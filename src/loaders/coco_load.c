@@ -8,8 +8,8 @@
 
 #include "loader.h"
 
-static int coco_test (FILE *, char *, const int);
-static int coco_load (struct module_data *, FILE *, const int);
+static int coco_test (HANDLE *, char *, const int);
+static int coco_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader coco_loader = {
 	"Coconizer",
@@ -27,43 +27,43 @@ static int check_cr(uint8 *s, int n)
 	return -1;
 }
 
-static int coco_test(FILE *f, char *t, const int start)
+static int coco_test(HANDLE *f, char *t, const int start)
 {
 	uint8 x, buf[20];
 	uint32 y;
 	int n, i;
 
-	x = read8(f);
+	x = hread_8(f);
 
 	/* check number of channels */
 	if (x != 0x84 && x != 0x88)
 		return -1;
 
-	fread(buf, 1, 20, f);		/* read title */
+	hread(buf, 1, 20, f);		/* read title */
 	if (check_cr(buf, 20) != 0)
 		return -1;
 
-	n = read8(f);			/* instruments */
+	n = hread_8(f);			/* instruments */
 	if (n > 100)
 		return -1;
 
-	read8(f);			/* sequences */
-	read8(f);			/* patterns */
+	hread_8(f);			/* sequences */
+	hread_8(f);			/* patterns */
 
-	y = read32l(f);
+	y = hread_32l(f);
 	if (y < 64 || y > 0x00100000)	/* offset of sequence table */
 		return -1;
 
-	y = read32l(f);			/* offset of patterns */
+	y = hread_32l(f);			/* offset of patterns */
 	if (y < 64 || y > 0x00100000)
 		return -1;
 
 	for (i = 0; i < n; i++) {
-		int ofs = read32l(f);
-		int len = read32l(f);
-		int vol = read32l(f);
-		int lps = read32l(f);
-		int lsz = read32l(f);
+		int ofs = hread_32l(f);
+		int len = hread_32l(f);
+		int vol = hread_32l(f);
+		int lps = hread_32l(f);
+		int lsz = hread_32l(f);
 
 		if (ofs < 64 || ofs > 0x00100000)
 			return -1;
@@ -77,14 +77,14 @@ static int coco_test(FILE *f, char *t, const int start)
 		if (lps + lsz - 1 > len)
 			return -1;
 
-		fread(buf, 1, 11, f);
+		hread(buf, 1, 11, f);
 		if (check_cr(buf, 11) != 0)
 			return -1;
 
-		read8(f);	/* unused */
+		hread_8(f);	/* unused */
 	}
 
-	fseek(f, start + 1, SEEK_SET);
+	hseek(f, start + 1, SEEK_SET);
 	read_title(f, t, 20);
 
 #if 0
@@ -160,7 +160,7 @@ static void fix_effect(struct xmp_event *e)
 	}
 }
 
-static int coco_load(struct module_data *m, FILE *f, const int start)
+static int coco_load(struct module_data *m, HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -169,7 +169,7 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	mod->chn = read8(f) & 0x3f;
+	mod->chn = hread_8(f) & 0x3f;
 	read_title(f, mod->name, 20);
 
 	for (i = 0; i < 20; i++) {
@@ -179,13 +179,13 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 
 	set_type(m, "Coconizer");
 
-	mod->ins = mod->smp = read8(f);
-	mod->len = read8(f);
-	mod->pat = read8(f);
+	mod->ins = mod->smp = hread_8(f);
+	mod->len = hread_8(f);
+	mod->pat = hread_8(f);
 	mod->trk = mod->pat * mod->chn;
 
-	seq_ptr = read32l(f);
-	pat_ptr = read32l(f);
+	seq_ptr = hread_32l(f);
+	pat_ptr = hread_32l(f);
 
 	MODULE_INFO();
 	INSTRUMENT_INIT();
@@ -196,21 +196,21 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		smp_ptr[i] = read32l(f);
-		mod->xxs[i].len = read32l(f);
-		mod->xxi[i].sub[0].vol = 0xff - read32l(f);
+		smp_ptr[i] = hread_32l(f);
+		mod->xxs[i].len = hread_32l(f);
+		mod->xxi[i].sub[0].vol = 0xff - hread_32l(f);
 		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxs[i].lps = read32l(f);
-                mod->xxs[i].lpe = mod->xxs[i].lps + read32l(f);
+		mod->xxs[i].lps = hread_32l(f);
+                mod->xxs[i].lpe = mod->xxs[i].lps + hread_32l(f);
 		if (mod->xxs[i].lpe)
 			mod->xxs[i].lpe -= 1;
 		mod->xxs[i].flg = mod->xxs[i].lps > 0 ?  XMP_SAMPLE_LOOP : 0;
-		fread(mod->xxi[i].name, 1, 11, f);
+		hread(mod->xxi[i].name, 1, 11, f);
 		for (j = 0; j < 11; j++) {
 			if (mod->xxi[i].name[j] == 0x0d)
 				mod->xxi[i].name[j] = 0;
 		}
-		read8(f);	/* unused */
+		hread_8(f);	/* unused */
 
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxi[i].sub[0].sid = i;
@@ -224,15 +224,15 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 
 	/* Sequence */
 
-	fseek(f, start + seq_ptr, SEEK_SET);
+	hseek(f, start + seq_ptr, SEEK_SET);
 	for (i = 0; ; i++) {
-		uint8 x = read8(f);
+		uint8 x = hread_8(f);
 		if (x == 0xff)
 			break;
 		mod->xxo[i] = x;
 	}
 	for (i++; i % 4; i++)	/* for alignment */
-		read8(f);
+		hread_8(f);
 
 
 	/* Patterns */
@@ -248,10 +248,10 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 
 		for (j = 0; j < (64 * mod->chn); j++) {
 			event = &EVENT (i, j % mod->chn, j / mod->chn);
-			event->fxp = read8(f);
-			event->fxt = read8(f);
-			event->ins = read8(f);
-			event->note = read8(f);
+			event->fxp = hread_8(f);
+			event->fxt = hread_8(f);
+			event->ins = hread_8(f);
+			event->note = hread_8(f);
 			if (event->note)
 				event->note += 12;
 
@@ -267,7 +267,7 @@ static int coco_load(struct module_data *m, FILE *f, const int start)
 		if (mod->xxi[i].nsm == 0)
 			continue;
 
-		fseek(f, start + smp_ptr[i], SEEK_SET);
+		hseek(f, start + smp_ptr[i], SEEK_SET);
 		load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

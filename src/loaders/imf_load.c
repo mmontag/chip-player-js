@@ -88,8 +88,8 @@ struct imf_sample {
 #define MAGIC_IM10	MAGIC4('I','M','1','0')
 #define MAGIC_II10	MAGIC4('I','I','1','0')
 
-static int imf_test (FILE *, char *, const int);
-static int imf_load (struct module_data *, FILE *, const int);
+static int imf_test (HANDLE *, char *, const int);
+static int imf_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader imf_loader = {
     "Imago Orpheus (IMF)",
@@ -97,13 +97,13 @@ const struct format_loader imf_loader = {
     imf_load
 };
 
-static int imf_test(FILE *f, char *t, const int start)
+static int imf_test(HANDLE *f, char *t, const int start)
 {
-    fseek(f, start + 60, SEEK_SET);
-    if (read32b(f) != MAGIC_IM10)
+    hseek(f, start + 60, SEEK_SET);
+    if (hread_32b(f) != MAGIC_IM10)
 	return -1;
 
-    fseek(f, start, SEEK_SET);
+    hseek(f, start, SEEK_SET);
     read_title(f, t, 32);
 
     return 0;
@@ -220,7 +220,7 @@ static void xlat_fx (int c, uint8 *fxt, uint8 *fxp, uint8 *arpeggio_val)
 }
 
 
-static int imf_load(struct module_data *m, FILE *f, const int start)
+static int imf_load(struct module_data *m, HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int c, r, i, j;
@@ -235,28 +235,28 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
     LOAD_INIT();
 
     /* Load and convert header */
-    fread(&ih.name, 32, 1, f);
-    ih.len = read16l(f);
-    ih.pat = read16l(f);
-    ih.ins = read16l(f);
-    ih.flg = read16l(f);
-    fread(&ih.unused1, 8, 1, f);
-    ih.tpo = read8(f);
-    ih.bpm = read8(f);
-    ih.vol = read8(f);
-    ih.amp = read8(f);
-    fread(&ih.unused2, 8, 1, f);
-    ih.magic = read32b(f);
+    hread(&ih.name, 32, 1, f);
+    ih.len = hread_16l(f);
+    ih.pat = hread_16l(f);
+    ih.ins = hread_16l(f);
+    ih.flg = hread_16l(f);
+    hread(&ih.unused1, 8, 1, f);
+    ih.tpo = hread_8(f);
+    ih.bpm = hread_8(f);
+    ih.vol = hread_8(f);
+    ih.amp = hread_8(f);
+    hread(&ih.unused2, 8, 1, f);
+    ih.magic = hread_32b(f);
 
     for (i = 0; i < 32; i++) {
-	fread(&ih.chn[i].name, 12, 1, f);
-	ih.chn[i].status = read8(f);
-	ih.chn[i].pan = read8(f);
-	ih.chn[i].chorus = read8(f);
-	ih.chn[i].reverb = read8(f);
+	hread(&ih.chn[i].name, 12, 1, f);
+	ih.chn[i].status = hread_8(f);
+	ih.chn[i].pan = hread_8(f);
+	ih.chn[i].chorus = hread_8(f);
+	ih.chn[i].reverb = hread_8(f);
     }
 
-    fread(&ih.pos, 256, 1, f);
+    hread(&ih.pos, 256, 1, f);
 
 #if 0
     if (ih.magic != MAGIC_IM10)
@@ -313,14 +313,14 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
 
-	pat_len = read16l(f) - 4;
-	mod->xxp[i]->rows = read16l(f);
+	pat_len = hread_16l(f) - 4;
+	mod->xxp[i]->rows = hread_16l(f);
 	TRACK_ALLOC (i);
 
 	r = 0;
 
 	while (--pat_len >= 0) {
-	    b = read8(f);
+	    b = hread_8(f);
 
 	    if (b == IMF_EOR) {
 		r++;
@@ -331,7 +331,7 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & IMF_NI_FOLLOW) {
-		n = read8(f);
+		n = hread_8(f);
 		switch (n) {
 		case 255:
 		case 160:	/* ??!? */
@@ -342,18 +342,18 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 		}
 
 		event->note = n;
-		event->ins = read8(f);
+		event->ins = hread_8(f);
 		pat_len -= 2;
 	    }
 	    if (b & IMF_FX_FOLLOWS) {
-		event->fxt = read8(f);
-		event->fxp = read8(f);
+		event->fxt = hread_8(f);
+		event->fxp = hread_8(f);
 		xlat_fx(c, &event->fxt, &event->fxp, arpeggio_val);
 		pat_len -= 2;
 	    }
 	    if (b & IMF_F2_FOLLOWS) {
-		event->f2t = read8(f);
-		event->f2p = read8(f);
+		event->f2t = hread_8(f);
+		event->f2p = hread_8(f);
 		xlat_fx(c, &event->f2t, &event->f2p, arpeggio_val);
 		pat_len -= 2;
 	    }
@@ -367,26 +367,26 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (smp_num = i = 0; i < mod->ins; i++) {
-	fread(&ii.name, 32, 1, f);
-	fread(&ii.map, 120, 1, f);
-	fread(&ii.unused, 8, 1, f);
+	hread(&ii.name, 32, 1, f);
+	hread(&ii.map, 120, 1, f);
+	hread(&ii.unused, 8, 1, f);
 	for (j = 0; j < 32; j++)
-		ii.vol_env[j] = read16l(f);
+		ii.vol_env[j] = hread_16l(f);
 	for (j = 0; j < 32; j++)
-		ii.pan_env[j] = read16l(f);
+		ii.pan_env[j] = hread_16l(f);
 	for (j = 0; j < 32; j++)
-		ii.pitch_env[j] = read16l(f);
+		ii.pitch_env[j] = hread_16l(f);
 	for (j = 0; j < 3; j++) {
-	    ii.env[j].npt = read8(f);
-	    ii.env[j].sus = read8(f);
-	    ii.env[j].lps = read8(f);
-	    ii.env[j].lpe = read8(f);
-	    ii.env[j].flg = read8(f);
-	    fread(&ii.env[j].unused, 3, 1, f);
+	    ii.env[j].npt = hread_8(f);
+	    ii.env[j].sus = hread_8(f);
+	    ii.env[j].lps = hread_8(f);
+	    ii.env[j].lpe = hread_8(f);
+	    ii.env[j].flg = hread_8(f);
+	    hread(&ii.env[j].unused, 3, 1, f);
 	}
-	ii.fadeout = read16l(f);
-	ii.nsm = read16l(f);
-	ii.magic = read32b(f);
+	ii.fadeout = hread_16l(f);
+	ii.nsm = hread_16l(f);
+	ii.magic = hread_32b(f);
 
 	if (ii.magic != MAGIC_II10)
 	    return -2;
@@ -421,20 +421,20 @@ static int imf_load(struct module_data *m, FILE *f, const int start)
 
 	for (j = 0; j < ii.nsm; j++, smp_num++) {
 
-	    fread(&is.name, 13, 1, f);
-	    fread(&is.unused1, 3, 1, f);
-	    is.len = read32l(f);
-	    is.lps = read32l(f);
-	    is.lpe = read32l(f);
-	    is.rate = read32l(f);
-	    is.vol = read8(f);
-	    is.pan = read8(f);
-	    fread(&is.unused2, 14, 1, f);
-	    is.flg = read8(f);
-	    fread(&is.unused3, 5, 1, f);
-	    is.ems = read16l(f);
-	    is.dram = read32l(f);
-	    is.magic = read32b(f);
+	    hread(&is.name, 13, 1, f);
+	    hread(&is.unused1, 3, 1, f);
+	    is.len = hread_32l(f);
+	    is.lps = hread_32l(f);
+	    is.lpe = hread_32l(f);
+	    is.rate = hread_32l(f);
+	    is.vol = hread_8(f);
+	    is.pan = hread_8(f);
+	    hread(&is.unused2, 14, 1, f);
+	    is.flg = hread_8(f);
+	    hread(&is.unused3, 5, 1, f);
+	    is.ems = hread_16l(f);
+	    is.dram = hread_32l(f);
+	    is.magic = hread_32b(f);
 
 	    mod->xxi[i].sub[j].sid = smp_num;
 	    mod->xxi[i].sub[j].vol = is.vol;

@@ -43,8 +43,8 @@ struct stm_file_header {
 };
 
 
-static int stm_test (FILE *, char *, const int);
-static int stm_load (struct module_data *, FILE *, const int);
+static int stm_test (HANDLE *, char *, const int);
+static int stm_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader stm_loader = {
     "Scream Tracker 2 (STM)",
@@ -52,25 +52,25 @@ const struct format_loader stm_loader = {
     stm_load
 };
 
-static int stm_test(FILE *f, char *t, const int start)
+static int stm_test(HANDLE *f, char *t, const int start)
 {
     char buf[8];
 
-    fseek(f, start + 20, SEEK_SET);
-    if (fread(buf, 1, 8, f) < 8)
+    hseek(f, start + 20, SEEK_SET);
+    if (hread(buf, 1, 8, f) < 8)
 	return -1;
     if (memcmp(buf, "!Scream!", 8) && memcmp(buf, "BMOD2STM", 8))
 	return -1;
 
-    read8(f);
+    hread_8(f);
 
-    if (read8(f) != STM_TYPE_MODULE)
+    if (hread_8(f) != STM_TYPE_MODULE)
 	return -1;
 
-    if (read8(f) < 1)		/* We don't want STX files */
+    if (hread_8(f) < 1)		/* We don't want STX files */
 	return -1;
 
-    fseek(f, start + 0, SEEK_SET);
+    hseek(f, start + 0, SEEK_SET);
     read_title(f, t, 20);
 
     return 0;
@@ -100,7 +100,7 @@ static const uint8 fx[] = {
 };
 
 
-static int stm_load(struct module_data *m, FILE *f, const int start)
+static int stm_load(struct module_data *m, HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -111,30 +111,30 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
 
     LOAD_INIT();
 
-    fread(&sfh.name, 20, 1, f);			/* ASCIIZ song name */
-    fread(&sfh.magic, 8, 1, f);			/* '!Scream!' */
-    sfh.rsvd1 = read8(f);			/* '\x1a' */
-    sfh.type = read8(f);			/* 1=song, 2=module */
-    sfh.vermaj = read8(f);			/* Major version number */
-    sfh.vermin = read8(f);			/* Minor version number */
-    sfh.tempo = read8(f);			/* Playback tempo */
-    sfh.patterns = read8(f);			/* Number of patterns */
-    sfh.gvol = read8(f);			/* Global volume */
-    fread(&sfh.rsvd2, 13, 1, f);		/* Reserved */
+    hread(&sfh.name, 20, 1, f);			/* ASCIIZ song name */
+    hread(&sfh.magic, 8, 1, f);			/* '!Scream!' */
+    sfh.rsvd1 = hread_8(f);			/* '\x1a' */
+    sfh.type = hread_8(f);			/* 1=song, 2=module */
+    sfh.vermaj = hread_8(f);			/* Major version number */
+    sfh.vermin = hread_8(f);			/* Minor version number */
+    sfh.tempo = hread_8(f);			/* Playback tempo */
+    sfh.patterns = hread_8(f);			/* Number of patterns */
+    sfh.gvol = hread_8(f);			/* Global volume */
+    hread(&sfh.rsvd2, 13, 1, f);		/* Reserved */
 
     for (i = 0; i < 31; i++) {
-	fread(&sfh.ins[i].name, 12, 1, f);	/* ASCIIZ instrument name */
-	sfh.ins[i].id = read8(f);		/* Id=0 */
-	sfh.ins[i].idisk = read8(f);		/* Instrument disk */
-	sfh.ins[i].rsvd1 = read16l(f);		/* Reserved */
-	sfh.ins[i].length = read16l(f);		/* Sample length */
-	sfh.ins[i].loopbeg = read16l(f);	/* Loop begin */
-	sfh.ins[i].loopend = read16l(f);	/* Loop end */
-	sfh.ins[i].volume = read8(f);		/* Playback volume */
-	sfh.ins[i].rsvd2 = read8(f);		/* Reserved */
-	sfh.ins[i].c2spd = read16l(f);		/* C4 speed */
-	sfh.ins[i].rsvd3 = read32l(f);		/* Reserved */
-	sfh.ins[i].paralen = read16l(f);	/* Length in paragraphs */
+	hread(&sfh.ins[i].name, 12, 1, f);	/* ASCIIZ instrument name */
+	sfh.ins[i].id = hread_8(f);		/* Id=0 */
+	sfh.ins[i].idisk = hread_8(f);		/* Instrument disk */
+	sfh.ins[i].rsvd1 = hread_16l(f);		/* Reserved */
+	sfh.ins[i].length = hread_16l(f);		/* Sample length */
+	sfh.ins[i].loopbeg = hread_16l(f);	/* Loop begin */
+	sfh.ins[i].loopend = hread_16l(f);	/* Loop end */
+	sfh.ins[i].volume = hread_8(f);		/* Playback volume */
+	sfh.ins[i].rsvd2 = hread_8(f);		/* Reserved */
+	sfh.ins[i].c2spd = hread_16l(f);		/* C4 speed */
+	sfh.ins[i].rsvd3 = hread_32l(f);		/* Reserved */
+	sfh.ins[i].paralen = hread_16l(f);	/* Length in paragraphs */
     }
 
     if (!strncmp ((char *)sfh.magic, "BMOD2STM", 8))
@@ -184,7 +184,7 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
 	c2spd_to_note (sfh.ins[i].c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
-    fread(mod->xxo, 1, 128, f);
+    hread(mod->xxo, 1, 128, f);
 
     for (i = 0; i < 128; i++)
 	if (mod->xxo[i] >= mod->pat)
@@ -205,7 +205,7 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
 	TRACK_ALLOC (i);
 	for (j = 0; j < 64 * mod->chn; j++) {
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
-	    b = read8(f);
+	    b = hread_8(f);
 	    memset (event, 0, sizeof (struct xmp_event));
 	    switch (b) {
 	    case 251:
@@ -216,17 +216,17 @@ static int stm_load(struct module_data *m, FILE *f, const int start)
 		b = 0;
 	    default:
 		event->note = b ? 13 + LSN(b) + 12 * (2 + MSN(b)) : 0;
-		b = read8(f);
+		b = hread_8(f);
 		event->vol = b & 0x07;
 		event->ins = (b & 0xf8) >> 3;
-		b = read8(f);
+		b = hread_8(f);
 		event->vol += (b & 0xf0) >> 1;
 		if (event->vol > 0x40)
 		    event->vol = 0;
 		else
 		    event->vol++;
 		event->fxt = fx[LSN(b)];
-		event->fxp = read8(f);
+		event->fxp = hread_8(f);
 		switch (event->fxt) {
 		case FX_SPEED:
 		    event->fxp = MSN (event->fxp);

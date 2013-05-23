@@ -15,8 +15,8 @@
 #define MAGIC_D_T_	MAGIC4('D','.','T','.')
 
 
-static int dt_test(FILE *, char *, const int);
-static int dt_load (struct module_data *, FILE *, const int);
+static int dt_test(HANDLE *, char *, const int);
+static int dt_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader dt_loader = {
 	"Digital Tracker (DTM)",
@@ -24,18 +24,18 @@ const struct format_loader dt_loader = {
 	dt_load
 };
 
-static int dt_test(FILE *f, char *t, const int start)
+static int dt_test(HANDLE *f, char *t, const int start)
 {
-	if (read32b(f) != MAGIC_D_T_)
+	if (hread_32b(f) != MAGIC_D_T_)
 		return -1;
 
-	read32b(f);			/* chunk size */
-	read16b(f);			/* type */
-	read16b(f);			/* 0xff then mono */
-	read16b(f);			/* reserved */
-	read16b(f);			/* tempo */
-	read16b(f);			/* bpm */
-	read32b(f);			/* undocumented */
+	hread_32b(f);			/* chunk size */
+	hread_16b(f);			/* type */
+	hread_16b(f);			/* 0xff then mono */
+	hread_16b(f);			/* reserved */
+	hread_16b(f);			/* tempo */
+	hread_16b(f);			/* bpm */
+	hread_32b(f);			/* undocumented */
 
 	read_title(f, t, 32);
 
@@ -49,59 +49,59 @@ struct local_data {
 };
 
 
-static void get_d_t_(struct module_data *m, int size, FILE *f, void *parm)
+static void get_d_t_(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int b;
 
-	read16b(f);			/* type */
-	read16b(f);			/* 0xff then mono */
-	read16b(f);			/* reserved */
-	mod->spd = read16b(f);
-	if ((b = read16b(f)) > 0)	/* RAMBO.DTM has bpm 0 */
+	hread_16b(f);			/* type */
+	hread_16b(f);			/* 0xff then mono */
+	hread_16b(f);			/* reserved */
+	mod->spd = hread_16b(f);
+	if ((b = hread_16b(f)) > 0)	/* RAMBO.DTM has bpm 0 */
 		mod->bpm = b;
-	read32b(f);			/* undocumented */
+	hread_32b(f);			/* undocumented */
 
-	fread(mod->name, 32, 1, f);
+	hread(mod->name, 32, 1, f);
 	set_type(m, "Digital Tracker DTM");
 
 	MODULE_INFO();
 }
 
-static void get_s_q_(struct module_data *m, int size, FILE *f, void *parm)
+static void get_s_q_(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, maxpat;
 
-	mod->len = read16b(f);
-	mod->rst = read16b(f);
-	read32b(f);	/* reserved */
+	mod->len = hread_16b(f);
+	mod->rst = hread_16b(f);
+	hread_32b(f);	/* reserved */
 
 	for (maxpat = i = 0; i < 128; i++) {
-		mod->xxo[i] = read8(f);
+		mod->xxo[i] = hread_8(f);
 		if (mod->xxo[i] > maxpat)
 			maxpat = mod->xxo[i];
 	}
 	mod->pat = maxpat + 1;
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
+static void get_patt(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 
-	mod->chn = read16b(f);
-	data->realpat = read16b(f);
+	mod->chn = hread_16b(f);
+	data->realpat = hread_16b(f);
 	mod->trk = mod->chn * mod->pat;
 }
 
-static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
+static void get_inst(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, c2spd;
 	uint8 name[30];
 
-	mod->ins = mod->smp = read16b(f);
+	mod->ins = mod->smp = hread_16b(f);
 
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
@@ -112,21 +112,21 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		read32b(f);		/* reserved */
-		mod->xxs[i].len = read32b(f);
+		hread_32b(f);		/* reserved */
+		mod->xxs[i].len = hread_32b(f);
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
-		fine = read8s(f);	/* finetune */
-		mod->xxi[i].sub[0].vol = read8(f);
+		fine = hread_8s(f);	/* finetune */
+		mod->xxi[i].sub[0].vol = hread_8(f);
 		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxs[i].lps = read32b(f);
-		replen = read32b(f);
+		mod->xxs[i].lps = hread_32b(f);
+		replen = hread_32b(f);
 		mod->xxs[i].lpe = mod->xxs[i].lps + replen - 1;
 		mod->xxs[i].flg = replen > 2 ?  XMP_SAMPLE_LOOP : 0;
 
-		fread(name, 22, 1, f);
+		hread(name, 22, 1, f);
 		copy_adjust(mod->xxi[i].name, name, 22);
 
-		flag = read16b(f);	/* bit 0-7:resol 8:stereo */
+		flag = hread_16b(f);	/* bit 0-7:resol 8:stereo */
 		if ((flag & 0xff) > 8) {
 			mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
 			mod->xxs[i].len >>= 1;
@@ -134,8 +134,8 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 			mod->xxs[i].lpe >>= 1;
 		}
 
-		read32b(f);		/* midi note (0x00300000) */
-		c2spd = read32b(f);	/* frequency */
+		hread_32b(f);		/* midi note (0x00300000) */
+		c2spd = hread_32b(f);	/* frequency */
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
 		/* It's strange that we have both c2spd and finetune */
@@ -158,7 +158,7 @@ static void get_inst(struct module_data *m, int size, FILE *f, void *parm)
 	}
 }
 
-static void get_dapt(struct module_data *m, int size, FILE *f, void *parm)
+static void get_dapt(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -174,9 +174,9 @@ static void get_dapt(struct module_data *m, int size, FILE *f, void *parm)
 		PATTERN_INIT();
 	}
 
-	read32b(f);	/* 0xffffffff */
-	i = pat = read16b(f);
-	rows = read16b(f);
+	hread_32b(f);	/* 0xffffffff */
+	i = pat = hread_16b(f);
+	rows = hread_16b(f);
 
 	for (i = last_pat; i <= pat; i++) {
 		PATTERN_ALLOC(i);
@@ -190,10 +190,10 @@ static void get_dapt(struct module_data *m, int size, FILE *f, void *parm)
 			uint8 a, b, c, d;
 
 			event = &EVENT(pat, k, j);
-			a = read8(f);
-			b = read8(f);
-			c = read8(f);
-			d = read8(f);
+			a = hread_8(f);
+			b = hread_8(f);
+			c = hread_8(f);
+			d = hread_8(f);
 			if (a) {
 				a--;
 				event->note = 12 * (a >> 4) + (a & 0x0f) + 12;
@@ -206,7 +206,7 @@ static void get_dapt(struct module_data *m, int size, FILE *f, void *parm)
 	}
 }
 
-static void get_dait(struct module_data *m, int size, FILE *f, void *parm)
+static void get_dait(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -226,7 +226,7 @@ static void get_dait(struct module_data *m, int size, FILE *f, void *parm)
 	i++;
 }
 
-static int dt_load(struct module_data *m, FILE *f, const int start)
+static int dt_load(struct module_data *m, HANDLE *f, const int start)
 {
 	iff_handle handle;
 	struct local_data data;
@@ -248,7 +248,7 @@ static int dt_load(struct module_data *m, FILE *f, const int start)
 	iff_register(handle, "DAIT", get_dait);
 
 	/* Load IFF chunks */
-	while (!feof(f)) {
+	while (!heof(f)) {
 		iff_chunk(handle, m, f , &data);
 	}
 

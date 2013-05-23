@@ -21,8 +21,8 @@
 #include <unistd.h>
 
 
-static int alm_test (FILE *, char *, const int);
-static int alm_load (struct module_data *, FILE *, const int);
+static int alm_test (HANDLE *, char *, const int);
+static int alm_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader alm_loader = {
     "Aley Keptr (ALM)",
@@ -30,11 +30,14 @@ const struct format_loader alm_loader = {
     alm_load
 };
 
-static int alm_test(FILE *f, char *t, const int start)
+static int alm_test(HANDLE *f, char *t, const int start)
 {
     char buf[7];
 
-    if (fread(buf, 1, 7, f) < 7)
+    if (f->type != HANDLE_TYPE_FILE)
+	return -1;
+
+    if (hread(buf, 1, 7, f) < 7)
 	return -1;
 
     if (memcmp(buf, "ALEYMOD", 7) && memcmp(buf, "ALEY MO", 7))
@@ -57,7 +60,7 @@ struct alm_file_header {
 
 #define NAME_SIZE 255
 
-static int alm_load(struct module_data *m, FILE *f, const int start)
+static int alm_load(struct module_data *m, HANDLE *h, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -68,7 +71,7 @@ static int alm_load(struct module_data *m, FILE *f, const int start)
     char *basename;
     char filename[NAME_SIZE];
     char modulename[NAME_SIZE];
-    FILE *s;
+    FILE *f = h->f, *s;
 
     LOAD_INIT();
 
@@ -83,7 +86,7 @@ static int alm_load(struct module_data *m, FILE *f, const int start)
     afh.speed = read8(f);
     afh.length = read8(f);
     afh.restart = read8(f);
-    fread(&afh.order, 128, 1, f);
+    hread(&afh.order, 128, 1, f);
 
     mod->len = afh.length;
     mod->rst = afh.restart;

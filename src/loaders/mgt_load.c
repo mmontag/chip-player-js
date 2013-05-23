@@ -13,8 +13,8 @@
 #define MAGIC_MCS	MAGIC4(0xbd,'M','C','S')
 
 
-static int mgt_test (FILE *, char *, const int);
-static int mgt_load (struct module_data *, FILE *, const int);
+static int mgt_test (HANDLE *, char *, const int);
+static int mgt_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader mgt_loader = {
 	"Megatracker (MGT)",
@@ -22,26 +22,26 @@ const struct format_loader mgt_loader = {
 	mgt_load
 };
 
-static int mgt_test(FILE *f, char *t, const int start)
+static int mgt_test(HANDLE *f, char *t, const int start)
 {
 	int sng_ptr;
 
-	if (read24b(f) != MAGIC_MGT)
+	if (hread_24b(f) != MAGIC_MGT)
 		return -1;
-	read8(f);
-	if (read32b(f) != MAGIC_MCS)
+	hread_8(f);
+	if (hread_32b(f) != MAGIC_MCS)
 		return -1;
 
-	fseek(f, 18, SEEK_CUR);
-	sng_ptr = read32b(f);
-	fseek(f, start + sng_ptr, SEEK_SET);
+	hseek(f, 18, SEEK_CUR);
+	sng_ptr = hread_32b(f);
+	hseek(f, start + sng_ptr, SEEK_SET);
 
 	read_title(f, t, 32);
 	
 	return 0;
 }
 
-static int mgt_load(struct module_data *m, FILE *f, const int start)
+static int mgt_load(struct module_data *m, HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -52,89 +52,89 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	read24b(f);		/* MGT */
-	ver = read8(f);
-	read32b(f);		/* MCS */
+	hread_24b(f);		/* MGT */
+	ver = hread_8(f);
+	hread_32b(f);		/* MCS */
 
 	set_type(m, "Megatracker MGT v%d.%d", MSN(ver), LSN(ver));
 
-	mod->chn = read16b(f);
-	read16b(f);			/* number of songs */
-	mod->len = read16b(f);
-	mod->pat = read16b(f);
-	mod->trk = read16b(f);
-	mod->ins = mod->smp = read16b(f);
-	read16b(f);			/* reserved */
-	read32b(f);			/* reserved */
+	mod->chn = hread_16b(f);
+	hread_16b(f);			/* number of songs */
+	mod->len = hread_16b(f);
+	mod->pat = hread_16b(f);
+	mod->trk = hread_16b(f);
+	mod->ins = mod->smp = hread_16b(f);
+	hread_16b(f);			/* reserved */
+	hread_32b(f);			/* reserved */
 
-	sng_ptr = read32b(f);
-	seq_ptr = read32b(f);
-	ins_ptr = read32b(f);
-	pat_ptr = read32b(f);
-	trk_ptr = read32b(f);
-	smp_ptr = read32b(f);
-	read32b(f);			/* total smp len */
-	read32b(f);			/* unpacked trk size */
+	sng_ptr = hread_32b(f);
+	seq_ptr = hread_32b(f);
+	ins_ptr = hread_32b(f);
+	pat_ptr = hread_32b(f);
+	trk_ptr = hread_32b(f);
+	smp_ptr = hread_32b(f);
+	hread_32b(f);			/* total smp len */
+	hread_32b(f);			/* unpacked trk size */
 
-	fseek(f, start + sng_ptr, SEEK_SET);
+	hseek(f, start + sng_ptr, SEEK_SET);
 
-	fread(mod->name, 1, 32, f);
-	seq_ptr = read32b(f);
-	mod->len = read16b(f);
-	mod->rst = read16b(f);
-	mod->bpm = read8(f);
-	mod->spd = read8(f);
-	read16b(f);			/* global volume */
-	read8(f);			/* master L */
-	read8(f);			/* master R */
+	hread(mod->name, 1, 32, f);
+	seq_ptr = hread_32b(f);
+	mod->len = hread_16b(f);
+	mod->rst = hread_16b(f);
+	mod->bpm = hread_8(f);
+	mod->spd = hread_8(f);
+	hread_16b(f);			/* global volume */
+	hread_8(f);			/* master L */
+	hread_8(f);			/* master R */
 
 	for (i = 0; i < mod->chn; i++) {
-		read16b(f);		/* pan */
+		hread_16b(f);		/* pan */
 	}
 	
 	MODULE_INFO();
 
 	/* Sequence */
 
-	fseek(f, start + seq_ptr, SEEK_SET);
+	hseek(f, start + seq_ptr, SEEK_SET);
 	for (i = 0; i < mod->len; i++)
-		mod->xxo[i] = read16b(f);
+		mod->xxo[i] = hread_16b(f);
 
 	/* Instruments */
 
 	INSTRUMENT_INIT();
 
-	fseek(f, start + ins_ptr, SEEK_SET);
+	hseek(f, start + ins_ptr, SEEK_SET);
 
 	for (i = 0; i < mod->ins; i++) {
 		int c2spd, flags;
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		fread(mod->xxi[i].name, 1, 32, f);
-		sdata[i] = read32b(f);
-		mod->xxs[i].len = read32b(f);
-		mod->xxs[i].lps = read32b(f);
-		mod->xxs[i].lpe = mod->xxs[i].lps + read32b(f);
-		read32b(f);
-		read32b(f);
-		c2spd = read32b(f);
+		hread(mod->xxi[i].name, 1, 32, f);
+		sdata[i] = hread_32b(f);
+		mod->xxs[i].len = hread_32b(f);
+		mod->xxs[i].lps = hread_32b(f);
+		mod->xxs[i].lpe = mod->xxs[i].lps + hread_32b(f);
+		hread_32b(f);
+		hread_32b(f);
+		c2spd = hread_32b(f);
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-		mod->xxi[i].sub[0].vol = read16b(f) >> 4;
-		read8(f);		/* vol L */
-		read8(f);		/* vol R */
+		mod->xxi[i].sub[0].vol = hread_16b(f) >> 4;
+		hread_8(f);		/* vol L */
+		hread_8(f);		/* vol R */
 		mod->xxi[i].sub[0].pan = 0x80;
-		flags = read8(f);
+		flags = hread_8(f);
 		mod->xxs[i].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxs[i].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
-		mod->xxi[i].sub[0].fin += 0 * read8(f);	// FIXME
-		read8(f);		/* unused */
-		read8(f);
-		read8(f);
-		read8(f);
-		read16b(f);
-		read32b(f);
-		read32b(f);
+		mod->xxi[i].sub[0].fin += 0 * hread_8(f);	// FIXME
+		hread_8(f);		/* unused */
+		hread_8(f);
+		hread_8(f);
+		hread_8(f);
+		hread_16b(f);
+		hread_32b(f);
+		hread_32b(f);
 
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxi[i].sub[0].sid = i;
@@ -158,11 +158,11 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 		int offset, rows;
 		uint8 b;
 
-		fseek(f, start + trk_ptr + i * 4, SEEK_SET);
-		offset = read32b(f);
-		fseek(f, start + offset, SEEK_SET);
+		hseek(f, start + trk_ptr + i * 4, SEEK_SET);
+		offset = hread_32b(f);
+		hseek(f, start + offset, SEEK_SET);
 
-		rows = read16b(f);
+		rows = hread_16b(f);
 		mod->xxt[i] = calloc(sizeof(struct xmp_track) +
 				sizeof(struct xmp_event) * rows, 1);
 		mod->xxt[i]->rows = rows;
@@ -171,23 +171,23 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 		for (j = 0; j < rows; j++) {
 			uint8 note, f2p;
 
-			b = read8(f);
+			b = hread_8(f);
 			j += b & 0x03;
 
 			note = 0;
 			event = &mod->xxt[i]->event[j];
 			if (b & 0x04)
-				note = read8(f);
+				note = hread_8(f);
 			if (b & 0x08)
-				event->ins = read8(f);
+				event->ins = hread_8(f);
 			if (b & 0x10)
-				event->vol = read8(f);
+				event->vol = hread_8(f);
 			if (b & 0x20)
-				event->fxt = read8(f);
+				event->fxt = hread_8(f);
 			if (b & 0x40)
-				event->fxp = read8(f);
+				event->fxp = hread_8(f);
 			if (b & 0x80)
-				f2p = read8(f);
+				f2p = hread_8(f);
 
 			if (note == 1)
 				event->note = XMP_KEY_OFF;
@@ -280,14 +280,14 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
-	fseek(f, start + pat_ptr, SEEK_SET);
+	hseek(f, start + pat_ptr, SEEK_SET);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
 
-		mod->xxp[i]->rows = read16b(f);
+		mod->xxp[i]->rows = hread_16b(f);
 		for (j = 0; j < mod->chn; j++) {
-			mod->xxp[i]->index[j] = read16b(f) - 1;
+			mod->xxp[i]->index[j] = hread_16b(f) - 1;
 		}
 	}
 
@@ -299,7 +299,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 		if (mod->xxi[i].nsm == 0)
 			continue;
 
-		fseek(f, start + sdata[i], SEEK_SET);
+		hseek(f, start + sdata[i], SEEK_SET);
 		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

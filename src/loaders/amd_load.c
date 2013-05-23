@@ -10,8 +10,8 @@
 #include "synth.h"
 
 
-static int amd_test (FILE *, char *, const int);
-static int amd_load (struct module_data *, FILE *, const int);
+static int amd_test (HANDLE *, char *, const int);
+static int amd_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader amd_loader = {
     "Amusic Adlib Tracker (AMD)",
@@ -19,18 +19,18 @@ const struct format_loader amd_loader = {
     amd_load
 };
 
-static int amd_test(FILE *f, char *t, const int start)
+static int amd_test(HANDLE *f, char *t, const int start)
 {
     char buf[9];
 
-    fseek(f, start + 1062, SEEK_SET);
-    if (fread(buf, 1, 9, f) < 9)
+    hseek(f, start + 1062, SEEK_SET);
+    if (hread(buf, 1, 9, f) < 9)
 	return -1;
 
     if (memcmp(buf, "<o", 2) || memcmp(buf + 6, "RoR", 3))
 	return -1;
 
-    fseek(f, start + 0, SEEK_SET);
+    hseek(f, start + 0, SEEK_SET);
     read_title(f, t, 24);
 
     return 0;
@@ -57,7 +57,7 @@ struct amd_file_header {
 
 
 
-static int amd_load(struct module_data *m, FILE *f, const int start)
+static int amd_load(struct module_data *m, HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int r, i, j, tmode = 1;
@@ -71,17 +71,17 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 
     LOAD_INIT();
 
-    fread(&afh.name, 24, 1, f);
-    fread(&afh.author, 24, 1, f);
+    hread(&afh.name, 24, 1, f);
+    hread(&afh.author, 24, 1, f);
     for (i = 0; i < 26; i++) {
-	fread(&afh.ins[i].name, 23, 1, f);
-	fread(&afh.ins[i].reg, 11, 1, f);
+	hread(&afh.ins[i].name, 23, 1, f);
+	hread(&afh.ins[i].reg, 11, 1, f);
     }
-    afh.len = read8(f);
-    afh.pat = read8(f);
-    fread(&afh.order, 128, 1, f);
-    fread(&afh.magic, 9, 1, f);
-    afh.version = read8(f);
+    afh.len = hread_8(f);
+    afh.pat = hread_8(f);
+    hread(&afh.order, 128, 1, f);
+    hread(&afh.magic, 9, 1, f);
+    afh.version = hread_8(f);
 
     mod->chn = 9;
     mod->bpm = 125;
@@ -131,7 +131,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
 	for (j = 0; j < 9; j++) {
-	    w = read16l(f);
+	    w = hread_16l(f);
 	    mod->xxp[i]->index[j] = w;
 	    if (w > mod->trk)
 		mod->trk = w;
@@ -140,26 +140,26 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
     }
     mod->trk++;
 
-    stored_tracks = read16l(f);
+    stored_tracks = hread_16l(f);
 
     D_(D_INFO "Stored tracks: %d", w);
 
     mod->xxt = calloc (sizeof (struct xmp_track *), mod->trk);
 
     for (i = 0; i < stored_tracks; i++) {
-	w = read16l(f);
+	w = hread_16l(f);
 	mod->xxt[w] = calloc (sizeof (struct xmp_track) +
 	    sizeof (struct xmp_event) * 64, 1);
 	mod->xxt[w]->rows = 64;
 	for (r = 0; r < 64; r++) {
 	    event = &mod->xxt[w]->event[r];
-	    b = read8(f);		/* Effect parameter */
+	    b = hread_8(f);		/* Effect parameter */
 	    if (b & 0x80) {
 		r += (b & 0x7f) - 1;
 		continue;
 	    }
 	    event->fxp = b;
-	    b = read8(f);		/* Instrument + effect type */
+	    b = hread_8(f);		/* Instrument + effect type */
 	    event->ins = MSN (b);
 	    switch (b = LSN (b)) {
 	    case 0:		/* Arpeggio */
@@ -194,7 +194,7 @@ static int amd_load(struct module_data *m, FILE *f, const int start)
 		break;
 	    }
 	    event->fxt = b;
-	    b = read8(f);	/* Note + octave + instrument */
+	    b = hread_8(f);	/* Note + octave + instrument */
 	    event->ins |= (b & 1) << 4;
 	    if ((event->note = MSN (b)))
 		event->note += (2 + ((b & 0xe) >> 1)) * 12;

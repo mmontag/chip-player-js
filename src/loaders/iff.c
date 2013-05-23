@@ -36,26 +36,26 @@ iff_handle iff_new()
 	return (iff_handle) data;
 }
 
-void iff_chunk(iff_handle opaque, struct module_data *m, FILE *f, void *parm)
+void iff_chunk(iff_handle opaque, struct module_data *m, HANDLE *f, void *parm)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	long size;
 	char id[17] = "";
 
-	if (fread(id, 1, data->id_size, f) != data->id_size)
+	if (hread(id, 1, data->id_size, f) != data->id_size)
 		return;
 
 	if (data->flags & IFF_SKIP_EMBEDDED) {
 		/* embedded RIFF hack */
 		if (!strncmp(id, "RIFF", 4)) {
-			read32b(f);
-			read32b(f);
+			hread_32b(f);
+			hread_32b(f);
 			/* read first chunk ID instead */
-			fread(id, 1, data->id_size, f);
+			hread(id, 1, data->id_size, f);
 		}
 	}
 
-	size = (data->flags & IFF_LITTLE_ENDIAN) ? read32l(f) : read32b(f);
+	size = (data->flags & IFF_LITTLE_ENDIAN) ? hread_32l(f) : hread_32b(f);
 
 	if (data->flags & IFF_CHUNK_ALIGN2)
 		size = (size + 1) & ~1;
@@ -70,7 +70,7 @@ void iff_chunk(iff_handle opaque, struct module_data *m, FILE *f, void *parm)
 }
 
 void iff_register(iff_handle opaque, char *id,
-		  void (*loader)(struct module_data *, int, FILE *, void *))
+		  void (*loader)(struct module_data *, int, HANDLE *, void *))
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	struct iff_info *f;
@@ -100,14 +100,14 @@ void iff_release(iff_handle opaque)
 }
 
 int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
-		FILE *f, void *parm)
+		HANDLE *f, void *parm)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	struct list_head *tmp;
 	struct iff_info *i;
 	int pos;
 
-	pos = ftell(f);
+	pos = htell(f);
 
 	list_for_each(tmp, &data->iff_list) {
 		i = list_entry(tmp, struct iff_info, list);
@@ -117,7 +117,7 @@ int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
 		}
 	}
 
-	fseek(f, pos + size, SEEK_SET);
+	hseek(f, pos + size, SEEK_SET);
 
 	return 0;
 }

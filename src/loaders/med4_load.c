@@ -19,8 +19,8 @@
 #define MAGIC_MED4	MAGIC4('M','E','D',4)
 #undef MED4_DEBUG
 
-static int med4_test(FILE *, char *, const int);
-static int med4_load (struct module_data *, FILE *, const int);
+static int med4_test(HANDLE *, char *, const int);
+static int med4_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader med4_loader = {
 	"MED 2.10 MED4 (MED)",
@@ -28,9 +28,9 @@ const struct format_loader med4_loader = {
 	med4_load
 };
 
-static int med4_test(FILE *f, char *t, const int start)
+static int med4_test(HANDLE *f, char *t, const int start)
 {
-	if (read32b(f) !=  MAGIC_MED4)
+	if (hread_32b(f) !=  MAGIC_MED4)
 		return -1;
 
 	read_title(f, t, 0);
@@ -121,7 +121,7 @@ static void fix_effect(struct xmp_event *event)
 	}
 }
 
-static inline uint8 read4(FILE *f, int *read4_ctl)
+static inline uint8 read4(HANDLE *f, int *read4_ctl)
 {
 	static uint8 b = 0;
 	uint8 ret;
@@ -129,7 +129,7 @@ static inline uint8 read4(FILE *f, int *read4_ctl)
 	if (*read4_ctl & 0x01) {
 		ret = b & 0x0f;
 	} else {
-		b = read8(f);
+		b = hread_8(f);
 		ret = b >> 4;
 	}
 
@@ -138,7 +138,7 @@ static inline uint8 read4(FILE *f, int *read4_ctl)
 	return ret;
 }
 
-static inline uint16 read12b(FILE *f, int *read4_ctl)
+static inline uint16 read12b(HANDLE *f, int *read4_ctl)
 {
 	uint32 a, b, c;
 
@@ -159,7 +159,7 @@ struct temp_inst {
 
 struct temp_inst temp_inst[32];
 
-static int med4_load(struct module_data *m, FILE *f, const int start)
+static int med4_load(struct module_data *m, HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, k, y;
@@ -176,7 +176,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	
 	LOAD_INIT();
 
-	read32b(f);		/* Skip magic */
+	hread_32b(f);		/* Skip magic */
 
 	vermaj = 2;
 	vermin = 10;
@@ -184,11 +184,11 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	/*
 	 * Check if we have a MEDV chunk at the end of the file
 	 */
-	pos = ftell(f);
-	fseek(f, 0, SEEK_END);
-	if (ftell(f) > 2000) {
-		fseek(f, -1023, SEEK_CUR);
-		fread(buf, 1, 1024, f);
+	pos = htell(f);
+	hseek(f, 0, SEEK_END);
+	if (htell(f) > 2000) {
+		hseek(f, -1023, SEEK_CUR);
+		hread(buf, 1, 1024, f);
 		for (i = 0; i < 1012; i++) {
 			if (!memcmp(buf + i, "MEDV\000\000\000\004", 8)) {
 				vermaj = *(buf + i + 10);
@@ -197,17 +197,17 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			}
 		}
 	}
-	fseek(f, start + pos, SEEK_SET);
+	hseek(f, start + pos, SEEK_SET);
 
 	snprintf(mod->type, XMP_NAME_SIZE, "MED %d.%02d MED4", vermaj, vermin);
 
-	m0 = read8(f);
+	m0 = hread_8(f);
 
 	mask = masksz = 0;
 	for (i = 0; i < 8; i++, m0 <<= 1) {
 		if (m0 & 0x80) {
 			mask <<= 8;
-			mask |= read8(f);
+			mask |= hread_8(f);
 			masksz++;
 		}
 	}
@@ -227,12 +227,12 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			continue;
 
 		/* read flags */
-	   	c = read8(f);
+	   	c = hread_8(f);
 
 		/* read instrument name */
-		size = read8(f);
+		size = hread_8(f);
 		for (j = 0; j < size; j++)
-			buf[j] = read8(f);
+			buf[j] = hread_8(f);
 		buf[j] = 0;
 #ifdef MED4_DEBUG
 		printf("%02x %02x %2d [%s]\n", i, c, size, buf);
@@ -241,17 +241,17 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		temp_inst[i].volume = 0x40;
 
 		if ((c & 0x01) == 0)
-			temp_inst[i].loop_start = read16b(f) << 1;
+			temp_inst[i].loop_start = hread_16b(f) << 1;
 		if ((c & 0x02) == 0)
-			loop_len = read16b(f) << 1;
+			loop_len = hread_16b(f) << 1;
 		if ((c & 0x04) == 0)	/* ? Tanko2 (MED 3.00 demo) */
-			read8(f);
+			hread_8(f);
 		if ((c & 0x08) == 0)	/* Tim Newsham's "span" */
-			read8(f);
+			hread_8(f);
 		if ((c & 0x20) == 0)
-			temp_inst[i].volume = read8(f);
+			temp_inst[i].volume = hread_8(f);
 		if ((c & 0x40) == 0)
-			temp_inst[i].transpose = read8s(f);
+			temp_inst[i].transpose = hread_8s(f);
 
 		temp_inst[i].loop_end = temp_inst[i].loop_start + loop_len;
 
@@ -260,12 +260,12 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		num_ins++;
 	}
 
-	mod->pat = read16b(f);
-	mod->len = read16b(f);
+	mod->pat = hread_16b(f);
+	mod->len = hread_16b(f);
 #ifdef MED4_DEBUG
 	printf("pat=%x len=%x\n", mod->pat, mod->len);
 #endif
-	fread(mod->xxo, 1, mod->len, f);
+	hread(mod->xxo, 1, mod->len, f);
 
 	/* From MED V3.00 docs:
 	 *
@@ -274,17 +274,17 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	 * tempos 1 - 10 are Tracker-compatible (but obsolete, because
 	 * secondary tempo can be used now).
 	 */
-	tempo = read16b(f);
+	tempo = hread_16b(f);
 	if (tempo <= 10) {
 		mod->spd = tempo;
 		mod->bpm = 125;
 	} else {
 		mod->bpm = 125 * tempo / 33;
 	}
-        transp = read8s(f);
-        read8s(f);
-        flags = read8s(f);
-	mod->spd = read8(f);
+        transp = hread_8s(f);
+        hread_8s(f);
+        flags = hread_8s(f);
+	mod->spd = hread_8(f);
 
 	if (~flags & 0x20)	/* sliding */
 		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
@@ -296,10 +296,10 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	if (vermaj == 2)	/* Happy.med has tempo 5 but loads as 6 */
 		mod->spd = flags & 0x20 ? 5 : 6;
 
-	fseek(f, 20, SEEK_CUR);
+	hseek(f, 20, SEEK_CUR);
 
-	fread(trkvol, 1, 16, f);
-	read8(f);		/* master vol */
+	hread(trkvol, 1, 16, f);
+	hread_8(f);		/* master vol */
 
 	MODULE_INFO();
 
@@ -308,9 +308,9 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	for (i = 0; i < 32; i++)
 		temp_inst[i].transpose += transp;
 
-	read8(f);
-	mod->chn = read8(f);;
-	fseek(f, -2, SEEK_CUR);
+	hread_8(f);
+	mod->chn = hread_8(f);;
+	hseek(f, -2, SEEK_CUR);
 	mod->trk = mod->chn * mod->pat;
 
 	PATTERN_INIT();
@@ -326,13 +326,13 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 #ifdef MED4_DEBUG
 		printf("\n===== PATTERN %d =====\n", i);
-		printf("offset = %lx\n", ftell(f));
+		printf("offset = %lx\n", htell(f));
 #endif
 
-		size = read8(f);	/* pattern control block */
-		chn = read8(f);
-		rows = (int)read8(f) + 1;
-		plen = read16b(f);
+		size = hread_8(f);	/* pattern control block */
+		chn = hread_8(f);
+		rows = (int)hread_8(f) + 1;
+		plen = hread_16b(f);
 
 #ifdef MED4_DEBUG
 		printf("size = %02x\n", size);
@@ -343,7 +343,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		/* read control byte */
 		for (j = 0; j < 4; j++) {
 			if (rows > j * 64)
-				ctl[j] = read8(f);
+				ctl[j] = hread_8(f);
 			else
 				break;
 #ifdef MED4_DEBUG
@@ -369,9 +369,9 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 				int c = ctl[y / 2];
 				int s = 4 * (y % 2);
 				linemask[y] = c & (0x80 >> s) ? ~0 :
-					      c & (0x40 >> s) ? 0 : read32b(f);
+					      c & (0x40 >> s) ? 0 : hread_32b(f);
 				fxmask[y]   = c & (0x20 >> s) ? ~0 :
-					      c & (0x10 >> s) ? 0 : read32b(f);
+					      c & (0x10 >> s) ? 0 : hread_32b(f);
 				num_masks++;
 #ifdef MED4_DEBUG
 				printf("linemask[%d] = %08x\n", y, linemask[y]);
@@ -384,7 +384,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 
 		/* check block end */
-		if (read8(f) != 0xff) {
+		if (hread_8(f) != 0xff) {
 			D_(D_CRIT "error: module is corrupted");
 			return -1;
 		}
@@ -454,19 +454,19 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 	/*
 	 * Load samples
 	 */
-	mask = read32b(f);
-	read16b(f);
+	mask = hread_32b(f);
+	hread_16b(f);
 
 #ifdef MED4_DEBUG
 	printf("instrument mask: %08x\n", mask);
 #endif
 
-	read16b(f);	/* ?!? */
+	hread_16b(f);	/* ?!? */
 
 	mask <<= 1;	/* no instrument #0 */
 
 	/* obtain number of samples */
-	pos = ftell(f);
+	pos = htell(f);
 	num_smp = 0;
 	{
 		int _len, _type, _mask = mask;
@@ -475,23 +475,23 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 			if (~_mask & 0x80000000)
 				continue;
-			read16b(f);
-			_len = read16b(f);
-			_type = (int16)read16b(f);
+			hread_16b(f);
+			_len = hread_16b(f);
+			_type = (int16)hread_16b(f);
 
-			_pos = ftell(f);
+			_pos = htell(f);
 
 			if (_type == 0 || _type == -2) {
 				num_smp++;
 			} else if (_type == -1) {
-				fseek(f, 20, SEEK_CUR);
-				num_smp += read16b(f);
+				hseek(f, 20, SEEK_CUR);
+				num_smp += hread_16b(f);
 			}
 
-			fseek(f, _pos + _len, SEEK_SET);
+			hseek(f, _pos + _len, SEEK_SET);
 		}
 	}
-	fseek(f, pos, SEEK_SET);
+	hseek(f, pos, SEEK_SET);
 
 	mod->smp = num_smp;
 
@@ -507,9 +507,9 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		if (~mask & 0x80000000)
 			continue;
 
-		x1 = read16b(f);
-		length = read16b(f);
-		type = (int16)read16b(f);	/* instrument type */
+		x1 = hread_16b(f);
+		length = hread_16b(f);
+		type = (int16)hread_16b(f);	/* instrument type */
 
 		strncpy((char *)mod->xxi[i].name, temp_inst[i].name, 32);
 
@@ -521,25 +521,25 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 		if (type == -2) {			/* Hybrid */
 			int length, type;
-			int pos = ftell(f);
+			int pos = htell(f);
 
-			read32b(f);	/* ? - MSH 00 */
-			read16b(f);	/* ? - ffff */
-			read16b(f);	/* ? - 0000 */
-			read16b(f);	/* ? - 0000 */
-			synth.rep = read16b(f);		/* ? */
-			synth.replen = read16b(f);	/* ? */
-			synth.voltbllen = read16b(f);
-			synth.wftbllen = read16b(f);
-			synth.volspeed = read8(f);
-			synth.wfspeed = read8(f);
-			synth.wforms = read16b(f);
-			fread(synth.voltbl, 1, synth.voltbllen, f);;
-			fread(synth.wftbl, 1, synth.wftbllen, f);;
+			hread_32b(f);	/* ? - MSH 00 */
+			hread_16b(f);	/* ? - ffff */
+			hread_16b(f);	/* ? - 0000 */
+			hread_16b(f);	/* ? - 0000 */
+			synth.rep = hread_16b(f);		/* ? */
+			synth.replen = hread_16b(f);	/* ? */
+			synth.voltbllen = hread_16b(f);
+			synth.wftbllen = hread_16b(f);
+			synth.volspeed = hread_8(f);
+			synth.wfspeed = hread_8(f);
+			synth.wforms = hread_16b(f);
+			hread(synth.voltbl, 1, synth.voltbllen, f);;
+			hread(synth.wftbl, 1, synth.wftbllen, f);;
 
-			fseek(f,  pos + read32b(f), SEEK_SET);
-			length = read32b(f);
-			type = read16b(f);
+			hseek(f,  pos + hread_32b(f), SEEK_SET);
+			length = hread_32b(f);
+			type = hread_16b(f);
 
 			mod->xxi[i].extra = malloc(sizeof (struct med_extras));
 			if (mod->xxi[i].extra == NULL)
@@ -583,23 +583,23 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		}
 
 		if (type == -1) {		/* Synthetic */
-			int pos = ftell(f);
+			int pos = htell(f);
 
-			read32b(f);	/* ? - MSH 00 */
-			read16b(f);	/* ? - ffff */
-			read16b(f);	/* ? - 0000 */
-			read16b(f);	/* ? - 0000 */
-			synth.rep = read16b(f);		/* ? */
-			synth.replen = read16b(f);	/* ? */
-			synth.voltbllen = read16b(f);
-			synth.wftbllen = read16b(f);
-			synth.volspeed = read8(f);
-			synth.wfspeed = read8(f);
-			synth.wforms = read16b(f);
-			fread(synth.voltbl, 1, synth.voltbllen, f);;
-			fread(synth.wftbl, 1, synth.wftbllen, f);;
+			hread_32b(f);	/* ? - MSH 00 */
+			hread_16b(f);	/* ? - ffff */
+			hread_16b(f);	/* ? - 0000 */
+			hread_16b(f);	/* ? - 0000 */
+			synth.rep = hread_16b(f);		/* ? */
+			synth.replen = hread_16b(f);	/* ? */
+			synth.voltbllen = hread_16b(f);
+			synth.wftbllen = hread_16b(f);
+			synth.volspeed = hread_8(f);
+			synth.wfspeed = hread_8(f);
+			synth.wforms = hread_16b(f);
+			hread(synth.voltbl, 1, synth.voltbllen, f);;
+			hread(synth.wftbl, 1, synth.wftbllen, f);;
 			for (j = 0; j < synth.wforms; j++)
-				synth.wf[j] = read32b(f);
+				synth.wf[j] = hread_32b(f);
 
 			D_(D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+03d",
 					synth.volspeed, synth.wfspeed,
@@ -631,10 +631,10 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 				mod->xxi[i].sub[j].sid = smp_idx;
 				mod->xxi[i].sub[j].fin = 0 /*exp_smp.finetune*/;
 
-				fseek(f, pos + synth.wf[j], SEEK_SET);
-/*printf("pos=%lx tell=%lx ", pos, ftell(f));*/
+				hseek(f, pos + synth.wf[j], SEEK_SET);
+/*printf("pos=%lx tell=%lx ", pos, htell(f));*/
 
-				mod->xxs[smp_idx].len = read16b(f) * 2;
+				mod->xxs[smp_idx].len = hread_16b(f) * 2;
 /*printf("idx=%x len=%x\n", synth.wf[j], mod->xxs[smp_idx].len);*/
 				mod->xxs[smp_idx].lps = 0;
 				mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
@@ -652,12 +652,12 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			m->med_wav_table[i] = calloc(1, synth.wftbllen);
 			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
 
-			fseek(f, pos + length, SEEK_SET);
+			hseek(f, pos + length, SEEK_SET);
 			continue;
 		}
 
 		if (type != 0) {
-			fseek(f, length, SEEK_CUR);
+			hseek(f, length, SEEK_CUR);
 			continue;
 		}
 
@@ -688,30 +688,30 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 		smp_idx++;
 	}
 
-	read16b(f);	/* unknown */
+	hread_16b(f);	/* unknown */
 
 	/* IFF-like section */
-	while (!feof(f)) {
+	while (!heof(f)) {
 		int32 id, size, s2, pos, ver;
 
-		if ((id = read32b(f)) < 0)
+		if ((id = hread_32b(f)) < 0)
 			break;
 
-		if ((size = read32b(f)) < 0)
+		if ((size = hread_32b(f)) < 0)
 			break;
 
-		pos = ftell(f);
+		pos = htell(f);
 
 		switch (id) {
 		case MAGIC4('M','E','D','V'):
-			ver = read32b(f);
+			ver = hread_32b(f);
 			D_(D_INFO "MED Version: %d.%0d\n",
 					(ver & 0xff00) >> 8, ver & 0xff);
 			break;
 		case MAGIC4('A','N','N','O'):
 			/* annotation */
 			s2 = size < 1023 ? size : 1023;
-			fread(buf, 1, s2, f);
+			hread(buf, 1, s2, f);
 			buf[s2] = 0;
 			D_(D_INFO "Annotation: %s\n", buf);
 			break;
@@ -720,7 +720,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			break;
 		}
 
-		fseek(f, pos + size, SEEK_SET);
+		hseek(f, pos + size, SEEK_SET);
 	}
 
 	return 0;

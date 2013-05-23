@@ -51,8 +51,8 @@ struct ims_header {
 };
 
 
-static int ims_test (FILE *, char *, const int);
-static int ims_load (struct module_data *, FILE *, const int);
+static int ims_test (HANDLE *, char *, const int);
+static int ims_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader ims_loader = {
     "Images Music System (IMS)",
@@ -60,7 +60,7 @@ const struct format_loader ims_loader = {
     ims_load
 };
 
-static int ims_test(FILE *f, char *t, const int start)
+static int ims_test(HANDLE *f, char *t, const int start)
 {
     int i;
     int smp_size, pat;
@@ -68,18 +68,18 @@ static int ims_test(FILE *f, char *t, const int start)
 
     smp_size = 0;
 
-    fread(&ih.title, 20, 1, f);
+    hread(&ih.title, 20, 1, f);
 
     for (i = 0; i < 31; i++) {
-	if (fread(&ih.ins[i].name, 1, 20, f) < 20)
+	if (hread(&ih.ins[i].name, 1, 20, f) < 20)
 	    return -1;
 
-	ih.ins[i].finetune = (int16)read16b(f);
-	ih.ins[i].size = read16b(f);
-	ih.ins[i].unknown = read8(f);
-	ih.ins[i].volume = read8(f);
-	ih.ins[i].loop_start = read16b(f);
-	ih.ins[i].loop_size = read16b(f);
+	ih.ins[i].finetune = (int16)hread_16b(f);
+	ih.ins[i].size = hread_16b(f);
+	ih.ins[i].unknown = hread_8(f);
+	ih.ins[i].volume = hread_8(f);
+	ih.ins[i].loop_start = hread_16b(f);
+	ih.ins[i].loop_size = hread_16b(f);
 
 	smp_size += ih.ins[i].size * 2;
 
@@ -102,10 +102,10 @@ static int ims_test(FILE *f, char *t, const int start)
     if (smp_size < 8)
 	return -1;
 
-    ih.len = read8(f);
-    ih.zero = read8(f);
-    fread (&ih.orders, 128, 1, f);
-    fread (&ih.magic, 4, 1, f);
+    ih.len = hread_8(f);
+    ih.zero = hread_8(f);
+    hread (&ih.orders, 128, 1, f);
+    hread (&ih.magic, 4, 1, f);
   
     if (ih.zero > 1)		/* not sure what this is */
 	return -1;
@@ -124,14 +124,14 @@ static int ims_test(FILE *f, char *t, const int start)
     if (pat > 0x7f || ih.len == 0 || ih.len > 0x7f)
 	return -1;
    
-    fseek(f, start + 0, SEEK_SET);
+    hseek(f, start + 0, SEEK_SET);
     read_title(f, t, 20);
 
     return 0;
 }
 
 
-static int ims_load(struct module_data *m, FILE *f, const int start)
+static int ims_load(struct module_data *m, HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -147,24 +147,24 @@ static int ims_load(struct module_data *m, FILE *f, const int start)
     mod->smp = mod->ins;
     smp_size = 0;
 
-    fread (&ih.title, 20, 1, f);
+    hread (&ih.title, 20, 1, f);
 
     for (i = 0; i < 31; i++) {
-	fread (&ih.ins[i].name, 20, 1, f);
-	ih.ins[i].finetune = (int16)read16b(f);
-	ih.ins[i].size = read16b(f);
-	ih.ins[i].unknown = read8(f);
-	ih.ins[i].volume = read8(f);
-	ih.ins[i].loop_start = read16b(f);
-	ih.ins[i].loop_size = read16b(f);
+	hread (&ih.ins[i].name, 20, 1, f);
+	ih.ins[i].finetune = (int16)hread_16b(f);
+	ih.ins[i].size = hread_16b(f);
+	ih.ins[i].unknown = hread_8(f);
+	ih.ins[i].volume = hread_8(f);
+	ih.ins[i].loop_start = hread_16b(f);
+	ih.ins[i].loop_size = hread_16b(f);
 
 	smp_size += ih.ins[i].size * 2;
     }
 
-    ih.len = read8(f);
-    ih.zero = read8(f);
-    fread (&ih.orders, 128, 1, f);
-    fread (&ih.magic, 4, 1, f);
+    ih.len = hread_8(f);
+    ih.zero = hread_8(f);
+    hread (&ih.orders, 128, 1, f);
+    hread (&ih.magic, 4, 1, f);
   
     mod->len = ih.len;
     memcpy (mod->xxo, ih.orders, mod->len);
@@ -214,7 +214,7 @@ static int ims_load(struct module_data *m, FILE *f, const int start)
 	TRACK_ALLOC(i);
 	for (j = 0; j < 0x100; j++) {
 	    event = &EVENT (i, j & 0x3, j >> 2);
-	    fread (ims_event, 1, 3, f);
+	    hread (ims_event, 1, 3, f);
 
 	    /* Event format:
 	     *

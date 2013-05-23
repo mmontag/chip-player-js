@@ -14,8 +14,8 @@
  * Sound Tracker written by Jarek Burczynski (Bzyk), 1990
  */
 
-static int stc_test(FILE *, char *, const int);
-static int stc_load(struct module_data *, FILE *, const int);
+static int stc_test(HANDLE *, char *, const int);
+static int stc_load(struct module_data *, HANDLE *, const int);
 
 
 const struct format_loader stc_loader = {
@@ -36,56 +36,56 @@ struct stc_pat {
 	int ch[3];
 };
 
-static int stc_test(FILE * f, char *t, const int start)
+static int stc_test(HANDLE * f, char *t, const int start)
 {
 	int pos_ptr, orn_ptr, pat_ptr;
 	int i, len, max_pat;
 
-	fseek(f, start, SEEK_SET);
+	hseek(f, start, SEEK_SET);
 
-	if (read8(f) > 0x20)			/* Check tempo */
+	if (hread_8(f) > 0x20)			/* Check tempo */
 		return -1;
 
-	pos_ptr = read16l(f);			/* Positions pointer */
-	orn_ptr = read16l(f);			/* Ornaments pointer */
-	pat_ptr = read16l(f);			/* Patterns pointer */
+	pos_ptr = hread_16l(f);			/* Positions pointer */
+	orn_ptr = hread_16l(f);			/* Ornaments pointer */
+	pat_ptr = hread_16l(f);			/* Patterns pointer */
 
 	if (pos_ptr < 138 || orn_ptr < 138 || pat_ptr < 138)
 		return -1;
 
-	fseek(f, start + pos_ptr, SEEK_SET);
-	len = read8(f) + 1;
+	hseek(f, start + pos_ptr, SEEK_SET);
+	len = hread_8(f) + 1;
 
 	for (max_pat = i = 0; i < len; i++) {
-		int pat = read8(f);
+		int pat = hread_8(f);
 		if (pat > MAX_PAT)		/* Check orders */
 			return -1;
 		if (pat > max_pat)
 			max_pat = pat;
-		read8(f);
+		hread_8(f);
 	}
 
-	fseek(f, pat_ptr, SEEK_SET);
+	hseek(f, pat_ptr, SEEK_SET);
 
 	for (i = 0; i < max_pat; i++) {
-		int num = read8(f);		/* Check track pointers */
+		int num = hread_8(f);		/* Check track pointers */
 		if (num != (i + 1))
 			return -1;
-		read16l(f);
-		read16l(f);
-		read16l(f);
+		hread_16l(f);
+		hread_16l(f);
+		hread_16l(f);
 	}
 
-	if (read8(f) != 0xff)
+	if (hread_8(f) != 0xff)
 		return -1;
 
-	fseek(f, start + 7, SEEK_SET);
+	hseek(f, start + 7, SEEK_SET);
 	read_title(f, t, 18);
 
 	return 0;
 }
 
-static int stc_load(struct module_data *m, FILE * f, const int start)
+static int stc_load(struct module_data *m, HANDLE * f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event /*, *noise*/;
@@ -100,25 +100,25 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 
 	LOAD_INIT();
 
-	mod->spd = read8(f);		/* Speed */
-	pos_ptr = read16l(f);		/* Positions pointer */
-	orn_ptr = read16l(f);		/* Ornaments pointer */
-	pat_ptr = read16l(f);		/* Patterns pointer */
+	mod->spd = hread_8(f);		/* Speed */
+	pos_ptr = hread_16l(f);		/* Positions pointer */
+	orn_ptr = hread_16l(f);		/* Ornaments pointer */
+	pat_ptr = hread_16l(f);		/* Patterns pointer */
 
-	fread(buf, 18, 1, f);		/* Title */
+	hread(buf, 18, 1, f);		/* Title */
 	copy_adjust(mod->name, (uint8 *)buf, 18);
 	set_type(m, "ZX Spectrum Sound Tracker");
 
-	read16l(f);			/* Size */
+	hread_16l(f);			/* Size */
 
 	/* Read orders */
 
-	fseek(f, pos_ptr, SEEK_SET);
-	mod->len = read8(f) + 1;
+	hseek(f, pos_ptr, SEEK_SET);
+	mod->len = hread_8(f) + 1;
 
 	for (num = i = 0; i < mod->len; i++) {
-		stc_ord[i].pattern = read8(f);
-		stc_ord[i].height = read8s(f);
+		stc_ord[i].pattern = hread_8(f);
+		stc_ord[i].height = hread_8s(f);
 		//printf("%d %d -- ", stc_ord[i].pattern, stc_ord[i].height);
 
 		for (flag = j = 0; j < i; j++) {
@@ -149,16 +149,16 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 
 	PATTERN_INIT();
 
-	fseek(f, pat_ptr, SEEK_SET);
+	hseek(f, pat_ptr, SEEK_SET);
 	decoded = calloc(mod->pat, sizeof(int));
 	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < MAX_PAT; i++) {
-		if (read8(f) == 0xff)
+		if (hread_8(f) == 0xff)
 			break;
-		stc_pat[i].ch[0] = read16l(f);
-		stc_pat[i].ch[1] = read16l(f);
-		stc_pat[i].ch[2] = read16l(f);
+		stc_pat[i].ch[0] = hread_16l(f);
+		stc_pat[i].ch[1] = hread_16l(f);
+		stc_pat[i].ch[2] = hread_16l(f);
 	}
 
 	for (i = 0; i < mod->len; i++) {		/* pattern */
@@ -180,11 +180,11 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 			int x;
 			int rowinc = 0;
 	
-			fseek(f, stc_pat[src].ch[j], SEEK_SET);
+			hseek(f, stc_pat[src].ch[j], SEEK_SET);
 
 			do {
 				for (;;) {
-					x = read8(f);
+					x = hread_8(f);
 
 					if (x == 0xff)
 						break;
@@ -221,9 +221,9 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 						/* envelope */
 						event->fxt = FX_SYNTH_0 +
 							x - 0x80;      /* R13 */
-						event->fxp = read8(f); /* R11 */
+						event->fxp = hread_8(f); /* R11 */
 						event->f2t = FX_SYNTH_1;
-						event->f2p = read8(f); /* R12 */
+						event->f2p = hread_8(f); /* R12 */
 					} else {
 						rowinc = x - 0xa1;
 					}
@@ -240,7 +240,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 
 	INSTRUMENT_INIT();
 
-	fseek(f, 27, SEEK_SET);
+	hseek(f, 27, SEEK_SET);
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 	for (i = 0; i < mod->ins; i++) {
@@ -254,7 +254,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 		mod->xxi[i].sub[0].xpo = -1;
 		mod->xxi[i].sub[0].sid = i;
 
-		fread(buf, 1, 99, f);
+		hread(buf, 1, 99, f);
 
 		if (buf[97] == 0) {
 			ss.loop = 32;
@@ -325,7 +325,7 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 	
 	/* Read ornaments */
 
-	fseek(f, orn_ptr, SEEK_SET);
+	hseek(f, orn_ptr, SEEK_SET);
 	m->extra = calloc(1, sizeof (struct spectrum_extra));
 	se = m->extra;
 
@@ -334,14 +334,14 @@ static int stc_load(struct module_data *m, FILE * f, const int start)
 		int index;
 		struct spectrum_ornament *so;
 
-		index = read8(f);		
+		index = hread_8(f);		
 
 		so = &se->ornament[index];
 		so->length = 32;
 		so->loop = 31;
 
 		for (j = 0; j < 32; j++) {
-			so->val[j] = read8s(f);
+			so->val[j] = hread_8s(f);
 		}
 	}
 

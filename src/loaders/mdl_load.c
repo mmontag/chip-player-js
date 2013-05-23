@@ -20,8 +20,8 @@
 #define MAGIC_DMDL	MAGIC4('D','M','D','L')
 
 
-static int mdl_test (FILE *, char *, const int);
-static int mdl_load (struct module_data *, FILE *, const int);
+static int mdl_test (HANDLE *, char *, const int);
+static int mdl_load (struct module_data *, HANDLE *, const int);
 
 const struct format_loader mdl_loader = {
     "Digitrakker (MDL)",
@@ -29,18 +29,18 @@ const struct format_loader mdl_loader = {
     mdl_load
 };
 
-static int mdl_test(FILE *f, char *t, const int start)
+static int mdl_test(HANDLE *f, char *t, const int start)
 {
     uint16 id;
 
-    if (read32b(f) != MAGIC_DMDL)
+    if (hread_32b(f) != MAGIC_DMDL)
 	return -1;
 
-    read8(f);			/* version */
-    id = read16b(f);
+    hread_8(f);			/* version */
+    id = hread_16b(f);
 
     if (id == 0x494e) {		/* IN */
-	read32b(f);
+	hread_32b(f);
 	read_title(f, t, 32);
     } else {
 	read_title(f, t, 0);
@@ -292,41 +292,41 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
  * IFF chunk handlers
  */
 
-static void get_chunk_in(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_in(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i;
 
-    fread(mod->name, 1, 32, f);
-    fseek(f, 20, SEEK_CUR);
+    hread(mod->name, 1, 32, f);
+    hseek(f, 20, SEEK_CUR);
 
-    mod->len = read16l(f);
-    mod->rst = read16l(f);
-    read8(f);			/* gvol */
-    mod->spd = read8(f);
-    mod->bpm = read8(f);
+    mod->len = hread_16l(f);
+    mod->rst = hread_16l(f);
+    hread_8(f);			/* gvol */
+    mod->spd = hread_8(f);
+    mod->bpm = hread_8(f);
 
     for (i = 0; i < 32; i++) {
-	uint8 chinfo = read8(f);
+	uint8 chinfo = hread_8(f);
 	if (chinfo & 0x80)
 	    break;
 	mod->xxc[i].pan = chinfo << 1;
     }
     mod->chn = i;
-    fseek(f, 32 - i - 1, SEEK_CUR);
+    hseek(f, 32 - i - 1, SEEK_CUR);
 
-    fread(mod->xxo, 1, mod->len, f);
+    hread(mod->xxo, 1, mod->len, f);
 
     MODULE_INFO();
 }
 
-static void get_chunk_pa(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_pa(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, chn;
     int x;
 
-    mod->pat = read8(f);
+    mod->pat = hread_8(f);
     mod->trk = mod->pat * mod->chn + 1;	/* Max */
 
     PATTERN_INIT();
@@ -334,25 +334,25 @@ static void get_chunk_pa(struct module_data *m, int size, FILE *f, void *parm)
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
-	chn = read8(f);
-	mod->xxp[i]->rows = (int)read8(f) + 1;
+	chn = hread_8(f);
+	mod->xxp[i]->rows = (int)hread_8(f) + 1;
 
-	fseek(f, 16, SEEK_CUR);		/* Skip pattern name */
+	hseek(f, 16, SEEK_CUR);		/* Skip pattern name */
 	for (j = 0; j < chn; j++) {
-	    x = read16l(f);
+	    x = hread_16l(f);
 	    if (j < mod->chn)
 		mod->xxp[i]->index[j] = x;
 	}
     }
 }
 
-static void get_chunk_p0(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_p0(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
     uint16 x16;
 
-    mod->pat = read8(f);
+    mod->pat = hread_8(f);
     mod->trk = mod->pat * mod->chn + 1;	/* Max */
 
     PATTERN_INIT();
@@ -363,20 +363,20 @@ static void get_chunk_p0(struct module_data *m, int size, FILE *f, void *parm)
 	mod->xxp[i]->rows = 64;
 
 	for (j = 0; j < 32; j++) {
-	    x16 = read16l(f);
+	    x16 = hread_16l(f);
 	    if (j < mod->chn)
 		mod->xxp[i]->index[j] = x16;
 	}
     }
 }
 
-static void get_chunk_tr(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_tr(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, k, row, len;
     struct xmp_track *track;
 
-    mod->trk = read16l(f) + 1;
+    mod->trk = hread_16l(f) + 1;
     mod->xxt = realloc(mod->xxt, sizeof (struct xmp_track *) * mod->trk);
 
     D_(D_INFO "Stored tracks: %d", mod->trk);
@@ -391,13 +391,13 @@ static void get_chunk_tr(struct module_data *m, int size, FILE *f, void *parm)
 
     for (i = 1; i < mod->trk; i++) {
 	/* Length of the track in bytes */
-	len = read16l(f);
+	len = hread_16l(f);
 
 	memset (track, 0, sizeof (struct xmp_track) +
             sizeof (struct xmp_event) * 256);
 
 	for (row = 0; len;) {
-	    j = read8(f);
+	    j = hread_8(f);
 	    len--;
 	    switch (j & 0x03) {
 	    case 0:
@@ -415,23 +415,23 @@ static void get_chunk_tr(struct module_data *m, int size, FILE *f, void *parm)
 		break;
 	    case 3:
 		if (j & MDL_NOTE_FOLLOWS) {
-		    uint8 b = read8(f);
+		    uint8 b = hread_8(f);
 		    len--;
 		    track->event[row].note = b == 0xff ? XMP_KEY_OFF : b + 12;
 		}
 		if (j & MDL_INSTRUMENT_FOLLOWS)
-		    len--, track->event[row].ins = read8(f);
+		    len--, track->event[row].ins = hread_8(f);
 		if (j & MDL_VOLUME_FOLLOWS)
-		    len--, track->event[row].vol = read8(f);
+		    len--, track->event[row].vol = hread_8(f);
 		if (j & MDL_EFFECT_FOLLOWS) {
-		    len--, k = read8(f);
+		    len--, k = hread_8(f);
 		    track->event[row].fxt = LSN (k);
 		    track->event[row].f2t = MSN (k);
 		}
 		if (j & MDL_PARAMETER1_FOLLOWS)
-		    len--, track->event[row].fxp = read8(f);
+		    len--, track->event[row].fxp = hread_8(f);
 		if (j & MDL_PARAMETER2_FOLLOWS)
-		    len--, track->event[row].f2p = read8(f);
+		    len--, track->event[row].f2p = hread_8(f);
 		break;
 	    }
 
@@ -457,7 +457,7 @@ static void get_chunk_tr(struct module_data *m, int size, FILE *f, void *parm)
     free(track);
 }
 
-static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_ii(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -465,15 +465,15 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
     int map, last_map;
     char buf[40];
 
-    mod->ins = read8(f);
+    mod->ins = hread_8(f);
     D_(D_INFO "Instruments: %d", mod->ins);
 
     INSTRUMENT_INIT();
 
     for (i = 0; i < mod->ins; i++) {
-	data->i_index[i] = read8(f);
-	mod->xxi[i].nsm = read8(f);
-	fread(buf, 1, 32, f);
+	data->i_index[i] = hread_8(f);
+	mod->xxi[i].nsm = hread_8(f);
+	hread(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);
 	strncpy((char *)mod->xxi[i].name, buf, 32);
@@ -489,40 +489,40 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
 	for (last_map = j = 0; j < mod->xxi[i].nsm; j++) {
 	    int x;
 
-	    mod->xxi[i].sub[j].sid = read8(f);
-	    map = read8(f) + 12;
-	    mod->xxi[i].sub[j].vol = read8(f);
+	    mod->xxi[i].sub[j].sid = hread_8(f);
+	    map = hread_8(f) + 12;
+	    mod->xxi[i].sub[j].vol = hread_8(f);
 	    for (k = last_map; k <= map; k++) {
 		if (k < XMP_MAX_KEYS)
 		    mod->xxi[i].map[k].ins = j;
 	    }
 	    last_map = map + 1;
 
-	    x = read8(f);		/* Volume envelope */
+	    x = hread_8(f);		/* Volume envelope */
 	    if (j == 0)
 		data->v_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
 		mod->xxi[i].sub[j].vol = 0xff;
 
-	    mod->xxi[i].sub[j].pan = read8(f) << 1;
+	    mod->xxi[i].sub[j].pan = hread_8(f) << 1;
 
-	    x = read8(f);		/* Pan envelope */
+	    x = hread_8(f);		/* Pan envelope */
 	    if (j == 0)
 		data->p_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
 		mod->xxi[i].sub[j].pan = 0x80;
 
-	    x = read16l(f);
+	    x = hread_16l(f);
 	    if (j == 0)
 		mod->xxi[i].rls = x;
 
-	    mod->xxi[i].sub[j].vra = read8(f);	/* vibrato rate */
-	    mod->xxi[i].sub[j].vde = read8(f);	/* vibrato delay */
-	    mod->xxi[i].sub[j].vsw = read8(f);	/* vibrato sweep */
-	    mod->xxi[i].sub[j].vwf = read8(f);	/* vibrato waveform */
-	    read8(f);			/* Reserved */
+	    mod->xxi[i].sub[j].vra = hread_8(f);	/* vibrato rate */
+	    mod->xxi[i].sub[j].vde = hread_8(f);	/* vibrato delay */
+	    mod->xxi[i].sub[j].vsw = hread_8(f);	/* vibrato sweep */
+	    mod->xxi[i].sub[j].vwf = hread_8(f);	/* vibrato waveform */
+	    hread_8(f);			/* Reserved */
 
-	    x = read8(f);		/* Pitch envelope */
+	    x = hread_8(f);		/* Pitch envelope */
 	    if (j == 0)
 		data->f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
@@ -533,7 +533,7 @@ static void get_chunk_ii(struct module_data *m, int size, FILE *f, void *parm)
     }
 }
 
-static void get_chunk_is(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_is(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -541,33 +541,33 @@ static void get_chunk_is(struct module_data *m, int size, FILE *f, void *parm)
     char buf[64];
     uint8 x;
 
-    mod->smp = read8(f);
+    mod->smp = hread_8(f);
     mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp);
     data->packinfo = calloc(sizeof (int), mod->smp);
 
     D_(D_INFO "Sample infos: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	data->s_index[i] = read8(f);		/* Sample number */
-	fread(buf, 1, 32, f);
+	data->s_index[i] = hread_8(f);		/* Sample number */
+	hread(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);
 
-	fseek(f, 8, SEEK_CUR);		/* Sample filename */
+	hseek(f, 8, SEEK_CUR);		/* Sample filename */
 
-	data->c2spd[i] = read32l(f);
+	data->c2spd[i] = hread_32l(f);
 
-	mod->xxs[i].len = read32l(f);
-	mod->xxs[i].lps = read32l(f);
-	mod->xxs[i].lpe = read32l(f);
+	mod->xxs[i].len = hread_32l(f);
+	mod->xxs[i].lps = hread_32l(f);
+	mod->xxs[i].lpe = hread_32l(f);
 
 	mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	mod->xxs[i].lpe = mod->xxs[i].lps + mod->xxs[i].lpe;
 	if (mod->xxs[i].lpe > 0)
 	    mod->xxs[i].lpe--;
 
-	read8(f);			/* Volume in DMDL 0.0 */
-	x = read8(f);
+	hread_8(f);			/* Volume in DMDL 0.0 */
+	x = hread_8(f);
 	if (x & 0x01) {
 	    mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
 	    mod->xxs[i].len >>= 1;
@@ -588,7 +588,7 @@ static void get_chunk_is(struct module_data *m, int size, FILE *f, void *parm)
     }
 }
 
-static void get_chunk_i0(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_i0(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -596,7 +596,7 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f, void *parm)
     char buf[64];
     uint8 x;
 
-    mod->ins = mod->smp = read8(f);
+    mod->ins = mod->smp = hread_8(f);
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
@@ -607,26 +607,26 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f, void *parm)
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	mod->xxi[i].sub[0].sid = data->i_index[i] = data->s_index[i] = read8(f);
+	mod->xxi[i].sub[0].sid = data->i_index[i] = data->s_index[i] = hread_8(f);
 
-	fread(buf, 1, 32, f);
+	hread(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);			/* Sample name */
-	fseek(f, 8, SEEK_CUR);		/* Sample filename */
+	hseek(f, 8, SEEK_CUR);		/* Sample filename */
 
-	data->c2spd[i] = read16l(f);
+	data->c2spd[i] = hread_16l(f);
 
-	mod->xxs[i].len = read32l(f);
-	mod->xxs[i].lps = read32l(f);
-	mod->xxs[i].lpe = read32l(f);
+	mod->xxs[i].len = hread_32l(f);
+	mod->xxs[i].lps = hread_32l(f);
+	mod->xxs[i].lpe = hread_32l(f);
 
 	mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	mod->xxs[i].lpe = mod->xxs[i].lps + mod->xxs[i].lpe;
 
-	mod->xxi[i].sub[0].vol = read8(f);	/* Volume */
+	mod->xxi[i].sub[0].vol = hread_8(f);	/* Volume */
 	mod->xxi[i].sub[0].pan = 0x80;
 
-	x = read8(f);
+	x = hread_8(f);
 	if (x & 0x01) {
 	    mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
 	    mod->xxs[i].len >>= 1;
@@ -643,7 +643,7 @@ static void get_chunk_i0(struct module_data *m, int size, FILE *f, void *parm)
     }
 }
 
-static void get_chunk_sa(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_sa(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -658,19 +658,19 @@ static void get_chunk_sa(struct module_data *m, int size, FILE *f, void *parm)
 
 	switch (data->packinfo[i]) {
 	case 0:
-	    fread(smpbuf, 1, mod->xxs[i].len, f);
+	    hread(smpbuf, 1, mod->xxs[i].len, f);
 	    break;
 	case 1: 
-	    len = read32l(f);
+	    len = hread_32l(f);
 	    buf = malloc(len + 4);
-	    fread(buf, 1, len, f);
+	    hread(buf, 1, len, f);
 	    unpack_sample8(smpbuf, buf, len, mod->xxs[i].len);
 	    free(buf);
 	    break;
 	case 2:
-	    len = read32l(f);
+	    len = hread_32l(f);
 	    buf = malloc(len + 4);
-	    fread(buf, 1, len, f);
+	    hread(buf, 1, len, f);
 	    unpack_sample16(smpbuf, buf, len, mod->xxs[i].len);
 	    free(buf);
 	    break;
@@ -684,12 +684,12 @@ static void get_chunk_sa(struct module_data *m, int size, FILE *f, void *parm)
     free(data->packinfo);
 }
 
-static void get_chunk_ve(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_ve(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct local_data *data = (struct local_data *)parm;
     int i;
 
-    if ((data->v_envnum = read8(f)) == 0)
+    if ((data->v_envnum = hread_8(f)) == 0)
 	return;
 
     D_(D_INFO "Vol envelopes: %d", data->v_envnum);
@@ -697,19 +697,19 @@ static void get_chunk_ve(struct module_data *m, int size, FILE *f, void *parm)
     data->v_env = calloc(data->v_envnum, sizeof (struct mdl_envelope));
 
     for (i = 0; i < data->v_envnum; i++) {
-	data->v_env[i].num = read8(f);
-	fread(data->v_env[i].data, 1, 30, f);
-	data->v_env[i].sus = read8(f);
-	data->v_env[i].loop = read8(f);
+	data->v_env[i].num = hread_8(f);
+	hread(data->v_env[i].data, 1, 30, f);
+	data->v_env[i].sus = hread_8(f);
+	data->v_env[i].loop = hread_8(f);
     }
 }
 
-static void get_chunk_pe(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_pe(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct local_data *data = (struct local_data *)parm;
     int i;
 
-    if ((data->p_envnum = read8(f)) == 0)
+    if ((data->p_envnum = hread_8(f)) == 0)
 	return;
 
     D_(D_INFO "Pan envelopes: %d", data->p_envnum);
@@ -717,19 +717,19 @@ static void get_chunk_pe(struct module_data *m, int size, FILE *f, void *parm)
     data->p_env = calloc(data->p_envnum, sizeof (struct mdl_envelope));
 
     for (i = 0; i < data->p_envnum; i++) {
-	data->p_env[i].num = read8(f);
-	fread(data->p_env[i].data, 1, 30, f);
-	data->p_env[i].sus = read8(f);
-	data->p_env[i].loop = read8(f);
+	data->p_env[i].num = hread_8(f);
+	hread(data->p_env[i].data, 1, 30, f);
+	data->p_env[i].sus = hread_8(f);
+	data->p_env[i].loop = hread_8(f);
     }
 }
 
-static void get_chunk_fe(struct module_data *m, int size, FILE *f, void *parm)
+static void get_chunk_fe(struct module_data *m, int size, HANDLE *f, void *parm)
 {
     struct local_data *data = (struct local_data *)parm;
     int i;
 
-    if ((data->f_envnum = read8(f)) == 0)
+    if ((data->f_envnum = hread_8(f)) == 0)
 	return;
 
     D_(D_INFO "Pitch envelopes: %d", data->f_envnum);
@@ -737,15 +737,15 @@ static void get_chunk_fe(struct module_data *m, int size, FILE *f, void *parm)
     data->f_env = calloc(data->f_envnum, sizeof (struct mdl_envelope));
 
     for (i = 0; i < data->f_envnum; i++) {
-	data->f_env[i].num = read8(f);
-	fread(data->f_env[i].data, 1, 30, f);
-	data->f_env[i].sus = read8(f);
-	data->f_env[i].loop = read8(f);
+	data->f_env[i].num = hread_8(f);
+	hread(data->f_env[i].data, 1, 30, f);
+	data->f_env[i].sus = hread_8(f);
+	data->f_env[i].loop = hread_8(f);
     }
 }
 
 
-static int mdl_load(struct module_data *m, FILE *f, const int start)
+static int mdl_load(struct module_data *m, HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     iff_handle handle;
@@ -756,8 +756,8 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
     LOAD_INIT();
 
     /* Check magic and get version */
-    read32b(f);
-    fread(buf, 1, 1, f);
+    hread_32b(f);
+    hread(buf, 1, 1, f);
 
     handle = iff_new();
     if (handle == NULL)
@@ -805,7 +805,7 @@ static int mdl_load(struct module_data *m, FILE *f, const int start)
     }
 
     /* Load IFFoid chunks */
-    while (!feof(f)) {
+    while (!heof(f)) {
 	iff_chunk(handle, m, f, &data);
     }
 

@@ -13,8 +13,8 @@
 #define MAGIC_MNAM	MAGIC4('M','N','A','M')
 
 
-static int arch_test (FILE *, char *, const int);
-static int arch_load (struct module_data *, FILE *, const int);
+static int arch_test (HANDLE *, char *, const int);
+static int arch_load (struct module_data *, HANDLE *, const int);
 
 
 const struct format_loader arch_loader = {
@@ -48,23 +48,23 @@ static uint8 convert_vol(uint8 vol) {
 }
 #endif
 
-static int arch_test(FILE *f, char *t, const int start)
+static int arch_test(HANDLE *f, char *t, const int start)
 {
-	if (read32b(f) != MAGIC_MUSX)
+	if (hread_32b(f) != MAGIC_MUSX)
 		return -1;
 
-	read32l(f);
+	hread_32l(f);
 
-	while (!feof(f)) {
-		uint32 id = read32b(f);
-		uint32 len = read32l(f);
+	while (!heof(f)) {
+		uint32 id = hread_32b(f);
+		uint32 len = hread_32l(f);
 
 		if (id == MAGIC_MNAM) {
 			read_title(f, t, 32);
 			return 0;
 		}
 
-		fseek(f, len, SEEK_CUR);
+		hseek(f, len, SEEK_CUR);
 	}
 
 	read_title(f, t, 0);
@@ -147,37 +147,37 @@ static void fix_effect(struct xmp_event *e)
 	}
 }
 
-static void get_tinf(struct module_data *m, int size, FILE *f, void *parm)
+static void get_tinf(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct local_data *data = (struct local_data *)parm;
 	int x;
 
-	x = read8(f);
+	x = hread_8(f);
 	data->year = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
-	x = read8(f);
+	x = hread_8(f);
 	data->year += ((x & 0xf0) >> 4) * 1000 + (x & 0x0f) * 100;
 
-	x = read8(f);
+	x = hread_8(f);
 	data->month = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
 
-	x = read8(f);
+	x = hread_8(f);
 	data->day = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
 }
 
-static void get_mvox(struct module_data *m, int size, FILE *f, void *parm)
+static void get_mvox(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
-	mod->chn = read32l(f);
+	mod->chn = hread_32l(f);
 }
 
-static void get_ster(struct module_data *m, int size, FILE *f, void *parm)
+static void get_ster(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 	int i;
 
-	fread(data->ster, 1, 8, f);
+	hread(data->ster, 1, 8, f);
 	
 	for (i=0; i < mod->chn; i++) {
 		if (data->ster[i] > 0 && data->ster[i] < 8) {
@@ -186,51 +186,51 @@ static void get_ster(struct module_data *m, int size, FILE *f, void *parm)
 	}
 }
 
-static void get_mnam(struct module_data *m, int size, FILE *f, void *parm)
+static void get_mnam(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
-	fread(mod->name, 1, 32, f);
+	hread(mod->name, 1, 32, f);
 }
 
-static void get_anam(struct module_data *m, int size, FILE *f, void *parm)
+static void get_anam(struct module_data *m, int size, HANDLE *f, void *parm)
 {
-	/*fread(m->author, 1, 32, f); */
+	/*hread(m->author, 1, 32, f); */
 }
 
-static void get_mlen(struct module_data *m, int size, FILE *f, void *parm)
-{
-	struct xmp_module *mod = &m->mod;
-
-	mod->len = read32l(f);
-}
-
-static void get_pnum(struct module_data *m, int size, FILE *f, void *parm)
+static void get_mlen(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
-	mod->pat = read32l(f);
+	mod->len = hread_32l(f);
 }
 
-static void get_plen(struct module_data *m, int size, FILE *f, void *parm)
+static void get_pnum(struct module_data *m, int size, HANDLE *f, void *parm)
+{
+	struct xmp_module *mod = &m->mod;
+
+	mod->pat = hread_32l(f);
+}
+
+static void get_plen(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct local_data *data = (struct local_data *)parm;
 
-	fread(data->rows, 1, 64, f);
+	hread(data->rows, 1, 64, f);
 }
 
-static void get_sequ(struct module_data *m, int size, FILE *f, void *parm)
+static void get_sequ(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
-	fread(mod->xxo, 1, 128, f);
+	hread(mod->xxo, 1, 128, f);
 
 	set_type(m, "Archimedes Tracker");
 
 	MODULE_INFO();
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
+static void get_patt(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -254,10 +254,10 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 		for (k = 0; k < mod->chn; k++) {
 			event = &EVENT(i, k, j);
 
-			event->fxp = read8(f);
-			event->fxt = read8(f);
-			event->ins = read8(f);
-			event->note = read8(f);
+			event->fxp = hread_8(f);
+			event->fxt = hread_8(f);
+			event->ins = hread_8(f);
+			event->note = hread_8(f);
 
 			if (event->note)
 				event->note += 48;
@@ -269,7 +269,7 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 	i++;
 }
 
-static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
+static void get_samp(struct module_data *m, int size, HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -294,30 +294,30 @@ static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 		return;
 
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	read32l(f);	/* SNAM */
+	hread_32l(f);	/* SNAM */
 	{
 		/* should usually be 0x14 but zero is not unknown */
-		int name_len = read32l(f);
+		int name_len = hread_32l(f);
 		if (name_len < 32)
-			fread(mod->xxi[i].name, 1, name_len, f);
+			hread(mod->xxi[i].name, 1, name_len, f);
 	}
-	read32l(f);	/* SVOL */
-	read32l(f);
-	/* mod->xxi[i].sub[0].vol = convert_vol(read32l(f)); */
-	mod->xxi[i].sub[0].vol = read32l(f) & 0xff;
-	read32l(f);	/* SLEN */
-	read32l(f);
-	mod->xxs[i].len = read32l(f);
-	read32l(f);	/* ROFS */
-	read32l(f);
-	mod->xxs[i].lps = read32l(f);
-	read32l(f);	/* RLEN */
-	read32l(f);
-	mod->xxs[i].lpe = read32l(f);
+	hread_32l(f);	/* SVOL */
+	hread_32l(f);
+	/* mod->xxi[i].sub[0].vol = convert_vol(hread_32l(f)); */
+	mod->xxi[i].sub[0].vol = hread_32l(f) & 0xff;
+	hread_32l(f);	/* SLEN */
+	hread_32l(f);
+	mod->xxs[i].len = hread_32l(f);
+	hread_32l(f);	/* ROFS */
+	hread_32l(f);
+	mod->xxs[i].lps = hread_32l(f);
+	hread_32l(f);	/* RLEN */
+	hread_32l(f);
+	mod->xxs[i].lpe = hread_32l(f);
 
-	read32l(f);	/* SDAT */
-	read32l(f);
-	read32l(f);	/* 0x00000000 */
+	hread_32l(f);	/* SDAT */
+	hread_32l(f);
+	hread_32l(f);	/* 0x00000000 */
 
 	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].sid = i;
@@ -350,7 +350,7 @@ static void get_samp(struct module_data *m, int size, FILE *f, void *parm)
 	data->max_ins++;
 }
 
-static int arch_load(struct module_data *m, FILE *f, const int start)
+static int arch_load(struct module_data *m, HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
@@ -359,8 +359,8 @@ static int arch_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	read32b(f);	/* MUSX */
-	read32b(f);
+	hread_32b(f);	/* MUSX */
+	hread_32b(f);
 
 	data.pflag = data.sflag = 0;
 	data.year = data.month = data.day = 0;
@@ -385,7 +385,7 @@ static int arch_load(struct module_data *m, FILE *f, const int start)
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!feof(f)) {
+	while (!heof(f)) {
 		iff_chunk(handle, m, f, &data);
 	}
 
