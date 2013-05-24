@@ -12,8 +12,8 @@
 #define MAGIC_PSM_	MAGIC4('P','S','M',0xfe)
 
 
-static int psm_test (HANDLE *, char *, const int);
-static int psm_load (struct module_data *, HANDLE *, const int);
+static int psm_test (HIO_HANDLE *, char *, const int);
+static int psm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader psm_loader = {
 	"Protracker Studio (PSM)",
@@ -21,9 +21,9 @@ const struct format_loader psm_loader = {
 	psm_load
 };
 
-static int psm_test(HANDLE *f, char *t, const int start)
+static int psm_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (hread_32b(f) != MAGIC_PSM_)
+	if (hio_read32b(f) != MAGIC_PSM_)
 		return -1;
 
 	read_title(f, t, 60);
@@ -34,7 +34,7 @@ static int psm_test(HANDLE *f, char *t, const int start)
 
 /* FIXME: effects translation */
 
-static int psm_load(struct module_data *m, HANDLE *f, const int start)
+static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int c, r, i;
@@ -46,71 +46,71 @@ static int psm_load(struct module_data *m, HANDLE *f, const int start)
  
 	LOAD_INIT();
 
-	hread_32b(f);
+	hio_read32b(f);
 
-	hread(buf, 1, 60, f);
+	hio_read(buf, 1, 60, f);
 	strncpy(mod->name, (char *)buf, XMP_NAME_SIZE);
 
-	type = hread_8(f);	/* song type */
-	ver = hread_8(f);		/* song version */
-	mode = hread_8(f);	/* pattern version */
+	type = hio_read8(f);	/* song type */
+	ver = hio_read8(f);		/* song version */
+	mode = hio_read8(f);	/* pattern version */
 
 	if (type & 0x01)	/* song mode not supported */
 		return -1;
 
 	set_type(m, "Protracker Studio PSM %d.%02d", MSN(ver), LSN(ver));
 
-	mod->spd = hread_8(f);
-	mod->bpm = hread_8(f);
-	hread_8(f);		/* master volume */
-	hread_16l(f);		/* song length */
-	mod->len = hread_16l(f);
-	mod->pat = hread_16l(f);
-	mod->ins = hread_16l(f);
-	mod->chn = hread_16l(f);
-	hread_16l(f);		/* channels used */
+	mod->spd = hio_read8(f);
+	mod->bpm = hio_read8(f);
+	hio_read8(f);		/* master volume */
+	hio_read16l(f);		/* song length */
+	mod->len = hio_read16l(f);
+	mod->pat = hio_read16l(f);
+	mod->ins = hio_read16l(f);
+	mod->chn = hio_read16l(f);
+	hio_read16l(f);		/* channels used */
 	mod->smp = mod->ins;
 	mod->trk = mod->pat * mod->chn;
 
-	p_ord = hread_32l(f);
-	p_chn = hread_32l(f);
-	p_pat = hread_32l(f);
-	p_ins = hread_32l(f);
+	p_ord = hio_read32l(f);
+	p_chn = hio_read32l(f);
+	p_pat = hio_read32l(f);
+	p_ins = hio_read32l(f);
 
 	/* should be this way but fails with Silverball song 6 */
 	//mod->flg |= ~type & 0x02 ? XXM_FLG_MODRNG : 0;
 
 	MODULE_INFO();
 
-	hseek(f, start + p_ord, SEEK_SET);
-	hread(mod->xxo, 1, mod->len, f);
+	hio_seek(f, start + p_ord, SEEK_SET);
+	hio_read(mod->xxo, 1, mod->len, f);
 
-	hseek(f, start + p_chn, SEEK_SET);
-	hread(buf, 1, 16, f);
+	hio_seek(f, start + p_chn, SEEK_SET);
+	hio_read(buf, 1, 16, f);
 
 	INSTRUMENT_INIT();
 
-	hseek(f, start + p_ins, SEEK_SET);
+	hio_seek(f, start + p_ins, SEEK_SET);
 	for (i = 0; i < mod->ins; i++) {
 		uint16 flags, c2spd;
 		int finetune;
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		hread(buf, 1, 13, f);		/* sample filename */
-		hread(buf, 1, 24, f);		/* sample description */
+		hio_read(buf, 1, 13, f);		/* sample filename */
+		hio_read(buf, 1, 24, f);		/* sample description */
 		strncpy((char *)mod->xxi[i].name, (char *)buf, 24);
 		str_adj((char *)mod->xxi[i].name);
-		p_smp[i] = hread_32l(f);
-		hread_32l(f);			/* memory location */
-		hread_16l(f);			/* sample number */
-		flags = hread_8(f);		/* sample type */
-		mod->xxs[i].len = hread_32l(f); 
-		mod->xxs[i].lps = hread_32l(f);
-		mod->xxs[i].lpe = hread_32l(f);
-		finetune = (int8)(hread_8(f) << 4);
-		mod->xxi[i].sub[0].vol = hread_8(f);
-		c2spd = 8363 * hread_16l(f) / 8448;
+		p_smp[i] = hio_read32l(f);
+		hio_read32l(f);			/* memory location */
+		hio_read16l(f);			/* sample number */
+		flags = hio_read8(f);		/* sample type */
+		mod->xxs[i].len = hio_read32l(f); 
+		mod->xxs[i].lps = hio_read32l(f);
+		mod->xxs[i].lpe = hio_read32l(f);
+		finetune = (int8)(hio_read8(f) << 4);
+		mod->xxi[i].sub[0].vol = hio_read8(f);
+		c2spd = 8363 * hio_read16l(f) / 8448;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
@@ -130,14 +130,14 @@ static int psm_load(struct module_data *m, HANDLE *f, const int start)
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
-	hseek(f, start + p_pat, SEEK_SET);
+	hio_seek(f, start + p_pat, SEEK_SET);
 	for (i = 0; i < mod->pat; i++) {
 		int len;
 		uint8 b, rows, chan;
 
-		len = hread_16l(f) - 4;
-		rows = hread_8(f);
-		chan = hread_8(f);
+		len = hio_read16l(f) - 4;
+		rows = hio_read8(f);
+		chan = hio_read8(f);
 
 		PATTERN_ALLOC (i);
 		mod->xxp[i]->rows = rows;
@@ -145,7 +145,7 @@ static int psm_load(struct module_data *m, HANDLE *f, const int start)
 
 		for (r = 0; r < rows; r++) {
 			while (len > 0) {
-				b = hread_8(f);
+				b = hio_read8(f);
 				len--;
 
 				if (b == 0)
@@ -155,19 +155,19 @@ static int psm_load(struct module_data *m, HANDLE *f, const int start)
 				event = &EVENT(i, c, r);
 	
 				if (b & 0x80) {
-					event->note = hread_8(f) + 36 + 1;
-					event->ins = hread_8(f);
+					event->note = hio_read8(f) + 36 + 1;
+					event->ins = hio_read8(f);
 					len -= 2;
 				}
 	
 				if (b & 0x40) {
-					event->vol = hread_8(f) + 1;
+					event->vol = hio_read8(f) + 1;
 					len--;
 				}
 	
 				if (b & 0x20) {
-					event->fxt = hread_8(f);
-					event->fxp = hread_8(f);
+					event->fxt = hio_read8(f);
+					event->fxp = hio_read8(f);
 					len -= 2;
 /* printf("p%d r%d c%d: %02x %02x\n", i, r, c, event->fxt, event->fxp); */
 				}
@@ -175,7 +175,7 @@ static int psm_load(struct module_data *m, HANDLE *f, const int start)
 		}
 
 		if (len > 0)
-			hseek(f, len, SEEK_CUR);
+			hio_seek(f, len, SEEK_CUR);
 	}
 
 	/* Read samples */
@@ -183,7 +183,7 @@ static int psm_load(struct module_data *m, HANDLE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		hseek(f, start + p_smp[i], SEEK_SET);
+		hio_seek(f, start + p_smp[i], SEEK_SET);
 		load_sample(m, f, SAMPLE_FLAG_DIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

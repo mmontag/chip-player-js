@@ -27,14 +27,14 @@
 
 char *copy_adjust(char *, uint8 *, int);
 int test_name(uint8 *, int);
-void read_title(HANDLE *, char *, int);
+void read_title(HIO_HANDLE *, char *, int);
 void set_xxh_defaults(struct xmp_module *);
 void cvt_pt_event(struct xmp_event *, uint8 *);
 void disable_continue_fx(struct xmp_event *);
 int check_filename_case(char *, char *, char *, int);
 void get_instrument_path(struct module_data *, char *, int);
 void set_type(struct module_data *, char *, ...);
-int load_sample(struct module_data *, HANDLE *, int, struct xmp_sample *, void *);
+int load_sample(struct module_data *, HIO_HANDLE *, int, struct xmp_sample *, void *);
 
 extern uint8 ord_xlat[];
 extern const int arch_vol_table[];
@@ -43,7 +43,7 @@ extern const int arch_vol_table[];
     (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 
 #define LOAD_INIT() do { \
-    hseek(f, start, SEEK_SET); \
+    hio_seek(f, start, SEEK_SET); \
 } while (0)
 
 #define MODULE_INFO() do { \

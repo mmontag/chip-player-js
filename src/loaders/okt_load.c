@@ -15,8 +15,8 @@
 #include "iff.h"
 
 
-static int okt_test (HANDLE *, char *, const int);
-static int okt_load (struct module_data *, HANDLE *, const int);
+static int okt_test (HIO_HANDLE *, char *, const int);
+static int okt_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader okt_loader = {
     "Oktalyzer",
@@ -24,11 +24,11 @@ const struct format_loader okt_loader = {
     okt_load
 };
 
-static int okt_test(HANDLE *f, char *t, const int start)
+static int okt_test(HIO_HANDLE *f, char *t, const int start)
 {
     char magic[8];
 
-    if (hread(magic, 1, 8, f) < 8)
+    if (hio_read(magic, 1, 8, f) < 8)
 	return -1;
 
     if (strncmp (magic, "OKTASONG", 8))
@@ -89,14 +89,14 @@ static const int fx[] = {
 };
 
 
-static void get_cmod(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_cmod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 { 
     struct xmp_module *mod = &m->mod;
     int i, j, k;
 
     mod->chn = 0;
     for (i = 0; i < 4; i++) {
-	j = hread_16b(f);
+	j = hio_read16b(f);
 	for (k = !!j; k >= 0; k--) {
 	    mod->xxc[mod->chn].pan = (((i + 1) / 2) % 2) * 0xff;
 	    mod->chn++;
@@ -105,7 +105,7 @@ static void get_cmod(struct module_data *m, int size, HANDLE *f, void *parm)
 }
 
 
-static void get_samp(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -121,16 +121,16 @@ static void get_samp(struct module_data *m, int size, HANDLE *f, void *parm)
     for (j = i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	hread(mod->xxi[i].name, 1, 20, f);
+	hio_read(mod->xxi[i].name, 1, 20, f);
 	str_adj((char *)mod->xxi[i].name);
 
 	/* Sample size is always rounded down */
-	mod->xxs[i].len = hread_32b(f) & ~1;
-	mod->xxs[i].lps = hread_16b(f);
-	looplen = hread_16b(f);
+	mod->xxs[i].len = hio_read32b(f) & ~1;
+	mod->xxs[i].lps = hio_read16b(f);
+	looplen = hio_read16b(f);
 	mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
-	mod->xxi[i].sub[0].vol = hread_16b(f);
-	data->mode[i] = hread_16b(f);
+	mod->xxi[i].sub[0].vol = hio_read16b(f);
+	data->mode[i] = hio_read16b(f);
 
 	mod->xxi[i].nsm = !!(mod->xxs[i].len);
 	mod->xxs[i].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
@@ -150,42 +150,42 @@ static void get_samp(struct module_data *m, int size, HANDLE *f, void *parm)
 }
 
 
-static void get_spee(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_spee(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
-    mod->spd = hread_16b(f);
+    mod->spd = hio_read16b(f);
     mod->bpm = 125;
 }
 
 
-static void get_slen(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_slen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
-    mod->pat = hread_16b(f);
+    mod->pat = hio_read16b(f);
     mod->trk = mod->pat * mod->chn;
 }
 
 
-static void get_plen(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_plen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
-    mod->len = hread_16b(f);
+    mod->len = hio_read16b(f);
     D_(D_INFO "Module length: %d", mod->len);
 }
 
 
-static void get_patt(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
-    hread(mod->xxo, 1, mod->len, f);
+    hio_read(mod->xxo, 1, mod->len, f);
 }
 
 
-static void get_pbod(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -202,7 +202,7 @@ static void get_pbod(struct module_data *m, int size, HANDLE *f, void *parm)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
     }
 
-    rows = hread_16b(f);
+    rows = hio_read16b(f);
 
     PATTERN_ALLOC(data->pattern);
     mod->xxp[data->pattern]->rows = rows;
@@ -214,16 +214,16 @@ static void get_pbod(struct module_data *m, int size, HANDLE *f, void *parm)
 	event = &EVENT(data->pattern, j % mod->chn, j / mod->chn);
 	memset(event, 0, sizeof(struct xmp_event));
 
-	note = hread_8(f);
-	ins = hread_8(f);
+	note = hio_read8(f);
+	ins = hio_read8(f);
 
 	if (note) {
 	    event->note = 48 + note;
 	    event->ins = 1 + ins;
 	}
 
-	event->fxt = fx[hread_8(f)];
-	event->fxp = hread_8(f);
+	event->fxt = fx[hio_read8(f)];
+	event->fxp = hio_read8(f);
 
 	if ((event->fxt == FX_VOLSET) && (event->fxp > 0x40)) {
 	    if (event->fxp <= 0x50) {
@@ -249,7 +249,7 @@ static void get_pbod(struct module_data *m, int size, HANDLE *f, void *parm)
 }
 
 
-static void get_sbod(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -271,14 +271,14 @@ static void get_sbod(struct module_data *m, int size, HANDLE *f, void *parm)
 }
 
 
-static int okt_load(struct module_data *m, HANDLE *f, const int start)
+static int okt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     iff_handle handle;
     struct local_data data;
 
     LOAD_INIT();
 
-    hseek(f, 8, SEEK_CUR);	/* OKTASONG */
+    hio_seek(f, 8, SEEK_CUR);	/* OKTASONG */
 
     handle = iff_new();
     if (handle == NULL)
@@ -301,7 +301,7 @@ static int okt_load(struct module_data *m, HANDLE *f, const int start)
     MODULE_INFO();
 
     /* Load IFF chunks */
-    while (!heof(f)) {
+    while (!hio_eof(f)) {
 	iff_chunk(handle, m, f, &data);
     }
 

@@ -10,8 +10,8 @@
 #include "depackers/readlzw.h"
 
 
-static int sym_test(HANDLE *, char *, const int);
-static int sym_load (struct module_data *, HANDLE *, const int);
+static int sym_test(HIO_HANDLE *, char *, const int);
+static int sym_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader sym_loader = {
 	"Digital Symphony",
@@ -19,21 +19,21 @@ const struct format_loader sym_loader = {
 	sym_load
 };
 
-static int sym_test(HANDLE *f, char *t, const int start)
+static int sym_test(HIO_HANDLE *f, char *t, const int start)
 {
 	uint32 a, b;
 	int i, ver;
 
-	if (f->type != HANDLE_TYPE_FILE)
+	if (f->type != HIO_HANDLE_TYPE_FILE)
 		return -1;
 
-	a = hread_32b(f);
-	b = hread_32b(f);
+	a = hio_read32b(f);
+	b = hio_read32b(f);
 
 	if (a != 0x02011313 || b != 0x1412010B)		/* BASSTRAK */
 		return -1;
 
-	ver = hread_8(f);
+	ver = hio_read8(f);
 
 	/* v1 files are the same as v0 but may contain strange compression
 	 * formats. Deal with that problem later if it arises.
@@ -42,17 +42,17 @@ static int sym_test(HANDLE *f, char *t, const int start)
 		return -1;
 	}
 
-	hread_8(f);		/* chn */
-	hread_16l(f);		/* pat */
-	hread_16l(f);		/* trk */
-	hread_24l(f);		/* infolen */
+	hio_read8(f);		/* chn */
+	hio_read16l(f);		/* pat */
+	hio_read16l(f);		/* trk */
+	hio_read24l(f);		/* infolen */
 
 	for (i = 0; i < 63; i++) {
-		if (~hread_8(f) & 0x80)
-			hread_24l(f);
+		if (~hio_read8(f) & 0x80)
+			hio_read24l(f);
 	}
 
-	read_title(f, t, hread_8(f));
+	read_title(f, t, hio_read8(f));
 
 	return 0;
 }
@@ -229,7 +229,7 @@ static uint32 readptr16l(uint8 *p)
 	return (b << 8) | a;
 }
 
-static int sym_load(struct module_data *m, HANDLE *f, const int start)
+static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -242,15 +242,15 @@ static int sym_load(struct module_data *m, HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hseek(f, 8, SEEK_CUR);			/* BASSTRAK */
+	hio_seek(f, 8, SEEK_CUR);			/* BASSTRAK */
 
-	ver = hread_8(f);
+	ver = hio_read8(f);
 	set_type(m, "Digital Symphony");
 
-	mod->chn = hread_8(f);
-	mod->len = mod->pat = hread_16l(f);
-	mod->trk = hread_16l(f);	/* Symphony patterns are actually tracks */
-	infolen = hread_24l(f);
+	mod->chn = hio_read8(f);
+	mod->len = mod->pat = hio_read16l(f);
+	mod->trk = hio_read16l(f);	/* Symphony patterns are actually tracks */
+	infolen = hio_read24l(f);
 
 	mod->ins = mod->smp = 63;
 
@@ -259,16 +259,16 @@ static int sym_load(struct module_data *m, HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		sn[i] = hread_8(f);	/* sample name length */
+		sn[i] = hio_read8(f);	/* sample name length */
 
 		if (~sn[i] & 0x80)
-			mod->xxs[i].len = hread_24l(f) << 1;
+			mod->xxs[i].len = hio_read24l(f) << 1;
 	}
 
-	a = hread_8(f);			/* track name length */
+	a = hio_read8(f);			/* track name length */
 
-	hread(mod->name, 1, a, f);
-	hread(&allowed_effects, 1, 8, f);
+	hio_read(mod->name, 1, a, f);
+	hio_read(&allowed_effects, 1, 8, f);
 
 	MODULE_INFO();
 
@@ -276,7 +276,7 @@ static int sym_load(struct module_data *m, HANDLE *f, const int start)
 	PATTERN_INIT();
 
 	/* Sequence */
-	a = hread_8(f);			/* packing */
+	a = hio_read8(f);			/* packing */
 
 	if (a != 0 && a != 1)
 		return -1;
@@ -295,7 +295,7 @@ static int sym_load(struct module_data *m, HANDLE *f, const int start)
 			return -1;
 		}
 	} else {
-		hread(buf, 1, size, f);
+		hio_read(buf, 1, size, f);
 	}
 
 	for (i = 0; i < mod->len; i++) {	/* len == pat */
@@ -315,7 +315,7 @@ static int sym_load(struct module_data *m, HANDLE *f, const int start)
 
 	/* Read and convert patterns */
 
-	a = hread_8(f);
+	a = hio_read8(f);
 
 	if (a != 0 && a != 1)
 		return -1;
@@ -335,7 +335,7 @@ static int sym_load(struct module_data *m, HANDLE *f, const int start)
 			return -1;
 		}
 	} else {
-		hread(buf, 1, size, f);
+		hio_read(buf, 1, size, f);
 	}
 
 	for (i = 0; i < mod->trk - 1; i++) {
@@ -379,23 +379,23 @@ static int sym_load(struct module_data *m, HANDLE *f, const int start)
 		uint8 buf[128];
 
 		memset(buf, 0, 128);
-		hread(buf, 1, sn[i] & 0x7f, f);
+		hio_read(buf, 1, sn[i] & 0x7f, f);
 		copy_adjust(mod->xxi[i].name, buf, 32);
 
 		if (~sn[i] & 0x80) {
 			int looplen;
 
-			mod->xxs[i].lps = hread_24l(f) << 1;
-			looplen = hread_24l(f) << 1;
+			mod->xxs[i].lps = hio_read24l(f) << 1;
+			looplen = hio_read24l(f) << 1;
 			if (looplen > 2)
 				mod->xxs[i].flg |= XMP_SAMPLE_LOOP;
 			mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
 			mod->xxi[i].nsm = 1;
-			mod->xxi[i].sub[0].vol = hread_8(f);
+			mod->xxi[i].sub[0].vol = hio_read8(f);
 			mod->xxi[i].sub[0].pan = 0x80;
 			/* finetune adjusted comparing DSym and S3M versions
 			 * of "inside out" */
-			mod->xxi[i].sub[0].fin = (int8)(hread_8(f) << 4);
+			mod->xxi[i].sub[0].fin = (int8)(hio_read8(f) << 4);
 			mod->xxi[i].sub[0].sid = i;
 		}
 
@@ -408,7 +408,7 @@ static int sym_load(struct module_data *m, HANDLE *f, const int start)
 		if (sn[i] & 0x80 || mod->xxs[i].len == 0)
 			continue;
 
-		a = hread_8(f);
+		a = hio_read8(f);
 
 		if (a != 0 && a != 1) {
 			fprintf(stderr, "libxmp: unsupported sample type\n");

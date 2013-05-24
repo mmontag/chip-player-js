@@ -22,8 +22,8 @@
 #define MAGIC_SONG	MAGIC4('S','O','N','G')
 
 
-static int sfx_test (HANDLE *, char *, const int);
-static int sfx_load (struct module_data *, HANDLE *, const int);
+static int sfx_test (HIO_HANDLE *, char *, const int);
+static int sfx_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader sfx_loader = {
     "SoundFX",
@@ -31,14 +31,14 @@ const struct format_loader sfx_loader = {
     sfx_load
 };
 
-static int sfx_test(HANDLE *f, char *t, const int start)
+static int sfx_test(HIO_HANDLE *f, char *t, const int start)
 {
     uint32 a, b;
 
-    hseek(f, 4 * 15, SEEK_CUR);
-    a = hread_32b(f);
-    hseek(f, 4 * 15, SEEK_CUR);
-    b = hread_32b(f);
+    hio_seek(f, 4 * 15, SEEK_CUR);
+    a = hio_read32b(f);
+    hio_seek(f, 4 * 15, SEEK_CUR);
+    b = hio_read32b(f);
 
     if (a != MAGIC_SONG && b != MAGIC_SONG)
 	return -1;
@@ -71,7 +71,7 @@ struct sfx_header2 {
 };
 
 
-static int sfx_13_20_load(struct module_data *m, HANDLE *f, const int nins, const int start)
+static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -85,11 +85,11 @@ static int sfx_13_20_load(struct module_data *m, HANDLE *f, const int nins, cons
     LOAD_INIT();
 
     for (i = 0; i < nins; i++)
-	ins_size[i] = hread_32b(f);
+	ins_size[i] = hio_read32b(f);
 
-    sfx.magic = hread_32b(f);
-    sfx.delay = hread_16b(f);
-    hread(&sfx.unknown, 14, 1, f);
+    sfx.magic = hio_read32b(f);
+    sfx.delay = hio_read16b(f);
+    hio_read(&sfx.unknown, 14, 1, f);
 
     if (sfx.magic != MAGIC_SONG)
 	return -1;
@@ -99,17 +99,17 @@ static int sfx_13_20_load(struct module_data *m, HANDLE *f, const int nins, cons
     mod->bpm = 14565 * 122 / sfx.delay;
 
     for (i = 0; i < mod->ins; i++) {
-	hread(&ins[i].name, 22, 1, f);
-	ins[i].len = hread_16b(f);
-	ins[i].finetune = hread_8(f);
-	ins[i].volume = hread_8(f);
-	ins[i].loop_start = hread_16b(f);
-	ins[i].loop_length = hread_16b(f);
+	hio_read(&ins[i].name, 22, 1, f);
+	ins[i].len = hio_read16b(f);
+	ins[i].finetune = hio_read8(f);
+	ins[i].volume = hio_read8(f);
+	ins[i].loop_start = hio_read16b(f);
+	ins[i].loop_length = hio_read16b(f);
     }
 
-    sfx2.len = hread_8(f);
-    sfx2.restart = hread_8(f);
-    hread(&sfx2.order, 128, 1, f);
+    sfx2.len = hio_read8(f);
+    sfx2.restart = hio_read8(f);
+    hio_read(&sfx2.order, 128, 1, f);
 
     mod->len = sfx2.len;
     if (mod->len > 0x7f)
@@ -163,7 +163,7 @@ static int sfx_13_20_load(struct module_data *m, HANDLE *f, const int nins, cons
 
 	for (j = 0; j < 64 * mod->chn; j++) {
 	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    hread(ev, 1, 4, f);
+	    hio_read(ev, 1, 4, f);
 
 	    event->note = period_to_note((LSN (ev[0]) << 8) | ev[1]);
 	    event->ins = (MSN (ev[0]) << 4) | MSN (ev[2]);
@@ -216,7 +216,7 @@ static int sfx_13_20_load(struct module_data *m, HANDLE *f, const int nins, cons
 }
 
 
-static int sfx_load(struct module_data *m, HANDLE *f, const int start)
+static int sfx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     if (sfx_13_20_load(m, f, 15, start) < 0)
 	return sfx_13_20_load(m, f, 31, start);

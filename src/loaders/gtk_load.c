@@ -10,8 +10,8 @@
 #include "period.h"
 
 
-static int gtk_test(HANDLE *, char *, const int);
-static int gtk_load (struct module_data *, HANDLE *, const int);
+static int gtk_test(HIO_HANDLE *, char *, const int);
+static int gtk_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader gtk_loader = {
 	"Graoumf Tracker (GTK)",
@@ -19,11 +19,11 @@ const struct format_loader gtk_loader = {
 	gtk_load
 };
 
-static int gtk_test(HANDLE * f, char *t, const int start)
+static int gtk_test(HIO_HANDLE * f, char *t, const int start)
 {
 	char buf[4];
 
-	if (hread(buf, 1, 4, f) < 4)
+	if (hio_read(buf, 1, 4, f) < 4)
 		return -1;
 
 	if (memcmp(buf, "GTK", 3) || buf[3] > 4)
@@ -82,7 +82,7 @@ static void translate_effects(struct xmp_event *event)
 	}
 }
 
-static int gtk_load(struct module_data *m, HANDLE *f, const int start)
+static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -93,18 +93,18 @@ static int gtk_load(struct module_data *m, HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hread(buffer, 4, 1, f);
+	hio_read(buffer, 4, 1, f);
 	ver = buffer[3];
-	hread(mod->name, 32, 1, f);
+	hio_read(mod->name, 32, 1, f);
 	set_type(m, "Graoumf Tracker GTK v%d", ver);
-	hseek(f, 160, SEEK_CUR);	/* skip comments */
+	hio_seek(f, 160, SEEK_CUR);	/* skip comments */
 
-	mod->ins = hread_16b(f);
+	mod->ins = hio_read16b(f);
 	mod->smp = mod->ins;
-	rows = hread_16b(f);
-	mod->chn = hread_16b(f);
-	mod->len = hread_16b(f);
-	mod->rst = hread_16b(f);
+	rows = hio_read16b(f);
+	mod->chn = hio_read16b(f);
+	mod->len = hio_read16b(f);
+	mod->rst = hio_read16b(f);
 	m->volbase = 0x100;
 
 	MODULE_INFO();
@@ -114,34 +114,34 @@ static int gtk_load(struct module_data *m, HANDLE *f, const int start)
 	INSTRUMENT_INIT();
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-		hread(buffer, 28, 1, f);
+		hio_read(buffer, 28, 1, f);
 		copy_adjust(mod->xxi[i].name, buffer, 28);
 
 		if (ver == 1) {
-			hread_32b(f);
-			mod->xxs[i].len = hread_32b(f);
-			mod->xxs[i].lps = hread_32b(f);
-			size = hread_32b(f);
+			hio_read32b(f);
+			mod->xxs[i].len = hio_read32b(f);
+			mod->xxs[i].lps = hio_read32b(f);
+			size = hio_read32b(f);
 			mod->xxs[i].lpe = mod->xxs[i].lps + size - 1;
-			hread_16b(f);
-			hread_16b(f);
+			hio_read16b(f);
+			hio_read16b(f);
 			mod->xxi[i].sub[0].vol = 0xff;
 			mod->xxi[i].sub[0].pan = 0x80;
 			bits = 1;
 			c2spd = 8363;
 		} else {
-			hseek(f, 14, SEEK_CUR);
-			hread_16b(f);		/* autobal */
-			bits = hread_16b(f);	/* 1 = 8 bits, 2 = 16 bits */
-			c2spd = hread_16b(f);
+			hio_seek(f, 14, SEEK_CUR);
+			hio_read16b(f);		/* autobal */
+			bits = hio_read16b(f);	/* 1 = 8 bits, 2 = 16 bits */
+			c2spd = hio_read16b(f);
 			c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-			mod->xxs[i].len = hread_32b(f);
-			mod->xxs[i].lps = hread_32b(f);
-			size = hread_32b(f);
+			mod->xxs[i].len = hio_read32b(f);
+			mod->xxs[i].lps = hio_read32b(f);
+			size = hio_read32b(f);
 			mod->xxs[i].lpe = mod->xxs[i].lps + size - 1;
-			mod->xxi[i].sub[0].vol = hread_16b(f);
-			hread_8(f);
-			mod->xxi[i].sub[0].fin = hread_8s(f);
+			mod->xxi[i].sub[0].vol = hio_read16b(f);
+			hio_read8(f);
+			mod->xxi[i].sub[0].fin = hio_read8s(f);
 		}
 
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
@@ -168,7 +168,7 @@ static int gtk_load(struct module_data *m, HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < 256; i++)
-		mod->xxo[i] = hread_16b(f);
+		mod->xxo[i] = hio_read16b(f);
 
 	for (patmax = i = 0; i < mod->len; i++) {
 		if (mod->xxo[i] > patmax)
@@ -192,16 +192,16 @@ static int gtk_load(struct module_data *m, HANDLE *f, const int start)
 			for (k = 0; k < mod->chn; k++) {
 				event = &EVENT (i, k, j);
 
-				event->note = hread_8(f);
+				event->note = hio_read8(f);
 				if (event->note) {
 					event->note += 13;
 				}
-				event->ins = hread_8(f);
+				event->ins = hio_read8(f);
 
-				event->fxt = hread_8(f);
-				event->fxp = hread_8(f);
+				event->fxt = hio_read8(f);
+				event->fxp = hio_read8(f);
 				if (ver >= 4) {
-					event->vol = hread_8(f);
+					event->vol = hio_read8(f);
 				}
 
 				translate_effects(event);

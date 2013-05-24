@@ -14,8 +14,8 @@
 #include "loader.h"
 #include "med_extras.h"
 
-static int mmd1_test(HANDLE *, char *, const int);
-static int mmd1_load (struct module_data *, HANDLE *, const int);
+static int mmd1_test(HIO_HANDLE *, char *, const int);
+static int mmd1_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mmd1_loader = {
 	"MED 2.10/OctaMED (MED)",
@@ -23,25 +23,25 @@ const struct format_loader mmd1_loader = {
 	mmd1_load
 };
 
-static int mmd1_test(HANDLE *f, char *t, const int start)
+static int mmd1_test(HIO_HANDLE *f, char *t, const int start)
 {
 	char id[4];
 	uint32 offset, len;
 
-	if (hread(id, 1, 4, f) < 4)
+	if (hio_read(id, 1, 4, f) < 4)
 		return -1;
 
 	if (memcmp(id, "MMD0", 4) && memcmp(id, "MMD1", 4))
 		return -1;
 
-	hseek(f, 28, SEEK_CUR);
-	offset = hread_32b(f);		/* expdata_offset */
+	hio_seek(f, 28, SEEK_CUR);
+	offset = hio_read32b(f);		/* expdata_offset */
 	
 	if (offset) {
-		hseek(f, start + offset + 44, SEEK_SET);
-		offset = hread_32b(f);
-		len = hread_32b(f);
-		hseek(f, start + offset, SEEK_SET);
+		hio_seek(f, start + offset + 44, SEEK_SET);
+		offset = hio_read32b(f);
+		len = hio_read32b(f);
+		hio_seek(f, start + offset, SEEK_SET);
 		read_title(f, t, len);
 	} else {
 		read_title(f, t, 0);
@@ -51,7 +51,7 @@ static int mmd1_test(HANDLE *f, char *t, const int start)
 }
 
 
-static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
+static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
@@ -78,60 +78,60 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hread(&header.id, 4, 1, f);
+	hio_read(&header.id, 4, 1, f);
 
 	ver = *((char *)&header.id + 3) - '1' + 1;
 
 	D_(D_WARN "load header");
-	header.modlen = hread_32b(f);
-	song_offset = hread_32b(f);
+	header.modlen = hio_read32b(f);
+	song_offset = hio_read32b(f);
 	D_(D_INFO "song_offset = 0x%08x", song_offset);
-	hread_16b(f);
-	hread_16b(f);
-	blockarr_offset = hread_32b(f);
+	hio_read16b(f);
+	hio_read16b(f);
+	blockarr_offset = hio_read32b(f);
 	D_(D_INFO "blockarr_offset = 0x%08x", blockarr_offset);
-	hread_32b(f);
-	smplarr_offset = hread_32b(f);
+	hio_read32b(f);
+	smplarr_offset = hio_read32b(f);
 	D_(D_INFO "smplarr_offset = 0x%08x", smplarr_offset);
-	hread_32b(f);
-	expdata_offset = hread_32b(f);
+	hio_read32b(f);
+	expdata_offset = hio_read32b(f);
 	D_(D_INFO "expdata_offset = 0x%08x", expdata_offset);
-	hread_32b(f);
-	header.pstate = hread_16b(f);
-	header.pblock = hread_16b(f);
-	header.pline = hread_16b(f);
-	header.pseqnum = hread_16b(f);
-	header.actplayline = hread_16b(f);
-	header.counter = hread_8(f);
-	header.extra_songs = hread_8(f);
+	hio_read32b(f);
+	header.pstate = hio_read16b(f);
+	header.pblock = hio_read16b(f);
+	header.pline = hio_read16b(f);
+	header.pseqnum = hio_read16b(f);
+	header.actplayline = hio_read16b(f);
+	header.counter = hio_read8(f);
+	header.extra_songs = hio_read8(f);
 
 	/*
 	 * song structure
 	 */
 	D_(D_WARN "load song");
-	hseek(f, start + song_offset, SEEK_SET);
+	hio_seek(f, start + song_offset, SEEK_SET);
 	for (i = 0; i < 63; i++) {
-		song.sample[i].rep = hread_16b(f);
-		song.sample[i].replen = hread_16b(f);
-		song.sample[i].midich = hread_8(f);
-		song.sample[i].midipreset = hread_8(f);
-		song.sample[i].svol = hread_8(f);
-		song.sample[i].strans = hread_8s(f);
+		song.sample[i].rep = hio_read16b(f);
+		song.sample[i].replen = hio_read16b(f);
+		song.sample[i].midich = hio_read8(f);
+		song.sample[i].midipreset = hio_read8(f);
+		song.sample[i].svol = hio_read8(f);
+		song.sample[i].strans = hio_read8s(f);
 	}
-	song.numblocks = hread_16b(f);
-	song.songlen = hread_16b(f);
+	song.numblocks = hio_read16b(f);
+	song.songlen = hio_read16b(f);
 	D_(D_INFO "song.songlen = %d", song.songlen);
 	for (i = 0; i < 256; i++)
-		song.playseq[i] = hread_8(f);
-	song.deftempo = hread_16b(f);
-	song.playtransp = hread_8(f);
-	song.flags = hread_8(f);
-	song.flags2 = hread_8(f);
-	song.tempo2 = hread_8(f);
+		song.playseq[i] = hio_read8(f);
+	song.deftempo = hio_read16b(f);
+	song.playtransp = hio_read8(f);
+	song.flags = hio_read8(f);
+	song.flags2 = hio_read8(f);
+	song.tempo2 = hio_read8(f);
 	for (i = 0; i < 16; i++)
-		song.trkvol[i] = hread_8(f);
-	song.mastervol = hread_8(f);
-	song.numsamples = hread_8(f);
+		song.trkvol[i] = hio_read8(f);
+	song.mastervol = hio_read8(f);
+	song.numsamples = hio_read8(f);
 
 	/*
 	 * convert header
@@ -172,16 +172,16 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		uint32 smpl_offset;
 		int16 type;
-		hseek(f, start + smplarr_offset + i * 4, SEEK_SET);
-		smpl_offset = hread_32b(f);
+		hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET);
+		smpl_offset = hio_read32b(f);
 		if (smpl_offset == 0)
 			continue;
-		hseek(f, start + smpl_offset, SEEK_SET);
-		hread_32b(f);				/* length */
-		type = hread_16b(f);
+		hio_seek(f, start + smpl_offset, SEEK_SET);
+		hio_read32b(f);				/* length */
+		type = hio_read16b(f);
 		if (type == -1) {			/* type is synth? */
-			hseek(f, 14, SEEK_CUR);
-			mod->smp += hread_16b(f);		/* wforms */
+			hio_seek(f, 14, SEEK_CUR);
+			mod->smp += hio_read16b(f);		/* wforms */
 		} else {
 			mod->smp++;
 		}
@@ -198,31 +198,31 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 	expsmp_offset = 0;
 	iinfo_offset = 0;
 	if (expdata_offset) {
-		hseek(f, start + expdata_offset, SEEK_SET);
-		hread_32b(f);
-		expsmp_offset = hread_32b(f);
+		hio_seek(f, start + expdata_offset, SEEK_SET);
+		hio_read32b(f);
+		expsmp_offset = hio_read32b(f);
 		D_(D_INFO "expsmp_offset = 0x%08x", expsmp_offset);
-		expdata.s_ext_entries = hread_16b(f);
-		expdata.s_ext_entrsz = hread_16b(f);
-		hread_32b(f);
-		hread_32b(f);
-		iinfo_offset = hread_32b(f);
+		expdata.s_ext_entries = hio_read16b(f);
+		expdata.s_ext_entrsz = hio_read16b(f);
+		hio_read32b(f);
+		hio_read32b(f);
+		iinfo_offset = hio_read32b(f);
 		D_(D_INFO "iinfo_offset = 0x%08x", iinfo_offset);
-		expdata.i_ext_entries = hread_16b(f);
-		expdata.i_ext_entrsz = hread_16b(f);
-		hread_32b(f);
-		hread_32b(f);
-		hread_32b(f);
-		hread_32b(f);
-		songname_offset = hread_32b(f);
+		expdata.i_ext_entries = hio_read16b(f);
+		expdata.i_ext_entrsz = hio_read16b(f);
+		hio_read32b(f);
+		hio_read32b(f);
+		hio_read32b(f);
+		hio_read32b(f);
+		songname_offset = hio_read32b(f);
 		D_(D_INFO "songname_offset = 0x%08x", songname_offset);
-		expdata.songnamelen = hread_32b(f);
-		hseek(f, start + songname_offset, SEEK_SET);
+		expdata.songnamelen = hio_read32b(f);
+		hio_seek(f, start + songname_offset, SEEK_SET);
 		D_(D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
 		for (i = 0; i < expdata.songnamelen; i++) {
 			if (i >= XMP_NAME_SIZE)
 				break;
-			mod->name[i] = hread_8(f);
+			mod->name[i] = hio_read8(f);
 		}
 	}
 
@@ -234,19 +234,19 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 	for (i = 0; i < mod->pat; i++) {
 		int block_offset;
 
-		hseek(f, start + blockarr_offset + i * 4, SEEK_SET);
-		block_offset = hread_32b(f);
+		hio_seek(f, start + blockarr_offset + i * 4, SEEK_SET);
+		block_offset = hio_read32b(f);
 		D_(D_INFO "block %d block_offset = 0x%08x", i, block_offset);
 		if (block_offset == 0)
 			continue;
-		hseek(f, start + block_offset, SEEK_SET);
+		hio_seek(f, start + block_offset, SEEK_SET);
 
 		if (ver > 0) {
-			block.numtracks = hread_16b(f);
-			block.lines = hread_16b(f);
+			block.numtracks = hio_read16b(f);
+			block.lines = hio_read16b(f);
 		} else {
-			block.numtracks = hread_8(f);
-			block.lines = hread_8(f);
+			block.numtracks = hio_read8(f);
+			block.lines = hio_read8(f);
 		}
 
 		if (block.numtracks > mod->chn)
@@ -273,19 +273,19 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 	for (i = 0; i < mod->pat; i++) {
 		int block_offset;
 
-		hseek(f, start + blockarr_offset + i * 4, SEEK_SET);
-		block_offset = hread_32b(f);
+		hio_seek(f, start + blockarr_offset + i * 4, SEEK_SET);
+		block_offset = hio_read32b(f);
 		if (block_offset == 0)
 			continue;
-		hseek(f, start + block_offset, SEEK_SET);
+		hio_seek(f, start + block_offset, SEEK_SET);
 
 		if (ver > 0) {
-			block.numtracks = hread_16b(f);
-			block.lines = hread_16b(f);
-			hread_32b(f);
+			block.numtracks = hio_read16b(f);
+			block.lines = hio_read16b(f);
+			hio_read32b(f);
 		} else {
-			block.numtracks = hread_8(f);
-			block.lines = hread_8(f);
+			block.numtracks = hio_read8(f);
+			block.lines = hio_read8(f);
 		}
 
 		PATTERN_ALLOC(i);
@@ -296,10 +296,10 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 		if (ver > 0) {		/* MMD1 */
 			for (j = 0; j < mod->xxp[i]->rows; j++) {
 				for (k = 0; k < block.numtracks; k++) {
-					e[0] = hread_8(f);
-					e[1] = hread_8(f);
-					e[2] = hread_8(f);
-					e[3] = hread_8(f);
+					e[0] = hio_read8(f);
+					e[1] = hio_read8(f);
+					e[2] = hio_read8(f);
+					e[3] = hio_read8(f);
 
 					event = &EVENT(i, k, j);
 					event->note = e[0] & 0x7f;
@@ -316,9 +316,9 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 		} else {		/* MMD0 */
 			for (j = 0; j < mod->xxp[i]->rows; j++) {
 				for (k = 0; k < block.numtracks; k++) {
-					e[0] = hread_8(f);
-					e[1] = hread_8(f);
-					e[2] = hread_8(f);
+					e[0] = hio_read8(f);
+					e[1] = hio_read8(f);
+					e[2] = hio_read8(f);
 
 					event = &EVENT(i, k, j);
 					event->note = e[0] & 0x3f;
@@ -351,58 +351,58 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 		int smpl_offset;
 		char name[40] = "";
 
-		hseek(f, start + smplarr_offset + i * 4, SEEK_SET);
-		smpl_offset = hread_32b(f);
+		hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET);
+		smpl_offset = hio_read32b(f);
 
 		D_(D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
 
 		if (smpl_offset == 0)
 			continue;
 
-		hseek(f, start + smpl_offset, SEEK_SET);
-		instr.length = hread_32b(f);
-		instr.type = hread_16b(f);
+		hio_seek(f, start + smpl_offset, SEEK_SET);
+		instr.length = hio_read32b(f);
+		instr.type = hio_read16b(f);
 
-		pos = htell(f);
+		pos = hio_tell(f);
 
 		if (expdata_offset && i < expdata.i_ext_entries) {
-		    hseek(f, iinfo_offset + i * expdata.i_ext_entrsz, SEEK_SET);
-		    hread(name, 40, 1, f);
+		    hio_seek(f, iinfo_offset + i * expdata.i_ext_entrsz, SEEK_SET);
+		    hio_read(name, 40, 1, f);
 		}
 
 		D_(D_INFO "\n[%2x] %-40.40s %d", i, name, instr.type);
 
 		exp_smp.finetune = 0;
 		if (expdata_offset && i < expdata.s_ext_entries) {
-			hseek(f, expsmp_offset + i * expdata.s_ext_entrsz,
+			hio_seek(f, expsmp_offset + i * expdata.s_ext_entrsz,
 							SEEK_SET);
-			exp_smp.hold = hread_8(f);
-			exp_smp.decay = hread_8(f);
-			exp_smp.suppress_midi_off = hread_8(f);
-			exp_smp.finetune = hread_8(f);
+			exp_smp.hold = hio_read8(f);
+			exp_smp.decay = hio_read8(f);
+			exp_smp.suppress_midi_off = hio_read8(f);
+			exp_smp.finetune = hio_read8(f);
 		}
 
-		hseek(f, pos, SEEK_SET);
+		hio_seek(f, pos, SEEK_SET);
 
 		if (instr.type == -2) {			/* Hybrid */
 			int length, type;
-			int pos = htell(f);
+			int pos = hio_tell(f);
 
-			synth.defaultdecay = hread_8(f);
-			hseek(f, 3, SEEK_CUR);
-			synth.rep = hread_16b(f);
-			synth.replen = hread_16b(f);
-			synth.voltbllen = hread_16b(f);
-			synth.wftbllen = hread_16b(f);
-			synth.volspeed = hread_8(f);
-			synth.wfspeed = hread_8(f);
-			synth.wforms = hread_16b(f);
-			hread(synth.voltbl, 1, 128, f);;
-			hread(synth.wftbl, 1, 128, f);;
+			synth.defaultdecay = hio_read8(f);
+			hio_seek(f, 3, SEEK_CUR);
+			synth.rep = hio_read16b(f);
+			synth.replen = hio_read16b(f);
+			synth.voltbllen = hio_read16b(f);
+			synth.wftbllen = hio_read16b(f);
+			synth.volspeed = hio_read8(f);
+			synth.wfspeed = hio_read8(f);
+			synth.wforms = hio_read16b(f);
+			hio_read(synth.voltbl, 1, 128, f);;
+			hio_read(synth.wftbl, 1, 128, f);;
 
-			hseek(f, pos - 6 + hread_32b(f), SEEK_SET);
-			length = hread_32b(f);
-			type = hread_16b(f);
+			hio_seek(f, pos - 6 + hio_read32b(f), SEEK_SET);
+			length = hio_read32b(f);
+			type = hio_read16b(f);
 
 			mod->xxi[i].extra = malloc(sizeof (struct med_extras));
 			if (mod->xxi[i].extra == NULL)
@@ -449,21 +449,21 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 		}
 
 		if (instr.type == -1) {			/* Synthetic */
-			int pos = htell(f);
+			int pos = hio_tell(f);
 
-			synth.defaultdecay = hread_8(f);
-			hseek(f, 3, SEEK_CUR);
-			synth.rep = hread_16b(f);
-			synth.replen = hread_16b(f);
-			synth.voltbllen = hread_16b(f);
-			synth.wftbllen = hread_16b(f);
-			synth.volspeed = hread_8(f);
-			synth.wfspeed = hread_8(f);
-			synth.wforms = hread_16b(f);
-			hread(synth.voltbl, 1, 128, f);;
-			hread(synth.wftbl, 1, 128, f);;
+			synth.defaultdecay = hio_read8(f);
+			hio_seek(f, 3, SEEK_CUR);
+			synth.rep = hio_read16b(f);
+			synth.replen = hio_read16b(f);
+			synth.voltbllen = hio_read16b(f);
+			synth.wftbllen = hio_read16b(f);
+			synth.volspeed = hio_read8(f);
+			synth.wfspeed = hio_read8(f);
+			synth.wforms = hio_read16b(f);
+			hio_read(synth.voltbl, 1, 128, f);;
+			hio_read(synth.wftbl, 1, 128, f);;
 			for (j = 0; j < 64; j++)
-				synth.wf[j] = hread_32b(f);
+				synth.wf[j] = hio_read32b(f);
 
 			D_(D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+3d %+1d",
 					synth.volspeed, synth.wfspeed,
@@ -495,9 +495,9 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 				mod->xxi[i].sub[j].sid = smp_idx;
 				mod->xxi[i].sub[j].fin = exp_smp.finetune;
 
-				hseek(f, pos - 6 + synth.wf[j], SEEK_SET);
+				hio_seek(f, pos - 6 + synth.wf[j], SEEK_SET);
 
-				mod->xxs[smp_idx].len = hread_16b(f) * 2;
+				mod->xxs[smp_idx].len = hio_read16b(f) * 2;
 				mod->xxs[smp_idx].lps = 0;
 				mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
 				mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
@@ -546,7 +546,7 @@ static int mmd1_load(struct module_data *m, HANDLE *f, const int start)
 				mod->xxi[i].sub[0].xpo,
 				mod->xxi[i].sub[0].fin >> 4);
 
-		hseek(f, start + smpl_offset + 6, SEEK_SET);
+		hio_seek(f, start + smpl_offset + 6, SEEK_SET);
 		load_sample(m, f, 0, &mod->xxs[smp_idx], NULL);
 
 		smp_idx++;

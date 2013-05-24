@@ -24,8 +24,8 @@
 
 #define MAX_SAMP 1024
 
-static int xm_test (HANDLE *, char *, const int);
-static int xm_load (struct module_data *, HANDLE *, const int);
+static int xm_test (HIO_HANDLE *, char *, const int);
+static int xm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader xm_loader = {
     "Fast Tracker II (XM)",
@@ -33,11 +33,11 @@ const struct format_loader xm_loader = {
     xm_load
 };
 
-static int xm_test(HANDLE *f, char *t, const int start)
+static int xm_test(HIO_HANDLE *f, char *t, const int start)
 {
     char buf[20];
 
-    if (hread(buf, 1, 17, f) < 17)		/* ID text */
+    if (hio_read(buf, 1, 17, f) < 17)		/* ID text */
 	return -1;
 
     if (memcmp(buf, "Extended Module: ", 17))
@@ -48,7 +48,7 @@ static int xm_test(HANDLE *f, char *t, const int start)
     return 0;
 }
 
-static int xm_load(struct module_data *m, HANDLE *f, const int start)
+static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, r;
@@ -64,23 +64,23 @@ static int xm_load(struct module_data *m, HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hread(&xfh.id, 17, 1, f);		/* ID text */
-    hread(&xfh.name, 20, 1, f);		/* Module name */
-    hread_8(f);				/* 0x1a */
-    hread(&xfh.tracker, 20, 1, f);	/* Tracker name */
-    xfh.version = hread_16l(f);		/* Version number, minor-major */
-    xfh.headersz = hread_32l(f);	/* Header size */
-    xfh.songlen = hread_16l(f);		/* Song length */
-    xfh.restart = hread_16l(f);		/* Restart position */
-    xfh.channels = hread_16l(f);	/* Number of channels */
-    xfh.patterns = hread_16l(f);	/* Number of patterns */
-    xfh.instruments = hread_16l(f);	/* Number of instruments */
-    xfh.flags = hread_16l(f);		/* 0=Amiga freq table, 1=Linear */
-    xfh.tempo = hread_16l(f);		/* Default tempo */
-    xfh.bpm = hread_16l(f);		/* Default BPM */
+    hio_read(&xfh.id, 17, 1, f);		/* ID text */
+    hio_read(&xfh.name, 20, 1, f);		/* Module name */
+    hio_read8(f);				/* 0x1a */
+    hio_read(&xfh.tracker, 20, 1, f);	/* Tracker name */
+    xfh.version = hio_read16l(f);		/* Version number, minor-major */
+    xfh.headersz = hio_read32l(f);	/* Header size */
+    xfh.songlen = hio_read16l(f);		/* Song length */
+    xfh.restart = hio_read16l(f);		/* Restart position */
+    xfh.channels = hio_read16l(f);	/* Number of channels */
+    xfh.patterns = hio_read16l(f);	/* Number of patterns */
+    xfh.instruments = hio_read16l(f);	/* Number of instruments */
+    xfh.flags = hio_read16l(f);		/* 0=Amiga freq table, 1=Linear */
+    xfh.tempo = hio_read16l(f);		/* Default tempo */
+    xfh.bpm = hio_read16l(f);		/* Default BPM */
 
     /* Honor header size -- needed by BoobieSqueezer XMs */
-    hread(&xfh.order, xfh.headersz - 0x14, 1, f); /* Pattern order table */
+    hio_read(&xfh.order, xfh.headersz - 0x14, 1, f); /* Pattern order table */
 
     strncpy(mod->name, (char *)xfh.name, 20);
 
@@ -126,7 +126,7 @@ static int xm_load(struct module_data *m, HANDLE *f, const int start)
 
     /* Honor header size */
 
-    hseek(f, start + xfh.headersz + 60, SEEK_SET);
+    hio_seek(f, start + xfh.headersz + 60, SEEK_SET);
 
     /* XM 1.02/1.03 has a different structure. This is a hack to re-order
      * the loader and recognize 1.02 files correctly.
@@ -143,10 +143,10 @@ load_patterns:
      * Mon, 04 Jan 1999 11:17:20 +0100
      */
     for (i = 0; i < mod->pat; i++) {
-	xph.length = hread_32l(f);
-	xph.packing = hread_8(f);
-	xph.rows = xfh.version > 0x0102 ? hread_16l(f) : hread_8(f) + 1;
-	xph.datasize = hread_16l(f);
+	xph.length = hio_read32l(f);
+	xph.packing = hio_read8(f);
+	xph.rows = xfh.version > 0x0102 ? hio_read16l(f) : hio_read8(f) + 1;
+	xph.datasize = hio_read16l(f);
 
 	PATTERN_ALLOC(i);
 	if (!(r = mod->xxp[i]->rows = xph.rows))
@@ -155,7 +155,7 @@ load_patterns:
 
 	if (xph.datasize) {
 	    pat = patbuf = calloc(1, xph.datasize);
-	    hread (patbuf, 1, xph.datasize, f);
+	    hio_read (patbuf, 1, xph.datasize, f);
 	    for (j = 0; j < (mod->chn * r); j++) {
 		if ((pat - patbuf) >= xph.datasize)
 		    break;
@@ -273,21 +273,21 @@ load_instruments:
 
     for (i = 0; i < mod->ins; i++) {
 
-	xih.size = hread_32l(f);		/* Instrument size */
+	xih.size = hio_read32l(f);		/* Instrument size */
 
 	/* Modules converted with MOD2XM 1.0 always say we have 31
 	 * instruments, but file may end abruptly before that. This test
 	 * will not work if file has trailing garbage.
 	 */
-	if (heof(f)) {
+	if (hio_eof(f)) {
 		mod->ins = i;
 		break;
 	}
 
-	hread(&xih.name, 22, 1, f);		/* Instrument name */
-	xih.type = hread_8(f);			/* Instrument type (always 0) */
-	xih.samples = hread_16l(f);		/* Number of samples */
-	xih.sh_size = hread_32l(f);		/* Sample header size */
+	hio_read(&xih.name, 22, 1, f);		/* Instrument name */
+	xih.type = hio_read8(f);			/* Instrument type (always 0) */
+	xih.samples = hio_read16l(f);		/* Number of samples */
+	xih.sh_size = hio_read32l(f);		/* Sample header size */
 
 	/* Sanity check */
 	if (xih.samples > 0x10 || (xih.samples > 0 && xih.sh_size > 0x100)) {
@@ -311,33 +311,33 @@ load_instruments:
 	     * only mode, where it will strip off the instrument data.
 	     */
 	    if (xih.size == 0x26) {
-		hread_8(f);
-		hread_32l(f);
+		hio_read8(f);
+		hio_read32l(f);
 		memset(&xi, 0, sizeof (struct xm_instrument));
 	    } else {
-		hread(&xi.sample, 96, 1, f);	/* Sample map */
+		hio_read(&xi.sample, 96, 1, f);	/* Sample map */
 		for (j = 0; j < 24; j++)
-		    xi.v_env[j] = hread_16l(f);	/* Points for volume envelope */
+		    xi.v_env[j] = hio_read16l(f);	/* Points for volume envelope */
 		for (j = 0; j < 24; j++)
-		    xi.p_env[j] = hread_16l(f);	/* Points for pan envelope */
-		xi.v_pts = hread_8(f);		/* Number of volume points */
-		xi.p_pts = hread_8(f);		/* Number of pan points */
-		xi.v_sus = hread_8(f);		/* Volume sustain point */
-		xi.v_start = hread_8(f);	/* Volume loop start point */
-		xi.v_end = hread_8(f);		/* Volume loop end point */
-		xi.p_sus = hread_8(f);		/* Pan sustain point */
-		xi.p_start = hread_8(f);	/* Pan loop start point */
-		xi.p_end = hread_8(f);		/* Pan loop end point */
-		xi.v_type = hread_8(f);		/* Bit 0:On 1:Sustain 2:Loop */
-		xi.p_type = hread_8(f);		/* Bit 0:On 1:Sustain 2:Loop */
-		xi.y_wave = hread_8(f);		/* Vibrato waveform */
-		xi.y_sweep = hread_8(f);	/* Vibrato sweep */
-		xi.y_depth = hread_8(f);	/* Vibrato depth */
-		xi.y_rate = hread_8(f);		/* Vibrato rate */
-		xi.v_fade = hread_16l(f);	/* Volume fadeout */
+		    xi.p_env[j] = hio_read16l(f);	/* Points for pan envelope */
+		xi.v_pts = hio_read8(f);		/* Number of volume points */
+		xi.p_pts = hio_read8(f);		/* Number of pan points */
+		xi.v_sus = hio_read8(f);		/* Volume sustain point */
+		xi.v_start = hio_read8(f);	/* Volume loop start point */
+		xi.v_end = hio_read8(f);		/* Volume loop end point */
+		xi.p_sus = hio_read8(f);		/* Pan sustain point */
+		xi.p_start = hio_read8(f);	/* Pan loop start point */
+		xi.p_end = hio_read8(f);		/* Pan loop end point */
+		xi.v_type = hio_read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
+		xi.p_type = hio_read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
+		xi.y_wave = hio_read8(f);		/* Vibrato waveform */
+		xi.y_sweep = hio_read8(f);	/* Vibrato sweep */
+		xi.y_depth = hio_read8(f);	/* Vibrato depth */
+		xi.y_rate = hio_read8(f);		/* Vibrato rate */
+		xi.v_fade = hio_read16l(f);	/* Volume fadeout */
 
 		/* Skip reserved space */
-		hseek(f, (int)xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
+		hio_seek(f, (int)xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
 
 		/* Envelope */
 		mod->xxi[i].rls = xi.v_fade;
@@ -369,16 +369,16 @@ load_instruments:
 	    }
 
 	    for (j = 0; j < mod->xxi[i].nsm; j++, sample_num++) {
-		xsh[j].length = hread_32l(f);		/* Sample length */
-		xsh[j].loop_start = hread_32l(f);	/* Sample loop start */
-		xsh[j].loop_length = hread_32l(f);	/* Sample loop length */
-		xsh[j].volume = hread_8(f);	/* Volume */
-		xsh[j].finetune = hread_8s(f);	/* Finetune (-128..+127) */
-		xsh[j].type = hread_8(f);	/* Flags */
-		xsh[j].pan = hread_8(f);	/* Panning (0-255) */
-		xsh[j].relnote = hread_8s(f);	/* Relative note number */
-		xsh[j].reserved = hread_8(f);
-		hread(&xsh[j].name, 22, 1, f);	/* Sample_name */
+		xsh[j].length = hio_read32l(f);		/* Sample length */
+		xsh[j].loop_start = hio_read32l(f);	/* Sample loop start */
+		xsh[j].loop_length = hio_read32l(f);	/* Sample loop length */
+		xsh[j].volume = hio_read8(f);	/* Volume */
+		xsh[j].finetune = hio_read8s(f);	/* Finetune (-128..+127) */
+		xsh[j].type = hio_read8(f);	/* Flags */
+		xsh[j].pan = hio_read8(f);	/* Panning (0-255) */
+		xsh[j].relnote = hio_read8s(f);	/* Relative note number */
+		xsh[j].reserved = hio_read8(f);
+		hio_read(&xsh[j].name, 22, 1, f);	/* Sample_name */
 
 		mod->xxi[i].sub[j].vol = xsh[j].volume;
 		mod->xxi[i].sub[j].pan = xsh[j].pan;
@@ -449,7 +449,7 @@ load_instruments:
 	     * generalization should take care of both cases.
 	     */
 
-	     hseek(f, (int)xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
+	     hio_seek(f, (int)xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
     }
     mod->smp = sample_num;

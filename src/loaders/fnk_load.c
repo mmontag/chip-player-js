@@ -13,8 +13,8 @@
 #define MAGIC_Funk	MAGIC4('F','u','n','k')
 
 
-static int fnk_test (HANDLE *, char *, const int);
-static int fnk_load (struct module_data *, HANDLE *, const int);
+static int fnk_test (HIO_HANDLE *, char *, const int);
+static int fnk_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader fnk_loader = {
     "Funktracker (FNK)",
@@ -22,19 +22,19 @@ const struct format_loader fnk_loader = {
     fnk_load
 };
 
-static int fnk_test(HANDLE *f, char *t, const int start)
+static int fnk_test(HIO_HANDLE *f, char *t, const int start)
 {
     uint8 a, b;
     int size;
     struct stat st;
 
-    if (hread_32b(f) != MAGIC_Funk)
+    if (hio_read32b(f) != MAGIC_Funk)
 	return -1;
 
-    hread_8(f); 
-    a = hread_8(f);
-    b = hread_8(f); 
-    hread_8(f); 
+    hio_read8(f); 
+    a = hio_read8(f);
+    b = hio_read8(f); 
+    hio_read8(f); 
 
     if ((a >> 1) < 10)			/* creation year (-1980) */
 	return -1;
@@ -42,11 +42,11 @@ static int fnk_test(HANDLE *f, char *t, const int start)
     if (MSN(b) > 7 || LSN(b) > 9)	/* CPU and card */
 	return -1;
 
-    size = hread_32l(f);
+    size = hio_read32l(f);
     if (size < 1024)
 	return -1;
 
-    if (f->type == HANDLE_TYPE_FILE) {
+    if (f->type == HIO_HANDLE_TYPE_FILE) {
         fstat(fileno(f->f), &st);
         if (size != st.st_size)
             return -1;
@@ -81,7 +81,7 @@ struct fnk_header {
 };
 
 
-static int fnk_load(struct module_data *m, HANDLE *f, const int start)
+static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -92,23 +92,23 @@ static int fnk_load(struct module_data *m, HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hread(&ffh.marker, 4, 1, f);
-    hread(&ffh.info, 4, 1, f);
-    ffh.filesize = hread_32l(f);
-    hread(&ffh.fmt, 4, 1, f);
-    ffh.loop = hread_8(f);
-    hread(&ffh.order, 256, 1, f);
-    hread(&ffh.pbrk, 128, 1, f);
+    hio_read(&ffh.marker, 4, 1, f);
+    hio_read(&ffh.info, 4, 1, f);
+    ffh.filesize = hio_read32l(f);
+    hio_read(&ffh.fmt, 4, 1, f);
+    ffh.loop = hio_read8(f);
+    hio_read(&ffh.order, 256, 1, f);
+    hio_read(&ffh.pbrk, 128, 1, f);
 
     for (i = 0; i < 64; i++) {
-	hread(&ffh.fih[i].name, 19, 1, f);
-	ffh.fih[i].loop_start = hread_32l(f);
-	ffh.fih[i].length = hread_32l(f);
-	ffh.fih[i].volume = hread_8(f);
-	ffh.fih[i].pan = hread_8(f);
-	ffh.fih[i].shifter = hread_8(f);
-	ffh.fih[i].waveform = hread_8(f);
-	ffh.fih[i].retrig = hread_8(f);
+	hio_read(&ffh.fih[i].name, 19, 1, f);
+	ffh.fih[i].loop_start = hio_read32l(f);
+	ffh.fih[i].length = hio_read32l(f);
+	ffh.fih[i].volume = hio_read8(f);
+	ffh.fih[i].pan = hio_read8(f);
+	ffh.fih[i].shifter = hio_read8(f);
+	ffh.fih[i].waveform = hio_read8(f);
+	ffh.fih[i].retrig = hio_read8(f);
     }
 
     day = ffh.info[0] & 0x1f;
@@ -201,7 +201,7 @@ static int fnk_load(struct module_data *m, HANDLE *f, const int start)
 
 	for (j = 0; j < 64 * mod->chn; j++) {
 	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    hread(&ev, 1, 3, f);
+	    hio_read(&ev, 1, 3, f);
 
 	    switch (ev[0] >> 2) {
 	    case 0x3f:

@@ -401,7 +401,7 @@ static void unlink_tempfiles(struct list_head *head)
 
 int xmp_test_module(char *path, struct xmp_test_info *info)
 {
-	HANDLE *h;
+	HIO_HANDLE *h;
 	struct stat st;
 	char buf[XMP_NAME_SIZE];
 	int i;
@@ -418,7 +418,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	}
 #endif
 
-	if ((h = hopen(path, HANDLE_TYPE_FILE)) == NULL)
+	if ((h = hio_open(path, HIO_HANDLE_TYPE_FILE)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 	INIT_LIST_HEAD(&tmpfiles_list);
@@ -467,7 +467,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	}
 
     err:
-	hclose(h);
+	hio_close(h);
 	unlink_tempfiles(&tmpfiles_list);
 	return ret;
 }
@@ -496,7 +496,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
-	HANDLE *h;
+	HIO_HANDLE *h;
 	int i;
 	struct stat st;
 	struct list_head tmpfiles_list;
@@ -514,7 +514,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	}
 #endif
 
-	if ((h = hopen(path, HANDLE_TYPE_FILE)) == NULL)
+	if ((h = hio_open(path, HIO_HANDLE_TYPE_FILE)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 	INIT_LIST_HEAD(&tmpfiles_list);
@@ -527,7 +527,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 		goto err_depack;
 
 	if (st.st_size < 256) {			/* get size after decrunch */
-		hclose(h);
+		hio_close(h);
 		unlink_tempfiles(&tmpfiles_list);
 		return -XMP_ERROR_FORMAT;
 	}
@@ -541,10 +541,10 @@ int xmp_load_module(xmp_context opaque, char *path)
 	D_(D_WARN "load");
 	test_result = load_result = -1;
 	for (i = 0; format_loader[i] != NULL; i++) {
-		hseek(h, 0, SEEK_SET);
+		hio_seek(h, 0, SEEK_SET);
 		test_result = format_loader[i]->test(h, NULL, 0);
 		if (test_result == 0) {
-			hseek(h, 0, SEEK_SET);
+			hio_seek(h, 0, SEEK_SET);
 			D_(D_WARN "load format: %s", format_loader[i]->name);
 			load_result = format_loader[i]->loader(m, h, 0);
 			break;
@@ -553,7 +553,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	set_md5sum(h->f, m->md5);
 
-	hclose(h);
+	hio_close(h);
 	unlink_tempfiles(&tmpfiles_list);
 
 	if (test_result < 0) {
@@ -577,7 +577,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	return 0;
 
     err_depack:
-	hclose(h);
+	hio_close(h);
 	unlink_tempfiles(&tmpfiles_list);
 	return -XMP_ERROR_DEPACK;
 }

@@ -56,13 +56,13 @@
 #include "period.h"
 
 #define MAGIC_PSM_	MAGIC4('P','S','M',' ')
-#define MAGIC_HANDLE	MAGIC4('F','I','L','E')
+#define MAGIC_HIO_HANDLE	MAGIC4('F','I','L','E')
 #define MAGIC_TITL	MAGIC4('T','I','T','L')
 #define MAGIC_OPLH	MAGIC4('O','P','L','H')
 
 
-static int masi_test (HANDLE *, char *, const int);
-static int masi_load (struct module_data *, HANDLE *, const int);
+static int masi_test (HIO_HANDLE *, char *, const int);
+static int masi_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader masi_loader = {
 	"Epic MegaGames MASI (PSM)",
@@ -70,28 +70,28 @@ const struct format_loader masi_loader = {
 	masi_load
 };
 
-static int masi_test(HANDLE *f, char *t, const int start)
+static int masi_test(HIO_HANDLE *f, char *t, const int start)
 {
 	int val;
 
-	if (hread_32b(f) != MAGIC_PSM_)
+	if (hio_read32b(f) != MAGIC_PSM_)
 		return -1;
 
-	hread_8(f);
-	hread_8(f);
-	hread_8(f);
-	if (hread_8(f) != 0)
+	hio_read8(f);
+	hio_read8(f);
+	hio_read8(f);
+	if (hio_read8(f) != 0)
 		return -1;
 
-	if (hread_32b(f) != MAGIC_HANDLE) 
+	if (hio_read32b(f) != MAGIC_HIO_HANDLE) 
 		return -1;
 
-	hread_32b(f);
-	val = hread_32l(f);
-	hseek(f, val, SEEK_CUR);
+	hio_read32b(f);
+	val = hio_read32l(f);
+	hio_seek(f, val, SEEK_CUR);
 
-	if (hread_32b(f) == MAGIC_TITL) {
-		val = hread_32l(f);
+	if (hio_read32b(f) == MAGIC_TITL) {
+		val = hio_read32l(f);
 		read_title(f, t, val);
 	} else {
 		read_title(f, t, 0);
@@ -108,20 +108,20 @@ struct local_data {
     uint8 *pord;
 };
 
-static void get_sdft(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_sdft(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 }
 
-static void get_titl(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_titl(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	char buf[40];
 	
-	hread(buf, 1, 40, f);
+	hio_read(buf, 1, 40, f);
 	strncpy(mod->name, buf, size > 32 ? 32 : size);
 }
 
-static void get_dsmp_cnt(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_dsmp_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
@@ -129,44 +129,44 @@ static void get_dsmp_cnt(struct module_data *m, int size, HANDLE *f, void *parm)
 	mod->smp = mod->ins;
 }
 
-static void get_pbod_cnt(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_pbod_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 	char buf[20];
 
 	mod->pat++;
-	hread(buf, 1, 20, f);
+	hio_read(buf, 1, 20, f);
 	if (buf[9] != 0 && buf[13] == 0)
 		data->sinaria = 1;
 }
 
 
-static void get_dsmp(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 	int i, srate;
 	int finetune;
 
-	hread_8(f);				/* flags */
-	hseek(f, 8, SEEK_CUR);			/* songname */
-	hseek(f, data->sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
+	hio_read8(f);				/* flags */
+	hio_seek(f, 8, SEEK_CUR);			/* songname */
+	hio_seek(f, data->sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	i = data->cur_ins;
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	hread(&mod->xxi[i].name, 1, 31, f);
+	hio_read(&mod->xxi[i].name, 1, 31, f);
 	str_adj((char *)mod->xxi[i].name);
-	hseek(f, 8, SEEK_CUR);
-	hread_8(f);		/* insno */
-	hread_8(f);
-	mod->xxs[i].len = hread_32l(f);
+	hio_seek(f, 8, SEEK_CUR);
+	hio_read8(f);		/* insno */
+	hio_read8(f);
+	mod->xxs[i].len = hio_read32l(f);
 	mod->xxi[i].nsm = !!(mod->xxs[i].len);
-	mod->xxs[i].lps = hread_32l(f);
-	mod->xxs[i].lpe = hread_32l(f);
+	mod->xxs[i].lps = hio_read32l(f);
+	mod->xxs[i].lpe = hio_read32l(f);
 	mod->xxs[i].flg = mod->xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
-	hread_16l(f);
+	hio_read16l(f);
 
 	if ((int32)mod->xxs[i].lpe < 0)
 		mod->xxs[i].lpe = 0;
@@ -178,14 +178,14 @@ static void get_dsmp(struct module_data *m, int size, HANDLE *f, void *parm)
 		if (mod->xxs[i].lpe > 2)
 			mod->xxs[i].lpe -= 2;
 
-		finetune = (int8)(hread_8s(f) << 4);
+		finetune = (int8)(hio_read8s(f) << 4);
 	}
 
-	mod->xxi[i].sub[0].vol = hread_8(f) / 2 + 1;
-	hread_32l(f);
+	mod->xxi[i].sub[0].vol = hio_read8(f) / 2 + 1;
+	hio_read32l(f);
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
-	srate = hread_32l(f);
+	srate = hio_read32l(f);
 
 	D_(D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -196,14 +196,14 @@ static void get_dsmp(struct module_data *m, int size, HANDLE *f, void *parm)
 	c2spd_to_note(srate, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	mod->xxi[i].sub[0].fin += finetune;
 
-	hseek(f, 16, SEEK_CUR);
+	hio_seek(f, 16, SEEK_CUR);
 	load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL);
 
 	data->cur_ins++;
 }
 
 
-static void get_pbod(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -215,10 +215,10 @@ static void get_pbod(struct module_data *m, int size, HANDLE *f, void *parm)
 
 	i = data->cur_pat;
 
-	len = hread_32l(f);
-	hread(data->pnam + i * 8, 1, data->sinaria ? 8 : 4, f);
+	len = hio_read32l(f);
+	hio_read(data->pnam + i * 8, 1, data->sinaria ? 8 : 4, f);
 
-	rows = hread_16l(f);
+	rows = hio_read16l(f);
 
 	PATTERN_ALLOC(i);
 	mod->xxp[i]->rows = rows;
@@ -227,20 +227,20 @@ static void get_pbod(struct module_data *m, int size, HANDLE *f, void *parm)
 	r = 0;
 
 	do {
-		rowlen = hread_16l(f) - 2;
+		rowlen = hio_read16l(f) - 2;
 		while (rowlen > 0) {
-			flag = hread_8(f);
+			flag = hio_read8(f);
 	
 			if (rowlen == 1)
 				break;
 	
-			chan = hread_8(f);
+			chan = hio_read8(f);
 			rowlen -= 2;
 	
 			event = chan < mod->chn ? &EVENT(i, chan, r) : &dummy;
 	
 			if (flag & 0x80) {
-				uint8 note = hread_8(f);
+				uint8 note = hio_read8(f);
 				rowlen--;
 				if (data->sinaria)
 					note += 37;
@@ -250,18 +250,18 @@ static void get_pbod(struct module_data *m, int size, HANDLE *f, void *parm)
 			}
 
 			if (flag & 0x40) {
-				event->ins = hread_8(f) + 1;
+				event->ins = hio_read8(f) + 1;
 				rowlen--;
 			}
 	
 			if (flag & 0x20) {
-				event->vol = hread_8(f) / 2;
+				event->vol = hio_read8(f) / 2;
 				rowlen--;
 			}
 	
 			if (flag & 0x10) {
-				uint8 fxt = hread_8(f);
-				uint8 fxp = hread_8(f);
+				uint8 fxt = hio_read8(f);
+				uint8 fxp = hio_read8(f);
 				rowlen -= 2;
 	
 				/* compressed events */
@@ -320,7 +320,7 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					fxp = (EX_RETRIG << 4) | (fxp & 0x0f); 
 					break;
 				case 0x29:		/* unknown */
-					hread_16l(f);
+					hio_read16l(f);
 					rowlen -= 2;
 					break;
 				case 0x33:		/* position Jump */
@@ -350,15 +350,15 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 	data->cur_pat++;
 }
 
-static void get_song(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
-	hseek(f, 10, SEEK_CUR);
-	mod->chn = hread_8(f);
+	hio_seek(f, 10, SEEK_CUR);
+	mod->chn = hio_read8(f);
 }
 
-static void get_song_2(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_song_2(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -366,53 +366,53 @@ static void get_song_2(struct module_data *m, int size, HANDLE *f, void *parm)
 	char c, buf[20];
 	int i;
 
-	hread(buf, 1, 9, f);
-	hread_16l(f);
+	hio_read(buf, 1, 9, f);
+	hio_read16l(f);
 
 	D_(D_INFO "Subsong title: %-9.9s", buf);
 
-	magic = hread_32b(f);
+	magic = hio_read32b(f);
 	while (magic != MAGIC_OPLH) {
 		int skip;
-		skip = hread_32l(f);;
-		hseek(f, skip, SEEK_CUR);
-		magic = hread_32b(f);
+		skip = hio_read32l(f);;
+		hio_seek(f, skip, SEEK_CUR);
+		magic = hio_read32b(f);
 	}
 
-	hread_32l(f);	/* chunk size */
+	hio_read32l(f);	/* chunk size */
 
-	hseek(f, 9, SEEK_CUR);		/* unknown data */
+	hio_seek(f, 9, SEEK_CUR);		/* unknown data */
 	
-	c = hread_8(f);
-	for (i = 0; c != 0x01; c = hread_8(f)) {
+	c = hio_read8(f);
+	for (i = 0; c != 0x01; c = hio_read8(f)) {
 		switch (c) {
 		case 0x07:
-			mod->spd = hread_8(f);
-			hread_8(f);		/* 08 */
-			mod->bpm = hread_8(f);
+			mod->spd = hio_read8(f);
+			hio_read8(f);		/* 08 */
+			mod->bpm = hio_read8(f);
 			break;
 		case 0x0d:
-			hread_8(f);		/* channel number? */
-			mod->xxc[i].pan = hread_8(f);
-			hread_8(f);		/* flags? */
+			hio_read8(f);		/* channel number? */
+			mod->xxc[i].pan = hio_read8(f);
+			hio_read8(f);		/* flags? */
 			i++;
 			break;
 		case 0x0e:
-			hread_8(f);		/* channel number? */
-			hread_8(f);		/* ? */
+			hio_read8(f);		/* channel number? */
+			hio_read8(f);		/* ? */
 			break;
 		default:
-			printf("channel %d: %02x %02x\n", i, c, hread_8(f));
+			printf("channel %d: %02x %02x\n", i, c, hio_read8(f));
 		}
 	}
 
-	for (; c == 0x01; c = hread_8(f)) {
-		hread(data->pord + mod->len * 8, 1, data->sinaria ? 8 : 4, f);
+	for (; c == 0x01; c = hio_read8(f)) {
+		hio_read(data->pord + mod->len * 8, 1, data->sinaria ? 8 : 4, f);
 		mod->len++;
 	}
 }
 
-static int masi_load(struct module_data *m, HANDLE *f, const int start)
+static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
@@ -422,16 +422,16 @@ static int masi_load(struct module_data *m, HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hread_32b(f);
+	hio_read32b(f);
 
 	data.sinaria = 0;
 	mod->name[0] = 0;
 
-	hseek(f, 8, SEEK_CUR);		/* skip file size and HANDLE */
+	hio_seek(f, 8, SEEK_CUR);		/* skip file size and HIO_HANDLE */
 	mod->smp = mod->ins = 0;
 	data.cur_pat = 0;
 	data.cur_ins = 0;
-	offset = htell(f);
+	offset = hio_tell(f);
 
 	handle = iff_new();
 	if (handle == NULL)
@@ -446,7 +446,7 @@ static int masi_load(struct module_data *m, HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!heof(f)) {
+	while (!hio_eof(f)) {
 		iff_chunk(handle, m, f, &data);
 	}
 
@@ -466,7 +466,7 @@ static int masi_load(struct module_data *m, HANDLE *f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 	D_(D_INFO "Stored samples : %d", mod->smp);
 
-	hseek(f, start + offset, SEEK_SET);
+	hio_seek(f, start + offset, SEEK_SET);
 
 	mod->len = 0;
 
@@ -481,7 +481,7 @@ static int masi_load(struct module_data *m, HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!heof (f)) {
+	while (!hio_eof (f)) {
 		iff_chunk(handle, m, f, &data);
 	}
 

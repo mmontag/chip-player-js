@@ -17,8 +17,8 @@
 
 #define MAGIC_STIM	MAGIC4('S','T','I','M')
 
-static int stim_test(HANDLE *, char *, const int);
-static int stim_load(struct module_data *, HANDLE *, const int);
+static int stim_test(HIO_HANDLE *, char *, const int);
+static int stim_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader stim_loader = {
 	"Slamtilt",
@@ -26,9 +26,9 @@ const struct format_loader stim_loader = {
 	stim_load
 };
 
-static int stim_test(HANDLE *f, char *t, const int start)
+static int stim_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (hread_32b(f) != MAGIC_STIM)
+	if (hio_read32b(f) != MAGIC_STIM)
 		return -1;
 
 	read_title(f, t, 0);
@@ -55,7 +55,7 @@ struct stim_header {
 	uint32 pataddr[64];	/* Pattern addresses (add 0xc) */
 };
 
-static int stim_load(struct module_data *m, HANDLE * f, const int start)
+static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
@@ -66,16 +66,16 @@ static int stim_load(struct module_data *m, HANDLE * f, const int start)
 
 	LOAD_INIT();
 
-	sh.id = hread_32b(f);
-	sh.smpaddr = hread_32b(f);
-	hread_32b(f);
-	hread_32b(f);
-	sh.nos = hread_16b(f);
-	sh.len = hread_16b(f);
-	sh.pat = hread_16b(f);
-	hread(&sh.order, 128, 1, f);
+	sh.id = hio_read32b(f);
+	sh.smpaddr = hio_read32b(f);
+	hio_read32b(f);
+	hio_read32b(f);
+	sh.nos = hio_read16b(f);
+	sh.len = hio_read16b(f);
+	sh.pat = hio_read16b(f);
+	hio_read(&sh.order, 128, 1, f);
 	for (i = 0; i < 64; i++)
-		sh.pataddr[i] = hread_32b(f) + 0x0c;
+		sh.pataddr[i] = hio_read32b(f) + 0x0c;
 
 	mod->len = sh.len;
 	mod->pat = sh.pat;
@@ -100,12 +100,12 @@ static int stim_load(struct module_data *m, HANDLE * f, const int start)
 		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		hseek(f, start + sh.pataddr[i] + 8, SEEK_SET);
+		hio_seek(f, start + sh.pataddr[i] + 8, SEEK_SET);
 
 		for (j = 0; j < 4; j++) {
 			for (k = 0; k < 64; k++) {
 				event = &EVENT(i, j, k);
-				b1 = hread_8(f);
+				b1 = hio_read8(f);
 
 				if (b1 & 0x80) {
 					k += b1 & 0x7f;
@@ -125,8 +125,8 @@ static int stim_load(struct module_data *m, HANDLE * f, const int start)
 				 *  Description bit set to 0.
 				 */
 
-				b2 = hread_8(f);
-				b3 = hread_8(f);
+				b2 = hio_read8(f);
+				b3 = hio_read8(f);
 
 				if ((event->note = b2 & 0x3f) != 0)
 					event->note += 47;
@@ -143,14 +143,14 @@ static int stim_load(struct module_data *m, HANDLE * f, const int start)
 
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
-	hseek(f, start + sh.smpaddr + mod->smp * 4, SEEK_SET);
+	hio_seek(f, start + sh.smpaddr + mod->smp * 4, SEEK_SET);
 
 	for (i = 0; i < mod->smp; i++) {
-		si.size = hread_16b(f);
-		si.finetune = hread_8(f);
-		si.volume = hread_8(f);
-		si.loop_start = hread_16b(f);
-		si.loop_size = hread_16b(f);
+		si.size = hio_read16b(f);
+		si.finetune = hio_read8(f);
+		si.volume = hio_read8(f);
+		si.loop_start = hio_read16b(f);
+		si.loop_size = hio_read16b(f);
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		mod->xxs[i].len = 2 * si.size;

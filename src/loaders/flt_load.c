@@ -10,8 +10,8 @@
 #include "mod.h"
 #include "period.h"
 
-static int flt_test (HANDLE *, char *, const int);
-static int flt_load (struct module_data *, HANDLE *, const int);
+static int flt_test (HIO_HANDLE *, char *, const int);
+static int flt_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader flt_loader = {
     "Startrekker (MOD)",
@@ -19,15 +19,15 @@ const struct format_loader flt_loader = {
     flt_load
 };
 
-static int flt_test(HANDLE *f, char *t, const int start)
+static int flt_test(HIO_HANDLE *f, char *t, const int start)
 {
     char buf[4];
 
-    if (f->type != HANDLE_TYPE_FILE)
+    if (f->type != HIO_HANDLE_TYPE_FILE)
 	return -1;
 
-    hseek(f, start + 1080, SEEK_SET);
-    if (hread(buf, 1, 4, f) < 4)
+    hio_seek(f, start + 1080, SEEK_SET);
+    if (hio_read(buf, 1, 4, f) < 4)
 	return -1;
 
     /* Also RASP? */
@@ -37,7 +37,7 @@ static int flt_test(HANDLE *f, char *t, const int start)
     if (buf[3] != '4' && buf[3] != '8' && buf[3] != 'M')
 	return -1;
 
-    hseek(f, start + 0, SEEK_SET);
+    hio_seek(f, start + 0, SEEK_SET);
     read_title(f, t, 20);
 
     return 0;
@@ -93,13 +93,13 @@ static int is_am_instrument(FILE *nt, int i)
     int16 wf;
 
     fseek(nt, 144 + i * 120, SEEK_SET);
-    if (hread(buf, 1, 2, nt) < 2)
+    if (hio_read(buf, 1, 2, nt) < 2)
 	return 0;
     if (memcmp(buf, "AM", 2))
 	return 0;
 
     fseek(nt, 24, SEEK_CUR);
-    wf = hread_16b(nt);
+    wf = hio_read16b(nt);
     if (wf < 0 || wf > 3)
 	return 0;
 
@@ -115,21 +115,21 @@ static void read_am_instrument(struct module_data *m, FILE *nt, int i)
     int8 am_noise[1024];
 
     fseek(nt, 144 + i * 120 + 2 + 4, SEEK_SET);
-    am.l0 = hread_16b(nt);
-    am.a1l = hread_16b(nt);
-    am.a1s = hread_16b(nt);
-    am.a2l = hread_16b(nt);
-    am.a2s = hread_16b(nt);
-    am.sl = hread_16b(nt);
-    am.ds = hread_16b(nt);
-    am.st = hread_16b(nt);
-    hread_16b(nt);
-    am.rs = hread_16b(nt);
-    am.wf = hread_16b(nt);
-    am.p_fall = -(int16)hread_16b(nt);
-    am.v_amp = hread_16b(nt);
-    am.v_spd = hread_16b(nt);
-    am.fq = hread_16b(nt);
+    am.l0 = hio_read16b(nt);
+    am.a1l = hio_read16b(nt);
+    am.a1s = hio_read16b(nt);
+    am.a2l = hio_read16b(nt);
+    am.a2s = hio_read16b(nt);
+    am.sl = hio_read16b(nt);
+    am.ds = hio_read16b(nt);
+    am.st = hio_read16b(nt);
+    hio_read16b(nt);
+    am.rs = hio_read16b(nt);
+    am.wf = hio_read16b(nt);
+    am.p_fall = -(int16)hio_read16b(nt);
+    am.v_amp = hio_read16b(nt);
+    am.v_spd = hio_read16b(nt);
+    am.fq = hio_read16b(nt);
 
 #if 0
 printf("L0=%d A1L=%d A1S=%d A2L=%d A2S=%d SL=%d DS=%d ST=%d RS=%d WF=%d\n",
@@ -269,7 +269,7 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 }
 
 
-static int flt_load(struct module_data *m, HANDLE *f, const int start)
+static int flt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -314,19 +314,19 @@ static int flt_load(struct module_data *m, HANDLE *f, const int start)
 	}
     }
 
-    hread(&mh.name, 20, 1, f);
+    hio_read(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
-	hread(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
-	mh.ins[i].size = hread_16b(f);		/* Length in 16-bit words */
-	mh.ins[i].finetune = hread_8(f);	/* Finetune (signed nibble) */
-	mh.ins[i].volume = hread_8(f);		/* Linear playback volume */
-	mh.ins[i].loop_start = hread_16b(f);	/* Loop start in 16-bit words */
-	mh.ins[i].loop_size = hread_16b(f);	/* Loop size in 16-bit words */
+	hio_read(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+	mh.ins[i].size = hio_read16b(f);		/* Length in 16-bit words */
+	mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
+	mh.ins[i].volume = hio_read8(f);		/* Linear playback volume */
+	mh.ins[i].loop_start = hio_read16b(f);	/* Loop start in 16-bit words */
+	mh.ins[i].loop_size = hio_read16b(f);	/* Loop size in 16-bit words */
     }
-    mh.len = hread_8(f);
-    mh.restart = hread_8(f);
-    hread(&mh.order, 128, 1, f);
-    hread(&mh.magic, 4, 1, f);
+    mh.len = hio_read8(f);
+    mh.restart = hio_read8(f);
+    hio_read(&mh.order, 128, 1, f);
+    hio_read(&mh.magic, 4, 1, f);
 
     if (mh.magic[3] == '4')
 	mod->chn = 4;
@@ -404,13 +404,13 @@ static int flt_load(struct module_data *m, HANDLE *f, const int start)
 	TRACK_ALLOC(i);
 	for (j = 0; j < (64 * 4); j++) {
 	    event = &EVENT(i, j % 4, j / 4);
-	    hread(mod_event, 1, 4, f);
+	    hio_read(mod_event, 1, 4, f);
 	    cvt_pt_event(event, mod_event);
 	}
 	if (mod->chn > 4) {
 	    for (j = 0; j < (64 * 4); j++) {
 		event = &EVENT(i, (j % 4) + 4, j / 4);
-		hread(mod_event, 1, 4, f);
+		hio_read(mod_event, 1, 4, f);
 		cvt_pt_event(event, mod_event);
 
 		/* no macros */

@@ -60,8 +60,8 @@ struct far_event {
 #define MAGIC_FAR	MAGIC4('F','A','R',0xfe)
 
 
-static int far_test (HANDLE *, char *, const int);
-static int far_load (struct module_data *, HANDLE *, const int);
+static int far_test (HIO_HANDLE *, char *, const int);
+static int far_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader far_loader = {
     "Farandole Composer (FAR)",
@@ -69,9 +69,9 @@ const struct format_loader far_loader = {
     far_load
 };
 
-static int far_test(HANDLE *f, char *t, const int start)
+static int far_test(HIO_HANDLE *f, char *t, const int start)
 {
-    if (hread_32b(f) != MAGIC_FAR)
+    if (hio_read32b(f) != MAGIC_FAR)
 	return -1;
 
     read_title(f, t, 40);
@@ -109,7 +109,7 @@ static const uint8 fx[] = {
 };
 
 
-static int far_load(struct module_data *m, HANDLE *f, const int start)
+static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, vib = 0;
@@ -121,26 +121,26 @@ static int far_load(struct module_data *m, HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hread_32b(f);				/* File magic: 'FAR\xfe' */
-    hread(&ffh.name, 40, 1, f);		/* Song name */
-    hread(&ffh.crlf, 3, 1, f);		/* 0x0d 0x0a 0x1A */
-    ffh.headersize = hread_16l(f);	/* Remaining header size in bytes */
-    ffh.version = hread_8(f);		/* Version MSN=major, LSN=minor */
-    hread(&ffh.ch_on, 16, 1, f);	/* Channel on/off switches */
-    hseek(f, 9, SEEK_CUR);		/* Current editing values */
-    ffh.tempo = hread_8(f);		/* Default tempo */
-    hread(&ffh.pan, 16, 1, f);		/* Channel pan definitions */
-    hread_32l(f);				/* Grid, mode (for editor) */
-    ffh.textlen = hread_16l(f);		/* Length of embedded text */
+    hio_read32b(f);				/* File magic: 'FAR\xfe' */
+    hio_read(&ffh.name, 40, 1, f);		/* Song name */
+    hio_read(&ffh.crlf, 3, 1, f);		/* 0x0d 0x0a 0x1A */
+    ffh.headersize = hio_read16l(f);	/* Remaining header size in bytes */
+    ffh.version = hio_read8(f);		/* Version MSN=major, LSN=minor */
+    hio_read(&ffh.ch_on, 16, 1, f);	/* Channel on/off switches */
+    hio_seek(f, 9, SEEK_CUR);		/* Current editing values */
+    ffh.tempo = hio_read8(f);		/* Default tempo */
+    hio_read(&ffh.pan, 16, 1, f);		/* Channel pan definitions */
+    hio_read32l(f);				/* Grid, mode (for editor) */
+    ffh.textlen = hio_read16l(f);		/* Length of embedded text */
 
-    hseek(f, ffh.textlen, SEEK_CUR);	/* Skip song text */
+    hio_seek(f, ffh.textlen, SEEK_CUR);	/* Skip song text */
 
-    hread(&ffh2.order, 256, 1, f);	/* Orders */
-    ffh2.patterns = hread_8(f);		/* Number of stored patterns (?) */
-    ffh2.songlen = hread_8(f);		/* Song length in patterns */
-    ffh2.restart = hread_8(f);		/* Restart pos */
+    hio_read(&ffh2.order, 256, 1, f);	/* Orders */
+    ffh2.patterns = hio_read8(f);		/* Number of stored patterns (?) */
+    ffh2.songlen = hio_read8(f);		/* Song length in patterns */
+    ffh2.restart = hio_read8(f);		/* Restart pos */
     for (i = 0; i < 256; i++)
-	ffh2.patsize[i] = hread_16l(f);	/* Size of each pattern in bytes */
+	ffh2.patsize[i] = hio_read16l(f);	/* Size of each pattern in bytes */
 
     mod->chn = 16;
     /*mod->pat=ffh2.patterns; (Error in specs? --claudio) */
@@ -176,8 +176,8 @@ static int far_load(struct module_data *m, HANDLE *f, const int start)
 	mod->xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
 	TRACK_ALLOC(i);
 
-	brk = hread_8(f) + 1;
-	hread_8(f);
+	brk = hio_read8(f) + 1;
+	hio_read8(f);
 
 	for (j = 0; j < mod->xxp[i]->rows * mod->chn; j++) {
 	    event = &EVENT(i, j % mod->chn, j / mod->chn);
@@ -185,10 +185,10 @@ static int far_load(struct module_data *m, HANDLE *f, const int start)
 	    if ((j % mod->chn) == 0 && (j / mod->chn) == brk)
 		event->f2t = FX_BREAK;
 	
-	    note = hread_8(f);
-	    ins = hread_8(f);
-	    vol = hread_8(f);
-	    fxb = hread_8(f);
+	    note = hio_read8(f);
+	    ins = hio_read8(f);
+	    vol = hio_read8(f);
+	    fxb = hio_read8(f);
 
 	    if (note)
 		event->note = note + 48;
@@ -249,7 +249,7 @@ static int far_load(struct module_data *m, HANDLE *f, const int start)
     }
 
     mod->ins = -1;
-    hread(sample_map, 1, 8, f);
+    hio_read(sample_map, 1, 8, f);
     for (i = 0; i < 64; i++) {
 	if (sample_map[i / 8] & (1 << (i % 8)))
 		mod->ins = i;
@@ -268,14 +268,14 @@ static int far_load(struct module_data *m, HANDLE *f, const int start)
 
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	hread(&fih.name, 32, 1, f);	/* Instrument name */
-	fih.length = hread_32l(f);	/* Length of sample (up to 64Kb) */
-	fih.finetune = hread_8(f);	/* Finetune (unsuported) */
-	fih.volume = hread_8(f);		/* Volume (unsuported?) */
-	fih.loop_start = hread_32l(f);	/* Loop start */
-	fih.loopend = hread_32l(f);	/* Loop end */
-	fih.sampletype = hread_8(f);	/* 1=16 bit sample */
-	fih.loopmode = hread_8(f);
+	hio_read(&fih.name, 32, 1, f);	/* Instrument name */
+	fih.length = hio_read32l(f);	/* Length of sample (up to 64Kb) */
+	fih.finetune = hio_read8(f);	/* Finetune (unsuported) */
+	fih.volume = hio_read8(f);		/* Volume (unsuported?) */
+	fih.loop_start = hio_read32l(f);	/* Loop start */
+	fih.loopend = hio_read32l(f);	/* Loop end */
+	fih.sampletype = hio_read8(f);	/* 1=16 bit sample */
+	fih.loopmode = hio_read8(f);
 
 	fih.length &= 0xffff;
 	fih.loop_start &= 0xffff;

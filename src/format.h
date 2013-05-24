@@ -9,8 +9,8 @@
 
 struct format_loader {
 	const char *name;
-	int (*const test)(HANDLE *, char *, const int);
-	int (*const loader)(struct module_data *, HANDLE *, const int);
+	int (*const test)(HIO_HANDLE *, char *, const int);
+	int (*const loader)(struct module_data *, HIO_HANDLE *, const int);
 };
 
 char **format_list(void);

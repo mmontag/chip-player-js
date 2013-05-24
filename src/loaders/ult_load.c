@@ -19,8 +19,8 @@
 #include "loader.h"
 
 
-static int ult_test (HANDLE *, char *, const int);
-static int ult_load (struct module_data *, HANDLE *, const int);
+static int ult_test (HIO_HANDLE *, char *, const int);
+static int ult_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader ult_loader = {
     "Ultra Tracker (ULT)",
@@ -28,11 +28,11 @@ const struct format_loader ult_loader = {
     ult_load
 };
 
-static int ult_test(HANDLE *f, char *t, const int start)
+static int ult_test(HIO_HANDLE *f, char *t, const int start)
 {
     char buf[15];
 
-    if (hread(buf, 1, 15, f) < 15)
+    if (hio_read(buf, 1, 15, f) < 15)
 	return -1;
 
     if (memcmp(buf, "MAS_UTrack_V000", 14))
@@ -83,7 +83,7 @@ struct ult_event {
 };
 
 
-static int ult_load(struct module_data *m, HANDLE *f, const int start)
+static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, k, ver, cnt;
@@ -99,9 +99,9 @@ static int ult_load(struct module_data *m, HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hread(&ufh.magic, 15, 1, f);
-    hread(&ufh.name, 32, 1, f);
-    ufh.msgsize = hread_8(f);
+    hio_read(&ufh.magic, 15, 1, f);
+    hio_read(&ufh.name, 32, 1, f);
+    ufh.msgsize = hio_read8(f);
 
     ver = ufh.magic[14] - '0';
 
@@ -111,9 +111,9 @@ static int ult_load(struct module_data *m, HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    hseek(f, ufh.msgsize * 32, SEEK_CUR);
+    hio_seek(f, ufh.msgsize * 32, SEEK_CUR);
 
-    mod->ins = mod->smp = hread_8(f);
+    mod->ins = mod->smp = hio_read8(f);
     /* mod->flg |= XXM_FLG_LINEAR; */
 
     /* Read and convert instruments */
@@ -125,16 +125,16 @@ static int ult_load(struct module_data *m, HANDLE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	hread(&uih.name, 32, 1, f);
-	hread(&uih.dosname, 12, 1, f);
-	uih.loop_start = hread_32l(f);
-	uih.loopend = hread_32l(f);
-	uih.sizestart = hread_32l(f);
-	uih.sizeend = hread_32l(f);
-	uih.volume = hread_8(f);
-	uih.bidiloop = hread_8(f);
-	uih.finetune = hread_16l(f);
-	uih.c2spd = ver < 4 ? 0 : hread_16l(f);
+	hio_read(&uih.name, 32, 1, f);
+	hio_read(&uih.dosname, 12, 1, f);
+	uih.loop_start = hio_read32l(f);
+	uih.loopend = hio_read32l(f);
+	uih.sizestart = hio_read32l(f);
+	uih.sizeend = hio_read32l(f);
+	uih.volume = hio_read8(f);
+	uih.bidiloop = hio_read8(f);
+	uih.finetune = hio_read16l(f);
+	uih.c2spd = ver < 4 ? 0 : hio_read16l(f);
 
 	if (ver > 3) {			/* Incorrect in ult_form.txt */
 	    uih.c2spd ^= uih.finetune;
@@ -201,9 +201,9 @@ static int ult_load(struct module_data *m, HANDLE *f, const int start)
 	    c2spd_to_note(uih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
-    hread(&ufh2.order, 256, 1, f);
-    ufh2.channels = hread_8(f);
-    ufh2.patterns = hread_8(f);
+    hio_read(&ufh2.order, 256, 1, f);
+    ufh2.channels = hio_read8(f);
+    ufh2.patterns = hio_read8(f);
 
     for (i = 0; i < 256; i++) {
 	if (ufh2.order[i] == 0xff)
@@ -219,7 +219,7 @@ static int ult_load(struct module_data *m, HANDLE *f, const int start)
 
     for (i = 0; i < mod->chn; i++) {
 	if (ver >= 3) {
-	    x8 = hread_8(f);
+	    x8 = hio_read8(f);
 	    mod->xxc[i].pan = 255 * x8 / 15;
 	} else {
 	    mod->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */
@@ -242,12 +242,12 @@ static int ult_load(struct module_data *m, HANDLE *f, const int start)
     for (i = 0; i < mod->chn; i++) {
 	for (j = 0; j < 64 * mod->pat; ) {
 	    cnt = 1;
-	    x8 = hread_8(f);		/* Read note or repeat code (0xfc) */
+	    x8 = hio_read8(f);		/* Read note or repeat code (0xfc) */
 	    if (x8 == 0xfc) {
-		cnt = hread_8(f);			/* Read repeat count */
-		x8 = hread_8(f);			/* Read note */
+		cnt = hio_read8(f);			/* Read repeat count */
+		x8 = hio_read8(f);			/* Read note */
 	    }
-	    hread(&ue, 4, 1, f);		/* Read rest of the event */
+	    hio_read(&ue, 4, 1, f);		/* Read rest of the event */
 
 	    if (cnt == 0)
 		cnt++;

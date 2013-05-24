@@ -14,8 +14,8 @@
 #define MAGIC_IT10	MAGIC4('I','T','1','0')
 
 
-static int ice_test (HANDLE *, char *, const int);
-static int ice_load (struct module_data *, HANDLE *, const int);
+static int ice_test (HIO_HANDLE *, char *, const int);
+static int ice_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader ice_loader = {
     "Soundtracker 2.6/Ice Tracker (MTN)",
@@ -23,16 +23,16 @@ const struct format_loader ice_loader = {
     ice_load
 };
 
-static int ice_test(HANDLE *f, char *t, const int start)
+static int ice_test(HIO_HANDLE *f, char *t, const int start)
 {
     uint32 magic;
 
-    hseek(f, start + 1464, SEEK_SET);
-    magic = hread_32b(f);
+    hio_seek(f, start + 1464, SEEK_SET);
+    magic = hio_read32b(f);
     if (magic != MAGIC_MTN_ && magic != MAGIC_IT10)
 	return -1;
 
-    hseek(f, start + 0, SEEK_SET);
+    hio_seek(f, start + 0, SEEK_SET);
     read_title(f, t, 28);
 
     return 0;
@@ -58,7 +58,7 @@ struct ice_header {
 };
 
 
-static int ice_load(struct module_data *m, HANDLE *f, const int start)
+static int ice_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -68,19 +68,19 @@ static int ice_load(struct module_data *m, HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hread(&ih.title, 20, 1, f);
+    hio_read(&ih.title, 20, 1, f);
     for (i = 0; i < 31; i++) {
-	hread(&ih.ins[i].name, 22, 1, f);
-	ih.ins[i].len = hread_16b(f);
-	ih.ins[i].finetune = hread_8(f);
-	ih.ins[i].volume = hread_8(f);
-	ih.ins[i].loop_start = hread_16b(f);
-	ih.ins[i].loop_size = hread_16b(f);
+	hio_read(&ih.ins[i].name, 22, 1, f);
+	ih.ins[i].len = hio_read16b(f);
+	ih.ins[i].finetune = hio_read8(f);
+	ih.ins[i].volume = hio_read8(f);
+	ih.ins[i].loop_start = hio_read16b(f);
+	ih.ins[i].loop_size = hio_read16b(f);
     }
-    ih.len = hread_8(f);
-    ih.trk = hread_8(f);
-    hread(&ih.ord, 128 * 4, 1, f);
-    ih.magic = hread_32b(f);
+    ih.len = hio_read8(f);
+    ih.trk = hio_read8(f);
+    hio_read(&ih.ord, 128 * 4, 1, f);
+    ih.magic = hio_read32b(f);
 
     if (ih.magic == MAGIC_IT10)
         set_type(m, "Ice Tracker IT10");
@@ -138,7 +138,7 @@ static int ice_load(struct module_data *m, HANDLE *f, const int start)
 	mod->xxt[i]->rows = 64;
 	for (j = 0; j < mod->xxt[i]->rows; j++) {
 		event = &mod->xxt[i]->event[j];
-		hread (ev, 1, 4, f);
+		hio_read (ev, 1, 4, f);
 		cvt_pt_event (event, ev);
 	}
     }

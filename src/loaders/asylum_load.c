@@ -13,8 +13,8 @@
 #include "loader.h"
 #include "period.h"
 
-static int asylum_test(HANDLE *, char *, const int);
-static int asylum_load(struct module_data *, HANDLE *, const int);
+static int asylum_test(HIO_HANDLE *, char *, const int);
+static int asylum_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader asylum_loader = {
 	"Asylum Music Format (AMF)",
@@ -22,11 +22,11 @@ const struct format_loader asylum_loader = {
 	asylum_load
 };
 
-static int asylum_test(HANDLE *f, char *t, const int start)
+static int asylum_test(HIO_HANDLE *f, char *t, const int start)
 {
 	char buf[32];
 
-	if (hread(buf, 1, 32, f) < 32)
+	if (hio_read(buf, 1, 32, f) < 32)
 		return -1;
 
 	if (memcmp(buf, "ASYLUM Music Format V1.0\0\0\0\0\0\0\0\0", 32))
@@ -37,7 +37,7 @@ static int asylum_test(HANDLE *f, char *t, const int start)
 	return 0;
 }
 
-static int asylum_load(struct module_data *m, HANDLE *f, const int start)
+static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -45,16 +45,16 @@ static int asylum_load(struct module_data *m, HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hseek(f, 32, SEEK_CUR);			/* skip magic */
-	mod->spd = hread_8(f);			/* initial speed */
-	mod->bpm = hread_8(f);			/* initial BPM */
-	mod->ins = hread_8(f);			/* number of instruments */
-	mod->pat = hread_8(f);			/* number of patterns */
-	mod->len = hread_8(f);			/* module length */
-	hread_8(f);
+	hio_seek(f, 32, SEEK_CUR);			/* skip magic */
+	mod->spd = hio_read8(f);			/* initial speed */
+	mod->bpm = hio_read8(f);			/* initial BPM */
+	mod->ins = hio_read8(f);			/* number of instruments */
+	mod->pat = hio_read8(f);			/* number of patterns */
+	mod->len = hio_read8(f);			/* module length */
+	hio_read8(f);
 
-	hread(mod->xxo, 1, mod->len, f);	/* read orders */
-	hseek(f, start + 294, SEEK_SET);
+	hio_read(mod->xxo, 1, mod->len, f);	/* read orders */
+	hio_seek(f, start + 294, SEEK_SET);
 
 	mod->chn = 8;
 	mod->smp = mod->ins;
@@ -72,7 +72,7 @@ static int asylum_load(struct module_data *m, HANDLE *f, const int start)
 
 		mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), 1);
 
-		hread(insbuf, 1, 37, f);
+		hio_read(insbuf, 1, 37, f);
 		copy_adjust(mod->xxi[i].name, insbuf, 22);
 		mod->xxi[i].sub[0].fin = (int8)(insbuf[22] << 4);
 		mod->xxi[i].sub[0].vol = insbuf[23];
@@ -94,7 +94,7 @@ static int asylum_load(struct module_data *m, HANDLE *f, const int start)
 		   mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin);
 	}
 
-	hseek(f, 37 * (64 - mod->ins), SEEK_CUR);
+	hio_seek(f, 37 * (64 - mod->ins), SEEK_CUR);
 
 	D_(D_INFO "Module length: %d", mod->len);
 
@@ -113,15 +113,15 @@ static int asylum_load(struct module_data *m, HANDLE *f, const int start)
 
 			event = &EVENT(i, j % mod->chn, j / mod->chn);
 			memset(event, 0, sizeof(struct xmp_event));
-			note = hread_8(f);
+			note = hio_read8(f);
 
 			if (note != 0) {
 				event->note = note + 13;
 			}
 
-			event->ins = hread_8(f);
-			event->fxt = hread_8(f);
-			event->fxp = hread_8(f);
+			event->ins = hio_read8(f);
+			event->fxt = hio_read8(f);
+			event->fxp = hio_read8(f);
 		}
 	}
 

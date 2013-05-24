@@ -38,7 +38,7 @@ struct fcm_header {
 };
     
 
-int fcm_load(struct module_data *m, HANDLE *f)
+int fcm_load(struct module_data *m, HIO_HANDLE *f)
 {
     int i, j, k;
     struct xmp_event *event;
@@ -47,7 +47,7 @@ int fcm_load(struct module_data *m, HANDLE *f)
 
     LOAD_INIT();
 
-    hread (&fh, 1, sizeof (struct fcm_header), f);
+    hio_read (&fh, 1, sizeof (struct fcm_header), f);
 
     if (fh.magic[0] != 'F' || fh.magic[1] != 'C' || fh.magic[2] != '-' ||
 	fh.magic[3] != 'M' || fh.name_id[0] != 'N')
@@ -60,7 +60,7 @@ int fcm_load(struct module_data *m, HANDLE *f)
 
     mod->len = fh.len;
 
-    hread (mod->xxo, 1, mod->len, f);
+    hio_read (mod->xxo, 1, mod->len, f);
 
     for (mod->pat = i = 0; i < mod->len; i++) {
 	if (mod->xxo[i] > mod->pat)
@@ -106,7 +106,7 @@ int fcm_load(struct module_data *m, HANDLE *f)
     if (V(0))
 	report ("Stored patterns: %d ", mod->pat);
 
-    hread (fe, 4, 1, f);	/* Skip 'SONG' pseudo chunk ID */
+    hio_read (fe, 4, 1, f);	/* Skip 'SONG' pseudo chunk ID */
 
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
@@ -115,7 +115,7 @@ int fcm_load(struct module_data *m, HANDLE *f)
 	for (j = 0; j < 64; j++) {
 	    for (k = 0; k < 4; k++) {
 		event = &EVENT (i, k, j);
-		hread (fe, 4, 1, f);
+		hio_read (fe, 4, 1, f);
 		cvt_pt_event (event, fe);
 	    }
 	}
@@ -128,7 +128,7 @@ int fcm_load(struct module_data *m, HANDLE *f)
 
     /* Load samples */
 
-    hread (fe, 4, 1, f);	/* Skip 'SAMP' pseudo chunk ID */
+    hio_read (fe, 4, 1, f);	/* Skip 'SAMP' pseudo chunk ID */
 
     if (V(0))
 	report ("\nStored samples : %d ", mod->smp);

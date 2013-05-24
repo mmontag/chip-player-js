@@ -12,8 +12,8 @@
 #define MAGIC_DskS	MAGIC4('D','s','k','S')
 
 
-static int dtt_test(HANDLE *, char *, const int);
-static int dtt_load (struct module_data *, HANDLE *, const int);
+static int dtt_test(HIO_HANDLE *, char *, const int);
+static int dtt_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader dtt_loader = {
 	"Desktop Tracker (DTT)",
@@ -21,9 +21,9 @@ const struct format_loader dtt_loader = {
 	dtt_load
 };
 
-static int dtt_test(HANDLE *f, char *t, const int start)
+static int dtt_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (hread_32b(f) != MAGIC_DskT)
+	if (hio_read32b(f) != MAGIC_DskT)
 		return -1;
 
 	read_title(f, t, 64);
@@ -31,7 +31,7 @@ static int dtt_test(HANDLE *f, char *t, const int start)
 	return 0;
 }
 
-static int dtt_load(struct module_data *m, HANDLE *f, const int start)
+static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -45,38 +45,38 @@ static int dtt_load(struct module_data *m, HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hread_32b(f);
+	hio_read32b(f);
 
 	set_type(m, "Desktop Tracker");
 
-	hread(buf, 1, 64, f);
+	hio_read(buf, 1, 64, f);
 	strncpy(mod->name, (char *)buf, XMP_NAME_SIZE);
-	hread(buf, 1, 64, f);
+	hio_read(buf, 1, 64, f);
 	/* strncpy(m->author, (char *)buf, XMP_NAME_SIZE); */
 	
-	flags = hread_32l(f);
-	mod->chn = hread_32l(f);
-	mod->len = hread_32l(f);
-	hread(buf, 1, 8, f);
-	mod->spd = hread_32l(f);
-	mod->rst = hread_32l(f);
-	mod->pat = hread_32l(f);
-	mod->ins = mod->smp = hread_32l(f);
+	flags = hio_read32l(f);
+	mod->chn = hio_read32l(f);
+	mod->len = hio_read32l(f);
+	hio_read(buf, 1, 8, f);
+	mod->spd = hio_read32l(f);
+	mod->rst = hio_read32l(f);
+	mod->pat = hio_read32l(f);
+	mod->ins = mod->smp = hio_read32l(f);
 	mod->trk = mod->pat * mod->chn;
 	
-	hread(mod->xxo, 1, (mod->len + 3) & ~3L, f);
+	hio_read(mod->xxo, 1, (mod->len + 3) & ~3L, f);
 
 	MODULE_INFO();
 
 	for (i = 0; i < mod->pat; i++) {
-		int x = hread_32l(f);
+		int x = hio_read32l(f);
 		if (i < 256)
 			pofs[i] = x;
 	}
 
 	n = (mod->pat + 3) & ~3L;
 	for (i = 0; i < n; i++) {
-		int x = hread_8(f);
+		int x = hio_read8(f);
 		if (i < 256)
 			plen[i] = x;
 	}
@@ -89,21 +89,21 @@ static int dtt_load(struct module_data *m, HANDLE *f, const int start)
 		int c2spd, looplen;
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-		hread_8(f);			/* note */
-		mod->xxi[i].sub[0].vol = hread_8(f) >> 1;
+		hio_read8(f);			/* note */
+		mod->xxi[i].sub[0].vol = hio_read8(f) >> 1;
 		mod->xxi[i].sub[0].pan = 0x80;
-		hread_16l(f);			/* not used */
-		c2spd = hread_32l(f);		/* period? */
-		hread_32l(f);			/* sustain start */
-		hread_32l(f);			/* sustain length */
-		mod->xxs[i].lps = hread_32l(f);
-		looplen = hread_32l(f);
+		hio_read16l(f);			/* not used */
+		c2spd = hio_read32l(f);		/* period? */
+		hio_read32l(f);			/* sustain start */
+		hio_read32l(f);			/* sustain length */
+		mod->xxs[i].lps = hio_read32l(f);
+		looplen = hio_read32l(f);
 		mod->xxs[i].flg = looplen > 0 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
-		mod->xxs[i].len = hread_32l(f);
-		hread(buf, 1, 32, f);
+		mod->xxs[i].len = hio_read32l(f);
+		hio_read(buf, 1, 32, f);
 		copy_adjust(mod->xxi[i].name, (uint8 *)buf, 32);
-		sdata[i] = hread_32l(f);
+		sdata[i] = hio_read32l(f);
 
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].sub[0].sid = i;
@@ -125,14 +125,14 @@ static int dtt_load(struct module_data *m, HANDLE *f, const int start)
 		mod->xxp[i]->rows = plen[i];
 		TRACK_ALLOC(i);
 
-		hseek(f, start + pofs[i], SEEK_SET);
+		hio_seek(f, start + pofs[i], SEEK_SET);
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
 			for (k = 0; k < mod->chn; k++) {
 				uint32 x;
 
 				event = &EVENT (i, k, j);
-				x = hread_32l(f);
+				x = hio_read32l(f);
 
 				event->ins  = (x & 0x0000003f);
 				event->note = (x & 0x00000fc0) >> 6;
@@ -144,7 +144,7 @@ static int dtt_load(struct module_data *m, HANDLE *f, const int start)
 				/* sorry, we only have room for two effects */
 				if (x & (0x1f << 17)) {
 					event->f2p = (x & 0x003e0000) >> 17;
-					x = hread_32l(f);
+					x = hio_read32l(f);
 					event->fxp = (x & 0x000000ff);
 					event->f2p = (x & 0x0000ff00) >> 8;
 				} else {
@@ -157,7 +157,7 @@ static int dtt_load(struct module_data *m, HANDLE *f, const int start)
 	/* Read samples */
 	D_(D_INFO "Stored samples: %d", mod->smp);
 	for (i = 0; i < mod->ins; i++) {
-		hseek(f, start + sdata[i], SEEK_SET);
+		hio_seek(f, start + sdata[i], SEEK_SET);
 		load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

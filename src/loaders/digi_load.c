@@ -24,8 +24,8 @@
 #include "loader.h"
 
 
-static int digi_test (HANDLE *, char *, const int);
-static int digi_load (struct module_data *, HANDLE *, const int);
+static int digi_test (HIO_HANDLE *, char *, const int);
+static int digi_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader digi_loader = {
     "DIGI Booster",
@@ -33,19 +33,19 @@ const struct format_loader digi_loader = {
     digi_load
 };
 
-static int digi_test(HANDLE *f, char *t, const int start)
+static int digi_test(HIO_HANDLE *f, char *t, const int start)
 {
     char buf[20];
 
-    if (hread(buf, 1, 20, f) < 20)
+    if (hio_read(buf, 1, 20, f) < 20)
 	return -1;
 
     if (memcmp(buf, "DIGI Booster module", 19))
 	return -1;
 
-    hseek(f, 156, SEEK_CUR);
-    hseek(f, 3 * 4 * 32, SEEK_CUR);
-    hseek(f, 2 * 1 * 32, SEEK_CUR);
+    hio_seek(f, 156, SEEK_CUR);
+    hio_seek(f, 3 * 4 * 32, SEEK_CUR);
+    hio_seek(f, 2 * 1 * 32, SEEK_CUR);
 
     read_title(f, t, 32);
 
@@ -73,7 +73,7 @@ struct digi_header {
 };
 
 
-static int digi_load(struct module_data *m, HANDLE *f, const int start)
+static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     struct xmp_event *event = 0;
@@ -84,32 +84,32 @@ static int digi_load(struct module_data *m, HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hread(&dh.id, 20, 1, f);
+    hio_read(&dh.id, 20, 1, f);
 
-    hread(&dh.vstr, 4, 1, f);
-    dh.ver = hread_8(f);
-    dh.chn = hread_8(f);
-    dh.pack = hread_8(f);
-    hread(&dh.unknown, 19, 1, f);
-    dh.pat = hread_8(f);
-    dh.len = hread_8(f);
-    hread(&dh.ord, 128, 1, f);
-
-    for (i = 0; i < 31; i++)
-	dh.slen[i] = hread_32b(f);
-    for (i = 0; i < 31; i++)
-	dh.sloop[i] = hread_32b(f);
-    for (i = 0; i < 31; i++)
-	dh.sllen[i] = hread_32b(f);
-    for (i = 0; i < 31; i++)
-	dh.vol[i] = hread_8(f);
-    for (i = 0; i < 31; i++)
-	dh.fin[i] = hread_8(f);
-
-    hread(&dh.title, 32, 1, f);
+    hio_read(&dh.vstr, 4, 1, f);
+    dh.ver = hio_read8(f);
+    dh.chn = hio_read8(f);
+    dh.pack = hio_read8(f);
+    hio_read(&dh.unknown, 19, 1, f);
+    dh.pat = hio_read8(f);
+    dh.len = hio_read8(f);
+    hio_read(&dh.ord, 128, 1, f);
 
     for (i = 0; i < 31; i++)
-        hread(&dh.insname[i], 30, 1, f);
+	dh.slen[i] = hio_read32b(f);
+    for (i = 0; i < 31; i++)
+	dh.sloop[i] = hio_read32b(f);
+    for (i = 0; i < 31; i++)
+	dh.sllen[i] = hio_read32b(f);
+    for (i = 0; i < 31; i++)
+	dh.vol[i] = hio_read8(f);
+    for (i = 0; i < 31; i++)
+	dh.fin[i] = hio_read8(f);
+
+    hio_read(&dh.title, 32, 1, f);
+
+    for (i = 0; i < 31; i++)
+        hio_read(&dh.insname[i], 30, 1, f);
 
     mod->ins = 31;
     mod->smp = mod->ins;
@@ -161,8 +161,8 @@ static int digi_load(struct module_data *m, HANDLE *f, const int start)
 	TRACK_ALLOC (i);
 
 	if (dh.pack) {
-	    w = (hread_16b(f) - 64) >> 2;
-	    hread (chn_table, 1, 64, f);
+	    w = (hio_read16b(f) - 64) >> 2;
+	    hio_read (chn_table, 1, 64, f);
 	} else {
 	    w = 64 * mod->chn;
 	    memset (chn_table, 0xff, 64);
@@ -171,7 +171,7 @@ static int digi_load(struct module_data *m, HANDLE *f, const int start)
 	for (j = 0; j < 64; j++) {
 	    for (c = 0, k = 0x80; c < mod->chn; c++, k >>= 1) {
 	        if (chn_table[j] & k) {
-		    hread (digi_event, 4, 1, f);
+		    hio_read (digi_event, 4, 1, f);
 		    event = &EVENT (i, c, j);
 	            cvt_pt_event(event, digi_event);
 		    switch (event->fxt) {

@@ -88,8 +88,8 @@ struct imf_sample {
 #define MAGIC_IM10	MAGIC4('I','M','1','0')
 #define MAGIC_II10	MAGIC4('I','I','1','0')
 
-static int imf_test (HANDLE *, char *, const int);
-static int imf_load (struct module_data *, HANDLE *, const int);
+static int imf_test (HIO_HANDLE *, char *, const int);
+static int imf_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader imf_loader = {
     "Imago Orpheus (IMF)",
@@ -97,13 +97,13 @@ const struct format_loader imf_loader = {
     imf_load
 };
 
-static int imf_test(HANDLE *f, char *t, const int start)
+static int imf_test(HIO_HANDLE *f, char *t, const int start)
 {
-    hseek(f, start + 60, SEEK_SET);
-    if (hread_32b(f) != MAGIC_IM10)
+    hio_seek(f, start + 60, SEEK_SET);
+    if (hio_read32b(f) != MAGIC_IM10)
 	return -1;
 
-    hseek(f, start, SEEK_SET);
+    hio_seek(f, start, SEEK_SET);
     read_title(f, t, 32);
 
     return 0;
@@ -220,7 +220,7 @@ static void xlat_fx (int c, uint8 *fxt, uint8 *fxp, uint8 *arpeggio_val)
 }
 
 
-static int imf_load(struct module_data *m, HANDLE *f, const int start)
+static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int c, r, i, j;
@@ -235,28 +235,28 @@ static int imf_load(struct module_data *m, HANDLE *f, const int start)
     LOAD_INIT();
 
     /* Load and convert header */
-    hread(&ih.name, 32, 1, f);
-    ih.len = hread_16l(f);
-    ih.pat = hread_16l(f);
-    ih.ins = hread_16l(f);
-    ih.flg = hread_16l(f);
-    hread(&ih.unused1, 8, 1, f);
-    ih.tpo = hread_8(f);
-    ih.bpm = hread_8(f);
-    ih.vol = hread_8(f);
-    ih.amp = hread_8(f);
-    hread(&ih.unused2, 8, 1, f);
-    ih.magic = hread_32b(f);
+    hio_read(&ih.name, 32, 1, f);
+    ih.len = hio_read16l(f);
+    ih.pat = hio_read16l(f);
+    ih.ins = hio_read16l(f);
+    ih.flg = hio_read16l(f);
+    hio_read(&ih.unused1, 8, 1, f);
+    ih.tpo = hio_read8(f);
+    ih.bpm = hio_read8(f);
+    ih.vol = hio_read8(f);
+    ih.amp = hio_read8(f);
+    hio_read(&ih.unused2, 8, 1, f);
+    ih.magic = hio_read32b(f);
 
     for (i = 0; i < 32; i++) {
-	hread(&ih.chn[i].name, 12, 1, f);
-	ih.chn[i].status = hread_8(f);
-	ih.chn[i].pan = hread_8(f);
-	ih.chn[i].chorus = hread_8(f);
-	ih.chn[i].reverb = hread_8(f);
+	hio_read(&ih.chn[i].name, 12, 1, f);
+	ih.chn[i].status = hio_read8(f);
+	ih.chn[i].pan = hio_read8(f);
+	ih.chn[i].chorus = hio_read8(f);
+	ih.chn[i].reverb = hio_read8(f);
     }
 
-    hread(&ih.pos, 256, 1, f);
+    hio_read(&ih.pos, 256, 1, f);
 
 #if 0
     if (ih.magic != MAGIC_IM10)
@@ -313,14 +313,14 @@ static int imf_load(struct module_data *m, HANDLE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
 
-	pat_len = hread_16l(f) - 4;
-	mod->xxp[i]->rows = hread_16l(f);
+	pat_len = hio_read16l(f) - 4;
+	mod->xxp[i]->rows = hio_read16l(f);
 	TRACK_ALLOC (i);
 
 	r = 0;
 
 	while (--pat_len >= 0) {
-	    b = hread_8(f);
+	    b = hio_read8(f);
 
 	    if (b == IMF_EOR) {
 		r++;
@@ -331,7 +331,7 @@ static int imf_load(struct module_data *m, HANDLE *f, const int start)
 	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & IMF_NI_FOLLOW) {
-		n = hread_8(f);
+		n = hio_read8(f);
 		switch (n) {
 		case 255:
 		case 160:	/* ??!? */
@@ -342,18 +342,18 @@ static int imf_load(struct module_data *m, HANDLE *f, const int start)
 		}
 
 		event->note = n;
-		event->ins = hread_8(f);
+		event->ins = hio_read8(f);
 		pat_len -= 2;
 	    }
 	    if (b & IMF_FX_FOLLOWS) {
-		event->fxt = hread_8(f);
-		event->fxp = hread_8(f);
+		event->fxt = hio_read8(f);
+		event->fxp = hio_read8(f);
 		xlat_fx(c, &event->fxt, &event->fxp, arpeggio_val);
 		pat_len -= 2;
 	    }
 	    if (b & IMF_F2_FOLLOWS) {
-		event->f2t = hread_8(f);
-		event->f2p = hread_8(f);
+		event->f2t = hio_read8(f);
+		event->f2p = hio_read8(f);
 		xlat_fx(c, &event->f2t, &event->f2p, arpeggio_val);
 		pat_len -= 2;
 	    }
@@ -367,26 +367,26 @@ static int imf_load(struct module_data *m, HANDLE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (smp_num = i = 0; i < mod->ins; i++) {
-	hread(&ii.name, 32, 1, f);
-	hread(&ii.map, 120, 1, f);
-	hread(&ii.unused, 8, 1, f);
+	hio_read(&ii.name, 32, 1, f);
+	hio_read(&ii.map, 120, 1, f);
+	hio_read(&ii.unused, 8, 1, f);
 	for (j = 0; j < 32; j++)
-		ii.vol_env[j] = hread_16l(f);
+		ii.vol_env[j] = hio_read16l(f);
 	for (j = 0; j < 32; j++)
-		ii.pan_env[j] = hread_16l(f);
+		ii.pan_env[j] = hio_read16l(f);
 	for (j = 0; j < 32; j++)
-		ii.pitch_env[j] = hread_16l(f);
+		ii.pitch_env[j] = hio_read16l(f);
 	for (j = 0; j < 3; j++) {
-	    ii.env[j].npt = hread_8(f);
-	    ii.env[j].sus = hread_8(f);
-	    ii.env[j].lps = hread_8(f);
-	    ii.env[j].lpe = hread_8(f);
-	    ii.env[j].flg = hread_8(f);
-	    hread(&ii.env[j].unused, 3, 1, f);
+	    ii.env[j].npt = hio_read8(f);
+	    ii.env[j].sus = hio_read8(f);
+	    ii.env[j].lps = hio_read8(f);
+	    ii.env[j].lpe = hio_read8(f);
+	    ii.env[j].flg = hio_read8(f);
+	    hio_read(&ii.env[j].unused, 3, 1, f);
 	}
-	ii.fadeout = hread_16l(f);
-	ii.nsm = hread_16l(f);
-	ii.magic = hread_32b(f);
+	ii.fadeout = hio_read16l(f);
+	ii.nsm = hio_read16l(f);
+	ii.magic = hio_read32b(f);
 
 	if (ii.magic != MAGIC_II10)
 	    return -2;
@@ -421,20 +421,20 @@ static int imf_load(struct module_data *m, HANDLE *f, const int start)
 
 	for (j = 0; j < ii.nsm; j++, smp_num++) {
 
-	    hread(&is.name, 13, 1, f);
-	    hread(&is.unused1, 3, 1, f);
-	    is.len = hread_32l(f);
-	    is.lps = hread_32l(f);
-	    is.lpe = hread_32l(f);
-	    is.rate = hread_32l(f);
-	    is.vol = hread_8(f);
-	    is.pan = hread_8(f);
-	    hread(&is.unused2, 14, 1, f);
-	    is.flg = hread_8(f);
-	    hread(&is.unused3, 5, 1, f);
-	    is.ems = hread_16l(f);
-	    is.dram = hread_32l(f);
-	    is.magic = hread_32b(f);
+	    hio_read(&is.name, 13, 1, f);
+	    hio_read(&is.unused1, 3, 1, f);
+	    is.len = hio_read32l(f);
+	    is.lps = hio_read32l(f);
+	    is.lpe = hio_read32l(f);
+	    is.rate = hio_read32l(f);
+	    is.vol = hio_read8(f);
+	    is.pan = hio_read8(f);
+	    hio_read(&is.unused2, 14, 1, f);
+	    is.flg = hio_read8(f);
+	    hio_read(&is.unused3, 5, 1, f);
+	    is.ems = hio_read16l(f);
+	    is.dram = hio_read32l(f);
+	    is.magic = hio_read32b(f);
 
 	    mod->xxi[i].sub[j].sid = smp_num;
 	    mod->xxi[i].sub[j].vol = is.vol;

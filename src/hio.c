@@ -11,71 +11,71 @@
 #include "common.h"
 #include "hio.h"
 
-int8 hread_8s(HANDLE *h)
+int8 hio_read8s(HIO_HANDLE *h)
 {
 	return read8s(h->f);
 }
 
-uint8 hread_8(HANDLE *h)
+uint8 hio_read8(HIO_HANDLE *h)
 {
 	return read8(h->f);
 }
 
-uint16 hread_16l(HANDLE *h)
+uint16 hio_read16l(HIO_HANDLE *h)
 {
 	return read16l(h->f);
 }
 
-uint16 hread_16b(HANDLE *h)
+uint16 hio_read16b(HIO_HANDLE *h)
 {
 	return read16b(h->f);
 }
 
-uint32 hread_24l(HANDLE *h)
+uint32 hio_read24l(HIO_HANDLE *h)
 {
 	return read24l(h->f);
 }
 
-uint32 hread_24b(HANDLE *h)
+uint32 hio_read24b(HIO_HANDLE *h)
 {
 	return read24b(h->f);
 }
 
-uint32 hread_32l(HANDLE *h)
+uint32 hio_read32l(HIO_HANDLE *h)
 {
 	return read32l(h->f);
 }
 
-uint32 hread_32b(HANDLE *h)
+uint32 hio_read32b(HIO_HANDLE *h)
 {
 	return read32b(h->f);
 }
 
-int hread(void *buf, int size, int num, HANDLE *h)
+int hio_read(void *buf, int size, int num, HIO_HANDLE *h)
 {
 	return fread(buf, size, num, h->f);
 }
 
-int hseek(HANDLE *h, long offset, int whence)
+int hio_seek(HIO_HANDLE *h, long offset, int whence)
 {
 	return fseek(h->f, offset, whence);
 }
 
-long htell(HANDLE *h)
+long hio_tell(HIO_HANDLE *h)
 {
 	return ftell(h->f);
 }
 
-int heof(HANDLE *h)
+int hio_eof(HIO_HANDLE *h)
 {
 	return feof(h->f);
 }
 
-HANDLE *hopen(void *path, int type)
+HIO_HANDLE *hio_open(void *path, int type)
 {
-	HANDLE *h;
+	HIO_HANDLE *h;
 
-	h = (HANDLE *)malloc(sizeof (HANDLE));
+	h = (HIO_HANDLE *)malloc(sizeof (HIO_HANDLE));
 	if (h == NULL)
 		return NULL;
 	
@@ -85,7 +85,7 @@ HANDLE *hopen(void *path, int type)
 	return h;
 }
 
-int hclose(HANDLE *h)
+int hio_close(HIO_HANDLE *h)
 {
 	int ret;
 

@@ -20,8 +20,8 @@
  * (http://www.loricentral.com/jj2music.html)
  */
 
-static int gal5_test(HANDLE *, char *, const int);
-static int gal5_load(struct module_data *, HANDLE *, const int);
+static int gal5_test(HIO_HANDLE *, char *, const int);
+static int gal5_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader gal5_loader = {
 	"Galaxy Music System 5.0 (J2B)",
@@ -34,84 +34,84 @@ struct local_data {
     uint8 chn_pan[64];
 };
 
-static int gal5_test(HANDLE *f, char *t, const int start)
+static int gal5_test(HIO_HANDLE *f, char *t, const int start)
 {
-        if (hread_32b(f) != MAGIC4('R', 'I', 'F', 'F'))
+        if (hio_read32b(f) != MAGIC4('R', 'I', 'F', 'F'))
 		return -1;
 
-	hread_32b(f);
+	hio_read32b(f);
 
-	if (hread_32b(f) != MAGIC4('A', 'M', ' ', ' '))
+	if (hio_read32b(f) != MAGIC4('A', 'M', ' ', ' '))
 		return -1;
 
-	if (hread_32b(f) != MAGIC4('I', 'N', 'I', 'T'))
+	if (hio_read32b(f) != MAGIC4('I', 'N', 'I', 'T'))
 		return -1;
 
-	hread_32b(f);		/* skip size */
+	hio_read32b(f);		/* skip size */
 	read_title(f, t, 64);
 
 	return 0;
 }
 
-static void get_init(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_init(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 	char buf[64];
 	int flags;
 	
-	hread(buf, 1, 64, f);
+	hio_read(buf, 1, 64, f);
 	strncpy(mod->name, buf, 64);
 	set_type(m, "Galaxy Music System 5.0");
-	flags = hread_8(f);	/* bit 0: Amiga period */
+	flags = hio_read8(f);	/* bit 0: Amiga period */
 	if (~flags & 0x01)
 		m->quirk |= QUIRK_LINEAR;
-	mod->chn = hread_8(f);
-	mod->spd = hread_8(f);
-	mod->bpm = hread_8(f);
-	hread_16l(f);		/* unknown - 0x01c5 */
-	hread_16l(f);		/* unknown - 0xff00 */
-	hread_8(f);		/* unknown - 0x80 */
-	hread(data->chn_pan, 1, 64, f);
+	mod->chn = hio_read8(f);
+	mod->spd = hio_read8(f);
+	mod->bpm = hio_read8(f);
+	hio_read16l(f);		/* unknown - 0x01c5 */
+	hio_read16l(f);		/* unknown - 0xff00 */
+	hio_read8(f);		/* unknown - 0x80 */
+	hio_read(data->chn_pan, 1, 64, f);
 }
 
-static void get_ordr(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_ordr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	mod->len = hread_8(f) + 1;
+	mod->len = hio_read8(f) + 1;
 	/* Don't follow Dr.Eggman's specs here */
 
 	for (i = 0; i < mod->len; i++)
-		mod->xxo[i] = hread_8(f);
+		mod->xxo[i] = hio_read8(f);
 }
 
-static void get_patt_cnt(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_patt_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	i = hread_8(f) + 1;	/* pattern number */
+	i = hio_read8(f) + 1;	/* pattern number */
 
 	if (i > mod->pat)
 		mod->pat = i;
 }
 
-static void get_inst_cnt(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_inst_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	hread_32b(f);		/* 42 01 00 00 */
-	hread_8(f);		/* 00 */
-	i = hread_8(f) + 1;	/* instrument number */
+	hio_read32b(f);		/* 42 01 00 00 */
+	hio_read8(f);		/* 00 */
+	i = hio_read8(f) + 1;	/* instrument number */
 
 	if (i > mod->ins)
 		mod->ins = i;
 }
 
-static void get_patt(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event, dummy;
@@ -119,17 +119,17 @@ static void get_patt(struct module_data *m, int size, HANDLE *f, void *parm)
 	int rows, r;
 	uint8 flag;
 	
-	i = hread_8(f);	/* pattern number */
-	len = hread_32l(f);
+	i = hio_read8(f);	/* pattern number */
+	len = hio_read32l(f);
 	
-	rows = hread_8(f) + 1;
+	rows = hio_read8(f) + 1;
 
 	PATTERN_ALLOC(i);
 	mod->xxp[i]->rows = rows;
 	TRACK_ALLOC(i);
 
 	for (r = 0; r < rows; ) {
-		if ((flag = hread_8(f)) == 0) {
+		if ((flag = hio_read8(f)) == 0) {
 			r++;
 			continue;
 		}
@@ -139,8 +139,8 @@ static void get_patt(struct module_data *m, int size, HANDLE *f, void *parm)
 		event = chan < mod->chn ? &EVENT(i, chan, r) : &dummy;
 
 		if (flag & 0x80) {
-			uint8 fxp = hread_8(f);
-			uint8 fxt = hread_8(f);
+			uint8 fxp = hio_read8(f);
+			uint8 fxt = hio_read8(f);
 
 			switch (fxt) {
 			case 0x14:		/* speed */
@@ -158,8 +158,8 @@ static void get_patt(struct module_data *m, int size, HANDLE *f, void *parm)
 		}
 
 		if (flag & 0x40) {
-			event->ins = hread_8(f);
-			event->note = hread_8(f);
+			event->ins = hio_read8(f);
+			event->note = hio_read8(f);
 
 			if (event->note == 128) {
 				event->note = XMP_KEY_OFF;
@@ -167,26 +167,26 @@ static void get_patt(struct module_data *m, int size, HANDLE *f, void *parm)
 		}
 
 		if (flag & 0x20) {
-			event->vol = 1 + hread_8(f) / 2;
+			event->vol = 1 + hio_read8(f) / 2;
 		}
 	}
 }
 
-static void get_inst(struct module_data *m, int size, HANDLE *f, void *parm)
+static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, srate, finetune, flags;
 	int has_unsigned_sample;
 
-	hread_32b(f);		/* 42 01 00 00 */
-	hread_8(f);		/* 00 */
-	i = hread_8(f);		/* instrument number */
+	hio_read32b(f);		/* 42 01 00 00 */
+	hio_read8(f);		/* 00 */
+	i = hio_read8(f);		/* instrument number */
 	
-	hread(&mod->xxi[i].name, 1, 28, f);
+	hio_read(&mod->xxi[i].name, 1, 28, f);
 	str_adj((char *)mod->xxi[i].name);
 
-	hseek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
-	mod->xxi[i].nsm = hread_16l(f);
+	hio_seek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
+	mod->xxi[i].nsm = hio_read16l(f);
 
 	D_(D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
@@ -197,28 +197,28 @@ static void get_inst(struct module_data *m, int size, HANDLE *f, void *parm)
 
 	/* FIXME: Currently reading only the first sample */
 
-	hread_32b(f);	/* RIFF */
-	hread_32b(f);	/* size */
-	hread_32b(f);	/* AS   */
-	hread_32b(f);	/* SAMP */
-	hread_32b(f);	/* size */
-	hread_32b(f);	/* unknown - usually 0x40000000 */
+	hio_read32b(f);	/* RIFF */
+	hio_read32b(f);	/* size */
+	hio_read32b(f);	/* AS   */
+	hio_read32b(f);	/* SAMP */
+	hio_read32b(f);	/* size */
+	hio_read32b(f);	/* unknown - usually 0x40000000 */
 
-	hread(&mod->xxs[i].name, 1, 28, f);
+	hio_read(&mod->xxs[i].name, 1, 28, f);
 	str_adj((char *)mod->xxs[i].name);
 
-	hread_32b(f);	/* unknown - 0x0000 */
-	hread_8(f);	/* unknown - 0x00 */
+	hio_read32b(f);	/* unknown - 0x0000 */
+	hio_read8(f);	/* unknown - 0x00 */
 
 	mod->xxi[i].sub[0].sid = i;
-	mod->xxi[i].vol = hread_8(f);
+	mod->xxi[i].vol = hio_read8(f);
 	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].vol = (hread_16l(f) + 1) / 512;
-	flags = hread_16l(f);
-	hread_16l(f);			/* unknown - 0x0080 */
-	mod->xxs[i].len = hread_32l(f);
-	mod->xxs[i].lps = hread_32l(f);
-	mod->xxs[i].lpe = hread_32l(f);
+	mod->xxi[i].sub[0].vol = (hio_read16l(f) + 1) / 512;
+	flags = hio_read16l(f);
+	hio_read16l(f);			/* unknown - 0x0080 */
+	mod->xxs[i].len = hio_read32l(f);
+	mod->xxs[i].lps = hio_read32l(f);
+	mod->xxs[i].lpe = hio_read32l(f);
 
 	mod->xxs[i].flg = 0;
 	has_unsigned_sample = 0;
@@ -231,13 +231,13 @@ static void get_inst(struct module_data *m, int size, HANDLE *f, void *parm)
 	if (~flags & 0x80)
 		has_unsigned_sample = 1;
 
-	srate = hread_32l(f);
+	srate = hio_read32l(f);
 	finetune = 0;
 	c2spd_to_note(srate, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	mod->xxi[i].sub[0].fin += finetune;
 
-	hread_32l(f);			/* 0x00000000 */
-	hread_32l(f);			/* unknown */
+	hio_read32l(f);			/* 0x00000000 */
+	hio_read32l(f);			/* unknown */
 
 	D_(D_INFO "  %x: %05x%c%05x %05x %c V%02x %04x %5d",
 		0, mod->xxs[i].len,
@@ -254,7 +254,7 @@ static void get_inst(struct module_data *m, int size, HANDLE *f, void *parm)
 	}
 }
 
-static int gal5_load(struct module_data *m, HANDLE *f, const int start)
+static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
@@ -263,11 +263,11 @@ static int gal5_load(struct module_data *m, HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hread_32b(f);	/* Skip RIFF */
-	hread_32b(f);	/* Skip size */
-	hread_32b(f);	/* Skip AM   */
+	hio_read32b(f);	/* Skip RIFF */
+	hio_read32b(f);	/* Skip size */
+	hio_read32b(f);	/* Skip AM   */
 
-	offset = htell(f);
+	offset = hio_tell(f);
 
 	mod->smp = mod->ins = 0;
 
@@ -285,7 +285,7 @@ static int gal5_load(struct module_data *m, HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_CHUNK_ALIGN2);
 
 	/* Load IFF chunks */
-	while (!heof(f)) {
+	while (!hio_eof(f)) {
 		iff_chunk(handle, m, f, &data);
 	}
 
@@ -301,7 +301,7 @@ static int gal5_load(struct module_data *m, HANDLE *f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 	D_(D_INFO "Stored samples: %d ", mod->smp);
 
-	hseek(f, start + offset, SEEK_SET);
+	hio_seek(f, start + offset, SEEK_SET);
 
 	handle = iff_new();
 	if (handle == NULL)
@@ -315,7 +315,7 @@ static int gal5_load(struct module_data *m, HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_CHUNK_ALIGN2);
 
 	/* Load IFF chunks */
-	while (!heof (f)) {
+	while (!hio_eof (f)) {
 		iff_chunk(handle, m, f, &data);
 	}
 

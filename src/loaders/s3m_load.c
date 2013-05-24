@@ -66,8 +66,8 @@
 #define MAGIC_SCRI	MAGIC4('S','C','R','I')
 #define MAGIC_SCRS	MAGIC4('S','C','R','S')
 
-static int s3m_test (HANDLE *, char *, const int);
-static int s3m_load (struct module_data *, HANDLE *, const int);
+static int s3m_test (HIO_HANDLE *, char *, const int);
+static int s3m_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader s3m_loader = {
     "Scream Tracker 3 (S3M)",
@@ -75,13 +75,13 @@ const struct format_loader s3m_loader = {
     s3m_load
 };
 
-static int s3m_test(HANDLE *f, char *t, const int start)
+static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 {
-    hseek(f, start + 44, SEEK_SET);
-    if (hread_32b(f) != MAGIC_SCRM)
+    hio_seek(f, start + 44, SEEK_SET);
+    if (hio_read32b(f) != MAGIC_SCRM)
 	return -1;
 
-    hseek(f, start + 0, SEEK_SET);
+    hio_seek(f, start + 0, SEEK_SET);
     read_title(f, t, 28);
 
     return 0;
@@ -183,7 +183,7 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val)
 }
 
 
-static int s3m_load(struct module_data *m, HANDLE *f, const int start)
+static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int c, r, i;
@@ -201,27 +201,27 @@ static int s3m_load(struct module_data *m, HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hread(&sfh.name, 28, 1, f);		/* Song name */
-    hread_8(f);				/* 0x1a */
-    sfh.type = hread_8(f);		/* File type */
-    hread_16l(f);				/* Reserved */
-    sfh.ordnum = hread_16l(f);		/* Number of orders (must be even) */
-    sfh.insnum = hread_16l(f);		/* Number of instruments */
-    sfh.patnum = hread_16l(f);		/* Number of patterns */
-    sfh.flags = hread_16l(f);		/* Flags */
-    sfh.version = hread_16l(f);		/* Tracker ID and version */
-    sfh.ffi = hread_16l(f);		/* File format information */
-    sfh.magic = hread_32b(f);		/* 'SCRM' */
-    sfh.gv = hread_8(f);			/* Global volume */
-    sfh.is = hread_8(f);			/* Initial speed */
-    sfh.it = hread_8(f);			/* Initial tempo */
-    sfh.mv = hread_8(f);			/* Master volume */
-    sfh.uc = hread_8(f);			/* Ultra click removal */
-    sfh.dp = hread_8(f);			/* Default pan positions if 0xfc */
-    hread_32l(f);				/* Reserved */
-    hread_32l(f);				/* Reserved */
-    sfh.special = hread_16l(f);		/* Ptr to special custom data */
-    hread(sfh.chset, 32, 1, f);		/* Channel settings */
+    hio_read(&sfh.name, 28, 1, f);		/* Song name */
+    hio_read8(f);				/* 0x1a */
+    sfh.type = hio_read8(f);		/* File type */
+    hio_read16l(f);				/* Reserved */
+    sfh.ordnum = hio_read16l(f);		/* Number of orders (must be even) */
+    sfh.insnum = hio_read16l(f);		/* Number of instruments */
+    sfh.patnum = hio_read16l(f);		/* Number of patterns */
+    sfh.flags = hio_read16l(f);		/* Flags */
+    sfh.version = hio_read16l(f);		/* Tracker ID and version */
+    sfh.ffi = hio_read16l(f);		/* File format information */
+    sfh.magic = hio_read32b(f);		/* 'SCRM' */
+    sfh.gv = hio_read8(f);			/* Global volume */
+    sfh.is = hio_read8(f);			/* Initial speed */
+    sfh.it = hio_read8(f);			/* Initial tempo */
+    sfh.mv = hio_read8(f);			/* Master volume */
+    sfh.uc = hio_read8(f);			/* Ultra click removal */
+    sfh.dp = hio_read8(f);			/* Default pan positions if 0xfc */
+    hio_read32l(f);				/* Reserved */
+    hio_read32l(f);				/* Reserved */
+    sfh.special = hio_read16l(f);		/* Ptr to special custom data */
+    hio_read(sfh.chset, 32, 1, f);		/* Channel settings */
 
 #if 0
     if (sfh.magic != MAGIC_SCRM)
@@ -270,18 +270,18 @@ static int s3m_load(struct module_data *m, HANDLE *f, const int start)
     }
     mod->trk = mod->pat * mod->chn;
 
-    hread(mod->xxo, 1, mod->len, f);
+    hio_read(mod->xxo, 1, mod->len, f);
 
     for (i = 0; i < mod->ins; i++)
-	pp_ins[i] = hread_16l(f);
+	pp_ins[i] = hio_read16l(f);
  
     for (i = 0; i < mod->pat; i++)
-	pp_pat[i] = hread_16l(f);
+	pp_pat[i] = hio_read16l(f);
 
     /* Default pan positions */
 
     for (i = 0, sfh.dp -= 0xfc; !sfh.dp /* && n */ && (i < 32); i++) {
-	uint8 x = hread_8(f);
+	uint8 x = hio_read8(f);
 	if (x & S3M_PAN_SET)
 	    mod->xxc[i].pan = (x << 4) & 0xff;
 	else
@@ -352,16 +352,16 @@ static int s3m_load(struct module_data *m, HANDLE *f, const int start)
 	if (!pp_pat[i])
 	    continue;
 
-	hseek(f, start + pp_pat[i] * 16, SEEK_SET);
+	hio_seek(f, start + pp_pat[i] * 16, SEEK_SET);
 	r = 0;
-	pat_len = hread_16l(f) - 2;
+	pat_len = hio_read16l(f) - 2;
 
 	/* Used to be (--pat_len >= 0). Replaced by Rudolf Cejka
 	 * <cejkar@dcse.fee.vutbr.cz>, fixes hunt.s3m
 	 * ftp://us.aminet.net/pub/aminet/mods/8voic/s3m_hunt.lha
 	 */
 	while (r < mod->xxp[i]->rows) {
-	    b = hread_8(f);
+	    b = hio_read8(f);
 
 	    if (b == S3M_EOR) {
 		r++;
@@ -372,7 +372,7 @@ static int s3m_load(struct module_data *m, HANDLE *f, const int start)
 	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
-		switch(n = hread_8(f)) {
+		switch(n = hio_read8(f)) {
 		case 255:
 		    n = 0;
 		    break;	/* Empty note */
@@ -383,18 +383,18 @@ static int s3m_load(struct module_data *m, HANDLE *f, const int start)
 		    n = 13 + 12 * MSN (n) + LSN (n);
 		}
 		event->note = n;
-		event->ins = hread_8(f);
+		event->ins = hio_read8(f);
 		pat_len -= 2;
 	    }
 
 	    if (b & S3M_VOL_FOLLOWS) {
-		event->vol = hread_8(f) + 1;
+		event->vol = hio_read8(f) + 1;
 		pat_len--;
 	    }
 
 	    if (b & S3M_FX_FOLLOWS) {
-		event->fxt = hread_8(f);
-		event->fxp = hread_8(f);
+		event->fxt = hio_read8(f);
+		event->fxp = hio_read8(f);
 		xlat_fx(c, event, arpeggio_val);
 		pat_len -= 2;
 	    }
@@ -412,25 +412,25 @@ static int s3m_load(struct module_data *m, HANDLE *f, const int start)
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	hseek(f, start + pp_ins[i] * 16, SEEK_SET);
-	x8 = hread_8(f);
+	hio_seek(f, start + pp_ins[i] * 16, SEEK_SET);
+	x8 = hio_read8(f);
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
 	if (x8 >= 2) {
 	    /* OPL2 FM instrument */
 
-	    hread(&sah.dosname, 12, 1, f);	/* DOS file name */
-	    hread(&sah.rsvd1, 3, 1, f);		/* 0x00 0x00 0x00 */
-	    hread(&sah.reg, 12, 1, f);		/* Adlib registers */
-	    sah.vol = hread_8(f);
-	    sah.dsk = hread_8(f);
-	    hread_16l(f);
-	    sah.c2spd = hread_16l(f);		/* C 4 speed */
-	    hread_16l(f);
-	    hread(&sah.rsvd4, 12, 1, f);	/* Reserved */
-	    hread(&sah.name, 28, 1, f);		/* Instrument name */
-	    sah.magic = hread_32b(f);		/* 'SCRI' */
+	    hio_read(&sah.dosname, 12, 1, f);	/* DOS file name */
+	    hio_read(&sah.rsvd1, 3, 1, f);		/* 0x00 0x00 0x00 */
+	    hio_read(&sah.reg, 12, 1, f);		/* Adlib registers */
+	    sah.vol = hio_read8(f);
+	    sah.dsk = hio_read8(f);
+	    hio_read16l(f);
+	    sah.c2spd = hio_read16l(f);		/* C 4 speed */
+	    hio_read16l(f);
+	    hio_read(&sah.rsvd4, 12, 1, f);	/* Reserved */
+	    hio_read(&sah.name, 28, 1, f);		/* Instrument name */
+	    sah.magic = hio_read32b(f);		/* 'SCRI' */
 
 	    if (sah.magic != MAGIC_SCRI) {
 		D_(D_CRIT "error: FM instrument magic");
@@ -450,23 +450,23 @@ static int s3m_load(struct module_data *m, HANDLE *f, const int start)
 	    continue;
 	}
 
-	hread(&sih.dosname, 13, 1, f);		/* DOS file name */
-	sih.memseg = hread_16l(f);		/* Pointer to sample data */
-	sih.length = hread_32l(f);		/* Length */
-	sih.loopbeg = hread_32l(f);		/* Loop begin */
-	sih.loopend = hread_32l(f);		/* Loop end */
-	sih.vol = hread_8(f);			/* Volume */
-	sih.rsvd1 = hread_8(f);			/* Reserved */
-	sih.pack = hread_8(f);			/* Packing type (not used) */
-	sih.flags = hread_8(f);		/* Loop/stereo/16bit samples flags */
-	sih.c2spd = hread_16l(f);			/* C 4 speed */
-	sih.rsvd2 = hread_16l(f);			/* Reserved */
-	hread(&sih.rsvd3, 4, 1, f);		/* Reserved */
-	sih.int_gp = hread_16l(f);		/* Internal - GUS pointer */
-	sih.int_512 = hread_16l(f);		/* Internal - SB pointer */
-	sih.int_last = hread_32l(f);		/* Internal - SB index */
-	hread(&sih.name, 28, 1, f);		/* Instrument name */
-	sih.magic = hread_32b(f);			/* 'SCRS' */
+	hio_read(&sih.dosname, 13, 1, f);		/* DOS file name */
+	sih.memseg = hio_read16l(f);		/* Pointer to sample data */
+	sih.length = hio_read32l(f);		/* Length */
+	sih.loopbeg = hio_read32l(f);		/* Loop begin */
+	sih.loopend = hio_read32l(f);		/* Loop end */
+	sih.vol = hio_read8(f);			/* Volume */
+	sih.rsvd1 = hio_read8(f);			/* Reserved */
+	sih.pack = hio_read8(f);			/* Packing type (not used) */
+	sih.flags = hio_read8(f);		/* Loop/stereo/16bit samples flags */
+	sih.c2spd = hio_read16l(f);			/* C 4 speed */
+	sih.rsvd2 = hio_read16l(f);			/* Reserved */
+	hio_read(&sih.rsvd3, 4, 1, f);		/* Reserved */
+	sih.int_gp = hio_read16l(f);		/* Internal - GUS pointer */
+	sih.int_512 = hio_read16l(f);		/* Internal - SB pointer */
+	sih.int_last = hio_read32l(f);		/* Internal - SB index */
+	hio_read(&sih.name, 28, 1, f);		/* Instrument name */
+	sih.magic = hio_read32b(f);			/* 'SCRS' */
 
 	if (x8 == 1 && sih.magic != MAGIC_SCRS) {
 	    D_(D_CRIT "error: instrument magic");
@@ -508,7 +508,7 @@ static int s3m_load(struct module_data *m, HANDLE *f, const int start)
 
 	c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
-	hseek(f, start + 16L * sih.memseg, SEEK_SET);
+	hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
 	load_sample(m, f, (sfh.ffi - 1) * SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
     }
 

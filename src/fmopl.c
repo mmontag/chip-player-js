@@ -1292,17 +1292,17 @@ void OPLDestroy(FM_OPL *OPL)
 /* ----------  Option handlers ----------       */
 
 #ifdef XMP_OPL_TIMER
-void OPLSetTimerHandler(FM_OPL *OPL,OPL_TIMERHANDLER TimerHandler,int channelOffset)
+void OPLSetTimerHandler(FM_OPL *OPL,OPL_TIMERhio_handleR TimerHandler,int channelOffset)
 {
 	OPL->TimerHandler   = TimerHandler;
 	OPL->TimerParam = channelOffset;
 }
-void OPLSetIRQHandler(FM_OPL *OPL,OPL_IRQHANDLER IRQHandler,int param)
+void OPLSetIRQHandler(FM_OPL *OPL,OPL_IRQhio_handleR IRQHandler,int param)
 {
 	OPL->IRQHandler     = IRQHandler;
 	OPL->IRQParam = param;
 }
-void OPLSetUpdateHandler(FM_OPL *OPL,OPL_UPDATEHANDLER UpdateHandler,int param)
+void OPLSetUpdateHandler(FM_OPL *OPL,OPL_UPDATEhio_handleR UpdateHandler,int param)
 {
 	OPL->UpdateHandler = UpdateHandler;
 	OPL->UpdateParam = param;
@@ -1310,14 +1310,14 @@ void OPLSetUpdateHandler(FM_OPL *OPL,OPL_UPDATEHANDLER UpdateHandler,int param)
 #endif
 
 #if BUILD_Y8950
-void OPLSetPortHandler(FM_OPL *OPL,OPL_PORTHANDLER_W PortHandler_w,OPL_PORTHANDLER_R PortHandler_r,int param)
+void OPLSetPortHandler(FM_OPL *OPL,OPL_PORThio_handleR_W PortHandler_w,OPL_PORThio_handleR_R PortHandler_r,int param)
 {
 	OPL->porthandler_w = PortHandler_w;
 	OPL->porthandler_r = PortHandler_r;
 	OPL->port_param = param;
 }
 
-void OPLSetKeyboardHandler(FM_OPL *OPL,OPL_PORTHANDLER_W KeyboardHandler_w,OPL_PORTHANDLER_R KeyboardHandler_r,int param)
+void OPLSetKeyboardHandler(FM_OPL *OPL,OPL_PORThio_handleR_W KeyboardHandler_w,OPL_PORThio_handleR_R KeyboardHandler_r,int param)
 {
 	OPL->keyboardhandler_w = KeyboardHandler_w;
 	OPL->keyboardhandler_r = KeyboardHandler_r;

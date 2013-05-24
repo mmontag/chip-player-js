@@ -17,7 +17,7 @@
 #define MAGIC_INST	MAGIC4('I','N','S','T')
 #define MAGIC_WAVE	MAGIC4('W','A','V','E')
 
-int asif_load(struct module_data *m, HANDLE *f, int i)
+int asif_load(struct module_data *m, HIO_HANDLE *f, int i)
 {
 	struct xmp_module *mod = &m->mod;
 	int size, pos;
@@ -28,34 +28,34 @@ int asif_load(struct module_data *m, HANDLE *f, int i)
 	if (f == NULL)
 		return -1;
 
-	if (hread_32b(f) != MAGIC_FORM)
+	if (hio_read32b(f) != MAGIC_FORM)
 		return -1;
-	size = hread_32b(f);
+	size = hio_read32b(f);
 
-	if (hread_32b(f) != MAGIC_ASIF)
+	if (hio_read32b(f) != MAGIC_ASIF)
 		return -1;
 
 	for (chunk = 0; chunk < 2; ) {
-		id = hread_32b(f);
-		size = hread_32b(f);
-		pos = htell(f) + size;
+		id = hio_read32b(f);
+		size = hio_read32b(f);
+		pos = hio_tell(f) + size;
 
 		switch (id) {
 		case MAGIC_WAVE:
 			//printf("wave chunk\n");
 		
-			hseek(f, hread_8(f), SEEK_CUR);	/* skip name */
-			mod->xxs[i].len = hread_16l(f) + 1;
-			size = hread_16l(f);		/* NumSamples */
+			hio_seek(f, hio_read8(f), SEEK_CUR);	/* skip name */
+			mod->xxs[i].len = hio_read16l(f) + 1;
+			size = hio_read16l(f);		/* NumSamples */
 			
 			//printf("WaveSize = %d\n", xxs[i].len);
 			//printf("NumSamples = %d\n", size);
 
 			for (j = 0; j < size; j++) {
-				hread_16l(f);		/* Location */
-				mod->xxs[j].len = 256 * hread_16l(f);
-				hread_16l(f);		/* OrigFreq */
-				hread_16l(f);		/* SampRate */
+				hio_read16l(f);		/* Location */
+				mod->xxs[j].len = 256 * hio_read16l(f);
+				hio_read16l(f);		/* OrigFreq */
+				hio_read16l(f);		/* SampRate */
 			}
 		
 			load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
@@ -66,16 +66,16 @@ int asif_load(struct module_data *m, HANDLE *f, int i)
 		case MAGIC_INST:
 			//printf("inst chunk\n");
 		
-			hseek(f, hread_8(f), SEEK_CUR);	/* skip name */
+			hio_seek(f, hio_read8(f), SEEK_CUR);	/* skip name */
 		
-			hread_16l(f);			/* SampNum */
-			hseek(f, 24, SEEK_CUR);		/* skip envelope */
-			hread_8(f);			/* ReleaseSegment */
-			hread_8(f);			/* PriorityIncrement */
-			hread_8(f);			/* PitchBendRange */
-			hread_8(f);			/* VibratoDepth */
-			hread_8(f);			/* VibratoSpeed */
-			hread_8(f);			/* UpdateRate */
+			hio_read16l(f);			/* SampNum */
+			hio_seek(f, 24, SEEK_CUR);		/* skip envelope */
+			hio_read8(f);			/* ReleaseSegment */
+			hio_read8(f);			/* PriorityIncrement */
+			hio_read8(f);			/* PitchBendRange */
+			hio_read8(f);			/* VibratoDepth */
+			hio_read8(f);			/* VibratoSpeed */
+			hio_read8(f);			/* UpdateRate */
 		
 			mod->xxi[i].nsm = 1;
 			mod->xxi[i].sub[0].vol = 0x40;
@@ -85,7 +85,7 @@ int asif_load(struct module_data *m, HANDLE *f, int i)
 			chunk++;
 		}
 
-		hseek(f, pos, SEEK_SET);
+		hio_seek(f, pos, SEEK_SET);
 	}
 
 	return 0;

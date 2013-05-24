@@ -18,8 +18,8 @@
 #include "mod.h"
 #include "period.h"
 
-static int st_test (HANDLE *, char *, const int);
-static int st_load (struct module_data *, HANDLE *, const int);
+static int st_test (HIO_HANDLE *, char *, const int);
+static int st_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader st_loader = {
     "Soundtracker (MOD)",
@@ -34,7 +34,7 @@ static const int period[] = {
     -1
 };
 
-static int st_test(HANDLE *f, char *t, const int start)
+static int st_test(HIO_HANDLE *f, char *t, const int start)
 {
     int i, j, k;
     int pat, smp_size;
@@ -42,7 +42,7 @@ static int st_test(HANDLE *f, char *t, const int start)
     uint8 mod_event[4];
     struct stat st;
 
-    if (f->type != HANDLE_TYPE_FILE)
+    if (f->type != HIO_HANDLE_TYPE_FILE)
 	return -1;    
 
     fstat(fileno(f->f), &st);
@@ -52,22 +52,22 @@ static int st_test(HANDLE *f, char *t, const int start)
 
     smp_size = 0;
 
-    hseek(f, start, SEEK_SET);
-    hread(mh.name, 1, 20, f);
+    hio_seek(f, start, SEEK_SET);
+    hio_read(mh.name, 1, 20, f);
     if (test_name(mh.name, 20) < 0)
 	return -1;
 
     for (i = 0; i < 15; i++) {
-	hread(mh.ins[i].name, 1, 22, f);
-	mh.ins[i].size = hread_16b(f);
-	mh.ins[i].finetune = hread_8(f);
-	mh.ins[i].volume = hread_8(f);
-	mh.ins[i].loop_start = hread_16b(f);
-	mh.ins[i].loop_size = hread_16b(f);
+	hio_read(mh.ins[i].name, 1, 22, f);
+	mh.ins[i].size = hio_read16b(f);
+	mh.ins[i].finetune = hio_read8(f);
+	mh.ins[i].volume = hio_read8(f);
+	mh.ins[i].loop_start = hio_read16b(f);
+	mh.ins[i].loop_size = hio_read16b(f);
     }
-    mh.len = hread_8(f);
-    mh.restart = hread_8(f);
-    hread(mh.order, 1, 128, f);
+    mh.len = hio_read8(f);
+    mh.restart = hio_read8(f);
+    hio_read(mh.order, 1, 128, f);
 	
     for (pat = i = 0; i < 128; i++) {
 	if (mh.order[i] > 0x7f)
@@ -127,7 +127,7 @@ static int st_test(HANDLE *f, char *t, const int start)
 	for (j = 0; j < (64 * 4); j++) {
 	    int p;
 	
-	    hread (mod_event, 1, 4, f);
+	    hio_read (mod_event, 1, 4, f);
 
 	    if (MSN(mod_event[0]))	/* sample number > 15 */
 		return -1;
@@ -149,13 +149,13 @@ static int st_test(HANDLE *f, char *t, const int start)
 	}
     }
 
-    hseek(f, start, SEEK_SET);
+    hio_seek(f, start, SEEK_SET);
     read_title(f, t, 20);
 
     return 0;
 }
 
-static int st_load(struct module_data *m, HANDLE *f, const int start)
+static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -175,18 +175,18 @@ static int st_load(struct module_data *m, HANDLE *f, const int start)
     mod->smp = mod->ins;
     smp_size = 0;
 
-    hread(mh.name, 1, 20, f);
+    hio_read(mh.name, 1, 20, f);
     for (i = 0; i < 15; i++) {
-	hread(mh.ins[i].name, 1, 22, f);
-	mh.ins[i].size = hread_16b(f);
-	mh.ins[i].finetune = hread_8(f);
-	mh.ins[i].volume = hread_8(f);
-	mh.ins[i].loop_start = hread_16b(f);
-	mh.ins[i].loop_size = hread_16b(f);
+	hio_read(mh.ins[i].name, 1, 22, f);
+	mh.ins[i].size = hio_read16b(f);
+	mh.ins[i].finetune = hio_read8(f);
+	mh.ins[i].volume = hio_read8(f);
+	mh.ins[i].loop_start = hio_read16b(f);
+	mh.ins[i].loop_size = hio_read16b(f);
     }
-    mh.len = hread_8(f);
-    mh.restart = hread_8(f);
-    hread(mh.order, 1, 128, f);
+    mh.len = hio_read8(f);
+    mh.restart = hio_read8(f);
+    hio_read(mh.order, 1, 128, f);
 	
     mod->len = mh.len;
     mod->rst = mh.restart;
@@ -248,11 +248,11 @@ static int st_load(struct module_data *m, HANDLE *f, const int start)
 
     /* Scan patterns for tracker detection */
     fxused = 0;
-    pos = htell(f);
+    pos = hio_tell(f);
 
     for (i = 0; i < mod->pat; i++) {
 	for (j = 0; j < (64 * mod->chn); j++) {
-	    hread (mod_event, 1, 4, f);
+	    hio_read (mod_event, 1, 4, f);
 
 	    cvt_pt_event (&ev, mod_event);
 
@@ -302,7 +302,7 @@ static int st_load(struct module_data *m, HANDLE *f, const int start)
 	D_(D_CRIT "File size error: %d", serr);
     }
 
-    hseek(f, start + pos, SEEK_SET);
+    hio_seek(f, start + pos, SEEK_SET);
 
     PATTERN_INIT();
 
@@ -316,7 +316,7 @@ static int st_load(struct module_data *m, HANDLE *f, const int start)
 	TRACK_ALLOC (i);
 	for (j = 0; j < (64 * mod->chn); j++) {
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
-	    hread (mod_event, 1, 4, f);
+	    hio_read (mod_event, 1, 4, f);
 
 	    cvt_pt_event(event, mod_event);
 	}

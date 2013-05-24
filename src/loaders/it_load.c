@@ -15,8 +15,8 @@
 #define MAGIC_IMPS	MAGIC4('I','M','P','S')
 
 
-static int it_test (HANDLE *, char *, const int);
-static int it_load (struct module_data *, HANDLE *, const int);
+static int it_test (HIO_HANDLE *, char *, const int);
+static int it_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader it_loader = {
     "Impulse Tracker (IT)",
@@ -25,7 +25,7 @@ const struct format_loader it_loader = {
 };
 
 #ifdef WIN32
-// FIXME: not thread-safe
+// FIXME: not thio_read-safe
 struct tm *localtime_r(const time_t *timep, struct tm *result)
 {
     memcpy(result, localtime(timep), sizeof(struct tm));
@@ -33,9 +33,9 @@ struct tm *localtime_r(const time_t *timep, struct tm *result)
 }
 #endif
 
-static int it_test(HANDLE *f, char *t, const int start)
+static int it_test(HIO_HANDLE *f, char *t, const int start)
 {
-    if (hread_32b(f) != MAGIC_IMPM)
+    if (hio_read32b(f) != MAGIC_IMPM)
 	return -1;
 
     read_title(f, t, 26);
@@ -80,8 +80,8 @@ static const uint8 fx[] = {
 };
 
 
-int itsex_decompress8 (HANDLE *, void *, int, int);
-int itsex_decompress16 (HANDLE *, void *, int, int);
+int itsex_decompress8 (HIO_HANDLE *, void *, int, int);
+int itsex_decompress16 (HIO_HANDLE *, void *, int, int);
 
 
 static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
@@ -242,7 +242,7 @@ static void fix_name(uint8 *s, int l)
 }
 
 
-static int it_load(struct module_data *m, HANDLE *f, const int start)
+static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int r, c, i, j, k, pat_len;
@@ -267,35 +267,35 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
     LOAD_INIT();
 
     /* Load and convert header */
-    hread_32b(f);		/* magic */
+    hio_read32b(f);		/* magic */
 
-    hread(&ifh.name, 26, 1, f);
-    ifh.hilite_min = hread_8(f);
-    ifh.hilite_maj = hread_8(f);
+    hio_read(&ifh.name, 26, 1, f);
+    ifh.hilite_min = hio_read8(f);
+    ifh.hilite_maj = hio_read8(f);
 
-    ifh.ordnum = hread_16l(f);
-    ifh.insnum = hread_16l(f);
-    ifh.smpnum = hread_16l(f);
-    ifh.patnum = hread_16l(f);
+    ifh.ordnum = hio_read16l(f);
+    ifh.insnum = hio_read16l(f);
+    ifh.smpnum = hio_read16l(f);
+    ifh.patnum = hio_read16l(f);
 
-    ifh.cwt = hread_16l(f);
-    ifh.cmwt = hread_16l(f);
-    ifh.flags = hread_16l(f);
-    ifh.special = hread_16l(f);
+    ifh.cwt = hio_read16l(f);
+    ifh.cmwt = hio_read16l(f);
+    ifh.flags = hio_read16l(f);
+    ifh.special = hio_read16l(f);
 
-    ifh.gv = hread_8(f);
-    ifh.mv = hread_8(f);
-    ifh.is = hread_8(f);
-    ifh.it = hread_8(f);
-    ifh.sep = hread_8(f);
-    ifh.pwd = hread_8(f);
+    ifh.gv = hio_read8(f);
+    ifh.mv = hio_read8(f);
+    ifh.is = hio_read8(f);
+    ifh.it = hio_read8(f);
+    ifh.sep = hio_read8(f);
+    ifh.pwd = hio_read8(f);
 
-    ifh.msglen = hread_16l(f);
-    ifh.msgofs = hread_32l(f);
-    ifh.rsvd = hread_32l(f);
+    ifh.msglen = hio_read16l(f);
+    ifh.msgofs = hio_read32l(f);
+    ifh.rsvd = hio_read32l(f);
 
-    hread(&ifh.chpan, 64, 1, f);
-    hread(&ifh.chvol, 64, 1, f);
+    hio_read(&ifh.chpan, 64, 1, f);
+    hio_read(&ifh.chvol, 64, 1, f);
 
     strncpy(mod->name, (char *)ifh.name, XMP_NAME_SIZE);
     mod->len = ifh.ordnum;
@@ -337,7 +337,7 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 
 	mod->xxc[i].vol = ifh.chvol[i];
     }
-    hread(mod->xxo, 1, mod->len, f);
+    hio_read(mod->xxo, 1, mod->len, f);
 
     new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 
@@ -349,11 +349,11 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 	}
     }
     for (i = 0; i < mod->ins; i++)
-	pp_ins[i] = hread_32l(f);
+	pp_ins[i] = hio_read32l(f);
     for (i = 0; i < mod->smp; i++)
-	pp_smp[i] = hread_32l(f);
+	pp_smp[i] = hio_read32l(f);
     for (i = 0; i < mod->pat; i++)
-	pp_pat[i] = hread_32l(f);
+	pp_pat[i] = hio_read32l(f);
 
     m->c4rate = C4_NTSC_RATE;
 
@@ -448,13 +448,13 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
     if (ifh.special & IT_HAS_MSG) {
 	if ((m->comment = malloc(ifh.msglen + 1)) == NULL)
 	    return -1;
-	i = htell(f);
-	hseek(f, start + ifh.msgofs, SEEK_SET);
+	i = hio_tell(f);
+	hio_seek(f, start + ifh.msgofs, SEEK_SET);
 
 	D_(D_INFO "Message length : %d", ifh.msglen);
 
 	for (j = 0; j < ifh.msglen; j++) {
-	    b = hread_8(f);
+	    b = hio_read8(f);
 	    if (b == '\r')
 		b = '\n';
 	    if ((b < 32 || b > 127) && b != '\n' && b != '\t')
@@ -463,7 +463,7 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 	}
 	m->comment[j] = 0;
 
-	hseek(f, i, SEEK_SET);
+	hio_seek(f, i, SEEK_SET);
     }
 
     INSTRUMENT_INIT();
@@ -481,36 +481,36 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 
 	if ((ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200)) {
 	    /* New instrument format */
-	    hseek(f, start + pp_ins[i], SEEK_SET);
+	    hio_seek(f, start + pp_ins[i], SEEK_SET);
 
-	    i2h.magic = hread_32b(f);
-	    hread(&i2h.dosname, 12, 1, f);
-	    i2h.zero = hread_8(f);
-	    i2h.nna = hread_8(f);
-	    i2h.dct = hread_8(f);
-	    i2h.dca = hread_8(f);
-	    i2h.fadeout = hread_16l(f);
+	    i2h.magic = hio_read32b(f);
+	    hio_read(&i2h.dosname, 12, 1, f);
+	    i2h.zero = hio_read8(f);
+	    i2h.nna = hio_read8(f);
+	    i2h.dct = hio_read8(f);
+	    i2h.dca = hio_read8(f);
+	    i2h.fadeout = hio_read16l(f);
 
-	    i2h.pps = hread_8(f);
-	    i2h.ppc = hread_8(f);
-	    i2h.gbv = hread_8(f);
-	    i2h.dfp = hread_8(f);
-	    i2h.rv = hread_8(f);
-	    i2h.rp = hread_8(f);
-	    i2h.trkvers = hread_16l(f);
+	    i2h.pps = hio_read8(f);
+	    i2h.ppc = hio_read8(f);
+	    i2h.gbv = hio_read8(f);
+	    i2h.dfp = hio_read8(f);
+	    i2h.rv = hio_read8(f);
+	    i2h.rp = hio_read8(f);
+	    i2h.trkvers = hio_read16l(f);
 
-	    i2h.nos = hread_8(f);
-	    i2h.rsvd1 = hread_8(f);
-	    hread(&i2h.name, 26, 1, f);
+	    i2h.nos = hio_read8(f);
+	    i2h.rsvd1 = hio_read8(f);
+	    hio_read(&i2h.name, 26, 1, f);
 
 	    fix_name(i2h.name, 26);
 
-	    i2h.ifc = hread_8(f);
-	    i2h.ifr = hread_8(f);
-	    i2h.mch = hread_8(f);
-	    i2h.mpr = hread_8(f);
-	    i2h.mbnk = hread_16l(f);
-	    hread(&i2h.keys, 240, 1, f);
+	    i2h.ifc = hio_read8(f);
+	    i2h.ifr = hio_read8(f);
+	    i2h.mch = hio_read8(f);
+	    i2h.mpr = hio_read8(f);
+	    i2h.mbnk = hio_read16l(f);
+	    hio_read(&i2h.keys, 240, 1, f);
 
 	    copy_adjust(xxi->name, i2h.name, 25);
 	    xxi->rls = i2h.fadeout << 5;
@@ -518,17 +518,17 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 	    /* Envelopes */
 
 #define BUILD_ENV(X) { \
-            env.flg = hread_8(f); \
-            env.num = hread_8(f); \
-            env.lpb = hread_8(f); \
-            env.lpe = hread_8(f); \
-            env.slb = hread_8(f); \
-            env.sle = hread_8(f); \
+            env.flg = hio_read8(f); \
+            env.num = hio_read8(f); \
+            env.lpb = hio_read8(f); \
+            env.lpe = hio_read8(f); \
+            env.slb = hio_read8(f); \
+            env.sle = hio_read8(f); \
             for (j = 0; j < 25; j++) { \
-            	env.node[j].y = hread_8(f); \
-            	env.node[j].x = hread_16l(f); \
+            	env.node[j].y = hio_read8(f); \
+            	env.node[j].x = hio_read16l(f); \
             } \
-            env.unused = hread_8(f); \
+            env.unused = hio_read8(f); \
 	    xxi->X##ei.flg = env.flg & IT_ENV_ON ? XMP_ENVELOPE_ON : 0; \
 	    xxi->X##ei.flg |= env.flg & IT_ENV_LOOP ? XMP_ENVELOPE_LOOP : 0; \
 	    xxi->X##ei.flg |= env.flg & IT_ENV_SLOOP ? (XMP_ENVELOPE_SUS|XMP_ENVELOPE_SLOOP) : 0; \
@@ -626,34 +626,34 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 
 	} else if (ifh.flags & IT_USE_INST) {
 /* Old instrument format */
-	    hseek(f, start + pp_ins[i], SEEK_SET);
+	    hio_seek(f, start + pp_ins[i], SEEK_SET);
 
-	    i1h.magic = hread_32b(f);
-	    hread(&i1h.dosname, 12, 1, f);
+	    i1h.magic = hio_read32b(f);
+	    hio_read(&i1h.dosname, 12, 1, f);
 
-	    i1h.zero = hread_8(f);
-	    i1h.flags = hread_8(f);
-	    i1h.vls = hread_8(f);
-	    i1h.vle = hread_8(f);
-	    i1h.sls = hread_8(f);
-	    i1h.sle = hread_8(f);
-	    i1h.rsvd1 = hread_16l(f);
-	    i1h.fadeout = hread_16l(f);
+	    i1h.zero = hio_read8(f);
+	    i1h.flags = hio_read8(f);
+	    i1h.vls = hio_read8(f);
+	    i1h.vle = hio_read8(f);
+	    i1h.sls = hio_read8(f);
+	    i1h.sle = hio_read8(f);
+	    i1h.rsvd1 = hio_read16l(f);
+	    i1h.fadeout = hio_read16l(f);
 
-	    i1h.nna = hread_8(f);
-	    i1h.dnc = hread_8(f);
-	    i1h.trkvers = hread_16l(f);
-	    i1h.nos = hread_8(f);
-	    i1h.rsvd2 = hread_8(f);
+	    i1h.nna = hio_read8(f);
+	    i1h.dnc = hio_read8(f);
+	    i1h.trkvers = hio_read16l(f);
+	    i1h.nos = hio_read8(f);
+	    i1h.rsvd2 = hio_read8(f);
 
-	    hread(&i1h.name, 26, 1, f);
+	    hio_read(&i1h.name, 26, 1, f);
 
 	    fix_name(i1h.name, 26);
 
-	    hread(&i1h.rsvd3, 6, 1, f);
-	    hread(&i1h.keys, 240, 1, f);
-	    hread(&i1h.epoint, 200, 1, f);
-	    hread(&i1h.enode, 50, 1, f);
+	    hio_read(&i1h.rsvd3, 6, 1, f);
+	    hio_read(&i1h.keys, 240, 1, f);
+	    hio_read(&i1h.epoint, 200, 1, f);
+	    hio_read(&i1h.enode, 50, 1, f);
 
 	    copy_adjust(xxi->name, i1h.name, 25);
 
@@ -738,32 +738,32 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 
 	if (~ifh.flags & IT_USE_INST)
 	    mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	hseek(f, start + pp_smp[i], SEEK_SET);
+	hio_seek(f, start + pp_smp[i], SEEK_SET);
 
-	ish.magic = hread_32b(f);
-	hread(&ish.dosname, 12, 1, f);
-	ish.zero = hread_8(f);
-	ish.gvl = hread_8(f);
-	ish.flags = hread_8(f);
-	ish.vol = hread_8(f);
-	hread(&ish.name, 26, 1, f);
+	ish.magic = hio_read32b(f);
+	hio_read(&ish.dosname, 12, 1, f);
+	ish.zero = hio_read8(f);
+	ish.gvl = hio_read8(f);
+	ish.flags = hio_read8(f);
+	ish.vol = hio_read8(f);
+	hio_read(&ish.name, 26, 1, f);
 
 	fix_name(ish.name, 26);
 
-	ish.convert = hread_8(f);
-	ish.dfp = hread_8(f);
-	ish.length = hread_32l(f);
-	ish.loopbeg = hread_32l(f);
-	ish.loopend = hread_32l(f);
-	ish.c5spd = hread_32l(f);
-	ish.sloopbeg = hread_32l(f);
-	ish.sloopend = hread_32l(f);
-	ish.sample_ptr = hread_32l(f);
+	ish.convert = hio_read8(f);
+	ish.dfp = hio_read8(f);
+	ish.length = hio_read32l(f);
+	ish.loopbeg = hio_read32l(f);
+	ish.loopend = hio_read32l(f);
+	ish.c5spd = hio_read32l(f);
+	ish.sloopbeg = hio_read32l(f);
+	ish.sloopend = hio_read32l(f);
+	ish.sample_ptr = hio_read32l(f);
 
-	ish.vis = hread_8(f);
-	ish.vid = hread_8(f);
-	ish.vir = hread_8(f);
-	ish.vit = hread_8(f);
+	ish.vis = hio_read8(f);
+	ish.vid = hio_read8(f);
+	ish.vir = hio_read8(f);
+	ish.vit = hio_read8(f);
 
 	/* Changed to continue to allow use-brdg.it and use-funk.it to
 	 * load correctly (both IT 2.04)
@@ -829,7 +829,7 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 	if (ish.flags & IT_SMP_SAMPLE && xxs->len > 1) {
 	    int cvt = 0;
 
-	    hseek(f, start + ish.sample_ptr, SEEK_SET);
+	    hio_seek(f, start + ish.sample_ptr, SEEK_SET);
 
 	    if (~ish.convert & IT_CVT_SIGNED)
 		cvt |= SAMPLE_FLAG_UNS;
@@ -883,16 +883,16 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 		mod->xxp[i]->index[j] = i * mod->chn;
 	    continue;
 	}
-	hseek(f, start + pp_pat[i], SEEK_SET);
-	pat_len = hread_16l(f) /* - 4*/;
-	mod->xxp[i]->rows = hread_16l(f);
+	hio_seek(f, start + pp_pat[i], SEEK_SET);
+	pat_len = hio_read16l(f) /* - 4*/;
+	mod->xxp[i]->rows = hio_read16l(f);
 	TRACK_ALLOC (i);
 	memset (mask, 0, L_CHANNELS);
-	hread_16l(f);
-	hread_16l(f);
+	hio_read16l(f);
+	hio_read16l(f);
 
 	while (--pat_len >= 0) {
-	    b = hread_8(f);
+	    b = hio_read8(f);
 	    if (!b) {
 		r++;
 		continue;
@@ -900,7 +900,7 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 	    c = (b - 1) & 63;
 
 	    if (b & 0x80) {
-		mask[c] = hread_8(f);
+		mask[c] = hio_read8(f);
 		pat_len--;
 	    }
 	    /*
@@ -911,7 +911,7 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 	     */
 	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
 	    if (mask[c] & 0x01) {
-		b = hread_8(f);
+		b = hio_read8(f);
 
 		/* From ittech.txt:
 		 * Note ranges from 0->119 (C-0 -> B-9)
@@ -936,20 +936,20 @@ static int it_load(struct module_data *m, HANDLE *f, const int start)
 		pat_len--;
 	    }
 	    if (mask[c] & 0x02) {
-		b = hread_8(f);
+		b = hio_read8(f);
 		lastevent[c].ins = event->ins = b;
 		pat_len--;
 	    }
 	    if (mask[c] & 0x04) {
-		b = hread_8(f);
+		b = hio_read8(f);
 		lastevent[c].vol = event->vol = b;
 		xlat_volfx(event);
 		pat_len--;
 	    }
 	    if (mask[c] & 0x08) {
-		b = hread_8(f);
+		b = hio_read8(f);
 		event->fxt = b;
-		event->fxp = hread_8(f);
+		event->fxp = hio_read8(f);
 		xlat_fx(c, event, arpeggio_val, last_fxp, new_fx);
 		lastevent[c].fxt = event->fxt;
 		lastevent[c].fxp = event->fxp;
