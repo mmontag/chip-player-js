@@ -506,12 +506,13 @@ skip_test:
 	flags = ptkloop ? SAMPLE_FLAG_FULLREP : 0;
 
 	if (ptsong) {
-	    FILE *s;
+	    HIO_HANDLE *s;
 	    char sn[256];
 	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
 	
-	    if ((s = fopen (sn, "rb"))) {
+	    if ((s = hio_open(sn, HIO_HANDLE_TYPE_FILE))) {
 	        load_sample(m, s, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		hio_close(s);
 	    }
 	} else {
 	    load_sample(m, f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);

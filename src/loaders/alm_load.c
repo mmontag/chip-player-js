@@ -60,7 +60,7 @@ struct alm_file_header {
 
 #define NAME_SIZE 255
 
-static int alm_load(struct module_data *m, HIO_HANDLE *h, const int start)
+static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -71,11 +71,10 @@ static int alm_load(struct module_data *m, HIO_HANDLE *h, const int start)
     char *basename;
     char filename[NAME_SIZE];
     char modulename[NAME_SIZE];
-    FILE *f = h->f, *s;
 
     LOAD_INIT();
 
-    fread(&afh.id, 7, 1, f);
+    hio_read(&afh.id, 7, 1, f);
 
     if (!strncmp((char *)afh.id, "ALEYMOD", 7))		/* Version 1.0 */
 	mod->spd = afh.speed / 2;
@@ -83,9 +82,9 @@ static int alm_load(struct module_data *m, HIO_HANDLE *h, const int start)
     strncpy(modulename, m->filename, NAME_SIZE);
     basename = strtok (modulename, ".");
 
-    afh.speed = read8(f);
-    afh.length = read8(f);
-    afh.restart = read8(f);
+    afh.speed = hio_read8(f);
+    afh.length = hio_read8(f);
+    afh.restart = hio_read8(f);
     hio_read(&afh.order, 128, 1, f);
 
     mod->len = afh.length;
@@ -117,10 +116,10 @@ static int alm_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	TRACK_ALLOC (i);
 	for (j = 0; j < 64 * mod->chn; j++) {
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
-	    b = read8(f);
+	    b = hio_read8(f);
 	    if (b)
 		event->note = (b == 37) ? 0x61 : b + 48;
-	    event->ins = read8(f);
+	    event->ins = hio_read8(f);
 	}
     }
 
@@ -131,23 +130,25 @@ static int alm_load(struct module_data *m, HIO_HANDLE *h, const int start)
     D_(D_INFO "Loading samples: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
+	HIO_HANDLE *s;
+
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
-	s = fopen (filename, "rb");
+	s = hio_open(filename, HIO_HANDLE_TYPE_FILE);
 
 	if (!(mod->xxi[i].nsm = (s != NULL)))
 	    continue;
 
-	fstat (fileno (s), &stat);
-	b = read8(s);		/* Get first octet */
+	fstat(fileno(s->f), &stat);
+	b = hio_read8(s);		/* Get first octet */
 	mod->xxs[i].len = stat.st_size - 5 * !b;
 
 	if (!b) {		/* Instrument with header */
-	    mod->xxs[i].lps = read16l(f);
-	    mod->xxs[i].lpe = read16l(f);
+	    mod->xxs[i].lps = hio_read16l(f);
+	    mod->xxs[i].lpe = hio_read16l(f);
 	    mod->xxs[i].flg = mod->xxs[i].lpe > mod->xxs[i].lps ? XMP_SAMPLE_LOOP : 0;
 	} else {
-	    fseek(s, 0, SEEK_SET);
+	    hio_seek(s, 0, SEEK_SET);
 	}
 
 	mod->xxi[i].sub[0].pan = 0x80;
@@ -160,7 +161,7 @@ static int alm_load(struct module_data *m, HIO_HANDLE *h, const int start)
 
 	load_sample(m, s, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
-	fclose(s);
+	hio_close(s);
     }
 
     /* ALM is LRLR, not LRRL */

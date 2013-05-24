@@ -173,8 +173,8 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (found) {
 			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
-			if ((s = fopen(path, "rb"))) {
-				fstat(fileno(s), &stat);
+			if ((s = hio_open(path, HIO_HANDLE_TYPE_FILE))) {
+				fstat(fileno(s->f), &stat);
 				mod->xxs[i].len = stat.st_size;
 			}
 		}
@@ -192,7 +192,7 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (found) {
 			load_sample(m, s, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
-			fclose(s);
+			hio_close(s);
 		}
 	}
 

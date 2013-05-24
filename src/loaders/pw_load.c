@@ -38,7 +38,7 @@ int pw_test_format(FILE *f, char *t, const int start,
 	int s = BUF_SIZE;
 
 	b = calloc(1, BUF_SIZE);
-	hio_read(b, s, 1, f);
+	fread(b, s, 1, f);
 
 	while ((extra = pw_check(b, s, info)) > 0) {
 		unsigned char *buf = realloc(b, s + extra);
@@ -47,7 +47,7 @@ int pw_test_format(FILE *f, char *t, const int start,
 			return -1;
 		}
 		b = buf;
-		hio_read(b + s, extra, 1, f);
+		fread(b + s, extra, 1, f);
 		s += extra;
 	}
 
@@ -58,7 +58,7 @@ int pw_test_format(FILE *f, char *t, const int start,
 
 static int pw_test(HIO_HANDLE *f, char *t, const int start)
 {
-	return pw_test_format(f, t, start, NULL);
+	return pw_test_format(f->f, t, start, NULL);
 }
 
 static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)

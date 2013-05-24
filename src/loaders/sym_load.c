@@ -417,7 +417,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (a == 1) {
 			uint8 *b = malloc(mod->xxs[i].len);
-			read_lzw_dynamic(f, b, 13, 0, mod->xxs[i].len,
+			read_lzw_dynamic(f->f, b, 13, 0, mod->xxs[i].len,
 					mod->xxs[i].len, XMP_LZW_QUIRK_DSYM);
 			load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[0].sid], (char*)b);

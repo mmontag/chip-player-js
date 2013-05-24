@@ -62,7 +62,6 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int i, j, k;
 	uint8 buffer[25];
 	int blocksize;
-	HIO_HANDLE *s;
 
 	LOAD_INIT();
 
@@ -180,6 +179,7 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
+		HIO_HANDLE *s;
 		char filename[1024];
 
 		if (!mod->xxi[i].name[0])
@@ -190,9 +190,9 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			strncat(filename, "/", NAME_SIZE);
 		strncat(filename, (char *)mod->xxi[i].name, NAME_SIZE);
 
-		if ((s = fopen(filename, "rb")) != NULL) {
+		if ((s = hio_open(filename, HIO_HANDLE_TYPE_FILE)) != NULL) {
 			asif_load(m, s, i);
-			fclose(s);
+			hio_close(s);
 		}
 
 #if 0

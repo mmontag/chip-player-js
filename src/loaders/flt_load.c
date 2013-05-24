@@ -23,9 +23,6 @@ static int flt_test(HIO_HANDLE *f, char *t, const int start)
 {
     char buf[4];
 
-    if (f->type != HIO_HANDLE_TYPE_FILE)
-	return -1;
-
     hio_seek(f, start + 1080, SEEK_SET);
     if (hio_read(buf, 1, 4, f) < 4)
 	return -1;
@@ -93,13 +90,13 @@ static int is_am_instrument(FILE *nt, int i)
     int16 wf;
 
     fseek(nt, 144 + i * 120, SEEK_SET);
-    if (hio_read(buf, 1, 2, nt) < 2)
+    if (fread(buf, 1, 2, nt) < 2)
 	return 0;
     if (memcmp(buf, "AM", 2))
 	return 0;
 
     fseek(nt, 24, SEEK_CUR);
-    wf = hio_read16b(nt);
+    wf = read16b(nt);
     if (wf < 0 || wf > 3)
 	return 0;
 
@@ -115,21 +112,21 @@ static void read_am_instrument(struct module_data *m, FILE *nt, int i)
     int8 am_noise[1024];
 
     fseek(nt, 144 + i * 120 + 2 + 4, SEEK_SET);
-    am.l0 = hio_read16b(nt);
-    am.a1l = hio_read16b(nt);
-    am.a1s = hio_read16b(nt);
-    am.a2l = hio_read16b(nt);
-    am.a2s = hio_read16b(nt);
-    am.sl = hio_read16b(nt);
-    am.ds = hio_read16b(nt);
-    am.st = hio_read16b(nt);
-    hio_read16b(nt);
-    am.rs = hio_read16b(nt);
-    am.wf = hio_read16b(nt);
-    am.p_fall = -(int16)hio_read16b(nt);
-    am.v_amp = hio_read16b(nt);
-    am.v_spd = hio_read16b(nt);
-    am.fq = hio_read16b(nt);
+    am.l0 = read16b(nt);
+    am.a1l = read16b(nt);
+    am.a1s = read16b(nt);
+    am.a2l = read16b(nt);
+    am.a2s = read16b(nt);
+    am.sl = read16b(nt);
+    am.ds = read16b(nt);
+    am.st = read16b(nt);
+    read16b(nt);
+    am.rs = read16b(nt);
+    am.wf = read16b(nt);
+    am.p_fall = -(int16)read16b(nt);
+    am.v_amp = read16b(nt);
+    am.v_spd = read16b(nt);
+    am.fq = read16b(nt);
 
 #if 0
 printf("L0=%d A1L=%d A1S=%d A2L=%d A2S=%d SL=%d DS=%d ST=%d RS=%d WF=%d\n",
