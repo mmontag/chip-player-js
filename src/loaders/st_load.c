@@ -45,7 +45,7 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
     if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
 	return -1;    
 
-    fstat(fileno(f->f), &st);
+    hio_stat(f, &st);
 
     if (st.st_size < 600)
 	return -1;

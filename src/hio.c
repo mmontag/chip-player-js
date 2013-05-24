@@ -8,6 +8,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "common.h"
 #include "hio.h"
 
@@ -109,3 +112,7 @@ int hio_close(HIO_HANDLE *h)
 	return ret;
 }
 
+int hio_stat(HIO_HANDLE *h, struct stat *st)
+{
+	return fstat(fileno(h->f), st);
+}

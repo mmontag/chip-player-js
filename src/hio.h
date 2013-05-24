@@ -1,6 +1,9 @@
 #ifndef XMP_HIO_H
 #define XMP_HIO_H
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #define HIO_HANDLE_TYPE(x) ((x)->type)
 
 typedef struct {
@@ -27,5 +30,6 @@ int	hio_eof		(HIO_HANDLE *);
 HIO_HANDLE *hio_open	(void *, int);
 HIO_HANDLE *hio_fdopen	(int, char *);
 int	hio_close	(HIO_HANDLE *);
+int	hio_stat	(HIO_HANDLE *, struct stat *);
 
 #endif

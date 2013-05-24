@@ -139,7 +139,7 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (!(mod->xxi[i].nsm = (s != NULL)))
 	    continue;
 
-	fstat(fileno(s->f), &stat);
+	hio_stat(s, &stat);
 	b = hio_read8(s);		/* Get first octet */
 	mod->xxs[i].len = stat.st_size - 5 * !b;
 

@@ -129,7 +129,7 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
      */
 
     /* get file size */
-    fstat(fileno(f->f), &st);
+    hio_stat(f, &st);
     smp_size = 0;
     hio_seek(f, start + 20, SEEK_SET);
 
