@@ -344,6 +344,8 @@ int	move_data		(FILE *, FILE *, int);
 
 uint16	readmem16l		(uint8 *);
 uint16	readmem16b		(uint8 *);
+uint32	readmem24l		(uint8 *);
+uint32	readmem24b		(uint8 *);
 uint32	readmem32l		(uint8 *);
 uint32	readmem32b		(uint8 *);
 
