@@ -85,6 +85,20 @@ HIO_HANDLE *hio_open(void *path, int type)
 	return h;
 }
 
+HIO_HANDLE *hio_fdopen(int fd, char *mode)
+{
+	HIO_HANDLE *h;
+	
+	h = (HIO_HANDLE *)malloc(sizeof (HIO_HANDLE));
+	if (h == NULL)
+		return NULL;
+	
+	h->type = HIO_HANDLE_TYPE_FILE;
+	h->f = fdopen(fd, mode);
+
+	return h;
+}
+
 int hio_close(HIO_HANDLE *h)
 {
 	int ret;

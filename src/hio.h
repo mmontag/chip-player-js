@@ -23,6 +23,7 @@ int	hio_seek	(HIO_HANDLE *, long, int);
 long	hio_tell	(HIO_HANDLE *);
 int	hio_eof		(HIO_HANDLE *);
 HIO_HANDLE *hio_open	(void *, int);
+HIO_HANDLE *hio_fdopen	(int, char *);
 int	hio_close	(HIO_HANDLE *);
 
 #endif
