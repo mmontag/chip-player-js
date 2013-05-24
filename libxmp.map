@@ -36,3 +36,8 @@ XMP_4.1 {
     xmp_play_buffer;
 } XMP_4.0;
 
+XMP_4.2 {
+  global:
+    xmp_load_module_from_memory;
+} XMP_4.1;
+
