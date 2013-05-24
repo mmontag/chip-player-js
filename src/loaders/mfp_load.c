@@ -36,6 +36,9 @@ static int mfp_test(HIO_HANDLE *f, char *t, const int start)
 	uint8 buf[384];
 	int i, len, lps, lsz;
 
+	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
+		return -1;
+
 	if (hio_read(buf, 1, 384, f) < 384)
 		return -1;
 
@@ -89,7 +92,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_event *event;
 	struct stat st;
 	char smp_filename[PATH_MAX];
-	FILE *s;
+	HIO_HANDLE *s;
 	int size1, size2;
 	int pat_addr, pat_table[128][4];
 	uint8 buf[1024], mod_event[4];
@@ -212,7 +215,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			goto err;
 		}
 	}
-	if ((s = fopen(smp_filename, "rb")) == NULL) {
+	if ((s = hio_open(smp_filename, HIO_HANDLE_TYPE_FILE)) == NULL) {
 		fprintf(stderr, "libxmp: can't open sample file %s\n",
 								smp_filename);
 		goto err;
@@ -223,7 +226,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
-	fclose(s);
+	hio_close(s);
 
 	m->quirk |= QUIRK_MODRNG;
 

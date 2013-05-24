@@ -116,7 +116,7 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
     }
 
-    if (f->type != HIO_HANDLE_TYPE_FILE)
+    if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
 	goto found;
 
     /* Test for UNIC tracker modules

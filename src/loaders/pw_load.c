@@ -58,6 +58,9 @@ int pw_test_format(FILE *f, char *t, const int start,
 
 static int pw_test(HIO_HANDLE *f, char *t, const int start)
 {
+	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
+		return -1;
+
 	return pw_test_format(f->f, t, start, NULL);
 }
 

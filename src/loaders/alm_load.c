@@ -34,7 +34,7 @@ static int alm_test(HIO_HANDLE *f, char *t, const int start)
 {
     char buf[7];
 
-    if (f->type != HIO_HANDLE_TYPE_FILE)
+    if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
 	return -1;
 
     if (hio_read(buf, 1, 7, f) < 7)

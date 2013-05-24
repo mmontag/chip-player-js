@@ -24,7 +24,7 @@ static int sym_test(HIO_HANDLE *f, char *t, const int start)
 	uint32 a, b;
 	int i, ver;
 
-	if (f->type != HIO_HANDLE_TYPE_FILE)
+	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
 		return -1;
 
 	a = hio_read32b(f);

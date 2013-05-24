@@ -1,6 +1,8 @@
 #ifndef XMP_HIO_H
 #define XMP_HIO_H
 
+#define HIO_HANDLE_TYPE(x) ((x)->type)
+
 typedef struct {
 #define HIO_HANDLE_TYPE_FILE	0
 #define HIO_HANDLE_TYPE_MEMORY	1
