@@ -182,7 +182,7 @@ TEST_DFILES	= Makefile $(TEST_OBJS:.o=.c) test.h md5.h data
 TEST_PATH	= .
 SRC_PATH	= ../src
 
-TEST_INTERNAL	= load_helpers.o loaders/itsex.o dataio.o scan.o misc.o \
+TEST_INTERNAL	= hio.o load_helpers.o loaders/itsex.o dataio.o scan.o misc.o \
 		  loaders/sample.o synth_null.o fnmatch.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \

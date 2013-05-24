@@ -9,16 +9,16 @@
 TEST(test_sample_load_8bit)
 {
 	struct xmp_sample s;
-	FILE *f;
+	HIO_HANDLE *f;
 	char buffer[202];
 	int i;
 	struct module_data m;
 
 	memset(&m, 0, sizeof (struct module_data));
 
-	f = fopen("data/sample-8bit.raw", "rb");
+	f = hio_open("data/sample-8bit.raw", HIO_HANDLE_TYPE_FILE);
 	fail_unless(f != NULL, "can't open sample file");
-	fread(buffer, 1, 101, f);
+	hio_read(buffer, 1, 101, f);
 	for (i = 0; i < 101; i++) {
 		buffer[101 + i] = buffer[101 - i - 1];
 	}
@@ -30,7 +30,7 @@ TEST(test_sample_load_8bit)
 
 	/* load sample with invalid loop */
 	SET(101, 150, 180, XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
-	fseek(f, 0, SEEK_SET);
+	hio_seek(f, 0, SEEK_SET);
 	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lps == 0, "didn't fix invalid loop start");
@@ -39,7 +39,7 @@ TEST(test_sample_load_8bit)
 
 	/* load sample with invalid loop */
 	SET(101, 50, 40, XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
-	fseek(f, 0, SEEK_SET);
+	hio_seek(f, 0, SEEK_SET);
 	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lps == 0, "didn't fix invalid loop start");
@@ -48,7 +48,7 @@ TEST(test_sample_load_8bit)
 
 	/* load sample from file */
 	SET(101, 0, 102, 0);
-	fseek(f, 0, SEEK_SET);
+	hio_seek(f, 0, SEEK_SET);
 	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lpe == 101, "didn't fix invalid loop end");
@@ -58,7 +58,7 @@ TEST(test_sample_load_8bit)
 
 	/* load sample from file w/ loop */
 	SET(101, 20, 80, XMP_SAMPLE_LOOP);
-	fseek(f, 0, SEEK_SET);
+	hio_seek(f, 0, SEEK_SET);
 	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.data[80] == s.data[79], "sample adjust error");
@@ -66,7 +66,7 @@ TEST(test_sample_load_8bit)
 
 	/* load sample from w/ bidirectional loop */
 	SET(101, 0, 102, XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
-	fseek(f, 0, SEEK_SET);
+	hio_seek(f, 0, SEEK_SET);
 	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lpe == 101, "didn't fix invalid loop end");

@@ -1,16 +1,17 @@
 #include "test.h"
 #include "../src/loaders/loader.h"
 
-int itsex_decompress16(FILE *module, void *dst, int len, char it215);
+int itsex_decompress16(HIO_HANDLE *module, void *dst, int len, char it215);
 
 
 TEST(test_depack_it_sample_16bit)
 {
-	FILE *f, *fo;
+	HIO_HANDLE *f;
+	FILE *fo;
 	int ret;
 	char dest[10000];
 
-	f = fopen("data/it-sample-16bit.raw", "rb");
+	f = hio_open("data/it-sample-16bit.raw", HIO_HANDLE_TYPE_FILE);
 	fail_unless(f != NULL, "can't open data file");
 
 	fo = fopen(TMP_FILE, "wb");
@@ -26,12 +27,9 @@ TEST(test_depack_it_sample_16bit)
 	fwrite(dest, 1, 9292, fo);
 
 	fclose(fo);
-	fclose(f);
+	hio_close(f);
 
-	f = fopen(TMP_FILE, "rb");
 	ret = check_md5(TMP_FILE, "1e2395653f9bd7838006572d8fcdb646");
 	fail_unless(ret == 0, "MD5 error");
-
-	fclose(f);
 }
 END_TEST
