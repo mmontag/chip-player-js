@@ -56,5 +56,8 @@ TEST(test_read_mem_hio)
 	x = hio_read(mem2, 1, 50, h);
 	for (i = 0; i < 50; i++)
 		fail_unless(mem2[i] == i + 9, "hio_read");
+
+	x = hio_close(h);
+	fail_unless(x == 0, "hio_close");
 }
 END_TEST
