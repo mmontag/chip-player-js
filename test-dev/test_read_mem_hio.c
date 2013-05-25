@@ -42,7 +42,7 @@ TEST(test_read_mem_hio)
 	fail_unless(x == 0x14, "hio_fseek");
 
 	x = hio_seek(h, 2, SEEK_SET);
-	fail_unless(x == 0, "hio_fseek");
+	fail_unless(x == 0, "hio_fseek SEEK_SET");
 
 	x = hio_read32b(h);
 	fail_unless(x == 0x02030405, "hio_read32b");
@@ -51,7 +51,10 @@ TEST(test_read_mem_hio)
 	fail_unless(x == 0, "hio_eof");
 
 	x = hio_seek(h, 3, SEEK_CUR);
-	fail_unless(x == 0, "hio_fseek");
+	fail_unless(x == 0, "hio_fseek SEEK_CUR");
+
+	x = hio_seek(h, 0, SEEK_END);
+	fail_unless(x == -1, "hio_fseek SEEK_END");
 
 	x = hio_read(mem2, 1, 50, h);
 	for (i = 0; i < 50; i++)
