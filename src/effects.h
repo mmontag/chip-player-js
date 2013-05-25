@@ -102,6 +102,10 @@
 #define FX_REVERB	0xaa	/* IMF */
 #define FX_S3M_BPM	0xab	/* S3M */
 #define FX_FINE_VIBRATO	0xac	/* S3M/PTM/IMF/LIQ */
+#define FX_F_VSLIDE_UP	0xad	/* MMD */
+#define FX_F_VSLIDE_DN	0xae	/* MMD */
+#define FX_F_PORTA_UP	0xaf	/* MMD */
+#define FX_F_PORTA_DN	0xb0	/* MMD */
 
 /* Reserved synth effects */
 #define FX_SYNTH_0	0xf0
