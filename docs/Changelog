@@ -3,6 +3,7 @@ Stable versions
 
 4.1.5 ():
 	- improve OctaMED effect handling (reported by Andreas Falkenhahn)
+	- fix P60A pattern depacking (reported by Andreas Falkenhahn)
 
 4.1.4 (20130519):
 	- fix array initialization in IT loader (reported by Jacques Philippe)
