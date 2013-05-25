@@ -102,7 +102,9 @@ int hio_read(void *buf, int size, int num, HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return fread(buf, size, num, h->f);
 	} else {
-		memcpy(buf, h->p, size * num);
+		size *= num;
+		memcpy(buf, h->p, size);
+		h->p += size;
 		return num;
 	}
 }

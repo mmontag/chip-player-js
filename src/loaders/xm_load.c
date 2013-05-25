@@ -64,14 +64,14 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hio_read(&xfh.id, 17, 1, f);		/* ID text */
-    hio_read(&xfh.name, 20, 1, f);		/* Module name */
-    hio_read8(f);				/* 0x1a */
+    hio_read(&xfh.id, 17, 1, f);	/* ID text */
+    hio_read(&xfh.name, 20, 1, f);	/* Module name */
+    hio_read8(f);			/* 0x1a */
     hio_read(&xfh.tracker, 20, 1, f);	/* Tracker name */
-    xfh.version = hio_read16l(f);		/* Version number, minor-major */
+    xfh.version = hio_read16l(f);	/* Version number, minor-major */
     xfh.headersz = hio_read32l(f);	/* Header size */
-    xfh.songlen = hio_read16l(f);		/* Song length */
-    xfh.restart = hio_read16l(f);		/* Restart position */
+    xfh.songlen = hio_read16l(f);	/* Song length */
+    xfh.restart = hio_read16l(f);	/* Restart position */
     xfh.channels = hio_read16l(f);	/* Number of channels */
     xfh.patterns = hio_read16l(f);	/* Number of patterns */
     xfh.instruments = hio_read16l(f);	/* Number of instruments */

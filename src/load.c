@@ -100,6 +100,12 @@ static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
 	MD5_CTX ctx;
 	int bytes_read;
 
+	/* We don't know the size of a module already in memory */
+	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE) {
+		memset(digest, 0, 16);
+		return;
+	}
+
 	hio_seek(f, 0, SEEK_SET);
 
 	MD5Init(&ctx);
