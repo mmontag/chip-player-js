@@ -1,6 +1,8 @@
 /*
  * The_Player_6.0a.c   Copyright (C) 1998 Sylvain "Asle" Chipaux
- *		       Copyright (C) 2006-2009 Claudio Matsuoka
+ *
+ * Modified for xmp by Claudio Matsuoka, 2006-2009
+ * Cleanup & fixes for p60.calm bottom4 by Claudio Matsuoka, May 2013
  *
  * The Player 6.0a to Protracker.
  *
@@ -16,18 +18,42 @@
 #include "prowiz.h"
 
 
+static uint8 set_event(uint8 *x, uint8 c1, uint8 c2, uint8 c3)
+{
+	uint8 b;
+
+	*x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
+	*x++ = ptk_table[c1 / 2][1];
+
+	b = c2 & 0x0f;
+	if (b == 0x08)
+	    c2 -= 0x08;
+
+	*x++ = c2;
+
+	if (b == 0x05 || b == 0x06 || b == 0x0a)
+	    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
+
+	*x++ = c3;
+
+	return b;
+}
+
+#define track(p,c,r) tdata[((int)(p) * 4 + (c)) * 512 + (r) * 4]
+
 static int depack_p60a(FILE *in, FILE *out)
 {
-    uint8 c1, c2, c3, c4, c5, c6;
+    uint8 c1, c2, c3, c4;
+    int effect;
     int max_row;
     signed char *smp_buffer;
-    int PatPos = 0;
+    int pat_pos = 0;
     int npat = 0;
     int nins = 0;
-    uint8 tdata[512][256];
+    uint8 *tdata;
     uint8 ptable[128];
     int isize[31];
-    uint8 PACK[31];
+/*  uint8 PACK[31];*/
 /*  uint8 DELTA[31];*/
     uint8 delta = 0;
     uint8 pack = 0;
@@ -42,31 +68,35 @@ static int depack_p60a(FILE *in, FILE *out)
     int val;
     uint8 buf[1024];
 
+    tdata = calloc(512, 256);
+    if (tdata == NULL)
+	return -1;
+
     memset(taddr, 0, 128 * 4 * 4);
-    memset(tdata, 0, 512 << 8);
     memset(ptable, 0, 128);
     memset(smp_size, 0, 31 * 4);
     memset(isize, 0, 31 * sizeof(int));
-    for (i = 0; i < 31; i++) {
+    /*for (i = 0; i < 31; i++) {
 	PACK[i] = 0;
-/*    DELTA[i] = 0;*/
-    }
+        DELTA[i] = 0;
+    }*/
 
     saddr[0] = 0;
     sdata_addr = read16b(in);		/* read sample data address */
     npat = read8(in);			/* read real number of patterns */
     nins = read8(in);			/* read number of samples */
 
-    if ((nins & 0x80) == 0x80) {
+    if (nins & 0x80) {
 	/*printf ( "Samples are saved as delta values !\n" ); */
 	delta = 1;
     }
-    if ((nins & 0x40) == 0x40) {
+    if (nins & 0x40) {
 	/*printf ( "some samples are packed !\n" ); */
 	/*printf ( "\n! Since I could not understand the packing method of the\n" */
 	/*	 "! samples, neither could I do a depacker .. . mission ends here :)\n" ); */
 	pack = 1;
 
+	free(tdata);
 	return -1;
     }
 
@@ -96,11 +126,11 @@ static int depack_p60a(FILE *in, FILE *out)
 	}
 	j = smp_size[i] / 2;
 
-	write16b(out, isize[i]);
+	write16b(out, isize[i]);	/* size */
 
 	c1 = read8(in);			/* finetune */
-	if ((c1 & 0x40) == 0x40)
-	    PACK[i] = 1;
+	/*if (c1 & 0x40)
+	    PACK[i] = 1;*/
 	write8(out, c1 & 0x3f);
 
 	write8(out, read8(in));		/* volume */
@@ -128,13 +158,13 @@ static int depack_p60a(FILE *in, FILE *out)
     }
 
     /* pattern table */
-    for (PatPos = 0; PatPos < 128; PatPos++) {
+    for (pat_pos = 0; pat_pos < 128; pat_pos++) {
 	c1 = read8(in);
 	if (c1 == 0xff)
 	    break;
-	ptable[PatPos] = c1;    /* <--- /2 in p50a */
+	ptable[pat_pos] = c1;    /* <--- /2 in p50a */
     }
-    write8(out, PatPos);		/* write size of pattern list */
+    write8(out, pat_pos);		/* write size of pattern list */
     write8(out, 0x7f);			/* write noisetracker byte */
     fwrite(ptable, 128, 1, out);	/* write pattern table */
     write32b(out, PW_MOD_MAGIC);	/* M.K. */
@@ -145,37 +175,28 @@ static int depack_p60a(FILE *in, FILE *out)
 
     for (i = 0; i < npat; i++) {
 	max_row = 63;
+
 	for (j = 0; j < 4; j++) {
 	    fseek(in, taddr[i][j] + tdata_addr, SEEK_SET);
+
 	    for (k = 0; k <= max_row; k++) {
-		uint8 *x = &tdata[i * 4 + j][k * 4];
+		uint8 *x = &track(i, j, k);
 		c1 = read8(in);
 		c2 = read8(in);
 		c3 = read8(in);
 
-		if ((c1 & 0x80) == 0x80 && c1 != 0x80) {
-		    c4 = read8(in);
-		    c1 = 0xff - c1;
+		/* case 2 */
+		if (c1 & 0x80 && c1 != 0x80) {
+		    c4 = read8(in);		/* number of empty rows */
+		    c1 = 0xff - c1;		/* relative note number */
 
-		    *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
-		    *x++ = ptk_table[c1 / 2][1];
+		    effect = set_event(x, c1, c2, c3);
 
-		    c6 = c2 & 0x0f;
-		    if (c6 == 0x08)
-			c2 -= 0x08;
-
-		    *x++ = c2;
-
-		    if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-			c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
-
-		    *x++ = c3;
-
-		    if (c6 == 0x0d) {		/* pattern break */
+		    if (effect == 0x0d) {		/* pattern break */
 			max_row = k;
 			break;
 		    }
-		    if (c6 == 0x0b) {		/* pattern jump */
+		    if (effect == 0x0b) {		/* pattern jump */
 			max_row = k;
 			break;
 		    }
@@ -186,63 +207,53 @@ static int depack_p60a(FILE *in, FILE *out)
 		    c4 = 0x100 - c4;
 
 		    for (l = 0; l < c4; l++) {
-			k += 1;
-			x = &tdata[i * 4 + j][k * 4];
+			if (++k >= 64)
+			    break;
 
-			*x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
-			*x++ = ptk_table[c1 / 2][1];
-
-			c6 = c2 & 0x0f;
-			if (c6 == 0x08)
-			    c2 -= 0x08;
-
-			*x++ = c2;
-
-			if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-			    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
-
-			*x++ = c3;
+			x = &track(i, j, k);
+			set_event(x, c1, c2, c3);
 		    }
 		    continue;
 		}
 
+		/* case 3
+		 * if the first byte is $80, the second is the number of
+		 * lines we'll have to repeat, and the last two bytes is the
+		 * number of bytes to go back to reach the starting point
+		 * where to read our lines
+		 */
 		if (c1 == 0x80) {
+		    int lines;
+
 		    c4 = read8(in);
 		    a = ftell(in);
-		    c5 = c2;
-		    fseek(in, -((c3 << 8) + c4), SEEK_CUR);
-		    for (l = 0; l <= c5; l++, k++) {
-			x = &tdata[i * 4 + j][k * 4];
+		    lines = c2;
+		    fseek(in, -(((int)c3 << 8) + c4), SEEK_CUR);
+
+		    for (l = 0; l <= lines; l++, k++) {
+			x = &track(i, j, k);
 
 			c1 = read8(in);
 			c2 = read8(in);
 			c3 = read8(in);
 
-			if ((c1 & 0x80) == 0x80 && c1 != 0x80) {
+			if (c1 & 0x80 && c1 != 0x80) {
 			    c4 = read8(in);
 			    c1 = 0xff - c1;
-			    *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
-			    *x++ = ptk_table[c1 / 2][1];
 
-			    c6 = c2 & 0x0f;
-			    if (c6 == 0x08)
-				c2 -= 0x08;
+			    if (k >= 64)
+				continue;
 
-			    *x++ = c2;
+			    effect = set_event(x, c1, c2, c3);
 
-			    if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-				c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
-
-			    *x++ = c3;
-
-			    if (c6 == 0x0d) {	/* pattern break */
+			    if (effect == 0x0d) {	/* pattern break */
 				max_row = k;
-				k = l = 9999l;
+				k = l = 9999;
 				continue;
 			    }
-			    if (c6 == 0x0b) {	/* pattern jump */
+			    if (effect == 0x0b) {	/* pattern jump */
 				max_row = k;
-				k = l = 9999l;
+				k = l = 9999;
 				continue;
 			    }
 			    if (c4 < 0x80) {	/* skip rows */
@@ -252,68 +263,33 @@ static int depack_p60a(FILE *in, FILE *out)
 			    c4 = 0x100 - c4;
 
 			    for (b = 0; b < c4; b++) {
-				k += 1;
-				x = &tdata[i * 4 + j][k * 4];
+				if (++k >= 64)
+				    break;
 
-				*x++ = ((c1 << 4) & 0x10) |
-						ptk_table[c1 / 2][0];
-				*x++ = ptk_table[c1 / 2][1];
-
-				c6 = c2 & 0x0f;
-				if (c6 == 0x08)
-				    c2 -= 0x08;
-
-				*x++ = c2;
-
-				if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-				    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
-				*x++ = c3;
+				x = &track(i, j, k);
+				set_event(x, c1, c2, c3);
 			    }
 			}
 
-			x = &tdata[i * 4 + j][k * 4];
-
-			*x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
-			*x++ = ptk_table[c1 / 2][1];
-
-			c6 = c2 & 0x0f;
-			if (c6 == 0x08)
-			    c2 -= 0x08;
-
-			*x++ = c2;
-
-			if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-			    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
-
-			*x++ = c3;
+			x = &track(i, j, k);
+			set_event(x, c1, c2, c3);
 		    }
 
 		    fseek(in, a, SEEK_SET);
-		    k -= 1;
+		    k--;
 		    continue;
 		}
 
-		x = &tdata[i * 4 + j][k * 4];
+		/* case 1 */
 
-		*x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
-		*x++ = ptk_table[c1 / 2][1];
+		x = &track(i, j, k);
+		effect = set_event(x, c1, c2, c3);
 
-		c6 = c2 & 0x0f;
-		if (c6 == 0x08)
-		    c2 -= 0x08;
-
-		*x++ = c2;
-
-		if (c6 == 0x05 || c6 == 0x06 || c6 == 0x0a)
-		    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
-
-		*x++ = c3;
-
-		if (c6 == 0x0d) {	/* pattern break */
+		if (effect == 0x0d) {	/* pattern break */
 		    max_row = k;
 		    break;
 		}
-		if (c6 == 0x0b) {	/* pattern jump */
+		if (effect == 0x0b) {	/* pattern jump */
 		    max_row = k;
 		    break;
 		}
@@ -327,13 +303,12 @@ static int depack_p60a(FILE *in, FILE *out)
 	memset(buf, 0, 1024);
 	for (j = 0; j < 64; j++) {
 	    for (k = 0; k < 4; k++)
-		memcpy(&buf[j * 16 + k * 4], &tdata[k + i * 4][j * 4], 4);
+		memcpy(&buf[j * 16 + k * 4], &track(i, k, j), 4);
 	}
 	fwrite(buf, 1024, 1, out);
     }
 
-    /* go to sample data address */
-    fseek(in, sdata_addr, SEEK_SET);
+    free(tdata);
 
     /* read and write sample data */
     for (i = 0; i < nins; i++) {
@@ -342,13 +317,9 @@ static int depack_p60a(FILE *in, FILE *out)
 	memset(smp_buffer, 0, smp_size[i]);
 	fread(smp_buffer, smp_size[i], 1, in);
 	if (delta == 1) {
-	    c1 = 0x00;
 	    for (j = 1; j < smp_size[i]; j++) {
-		c2 = smp_buffer[j];
-		c2 = 0x100 - c2;
-		c3 = c2 + c1;
+		c3 = 0x100 - smp_buffer[j] + smp_buffer[j - 1];
 		smp_buffer[j] = c3;
-		c1 = c3;
 	    }
 	}
 	fwrite(smp_buffer, smp_size[i], 1, out);
@@ -394,7 +365,7 @@ static int test_p60a(uint8 *data, char *t, int s)
 	/* test sample sizes and loop start */
 	ssize = 0;
 	for (n = 0; n < k; n++) {
-		o = ((data[start + 4 + n * 6] << 8) + data[start + 5 + n * 6]);
+		o = readmem16b(data + start + n * 6 + 4);
 		if ((o < 0xffdf && o > 0x8000) || o == 0)
 			return -1;
 
@@ -530,8 +501,7 @@ void testP60A_pack (void)
 	/* test sample sizes and loop start */
 	ssize = 0;
 	for (n = 0; n < k; n++) {
-		o = ((data[start + 8 + n * 6] << 8) +
-			data[start + 9 + n * 6]);
+		o = ((data[start + 8 + n * 6] << 8) + data[start + 9 + n * 6]);
 		if (((o < 0xFFDF) && (o > 0x8000)) || (o == 0)) {
 /*printf ( "#5 Start:%ld\n" , start );*/
 			Test = BAD;
@@ -558,8 +528,7 @@ void testP60A_pack (void)
 
 	/* test sample data address */
 	j =
-		(data[start] << 8) + data[start +
-		1];
+		(data[start] << 8) + data[start + 1];
 	if (j < (k * 6 + 8 + m * 8)) {
 /*printf ( "#6 Start:%ld\n" , start );*/
 		Test = BAD;
@@ -571,11 +540,8 @@ void testP60A_pack (void)
 
 	/* test track table */
 	for (l = 0; l < (m * 4); l++) {
-		o =
-			((data[start + 8 + k * 6 +
-					 l * 2] << 8) +
-			data[start + 8 + k * 6 + l * 2 +
-				1]);
+		o = ((data[start + 8 + k * 6 + l * 2] << 8) +
+			data[start + 8 + k * 6 + l * 2 + 1]);
 		if ((o + k * 6 + 8 + m * 8) > j) {
 /*printf ( "#7 Start:%ld (value:%ld)(where:%x)(l:%ld)(m:%ld)(o:%ld)\n"
 , start
@@ -598,10 +564,8 @@ void testP60A_pack (void)
 		Test = BAD;
 		return;
 	}
-	while ((data[start + k * 6 + 8 + m * 8 + l] !=
-			0xFF) && (l < 128)) {
-		if (data[start + k * 6 + 8 + m * 8 +
-				l] > (m - 1)) {
+	while ((data[start + k * 6 + 8 + m * 8 + l] != 0xFF) && (l < 128)) {
+		if (data[start + k * 6 + 8 + m * 8 + l] > (m - 1)) {
 /*printf ( "#8,1 Start:%ld (value:%ld)(where:%x)(l:%ld)(m:%ld)(k:%ld)\n"
 , start
 , data[start+k*6+8+m*8+l]
@@ -613,11 +577,8 @@ void testP60A_pack (void)
 			ssize = 0;
 			return;
 		}
-		if (data[start + k * 6 + 8 + m * 8 +
-				l] > o)
-			o =
-				data[start + k * 6 + 8 +
-				m * 8 + l];
+		if (data[start + k * 6 + 8 + m * 8 + l] > o)
+			o = data[start + k * 6 + 8 + m * 8 + l];
 		l++;
 	}
 	if ((l == 0) || (l == 128)) {
@@ -645,12 +606,8 @@ void testP60A_pack (void)
 				Test = BAD;
 				return;
 			}
-			if ((((data[start +
-								n] << 4) &
-						0x10) |
-					((data[start + n +
-								1] >> 4) &
-						0x0F)) > k) {
+			if ((((data[start + n] << 4) & 0x10) |
+				((data[start + n + 1] >> 4) & 0x0F)) > k) {
 /*printf ( "#9,1 Start:%ld (value:%ld) (where:%x) (n:%ld) (j:%ld)\n"
 , start
 , data[start+n]
