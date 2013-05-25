@@ -6,6 +6,7 @@ static unsigned char buffer[8192];
 TEST(test_api_load_module_from_memory)
 {
 	xmp_context ctx;
+	struct xmp_frame_info fi;
 	int ret;
 	FILE *f;
 
@@ -20,6 +21,7 @@ TEST(test_api_load_module_from_memory)
 	ret = xmp_load_module_from_memory(ctx, buffer);
 	fail_unless(ret == 0, "load file");
 
-	
+	xmp_get_frame_info(ctx, &fi);
+	fail_unless(fi.total_time == 15360, "module duration");
 }
 END_TEST
