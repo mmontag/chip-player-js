@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.1.5 ():
+	- improve OctaMED effect handling (reported by Andreas Falkenhahn)
+
 4.1.4 (20130519):
 	- fix array initialization in IT loader (reported by Jacques Philippe)
 	- remove regression tests from the distribution package
