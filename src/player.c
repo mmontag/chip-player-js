@@ -279,7 +279,10 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		return;
 	}
 
-	finalvol = xc->volume;
+	if (m->med_vol_table && m->med_vol_table[xc->ins])
+		finalvol = xc->med.volume * xc->volume / 64;
+	else
+		finalvol = xc->volume;
 
 	if (TEST(TREMOLO))
 		finalvol += get_lfo(&xc->tremolo) / 128;
@@ -636,7 +639,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		return;
 	}
 
-	if (!t && act != VIRT_ACTIVE) {
+	if (t == 0 && act != VIRT_ACTIVE) {
 		if (!IS_VALID_INSTRUMENT(xc->ins) || act == VIRT_ACTION_CUT) {
 			virt_resetchannel(ctx, chn);
 			return;
@@ -647,7 +650,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		return;
 
 	/* Process MED synth instruments */
-	med_synth(ctx, chn, xc, !t && TEST(NEW_INS | NEW_NOTE));
+	med_synth(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
 
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {

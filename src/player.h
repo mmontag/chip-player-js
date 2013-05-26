@@ -191,6 +191,7 @@ struct channel_data {
 		int vib_speed;	/* MED synth vibrato speed */
 		int vib_idx;	/* MED synth vibrato index */
 		int vib_wf;	/* MED synth vibrato waveform */
+		int volume;	/* MED synth note volume */
 	} med;
 
 	struct xmp_event *delayed_event;
