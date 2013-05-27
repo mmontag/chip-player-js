@@ -53,8 +53,7 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		 * chord sound or other special effect. Arpeggio works better
 		 * with some instruments than others.
 		 */
-		event->fxp = FX_ARPEGGIO;
-		break;
+		/* fall-through */
 	case 0x01:
 		/* SLIDE UP 01
 		 * This slides the pitch of the current track up. It decreases
@@ -109,6 +108,7 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		 * left half of the argument determines the decay and the
 		 * right half the hold.
 		 */
+		event->fxt = event->fxp = 0;
 		break;
 	case 0x09:
 		/* SECONDARY TEMPO 09
