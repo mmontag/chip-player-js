@@ -106,6 +106,7 @@
 #define FX_F_VSLIDE_DN	0xae	/* MMD */
 #define FX_F_PORTA_UP	0xaf	/* MMD */
 #define FX_F_PORTA_DN	0xb0	/* MMD */
+#define FX_MED_DECAY	0xb1	/* MMD hold/decay */
 
 /* Reserved synth effects */
 #define FX_SYNTH_0	0xf0

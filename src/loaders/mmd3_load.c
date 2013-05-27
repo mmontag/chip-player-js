@@ -322,6 +322,14 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 				if (event->note)
 					event->note += 24 + song.playtransp;
 				event->ins = e[1] & 0x3f;
+
+				/* Decay */
+				if (event->ins && !event->note) {
+					event->f2t = FX_MED_DECAY;
+					event->f2p = event->ins;
+					event->ins = 0;
+				}
+
 				event->fxt = e[2];
 				event->fxp = e[3];
 				mmd_xlat_fx(event, bpm_on, bpmlen, med_8ch);
