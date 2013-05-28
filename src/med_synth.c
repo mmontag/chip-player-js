@@ -95,7 +95,7 @@ int get_med_arp(struct module_data *m, struct channel_data *xc)
 }
 
 
-void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int rst)
+void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int new_note)
 {
     struct module_data *m = &ctx->m;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
@@ -107,7 +107,7 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int r
     if (m->med_vol_table[xc->ins] == NULL || m->med_wav_table[xc->ins] == NULL)
 	return;
 
-    if (rst) {
+    if (new_note) {
 	xc->med.arp = xc->med.aidx = 0;
 	xc->med.period = xc->period;
 	xc->med.vp = xc->med.vc = xc->med.vw = 0;
@@ -159,12 +159,12 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int r
 		break;
 	    default:
 		if (b >= 0x00 && b <= 0x40)
-		    xc->volume = b;
+		    xc->med.volume = b;
 	    }
 	}
 
-	xc->volume += xc->med.vv;
-	CLAMP(xc->volume, 0, 64);
+	xc->med.volume += xc->med.vv;
+	CLAMP(xc->med.volume, 0, 64);
 
 skip_vol:
 

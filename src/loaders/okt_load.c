@@ -125,23 +125,24 @@ static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	str_adj((char *)mod->xxi[i].name);
 
 	/* Sample size is always rounded down */
-	mod->xxs[i].len = hio_read32b(f) & ~1;
-	mod->xxs[i].lps = hio_read16b(f);
+	mod->xxs[j].len = hio_read32b(f) & ~1;
+	mod->xxs[j].lps = hio_read16b(f);
 	looplen = hio_read16b(f);
-	mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
+	mod->xxs[j].lpe = mod->xxs[j].lps + looplen;
+	mod->xxs[j].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
+
 	mod->xxi[i].sub[0].vol = hio_read16b(f);
 	data->mode[i] = hio_read16b(f);
 
-	mod->xxi[i].nsm = !!(mod->xxs[i].len);
-	mod->xxs[i].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].nsm = !!(mod->xxs[j].len);
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = j;
 
 	data->idx[j] = i;
 
 	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
-		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
-		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		mod->xxi[i].name, mod->xxs[j].len, mod->xxs[j].lps,
+		mod->xxs[j].lpe, mod->xxs[j].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		mod->xxi[i].sub[0].vol, data->mode[i]);
 
 	if (mod->xxi[i].nsm)
@@ -233,11 +234,11 @@ static void get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		event->fxt = FX_VOLSLIDE;
 		event->fxp = (event->fxp - 0x50) << 4;
 	    } else if (event->fxp <= 0x70) {
-		event->fxt = FX_EXTENDED;
-		event->fxp = (EX_F_VSLIDE_DN << 4) | (event->fxp - 0x60);
+		event->fxt = FX_F_VSLIDE_DN;
+		event->fxp = event->fxp - 0x60;
 	    } else if (event->fxp <= 0x80) {
-		event->fxt = FX_EXTENDED;
-		event->fxp = (EX_F_VSLIDE_UP << 4) | (event->fxp - 0x70);
+		event->fxt = FX_F_VSLIDE_UP;
+		event->fxp = event->fxp - 0x70;
 	    }
 	}
 	if (event->fxt == FX_ARPEGGIO)	/* Arpeggio fixup */
@@ -265,7 +266,7 @@ static void get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     if (data->mode[i] == OKT_MODE8 || data->mode[i] == OKT_MODEB)
 	flags = SAMPLE_FLAG_7BIT;
 
-    load_sample(m, f, flags, &mod->xxs[i], NULL);
+    load_sample(m, f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
     data->sample++;
 }
