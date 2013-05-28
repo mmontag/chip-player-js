@@ -99,7 +99,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			switch (MSN(fxp)) {
 			case 0xf:
 				fxp &= 0x0f;
-				goto ex_f_porta_up;
+				goto fx_f_porta_up;
 			case 0xe:
 				fxp &= 0x0f;
 				fxp |= 0x10;
@@ -129,7 +129,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			switch (MSN(fxp)) {
 			case 0xf:
 				fxp &= 0x0f;
-				goto ex_f_porta_dn;
+				goto fx_f_porta_dn;
 			case 0xe:
 				fxp &= 0x0f;
 				fxp |= 0x20;
@@ -268,11 +268,11 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			if (l == 0xf && h != 0) {
 				xc->vol.memory = fxp;
 				fxp >>= 4;
-				goto ex_f_vslide_up;
+				goto fx_f_vslide_up;
 			} else if (h == 0xf && l != 0) {
 				xc->vol.memory = fxp;
 				fxp &= 0x0f;
-				goto ex_f_vslide_dn;
+				goto fx_f_vslide_dn;
 			} else if (fxp == 0x00) {
 				if ((fxp = xc->vol.memory) != 0)
 					goto fx_volslide;
@@ -367,21 +367,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		fxp &= 0x0f;
 		switch (fxt) {
 		case EX_F_PORTA_UP:	/* Fine portamento up */
-		      ex_f_porta_up:
-			SET(FINE_BEND);
-			if (fxp)
-				xc->freq.fslide = -fxp * 4;
-			else if (xc->freq.slide > 0)
-				xc->freq.slide *= -1;
-			break;
+		    goto fx_f_porta_up;
 		case EX_F_PORTA_DN:	/* Fine portamento down */
-		      ex_f_porta_dn:
-			SET(FINE_BEND);
-			if (fxp)
-				xc->freq.fslide = fxp * 4;
-			else if (xc->freq.slide < 0)
-				xc->freq.slide *= -1;
-			break;
+		    goto fx_f_porta_dn;
 		case EX_GLISS:		/* Glissando toggle */
 			xc->gliss = fxp;
 			break;
@@ -426,17 +414,9 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			xc->retrig.type = 0;
 			break;
 		case EX_F_VSLIDE_UP:	/* Fine volume slide up */
-		      ex_f_vslide_up:
-			SET(FINE_VOLS);
-			if (fxp)
-				xc->vol.fslide = fxp;
-			break;
+			goto fx_f_vslide_up;
 		case EX_F_VSLIDE_DN:	/* Fine volume slide down */
-		      ex_f_vslide_dn:
-			SET(FINE_VOLS);
-			if (fxp)
-				xc->vol.fslide = -fxp;
-			break;
+			goto fx_f_vslide_dn;
 		case EX_CUT:		/* Cut note */
 			SET(RETRIG);
 			xc->retrig.val = fxp + 1;
@@ -462,13 +442,43 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 			goto fx_s3m_bpm;
 		}
 		break;
+
+	case FX_F_VSLIDE_UP:	/* Fine volume slide up */
+	    fx_f_vslide_up:
+		SET(FINE_VOLS);
+		if (fxp)
+			xc->vol.fslide = fxp;
+		break;
+	case FX_F_VSLIDE_DN:	/* Fine volume slide down */
+	    fx_f_vslide_dn:
+		SET(FINE_VOLS);
+		if (fxp)
+			xc->vol.fslide = -fxp;
+		break;
+	case FX_F_PORTA_UP:	/* Fine portamento up */
+	    fx_f_porta_up:
+		SET(FINE_BEND);
+		if (fxp)
+			xc->freq.fslide = -fxp * 4;
+		else if (xc->freq.slide > 0)
+			xc->freq.slide *= -1;
+		break;
+	case FX_F_PORTA_DN:	/* Fine portamento down */
+	    fx_f_porta_dn:
+		SET(FINE_BEND);
+		if (fxp)
+			xc->freq.fslide = fxp * 4;
+		else if (xc->freq.slide < 0)
+			xc->freq.slide *= -1;
+		break;
+
 	case FX_S3M_SPEED:	/* Set S3M speed */
-	fx_s3m_speed:
+	    fx_s3m_speed:
 		if (fxp)
 			p->speed = fxp;
 		break;
 	case FX_S3M_BPM:	/* Set S3M BPM */
-        fx_s3m_bpm:
+            fx_s3m_bpm:
 		if (fxp) {
 			if (fxp < XMP_MIN_BPM)
 				fxp = XMP_MIN_BPM;
@@ -506,7 +516,7 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 		}
 		break;
 	case FX_GVOL_SLIDE:	/* Global volume slide */
-              fx_gvolslide:
+            fx_gvolslide:
 		if (fxp) {
 			SET(GVOL_SLIDE);
 			xc->gvol.memory = fxp;
