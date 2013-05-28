@@ -125,23 +125,14 @@ static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	str_adj((char *)mod->xxi[i].name);
 
 	/* Sample size is always rounded down */
-<<<<<<< HEAD
-	mod->xxs[i].len = hio_read32b(f) & ~1;
-	mod->xxs[i].lps = hio_read16b(f);
+	mod->xxs[j].len = hio_read32b(f) & ~1;
+	mod->xxs[j].lps = hio_read16b(f);
 	looplen = hio_read16b(f);
-	mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
-	mod->xxi[i].sub[0].vol = hio_read16b(f);
-	data->mode[i] = hio_read16b(f);
-=======
-	mod->xxs[j].len = read32b(f) & ~1;
-	mod->xxs[j].lps = read16b(f);
-	looplen = read16b(f);
 	mod->xxs[j].lpe = mod->xxs[j].lps + looplen;
 	mod->xxs[j].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
 
-	mod->xxi[i].sub[0].vol = read16b(f);
-	data->mode[i] = read16b(f);
->>>>>>> b22ffe29489cc55c63ccaab6b633866b6cf1f9b9
+	mod->xxi[i].sub[0].vol = hio_read16b(f);
+	data->mode[i] = hio_read16b(f);
 
 	mod->xxi[i].nsm = !!(mod->xxs[j].len);
 	mod->xxi[i].sub[0].pan = 0x80;
