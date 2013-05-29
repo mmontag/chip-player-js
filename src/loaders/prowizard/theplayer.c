@@ -1,9 +1,10 @@
 /*
- * The Player 5.0a/6.0a common decoding
+ * The Player common decoding
  * Copyright (C) 1998 Sylvain "Asle" Chipaux
+ * Copyright (C) 2006-2013 Sylvain "Asle" Chipaux
  *
- * Modified for xmp by Claudio Matsuoka, 2006-2009
- * Cleanup & fixes for p60.calm bottom4 by Claudio Matsuoka, May 2013
+ * Code consolidated from depackers for different versions of The Player.
+ * Original code by Sylvain Chipaux, modified for xmp by Claudio Matsuoka.
  */
 
 #include <string.h>
@@ -213,15 +214,12 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     nins = read8(in);			/* read number of samples */
 
     if (nins & 0x80) {
-	/*printf ( "Samples are saved as delta values !\n" ); */
+	/* Samples saved as delta values */
 	delta = 1;
     }
 
-    if (version >= 0x60 && nins & 0x40) {
-	/* some samples are packed
-	 * Since I could not understand the packing method of the samples
-	 * neither could I do a depacker .. . mission ends here
-	 */
+    if (p60 && nins & 0x40) {
+	/* Some samples are packed -- depacking not implemented */
 	pack = 1;
 
 	free(tdata);
