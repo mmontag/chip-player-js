@@ -169,7 +169,7 @@ static void decode_pattern(FILE *in, int npat, uint8 *tdata, int tdata_addr, int
 }
 
 
-static int theplayer_depack(FILE *in, FILE *out, int p60)
+static int theplayer_depack(FILE *in, FILE *out, int version)
 {
     uint8 c1, c3;
     signed char *smp_buffer;
@@ -217,7 +217,7 @@ static int theplayer_depack(FILE *in, FILE *out, int p60)
 	delta = 1;
     }
 
-    if (p60 && nins & 0x40) {
+    if (version >= 0x60 && nins & 0x40) {
 	/* some samples are packed
 	 * Since I could not understand the packing method of the samples
 	 * neither could I do a depacker .. . mission ends here
@@ -290,7 +290,7 @@ static int theplayer_depack(FILE *in, FILE *out, int p60)
 	c1 = read8(in);
 	if (c1 == 0xff)
 	    break;
-	ptable[pat_pos] = p60 ? c1 : c1 / 2;	/* <--- /2 in p50a */
+	ptable[pat_pos] = version >= 0x60 ? c1 : c1 / 2; /* <--- /2 in p50a */
     }
     write8(out, pat_pos);		/* write size of pattern list */
     write8(out, 0x7f);			/* write noisetracker byte */
@@ -338,7 +338,7 @@ static int theplayer_depack(FILE *in, FILE *out, int p60)
 }
 
 
-static int theplayer_test(uint8 *data, char *t, int s, int p60)
+static int theplayer_test(uint8 *data, char *t, int s, int version)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -407,7 +407,7 @@ static int theplayer_test(uint8 *data, char *t, int s, int p60)
 	PW_REQUEST_DATA(s, start + k * 6 + 4 + m * 8);
 
 	while (data[start + k * 6 + 4 + m * 8 + l] != 0xff && l < 128) {
-		if (p60) {
+		if (version >= 0x60) {
 			if (data[start + k * 6 + 4 + m * 8 + l] > m - 1)
 				return -1;
 		} else {
@@ -430,7 +430,7 @@ static int theplayer_test(uint8 *data, char *t, int s, int p60)
 	if (l == 0 || l == 128)
 		return -1;
 
-	if (p60)
+	if (version >= 0x60)
 		o++;
 	else
 		o = o / 2 + 1;
@@ -464,12 +464,12 @@ static int theplayer_test(uint8 *data, char *t, int s, int p60)
 
 static int depack_p50a(FILE *in, FILE *out)
 {
-	return theplayer_depack(in, out, 0);
+	return theplayer_depack(in, out, 0x50);
 }
 
 static int test_p50a(uint8 *data, char *t, int s)
 {
-	return theplayer_test(data, t, s, 0);
+	return theplayer_test(data, t, s, 0x50);
 }
 
 const struct pw_format pw_p50a = {
@@ -482,12 +482,12 @@ const struct pw_format pw_p50a = {
 
 static int depack_p60a(FILE *in, FILE *out)
 {
-	return theplayer_depack(in, out, 1);
+	return theplayer_depack(in, out, 0x60);
 }
 
 static int test_p60a(uint8 *data, char *t, int s)
 {
-	return theplayer_test(data, t, s, 1);
+	return theplayer_test(data, t, s, 0x60);
 }
 
 const struct pw_format pw_p60a = {
