@@ -100,12 +100,6 @@ static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
 	MD5_CTX ctx;
 	int bytes_read;
 
-	/* We don't know the size of a module already in memory */
-	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE) {
-		memset(digest, 0, 16);
-		return;
-	}
-
 	hio_seek(f, 0, SEEK_SET);
 
 	MD5Init(&ctx);
@@ -424,7 +418,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	}
 #endif
 
-	if ((h = hio_open(path, HIO_HANDLE_TYPE_FILE)) == NULL)
+	if ((h = hio_open_file(path, "rb")) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 	INIT_LIST_HEAD(&tmpfiles_list);
@@ -520,7 +514,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	}
 #endif
 
-	if ((h = hio_open(path, HIO_HANDLE_TYPE_FILE)) == NULL)
+	if ((h = hio_open_file(path, "rb")) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 	INIT_LIST_HEAD(&tmpfiles_list);
@@ -588,7 +582,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	return -XMP_ERROR_DEPACK;
 }
 
-int xmp_load_module_from_memory(xmp_context opaque, void *mem)
+int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -599,7 +593,7 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem)
 
 	D_(D_WARN "path = %s", path);
 
-	if ((h = hio_open(mem, HIO_HANDLE_TYPE_MEMORY)) == NULL)
+	if ((h = hio_open_mem(mem, size)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 	INIT_LIST_HEAD(&tmpfiles_list);

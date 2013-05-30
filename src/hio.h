@@ -13,6 +13,8 @@ typedef struct {
 	FILE *f;
 	uint8 *p;
 	uint8 *start;
+	long size;
+	int eof;
 } HIO_HANDLE;
 
 int8	hio_read8s	(HIO_HANDLE *);
@@ -27,8 +29,9 @@ int	hio_read	(void *, int, int, HIO_HANDLE *);
 int	hio_seek	(HIO_HANDLE *, long, int);
 long	hio_tell	(HIO_HANDLE *);
 int	hio_eof		(HIO_HANDLE *);
-HIO_HANDLE *hio_open	(void *, int);
-HIO_HANDLE *hio_fdopen	(int, char *);
+HIO_HANDLE *hio_open_file (void *, char *);
+HIO_HANDLE *hio_open_mem  (void *, long);
+HIO_HANDLE *hio_open_fd	  (int, char *);
 int	hio_close	(HIO_HANDLE *);
 int	hio_stat	(HIO_HANDLE *, struct stat *);
 
