@@ -206,10 +206,14 @@ long hio_tell(HIO_HANDLE *h)
 
 int hio_eof(HIO_HANDLE *h)
 {
-	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE)
+	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return feof(h->f);
-	else
-		return CAN_READ(h) <= 0;
+	} else {
+		if (h->size <= 0)
+			return 0;
+		else
+			return CAN_READ(h) <= 0;
+	}
 }
 
 HIO_HANDLE *hio_open_file(void *path, char *mode)
