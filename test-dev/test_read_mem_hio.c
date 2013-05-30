@@ -1,3 +1,5 @@
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "test.h"
 #include "../src/hio.h"
 
@@ -7,12 +9,17 @@ TEST(test_read_mem_hio)
 	int i;
 	unsigned int x;
 	HIO_HANDLE *h;
+	struct stat st;
 
 	for (i = 0; i < 100; i++)
 		mem[i] = i;
 
 	h = hio_open_mem(mem, 100);
 	fail_unless(h != NULL, "hio_open");
+
+	x = hio_stat(h, &st);
+	fail_unless(x == 0, "hio_stat");
+	fail_unless(st.st_size == 100, "hio_stat size");
 
 	x = hio_read8(h);
 	fail_unless(x == 0x00, "hio_read8");
