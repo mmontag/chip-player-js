@@ -7,18 +7,18 @@ TEST(test_api_load_module_from_memory)
 {
 	xmp_context ctx;
 	struct xmp_frame_info fi;
-	int ret;
+	int ret, size;
 	FILE *f;
 
 
 	ctx = xmp_create_context();
 	f = fopen("data/test.xm", "rb");
 	fail_unless(f != NULL, "can't open module");
-	fread(buffer, 1, 8192, f);
+	size = fread(buffer, 1, 8192, f);
 	fclose(f);
 
 	/* valid file */
-	ret = xmp_load_module_from_memory(ctx, buffer);
+	ret = xmp_load_module_from_memory(ctx, buffer, size);
 	fail_unless(ret == 0, "load file");
 
 	xmp_get_frame_info(ctx, &fi);

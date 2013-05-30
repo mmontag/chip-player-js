@@ -16,7 +16,7 @@ TEST(test_sample_load_skip)
 
 	memset(&m, 0, sizeof(struct module_data));
 
-	f = hio_open("data/sample-16bit.raw", HIO_HANDLE_TYPE_FILE);
+	f = hio_open_file("data/sample-16bit.raw", "rb");
 	fail_unless(f != NULL, "can't open sample file");
 
 	/* read little-endian sample to native-endian buffer */
