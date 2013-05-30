@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "xmp.h"
+#include <xmp.h>
 
 
 static void display_info(struct xmp_module_info *mi)
