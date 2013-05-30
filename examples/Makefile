@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -O3 -Wall -I../include
 LD = gcc
 LDFLAGS =
-LIBS = -L../lib -lxmp -lm
+LIBS = -L../lib -lxmp
 
 all: examples
 
@@ -24,3 +24,5 @@ showinfo: showinfo.o
 player-getbuffer: player-getbuffer.o alsa.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
 
+player-openal: player-openal.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lopenal $(LIBS)
