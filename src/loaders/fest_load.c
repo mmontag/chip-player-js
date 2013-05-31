@@ -105,7 +105,7 @@ static int fest_load(struct module_data *m, FILE * f, const int start)
 		mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
 		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
 		mod->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-		mod->xxi[i].sub[0].fin = (int8) (mh.ins[i].finetune << 4);
+		mod->xxi[i].sub[0].fin = -(int8)(mh.ins[i].finetune << 4);
 		mod->xxi[i].sub[0].vol = mh.ins[i].volume;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
