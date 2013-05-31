@@ -175,7 +175,7 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
 			fread(mod_event, 1, 4, f);
-			cvt_pt_event(event, mod_event);
+			decode_protracker_event(event, mod_event);
 		}
 	}
 

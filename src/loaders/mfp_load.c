@@ -179,7 +179,7 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 					for (y = 0; y < 4; y++, row++) {
 						event = &EVENT(i, j, row);
 						memcpy(mod_event, &buf[buf[buf[buf[k] + x] + y] * 2], 4);
-						cvt_pt_event(event, mod_event);
+						decode_protracker_event(event, mod_event);
 					}
 				}
 			}

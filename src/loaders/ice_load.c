@@ -139,7 +139,7 @@ static int ice_load(struct module_data *m, FILE *f, const int start)
 	for (j = 0; j < mod->xxt[i]->rows; j++) {
 		event = &mod->xxt[i]->event[j];
 		fread (ev, 1, 4, f);
-		cvt_pt_event (event, ev);
+		decode_protracker_event(event, ev);
 	}
     }
 

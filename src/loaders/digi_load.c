@@ -173,7 +173,7 @@ static int digi_load(struct module_data *m, FILE *f, const int start)
 	        if (chn_table[j] & k) {
 		    fread (digi_event, 4, 1, f);
 		    event = &EVENT (i, c, j);
-	            cvt_pt_event(event, digi_event);
+	            decode_protracker_event(event, digi_event);
 		    switch (event->fxt) {
 		    case 0x08:		/* Robot */
 			event->fxt = event->fxp = 0;

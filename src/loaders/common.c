@@ -69,7 +69,46 @@ void read_title(FILE *f, char *t, int s)
 	copy_adjust(t, buf, s);
 }
 
-void cvt_pt_event(struct xmp_event *event, uint8 *mod_event)
+/*
+ * Honor Noisetracker effects:
+ *
+ *  0 - arpeggio
+ *  1 - portamento up
+ *  2 - portamento down
+ *  3 - Tone-portamento
+ *  4 - Vibrato
+ *  A - Slide volume
+ *  B - Position jump
+ *  C - Set volume
+ *  D - Pattern break
+ *  E - Set filter (keep the led off, please!)
+ *  F - Set speed (now up to $1F)
+ *
+ * Pex Tufvesson's notes from http://www.livet.se/mahoney/:
+ *
+ * Note that some of the modules will have bugs in the playback with all
+ * known PC module players. This is due to that in many demos where I synced
+ * events in the demo with the music, I used commands that these newer PC
+ * module players erroneously interpret as "newer-version-trackers commands".
+ * Which they aren't.
+ */
+void decode_noisetracker_event(struct xmp_event *event, uint8 *mod_event)
+{
+	int fxt;
+
+	event->note = period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
+	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
+	fxt = LSN(mod_event[2]);
+
+	if (fxt <= 0x06 || (fxt >= 0x0a && fxt != 0x0e)) {
+		event->fxt = fxt;
+		event->fxp = mod_event[3];
+	}
+
+	disable_continue_fx(event);
+}
+
+void decode_protracker_event(struct xmp_event *event, uint8 *mod_event)
 {
 	event->note = period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
 	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
