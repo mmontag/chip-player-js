@@ -172,27 +172,33 @@ struct channel_data {
 		int resonance;	/* IT filter resonance */
 	} filter;
 
-	struct med_channel {
-		int vp;		/* MED synth volume sequence table pointer */
-		int vv;		/* MED synth volume slide value */
-		int vs;		/* MED synth volume speed */
-		int vc;		/* MED synth volume speed counter */
-		int vw;		/* MED synth volume wait counter */
-		int wp;		/* MED synth waveform sequence table pointer */
-		int wv;		/* MED synth waveform slide value */
-		int ws;		/* MED synth waveform speed */
-		int wc;		/* MED synth waveform speed counter */
-		int ww;		/* MED synth waveform wait counter */
-		int period;	/* MED synth period for RES */
-		int arp;	/* MED synth arpeggio start */
-		int aidx;	/* MED synth arpeggio index */
-		int vwf;	/* MED synth vibrato waveform */
-		int vib_depth;	/* MED synth vibrato depth */
-		int vib_speed;	/* MED synth vibrato speed */
-		int vib_idx;	/* MED synth vibrato index */
-		int vib_wf;	/* MED synth vibrato waveform */
-		int volume;	/* MED synth note volume */
-	} med;
+	union {
+		struct med_channel {
+			int vp;		/* MED synth volume table pointer */
+			int vv;		/* MED synth volume slide value */
+			int vs;		/* MED synth volume speed */
+			int vc;		/* MED synth volume speed counter */
+			int vw;		/* MED synth volume wait counter */
+			int wp;		/* MED synth waveform table pointer */
+			int wv;		/* MED synth waveform slide value */
+			int ws;		/* MED synth waveform speed */
+			int wc;		/* MED synth waveform speed counter */
+			int ww;		/* MED synth waveform wait counter */
+			int period;	/* MED synth period for RES */
+			int arp;	/* MED synth arpeggio start */
+			int aidx;	/* MED synth arpeggio index */
+			int vwf;	/* MED synth vibrato waveform */
+			int vib_depth;	/* MED synth vibrato depth */
+			int vib_speed;	/* MED synth vibrato speed */
+			int vib_idx;	/* MED synth vibrato index */
+			int vib_wf;	/* MED synth vibrato waveform */
+			int volume;	/* MED synth note volume */
+		} med;
+
+		struct hmnt_channel {
+			int datapos;	/* HMNT waveform table pointer */
+		} hmnt;
+	} extra;
 
 	struct xmp_event *delayed_event;
 	int delayed_ins;	/* IT save instrument emulation */
@@ -207,6 +213,7 @@ struct channel_data {
 
 void process_fx(struct context_data *, int, uint8, uint8, uint8, struct channel_data *, int);
 void med_synth(struct context_data *, int, struct channel_data *, int);
+void hmnt_synth(struct context_data *, int, struct channel_data *, int);
 int get_med_arp(struct module_data *, struct channel_data *);
 int get_med_vibrato(struct channel_data *);
 void filter_setup(int, int, int, int*, int*, int *);

@@ -544,6 +544,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			mod->xxi[i].extra = malloc(sizeof (struct med_extras));
 			if (mod->xxi[i].extra == NULL)
 				return -1;
+			MED_EXTRA(mod->xxi[i])->magic = MED_EXTRAS_MAGIC;
 
 			mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 			if (mod->xxi[i].sub == NULL)
@@ -614,6 +615,7 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 			mod->xxi[i].extra = malloc(sizeof (struct med_extras));
 			if (mod->xxi[i].extra == NULL)
 				return -1;
+			MED_EXTRA(mod->xxi[i])->magic = MED_EXTRAS_MAGIC;
 
 			mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument),
 							synth.wforms);

@@ -70,7 +70,7 @@ extern const struct format_loader alm_loader;
 extern const struct format_loader polly_loader;
 extern const struct format_loader stc_loader;
 extern const struct format_loader pw_loader;
-extern const struct format_loader fest_loader;
+extern const struct format_loader hmnt_loader;
 
 extern const struct pw_format *const pw_format[];
 
@@ -120,7 +120,7 @@ const struct format_loader *const format_loader[] = {
 	&sfx_loader,
 	&far_loader,
 	&umx_loader,
-	&fest_loader,
+	&hmnt_loader,
 	&stim_loader,
 	&coco_loader,
 	&mtp_loader,

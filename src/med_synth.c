@@ -37,10 +37,10 @@
  *	0xf0	    SPD		Set speed
  */
 
-#define VT m->med_vol_table[xc->ins][xc->med.vp++]
-#define WT m->med_wav_table[xc->ins][xc->med.wp++]
-#define VT_SKIP xc->med.vp++
-#define WT_SKIP xc->med.wp++
+#define VT m->med_vol_table[xc->ins][xc->extra.med.vp++]
+#define WT m->med_wav_table[xc->ins][xc->extra.med.wp++]
+#define VT_SKIP xc->extra.med.vp++
+#define WT_SKIP xc->extra.med.wp++
 
 
 static const int sine[32] = {
@@ -55,18 +55,18 @@ int get_med_vibrato(struct channel_data *xc)
 	int vib;
 
 #if 0
-	if (xc->med.vib_wf >= xxi[xc->ins].nsm)	/* invalid waveform */
+	if (xc->extra.med.vib_wf >= xxi[xc->ins].nsm)	/* invalid waveform */
 		return 0;
 
-	if (xxs[xxi[xc->ins][xc->med.vib_wf].sid].len != 32)
+	if (xxs[xxi[xc->ins][xc->extra.med.vib_wf].sid].len != 32)
 		return 0;
 #endif
 
 	/* FIXME: always using sine waveform */
 
-	vib = (sine[xc->med.vib_idx >> 5] * xc->med.vib_depth) >> 11;
-	xc->med.vib_idx += xc->med.vib_speed;
-	xc->med.vib_idx %= (32 << 5);
+	vib = (sine[xc->extra.med.vib_idx >> 5] * xc->extra.med.vib_depth) >> 11;
+	xc->extra.med.vib_idx += xc->extra.med.vib_speed;
+	xc->extra.med.vib_idx %= (32 << 5);
 
 	return vib;
 }
@@ -76,16 +76,16 @@ int get_med_arp(struct module_data *m, struct channel_data *xc)
 {
 	int arp;
 
-	if (xc->med.arp == 0)
+	if (xc->extra.med.arp == 0)
 		return 0;
 
-	if (m->med_wav_table[xc->ins][xc->med.arp] == 0xfd) /* empty arpeggio */
+	if (m->med_wav_table[xc->ins][xc->extra.med.arp] == 0xfd) /* empty arpeggio */
 		return 0;
 
-	arp = m->med_wav_table[xc->ins][xc->med.aidx++];
+	arp = m->med_wav_table[xc->ins][xc->extra.med.aidx++];
 	if (arp == 0xfd) {
-		xc->med.aidx = xc->med.arp;
-		arp = m->med_wav_table[xc->ins][xc->med.aidx++];
+		xc->extra.med.aidx = xc->extra.med.arp;
+		arp = m->med_wav_table[xc->ins][xc->extra.med.aidx++];
 	}
 
 	return 100 * arp;
@@ -98,6 +98,10 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int n
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
     int temp;
 
+    if (m->mod.xxi[xc->ins].extra == NULL ||
+		MED_EXTRA(m->mod.xxi[xc->ins])->magic != MED_EXTRAS_MAGIC)
+        return;
+
     if (m->med_vol_table == NULL || m->med_wav_table == NULL)
 	return;
 
@@ -105,19 +109,19 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int n
 	return;
 
     if (new_note) {
-	xc->med.arp = xc->med.aidx = 0;
-	xc->med.period = xc->period;
-	xc->med.vp = xc->med.vc = xc->med.vw = 0;
-	xc->med.wp = xc->med.wc = xc->med.ww = 0;
-	xc->med.vs = MED_EXTRA(m->mod.xxi[xc->ins])->vts;
-	xc->med.ws = MED_EXTRA(m->mod.xxi[xc->ins])->wts;
+	xc->extra.med.arp = xc->extra.med.aidx = 0;
+	xc->extra.med.period = xc->period;
+	xc->extra.med.vp = xc->extra.med.vc = xc->extra.med.vw = 0;
+	xc->extra.med.wp = xc->extra.med.wc = xc->extra.med.ww = 0;
+	xc->extra.med.vs = MED_EXTRA(m->mod.xxi[xc->ins])->vts;
+	xc->extra.med.ws = MED_EXTRA(m->mod.xxi[xc->ins])->wts;
     }
 
-    if (xc->med.vs > 0 && xc->med.vc-- == 0) {
-	xc->med.vc = xc->med.vs - 1;
+    if (xc->extra.med.vs > 0 && xc->extra.med.vc-- == 0) {
+	xc->extra.med.vc = xc->extra.med.vs - 1;
 
-	if (xc->med.vw > 0) {
-	    xc->med.vw--;
+	if (xc->extra.med.vw > 0) {
+	    xc->extra.med.vw--;
 	    goto skip_vol;
 	}
 
@@ -126,13 +130,13 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int n
 	    while (jump--) {
 	    case 0xff:		/* END */
 	    case 0xfb:		/* HLT */
-		xc->med.vp--;
+		xc->extra.med.vp--;
 		break;
 	    case 0xfe:		/* JMP */
 		if (loop)	/* avoid infinite loop */
 		    break;
 		temp = VT;
-		xc->med.vp = temp;
+		xc->extra.med.vp = temp;
 		loop = jump = 1;
 		break;
 	    case 0xfa:		/* JWS */
@@ -143,30 +147,30 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int n
 		VT_SKIP;	/* Not implemented */
 		break;
 	    case 0xf3:		/* CHU */
-		xc->med.vv = VT;
+		xc->extra.med.vv = VT;
 		break;
 	    case 0xf2:		/* CHD */
-		xc->med.vv = -VT;
+		xc->extra.med.vv = -VT;
 		break;
 	    case 0xf1:		/* WAI */
-		xc->med.vw = VT;
+		xc->extra.med.vw = VT;
 		break;
 	    case 0xf0:		/* SPD */
-		xc->med.vs = VT;
+		xc->extra.med.vs = VT;
 		break;
 	    default:
 		if (b >= 0x00 && b <= 0x40)
-		    xc->med.volume = b;
+		    xc->extra.med.volume = b;
 	    }
 	}
 
-	xc->med.volume += xc->med.vv;
-	CLAMP(xc->med.volume, 0, 64);
+	xc->extra.med.volume += xc->extra.med.vv;
+	CLAMP(xc->extra.med.volume, 0, 64);
 
 skip_vol:
 
-	if (xc->med.ww > 0) {
-	    xc->med.ww--;
+	if (xc->extra.med.ww > 0) {
+	    xc->extra.med.ww--;
 	    goto skip_wav;
 	}
 
@@ -177,51 +181,51 @@ skip_vol:
 	    while (jump--) {
 	    case 0xff:		/* END */
 	    case 0xfb:		/* HLT */
-		xc->med.wp--;
+		xc->extra.med.wp--;
 		break;
 	    case 0xfe:		/* JMP */
 		if (loop)	/* avoid infinite loop */
 		    break;
 		temp = WT;
 		if (temp == 0xff) {	/* handle JMP END case */
-		    xc->med.wp--;	/* see lepeltheme ins 0x02 */
+		    xc->extra.med.wp--;	/* see lepeltheme ins 0x02 */
 		    break;
 		}
-		xc->med.wp = temp;
+		xc->extra.med.wp = temp;
 		loop = jump = 1;
 		break;
 	    case 0xfd:		/* ARE */
 		break;
 	    case 0xfc:		/* ARP */
-		xc->med.arp = xc->med.aidx = xc->med.wp++;
+		xc->extra.med.arp = xc->extra.med.aidx = xc->extra.med.wp++;
 		while (WT != 0xfd);
 		break;
 	    case 0xfa:		/* JVS */
 		jws = WT;
 		break;
 	    case 0xf7:		/* VWF */
-		xc->med.vwf = WT;
+		xc->extra.med.vwf = WT;
 		break;
 	    case 0xf6:		/* RES */
-		xc->period = xc->med.period;
+		xc->period = xc->extra.med.period;
 		break;
 	    case 0xf5:		/* VBS */
-		xc->med.vib_speed = WT;
+		xc->extra.med.vib_speed = WT;
 		break;
 	    case 0xf4:		/* VBD */
-		xc->med.vib_depth = WT;
+		xc->extra.med.vib_depth = WT;
 		break;
 	    case 0xf3:		/* CHU */
-		xc->med.wv = -WT;
+		xc->extra.med.wv = -WT;
 		break;
 	    case 0xf2:		/* CHD */
-		xc->med.wv = WT;
+		xc->extra.med.wv = WT;
 		break;
 	    case 0xf1:		/* WAI */
-		xc->med.ww = WT;
+		xc->extra.med.ww = WT;
 		break;
 	    case 0xf0:		/* SPD */
-		xc->med.ws = WT;
+		xc->extra.med.ws = WT;
 		break;
 	    default:
 		xxi = & m->mod.xxi[xc->ins];
@@ -233,16 +237,16 @@ skip_vol:
 	}
 skip_wav:
 	;
-	/* xc->period += xc->med.wv; */
+	/* xc->period += xc->extra.med.wv; */
     }
 
     if (jws) {
-	xc->med.wp = jws;
+	xc->extra.med.wp = jws;
 	jws = 0;
     }
 
     if (jvs) {
-	xc->med.vp = jvs;
+	xc->extra.med.vp = jvs;
 	jvs = 0;
     }
 }

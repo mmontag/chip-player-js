@@ -153,7 +153,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			virt_resetchannel(ctx, chn);
 		}
 
-		xc->med.arp = xc->med.aidx = 0;
+		xc->extra.med.arp = xc->extra.med.aidx = 0;
 	}
 
 	/* Check note */
@@ -282,7 +282,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		}
 
-		xc->med.arp = xc->med.aidx = 0;
+		xc->extra.med.arp = xc->extra.med.aidx = 0;
 	}
 
 	/* Check note */
@@ -478,7 +478,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			use_ins_vol = 0;
 		}
 
-		xc->med.arp = xc->med.aidx = 0;
+		xc->extra.med.arp = xc->extra.med.aidx = 0;
 	}
 
 	/* Check note */
@@ -657,7 +657,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			use_ins_vol = 0;
 		}
 
-		xc->med.arp = xc->med.aidx = 0;
+		xc->extra.med.arp = xc->extra.med.aidx = 0;
 	}
 
 	/* Check note */

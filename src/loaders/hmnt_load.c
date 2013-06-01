@@ -9,6 +9,7 @@
 #include "loader.h"
 #include "mod.h"
 #include "period.h"
+#include "hmnt_extras.h"
 
 /*
  * From http://www.livet.se/mahoney/:
@@ -60,13 +61,13 @@
  * "patterns" of the song.
  */
 
-static int fest_test(FILE *, char *, const int);
-static int fest_load(struct module_data *, FILE *, const int);
+static int hmnt_test(FILE *, char *, const int);
+static int hmnt_load(struct module_data *, FILE *, const int);
 
-const struct format_loader fest_loader = {
-	"His Master's NoiseTracker (MOD)",
-	fest_test,
-	fest_load
+const struct format_loader hmnt_loader = {
+	"His Master's Noisetracker (MOD)",
+	hmnt_test,
+	hmnt_load
 };
 
 /* His Master's Noise M&K! will fail in regular Noisetracker loading
@@ -75,7 +76,7 @@ const struct format_loader fest_loader = {
 #define MAGIC_FEST	MAGIC4('F', 'E', 'S', 'T')
 #define MAGIC_MK	MAGIC4('M', '&', 'K', '!')
 
-static int fest_test(FILE * f, char *t, const int start)
+static int hmnt_test(FILE * f, char *t, const int start)
 {
 	int magic;
 
@@ -98,7 +99,7 @@ struct mupp {
 	uint8 dataloopend;
 };
 
-static int fest_load(struct module_data *m, FILE * f, const int start)
+static int hmnt_load(struct module_data *m, FILE * f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j;
@@ -187,7 +188,7 @@ static int fest_load(struct module_data *m, FILE * f, const int start)
 	mod->trk = mod->chn * mod->pat;
 
 	strncpy(mod->name, (char *)mh.name, 20);
-	set_type(m, "%s (%4.4s)", "His Master's NoiseTracker", mh.magic);
+	set_type(m, "%s (%4.4s)", "His Master's Noisetracker", mh.magic);
 	MODULE_INFO();
 
 	INSTRUMENT_INIT();
@@ -195,15 +196,15 @@ static int fest_load(struct module_data *m, FILE * f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		int num;
 
-/*
-printf("%2x] ", i);
-int j; for(j = 0; j < 10; j++) printf("%02x ", mh.ins[i].name[j]); printf("\n");
-*/
 		if (mupp[i].prgon) {
 			num = 28;
 			snprintf((char *)mod->xxi[i].name, XMP_NAME_SIZE,
 				"Mupp pat=%02x (%02x,%02x)", mupp[i].pattno,
 				mupp[i].dataloopstart, mupp[i].dataloopend);
+			mod->xxi[i].extra = calloc(1, sizeof(struct hmnt_extras));
+			if (mod->xxi[i].extra == NULL)
+				return -1;
+			HMNT_EXTRA(mod->xxi[i])->magic = HMNT_EXTRAS_MAGIC;
 		} else {
 			num = mh.ins[i].size > 0 ? 1 : 0;
 			copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
@@ -218,6 +219,9 @@ int j; for(j = 0; j < 10; j++) printf("%02x ", mh.ins[i].name[j]); printf("\n");
 
 		mod->xxi[i].nsm = num;
 		mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), num);
+		if (mod->xxi[i].sub == NULL)
+			return -1;
+
 		for (j = 0; j < num; j++) {
 			mod->xxi[i].sub[j].fin =
 					-(int8)(mh.ins[i].finetune << 4);
@@ -236,14 +240,7 @@ int j; for(j = 0; j < 10; j++) printf("%02x ", mh.ins[i].name[j]); printf("\n");
 		PATTERN_ALLOC(i);
 		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
-/*
-printf("pat %d offset=%lx\n", i, ftell(f));
-if (i==5) {
-char b[1024];
-FILE *x; x=fopen("asd5.raw", "wb"); fread(b, 1, 1024, f); fwrite(b, 1, 1024, x);
-fclose(x);
-} else
-*/
+
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
 			fread(mod_event, 1, 4, f);
@@ -267,6 +264,9 @@ fclose(x);
 
 	mupp_index = 0;
 	for (i = 0; i < 31; i ++) {
+		struct hmnt_extras *extra =
+				(struct hmnt_extras *)mod->xxi[i].extra;
+
 		if (!mupp[i].prgon)
 			continue;
 
@@ -280,6 +280,12 @@ fclose(x);
 			mod->xxs[k].flg = XMP_SAMPLE_LOOP;
 			load_sample(m, f, 0, &mod->xxs[k], NULL);
 		}
+
+		extra->dataloopstart = mupp[i].dataloopstart;
+		extra->dataloopend = mupp[i].dataloopend;
+
+		fread(extra->data, 1, 64, f);
+
 		mupp_index++;
 	}
 

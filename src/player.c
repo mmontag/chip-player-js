@@ -280,7 +280,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	}
 
 	if (m->med_vol_table && m->med_vol_table[xc->ins])
-		finalvol = xc->med.volume * xc->volume / 64;
+		finalvol = xc->extra.med.volume * xc->volume / 64;
 	else
 		finalvol = xc->volume;
 
@@ -651,6 +651,9 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 
 	/* Process MED synth instruments */
 	med_synth(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
+
+	/* Process His Master's Noisetracker synth instruments */
+	hmnt_synth(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
 
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {
