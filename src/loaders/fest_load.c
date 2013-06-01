@@ -6,6 +6,10 @@
  * for more information.
  */
 
+#include "loader.h"
+#include "mod.h"
+#include "period.h"
+
 /*
  * From http://www.livet.se/mahoney/:
  *
@@ -18,9 +22,24 @@
  * http://www.deliplayer.com
  */
 
-#include "loader.h"
-#include "mod.h"
-#include "period.h"
+/*
+ * From http://www.cactus.jawnet.pl/attitude/index.php?action=readtext&issue=12&which=12
+ *
+ * [Bepp] For your final Amiga release, the music disk His Master's Noise,
+ * you developed a special version of NoiseTracker. Could you tell us a
+ * little about this project?
+ *
+ * [Mahoney] I wanted to make a music disk with loads of songs, without being
+ * too repetitive or boring. So all of my "experimental features" that did not
+ * belong to NoiseTracker v2.0 were put into a separate version that would
+ * feature wavetable sounds, chord calculations, off-line filter calculations,
+ * mixing, reversing, sample accurate delays, resampling, fades - calculations
+ * that would be done on a standard setup of sounds instead of on individual
+ * modules. This "compression technique" lead to some 100 songs fitting on two
+ * standard 3.5" disks, written by 22 different composers. I'd say that writing
+ * a music program does give you loads of talented friends - you should try
+ * that yourself someday!
+ */
 
 static int fest_test(FILE *, char *, const int);
 static int fest_load(struct module_data *, FILE *, const int);
@@ -111,6 +130,8 @@ static int fest_load(struct module_data *m, FILE * f, const int start)
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 
+printf("%2x] ", i);
+int j; for(j = 0; j < 10; j++) printf("%02x ", mh.ins[i].name[j]); printf("\n");
 		copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 	}
 
