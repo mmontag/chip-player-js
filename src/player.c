@@ -31,6 +31,8 @@
 #include "player.h"
 #include "synth.h"
 #include "mixer.h"
+#include "med_extras.h"
+#include "hmnt_extras.h"
 
 /* Values for multi-retrig */
 static const struct retrig_control rval[] = {
@@ -279,8 +281,10 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		return;
 	}
 
-	if (m->med_vol_table && m->med_vol_table[xc->ins])
+        if (HAS_MED_EXTRAS(m->mod.xxi[xc->ins]))
 		finalvol = xc->extra.med.volume * xc->volume / 64;
+	else if (HAS_HMNT_EXTRAS(m->mod.xxi[xc->ins]))
+		finalvol = xc->extra.hmnt.volume * xc->volume / 64;
 	else
 		finalvol = xc->volume;
 
@@ -650,10 +654,11 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		return;
 
 	/* Process MED synth instruments */
-	med_synth(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
-
+        if (HAS_MED_EXTRAS(m->mod.xxi[xc->ins]))
+		med_synth(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
 	/* Process His Master's Noisetracker synth instruments */
-	hmnt_synth(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
+        else if (HAS_HMNT_EXTRAS(m->mod.xxi[xc->ins]))
+		hmnt_synth(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
 
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {

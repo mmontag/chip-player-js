@@ -197,6 +197,7 @@ struct channel_data {
 
 		struct hmnt_channel {
 			int datapos;	/* HMNT waveform table pointer */
+			int volume;	/* HMNT synth volume */
 		} hmnt;
 	} extra;
 
@@ -212,10 +213,6 @@ struct channel_data {
 
 
 void process_fx(struct context_data *, int, uint8, uint8, uint8, struct channel_data *, int);
-void med_synth(struct context_data *, int, struct channel_data *, int);
-void hmnt_synth(struct context_data *, int, struct channel_data *, int);
-int get_med_arp(struct module_data *, struct channel_data *);
-int get_med_vibrato(struct channel_data *);
 void filter_setup(int, int, int, int*, int*, int *);
 int read_event(struct context_data *, struct xmp_event *, int);
 

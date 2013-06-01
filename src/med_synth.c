@@ -98,10 +98,6 @@ void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int n
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
     int temp;
 
-    if (m->mod.xxi[xc->ins].extra == NULL ||
-		MED_EXTRA(m->mod.xxi[xc->ins])->magic != MED_EXTRAS_MAGIC)
-        return;
-
     if (m->med_vol_table == NULL || m->med_wav_table == NULL)
 	return;
 

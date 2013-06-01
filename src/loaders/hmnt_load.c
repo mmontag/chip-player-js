@@ -197,7 +197,7 @@ static int hmnt_load(struct module_data *m, FILE * f, const int start)
 		int num;
 
 		if (mupp[i].prgon) {
-			num = 28;
+			mod->xxi[i].nsm = num = 28;
 			snprintf((char *)mod->xxi[i].name, XMP_NAME_SIZE,
 				"Mupp pat=%02x (%02x,%02x)", mupp[i].pattno,
 				mupp[i].dataloopstart, mupp[i].dataloopend);
@@ -206,7 +206,8 @@ static int hmnt_load(struct module_data *m, FILE * f, const int start)
 				return -1;
 			HMNT_EXTRA(mod->xxi[i])->magic = HMNT_EXTRAS_MAGIC;
 		} else {
-			num = mh.ins[i].size > 0 ? 1 : 0;
+			num = 1;
+			mod->xxi[i].nsm = mh.ins[i].size > 0 ? 1 : 0;
 			copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
 			mod->xxs[i].len = 2 * mh.ins[i].size;
@@ -217,7 +218,6 @@ static int hmnt_load(struct module_data *m, FILE * f, const int start)
 						XMP_SAMPLE_LOOP : 0;
 		}
 
-		mod->xxi[i].nsm = num;
 		mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), num);
 		if (mod->xxi[i].sub == NULL)
 			return -1;
@@ -276,7 +276,7 @@ static int hmnt_load(struct module_data *m, FILE * f, const int start)
 			mod->xxi[i].sub[j].sid = k;
 			mod->xxs[k].len = 32;
 			mod->xxs[k].lps = 0;
-			mod->xxs[k].lpe = 31;
+			mod->xxs[k].lpe = 32;
 			mod->xxs[k].flg = XMP_SAMPLE_LOOP;
 			load_sample(m, f, 0, &mod->xxs[k], NULL);
 		}
@@ -285,6 +285,7 @@ static int hmnt_load(struct module_data *m, FILE * f, const int start)
 		extra->dataloopend = mupp[i].dataloopend;
 
 		fread(extra->data, 1, 64, f);
+		fread(extra->progvolume, 1, 64, f);
 
 		mupp_index++;
 	}

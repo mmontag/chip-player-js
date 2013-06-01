@@ -16,12 +16,7 @@ void hmnt_synth(struct context_data *ctx, int chn, struct channel_data *xc,
 {
 	struct module_data *m = &ctx->m;
 	struct xmp_instrument *xxi;
-	int pos, waveform;
-
-
-	if (m->mod.xxi[xc->ins].extra == NULL ||
-		HMNT_EXTRA(m->mod.xxi[xc->ins])->magic != HMNT_EXTRAS_MAGIC)
-		return;
+	int pos, waveform, volume;
 
 	if (new_note) {
 		xc->extra.hmnt.datapos = 0;
@@ -30,6 +25,7 @@ void hmnt_synth(struct context_data *ctx, int chn, struct channel_data *xc,
 	xxi = &m->mod.xxi[xc->ins];
 	pos = xc->extra.hmnt.datapos;
 	waveform = HMNT_EXTRA(m->mod.xxi[xc->ins])->data[pos];
+	volume = HMNT_EXTRA(m->mod.xxi[xc->ins])->progvolume[pos] & 0x7f;
 
 	if (waveform < xxi->nsm && xxi->sub[waveform].sid != xc->smp) {
 		xc->smp = xxi->sub[waveform].sid;
@@ -41,4 +37,5 @@ void hmnt_synth(struct context_data *ctx, int chn, struct channel_data *xc,
 		pos = HMNT_EXTRA(m->mod.xxi[xc->ins])->dataloopstart;
 
 	xc->extra.hmnt.datapos = pos;
+	xc->extra.hmnt.volume = volume;
 }
