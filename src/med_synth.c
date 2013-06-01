@@ -37,9 +37,6 @@
  *	0xf0	    SPD		Set speed
  */
 
-extern uint8 **med_vol_table;
-extern uint8 **med_wav_table;
-
 #define VT m->med_vol_table[xc->ins][xc->med.vp++]
 #define WT m->med_wav_table[xc->ins][xc->med.wp++]
 #define VT_SKIP xc->med.vp++
