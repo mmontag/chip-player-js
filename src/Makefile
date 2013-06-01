@@ -8,7 +8,7 @@ SRC_OBJS	= virtual.o format.o misc.o period.o player.o read_event.o \
 SRC_DFILES	= Makefile $(SRC_OBJS:.o=.c) common.h effects.h envelope.h \
 		  fmopl.h format.h lfo.h list.h mixer.h period.h player.h \
 		  spectrum.h synth.h virtual.h ym2149.h fnmatch.h md5.h \
-		  precomp_lut.h med_extras.h
+		  precomp_lut.h med_extras.h hmnt_extras.h
 
 SRC_PATH	= src
 
