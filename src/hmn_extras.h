@@ -16,6 +16,7 @@ struct hmn_extras {
 	(HMN_EXTRA(x) != NULL && HMN_EXTRA(x)->magic == HMN_EXTRAS_MAGIC)
 
 void hmn_extra(struct context_data *, int, struct channel_data *, int);
+void hmn_set_arpeggio(struct channel_data *, int);
 
 #endif
 
