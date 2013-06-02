@@ -37,7 +37,7 @@ void hmn_set_arpeggio(struct channel_data *xc, int arp)
 	xc->arpeggio.size = 16;
 }
 
-void hmn_extras(struct context_data *ctx, int chn, struct channel_data *xc,
+void hmn_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 		int new_note)
 {
 	struct module_data *m = &ctx->m;

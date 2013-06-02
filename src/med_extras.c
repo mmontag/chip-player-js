@@ -92,7 +92,7 @@ int med_get_arp(struct module_data *m, struct channel_data *xc)
 }
 
 
-void med_extras(struct context_data *ctx, int chn, struct channel_data *xc, int new_note)
+void med_play_extras(struct context_data *ctx, int chn, struct channel_data *xc, int new_note)
 {
     struct module_data *m = &ctx->m;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;

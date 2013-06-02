@@ -393,7 +393,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	/* Arpeggio */
 
-	arp = xc->arpeggio.val[xc->arpeggio.count];
+	arp = 100 * xc->arpeggio.val[xc->arpeggio.count];
 	linear_bend += (arp + med_get_arp(m, xc)) << 7;
 
 	/* For xmp_get_frame_info() */
@@ -655,10 +655,10 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 
 	/* Process MED synth instruments */
         if (HAS_MED_EXTRAS(m->mod.xxi[xc->ins]))
-		med_extra(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
+		med_play_extras(ctx, chn, xc, t == 0 && TEST(NEW_INS|NEW_NOTE));
 	/* Process His Master's Noisetracker synth instruments */
         else if (HAS_HMN_EXTRAS(m->mod.xxi[xc->ins]))
-		hmn_extra(ctx, chn, xc, t == 0 && TEST(NEW_INS | NEW_NOTE));
+		hmn_play_extras(ctx, chn, xc, t == 0 && TEST(NEW_INS|NEW_NOTE));
 
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {
