@@ -1,9 +1,9 @@
 
 SRC_OBJS	= virtual.o format.o misc.o period.o player.o read_event.o \
 		  dataio.o mkstemp.o fnmatch.o md5.o lfo.o envelope.o scan.o \
-		  control.o med_synth.o filter.o fmopl.o effects.o mixer.o \
+		  control.o med_extras.o filter.o fmopl.o effects.o mixer.o \
 		  synth_null.o mix_all.o ym2149.o adlib.o spectrum.o \
-		  load_helpers.o load.o hmn_synth.o
+		  load_helpers.o load.o hmn_extras.o
 
 SRC_DFILES	= Makefile $(SRC_OBJS:.o=.c) common.h effects.h envelope.h \
 		  fmopl.h format.h lfo.h list.h mixer.h period.h player.h \

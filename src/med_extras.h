@@ -13,7 +13,7 @@ struct med_extras {
 #define HAS_MED_EXTRAS(x) \
 	(MED_EXTRA(x) != NULL && MED_EXTRA(x)->magic == MED_EXTRAS_MAGIC)
 
-void med_synth(struct context_data *, int, struct channel_data *, int);
+void med_extra(struct context_data *, int, struct channel_data *, int);
 int get_med_arp(struct module_data *, struct channel_data *);
 int get_med_vibrato(struct channel_data *);
 

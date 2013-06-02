@@ -15,7 +15,7 @@ struct hmn_extras {
 #define HAS_HMN_EXTRAS(x) \
 	(HMN_EXTRA(x) != NULL && HMN_EXTRA(x)->magic == HMN_EXTRAS_MAGIC)
 
-void hmn_synth(struct context_data *, int, struct channel_data *, int);
+void hmn_extra(struct context_data *, int, struct channel_data *, int);
 
 #endif
 
