@@ -7,7 +7,7 @@ LIBS = -lxmp
 
 all: examples
 
-examples: player-simple player-showpatterns showinfo player-getbuffer player-openal
+examples: player-simple player-showpatterns showinfo player-getbuffer player-openal player-openal-buffer
 
 player-simple: player-simple.o alsa.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
@@ -22,4 +22,7 @@ player-getbuffer: player-getbuffer.o alsa.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
 
 player-openal: player-openal.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lopenal $(LIBS)
+
+player-openal-buffer: player-openal-buffer.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lopenal $(LIBS)
