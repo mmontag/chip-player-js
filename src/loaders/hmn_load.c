@@ -9,7 +9,7 @@
 #include "loader.h"
 #include "mod.h"
 #include "period.h"
-#include "hmnt_extras.h"
+#include "hmn_extras.h"
 
 /*
  * From http://www.livet.se/mahoney/:
@@ -61,13 +61,13 @@
  * "patterns" of the song.
  */
 
-static int hmnt_test(FILE *, char *, const int);
-static int hmnt_load(struct module_data *, FILE *, const int);
+static int hmn_test(FILE *, char *, const int);
+static int hmn_load(struct module_data *, FILE *, const int);
 
-const struct format_loader hmnt_loader = {
+const struct format_loader hmn_loader = {
 	"His Master's Noisetracker (MOD)",
-	hmnt_test,
-	hmnt_load
+	hmn_test,
+	hmn_load
 };
 
 /* His Master's Noise M&K! will fail in regular Noisetracker loading
@@ -76,7 +76,7 @@ const struct format_loader hmnt_loader = {
 #define MAGIC_FEST	MAGIC4('F', 'E', 'S', 'T')
 #define MAGIC_MK	MAGIC4('M', '&', 'K', '!')
 
-static int hmnt_test(FILE * f, char *t, const int start)
+static int hmn_test(FILE * f, char *t, const int start)
 {
 	int magic;
 
@@ -99,7 +99,7 @@ struct mupp {
 	uint8 dataloopend;
 };
 
-static int hmnt_load(struct module_data *m, FILE * f, const int start)
+static int hmn_load(struct module_data *m, FILE * f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j;
@@ -201,10 +201,10 @@ static int hmnt_load(struct module_data *m, FILE * f, const int start)
 			snprintf((char *)mod->xxi[i].name, XMP_NAME_SIZE,
 				"Mupp pat=%02x (%02x,%02x)", mupp[i].pattno,
 				mupp[i].dataloopstart, mupp[i].dataloopend);
-			mod->xxi[i].extra = calloc(1, sizeof(struct hmnt_extras));
+			mod->xxi[i].extra = calloc(1, sizeof(struct hmn_extras));
 			if (mod->xxi[i].extra == NULL)
 				return -1;
-			HMNT_EXTRA(mod->xxi[i])->magic = HMNT_EXTRAS_MAGIC;
+			HMN_EXTRA(mod->xxi[i])->magic = HMN_EXTRAS_MAGIC;
 		} else {
 			num = 1;
 			mod->xxi[i].nsm = mh.ins[i].size > 0 ? 1 : 0;
@@ -264,8 +264,8 @@ static int hmnt_load(struct module_data *m, FILE * f, const int start)
 
 	mupp_index = 0;
 	for (i = 0; i < 31; i ++) {
-		struct hmnt_extras *extra =
-				(struct hmnt_extras *)mod->xxi[i].extra;
+		struct hmn_extras *extra =
+				(struct hmn_extras *)mod->xxi[i].extra;
 
 		if (!mupp[i].prgon)
 			continue;

@@ -195,10 +195,10 @@ struct channel_data {
 			int volume;	/* MED synth note volume */
 		} med;
 
-		struct hmnt_channel {
-			int datapos;	/* HMNT waveform table pointer */
-			int volume;	/* HMNT synth volume */
-		} hmnt;
+		struct hmn_channel {
+			int datapos;	/* HMN waveform table pointer */
+			int volume;	/* HMN synth volume */
+		} hmn;
 	} extra;
 
 	struct xmp_event *delayed_event;
