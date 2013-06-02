@@ -198,8 +198,8 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 
 		if (mupp[i].prgon) {
 			mod->xxi[i].nsm = num = 28;
-			snprintf((char *)mod->xxi[i].name, XMP_NAME_SIZE,
-				"Mupp pat=%02x (%02x,%02x)", mupp[i].pattno,
+			snprintf(mod->xxi[i].name, XMP_NAME_SIZE,
+				"Mupp %02x %02x %02x", mupp[i].pattno,
 				mupp[i].dataloopstart, mupp[i].dataloopend);
 			mod->xxi[i].extra = calloc(1, sizeof(struct hmn_extras));
 			if (mod->xxi[i].extra == NULL)
@@ -224,7 +224,7 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 
 		for (j = 0; j < num; j++) {
 			mod->xxi[i].sub[j].fin =
-					-(int8)(mh.ins[i].finetune << 4);
+					-(int8)(mh.ins[i].finetune << 3);
 			mod->xxi[i].sub[j].vol = mh.ins[i].volume;
 			mod->xxi[i].sub[j].pan = 0x80;
 			mod->xxi[i].sub[j].sid = i;

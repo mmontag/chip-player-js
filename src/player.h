@@ -93,7 +93,7 @@ struct channel_data {
 	struct lfo panbrello;
 
 	struct {
-        	int val[4];
+        	uint8 val[16];	/* 16 for Smaksak MegaArps */
 		int size;
 		int count;
 	} arpeggio;
