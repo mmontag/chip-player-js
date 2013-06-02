@@ -50,7 +50,7 @@ static const int sine[32] = {
     -255,-250,-235,-212,-180,-141, -97, -49
 };
 
-int get_med_vibrato(struct channel_data *xc)
+int med_get_vibrato(struct channel_data *xc)
 {
 	int vib;
 
@@ -72,7 +72,7 @@ int get_med_vibrato(struct channel_data *xc)
 }
 
 
-int get_med_arp(struct module_data *m, struct channel_data *xc)
+int med_get_arp(struct module_data *m, struct channel_data *xc)
 {
 	int arp;
 
@@ -92,7 +92,7 @@ int get_med_arp(struct module_data *m, struct channel_data *xc)
 }
 
 
-void med_synth(struct context_data *ctx, int chn, struct channel_data *xc, int new_note)
+void med_extras(struct context_data *ctx, int chn, struct channel_data *xc, int new_note)
 {
     struct module_data *m = &ctx->m;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;

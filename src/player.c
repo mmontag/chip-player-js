@@ -378,7 +378,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	linear_bend = period_to_bend(xc->period + vibrato + get_med_vibrato(xc),
+	linear_bend = period_to_bend(xc->period + vibrato + med_get_vibrato(xc),
 				xc->note, HAS_QUIRK(QUIRK_MODRNG),
 				xc->gliss, HAS_QUIRK(QUIRK_LINEAR));
 
@@ -394,7 +394,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	/* Arpeggio */
 
 	arp = xc->arpeggio.val[xc->arpeggio.count];
-	linear_bend += (arp + get_med_arp(m, xc)) << 7;
+	linear_bend += (arp + med_get_arp(m, xc)) << 7;
 
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
