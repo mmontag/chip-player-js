@@ -281,9 +281,9 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		return;
 	}
 
-        if (HAS_MED_EXTRAS(m->mod.xxi[xc->ins]))
+        if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
 		finalvol = xc->extra.med.volume * xc->volume / 64;
-	else if (HAS_HMN_EXTRAS(m->mod.xxi[xc->ins]))
+	else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
 		finalvol = xc->extra.hmn.volume * xc->volume / 64;
 	else
 		finalvol = xc->volume;
@@ -654,10 +654,10 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		return;
 
 	/* Process MED synth instruments */
-        if (HAS_MED_EXTRAS(m->mod.xxi[xc->ins]))
+        if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
 		med_play_extras(ctx, chn, xc, t == 0 && TEST(NEW_INS|NEW_NOTE));
 	/* Process His Master's Noisetracker synth instruments */
-        else if (HAS_HMN_EXTRAS(m->mod.xxi[xc->ins]))
+        else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
 		hmn_play_extras(ctx, chn, xc, t == 0 && TEST(NEW_INS|NEW_NOTE));
 
 	/* Do cut/retrig */

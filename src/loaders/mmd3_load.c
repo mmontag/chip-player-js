@@ -410,18 +410,16 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 			length = read32b(f);
 			type = read16b(f);
 
-			mod->xxi[i].extra = malloc(sizeof (struct med_extras));
-			if (mod->xxi[i].extra == NULL)
+			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
-			MED_EXTRA(mod->xxi[i])->magic = MED_EXTRAS_MAGIC;
 
 			mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 			if (mod->xxi[i].sub == NULL)
 				return -1;
 
 			mod->xxi[i].nsm = 1;
-			MED_EXTRA(mod->xxi[i])->vts = synth.volspeed;
-			MED_EXTRA(mod->xxi[i])->wts = synth.wfspeed;
+			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
+			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
 			mod->xxi[i].sub[0].pan = 0x80;
 			mod->xxi[i].sub[0].vol = song.sample[i].svol;
 			mod->xxi[i].sub[0].xpo = song.sample[i].strans;
@@ -482,10 +480,8 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 			if (synth.wforms == 0xffff)
 				continue;
 
-			mod->xxi[i].extra = malloc(sizeof (struct med_extras));
-			if (mod->xxi[i].extra == NULL)
+			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
-			MED_EXTRA(mod->xxi[i])->magic = MED_EXTRAS_MAGIC;
 
 			mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument),
 							synth.wforms);
@@ -493,8 +489,8 @@ static int mmd3_load(struct module_data *m, FILE *f, const int start)
 				return -1;
 
 			mod->xxi[i].nsm = synth.wforms;
-			MED_EXTRA(mod->xxi[i])->vts = synth.volspeed;
-			MED_EXTRA(mod->xxi[i])->wts = synth.wfspeed;
+			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
+			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
 
 			for (j = 0; j < synth.wforms; j++) {
 				mod->xxi[i].sub[j].pan = 0x80;

@@ -109,8 +109,8 @@ void med_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 	xc->extra.med.period = xc->period;
 	xc->extra.med.vp = xc->extra.med.vc = xc->extra.med.vw = 0;
 	xc->extra.med.wp = xc->extra.med.wc = xc->extra.med.ww = 0;
-	xc->extra.med.vs = MED_EXTRA(m->mod.xxi[xc->ins])->vts;
-	xc->extra.med.ws = MED_EXTRA(m->mod.xxi[xc->ins])->wts;
+	xc->extra.med.vs = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->vts;
+	xc->extra.med.ws = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->wts;
     }
 
     if (xc->extra.med.vs > 0 && xc->extra.med.vc-- == 0) {
@@ -245,4 +245,14 @@ skip_wav:
 	xc->extra.med.vp = jvs;
 	jvs = 0;
     }
+}
+
+int med_new_instrument_extras(struct xmp_instrument *xxi)
+{
+	xxi->extra = calloc(1, sizeof(struct med_instrument_extras));
+	if (xxi->extra == NULL)
+		return -1;
+	MED_INSTRUMENT_EXTRAS((*xxi))->magic = MED_EXTRAS_MAGIC;
+
+	return 0;
 }

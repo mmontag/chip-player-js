@@ -50,8 +50,8 @@ void hmn_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 
 	xxi = &m->mod.xxi[xc->ins];
 	pos = xc->extra.hmn.datapos;
-	waveform = HMN_EXTRA(m->mod.xxi[xc->ins])->data[pos];
-	volume = HMN_EXTRA(m->mod.xxi[xc->ins])->progvolume[pos] & 0x7f;
+	waveform = HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->data[pos];
+	volume = HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->progvolume[pos] & 0x7f;
 
 	if (waveform < xxi->nsm && xxi->sub[waveform].sid != xc->smp) {
 		xc->smp = xxi->sub[waveform].sid;
@@ -59,9 +59,19 @@ void hmn_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 	}
 
 	pos++;
-	if (pos > HMN_EXTRA(m->mod.xxi[xc->ins])->dataloopend)
-		pos = HMN_EXTRA(m->mod.xxi[xc->ins])->dataloopstart;
+	if (pos > HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->dataloopend)
+		pos = HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->dataloopstart;
 
 	xc->extra.hmn.datapos = pos;
 	xc->extra.hmn.volume = volume;
+}
+
+int hmn_new_instrument_extras(struct xmp_instrument *xxi)
+{
+	xxi->extra = calloc(1, sizeof(struct hmn_instrument_extras));
+	if (xxi->extra == NULL)
+		return -1;
+	HMN_INSTRUMENT_EXTRAS((*xxi))->magic = HMN_EXTRAS_MAGIC;
+
+	return 0;
 }
