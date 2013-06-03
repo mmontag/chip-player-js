@@ -17,6 +17,10 @@ struct hmn_channel_extras {
 	int volume;		/* HMN synth volume */
 };
  
+struct hmn_module_extras {
+	uint32 magic;
+};
+
 #define HMN_INSTRUMENT_EXTRAS(x) ((struct hmn_instrument_extras *)(x).extra)
 #define HAS_HMN_INSTRUMENT_EXTRAS(x) \
 	(HMN_INSTRUMENT_EXTRAS(x) != NULL && \
@@ -27,10 +31,19 @@ struct hmn_channel_extras {
 	(HMN_CHANNEL_EXTRAS(x) != NULL && \
 	 HMN_CHANNEL_EXTRAS(x)->magic == HMN_EXTRAS_MAGIC)
 
+#define HMN_MODULE_EXTRAS(x) ((struct hmn_module_extras *)(x).extra)
+#define HAS_HMN_MODULE_EXTRAS(x) \
+	(HMN_MODULE_EXTRAS(x) != NULL && \
+	 HMN_MODULE_EXTRAS(x)->magic == HMN_EXTRAS_MAGIC)
+
 void hmn_play_extras(struct context_data *, int, struct channel_data *, int);
 void hmn_set_arpeggio(struct channel_data *, int);
 int hmn_new_instrument_extras(struct xmp_instrument *);
-int hmn_new_channel_extras(struct xmp_instrument *);
+int hmn_new_channel_extras(struct channel_data *);
+void hmn_reset_channel_extras(struct channel_data *);
+void hmn_release_channel_extras(struct channel_data *);
+int hmn_new_module_extras(struct module_data *);
+void hmn_release_module_extras(struct module_data *);
 
 #endif
 

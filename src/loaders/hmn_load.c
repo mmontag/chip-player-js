@@ -184,8 +184,10 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 	}
 
 	mod->pat++;
-
 	mod->trk = mod->chn * mod->pat;
+
+	if (hmn_new_module_extras(m) != 0)
+		return -1;
 
 	strncpy(mod->name, (char *)mh.name, 20);
 	set_type(m, "%s (%4.4s)", "His Master's Noisetracker", mh.magic);

@@ -172,34 +172,7 @@ struct channel_data {
 		int resonance;	/* IT filter resonance */
 	} filter;
 
-	union {
-		struct med_channel {
-			int vp;		/* MED synth volume table pointer */
-			int vv;		/* MED synth volume slide value */
-			int vs;		/* MED synth volume speed */
-			int vc;		/* MED synth volume speed counter */
-			int vw;		/* MED synth volume wait counter */
-			int wp;		/* MED synth waveform table pointer */
-			int wv;		/* MED synth waveform slide value */
-			int ws;		/* MED synth waveform speed */
-			int wc;		/* MED synth waveform speed counter */
-			int ww;		/* MED synth waveform wait counter */
-			int period;	/* MED synth period for RES */
-			int arp;	/* MED synth arpeggio start */
-			int aidx;	/* MED synth arpeggio index */
-			int vwf;	/* MED synth vibrato waveform */
-			int vib_depth;	/* MED synth vibrato depth */
-			int vib_speed;	/* MED synth vibrato speed */
-			int vib_idx;	/* MED synth vibrato index */
-			int vib_wf;	/* MED synth vibrato waveform */
-			int volume;	/* MED synth note volume */
-		} med;
-
-		struct hmn_channel {
-			int datapos;	/* HMN waveform table pointer */
-			int volume;	/* HMN synth volume */
-		} hmn;
-	} extra;
+	void *extra;
 
 	struct xmp_event *delayed_event;
 	int delayed_ins;	/* IT save instrument emulation */

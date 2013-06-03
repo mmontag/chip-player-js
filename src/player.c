@@ -95,7 +95,6 @@ static void update_invloop(struct module_data *m, struct channel_data *xc)
 	}
 }
 
-
 static void reset_channel(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
@@ -105,13 +104,23 @@ static void reset_channel(struct context_data *ctx)
 	int i;
 
 	m->synth->reset(ctx);
-	memset(p->xc_data, 0,
-	       sizeof(struct channel_data) * p->virt.virt_channels);
 
 	for (i = 0; i < p->virt.virt_channels; i++) {
+		void *extra;
+
 		xc = &p->xc_data[i];
+		extra = xc->extra;
+		memset(xc, 0, sizeof (struct channel_data));
+		xc->extra = extra;
+
+		if (HAS_MED_CHANNEL_EXTRAS(*m))
+			med_reset_channel_extras(xc);
+		else if (HAS_HMN_CHANNEL_EXTRAS(*m))
+			hmn_reset_channel_extras(xc);
+
 		xc->ins = xc->key = -1;
 	}
+
 	for (i = 0; i < p->virt.num_tracks; i++) {
 		xc = &p->xc_data[i];
 		xc->masterpan = mod->xxc[i].pan;
@@ -282,9 +291,9 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	}
 
         if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		finalvol = xc->extra.med.volume * xc->volume / 64;
+		finalvol = MED_CHANNEL_EXTRAS(*xc)->volume * xc->volume / 64;
 	else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		finalvol = xc->extra.hmn.volume * xc->volume / 64;
+		finalvol = HMN_CHANNEL_EXTRAS(*xc)->volume * xc->volume / 64;
 	else
 		finalvol = xc->volume;
 
@@ -346,6 +355,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+	double period;
 	int linear_bend;
 	int frq_envelope;
 	int arp, vibrato, cutoff, resonance;
@@ -378,9 +388,12 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	linear_bend = period_to_bend(xc->period + vibrato + med_get_vibrato(xc),
-				xc->note, HAS_QUIRK(QUIRK_MODRNG),
-				xc->gliss, HAS_QUIRK(QUIRK_LINEAR));
+	period = xc->period + vibrato;
+	if (HAS_MED_CHANNEL_EXTRAS(*xc))
+		period += med_get_vibrato(xc);
+
+	linear_bend = period_to_bend(period, xc->note, HAS_QUIRK(QUIRK_MODRNG),
+					xc->gliss, HAS_QUIRK(QUIRK_LINEAR));
 
 	/* Envelope */
 
@@ -393,8 +406,14 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	/* Arpeggio */
 
-	arp = 100 * xc->arpeggio.val[xc->arpeggio.count];
-	linear_bend += (arp + med_get_arp(m, xc)) << 7;
+	arp = xc->arpeggio.val[xc->arpeggio.count];
+	if (arp != 0) {
+		arp *= 100;
+		if (HAS_MED_CHANNEL_EXTRAS(*xc))
+			arp += med_get_arp(m, xc);
+
+		linear_bend += arp << 7;
+	}
 
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
@@ -909,6 +928,17 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 		goto err1;
 	}
 
+	for (i = 0; i < p->virt.virt_channels; i++) {
+		struct channel_data *xc = &p->xc_data[i];
+		if (HAS_MED_MODULE_EXTRAS(*m)) {
+			if (med_new_channel_extras(xc) < 0)
+				goto err2;
+		} else if (HAS_HMN_MODULE_EXTRAS(*m)) {
+			if (hmn_new_channel_extras(xc) < 0)
+				goto err2;
+		}
+	}
+
 	if (m->synth->init(ctx, s->freq) < 0) {
 		ret = -XMP_ERROR_INTERNAL;
 		goto err2;
@@ -1084,6 +1114,17 @@ void xmp_end_player(xmp_context opaque)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct flow_control *f = &p->flow;
+	struct channel_data *xc;
+	int i;
+
+	/* Free channel extras */
+	for (i = 0; i < p->virt.virt_channels; i++) {
+		xc = &p->xc_data[i];
+		if (HAS_MED_CHANNEL_EXTRAS(*m))
+			med_release_channel_extras(xc);
+		else if (HAS_HMN_CHANNEL_EXTRAS(*m))
+			hmn_release_channel_extras(xc);
+	}
 
 	virt_off(ctx);
 	m->synth->deinit(ctx);

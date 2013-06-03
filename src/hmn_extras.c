@@ -6,6 +6,7 @@
  * for more information.
  */
 
+#include <stdlib.h>
 #include "common.h"
 #include "player.h"
 #include "virtual.h"
@@ -41,15 +42,16 @@ void hmn_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 		int new_note)
 {
 	struct module_data *m = &ctx->m;
+	struct hmn_channel_extras *ce = xc->extra;
 	struct xmp_instrument *xxi;
 	int pos, waveform, volume;
 
 	if (new_note) {
-		xc->extra.hmn.datapos = 0;
+		ce->datapos = 0;
 	}
 
 	xxi = &m->mod.xxi[xc->ins];
-	pos = xc->extra.hmn.datapos;
+	pos = ce->datapos;
 	waveform = HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->data[pos];
 	volume = HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->progvolume[pos] & 0x7f;
 
@@ -62,8 +64,8 @@ void hmn_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 	if (pos > HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->dataloopend)
 		pos = HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->dataloopstart;
 
-	xc->extra.hmn.datapos = pos;
-	xc->extra.hmn.volume = volume;
+	ce->datapos = pos;
+	ce->volume = volume;
 }
 
 int hmn_new_instrument_extras(struct xmp_instrument *xxi)
@@ -76,7 +78,6 @@ int hmn_new_instrument_extras(struct xmp_instrument *xxi)
 	return 0;
 }
 
-#if 0
 int hmn_new_channel_extras(struct channel_data *xc)
 {
 	xc->extra = calloc(1, sizeof(struct hmn_channel_extras));
@@ -86,5 +87,29 @@ int hmn_new_channel_extras(struct channel_data *xc)
 
 	return 0;
 }
-#endif
+
+void hmn_reset_channel_extras(struct channel_data *xc)
+{
+	memset(xc->extra, 0, sizeof(struct hmn_channel_extras));
+}
+
+void hmn_release_channel_extras(struct channel_data *xc)
+{
+	free(xc->extra);
+}
+
+int hmn_new_module_extras(struct module_data *m)
+{
+	m->extra = calloc(1, sizeof(struct hmn_module_extras));
+	if (m->extra == NULL)
+		return -1;
+	HMN_MODULE_EXTRAS((*m))->magic = HMN_EXTRAS_MAGIC;
+
+	return 0;
+}
+
+void hmn_release_module_extras(struct module_data *m)
+{
+	free(m->extra);
+}
 

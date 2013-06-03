@@ -38,36 +38,37 @@
  *	0xf0	    SPD		Set speed
  */
 
-#define VT me->vol_table[xc->ins][xc->extra.med.vp++]
-#define WT me->wav_table[xc->ins][xc->extra.med.wp++]
-#define VT_SKIP xc->extra.med.vp++
-#define WT_SKIP xc->extra.med.wp++
+#define VT me->vol_table[xc->ins][ce->vp++]
+#define WT me->wav_table[xc->ins][ce->wp++]
+#define VT_SKIP ce->vp++
+#define WT_SKIP ce->wp++
 
 
 static const int sine[32] = {
-       0,  49,  97, 141, 180, 212, 235, 250,
-     255, 250, 235, 212, 180, 141,  97,  49,
-       0, -49, -97,-141,-180,-212,-235,-250,
-    -255,-250,-235,-212,-180,-141, -97, -49
+	   0,  49,  97, 141, 180, 212, 235, 250,
+	 255, 250, 235, 212, 180, 141,  97,  49,
+	   0, -49, -97,-141,-180,-212,-235,-250,
+	-255,-250,-235,-212,-180,-141, -97, -49
 };
 
 int med_get_vibrato(struct channel_data *xc)
 {
+	struct med_channel_extras *ce = xc->extra;
 	int vib;
 
 #if 0
-	if (xc->extra.med.vib_wf >= xxi[xc->ins].nsm)	/* invalid waveform */
+	if (ce->vib_wf >= xxi[xc->ins].nsm)	/* invalid waveform */
 		return 0;
 
-	if (xxs[xxi[xc->ins][xc->extra.med.vib_wf].sid].len != 32)
+	if (xxs[xxi[xc->ins][ce->vib_wf].sid].len != 32)
 		return 0;
 #endif
 
 	/* FIXME: always using sine waveform */
 
-	vib = (sine[xc->extra.med.vib_idx >> 5] * xc->extra.med.vib_depth) >> 11;
-	xc->extra.med.vib_idx += xc->extra.med.vib_speed;
-	xc->extra.med.vib_idx %= (32 << 5);
+	vib = (sine[ce->vib_idx >> 5] * ce->vib_depth) >> 11;
+	ce->vib_idx += ce->vib_speed;
+	ce->vib_idx %= (32 << 5);
 
 	return vib;
 }
@@ -75,21 +76,20 @@ int med_get_vibrato(struct channel_data *xc)
 
 int med_get_arp(struct module_data *m, struct channel_data *xc)
 {
-	struct med_module_extras *me;
+	struct med_module_extras *me = m->extra;
+	struct med_channel_extras *ce = xc->extra;
 	int arp;
 
-	if (xc->extra.med.arp == 0)
+	if (ce->arp == 0)
 		return 0;
 
-	me = (struct med_module_extras *)m->extra;
-
-	if (me->wav_table[xc->ins][xc->extra.med.arp] == 0xfd) /* empty arpeggio */
+	if (me->wav_table[xc->ins][ce->arp] == 0xfd) /* empty arpeggio */
 		return 0;
 
-	arp = me->wav_table[xc->ins][xc->extra.med.aidx++];
+	arp = me->wav_table[xc->ins][ce->aidx++];
 	if (arp == 0xfd) {
-		xc->extra.med.aidx = xc->extra.med.arp;
-		arp = me->wav_table[xc->ins][xc->extra.med.aidx++];
+		ce->aidx = ce->arp;
+		arp = me->wav_table[xc->ins][ce->aidx++];
 	}
 
 	return 100 * arp;
@@ -100,6 +100,7 @@ void med_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 {
     struct module_data *m = &ctx->m;
     struct med_module_extras *me;
+    struct med_channel_extras *ce;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
     int temp;
 
@@ -107,24 +108,25 @@ void med_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 	return;
 
     me = (struct med_module_extras *)m->extra;
+    ce = (struct med_channel_extras *)xc->extra;
 
     if (me->vol_table[xc->ins] == NULL || me->wav_table[xc->ins] == NULL)
 	return;
 
     if (new_note) {
-	xc->extra.med.arp = xc->extra.med.aidx = 0;
-	xc->extra.med.period = xc->period;
-	xc->extra.med.vp = xc->extra.med.vc = xc->extra.med.vw = 0;
-	xc->extra.med.wp = xc->extra.med.wc = xc->extra.med.ww = 0;
-	xc->extra.med.vs = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->vts;
-	xc->extra.med.ws = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->wts;
+	ce->arp = ce->aidx = 0;
+	ce->period = xc->period;
+	ce->vp = ce->vc = ce->vw = 0;
+	ce->wp = ce->wc = ce->ww = 0;
+	ce->vs = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->vts;
+	ce->ws = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->wts;
     }
 
-    if (xc->extra.med.vs > 0 && xc->extra.med.vc-- == 0) {
-	xc->extra.med.vc = xc->extra.med.vs - 1;
+    if (ce->vs > 0 && ce->vc-- == 0) {
+	ce->vc = ce->vs - 1;
 
-	if (xc->extra.med.vw > 0) {
-	    xc->extra.med.vw--;
+	if (ce->vw > 0) {
+	    ce->vw--;
 	    goto skip_vol;
 	}
 
@@ -133,13 +135,13 @@ void med_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 	    while (jump--) {
 	    case 0xff:		/* END */
 	    case 0xfb:		/* HLT */
-		xc->extra.med.vp--;
+		ce->vp--;
 		break;
 	    case 0xfe:		/* JMP */
 		if (loop)	/* avoid infinite loop */
 		    break;
 		temp = VT;
-		xc->extra.med.vp = temp;
+		ce->vp = temp;
 		loop = jump = 1;
 		break;
 	    case 0xfa:		/* JWS */
@@ -150,30 +152,30 @@ void med_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 		VT_SKIP;	/* Not implemented */
 		break;
 	    case 0xf3:		/* CHU */
-		xc->extra.med.vv = VT;
+		ce->vv = VT;
 		break;
 	    case 0xf2:		/* CHD */
-		xc->extra.med.vv = -VT;
+		ce->vv = -VT;
 		break;
 	    case 0xf1:		/* WAI */
-		xc->extra.med.vw = VT;
+		ce->vw = VT;
 		break;
 	    case 0xf0:		/* SPD */
-		xc->extra.med.vs = VT;
+		ce->vs = VT;
 		break;
 	    default:
 		if (b >= 0x00 && b <= 0x40)
-		    xc->extra.med.volume = b;
+		    ce->volume = b;
 	    }
 	}
 
-	xc->extra.med.volume += xc->extra.med.vv;
-	CLAMP(xc->extra.med.volume, 0, 64);
+	ce->volume += ce->vv;
+	CLAMP(ce->volume, 0, 64);
 
 skip_vol:
 
-	if (xc->extra.med.ww > 0) {
-	    xc->extra.med.ww--;
+	if (ce->ww > 0) {
+	    ce->ww--;
 	    goto skip_wav;
 	}
 
@@ -184,51 +186,51 @@ skip_vol:
 	    while (jump--) {
 	    case 0xff:		/* END */
 	    case 0xfb:		/* HLT */
-		xc->extra.med.wp--;
+		ce->wp--;
 		break;
 	    case 0xfe:		/* JMP */
 		if (loop)	/* avoid infinite loop */
 		    break;
 		temp = WT;
 		if (temp == 0xff) {	/* handle JMP END case */
-		    xc->extra.med.wp--;	/* see lepeltheme ins 0x02 */
+		    ce->wp--;	/* see lepeltheme ins 0x02 */
 		    break;
 		}
-		xc->extra.med.wp = temp;
+		ce->wp = temp;
 		loop = jump = 1;
 		break;
 	    case 0xfd:		/* ARE */
 		break;
 	    case 0xfc:		/* ARP */
-		xc->extra.med.arp = xc->extra.med.aidx = xc->extra.med.wp++;
+		ce->arp = ce->aidx = ce->wp++;
 		while (WT != 0xfd);
 		break;
 	    case 0xfa:		/* JVS */
 		jws = WT;
 		break;
 	    case 0xf7:		/* VWF */
-		xc->extra.med.vwf = WT;
+		ce->vwf = WT;
 		break;
 	    case 0xf6:		/* RES */
-		xc->period = xc->extra.med.period;
+		xc->period = ce->period;
 		break;
 	    case 0xf5:		/* VBS */
-		xc->extra.med.vib_speed = WT;
+		ce->vib_speed = WT;
 		break;
 	    case 0xf4:		/* VBD */
-		xc->extra.med.vib_depth = WT;
+		ce->vib_depth = WT;
 		break;
 	    case 0xf3:		/* CHU */
-		xc->extra.med.wv = -WT;
+		ce->wv = -WT;
 		break;
 	    case 0xf2:		/* CHD */
-		xc->extra.med.wv = WT;
+		ce->wv = WT;
 		break;
 	    case 0xf1:		/* WAI */
-		xc->extra.med.ww = WT;
+		ce->ww = WT;
 		break;
 	    case 0xf0:		/* SPD */
-		xc->extra.med.ws = WT;
+		ce->ws = WT;
 		break;
 	    default:
 		xxi = & m->mod.xxi[xc->ins];
@@ -240,16 +242,16 @@ skip_vol:
 	}
 skip_wav:
 	;
-	/* xc->period += xc->extra.med.wv; */
+	/* xc->period += ce->wv; */
     }
 
     if (jws) {
-	xc->extra.med.wp = jws;
+	ce->wp = jws;
 	jws = 0;
     }
 
     if (jvs) {
-	xc->extra.med.vp = jvs;
+	ce->vp = jvs;
 	jvs = 0;
     }
 }
@@ -264,7 +266,6 @@ int med_new_instrument_extras(struct xmp_instrument *xxi)
 	return 0;
 }
 
-#if 0
 int med_new_channel_extras(struct channel_data *xc)
 {
 	xc->extra = calloc(1, sizeof(struct med_channel_extras));
@@ -274,7 +275,16 @@ int med_new_channel_extras(struct channel_data *xc)
 
 	return 0;
 }
-#endif
+
+void med_reset_channel_extras(struct channel_data *xc)
+{
+	memset(xc->extra, 0, sizeof(struct med_channel_extras));
+}
+
+void med_release_channel_extras(struct channel_data *xc)
+{
+	free(xc->extra);
+}
 
 int med_new_module_extras(struct module_data *m)
 {
