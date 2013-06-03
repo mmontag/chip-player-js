@@ -198,7 +198,7 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 
 		if (mupp[i].prgon) {
 			mod->xxi[i].nsm = num = 28;
-			snprintf(mod->xxi[i].name, XMP_NAME_SIZE,
+			snprintf(mod->xxi[i].name, 32,
 				"Mupp %02x %02x %02x", mupp[i].pattno,
 				mupp[i].dataloopstart, mupp[i].dataloopend);
 			mod->xxi[i].extra = calloc(1, sizeof(struct hmn_extras));
