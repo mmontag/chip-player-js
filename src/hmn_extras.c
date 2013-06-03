@@ -75,3 +75,16 @@ int hmn_new_instrument_extras(struct xmp_instrument *xxi)
 
 	return 0;
 }
+
+#if 0
+int hmn_new_channel_extras(struct channel_data *xc)
+{
+	xc->extra = calloc(1, sizeof(struct hmn_channel_extras));
+	if (xc->extra == NULL)
+		return -1;
+	HMN_CHANNEL_EXTRAS((*xc))->magic = HMN_EXTRAS_MAGIC;
+
+	return 0;
+}
+#endif
+

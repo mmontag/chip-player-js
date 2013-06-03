@@ -264,17 +264,17 @@ int med_new_instrument_extras(struct xmp_instrument *xxi)
 	return 0;
 }
 
+#if 0
 int med_new_channel_extras(struct channel_data *xc)
 {
-#if 0
 	xc->extra = calloc(1, sizeof(struct med_channel_extras));
 	if (xc->extra == NULL)
 		return -1;
 	MED_CHANNEL_EXTRAS((*xc))->magic = MED_EXTRAS_MAGIC;
-#endif
 
 	return 0;
 }
+#endif
 
 int med_new_module_extras(struct module_data *m)
 {

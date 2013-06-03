@@ -59,6 +59,6 @@ void med_play_extras(struct context_data *, int, struct channel_data *, int);
 int med_new_instrument_extras(struct xmp_instrument *);
 int med_new_channel_extras(struct channel_data *);
 int med_new_module_extras(struct module_data *);
-int med_release_module_extras(struct module_data *);
+void med_release_module_extras(struct module_data *);
 
 #endif
