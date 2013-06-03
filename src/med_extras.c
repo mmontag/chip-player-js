@@ -6,6 +6,7 @@
  * for more information.
  */
 
+#include <stdlib.h>
 #include "common.h"
 #include "player.h"
 #include "virtual.h"
@@ -37,8 +38,8 @@
  *	0xf0	    SPD		Set speed
  */
 
-#define VT m->med_vol_table[xc->ins][xc->extra.med.vp++]
-#define WT m->med_wav_table[xc->ins][xc->extra.med.wp++]
+#define VT me->vol_table[xc->ins][xc->extra.med.vp++]
+#define WT me->wav_table[xc->ins][xc->extra.med.wp++]
 #define VT_SKIP xc->extra.med.vp++
 #define WT_SKIP xc->extra.med.wp++
 
@@ -74,18 +75,21 @@ int med_get_vibrato(struct channel_data *xc)
 
 int med_get_arp(struct module_data *m, struct channel_data *xc)
 {
+	struct med_module_extras *me;
 	int arp;
 
 	if (xc->extra.med.arp == 0)
 		return 0;
 
-	if (m->med_wav_table[xc->ins][xc->extra.med.arp] == 0xfd) /* empty arpeggio */
+	me = (struct med_module_extras *)m->extra;
+
+	if (me->wav_table[xc->ins][xc->extra.med.arp] == 0xfd) /* empty arpeggio */
 		return 0;
 
-	arp = m->med_wav_table[xc->ins][xc->extra.med.aidx++];
+	arp = me->wav_table[xc->ins][xc->extra.med.aidx++];
 	if (arp == 0xfd) {
 		xc->extra.med.aidx = xc->extra.med.arp;
-		arp = m->med_wav_table[xc->ins][xc->extra.med.aidx++];
+		arp = me->wav_table[xc->ins][xc->extra.med.aidx++];
 	}
 
 	return 100 * arp;
@@ -95,13 +99,16 @@ int med_get_arp(struct module_data *m, struct channel_data *xc)
 void med_play_extras(struct context_data *ctx, int chn, struct channel_data *xc, int new_note)
 {
     struct module_data *m = &ctx->m;
+    struct med_module_extras *me;
     int b, jws = 0, jvs = 0, loop = 0, jump = 0;
     int temp;
 
-    if (m->med_vol_table == NULL || m->med_wav_table == NULL)
+    if (!HAS_MED_MODULE_EXTRAS(*m))
 	return;
 
-    if (m->med_vol_table[xc->ins] == NULL || m->med_wav_table[xc->ins] == NULL)
+    me = (struct med_module_extras *)m->extra;
+
+    if (me->vol_table[xc->ins] == NULL || me->wav_table[xc->ins] == NULL)
 	return;
 
     if (new_note) {
@@ -256,3 +263,61 @@ int med_new_instrument_extras(struct xmp_instrument *xxi)
 
 	return 0;
 }
+
+int med_new_channel_extras(struct channel_data *xc)
+{
+#if 0
+	xc->extra = calloc(1, sizeof(struct med_channel_extras));
+	if (xc->extra == NULL)
+		return -1;
+	MED_CHANNEL_EXTRAS((*xc))->magic = MED_EXTRAS_MAGIC;
+#endif
+
+	return 0;
+}
+
+int med_new_module_extras(struct module_data *m)
+{
+	struct med_module_extras *me;
+	struct xmp_module *mod = &m->mod;
+
+	m->extra = calloc(1, sizeof(struct med_module_extras));
+	if (m->extra == NULL)
+		return -1;
+	MED_MODULE_EXTRAS((*m))->magic = MED_EXTRAS_MAGIC;
+
+	me = (struct med_module_extras *)m->extra;
+
+        me->vol_table = calloc(sizeof(uint8 *), mod->ins);
+	if (me->vol_table == NULL)
+		return -1;
+        me->wav_table = calloc(sizeof(uint8 *), mod->ins);
+	if (me->wav_table == NULL)
+		return -1;
+
+	return 0;
+}
+
+void med_release_module_extras(struct module_data *m)
+{
+	struct med_module_extras *me;
+	struct xmp_module *mod = &m->mod;
+	int i;
+
+	me = (struct med_module_extras *)m->extra;
+
+        if (me->vol_table) {
+		for (i = 0; i < mod->ins; i++)
+			free(me->vol_table[i]);
+		free(me->vol_table);
+	}
+
+	if (me->wav_table) {
+		for (i = 0; i < mod->ins; i++)
+			free(me->wav_table[i]);
+		free(me->wav_table);
+        }
+
+	free(m->extra);
+}
+

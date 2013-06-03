@@ -13,6 +13,7 @@
  */
 
 #include <assert.h>
+#include "med.h"
 #include "loader.h"
 #include "med_extras.h"
 
@@ -45,24 +46,7 @@ typedef uint16 UWORD;
 typedef int8 BYTE;
 typedef uint8 UBYTE;
 
-struct SynthInstr {
-	ULONG length;		/* length of this struct */
-	WORD type;		/* -1 or -2 (offs: 4) */
-	UBYTE defaultdecay;
-	UBYTE reserved[3];
-	UWORD rep;
-	UWORD replen;
-	UWORD voltbllen;	/* offs: 14 */
-	UWORD wftbllen;		/* offs: 16 */
-	UBYTE volspeed;		/* offs: 18 */
-	UBYTE wfspeed;		/* offs: 19 */
-	UWORD wforms;		/* offs: 20 */
-	UBYTE voltbl[128];	/* offs: 22 */
-	UBYTE wftbl[128];	/* offs: 150 */
-	ULONG wf[64];		/* offs: 278 */
-};
-
-#ifdef D_EBUG
+#ifdef DEBUG
 static const char *inst_type[] = {
 	"HYB",		/* -2 */
 	"SYN",		/* -1 */
@@ -448,8 +432,8 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 	mod->ins =  num_ins;
 
-	m->med_vol_table = calloc(sizeof(uint8 *), mod->ins);
-        m->med_wav_table = calloc(sizeof(uint8 *), mod->ins);
+	if (med_new_module_extras(m) != 0)
+		return -1;
 
 	/*
 	 * Load samples
@@ -572,11 +556,8 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 
 			smp_idx++;
 
-			m->med_vol_table[i] = calloc(1, synth.voltbllen);
-			memcpy(m->med_vol_table[i], synth.voltbl, synth.voltbllen);
-
-			m->med_wav_table[i] = calloc(1, synth.wftbllen);
-			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
+			if (mmd_alloc_tables(m, i, &synth) != 0)
+				return -1;
 
 			continue;
 		}
@@ -644,11 +625,8 @@ static int med4_load(struct module_data *m, FILE *f, const int start)
 				smp_idx++;
 			}
 
-			m->med_vol_table[i] = calloc(1, synth.voltbllen);
-			memcpy(m->med_vol_table[i], synth.voltbl, synth.voltbllen);
-
-			m->med_wav_table[i] = calloc(1, synth.wftbllen);
-			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
+			if (mmd_alloc_tables(m, i, &synth) != 0)
+				return -1;
 
 			fseek(f, pos + length, SEEK_SET);
 			continue;

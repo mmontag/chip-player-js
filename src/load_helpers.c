@@ -138,8 +138,6 @@ void load_prologue(struct context_data *ctx)
 	m->synth = &synth_null;
 	m->extra = NULL;
 	m->time_factor = DEFAULT_TIME_FACTOR;
-	m->med_vol_table = NULL;
-	m->med_wav_table = NULL;
 
 	for (i = 0; i < 64; i++) {
 		m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;

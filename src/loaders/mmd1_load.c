@@ -352,8 +352,8 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 		}
 	}
 
-	m->med_vol_table = calloc(sizeof(uint8 *), mod->ins);
-	m->med_wav_table = calloc(sizeof(uint8 *), mod->ins);
+	if (med_new_module_extras(m))
+		return -1;
 
 	/*
 	 * Read and convert instruments and samples
@@ -454,11 +454,8 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 
 			smp_idx++;
 
-			m->med_vol_table[i] = calloc(1, synth.voltbllen);
-			memcpy(m->med_vol_table[i], synth.voltbl, synth.voltbllen);
-
-			m->med_wav_table[i] = calloc(1, synth.wftbllen);
-			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
+			if (mmd_alloc_tables(m, i, &synth) != 0)
+				return -1;
 
 			continue;
 		}
@@ -521,11 +518,8 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 				smp_idx++;
 			}
 
-			m->med_vol_table[i] = calloc(1, synth.voltbllen);
-			memcpy(m->med_vol_table[i], synth.voltbl, synth.voltbllen);
-
-			m->med_wav_table[i] = calloc(1, synth.wftbllen);
-			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
+			if (mmd_alloc_tables(m, i, &synth) != 0)
+				return -1;
 
 			continue;
 		}
@@ -583,7 +577,7 @@ static int mmd1_load(struct module_data *m, FILE *f, const int start)
 					continue;
 
 				/* Not a synth instrument */
-				if (!m->med_wav_table[event->ins - 1]) {
+				if (!MED_MODULE_EXTRAS(*m)->wav_table[event->ins - 1]) {
 					while (event->note > (48 + 36))
 						event->note -= 12;
 				}
