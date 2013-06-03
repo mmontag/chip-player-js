@@ -218,7 +218,7 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
 	delta = 1;
     }
 
-    if (p60 && nins & 0x40) {
+    if (version >= 0x60 && nins & 0x40) {
 	/* Some samples are packed -- depacking not implemented */
 	pack = 1;
 
