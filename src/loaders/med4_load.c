@@ -39,13 +39,6 @@ static int med4_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-typedef int32 LONG;
-typedef uint32 ULONG;
-typedef int16 WORD;
-typedef uint16 UWORD;
-typedef int8 BYTE;
-typedef uint8 UBYTE;
-
 #ifdef DEBUG
 static const char *inst_type[] = {
 	"HYB",		/* -2 */
