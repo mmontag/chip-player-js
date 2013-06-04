@@ -13,6 +13,7 @@
  */
 
 #include <assert.h>
+#include "med.h"
 #include "loader.h"
 #include "med_extras.h"
 
@@ -45,24 +46,7 @@ typedef uint16 UWORD;
 typedef int8 BYTE;
 typedef uint8 UBYTE;
 
-struct SynthInstr {
-	ULONG length;		/* length of this struct */
-	WORD type;		/* -1 or -2 (offs: 4) */
-	UBYTE defaultdecay;
-	UBYTE reserved[3];
-	UWORD rep;
-	UWORD replen;
-	UWORD voltbllen;	/* offs: 14 */
-	UWORD wftbllen;		/* offs: 16 */
-	UBYTE volspeed;		/* offs: 18 */
-	UBYTE wfspeed;		/* offs: 19 */
-	UWORD wforms;		/* offs: 20 */
-	UBYTE voltbl[128];	/* offs: 22 */
-	UBYTE wftbl[128];	/* offs: 150 */
-	ULONG wf[64];		/* offs: 278 */
-};
-
-#ifdef D_EBUG
+#ifdef DEBUG
 static const char *inst_type[] = {
 	"HYB",		/* -2 */
 	"SYN",		/* -1 */
@@ -448,8 +432,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->ins =  num_ins;
 
-	m->med_vol_table = calloc(sizeof(uint8 *), mod->ins);
-        m->med_wav_table = calloc(sizeof(uint8 *), mod->ins);
+	if (med_new_module_extras(m) != 0)
+		return -1;
 
 	/*
 	 * Load samples
@@ -541,8 +525,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			length = hio_read32b(f);
 			type = hio_read16b(f);
 
-			mod->xxi[i].extra = malloc(sizeof (struct med_extras));
-			if (mod->xxi[i].extra == NULL)
+			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 
 			mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -550,8 +533,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				return -1;
 
 			mod->xxi[i].nsm = 1;
-			MED_EXTRA(mod->xxi[i])->vts = synth.volspeed;
-			MED_EXTRA(mod->xxi[i])->wts = synth.wfspeed;
+			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
+			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
 			mod->xxi[i].sub[0].pan = 0x80;
 			mod->xxi[i].sub[0].vol = temp_inst[i].volume;
 			mod->xxi[i].sub[0].xpo = temp_inst[i].transpose;
@@ -573,11 +556,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			smp_idx++;
 
-			m->med_vol_table[i] = calloc(1, synth.voltbllen);
-			memcpy(m->med_vol_table[i], synth.voltbl, synth.voltbllen);
-
-			m->med_wav_table[i] = calloc(1, synth.wftbllen);
-			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
+			if (mmd_alloc_tables(m, i, &synth) != 0)
+				return -1;
 
 			continue;
 		}
@@ -611,8 +591,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (synth.wforms == 0xffff)	
 				continue;
 
-			mod->xxi[i].extra = malloc(sizeof (struct med_extras));
-			if (mod->xxi[i].extra == NULL)
+			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 
 			mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument),
@@ -621,8 +600,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				return -1;
 
 			mod->xxi[i].nsm = synth.wforms;
-			MED_EXTRA(mod->xxi[i])->vts = synth.volspeed;
-			MED_EXTRA(mod->xxi[i])->wts = synth.wfspeed;
+			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
+			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
 
 			for (j = 0; j < synth.wforms; j++) {
 				mod->xxi[i].sub[j].pan = 0x80;
@@ -646,11 +625,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				smp_idx++;
 			}
 
-			m->med_vol_table[i] = calloc(1, synth.voltbllen);
-			memcpy(m->med_vol_table[i], synth.voltbl, synth.voltbllen);
-
-			m->med_wav_table[i] = calloc(1, synth.wftbllen);
-			memcpy(m->med_wav_table[i], synth.wftbl, synth.wftbllen);
+			if (mmd_alloc_tables(m, i, &synth) != 0)
+				return -1;
 
 			hio_seek(f, pos + length, SEEK_SET);
 			continue;

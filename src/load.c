@@ -28,6 +28,7 @@
 #include "list.h"
 #include "md5.h"
 #include "hio.h"
+#include "med_extras.h"
 
 
 extern struct format_loader *format_loader[];
@@ -648,23 +649,8 @@ void xmp_release_module(xmp_context opaque)
 
 	D_(D_INFO "Freeing memory");
 
-	if (m->extra) {
-		free(m->extra);
-	}
-
-	if (m->med_vol_table) {
-		for (i = 0; i < mod->ins; i++)
-			if (m->med_vol_table[i])
-				free(m->med_vol_table[i]);
-		free(m->med_vol_table);
-	}
-
-	if (m->med_wav_table) {
-		for (i = 0; i < mod->ins; i++)
-			if (m->med_wav_table[i])
-				free(m->med_wav_table[i]);
-		free(m->med_wav_table);
-	}
+	if (HAS_MED_MODULE_EXTRAS(*m))
+		med_release_module_extras(m);
 
 	for (i = 0; i < mod->trk; i++) {
 		free(mod->xxt[i]);

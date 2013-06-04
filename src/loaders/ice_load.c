@@ -137,9 +137,9 @@ static int ice_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		(struct xmp_event) * 64, 1);
 	mod->xxt[i]->rows = 64;
 	for (j = 0; j < mod->xxt[i]->rows; j++) {
-		event = &mod->xxt[i]->event[j];
-		hio_read (ev, 1, 4, f);
-		cvt_pt_event (event, ev);
+	    event = &mod->xxt[i]->event[j];
+	    hio_read (ev, 1, 4, f);
+	    decode_protracker_event(event, ev);
 	}
     }
 

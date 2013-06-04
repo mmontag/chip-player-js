@@ -221,9 +221,6 @@ struct module_data {
 
 	char *instrument_path;
 
-	uint8 **med_vol_table;		/* MED volume sequence table */
-	uint8 **med_wav_table;		/* MED waveform sequence table */
-
 	void *extra;			/* format-specific extra fields */
 
 	const struct synth_info *synth;

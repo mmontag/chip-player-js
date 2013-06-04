@@ -33,25 +33,41 @@
 struct mod_magic {
     char *magic;
     int flag;
-    int ptkloop;
-    char *tracker;
+    int id;
     int ch;
 };
 
+#define TRACKER_PROTRACKER	0
+#define TRACKER_NOISETRACKER	1
+#define TRACKER_SOUNDTRACKER	2
+#define TRACKER_FASTTRACKER	3
+#define TRACKER_FASTTRACKER2	4
+#define TRACKER_OCTALYSER	5
+#define TRACKER_TAKETRACKER	6
+#define TRACKER_DIGITALTRACKER	7
+#define TRACKER_FLEXTRAX	8
+#define TRACKER_MODSGRAVE	9
+#define TRACKER_SCREAMTRACKER3	10
+#define TRACKER_UNKNOWN_CONV	95
+#define TRACKER_CONVERTEDST	96
+#define TRACKER_CONVERTED	97
+#define TRACKER_CLONE		98
+#define TRACKER_UNKNOWN		99
+
 const struct mod_magic mod_magic[] = {
-    { "M.K.", 0, 1, "Protracker", 4 },
-    { "M!K!", 1, 1, "Protracker", 4 },
-    { "M&K!", 1, 1, "Noisetracker", 4 },
-    { "N.T.", 1, 1, "Noisetracker", 4 },
-    { "6CHN", 0, 0, "Fast Tracker", 6 },
-    { "8CHN", 0, 0, "Fast Tracker", 8 },
-    { "CD61", 1, 0, "Octalyser", 6 },		/* Atari STe/Falcon */
-    { "CD81", 1, 0, "Octalyser", 8 },		/* Atari STe/Falcon */
-    { "TDZ4", 1, 0, "TakeTracker", 4 },		/* see XModule SaveTracker.c */
-    { "FA04", 1, 0, "Digital Tracker", 4 },	/* Atari Falcon */
-    { "FA06", 1, 0, "Digital Tracker", 6 },	/* Atari Falcon */
-    { "FA08", 1, 0, "Digital Tracker", 8 },	/* Atari Falcon */
-    { "NSMS", 1, 0, "unknown", 4 },		/* in Kingdom.mod */
+    { "M.K.", 0, TRACKER_PROTRACKER, 4 },
+    { "M!K!", 1, TRACKER_PROTRACKER, 4 },
+    { "M&K!", 1, TRACKER_NOISETRACKER, 4 },
+    { "N.T.", 1, TRACKER_NOISETRACKER, 4 },
+    { "6CHN", 0, TRACKER_FASTTRACKER, 6 },
+    { "8CHN", 0, TRACKER_FASTTRACKER, 8 },
+    { "CD61", 1, TRACKER_OCTALYSER, 6 },	/* Atari STe/Falcon */
+    { "CD81", 1, TRACKER_OCTALYSER, 8 },	/* Atari STe/Falcon */
+    { "TDZ4", 1, TRACKER_TAKETRACKER, 4 },	/* see XModule SaveTracker.c */
+    { "FA04", 1, TRACKER_DIGITALTRACKER, 4 },	/* Atari Falcon */
+    { "FA06", 1, TRACKER_DIGITALTRACKER, 6 },	/* Atari Falcon */
+    { "FA08", 1, TRACKER_DIGITALTRACKER, 8 },	/* Atari Falcon */
+    { "NSMS", 1, TRACKER_UNKNOWN, 4 },		/* in Kingdom.mod */
     { "", 0 }
 };
 
@@ -190,6 +206,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int detected = 0;
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */
+    int tracker_id = TRACKER_PROTRACKER;
 
     LOAD_INIT();
 
@@ -221,9 +238,8 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; mod_magic[i].ch; i++) {
 	if (!(strncmp (magic, mod_magic[i].magic, 4))) {
 	    mod->chn = mod_magic[i].ch;
-	    tracker = mod_magic[i].tracker;
+	    tracker_id = mod_magic[i].id;
 	    detected = mod_magic[i].flag;
-	    ptkloop = mod_magic[i].ptkloop;
 	    break;
 	}
     }
@@ -237,12 +253,12 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	} else {
 	    return -1;
 	}
-	tracker = "TakeTracker/FastTracker II";
+	tracker_id = mod->chn & 1 ? TRACKER_TAKETRACKER : TRACKER_FASTTRACKER2;
 	detected = 1;
 	m->quirk &= ~QUIRK_MODRNG;
     }
 
-    strncpy (mod->name, (char *) mh.name, 20);
+    strncpy(mod->name, (char *) mh.name, 20);
 
     mod->len = mh.len;
     /* mod->rst = mh.restart; */
@@ -305,8 +321,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + pos, SEEK_SET);
 
 	if (!memcmp(idbuffer, "FLEX", 4)) {
-	    tracker = "Flextrax";
-	    ptkloop = 0;
+	    tracker_id = TRACKER_FLEXTRAX;
 	    goto skip_test;
 	}
     }
@@ -323,8 +338,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if ((wow = (!strncmp(magic, "M.K.", 4) &&
 		(0x43c + mod->pat * 32 * 0x40 + smp_size == m->size)))) {
 	mod->chn = 8;
-	tracker = "Mod's Grave";
-	ptkloop = 0;
+	tracker_id = TRACKER_MODSGRAVE;
 	goto skip_test;
     }
 
@@ -332,31 +346,27 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
      */
     else if ((ptsong = (!strncmp((char *)magic, "M.K.", 4) &&
 		(0x43c + mod->pat * 0x400 == m->size)))) {
-	tracker = "Protracker";
+	tracker_id = TRACKER_PROTRACKER;
 	goto skip_test;
     }
 
     /* Test Protracker-like files
      */
     if (mod->chn == 4 && mh.restart == mod->pat) {
-	tracker = "Soundtracker";
+	tracker_id = TRACKER_SOUNDTRACKER;
     } else if (mod->chn == 4 && mh.restart == 0x78) {
-	tracker = "Noisetracker" /*" (0x78)"*/;
-	ptkloop = 1;
+        tracker_id = TRACKER_NOISETRACKER;
     } else if (mh.restart < 0x7f) {
 	if (mod->chn == 4) {
-	    tracker = "Noisetracker";
-	    ptkloop = 1;
+	    tracker_id = TRACKER_NOISETRACKER;
 	} else {
-	    tracker = "unknown tracker";
-	    ptkloop = 0;
+	    tracker_id = TRACKER_UNKNOWN;
 	}
 	mod->rst = mh.restart;
     }
 
     if (mod->chn != 4 && mh.restart == 0x7f) {
-	tracker = "Scream Tracker 3 MOD";
-	ptkloop = 0;
+	tracker_id = TRACKER_SCREAMTRACKER3;
 	m->quirk &= ~QUIRK_MODRNG;
 	m->read_event_type = READ_EVENT_ST3;
     }
@@ -367,8 +377,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		break;
 	}
 	if (i < 31) {
-	    tracker = "Protracker clone";
-	    ptkloop = 0;
+	    tracker_id = TRACKER_CLONE;
 	}
     }
 
@@ -380,8 +389,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (i == 31) {	/* All loops are size 2 or greater */
 	    for (i = 0; i < 31; i++) {
 		if (mh.ins[i].size == 1 && mh.ins[i].volume == 0) {
-		    tracker = "Probably converted";
-		    ptkloop = 0;
+		    tracker_id = TRACKER_CONVERTED;
 		    goto skip_test;
 		}
 	    }
@@ -395,30 +403,26 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1) {
 			switch (mod->chn) {
 			case 4:
-		            tracker = "Noisetracker";	/* or Octalyzer */
+			    tracker_id = TRACKER_NOISETRACKER;	/* or Octalyser */
 			    break;
 			case 6:
 			case 8:
-		            tracker = "Octalyser";
-		    	    ptkloop = 0;
+		            tracker_id = TRACKER_OCTALYSER;
 			    break;
 			default:
-		            tracker = "unknown tracker";
-		    	    ptkloop = 0;
+		            tracker_id = TRACKER_UNKNOWN;
 			}
 		        goto skip_test;
 		    }
 	        }
 
 		if (mod->chn == 4) {
-	    	    tracker = "Protracker";
+	    	    tracker_id = TRACKER_PROTRACKER;
 		} else if (mod->chn == 6 || mod->chn == 8) {
-	    	    tracker = "FastTracker 1.01?";
-		    ptkloop = 0;
+	    	    tracker_id = TRACKER_FASTTRACKER;	/* FastTracker 1.01? */
 		    m->quirk &= ~QUIRK_MODRNG;
 		} else {
-	    	    tracker = "unknown tracker";
-		    ptkloop = 0;
+	    	    tracker_id = TRACKER_UNKNOWN;
 		}
 	    }
 	} else {	/* Has loops with 0 size */
@@ -427,8 +431,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    break;
 	    }
 	    if (i == 31 && is_st_ins((char *)mh.ins[14].name)) {
-		tracker = "converted 15 instrument";
-		ptkloop = 0;
+		tracker_id = TRACKER_CONVERTEDST;
 		goto skip_test;
 	    }
 
@@ -438,24 +441,76 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    break;
 	    }
 	    if (i < 31) {
-		tracker = "unknown/converted";
-		ptkloop = 0;
+		tracker_id = TRACKER_UNKNOWN_CONV;
 		goto skip_test;
 	    }
 
 	    if (mod->chn == 4 || mod->chn == 6 || mod->chn == 8) {
-	    	tracker = "Fast Tracker";
-		ptkloop = 0;
+	    	tracker_id = TRACKER_FASTTRACKER;
 	        m->quirk &= ~QUIRK_MODRNG;
 		goto skip_test;
 	    }
 
-	    tracker = "unknown tracker";		/* ??!? */
-	    ptkloop = 0;
+	    tracker_id = TRACKER_UNKNOWN;	/* ??!? */
 	}
     }
 
 skip_test:
+
+    switch (tracker_id) {
+    case TRACKER_PROTRACKER:
+	tracker = "Protracker";
+	ptkloop = 1;
+	break;
+    case TRACKER_NOISETRACKER:
+	tracker = "Noisetracker";
+	ptkloop = 1;
+	break;
+    case TRACKER_SOUNDTRACKER:
+	tracker = "Soundtracker";
+	ptkloop = 1;
+	break;
+    case TRACKER_FASTTRACKER:
+	tracker = "Fast Tracker";
+	break;
+    case TRACKER_FASTTRACKER2:
+	tracker = "FastTracker 2";
+	break;
+    case TRACKER_OCTALYSER:
+	tracker = "Octalyser";
+	break;
+    case TRACKER_TAKETRACKER:
+	tracker = "TakeTracker";
+	break;
+    case TRACKER_DIGITALTRACKER:
+	tracker = "Digital Tracker";
+	break;
+    case TRACKER_FLEXTRAX:
+	tracker = "Flextrax";
+	break;
+    case TRACKER_MODSGRAVE:
+	tracker = "Mod's Grave";
+	break;
+    case TRACKER_SCREAMTRACKER3:
+	tracker = "Scream Tracker III";
+	break;
+    case TRACKER_UNKNOWN_CONV:
+	tracker = "unknown or converted";
+	break;
+    case TRACKER_CONVERTEDST:
+	tracker = "converted ST2.2 or earlier";
+	break;
+    case TRACKER_CONVERTED:
+	tracker = "converted";
+	break;
+    case TRACKER_CLONE:
+	tracker = "Protracker clone";
+	break;
+    default:
+    case TRACKER_UNKNOWN:
+	tracker = "unknown";
+	break;
+    }
 
     mod->trk = mod->chn * mod->pat;
 
@@ -486,7 +541,15 @@ skip_test:
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    hio_read (mod_event, 1, 4, f);
 
-	    cvt_pt_event(event, mod_event);
+	    switch (tracker_id) {
+	    case TRACKER_NOISETRACKER:
+		decode_noisetracker_event(event, mod_event);
+		break;
+	    case TRACKER_PROTRACKER:
+	    default:
+		decode_protracker_event(event, mod_event);
+		break;
+	    }
 	}
     }
 

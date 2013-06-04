@@ -13,6 +13,7 @@
 
 #include "med.h"
 #include "loader.h"
+#include "med_extras.h"
 
 #ifdef D_EBUG
 const char *const mmd_inst_type[] = {
@@ -265,3 +266,27 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		break;
 	}
 }
+
+
+int mmd_alloc_tables(struct module_data *m, int i, struct SynthInstr *synth)
+{
+	struct med_module_extras *me = (struct med_module_extras *)m->extra;
+
+	me->vol_table[i] = calloc(1, synth->voltbllen);
+	if (me->vol_table[i] == NULL)
+		goto err;
+	memcpy(me->vol_table[i], synth->voltbl, synth->voltbllen);
+
+	me->wav_table[i] = calloc(1, synth->wftbllen);
+	if (me->wav_table[i] == NULL)
+		goto err1;
+	memcpy(me->wav_table[i], synth->wftbl, synth->wftbllen);
+
+	return 0;
+
+    err1:
+	free(me->vol_table[i]);
+    err:
+	return -1;
+}
+

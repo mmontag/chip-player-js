@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "xmp.h"
+#include <xmp.h>
 #include "sound.h"
 
 static char *note_name[] = {

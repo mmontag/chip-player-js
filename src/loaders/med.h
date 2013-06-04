@@ -3,10 +3,7 @@
 
 #include "common.h"
 
-
 #define MMD_INST_TYPES 9
-int mmd_get_8ch_tempo(int);
-void mmd_xlat_fx(struct xmp_event *, int, int, int);
 
 #ifdef D_EBUG
 extern const char *const mmd_inst_type[];
@@ -308,5 +305,9 @@ struct MMDDump {
     /* if ext_len >= 20: */
     UBYTE name[20];			/* name of the dump */
 };
+
+int mmd_get_8ch_tempo(int);
+void mmd_xlat_fx(struct xmp_event *, int, int, int);
+int mmd_alloc_tables(struct module_data *, int, struct SynthInstr *);
 
 #endif /* XMP_MED_H */

@@ -57,32 +57,32 @@ void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
 	case FX_ARPEGGIO:
 		if (fxp != 0) {
 			xc->arpeggio.val[0] = 0;
-			xc->arpeggio.val[1] = 100 * MSN(fxp);
-			xc->arpeggio.val[2] = 100 * LSN(fxp);
+			xc->arpeggio.val[1] = MSN(fxp);
+			xc->arpeggio.val[2] = LSN(fxp);
 			xc->arpeggio.size = 3;
 		}
 		break;
 	case FX_OKT_ARP3:
 		if (fxp != 0) {
-			xc->arpeggio.val[0] = -100 * MSN(fxp);
+			xc->arpeggio.val[0] = -MSN(fxp);
 			xc->arpeggio.val[1] = 0;
-			xc->arpeggio.val[2] = 100 * LSN(fxp);
+			xc->arpeggio.val[2] = LSN(fxp);
 			xc->arpeggio.size = 3;
 		}
 		break;
 	case FX_OKT_ARP4:
 		if (fxp != 0) {
 			xc->arpeggio.val[0] = 0;
-			xc->arpeggio.val[1] = 100 * LSN(fxp);
+			xc->arpeggio.val[1] = LSN(fxp);
 			xc->arpeggio.val[2] = 0;
-			xc->arpeggio.val[3] = -100 * MSN(fxp);
+			xc->arpeggio.val[3] = -MSN(fxp);
 			xc->arpeggio.size = 4;
 		}
 		break;
 	case FX_OKT_ARP5:
 		if (fxp != 0) {
-			xc->arpeggio.val[0] = 100 * LSN(fxp);
-			xc->arpeggio.val[1] = 100 * LSN(fxp);
+			xc->arpeggio.val[0] = LSN(fxp);
+			xc->arpeggio.val[1] = LSN(fxp);
 			xc->arpeggio.val[2] = 0;
 			xc->arpeggio.size = 3;
 		}

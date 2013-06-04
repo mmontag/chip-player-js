@@ -1,6 +1,5 @@
-
-#ifndef __PROWIZ_H
-#define __PROWIZ_H
+#ifndef PROWIZ_H
+#define PROWIZ_H
 
 #include <stdio.h>
 #include "list.h"

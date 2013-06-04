@@ -251,7 +251,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (j = 0; j < (64 * mod->chn); j++) {
 	    hio_read (mod_event, 1, 4, f);
 
-	    cvt_pt_event (&ev, mod_event);
+	    decode_protracker_event (&ev, mod_event);
 
 	    if (ev.fxt)
 		fxused |= 1 << ev.fxt;
@@ -315,7 +315,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    hio_read (mod_event, 1, 4, f);
 
-	    cvt_pt_event(event, mod_event);
+	    decode_protracker_event(event, mod_event);
 	}
     }
 

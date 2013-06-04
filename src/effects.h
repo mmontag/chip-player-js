@@ -107,6 +107,7 @@
 #define FX_F_PORTA_UP	0xaf	/* MMD */
 #define FX_F_PORTA_DN	0xb0	/* MMD */
 #define FX_MED_DECAY	0xb1	/* MMD hold/decay */
+#define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
 
 /* Reserved synth effects */
 #define FX_SYNTH_0	0xf0

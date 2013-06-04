@@ -1,9 +1,10 @@
 /*
- * The Player 5.0a/6.0a common decoding
+ * The Player common decoding
  * Copyright (C) 1998 Sylvain "Asle" Chipaux
+ * Copyright (C) 2006-2013 Sylvain "Asle" Chipaux
  *
- * Modified for xmp by Claudio Matsuoka, 2006-2009
- * Cleanup & fixes for p60.calm bottom4 by Claudio Matsuoka, May 2013
+ * Code consolidated from depackers for different versions of The Player.
+ * Original code by Sylvain Chipaux, modified for xmp by Claudio Matsuoka.
  */
 
 #include <string.h>
@@ -34,11 +35,144 @@ static uint8 set_event(uint8 *x, uint8 c1, uint8 c2, uint8 c3)
 
 #define track(p,c,r) tdata[((int)(p) * 4 + (c)) * 512 + (r) * 4]
 
-static int theplayer_depack(FILE *in, FILE *out, int p60)
+
+static void decode_pattern(FILE *in, int npat, uint8 *tdata, int tdata_addr, int taddr[128][4])
 {
-    uint8 c1, c2, c3, c4;
-    int effect;
+    int i, j, k, l;
     int max_row;
+    int effect;
+    long pos;
+    uint8 c1, c2, c3, c4;
+
+    for (i = 0; i < npat; i++) {
+	max_row = 63;
+
+	for (j = 0; j < 4; j++) {
+	    fseek(in, taddr[i][j] + tdata_addr, SEEK_SET);
+
+	    for (k = 0; k <= max_row; k++) {
+		uint8 *x = &track(i, j, k);
+		c1 = read8(in);
+		c2 = read8(in);
+		c3 = read8(in);
+
+		/* case 2 */
+		if (c1 & 0x80 && c1 != 0x80) {
+		    c4 = read8(in);		/* number of empty rows */
+		    c1 = 0xff - c1;		/* relative note number */
+
+		    effect = set_event(x, c1, c2, c3);
+
+		    if (effect == 0x0d) {		/* pattern break */
+			max_row = k;
+			break;
+		    }
+		    if (effect == 0x0b) {		/* pattern jump */
+			max_row = k;
+			break;
+		    }
+		    if (c4 < 0x80) {		/* skip rows */
+			k += c4;
+			continue;
+		    }
+		    c4 = 0x100 - c4;
+
+		    for (l = 0; l < c4; l++) {
+			if (++k >= 64)
+			    break;
+
+			x = &track(i, j, k);
+			set_event(x, c1, c2, c3);
+		    }
+		    continue;
+		}
+
+		/* case 3
+		 * if the first byte is $80, the second is the number of
+		 * lines we'll have to repeat, and the last two bytes is the
+		 * number of bytes to go back to reach the starting point
+		 * where to read our lines
+		 */
+		if (c1 == 0x80) {
+		    int lines;
+
+		    c4 = read8(in);
+		    pos = ftell(in);
+		    lines = c2;
+		    fseek(in, -(((int)c3 << 8) + c4), SEEK_CUR);
+
+		    for (l = 0; l <= lines; l++, k++) {
+			x = &track(i, j, k);
+
+			c1 = read8(in);
+			c2 = read8(in);
+			c3 = read8(in);
+
+			if (c1 & 0x80 && c1 != 0x80) {
+			    c4 = read8(in);
+			    c1 = 0xff - c1;
+
+			    if (k >= 64)
+				continue;
+
+			    effect = set_event(x, c1, c2, c3);
+
+			    if (effect == 0x0d) {	/* pattern break */
+				max_row = k;
+				k = l = 9999;
+				continue;
+			    }
+			    if (effect == 0x0b) {	/* pattern jump */
+				max_row = k;
+				k = l = 9999;
+				continue;
+			    }
+			    if (c4 < 0x80) {	/* skip rows */
+				k += c4;
+				continue;
+			    }
+			    c4 = 0x100 - c4;
+
+			    for (l = 0; l < c4; l++) {
+				if (++k >= 64)
+				    break;
+
+				x = &track(i, j, k);
+				set_event(x, c1, c2, c3);
+			    }
+			}
+
+			x = &track(i, j, k);
+			set_event(x, c1, c2, c3);
+		    }
+
+		    fseek(in, pos, SEEK_SET);
+		    k--;
+		    continue;
+		}
+
+		/* case 1 */
+
+		x = &track(i, j, k);
+		effect = set_event(x, c1, c2, c3);
+
+		if (effect == 0x0d) {	/* pattern break */
+		    max_row = k;
+		    break;
+		}
+		if (effect == 0x0b) {	/* pattern jump */
+		    max_row = k;
+		    break;
+		}
+	    }
+	}
+    }
+}
+
+
+static int theplayer_depack(FILE *in, FILE *out, int version)
+{
+    uint8 c1, c3;
     signed char *smp_buffer;
     int pat_pos = 0;
     int npat = 0;
@@ -54,7 +188,7 @@ static int theplayer_depack(FILE *in, FILE *out, int p60)
     int tdata_addr = 0;
     int sdata_addr = 0;
     int ssize = 0;
-    int i = 0, j, k, l, a, b;
+    int i, j, k;
     int smp_size[31];
     int saddr[31];
     int unpacked_ssize;
@@ -80,15 +214,12 @@ static int theplayer_depack(FILE *in, FILE *out, int p60)
     nins = read8(in);			/* read number of samples */
 
     if (nins & 0x80) {
-	/*printf ( "Samples are saved as delta values !\n" ); */
+	/* Samples saved as delta values */
 	delta = 1;
     }
 
-    if (p60 && nins & 0x40) {
-	/* some samples are packed
-	 * Since I could not understand the packing method of the samples
-	 * neither could I do a depacker .. . mission ends here
-	 */
+    if (version >= 0x60 && nins & 0x40) {
+	/* Some samples are packed -- depacking not implemented */
 	pack = 1;
 
 	free(tdata);
@@ -157,7 +288,7 @@ static int theplayer_depack(FILE *in, FILE *out, int p60)
 	c1 = read8(in);
 	if (c1 == 0xff)
 	    break;
-	ptable[pat_pos] = p60 ? c1 : c1 / 2;	/* <--- /2 in p50a */
+	ptable[pat_pos] = version >= 0x60 ? c1 : c1 / 2; /* <--- /2 in p50a */
     }
     write8(out, pat_pos);		/* write size of pattern list */
     write8(out, 0x7f);			/* write noisetracker byte */
@@ -166,134 +297,10 @@ static int theplayer_depack(FILE *in, FILE *out, int p60)
 
     tdata_addr = ftell(in);
 
-    /* rewrite the track data */
-
-    for (i = 0; i < npat; i++) {
-	max_row = 63;
-
-	for (j = 0; j < 4; j++) {
-	    fseek(in, taddr[i][j] + tdata_addr, SEEK_SET);
-
-	    for (k = 0; k <= max_row; k++) {
-		uint8 *x = &track(i, j, k);
-		c1 = read8(in);
-		c2 = read8(in);
-		c3 = read8(in);
-
-		/* case 2 */
-		if (c1 & 0x80 && c1 != 0x80) {
-		    c4 = read8(in);		/* number of empty rows */
-		    c1 = 0xff - c1;		/* relative note number */
-
-		    effect = set_event(x, c1, c2, c3);
-
-		    if (effect == 0x0d) {		/* pattern break */
-			max_row = k;
-			break;
-		    }
-		    if (effect == 0x0b) {		/* pattern jump */
-			max_row = k;
-			break;
-		    }
-		    if (c4 < 0x80) {		/* skip rows */
-			k += c4;
-			continue;
-		    }
-		    c4 = 0x100 - c4;
-
-		    for (l = 0; l < c4; l++) {
-			if (++k >= 64)
-			    break;
-
-			x = &track(i, j, k);
-			set_event(x, c1, c2, c3);
-		    }
-		    continue;
-		}
-
-		/* case 3
-		 * if the first byte is $80, the second is the number of
-		 * lines we'll have to repeat, and the last two bytes is the
-		 * number of bytes to go back to reach the starting point
-		 * where to read our lines
-		 */
-		if (c1 == 0x80) {
-		    int lines;
-
-		    c4 = read8(in);
-		    a = ftell(in);
-		    lines = c2;
-		    fseek(in, -(((int)c3 << 8) + c4), SEEK_CUR);
-
-		    for (l = 0; l <= lines; l++, k++) {
-			x = &track(i, j, k);
-
-			c1 = read8(in);
-			c2 = read8(in);
-			c3 = read8(in);
-
-			if (c1 & 0x80 && c1 != 0x80) {
-			    c4 = read8(in);
-			    c1 = 0xff - c1;
-
-			    if (k >= 64)
-				continue;
-
-			    effect = set_event(x, c1, c2, c3);
-
-			    if (effect == 0x0d) {	/* pattern break */
-				max_row = k;
-				k = l = 9999;
-				continue;
-			    }
-			    if (effect == 0x0b) {	/* pattern jump */
-				max_row = k;
-				k = l = 9999;
-				continue;
-			    }
-			    if (c4 < 0x80) {	/* skip rows */
-				k += c4;
-				continue;
-			    }
-			    c4 = 0x100 - c4;
-
-			    for (b = 0; b < c4; b++) {
-				if (++k >= 64)
-				    break;
-
-				x = &track(i, j, k);
-				set_event(x, c1, c2, c3);
-			    }
-			}
-
-			x = &track(i, j, k);
-			set_event(x, c1, c2, c3);
-		    }
-
-		    fseek(in, a, SEEK_SET);
-		    k--;
-		    continue;
-		}
-
-		/* case 1 */
-
-		x = &track(i, j, k);
-		effect = set_event(x, c1, c2, c3);
-
-		if (effect == 0x0d) {	/* pattern break */
-		    max_row = k;
-		    break;
-		}
-		if (effect == 0x0b) {	/* pattern jump */
-		    max_row = k;
-		    break;
-		}
-	    }
-	}
-    }
+    /* patterns */
+    decode_pattern(in, npat, tdata, tdata_addr, taddr);
 
     /* write pattern data */
-
     for (i = 0; i < npat; i++) {
 	memset(buf, 0, 1024);
 	for (j = 0; j < 64; j++) {
@@ -329,7 +336,7 @@ static int theplayer_depack(FILE *in, FILE *out, int p60)
 }
 
 
-static int theplayer_test(uint8 *data, char *t, int s, int p60)
+static int theplayer_test(uint8 *data, char *t, int s, int version)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -398,7 +405,7 @@ static int theplayer_test(uint8 *data, char *t, int s, int p60)
 	PW_REQUEST_DATA(s, start + k * 6 + 4 + m * 8);
 
 	while (data[start + k * 6 + 4 + m * 8 + l] != 0xff && l < 128) {
-		if (p60) {
+		if (version >= 0x60) {
 			if (data[start + k * 6 + 4 + m * 8 + l] > m - 1)
 				return -1;
 		} else {
@@ -421,7 +428,7 @@ static int theplayer_test(uint8 *data, char *t, int s, int p60)
 	if (l == 0 || l == 128)
 		return -1;
 
-	if (p60)
+	if (version >= 0x60)
 		o++;
 	else
 		o = o / 2 + 1;
@@ -455,12 +462,12 @@ static int theplayer_test(uint8 *data, char *t, int s, int p60)
 
 static int depack_p50a(FILE *in, FILE *out)
 {
-	return theplayer_depack(in, out, 0);
+	return theplayer_depack(in, out, 0x50);
 }
 
 static int test_p50a(uint8 *data, char *t, int s)
 {
-	return theplayer_test(data, t, s, 0);
+	return theplayer_test(data, t, s, 0x50);
 }
 
 const struct pw_format pw_p50a = {
@@ -473,12 +480,12 @@ const struct pw_format pw_p50a = {
 
 static int depack_p60a(FILE *in, FILE *out)
 {
-	return theplayer_depack(in, out, 1);
+	return theplayer_depack(in, out, 0x60);
 }
 
 static int test_p60a(uint8 *data, char *t, int s)
 {
-	return theplayer_test(data, t, s, 1);
+	return theplayer_test(data, t, s, 0x60);
 }
 
 const struct pw_format pw_p60a = {

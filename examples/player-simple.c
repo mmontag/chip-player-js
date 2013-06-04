@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "xmp.h"
+#include <xmp.h>
 #include "sound.h"
 
 static void display_data(struct xmp_module_info *mi, struct xmp_frame_info *fi)

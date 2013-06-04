@@ -3,11 +3,11 @@ CC = gcc
 CFLAGS = -O3 -Wall -I../include
 LD = gcc
 LDFLAGS =
-LIBS = -L../lib -lxmp -lm
+LIBS = -lxmp
 
 all: examples
 
-examples: player-simple player-showpatterns showinfo player-getbuffer test3
+examples: player-simple player-showpatterns showinfo player-getbuffer player-openal player-openal-buffer
 
 player-simple: player-simple.o alsa.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
@@ -15,12 +15,14 @@ player-simple: player-simple.o alsa.o
 player-showpatterns: player-showpatterns.o alsa.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
 
-test3: test3.o
-	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
-
 showinfo: showinfo.o
 	$(LD) -o $@ $(LDFLAGS) $+ $(LIBS)
 
 player-getbuffer: player-getbuffer.o alsa.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lasound $(LIBS)
 
+player-openal: player-openal.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lopenal $(LIBS)
+
+player-openal-buffer: player-openal-buffer.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lopenal $(LIBS)
