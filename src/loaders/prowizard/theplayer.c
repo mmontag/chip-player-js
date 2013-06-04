@@ -1,16 +1,9 @@
 /*
- * The_Player_6.0a.c   Copyright (C) 1998 Sylvain "Asle" Chipaux
+ * The Player 5.0a/6.0a common decoding
+ * Copyright (C) 1998 Sylvain "Asle" Chipaux
  *
  * Modified for xmp by Claudio Matsuoka, 2006-2009
  * Cleanup & fixes for p60.calm bottom4 by Claudio Matsuoka, May 2013
- *
- * The Player 6.0a to Protracker.
- *
- * note: It's a REAL mess !. It's VERY badly coded, I know. Just dont forget
- *      it was mainly done to test the description I made of P60a format. I
- *      certainly wont dare to beat Gryzor on the ground :). His Prowiz IS
- *      the converter to use !!!. Though, using the official depacker could
- *      be a good idea too :).
  */
 
 #include <string.h>
@@ -41,7 +34,7 @@ static uint8 set_event(uint8 *x, uint8 c1, uint8 c2, uint8 c3)
 
 #define track(p,c,r) tdata[((int)(p) * 4 + (c)) * 512 + (r) * 4]
 
-static int depack_p60a(FILE *in, FILE *out)
+static int theplayer_depack(FILE *in, FILE *out, int p60)
 {
     uint8 c1, c2, c3, c4;
     int effect;
@@ -90,10 +83,12 @@ static int depack_p60a(FILE *in, FILE *out)
 	/*printf ( "Samples are saved as delta values !\n" ); */
 	delta = 1;
     }
-    if (nins & 0x40) {
-	/*printf ( "some samples are packed !\n" ); */
-	/*printf ( "\n! Since I could not understand the packing method of the\n" */
-	/*	 "! samples, neither could I do a depacker .. . mission ends here :)\n" ); */
+
+    if (p60 && nins & 0x40) {
+	/* some samples are packed
+	 * Since I could not understand the packing method of the samples
+	 * neither could I do a depacker .. . mission ends here
+	 */
 	pack = 1;
 
 	free(tdata);
@@ -162,7 +157,7 @@ static int depack_p60a(FILE *in, FILE *out)
 	c1 = read8(in);
 	if (c1 == 0xff)
 	    break;
-	ptable[pat_pos] = c1;    /* <--- /2 in p50a */
+	ptable[pat_pos] = p60 ? c1 : c1 / 2;	/* <--- /2 in p50a */
     }
     write8(out, pat_pos);		/* write size of pattern list */
     write8(out, 0x7f);			/* write noisetracker byte */
@@ -319,6 +314,7 @@ static int depack_p60a(FILE *in, FILE *out)
 	if (delta == 1) {
 	    for (j = 1; j < smp_size[i]; j++) {
 		c3 = 0x100 - smp_buffer[j] + smp_buffer[j - 1];
+		/* P50A: c3 = smp_buffer[j - 1] - smp_buffer[j]; */
 		smp_buffer[j] = c3;
 	    }
 	}
@@ -333,7 +329,7 @@ static int depack_p60a(FILE *in, FILE *out)
 }
 
 
-static int test_p60a(uint8 *data, char *t, int s)
+static int theplayer_test(uint8 *data, char *t, int s, int p60)
 {
 	int j, k, l, m, n, o;
 	int start = 0, ssize;
@@ -356,7 +352,6 @@ static int test_p60a(uint8 *data, char *t, int s)
 		/* test volumes */
 		if (data[start + 7 + l * 6] > 0x40)
 			return -1;
-
 		/* test finetunes */
 		if (data[start + 6 + l * 6] > 0x0F)
 			return -1;
@@ -396,13 +391,23 @@ static int test_p60a(uint8 *data, char *t, int s)
 	}
 
 	/* test pattern table */
-	l = o = 0;
+	l = 0;
+	o = 0;
+
 	/* first, test if we dont oversize the input file */
 	PW_REQUEST_DATA(s, start + k * 6 + 4 + m * 8);
 
 	while (data[start + k * 6 + 4 + m * 8 + l] != 0xff && l < 128) {
-		if (data[start + k * 6 + 4 + m * 8 + l] > m - 1)
-			return -1;
+		if (p60) {
+			if (data[start + k * 6 + 4 + m * 8 + l] > m - 1)
+				return -1;
+		} else {
+                	if (data[start + k * 6 + 4 + m * 8 + l] & 0x01)
+                       		return -1;
+
+                	if (data[start + k * 6 + 4 + m * 8 + l] > m * 2)
+				return -1;
+		}
 
 		if (data[start + k * 6 + 4 + m * 8 + l] > o)
 			o = data[start + k * 6 + 4 + m * 8 + l];
@@ -416,7 +421,10 @@ static int test_p60a(uint8 *data, char *t, int s)
 	if (l == 0 || l == 128)
 		return -1;
 
-	o += 1;
+	if (p60)
+		o++;
+	else
+		o = o / 2 + 1;
 	/* o is the highest number of pattern */
 
 	/* test notes ... pfiew */
@@ -442,6 +450,46 @@ static int test_p60a(uint8 *data, char *t, int s)
 
 	return 0;
 }
+
+
+
+static int depack_p50a(FILE *in, FILE *out)
+{
+	return theplayer_depack(in, out, 0);
+}
+
+static int test_p50a(uint8 *data, char *t, int s)
+{
+	return theplayer_test(data, t, s, 0);
+}
+
+const struct pw_format pw_p50a = {
+	"The Player 5.0a",
+	test_p50a,
+	depack_p50a
+};
+
+
+
+static int depack_p60a(FILE *in, FILE *out)
+{
+	return theplayer_depack(in, out, 1);
+}
+
+static int test_p60a(uint8 *data, char *t, int s)
+{
+	return theplayer_test(data, t, s, 1);
+}
+
+const struct pw_format pw_p60a = {
+	"The Player 6.0a",
+	test_p60a,
+	depack_p60a
+};
+
+
+
+
 
 
 #if 0
@@ -628,10 +676,4 @@ void testP60A_pack (void)
 	Test = GOOD;
 }
 #endif
-
-const struct pw_format pw_p60a = {
-	"The Player 6.0a",
-	test_p60a,
-	depack_p60a
-};
 

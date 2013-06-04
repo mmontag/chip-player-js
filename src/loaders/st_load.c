@@ -42,9 +42,6 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
     uint8 mod_event[4];
     struct stat st;
 
-    if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
-	return -1;    
-
     hio_stat(f, &st);
 
     if (st.st_size < 600)

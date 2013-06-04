@@ -190,7 +190,7 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			strncat(filename, "/", NAME_SIZE);
 		strncat(filename, (char *)mod->xxi[i].name, NAME_SIZE);
 
-		if ((s = hio_open(filename, HIO_HANDLE_TYPE_FILE)) != NULL) {
+		if ((s = hio_open_file(filename, "rb")) != NULL) {
 			asif_load(m, s, i);
 			hio_close(s);
 		}

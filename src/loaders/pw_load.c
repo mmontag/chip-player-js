@@ -91,7 +91,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 	}
 
-	if ((f = hio_fdopen(fd, "w+b")) == NULL) {
+	if ((f = hio_open_fd(fd, "w+b")) == NULL) {
 		close(fd);
 		unlink(tmp);
 		return -1;

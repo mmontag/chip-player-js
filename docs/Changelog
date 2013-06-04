@@ -1,6 +1,8 @@
 Stable versions
 ---------------
 
+4.1.6 ():
+
 4.1.5 (20130527):
 	Fix bugs reported by Andreas Falkenhahn:
 	- fix OctaMED decay event and effect decoding

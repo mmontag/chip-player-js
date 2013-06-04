@@ -3,7 +3,7 @@
 #include "test.h"
 #include "../src/hio.h"
 
-TEST(test_read_mem_hio)
+TEST(test_read_mem_hio_nosize)
 {
 	uint8 mem[100], mem2[100];
 	int i;
@@ -14,12 +14,12 @@ TEST(test_read_mem_hio)
 	for (i = 0; i < 100; i++)
 		mem[i] = i;
 
-	h = hio_open_mem(mem, 100);
+	h = hio_open_mem(mem, 0);
 	fail_unless(h != NULL, "hio_open");
 
 	x = hio_stat(h, &st);
 	fail_unless(x == 0, "hio_stat");
-	fail_unless(st.st_size == 100, "hio_stat size");
+	fail_unless(st.st_size == 0, "hio_stat size");
 
 	x = hio_read8(h);
 	fail_unless(x == 0x00, "hio_read8");
@@ -62,13 +62,13 @@ TEST(test_read_mem_hio)
 		fail_unless(mem2[i] == i + 9, "hio_read");
 
 	x = hio_seek(h, 0, SEEK_END);
-	fail_unless(x == 0, "hio_fseek SEEK_END");
+	fail_unless(x == -1, "hio_fseek SEEK_END");
 
 	x = hio_read8(h);
-	fail_unless(x == 99, "hio_read8");
+	fail_unless(x == 59, "hio_read8");
 
 	x = hio_eof(h);
-	fail_unless(x != 0, "hio_eof");
+	fail_unless(x == 0, "hio_eof");
 
 	x = hio_close(h);
 	fail_unless(x == 0, "hio_close");
