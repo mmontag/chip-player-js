@@ -390,7 +390,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	period = xc->period + vibrato;
 	if (HAS_MED_CHANNEL_EXTRAS(*xc))
-		period += med_get_vibrato(xc);
+		period += med_change_period(ctx, xc);
 
 	linear_bend = period_to_bend(period, xc->note, HAS_QUIRK(QUIRK_MODRNG),
 					xc->gliss, HAS_QUIRK(QUIRK_LINEAR));

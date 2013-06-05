@@ -51,10 +51,12 @@ static const int sine[32] = {
 	-255,-250,-235,-212,-180,-141, -97, -49
 };
 
-int med_get_vibrato(struct channel_data *xc)
+int med_change_period(struct context_data *ctx, struct channel_data *xc)
 {
 	struct med_channel_extras *ce = xc->extra;
 	int vib;
+
+	/* Vibrato */
 
 #if 0
 	if (ce->vib_wf >= xxi[xc->ins].nsm)	/* invalid waveform */
