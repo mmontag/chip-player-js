@@ -38,6 +38,7 @@ struct hmn_module_extras {
 
 void hmn_play_extras(struct context_data *, int, struct channel_data *, int);
 void hmn_set_arpeggio(struct channel_data *, int);
+int hmn_linear_bend(struct context_data *, struct channel_data *);
 int hmn_new_instrument_extras(struct xmp_instrument *);
 int hmn_new_channel_extras(struct channel_data *);
 void hmn_reset_channel_extras(struct channel_data *);

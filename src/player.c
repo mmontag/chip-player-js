@@ -408,12 +408,13 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	arp = xc->arpeggio.val[xc->arpeggio.count];
 	if (arp != 0) {
-		arp *= 100;
-		if (HAS_MED_CHANNEL_EXTRAS(*xc))
-			arp += med_get_arp(m, xc);
-
-		linear_bend += arp << 7;
+		linear_bend += (100 << 7) * arp;
 	}
+
+	if (HAS_MED_CHANNEL_EXTRAS(*xc))
+		linear_bend += med_linear_bend(ctx, xc);
+	else if (HAS_HMN_CHANNEL_EXTRAS(*xc))
+		linear_bend += hmn_linear_bend(ctx, xc);
 
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;

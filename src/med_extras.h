@@ -53,7 +53,7 @@ struct med_module_extras {
 	(MED_MODULE_EXTRAS(x) != NULL && \
 	 MED_MODULE_EXTRAS(x)->magic == MED_EXTRAS_MAGIC)
 
-int med_get_arp(struct module_data *, struct channel_data *);
+int med_linear_bend(struct context_data *, struct channel_data *);
 int med_get_vibrato(struct channel_data *);
 void med_play_extras(struct context_data *, int, struct channel_data *, int);
 int med_new_instrument_extras(struct xmp_instrument *);

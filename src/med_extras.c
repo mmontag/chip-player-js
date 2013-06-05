@@ -74,11 +74,14 @@ int med_get_vibrato(struct channel_data *xc)
 }
 
 
-int med_get_arp(struct module_data *m, struct channel_data *xc)
+int med_linear_bend(struct context_data *ctx, struct channel_data *xc)
 {
+	struct module_data *m = &ctx->m;
 	struct med_module_extras *me = m->extra;
 	struct med_channel_extras *ce = xc->extra;
 	int arp;
+
+	/* Arpeggio */
 
 	if (ce->arp == 0)
 		return 0;
@@ -92,7 +95,7 @@ int med_get_arp(struct module_data *m, struct channel_data *xc)
 		arp = me->wav_table[xc->ins][ce->aidx++];
 	}
 
-	return 100 * arp;
+	return (100 << 7) * arp;
 }
 
 

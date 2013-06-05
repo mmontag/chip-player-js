@@ -38,6 +38,11 @@ void hmn_set_arpeggio(struct channel_data *xc, int arp)
 	xc->arpeggio.size = 16;
 }
 
+int hmn_linear_bend(struct context_data *ctx, struct channel_data *xc)
+{
+	return 0;
+}
+
 void hmn_play_extras(struct context_data *ctx, int chn, struct channel_data *xc,
 		int new_note)
 {
