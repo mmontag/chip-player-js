@@ -5,11 +5,11 @@
 extern "C" {
 #endif
 
-#define XMP_VERSION "4.1.6"
-#define XMP_VERCODE 0x040106
+#define XMP_VERSION "4.2.0"
+#define XMP_VERCODE 0x040200
 #define XMP_VER_MAJOR 4
-#define XMP_VER_MINOR 1
-#define XMP_VER_RELEASE 6
+#define XMP_VER_MINOR 2
+#define XMP_VER_RELEASE 0
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
 # ifdef BUILDING_DLL
@@ -308,6 +308,7 @@ EXPORT int         xmp_channel_vol     (xmp_context, int, int);
 EXPORT int         xmp_set_player      (xmp_context, int, int);
 EXPORT int         xmp_get_player      (xmp_context, int);
 EXPORT int         xmp_set_instrument_path (xmp_context, char *);
+EXPORT int         xmp_load_module_from_memory (xmp_context, void *, long);
 
 #ifdef __cplusplus
 }

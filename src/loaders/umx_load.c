@@ -20,8 +20,8 @@ extern const struct format_loader it_loader;
 extern const struct format_loader s3m_loader;
 extern const struct format_loader mod_loader;
 
-static int umx_test (FILE *, char *, const int);
-static int umx_load (struct module_data *, FILE *, const int);
+static int umx_test (HIO_HANDLE *, char *, const int);
+static int umx_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader umx_loader = {
 	"Epic Games UMX",
@@ -29,13 +29,13 @@ const struct format_loader umx_loader = {
 	umx_load
 };
 
-static int umx_test(FILE *f, char *t, const int start)
+static int umx_test(HIO_HANDLE *f, char *t, const int start)
 {
 	int i, offset = -1;
 	uint8 buf[TEST_SIZE], *b = buf;
 	uint32 id;
 
-	if (fread(buf, 1, TEST_SIZE, f) < TEST_SIZE)
+	if (hio_read(buf, 1, TEST_SIZE, f) < TEST_SIZE)
 		return -1;
 ;
 	id = readmem32b(b);
@@ -70,7 +70,7 @@ static int umx_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int umx_load(struct module_data *m, FILE *f, const int start)
+static int umx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	int i;
 	uint8 buf[TEST_SIZE], *b = buf;
@@ -80,7 +80,7 @@ static int umx_load(struct module_data *m, FILE *f, const int start)
 
 	D_(D_INFO "Container type : Epic Games UMX");
 
-	fread(buf, 1, TEST_SIZE, f);
+	hio_read(buf, 1, TEST_SIZE, f);
 
 	for (i = 0; i < TEST_SIZE; i++, b++) {
 		id = readmem32b(b);

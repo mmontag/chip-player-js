@@ -140,6 +140,28 @@ uint16 readmem16b(uint8 *m)
 	return (a << 8) | b;
 }
 
+uint32 readmem24l(uint8 *m)
+{
+	uint32 a, b, c;
+
+	a = m[0];
+	b = m[1];
+	c = m[2];
+
+	return (c << 16) | (b << 8) | a;
+}
+
+uint32 readmem24b(uint8 *m)
+{
+	uint32 a, b, c;
+
+	a = m[0];
+	b = m[1];
+	c = m[2];
+
+	return (a << 16) | (b << 8) | c;
+}
+
 uint32 readmem32l(uint8 *m)
 {
 	uint32 a, b, c, d;

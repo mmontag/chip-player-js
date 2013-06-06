@@ -61,8 +61,8 @@
  * "patterns" of the song.
  */
 
-static int hmn_test(FILE *, char *, const int);
-static int hmn_load(struct module_data *, FILE *, const int);
+static int hmn_test(HIO_HANDLE *, char *, const int);
+static int hmn_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader hmn_loader = {
 	"His Master's Noisetracker (MOD)",
@@ -76,17 +76,17 @@ const struct format_loader hmn_loader = {
 #define MAGIC_FEST	MAGIC4('F', 'E', 'S', 'T')
 #define MAGIC_MK	MAGIC4('M', '&', 'K', '!')
 
-static int hmn_test(FILE * f, char *t, const int start)
+static int hmn_test(HIO_HANDLE * f, char *t, const int start)
 {
 	int magic;
 
-	fseek(f, start + 1080, SEEK_SET);
-	magic = read32b(f);
+	hio_seek(f, start + 1080, SEEK_SET);
+	magic = hio_read32b(f);
 
 	if (magic != MAGIC_FEST && magic != MAGIC_MK)
 		return -1;
 
-	fseek(f, start + 0, SEEK_SET);
+	hio_seek(f, start + 0, SEEK_SET);
 	read_title(f, t, 20);
 
 	return 0;
@@ -99,7 +99,7 @@ struct mupp {
 	uint8 dataloopend;
 };
 
-static int hmn_load(struct module_data *m, FILE * f, const int start)
+static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j;
@@ -147,11 +147,11 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 	 */
 	memset(mupp, 0, 31 * sizeof (struct mupp));
 
-	fread(&mh.name, 20, 1, f);
+	hio_read(&mh.name, 20, 1, f);
 	num_mupp = 0;
 
 	for (i = 0; i < 31; i++) {
-		fread(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+		hio_read(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
 		if (memcmp(mh.ins[i].name, "Mupp", 4) == 0) {
 			mupp[i].prgon = 1;
 			mupp[i].pattno = mh.ins[i].name[4];
@@ -160,16 +160,16 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 			num_mupp++;
 		}
 
-		mh.ins[i].size = read16b(f);	/* Length in 16-bit words */
-		mh.ins[i].finetune = read8(f);	/* Finetune (signed nibble) */
-		mh.ins[i].volume = read8(f);	/* Linear playback volume */
-		mh.ins[i].loop_start = read16b(f);	/* Loop start in 16-bit words */
-		mh.ins[i].loop_size = read16b(f);	/* Loop size in 16-bit words */
+		mh.ins[i].size = hio_read16b(f);
+		mh.ins[i].finetune = hio_read8(f);
+		mh.ins[i].volume = hio_read8(f);
+		mh.ins[i].loop_start = hio_read16b(f);
+		mh.ins[i].loop_size = hio_read16b(f);
 	}
-	mh.len = read8(f);
-	mh.restart = read8(f);
-	fread(&mh.order, 128, 1, f);
-	fread(&mh.magic, 4, 1, f);
+	mh.len = hio_read8(f);
+	mh.restart = hio_read8(f);
+	hio_read(&mh.order, 128, 1, f);
+	hio_read(&mh.magic, 4, 1, f);
 
 	mod->chn = 4;
 	mod->ins = 31;
@@ -243,7 +243,7 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
-			fread(mod_event, 1, 4, f);
+			hio_read(mod_event, 1, 4, f);
 			decode_noisetracker_event(event, mod_event);
 		}
 	}
@@ -270,7 +270,7 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 		if (!mupp[i].prgon)
 			continue;
 
-		fseek(f, start + 1084 + 1024 * mupp[i].pattno, SEEK_SET);
+		hio_seek(f, start + 1084 + 1024 * mupp[i].pattno, SEEK_SET);
 		for (j = 0; j < 28; j++) {
 			int k = 31 + 28 * mupp_index + j;
 			mod->xxi[i].sub[j].sid = k;
@@ -284,8 +284,8 @@ static int hmn_load(struct module_data *m, FILE * f, const int start)
 		extra->dataloopstart = mupp[i].dataloopstart;
 		extra->dataloopend = mupp[i].dataloopend;
 
-		fread(extra->data, 1, 64, f);
-		fread(extra->progvolume, 1, 64, f);
+		hio_read(extra->data, 1, 64, f);
+		hio_read(extra->progvolume, 1, 64, f);
 
 		mupp_index++;
 	}

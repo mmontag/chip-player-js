@@ -11,8 +11,8 @@
 #include "rtm.h"
 
 
-static int rtm_test(FILE *, char *, const int);
-static int rtm_load (struct module_data *, FILE *, const int);
+static int rtm_test(HIO_HANDLE *, char *, const int);
+static int rtm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader rtm_loader = {
 	"Real Tracker (RTM)",
@@ -20,16 +20,16 @@ const struct format_loader rtm_loader = {
 	rtm_load
 };
 
-static int rtm_test(FILE *f, char *t, const int start)
+static int rtm_test(HIO_HANDLE *f, char *t, const int start)
 {
 	char buf[4];
 
-	if (fread(buf, 1, 4, f) < 4)
+	if (hio_read(buf, 1, 4, f) < 4)
 		return -1;
 	if (memcmp(buf, "RTMM", 4))
 		return -1;
 
-	if (read8(f) != 0x20)
+	if (hio_read8(f) != 0x20)
 		return -1;
 
 	read_title(f, t, 32);
@@ -40,29 +40,29 @@ static int rtm_test(FILE *f, char *t, const int start)
 
 #define MAX_SAMP 1024
 
-static int read_object_header(FILE *f, struct ObjectHeader *h, char *id)
+static int read_object_header(HIO_HANDLE *f, struct ObjectHeader *h, char *id)
 {
-	fread(&h->id, 4, 1, f);
+	hio_read(&h->id, 4, 1, f);
 	D_(D_WARN "object id: %02x %02x %02x %02x", h->id[0],
 					h->id[1], h->id[2], h->id[3]);
 
 	if (memcmp(id, h->id, 4))
 		return -1;
 
-	h->rc = read8(f);
+	h->rc = hio_read8(f);
 	if (h->rc != 0x20)
 		return -1;
-	fread(&h->name, 32, 1, f);
-	h->eof = read8(f);
-	h->version = read16l(f);
-	h->headerSize = read16l(f);
+	hio_read(&h->name, 32, 1, f);
+	h->eof = hio_read8(f);
+	h->version = hio_read16l(f);
+	h->headerSize = hio_read16l(f);
 	D_(D_INFO "object %-4.4s (%d)", h->id, h->headerSize);
 	
 	return 0;
 }
 
 
-static int rtm_load(struct module_data *m, FILE *f, const int start)
+static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, r;
@@ -82,25 +82,25 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 
 	version = oh.version;
 
-	fread(tracker_name, 1, 20, f);
+	hio_read(tracker_name, 1, 20, f);
 	tracker_name[20] = 0;
-	fread(composer, 1, 32, f);
+	hio_read(composer, 1, 32, f);
 	composer[32] = 0;
-	rh.flags = read16l(f);	/* bit 0: linear table, bit 1: track names */
-	rh.ntrack = read8(f);
-	rh.ninstr = read8(f);
-	rh.nposition = read16l(f);
-	rh.npattern = read16l(f);
-	rh.speed = read8(f);
-	rh.tempo = read8(f);
-	fread(&rh.panning, 32, 1, f);
-	rh.extraDataSize = read32l(f);
+	rh.flags = hio_read16l(f);	/* bit 0: linear table, bit 1: track names */
+	rh.ntrack = hio_read8(f);
+	rh.ninstr = hio_read8(f);
+	rh.nposition = hio_read16l(f);
+	rh.npattern = hio_read16l(f);
+	rh.speed = hio_read8(f);
+	rh.tempo = hio_read8(f);
+	hio_read(&rh.panning, 32, 1, f);
+	rh.extraDataSize = hio_read32l(f);
 
 	if (version >= 0x0112)
-		fseek(f, 32, SEEK_CUR);		/* skip original name */
+		hio_seek(f, 32, SEEK_CUR);		/* skip original name */
 
 	for (i = 0; i < rh.nposition; i++)
-		mod->xxo[i] = read16l(f);
+		mod->xxo[i] = hio_read16l(f);
 	
 	strncpy(mod->name, oh.name, 20);
 	snprintf(mod->type, XMP_NAME_SIZE, "%s RTM %x.%02x",
@@ -131,17 +131,17 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 	for (i = 0; i < mod->pat; i++) {
 		uint8 c;
 
-		fseek(f, start + offset, SEEK_SET);
+		hio_seek(f, start + offset, SEEK_SET);
 
 		if (read_object_header(f, &oh, "RTND") < 0) {
 			D_(D_CRIT "Error reading pattern %d", i);
 			return -1;
 		}
 	
-		rp.flags = read16l(f);
-		rp.ntrack = read8(f);
-		rp.nrows = read16l(f);
-		rp.datasize = read32l(f);
+		rp.flags = hio_read16l(f);
+		rp.ntrack = hio_read8(f);
+		rp.nrows = hio_read16l(f);
+		rp.datasize = hio_read32l(f);
 
 		offset += 42 + oh.headerSize + rp.datasize;
 
@@ -152,7 +152,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 		for (r = 0; r < rp.nrows; r++) {
 			for (j = 0; /*j < rp.ntrack */; j++) {
 
-				c = read8(f);
+				c = hio_read8(f);
 				if (c == 0)		/* next row */
 					break;
 
@@ -166,11 +166,11 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 				event = &EVENT(i, j, r);
 
 				if (c & 0x01) {		/* set track */
-					j = read8(f);
+					j = hio_read8(f);
 					event = &EVENT(i, j, r);
 				}
 				if (c & 0x02) {		/* read note */
-					event->note = read8(f) + 1;
+					event->note = hio_read8(f) + 1;
 					if (event->note == 0xff) {
 						event->note = XMP_KEY_OFF;
 					} else {
@@ -178,15 +178,15 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 					}
 				}
 				if (c & 0x04)		/* read instrument */
-					event->ins = read8(f);
+					event->ins = hio_read8(f);
 				if (c & 0x08)		/* read effect */
-					event->fxt = read8(f);
+					event->fxt = hio_read8(f);
 				if (c & 0x10)		/* read parameter */
-					event->fxp = read8(f);
+					event->fxp = hio_read8(f);
 				if (c & 0x20)		/* read effect 2 */
-					event->f2t = read8(f);
+					event->f2t = hio_read8(f);
 				if (c & 0x40)		/* read parameter 2 */
-					event->f2p = read8(f);
+					event->f2p = hio_read8(f);
 			}
 		}
 	}
@@ -197,7 +197,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 
-	fseek(f, start + offset, SEEK_SET);
+	hio_seek(f, start + offset, SEEK_SET);
 
 	/* ESTIMATED value! We don't know the actual value at this point */
 	mod->smp = MAX_SAMP;
@@ -220,47 +220,47 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 			continue;
 		}
 
-		ri.nsample = read8(f);
-		ri.flags = read16l(f);	/* bit 0 : default panning enabled */
-		fread(&ri.table, 120, 1, f);
+		ri.nsample = hio_read8(f);
+		ri.flags = hio_read16l(f);	/* bit 0 : default panning enabled */
+		hio_read(&ri.table, 120, 1, f);
 
-		ri.volumeEnv.npoint = read8(f);
+		ri.volumeEnv.npoint = hio_read8(f);
 		for (j = 0; j < 12; j++) {
-			ri.volumeEnv.point[j].x = read32l(f);
-			ri.volumeEnv.point[j].y = read32l(f);
+			ri.volumeEnv.point[j].x = hio_read32l(f);
+			ri.volumeEnv.point[j].y = hio_read32l(f);
 		}
-		ri.volumeEnv.sustain = read8(f);
-		ri.volumeEnv.loopstart = read8(f);
-		ri.volumeEnv.loopend = read8(f);
-		ri.volumeEnv.flags = read16l(f); /* bit 0:enable 1:sus 2:loop */
+		ri.volumeEnv.sustain = hio_read8(f);
+		ri.volumeEnv.loopstart = hio_read8(f);
+		ri.volumeEnv.loopend = hio_read8(f);
+		ri.volumeEnv.flags = hio_read16l(f); /* bit 0:enable 1:sus 2:loop */
 		
-		ri.panningEnv.npoint = read8(f);
+		ri.panningEnv.npoint = hio_read8(f);
 		for (j = 0; j < 12; j++) {
-			ri.panningEnv.point[j].x = read32l(f);
-			ri.panningEnv.point[j].y = read32l(f);
+			ri.panningEnv.point[j].x = hio_read32l(f);
+			ri.panningEnv.point[j].y = hio_read32l(f);
 		}
-		ri.panningEnv.sustain = read8(f);
-		ri.panningEnv.loopstart = read8(f);
-		ri.panningEnv.loopend = read8(f);
-		ri.panningEnv.flags = read16l(f);
+		ri.panningEnv.sustain = hio_read8(f);
+		ri.panningEnv.loopstart = hio_read8(f);
+		ri.panningEnv.loopend = hio_read8(f);
+		ri.panningEnv.flags = hio_read16l(f);
 
-		ri.vibflg = read8(f);
-		ri.vibsweep = read8(f);
-		ri.vibdepth = read8(f);
-		ri.vibrate = read8(f);
-		ri.volfade = read16l(f);
+		ri.vibflg = hio_read8(f);
+		ri.vibsweep = hio_read8(f);
+		ri.vibdepth = hio_read8(f);
+		ri.vibrate = hio_read8(f);
+		ri.volfade = hio_read16l(f);
 
 		if (version >= 0x0110) {
-			ri.midiPort = read8(f);
-			ri.midiChannel = read8(f);
-			ri.midiProgram = read8(f);
-			ri.midiEnable = read8(f);
+			ri.midiPort = hio_read8(f);
+			ri.midiChannel = hio_read8(f);
+			ri.midiProgram = hio_read8(f);
+			ri.midiEnable = hio_read8(f);
 		}
 		if (version >= 0x0112) {
-			ri.midiTranspose = read8(f);
-			ri.midiBenderRange = read8(f);
-			ri.midiBaseVolume = read8(f);
-			ri.midiUseVelocity = read8(f);
+			ri.midiTranspose = hio_read8(f);
+			ri.midiBenderRange = hio_read8(f);
+			ri.midiBaseVolume = hio_read8(f);
+			ri.midiUseVelocity = hio_read8(f);
 		}
 
 		mod->xxi[i].nsm = ri.nsample;
@@ -310,16 +310,16 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 				return -1;
 			}
 
-			rs.flags = read16l(f);
-			rs.basevolume = read8(f);
-			rs.defaultvolume = read8(f);
-			rs.length = read32l(f);
-			rs.loop = read32l(f);
-			rs.loopbegin = read32l(f);
-			rs.loopend = read32l(f);
-			rs.basefreq = read32l(f);
-			rs.basenote = read8(f);
-			rs.panning = read8(f);
+			rs.flags = hio_read16l(f);
+			rs.basevolume = hio_read8(f);
+			rs.defaultvolume = hio_read8(f);
+			rs.length = hio_read32l(f);
+			rs.loop = hio_read32l(f);
+			rs.loopbegin = hio_read32l(f);
+			rs.loopend = hio_read32l(f);
+			rs.basefreq = hio_read32l(f);
+			rs.basenote = hio_read8(f);
+			rs.panning = hio_read8(f);
 
 			c2spd_to_note(rs.basefreq,
 					&mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
@@ -334,7 +334,7 @@ static int rtm_load(struct module_data *m, FILE *f, const int start)
 			mod->xxi[i].sub[j].sid = smpnum;
 
 			if (smpnum >= MAX_SAMP) {
-				fseek(f, rs.length, SEEK_CUR);
+				hio_seek(f, rs.length, SEEK_CUR);
 				continue;
 			}
 

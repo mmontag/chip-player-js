@@ -72,8 +72,8 @@ struct liq_pattern {
 };
 
 
-static int liq_test (FILE *, char *, const int);
-static int liq_load (struct module_data *, FILE *, const int);
+static int liq_test (HIO_HANDLE *, char *, const int);
+static int liq_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader liq_loader = {
     "Liquid Tracker (LIQ)",
@@ -81,11 +81,11 @@ const struct format_loader liq_loader = {
     liq_load
 };
 
-static int liq_test(FILE *f, char *t, const int start)
+static int liq_test(HIO_HANDLE *f, char *t, const int start)
 {
     char buf[15];
 
-    if (fread(buf, 1, 14, f) < 14)
+    if (hio_read(buf, 1, 14, f) < 14)
 	return -1;
 
     if (memcmp(buf, "Liquid Module:", 14))
@@ -177,14 +177,14 @@ static void xlat_fx(int c, struct xmp_event *e)
 }
 
 
-static void decode_event(uint8 x1, struct xmp_event *event, FILE *f)
+static void decode_event(uint8 x1, struct xmp_event *event, HIO_HANDLE *f)
 {
     uint8 x2;
 
     memset (event, 0, sizeof (struct xmp_event));
 
     if (x1 & 0x01) {
-	x2 = read8(f);
+	x2 = hio_read8(f);
 	if (x2 == 0xfe)
 	    event->note = XMP_KEY_OFF;
 	else
@@ -192,16 +192,16 @@ static void decode_event(uint8 x1, struct xmp_event *event, FILE *f)
     }
 
     if (x1 & 0x02)
-	event->ins = read8(f) + 1;
+	event->ins = hio_read8(f) + 1;
 
     if (x1 & 0x04)
-	event->vol = read8(f);
+	event->vol = hio_read8(f);
 
     if (x1 & 0x08)
-	event->fxt = read8(f) - 'A';
+	event->fxt = hio_read8(f) - 'A';
 
     if (x1 & 0x10)
-	event->fxp = read8(f);
+	event->fxp = hio_read8(f);
 
     D_(D_INFO "  event: %02x %02x %02x %02x %02x",
 	event->note, event->ins, event->vol, event->fxt, event->fxp);
@@ -212,7 +212,7 @@ static void decode_event(uint8 x1, struct xmp_event *event, FILE *f)
     assert (event->fxt <= 26);
 }
 
-static int liq_load(struct module_data *m, FILE *f, const int start)
+static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i;
@@ -226,28 +226,28 @@ static int liq_load(struct module_data *m, FILE *f, const int start)
 
     LOAD_INIT();
 
-    fread(&lh.magic, 14, 1, f);
-    fread(&lh.name, 30, 1, f);
-    fread(&lh.author, 20, 1, f);
-    read8(f);
-    fread(&lh.tracker, 20, 1, f);
+    hio_read(&lh.magic, 14, 1, f);
+    hio_read(&lh.name, 30, 1, f);
+    hio_read(&lh.author, 20, 1, f);
+    hio_read8(f);
+    hio_read(&lh.tracker, 20, 1, f);
 
-    lh.version = read16l(f);
-    lh.speed = read16l(f);
-    lh.bpm = read16l(f);
-    lh.low = read16l(f);
-    lh.high = read16l(f);
-    lh.chn = read16l(f);
-    lh.flags = read32l(f);
-    lh.pat = read16l(f);
-    lh.ins = read16l(f);
-    lh.len = read16l(f);
-    lh.hdrsz = read16l(f);
+    lh.version = hio_read16l(f);
+    lh.speed = hio_read16l(f);
+    lh.bpm = hio_read16l(f);
+    lh.low = hio_read16l(f);
+    lh.high = hio_read16l(f);
+    lh.chn = hio_read16l(f);
+    lh.flags = hio_read32l(f);
+    lh.pat = hio_read16l(f);
+    lh.ins = hio_read16l(f);
+    lh.len = hio_read16l(f);
+    lh.hdrsz = hio_read16l(f);
 
     if ((lh.version >> 8) == 0) {
 	lh.hdrsz = lh.len;
 	lh.len = 0;
-	fseek(f, -2, SEEK_CUR);
+	hio_seek(f, -2, SEEK_CUR);
     }
 
     mod->spd = lh.speed;
@@ -275,19 +275,19 @@ static int liq_load(struct module_data *m, FILE *f, const int start)
 
     if (lh.version > 0) {
 	for (i = 0; i < mod->chn; i++)
-	    mod->xxc[i].pan = read8(f) << 2;
+	    mod->xxc[i].pan = hio_read8(f) << 2;
 
 	for (i = 0; i < mod->chn; i++)
-	    mod->xxc[i].vol = read8(f);
+	    mod->xxc[i].vol = hio_read8(f);
 
-	fread(mod->xxo, 1, mod->len, f);
+	hio_read(mod->xxo, 1, mod->len, f);
 
 	/* Skip 1.01 echo pools */
-	fseek(f, lh.hdrsz - (0x6d + mod->chn * 2 + mod->len), SEEK_CUR);
+	hio_seek(f, lh.hdrsz - (0x6d + mod->chn * 2 + mod->len), SEEK_CUR);
     } else {
-	fseek(f, start + 0xf0, SEEK_SET);
-	fread (mod->xxo, 1, 256, f);
-	fseek(f, start + lh.hdrsz, SEEK_SET);
+	hio_seek(f, start + 0xf0, SEEK_SET);
+	hio_read (mod->xxo, 1, 256, f);
+	hio_seek(f, start + lh.hdrsz, SEEK_SET);
 
 	for (i = 0; i < 256; i++) {
 	    if (mod->xxo[i] == 0xff)
@@ -310,15 +310,15 @@ static int liq_load(struct module_data *m, FILE *f, const int start)
 	int row, channel, count;
 
 	PATTERN_ALLOC (i);
-	pmag = read32b(f);
+	pmag = hio_read32b(f);
 	if (pmag == 0x21212121)		/* !!!! */
 	    continue;
 	assert(pmag == 0x4c500000);	/* LP\0\0 */
 	
-	fread(&lp.name, 30, 1, f);
-	lp.rows = read16l(f);
-	lp.size = read32l(f);
-	lp.reserved = read32l(f);
+	hio_read(&lp.name, 30, 1, f);
+	lp.rows = hio_read16l(f);
+	lp.size = hio_read32l(f);
+	lp.reserved = hio_read32l(f);
 
 	D_(D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
 	mod->xxp[i]->rows = lp.rows;
@@ -326,7 +326,7 @@ static int liq_load(struct module_data *m, FILE *f, const int start)
 
 	row = 0;
 	channel = 0;
-	count = ftell (f);
+	count = hio_tell (f);
 
 /*
  * Packed pattern data is stored full Track after full Track from the left to
@@ -346,20 +346,20 @@ read_event:
 	    goto next_row;	
 	}
 
-	x1 = read8(f);
+	x1 = hio_read8(f);
 
 test_event:
 	event = &EVENT(i, channel, row);
 	D_(D_INFO "* count=%ld chan=%d row=%d event=%02x",
-				ftell(f) - count, channel, row, x1);
+				hio_tell(f) - count, channel, row, x1);
 
 	switch (x1) {
 	case 0xc0:			/* end of pattern */
 	    D_(D_WARN "- end of pattern");
-	    assert (ftell (f) - count == lp.size);
+	    assert (hio_tell (f) - count == lp.size);
 	    goto next_pattern;
 	case 0xe1:			/* skip channels */
-	    x1 = read8(f);
+	    x1 = hio_read8(f);
 	    channel += x1;
 	    D_(D_INFO "  [skip %d channels]", x1);
 	    /* fall thru */
@@ -373,7 +373,7 @@ test_event:
 	    row = -1;
 	    goto next_row;
 	case 0xe0:			/* skip rows */
-	    x1 = read8(f);
+	    x1 = hio_read8(f);
 	    D_(D_INFO "  [skip %d rows]", x1);
 	    row += x1;
 	    /* fall thru */
@@ -390,7 +390,7 @@ test_event:
 	}
 
 	if (x1 > 0xa0 && x1 < 0xc0) {	/* packed data repeat */
-	    x2 = read8(f);
+	    x2 = hio_read8(f);
 	    D_(D_INFO "  [packed data - repeat %d times]", x2);
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
@@ -398,7 +398,7 @@ test_event:
 	}
 
 	if (x1 > 0x80 && x1 < 0xa0) {	/* packed data repeat, keep note */
-	    x2 = read8(f);
+	    x2 = hio_read8(f);
 	    D_(D_INFO "  [packed data - repeat %d times, keep note]", x2);
 	    decode_event (x1, event, f);
 	    xlat_fx (channel, event); 
@@ -417,7 +417,7 @@ test_event:
 	else if (x1 == 0xfe)
 	    event->note = XMP_KEY_OFF;
 
-	x1 = read8(f);
+	x1 = hio_read8(f);
 	if (x1 > 100) {
 	    row++;
 	    goto test_event;
@@ -425,15 +425,15 @@ test_event:
 	if (x1 != 0xff)
 	    event->ins = x1 + 1;
 
-	x1 = read8(f);
+	x1 = hio_read8(f);
 	if (x1 != 0xff)
 	    event->vol = x1;
 
-	x1 = read8(f);
+	x1 = hio_read8(f);
 	if (x1 != 0xff)
 	    event->fxt = x1 - 'A';
 
-	x1 = read8(f);
+	x1 = hio_read8(f);
 	event->fxp = x1;
 
 	assert(event->fxt <= 26);
@@ -476,38 +476,38 @@ next_pattern:
 	unsigned char b[4];
 
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	fread (&b, 1, 4, f);
+	hio_read (&b, 1, 4, f);
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')
 	    continue;
 	assert (b[0] == 'L' && b[1] == 'D' && b[2] == 'S' && b[3] == 'S');
 	D_(D_WARN "INS %d: %c %c %c %c", i, b[0], b[1], b[2], b[3]);
 
-	li.version = read16l(f);
-	fread(&li.name, 30, 1, f);
-	fread(&li.editor, 20, 1, f);
-	fread(&li.author, 20, 1, f);
-	li.hw_id = read8(f);
+	li.version = hio_read16l(f);
+	hio_read(&li.name, 30, 1, f);
+	hio_read(&li.editor, 20, 1, f);
+	hio_read(&li.author, 20, 1, f);
+	li.hw_id = hio_read8(f);
 
-	li.length = read32l(f);
-	li.loopstart = read32l(f);
-	li.loopend = read32l(f);
-	li.c2spd = read32l(f);
+	li.length = hio_read32l(f);
+	li.loopstart = hio_read32l(f);
+	li.loopend = hio_read32l(f);
+	li.c2spd = hio_read32l(f);
 
-	li.vol = read8(f);
-	li.flags = read8(f);
-	li.pan = read8(f);
-	li.midi_ins = read8(f);
-	li.gvl = read8(f);
-	li.chord = read8(f);
+	li.vol = hio_read8(f);
+	li.flags = hio_read8(f);
+	li.pan = hio_read8(f);
+	li.midi_ins = hio_read8(f);
+	li.gvl = hio_read8(f);
+	li.chord = hio_read8(f);
 
-	li.hdrsz = read16l(f);
-	li.comp = read16l(f);
-	li.crc = read32l(f);
+	li.hdrsz = hio_read16l(f);
+	li.comp = hio_read16l(f);
+	li.crc = hio_read32l(f);
 
-	li.midi_ch = read8(f);
-	fread(&li.rsvd, 11, 1, f);
-	fread(&li.filename, 25, 1, f);
+	li.midi_ch = hio_read8(f);
+	hio_read(&li.rsvd, 11, 1, f);
+	hio_read(&li.filename, 25, 1, f);
 
 	mod->xxi[i].nsm = !!(li.length);
 	mod->xxi[i].vol = 0x40;
@@ -545,7 +545,7 @@ next_pattern:
 		li.version >> 8, li.version & 0xff, li.c2spd);
 
 	c2spd_to_note (li.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-	fseek(f, li.hdrsz - 0x90, SEEK_CUR);
+	hio_seek(f, li.hdrsz - 0x90, SEEK_CUR);
 
 	if (!mod->xxs[i].len)
 	    continue;

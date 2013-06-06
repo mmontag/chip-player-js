@@ -9,8 +9,8 @@
 #include "loader.h"
 #include "synth.h"
 
-static int rad_test(FILE *, char *, const int);
-static int rad_load(struct module_data *, FILE *, const int);
+static int rad_test(HIO_HANDLE *, char *, const int);
+static int rad_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader rad_loader = {
 	"Reality Adlib Tracker (RAD)",
@@ -18,11 +18,11 @@ const struct format_loader rad_loader = {
 	rad_load
 };
 
-static int rad_test(FILE *f, char *t, const int start)
+static int rad_test(HIO_HANDLE *f, char *t, const int start)
 {
 	char buf[16];
 
-	if (fread(buf, 1, 16, f) < 16)
+	if (hio_read(buf, 1, 16, f) < 16)
 		return -1;
 
 	if (memcmp(buf, "RAD by REALiTY!!", 16))
@@ -39,7 +39,7 @@ struct rad_instrument {
 };
 
 
-static int rad_load(struct module_data *m, FILE *f, const int start)
+static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -53,9 +53,9 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	fseek(f, 16, SEEK_SET);		/* skip magic */
-	version = read8(f);
-	flags = read8(f);
+	hio_seek(f, 16, SEEK_SET);		/* skip magic */
+	version = hio_read8(f);
+	flags = hio_read8(f);
 
 	mod->chn = 9;
 	mod->bpm = 125;
@@ -72,27 +72,27 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 
 	/* Read description */
 	if (flags & 0x80) {
-		while ((b = read8(f)) != 0);
+		while ((b = hio_read8(f)) != 0);
 	}
 
 	/* Read instruments */
 	D_(D_INFO "Read instruments");
 
-	pos = ftell(f);
+	pos = hio_tell(f);
 
 	mod->ins = 0;
-	while ((b = read8(f)) != 0) {
+	while ((b = hio_read8(f)) != 0) {
 		mod->ins = b;
-		fread(sid, 1, 11, f);
+		hio_read(sid, 1, 11, f);
 	}
 
-	fseek(f, pos, SEEK_SET);
+	hio_seek(f, pos, SEEK_SET);
 	mod->smp = mod->ins;
 
 	INSTRUMENT_INIT();
 
-	while ((b = read8(f)) != 0) {
-		fread(sid, 1, 11, f);
+	while ((b = hio_read8(f)) != 0) {
+		hio_read(sid, 1, 11, f);
 		load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
 					&mod->xxs[b - 1], (char *)sid);
 	}
@@ -107,17 +107,17 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* Read orders */
-	mod->len = read8(f);
+	mod->len = hio_read8(f);
 
 	for (j = i = 0; i < mod->len; i++) {
-		b = read8(f);
+		b = hio_read8(f);
 		if (b < 0x80)
 			mod->xxo[j++] = b;
 	}
 
 	/* Read pattern pointers */
 	for (mod->pat = i = 0; i < 32; i++) {
-		ppat[i] = read16l(f);
+		ppat[i] = hio_read16l(f);
 		if (ppat[i])
 			mod->pat++;
 	}
@@ -138,17 +138,17 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 		if (ppat[i] == 0)
 			continue;
 
-		fseek(f, start + ppat[i], SEEK_SET);
+		hio_seek(f, start + ppat[i], SEEK_SET);
 
 		do {
-			r = read8(f);		/* Row number */
+			r = hio_read8(f);		/* Row number */
 
 			if ((r & 0x7f) >= 64) {
 				D_(D_CRIT "** Whoops! row = %d\n", r);
 			}
 
 			do {
-				c = read8(f);	/* Channel number */
+				c = hio_read8(f);	/* Channel number */
 
 				if ((c & 0x7f) >= mod->chn) {
 					D_(D_CRIT "** Whoops! channel = %d\n", c);
@@ -156,7 +156,7 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 
 				event = &EVENT(i, c & 0x7f, r & 0x7f);
 
-				b = read8(f);	/* Note + octave + inst */
+				b = hio_read8(f);	/* Note + octave + inst */
 				event->ins = (b & 0x80) >> 3;
 				event->note = LSN(b);
 
@@ -166,11 +166,11 @@ static int rad_load(struct module_data *m, FILE *f, const int start)
 					event->note += 26 +
 						12 * ((b & 0x70) >> 4);
 
-				b = read8(f);	/* Instrument + effect */
+				b = hio_read8(f);	/* Instrument + effect */
 				event->ins |= MSN(b);
 				event->fxt = LSN(b);
 				if (event->fxt) {
-					b = read8(f);	/* Effect parameter */
+					b = hio_read8(f);	/* Effect parameter */
 					event->fxp = b;
 
 					/* FIXME: tempo setting */

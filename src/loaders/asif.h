@@ -3,7 +3,8 @@
 
 #include <stdio.h>
 #include "common.h"
+#include "hio.h"
 
-int asif_load(struct module_data *, FILE *, int);
+int asif_load(struct module_data *, HIO_HANDLE *, int);
 
 #endif

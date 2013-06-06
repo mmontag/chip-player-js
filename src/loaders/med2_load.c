@@ -22,8 +22,8 @@
 
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 
-static int med2_test(FILE *, char *, const int);
-static int med2_load (struct module_data *, FILE *, const int);
+static int med2_test(HIO_HANDLE *, char *, const int);
+static int med2_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader med2_loader = {
 	"MED 1.12 MED2 (MED)",
@@ -32,9 +32,9 @@ const struct format_loader med2_loader = {
 };
 
 
-static int med2_test(FILE *f, char *t, const int start)
+static int med2_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (read32b(f) !=  MAGIC_MED2)
+	if (hio_read32b(f) !=  MAGIC_MED2)
 		return -1;
 
         read_title(f, t, 0);
@@ -43,7 +43,7 @@ static int med2_test(FILE *f, char *t, const int start)
 }
 
 
-int med2_load(struct module_data *m, FILE *f, const int start)
+int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, k;
@@ -53,7 +53,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	if (read32b(f) !=  MAGIC_MED2)
+	if (hio_read32b(f) !=  MAGIC_MED2)
 		return -1;
 
 	set_type(m, "MED 1.12 MED2");
@@ -62,49 +62,49 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 	INSTRUMENT_INIT();
 
 	/* read instrument names */
-	fread(buf, 1, 40, f);	/* skip 0 */
+	hio_read(buf, 1, 40, f);	/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		fread(buf, 1, 40, f);
+		hio_read(buf, 1, 40, f);
 		copy_adjust(mod->xxi[i].name, buf, 32);
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	}
 
 	/* read instrument volumes */
-	read8(f);		/* skip 0 */
+	hio_read8(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		mod->xxi[i].sub[0].vol = read8(f);
+		mod->xxi[i].sub[0].vol = hio_read8(f);
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].fin = 0;
 		mod->xxi[i].sub[0].sid = i;
 	}
 
 	/* read instrument loops */
-	read16b(f);		/* skip 0 */
+	hio_read16b(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		mod->xxs[i].lps = read16b(f);
+		mod->xxs[i].lps = hio_read16b(f);
 	}
 
 	/* read instrument loop length */
-	read16b(f);		/* skip 0 */
+	hio_read16b(f);		/* skip 0 */
 	for (i = 0; i < 31; i++) {
-		uint32 lsiz = read16b(f);
+		uint32 lsiz = hio_read16b(f);
 		mod->xxs[i].lpe = mod->xxs[i].lps + lsiz;
 		mod->xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
 	}
 
 	mod->chn = 4;
-	mod->pat = read16b(f);
+	mod->pat = hio_read16b(f);
 	mod->trk = mod->chn * mod->pat;
 
-	fread(mod->xxo, 1, 100, f);
-	mod->len = read16b(f);
+	hio_read(mod->xxo, 1, 100, f);
+	mod->len = hio_read16b(f);
 
-	mod->spd = 192 / read16b(f);
+	mod->spd = 192 / hio_read16b(f);
 
-	read16b(f);			/* flags */
-	sliding = read16b(f);		/* sliding */
-	read32b(f);			/* jumping mask */
-	fseek(f, 16, SEEK_CUR);		/* rgb */
+	hio_read16b(f);			/* flags */
+	sliding = hio_read16b(f);		/* sliding */
+	hio_read32b(f);			/* jumping mask */
+	hio_seek(f, 16, SEEK_CUR);		/* rgb */
 
 	MODULE_INFO();
 
@@ -123,17 +123,17 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		read32b(f);
+		hio_read32b(f);
 
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
 				uint8 x;
 				event = &EVENT(i, k, j);
-				event->note = period_to_note(read16b(f));
-				x = read8(f);
+				event->note = period_to_note(hio_read16b(f));
+				x = hio_read8(f);
 				event->ins = x >> 4;
 				event->fxt = x & 0x0f;
-				event->fxp = read8(f);
+				event->fxp = hio_read8(f);
 
 				switch (event->fxt) {
 				case 0x00:		/* arpeggio */
@@ -163,7 +163,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 		char path[PATH_MAX];
 		char ins_path[256];
 		char name[256];
-		FILE *s = NULL;
+		HIO_HANDLE *s = NULL;
 		struct stat stat;
 		int found;
 
@@ -173,8 +173,8 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 
 		if (found) {
 			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
-			if ((s = fopen(path, "rb"))) {
-				fstat(fileno(s), &stat);
+			if ((s = hio_open_file(path, "rb"))) {
+				hio_stat(s, &stat);
 				mod->xxs[i].len = stat.st_size;
 			}
 		}
@@ -192,7 +192,7 @@ int med2_load(struct module_data *m, FILE *f, const int start)
 
 		if (found) {
 			load_sample(m, s, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
-			fclose(s);
+			hio_close(s);
 		}
 	}
 

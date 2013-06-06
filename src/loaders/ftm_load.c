@@ -29,7 +29,7 @@ struct ftm_header {
 	uint8 unknown2[2];
 };
 
-int ftm_load(FILE * f)
+int ftm_load(HIO_HANDLE * f)
 {
 	int i, j, k;
 	struct xmp_event *event;
@@ -39,18 +39,18 @@ int ftm_load(FILE * f)
 
 	LOAD_INIT();
 
-	fread(&fh.id, 4, 1, f);
+	hio_read(&fh.id, 4, 1, f);
 	if (memcmp(fh.id, "FTMN", 4))
 		return -1;
 
-	fh.ver = read8(f);
-	fh.nos = read8(f);
-	read16b(f);
-	read32b(f);
-	read32b(f);
-	fread(&fh.title, 32, 1, f);
-	fread(&fh.author, 32, 1, f);
-	read16b(f);
+	fh.ver = hio_read8(f);
+	fh.nos = hio_read8(f);
+	hio_read16b(f);
+	hio_read32b(f);
+	hio_read32b(f);
+	hio_read(&fh.title, 32, 1, f);
+	hio_read(&fh.author, 32, 1, f);
+	hio_read16b(f);
 
 	//mod->len = fh.len;
 	//mod->pat = fh.pat;

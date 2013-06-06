@@ -22,8 +22,8 @@
 #endif
 #include <unistd.h>
 
-static int mfp_test(FILE *, char *, const int);
-static int mfp_load(struct module_data *, FILE *, const int);
+static int mfp_test(HIO_HANDLE *, char *, const int);
+static int mfp_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mfp_loader = {
 	"Magnetic Fields Packer",
@@ -31,12 +31,15 @@ const struct format_loader mfp_loader = {
 	mfp_load
 };
 
-static int mfp_test(FILE *f, char *t, const int start)
+static int mfp_test(HIO_HANDLE *f, char *t, const int start)
 {
 	uint8 buf[384];
 	int i, len, lps, lsz;
 
-	if (fread(buf, 1, 384, f) < 384)
+	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
+		return -1;
+
+	if (hio_read(buf, 1, 384, f) < 384)
 		return -1;
 
 	/* check restart byte */
@@ -82,14 +85,14 @@ static int mfp_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int mfp_load(struct module_data *m, FILE *f, const int start)
+static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, k, x, y;
 	struct xmp_event *event;
 	struct stat st;
 	char smp_filename[PATH_MAX];
-	FILE *s;
+	HIO_HANDLE *s;
 	int size1, size2;
 	int pat_addr, pat_table[128][4];
 	uint8 buf[1024], mod_event[4];
@@ -110,11 +113,11 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		
-		mod->xxs[i].len = 2 * read16b(f);
-		mod->xxi[i].sub[0].fin = (int8)(read8(f) << 4);
-		mod->xxi[i].sub[0].vol = read8(f);
-		mod->xxs[i].lps = 2 * read16b(f);
-		loop_size = read16b(f);
+		mod->xxs[i].len = 2 * hio_read16b(f);
+		mod->xxi[i].sub[0].fin = (int8)(hio_read8(f) << 4);
+		mod->xxi[i].sub[0].vol = hio_read8(f);
+		mod->xxs[i].lps = 2 * hio_read16b(f);
+		loop_size = hio_read16b(f);
 
 		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * loop_size;
 		mod->xxs[i].flg = loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
@@ -130,15 +133,15 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
                        	mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
 	}
 
-	mod->len = mod->pat = read8(f);
-	read8(f);		/* restart */
+	mod->len = mod->pat = hio_read8(f);
+	hio_read8(f);		/* restart */
 
 	for (i = 0; i < 128; i++)
-		mod->xxo[i] = read8(f);
+		mod->xxo[i] = hio_read8(f);
 
 #if 0
 	for (i = 0; i < 128; i++) {
-		mod->xxo[i] = read8(f);
+		mod->xxo[i] = hio_read8(f);
 		if (mod->xxo[i] > mod->pat)
 			mod->pat = mod->xxo[i];
 	}
@@ -151,18 +154,18 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 
 	PATTERN_INIT();
 
-	size1 = read16b(f);
-	size2 = read16b(f);
+	size1 = hio_read16b(f);
+	size2 = hio_read16b(f);
 
 	for (i = 0; i < size1; i++) {		/* Read pattern table */
 		for (j = 0; j < 4; j++) {
-			pat_table[i][j] = read16b(f);
+			pat_table[i][j] = hio_read16b(f);
 		}
 	}
 
 	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
-	pat_addr = ftell(f);
+	pat_addr = hio_tell(f);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
@@ -170,9 +173,9 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 		TRACK_ALLOC(i);
 
 		for (j = 0; j < 4; j++) {
-			fseek(f, pat_addr + pat_table[i][j], SEEK_SET);
+			hio_seek(f, pat_addr + pat_table[i][j], SEEK_SET);
 
-			fread(buf, 1, 1024, f);
+			hio_read(buf, 1, 1024, f);
 
 			for (row = k = 0; k < 4; k++) {
 				for (x = 0; x < 4; x++) {
@@ -212,7 +215,7 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 			goto err;
 		}
 	}
-	if ((s = fopen(smp_filename, "rb")) == NULL) {
+	if ((s = hio_open_file(smp_filename, "rb")) == NULL) {
 		fprintf(stderr, "libxmp: can't open sample file %s\n",
 								smp_filename);
 		goto err;
@@ -223,7 +226,7 @@ static int mfp_load(struct module_data *m, FILE *f, const int start)
 				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
-	fclose(s);
+	hio_close(s);
 
 	m->quirk |= QUIRK_MODRNG;
 

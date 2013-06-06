@@ -70,8 +70,8 @@ struct stx_instrument_header {
 };
 
 
-static int stx_test (FILE *, char *, const int);
-static int stx_load (struct module_data *, FILE *, const int);
+static int stx_test (HIO_HANDLE *, char *, const int);
+static int stx_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader stx_loader = {
     "STMIK 0.2 (STX)",
@@ -79,23 +79,23 @@ const struct format_loader stx_loader = {
     stx_load
 };
 
-static int stx_test(FILE *f, char *t, const int start)
+static int stx_test(HIO_HANDLE *f, char *t, const int start)
 {
     char buf[8];
 
-    fseek(f, start + 20, SEEK_SET);
-    if (fread(buf, 1, 8, f) < 8)
+    hio_seek(f, start + 20, SEEK_SET);
+    if (hio_read(buf, 1, 8, f) < 8)
 	return -1;
     if (memcmp(buf, "!Scream!", 8) && memcmp(buf, "BMOD2STM", 8))
 	return -1;
 
-    fseek(f, start + 60, SEEK_SET);
-    if (fread(buf, 1, 4, f) < 4)
+    hio_seek(f, start + 60, SEEK_SET);
+    if (hio_read(buf, 1, 4, f) < 4)
 	return -1;
     if (memcmp(buf, "SCRM", 4))
 	return -1;
 
-    fseek(f, start + 0, SEEK_SET);
+    hio_seek(f, start + 0, SEEK_SET);
     read_title(f, t, 20);
 
     return 0;
@@ -113,7 +113,7 @@ static const uint8 fx[] = {
 };
 
 
-static int stx_load(struct module_data *m, FILE *f, const int start)
+static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int c, r, i, broken = 0;
@@ -128,26 +128,26 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
 
     LOAD_INIT();
 
-    fread(&sfh.name, 20, 1, f);
-    fread(&sfh.magic, 8, 1, f);
-    sfh.psize = read16l(f);
-    sfh.unknown1 = read16l(f);
-    sfh.pp_pat = read16l(f);
-    sfh.pp_ins = read16l(f);
-    sfh.pp_chn = read16l(f);
-    sfh.unknown2 = read16l(f);
-    sfh.unknown3 = read16l(f);
-    sfh.gvol = read8(f);
-    sfh.tempo = read8(f);
-    sfh.unknown4 = read16l(f);
-    sfh.unknown5 = read16l(f);
-    sfh.patnum = read16l(f);
-    sfh.insnum = read16l(f);
-    sfh.ordnum = read16l(f);
-    sfh.unknown6 = read16l(f);
-    sfh.unknown7 = read16l(f);
-    sfh.unknown8 = read16l(f);
-    fread(&sfh.magic2, 4, 1, f);
+    hio_read(&sfh.name, 20, 1, f);
+    hio_read(&sfh.magic, 8, 1, f);
+    sfh.psize = hio_read16l(f);
+    sfh.unknown1 = hio_read16l(f);
+    sfh.pp_pat = hio_read16l(f);
+    sfh.pp_ins = hio_read16l(f);
+    sfh.pp_chn = hio_read16l(f);
+    sfh.unknown2 = hio_read16l(f);
+    sfh.unknown3 = hio_read16l(f);
+    sfh.gvol = hio_read8(f);
+    sfh.tempo = hio_read8(f);
+    sfh.unknown4 = hio_read16l(f);
+    sfh.unknown5 = hio_read16l(f);
+    sfh.patnum = hio_read16l(f);
+    sfh.insnum = hio_read16l(f);
+    sfh.ordnum = hio_read16l(f);
+    sfh.unknown6 = hio_read16l(f);
+    sfh.unknown7 = hio_read16l(f);
+    sfh.unknown8 = hio_read16l(f);
+    hio_read(&sfh.magic2, 4, 1, f);
 
     /* BMOD2STM does not convert pitch */
     if (!strncmp ((char *) sfh.magic, "BMOD2STM", 8))
@@ -170,10 +170,10 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
     /* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
      * length encoded in the first two bytes of the pattern (like S3M).
      */
-    fseek(f, start + (sfh.pp_pat << 4), SEEK_SET);
-    x16 = read16l(f);
-    fseek(f, start + (x16 << 4), SEEK_SET);
-    x16 = read16l(f);
+    hio_seek(f, start + (sfh.pp_pat << 4), SEEK_SET);
+    x16 = hio_read16l(f);
+    hio_seek(f, start + (x16 << 4), SEEK_SET);
+    x16 = hio_read16l(f);
     if (x16 == sfh.psize)
 	broken = 1;
 
@@ -189,22 +189,22 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
     pp_ins = calloc (2, mod->ins);
 
     /* Read pattern pointers */
-    fseek(f, start + (sfh.pp_pat << 4), SEEK_SET);
+    hio_seek(f, start + (sfh.pp_pat << 4), SEEK_SET);
     for (i = 0; i < mod->pat; i++)
-	pp_pat[i] = read16l(f);
+	pp_pat[i] = hio_read16l(f);
 
     /* Read instrument pointers */
-    fseek(f, start + (sfh.pp_ins << 4), SEEK_SET);
+    hio_seek(f, start + (sfh.pp_ins << 4), SEEK_SET);
     for (i = 0; i < mod->ins; i++)
-	pp_ins[i] = read16l(f);
+	pp_ins[i] = hio_read16l(f);
 
     /* Skip channel table (?) */
-    fseek(f, start + (sfh.pp_chn << 4) + 32, SEEK_SET);
+    hio_seek(f, start + (sfh.pp_chn << 4) + 32, SEEK_SET);
 
     /* Read orders */
     for (i = 0; i < mod->len; i++) {
-	mod->xxo[i] = read8(f);
-	fseek(f, 4, SEEK_CUR);
+	mod->xxo[i] = hio_read8(f);
+	hio_seek(f, 4, SEEK_CUR);
     }
  
     INSTRUMENT_INIT();
@@ -213,26 +213,26 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	fseek(f, start + (pp_ins[i] << 4), SEEK_SET);
+	hio_seek(f, start + (pp_ins[i] << 4), SEEK_SET);
 
-	sih.type = read8(f);
-	fread(&sih.dosname, 13, 1, f);
-	sih.memseg = read16l(f);
-	sih.length = read32l(f);
-	sih.loopbeg = read32l(f);
-	sih.loopend = read32l(f);
-	sih.vol = read8(f);
-	sih.rsvd1 = read8(f);
-	sih.pack = read8(f);
-	sih.flags = read8(f);
-	sih.c2spd = read16l(f);
-	sih.rsvd2 = read16l(f);
-	fread(&sih.rsvd3, 4, 1, f);
-	sih.int_gp = read16l(f);
-	sih.int_512 = read16l(f);
-	sih.int_last = read32l(f);
-	fread(&sih.name, 28, 1, f);
-	fread(&sih.magic, 4, 1, f);
+	sih.type = hio_read8(f);
+	hio_read(&sih.dosname, 13, 1, f);
+	sih.memseg = hio_read16l(f);
+	sih.length = hio_read32l(f);
+	sih.loopbeg = hio_read32l(f);
+	sih.loopend = hio_read32l(f);
+	sih.vol = hio_read8(f);
+	sih.rsvd1 = hio_read8(f);
+	sih.pack = hio_read8(f);
+	sih.flags = hio_read8(f);
+	sih.c2spd = hio_read16l(f);
+	sih.rsvd2 = hio_read16l(f);
+	hio_read(&sih.rsvd3, 4, 1, f);
+	sih.int_gp = hio_read16l(f);
+	sih.int_512 = hio_read16l(f);
+	sih.int_last = hio_read32l(f);
+	hio_read(&sih.name, 28, 1, f);
+	hio_read(&sih.magic, 4, 1, f);
 
 	mod->xxi[i].nsm = !!(mod->xxs[i].len = sih.length);
 	mod->xxs[i].lps = sih.loopbeg;
@@ -268,12 +268,12 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
 	if (!pp_pat[i])
 	    continue;
 
-	fseek(f, start + (pp_pat[i] << 4), SEEK_SET);
+	hio_seek(f, start + (pp_pat[i] << 4), SEEK_SET);
 	if (broken)
-	    fseek(f, 2, SEEK_CUR);
+	    hio_seek(f, 2, SEEK_CUR);
 
 	for (r = 0; r < 64; ) {
-	    b = read8(f);
+	    b = hio_read8(f);
 
 	    if (b == S3M_EOR) {
 		r++;
@@ -284,7 +284,7 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
 	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
 
 	    if (b & S3M_NI_FOLLOW) {
-		n = read8(f);
+		n = hio_read8(f);
 
 		switch (n) {
 		case 255:
@@ -298,16 +298,16 @@ static int stx_load(struct module_data *m, FILE *f, const int start)
 		}
 
 		event->note = n;
-		event->ins = read8(f);;
+		event->ins = hio_read8(f);;
 	    }
 
 	    if (b & S3M_VOL_FOLLOWS) {
-		event->vol = read8(f) + 1;
+		event->vol = hio_read8(f) + 1;
 	    }
 
 	    if (b & S3M_FX_FOLLOWS) {
-		event->fxt = fx[read8(f)];
-		event->fxp = read8(f);
+		event->fxt = fx[hio_read8(f)];
+		event->fxp = hio_read8(f);
 		switch (event->fxt) {
 		case FX_SPEED:
 		    event->fxp = MSN (event->fxp);

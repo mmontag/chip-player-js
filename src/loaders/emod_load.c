@@ -15,8 +15,8 @@
 #define MAGIC_EMIC	MAGIC4('E','M','I','C')
 
 
-static int emod_test (FILE *, char *, const int);
-static int emod_load (struct module_data *, FILE *, const int);
+static int emod_test (HIO_HANDLE *, char *, const int);
+static int emod_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader emod_loader = {
     "Quadra Composer (EMOD)",
@@ -24,19 +24,19 @@ const struct format_loader emod_loader = {
     emod_load
 };
 
-static int emod_test(FILE *f, char *t, const int start)
+static int emod_test(HIO_HANDLE *f, char *t, const int start)
 {
-    if (read32b(f) != MAGIC_FORM)
+    if (hio_read32b(f) != MAGIC_FORM)
 	return -1;
 
-    read32b(f);
+    hio_read32b(f);
 
-    if (read32b(f) != MAGIC_EMOD)
+    if (hio_read32b(f) != MAGIC_EMOD)
 	return -1;
 
-    if (read32b(f) == MAGIC_EMIC) {
-        read32b(f);		/* skip size */
-        read16b(f);		/* skip version */
+    if (hio_read32b(f) == MAGIC_EMIC) {
+        hio_read32b(f);		/* skip size */
+        hio_read16b(f);		/* skip version */
         read_title(f, t, 20);
     } else {
         read_title(f, t, 0);
@@ -46,17 +46,17 @@ static int emod_test(FILE *f, char *t, const int start)
 }
 
 
-static void get_emic(struct module_data *m, int size, FILE *f, void *parm)
+static void get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, ver;
     uint8 reorder[256];
 
-    ver = read16b(f);
-    fread(mod->name, 1, 20, f);
-    fseek(f, 20, SEEK_CUR);
-    mod->bpm = read8(f);
-    mod->ins = read8(f);
+    ver = hio_read16b(f);
+    hio_read(mod->name, 1, 20, f);
+    hio_seek(f, 20, SEEK_CUR);
+    mod->bpm = hio_read8(f);
+    mod->ins = hio_read8(f);
     mod->smp = mod->ins;
 
     m->quirk |= QUIRK_MODRNG;
@@ -69,15 +69,15 @@ static void get_emic(struct module_data *m, int size, FILE *f, void *parm)
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	read8(f);		/* num */
-	mod->xxi[i].sub[0].vol = read8(f);
-	mod->xxs[i].len = 2 * read16b(f);
-	fread(mod->xxi[i].name, 1, 20, f);
-	mod->xxs[i].flg = read8(f) & 1 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxi[i].sub[0].fin = read8(f);
-	mod->xxs[i].lps = 2 * read16b(f);
-	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * read16b(f);
-	read32b(f);		/* ptr */
+	hio_read8(f);		/* num */
+	mod->xxi[i].sub[0].vol = hio_read8(f);
+	mod->xxs[i].len = 2 * hio_read16b(f);
+	hio_read(mod->xxi[i].name, 1, 20, f);
+	mod->xxs[i].flg = hio_read8(f) & 1 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].sub[0].fin = hio_read8(f);
+	mod->xxs[i].lps = 2 * hio_read16b(f);
+	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * hio_read16b(f);
+	hio_read32b(f);		/* ptr */
 
 	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].pan = 0x80;
@@ -89,8 +89,8 @@ static void get_emic(struct module_data *m, int size, FILE *f, void *parm)
 		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
     }
 
-    read8(f);			/* pad */
-    mod->pat = read8(f);
+    hio_read8(f);			/* pad */
+    mod->pat = hio_read8(f);
 
     mod->trk = mod->pat * mod->chn;
 
@@ -99,24 +99,24 @@ static void get_emic(struct module_data *m, int size, FILE *f, void *parm)
     memset(reorder, 0, 256);
 
     for (i = 0; i < mod->pat; i++) {
-	reorder[read8(f)] = i;
+	reorder[hio_read8(f)] = i;
 	PATTERN_ALLOC(i);
-	mod->xxp[i]->rows = read8(f) + 1;
+	mod->xxp[i]->rows = hio_read8(f) + 1;
 	TRACK_ALLOC(i);
-	fseek(f, 20, SEEK_CUR);		/* skip name */
-	read32b(f);			/* ptr */
+	hio_seek(f, 20, SEEK_CUR);		/* skip name */
+	hio_read32b(f);			/* ptr */
     }
 
-    mod->len = read8(f);
+    mod->len = hio_read8(f);
 
     D_(D_INFO "Module length: %d", mod->len);
 
     for (i = 0; i < mod->len; i++)
-	mod->xxo[i] = reorder[read8(f)];
+	mod->xxo[i] = reorder[hio_read8(f)];
 }
 
 
-static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
+static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, k;
@@ -129,12 +129,12 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 	for (j = 0; j < mod->xxp[i]->rows; j++) {
 	    for (k = 0; k < mod->chn; k++) {
 		event = &EVENT(i, k, j);
-		event->ins = read8(f);
-		event->note = read8(f) + 1;
+		event->ins = hio_read8(f);
+		event->note = hio_read8(f) + 1;
 		if (event->note != 0)
 		    event->note += 48;
-		event->fxt = read8(f) & 0x0f;
-		event->fxp = read8(f);
+		event->fxt = hio_read8(f) & 0x0f;
+		event->fxp = hio_read8(f);
 
 		/* Fix effects */
 		switch (event->fxt) {
@@ -156,7 +156,7 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 }
 
 
-static void get_8smp(struct module_data *m, int size, FILE *f, void *parm)
+static void get_8smp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i;
@@ -169,15 +169,15 @@ static void get_8smp(struct module_data *m, int size, FILE *f, void *parm)
 }
 
 
-static int emod_load(struct module_data *m, FILE *f, const int start)
+static int emod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     iff_handle handle;
 
     LOAD_INIT();
 
-    read32b(f);		/* FORM */
-    read32b(f);
-    read32b(f);		/* EMOD */
+    hio_read32b(f);		/* FORM */
+    hio_read32b(f);
+    hio_read32b(f);		/* EMOD */
 
     handle = iff_new();
     if (handle == NULL)
@@ -189,7 +189,7 @@ static int emod_load(struct module_data *m, FILE *f, const int start)
     iff_register(handle, "8SMP", get_8smp);
 
     /* Load IFF chunks */
-    while (!feof(f)) {
+    while (!hio_eof(f)) {
 	iff_chunk(handle, m, f, NULL);
     }
 

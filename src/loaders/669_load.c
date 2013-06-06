@@ -9,8 +9,8 @@
 #include "loader.h"
 
 
-static int ssn_test (FILE *, char *, const int);
-static int ssn_load (struct module_data *, FILE *, const int);
+static int ssn_test (HIO_HANDLE *, char *, const int);
+static int ssn_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader ssn_loader = {
     "Composer 669",
@@ -18,19 +18,19 @@ const struct format_loader ssn_loader = {
     ssn_load
 };
 
-static int ssn_test(FILE *f, char *t, const int start)
+static int ssn_test(HIO_HANDLE *f, char *t, const int start)
 {
     uint16 id;
 
-    id = read16b(f);
+    id = hio_read16b(f);
     if (id != 0x6966 && id != 0x4a4e)
 	return -1;
 
-    fseek(f, 238, SEEK_CUR);
-    if (read8(f) != 0xff)
+    hio_seek(f, 238, SEEK_CUR);
+    if (hio_read8(f) != 0xff)
 	return -1;
 
-    fseek(f, start + 2, SEEK_SET);
+    hio_seek(f, start + 2, SEEK_SET);
     read_title(f, t, 36);
 
     return 0;
@@ -71,7 +71,7 @@ static const uint8 fx[] = {
 };
 
 
-static int ssn_load(struct module_data *m, FILE *f, const int start)
+static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -82,14 +82,14 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 
     LOAD_INIT();
 
-    fread(&sfh.marker, 2, 1, f);	/* 'if'=standard, 'JN'=extended */
-    fread(&sfh.message, 108, 1, f);	/* Song message */
-    sfh.nos = read8(f);			/* Number of samples (0-64) */
-    sfh.nop = read8(f);			/* Number of patterns (0-128) */
-    sfh.loop = read8(f);		/* Loop order number */
-    fread(&sfh.order, 128, 1, f);	/* Order list */
-    fread(&sfh.speed, 128, 1, f);	/* Tempo list for patterns */
-    fread(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
+    hio_read(&sfh.marker, 2, 1, f);	/* 'if'=standard, 'JN'=extended */
+    hio_read(&sfh.message, 108, 1, f);	/* Song message */
+    sfh.nos = hio_read8(f);			/* Number of samples (0-64) */
+    sfh.nop = hio_read8(f);			/* Number of patterns (0-128) */
+    sfh.loop = hio_read8(f);		/* Loop order number */
+    hio_read(&sfh.order, 128, 1, f);	/* Order list */
+    hio_read(&sfh.speed, 128, 1, f);	/* Tempo list for patterns */
+    hio_read(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
 
     mod->chn = 8;
     mod->ins = sfh.nos;
@@ -125,10 +125,10 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	fread (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
-	sih.length = read32l(f);		/* Instrument size */
-	sih.loop_start = read32l(f);		/* Instrument loop start */
-	sih.loopend = read32l(f);		/* Instrument loop end */
+	hio_read (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
+	sih.length = hio_read32l(f);		/* Instrument size */
+	sih.loop_start = hio_read32l(f);		/* Instrument loop start */
+	sih.loopend = hio_read32l(f);		/* Instrument loop end */
 
 	mod->xxi[i].nsm = !!(mod->xxs[i].len = sih.length);
 	mod->xxs[i].lps = sih.loop_start;
@@ -161,7 +161,7 @@ static int ssn_load(struct module_data *m, FILE *f, const int start)
 
 	for (j = 0; j < 64 * 8; j++) {
 	    event = &EVENT(i, j % 8, j / 8);
-	    fread(&ev, 1, 3, f);
+	    hio_read(&ev, 1, 3, f);
 
 	    if ((ev[0] & 0xfe) != 0xfe) {
 		event->note = 1 + 36 + (ev[0] >> 2);

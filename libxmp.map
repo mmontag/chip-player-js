@@ -40,5 +40,6 @@ XMP_4.1 {
 XMP_4.2 {
   global:
     xmp_get_player;
+    xmp_load_module_from_memory;
 } XMP_4.1;
 

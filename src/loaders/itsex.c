@@ -3,7 +3,7 @@
 #include "loader.h"
 
 
-static inline uint32 read_bits(FILE *ibuf, uint32 *bitbuf, int *bitnum, int n)
+static inline uint32 read_bits(HIO_HANDLE *ibuf, uint32 *bitbuf, int *bitnum, int n)
 {
 	uint32 retval = 0;
 	int i = n;
@@ -12,7 +12,7 @@ static inline uint32 read_bits(FILE *ibuf, uint32 *bitbuf, int *bitnum, int n)
 	if (n > 0) {
 		do {
 			if (bnum == 0) {
-				bbuf = read8(ibuf);
+				bbuf = hio_read8(ibuf);
 				bnum = 8;
 			}
 			retval >>= 1;
@@ -32,7 +32,7 @@ static inline uint32 read_bits(FILE *ibuf, uint32 *bitbuf, int *bitnum, int n)
 }
 
 
-int itsex_decompress8(FILE *src, uint8 *dst, int len, int it215)
+int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
 {
 	uint32 size = 0;
 	uint32 block_count = 0;
@@ -44,7 +44,7 @@ int itsex_decompress8(FILE *src, uint8 *dst, int len, int it215)
 	while (len) {
 		if (!block_count) {
 			block_count = 0x8000;
-			size = read16l(src);
+			size = hio_read16l(src);
 			left = 9;
 			temp = temp2 = 0;
 			bitbuf = bitnum = 0;
@@ -58,7 +58,7 @@ int itsex_decompress8(FILE *src, uint8 *dst, int len, int it215)
 		pos = 0;
 		do {
 			uint16 bits = read_bits(src, &bitbuf, &bitnum, left);
-			if (feof(src))
+			if (hio_eof(src))
 				return -1;
 
 			if (left < 7) {
@@ -68,7 +68,7 @@ int itsex_decompress8(FILE *src, uint8 *dst, int len, int it215)
 					goto unpack_byte;
 				bits = (read_bits(src, &bitbuf, &bitnum, 3)
 								+ 1) & 0xff;
-				if (feof(src))
+				if (hio_eof(src))
 					return -1;
 
 				left = ((uint8)bits < left) ?  (uint8)bits :
@@ -127,7 +127,7 @@ int itsex_decompress8(FILE *src, uint8 *dst, int len, int it215)
 	return 0;
 }
 
-int itsex_decompress16(FILE *src, int16 *dst, int len, int it215)
+int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
 {
 	uint32 size = 0;
 	uint32 block_count = 0;
@@ -140,7 +140,7 @@ int itsex_decompress16(FILE *src, int16 *dst, int len, int it215)
 	while (len) {
 		if (!block_count) {
 			block_count = 0x4000;
-			size = read16l(src);
+			size = hio_read16l(src);
 			left = 17;
 			temp = temp2 = 0;
 			bitbuf = bitnum = 0;
@@ -154,7 +154,7 @@ int itsex_decompress16(FILE *src, int16 *dst, int len, int it215)
 		pos = 0;
 		do {
 			uint32 bits = read_bits(src, &bitbuf, &bitnum, left);
-			if (feof(src))
+			if (hio_eof(src))
 				return -1;
 
 			if (left < 7) {
@@ -166,7 +166,7 @@ int itsex_decompress16(FILE *src, int16 *dst, int len, int it215)
 
 				bits = read_bits(src, &bitbuf, &bitnum, 4) + 1;
 
-				if (feof(src))
+				if (hio_eof(src))
 					return -1;
 
 				left = ((uint8)(bits & 0xff) < left) ?

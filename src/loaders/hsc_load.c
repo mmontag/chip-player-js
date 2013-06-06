@@ -18,8 +18,8 @@
  */
 
 
-static int hsc_test (FILE *, char *, const int);
-static int hsc_load (struct module_data *, FILE *, const int);
+static int hsc_test (HIO_HANDLE *, char *, const int);
+static int hsc_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader hsc_loader = {
     "HSC-Tracker",
@@ -27,14 +27,14 @@ const struct format_loader hsc_loader = {
     hsc_load
 };
 
-static int hsc_test(FILE *f, char *t, const int start)
+static int hsc_test(HIO_HANDLE *f, char *t, const int start)
 {
     int p, i, r, c;
     uint8 buf[1200];
 
-    fseek(f, 128 * 12, SEEK_CUR);
+    hio_seek(f, 128 * 12, SEEK_CUR);
 
-    if (fread(buf, 1, 51, f) != 51)
+    if (hio_read(buf, 1, 51, f) != 51)
 	return -1;
 
     for (p = i = 0; i < 51; i++) {
@@ -47,7 +47,7 @@ static int hsc_test(FILE *f, char *t, const int start)
 	return -1;		
 
     for (i = 0; i < p; i++) {
-	fread(buf, 1, 64 * 9 * 2, f);
+	hio_read(buf, 1, 64 * 9 * 2, f);
 	for (r = 0; r < 64; r++) {
 	    for (c = 0; c < 9; c++) {
 		uint8 n = buf[r * 9 * 2 + c * 2];
@@ -65,7 +65,7 @@ static int hsc_test(FILE *f, char *t, const int start)
     return 0;
 }
 
-static int hsc_load(struct module_data *m, FILE *f, const int start)
+static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int pat, i, r, c;
@@ -74,7 +74,7 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
 
     LOAD_INIT();
 
-    fread(buf, 1, 128 * 12, f);
+    hio_read(buf, 1, 128 * 12, f);
 
     x = buf;
     for (i = 0; i < 128; i++, x += 12) {
@@ -86,7 +86,7 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
 
     mod->ins = i;
 
-    fseek(f, start + 0, SEEK_SET);
+    hio_seek(f, start + 0, SEEK_SET);
 
     mod->chn = 9;
     mod->bpm = 135;
@@ -102,7 +102,7 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
     /* Read instruments */
     INSTRUMENT_INIT();
 
-    fread (buf, 1, 128 * 12, f);
+    hio_read (buf, 1, 128 * 12, f);
     sid = buf;
     for (i = 0; i < mod->ins; i++, sid += 12) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -120,13 +120,13 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
 
     /* Read orders */
     for (pat = i = 0; i < 51; i++) {
-	fread (&mod->xxo[i], 1, 1, f);
+	hio_read (&mod->xxo[i], 1, 1, f);
 	if (mod->xxo[i] & 0x80)
 	    break;			/* FIXME: jump line */
 	if (mod->xxo[i] > pat)
 	    pat = mod->xxo[i];
     }
-    fseek(f, 50 - i, SEEK_CUR);
+    hio_seek(f, 50 - i, SEEK_CUR);
     mod->len = i;
     mod->pat = pat + 1;
     mod->trk = mod->pat * mod->chn;
@@ -146,7 +146,7 @@ static int hsc_load(struct module_data *m, FILE *f, const int start)
 	TRACK_ALLOC (i);
         for (r = 0; r < mod->xxp[i]->rows; r++) {
             for (c = 0; c < 9; c++) {
-	        fread (e, 1, 2, f);
+	        hio_read (e, 1, 2, f);
 	        event = &EVENT (i, c, r);
 		if (e[0] & 0x80) {
 		    ins[c] = e[1] + 1;

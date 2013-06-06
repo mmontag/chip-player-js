@@ -19,8 +19,8 @@
 
 extern struct list_head *checked_format;
 
-static int pw_test(FILE *, char *, const int);
-static int pw_load(struct module_data *, FILE *, const int);
+static int pw_test(HIO_HANDLE *, char *, const int);
+static int pw_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader pw_loader = {
 	"prowizard",
@@ -56,12 +56,15 @@ int pw_test_format(FILE *f, char *t, const int start,
 	return extra == 0 ? 0 : -1;
 }
 
-static int pw_test(FILE *f, char *t, const int start)
+static int pw_test(HIO_HANDLE *f, char *t, const int start)
 {
-	return pw_test_format(f, t, start, NULL);
+	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
+		return -1;
+
+	return pw_test_format(f->f, t, start, NULL);
 }
 
-static int pw_load(struct module_data *m, FILE *f, const int start)
+static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -82,13 +85,13 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 	if ((fd = mkstemp(tmp)) < 0)
 		return -1;
 
-	if (pw_wizardry(fileno(f), fd, &name) < 0) {
+	if (pw_wizardry(fileno(f->f), fd, &name) < 0) {
 		close(fd);
 		unlink(tmp);
 		return -1;
 	}
 
-	if ((f = fdopen(fd, "w+b")) == NULL) {
+	if ((f = hio_open_fd(fd, "w+b")) == NULL) {
 		close(fd);
 		unlink(tmp);
 		return -1;
@@ -99,19 +102,19 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	fread(&mh.name, 20, 1, f);
+	hio_read(&mh.name, 20, 1, f);
 	for (i = 0; i < 31; i++) {
-		fread(&mh.ins[i].name, 22, 1, f);
-		mh.ins[i].size = read16b(f);
-		mh.ins[i].finetune = read8(f);
-		mh.ins[i].volume = read8(f);
-		mh.ins[i].loop_start = read16b(f);
-		mh.ins[i].loop_size = read16b(f);
+		hio_read(&mh.ins[i].name, 22, 1, f);
+		mh.ins[i].size = hio_read16b(f);
+		mh.ins[i].finetune = hio_read8(f);
+		mh.ins[i].volume = hio_read8(f);
+		mh.ins[i].loop_start = hio_read16b(f);
+		mh.ins[i].loop_size = hio_read16b(f);
 	}
-	mh.len = read8(f);
-	mh.restart = read8(f);
-	fread(&mh.order, 128, 1, f);
-	fread(&mh.magic, 4, 1, f);
+	mh.len = hio_read8(f);
+	mh.restart = hio_read8(f);
+	hio_read(&mh.order, 128, 1, f);
+	hio_read(&mh.magic, 4, 1, f);
 
 	if (memcmp(mh.magic, "M.K.", 4))
 		goto err;
@@ -174,7 +177,7 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 		TRACK_ALLOC(i);
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
-			fread(mod_event, 1, 4, f);
+			hio_read(mod_event, 1, 4, f);
 			decode_protracker_event(event, mod_event);
 		}
 	}
@@ -188,12 +191,12 @@ static int pw_load(struct module_data *m, FILE *f, const int start)
 		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
-	fclose(f);
+	hio_close(f);
 	unlink(tmp);
 	return 0;
 
 err:
-	fclose(f);
+	hio_close(f);
 	unlink(tmp);
 	return -1;
 }

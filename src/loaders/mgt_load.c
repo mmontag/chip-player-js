@@ -13,8 +13,8 @@
 #define MAGIC_MCS	MAGIC4(0xbd,'M','C','S')
 
 
-static int mgt_test (FILE *, char *, const int);
-static int mgt_load (struct module_data *, FILE *, const int);
+static int mgt_test (HIO_HANDLE *, char *, const int);
+static int mgt_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mgt_loader = {
 	"Megatracker (MGT)",
@@ -22,26 +22,26 @@ const struct format_loader mgt_loader = {
 	mgt_load
 };
 
-static int mgt_test(FILE *f, char *t, const int start)
+static int mgt_test(HIO_HANDLE *f, char *t, const int start)
 {
 	int sng_ptr;
 
-	if (read24b(f) != MAGIC_MGT)
+	if (hio_read24b(f) != MAGIC_MGT)
 		return -1;
-	read8(f);
-	if (read32b(f) != MAGIC_MCS)
+	hio_read8(f);
+	if (hio_read32b(f) != MAGIC_MCS)
 		return -1;
 
-	fseek(f, 18, SEEK_CUR);
-	sng_ptr = read32b(f);
-	fseek(f, start + sng_ptr, SEEK_SET);
+	hio_seek(f, 18, SEEK_CUR);
+	sng_ptr = hio_read32b(f);
+	hio_seek(f, start + sng_ptr, SEEK_SET);
 
 	read_title(f, t, 32);
 	
 	return 0;
 }
 
-static int mgt_load(struct module_data *m, FILE *f, const int start)
+static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -52,89 +52,89 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	read24b(f);		/* MGT */
-	ver = read8(f);
-	read32b(f);		/* MCS */
+	hio_read24b(f);		/* MGT */
+	ver = hio_read8(f);
+	hio_read32b(f);		/* MCS */
 
 	set_type(m, "Megatracker MGT v%d.%d", MSN(ver), LSN(ver));
 
-	mod->chn = read16b(f);
-	read16b(f);			/* number of songs */
-	mod->len = read16b(f);
-	mod->pat = read16b(f);
-	mod->trk = read16b(f);
-	mod->ins = mod->smp = read16b(f);
-	read16b(f);			/* reserved */
-	read32b(f);			/* reserved */
+	mod->chn = hio_read16b(f);
+	hio_read16b(f);			/* number of songs */
+	mod->len = hio_read16b(f);
+	mod->pat = hio_read16b(f);
+	mod->trk = hio_read16b(f);
+	mod->ins = mod->smp = hio_read16b(f);
+	hio_read16b(f);			/* reserved */
+	hio_read32b(f);			/* reserved */
 
-	sng_ptr = read32b(f);
-	seq_ptr = read32b(f);
-	ins_ptr = read32b(f);
-	pat_ptr = read32b(f);
-	trk_ptr = read32b(f);
-	smp_ptr = read32b(f);
-	read32b(f);			/* total smp len */
-	read32b(f);			/* unpacked trk size */
+	sng_ptr = hio_read32b(f);
+	seq_ptr = hio_read32b(f);
+	ins_ptr = hio_read32b(f);
+	pat_ptr = hio_read32b(f);
+	trk_ptr = hio_read32b(f);
+	smp_ptr = hio_read32b(f);
+	hio_read32b(f);			/* total smp len */
+	hio_read32b(f);			/* unpacked trk size */
 
-	fseek(f, start + sng_ptr, SEEK_SET);
+	hio_seek(f, start + sng_ptr, SEEK_SET);
 
-	fread(mod->name, 1, 32, f);
-	seq_ptr = read32b(f);
-	mod->len = read16b(f);
-	mod->rst = read16b(f);
-	mod->bpm = read8(f);
-	mod->spd = read8(f);
-	read16b(f);			/* global volume */
-	read8(f);			/* master L */
-	read8(f);			/* master R */
+	hio_read(mod->name, 1, 32, f);
+	seq_ptr = hio_read32b(f);
+	mod->len = hio_read16b(f);
+	mod->rst = hio_read16b(f);
+	mod->bpm = hio_read8(f);
+	mod->spd = hio_read8(f);
+	hio_read16b(f);			/* global volume */
+	hio_read8(f);			/* master L */
+	hio_read8(f);			/* master R */
 
 	for (i = 0; i < mod->chn; i++) {
-		read16b(f);		/* pan */
+		hio_read16b(f);		/* pan */
 	}
 	
 	MODULE_INFO();
 
 	/* Sequence */
 
-	fseek(f, start + seq_ptr, SEEK_SET);
+	hio_seek(f, start + seq_ptr, SEEK_SET);
 	for (i = 0; i < mod->len; i++)
-		mod->xxo[i] = read16b(f);
+		mod->xxo[i] = hio_read16b(f);
 
 	/* Instruments */
 
 	INSTRUMENT_INIT();
 
-	fseek(f, start + ins_ptr, SEEK_SET);
+	hio_seek(f, start + ins_ptr, SEEK_SET);
 
 	for (i = 0; i < mod->ins; i++) {
 		int c2spd, flags;
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		fread(mod->xxi[i].name, 1, 32, f);
-		sdata[i] = read32b(f);
-		mod->xxs[i].len = read32b(f);
-		mod->xxs[i].lps = read32b(f);
-		mod->xxs[i].lpe = mod->xxs[i].lps + read32b(f);
-		read32b(f);
-		read32b(f);
-		c2spd = read32b(f);
+		hio_read(mod->xxi[i].name, 1, 32, f);
+		sdata[i] = hio_read32b(f);
+		mod->xxs[i].len = hio_read32b(f);
+		mod->xxs[i].lps = hio_read32b(f);
+		mod->xxs[i].lpe = mod->xxs[i].lps + hio_read32b(f);
+		hio_read32b(f);
+		hio_read32b(f);
+		c2spd = hio_read32b(f);
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-		mod->xxi[i].sub[0].vol = read16b(f) >> 4;
-		read8(f);		/* vol L */
-		read8(f);		/* vol R */
+		mod->xxi[i].sub[0].vol = hio_read16b(f) >> 4;
+		hio_read8(f);		/* vol L */
+		hio_read8(f);		/* vol R */
 		mod->xxi[i].sub[0].pan = 0x80;
-		flags = read8(f);
+		flags = hio_read8(f);
 		mod->xxs[i].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxs[i].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
-		mod->xxi[i].sub[0].fin += 0 * read8(f);	// FIXME
-		read8(f);		/* unused */
-		read8(f);
-		read8(f);
-		read8(f);
-		read16b(f);
-		read32b(f);
-		read32b(f);
+		mod->xxi[i].sub[0].fin += 0 * hio_read8(f);	// FIXME
+		hio_read8(f);		/* unused */
+		hio_read8(f);
+		hio_read8(f);
+		hio_read8(f);
+		hio_read16b(f);
+		hio_read32b(f);
+		hio_read32b(f);
 
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxi[i].sub[0].sid = i;
@@ -158,11 +158,11 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 		int offset, rows;
 		uint8 b;
 
-		fseek(f, start + trk_ptr + i * 4, SEEK_SET);
-		offset = read32b(f);
-		fseek(f, start + offset, SEEK_SET);
+		hio_seek(f, start + trk_ptr + i * 4, SEEK_SET);
+		offset = hio_read32b(f);
+		hio_seek(f, start + offset, SEEK_SET);
 
-		rows = read16b(f);
+		rows = hio_read16b(f);
 		mod->xxt[i] = calloc(sizeof(struct xmp_track) +
 				sizeof(struct xmp_event) * rows, 1);
 		mod->xxt[i]->rows = rows;
@@ -171,23 +171,23 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 		for (j = 0; j < rows; j++) {
 			uint8 note, f2p;
 
-			b = read8(f);
+			b = hio_read8(f);
 			j += b & 0x03;
 
 			note = 0;
 			event = &mod->xxt[i]->event[j];
 			if (b & 0x04)
-				note = read8(f);
+				note = hio_read8(f);
 			if (b & 0x08)
-				event->ins = read8(f);
+				event->ins = hio_read8(f);
 			if (b & 0x10)
-				event->vol = read8(f);
+				event->vol = hio_read8(f);
 			if (b & 0x20)
-				event->fxt = read8(f);
+				event->fxt = hio_read8(f);
 			if (b & 0x40)
-				event->fxp = read8(f);
+				event->fxp = hio_read8(f);
 			if (b & 0x80)
-				f2p = read8(f);
+				f2p = hio_read8(f);
 
 			if (note == 1)
 				event->note = XMP_KEY_OFF;
@@ -280,14 +280,14 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
-	fseek(f, start + pat_ptr, SEEK_SET);
+	hio_seek(f, start + pat_ptr, SEEK_SET);
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
 
-		mod->xxp[i]->rows = read16b(f);
+		mod->xxp[i]->rows = hio_read16b(f);
 		for (j = 0; j < mod->chn; j++) {
-			mod->xxp[i]->index[j] = read16b(f) - 1;
+			mod->xxp[i]->index[j] = hio_read16b(f) - 1;
 		}
 	}
 
@@ -299,7 +299,7 @@ static int mgt_load(struct module_data *m, FILE *f, const int start)
 		if (mod->xxi[i].nsm == 0)
 			continue;
 
-		fseek(f, start + sdata[i], SEEK_SET);
+		hio_seek(f, start + sdata[i], SEEK_SET);
 		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 

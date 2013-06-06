@@ -25,8 +25,8 @@
 #include "asif.h"
 
 
-static int mtp_test (FILE *, char *, const int);
-static int mtp_load (struct module_data *, FILE *, const int);
+static int mtp_test (HIO_HANDLE *, char *, const int);
+static int mtp_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mtp_loader = {
 	"Soundsmith/MegaTracker (MTP)",
@@ -34,11 +34,11 @@ const struct format_loader mtp_loader = {
 	mtp_load
 };
 
-static int mtp_test(FILE *f, char *t, const int start)
+static int mtp_test(HIO_HANDLE *f, char *t, const int start)
 {
 	char buf[6];
 
-	if (fread(buf, 1, 6, f) < 6)
+	if (hio_read(buf, 1, 6, f) < 6)
 		return -1;
 
 	if (memcmp(buf, "SONGOK", 6) && memcmp(buf, "IAN92a", 6))
@@ -55,18 +55,17 @@ static int mtp_test(FILE *f, char *t, const int start)
 #define NAME_SIZE 255
 
 
-static int mtp_load(struct module_data *m, FILE *f, const int start)
+static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j, k;
 	uint8 buffer[25];
 	int blocksize;
-	FILE *s;
 
 	LOAD_INIT();
 
-	fread(buffer, 6, 1, f);
+	hio_read(buffer, 6, 1, f);
 
 	if (!memcmp(buffer, "SONGOK", 6))
 		set_type(m, "IIgs SoundSmith");
@@ -75,9 +74,9 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 	else
 		return -1;
 
-	blocksize = read16l(f);
-	mod->spd = read16l(f);
-	fseek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
+	blocksize = hio_read16l(f);
+	mod->spd = hio_read16l(f);
+	hio_seek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
 	mod->ins = mod->smp = 15;
 	INSTRUMENT_INIT();
@@ -85,24 +84,24 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		fread(buffer, 1, 22, f);
+		hio_read(buffer, 1, 22, f);
 		if (buffer[0]) {
 			buffer[buffer[0] + 1] = 0;
 			copy_adjust(mod->xxi[i].name, buffer + 1, 22);
 		}
-		read16l(f);		/* skip 2 reserved bytes */
-		mod->xxi[i].sub[0].vol = read8(f) >> 2;
+		hio_read16l(f);		/* skip 2 reserved bytes */
+		mod->xxi[i].sub[0].vol = hio_read8(f) >> 2;
 		mod->xxi[i].sub[0].pan = 0x80;
-		fseek(f, 5, SEEK_CUR);	/* skip 5 bytes */
+		hio_seek(f, 5, SEEK_CUR);	/* skip 5 bytes */
 	}
 
-	mod->len = read8(f) & 0x7f;
-	read8(f);
-	fread(mod->xxo, 1, 128, f);
+	mod->len = hio_read8(f) & 0x7f;
+	hio_read8(f);
+	hio_read(mod->xxo, 1, 128, f);
 
 	MODULE_INFO();
 
-	fseek(f, start + 600, SEEK_SET);
+	hio_seek(f, start + 600, SEEK_SET);
 
 	mod->chn = 14;
 	mod->pat = blocksize / (14 * 64);
@@ -122,7 +121,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
 			for (k = 0; k < mod->chn; k++) {
 				event = &EVENT(i, k, j);
-				event->note = read8(f);;
+				event->note = hio_read8(f);;
 				if (event->note)
 					event->note += 24;
 			}
@@ -135,7 +134,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 			for (k = 0; k < mod->chn; k++) {
 				uint8 x;
 				event = &EVENT(i, k, j);
-				x = read8(f);;
+				x = hio_read8(f);;
 				event->ins = x >> 4;
 
 				switch (x & 0x0f) {
@@ -164,7 +163,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
 			for (k = 0; k < mod->chn; k++) {
 				event = &EVENT(i, k, j);
-				event->fxp = read8(f);;
+				event->fxp = hio_read8(f);;
 
 				switch (event->fxt) {
 				case FX_VOLSET:
@@ -180,6 +179,7 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
+		HIO_HANDLE *s;
 		char filename[1024];
 
 		if (!mod->xxi[i].name[0])
@@ -190,9 +190,9 @@ static int mtp_load(struct module_data *m, FILE *f, const int start)
 			strncat(filename, "/", NAME_SIZE);
 		strncat(filename, (char *)mod->xxi[i].name, NAME_SIZE);
 
-		if ((s = fopen(filename, "rb")) != NULL) {
+		if ((s = hio_open_file(filename, "rb")) != NULL) {
 			asif_load(m, s, i);
-			fclose(s);
+			hio_close(s);
 		}
 
 #if 0

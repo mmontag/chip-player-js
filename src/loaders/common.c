@@ -52,7 +52,7 @@ int test_name(uint8 *s, int n)
 	return 0;
 }
 
-void read_title(FILE *f, char *t, int s)
+void read_title(HIO_HANDLE *f, char *t, int s)
 {
 	uint8 buf[XMP_NAME_SIZE];
 
@@ -64,7 +64,7 @@ void read_title(FILE *f, char *t, int s)
 
 	memset(t, 0, s + 1);
 
-	fread(buf, 1, s, f);
+	hio_read(buf, 1, s, f);
 	buf[s] = 0;
 	copy_adjust(t, buf, s);
 }

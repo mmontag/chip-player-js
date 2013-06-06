@@ -72,8 +72,8 @@ const struct mod_magic mod_magic[] = {
 };
 
 
-static int mod_test (FILE *, char *, const int);
-static int mod_load (struct module_data *, FILE *, const int);
+static int mod_test (HIO_HANDLE *, char *, const int);
+static int mod_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mod_loader = {
     "Protracker (MOD)",
@@ -81,15 +81,15 @@ const struct format_loader mod_loader = {
     mod_load
 };
 
-static int mod_test(FILE *f, char *t, const int start)
+static int mod_test(HIO_HANDLE *f, char *t, const int start)
 {
     int i;
     char buf[4];
     struct stat st;
     int smp_size, num_pat;
 
-    fseek(f, start + 1080, SEEK_SET);
-    if (fread(buf, 1, 4, f) < 4)
+    hio_seek(f, start + 1080, SEEK_SET);
+    if (hio_read(buf, 1, 4, f) < 4)
 	return -1;
 
     if (!strncmp(buf + 2, "CH", 2) && isdigit((int)buf[0]) && isdigit((int)buf[1])) {
@@ -117,20 +117,23 @@ static int mod_test(FILE *f, char *t, const int start)
      * formats with valid magic at offset 1080
      */
 
-    fseek(f, start + 20, SEEK_SET);
+    hio_seek(f, start + 20, SEEK_SET);
     for (i = 0; i < 31; i++) {
-	fseek(f, 22, SEEK_CUR);			/* Instrument name */
-	if (read16b(f) & 0x8000)		/* test length */
+	hio_seek(f, 22, SEEK_CUR);			/* Instrument name */
+	if (hio_read16b(f) & 0x8000)		/* test length */
 		return -1;
-	if (read8(f) & 0xf0)			/* test finetune */
+	if (hio_read8(f) & 0xf0)			/* test finetune */
 		return -1;
-	if (read8(f) > 0x40)			/* test volume */
+	if (hio_read8(f) > 0x40)			/* test volume */
 		return -1;
-	if (read16b(f) & 0x8000)		/* test loop start */
+	if (hio_read16b(f) & 0x8000)		/* test loop start */
 		return -1;
-	if (read16b(f) & 0x8000)		/* test loop size */
+	if (hio_read16b(f) & 0x8000)		/* test loop size */
 		return -1;
     }
+
+    if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
+	goto found;
 
     /* Test for UNIC tracker modules
      *
@@ -142,22 +145,22 @@ static int mod_test(FILE *f, char *t, const int start)
      */
 
     /* get file size */
-    fstat(fileno(f), &st);
+    hio_stat(f, &st);
     smp_size = 0;
-    fseek(f, start + 20, SEEK_SET);
+    hio_seek(f, start + 20, SEEK_SET);
 
     /* get samples size */
     for (i = 0; i < 31; i++) {
-	fseek(f, 22, SEEK_CUR);
-	smp_size += 2 * read16b(f);		/* Length in 16-bit words */
-	fseek(f, 6, SEEK_CUR);
+	hio_seek(f, 22, SEEK_CUR);
+	smp_size += 2 * hio_read16b(f);		/* Length in 16-bit words */
+	hio_seek(f, 6, SEEK_CUR);
     } 
 
     /* get number of patterns */
     num_pat = 0;
-    fseek(f, start + 952, SEEK_SET);
+    hio_seek(f, start + 952, SEEK_SET);
     for (i = 0; i < 128; i++) {
-	uint8 x = read8(f);
+	uint8 x = hio_read8(f);
 	if (x > 0x7f)
 		break;
 	if (x > num_pat)
@@ -169,7 +172,7 @@ static int mod_test(FILE *f, char *t, const int start)
 	return -1;
 
   found:
-    fseek(f, start + 0, SEEK_SET);
+    hio_seek(f, start + 0, SEEK_SET);
     read_title(f, t, 20);
 
     return 0;
@@ -190,7 +193,8 @@ static int is_st_ins (char *s)
     return 1;
 }
 
-static int mod_load(struct module_data *m, FILE *f, const int start)
+
+static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -214,22 +218,22 @@ static int mod_load(struct module_data *m, FILE *f, const int start)
 
     m->quirk |= QUIRK_MODRNG;
 
-    fread(&mh.name, 20, 1, f);
+    hio_read(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
-	fread(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
-	mh.ins[i].size = read16b(f);		/* Length in 16-bit words */
-	mh.ins[i].finetune = read8(f);		/* Finetune (signed nibble) */
-	mh.ins[i].volume = read8(f);		/* Linear playback volume */
-	mh.ins[i].loop_start = read16b(f);	/* Loop start in 16-bit words */
-	mh.ins[i].loop_size = read16b(f);	/* Loop size in 16-bit words */
+	hio_read(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
+	mh.ins[i].size = hio_read16b(f);		/* Length in 16-bit words */
+	mh.ins[i].finetune = hio_read8(f);		/* Finetune (signed nibble) */
+	mh.ins[i].volume = hio_read8(f);		/* Linear playback volume */
+	mh.ins[i].loop_start = hio_read16b(f);	/* Loop start in 16-bit words */
+	mh.ins[i].loop_size = hio_read16b(f);	/* Loop size in 16-bit words */
 
 	smp_size += 2 * mh.ins[i].size;
     }
-    mh.len = read8(f);
-    mh.restart = read8(f);
-    fread(&mh.order, 128, 1, f);
+    mh.len = hio_read8(f);
+    mh.restart = hio_read8(f);
+    hio_read(&mh.order, 128, 1, f);
     memset(magic, 0, 8);
-    fread(magic, 4, 1, f);
+    hio_read(magic, 4, 1, f);
 
     for (i = 0; mod_magic[i].ch; i++) {
 	if (!(strncmp (magic, mod_magic[i].magic, 4))) {
@@ -311,10 +315,10 @@ static int mod_load(struct module_data *m, FILE *f, const int start)
      */
 
     if (0x43c + mod->pat * 4 * mod->chn * 0x40 + smp_size < m->size) {
-	int pos = ftell(f);
-	fseek(f, start + 0x43c + mod->pat * 4 * mod->chn * 0x40 + smp_size, SEEK_SET);
-	fread(idbuffer, 1, 4, f);
-	fseek(f, start + pos, SEEK_SET);
+	int pos = hio_tell(f);
+	hio_seek(f, start + 0x43c + mod->pat * 4 * mod->chn * 0x40 + smp_size, SEEK_SET);
+	hio_read(idbuffer, 1, 4, f);
+	hio_seek(f, start + pos, SEEK_SET);
 
 	if (!memcmp(idbuffer, "FLEX", 4)) {
 	    tracker_id = TRACKER_FLEXTRAX;
@@ -535,7 +539,7 @@ skip_test:
 	TRACK_ALLOC (i);
 	for (j = 0; j < (64 * mod->chn); j++) {
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
-	    fread (mod_event, 1, 4, f);
+	    hio_read (mod_event, 1, 4, f);
 
 	    switch (tracker_id) {
 	    case TRACKER_NOISETRACKER:
@@ -565,12 +569,13 @@ skip_test:
 	flags = ptkloop ? SAMPLE_FLAG_FULLREP : 0;
 
 	if (ptsong) {
-	    FILE *s;
+	    HIO_HANDLE *s;
 	    char sn[256];
 	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
 	
-	    if ((s = fopen (sn, "rb"))) {
+	    if ((s = hio_open_file(sn, "rb"))) {
 	        load_sample(m, s, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		hio_close(s);
 	    }
 	} else {
 	    load_sample(m, f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);

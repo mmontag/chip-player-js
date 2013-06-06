@@ -19,8 +19,8 @@
 #define MAGIC_MED3	MAGIC4('M','E','D',3)
 
 
-static int med3_test(FILE *, char *, const int);
-static int med3_load (struct module_data *, FILE *, const int);
+static int med3_test(HIO_HANDLE *, char *, const int);
+static int med3_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader med3_loader = {
 	"MED 2.00 MED3 (MED)",
@@ -28,9 +28,9 @@ const struct format_loader med3_loader = {
 	med3_load
 };
 
-static int med3_test(FILE *f, char *t, const int start)
+static int med3_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (read32b(f) !=  MAGIC_MED3)
+	if (hio_read32b(f) !=  MAGIC_MED3)
 		return -1;
 
 	read_title(f, t, 0);
@@ -200,7 +200,7 @@ static void unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 }
 
 
-static int med3_load(struct module_data *m, FILE *f, const int start)
+static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j;
@@ -209,7 +209,7 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	read32b(f);
+	hio_read32b(f);
 
 	set_type(m, "MED 2.00 MED3");
 
@@ -220,7 +220,7 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 	for (i = 0; i < 32; i++) {
 		uint8 c, buf[40];
 		for (j = 0; j < 40; j++) {
-			c = read8(f);
+			c = hio_read8(f);
 			buf[j] = c;
 			if (c == 0)
 				break;
@@ -230,58 +230,58 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 	}
 
 	/* read instrument volumes */
-	mask = read32b(f);
+	mask = hio_read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		mod->xxi[i].sub[0].vol = mask & MASK ? read8(f) : 0;
+		mod->xxi[i].sub[0].vol = mask & MASK ? hio_read8(f) : 0;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].fin = 0;
 		mod->xxi[i].sub[0].sid = i;
 	}
 
 	/* read instrument loops */
-	mask = read32b(f);
+	mask = hio_read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		mod->xxs[i].lps = mask & MASK ? read16b(f) : 0;
+		mod->xxs[i].lps = mask & MASK ? hio_read16b(f) : 0;
 	}
 
 	/* read instrument loop length */
-	mask = read32b(f);
+	mask = hio_read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		uint32 lsiz = mask & MASK ? read16b(f) : 0;
+		uint32 lsiz = mask & MASK ? hio_read16b(f) : 0;
 		mod->xxs[i].len = mod->xxs[i].lps + lsiz;
 		mod->xxs[i].lpe = mod->xxs[i].lps + lsiz;
 		mod->xxs[i].flg = lsiz > 1 ? XMP_SAMPLE_LOOP : 0;
 	}
 
 	mod->chn = 4;
-	mod->pat = read16b(f);
+	mod->pat = hio_read16b(f);
 	mod->trk = mod->chn * mod->pat;
 
-	mod->len = read16b(f);
-	fread(mod->xxo, 1, mod->len, f);
-	mod->spd = read16b(f);
+	mod->len = hio_read16b(f);
+	hio_read(mod->xxo, 1, mod->len, f);
+	mod->spd = hio_read16b(f);
 	if (mod->spd > 10) {
 		mod->bpm = 125 * mod->spd / 33;
 		mod->spd = 6;
 	}
-	transp = read8s(f);
-	read8(f);			/* flags */
-	sliding = read16b(f);		/* sliding */
-	read32b(f);			/* jumping mask */
-	fseek(f, 16, SEEK_CUR);		/* rgb */
+	transp = hio_read8s(f);
+	hio_read8(f);			/* flags */
+	sliding = hio_read16b(f);		/* sliding */
+	hio_read32b(f);			/* jumping mask */
+	hio_seek(f, 16, SEEK_CUR);		/* rgb */
 
 	/* read midi channels */
-	mask = read32b(f);
+	mask = hio_read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		if (mask & MASK)
-			read8(f);
+			hio_read8(f);
 	}
 
 	/* read midi programs */
-	mask = read32b(f);
+	mask = hio_read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		if (mask & MASK)
-			read8(f);
+			hio_read8(f);
 	}
 	
 	MODULE_INFO();
@@ -309,10 +309,10 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		tracks = read8(f);
+		tracks = hio_read8(f);
 
-		b = read8(f);
-		convsz = read16b(f);
+		b = hio_read8(f);
+		convsz = hio_read16b(f);
 		conv = calloc(1, convsz + 16);
 		assert(conv);
 
@@ -321,30 +321,30 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
                 else if (b & M0F_LINEMSK0F)
 			*conv = 0xffffffff;
                 else
-			*conv = read32b(f);
+			*conv = hio_read32b(f);
 
                 if (b & M0F_LINEMSK10)
 			*(conv + 1) = 0L;
                 else if (b & M0F_LINEMSK1F)
 			*(conv + 1) = 0xffffffff;
                 else
-			*(conv + 1) = read32b(f);
+			*(conv + 1) = hio_read32b(f);
 
                 if (b & M0F_FXMSK00)
 			*(conv + 2) = 0L;
                 else if (b & M0F_FXMSK0F)
 			*(conv + 2) = 0xffffffff;
                 else
-			*(conv + 2) = read32b(f);
+			*(conv + 2) = hio_read32b(f);
 
                 if (b & M0F_FXMSK10)
 			*(conv + 3) = 0L;
                 else if (b & M0F_FXMSK1F)
 			*(conv + 3) = 0xffffffff;
                 else
-			*(conv + 3) = read32b(f);
+			*(conv + 3) = hio_read32b(f);
 
-		fread(conv + 4, 1, convsz, f);
+		hio_read(conv + 4, 1, convsz, f);
 
                 unpack_block(m, i, (uint8 *)conv);
 
@@ -355,13 +355,13 @@ static int med3_load(struct module_data *m, FILE *f, const int start)
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 
-	mask = read32b(f);
+	mask = hio_read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
 		if (~mask & MASK)
 			continue;
 
-		mod->xxs[i].len = read32b(f);
-		if (read16b(f))		/* type */
+		mod->xxs[i].len = hio_read32b(f);
+		if (hio_read16b(f))		/* type */
 			continue;
 
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);

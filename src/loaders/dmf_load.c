@@ -19,8 +19,8 @@
 #define MAGIC_DDMF	MAGIC4('D','D','M','F')
 
 
-static int dmf_test(FILE *, char *, const int);
-static int dmf_load (struct module_data *, FILE *, const int);
+static int dmf_test(HIO_HANDLE *, char *, const int);
+static int dmf_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader dmf_loader = {
 	"X-Tracker (DMF)",
@@ -28,12 +28,12 @@ const struct format_loader dmf_loader = {
 	dmf_load
 };
 
-static int dmf_test(FILE * f, char *t, const int start)
+static int dmf_test(HIO_HANDLE * f, char *t, const int start)
 {
-	if (read32b(f) != MAGIC_DDMF)
+	if (hio_read32b(f) != MAGIC_DDMF)
 		return -1;
 
-	fseek(f, 9, SEEK_CUR);
+	hio_seek(f, 9, SEEK_CUR);
 	read_title(f, t, 30);
 
 	return 0;
@@ -158,23 +158,23 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
  * IFF chunk handlers
  */
 
-static void get_sequ(struct module_data *m, int size, FILE *f, void *parm)
+static void get_sequ(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	read16l(f);	/* sequencer loop start */
-	read16l(f);	/* sequencer loop end */
+	hio_read16l(f);	/* sequencer loop start */
+	hio_read16l(f);	/* sequencer loop end */
 
 	mod->len = (size - 4) / 2;
 	if (mod->len > 255)
 		mod->len = 255;
 
 	for (i = 0; i < mod->len; i++)
-		mod->xxo[i] = read16l(f);
+		mod->xxo[i] = hio_read16l(f);
 }
 
-static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
+static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, r, chn;
@@ -183,8 +183,8 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 	int track_counter[32];
 	struct xmp_event *event;
 
-	mod->pat = read16l(f);
-	mod->chn = read8(f);
+	mod->pat = hio_read16l(f);
+	mod->chn = hio_read8(f);
 	mod->trk = mod->chn * mod->pat;
 
 	PATTERN_INIT();
@@ -193,12 +193,12 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		chn = read8(f);
-		read8(f);		/* beat */
-		mod->xxp[i]->rows = read16l(f);
+		chn = hio_read8(f);
+		hio_read8(f);		/* beat */
+		mod->xxp[i]->rows = hio_read16l(f);
 		TRACK_ALLOC(i);
 
-		patsize = read32l(f);
+		patsize = hio_read32l(f);
 
 		for (j = 0; j < chn; j++)
 			track_counter[j] = 0;
@@ -206,9 +206,9 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 		for (counter = r = 0; r < mod->xxp[i]->rows; r++) {
 			if (counter == 0) {
 				/* global track */
-				info = read8(f);
-				counter = info & 0x80 ? read8(f) : 0;
-				data = info & 0x3f ? read8(f) : 0;
+				info = hio_read8(f);
+				counter = info & 0x80 ? hio_read8(f) : 0;
+				data = info & 0x3f ? hio_read8(f) : 0;
 			} else {
 				counter--;
 			}
@@ -219,27 +219,27 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 				event = &EVENT(i, j, r);
 
 				if (track_counter[j] == 0) {
-					b = read8(f);
+					b = hio_read8(f);
 		
 					if (b & 0x80)
-						track_counter[j] = read8(f);
+						track_counter[j] = hio_read8(f);
 					if (b & 0x40)
-						event->ins = read8(f);
+						event->ins = hio_read8(f);
 					if (b & 0x20)
-						event->note = 24 + read8(f);
+						event->note = 24 + hio_read8(f);
 					if (b & 0x10)
-						event->vol = read8(f);
+						event->vol = hio_read8(f);
 					if (b & 0x08) {	/* instrument effect */
-						fxt = read8(f);
-						fxp = read8(f);
+						fxt = hio_read8(f);
+						fxp = hio_read8(f);
 					}
 					if (b & 0x04) {	/* note effect */
-						fxt = read8(f);
-						fxp = read8(f);
+						fxt = hio_read8(f);
+						fxp = hio_read8(f);
 					}
 					if (b & 0x02) {	/* volume effect */
-						fxt = read8(f);
-						fxp = read8(f);
+						fxt = hio_read8(f);
+						fxp = hio_read8(f);
 						switch (fxt) {
 						case 0x02:
 							event->fxt = FX_VOLSLIDE_DN;
@@ -255,14 +255,14 @@ static void get_patt(struct module_data *m, int size, FILE *f, void *parm)
 	}
 }
 
-static void get_smpi(struct module_data *m, int size, FILE *f, void *parm)
+static void get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 	int i, namelen, c3spd, flag;
 	uint8 name[30];
 
-	mod->ins = mod->smp = read8(f);
+	mod->ins = mod->smp = hio_read8(f);
 
 	INSTRUMENT_INIT();
 
@@ -273,28 +273,28 @@ static void get_smpi(struct module_data *m, int size, FILE *f, void *parm)
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		
-		namelen = read8(f);
-		x = namelen - fread(name, 1, namelen > 30 ? 30 : namelen, f);
+		namelen = hio_read8(f);
+		x = namelen - hio_read(name, 1, namelen > 30 ? 30 : namelen, f);
 		copy_adjust(mod->xxi[i].name, name, namelen);
 		name[namelen] = 0;
 		while (x--)
-			read8(f);
+			hio_read8(f);
 
-		mod->xxs[i].len = read32l(f);
-		mod->xxs[i].lps = read32l(f);
-		mod->xxs[i].lpe = read32l(f);
+		mod->xxs[i].len = hio_read32l(f);
+		mod->xxs[i].lps = hio_read32l(f);
+		mod->xxs[i].lpe = hio_read32l(f);
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
-		c3spd = read16l(f);
+		c3spd = hio_read16l(f);
 		c2spd_to_note(c3spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-		mod->xxi[i].sub[0].vol = read8(f);
+		mod->xxi[i].sub[0].vol = hio_read8(f);
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
-		flag = read8(f);
+		flag = hio_read8(f);
 		mod->xxs[i].flg = flag & 0x01 ? XMP_SAMPLE_LOOP : 0;
 		if (data->ver >= 8)
-			fseek(f, 8, SEEK_CUR);	/* library name */
-		read16l(f);	/* reserved -- specs say 1 byte only*/
-		read32l(f);	/* sampledata crc32 */
+			hio_seek(f, 8, SEEK_CUR);	/* library name */
+		hio_read16l(f);	/* reserved -- specs say 1 byte only*/
+		hio_read32l(f);	/* sampledata crc32 */
 
 		data->packtype[i] = (flag & 0x0c) >> 2;
 		D_(D_INFO "[%2X] %-30.30s %05x %05x %05x %c P%c %5d V%02x",
@@ -306,7 +306,7 @@ static void get_smpi(struct module_data *m, int size, FILE *f, void *parm)
 	}
 }
 
-static void get_smpd(struct module_data *m, int size, FILE *f, void *parm)
+static void get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -328,7 +328,7 @@ static void get_smpd(struct module_data *m, int size, FILE *f, void *parm)
 	assert(ibuf != NULL);
 
 	for (i = 0; i < mod->smp; i++) {
-		smpsize = read32l(f);
+		smpsize = hio_read32l(f);
 		if (smpsize == 0)
 			continue;
 
@@ -337,12 +337,12 @@ static void get_smpd(struct module_data *m, int size, FILE *f, void *parm)
 			load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 			break;
 		case 1:
-			fread(ibuf, smpsize, 1, f);
+			hio_read(ibuf, smpsize, 1, f);
 			unpack(sbuf, ibuf, ibuf + smpsize, mod->xxs[i].len);
 			load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)sbuf);
 			break;
 		default:
-			fseek(f, smpsize, SEEK_CUR);
+			hio_seek(f, smpsize, SEEK_CUR);
 		}
 	}
 
@@ -350,7 +350,7 @@ static void get_smpd(struct module_data *m, int size, FILE *f, void *parm)
 	free(sbuf);
 }
 
-static int dmf_load(struct module_data *m, FILE *f, const int start)
+static int dmf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
@@ -360,17 +360,17 @@ static int dmf_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	read32b(f);		/* DDMF */
+	hio_read32b(f);		/* DDMF */
 
-	data.ver = read8(f);
-	fread(tracker_name, 8, 1, f);
+	data.ver = hio_read8(f);
+	hio_read(tracker_name, 8, 1, f);
 	tracker_name[8] = 0;
 	snprintf(mod->type, XMP_NAME_SIZE, "%s DMF v%d",
 				tracker_name, data.ver);
 	tracker_name[8] = 0;
-	fread(mod->name, 30, 1, f);
-	fseek(f, 20, SEEK_CUR);
-	fread(date, 3, 1, f);
+	hio_read(mod->name, 30, 1, f);
+	hio_seek(f, 20, SEEK_CUR);
+	hio_read(date, 3, 1, f);
 	
 	MODULE_INFO();
 	D_(D_INFO "Creation date: %02d/%02d/%04d", date[0],
@@ -388,7 +388,7 @@ static int dmf_load(struct module_data *m, FILE *f, const int start)
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!feof(f)) {
+	while (!hio_eof(f)) {
 		iff_chunk(handle, m, f, &data);
 	}
 

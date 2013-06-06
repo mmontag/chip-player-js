@@ -19,8 +19,8 @@
 #define MAGIC_GMFS	MAGIC4('G','M','F','S')
 
 
-static int gdm_test(FILE *, char *, const int);
-static int gdm_load (struct module_data *, FILE *, const int);
+static int gdm_test(HIO_HANDLE *, char *, const int);
+static int gdm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader gdm_loader = {
 	"Generic Digital Music (GDM)",
@@ -28,16 +28,16 @@ const struct format_loader gdm_loader = {
 	gdm_load
 };
 
-static int gdm_test(FILE *f, char *t, const int start)
+static int gdm_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (read32b(f) != MAGIC_GDM)
+	if (hio_read32b(f) != MAGIC_GDM)
 		return -1;
 
-	fseek(f, start + 0x47, SEEK_SET);
-	if (read32b(f) != MAGIC_GMFS)
+	hio_seek(f, start + 0x47, SEEK_SET);
+	if (hio_read32b(f) != MAGIC_GMFS)
 		return -1;
 
-	fseek(f, start + 4, SEEK_SET);
+	hio_seek(f, start + 4, SEEK_SET);
 	read_title(f, t, 32);
 
 	return 0;
@@ -97,7 +97,7 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 }
 
 
-static int gdm_load(struct module_data *m, FILE *f, const int start)
+static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -108,17 +108,17 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	read32b(f);		/* skip magic */
-	fread(mod->name, 1, 32, f);
-	fseek(f, 32, SEEK_CUR);	/* skip author */
+	hio_read32b(f);		/* skip magic */
+	hio_read(mod->name, 1, 32, f);
+	hio_seek(f, 32, SEEK_CUR);	/* skip author */
 
-	fseek(f, 7, SEEK_CUR);
+	hio_seek(f, 7, SEEK_CUR);
 
-	vermaj = read8(f);
-	vermin = read8(f);
-	tracker = read16l(f);
-	tvmaj = read8(f);
-	tvmin = read8(f);
+	vermaj = hio_read8(f);
+	vermin = hio_read8(f);
+	tracker = hio_read16l(f);
+	tvmaj = hio_read8(f);
+	tvmin = hio_read8(f);
 
 	if (tracker == 0) {
 		set_type(m, "GDM %d.%02d (2GDM %d.%02d)",
@@ -128,7 +128,7 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 					vermaj, vermin, tvmaj, tvmin);
 	}
 
-	fread(panmap, 32, 1, f);
+	hio_read(panmap, 32, 1, f);
 	for (i = 0; i < 32; i++) {
 		if (panmap[i] != 0xff)
 			mod->chn = i + 1;
@@ -137,29 +137,29 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 		mod->xxc[i].pan = 0x80 + (panmap[i] - 8) * 16;
 	}
 
-	mod->gvl = read8(f);
-	mod->spd = read8(f);
-	mod->bpm = read8(f);
-	origfmt = read16l(f);
-	ord_ofs = read32l(f);
-	mod->len = read8(f) + 1;
-	pat_ofs = read32l(f);
-	mod->pat = read8(f) + 1;
-	ins_ofs = read32l(f);
-	smp_ofs = read32l(f);
-	mod->ins = mod->smp = read8(f) + 1;
+	mod->gvl = hio_read8(f);
+	mod->spd = hio_read8(f);
+	mod->bpm = hio_read8(f);
+	origfmt = hio_read16l(f);
+	ord_ofs = hio_read32l(f);
+	mod->len = hio_read8(f) + 1;
+	pat_ofs = hio_read32l(f);
+	mod->pat = hio_read8(f) + 1;
+	ins_ofs = hio_read32l(f);
+	smp_ofs = hio_read32l(f);
+	mod->ins = mod->smp = hio_read8(f) + 1;
 	mod->trk = mod->pat * mod->chn;
 	
 	MODULE_INFO();
 
-	fseek(f, start + ord_ofs, SEEK_SET);
+	hio_seek(f, start + ord_ofs, SEEK_SET);
 
 	for (i = 0; i < mod->len; i++)
-		mod->xxo[i] = read8(f);
+		mod->xxo[i] = hio_read8(f);
 
 	/* Read instrument data */
 
-	fseek(f, start + ins_ofs, SEEK_SET);
+	hio_seek(f, start + ins_ofs, SEEK_SET);
 
 	INSTRUMENT_INIT();
 
@@ -167,17 +167,17 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 		int flg, c4spd, vol, pan;
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-		fread(buffer, 32, 1, f);
+		hio_read(buffer, 32, 1, f);
 		copy_adjust(mod->xxi[i].name, buffer, 32);
-		fseek(f, 12, SEEK_CUR);		/* skip filename */
-		read8(f);			/* skip EMS handle */
-		mod->xxs[i].len = read32l(f);
-		mod->xxs[i].lps = read32l(f);
-		mod->xxs[i].lpe = read32l(f);
-		flg = read8(f);
-		c4spd = read16l(f);
-		vol = read8(f);
-		pan = read8(f);
+		hio_seek(f, 12, SEEK_CUR);		/* skip filename */
+		hio_read8(f);			/* skip EMS handle */
+		mod->xxs[i].len = hio_read32l(f);
+		mod->xxs[i].lps = hio_read32l(f);
+		mod->xxs[i].lpe = hio_read32l(f);
+		flg = hio_read8(f);
+		c4spd = hio_read16l(f);
+		vol = hio_read8(f);
+		pan = hio_read8(f);
 		
 		mod->xxi[i].sub[0].vol = vol > 0x40 ? 0x40 : vol;
 		mod->xxi[i].sub[0].pan = pan > 15 ? 0x80 : 0x80 + (pan - 8) * 16;
@@ -211,7 +211,7 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 
 	/* Read and convert patterns */
 
-	fseek(f, start + pat_ofs, SEEK_SET);
+	hio_seek(f, start + pat_ofs, SEEK_SET);
 
 	PATTERN_INIT();
 
@@ -224,11 +224,11 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 		mod->xxp[i]->rows = 64;
 		TRACK_ALLOC(i);
 
-		len = read16l(f);
+		len = hio_read16l(f);
 		len -= 2;
 
 		for (r = 0; len > 0; ) {
-			c = read8(f);
+			c = hio_read8(f);
 			len--;
 
 			if (c == 0) {
@@ -240,31 +240,31 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 			event = &EVENT (i, c & 0x1f, r);
 
 			if (c & 0x20) {		/* note and sample follows */
-				k = read8(f);
+				k = hio_read8(f);
 				event->note = 12 + 12 * MSN(k & 0x7f) + LSN(k);
-				event->ins = read8(f);
+				event->ins = hio_read8(f);
 				len -= 2;
 			}
 
 			if (c & 0x40) {		/* effect(s) follow */
 				do {
-					k = read8(f);
+					k = hio_read8(f);
 					len--;
 					switch ((k & 0xc0) >> 6) {
 					case 0:
 						event->fxt = k & 0x1f;
-						event->fxp = read8(f);
+						event->fxp = hio_read8(f);
 						len--;
 						fix_effect(&event->fxt, &event->fxp);
 						break;
 					case 1:
 						event->f2t = k & 0x1f;
-						event->f2p = read8(f);
+						event->f2p = hio_read8(f);
 						len--;
 						fix_effect(&event->f2t, &event->f2p);
 						break;
 					case 2:
-						read8(f);
+						hio_read8(f);
 						len--;
 					}
 				} while (k & 0x20);
@@ -274,7 +274,7 @@ static int gdm_load(struct module_data *m, FILE *f, const int start)
 
 	/* Read samples */
 
-	fseek(f, start + smp_ofs, SEEK_SET);
+	hio_seek(f, start + smp_ofs, SEEK_SET);
 
 	D_(D_INFO "Stored samples: %d", mod->smp);
 

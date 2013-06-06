@@ -14,8 +14,8 @@
 
 #include "loader.h"
 
-static int polly_test(FILE *, char *, const int);
-static int polly_load(struct module_data *, FILE *, const int);
+static int polly_test(HIO_HANDLE *, char *, const int);
+static int polly_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader polly_loader = {
 	"Polly Tracker",
@@ -29,24 +29,24 @@ const struct format_loader polly_loader = {
 #define SMP_OFS (NUM_PAT * PAT_SIZE + 256)
 
 
-static void decode_rle(uint8 *out, FILE *f, int size)
+static void decode_rle(uint8 *out, HIO_HANDLE *f, int size)
 {
 	int i;
 
 	for (i = 0; i < size; ) {
-		int x = read8(f);
+		int x = hio_read8(f);
 
-		if (feof(f))
+		if (hio_eof(f))
 			return;
 
 		if (x == 0xae) {
 			int n,v;
-			switch (n = read8(f)) {
+			switch (n = hio_read8(f)) {
 			case 0x01:
 				out[i++] = 0xae;
 				break;
 			default:
-				v = read8(f);
+				v = hio_read8(f);
 				while (n-- && i < size)
 					out[i++] = v;
 			}
@@ -56,12 +56,12 @@ static void decode_rle(uint8 *out, FILE *f, int size)
 	}
 }
 
-static int polly_test(FILE *f, char *t, const int start)
+static int polly_test(HIO_HANDLE *f, char *t, const int start)
 {
 	int i;
 	uint8 *buf;
 
-	if (read8(f) != 0xae)
+	if (hio_read8(f) != 0xae)
 		return -1;
 
 	if ((buf = malloc(0x10000)) == NULL)
@@ -93,7 +93,7 @@ static int polly_test(FILE *f, char *t, const int start)
 	return 0;
 }
 
-static int polly_load(struct module_data *m, FILE *f, const int start)
+static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -102,7 +102,7 @@ static int polly_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	read8(f);			/* skip 0xae */
+	hio_read8(f);			/* skip 0xae */
 	/*
 	 * File is RLE-encoded, escape is 0xAE (Aleksi Eeben's initials).
 	 * Actual 0xAE is encoded as 0xAE 0x01

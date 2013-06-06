@@ -19,8 +19,8 @@
 #include "period.h"
 
 
-static int amf_test(FILE *, char *, const int);
-static int amf_load (struct module_data *, FILE *, const int);
+static int amf_test(HIO_HANDLE *, char *, const int);
+static int amf_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader amf_loader = {
 	"DSMI Advanced Module Format (AMF)",
@@ -28,18 +28,18 @@ const struct format_loader amf_loader = {
 	amf_load
 };
 
-static int amf_test(FILE * f, char *t, const int start)
+static int amf_test(HIO_HANDLE * f, char *t, const int start)
 {
 	char buf[4];
 	int ver;
 
-	if (fread(buf, 1, 3, f) < 3)
+	if (hio_read(buf, 1, 3, f) < 3)
 		return -1;
 
 	if (buf[0] != 'A' || buf[1] != 'M' || buf[2] != 'F')
 		return -1;
 
-	ver = read8(f);
+	ver = hio_read8(f);
 	if (ver < 0x0a || ver > 0x0e)
 		return -1;
 
@@ -49,7 +49,7 @@ static int amf_test(FILE * f, char *t, const int start)
 }
 
 
-static int amf_load(struct module_data *m, FILE *f, const int start)
+static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j;
@@ -60,33 +60,33 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 
 	LOAD_INIT();
 
-	fread(buf, 1, 3, f);
-	ver = read8(f);
+	hio_read(buf, 1, 3, f);
+	ver = hio_read8(f);
 
-	fread(buf, 1, 32, f);
+	hio_read(buf, 1, 32, f);
 	strncpy(mod->name, (char *)buf, 32);
 	set_type(m, "DSMI %d.%d AMF", ver / 10, ver % 10);
 
-	mod->ins = read8(f);
-	mod->len = read8(f);
-	mod->trk = read16l(f);
-	mod->chn = read8(f);
+	mod->ins = hio_read8(f);
+	mod->len = hio_read8(f);
+	mod->trk = hio_read16l(f);
+	mod->chn = hio_read8(f);
 
 	mod->smp = mod->ins;
 	mod->pat = mod->len;
 
 	if (ver == 0x0a)
-		fread(buf, 1, 16, f);		/* channel remap table */
+		hio_read(buf, 1, 16, f);		/* channel remap table */
 
 	if (ver >= 0x0d) {
-		fread(buf, 1, 32, f);		/* panning table */
+		hio_read(buf, 1, 32, f);		/* panning table */
 		for (i = 0; i < 32; i++) {
 			mod->xxc->pan = 0x80 + 2 * (int8)buf[i];
 		}
-		mod->bpm = read8(f);
-		mod->spd = read8(f);
+		mod->bpm = hio_read8(f);
+		mod->spd = hio_read8(f);
 	} else if (ver >= 0x0b) {
-		fread(buf, 1, 16, f);
+		hio_read(buf, 1, 16, f);
 	}
 
 	MODULE_INFO();
@@ -112,9 +112,9 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 
 	for (i = 0; i < mod->pat; i++) {
 		PATTERN_ALLOC(i);
-		mod->xxp[i]->rows = ver >= 0x0e ? read16l(f) : 64;
+		mod->xxp[i]->rows = ver >= 0x0e ? hio_read16l(f) : 64;
 		for (j = 0; j < mod->chn; j++) {
-			uint16 t = read16l(f);
+			uint16 t = hio_read16l(f);
 			mod->xxp[i]->index[j] = t;
 		}
 	}
@@ -130,43 +130,43 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 	if (ver <= 0x0a) {
 		uint8 b;
 		int len, start, end;
-		long pos = ftell(f);
+		long pos = hio_tell(f);
 		for (i = 0; i < mod->ins; i++) {
-			b = read8(f);
+			b = hio_read8(f);
 			if (b != 0 && b != 1) {
 				ver = 0x09;
 				break;
 			}
-			fseek(f, 32 + 13, SEEK_CUR);
-			if (read32l(f) > 0x100000) {	/* check index */
+			hio_seek(f, 32 + 13, SEEK_CUR);
+			if (hio_read32l(f) > 0x100000) {	/* check index */
 				ver = 0x09;
 				break;
 			}
-			len = read32l(f);
+			len = hio_read32l(f);
 			if (len > 0x100000) {		/* check len */
 				ver = 0x09;
 				break;
 			}
-			if (read16l(f) == 0x0000) {	/* check c2spd */
+			if (hio_read16l(f) == 0x0000) {	/* check c2spd */
 				ver = 0x09;
 				break;
 			}
-			if (read8(f) > 0x40) {		/* check volume */
+			if (hio_read8(f) > 0x40) {		/* check volume */
 				ver = 0x09;
 				break;
 			}
-			start = read32l(f);
+			start = hio_read32l(f);
 			if (start > len) {		/* check loop start */
 				ver = 0x09;
 				break;
 			}
-			end = read32l(f);
+			end = hio_read32l(f);
 			if (end > len) {		/* check loop end */
 				ver = 0x09;
 				break;
 			}
 		}
-		fseek(f, pos, SEEK_SET);
+		hio_seek(f, pos, SEEK_SET);
 	}
 
 	for (i = 0; i < mod->ins; i++) {
@@ -175,21 +175,21 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-		b = read8(f);
+		b = hio_read8(f);
 		mod->xxi[i].nsm = b ? 1 : 0;
 
-		fread(buf, 1, 32, f);
+		hio_read(buf, 1, 32, f);
 		copy_adjust(mod->xxi[i].name, buf, 32);
 
-		fread(buf, 1, 13, f);	/* sample name */
-		read32l(f);		/* sample index */
+		hio_read(buf, 1, 13, f);	/* sample name */
+		hio_read32l(f);		/* sample index */
 
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxs[i].len = read32l(f);
-		c2spd = read16l(f);
+		mod->xxs[i].len = hio_read32l(f);
+		c2spd = hio_read16l(f);
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-		mod->xxi[i].sub[0].vol = read8(f);
+		mod->xxi[i].sub[0].vol = hio_read8(f);
 
 		/*
 		 * Andre Timmermans <andre.timmermans@atos.net> says:
@@ -203,11 +203,11 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 		 */
 
 		if (ver < 0x0a) {
-			mod->xxs[i].lps = read16l(f);
+			mod->xxs[i].lps = hio_read16l(f);
 			mod->xxs[i].lpe = mod->xxs[i].len - 1;
 		} else {
-			mod->xxs[i].lps = read32l(f);
-			mod->xxs[i].lpe = read32l(f);
+			mod->xxs[i].lps = hio_read32l(f);
+			mod->xxs[i].lpe = hio_read32l(f);
 		}
 
 		if (ver < 0x0a) {
@@ -231,7 +231,7 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 
 	for (i = 0; i < mod->trk; i++) {		/* read track table */
 		uint16 t;
-		t = read16l(f);
+		t = hio_read16l(f);
 		trkmap[i] = t;
 		if (t > newtrk) newtrk = t;
 /*printf("%d -> %d\n", i, t);*/
@@ -273,13 +273,13 @@ static int amf_load(struct module_data *m, FILE *f, const int start)
 			sizeof(struct xmp_event) * 64 - 1, 1);
 		mod->xxt[i]->rows = 64;
 
-		size = read24l(f);
+		size = hio_read24l(f);
 /*printf("TRACK %d SIZE %d\n", i, size);*/
 
 		for (j = 0; j < size; j++) {
-			t1 = read8(f);			/* row */
-			t2 = read8(f);			/* type */
-			t3 = read8(f);			/* parameter */
+			t1 = hio_read8(f);			/* row */
+			t2 = hio_read8(f);			/* type */
+			t3 = hio_read8(f);			/* parameter */
 /*printf("track %d row %d: %02x %02x %02x\n", i, t1, t1, t2, t3);*/
 
 			if (t1 == 0xff && t2 == 0xff && t3 == 0xff)
