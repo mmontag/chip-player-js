@@ -33,6 +33,12 @@ XMP_4.0 {
 XMP_4.1 {
   global:
     xmp_set_player;
+    xmp_get_player;
     xmp_play_buffer;
 } XMP_4.0;
+
+XMP_4.2 {
+  global:
+    xmp_get_player;
+} XMP_4.1;
 

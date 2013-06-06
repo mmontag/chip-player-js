@@ -54,6 +54,8 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 	/* End of module creation */
 
 	load_epilogue(ctx);
+
+	ctx->state = XMP_STATE_LOADED;
 }
 
 void new_event(struct context_data *ctx, int pat, int row, int chn, int note, int ins, int vol, int fxt, int fxp, int f2t, int f2p)

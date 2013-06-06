@@ -31,11 +31,18 @@ xmp_context xmp_create_context()
 		return NULL;
 	}
 
+	ctx->state = XMP_STATE_UNLOADED;
+
 	return (xmp_context)ctx;
 }
 
 void xmp_free_context(xmp_context opaque)
 {
+	struct context_data *ctx = (struct context_data *)opaque;
+
+	if (ctx->state > XMP_STATE_UNLOADED)
+		xmp_release_module(opaque);
+
 	free(opaque);
 }
 
@@ -46,6 +53,9 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
 	int seq, start;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return;
 
 	/* If dir is 0, we can jump to a different sequence */
 	if (dir == 0) {
@@ -99,8 +109,12 @@ int xmp_next_position(xmp_context opaque)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
+
 	if (p->pos < m->mod.len)
 		set_position(ctx, p->pos + 1, 1);
+
 	return p->pos;
 }
 
@@ -109,6 +123,9 @@ int xmp_prev_position(xmp_context opaque)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
 
 	if (p->pos == m->seq_data[p->sequence].entry_point) {
 		set_position(ctx, -1, -1);
@@ -123,6 +140,9 @@ int xmp_set_position(xmp_context opaque, int pos)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
+
 	set_position(ctx, pos, 0);
 
 	return p->pos;
@@ -133,6 +153,9 @@ void xmp_stop_module(xmp_context opaque)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 
+	if (ctx->state < XMP_STATE_PLAYING)
+		return;
+
 	p->pos = -2;
 }
 
@@ -140,6 +163,9 @@ void xmp_restart_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return;
 
 	p->loop_count = 0;
 	p->pos = -1;
@@ -151,6 +177,9 @@ int xmp_seek_time(xmp_context opaque, int time)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	int i, t;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
 
 	for (i = m->mod.len - 1; i >= 0; i--) {
 		int pat = m->mod.xxo[i];
@@ -179,6 +208,9 @@ int xmp_channel_mute(xmp_context opaque, int chn, int status)
 	struct player_data *p = &ctx->p;
 	int ret;
 
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
+
 	if (chn < 0 || chn >= XMP_MAX_CHANNELS) {
 		return -XMP_ERROR_INVALID;
 	}
@@ -199,6 +231,9 @@ int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	int ret;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
 
 	if (chn < 0 || chn >= XMP_MAX_CHANNELS) {
 		return -XMP_ERROR_INVALID;
@@ -232,6 +267,9 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
 
 	switch (parm) {
 	case XMP_PLAYER_AMP:
@@ -283,9 +321,12 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 #ifdef USE_VERSIONED_SYMBOLS
 extern int xmp_get_player_v41__(xmp_context, int)
 	__attribute__((alias("xmp_get_player_v40__")));
+extern int xmp_get_player_v42__(xmp_context, int)
+	__attribute__((alias("xmp_get_player_v40__")));
 
 asm(".symver xmp_get_player_v40__, xmp_get_player@XMP_4.0");
-asm(".symver xmp_get_player_v41__, xmp_get_player@@XMP_4.1");
+asm(".symver xmp_get_player_v41__, xmp_get_player@XMP_4.1");
+asm(".symver xmp_get_player_v42__, xmp_get_player@@XMP_4.2");
 
 #define xmp_get_player__ xmp_get_player_v40__
 #else
@@ -299,6 +340,9 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
 
 	switch (parm) {
 	case XMP_PLAYER_AMP:
@@ -322,6 +366,9 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	case XMP_PLAYER_SMPCTL:
 		ret = m->smpctl;
 		break;
+	case XMP_PLAYER_STATE:
+		ret = ctx->state;
+		break;
 	}
 
 	return ret;
@@ -336,6 +383,9 @@ void xmp_inject_event(xmp_context opaque, int channel, struct xmp_event *e)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return;
 
 	memcpy(&p->inject_event[channel], e, sizeof(struct xmp_event));
 	p->inject_event[channel]._flag = 1;

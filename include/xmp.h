@@ -46,6 +46,7 @@ extern "C" {
 #define XMP_PLAYER_FLAGS	4	/* Player flags */
 #define XMP_PLAYER_CFLAGS	5	/* Player flags for current module */
 #define XMP_PLAYER_SMPCTL	6	/* Sample control flags */
+#define XMP_PLAYER_STATE	7	/* Internal player state */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
@@ -55,6 +56,11 @@ extern "C" {
 /* dsp effect types */
 #define XMP_DSP_LOWPASS		(1 << 0) /* Lowpass filter effect */
 #define XMP_DSP_ALL		(XMP_DSP_LOWPASS)
+
+/* player state */
+#define XMP_STATE_UNLOADED	0	/* Context created */
+#define XMP_STATE_LOADED	1	/* Module loaded */
+#define XMP_STATE_PLAYING	2	/* Module playing */
 
 /* player flags */
 #define XMP_FLAGS_VBLANK	(1 << 0) /* Use vblank timing */
@@ -84,6 +90,7 @@ extern "C" {
 #define XMP_ERROR_DEPACK	5	/* Error depacking file */
 #define XMP_ERROR_SYSTEM	6	/* System error */
 #define XMP_ERROR_INVALID	7	/* Invalid parameter */
+#define XMP_ERROR_STATE		8	/* Invalid player state */
 
 struct xmp_channel {
 	int pan;			/* Channel pan (0x80 is center) */

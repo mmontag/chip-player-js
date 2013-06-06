@@ -532,6 +532,9 @@ int xmp_load_module(xmp_context opaque, char *path)
 		return -XMP_ERROR_FORMAT;
 	}
 
+	if (ctx->state > XMP_STATE_UNLOADED)
+		xmp_release_module(opaque);
+
 	split_name(path, &m->dirname, &m->basename);
 	m->filename = path;	/* For ALM, SSMT, etc */
 	m->size = st.st_size;
@@ -574,6 +577,8 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	load_epilogue(ctx);
 
+	ctx->state = XMP_STATE_LOADED;
+
 	return 0;
 
     err_depack:
@@ -588,6 +593,11 @@ void xmp_release_module(xmp_context opaque)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int i;
+
+	if (ctx->state > XMP_STATE_LOADED)
+		xmp_end_player(opaque);
+
+	ctx->state = XMP_STATE_UNLOADED;
 
 	D_(D_INFO "Freeing memory");
 
@@ -630,6 +640,9 @@ void xmp_release_module(xmp_context opaque)
 void xmp_scan_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+
+	if (ctx->state < XMP_STATE_LOADED)
+		return;
 
 	scan_sequences(ctx);
 }

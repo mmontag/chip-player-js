@@ -866,8 +866,16 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	if (rate < XMP_MIN_SRATE || rate > XMP_MAX_SRATE)
 		return -XMP_ERROR_INVALID;
 
+	if (ctx->state < XMP_STATE_LOADED)
+		return -XMP_ERROR_STATE;
+
+	if (ctx->state > XMP_STATE_LOADED)
+		xmp_end_player(opaque);
+
 	if (mixer_on(ctx, rate, format, m->c4rate) < 0)
 		return -XMP_ERROR_INTERNAL;
+
+	ctx->state = XMP_STATE_PLAYING;
 
 	p->gvol = m->volbase;
 	p->pos = p->ord = 0;
@@ -1118,6 +1126,11 @@ void xmp_end_player(xmp_context opaque)
 	struct channel_data *xc;
 	int i;
 
+	if (ctx->state < XMP_STATE_PLAYING)
+		return;
+
+	ctx->state = XMP_STATE_LOADED;
+
 	/* Free channel extras */
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		xc = &p->xc_data[i];
@@ -1145,6 +1158,9 @@ void xmp_get_module_info(xmp_context opaque, struct xmp_module_info *info)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 
+	if (ctx->state < XMP_STATE_LOADED)
+		return;
+
 	memcpy(info->md5, m->md5, 16);
 	info->mod = mod;
 	info->comment = m->comment;
@@ -1161,6 +1177,9 @@ void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	int chn, i;
+
+	if (ctx->state < XMP_STATE_LOADED)
+		return;
 
 	chn = mod->chn;
 
