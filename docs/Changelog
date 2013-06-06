@@ -1,8 +1,10 @@
 Stable versions
 ---------------
 
-4.1.6 ():
+4.2.0 ():
 	- ignore invalid Noisetracker effects
+	- add API call to load a module from a buffer in memory
+	- add API call to read the player state (loaded, playing, etc)
 
 4.1.5 (20130527):
 	Fix bugs reported by Andreas Falkenhahn:
