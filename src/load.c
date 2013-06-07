@@ -608,6 +608,9 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	m->basename = NULL;
 	m->size = 0;
 
+	if (ctx->state > XMP_STATE_UNLOADED)
+		xmp_release_module(opaque);
+
 	load_prologue(ctx);
 
 	D_(D_WARN "load");
@@ -641,6 +644,8 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	}
 
 	load_epilogue(ctx);
+
+	ctx->state = XMP_STATE_LOADED;
 
 	return 0;
 }
