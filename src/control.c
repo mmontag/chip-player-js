@@ -347,7 +347,7 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
 
-	if (ctx->state < XMP_STATE_PLAYING)
+	if (parm != XMP_PLAYER_STATE && ctx->state < XMP_STATE_PLAYING)
 		return -XMP_ERROR_STATE;
 
 	switch (parm) {
