@@ -313,6 +313,12 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 		m->smpctl = val;
 		ret = 0;
 		break;
+	case XMP_PLAYER_VOLUME:
+		if (val >= 0 && val <= 200) {
+			p->master_vol = val;
+			ret = 0;
+		}
+		break;
 	}
 
 	return ret;
@@ -365,6 +371,9 @@ int xmp_get_player__(xmp_context opaque, int parm)
 		break;
 	case XMP_PLAYER_SMPCTL:
 		ret = m->smpctl;
+		break;
+	case XMP_PLAYER_VOLUME:
+		ret = p->master_vol;
 		break;
 	case XMP_PLAYER_STATE:
 		ret = ctx->state;

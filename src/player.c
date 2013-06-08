@@ -343,6 +343,8 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
+	finalvol = finalvol * p->master_vol / 100;
+
 	xc->info_finalvol = finalvol;
 
 	virt_setvol(ctx, chn, finalvol);
@@ -877,6 +879,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 
 	ctx->state = XMP_STATE_PLAYING;
 
+	p->master_vol = 100;
 	p->gvol = m->volbase;
 	p->pos = p->ord = 0;
 	p->frame = -1;
