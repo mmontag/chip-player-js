@@ -31,8 +31,7 @@
 #include "player.h"
 #include "synth.h"
 #include "mixer.h"
-#include "med_extras.h"
-#include "hmn_extras.h"
+#include "extras.h"
 
 /* Values for multi-retrig */
 static const struct retrig_control rval[] = {
@@ -112,12 +111,7 @@ static void reset_channel(struct context_data *ctx)
 		extra = xc->extra;
 		memset(xc, 0, sizeof (struct channel_data));
 		xc->extra = extra;
-
-		if (HAS_MED_CHANNEL_EXTRAS(*m))
-			med_reset_channel_extras(xc);
-		else if (HAS_HMN_CHANNEL_EXTRAS(*m))
-			hmn_reset_channel_extras(xc);
-
+		reset_channel_extras(ctx, xc);
 		xc->ins = xc->key = -1;
 	}
 
@@ -290,12 +284,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		return;
 	}
 
-        if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		finalvol = MED_CHANNEL_EXTRAS(*xc)->volume * xc->volume / 64;
-	else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		finalvol = HMN_CHANNEL_EXTRAS(*xc)->volume * xc->volume / 64;
-	else
-		finalvol = xc->volume;
+	finalvol = extras_get_volume(ctx, xc);
 
 	if (TEST(TREMOLO))
 		finalvol += get_lfo(&xc->tremolo) / 128;
@@ -390,9 +379,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	period = xc->period + vibrato;
-	if (HAS_MED_CHANNEL_EXTRAS(*xc))
-		period += med_change_period(ctx, xc);
+	period = xc->period + vibrato + extras_get_period(ctx, xc);
 
 	linear_bend = period_to_bend(period, xc->note, HAS_QUIRK(QUIRK_MODRNG),
 					xc->gliss, HAS_QUIRK(QUIRK_LINEAR));
@@ -413,10 +400,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		linear_bend += (100 << 7) * arp;
 	}
 
-	if (HAS_MED_CHANNEL_EXTRAS(*xc))
-		linear_bend += med_linear_bend(ctx, xc);
-	else if (HAS_HMN_CHANNEL_EXTRAS(*xc))
-		linear_bend += hmn_linear_bend(ctx, xc);
+	linear_bend += extras_get_linear_bend(ctx, xc);
 
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
@@ -675,12 +659,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	if (!IS_VALID_INSTRUMENT(xc->ins))
 		return;
 
-	/* Process MED synth instruments */
-        if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		med_play_extras(ctx, chn, xc, t == 0 && TEST(NEW_INS|NEW_NOTE));
-	/* Process His Master's Noisetracker synth instruments */
-        else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		hmn_play_extras(ctx, chn, xc, t == 0 && TEST(NEW_INS|NEW_NOTE));
+	play_extras(ctx, xc, chn, t == 0 && TEST(NEW_INS|NEW_NOTE));
 
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {
@@ -942,13 +921,8 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		struct channel_data *xc = &p->xc_data[i];
-		if (HAS_MED_MODULE_EXTRAS(*m)) {
-			if (med_new_channel_extras(xc) < 0)
-				goto err2;
-		} else if (HAS_HMN_MODULE_EXTRAS(*m)) {
-			if (hmn_new_channel_extras(xc) < 0)
-				goto err2;
-		}
+		if (new_channel_extras(ctx, xc) < 0)
+			goto err2;
 	}
 
 	if (m->synth->init(ctx, s->freq) < 0) {
@@ -1137,10 +1111,7 @@ void xmp_end_player(xmp_context opaque)
 	/* Free channel extras */
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		xc = &p->xc_data[i];
-		if (HAS_MED_CHANNEL_EXTRAS(*m))
-			med_release_channel_extras(xc);
-		else if (HAS_HMN_CHANNEL_EXTRAS(*m))
-			hmn_release_channel_extras(xc);
+		release_channel_extras(ctx, xc);
 	}
 
 	virt_off(ctx);

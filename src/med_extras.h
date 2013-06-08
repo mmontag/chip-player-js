@@ -56,7 +56,7 @@ struct med_module_extras {
 int med_change_period(struct context_data *, struct channel_data *);
 int med_linear_bend(struct context_data *, struct channel_data *);
 int med_get_vibrato(struct channel_data *);
-void med_play_extras(struct context_data *, int, struct channel_data *, int);
+void med_play_extras(struct context_data *, struct channel_data *, int, int);
 int med_new_instrument_extras(struct xmp_instrument *);
 int med_new_channel_extras(struct channel_data *);
 void med_reset_channel_extras(struct channel_data *);
