@@ -1088,7 +1088,7 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 			xmp_get_frame_info(opaque, &fi);
 
 			/* Check end of module */
-			if (ret < 0 || (fi.loop_count > 0 && fi.loop_count >= loop)) {
+			if (ret < 0 || (loop > 0 && fi.loop_count >= loop)) {
 				/* Start of frame, return end of replay */
 				if (filled == 0) {
 					consumed = 0;
