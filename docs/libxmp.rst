@@ -1,5 +1,5 @@
 
-Libxmp 4.1 API documentation
+Libxmp 4.2 API documentation
 ============================
 
 .. contents:: `Contents`
@@ -35,6 +35,10 @@ Concepts
   module authors such as Skaven commonly place extra patterns at the end of
   the module.
 
+* **State:**
+  The player can be in one of three possible states: *unloaded*, *loaded*,
+  or *playing*. The player is in unloaded state after context creation,
+  changing to other states when a module is loaded or played.
 
 A simple example
 ----------------
@@ -101,6 +105,7 @@ error. Error codes are::
   -XMP_ERROR_LOAD       /* Error loading file */
   -XMP_ERROR_DEPACK     /* Error depacking file */
   -XMP_ERROR_SYSTEM     /* System error */
+  -XMP_ERROR_STATE      /* Incorrect player state */
 
 If a system error occurs, the specific error is set in ``errno``.
 
@@ -122,6 +127,10 @@ if replay should stop.
 Use `xmp_end_player()`_, `xmp_release_module()`_ and
 `xmp_free_context()`_ to release memory and end replay.
 
+
+.. raw:: pdf
+
+    PageBreak
 
 API reference
 -------------
@@ -178,7 +187,7 @@ void xmp_free_context(xmp_context c)
 ````````````````````````````````````
 
   Destroy a player context previously created using `xmp_create_context()`_.
- 
+
   **Parameters:**
     :c:
       the player context handle.
@@ -192,7 +201,8 @@ Module loading
 int xmp_test_module(char \*path, struct xmp_test_info \*test_info)
 ``````````````````````````````````````````````````````````````````
 
-  Test if a file is a valid module.
+  Test if a file is a valid module. Testing a file does not affect the
+  current player context or any currently loaded module.
  
   **Parameters:**
     :path: pathname of the module to test.
@@ -219,7 +229,7 @@ int xmp_load_module(xmp_context c, char \*path)
 ```````````````````````````````````````````````
 
   Load a module into the specified player context.
- 
+
   **Parameters:**
     :c: the player context handle.
  
@@ -233,13 +243,39 @@ int xmp_load_module(xmp_context c, char \*path)
     file loading failed, or ``-XMP_ERROR_SYSTEM`` in case of a system error
     (the system error code is set in ``errno``).
 
+.. _xmp_load_module_from_memory():
+
+int xmp_load_module_from_memory(xmp_context c, void \*mem, long size)
+`````````````````````````````````````````````````````````````````````
+
+  *[Added in libxmp 4.2]* Load a module from memory into the specified
+  player context.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :mem: a pointer to the module file image in memory. Multi-file modules
+      or compressed modules can't be loaded from memory.
+ 
+    :size: the size of the module, or 0 if the size is unknown or not
+      specified. If size is set to 0 certain module formats won't be
+      recognized, the MD5 digest will not be set, and module-specific
+      quirks won't be applied.
+ 
+  **Returns:**
+    0 if sucessful, or a negative error code in case of error.
+    Error codes can be ``-XMP_ERROR_FORMAT`` in case of an unrecognized file
+    format, ``-XMP_ERROR_LOAD`` if the file format was recognized but the
+    file loading failed, or ``-XMP_ERROR_SYSTEM`` in case of a system error
+    (the system error code is set in ``errno``).
+
 .. _xmp_release_module():
 
 void xmp_release_module(xmp_context c)
 ``````````````````````````````````````
 
   Release memory allocated by a module from the specified player context.
- 
+
   **Parameters:**
     :c: the player context handle.
 
@@ -315,7 +351,7 @@ int xmp_start_player(xmp_context c, int rate, int format)
 `````````````````````````````````````````````````````````
 
   Start playing the currently loaded module.
- 
+
   **Parameters:**
     :c: the player context handle.
  
@@ -349,32 +385,6 @@ int xmp_play_frame(xmp_context c)
 
   **Returns:**
     0 if sucessful or -1 if the module was stopped.
-
-.. _xmp_play_buffer():
-
-int xmp_play_buffer(xmp_context c, void \*buffer, int size, int loop)
-`````````````````````````````````````````````````````````````````````
-
-  *[Added in libxmp 4.1]* Fill the buffer with PCM data up to the specified
-  size. This is a convenience function that calls `xmp_play_frame()`_
-  internally to fill the user-supplied buffer -- don't call both functions
-  in the same replay loop, choose one of them. If you don't need equally
-  sized data chunks, `xmp_play_frame()`_ will result in better performance.
-
-  **Parameters:**
-    :c: the player context handle.
-
-    :buffer: the buffer to fill with PCM data, or NULL to reset the
-     internal state.
-
-    :size: buffer size in bytes.
-
-    :loop: stop replay when the loop counter reaches the specified
-     value, or 0 to disable loop checking.
-
-  **Returns:**
-    0 if sucessful or -1 if module was stopped or the loop counter was
-    reached.
 
 .. _xmp_get_frame_info():
 
@@ -431,6 +441,32 @@ void xmp_get_frame_info(xmp_context c, struct xmp_frame_info \*info)
   **Returns:**
     0 if sucessful or -1 if the module was stopped.
 
+.. _xmp_play_buffer():
+
+int xmp_play_buffer(xmp_context c, void \*buffer, int size, int loop)
+`````````````````````````````````````````````````````````````````````
+
+  *[Added in libxmp 4.1]* Fill the buffer with PCM data up to the specified
+  size. This is a convenience function that calls `xmp_play_frame()`_
+  internally to fill the user-supplied buffer -- don't call both functions
+  in the same replay loop, choose one of them. If you don't need equally
+  sized data chunks, `xmp_play_frame()`_ will result in better performance.
+
+  **Parameters:**
+    :c: the player context handle.
+
+    :buffer: the buffer to fill with PCM data, or NULL to reset the
+     internal state.
+
+    :size: buffer size in bytes.
+
+    :loop: stop replay when the loop counter reaches the specified
+     value, or 0 to disable loop checking.
+
+  **Returns:**
+    0 if sucessful or -1 if module was stopped or the loop counter was
+    reached.
+
 .. _xmp_end_player():
 
 void xmp_end_player(xmp_context c)
@@ -456,7 +492,8 @@ int xmp_next_position(xmp_context c)
     :c: the player context handle.
  
   **Returns:**
-    The new position index.
+    The new position index, or ``-XMP_ERROR_STATE`` if the player is not
+    in playing state.
 
 .. _xmp_prev_position():
 
@@ -469,7 +506,8 @@ int xmp_prev_position(xmp_context c)
     :c: the player context handle.
 
   **Returns:**
-    The new position index.
+    The new position index, or ``-XMP_ERROR_STATE`` if the player is not
+    in playing state.
 
 .. _xmp_set_position():
 
@@ -484,7 +522,8 @@ int xmp_set_position(xmp_context c, int pos)
     :pos: the position index to set.
  
   **Returns:**
-    The new position index.
+    The new position index, or ``-XMP_ERROR_STATE`` if the player is not
+    in playing state.
 
 .. _xmp_stop_module():
 
@@ -519,7 +558,8 @@ int xmp_seek_time(xmp_context c, int time)
     :time: time to seek in milliseconds.
 
   **Returns:**
-    The new position index.
+    The new position index, or ``-XMP_ERROR_STATE`` if the player is not
+    in playing state.
 
 .. _xmp_channel_mute():
 
@@ -537,7 +577,8 @@ int xmp_channel_mute(xmp_context c, int channel, int status)
       current channel status.
  
   **Returns:**
-    The previous channel status.
+    The previous channel status, or ``-XMP_ERROR_STATE`` if the player is not
+    in playing state.
 
 .. _xmp_channel_vol():
 
@@ -555,7 +596,9 @@ int xmp_channel_vol(xmp_context c, int channel, int vol)
       the current volume.
  
   **Returns:**
-    The previous channel volume.
+    The previous channel volume, or ``-XMP_ERROR_STATE`` if the player is not
+    in playing state.
+
 
 .. _xmp_inject_event():
 
@@ -587,6 +630,58 @@ void xmp_inject_event(xmp_context c, int channel, struct xmp_event \*event)
 Player parameter setting
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _xmp_set_instrument_path():
+
+int xmp_set_instrument_path(xmp_context c, char \*path)
+```````````````````````````````````````````````````````
+
+  Set the path to retrieve external instruments or samples. Used by some
+  formats (such as MED2) to read sample files from a different directory
+  in the filesystem.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :path: the path to retrieve instrument files.
+ 
+  **Returns:**
+    0 if the instrument path was correctly set, or ``-XMP_ERROR_SYSTEM``
+    in case of error (the system error code is set in ``errno``).
+
+.. _xmp_get_player():
+
+int xmp_get_player(xmp_context c, int param)
+````````````````````````````````````````````
+
+  Retrieve current value of the specified player parameter.
+ 
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :param: player parameter to get.
+      Valid parameters are::
+
+        XMP_PLAYER_AMP      /* Amplification factor */
+        XMP_PLAYER_MIX      /* Stereo mixing */
+        XMP_PLAYER_INTERP   /* Interpolation type */
+        XMP_PLAYER_DSP      /* DSP effect flags */
+        XMP_PLAYER_FLAGS    /* Player flags */
+        XMP_PLAYER_CFLAGS   /* Player flags for current module*/
+        XMP_PLAYER_SMPCTL   /* Control sample loading */
+        XMP_PLAYER_VOLUME   /* Player master volume */
+        XMP_PLAYER_STATE    /* Current player state*/
+
+      See ``xmp_set_player`` for the list of valid values for each parameter.
+      Valid states are::
+
+        XMP_STATE_UNLOADED  /* Context created */
+        XMP_STATE_LOADED    /* Module loaded */
+        XMP_STATE_PLAYING   /* Module playing */
+
+  **Returns:**
+    The parameter value, or ``-XMP_ERROR_STATE`` if the parameter is not
+    ``XMP_PLAYER_STATE`` and the player is not in playing state.
+
 .. _xmp_set_player():
 
 int xmp_set_player(xmp_context c, int param, int val)
@@ -605,6 +700,7 @@ int xmp_set_player(xmp_context c, int param, int val)
         XMP_PLAYER_FLAGS    /* Player flags */
         XMP_PLAYER_CFLAGS   /* Player flags for current module*/
         XMP_PLAYER_SMPCTL   /* Control sample loading */
+        XMP_PLAYER_VOLUME   /* Player master volume */
 
     :val: the value to set. Valid values are:
 
@@ -641,40 +737,10 @@ int xmp_set_player(xmp_context c, int param, int val)
         loading large sample data, and is useful when duration information
         is needed for a module that won't be played immediately.
 
+      * *[Added in libxmp 4.2]* Set the player master volume, in a 0-100 scale.
+
   **Returns:**
-    0 if parameter was correctly set, or ``-XMP_ERROR_INVALID`` if
-    parameter or values are out of the valid ranges.
+    0 if parameter was correctly set, ``-XMP_ERROR_INVALID`` if
+    parameter or values are out of the valid ranges, or ``-XMP_ERROR_STATE``
+    if the player is not in playing state.
 
-.. _xmp_get_player():
-
-int xmp_get_player(xmp_context c, int param)
-````````````````````````````````````````````
-
-  Retrieve current value of the specified mixer parameter.
- 
-  **Parameters:**
-    :c: the player context handle.
- 
-    :param: player parameter to get. See `xmp_set_player()`_ for a list
-      of valid parameters.
- 
-  **Returns:**
-    The parameter value.
-
-.. _xmp_set_instrument_path():
-
-int xmp_set_instrument_path(xmp_context c, char \*path)
-```````````````````````````````````````````````````````
-
-  Set the path to retrieve external instruments or samples. Used by some
-  formats (such as MED2) to read sample files from a different directory
-  in the filesystem.
-
-  **Parameters:**
-    :c: the player context handle.
- 
-    :path: the path to retrieve instrument files.
- 
-  **Returns:**
-    0 if the instrument path was correctly set, or ``-XMP_ERROR_SYSTEM``
-    in case of error (the system error code is set in ``errno``).
