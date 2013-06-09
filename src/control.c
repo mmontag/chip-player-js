@@ -319,6 +319,12 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 			ret = 0;
 		}
 		break;
+	case XMP_PLAYER_RVOLUME:
+		if (val >= 0 && val <= 200) {
+			p->res_vol = val;
+			ret = 0;
+		}
+		break;
 	}
 
 	return ret;
@@ -374,6 +380,9 @@ int xmp_get_player__(xmp_context opaque, int parm)
 		break;
 	case XMP_PLAYER_VOLUME:
 		ret = p->master_vol;
+		break;
+	case XMP_PLAYER_RVOLUME:
+		ret = p->res_vol;
 		break;
 	case XMP_PLAYER_STATE:
 		ret = ctx->state;

@@ -332,7 +332,10 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	finalvol = finalvol * p->master_vol / 100;
+	if (chn < m->mod.chn)
+		finalvol = finalvol * p->master_vol / 100;
+	else
+		finalvol = finalvol * p->res_vol / 100;
 
 	xc->info_finalvol = finalvol;
 
@@ -707,7 +710,7 @@ static void inject_event(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	int chn;
 	
-	for (chn = 0; chn < mod->chn; chn++) {
+	for (chn = 0; chn < mod->chn + p->res_chn; chn++) {
 		struct xmp_event *e = &p->inject_event[chn];
 		if (e->_flag > 0) {
 			read_event(ctx, e, chn);
@@ -859,6 +862,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	ctx->state = XMP_STATE_PLAYING;
 
 	p->master_vol = 100;
+	p->res_vol = 100;
 	p->gvol = m->volbase;
 	p->pos = p->ord = 0;
 	p->frame = -1;
@@ -1243,9 +1247,7 @@ int xmp_reserve_channels(xmp_context opaque, int num)
 int xmp_reserve_samples(xmp_context opaque, int num)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
-	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
-	struct xmp_module *mod = &m->mod;
 
 	if (ctx->state > XMP_STATE_UNLOADED)
 		return -XMP_ERROR_STATE;
@@ -1255,7 +1257,7 @@ int xmp_reserve_samples(xmp_context opaque, int num)
 	return 0;
 }
 
-int xmp_play_instrument(xmp_context opaque, int chn, int note, int ins, int vol)
+int xmp_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
@@ -1266,10 +1268,10 @@ int xmp_play_instrument(xmp_context opaque, int chn, int note, int ins, int vol)
 	if (ctx->state < XMP_STATE_PLAYING)
 		return -XMP_ERROR_STATE;
 
-	if (chn >= mod->chn + p->res_chn)
+	if (chn >= p->res_chn)
 		return -XMP_ERROR_INVALID;
 
-	event = &p->inject_event[chn];
+	event = &p->inject_event[mod->chn + chn];
 	memset(event, 0, sizeof (struct xmp_event));
 	event->note = note;
 	event->ins = ins;
@@ -1279,7 +1281,7 @@ int xmp_play_instrument(xmp_context opaque, int chn, int note, int ins, int vol)
 	return 0;
 }
 
-int xmp_play_sample(xmp_context opaque, int chn, int ins, int vol)
+int xmp_play_sample(xmp_context opaque, int ins, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;

@@ -246,6 +246,7 @@ struct player_data {
 	unsigned char sequence_control[XMP_MAX_MOD_LENGTH];
 
 	int res_chn;			/* Reserved channels */
+	int res_vol;
 	int master_vol;
 	int gvol;
 
