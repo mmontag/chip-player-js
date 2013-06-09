@@ -244,7 +244,18 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
 			hio_read(mod_event, 1, 4, f);
-			decode_noisetracker_event(event, mod_event);
+			decode_protracker_event(event, mod_event);
+
+			switch (event->fxt) {
+			case 0x07:
+				event->fxt = FX_MEGAARP;
+				break;
+			case 0x08:
+			case 0x09:
+			case 0x0e:
+				event->fxt = event->fxp = 0;
+				break;
+			}
 		}
 	}
 

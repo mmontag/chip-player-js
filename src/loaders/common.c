@@ -96,6 +96,7 @@ void decode_noisetracker_event(struct xmp_event *event, uint8 *mod_event)
 {
 	int fxt;
 
+	memset(event, 0, sizeof (struct xmp_event));
 	event->note = period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
 	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
 	fxt = LSN(mod_event[2]);
@@ -110,10 +111,14 @@ void decode_noisetracker_event(struct xmp_event *event, uint8 *mod_event)
 
 void decode_protracker_event(struct xmp_event *event, uint8 *mod_event)
 {
+	memset(event, 0, sizeof (struct xmp_event));
 	event->note = period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
 	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
-	event->fxt = LSN(mod_event[2]);
-	event->fxp = mod_event[3];
+
+	if (event->fxt != 0x08) {
+		event->fxt = LSN(mod_event[2]);
+		event->fxp = mod_event[3];
+	}
 
 	disable_continue_fx(event);
 }
