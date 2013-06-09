@@ -650,6 +650,42 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	return 0;
 }
 
+int xmp_empty_module(xmp_context opaque)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	m->filename = NULL;
+	m->basename = NULL;
+	m->size = 0;
+
+	if (ctx->state > XMP_STATE_UNLOADED)
+		xmp_release_module(opaque);
+
+	load_prologue(ctx);
+
+	mod->len = 1;
+	mod->pat = 1;
+	mod->ins = 0;
+	mod->smp = 0;
+	mod->chn = 1;
+	mod->trk = 1;
+	mod->xxo[0] = 0;
+	mod->xxp[0] = calloc(1, sizeof (struct xmp_pattern));
+        mod->xxp[0]->rows = 64;
+        mod->xxp[0]->index[0] = 0;
+        mod->xxt[0] = calloc (sizeof (struct xmp_track) +
+		      sizeof (struct xmp_event) * (mod->xxp[0]->rows - 1), 1);
+	mod->xxt[0]->rows = 64;
+
+	load_epilogue(ctx);
+
+	ctx->state = XMP_STATE_LOADED;
+
+	return 0;
+}
+
 void xmp_release_module(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;

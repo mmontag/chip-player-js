@@ -315,6 +315,7 @@ EXPORT int         xmp_reserve_channels(xmp_context, int);
 EXPORT int         xmp_reserve_samples (xmp_context, int);
 EXPORT int         xmp_play_instrument (xmp_context, int, int, int, int);
 EXPORT int         xmp_play_sample     (xmp_context, int, int, int);
+EXPORT int         xmp_empty_module    (xmp_context);
 
 #ifdef __cplusplus
 }
