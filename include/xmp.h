@@ -48,7 +48,7 @@ extern "C" {
 #define XMP_PLAYER_SMPCTL	6	/* Sample control flags */
 #define XMP_PLAYER_VOLUME	7	/* Player module volume */
 #define XMP_PLAYER_STATE	8	/* Internal player state */
-#define XMP_PLAYER_RVOLUME	9	/* Player reserved channels volume */
+#define XMP_PLAYER_SFX_VOLUME	9	/* Player SFX olume */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
@@ -311,11 +311,10 @@ EXPORT int         xmp_set_player      (xmp_context, int, int);
 EXPORT int         xmp_get_player      (xmp_context, int);
 EXPORT int         xmp_set_instrument_path (xmp_context, char *);
 EXPORT int         xmp_load_module_from_memory (xmp_context, void *, long);
-EXPORT int         xmp_reserve_channels(xmp_context, int);
-EXPORT int         xmp_reserve_samples (xmp_context, int);
-EXPORT int         xmp_play_instrument (xmp_context, int, int, int, int);
-EXPORT int         xmp_play_sample     (xmp_context, int, int, int);
 EXPORT int         xmp_empty_module    (xmp_context);
+EXPORT int         xmp_sfx_channels    (xmp_context, int);
+EXPORT int         xmp_sfx_play_instrument(xmp_context, int, int, int, int);
+EXPORT int         xmp_sfx_play_sample (xmp_context, int, int, int);
 
 #ifdef __cplusplus
 }

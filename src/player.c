@@ -335,7 +335,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	if (chn < m->mod.chn)
 		finalvol = finalvol * p->master_vol / 100;
 	else
-		finalvol = finalvol * p->res_vol / 100;
+		finalvol = finalvol * p->sfx_vol / 100;
 
 	xc->info_finalvol = finalvol;
 
@@ -708,9 +708,10 @@ static void inject_event(struct context_data *ctx)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	struct sfx_data *sfx = &ctx->sfx;
 	int chn;
 	
-	for (chn = 0; chn < mod->chn + p->res_chn; chn++) {
+	for (chn = 0; chn < mod->chn + sfx->chn; chn++) {
 		struct xmp_event *e = &p->inject_event[chn];
 		if (e->_flag > 0) {
 			read_event(ctx, e, chn);
@@ -841,6 +842,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
+	struct sfx_data *sfx = &ctx->sfx;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
@@ -862,7 +864,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	ctx->state = XMP_STATE_PLAYING;
 
 	p->master_vol = 100;
-	p->res_vol = 100;
+	p->sfx_vol = 100;
 	p->gvol = m->volbase;
 	p->pos = p->ord = 0;
 	p->frame = -1;
@@ -901,7 +903,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	p->speed = m->xxo_info[p->ord].speed;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 
-	if (virt_on(ctx, mod->chn + p->res_chn) != 0) {
+	if (virt_on(ctx, mod->chn + sfx->chn) != 0) {
 		ret = -XMP_ERROR_INTERNAL;
 		goto err;
 	}
@@ -1229,69 +1231,5 @@ void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 			}
 		}
 	}
-}
-
-int xmp_reserve_channels(xmp_context opaque, int num)
-{
-	struct context_data *ctx = (struct context_data *)opaque;
-	struct player_data *p = &ctx->p;
-
-	if (ctx->state > XMP_STATE_LOADED)
-		return -XMP_ERROR_STATE;
-
-	p->res_chn = num;
-
-	return 0;
-}
-
-int xmp_reserve_samples(xmp_context opaque, int num)
-{
-	struct context_data *ctx = (struct context_data *)opaque;
-	struct module_data *m = &ctx->m;
-
-	if (ctx->state > XMP_STATE_UNLOADED)
-		return -XMP_ERROR_STATE;
-
-	m->res_ins = num;
-
-	return 0;
-}
-
-int xmp_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
-{
-	struct context_data *ctx = (struct context_data *)opaque;
-	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
-	struct xmp_module *mod = &m->mod;
-	struct xmp_event *event;
-
-	if (ctx->state < XMP_STATE_PLAYING)
-		return -XMP_ERROR_STATE;
-
-	if (chn >= p->res_chn)
-		return -XMP_ERROR_INVALID;
-
-	event = &p->inject_event[mod->chn + chn];
-	memset(event, 0, sizeof (struct xmp_event));
-	event->note = note;
-	event->ins = ins;
-	event->vol = vol;
-	event->_flag = 1;
-
-	return 0;
-}
-
-int xmp_play_sample(xmp_context opaque, int ins, int vol, int chn)
-{
-	struct context_data *ctx = (struct context_data *)opaque;
-	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
-	struct xmp_module *mod = &m->mod;
-
-	if (chn >= p->res_chn || ins >= m->res_ins)
-		return -XMP_ERROR_INVALID;
-
-	return xmp_play_instrument(opaque, mod->chn + chn, 61,
-						mod->ins + ins, vol);
 }
 
