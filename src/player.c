@@ -1240,6 +1240,21 @@ int xmp_reserve_channels(xmp_context opaque, int num)
 	return 0;
 }
 
+int xmp_reserve_samples(xmp_context opaque, int num)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	if (ctx->state > XMP_STATE_UNLOADED)
+		return -XMP_ERROR_STATE;
+
+	m->res_ins = num;
+
+	return 0;
+}
+
 int xmp_play_instrument(xmp_context opaque, int chn, int note, int ins, int vol)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -1263,3 +1278,18 @@ int xmp_play_instrument(xmp_context opaque, int chn, int note, int ins, int vol)
 
 	return 0;
 }
+
+int xmp_play_sample(xmp_context opaque, int chn, int ins, int vol)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	if (chn >= p->res_chn || ins >= m->res_ins)
+		return -XMP_ERROR_INVALID;
+
+	return xmp_play_instrument(opaque, mod->chn + chn, 61,
+						mod->ins + ins, vol);
+}
+

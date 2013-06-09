@@ -214,6 +214,7 @@ struct module_data {
 #define READ_EVENT_IT	3
 	int read_event_type;
 	int smpctl;			/* sample control flags */
+	int res_ins;			/* reserved instruments */
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
 	int num_sequences;

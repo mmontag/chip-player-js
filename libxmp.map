@@ -42,6 +42,8 @@ XMP_4.2 {
     xmp_get_player;
     xmp_load_module_from_memory;
     xmp_reserve_channels;
+    xmp_reserve_samples;
     xmp_play_instrument;
+    xmp_play_sample;
 } XMP_4.1;
 
