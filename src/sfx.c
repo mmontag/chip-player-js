@@ -61,3 +61,19 @@ int xmp_sfx_play_sample(xmp_context opaque, int ins, int vol, int chn)
 						mod->ins + ins, vol);
 }
 
+int xmp_sfx_channel_pan(xmp_context opaque, int chn, int pan)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
+	struct sfx_data *sfx = &ctx->sfx;
+	struct module_data *m = &ctx->m;
+	struct channel_data *xc;
+
+	if (chn >= sfx->chn || pan < 0 || pan > 255)
+		return -XMP_ERROR_INVALID;
+
+	xc = &p->xc_data[m->mod.chn + chn];
+	xc->masterpan = pan;
+
+	return 0;
+}

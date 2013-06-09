@@ -45,5 +45,6 @@ XMP_4.2 {
     xmp_sfx_channels;
     xmp_sfx_play_instrument;
     xmp_sfx_play_sample;
+    xmp_sfx_channel_pan;
 } XMP_4.1;
 

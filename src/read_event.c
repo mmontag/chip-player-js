@@ -131,8 +131,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (e->ins) {
 		int ins = e->ins - 1;
-		SET(NEW_INS);
 		use_ins_vol = 1;
+		SET(NEW_INS);
 		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
@@ -783,12 +783,85 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	return 0;
 }
 
+static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	struct channel_data *xc = &p->xc_data[chn];
+	struct xmp_subinstrument *sub;
+	int is_sfx_ins;
+	int ins, note;
+
+	xc->flags = 0;
+	note = -1;
+
+	if (!e->ins)
+		return 0;
+
+	is_sfx_ins = 0;
+	ins = e->ins - 1;
+	SET(NEW_INS);
+	xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
+	xc->per_flags = 0;
+	xc->offset_val = 0;
+	RESET_NOTE(NOTE_RELEASE);
+
+	xc->ins = ins;
+
+	if (!IS_VALID_INSTRUMENT(ins))
+		is_sfx_ins = 1;
+
+	SET(NEW_NOTE);
+
+	if (e->note == XMP_KEY_OFF) {
+		SET_NOTE(NOTE_RELEASE);
+		return 0;
+	}
+
+	xc->key = e->note - 1;
+	RESET_NOTE(NOTE_END);
+
+	sub = get_subinstrument(ctx, xc->ins, xc->key);
+
+	if (!is_sfx_ins) {
+		int transp = mod->xxi[xc->ins].map[xc->key].xpo;
+		int smp;
+
+		note = xc->key + sub->xpo + transp;
+		smp = sub->sid;
+
+		if (mod->xxs[smp].len == 0)
+			smp = -1;
+
+		if (smp >= 0 && smp < mod->smp) {
+			set_patch(ctx, chn, xc->ins, smp, note);
+			xc->smp = smp;
+		}
+	}
+
+	sub = get_subinstrument(ctx, xc->ins, xc->key);
+
+	set_effect_defaults(ctx, note, sub, xc, 0);
+	if (e->ins && sub != NULL)
+		reset_envelopes(mod, xc);
+
+	xc->volume = e->vol - 1;
+	SET(NEW_VOL);
+
+	xc->note = note;
+	virt_voicepos(ctx, chn, xc->offset_val);
+
+	return 0;
+}
 
 int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct module_data *m = &ctx->m;
 
-	switch (m->read_event_type) {
+	if (chn >= m->mod.chn) {
+		return read_event_sfx(ctx, e, chn);
+	} else switch (m->read_event_type) {
 	case READ_EVENT_MOD:
 		return read_event_mod(ctx, e, chn);
 	case READ_EVENT_FT2:

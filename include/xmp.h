@@ -315,6 +315,7 @@ EXPORT int         xmp_empty_module    (xmp_context);
 EXPORT int         xmp_sfx_channels    (xmp_context, int);
 EXPORT int         xmp_sfx_play_instrument(xmp_context, int, int, int, int);
 EXPORT int         xmp_sfx_play_sample (xmp_context, int, int, int);
+EXPORT int         xmp_sfx_channel_pan (xmp_context, int, int);
 
 #ifdef __cplusplus
 }
