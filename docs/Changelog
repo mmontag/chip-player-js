@@ -6,6 +6,7 @@ Stable versions
 	- add API call to load a module from a buffer in memory
 	- add API call to read the player state (loaded, playing, etc)
 	- add API call to set the player master volume
+	- add loader for His Master's Noise modules
 	- fix loop parameter in xmp_play_buffer()
 
 4.1.5 (20130527):
