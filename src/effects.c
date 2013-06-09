@@ -12,6 +12,7 @@
 #include "period.h"
 #include "virtual.h"
 #include "mixer.h"
+#include "extras.h"
 
 #define NOT_IMPLEMENTED
 #define HAS_QUIRK(x) (m->quirk & (x))
@@ -39,8 +40,8 @@ static void do_toneporta(struct module_data *m,
 }
 
 
-void process_fx(struct context_data *ctx, int chn, uint8 note, uint8 fxt,
-		uint8 fxp, struct channel_data *xc, int fnum)
+void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
+		uint8 note, uint8 fxt, uint8 fxp, int fnum)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;

@@ -185,7 +185,7 @@ struct channel_data {
 };
 
 
-void process_fx(struct context_data *, int, uint8, uint8, uint8, struct channel_data *, int);
+void process_fx(struct context_data *, struct channel_data *, int, uint8, uint8, uint8, int);
 void filter_setup(int, int, int, int*, int*, int *);
 int read_event(struct context_data *, struct xmp_event *, int);
 

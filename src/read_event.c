@@ -209,8 +209,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Secondary effect handled first */
-	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
-	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
+	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
+	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
 
 	if (TEST(NEW_VOL))
 		use_ins_vol = 0;
@@ -392,8 +392,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	xc->offset_val = 0;
 
 	/* Secondary effect handled first */
-	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
-	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
+	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
+	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
 
 	if (TEST(NEW_VOL))
 		use_ins_vol = 0;
@@ -537,8 +537,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Secondary effect handled first */
-	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
-	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
+	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
+	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
 
 	if (TEST(NEW_VOL))
 		use_ins_vol = 0;
@@ -753,8 +753,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* According to Storlek test 25, Impulse Tracker handles the volume
 	 * column effects last.
 	 */
-	process_fx(ctx, chn, e->note, e->fxt, e->fxp, xc, 0);
-	process_fx(ctx, chn, e->note, e->f2t, e->f2p, xc, 1);
+	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
+	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
 
 	if (TEST(NEW_VOL))
 		use_ins_vol = 0;
