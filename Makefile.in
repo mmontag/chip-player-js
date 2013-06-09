@@ -93,7 +93,7 @@ lib/$(LIB): $(OBJS)
 
 lib/$(SHLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(CC) -shared -Wl,-soname,$(SONAME) $(LD_VERSCRIPT) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -shared -Wl,-soname,$(SONAME) $(LD_VERSCRIPT) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(SHLIB) lib/$(SONAME)
@@ -101,7 +101,7 @@ lib/$(SHLIB): $(LOBJS)
 
 lib/$(DLL): $(OBJS)
 	@mkdir -p lib
-	@CMD='$(CC) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/libxmp_dll.a -o $@ $(OBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/libxmp_dll.a -o $@ $(OBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -112,7 +112,7 @@ lib/$(DLL): $(OBJS)
 
 lib/$(DYLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(CC) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,$(COMPAT_VERSION),-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,$(COMPAT_VERSION),-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(DYLIB) lib/libxmp.$(VERSION_MAJOR).dylib
