@@ -310,6 +310,8 @@ EXPORT int         xmp_set_player      (xmp_context, int, int);
 EXPORT int         xmp_get_player      (xmp_context, int);
 EXPORT int         xmp_set_instrument_path (xmp_context, char *);
 EXPORT int         xmp_load_module_from_memory (xmp_context, void *, long);
+EXPORT int         xmp_reserve_channels(xmp_context, int);
+EXPORT int         xmp_play_instrument (xmp_context, int, int, int, int);
 
 #ifdef __cplusplus
 }
