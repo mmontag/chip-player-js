@@ -153,7 +153,7 @@ install: all
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
 	@$(INSTALL) -m644 libxmp.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
 
-depend: test/all_tests.c
+depend:
 	@echo Building dependencies...
 	@echo > $@
 	@for i in $(OBJS) $(T_OBJS); do \
