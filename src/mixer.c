@@ -284,6 +284,7 @@ void mixer_softmixer(struct context_data *ctx)
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs;
 	struct mixer_voice *vi;
 	int samples, size;
@@ -346,7 +347,11 @@ void mixer_softmixer(struct context_data *ctx)
 			continue;
 		}
 
-		xxs = &m->mod.xxs[vi->smp];
+		if (vi->smp < mod->smp)
+			xxs = &mod->xxs[vi->smp];
+		else
+			xxs = &ctx->sfx.xxs[vi->smp - mod->smp];
+
 		lps = xxs->lps;
 		lpe = xxs->lpe;
 
@@ -461,8 +466,13 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
-	struct xmp_sample *xxs = &m->mod.xxs[vi->smp];
+	struct xmp_sample *xxs;
 	int lps;
+
+	if (vi->smp < m->mod.smp)
+ 		xxs = &m->mod.xxs[vi->smp];
+	else
+ 		xxs = &ctx->sfx.xxs[vi->smp - m->mod.smp];
 
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {
 		return;
@@ -523,7 +533,12 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
-	struct xmp_sample *xxs = &m->mod.xxs[smp];
+	struct xmp_sample *xxs;
+
+	if (smp < m->mod.smp)
+		xxs = &m->mod.xxs[smp];
+	else
+		xxs = &ctx->sfx.xxs[smp - m->mod.smp];
 
 	vi->smp = smp;
 	vi->vol = 0;

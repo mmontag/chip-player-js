@@ -236,7 +236,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	/* Skip sample loading
 	 * FIXME: fails for ADPCM samples
 	 */
-	if (m->smpctl & XMP_SMPCTL_SKIP) {
+	if (m && m->smpctl & XMP_SMPCTL_SKIP) {
 		if (~flags & SAMPLE_FLAG_NOLOAD)
 			hio_seek(f, xxs->len, SEEK_CUR);
 		return 0;

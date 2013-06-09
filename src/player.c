@@ -631,6 +631,7 @@ static void update_pan(struct context_data *ctx, int chn, int t)
 static void play_channel(struct context_data *ctx, int chn, int t)
 {
 	struct player_data *p = &ctx->p;
+	struct sfx_data *sfx = &ctx->sfx;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
@@ -653,13 +654,13 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	}
 
 	if (t == 0 && act != VIRT_ACTIVE) {
-		if (!IS_VALID_INSTRUMENT(xc->ins) || act == VIRT_ACTION_CUT) {
+		if (!IS_VALID_INSTRUMENT_OR_SFX(xc->ins) || act == VIRT_ACTION_CUT) {
 			virt_resetchannel(ctx, chn);
 			return;
 		}
 	}
 
-	if (!IS_VALID_INSTRUMENT(xc->ins))
+	if (!IS_VALID_INSTRUMENT_OR_SFX(xc->ins))
 		return;
 
 	play_extras(ctx, xc, chn, t == 0 && TEST(NEW_INS|NEW_NOTE));

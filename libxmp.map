@@ -42,9 +42,11 @@ XMP_4.2 {
     xmp_get_player;
     xmp_load_module_from_memory;
     xmp_empty_module;
-    xmp_sfx_channels;
+    xmp_sfx_init;
+    xmp_sfx_deinit;
     xmp_sfx_play_instrument;
     xmp_sfx_play_sample;
     xmp_sfx_channel_pan;
+    xmp_sfx_load_sample;
 } XMP_4.1;
 

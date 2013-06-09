@@ -786,12 +786,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
+	struct sfx_data *sfx = &ctx->sfx;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_subinstrument *sub;
 	int is_sfx_ins;
-	int ins, note;
+	int ins, note, transp, smp;
 
 	xc->flags = 0;
 	note = -1;
@@ -809,7 +810,7 @@ static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn
 
 	xc->ins = ins;
 
-	if (!IS_VALID_INSTRUMENT(ins))
+	if (ins >= mod->ins && ins < mod->ins + sfx->ins)
 		is_sfx_ins = 1;
 
 	SET(NEW_NOTE);
@@ -822,25 +823,29 @@ static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn
 	xc->key = e->note - 1;
 	RESET_NOTE(NOTE_END);
 
-	sub = get_subinstrument(ctx, xc->ins, xc->key);
-
-	if (!is_sfx_ins) {
-		int transp = mod->xxi[xc->ins].map[xc->key].xpo;
-		int smp;
-
+	if (is_sfx_ins) {
+		sub = &sfx->xxi[xc->ins - mod->ins].sub[0];
+		note = xc->key + sub->xpo;
+		smp = sub->sid;
+		if (sfx->xxs[smp].len == 0)
+			smp = -1;
+		if (smp >= 0 && smp < sfx->smp) {
+			smp += mod->smp;
+			virt_setpatch(ctx, chn, xc->ins, smp, note, 0, 0, 0);
+			xc->smp = smp;
+		}
+	} else {
+		transp = mod->xxi[xc->ins].map[xc->key].xpo;
+		sub = get_subinstrument(ctx, xc->ins, xc->key);
 		note = xc->key + sub->xpo + transp;
 		smp = sub->sid;
-
 		if (mod->xxs[smp].len == 0)
 			smp = -1;
-
 		if (smp >= 0 && smp < mod->smp) {
 			set_patch(ctx, chn, xc->ins, smp, note);
 			xc->smp = smp;
 		}
 	}
-
-	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, 0);
 	if (e->ins && sub != NULL)

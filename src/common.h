@@ -194,7 +194,10 @@ struct ord_data {
 
 struct sfx_data {
 	int chn;
-	struct xmp_instrument *ins;
+	int ins;
+	int smp;
+	struct xmp_instrument *xxi;
+	struct xmp_sample *xxs;
 };
 
 struct module_data {
@@ -219,7 +222,6 @@ struct module_data {
 #define READ_EVENT_IT	3
 	int read_event_type;
 	int smpctl;			/* sample control flags */
-	int res_ins;			/* reserved instruments */
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
 	int num_sequences;
