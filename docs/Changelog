@@ -6,6 +6,8 @@ Stable versions
 	- add API call to load a module from a buffer in memory
 	- add API call to read the player state (loaded, playing, etc)
 	- add API call to set the player master volume
+	- add API calls to reserve channels and play instruments on them
+	- add API call to create an empty module instead of loading
 	- add loader for His Master's Noise modules
 	- fix loop parameter in xmp_play_buffer()
 
