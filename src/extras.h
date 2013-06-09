@@ -12,5 +12,6 @@ void play_extras(struct context_data *, struct channel_data *, int, int);
 int extras_get_volume(struct context_data *, struct channel_data *);
 int extras_get_period(struct context_data *, struct channel_data *);
 int extras_get_linear_bend(struct context_data *, struct channel_data *);
+void extras_process_fx(struct context_data *, struct channel_data *, int, uint8, uint8, uint8, int);
 
 #endif

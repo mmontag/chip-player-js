@@ -25,6 +25,10 @@ void release_module_extras(struct context_data *ctx)
 		med_release_module_extras(m);
 }
 
+/*
+ * Channel extras
+ */
+
 int new_channel_extras(struct context_data *ctx, struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
@@ -39,10 +43,6 @@ int new_channel_extras(struct context_data *ctx, struct channel_data *xc)
 
 	return 0;
 }
-
-/*
- * Channel extras
- */
 
 void release_channel_extras(struct context_data *ctx, struct channel_data *xc)
 {
@@ -116,4 +116,11 @@ int extras_get_linear_bend(struct context_data *ctx, struct channel_data *xc)
 		linear_bend = 0;
 
 	return linear_bend;
+}
+
+void extras_process_fx(struct context_data *ctx, struct channel_data *xc,
+			int chn, uint8 note, uint8 fxt, uint8 fxp, int fnum)
+{
+	if (HAS_HMN_CHANNEL_EXTRAS(*xc))
+		hmn_extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
 }

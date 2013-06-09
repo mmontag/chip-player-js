@@ -65,7 +65,7 @@ static int hmn_test(HIO_HANDLE *, char *, const int);
 static int hmn_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader hmn_loader = {
-	"His Master's Noisetracker (MOD)",
+	"His Master's Noise (MOD)",
 	hmn_test,
 	hmn_load
 };
@@ -190,7 +190,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		return -1;
 
 	strncpy(mod->name, (char *)mh.name, 20);
-	set_type(m, "%s (%4.4s)", "His Master's Noisetracker", mh.magic);
+	set_type(m, "%s (%4.4s)", "His Master's Noise", mh.magic);
 	MODULE_INFO();
 
 	INSTRUMENT_INIT();

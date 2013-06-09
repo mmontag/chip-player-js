@@ -10,6 +10,7 @@
 #include "common.h"
 #include "player.h"
 #include "virtual.h"
+#include "effects.h"
 #include "hmn_extras.h"
 
 static uint8 megaarp[16][16] = {
@@ -32,11 +33,6 @@ static uint8 megaarp[16][16] = {
 	{  0,  4,  0,  4,  0,  4,  0,  4,  0,  4,  0,  4,  0,  4,  0,  4 }
 };
 
-void hmn_set_arpeggio(struct channel_data *xc, int arp)
-{
-	memcpy(xc->arpeggio.val, megaarp[arp], 16);
-	xc->arpeggio.size = 16;
-}
 
 int hmn_linear_bend(struct context_data *ctx, struct channel_data *xc)
 {
@@ -95,7 +91,7 @@ int hmn_new_channel_extras(struct channel_data *xc)
 
 void hmn_reset_channel_extras(struct channel_data *xc)
 {
-	memset(xc->extra, 0, sizeof(struct hmn_channel_extras));
+	memset(xc->extra + 4, 0, sizeof(struct hmn_channel_extras) - 4);
 }
 
 void hmn_release_channel_extras(struct channel_data *xc)
@@ -118,3 +114,13 @@ void hmn_release_module_extras(struct module_data *m)
 	free(m->extra);
 }
 
+void hmn_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
+			   int chn, uint8 note, uint8 fxt, uint8 fxp, int fnum)
+{
+	switch (fxt) {
+	case FX_MEGAARP:
+		memcpy(xc->arpeggio.val, megaarp[fxp], 16);
+		xc->arpeggio.size = 16;
+		break;
+	}
+}

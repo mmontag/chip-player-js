@@ -757,5 +757,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_PANBRELLO_WF:	/* Panbrello waveform */
 		set_lfo_waveform(&xc->panbrello, fxp & 3);
 		break;
+	default:
+		extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
+		break;
 	}
 }

@@ -45,6 +45,7 @@ void hmn_reset_channel_extras(struct channel_data *);
 void hmn_release_channel_extras(struct channel_data *);
 int hmn_new_module_extras(struct module_data *);
 void hmn_release_module_extras(struct module_data *);
+void hmn_extras_process_fx(struct context_data *, struct channel_data *, int, uint8, uint8, uint8, int);
 
 #endif
 
