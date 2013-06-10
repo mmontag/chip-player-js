@@ -100,6 +100,15 @@ static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
 	unsigned char buf[BUFLEN];
 	MD5_CTX ctx;
 	int bytes_read;
+	struct stat st;
+
+	if (hio_stat(f, &st) < 0)
+		return;
+
+	if (st.st_size <= 0) {
+		memset(digest, 0, 16);
+		return;
+	}
 
 	hio_seek(f, 0, SEEK_SET);
 
