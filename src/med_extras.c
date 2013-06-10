@@ -283,7 +283,7 @@ int med_new_channel_extras(struct channel_data *xc)
 
 void med_reset_channel_extras(struct channel_data *xc)
 {
-	memset(xc->extra, 0, sizeof(struct med_channel_extras));
+	memset((char *)xc->extra + 4, 0, sizeof(struct med_channel_extras) - 4);
 }
 
 void med_release_channel_extras(struct channel_data *xc)

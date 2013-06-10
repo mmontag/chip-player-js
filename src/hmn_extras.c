@@ -91,7 +91,7 @@ int hmn_new_channel_extras(struct channel_data *xc)
 
 void hmn_reset_channel_extras(struct channel_data *xc)
 {
-	memset(xc->extra + 4, 0, sizeof(struct hmn_channel_extras) - 4);
+	memset((char *)xc->extra + 4, 0, sizeof(struct hmn_channel_extras) - 4);
 }
 
 void hmn_release_channel_extras(struct channel_data *xc)
