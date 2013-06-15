@@ -315,7 +315,7 @@ EXPORT int         xmp_create_module   (xmp_context, int);
 EXPORT int         xmp_sfx_init        (xmp_context, int, int);
 EXPORT void        xmp_sfx_deinit      (xmp_context);
 EXPORT int         xmp_sfx_play_instrument(xmp_context, int, int, int, int);
-EXPORT int         xmp_sfx_play_sample (xmp_context, int, int, int);
+EXPORT int         xmp_sfx_play_sample (xmp_context, int, int, int, int);
 EXPORT int         xmp_sfx_channel_pan (xmp_context, int, int);
 EXPORT int         xmp_sfx_load_sample (xmp_context, int, char *);
 

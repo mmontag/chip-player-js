@@ -44,6 +44,9 @@ int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int 
 	if (chn >= sfx->chn)
 		return -XMP_ERROR_INVALID;
 
+	if (note == 0)
+		note = 60;		/* middle C note number */
+
 	event = &p->inject_event[mod->chn + chn];
 	memset(event, 0, sizeof (struct xmp_event));
 	event->note = note + 1;
@@ -54,7 +57,7 @@ int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int 
 	return 0;
 }
 
-int xmp_sfx_play_sample(xmp_context opaque, int ins, int vol, int chn)
+int xmp_sfx_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct sfx_data *sfx = &ctx->sfx;
@@ -64,7 +67,7 @@ int xmp_sfx_play_sample(xmp_context opaque, int ins, int vol, int chn)
 	if (chn >= sfx->chn || ins >= sfx->ins)
 		return -XMP_ERROR_INVALID;
 
-	return xmp_sfx_play_instrument(opaque, mod->ins + ins, 60, vol, 0);
+	return xmp_sfx_play_instrument(opaque, mod->ins + ins, note, vol, 0);
 }
 
 int xmp_sfx_channel_pan(xmp_context opaque, int chn, int pan)
