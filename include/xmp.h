@@ -311,7 +311,7 @@ EXPORT int         xmp_set_player      (xmp_context, int, int);
 EXPORT int         xmp_get_player      (xmp_context, int);
 EXPORT int         xmp_set_instrument_path (xmp_context, char *);
 EXPORT int         xmp_load_module_from_memory (xmp_context, void *, long);
-EXPORT int         xmp_empty_module    (xmp_context);
+EXPORT int         xmp_empty_module    (xmp_context, int);
 EXPORT int         xmp_sfx_init        (xmp_context, int, int);
 EXPORT void        xmp_sfx_deinit      (xmp_context);
 EXPORT int         xmp_sfx_play_instrument(xmp_context, int, int, int, int);

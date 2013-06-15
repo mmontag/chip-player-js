@@ -659,11 +659,15 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	return 0;
 }
 
-int xmp_empty_module(xmp_context opaque)
+int xmp_empty_module(xmp_context opaque, int nch)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	int i;
+
+	if (nch < 1 || nch > 64)
+		return -XMP_ERROR_INVALID;
 
 	m->filename = NULL;
 	m->basename = NULL;
@@ -674,19 +678,22 @@ int xmp_empty_module(xmp_context opaque)
 
 	load_prologue(ctx);
 
-	mod->len = 1;
 	mod->pat = 1;
+	mod->len = mod->pat;
 	mod->ins = 0;
 	mod->smp = 0;
-	mod->chn = 1;
-	mod->trk = 1;
+	mod->chn = nch;
+	mod->trk = mod->pat * mod->chn;
 	mod->xxo[0] = 0;
 	mod->xxp[0] = calloc(1, sizeof (struct xmp_pattern));
-        mod->xxp[0]->rows = 64;
-        mod->xxp[0]->index[0] = 0;
-        mod->xxt[0] = calloc (sizeof (struct xmp_track) +
-		      sizeof (struct xmp_event) * (mod->xxp[0]->rows - 1), 1);
-	mod->xxt[0]->rows = 64;
+       	mod->xxp[0]->rows = 64;
+
+	for (i = 0; i < mod->trk; i++) {
+        	mod->xxp[i / nch]->index[i % nch] = i;
+        	mod->xxt[i] = calloc (sizeof (struct xmp_track) + sizeof
+			(struct xmp_event) * (mod->xxp[i / nch]->rows - 1), 1);
+		mod->xxt[i]->rows = 64;
+	}
 
 	load_epilogue(ctx);
 
