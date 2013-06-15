@@ -685,10 +685,26 @@ int xmp_create_module(xmp_context opaque, int nch)
 	mod->chn = nch;
 	mod->trk = mod->pat * mod->chn;
 	mod->xxo[0] = 0;
-	mod->xxp[0] = calloc(1, sizeof (struct xmp_pattern));
-       	mod->xxp[0]->rows = 64;
+	mod->xxp = calloc(mod->pat, sizeof (struct xmp_pattern *));
+	if (mod->xxp == NULL)
+		goto err;
+	mod->xxt = calloc(mod->trk, sizeof (struct xmp_track *));
+	if (mod->xxt == NULL)
+		goto err1;
+
+	for (i = 0; i < mod->pat; i++) {
+		mod->xxp[i] = calloc(1, sizeof (struct xmp_pattern) +
+					(nch - 1) * sizeof(int));
+		if (mod->xxp[i] == NULL)
+			goto err2;
+		mod->xxp[i]->rows = 64;
+	}
 
 	for (i = 0; i < mod->trk; i++) {
+		mod->xxt[i] = calloc(1, sizeof (struct xmp_track) +
+			(mod->xxp[0]->rows - 1) * sizeof (struct xmp_event));
+		if (mod->xxt[i] == NULL)
+			goto err3;
         	mod->xxp[i / nch]->index[i % nch] = i;
         	mod->xxt[i] = calloc (sizeof (struct xmp_track) + sizeof
 			(struct xmp_event) * (mod->xxp[i / nch]->rows - 1), 1);
@@ -700,6 +716,18 @@ int xmp_create_module(xmp_context opaque, int nch)
 	ctx->state = XMP_STATE_LOADED;
 
 	return 0;
+
+    err3:
+	for (i = 0; i < mod->trk; i++)
+		free(mod->xxt[i]);
+    err2:
+	for (i = 0; i < mod->pat; i++)
+		free(mod->xxp[i]);
+	free(mod->xxt);
+    err1:
+        free(mod->xxp);
+    err:
+	return XMP_ERROR_INTERNAL;
 }
 
 void xmp_release_module(xmp_context opaque)
