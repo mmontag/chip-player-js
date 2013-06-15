@@ -825,6 +825,9 @@ static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (is_sfx_ins) {
 		sub = &sfx->xxi[xc->ins - mod->ins].sub[0];
+		if (sub == NULL)
+			return 0;
+
 		note = xc->key + sub->xpo;
 		smp = sub->sid;
 		if (sfx->xxs[smp].len == 0)
