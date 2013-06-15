@@ -41,7 +41,7 @@ XMP_4.2 {
   global:
     xmp_get_player;
     xmp_load_module_from_memory;
-    xmp_empty_module;
+    xmp_create_module;
     xmp_sfx_init;
     xmp_sfx_deinit;
     xmp_sfx_play_instrument;

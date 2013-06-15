@@ -659,7 +659,7 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	return 0;
 }
 
-int xmp_empty_module(xmp_context opaque, int nch)
+int xmp_create_module(xmp_context opaque, int nch)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;

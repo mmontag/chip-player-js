@@ -46,6 +46,7 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 
 API		= get_format_list create_context free_context \
 		  test_module load_module load_module_from_memory \
+		  create_module \
 		  start_player play_buffer \
 		  set_position prev_position \
 		  set_player stop_module restart_module seek_time \
