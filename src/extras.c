@@ -23,6 +23,8 @@ void release_module_extras(struct context_data *ctx)
 
 	if (HAS_MED_MODULE_EXTRAS(*m))
 		med_release_module_extras(m);
+	else if (HAS_HMN_MODULE_EXTRAS(*m))
+		hmn_release_module_extras(m);
 }
 
 /*
