@@ -150,7 +150,9 @@ styles:
   toc3:
     parent: toc
     leftIndent: 40
-    fontSize: 90%
+    #fontSize: 90%
+    spaceBefore: 0
+    spaceAfter: 0
 
   toc4:
     parent: toc

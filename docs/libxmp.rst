@@ -5,6 +5,10 @@ Libxmp 4.2 API documentation
 .. contents:: `Contents`
    :depth: 3
 
+.. raw:: pdf
+
+    PageBreak
+
 Introduction
 ------------
 
@@ -35,10 +39,16 @@ Concepts
   module authors such as Skaven commonly place extra patterns at the end of
   the module.
 
-* **State:**
+* **State:** *[Added in libxmp 4.2]*
   The player can be in one of three possible states: *unloaded*, *loaded*,
   or *playing*. The player is in unloaded state after context creation,
   changing to other states when a module is loaded or played.
+
+* **Sound effects:** *[Added in libxmp 4.2]*
+  Special sound effect Channels can be reserved using `xmp_sfx_init()`
+  to play module instruments or external samples. This is useful when
+  libxmp is used to provide background music to games or other applications
+  where sound effects can be played in response to events or user actions.
 
 A simple example
 ----------------
@@ -126,6 +136,66 @@ if replay should stop.
 
 Use `xmp_end_player()`_, `xmp_release_module()`_ and
 `xmp_free_context()`_ to release memory and end replay.
+
+
+SDL example
+-----------
+
+To use libxmp with SDL, just provide a callback function that renders module
+data. The module will play when ``SDL_PauseAudio(0)`` is called::
+
+    #include <SDL/SDL.h>
+    #include <xmp.h>
+
+    static void fill_audio(void *udata, unsigned char *stream, int len)
+    {
+        xmp_play_buffer(udata, stream, len, 0);
+    }
+
+    int sound_init(xmp_context ctx, int sampling_rate, int channels)
+    {
+        SDL_AudioSpec a;
+
+        a.freq = sampling_rate;
+        a.format = (AUDIO_S16);
+        a.channels = channels;
+        a.samples = 2048;
+        a.callback = fill_audio;
+        a.userdata = ctx;
+
+        if (SDL_OpenAudio(&a, NULL) < 0) {
+                fprintf(stderr, "%s\n", SDL_GetError());
+                return -1;
+        }
+    }
+
+    int main(int argc, char **argv)
+    {
+	xmp_context ctx;
+
+        if ((ctx = xmp_create_context()) == NULL)
+                return 1;
+
+        sound_init(ctx, 44100, 2);
+        xmp_load_module(ctx, argv[1]);
+        xmp_start_player(ctx, 44100, 0);
+
+        SDL_PauseAudio(0);
+
+        sleep(10);              // Do something important here
+
+        SDL_PauseAudio(1);
+
+        xmp_end_player(ctx);
+        xmp_release_module(ctx);
+        xmp_free_context(ctx);
+
+        SDL_CloseAudio();
+        return 0;
+    }
+
+SDL callbacks run in a separate thread, so don't forget to protect sections
+that manipulate module data with ``SDL_LockAudio()`` and ``SDL_UnlockAudio()``.
 
 
 .. raw:: pdf
@@ -384,7 +454,8 @@ int xmp_play_frame(xmp_context c)
     :c: the player context handle.
 
   **Returns:**
-    0 if sucessful or -1 if the module was stopped.
+    0 if sucessful, ``-XMP_END`` if the module ended or was stopped, or
+    ``-XMP_ERROR_STATE`` if the player is not in playing state.
 
 .. _xmp_get_frame_info():
 
@@ -438,9 +509,6 @@ void xmp_get_frame_info(xmp_context c, struct xmp_frame_info \*info)
       contain the pointer to the sound buffer PCM data and its size. The
       buffer size will be no larger than ``XMP_MAX_FRAMESIZE``.
  
-  **Returns:**
-    0 if sucessful or -1 if the module was stopped.
-
 .. _xmp_play_buffer():
 
 int xmp_play_buffer(xmp_context c, void \*buffer, int size, int loop)
@@ -464,8 +532,9 @@ int xmp_play_buffer(xmp_context c, void \*buffer, int size, int loop)
      value, or 0 to disable loop checking.
 
   **Returns:**
-    0 if sucessful or -1 if module was stopped or the loop counter was
-    reached.
+    0 if sucessful, ``-XMP_END`` if module was stopped or the loop counter
+    was reached, or ``-XMP_ERROR_STATE`` if the player is not in playing
+    state.
 
 .. _xmp_end_player():
 
@@ -522,8 +591,8 @@ int xmp_set_position(xmp_context c, int pos)
     :pos: the position index to set.
  
   **Returns:**
-    The new position index, or ``-XMP_ERROR_STATE`` if the player is not
-    in playing state.
+    The new position index, ``-XMP_ERROR_INVALID`` of the new position is
+    invalid or ``-XMP_ERROR_STATE`` if the player is not in playing state.
 
 .. _xmp_stop_module():
 
@@ -743,4 +812,114 @@ int xmp_set_player(xmp_context c, int param, int val)
     0 if parameter was correctly set, ``-XMP_ERROR_INVALID`` if
     parameter or values are out of the valid ranges, or ``-XMP_ERROR_STATE``
     if the player is not in playing state.
+
+.. raw:: pdf
+
+    PageBreak
+
+Sound effects API
+~~~~~~~~~~~~~~~~~
+
+.. _xmp_sfx_init():
+
+int xmp_sfx_init(xmp_context c, int nch, int nsmp)
+``````````````````````````````````````````````````
+
+  Initialize the sound effects subsystem with the given number of
+  reserved channels and samples.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :nch: number of sound effects channels (1 to 64).
+ 
+    :nsmp: number of sound effects samples.
+ 
+  **Returns:**
+    0 if the sound effects system was correctly initialized,
+    ``-XMP_ERROR_INVALID`` in case of invalid parameters, ``-XMP_ERROR_STATE``
+    if the player is not in playing state, or ``-XMP_ERROR_SYSTEM`` in case
+    of error (the system error code is set in ``errno``).
+
+.. _xmp_sfx_play_instrument():
+
+int xmp_sfx_play_instrument(xmp_context c, int ins, int note, int vol, int chn)
+```````````````````````````````````````````````````````````````````````````````
+
+  Play a note using an instrument from the currently loaded module in
+  one of the reserved sound effects channels.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :ins: the instrument to play.
+
+    :note: the note number to play (60 = middle C).
+
+    :vol: the volume to use (0 to the maximum volume value used by the
+      current module.
+
+    :chn: the sound effects channel to use to play the instrument.
+
+  **Returns:**
+    0 if the instrument was correctly played, ``-XMP_ERROR_INVALID`` in
+    case of invalid parameters, or ``-XMP_ERROR_STATE`` if the player is not
+    in playing state.
+
+.. _xmp_sfx_play_sample():
+
+int xmp_sfx_play_sample(xmp_context c, int ins, int vol, int chn)
+`````````````````````````````````````````````````````````````````
+
+  Play an external sample file in one of the reserved sound effects
+  channels. The sample must have been previously loaded using
+  `xmp_sfx_load_sample()`_.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :ins: the sample to play.
+
+    :vol: the volume to use (0 to the maximum volume value used by the
+      current module.
+
+    :chn: the sound effects channel to use to play the sample.
+
+  **Returns:**
+    0 if the sample was correctly played, ``-XMP_ERROR_INVALID`` in
+    case of invalid parameters, or ``-XMP_ERROR_STATE`` if the player is not
+    in playing state.
+
+.. _xmp_sfx_channel_pan():
+
+int xmp_sfx_channel_pan(xmp_context c, int chn, int pan)
+````````````````````````````````````````````````````````
+
+  Set the sound effects channel pan value.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :chn: the sound effects channel number.
+
+    :pan: the pan value to set (0 to 255).
+
+  **Returns:**
+    0 if the pan value was set, or ``-XMP_ERROR_INVALID`` if parameters
+    are invalid.
+
+.. _xmp_sfx_load_sample():
+
+int xmp_sfx_load_sample(xmp_context c, int num, char \*path)
+````````````````````````````````````````````````````````````
+
+.. _xmp_sfx_release_sample():
+
+void xmp_sfx_release_sample(xmp_context c, int num)
+```````````````````````````````````````````````````
+
+.. _xmp_sfx_deinit():
+
+void xmp_sfx_deinit(xmp_context opaque)
+```````````````````````````````````````
 
