@@ -54,9 +54,6 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	struct flow_control *f = &p->flow;
 	int seq, start;
 
-	if (ctx->state < XMP_STATE_PLAYING)
-		return;
-
 	/* If dir is 0, we can jump to a different sequence */
 	if (dir == 0) {
 		seq = get_sequence(ctx, pos);
@@ -132,16 +129,20 @@ int xmp_prev_position(xmp_context opaque)
 	} else if (p->pos > m->seq_data[p->sequence].entry_point) {
 		set_position(ctx, p->pos - 1, -1);
 	}
-	return p->pos;
+	return p->pos < 0 ? 0 : p->pos;
 }
 
 int xmp_set_position(xmp_context opaque, int pos)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 
 	if (ctx->state < XMP_STATE_PLAYING)
 		return -XMP_ERROR_STATE;
+
+	if (pos >= m->mod.len)
+		return -XMP_ERROR_INVALID;
 
 	set_position(ctx, pos, 0);
 
