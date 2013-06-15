@@ -8,10 +8,18 @@ TEST(test_api_channel_mute)
 
 	ctx = xmp_create_context();
 	xmp_load_module(ctx, "data/ode2ptk.mod");
+
+	/* state check */
+	ret = xmp_channel_mute(ctx, XMP_MAX_CHANNELS, 2);
+	fail_unless(ret == -XMP_ERROR_STATE, "state check error");
+
 	xmp_start_player(ctx, 8000, 0);
 
 	/* invalid channel */
 	ret = xmp_channel_mute(ctx, XMP_MAX_CHANNELS, 2);
+	fail_unless(ret == -XMP_ERROR_INVALID, "invalid channel error");
+
+	ret = xmp_channel_mute(ctx, -1, 2);
 	fail_unless(ret == -XMP_ERROR_INVALID, "invalid channel error");
 
 	for (i = 0; i < XMP_MAX_CHANNELS; i++) {

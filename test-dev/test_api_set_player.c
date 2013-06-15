@@ -118,5 +118,38 @@ TEST(test_api_set_player)
 	fail_unless(ret == 0, "error setting flags");
 	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
 	fail_unless((ret & XMP_SMPCTL_SKIP) != 0, "skip sample ctl");
+
+	/* volume */
+	ret = xmp_set_player(opaque, XMP_PLAYER_VOLUME, 0);
+	fail_unless(ret == 0, "error setting volume");
+	ret = xmp_get_player(opaque, XMP_PLAYER_VOLUME);
+	fail_unless(ret == 0, "can't get XMP_PLAYER_VOLUME");
+
+	ret = xmp_set_player(opaque, XMP_PLAYER_VOLUME, 200);
+	fail_unless(ret == 0, "error setting volume");
+	ret = xmp_get_player(opaque, XMP_PLAYER_VOLUME);
+	fail_unless(ret == 200, "can't get XMP_PLAYER_VOLUME");
+
+	ret = xmp_set_player(opaque, XMP_PLAYER_VOLUME, -1);
+	fail_unless(ret == -XMP_ERROR_INVALID, "error setting invalid volume");
+	ret = xmp_set_player(opaque, XMP_PLAYER_VOLUME, 201);
+	fail_unless(ret == -XMP_ERROR_INVALID, "error setting invalid volume");
+
+	/* sfx volume */
+	ret = xmp_set_player(opaque, XMP_PLAYER_SFX_VOLUME, 0);
+	fail_unless(ret == 0, "error setting sfx volume");
+	ret = xmp_get_player(opaque, XMP_PLAYER_SFX_VOLUME);
+	fail_unless(ret == 0, "can't get XMP_PLAYER_SFX_VOLUME");
+
+	ret = xmp_set_player(opaque, XMP_PLAYER_SFX_VOLUME, 200);
+	fail_unless(ret == 0, "error setting sfx volume");
+	ret = xmp_get_player(opaque, XMP_PLAYER_SFX_VOLUME);
+	fail_unless(ret == 200, "can't get XMP_PLAYER_SFX_VOLUME");
+
+	ret = xmp_set_player(opaque, XMP_PLAYER_SFX_VOLUME, -1);
+	fail_unless(ret == -XMP_ERROR_INVALID, "error setting invalid sfx volume");
+	ret = xmp_set_player(opaque, XMP_PLAYER_SFX_VOLUME, 201);
+	fail_unless(ret == -XMP_ERROR_INVALID, "error setting invalid sfx volume");
+
 }
 END_TEST
