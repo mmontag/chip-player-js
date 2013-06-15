@@ -960,9 +960,11 @@ int xmp_play_frame(xmp_context opaque)
 	struct flow_control *f = &p->flow;
 	int i;
 
-	if (mod->len <= 0 || mod->xxo[p->ord] == 0xff) {
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
+
+	if (mod->len <= 0 || mod->xxo[p->ord] == 0xff)
 		return -XMP_END;
-	}
 
 	/* check reposition */
 	if (p->ord != p->pos) {
@@ -1051,6 +1053,7 @@ int xmp_play_frame(xmp_context opaque)
 
 int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 {
+	struct context_data *ctx = (struct context_data *)opaque;
 	int ret = 0, filled = 0, copy_size;
 	static int consumed = 0;
 	static int in_buffer_size = 0;
@@ -1062,7 +1065,11 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 	if (out_buffer == NULL) {
 		consumed = 0;
 		in_buffer_size = 0;
+		return 0;
 	}
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
 
 	/* Fill buffer */
 	while (filled < size) {
