@@ -1,7 +1,3 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
 #include "test.h"
 
 TEST(test_api_create_module)
@@ -17,7 +13,7 @@ TEST(test_api_create_module)
 	fail_unless(state == XMP_STATE_UNLOADED, "state error");
 
 	ret = xmp_create_module(ctx, 4);
-	fail_unless(ret == 0, "load file");
+	fail_unless(ret == 0, "create module");
 
 	state = xmp_get_player(ctx, XMP_PLAYER_STATE);
 	fail_unless(state == XMP_STATE_LOADED, "state error");

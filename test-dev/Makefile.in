@@ -50,7 +50,8 @@ API		= get_format_list create_context free_context \
 		  start_player play_buffer \
 		  set_position prev_position \
 		  set_player stop_module restart_module seek_time \
-		  channel_mute channel_vol inject_event scan_module
+		  channel_mute channel_vol inject_event scan_module \
+		  sfx_play_sample
 
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \
