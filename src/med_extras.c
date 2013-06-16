@@ -101,165 +101,167 @@ int med_linear_bend(struct context_data *ctx, struct channel_data *xc)
 }
 
 
-void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn, int new_note)
+void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
+		     int new_note)
 {
-    struct module_data *m = &ctx->m;
-    struct med_module_extras *me;
-    struct med_channel_extras *ce;
-    int b, jws = 0, jvs = 0, loop = 0, jump = 0;
-    int temp;
+	struct module_data *m = &ctx->m;
+	struct med_module_extras *me;
+	struct med_channel_extras *ce;
+	int b, jws = 0, jvs, loop;
+	int temp;
 
-    if (!HAS_MED_MODULE_EXTRAS(*m))
-	return;
+	if (!HAS_MED_MODULE_EXTRAS(*m))
+		return;
 
-    me = (struct med_module_extras *)m->extra;
-    ce = (struct med_channel_extras *)xc->extra;
+	me = (struct med_module_extras *)m->extra;
+	ce = (struct med_channel_extras *)xc->extra;
 
-    if (me->vol_table[xc->ins] == NULL || me->wav_table[xc->ins] == NULL)
-	return;
+	if (me->vol_table[xc->ins] == NULL || me->wav_table[xc->ins] == NULL)
+		return;
 
-    if (new_note) {
-	ce->arp = ce->aidx = 0;
-	ce->period = xc->period;
-	ce->vp = ce->vc = ce->vw = 0;
-	ce->wp = ce->wc = ce->ww = 0;
-	ce->vv = 0;
-	ce->vs = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->vts;
-	ce->ws = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->wts;
-    }
-
-    if (ce->vs > 0 && ce->vc-- == 0) {
-	ce->vc = ce->vs - 1;
-
-	if (ce->vw > 0) {
-	    ce->vw--;
-	    goto skip_vol;
+	if (new_note) {
+		ce->arp = ce->aidx = 0;
+		ce->period = xc->period;
+		ce->vp = ce->vc = ce->vw = 0;
+		ce->wp = ce->wc = ce->ww = 0;
+		ce->vv = 0;
+		ce->vs = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->vts;
+		ce->ws = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->wts;
 	}
 
-	jump = loop = jws = 0;
-	switch (b = VT) {
-	    while (jump--) {
-	    case 0xff:		/* END */
-	    case 0xfb:		/* HLT */
-		ce->vp--;
-		break;
-	    case 0xfe:		/* JMP */
-		if (loop)	/* avoid infinite loop */
-		    break;
-		temp = VT;
-		ce->vp = temp;
-		loop = jump = 1;
-		break;
-	    case 0xfa:		/* JWS */
-		jws = VT;
-		break;
-	    case 0xf5:		/* EN2 */
-	    case 0xf4:		/* EN1 */
-		VT_SKIP;	/* Not implemented */
-		break;
-	    case 0xf3:		/* CHU */
-		ce->vv = VT;
-		break;
-	    case 0xf2:		/* CHD */
-		ce->vv = -VT;
-		break;
-	    case 0xf1:		/* WAI */
-		ce->vw = VT;
-		break;
-	    case 0xf0:		/* SPD */
-		ce->vs = VT;
-		break;
-	    default:
-		if (b >= 0x00 && b <= 0x40)
-		    ce->volume = b;
-	    }
-	}
+	if (ce->vs > 0 && ce->vc-- == 0) {
+		ce->vc = ce->vs - 1;
 
-	ce->volume += ce->vv;
-	CLAMP(ce->volume, 0, 64);
-
-skip_vol:
-
-	if (ce->ww > 0) {
-	    ce->ww--;
-	    goto skip_wav;
-	}
-
-	jump = loop = jvs = 0;
-	switch (b = WT) {
-	    struct xmp_instrument *xxi;
-
-	    while (jump--) {
-	    case 0xff:		/* END */
-	    case 0xfb:		/* HLT */
-		ce->wp--;
-		break;
-	    case 0xfe:		/* JMP */
-		if (loop)	/* avoid infinite loop */
-		    break;
-		temp = WT;
-		if (temp == 0xff) {	/* handle JMP END case */
-		    ce->wp--;	/* see lepeltheme ins 0x02 */
-		    break;
+		if (ce->vw > 0) {
+			ce->vw--;
+			goto skip_vol;
 		}
-		ce->wp = temp;
-		loop = jump = 1;
-		break;
-	    case 0xfd:		/* ARE */
-		break;
-	    case 0xfc:		/* ARP */
-		ce->arp = ce->aidx = ce->wp++;
-		while (WT != 0xfd);
-		break;
-	    case 0xfa:		/* JVS */
-		jws = WT;
-		break;
-	    case 0xf7:		/* VWF */
-		ce->vwf = WT;
-		break;
-	    case 0xf6:		/* RES */
-		xc->period = ce->period;
-		break;
-	    case 0xf5:		/* VBS */
-		ce->vib_speed = WT;
-		break;
-	    case 0xf4:		/* VBD */
-		ce->vib_depth = WT;
-		break;
-	    case 0xf3:		/* CHU */
-		ce->wv = -WT;
-		break;
-	    case 0xf2:		/* CHD */
-		ce->wv = WT;
-		break;
-	    case 0xf1:		/* WAI */
-		ce->ww = WT;
-		break;
-	    case 0xf0:		/* SPD */
-		ce->ws = WT;
-		break;
-	    default:
-		xxi = & m->mod.xxi[xc->ins];
-		if (b < xxi->nsm && xxi->sub[b].sid != xc->smp) {
-		    xc->smp = xxi->sub[b].sid;
-		    virt_setsmp(ctx, chn, xc->smp);
+
+		loop = jws = 0;
+
+	    next_vt:
+		switch (b = VT) {
+		case 0xff:	/* END */
+		case 0xfb:	/* HLT */
+			ce->vp--;
+			break;
+		case 0xfe:	/* JMP */
+			if (loop)	/* avoid infinite loop */
+				break;
+			temp = VT;
+			ce->vp = temp;
+			loop = 1;
+			goto next_vt;
+			break;
+		case 0xfa:	/* JWS */
+			jws = VT;
+			break;
+		case 0xf5:	/* EN2 */
+		case 0xf4:	/* EN1 */
+			VT_SKIP;	/* Not implemented */
+			break;
+		case 0xf3:	/* CHU */
+			ce->vv = VT;
+			break;
+		case 0xf2:	/* CHD */
+			ce->vv = -VT;
+			break;
+		case 0xf1:	/* WAI */
+			ce->vw = VT;
+			break;
+		case 0xf0:	/* SPD */
+			ce->vs = VT;
+			break;
+		default:
+			if (b >= 0x00 && b <= 0x40)
+				ce->volume = b;
 		}
-	    }
+
+		ce->volume += ce->vv;
+		CLAMP(ce->volume, 0, 64);
+
+	    skip_vol:
+
+		if (ce->ww > 0) {
+			ce->ww--;
+			goto skip_wav;
+		}
+
+		loop = jvs = 0;
+
+	    next_wt:
+		switch (b = WT) {
+			struct xmp_instrument *xxi;
+
+		case 0xff:	/* END */
+		case 0xfb:	/* HLT */
+			ce->wp--;
+			break;
+		case 0xfe:	/* JMP */
+			if (loop)	/* avoid infinite loop */
+				break;
+			temp = WT;
+			if (temp == 0xff) {	/* handle JMP END case */
+				ce->wp--;	/* see lepeltheme ins 0x02 */
+				break;
+			}
+			ce->wp = temp;
+			loop = 1;
+			goto next_wt;
+		case 0xfd:	/* ARE */
+			break;
+		case 0xfc:	/* ARP */
+			ce->arp = ce->aidx = ce->wp++;
+			while (WT != 0xfd) ;
+			break;
+		case 0xfa:	/* JVS */
+			jws = WT;
+			break;
+		case 0xf7:	/* VWF */
+			ce->vwf = WT;
+			break;
+		case 0xf6:	/* RES */
+			xc->period = ce->period;
+			break;
+		case 0xf5:	/* VBS */
+			ce->vib_speed = WT;
+			break;
+		case 0xf4:	/* VBD */
+			ce->vib_depth = WT;
+			break;
+		case 0xf3:	/* CHU */
+			ce->wv = -WT;
+			break;
+		case 0xf2:	/* CHD */
+			ce->wv = WT;
+			break;
+		case 0xf1:	/* WAI */
+			ce->ww = WT;
+			break;
+		case 0xf0:	/* SPD */
+			ce->ws = WT;
+			break;
+		default:
+			xxi = &m->mod.xxi[xc->ins];
+			if (b < xxi->nsm && xxi->sub[b].sid != xc->smp) {
+				xc->smp = xxi->sub[b].sid;
+				virt_setsmp(ctx, chn, xc->smp);
+			}
+		}
+	    skip_wav:
+		;
+		/* xc->period += ce->wv; */
 	}
-skip_wav:
-	;
-	/* xc->period += ce->wv; */
-    }
 
-    if (jws) {
-	ce->wp = jws;
-	jws = 0;
-    }
+	if (jws) {
+		ce->wp = jws;
+		jws = 0;
+	}
 
-    if (jvs) {
-	ce->vp = jvs;
-	jvs = 0;
-    }
+	if (jvs) {
+		ce->vp = jvs;
+		jvs = 0;
+	}
 }
 
 int med_new_instrument_extras(struct xmp_instrument *xxi)
