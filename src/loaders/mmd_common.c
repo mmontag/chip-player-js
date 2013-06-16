@@ -261,6 +261,23 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		 */
 		event->fxt = FX_F_VSLIDE_DN;
 		break;
+	case 0x1d:
+		/* JUMP TO NEXT BLOCK 1D
+		 * Jumps to the next line in the PLAY SEQUENCE LIST at the
+		 * specified line. ProTracker command D. This command is
+		 * like F00, except that you can specify the line number of
+		 * the first line to be played. The line number must be
+		 * specified in HEX.
+		 */
+		event->fxt = FX_BREAK;
+		break;
+	case 0x1e:
+		/* PLAY LINE x TIMES 1E
+		 * Plays only commands, notes not replayed. ProTracker
+		 * pattern delay.
+		 */
+		event->fxt = FX_PATT_DELAY;
+		break;
 	default:
 		event->fxt = event->fxp = 0;
 		break;

@@ -18,7 +18,7 @@
 #define FX_EXTENDED	0x0e
 #define FX_SPEED	0x0f
 
-/* Unofficial Protracker effects */
+/* Fast tracker effects */
 #define FX_SETPAN	0x08
 
 /* Fast Tracker II effects */
@@ -108,6 +108,7 @@
 #define FX_F_PORTA_DN	0xb0	/* MMD */
 #define FX_MED_DECAY	0xb1	/* MMD hold/decay */
 #define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
+#define FX_PATT_DELAY	0xb3	/* MMD */
 
 /* Reserved synth effects */
 #define FX_SYNTH_0	0xf0

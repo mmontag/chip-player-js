@@ -428,8 +428,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			/* computed at frame loop */
 			break;
 		case EX_PATT_DELAY:	/* Pattern delay */
-			p->flow.delay = fxp;
-			break;
+			goto fx_patt_delay;
 		case EX_INVLOOP:	/* Invert loop / funk repeat */
 			xc->invloop.speed = fxp;
 			break;
@@ -442,6 +441,11 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		} else {
 			goto fx_s3m_bpm;
 		}
+		break;
+
+	case FX_PATT_DELAY:
+	    fx_patt_delay:
+		p->flow.delay = fxp;
 		break;
 
 	case FX_F_VSLIDE_UP:	/* Fine volume slide up */

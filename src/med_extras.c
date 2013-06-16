@@ -68,7 +68,7 @@ int med_change_period(struct context_data *ctx, struct channel_data *xc)
 
 	/* FIXME: always using sine waveform */
 
-	vib = (sine[ce->vib_idx >> 5] * ce->vib_depth) >> 11;
+	vib = (sine[ce->vib_idx >> 5] * ce->vib_depth) >> 10;
 	ce->vib_idx += ce->vib_speed;
 	ce->vib_idx %= (32 << 5);
 
