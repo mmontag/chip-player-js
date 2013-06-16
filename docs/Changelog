@@ -10,6 +10,9 @@ Stable versions
 	- add API call to create an empty module instead of loading
 	- add loader for His Master's Noise modules
 	- fix loop parameter in xmp_play_buffer()
+	- fix MED synth volume slide reset on new note
+	- refactor handling of format-specific instrument and channel data
+	- refactor MED synth command interpreter
 
 4.1.5 (20130527):
 	Fix bugs reported by Andreas Falkenhahn:
