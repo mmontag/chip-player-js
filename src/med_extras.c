@@ -123,6 +123,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 	ce->period = xc->period;
 	ce->vp = ce->vc = ce->vw = 0;
 	ce->wp = ce->wc = ce->ww = 0;
+	ce->vv = 0;
 	ce->vs = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->vts;
 	ce->ws = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->wts;
     }
