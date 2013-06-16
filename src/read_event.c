@@ -39,16 +39,20 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 	return NULL;
 }
 
-static void reset_envelopes(struct xmp_module *mod, struct channel_data *xc)
+static void reset_envelopes(struct context_data *ctx, struct channel_data *xc)
 {
+	struct xmp_instrument *xxi;
+
+	xxi = get_instrument(ctx, xc->ins);
+
 	/* Reset envelope positions */
-	if (~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_CARRY) {
+	if (~xxi->aei.flg & XMP_ENVELOPE_CARRY) {
 		xc->v_idx = 0;
 	}
-	if (~mod->xxi[xc->ins].pei.flg & XMP_ENVELOPE_CARRY) {
+	if (~xxi->pei.flg & XMP_ENVELOPE_CARRY) {
 		xc->p_idx = 0;
 	}
-	if (~mod->xxi[xc->ins].fei.flg & XMP_ENVELOPE_CARRY) {
+	if (~xxi->fei.flg & XMP_ENVELOPE_CARRY) {
 		xc->f_idx = 0;
 	}
 }
@@ -200,7 +204,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (e->ins && sub != NULL)
-		reset_envelopes(mod, xc);
+		reset_envelopes(ctx, xc);
 
 	/* Process new volume */
 	if (e->vol) {
@@ -379,7 +383,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		 * But make sure we have an instrument set, see Letting go
 		 * pos 4 chn 20
 		 */
-		reset_envelopes(mod, xc);
+		reset_envelopes(ctx, xc);
 	}
 
 	/* Process new volume */
@@ -528,7 +532,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (e->ins && sub != NULL)
-		reset_envelopes(mod, xc);
+		reset_envelopes(ctx, xc);
 
 	/* Process new volume */
 	if (e->vol) {
@@ -690,7 +694,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 
 			if (HAS_QUIRK(QUIRK_PRENV) && e->ins)
-				reset_envelopes(mod, xc);
+				reset_envelopes(ctx, xc);
 		}
 	}
 
@@ -739,7 +743,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (note >= 0 && sub != NULL)
-		reset_envelopes(mod, xc);
+		reset_envelopes(ctx, xc);
 	
 	/* Process new volume */
 	if (e->vol) {
@@ -852,7 +856,7 @@ static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc, 0);
 	if (e->ins && sub != NULL)
-		reset_envelopes(mod, xc);
+		reset_envelopes(ctx, xc);
 
 	xc->volume = e->vol - 1;
 	SET(NEW_VOL);

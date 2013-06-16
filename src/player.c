@@ -216,10 +216,12 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
-	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+	struct xmp_instrument *instrument;
 	int finalvol;
 	uint16 vol_envelope;
 	int gvol, end;
+
+	instrument = get_instrument(ctx, xc->ins);
 
 	/* Keyoff and fadeout */
 
@@ -348,12 +350,14 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
-	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+	struct xmp_instrument *instrument;
 	double period;
 	int linear_bend;
 	int frq_envelope;
 	int arp, vibrato, cutoff, resonance;
 	int end;
+
+	instrument = get_instrument(ctx, xc->ins);
 
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0, &end);
 	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
@@ -442,13 +446,14 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 static void process_pan(struct context_data *ctx, int chn, int t, int act)
 {
 	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
 	struct channel_data *xc = &p->xc_data[chn];
-	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
+	struct xmp_instrument *instrument;
 	int finalpan, panbrello = 0;
 	int pan_envelope;
 	int end;
+
+	instrument = get_instrument(ctx, xc->ins);
 
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32, &end);
 	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);

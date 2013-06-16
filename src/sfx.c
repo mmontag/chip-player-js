@@ -12,6 +12,41 @@
 #include "player.h"
 #include "hio.h"
 
+
+struct xmp_instrument *get_instrument(struct context_data *ctx, int ins)
+{
+	struct sfx_data *sfx = &ctx->sfx;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	struct xmp_instrument *xxi;
+
+	if (ins < mod->ins)
+		xxi = &mod->xxi[ins];
+	else if (ins < mod->ins + sfx->ins)
+		xxi = &sfx->xxi[ins - mod->ins];
+	else
+		xxi = NULL;
+
+	return xxi;
+}
+
+struct xmp_sample *get_sample(struct context_data *ctx, int smp)
+{
+	struct sfx_data *sfx = &ctx->sfx;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	struct xmp_sample *xxs;
+
+	if (smp < mod->smp)
+		xxs = &mod->xxs[smp];
+	else if (smp < mod->smp + sfx->smp)
+		xxs = &sfx->xxs[smp - mod->smp];
+	else
+		xxs = NULL;
+
+	return xxs;
+}
+
 int xmp_sfx_init(xmp_context opaque, int chn, int smp)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -21,12 +56,21 @@ int xmp_sfx_init(xmp_context opaque, int chn, int smp)
 		return -XMP_ERROR_STATE;
 
 	sfx->xxi = calloc(sizeof (struct xmp_instrument), smp);
+	if (sfx->xxi == NULL)
+		goto err;
 	sfx->xxs = calloc(sizeof (struct xmp_sample), smp);
+	if (sfx->xxs == NULL)
+		goto err1;
 
 	sfx->chn = chn;
 	sfx->ins = sfx->smp = smp;
 
 	return 0;
+
+    err1:
+	free(sfx->xxi);
+    err:
+	return -XMP_ERROR_INTERNAL;
 }
 
 int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
@@ -165,6 +209,9 @@ void xmp_sfx_release_sample(xmp_context opaque, int num)
 
 	free(sfx->xxs[num].data);
 	free(sfx->xxi[num].sub);
+
+	sfx->xxs[num].data = NULL;
+	sfx->xxi[num].sub = NULL;
 }
 
 void xmp_sfx_deinit(xmp_context opaque)

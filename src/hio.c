@@ -222,12 +222,19 @@ HIO_HANDLE *hio_open_file(void *path, char *mode)
 
 	h = (HIO_HANDLE *)malloc(sizeof (HIO_HANDLE));
 	if (h == NULL)
-		return NULL;
+		goto err;
 	
 	h->type = HIO_HANDLE_TYPE_FILE;
 	h->f = fopen(path, mode);
+	if (h->f == NULL)
+		goto err2;
 
 	return h;
+
+    err2:
+	free(h);
+    err:
+	return NULL;
 }
 
 HIO_HANDLE *hio_open_mem(void *path, long size)

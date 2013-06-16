@@ -74,6 +74,9 @@ void play_extras(struct context_data *ctx, struct channel_data *xc, int chn, int
 {
 	struct module_data *m = &ctx->m;
 
+	if (xc->ins >= m->mod.ins)	/* SFX instruments have no extras */
+		return;
+
         if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
 		med_play_extras(ctx, xc, chn, new_note);
         else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
@@ -85,7 +88,9 @@ int extras_get_volume(struct context_data *ctx, struct channel_data *xc)
 	struct module_data *m = &ctx->m;
 	int vol;
 
-        if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
+	if (xc->ins >= m->mod.ins)
+		vol = xc->volume;
+        else if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
 		vol = MED_CHANNEL_EXTRAS(*xc)->volume * xc->volume / 64;
 	else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
 		vol = HMN_CHANNEL_EXTRAS(*xc)->volume * xc->volume / 64;

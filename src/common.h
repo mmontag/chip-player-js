@@ -363,4 +363,7 @@ int	get_temp_dir		(char *, int);
 int	mkstemp			(char *);
 #endif
 
+struct xmp_instrument *get_instrument(struct context_data *, int);
+struct xmp_sample *get_sample(struct context_data *, int);
+
 #endif /* LIBXMP_COMMON_H */

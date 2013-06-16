@@ -48,5 +48,6 @@ XMP_4.2 {
     xmp_sfx_play_sample;
     xmp_sfx_channel_pan;
     xmp_sfx_load_sample;
+    xmp_sfx_release_sample;
 } XMP_4.1;
 
