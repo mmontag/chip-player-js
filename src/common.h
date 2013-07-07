@@ -302,6 +302,12 @@ struct player_data {
 	} virt;
 
 	struct xmp_event inject_event[XMP_MAX_CHANNELS];
+
+	struct {		
+		int consumed;
+		int in_size;
+		char *in_buffer;
+	} buffer_data;
 };
 
 struct mixer_data {

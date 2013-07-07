@@ -1059,17 +1059,15 @@ int xmp_play_frame(xmp_context opaque)
 int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
 	int ret = 0, filled = 0, copy_size;
-	static int consumed = 0;
-	static int in_buffer_size = 0;
-	static char *in_buffer;
 	struct xmp_frame_info fi;
 
 	/* Reset internal state
 	 * Syncs buffer start with frame start */
 	if (out_buffer == NULL) {
-		consumed = 0;
-		in_buffer_size = 0;
+		p->buffer_data.consumed = 0;
+		p->buffer_data.in_size = 0;
 		return 0;
 	}
 
@@ -1079,7 +1077,7 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 	/* Fill buffer */
 	while (filled < size) {
 		/* Check if buffer full */
-		if (consumed == in_buffer_size) {
+		if (p->buffer_data.consumed == p->buffer_data.in_size) {
 			ret = xmp_play_frame(opaque);
 			xmp_get_frame_info(opaque, &fi);
 
@@ -1087,8 +1085,8 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 			if (ret < 0 || (loop > 0 && fi.loop_count >= loop)) {
 				/* Start of frame, return end of replay */
 				if (filled == 0) {
-					consumed = 0;
-					in_buffer_size = 0;
+					p->buffer_data.consumed = 0;
+					p->buffer_data.in_size = 0;
 					return -1;
 				}
 
@@ -1097,16 +1095,17 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 				return 0;
 			}
 
-			consumed = 0;
-			in_buffer = fi.buffer;
-			in_buffer_size = fi.buffer_size;
+			p->buffer_data.consumed = 0;
+			p->buffer_data.in_buffer = fi.buffer;
+			p->buffer_data.in_size = fi.buffer_size;
 		}
 
 		/* Copy frame data to user buffer */
-		copy_size = MIN(size - filled, in_buffer_size - consumed);
-		memcpy((char *)out_buffer + filled, in_buffer + consumed,
-								copy_size);
-		consumed += copy_size;
+		copy_size = MIN(size - filled, p->buffer_data.in_size -
+					p->buffer_data.consumed);
+		memcpy((char *)out_buffer + filled, p->buffer_data.in_buffer +
+					p->buffer_data.consumed, copy_size);
+		p->buffer_data.consumed += copy_size;
 		filled += copy_size;
 	}
 
