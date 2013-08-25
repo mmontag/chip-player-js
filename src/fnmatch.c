@@ -94,12 +94,12 @@ fnmatch(const char *pattern, const char *string, int flags)
 			if (c == EOS)
 				if (flags & FNM_PATHNAME)
 					return ((flags & FNM_LEADING_DIR) ||
-					    index(string, '/') == NULL ?
+					    strchr(string, '/') == NULL ?
 					    0 : FNM_NOMATCH);
 				else
 					return (0);
 			else if (c == '/' && flags & FNM_PATHNAME) {
-				if ((string = index(string, '/')) == NULL)
+				if ((string = strchr(string, '/')) == NULL)
 					return (FNM_NOMATCH);
 				break;
 			}
@@ -213,7 +213,7 @@ rangematch(const char *pattern, char test, int flags, char **newp)
 			ok = 1;
 	} while ((c = *pattern++) != ']');
 
-	*newp = (char *)(uintptr_t)pattern;
+	*newp = (char *)pattern;
 	return (ok == negate ? RANGE_NOMATCH : RANGE_MATCH);
 }
 
