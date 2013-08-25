@@ -11,6 +11,7 @@ Stable versions
 	- add loader for His Master's Noise modules
 	- fix loop parameter in xmp_play_buffer()
 	- fix MED synth volume slide reset on new note
+	- fix instrument mapping in IT old instrument format
 	- refactor handling of format-specific instrument and channel data
 	- refactor MED synth command interpreter
 

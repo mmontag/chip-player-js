@@ -688,7 +688,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		inst_map[j] = -1;
 
 	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
-		c = i1h.keys[25 + j * 2] - 1;
+		c = i1h.keys[j * 2 + 1] - 1;
 		if (c < 0) {
 		    xxi->map[j].ins = 0xff;	/* No sample */
 		    xxi->map[j].xpo = 0;
@@ -700,7 +700,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    k++;
 		}
 		xxi->map[j].ins = inst_map[c];
-		xxi->map[j].xpo = i1h.keys[24 + j * 2] - (j + 12);
+		xxi->map[j].xpo = i1h.keys[j * 2] - j;
 	    }
 
 	    xxi->nsm = k;
