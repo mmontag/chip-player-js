@@ -60,17 +60,17 @@ CFLAGS += -Iinclude -Isrc
 .SUFFIXES: .c .o .lo .a .so .dll .in .gco .gcda .gcno
 
 .c.o:
-	@CMD='$(CC) $(CFLAGS) -o $*.o $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -o $*.o $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.o ; fi; \
 	eval $$CMD
 
 .c.lo:
-	@CMD='$(CC) $(CFLAGS) -fPIC -o $*.lo $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -o $*.lo $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.lo ; fi; \
 	eval $$CMD
 
 .c.gco:
-	@CMD='$(CC) $(CFLAGS) -O0 -fno-inline -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
+	@CMD='$(CC) $(CPPFLAGS) $(CFLAGS) -O0 -fno-inline -fprofile-arcs -ftest-coverage -o $*.gco $<'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo CC $*.gco ; fi; \
 	eval $$CMD
 
