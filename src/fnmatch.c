@@ -36,16 +36,16 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-
 /*
  * Function fnmatch() as specified in POSIX 1003.2-1992, section B.6.
  * Compares a filename or pathname to a pattern.
  */
 
-#include <sys/param.h>
-#include <sys/ctype.h>
-#include <sys/libkern.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "fnmatch.h"
 
 #define	EOS	'\0'
 
