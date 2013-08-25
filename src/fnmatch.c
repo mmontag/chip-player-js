@@ -4,9 +4,9 @@
 
 #ifndef HAVE_FNMATCH
 
-/*
+/*-
  * Copyright (c) 1989, 1993, 1994
- *      The Regents of the University of California.  All rights reserved.
+ *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Guido van Rossum.
@@ -19,10 +19,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the University of
- *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -38,33 +34,32 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * From FreeBSD fnmatch.c 1.11
- * $Id: fnmatch.c 273994 2009-01-20 01:37:48Z pajoye $
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)fnmatch.c   8.2 (Berkeley) 4/16/94";
-#endif				/* LIBC_SCCS and not lint */
+#include <sys/cdefs.h>
 
 /*
  * Function fnmatch() as specified in POSIX 1003.2-1992, section B.6.
  * Compares a filename or pathname to a pattern.
  */
 
-#include <ctype.h>
-#include <string.h>
-#include <stdio.h>
+#include <sys/param.h>
+#include <sys/ctype.h>
+#include <sys/libkern.h>
 
-#include "fnmatch.h"
+#define	EOS	'\0'
 
-#define EOS     '\0'
+#define RANGE_MATCH     1
+#define RANGE_NOMATCH   0
+#define RANGE_ERROR     (-1)
 
-static const char *rangematch(const char *, char, int);
+static int rangematch(const char *, char, int, char **);
 
-int fnmatch(const char *pattern, const char *string, int flags)
+int
+fnmatch(const char *pattern, const char *string, int flags)
 {
 	const char *stringstart;
+	char *newp;
 	char c, test;
 
 	for (stringstart = string;;)
@@ -80,7 +75,7 @@ int fnmatch(const char *pattern, const char *string, int flags)
 				return (FNM_NOMATCH);
 			if (*string == '.' && (flags & FNM_PERIOD) &&
 			    (string == stringstart ||
-			     ((flags & FNM_PATHNAME) && *(string - 1) == '/')))
+			    ((flags & FNM_PATHNAME) && *(string - 1) == '/')))
 				return (FNM_NOMATCH);
 			++string;
 			break;
@@ -92,27 +87,26 @@ int fnmatch(const char *pattern, const char *string, int flags)
 
 			if (*string == '.' && (flags & FNM_PERIOD) &&
 			    (string == stringstart ||
-			     ((flags & FNM_PATHNAME) && *(string - 1) == '/')))
+			    ((flags & FNM_PATHNAME) && *(string - 1) == '/')))
 				return (FNM_NOMATCH);
 
 			/* Optimize for pattern with * at end or before /. */
 			if (c == EOS)
 				if (flags & FNM_PATHNAME)
 					return ((flags & FNM_LEADING_DIR) ||
-						strchr(string, '/') == NULL ?
-						0 : FNM_NOMATCH);
+					    index(string, '/') == NULL ?
+					    0 : FNM_NOMATCH);
 				else
 					return (0);
 			else if (c == '/' && flags & FNM_PATHNAME) {
-				if ((string = strchr(string, '/')) == NULL)
+				if ((string = index(string, '/')) == NULL)
 					return (FNM_NOMATCH);
 				break;
 			}
 
 			/* General case, use recursion. */
 			while ((test = *string) != EOS) {
-				if (!fnmatch
-				    (pattern, string, flags & ~FNM_PERIOD))
+				if (!fnmatch(pattern, string, flags & ~FNM_PERIOD))
 					return (0);
 				if (test == '/' && flags & FNM_PATHNAME)
 					break;
@@ -122,11 +116,22 @@ int fnmatch(const char *pattern, const char *string, int flags)
 		case '[':
 			if (*string == EOS)
 				return (FNM_NOMATCH);
-			if (*string == '/' && flags & FNM_PATHNAME)
+			if (*string == '/' && (flags & FNM_PATHNAME))
 				return (FNM_NOMATCH);
-			if ((pattern =
-			     rangematch(pattern, *string, flags)) == NULL)
+			if (*string == '.' && (flags & FNM_PERIOD) &&
+			    (string == stringstart ||
+			    ((flags & FNM_PATHNAME) && *(string - 1) == '/')))
 				return (FNM_NOMATCH);
+
+			switch (rangematch(pattern, *string, flags, &newp)) {
+			case RANGE_ERROR:
+				goto norm;
+			case RANGE_MATCH:
+				pattern = newp;
+				break;
+			case RANGE_NOMATCH:
+				return (FNM_NOMATCH);
+			}
 			++string;
 			break;
 		case '\\':
@@ -138,15 +143,13 @@ int fnmatch(const char *pattern, const char *string, int flags)
 			}
 			/* FALLTHROUGH */
 		default:
-			if (c == *string) ;
+		norm:
+			if (c == *string)
+				;
 			else if ((flags & FNM_CASEFOLD) &&
 				 (tolower((unsigned char)c) ==
-				  tolower((unsigned char)*string))) ;
-			else if ((flags & FNM_PREFIX_DIRS) && *string == EOS &&
-				 (c == '/' && string != stringstart ||
-				  string == stringstart + 1
-				  && *stringstart == '/'))
-				return (0);
+				  tolower((unsigned char)*string)))
+				;
 			else
 				return (FNM_NOMATCH);
 			string++;
@@ -155,7 +158,8 @@ int fnmatch(const char *pattern, const char *string, int flags)
 	/* NOTREACHED */
 }
 
-static const char *rangematch(const char *pattern, char test, int flags)
+static int
+rangematch(const char *pattern, char test, int flags, char **newp)
 {
 	int negate, ok;
 	char c, c2;
@@ -167,39 +171,50 @@ static const char *rangematch(const char *pattern, char test, int flags)
 	 * consistency with the regular expression syntax.
 	 * J.T. Conklin (conklin@ngai.kaleida.com)
 	 */
-	if ((negate = (*pattern == '!' || *pattern == '^')))
+	if ( (negate = (*pattern == '!' || *pattern == '^')) )
 		++pattern;
 
 	if (flags & FNM_CASEFOLD)
 		test = tolower((unsigned char)test);
 
-	for (ok = 0; (c = *pattern++) != ']';) {
+	/*
+	 * A right bracket shall lose its special meaning and represent
+	 * itself in a bracket expression if it occurs first in the list.
+	 * -- POSIX.2 2.8.3.2
+	 */
+	ok = 0;
+	c = *pattern++;
+	do {
 		if (c == '\\' && !(flags & FNM_NOESCAPE))
 			c = *pattern++;
 		if (c == EOS)
-			return (NULL);
+			return (RANGE_ERROR);
+
+		if (c == '/' && (flags & FNM_PATHNAME))
+			return (RANGE_NOMATCH);
 
 		if (flags & FNM_CASEFOLD)
 			c = tolower((unsigned char)c);
 
 		if (*pattern == '-'
-		    && (c2 = *(pattern + 1)) != EOS && c2 != ']') {
+		    && (c2 = *(pattern+1)) != EOS && c2 != ']') {
 			pattern += 2;
 			if (c2 == '\\' && !(flags & FNM_NOESCAPE))
 				c2 = *pattern++;
 			if (c2 == EOS)
-				return (NULL);
+				return (RANGE_ERROR);
 
 			if (flags & FNM_CASEFOLD)
 				c2 = tolower((unsigned char)c2);
 
-			if ((unsigned char)c <= (unsigned char)test &&
-			    (unsigned char)test <= (unsigned char)c2)
+			if (c <= test && test <= c2)
 				ok = 1;
 		} else if (c == test)
 			ok = 1;
-	}
-	return (ok == negate ? NULL : pattern);
+	} while ((c = *pattern++) != ']');
+
+	*newp = (char *)(uintptr_t)pattern;
+	return (ok == negate ? RANGE_NOMATCH : RANGE_MATCH);
 }
 
 #endif
