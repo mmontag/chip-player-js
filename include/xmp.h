@@ -48,7 +48,7 @@ extern "C" {
 #define XMP_PLAYER_SMPCTL	6	/* Sample control flags */
 #define XMP_PLAYER_VOLUME	7	/* Player module volume */
 #define XMP_PLAYER_STATE	8	/* Internal player state */
-#define XMP_PLAYER_SFX_VOLUME	9	/* Player SFX olume */
+#define XMP_PLAYER_SFX_VOLUME	9	/* Player SFX volume */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
