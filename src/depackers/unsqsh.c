@@ -36,7 +36,7 @@ struct io {
 	int offs;
 };
 
-static uint8 a3[] = {
+static uint8 ctable[] = {
 	2, 3, 4, 5, 6, 7, 8, 0,
 	3, 2, 4, 5, 6, 7, 8, 0,
 	4, 3, 5, 2, 6, 7, 8, 0,
@@ -187,7 +187,7 @@ static void unsqsh_block(struct io *io, uint8 *dest_end)
 					}
 				}
 
-				count = *(a3 + (8 * old_count) + count - 17);
+				count = ctable[8 * old_count + count - 17];
 				if (count != 8) {
 					unpack_len = 4;
 					d2 += 8;
