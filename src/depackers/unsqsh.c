@@ -225,7 +225,7 @@ static int unsqsh(uint8 *src, uint8 *dest, int len)
 	int sum, packed_size, unpacked_size;
 	int lchk;
 	uint8 *c, *dest_end;
-	uint8 bc1, bc2, bc3;
+	uint8 bc[3];
 	struct io io;
 
 	io.src = src;
@@ -247,16 +247,10 @@ static int unsqsh(uint8 *src, uint8 *dest, int len)
 		c += 2;
 
 		io.src = c + 2;
-		bc1 = c[packed_size + 2];
-		bc2 = c[packed_size + 1];
-		bc3 = c[packed_size];
-		c[packed_size + 2] = 0;
-		c[packed_size + 1] = 0;
-		c[packed_size] = 0;
+		memcpy(bc, c + packed_size, 3);
+		memset(c + packed_size, 0, 3);
 		lchk = xchecksum((uint32 *) (c), (packed_size + 3) >> 2);
-		c[packed_size + 2] = bc1;
-		c[packed_size + 1] = bc2;
-		c[packed_size] = bc3;
+		memcpy(c + packed_size, bc, 3);
 
 		if (lchk != sum) {
 			return decrunched;
