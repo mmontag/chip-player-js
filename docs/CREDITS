@@ -227,3 +227,13 @@ Vorbis decoder
  Placed in the public domain April 2007 by the author: no copyright is
  claimed, and you may use it for any purpose you like.
 
+
+ptpopen - A Windows replacement for popen()
+
+ pt_popen/pt_pclose functions
+ Written somewhere in the 90s by Kurt Keller
+
+ This piece of code is in the public domain. I do not claim any rights
+ on it. Do whatever you want to do with it and I hope it will be still
+ useful.
+

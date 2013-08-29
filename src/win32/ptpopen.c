@@ -1,7 +1,14 @@
 /*
- * pt_popen/pt_pclose functions by Kurt Keller
+ * pt_popen/pt_pclose functions
+ * Written somewhere in the 90s by Kurt Keller
+ * Comments translated by Steve Donovan
  * Modified for use in xmp by Mirko Buffoni and Claudio Matsuoka
- * comments translated by Steve Donovan
+ */
+
+/*
+ * This piece of code is in the public domain. I do not claim any rights
+ * on it. Do whatever you want to do with it and I hope it will be still
+ * useful. -- Kurt Keller, Aug 2013
  */
 
 #if !defined(HAVE_POPEN) && defined(WIN32)
