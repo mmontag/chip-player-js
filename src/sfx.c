@@ -55,6 +55,11 @@ int xmp_sfx_init(xmp_context opaque, int chn, int smp)
 	if (ctx->state > XMP_STATE_LOADED)
 		return -XMP_ERROR_STATE;
 
+	if (ctx->state < XMP_STATE_LOADED) {
+		if (xmp_create_module(opaque, 0) < 0)
+			return -XMP_ERROR_INTERNAL;
+	}
+
 	sfx->xxi = calloc(sizeof (struct xmp_instrument), smp);
 	if (sfx->xxi == NULL)
 		goto err;
@@ -88,6 +93,9 @@ int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int 
 	if (chn >= sfx->chn)
 		return -XMP_ERROR_INVALID;
 
+	if (ins >= mod->ins)
+		return -XMP_ERROR_INVALID;
+
 	if (note == 0)
 		note = 60;		/* middle C note number */
 
@@ -104,14 +112,35 @@ int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int 
 int xmp_sfx_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+	struct player_data *p = &ctx->p;
 	struct sfx_data *sfx = &ctx->sfx;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	struct xmp_event *event;
+
+	if (ctx->state < XMP_STATE_PLAYING)
+		return -XMP_ERROR_STATE;
 
 	if (chn >= sfx->chn || ins >= sfx->ins)
 		return -XMP_ERROR_INVALID;
 
-	return xmp_sfx_play_instrument(opaque, mod->ins + ins, note, vol, 0);
+	if (chn >= sfx->chn)
+		return -XMP_ERROR_INVALID;
+
+	if (ins >= sfx->ins)
+		return -XMP_ERROR_INVALID;
+
+	if (note == 0)
+		note = 60;		/* middle C note number */
+
+	event = &p->inject_event[mod->chn + chn];
+	memset(event, 0, sizeof (struct xmp_event));
+	event->note = note + 1;
+	event->ins = mod->ins + ins + 1;
+	event->vol = vol + 1;
+	event->_flag = 1;
+
+	return 0;
 }
 
 int xmp_sfx_channel_pan(xmp_context opaque, int chn, int pan)
