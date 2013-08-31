@@ -666,7 +666,7 @@ int xmp_create_module(xmp_context opaque, int nch)
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	if (nch < 1 || nch > 64)
+	if (nch < 0 || nch > 64)
 		return -XMP_ERROR_INVALID;
 
 	m->filename = NULL;
