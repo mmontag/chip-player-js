@@ -15,7 +15,7 @@
 #include "prowiz.h"
 
 
-const struct pw_format *const pw_format[] = {
+const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
 	/* With signature */
 	&pw_ac1d,
 	&pw_fchs,
