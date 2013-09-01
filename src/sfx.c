@@ -85,10 +85,7 @@ int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int 
 	if (ctx->state < XMP_STATE_PLAYING)
 		return -XMP_ERROR_STATE;
 
-	if (chn >= sfx->chn)
-		return -XMP_ERROR_INVALID;
-
-	if (ins >= mod->ins)
+	if (chn >= sfx->chn || ins >= mod->ins)
 		return -XMP_ERROR_INVALID;
 
 	if (note == 0)
@@ -117,12 +114,6 @@ int xmp_sfx_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
 		return -XMP_ERROR_STATE;
 
 	if (chn >= sfx->chn || ins >= sfx->ins)
-		return -XMP_ERROR_INVALID;
-
-	if (chn >= sfx->chn)
-		return -XMP_ERROR_INVALID;
-
-	if (ins >= sfx->ins)
 		return -XMP_ERROR_INVALID;
 
 	if (note == 0)
