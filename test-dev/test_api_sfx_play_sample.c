@@ -14,8 +14,8 @@ TEST(test_api_sfx_play_sample)
 	ctx = (struct context_data *)opaque;
 	p = &ctx->p;
 
-	ret = xmp_create_module(opaque, 4);
-	fail_unless(ret == 0, "create module");
+	ret = xmp_load_module(opaque, "data/mod.loving_is_easy.pp");
+	fail_unless(ret == 0, "load module");
 
 	xmp_sfx_init(opaque, 1, 2);
 	ret = xmp_sfx_load_sample(opaque, 0, "data/blip.wav");
@@ -35,7 +35,7 @@ TEST(test_api_sfx_play_sample)
 	vi = &p->virt.voice_array[voc];
 
 	fail_unless(vi->note - ctx->sfx.xxi[0].sub[0].xpo == 60, "set note");
-	fail_unless(vi->ins  ==  0, "set instrument");
+	fail_unless(vi->ins  ==  31, "set instrument");
 	fail_unless(vi->vol / 16 == 64, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
@@ -44,7 +44,7 @@ TEST(test_api_sfx_play_sample)
 	xmp_play_frame(opaque);
 
 	fail_unless(vi->note - ctx->sfx.xxi[1].sub[0].xpo == 50, "set note");
-	fail_unless(vi->ins  ==  1, "set instrument");
+	fail_unless(vi->ins  ==  32, "set instrument");
 	fail_unless(vi->vol / 16 == 40, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 

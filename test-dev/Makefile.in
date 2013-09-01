@@ -46,12 +46,12 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 
 API		= get_format_list create_context free_context \
 		  test_module load_module load_module_from_memory \
-		  create_module \
 		  start_player play_buffer \
 		  set_position prev_position \
 		  set_player stop_module restart_module seek_time \
-		  channel_mute channel_vol inject_event scan_module \
-		  sfx_play_sample
+		  channel_mute channel_vol inject_event scan_module
+
+API_SFX		= sfx_play_sample
 
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \
@@ -156,7 +156,7 @@ PLAYER_TESTS	= $(addprefix player_,$(PLAYER))
 
 SYNTH_TESTS	= $(addprefix synth_,$(SYNTH))
 
-API_TESTS	= $(addprefix api_,$(API))
+API_TESTS	= $(addprefix api_,$(API)) $(addprefix api_,$(API_SFX))
 
 TESTS		= $(READ_TESTS) \
 		  $(WRITE_TESTS) \
