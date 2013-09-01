@@ -659,6 +659,7 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	return 0;
 }
 
+#if 0
 int xmp_create_module(xmp_context opaque, int nch)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -729,6 +730,7 @@ int xmp_create_module(xmp_context opaque, int nch)
     err:
 	return XMP_ERROR_INTERNAL;
 }
+#endif
 
 void xmp_release_module(xmp_context opaque)
 {

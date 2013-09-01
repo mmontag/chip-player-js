@@ -55,11 +55,6 @@ int xmp_sfx_init(xmp_context opaque, int chn, int smp)
 	if (ctx->state > XMP_STATE_LOADED)
 		return -XMP_ERROR_STATE;
 
-	if (ctx->state < XMP_STATE_LOADED) {
-		if (xmp_create_module(opaque, 0) < 0)
-			return -XMP_ERROR_INTERNAL;
-	}
-
 	sfx->xxi = calloc(sizeof (struct xmp_instrument), smp);
 	if (sfx->xxi == NULL)
 		goto err;
