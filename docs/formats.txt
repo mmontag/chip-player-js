@@ -10,6 +10,7 @@ MOD, M15	Soundtracker		2.2, UST
 MOD/NT		Startrekker/ADSC	FLT4/8/M, EXO4/8
 MOD		Digital Tracker		FA04, FA06, FA08
 MOD		Fast/Taketracker	xCHN, xxCH
+MOD		His Master's Noise	-
 FLX		Flextrax		M.K., xCHN (no dsp effects)
 WOW		Mod's Grave		M.K.
 
@@ -76,7 +77,7 @@ Commodore 64 formats:
 
 MOD		Polly Tracker		-
 
-C tracker formats:
+PC tracker formats:
 
 669		Composer 669/UNIS 669   if, JN
 ALM		Aley Keptr		1.0, 1.1, 1.2
