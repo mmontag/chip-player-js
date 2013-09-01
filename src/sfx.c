@@ -151,21 +151,34 @@ int xmp_sfx_load_sample(xmp_context opaque, int num, char *path)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct sfx_data *sfx = &ctx->sfx;
 	struct module_data *m = &ctx->m;
-	struct xmp_instrument *xxi = &sfx->xxi[num];
-	struct xmp_sample *xxs = &sfx->xxs[num];
+	struct xmp_instrument *xxi;
+	struct xmp_sample *xxs;
 	HIO_HANDLE *h;
 	uint32 magic;
 	int chn, rate, bits, size;
+	int retval = -XMP_ERROR_INTERNAL;
+
+	if (num >= sfx->ins) {
+		retval = -XMP_ERROR_INVALID;
+		goto err;
+	}
+
+	xxi = &sfx->xxi[num];
+	xxs = &sfx->xxs[num];
 
 	h = hio_open_file(path, "rb");
-	if (h == NULL)
+	if (h == NULL) {
+		retval = -XMP_ERROR_SYSTEM;
 		goto err;
+	}
 		
 	/* Init instrument */
 
 	xxi->sub = calloc(sizeof(struct xmp_subinstrument), 1);
-	if (xxi->sub == NULL)
+	if (xxi->sub == NULL) {
+		retval = -XMP_ERROR_SYSTEM;
 		goto err1;
+	}
 
 	xxi->vol = m->volbase;
 	xxi->nsm = 1;
@@ -176,13 +189,17 @@ int xmp_sfx_load_sample(xmp_context opaque, int num, char *path)
 	/* Load sample */
 
 	magic = hio_read32b(h);
-	if (magic != 0x52494646)	/* RIFF */
+	if (magic != 0x52494646) {	/* RIFF */
+		retval = -XMP_ERROR_FORMAT;
 		goto err2;
+	}
 
 	hio_seek(h, 22, SEEK_SET);
 	chn = hio_read16l(h);
-	if (chn != 1)
+	if (chn != 1) {
+		retval = -XMP_ERROR_FORMAT;
 		goto err2;
+	}
 
 	rate = hio_read32l(h);
 
@@ -200,8 +217,10 @@ int xmp_sfx_load_sample(xmp_context opaque, int num, char *path)
 	xxs->flg = bits == 16 ? XMP_SAMPLE_16BIT : 0;
 
 	xxs->data = malloc(size);
-	if (xxs->data == NULL)
+	if (xxs->data == NULL) {
+		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
+	}
 
 	hio_seek(h, 44, SEEK_SET);
 	hio_read(xxs->data, 1, size, h);
@@ -214,19 +233,24 @@ int xmp_sfx_load_sample(xmp_context opaque, int num, char *path)
     err1:
 	hio_close(h);
     err:
-	return -XMP_ERROR_INTERNAL;
+	return retval;
 }
 
-void xmp_sfx_release_sample(xmp_context opaque, int num)
+int xmp_sfx_release_sample(xmp_context opaque, int num)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct sfx_data *sfx = &ctx->sfx;
+
+	if (num >= sfx->ins)
+		return -XMP_ERROR_INVALID;
 
 	free(sfx->xxs[num].data);
 	free(sfx->xxi[num].sub);
 
 	sfx->xxs[num].data = NULL;
 	sfx->xxi[num].sub = NULL;
+
+	return 0;
 }
 
 void xmp_sfx_deinit(xmp_context opaque)

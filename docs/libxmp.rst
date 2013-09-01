@@ -290,7 +290,7 @@ int xmp_test_module(char \*path, struct xmp_test_info \*test_info)
     0 if the file is a valid module, or a negative error code
     in case of error. Error codes can be ``-XMP_ERROR_FORMAT`` in case of an
     unrecognized file format, ``-XMP_ERROR_DEPACK`` if the file is compressed
-    and uncompression failed, or ``-XMP_ERROR_SYSTEM`` in case of a system error
+    and uncompression failed, or ``-XMP_ERROR_SYSTEM`` in case of system error
     (the system error code is set in ``errno``).
 
 .. _xmp_load_module():
@@ -310,7 +310,7 @@ int xmp_load_module(xmp_context c, char \*path)
     Error codes can be ``-XMP_ERROR_FORMAT`` in case of an unrecognized file
     format, ``-XMP_ERROR_DEPACK`` if the file is compressed and uncompression
     failed, ``-XMP_ERROR_LOAD`` if the file format was recognized but the
-    file loading failed, or ``-XMP_ERROR_SYSTEM`` in case of a system error
+    file loading failed, or ``-XMP_ERROR_SYSTEM`` in case of system error
     (the system error code is set in ``errno``).
 
 .. _xmp_load_module_from_memory():
@@ -336,7 +336,7 @@ int xmp_load_module_from_memory(xmp_context c, void \*mem, long size)
     0 if sucessful, or a negative error code in case of error.
     Error codes can be ``-XMP_ERROR_FORMAT`` in case of an unrecognized file
     format, ``-XMP_ERROR_LOAD`` if the file format was recognized but the
-    file loading failed, or ``-XMP_ERROR_SYSTEM`` in case of a system error
+    file loading failed, or ``-XMP_ERROR_SYSTEM`` in case of system error
     (the system error code is set in ``errno``).
 
 .. _xmp_release_module():
@@ -439,7 +439,7 @@ int xmp_start_player(xmp_context c, int rate, int format)
     0 if sucessful, or a negative error code in case of error.
     Error codes can be ``-XMP_ERROR_INTERNAL`` in case of a internal player
     error, ``-XMP_ERROR_INVALID`` if the sampling rate is invalid, or
-    ``-XMP_ERROR_SYSTEM`` in case of a system error (the system error
+    ``-XMP_ERROR_SYSTEM`` in case of system error (the system error
     code is set in ``errno``).
 
 .. _xmp_play_frame():
@@ -818,6 +818,99 @@ int xmp_set_player(xmp_context c, int param, int val)
     PageBreak
 
 Sound effects API
+-----------------
+
+Libxmp 4.2 includes a mini-API that can be used to add sound effects to
+games and similar applications. It allows module instruments or external
+sample files in wav format to be played in response to arbitrary events.
+
+Example
+~~~~~~~
+
+This example loads a module and a sound sample, plays the module as
+background music, and playes the sample when a key is pressed::
+
+    #include <SDL/SDL.h>
+    #include <xmp.h>
+
+    static void fill_audio(void *udata, unsigned char *stream, int len)
+    {
+        xmp_play_buffer(udata, stream, len, 0);
+    }
+
+    int sound_init(xmp_context ctx, int sampling_rate, int channels)
+    {
+        SDL_AudioSpec a;
+
+        a.freq = sampling_rate;
+        a.format = (AUDIO_S16);
+        a.channels = channels;
+        a.samples = 2048;
+        a.callback = fill_audio;
+        a.userdata = ctx;
+
+        if (SDL_OpenAudio(&a, NULL) < 0) {
+                fprintf(stderr, "%s\n", SDL_GetError());
+                return -1;
+        }
+    }
+
+    int video_init()
+    {
+        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+            fprintf(stderr, "%s\n", SDL_GetError());
+            return -1;
+        }
+        if (SDL_SetVideoMode(640, 480, 8, 0) == NULL) {
+            fprintf(stderr, "%s\n", SDL_GetError());
+            return -1;
+        }
+        atexit(SDL_Quit);
+    }
+
+    int main(int argc, char **argv)
+    {
+        SDL_Event event;
+	xmp_context ctx;
+
+        if ((ctx = xmp_create_context()) == NULL)
+                return 1;
+
+	video_init();
+        sound_init(ctx, 44100, 2);
+
+        xmp_sfx_init(ctx, 1, 1);
+	xmp_sfx_load_sample(ctx, 0, "blip.wav");
+
+        xmp_load_module(ctx, "music.mod");
+        xmp_start_player(ctx, 44100, 0);
+	xmp_set_player(ctx, XMP_PLAYER_VOLUME, 40);
+
+        SDL_PauseAudio(0);
+
+        while (1) {
+            if (SDL_WaitEvent(&event)) {
+                if (event.type == SDL_KEYDOWN) {
+                    if (event.key.keysym.sym == SDLK_ESCAPE)
+                        break;
+	            xmp_sfx_play_sample(ctx, 0, 60, 64, 0);
+                }
+	    }
+        }
+
+        SDL_PauseAudio(1);
+
+        xmp_end_player(ctx);
+        xmp_release_module(ctx);
+        xmp_free_context(ctx);
+	xmp_sfx_deinit(ctx);
+
+        SDL_CloseAudio();
+        return 0;
+    }
+
+
+SFX API reference
 ~~~~~~~~~~~~~~~~~
 
 .. _xmp_sfx_init():
@@ -838,8 +931,8 @@ int xmp_sfx_init(xmp_context c, int nch, int nsmp)
   **Returns:**
     0 if the sound effects system was correctly initialized,
     ``-XMP_ERROR_INVALID`` in case of invalid parameters, ``-XMP_ERROR_STATE``
-    if the player is not in playing state, or ``-XMP_ERROR_SYSTEM`` in case
-    of error (the system error code is set in ``errno``).
+    if the player is already in playing state, or ``-XMP_ERROR_SYSTEM`` in case
+    of system error (the system error code is set in ``errno``).
 
 .. _xmp_sfx_play_instrument():
 
@@ -913,13 +1006,47 @@ int xmp_sfx_channel_pan(xmp_context c, int chn, int pan)
 int xmp_sfx_load_sample(xmp_context c, int num, char \*path)
 ````````````````````````````````````````````````````````````
 
+  Load a sound sample from a file. Samples should be in mono WAV (RIFF)
+  format.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :num: the slot number of the sound effect sample to load.
+
+    :path: pathname of the file to load.
+
+  **Returns:**
+    0 if the sample was correctly loaded, ``-XMP_ERROR_INVALID`` if the
+    sample slot number is invalid (not reserved using `xmp_sfx_init()`_),
+    ``-XMP_ERROR_FORMAT`` if the file format is unsupported, or
+    ``-XMP_ERROR_SYSTEM`` in case of system error (the system error code is
+    set in ``errno``).
+
 .. _xmp_sfx_release_sample():
 
-void xmp_sfx_release_sample(xmp_context c, int num)
-```````````````````````````````````````````````````
+int xmp_sfx_release_sample(xmp_context c, int num)
+``````````````````````````````````````````````````
+
+  Release memory allocated by a sound effect sample in the specified player
+  context.
+
+  **Parameters:**
+    :c: the player context handle.
+
+    :num: the sample slot number to release.
+
+  **Returns:**
+    0 if memory was correctly released, or ``-XMP_ERROR_INVALID`` if the
+    sample slot number is invalid.
 
 .. _xmp_sfx_deinit():
 
-void xmp_sfx_deinit(xmp_context opaque)
+void xmp_sfx_deinit(xmp_context c)
 ```````````````````````````````````````
+
+  Deinitialize and resease memory used by the sound effects subsystem.
+
+  **Parameters:**
+    :c: the player context handle.
 
