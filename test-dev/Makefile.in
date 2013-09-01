@@ -114,6 +114,8 @@ PLAYER		= read_event scan period_amiga period_mod_range \
 		  ft2_note_noins_after_keyoff \
 		  invalid_period invalid_mod_length invalid_mod_channels
 
+FORMAT		= ust
+
 SYNTH		= adlib spectrum
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
@@ -154,6 +156,8 @@ WRITE_TESTS	= $(addprefix write_,$(WRITE))
 
 PLAYER_TESTS	= $(addprefix player_,$(PLAYER))
 
+FORMAT_TESTS	= $(addprefix format_,$(FORMAT))
+
 SYNTH_TESTS	= $(addprefix synth_,$(SYNTH))
 
 API_TESTS	= $(addprefix api_,$(API)) $(addprefix api_,$(API_SFX))
@@ -164,6 +168,7 @@ TESTS		= $(READ_TESTS) \
 		  $(DEPACK_TESTS) \
 		  $(PROWIZARD_TESTS) \
 		  string_adjustment \
+		  $(FORMAT_TESTS) \
 		  $(API_TESTS) \
 		  $(QUIRK_TESTS) \
 		  $(CASE1_TESTS) \
