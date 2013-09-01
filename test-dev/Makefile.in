@@ -114,7 +114,7 @@ PLAYER		= read_event scan period_amiga period_mod_range \
 		  ft2_note_noins_after_keyoff \
 		  invalid_period invalid_mod_length invalid_mod_channels
 
-FORMAT		= ust
+FORMAT		= ust ac1d
 
 SYNTH		= adlib spectrum
 
