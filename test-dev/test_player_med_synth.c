@@ -16,7 +16,7 @@ TEST(test_player_med_synth)
 	xmp_load_module(opaque, "data/Inertiaload-1.med");
 	xmp_start_player(opaque, 44100, 0);
 
-	for (i = 0; i < 25; i++) {
+	for (i = 0; i < 500; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 
