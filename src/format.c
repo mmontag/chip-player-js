@@ -74,7 +74,7 @@ extern const struct format_loader hmn_loader;
 
 extern const struct pw_format *const pw_format[];
 
-const struct format_loader *const format_loader[] = {
+const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&xm_loader,
 	&mod_loader,
 	&flt_loader,
@@ -138,7 +138,7 @@ const struct format_loader *const format_loader[] = {
 	NULL
 };
 
-static const char *_farray[MAX_FORMATS] = { NULL };
+static const char *_farray[NUM_FORMATS + NUM_PW_FORMATS + 1] = { NULL };
 
 char **format_list()
 {
@@ -148,19 +148,12 @@ char **format_list()
 		for (count = i = 0; format_loader[i] != NULL; i++) {
 			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
 				for (j = 0; pw_format[j] != NULL; j++) {
-					if (count >= MAX_FORMATS)
-						return NULL;
 					_farray[count++] = pw_format[j]->name;
 				}
 			} else {
-				if (count >= MAX_FORMATS)
-					return NULL;
 				_farray[count++] = format_loader[i]->name;
 			}
 		}
-
-		if (count >= MAX_FORMATS)
-			return NULL;
 
 		_farray[count] = NULL;
 	}

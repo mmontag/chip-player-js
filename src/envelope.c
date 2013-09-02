@@ -19,10 +19,7 @@ int get_envelope(struct xmp_envelope *env, int x, int def, int *end)
 
 	*end = 0;
 
-	if (~env->flg & XMP_ENVELOPE_ON)
-		return def;
-
-	if (env->npt <= 0)
+	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0)
 		return def;
 
 	index = (env->npt - 1) * 2;
@@ -62,11 +59,7 @@ int update_envelope(struct xmp_envelope *env, int x, int release)
 		x++;
 	}
 
-	if (~env->flg & XMP_ENVELOPE_ON) {
-		return x;
-	}
-
-	if (env->npt <= 0) {
+	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0) {
 		return x;
 	}
 

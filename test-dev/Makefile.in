@@ -46,12 +46,12 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 
 API		= get_format_list create_context free_context \
 		  test_module load_module load_module_from_memory \
-		  create_module \
 		  start_player play_buffer \
 		  set_position prev_position \
 		  set_player stop_module restart_module seek_time \
-		  channel_mute channel_vol inject_event scan_module \
-		  sfx_play_sample
+		  channel_mute channel_vol inject_event scan_module
+
+API_SFX		= sfx_play_instrument sfx_play_sample
 
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \
@@ -103,7 +103,7 @@ WRITE		= file_32bit_little_endian file_32bit_big_endian \
 		  file_8bit file_move_data
 
 PLAYER		= read_event scan period_amiga period_mod_range \
-		  med_synth med_synth_2 \
+		  med_synth med_synth_2 hmn_extras \
 		  note_off_ft2 note_off_it \
 		  virtual_channel nna_cut nna_cont nna_off nna_fade dct_note \
 		  it_keyoff it_note_after_cut \
@@ -113,6 +113,8 @@ PLAYER		= read_event scan period_amiga period_mod_range \
 		  xm_portamento_envelope_reset \
 		  ft2_note_noins_after_keyoff \
 		  invalid_period invalid_mod_length invalid_mod_channels
+
+FORMAT		= ust ac1d
 
 SYNTH		= adlib spectrum
 
@@ -154,9 +156,11 @@ WRITE_TESTS	= $(addprefix write_,$(WRITE))
 
 PLAYER_TESTS	= $(addprefix player_,$(PLAYER))
 
+FORMAT_TESTS	= $(addprefix format_,$(FORMAT))
+
 SYNTH_TESTS	= $(addprefix synth_,$(SYNTH))
 
-API_TESTS	= $(addprefix api_,$(API))
+API_TESTS	= $(addprefix api_,$(API)) $(addprefix api_,$(API_SFX))
 
 TESTS		= $(READ_TESTS) \
 		  $(WRITE_TESTS) \
@@ -164,6 +168,7 @@ TESTS		= $(READ_TESTS) \
 		  $(DEPACK_TESTS) \
 		  $(PROWIZARD_TESTS) \
 		  string_adjustment \
+		  $(FORMAT_TESTS) \
 		  $(API_TESTS) \
 		  $(QUIRK_TESTS) \
 		  $(CASE1_TESTS) \

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "list.h"
 #include "common.h"
+#include "format.h"
 
 #define MIN_FILE_LENGHT 2048
 

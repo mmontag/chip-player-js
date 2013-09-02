@@ -1,6 +1,6 @@
 #include "test.h"
 
-TEST(test_player_med_synth_2)
+TEST(test_player_hmn_extras)
 {
 	xmp_context opaque;
 	struct xmp_frame_info info;
@@ -10,10 +10,10 @@ TEST(test_player_med_synth_2)
 	FILE *f;
 	int i, j;
 
-	f = fopen("data/med_synth_2.data", "r");
+	f = fopen("data/hmn_extras.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/MED.Synth-a-sysmic");
+	xmp_load_module(opaque, "data/Gaffeltruck.mod");
 	xmp_start_player(opaque, 44100, 0);
 
 	for (i = 0; i < 500; i++) {
@@ -23,7 +23,6 @@ TEST(test_player_med_synth_2)
 		for (j = 0; j < 4; j++) {
 			ci = &info.channel_info[j];
 			fgets(line, 200, f);
-
 			sscanf(line, "%d %d %d %d %d %d %d %d %d",
 					&time, &row, &frame, &chan, &period,
 					&volume, &ins, &pan, &smp);
