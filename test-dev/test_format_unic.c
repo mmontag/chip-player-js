@@ -27,6 +27,7 @@ TEST(test_format_unic)
 					&time, &row, &frame, &chan, &period,
 					&volume, &ins, &pan, &smp);
 
+printf("info.time=%d time=%d\n", info.time, time);
 			fail_unless(info.time  == time,  "time mismatch");
 			fail_unless(info.row   == row,   "row mismatch");
 			fail_unless(info.frame == frame, "frame mismatch");
