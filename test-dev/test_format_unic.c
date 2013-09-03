@@ -8,14 +8,12 @@ TEST(test_format_unic)
 	int time, row, frame, chan, period, volume, ins, pan, smp;
 	char line[200];
 	FILE *f;
-	int ret, i, j;
+	int i, j;
 
 	f = fopen("data/format_unic.data", "r");
 
 	opaque = xmp_create_context();
-	ret = xmp_load_module(opaque, "data/EaglePlayerIntro.mod");
-	printf("%d\n", ret);
-	fail_unless(ret == 0, "load module");
+	xmp_load_module(opaque, "data/EaglePlayerIntro.mod");
 	xmp_start_player(opaque, 44100, 0);
 
 	for (i = 0; i < 500; i++) {
