@@ -107,7 +107,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 	struct module_data *m = &ctx->m;
 	struct med_module_extras *me;
 	struct med_channel_extras *ce;
-	int b, jws = 0, jvs = 0, loop;
+	int b, jws = 0, jvs, loop;
 	int temp;
 
 	if (!HAS_MED_MODULE_EXTRAS(*m))

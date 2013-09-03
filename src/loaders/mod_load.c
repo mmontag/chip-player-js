@@ -168,8 +168,6 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
     }
     num_pat++;
 
-system("uname -a");
-printf("%d %d\n", start + 1084 + num_pat * 0x300 + smp_size, st.st_size);
     if (start + 1084 + num_pat * 0x300 + smp_size == st.st_size)
 	return -1;
 
