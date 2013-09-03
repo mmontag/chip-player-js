@@ -21,8 +21,6 @@ int decrunch_xz(FILE *in, FILE *out)
 	unsigned char *membuf;
 	int ret = 0;
 
-        xz_crc32_init();
-
 	memset(&b, 0, sizeof(b));
 	if ((membuf = malloc(2 * BUFFER_SIZE)) == NULL)
 		return -1;

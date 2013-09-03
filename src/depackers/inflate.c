@@ -2,12 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include "fileio.h"
-//#include "kinflate.h"
-//#include "zipfile.h"
-
 #include "common.h"
 #include "inflate.h"
+#include "crc32.h"
 
 #define read_int_b(x) read32b(x)
 #define read_word(x) read16l(x)
@@ -105,66 +102,6 @@ int print_binary(int b, int l)
   return 0;
 }
 #endif
-
-/* These CRC32 functions were taken from the gzip spec and kohninized */
-
-int build_crc32(struct inflate_data *data)
-{
-  unsigned int c;
-  int n,k;
-
-  for (n=0; n<256; n++)
-  {
-    c=(unsigned int)n;
-    for (k=0; k<8; k++)
-    {
-      if (c&1)
-      { c=0xedb88320^(c>>1); }
-        else
-      { c=c>>1; }
-    }
-    data->crc_table[n]=c;
-  }
-
-  /* data->crc_built=1; */
-
-  return 0;
-}
-
-unsigned int crc32(unsigned char *buffer, int len, unsigned int crc, struct inflate_data *data)
-{
-  int t;
-
-  for (t=0; t<len; t++)
-  {
-    crc=data->crc_table[(crc^buffer[t])&0xff]^(crc>>8);
-  }
-
-  return crc;
-}
-
-static int kunzip_inflate_init(struct inflate_data *data)
-{
-/*
-  int t,r,b,rev_code;
-
-  for (t=0; t<256; t++)
-  {
-    b=128;
-    rev_code=0;
-    for (r=0; r<8; r++)
-    {
-      rev_code+=(((t&(1<<r))>>r)*b);
-      b=b>>1;
-    }
-
-    reverse[t]=rev_code;
-  }
-*/
-  /* if (data->crc_built==0) */ build_crc32(data);
-
-  return 0;
-}
 
 static int kunzip_inflate_free(struct inflate_data *data)
 {
@@ -795,7 +732,7 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
       if (window_ptr>=WINDOW_SIZE)
       {
         fwrite(window,1,WINDOW_SIZE,out);
-        huffman->checksum=crc32(huffman->window,WINDOW_SIZE,huffman->checksum,data);
+        huffman->checksum=crc32_2(huffman->window,WINDOW_SIZE,huffman->checksum);
         window_ptr=0;
       }
     }
@@ -953,7 +890,7 @@ exit(0);
           if (window_ptr>=WINDOW_SIZE)
           {
             fwrite(window,1,WINDOW_SIZE,out);
-            huffman->checksum=crc32(huffman->window,WINDOW_SIZE,huffman->checksum, data);
+            huffman->checksum=crc32_2(huffman->window,WINDOW_SIZE,huffman->checksum);
             window_ptr=0;
           }
         }
@@ -1032,7 +969,7 @@ if (!is_zip) {
   }
 }
 
-  kunzip_inflate_init(&data);
+  /* kunzip_inflate_init(&data); */
 
   bitstream.holding=0;
   bitstream.bitptr=0;
@@ -1082,7 +1019,7 @@ if (!is_zip) {
         if (huffman.window_ptr>=WINDOW_SIZE)
         {
           fwrite(huffman.window,1,WINDOW_SIZE,out);
-          huffman.checksum=crc32(huffman.window,WINDOW_SIZE,huffman.checksum,&data);
+          huffman.checksum=crc32_2(huffman.window,WINDOW_SIZE,huffman.checksum);
           huffman.window_ptr=0;
         }
       }
@@ -1126,7 +1063,7 @@ if (!is_zip) {
   if (huffman.window_ptr!=0)
   {
     fwrite(huffman.window,1,huffman.window_ptr,out);
-    huffman.checksum=crc32(huffman.window,huffman.window_ptr,huffman.checksum, &data);
+    huffman.checksum=crc32_2(huffman.window,huffman.window_ptr,huffman.checksum);
   }
 
 /*

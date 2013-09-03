@@ -29,6 +29,7 @@ Michael Kohn <mike@mikekohn.net>
 /*#include "kunzip.h"*/
 
 #include "inflate.h"
+#include "crc32.h"
 
 #ifdef WIN32
 #define strncasecmp strnicmp
@@ -208,7 +209,7 @@ int t,r;
 
     read_buffer(in,buffer,r);
     write_buffer(out,buffer,r);
-    checksum=crc32(buffer,r,checksum,data);
+    checksum=crc32_1(buffer,r,checksum);
     t=t+r;
   }
 
@@ -730,7 +731,7 @@ struct inflate_data data;
   printf("compression_method=%d\n", local_file_header.compression_method);
 #endif
 
-  build_crc32(&data);
+  //build_crc32(&data);
 
   if (local_file_header.uncompressed_size!=0)
   {
