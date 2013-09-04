@@ -639,7 +639,7 @@ static int extract_normal(FILE * in_file, struct local_data *data)
 	    if (count > data->unpack_size)
 		count = data->unpack_size;	/* take only what we need */
 
-	    data->sum = crc32_1(pos, count, data->sum);
+	    data->sum = crc32_A1(pos, count, data->sum);
 
 	    if (out_file) {	/* Write the data to the file */
 		abort = 1;
@@ -708,7 +708,7 @@ static int extract_store(FILE * in_file, struct local_data *data)
 	    }
 	    data->pack_size -= count;
 
-	    data->sum = crc32_1(data->read_buffer, count, data->sum);
+	    data->sum = crc32_A1(data->read_buffer, count, data->sum);
 
 	    if (out_file) {	/* Write the data to the file */
 		abort = 1;
@@ -784,7 +784,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 
 	/* Must set the field to 0 before calculating the crc */
 	memset(data->archive_header + 26, 0, 4);
-	data->sum = crc32_1(data->archive_header, 31, data->sum);
+	data->sum = crc32_A1(data->archive_header, 31, data->sum);
 	temp = data->archive_header[30];	/* filename length */
 	actual = fread(data->header_filename, 1, temp, in_file);
 
@@ -799,7 +799,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	}
 
 	data->header_filename[temp] = 0;
-	data->sum = crc32_1(data->header_filename, temp, data->sum);
+	data->sum = crc32_A1(data->header_filename, temp, data->sum);
 	temp = data->archive_header[14];	/* comment length */
 	actual = fread(data->header_comment, 1, temp, in_file);
 
@@ -814,7 +814,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	}
 
 	data->header_comment[temp] = 0;
-	data->sum = crc32_1(data->header_comment, temp, data->sum);
+	data->sum = crc32_A1(data->header_comment, temp, data->sum);
 
 	if (data->sum != data->crc) {
 	    fprintf(stderr, "CRC: Archive_Header\n");
@@ -901,7 +901,7 @@ int decrunch_lzx(FILE * f, FILE * fo)
 
 	fseek(f, 10, SEEK_CUR);	/* skip header */
 
-	crc32_init();
+	crc32_init_A();
 	data->outfile = fo;
 	extract_archive(f, data);
 

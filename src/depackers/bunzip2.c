@@ -39,6 +39,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
+#include "common.h"
+#include "crc32.h"
 
 /* Constants for huffman coding */
 #define MAX_GROUPS			6
@@ -79,7 +81,7 @@ typedef struct {
 	unsigned char *inbuf /*,*outbuf*/;
 	unsigned int inbufBitCount, inbufBits;
 	/* The CRC values stored in the block header and calculated from the data */
-	unsigned int crc32Table[256],headerCRC, totalCRC, writeCRC;
+	unsigned int headerCRC, totalCRC, writeCRC;
 	/* Intermediate buffer and its size (in bytes) */
 	unsigned int *dbuf, dbufSize;
 	/* These things are a bit too big to go on the stack */
@@ -450,7 +452,7 @@ static int read_bunzip(bunzip_data *bd, char *outbuf, int len)
 			/* Write next byte into output buffer, updating CRC */
 			outbuf[gotcount++] = current;
 			bd->writeCRC=(((bd->writeCRC)<<8)
-						  ^bd->crc32Table[((bd->writeCRC)>>24)^current]);
+						  ^crc32_table_B[((bd->writeCRC)>>24)^current]);
 			/* Loop now if we're outputting multiple copies of this byte */
 			if (bd->writeCopies) {
 				--bd->writeCopies;
@@ -508,7 +510,7 @@ decode_next_byte:
 static int start_bunzip(bunzip_data **bdp, FILE *in, char *inbuf, int len)
 {
 	bunzip_data *bd;
-	unsigned int i,j,c;
+	unsigned int i;
 	const unsigned int BZh0=(((unsigned int)'B')<<24)+(((unsigned int)'Z')<<16)
 							+(((unsigned int)'h')<<8)+(unsigned int)'0';
 
@@ -523,6 +525,8 @@ static int start_bunzip(bunzip_data **bdp, FILE *in, char *inbuf, int len)
 		bd->inbuf=(unsigned char *)inbuf;
 		bd->inbufCount=len;
 	} else bd->inbuf=(unsigned char *)(bd+1);
+
+#if 0
 	/* Init the CRC32 table (big endian) */
 	for(i=0;i<256;i++) {
 		c=i<<24;
@@ -530,6 +534,8 @@ static int start_bunzip(bunzip_data **bdp, FILE *in, char *inbuf, int len)
 			c=c&0x80000000 ? (c<<1)^0x04c11db7 : (c<<1);
 		bd->crc32Table[i]=c;
 	}
+#endif
+
 	/* Setup for I/O error handling via longjmp */
 	i=setjmp(bd->jmpbuf);
 	if(i) return i;
@@ -554,6 +560,8 @@ int decrunch_bzip2(FILE *src, FILE *dst)
 	char *outbuf;
 	bunzip_data *bd;
 	int i;
+
+	crc32_init_B();
 
 	if(!(outbuf=malloc(IOBUF_SIZE))) return RETVAL_OUT_OF_MEMORY;
 	if(!(i=start_bunzip(&bd,src,0,0))) {

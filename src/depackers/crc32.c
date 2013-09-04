@@ -25,10 +25,10 @@
 #include "common.h"
 #include "crc32.h"
 
-uint32 crc_table_A[256];
-uint32 crc_table_B[256];
+uint32 crc32_table_A[256];
+uint32 crc32_table_B[256];
 
-static void crc_table_init(uint32 poly, uint32 *table)
+static void crc_table_init_A(uint32 poly, uint32 *table)
 {
 	int i, j;
 	uint32 k;
@@ -45,34 +45,62 @@ static void crc_table_init(uint32 poly, uint32 *table)
 	return;
 }
 
-void crc32_init()
+static void crc_table_init_B(uint32 poly, uint32 *table)
+{
+	int i, j;
+	uint32 k;
+
+	for (i = 0; i < 256; i++) {
+		k = i << 24;
+		for (j = 0; j < 8; j++) {
+			k = k & 0x80000000 ? (k << 1) ^ poly : k << 1;
+		}
+
+		table[i] = k;
+	}
+
+	return;
+}
+
+void crc32_init_A()
 {
 	static int flag = 0;
 
 	if (flag)
 		return;
 
-	crc_table_init(0xedb88320, crc_table_A);
-	crc_table_init(0x04c11db7, crc_table_B);
+	crc_table_init_A(0xedb88320, crc32_table_A);
 
 	flag = 1;
 }
 
-uint32 crc32_1(const uint8 *buf, size_t size, uint32 crc)
+void crc32_init_B()
+{
+	static int flag = 0;
+
+	if (flag)
+		return;
+
+	crc_table_init_B(0x04c11db7, crc32_table_B);
+
+	flag = 1;
+}
+
+uint32 crc32_A1(const uint8 *buf, size_t size, uint32 crc)
 {
 	crc = ~crc;
 
         while (size--) {
-                crc = crc_table_A[*buf++ ^ (crc & 0xff)] ^ (crc >> 8);
+                crc = crc32_table_A[*buf++ ^ (crc & 0xff)] ^ (crc >> 8);
         }
 
         return ~crc;
 }
 
-uint32 crc32_2(const uint8 *buf, size_t size, uint32 crc)
+uint32 crc32_A2(const uint8 *buf, size_t size, uint32 crc)
 {
         while (size--) {
-                crc = crc_table_A[*buf++ ^ (crc & 0xff)] ^ (crc >> 8);
+                crc = crc32_table_A[*buf++ ^ (crc & 0xff)] ^ (crc >> 8);
         }
 
         return crc;

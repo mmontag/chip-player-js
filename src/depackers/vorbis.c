@@ -605,7 +605,7 @@ static void setup_temp_free(vorb *f, void *p, size_t sz)
 #define CRC32_POLY    0x04c11db7   // from spec
 
 static uint32 crc_table[256];
-static void crc32_init(void)
+static void crc32_init_A(void)
 {
    int i,j;
    uint32 s;
@@ -3358,7 +3358,7 @@ static int start_decoder(vorb *f)
    }
    #endif
 
-   crc32_init(); // always init it, to avoid multithread race conditions
+   crc32_init_A(); // always init it, to avoid multithread race conditions
 
    if (get8_packet(f) != VORBIS_packet_setup)       return error(f, VORBIS_invalid_setup);
    for (i=0; i < 6; ++i) header[i] = get8_packet(f);

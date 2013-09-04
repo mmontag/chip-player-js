@@ -732,7 +732,7 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
       if (window_ptr>=WINDOW_SIZE)
       {
         fwrite(window,1,WINDOW_SIZE,out);
-        huffman->checksum=crc32_2(huffman->window,WINDOW_SIZE,huffman->checksum);
+        huffman->checksum=crc32_A2(huffman->window,WINDOW_SIZE,huffman->checksum);
         window_ptr=0;
       }
     }
@@ -890,7 +890,7 @@ exit(0);
           if (window_ptr>=WINDOW_SIZE)
           {
             fwrite(window,1,WINDOW_SIZE,out);
-            huffman->checksum=crc32_2(huffman->window,WINDOW_SIZE,huffman->checksum);
+            huffman->checksum=crc32_A2(huffman->window,WINDOW_SIZE,huffman->checksum);
             window_ptr=0;
           }
         }
@@ -1019,7 +1019,7 @@ if (!is_zip) {
         if (huffman.window_ptr>=WINDOW_SIZE)
         {
           fwrite(huffman.window,1,WINDOW_SIZE,out);
-          huffman.checksum=crc32_2(huffman.window,WINDOW_SIZE,huffman.checksum);
+          huffman.checksum=crc32_A2(huffman.window,WINDOW_SIZE,huffman.checksum);
           huffman.window_ptr=0;
         }
       }
@@ -1063,7 +1063,7 @@ if (!is_zip) {
   if (huffman.window_ptr!=0)
   {
     fwrite(huffman.window,1,huffman.window_ptr,out);
-    huffman.checksum=crc32_2(huffman.window,huffman.window_ptr,huffman.checksum);
+    huffman.checksum=crc32_A2(huffman.window,huffman.window_ptr,huffman.checksum);
   }
 
 /*

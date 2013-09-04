@@ -160,7 +160,7 @@ int t,r;
 
     read_buffer(in,buffer,r);
     write_buffer(out,buffer,r);
-    checksum=crc32_1(buffer,r,checksum);
+    checksum=crc32_A1(buffer,r,checksum);
     t=t+r;
   }
 
@@ -682,7 +682,7 @@ struct inflate_data data;
   printf("compression_method=%d\n", local_file_header.compression_method);
 #endif
 
-  crc32_init();
+  crc32_init_A();
 
   if (local_file_header.uncompressed_size!=0)
   {
