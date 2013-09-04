@@ -46,6 +46,8 @@ int decrunch_gzip(FILE *in, FILE *out)
 	int val, c;
 	uint32 crc;
 
+	crc32_init();
+
 	member.id1 = read8(in);
 	member.id2 = read8(in);
 	member.cm  = read8(in);

@@ -140,55 +140,6 @@ int t,r;
 
 char *strcasestr(const char *haystack, const char *needle);
 
-/* These CRC32 functions were taken from the gzip spec and kohninized */
-/*
-
-int crc_built=0;
-unsigned int crc_table[256];
-
-int build_crc32()
-{
-unsigned int c;
-int n,k;
-
-  for (n=0; n<256; n++)
-  {
-    c=(unsigned int)n;
-    for (k=0; k<8; k++)
-    {
-      if (c&1)
-      { c=0xedb88320^(c>>1); }
-        else
-      { c=c>>1; }
-    }
-    crc_table[n]=c;
-  }
-
-  crc_built=1;
-
-  return 0;
-}
-
-unsigned int crc32(FILE *in)
-{
-unsigned int crc;
-int ch;
-
-  if (crc_built==0) build_crc32();
-
-  crc=0xffffffff;
-
-  while(1)
-  {
-    ch=getc(in);
-    if (ch==EOF) break;
-
-    crc=crc_table[(crc^ch)&0xff]^(crc>>8);
-  }
-
-  return crc^0xffffffff;
-}
-*/
 
 static unsigned int copy_file(FILE *in, FILE *out, int len, struct inflate_data *data)
 {
@@ -731,7 +682,7 @@ struct inflate_data data;
   printf("compression_method=%d\n", local_file_header.compression_method);
 #endif
 
-  //build_crc32(&data);
+  crc32_init();
 
   if (local_file_header.uncompressed_size!=0)
   {

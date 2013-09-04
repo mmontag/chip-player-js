@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "xz.h"
+#include "crc32.h"
 
 #define BUFFER_SIZE 4096
 
@@ -20,6 +21,8 @@ int decrunch_xz(FILE *in, FILE *out)
 	struct xz_dec *state;
 	unsigned char *membuf;
 	int ret = 0;
+
+	crc32_init();
 
 	memset(&b, 0, sizeof(b));
 	if ((membuf = malloc(2 * BUFFER_SIZE)) == NULL)

@@ -901,6 +901,7 @@ int decrunch_lzx(FILE * f, FILE * fo)
 
 	fseek(f, 10, SEEK_CUR);	/* skip header */
 
+	crc32_init();
 	data->outfile = fo;
 	extract_archive(f, data);
 
