@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "common.h"
 #include "inflate.h"
+#include "crc32.h"
 
 /* See RFC1952 for further information */
 
