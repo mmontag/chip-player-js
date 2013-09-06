@@ -588,11 +588,11 @@ static int extract_normal(FILE * in_file, struct local_data *data)
 			count = data->pack_size;	/* make sure we don't read too much */
 
 		    if (fread(temp, 1, count, in_file) != count) {
-			printf("\n");
+			/* printf("\n");
 			if (ferror(in_file))
 			    perror("FRead(Data)");
 			else
-			    fprintf(stderr, "EOF: Data\n");
+			    fprintf(stderr, "EOF: Data\n"); */
 			abort = 1;
 			break;	/* fatal error */
 		    }
@@ -698,11 +698,11 @@ static int extract_store(FILE * in_file, struct local_data *data)
 	    count = (data->unpack_size > 16384) ? 16384 : data->unpack_size;
 
 	    if (fread(data->read_buffer, 1, count, in_file) != count) {
-		printf("\n");
+		/* printf("\n");
 		if (ferror(in_file))
 		    perror("FRead(Data)");
 		else
-		    fprintf(stderr, "EOF: Data\n");
+		    fprintf(stderr, "EOF: Data\n"); */
 		abort = 1;
 		break;		/* fatal error */
 	    }
@@ -765,7 +765,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	abort = 1;		/* assume an error */
 	actual = fread(data->archive_header, 1, 31, in_file);
 	if (ferror(in_file)) {
-	    perror("FRead(Archive_Header)");
+	    /* perror("FRead(Archive_Header)"); */
 	    continue;
 	}
 
@@ -775,7 +775,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	}
 
 	if (actual != 31) {
-	    fprintf(stderr, "EOF: Archive_Header\n");
+	    /* fprintf(stderr, "EOF: Archive_Header\n"); */
 	    continue;
 	}
 
@@ -789,12 +789,12 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	actual = fread(data->header_filename, 1, temp, in_file);
 
 	if (ferror(in_file)) {
-	    perror("FRead(Header_Filename)");
+	    /* perror("FRead(Header_Filename)"); */
 	    continue;
 	}
 
 	if (actual != temp) {
-	    fprintf(stderr, "EOF: Header_Filename\n");
+	    /* fprintf(stderr, "EOF: Header_Filename\n"); */
 	    continue;
 	}
 
@@ -804,12 +804,12 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	actual = fread(data->header_comment, 1, temp, in_file);
 
 	if (ferror(in_file)) {
-	    perror("FRead(Header_Comment)");
+	    /* perror("FRead(Header_Comment)"); */
 	    continue;
 	}
 
 	if (actual != temp) {
-	    fprintf(stderr, "EOF: Header_Comment\n");
+	    /* fprintf(stderr, "EOF: Header_Comment\n"); */
 	    continue;
 	}
 
@@ -817,7 +817,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	data->sum = crc32_A1(data->header_comment, temp, data->sum);
 
 	if (data->sum != data->crc) {
-	    fprintf(stderr, "CRC: Archive_Header\n");
+	    /* fprintf(stderr, "CRC: Archive_Header\n"); */
 	    continue;
 	}
 
@@ -829,7 +829,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	/* allocate a filename node */
 	node = malloc(sizeof(struct filename_node));
 	if (node == NULL) {
-	    fprintf(stderr, "MAlloc(Filename_node)\n");
+	    /* fprintf(stderr, "MAlloc(Filename_node)\n"); */
 	    continue;
 	}
 
@@ -872,7 +872,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	filename_next = &data->filename_list;
 
 	if (fseek(in_file, data->pack_size, SEEK_CUR)) {
-	    perror("FSeek(Data)");
+	    /* perror("FSeek(Data)"); */
 	    break;
 	}
 
