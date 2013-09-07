@@ -42,7 +42,6 @@
 #define PMARC0_METHOD           0x2D706D30      /* -pm0- */
 #define PMARC2_METHOD           0x2D706D32      /* -pm2- */
 
-
 #undef UCHAR_MAX
 #define UCHAR_MAX       ((1<<(sizeof(uint8)*8))-1)
 #define MAX_DICBIT      16
@@ -479,18 +478,6 @@ static void decode_start_st1(struct LhADecrData *dat)
 
 /* ------------------------------------------------------------------------ */
 
-static void start_p_dyn(struct LhADecrData *dat)
-{
-  dat->d.st.freq[ROOT_P] = 1;
-  dat->d.st.child[ROOT_P] = ~(N_CHAR);
-  dat->d.st.s_node[N_CHAR] = ROOT_P;
-  dat->d.st.edge[dat->d.st.block[ROOT_P] = dat->d.st.stock[dat->d.st.avail++]] = ROOT_P;
-  dat->d.st.most_p = ROOT_P;
-  dat->d.st.total_p = 0;
-  dat->d.st.nn = 1 << dat->DicBit;
-  dat->nextcount = 64;
-}
-
 static void start_c_dyn(struct LhADecrData *dat)
 {
   int32 i, j, f;
@@ -529,6 +516,20 @@ static void start_c_dyn(struct LhADecrData *dat)
   }
 }
 
+#ifdef ENABLE_LH2
+
+static void start_p_dyn(struct LhADecrData *dat)
+{
+  dat->d.st.freq[ROOT_P] = 1;
+  dat->d.st.child[ROOT_P] = ~(N_CHAR);
+  dat->d.st.s_node[N_CHAR] = ROOT_P;
+  dat->d.st.edge[dat->d.st.block[ROOT_P] = dat->d.st.stock[dat->d.st.avail++]] = ROOT_P;
+  dat->d.st.most_p = ROOT_P;
+  dat->d.st.total_p = 0;
+  dat->d.st.nn = 1 << dat->DicBit;
+  dat->nextcount = 64;
+}
+
 static void decode_start_dyn(struct LhADecrData *dat)
 {
   dat->d.st.n_max = 286;
@@ -537,6 +538,9 @@ static void decode_start_dyn(struct LhADecrData *dat)
   start_c_dyn(dat);
   start_p_dyn(dat);
 }
+
+#endif
+
 static void reconst(struct LhADecrData *dat, int32 start, int32 end)
 {
   int32  i, j, k, l, b = 0;
@@ -648,6 +652,8 @@ static int32 swap_inc(struct LhADecrData *dat, int32 p)
   return dat->d.st.parent[p];
 }
 
+#ifdef ENABLE_LH2
+
 static void update_p(struct LhADecrData *dat, int32 p)
 {
   int32 q;
@@ -688,6 +694,8 @@ static void make_new_node(struct LhADecrData *dat, int32 p)
   dat->d.st.s_node[p + N_CHAR] = dat->d.st.most_p = q;
   update_p(dat, p);
 }
+
+#endif
 
 static void update_c(struct LhADecrData *dat, int32 p)
 {
@@ -732,6 +740,8 @@ static uint16 decode_c_dyn(struct LhADecrData *dat)
   return (uint16) c;
 }
 
+#ifdef ENABLE_LH2
+
 static uint16 decode_p_dyn(struct LhADecrData *dat)
 {
   int32 c;
@@ -764,6 +774,7 @@ static uint16 decode_p_dyn(struct LhADecrData *dat)
   return (uint16) ((c << 6) + getbits(dat, 6));
 }
 
+#endif
 
 /* ------------------------------------------------------------------------ */
 
@@ -832,6 +843,8 @@ static uint16 decode_p_st0(struct LhADecrData *dat)
   }
   return (uint16)((j << 6) + getbits(dat, 6));
 }
+
+#ifdef ENABLE_LH3
 
 static void decode_start_st0(struct LhADecrData *dat)
 {
@@ -924,6 +937,8 @@ static uint16 decode_c_st0(struct LhADecrData *dat)
     j += getbits(dat, EXTRABITS);
   return (uint16) j;
 }
+
+#endif
 
 /* ------------------------------------------------------------------------ */
 
@@ -1347,16 +1362,22 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
       DecodeC = decode_c_dyn;
       DecodeP = decode_p_st0;
       break;
+
+#ifdef ENABLE_LH2
     case LZHUFF2_METHOD:
       DecodeStart = decode_start_dyn;
       DecodeC = decode_c_dyn;
       DecodeP = decode_p_dyn;
       break;
+#endif
+
+#ifdef ENABLE_LH3
     case LZHUFF3_METHOD:
       DecodeStart = decode_start_st0;
       DecodeP = decode_p_st0;
       DecodeC = decode_c_st0;
       break;
+#endif
 
 #ifdef ENABLE_PMARC
     case PMARC2_METHOD:
