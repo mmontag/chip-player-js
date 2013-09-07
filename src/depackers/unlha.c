@@ -1642,20 +1642,21 @@ static int get_header(FILE *f, struct lha_data *data)
 		break;
 	case 2:
 		size = readmem16l(buf);
-		data->method = readmem32b(buf + 2);
-		data->packed_size = readmem32l(buf + 7);
-		data->original_size = readmem32l(buf + 11);
-		data->crc = read16l(f);
-		fseek(f, size - 2 - 21, SEEK_CUR);
-		break;
+		/* fall through */
 	case 3:
 		data->method = readmem32b(buf + 2);
 		data->packed_size = readmem32l(buf + 7);
 		data->original_size = readmem32l(buf + 11);
 		data->crc = read16l(f);
 		read8(f);		/* skip OS id */
-		size = read32l(f);
-		fseek(f, size - 21, SEEK_CUR);
+		while ((size = read16l(f)) != 0) {
+			int type = read8(f);
+			if (type == 0x01) {
+				fread(data->name, 1, size - 3, f);
+			} else {
+				fseek(f, size - 3, SEEK_CUR);
+			}
+		}
 		break;
 	default:
 		return -1;
