@@ -1645,7 +1645,7 @@ static int get_header(FILE *f, struct lha_data *data)
 		data->packed_size = readmem32l(buf + 7);
 		data->original_size = readmem32l(buf + 11);
 		data->crc = read16l(f);
-		fseek(f, size + 2 - 21, SEEK_CUR);
+		fseek(f, size - 2 - 21, SEEK_CUR);
 		break;
 	case 3:
 		data->method = readmem32b(buf + 2);
