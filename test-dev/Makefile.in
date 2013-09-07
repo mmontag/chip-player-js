@@ -25,8 +25,8 @@ SMPLOADERS	= 8bit 16bit delta signal endian skip
 DEPACKERS	= pp sqsh s404 mmcmp zip zip_filtered zip_store arcfs \
 		  gzip compress arc_method2 arc_method8 \
 		  spark j2b lzx bzip2 xz lha_l0_lzhuff1 lha_l0_lzhuff5 \
-		  lha_l1_lzhuff5 lha_l1_lzhuff6 lha_l1_lzhuff7 zoo \
-		  vorbis vorbis_8bit it_sample_8bit it_sample_16bit
+		  lha_l1_lzhuff5 lha_l1_lzhuff6 lha_l1_lzhuff7 lha_l2_lzhuff7 \
+		  zoo vorbis vorbis_8bit it_sample_8bit it_sample_16bit
 
 PROWIZARD	= zen fuchs starpack
 
