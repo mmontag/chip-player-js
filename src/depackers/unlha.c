@@ -1634,9 +1634,10 @@ static int get_header(FILE *f, struct lha_data *data)
 		namelen = read8(f);
 		fread(data->name, 1, namelen, f);
 		data->crc = read16l(f);
-		fseek(f, size + 2 - 26 - namelen, SEEK_CUR);
+		fseek(f, size - (22 + namelen) - 2, SEEK_CUR);
 		while ((size = read16l(f)) != 0) {
 			fseek(f, size - 2, SEEK_CUR);
+			data->packed_size -= size;
 		}
 		break;
 	case 2:
