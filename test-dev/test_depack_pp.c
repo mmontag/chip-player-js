@@ -12,7 +12,6 @@ TEST(test_depack_pp)
 	ret = xmp_load_module(c, "data/mod.loving_is_easy.pp");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
 	ret = compare_md5(info.md5, "80ba11ca20f7ffef184a58c1fc619c18");

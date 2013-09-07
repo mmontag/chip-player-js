@@ -12,7 +12,6 @@ TEST(test_depack_lzx)
 	ret = xmp_load_module(c, "data/lzxdata");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
 	ret = compare_md5(info.md5, "6e4226be5a72fe3770550ced7a2022de");

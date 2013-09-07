@@ -12,7 +12,6 @@ TEST(test_depack_zip_filtered)
 	ret = xmp_load_module(c, "data/zipdata2");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
 	ret = compare_md5(info.md5, "c993a848f57227660f8b10db1d4d874f");

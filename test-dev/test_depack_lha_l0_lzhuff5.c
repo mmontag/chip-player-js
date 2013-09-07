@@ -12,7 +12,6 @@ TEST(test_depack_lha_l0_lzhuff5)
 	ret = xmp_load_module(c, "data/l0_lzhuff5");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
 	ret = compare_md5(info.md5, "d62117b9d24b152b225bdb7be24d5c5c");
