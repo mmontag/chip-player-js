@@ -1,16 +1,16 @@
 #include "test.h"
 
-TEST(test_format_ust)
+TEST(test_loader_m15)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
 	FILE *f;
 	int ret;
 
-	f = fopen("data/format_ust.data", "r");
+	f = fopen("data/format_m15.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/m/lepeltheme.mod");
+	xmp_load_module(opaque, "data/m/oxygene2.mod");
 
 	xmp_get_module_info(opaque, &info);
 

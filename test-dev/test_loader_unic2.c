@@ -1,16 +1,16 @@
 #include "test.h"
 
-TEST(test_format_ac1d)
+TEST(test_loader_unic2)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
 	FILE *f;
 	int ret;
 
-	f = fopen("data/format_ac1d.data", "r");
+	f = fopen("data/format_unic2.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/m/InTheKitchen.mod");
+	xmp_load_module(opaque, "data/m/DD.checknobankh");
 
 	xmp_get_module_info(opaque, &info);
 

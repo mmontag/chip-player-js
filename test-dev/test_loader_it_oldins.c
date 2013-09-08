@@ -1,16 +1,16 @@
 #include "test.h"
 
-TEST(test_format_unic)
+TEST(test_loader_it_oldins)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
 	FILE *f;
 	int ret;
 
-	f = fopen("data/format_unic.data", "r");
+	f = fopen("data/format_it_oldins.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/m/EaglePlayerIntro.mod");
+	xmp_load_module(opaque, "data/m/Fight2.it");
 
 	xmp_get_module_info(opaque, &info);
 

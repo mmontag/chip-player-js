@@ -1,16 +1,16 @@
 #include "test.h"
 
-TEST(test_format_unic2)
+TEST(test_loader_ust)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
 	FILE *f;
 	int ret;
 
-	f = fopen("data/format_unic2.data", "r");
+	f = fopen("data/format_ust.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/m/DD.checknobankh");
+	xmp_load_module(opaque, "data/m/lepeltheme.mod");
 
 	xmp_get_module_info(opaque, &info);
 
