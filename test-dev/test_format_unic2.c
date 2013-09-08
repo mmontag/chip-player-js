@@ -10,7 +10,7 @@ TEST(test_format_unic2)
 	f = fopen("data/format_unic2.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/DD.checknobankh");
+	xmp_load_module(opaque, "data/m/DD.checknobankh");
 
 	xmp_get_module_info(opaque, &info);
 

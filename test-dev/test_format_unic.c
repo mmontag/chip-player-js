@@ -10,7 +10,7 @@ TEST(test_format_unic)
 	f = fopen("data/format_unic.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/EaglePlayerIntro.mod");
+	xmp_load_module(opaque, "data/m/EaglePlayerIntro.mod");
 
 	xmp_get_module_info(opaque, &info);
 

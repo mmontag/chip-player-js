@@ -10,7 +10,7 @@ TEST(test_format_ac1d)
 	f = fopen("data/format_ac1d.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/InTheKitchen.mod");
+	xmp_load_module(opaque, "data/m/InTheKitchen.mod");
 
 	xmp_get_module_info(opaque, &info);
 

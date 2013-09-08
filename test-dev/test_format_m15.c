@@ -10,7 +10,7 @@ TEST(test_format_m15)
 	f = fopen("data/format_m15.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/oxygene2.mod");
+	xmp_load_module(opaque, "data/m/oxygene2.mod");
 
 	xmp_get_module_info(opaque, &info);
 

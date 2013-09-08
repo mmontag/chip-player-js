@@ -10,7 +10,7 @@ TEST(test_format_ust)
 	f = fopen("data/format_ust.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/lepeltheme.mod");
+	xmp_load_module(opaque, "data/m/lepeltheme.mod");
 
 	xmp_get_module_info(opaque, &info);
 
