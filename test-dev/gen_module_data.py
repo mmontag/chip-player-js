@@ -32,6 +32,9 @@ def display_instrument(i):
     display_envelope(i.get_envelope(Xmp.VOL_ENVELOPE))
     display_envelope(i.get_envelope(Xmp.FREQ_ENVELOPE))
     display_envelope(i.get_envelope(Xmp.PAN_ENVELOPE))
+    print ' '.join(map(str, [ i.map[j].ins for j in range(Xmp.MAX_KEYS) ]))
+    print ' '.join(map(str, [ i.map[j].xpo for j in range(Xmp.MAX_KEYS) ]))
+    
     for j in range(i.nsm):
         display_subinstrument(i.get_subinstrument(j))
 

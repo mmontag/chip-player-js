@@ -182,10 +182,26 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		x = strcmp(++s, xxi->name);
 		fail_unless(x == 0, "instrument name");
 
+		/* check envelopes */
 		check_envelope(&xxi->aei, line, f);
 		check_envelope(&xxi->fei, line, f);
 		check_envelope(&xxi->pei, line, f);
 
+		/* check mapping */
+		read_line(line, 1024, f);
+		s = line;
+		for (j = 0; j < XMP_MAX_KEYS; j++) {
+			x = strtoul(line, &s, 0);
+			fail_unless(x == xxi->map[j].ins, "instrument map");
+		}
+		read_line(line, 1024, f);
+		s = line;
+		for (j = 0; j < XMP_MAX_KEYS; j++) {
+			x = strtoul(line, &s, 0);
+			fail_unless(x == xxi->map[j].xpo, "transpose map");
+		}
+
+		/* check subinstruments */
 		for (j = 0; j < xxi->nsm; j++) {
 			struct xmp_subinstrument *sub = &xxi->sub[j];
 
