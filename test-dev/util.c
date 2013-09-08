@@ -267,10 +267,40 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		fail_unless(x == xxt->rows, "track rows");
 
 		MD5Init(&ctx);
-		MD5Update(&ctx, xxt->event, xxt->rows * sizeof (struct xmp_event));
+		MD5Update(&ctx, (const unsigned char *)xxt->event,
+				xxt->rows * sizeof (struct xmp_event));
 		MD5Final(d, &ctx);
 
 		fail_unless(compare_md5(d, ++s) == 0, "track data");
+	}
+
+	/* Check samples */
+	for (i = 0; i < mod->smp; i++) {
+		struct xmp_sample *xxs = &mod->xxs[i];
+		unsigned char d[16];
+		MD5_CTX ctx;
+		int len = xxs->len;
+
+		if (xxs->flg & XMP_SAMPLE_16BIT)
+			len *= 2;
+		
+		read_line(line, 1024, f);
+		x = strtoul(line, &s, 0);
+		fail_unless(x == xxs->len, "sample length");
+		x = strtoul(s, &s, 0);
+		fail_unless(x == xxs->lps, "sample loop start");
+		x = strtoul(s, &s, 0);
+		fail_unless(x == xxs->lpe, "sample loop end");
+		x = strtoul(s, &s, 0);
+		fail_unless(x == xxs->flg, "sample flags");
+
+		MD5Init(&ctx);
+		MD5Update(&ctx, xxs->data, len);
+		MD5Final(d, &ctx);
+		fail_unless(compare_md5(d, ++s) == 0, "sample data");
+
+		s += 32;
+		fail_unless(strcmp(xxs->name, ++s) == 0, "sample name");
 	}
 
 	return 0;
