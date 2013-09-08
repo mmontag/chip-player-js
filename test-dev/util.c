@@ -256,5 +256,23 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		
 	}
 
+	/* Check tracks */
+	for (i = 0; i < mod->trk; i++) {
+		struct xmp_track *xxt = mod->xxt[i];
+		unsigned char d[16];
+		MD5_CTX ctx;
+
+		read_line(line, 1024, f);
+		x = strtoul(line, &s, 0);
+		fail_unless(x == xxt->rows, "track rows");
+
+		MD5Init(&ctx);
+		MD5Update(&ctx, xxt->event, xxt->rows * sizeof (struct xmp_event));
+		MD5Final(d, &ctx);
+
+		fail_unless(compare_md5(d, ++s) == 0, "track data");
+	}
+
 	return 0;
 }
+
