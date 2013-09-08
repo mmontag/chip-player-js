@@ -241,5 +241,20 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		}
 	}
 
+	/* Check patterns */
+	for (i = 0; i < mod->pat; i++) {
+		struct xmp_pattern *xxp = mod->xxp[i];
+
+		read_line(line, 1024, f);
+		x = strtoul(line, &s, 0);
+		fail_unless(x == xxp->rows, "pattern rows");
+
+		for (j = 0; j < mod->chn; j++) {
+			x = strtoul(s, &s, 0);
+			fail_unless(x == xxp->index[j], "pattern index");
+		}
+		
+	}
+
 	return 0;
 }
