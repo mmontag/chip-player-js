@@ -77,3 +77,53 @@ void convert_endian(unsigned char *p, int l)
         }
 }
 
+static int read_line(char *line, int size, FILE *f)
+{
+	int pos;
+
+	fgets(line, size, f);
+	pos = strlen(line);
+
+	if (pos > 0 && line[pos - 1] == '\n')
+		line[--pos] = 0;
+
+	return pos;
+}
+
+int compare_module(struct xmp_module *mod, FILE *f)
+{
+	char line[1024];
+	char *s;
+	int x;
+
+	/* Check title and format */
+	read_line(line, 1024, f);
+	fail_unless(!strcmp(line, mod->name), "module name");
+	read_line(line, 1024, f);
+	fail_unless(!strcmp(line, mod->type), "module type");
+
+	/* Check module attributes */
+	read_line(line, 1024, f);
+	x = strtoul(line, &s, 0);
+	fail_unless(x == mod->pat, "number of patterns");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->trk, "number of tracks");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->chn, "number of channels");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->ins, "number of instruments");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->smp, "number of samples");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->spd, "initial speed");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->bpm, "initial tempo");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->len, "module length");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->rst, "restart position");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == mod->gvl, "global volume");
+
+	return 0;
+}

@@ -33,6 +33,7 @@ int map_channel(struct player_data *, int);
 int play_frame(struct context_data *);
 
 
+int compare_module(struct xmp_module *, FILE *);
 int compare_md5(unsigned char *, char *);
 int check_md5(char *, char *);
 void convert_endian(unsigned char *, int);
