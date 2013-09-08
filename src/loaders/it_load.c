@@ -625,7 +625,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    );
 
 	} else if (ifh.flags & IT_USE_INST) {
-/* Old instrument format */
+	    /* Old instrument format */
 	    hio_seek(f, start + pp_ins[i], SEEK_SET);
 
 	    i1h.magic = hio_read32b(f);
@@ -688,9 +688,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		inst_map[j] = -1;
 
 	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
-		c = i1h.keys[j * 2 + 1] - 1;
+		c = j < 120 ? i1h.keys[j * 2 + 1] - 1 : -1;
 		if (c < 0) {
-		    xxi->map[j].ins = 0xff;	/* No sample */
+		    xxi->map[j].ins = 0;
 		    xxi->map[j].xpo = 0;
 		    continue;
 		}
