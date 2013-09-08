@@ -90,11 +90,44 @@ static int read_line(char *line, int size, FILE *f)
 	return pos;
 }
 
+static void check_envelope(struct xmp_envelope *env, char *line, FILE *f)
+{
+	int i, x;
+	char *s;
+
+	/* read envelope parameters */
+	read_line(line, 1024, f);
+	x = strtoul(line, &s, 0);
+	fail_unless(x == env->flg, "envelope flags");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == env->npt, "envelope number of points");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == env->scl, "envelope scaling");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == env->sus, "envelope sustain start");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == env->sue, "envelope sustain end");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == env->lps, "envelope loop start");
+	x = strtoul(s, &s, 0);
+	fail_unless(x == env->lpe, "envelope loop end");
+
+	if (env->npt > 0) {
+		read_line(line, 1024, f);
+		s = line;
+		for (i = 0; i < env->npt * 2; i++) {
+			x = strtoul(s, &s, 0);
+			fail_unless(x == env->data[i], "envelope point");
+		}
+	}
+
+}
+
 int compare_module(struct xmp_module *mod, FILE *f)
 {
 	char line[1024];
 	char *s;
-	int x;
+	int i, j, x;
 
 	/* Check title and format */
 	read_line(line, 1024, f);
@@ -124,6 +157,73 @@ int compare_module(struct xmp_module *mod, FILE *f)
 	fail_unless(x == mod->rst, "restart position");
 	x = strtoul(s, &s, 0);
 	fail_unless(x == mod->gvl, "global volume");
+
+	/* Check orders */
+	if (mod->len > 0) {
+		read_line(line, 1024, f);
+		s = line;
+		for (i = 0; i < mod->len; i++) {
+			x = strtoul(s, &s, 0);
+			fail_unless(x == mod->xxo[i], "orders");
+		}
+	}
+
+	/* Check instruments */
+	for (i = 0; i < mod->ins; i++) {
+		struct xmp_instrument *xxi = &mod->xxi[i];
+
+		read_line(line, 1024, f);
+		x = strtoul(line, &s, 0);
+		fail_unless(x == xxi->vol, "instrument volume");
+		x = strtoul(s, &s, 0);
+		fail_unless(x == xxi->nsm, "number of subinstruments");
+		x = strtoul(s, &s, 0);
+		fail_unless(x == xxi->rls, "instrument release");
+		x = strcmp(++s, xxi->name);
+		fail_unless(x == 0, "instrument name");
+
+		check_envelope(&xxi->aei, line, f);
+		check_envelope(&xxi->fei, line, f);
+		check_envelope(&xxi->pei, line, f);
+
+		for (j = 0; j < xxi->nsm; j++) {
+			struct xmp_subinstrument *sub = &xxi->sub[j];
+
+			read_line(line, 1024, f);
+			x = strtoul(line, &s, 0);
+			fail_unless(x == sub->vol, "subinst volume");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->gvl, "subinst gl volume");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->pan, "subinst pan");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->xpo, "subinst transpose");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->fin, "subinst finetune");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->vwf, "subinst vibr wf");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->vde, "subinst vibr depth");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->vra, "subinst vibr rate");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->vsw, "subinst vibr sweep");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->rvv, "subinst vol var");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->sid, "subinst sample nr");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->nna, "subinst NNA");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->dct, "subinst DCT");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->dca, "subinst DCA");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->ifc, "subinst cutoff");
+			x = strtoul(s, &s, 0);
+			fail_unless(x == sub->ifr, "subinst resonance");
+		}
+	}
 
 	return 0;
 }
