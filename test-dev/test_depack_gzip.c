@@ -12,7 +12,6 @@ TEST(test_depack_gzip)
 	ret = xmp_load_module(c, "data/gzipdata");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
 	ret = compare_md5(info.md5, "0350baf25b96d6d125f537c63f03e3db");

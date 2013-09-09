@@ -12,7 +12,6 @@ TEST(test_depack_mmcmp)
 	ret = xmp_load_module(c, "data/test.mmcmp");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
 	ret = compare_md5(info.md5, "2d8b03b2bce0563dfdf89613c7976fe4");

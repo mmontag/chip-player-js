@@ -1,7 +1,7 @@
 #include "test.h"
 
 
-TEST(test_depack_s404)
+TEST(test_depack_lha_l1_filtered)
 {
 	xmp_context c;
 	struct xmp_module_info info;
@@ -9,12 +9,12 @@ TEST(test_depack_s404)
 
 	c = xmp_create_context();
 	fail_unless(c != NULL, "can't create context");
-	ret = xmp_load_module(c, "data/synth-a-.med.stc");
+	ret = xmp_load_module(c, "data/l1_data");
 	fail_unless(ret == 0, "can't load module");
 
 	xmp_get_module_info(c, &info);
 
-	ret = compare_md5(info.md5, "a9405964cc276b316bba6976f7539f38");
+	ret = compare_md5(info.md5, "c993a848f57227660f8b10db1d4d874f");
 	fail_unless(ret == 0, "MD5 error");
 }
 END_TEST

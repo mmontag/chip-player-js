@@ -12,7 +12,6 @@ TEST(test_depack_zoo)
 	ret = xmp_load_module(c, "data/zoodata.zoo");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
 	ret = compare_md5(info.md5, "a3c22f92e1ec5d7d324e975364a775e8");

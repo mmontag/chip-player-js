@@ -12,7 +12,6 @@ TEST(test_depack_j2b)
 	ret = xmp_load_module(c, "data/j2b_muse_data");
 	fail_unless(ret == 0, "can't load module");
 
-	xmp_start_player(c, 44100, 0);
 	xmp_get_module_info(c, &info);
 
 	ret = compare_md5(info.md5, "166d2a8f5e4fbb466fe15d820ca59265");

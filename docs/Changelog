@@ -7,11 +7,11 @@ Stable versions
 	- add API call to read the player state (loaded, playing, etc)
 	- add API call to set the player master volume
 	- add API calls to reserve channels and play instruments on them
-	- add API call to create an empty module instead of loading
 	- add loader for His Master's Noise modules
 	- fix loop parameter in xmp_play_buffer()
 	- fix MED synth volume slide reset on new note
 	- fix instrument mapping in IT old instrument format
+	- fix LHA depacker header parsing
 	- refactor handling of format-specific instrument and channel data
 	- refactor MED synth command interpreter
 	- rewrite SQSH depacker code
