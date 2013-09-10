@@ -303,6 +303,19 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		fail_unless(strcmp(xxs->name, ++s) == 0, "sample name");
 	}
 
+	/* Check channels */
+	for (i = 0; i < mod->chn; i++) {
+		struct xmp_channel *xxc = &mod->xxc[i];
+
+		read_line(line, 1024, f);
+		x = strtoul(line, &s, 0);
+		fail_unless(x == xxc->pan, "channel pan");
+		x = strtoul(s, &s, 0);
+		fail_unless(x == xxc->vol, "channel volume");
+		x = strtoul(s, &s, 0);
+		fail_unless(x == xxc->flg, "channel flags");
+	}
+
 	return 0;
 }
 
