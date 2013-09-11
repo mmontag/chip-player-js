@@ -10,7 +10,8 @@ TEST(test_loader_it_oldins)
 	f = fopen("data/format_it_oldins.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/m/Fight2.it");
+	ret = xmp_load_module(opaque, "data/m/Fight2.it");
+	fail_unless(ret == 0, "module load");
 
 	xmp_get_module_info(opaque, &info);
 

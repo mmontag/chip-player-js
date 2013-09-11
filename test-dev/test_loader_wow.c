@@ -10,7 +10,8 @@ TEST(test_loader_wow)
 	f = fopen("data/format_wow.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/m/crystals.mod");
+	ret = xmp_load_module(opaque, "data/m/crystals.mod");
+	fail_unless(ret == 0, "module load");
 
 	xmp_get_module_info(opaque, &info);
 
