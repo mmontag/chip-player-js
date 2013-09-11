@@ -294,10 +294,13 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		x = strtoul(s, &s, 0);
 		fail_unless(x == xxs->flg, "sample flags");
 
-		MD5Init(&ctx);
-		MD5Update(&ctx, xxs->data, len);
-		MD5Final(d, &ctx);
-		fail_unless(compare_md5(d, ++s) == 0, "sample data");
+		s++;
+		if (len > 0) {
+			MD5Init(&ctx);
+			MD5Update(&ctx, xxs->data, len);
+			MD5Final(d, &ctx);
+			fail_unless(compare_md5(d, s) == 0, "sample data");
+		}
 
 		s += 32;
 		fail_unless(strcmp(xxs->name, ++s) == 0, "sample name");
