@@ -9,7 +9,7 @@ import md5
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT_PATH + "/../libxmp-python")
 
-from pyxmp import Xmp
+from pyxmp import *
 
 
 def display_header(m):
@@ -80,11 +80,8 @@ if __name__ == "__main__":
         print 'Usage: {0} <module>'.format(os.path.basename(sys.argv[0]))
         sys.exit(1)
     
-    xmp = Xmp()
-    
-    module = xmp.load_module(sys.argv[1])
     try:
-        module = xmp.load_module(sys.argv[1])
+        module = Module(sys.argv[1])
     except IOError, error:
         sys.stderr.write('{0}: {1}\n'.format(sys.argv[1], error.strerror))
         sys.exit(1)
