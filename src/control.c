@@ -320,9 +320,9 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 			ret = 0;
 		}
 		break;
-	case XMP_PLAYER_SFX_VOLUME:
+	case XMP_PLAYER_SMIX_VOLUME:
 		if (val >= 0 && val <= 200) {
-			p->sfx_vol = val;
+			p->smix_vol = val;
 			ret = 0;
 		}
 		break;
@@ -382,8 +382,8 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	case XMP_PLAYER_VOLUME:
 		ret = p->master_vol;
 		break;
-	case XMP_PLAYER_SFX_VOLUME:
-		ret = p->sfx_vol;
+	case XMP_PLAYER_SMIX_VOLUME:
+		ret = p->smix_vol;
 		break;
 	case XMP_PLAYER_STATE:
 		ret = ctx->state;

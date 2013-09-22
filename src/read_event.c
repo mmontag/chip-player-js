@@ -787,15 +787,15 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	return 0;
 }
 
-static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn)
+static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_subinstrument *sub;
-	int is_sfx_ins;
+	int is_smix_ins;
 	int ins, note, transp, smp;
 
 	xc->flags = 0;
@@ -804,7 +804,7 @@ static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn
 	if (!e->ins)
 		return 0;
 
-	is_sfx_ins = 0;
+	is_smix_ins = 0;
 	ins = e->ins - 1;
 	SET(NEW_INS);
 	xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
@@ -814,8 +814,8 @@ static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn
 
 	xc->ins = ins;
 
-	if (ins >= mod->ins && ins < mod->ins + sfx->ins)
-		is_sfx_ins = 1;
+	if (ins >= mod->ins && ins < mod->ins + smix->ins)
+		is_smix_ins = 1;
 
 	SET(NEW_NOTE);
 
@@ -827,16 +827,16 @@ static int read_event_sfx(struct context_data *ctx, struct xmp_event *e, int chn
 	xc->key = e->note - 1;
 	RESET_NOTE(NOTE_END);
 
-	if (is_sfx_ins) {
-		sub = &sfx->xxi[xc->ins - mod->ins].sub[0];
+	if (is_smix_ins) {
+		sub = &smix->xxi[xc->ins - mod->ins].sub[0];
 		if (sub == NULL)
 			return 0;
 
 		note = xc->key + sub->xpo;
 		smp = sub->sid;
-		if (sfx->xxs[smp].len == 0)
+		if (smix->xxs[smp].len == 0)
 			smp = -1;
-		if (smp >= 0 && smp < sfx->smp) {
+		if (smp >= 0 && smp < smix->smp) {
 			smp += mod->smp;
 			virt_setpatch(ctx, chn, xc->ins, smp, note, 0, 0, 0);
 			xc->smp = smp;
@@ -872,7 +872,7 @@ int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 	struct module_data *m = &ctx->m;
 
 	if (chn >= m->mod.chn) {
-		return read_event_sfx(ctx, e, chn);
+		return read_event_smix(ctx, e, chn);
 	} else switch (m->read_event_type) {
 	case READ_EVENT_MOD:
 		return read_event_mod(ctx, e, chn);

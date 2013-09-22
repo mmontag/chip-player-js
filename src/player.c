@@ -337,7 +337,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	if (chn < m->mod.chn)
 		finalvol = finalvol * p->master_vol / 100;
 	else
-		finalvol = finalvol * p->sfx_vol / 100;
+		finalvol = finalvol * p->smix_vol / 100;
 
 	xc->info_finalvol = finalvol;
 
@@ -636,7 +636,7 @@ static void update_pan(struct context_data *ctx, int chn, int t)
 static void play_channel(struct context_data *ctx, int chn, int t)
 {
 	struct player_data *p = &ctx->p;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
@@ -714,10 +714,10 @@ static void inject_event(struct context_data *ctx)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	int chn;
 	
-	for (chn = 0; chn < mod->chn + sfx->chn; chn++) {
+	for (chn = 0; chn < mod->chn + smix->chn; chn++) {
 		struct xmp_event *e = &p->inject_event[chn];
 		if (e->_flag > 0) {
 			read_event(ctx, e, chn);
@@ -848,7 +848,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
@@ -870,7 +870,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	ctx->state = XMP_STATE_PLAYING;
 
 	p->master_vol = 100;
-	p->sfx_vol = 100;
+	p->smix_vol = 100;
 	p->gvol = m->volbase;
 	p->pos = p->ord = 0;
 	p->frame = -1;
@@ -909,7 +909,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	p->speed = m->xxo_info[p->ord].speed;
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 
-	if (virt_on(ctx, mod->chn + sfx->chn) != 0) {
+	if (virt_on(ctx, mod->chn + smix->chn) != 0) {
 		ret = -XMP_ERROR_INTERNAL;
 		goto err;
 	}

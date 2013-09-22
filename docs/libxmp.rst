@@ -44,8 +44,8 @@ Concepts
   or *playing*. The player is in unloaded state after context creation,
   changing to other states when a module is loaded or played.
 
-* **Sound effects:** *[Added in libxmp 4.2]*
-  Special sound effect Channels can be reserved using `xmp_sfx_init()`
+* **External sample mixer:** *[Added in libxmp 4.2]*
+  Special sound channels can be reserved using `xmp_start_smix()`
   to play module instruments or external samples. This is useful when
   libxmp is used to provide background music to games or other applications
   where sound effects can be played in response to events or user actions.
@@ -817,12 +817,12 @@ int xmp_set_player(xmp_context c, int param, int val)
 
     PageBreak
 
-Sound effects API
------------------
+External sample mixer API
+-------------------------
 
 Libxmp 4.2 includes a mini-API that can be used to add sound effects to
 games and similar applications. It allows module instruments or external
-sample files in wav format to be played in response to arbitrary events.
+sample files in WAV format to be played in response to arbitrary events.
 
 Example
 ~~~~~~~
@@ -879,8 +879,8 @@ background music, and playes the sample when a key is pressed::
 	video_init();
         sound_init(ctx, 44100, 2);
 
-        xmp_sfx_init(ctx, 1, 1);
-	xmp_sfx_load_sample(ctx, 0, "blip.wav");
+        xmp_start_smix(ctx, 1, 1);
+	xmp_smix_load_sample(ctx, 0, "blip.wav");
 
         xmp_load_module(ctx, "music.mod");
         xmp_start_player(ctx, 44100, 0);
@@ -893,7 +893,7 @@ background music, and playes the sample when a key is pressed::
                 if (event.type == SDL_KEYDOWN) {
                     if (event.key.keysym.sym == SDLK_ESCAPE)
                         break;
-	            xmp_sfx_play_sample(ctx, 0, 60, 64, 0);
+	            xmp_smix_play_sample(ctx, 0, 60, 64, 0);
                 }
 	    }
         }
@@ -903,44 +903,44 @@ background music, and playes the sample when a key is pressed::
         xmp_end_player(ctx);
         xmp_release_module(ctx);
         xmp_free_context(ctx);
-	xmp_sfx_deinit(ctx);
+	xmp_end_smix(ctx);
 
         SDL_CloseAudio();
         return 0;
     }
 
 
-SFX API reference
-~~~~~~~~~~~~~~~~~
+SMIX API reference
+~~~~~~~~~~~~~~~~~~
 
-.. _xmp_sfx_init():
+.. _xmp_start_smix():
 
-int xmp_sfx_init(xmp_context c, int nch, int nsmp)
-``````````````````````````````````````````````````
+int xmp_start_smix(xmp_context c, int nch, int nsmp)
+````````````````````````````````````````````````````
 
-  Initialize the sound effects subsystem with the given number of
+  Initialize the external sample mixer subsystem with the given number of
   reserved channels and samples.
 
   **Parameters:**
     :c: the player context handle.
  
-    :nch: number of sound effects channels (1 to 64).
+    :nch: number of reserved sound mixer channels (1 to 64).
  
-    :nsmp: number of sound effects samples.
+    :nsmp: number of external samples.
  
   **Returns:**
-    0 if the sound effects system was correctly initialized,
+    0 if the external sample mixer system was correctly initialized,
     ``-XMP_ERROR_INVALID`` in case of invalid parameters, ``-XMP_ERROR_STATE``
     if the player is already in playing state, or ``-XMP_ERROR_SYSTEM`` in case
     of system error (the system error code is set in ``errno``).
 
-.. _xmp_sfx_play_instrument():
+.. _xmp_smix_play_instrument():
 
-int xmp_sfx_play_instrument(xmp_context c, int ins, int note, int vol, int chn)
-```````````````````````````````````````````````````````````````````````````````
+int xmp_smix_play_instrument(xmp_context c, int ins, int note, int vol, int chn)
+````````````````````````````````````````````````````````````````````````````````
 
   Play a note using an instrument from the currently loaded module in
-  one of the reserved sound effects channels.
+  one of the reserved sound mixer channels.
 
   **Parameters:**
     :c: the player context handle.
@@ -952,21 +952,21 @@ int xmp_sfx_play_instrument(xmp_context c, int ins, int note, int vol, int chn)
     :vol: the volume to use (0 to the maximum volume value used by the
       current module.
 
-    :chn: the sound effects channel to use to play the instrument.
+    :chn: the reserved channe to use to play the instrument.
 
   **Returns:**
     0 if the instrument was correctly played, ``-XMP_ERROR_INVALID`` in
     case of invalid parameters, or ``-XMP_ERROR_STATE`` if the player is not
     in playing state.
 
-.. _xmp_sfx_play_sample():
+.. _xmp_smix_play_sample():
 
-int xmp_sfx_play_sample(xmp_context c, int ins, int vol, int chn)
-`````````````````````````````````````````````````````````````````
+int xmp_smix_play_sample(xmp_context c, int ins, int vol, int chn)
+``````````````````````````````````````````````````````````````````
 
-  Play an external sample file in one of the reserved sound effects
-  channels. The sample must have been previously loaded using
-  `xmp_sfx_load_sample()`_.
+  Play an external sample file in one of the reserved sound channels.
+  The sample must have been previously loaded using
+  `xmp_smix_load_sample()`_.
 
   **Parameters:**
     :c: the player context handle.
@@ -976,24 +976,24 @@ int xmp_sfx_play_sample(xmp_context c, int ins, int vol, int chn)
     :vol: the volume to use (0 to the maximum volume value used by the
       current module.
 
-    :chn: the sound effects channel to use to play the sample.
+    :chn: the reserved channel to use to play the sample.
 
   **Returns:**
     0 if the sample was correctly played, ``-XMP_ERROR_INVALID`` in
     case of invalid parameters, or ``-XMP_ERROR_STATE`` if the player is not
     in playing state.
 
-.. _xmp_sfx_channel_pan():
+.. _xmp_smix_channel_pan():
 
-int xmp_sfx_channel_pan(xmp_context c, int chn, int pan)
-````````````````````````````````````````````````````````
+int xmp_smix_channel_pan(xmp_context c, int chn, int pan)
+`````````````````````````````````````````````````````````
 
-  Set the sound effects channel pan value.
+  Set the reserved channel pan value.
 
   **Parameters:**
     :c: the player context handle.
  
-    :chn: the sound effects channel number.
+    :chn: the reserved channel number.
 
     :pan: the pan value to set (0 to 255).
 
@@ -1001,10 +1001,10 @@ int xmp_sfx_channel_pan(xmp_context c, int chn, int pan)
     0 if the pan value was set, or ``-XMP_ERROR_INVALID`` if parameters
     are invalid.
 
-.. _xmp_sfx_load_sample():
+.. _xmp_smix_load_sample():
 
-int xmp_sfx_load_sample(xmp_context c, int num, char \*path)
-````````````````````````````````````````````````````````````
+int xmp_smix_load_sample(xmp_context c, int num, char \*path)
+`````````````````````````````````````````````````````````````
 
   Load a sound sample from a file. Samples should be in mono WAV (RIFF)
   format.
@@ -1012,23 +1012,23 @@ int xmp_sfx_load_sample(xmp_context c, int num, char \*path)
   **Parameters:**
     :c: the player context handle.
  
-    :num: the slot number of the sound effect sample to load.
+    :num: the slot number of the external sample to load.
 
     :path: pathname of the file to load.
 
   **Returns:**
     0 if the sample was correctly loaded, ``-XMP_ERROR_INVALID`` if the
-    sample slot number is invalid (not reserved using `xmp_sfx_init()`_),
+    sample slot number is invalid (not reserved using `xmp_start_smix()`_),
     ``-XMP_ERROR_FORMAT`` if the file format is unsupported, or
     ``-XMP_ERROR_SYSTEM`` in case of system error (the system error code is
     set in ``errno``).
 
-.. _xmp_sfx_release_sample():
+.. _xmp_smix_release_sample():
 
-int xmp_sfx_release_sample(xmp_context c, int num)
-``````````````````````````````````````````````````
+int xmp_smix_release_sample(xmp_context c, int num)
+```````````````````````````````````````````````````
 
-  Release memory allocated by a sound effect sample in the specified player
+  Release memory allocated by an external sample in the specified player
   context.
 
   **Parameters:**
@@ -1040,12 +1040,12 @@ int xmp_sfx_release_sample(xmp_context c, int num)
     0 if memory was correctly released, or ``-XMP_ERROR_INVALID`` if the
     sample slot number is invalid.
 
-.. _xmp_sfx_deinit():
+.. _xmp_end_smix():
 
-void xmp_sfx_deinit(xmp_context c)
-```````````````````````````````````````
+void xmp_end_smix(xmp_context c)
+````````````````````````````````
 
-  Deinitialize and resease memory used by the sound effects subsystem.
+  Deinitialize and resease memory used by the external sample mixer subsystem.
 
   **Parameters:**
     :c: the player context handle.

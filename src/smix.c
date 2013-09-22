@@ -15,15 +15,15 @@
 
 struct xmp_instrument *get_instrument(struct context_data *ctx, int ins)
 {
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_instrument *xxi;
 
 	if (ins < mod->ins)
 		xxi = &mod->xxi[ins];
-	else if (ins < mod->ins + sfx->ins)
-		xxi = &sfx->xxi[ins - mod->ins];
+	else if (ins < mod->ins + smix->ins)
+		xxi = &smix->xxi[ins - mod->ins];
 	else
 		xxi = NULL;
 
@@ -32,52 +32,52 @@ struct xmp_instrument *get_instrument(struct context_data *ctx, int ins)
 
 struct xmp_sample *get_sample(struct context_data *ctx, int smp)
 {
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs;
 
 	if (smp < mod->smp)
 		xxs = &mod->xxs[smp];
-	else if (smp < mod->smp + sfx->smp)
-		xxs = &sfx->xxs[smp - mod->smp];
+	else if (smp < mod->smp + smix->smp)
+		xxs = &smix->xxs[smp - mod->smp];
 	else
 		xxs = NULL;
 
 	return xxs;
 }
 
-int xmp_sfx_init(xmp_context opaque, int chn, int smp)
+int xmp_start_smix(xmp_context opaque, int chn, int smp)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 
 	if (ctx->state > XMP_STATE_LOADED)
 		return -XMP_ERROR_STATE;
 
-	sfx->xxi = calloc(sizeof (struct xmp_instrument), smp);
-	if (sfx->xxi == NULL)
+	smix->xxi = calloc(sizeof (struct xmp_instrument), smp);
+	if (smix->xxi == NULL)
 		goto err;
-	sfx->xxs = calloc(sizeof (struct xmp_sample), smp);
-	if (sfx->xxs == NULL)
+	smix->xxs = calloc(sizeof (struct xmp_sample), smp);
+	if (smix->xxs == NULL)
 		goto err1;
 
-	sfx->chn = chn;
-	sfx->ins = sfx->smp = smp;
+	smix->chn = chn;
+	smix->ins = smix->smp = smp;
 
 	return 0;
 
     err1:
-	free(sfx->xxi);
+	free(smix->xxi);
     err:
 	return -XMP_ERROR_INTERNAL;
 }
 
-int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
+int xmp_smix_play_instrument(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -85,7 +85,7 @@ int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int 
 	if (ctx->state < XMP_STATE_PLAYING)
 		return -XMP_ERROR_STATE;
 
-	if (chn >= sfx->chn || ins >= mod->ins)
+	if (chn >= smix->chn || ins >= mod->ins)
 		return -XMP_ERROR_INVALID;
 
 	if (note == 0)
@@ -101,11 +101,11 @@ int xmp_sfx_play_instrument(xmp_context opaque, int ins, int note, int vol, int 
 	return 0;
 }
 
-int xmp_sfx_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
+int xmp_smix_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -113,7 +113,7 @@ int xmp_sfx_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
 	if (ctx->state < XMP_STATE_PLAYING)
 		return -XMP_ERROR_STATE;
 
-	if (chn >= sfx->chn || ins >= sfx->ins)
+	if (chn >= smix->chn || ins >= smix->ins)
 		return -XMP_ERROR_INVALID;
 
 	if (note == 0)
@@ -129,15 +129,15 @@ int xmp_sfx_play_sample(xmp_context opaque, int ins, int note, int vol, int chn)
 	return 0;
 }
 
-int xmp_sfx_channel_pan(xmp_context opaque, int chn, int pan)
+int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc;
 
-	if (chn >= sfx->chn || pan < 0 || pan > 255)
+	if (chn >= smix->chn || pan < 0 || pan > 255)
 		return -XMP_ERROR_INVALID;
 
 	xc = &p->xc_data[m->mod.chn + chn];
@@ -146,10 +146,10 @@ int xmp_sfx_channel_pan(xmp_context opaque, int chn, int pan)
 	return 0;
 }
 
-int xmp_sfx_load_sample(xmp_context opaque, int num, char *path)
+int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_instrument *xxi;
 	struct xmp_sample *xxs;
@@ -158,13 +158,13 @@ int xmp_sfx_load_sample(xmp_context opaque, int num, char *path)
 	int chn, rate, bits, size;
 	int retval = -XMP_ERROR_INTERNAL;
 
-	if (num >= sfx->ins) {
+	if (num >= smix->ins) {
 		retval = -XMP_ERROR_INVALID;
 		goto err;
 	}
 
-	xxi = &sfx->xxi[num];
-	xxs = &sfx->xxs[num];
+	xxi = &smix->xxi[num];
+	xxs = &smix->xxs[num];
 
 	h = hio_open_file(path, "rb");
 	if (h == NULL) {
@@ -236,32 +236,32 @@ int xmp_sfx_load_sample(xmp_context opaque, int num, char *path)
 	return retval;
 }
 
-int xmp_sfx_release_sample(xmp_context opaque, int num)
+int xmp_smix_release_sample(xmp_context opaque, int num)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 
-	if (num >= sfx->ins)
+	if (num >= smix->ins)
 		return -XMP_ERROR_INVALID;
 
-	free(sfx->xxs[num].data);
-	free(sfx->xxi[num].sub);
+	free(smix->xxs[num].data);
+	free(smix->xxi[num].sub);
 
-	sfx->xxs[num].data = NULL;
-	sfx->xxi[num].sub = NULL;
+	smix->xxs[num].data = NULL;
+	smix->xxi[num].sub = NULL;
 
 	return 0;
 }
 
-void xmp_sfx_deinit(xmp_context opaque)
+void xmp_end_smix(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
-	struct sfx_data *sfx = &ctx->sfx;
+	struct smix_data *smix = &ctx->smix;
 	int i;
 
-	for (i = 0; i < sfx->smp; i++)
-		xmp_sfx_release_sample(opaque, i);
+	for (i = 0; i < smix->smp; i++)
+		xmp_smix_release_sample(opaque, i);
 
-	free(sfx->xxs);
-	free(sfx->xxi);
+	free(smix->xxs);
+	free(smix->xxi);
 }

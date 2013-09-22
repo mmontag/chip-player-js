@@ -350,7 +350,7 @@ void mixer_softmixer(struct context_data *ctx)
 		if (vi->smp < mod->smp)
 			xxs = &mod->xxs[vi->smp];
 		else
-			xxs = &ctx->sfx.xxs[vi->smp - mod->smp];
+			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
 
 		lps = xxs->lps;
 		lpe = xxs->lpe;
@@ -472,7 +472,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	if (vi->smp < m->mod.smp)
  		xxs = &m->mod.xxs[vi->smp];
 	else
- 		xxs = &ctx->sfx.xxs[vi->smp - m->mod.smp];
+ 		xxs = &ctx->smix.xxs[vi->smp - m->mod.smp];
 
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {
 		return;

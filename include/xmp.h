@@ -48,7 +48,7 @@ extern "C" {
 #define XMP_PLAYER_SMPCTL	6	/* Sample control flags */
 #define XMP_PLAYER_VOLUME	7	/* Player module volume */
 #define XMP_PLAYER_STATE	8	/* Internal player state */
-#define XMP_PLAYER_SFX_VOLUME	9	/* Player SFX volume */
+#define XMP_PLAYER_SMIX_VOLUME	9	/* SMIX volume */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
@@ -311,13 +311,15 @@ EXPORT int         xmp_set_player      (xmp_context, int, int);
 EXPORT int         xmp_get_player      (xmp_context, int);
 EXPORT int         xmp_set_instrument_path (xmp_context, char *);
 EXPORT int         xmp_load_module_from_memory (xmp_context, void *, long);
-EXPORT int         xmp_sfx_init        (xmp_context, int, int);
-EXPORT void        xmp_sfx_deinit      (xmp_context);
-EXPORT int         xmp_sfx_play_instrument(xmp_context, int, int, int, int);
-EXPORT int         xmp_sfx_play_sample (xmp_context, int, int, int, int);
-EXPORT int         xmp_sfx_channel_pan (xmp_context, int, int);
-EXPORT int         xmp_sfx_load_sample (xmp_context, int, char *);
-EXPORT int         xmp_sfx_release_sample (xmp_context, int);
+
+/* External sample mixer API */
+EXPORT int         xmp_start_smix       (xmp_context, int, int);
+EXPORT void        xmp_end_smix         (xmp_context);
+EXPORT int         xmp_smix_play_instrument(xmp_context, int, int, int, int);
+EXPORT int         xmp_smix_play_sample (xmp_context, int, int, int, int);
+EXPORT int         xmp_smix_channel_pan (xmp_context, int, int);
+EXPORT int         xmp_smix_load_sample (xmp_context, int, char *);
+EXPORT int         xmp_smix_release_sample (xmp_context, int);
 
 #ifdef __cplusplus
 }

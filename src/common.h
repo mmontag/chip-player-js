@@ -192,7 +192,7 @@ struct ord_data {
 
 /* Context */
 
-struct sfx_data {
+struct smix_data {
 	int chn;
 	int ins;
 	int smp;
@@ -252,7 +252,7 @@ struct player_data {
 	int sequence;
 	unsigned char sequence_control[XMP_MAX_MOD_LENGTH];
 
-	int sfx_vol;			/* SFX volume */
+	int smix_vol;			/* SFX volume */
 	int master_vol;			/* Music volume */
 	int gvol;
 
@@ -330,7 +330,7 @@ struct context_data {
 	struct player_data p;
 	struct mixer_data s;
 	struct module_data m;
-	struct sfx_data sfx;
+	struct smix_data smix;
 	int state;
 };
 

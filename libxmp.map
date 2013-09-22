@@ -41,12 +41,12 @@ XMP_4.2 {
   global:
     xmp_get_player;
     xmp_load_module_from_memory;
-    xmp_sfx_init;
-    xmp_sfx_deinit;
-    xmp_sfx_play_instrument;
-    xmp_sfx_play_sample;
-    xmp_sfx_channel_pan;
-    xmp_sfx_load_sample;
-    xmp_sfx_release_sample;
+    xmp_start_smix;
+    xmp_end_smix;
+    xmp_smix_play_instrument;
+    xmp_smix_play_sample;
+    xmp_smix_channel_pan;
+    xmp_smix_load_sample;
+    xmp_smix_release_sample;
 } XMP_4.1;
 
