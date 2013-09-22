@@ -2,7 +2,7 @@
 #include "../src/mixer.h"
 #include "../src/virtual.h"
 
-TEST(test_api_sfx_play_instrument)
+TEST(test_api_smix_play_instrument)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -14,7 +14,7 @@ TEST(test_api_sfx_play_instrument)
 	ctx = (struct context_data *)opaque;
 	p = &ctx->p;
 
-	xmp_sfx_init(opaque, 1, 2);
+	xmp_start_smix(opaque, 1, 2);
 
 	ret = xmp_load_module(opaque, "data/mod.loving_is_easy.pp");
 	fail_unless(ret == 0, "load module");
@@ -22,7 +22,7 @@ TEST(test_api_sfx_play_instrument)
 	xmp_start_player(opaque, 44100, 0);
 	xmp_play_frame(opaque);
 
-	ret = xmp_sfx_play_instrument(opaque, 2, 60, 64, 0);
+	ret = xmp_smix_play_instrument(opaque, 2, 60, 64, 0);
 	fail_unless(ret == 0, "play_instrument");
 	xmp_play_frame(opaque);
 
@@ -35,7 +35,7 @@ TEST(test_api_sfx_play_instrument)
 	fail_unless(vi->vol / 16 == 64, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	ret = xmp_sfx_play_instrument(opaque, 3, 50, 40, 0);
+	ret = xmp_smix_play_instrument(opaque, 3, 50, 40, 0);
 	fail_unless(ret == 0, "play_sample");
 	xmp_play_frame(opaque);
 
@@ -45,6 +45,6 @@ TEST(test_api_sfx_play_instrument)
 	fail_unless(vi->pos0 ==  0, "sample position");
 
 	xmp_release_module(opaque);
-	xmp_sfx_deinit(opaque);
+	xmp_end_smix(opaque);
 }
 END_TEST

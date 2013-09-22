@@ -2,7 +2,7 @@
 #include "../src/mixer.h"
 #include "../src/virtual.h"
 
-TEST(test_api_sfx_play_sample)
+TEST(test_api_smix_play_sample)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -18,24 +18,24 @@ TEST(test_api_sfx_play_sample)
 	fail_unless(ret == 0, "load module");
 
 	/* try to load sample before initializing */
-	ret = xmp_sfx_load_sample(opaque, 0, "data/blip.wav");
+	ret = xmp_smix_load_sample(opaque, 0, "data/blip.wav");
 	fail_unless(ret == -XMP_ERROR_INVALID, "load sample before init");
 
-	xmp_sfx_init(opaque, 1, 2);
+	xmp_start_smix(opaque, 1, 2);
 
 	/* try to load in invalid slot */
-	ret = xmp_sfx_load_sample(opaque, 2, "data/blip.wav");
+	ret = xmp_smix_load_sample(opaque, 2, "data/blip.wav");
 	fail_unless(ret == -XMP_ERROR_INVALID, "load sample in invalid slot");
 
-	ret = xmp_sfx_load_sample(opaque, 0, "data/blip.wav");
+	ret = xmp_smix_load_sample(opaque, 0, "data/blip.wav");
 	fail_unless(ret == 0, "load sample 0");
-        ret = xmp_sfx_load_sample(opaque, 1, "data/buzz.wav");
+        ret = xmp_smix_load_sample(opaque, 1, "data/buzz.wav");
 	fail_unless(ret == 0, "load sample 1");
 
 	xmp_start_player(opaque, 44100, 0);
 	xmp_play_frame(opaque);
 
-	ret = xmp_sfx_play_sample(opaque, 0, 60, 64, 0);
+	ret = xmp_smix_play_sample(opaque, 0, 60, 64, 0);
 	fail_unless(ret == 0, "play_sample");
 	xmp_play_frame(opaque);
 
@@ -43,23 +43,23 @@ TEST(test_api_sfx_play_sample)
 	fail_unless(voc >= 0, "virtual map");
 	vi = &p->virt.voice_array[voc];
 
-	fail_unless(vi->note - ctx->sfx.xxi[0].sub[0].xpo == 60, "set note");
+	fail_unless(vi->note - ctx->smix.xxi[0].sub[0].xpo == 60, "set note");
 	fail_unless(vi->ins  ==  31, "set instrument");
 	fail_unless(vi->vol / 16 == 64, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	ret = xmp_sfx_play_sample(opaque, 1, 50, 40, 0);
+	ret = xmp_smix_play_sample(opaque, 1, 50, 40, 0);
 	fail_unless(ret == 0, "play_sample");
 	xmp_play_frame(opaque);
 
-	fail_unless(vi->note - ctx->sfx.xxi[1].sub[0].xpo == 50, "set note");
+	fail_unless(vi->note - ctx->smix.xxi[1].sub[0].xpo == 50, "set note");
 	fail_unless(vi->ins  ==  32, "set instrument");
 	fail_unless(vi->vol / 16 == 40, "set volume");
 	fail_unless(vi->pos0 ==  0, "sample position");
 
-	xmp_sfx_release_sample(opaque, 0);
-	xmp_sfx_release_sample(opaque, 1);
+	xmp_smix_release_sample(opaque, 0);
+	xmp_smix_release_sample(opaque, 1);
 
-	xmp_sfx_deinit(opaque);
+	xmp_end_smix(opaque);
 }
 END_TEST

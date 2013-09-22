@@ -53,7 +53,7 @@ API		= get_format_list create_context free_context \
 		  set_player stop_module restart_module seek_time \
 		  channel_mute channel_vol inject_event scan_module
 
-API_SFX		= sfx_play_instrument sfx_play_sample
+API_SMIX		= smix_play_instrument smix_play_sample
 
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \
@@ -163,7 +163,7 @@ LOADER_TESTS	= $(addprefix loader_,$(LOADER))
 
 SYNTH_TESTS	= $(addprefix synth_,$(SYNTH))
 
-API_TESTS	= $(addprefix api_,$(API)) $(addprefix api_,$(API_SFX))
+API_TESTS	= $(addprefix api_,$(API)) $(addprefix api_,$(API_SMIX))
 
 TESTS		= $(READ_TESTS) \
 		  $(WRITE_TESTS) \
