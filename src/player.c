@@ -94,7 +94,7 @@ static void update_invloop(struct module_data *m, struct channel_data *xc)
 	}
 }
 
-static void reset_channel(struct context_data *ctx)
+static void reset_channels(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -944,7 +944,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 
 	m->synth->reset(ctx);
 
-	reset_channel(ctx);
+	reset_channels(ctx);
 
 	return 0;
 
@@ -1012,7 +1012,7 @@ int xmp_play_frame(xmp_context opaque)
 		p->current_time = m->xxo_info[p->ord].time;
 
 		virt_reset(ctx);
-		reset_channel(ctx);
+		reset_channels(ctx);
 	} else {
 		p->frame++;
 		if (p->frame >= (p->speed * (1 + f->delay))) {
