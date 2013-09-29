@@ -191,13 +191,13 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		read_line(line, 1024, f);
 		s = line;
 		for (j = 0; j < XMP_MAX_KEYS; j++) {
-			x = strtoul(line, &s, 0);
+			x = strtoul(s, &s, 0);
 			fail_unless(x == xxi->map[j].ins, "instrument map");
 		}
 		read_line(line, 1024, f);
 		s = line;
 		for (j = 0; j < XMP_MAX_KEYS; j++) {
-			x = strtoul(line, &s, 0);
+			x = strtoul(s, &s, 0);
 			fail_unless(x == xxi->map[j].xpo, "transpose map");
 		}
 
