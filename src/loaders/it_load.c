@@ -253,7 +253,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct it_sample_header ish;
     struct it_envelope env;
     uint8 b, mask[L_CHANNELS];
-    int max_ch, flag;
+    int max_ch;
     int inst_map[120], inst_rmap[XMP_MAX_KEYS];
     char tracker_name[40];
     uint32 *pp_ins;		/* Pointers to instruments */
@@ -315,8 +315,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if ((ifh.flags & IT_USE_INST) && ifh.cmwt >= 0x200) {
        m->quirk |= QUIRK_INSVOL;
     }
-
-    mod->chn = 64;	/* Effects in muted channels are still processed! */
 
     for (i = 0; i < 64; i++) {
 	if (ifh.chpan[i] == 100)	/* Surround -> center */
@@ -863,30 +861,89 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     D_(D_INFO "Stored Patterns: %d", mod->pat);
 
+    /* Effects in muted channels are processed, so scan patterns first to
+     * see the real number of channels
+     */
+    max_ch = 0;
+    for (i = 0; i < mod->pat; i++) {
+	/* If the offset to a pattern is 0, the pattern is empty */
+	if (pp_pat[i] == 0)
+	    continue;
+
+	hio_seek(f, start + pp_pat[i], SEEK_SET);
+	pat_len = hio_read16l(f) /* - 4*/;
+	hio_read16l(f);
+	memset (mask, 0, L_CHANNELS);
+	hio_read16l(f);
+	hio_read16l(f);
+
+	while (--pat_len >= 0) {
+	    b = hio_read8(f);
+	    if (b == 0)
+		continue;
+
+	    c = (b - 1) & 63;
+
+	    if (c > max_ch)
+		max_ch = c;
+
+	    if (b & 0x80) {
+		mask[c] = hio_read8(f);
+		pat_len--;
+	    }
+
+	    if (mask[c] & 0x01) {
+		hio_read8(f);
+		pat_len--;
+	    }
+	    if (mask[c] & 0x02) {
+		hio_read8(f);
+		pat_len--;
+	    }
+	    if (mask[c] & 0x04) {
+		hio_read8(f);
+		pat_len--;
+	    }
+	    if (mask[c] & 0x08) {
+		hio_read8(f);
+		hio_read8(f);
+		pat_len -= 2;
+	    }
+	}
+    }
+
+    /* Set the number of channels actually used
+     */
+    mod->chn = max_ch + 1;
     mod->trk = mod->pat * mod->chn;
+
     memset(arpeggio_val, 0, 64);
     memset(last_fxp, 0, 64);
 
     PATTERN_INIT();
 
     /* Read patterns */
-    for (max_ch = i = 0; i < mod->pat; i++) {
+    for (i = 0; i < mod->pat; i++) {
 	PATTERN_ALLOC (i);
 	r = 0;
+
 	/* If the offset to a pattern is 0, the pattern is empty */
-	if (!pp_pat[i]) {
+	if (pp_pat[i] == 0) {
 	    mod->xxp[i]->rows = 64;
-	    mod->xxt[i * mod->chn] = calloc (sizeof (struct xmp_track) +
-		sizeof (struct xmp_event) * 64, 1);
-	    mod->xxt[i * mod->chn]->rows = 64;
-	    for (j = 0; j < mod->chn; j++)
-		mod->xxp[i]->index[j] = i * mod->chn;
+	    for (j = 0; j < mod->chn; j++) {
+		int tnum = i * mod->chn + j;
+	        mod->xxt[tnum] = calloc (sizeof (struct xmp_track) +
+					 sizeof (struct xmp_event) * 63, 1);
+	        mod->xxt[tnum]->rows = 64;
+		mod->xxp[i]->index[j] = tnum;
+	    }
 	    continue;
 	}
+
 	hio_seek(f, start + pp_pat[i], SEEK_SET);
 	pat_len = hio_read16l(f) /* - 4*/;
 	mod->xxp[i]->rows = hio_read16l(f);
-	TRACK_ALLOC (i);
+	TRACK_ALLOC(i);
 	memset (mask, 0, L_CHANNELS);
 	hio_read16l(f);
 	hio_read16l(f);
@@ -970,28 +1027,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		event->fxp = lastevent[c].fxp;
 	    }
 	}
-
-	/* Scan channels, look for unused tracks */
-	for (c = mod->chn - 1; c >= max_ch; c--) {
-	    for (flag = j = 0; j < mod->xxt[mod->xxp[i]->index[c]]->rows; j++) {
-		event = &EVENT (i, c, j);
-		if (event->note || event->vol || event->ins || event->fxt ||
-		    event->fxp || event->f2t || event->f2p) {
-		    flag = 1;
-		    break;
-		}
-	    }
-	    if (flag && c > max_ch)
-		max_ch = c;
-	}
     }
 
     free(pp_pat);
     free(pp_smp);
     if (pp_ins)		/* sample mode has no instruments */
 	free(pp_ins);
-
-    mod->chn = max_ch + 1;
 
     /* Format quirks */
 
