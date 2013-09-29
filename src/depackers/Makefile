@@ -12,10 +12,10 @@ DEPACKERS_PATH	= src/depackers
 
 OBJS += $(addprefix $(DEPACKERS_PATH)/,$(DEPACKERS_OBJS))
 
-default-depackers:
+default-depackers::
 	$(MAKE) -C ..
 
-dist-depackers:
+dist-depackers::
 	mkdir -p $(DIST)/$(DEPACKERS_PATH)
 	cp -RPp $(addprefix $(DEPACKERS_PATH)/,$(DEPACKERS_DFILES)) $(DIST)/$(DEPACKERS_PATH)
 

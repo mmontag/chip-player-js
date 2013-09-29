@@ -14,10 +14,10 @@ SRC_PATH	= src
 
 OBJS += $(addprefix $(SRC_PATH)/,$(SRC_OBJS))
 
-default-src:
+default-src::
 	$(MAKE) -C ..
 
-dist-src:
+dist-src::
 	mkdir -p $(DIST)/$(SRC_PATH)
 	cp -RPp $(addprefix $(SRC_PATH)/,$(SRC_DFILES)) $(DIST)/$(SRC_PATH)
 
