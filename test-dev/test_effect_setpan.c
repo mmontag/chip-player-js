@@ -36,7 +36,6 @@ TEST(test_effect_setpan)
 	xmp_start_player(opaque, 44100, 0);
 
 	/* set mix to 100% pan separation */
-
 	xmp_set_player(opaque, XMP_PLAYER_MIX, 100);
 
 	for (i = 0; i < 64; i++) {
