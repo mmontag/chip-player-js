@@ -72,18 +72,18 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hio_read(&mfh.magic, 3, 1, f);		/* "MTM" */
+    hio_read(&mfh.magic, 3, 1, f);	/* "MTM" */
     mfh.version = hio_read8(f);		/* MSN=major, LSN=minor */
-    hio_read(&mfh.name, 20, 1, f);		/* ASCIIZ Module name */
-    mfh.tracks = hio_read16l(f);		/* Number of tracks saved */
-    mfh.patterns = hio_read8(f);		/* Number of patterns saved */
+    hio_read(&mfh.name, 20, 1, f);	/* ASCIIZ Module name */
+    mfh.tracks = hio_read16l(f);	/* Number of tracks saved */
+    mfh.patterns = hio_read8(f);	/* Number of patterns saved */
     mfh.modlen = hio_read8(f);		/* Module length */
-    mfh.extralen = hio_read16l(f);		/* Length of the comment field */
+    mfh.extralen = hio_read16l(f);	/* Length of the comment field */
     mfh.samples = hio_read8(f);		/* Number of samples */
     mfh.attr = hio_read8(f);		/* Always zero */
     mfh.rows = hio_read8(f);		/* Number rows per track */
-    mfh.channels = hio_read8(f);		/* Number of tracks per pattern */
-    hio_read(&mfh.pan, 32, 1, f);		/* Pan positions for each channel */
+    mfh.channels = hio_read8(f);	/* Number of tracks per pattern */
+    hio_read(&mfh.pan, 32, 1, f);	/* Pan positions for each channel */
 
 #if 0
     if (strncmp ((char *)mfh.magic, "MTM", 3))
@@ -104,22 +104,24 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Read and convert instruments */
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
 
 	hio_read(&mih.name, 22, 1, f);		/* Instrument name */
 	mih.length = hio_read32l(f);		/* Instrument length in bytes */
-	mih.loop_start = hio_read32l(f);		/* Sample loop start */
+	mih.loop_start = hio_read32l(f);	/* Sample loop start */
 	mih.loopend = hio_read32l(f);		/* Sample loop end */
 	mih.finetune = hio_read8(f);		/* Finetune */
-	mih.volume = hio_read8(f);			/* Playback volume */
-	mih.attr = hio_read8(f);			/* &0x01: 16bit sample */
+	mih.volume = hio_read8(f);		/* Playback volume */
+	mih.attr = hio_read8(f);		/* &0x01: 16bit sample */
 
 	mod->xxs[i].len = mih.length;
-	mod->xxi[i].nsm = mih.length > 0 ? 1 : 0;
 	mod->xxs[i].lps = mih.loop_start;
 	mod->xxs[i].lpe = mih.loopend;
 	mod->xxs[i].flg = mod->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
@@ -147,16 +149,19 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     hio_read(mod->xxo, 1, 128, f);
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     D_(D_INFO "Stored tracks: %d", mod->trk - 1);
 
     for (i = 0; i < mod->trk; i++) {
-	mod->xxt[i] = calloc (sizeof (struct xmp_track) +
-	    sizeof (struct xmp_event) * mfh.rows, 1);
-	mod->xxt[i]->rows = mfh.rows;
-	if (!i)
+
+	if (track_alloc(mod, i, mfh.rows) < 0)
+	    return -1;
+
+	if (i == 0)
 	    continue;
+
 	hio_read (&mt, 3, 64, f);
 	for (j = 0; j < 64; j++) {
 	    if ((mod->xxt[i]->event[j].note = mt[j * 3] >> 2))
@@ -179,7 +184,9 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored patterns: %d", mod->pat - 1);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+		return -1;
+
 	mod->xxp[i]->rows = 64;
 	for (j = 0; j < 32; j++)
 	    mp[j] = hio_read16l(f);

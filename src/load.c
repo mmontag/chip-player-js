@@ -482,24 +482,36 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	return ret;
 }
 
-
-/* FIXME: ugly code, check allocations */
-static void split_name(char *s, char **d, char **b)
+static char *get_dirname(char *name)
 {
-	char *div;
-	int tmp;
+	char *div, *dirname;
+	int len;
 
-	D_("alloc dirname/basename");
-	if ((div = strrchr(s, '/'))) {
-		tmp = div - s + 1;
-		*d = malloc(tmp + 1);
-		memcpy(*d, s, tmp);
-		(*d)[tmp] = 0;
-		*b = strdup(div + 1);
+	if ((div = strrchr(name, '/'))) {
+		len = div - name + 1;
+		dirname = malloc(len + 1);
+		if (dirname != NULL) {
+			memcpy(dirname, name, len);
+			dirname[len] = 0;
+		}
 	} else {
-		*d = strdup("");
-		*b = strdup(s);
+		dirname = strdup("");
 	}
+
+	return dirname;
+}
+
+static char *get_basename(char *name)
+{
+	char *div, *basename;
+
+	if ((div = strrchr(name, '/'))) {
+		basename = strdup(div + 1);
+	} else {
+		basename = strdup(name);
+	}
+
+	return basename;
 }
 
 int xmp_load_module(xmp_context opaque, char *path)
@@ -545,7 +557,14 @@ int xmp_load_module(xmp_context opaque, char *path)
 	if (ctx->state > XMP_STATE_UNLOADED)
 		xmp_release_module(opaque);
 
-	split_name(path, &m->dirname, &m->basename);
+	m->dirname = get_dirname(path);
+	if (m->dirname == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	m->basename = get_basename(path);
+	if (m->basename == NULL)
+		return -XMP_ERROR_SYSTEM;
+
 	m->filename = path;	/* For ALM, SSMT, etc */
 	m->size = st.st_size;
 
