@@ -205,7 +205,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	D_(D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
 	if (mod->xxi[i].nsm == 0)
-		return;
+		return 0;
 
 	if (subinstrument_alloc(mod, i) < 0)
 		return -1;
@@ -275,7 +275,7 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
-	int i, offset;
+	int i, ret, offset;
 	struct local_data data;
 
 	LOAD_INIT();
@@ -293,10 +293,14 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "INIT", get_init);		/* Galaxy 5.0 */
-	iff_register(handle, "ORDR", get_ordr);
-	iff_register(handle, "PATT", get_patt_cnt);
-	iff_register(handle, "INST", get_inst_cnt);
+	ret = iff_register(handle, "INIT", get_init);		/* Galaxy 5.0 */
+	ret |= iff_register(handle, "ORDR", get_ordr);
+	ret |= iff_register(handle, "PATT", get_patt_cnt);
+	ret |= iff_register(handle, "INST", get_inst_cnt);
+
+	if (ret != 0)
+		return -1;
+
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 	iff_set_quirk(handle, IFF_SKIP_EMBEDDED);
 	iff_set_quirk(handle, IFF_CHUNK_ALIGN2);
@@ -329,8 +333,12 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "PATT", get_patt);
-	iff_register(handle, "INST", get_inst);
+	ret = iff_register(handle, "PATT", get_patt);
+	ret |= iff_register(handle, "INST", get_inst);
+
+	if (ret != 0)
+		return -1;
+
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 	iff_set_quirk(handle, IFF_SKIP_EMBEDDED);
 	iff_set_quirk(handle, IFF_CHUNK_ALIGN2);

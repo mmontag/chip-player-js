@@ -43,7 +43,7 @@ struct local_data {
 };
 
 
-static void get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
@@ -55,10 +55,13 @@ static void get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->trk = mod->pat * mod->chn;
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
+
+	return 0;
 }
 
-static void get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -66,7 +69,7 @@ static void get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	char buffer[50];
 
 	if (data->have_song)
-		return;
+		return 0;
 
 	data->have_song = 1;
 
@@ -78,9 +81,11 @@ static void get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = hio_read16b(f);
+
+	return 0;
 }
 
-static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -90,14 +95,17 @@ static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	D_(D_INFO "Instruments: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-
 		mod->xxi[i].nsm = 1;
+
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
+
 		hio_read(buffer, 30, 1, f);
 		copy_adjust(mod->xxi[i].name, buffer, 30);
 		snum = hio_read16b(f);
 		if (snum == 0 || snum > mod->smp)
 			continue;
+
 		mod->xxi[i].sub[0].sid = --snum;
 		mod->xxi[i].sub[0].vol = hio_read16b(f);
 		c2spd = hio_read32b(f);
@@ -116,16 +124,19 @@ static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			i, mod->xxi[i].name, snum,
 			mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].pan, c2spd);
 	}
+
+	return 0;
 }
 
-static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, c, r, n, sz;
 	struct xmp_event *event, dummy;
 	uint8 x;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
@@ -135,9 +146,14 @@ static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	 */
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxp[i]->rows = hio_read16b(f);
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		sz = hio_read32b(f);
 		//printf("rows = %d, size = %d\n", mod->xxp[i]->rows, sz);
@@ -206,9 +222,11 @@ static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 				event->f2t = event->f2p = 0;
 		}
 	}
+
+	return 0;
 }
 
-static void get_smpl(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_smpl(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, flags;
@@ -242,9 +260,11 @@ static void get_smpl(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			(mod->xxs[i].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' : 'L') : ' ');
 
 	}
+
+	return 0;
 }
 
-static void get_venv(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_venv(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, nenv, ins;
@@ -268,6 +288,8 @@ static void get_venv(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			mod->xxi[ins].aei.data[j * 2 + 1] = hio_read16b(f);
 		}
 	}
+
+	return 0;
 }
 
 static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
@@ -276,7 +298,7 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	iff_handle handle;
 	char name[44];
 	uint16 version;
-	int i;
+	int i, ret;
 	struct local_data data;
 
 	LOAD_INIT();
@@ -294,12 +316,15 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "INFO", get_info);
-	iff_register(handle, "SONG", get_song);
-	iff_register(handle, "INST", get_inst);
-	iff_register(handle, "PATT", get_patt);
-	iff_register(handle, "SMPL", get_smpl);
-	iff_register(handle, "VENV", get_venv);
+	ret = iff_register(handle, "INFO", get_info);
+	ret |= iff_register(handle, "SONG", get_song);
+	ret |= iff_register(handle, "INST", get_inst);
+	ret |= iff_register(handle, "PATT", get_patt);
+	ret |= iff_register(handle, "SMPL", get_smpl);
+	ret |= iff_register(handle, "VENV", get_venv);
+
+	if (ret != 0)
+		return -1;
 
 	strncpy(mod->name, name, XMP_NAME_SIZE);
 	snprintf(mod->type, XMP_NAME_SIZE, "DigiBooster Pro %d.%02x DBM0",

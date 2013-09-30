@@ -300,6 +300,7 @@ static int okt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     iff_handle handle;
     struct local_data data;
+    int ret;
 
     LOAD_INIT();
 
@@ -312,14 +313,17 @@ static int okt_load(struct module_data *m, HIO_HANDLE *f, const int start)
     memset(&data, 0, sizeof(struct local_data));
 
     /* IFF chunk IDs */
-    iff_register(handle, "CMOD", get_cmod);
-    iff_register(handle, "SAMP", get_samp);
-    iff_register(handle, "SPEE", get_spee);
-    iff_register(handle, "SLEN", get_slen);
-    iff_register(handle, "PLEN", get_plen);
-    iff_register(handle, "PATT", get_patt);
-    iff_register(handle, "PBOD", get_pbod);
-    iff_register(handle, "SBOD", get_sbod);
+    ret = iff_register(handle, "CMOD", get_cmod);
+    ret |= iff_register(handle, "SAMP", get_samp);
+    ret |= iff_register(handle, "SPEE", get_spee);
+    ret |= iff_register(handle, "SLEN", get_slen);
+    ret |= iff_register(handle, "PLEN", get_plen);
+    ret |= iff_register(handle, "PATT", get_patt);
+    ret |= iff_register(handle, "PBOD", get_pbod);
+    ret |= iff_register(handle, "SBOD", get_sbod);
+
+    if (ret != 0)
+	return -1;
 
     set_type(m, "Oktalyzer");
 

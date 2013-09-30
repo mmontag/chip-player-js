@@ -338,7 +338,7 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
-	int i, offset;
+	int i, ret, offset;
 	struct local_data data;
 
 	LOAD_INIT();
@@ -356,10 +356,14 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "MAIN", get_main);
-	iff_register(handle, "ORDR", get_ordr);
-	iff_register(handle, "PATT", get_patt_cnt);
-	iff_register(handle, "INST", get_inst_cnt);
+	ret = iff_register(handle, "MAIN", get_main);
+	ret |= iff_register(handle, "ORDR", get_ordr);
+	ret |= iff_register(handle, "PATT", get_patt_cnt);
+	ret |= iff_register(handle, "INST", get_inst_cnt);
+
+	if (ret != 0)
+		return -1;
+
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 	iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
 
@@ -391,8 +395,12 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "PATT", get_patt);
-	iff_register(handle, "INST", get_inst);
+	ret = iff_register(handle, "PATT", get_patt);
+	ret |= iff_register(handle, "INST", get_inst);
+
+	if (ret != 0)
+		return -1;
+
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 	iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
 

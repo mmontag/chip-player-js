@@ -69,17 +69,22 @@ void iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *pa
 	iff_process(opaque, m, id, size, f, parm);
 }
 
-void iff_register(iff_handle opaque, char *id,
+int iff_register(iff_handle opaque, char *id,
 	int (*loader)(struct module_data *, int, HIO_HANDLE *, void *))
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	struct iff_info *f;
 
 	f = malloc(sizeof(struct iff_info));
+	if (f == NULL)
+		return -1;
+
 	strncpy(f->id, id, 5);
 	f->loader = loader;
 
 	list_add_tail(&f->list, &data->iff_list);
+
+	return 0;
 }
 
 void iff_release(iff_handle opaque)
