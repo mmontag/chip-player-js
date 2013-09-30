@@ -302,9 +302,23 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->ins = ifh.insnum;
     mod->smp = ifh.smpnum;
     mod->pat = ifh.patnum;
-    pp_ins = mod->ins ? calloc(4, mod->ins) : NULL;
+
+    if (mod->ins) {
+        pp_ins = calloc(4, mod->ins);
+        if (pp_ins == NULL)
+	    goto err;
+    } else {
+	pp_ins = NULL;
+    }
+
     pp_smp = calloc(4, mod->smp);
+    if (pp_smp == NULL)
+	goto err2;
+
     pp_pat = calloc(4, mod->pat);
+    if (pp_pat == NULL)
+	goto err3;
+
     mod->spd = ifh.is;
     mod->bpm = ifh.it;
 
@@ -445,7 +459,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     if (ifh.special & IT_HAS_MSG) {
 	if ((m->comment = malloc(ifh.msglen + 1)) == NULL)
-	    return -1;
+	    goto err4;
 	i = hio_tell(f);
 	hio_seek(f, start + ifh.msgofs, SEEK_SET);
 
@@ -464,7 +478,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, i, SEEK_SET);
     }
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	goto err4;
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
@@ -595,6 +610,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    if (k) {
 		xxi->sub = calloc(sizeof (struct xmp_subinstrument), k);
+		if (xxi->sub == NULL)
+		    goto err4;
+
 		for (j = 0; j < k; j++) {
 		    xxi->sub[j].sid = inst_rmap[j];
 		    xxi->sub[j].nna = i2h.nna;
@@ -706,6 +724,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    if (k) {
 		xxi->sub = calloc(sizeof (struct xmp_subinstrument), k);
+ 		if (xxi->sub == NULL)
+		    goto err4;
+
 		for (j = 0; j < k; j++) {
 		    xxi->sub[j].sid = inst_rmap[j];
 		    xxi->sub[j].nna = i1h.nna;
@@ -734,8 +755,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	struct xmp_sample *xxs = &mod->xxs[i];
 
-	if (~ifh.flags & IT_USE_INST)
+	if (~ifh.flags & IT_USE_INST) {
 	    mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	    if (mod->xxi[i].sub == NULL)
+		goto err4;
+	}
+
 	hio_seek(f, start + pp_smp[i], SEEK_SET);
 
 	ish.magic = hio_read32b(f);
@@ -832,10 +857,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    if (~ish.convert & IT_CVT_SIGNED)
 		cvt |= SAMPLE_FLAG_UNS;
 
-	    /* Handle compressed samples using Tammo Hinrichs' routine */
+	    /* compressed samples */
 	    if (ish.flags & IT_SMP_COMP) {
 		uint8 *buf;
 		buf = calloc(1, xxs->len * 2);
+		if (buf == NULL)
+		    goto err4;
 
 		if (ish.flags & IT_SMP_16BIT) {
 		    itsex_decompress16(f, buf, xxs->len, 
@@ -920,11 +947,15 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     memset(arpeggio_val, 0, 64);
     memset(last_fxp, 0, 64);
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	goto err4;
 
     /* Read patterns */
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+
+	if (pattern_alloc(mod, i) < 0)
+	    goto err4;
+
 	r = 0;
 
 	/* If the offset to a pattern is 0, the pattern is empty */
@@ -932,9 +963,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    mod->xxp[i]->rows = 64;
 	    for (j = 0; j < mod->chn; j++) {
 		int tnum = i * mod->chn + j;
-	        mod->xxt[tnum] = calloc (sizeof (struct xmp_track) +
-					 sizeof (struct xmp_event) * 63, 1);
-	        mod->xxt[tnum]->rows = 64;
+		if (track_alloc(mod, tnum, 64) < 0)
+		    goto err4;
 		mod->xxp[i]->index[j] = tnum;
 	    }
 	    continue;
@@ -943,7 +973,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + pp_pat[i], SEEK_SET);
 	pat_len = hio_read16l(f) /* - 4*/;
 	mod->xxp[i]->rows = hio_read16l(f);
-	TRACK_ALLOC(i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    goto err4;
+
 	memset (mask, 0, L_CHANNELS);
 	hio_read16l(f);
 	hio_read16l(f);
@@ -1031,8 +1064,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     free(pp_pat);
     free(pp_smp);
-    if (pp_ins)		/* sample mode has no instruments */
-	free(pp_ins);
+    free(pp_ins);
 
     /* Format quirks */
 
@@ -1053,4 +1085,13 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     m->read_event_type = READ_EVENT_IT;
 
     return 0;
+
+  err4:
+    free(pp_pat);
+  err3:
+    free(pp_smp);
+  err2:
+    free(pp_ins);
+  err:
+    return -1;
 }
