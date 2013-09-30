@@ -278,10 +278,15 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     pat_size = 256 * mod->chn * mod->pat;
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
+
 	mod->xxs[i].len = 2 * mh.ins[i].size;
 	mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
 	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
@@ -293,7 +298,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].vol = mh.ins[i].volume;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
-	mod->xxi[i].nsm = !!(mod->xxs[i].len);
 	copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
     }
 
@@ -528,15 +532,21 @@ skip_test:
 			mod->xxs[i].len > mod->xxs[i].lpe ? '!' : ' ');
     }
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Load and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
+
 	for (j = 0; j < (64 * mod->chn); j++) {
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    hio_read (mod_event, 1, 4, f);
