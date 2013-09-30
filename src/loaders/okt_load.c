@@ -89,7 +89,7 @@ static const int fx[] = {
 };
 
 
-static void get_cmod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_cmod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 { 
     struct xmp_module *mod = &m->mod;
     int i, j, k;
@@ -102,10 +102,12 @@ static void get_cmod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	    mod->chn++;
 	}
     }
+
+    return 0;
 }
 
 
-static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -116,10 +118,14 @@ static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     mod->ins = size / 32;  /* sizeof(struct okt_instrument_header); */
     mod->smp = mod->ins;
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     for (j = i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
 
 	hio_read(mod->xxi[i].name, 1, 20, f);
 	str_adj((char *)mod->xxi[i].name);
@@ -134,7 +140,6 @@ static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->xxi[i].sub[0].vol = hio_read16b(f);
 	data->mode[i] = hio_read16b(f);
 
-	mod->xxi[i].nsm = !!(mod->xxs[j].len);
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = j;
 
@@ -148,45 +153,55 @@ static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	if (mod->xxi[i].nsm)
 	    j++;
     }
+
+    return 0;
 }
 
 
-static void get_spee(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_spee(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
     mod->spd = hio_read16b(f);
     mod->bpm = 125;
+
+    return 0;
 }
 
 
-static void get_slen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_slen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
     mod->pat = hio_read16b(f);
     mod->trk = mod->pat * mod->chn;
+
+    return 0;
 }
 
 
-static void get_plen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_plen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
     mod->len = hio_read16b(f);
     D_(D_INFO "Module length: %d", mod->len);
+
+    return 0;
 }
 
 
-static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
 
     hio_read(mod->xxo, 1, mod->len, f);
+
+    return 0;
 }
 
 
-static void get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -196,18 +211,23 @@ static void get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     struct xmp_event *event;
 
     if (data->pattern >= mod->pat)
-	return;
+	return 0;
 
     if (!data->pattern) {
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+	    return -1;
 	D_(D_INFO "Stored patterns: %d", mod->pat);
     }
 
     rows = hio_read16b(f);
 
-    PATTERN_ALLOC(data->pattern);
+    if (pattern_alloc(mod, data->pattern) < 0)
+	return -1;
+
     mod->xxp[data->pattern]->rows = rows;
-    TRACK_ALLOC(data->pattern);
+
+    if (pattern_tracks_alloc(mod, data->pattern) < 0)
+	return -1;
 
     for (j = 0; j < rows * mod->chn; j++) {
 	uint8 note, ins;
@@ -247,10 +267,12 @@ static void get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	    event->fxt = event->fxp = 0;
     }
     data->pattern++;
+
+    return 0;
 }
 
 
-static void get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -258,7 +280,7 @@ static void get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     int i;
 
     if (data->sample >= mod->ins)
-	return;
+	return 0;
 
     D_(D_INFO "Stored samples: %d", mod->smp);
 
@@ -269,6 +291,8 @@ static void get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     load_sample(m, f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 
     data->sample++;
+
+    return 0;
 }
 
 

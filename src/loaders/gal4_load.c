@@ -49,7 +49,7 @@ struct local_data {
     int snum;
 };
 
-static void get_main(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_main(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	char buf[64];
@@ -68,9 +68,11 @@ static void get_main(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read16l(f);		/* unknown - 0x01c5 */
 	hio_read16l(f);		/* unknown - 0xff00 */
 	hio_read8(f);		/* unknown - 0x80 */
+
+	return 0;
 }
 
-static void get_ordr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_ordr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -79,9 +81,11 @@ static void get_ordr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = hio_read8(f);
+
+	return 0;
 }
 
-static void get_patt_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_patt_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -90,9 +94,11 @@ static void get_patt_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *p
 
 	if (i > mod->pat)
 		mod->pat = i;
+
+	return 0;
 }
 
-static void get_inst_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_inst_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -106,9 +112,11 @@ static void get_inst_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *p
 	hio_seek(f, 28, SEEK_CUR);		/* skip name */
 
 	mod->smp += hio_read8(f);
+
+	return 0;
 }
 
-static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event, dummy;
@@ -121,9 +129,13 @@ static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	
 	rows = hio_read8(f) + 1;
 
-	PATTERN_ALLOC(i);
+	if (pattern_alloc(mod, i) < 0)
+		return -1;
+
 	mod->xxp[i]->rows = rows;
-	TRACK_ALLOC(i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+		return -1;
 
 	for (r = 0; r < rows; ) {
 		if ((flag = hio_read8(f)) == 0) {
@@ -167,9 +179,11 @@ static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			event->vol = 1 + hio_read8(f) / 2;
 		}
 	}
+
+	return 9;
 }
 
-static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -253,9 +267,10 @@ static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	D_(D_INFO "[%2X] %-28.28s  %2d ", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
 	if (mod->xxi[i].nsm == 0)
-		return;
+		return 0;
 
-	mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), mod->xxi[i].nsm);
+	if (subinstrument_alloc(mod, i) < 0)
+		return -1;
 
 	for (j = 0; j < mod->xxi[i].nsm; j++, data->snum++) {
 		hio_read32b(f);	/* SAMP */
@@ -315,6 +330,8 @@ static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			load_sample(m, f, 0, &mod->xxs[data->snum], NULL);
 		}
 	}
+
+	return 0;
 }
 
 static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
@@ -356,8 +373,12 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->trk = mod->pat * mod->chn;
 
 	MODULE_INFO();
-	INSTRUMENT_INIT();
-	PATTERN_INIT();
+
+	if (instrument_init(mod) < 0)
+		return -1;
+
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored patterns: %d\n", mod->pat);
 	D_(D_INFO "Stored samples : %d ", mod->smp);

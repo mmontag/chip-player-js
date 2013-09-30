@@ -23,14 +23,14 @@ struct iff_header {
 
 struct iff_info {
 	char id[5];
-	void (*loader)(struct module_data *, int, HIO_HANDLE *, void *);
+	int (*loader)(struct module_data *, int, HIO_HANDLE *, void *);
 	struct list_head list;
 };
 
 iff_handle iff_new(void);
 void iff_chunk(iff_handle, struct module_data *, HIO_HANDLE *, void *);
 void iff_register(iff_handle, char *,
-	void (*loader)(struct module_data *, int, HIO_HANDLE *, void *));
+	int (*loader)(struct module_data *, int, HIO_HANDLE *, void *));
 void iff_id_size(iff_handle, int);
 void iff_set_quirk(iff_handle, int);
 void iff_release(iff_handle);

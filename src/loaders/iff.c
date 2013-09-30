@@ -70,7 +70,7 @@ void iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *pa
 }
 
 void iff_register(iff_handle opaque, char *id,
-		  void (*loader)(struct module_data *, int, HIO_HANDLE *, void *))
+	int (*loader)(struct module_data *, int, HIO_HANDLE *, void *))
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	struct iff_info *f;
@@ -112,7 +112,8 @@ int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
 	list_for_each(tmp, &data->iff_list) {
 		i = list_entry(tmp, struct iff_info, list);
 		if (id && !strncmp(id, i->id, data->id_size)) {
-			i->loader(m, size, f, parm);
+			if (i->loader(m, size, f, parm) < 0)
+				return -1;
 			break;
 		}
 	}
