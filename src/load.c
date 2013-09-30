@@ -260,7 +260,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     }
 
     temp->name = strdup(tmp);
-    if ((fd = mkstemp(temp->name)) < 0) {
+    if (temp->name == NULL || (fd = mkstemp(temp->name)) < 0) {
 	D_(D_CRIT "failed");
 	return -1;
     }

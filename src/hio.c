@@ -262,6 +262,10 @@ HIO_HANDLE *hio_open_fd(int fd, char *mode)
 	
 	h->type = HIO_HANDLE_TYPE_FILE;
 	h->f = fdopen(fd, mode);
+	if (h->f == NULL) {
+		free(h);
+		return NULL;
+	}
 
 	return h;
 }

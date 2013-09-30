@@ -96,6 +96,8 @@ int pw_wizardry(int in, int out, char **name)
 		return -1;
 
 	file_out = fdopen(dup(out), "w+b");
+	if (file_out == NULL)
+		return -1;
 
 	if (fstat(fileno(file_in), &st) < 0)
 		in_size = -1;
