@@ -13,6 +13,8 @@ Stable versions
 	- fix instrument mapping in IT old instrument format
 	- fix number of tracks in IT loader
 	- fix LHA depacker header parsing
+	- fix thread-unsafe Archimedes Tracker loader
+	- fix thread-unsafe Digital Tracker loader
 	- refactor handling of format-specific instrument and channel data
 	- refactor MED synth command interpreter
 	- rewrite SQSH depacker code
