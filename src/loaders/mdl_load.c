@@ -292,7 +292,7 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
  * IFF chunk handlers
  */
 
-static void get_chunk_in(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_in(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i;
@@ -318,9 +318,11 @@ static void get_chunk_in(struct module_data *m, int size, HIO_HANDLE *f, void *p
     hio_read(mod->xxo, 1, mod->len, f);
 
     MODULE_INFO();
+
+    return 0;
 }
 
-static void get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, chn;
@@ -344,9 +346,11 @@ static void get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *p
 		mod->xxp[i]->index[j] = x;
 	}
     }
+
+    return 0;
 }
 
-static void get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
@@ -368,9 +372,11 @@ static void get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *p
 		mod->xxp[i]->index[j] = x16;
 	}
     }
+
+    return 0;
 }
 
-static void get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, k, row, len;
@@ -455,9 +461,11 @@ static void get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *p
     }
 
     free(track);
+
+    return 0;
 }
 
-static void get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -531,9 +539,11 @@ static void get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *p
 			data->v_index[i], data->p_index[i], data->f_index[i]);
 	}
     }
+
+    return 0;
 }
 
-static void get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -586,9 +596,11 @@ static void get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *p
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			data->c2spd[i], data->packinfo[i]);
     }
+
+    return 0;
 }
 
-static void get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -641,9 +653,11 @@ static void get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *p
 		mod->xxs[i].len,mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		mod->xxs[i].lps, mod->xxs[i].lpe, data->packinfo[i]);
     }
+
+    return 0;
 }
 
-static void get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     struct local_data *data = (struct local_data *)parm;
@@ -682,15 +696,17 @@ static void get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *p
     }
 
     free(data->packinfo);
+
+    return 0;
 }
 
-static void get_chunk_ve(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_ve(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct local_data *data = (struct local_data *)parm;
     int i;
 
     if ((data->v_envnum = hio_read8(f)) == 0)
-	return;
+	return 0;
 
     D_(D_INFO "Vol envelopes: %d", data->v_envnum);
 
@@ -702,15 +718,17 @@ static void get_chunk_ve(struct module_data *m, int size, HIO_HANDLE *f, void *p
 	data->v_env[i].sus = hio_read8(f);
 	data->v_env[i].loop = hio_read8(f);
     }
+
+    return 0;
 }
 
-static void get_chunk_pe(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_pe(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct local_data *data = (struct local_data *)parm;
     int i;
 
     if ((data->p_envnum = hio_read8(f)) == 0)
-	return;
+	return 0;
 
     D_(D_INFO "Pan envelopes: %d", data->p_envnum);
 
@@ -722,15 +740,17 @@ static void get_chunk_pe(struct module_data *m, int size, HIO_HANDLE *f, void *p
 	data->p_env[i].sus = hio_read8(f);
 	data->p_env[i].loop = hio_read8(f);
     }
+
+    return 0;
 }
 
-static void get_chunk_fe(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_chunk_fe(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct local_data *data = (struct local_data *)parm;
     int i;
 
     if ((data->f_envnum = hio_read8(f)) == 0)
-	return;
+	return 0;
 
     D_(D_INFO "Pitch envelopes: %d", data->f_envnum);
 
@@ -742,6 +762,8 @@ static void get_chunk_fe(struct module_data *m, int size, HIO_HANDLE *f, void *p
 	data->f_env[i].sus = hio_read8(f);
 	data->f_env[i].loop = hio_read8(f);
     }
+
+    return 0;
 }
 
 
