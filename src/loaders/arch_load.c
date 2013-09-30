@@ -75,7 +75,7 @@ static int arch_test(HIO_HANDLE *f, char *t, const int start)
 
 struct local_data {
     int year, month, day;
-    int pflag, sflag, max_ins;
+    int pflag, sflag, max_ins, max_pat;
     uint8 ster[8], rows[64];
 };
 
@@ -147,7 +147,7 @@ static void fix_effect(struct xmp_event *e)
 	}
 }
 
-static void get_tinf(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_tinf(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct local_data *data = (struct local_data *)parm;
 	int x;
@@ -162,16 +162,20 @@ static void get_tinf(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	x = hio_read8(f);
 	data->day = ((x & 0xf0) >> 4) * 10 + (x & 0x0f);
+
+	return 0;
 }
 
-static void get_mvox(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_mvox(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	mod->chn = hio_read32l(f);
+
+	return 0;
 }
 
-static void get_ster(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_ster(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -184,71 +188,90 @@ static void get_ster(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			mod->xxc[i].pan = 42 * data->ster[i] - 40;
 		}
 	}
+
+	return 0;
 }
 
-static void get_mnam(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_mnam(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	hio_read(mod->name, 1, 32, f);
+
+	return 0;
 }
 
-static void get_anam(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_anam(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	/*hio_read(m->author, 1, 32, f); */
+
+	return 0;
 }
 
-static void get_mlen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_mlen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	mod->len = hio_read32l(f);
+
+	return 0;
 }
 
-static void get_pnum(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_pnum(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	mod->pat = hio_read32l(f);
+
+	return 0;
 }
 
-static void get_plen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_plen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct local_data *data = (struct local_data *)parm;
 
 	hio_read(data->rows, 1, 64, f);
+
+	return 0;
 }
 
-static void get_sequ(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_sequ(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	hio_read(mod->xxo, 1, 128, f);
-
 	set_type(m, "Archimedes Tracker");
-
 	MODULE_INFO();
+
+	return 0;
 }
 
-static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
-	static int i = 0;
-	int j, k;
+	int i, j, k;
 	struct xmp_event *event;
 
 	if (!data->pflag) {
 		D_(D_INFO "Stored patterns: %d", mod->pat);
 		data->pflag = 1;
-		i = 0;
+		data->max_pat = 0;
 		mod->trk = mod->pat * mod->chn;
-		PATTERN_INIT();
+
+		if (pattern_init(mod) < 0)
+			return -1;
 	}
 
-	PATTERN_ALLOC(i);
+        i = data->max_pat;
+
+	if (pattern_alloc(mod, i) < 0)
+		return -1;
+
 	mod->xxp[i]->rows = data->rows[i];
-	TRACK_ALLOC(i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+		return -1;
 
 	for (j = 0; j < data->rows[i]; j++) {
 		for (k = 0; k < mod->chn; k++) {
@@ -266,14 +289,16 @@ static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		}
 	}
 
-	i++;
+	data->max_pat++;
+
+	return 0;
 }
 
-static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
-	static int i = 0;
+	int i;
 
 	if (!data->sflag) {
 		mod->smp = mod->ins = 36;
@@ -283,17 +308,22 @@ static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 		data->sflag = 1;
 		data->max_ins = 0;
-		i = 0;
 	}
 
 	/* FIXME: More than 36 sample slots used.  Unfortunately we
-	 * have no way to handle this without two passes, and there's
-	 * only officially supposed to be 36, so ignore the rest.
+	 * have no way to handle this without two passes, and it's
+	 * officially supposed to be 36, so ignore the rest.
 	 */
-	if (i >= 36)
-		return;
+	if (data->max_ins >= 36)
+		return 0;
 
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	i = data->max_ins;
+
+	mod->xxi[i].nsm = 1;
+
+	if (subinstrument_alloc(mod, i) < 0)
+		return -1;
+
 	hio_read32l(f);	/* SNAM */
 	{
 		/* should usually be 0x14 but zero is not unknown */
@@ -319,7 +349,6 @@ static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read32l(f);
 	hio_read32l(f);	/* 0x00000000 */
 
-	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].sub[0].pan = 0x80;
 
@@ -346,8 +375,9 @@ static void get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 				mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				mod->xxi[i].sub[0].vol);
 
-	i++;
 	data->max_ins++;
+
+	return 0;
 }
 
 static int arch_load(struct module_data *m, HIO_HANDLE *f, const int start)
