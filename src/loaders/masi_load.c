@@ -108,28 +108,33 @@ struct local_data {
     uint8 *pord;
 };
 
-static void get_sdft(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_sdft(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
+	return 0;
 }
 
-static void get_titl(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_titl(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	char buf[40];
 	
 	hio_read(buf, 1, 40, f);
 	strncpy(mod->name, buf, size > 32 ? 32 : size);
+
+	return 0;
 }
 
-static void get_dsmp_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_dsmp_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	mod->ins++;
 	mod->smp = mod->ins;
+
+	return 0;
 }
 
-static void get_pbod_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_pbod_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -139,10 +144,12 @@ static void get_pbod_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *p
 	hio_read(buf, 1, 20, f);
 	if (buf[9] != 0 && buf[13] == 0)
 		data->sinaria = 1;
+
+	return 0;
 }
 
 
-static void get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -200,10 +207,12 @@ static void get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL);
 
 	data->cur_ins++;
+
+	return 0;
 }
 
 
-static void get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -348,17 +357,21 @@ printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 	} while (r < rows);
 
 	data->cur_pat++;
+
+	return 0;
 }
 
-static void get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
 	hio_seek(f, 10, SEEK_CUR);
 	mod->chn = hio_read8(f);
+
+	return 0;
 }
 
-static void get_song_2(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_song_2(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -410,13 +423,15 @@ static void get_song_2(struct module_data *m, int size, HIO_HANDLE *f, void *par
 		hio_read(data->pord + mod->len * 8, 1, data->sinaria ? 8 : 4, f);
 		mod->len++;
 	}
+
+	return 0;
 }
 
 static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	iff_handle handle;
-	int offset;
+	int ret, offset;
 	int i, j;
 	struct local_data data;
 
@@ -438,11 +453,15 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "TITL", get_titl);
-	iff_register(handle, "SDFT", get_sdft);
-	iff_register(handle, "SONG", get_song);
-	iff_register(handle, "DSMP", get_dsmp_cnt);
-	iff_register(handle, "PBOD", get_pbod_cnt);
+	ret = iff_register(handle, "TITL", get_titl);
+	ret |= iff_register(handle, "SDFT", get_sdft);
+	ret |= iff_register(handle, "SONG", get_song);
+	ret |= iff_register(handle, "DSMP", get_dsmp_cnt);
+	ret |= iff_register(handle, "PBOD", get_pbod_cnt);
+
+	if (ret != 0)
+		return -1;
+
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
@@ -475,9 +494,13 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "SONG", get_song_2);
-	iff_register(handle, "DSMP", get_dsmp);
-	iff_register(handle, "PBOD", get_pbod);
+	ret = iff_register(handle, "SONG", get_song_2);
+	ret |= iff_register(handle, "DSMP", get_dsmp);
+	ret |= iff_register(handle, "PBOD", get_pbod);
+
+	if (ret != 0)
+		return -1;
+
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */

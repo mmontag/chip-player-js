@@ -63,7 +63,7 @@ static int pt3_test(HIO_HANDLE *f, char *t, const int start)
 #define PT3_FLAG_RAWPAT	0x0080	/* Packed patterns if not set */
 
 
-static void get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int flags;
@@ -92,22 +92,29 @@ static void get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	D_(D_INFO "Creation date: %02d/%02d/%02d %02d:%02d:%02d",
 		       day, month, year, hour, min, sec);
 	D_(D_INFO "Playing time: %02d:%02d:%02d", dhour, dmin, dsec);
+
+	return 0;
 }
 
-static void get_cmnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_cmnt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	D_(D_INFO "Comment size: %d", size);
+
+	return 0;
 }
 
-static void get_ptdt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_ptdt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	ptdt_load(m, f, 0);
+
+	return 0;
 }
 
 static int pt3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	iff_handle handle;
 	char buf[20];
+	int ret;
 
 	LOAD_INIT();
 
@@ -126,9 +133,12 @@ static int pt3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "INFO", get_info);
-	iff_register(handle, "CMNT", get_cmnt);
-	iff_register(handle, "PTDT", get_ptdt);
+	ret = iff_register(handle, "INFO", get_info);
+	ret |= iff_register(handle, "CMNT", get_cmnt);
+	ret |= iff_register(handle, "PTDT", get_ptdt);
+
+	if (ret != 0)
+		return -1;
 
 	iff_set_quirk(handle, IFF_FULL_CHUNK_SIZE);
 
