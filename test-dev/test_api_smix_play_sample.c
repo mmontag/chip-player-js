@@ -24,11 +24,23 @@ TEST(test_api_smix_play_sample)
         ret = xmp_smix_load_sample(opaque, 1, "data/buzz.wav");
 	fail_unless(ret == 0, "load sample 1");
 
+	/* play sample before starting player */
+	ret = xmp_smix_play_sample(opaque, 2, 60, 64, 0);
+	fail_unless(ret == -XMP_ERROR_STATE, "invalid state");
+
 	xmp_start_player(opaque, 44100, 0);
 	xmp_play_frame(opaque);
 
+	/* play invalid sample */
+	ret = xmp_smix_play_sample(opaque, 2, 60, 64, 0);
+	fail_unless(ret == -XMP_ERROR_INVALID, "invalid sample");
+
+	/* play sample in invalid channel */
+	ret = xmp_smix_play_sample(opaque, 0, 60, 64, 1);
+	fail_unless(ret == -XMP_ERROR_INVALID, "invalid channel");
+
 	ret = xmp_smix_play_sample(opaque, 0, 60, 64, 0);
-	fail_unless(ret == 0, "play_sample");
+	fail_unless(ret == 0, "play sample");
 	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 4);

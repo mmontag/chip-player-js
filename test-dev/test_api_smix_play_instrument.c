@@ -19,11 +19,23 @@ TEST(test_api_smix_play_instrument)
 	ret = xmp_load_module(opaque, "data/mod.loving_is_easy.pp");
 	fail_unless(ret == 0, "load module");
 
+	/* play instrument before starting player */
+	ret = xmp_smix_play_instrument(opaque, 2, 60, 64, 0);
+	fail_unless(ret == -XMP_ERROR_STATE, "invalid state");
+
 	xmp_start_player(opaque, 44100, 0);
 	xmp_play_frame(opaque);
 
+	/* play invalid instrument */
+	ret = xmp_smix_play_instrument(opaque, 31, 60, 64, 0);
+	fail_unless(ret == -XMP_ERROR_INVALID, "invalid instrument");
+
+	/* play instrument in invalid channel */
+	ret = xmp_smix_play_instrument(opaque, 31, 60, 64, 1);
+	fail_unless(ret == -XMP_ERROR_INVALID, "invalid instrument");
+
 	ret = xmp_smix_play_instrument(opaque, 2, 60, 64, 0);
-	fail_unless(ret == 0, "play_instrument");
+	fail_unless(ret == 0, "play instrument");
 	xmp_play_frame(opaque);
 
 	voc = map_channel(p, 4);
