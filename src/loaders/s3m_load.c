@@ -358,7 +358,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->xxp[i]->rows = 64;
 
-	if (track_alloc(mod, i) < 0)
+	if (pattern_tracks_alloc(mod, i) < 0)
 		return -1;
 
 	if (pp_pat[i] == 0)
@@ -425,6 +425,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	if (mod->xxi[i].sub == NULL)
+	    return -1;
+
 	hio_seek(f, start + pp_ins[i] * 16, SEEK_SET);
 	x8 = hio_read8(f);
 	mod->xxi[i].sub[0].pan = 0x80;

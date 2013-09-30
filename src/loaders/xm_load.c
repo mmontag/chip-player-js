@@ -135,7 +135,9 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	goto load_instruments;
 
 load_patterns:
-    PATTERN_INIT();
+
+    if (pattern_init(mod) < 0)
+	return -1;
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
@@ -148,14 +150,21 @@ load_patterns:
 	xph.rows = xfh.version > 0x0102 ? hio_read16l(f) : hio_read8(f) + 1;
 	xph.datasize = hio_read16l(f);
 
-	PATTERN_ALLOC(i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
 	if (!(r = mod->xxp[i]->rows = xph.rows))
 	    r = mod->xxp[i]->rows = 0x100;
-	TRACK_ALLOC(i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
 
 	if (xph.datasize) {
 	    pat = patbuf = calloc(1, xph.datasize);
-	    hio_read (patbuf, 1, xph.datasize, f);
+	    if (patbuf == NULL)
+		return -1;
+
+	    hio_read(patbuf, 1, xph.datasize, f);
 	    for (j = 0; j < (mod->chn * r); j++) {
 		if ((pat - patbuf) >= xph.datasize)
 		    break;
@@ -249,15 +258,21 @@ load_patterns:
     }
 
     /* Alloc one extra pattern */
-    PATTERN_ALLOC(i);
+    {
+	int t = i * mod->chn;
 
-    mod->xxp[i]->rows = 64;
-    mod->xxt[i * mod->chn] = calloc (1, sizeof (struct xmp_track) +
-	sizeof (struct xmp_event) * 64);
-    mod->xxt[i * mod->chn]->rows = 64;
-    for (j = 0; j < mod->chn; j++)
-	mod->xxp[i]->index[j] = i * mod->chn;
-    mod->pat++;
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
+	mod->xxp[i]->rows = 64;
+
+	if (track_alloc(mod, t, 64) < 0)
+	    return -1;
+
+	for (j = 0; j < mod->chn; j++)
+	    mod->xxp[i]->index[j] = t;
+	mod->pat++;
+    }
 
     if (xfh.version <= 0x0103) {
 	goto load_samples;
@@ -269,7 +284,8 @@ load_instruments:
     /* ESTIMATED value! We don't know the actual value at this point */
     mod->smp = MAX_SAMP;
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     for (i = 0; i < mod->ins; i++) {
 
@@ -285,7 +301,7 @@ load_instruments:
 	}
 
 	hio_read(&xih.name, 22, 1, f);		/* Instrument name */
-	xih.type = hio_read8(f);			/* Instrument type (always 0) */
+	xih.type = hio_read8(f);		/* Instrument type (always 0) */
 	xih.samples = hio_read16l(f);		/* Number of samples */
 	xih.sh_size = hio_read32l(f);		/* Sample header size */
 
@@ -304,7 +320,8 @@ load_instruments:
 	D_(D_INFO "[%2X] %-22.22s %2d", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
 	if (mod->xxi[i].nsm) {
-	    mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), mod->xxi[i].nsm);
+	    if (subinstrument_alloc(mod, i) < 0)
+		return -1;
 
 	    /* for BoobieSqueezer (see http://boobie.rotfl.at/)
 	     * It works pretty much the same way as Impulse Tracker's sample
@@ -317,23 +334,23 @@ load_instruments:
 	    } else {
 		hio_read(&xi.sample, 96, 1, f);	/* Sample map */
 		for (j = 0; j < 24; j++)
-		    xi.v_env[j] = hio_read16l(f);	/* Points for volume envelope */
+		    xi.v_env[j] = hio_read16l(f); /* Points for volume envelope */
 		for (j = 0; j < 24; j++)
-		    xi.p_env[j] = hio_read16l(f);	/* Points for pan envelope */
-		xi.v_pts = hio_read8(f);		/* Number of volume points */
-		xi.p_pts = hio_read8(f);		/* Number of pan points */
-		xi.v_sus = hio_read8(f);		/* Volume sustain point */
+		    xi.p_env[j] = hio_read16l(f); /* Points for pan envelope */
+		xi.v_pts = hio_read8(f);	/* Number of volume points */
+		xi.p_pts = hio_read8(f);	/* Number of pan points */
+		xi.v_sus = hio_read8(f);	/* Volume sustain point */
 		xi.v_start = hio_read8(f);	/* Volume loop start point */
-		xi.v_end = hio_read8(f);		/* Volume loop end point */
-		xi.p_sus = hio_read8(f);		/* Pan sustain point */
+		xi.v_end = hio_read8(f);	/* Volume loop end point */
+		xi.p_sus = hio_read8(f);	/* Pan sustain point */
 		xi.p_start = hio_read8(f);	/* Pan loop start point */
-		xi.p_end = hio_read8(f);		/* Pan loop end point */
-		xi.v_type = hio_read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
-		xi.p_type = hio_read8(f);		/* Bit 0:On 1:Sustain 2:Loop */
-		xi.y_wave = hio_read8(f);		/* Vibrato waveform */
+		xi.p_end = hio_read8(f);	/* Pan loop end point */
+		xi.v_type = hio_read8(f);	/* Bit 0:On 1:Sustain 2:Loop */
+		xi.p_type = hio_read8(f);	/* Bit 0:On 1:Sustain 2:Loop */
+		xi.y_wave = hio_read8(f);	/* Vibrato waveform */
 		xi.y_sweep = hio_read8(f);	/* Vibrato sweep */
 		xi.y_depth = hio_read8(f);	/* Vibrato depth */
-		xi.y_rate = hio_read8(f);		/* Vibrato rate */
+		xi.y_rate = hio_read8(f);	/* Vibrato rate */
 		xi.v_fade = hio_read16l(f);	/* Volume fadeout */
 
 		/* Skip reserved space */

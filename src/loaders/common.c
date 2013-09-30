@@ -33,6 +33,16 @@ int instrument_init(struct xmp_module *mod)
 	return 0;
 }
 
+int subinstrument_alloc(struct xmp_module *mod, int i)
+{
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument),	
+						mod->xxi[i].nsm);
+	if (mod->xxi[i].sub == NULL)
+		return -1;
+
+	return 0;
+}
+
 int pattern_init(struct xmp_module *mod)
 {
 	mod->xxt = calloc(sizeof (struct xmp_track *), mod->trk);
@@ -56,7 +66,19 @@ int pattern_alloc(struct xmp_module *mod, int num)
 	return 0;
 }
 
-int track_alloc(struct xmp_module *mod, int p)
+int track_alloc(struct xmp_module *mod, int num, int rows)
+{
+	mod->xxt[num] = calloc (sizeof (struct xmp_track) +
+				sizeof (struct xmp_event) * (rows - 1), 1);
+	if (mod->xxt[num] == NULL)
+		return -1;
+
+	mod->xxt[num]->rows = rows;
+
+	return 0;
+}
+
+int pattern_tracks_alloc(struct xmp_module *mod, int p)
 {
 	int i;
 
@@ -64,12 +86,10 @@ int track_alloc(struct xmp_module *mod, int p)
 		int t = p * mod->chn + i;
 		int rows = mod->xxp[p]->rows;
 
-		mod->xxt[t] = calloc (sizeof (struct xmp_track) +
-				sizeof (struct xmp_event) * (rows - 1), 1);
-		if (mod->xxt[t] == NULL)
+		if (track_alloc(mod, t, rows) < 0)
 			return -1;
+
 		mod->xxp[p]->index[i] = t;
-		mod->xxt[t]->rows = rows;
 	}
 
 	return 0;
