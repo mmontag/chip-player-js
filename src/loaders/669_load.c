@@ -84,8 +84,8 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     hio_read(&sfh.marker, 2, 1, f);	/* 'if'=standard, 'JN'=extended */
     hio_read(&sfh.message, 108, 1, f);	/* Song message */
-    sfh.nos = hio_read8(f);			/* Number of samples (0-64) */
-    sfh.nop = hio_read8(f);			/* Number of patterns (0-128) */
+    sfh.nos = hio_read8(f);		/* Number of samples (0-64) */
+    sfh.nop = hio_read8(f);		/* Number of patterns (0-128) */
     sfh.loop = hio_read8(f);		/* Loop order number */
     hio_read(&sfh.order, 128, 1, f);	/* Order list */
     hio_read(&sfh.speed, 128, 1, f);	/* Tempo list for patterns */
@@ -118,19 +118,23 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
     
     /* Read and convert instruments and samples */
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     D_(D_INFO "Instruments: %d", mod->pat);
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
 
 	hio_read (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
 	sih.length = hio_read32l(f);		/* Instrument size */
-	sih.loop_start = hio_read32l(f);		/* Instrument loop start */
+	sih.loop_start = hio_read32l(f);	/* Instrument loop start */
 	sih.loopend = hio_read32l(f);		/* Instrument loop end */
 
-	mod->xxi[i].nsm = !!(mod->xxs[i].len = sih.length);
+	mod->xxs[i].len = sih.length;
 	mod->xxs[i].lps = sih.loop_start;
 	mod->xxs[i].lpe = sih.loopend >= 0xfffff ? 0 : sih.loopend;
 	mod->xxs[i].flg = mod->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
@@ -145,14 +149,19 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
 
 	EVENT(i, 0, 0).f2t = FX_SPEED_CP;
 	EVENT(i, 0, 0).f2p = sfh.speed[i];
