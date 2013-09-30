@@ -18,6 +18,64 @@
 #include "period.h"
 #include "loader.h"
 
+int instrument_init(struct xmp_module *mod)
+{
+	mod->xxi = calloc(sizeof (struct xmp_instrument), mod->ins);
+	if (mod->xxi == NULL)
+		return -1;
+
+	if (mod->smp) {
+		mod->xxs = calloc (sizeof (struct xmp_sample), mod->smp);
+		if (mod->xxs == NULL)
+			return -1;
+	}
+
+	return 0;
+}
+
+int pattern_init(struct xmp_module *mod)
+{
+	mod->xxt = calloc(sizeof (struct xmp_track *), mod->trk);
+	if (mod->xxt == NULL)
+		return -1;
+
+	mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat + 1);
+	if (mod->xxp == NULL)
+		return -1;
+
+	return 0;
+}
+
+int pattern_alloc(struct xmp_module *mod, int num)
+{
+	mod->xxp[num] = calloc(1, sizeof (struct xmp_pattern) +
+        				sizeof (int) * (mod->chn - 1));
+	if (mod->xxp[num] == NULL)
+		return -1;
+
+	return 0;
+}
+
+int track_alloc(struct xmp_module *mod, int p)
+{
+	int i;
+
+	for (i = 0; i < mod->chn; i++) {
+		int t = p * mod->chn + i;
+		int rows = mod->xxp[p]->rows;
+
+		mod->xxt[t] = calloc (sizeof (struct xmp_track) +
+				sizeof (struct xmp_event) * (rows - 1), 1);
+		if (mod->xxt[t] == NULL)
+			return -1;
+		mod->xxp[p]->index[i] = t;
+		mod->xxt[t]->rows = rows;
+	}
+
+	return 0;
+}
+
+
 
 char *copy_adjust(char *s, uint8 *r, int n)
 {

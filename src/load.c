@@ -748,30 +748,37 @@ void xmp_release_module(xmp_context opaque)
 
 	release_module_extras(ctx);
 
-	for (i = 0; i < mod->trk; i++) {
-		free(mod->xxt[i]);
+	if (mod->xxt) {
+		for (i = 0; i < mod->trk; i++) {
+			free(mod->xxt[i]);
+		}
+		free(mod->xxt);
 	}
 
-	for (i = 0; i < mod->pat; i++) {
-		free(mod->xxp[i]);
+	if (mod->xxp) {
+		for (i = 0; i < mod->pat; i++) {
+			free(mod->xxp[i]);
+		}
+		free(mod->xxp);
 	}
 
-	for (i = 0; i < mod->ins; i++) {
-		free(mod->xxi[i].sub);
-		if (mod->xxi[i].extra)
+
+	if (mod->xxi) {
+		for (i = 0; i < mod->ins; i++) {
+			free(mod->xxi[i].sub);
 			free(mod->xxi[i].extra);
+		}
+		free(mod->xxi);
 	}
 
-	free(mod->xxt);
-	free(mod->xxp);
-	if (mod->smp > 0) {
+	if (mod->xxs) {
 		for (i = 0; i < mod->smp; i++) {
 			if (mod->xxs[i].data != NULL)
 				free(mod->xxs[i].data - 4);
 		}
 		free(mod->xxs);
 	}
-	free(mod->xxi);
+
 	if (m->comment) {
 		free(m->comment);
 	}

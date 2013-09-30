@@ -245,8 +245,15 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->ins = sfh.insnum;
     mod->smp = mod->ins;
     mod->pat = sfh.patnum;
+
     pp_ins = calloc (2, mod->ins);
+    if (pp_ins == NULL)
+	goto err;
+
     pp_pat = calloc (2, mod->pat);
+    if (pp_pat == NULL)
+	goto err2;
+
     if (sfh.flags & S3M_AMIGA_RANGE)
 	m->quirk |= QUIRK_MODRNG;
     if (sfh.flags & S3M_ST300_VOLS)
@@ -336,7 +343,8 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	goto err3;
 
     /* Read patterns */
 
@@ -345,11 +353,15 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     memset (arpeggio_val, 0, 32);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
-	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 
-	if (!pp_pat[i])
+	mod->xxp[i]->rows = 64;
+
+	if (track_alloc(mod, i) < 0)
+		return -1;
+
+	if (pp_pat[i] == 0)
 	    continue;
 
 	hio_seek(f, start + pp_pat[i] * 16, SEEK_SET);
@@ -404,7 +416,8 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
     D_(D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Read and convert instruments and samples */
 
@@ -470,7 +483,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if (x8 == 1 && sih.magic != MAGIC_SCRS) {
 	    D_(D_CRIT "error: instrument magic");
-	    goto err;
+	    goto err3;
 	}
 
 	if (quirk87) {
@@ -521,9 +534,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     return 0;
 
-  err:
+  err3:
     free(pp_pat);
+  err2:
     free(pp_ins);
+  err:
     return -1;
 }
 
