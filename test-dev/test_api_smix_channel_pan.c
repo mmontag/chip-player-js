@@ -34,6 +34,15 @@ TEST(test_api_smix_channel_pan)
 	fail_unless(voc >= 0, "virtual map");
 	vi = &p->virt.voice_array[voc];
 
+	ret = xmp_smix_channel_pan(opaque, 2, 0x00);
+	fail_unless(ret == -XMP_ERROR_INVALID, "invalid channel");
+
+	ret = xmp_smix_channel_pan(opaque, 0, -1);
+	fail_unless(ret == -XMP_ERROR_INVALID, "invalid pan");
+
+	ret = xmp_smix_channel_pan(opaque, 0, 256);
+	fail_unless(ret == -XMP_ERROR_INVALID, "invalid pan");
+
 	xmp_smix_channel_pan(opaque, 0, 0x00);
 	xmp_play_frame(opaque);
 	fail_unless(vi->pan == -128, "set pan left");

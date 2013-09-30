@@ -53,7 +53,8 @@ API		= get_format_list create_context free_context \
 		  set_player stop_module restart_module seek_time \
 		  channel_mute channel_vol inject_event scan_module
 
-API_SMIX	= smix_play_instrument smix_play_sample smix_channel_pan
+API_SMIX	= smix_play_instrument smix_load_sample smix_play_sample \
+		  smix_channel_pan
 
 STORLEK		= 01_arpeggio_pitch_slide \
 		  02_arpeggio_no_value \

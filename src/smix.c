@@ -230,6 +230,7 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	
     err2:
 	free(xxi->sub);
+	xxi->sub = NULL;
     err1:
 	hio_close(h);
     err:
