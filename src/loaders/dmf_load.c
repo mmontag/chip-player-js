@@ -41,8 +41,8 @@ static int dmf_test(HIO_HANDLE * f, char *t, const int start)
 
 
 struct local_data {
-    int ver;
-    uint8 packtype[256];
+	int ver;
+	uint8 packtype[256];
 };
 
 
@@ -158,7 +158,7 @@ static int unpack(uint8 *psample, uint8 *ibuf, uint8 *ibufmax, uint32 maxlen)
  * IFF chunk handlers
  */
 
-static void get_sequ(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_sequ(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i;
@@ -172,9 +172,11 @@ static void get_sequ(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = hio_read16l(f);
+
+	return 0;
 }
 
-static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, r, chn;
@@ -253,9 +255,11 @@ static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			}
 		}
 	}
+
+	return 0;
 }
 
-static void get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -304,9 +308,11 @@ static void get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 				'0' + data->packtype[i],
 				c3spd, mod->xxi[i].sub[0].vol);
 	}
+
+	return 0;
 }
 
-static void get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -348,6 +354,8 @@ static void get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	free(ibuf);
 	free(sbuf);
+
+	return 0;
 }
 
 static int dmf_load(struct module_data *m, HIO_HANDLE *f, const int start)
@@ -357,6 +365,7 @@ static int dmf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	uint8 date[3];
 	char tracker_name[10];
 	struct local_data data;
+	int ret;
 
 	LOAD_INIT();
 
@@ -381,10 +390,14 @@ static int dmf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "SEQU", get_sequ);
-	iff_register(handle, "PATT", get_patt);
-	iff_register(handle, "SMPI", get_smpi);
-	iff_register(handle, "SMPD", get_smpd);
+	ret = iff_register(handle, "SEQU", get_sequ);
+	ret |= iff_register(handle, "PATT", get_patt);
+	ret |= iff_register(handle, "SMPI", get_smpi);
+	ret |= iff_register(handle, "SMPD", get_smpd);
+
+	if (ret != 0)
+		return -1;
+
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
