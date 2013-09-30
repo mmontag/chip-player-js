@@ -46,7 +46,7 @@ static int emod_test(HIO_HANDLE *f, char *t, const int start)
 }
 
 
-static void get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, ver;
@@ -113,10 +113,12 @@ static void get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
     for (i = 0; i < mod->len; i++)
 	mod->xxo[i] = reorder[hio_read8(f)];
+
+    return 0;
 }
 
 
-static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i, j, k;
@@ -153,10 +155,12 @@ static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	    }
 	}
     }
+
+    return 0;
 }
 
 
-static void get_8smp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_8smp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
     int i;
@@ -166,12 +170,15 @@ static void get_8smp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     for (i = 0; i < mod->smp; i++) {
 	load_sample(m, f, 0, &mod->xxs[i], NULL);
     }
+
+    return 0;
 }
 
 
 static int emod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     iff_handle handle;
+    int ret;
 
     LOAD_INIT();
 
@@ -184,9 +191,12 @@ static int emod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     /* IFF chunk IDs */
-    iff_register(handle, "EMIC", get_emic);
-    iff_register(handle, "PATT", get_patt);
-    iff_register(handle, "8SMP", get_8smp);
+    ret = iff_register(handle, "EMIC", get_emic);
+    ret |= iff_register(handle, "PATT", get_patt);
+    ret |= iff_register(handle, "8SMP", get_8smp);
+
+    if (ret != 0)
+	return -1;
 
     /* Load IFF chunks */
     while (!hio_eof(f)) {

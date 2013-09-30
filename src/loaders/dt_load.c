@@ -46,10 +46,12 @@ static int dt_test(HIO_HANDLE *f, char *t, const int start)
 struct local_data {
     int pflag, sflag;
     int realpat;
+    int last_pat;
+    int insnum;
 };
 
 
-static void get_d_t_(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_d_t_(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int b;
@@ -66,9 +68,11 @@ static void get_d_t_(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	set_type(m, "Digital Tracker DTM");
 
 	MODULE_INFO();
+
+	return 0;
 }
 
-static void get_s_q_(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_s_q_(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, maxpat;
@@ -83,9 +87,11 @@ static void get_s_q_(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			maxpat = mod->xxo[i];
 	}
 	mod->pat = maxpat + 1;
+
+	return 0;
 }
 
-static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
@@ -93,9 +99,11 @@ static void get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->chn = hio_read16b(f);
 	data->realpat = hio_read16b(f);
 	mod->trk = mod->chn * mod->pat;
+
+	return 0;
 }
 
-static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, c2spd;
@@ -156,21 +164,22 @@ static void get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			fine,
 			c2spd);
 	}
+
+	return 0;
 }
 
-static void get_dapt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_dapt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 	int pat, i, j, k;
 	struct xmp_event *event;
-	static int last_pat;
 	int rows;
 
 	if (!data->pflag) {
 		D_(D_INFO "Stored patterns: %d", mod->pat);
 		data->pflag = 1;
-		last_pat = 0;
+		data->last_pat = 0;
 		PATTERN_INIT();
 	}
 
@@ -178,12 +187,12 @@ static void get_dapt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	i = pat = hio_read16b(f);
 	rows = hio_read16b(f);
 
-	for (i = last_pat; i <= pat; i++) {
+	for (i = data->last_pat; i <= pat; i++) {
 		PATTERN_ALLOC(i);
 		mod->xxp[i]->rows = rows;
 		TRACK_ALLOC(i);
 	}
-	last_pat = pat + 1;
+	data->last_pat = pat + 1;
 
 	for (j = 0; j < rows; j++) {
 		for (k = 0; k < mod->chn; k++) {
@@ -204,32 +213,36 @@ static void get_dapt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			event->fxp = d;
 		}
 	}
+
+	return 0;
 }
 
-static void get_dait(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int get_dait(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
-	static int i = 0;
 
 	if (!data->sflag) {
 		D_(D_INFO "Stored samples : %d ", mod->smp);
 		data->sflag = 1;
-		i = 0;
+		data->insnum = 0;
 	}
 
 	if (size > 2) {
 		load_sample(m, f, SAMPLE_FLAG_BIGEND,
-				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			&mod->xxs[mod->xxi[data->insnum].sub[0].sid], NULL);
 	}
 
-	i++;
+	data->insnum++;
+
+	return 0;
 }
 
 static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	iff_handle handle;
 	struct local_data data;
+	int ret;
 
 	LOAD_INIT();
 
@@ -240,12 +253,15 @@ static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "D.T.", get_d_t_);
-	iff_register(handle, "S.Q.", get_s_q_);
-	iff_register(handle, "PATT", get_patt);
-	iff_register(handle, "INST", get_inst);
-	iff_register(handle, "DAPT", get_dapt);
-	iff_register(handle, "DAIT", get_dait);
+	ret = iff_register(handle, "D.T.", get_d_t_);
+	ret |= iff_register(handle, "S.Q.", get_s_q_);
+	ret |= iff_register(handle, "PATT", get_patt);
+	ret |= iff_register(handle, "INST", get_inst);
+	ret |= iff_register(handle, "DAPT", get_dapt);
+	ret |= iff_register(handle, "DAIT", get_dait);
+
+	if (ret != 0)
+		return -1;
 
 	/* Load IFF chunks */
 	while (!hio_eof(f)) {
