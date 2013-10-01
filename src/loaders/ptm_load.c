@@ -100,18 +100,18 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Load and convert header */
 
-    hio_read(&pfh.name, 28, 1, f);		/* Song name */
+    hio_read(&pfh.name, 28, 1, f);	/* Song name */
     pfh.doseof = hio_read8(f);		/* 0x1a */
     pfh.vermin = hio_read8(f);		/* Minor version */
     pfh.vermaj = hio_read8(f);		/* Major type */
     pfh.rsvd1 = hio_read8(f);		/* Reserved */
-    pfh.ordnum = hio_read16l(f);		/* Number of orders (must be even) */
-    pfh.insnum = hio_read16l(f);		/* Number of instruments */
-    pfh.patnum = hio_read16l(f);		/* Number of patterns */
-    pfh.chnnum = hio_read16l(f);		/* Number of channels */
+    pfh.ordnum = hio_read16l(f);	/* Number of orders (must be even) */
+    pfh.insnum = hio_read16l(f);	/* Number of instruments */
+    pfh.patnum = hio_read16l(f);	/* Number of patterns */
+    pfh.chnnum = hio_read16l(f);	/* Number of channels */
     pfh.flags = hio_read16l(f);		/* Flags (set to 0) */
     pfh.rsvd2 = hio_read16l(f);		/* Reserved */
-    pfh.magic = hio_read32b(f); 		/* 'PTMF' */
+    pfh.magic = hio_read32b(f); 	/* 'PTMF' */
 
 #if 0
     if (pfh.magic != MAGIC_PTMF)
@@ -142,17 +142,16 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Read and convert instruments and samples */
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-
-	pih.type = hio_read8(f);			/* Sample type */
-	hio_read(&pih.dosname, 12, 1, f);		/* DOS file name */
+	pih.type = hio_read8(f);		/* Sample type */
+	hio_read(&pih.dosname, 12, 1, f);	/* DOS file name */
 	pih.vol = hio_read8(f);			/* Volume */
-	pih.c4spd = hio_read16l(f);			/* C4 speed */
+	pih.c4spd = hio_read16l(f);		/* C4 speed */
 	pih.smpseg = hio_read16l(f);		/* Sample segment (not used) */
 	pih.smpofs = hio_read32l(f);		/* Sample offset */
 	pih.length = hio_read32l(f);		/* Length */
@@ -161,19 +160,25 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	pih.gusbeg = hio_read32l(f);		/* GUS begin address */
 	pih.guslps = hio_read32l(f);		/* GUS loop start address */
 	pih.guslpe = hio_read32l(f);		/* GUS loop end address */
-	pih.gusflg = hio_read8(f);			/* GUS loop flags */
-	pih.rsvd1 = hio_read8(f);			/* Reserved */
+	pih.gusflg = hio_read8(f);		/* GUS loop flags */
+	pih.rsvd1 = hio_read8(f);		/* Reserved */
 	hio_read(&pih.name, 28, 1, f);		/* Instrument name */
-	pih.magic = hio_read32b(f);			/* 'PTMS' */
+	pih.magic = hio_read32b(f);		/* 'PTMS' */
 
 	if ((pih.type & 3) != 1)
 	    continue;
 
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+		return -1;
+
 	smp_ofs[i] = pih.smpofs;
 	mod->xxs[i].len = pih.length;
-	mod->xxi[i].nsm = pih.length > 0 ? 1 : 0;
 	mod->xxs[i].lps = pih.loopbeg;
 	mod->xxs[i].lpe = pih.loopend;
+
+	if (mod->xxs[i].len == 0)
+		mod->xxi[i].nsm = 0;
 
 	mod->xxs[i].flg = 0;
 	if (pih.type & 0x04) {
@@ -207,7 +212,8 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	c2spd_to_note(pih.c4spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -215,9 +221,14 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	if (!pfh.patseg[i])
 	    continue;
-	PATTERN_ALLOC (i);
+
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
+
 	hio_seek(f, start + 16L * pfh.patseg[i], SEEK_SET);
 	r = 0;
 	while (r < 64) {
