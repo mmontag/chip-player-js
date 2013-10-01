@@ -193,21 +193,19 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	set_type(m, "%s (%4.4s)", "His Master's Noise", mh.magic);
 	MODULE_INFO();
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		int num;
-
 		if (mupp[i].prgon) {
-			mod->xxi[i].nsm = num = 28;
+			mod->xxi[i].nsm = 28;
 			snprintf(mod->xxi[i].name, 32,
 				"Mupp %02x %02x %02x", mupp[i].pattno,
 				mupp[i].dataloopstart, mupp[i].dataloopend);
 			if (hmn_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 		} else {
-			num = 1;
-			mod->xxi[i].nsm = mh.ins[i].size > 0 ? 1 : 0;
+			mod->xxi[i].nsm = 1;
 			copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
 			mod->xxs[i].len = 2 * mh.ins[i].size;
@@ -218,11 +216,10 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 						XMP_SAMPLE_LOOP : 0;
 		}
 
-		mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), num);
-		if (mod->xxi[i].sub == NULL)
+		if (subinstrument_alloc(mod, i) < 0)
 			return -1;
 
-		for (j = 0; j < num; j++) {
+		for (j = 0; j < mod->xxi[i].nsm; j++) {
 			mod->xxi[i].sub[j].fin =
 					-(int8)(mh.ins[i].finetune << 3);
 			mod->xxi[i].sub[j].vol = mh.ins[i].volume;
@@ -231,15 +228,20 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
