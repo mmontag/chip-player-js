@@ -111,29 +111,29 @@ static int stm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hio_read(&sfh.name, 20, 1, f);			/* ASCIIZ song name */
-    hio_read(&sfh.magic, 8, 1, f);			/* '!Scream!' */
+    hio_read(&sfh.name, 20, 1, f);		/* ASCIIZ song name */
+    hio_read(&sfh.magic, 8, 1, f);		/* '!Scream!' */
     sfh.rsvd1 = hio_read8(f);			/* '\x1a' */
     sfh.type = hio_read8(f);			/* 1=song, 2=module */
     sfh.vermaj = hio_read8(f);			/* Major version number */
     sfh.vermin = hio_read8(f);			/* Minor version number */
     sfh.tempo = hio_read8(f);			/* Playback tempo */
-    sfh.patterns = hio_read8(f);			/* Number of patterns */
+    sfh.patterns = hio_read8(f);		/* Number of patterns */
     sfh.gvol = hio_read8(f);			/* Global volume */
     hio_read(&sfh.rsvd2, 13, 1, f);		/* Reserved */
 
     for (i = 0; i < 31; i++) {
 	hio_read(&sfh.ins[i].name, 12, 1, f);	/* ASCIIZ instrument name */
 	sfh.ins[i].id = hio_read8(f);		/* Id=0 */
-	sfh.ins[i].idisk = hio_read8(f);		/* Instrument disk */
-	sfh.ins[i].rsvd1 = hio_read16l(f);		/* Reserved */
-	sfh.ins[i].length = hio_read16l(f);		/* Sample length */
+	sfh.ins[i].idisk = hio_read8(f);	/* Instrument disk */
+	sfh.ins[i].rsvd1 = hio_read16l(f);	/* Reserved */
+	sfh.ins[i].length = hio_read16l(f);	/* Sample length */
 	sfh.ins[i].loopbeg = hio_read16l(f);	/* Loop begin */
 	sfh.ins[i].loopend = hio_read16l(f);	/* Loop end */
-	sfh.ins[i].volume = hio_read8(f);		/* Playback volume */
-	sfh.ins[i].rsvd2 = hio_read8(f);		/* Reserved */
-	sfh.ins[i].c2spd = hio_read16l(f);		/* C4 speed */
-	sfh.ins[i].rsvd3 = hio_read32l(f);		/* Reserved */
+	sfh.ins[i].volume = hio_read8(f);	/* Playback volume */
+	sfh.ins[i].rsvd2 = hio_read8(f);	/* Reserved */
+	sfh.ins[i].c2spd = hio_read16l(f);	/* C4 speed */
+	sfh.ins[i].rsvd3 = hio_read32l(f);	/* Reserved */
 	sfh.ins[i].paralen = hio_read16l(f);	/* Length in paragraphs */
     }
 
@@ -158,12 +158,16 @@ static int stm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Read and convert instruments and samples */
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	mod->xxi[i].nsm = !!(mod->xxs[i].len = sfh.ins[i].length);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
+
+	mod->xxs[i].len = sfh.ins[i].length;
 	mod->xxs[i].lps = sfh.ins[i].loopbeg;
 	mod->xxs[i].lpe = sfh.ins[i].loopend;
 	if (mod->xxs[i].lpe == 0xffff)
@@ -194,15 +198,21 @@ static int stm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     D_(D_INFO "Module length: %d", mod->len);
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
+
 	for (j = 0; j < 64 * mod->chn; j++) {
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    b = hio_read8(f);
