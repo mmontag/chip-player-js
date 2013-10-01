@@ -356,7 +356,6 @@ static int flt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].nsm = 1;
-
 	if (subinstrument_alloc(mod, i) < 0)
 	    return -1;
 
@@ -369,6 +368,9 @@ static int flt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].rls = 0xfff;
+
+	if (mod->xxs[i].len == 0)
+		mod->xxi[i].nsm = 0;
 
 	copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 

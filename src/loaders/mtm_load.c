@@ -139,6 +139,9 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	copy_adjust(mod->xxi[i].name, mih.name, 22);
 
+	if (mod->xxs[i].len == 0)
+		mod->xxi[i].nsm = 0;
+
 	D_(D_INFO "[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
 		mod->xxi[i].name, mod->xxs[i].len,
 		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',

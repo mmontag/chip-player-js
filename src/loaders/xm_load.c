@@ -139,14 +139,13 @@ load_patterns:
     mod->pat++;
     if (pattern_init(mod) < 0)
 	return -1;
-    mod->pat--;
 
-    D_(D_INFO "Stored patterns: %d", mod->pat);
+    D_(D_INFO "Stored patterns: %d", mod->pat - 1);
 
     /* Endianism fixed by Miodrag Vallat <miodrag@multimania.com>
      * Mon, 04 Jan 1999 11:17:20 +0100
      */
-    for (i = 0; i < mod->pat; i++) {
+    for (i = 0; i < mod->pat - 1; i++) {
 	xph.length = hio_read32l(f);
 	xph.packing = hio_read8(f);
 	xph.rows = xfh.version > 0x0102 ? hio_read16l(f) : hio_read8(f) + 1;
@@ -275,7 +274,6 @@ load_patterns:
 
 	for (j = 0; j < mod->chn; j++)
 	    mod->xxp[i]->index[j] = t;
-	mod->pat++;
     }
 
     if (xfh.version <= 0x0103) {

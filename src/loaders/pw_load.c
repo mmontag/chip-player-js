@@ -163,6 +163,9 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].rls = 0xfff;
 
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
+
 		copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
 
 		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",

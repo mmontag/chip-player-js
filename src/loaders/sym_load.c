@@ -243,7 +243,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hio_seek(f, 8, SEEK_CUR);			/* BASSTRAK */
+	hio_seek(f, 8, SEEK_CUR);	/* BASSTRAK */
 
 	ver = hio_read8(f);
 	set_type(m, "Digital Symphony");
@@ -255,18 +255,23 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->ins = mod->smp = 63;
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 
 		sn[i] = hio_read8(f);	/* sample name length */
 
 		if (~sn[i] & 0x80)
 			mod->xxs[i].len = hio_read24l(f) << 1;
+		else
+			mod->xxi[i].nsm = 0;
 	}
 
-	a = hio_read8(f);			/* track name length */
+	a = hio_read8(f);		/* track name length */
 
 	hio_read(mod->name, 1, a, f);
 	hio_read(&allowed_effects, 1, 8, f);
@@ -274,10 +279,11 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	MODULE_INFO();
 
 	mod->trk++;			/* alloc extra empty track */
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Sequence */
-	a = hio_read8(f);			/* packing */
+	a = hio_read8(f);		/* packing */
 
 	if (a != 0 && a != 1)
 		return -1;
@@ -300,8 +306,12 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < mod->len; i++) {	/* len == pat */
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0) {
+			free(buf);
+			return -1;
+		}
 		mod->xxp[i]->rows = 64;
+
 		for (j = 0; j < mod->chn; j++) {
 			int idx = 2 * (i * mod->chn + j);
 			mod->xxp[i]->index[j] = readptr16l(&buf[idx]);
@@ -340,9 +350,10 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < mod->trk - 1; i++) {
-		mod->xxt[i] = calloc(sizeof(struct xmp_track) +
-				sizeof(struct xmp_event) * 64 - 1, 1);
-		mod->xxt[i]->rows = 64;
+		if (track_alloc(mod, i, 64) < 0) {
+			free(buf);
+			return -1;
+		}
 
 		for (j = 0; j < mod->xxt[i]->rows; j++) {
 			int parm;
@@ -368,9 +379,8 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	free(buf);
 
 	/* Extra track */
-	mod->xxt[i] = calloc(sizeof(struct xmp_track) +
-				sizeof(struct xmp_event) * 64 - 1, 1);
-	mod->xxt[i]->rows = 64;
+	if (track_alloc(mod, i, 64) < 0)
+		return -1;
 
 	/* Load and convert instruments */
 
@@ -391,7 +401,6 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (looplen > 2)
 				mod->xxs[i].flg |= XMP_SAMPLE_LOOP;
 			mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
-			mod->xxi[i].nsm = 1;
 			mod->xxi[i].sub[0].vol = hio_read8(f);
 			mod->xxi[i].sub[0].pan = 0x80;
 			/* finetune adjusted comparing DSym and S3M versions

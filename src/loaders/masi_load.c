@@ -179,6 +179,9 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	if ((int32)mod->xxs[i].lpe < 0)
 		mod->xxs[i].lpe = 0;
 
+	if (mod->xxs[i].len == 0)
+		mod->xxi[i].nsm = 0;
+
 	finetune = 0;
 	if (data->sinaria) {
 		if (mod->xxs[i].len > 2)

@@ -177,6 +177,9 @@ static int stm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
+	if (mod->xxs[i].len == 0)
+		mod->xxi[i].nsm = 0;
+
 	copy_adjust(mod->xxi[i].name, sfh.ins[i].name, 12);
 
 	D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d", i,
