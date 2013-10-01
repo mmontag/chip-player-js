@@ -81,7 +81,7 @@ static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
 	return res;
 }
 
-static void unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
+static int unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -95,7 +95,8 @@ static void unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 
 	from += 16;
 	patbuf = to = calloc(3, 4 * 64);
-	assert(to);
+	if (to == NULL)
+		return -1;
 
 	for (i = 0; i < 64; i++) {
 		if (i == 32) {
@@ -197,6 +198,8 @@ static void unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 	}
 
 	free(patbuf);
+
+	return 0;
 }
 
 
@@ -214,7 +217,9 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	set_type(m, "MED 2.00 MED3");
 
 	mod->ins = mod->smp = 32;
-	INSTRUMENT_INIT();
+
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	/* read instrument names */
 	for (i = 0; i < 32; i++) {
@@ -226,7 +231,9 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				break;
 		}
 		copy_adjust(mod->xxi[i].name, buf, 32);
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 	}
 
 	/* read instrument volumes */
@@ -266,9 +273,9 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 	transp = hio_read8s(f);
 	hio_read8(f);			/* flags */
-	sliding = hio_read16b(f);		/* sliding */
+	sliding = hio_read16b(f);	/* sliding */
 	hio_read32b(f);			/* jumping mask */
-	hio_seek(f, 16, SEEK_CUR);		/* rgb */
+	hio_seek(f, 16, SEEK_CUR);	/* rgb */
 
 	/* read midi channels */
 	mask = hio_read32b(f);
@@ -295,7 +302,8 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < 32; i++)
 		mod->xxi[i].sub[0].xpo = transp;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -305,16 +313,21 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint8 b, tracks;
 		uint16 convsz;
 
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		tracks = hio_read8(f);
 
 		b = hio_read8(f);
 		convsz = hio_read16b(f);
 		conv = calloc(1, convsz + 16);
-		assert(conv);
+		if (conv == NULL)
+			return -1;
 
                 if (b & M0F_LINEMSK00)
 			*conv = 0L;
@@ -346,7 +359,10 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		hio_read(conv + 4, 1, convsz, f);
 
-                unpack_block(m, i, (uint8 *)conv);
+                if (unpack_block(m, i, (uint8 *)conv) < 0) {
+			free(conv);
+			return -1;
+		}
 
 		free(conv);
 	}
@@ -357,14 +373,18 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mask = hio_read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		if (~mask & MASK)
+		if (~mask & MASK) {
+			mod->xxi[i].nsm = 0;
 			continue;
+		}
 
 		mod->xxs[i].len = hio_read32b(f);
+
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
+
 		if (hio_read16b(f))		/* type */
 			continue;
-
-		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 
 		D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x ",
 			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
