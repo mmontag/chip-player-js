@@ -295,7 +295,7 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		fail_unless(x == xxs->flg, "sample flags");
 
 		s++;
-		if (len > 0) {
+		if (len > 0 && xxs->data != NULL) {
 			MD5Init(&ctx);
 			MD5Update(&ctx, xxs->data, len);
 			MD5Final(d, &ctx);
