@@ -12,9 +12,7 @@
  * working on) so it may include information not completely neccessary."
  */
 
-
 #include "loader.h"
-
 
 struct far_header {
 	uint32 magic;		/* File magic: 'FAR\xfe' */
@@ -161,7 +159,8 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Comment bytes  : %d", ffh.textlen);
@@ -170,11 +169,16 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	uint8 brk, note, ins, vol, fxb;
 
-	PATTERN_ALLOC(i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
 	if (!ffh2.patsize[i])
 	    continue;
+
 	mod->xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
-	TRACK_ALLOC(i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
 
 	brk = hio_read8(f) + 1;
 	hio_read8(f);
@@ -258,7 +262,8 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     mod->smp = mod->ins;
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Read and convert instruments and samples */
 
@@ -266,7 +271,9 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
 		continue;
 
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
 
 	hio_read(&fih.name, 32, 1, f);	/* Instrument name */
 	fih.length = hio_read32l(f);	/* Length of sample (up to 64Kb) */
@@ -281,10 +288,12 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	fih.loop_start &= 0xffff;
 	fih.loopend &= 0xffff;
 	mod->xxs[i].len = fih.length;
-	mod->xxi[i].nsm = fih.length > 0 ? 1 : 0;
 	mod->xxs[i].lps = fih.loop_start;
 	mod->xxs[i].lpe = fih.loopend;
 	mod->xxs[i].flg = 0;
+
+	if (mod->xxs[i].len == 0)
+		mod->xxi[i].nsm = 0;
 
 	if (fih.sampletype != 0) {
 		mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
