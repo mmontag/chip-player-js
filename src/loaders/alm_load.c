@@ -105,15 +105,21 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+		return -1;
+
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+		return -1;
+
 	for (j = 0; j < 64 * mod->chn; j++) {
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    b = hio_read8(f);
@@ -123,7 +129,8 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Read and convert instruments and samples */
 
@@ -132,12 +139,18 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	HIO_HANDLE *s;
 
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
+
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = hio_open_file(filename, "rb");
 
-	if (!(mod->xxi[i].nsm = (s != NULL)))
+	if (s == NULL) {
+	    mod->xxi[i].nsm = 0;
 	    continue;
+	}
 
 	hio_stat(s, &stat);
 	b = hio_read8(s);		/* Get first octet */
