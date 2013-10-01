@@ -52,7 +52,7 @@ int pattern_init(struct xmp_module *mod)
 	if (mod->xxt == NULL)
 		return -1;
 
-	mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat + 1);
+	mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat);
 	if (mod->xxp == NULL)
 		return -1;
 

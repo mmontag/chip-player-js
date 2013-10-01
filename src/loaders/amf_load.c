@@ -76,10 +76,10 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat = mod->len;
 
 	if (ver == 0x0a)
-		hio_read(buf, 1, 16, f);		/* channel remap table */
+		hio_read(buf, 1, 16, f);	/* channel remap table */
 
 	if (ver >= 0x0d) {
-		hio_read(buf, 1, 32, f);		/* panning table */
+		hio_read(buf, 1, 32, f);	/* panning table */
 		for (i = 0; i < 32; i++) {
 			mod->xxc->pan = 0x80 + 2 * (int8)buf[i];
 		}
@@ -109,10 +109,15 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	mod->xxp = calloc(sizeof(struct xmp_pattern *), mod->pat + 1);
+	if (mod->xxp == NULL)
+		return -1;
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxp[i]->rows = ver >= 0x0e ? hio_read16l(f) : 64;
+
 		for (j = 0; j < mod->chn; j++) {
 			uint16 t = hio_read16l(f);
 			mod->xxp[i]->index[j] = t;
@@ -121,7 +126,8 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Instruments */
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	/* Probe for 2-byte loop start 1.0 format
 	 * in facing_n.amf and sweetdrm.amf have only the sample
@@ -138,7 +144,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				break;
 			}
 			hio_seek(f, 32 + 13, SEEK_CUR);
-			if (hio_read32l(f) > 0x100000) {	/* check index */
+			if (hio_read32l(f) > 0x100000) { /* check index */
 				ver = 0x09;
 				break;
 			}
@@ -151,7 +157,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				ver = 0x09;
 				break;
 			}
-			if (hio_read8(f) > 0x40) {		/* check volume */
+			if (hio_read8(f) > 0x40) {	/* check volume */
 				ver = 0x09;
 				break;
 			}
@@ -173,16 +179,17 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint8 b;
 		int c2spd;
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 
 		b = hio_read8(f);
-		mod->xxi[i].nsm = b ? 1 : 0;
 
 		hio_read(buf, 1, 32, f);
 		copy_adjust(mod->xxi[i].name, buf, 32);
 
 		hio_read(buf, 1, 13, f);	/* sample name */
-		hio_read32l(f);		/* sample index */
+		hio_read32l(f);			/* sample index */
 
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].sub[0].pan = 0x80;
@@ -227,6 +234,8 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* Tracks */
 
 	trkmap = calloc(sizeof(int), mod->trk);
+	if (trkmap == NULL)
+		return -1;
 	newtrk = 0;
 
 	for (i = 0; i < mod->trk; i++) {		/* read track table */
@@ -258,20 +267,20 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->trk++;
 	mod->xxt = calloc (sizeof (struct xmp_track *), mod->trk);
+	if (mod->xxt == NULL)
+		return -1;
 
 	/* Alloc track 0 as empty track */
-	mod->xxt[0] = calloc(sizeof(struct xmp_track) +
-				sizeof(struct xmp_event) * 64 - 1, 1);
-	mod->xxt[0]->rows = 64;
+	if (track_alloc(mod, 0, 64) < 0)
+		return -1;
 
 	/* Alloc rest of the tracks */
 	for (i = 1; i < mod->trk; i++) {
 		uint8 t1, t2, t3;
 		int size;
 
-		mod->xxt[i] = calloc(sizeof(struct xmp_track) +
-			sizeof(struct xmp_event) * 64 - 1, 1);
-		mod->xxt[i]->rows = 64;
+		if (track_alloc(mod, i, 64) < 0)
+			return -1;
 
 		size = hio_read24l(f);
 /*printf("TRACK %d SIZE %d\n", i, size);*/
