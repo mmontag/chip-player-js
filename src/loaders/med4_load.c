@@ -290,7 +290,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, -2, SEEK_CUR);
 	mod->trk = mod->chn * mod->pat;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -329,9 +330,13 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 #endif
 		}
 
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxp[i]->rows = rows;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		/* initialize masks */
 		for (y = 0; y < 8; y++) {
@@ -472,7 +477,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->smp = num_smp;
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 
@@ -521,11 +527,10 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 
-			mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-			if (mod->xxi[i].sub == NULL)
+			mod->xxi[i].nsm = 1;
+			if (subinstrument_alloc(mod, i) < 0)
 				return -1;
 
-			mod->xxi[i].nsm = 1;
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
 			mod->xxi[i].sub[0].pan = 0x80;
@@ -587,12 +592,10 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 
-			mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument),
-							synth.wforms);
-			if (mod->xxi[i].sub == NULL)
+			mod->xxi[i].nsm = synth.wforms;
+			if (subinstrument_alloc(mod, i) < 0)
 				return -1;
 
-			mod->xxi[i].nsm = synth.wforms;
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
 
@@ -631,8 +634,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 
                 /* instr type is sample */
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
                 mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 		
 		mod->xxi[i].sub[0].vol = temp_inst[i].volume;
 		mod->xxi[i].sub[0].pan = 0x80;
