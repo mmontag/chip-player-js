@@ -136,8 +136,10 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 load_patterns:
 
+    mod->pat++;
     if (pattern_init(mod) < 0)
 	return -1;
+    mod->pat--;
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
@@ -153,8 +155,10 @@ load_patterns:
 	if (pattern_alloc(mod, i) < 0)
 	    return -1;
 
-	if (!(r = mod->xxp[i]->rows = xph.rows))
-	    r = mod->xxp[i]->rows = 0x100;
+	r = xph.rows;
+	if (r == 0)
+	    r = 0x100;
+	mod->xxp[i]->rows = r;
 
 	if (pattern_tracks_alloc(mod, i) < 0)
 	    return -1;
