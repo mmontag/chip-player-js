@@ -186,7 +186,12 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
     MODULE_INFO();
  
     pp_pat = calloc (2, mod->pat);
+    if (pp_pat == NULL)
+	goto err;
+
     pp_ins = calloc (2, mod->ins);
+    if (pp_ins == NULL)
+	goto err2;
 
     /* Read pattern pointers */
     hio_seek(f, start + (sfh.pp_pat << 4), SEEK_SET);
@@ -207,12 +212,16 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, 4, SEEK_CUR);
     }
  
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	goto err3;
 
     /* Read and convert instruments and samples */
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    goto err3;
+
 	hio_seek(f, start + (pp_ins[i] << 4), SEEK_SET);
 
 	sih.type = hio_read8(f);
@@ -234,7 +243,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(&sih.name, 28, 1, f);
 	hio_read(&sih.magic, 4, 1, f);
 
-	mod->xxi[i].nsm = !!(mod->xxs[i].len = sih.length);
+	mod->xxs[i].len = sih.length;
 	mod->xxs[i].lps = sih.loopbeg;
 	mod->xxs[i].lpe = sih.loopend;
 	if (mod->xxs[i].lpe == 0xffff)
@@ -255,17 +264,21 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
     }
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    goto err3;
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
 
-	if (!pp_pat[i])
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    goto err3;
+
+	if (pp_pat[i] == 0)
 	    continue;
 
 	hio_seek(f, start + (pp_pat[i] << 4), SEEK_SET);
@@ -318,11 +331,10 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 	    }
 	}
-
     }
 
-    free (pp_pat);
     free (pp_ins);
+    free (pp_pat);
 
     /* Read samples */
     D_(D_INFO "Stored samples: %d", mod->smp);
@@ -335,4 +347,11 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
     m->read_event_type = READ_EVENT_ST3;
 
     return 0;
+
+  err3:
+    free(pp_ins);
+  err2:
+    free(pp_pat);
+  err:
+    return -1;
 }
