@@ -161,7 +161,9 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_seek(f, data->sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	i = data->cur_ins;
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+		return -1;
 
 	hio_read(&mod->xxi[i].name, 1, 31, f);
 	str_adj((char *)mod->xxi[i].name);
@@ -169,7 +171,6 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read8(f);		/* insno */
 	hio_read8(f);
 	mod->xxs[i].len = hio_read32l(f);
-	mod->xxi[i].nsm = !!(mod->xxs[i].len);
 	mod->xxs[i].lps = hio_read32l(f);
 	mod->xxs[i].lpe = hio_read32l(f);
 	mod->xxs[i].flg = mod->xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
@@ -229,9 +230,13 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	rows = hio_read16l(f);
 
-	PATTERN_ALLOC(i);
+	if (pattern_alloc(mod, i) < 0)
+		return -1;
+
 	mod->xxp[i]->rows = rows;
-	TRACK_ALLOC(i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+		return -1;
 
 	r = 0;
 
@@ -473,14 +478,23 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->trk = mod->pat * mod->chn;
 	data.pnam = malloc(mod->pat * 8);	/* pattern names */
+	if (data.pnam == NULL)
+		goto err;
+
 	data.pord = malloc(255 * 8);		/* pattern orders */
+	if (data.pord == NULL)
+		goto err2;
 
 	set_type(m, data.sinaria ?
 		"Sinaria PSM" : "Epic MegaGames MASI PSM");
 
 	MODULE_INFO();
-	INSTRUMENT_INIT();
-	PATTERN_INIT();
+
+	if (instrument_init(mod) < 0)
+		goto err3;
+
+	if (pattern_init(mod) < 0)
+		goto err3;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 	D_(D_INFO "Stored samples : %d", mod->smp);
@@ -491,7 +505,7 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	handle = iff_new();
 	if (handle == NULL)
-		return -1;
+		goto err3;
 
 	/* IFF chunk IDs */
 	ret = iff_register(handle, "SONG", get_song_2);
@@ -499,7 +513,7 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ret |= iff_register(handle, "PBOD", get_pbod);
 
 	if (ret != 0)
-		return -1;
+		goto err3;
 
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
@@ -522,8 +536,15 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			break;
 	}
 
-	free(data.pnam);
 	free(data.pord);
+	free(data.pnam);
 
 	return 0;
+
+    err3:
+	free(data.pord);
+    err2:
+	free(data.pnam);
+    err:
+	return -1;
 }
