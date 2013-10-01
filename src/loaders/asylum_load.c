@@ -64,13 +64,16 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	/* Read and convert instruments and samples */
 	for (i = 0; i < mod->ins; i++) {
 		uint8 insbuf[37];
 
-		mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)	
+			return -1;
 
 		hio_read(insbuf, 1, 37, f);
 		copy_adjust(mod->xxi[i].name, insbuf, 22);
@@ -84,7 +87,6 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].lps = readmem32l(insbuf + 29);
 		mod->xxs[i].lpe = mod->xxs[i].lps + readmem32l(insbuf + 33);
 		
-		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxs[i].flg = mod->xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
 
 		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %d", i,
@@ -98,15 +100,20 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	D_(D_INFO "Module length: %d", mod->len);
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		for (j = 0; j < 64 * mod->chn; j++) {
 			uint8 note;
