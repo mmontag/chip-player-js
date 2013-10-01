@@ -290,7 +290,9 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 * Read and convert patterns
 	 */
 	D_(D_WARN "read patterns");
-	PATTERN_INIT();
+
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	for (i = 0; i < mod->pat; i++) {
 		int block_offset;
@@ -305,10 +307,13 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		block.lines = hio_read16b(f);
 		hio_read32b(f);
 
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 
 		mod->xxp[i]->rows = block.lines + 1;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
 			for (k = 0; k < block.numtracks; k++) {
@@ -344,7 +349,9 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 * Read and convert instruments and samples
 	 */
 	D_(D_WARN "read instruments");
-	INSTRUMENT_INIT();
+
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 
@@ -413,11 +420,10 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 
-			mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-			if (mod->xxi[i].sub == NULL)
+			mod->xxi[i].nsm = 1;
+			if (subinstrument_alloc(mod, i) < 0)
 				return -1;
 
-			mod->xxi[i].nsm = 1;
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
 			mod->xxi[i].sub[0].pan = 0x80;
@@ -480,12 +486,10 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 
-			mod->xxi[i].sub = calloc(sizeof(struct xmp_subinstrument),
-							synth.wforms);
-			if (mod->xxi[i].sub == NULL)
+			mod->xxi[i].nsm = synth.wforms;
+			if (subinstrument_alloc(mod, i) < 0)
 				return -1;
 
-			mod->xxi[i].nsm = synth.wforms;
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
 
@@ -518,8 +522,9 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 
 		/* instr type is sample */
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 
 		mod->xxi[i].sub[0].vol = song.sample[i].svol;
 		mod->xxi[i].sub[0].pan = 0x80;
