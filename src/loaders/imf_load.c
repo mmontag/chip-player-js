@@ -302,7 +302,8 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->c4rate = C4_NTSC_RATE;
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read patterns */
 
@@ -311,11 +312,13 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     memset(arpeggio_val, 0, 32);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 
 	pat_len = hio_read16l(f) - 4;
 	mod->xxp[i]->rows = hio_read16l(f);
-	TRACK_ALLOC (i);
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
 
 	r = 0;
 
@@ -360,7 +363,8 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Read and convert instruments and samples */
 
@@ -391,10 +395,12 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (ii.magic != MAGIC_II10)
 	    return -2;
 
-        if (ii.nsm)
- 	    mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), ii.nsm);
-
 	mod->xxi[i].nsm = ii.nsm;
+
+        if (mod->xxi[i].nsm) {
+	    if (subinstrument_alloc(mod, i) < 0)
+		return -1;
+	}
 
 	str_adj ((char *) ii.name);
 	strncpy ((char *) mod->xxi[i].name, ii.name, 24);
