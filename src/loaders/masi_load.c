@@ -458,7 +458,7 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	handle = iff_new();
 	if (handle == NULL)
-		return -1;
+		goto err;
 
 	/* IFF chunk IDs */
 	ret = iff_register(handle, "TITL", get_titl);
@@ -468,13 +468,16 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ret |= iff_register(handle, "PBOD", get_pbod_cnt);
 
 	if (ret != 0)
-		return -1;
+		goto err;
 
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
 	while (!hio_eof(f)) {
-		iff_chunk(handle, m, f, &data);
+		if (iff_chunk(handle, m, f, &data) < 0) {
+			iff_release(handle);
+			goto err;
+		}
 	}
 
 	iff_release(handle);
@@ -522,7 +525,10 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!hio_eof (f)) {
-		iff_chunk(handle, m, f, &data);
+		if (iff_chunk(handle, m, f, &data) < 0) {
+			iff_release(handle);
+			goto err3;
+		}
 	}
 
 	iff_release(handle);
