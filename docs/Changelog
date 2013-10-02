@@ -15,6 +15,7 @@ Stable versions
 	- fix LHA depacker header parsing
 	- fix thread-unsafe Archimedes Tracker loader
 	- fix thread-unsafe Digital Tracker loader
+	- fix handling of loader errors
 	- refactor handling of format-specific instrument and channel data
 	- refactor MED synth command interpreter
 	- rewrite SQSH depacker code
