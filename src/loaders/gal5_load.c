@@ -306,11 +306,9 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_CHUNK_ALIGN2);
 
 	/* Load IFF chunks */
-	while (!hio_eof(f)) {
-		if (iff_chunk(handle, m, f, &data) < 0) {
-			iff_release(handle);
-			return -1;
-		}
+	if (iff_load(handle, m, f, &data) < 0) {
+		iff_release(handle);
+		return -1;
 	}
 
 	iff_release(handle);
@@ -347,11 +345,9 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_CHUNK_ALIGN2);
 
 	/* Load IFF chunks */
-	while (!hio_eof (f)) {
-		if (iff_chunk(handle, m, f, &data) < 0) {
-			iff_release(handle);
-			return -1;
-		}
+	if (iff_load(handle, m, f, &data) < 0) {
+		iff_release(handle);
+		return -1;
 	}
 
 	iff_release(handle);

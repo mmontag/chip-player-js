@@ -199,8 +199,9 @@ static int emod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     /* Load IFF chunks */
-    while (!hio_eof(f)) {
-	iff_chunk(handle, m, f, NULL);
+    if (iff_load(handle, m, f, NULL) < 0) {
+	iff_release(handle);
+	return -1;
     }
 
     iff_release(handle);

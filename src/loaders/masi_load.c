@@ -473,11 +473,9 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!hio_eof(f)) {
-		if (iff_chunk(handle, m, f, &data) < 0) {
-			iff_release(handle);
-			goto err;
-		}
+	if (iff_load(handle, m, f, &data) < 0) {
+		iff_release(handle);
+		goto err;
 	}
 
 	iff_release(handle);
@@ -524,11 +522,9 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	while (!hio_eof (f)) {
-		if (iff_chunk(handle, m, f, &data) < 0) {
-			iff_release(handle);
-			goto err3;
-		}
+	if (iff_load(handle, m, f, &data) < 0) {
+		iff_release(handle);
+		goto err3;
 	}
 
 	iff_release(handle);

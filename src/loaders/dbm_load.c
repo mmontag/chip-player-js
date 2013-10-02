@@ -332,8 +332,9 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	MODULE_INFO();
 
 	/* Load IFF chunks */
-	while (!hio_eof(f)) {
-		iff_chunk(handle, m, f, &data);
+	if (iff_load(handle, m, f, &data) < 0) {
+		iff_release(handle);
+		return -1;
 	}
 
 	iff_release(handle);

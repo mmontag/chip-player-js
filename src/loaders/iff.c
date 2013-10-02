@@ -36,14 +36,14 @@ iff_handle iff_new()
 	return (iff_handle) data;
 }
 
-int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
+static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	long size;
 	char id[17] = "";
 
 	if (hio_read(id, 1, data->id_size, f) != data->id_size)
-		return 0;
+		return 1;
 
 	if (data->flags & IFF_SKIP_EMBEDDED) {
 		/* embedded RIFF hack */
@@ -66,7 +66,27 @@ int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *par
 	if (data->flags & IFF_FULL_CHUNK_SIZE)
 		size -= data->id_size + 4;
 
+	if (size < 0)
+		return 1;
+
 	return iff_process(opaque, m, id, size, f, parm);
+}
+
+int iff_load(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
+{
+	int ret;
+
+	while (!hio_eof(f)) {
+		ret = iff_chunk(opaque, m, f, parm);
+
+		if (ret > 0)
+			break;
+
+		if (iff_chunk(opaque, m, f, parm) < 0)
+			return -1;
+	}
+
+	return 0;
 }
 
 int iff_register(iff_handle opaque, char *id,
