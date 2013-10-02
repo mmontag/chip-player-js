@@ -89,7 +89,8 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, pos, SEEK_SET);
 	mod->smp = mod->ins;
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	while ((b = hio_read8(f)) != 0) {
 		hio_read(sid, 1, 11, f);
@@ -98,8 +99,9 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 		mod->xxi[i].sub[0].vol = 0x40;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].xpo = -1;
@@ -127,13 +129,17 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Instruments: %d", mod->ins);
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Read and convert patterns */
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		if (ppat[i] == 0)
 			continue;
@@ -166,11 +172,11 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					event->note += 26 +
 						12 * ((b & 0x70) >> 4);
 
-				b = hio_read8(f);	/* Instrument + effect */
+				b = hio_read8(f);	/* Inst + effect */
 				event->ins |= MSN(b);
 				event->fxt = LSN(b);
 				if (event->fxt) {
-					b = hio_read8(f);	/* Effect parameter */
+					b = hio_read8(f); /* Effect parameter */
 					event->fxp = b;
 
 					/* FIXME: tempo setting */

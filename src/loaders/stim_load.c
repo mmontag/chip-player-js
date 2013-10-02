@@ -90,15 +90,19 @@ static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	MODULE_INFO();
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		hio_seek(f, start + sh.pataddr[i] + 8, SEEK_SET);
 
@@ -139,7 +143,8 @@ static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
@@ -152,7 +157,10 @@ static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		si.loop_start = hio_read16b(f);
 		si.loop_size = hio_read16b(f);
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxs[i].len = 2 * si.size;
 		mod->xxs[i].lps = 2 * si.loop_start;
 		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * si.loop_size;
@@ -161,8 +169,10 @@ static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		mod->xxi[i].sub[0].vol = si.volume;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
-		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].rls = 0xfff;
+
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
 
 		D_(D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
 			       i, mod->xxs[i].len, mod->xxs[i].lps,
