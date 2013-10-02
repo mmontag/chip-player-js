@@ -121,7 +121,6 @@ static int pt3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read32b(f);		/* FORM */
 	hio_read32b(f);		/* size */
 	hio_read32b(f);		/* MODL */
-
 	hio_read32b(f);		/* VERS */
 	hio_read32b(f);		/* VERS size */
 
@@ -143,8 +142,12 @@ static int pt3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	iff_set_quirk(handle, IFF_FULL_CHUNK_SIZE);
 
 	/* Load IFF chunks */
-	while (!hio_eof(f))
-		iff_chunk(handle, m, f, NULL);
+	while (!hio_eof(f)) {
+		if (iff_chunk(handle, m, f, NULL) < 0) {
+			iff_release(handle);
+			return -1;
+		}
+	}
 
 	iff_release(handle);
 
@@ -188,19 +191,26 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat++;
 	mod->trk = mod->chn * mod->pat;
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxs[i].len = 2 * mh.ins[i].size;
 		mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
 		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
 		mod->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
+
 		mod->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
 		mod->xxi[i].sub[0].vol = mh.ins[i].volume;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
-		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].rls = 0xfff;
 
 		copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
@@ -214,15 +224,20 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				mod->xxi[i].sub[0].fin >> 4);
 	}
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
+
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
 			hio_read(mod_event, 1, 4, f);

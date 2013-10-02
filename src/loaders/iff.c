@@ -43,7 +43,7 @@ int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *par
 	char id[17] = "";
 
 	if (hio_read(id, 1, data->id_size, f) != data->id_size)
-		return;
+		return 0;
 
 	if (data->flags & IFF_SKIP_EMBEDDED) {
 		/* embedded RIFF hack */

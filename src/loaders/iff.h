@@ -28,7 +28,7 @@ struct iff_info {
 };
 
 iff_handle iff_new(void);
-void iff_chunk(iff_handle, struct module_data *, HIO_HANDLE *, void *);
+int iff_chunk(iff_handle, struct module_data *, HIO_HANDLE *, void *);
 int iff_register(iff_handle, char *,
 	int (*loader)(struct module_data *, int, HIO_HANDLE *, void *));
 void iff_id_size(iff_handle, int);
