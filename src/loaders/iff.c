@@ -36,7 +36,7 @@ iff_handle iff_new()
 	return (iff_handle) data;
 }
 
-void iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
+int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	long size;
@@ -66,7 +66,7 @@ void iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *pa
 	if (data->flags & IFF_FULL_CHUNK_SIZE)
 		size -= data->id_size + 4;
 
-	iff_process(opaque, m, id, size, f, parm);
+	return iff_process(opaque, m, id, size, f, parm);
 }
 
 int iff_register(iff_handle opaque, char *id,
