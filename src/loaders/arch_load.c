@@ -416,7 +416,10 @@ static int arch_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Load IFF chunks */
 	while (!hio_eof(f)) {
-		iff_chunk(handle, m, f, &data);
+		if (iff_chunk(handle, m, f, &data) < 0) {
+			iff_release(handle);
+			return -1;
+		}
 	}
 
 	iff_release(handle);

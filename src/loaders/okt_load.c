@@ -333,14 +333,13 @@ static int okt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Load IFF chunks */
     while (!hio_eof(f)) {
-	if (iff_chunk(handle, m, f, &data) < 0)
-		goto err;
+	if (iff_chunk(handle, m, f, &data) < 0) {
+    	    iff_release(handle);
+	    return -1;
+	}
     }
 
     iff_release(handle);
-    return 0;
 
-  err:
-    iff_release(handle);
-    return -1;
+    return 0;
 }
