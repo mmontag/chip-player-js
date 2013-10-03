@@ -98,11 +98,15 @@ static int ice_load(struct module_data *m, HIO_HANDLE *f, const int start)
     strncpy (mod->name, (char *) ih.title, 20);
     MODULE_INFO();
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	mod->xxi[i].nsm = !!(mod->xxs[i].len = 2 * ih.ins[i].len);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
+
+	mod->xxs[i].len = 2 * ih.ins[i].len;
 	mod->xxs[i].lps = 2 * ih.ins[i].loop_start;
 	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * ih.ins[i].loop_size;
 	mod->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
@@ -111,19 +115,25 @@ static int ice_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
+	if (mod->xxs[i].len == 0)
+		mod->xxi[i].nsm = 0;
+
 	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c %02x %01x",
 		i, ih.ins[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
     }
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 	mod->xxp[i]->rows = 64;
+
 	for (j = 0; j < mod->chn; j++) {
 	    mod->xxp[i]->index[j] = ih.ord[i][j];
 	}
@@ -133,9 +143,9 @@ static int ice_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored tracks: %d", mod->trk);
 
     for (i = 0; i < mod->trk; i++) {
-	mod->xxt[i] = calloc (sizeof (struct xmp_track) + sizeof
-		(struct xmp_event) * 64, 1);
-	mod->xxt[i]->rows = 64;
+	if (track_alloc(mod, i, 64) < 0)
+	    return -1;
+
 	for (j = 0; j < mod->xxt[i]->rows; j++) {
 	    event = &mod->xxt[i]->event[j];
 	    hio_read (ev, 1, 4, f);
