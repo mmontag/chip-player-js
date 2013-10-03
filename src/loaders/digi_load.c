@@ -128,13 +128,17 @@ static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->len; i++)
 	mod->xxo[i] = dh.ord[i];
  
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Read and convert instruments and samples */
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	mod->xxi[i].nsm = !!(mod->xxs[i].len = dh.slen[i]);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
+
+	mod->xxs[i].len = dh.slen[i];
 	mod->xxs[i].lps = dh.sloop[i];
 	mod->xxs[i].lpe = dh.sloop[i] + dh.sllen[i];
 	mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
@@ -143,6 +147,9 @@ static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
+	if (mod->xxs[i].len == 0)
+	    mod->xxi[i].nsm = 0;
+
 	instrument_name(mod, i, dh.insname[i], 30);
 
 	D_(D_INFO "[%2X] %-30.30s %04x %04x %04x %c V%02x", i,
@@ -150,15 +157,19 @@ static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol);
     }
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
 
 	if (dh.pack) {
 	    w = (hio_read16b(f) - 64) >> 2;
