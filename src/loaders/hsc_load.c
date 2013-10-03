@@ -106,10 +106,10 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_read (buf, 1, 128 * 12, f);
     sid = buf;
     for (i = 0; i < mod->ins; i++, sid += 12) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
+	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].vol = 0x40;
 	mod->xxi[i].sub[0].fin = (int8)sid[11] / 4;
 	mod->xxi[i].sub[0].pan = 0x80;

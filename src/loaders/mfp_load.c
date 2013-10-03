@@ -112,8 +112,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < 31; i++) {
 		int loop_size;
 
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 		
 		mod->xxs[i].len = 2 * hio_read16b(f);
@@ -128,8 +127,8 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].rls = 0xfff;
 
-		if (mod->xxs[i].len == 0)
-			mod->xxi[i].nsm = 0;
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
                	D_(D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
                        	i, mod->xxs[i].len, mod->xxs[i].lps,

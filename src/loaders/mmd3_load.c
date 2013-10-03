@@ -416,7 +416,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				return -1;
 
 			mod->xxi[i].nsm = 1;
-			if (subinstrument_alloc(mod, i) < 0)
+			if (subinstrument_alloc(mod, i, 1) < 0)
 				return -1;
 
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
@@ -482,7 +482,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				return -1;
 
 			mod->xxi[i].nsm = synth.wforms;
-			if (subinstrument_alloc(mod, i) < 0)
+			if (subinstrument_alloc(mod, i, synth.wforms) < 0)
 				return -1;
 
 			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
@@ -518,7 +518,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		/* instr type is sample */
 		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		mod->xxi[i].sub[0].vol = song.sample[i].svol;

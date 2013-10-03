@@ -99,13 +99,13 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 		mod->xxi[i].sub[0].vol = 0x40;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].xpo = -1;
 		mod->xxi[i].sub[0].sid = i;
+		mod->xxi[i].nsm = 1;
 	}
 
 	/* Read orders */

@@ -259,16 +259,15 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		sn[i] = hio_read8(f);	/* sample name length */
 
-		if (~sn[i] & 0x80)
+		if (~sn[i] & 0x80) {
 			mod->xxs[i].len = hio_read24l(f) << 1;
-		else
-			mod->xxi[i].nsm = 0;
+			mod->xxi[i].nsm = 1;
+		}
 	}
 
 	a = hio_read8(f);		/* track name length */

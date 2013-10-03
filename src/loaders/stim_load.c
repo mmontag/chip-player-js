@@ -153,8 +153,7 @@ static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		si.loop_start = hio_read16b(f);
 		si.loop_size = hio_read16b(f);
 
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		mod->xxs[i].len = 2 * si.size;
@@ -167,8 +166,8 @@ static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].rls = 0xfff;
 
-		if (mod->xxs[i].len == 0)
-			mod->xxi[i].nsm = 0;
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
 		D_(D_INFO "[%2X] %04x %04x %04x %c V%02x %+d",
 			       i, mod->xxs[i].len, mod->xxs[i].lps,

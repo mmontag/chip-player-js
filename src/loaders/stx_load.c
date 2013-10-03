@@ -218,8 +218,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
     /* Read and convert instruments and samples */
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    goto err3;
 
 	hio_seek(f, start + (pp_ins[i] << 4), SEEK_SET);
@@ -252,6 +251,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].vol = sih.vol;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
+	mod->xxi[i].nsm = 1;
 
 	instrument_name(mod, i, sih.name, 12);
 

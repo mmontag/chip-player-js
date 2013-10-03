@@ -216,7 +216,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 						XMP_SAMPLE_LOOP : 0;
 		}
 
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
 			return -1;
 
 		for (j = 0; j < mod->xxi[i].nsm; j++) {

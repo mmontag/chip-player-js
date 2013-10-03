@@ -179,8 +179,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint8 b;
 		int c2spd;
 
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		b = hio_read8(f);
@@ -191,6 +190,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read(buf, 1, 13, f);	/* sample name */
 		hio_read32l(f);			/* sample index */
 
+		mod->xxi[i].nsm = 1;
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxs[i].len = hio_read32l(f);

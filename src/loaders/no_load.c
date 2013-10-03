@@ -106,8 +106,7 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		int hasname, c2spd;
 
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		nsize = hio_read8(f);
@@ -132,8 +131,8 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read32l(f);
 		hio_read16l(f);
 
-		if (mod->xxs[i].len == 0)
-			mod->xxi[i].nsm = 0;
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
 		/*
 		mod->xxs[i].lps = 0;

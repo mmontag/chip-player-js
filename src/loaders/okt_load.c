@@ -122,8 +122,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	return -1;
 
     for (j = i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	hio_read(mod->xxi[i].name, 1, 20, f);
@@ -144,8 +143,8 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	data->idx[j] = i;
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
 
 	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
 		mod->xxi[i].name, mod->xxs[j].len, mod->xxs[j].lps,

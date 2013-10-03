@@ -395,7 +395,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].nsm = ii.nsm;
 
         if (mod->xxi[i].nsm) {
-	    if (subinstrument_alloc(mod, i) < 0)
+	    if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
 		return -1;
 	}
 

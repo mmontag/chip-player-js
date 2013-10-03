@@ -231,8 +231,7 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				break;
 		}
 		instrument_name(mod, i, buf, 32);
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 	}
 
@@ -368,11 +367,10 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mask = hio_read32b(f);
 	for (i = 0; i < 32; i++, mask <<= 1) {
-		if (~mask & MASK) {
-			mod->xxi[i].nsm = 0;
+		if (~mask & MASK)
 			continue;
-		}
 
+		mod->xxi[i].nsm = 1;
 		mod->xxs[i].len = hio_read32b(f);
 
 		if (mod->xxs[i].len == 0)

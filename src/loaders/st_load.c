@@ -226,9 +226,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	mod->xxs[i].len = 2 * mh.ins[i].size;
@@ -242,8 +240,8 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	strncpy((char *)mod->xxi[i].name, (char *)mh.ins[i].name, 22);
 	str_adj((char *)mod->xxi[i].name);
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
     }
 
     mod->trk = mod->chn * mod->pat;

@@ -115,8 +115,7 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		hio_read(buffer, 28, 1, f);
@@ -149,8 +148,8 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxi[i].sub[0].fin = hio_read8s(f);
 		}
 
-		if (mod->xxs[i].len == 0)
-			mod->xxi[i].nsm = 0;
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxs[i].flg = size > 2 ? XMP_SAMPLE_LOOP : 0;

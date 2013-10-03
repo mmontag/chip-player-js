@@ -71,8 +71,7 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		uint8 insbuf[37];
 
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)	
+		if (subinstrument_alloc(mod, i, 1) < 0)	
 			return -1;
 
 		hio_read(insbuf, 1, 37, f);
@@ -133,8 +132,7 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len > 1) {
 			load_sample(m, f, 0, &mod->xxs[i], NULL);
-		} else {
-			mod->xxi[i].nsm = 0;
+			mod->xxi[i].nsm = 1;
 		}
 	}
 

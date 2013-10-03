@@ -96,8 +96,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint16 flags, c2spd;
 		int finetune;
 
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		hio_read(buf, 1, 13, f);	/* sample filename */
@@ -116,12 +115,14 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		c2spd = 8363 * hio_read16l(f) / 8448;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
-		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxs[i].flg = flags & 0x80 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxs[i].flg |= flags & 0x20 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo,
 						&mod->xxi[i].sub[0].fin);
 		mod->xxi[i].sub[0].fin += finetune;
+
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
 		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %5d",
 			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,

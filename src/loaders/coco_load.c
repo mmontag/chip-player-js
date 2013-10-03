@@ -196,8 +196,7 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	m->volbase = 0xff;
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		smp_ptr[i] = hio_read32l(f);
@@ -217,8 +216,8 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read8(f);	/* unused */
 		mod->xxi[i].sub[0].sid = i;
 
-		if (mod->xxs[i].len == 0)
-			mod->xxi[i].nsm = 0;
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
 		D_(D_INFO "[%2X] %-10.10s  %05x %05x %05x %c V%02x",
 				i, mod->xxi[i].name,

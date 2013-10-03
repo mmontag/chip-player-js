@@ -135,14 +135,14 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	mod->xxs[i].len = ins_size[i];
 	mod->xxs[i].lps = ins[i].loop_start;
 	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * ins[i].loop_length;
 	mod->xxs[i].flg = ins[i].loop_length > 1 ? XMP_SAMPLE_LOOP : 0;
+	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].vol = ins[i].volume;
 	mod->xxi[i].sub[0].fin = (int8)(ins[i].finetune << 4); 
 	mod->xxi[i].sub[0].pan = 0x80;

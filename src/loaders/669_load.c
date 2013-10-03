@@ -124,8 +124,7 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->pat);
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	hio_read (&sih.name, 13, 1, f);		/* ASCIIZ instrument name */
@@ -141,8 +140,8 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
 
 	instrument_name(mod, i, sih.name, 13);
 

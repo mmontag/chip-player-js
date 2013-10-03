@@ -315,8 +315,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	i = data->max_ins;
 
 	mod->xxi[i].nsm = 1;
-
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 		return -1;
 
 	hio_read32l(f);	/* SNAM */

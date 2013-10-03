@@ -33,13 +33,12 @@ int instrument_init(struct xmp_module *mod)
 	return 0;
 }
 
-int subinstrument_alloc(struct xmp_module *mod, int i)
+int subinstrument_alloc(struct xmp_module *mod, int i, int num)
 {
-	if (mod->xxi[i].nsm == 0)
+	if (num == 0)
 		return 0;
 
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument),	
-						mod->xxi[i].nsm);
+	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), num);
 	if (mod->xxi[i].sub == NULL)
 		return -1;
 

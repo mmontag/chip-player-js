@@ -168,8 +168,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if ((pih.type & 3) != 1)
 	    continue;
 
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 		return -1;
 
 	smp_ofs[i] = pih.smpofs;
@@ -177,8 +176,8 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxs[i].lps = pih.loopbeg;
 	mod->xxs[i].lpe = pih.loopend;
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
 
 	mod->xxs[i].flg = 0;
 	if (pih.type & 0x04) {

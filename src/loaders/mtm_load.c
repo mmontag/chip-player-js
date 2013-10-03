@@ -109,8 +109,7 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Read and convert instruments */
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	hio_read(&mih.name, 22, 1, f);		/* Instrument name */
@@ -139,8 +138,8 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	instrument_name(mod, i, mih.name, 22);
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
 
 	D_(D_INFO "[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
 		mod->xxi[i].name, mod->xxs[i].len,

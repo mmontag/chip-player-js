@@ -124,8 +124,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	hio_read(&uih.name, 32, 1, f);
@@ -148,8 +147,8 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxs[i].lps = uih.loop_start;
 	mod->xxs[i].lpe = uih.loopend;
 
-	if (mod->xxs[i].len == 0)
-	    mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+	    mod->xxi[i].nsm = 1;
 
 	/* BiDi Loop : (Bidirectional Loop)
 	 *

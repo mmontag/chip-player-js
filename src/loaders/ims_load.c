@@ -185,8 +185,7 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	mod->xxs[i].len = 2 * ih.ins[i].size;
@@ -198,8 +197,8 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].rls = 0xfff;
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
 
 	instrument_name(mod, i, ih.ins[i].name, 20);
 

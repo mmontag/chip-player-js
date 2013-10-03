@@ -68,8 +68,7 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < 31; i++) {
 		hio_read(buf, 1, 40, f);
 		instrument_name(mod, i, buf, 32);
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 	}
 
@@ -183,8 +182,8 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
 		}
 
-		if (mod->xxs[i].len == 0)
-			mod->xxi[i].nsm = 0;
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
 		if (!strlen((char *)mod->xxi[i].name) && !mod->xxs[i].len)
 			continue;

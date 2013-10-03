@@ -134,18 +134,17 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	HIO_HANDLE *s;
 
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	snprintf(filename, NAME_SIZE, "%s.%d", basename, i + 1);
 	s = hio_open_file(filename, "rb");
 
-	if (s == NULL) {
-	    mod->xxi[i].nsm = 0;
+	if (s == NULL)
 	    continue;
-	}
+
+	mod->xxi[i].nsm = 1;
 
 	hio_stat(s, &stat);
 	b = hio_read8(s);		/* Get first octet */

@@ -318,7 +318,7 @@ load_instruments:
 	D_(D_INFO "[%2X] %-22.22s %2d", i, mod->xxi[i].name, mod->xxi[i].nsm);
 
 	if (mod->xxi[i].nsm) {
-	    if (subinstrument_alloc(mod, i) < 0)
+	    if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
 		return -1;
 
 	    /* for BoobieSqueezer (see http://boobie.rotfl.at/)

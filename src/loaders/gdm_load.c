@@ -167,8 +167,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		int flg, c4spd, vol, pan;
 
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		hio_read(buffer, 32, 1, f);
@@ -191,8 +190,8 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].flg = 0;
 
 
-		if (mod->xxs[i].len == 0)
-			mod->xxi[i].nsm = 0;
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
 		if (flg & 0x01) {
 			mod->xxs[i].flg |= XMP_SAMPLE_LOOP;

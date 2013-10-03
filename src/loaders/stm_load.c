@@ -163,8 +163,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Read and convert instruments and samples */
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	mod->xxs[i].len = sfh.ins[i].length;
@@ -177,8 +176,8 @@ static int stm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
 
 	instrument_name(mod, i, sfh.ins[i].name, 12);
 

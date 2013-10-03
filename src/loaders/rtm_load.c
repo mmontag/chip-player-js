@@ -373,7 +373,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (mod->xxi[i].nsm > 16)
 			mod->xxi[i].nsm = 16;
 
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
 			return -1;
 
 		for (j = 0; j < 120; j++)

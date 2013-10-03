@@ -68,8 +68,7 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	hio_read8(f);		/* num */
@@ -82,6 +81,7 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * hio_read16b(f);
 	hio_read32b(f);		/* ptr */
 
+	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 

@@ -271,8 +271,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
 		continue;
 
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
 	hio_read(&fih.name, 32, 1, f);	/* Instrument name */
@@ -292,8 +291,8 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxs[i].lpe = fih.loopend;
 	mod->xxs[i].flg = 0;
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
 
 	if (fih.sampletype != 0) {
 		mod->xxs[i].flg |= XMP_SAMPLE_16BIT;

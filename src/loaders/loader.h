@@ -26,7 +26,7 @@
 #define SAMPLE_FLAG_SYNTH	(SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_SPECTRUM)
 
 int instrument_init(struct xmp_module *);
-int subinstrument_alloc(struct xmp_module *, int);
+int subinstrument_alloc(struct xmp_module *, int, int);
 int pattern_init(struct xmp_module *);
 int pattern_alloc(struct xmp_module *, int);
 int track_alloc(struct xmp_module *, int, int);

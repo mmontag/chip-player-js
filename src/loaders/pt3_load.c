@@ -193,8 +193,7 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i) < 0)
+		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
 		mod->xxs[i].len = 2 * mh.ins[i].size;
@@ -202,8 +201,8 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
 		mod->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 
-		if (mod->xxs[i].len == 0)
-			mod->xxi[i].nsm = 0;
+		if (mod->xxs[i].len > 0)
+			mod->xxi[i].nsm = 1;
 
 		mod->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
 		mod->xxi[i].sub[0].vol = mh.ins[i].volume;

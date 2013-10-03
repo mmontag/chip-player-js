@@ -161,8 +161,7 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_seek(f, data->sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	i = data->cur_ins;
-	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i) < 0)
+	if (subinstrument_alloc(mod, i, 1) < 0)
 		return -1;
 
 	hio_read(&mod->xxi[i].name, 1, 31, f);
@@ -179,8 +178,8 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	if ((int32)mod->xxs[i].lpe < 0)
 		mod->xxs[i].lpe = 0;
 
-	if (mod->xxs[i].len == 0)
-		mod->xxi[i].nsm = 0;
+	if (mod->xxs[i].len > 0)
+		mod->xxi[i].nsm = 1;
 
 	finetune = 0;
 	if (data->sinaria) {
