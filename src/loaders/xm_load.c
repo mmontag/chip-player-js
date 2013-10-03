@@ -151,15 +151,11 @@ load_patterns:
 	xph.rows = xfh.version > 0x0102 ? hio_read16l(f) : hio_read8(f) + 1;
 	xph.datasize = hio_read16l(f);
 
-	if (pattern_alloc(mod, i) < 0)
-	    return -1;
-
 	r = xph.rows;
 	if (r == 0)
 	    r = 0x100;
-	mod->xxp[i]->rows = r;
 
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (pattern_tracks_alloc(mod, i, r) < 0)
 	    return -1;
 
 	if (xph.datasize) {

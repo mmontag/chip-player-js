@@ -289,11 +289,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			block.lines = hio_read8(f);
 		}
 
-		if (pattern_alloc(mod, i) < 0)
-			return -1;
-
-		mod->xxp[i]->rows = block.lines + 1;
-		if (pattern_tracks_alloc(mod, i) < 0)
+		if (pattern_tracks_alloc(mod, i, block.lines + 1) < 0)
 			return -1;
 
 		if (ver > 0) {		/* MMD1 */

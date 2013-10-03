@@ -30,7 +30,8 @@ int subinstrument_alloc(struct xmp_module *, int);
 int pattern_init(struct xmp_module *);
 int pattern_alloc(struct xmp_module *, int);
 int track_alloc(struct xmp_module *, int, int);
-int pattern_tracks_alloc(struct xmp_module *, int);
+int tracks_in_pattern_alloc(struct xmp_module *, int);
+int pattern_tracks_alloc(struct xmp_module *, int, int);
 char *instrument_name(struct xmp_module *, int, uint8 *, int);
 
 char *copy_adjust(char *, uint8 *, int);

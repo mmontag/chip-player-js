@@ -974,7 +974,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	pat_len = hio_read16l(f) /* - 4*/;
 	mod->xxp[i]->rows = hio_read16l(f);
 
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (tracks_in_pattern_alloc(mod, i) < 0)
 	    goto err4;
 
 	memset (mask, 0, L_CHANNELS);

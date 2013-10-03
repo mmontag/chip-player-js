@@ -146,13 +146,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	 */
 
 	for (i = 0; i < mod->pat; i++) {
-
-		if (pattern_alloc(mod, i) < 0)
-			return -1;
-
-		mod->xxp[i]->rows = hio_read16b(f);
-
-		if (pattern_tracks_alloc(mod, i) < 0)
+		if (pattern_tracks_alloc(mod, i, hio_read16b(f)) < 0)
 			return -1;
 
 		sz = hio_read32b(f);

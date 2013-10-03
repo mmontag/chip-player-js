@@ -330,12 +330,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 #endif
 		}
 
-		if (pattern_alloc(mod, i) < 0)
-			return -1;
-
-		mod->xxp[i]->rows = rows;
-
-		if (pattern_tracks_alloc(mod, i) < 0)
+		if (pattern_tracks_alloc(mod, i, rows) < 0)
 			return -1;
 
 		/* initialize masks */

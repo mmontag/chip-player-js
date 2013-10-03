@@ -97,11 +97,7 @@ static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_alloc(mod, i) < 0)
-			return -1;
-		mod->xxp[i]->rows = 64;
-
-		if (pattern_tracks_alloc(mod, i) < 0)
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
 			return -1;
 
 		hio_seek(f, start + sh.pataddr[i] + 8, SEEK_SET);

@@ -177,7 +177,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
 
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (tracks_in_pattern_alloc(mod, i) < 0)
 	    return -1;
 
 	brk = hio_read8(f) + 1;

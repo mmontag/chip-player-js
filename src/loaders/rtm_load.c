@@ -247,12 +247,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		offset += 42 + oh.headerSize + rp.datasize;
 
-		if (pattern_alloc(mod, i) < 0)
-			return -1;
-
-		mod->xxp[i]->rows = rp.nrows;
-
-		if (pattern_tracks_alloc(mod, i) < 0)
+		if (pattern_tracks_alloc(mod, i, rp.nrows) < 0)
 			return -1;
 
 		for (r = 0; r < rp.nrows; r++) {

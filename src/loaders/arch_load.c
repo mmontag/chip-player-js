@@ -265,12 +265,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
         i = data->max_pat;
 
-	if (pattern_alloc(mod, i) < 0)
-		return -1;
-
-	mod->xxp[i]->rows = data->rows[i];
-
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (pattern_tracks_alloc(mod, i, data->rows[i]) < 0)
 		return -1;
 
 	for (j = 0; j < data->rows[i]; j++) {

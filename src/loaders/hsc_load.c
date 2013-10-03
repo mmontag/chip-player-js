@@ -145,11 +145,7 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	int ins[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-	if (pattern_alloc(mod, i) < 0)
-	    return -1;
-	mod->xxp[i]->rows = 64;
-
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (pattern_tracks_alloc(mod, i, 64) < 0)
 	    return -1;
 
         for (r = 0; r < mod->xxp[i]->rows; r++) {

@@ -222,11 +222,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (!pfh.patseg[i])
 	    continue;
 
-	if (pattern_alloc(mod, i) < 0)
-	    return -1;
-	mod->xxp[i]->rows = 64;
-
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (pattern_tracks_alloc(mod, i, 64) < 0)
 	    return -1;
 
 	hio_seek(f, start + 16L * pfh.patseg[i], SEEK_SET);

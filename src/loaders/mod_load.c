@@ -542,12 +542,7 @@ skip_test:
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_alloc(mod, i) < 0)
-	    return -1;
-
-	mod->xxp[i]->rows = 64;
-
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (pattern_tracks_alloc(mod, i, 64) < 0)
 	    return -1;
 
 	for (j = 0; j < (64 * mod->chn); j++) {

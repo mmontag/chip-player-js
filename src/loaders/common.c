@@ -81,19 +81,31 @@ int track_alloc(struct xmp_module *mod, int num, int rows)
 	return 0;
 }
 
-int pattern_tracks_alloc(struct xmp_module *mod, int p)
+int tracks_in_pattern_alloc(struct xmp_module *mod, int num)
 {
 	int i;
 
 	for (i = 0; i < mod->chn; i++) {
-		int t = p * mod->chn + i;
-		int rows = mod->xxp[p]->rows;
+		int t = num * mod->chn + i;
+		int rows = mod->xxp[num]->rows;
 
 		if (track_alloc(mod, t, rows) < 0)
 			return -1;
 
-		mod->xxp[p]->index[i] = t;
+		mod->xxp[num]->index[i] = t;
 	}
+
+	return 0;
+}
+
+int pattern_tracks_alloc(struct xmp_module *mod, int num, int rows)
+{
+	if (pattern_alloc(mod, num) < 0)
+		return -1;
+	mod->xxp[num]->rows = rows;
+
+	if (tracks_in_pattern_alloc(mod, num) < 0)
+		return -1;
 
 	return 0;
 }

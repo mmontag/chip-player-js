@@ -223,12 +223,7 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
     rows = hio_read16b(f);
 
-    if (pattern_alloc(mod, data->pattern) < 0)
-	return -1;
-
-    mod->xxp[data->pattern]->rows = rows;
-
-    if (pattern_tracks_alloc(mod, data->pattern) < 0)
+    if (pattern_tracks_alloc(mod, data->pattern, rows) < 0)
 	return -1;
 
     for (j = 0; j < rows * mod->chn; j++) {

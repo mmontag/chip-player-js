@@ -312,12 +312,9 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     memset(arpeggio_val, 0, 32);
 
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_alloc(mod, i) < 0)
-	    return -1;
-
 	pat_len = hio_read16l(f) - 4;
-	mod->xxp[i]->rows = hio_read16l(f);
-	if (pattern_tracks_alloc(mod, i) < 0)
+
+	if (pattern_tracks_alloc(mod, i, hio_read16l(f)) < 0)
 	    return -1;
 
 	r = 0;

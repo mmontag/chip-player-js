@@ -129,12 +129,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	
 	rows = hio_read8(f) + 1;
 
-	if (pattern_alloc(mod, i) < 0)
-		return -1;
-
-	mod->xxp[i]->rows = rows;
-
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (pattern_tracks_alloc(mod, i, rows) < 0)
 		return -1;
 
 	for (r = 0; r < rows; ) {

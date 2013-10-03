@@ -134,11 +134,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Read and convert patterns */
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_alloc(mod, i) < 0)
-			return -1;
-		mod->xxp[i]->rows = 64;
-
-		if (pattern_tracks_alloc(mod, i) < 0)
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
 			return -1;
 
 		if (ppat[i] == 0)

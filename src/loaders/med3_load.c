@@ -313,12 +313,7 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint8 b, tracks;
 		uint16 convsz;
 
-		if (pattern_alloc(mod, i) < 0)
-			return -1;
-
-		mod->xxp[i]->rows = 64;
-
-		if (pattern_tracks_alloc(mod, i) < 0)
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
 			return -1;
 
 		tracks = hio_read8(f);

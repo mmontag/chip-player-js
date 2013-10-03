@@ -307,12 +307,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		block.lines = hio_read16b(f);
 		hio_read32b(f);
 
-		if (pattern_alloc(mod, i) < 0)
-			return -1;
-
-		mod->xxp[i]->rows = block.lines + 1;
-
-		if (pattern_tracks_alloc(mod, i) < 0)
+		if (pattern_tracks_alloc(mod, i, block.lines + 1) < 0)
 			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {

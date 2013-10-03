@@ -104,11 +104,7 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     for (i = 0; i < mod->pat; i++) {
 	reorder[hio_read8(f)] = i;
 
-	if (pattern_alloc(mod, i) < 0)
-	    return -1;
-	mod->xxp[i]->rows = hio_read8(f) + 1;
-
-	if (pattern_tracks_alloc(mod, i) < 0)
+	if (pattern_tracks_alloc(mod, i, hio_read8(f) + 1) < 0)
 	    return -1;
 
 	hio_seek(f, 20, SEEK_CUR);		/* skip name */
