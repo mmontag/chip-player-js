@@ -64,10 +64,13 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     snprintf(mod->type, XMP_NAME_SIZE, "Quadra Composer EMOD v%d", ver);
     MODULE_INFO();
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
 
 	hio_read8(f);		/* num */
 	mod->xxi[i].sub[0].vol = hio_read8(f);
@@ -79,7 +82,6 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * hio_read16b(f);
 	hio_read32b(f);		/* ptr */
 
-	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
@@ -94,15 +96,21 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
     mod->trk = mod->pat * mod->chn;
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     memset(reorder, 0, 256);
 
     for (i = 0; i < mod->pat; i++) {
 	reorder[hio_read8(f)] = i;
-	PATTERN_ALLOC(i);
+
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 	mod->xxp[i]->rows = hio_read8(f) + 1;
-	TRACK_ALLOC(i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
+
 	hio_seek(f, 20, SEEK_CUR);		/* skip name */
 	hio_read32b(f);			/* ptr */
     }

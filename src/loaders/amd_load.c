@@ -98,15 +98,17 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
     MODULE_INFO();
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Load instruments */
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
 
 	instrument_name(mod, i, afh.ins[i].name, 23);
 
-	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].vol = 0x40;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
@@ -127,9 +129,13 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     mod->xxp = calloc (sizeof (struct xmp_pattern *), mod->pat + 1);
+    if (mod->xxp == NULL)
+	return -1;
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
 	for (j = 0; j < 9; j++) {
 	    w = hio_read16l(f);
 	    mod->xxp[i]->index[j] = w;
@@ -145,12 +151,14 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored tracks: %d", w);
 
     mod->xxt = calloc (sizeof (struct xmp_track *), mod->trk);
+    if (mod->xxt == NULL)
+	return -1;
 
     for (i = 0; i < stored_tracks; i++) {
 	w = hio_read16l(f);
-	mod->xxt[w] = calloc (sizeof (struct xmp_track) +
-	    sizeof (struct xmp_event) * 64, 1);
-	mod->xxt[w]->rows = 64;
+	if (track_alloc(mod, w, 64) < 0)
+	    return -1;
+
 	for (r = 0; r < 64; r++) {
 	    event = &mod->xxt[w]->event[r];
 	    b = hio_read8(f);		/* Effect parameter */
