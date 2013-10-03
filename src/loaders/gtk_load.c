@@ -111,9 +111,14 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
+
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
+
 		hio_read(buffer, 28, 1, f);
 		instrument_name(mod, i, buffer, 28);
 
@@ -144,7 +149,9 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxi[i].sub[0].fin = hio_read8s(f);
 		}
 
-		mod->xxi[i].nsm = !!mod->xxs[i].len;
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
+
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxs[i].flg = size > 2 ? XMP_SAMPLE_LOOP : 0;
 
@@ -178,15 +185,19 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat = patmax + 1;
 	mod->trk = mod->pat * mod->chn;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = rows;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
 			for (k = 0; k < mod->chn; k++) {

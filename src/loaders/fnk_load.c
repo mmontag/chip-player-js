@@ -163,12 +163,16 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     MODULE_INFO();
     D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     /* Convert instruments */
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	mod->xxi[i].nsm = !!(mod->xxs[i].len = ffh.fih[i].length);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
+
+	mod->xxs[i].len = ffh.fih[i].length;
 	mod->xxs[i].lps = ffh.fih[i].loop_start;
 	if (mod->xxs[i].lps == -1)
 	    mod->xxs[i].lps = 0;
@@ -177,6 +181,9 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].vol = ffh.fih[i].volume;
 	mod->xxi[i].sub[0].pan = ffh.fih[i].pan;
 	mod->xxi[i].sub[0].sid = i;
+
+	if (mod->xxs[i].len == 0)
+	     mod->xxi[i].nsm = 0;
 
 	instrument_name(mod, i, ffh.fih[i].name, 19);
 
@@ -187,15 +194,19 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].pan);
     }
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
 
 	EVENT(i, 1, ffh.pbrk[i]).f2t = FX_BREAK;
 

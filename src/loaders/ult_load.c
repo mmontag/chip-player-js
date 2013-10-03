@@ -118,12 +118,15 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Read and convert instruments */
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
 
 	hio_read(&uih.name, 32, 1, f);
 	hio_read(&uih.dosname, 12, 1, f);
@@ -142,9 +145,11 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    uih.c2spd ^= uih.finetune;
 	}
 	mod->xxs[i].len = uih.sizeend - uih.sizestart;
-	mod->xxi[i].nsm = !!mod->xxs[i].len;
 	mod->xxs[i].lps = uih.loop_start;
 	mod->xxs[i].lpe = uih.loopend;
+
+	if (mod->xxs[i].len == 0)
+	    mod->xxi[i].nsm = 0;
 
 	/* BiDi Loop : (Bidirectional Loop)
 	 *
@@ -226,7 +231,8 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
 
@@ -234,9 +240,12 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Events are stored by channel */
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+	
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
     }
 
     for (i = 0; i < mod->chn; i++) {
@@ -244,8 +253,8 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    cnt = 1;
 	    x8 = hio_read8(f);		/* Read note or repeat code (0xfc) */
 	    if (x8 == 0xfc) {
-		cnt = hio_read8(f);			/* Read repeat count */
-		x8 = hio_read8(f);			/* Read note */
+		cnt = hio_read8(f);		/* Read repeat count */
+		x8 = hio_read8(f);		/* Read note */
 	    }
 	    hio_read(&ue, 4, 1, f);		/* Read rest of the event */
 
