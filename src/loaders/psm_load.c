@@ -88,17 +88,20 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + p_chn, SEEK_SET);
 	hio_read(buf, 1, 16, f);
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	hio_seek(f, start + p_ins, SEEK_SET);
 	for (i = 0; i < mod->ins; i++) {
 		uint16 flags, c2spd;
 		int finetune;
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 
-		hio_read(buf, 1, 13, f);		/* sample filename */
-		hio_read(buf, 1, 24, f);		/* sample description */
+		hio_read(buf, 1, 13, f);	/* sample filename */
+		hio_read(buf, 1, 24, f);	/* sample description */
 		strncpy((char *)mod->xxi[i].name, (char *)buf, 24);
 		str_adj((char *)mod->xxi[i].name);
 		p_smp[i] = hio_read32l(f);
@@ -116,7 +119,8 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxs[i].flg = flags & 0x80 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxs[i].flg |= flags & 0x20 ? XMP_SAMPLE_LOOP_BIDIR : 0;
-		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo,
+						&mod->xxi[i].sub[0].fin);
 		mod->xxi[i].sub[0].fin += finetune;
 
 		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %5d",
@@ -125,8 +129,8 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			'L' : ' ', mod->xxi[i].sub[0].vol, c2spd);
 	}
 	
-
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
@@ -139,9 +143,12 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		rows = hio_read8(f);
 		chan = hio_read8(f);
 
-		PATTERN_ALLOC (i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = rows;
-		TRACK_ALLOC (i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		for (r = 0; r < rows; r++) {
 			while (len > 0) {
@@ -169,7 +176,6 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					event->fxt = hio_read8(f);
 					event->fxp = hio_read8(f);
 					len -= 2;
-/* printf("p%d r%d c%d: %02x %02x\n", i, r, c, event->fxt, event->fxp); */
 				}
 			}
 		}
@@ -184,7 +190,8 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		hio_seek(f, start + p_smp[i], SEEK_SET);
-		load_sample(m, f, SAMPLE_FLAG_DIFF, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		load_sample(m, f, SAMPLE_FLAG_DIFF,
+				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	}
 
 	return 0;
