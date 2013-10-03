@@ -100,13 +100,16 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
     MODULE_INFO();
 
     /* Read instruments */
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     hio_read (buf, 1, 128 * 12, f);
     sid = buf;
     for (i = 0; i < mod->ins; i++, sid += 12) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i) < 0)
+	    return -1;
+
 	mod->xxi[i].sub[0].vol = 0x40;
 	mod->xxi[i].sub[0].fin = (int8)sid[11] / 4;
 	mod->xxi[i].sub[0].pan = 0x80;
@@ -135,15 +138,20 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->ins);
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
     for (i = 0; i < mod->pat; i++) {
 	int ins[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 	mod->xxp[i]->rows = 64;
-	TRACK_ALLOC (i);
+
+	if (pattern_tracks_alloc(mod, i) < 0)
+	    return -1;
+
         for (r = 0; r < mod->xxp[i]->rows; r++) {
             for (c = 0; c < 9; c++) {
 	        hio_read (e, 1, 2, f);

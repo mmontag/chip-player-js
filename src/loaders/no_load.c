@@ -99,13 +99,16 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	/* Read instrument names */
 	for (i = 0; i < mod->ins; i++) {
 		int hasname, c2spd;
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 
 		nsize = hio_read8(f);
 		hasname = 0;
@@ -129,9 +132,13 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read32l(f);
 		hio_read16l(f);
 
-		mod->xxi[i].nsm = !!(mod->xxs[i].len);
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
+
+		/*
 		mod->xxs[i].lps = 0;
 		mod->xxs[i].lpe = 0;
+		*/
 		mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxi[i].sub[0].fin = 0;
 		mod->xxi[i].sub[0].pan = 0x80;
@@ -147,16 +154,19 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	}
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-//printf("%d  %x\n", i, hio_tell(f));
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
 			for (k = 0; k < mod->chn; k++) {

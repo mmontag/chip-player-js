@@ -161,12 +161,16 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, start + ins_ofs, SEEK_SET);
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
 		int flg, c4spd, vol, pan;
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
+
 		hio_read(buffer, 32, 1, f);
 		instrument_name(mod, i, buffer, 32);
 		hio_seek(f, 12, SEEK_CUR);		/* skip filename */
@@ -183,9 +187,12 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].pan = pan > 15 ? 0x80 : 0x80 + (pan - 8) * 16;
 		c2spd_to_note(c4spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
-		mod->xxi[i].nsm = !!(mod->xxs[i].len);
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxs[i].flg = 0;
+
+
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
 
 		if (flg & 0x01) {
 			mod->xxs[i].flg |= XMP_SAMPLE_LOOP;
@@ -213,16 +220,20 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, start + pat_ofs, SEEK_SET);
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		int len, c, r, k;
 
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		len = hio_read16l(f);
 		len -= 2;
