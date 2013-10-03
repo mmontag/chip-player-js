@@ -188,13 +188,17 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	pat_ptr = hio_read32l(f);
 
 	MODULE_INFO();
-	INSTRUMENT_INIT();
+
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	m->vol_table = (int *)arch_vol_table;
 	m->volbase = 0xff;
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 
 		smp_ptr[i] = hio_read32l(f);
 		mod->xxs[i].len = hio_read32l(f);
@@ -211,9 +215,10 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				mod->xxi[i].name[j] = 0;
 		}
 		hio_read8(f);	/* unused */
-
-		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		mod->xxi[i].sub[0].sid = i;
+
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
 
 		D_(D_INFO "[%2X] %-10.10s  %05x %05x %05x %c V%02x",
 				i, mod->xxi[i].name,
@@ -237,14 +242,18 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Patterns */
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC (i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC (i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		for (j = 0; j < (64 * mod->chn); j++) {
 			event = &EVENT (i, j % mod->chn, j / mod->chn);

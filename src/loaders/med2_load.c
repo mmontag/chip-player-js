@@ -53,20 +53,24 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	if (hio_read32b(f) !=  MAGIC_MED2)
+	if (hio_read32b(f) != MAGIC_MED2)
 		return -1;
 
 	set_type(m, "MED 1.12 MED2");
 
 	mod->ins = mod->smp = 32;
-	INSTRUMENT_INIT();
+
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	/* read instrument names */
 	hio_read(buf, 1, 40, f);	/* skip 0 */
 	for (i = 0; i < 31; i++) {
 		hio_read(buf, 1, 40, f);
 		instrument_name(mod, i, buf, 32);
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		mod->xxi[i].nsm = 1;
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 	}
 
 	/* read instrument volumes */
@@ -113,15 +117,19 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (sliding == 6)
 		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		hio_read32b(f);
 
@@ -179,7 +187,8 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
 		}
 
-		mod->xxi[i].nsm = !!(mod->xxs[i].len);
+		if (mod->xxs[i].len == 0)
+			mod->xxi[i].nsm = 0;
 
 		if (!strlen((char *)mod->xxi[i].name) && !mod->xxs[i].len)
 			continue;
