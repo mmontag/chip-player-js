@@ -137,7 +137,7 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(mod->xxi[i].name, mih.name, 22);
+	instrument_name(mod, i, mih.name, 22);
 
 	if (mod->xxs[i].len == 0)
 		mod->xxi[i].nsm = 0;

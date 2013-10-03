@@ -98,7 +98,12 @@ int pattern_tracks_alloc(struct xmp_module *mod, int p)
 	return 0;
 }
 
+char *instrument_name(struct xmp_module *mod, int i, uint8 *r, int n)
+{
+	CLAMP(n, 0, 31);
 
+	return copy_adjust(mod->xxi[i].name, r, n);
+}
 
 char *copy_adjust(char *s, uint8 *r, int n)
 {

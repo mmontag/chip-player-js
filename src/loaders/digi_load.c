@@ -143,7 +143,7 @@ static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(mod->xxi[i].name, dh.insname[i], 30);
+	instrument_name(mod, i, dh.insname[i], 30);
 
 	D_(D_INFO "[%2X] %-30.30s %04x %04x %04x %c V%02x", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,

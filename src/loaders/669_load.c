@@ -144,7 +144,7 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (mod->xxs[i].len == 0)
 		mod->xxi[i].nsm = 0;
 
-	copy_adjust(mod->xxi[i].name, sih.name, 13);
+	instrument_name(mod, i, sih.name, 13);
 
 	D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,

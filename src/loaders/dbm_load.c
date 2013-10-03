@@ -101,7 +101,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			return -1;
 
 		hio_read(buffer, 30, 1, f);
-		copy_adjust(mod->xxi[i].name, buffer, 30);
+		instrument_name(mod, i, buffer, 30);
 		snum = hio_read16b(f);
 		if (snum == 0 || snum > mod->smp)
 			continue;

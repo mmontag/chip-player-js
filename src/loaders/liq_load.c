@@ -534,7 +534,7 @@ next_pattern:
 	mod->xxi[i].sub[0].pan = li.pan;
 	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(mod->xxi[i].name, li.name, 31);
+	instrument_name(mod, i, li.name, 31);
 
 	D_(D_INFO "[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d",
 		i, mod->xxi[i].name, mod->xxs[i].len,

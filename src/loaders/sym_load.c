@@ -391,7 +391,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		memset(buf, 0, 128);
 		hio_read(buf, 1, sn[i] & 0x7f, f);
-		copy_adjust(mod->xxi[i].name, buf, 32);
+		instrument_name(mod, i, buf, 32);
 
 		if (~sn[i] & 0x80) {
 			int looplen;

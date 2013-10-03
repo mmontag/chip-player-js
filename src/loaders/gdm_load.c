@@ -168,7 +168,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		hio_read(buffer, 32, 1, f);
-		copy_adjust(mod->xxi[i].name, buffer, 32);
+		instrument_name(mod, i, buffer, 32);
 		hio_seek(f, 12, SEEK_CUR);		/* skip filename */
 		hio_read8(f);			/* skip EMS handle */
 		mod->xxs[i].len = hio_read32l(f);

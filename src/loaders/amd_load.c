@@ -104,7 +104,7 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 
-	copy_adjust(mod->xxi[i].name, afh.ins[i].name, 23);
+	instrument_name(mod, i, afh.ins[i].name, 23);
 
 	mod->xxi[i].nsm = 1;
 	mod->xxi[i].sub[0].vol = 0x40;

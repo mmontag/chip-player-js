@@ -76,7 +76,7 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 
 		hio_read(insbuf, 1, 37, f);
-		copy_adjust(mod->xxi[i].name, insbuf, 22);
+		instrument_name(mod, i, insbuf, 22);
 		mod->xxi[i].sub[0].fin = (int8)(insbuf[22] << 4);
 		mod->xxi[i].sub[0].vol = insbuf[23];
 		mod->xxi[i].sub[0].xpo = (int8)insbuf[24];

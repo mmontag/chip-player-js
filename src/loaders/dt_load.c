@@ -132,7 +132,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxs[i].flg = replen > 2 ?  XMP_SAMPLE_LOOP : 0;
 
 		hio_read(name, 22, 1, f);
-		copy_adjust(mod->xxi[i].name, name, 22);
+		instrument_name(mod, i, name, 22);
 
 		flag = hio_read16b(f);	/* bit 0-7:resol 8:stereo */
 		if ((flag & 0xff) > 8) {

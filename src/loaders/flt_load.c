@@ -372,7 +372,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (mod->xxs[i].len == 0)
 		mod->xxi[i].nsm = 0;
 
-	copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
+	instrument_name(mod, i, mh.ins[i].name, 22);
 
 	if (am_synth && is_am_instrument(nt, i)) {
 	    D_(D_INFO "[%2X] %-22.22s SYNT ---- ----   V40 %+d",

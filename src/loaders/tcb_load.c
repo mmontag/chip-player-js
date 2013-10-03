@@ -81,7 +81,7 @@ static int tcb_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		hio_read(buffer, 8, 1, f);
-		copy_adjust(mod->xxi[i].name, buffer, 8);
+		instrument_name(mod, i, buffer, 8);
 	}
 
 	hio_read16b(f);	/* ? */

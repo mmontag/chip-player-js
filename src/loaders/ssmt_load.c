@@ -87,7 +87,7 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read(buffer, 1, 22, f);
 		if (buffer[0]) {
 			buffer[buffer[0] + 1] = 0;
-			copy_adjust(mod->xxi[i].name, buffer + 1, 22);
+			instrument_name(mod, i, buffer + 1, 22);
 		}
 		hio_read16l(f);		/* skip 2 reserved bytes */
 		mod->xxi[i].sub[0].vol = hio_read8(f) >> 2;

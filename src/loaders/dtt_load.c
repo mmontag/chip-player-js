@@ -102,7 +102,7 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
 		mod->xxs[i].len = hio_read32l(f);
 		hio_read(buf, 1, 32, f);
-		copy_adjust(mod->xxi[i].name, (uint8 *)buf, 32);
+		instrument_name(mod, i, (uint8 *)buf, 32);
 		sdata[i] = hio_read32l(f);
 
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);

@@ -279,7 +279,7 @@ static int get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		
 		namelen = hio_read8(f);
 		x = namelen - hio_read(name, 1, namelen > 30 ? 30 : namelen, f);
-		copy_adjust(mod->xxi[i].name, name, namelen);
+		instrument_name(mod, i, name, namelen);
 		name[namelen] = 0;
 		while (x--)
 			hio_read8(f);

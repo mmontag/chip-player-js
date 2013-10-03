@@ -454,7 +454,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    }
 	    sah.magic = 0;
 
-	    copy_adjust(mod->xxi[i].name, sah.name, 28);
+	    instrument_name(mod, i, sah.name, 28);
 
 	    mod->xxi[i].nsm = 1;
 	    mod->xxi[i].sub[0].vol = sah.vol;
@@ -513,7 +513,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].vol = sih.vol;
 	sih.magic = 0;
 
-	copy_adjust(mod->xxi[i].name, sih.name, 28);
+	instrument_name(mod, i, sih.name, 28);
 
 	D_(D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
 			i, mod->xxi[i].name, mod->xxs[i].len,

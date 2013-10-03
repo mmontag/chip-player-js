@@ -298,7 +298,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].vol = mh.ins[i].volume;
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
-	copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
+	instrument_name(mod, i, mh.ins[i].name, 22);
 
 	if (mod->xxs[i].len == 0)
 		mod->xxi[i].nsm = 0;

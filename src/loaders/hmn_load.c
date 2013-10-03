@@ -206,7 +206,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 				return -1;
 		} else {
 			mod->xxi[i].nsm = 1;
-			copy_adjust(mod->xxi[i].name, mh.ins[i].name, 22);
+			instrument_name(mod, i, mh.ins[i].name, 22);
 
 			mod->xxs[i].len = 2 * mh.ins[i].size;
 			mod->xxs[i].lps = 2 * mh.ins[i].loop_start;

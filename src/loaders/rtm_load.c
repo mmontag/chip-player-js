@@ -211,7 +211,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = rh.nposition;
 	mod->pat = rh.npattern;
 	mod->chn = rh.ntrack;
-	mod->trk = mod->chn * mod->pat + 1;
+	mod->trk = mod->chn * mod->pat;
 	mod->ins = rh.ninstr;
 	mod->spd = rh.speed;
 	mod->bpm = rh.tempo;
@@ -223,7 +223,8 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = rh.panning[i] & 0xff;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
@@ -246,9 +247,13 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		offset += 42 + oh.headerSize + rp.datasize;
 
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
+
 		mod->xxp[i]->rows = rp.nrows;
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i) < 0)
+			return -1;
 
 		for (r = 0; r < rp.nrows; r++) {
 			for (j = 0; /*j < rp.ntrack */; j++) {
@@ -303,7 +308,8 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* ESTIMATED value! We don't know the actual value at this point */
 	mod->smp = MAX_SAMP;
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	smpnum = 0;
 	for (i = 0; i < mod->ins; i++) {
@@ -312,7 +318,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 		}
 
-		copy_adjust(mod->xxi[i].name, (uint8 *)&oh.name, 32);
+		instrument_name(mod, i, (uint8 *)&oh.name, 32);
 
 		if (oh.headerSize == 0) {
 			D_(D_INFO "[%2X] %-26.26s %2d ", i,
@@ -371,7 +377,9 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (mod->xxi[i].nsm > 16)
 			mod->xxi[i].nsm = 16;
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), mod->xxi[i].nsm);
+
+		if (subinstrument_alloc(mod, i) < 0)
+			return -1;
 
 		for (j = 0; j < 120; j++)
 			mod->xxi[i].map[j].ins = ri.table[j];
@@ -422,11 +430,12 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			rs.basenote = hio_read8(f);
 			rs.panning = hio_read8(f);
 
-			c2spd_to_note(rs.basefreq,
-					&mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+			c2spd_to_note(rs.basefreq, &mod->xxi[i].sub[0].xpo,
+						&mod->xxi[i].sub[0].fin);
 			mod->xxi[i].sub[j].xpo += 48 - rs.basenote;
 
-			mod->xxi[i].sub[j].vol = rs.defaultvolume * rs.basevolume / 0x40;
+			mod->xxi[i].sub[j].vol = rs.defaultvolume *
+						rs.basevolume / 0x40;
 			mod->xxi[i].sub[j].pan = 0x80 + rs.panning * 2;
 			mod->xxi[i].sub[j].vwf = ri.vibflg;
 			mod->xxi[i].sub[j].vde = ri.vibdepth;

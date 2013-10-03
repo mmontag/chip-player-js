@@ -65,7 +65,7 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(buf, 1, 40, f);	/* skip 0 */
 	for (i = 0; i < 31; i++) {
 		hio_read(buf, 1, 40, f);
-		copy_adjust(mod->xxi[i].name, buf, 32);
+		instrument_name(mod, i, buf, 32);
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	}
 

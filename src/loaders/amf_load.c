@@ -186,7 +186,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		b = hio_read8(f);
 
 		hio_read(buf, 1, 32, f);
-		copy_adjust(mod->xxi[i].name, buf, 32);
+		instrument_name(mod, i, buf, 32);
 
 		hio_read(buf, 1, 13, f);	/* sample name */
 		hio_read32l(f);			/* sample index */

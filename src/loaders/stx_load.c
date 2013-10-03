@@ -253,7 +253,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(mod->xxi[i].name, sih.name, 12);
+	instrument_name(mod, i, sih.name, 12);
 
 	D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,

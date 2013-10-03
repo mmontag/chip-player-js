@@ -230,7 +230,7 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (c == 0)
 				break;
 		}
-		copy_adjust(mod->xxi[i].name, buf, 32);
+		instrument_name(mod, i, buf, 32);
 		mod->xxi[i].nsm = 1;
 		if (subinstrument_alloc(mod, i) < 0)
 			return -1;

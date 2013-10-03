@@ -306,7 +306,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].vol = 0xff; /* fih.volume; */
 	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(mod->xxi[i].name, fih.name, 32);
+	instrument_name(mod, i, fih.name, 32);
 
 	D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,

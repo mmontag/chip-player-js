@@ -313,7 +313,7 @@ load_instruments:
 		break;
 	}
 
-	copy_adjust(mod->xxi[i].name, xih.name, 22);
+	instrument_name(mod, i, xih.name, 22);
 
 	mod->xxi[i].nsm = xih.samples;
 	if (mod->xxi[i].nsm > 16)

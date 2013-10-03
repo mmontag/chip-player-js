@@ -188,7 +188,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(mod->xxi[i].name, uih.name, 24);
+	instrument_name(mod, i, uih.name, 24);
 
 	D_(D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
 		i, uih.name, mod->xxs[i].len,

@@ -810,7 +810,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    mod->xxi[i].sub[0].pan = 0x80;
 	    mod->xxi[i].sub[0].sid = i;
 	    mod->xxi[i].nsm = !!(xxs->len);
-	    copy_adjust(mod->xxi[i].name, ish.name, 25);
+	    instrument_name(mod, i, ish.name, 25);
 	} else {
 	    copy_adjust(xxs->name, ish.name, 25);
 	}

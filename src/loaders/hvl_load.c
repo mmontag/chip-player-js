@@ -512,7 +512,7 @@ static int hvl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		
 		for (i=0; nameptr < namebuf+len && i < mod->ins; i++) {
 			nameptr += strlen((char *)nameptr)+1;
-			copy_adjust(mod->xxi[i].name, nameptr, 32);
+			instrument_name(mod, i, nameptr, 32);
 
 			printf ("%02x: %s\n", i, nameptr);
 		}

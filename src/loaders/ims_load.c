@@ -195,7 +195,7 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].nsm = !!(mod->xxs[i].len);
 	mod->xxi[i].rls = 0xfff;
 
-	copy_adjust(mod->xxi[i].name, ih.ins[i].name, 20);
+	instrument_name(mod, i, ih.ins[i].name, 20);
 
 	D_(D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x %+d",
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,

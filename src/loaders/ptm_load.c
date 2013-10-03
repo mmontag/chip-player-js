@@ -199,7 +199,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].sid = i;
 	pih.magic = 0;
 
-	copy_adjust(mod->xxi[i].name, pih.name, 28);
+	instrument_name(mod, i, pih.name, 28);
 
 	D_(D_INFO "[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d",
 		i, mod->xxi[i].name, mod->xxs[i].len,

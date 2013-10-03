@@ -115,7 +115,7 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 		hio_read(buffer, 28, 1, f);
-		copy_adjust(mod->xxi[i].name, buffer, 28);
+		instrument_name(mod, i, buffer, 28);
 
 		if (ver == 1) {
 			hio_read32b(f);

@@ -178,7 +178,7 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = ffh.fih[i].pan;
 	mod->xxi[i].sub[0].sid = i;
 
-	copy_adjust(mod->xxi[i].name, ffh.fih[i].name, 19);
+	instrument_name(mod, i, ffh.fih[i].name, 19);
 
 	D_(D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x", i,
 		mod->xxi[i].name,
