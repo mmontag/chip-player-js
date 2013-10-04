@@ -860,6 +860,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    /* compressed samples */
 	    if (ish.flags & IT_SMP_COMP) {
 		uint8 *buf;
+	    	int ret;
+
 		buf = calloc(1, xxs->len * 2);
 		if (buf == NULL)
 		    goto err4;
@@ -878,10 +880,16 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					ish.convert & IT_CVT_DIFF);
 		}
 
-		load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt, &mod->xxs[i], buf);
+		ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
+							&mod->xxs[i], buf);
+		if (ret < 0) {
+		    free(buf);
+		    return -1;
+		}
 		free (buf);
 	    } else {
-		load_sample(m, f, cvt, &mod->xxs[i], NULL);
+		if (load_sample(m, f, cvt, &mod->xxs[i], NULL) < 0)
+		    return -1;
 	    }
 	}
     }

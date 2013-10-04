@@ -198,6 +198,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint16 *pp_ins;		/* Parapointers to instruments */
     uint16 *pp_pat;		/* Parapointers to patterns */
     uint8 arpeggio_val[32];
+    int ret;
 
     LOAD_INIT();
 
@@ -455,7 +456,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    mod->xxi[i].sub[0].vol = sah.vol;
 	    c2spd_to_note(sah.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	    mod->xxi[i].sub[0].xpo += 12;
-	    load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i], (char *)&sah.reg);
+	    ret = load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i],
+							(char *)&sah.reg);
+	    if (ret < 0)
+		return -1;
+
 	    D_(D_INFO "[%2X] %-28.28s", i, mod->xxi[i].name);
 
 	    continue;
@@ -520,7 +525,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
 	hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
-	load_sample(m, f, (sfh.ffi - 1) * SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
+
+	ret = load_sample(m, f, (sfh.ffi - 1) * SAMPLE_FLAG_UNS,
+						&mod->xxs[i], NULL);
+	if (ret < 0)
+		return -1;
     }
 
     free(pp_pat);

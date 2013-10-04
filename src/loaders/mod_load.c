@@ -580,11 +580,17 @@ skip_test:
 	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
 	
 	    if ((s = hio_open_file(sn, "rb"))) {
-	        load_sample(m, s, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		int sid = mod->xxi[i].sub[0].sid;
+	        if (load_sample(m, s, flags, &mod->xxs[sid], NULL) < 0) {
+		    hio_close(s);
+		    return -1;
+		}
 		hio_close(s);
 	    }
 	} else {
-	    load_sample(m, f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	    int sid = mod->xxi[i].sub[0].sid;
+	    if (load_sample(m, f, flags, &mod->xxs[sid], NULL) < 0)
+		return -1;
 	}
     }
 

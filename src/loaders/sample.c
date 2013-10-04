@@ -214,8 +214,10 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 			convert_hsc_to_sbi(buffer);
 		}
 
-		if ((xxs->data = malloc(size + 4)) == NULL)
+		xxs->data = malloc(size + 4);
+		if (xxs->data == NULL)
 			return -1;
+
 		*(uint32 *)xxs->data = 0;
 		xxs->data += 4;
 
@@ -283,8 +285,10 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	}
 
 	/* add guard bytes before the buffer for higher order interpolation */
-	if ((xxs->data = malloc(bytelen + extralen + unroll_extralen + 4)) == NULL)
+	xxs->data = malloc(bytelen + extralen + unroll_extralen + 4);
+	if (xxs->data == NULL)
 		return -1;
+
 	*(uint32 *)xxs->data = 0;
 	xxs->data += 4;
 
