@@ -79,10 +79,12 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
 	mod->ins = mod->smp = 15;
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			return -1;
 
 		hio_read(buffer, 1, 22, f);
 		if (buffer[0]) {
@@ -107,16 +109,16 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat = blocksize / (14 * 64);
 	mod->trk = mod->pat * mod->chn;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	/* Load notes */
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
-		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
+			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
 			for (k = 0; k < mod->chn; k++) {

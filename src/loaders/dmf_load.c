@@ -189,16 +189,17 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->chn = hio_read8(f);
 	mod->trk = mod->chn * mod->pat;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
 		chn = hio_read8(f);
 		hio_read8(f);		/* beat */
-		mod->xxp[i]->rows = hio_read16l(f);
-		TRACK_ALLOC(i);
+
+		if (pattern_tracks_alloc(mod, i, hio_read16l(f)) < 0)
+			return -1;
 
 		patsize = hio_read32l(f);
 
@@ -268,14 +269,16 @@ static int get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->ins = mod->smp = hio_read8(f);
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
 		int x;
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			return -1;
 		
 		namelen = hio_read8(f);
 		x = namelen - hio_read(name, 1, namelen > 30 ? 30 : namelen, f);
@@ -329,9 +332,11 @@ static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	/* why didn't we mmap this? */
 	sbuf = malloc(smpsize);
-	assert(sbuf != NULL);
+	if (sbuf == NULL)
+		goto err;
 	ibuf = malloc(smpsize);
-	assert(ibuf != NULL);
+	if (ibuf == NULL)
+		goto err2;
 
 	for (i = 0; i < mod->smp; i++) {
 		smpsize = hio_read32l(f);
@@ -356,6 +361,11 @@ static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	free(sbuf);
 
 	return 0;
+
+    err2:
+	free(sbuf);
+    err:
+	return -1;
 }
 
 static int dmf_load(struct module_data *m, HIO_HANDLE *f, const int start)

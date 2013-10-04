@@ -61,30 +61,4 @@ extern const int arch_vol_table[];
     D_(D_WARN "Module type: %s", m->mod.type); \
 } while (0)
 
-#define INSTRUMENT_INIT() do { \
-    mod->xxi = calloc(sizeof (struct xmp_instrument), mod->ins); \
-    if (mod->smp) { mod->xxs = calloc (sizeof (struct xmp_sample), mod->smp); }\
-} while (0)
-
-#define PATTERN_INIT() do { \
-    mod->xxt = calloc(sizeof (struct xmp_track *), mod->trk); \
-    mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat + 1); \
-} while (0)
-
-#define PATTERN_ALLOC(x_) do { \
-    mod->xxp[x_] = calloc(1, sizeof (struct xmp_pattern) + \
-	sizeof (int) * (mod->chn - 1)); \
-} while (0)
-
-#define TRACK_ALLOC(x_) do { \
-    int i_; \
-    for (i_ = 0; i_ < mod->chn; i_++) { \
-	int t_ = (x_) * mod->chn + i_; \
-	mod->xxp[x_]->index[i_] = t_; \
-	mod->xxt[t_] = calloc (sizeof (struct xmp_track) + \
-	    sizeof (struct xmp_event) * (mod->xxp[x_]->rows - 1), 1); \
-	mod->xxt[t_]->rows = mod->xxp[x_]->rows; \
-    } \
-} while (0)
-
 #endif

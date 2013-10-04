@@ -81,14 +81,17 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			plen[i] = x;
 	}
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	/* Read instrument names */
 
 	for (i = 0; i < mod->ins; i++) {
 		int c2spd, looplen;
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			return -1;
+
 		hio_read8(f);			/* note */
 		mod->xxi[i].sub[0].vol = hio_read8(f) >> 1;
 		mod->xxi[i].sub[0].pan = 0x80;
@@ -115,15 +118,15 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				mod->xxi[i].sub[0].vol, c2spd);
 	}
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
-		mod->xxp[i]->rows = plen[i];
-		TRACK_ALLOC(i);
+		if (pattern_tracks_alloc(mod, i, plen[i]) < 0)
+			return -1;
 
 		hio_seek(f, start + pofs[i], SEEK_SET);
 

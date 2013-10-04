@@ -298,8 +298,8 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
 
     /* Read and convert patterns */
 
@@ -309,11 +309,14 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	int row, channel, count;
 
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
 	pmag = hio_read32b(f);
 	if (pmag == 0x21212121)		/* !!!! */
 	    continue;
-	assert(pmag == 0x4c500000);	/* LP\0\0 */
+	if (pmag != 0x4c500000)		/* LP\0\0 */
+	    return -1;
 	
 	hio_read(&lp.name, 30, 1, f);
 	lp.rows = hio_read16l(f);
@@ -321,8 +324,9 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	lp.reserved = hio_read32l(f);
 
 	D_(D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
+
 	mod->xxp[i]->rows = lp.rows;
-	TRACK_ALLOC (i);
+	tracks_in_pattern_alloc(mod, i);
 
 	row = 0;
 	channel = 0;
@@ -468,14 +472,16 @@ next_pattern:
 
     /* Read and convert instruments */
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
 	unsigned char b[4];
 
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	if (subinstrument_alloc(mod, i, 1) < 0)
+	    return -1;
 	hio_read (&b, 1, 4, f);
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')

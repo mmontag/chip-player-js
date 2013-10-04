@@ -113,12 +113,14 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
 		int fine, replen, flag;
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			return -1;
 
 		hio_read32b(f);		/* reserved */
 		mod->xxs[i].len = hio_read32b(f);
@@ -180,7 +182,9 @@ static int get_dapt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		D_(D_INFO "Stored patterns: %d", mod->pat);
 		data->pflag = 1;
 		data->last_pat = 0;
-		PATTERN_INIT();
+
+		if (pattern_init(mod) < 0)
+			return -1;
 	}
 
 	hio_read32b(f);	/* 0xffffffff */
@@ -188,9 +192,8 @@ static int get_dapt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	rows = hio_read16b(f);
 
 	for (i = data->last_pat; i <= pat; i++) {
-		PATTERN_ALLOC(i);
-		mod->xxp[i]->rows = rows;
-		TRACK_ALLOC(i);
+		if (pattern_tracks_alloc(mod, i, rows) < 0)
+			return -1;
 	}
 	data->last_pat = pat + 1;
 

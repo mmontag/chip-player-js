@@ -102,14 +102,16 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Instruments */
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	hio_seek(f, start + ins_ptr, SEEK_SET);
 
 	for (i = 0; i < mod->ins; i++) {
 		int c2spd, flags;
 
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		if (subinstrument_alloc(mod, i , 1) < 0)
+			return -1;
 
 		hio_read(mod->xxi[i].name, 1, 32, f);
 		sdata[i] = hio_read32b(f);
@@ -148,7 +150,8 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	/* PATTERN_INIT - alloc extra track*/
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored tracks: %d", mod->trk);
 
@@ -163,9 +166,9 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, start + offset, SEEK_SET);
 
 		rows = hio_read16b(f);
-		mod->xxt[i] = calloc(sizeof(struct xmp_track) +
-				sizeof(struct xmp_event) * rows, 1);
-		mod->xxt[i]->rows = rows;
+
+		if (track_alloc(mod, i, rows) < 0)
+			return -1;
 
 		//printf("\n=== Track %d ===\n\n", i);
 		for (j = 0; j < rows; j++) {
@@ -283,7 +286,8 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + pat_ptr, SEEK_SET);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
+		if (pattern_alloc(mod, i) < 0)
+			return -1;
 
 		mod->xxp[i]->rows = hio_read16b(f);
 		for (j = 0; j < mod->chn; j++) {
