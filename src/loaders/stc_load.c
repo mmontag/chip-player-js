@@ -172,7 +172,7 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		//printf("%d/%d) Read pattern %d -> %d\n", i, mod->len, src, dest);
 
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (pattern_tracks_alloc(mod, dest, 64) < 0)
 			return -1;
 
 		for (j = 0; j < 3; j++) {		/* row */
