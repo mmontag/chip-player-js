@@ -371,6 +371,7 @@ static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     for (i = 0; i < mod->pat; i++) {
 	if (pattern_alloc(mod, i) < 0)
 	    return -1;
+	mod->xxp[i]->rows = 64;
 
 	for (j = 0; j < 32; j++) {
 	    x16 = hio_read16l(f);
@@ -465,6 +466,7 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	memcpy(mod->xxt[i], track, sizeof (struct xmp_track) +
 				sizeof (struct xmp_event) * (row - 1));
+	mod->xxt[i]->rows = row;
     }
 
     free(track);
@@ -792,6 +794,7 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int i, j, k, l;
     char buf[8];
     struct local_data data;
+    int retval = 0;
 
     LOAD_INIT();
 
@@ -849,16 +852,17 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     /* Load IFFoid chunks */
     if (iff_load(handle, m, f, &data) < 0) {
     	iff_release(handle);
-	return -1;
+	retval = -1;
+	goto err;
     }
 
     iff_release(handle);
 
     /* Re-index instruments & samples */
 
-    for (i = 0; i < mod->pat; i++)
-	for (j = 0; j < mod->xxp[i]->rows; j++)
-	    for (k = 0; k < mod->chn; k++)
+    for (i = 0; i < mod->pat; i++) {
+	for (j = 0; j < mod->xxp[i]->rows; j++) {
+	    for (k = 0; k < mod->chn; k++) {
 		for (l = 0; l < mod->ins; l++) {
 		    if (j >= mod->xxt[mod->xxp[i]->index[k]]->rows)
 			continue;
@@ -868,6 +872,10 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			break;
 		    }
 		}
+	    }
+	}
+    }
+	
 
     for (i = 0; i < mod->ins; i++) {
 
@@ -966,6 +974,7 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
     }
 
+  err:
     free(data.c2spd);
     free(data.f_index);
     free(data.p_index);
