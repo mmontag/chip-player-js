@@ -140,14 +140,14 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->chn = 4;
 	mod->trk = mod->pat * mod->chn;
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
-		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
+			return -1;
 
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
@@ -167,10 +167,12 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	mod->ins = mod->smp = 15;
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	for (i = 0; i < 15; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			return -1;
 		mod->xxs[i].len = buf[ORD_OFS + 129 + i] < 0x10 ? 0 :
 					256 * buf[ORD_OFS + 145 + i];
 		mod->xxi[i].sub[0].fin = 0;

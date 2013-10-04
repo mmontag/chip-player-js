@@ -147,7 +147,8 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Read patterns */
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	hio_seek(f, pat_ptr, SEEK_SET);
 	decoded = calloc(mod->pat, sizeof(int));
@@ -171,9 +172,8 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		//printf("%d/%d) Read pattern %d -> %d\n", i, mod->len, src, dest);
 
-		PATTERN_ALLOC(dest);
-		mod->xxp[dest]->rows = 64;
-		TRACK_ALLOC(dest);
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
+			return -1;
 
 		for (j = 0; j < 3; j++) {		/* row */
 			int row = 0;
@@ -238,7 +238,8 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Read instruments */
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	hio_seek(f, 27, SEEK_SET);
 
@@ -247,7 +248,8 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		struct spectrum_sample ss;
 
 		memset(&ss, 0, sizeof (struct spectrum_sample));
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			return -1;
 		mod->xxi[i].nsm = 1;
 		mod->xxi[i].sub[0].vol = 0x40;
 		mod->xxi[i].sub[0].pan = 0x80;

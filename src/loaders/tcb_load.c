@@ -75,11 +75,13 @@ static int tcb_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	INSTRUMENT_INIT();
+	if (instrument_init(mod) < 0)
+		return -1;
 
 	/* Read instrument names */
 	for (i = 0; i < mod->ins; i++) {
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			return -1;
 		hio_read(buffer, 8, 1, f);
 		instrument_name(mod, i, buffer, 8);
 	}
@@ -92,15 +94,15 @@ static int tcb_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < 5; i++)
 		hio_read16b(f);
 
-	PATTERN_INIT();
+	if (pattern_init(mod) < 0)
+		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
-		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
+			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
 			for (k = 0; k < mod->chn; k++) {
