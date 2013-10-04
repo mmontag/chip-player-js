@@ -199,7 +199,8 @@ TEST_PATH	= .
 SRC_PATH	= ../src
 
 TEST_INTERNAL	= hio.o load_helpers.o loaders/itsex.o dataio.o scan.o misc.o \
-		  loaders/sample.o synth_null.o fnmatch.o
+		  loaders/sample.o loaders/common.o period.o synth_null.o \
+		  fnmatch.o
 
 T_OBJS 		= $(addprefix $(TEST_PATH)/,$(TEST_OBJS)) \
 		  $(addprefix $(SRC_PATH)/,$(TEST_INTERNAL))

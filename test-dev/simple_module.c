@@ -25,19 +25,17 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 	mod->xxo[0] = 0;
 	mod->xxo[1] = 1;
 
-	PATTERN_INIT();
+	pattern_init(mod);
 
 	for (i = 0; i < mod->pat; i++) {
-		PATTERN_ALLOC(i);
-		mod->xxp[i]->rows = 64;
-		TRACK_ALLOC(i);
+		pattern_tracks_alloc(mod, i, 64);
 	}
 
-	INSTRUMENT_INIT();
+	instrument_init(mod);
 
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].nsm = 1;
-		mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+		subinstrument_alloc(mod, i, 1);
 
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].vol = 0x40;
