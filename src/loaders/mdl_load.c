@@ -331,11 +331,15 @@ static int get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->pat = hio_read8(f);
     mod->trk = mod->pat * mod->chn + 1;	/* Max */
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
+
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
+
 	chn = hio_read8(f);
 	mod->xxp[i]->rows = (int)hio_read8(f) + 1;
 
@@ -359,12 +363,14 @@ static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->pat = hio_read8(f);
     mod->trk = mod->pat * mod->chn + 1;	/* Max */
 
-    PATTERN_INIT();
+    if (pattern_init(mod) < 0)
+	return -1;
+
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	PATTERN_ALLOC (i);
-	mod->xxp[i]->rows = 64;
+	if (pattern_alloc(mod, i) < 0)
+	    return -1;
 
 	for (j = 0; j < 32; j++) {
 	    x16 = hio_read16l(f);
@@ -387,13 +393,14 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     D_(D_INFO "Stored tracks: %d", mod->trk);
 
-    track = calloc (1, sizeof (struct xmp_track) +
-	sizeof (struct xmp_event) * 256);
+    track = calloc(1, sizeof (struct xmp_track) +
+			sizeof (struct xmp_event) * 255);
+    if (track == NULL)
+	return -1;
 
     /* Empty track 0 is not stored in the file */
-    mod->xxt[0] = calloc (1, sizeof (struct xmp_track) +
-	256 * sizeof (struct xmp_event));
-    mod->xxt[0]->rows = 256;
+    if (track_alloc(mod, 0, 256) < 0)
+	return -1;
 
     for (i = 1; i < mod->trk; i++) {
 	/* Length of the track in bytes */
@@ -453,11 +460,11 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    row = 128;
 	else row = 256;
 
-	mod->xxt[i] = calloc (1, sizeof (struct xmp_track) +
-	    sizeof (struct xmp_event) * row);
+	if (track_alloc(mod, i, row) < 0)
+	    return -1;
+
 	memcpy(mod->xxt[i], track, sizeof (struct xmp_track) +
-	    sizeof (struct xmp_event) * row);
-	mod->xxt[i]->rows = row;
+				sizeof (struct xmp_event) * (row - 1));
     }
 
     free(track);
@@ -476,7 +483,8 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->ins = hio_read8(f);
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     for (i = 0; i < mod->ins; i++) {
 	data->i_index[i] = hio_read8(f);
@@ -489,7 +497,8 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	D_(D_INFO "[%2X] %-32.32s %2d", data->i_index[i],
 				mod->xxi[i].name, mod->xxi[i].nsm);
 
-	mod->xxi[i].sub = calloc (sizeof (struct xmp_subinstrument), mod->xxi[i].nsm);
+	if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 9)
+	    return -1;
 
 	for (j = 0; j < XMP_MAX_KEYS; j++)
 	    mod->xxi[i].map[j].ins = -1;
@@ -553,7 +562,12 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     mod->smp = hio_read8(f);
     mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp);
+    if (mod->xxs == NULL)
+	return -1;
+
     data->packinfo = calloc(sizeof (int), mod->smp);
+    if (data->packinfo == NULL)
+	return -1;
 
     D_(D_INFO "Sample infos: %d", mod->smp);
 
@@ -612,13 +626,17 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    INSTRUMENT_INIT();
+    if (instrument_init(mod) < 0)
+	return -1;
 
     data->packinfo = calloc (sizeof (int), mod->smp);
+    if (data->packinfo == NULL)
+	return -1;
 
     for (i = 0; i < mod->ins; i++) {
 	mod->xxi[i].nsm = 1;
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	if (subinstrument_alloc(mod, i, 1) < 0)
+	    return -1;
 	mod->xxi[i].sub[0].sid = data->i_index[i] = data->s_index[i] = hio_read8(f);
 
 	hio_read(buf, 1, 32, f);
@@ -669,6 +687,8 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     for (i = 0; i < mod->smp; i++) {
 	smpbuf = calloc (1, mod->xxs[i].flg & XMP_SAMPLE_16BIT ?
 		mod->xxs[i].len << 1 : mod->xxs[i].len);
+	if (smpbuf == NULL)
+	    return -1;
 
 	switch (data->packinfo[i]) {
 	case 0:
@@ -694,8 +714,6 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	free (smpbuf);
     }
-
-    free(data->packinfo);
 
     return 0;
 }
@@ -953,12 +971,11 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     free(data.i_index);
     free(data.s_index);
 
-    if (data.v_envnum)
-	free(data.v_env);
-    if (data.p_envnum)
-	free(data.p_env);
-    if (data.f_envnum)
-	free(data.f_env);
+    free(data.v_env);
+    free(data.p_env);
+    free(data.f_env);
+
+    free(data.packinfo);
 
     m->quirk |= QUIRKS_FT2;
     m->read_event_type = READ_EVENT_FT2;
