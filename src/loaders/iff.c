@@ -82,7 +82,7 @@ int iff_load(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm
 		if (ret > 0)
 			break;
 
-		if (iff_chunk(opaque, m, f, parm) < 0)
+		if (ret < 0)
 			return -1;
 	}
 

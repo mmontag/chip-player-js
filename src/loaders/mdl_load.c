@@ -406,8 +406,8 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	/* Length of the track in bytes */
 	len = hio_read16l(f);
 
-	memset (track, 0, sizeof (struct xmp_track) +
-            sizeof (struct xmp_event) * 256);
+	memset(track, 0, sizeof (struct xmp_track) +
+            			sizeof (struct xmp_event) * 255);
 
 	for (row = 0; len;) {
 	    j = hio_read8(f);
@@ -497,7 +497,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	D_(D_INFO "[%2X] %-32.32s %2d", data->i_index[i],
 				mod->xxi[i].name, mod->xxi[i].nsm);
 
-	if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 9)
+	if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
 	    return -1;
 
 	for (j = 0; j < XMP_MAX_KEYS; j++)
@@ -795,6 +795,8 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
+    memset(&data, 0, sizeof (struct local_data));
+
     /* Check magic and get version */
     hio_read32b(f);
     hio_read(buf, 1, 1, f);
@@ -959,7 +961,7 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    for (k = 0; k < mod->smp; k++)
 		if (mod->xxi[i].sub[j].sid == data.s_index[k]) {
 		    mod->xxi[i].sub[j].sid = k;
-		    c2spd_to_note (data.c2spd[k], &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
+		    c2spd_to_note(data.c2spd[k], &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
 		    break;
 		}
     }
