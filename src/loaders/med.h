@@ -2,6 +2,7 @@
 #define XMP_MED_H
 
 #include "common.h"
+#include "hio.h"
 
 #define MMD_INST_TYPES 9
 
@@ -25,10 +26,10 @@ typedef char *STRPTR;
  */
 
 struct PlaySeq {                                                            
-    char name[32];		/* (0)  31 chars + \0 */                        
-    ULONG reserved[2];		/* (32) for possible extensions */              
-    UWORD length;		/* (40) # of entries */                         
-    UWORD seq[1];		/* (42) block numbers.. */                      
+    char name[32];		/* (0)  31 chars + \0 */
+    ULONG reserved[2];		/* (32) for possible extensions */
+    UWORD length;		/* (40) # of entries */
+    UWORD seq[1];		/* (42) block numbers.. */
 };                                                      
 
 
@@ -309,5 +310,10 @@ struct MMDDump {
 int mmd_get_8ch_tempo(int);
 void mmd_xlat_fx(struct xmp_event *, int, int, int);
 int mmd_alloc_tables(struct module_data *, int, struct SynthInstr *);
+
+int mmd_load_hybrid_instrument(HIO_HANDLE *, struct module_data *m, int, int,
+		struct SynthInstr *, struct InstrExt *, struct MMD0sample *);
+int mmd_load_synth_instrument(HIO_HANDLE *, struct module_data *m, int, int,
+		struct SynthInstr *, struct InstrExt *, struct MMD0sample *);
 
 #endif /* XMP_MED_H */
