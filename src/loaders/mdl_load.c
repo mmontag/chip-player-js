@@ -82,6 +82,41 @@ struct local_data {
 };
 
 
+static void fix_env(struct xmp_module *mod, struct xmp_envelope *ei,
+			struct mdl_envelope *env, int *index, int envnum)
+{
+    int i, j, k;
+
+    for (i = 0; i < mod->ins; i++) {
+	if (index[i] >= 0) {
+	    mod->xxi[i].pei.flg = XMP_ENVELOPE_ON;
+	    mod->xxi[i].pei.npt = 16;
+
+	    for (j = 0; j < envnum; j++) {
+		if (index[i] == j) {
+		    ei->flg |= env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
+		    ei->flg |= env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
+		    ei->sus = env[j].sus & 0x0f;
+		    ei->lps = env[j].loop & 0x0f;
+		    ei->lpe = env[j].loop & 0xf0;
+		    ei->data[0] = 0;
+
+		    for (k = 1; k < ei->npt; k++) {
+			ei->data[k * 2] = ei->data[(k - 1) * 2] +
+					env[j].data[(k - 1) * 2];
+			if (env[j].data[k * 2] == 0)
+			    break;
+			ei->data[k * 2 + 1] = env[j].data[(k - 1) * 2 + 1];
+		    }
+		    ei->npt = k;
+		    break;
+		}
+	    }
+	}
+    }
+}
+
+
 /* Effects 1-6 (note effects) can only be entered in the first effect
  * column, G-L (volume-effects) only in the second column.
  */
@@ -876,102 +911,21 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 	
+    fix_env(mod, &mod->xxi[i].aei, data.v_env, data.v_index, data.v_envnum);
+    fix_env(mod, &mod->xxi[i].pei, data.p_env, data.p_index, data.p_envnum);
+    fix_env(mod, &mod->xxi[i].fei, data.f_env, data.f_index, data.f_envnum);
 
     for (i = 0; i < mod->ins; i++) {
-
-	/* FIXME: envelope timing is wrong */
-
-	/* volume envelopes */
-	if (data.v_index[i] >= 0) {
-	    mod->xxi[i].aei.flg = XMP_ENVELOPE_ON;
-	    mod->xxi[i].aei.npt = 16;
-
-	    for (j = 0; j < data.v_envnum; j++) {
-		if (data.v_index[i] == j) {
-		    mod->xxi[i].aei.flg |= data.v_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
-		    mod->xxi[i].aei.flg |= data.v_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
-		    mod->xxi[i].aei.sus = data.v_env[j].sus & 0x0f;
-		    mod->xxi[i].aei.lps = data.v_env[j].loop & 0x0f;
-		    mod->xxi[i].aei.lpe = data.v_env[j].loop & 0xf0;
-		    mod->xxi[i].aei.data[0] = 0;
-		    for (k = 1; k < mod->xxi[i].aei.npt; k++) {
-			mod->xxi[i].aei.data[k * 2] = mod->xxi[i].aei.data[(k - 1) * 2] +
-						data.v_env[j].data[(k - 1) * 2];
-
-			if (data.v_env[j].data[k * 2] == 0)
-			    break;
-
-			mod->xxi[i].aei.data[k * 2 + 1] = data.v_env[j].data[(k - 1) * 2 + 1];
-		    }
-		    mod->xxi[i].aei.npt = k;
-		    break;
-		}
-	    }
-	}
-
-	/* pan envelopes */
-	if (data.p_index[i] >= 0) {
-	    mod->xxi[i].pei.flg = XMP_ENVELOPE_ON;
-	    mod->xxi[i].pei.npt = 16;
-
-	    for (j = 0; j < data.p_envnum; j++) {
-		if (data.p_index[i] == j) {
-		    mod->xxi[i].pei.flg |= data.p_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
-		    mod->xxi[i].pei.flg |= data.p_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
-		    mod->xxi[i].pei.sus = data.p_env[j].sus & 0x0f;
-		    mod->xxi[i].pei.lps = data.p_env[j].loop & 0x0f;
-		    mod->xxi[i].pei.lpe = data.p_env[j].loop & 0xf0;
-		    mod->xxi[i].pei.data[0] = 0;
-
-		    for (k = 1; k < mod->xxi[i].pei.npt; k++) {
-			mod->xxi[i].pei.data[k * 2] = mod->xxi[i].pei.data[(k - 1) * 2] +
-						data.p_env[j].data[(k - 1) * 2];
-			if (data.p_env[j].data[k * 2] == 0)
-			    break;
-			mod->xxi[i].pei.data[k * 2 + 1] = data.p_env[j].data[(k - 1) * 2 + 1];
-		    }
-		    mod->xxi[i].pei.npt = k;
-		    break;
-		}
-	    }
-	}
-
-	/* pitch envelopes */
-	if (data.f_index[i] >= 0) {
-	    mod->xxi[i].fei.flg = XMP_ENVELOPE_ON;
-	    mod->xxi[i].fei.npt = 16;
-
-	    for (j = 0; j < data.f_envnum; j++) {
-		if (data.f_index[i] == j) {
-		    mod->xxi[i].fei.flg |= data.f_env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
-		    mod->xxi[i].fei.flg |= data.f_env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
-		    mod->xxi[i].fei.sus = data.f_env[j].sus & 0x0f;
-		    mod->xxi[i].fei.lps = data.f_env[j].loop & 0x0f;
-		    mod->xxi[i].fei.lpe = data.f_env[j].loop & 0xf0;
-		    mod->xxi[i].fei.data[0] = 0;
-		    mod->xxi[i].fei.data[1] = 32;
-
-		    for (k = 1; k < mod->xxi[i].fei.npt; k++) {
-			mod->xxi[i].fei.data[k * 2] = mod->xxi[i].fei.data[(k - 1) * 2] +
-						data.f_env[j].data[(k - 1) * 2];
-			if (data.f_env[j].data[k * 2] == 0)
-			    break;
-			mod->xxi[i].fei.data[k * 2 + 1] = data.f_env[j].data[(k - 1) * 2 + 1] * 4;
-		    }
-
-		    mod->xxi[i].fei.npt = k;
-		    break;
-		}
-	    }
-	}
-
-	for (j = 0; j < mod->xxi[i].nsm; j++)
-	    for (k = 0; k < mod->smp; k++)
+	for (j = 0; j < mod->xxi[i].nsm; j++) {
+	    for (k = 0; k < mod->smp; k++) {
 		if (mod->xxi[i].sub[j].sid == data.s_index[k]) {
 		    mod->xxi[i].sub[j].sid = k;
-		    c2spd_to_note(data.c2spd[k], &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
+		    c2spd_to_note(data.c2spd[k],
+			&mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
 		    break;
 		}
+	    }
+	}
     }
 
   err:
