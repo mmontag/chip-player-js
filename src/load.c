@@ -35,6 +35,7 @@ extern struct format_loader *format_loader[];
 
 void load_prologue(struct context_data *);
 void load_epilogue(struct context_data *);
+int prepare_scan(struct context_data *);
 
 
 struct tmpfilename {
@@ -522,7 +523,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	struct stat st;
 	struct list_head tmpfiles_list;
 	int test_result, load_result;
-	int i;
+	int i, ret;
 
 	D_(D_WARN "path = %s", path);
 
@@ -606,6 +607,12 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	load_epilogue(ctx);
 
+	ret = prepare_scan(ctx);
+	if (ret < 0)
+		return ret;
+
+	scan_sequences(ctx);
+
 	ctx->state = XMP_STATE_LOADED;
 
 	return 0;
@@ -623,7 +630,7 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	HIO_HANDLE *h;
 	struct list_head tmpfiles_list;
 	int test_result, load_result;
-	int i;
+	int i, ret;
 
 	D_(D_WARN "path = %s", path);
 
@@ -672,6 +679,12 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	}
 
 	load_epilogue(ctx);
+
+	ret = prepare_scan(ctx);
+	if (ret < 0)
+		return ret;
+
+	scan_sequences(ctx);
 
 	ctx->state = XMP_STATE_LOADED;
 
@@ -732,6 +745,12 @@ int xmp_create_module(xmp_context opaque, int nch)
 	}
 
 	load_epilogue(ctx);
+
+	ret = prepare_scan(ctx);
+	if (ret < 0)
+		return ret;
+
+	scan_sequences(ctx);
 
 	ctx->state = XMP_STATE_LOADED;
 
@@ -796,6 +815,13 @@ void xmp_release_module(xmp_context opaque)
 				free(mod->xxs[i].data - 4);
 		}
 		free(mod->xxs);
+	}
+
+	if (m->scan_cnt) {
+		for (i = 0; i < mod->len; i++) {
+			free(m->scan_cnt[i]);
+		}
+		free(m->scan_cnt);
 	}
 
 	if (m->comment) {

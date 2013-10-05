@@ -7,6 +7,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include <fnmatch.h>
 #include "common.h"
 #include "synth.h"
@@ -150,24 +151,25 @@ void load_epilogue(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	int i, j;
 
-    	m->mod.gvl = m->gvolbase;
+    	mod->gvl = m->gvolbase;
 
 	/* Fix cases where the restart value is invalid e.g. kc_fall8.xm
 	 * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
 	 * Ralf Hoffmann <ralf@boomerangsworld.de>)
 	 */
-	if (m->mod.rst >= m->mod.len) {
-		m->mod.rst = 0;
+	if (mod->rst >= mod->len) {
+		mod->rst = 0;
 	}
 
 	/* Sanity check */
-	if (m->mod.spd == 0) {
-		m->mod.spd = 6;
+	if (mod->spd == 0) {
+		mod->spd = 6;
 	}
-	if (m->mod.bpm == 0) {
-		m->mod.bpm = 125;
+	if (mod->bpm == 0) {
+		mod->bpm = 125;
 	}
 
 	/* Set appropriate values for instrument volumes and subinstrument
@@ -175,28 +177,50 @@ void load_epilogue(struct context_data *ctx)
 	 * consistent if the user inspects struct xmp_module. We can later
 	 * set volumes in the loaders and eliminate the quirk.
 	 */
-	for (i = 0; i < m->mod.ins; i++) {
+	for (i = 0; i < mod->ins; i++) {
 		if (~m->quirk & QUIRK_INSVOL) {
-			m->mod.xxi[i].vol = m->volbase;
+			mod->xxi[i].vol = m->volbase;
 		}
-		for (j = 0; j < m->mod.xxi[i].nsm; j++) {
+		for (j = 0; j < mod->xxi[i].nsm; j++) {
 			if (~m->quirk & QUIRK_INSVOL) {
-				m->mod.xxi[i].sub[j].gvl = m->volbase;
+				mod->xxi[i].sub[j].gvl = m->volbase;
 			}
 		}
 	}
 
 	/* Sanity check for envelopes
 	 */
-	for (i = 0; i < m->mod.ins; i++) {
-		check_envelope(&m->mod.xxi[i].aei);
-		check_envelope(&m->mod.xxi[i].fei);
-		check_envelope(&m->mod.xxi[i].pei);
+	for (i = 0; i < mod->ins; i++) {
+		check_envelope(&mod->xxi[i].aei);
+		check_envelope(&mod->xxi[i].fei);
+		check_envelope(&mod->xxi[i].pei);
 	}
 
 	p->flags = p->player_flags;
 	module_quirks(ctx);
-
-	scan_sequences(ctx);
 }
 
+int prepare_scan(struct context_data *ctx)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	int i, ord;
+
+	ord = 0;
+	while (ord < mod->len && mod->xxo[ord] >= mod->pat) {
+		ord++;
+	}
+	if (ord >= mod->len)
+		mod->len = 0;
+
+	m->scan_cnt = calloc(sizeof (char *), mod->len);
+	for (i = 0; i < mod->len; i++) {
+		int pat = mod->xxo[i];
+		m->scan_cnt[i] = calloc(1, pat >= mod->pat ?  1 :
+			mod->xxp[pat]->rows ? mod->xxp[pat]->rows : 1);
+		if (m->scan_cnt[i] == NULL)
+			return -XMP_ERROR_SYSTEM;
+	}
+ 
+	return 0;
+}

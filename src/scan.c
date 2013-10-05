@@ -46,31 +46,23 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     double clock, clock_rst;
     int loop_chn, loop_flg;
     int pdelay = 0, skip_fetch;
-    int* loop_stk;
-    int* loop_row;
-    char** tab_cnt;
+    int loop_stk[XMP_MAX_CHANNELS];
+    int loop_row[XMP_MAX_CHANNELS];
     struct xmp_event* event;
-    int pat;
+    int i, pat;
     struct ord_data *info;
-
-    ord = 0;
-    while (ord < mod->len && mod->xxo[ord] >= mod->pat) {
-	ord++;
-    }
-    if (ord >= mod->len)
-	mod->len = 0;
 
     if (mod->len == 0)
 	return 0;
 
-    tab_cnt = calloc(sizeof (char *), mod->len);
-    for (ord = 0; ord < mod->len; ord++) {
-	tab_cnt[ord] = calloc(1, mod->xxo[ord] >= mod->pat ?  1 :
-	    mod->xxp[mod->xxo[ord]]->rows ? mod->xxp[mod->xxo[ord]]->rows : 1);
+    for (i = 0; i < mod->len; i++) {
+	int pat = mod->xxo[i];
+	memset(m->scan_cnt[i], 0, pat >= mod->pat ? 1 :
+			mod->xxp[pat]->rows ? mod->xxp[pat]->rows : 1);
     }
 
-    loop_stk = calloc(sizeof (int), mod->chn);
-    loop_row = calloc(sizeof (int), mod->chn);
+    memset(loop_stk, 0, sizeof(int) * mod->chn);
+    memset(loop_row, 0, sizeof(int) * mod->chn);
     loop_chn = loop_flg = 0;
 
     gvl = mod->gvl;
@@ -138,7 +130,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    continue;
 	}
 
-	if (break_row < mod->xxp[pat]->rows && tab_cnt[ord][break_row])
+	if (break_row < mod->xxp[pat]->rows && m->scan_cnt[ord][break_row])
 	    break;
 
 	info->gvl = gvl;
@@ -177,11 +169,11 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    if (cnt_row > 512)	/* was 255, but Global trash goes to 318 */
 		goto end_module;
 
-	    if (!loop_flg && tab_cnt[ord][row]) {
+	    if (!loop_flg && m->scan_cnt[ord][row]) {
 		cnt_row--;
 		goto end_module;
 	    }
-	    tab_cnt[ord][row]++;
+	    m->scan_cnt[ord][row]++;
 
 	    pdelay = 0;
 
@@ -365,16 +357,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     row = break_row;
 
 end_module:
-    p->scan[chain].num = tab_cnt[ord][row];
+    p->scan[chain].num = m->scan_cnt[ord][row];
     p->scan[chain].row = row;
     p->scan[chain].ord = ord;
-
-    free(loop_row);
-    free(loop_stk);
-
-    for (ord = mod->len; ord--; )
-	free(tab_cnt[ord]);
-    free(tab_cnt);
 
     clock -= clock_rst;
     alltmp += cnt_row * speed * base_time;

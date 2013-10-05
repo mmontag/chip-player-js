@@ -17,6 +17,7 @@ TEST(test_prev_order_start_seq)
 	set_order(ctx, 2, 0);
 	set_order(ctx, 3, 0xff);
 	set_order(ctx, 4, 1);
+	prepare_scan(ctx);
 	scan_sequences(ctx);
 
 	xmp_start_player(opaque, 44100, 0);

@@ -52,6 +52,8 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 	/* End of module creation */
 
 	load_epilogue(ctx);
+	prepare_scan(ctx);
+	scan_sequences(ctx);
 
 	ctx->state = XMP_STATE_LOADED;
 }

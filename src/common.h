@@ -233,6 +233,8 @@ struct module_data {
 
 	const struct synth_info *synth;
 	void *synth_chip;
+
+	char **scan_cnt;		/* scan counters */
 };
 
 
