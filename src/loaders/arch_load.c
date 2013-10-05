@@ -360,7 +360,8 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxs[i].lpe = mod->xxs[i].len;
 	}
 
-	load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	if (load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[i], NULL) < 0)
+		return -1;
 
 	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",
 				i, mod->xxi[i].name,

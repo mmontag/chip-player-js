@@ -118,7 +118,8 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	D_(D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 
-	load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i], regs);
+	if (load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i], regs) < 0)
+	    return -1;
     }
 
     if (!afh.version) {

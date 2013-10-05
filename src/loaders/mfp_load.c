@@ -226,8 +226,9 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		load_sample(m, s, SAMPLE_FLAG_FULLREP,
-				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		if (load_sample(m, s, SAMPLE_FLAG_FULLREP,
+				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL) < 0)
+			return -1;
 	}
 
 	hio_close(s);

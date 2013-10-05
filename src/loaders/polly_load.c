@@ -198,12 +198,18 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Loading samples: %d", mod->ins);
 
 	for (i = 0; i < mod->ins; i++) {
+		int ret;
+
 		if (mod->xxs[i].len == 0)
 			continue;
-		load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS,
-				&mod->xxs[mod->xxi[i].sub[0].sid],
-				(char*)buf + ORD_OFS + 256 +
+		ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS,
+				&mod->xxs[i], (char*)buf + ORD_OFS + 256 +
 					256 * (buf[ORD_OFS + 129 + i] - 0x10));
+
+		if (ret < 0) {
+			free(buf);
+			return -1;
+		}
 	}
 
 	free(buf);

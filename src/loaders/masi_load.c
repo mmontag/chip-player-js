@@ -56,7 +56,7 @@
 #include "period.h"
 
 #define MAGIC_PSM_	MAGIC4('P','S','M',' ')
-#define MAGIC_HIO_HANDLE	MAGIC4('F','I','L','E')
+#define MAGIC_FILE	MAGIC4('F','I','L','E')
 #define MAGIC_TITL	MAGIC4('T','I','T','L')
 #define MAGIC_OPLH	MAGIC4('O','P','L','H')
 
@@ -83,7 +83,7 @@ static int masi_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read8(f) != 0)
 		return -1;
 
-	if (hio_read32b(f) != MAGIC_HIO_HANDLE) 
+	if (hio_read32b(f) != MAGIC_FILE) 
 		return -1;
 
 	hio_read32b(f);
@@ -198,16 +198,17 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	srate = hio_read32l(f);
 
 	D_(D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
-		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
-		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol,
-		finetune, srate);
+		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
+		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ?
+		'L' : ' ', mod->xxi[i].sub[0].vol, finetune, srate);
 
 	srate = 8363 * srate / 8448;
 	c2spd_to_note(srate, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	mod->xxi[i].sub[0].fin += finetune;
 
 	hio_seek(f, 16, SEEK_CUR);
-	load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL);
+	if (load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL) < 0)
+		return -1;
 
 	data->cur_ins++;
 

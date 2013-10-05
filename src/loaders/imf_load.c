@@ -423,6 +423,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (j = 0; j < ii.nsm; j++, smp_num++) {
+	    int sid;
 
 	    hio_read(&is.name, 13, 1, f);
 	    hio_read(&is.unused1, 3, 1, f);
@@ -462,9 +463,12 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    if (!mod->xxs[smp_num].len)
 		continue;
 
-	    load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[j].sid], NULL);
+	    sid = mod->xxi[i].sub[j].sid;
+	    if (load_sample(m, f, 0, &mod->xxs[sid], NULL) < 0)
+		return -1;
 	}
     }
+
     mod->smp = smp_num;
     mod->xxs = realloc(mod->xxs, sizeof (struct xmp_sample) * mod->smp);
 

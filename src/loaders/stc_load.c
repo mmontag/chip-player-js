@@ -322,7 +322,10 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			
 		}
 
-		load_sample(m, f, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i], (char *)&ss);
+		if (load_sample(m, f, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i],
+							(char *)&ss) < 0) {
+			return -1;
+		}
 	}
 	
 	/* Read ornaments */

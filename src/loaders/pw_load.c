@@ -197,7 +197,8 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	D_(D_INFO "Stored samples: %d", mod->smp);
 	for (i = 0; i < mod->smp; i++) {
-		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+			goto err;
 	}
 
 	hio_close(f);

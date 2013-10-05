@@ -334,6 +334,7 @@ static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	sbuf = malloc(smpsize);
 	if (sbuf == NULL)
 		goto err;
+
 	ibuf = malloc(smpsize);
 	if (ibuf == NULL)
 		goto err2;
@@ -345,12 +346,15 @@ static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 		switch (data->packtype[i]) {
 		case 0:
-			load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+				goto err3;
 			break;
 		case 1:
 			hio_read(ibuf, smpsize, 1, f);
 			unpack(sbuf, ibuf, ibuf + smpsize, mod->xxs[i].len);
-			load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)sbuf);
+			if (load_sample(m, NULL, SAMPLE_FLAG_NOLOAD,
+					&mod->xxs[i], (char *)sbuf) < 0)
+				goto err3;
 			break;
 		default:
 			hio_seek(f, smpsize, SEEK_CUR);
@@ -362,6 +366,8 @@ static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	return 0;
 
+    err3:
+	free(ibuf);
     err2:
 	free(sbuf);
     err:

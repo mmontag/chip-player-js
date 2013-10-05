@@ -222,7 +222,9 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)
 			continue;
-		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+
+		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+			return -1;
 	}
 
 	return 0;

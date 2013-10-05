@@ -555,7 +555,8 @@ next_pattern:
 
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(m, f, 0, &mod->xxs[i], NULL);
+	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+	    return -1;
     }
 
     m->quirk |= QUIRKS_ST3;

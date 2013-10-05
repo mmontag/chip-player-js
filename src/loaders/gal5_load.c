@@ -259,8 +259,9 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxi[i].sub[0].vol, flags, srate);
 
 	if (mod->xxs[i].len > 1) {
-		load_sample(m, f, has_unsigned_sample ?
-			SAMPLE_FLAG_UNS : 0, &mod->xxs[i], NULL);
+		if (load_sample(m, f, has_unsigned_sample ?
+				SAMPLE_FLAG_UNS : 0, &mod->xxs[i], NULL) < 0)
+			return -1;
 	}
 
 	return 0;

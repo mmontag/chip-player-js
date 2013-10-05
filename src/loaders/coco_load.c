@@ -272,7 +272,8 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 
 		hio_seek(f, start + smp_ptr[i], SEEK_SET);
-		load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		if (load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[i], NULL) < 0)
+			return -1;
 	}
 
 	for (i = 0; i < mod->chn; i++)

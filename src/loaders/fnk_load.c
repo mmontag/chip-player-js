@@ -292,8 +292,8 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (mod->xxs[i].len <= 2)
 	    continue;
 
-	load_sample(m, f, 0, &mod->xxs[i], NULL);
-
+	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+	    return -1;
     }
 
     for (i = 0; i < mod->chn; i++)

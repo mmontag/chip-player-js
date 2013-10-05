@@ -240,7 +240,8 @@ static int get_smpl(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			continue;
 		}
 		
-		load_sample(m, f, SAMPLE_FLAG_BIGEND, &mod->xxs[i], NULL);
+		if (load_sample(m, f, SAMPLE_FLAG_BIGEND, &mod->xxs[i], NULL) < 0)
+			return -1;
 
 		if (mod->xxs[i].len == 0)
 			continue;

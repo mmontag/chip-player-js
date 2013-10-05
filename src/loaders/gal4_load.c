@@ -322,7 +322,9 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			srate);
 	
 		if (mod->xxs[data->snum].len > 1) {
-			load_sample(m, f, 0, &mod->xxs[data->snum], NULL);
+			int snum = data->snum;
+			if (load_sample(m, f, 0, &mod->xxs[snum], NULL) < 0)
+				return -1;
 		}
 	}
 

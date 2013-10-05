@@ -131,7 +131,8 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len > 1) {
-			load_sample(m, f, 0, &mod->xxs[i], NULL);
+			if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+				return -1;
 			mod->xxi[i].nsm = 1;
 		}
 	}

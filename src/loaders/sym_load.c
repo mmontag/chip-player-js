@@ -238,7 +238,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int ver, infolen, sn[64];
 	uint32 a, b;
 	uint8 *buf;
-	int size;
+	int size, ret;
 	uint8 allowed_effects[8];
 
 	LOAD_INIT();
@@ -428,16 +428,20 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			uint8 *b = malloc(mod->xxs[i].len);
 			read_lzw_dynamic(f->f, b, 13, 0, mod->xxs[i].len,
 					mod->xxs[i].len, XMP_LZW_QUIRK_DSYM);
-			load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
-				&mod->xxs[mod->xxi[i].sub[0].sid], (char*)b);
+			ret = load_sample(m, NULL,
+					SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
+					&mod->xxs[i], (char*)b);
 			free(b);
 		/*} else if (a == 4) {
-			load_sample(m, f, SAMPLE_FLAG_VIDC,
-				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);*/
+			ret = load_sample(m, f, SAMPLE_FLAG_VIDC,
+					&mod->xxs[i], NULL);*/
 		} else {
-			load_sample(m, f, SAMPLE_FLAG_VIDC,
-				&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			ret = load_sample(m, f, SAMPLE_FLAG_VIDC,
+					&mod->xxs[i], NULL);
 		}
+
+		if (ret < 0)
+			return -1;
 	}
 
 	for (i = 0; i < mod->chn; i++)

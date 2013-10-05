@@ -263,8 +263,10 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < 31; i++) {
-		load_sample(m, f, SAMPLE_FLAG_FULLREP,
-			    &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		if (load_sample(m, f, SAMPLE_FLAG_FULLREP,
+						&mod->xxs[i], NULL) < 0) {
+			return -1;
+		}
 	}
 
 
@@ -286,7 +288,8 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			mod->xxs[k].lps = 0;
 			mod->xxs[k].lpe = 32;
 			mod->xxs[k].flg = XMP_SAMPLE_LOOP;
-			load_sample(m, f, 0, &mod->xxs[k], NULL);
+			if (load_sample(m, f, 0, &mod->xxs[k], NULL) < 0)
+				return -1;
 		}
 
 		extra->dataloopstart = mupp[i].dataloopstart;

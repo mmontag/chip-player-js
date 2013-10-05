@@ -37,7 +37,6 @@ static int ssn_test(HIO_HANDLE *f, char *t, const int start)
 }
 
 
-
 struct ssn_file_header {
     uint8 marker[2];		/* 'if'=standard, 'JN'=extended */
     uint8 message[108];		/* Song message */
@@ -216,7 +215,8 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)
 	    continue;
-	load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL);
+	if (load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+	    return -1;
     }
 
     for (i = 0; i < mod->chn; i++)

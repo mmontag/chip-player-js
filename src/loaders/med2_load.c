@@ -195,8 +195,10 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxi[i].sub[0].vol);
 
 		if (found) {
-			load_sample(m, s, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+			int ret = load_sample(m, s, 0, &mod->xxs[i], NULL);
 			hio_close(s);
+			if (ret < 0)
+				return -1;
 		}
 	}
 

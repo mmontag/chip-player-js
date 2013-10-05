@@ -103,7 +103,7 @@ static int is_am_instrument(FILE *nt, int i)
     return 1;
 }
 
-static void read_am_instrument(struct module_data *m, FILE *nt, int i)
+static int read_am_instrument(struct module_data *m, FILE *nt, int i)
 {
     struct xmp_module *mod = &m->mod;
     struct am_instrument am;
@@ -262,7 +262,10 @@ am.l0, am.a1l, am.a1s, am.a2l, am.a2s, am.sl, am.ds, am.st, am.rs, am.wf);
 	mod->xxi[i].fei.data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
     }
 
-    load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[mod->xxi[i].sub[0].sid], wave);
+    if (load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], wave))
+	return -1;
+
+    return 0;
 }
 
 
@@ -356,7 +359,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     for (i = 0; i < mod->ins; i++) {
 	if (subinstrument_alloc(mod, i, 1) < 0)
-	    return -1;
+	    goto err;
 
 	mod->xxs[i].len = 2 * mh.ins[i].size;
 	mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
@@ -385,7 +388,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     if (pattern_init(mod) < 0)
-	return -1;
+	goto err;
 
     /* Load and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -403,7 +406,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE *f, const int start)
      */
     for (i = 0; i < mod->pat; i++) {
 	if (pattern_tracks_alloc(mod, i, 64) < 0)
-	    return -1;
+	    goto err;
 
 	for (j = 0; j < (64 * 4); j++) {
 	    event = &EVENT(i, j % 4, j / 4);
@@ -434,16 +437,24 @@ static int flt_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (mod->xxs[i].len == 0) {
 	    if (am_synth && is_am_instrument(nt, i)) {
-		read_am_instrument(m, nt, i);
+		if (read_am_instrument(m, nt, i) < 0)
+		    goto err;
 	    }
 	    continue;
 	}
-	load_sample(m, f, SAMPLE_FLAG_FULLREP,
-					&mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	if (load_sample(m, f, SAMPLE_FLAG_FULLREP, &mod->xxs[i], NULL) < 0) {
+	    goto err;
+	}
     }
 
     if (nt)
 	fclose(nt);
 
     return 0;
+
+  err:
+    if (nt)
+	fclose(nt);
+
+    return -1;
 }

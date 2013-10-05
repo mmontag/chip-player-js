@@ -721,6 +721,8 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
+	int ret;
+
 	smpbuf = calloc (1, mod->xxs[i].flg & XMP_SAMPLE_16BIT ?
 		mod->xxs[i].len << 1 : mod->xxs[i].len);
 	if (smpbuf == NULL)
@@ -746,9 +748,12 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    break;
 	}
 	
-	load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)smpbuf);
-
+	ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD,
+					&mod->xxs[i], (char *)smpbuf);
 	free (smpbuf);
+
+	if (ret < 0)
+		return -1;
     }
 
     return 0;

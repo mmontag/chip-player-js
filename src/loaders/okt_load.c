@@ -284,7 +284,8 @@ static int get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
     if (data->mode[i] == OKT_MODE8 || data->mode[i] == OKT_MODEB)
 	flags = SAMPLE_FLAG_7BIT;
 
-    load_sample(m, f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+    if (load_sample(m, f, flags, &mod->xxs[mod->xxi[i].sub[0].sid], NULL) < 0)
+	return -1;
 
     data->sample++;
 

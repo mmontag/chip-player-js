@@ -117,8 +117,9 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
-	load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
-					&mod->xxs[i], (char *)sid);
+	if (load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
+					&mod->xxs[i], (char *)sid) < 0)
+		return -1;
     }
 
     /* Read orders */

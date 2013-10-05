@@ -475,7 +475,10 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				mod->xxi[i].sub[0].fin >> 4);
 
 		hio_seek(f, start + smpl_offset + 6, SEEK_SET);
-		load_sample(m, f, SAMPLE_FLAG_BIGEND, &mod->xxs[smp_idx], NULL);
+		if (load_sample(m, f, SAMPLE_FLAG_BIGEND,
+					&mod->xxs[smp_idx], NULL) < 0) {
+			return -1;
+		}
 
 		smp_idx++;
 	}

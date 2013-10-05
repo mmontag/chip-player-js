@@ -352,7 +352,8 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	xxs->lpe = xxs->lps + 2 * sample->replen;
 	xxs->flg = sample->replen > 1 ?  XMP_SAMPLE_LOOP : 0;
 
-	load_sample(m, f, 0, &mod->xxs[smp_idx], NULL);
+	if (load_sample(m, f, 0, &mod->xxs[smp_idx], NULL) < 0)
+		return -1;
 
 	return 0;
 }
@@ -414,7 +415,8 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
 		mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
 
-		load_sample(m, f, 0, &mod->xxs[smp_idx], NULL);
+		if (load_sample(m, f, 0, &mod->xxs[smp_idx], NULL) < 0)
+			return -1;
 
 		smp_idx++;
 	}

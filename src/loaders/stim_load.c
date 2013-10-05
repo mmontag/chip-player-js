@@ -176,7 +176,9 @@ static int stim_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		if (!mod->xxs[i].len)
 			continue;
-		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+
+		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+			return -1;
 	}
 
 	m->quirk |= QUIRK_MODRNG;

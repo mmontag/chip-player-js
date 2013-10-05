@@ -166,7 +166,8 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		filename, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 
-	load_sample(m, s, SAMPLE_FLAG_UNS, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	if (load_sample(m, s, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+	    return -1;
 
 	hio_close(s);
     }

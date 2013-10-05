@@ -385,7 +385,8 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol);
 
-		load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+			return -1;
 	}
 
 	return 0;

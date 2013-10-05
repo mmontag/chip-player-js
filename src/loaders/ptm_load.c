@@ -302,20 +302,15 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	struct xmp_sample *xxs;
-	int smpnum;
-
 	if (mod->xxi[i].nsm == 0)
 	    continue;
 
-	smpnum = mod->xxi[i].sub[0].sid;
-	xxs = &mod->xxs[smpnum];
-
-	if (xxs->len == 0)
+	if (mod->xxs[i].len == 0)
 	    continue;
 
-	hio_seek(f, start + smp_ofs[smpnum], SEEK_SET);
-	load_sample(m, f, SAMPLE_FLAG_8BDIFF, xxs, NULL);
+	hio_seek(f, start + smp_ofs[i], SEEK_SET);
+	if (load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL) < 0)
+	    return -1;
     }
 
     m->vol_table = (int *)ptm_vol;
