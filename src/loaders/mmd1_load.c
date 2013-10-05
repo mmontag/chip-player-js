@@ -401,57 +401,13 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, pos, SEEK_SET);
 
 		if (instr.type == -2) {			/* Hybrid */
-			int length, type;
-			int pos = hio_tell(f);
-
-			synth.defaultdecay = hio_read8(f);
-			hio_seek(f, 3, SEEK_CUR);
-			synth.rep = hio_read16b(f);
-			synth.replen = hio_read16b(f);
-			synth.voltbllen = hio_read16b(f);
-			synth.wftbllen = hio_read16b(f);
-			synth.volspeed = hio_read8(f);
-			synth.wfspeed = hio_read8(f);
-			synth.wforms = hio_read16b(f);
-			hio_read(synth.voltbl, 1, 128, f);;
-			hio_read(synth.wftbl, 1, 128, f);;
-
-			hio_seek(f, pos - 6 + hio_read32b(f), SEEK_SET);
-			length = hio_read32b(f);
-			type = hio_read16b(f);
-
-			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
-				return -1;
-
-			mod->xxi[i].nsm = 1;
-			if (subinstrument_alloc(mod, i, 1) < 0)
-				return -1;
-
-			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
-			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
-			mod->xxi[i].sub[0].pan = 0x80;
-			mod->xxi[i].sub[0].vol = song.sample[i].svol;
-			mod->xxi[i].sub[0].xpo = song.sample[i].strans;
-			mod->xxi[i].sub[0].sid = smp_idx;
-			mod->xxi[i].sub[0].fin = exp_smp.finetune;
-			mod->xxs[smp_idx].len = length;
-			mod->xxs[smp_idx].lps = 2 * song.sample[i].rep;
-			mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].lps +
-						2 * song.sample[i].replen;
-			mod->xxs[smp_idx].flg = song.sample[i].replen > 1 ?
-						XMP_SAMPLE_LOOP : 0;
-
-			D_(D_INFO "  %05x %05x %05x %02x %+3d %+1d",
-				       mod->xxs[smp_idx].len,
-				       mod->xxs[smp_idx].lps,
-				       mod->xxs[smp_idx].lpe,
-				       mod->xxi[i].sub[0].vol,
-				       mod->xxi[i].sub[0].xpo,
-				       mod->xxi[i].sub[0].fin >> 4);
-
-			load_sample(m, f, 0, &mod->xxs[smp_idx], NULL);
+			int ret = mmd_load_hybrid_instrument(f, m, i, smp_idx,
+				&synth, &exp_smp, &song.sample[i]);
 
 			smp_idx++;
+
+			if (ret < 0)
+				return -1;
 
 			if (mmd_alloc_tables(m, i, &synth) != 0)
 				return -1;
@@ -460,60 +416,16 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 
 		if (instr.type == -1) {			/* Synthetic */
-			int pos = hio_tell(f);
+			int ret = mmd_load_synth_instrument(f, m, i, smp_idx,
+				&synth, &exp_smp, &song.sample[i]);
 
-			synth.defaultdecay = hio_read8(f);
-			hio_seek(f, 3, SEEK_CUR);
-			synth.rep = hio_read16b(f);
-			synth.replen = hio_read16b(f);
-			synth.voltbllen = hio_read16b(f);
-			synth.wftbllen = hio_read16b(f);
-			synth.volspeed = hio_read8(f);
-			synth.wfspeed = hio_read8(f);
-			synth.wforms = hio_read16b(f);
-			hio_read(synth.voltbl, 1, 128, f);;
-			hio_read(synth.wftbl, 1, 128, f);;
-			for (j = 0; j < 64; j++)
-				synth.wf[j] = hio_read32b(f);
-
-			D_(D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+3d %+1d",
-					synth.volspeed, synth.wfspeed,
-					synth.wforms & 0xff,
-					song.sample[i].svol,
-					song.sample[i].strans,
-					exp_smp.finetune);
-
-			if (synth.wforms == 0xffff)	
+			if (ret > 0)
 				continue;
 
-			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
+			if (ret < 0)
 				return -1;
 
-			mod->xxi[i].nsm = synth.wforms;
-			if (subinstrument_alloc(mod, i, synth.wforms) < 0)
-				return -1;
-
-			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->vts = synth.volspeed;
-			MED_INSTRUMENT_EXTRAS(mod->xxi[i])->wts = synth.wfspeed;
-
-			for (j = 0; j < synth.wforms; j++) {
-				mod->xxi[i].sub[j].pan = 0x80;
-				mod->xxi[i].sub[j].vol = song.sample[i].svol;
-				mod->xxi[i].sub[j].xpo = song.sample[i].strans - 24;
-				mod->xxi[i].sub[j].sid = smp_idx;
-				mod->xxi[i].sub[j].fin = exp_smp.finetune;
-
-				hio_seek(f, pos - 6 + synth.wf[j], SEEK_SET);
-
-				mod->xxs[smp_idx].len = hio_read16b(f) * 2;
-				mod->xxs[smp_idx].lps = 0;
-				mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
-				mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
-
-				load_sample(m, f, 0, &mod->xxs[smp_idx], NULL);
-
-				smp_idx++;
-			}
+			smp_idx += synth.wforms;
 
 			if (mmd_alloc_tables(m, i, &synth) != 0)
 				return -1;

@@ -82,37 +82,36 @@ struct local_data {
 };
 
 
-static void fix_env(struct xmp_module *mod, struct xmp_envelope *ei,
-			struct mdl_envelope *env, int *index, int envnum)
+static void fix_env(int i, struct xmp_envelope *ei, struct mdl_envelope *env,
+		    int *index, int envnum)
 {
-    int i, j, k;
+    int j, k;
 
-    for (i = 0; i < mod->ins; i++) {
-	if (index[i] >= 0) {
-	    mod->xxi[i].pei.flg = XMP_ENVELOPE_ON;
-	    mod->xxi[i].pei.npt = 16;
+    if (index[i] >= 0) {
+	ei->flg = XMP_ENVELOPE_ON;
+	ei->npt = 16;
 
-	    for (j = 0; j < envnum; j++) {
-		if (index[i] == j) {
-		    ei->flg |= env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
-		    ei->flg |= env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
-		    ei->sus = env[j].sus & 0x0f;
-		    ei->lps = env[j].loop & 0x0f;
-		    ei->lpe = env[j].loop & 0xf0;
-		    ei->data[0] = 0;
+	for (j = 0; j < envnum; j++) {
+    	    if (index[i] == j) {
+    	        ei->flg |= env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
+    	        ei->flg |= env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
+    	        ei->sus = env[j].sus & 0x0f;
+    	        ei->lps = env[j].loop & 0x0f;
+    	        ei->lpe = env[j].loop & 0xf0;
+    	        ei->data[0] = 0;
 
-		    for (k = 1; k < ei->npt; k++) {
-			ei->data[k * 2] = ei->data[(k - 1) * 2] +
-					env[j].data[(k - 1) * 2];
-			if (env[j].data[k * 2] == 0)
-			    break;
-			ei->data[k * 2 + 1] = env[j].data[(k - 1) * 2 + 1];
-		    }
-		    ei->npt = k;
-		    break;
-		}
-	    }
-	}
+    	        for (k = 1; k < ei->npt; k++) {
+        	    ei->data[k * 2] = ei->data[(k - 1) * 2] +
+        				env[j].data[(k - 1) * 2];
+        	    if (env[j].data[k * 2] == 0)
+        		    break;
+        	    ei->data[k * 2 + 1] = env[j].data[(k - 1) * 2 + 1];
+        	}
+
+        	ei->npt = k;
+        	break;
+            }
+        }
     }
 }
 
@@ -911,11 +910,11 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 	
-    fix_env(mod, &mod->xxi[i].aei, data.v_env, data.v_index, data.v_envnum);
-    fix_env(mod, &mod->xxi[i].pei, data.p_env, data.p_index, data.p_envnum);
-    fix_env(mod, &mod->xxi[i].fei, data.f_env, data.f_index, data.f_envnum);
-
     for (i = 0; i < mod->ins; i++) {
+        fix_env(i, &mod->xxi[i].aei, data.v_env, data.v_index, data.v_envnum);
+        fix_env(i, &mod->xxi[i].pei, data.p_env, data.p_index, data.p_envnum);
+        fix_env(i, &mod->xxi[i].fei, data.f_env, data.f_index, data.f_envnum);
+
 	for (j = 0; j < mod->xxi[i].nsm; j++) {
 	    for (k = 0; k < mod->smp; k++) {
 		if (mod->xxi[i].sub[j].sid == data.s_index[k]) {
