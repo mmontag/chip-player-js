@@ -19,6 +19,7 @@ Stable versions
 	- refactor handling of format-specific instrument and channel data
 	- refactor MED synth command interpreter
 	- rewrite SQSH depacker code
+	- disable rarely used ZOO depacker
 	- code cleanup
 
 4.1.5 (20130527):
