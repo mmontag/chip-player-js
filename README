@@ -40,8 +40,8 @@ Soundsmith, ALM, etc). must have all files in the same directory.
 SUPPORTED PACKERS
 
 The following formats have built-in decompressors: bz2, gz, lha, oxm, xz,
-Z, zip, zoo, ArcFS, arc, MMCMP, PowerPack, !Spark, SQSH, MUSE, LZX, and
-S404. Other compressed formats need helpers to be installed on the system:
+Z, zip, ArcFS, arc, MMCMP, PowerPack, !Spark, SQSH, MUSE, LZX, and S404.
+Other compressed formats need helpers to be installed on the system:
 mo3 (unmo3) and rar (unrar).
 
 

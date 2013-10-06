@@ -188,19 +188,6 @@ LHA decompressor
  version 2.1 of the License, or (at your option) any later version.
 
 
-Zoo decompressor
-
- unzoo.c                     Tools                        Martin Schoenert
-
- @(#)$Id: unzoo.c,v 4.4 2000/05/29 08:56:57 sal Exp $
-
- This file is in the Public Domain.
-
- Lempel-Ziv decompression.  Mostly based on Tom Pfau's assembly language
- code.  The contents of this file are hereby released to the public domain.
-                                  -- Rahul Dhesi 1986/11/14
-
-
 DMF sample decompressor
 IT resonant filters
 IT sample decompressor
