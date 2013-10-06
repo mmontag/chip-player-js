@@ -257,6 +257,8 @@ printf("load_fixed_huffman()\n");
   huffman->dist_huff_count=0;
 
   huffman_tree=malloc(600*sizeof(struct huffman_tree_t));
+  if (huffman_tree == NULL)
+    return -1;
 
   *huffman_tree_ptr=huffman_tree;
 
@@ -286,7 +288,6 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
 #ifdef DEBUG
   printf("Entering load_codes()\n");
 #endif
-
 
   r=0;
   while (r<count)
@@ -929,8 +930,14 @@ int inflate(FILE *in, FILE *out, uint32 *checksum, int is_zip)
   huffman.checksum=0xffffffff;
 
   data.huffman_tree_len_static=0;
+
   huffman_tree_len=malloc(1024*sizeof(struct huffman_tree_t));
+  if (huffman_tree_len == NULL)
+    goto err;
+
   huffman_tree_dist=malloc(1024*sizeof(struct huffman_tree_t));
+  if (huffman_tree_dist == NULL)
+    goto err2;
 
   huffman.window_ptr=0;
 
@@ -955,7 +962,7 @@ if (!is_zip) {
   if ((CMF&15)!=8)
   {
     printf("Unsupported compression used.\n");
-    goto err;
+    goto err3;
   }
 
   if ((FLG&32)!=0)
@@ -1028,8 +1035,11 @@ if (!is_zip) {
     if (comp_method==2)	/* Reduced with compression factor 1 */
     {
       /* Fixed Huffman */
-      if (data.huffman_tree_len_static==0)
-      { load_fixed_huffman(&huffman, &data.huffman_tree_len_static); }
+      if (data.huffman_tree_len_static==0) {
+	if (load_fixed_huffman(&huffman, &data.huffman_tree_len_static) < 0)
+	  goto err4;
+      }
+
       decompress(in, &huffman, &bitstream, data.huffman_tree_len_static, 0, out, &data);
 /*
       free(huffman_tree_len);
@@ -1043,7 +1053,7 @@ if (!is_zip) {
       /* Dynamic Huffman */
       res = load_dynamic_huffman(in,&huffman,&bitstream,huffman_tree_len,huffman_tree_dist);
       if (res < 0) 
-        goto err1;
+        goto err4;
 
       decompress(in, &huffman, &bitstream, huffman_tree_len, huffman_tree_dist, out, &data);
 
@@ -1066,20 +1076,11 @@ if (!is_zip) {
     huffman.checksum=crc32_A2(huffman.window,huffman.window_ptr,huffman.checksum);
   }
 
-/*
-  if (buffer!=0)
-  { free(buffer); }
-*/
 
-  if (huffman_tree_len!=0) free(huffman_tree_len);
-  if (huffman_tree_dist!=0) free(huffman_tree_dist);
+  free(huffman_tree_dist);
+  free(huffman_tree_len);
 
   *checksum=huffman.checksum^0xffffffff;
-
-/*
-  huffman_tree_len=0;
-  huffman_tree_dist=0;
-*/
 
   kunzip_inflate_free(&data);
 
@@ -1091,10 +1092,12 @@ if (!is_zip) {
 
   return 0;
 
- err1:
+ err4:
   kunzip_inflate_free(&data);
- err:
+ err3:
   free(huffman_tree_dist);
+ err2:
   free(huffman_tree_len);
+ err:
   return -1;
 }
