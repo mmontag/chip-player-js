@@ -1475,6 +1475,7 @@ static int codebook_decode_step(vorb *f, Codebook *c, float *output, int len, in
    return TRUE;
 }
 
+#if STB_VORBIS_MAX_CHANNELS > 1
 static int codebook_decode_deinterleave_repeat(vorb *f, Codebook *c, float **outputs, int ch, int *c_inter_p, int *p_inter_p, int len, int total_decode)
 {
    int c_inter = *c_inter_p;
@@ -1541,8 +1542,10 @@ static int codebook_decode_deinterleave_repeat(vorb *f, Codebook *c, float **out
    *p_inter_p = p_inter;
    return TRUE;
 }
+#endif
 
 #ifndef STB_VORBIS_DIVIDES_IN_CODEBOOK
+#if STB_VORBIS_MAX_CHANNELS > 1
 static int codebook_decode_deinterleave_repeat_2(vorb *f, Codebook *c, float **outputs, int *c_inter_p, int *p_inter_p, int len, int total_decode)
 {
    int c_inter = *c_inter_p;
@@ -1613,6 +1616,7 @@ static int codebook_decode_deinterleave_repeat_2(vorb *f, Codebook *c, float **o
    *p_inter_p = p_inter;
    return TRUE;
 }
+#endif
 #endif
 
 static int predict_point(int x, int x0, int x1, int y0, int y1)
@@ -1801,6 +1805,7 @@ static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int
       if (!do_not_decode[i])
          memset(residue_buffers[i], 0, sizeof(float) * n);
 
+#if STB_VORBIS_MAX_CHANNELS > 1
    if (rtype == 2 && ch != 1) {
       //int len = ch * n;
       for (j=0; j < ch; ++j)
@@ -1951,6 +1956,8 @@ static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int
       }
       goto done;
    }
+#endif
+
    stb_prof(9);
 
    for (pass=0; pass < 8; ++pass) {
