@@ -25,9 +25,9 @@ const struct format_loader it_loader = {
 };
 
 #ifdef WIN32
-// FIXME: not thio_read-safe
 struct tm *localtime_r(const time_t *timep, struct tm *result)
 {
+    /* Note: Win32 localtime() is thread-safe */
     memcpy(result, localtime(timep), sizeof(struct tm));
     return result;
 }
@@ -242,6 +242,40 @@ static void fix_name(uint8 *s, int l)
 }
 
 
+static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env, HIO_HANDLE *f)
+{
+    int j;
+
+    env->flg = hio_read8(f);
+    env->num = hio_read8(f);
+    env->lpb = hio_read8(f);
+    env->lpe = hio_read8(f);
+    env->slb = hio_read8(f);
+    env->sle = hio_read8(f);
+
+    for (j = 0; j < 25; j++) {
+    	env->node[j].y = hio_read8(f);
+    	env->node[j].x = hio_read16l(f);
+    }
+
+    env->unused = hio_read8(f);
+
+    ei->flg = env->flg & IT_ENV_ON ? XMP_ENVELOPE_ON : 0;
+    ei->flg |= env->flg & IT_ENV_LOOP ? XMP_ENVELOPE_LOOP : 0;
+    ei->flg |= env->flg & IT_ENV_SLOOP ? (XMP_ENVELOPE_SUS|XMP_ENVELOPE_SLOOP) : 0;
+    ei->flg |= env->flg & IT_ENV_CARRY ? XMP_ENVELOPE_CARRY : 0;
+    ei->npt = env->num;
+    ei->sus = env->slb;
+    ei->sue = env->sle;
+    ei->lps = env->lpb;
+    ei->lpe = env->lpe;
+
+    for (j = 0; j < env->num; j++) {
+	ei->data[j * 2] = env->node[j].x;
+	ei->data[j * 2 + 1] = env->node[j].y;
+    }
+}
+
 static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
@@ -331,6 +365,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     for (i = 0; i < 64; i++) {
+	struct xmp_channel *xxc = &mod->xxc[i];
+
 	if (ifh.chpan[i] == 100)	/* Surround -> center */
 	    ifh.chpan[i] = 32;
 
@@ -340,14 +376,14 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	if (ifh.flags & IT_STEREO) {
-	    mod->xxc[i].pan = (int)ifh.chpan[i] * 0x80 >> 5;
-	    if (mod->xxc[i].pan > 0xff)
-		mod->xxc[i].pan = 0xff;
+	    xxc->pan = (int)ifh.chpan[i] * 0x80 >> 5;
+	    if (xxc->pan > 0xff)
+		xxc->pan = 0xff;
 	} else {
-	    mod->xxc[i].pan = 0x80;
+	    xxc->pan = 0x80;
 	}
 
-	mod->xxc[i].vol = ifh.chvol[i];
+	xxc->vol = ifh.chvol[i];
     }
     hio_read(mod->xxo, 1, mod->len, f);
 
@@ -530,36 +566,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    /* Envelopes */
 
-#define BUILD_ENV(X) { \
-            env.flg = hio_read8(f); \
-            env.num = hio_read8(f); \
-            env.lpb = hio_read8(f); \
-            env.lpe = hio_read8(f); \
-            env.slb = hio_read8(f); \
-            env.sle = hio_read8(f); \
-            for (j = 0; j < 25; j++) { \
-            	env.node[j].y = hio_read8(f); \
-            	env.node[j].x = hio_read16l(f); \
-            } \
-            env.unused = hio_read8(f); \
-	    xxi->X##ei.flg = env.flg & IT_ENV_ON ? XMP_ENVELOPE_ON : 0; \
-	    xxi->X##ei.flg |= env.flg & IT_ENV_LOOP ? XMP_ENVELOPE_LOOP : 0; \
-	    xxi->X##ei.flg |= env.flg & IT_ENV_SLOOP ? (XMP_ENVELOPE_SUS|XMP_ENVELOPE_SLOOP) : 0; \
-	    xxi->X##ei.flg |= env.flg & IT_ENV_CARRY ? XMP_ENVELOPE_CARRY : 0; \
-	    xxi->X##ei.npt = env.num; \
-	    xxi->X##ei.sus = env.slb; \
-	    xxi->X##ei.sue = env.sle; \
-	    xxi->X##ei.lps = env.lpb; \
-	    xxi->X##ei.lpe = env.lpe; \
-	    for (j = 0; j < env.num; j++) { \
-		xxi->X##ei.data[j * 2] = env.node[j].x; \
-		xxi->X##ei.data[j * 2 + 1] = env.node[j].y; \
-	    } \
-}
-
-	    BUILD_ENV(a);
-	    BUILD_ENV(p);
-	    BUILD_ENV(f);
+	    read_envelope(&xxi->aei, &env, f);
+	    read_envelope(&xxi->pei, &env, f);
+	    read_envelope(&xxi->fei, &env, f);
 	    
 	    if (xxi->pei.flg & XMP_ENVELOPE_ON) {
 		for (j = 0; j < xxi->pei.npt; j++)
@@ -614,13 +623,15 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    goto err4;
 
 		for (j = 0; j < k; j++) {
-		    xxi->sub[j].sid = inst_rmap[j];
-		    xxi->sub[j].nna = i2h.nna;
-		    xxi->sub[j].dct = i2h.dct;
-		    xxi->sub[j].dca = dca2nna[i2h.dca & 0x03];
-		    xxi->sub[j].pan = i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4;
-		    xxi->sub[j].ifc = i2h.ifc;
-		    xxi->sub[j].ifr = i2h.ifr;
+		    struct xmp_subinstrument *sub = &xxi->sub[j];
+
+		    sub->sid = inst_rmap[j];
+		    sub->nna = i2h.nna;
+		    sub->dct = i2h.dct;
+		    sub->dca = dca2nna[i2h.dca & 0x03];
+		    sub->pan = i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4;
+		    sub->ifc = i2h.ifc;
+		    sub->ifr = i2h.ifr;
 	        }
 	    }
 
@@ -728,11 +739,13 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    goto err4;
 
 		for (j = 0; j < k; j++) {
-		    xxi->sub[j].sid = inst_rmap[j];
-		    xxi->sub[j].nna = i1h.nna;
-		    xxi->sub[j].dct = i1h.dnc ? XMP_INST_DCT_NOTE : XMP_INST_DCT_OFF;
-		    xxi->sub[j].dca = XMP_INST_DCA_CUT;
-		    xxi->sub[j].pan = 0x80;
+		    struct xmp_subinstrument *sub = &xxi->sub[j];
+
+		    sub->sid = inst_rmap[j];
+		    sub->nna = i1h.nna;
+		    sub->dct = i1h.dnc ? XMP_INST_DCT_NOTE : XMP_INST_DCT_OFF;
+		    sub->dca = XMP_INST_DCA_CUT;
+		    sub->pan = 0x80;
 	        }
 	    }
 
