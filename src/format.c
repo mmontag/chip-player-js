@@ -66,7 +66,7 @@ extern const struct format_loader amd_loader;
 extern const struct format_loader rad_loader;
 extern const struct format_loader hsc_loader;
 extern const struct format_loader mfp_loader;
-extern const struct format_loader alm_loader;
+/* extern const struct format_loader alm_loader; */
 extern const struct format_loader polly_loader;
 extern const struct format_loader stc_loader;
 extern const struct format_loader pw_loader;
@@ -131,7 +131,7 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&rad_loader,
 	&hsc_loader,
 	&mfp_loader,
-	&alm_loader,
+	/* &alm_loader, */
 	&polly_loader,
 	&stc_loader,
 	&pw_loader,
