@@ -214,6 +214,9 @@ int prepare_scan(struct context_data *ctx)
 		mod->len = 0;
 
 	m->scan_cnt = calloc(sizeof (char *), mod->len);
+	if (m->scan_cnt == NULL)
+		return -XMP_ERROR_SYSTEM;
+
 	for (i = 0; i < mod->len; i++) {
 		int pat = mod->xxo[i];
 		m->scan_cnt[i] = calloc(1, pat >= mod->pat ?  1 :
