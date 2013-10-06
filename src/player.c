@@ -867,8 +867,6 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	if (mixer_on(ctx, rate, format, m->c4rate) < 0)
 		return -XMP_ERROR_INTERNAL;
 
-	ctx->state = XMP_STATE_PLAYING;
-
 	p->master_vol = 100;
 	p->smix_vol = 100;
 	p->gvol = m->volbase;
@@ -943,8 +941,9 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	}
 
 	m->synth->reset(ctx);
-
 	reset_channels(ctx);
+
+	ctx->state = XMP_STATE_PLAYING;
 
 	return 0;
 
