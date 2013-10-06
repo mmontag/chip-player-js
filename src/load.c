@@ -59,7 +59,7 @@ int decrunch_compress	(FILE *, FILE *);
 int decrunch_bzip2	(FILE *, FILE *);
 int decrunch_xz		(FILE *, FILE *);
 int decrunch_lha	(FILE *, FILE *);
-int decrunch_zoo	(FILE *, FILE *);
+/* int decrunch_zoo	(FILE *, FILE *); */
 int test_oxm		(FILE *);
 char *test_xfd		(unsigned char *, int);
 
@@ -80,7 +80,7 @@ enum {
 	BUILTIN_BZIP2,
 	BUILTIN_XZ,
 	BUILTIN_LHA,
-	BUILTIN_ZOO,
+	/* BUILTIN_ZOO, */
 };
 
 
@@ -166,9 +166,11 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     } else if (b[0] == 0xfd && b[3] == 'X' && b[4] == 'Z' && b[5] == 0x00) {
 	/* xz */
 	builtin = BUILTIN_XZ;
+#if 0
     } else if (b[0] == 'Z' && b[1] == 'O' && b[2] == 'O' && b[3] == ' ') {
 	/* zoo */
 	builtin = BUILTIN_ZOO;
+#endif
     } else if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
 	/* MO3 */
 	cmd = "unmo3 -s \"%s\" STDOUT";
@@ -345,9 +347,11 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	case BUILTIN_LHA:
 	    res = decrunch_lha(*f, t);
 	    break;
+#if 0
 	case BUILTIN_ZOO:
 	    res = decrunch_zoo(*f, t);
 	    break;
+#endif
 	case BUILTIN_OXM:
 	    res = decrunch_oxm(*f, t);
 	    break;
