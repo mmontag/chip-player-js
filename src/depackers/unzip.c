@@ -16,18 +16,11 @@ Michael Kohn <mike@mikekohn.net>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#ifndef WIN32
-#include <utime.h>
-#endif
 #include <time.h>
 #include <unistd.h>
 #include "common.h"
 #include "inflate.h"
 #include "crc32.h"
-
-#ifdef WIN32
-#define strncasecmp strnicmp
-#endif
 
 struct zip_file_header
 {
@@ -96,39 +89,7 @@ int t;
 
 /*----------------------- end of fileio.c -----------------------*/
 
-#ifdef WIN32
-
-struct utimbuf
-{
-  int actime;
-  int modtime;
-};
-
-int utime(char *outname, struct utimbuf *my_utimbuf);
-
-char *strcasestr_m(char *hejstack, char *needle)
-{
-int hejlen,neelen;
-int t,r;
-
-  hejlen=strlen(hejstack);
-  neelen=strlen(needle);
-  r=hejlen-neelen;
-
-  for(t=0; t<=r; t++)
-  {
-    if (strncasecmp(&hejstack[t],needle,neelen)==0)
-    { return &hejstack[t]; }
-  }
-
-  return (char *)0;
-}
-
-#endif
-
 #define BUFFER_SIZE 16738
-
-char *strcasestr(const char *haystack, const char *needle);
 
 
 static unsigned int copy_file(FILE *in, FILE *out, int len, struct inflate_data *data)
@@ -150,14 +111,14 @@ int t,r;
 
     read_buffer(in,buffer,r);
     write_buffer(out,buffer,r);
-    checksum=crc32_A1(buffer,r,checksum);
+    checksum=crc32_A2(buffer,r,checksum);
     t=t+r;
   }
 
   return checksum^0xffffffff;
 }
 
-int read_zip_header(FILE *in, struct zip_file_header *header)
+static int read_zip_header(FILE *in, struct zip_file_header *header)
 {
   header->signature=read_int(in);
   if (header->signature!=0x04034b50) return -1;
@@ -181,7 +142,7 @@ int read_zip_header(FILE *in, struct zip_file_header *header)
  * pass an array of patterns containing files we want to exclude from
  * our search (such as README, *.nfo, etc)
  */
-int kunzip_file_with_name(FILE *in, FILE *out)
+static int kunzip_file_with_name(FILE *in, FILE *out)
 {
 struct zip_file_header header;
 int ret_code;
@@ -249,7 +210,7 @@ struct inflate_data data;
   return -1;
 }
 
-int kunzip_get_offset_excluding(FILE *in)
+static int kunzip_get_offset_excluding(FILE *in)
 {
 struct zip_file_header header;
 int i=0,curr;
