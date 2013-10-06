@@ -143,16 +143,10 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	data->idx[j] = i;
 
-	if (mod->xxs[i].len > 0)
-		mod->xxi[i].nsm = 1;
-
-	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x M%02x\n", i,
-		mod->xxi[i].name, mod->xxs[j].len, mod->xxs[j].lps,
-		mod->xxs[j].lpe, mod->xxs[j].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		mod->xxi[i].sub[0].vol, data->mode[i]);
-
-	if (mod->xxi[i].nsm)
+	if (mod->xxs[j].len > 0) {
+	    mod->xxi[j].nsm = 1;
 	    j++;
+	}
     }
 
     return 0;
