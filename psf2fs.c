@@ -105,7 +105,11 @@ static void makelibpath(const char *path, const char *libpath, char *finalpath, 
     finalpath_length -= p_l;
   }
   if(!finalpath_length) return;
+#if _MSC_VER >= 1300
+  strcpy_s(finalpath, finalpath_length, libpath);
+#else
   strncpy(finalpath, libpath, finalpath_length);
+#endif
   finalpath[finalpath_length - 1] = 0;
 }
 
@@ -221,7 +225,7 @@ static struct DIR_ENTRY *makearchivedir(
       dir->offset_table[i] = dataofs;
     }
   }
-success:
+//success:
   return dir;
 
 corrupt:
@@ -336,7 +340,7 @@ static int addarchive(
   // now merge everything
   *psource = mergesource(source, this_source);
   *pdir = mergedir(dir, this_dir);
-success:
+//success:
   return 0;
 
 outofmemory:
@@ -430,7 +434,7 @@ static int virtual_read(struct PSF2FS *fs, struct DIR_ENTRY *entry, int offset, 
     buffer += canread;
   }
 
-success:
+//success:
   return length_read;
 
 bounds:
