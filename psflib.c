@@ -456,7 +456,11 @@ static int psf_load_internal( psf_load_state * state, const char * file_name )
 
 			if ( Z_MEM_ERROR != zerr && Z_BUF_ERROR != zerr ) goto error_free_tags;
 
-			try_exe_decompressed_size += 1 * 1024 * 1024;
+			if ( try_exe_decompressed_size < 1 * 1024 * 1024 )
+				try_exe_decompressed_size += 1 * 1024 * 1024;
+			else
+				try_exe_decompressed_size += try_exe_decompressed_size;
+
 			exe_decompressed_size = try_exe_decompressed_size;
 
 			try_exe_decompressed_buffer = realloc( exe_decompressed_buffer, exe_decompressed_size );
