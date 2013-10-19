@@ -221,9 +221,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_read(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
 	hio_read(&mh.ins[i].name, 22, 1, f);	/* Instrument name */
-	mh.ins[i].size = hio_read16b(f);		/* Length in 16-bit words */
-	mh.ins[i].finetune = hio_read8(f);		/* Finetune (signed nibble) */
-	mh.ins[i].volume = hio_read8(f);		/* Linear playback volume */
+	mh.ins[i].size = hio_read16b(f);	/* Length in 16-bit words */
+	mh.ins[i].finetune = hio_read8(f);	/* Finetune (signed nibble) */
+	mh.ins[i].volume = hio_read8(f);	/* Linear playback volume */
 	mh.ins[i].loop_start = hio_read16b(f);	/* Loop start in 16-bit words */
 	mh.ins[i].loop_size = hio_read16b(f);	/* Loop size in 16-bit words */
 
