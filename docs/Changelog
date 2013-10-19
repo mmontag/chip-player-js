@@ -16,6 +16,7 @@ Stable versions
 	- fix thread-unsafe Archimedes Tracker loader
 	- fix thread-unsafe Digital Tracker loader
 	- fix handling of loader errors
+	- fix S3M 16-bit sample replay
 	- refactor handling of format-specific instrument and channel data
 	- refactor MED synth command interpreter
 	- rewrite SQSH depacker code

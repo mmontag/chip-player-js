@@ -505,9 +505,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if (sih.flags & 4) {
 	    mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
-	    mod->xxs[i].len >>= 1;
-	    mod->xxs[i].lps >>= 1;
-	    mod->xxs[i].lpe >>= 1;
 	}
 
 	mod->xxi[i].sub[0].vol = sih.vol;
