@@ -48,7 +48,7 @@ Concepts
   Special sound channels can be reserved using `xmp_start_smix()`
   to play module instruments or external samples. This is useful when
   libxmp is used to provide background music to games or other applications
-  where sound effects can be played in response to events or user actions.
+  where sound effects can be played in response to events or user actions
 
 A simple example
 ----------------
@@ -821,14 +821,15 @@ External sample mixer API
 -------------------------
 
 Libxmp 4.2 includes a mini-API that can be used to add sound effects to
-games and similar applications. It allows module instruments or external
-sample files in WAV format to be played in response to arbitrary events.
+games and similar applications, provided that you have a low latency sound
+system. It allows module instruments or external sample files in WAV format
+to be played in response to arbitrary events.
 
 Example
 ~~~~~~~
 
-This example loads a module and a sound sample, plays the module as
-background music, and playes the sample when a key is pressed::
+This example using SDL loads a module and a sound sample, plays the module
+as background music, and plays the sample when a key is pressed::
 
     #include <SDL/SDL.h>
     #include <xmp.h>

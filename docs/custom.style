@@ -87,7 +87,7 @@ styles:
     parent: null
     fontName: stdFont
     fontSize: 10
-    leading: 12
+    leading: 12 
     leftIndent: 0
     rightIndent: 0
     firstLineIndent: 0
@@ -127,6 +127,7 @@ styles:
 
   toc:
     parent: normal
+    leading: 9
 
   blockquote:
     parent: bodytext
@@ -149,10 +150,11 @@ styles:
 
   toc3:
     parent: toc
+    leading: 7
     leftIndent: 40
-    #fontSize: 90%
-    spaceBefore: 0
+    fontSize: 90%
     spaceAfter: 0
+    spaceBefore: 0
 
   toc4:
     parent: toc
