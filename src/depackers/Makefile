@@ -6,7 +6,7 @@ DEPACKERS_OBJS	= ppdepack.o unsqsh.o mmcmp.o readrle.o readhuff.o readlzw.o \
 
 DEPACKERS_DFILES = Makefile $(DEPACKERS_OBJS:.o=.c) readhuff.h readlzw.h \
 		  readrle.h inflate.h xz_lzma2.h README.unxz xz.h \
-		  xz_private.h xz_stream.h xz_config.h vorbis.h
+		  xz_private.h xz_stream.h xz_config.h vorbis.h crc32.h
 
 DEPACKERS_PATH	= src/depackers
 
