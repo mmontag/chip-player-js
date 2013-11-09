@@ -341,6 +341,7 @@ struct context_data {
 
 char	*str_adj		(char *);
 int	exclude_match		(char *);
+int	prepare_scan		(struct context_data *);
 int	scan_sequences		(struct context_data *);
 int	get_sequence		(struct context_data *, int);
 
