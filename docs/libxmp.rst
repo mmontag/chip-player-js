@@ -24,7 +24,7 @@ music replayers for games and other applications, module-to-mp3 renderers, etc.
 
 
 Concepts
---------
+~~~~~~~~
 
 * **Player context:**
   Most libxmp functions require a handle that identifies the module player
@@ -51,7 +51,7 @@ Concepts
   where sound effects can be played in response to events or user actions
 
 A simple example
-----------------
+~~~~~~~~~~~~~~~~
 
 This example loads a module, plays it at 44.1kHz and writes it to a raw
 sound file::
@@ -139,7 +139,7 @@ Use `xmp_end_player()`_, `xmp_release_module()`_ and
 
 
 SDL example
------------
+~~~~~~~~~~~
 
 To use libxmp with SDL, just provide a callback function that renders module
 data. The module will play when ``SDL_PauseAudio(0)`` is called::
