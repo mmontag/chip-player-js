@@ -296,7 +296,7 @@ void virt_setsmp(struct context_data *ctx, int chn, int smp)
 	mixer_voicepos(ctx, voc, pos, frac);	/* Restore old position */
 }
 
-static inline void check_dct(struct context_data *ctx, int i, int chn, int ins,
+static void check_dct(struct context_data *ctx, int i, int chn, int ins,
 			int smp, int note, int dct, int dca)
 {
 	struct player_data *p = &ctx->p;
