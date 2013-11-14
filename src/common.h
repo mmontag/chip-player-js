@@ -130,6 +130,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define dup _dup
 #define fileno _fileno
 #define snprintf _snprintf
+#define vsnprintf _vsnprintf
 #define strnicmp _strnicmp
 #define strdup _strdup
 #define fdopen _fdopen
