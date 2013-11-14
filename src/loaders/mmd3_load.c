@@ -393,10 +393,12 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, pos, SEEK_SET);
 
 		if (instr.type == -2) {			/* Hybrid */
+			int ret;
+
 			if (subinstrument_alloc(mod, i, 1) < 0)
 				return -1;
 
-			int ret = mmd_load_hybrid_instrument(f, m, i,
+			ret = mmd_load_hybrid_instrument(f, m, i,
 				smp_idx, &synth, &exp_smp, &song.sample[i]);
 
 			if (ret < 0)
