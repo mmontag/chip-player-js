@@ -2,6 +2,7 @@ Stable versions
 ---------------
 
 4.2.1 ():
+	- portability fixes
 
 4.2.0 (20131109):
 	- ignore invalid Noisetracker effects
