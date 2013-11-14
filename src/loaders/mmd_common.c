@@ -384,9 +384,9 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	D_(D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+3d %+1d",
 			synth->volspeed, synth->wfspeed,
 			synth->wforms & 0xff,
-			song.sample[i].svol,
-			song.sample[i].strans,
-			exp_smp.finetune);
+			sample->svol,
+			sample->strans,
+			exp_smp->finetune);
 
 	if (synth->wforms == 0xffff)	
 		return 0;
