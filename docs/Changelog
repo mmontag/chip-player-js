@@ -1,6 +1,8 @@
 Stable versions
 ---------------
 
+4.2.1 ():
+
 4.2.0 (20131109):
 	- ignore invalid Noisetracker effects
 	- add API call to load a module from a buffer in memory
