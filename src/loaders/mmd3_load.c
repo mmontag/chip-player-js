@@ -396,10 +396,8 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (subinstrument_alloc(mod, i, 1) < 0)
 				return -1;
 
-			int ret = mmd_load_hybrid_instrument(f, m, i,
-				smp_idx, &synth, &exp_smp, &song.sample[i]);
-
-			if (ret < 0)
+			if (mmd_load_hybrid_instrument(f, m, i,
+				smp_idx, &synth, &exp_smp, &song.sample[i]) < 0)
 				return -1;
 
 			smp_idx++;
