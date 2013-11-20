@@ -561,7 +561,7 @@ skip_test:
 
     /* Load samples */
 
-    if ((x = strrchr(m->filename, '/')))
+    if (m->filename && (x = strrchr(m->filename, '/')))
 	strncpy(pathname, m->filename, x - m->filename);
 
     D_(D_INFO "Stored samples: %d", mod->smp);
