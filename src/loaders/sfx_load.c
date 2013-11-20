@@ -89,6 +89,9 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 
     sfx.magic = hio_read32b(f);
     sfx.delay = hio_read16b(f);
+    if (sfx.delay < 178)//min value for 10000bpm
+	return -1;
+
     hio_read(&sfx.unknown, 14, 1, f);
 
     if (sfx.magic != MAGIC_SONG)
