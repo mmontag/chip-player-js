@@ -253,7 +253,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			/* Use empty track if an invalid track is requested
 			 * (such as in Lasse Makkonen "faster and louder")
 			 */
-			if (k < 0 || k > mod->trk)
+			if (k < 0 || k >= mod->trk)
 				k = 0;
 			mod->xxp[i]->index[j] = trkmap[k];
 /*printf("mod->xxp[%d]->info[%d].index = %d (k = %d)\n", i, j, trkmap[k], k);*/
