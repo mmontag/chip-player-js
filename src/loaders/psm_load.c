@@ -67,8 +67,8 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = hio_read16l(f);
 	mod->pat = hio_read16l(f);
 	mod->ins = hio_read16l(f);
-	mod->chn = hio_read16l(f);
-	hio_read16l(f);		/* channels used */
+	hio_read16l(f);               /* ignore channels to play */
+	mod->chn = hio_read16l(f);    /* use channels to proceed */
 	mod->smp = mod->ins;
 	mod->trk = mod->pat * mod->chn;
 
@@ -156,6 +156,8 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					break;
 	
 				c = b & 0x0f;
+				if (c >= mod->chn)
+					return -1;
 				event = &EVENT(i, c, r);
 	
 				if (b & 0x80) {
