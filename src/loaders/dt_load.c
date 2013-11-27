@@ -248,7 +248,7 @@ static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	iff_handle handle;
 	struct local_data data;
-	int ret;
+	int ret, i;
 
 	LOAD_INIT();
 
@@ -270,12 +270,16 @@ static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f , &data) < 0) {
-		iff_release(handle);
-		return -1;
-	}
-
+	ret = iff_load(handle, m, f , &data);
 	iff_release(handle);
+	if (ret < 0)
+		return -1;
+
+	//fix rest patterns
+	for (i = data.last_pat; i < m->mod.pat; i++) {
+		if (pattern_tracks_alloc(&m->mod, i, 64) < 0)
+			return -1;
+	}
 
 	return 0;
 }
