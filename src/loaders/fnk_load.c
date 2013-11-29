@@ -46,11 +46,9 @@ static int fnk_test(HIO_HANDLE *f, char *t, const int start)
     if (size < 1024)
 	return -1;
 
-    if (HIO_HANDLE_TYPE(f) == HIO_HANDLE_TYPE_FILE) {
-        hio_stat(f, &st);
-        if (size != st.st_size)
-            return -1;
-    }
+    hio_stat(f, &st);
+    if (size != st.st_size)
+        return -1;
 
     read_title(f, t, 0);
 
