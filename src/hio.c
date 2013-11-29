@@ -179,9 +179,13 @@ int hio_seek(HIO_HANDLE *h, long offset, int whence)
 		switch (whence) {
 		default:
 		case SEEK_SET:
+			if (offset >= h->size)
+				return -1;
 			h->p = h->start + offset;
 			return 0;
 		case SEEK_CUR:
+			if (offset >= CAN_READ(h))
+				return -1;
 			h->p += offset;
 			return 0;
 		case SEEK_END:
