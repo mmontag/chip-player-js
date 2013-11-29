@@ -195,6 +195,15 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
     return 0;
 }
 
+static struct xmp_sample* realloc_samples(struct xmp_sample* buf, int* size, int new_size)
+{
+  buf = realloc(buf, sizeof (struct xmp_sample) * new_size);
+  if (new_size > *size)
+    memset(buf + *size, 0, sizeof (struct xmp_sample) * (new_size - *size));
+  *size = new_size;
+  return buf;
+}
+
 static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 {
     struct xmp_module *mod = &m->mod;
@@ -203,6 +212,9 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
     struct xm_sample_header xsh[16];
     int sample_num = 0;
     int i, j;
+    //packed structures size
+    int sizeof_xih = 33;
+    int sizeof_xi = 208;
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
@@ -248,15 +260,16 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	if (xxi->nsm) {
 	    if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
 		return -1;
+	    if (xih.size < sizeof_xih)
+		return -1;
 
 	    /* for BoobieSqueezer (see http://boobie.rotfl.at/)
 	     * It works pretty much the same way as Impulse Tracker's sample
 	     * only mode, where it will strip off the instrument data.
 	     */
-	    if (xih.size == 0x26) {
-		hio_read8(f);
-		hio_read32l(f);
+      if (xih.size < sizeof_xih + sizeof_xi) {
 		memset(&xi, 0, sizeof (struct xm_instrument));
+		hio_seek(f, xih.size - sizeof_xih, SEEK_CUR);
 	    } else {
 		hio_read(&xi.sample, 96, 1, f);	/* Sample map */
 		for (j = 0; j < 24; j++)
@@ -280,7 +293,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		xi.v_fade = hio_read16l(f);	/* Volume fadeout */
 
 		/* Skip reserved space */
-		hio_seek(f, (int)xih.size - 33 /*sizeof (xih)*/ - 208 /*sizeof (xi)*/, SEEK_CUR);
+		hio_seek(f, (int)xih.size - (sizeof_xih + sizeof_xi), SEEK_CUR);
 
 		/* Envelope */
 		xxi->rls = xi.v_fade;
@@ -297,12 +310,13 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 
 		if (xxi->aei.npt <= 0 || xxi->aei.npt > XMP_MAX_ENV_POINTS)
 		    xxi->aei.flg &= ~XMP_ENVELOPE_ON;
+		else
+		    memcpy(xxi->aei.data, xi.v_env, xxi->aei.npt * 4);
 
 		if (xxi->pei.npt <= 0 || xxi->pei.npt > XMP_MAX_ENV_POINTS)
 		    xxi->pei.flg &= ~XMP_ENVELOPE_ON;
-
-		memcpy(xxi->aei.data, xi.v_env, xxi->aei.npt * 4);
-		memcpy(xxi->pei.data, xi.p_env, xxi->pei.npt * 4);
+		else
+		    memcpy(xxi->pei.data, xi.p_env, xxi->pei.npt * 4);
 
 		for (j = 12; j < 108; j++) {
 		    xxi->map[j].ins = xi.sample[j - 12];
@@ -313,7 +327,11 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 
 	    for (j = 0; j < xxi->nsm; j++, sample_num++) {
 		struct xmp_subinstrument *sub = &xxi->sub[j];
-		struct xmp_sample *xxs = &mod->xxs[sample_num];
+		struct xmp_sample *xxs;
+		if (sample_num >= mod->smp) {
+		    mod->xxs = realloc_samples(mod->xxs, &mod->smp, mod->smp * 3 / 2);
+		}
+		xxs = &mod->xxs[sample_num];
 
 		xsh[j].length = hio_read32l(f);		/* Sample length */
 		xsh[j].loop_start = hio_read32l(f);	/* Sample loop start */
@@ -335,8 +353,6 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		sub->vra = xi.y_rate;
 		sub->vsw = xi.y_sweep;
 		sub->sid = sample_num;
-		if (sample_num >= MAX_SAMP)
-		    continue;
 
 		copy_adjust(xxs->name, xsh[j].name, 22);
 
@@ -360,8 +376,6 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	    for (j = 0; j < xxi->nsm; j++) {
 		struct xmp_subinstrument *sub = &xxi->sub[j];
 
-		if (sample_num >= MAX_SAMP)
-		    continue;
 		D_(D_INFO " %1x: %06x%c%06x %06x %c V%02x F%+04d P%02x R%+03d",
 		    j, mod->xxs[sub->sid].len,
 		    mod->xxs[sub->sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
@@ -402,8 +416,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	     hio_seek(f, (int)xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
     }
-    mod->smp = sample_num;
-    mod->xxs = realloc(mod->xxs, sizeof (struct xmp_sample) * mod->smp);
+    mod->xxs = realloc_samples(mod->xxs, &mod->smp, sample_num);
 
     return 0;
 }
