@@ -130,13 +130,12 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read(panmap, 32, 1, f);
 	for (i = 0; i < 32; i++) {
-		if (panmap[i] != 0xff)
-			mod->chn = i + 1;
 		if (panmap[i] == 16)
 			panmap[i] = 8;
 		mod->xxc[i].pan = 0x80 + (panmap[i] - 8) * 16;
 	}
 
+	mod->chn = 32;
 	mod->gvl = hio_read8(f);
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);
