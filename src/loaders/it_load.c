@@ -270,9 +270,13 @@ static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env, HIO_
     ei->lps = env->lpb;
     ei->lpe = env->lpe;
 
-    for (j = 0; j < env->num; j++) {
-	ei->data[j * 2] = env->node[j].x;
-	ei->data[j * 2 + 1] = env->node[j].y;
+    if (ei->npt > 0 && ei->npt < XMP_MAX_ENV_POINTS) {
+    	for (j = 0; j < ei->npt; j++) {
+    		ei->data[j * 2] = env->node[j].x;
+    		ei->data[j * 2 + 1] = env->node[j].y;
+    	}
+    } else {
+    	ei->flg &= ~XMP_ENVELOPE_ON;
     }
 }
 
@@ -385,7 +389,13 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	xxc->vol = ifh.chvol[i];
     }
-    hio_read(mod->xxo, 1, mod->len, f);
+    if (mod->len <= XMP_MAX_MOD_LENGTH) {
+    	hio_read(mod->xxo, 1, mod->len, f);
+    } else {
+    	hio_read(mod->xxo, 1, XMP_MAX_MOD_LENGTH, f);
+    	hio_seek(f, mod->len - XMP_MAX_MOD_LENGTH, SEEK_CUR);
+    	mod->len = XMP_MAX_MOD_LENGTH;
+    }
 
     new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 
@@ -530,7 +540,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if ((ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200)) {
 	    /* New instrument format */
-	    hio_seek(f, start + pp_ins[i], SEEK_SET);
+	    if (hio_seek(f, start + pp_ins[i], SEEK_SET) != 0)
+	    	goto err4;
 
 	    i2h.magic = hio_read32b(f);
 	    hio_read(&i2h.dosname, 12, 1, f);
@@ -865,7 +876,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (ish.flags & IT_SMP_SAMPLE && xxs->len > 1) {
 	    int cvt = 0;
 
-	    hio_seek(f, start + ish.sample_ptr, SEEK_SET);
+	    if (0 != hio_seek(f, start + ish.sample_ptr, SEEK_SET))
+	    	goto err4;
+
+	    //TODO: use proper unsigned values in xmp_sample structure
+	    if ((unsigned)xxs->lpe > (unsigned)xxs->len || (unsigned)xxs->lps >= (unsigned)xxs->lpe)
+	    	xxs->flg &= ~XMP_SAMPLE_LOOP;
 
 	    if (~ish.convert & IT_CVT_SIGNED)
 		cvt |= SAMPLE_FLAG_UNS;
@@ -1020,7 +1036,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	     * real number of channels before loading the patterns and
 	     * we don't want to set it to 64 channels.
 	     */
-	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= mod->chn || r >= mod->xxp[i]->rows ? &dummy : &EVENT (i, c, r);
 	    if (mask[c] & 0x01) {
 		b = hio_read8(f);
 
