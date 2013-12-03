@@ -122,7 +122,7 @@ LOADER		= ust ac1d unic unic2 nst flt flt8 wow m15 mtm it it_oldins \
 		  dsmi stim rad pt36 psm rtm ice dbm mdl \
 		  med3 med4 mmd3
 
-SYNTH		= adlib spectrum
+SYNTH		= adlib #spectrum
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
 		  $(addprefix new_note_same_ins_,$(REPLAYERS)) \
