@@ -46,7 +46,7 @@ extern const struct format_loader tcb_loader;
 extern const struct format_loader dt_loader;
 extern const struct format_loader gtk_loader;
 extern const struct format_loader dtt_loader;
-extern const struct format_loader mgt_loader;
+/* extern const struct format_loader mgt_loader; */
 extern const struct format_loader arch_loader;
 extern const struct format_loader sym_loader;
 extern const struct format_loader digi_loader;
@@ -57,8 +57,8 @@ extern const struct format_loader sfx_loader;
 extern const struct format_loader far_loader;
 extern const struct format_loader umx_loader;
 extern const struct format_loader stim_loader;
-extern const struct format_loader coco_loader;
-extern const struct format_loader mtp_loader;
+/* extern const struct format_loader coco_loader; */
+/* extern const struct format_loader mtp_loader; */
 extern const struct format_loader ims_loader;
 extern const struct format_loader ssn_loader;
 extern const struct format_loader fnk_loader;
@@ -67,8 +67,8 @@ extern const struct format_loader rad_loader;
 extern const struct format_loader hsc_loader;
 extern const struct format_loader mfp_loader;
 /* extern const struct format_loader alm_loader; */
-extern const struct format_loader polly_loader;
-extern const struct format_loader stc_loader;
+/* extern const struct format_loader polly_loader; */
+/* extern const struct format_loader stc_loader; */
 extern const struct format_loader pw_loader;
 extern const struct format_loader hmn_loader;
 
@@ -110,7 +110,7 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&dt_loader,
 	&gtk_loader,
 	&dtt_loader,
-	&mgt_loader,
+	/* &mgt_loader, */
 	&arch_loader,
 	&sym_loader,
 	&digi_loader,
@@ -122,8 +122,8 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&umx_loader,
 	&hmn_loader,
 	&stim_loader,
-	&coco_loader,
-	&mtp_loader,
+	/* &coco_loader, */
+	/* &mtp_loader, */
 	&ims_loader,
 	&ssn_loader,
 	&fnk_loader,
@@ -132,8 +132,8 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&hsc_loader,
 	&mfp_loader,
 	/* &alm_loader, */
-	&polly_loader,
-	&stc_loader,
+	/* &polly_loader, */
+	/* &stc_loader, */
 	&pw_loader,
 	NULL
 };

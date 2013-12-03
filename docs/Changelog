@@ -3,6 +3,9 @@ Stable versions
 
 4.2.1 ():
 	- portability fixes
+	- disable poorly implemented, experimental and rarely used module
+	  formats: STC, MGT, MTP, Polly, Coconizer
+	- disable YM2149 emulator
 
 4.2.0 (20131109):
 	- ignore invalid Noisetracker effects
@@ -24,6 +27,7 @@ Stable versions
 	- refactor MED synth command interpreter
 	- rewrite SQSH depacker code
 	- disable rarely used ZOO depacker
+	- disable rarely used ALM loader
 	- code cleanup
 
 4.1.5 (20130527):
