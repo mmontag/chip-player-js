@@ -296,7 +296,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 		memcpy(xxs->data, buffer, bytelen);
 	} else {
 		uint8 buf[5];
-		int pos = hio_tell(f);
+		long pos = hio_tell(f);
 		int num = hio_read(buf, 1, 5, f);
 
 		hio_seek(f, pos, SEEK_SET);
@@ -313,8 +313,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 		} else {
 			int x = hio_read(xxs->data, 1, bytelen, f);
 			if (x != bytelen) {
-				fprintf(stderr, "libxmp: short read (%d) in "
-					"sample load\n", x - bytelen);
+				D_(D_WARN, "short read (%d) in sample load", x - bytelen);
 				memset(xxs->data + x, 0, bytelen - x);
 			}
 		}
