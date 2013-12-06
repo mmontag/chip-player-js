@@ -15,15 +15,18 @@
 #include "common.h"
 #include "hio.h"
 
-#define CAN_READ(x) ((h)->size - ((h)->p - (h)->start))
+inline ptrdiff_t CAN_READ(HIO_HANDLE *h)
+{
+  return h->pos >= 0 ? h->size - h->pos : 0;
+}
 
 int8 hio_read8s(HIO_HANDLE *h)
 {
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return read8s(h->f);
 	} else {
-		if (h->size <= 0 || CAN_READ(h) >= 1) 
-			return *(int8 *)h->p++;
+		if (CAN_READ(h) >= 1) 
+			return *(int8 *)(h->start + h->pos++);
 		else
 			return EOF;
 	}
@@ -34,8 +37,8 @@ uint8 hio_read8(HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return read8(h->f);
 	} else {
-		if (h->size <= 0 || CAN_READ(h) >= 1) 
-			return *(uint8 *)h->p++;
+		if (CAN_READ(h) >= 1) 
+			return *(uint8 *)(h->start + h->pos++);
 		else
 			return EOF;
 	}
@@ -46,13 +49,13 @@ uint16 hio_read16l(HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return read16l(h->f);
 	} else {
-		int can_read = CAN_READ(h);
-		if (h->size <= 0 || can_read >= 2) {
-			uint16 n = readmem16l(h->p);
-			h->p += 2;
+		ptrdiff_t can_read = CAN_READ(h);
+		if (can_read >= 2) {
+			uint16 n = readmem16l(h->start + h->pos);
+			h->pos += 2;
 			return n;
 		} else {
-			h->p += can_read;
+			h->pos += can_read;
 			return EOF;
 		}
 	}
@@ -63,13 +66,13 @@ uint16 hio_read16b(HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return read16b(h->f);
 	} else {
-		int can_read = CAN_READ(h);
-		if (h->size <= 0 || can_read >= 2) {
-			uint16 n = readmem16b(h->p);
-			h->p += 2;
+		ptrdiff_t can_read = CAN_READ(h);
+		if (can_read >= 2) {
+			uint16 n = readmem16b(h->start + h->pos);
+			h->pos += 2;
 			return n;
 		} else {
-			h->p += can_read;
+			h->pos += can_read;
 			return EOF;
 		}
 	}
@@ -80,13 +83,13 @@ uint32 hio_read24l(HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return read24l(h->f); 
 	} else {
-		int can_read = CAN_READ(h);
-		if (h->size <= 0 || can_read >= 3) {
-			uint32 n = readmem24l(h->p);
-			h->p += 3;
+		ptrdiff_t can_read = CAN_READ(h);
+		if (can_read >= 3) {
+			uint32 n = readmem24l(h->start + h->pos);
+			h->pos += 3;
 			return n;
 		} else {
-			h->p += can_read;
+			h->pos += can_read;
 			return EOF;
 		}
 	}
@@ -97,13 +100,13 @@ uint32 hio_read24b(HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return read24b(h->f);
 	} else {
-		int can_read = CAN_READ(h);
-		if (h->size <= 0 || can_read >= 3) {
-			uint32 n = readmem24b(h->p);
-			h->p += 3;
+		ptrdiff_t can_read = CAN_READ(h);
+		if (can_read >= 3) {
+			uint32 n = readmem24b(h->start + h->pos);
+			h->pos += 3;
 			return n;
 		} else {
-			h->p += can_read;
+			h->pos += can_read;
 			return EOF;
 		}
 	}
@@ -114,13 +117,13 @@ uint32 hio_read32l(HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return read32l(h->f);
 	} else {
-		int can_read = CAN_READ(h);
-		if (h->size <= 0 || can_read >= 4) {
-			uint32 n = readmem32l(h->p);
-			h->p += 4;
+		ptrdiff_t can_read = CAN_READ(h);
+		if (can_read >= 4) {
+			uint32 n = readmem32l(h->start + h->pos);
+			h->pos += 4;
 			return n;
 		} else {
-			h->p += can_read;
+			h->pos += can_read;
 			return EOF;
 		}
 	}
@@ -131,43 +134,36 @@ uint32 hio_read32b(HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return read32b(h->f);
 	} else {
-		int can_read = CAN_READ(h);
-		if (h->size <= 0 || can_read >= 4) {
-			uint32 n = readmem32b(h->p);
-			h->p += 4;
+		ptrdiff_t can_read = CAN_READ(h);
+		if (can_read >= 4) {
+			uint32 n = readmem32b(h->start + h->pos);
+			h->pos += 4;
 			return n;
 		} else {
-			h->p += can_read;
+			h->pos += can_read;
 			return EOF;
 		}
 	}
 }
 
-int hio_read(void *buf, int size, int num, HIO_HANDLE *h)
+size_t hio_read(void *buf, size_t size, size_t num, HIO_HANDLE *h)
 {
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
 		return fread(buf, size, num, h->f);
 	} else {
-		if (h->size <= 0) {
-			size *= num;
-		} else {
-			int should_read = size * num;
-			int can_read = CAN_READ(h);
+ 		size_t should_read = size * num;
+ 		ptrdiff_t can_read = CAN_READ(h);
+ 		if (can_read <= 0)
+ 			return 0;
 
-			if (should_read > can_read) {
-				should_read = can_read;
-			}
+ 		if (should_read > can_read) {
+ 			should_read = can_read;
+ 		}
 
-			num = should_read / size;
-			size = should_read;
-		}
+ 		memcpy(buf, h->start + h->pos, should_read);
+ 		h->pos += should_read;
 
-		if (size > 0) {
-			memcpy(buf, h->p, size);
-			h->p += size;
-		}
-
-		return num;
+		return should_read / size;
 	}
 }
 
@@ -179,23 +175,18 @@ int hio_seek(HIO_HANDLE *h, long offset, int whence)
 		switch (whence) {
 		default:
 		case SEEK_SET:
-			if (offset >= h->size)
+			if (offset > h->size || offset < 0)
 				return -1;
-			h->p = h->start + offset;
+			h->pos = offset;
 			return 0;
 		case SEEK_CUR:
-			if (offset >= CAN_READ(h))
+			if (offset > CAN_READ(h) || offset < -h->pos)
 				return -1;
-			h->p += offset;
+			h->pos += offset;
 			return 0;
 		case SEEK_END:
-			if (h->size <= 0) {
-				errno = EINVAL;
-				return -1;
-			} else {
-				h->p = h->start + h->size - 1;
-				return 0;
-			}
+			h->pos = h->size + offset;
+			return 0;
 		}
 	}
 }
@@ -205,7 +196,7 @@ long hio_tell(HIO_HANDLE *h)
 	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE)
 		return ftell(h->f);
 	else
-		return (long)h->p - (long)h->start;
+		return (long)h->pos;
 }
 
 int hio_eof(HIO_HANDLE *h)
@@ -250,7 +241,8 @@ HIO_HANDLE *hio_open_mem(void *path, long size)
 		return NULL;
 	
 	h->type = HIO_HANDLE_TYPE_MEMORY;
-	h->p = h->start = path;
+	h->start = path;
+	h->pos = 0;
 	h->size = size;
 
 	return h;
