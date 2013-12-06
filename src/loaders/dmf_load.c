@@ -315,62 +315,77 @@ static int get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	return 0;
 }
 
+struct dynamic_buffer
+{
+	uint32 size;
+	uint8* data;
+};
+
+static int dynamic_buffer_alloc(struct dynamic_buffer* buf, uint32 size)
+{
+	uint8* data;
+	if (buf->size >= size)
+	  return 0;
+	if (!buf->data)
+	  data = malloc(size);
+	else
+	  data = realloc(buf->data, size);
+	if (data) {
+	  buf->data = data;
+	  buf->size = size;
+	  return 0;
+	} else {
+	  return -1;
+	}
+}
+
+static void dynamic_buffer_free(struct dynamic_buffer* buf)
+{
+	free(buf->data);
+}
+
 static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
 	int i;
-	int smpsize;
-	uint8 *sbuf, *ibuf;
+	struct dynamic_buffer sbuf = {0}, ibuf = {0};
 
-	D_(D_INFO "Stored samples: %d", mod->ins);
-
-	for (smpsize = i = 0; i < mod->smp; i++) {
-		if (mod->xxs[i].len > smpsize)
-			smpsize = mod->xxs[i].len;
-	}
-
-	/* why didn't we mmap this? */
-	sbuf = malloc(smpsize);
-	if (sbuf == NULL)
-		goto err;
-
-	ibuf = malloc(smpsize);
-	if (ibuf == NULL)
-		goto err2;
+	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->smp; i++) {
-		smpsize = hio_read32l(f);
-		if (smpsize == 0)
+		uint32 samplesize = mod->xxs[i].len;
+		uint32 datasize = hio_read32l(f);
+		if (datasize == 0)
 			continue;
 
 		switch (data->packtype[i]) {
 		case 0:
-			if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
-				goto err3;
+      if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+				goto error;
 			break;
 		case 1:
-			hio_read(ibuf, smpsize, 1, f);
-			unpack(sbuf, ibuf, ibuf + smpsize, mod->xxs[i].len);
+      if (dynamic_buffer_alloc(&ibuf, datasize) < 0)
+				goto error;
+      if (hio_read(ibuf.data, 1, datasize, f) != datasize)
+				goto error;
+      if (dynamic_buffer_alloc(&sbuf, samplesize) < 0)
+				goto error;
+			unpack(sbuf.data, ibuf.data, ibuf.data + datasize, samplesize);
 			if (load_sample(m, NULL, SAMPLE_FLAG_NOLOAD,
-					&mod->xxs[i], (char *)sbuf) < 0)
-				goto err3;
+        &mod->xxs[i], (char *)sbuf.data) < 0)
+        goto error;
 			break;
 		default:
-			hio_seek(f, smpsize, SEEK_CUR);
+			hio_seek(f, datasize, SEEK_CUR);
 		}
 	}
-
-	free(ibuf);
-	free(sbuf);
-
+	dynamic_buffer_free(&ibuf);
+	dynamic_buffer_free(&sbuf);
 	return 0;
-
-    err3:
-	free(ibuf);
-    err2:
-	free(sbuf);
-    err:
+error:
+	dynamic_buffer_free(&ibuf);
+	dynamic_buffer_free(&sbuf);
 	return -1;
 }
 
