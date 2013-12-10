@@ -54,6 +54,7 @@ static const char *inst_type[] = {
 };
 #endif
 
+const unsigned MAX_CHANNELS = 16;
 
 static void fix_effect(struct xmp_event *event)
 {
@@ -98,32 +99,65 @@ static void fix_effect(struct xmp_event *event)
 	}
 }
 
-static inline uint8 read4(HIO_HANDLE *f, int *read4_ctl)
+struct stream
 {
-	static uint8 b = 0;
-	uint8 ret;
+	HIO_HANDLE* f;
+	int has_nibble;
+	uint8 value;
+};
 
-	if (*read4_ctl & 0x01) {
-		ret = b & 0x0f;
-	} else {
-		b = hio_read8(f);
-		ret = b >> 4;
-	}
-
-	*read4_ctl ^= 0x01;
-
-	return ret;
+static inline void stream_init(HIO_HANDLE* f, struct stream* s)
+{
+	s->f = f;
+	s->has_nibble = 0;
 }
 
-static inline uint16 read12b(HIO_HANDLE *f, int *read4_ctl)
+static inline unsigned stream_read4(struct stream* s)
 {
-	uint32 a, b, c;
+	s->has_nibble = !s->has_nibble;
+	if (!s->has_nibble) {
+	  return s->value & 0x0f;
+	} else {
+	  s->value = hio_read8(s->f);
+	  return s->value >> 4;
+	}
+}
 
-	a = read4(f, read4_ctl);
-	b = read4(f, read4_ctl);
-	c = read4(f, read4_ctl);
+static inline unsigned stream_read8(struct stream* s)
+{
+	unsigned a = stream_read4(s);
+	unsigned b = stream_read4(s);
+	return (a << 4) | b;
+}
 
+static inline unsigned stream_read12(struct stream* s)
+{
+	unsigned a = stream_read4(s);
+	unsigned b = stream_read4(s);
+	unsigned c = stream_read4(s);
 	return (a << 8) | (b << 4) | c;
+}
+
+static inline uint16 stream_read16(struct stream* s)
+{
+	unsigned a = stream_read4(s);
+	unsigned b = stream_read4(s);
+	unsigned c = stream_read4(s);
+	unsigned d = stream_read4(s);
+	return (a << 12) | (b << 8) | (c << 4) | d;
+}
+
+static inline uint16 stream_read_aligned16(struct stream* s, int bits)
+{
+	if (bits <= 4) {
+	  return stream_read4(s) << 12;
+	} else if (bits <= 8) {
+	  return stream_read8(s) << 8;
+	} else if (bits <= 12) {
+	  return stream_read12(s) << 4;
+	} else {
+	  return stream_read16(s);
+	}
 }
 
 struct temp_inst {
@@ -134,13 +168,12 @@ struct temp_inst {
 	int transpose;
 };
 
-struct temp_inst temp_inst[32];
-
 static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j, k, y;
-	uint32 m0, mask;
+	uint8 m0;
+	uint64 mask;
 	int transp, masksz;
 	int pos, vermaj, vermin;
 	uint8 trkvol[16], buf[1024];
@@ -149,7 +182,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int num_ins, num_smp;
 	int smp_idx;
 	int tempo;
-	int read4_ctl;
+	struct temp_inst temp_inst[64];
 	
 	LOAD_INIT();
 
@@ -164,9 +197,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	pos = hio_tell(f);
 	hio_seek(f, 0, SEEK_END);
 	if (hio_tell(f) > 2000) {
-		hio_seek(f, -1023, SEEK_CUR);
+		hio_seek(f, -1024, SEEK_CUR);
 		hio_read(buf, 1, 1024, f);
-		for (i = 0; i < 1012; i++) {
+		for (i = 0; i < 1013; i++) {
 			if (!memcmp(buf + i, "MEDV\000\000\000\004", 8)) {
 				vermaj = *(buf + i + 10);
 				vermin = *(buf + i + 11);
@@ -181,26 +214,25 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	m0 = hio_read8(f);
 
 	mask = masksz = 0;
-	for (i = 0; i < 8; i++, m0 <<= 1) {
+	for (i = 0; m0 != 0 && i < 8; i++, m0 <<= 1) {
 		if (m0 & 0x80) {
 			mask <<= 8;
 			mask |= hio_read8(f);
 			masksz++;
 		}
 	}
-	mask <<= (32 - masksz * 8);
+	mask <<= 8 * (sizeof(mask) - masksz);
 	/*printf("m0=%x mask=%x\n", m0, mask);*/
 
 	/* read instrument names in temporary space */
 
 	num_ins = 0;
-	for (i = 0; i < 32; i++, mask <<= 1) {
+	memset(&temp_inst, 0, sizeof(temp_inst));
+	for (i = 0; mask != 0 && i < 64; i++, mask <<= 1) {
 		uint8 c, size, buf[40];
 		uint16 loop_len = 0;
 
-		memset(&temp_inst[i], 0, sizeof (struct temp_inst));
-
-		if (~mask & 0x80000000)
+		if ((int64)mask > 0)
 			continue;
 
 		/* read flags */
@@ -225,7 +257,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			hio_read8(f);
 		if ((c & 0x08) == 0)	/* Tim Newsham's "span" */
 			hio_read8(f);
-		if ((c & 0x20) == 0)
+		if ((c & 0x30) == 0)
 			temp_inst[i].volume = hio_read8(f);
 		if ((c & 0x40) == 0)
 			temp_inst[i].transpose = hio_read8s(f);
@@ -242,6 +274,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 #ifdef MED4_DEBUG
 	printf("pat=%x len=%x\n", mod->pat, mod->len);
 #endif
+	if (mod->len > XMP_MAX_MOD_LENGTH)
+	  return -1;
 	hio_read(mod->xxo, 1, mod->len, f);
 
 	/* From MED V3.00 docs:
@@ -282,12 +316,10 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	D_(D_INFO "Play transpose: %d", transp);
 
-	for (i = 0; i < 32; i++)
+	for (i = 0; i < 64; i++)
 		temp_inst[i].transpose += transp;
 
-	hio_read8(f);
-	mod->chn = hio_read8(f);;
-	hio_seek(f, -2, SEEK_CUR);
+	mod->chn = MAX_CHANNELS;
 	mod->trk = mod->chn * mod->pat;
 
 	if (pattern_init(mod) < 0)
@@ -298,9 +330,11 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (i = 0; i < mod->pat; i++) {
 		int size, plen, rows;
-		uint8 ctl[4], chmsk, chn;
+		uint8 ctl[4], chn;
+		unsigned chmsk;
 		uint32 linemask[8], fxmask[8], x;
 		int num_masks;
+		struct stream stream;
 
 #ifdef MED4_DEBUG
 		printf("\n===== PATTERN %d =====\n", i);
@@ -308,10 +342,12 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 #endif
 
 		size = hio_read8(f);	/* pattern control block */
+		pos = hio_tell(f);
 		chn = hio_read8(f);
+		if (chn > mod->chn)
+			return -1;
 		rows = (int)hio_read8(f) + 1;
 		plen = hio_read16b(f);
-
 #ifdef MED4_DEBUG
 		printf("size = %02x\n", size);
 		printf("chn  = %01x\n", chn);
@@ -359,14 +395,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
 		}
 
-
-		/* check block end */
-		if (hio_read8(f) != 0xff) {
-			D_(D_CRIT "error: module is corrupted");
-			return -1;
-		}
-
-		read4_ctl = 0;
+		hio_seek(f, pos + size, SEEK_SET);
+		stream_init(f, &stream);
 
 		for (y = 0; y < num_masks; y++) {
 
@@ -374,12 +404,12 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			int line = y * 32 + j;
 
 			if (linemask[y] & 0x80000000) {
-				chmsk = read4(f, &read4_ctl);
-				for (k = 0; k < 4; k++, chmsk <<= 1) {
+			  chmsk = stream_read_aligned16(&stream, chn);
+				for (k = 0; k < chn; k++, chmsk <<= 1) {
 					event = &EVENT(i, k, line);
 
-					if (chmsk & 0x08) {
-						x = read12b(f, &read4_ctl);
+					if (chmsk & 0x8000) {
+						x = stream_read12(&stream);
 						event->note = x >> 4;
 						if (event->note)
 							event->note += 48;
@@ -389,12 +419,12 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
 
 			if (fxmask[y] & 0x80000000) {
-				chmsk = read4(f, &read4_ctl);
-				for (k = 0; k < 4; k++, chmsk <<= 1) {
+			  chmsk = stream_read_aligned16(&stream, chn);
+				for (k = 0; k < chn; k++, chmsk <<= 1) {
 					event = &EVENT(i, k, line);
 
-					if (chmsk & 0x08) {
-						x = read12b(f, &read4_ctl);
+					if (chmsk & 0x8000) {
+						x = stream_read12(&stream);
 						event->fxt = x >> 8;
 						event->fxp = x & 0xff;
 						fix_effect(event);
@@ -421,6 +451,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 
 		}
+		hio_seek(f, pos + size + plen, SEEK_SET);
 	}
 
 	mod->ins =  num_ins;
@@ -432,13 +463,16 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 * Load samples
 	 */
 	mask = hio_read32b(f);
-	hio_read16b(f);
+	if (mask == MAGIC4('M','E','D','V')) {
+	  mod->smp = 0;
 
-#ifdef MED4_DEBUG
-	printf("instrument mask: %08x\n", mask);
-#endif
-
-	hio_read16b(f);	/* ?!? */
+	  if (instrument_init(mod) < 0)
+		  return -1;
+	  hio_seek(f, -4, SEEK_CUR);
+	  goto parse_iff;
+	}
+	mask <<= 32;
+	mask |= hio_read32b(f);
 
 	mask <<= 1;	/* no instrument #0 */
 
@@ -446,11 +480,12 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	pos = hio_tell(f);
 	num_smp = 0;
 	{
-		int _len, _type, _mask = mask;
-		for (i = 0; i < 32; i++, _mask <<= 1) {
+		int _len, _type;
+		uint64 _mask = mask;
+		for (i = 0; _mask != 0 && i < 64; i++, _mask <<= 1) {
 			int _pos;
 
-			if (~_mask & 0x80000000)
+			if ((int64)_mask > 0)
 				continue;
 			hio_read16b(f);
 			_len = hio_read16b(f);
@@ -478,11 +513,11 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Instruments: %d", mod->ins);
 
 	smp_idx = 0;
-	for (i = 0; i < num_ins; i++, mask <<= 1) {
+	for (i = 0; mask != 0 && i < num_ins; i++, mask <<= 1) {
 		int x1, length, type;
 		struct SynthInstr synth;
 
-		if (~mask & 0x80000000)
+		if ((int64)mask > 0)
 			continue;
 
 		x1 = hio_read16b(f);
@@ -572,6 +607,10 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			synth.wforms = hio_read16b(f);
 			hio_read(synth.voltbl, 1, synth.voltbllen, f);;
 			hio_read(synth.wftbl, 1, synth.wftbllen, f);;
+			if (synth.wforms == 0xffff)	
+				continue;
+			if (synth.wforms > 64)
+				return -1;
 			for (j = 0; j < synth.wforms; j++)
 				synth.wf[j] = hio_read32b(f);
 
@@ -581,9 +620,6 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					temp_inst[i].volume,
 					temp_inst[i].transpose /*,
 					exp_smp.finetune*/);
-
-			if (synth.wforms == 0xffff)	
-				continue;
 
 			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
@@ -662,6 +698,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read16b(f);	/* unknown */
 
 	/* IFF-like section */
+parse_iff:
 	while (!hio_eof(f)) {
 		int32 id, size, s2, pos, ver;
 

@@ -28,12 +28,15 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 {
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	struct xmp_instrument *instrument;
 
-	if (ins >= 0 && key >= 0) {
-		if (mod->xxi[ins].map[key].ins != 0xff) {
-			int mapped = mod->xxi[ins].map[key].ins;
-			return &mod->xxi[ins].sub[mapped];
-		}
+	if (ins >= 0 && ins < mod->ins) {
+		instrument = &mod->xxi[ins];
+		if (key >= 0 && key < XMP_MAX_KEYS) {
+			int mapped = instrument->map[key].ins;
+			if (mapped != 0xff && mapped >= 0 && mapped < instrument->nsm)
+			  	return &instrument->sub[mapped];
+	  }
 	}
 
 	return NULL;
