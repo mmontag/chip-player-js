@@ -191,16 +191,16 @@ struct xmp_instrument {
 
 struct xmp_sample {
 	char name[32];			/* Sample name */
-	int len;			/* Sample length */
-	int lps;			/* Loop start */
-	int lpe;			/* Loop end */
+	unsigned len;			/* Sample length */
+	unsigned lps;			/* Loop start */
+	unsigned lpe;			/* Loop end */
 #define XMP_SAMPLE_16BIT	(1 << 0)  /* 16bit sample */
 #define XMP_SAMPLE_LOOP		(1 << 1)  /* Sample is looped */
 #define XMP_SAMPLE_LOOP_BIDIR	(1 << 2)  /* Bidirectional sample loop */
 #define XMP_SAMPLE_LOOP_REVERSE	(1 << 3)  /* Backwards sample loop */
 #define XMP_SAMPLE_LOOP_FULL	(1 << 4)  /* Play full sample before looping */
 #define XMP_SAMPLE_SYNTH	(1 << 15) /* Data contains synth patch */
-	int flg;			/* Flags */
+	unsigned flg;			/* Flags */
 	unsigned char *data;		/* Sample data */
 };
 
