@@ -55,7 +55,7 @@ static int ims_test (HIO_HANDLE *, char *, const int);
 static int ims_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader ims_loader = {
-    "Images Music System (IMS)",
+    "Images Music System",
     ims_test,
     ims_load
 };

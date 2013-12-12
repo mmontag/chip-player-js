@@ -26,7 +26,7 @@ static int med2_test(HIO_HANDLE *, char *, const int);
 static int med2_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader med2_loader = {
-	"MED 1.12 MED2 (MED)",
+	"MED 1.12 MED2",
 	med2_test,
 	med2_load
 };

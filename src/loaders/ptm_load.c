@@ -60,7 +60,7 @@ static int ptm_test (HIO_HANDLE *, char *, const int);
 static int ptm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader ptm_loader = {
-    "Poly Tracker (PTM)",
+    "Poly Tracker",
     ptm_test,
     ptm_load
 };

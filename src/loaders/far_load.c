@@ -62,7 +62,7 @@ static int far_test (HIO_HANDLE *, char *, const int);
 static int far_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader far_loader = {
-    "Farandole Composer (FAR)",
+    "Farandole Composer",
     far_test,
     far_load
 };

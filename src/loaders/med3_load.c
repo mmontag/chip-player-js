@@ -23,7 +23,7 @@ static int med3_test(HIO_HANDLE *, char *, const int);
 static int med3_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader med3_loader = {
-	"MED 2.00 MED3 (MED)",
+	"MED 2.00 MED3",
 	med3_test,
 	med3_load
 };

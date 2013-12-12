@@ -19,7 +19,7 @@ static int it_test (HIO_HANDLE *, char *, const int);
 static int it_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader it_loader = {
-    "Impulse Tracker (IT)",
+    "Impulse Tracker",
     it_test,
     it_load
 };

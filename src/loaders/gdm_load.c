@@ -23,7 +23,7 @@ static int gdm_test(HIO_HANDLE *, char *, const int);
 static int gdm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader gdm_loader = {
-	"Generic Digital Music (GDM)",
+	"Generic Digital Music",
 	gdm_test,
 	gdm_load
 };

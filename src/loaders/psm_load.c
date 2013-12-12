@@ -16,7 +16,7 @@ static int psm_test (HIO_HANDLE *, char *, const int);
 static int psm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader psm_loader = {
-	"Protracker Studio (PSM)",
+	"Protracker Studio",
 	psm_test,
 	psm_load
 };

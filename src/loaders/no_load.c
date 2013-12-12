@@ -18,7 +18,7 @@ static int no_test (HIO_HANDLE *, char *, const int);
 static int no_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader no_loader = {
-	"Liquid Tracker NO (LIQ)",
+	"Liquid Tracker NO",
 	no_test,
 	no_load
 };

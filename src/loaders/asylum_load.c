@@ -17,7 +17,7 @@ static int asylum_test(HIO_HANDLE *, char *, const int);
 static int asylum_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader asylum_loader = {
-	"Asylum Music Format (AMF)",
+	"Asylum Music Format v1.0",
 	asylum_test,
 	asylum_load
 };
@@ -60,7 +60,7 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->smp = mod->ins;
 	mod->trk = mod->pat * mod->chn;
 
-	snprintf(mod->type, XMP_NAME_SIZE, "Asylum Music Format V1.0");
+	snprintf(mod->type, XMP_NAME_SIZE, "Asylum Music Format v1.0");
 
 	MODULE_INFO();
 

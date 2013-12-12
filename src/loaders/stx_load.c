@@ -74,7 +74,7 @@ static int stx_test (HIO_HANDLE *, char *, const int);
 static int stx_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader stx_loader = {
-    "STMIK 0.2 (STX)",
+    "STMIK 0.2",
     stx_test,
     stx_load
 };

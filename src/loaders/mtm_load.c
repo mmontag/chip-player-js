@@ -39,7 +39,7 @@ static int mtm_test (HIO_HANDLE *, char *, const int);
 static int mtm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mtm_loader = {
-    "Multitracker (MTM)",
+    "Multitracker",
     mtm_test,
     mtm_load
 };

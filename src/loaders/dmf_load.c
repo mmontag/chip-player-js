@@ -23,7 +23,7 @@ static int dmf_test(HIO_HANDLE *, char *, const int);
 static int dmf_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader dmf_loader = {
-	"X-Tracker (DMF)",
+	"X-Tracker",
 	dmf_test,
 	dmf_load
 };

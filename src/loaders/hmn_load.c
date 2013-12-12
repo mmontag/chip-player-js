@@ -65,7 +65,7 @@ static int hmn_test(HIO_HANDLE *, char *, const int);
 static int hmn_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader hmn_loader = {
-	"His Master's Noise (MOD)",
+	"His Master's Noise",
 	hmn_test,
 	hmn_load
 };

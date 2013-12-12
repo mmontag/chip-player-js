@@ -26,7 +26,7 @@ static int sfx_test (HIO_HANDLE *, char *, const int);
 static int sfx_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader sfx_loader = {
-    "SoundFX",
+    "SoundFX v1.3/2.0",
     sfx_test,
     sfx_load
 };

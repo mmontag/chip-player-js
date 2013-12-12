@@ -76,7 +76,7 @@ static int liq_test (HIO_HANDLE *, char *, const int);
 static int liq_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader liq_loader = {
-    "Liquid Tracker (LIQ)",
+    "Liquid Tracker",
     liq_test,
     liq_load
 };

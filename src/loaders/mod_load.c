@@ -76,7 +76,7 @@ static int mod_test (HIO_HANDLE *, char *, const int);
 static int mod_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mod_loader = {
-    "Protracker (MOD)",
+    "Amiga Protracker/Compatible",
     mod_test,
     mod_load
 };

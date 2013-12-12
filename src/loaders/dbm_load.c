@@ -21,7 +21,7 @@ static int dbm_test(HIO_HANDLE *, char *, const int);
 static int dbm_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader dbm_loader = {
-	"DigiBooster Pro (DBM)",
+	"DigiBooster Pro",
 	dbm_test,
 	dbm_load
 };

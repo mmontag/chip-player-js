@@ -92,7 +92,7 @@ static int imf_test (HIO_HANDLE *, char *, const int);
 static int imf_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader imf_loader = {
-    "Imago Orpheus (IMF)",
+    "Imago Orpheus v1.0",
     imf_test,
     imf_load
 };

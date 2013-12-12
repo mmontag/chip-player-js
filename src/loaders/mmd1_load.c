@@ -18,7 +18,7 @@ static int mmd1_test(HIO_HANDLE *, char *, const int);
 static int mmd1_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mmd1_loader = {
-	"MED 2.10/OctaMED (MED)",
+	"MED 2.10/OctaMED",
 	mmd1_test,
 	mmd1_load
 };

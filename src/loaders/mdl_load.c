@@ -24,7 +24,7 @@ static int mdl_test (HIO_HANDLE *, char *, const int);
 static int mdl_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mdl_loader = {
-    "Digitrakker (MDL)",
+    "Digitrakker",
     mdl_test,
     mdl_load
 };

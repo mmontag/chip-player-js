@@ -23,7 +23,7 @@ static int amf_test(HIO_HANDLE *, char *, const int);
 static int amf_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader amf_loader = {
-	"DSMI Advanced Module Format (AMF)",
+	"DSMI Advanced Module Format",
 	amf_test,
 	amf_load
 };
