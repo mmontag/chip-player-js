@@ -3,6 +3,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stddef.h>
 
 #define HIO_HANDLE_TYPE(x) ((x)->type)
 
