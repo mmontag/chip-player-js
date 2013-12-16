@@ -241,17 +241,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     copy_adjust(mod->name, sfh.name, 28);
 
-    /* Load and convert header */
-    mod->len = sfh.ordnum;
-    mod->ins = sfh.insnum;
-    mod->smp = mod->ins;
-    mod->pat = sfh.patnum;
-
-    pp_ins = calloc (2, mod->ins);
+    pp_ins = calloc (2, sfh.insnum);
     if (pp_ins == NULL)
 	goto err;
 
-    pp_pat = calloc (2, mod->pat);
+    pp_pat = calloc (2, sfh.patnum);
     if (pp_pat == NULL)
 	goto err2;
 
@@ -276,14 +270,30 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxc[i].pan = 0x80;
 	}
     }
+
+    if (sfh.ordnum <= XMP_MAX_MOD_LENGTH) {
+      hio_read(mod->xxo, 1, mod->len = sfh.ordnum, f);
+    } else {
+      hio_read(mod->xxo, 1, mod->len = XMP_MAX_MOD_LENGTH, f);
+      hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR);
+    }
+    mod->pat = 0;
+    for (i = 0; i < mod->len && mod->xxo[i] != 0xff; ++i) {
+      if (mod->xxo[i] > mod->pat)
+        mod->pat = mod->xxo[i];
+    }
+    if (mod->pat > sfh.patnum)
+      mod->pat = sfh.patnum;
+
     mod->trk = mod->pat * mod->chn;
+    /* Load and convert header */
+    mod->ins = sfh.insnum;
+    mod->smp = mod->ins;
 
-    hio_read(mod->xxo, 1, mod->len, f);
-
-    for (i = 0; i < mod->ins; i++)
+    for (i = 0; i < sfh.insnum; i++)
 	pp_ins[i] = hio_read16l(f);
  
-    for (i = 0; i < mod->pat; i++)
+    for (i = 0; i < sfh.patnum; i++)
 	pp_pat[i] = hio_read16l(f);
 
     /* Default pan positions */
@@ -364,11 +374,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	r = 0;
 	pat_len = hio_read16l(f) - 2;
 
-	/* Used to be (--pat_len >= 0). Replaced by Rudolf Cejka
-	 * <cejkar@dcse.fee.vutbr.cz>, fixes hunt.s3m
-	 * ftp://us.aminet.net/pub/aminet/mods/8voic/s3m_hunt.lha
-	 */
-	while (r < mod->xxp[i]->rows) {
+	while (pat_len >= 0 && r < mod->xxp[i]->rows) {
 	    b = hio_read8(f);
 
 	    if (b == S3M_EOR) {
