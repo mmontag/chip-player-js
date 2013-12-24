@@ -70,7 +70,7 @@ static int s3m_test (HIO_HANDLE *, char *, const int);
 static int s3m_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader s3m_loader = {
-    "Scream Tracker 3 (S3M)",
+    "Scream Tracker 3",
     s3m_test,
     s3m_load
 };

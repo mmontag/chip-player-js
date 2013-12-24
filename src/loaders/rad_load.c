@@ -13,7 +13,7 @@ static int rad_test(HIO_HANDLE *, char *, const int);
 static int rad_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader rad_loader = {
-	"Reality Adlib Tracker (RAD)",
+	"Reality Adlib Tracker",
 	rad_test,
 	rad_load
 };

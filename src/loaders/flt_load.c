@@ -14,7 +14,7 @@ static int flt_test (HIO_HANDLE *, char *, const int);
 static int flt_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader flt_loader = {
-    "Startrekker (MOD)",
+    "Startrekker",
     flt_test,
     flt_load
 };
