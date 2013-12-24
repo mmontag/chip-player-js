@@ -65,7 +65,7 @@ TEST(test_read_mem_hio)
 	fail_unless(x == 0, "hio_fseek SEEK_END");
 
 	x = hio_read8(h);
-	fail_unless(x == 99, "hio_read8");
+	fail_unless(x != EOF, "hio_read8");
 
 	x = hio_eof(h);
 	fail_unless(x != 0, "hio_eof");

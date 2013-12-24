@@ -636,6 +636,10 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	int test_result, load_result;
 	int i, ret;
 
+	/* Use size < 0 for unknown/undetermined size */
+	if (size == 0)
+		size--;
+
 	if ((h = hio_open_mem(mem, size)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 

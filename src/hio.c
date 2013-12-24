@@ -11,13 +11,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <limits.h>
 #include <errno.h>
 #include "common.h"
 #include "hio.h"
 
 inline ptrdiff_t CAN_READ(HIO_HANDLE *h)
 {
-  return h->pos >= 0 ? h->size - h->pos : 0;
+	if (h->size >= 0)
+		return h->pos >= 0 ? h->size - h->pos : 0;
+
+	return INT_MAX;
 }
 
 int8 hio_read8s(HIO_HANDLE *h)
@@ -175,16 +179,18 @@ int hio_seek(HIO_HANDLE *h, long offset, int whence)
 		switch (whence) {
 		default:
 		case SEEK_SET:
-			if (offset > h->size || offset < 0)
+			if (h->size >= 0 && (offset > h->size || offset < 0))
 				return -1;
 			h->pos = offset;
 			return 0;
 		case SEEK_CUR:
-			if (offset > CAN_READ(h) || offset < -h->pos)
+			if (h->size >= 0 && (offset > CAN_READ(h) || offset < -h->pos))
 				return -1;
 			h->pos += offset;
 			return 0;
 		case SEEK_END:
+			if (h->size < 0)
+				return -1;
 			h->pos = h->size + offset;
 			return 0;
 		}

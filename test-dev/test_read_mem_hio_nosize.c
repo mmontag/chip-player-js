@@ -14,12 +14,12 @@ TEST(test_read_mem_hio_nosize)
 	for (i = 0; i < 100; i++)
 		mem[i] = i;
 
-	h = hio_open_mem(mem, 0);
+	h = hio_open_mem(mem, -1);
 	fail_unless(h != NULL, "hio_open");
 
 	x = hio_stat(h, &st);
 	fail_unless(x == 0, "hio_stat");
-	fail_unless(st.st_size == 0, "hio_stat size");
+	fail_unless(st.st_size == -1, "hio_stat size");
 
 	x = hio_read8(h);
 	fail_unless(x == 0x00, "hio_read8");
