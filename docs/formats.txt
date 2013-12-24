@@ -59,7 +59,6 @@ Atari tracker formats:
 MOD		Octalyser		CD61, CD81
 DTM		Digital Tracker		1.9
 GTK (*)		Graoumf Tracker		GTK1, GTK4
-MGT		Megatracker		1.1
 MOD		TCB Tracker		'AN COOL.'
 
 Acorn tracker formats:
@@ -67,20 +66,10 @@ Acorn tracker formats:
 -		Archimedes Tracker	V1.0+++
 -		Digital Symphony	0
 - (*)		Desktop Tracker		-
--		Coconizer               old
-
-IIgs tracker formats:
-
-MTP (*)		SoundSmith		SONGOK, IAN92a
-
-Commodore 64 formats:
-
-MOD		Polly Tracker		-
 
 PC tracker formats:
 
 669		Composer 669/UNIS 669   if, JN
-ALM		Aley Keptr		1.0, 1.1, 1.2
 DMF (*)		X-Tracker		7, 8
 FAR		Farandole Composer	1.0
 FNK		Funktracker		R0, R1, R2
