@@ -109,7 +109,7 @@ struct stream
 static inline void stream_init(HIO_HANDLE* f, struct stream* s)
 {
 	s->f = f;
-	s->has_nibble = 0;
+	s->has_nibble = s->value = 0;
 }
 
 static inline unsigned stream_read4(struct stream* s)
@@ -319,7 +319,13 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < 64; i++)
 		temp_inst[i].transpose += transp;
 
+#if 1
+	hio_read8(f);
+	mod->chn = hio_read8(f);;
+	hio_seek(f, -2, SEEK_CUR);
+#else
 	mod->chn = MAX_CHANNELS;
+#endif
 	mod->trk = mod->chn * mod->pat;
 
 	if (pattern_init(mod) < 0)
