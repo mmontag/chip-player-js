@@ -667,8 +667,6 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 		}
 	}
 
-	set_md5sum(h, m->md5);
-
 	hio_close(h);
 
 	if (test_result < 0)
@@ -678,6 +676,8 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 		xmp_release_module(opaque);
 		return -XMP_ERROR_LOAD;
 	}
+
+	set_md5sum(h, m->md5);
 
 	str_adj(m->mod.name);
 	if (!*m->mod.name) {
