@@ -23,5 +23,17 @@ TEST(test_api_load_module_from_memory)
 
 	xmp_get_frame_info(ctx, &fi);
 	fail_unless(fi.total_time == 15360, "module duration");
+
+	f = fopen("data/test.it", "rb");
+	fail_unless(f != NULL, "can't open module");
+	size = fread(buffer, 1, 8192, f);
+	fclose(f);
+
+	/* and reload without releasing */
+	ret = xmp_load_module_from_memory(ctx, buffer, size);
+	fail_unless(ret == 0, "load file");
+
+	xmp_get_frame_info(ctx, &fi);
+	fail_unless(fi.total_time == 7680, "module duration");
 }
 END_TEST

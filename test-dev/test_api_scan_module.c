@@ -11,6 +11,9 @@ TEST(test_api_scan_module)
 	opaque = xmp_create_context();
 	ctx = (struct context_data *)opaque;
 
+	/* try to scan before loading */
+	xmp_scan_module(opaque);
+
  	create_simple_module(ctx, 2, 2);
 
 	new_event(ctx, 0, 0, 0, 0, 0, 0, FX_SPEED, 0x03, 0, 0);
