@@ -519,6 +519,60 @@ static char *get_basename(char *name)
 	return basename;
 }
 
+static int load_module(xmp_context opaque, HIO_HANDLE *h, struct list_head *tmpfiles_list)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
+	int i, ret;
+	int test_result, load_result;
+
+	load_prologue(ctx);
+
+	D_(D_WARN "load");
+	test_result = load_result = -1;
+	for (i = 0; format_loader[i] != NULL; i++) {
+		hio_seek(h, 0, SEEK_SET);
+		test_result = format_loader[i]->test(h, NULL, 0);
+		if (test_result == 0) {
+			hio_seek(h, 0, SEEK_SET);
+			D_(D_WARN "load format: %s", format_loader[i]->name);
+			load_result = format_loader[i]->loader(m, h, 0);
+			break;
+		}
+	}
+
+	if (test_result == 0 && load_result == 0)
+		set_md5sum(h, m->md5);
+
+	hio_close(h);
+	if (tmpfiles_list != NULL)
+		unlink_tempfiles(tmpfiles_list);
+
+	if (test_result < 0) {
+		free(m->basename);
+		free(m->dirname);
+		return -XMP_ERROR_FORMAT;
+	}
+
+	if (load_result < 0) {
+		xmp_release_module(opaque);
+		return -XMP_ERROR_LOAD;
+	}
+
+	str_adj(m->mod.name);
+	load_epilogue(ctx);
+
+	ret = prepare_scan(ctx);
+	if (ret < 0)
+		return ret;
+
+	scan_sequences(ctx);
+
+	ctx->state = XMP_STATE_LOADED;
+
+	return 0;
+}
+
 int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -526,8 +580,6 @@ int xmp_load_module(xmp_context opaque, char *path)
 	HIO_HANDLE *h;
 	struct stat st;
 	struct list_head tmpfiles_list;
-	int test_result, load_result;
-	int i, ret;
 
 	D_(D_WARN "path = %s", path);
 
@@ -573,53 +625,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	m->filename = path;	/* For ALM, SSMT, etc */
 	m->size = st.st_size;
 
-	load_prologue(ctx);
-
-	D_(D_WARN "load");
-	test_result = load_result = -1;
-	for (i = 0; format_loader[i] != NULL; i++) {
-		hio_seek(h, 0, SEEK_SET);
-		test_result = format_loader[i]->test(h, NULL, 0);
-		if (test_result == 0) {
-			hio_seek(h, 0, SEEK_SET);
-			D_(D_WARN "load format: %s", format_loader[i]->name);
-			load_result = format_loader[i]->loader(m, h, 0);
-			break;
-		}
-	}
-
-	set_md5sum(h, m->md5);
-
-	hio_close(h);
-	unlink_tempfiles(&tmpfiles_list);
-
-	if (test_result < 0) {
-		free(m->basename);
-		free(m->dirname);
-		return -XMP_ERROR_FORMAT;
-	}
-
-	if (load_result < 0) {
-		xmp_release_module(opaque);
-		return -XMP_ERROR_LOAD;
-	}
-
-	str_adj(m->mod.name);
-	if (!*m->mod.name) {
-		strncpy(m->mod.name, m->basename, XMP_NAME_SIZE);
-	}
-
-	load_epilogue(ctx);
-
-	ret = prepare_scan(ctx);
-	if (ret < 0)
-		return ret;
-
-	scan_sequences(ctx);
-
-	ctx->state = XMP_STATE_LOADED;
-
-	return 0;
+	return load_module(opaque, h, &tmpfiles_list);
 
     err_depack:
 	hio_close(h);
@@ -632,9 +638,6 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	HIO_HANDLE *h;
-	struct list_head tmpfiles_list;
-	int test_result, load_result;
-	int i, ret;
 
 	/* Use size < 0 for unknown/undetermined size */
 	if (size == 0)
@@ -643,8 +646,6 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	if ((h = hio_open_mem(mem, size)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
-	INIT_LIST_HEAD(&tmpfiles_list);
-
 	m->filename = NULL;
 	m->basename = NULL;
 	m->size = 0;
@@ -652,51 +653,7 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	if (ctx->state > XMP_STATE_UNLOADED)
 		xmp_release_module(opaque);
 
-	load_prologue(ctx);
-
-	D_(D_WARN "load");
-	test_result = load_result = -1;
-	for (i = 0; format_loader[i] != NULL; i++) {
-		hio_seek(h, 0, SEEK_SET);
-		test_result = format_loader[i]->test(h, NULL, 0);
-		if (test_result == 0) {
-			hio_seek(h, 0, SEEK_SET);
-			D_(D_WARN "load format: %s", format_loader[i]->name);
-			load_result = format_loader[i]->loader(m, h, 0);
-			break;
-		}
-	}
-
-	hio_close(h);
-
-	if (test_result < 0)
-		return -XMP_ERROR_FORMAT;
-
-	if (load_result < 0) {
-		xmp_release_module(opaque);
-		return -XMP_ERROR_LOAD;
-	}
-
-	set_md5sum(h, m->md5);
-
-	str_adj(m->mod.name);
-	if (!*m->mod.name) {
-		strncpy(m->mod.name, "<untitled>", XMP_NAME_SIZE);
-	}
-
-	load_epilogue(ctx);
-
-	ret = prepare_scan(ctx);
-	if (ret < 0) {
-		xmp_release_module(opaque);
-		return ret;
-	}
-
-	scan_sequences(ctx);
-
-	ctx->state = XMP_STATE_LOADED;
-
-	return 0;
+	return load_module(opaque, h, NULL);
 }
 
 #if 0
