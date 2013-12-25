@@ -2,16 +2,16 @@ Stable versions
 ---------------
 
 4.2.1 ():
-	Many fixes by vitamin-caig:
+	Many fixes by Vitamin/CAIG:
 	- fixes in memory I/O layer
-	- improve loading of many module formats including XM
+	- improve loading of many module formats including XM and S3M
 	- fix resource leak in case of invalid module structure
 	- portability fixes
 	Other changes:
-	- disable poorly implemented, experimental and rarely used module
-	  formats: STC, MGT, MTP, Polly, Coconizer
+	- disable poorly implemented and rarely used module formats
 	- disable YM2149 emulator
 	- fix vibrato effect depth
+	- code cleanup
 
 4.2.0 (20131109):
 	- ignore invalid Noisetracker effects
