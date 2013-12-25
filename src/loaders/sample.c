@@ -8,7 +8,6 @@
 
 #include "common.h"
 #include "synth.h"
-#include "spectrum.h"
 #include "loader.h"
 
 /*
@@ -206,11 +205,9 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	 * Default is YM3128 for historical reasons
 	 */
 	if (flags & SAMPLE_FLAG_SYNTH) {
-		int size = 11;	/* Adlib instrument size */
+		const int size = 11;	/* Adlib instrument size */
 
-		if (flags & SAMPLE_FLAG_SPECTRUM) {
-			size = sizeof(struct spectrum_sample);
-		} else if (flags & SAMPLE_FLAG_HSC) {
+		if (flags & SAMPLE_FLAG_HSC) {
 			convert_hsc_to_sbi(buffer);
 		}
 
