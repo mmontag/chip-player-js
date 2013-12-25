@@ -742,6 +742,9 @@ void xmp_release_module(xmp_context opaque)
 	struct xmp_module *mod = &m->mod;
 	int i;
 
+	if (ctx->state < XMP_STATE_LOADED)
+		return;
+
 	if (ctx->state > XMP_STATE_LOADED)
 		xmp_end_player(opaque);
 
