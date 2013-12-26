@@ -85,7 +85,7 @@ data->global_use_rle=use_rle;
 data->maxstr=(1<<max_bits);
 
 if((data_out=malloc(orig_len))==NULL) {
-  fprintf(stderr,"nomarch: out of memory!\n");
+  //fprintf(stderr,"nomarch: out of memory!\n");
   return NULL;
 }
 
@@ -243,7 +243,7 @@ unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
 	}
 
 	if ((buf2 = malloc(in_len)) == NULL) {
-		perror("read_lzw_dynamic");
+		//perror("read_lzw_dynamic");
 		return NULL;
 	}
 

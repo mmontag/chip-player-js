@@ -15,11 +15,13 @@
 #include "readrle.h"
 
 
+#if 0
 static void rawoutput(int byte, struct data_in_out *io)
 {
 if(io->data_out_point<io->data_out_max)
   *io->data_out_point++=byte;
 }
+#endif
 
 
 /* call with -1 before starting, to make sure state is initialised */
@@ -54,7 +56,7 @@ else
   }
 }
 
-
+#if 0
 unsigned char *convert_rle(unsigned char *data_in,
                            unsigned long in_len,
                            unsigned long orig_len)
@@ -75,3 +77,4 @@ while(io.data_in_point<io.data_in_max)
 
 return(data_out);
 }
+#endif

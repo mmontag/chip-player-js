@@ -178,6 +178,7 @@ static unsigned char *read_file_data(FILE * in,
 	return (data);
 }
 
+#if 0
 /* variant which just skips past the data */
 static int skip_file_data(FILE *in,struct archived_file_header_tag *hdrp)
 {
@@ -190,18 +191,19 @@ static int skip_file_data(FILE *in,struct archived_file_header_tag *hdrp)
 
 	return 1;
 }
+#endif
 
 static int arc_extract(FILE * in, FILE * out)
 {
 	struct archived_file_header_tag hdr;
 	/* int done = 0; */
 	unsigned char *data, *orig_data;
-	int supported;
 	int exitval = 0;
 
 	if (!skip_sfx_header(in) || !read_file_header(in, &hdr))
 		return -1;
 
+#if 0
 	/* We don't files named 'From?' */
 	while (!strcmp(hdr.name, "From?") || *hdr.name == '!') {
 		if (!skip_file_data(in,&hdr))
@@ -209,6 +211,7 @@ static int arc_extract(FILE * in, FILE * out)
 		if (!read_file_header(in, &hdr))
 			return -1;
 	}
+#endif
 
 	/* extract a single file */
 	/* do { */
@@ -224,7 +227,6 @@ static int arc_extract(FILE * in, FILE * out)
 	}
 
 	orig_data = NULL;
-	supported = 0;
 
 	/* FWIW, most common types are (by far) 8/9 and 2.
 	 * (127 is the most common in Spark archives, but only those.)
@@ -232,12 +234,11 @@ static int arc_extract(FILE * in, FILE * out)
 	 * And I don't think I've seen a *single* file with 1 or 7 yet.
 	 */
 	switch (hdr.method) {
-	case 1:
 	case 2:		/* no compression */
-		supported = 1;
 		orig_data = data;
 		break;
 
+#if 0
 	case 3:		/* "packed" (RLE) */
 		supported = 1;
 		orig_data =
@@ -251,13 +252,11 @@ static int arc_extract(FILE * in, FILE * out)
 		break;
 
 	case 5:		/* "crunched" (12-bit static LZW) */
-		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 0, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 6:		/* "crunched" (RLE+12-bit static LZW) */
-		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 0, 1,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
@@ -269,26 +268,28 @@ static int arc_extract(FILE * in, FILE * out)
 		 * so I presume it wouldn't be *that* hard to add... :-)
 		 */
 		break;
+#endif
 
 	case 8:		/* "Crunched" [sic]
 			 * (RLE+9-to-12-bit dynamic LZW, a *bit* like GIF) */
-		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 12, 1,
 					hdr.compressed_size, hdr.orig_size,
 					NOMARCH_QUIRK_SKIPMAX);
 		break;
 
 	case 9:		/* "Squashed" (9-to-13-bit, no RLE) */
-		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 13, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 127:	/* "Compress" (9-to-16-bit, no RLE) ("Spark" only) */
-		supported = 1;
 		orig_data = convert_lzw_dynamic(data, 16, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
+
+	default:
+		free(data);
+		return -1;
 	}
 
 	/* there was a `pak 2.0' which added a type 10 ("distill"), but I don't
@@ -296,38 +297,17 @@ static int arc_extract(FILE * in, FILE * out)
 	 */
 
 	if (orig_data == NULL) {
-		if (supported)
-			fprintf(stderr, "error extracting file");
-		else
-			fprintf(stderr, "unsupported compression method %d\n",
-							hdr.method);
-		exitval = 1;
-	} else {
-		char *ptr;
-
-		/* CP/M stuff in particular likes those slashes... */
-		while ((ptr = strchr(hdr.name, '/')) != NULL)
-			*ptr = '_';
-
-		if (fwrite(orig_data, 1, hdr.orig_size, out) != hdr.orig_size) {
-			fprintf(stderr, "error, %s\n", strerror(errno));
-			exitval = 1;
-		}
-
-		if (orig_data != data)	/* don't free uncompressed stuff twice :-) */
-			free(orig_data);
+		free(data);
+		return -1;
 	}
 
-	free(data);
+	if (fwrite(orig_data, 1, hdr.orig_size, out) != hdr.orig_size)
+		exitval = -1;
 
-#if 0
-	/* read header ready for next file */
-	if (!read_file_header(in, &hdr))
-		fprintf(stderr,
-			"nomarch: error reading record header\n"), exit(1);
-#endif
-	/*done = 1; */
-	/* } while (!done); */
+	if (orig_data != data)	/* don't free uncompressed stuff twice :-) */
+		free(orig_data);
+
+	free(data);
 
 	return exitval;
 }
