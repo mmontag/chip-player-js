@@ -290,7 +290,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
 	if (mod->xxs[i].lpe > mod->xxs[i].len)
 		mod->xxs[i].lpe = mod->xxs[i].len;
-	mod->xxs[i].flg = (mh.ins[i].loop_size > 1 && mod->xxs[i].lpe > 8) ?
+	mod->xxs[i].flg = (mh.ins[i].loop_size > 1 && mod->xxs[i].lpe >= 4) ?
 		XMP_SAMPLE_LOOP : 0;
 	mod->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
 	mod->xxi[i].sub[0].vol = mh.ins[i].volume;
