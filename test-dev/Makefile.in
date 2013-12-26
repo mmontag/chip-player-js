@@ -239,7 +239,7 @@ covercheck: coverclean $(TEST_PATH)/all_tests.c $(TEST_PATH)/libxmp-covertest
 	genhtml -o coverage --rc lcov_branch_coverage=1 libxmp.cov
 
 coverclean:
-	@rm -f $(GCOBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
+	@rm -f $(GCOBJS) ../lib/$(GCLIB)
 
 $(TEST_PATH)/libxmp-covertest: $(GCT_OBJS) ../lib/$(GCLIB)
 	@CMD='$(LD) -o $@ $(LDFLAGS) $(GCT_OBJS) ../lib/$(GCLIB) -lgcov $(LIBS)'; \

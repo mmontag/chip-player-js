@@ -185,8 +185,12 @@ distcheck:
 devcheck:
 	$(MAKE) -C test-dev
 
-covercheck:
+covercheck: coverage
 	$(MAKE) -C test-dev covercheck
+
+coverclean:
+	rm -f $(OBJS:.o=.gco) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
+	$(MAKE) -C test-dev coverclean
 
 $(OBJS): Makefile
 
