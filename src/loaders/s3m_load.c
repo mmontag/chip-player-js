@@ -202,27 +202,27 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hio_read(&sfh.name, 28, 1, f);		/* Song name */
-    hio_read8(f);				/* 0x1a */
+    hio_read(&sfh.name, 28, 1, f);	/* Song name */
+    hio_read8(f);			/* 0x1a */
     sfh.type = hio_read8(f);		/* File type */
-    hio_read16l(f);				/* Reserved */
-    sfh.ordnum = hio_read16l(f);		/* Number of orders (must be even) */
-    sfh.insnum = hio_read16l(f);		/* Number of instruments */
-    sfh.patnum = hio_read16l(f);		/* Number of patterns */
+    hio_read16l(f);			/* Reserved */
+    sfh.ordnum = hio_read16l(f);	/* Number of orders (must be even) */
+    sfh.insnum = hio_read16l(f);	/* Number of instruments */
+    sfh.patnum = hio_read16l(f);	/* Number of patterns */
     sfh.flags = hio_read16l(f);		/* Flags */
-    sfh.version = hio_read16l(f);		/* Tracker ID and version */
+    sfh.version = hio_read16l(f);	/* Tracker ID and version */
     sfh.ffi = hio_read16l(f);		/* File format information */
     sfh.magic = hio_read32b(f);		/* 'SCRM' */
-    sfh.gv = hio_read8(f);			/* Global volume */
-    sfh.is = hio_read8(f);			/* Initial speed */
-    sfh.it = hio_read8(f);			/* Initial tempo */
-    sfh.mv = hio_read8(f);			/* Master volume */
-    sfh.uc = hio_read8(f);			/* Ultra click removal */
-    sfh.dp = hio_read8(f);			/* Default pan positions if 0xfc */
-    hio_read32l(f);				/* Reserved */
-    hio_read32l(f);				/* Reserved */
-    sfh.special = hio_read16l(f);		/* Ptr to special custom data */
-    hio_read(sfh.chset, 32, 1, f);		/* Channel settings */
+    sfh.gv = hio_read8(f);		/* Global volume */
+    sfh.is = hio_read8(f);		/* Initial speed */
+    sfh.it = hio_read8(f);		/* Initial tempo */
+    sfh.mv = hio_read8(f);		/* Master volume */
+    sfh.uc = hio_read8(f);		/* Ultra click removal */
+    sfh.dp = hio_read8(f);		/* Default pan positions if 0xfc */
+    hio_read32l(f);			/* Reserved */
+    hio_read32l(f);			/* Reserved */
+    sfh.special = hio_read16l(f);	/* Ptr to special custom data */
+    hio_read(sfh.chset, 32, 1, f);	/* Channel settings */
 
 #if 0
     if (sfh.magic != MAGIC_SCRM)
@@ -272,10 +272,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     if (sfh.ordnum <= XMP_MAX_MOD_LENGTH) {
-      hio_read(mod->xxo, 1, mod->len = sfh.ordnum, f);
+	mod->len = sfh.ordnum;
+	hio_read(mod->xxo, 1, mod->len, f);
     } else {
-      hio_read(mod->xxo, 1, mod->len = XMP_MAX_MOD_LENGTH, f);
-      hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR);
+	mod->len = XMP_MAX_MOD_LENGTH;
+	hio_read(mod->xxo, 1, mod->len, f);
+	hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR);
     }
     mod->pat = 0;
     for (i = 0; i < mod->len && mod->xxo[i] != 0xff; ++i) {
@@ -439,15 +441,15 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    /* OPL2 FM instrument */
 
 	    hio_read(&sah.dosname, 12, 1, f);	/* DOS file name */
-	    hio_read(&sah.rsvd1, 3, 1, f);		/* 0x00 0x00 0x00 */
-	    hio_read(&sah.reg, 12, 1, f);		/* Adlib registers */
+	    hio_read(&sah.rsvd1, 3, 1, f);	/* 0x00 0x00 0x00 */
+	    hio_read(&sah.reg, 12, 1, f);	/* Adlib registers */
 	    sah.vol = hio_read8(f);
 	    sah.dsk = hio_read8(f);
 	    hio_read16l(f);
 	    sah.c2spd = hio_read16l(f);		/* C 4 speed */
 	    hio_read16l(f);
 	    hio_read(&sah.rsvd4, 12, 1, f);	/* Reserved */
-	    hio_read(&sah.name, 28, 1, f);		/* Instrument name */
+	    hio_read(&sah.name, 28, 1, f);	/* Instrument name */
 	    sah.magic = hio_read32b(f);		/* 'SCRI' */
 
 	    if (sah.magic != MAGIC_SCRI) {
@@ -472,23 +474,23 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    continue;
 	}
 
-	hio_read(&sih.dosname, 13, 1, f);		/* DOS file name */
+	hio_read(&sih.dosname, 13, 1, f);	/* DOS file name */
 	sih.memseg = hio_read16l(f);		/* Pointer to sample data */
 	sih.length = hio_read32l(f);		/* Length */
 	sih.loopbeg = hio_read32l(f);		/* Loop begin */
 	sih.loopend = hio_read32l(f);		/* Loop end */
 	sih.vol = hio_read8(f);			/* Volume */
-	sih.rsvd1 = hio_read8(f);			/* Reserved */
-	sih.pack = hio_read8(f);			/* Packing type (not used) */
+	sih.rsvd1 = hio_read8(f);		/* Reserved */
+	sih.pack = hio_read8(f);		/* Packing type (not used) */
 	sih.flags = hio_read8(f);		/* Loop/stereo/16bit samples flags */
-	sih.c2spd = hio_read16l(f);			/* C 4 speed */
-	sih.rsvd2 = hio_read16l(f);			/* Reserved */
+	sih.c2spd = hio_read16l(f);		/* C 4 speed */
+	sih.rsvd2 = hio_read16l(f);		/* Reserved */
 	hio_read(&sih.rsvd3, 4, 1, f);		/* Reserved */
 	sih.int_gp = hio_read16l(f);		/* Internal - GUS pointer */
 	sih.int_512 = hio_read16l(f);		/* Internal - SB pointer */
 	sih.int_last = hio_read32l(f);		/* Internal - SB index */
 	hio_read(&sih.name, 28, 1, f);		/* Instrument name */
-	sih.magic = hio_read32b(f);			/* 'SCRS' */
+	sih.magic = hio_read32b(f);		/* 'SCRS' */
 
 	if (x8 == 1 && sih.magic != MAGIC_SCRS) {
 	    D_(D_CRIT "error: instrument magic");
