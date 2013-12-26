@@ -214,7 +214,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 
 	case FX_VIBRATO:	/* Vibrato */
 		SET(VIBRATO);
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 2, MSN(fxp));
 		break;
 	case FX_FINE_VIBRATO:	/* Fine vibrato (4x) */
 		SET(VIBRATO);
@@ -226,7 +226,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		} else {
 			RESET_PER(VIBRATO);
 		}
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) * 4, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 2, MSN(fxp));
 		break;
 
 	case FX_TONE_VSLIDE:	/* Toneporta + vol slide */

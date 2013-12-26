@@ -380,9 +380,9 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
 		if (HAS_QUIRK(QUIRK_DEEPVIB)) {
-			vibrato += get_lfo(&xc->vibrato) >> 8;
-		} else {
 			vibrato += get_lfo(&xc->vibrato) >> 9;
+		} else {
+			vibrato += get_lfo(&xc->vibrato) >> 10;
 		}
 	}
 
