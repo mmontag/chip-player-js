@@ -279,13 +279,15 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(mod->xxo, 1, mod->len, f);
 	hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR);
     }
-    mod->pat = 0;
-    for (i = 0; i < mod->len && mod->xxo[i] != 0xff; ++i) {
-      if (mod->xxo[i] > mod->pat)
-        mod->pat = mod->xxo[i];
+
+    mod->pat = -1;
+    for (i = 0; i < mod->len && mod->xxo[i] < 0xfe; ++i) {
+	if (mod->xxo[i] > mod->pat)
+            mod->pat = mod->xxo[i];
     }
+    mod->pat++;
     if (mod->pat > sfh.patnum)
-      mod->pat = sfh.patnum;
+	mod->pat = sfh.patnum;
 
     mod->trk = mod->pat * mod->chn;
     /* Load and convert header */
