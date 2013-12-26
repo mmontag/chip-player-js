@@ -80,3 +80,4 @@ tags
 *~
 commit-*
 *.swp
+*.patch
