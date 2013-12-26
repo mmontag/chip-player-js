@@ -68,7 +68,6 @@ TEST(test_api_test_module)
 	ret = xmp_test_module("data/xzdata", &tinfo);
 	fail_unless(ret == 0, "S3M test module fail");
 	fail_unless(strcmp(tinfo.name, "Inspiration") == 0, "S3M module name fail");
-printf("%s\n", tinfo.type);
 	fail_unless(strcmp(tinfo.type, "Scream Tracker 3") == 0, "S3M module type fail");
 
 	/* Prowizard */
