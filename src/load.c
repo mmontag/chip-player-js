@@ -754,47 +754,27 @@ void xmp_release_module(xmp_context opaque)
 
 	release_module_extras(ctx);
 
-	if (mod->xxt) {
-		for (i = 0; i < mod->trk; i++) {
-			free(mod->xxt[i]);
-		}
-		free(mod->xxt);
+	for (i = 0; i < mod->trk; i++)
+		free(mod->xxt[i]);
+	free(mod->xxt);
+
+	for (i = 0; i < mod->pat; i++)
+		free(mod->xxp[i]);
+	free(mod->xxp);
+
+	for (i = 0; i < mod->ins; i++) {
+		free(mod->xxi[i].sub);
+		free(mod->xxi[i].extra);
 	}
 
-	if (mod->xxp) {
-		for (i = 0; i < mod->pat; i++) {
-			free(mod->xxp[i]);
-		}
-		free(mod->xxp);
+	for (i = 0; i < mod->smp; i++) {
+		if (mod->xxs[i].data != NULL)
+			free(mod->xxs[i].data - 4);
 	}
 
-
-	if (mod->xxi) {
-		for (i = 0; i < mod->ins; i++) {
-			free(mod->xxi[i].sub);
-			free(mod->xxi[i].extra);
-		}
-		free(mod->xxi);
-	}
-
-	if (mod->xxs) {
-		for (i = 0; i < mod->smp; i++) {
-			if (mod->xxs[i].data != NULL)
-				free(mod->xxs[i].data - 4);
-		}
-		free(mod->xxs);
-	}
-
-	if (m->scan_cnt) {
-		for (i = 0; i < mod->len; i++) {
-			free(m->scan_cnt[i]);
-		}
-		free(m->scan_cnt);
-	}
-
-	if (m->comment) {
-		free(m->comment);
-	}
+	for (i = 0; i < mod->len; i++)
+		free(m->scan_cnt[i]);
+	free(m->comment);
 
 	D_("free dirname/basename");
 	free(m->dirname);
