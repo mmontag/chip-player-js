@@ -8,8 +8,9 @@ Stable versions
 	- fix resource leak in case of invalid module structure
 	- portability fixes
 	Other changes:
-	- disable poorly implemented and rarely used module formats
 	- disable YM2149 emulator
+	- disable poorly implemented and rarely used module formats
+	- fix mod loop setting in very small loops (reported by Misty De Meo)
 	- fix vibrato effect depth
 	- code cleanup
 
