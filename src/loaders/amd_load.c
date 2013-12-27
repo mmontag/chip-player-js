@@ -186,7 +186,7 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int i, j;
 	struct amd_file_header afh;
 	char regs[11];
-	const int reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
+	const char reg_xlat[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4, 9, 10 };
 
 	LOAD_INIT();
 
@@ -236,7 +236,7 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].nsm = 1;
 
 		for (j = 0; j < 11; j++)
-			regs[j] = afh.ins[i].reg[reg_xlat[j]];
+			regs[j] = afh.ins[i].reg[(int)reg_xlat[j]];
 
 		D_(D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 

@@ -27,7 +27,7 @@ const struct format_loader st_loader = {
     st_load
 };
 
-static const int period[] = {
+static const short period[] = {
     856, 808, 762, 720, 678, 640, 604, 570, 538, 508, 480, 453,
     428, 404, 381, 360, 339, 320, 302, 285, 269, 254, 240, 226,
     214, 202, 190, 180, 170, 160, 151, 143, 135, 127, 120, 113,

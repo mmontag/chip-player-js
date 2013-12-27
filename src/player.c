@@ -65,7 +65,7 @@ static const struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
  * altered). The parameter is the speed of moving the loop.
  */
 
-static const int invloop_table[] = {
+static const short invloop_table[] = {
 	0, 5, 6, 7, 8, 10, 11, 13, 16, 19, 22, 26, 32, 43, 64, 128
 };
 
