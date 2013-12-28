@@ -116,7 +116,7 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
    *      1 longword decrunch info        'decrlen' << 8 | '8 bits other info'
    */
   int success=0;
-  uint8 *output, crypted;
+  uint8 *output /*, crypted*/;
   uint32 outlen;
 
   if (len < 16) {
@@ -129,8 +129,9 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
       /*fprintf(stderr, "File length is not a multiple of 4\n");*/
       return -1;
     }
-    crypted = 0;
+    /*crypted = 0;*/
   }
+#if 0
   else if (data[0]=='P' && data[1]=='X' && data[2]=='2' && data[3]=='0') {
     if ((len-2) & 0x03) {
       /*fprintf(stderr, "(file length - 2) is not a multiple of 4\n");*/
@@ -138,6 +139,7 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
     }
     crypted = 1;
   }
+#endif
   else {
     /*fprintf(stderr, "File does not have the PP signature\n");*/
     return -1;
@@ -153,7 +155,7 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
     return -1;
   }
 
-  if (crypted == 0) {
+  /* if (crypted == 0) { */
     /*fprintf(stderr, "not encrypted, decrunching anyway\n"); */
     if (ppDecrunch(&data[8], output, &data[4], len-12, outlen, data[len-1])) {
       /* fprintf(stderr, "Decrunch successful! "); */
@@ -161,9 +163,9 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
     } else {
       success=-1;
     } 
-  } else {
+  /*} else {
     success=-1;
-  }
+  }*/
   free(output);
   return success;
 }
