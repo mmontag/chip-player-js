@@ -18,8 +18,7 @@
 double	note_to_period		(int, int, int);
 int	note_to_period_mix	(int, int);
 int	period_to_note		(int);
-int	period_to_bend_linear	(double, int, int);
-int	period_to_bend_amiga	(double, int, int, int);
+int	period_to_bend		(double, int, int, int, int);
 void	c2spd_to_note		(int, int *, int *);
 
 #endif /* LIBXMP_PERIOD_H */

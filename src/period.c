@@ -73,27 +73,19 @@ int period_to_note(int p)
 }
 
 
-/* Get pitchbend from base note and linear period */
-int period_to_bend_linear(double p, int n, int gliss)
-{
-    int b;
-
-    if (n == 0)
-	return 0;
-
-    b = 100 * (8 * (((240 - n) << 4) - p));	/* Linear */
-    return gliss ? b / 12800 * 12800 : b;
-}
-
-
 /* Get pitchbend from base note and amiga period */
-int period_to_bend_amiga(double p, int n, int limit, int gliss)
+int period_to_bend(double p, int n, int limit, int gliss, int type)
 {
     int b;
     double d;
 
     if (n == 0)
 	return 0;
+
+    if (type) {
+    	b = 100 * (8 * (((240 - n) << 4) - p));	/* Linear */
+    	return gliss ? b / 12800 * 12800 : b;
+    }
 
     if (limit) {				/* Force Amiga limits */
 	if (p > AMIGA_LIMIT_LOWER)

@@ -403,13 +403,9 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	period = xc->period + extras_get_period(ctx, xc);
 
-	if (HAS_QUIRK(QUIRK_LINEAR)) {
-		linear_bend = period_to_bend_linear(period, xc->note,
-					xc->gliss) - vibrato * 800;
-	} else {
-		linear_bend = period_to_bend_amiga(period + vibrato, xc->note,
-					HAS_QUIRK(QUIRK_MODRNG), xc->gliss);
-	}
+	linear_bend = period_to_bend(period + vibrato, xc->note,
+				HAS_QUIRK(QUIRK_MODRNG), xc->gliss,
+				HAS_QUIRK(QUIRK_LINEAR));
 
 	/* Envelope */
 
