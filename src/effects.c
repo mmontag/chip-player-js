@@ -375,7 +375,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->gliss = fxp;
 			break;
 		case EX_VIBRATO_WF:	/* Set vibrato waveform */
-			set_lfo_waveform(&xc->vibrato, fxp & 3);
+			fxp &= 3;
+			if (HAS_QUIRK(QUIRK_S3MLFO) && fxp == 2)
+				fxp |= 0x10;
+			set_lfo_waveform(&xc->vibrato, fxp);
 			break;
 		case EX_FINETUNE:	/* Set finetune */
 			fxp <<= 4;

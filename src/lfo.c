@@ -22,26 +22,34 @@ static const short sine_wave[WAVEFORM_SIZE] = {
 
 /* LFO */
 
-int get_lfo(struct lfo *lfo)
+int get_lfo(struct lfo *lfo, int div)
 {
-	if (lfo->rate == 0)
+	int val;
+
+	if (lfo->rate == 0 || div == 0)
 		return 0;
 
 	switch (lfo->type) {
-	case 0:	/* sine */
-		return sine_wave[lfo->phase] * lfo->depth;
+	case 0: /* sine */
+		val = sine_wave[lfo->phase];
+		break;
 	case 1:	/* ramp down */
-		return 255 - (lfo->phase << 3);
-	case 2:	/* square wave */
-		return lfo->phase < WAVEFORM_SIZE / 2 ? 255 * lfo->depth : 0;
-	case 3:	/* random */
-		return ((rand() & 0x1ff) - 256) * lfo->depth;
-	case 4:	/* ramp up */
-		return -255 + (lfo->phase << 3);
+		val = 255 - (lfo->phase << 3);
+		break;
+	case 2:	/* square */
+		val = lfo->phase < WAVEFORM_SIZE / 2 ? 255 : -255;
+		break;
+	case 3: /* random */
+		val = ((rand() & 0x1ff) - 256);
+		break;
+	case 0x12: /* S3M square */
+		val = lfo->phase < WAVEFORM_SIZE / 2 ? 255 : 0;
+		break;
 	default:
 		return 0;
 	}
-	
+
+	return val * lfo->depth / div;
 }
 
 void update_lfo(struct lfo *lfo)
