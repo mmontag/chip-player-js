@@ -766,11 +766,13 @@ void xmp_release_module(xmp_context opaque)
 		free(mod->xxi[i].sub);
 		free(mod->xxi[i].extra);
 	}
+	free(mod->xxi);
 
 	for (i = 0; i < mod->smp; i++) {
 		if (mod->xxs[i].data != NULL)
 			free(mod->xxs[i].data - 4);
 	}
+	free(mod->xxs);
 
 	for (i = 0; i < mod->len; i++)
 		free(m->scan_cnt[i]);
@@ -779,6 +781,8 @@ void xmp_release_module(xmp_context opaque)
 	D_("free dirname/basename");
 	free(m->dirname);
 	free(m->basename);
+
+	free(m->scan_cnt);
 }
 
 void xmp_scan_module(xmp_context opaque)
