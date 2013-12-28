@@ -11,6 +11,7 @@ Stable versions
 	- disable YM2149 emulator
 	- disable poorly implemented and rarely used module formats
 	- fix mod loop setting in very small loops (reported by Misty De Meo)
+	- fix linear period mode vibrato handling
 	- refactor vibrato effect processing
 	- code cleanup
 
