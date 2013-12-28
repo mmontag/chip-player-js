@@ -195,9 +195,12 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
     return 0;
 }
 
+/* Sample number adjustment by Vitamin/CAIG */
 static struct xmp_sample* realloc_samples(struct xmp_sample* buf, int* size, int new_size)
 {
   buf = realloc(buf, sizeof (struct xmp_sample) * new_size);
+  if (buf == NULL)
+    return NULL;
   if (new_size > *size)
     memset(buf + *size, 0, sizeof (struct xmp_sample) * (new_size - *size));
   *size = new_size;
@@ -328,19 +331,22 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	    for (j = 0; j < xxi->nsm; j++, sample_num++) {
 		struct xmp_subinstrument *sub = &xxi->sub[j];
 		struct xmp_sample *xxs;
+
 		if (sample_num >= mod->smp) {
 		    mod->xxs = realloc_samples(mod->xxs, &mod->smp, mod->smp * 3 / 2);
+		    if (mod->xxs == NULL)
+			return -1;
 		}
 		xxs = &mod->xxs[sample_num];
 
 		xsh[j].length = hio_read32l(f);		/* Sample length */
 		xsh[j].loop_start = hio_read32l(f);	/* Sample loop start */
 		xsh[j].loop_length = hio_read32l(f);	/* Sample loop length */
-		xsh[j].volume = hio_read8(f);	/* Volume */
+		xsh[j].volume = hio_read8(f);		/* Volume */
 		xsh[j].finetune = hio_read8s(f);	/* Finetune (-128..+127) */
-		xsh[j].type = hio_read8(f);	/* Flags */
-		xsh[j].pan = hio_read8(f);	/* Panning (0-255) */
-		xsh[j].relnote = hio_read8s(f);	/* Relative note number */
+		xsh[j].type = hio_read8(f);		/* Flags */
+		xsh[j].pan = hio_read8(f);		/* Panning (0-255) */
+		xsh[j].relnote = hio_read8s(f);		/* Relative note number */
 		xsh[j].reserved = hio_read8(f);
 		hio_read(&xsh[j].name, 22, 1, f);	/* Sample_name */
 
@@ -416,7 +422,11 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	     hio_seek(f, (int)xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
 	}
     }
+
+    /* Final sample number adjustment */
     mod->xxs = realloc_samples(mod->xxs, &mod->smp, sample_num);
+    if (mod->xxs == NULL)
+	return -1;
 
     return 0;
 }
