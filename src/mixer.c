@@ -613,7 +613,6 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 {
 	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
 	switch (type) {
@@ -632,10 +631,6 @@ void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 	case DSP_EFFECT_FILTER_B1:
 		vi->filter.b1 = val;
 		break;
-	}
-
-	if (vi->fidx & FLAG_SYNTH) {
-		m->synth->seteffect(ctx, voc, type, val);
 	}
 }
 

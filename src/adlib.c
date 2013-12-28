@@ -289,10 +289,6 @@ static void synth_setvol(struct context_data *ctx, int c, int vol)
 	opl_write(a, 0x40 + ofs, (b & 0xc0) | (63 - vol));
 }
 
-static void synth_seteffect(struct context_data *ctx, int c, int type, int val)
-{
-}
-
 static int synth_init(struct context_data *ctx, int freq)
 {
 	SYNTH_CHIP(ctx) = adlib_new();
@@ -355,6 +351,5 @@ const struct synth_info synth_adlib = {
 	synth_setpatch,
 	synth_setnote,
 	synth_setvol,
-	synth_seteffect,
 	synth_mixer
 };
