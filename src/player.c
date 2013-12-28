@@ -586,8 +586,8 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 	}
 
 	if (t % p->speed == 0) {
-		if (TEST(FINE_BEND)) {	/* FIXME */
-			xc->period = (4 * xc->period + xc->freq.fslide) / 4;
+		if (TEST(FINE_BEND)) {
+			xc->period += xc->freq.fslide;
 		}
 		if (TEST(FINE_NSLIDE)) {
 			xc->note += xc->noteslide.fslide;

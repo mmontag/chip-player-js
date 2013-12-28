@@ -137,7 +137,7 @@ struct channel_data {
 
 	struct {
 		int slide;	/* Frequency slide value */
-		int fslide;	/* Fine frequency slide value */
+		double fslide;	/* Fine frequency slide value */
 		int memory;	/* Portamento effect memory */
 	} freq;
 

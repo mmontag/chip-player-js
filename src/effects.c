@@ -467,7 +467,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	    fx_f_porta_up:
 		SET(FINE_BEND);
 		if (fxp)
-			xc->freq.fslide = -fxp * 4;
+			xc->freq.fslide = -fxp;
 		else if (xc->freq.slide > 0)
 			xc->freq.slide *= -1;
 		break;
@@ -475,7 +475,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	    fx_f_porta_dn:
 		SET(FINE_BEND);
 		if (fxp)
-			xc->freq.fslide = fxp * 4;
+			xc->freq.fslide = fxp;
 		else if (xc->freq.slide < 0)
 			xc->freq.slide *= -1;
 		break;
@@ -612,10 +612,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		SET(FINE_BEND);
 		switch (MSN(fxp)) {
 		case 1:
-			xc->freq.fslide = -LSN(fxp);
+			xc->freq.fslide = -0.25 * LSN(fxp);
 			break;
 		case 2:
-			xc->freq.fslide = LSN(fxp);
+			xc->freq.fslide = 0.25 * LSN(fxp);
 			break;
 		}
 		break;
