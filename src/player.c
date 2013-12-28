@@ -401,10 +401,15 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	period = xc->period + vibrato + extras_get_period(ctx, xc);
+	period = xc->period + extras_get_period(ctx, xc);
 
-	linear_bend = period_to_bend(period, xc->note, HAS_QUIRK(QUIRK_MODRNG),
-					xc->gliss, HAS_QUIRK(QUIRK_LINEAR));
+	if (HAS_QUIRK(QUIRK_LINEAR)) {
+		linear_bend = period_to_bend_linear(period, xc->note,
+					xc->gliss) - vibrato * 800;
+	} else {
+		linear_bend = period_to_bend_amiga(period + vibrato, xc->note,
+					HAS_QUIRK(QUIRK_MODRNG), xc->gliss);
+	}
 
 	/* Envelope */
 
