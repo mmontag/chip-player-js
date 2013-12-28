@@ -288,8 +288,10 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	finalvol = extras_get_volume(ctx, xc);
 
-	if (TEST(TREMOLO))
+	if (TEST(TREMOLO)) {
 		finalvol += get_lfo(&xc->tremolo) / 128;
+		update_lfo(&xc->tremolo);
+	}
 
 	CLAMP(finalvol, 0, m->volbase);
 
@@ -377,12 +379,34 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	/* Vibrato */
 
 	vibrato = get_lfo(&xc->insvib.lfo) / (1024 * (1 + xc->insvib.sweep));
+	update_lfo(&xc->insvib.lfo);
+	if (xc->insvib.sweep > 1) {
+		xc->insvib.sweep -= 2;
+	} else {
+		xc->insvib.sweep = 0;
+	}
 
 	if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
-		if (HAS_QUIRK(QUIRK_DEEPVIB)) {
-			vibrato += get_lfo(&xc->vibrato) >> 9;
+		int vib = get_lfo(&xc->vibrato);
+		int shift = 9;
+
+		if (HAS_QUIRK(QUIRK_VIBHALF))
+			shift++;
+
+		if (vib < 0) {
+			vib = (vib + ((1 << shift) - 1)) >> shift;
 		} else {
-			vibrato += get_lfo(&xc->vibrato) >> 10;
+			vib >>= shift;
+		}
+
+		if (HAS_QUIRK(QUIRK_VIBINV)) {
+			vibrato -= vib;
+		} else {
+			vibrato += vib;
+		}
+
+		if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
+			update_lfo(&xc->vibrato);
 		}
 	}
 
@@ -458,8 +482,10 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32, &end);
 	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
 
-	if (TEST(PANBRELLO))
+	if (TEST(PANBRELLO)) {
 		panbrello = get_lfo(&xc->panbrello) / 512;
+		update_lfo(&xc->panbrello);
+	}
 
 	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
@@ -532,8 +558,6 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 	CLAMP(xc->volume, 0, m->volbase);
 	CLAMP(p->gvol, 0, m->gvolbase);
 	CLAMP(xc->mastervol, 0, m->volbase);
-
-	update_lfo(&xc->tremolo);
 }
 
 static void update_frequency(struct context_data *ctx, int chn, int t)
@@ -543,8 +567,9 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 	struct channel_data *xc = &p->xc_data[chn];
 
 	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_PBALL)) {
-		if (TEST(PITCHBEND) || TEST_PER(PITCHBEND))
+		if (TEST(PITCHBEND) || TEST_PER(PITCHBEND)) {
 			xc->period += xc->freq.slide;
+		}
 
 		/* Do tone portamento */
 		if (TEST(TONEPORTA) || TEST_PER(TONEPORTA)) {
@@ -570,7 +595,7 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 	}
 
 	if (t % p->speed == 0) {
-		if (TEST(FINE_BEND)) {
+		if (TEST(FINE_BEND)) {	/* FIXME */
 			xc->period = (4 * xc->period + xc->freq.fslide) / 4;
 		}
 		if (TEST(FINE_NSLIDE)) {
@@ -596,19 +621,6 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 
 	xc->arpeggio.count++;
 	xc->arpeggio.count %= xc->arpeggio.size;
-
-	/* Update vibrato */
-	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
-		update_lfo(&xc->vibrato);
-
-		/* Update instrument vibrato */
-		update_lfo(&xc->insvib.lfo);
-		if (xc->insvib.sweep > 1) {
-			xc->insvib.sweep -= 2;
-		} else {
-			xc->insvib.sweep = 0;
-		}
-	}
 }
 
 static void update_pan(struct context_data *ctx, int chn, int t)
@@ -629,8 +641,6 @@ static void update_pan(struct context_data *ctx, int chn, int t)
 			xc->pan.val = 0xff;
 		}
 	}
-
-	update_lfo(&xc->panbrello);
 }
 
 static void play_channel(struct context_data *ctx, int chn, int t)

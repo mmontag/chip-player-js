@@ -1113,8 +1113,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	m->quirk |= QUIRK_UNISLD;
     } 
 
-    if (!new_fx) {
-	m->quirk |= QUIRK_DEEPVIB;
+    if (new_fx) {
+	m->quirk |= QUIRK_VIBHALF | QUIRK_VIBINV;
+    } else {
 	m->quirk &= ~QUIRK_VIBALL;
     }
 

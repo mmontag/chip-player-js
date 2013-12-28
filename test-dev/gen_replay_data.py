@@ -34,8 +34,8 @@ if argc > 2:
 else:
 	channels = range(mi.mod[0].chn)
 
-while mod.play_frame():
-	mod.get_frame_info(fi)
+while player.play_frame():
+	player.get_frame_info(fi)
 	if fi.loop_count > 0:
 		break
 
