@@ -11,7 +11,7 @@ Stable versions
 	- disable YM2149 emulator
 	- disable poorly implemented and rarely used module formats
 	- fix mod loop setting in very small loops (reported by Misty De Meo)
-	- fix vibrato effect depth
+	- refactor vibrato effect processing
 	- code cleanup
 
 4.2.0 (20131109):
