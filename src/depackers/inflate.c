@@ -401,7 +401,7 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
   {
     /* CM: workaround for crash with whacke.zip */
     if (lengths[t] >= count) {
-      fprintf(stderr, "unzip: decompression error\n");
+      /* fprintf(stderr, "unzip: decompression error\n"); */
       return -1;
     }
 
@@ -961,7 +961,7 @@ if (!is_zip) {
 
   if ((CMF&15)!=8)
   {
-    printf("Unsupported compression used.\n");
+    /* printf("Unsupported compression used.\n"); */
     goto err3;
   }
 
@@ -972,7 +972,8 @@ if (!is_zip) {
 
   if (((CMF*256+FLG)%31)!=0)
   {
-    printf("FCHECK fails.\n");
+    /* printf("FCHECK fails.\n"); */
+    goto err3;
   }
 }
 
@@ -1015,7 +1016,7 @@ if (!is_zip) {
 
       if (block_len!=t)
       {
-        printf("Error: LEN and NLEN don't match (%d %d)\n",block_len,t);
+        /* printf("Error: LEN and NLEN don't match (%d %d)\n",block_len,t); */
         break;
       }
 
@@ -1062,7 +1063,7 @@ if (!is_zip) {
     if (comp_method==3)
     {
       /* Error */
-      printf("Error (inflate): unknown compression type\n");
+      /* printf("Error (inflate): unknown compression type\n"); */
       break;
     }
 

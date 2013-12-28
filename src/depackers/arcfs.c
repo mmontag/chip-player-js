@@ -116,10 +116,9 @@ static int arcfs_extract(FILE *in, FILE *out)
 	if (hdr.method == 0)
 		return -1;
 
-	if ((data = read_file_data(in, &hdr)) == NULL) {
-		fprintf(stderr, "ArcFS: error reading data (hit EOF)\n");
+	/* error reading data (hit EOF) */
+	if ((data = read_file_data(in, &hdr)) == NULL)
 		return -1;
-	}
 
 	orig_data = NULL;
 

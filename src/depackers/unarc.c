@@ -168,7 +168,7 @@ static unsigned char *read_file_data(FILE * in,
 	int siz = hdrp->compressed_size;
 
 	if ((data = malloc(siz)) == NULL)
-		fprintf(stderr, "nomarch: out of memory!\n"), exit(1);
+		return NULL;
 
 	if (fread(data, 1, siz, in) != siz) {
 		free(data);
@@ -221,10 +221,9 @@ static int arc_extract(FILE * in, FILE * out)
 		return -1;
 	}
 
-	if ((data = read_file_data(in, &hdr)) == NULL) {
-		fprintf(stderr, "nomarch: error reading data (hit EOF)\n");
+	/* error reading data (hit EOF) */
+	if ((data = read_file_data(in, &hdr)) == NULL)
 		return -1;
-	}
 
 	orig_data = NULL;
 
