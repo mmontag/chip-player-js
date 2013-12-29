@@ -400,15 +400,11 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		}
 	    }
 	} else {
-	    /* The sample size is a field of struct xm_instrument_header that
-	     * should be in struct xm_instrument according to the (official)
-	     * format description. xmp puts the field in the header because
-	     * Fasttracker writes the modules this way. BUT there's some
-	     * other tracker or conversor out there following the specs
-	     * verbatim and thus creating modules incompatible with those
-	     * created by Fasttracker. The following piece of code is a
-	     * workaround for this problem (allowing xmp to play "Braintomb"
-	     * by Jazztiz/ART). (seek -4)
+	    /* Sample size should be in struct xm_instrument according to
+	     * the official format description, but FT2 actually puts it in
+	     * struct xm_instrument header. There's a tracker or converter
+	     * that follow the specs, so we must handle both cases (see 
+	     * "Braintomb" by Jazztiz/ART).
 	     */
 
 	    /* Umm, Cyke O'Path <cyker@heatwave.co.uk> sent me a couple of
