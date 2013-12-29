@@ -134,6 +134,11 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 	uint8 b;
 	uint16 w;
 
+	D_(D_INFO "Stored patterns: %d", mod->pat);
+	mod->xxp = calloc(sizeof(struct xmp_pattern *), mod->pat + 1);
+	if (mod->xxp == NULL)
+		return -1;
+
 	for (i = 0; i < mod->pat; i++) {
 		if (pattern_alloc(mod, i) < 0)
 			return -1;
@@ -243,11 +248,6 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i],regs) < 0)
 			return -1;
 	}
-
-	D_(D_INFO "Stored patterns: %d", mod->pat);
-	mod->xxp = calloc(sizeof(struct xmp_pattern *), mod->pat + 1);
-	if (mod->xxp == NULL)
-		return -1;
 
 	if (afh.version == 0x10) {
 		if (load_unpacked_patterns(m, f) < 0)
