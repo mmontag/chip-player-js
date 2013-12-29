@@ -49,11 +49,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	struct flow_control *f = &p->flow;
 	int h, l;
 
-	if (fxt >= FX_SYNTH_0 && fxt <= FX_SYNTH_F) {
-		virt_seteffect(ctx, chn, fxt, fxp);
-		return;
-	}
-
 	switch (fxt) {
 	case FX_ARPEGGIO:
 		if (fxp != 0) {
