@@ -7,7 +7,7 @@ TEST(test_read_mem_hio)
 {
 	uint8 mem[100], mem2[100];
 	int i;
-	unsigned int x;
+	int x;
 	HIO_HANDLE *h;
 	struct stat st;
 
@@ -65,10 +65,39 @@ TEST(test_read_mem_hio)
 	fail_unless(x == 0, "hio_fseek SEEK_END");
 
 	x = hio_read8(h);
-	fail_unless(x != EOF, "hio_read8");
-
 	x = hio_eof(h);
-	fail_unless(x != 0, "hio_eof");
+	fail_unless(x != 0, "read8 eof");
+
+	x = hio_read8s(h);
+	x = hio_eof(h);
+	fail_unless(x != 0, "read8s eof");
+
+	x = hio_read16l(h);
+	x = hio_eof(h);
+	fail_unless(x != 0, "read16l eof");
+
+	x = hio_read16b(h);
+	x = hio_eof(h);
+	fail_unless(x != 0, "read16b eof");
+
+	x = hio_read24l(h);
+	x = hio_eof(h);
+	fail_unless(x != 0, "read24l eof");
+
+	x = hio_read24b(h);
+	x = hio_eof(h);
+	fail_unless(x != 0, "read24b eof");
+
+	x = hio_read32l(h);
+	x = hio_eof(h);
+	fail_unless(x != 0, "read32l eof");
+
+	x = hio_read32b(h);
+	x = hio_eof(h);
+	fail_unless(x != 0, "read32b eof");
+
+	x = hio_seek(h, 20, SEEK_CUR);
+	fail_unless(x == -1, "hio_seek");
 
 	x = hio_close(h);
 	fail_unless(x == 0, "hio_close");
