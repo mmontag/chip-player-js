@@ -17,7 +17,7 @@ static int mgt_test (HIO_HANDLE *, char *, const int);
 static int mgt_load (struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mgt_loader = {
-	"Megatracker (MGT)",
+	"Megatracker",
 	mgt_test,
 	mgt_load
 };

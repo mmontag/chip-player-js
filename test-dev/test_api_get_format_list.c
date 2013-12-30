@@ -12,6 +12,6 @@ TEST(test_api_get_format_list)
 		fail_unless(*list[i] != 0, "empty format name");
 	}
 
-	fail_unless(i == 93, "wrong number of formats");
+	fail_unless(i == 94, "wrong number of formats");
 }
 END_TEST

@@ -5,7 +5,7 @@
 #include "common.h"
 #include "hio.h"
 
-#define NUM_FORMATS 53
+#define NUM_FORMATS 54
 #define NUM_PW_FORMATS 40
 
 struct format_loader {
