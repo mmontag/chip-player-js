@@ -119,7 +119,7 @@ PLAYER		= read_event scan period_amiga period_mod_range \
 
 LOADER		= ust ac1d unic unic2 nst flt flt8 wow m15 mtm it it_oldins \
 		  xm102 j2b okt 669 s3m stm stx sfx masi imf ptm far asylum \
-		  dsmi stim rad pt36 psm rtm ice dbm mdl \
+		  dsmi stim rad pt36 psm rtm ice dbm mdl mgt \
 		  med3 med4 mmd3
 
 SYNTH		= adlib #spectrum
