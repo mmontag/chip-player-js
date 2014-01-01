@@ -47,7 +47,6 @@ static int compare_md5(unsigned char *d, char *digest)
 int main()
 {
 	int ret;
-	unsigned char *buf;
 	xmp_context c;
 	struct xmp_frame_info info;
 	long time;
@@ -74,12 +73,6 @@ int main()
 	xmp_set_player(c, XMP_PLAYER_MIX, 100);
 	xmp_set_player(c, XMP_PLAYER_INTERP, XMP_INTERP_SPLINE);
 
-	buf = malloc(XMP_MAX_FRAMESIZE);
-	if (buf == NULL) {
-		printf("can't alloc raw buffer\n");
-		goto err;
-	}
-
 	printf("Testing ");
 	fflush(stdout);
 	time = 0;
@@ -95,7 +88,7 @@ int main()
 		time += info.frame_time;
 
 		if (is_big_endian())
-			convert_endian(buf, info.buffer_size >> 1);
+			convert_endian(info.buffer, info.buffer_size >> 1);
 
 		MD5Update(&ctx, info.buffer, info.buffer_size);
 
