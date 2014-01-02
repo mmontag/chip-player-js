@@ -67,7 +67,7 @@ struct digi_header {
     uint32 sloop[31];		/* Sample loop start for 31 samples */
     uint32 sllen[31];		/* Sample loop length for 31 samples */
     uint8 vol[31];		/* Instrument volumes */
-    uint8 fin[31];		/* Finetunes */
+    int8 fin[31];		/* Finetunes */
     uint8 title[32];		/* Song name */
     uint8 insname[31][30];	/* Instrument names */
 };
@@ -104,7 +104,7 @@ static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < 31; i++)
 	dh.vol[i] = hio_read8(f);
     for (i = 0; i < 31; i++)
-	dh.fin[i] = hio_read8(f);
+	dh.fin[i] = hio_read8s(f);
 
     hio_read(&dh.title, 32, 1, f);
 
