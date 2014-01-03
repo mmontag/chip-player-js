@@ -10,7 +10,7 @@ TEST(test_loader_okt)
 	f = fopen("data/format_okt.data", "r");
 
 	opaque = xmp_create_context();
-	ret = xmp_load_module(opaque, "data/m/Locomotion.okt");
+	ret = xmp_load_module(opaque, "data/m/OKT.Yes-PartII");
 	fail_unless(ret == 0, "module load");
 
 	xmp_get_module_info(opaque, &info);
