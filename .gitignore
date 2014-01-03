@@ -12,8 +12,9 @@
 *.gcda
 *.cov
 a.out
-players/xmp/src/xmp
 lib/
+test-dev/libxmp-covertest
+test-dev/libxmp-tests
 
 # VC++ files
 *.suo
@@ -31,6 +32,8 @@ lib/
 *.med
 *.mod.nt
 *.amf
+*.umx
+*.gtk
 mod.*
 AS.*
 *.NT
@@ -70,6 +73,7 @@ docs/libxmp.3
 docs/libxmp.html
 docs/libxmp.man.rst
 docs/libxmp.pdf
+.test
 
 # Other stuff and leftovers
 xmp.out
