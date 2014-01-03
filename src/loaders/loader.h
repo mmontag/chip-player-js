@@ -17,13 +17,10 @@
 #define SAMPLE_FLAG_NOLOAD	0x0010	/* Get from buffer, don't load */
 #define SAMPLE_FLAG_BIGEND	0x0040	/* Big-endian */
 #define SAMPLE_FLAG_VIDC	0x0080	/* Archimedes VIDC logarithmic */
-#define SAMPLE_FLAG_STEREO	0x0100	/* Interleaved stereo sample */
+/*#define SAMPLE_FLAG_STEREO	0x0100	   Interleaved stereo sample */
 #define SAMPLE_FLAG_FULLREP	0x0200	/* Play full sample before looping */
 #define SAMPLE_FLAG_ADLIB	0x1000	/* Adlib synth instrument */
 #define SAMPLE_FLAG_HSC		0x2000	/* HSC Adlib synth instrument */
-#define SAMPLE_FLAG_SPECTRUM	0x4000	/* Spectrum synth instrument */
-
-#define SAMPLE_FLAG_SYNTH	(SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_SPECTRUM)
 
 int instrument_init(struct xmp_module *);
 int subinstrument_alloc(struct xmp_module *, int, int);

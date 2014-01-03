@@ -88,6 +88,7 @@ static void convert_endian(uint8 *p, int l)
 	}
 }
 
+#if 0
 /* Downmix stereo samples to mono */
 static void convert_stereo_to_mono(uint8 *p, int l, int r)
 {
@@ -103,6 +104,7 @@ static void convert_stereo_to_mono(uint8 *p, int l, int r)
 			p[i] = (p[i * 2] + p[i * 2 + 1]) / 2;
 	}
 }
+#endif
 
 /* Convert 7 bit samples to 8 bit */
 static void convert_7bit_to_8bit(uint8 *p, int l)
@@ -201,11 +203,9 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 {
 	int bytelen, extralen, unroll_extralen, i;
 
-	/* Synth patches
-	 * Default is YM3128 for historical reasons
-	 */
-	if (flags & SAMPLE_FLAG_SYNTH) {
-		const int size = 11;	/* Adlib instrument size */
+	/* Adlib FM patches */
+	if (flags & SAMPLE_FLAG_ADLIB) {
+		const int size = 11;
 
 		if (flags & SAMPLE_FLAG_HSC) {
 			convert_hsc_to_sbi(buffer);
@@ -348,12 +348,14 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 				xxs->flg & XMP_SAMPLE_16BIT);
 	}
 
+#if 0
 	/* Downmix stereo samples */
 	if (flags & SAMPLE_FLAG_STEREO) {
 		convert_stereo_to_mono(xxs->data, xxs->len,
 					xxs->flg & XMP_SAMPLE_16BIT);
 		xxs->len /= 2;
 	}
+#endif
 
 	if (flags & SAMPLE_FLAG_VIDC) {
 		convert_vidc_to_linear(xxs->data, xxs->len);
