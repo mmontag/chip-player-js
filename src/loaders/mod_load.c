@@ -14,7 +14,6 @@
  * - Noisetracker N.T. and M&K! (not tested)
  * - Fast Tracker 6CHN and 8CHN
  * - Fasttracker II/Take Tracker ?CHN and ??CH
- * - M.K. with ADPCM samples (MDZ)
  * - Mod's Grave M.K. w/ 8 channels (WOW)
  * - Atari Octalyser CD61 and CD81
  * - Digital Tracker FA04, FA06 and FA08
