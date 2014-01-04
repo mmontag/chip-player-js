@@ -32,7 +32,7 @@
 
 #include "vorbis.h"
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #define alloca _alloca
 #endif
 
