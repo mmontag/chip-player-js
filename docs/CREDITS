@@ -177,6 +177,18 @@ LHA decompressor
  version 2.1 of the License, or (at your option) any later version.
 
 
+LZX decompressor
+
+ LZX file archiver client
+ XAD library system for archive handling
+ Copyright (C) 1998 and later by Dirk Stöcker <soft@dstoecker.de>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+
 DMF sample decompressor
 IT resonant filters
 IT sample decompressor

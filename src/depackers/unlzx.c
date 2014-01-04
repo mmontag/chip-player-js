@@ -1,104 +1,358 @@
-/* $VER: unlzx.c 1.0 (22.2.98) */
-/* Created: 11.2.98 */
+/*  $Id: LZX.c,v 1.12 2005/06/23 14:54:41 stoecker Exp $
+    LZX file archiver client
 
-/* LZX Extract in (supposedly) portable C.                                */
+    XAD library system for archive handling
+    Copyright (C) 1998 and later by Dirk Stöcker <soft@dstoecker.de>
 
-/* Modified by Claudio Matsuoka for xmp                                   */
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
 
-/* Compile with:                                                          */
-/* gcc unlzx.c -ounlzx -O2                                                */
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
 
-/* Thanks to Dan Fraser for decoding the coredumps and helping me track   */
-/* down some HIDEOUSLY ANNOYING bugs.                                     */
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
-/* Everything is accessed as unsigned char's to try and avoid problems    */
-/* with byte order and alignment. Most of the decrunch functions          */
-/* encourage overruns in the buffers to make things as fast as possible.  */
-/* All the time is taken up in crc_calc() and decrunch() so they are      */
-/* pretty damn optimized. Don't try to understand this program.           */
+/*
+    Modified for xmp by Claudio Matsuoka, 2014-01-04
+*/
 
-/* ---------------------------------------------------------------------- */
-
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "common.h"
 #include "crc32.h"
 
-/* ---------------------------------------------------------------------- */
+#if 0
+#ifndef XADMASTERVERSION
+#define XADMASTERVERSION      10
+#endif
 
-/* static const unsigned char VERSION[]="$VER: unlzx 1.0 (22.2.98)"; */
+XADCLIENTVERSTR("LZX 1.10 (21.2.2004)")
+#define LZX_VERSION             1
+#define LZX_REVISION            10
+/* ---------------------------------------------------------------------- */
+#define LZXINFO_DAMAGE_PROTECT 1
+#define LZXINFO_FLAG_LOCKED 2
+struct LZXInfo_Header {
+    uint8 ID[3];	/* "LZX" */
+    uint8 Flags;	/* LZXINFO_FLAG_#? */
+    uint8 Unknown[6];
+};
+#endif
+
+#define LZXHDR_FLAG_MERGED      (1<<0)
+
+#define LZXHDR_PROT_READ        (1<<0)
+#define LZXHDR_PROT_WRITE       (1<<1)
+#define LZXHDR_PROT_DELETE      (1<<2)
+#define LZXHDR_PROT_EXECUTE     (1<<3)
+#define LZXHDR_PROT_ARCHIVE     (1<<4)
+#define LZXHDR_PROT_HOLD        (1<<5)
+#define LZXHDR_PROT_SCRIPT      (1<<6)
+#define LZXHDR_PROT_PURE        (1<<7)
+
+#define LZXHDR_TYPE_MSDOS       0
+#define LZXHDR_TYPE_WINDOWS     1
+#define LZXHDR_TYPE_OS2         2
+#define LZXHDR_TYPE_AMIGA       10
+#define LZXHDR_TYPE_UNIX        20
+
+#define LZXHDR_PACK_STORE       0
+#define LZXHDR_PACK_NORMAL      2
+#define LZXHDR_PACK_EOF         32
+
+struct LZXArc_Header {
+    uint8 Attributes;	/*  0 - LZXHDR_PROT_#? */
+    uint8 pad1;		/*  1 */
+    uint8 FileSize[4];	/*  2 (little endian) */
+    uint8 CrSize[4];	/*  6 (little endian) */
+    uint8 MachineType;	/* 10 - LZXHDR_TYPE_#? */
+    uint8 PackMode;	/* 11 - LZXHDR_PACK_#? */
+    uint8 Flags;	/* 12 - LZXHDR_FLAG_#? */
+    uint8 pad2;		/* 13 */
+    uint8 CommentSize;	/* 14 - length (0-79) */
+    uint8 ExtractVersion;	/* 15 - version needed to extract */
+    uint8 pad3;		/* 16 */
+    uint8 pad4;		/* 17 */
+    uint8 Date[4];	/* 18 - Packed_Date */
+    uint8 DataCRC[4];	/* 22 (little endian) */
+    uint8 HeaderCRC[4];	/* 26 (little endian) */
+    uint8 FilenameSize;	/* 30 - filename length */
+};				/* SIZE = 31 */
+
+/* Header CRC includes filename and comment. */
+
+#define LZXHEADERSIZE   31
+
+/* Packed date [4 BYTES, bit 0 is MSB, 31 is LSB]
+  bit  0 -  4   Day
+       5 -  8   Month   (January is 0)
+       9 - 14   Year    (start 1970)
+      15 - 19   Hour
+      20 - 25   Minute
+      26 - 31   Second
+*/
+
+struct LZXEntryData {
+    uint32 CRC;		/* CRC of uncrunched data */
+    uint32 PackMode;	/* CrunchMode */
+    uint32 ArchivePos;	/* Position is src file */
+    uint32 DataStart;	/* Position in merged buffer */
+};
+
+#define LZXPE(a)	((struct LZXEntryData *) ((a)->xfi_PrivateInfo))
+#define LZXDD(a)	((struct LZXDecrData *) ((a)->xai_PrivateClient))
+struct LZXDecrData {
+    int mode;
+
+    uint8 archive_header[31];
+    uint8 header_filename[256];
+    uint8 header_comment[256];
+    uint32 crc;
+    uint8 pack_mode;
+    uint32 sum;
+    FILE *outfile;
+
+    struct filename_node *filename_list;
+
+    uint8 *src;
+    uint8 *dest;
+    uint8 *src_end;
+    uint8 *dest_end;
+
+    uint32 method;
+    uint32 decrunch_length;
+    uint32 pack_size;
+    uint32 unpack_size;
+    uint32 last_offset;
+    uint32 control;
+    int shift;
+
+    uint8 offset_len[8];
+    uint16 offset_table[128];
+    uint8 huffman20_len[20];
+    uint16 huffman20_table[96];
+    uint8 literal_len[768];
+    uint16 literal_table[5120];
+
+    uint8 read_buffer[16384];	/* have a reasonable sized read buffer */
+    uint8 buffer[258 + 65536 + 258];	/* allow overrun for speed */
+};
 
 /* ---------------------------------------------------------------------- */
+#if 0
+XADRECOGDATA(LZX)
+{
+    if (data[0] == 'L' && data[1] == 'Z' && data[2] == 'X')
+	return 1;
+    else
+	return 0;
+}
+
+#define XADFIBF_DELETE  (1<<0)
+#define XADFIBF_EXECUTE (1<<1)
+#define XADFIBF_WRITE   (1<<2)
+#define XADFIBF_READ    (1<<3)
+#define XADFIBF_PURE    (1<<4)
+
+XADGETINFO(LZX)
+{
+    int err;
+    uint32 bufpos = 0;
+    struct xadFileInfo *fi, *fig = 0;	/* fig - first grouped ptr */
+    struct LZXArc_Header head;
+
+    if (!
+	(err =
+	 xadHookAccess(XADM XADAC_INPUTSEEK, sizeof(struct LZXInfo_Header), 0,
+		       ai))) {
+	while (!err && ai->xai_InPos < ai->xai_InSize) {
+	    if (!
+		(err =
+		 xadHookAccess(XADM XADAC_READ, LZXHEADERSIZE, &head, ai))) {
+		uint32 i, j, k, l, crc;
+		i = head.CommentSize;
+		j = head.FilenameSize;
+		k = EndGetI32(head.HeaderCRC);
+		head.HeaderCRC[0] = head.HeaderCRC[1] = head.HeaderCRC[2] =
+		    head.HeaderCRC[3] = 0;
+		/* clear for CRC check */
+
+		if (!
+		    (fi =
+		     (struct xadFileInfo *)xadAllocObject(XADM XADOBJ_FILEINFO,
+							  XAD_OBJNAMESIZE,
+							  j + 1,
+							  i ? XAD_OBJCOMMENTSIZE
+							  : TAG_IGNORE, i + 1,
+							  XAD_OBJPRIVINFOSIZE,
+							  sizeof(struct
+								 LZXEntryData),
+							  TAG_DONE)))
+		    err = XADERR_NOMEMORY;
+		else if (!
+			 (err =
+			  xadHookAccess(XADM XADAC_READ, j, fi->xfi_FileName,
+					ai)) && (!i
+						 || !(err =
+						      xadHookAccess(XADM
+								    XADAC_READ,
+								    i,
+								    fi->
+								    xfi_Comment,
+								    ai)))) {
+		    l = EndGetI32(head.CrSize);
+
+		    if (!l
+			|| !(err =
+			     xadHookAccess(XADM XADAC_INPUTSEEK, l, 0, ai))) {
+			crc =
+			    xadCalcCRC32(XADM XADCRC32_ID1, (uint32)~0,
+					 LZXHEADERSIZE, (uint8 *)&head);
+			crc =
+			    xadCalcCRC32(XADM XADCRC32_ID1, crc, j,
+					 (uint8 *)fi->xfi_FileName);
+			if (i)
+			    crc =
+				xadCalcCRC32(XADM XADCRC32_ID1, crc, i,
+					     (uint8 *)fi->xfi_Comment);
+
+			if (~crc != k)
+			    err = XADERR_CHECKSUM;
+			else {
+			    if (!fig) {
+				fig = fi;
+				bufpos = 0;
+			    }
+			    fi->xfi_Size = EndGetI32(head.FileSize);
+			    if (!l && !fi->xfi_Size
+				&& fi->xfi_FileName[--j] == '/') {
+				fi->xfi_FileName[j] = 0;
+				fi->xfi_Flags |= XADFIF_DIRECTORY;
+			    }
+
+			    i = head.Attributes;
+			    j = 0;
+
+			    if (!(i & LZXHDR_PROT_READ))
+				j |= XADFIBF_READ;
+			    if (!(i & LZXHDR_PROT_WRITE))
+				j |= XADFIBF_WRITE;
+			    if (!(i & LZXHDR_PROT_DELETE))
+				j |= XADFIBF_DELETE;
+			    if (!(i & LZXHDR_PROT_EXECUTE))
+				j |= XADFIBF_EXECUTE;
+			    j |= (i &
+				  (LZXHDR_PROT_ARCHIVE | LZXHDR_PROT_SCRIPT));
+			    if (i & LZXHDR_PROT_PURE)
+				j |= XADFIBF_PURE;
+			    if (i & LZXHDR_PROT_HOLD)
+				j |= (1 << 7);	/* not defined in <dos/dos.h> */
+			    fi->xfi_Protection = j;
+
+			    {	/* Make the date */
+				struct xadDate d;
+				j = EndGetM32(head.Date);
+				d.xd_Second = j & 63;
+				j >>= 6;
+				d.xd_Minute = j & 63;
+				j >>= 6;
+				d.xd_Hour = j & 31;
+				j >>= 5;
+				d.xd_Year = 1970 + (j & 63);
+				if (d.xd_Year >= 2028)	/* Original LZX */
+				    d.xd_Year += 2000 - 2028;
+				else if (d.xd_Year < 1978)	/* Dr.Titus */
+				    d.xd_Year += 2034 - 1970;
+				/* Dates from 1978 to 1999 are correct */
+				/* Dates from 2000 to 2027 Mikolaj patch are correct */
+				/* Dates from 2000 to 2005 LZX/Dr.Titus patch are correct */
+				/* Dates from 2034 to 2041 Dr.Titus patch are correct */
+				j >>= 6;
+				d.xd_Month = 1 + (j & 15);
+				j >>= 4;
+				d.xd_Day = j;
+				d.xd_Micros = 0;
+				xadConvertDates(XADM XAD_DATEXADDATE, &d,
+						XAD_GETDATEXADDATE,
+						&fi->xfi_Date, TAG_DONE);
+			    }
+			    LZXPE(fi)->CRC = EndGetI32(head.DataCRC);
+			    LZXPE(fi)->DataStart = bufpos;
+			    bufpos += fi->xfi_Size;
+			    if (head.Flags & LZXHDR_FLAG_MERGED) {
+				fi->xfi_Flags |= XADFIF_GROUPED;
+				if (l) {
+				    fi->xfi_Flags |= XADFIF_ENDOFGROUP;
+				    fi->xfi_GroupCrSize = l;
+				}
+			    } else
+				fi->xfi_CrunchSize = l;
+
+			    if (l) {
+				LZXPE(fi)->ArchivePos = ai->xai_InPos - l;
+				LZXPE(fi)->PackMode = head.PackMode;
+				while (fig) {
+				    fig->xfi_GroupCrSize = l;
+				    LZXPE(fig)->ArchivePos = ai->xai_InPos - l;
+				    LZXPE(fig)->PackMode = head.PackMode;
+				    fig = fig->xfi_Next;
+				}
+			    }
+
+			    err = xadAddFileEntryA(XADM fi, ai, 0);
+			    fi = 0;
+			}	/* skip crunched data */
+		    }		/* get filename and comment */
+		    if (fi)
+			xadFreeObjectA(XADM fi, 0);
+		}		/* xadFileInfo Allocation */
+	    }			/* READ header */
+	}			/* while loop */
+    }
+    /* INPUTSEEK 3 bytes */
+    if (err && ai->xai_FileInfo) {
+	ai->xai_Flags |= XADAIF_FILECORRUPT;
+	ai->xai_LastError = err;
+	err = 0;
+    }
+
+    return err;
+}
+#endif
 
 struct filename_node {
     struct filename_node *next;
-    unsigned int length;
-    unsigned int crc;
+    uint32 length;
+    uint32 crc;
     char filename[256];
 };
 
 /* ---------------------------------------------------------------------- */
 
-struct local_data {
-    int mode;
-
-    unsigned char archive_header[31];
-    unsigned char header_filename[256];
-    unsigned char header_comment[256];
-
-    unsigned int pack_size;
-    unsigned int unpack_size;
-
-    unsigned int crc;
-    unsigned char pack_mode;
-
-    struct filename_node *filename_list;
-
-    unsigned char read_buffer[16384];	/* have a reasonable sized read buffer */
-    unsigned char buffer[258 + 65536 + 258];	/* allow overrun for speed */
-
-    unsigned char *src;
-    unsigned char *dest;
-    unsigned char *src_end;
-    unsigned char *dest_end;
-
-    unsigned int method;
-    unsigned int decrunch_length;
-    unsigned int last_offset;
-    unsigned int control;
-    int shift;
-
-    unsigned char offset_len[8];
-    unsigned short offset_table[128];
-    unsigned char huffman20_len[20];
-    unsigned short huffman20_table[96];
-    unsigned char literal_len[768];
-    unsigned short literal_table[5120];
-
-    unsigned int sum;
-
-    FILE *outfile;
-};
-
-/* ---------------------------------------------------------------------- */
-
-static const unsigned char table_one[32] = {
+static const uint8 table_one[32] = {
     0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10,
     11, 11, 12, 12, 13, 13, 14, 14
 };
 
-static const unsigned int table_two[32] = {
+static const uint32 table_two[32] = {
     0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512,
     768, 1024,
     1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384, 24576, 32768, 49152
 };
 
-static const unsigned int table_three[16] = {
+static const uint32 table_three[16] = {
     0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767
 };
 
-static const unsigned char table_four[34] = {
+static const uint8 table_four[34] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
 };
@@ -109,12 +363,12 @@ static const unsigned char table_four[34] = {
 /* There is an alternate algorithm which is faster but also more complex. */
 
 static int make_decode_table(int number_symbols, int table_size,
-			     unsigned char *length, unsigned short *table)
+			     uint8 *length, uint16 *table)
 {
-    register unsigned char bit_num = 0;
+    register uint8 bit_num = 0;
     register int symbol;
-    unsigned int leaf;		/* could be a register */
-    unsigned int table_mask, bit_mask, pos, fill, next_symbol, reverse;
+    uint32 leaf;		/* could be a register */
+    uint32 table_mask, bit_mask, pos, fill, next_symbol, reverse;
 
     pos = 0;			/* current position in decode table */
 
@@ -211,133 +465,134 @@ static int make_decode_table(int number_symbols, int table_size,
 }
 
 /* ---------------------------------------------------------------------- */
-
 /* Read and build the decrunch tables. There better be enough data in the */
 /* src buffer or it's stuffed. */
 
-static int read_literal_table(struct local_data *data)
+static int read_literal_table(struct LZXDecrData *decr)
 {
-    register unsigned int control;
+    register uint32 control;
     register int shift;
-    unsigned int temp;		/* could be a register */
-    unsigned int symbol, pos, count, fix, max_symbol;
+    uint32 temp;		/* could be a register */
+    uint32 symbol, pos, count, fix, max_symbol;
+    uint8 *src;
     int abort = 0;
 
-    control = data->control;
-    shift = data->shift;
+    control = decr->control;
+    shift = decr->shift;
+    src = decr->src;
 
     if (shift < 0) {		/* fix the control word if necessary */
 	shift += 16;
-	control += *data->src++ << (8 + shift);
-	control += *data->src++ << shift;
+	control += *src++ << (8 + shift);
+	control += *src++ << shift;
     }
 
     /* read the decrunch method */
 
-    data->method = control & 7;
+    decr->method = control & 7;
     control >>= 3;
     shift -= 3;
 
     if (shift < 0) {
 	shift += 16;
-	control += *data->src++ << (8 + shift);
-	control += *data->src++ << shift;
+	control += *src++ << (8 + shift);
+	control += *src++ << shift;
     }
 
     /* Read and build the offset huffman table */
 
-    if (!abort && data->method == 3) {
+    if (!abort && decr->method == 3) {
 	for (temp = 0; temp < 8; temp++) {
-	    data->offset_len[temp] = control & 7;
+	    decr->offset_len[temp] = control & 7;
 	    control >>= 3;
 	    if ((shift -= 3) < 0) {
 		shift += 16;
-		control += *data->src++ << (8 + shift);
-		control += *data->src++ << shift;
+		control += *src++ << (8 + shift);
+		control += *src++ << shift;
 	    }
 	}
-	abort = make_decode_table(8, 7, data->offset_len, data->offset_table);
+	abort = make_decode_table(8, 7, decr->offset_len, decr->offset_table);
     }
 
     /* read decrunch length */
 
     if (!abort) {
-	data->decrunch_length = (control & 255) << 16;
+	decr->decrunch_length = (control & 255) << 16;
 	control >>= 8;
 	shift -= 8;
 
 	if (shift < 0) {
 	    shift += 16;
-	    control += *data->src++ << (8 + shift);
-	    control += *data->src++ << shift;
+	    control += *src++ << (8 + shift);
+	    control += *src++ << shift;
 	}
 
-	data->decrunch_length += (control & 255) << 8;
+	decr->decrunch_length += (control & 255) << 8;
 	control >>= 8;
 	shift -= 8;
 
 	if (shift < 0) {
 	    shift += 16;
-	    control += *data->src++ << (8 + shift);
-	    control += *data->src++ << shift;
+	    control += *src++ << (8 + shift);
+	    control += *src++ << shift;
 	}
 
-	data->decrunch_length += (control & 255);
+	decr->decrunch_length += (control & 255);
 	control >>= 8;
 	shift -= 8;
 
 	if (shift < 0) {
 	    shift += 16;
-	    control += *data->src++ << (8 + shift);
-	    control += *data->src++ << shift;
+	    control += *src++ << (8 + shift);
+	    control += *src++ << shift;
 	}
     }
 
     /* read and build the huffman literal table */
 
-    if (!abort && data->method != 1) {
+    if (!abort && decr->method != 1) {
 	pos = 0;
 	fix = 1;
 	max_symbol = 256;
 
 	do {
 	    for (temp = 0; temp < 20; temp++) {
-		data->huffman20_len[temp] = control & 15;
+		decr->huffman20_len[temp] = control & 15;
 		control >>= 4;
 		if ((shift -= 4) < 0) {
 		    shift += 16;
-		    control += *data->src++ << (8 + shift);
-		    control += *data->src++ << shift;
+		    control += *src++ << (8 + shift);
+		    control += *src++ << shift;
 		}
 	    }
-	    abort = make_decode_table(20, 6, data->huffman20_len,
-				  data->huffman20_table);
+	    abort = make_decode_table(20, 6, decr->huffman20_len,
+				  decr->huffman20_table);
 
 	    if (abort)
 		break;		/* argh! table is corrupt! */
 
 	    do {
-		if ((symbol = data->huffman20_table[control & 63]) >= 20) {
+		if ((symbol = decr->huffman20_table[control & 63]) >= 20) {
 		    do {	/* symbol is longer than 6 bits */
-			symbol = data->huffman20_table[((control >> 6) & 1) +
+			symbol = decr->huffman20_table[((control >> 6) & 1) +
 						  (symbol << 1)];
 			if (!shift--) {
 			    shift += 16;
-			    control += *data->src++ << 24;
-			    control += *data->src++ << 16;
+			    control += *src++ << 24;
+			    control += *src++ << 16;
 			}
 			control >>= 1;
 		    } while (symbol >= 20);
 		    temp = 6;
 		} else {
-		    temp = data->huffman20_len[symbol];
+		    temp = decr->huffman20_len[symbol];
 		}
 
 		control >>= temp;
 		if ((shift -= temp) < 0) {
 		    shift += 16;
-		    control += *data->src++ << (8 + shift);
-		    control += *data->src++ << shift;
+		    control += *src++ << (8 + shift);
+		    control += *src++ << shift;
 		}
 
 		switch (symbol) {
@@ -356,56 +611,56 @@ static int read_literal_table(struct local_data *data)
 
 		    if ((shift -= temp) < 0) {
 			shift += 16;
-			control += *data->src++ << (8 + shift);
-			control += *data->src++ << shift;
+			control += *src++ << (8 + shift);
+			control += *src++ << shift;
 		    }
 
 		    while ((pos < max_symbol) && (count--))
-			data->literal_len[pos++] = 0;
+			decr->literal_len[pos++] = 0;
 
 		    break;
 		case 19:
 		    count = (control & 1) + 3 + fix;
 		    if (!shift--) {
 			shift += 16;
-			control += *data->src++ << 24;
-			control += *data->src++ << 16;
+			control += *src++ << 24;
+			control += *src++ << 16;
 		    }
 
 		    control >>= 1;
-		    if ((symbol = data->huffman20_table[control & 63]) >= 20) {
+		    if ((symbol = decr->huffman20_table[control & 63]) >= 20) {
 			do {	/* symbol is longer than 6 bits */
 			    symbol =
-				data->huffman20_table[((control >> 6) & 1) +
+				decr->huffman20_table[((control >> 6) & 1) +
 						      (symbol << 1)];
 			    if (!shift--) {
 				shift += 16;
-				control += *data->src++ << 24;
-				control += *data->src++ << 16;
+				control += *src++ << 24;
+				control += *src++ << 16;
 			    }
 			    control >>= 1;
 			} while (symbol >= 20);
 			temp = 6;
 		    } else {
-			temp = data->huffman20_len[symbol];
+			temp = decr->huffman20_len[symbol];
 		    }
 
 		    control >>= temp;
 
 		    if ((shift -= temp) < 0) {
 			shift += 16;
-			control += *data->src++ << (8 + shift);
-			control += *data->src++ << shift;
+			control += *src++ << (8 + shift);
+			control += *src++ << shift;
 		    }
-		    symbol = table_four[data->literal_len[pos] + 17 - symbol];
+		    symbol = table_four[decr->literal_len[pos] + 17 - symbol];
 
 		    while (pos < max_symbol && count--)
-			data->literal_len[pos++] = symbol;
+			decr->literal_len[pos++] = symbol;
 
 		    break;
 		default:
-		    symbol = table_four[data->literal_len[pos] + 17 - symbol];
-		    data->literal_len[pos++] = symbol;
+		    symbol = table_four[decr->literal_len[pos] + 17 - symbol];
+		    decr->literal_len[pos++] = symbol;
 		    break;
 		}
 	    } while (pos < max_symbol);
@@ -415,95 +670,98 @@ static int read_literal_table(struct local_data *data)
 	} while (max_symbol == 768);
 
 	if (!abort)
-	    abort = make_decode_table(768, 12, data->literal_len,
-				  data->literal_table);
+	    abort = make_decode_table(768, 12, decr->literal_len,
+				  decr->literal_table);
     }
 
-    data->control = control;
-    data->shift = shift;
+    decr->control = control;
+    decr->shift = shift;
+    decr->src = src;
 
     return abort;
 }
 
 /* ---------------------------------------------------------------------- */
 
-/* Fill up the decrunch buffer. Needs lots of overrun for both data->dest */
+/* Fill up the decrunch buffer. Needs lots of overrun for both decr->dest */
 /* and src buffers. Most of the time is spent in this routine so it's  */
 /* pretty damn optimized. */
 
-static void decrunch(struct local_data *data)
+static void decrunch(struct LZXDecrData *decr)
 {
-    register unsigned int control;
+    register uint32 control;
     register int shift;
-    unsigned int temp;		/* could be a register */
-    unsigned int symbol, count;
-    unsigned char *string;
+    uint32 temp;		/* could be a register */
+    uint32 symbol, count;
+    uint8 *string, *src, *dest;
 
-    control = data->control;
-    shift = data->shift;
+    control = decr->control;
+    shift = decr->shift;
+    src = decr->src;
+    dest = decr->dest;
 
     do {
-	if ((symbol = data->literal_table[control & 4095]) >= 768) {
+	if ((symbol = decr->literal_table[control & 4095]) >= 768) {
 	    control >>= 12;
 
 	    if ((shift -= 12) < 0) {
 		shift += 16;
-		control += *data->src++ << (8 + shift);
-		control += *data->src++ << shift;
+		control += *src++ << (8 + shift);
+		control += *src++ << shift;
 	    }
 	    do {		/* literal is longer than 12 bits */
-		symbol = data->literal_table[(control & 1) + (symbol << 1)];
+		symbol = decr->literal_table[(control & 1) + (symbol << 1)];
 		if (!shift--) {
 		    shift += 16;
-		    control += *data->src++ << 24;
-		    control += *data->src++ << 16;
+		    control += *src++ << 24;
+		    control += *src++ << 16;
 		}
 		control >>= 1;
 	    } while (symbol >= 768);
 	} else {
-	    temp = data->literal_len[symbol];
+	    temp = decr->literal_len[symbol];
 	    control >>= temp;
 
 	    if ((shift -= temp) < 0) {
 		shift += 16;
-		control += *data->src++ << (8 + shift);
-		control += *data->src++ << shift;
+		control += *src++ << (8 + shift);
+		control += *src++ << shift;
 	    }
 	}
 
 	if (symbol < 256) {
-	    *data->dest++ = symbol;
+	    *dest++ = symbol;
 	} else {
 	    symbol -= 256;
 	    count = table_two[temp = symbol & 31];
 	    temp = table_one[temp];
 
-	    if ((temp >= 3) && (data->method == 3)) {
+	    if ((temp >= 3) && (decr->method == 3)) {
 		temp -= 3;
 		count += ((control & table_three[temp]) << 3);
 		control >>= temp;
 		if ((shift -= temp) < 0) {
 		    shift += 16;
-		    control += *data->src++ << (8 + shift);
-		    control += *data->src++ << shift;
+		    control += *src++ << (8 + shift);
+		    control += *src++ << shift;
 		}
-		count += (temp = data->offset_table[control & 127]);
-		temp = data->offset_len[temp];
+		count += (temp = decr->offset_table[control & 127]);
+		temp = decr->offset_len[temp];
 	    } else {
 		count += control & table_three[temp];
 		if (!count)
-		    count = data->last_offset;
+		    count = decr->last_offset;
 	    }
 
 	    control >>= temp;
 
 	    if ((shift -= temp) < 0) {
 		shift += 16;
-		control += *data->src++ << (8 + shift);
-		control += *data->src++ << shift;
+		control += *src++ << (8 + shift);
+		control += *src++ << shift;
 	    }
 
-	    data->last_offset = count;
+	    decr->last_offset = count;
 
 	    count = table_two[temp = (symbol >> 5) & 15] + 3;
 	    temp = table_one[temp];
@@ -513,79 +771,81 @@ static void decrunch(struct local_data *data)
 	    shift -= temp;
 	    if (shift < 0) {
 		shift += 16;
-		control += *data->src++ << (8 + shift);
-		control += *data->src++ << shift;
+		control += *src++ << (8 + shift);
+		control += *src++ << shift;
 	    }
 
-	    string = (data->buffer + data->last_offset < data->dest) ?
-			data->dest - data->last_offset :
-			data->dest + 65536 - data->last_offset;
+	    string = (decr->buffer + decr->last_offset < dest) ?
+			dest - decr->last_offset :
+			dest + 65536 - decr->last_offset;
 
 	    do {
-		*data->dest++ = *string++;
+		*dest++ = *string++;
 	    } while (--count);
 	}
-    } while (data->dest < data->dest_end && data->src < data->src_end);
+    } while (dest < decr->dest_end && src < decr->src_end);
 
-    data->control = control;
-    data->shift = shift;
+    decr->control = control;
+    decr->shift = shift;
+    decr->src = src;
+    decr->dest = dest;
 }
 
 /* ---------------------------------------------------------------------- */
 
 /* Trying to understand this function is hazardous. */
 
-static int extract_normal(FILE * in_file, struct local_data *data)
+static int extract_normal(FILE * in_file, struct LZXDecrData *decr)
 {
     struct filename_node *node;
     FILE *out_file = 0;
-    unsigned char *pos;
-    unsigned char *temp;
-    unsigned int count;
+    uint8 *pos;
+    uint8 *temp;
+    uint32 count;
     int abort = 0;
 
-    data->control = 0;	/* initial control word */
-    data->shift = -16;
-    data->last_offset = 1;
-    data->unpack_size = 0;
-    data->decrunch_length = 0;
+    decr->control = 0;	/* initial control word */
+    decr->shift = -16;
+    decr->last_offset = 1;
+    decr->unpack_size = 0;
+    decr->decrunch_length = 0;
 
-    memset(data->offset_len, 0, 8);
-    memset(data->literal_len, 0, 768);
+    memset(decr->offset_len, 0, 8);
+    memset(decr->literal_len, 0, 768);
 
-    data->src = data->read_buffer + 16384;
-    data->src_end = data->src - 1024;
-    pos = data->dest_end = data->dest = data->buffer + 258 + 65536;
+    decr->src = decr->read_buffer + 16384;
+    decr->src_end = decr->src - 1024;
+    pos = decr->dest_end = decr->dest = decr->buffer + 258 + 65536;
 
-    for (node = data->filename_list; (!abort) && node; node = node->next) {
+    for (node = decr->filename_list; (!abort) && node; node = node->next) {
 	/*printf("Extracting \"%s\"...", node->filename);
 	   fflush(stdout); */
 
 	if (exclude_match(node->filename)) {
 	    out_file = NULL;
 	} else {
-	    out_file = data->outfile;
+	    out_file = decr->outfile;
 	}
 
-	data->sum = 0;		/* reset CRC */
-	data->unpack_size = node->length;
+	decr->sum = 0;		/* reset CRC */
+	decr->unpack_size = node->length;
 
-	while (data->unpack_size > 0) {
+	while (decr->unpack_size > 0) {
 
-	    if (pos == data->dest) {	/* time to fill the buffer? */
+	    if (pos == decr->dest) {	/* time to fill the buffer? */
 /* check if we have enough data and read some if not */
-		if (data->src >= data->src_end) {	/* have we exhausted the current read buffer? */
-		    temp = data->read_buffer;
-		    if ((count = temp - data->src + 16384)) {
+		if (decr->src >= decr->src_end) {	/* have we exhausted the current read buffer? */
+		    temp = decr->read_buffer;
+		    if ((count = temp - decr->src + 16384)) {
 			do {	/* copy the remaining overrun to the start of the buffer */
-			    *temp++ = *data->src++;
+			    *temp++ = *decr->src++;
 			} while (--count);
 		    }
-		    data->src = data->read_buffer;
-		    count = data->src - temp + 16384;
+		    decr->src = decr->read_buffer;
+		    count = decr->src - temp + 16384;
 
-		    if (data->pack_size < count)
-			count = data->pack_size;	/* make sure we don't read too much */
+		    if (decr->pack_size < count)
+			count = decr->pack_size;	/* make sure we don't read too much */
 
 		    if (fread(temp, 1, count, in_file) != count) {
 			/* printf("\n");
@@ -596,50 +856,50 @@ static int extract_normal(FILE * in_file, struct local_data *data)
 			abort = 1;
 			break;	/* fatal error */
 		    }
-		    data->pack_size -= count;
+		    decr->pack_size -= count;
 
 		    temp += count;
-		    if (data->src >= temp)
+		    if (decr->src >= temp)
 			break;	/* argh! no more data! */
 		}
 
-		/* if(src >= data->src_end) */
+		/* if(src >= decr->src_end) */
 		/* check if we need to read the tables */
-		if (data->decrunch_length <= 0) {
-		    if (read_literal_table(data))
+		if (decr->decrunch_length <= 0) {
+		    if (read_literal_table(decr))
 			break;	/* argh! can't make huffman tables! */
 		}
 
                 /* unpack some data */
-		if (data->dest >= data->buffer + 258 + 65536) {
+		if (decr->dest >= decr->buffer + 258 + 65536) {
 		    if ((count =
-			 data->dest - data->buffer - 65536)) {
-			temp = (data->dest =
-				data->buffer) + 65536;
+			 decr->dest - decr->buffer - 65536)) {
+			temp = (decr->dest =
+				decr->buffer) + 65536;
 			do {	/* copy the overrun to the start of the buffer */
-			    *data->dest++ = *temp++;
+			    *decr->dest++ = *temp++;
 			} while (--count);
 		    }
-		    pos = data->dest;
+		    pos = decr->dest;
 		}
-		data->dest_end = data->dest + data->decrunch_length;
-		if (data->dest_end > data->buffer + 258 + 65536)
-		    data->dest_end = data->buffer + 258 + 65536;
-		temp = data->dest;
+		decr->dest_end = decr->dest + decr->decrunch_length;
+		if (decr->dest_end > decr->buffer + 258 + 65536)
+		    decr->dest_end = decr->buffer + 258 + 65536;
+		temp = decr->dest;
 
-		decrunch(data);
+		decrunch(decr);
 
-		data->decrunch_length -= (data->dest - temp);
+		decr->decrunch_length -= (decr->dest - temp);
 	    }
 
             /* calculate amount of data we can use before we need to
              * fill the buffer again
              */
-	    count = data->dest - pos;
-	    if (count > data->unpack_size)
-		count = data->unpack_size;	/* take only what we need */
+	    count = decr->dest - pos;
+	    if (count > decr->unpack_size)
+		count = decr->unpack_size;	/* take only what we need */
 
-	    data->sum = crc32_A1(pos, count, data->sum);
+	    decr->sum = crc32_A1(pos, count, decr->sum);
 
 	    if (out_file) {	/* Write the data to the file */
 		abort = 1;
@@ -651,7 +911,7 @@ static int extract_normal(FILE * in_file, struct local_data *data)
 #endif
 		}
 	    }
-	    data->unpack_size -= count;
+	    decr->unpack_size -= count;
 	    pos += count;
 	}
 
@@ -671,33 +931,33 @@ static int extract_normal(FILE * in_file, struct local_data *data)
 
 /* This is less complex than extract_normal. Almost decipherable. */
 
-static int extract_store(FILE * in_file, struct local_data *data)
+static int extract_store(FILE * in_file, struct LZXDecrData *decr)
 {
     struct filename_node *node;
     FILE *out_file;
-    unsigned int count;
+    uint32 count;
     int abort = 0;
 
-    for (node = data->filename_list; (!abort) && node; node = node->next) {
+    for (node = decr->filename_list; (!abort) && node; node = node->next) {
 	/*printf("Storing \"%s\"...", node->filename);
 	   fflush(stdout); */
 
 	if (exclude_match(node->filename)) {
 	    out_file = NULL;
 	} else {
-	    out_file = data->outfile;
+	    out_file = decr->outfile;
 	}
 
-	data->sum = 0;		/* reset CRC */
+	decr->sum = 0;		/* reset CRC */
 
-	data->unpack_size = node->length;
-	if (data->unpack_size > data->pack_size)
-	    data->unpack_size = data->pack_size;
+	decr->unpack_size = node->length;
+	if (decr->unpack_size > decr->pack_size)
+	    decr->unpack_size = decr->pack_size;
 
-	while (data->unpack_size > 0) {
-	    count = (data->unpack_size > 16384) ? 16384 : data->unpack_size;
+	while (decr->unpack_size > 0) {
+	    count = (decr->unpack_size > 16384) ? 16384 : decr->unpack_size;
 
-	    if (fread(data->read_buffer, 1, count, in_file) != count) {
+	    if (fread(decr->read_buffer, 1, count, in_file) != count) {
 		/* printf("\n");
 		if (ferror(in_file))
 		    perror("FRead(Data)");
@@ -706,13 +966,13 @@ static int extract_store(FILE * in_file, struct local_data *data)
 		abort = 1;
 		break;		/* fatal error */
 	    }
-	    data->pack_size -= count;
+	    decr->pack_size -= count;
 
-	    data->sum = crc32_A1(data->read_buffer, count, data->sum);
+	    decr->sum = crc32_A1(decr->read_buffer, count, decr->sum);
 
 	    if (out_file) {	/* Write the data to the file */
 		abort = 1;
-		if (fwrite(data->read_buffer, 1, count, out_file) != count) {
+		if (fwrite(decr->read_buffer, 1, count, out_file) != count) {
 #if 0
 		    perror("FWrite");	/* argh! write error */
 		    fclose(out_file);
@@ -720,7 +980,7 @@ static int extract_store(FILE * in_file, struct local_data *data)
 #endif
 		}
 	    }
-	    data->unpack_size -= count;
+	    decr->unpack_size -= count;
 	}
     }				/* for */
 
@@ -729,28 +989,14 @@ static int extract_store(FILE * in_file, struct local_data *data)
 
 /* ---------------------------------------------------------------------- */
 
-/* Easiest of the three. Just print the file(s) we didn't understand. */
-
-static int extract_unknown(FILE * in_file, struct local_data *data)
+static int extract_unknown(FILE * in_file, struct LZXDecrData *decr)
 {
-    struct filename_node *node;
-    int abort = 0;
-
-    for (node = data->filename_list; node; node = node->next) {
-	fprintf(stderr, "unlzx: unknown \"%s\"\n", node->filename);
-    }
-
-    return abort;
+    return 0;
 }
 
-/* ---------------------------------------------------------------------- */
-
-/* Read the archive and build a linked list of names. Merged files is     */
-/* always assumed. Will fail if there is no memory for a node. Sigh.      */
-
-static int extract_archive(FILE * in_file, struct local_data *data)
+static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 {
-    unsigned int temp;
+    uint32 temp;
     struct filename_node **filename_next;
     struct filename_node *node;
     struct filename_node *temp_node;
@@ -758,12 +1004,12 @@ static int extract_archive(FILE * in_file, struct local_data *data)
     int abort;
     int result = 1;		/* assume an error */
 
-    data->filename_list = 0;	/* clear the list */
-    filename_next = &data->filename_list;
+    decr->filename_list = 0;	/* clear the list */
+    filename_next = &decr->filename_list;
 
     do {
 	abort = 1;		/* assume an error */
-	actual = fread(data->archive_header, 1, 31, in_file);
+	actual = fread(decr->archive_header, 1, 31, in_file);
 	if (ferror(in_file)) {
 	    /* perror("FRead(Archive_Header)"); */
 	    continue;
@@ -779,14 +1025,14 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	    continue;
 	}
 
-	data->sum = 0;		/* reset CRC */
-	data->crc = readmem32l(data->archive_header + 26);
+	decr->sum = 0;		/* reset CRC */
+	decr->crc = readmem32l(decr->archive_header + 26);
 
 	/* Must set the field to 0 before calculating the crc */
-	memset(data->archive_header + 26, 0, 4);
-	data->sum = crc32_A1(data->archive_header, 31, data->sum);
-	temp = data->archive_header[30];	/* filename length */
-	actual = fread(data->header_filename, 1, temp, in_file);
+	memset(decr->archive_header + 26, 0, 4);
+	decr->sum = crc32_A1(decr->archive_header, 31, decr->sum);
+	temp = decr->archive_header[30];	/* filename length */
+	actual = fread(decr->header_filename, 1, temp, in_file);
 
 	if (ferror(in_file)) {
 	    /* perror("FRead(Header_Filename)"); */
@@ -798,10 +1044,10 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	    continue;
 	}
 
-	data->header_filename[temp] = 0;
-	data->sum = crc32_A1(data->header_filename, temp, data->sum);
-	temp = data->archive_header[14];	/* comment length */
-	actual = fread(data->header_comment, 1, temp, in_file);
+	decr->header_filename[temp] = 0;
+	decr->sum = crc32_A1(decr->header_filename, temp, decr->sum);
+	temp = decr->archive_header[14];	/* comment length */
+	actual = fread(decr->header_comment, 1, temp, in_file);
 
 	if (ferror(in_file)) {
 	    /* perror("FRead(Header_Comment)"); */
@@ -813,18 +1059,18 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	    continue;
 	}
 
-	data->header_comment[temp] = 0;
-	data->sum = crc32_A1(data->header_comment, temp, data->sum);
+	decr->header_comment[temp] = 0;
+	decr->sum = crc32_A1(decr->header_comment, temp, decr->sum);
 
-	if (data->sum != data->crc) {
+	if (decr->sum != decr->crc) {
 	    /* fprintf(stderr, "CRC: Archive_Header\n"); */
 	    continue;
 	}
 
-	data->unpack_size = readmem32l(data->archive_header + 2);
-	data->pack_size = readmem32l(data->archive_header + 6);
-	data->pack_mode = data->archive_header[11];
-	data->crc = readmem32l(data->archive_header + 22);
+	decr->unpack_size = readmem32l(decr->archive_header + 2);
+	decr->pack_size = readmem32l(decr->archive_header + 6);
+	decr->pack_mode = decr->archive_header[11];
+	decr->crc = readmem32l(decr->archive_header + 22);
 
 	/* allocate a filename node */
 	node = malloc(sizeof(struct filename_node));
@@ -836,42 +1082,42 @@ static int extract_archive(FILE * in_file, struct local_data *data)
 	*filename_next = node;	/* add this node to the list */
 	filename_next = &(node->next);
 	node->next = 0;
-	node->length = data->unpack_size;
-	node->crc = data->crc;
-	for (temp = 0; (node->filename[temp] = data->header_filename[temp]);
+	node->length = decr->unpack_size;
+	node->crc = decr->crc;
+	for (temp = 0; (node->filename[temp] = decr->header_filename[temp]);
 	     temp++) ;
 
-	if (data->pack_size == 0) {
+	if (decr->pack_size == 0) {
 	    abort = 0;		/* continue */
 	    continue;
 	}
 
-	switch (data->pack_mode) {
-	case 0:		/* store */
-	    abort = extract_store(in_file, data);
+	switch (decr->pack_mode) {
+	case 0:			/* store */
+	    /*abort =*/ extract_store(in_file, decr);
 	    abort = 1;		/* for xmp */
 	    break;
-	case 2:		/* normal */
-	    abort = extract_normal(in_file, data);
+	case 2:			/* normal */
+	    /*abort =*/ extract_normal(in_file, decr);
 	    abort = 1;		/* for xmp */
 	    break;
 	default:		/* unknown */
-	    abort = extract_unknown(in_file, data);
+	    /*abort =*/ extract_unknown(in_file, decr);
 	    break;
 	}
 
 	if (abort)
 	    break;		/* a read error occured */
 
-	temp_node = data->filename_list;	/* free the list now */
+	temp_node = decr->filename_list;	/* free the list now */
 	while ((node = temp_node)) {
 	    temp_node = node->next;
 	    free(node);
 	}
-	data->filename_list = 0;	/* clear the list */
-	filename_next = &data->filename_list;
+	decr->filename_list = 0;	/* clear the list */
+	filename_next = &decr->filename_list;
 
-	if (fseek(in_file, data->pack_size, SEEK_CUR)) {
+	if (fseek(in_file, decr->pack_size, SEEK_CUR)) {
 	    /* perror("FSeek(Data)"); */
 	    break;
 	}
@@ -879,7 +1125,7 @@ static int extract_archive(FILE * in_file, struct local_data *data)
     } while (!abort);
 
     /* free the filename list in case an error occured */
-    temp_node = data->filename_list;
+    temp_node = decr->filename_list;
     while ((node = temp_node)) {
 	temp_node = node->next;
 	free(node);
@@ -888,24 +1134,24 @@ static int extract_archive(FILE * in_file, struct local_data *data)
     return result;
 }
 
-int decrunch_lzx(FILE * f, FILE * fo)
+int decrunch_lzx(FILE *f, FILE *fo)
 {
-	struct local_data *data;
+	struct LZXDecrData *decr;
 
 	if (fo == NULL)
 		return -1;
 
-	data = malloc(sizeof(struct local_data));
-	if (data == NULL)
+	decr = malloc(sizeof(struct LZXDecrData));
+	if (decr == NULL)
 		return -1;
 
 	fseek(f, 10, SEEK_CUR);	/* skip header */
 
 	crc32_init_A();
-	data->outfile = fo;
-	extract_archive(f, data);
+	decr->outfile = fo;
+	extract_archive(f, decr);
 
-	free(data);
+	free(decr);
 
 	return 0;
 }
