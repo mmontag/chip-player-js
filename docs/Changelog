@@ -4,6 +4,7 @@ Stable versions
 4.2.2 ():
 	- re-enable Falcon MegaTracker loader
 	- fix DIGI Booster finetune (reported by Andreas Argirakis)
+	- fix crash in zip depacker
 	- replace LZX decompressor code with LGPL version from XAD
 
 4.2.1 (20131229):
