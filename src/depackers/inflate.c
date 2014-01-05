@@ -771,7 +771,7 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
         bitstream->holding>>=length_extra_bits[code];
       }
 
-      if (huffman->dist_huff_count==0)
+      if (huffman_tree_dist == 0 || huffman->dist_huff_count==0)
       {
         if (bitstream->bitptr<5)
         {
