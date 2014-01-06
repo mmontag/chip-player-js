@@ -11,7 +11,6 @@
  * Specification - Revision 2 by MenTaLguY
  */
 
-#include <assert.h>
 #include "loader.h"
 #include "period.h"
 
@@ -108,7 +107,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hio_read32b(f);		/* skip magic */
+	hio_read32b(f);			/* skip magic */
 	hio_read(mod->name, 1, 32, f);
 	hio_seek(f, 32, SEEK_CUR);	/* skip author */
 
@@ -130,12 +129,16 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read(panmap, 32, 1, f);
 	for (i = 0; i < 32; i++) {
-		if (panmap[i] == 16)
+		if (panmap[i] == 255) {
 			panmap[i] = 8;
+			mod->xxc[i].vol = 0;
+			mod->xxc[i].flg |= XMP_CHANNEL_MUTE;
+		} else if (panmap[i] == 16) {
+			panmap[i] = 8;
+		}
 		mod->xxc[i].pan = 0x80 + (panmap[i] - 8) * 16;
 	}
 
-	mod->chn = 32;
 	mod->gvl = hio_read8(f);
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);
@@ -147,7 +150,6 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ins_ofs = hio_read32l(f);
 	smp_ofs = hio_read32l(f);
 	mod->ins = mod->smp = hio_read8(f) + 1;
-	mod->trk = mod->pat * mod->chn;
 	
 	MODULE_INFO();
 
@@ -218,9 +220,53 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, start + pat_ofs, SEEK_SET);
 
+	/* Effects in muted channels are processed, so scan patterns first to
+	 * see the real number of channels
+	 */
+	mod->chn = 0;
+	for (i = 0; i < mod->pat; i++) {
+		int len, c, r, k;
+
+		len = hio_read16l(f);
+		len -= 2;
+
+		for (r = 0; len > 0; ) {
+			c = hio_read8(f);
+			len--;
+
+			if (c == 0) {
+				r++;
+				continue;
+			}
+
+			if (mod->chn <= (c & 0x1f)) 
+				mod->chn = (c & 0x1f) + 1;
+
+			if (c & 0x20) {		/* note and sample follows */
+				hio_read8(f);
+				hio_read8(f);
+				len -= 2;
+			}
+
+			if (c & 0x40) {		/* effect(s) follow */
+				do {
+					k = hio_read8(f);
+					len--;
+					if ((k & 0xc0) != 0xc0) {
+						hio_read8(f);
+						len--;
+					}
+				} while (k & 0x20);
+			}
+		}
+	}
+ 
+	mod->trk = mod->pat * mod->chn;
+
 	if (pattern_init(mod) < 0)
 		return -1;
 
+	hio_seek(f, start + pat_ofs, SEEK_SET);
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
@@ -241,8 +287,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				continue;
 			}
 
-			assert((c & 0x1f) < mod->chn);
-			event = &EVENT (i, c & 0x1f, r);
+			event = &EVENT(i, c & 0x1f, r);
 
 			if (c & 0x20) {		/* note and sample follows */
 				k = hio_read8(f);

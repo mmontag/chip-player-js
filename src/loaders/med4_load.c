@@ -99,8 +99,7 @@ static void fix_effect(struct xmp_event *event)
 	}
 }
 
-struct stream
-{
+struct stream {
 	HIO_HANDLE* f;
 	int has_nibble;
 	uint8 value;
@@ -460,7 +459,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, pos + size + plen, SEEK_SET);
 	}
 
-	mod->ins =  num_ins;
+	mod->ins = num_ins;
 
 	if (med_new_module_extras(m) != 0)
 		return -1;
