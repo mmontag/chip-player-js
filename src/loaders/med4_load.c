@@ -493,10 +493,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			if ((int64)_mask > 0)
 				continue;
-			hio_read16b(f);
-			_len = hio_read16b(f);
-			_type = (int16)hio_read16b(f);
 
+			_len = hio_read32b(f);
+			_type = (int16)hio_read16b(f);
 			_pos = hio_tell(f);
 
 			if (_type == 0 || _type == -2) {
@@ -520,14 +519,13 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	smp_idx = 0;
 	for (i = 0; mask != 0 && i < num_ins; i++, mask <<= 1) {
-		int x1, length, type;
+		int length, type;
 		struct SynthInstr synth;
 
 		if ((int64)mask > 0)
 			continue;
 
-		x1 = hio_read16b(f);
-		length = hio_read16b(f);
+		length = hio_read32b(f);
 		type = (int16)hio_read16b(f);	/* instrument type */
 
 		strncpy((char *)mod->xxi[i].name, temp_inst[i].name, 32);
