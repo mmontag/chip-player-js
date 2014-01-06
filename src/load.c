@@ -742,8 +742,11 @@ void xmp_release_module(xmp_context opaque)
 	struct xmp_module *mod = &m->mod;
 	int i;
 
+	/* can't test this here, we must call release_module to clean up
+	 * load errors
 	if (ctx->state < XMP_STATE_LOADED)
 		return;
+	 */
 
 	if (ctx->state > XMP_STATE_LOADED)
 		xmp_end_player(opaque);
@@ -778,15 +781,18 @@ void xmp_release_module(xmp_context opaque)
 	if (mod->smp > 0)
 		free(mod->xxs);
 
-	for (i = 0; i < mod->len; i++)
-		free(m->scan_cnt[i]);
+	if (m->scan_cnt) {
+		for (i = 0; i < mod->len; i++)
+			free(m->scan_cnt[i]);
+		free(m->scan_cnt);
+	}
+
 	free(m->comment);
 
 	D_("free dirname/basename");
 	free(m->dirname);
 	free(m->basename);
 
-	free(m->scan_cnt);
 }
 
 void xmp_scan_module(xmp_context opaque)
