@@ -318,17 +318,29 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < 64; i++)
 		temp_inst[i].transpose += transp;
 
-#if 1
-	hio_read8(f);
-	mod->chn = hio_read8(f);;
-	hio_seek(f, -2, SEEK_CUR);
-#else
-	mod->chn = MAX_CHANNELS;
-#endif
+	/* Scan patterns to determine number of channels */
+	mod->chn = 0;
+	pos = hio_tell(f);
+
+	for (i = 0; i < mod->pat; i++) {
+		int size, plen, chn;
+
+		size = hio_read8(f);	/* pattern control block */
+		chn = hio_read8(f);
+		if (chn > mod->chn)
+			mod->chn = chn;
+		hio_read8(f);		/* skip number of rows */
+		plen = hio_read16b(f);
+
+		hio_seek(f, size + plen - 4, SEEK_CUR);
+	}
+
 	mod->trk = mod->chn * mod->pat;
 
 	if (pattern_init(mod) < 0)
 		return -1;
+
+	hio_seek(f, pos, SEEK_SET);
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
