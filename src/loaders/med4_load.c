@@ -586,7 +586,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxs[smp_idx].len = length;
 			mod->xxs[smp_idx].lps = temp_inst[i].loop_start;
 			mod->xxs[smp_idx].lpe = temp_inst[i].loop_end;
-			mod->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
+			mod->xxs[smp_idx].flg = temp_inst[i].loop_end > 2 ?
 						XMP_SAMPLE_LOOP : 0;
 
 			D_(D_INFO "  %05x %05x %05x %02x %+03d",
@@ -695,7 +695,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[smp_idx].len = length;
 		mod->xxs[smp_idx].lps = temp_inst[i].loop_start;
 		mod->xxs[smp_idx].lpe = temp_inst[i].loop_end;
-		mod->xxs[smp_idx].flg = temp_inst[i].loop_end > 1 ?
+		mod->xxs[smp_idx].flg = temp_inst[i].loop_end > 2 ?
 						XMP_SAMPLE_LOOP : 0;
 
 		D_(D_INFO "  %04x %04x %04x %c V%02x %+03d",
