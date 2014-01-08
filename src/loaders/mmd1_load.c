@@ -376,6 +376,8 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (smp_idx = i = 0; i < mod->ins; i++) {
 		int smpl_offset;
 		char name[40] = "";
+		struct xmp_subinstrument *sub;
+		struct xmp_sample *xxs;
 
 		if (hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET) != 0)
 		  return -1;
@@ -454,32 +456,31 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
-		mod->xxi[i].sub[0].vol = song.sample[i].svol;
-		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxi[i].sub[0].xpo = song.sample[i].strans;
-		mod->xxi[i].sub[0].sid = smp_idx;
-		mod->xxi[i].sub[0].fin = exp_smp.finetune << 4;
+		sub = &mod->xxi[i].sub[0];
 
-		mod->xxs[smp_idx].len = instr.length;
-		mod->xxs[smp_idx].lps = 2 * song.sample[i].rep;
-		mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].lps + 2 *
-						song.sample[i].replen;
+		sub->vol = song.sample[i].svol;
+		sub->pan = 0x80;
+		sub->xpo = song.sample[i].strans;
+		sub->sid = smp_idx;
+		sub->fin = exp_smp.finetune << 4;
 
-		mod->xxs[smp_idx].flg = 0;
+		xxs = &mod->xxs[smp_idx];
+
+		xxs->len = instr.length;
+		xxs->lps = 2 * song.sample[i].rep;
+		xxs->lpe = xxs->lps + 2 * song.sample[i].replen;
+		xxs->flg = 0;
+
 		if (song.sample[i].replen > 1)
-			mod->xxs[smp_idx].flg |= XMP_SAMPLE_LOOP;
+			xxs->flg |= XMP_SAMPLE_LOOP;
 
 		D_(D_INFO "  %05x %05x %05x %02x %+3d %+1d",
-				mod->xxs[smp_idx].len,
-				mod->xxs[smp_idx].lps,
-				mod->xxs[smp_idx].lpe,
-				mod->xxi[i].sub[0].vol,
-				mod->xxi[i].sub[0].xpo,
-				mod->xxi[i].sub[0].fin >> 4);
+				xxs->len, xxs->lps, xxs->lpe,
+				sub->vol, sub->xpo, sub->fin >> 4);
 
 		if (hio_seek(f, start + smpl_offset + 6, SEEK_SET) != 0)
 		  return -1;
-		if (load_sample(m, f, 0, &mod->xxs[smp_idx], NULL) < 0)
+		if (load_sample(m, f, 0, xxs, NULL) < 0)
 			return -1;
 
 		smp_idx++;

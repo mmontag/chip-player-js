@@ -313,7 +313,8 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_instrument *xxi = &mod->xxi[i];
-	struct xmp_sample *xxs = &mod->xxs[smp_idx];
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs;
 	int length, type;
 	int pos = hio_tell(f);
 
@@ -342,17 +343,23 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 
 	MED_INSTRUMENT_EXTRAS((*xxi))->vts = synth->volspeed;
 	MED_INSTRUMENT_EXTRAS((*xxi))->wts = synth->wfspeed;
-	xxi->sub[0].pan = 0x80;
-	xxi->sub[0].vol = sample->svol;
-	xxi->sub[0].xpo = sample->strans;
-	xxi->sub[0].sid = smp_idx;
-	xxi->sub[0].fin = exp_smp->finetune;
+
+	sub = &xxi->sub[0];
+
+	sub->pan = 0x80;
+	sub->vol = sample->svol;
+	sub->xpo = sample->strans;
+	sub->sid = smp_idx;
+	sub->fin = exp_smp->finetune;
+
+	xxs = &mod->xxs[smp_idx];
+
 	xxs->len = length;
 	xxs->lps = 2 * sample->rep;
 	xxs->lpe = xxs->lps + 2 * sample->replen;
 	xxs->flg = sample->replen > 1 ?  XMP_SAMPLE_LOOP : 0;
 
-	if (load_sample(m, f, 0, &mod->xxs[smp_idx], NULL) < 0)
+	if (load_sample(m, f, 0, xxs, NULL) < 0)
 		return -1;
 
 	return 0;
@@ -404,20 +411,23 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	MED_INSTRUMENT_EXTRAS((*xxi))->wts = synth->wfspeed;
 
 	for (j = 0; j < synth->wforms; j++) {
-		xxi->sub[j].pan = 0x80;
-		xxi->sub[j].vol = sample->svol;
-		xxi->sub[j].xpo = sample->strans - 24;
-		xxi->sub[j].sid = smp_idx;
-		xxi->sub[j].fin = exp_smp->finetune;
+		struct xmp_subinstrument *sub = &xxi->sub[j];
+		struct xmp_sample *xxs = &mod->xxs[smp_idx];
+
+		sub->pan = 0x80;
+		sub->vol = sample->svol;
+		sub->xpo = sample->strans - 24;
+		sub->sid = smp_idx;
+		sub->fin = exp_smp->finetune;
 
 		hio_seek(f, pos - 6 + synth->wf[j], SEEK_SET);
 
-		mod->xxs[smp_idx].len = hio_read16b(f) * 2;
-		mod->xxs[smp_idx].lps = 0;
-		mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
-		mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
+		xxs->len = hio_read16b(f) * 2;
+		xxs->lps = 0;
+		xxs->lpe = mod->xxs[smp_idx].len;
+		xxs->flg = XMP_SAMPLE_LOOP;
 
-		if (load_sample(m, f, 0, &mod->xxs[smp_idx], NULL) < 0)
+		if (load_sample(m, f, 0, xxs, NULL) < 0)
 			return -1;
 
 		smp_idx++;
