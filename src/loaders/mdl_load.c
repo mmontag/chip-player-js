@@ -473,8 +473,8 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 		    len--, track->event[row].vol = hio_read8(f);
 		if (j & MDL_EFFECT_FOLLOWS) {
 		    len--, k = hio_read8(f);
-		    track->event[row].fxt = LSN (k);
-		    track->event[row].f2t = MSN (k);
+		    track->event[row].fxt = LSN(k);
+		    track->event[row].f2t = MSN(k);
 		}
 		if (j & MDL_PARAMETER1_FOLLOWS)
 		    len--, track->event[row].fxp = hio_read8(f);
@@ -575,7 +575,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    sub->vde = hio_read8(f);	/* vibrato delay */
 	    sub->vsw = hio_read8(f);	/* vibrato sweep */
 	    sub->vwf = hio_read8(f);	/* vibrato waveform */
-	    hio_read8(f);			/* Reserved */
+	    hio_read8(f);		/* Reserved */
 
 	    x = hio_read8(f);		/* Pitch envelope */
 	    if (j == 0)
@@ -612,7 +612,7 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     for (i = 0; i < mod->smp; i++) {
 	struct xmp_sample *xxs = &mod->xxs[i];
 
-	data->s_index[i] = hio_read8(f);		/* Sample number */
+	data->s_index[i] = hio_read8(f);	/* Sample number */
 	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);
@@ -630,7 +630,7 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	if (xxs->lpe > 0)
 	    xxs->lpe--;
 
-	hio_read8(f);			/* Volume in DMDL 0.0 */
+	hio_read8(f);				/* Volume in DMDL 0.0 */
 	x = hio_read8(f);
 	if (x & 0x01) {
 	    xxs->flg |= XMP_SAMPLE_16BIT;
@@ -693,7 +693,6 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	xxs->len = hio_read32l(f);
 	xxs->lps = hio_read32l(f);
 	xxs->lpe = hio_read32l(f);
-
 	xxs->flg = xxs->lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	xxs->lpe = xxs->lps + xxs->lpe;
 
@@ -872,9 +871,9 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	iff_register(handle, "IS", get_chunk_i0);	/* Old 0.0 Sample info */
     }
 
-    /* MDL uses a degenerated IFF-style file format with 16 bit IDs and
-     * little endian 32 bit chunk size. There's only one chunk per data
-     * type i.e. one huge chunk for all the sampled instruments.
+    /* MDL uses a IFF-style file format with 16 bit IDs and little endian
+     * 32 bit chunk size. There's only one chunk per data type (i.e. one
+     * big chunk for all samples).
      */
     iff_id_size(handle, 2);
     iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
