@@ -101,11 +101,11 @@ static int masi_test(HIO_HANDLE *f, char *t, const int start)
 }
 
 struct local_data {
-    int sinaria;
-    int cur_pat;
-    int cur_ins;
-    uint8 *pnam;
-    uint8 *pord;
+	int sinaria;
+	int cur_pat;
+	int cur_ins;
+	uint8 *pnam;
+	uint8 *pord;
 };
 
 static int get_sdft(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
@@ -152,11 +152,14 @@ static int get_pbod_cnt(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	struct xmp_instrument *xxi;
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs;
 	struct local_data *data = (struct local_data *)parm;
 	int i, srate;
 	int finetune;
 
-	hio_read8(f);				/* flags */
+	hio_read8(f);					/* flags */
 	hio_seek(f, 8, SEEK_CUR);			/* songname */
 	hio_seek(f, data->sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
@@ -164,50 +167,54 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	if (subinstrument_alloc(mod, i, 1) < 0)
 		return -1;
 
-	hio_read(&mod->xxi[i].name, 1, 31, f);
-	str_adj((char *)mod->xxi[i].name);
+	xxi = &mod->xxi[i];
+	sub = &xxi->sub[0];
+	xxs = &mod->xxs[i];
+
+	hio_read(&xxi->name, 1, 31, f);
+	str_adj((char *)xxi->name);
 	hio_seek(f, 8, SEEK_CUR);
 	hio_read8(f);		/* insno */
 	hio_read8(f);
-	mod->xxs[i].len = hio_read32l(f);
-	mod->xxs[i].lps = hio_read32l(f);
-	mod->xxs[i].lpe = hio_read32l(f);
-	mod->xxs[i].flg = mod->xxs[i].lpe > 2 ? XMP_SAMPLE_LOOP : 0;
+	xxs->len = hio_read32l(f);
+	xxs->lps = hio_read32l(f);
+	xxs->lpe = hio_read32l(f);
+	xxs->flg = xxs->lpe > 2 ? XMP_SAMPLE_LOOP : 0;
 	hio_read16l(f);
 
-	if ((int32)mod->xxs[i].lpe < 0)
-		mod->xxs[i].lpe = 0;
+	if ((int32)xxs->lpe < 0)
+		xxs->lpe = 0;
 
-	if (mod->xxs[i].len > 0)
-		mod->xxi[i].nsm = 1;
+	if (xxs->len > 0)
+		xxi->nsm = 1;
 
 	finetune = 0;
 	if (data->sinaria) {
-		if (mod->xxs[i].len > 2)
-			mod->xxs[i].len -= 2;
-		if (mod->xxs[i].lpe > 2)
-			mod->xxs[i].lpe -= 2;
+		if (xxs->len > 2)
+			xxs->len -= 2;
+		if (xxs->lpe > 2)
+			xxs->lpe -= 2;
 
 		finetune = (int8)(hio_read8s(f) << 4);
 	}
 
-	mod->xxi[i].sub[0].vol = hio_read8(f) / 2 + 1;
+	sub->vol = hio_read8(f) / 2 + 1;
 	hio_read32l(f);
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
+	sub->pan = 0x80;
+	sub->sid = i;
 	srate = hio_read32l(f);
 
 	D_(D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
-		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
-		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ?
-		'L' : ' ', mod->xxi[i].sub[0].vol, finetune, srate);
+		xxi->name, xxs->len, xxs->lps, xxs->lpe,
+		xxs->flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
+		sub->vol, finetune, srate);
 
 	srate = 8363 * srate / 8448;
-	c2spd_to_note(srate, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-	mod->xxi[i].sub[0].fin += finetune;
+	c2spd_to_note(srate, &sub->xpo, &sub->fin);
+	sub->fin += finetune;
 
 	hio_seek(f, 16, SEEK_CUR);
-	if (load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL) < 0)
+	if (load_sample(m, f, SAMPLE_FLAG_8BDIFF, xxs, NULL) < 0)
 		return -1;
 
 	data->cur_ins++;
@@ -288,7 +295,7 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 						fxp = (fxp + 1) * 2;
 						break; }
 					default:
-printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
+D_(D_CRIT "p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					}
 				} else
 				switch (fxt) {
@@ -348,7 +355,7 @@ printf("p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					fxt = FX_SPEED;
 					break;
 				default:
-printf("p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
+D_(D_CRIT "p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 					fxt = fxp = 0;
 				}
 	
@@ -445,7 +452,7 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	data.sinaria = 0;
 	mod->name[0] = 0;
 
-	hio_seek(f, 8, SEEK_CUR);		/* skip file size and HIO_HANDLE */
+	hio_seek(f, 8, SEEK_CUR);		/* skip file size and FILE */
 	mod->smp = mod->ins = 0;
 	data.cur_pat = 0;
 	data.cur_ins = 0;
