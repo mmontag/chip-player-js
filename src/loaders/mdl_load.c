@@ -523,31 +523,33 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi = &mod->xxi[i];
+
 	data->i_index[i] = hio_read8(f);
-	mod->xxi[i].nsm = hio_read8(f);
+	xxi->nsm = hio_read8(f);
 	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);
-	strncpy((char *)mod->xxi[i].name, buf, 32);
+	strncpy((char *)xxi->name, buf, 32);
 
-	D_(D_INFO "[%2X] %-32.32s %2d", data->i_index[i],
-				mod->xxi[i].name, mod->xxi[i].nsm);
+	D_(D_INFO "[%2X] %-32.32s %2d", data->i_index[i], xxi->name, xxi->nsm);
 
-	if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
+	if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
 	    return -1;
 
 	for (j = 0; j < XMP_MAX_KEYS; j++)
-	    mod->xxi[i].map[j].ins = -1;
+	    xxi->map[j].ins = -1;
 
 	for (last_map = j = 0; j < mod->xxi[i].nsm; j++) {
 	    int x;
+	    struct xmp_subinstrument *sub = &xxi->sub[j];
 
-	    mod->xxi[i].sub[j].sid = hio_read8(f);
+	    sub->sid = hio_read8(f);
 	    map = hio_read8(f) + 12;
-	    mod->xxi[i].sub[j].vol = hio_read8(f);
+	    sub->vol = hio_read8(f);
 	    for (k = last_map; k <= map; k++) {
 		if (k < XMP_MAX_KEYS)
-		    mod->xxi[i].map[k].ins = j;
+		    xxi->map[k].ins = j;
 	    }
 	    last_map = map + 1;
 
@@ -555,7 +557,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    if (j == 0)
 		data->v_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
-		mod->xxi[i].sub[j].vol = 0xff;
+		sub->vol = 0xff;
 
 	    mod->xxi[i].sub[j].pan = hio_read8(f) << 1;
 
@@ -563,16 +565,16 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    if (j == 0)
 		data->p_index[i] = x & 0x80 ? x & 0x3f : -1;
 	    if (~x & 0x40)
-		mod->xxi[i].sub[j].pan = 0x80;
+		sub->pan = 0x80;
 
 	    x = hio_read16l(f);
 	    if (j == 0)
-		mod->xxi[i].rls = x;
+		xxi->rls = x;
 
-	    mod->xxi[i].sub[j].vra = hio_read8(f);	/* vibrato rate */
-	    mod->xxi[i].sub[j].vde = hio_read8(f);	/* vibrato delay */
-	    mod->xxi[i].sub[j].vsw = hio_read8(f);	/* vibrato sweep */
-	    mod->xxi[i].sub[j].vwf = hio_read8(f);	/* vibrato waveform */
+	    sub->vra = hio_read8(f);	/* vibrato rate */
+	    sub->vde = hio_read8(f);	/* vibrato delay */
+	    sub->vsw = hio_read8(f);	/* vibrato sweep */
+	    sub->vwf = hio_read8(f);	/* vibrato waveform */
 	    hio_read8(f);			/* Reserved */
 
 	    x = hio_read8(f);		/* Pitch envelope */
@@ -580,8 +582,8 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 		data->f_index[i] = x & 0x80 ? x & 0x3f : -1;
 
 	    D_(D_INFO "  %2x: V%02x S%02x v%02x p%02x f%02x",
-			j, mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].sid,
-			data->v_index[i], data->p_index[i], data->f_index[i]);
+			j, sub->vol, sub->sid, data->v_index[i],
+			data->p_index[i], data->f_index[i]);
 	}
     }
 
@@ -608,6 +610,8 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     D_(D_INFO "Sample infos: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
+	struct xmp_sample *xxs = &mod->xxs[i];
+
 	data->s_index[i] = hio_read8(f);		/* Sample number */
 	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
@@ -617,33 +621,31 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	data->c2spd[i] = hio_read32l(f);
 
-	mod->xxs[i].len = hio_read32l(f);
-	mod->xxs[i].lps = hio_read32l(f);
-	mod->xxs[i].lpe = hio_read32l(f);
+	xxs->len = hio_read32l(f);
+	xxs->lps = hio_read32l(f);
+	xxs->lpe = hio_read32l(f);
 
-	mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxs[i].lpe = mod->xxs[i].lps + mod->xxs[i].lpe;
-	if (mod->xxs[i].lpe > 0)
-	    mod->xxs[i].lpe--;
+	xxs->flg = xxs->lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+	xxs->lpe = xxs->lps + xxs->lpe;
+	if (xxs->lpe > 0)
+	    xxs->lpe--;
 
 	hio_read8(f);			/* Volume in DMDL 0.0 */
 	x = hio_read8(f);
 	if (x & 0x01) {
-	    mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
-	    mod->xxs[i].len >>= 1;
-	    mod->xxs[i].lps >>= 1;
-	    mod->xxs[i].lpe >>= 1;
+	    xxs->flg |= XMP_SAMPLE_16BIT;
+	    xxs->len >>= 1;
+	    xxs->lps >>= 1;
+	    xxs->lpe >>= 1;
         }
-	mod->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
+	xxs->flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
 	data->packinfo[i] = (x & 0x0c) >> 2;
 
 	D_(D_INFO "[%2X] %-32.32s %05x%c %05x %05x %c %6d %d",
-			data->s_index[i], buf,
-			mod->xxs[i].len,
-			mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-			mod->xxs[i].lps,
-			mod->xxs[i].lpe,
-			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+			data->s_index[i], buf, xxs->len,
+			xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+			xxs->lps, xxs->lpe,
+			xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			data->c2spd[i], data->packinfo[i]);
     }
 
@@ -670,10 +672,15 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs = &mod->xxs[i];
+
 	mod->xxi[i].nsm = 1;
 	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
-	mod->xxi[i].sub[0].sid = data->i_index[i] = data->s_index[i] = hio_read8(f);
+
+	sub = &mod->xxi[i].sub[0];
+	sub->sid = data->i_index[i] = data->s_index[i] = hio_read8(f);
 
 	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
@@ -682,30 +689,30 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	data->c2spd[i] = hio_read16l(f);
 
-	mod->xxs[i].len = hio_read32l(f);
-	mod->xxs[i].lps = hio_read32l(f);
-	mod->xxs[i].lpe = hio_read32l(f);
+	xxs->len = hio_read32l(f);
+	xxs->lps = hio_read32l(f);
+	xxs->lpe = hio_read32l(f);
 
-	mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxs[i].lpe = mod->xxs[i].lps + mod->xxs[i].lpe;
+	xxs->flg = xxs->lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+	xxs->lpe = xxs->lps + xxs->lpe;
 
-	mod->xxi[i].sub[0].vol = hio_read8(f);	/* Volume */
-	mod->xxi[i].sub[0].pan = 0x80;
+	sub->vol = hio_read8(f);	/* Volume */
+	sub->pan = 0x80;
 
 	x = hio_read8(f);
 	if (x & 0x01) {
-	    mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
-	    mod->xxs[i].len >>= 1;
-	    mod->xxs[i].lps >>= 1;
-	    mod->xxs[i].lpe >>= 1;
+	    xxs->flg |= XMP_SAMPLE_16BIT;
+	    xxs->len >>= 1;
+	    xxs->lps >>= 1;
+	    xxs->lpe >>= 1;
 	}
-	mod->xxs[i].flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
+	xxs->flg |= (x & 0x02) ? XMP_SAMPLE_LOOP_BIDIR : 0;
 	data->packinfo[i] = (x & 0x0c) >> 2;
 
 	D_(D_INFO "[%2X] %-32.32s %5d V%02x %05x%c %05x %05x %d",
-		data->i_index[i], buf, data->c2spd[i],  mod->xxi[i].sub[0].vol,
-		mod->xxs[i].len,mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		mod->xxs[i].lps, mod->xxs[i].lpe, data->packinfo[i]);
+		data->i_index[i], buf, data->c2spd[i],  sub->vol,
+		xxs->len, xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		xxs->lps, xxs->lpe, data->packinfo[i]);
     }
 
     return 0;
