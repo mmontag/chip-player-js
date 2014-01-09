@@ -9,6 +9,7 @@ Stable versions
 	- fix MED4 sample loop flag setting
 	- fix number of channels in GDM loader
 	- fix number of channels in MED4 loader
+	- fix instrument name setting in MDL loader
 	- replace LZX decompressor code with LGPL version from XAD
 
 4.2.1 (20131229):
