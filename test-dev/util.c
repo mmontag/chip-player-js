@@ -179,7 +179,7 @@ int compare_module(struct xmp_module *mod, FILE *f)
 		fail_unless(x == xxi->nsm, "number of subinstruments");
 		x = strtoul(s, &s, 0);
 		fail_unless(x == xxi->rls, "instrument release");
-		x = strcmp(++s, xxi->name);
+		x = strncmp(++s, xxi->name, 32);
 		fail_unless(x == 0, "instrument name");
 
 		/* check envelopes */
