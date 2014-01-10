@@ -118,7 +118,9 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		 */
 		event->fxt = FX_SPEED;
 		break;
-	/* 0x0a not mentioned */
+	case 0x0a:
+		/* 0x0a not mentioned but it's Protracker-compatible */
+		break;
 	case 0x0b:
 		/* POSITION JUMP 0B
 		 * The song plays up to this command and then jumps to
