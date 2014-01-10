@@ -170,22 +170,11 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
 	m->time_factor = MED_TIME_FACTOR;
 
-	/* From the OctaMEDv4 documentation:
-	 *
-	 * In 8-channel mode, you can control the playing speed more
-	 * accurately (to techies: by changing the size of the mix buffer).
-	 * This can be done with the left tempo gadget (values 1-10; the
-	 * lower, the faster). Values 11-240 are equivalent to 10.
-	 */
+	mmd_set_bpm(m, med_8ch, song.deftempo, bpm_on, bpmlen);
 
 	mod->spd = song.tempo2;
-	mod->bpm = med_8ch ?
-			mmd_get_8ch_tempo(song.deftempo) :
-			(bpm_on ? song.deftempo * bpmlen / 16 : song.deftempo);
-
 	mod->pat = song.numblocks;
 	mod->ins = song.numsamples;
-	//mod->smp = mod->ins;
 	mod->rst = 0;
 	mod->chn = 0;
 	mod->name[0] = 0;

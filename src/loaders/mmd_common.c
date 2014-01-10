@@ -30,19 +30,6 @@ const char *const mmd_inst_type[] = {
 };
 #endif
 
-int mmd_get_8ch_tempo(int tempo)
-{
-	const int tempos[10] = {
-		47, 43, 40, 37, 35, 32, 30, 29, 27, 26
-	};
-
-	if (tempo > 0) {
-		tempo = tempo > 10 ? 10 : tempo;
-		return tempos[tempo-1];
-	} else {
-		return tempo;
-	}
-}
 
 void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 {
@@ -435,3 +422,42 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 
 	return 0;
 }
+
+static int get_8ch_tempo(int tempo)
+{
+	const int tempos[10] = {
+		47, 43, 40, 37, 35, 32, 30, 29, 27, 26
+	};
+
+	if (tempo > 0) {
+		tempo = tempo > 10 ? 10 : tempo;
+		return tempos[tempo-1];
+	} else {
+		return tempo;
+	}
+}
+
+void mmd_set_bpm(struct module_data *m, int med_8ch, int deftempo,
+						int bpm_on, int bpmlen)
+{
+	struct xmp_module *mod = &m->mod;
+
+	/* From the OctaMEDv4 documentation:
+	 *
+	 * In 8-channel mode, you can control the playing speed more
+	 * accurately (to techies: by changing the size of the mix buffer).
+	 * This can be done with the left tempo gadget (values 1-10; the
+	 * lower, the faster). Values 11-240 are equivalent to 10.
+	 */
+
+	if (med_8ch) {
+		mod->bpm = get_8ch_tempo(deftempo);
+	} else {
+		mod->bpm = deftempo;
+
+		if (bpm_on) {
+			m->time_factor = DEFAULT_TIME_FACTOR * 4 / bpmlen;
+		}
+	}
+}
+
