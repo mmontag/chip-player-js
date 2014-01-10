@@ -207,6 +207,10 @@ static struct xmp_sample* realloc_samples(struct xmp_sample* buf, int* size, int
   return buf;
 }
 
+//packed structures size
+#define XM_INST_HEADER_SIZE 33
+#define XM_INST_SIZE 208
+
 static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 {
     struct xmp_module *mod = &m->mod;
@@ -215,9 +219,6 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
     struct xm_sample_header xsh[16];
     int sample_num = 0;
     int i, j;
-    //packed structures size
-    int sizeof_xih = 33;
-    int sizeof_xi = 208;
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
@@ -263,16 +264,16 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	if (xxi->nsm) {
 	    if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
 		return -1;
-	    if (xih.size < sizeof_xih)
+	    if (xih.size < XM_INST_HEADER_SIZE)
 		return -1;
 
 	    /* for BoobieSqueezer (see http://boobie.rotfl.at/)
 	     * It works pretty much the same way as Impulse Tracker's sample
 	     * only mode, where it will strip off the instrument data.
 	     */
-      if (xih.size < sizeof_xih + sizeof_xi) {
+      if (xih.size < XM_INST_HEADER_SIZE + XM_INST_SIZE) {
 		memset(&xi, 0, sizeof (struct xm_instrument));
-		hio_seek(f, xih.size - sizeof_xih, SEEK_CUR);
+		hio_seek(f, xih.size - XM_INST_HEADER_SIZE, SEEK_CUR);
 	    } else {
 		hio_read(&xi.sample, 96, 1, f);	/* Sample map */
 		for (j = 0; j < 24; j++)
@@ -296,7 +297,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		xi.v_fade = hio_read16l(f);	/* Volume fadeout */
 
 		/* Skip reserved space */
-		hio_seek(f, (int)xih.size - (sizeof_xih + sizeof_xi), SEEK_CUR);
+		hio_seek(f, (int)xih.size - (XM_INST_HEADER_SIZE + XM_INST_SIZE), SEEK_CUR);
 
 		/* Envelope */
 		xxi->rls = xi.v_fade;
@@ -415,7 +416,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	     * generalization should take care of both cases.
 	     */
 
-	     hio_seek(f, (int)xih.size - 33 /*sizeof (xih)*/, SEEK_CUR);
+	     hio_seek(f, (int)xih.size - XM_INST_HEADER_SIZE, SEEK_CUR);
 	}
     }
 
