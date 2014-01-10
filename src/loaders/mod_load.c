@@ -475,16 +475,12 @@ skip_test:
 	ptkloop = 1;
 	break;
     case TRACKER_FASTTRACKER:
-	tracker = "Fast Tracker";
-	break;
     case TRACKER_FASTTRACKER2:
-	tracker = "FastTracker 2";
+    case TRACKER_TAKETRACKER:
+	tracker = "Fast Tracker";
 	break;
     case TRACKER_OCTALYSER:
 	tracker = "Octalyser";
-	break;
-    case TRACKER_TAKETRACKER:
-	tracker = "TakeTracker";
 	break;
     case TRACKER_DIGITALTRACKER:
 	tracker = "Digital Tracker";
@@ -496,14 +492,10 @@ skip_test:
 	tracker = "Mod's Grave";
 	break;
     case TRACKER_SCREAMTRACKER3:
-	tracker = "Scream Tracker III";
+	tracker = "Scream Tracker";
 	break;
-    case TRACKER_UNKNOWN_CONV:
-	tracker = "unknown or converted";
 	break;
     case TRACKER_CONVERTEDST:
-	tracker = "converted ST2.2 or earlier";
-	break;
     case TRACKER_CONVERTED:
 	tracker = "converted";
 	break;
@@ -511,14 +503,15 @@ skip_test:
 	tracker = "Protracker clone";
 	break;
     default:
+    case TRACKER_UNKNOWN_CONV:
     case TRACKER_UNKNOWN:
-	tracker = "unknown";
+	tracker = "unknown tracker/converted";
 	break;
     }
 
     mod->trk = mod->chn * mod->pat;
 
-    snprintf(mod->type, XMP_NAME_SIZE, "%s (%s)", tracker, magic);
+    snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
     MODULE_INFO();
 
     for (i = 0; i < mod->ins; i++) {
