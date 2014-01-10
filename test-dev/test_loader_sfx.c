@@ -10,7 +10,7 @@ TEST(test_loader_sfx)
 	f = fopen("data/format_sfx.data", "r");
 
 	opaque = xmp_create_context();
-	ret = xmp_load_module(opaque, "data/m/PSA.sfx");
+	ret = xmp_load_module(opaque, "data/m/SFX.Crockett's_theme");
 	fail_unless(ret == 0, "module load");
 
 	xmp_get_module_info(opaque, &info);
