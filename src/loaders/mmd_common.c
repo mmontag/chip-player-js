@@ -30,6 +30,19 @@ const char *const mmd_inst_type[] = {
 };
 #endif
 
+static int get_8ch_tempo(int tempo)
+{
+	const int tempos[10] = {
+		47, 43, 40, 37, 35, 32, 30, 29, 27, 26
+	};
+
+	if (tempo > 0) {
+		tempo = tempo > 10 ? 10 : tempo;
+		return tempos[tempo-1];
+	} else {
+		return tempo;
+	}
+}
 
 void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 {
@@ -144,7 +157,7 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 			break;
 		} else if (event->fxp <= 0xf0) {
 			event->fxt = FX_S3M_BPM;
-                        event->fxp = med_8ch ? mmd_get_8ch_tempo(event->fxp) : (bpm_on ? event->fxp/bpmlen : event->fxp);
+                        event->fxp = med_8ch ? get_8ch_tempo(event->fxp) : event->fxp;
 			break;
 		} else switch (event->fxp) {
 		case 0xf1:	/* Play note twice */
@@ -421,20 +434,6 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	}
 
 	return 0;
-}
-
-static int get_8ch_tempo(int tempo)
-{
-	const int tempos[10] = {
-		47, 43, 40, 37, 35, 32, 30, 29, 27, 26
-	};
-
-	if (tempo > 0) {
-		tempo = tempo > 10 ? 10 : tempo;
-		return tempos[tempo-1];
-	} else {
-		return tempo;
-	}
 }
 
 void mmd_set_bpm(struct module_data *m, int med_8ch, int deftempo,
