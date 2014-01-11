@@ -30,6 +30,7 @@ int track_alloc(struct xmp_module *, int, int);
 int tracks_in_pattern_alloc(struct xmp_module *, int);
 int pattern_tracks_alloc(struct xmp_module *, int, int);
 char *instrument_name(struct xmp_module *, int, uint8 *, int);
+struct xmp_sample* realloc_samples(struct xmp_sample *, int *, int);
 
 char *copy_adjust(char *, uint8 *, int);
 int test_name(uint8 *, int);

@@ -308,6 +308,8 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	smpnum = 0;
 	for (i = 0; i < mod->ins; i++) {
+		struct xmp_instrument *xxi = &mod->xxi[i];
+
 		if (read_object_header(f, &oh, "RTIN") < 0) {
 			D_(D_CRIT "Error reading instrument %d", i);
 			return -1;
@@ -317,7 +319,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (oh.headerSize == 0) {
 			D_(D_INFO "[%2X] %-26.26s %2d ", i,
-					mod->xxi[i].name, mod->xxi[i].nsm);
+						xxi->name, xxi->nsm);
 			ri.nsample = 0;
 			continue;
 		}
@@ -365,50 +367,46 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			ri.midiUseVelocity = hio_read8(f);
 		}
 
-		mod->xxi[i].nsm = ri.nsample;
+		xxi->nsm = ri.nsample;
 
-		D_(D_INFO "[%2X] %-26.26s %2d", i, mod->xxi[i].name,
-							mod->xxi[i].nsm);
+		D_(D_INFO "[%2X] %-26.26s %2d", i, xxi->name, xxi->nsm);
 
-		if (mod->xxi[i].nsm > 16)
-			mod->xxi[i].nsm = 16;
+		if (xxi->nsm > 16)
+			xxi->nsm = 16;
 
-		if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
+		if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
 			return -1;
 
 		for (j = 0; j < 120; j++)
-			mod->xxi[i].map[j].ins = ri.table[j];
+			xxi->map[j].ins = ri.table[j];
 
 		/* Envelope */
-		mod->xxi[i].rls = ri.volfade;
-		mod->xxi[i].aei.npt = ri.volumeEnv.npoint;
-		mod->xxi[i].aei.sus = ri.volumeEnv.sustain;
-		mod->xxi[i].aei.lps = ri.volumeEnv.loopstart;
-		mod->xxi[i].aei.lpe = ri.volumeEnv.loopend;
-		mod->xxi[i].aei.flg = ri.volumeEnv.flags;
-		mod->xxi[i].pei.npt = ri.panningEnv.npoint;
-		mod->xxi[i].pei.sus = ri.panningEnv.sustain;
-		mod->xxi[i].pei.lps = ri.panningEnv.loopstart;
-		mod->xxi[i].pei.lpe = ri.panningEnv.loopend;
-		mod->xxi[i].pei.flg = ri.panningEnv.flags;
+		xxi->rls = ri.volfade;
+		xxi->aei.npt = ri.volumeEnv.npoint;
+		xxi->aei.sus = ri.volumeEnv.sustain;
+		xxi->aei.lps = ri.volumeEnv.loopstart;
+		xxi->aei.lpe = ri.volumeEnv.loopend;
+		xxi->aei.flg = ri.volumeEnv.flags;
+		xxi->pei.npt = ri.panningEnv.npoint;
+		xxi->pei.sus = ri.panningEnv.sustain;
+		xxi->pei.lps = ri.panningEnv.loopstart;
+		xxi->pei.lpe = ri.panningEnv.loopend;
+		xxi->pei.flg = ri.panningEnv.flags;
 
-		if (mod->xxi[i].aei.npt <= 0)
-			mod->xxi[i].aei.flg &= ~XMP_ENVELOPE_ON;
-
-		if (mod->xxi[i].pei.npt <= 0)
-			mod->xxi[i].pei.flg &= ~XMP_ENVELOPE_ON;
-
-		for (j = 0; j < mod->xxi[i].aei.npt; j++) {
-			mod->xxi[i].aei.data[j * 2 + 0] = ri.volumeEnv.point[j].x;
-			mod->xxi[i].aei.data[j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
+		for (j = 0; j < xxi->aei.npt; j++) {
+			xxi->aei.data[j * 2 + 0] = ri.volumeEnv.point[j].x;
+			xxi->aei.data[j * 2 + 1] = ri.volumeEnv.point[j].y / 2;
 		}
-		for (j = 0; j < mod->xxi[i].pei.npt; j++) {
-			mod->xxi[i].pei.data[j * 2 + 0] = ri.panningEnv.point[j].x;
-			mod->xxi[i].pei.data[j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
+		for (j = 0; j < xxi->pei.npt; j++) {
+			xxi->pei.data[j * 2 + 0] = ri.panningEnv.point[j].x;
+			xxi->pei.data[j * 2 + 1] = 32 + ri.panningEnv.point[j].y / 2;
 		}
 
 		/* For each sample */
-		for (j = 0; j < mod->xxi[i].nsm; j++, smpnum++) {
+		for (j = 0; j < xxi->nsm; j++, smpnum++) {
+			struct xmp_subinstrument *sub = &xxi->sub[j];
+			struct xmp_sample *xxs;
+
 			if (read_object_header(f, &oh, "RTSM") < 0) {
 				D_(D_CRIT "Error reading sample %d", j);
 				return -1;
@@ -425,61 +423,59 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			rs.basenote = hio_read8(f);
 			rs.panning = hio_read8(f);
 
-			c2spd_to_note(rs.basefreq, &mod->xxi[i].sub[0].xpo,
-						&mod->xxi[i].sub[0].fin);
-			mod->xxi[i].sub[j].xpo += 48 - rs.basenote;
+			c2spd_to_note(rs.basefreq, &sub->xpo, &sub->fin);
+			sub->xpo += 48 - rs.basenote;
+			sub->vol = rs.defaultvolume * rs.basevolume / 0x40;
+			sub->pan = 0x80 + rs.panning * 2;
+			sub->vwf = ri.vibflg;
+			sub->vde = ri.vibdepth;
+			sub->vra = ri.vibrate;
+			sub->vsw = ri.vibsweep;
+			sub->sid = smpnum;
 
-			mod->xxi[i].sub[j].vol = rs.defaultvolume *
-						rs.basevolume / 0x40;
-			mod->xxi[i].sub[j].pan = 0x80 + rs.panning * 2;
-			mod->xxi[i].sub[j].vwf = ri.vibflg;
-			mod->xxi[i].sub[j].vde = ri.vibdepth;
-			mod->xxi[i].sub[j].vra = ri.vibrate;
-			mod->xxi[i].sub[j].vsw = ri.vibsweep;
-			mod->xxi[i].sub[j].sid = smpnum;
-
-			if (smpnum >= MAX_SAMP) {
-				hio_seek(f, rs.length, SEEK_CUR);
-				continue;
+			if (smpnum >= mod->smp) {
+				 mod->xxs = realloc_samples(mod->xxs,
+						&mod->smp, mod->smp * 3 / 2);
+				if (mod->xxs == NULL)
+					return -1;
 			}
+ 			xxs = &mod->xxs[smpnum];
 
-			copy_adjust(mod->xxs[smpnum].name, (uint8 *)oh.name, 32);
+			copy_adjust(xxs->name, (uint8 *)oh.name, 32);
 
-			mod->xxs[smpnum].len = rs.length;
-			mod->xxs[smpnum].lps = rs.loopbegin;
-			mod->xxs[smpnum].lpe = rs.loopend;
+			xxs->len = rs.length;
+			xxs->lps = rs.loopbegin;
+			xxs->lpe = rs.loopend;
 
-			mod->xxs[smpnum].flg = 0;
+			xxs->flg = 0;
 			if (rs.flags & 0x02) {
-				mod->xxs[smpnum].flg |= XMP_SAMPLE_16BIT;
-				mod->xxs[smpnum].len >>= 1;
-				mod->xxs[smpnum].lps >>= 1;
-				mod->xxs[smpnum].lpe >>= 1;
+				xxs->flg |= XMP_SAMPLE_16BIT;
+				xxs->len >>= 1;
+				xxs->lps >>= 1;
+				xxs->lpe >>= 1;
 			}
 
-			mod->xxs[smpnum].flg |= rs.loop & 0x03 ?  XMP_SAMPLE_LOOP : 0;
-			mod->xxs[smpnum].flg |= rs.loop == 2 ? XMP_SAMPLE_LOOP_BIDIR : 0;
+			xxs->flg |= rs.loop & 0x03 ?  XMP_SAMPLE_LOOP : 0;
+			xxs->flg |= rs.loop == 2 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
 			D_(D_INFO "  [%1x] %05x%c%05x %05x %c "
 						"V%02x F%+04d P%02x R%+03d",
-				j, mod->xxs[mod->xxi[i].sub[j].sid].len,
-				mod->xxs[mod->xxi[i].sub[j].sid].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-				mod->xxs[mod->xxi[i].sub[j].sid].lps,
-				mod->xxs[mod->xxi[i].sub[j].sid].lpe,
-				mod->xxs[mod->xxi[i].sub[j].sid].flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
-				mod->xxs[mod->xxi[i].sub[j].sid].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-				mod->xxi[i].sub[j].vol, mod->xxi[i].sub[j].fin,
-				mod->xxi[i].sub[j].pan, mod->xxi[i].sub[j].xpo);
+				j, xxs->len,
+				xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+				xxs->lps, xxs->lpe,
+				xxs->flg & XMP_SAMPLE_LOOP_BIDIR ? 'B' :
+				xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+				sub->vol, sub->fin, sub->pan, sub->xpo);
 
-			if (load_sample(m, f, SAMPLE_FLAG_DIFF,
-			    &mod->xxs[mod->xxi[i].sub[j].sid], NULL) < 0) {
+			if (load_sample(m, f, SAMPLE_FLAG_DIFF, xxs, NULL) < 0)
 				return -1;
-			}
 		}
 	}
 
-	mod->smp = smpnum;
-	mod->xxs = realloc(mod->xxs, sizeof (struct xmp_sample) * mod->smp);
+	/* Final sample number adjustment */
+	mod->xxs = realloc_samples(mod->xxs, &mod->smp, smpnum);
+	if (mod->xxs == NULL)
+		return -1;
 
 	m->quirk |= QUIRKS_FT2;
 	m->read_event_type = READ_EVENT_FT2;

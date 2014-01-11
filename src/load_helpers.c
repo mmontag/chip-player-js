@@ -75,7 +75,7 @@ static void module_quirks(struct context_data *ctx)
 
 static void check_envelope(struct xmp_envelope *env)
 {
-	if (env->lps >= env->npt || env->lpe >= env->npt)
+	if (env->npt <= 0 || env->lps >= env->npt || env->lpe >= env->npt)
 		env->flg &= ~XMP_ENVELOPE_LOOP;
 }
 

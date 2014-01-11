@@ -109,6 +109,19 @@ int pattern_tracks_alloc(struct xmp_module *mod, int num, int rows)
 	return 0;
 }
 
+/* Sample number adjustment by Vitamin/CAIG */
+struct xmp_sample *realloc_samples(struct xmp_sample *buf, int *size, int new_size)
+{
+	buf = realloc(buf, sizeof (struct xmp_sample) * new_size);
+	if (buf == NULL)
+		return NULL;
+	if (new_size > *size)
+		memset(buf + *size, 0, sizeof (struct xmp_sample) * (new_size - *size));
+	*size = new_size;
+
+	return buf;
+}
+
 char *instrument_name(struct xmp_module *mod, int i, uint8 *r, int n)
 {
 	CLAMP(n, 0, 31);
