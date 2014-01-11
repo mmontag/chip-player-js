@@ -15,7 +15,7 @@
 #include "loader.h"
 #include "med_extras.h"
 
-#ifdef D_EBUG
+#ifdef DEBUG
 const char *const mmd_inst_type[] = {
 	"HYB",			/* -2 */
 	"SYN",			/* -1 */

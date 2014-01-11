@@ -6,7 +6,7 @@
 
 #define MMD_INST_TYPES 9
 
-#ifdef D_EBUG
+#ifdef DEBUG
 extern const char *const mmd_inst_type[];
 #endif
 
