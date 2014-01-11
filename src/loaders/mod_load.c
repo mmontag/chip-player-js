@@ -511,7 +511,7 @@ skip_test:
 
     mod->trk = mod->chn * mod->pat;
 
-    if (!memcmp(magic, "M.K.", 4)) {
+    if (!memcmp(magic, "M.K.", 4) || tracker_id == TRACKER_FLEXTRAX) {
         snprintf(mod->type, XMP_NAME_SIZE, "%s", tracker);
     } else {
         snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
