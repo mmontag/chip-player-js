@@ -4,7 +4,13 @@ Stable versions
 4.2.2 ():
 	- re-enable Falcon MegaTracker loader
 	- fix DIGI Booster finetune (reported by Andreas Argirakis)
+	- fix tempo in BPM mode MMD modules (reported by Andreas Argirakis)
 	- fix crash in zip depacker
+	- fix MED4 large (>64KB) sample loading
+	- fix MED4 sample loop flag setting
+	- fix number of channels in GDM loader
+	- fix number of channels in MED4 loader
+	- fix instrument name setting in MDL loader
 	- replace LZX decompressor code with LGPL version from XAD
 
 4.2.1 (20131229):

@@ -170,22 +170,11 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
 	m->time_factor = MED_TIME_FACTOR;
 
-	/* From the OctaMEDv4 documentation:
-	 *
-	 * In 8-channel mode, you can control the playing speed more
-	 * accurately (to techies: by changing the size of the mix buffer).
-	 * This can be done with the left tempo gadget (values 1-10; the
-	 * lower, the faster). Values 11-240 are equivalent to 10.
-	 */
+	mmd_set_bpm(m, med_8ch, song.deftempo, bpm_on, bpmlen);
 
 	mod->spd = song.tempo2;
-	mod->bpm = med_8ch ?
-			mmd_get_8ch_tempo(song.deftempo) :
-			(bpm_on ? song.deftempo * bpmlen / 16 : song.deftempo);
-
 	mod->pat = song.numblocks;
 	mod->ins = song.numsamples;
-	//mod->smp = mod->ins;
 	mod->rst = 0;
 	mod->chn = 0;
 	mod->name[0] = 0;
@@ -353,6 +342,8 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (smp_idx = i = 0; i < mod->ins; i++) {
 		int smpl_offset;
 		char name[40] = "";
+		struct xmp_subinstrument *sub;
+		struct xmp_sample *xxs;
 
 		hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET);
 		smpl_offset = hio_read32b(f);
@@ -438,26 +429,30 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
-		mod->xxi[i].sub[0].vol = song.sample[i].svol;
-		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxi[i].sub[0].xpo = song.sample[i].strans;
-		mod->xxi[i].sub[0].sid = smp_idx;
-		mod->xxi[i].sub[0].fin = exp_smp.finetune << 4;
+		sub = &mod->xxi[i].sub[0];
 
-		mod->xxs[smp_idx].len = instr.length;
-		mod->xxs[smp_idx].lps = 2 * song.sample[i].rep;
-		mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].lps + 2 *
-						song.sample[i].replen;
+		sub->vol = song.sample[i].svol;
+		sub->pan = 0x80;
+		sub->xpo = song.sample[i].strans;
+		sub->sid = smp_idx;
+		sub->fin = exp_smp.finetune << 4;
 
-		mod->xxs[smp_idx].flg = 0;
+		xxs = &mod->xxs[smp_idx];
+
+		xxs->len = instr.length;
+		xxs->lps = 2 * song.sample[i].rep;
+		xxs->lpe = xxs->lps + 2 * song.sample[i].replen;
+		xxs->flg = 0;
+
 		if (song.sample[i].replen > 1) {
-			mod->xxs[smp_idx].flg |= XMP_SAMPLE_LOOP;
+			xxs->flg |= XMP_SAMPLE_LOOP;
 		}
+
 		if (instr.type & S_16) {
-			mod->xxs[smp_idx].flg |= XMP_SAMPLE_16BIT;
-			mod->xxs[smp_idx].len >>= 1;
-			mod->xxs[smp_idx].lps >>= 1;
-			mod->xxs[smp_idx].lpe >>= 1;
+			xxs->flg |= XMP_SAMPLE_16BIT;
+			xxs->len >>= 1;
+			xxs->lps >>= 1;
+			xxs->lpe >>= 1;
 		}
 
 		/* STEREO means that this is a stereo sample. The sample
@@ -468,17 +463,13 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		 */
 
 		D_(D_INFO "  %05x%c%05x %05x %02x %+3d %+1d ",
-				mod->xxs[smp_idx].len,
-				mod->xxs[smp_idx].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-				mod->xxs[smp_idx].lps,
-				mod->xxs[smp_idx].lpe,
-				mod->xxi[i].sub[0].vol,
-				mod->xxi[i].sub[0].xpo,
-				mod->xxi[i].sub[0].fin >> 4);
+				xxs->len,
+				xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+				xxs->lps, xxs->lpe,
+				sub->vol, sub->xpo, sub->fin >> 4);
 
 		hio_seek(f, start + smpl_offset + 6, SEEK_SET);
-		if (load_sample(m, f, SAMPLE_FLAG_BIGEND,
-					&mod->xxs[smp_idx], NULL) < 0) {
+		if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
 			return -1;
 		}
 

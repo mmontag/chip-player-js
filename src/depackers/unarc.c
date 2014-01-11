@@ -24,13 +24,8 @@
 #define NOMARCH_VER	"1.4"
 
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <time.h>
-#include <sys/types.h>
-#include <unistd.h>
 #include "common.h"
 #include "readrle.h"
 #include "readhuff.h"
@@ -61,28 +56,28 @@ static int read_file_header(FILE * in, struct archived_file_header_tag *hdrp)
 
 	hdrp->method = 0xff;
 	if (fgetc(in) != 0x1a)
-		return (0);
+		return 0;
 
 	if ((c = fgetc(in)) == EOF)
-		return (0);
+		return 0;
 
-/* allow for the spark archive variant's alternate method encoding */
+	/* allow for the spark archive variant's alternate method encoding */
 	method_high = (c >> 7);
 	hdrp->method = (c & 127);
 
-/* zero if EOF, which also means no further `header' */
+	/* zero if EOF, which also means no further `header' */
 	if (hdrp->method == 0)
-		return (1);
+		return 1;
 
-/* `old' version of uncompressed storage was weird */
+	/* `old' version of uncompressed storage was weird */
 	if (hdrp->method == 1)
 		bufsiz -= 4;	/* no `orig_size' field */
 
 	if (fread(hdrp->name, 1, sizeof(hdrp->name), in) != sizeof(hdrp->name)
 	    || fread(buf, 1, bufsiz, in) != bufsiz)
-		return (0);
+		return 0;
 
-/* extract the bits from buf */
+	/* extract the bits from buf */
 	hdrp->compressed_size =
 	    (buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24));
 	hdrp->date = (buf[4] | (buf[5] << 8));
@@ -96,19 +91,19 @@ static int read_file_header(FILE * in, struct archived_file_header_tag *hdrp)
 		    (buf[10] | (buf[11] << 8) | (buf[12] << 16) |
 		     (buf[13] << 24));
 
-/* make *sure* name is asciiz */
+	/* make *sure* name is asciiz */
 	hdrp->name[12] = 0;
 
 #if 0
-/* strip top bits, and lowercase the name */
+	/* strip top bits, and lowercase the name */
 	for (f = 0; f < strlen(hdrp->name); f++)
 		hdrp->name[f] = maybe_downcase(hdrp->name[f] & 127);
 #endif
 
-/* lose the possible extra bytes in spark archives */
+	/* lose the possible extra bytes in spark archives */
 	if (method_high) {
 		if (fread(buf, 1, 12, in) != 12)
-			return (0);
+			return 0;
 
 		/* has a weird recursive-.arc file scheme for subdirs,
 		 * and since these are supposed to be dealt with inline
@@ -120,7 +115,7 @@ static int read_file_header(FILE * in, struct archived_file_header_tag *hdrp)
 			hdrp->has_crc = 0;
 	}
 
-	return (1);
+	return 1;
 }
 
 /* self-extracting archives, for both CP/M and MS-DOS, have up to
@@ -145,7 +140,7 @@ static int skip_sfx_header(FILE * in)
 
 	for (f = 0; f < 4; f++) {
 		if ((c = fgetc(in)) == EOF)
-			return (0);
+			return 0;
 		if (c == 0x1a) {
 			got = 1;
 			ungetc(c, in);
@@ -153,7 +148,7 @@ static int skip_sfx_header(FILE * in)
 		}
 	}
 
-	return (got);
+	return got;
 }
 
 /* read file data, assuming header has just been read from in
@@ -175,7 +170,7 @@ static unsigned char *read_file_data(FILE * in,
 		data = NULL;
 	}
 
-	return (data);
+	return data;
 }
 
 #if 0
@@ -193,7 +188,7 @@ static int skip_file_data(FILE *in,struct archived_file_header_tag *hdrp)
 }
 #endif
 
-static int arc_extract(FILE * in, FILE * out)
+static int arc_extract(FILE *in, FILE *out)
 {
 	struct archived_file_header_tag hdr;
 	/* int done = 0; */
@@ -311,16 +306,7 @@ static int arc_extract(FILE * in, FILE * out)
 	return exitval;
 }
 
-int decrunch_arc(FILE * f, FILE * fo)
+int decrunch_arc(FILE *f, FILE *fo)
 {
-	int ret;
-
-	if (fo == NULL)
-		return -1;
-
-	ret = arc_extract(f, fo);
-	if (ret < 0)
-		return -1;
-
-	return 0;
+	return arc_extract(f, fo);
 }

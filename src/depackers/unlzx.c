@@ -929,71 +929,6 @@ static int extract_normal(FILE * in_file, struct LZXDecrData *decr)
 
 /* ---------------------------------------------------------------------- */
 
-/* This is less complex than extract_normal. Almost decipherable. */
-
-static int extract_store(FILE * in_file, struct LZXDecrData *decr)
-{
-    struct filename_node *node;
-    FILE *out_file;
-    uint32 count;
-    int abort = 0;
-
-    for (node = decr->filename_list; (!abort) && node; node = node->next) {
-	/*printf("Storing \"%s\"...", node->filename);
-	   fflush(stdout); */
-
-	if (exclude_match(node->filename)) {
-	    out_file = NULL;
-	} else {
-	    out_file = decr->outfile;
-	}
-
-	decr->sum = 0;		/* reset CRC */
-
-	decr->unpack_size = node->length;
-	if (decr->unpack_size > decr->pack_size)
-	    decr->unpack_size = decr->pack_size;
-
-	while (decr->unpack_size > 0) {
-	    count = (decr->unpack_size > 16384) ? 16384 : decr->unpack_size;
-
-	    if (fread(decr->read_buffer, 1, count, in_file) != count) {
-		/* printf("\n");
-		if (ferror(in_file))
-		    perror("FRead(Data)");
-		else
-		    fprintf(stderr, "EOF: Data\n"); */
-		abort = 1;
-		break;		/* fatal error */
-	    }
-	    decr->pack_size -= count;
-
-	    decr->sum = crc32_A1(decr->read_buffer, count, decr->sum);
-
-	    if (out_file) {	/* Write the data to the file */
-		abort = 1;
-		if (fwrite(decr->read_buffer, 1, count, out_file) != count) {
-#if 0
-		    perror("FWrite");	/* argh! write error */
-		    fclose(out_file);
-		    out_file = 0;
-#endif
-		}
-	    }
-	    decr->unpack_size -= count;
-	}
-    }				/* for */
-
-    return (abort);
-}
-
-/* ---------------------------------------------------------------------- */
-
-static int extract_unknown(FILE * in_file, struct LZXDecrData *decr)
-{
-    return 0;
-}
-
 static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 {
     uint32 temp;
@@ -1087,22 +1022,25 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 	for (temp = 0; (node->filename[temp] = decr->header_filename[temp]);
 	     temp++) ;
 
+#if 0
 	if (decr->pack_size == 0) {
 	    abort = 0;		/* continue */
 	    continue;
 	}
+#endif
 
 	switch (decr->pack_mode) {
+#if 0
 	case 0:			/* store */
 	    /*abort =*/ extract_store(in_file, decr);
 	    abort = 1;		/* for xmp */
 	    break;
+#endif
 	case 2:			/* normal */
 	    /*abort =*/ extract_normal(in_file, decr);
 	    abort = 1;		/* for xmp */
 	    break;
 	default:		/* unknown */
-	    /*abort =*/ extract_unknown(in_file, decr);
 	    break;
 	}
 

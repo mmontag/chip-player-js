@@ -307,7 +307,6 @@ struct MMDDump {
     UBYTE name[20];			/* name of the dump */
 };
 
-int mmd_get_8ch_tempo(int);
 void mmd_xlat_fx(struct xmp_event *, int, int, int);
 int mmd_alloc_tables(struct module_data *, int, struct SynthInstr *);
 
@@ -315,5 +314,7 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *, struct module_data *m, int, int,
 		struct SynthInstr *, struct InstrExt *, struct MMD0sample *);
 int mmd_load_synth_instrument(HIO_HANDLE *, struct module_data *m, int, int,
 		struct SynthInstr *, struct InstrExt *, struct MMD0sample *);
+
+void mmd_set_bpm(struct module_data *, int, int, int, int);
 
 #endif /* XMP_MED_H */

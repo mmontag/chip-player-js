@@ -448,7 +448,10 @@ void mixer_softmixer(struct context_data *ctx)
 	if (~s->format & XMP_FORMAT_MONO) {
 		size *= 2;
 	}
-	assert(size <= XMP_MAX_FRAMESIZE);
+
+	if (size > XMP_MAX_FRAMESIZE) {
+		size = XMP_MAX_FRAMESIZE;
+	}
 
 	if (s->format & XMP_FORMAT_8BIT) {
 		downmix_int_8bit(s->buffer, s->buf32, size, s->amplify,

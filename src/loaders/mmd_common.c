@@ -30,7 +30,7 @@ const char *const mmd_inst_type[] = {
 };
 #endif
 
-int mmd_get_8ch_tempo(int tempo)
+static int get_8ch_tempo(int tempo)
 {
 	const int tempos[10] = {
 		47, 43, 40, 37, 35, 32, 30, 29, 27, 26
@@ -118,7 +118,9 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		 */
 		event->fxt = FX_SPEED;
 		break;
-	/* 0x0a not mentioned */
+	case 0x0a:
+		/* 0x0a not mentioned but it's Protracker-compatible */
+		break;
 	case 0x0b:
 		/* POSITION JUMP 0B
 		 * The song plays up to this command and then jumps to
@@ -157,7 +159,7 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 			break;
 		} else if (event->fxp <= 0xf0) {
 			event->fxt = FX_S3M_BPM;
-                        event->fxp = med_8ch ? mmd_get_8ch_tempo(event->fxp) : (bpm_on ? event->fxp/bpmlen : event->fxp);
+                        event->fxp = med_8ch ? get_8ch_tempo(event->fxp) : event->fxp;
 			break;
 		} else switch (event->fxp) {
 		case 0xf1:	/* Play note twice */
@@ -313,7 +315,8 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_instrument *xxi = &mod->xxi[i];
-	struct xmp_sample *xxs = &mod->xxs[smp_idx];
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs;
 	int length, type;
 	int pos = hio_tell(f);
 
@@ -342,17 +345,23 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 
 	MED_INSTRUMENT_EXTRAS((*xxi))->vts = synth->volspeed;
 	MED_INSTRUMENT_EXTRAS((*xxi))->wts = synth->wfspeed;
-	xxi->sub[0].pan = 0x80;
-	xxi->sub[0].vol = sample->svol;
-	xxi->sub[0].xpo = sample->strans;
-	xxi->sub[0].sid = smp_idx;
-	xxi->sub[0].fin = exp_smp->finetune;
+
+	sub = &xxi->sub[0];
+
+	sub->pan = 0x80;
+	sub->vol = sample->svol;
+	sub->xpo = sample->strans;
+	sub->sid = smp_idx;
+	sub->fin = exp_smp->finetune;
+
+	xxs = &mod->xxs[smp_idx];
+
 	xxs->len = length;
 	xxs->lps = 2 * sample->rep;
 	xxs->lpe = xxs->lps + 2 * sample->replen;
 	xxs->flg = sample->replen > 1 ?  XMP_SAMPLE_LOOP : 0;
 
-	if (load_sample(m, f, 0, &mod->xxs[smp_idx], NULL) < 0)
+	if (load_sample(m, f, 0, xxs, NULL) < 0)
 		return -1;
 
 	return 0;
@@ -404,20 +413,23 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	MED_INSTRUMENT_EXTRAS((*xxi))->wts = synth->wfspeed;
 
 	for (j = 0; j < synth->wforms; j++) {
-		xxi->sub[j].pan = 0x80;
-		xxi->sub[j].vol = sample->svol;
-		xxi->sub[j].xpo = sample->strans - 24;
-		xxi->sub[j].sid = smp_idx;
-		xxi->sub[j].fin = exp_smp->finetune;
+		struct xmp_subinstrument *sub = &xxi->sub[j];
+		struct xmp_sample *xxs = &mod->xxs[smp_idx];
+
+		sub->pan = 0x80;
+		sub->vol = sample->svol;
+		sub->xpo = sample->strans - 24;
+		sub->sid = smp_idx;
+		sub->fin = exp_smp->finetune;
 
 		hio_seek(f, pos - 6 + synth->wf[j], SEEK_SET);
 
-		mod->xxs[smp_idx].len = hio_read16b(f) * 2;
-		mod->xxs[smp_idx].lps = 0;
-		mod->xxs[smp_idx].lpe = mod->xxs[smp_idx].len;
-		mod->xxs[smp_idx].flg = XMP_SAMPLE_LOOP;
+		xxs->len = hio_read16b(f) * 2;
+		xxs->lps = 0;
+		xxs->lpe = mod->xxs[smp_idx].len;
+		xxs->flg = XMP_SAMPLE_LOOP;
 
-		if (load_sample(m, f, 0, &mod->xxs[smp_idx], NULL) < 0)
+		if (load_sample(m, f, 0, xxs, NULL) < 0)
 			return -1;
 
 		smp_idx++;
@@ -425,3 +437,28 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 
 	return 0;
 }
+
+void mmd_set_bpm(struct module_data *m, int med_8ch, int deftempo,
+						int bpm_on, int bpmlen)
+{
+	struct xmp_module *mod = &m->mod;
+
+	/* From the OctaMEDv4 documentation:
+	 *
+	 * In 8-channel mode, you can control the playing speed more
+	 * accurately (to techies: by changing the size of the mix buffer).
+	 * This can be done with the left tempo gadget (values 1-10; the
+	 * lower, the faster). Values 11-240 are equivalent to 10.
+	 */
+
+	if (med_8ch) {
+		mod->bpm = get_8ch_tempo(deftempo);
+	} else {
+		mod->bpm = deftempo;
+
+		if (bpm_on) {
+			m->time_factor = DEFAULT_TIME_FACTOR * 4 / bpmlen;
+		}
+	}
+}
+

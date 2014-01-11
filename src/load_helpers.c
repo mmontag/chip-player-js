@@ -125,6 +125,7 @@ void load_prologue(struct context_data *ctx)
 	m->quirk = 0;
 	m->read_event_type = READ_EVENT_MOD;
 	m->comment = NULL;
+	m->scan_cnt = NULL;
 
 	/* Set defaults */
     	m->mod.pat = 0;

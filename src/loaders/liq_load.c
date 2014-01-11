@@ -478,10 +478,16 @@ next_pattern:
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi = &mod->xxi[i];
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs = &mod->xxs[i];
 	unsigned char b[4];
 
 	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
+
+	sub = &xxi->sub[0];
+
 	hio_read (&b, 1, 4, f);
 
 	if (b[0] == '?' && b[1] == '?' && b[2] == '?' && b[3] == '?')
@@ -515,47 +521,47 @@ next_pattern:
 	hio_read(&li.rsvd, 11, 1, f);
 	hio_read(&li.filename, 25, 1, f);
 
-	mod->xxi[i].nsm = !!(li.length);
-	mod->xxi[i].vol = 0x40;
-	mod->xxs[i].len = li.length;
-	mod->xxs[i].lps = li.loopstart;
-	mod->xxs[i].lpe = li.loopend;
+	xxi->nsm = !!(li.length);
+	xxi->vol = 0x40;
+
+	xxs->len = li.length;
+	xxs->lps = li.loopstart;
+	xxs->lpe = li.loopend;
 
 	if (li.flags & 0x01) {
-	    mod->xxs[i].flg = XMP_SAMPLE_16BIT;
-	    mod->xxs[i].len >>= 1;
-	    mod->xxs[i].lps >>= 1;
-	    mod->xxs[i].lpe >>= 1;
+	    xxs->flg = XMP_SAMPLE_16BIT;
+	    xxs->len >>= 1;
+	    xxs->lps >>= 1;
+	    xxs->lpe >>= 1;
 	}
 
 	if (li.loopend > 0)
-	    mod->xxs[i].flg = XMP_SAMPLE_LOOP;
+	    xxs->flg = XMP_SAMPLE_LOOP;
 
 	/* FIXME: LDSS 1.0 have global vol == 0 ? */
 	/* if (li.gvl == 0) */
 	    li.gvl = 0x40;
 
-	mod->xxi[i].sub[0].vol = li.vol;
-	mod->xxi[i].sub[0].gvl = li.gvl;
-	mod->xxi[i].sub[0].pan = li.pan;
-	mod->xxi[i].sub[0].sid = i;
+	sub->vol = li.vol;
+	sub->gvl = li.gvl;
+	sub->pan = li.pan;
+	sub->sid = i;
 
 	instrument_name(mod, i, li.name, 31);
 
 	D_(D_INFO "[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d",
 		i, mod->xxi[i].name, mod->xxs[i].len,
-		mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		mod->xxs[i].lps, mod->xxs[i].lpe,
-		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].gvl,
+		xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ', xxs->lps, xxs->lpe,
+		xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol, sub->gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
 
-	c2spd_to_note (li.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+	c2spd_to_note(li.c2spd, &sub->xpo, &sub->fin);
 	hio_seek(f, li.hdrsz - 0x90, SEEK_CUR);
 
-	if (!mod->xxs[i].len)
+	if (xxs->len == 0)
 	    continue;
-	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+
+	if (load_sample(m, f, 0, xxs, NULL) < 0)
 	    return -1;
     }
 
