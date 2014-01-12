@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.2.3 ():
+	- remove limit of samples in RTM loader
+
 4.2.2 (20140111):
 	- re-enable Falcon MegaTracker loader
 	- fix DIGI Booster finetune (reported by Andreas Argirakis)
