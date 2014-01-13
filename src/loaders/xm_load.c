@@ -288,7 +288,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		hio_seek(f, (int)xih.size - (XM_INST_HEADER_SIZE + XM_INST_SIZE), SEEK_CUR);
 
 		/* Envelope */
-		xxi->rls = xi.v_fade;
+		xxi->rls = xi.v_fade << 1;
 		xxi->aei.npt = xi.v_pts;
 		xxi->aei.sus = xi.v_sus;
 		xxi->aei.lps = xi.v_start;

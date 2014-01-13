@@ -22,7 +22,7 @@ TEST(test_effect_pastnote_fade)
 	set_instrument_nna(ctx, 0, 0, XMP_INST_NNA_CONT, XMP_INST_DCT_OFF,
 							XMP_INST_DCA_CUT);
 
-	set_instrument_fadeout(ctx, 0, 5000);
+	set_instrument_fadeout(ctx, 0, 10000);
 
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);
 	new_event(ctx, 0, 1, 0, 50, 2,  0, FX_IT_INSTFUNC, 0x02, 0, 0);

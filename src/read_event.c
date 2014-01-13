@@ -140,7 +140,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		int ins = e->ins - 1;
 		use_ins_vol = 1;
 		SET(NEW_INS);
-		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
+		xc->fadeout = 0x10000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
 		xc->offset_val = 0;
 		RESET_NOTE(NOTE_RELEASE);
@@ -272,7 +272,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		int ins = e->ins - 1;
 		SET(NEW_INS);
 		use_ins_vol = 1;
-		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
+		xc->fadeout = 0x10000;
 		xc->per_flags = 0;
 		RESET_NOTE(NOTE_RELEASE);
 
@@ -352,7 +352,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
 		xc->key = --key;
-		xc->fadeout = 0x8000;		/* for Last Battle.xm */
+		xc->fadeout = 0x10000;
 		RESET_NOTE(NOTE_RELEASE | NOTE_END);
 
 		sub = get_subinstrument(ctx, xc->ins, key);
@@ -459,7 +459,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		int ins = e->ins - 1;
 		SET(NEW_INS);
 		use_ins_vol = 1;
-		xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
+		xc->fadeout = 0x10000;
 		xc->per_flags = 0;
 		xc->offset_val = 0;
 		RESET_NOTE(NOTE_RELEASE);
@@ -629,7 +629,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			SET(NEW_INS);
 			use_ins_vol = 1;
 			reset_env = 1;
-			xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
+			xc->fadeout = 0x10000;
 		}
 		xc->per_flags = 0;
 
@@ -810,7 +810,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	is_smix_ins = 0;
 	ins = e->ins - 1;
 	SET(NEW_INS);
-	xc->fadeout = 0x8000;	/* for painlace.mod pat 0 ch 3 echo */
+	xc->fadeout = 0x10000;
 	xc->per_flags = 0;
 	xc->offset_val = 0;
 	RESET_NOTE(NOTE_RELEASE);

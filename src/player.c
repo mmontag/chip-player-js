@@ -295,7 +295,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	CLAMP(finalvol, 0, m->volbase);
 
-	finalvol = (finalvol * xc->fadeout) >> 5;	/* 16 bit output */
+	finalvol = (finalvol * xc->fadeout) >> 6;	/* 16 bit output */
 
 	if (HAS_QUIRK(QUIRK_ST3GVOL)) {
 		gvol = 0x40;

@@ -7,10 +7,7 @@
  */
 
 /* Note: envelope switching (effect 9) and sample status change (effect 8)
- * are not supported. Frequency envelopes will be added in xmp 1.2.0. In
- * MDL envelopes are defined for each instrument in a patch -- xmp accepts
- * only one envelope for each patch, and the enveope of the first instrument
- * will be taken.
+ * not supported.
  */
 
 #include "loader.h"
@@ -968,7 +965,7 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     free(data.packinfo);
 
-    m->quirk |= QUIRKS_FT2;
+    m->quirk |= QUIRKS_FT2 | QUIRK_KEYOFF;
     m->read_event_type = READ_EVENT_FT2;
 
     return 0;

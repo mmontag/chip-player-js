@@ -20,7 +20,7 @@ TEST(test_player_note_off_ft2)
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, 0, 0);
 	new_event(ctx, 0, 1, 0, XMP_KEY_OFF, 0,  0, 0x00, 0, 0, 0);
 	set_quirk(ctx, QUIRKS_FT2, READ_EVENT_FT2);
-	set_instrument_fadeout(ctx, 0, 8000);
+	set_instrument_fadeout(ctx, 0, 16000);
 
 	/* Test: Without envelope in FT2 mode */
 	xmp_start_player(opaque, 44100, 0);

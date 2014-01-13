@@ -3,6 +3,7 @@ Stable versions
 
 4.2.3 ():
 	- remove limit of samples in RTM loader
+	- fix MDL effect decoding
 
 4.2.2 (20140111):
 	- re-enable Falcon MegaTracker loader

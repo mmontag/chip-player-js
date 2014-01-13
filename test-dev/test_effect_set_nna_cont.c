@@ -19,7 +19,7 @@ TEST(test_effect_set_nna_cont)
  	create_simple_module(ctx, 2, 2);
 	set_instrument_volume(ctx, 0, 0, 22);
 	set_instrument_volume(ctx, 1, 0, 33);
-	set_instrument_fadeout(ctx, 0, 5000);
+	set_instrument_fadeout(ctx, 0, 10000);
 
 	new_event(ctx, 0, 0, 0, 60, 1, 44, 0x0f, 2, FX_IT_INSTFUNC, 0x04);
 	new_event(ctx, 0, 1, 0, 50, 2,  0, 0x00, 0, 0, 0);
