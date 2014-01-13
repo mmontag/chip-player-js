@@ -36,7 +36,7 @@ static int mdl_test(HIO_HANDLE *f, char *t, const int start)
     if (hio_read32b(f) != MAGIC_DMDL)
 	return -1;
 
-    hio_read8(f);			/* version */
+    hio_read8(f);		/* version */
     id = hio_read16b(f);
 
     if (id == 0x494e) {		/* IN */
@@ -123,9 +123,6 @@ static void fix_env(int i, struct xmp_envelope *ei, struct mdl_envelope *env,
 static void xlat_fx_common(uint8 *t, uint8 *p)
 {
     switch (*t) {
-    case 0x00:			/* - - No effect */
-	*p = 0;
-	break;
     case 0x07:			/* 7 - Set BPM */
 	*t = FX_S3M_BPM;
 	break;
@@ -165,6 +162,9 @@ static void xlat_fx_common(uint8 *t, uint8 *p)
 static void xlat_fx1(uint8 *t, uint8 *p)
 {
     switch (*t) {
+    case 0x00:			/* - - No effect */
+	*p = 0;
+	break;
     case 0x05:			/* 5 - Arpeggio */
 	*t = FX_ARPEGGIO;
 	break;
@@ -180,6 +180,9 @@ static void xlat_fx1(uint8 *t, uint8 *p)
 static void xlat_fx2(uint8 *t, uint8 *p)
 {
     switch (*t) {
+    case 0x00:			/* - - No effect */
+	*p = 0;
+	break;
     case 0x01:			/* G - Volume slide up */
 	*t = FX_VOLSLIDE_UP;
 	break;
@@ -363,10 +366,9 @@ static int get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     int x;
 
     mod->pat = hio_read8(f);
-    mod->trk = mod->pat * mod->chn + 1;	/* Max */
 
-    if (pattern_init(mod) < 0)
-	return -1;
+    if ((mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat)) == NULL)
+        return -1;
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
@@ -395,10 +397,9 @@ static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     uint16 x16;
 
     mod->pat = hio_read8(f);
-    mod->trk = mod->pat * mod->chn + 1;	/* Max */
 
-    if (pattern_init(mod) < 0)
-	return -1;
+    if ((mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat)) == NULL)
+        return -1;
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
@@ -424,7 +425,8 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     struct xmp_track *track;
 
     mod->trk = hio_read16l(f) + 1;
-    mod->xxt = realloc(mod->xxt, sizeof (struct xmp_track *) * mod->trk);
+    if ((mod->xxt = calloc(sizeof (struct xmp_track *), mod->trk)) == NULL)
+	return -1;
 
     D_(D_INFO "Stored tracks: %d", mod->trk);
 
@@ -445,46 +447,46 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
             			sizeof (struct xmp_event) * 255);
 
 	for (row = 0; len;) {
+	    struct xmp_event *ev = &track->event[row];
+
 	    j = hio_read8(f);
 	    len--;
 	    switch (j & 0x03) {
 	    case 0:
 		row += j >> 2;
+	        ev = &track->event[row];
 		break;
 	    case 1:
 		for (k = 0; k <= (j >> 2); k++)
-		    memcpy (&track->event[row + k], &track->event[row - 1],
-			sizeof (struct xmp_event));
+		    memcpy (&ev[k], &ev[-1], sizeof (struct xmp_event));
 		row += k - 1;
+	        ev = &track->event[row];
 		break;
 	    case 2:
-		memcpy (&track->event[row], &track->event[j >> 2],
+		memcpy (ev, &track->event[j >> 2],
 		    sizeof (struct xmp_event));
 		break;
 	    case 3:
 		if (j & MDL_NOTE_FOLLOWS) {
 		    uint8 b = hio_read8(f);
 		    len--;
-		    track->event[row].note = b == 0xff ? XMP_KEY_OFF : b + 12;
+		    ev->note = b == 0xff ? XMP_KEY_OFF : b + 12;
 		}
 		if (j & MDL_INSTRUMENT_FOLLOWS)
-		    len--, track->event[row].ins = hio_read8(f);
+		    len--, ev->ins = hio_read8(f);
 		if (j & MDL_VOLUME_FOLLOWS)
-		    len--, track->event[row].vol = hio_read8(f);
+		    len--, ev->vol = hio_read8(f);
 		if (j & MDL_EFFECT_FOLLOWS) {
 		    len--, k = hio_read8(f);
-		    track->event[row].fxt = LSN(k);
-		    track->event[row].f2t = MSN(k);
+		    ev->fxt = LSN(k);
+		    ev->f2t = MSN(k);
 		}
 		if (j & MDL_PARAMETER1_FOLLOWS)
-		    len--, track->event[row].fxp = hio_read8(f);
+		    len--, ev->fxp = hio_read8(f);
 		if (j & MDL_PARAMETER2_FOLLOWS)
-		    len--, track->event[row].f2p = hio_read8(f);
+		    len--, ev->f2p = hio_read8(f);
 		break;
 	    }
-
-	    xlat_fx1(&track->event[row].fxt, &track->event[row].fxp);
-	    xlat_fx2(&track->event[row].f2t, &track->event[row].f2p);
 
 	    row++;
 	}
@@ -500,7 +502,15 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	memcpy(mod->xxt[i], track, sizeof (struct xmp_track) +
 				sizeof (struct xmp_event) * (row - 1));
+
 	mod->xxt[i]->rows = row;
+
+	/* Translate effects */
+	for (j = 0; j < row; j++) {
+		struct xmp_event *ev = &mod->xxt[i]->event[j];
+		xlat_fx1(&ev->fxt, &ev->fxp);
+		xlat_fx2(&ev->f2t, &ev->f2p);
+	}
     }
 
     free(track);
@@ -599,8 +609,7 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     uint8 x;
 
     mod->smp = hio_read8(f);
-    mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp);
-    if (mod->xxs == NULL)
+    if ((mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp)) == NULL)
 	return -1;
 
     data->packinfo = calloc(sizeof (int), mod->smp);
@@ -667,8 +676,7 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     if (instrument_init(mod) < 0)
 	return -1;
 
-    data->packinfo = calloc (sizeof (int), mod->smp);
-    if (data->packinfo == NULL)
+    if ((data->packinfo = calloc(sizeof (int), mod->smp)) == NULL)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
@@ -728,42 +736,49 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	int ret;
+	struct xmp_sample *xxs = &mod->xxs[i];
 
-	smpbuf = calloc (1, mod->xxs[i].flg & XMP_SAMPLE_16BIT ?
-		mod->xxs[i].len << 1 : mod->xxs[i].len);
-	if (smpbuf == NULL)
-	    return -1;
+        len = xxs->len;
+	if (xxs->flg & XMP_SAMPLE_16BIT)
+	    len <<= 1;
+
+	if ((smpbuf = calloc(1, len)) == NULL)
+	    goto err;
 
 	switch (data->packinfo[i]) {
 	case 0:
-	    hio_read(smpbuf, 1, mod->xxs[i].len, f);
+	    hio_read(smpbuf, 1, len, f);
 	    break;
 	case 1: 
 	    len = hio_read32l(f);
-	    buf = malloc(len + 4);
+	    if ((buf = malloc(len + 4)) == NULL)
+		goto err2;
 	    hio_read(buf, 1, len, f);
-	    unpack_sample8(smpbuf, buf, len, mod->xxs[i].len);
+	    unpack_sample8(smpbuf, buf, len, xxs->len);
 	    free(buf);
 	    break;
 	case 2:
 	    len = hio_read32l(f);
-	    buf = malloc(len + 4);
+	    if ((buf = malloc(len + 4)) == NULL)
+		goto err2;
 	    hio_read(buf, 1, len, f);
-	    unpack_sample16(smpbuf, buf, len, mod->xxs[i].len);
+	    unpack_sample16(smpbuf, buf, len, xxs->len);
 	    free(buf);
 	    break;
 	}
 	
-	ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD,
-					&mod->xxs[i], (char *)smpbuf);
-	free (smpbuf);
+	if (load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, xxs, (char *)smpbuf) < 0)
+	    goto err2;
 
-	if (ret < 0)
-		return -1;
+	free(smpbuf);
     }
 
     return 0;
+
+  err2:
+    free(smpbuf);
+  err:
+    return -1;
 }
 
 static int get_chunk_ve(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
