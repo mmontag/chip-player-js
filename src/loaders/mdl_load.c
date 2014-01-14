@@ -82,7 +82,7 @@ struct local_data {
 static void fix_env(int i, struct xmp_envelope *ei, struct mdl_envelope *env,
 		    int *index, int envnum)
 {
-    int j, k;
+    int j, k, lastx;
 
     if (index[i] >= 0) {
 	ei->flg = XMP_ENVELOPE_ON;
@@ -95,14 +95,18 @@ static void fix_env(int i, struct xmp_envelope *ei, struct mdl_envelope *env,
     	        ei->sus = env[j].sus & 0x0f;
     	        ei->lps = env[j].loop & 0x0f;
     	        ei->lpe = env[j].loop & 0xf0;
-    	        ei->data[0] = 0;
 
-    	        for (k = 1; k < ei->npt; k++) {
-        	    ei->data[k * 2] = ei->data[(k - 1) * 2] +
-        				env[j].data[(k - 1) * 2];
-        	    if (env[j].data[k * 2] == 0)
+		lastx = -1;
+
+    	        for (k = 0; k < ei->npt; k++) {
+		    int x = env[j].data[k * 2];
+
+        	    if (x == 0)
         		    break;
-        	    ei->data[k * 2 + 1] = env[j].data[(k - 1) * 2 + 1];
+        	    ei->data[k * 2] = lastx + x;
+        	    ei->data[k * 2 + 1] = env[j].data[k * 2 + 1];
+
+		    lastx = ei->data[k * 2];
         	}
 
         	ei->npt = k;
@@ -579,7 +583,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 		xxi->rls = x;
 
 	    sub->vra = hio_read8(f);	/* vibrato rate */
-	    sub->vde = hio_read8(f);	/* vibrato delay */
+	    sub->vde = hio_read8(f) >> 1;	/* vibrato depth */
 	    sub->vsw = hio_read8(f);	/* vibrato sweep */
 	    sub->vwf = hio_read8(f);	/* vibrato waveform */
 	    hio_read8(f);		/* Reserved */
@@ -634,8 +638,6 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	xxs->flg = xxs->lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	xxs->lpe = xxs->lps + xxs->lpe;
-	if (xxs->lpe > 0)
-	    xxs->lpe--;
 
 	hio_read8(f);				/* Volume in DMDL 0.0 */
 	x = hio_read8(f);
