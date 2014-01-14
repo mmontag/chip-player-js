@@ -4,7 +4,11 @@ Stable versions
 4.2.3 ():
 	- remove limit of samples in RTM loader
 	- fix MDL effect decoding
+	- fix MDL envelope decoding
 	- fix MDL fadeout setting when envelopes are disabled
+	- fix MDL instrument vibrato depth
+	- fix MDL sample loop size
+	- fix MDL fine volume slide effect
 
 4.2.2 (20140111):
 	- re-enable Falcon MegaTracker loader
