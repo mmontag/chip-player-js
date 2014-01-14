@@ -89,7 +89,7 @@ static void fix_env(int i, struct xmp_envelope *ei, struct mdl_envelope *env,
 	ei->npt = 16;
 
 	for (j = 0; j < envnum; j++) {
-    	    if (index[i] == j) {
+    	    if (index[i] == env[j].num) {
     	        ei->flg |= env[j].sus & 0x10 ? XMP_ENVELOPE_SUS : 0;
     	        ei->flg |= env[j].sus & 0x20 ? XMP_ENVELOPE_LOOP : 0;
     	        ei->sus = env[j].sus & 0x0f;
@@ -919,24 +919,21 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     iff_release(handle);
 
-    /* Re-index instruments & samples */
+    /* Reindex instruments */
+    for (i = 0; i < mod->trk; i++) {
+	for (j = 0; j < mod->xxt[i]->rows; j++) {
+	    struct xmp_event *e = &mod->xxt[i]->event[j];
 
-    for (i = 0; i < mod->pat; i++) {
-	for (j = 0; j < mod->xxp[i]->rows; j++) {
-	    for (k = 0; k < mod->chn; k++) {
-		for (l = 0; l < mod->ins; l++) {
-		    if (j >= mod->xxt[mod->xxp[i]->index[k]]->rows)
-			continue;
-		    
-		    if (EVENT(i, k, j).ins && EVENT(i, k, j).ins == data.i_index[l]) {
-		    	EVENT(i, k, j).ins = l + 1;
-			break;
-		    }
+	    for (l = 0; l < mod->ins; l++) {
+		if (e->ins && e->ins == data.i_index[l]) {
+		    e->ins = l + 1;
+		    break;
 		}
 	    }
 	}
     }
 	
+    /* Reindex envelopes, etc. */
     for (i = 0; i < mod->ins; i++) {
         fix_env(i, &mod->xxi[i].aei, data.v_env, data.v_index, data.v_envnum);
         fix_env(i, &mod->xxi[i].pei, data.p_env, data.p_index, data.p_envnum);
