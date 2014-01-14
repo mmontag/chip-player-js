@@ -622,6 +622,7 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
 	str_adj(buf);
+	strncpy(xxs->name, buf, 32);
 
 	hio_seek(f, 8, SEEK_CUR);		/* Sample filename */
 
