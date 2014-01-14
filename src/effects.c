@@ -324,11 +324,29 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}		
 		break;
 	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
+		if (HAS_QUIRK(QUIRK_FINEFX)) {
+			h = MSN(fxp);
+			l = LSN(fxp);
+			if (h == 0xf && l != 0) {
+				fxp &= 0x0f;
+				goto fx_f_vslide_up;
+			}
+		}
+
 		if (fxp)
 			xc->vol.slide = fxp;
 		SET(VOL_SLIDE);
 		break;
 	case FX_VOLSLIDE_DN:	/* Vol slide with uint8 arg */
+		if (HAS_QUIRK(QUIRK_FINEFX)) {
+			h = MSN(fxp);
+			l = LSN(fxp);
+			if (h == 0xf && l != 0) {
+				fxp &= 0x0f;
+				goto fx_f_vslide_dn;
+			}
+		}
+
 		if (fxp)
 			xc->vol.slide = -fxp;
 		SET(VOL_SLIDE);
