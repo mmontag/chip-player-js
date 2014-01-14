@@ -2,10 +2,10 @@ VERSION_MAJOR	= 4
 VERSION_MINOR	= 2
 VERSION_RELEASE	= 3
 
-COMPAT_MINOR	= 2
-
 VERSION		= $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
-COMPAT_VERSION	= $(VERSION_MAJOR).$(COMPAT_MINOR).0
+
+# This dylib will support anything linked against COMPAT_VERSION through VERSION
+COMPAT_VERSION	= $(VERSION_MAJOR)
 
 CC		= @CC@
 CFLAGS		= -c @CFLAGS@ @DEFS@ -D_REENTRANT
@@ -36,7 +36,7 @@ SOLIB		= libxmp.so
 SHLIB		= $(SOLIB).$(VERSION)
 SONAME		= $(SOLIB).$(VERSION_MAJOR)
 DLL		= libxmp.dll
-DYLIB		= libxmp.$(VERSION).dylib
+DYLIB		= libxmp.$(VERSION_MAJOR).dylib
 GCLIB		= libxmp-gc.a
 
 all: @STATIC@ @SHARED@
@@ -115,8 +115,7 @@ lib/$(DYLIB): $(LOBJS)
 	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,$(COMPAT_VERSION),-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
-	ln -sf $(DYLIB) lib/libxmp.$(VERSION_MAJOR).dylib
-	ln -sf libxmp.$(VERSION_MAJOR).dylib lib/libxmp.dylib
+	ln -sf $(DYLIB) lib/libxmp.dylib
 
 lib/$(GCLIB): $(GCOBJS)
 	@mkdir -p lib
@@ -137,9 +136,8 @@ install: all
 	fi
 	@if [ -f lib/$(DYLIB) ]; then \
 		echo "Installing $(DYLIB)..."; \
-		$(INSTALL) -m644 lib/$(DYLIB) $(DESTDIR)$(LIBDIR); \
-		ln -sf $(DYLIB) $(DESTDIR)$(LIBDIR)/libxmp.$(VERSION_MAJOR).dylib; \
-		ln -sf libxmp.$(VERSION_MAJOR).dylib $(DESTDIR)$(LIBDIR)/libxmp.dylib;\
+		$(INSTALL) -m755 lib/$(DYLIB) $(DESTDIR)$(LIBDIR); \
+		ln -sf $(DYLIB) $(DESTDIR)$(LIBDIR)/libxmp.dylib; \
 	fi
 	@if [ -f lib/$(SHLIB) ]; then \
 		echo "Installing $(SHLIB)..."; \
