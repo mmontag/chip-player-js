@@ -1,16 +1,16 @@
 #include "test.h"
 
-TEST(test_loader_mdl)
+TEST(test_loader_mdl0)
 {
 	xmp_context opaque;
 	struct xmp_module_info info;
 	FILE *f;
 	int ret;
 
-	f = fopen("data/format_mdl.data", "r");
+	f = fopen("data/format_mdl0.data", "r");
 
 	opaque = xmp_create_context();
-	ret = xmp_load_module(opaque, "data/m/the spring.mdl");
+	ret = xmp_load_module(opaque, "data/m/breaking.mdl");
 	fail_unless(ret == 0, "module load");
 
 	xmp_get_module_info(opaque, &info);
