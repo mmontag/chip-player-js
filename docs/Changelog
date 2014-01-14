@@ -9,6 +9,7 @@ Stable versions
 	- fix MDL instrument vibrato depth
 	- fix MDL sample loop size
 	- fix MDL fine volume slide effect
+	- fix MacOS X dylib versioning
 
 4.2.2 (20140111):
 	- re-enable Falcon MegaTracker loader
