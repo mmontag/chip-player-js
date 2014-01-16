@@ -123,6 +123,10 @@ LOADER		= ust ac1d unic unic2 nst flt flt8 wow m15 mtm it it_oldins \
 		  6chn mod_adpcm4 \
 		  med3 med4 mmd0 mmd3
 
+PROBLEMATIC	= length_data_jack \
+		  length_condom_corruption \
+		  length_klisje_paa_klisje
+
 SYNTH		= adlib #spectrum
 
 CASE1_TESTS	= $(addprefix new_note_no_ins_,$(REPLAYERS)) \
@@ -169,6 +173,8 @@ SYNTH_TESTS	= $(addprefix synth_,$(SYNTH))
 
 API_TESTS	= $(addprefix api_,$(API)) $(addprefix api_,$(API_SMIX))
 
+PROBLEM_TESTS	= $(addprefix module_,$(PROBLEMATIC))
+
 TESTS		= $(READ_TESTS) \
 		  $(WRITE_TESTS) \
 		  $(SMPLOAD_TESTS) \
@@ -187,7 +193,8 @@ TESTS		= $(READ_TESTS) \
 		  $(STORLEK_TESTS) \
 		  $(PLAYER_TESTS) \
 		  $(MIXER_TESTS) \
-		  $(SYNTH_TESTS)
+		  $(SYNTH_TESTS) \
+		  $(PROBLEM_TESTS)
 
 TEST_NAMES	= $(addprefix test_,$(TESTS))
 
