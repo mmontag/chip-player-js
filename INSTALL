@@ -1,9 +1,9 @@
 Requirements
 ------------
 
-- This package needs to be built using GNU make (
-  https://www.gnu.org/software/make/ ). On BSD or SysV systems, you may need
-  to use "gmake" instead of "make".
+- This package needs to be built using GNU make
+  (https://www.gnu.org/software/make/). On BSD or SysV systems, you may
+  need to use "gmake" instead of "make".
 
 
 Building the library
