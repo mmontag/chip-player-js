@@ -281,7 +281,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     mod->pat = -1;
-    for (i = 0; i < mod->len && mod->xxo[i] < 0xfe; ++i) {
+    for (i = 0; i < mod->len && mod->xxo[i] < 0xff; ++i) {
 	if (mod->xxo[i] > mod->pat)
             mod->pat = mod->xxo[i];
     }
