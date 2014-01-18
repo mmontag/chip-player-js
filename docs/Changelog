@@ -3,7 +3,7 @@ Stable versions
 
 4.2.3 (20140118):
 	- remove limit of samples in RTM loader
-	- fix S3M length bug intruduced in 4.2.1 (reported by Misty De Meo)
+	- fix S3M length bug introduced in 4.2.1 (reported by Misty De Meo)
 	- fix MDL effect decoding
 	- fix MDL envelope decoding
 	- fix MDL fadeout setting when envelopes are disabled
