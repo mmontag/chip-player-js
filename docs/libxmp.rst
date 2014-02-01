@@ -425,7 +425,7 @@ int xmp_start_player(xmp_context c, int rate, int format)
   **Parameters:**
     :c: the player context handle.
  
-    :rate: the sampling rate to use, in Hz (tipically 44100). Valid values
+    :rate: the sampling rate to use, in Hz (typically 44100). Valid values
        range from 8kHz to 48kHz.
 
     :flags: bitmapped configurable player flags, one or more of the
