@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.2.4 ():
+	- fix Chiptracker pattern decoding
+
 4.2.3 (20140118):
 	- remove limit of samples in RTM loader
 	- fix S3M length bug introduced in 4.2.1 (reported by Misty De Meo)
