@@ -1,6 +1,6 @@
 
 PROWIZ_OBJS	= prowiz.o ptktable.o tuning.o ac1d.o di.o eureka.o \
-		  fc-m.o fuchs.o fuzzac.o gmc.o heatseek.o kris.o ksm.o \
+		  fc-m.o fuchs.o fuzzac.o gmc.o heatseek.o ksm.o \
 		  mp.o np1.o np2.o np3.o p61a.o pm10c.o pm18a.o \
 		  pha.o prun1.o prun2.o tdd.o unic.o unic2.o wn.o zen.o \
 		  tp3.o p40.o xann.o theplayer.o pp21.o starpack.o titanics.o \
