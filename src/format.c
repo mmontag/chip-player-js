@@ -71,6 +71,7 @@ extern const struct format_loader mfp_loader;
 /* extern const struct format_loader stc_loader; */
 extern const struct format_loader pw_loader;
 extern const struct format_loader hmn_loader;
+extern const struct format_loader chip_loader;
 
 extern const struct pw_format *const pw_format[];
 
@@ -104,6 +105,7 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&med3_loader,
 	&med4_loader,
 	&dmf_loader,
+	&chip_loader,
 	&rtm_loader,
 	&pt3_loader,
 	&tcb_loader,

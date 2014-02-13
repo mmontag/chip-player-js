@@ -22,7 +22,7 @@ const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
 	&pw_fcm,
 	&pw_fuzz,
 	&pw_hrt,
-	&pw_kris,
+	/* &pw_kris, */
 	&pw_ksm,
 	&pw_mp_id,
 	&pw_ntp,
