@@ -146,6 +146,8 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 		xc->delayed_event = e;
 		if (e->ins)
 			xc->delayed_ins = e->ins;
+		else
+			xc->delayed_event->ins = xc->ins + 1;
 		return 1;
 	}
 	if (e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY) {
@@ -153,6 +155,8 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 		xc->delayed_event = e;
 		if (e->ins)
 			xc->delayed_ins = e->ins;
+		else
+			xc->delayed_event->ins = xc->ins + 1;
 		return 1;
 	}
 
