@@ -2,7 +2,7 @@
 
 /*
 When a note is issued with no instrument after a keyoff event, it should
-be played.
+be played [if instrument has no envelope]
 
 Last Battle.xm:
 

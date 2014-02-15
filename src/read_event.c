@@ -354,6 +354,9 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->key = --key;
 		xc->fadeout = 0x10000;
 		RESET_NOTE(NOTE_END);
+		if (~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_ON) {
+			RESET_NOTE(NOTE_RELEASE);
+		}
 
 		sub = get_subinstrument(ctx, xc->ins, key);
 
