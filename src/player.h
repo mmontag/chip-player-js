@@ -175,7 +175,7 @@ struct channel_data {
 
 	void *extra;
 
-	struct xmp_event *delayed_event;
+	struct xmp_event delayed_event;
 	int delayed_ins;	/* IT save instrument emulation */
 
 	int info_period;	/* Period */

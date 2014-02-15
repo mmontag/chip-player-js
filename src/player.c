@@ -143,20 +143,20 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* Delay the entire fetch cycle */
 	if (e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY) {
 		xc->delay = LSN(e->fxp) + 1;
-		xc->delayed_event = e;
+		memcpy(&xc->delayed_event, e, sizeof (struct xmp_event));
 		if (e->ins)
 			xc->delayed_ins = e->ins;
 		else
-			xc->delayed_event->ins = xc->ins + 1;
+			xc->delayed_event.ins = xc->ins + 1;
 		return 1;
 	}
 	if (e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY) {
 		xc->delay = LSN(e->f2p) + 1;
-		xc->delayed_event = e;
+		memcpy(&xc->delayed_event, e, sizeof (struct xmp_event));
 		if (e->ins)
 			xc->delayed_ins = e->ins;
 		else
-			xc->delayed_event->ins = xc->ins + 1;
+			xc->delayed_event.ins = xc->ins + 1;
 		return 1;
 	}
 
@@ -653,7 +653,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	/* Do delay */
 	if (xc->delay > 0) {
 		if (--xc->delay == 0) {
-			read_event(ctx, xc->delayed_event, chn);
+			read_event(ctx, &xc->delayed_event, chn);
 		}
 	}
 
