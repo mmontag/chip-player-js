@@ -718,18 +718,16 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_FLT_RESN:
 		xc->filter.resonance = fxp;
 		break;
-	case FX_CHORUS:
 #if 0
+	case FX_CHORUS:
 		/* FIXME */
 		m->mod.xxc[chn].cho = fxp;
-#endif
 		break;
 	case FX_REVERB:
-#if 0
 		/* FIXME */
 		m->mod.xxc[chn].rvb = fxp;
-#endif
 		break;
+#endif
 	case FX_NSLIDE_DN:
 	case FX_NSLIDE_UP:
 	case FX_NSLIDE_R_DN:
