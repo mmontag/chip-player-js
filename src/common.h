@@ -164,6 +164,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_VIBINV	(1 << 21)	/* Vibrato has inverse waveform */
 #define QUIRK_PRENV	(1 << 22)	/* Portamento resets envelope & fade */
 #define QUIRK_S3MLFO	(1 << 23)	/* S3M-style LFO waveforms */
+#define QUIRK_RTDELAY	(1 << 24)	/* Delay effect retrigs instrument */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
@@ -171,7 +172,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 /* Format quirks */
 #define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN | QUIRK_FINEFX | \
 				 QUIRK_S3MLFO  )
-#define QUIRKS_FT2		(QUIRK_FINEFX)
+#define QUIRKS_FT2		(QUIRK_RTDELAY | QUIRK_FINEFX )
 #define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_FINEFX | QUIRK_VIBALL | \
 				 QUIRK_ENVFADE | QUIRK_ITVPOR | QUIRK_KEYOFF | \
 				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_S3MLFO | \
