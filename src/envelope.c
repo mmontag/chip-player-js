@@ -55,10 +55,6 @@ int update_envelope(struct xmp_envelope *env, int x, int release)
 	int has_loop, has_sus;
 	int lpe, lps, sus, sue;
 
-	if (x < 0xffff)	{	/* increment tick */
-		x++;
-	}
-
 	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0) {
 		return x;
 	}
@@ -73,22 +69,26 @@ int update_envelope(struct xmp_envelope *env, int x, int release)
 
 	if (env->flg & XMP_ENVELOPE_SLOOP) {
 		if (!release && has_sus) {
-			if (x > data[sue])
-				x = data[sus];
+			if (x == data[sue])
+				x = data[sus] - 1;
 		} else if (has_loop) {
-			if (x > data[lpe])
-				x = data[lps];
+			if (x == data[lpe])
+				x = data[lps] - 1;
 		}
 	} else {
-		if (!release && has_sus && x > data[sus]) {
+		if (!release && has_sus && x == data[sus]) {
 			/* stay in the sustain point */
-			x = data[sus];
+			x--;
 		}
 
-		if (has_loop && x > data[lpe]) {
+		if (has_loop && x == data[lpe]) {
 	    		if (!(release && has_sus && sus == lpe))
-				x = data[lps];
+				x = data[lps] - 1;
 		}
+	}
+
+	if (x < 0xffff)	{	/* increment tick */
+		x++;
 	}
 
 	return x;
