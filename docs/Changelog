@@ -5,6 +5,7 @@ Stable versions
 	- fix Chiptracker pattern decoding (reported by Andreas Argirakis)
 	- fix note retrig on delay effect (reported by Justin Crawford)
 	- fix XM keyoff reset on new note event (reported by Justin Crawford)
+	- fix envelope update after manually set point
 
 4.2.3 (20140118):
 	- remove limit of samples in RTM loader
