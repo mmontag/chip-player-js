@@ -141,27 +141,33 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 		}
 	}
 
-	/* Delay the entire fetch cycle */
-	if (e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY) {
+	/* Delay event read */
+	if (e->fxt == FX_EXTENDED && MSN(e->fxp) == EX_DELAY && LSN(e->fxp)) {
 		xc->delay = LSN(e->fxp) + 1;
-		memcpy(&xc->delayed_event, e, sizeof (struct xmp_event));
-		if (e->ins)
-			xc->delayed_ins = e->ins;
-		else if (HAS_QUIRK(QUIRK_RTDELAY))
-			xc->delayed_event.ins = xc->ins + 1;
-		return 1;
+		goto do_delay;
 	}
-	if (e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY) {
+	if (e->f2t == FX_EXTENDED && MSN(e->f2p) == EX_DELAY && LSN(e->f2p)) {
 		xc->delay = LSN(e->f2p) + 1;
-		memcpy(&xc->delayed_event, e, sizeof (struct xmp_event));
-		if (e->ins)
-			xc->delayed_ins = e->ins;
-		else if (HAS_QUIRK(QUIRK_RTDELAY))
-			xc->delayed_event.ins = xc->ins + 1;
-		return 1;
+		goto do_delay;
 	}
 
 	return 0;
+
+    do_delay:
+	memcpy(&xc->delayed_event, e, sizeof (struct xmp_event));
+
+	if (e->ins)
+		xc->delayed_ins = e->ins;
+
+	if (HAS_QUIRK(QUIRK_RTDELAY)) {
+		RESET(NOTE_RELEASE);
+		if (e->ins == 0)
+			xc->delayed_event.note = xc->key + 1;
+		if (e->ins == 0)
+			xc->delayed_event.ins = xc->ins + 1;
+	}
+
+	return 1;
 }
 
 static inline void read_row(struct context_data *ctx, int pat, int row)
