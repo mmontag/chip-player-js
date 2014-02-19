@@ -19,6 +19,10 @@ TEST(test_effect_ed_delay)
 	new_event(ctx, 0, 1, 0, 61, 1,  0, 0, 0, 0x0e, 0xd0);
 	new_event(ctx, 0, 2, 0, 62, 2,  0, 0x0e, 0xd1, 0, 0);
 	new_event(ctx, 0, 3, 0, 63, 2,  0, 0, 0, 0x0e, 0xd3);
+	new_event(ctx, 0, 4, 0,  0, 0,  0, 0, 0,    0,    0);
+	new_event(ctx, 0, 5, 0,  0, 0,  0, 0, 0, 0x0e, 0xd1);
+	new_event(ctx, 0, 6, 0,  0, 0,  0, 0, 0, 0x0e, 0xd1);
+	new_event(ctx, 0, 7, 0,  0, 0,  0, 0, 0, 0x0e, 0xd0);
 
 	xmp_start_player(opaque, 44100, 0);
 
@@ -50,7 +54,7 @@ TEST(test_effect_ed_delay)
 	fail_unless(vi->note == 60, "row 2 frame 0");
 	fail_unless(vi->pos0 !=  0, "sample position");
 
-	/* note changes in the frame 1 */
+	/* note changes in frame 1 */
 	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 2 frame 1");
 	fail_unless(vi->pos0 ==  0, "sample position");
@@ -71,6 +75,37 @@ TEST(test_effect_ed_delay)
 
 	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 4 frame 1");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	/* Now test retrigs on delay effect */
+
+	/* Row 5: in standard mode */
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 5 frame 0");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 5 frame 1");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	set_quirk(ctx, QUIRK_RTDELAY, READ_EVENT_FT2);
+
+	/* Row 6: in retrig mode */
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 6 frame 0");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 6 frame 1");
+	fail_unless(vi->pos0 ==  0, "sample position");
+
+	/* Row 7: don't retrig */
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 7 frame 0");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 7 frame 1");
 	fail_unless(vi->pos0 !=  0, "sample position");
 }
 END_TEST
