@@ -35,7 +35,7 @@ PROWIZARD	= zen fuchs starpack
 EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 		  4_vibrato a_volslide \
 		  c_volset \
-		  ed_delay ef_invert_loop \
+		  e9_retrig ed_delay ef_invert_loop \
 		  f_set_speed \
 		  volslide track_volslide \
 		  okt_arpeggio per_slide per_toneporta setpan masterpan \
