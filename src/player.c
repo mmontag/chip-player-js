@@ -39,6 +39,7 @@ static const struct retrig_control rval[] = {
 	{  -8,  1,  1 }, { -16,  1,  1 }, {   0,  2,  3 }, {   0,  1,  2 },
 	{   0,  1,  1 }, {   1,  1,  1 }, {   2,  1,  1 }, {   4,  1,  1 },
 	{   8,  1,  1 }, {  16,  1,  1 }, {   0,  3,  2 }, {   0,  2,  1 },
+	{   0,  1,  1 },	/* Note retrig */
 	{   0,  0,  1 }		/* Note cut */
 	
 };
@@ -685,14 +686,20 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {
 		if (--xc->retrig.count <= 0) {
-			if (xc->retrig.type < 0x10) {
+			if (xc->retrig.type < 0x11) {
 				/* don't retrig on cut */
 				virt_voicepos(ctx, chn, 0);
 			}
+
 			xc->volume += rval[xc->retrig.type].s;
 			xc->volume *= rval[xc->retrig.type].m;
 			xc->volume /= rval[xc->retrig.type].d;
-                	xc->retrig.count = LSN(xc->retrig.val);
+
+			if (xc->retrig.type < 0x10) {
+                		xc->retrig.count = LSN(xc->retrig.val);
+			} else {
+				RESET(RETRIG);
+			}
 		}
         }
 
