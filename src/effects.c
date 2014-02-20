@@ -425,10 +425,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		case EX_RETRIG:		/* Retrig note */
 			SET(RETRIG);
 			if (fxp != 0) {
-				xc->retrig.val = fxp + 1;
+				xc->retrig.val = fxp;
 			}
 			xc->retrig.count = LSN(xc->retrig.val);
-			xc->retrig.type = 0x10;
+			xc->retrig.type = 0;
 			break;
 		case EX_F_VSLIDE_UP:	/* Fine volume slide up */
 			goto fx_f_vslide_up;
@@ -438,7 +438,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			SET(RETRIG);
 			xc->retrig.val = fxp + 1;
 			xc->retrig.count = xc->retrig.val;
-			xc->retrig.type = 0x11;
+			xc->retrig.type = 0x10;
 			break;
 		case EX_DELAY:		/* Note delay */
 			/* computed at frame loop */
