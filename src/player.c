@@ -160,8 +160,7 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 		xc->delayed_ins = e->ins;
 
 	if (HAS_QUIRK(QUIRK_RTDELAY)) {
-		RESET(NOTE_RELEASE);
-		if (e->ins == 0)
+		if (e->note == 0)
 			xc->delayed_event.note = xc->key + 1;
 		if (e->ins == 0)
 			xc->delayed_event.ins = xc->ins + 1;
