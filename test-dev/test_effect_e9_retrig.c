@@ -49,7 +49,7 @@ TEST(test_effect_e9_retrig)
 	/* frame 4 */
 	xmp_play_frame(opaque);
 	fail_unless(vi->note == 59, "row 0 frame 4");
-	fail_unless(vi->pos0 !=  0, "sample position frame 4");
+	fail_unless(vi->pos0 ==  0, "sample position frame 4");
 
 	/* frame 5 */
 	xmp_play_frame(opaque);

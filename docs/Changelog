@@ -5,7 +5,6 @@ Stable versions
 	Fix bugs reported by Justin Crawford:
 	- fix XM note and envelope retrig on delay effect
 	- fix XM keyoff reset on new note event
-	- fix XM retrig effect acting as S3M multi-retrig
 	- fix envelope update after manually set point
 	Other changes:
 	- fix Chiptracker pattern decoding (reported by Andreas Argirakis)

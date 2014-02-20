@@ -427,7 +427,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			if (fxp != 0) {
 				xc->retrig.val = fxp;
 			}
-			xc->retrig.count = LSN(xc->retrig.val);
+			xc->retrig.count = LSN(xc->retrig.val) + 1;
 			xc->retrig.type = 0;
 			break;
 		case EX_F_VSLIDE_UP:	/* Fine volume slide up */
