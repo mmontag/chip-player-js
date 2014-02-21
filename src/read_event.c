@@ -805,7 +805,6 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	int ins, note, transp, smp;
 
 	xc->flags = 0;
-	note = -1;
 
 	if (!e->ins)
 		return 0;

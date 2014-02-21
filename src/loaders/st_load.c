@@ -160,7 +160,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct xmp_event ev, *event;
     struct st_header mh;
     uint8 mod_event[4];
-    int ust = 1, nt = 0, serr = 0;
+    int ust = 1, serr = 0;
     /* int lps_mult = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2; */
     char *modtype;
     int fxused;
@@ -208,8 +208,8 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (mh.ins[i].finetune)
 	    ust = 0;
 
-	if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1)
-	    nt = 1;
+	/* if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1)
+	    nt = 1; */
 
 	/* UST: Maximum sample length is 9999 bytes decimal, but 1387 words
 	 * hexadecimal. Longest samples on original sample disk ST-01 were

@@ -107,7 +107,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct stat st;
 	char smp_filename[PATH_MAX];
 	HIO_HANDLE *s;
-	int size1, size2;
+	int size1 /*, size2*/;
 	int pat_addr, pat_table[128][4];
 	uint8 buf[1024], mod_event[4];
 	int row;
@@ -174,7 +174,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	size1 = hio_read16b(f);
-	size2 = hio_read16b(f);
+	/* size2 = */ hio_read16b(f);
 
 	for (i = 0; i < size1; i++) {		/* Read pattern table */
 		for (j = 0; j < 4; j++) {

@@ -197,7 +197,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
-    int smp_size, pat_size, wow, ptsong = 0;
+    int smp_size, /*pat_size,*/ wow, ptsong = 0;
     struct xmp_event *event;
     struct mod_header mh;
     uint8 mod_event[4];
@@ -213,7 +213,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->smp = mod->ins;
     mod->chn = 0;
     smp_size = 0;
-    pat_size = 0;
+    /*pat_size = 0;*/
 
     m->quirk |= QUIRK_MODRNG;
 
@@ -275,7 +275,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
     mod->pat++;
 
-    pat_size = 256 * mod->chn * mod->pat;
+    /*pat_size = 256 * mod->chn * mod->pat;*/
 
     if (instrument_init(mod) < 0)
 	return -1;

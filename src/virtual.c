@@ -72,7 +72,7 @@ int virt_on(struct context_data *ctx, int num)
 		num = p->virt.virt_channels;
 	}
 
-	num = p->virt.maxvoc = mixer_numvoices(ctx, num);
+	p->virt.maxvoc = mixer_numvoices(ctx, num);
 
 	p->virt.voice_array = calloc(p->virt.maxvoc,
 				sizeof(struct mixer_voice));
