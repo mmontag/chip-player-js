@@ -1239,10 +1239,14 @@ FM_OPL *OPLCreate(int type, int clock, int rate)
 	OPL->state.num_lock = 0;
 	OPL->state.cur_chip = NULL;
 
-	if( OPL_LockTable(&OPL->state) ==-1) return NULL;
+	if( OPL_LockTable(&OPL->state) ==-1) {
+		free(OPL);
+		return NULL;
+	}
 
-	OPL->P_CH  = (OPL_CH *)ptr; ptr+=sizeof(OPL_CH)*max_ch;
+	OPL->P_CH  = (OPL_CH *)ptr;
 #if BUILD_Y8950
+	ptr+=sizeof(OPL_CH)*max_ch;
 	if(type&OPL_TYPE_ADPCM) OPL->deltat = (YM_DELTAT *)ptr; ptr+=sizeof(YM_DELTAT);
 #endif
 	/* set channel state pointer */
