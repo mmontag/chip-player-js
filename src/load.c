@@ -136,7 +136,7 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     if (get_temp_dir(tmp, PATH_MAX) < 0)
 	return 0;
 
-    strncat(tmp, "xmp_XXXXXX", PATH_MAX);
+    strncat(tmp, "xmp_XXXXXX", PATH_MAX - 10);
 
     fseek(*f, 0, SEEK_SET);
     if ((headersize = fread(b, 1, 1024, *f)) < 100)	/* minimum valid file size */

@@ -83,7 +83,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (get_temp_dir(tmp, PATH_MAX) < 0)
 		return -1;
 
-	strncat(tmp, "xmp_XXXXXX", PATH_MAX);
+	strncat(tmp, "xmp_XXXXXX", PATH_MAX - 10);
 
 	if ((fd = mkstemp(tmp)) < 0)
 		return -1;
