@@ -9,6 +9,7 @@ Stable versions
 	- fix envelope update after manually set point
 	Other changes:
 	- fix Chiptracker pattern decoding (reported by Andreas Argirakis)
+	- fix AMF sample loop end
 	- address clang-analyzer warnings
 
 4.2.3 (20140118):
