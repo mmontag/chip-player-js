@@ -105,7 +105,7 @@ static int unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 	uint8 *patbuf, *to;
 	int i, j, trkn = mod->chn;
 
-	from += 16;
+	/*from += 16;*/
 	patbuf = to = calloc(3, 4 * 64);
 	if (to == NULL)
 		return -1;

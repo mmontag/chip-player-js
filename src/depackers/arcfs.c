@@ -35,16 +35,16 @@ struct archived_file_header_tag {
 
 static int read_file_header(FILE *in, struct archived_file_header_tag *hdrp)
 {
-	int hlen, start, ver;
+	int hlen, start /*, ver*/;
 	int i;
 
 	fseek(in, 8, SEEK_CUR);			/* skip magic */
 	hlen = read32l(in) / 36;
 	start = read32l(in);
-	ver = read32l(in);
+	/*ver =*/ read32l(in);
 
 	read32l(in);
-	ver = read32l(in);
+	/*ver =*/ read32l(in);
 
 	fseek(in, 68, SEEK_CUR);		/* reserved */
 

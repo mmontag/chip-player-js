@@ -176,13 +176,13 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		uint8 b;
+		/*uint8 b;*/
 		int c2spd;
 
 		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
-		b = hio_read8(f);
+		/*b =*/ hio_read8(f);
 
 		hio_read(buf, 1, 32, f);
 		instrument_name(mod, i, buf, 32);
@@ -336,7 +336,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					if ((int8)t3 >= 0) {
 						fxt = FX_PORTA_DN;
 						fxp = t3;
-					} if (t3 == 0x80) {
+					} else if (t3 == 0x80) {
 						fxt = FX_PORTA_UP;
 						fxp = 0;
 					} else {
