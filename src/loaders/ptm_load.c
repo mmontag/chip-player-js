@@ -1,9 +1,23 @@
-/* Extended Module Player
+/* Extended Module Player format loaders
  * Copyright (C) 1996-2014 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU Lesser General Public License. See COPYING.LIB
- * for more information.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 #include "loader.h"
@@ -148,6 +162,10 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     /* Read and convert instruments and samples */
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi = &mod->xxi[i];
+	struct xmp_sample *xxs = &mod->xxs[i];
+	struct xmp_subinstrument *sub;
+
 	pih.type = hio_read8(f);		/* Sample type */
 	hio_read(&pih.dosname, 12, 1, f);	/* DOS file name */
 	pih.vol = hio_read8(f);			/* Volume */
@@ -169,33 +187,35 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    continue;
 
 	if (subinstrument_alloc(mod, i, 1) < 0)
-		return -1;
+	    return -1;
+
+	sub = &xxi->sub[0];
 
 	smp_ofs[i] = pih.smpofs;
-	mod->xxs[i].len = pih.length;
-	mod->xxs[i].lps = pih.loopbeg;
-	mod->xxs[i].lpe = pih.loopend;
+	xxs->len = pih.length;
+	xxs->lps = pih.loopbeg;
+	xxs->lpe = pih.loopend;
 
 	if (mod->xxs[i].len > 0)
 		mod->xxi[i].nsm = 1;
 
-	mod->xxs[i].flg = 0;
+	xxs->flg = 0;
 	if (pih.type & 0x04) {
-		mod->xxs[i].flg |= XMP_SAMPLE_LOOP;
+	    xxs->flg |= XMP_SAMPLE_LOOP;
 	}
 	if (pih.type & 0x08) {
-		mod->xxs[i].flg |= XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR;
+	    xxs->flg |= XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR;
 	}
 	if (pih.type & 0x10) {
-	    mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
-	    mod->xxs[i].len >>= 1;
-	    mod->xxs[i].lps >>= 1;
-	    mod->xxs[i].lpe >>= 1;
+	    xxs->flg |= XMP_SAMPLE_16BIT;
+	    xxs->len >>= 1;
+	    xxs->lps >>= 1;
+	    xxs->lpe >>= 1;
 	}
 
-	mod->xxi[i].sub[0].vol = pih.vol;
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
+	sub->vol = pih.vol;
+	sub->pan = 0x80;
+	sub->sid = i;
 	pih.magic = 0;
 
 	instrument_name(mod, i, pih.name, 28);
@@ -203,12 +223,11 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d",
 		i, mod->xxi[i].name, mod->xxs[i].len,
 		pih.type & 0x10 ? '+' : ' ',
-		mod->xxs[i].lps, mod->xxs[i].lpe,
-		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		mod->xxi[i].sub[0].vol, pih.c4spd);
+		xxs->lps, xxs->lpe, xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		sub->vol, pih.c4spd);
 
 	/* Convert C4SPD to relnote/finetune */
-	c2spd_to_note(pih.c4spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+	c2spd_to_note(pih.c4spd, &sub->xpo, &sub->fin);
     }
 
     if (pattern_init(mod) < 0)
