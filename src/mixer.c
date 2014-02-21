@@ -469,6 +469,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
+	struct mixer_data *s = &ctx->s;
 	struct xmp_sample *xxs;
 	int lps;
 
@@ -480,6 +481,9 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {
 		return;
 	}
+
+	if (s->interp > XMP_INTERP_NEAREST)
+		anticlick(ctx, voc, vi->vol, vi->pan, NULL, 0);
 
 	if (xxs->flg & XMP_SAMPLE_LOOP) {
 		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
