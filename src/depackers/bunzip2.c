@@ -548,7 +548,7 @@ static int start_bunzip(bunzip_data **bdp, FILE *in, char *inbuf, int len)
 	   uncompressed data.  Allocate intermediate buffer for block. */
 	bd->dbufSize=100000*(i-BZh0);
 
-	if(!(bd->dbuf=malloc(bd->dbufSize * sizeof(int))))
+	if(!(bd->dbuf=malloc(bd->dbufSize * sizeof(unsigned int))))
 		return RETVAL_OUT_OF_MEMORY;
 	return RETVAL_OK;
 }
