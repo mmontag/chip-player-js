@@ -46,7 +46,7 @@ Other Amiga tracker formats:
 DBM		DigiBooster Pro		DBM0
 DIGI		DIGI Booster		1.4, 1.5, 1.6, 1.7
 EMOD		Quadra Composer		0001
-KRIS		ChipTracker		KRIS
+MOD		ChipTracker		KRIS
 MOD 		Protracker 3.59		PTDT
 MED		MED 1.12/2.10/3.00	MED2, MED3, MED4
 MED		MED 3.00/OctaMED	MMD0, MMD1, MMD2, MMD3
@@ -60,6 +60,7 @@ MOD		Octalyser		CD61, CD81
 DTM		Digital Tracker		1.9
 GTK (*)		Graoumf Tracker		GTK1, GTK4
 MOD		TCB Tracker		'AN COOL.'
+MGT		Megatracker		-
 
 Acorn tracker formats:
 
