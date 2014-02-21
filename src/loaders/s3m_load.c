@@ -443,14 +443,20 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
-	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	if (mod->xxi[i].sub == NULL)
+	struct xmp_instrument *xxi = &mod->xxi[i];
+	struct xmp_sample *xxs = &mod->xxs[i];
+	struct xmp_subinstrument *sub;
+
+	xxi->sub = calloc(sizeof (struct xmp_subinstrument), 1);
+	if (xxi->sub == NULL)
 	    return -1;
+
+	sub = &xxi->sub[0];
 
 	hio_seek(f, start + pp_ins[i] * 16, SEEK_SET);
 	x8 = hio_read8(f);
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
+	sub->pan = 0x80;
+	sub->sid = i;
 
 	if (x8 >= 2) {
 	    /* OPL2 FM instrument */
@@ -475,16 +481,15 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    instrument_name(mod, i, sah.name, 28);
 
-	    mod->xxi[i].nsm = 1;
-	    mod->xxi[i].sub[0].vol = sah.vol;
-	    c2spd_to_note(sah.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-	    mod->xxi[i].sub[0].xpo += 12;
-	    ret = load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i],
-							(char *)&sah.reg);
+	    xxi->nsm = 1;
+	    sub->vol = sah.vol;
+	    c2spd_to_note(sah.c2spd, &sub->xpo, &sub->fin);
+	    sub->xpo += 12;
+	    ret = load_sample(m, f, SAMPLE_FLAG_ADLIB, xxs, (char *)&sah.reg);
 	    if (ret < 0)
 		return -1;
 
-	    D_(D_INFO "[%2X] %-28.28s", i, mod->xxi[i].name);
+	    D_(D_INFO "[%2X] %-28.28s", i, xxi->name);
 
 	    continue;
 	}
@@ -519,35 +524,35 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    fix87(sih.flags);
 	}
 
-	mod->xxs[i].len = sih.length;
-	mod->xxi[i].nsm = sih.length > 0 ? 1 : 0;
-	mod->xxs[i].lps = sih.loopbeg;
-	mod->xxs[i].lpe = sih.loopend;
+	xxs->len = sih.length;
+	xxi->nsm = sih.length > 0 ? 1 : 0;
+	xxs->lps = sih.loopbeg;
+	xxs->lpe = sih.loopend;
 
-	mod->xxs[i].flg = sih.flags & 1 ? XMP_SAMPLE_LOOP : 0;
+	xxs->flg = sih.flags & 1 ? XMP_SAMPLE_LOOP : 0;
 
 	if (sih.flags & 4) {
-	    mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
+	    xxs->flg |= XMP_SAMPLE_16BIT;
 	}
 
-	mod->xxi[i].sub[0].vol = sih.vol;
+	sub->vol = sih.vol;
 	sih.magic = 0;
 
 	instrument_name(mod, i, sih.name, 28);
 
 	D_(D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
 			i, mod->xxi[i].name, mod->xxs[i].len,
-			mod->xxs[i].flg & XMP_SAMPLE_16BIT ?'+' : ' ',
-			mod->xxs[i].lps, mod->xxs[i].lpe,
-			mod->xxs[i].flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
-			mod->xxi[i].sub[0].vol, sih.c2spd);
+			xxs->flg & XMP_SAMPLE_16BIT ?'+' : ' ',
+			xxs->lps, mod->xxs[i].lpe,
+			xxs->flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
+			sub->vol, sih.c2spd);
 
-	c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+	c2spd_to_note(sih.c2spd, &sub->xpo, &sub->fin);
 
 	hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
 
 	ret = load_sample(m, f, (sfh.ffi - 1) * SAMPLE_FLAG_UNS,
-						&mod->xxs[i], NULL);
+							xxs, NULL);
 	if (ret < 0)
 		return -1;
     }
