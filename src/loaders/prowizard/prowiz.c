@@ -128,6 +128,7 @@ int pw_wizardry(int in, int out, char **name)
 	}
 
 	if (pw_format[i] == NULL) {
+		free(data);
 		return -1;
 	}
 
