@@ -351,7 +351,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     for (i = 0; i < mod->ins; i++) {
 	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
-	    goto err3;
+	    goto err;
     }
 
     m->quirk |= QUIRK_VSALL | QUIRKS_ST3;
