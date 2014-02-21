@@ -175,10 +175,10 @@ struct inflate_data data;
     {
       checksum=copy_file(in,out,header.uncompressed_size,&data);
     }
-      else
+    else
     {
       if (inflate(in, out, &checksum, 1) < 0)
-	return -1;
+	goto err3;
     }
 
     /* fclose(out); */
@@ -204,6 +204,8 @@ struct inflate_data data;
 
   return ret_code;
 
+ err3:
+  free(header.extra_field);
  err2:
   free(header.file_name);
  err:
