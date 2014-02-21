@@ -101,7 +101,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int vermaj, vermin, tvmaj, tvmin, tracker;
-	int origfmt, ord_ofs, pat_ofs, ins_ofs, smp_ofs;
+	int /*origfmt,*/ ord_ofs, pat_ofs, ins_ofs, smp_ofs;
 	uint8 buffer[32], panmap[32];
 	int i;
 
@@ -142,7 +142,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->gvl = hio_read8(f);
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);
-	origfmt = hio_read16l(f);
+	/*origfmt =*/ hio_read16l(f);
 	ord_ofs = hio_read32l(f);
 	mod->len = hio_read8(f) + 1;
 	pat_ofs = hio_read32l(f);
