@@ -269,12 +269,12 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 
 	if (jws) {
 		ce->wp = jws;
-		jws = 0;
+		/* jws = 0; */
 	}
 
 	if (jvs) {
 		ce->vp = jvs;
-		jvs = 0;
+		/* jvs = 0; */
 	}
 }
 
