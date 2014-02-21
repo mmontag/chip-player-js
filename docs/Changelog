@@ -9,6 +9,7 @@ Stable versions
 	- fix envelope update after manually set point
 	Other changes:
 	- fix Chiptracker pattern decoding (reported by Andreas Argirakis)
+	- address clang-analyzer warnings
 
 4.2.3 (20140118):
 	- remove limit of samples in RTM loader
