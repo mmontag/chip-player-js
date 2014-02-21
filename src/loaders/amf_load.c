@@ -211,7 +211,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (ver < 0x0a) {
 			mod->xxs[i].lps = hio_read16l(f);
-			mod->xxs[i].lpe = mod->xxs[i].len - 1;
+			mod->xxs[i].lpe = mod->xxs[i].len;
 		} else {
 			mod->xxs[i].lps = hio_read32l(f);
 			mod->xxs[i].lpe = hio_read32l(f);
