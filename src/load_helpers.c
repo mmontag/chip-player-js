@@ -214,8 +214,11 @@ int prepare_scan(struct context_data *ctx)
 	while (ord < mod->len && mod->xxo[ord] >= mod->pat) {
 		ord++;
 	}
-	if (ord >= mod->len)
+
+	if (ord >= mod->len) {
 		mod->len = 0;
+		return 0;
+	}
 
 	m->scan_cnt = calloc(sizeof (char *), mod->len);
 	if (m->scan_cnt == NULL)
