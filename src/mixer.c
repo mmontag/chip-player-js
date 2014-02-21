@@ -508,7 +508,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	}
 
 	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-		vi->end += (xxs->lpe - xxs->lps);
+		vi->end += (xxs->lpe - lps);
 	}
 
 	vi->attack = SLOW_ATTACK;
