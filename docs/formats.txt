@@ -71,7 +71,6 @@ Acorn tracker formats:
 PC tracker formats:
 
 669		Composer 669/UNIS 669   if, JN
-DMF (*)		X-Tracker		7, 8
 FAR		Farandole Composer	1.0
 FNK		Funktracker		R0, R1, R2
 IMF		Imago Orpheus		1.0

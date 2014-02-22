@@ -11,6 +11,7 @@ Stable versions
 	- fix Chiptracker pattern decoding (reported by Andreas Argirakis)
 	- fix AMF sample loop end
 	- refactor S3M arpeggio effect memory
+	- disabled incomplete DMF loader
 	- address clang-analyzer warnings
 
 4.2.3 (20140118):
