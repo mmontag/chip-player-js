@@ -123,7 +123,7 @@ static const uint8 fx[] =
 	FX_TONEPORTA,		/* Gxx  Tone portamento with speed xx */
 	FX_VIBRATO,		/* Hxy  Vibrato with speed x and depth y */
 	FX_TREMOR,		/* Ixy  Tremor with ontime x and offtime y */
-	FX_ARPEGGIO,		/* Jxy  Arpeggio with halfnote additions */
+	FX_S3M_ARPEGGIO,	/* Jxy  Arpeggio with halfnote additions */
 	FX_VIBRA_VSLIDE,	/* Kxy  Dual command: H00 and Dxy */
 	FX_TONE_VSLIDE,		/* Lxy  Dual command: G00 and Dxy */
 	NONE,
@@ -144,17 +144,11 @@ static const uint8 fx[] =
 
 
 /* Effect translation */
-static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val)
+static void xlat_fx(int c, struct xmp_event *e)
 {
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
 
     switch (e->fxt = fx[e->fxt]) {
-    case FX_ARPEGGIO:			/* Arpeggio */
-	if (e->fxp)
-	    arpeggio_val[c] = e->fxp;
-	else
-	    e->fxp = arpeggio_val[c];
-	break;
     case FX_S3M_EXTENDED:		/* Extended effects */
 	e->fxt = FX_EXTENDED;
 	switch (h) {
@@ -210,7 +204,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int quirk87 = 0;
     uint16 *pp_ins;		/* Parapointers to instruments */
     uint16 *pp_pat;		/* Parapointers to patterns */
-    uint8 arpeggio_val[32];
     int ret;
 
     LOAD_INIT();
@@ -378,8 +371,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
-    memset (arpeggio_val, 0, 32);
-
     for (i = 0; i < mod->pat; i++) {
 	if (pattern_tracks_alloc(mod, i, 64) < 0)
 		return -1;
@@ -426,7 +417,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    if (b & S3M_FX_FOLLOWS) {
 		event->fxt = hio_read8(f);
 		event->fxp = hio_read8(f);
-		xlat_fx(c, event, arpeggio_val);
+		xlat_fx(c, event);
 		pat_len -= 2;
 	    }
 	}

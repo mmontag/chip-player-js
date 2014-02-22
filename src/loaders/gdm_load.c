@@ -70,7 +70,7 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 	case 0x0f:			/* same as protracker */
 		break;
 	case 0x10:			/* arpeggio */
-		*fxt = FX_ARPEGGIO;
+		*fxt = FX_S3M_ARPEGGIO;
 		break;
 	case 0x11:			/* set internal flag */
 		*fxt = *fxp = 0;

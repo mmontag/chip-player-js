@@ -51,6 +51,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 
 	switch (fxt) {
 	case FX_ARPEGGIO:
+	      fx_arpeggio:
 		if (fxp != 0) {
 			xc->arpeggio.val[0] = 0;
 			xc->arpeggio.val[1] = MSN(fxp);
@@ -58,6 +59,13 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->arpeggio.size = 3;
 		}
 		break;
+	case FX_S3M_ARPEGGIO:
+		if (fxp == 0) {
+			fxp = xc->arpeggio.memory;
+		} else {
+			xc->arpeggio.memory = fxp;
+		}
+		goto fx_arpeggio;
 	case FX_OKT_ARP3:
 		if (fxp != 0) {
 			xc->arpeggio.val[0] = -MSN(fxp);

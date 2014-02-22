@@ -74,7 +74,7 @@ static const uint8 fx[] = {
 	/* G */ FX_TONEPORTA,
 	/* H */ FX_VIBRATO,
 	/* I */ FX_TREMOR,
-	/* J */ FX_ARPEGGIO,
+	/* J */ FX_S3M_ARPEGGIO,
 	/* K */ FX_VIBRA_VSLIDE,
 	/* L */ FX_TONE_VSLIDE,
 	/* M */ FX_TRK_VOL,
@@ -98,18 +98,11 @@ int itsex_decompress8 (HIO_HANDLE *, void *, int, int);
 int itsex_decompress16 (HIO_HANDLE *, void *, int, int);
 
 
-static void xlat_fx(int c, struct xmp_event *e, uint8 *arpeggio_val,
-                    uint8 *last_fxp, int new_fx)
+static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
 {
     uint8 h = MSN(e->fxp), l = LSN(e->fxp);
 
     switch (e->fxt = fx[e->fxt]) {
-    case FX_ARPEGGIO:		/* Arpeggio */
-	if (e->fxp)
-	    arpeggio_val[c] = e->fxp;
-	else
-	    e->fxp = arpeggio_val[c];
-	break;
     case FX_XTND:		/* Extended effect */
 	e->fxt = FX_EXTENDED;
 
@@ -311,7 +304,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint32 *pp_ins;		/* Pointers to instruments */
     uint32 *pp_smp;		/* Pointers to samples */
     uint32 *pp_pat;		/* Pointers to patterns */
-    uint8 arpeggio_val[64];
     uint8 last_fxp[64];
     int dca2nna[] = { 0, 2, 3 };
     int new_fx;
@@ -995,7 +987,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->chn = max_ch + 1;
     mod->trk = mod->pat * mod->chn;
 
-    memset(arpeggio_val, 0, 64);
     memset(last_fxp, 0, 64);
 
     if (pattern_init(mod) < 0)
@@ -1091,7 +1082,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		b = hio_read8(f);
 		event->fxt = b;
 		event->fxp = hio_read8(f);
-		xlat_fx(c, event, arpeggio_val, last_fxp, new_fx);
+		xlat_fx(c, event, last_fxp, new_fx);
 		lastevent[c].fxt = event->fxt;
 		lastevent[c].fxp = event->fxp;
 		pat_len -= 2;

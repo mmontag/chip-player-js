@@ -97,6 +97,7 @@ struct channel_data {
         	int8 val[16];	/* 16 for Smaksak MegaArps */
 		int size;
 		int count;
+		int memory;
 	} arpeggio;
 
 	struct {

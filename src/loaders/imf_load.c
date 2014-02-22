@@ -125,7 +125,7 @@ static const uint8 fx[] = {
 	FX_VIBRA_VSLIDE,
 	FX_FINE_VIBRATO,
 	FX_TREMOLO,
-	FX_ARPEGGIO,
+	FX_S3M_ARPEGGIO,
 	FX_SETPAN,
 	FX_PANSLIDE,
 	FX_VOLSET,
@@ -156,17 +156,11 @@ static const uint8 fx[] = {
 
 
 /* Effect translation */
-static void xlat_fx (int c, uint8 *fxt, uint8 *fxp, uint8 *arpeggio_val)
+static void xlat_fx (int c, uint8 *fxt, uint8 *fxp)
 {
     uint8 h = MSN (*fxp), l = LSN (*fxp);
 
     switch (*fxt = fx[*fxt]) {
-    case FX_ARPEGGIO:			/* Arpeggio */
-	if (*fxp)
-	    arpeggio_val[c] = *fxp;
-	else
-	    *fxp = arpeggio_val[c];
-	break;
     case FX_IMF_FPORTA_UP:
 	*fxt = FX_PORTA_UP;
 	if (*fxp < 0x30)
@@ -230,7 +224,6 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct imf_sample is;
     int pat_len, smp_num;
     uint8 n, b;
-    uint8 arpeggio_val[32];
 
     LOAD_INIT();
 
@@ -309,8 +302,6 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
-    memset(arpeggio_val, 0, 32);
-
     for (i = 0; i < mod->pat; i++) {
 	pat_len = hio_read16l(f) - 4;
 
@@ -348,13 +339,13 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    if (b & IMF_FX_FOLLOWS) {
 		event->fxt = hio_read8(f);
 		event->fxp = hio_read8(f);
-		xlat_fx(c, &event->fxt, &event->fxp, arpeggio_val);
+		xlat_fx(c, &event->fxt, &event->fxp);
 		pat_len -= 2;
 	    }
 	    if (b & IMF_F2_FOLLOWS) {
 		event->f2t = hio_read8(f);
 		event->f2p = hio_read8(f);
-		xlat_fx(c, &event->f2t, &event->f2p, arpeggio_val);
+		xlat_fx(c, &event->f2t, &event->f2p);
 		pat_len -= 2;
 	    }
 	}

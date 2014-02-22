@@ -109,6 +109,7 @@
 #define FX_MED_DECAY	0xb1	/* MMD hold/decay */
 #define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
 #define FX_PATT_DELAY	0xb3	/* MMD */
+#define FX_S3M_ARPEGGIO	0xb4
 
 
 #endif /* LIBXMP_EFFECTS_H */
