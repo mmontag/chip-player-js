@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.2.4 ():
+4.2.4 (20140222):
 	Fix bugs reported by Justin Crawford:
 	- fix XM note and envelope retrig on delay effect
 	- fix XM keyoff reset on new note event
