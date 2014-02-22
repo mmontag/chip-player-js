@@ -244,12 +244,12 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int i, r;
 	struct xmp_event *event, dummy;
 	uint8 flag, chan;
-	uint32 len;
+	/* uint32 len; */
 	int rows, rowlen;
 
 	i = data->cur_pat;
 
-	len = hio_read32l(f);
+	/*len =*/ hio_read32l(f);
 	hio_read(data->pnam + i * 8, 1, data->sinaria ? 8 : 4, f);
 
 	rows = hio_read16l(f);

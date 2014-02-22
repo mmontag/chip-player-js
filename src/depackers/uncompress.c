@@ -68,16 +68,13 @@ int decrunch_compress(FILE * in, FILE * out)
 	int i;
 
 	long bytes_in;			/* Total number of byte from input */
-	long bytes_out;			/* Total number of byte to output */
+	/*long bytes_out;*/		/* Total number of byte to output */
 	char_type inbuf[IBUFSIZ + 64];	/* Input buffer */
 	char_type outbuf[OBUFSIZ + 2048];/* Output buffer */
 	count_int htab[HSIZE];
 	unsigned short codetab[HSIZE];
 
-	bytes_in = 0;
-	bytes_out = 0;
 	insize = 0;
-
 	rsize = fread(inbuf, 1, IBUFSIZ, in);
 	insize += rsize;
 

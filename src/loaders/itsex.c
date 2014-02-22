@@ -34,7 +34,7 @@ static inline uint32 read_bits(HIO_HANDLE *ibuf, uint32 *bitbuf, int *bitnum, in
 
 int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
 {
-	uint32 size = 0;
+	/* uint32 size = 0; */
 	uint32 block_count = 0;
 	uint32 bitbuf = 0;
 	int bitnum = 0;
@@ -44,7 +44,7 @@ int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
 	while (len) {
 		if (!block_count) {
 			block_count = 0x8000;
-			size = hio_read16l(src);
+			/*size =*/ hio_read16l(src);
 			left = 9;
 			temp = temp2 = 0;
 			bitbuf = bitnum = 0;
@@ -129,7 +129,7 @@ int itsex_decompress8(HIO_HANDLE *src, uint8 *dst, int len, int it215)
 
 int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
 {
-	uint32 size = 0;
+	/* uint32 size = 0; */
 	uint32 block_count = 0;
 	uint32 bitbuf = 0;
 	int bitnum = 0;
@@ -140,7 +140,7 @@ int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
 	while (len) {
 		if (!block_count) {
 			block_count = 0x4000;
-			size = hio_read16l(src);
+			/*size =*/ hio_read16l(src);
 			left = 17;
 			temp = temp2 = 0;
 			bitbuf = bitnum = 0;

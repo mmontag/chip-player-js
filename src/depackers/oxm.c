@@ -87,12 +87,12 @@ int test_oxm(FILE *f)
 static char *oggdec(FILE *f, int len, int res, int *newlen)
 {
 	int i, n, ch;
-	int size;
+	/*int size;*/
 	uint8 *data, *pcm;
 	int16 *pcm16;
 	uint32 id;
 
-	size = read32l(f);
+	/*size =*/ read32l(f);
 	id = read32b(f);
 	fseek(f, -8, SEEK_CUR);
 
@@ -110,7 +110,7 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 	n = stb_vorbis_decode_memory(data, len, &ch, &pcm16);
 	free(data);
 
-	if (n < 0)
+	if (n <= 0)
 		return NULL;
 
 	pcm = (uint8 *)pcm16;

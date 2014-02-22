@@ -67,8 +67,8 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	int flags;
-	int day, month, year, hour, min, sec;
-	int dhour, dmin, dsec;
+	/* int day, month, year, hour, min, sec;
+	int dhour, dmin, dsec; */
 
 	hio_read(mod->name, 1, 32, f);
 	mod->ins = hio_read16b(f);
@@ -77,21 +77,21 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->gvl = hio_read16b(f);
 	mod->bpm = hio_read16b(f);
 	flags = hio_read16b(f);
-	day   = hio_read16b(f);
-	month = hio_read16b(f);
-	year  = hio_read16b(f);
-	hour  = hio_read16b(f);
-	min   = hio_read16b(f);
-	sec   = hio_read16b(f);
-	dhour = hio_read16b(f);
-	dmin  = hio_read16b(f);
-	dsec  = hio_read16b(f);
+	/*day   =*/ hio_read16b(f);
+	/*month =*/ hio_read16b(f);
+	/*year  =*/ hio_read16b(f);
+	/*hour  =*/ hio_read16b(f);
+	/*min   =*/ hio_read16b(f);
+	/*sec   =*/ hio_read16b(f);
+	/*dhour =*/ hio_read16b(f);
+	/*dmin  =*/ hio_read16b(f);
+	/*dsec  =*/ hio_read16b(f);
 
 	MODULE_INFO();
 
-	D_(D_INFO "Creation date: %02d/%02d/%02d %02d:%02d:%02d",
+	/*D_(D_INFO "Creation date: %02d/%02d/%02d %02d:%02d:%02d",
 		       day, month, year, hour, min, sec);
-	D_(D_INFO "Playing time: %02d:%02d:%02d", dhour, dmin, dsec);
+	D_(D_INFO "Playing time: %02d:%02d:%02d", dhour, dmin, dsec);*/
 
 	return 0;
 }

@@ -30,7 +30,7 @@ int asif_load(struct module_data *m, HIO_HANDLE *f, int i)
 
 	if (hio_read32b(f) != MAGIC_FORM)
 		return -1;
-	size = hio_read32b(f);
+	/*size =*/ hio_read32b(f);
 
 	if (hio_read32b(f) != MAGIC_ASIF)
 		return -1;
@@ -48,9 +48,6 @@ int asif_load(struct module_data *m, HIO_HANDLE *f, int i)
 			mod->xxs[i].len = hio_read16l(f) + 1;
 			size = hio_read16l(f);		/* NumSamples */
 			
-			//printf("WaveSize = %d\n", xxs[i].len);
-			//printf("NumSamples = %d\n", size);
-
 			for (j = 0; j < size; j++) {
 				hio_read16l(f);		/* Location */
 				mod->xxs[j].len = 256 * hio_read16l(f);
@@ -72,7 +69,7 @@ int asif_load(struct module_data *m, HIO_HANDLE *f, int i)
 			hio_seek(f, hio_read8(f), SEEK_CUR);	/* skip name */
 		
 			hio_read16l(f);			/* SampNum */
-			hio_seek(f, 24, SEEK_CUR);		/* skip envelope */
+			hio_seek(f, 24, SEEK_CUR);	/* skip envelope */
 			hio_read8(f);			/* ReleaseSegment */
 			hio_read8(f);			/* PriorityIncrement */
 			hio_read8(f);			/* PitchBendRange */

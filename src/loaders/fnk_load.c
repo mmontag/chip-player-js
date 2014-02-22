@@ -83,7 +83,7 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
-    int day, month, year;
+    /* int day, month, year; */
     struct xmp_event *event;
     struct fnk_header ffh;
     uint8 ev[3];
@@ -109,9 +109,9 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ffh.fih[i].retrig = hio_read8(f);
     }
 
-    day = ffh.info[0] & 0x1f;
+    /* day = ffh.info[0] & 0x1f;
     month = ((ffh.info[1] & 0x01) << 3) | ((ffh.info[0] & 0xe0) >> 5);
-    year = 1980 + ((ffh.info[1] & 0xfe) >> 1);
+    year = 1980 + ((ffh.info[1] & 0xfe) >> 1); */
 
     mod->smp = mod->ins = 64;
 
@@ -159,7 +159,7 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     m->quirk |= QUIRK_LINEAR;
 
     MODULE_INFO();
-    D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year);
+    /* D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year); */
 
     if (instrument_init(mod) < 0)
 	return -1;
