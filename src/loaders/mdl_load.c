@@ -448,11 +448,11 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     track = calloc(1, sizeof (struct xmp_track) +
 			sizeof (struct xmp_event) * 255);
     if (track == NULL)
-	return -1;
+	goto err;
 
     /* Empty track 0 is not stored in the file */
     if (track_alloc(mod, 0, 256) < 0)
-	return -1;
+	goto err2;
 
     for (i = 1; i < mod->trk; i++) {
 	/* Length of the track in bytes */
@@ -513,7 +513,7 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	else row = 256;
 
 	if (track_alloc(mod, i, row) < 0)
-	    return -1;
+	    goto err2;
 
 	memcpy(mod->xxt[i], track, sizeof (struct xmp_track) +
 				sizeof (struct xmp_event) * (row - 1));
@@ -531,6 +531,11 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     free(track);
 
     return 0;
+
+  err2:
+    free(track);
+  err:
+    return -1;
 }
 
 static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
