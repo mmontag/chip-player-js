@@ -373,7 +373,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     for (i = 0; i < mod->pat; i++) {
 	if (pattern_tracks_alloc(mod, i, 64) < 0)
-		return -1;
+	    goto err3;
 
 	if (pp_pat[i] == 0)
 	    continue;
@@ -427,7 +427,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
 
     if (instrument_init(mod) < 0)
-	return -1;
+	goto err3;
 
     /* Read and convert instruments and samples */
 
@@ -440,7 +440,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	xxi->sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	if (xxi->sub == NULL)
-	    return -1;
+	    goto err3;
 
 	sub = &xxi->sub[0];
 
@@ -466,7 +466,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    if (sah.magic != MAGIC_SCRI) {
 		D_(D_CRIT "error: FM instrument magic");
-		goto err;
+		goto err3;
 	    }
 	    sah.magic = 0;
 
@@ -478,7 +478,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    sub->xpo += 12;
 	    ret = load_sample(m, f, SAMPLE_FLAG_ADLIB, xxs, (char *)&sah.reg);
 	    if (ret < 0)
-		return -1;
+		goto err3;
 
 	    D_(D_INFO "[%2X] %-28.28s", i, xxi->name);
 
@@ -542,10 +542,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
 
-	ret = load_sample(m, f, (sfh.ffi - 1) * SAMPLE_FLAG_UNS,
-							xxs, NULL);
+	ret = load_sample(m, f, (sfh.ffi - 1) * SAMPLE_FLAG_UNS, xxs, NULL);
 	if (ret < 0)
-		return -1;
+		goto err3;
     }
 
     free(pp_pat);
