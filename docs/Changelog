@@ -10,8 +10,10 @@ Stable versions
 	Other changes:
 	- fix Chiptracker pattern decoding (reported by Andreas Argirakis)
 	- fix AMF sample loop end
+	- fix false positives in Slamtilt format test
 	- refactor S3M arpeggio effect memory
 	- disabled incomplete DMF loader
+	- disabled incomplete DTT loader
 	- address clang-analyzer warnings
 
 4.2.3 (20140118):
