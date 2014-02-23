@@ -5,11 +5,11 @@
 extern "C" {
 #endif
 
-#define XMP_VERSION "4.2.4"
-#define XMP_VERCODE 0x040204
+#define XMP_VERSION "4.2.5"
+#define XMP_VERCODE 0x040205
 #define XMP_VER_MAJOR 4
 #define XMP_VER_MINOR 2
-#define XMP_VER_RELEASE 4
+#define XMP_VER_RELEASE 5
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
 # if defined(BUILDING_STATIC)

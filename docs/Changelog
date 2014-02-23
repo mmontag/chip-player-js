@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.2.5 ():
+	- fix Oktalyzer sample numbering (reported by Andreas Argirakis)
+	
 4.2.4 (20140222):
 	Fix bugs reported by Justin Crawford:
 	- fix XM note and envelope retrig on delay effect
