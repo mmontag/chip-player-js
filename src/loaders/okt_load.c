@@ -1,9 +1,23 @@
-/* Extended Module Player
+/* Extended Module Player format loaders
  * Copyright (C) 1996-2014 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU Lesser General Public License. See COPYING.LIB
- * for more information.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 /* Based on the format description written by Harald Zappe.
@@ -122,29 +136,35 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	return -1;
 
     for (j = i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi = &mod->xxi[i];
+	struct xmp_sample *xxs = &mod->xxs[j];
+	struct xmp_subinstrument *sub;
+
 	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
-	hio_read(mod->xxi[i].name, 1, 20, f);
-	str_adj((char *)mod->xxi[i].name);
+	sub = &xxi->sub[0];
+
+	hio_read(xxi->name, 1, 20, f);
+	str_adj((char *)xxi->name);
 
 	/* Sample size is always rounded down */
-	mod->xxs[j].len = hio_read32b(f) & ~1;
-	mod->xxs[j].lps = hio_read16b(f);
+	xxs->len = hio_read32b(f) & ~1;
+	xxs->lps = hio_read16b(f);
 	looplen = hio_read16b(f);
-	mod->xxs[j].lpe = mod->xxs[j].lps + looplen;
-	mod->xxs[j].flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
+	xxs->lpe = xxs->lps + looplen;
+	xxs->flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
 
-	mod->xxi[i].sub[0].vol = hio_read16b(f);
+	sub->vol = hio_read16b(f);
 	data->mode[i] = hio_read16b(f);
 
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = j;
+	sub->pan = 0x80;
+	sub->sid = j;
 
 	data->idx[j] = i;
 
-	if (mod->xxs[j].len > 0) {
-	    mod->xxi[j].nsm = 1;
+	if (xxs->len > 0) {
+	    xxi->nsm = 1;
 	    j++;
 	}
     }
