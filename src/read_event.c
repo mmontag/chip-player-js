@@ -249,7 +249,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc = &p->xc_data[chn];
-	int note, key;
+	int note, key, ins;
 	struct xmp_subinstrument *sub;
 	int new_invalid_ins;
 	int is_toneporta;
@@ -258,6 +258,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	xc->flags = 0;
 	note = -1;
 	key = e->note;
+	ins = e->ins;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
 	use_ins_vol = 0;
@@ -268,17 +269,26 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Check instrument */
 
+	/* Ignore invalid instruments. This is a partial fix for invalid
+	 * instrument handling: an event without instrument after the
+	 * event with the invalid instrument should also "play" with the
+	 * invalid instrument, and we're not doing this. We don't like
+	 * xc->ins set to an invalid instrument :\ */
+	if (ins > 0 && !IS_VALID_INSTRUMENT(ins - 1)) {
+		ins = 0;
+	}
+
+	/* Do this regardless if the instrument is invalid or not */
 	if (e->ins) {
-		int ins = e->ins - 1;
 		SET(NEW_INS);
 		use_ins_vol = 1;
 		xc->fadeout = 0x10000;
 		xc->per_flags = 0;
 		RESET_NOTE(NOTE_RELEASE);
 
-		if (IS_VALID_INSTRUMENT(ins)) {
+		if (IS_VALID_INSTRUMENT(ins - 1)) {
 			if (!is_toneporta)
-				xc->ins = ins;
+				xc->ins = ins - 1;
 		} else {
 			new_invalid_ins = 1;
 
@@ -319,7 +329,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* FT2: Retrieve old instrument volume */
-	if (e->ins) {
+	if (ins) {
 		struct xmp_subinstrument *sub;
 
 		if (key == 0 || key >= XMP_KEY_OFF) {
@@ -384,7 +394,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
-	if (e->ins && sub != NULL) {
+	if (ins && sub != NULL) {
 		/* Reset envelopes on new instrument, see olympic.xm pos 10
 		 * But make sure we have an instrument set, see Letting go
 		 * pos 4 chn 20
