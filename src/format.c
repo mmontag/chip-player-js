@@ -44,7 +44,7 @@ extern const struct format_loader rtm_loader;
 extern const struct format_loader pt3_loader;
 extern const struct format_loader tcb_loader;
 extern const struct format_loader dt_loader;
-extern const struct format_loader gtk_loader;
+/* extern const struct format_loader gtk_loader; */
 /* extern const struct format_loader dtt_loader; */
 extern const struct format_loader mgt_loader;
 extern const struct format_loader arch_loader;
@@ -110,7 +110,7 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&pt3_loader,
 	&tcb_loader,
 	&dt_loader,
-	&gtk_loader,
+	/* &gtk_loader, */
 	/* &dtt_loader, */
 	&mgt_loader,
 	&arch_loader,

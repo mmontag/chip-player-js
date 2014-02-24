@@ -43,16 +43,56 @@ static void translate_effects(struct xmp_event *event)
 	}
 
 	/* handle high-numbered effects */
-	if (event->fxt > 0x0f) {
+	if (event->fxt >= 0x40 && event->fxt <= 0x4f) {
+		event->fxp = (event->fxt << 4) | (event->fxp >> 4);
+		event->fxt = FX_SETPAN;
+	} else if (event->fxt >= 0x80 && event->fxt <= 0x8f) {
+		event->fxt = FX_MULTI_RETRIG;
+	} else if (event->fxt >= 0x08) {
 		switch (event->fxt) {
+		case 0x08:	/* detune */
+			event->fxt = event->fxp = 0;
+			break;
+		case 0x09:	/* delay */
+			event->fxt = FX_EXTENDED;
+			event->fxp = 0xd0 | (event->fxp & 0x0f);
+			break;
+		case 0x0a:	/* cut / note release */
+			event->fxt = FX_EXTENDED;
+			event->fxp = 0xc0 | (event->fxp & 0x0f);
+			break;
+		case 0x0b:	/* position jump */
+		case 0x0d:	/* break pattern */
+		case 0x0f:	/* set global speed/tempo */
+			/* same as ptk */
+			break;
+		case 0x0c:	/* set vibrato waveform */
+			event->fxt = FX_EXTENDED;
+			event->fxp = 0x40 | (event->fxp & 0x0f);
+			break;
+		case 0x0e:	/* set tremolo waveform */
+			event->fxt = FX_EXTENDED;
+			event->fxp = 0x70 | (event->fxp & 0x0f);
+			break;
 		case 0x10:	/* arpeggio */
 			event->fxt = FX_ARPEGGIO;
 			break;
+		case 0x11:	/* fine portamento up */
+			event->fxt = FX_F_PORTA_UP;
+			break;
+		case 0x12:	/* fine portamento down */
+			event->fxt = FX_F_PORTA_DN;
+			break;
+		case 0x13:	/* roll + volume slide */
+			event->fxt = FX_MULTI_RETRIG;
+			break;
+		case 0x16:	/* exp. volume slide up */
+		case 0x14:	/* linear volume slide up */
+			event->fxt = FX_VOLSLIDE_UP;
+			break;
+		case 0x17:	/* exp. volume slide down */
 		case 0x15:	/* linear volume slide down */
 			event->fxt = FX_VOLSLIDE_DN;
-			break;
-		case 0x16:	/* linear volume slide up */
-			event->fxt = FX_VOLSLIDE_UP;
 			break;
 		case 0x20:	/* set volume */
 			event->fxt = FX_VOLSET;
@@ -78,7 +118,6 @@ static void translate_effects(struct xmp_event *event)
 		default:
 			event->fxt = event->fxp = 0;
 		}
-	
 	}
 }
 
