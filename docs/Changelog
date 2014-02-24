@@ -4,6 +4,7 @@ Stable versions
 4.2.5 ():
 	- fix Oktalyzer sample numbering (reported by Andreas Argirakis)
 	- fix XM delay effect with invalid instrument
+	- disable incomplete Graoumf Tracker loader
 	
 4.2.4 (20140222):
 	Fix bugs reported by Justin Crawford:
@@ -16,8 +17,8 @@ Stable versions
 	- fix AMF sample loop end
 	- fix false positives in Slamtilt format test
 	- refactor S3M arpeggio effect memory
-	- disabled incomplete DMF loader
-	- disabled incomplete DTT loader
+	- disable incomplete DMF loader
+	- disable incomplete DTT loader
 	- address clang-analyzer warnings
 
 4.2.3 (20140118):
