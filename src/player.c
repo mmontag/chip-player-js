@@ -178,6 +178,12 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	struct flow_control *f = &p->flow;
 	struct xmp_event *event;
 
+	/* FIXME: workaround for pattern delay + break) */
+	if (f->skip_fetch) {
+		f->skip_fetch = 0;
+		return;
+	}
+
 	for (chn = 0; chn < mod->chn; chn++) {
 		if (row < mod->xxt[TRACK_NUM(pat, chn)]->rows) {
 			event = &EVENT(pat, chn, row);
@@ -1045,11 +1051,7 @@ int xmp_play_frame(xmp_context opaque)
 			f->end_point--;
 		}
 
-		if (f->skip_fetch) {
-			f->skip_fetch = 0;
-		} else {
-			read_row(ctx, mod->xxo[p->ord], p->row);
-		}
+		read_row(ctx, mod->xxo[p->ord], p->row);
 	}
 
 	inject_event(ctx);
