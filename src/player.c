@@ -163,7 +163,7 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 		if (e->note == 0)
 			xc->delayed_event.note = xc->key + 1;
 		if (e->ins == 0)
-			xc->delayed_event.ins = xc->ins + 1;
+			xc->delayed_event.ins = xc->ins_last;
 	}
 
 	return 1;

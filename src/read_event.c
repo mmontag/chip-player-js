@@ -269,11 +269,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Check instrument */
 
-	/* Ignore invalid instruments. This is a partial fix for invalid
-	 * instrument handling: an event without instrument after the
-	 * event with the invalid instrument should also "play" with the
-	 * invalid instrument, and we're not doing this. We don't like
-	 * xc->ins set to an invalid instrument :\ */
+	/* Ignore invalid instruments. The last instrument, invalid or
+	 * not, is preserved in channel data (see read_event() below).
+	 * Fixes stray delayed notes in forgotten_city.xm.
+	 */
 	if (ins > 0 && !IS_VALID_INSTRUMENT(ins - 1)) {
 		ins = 0;
 	}
@@ -884,7 +883,12 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 
 int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 {
+	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+	struct channel_data *xc = &p->xc_data[chn];
+
+	if (e->ins != 0)
+		xc->ins_last = e->ins;
 
 	if (chn >= m->mod.chn) {
 		return read_event_smix(ctx, e, chn);
