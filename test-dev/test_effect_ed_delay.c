@@ -23,6 +23,8 @@ TEST(test_effect_ed_delay)
 	new_event(ctx, 0, 5, 0,  0, 0,  0, 0, 0, 0x0e, 0xd1);
 	new_event(ctx, 0, 6, 0,  0, 0,  0, 0, 0, 0x0e, 0xd1);
 	new_event(ctx, 0, 7, 0,  0, 0,  0, 0, 0, 0x0e, 0xd0);
+	new_event(ctx, 0, 8, 0,  0, 3,  0, 0, 0,    0,    0);
+	new_event(ctx, 0, 9, 0,  0, 0,  0, 0, 0, 0x0e, 0xd1);
 
 	xmp_start_player(opaque, 44100, 0);
 
@@ -107,5 +109,24 @@ TEST(test_effect_ed_delay)
 	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 7 frame 1");
 	fail_unless(vi->pos0 !=  0, "sample position");
+
+	/* Row 8: invalid instrument is ignored */
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 8 frame 0");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 8 frame 1");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	/* Row 9: don't retrig */
+	xmp_play_frame(opaque);
+	fail_unless(vi->note == 61, "row 9 frame 0");
+	fail_unless(vi->pos0 !=  0, "sample position");
+
+	xmp_play_frame(opaque);
+	/* we cut the virtual voice on invalid instrument */
+	fail_unless(vi->note ==  0, "row 9 frame 1");
+	fail_unless(vi->pos0 ==  0, "sample position");
 }
 END_TEST
