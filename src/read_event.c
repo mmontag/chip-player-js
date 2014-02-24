@@ -333,7 +333,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 		if (key == 0 || key >= XMP_KEY_OFF) {
 			/* Previous instrument */
-			sub = get_subinstrument(ctx, xc->ins_oinsvol, xc->key);
+			sub = get_subinstrument(ctx, xc->old_insvol, xc->key);
 
 			/* No note */
 			if (sub != NULL) {
@@ -354,7 +354,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			} else {
 				xc->volume = 0;
 			}
-			xc->ins_oinsvol = xc->ins;
+			xc->old_insvol = xc->ins;
 			SET(NEW_VOL);
 		}
 	}
@@ -888,7 +888,7 @@ int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 	struct channel_data *xc = &p->xc_data[chn];
 
 	if (e->ins != 0)
-		xc->ins_last = e->ins;
+		xc->old_ins = e->ins;
 
 	if (chn >= m->mod.chn) {
 		return read_event_smix(ctx, e, chn);

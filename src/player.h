@@ -72,8 +72,8 @@ struct channel_data {
 	double period;		/* Amiga or linear period */
 	int finetune;		/* Guess what */
 	int ins;		/* Instrument number */
-	int ins_last;		/* Last instruemnt */
-	int ins_oinsvol;	/* Last instrument that did set a note */
+	int old_ins;		/* Last instruemnt */
+	int old_insvol;		/* Last instrument that did set a note */
 	int smp;		/* Sample number */
 	int masterpan;		/* Master pan -- for S3M set pan effect */
 	int mastervol;		/* Master vol -- for IT track vol effect */
