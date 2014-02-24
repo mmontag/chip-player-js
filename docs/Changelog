@@ -3,6 +3,7 @@ Stable versions
 
 4.2.5 ():
 	- fix Oktalyzer sample numbering (reported by Andreas Argirakis)
+	- fix XM delay effect with invalid instrument
 	
 4.2.4 (20140222):
 	Fix bugs reported by Justin Crawford:
@@ -509,7 +510,7 @@ Stable versions
 	- skip 0xfe and 0xff S3M/IT control patterns at load time
 	- fix scan of pattern break in the last pattern of the module
 	- add BPM quirk for XMs converted with MED2XM (fixes Fascinated.xm,
-          reported by Lorence Lombardo)
+	  reported by Lorence Lombardo)
 	- merge Windows patch for decompression by Mirko Buffoni
 
 2.5.0 (20071127):
@@ -1234,11 +1235,11 @@ Experimental versions
 	- Changed the XM loader to always unpack the patterns
 	- S3M pan positions fixed
 	- Timing variables changed to floating point - I really don't like
-          FP, maybe I've been hacking in assembly language too much
+	  FP, maybe I've been hacking in assembly language too much
 	- Added 15-instrument MOD loader
 	- Added XM finetune interpolation
 	- Arpeggio bug fixed: pitchbend increments between semitones is 100
-          and not 128 (why don't they use ROUND numbers?)
+	  and not 128 (why don't they use ROUND numbers?)
 	- Changed period2bend to prevent lossage in higher octaves
 	- Pattern loop effect implemented (running_lamer.mod plays OK)
 	- Auto-detector (?) for 15-instrument MODs (option -f removed)
@@ -1293,7 +1294,7 @@ Development (unreleased) versions
 	- Pan slide effect implemented (but does it work?)
 	- Arpeggio effect implemented
 	- "Official" Amiga (exponential) periods implemented
-        - Multi-retrig and delay effects implemented
+	- Multi-retrig and delay effects implemented
 	- Retrig and cut implemented as special cases of multi retrig
 	- Fixed vibrato/tremolo waveforms
 	- Added some macros to reduce the code mess
@@ -1301,7 +1302,7 @@ Development (unreleased) versions
 	
 0.06 (19960924): This version can play most MODs
 	- Changed a lot of variable names
-        - Fixed envelope processing
+	- Fixed envelope processing
 	- Fixed pitchbending (SEQ_BENDER vs SEQ_PITCHBEND) bug
 	- Fixed panning (SEQ_CONTROL vs SEQ_PANNING) bug
 	- Fixed multisample struct definition bug
