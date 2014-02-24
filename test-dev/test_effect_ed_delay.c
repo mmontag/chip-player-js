@@ -123,10 +123,12 @@ TEST(test_effect_ed_delay)
 	xmp_play_frame(opaque);
 	fail_unless(vi->note == 61, "row 9 frame 0");
 	fail_unless(vi->pos0 !=  0, "sample position");
+	fail_unless(vi->vol  !=  0, "voice volume");
 
 	xmp_play_frame(opaque);
 	/* we cut the virtual voice on invalid instrument */
 	fail_unless(vi->note ==  0, "row 9 frame 1");
 	fail_unless(vi->pos0 ==  0, "sample position");
+	fail_unless(vi->vol  ==  0, "voice volume");
 }
 END_TEST
