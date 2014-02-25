@@ -42,7 +42,7 @@ extern const struct format_loader med4_loader;
 /* extern const struct format_loader dmf_loader; */
 extern const struct format_loader rtm_loader;
 extern const struct format_loader pt3_loader;
-extern const struct format_loader tcb_loader;
+/* extern const struct format_loader tcb_loader; */
 extern const struct format_loader dt_loader;
 /* extern const struct format_loader gtk_loader; */
 /* extern const struct format_loader dtt_loader; */
@@ -108,7 +108,7 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&chip_loader,
 	&rtm_loader,
 	&pt3_loader,
-	&tcb_loader,
+	/* &tcb_loader, */
 	&dt_loader,
 	/* &gtk_loader, */
 	/* &dtt_loader, */

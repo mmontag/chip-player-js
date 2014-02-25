@@ -5,6 +5,7 @@ Stable versions
 	- fix Oktalyzer sample numbering (reported by Andreas Argirakis)
 	- fix XM delay effect with invalid instrument
 	- disable incomplete Graoumf Tracker loader
+	- disable incomplete TCB Tracker loader
 	
 4.2.4 (20140222):
 	Fix bugs reported by Justin Crawford:
