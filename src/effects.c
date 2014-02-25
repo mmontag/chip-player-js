@@ -12,7 +12,9 @@
 #include "period.h"
 #include "virtual.h"
 #include "mixer.h"
+#ifndef XMP_CORE_PLAYER
 #include "extras.h"
+#endif
 
 #define NOT_IMPLEMENTED
 #define HAS_QUIRK(x) (m->quirk & (x))
@@ -784,7 +786,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		set_lfo_waveform(&xc->panbrello, fxp & 3);
 		break;
 	default:
+#ifndef XMP_CORE_PLAYER
 		extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
+#endif
 		break;
 	}
 }

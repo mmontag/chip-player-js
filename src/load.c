@@ -28,7 +28,9 @@
 #include "list.h"
 #include "md5.h"
 #include "hio.h"
+#ifndef XMP_CORE_PLAYER
 #include "extras.h"
+#endif
 
 
 extern struct format_loader *format_loader[];
@@ -38,6 +40,7 @@ void load_epilogue(struct context_data *);
 int prepare_scan(struct context_data *);
 
 
+#ifndef XMP_CORE_PLAYER
 struct tmpfilename {
 	char *name;
 	struct list_head list;
@@ -96,29 +99,6 @@ enum {
 
 #define BUFLEN 16384
 
-static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
-{
-	unsigned char buf[BUFLEN];
-	MD5_CTX ctx;
-	int bytes_read;
-	struct stat st;
-
-	if (hio_stat(f, &st) < 0)
-		return;
-
-	if (st.st_size <= 0) {
-		memset(digest, 0, 16);
-		return;
-	}
-
-	hio_seek(f, 0, SEEK_SET);
-
-	MD5Init(&ctx);
-	while ((bytes_read = hio_read(buf, 1, BUFLEN, f)) > 0) {
-		MD5Update(&ctx, buf, bytes_read);
-	}
-	MD5Final(digest, &ctx);
-}
 
 static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 {
@@ -127,7 +107,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
     FILE *t;
     int fd, builtin, res;
     char *temp2, tmp[PATH_MAX];
+#ifndef XMP_CORE_PLAYER
     struct tmpfilename *temp;
+#endif
     int headersize;
 
     cmd = NULL;
@@ -413,78 +395,28 @@ static void unlink_tempfiles(struct list_head *head)
 	}
 }
 
-
-int xmp_test_module(char *path, struct xmp_test_info *info)
+static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
 {
-	HIO_HANDLE *h;
+	unsigned char buf[BUFLEN];
+	MD5_CTX ctx;
+	int bytes_read;
 	struct stat st;
-	char buf[XMP_NAME_SIZE];
-	int i;
-	struct list_head tmpfiles_list;
-	int ret = -XMP_ERROR_FORMAT;;
 
-	if (stat(path, &st) < 0)
-		return -XMP_ERROR_SYSTEM;
+	if (hio_stat(f, &st) < 0)
+		return;
 
-#ifndef _MSC_VER
-	if (S_ISDIR(st.st_mode)) {
-		errno = EISDIR;
-		return -XMP_ERROR_SYSTEM;
-	}
-#endif
-
-	if ((h = hio_open_file(path, "rb")) == NULL)
-		return -XMP_ERROR_SYSTEM;
-
-	INIT_LIST_HEAD(&tmpfiles_list);
-
-	if (decrunch(&tmpfiles_list, &h->f, &path, DECRUNCH_MAX) < 0) {
-		ret = -XMP_ERROR_DEPACK;
-		goto err;
+	if (st.st_size <= 0) {
+		memset(digest, 0, 16);
+		return;
 	}
 
-	if (hio_stat(h, &st) < 0) {/* get size after decrunch */
-		ret = -XMP_ERROR_DEPACK;
-		goto err;
+	hio_seek(f, 0, SEEK_SET);
+
+	MD5Init(&ctx);
+	while ((bytes_read = hio_read(buf, 1, BUFLEN, f)) > 0) {
+		MD5Update(&ctx, buf, bytes_read);
 	}
-
-	if (st.st_size < 256) {		/* set minimum valid module size */
-		ret = -XMP_ERROR_FORMAT;
-		goto err;
-	}
-
-	if (info != NULL) {
-		*info->name = 0;	/* reset name prior to testing */
-		*info->type = 0;	/* reset type prior to testing */
-	}
-
-	for (i = 0; format_loader[i] != NULL; i++) {
-		fseek(h->f, 0, SEEK_SET);
-		if (format_loader[i]->test(h, buf, 0) == 0) {
-			int is_prowizard = 0;
-
-			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
-				fseek(h->f, 0, SEEK_SET);
-				pw_test_format(h->f, buf, 0, info);
-				is_prowizard = 1;
-			}
-
-			fclose(h->f);
-
-			unlink_tempfiles(&tmpfiles_list);
-			if (info != NULL && !is_prowizard) {
-				strncpy(info->name, buf, XMP_NAME_SIZE);
-				strncpy(info->type, format_loader[i]->name,
-							XMP_NAME_SIZE);
-			}
-			return 0;
-		}
-	}
-
-    err:
-	hio_close(h);
-	unlink_tempfiles(&tmpfiles_list);
-	return ret;
+	MD5Final(digest, &ctx);
 }
 
 static char *get_dirname(char *name)
@@ -518,6 +450,88 @@ static char *get_basename(char *name)
 
 	return basename;
 }
+#endif /* XMP_CORE_PLAYER */
+
+int xmp_test_module(char *path, struct xmp_test_info *info)
+{
+	HIO_HANDLE *h;
+	struct stat st;
+	char buf[XMP_NAME_SIZE];
+	int i;
+	struct list_head tmpfiles_list;
+	int ret = -XMP_ERROR_FORMAT;;
+
+	if (stat(path, &st) < 0)
+		return -XMP_ERROR_SYSTEM;
+
+#ifndef _MSC_VER
+	if (S_ISDIR(st.st_mode)) {
+		errno = EISDIR;
+		return -XMP_ERROR_SYSTEM;
+	}
+#endif
+
+	if ((h = hio_open_file(path, "rb")) == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	INIT_LIST_HEAD(&tmpfiles_list);
+
+#ifndef XMP_CORE_PLAYER
+	if (decrunch(&tmpfiles_list, &h->f, &path, DECRUNCH_MAX) < 0) {
+		ret = -XMP_ERROR_DEPACK;
+		goto err;
+	}
+
+	if (hio_stat(h, &st) < 0) {/* get size after decrunch */
+		ret = -XMP_ERROR_DEPACK;
+		goto err;
+	}
+#endif
+
+	if (st.st_size < 256) {		/* set minimum valid module size */
+		ret = -XMP_ERROR_FORMAT;
+		goto err;
+	}
+
+	if (info != NULL) {
+		*info->name = 0;	/* reset name prior to testing */
+		*info->type = 0;	/* reset type prior to testing */
+	}
+
+	for (i = 0; format_loader[i] != NULL; i++) {
+		fseek(h->f, 0, SEEK_SET);
+		if (format_loader[i]->test(h, buf, 0) == 0) {
+			int is_prowizard = 0;
+
+#ifndef XMP_CORE_PLAYER
+			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
+				fseek(h->f, 0, SEEK_SET);
+				pw_test_format(h->f, buf, 0, info);
+				is_prowizard = 1;
+			}
+#endif
+
+			fclose(h->f);
+
+#ifndef XMP_CORE_PLAYER
+			unlink_tempfiles(&tmpfiles_list);
+#endif
+			if (info != NULL && !is_prowizard) {
+				strncpy(info->name, buf, XMP_NAME_SIZE);
+				strncpy(info->type, format_loader[i]->name,
+							XMP_NAME_SIZE);
+			}
+			return 0;
+		}
+	}
+
+    err:
+	hio_close(h);
+#ifndef XMP_CORE_PLAYER
+	unlink_tempfiles(&tmpfiles_list);
+#endif
+	return ret;
+}
 
 static int load_module(xmp_context opaque, HIO_HANDLE *h, struct list_head *tmpfiles_list)
 {
@@ -541,12 +555,17 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h, struct list_head *tmpf
 		}
 	}
 
+#ifndef XMP_CORE_PLAYER
 	if (test_result == 0 && load_result == 0)
 		set_md5sum(h, m->md5);
+#endif
 
 	hio_close(h);
+
+#ifndef XMP_CORE_PLAYER
 	if (tmpfiles_list != NULL)
 		unlink_tempfiles(tmpfiles_list);
+#endif
 
 	if (test_result < 0) {
 		free(m->basename);
@@ -598,6 +617,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	INIT_LIST_HEAD(&tmpfiles_list);
 
+#ifndef XMP_CORE_PLAYER
 	D_(D_INFO "decrunch");
 	if (decrunch(&tmpfiles_list, &h->f, &path, DECRUNCH_MAX) < 0)
 		goto err_depack;
@@ -610,10 +630,12 @@ int xmp_load_module(xmp_context opaque, char *path)
 		unlink_tempfiles(&tmpfiles_list);
 		return -XMP_ERROR_FORMAT;
 	}
+#endif
 
 	if (ctx->state > XMP_STATE_UNLOADED)
 		xmp_release_module(opaque);
 
+#ifndef XMP_CORE_PLAYER
 	m->dirname = get_dirname(path);
 	if (m->dirname == NULL)
 		return -XMP_ERROR_SYSTEM;
@@ -623,14 +645,17 @@ int xmp_load_module(xmp_context opaque, char *path)
 		return -XMP_ERROR_SYSTEM;
 
 	m->filename = path;	/* For ALM, SSMT, etc */
+#endif
 	m->size = st.st_size;
 
 	return load_module(opaque, h, &tmpfiles_list);
 
+#ifndef XMP_CORE_PLAYER
     err_depack:
 	hio_close(h);
 	unlink_tempfiles(&tmpfiles_list);
 	return -XMP_ERROR_DEPACK;
+#endif
 }
 
 int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
@@ -755,7 +780,9 @@ void xmp_release_module(xmp_context opaque)
 
 	D_(D_INFO "Freeing memory");
 
+#ifndef XMP_CORE_PLAYER
 	release_module_extras(ctx);
+#endif
 
 	for (i = 0; i < mod->trk; i++)
 		free(mod->xxt[i]);

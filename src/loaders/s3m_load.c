@@ -74,7 +74,10 @@
 #include "loader.h"
 #include "s3m.h"
 #include "period.h"
+
+#ifndef XMP_CORE_PLAYER
 #include "synth.h"
+#endif
 
 #define MAGIC_SCRM	MAGIC4('S','C','R','M')
 #define MAGIC_SCRI	MAGIC4('S','C','R','I')
@@ -550,7 +553,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     free(pp_pat);
     free(pp_ins);
 
+#ifndef XMP_CORE_PLAYER
     m->synth = &synth_adlib;
+#endif
     m->quirk |= QUIRKS_ST3;
     m->read_event_type = READ_EVENT_ST3;
 

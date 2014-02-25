@@ -29,9 +29,11 @@
 #include "period.h"
 #include "effects.h"
 #include "player.h"
-#include "synth.h"
 #include "mixer.h"
+#ifndef XMP_CORE_PLAYER
+#include "synth.h"
 #include "extras.h"
+#endif
 
 /* Values for multi-retrig */
 static const struct retrig_control rval[] = {
@@ -102,6 +104,7 @@ static void reset_channels(struct context_data *ctx)
 	struct channel_data *xc;
 	int i;
 
+#ifndef XMP_CORE_PLAYER
 	m->synth->reset(ctx);
 
 	for (i = 0; i < p->virt.virt_channels; i++) {
@@ -114,6 +117,13 @@ static void reset_channels(struct context_data *ctx)
 		reset_channel_extras(ctx, xc);
 		xc->ins = xc->key = -1;
 	}
+#else
+	for (i = 0; i < p->virt.virt_channels; i++) {
+		xc = &p->xc_data[i];
+		memset(xc, 0, sizeof (struct channel_data));
+		xc->ins = xc->key = -1;
+	}
+#endif
 
 	for (i = 0; i < p->virt.num_tracks; i++) {
 		xc = &p->xc_data[i];
@@ -302,7 +312,11 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		return;
 	}
 
+#ifndef XMP_CORE_PLAYER
 	finalvol = extras_get_volume(ctx, xc);
+#else
+	finalvol = 0;
+#endif
 
 	if (TEST(TREMOLO)) {
 		finalvol += get_lfo(&xc->tremolo, 1 << 6);
@@ -417,7 +431,10 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	period = xc->period + extras_get_period(ctx, xc);
+	period = xc->period;
+#ifndef XMP_CORE_PLAYER
+	period += extras_get_period(ctx, xc);
+#endif
 
 	linear_bend = period_to_bend(period + vibrato, xc->note,
 				HAS_QUIRK(QUIRK_MODRNG), xc->gliss,
@@ -439,7 +456,9 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		linear_bend += (100 << 7) * arp;
 	}
 
+#ifndef XMP_CORE_PLAYER
 	linear_bend += extras_get_linear_bend(ctx, xc);
+#endif
 
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
@@ -686,7 +705,9 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	if (!IS_VALID_INSTRUMENT_OR_SFX(xc->ins))
 		return;
 
+#ifndef XMP_CORE_PLAYER
 	play_extras(ctx, xc, chn, t == 0 && TEST(NEW_INS|NEW_NOTE));
+#endif
 
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {
@@ -865,7 +886,9 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
+#ifndef XMP_CORE_PLAYER
 	struct mixer_data *s = &ctx->s;
+#endif
 	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
@@ -947,6 +970,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 		goto err1;
 	}
 
+#ifndef XMP_CORE_PLAYER
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		struct channel_data *xc = &p->xc_data[i];
 		if (new_channel_extras(ctx, xc) < 0)
@@ -959,14 +983,17 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	}
 
 	m->synth->reset(ctx);
+#endif
 	reset_channels(ctx);
 
 	ctx->state = XMP_STATE_PLAYING;
 
 	return 0;
 
+#ifndef XMP_CORE_PLAYER
     err2:
 	free(p->xc_data);
+#endif
     err1:
 	free(f->loop);
     err:
@@ -1129,24 +1156,30 @@ void xmp_end_player(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
-	struct module_data *m = &ctx->m;
 	struct flow_control *f = &p->flow;
+#ifndef XMP_CORE_PLAYER
+	struct module_data *m = &ctx->m;
 	struct channel_data *xc;
 	int i;
+#endif
 
 	if (ctx->state < XMP_STATE_PLAYING)
 		return;
 
 	ctx->state = XMP_STATE_LOADED;
 
+#ifndef XMP_CORE_PLAYER
 	/* Free channel extras */
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		xc = &p->xc_data[i];
 		release_channel_extras(ctx, xc);
 	}
+#endif
 
 	virt_off(ctx);
+#ifndef XMP_CORE_PLAYER
 	m->synth->deinit(ctx);
+#endif
 
 	free(p->xc_data);
 	free(f->loop);
