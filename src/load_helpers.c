@@ -24,9 +24,10 @@
 #include <stdlib.h>
 #include <fnmatch.h>
 #include "common.h"
-#include "synth.h"
 #include "loaders/loader.h"
 
+#ifndef XMP_CORE_PLAYER
+#include "synth.h"
 
 /*
  * Handle special "module quirks" that can't be detected automatically
@@ -86,6 +87,7 @@ static void module_quirks(struct context_data *ctx)
 		}
 	}
 }
+#endif
 
 static void check_envelope(struct xmp_envelope *env)
 {
@@ -152,8 +154,10 @@ void load_prologue(struct context_data *ctx)
     	m->mod.len = 0;
     	m->mod.rst = 0;
 
+#ifndef XMP_CORE_PLAYER
 	m->synth = &synth_null;
 	m->extra = NULL;
+#endif
 	m->time_factor = DEFAULT_TIME_FACTOR;
 
 	for (i = 0; i < 64; i++) {
@@ -213,7 +217,9 @@ void load_epilogue(struct context_data *ctx)
 	}
 
 	p->flags = p->player_flags;
+#ifndef XMP_CORE_PLAYER
 	module_quirks(ctx);
+#endif
 }
 
 int prepare_scan(struct context_data *ctx)

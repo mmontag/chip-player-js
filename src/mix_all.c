@@ -23,9 +23,11 @@
 #include "common.h"
 #include "virtual.h"
 #include "mixer.h"
-#include "synth.h"
 #include "precomp_lut.h"
 
+#ifndef XMP_CORE_PLAYER
+#include "synth.h"
+#endif
 
 /* Mixers
  *
