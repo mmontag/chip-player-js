@@ -82,6 +82,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->arpeggio.memory = fxp;
 		}
 		goto fx_arpeggio;
+#ifndef XMP_CORE_PLAYER
 	case FX_OKT_ARP3:
 		if (fxp != 0) {
 			xc->arpeggio.val[0] = -MSN(fxp);
@@ -107,6 +108,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->arpeggio.size = 3;
 		}
 		break;
+#endif
 	case FX_PORTA_UP:	/* Portamento up */
 		if (fxp == 0) {
 			fxp = xc->freq.memory;
@@ -190,46 +192,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		SET(TONEPORTA);
 		break;
-	case FX_PER_PORTA_UP:	/* Persistent portamento up */
-		SET_PER(PITCHBEND);
-		xc->freq.slide = -fxp;
-		if ((xc->freq.memory = fxp) == 0)
-			RESET_PER(PITCHBEND);
-		break;
-	case FX_PER_PORTA_DN:	/* Persistent portamento down */
-		SET_PER(PITCHBEND);
-		xc->freq.slide = fxp;
-		if ((xc->freq.memory = fxp) == 0)
-			RESET_PER(PITCHBEND);
-		break;
-	case FX_PER_TPORTA:	/* Persistent tone portamento */
-		if (!IS_VALID_INSTRUMENT(xc->ins))
-			break;
-		SET_PER(TONEPORTA);
-		do_toneporta(m, xc, note);
-		xc->porta.slide = fxp;
-		if (fxp == 0)
-			RESET_PER(TONEPORTA);
-		break;
-	case FX_PER_VSLD_UP:	/* Persistent volslide up */
-		SET_PER(VOL_SLIDE);
-		xc->vol.slide = fxp;
-		if (fxp == 0)
-			RESET_PER(VOL_SLIDE);
-		break;
-	case FX_PER_VSLD_DN:	/* Persistent volslide down */
-		SET_PER(VOL_SLIDE);
-		xc->vol.slide = -fxp;
-		if (fxp == 0)
-			RESET_PER(VOL_SLIDE);
-		break;
-	case FX_SPEED_CP:	/* Set speed and ... */
-		if (fxp)
-			p->speed = fxp;
-		/* fall through */
-	case FX_PER_CANCEL:	/* Cancel persistent effects */
-		xc->per_flags = 0;
-		break;
 
 	case FX_VIBRATO:	/* Vibrato */
 		SET(VIBRATO);
@@ -238,14 +200,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_FINE_VIBRATO:	/* Fine vibrato (4x) */
 		SET(VIBRATO);
 		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp), MSN(fxp));
-		break;
-	case FX_PER_VIBRATO:	/* Persistent vibrato */
-		if (LSN(fxp) != 0) {
-			SET_PER(VIBRATO);
-		} else {
-			RESET_PER(VIBRATO);
-		}
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 2, MSN(fxp));
 		break;
 
 	case FX_TONE_VSLIDE:	/* Toneporta + vol slide */
@@ -347,47 +301,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 				RESET(VOL_SLIDE_2);
 		}		
 		break;
-	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
-		if (HAS_QUIRK(QUIRK_FINEFX)) {
-			h = MSN(fxp);
-			l = LSN(fxp);
-			if (h == 0xf && l != 0) {
-				fxp &= 0x0f;
-				goto fx_f_vslide_up;
-			}
-		}
-
-		if (fxp)
-			xc->vol.slide = fxp;
-		SET(VOL_SLIDE);
-		break;
-	case FX_VOLSLIDE_DN:	/* Vol slide with uint8 arg */
-		if (HAS_QUIRK(QUIRK_FINEFX)) {
-			h = MSN(fxp);
-			l = LSN(fxp);
-			if (h == 0xf && l != 0) {
-				fxp &= 0x0f;
-				goto fx_f_vslide_dn;
-			}
-		}
-
-		if (fxp)
-			xc->vol.slide = -fxp;
-		SET(VOL_SLIDE);
-		break;
-	case FX_F_VSLIDE:	/* Fine volume slide */
-		SET(FINE_VOLS);
-		if (fxp) {
-			h = MSN(fxp);
-			l = LSN(fxp);
-			if (l == 0)
-				xc->vol.fslide = h;
-			else if (h == 0)
-				xc->vol.fslide = -l;
-			else
-				RESET(FINE_VOLS);
-		}		
-		break;
 	case FX_JUMP:		/* Order jump */
 		p->flow.pbreak = 1;
 		p->flow.jump = fxp;
@@ -483,9 +396,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 
-	case FX_PATT_DELAY:
-	    fx_patt_delay:
-		p->flow.delay = fxp;
+	case FX_FINETUNE:
+	      fx_finetune:
+		xc->finetune = (int16) (fxp - 0x80);
 		break;
 
 	case FX_F_VSLIDE_UP:	/* Fine volume slide up */
@@ -515,6 +428,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->freq.fslide = fxp;
 		else if (xc->freq.slide < 0)
 			xc->freq.slide *= -1;
+		break;
+	case FX_PATT_DELAY:
+	    fx_patt_delay:
+		p->flow.delay = fxp;
 		break;
 
 	case FX_S3M_SPEED:	/* Set S3M speed */
@@ -703,10 +620,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->trackvol.fslide = MSN(fxp) - LSN(fxp);
 		}
 		break;
-	case FX_FINETUNE:
-	      fx_finetune:
-		xc->finetune = (int16) (fxp - 0x80);
-		break;
 	case FX_IT_INSTFUNC:
 		switch (fxp) {
 		case 0:	/* Past note cut */
@@ -752,6 +665,49 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		m->mod.xxc[chn].rvb = fxp;
 		break;
 #endif
+
+#ifndef XMP_CORE_PLAYER
+	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
+		if (HAS_QUIRK(QUIRK_FINEFX)) {
+			h = MSN(fxp);
+			l = LSN(fxp);
+			if (h == 0xf && l != 0) {
+				fxp &= 0x0f;
+				goto fx_f_vslide_up;
+			}
+		}
+
+		if (fxp)
+			xc->vol.slide = fxp;
+		SET(VOL_SLIDE);
+		break;
+	case FX_VOLSLIDE_DN:	/* Vol slide with uint8 arg */
+		if (HAS_QUIRK(QUIRK_FINEFX)) {
+			h = MSN(fxp);
+			l = LSN(fxp);
+			if (h == 0xf && l != 0) {
+				fxp &= 0x0f;
+				goto fx_f_vslide_dn;
+			}
+		}
+
+		if (fxp)
+			xc->vol.slide = -fxp;
+		SET(VOL_SLIDE);
+		break;
+	case FX_F_VSLIDE:	/* Fine volume slide */
+		SET(FINE_VOLS);
+		if (fxp) {
+			h = MSN(fxp);
+			l = LSN(fxp);
+			if (l == 0)
+				xc->vol.fslide = h;
+			else if (h == 0)
+				xc->vol.fslide = -l;
+			else
+				RESET(FINE_VOLS);
+		}		
+		break;
 	case FX_NSLIDE_DN:
 	case FX_NSLIDE_UP:
 	case FX_NSLIDE_R_DN:
@@ -792,6 +748,56 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		SET(FINE_NSLIDE);
 		xc->noteslide.fslide = fxp;
 		break;
+
+	case FX_PER_VIBRATO:	/* Persistent vibrato */
+		if (LSN(fxp) != 0) {
+			SET_PER(VIBRATO);
+		} else {
+			RESET_PER(VIBRATO);
+		}
+		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 2, MSN(fxp));
+		break;
+	case FX_PER_PORTA_UP:	/* Persistent portamento up */
+		SET_PER(PITCHBEND);
+		xc->freq.slide = -fxp;
+		if ((xc->freq.memory = fxp) == 0)
+			RESET_PER(PITCHBEND);
+		break;
+	case FX_PER_PORTA_DN:	/* Persistent portamento down */
+		SET_PER(PITCHBEND);
+		xc->freq.slide = fxp;
+		if ((xc->freq.memory = fxp) == 0)
+			RESET_PER(PITCHBEND);
+		break;
+	case FX_PER_TPORTA:	/* Persistent tone portamento */
+		if (!IS_VALID_INSTRUMENT(xc->ins))
+			break;
+		SET_PER(TONEPORTA);
+		do_toneporta(m, xc, note);
+		xc->porta.slide = fxp;
+		if (fxp == 0)
+			RESET_PER(TONEPORTA);
+		break;
+	case FX_PER_VSLD_UP:	/* Persistent volslide up */
+		SET_PER(VOL_SLIDE);
+		xc->vol.slide = fxp;
+		if (fxp == 0)
+			RESET_PER(VOL_SLIDE);
+		break;
+	case FX_PER_VSLD_DN:	/* Persistent volslide down */
+		SET_PER(VOL_SLIDE);
+		xc->vol.slide = -fxp;
+		if (fxp == 0)
+			RESET_PER(VOL_SLIDE);
+		break;
+	case FX_SPEED_CP:	/* Set speed and ... */
+		if (fxp)
+			p->speed = fxp;
+		/* fall through */
+	case FX_PER_CANCEL:	/* Cancel persistent effects */
+		xc->per_flags = 0;
+		break;
+#endif
 	case FX_PANBRELLO:	/* Panbrello */
 		SET(PANBRELLO);
 		SET_LFO_NOTZERO(&xc->panbrello, LSN(fxp) << 4, MSN(fxp));

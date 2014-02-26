@@ -121,8 +121,12 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 }
 
 
+#ifndef XMP_CORE_PLAYER
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE \
 		|| (x) == FX_PER_TPORTA)
+#else
+#define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE)
+#endif
 
 #define set_patch(ctx,chn,ins,smp,note) \
 	virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0)

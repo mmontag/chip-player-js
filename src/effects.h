@@ -48,6 +48,7 @@
 #define EX_PATT_DELAY	0x0e
 #define EX_INVLOOP	0x0f
 
+#ifndef XMP_CORE_PLAYER
 /* Oktalyzer effects */
 #define FX_OKT_ARP3	0x70
 #define FX_OKT_ARP4	0x71
@@ -66,6 +67,7 @@
 #define FX_PER_VSLD_DN	0x7d
 #define FX_SPEED_CP	0x7e
 #define FX_PER_CANCEL	0x7f
+#endif
 
 /* IT effects */
 #define FX_TRK_VOL      0x80
@@ -81,6 +83,13 @@
 #define FX_PANBRELLO	0x8a
 #define FX_PANBRELLO_WF	0x8b
 
+#define FX_S3M_SPEED	0xa3	/* S3M */
+#define FX_S3M_BPM	0xab	/* S3M */
+#define FX_S3M_ARPEGGIO	0xb4
+#define FX_VOLSLIDE_2	0xa4
+#define FX_FINE_VIBRATO	0xac	/* S3M/PTM/IMF/LIQ */
+
+#ifndef XMP_CORE_PLAYER
 /* MED effects */
 #define FX_HOLD_DECAY	0x90
 #define FX_SETPITCH	0x91
@@ -94,22 +103,18 @@
 /* Extra effects */
 #define FX_VOLSLIDE_UP	0xa0	/* SFX, MDL */
 #define FX_VOLSLIDE_DN	0xa1
-#define FX_S3M_SPEED	0xa3	/* S3M */
-#define FX_VOLSLIDE_2	0xa4
 #define FX_F_VSLIDE	0xa5	/* IMF/MDL */
-#define FX_FINETUNE	0xa6
 #define FX_CHORUS	0xa9	/* IMF */
 #define FX_REVERB	0xaa	/* IMF */
-#define FX_S3M_BPM	0xab	/* S3M */
-#define FX_FINE_VIBRATO	0xac	/* S3M/PTM/IMF/LIQ */
+#define FX_MED_DECAY	0xb1	/* MMD hold/decay */
+#define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
+#endif
+
+#define FX_FINETUNE	0xa6
+#define FX_PATT_DELAY	0xb3	/* MMD */
 #define FX_F_VSLIDE_UP	0xad	/* MMD */
 #define FX_F_VSLIDE_DN	0xae	/* MMD */
 #define FX_F_PORTA_UP	0xaf	/* MMD */
 #define FX_F_PORTA_DN	0xb0	/* MMD */
-#define FX_MED_DECAY	0xb1	/* MMD hold/decay */
-#define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
-#define FX_PATT_DELAY	0xb3	/* MMD */
-#define FX_S3M_ARPEGGIO	0xb4
-
 
 #endif /* LIBXMP_EFFECTS_H */

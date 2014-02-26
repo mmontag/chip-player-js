@@ -262,12 +262,14 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    }
 		}
 
+#ifndef XMP_CORE_PLAYER
 		if (f1 == FX_SPEED_CP) {
 		    f1 = FX_S3M_SPEED;
 		}
 		if (f2 == FX_SPEED_CP) {
 		    f2 = FX_S3M_SPEED;
 		}
+#endif
 
 		if ((f1 == FX_S3M_SPEED && p1) || (f2 == FX_S3M_SPEED && p2)) {
 		    parm = (f1 == FX_S3M_SPEED) ? p1 : p2;
