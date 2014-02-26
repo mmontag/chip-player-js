@@ -147,21 +147,6 @@ char *copy_adjust(char *s, uint8 *r, int n)
 	return s;
 }
 
-int test_name(uint8 *s, int n)
-{
-	int i;
-
-	/* ACS_Team2.mod has a backspace in instrument name */
-	for (i = 0; i < n; i++) {
-		if (s[i] > 0x7f)
-			return -1;
-		if (s[i] > 0 && s[i] < 32 && s[i] != 0x08)
-			return -1;
-	}
-
-	return 0;
-}
-
 void read_title(HIO_HANDLE *f, char *t, int s)
 {
 	uint8 buf[XMP_NAME_SIZE];
@@ -177,6 +162,23 @@ void read_title(HIO_HANDLE *f, char *t, int s)
 	hio_read(buf, 1, s, f);
 	buf[s] = 0;
 	copy_adjust(t, buf, s);
+}
+
+#ifndef XMP_CORE_PLAYER
+
+int test_name(uint8 *s, int n)
+{
+	int i;
+
+	/* ACS_Team2.mod has a backspace in instrument name */
+	for (i = 0; i < n; i++) {
+		if (s[i] > 0x7f)
+			return -1;
+		if (s[i] > 0 && s[i] < 32 && s[i] != 0x08)
+			return -1;
+	}
+
+	return 0;
 }
 
 /*
@@ -218,6 +220,7 @@ void decode_noisetracker_event(struct xmp_event *event, uint8 *mod_event)
 
 	disable_continue_fx(event);
 }
+#endif
 
 void decode_protracker_event(struct xmp_event *event, uint8 *mod_event)
 {
@@ -251,6 +254,7 @@ void disable_continue_fx(struct xmp_event *event)
 	}
 }
 
+#ifndef XMP_CORE_PLAYER
 #ifndef WIN32
 
 /* Given a directory, see if file exists there, ignoring case */
@@ -301,6 +305,7 @@ void get_instrument_path(struct module_data *m, char *path, int size)
 		strncpy(path, ".", size);
 	}
 }
+#endif /* XMP_CORE_PLAYER */
 
 void set_type(struct module_data *m, char *fmt, ...)
 {

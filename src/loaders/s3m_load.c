@@ -197,16 +197,16 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int c, r, i;
-    struct s3m_adlib_header sah;
     struct xmp_event *event = 0, dummy;
     struct s3m_file_header sfh;
     struct s3m_instrument_header sih;
+#ifndef XMP_CORE_PLAYER
+    struct s3m_adlib_header sah;
+    char tracker_name[40];
+    int quirk87 = 0;
+#endif
     int pat_len;
     uint8 n, b, x8;
-#ifndef XMP_CORE_PLAYER
-    char tracker_name[40];
-#endif
-    int quirk87 = 0;
     uint16 *pp_ins;		/* Parapointers to instruments */
     uint16 *pp_pat;		/* Parapointers to patterns */
     int ret;
@@ -240,6 +240,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 #endif
 
+#ifndef XMP_CORE_PLAYER
     /* S3M anomaly in return_of_litmus.s3m */
     if (sfh.version == 0x1301 && sfh.name[27] == 0x87)
 	quirk87 = 1;
@@ -249,6 +250,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	fix87(sfh.patnum);
 	fix87(sfh.flags);
     }
+#endif
 
     copy_adjust(mod->name, sfh.name, 28);
 
@@ -460,6 +462,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sub->sid = i;
 
 	if (x8 >= 2) {
+#ifndef XMP_CORE_PLAYER
 	    /* OPL2 FM instrument */
 
 	    hio_read(&sah.dosname, 12, 1, f);	/* DOS file name */
@@ -493,6 +496,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    D_(D_INFO "[%2X] %-28.28s", i, xxi->name);
 
 	    continue;
+#else
+	    goto err3;
+#endif
 	}
 
 	hio_read(&sih.dosname, 13, 1, f);	/* DOS file name */
@@ -518,12 +524,14 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    goto err3;
 	}
 
+#ifndef XMP_CORE_PLAYER
 	if (quirk87) {
 	    fix87(sih.length);
 	    fix87(sih.loopbeg);
 	    fix87(sih.loopend);
 	    fix87(sih.flags);
 	}
+#endif
 
 	xxs->len = sih.length;
 	xxi->nsm = sih.length > 0 ? 1 : 0;
