@@ -7,8 +7,10 @@
  */
 
 #include "common.h"
-#include "synth.h"
 #include "loader.h"
+
+#ifndef XMP_CORE_PLAYER
+#include "synth.h"
 
 /*
  * From the Audio File Formats (version 2.5)
@@ -40,6 +42,68 @@ static const int8 vdic_table[128] = {
 	/* 120 */	 95,  98, 103, 109, 114, 120, 126, 127
 };
 
+
+/* Convert 7 bit samples to 8 bit */
+static void convert_7bit_to_8bit(uint8 *p, int l)
+{
+	for (; l--; p++) {
+		*p <<= 1;
+	}
+}
+
+/* Convert Archimedes VIDC samples to linear */
+static void convert_vidc_to_linear(uint8 *p, int l)
+{
+	int i;
+	uint8 x;
+
+	for (i = 0; i < l; i++) {
+		x = p[i];
+		p[i] = vdic_table[x >> 1];
+		if (x & 0x01)
+			p[i] *= -1;
+	}
+}
+
+/* Convert HSC OPL2 instrument data to SBI instrument data */
+static void convert_hsc_to_sbi(uint8 *a)
+{
+	uint8 b[11];
+	int i;
+
+	for (i = 0; i < 10; i += 2) {
+		uint8 x;
+		x = a[i];
+		a[i] = a[i + 1];
+		a[i + 1] = x;
+	}
+
+	memcpy(b, a, 11);
+	a[8] = b[10];
+	a[10] = b[9];
+	a[9] = b[8];
+}
+
+
+static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
+{
+	char delta = 0;
+	uint8 b0, b1;
+	int i;
+
+	len = (len + 1) / 2;
+
+	for (i = 0; i < len; i++) {
+		b0 = *inp;
+		b1 = *inp++ >> 4;
+		delta += tab[b0 & 0x0f];
+		*outp++ = delta;
+		delta += tab[b1 & 0x0f];
+		*outp++ = delta;
+	}
+}
+
+#endif
 
 /* Convert differential to absolute sample data */
 static void convert_delta(uint8 *p, int l, int r)
@@ -106,67 +170,6 @@ static void convert_stereo_to_mono(uint8 *p, int l, int r)
 }
 #endif
 
-/* Convert 7 bit samples to 8 bit */
-static void convert_7bit_to_8bit(uint8 *p, int l)
-{
-	for (; l--; p++) {
-		*p <<= 1;
-	}
-}
-
-/* Convert Archimedes VIDC samples to linear */
-static void convert_vidc_to_linear(uint8 *p, int l)
-{
-	int i;
-	uint8 x;
-
-	for (i = 0; i < l; i++) {
-		x = p[i];
-		p[i] = vdic_table[x >> 1];
-		if (x & 0x01)
-			p[i] *= -1;
-	}
-}
-
-/* Convert HSC OPL2 instrument data to SBI instrument data */
-static void convert_hsc_to_sbi(uint8 *a)
-{
-	uint8 b[11];
-	int i;
-
-	for (i = 0; i < 10; i += 2) {
-		uint8 x;
-		x = a[i];
-		a[i] = a[i + 1];
-		a[i + 1] = x;
-	}
-
-	memcpy(b, a, 11);
-	a[8] = b[10];
-	a[10] = b[9];
-	a[9] = b[8];
-}
-
-
-static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
-{
-	char delta = 0;
-	uint8 b0, b1;
-	int i;
-
-	len = (len + 1) / 2;
-
-	for (i = 0; i < len; i++) {
-		b0 = *inp;
-		b1 = *inp++ >> 4;
-		delta += tab[b0 & 0x0f];
-		*outp++ = delta;
-		delta += tab[b1 & 0x0f];
-		*outp++ = delta;
-	}
-}
-
-
 static void unroll_loop(struct xmp_sample *xxs)
 {
 	int8 *s8;
@@ -203,6 +206,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 {
 	int bytelen, extralen, unroll_extralen, i;
 
+#ifndef XMP_CORE_PLAYER
 	/* Adlib FM patches */
 	if (flags & SAMPLE_FLAG_ADLIB) {
 		const int size = 11;
@@ -225,6 +229,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 
 		return 0;
 	}
+#endif
 
 	/* Empty samples
 	 */
@@ -292,6 +297,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);
 	} else {
+#ifndef XMP_CORE_PLAYER
 		uint8 buf[5];
 		long pos = hio_tell(f);
 		int num = hio_read(buf, 1, 5, f);
@@ -307,7 +313,9 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 			hio_read(xxs->data + x2, 1, x2, f);
 			adpcm4_decoder((uint8 *)xxs->data + x2,
 				       (uint8 *)xxs->data, table, bytelen);
-		} else {
+		} else
+#endif
+		{
 			int x = hio_read(xxs->data, 1, bytelen, f);
 			if (x != bytelen) {
 				D_(D_WARN, "short read (%d) in sample load", x - bytelen);
@@ -316,9 +324,11 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 		}
 	}
 
+#ifndef XMP_CORE_PLAYER
 	if (flags & SAMPLE_FLAG_7BIT) {
 		convert_7bit_to_8bit(xxs->data, xxs->len);
 	}
+#endif
 
 	/* Fix endianism if needed */
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
@@ -357,9 +367,11 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	}
 #endif
 
+#ifndef XMP_CORE_PLAYER
 	if (flags & SAMPLE_FLAG_VIDC) {
 		convert_vidc_to_linear(xxs->data, xxs->len);
 	}
+#endif
 
 	/* Check for full loop samples */
 	if (flags & SAMPLE_FLAG_FULLREP) {

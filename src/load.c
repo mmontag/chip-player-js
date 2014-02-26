@@ -40,9 +40,10 @@
 
 #include "format.h"
 #include "list.h"
-#include "md5.h"
 #include "hio.h"
+
 #ifndef XMP_CORE_PLAYER
+#include "md5.h"
 #include "extras.h"
 #endif
 
