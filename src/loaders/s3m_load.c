@@ -203,7 +203,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct s3m_instrument_header sih;
     int pat_len;
     uint8 n, b, x8;
+#ifndef XMP_CORE_PLAYER
     char tracker_name[40];
+#endif
     int quirk87 = 0;
     uint16 *pp_ins;		/* Parapointers to instruments */
     uint16 *pp_pat;		/* Parapointers to patterns */
@@ -324,6 +326,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (sfh.version == 0x1300)
 	m->quirk |= QUIRK_VSALL;
 
+#ifndef XMP_CORE_PLAYER
     switch (sfh.version >> 12) {
     case 1:
 	snprintf(tracker_name, 40, "Scream Tracker %d.%02x",
@@ -364,6 +367,10 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     snprintf(mod->type, XMP_NAME_SIZE, "%s S3M", tracker_name);
+#else
+    snprintf(mod->type, 40, "Scream Tracker 3 %d.%02x S3M",
+		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
+#endif
 
     MODULE_INFO();
 
