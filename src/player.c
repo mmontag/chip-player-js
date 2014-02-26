@@ -329,7 +329,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 #ifndef XMP_CORE_PLAYER
 	finalvol = extras_get_volume(ctx, xc);
 #else
-	finalvol = 0;
+	finalvol = xc->volume;
 #endif
 
 	if (TEST(TREMOLO)) {
