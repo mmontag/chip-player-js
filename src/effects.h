@@ -83,11 +83,6 @@
 #define FX_PANBRELLO	0x8a
 #define FX_PANBRELLO_WF	0x8b
 
-#define FX_S3M_SPEED	0xa3	/* S3M */
-#define FX_S3M_BPM	0xab	/* S3M */
-#define FX_S3M_ARPEGGIO	0xb4
-#define FX_VOLSLIDE_2	0xa4
-#define FX_FINE_VIBRATO	0xac	/* S3M/PTM/IMF/LIQ */
 
 #ifndef XMP_CORE_PLAYER
 /* MED effects */
@@ -110,11 +105,16 @@
 #define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
 #endif
 
+#define FX_S3M_SPEED	0xa3	/* S3M */
+#define FX_VOLSLIDE_2	0xa4
 #define FX_FINETUNE	0xa6
-#define FX_PATT_DELAY	0xb3	/* MMD */
+#define FX_S3M_BPM	0xab	/* S3M */
+#define FX_FINE_VIBRATO	0xac	/* S3M/PTM/IMF/LIQ */
 #define FX_F_VSLIDE_UP	0xad	/* MMD */
 #define FX_F_VSLIDE_DN	0xae	/* MMD */
 #define FX_F_PORTA_UP	0xaf	/* MMD */
 #define FX_F_PORTA_DN	0xb0	/* MMD */
+#define FX_PATT_DELAY	0xb3	/* MMD */
+#define FX_S3M_ARPEGGIO	0xb4
 
 #endif /* LIBXMP_EFFECTS_H */
