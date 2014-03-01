@@ -144,13 +144,14 @@ static const char *_farray[NUM_FORMATS + NUM_PW_FORMATS + 1] = { NULL };
 
 char **format_list()
 {
-	int count, i, j;
+	int count, i;
 
 	if (_farray[0] == NULL) {
 		for (count = i = 0; format_loader[i] != NULL; i++) {
-			int j;
 
 			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
+				int j;
+
 				for (j = 0; pw_format[j] != NULL; j++) {
 					_farray[count++] = pw_format[j]->name;
 				}
