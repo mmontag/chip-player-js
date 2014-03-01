@@ -353,12 +353,14 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	/* Apply channel volume */
 	finalvol = finalvol * get_channel_vol(ctx, chn) / 100;
 
+#ifndef LIBXMP_CORE_PLAYER
 	/* Volume translation table (for PTM, ARCH, COCO) */
 	if (m->vol_table) {
 		finalvol = m->volbase == 0xff ?
 		    m->vol_table[finalvol >> 2] << 2 :
 		    m->vol_table[finalvol >> 4] << 4;
 	}
+#endif
 
 	if (HAS_QUIRK(QUIRK_INSVOL)) {
 		finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
@@ -564,6 +566,7 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 			xc->volume += xc->vol.slide;
 		}
 
+#ifndef LIBXMP_CORE_PLAYER
 		if (TEST_PER(VOL_SLIDE)) {
 			if (xc->vol.slide > 0 && xc->volume > m->volbase) {
 				xc->volume = m->volbase;
@@ -574,6 +577,7 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 				RESET_PER(VOL_SLIDE);
 			}
 		}
+#endif
 
 		if (TEST(VOL_SLIDE_2)) {
 			xc->volume += xc->vol.slide2;
@@ -639,11 +643,14 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 		if (TEST(FINE_BEND)) {
 			xc->period += xc->freq.fslide;
 		}
+
+#ifndef LIBXMP_CORE_PLAYER
 		if (TEST(FINE_NSLIDE)) {
 			xc->note += xc->noteslide.fslide;
 			xc->period = note_to_period(xc->note, xc->finetune,
 						    HAS_QUIRK(QUIRK_LINEAR));
 		}
+#endif
 	}
 
 	/* Check for invalid periods (from Toru Egashira's NSPmod)
@@ -822,12 +829,14 @@ static void next_order(struct context_data *ctx)
 	p->pos = p->ord;
 	p->frame = 0;
 
+#ifndef LIBXMP_CORE_PLAYER
 	/* Reset persistent effects at new pattern */
 	if (HAS_QUIRK(QUIRK_PERPAT)) {
 		int chn;
 		for (chn = 0; chn < mod->chn; chn++)
 			p->xc_data[chn].per_flags = 0;
 	}
+#endif
 }
 
 static void next_row(struct context_data *ctx)
