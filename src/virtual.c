@@ -290,6 +290,8 @@ int virt_getvoicepos(struct context_data *ctx, int chn)
 	return mixer_getvoicepos(ctx, voc);
 }
 
+#ifndef LIBXMP_CORE_PLAYER
+
 void virt_setsmp(struct context_data *ctx, int chn, int smp)
 {
 	struct player_data *p = &ctx->p;
@@ -309,6 +311,8 @@ void virt_setsmp(struct context_data *ctx, int chn, int smp)
 	mixer_setpatch(ctx, voc, smp);
 	mixer_voicepos(ctx, voc, pos, frac);	/* Restore old position */
 }
+
+#endif
 
 static void check_dct(struct context_data *ctx, int i, int chn, int ins,
 			int smp, int note, int dct, int dca)
