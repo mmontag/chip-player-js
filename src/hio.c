@@ -268,6 +268,8 @@ HIO_HANDLE *hio_open_mem(void *path, long size)
 	return h;
 }
 
+#ifndef LIBXMP_CORE_PLAYER
+
 HIO_HANDLE *hio_open_fd(int fd, char *mode)
 {
 	HIO_HANDLE *h;
@@ -285,6 +287,8 @@ HIO_HANDLE *hio_open_fd(int fd, char *mode)
 
 	return h;
 }
+
+#endif
 
 int hio_close(HIO_HANDLE *h)
 {
