@@ -99,41 +99,6 @@ uint32 read32b(FILE *f)
 	return (a << 24) | (b << 16) | (c << 8) | d;
 }
 
-
-
-inline void write8(FILE *f, uint8 b)
-{
-	fputc(b, f);
-}
-
-void write16l(FILE *f, uint16 w)
-{
-	write8(f, w & 0x00ff);
-	write8(f, (w & 0xff00) >> 8);
-}
-
-void write16b(FILE *f, uint16 w)
-{
-	write8(f, (w & 0xff00) >> 8);
-	write8(f, w & 0x00ff);
-}
-
-void write32l(FILE *f, uint32 w)
-{
-	write8(f, w & 0x000000ff);
-	write8(f, (w & 0x0000ff00) >> 8);
-	write8(f, (w & 0x00ff0000) >> 16);
-	write8(f, (w & 0xff000000) >> 24);
-}
-
-void write32b(FILE *f, uint32 w)
-{
-	write8(f, (w & 0xff000000) >> 24);
-	write8(f, (w & 0x00ff0000) >> 16);
-	write8(f, (w & 0x0000ff00) >> 8);
-	write8(f, w & 0x000000ff);
-}
-
 uint16 readmem16l(uint8 *m)
 {
 	uint32 a, b;
@@ -200,6 +165,41 @@ uint32 readmem32b(uint8 *m)
 	return (a << 24) | (b << 16) | (c << 8) | d;
 }
 
+#ifndef LIBXMP_CORE_PLAYER
+
+inline void write8(FILE *f, uint8 b)
+{
+	fputc(b, f);
+}
+
+void write16l(FILE *f, uint16 w)
+{
+	write8(f, w & 0x00ff);
+	write8(f, (w & 0xff00) >> 8);
+}
+
+void write16b(FILE *f, uint16 w)
+{
+	write8(f, (w & 0xff00) >> 8);
+	write8(f, w & 0x00ff);
+}
+
+void write32l(FILE *f, uint32 w)
+{
+	write8(f, w & 0x000000ff);
+	write8(f, (w & 0x0000ff00) >> 8);
+	write8(f, (w & 0x00ff0000) >> 16);
+	write8(f, (w & 0xff000000) >> 24);
+}
+
+void write32b(FILE *f, uint32 w)
+{
+	write8(f, (w & 0xff000000) >> 24);
+	write8(f, (w & 0x00ff0000) >> 16);
+	write8(f, (w & 0x0000ff00) >> 8);
+	write8(f, w & 0x000000ff);
+}
+
 int move_data(FILE *out, FILE *in, int len)
 {
 	uint8 buf[1024];
@@ -214,3 +214,4 @@ int move_data(FILE *out, FILE *in, int len)
 	return 0;
 }
 
+#endif

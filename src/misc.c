@@ -46,6 +46,8 @@ char *str_adj(char *s)
 	return s;
 }
 
+#ifndef LIBXMP_CORE_PLAYER
+
 int get_temp_dir(char *buf, int size)
 {
 #if defined WIN32
@@ -79,3 +81,4 @@ int get_temp_dir(char *buf, int size)
 	return 0;
 }
 
+#endif
