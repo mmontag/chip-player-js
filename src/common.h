@@ -350,7 +350,7 @@ struct context_data {
 
 /* Prototypes */
 
-char	*str_adj		(char *);
+char	*adjust_string		(char *);
 int	exclude_match		(char *);
 int	prepare_scan		(struct context_data *);
 int	scan_sequences		(struct context_data *);

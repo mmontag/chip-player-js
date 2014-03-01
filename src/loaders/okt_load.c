@@ -142,7 +142,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		sub = &xxi->sub[0];
 
 		hio_read(xxi->name, 1, 20, f);
-		str_adj((char *)xxi->name);
+		adjust_string((char *)xxi->name);
 
 		/* Sample size is always rounded down */
 		xxs->len = hio_read32b(f) & ~1;

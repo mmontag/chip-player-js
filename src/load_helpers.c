@@ -20,13 +20,21 @@
  * THE SOFTWARE.
  */
 
+#include <stdio.h>
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-#include <fnmatch.h>
+#ifdef ANDROID
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 #include "common.h"
 #include "loaders/loader.h"
 
+
 #ifndef LIBXMP_CORE_PLAYER
+#include <fnmatch.h>
 #include "synth.h"
 
 /*
@@ -87,13 +95,6 @@ static void module_quirks(struct context_data *ctx)
 		}
 	}
 }
-#endif
-
-static void check_envelope(struct xmp_envelope *env)
-{
-	if (env->npt <= 0 || env->lps >= env->npt || env->lpe >= env->npt)
-		env->flg &= ~XMP_ENVELOPE_LOOP;
-}
 
 /* 
  * Check whether the given string matches one of the blacklisted glob
@@ -123,6 +124,61 @@ int exclude_match(char *name)
 	}
 
 	return 0;
+}
+
+int get_temp_dir(char *buf, int size)
+{
+#if defined WIN32
+	const char def[] = "C:\\WINDOWS\\TEMP";
+	char *tmp = getenv("TEMP");
+
+	strncpy(buf, tmp ? tmp : def, size);
+	strncat(buf, "\\", size);
+#elif defined __AMIGA__
+	strncpy(buf, "T:", size);
+#elif defined ANDROID
+#define APPDIR "/sdcard/Xmp for Android"
+	struct stat st;
+	if (stat(APPDIR, &st) < 0) {
+		if (mkdir(APPDIR, 0777) < 0)
+			return -1;
+	}
+	if (stat(APPDIR "/tmp", &st) < 0) {
+		if (mkdir(APPDIR "/tmp", 0777) < 0)
+			return -1;
+	}
+	strncpy(buf, APPDIR "/tmp/", size);
+#else
+	const char def[] = "/tmp";
+	char *tmp = getenv("TMPDIR");
+
+	strncpy(buf, tmp ? tmp : def, size);
+	strncat(buf, "/", size);
+#endif
+
+	return 0;
+}
+
+#endif
+
+char *adjust_string(char *s)
+{
+	int i;
+
+	for (i = 0; i < strlen(s); i++)
+		if (!isprint((int)s[i]) || ((uint8) s[i] > 127))
+			s[i] = ' ';
+
+	while (*s && (s[strlen(s) - 1] == ' '))
+		s[strlen(s) - 1] = 0;
+
+	return s;
+}
+
+static void check_envelope(struct xmp_envelope *env)
+{
+	if (env->npt <= 0 || env->lps >= env->npt || env->lpe >= env->npt)
+		env->flg &= ~XMP_ENVELOPE_LOOP;
 }
 
 void load_prologue(struct context_data *ctx)

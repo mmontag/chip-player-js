@@ -390,7 +390,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 	}
 
-	str_adj ((char *) ii.name);
+	adjust_string ((char *) ii.name);
 	strncpy ((char *) mod->xxi[i].name, ii.name, 24);
 
 	for (j = 0; j < 108; j++) {

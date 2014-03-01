@@ -559,7 +559,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	xxi->nsm = hio_read8(f);
 	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
-	str_adj(buf);
+	adjust_string(buf);
 	strncpy((char *)xxi->name, buf, 32);
 
 	D_(D_INFO "[%2X] %-32.32s %2d", data->i_index[i], xxi->name, xxi->nsm);
@@ -644,7 +644,7 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	data->s_index[i] = hio_read8(f);	/* Sample number */
 	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
-	str_adj(buf);
+	adjust_string(buf);
 	strncpy(xxs->name, buf, 32);
 
 	hio_seek(f, 8, SEEK_CUR);		/* Sample filename */
@@ -711,7 +711,7 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
-	str_adj(buf);			/* Sample name */
+	adjust_string(buf);			/* Sample name */
 	hio_seek(f, 8, SEEK_CUR);	/* Sample filename */
 	strncpy(mod->xxi[i].name, buf, 32);
 

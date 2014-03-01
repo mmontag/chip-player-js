@@ -593,7 +593,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h, struct list_head *tmpf
 		return -XMP_ERROR_LOAD;
 	}
 
-	str_adj(m->mod.name);
+	adjust_string(m->mod.name);
 	load_epilogue(ctx);
 
 	ret = prepare_scan(ctx);

@@ -1,5 +1,5 @@
 
-SRC_OBJS	= virtual.o format.o misc.o period.o player.o read_event.o \
+SRC_OBJS	= virtual.o format.o period.o player.o read_event.o \
 		  dataio.o mkstemp.o fnmatch.o md5.o lfo.o envelope.o scan.o \
 		  control.o med_extras.o filter.o fmopl.o effects.o mixer.o \
 		  synth_null.o mix_all.o adlib.o load_helpers.o load.o hio.o \

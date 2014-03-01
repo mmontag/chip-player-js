@@ -186,7 +186,7 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	xxs = &mod->xxs[i];
 
 	hio_read(&xxi->name, 1, 31, f);
-	str_adj((char *)xxi->name);
+	adjust_string((char *)xxi->name);
 	hio_seek(f, 8, SEEK_CUR);
 	hio_read8(f);		/* insno */
 	hio_read8(f);
