@@ -1,11 +1,12 @@
 Stable versions
 ---------------
 
-4.2.5 ():
+4.2.5 (20140302):
 	- fix Oktalyzer sample numbering (reported by Andreas Argirakis)
 	- fix XM delay effect with invalid instrument
 	- disable incomplete Graoumf Tracker loader
 	- disable incomplete TCB Tracker loader
+	- code refactor for core mod player library subset
 	
 4.2.4 (20140222):
 	Fix bugs reported by Justin Crawford:
