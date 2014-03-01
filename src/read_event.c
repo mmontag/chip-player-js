@@ -26,7 +26,10 @@
 #include "effects.h"
 #include "virtual.h"
 #include "period.h"
+
+#ifndef LIBXMP_CORE_PLAYER
 #include "med_extras.h"
+#endif
 
 
 static inline void copy_channel(struct player_data *p, int to, int from)
@@ -179,10 +182,12 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			virt_resetchannel(ctx, chn);
 		}
 
+#ifndef LIBXMP_CORE_PLAYER
 		if (HAS_MED_CHANNEL_EXTRAS(*xc)) {
 			MED_CHANNEL_EXTRAS(*xc)->arp = 0;
 			MED_CHANNEL_EXTRAS(*xc)->aidx = 0;
 		}
+#endif
 	}
 
 	/* Check note */
