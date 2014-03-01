@@ -494,10 +494,12 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     if (!strncmp(tracker_name, "FastTracker v 2.00", 18))
 	strcpy(tracker_name, "old ModPlug Tracker");
-#endif
 
-    snprintf(mod->type, XMP_NAME_SIZE, "%s XM %d.%02d",
-			tracker_name, xfh.version >> 8, xfh.version & 0xff);
+    set_type(m, "%s XM %d.%02d", tracker_name,
+				xfh.version >> 8, xfh.version & 0xff);
+#else
+    set_type(m, tracker_name);
+#endif
 
     MODULE_INFO();
 

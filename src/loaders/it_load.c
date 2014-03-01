@@ -502,7 +502,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     set_type(m, "%s IT %d.%02x", tracker_name,
 			ifh.cmwt >> 8, ifh.cmwt & 0xff);
 #else
-    set_type(m, "Impulse Tracker IT %d.%02x", ifh.cmwt >> 8, ifh.cmwt & 0xff);
+    set_type(m, "Impulse Tracker");
 #endif
 
     MODULE_INFO();

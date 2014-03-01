@@ -368,10 +368,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	snprintf(tracker_name, 40, "unknown (%04x)", sfh.version);
     }
 
-    snprintf(mod->type, XMP_NAME_SIZE, "%s S3M", tracker_name);
+    set_type(m, "%s S3M", tracker_name);
 #else
-    snprintf(mod->type, 40, "Scream Tracker %d.%02x S3M",
-		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
+    set_type(m, "Scream Tracker 3");
 #endif
 
     MODULE_INFO();
