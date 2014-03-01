@@ -26,7 +26,7 @@
 #include "common.h"
 #include "loaders/loader.h"
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 #include "synth.h"
 
 /*
@@ -154,7 +154,7 @@ void load_prologue(struct context_data *ctx)
     	m->mod.len = 0;
     	m->mod.rst = 0;
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	m->synth = &synth_null;
 	m->extra = NULL;
 #endif
@@ -217,7 +217,7 @@ void load_epilogue(struct context_data *ctx)
 	}
 
 	p->flags = p->player_flags;
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	module_quirks(ctx);
 #endif
 }

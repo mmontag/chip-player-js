@@ -23,7 +23,7 @@
 #include "common.h"
 #include "loader.h"
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 #include "synth.h"
 
 /*
@@ -220,7 +220,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 {
 	int bytelen, extralen, unroll_extralen, i;
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	/* Adlib FM patches */
 	if (flags & SAMPLE_FLAG_ADLIB) {
 		const int size = 11;
@@ -311,7 +311,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);
 	} else {
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 		uint8 buf[5];
 		long pos = hio_tell(f);
 		int num = hio_read(buf, 1, 5, f);
@@ -338,7 +338,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 		}
 	}
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	if (flags & SAMPLE_FLAG_7BIT) {
 		convert_7bit_to_8bit(xxs->data, xxs->len);
 	}
@@ -381,7 +381,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	}
 #endif
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	if (flags & SAMPLE_FLAG_VIDC) {
 		convert_vidc_to_linear(xxs->data, xxs->len);
 	}

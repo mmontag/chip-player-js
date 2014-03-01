@@ -178,7 +178,7 @@ void read_title(HIO_HANDLE *f, char *t, int s)
 	copy_adjust(t, buf, s);
 }
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 
 int test_name(uint8 *s, int n)
 {
@@ -268,7 +268,7 @@ void disable_continue_fx(struct xmp_event *event)
 	}
 }
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 #ifndef WIN32
 
 /* Given a directory, see if file exists there, ignoring case */
@@ -319,7 +319,7 @@ void get_instrument_path(struct module_data *m, char *path, int size)
 		strncpy(path, ".", size);
 	}
 }
-#endif /* XMP_CORE_PLAYER */
+#endif /* LIBXMP_CORE_PLAYER */
 
 void set_type(struct module_data *m, char *fmt, ...)
 {

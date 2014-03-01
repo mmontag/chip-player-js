@@ -480,7 +480,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    break;
     }
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
     if (xfh.headersz == 0x0113) {
 	strcpy(tracker_name, "unknown tracker");
     } else if (*tracker_name == 0) {

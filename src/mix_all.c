@@ -25,7 +25,7 @@
 #include "mixer.h"
 #include "precomp_lut.h"
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 #include "synth.h"
 #endif
 

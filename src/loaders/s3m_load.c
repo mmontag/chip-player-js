@@ -75,7 +75,7 @@
 #include "s3m.h"
 #include "period.h"
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 #include "synth.h"
 #endif
 
@@ -200,7 +200,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct xmp_event *event = 0, dummy;
     struct s3m_file_header sfh;
     struct s3m_instrument_header sih;
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
     struct s3m_adlib_header sah;
     char tracker_name[40];
     int quirk87 = 0;
@@ -240,7 +240,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 #endif
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
     /* S3M anomaly in return_of_litmus.s3m */
     if (sfh.version == 0x1301 && sfh.name[27] == 0x87)
 	quirk87 = 1;
@@ -328,7 +328,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (sfh.version == 0x1300)
 	m->quirk |= QUIRK_VSALL;
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
     switch (sfh.version >> 12) {
     case 1:
 	snprintf(tracker_name, 40, "Scream Tracker %d.%02x",
@@ -462,7 +462,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sub->sid = i;
 
 	if (x8 >= 2) {
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	    /* OPL2 FM instrument */
 
 	    hio_read(&sah.dosname, 12, 1, f);	/* DOS file name */
@@ -524,7 +524,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    goto err3;
 	}
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	if (quirk87) {
 	    fix87(sih.length);
 	    fix87(sih.loopbeg);
@@ -568,7 +568,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     free(pp_pat);
     free(pp_ins);
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
     m->synth = &synth_adlib;
 #endif
     m->quirk |= QUIRKS_ST3;

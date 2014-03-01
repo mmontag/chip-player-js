@@ -48,7 +48,7 @@
 #define EX_PATT_DELAY	0x0e
 #define EX_INVLOOP	0x0f
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 /* Oktalyzer effects */
 #define FX_OKT_ARP3	0x70
 #define FX_OKT_ARP4	0x71
@@ -84,7 +84,7 @@
 #define FX_PANBRELLO_WF	0x8b
 
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 /* MED effects */
 #define FX_HOLD_DECAY	0x90
 #define FX_SETPITCH	0x91

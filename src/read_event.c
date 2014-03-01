@@ -121,7 +121,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 }
 
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE \
 		|| (x) == FX_PER_TPORTA)
 #else

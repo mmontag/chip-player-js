@@ -148,6 +148,8 @@ char **format_list()
 
 	if (_farray[0] == NULL) {
 		for (count = i = 0; format_loader[i] != NULL; i++) {
+			int j;
+
 			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
 				for (j = 0; pw_format[j] != NULL; j++) {
 					_farray[count++] = pw_format[j]->name;

@@ -16,7 +16,7 @@ struct format_loader {
 
 char **format_list(void);
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 int pw_test_format(FILE *, char *, const int, struct xmp_test_info *);
 #endif
 

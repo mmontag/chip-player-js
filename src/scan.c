@@ -262,7 +262,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    }
 		}
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 		if (f1 == FX_SPEED_CP) {
 		    f1 = FX_S3M_SPEED;
 		}

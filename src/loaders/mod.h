@@ -42,7 +42,7 @@ struct mod_header {
 };
 
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 /* Soundtracker 15-instrument module header */
 
 struct st_header {

@@ -29,7 +29,7 @@
 #include "mixer.h"
 #include "period.h"
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 #include "synth.h"
 #endif
 
@@ -308,7 +308,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int vol_l, vol_r, step, voc;
 	int prev_l, prev_r;
 	int lps, lpe;
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	int synth = 1;
 #endif
 	int32 *buf_pos;
@@ -350,7 +350,7 @@ void mixer_softmixer(struct context_data *ctx)
 		vol_r = vi->vol * (0x80 - vi->pan);
 		vol_l = vi->vol * (0x80 + vi->pan);
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 		if (vi->fidx & FLAG_SYNTH) {
 			if (synth) {
 				m->synth->mixer(ctx, buf_pos, s->ticksize,
@@ -573,7 +573,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 		vi->fidx |= FLAG_STEREO;
 	}
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {
 		vi->fidx |= FLAG_SYNTH;
 		m->synth->setpatch(ctx, voc, xxs->data);
@@ -610,13 +610,13 @@ void mixer_setbend(struct context_data *ctx, int voc, int bend)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	struct module_data *m = &ctx->m;
 #endif
 
 	vi->period = note_to_period_mix(vi->note, bend);
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	if (vi->fidx & FLAG_SYNTH) {
 		m->synth->setnote(ctx, voc, vi->note, bend >> 7);
 	}
@@ -628,7 +628,7 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	struct module_data *m = &ctx->m;
 #endif
 
@@ -637,7 +637,7 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 
 	vi->vol = vol;
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	if (vi->fidx & FLAG_SYNTH) {
 		m->synth->setvol(ctx, voc, vol >> 4);
 	}

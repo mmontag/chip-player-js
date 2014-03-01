@@ -26,7 +26,7 @@
 #include "period.h"
 #include "virtual.h"
 #include "mixer.h"
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 #include "extras.h"
 #endif
 
@@ -82,7 +82,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->arpeggio.memory = fxp;
 		}
 		goto fx_arpeggio;
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	case FX_OKT_ARP3:
 		if (fxp != 0) {
 			xc->arpeggio.val[0] = -MSN(fxp);
@@ -666,7 +666,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 #endif
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
 		if (HAS_QUIRK(QUIRK_FINEFX)) {
 			h = MSN(fxp);
@@ -806,7 +806,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		set_lfo_waveform(&xc->panbrello, fxp & 3);
 		break;
 	default:
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 		extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
 #endif
 		break;

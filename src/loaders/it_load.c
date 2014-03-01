@@ -300,7 +300,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint8 b, mask[L_CHANNELS];
     int max_ch;
     int inst_map[120], inst_rmap[XMP_MAX_KEYS];
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
     char tracker_name[40];
 #endif
     uint32 *pp_ins;		/* Pointers to instruments */
@@ -423,7 +423,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->c4rate = C4_NTSC_RATE;
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
     /* Identify tracker */
 
     switch (ifh.cwt >> 8) {

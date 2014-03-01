@@ -98,7 +98,7 @@ struct s3m_instrument_header {
 	uint32 magic;		/* 'SCRS' */
 };
 
-#ifndef XMP_CORE_PLAYER
+#ifndef LIBXMP_CORE_PLAYER
 struct s3m_adlib_header {
 	uint8 dosname[12];	/* DOS file name */
 	uint8 rsvd1[3];		/* 0x00 0x00 0x00 */
