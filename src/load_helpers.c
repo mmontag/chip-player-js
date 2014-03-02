@@ -24,16 +24,18 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef ANDROID
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
 #include "common.h"
 #include "loaders/loader.h"
 
 
 #ifndef LIBXMP_CORE_PLAYER
+
+#ifdef ANDROID
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
 #include <fnmatch.h>
 #include "synth.h"
 
@@ -159,7 +161,7 @@ int get_temp_dir(char *buf, int size)
 	return 0;
 }
 
-#endif
+#endif /* LIBXMP_CORE_PLAYER */
 
 char *adjust_string(char *s)
 {

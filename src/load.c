@@ -24,9 +24,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifndef LIBXMP_CORE_PLAYER
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 #include <errno.h>
 #ifdef __native_client__
 #include <sys/syslimits.h>
