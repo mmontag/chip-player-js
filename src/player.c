@@ -394,7 +394,9 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 {
+#ifndef LIBXMP_CORE_DISABLE_IT
 	struct mixer_data *s = &ctx->s;
+#endif
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
@@ -402,7 +404,10 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	double period;
 	int linear_bend;
 	int frq_envelope;
-	int arp, vibrato, cutoff, resonance;
+	int arp, vibrato;
+#ifndef LIBXMP_CORE_DISABLE_IT
+	int cutoff, resonance;
+#endif
 	int end;
 
 	instrument = get_instrument(ctx, xc->ins);
@@ -482,6 +487,8 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	virt_setbend(ctx, chn, linear_bend);
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 	/* Process filter */
 
 	if (!HAS_QUIRK(QUIRK_FILTER)) {
@@ -508,6 +515,8 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	/* Always set cutoff */
 	virt_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
+
+#endif
 }
 
 static void process_pan(struct context_data *ctx, int chn, int t, int act)
@@ -885,6 +894,8 @@ static void next_row(struct context_data *ctx)
 	}
 }
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 /*
  * Set note action for virt_pastnote
  */
@@ -903,6 +914,8 @@ void player_set_fadeout(struct context_data *ctx, int chn)
 
 	SET_NOTE(NOTE_FADEOUT);
 }
+
+#endif
 
 
 int xmp_start_player(xmp_context opaque, int rate, int format)

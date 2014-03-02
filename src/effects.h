@@ -69,6 +69,7 @@
 #define FX_PER_CANCEL	0x7f
 #endif
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 /* IT effects */
 #define FX_TRK_VOL      0x80
 #define FX_TRK_VSLIDE   0x81
@@ -82,7 +83,7 @@
 #define FX_IT_PANSLIDE	0x89
 #define FX_PANBRELLO	0x8a
 #define FX_PANBRELLO_WF	0x8b
-
+#endif
 
 #ifndef LIBXMP_CORE_PLAYER
 /* MED effects */

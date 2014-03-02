@@ -22,7 +22,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "common.h"
 #include "virtual.h"
@@ -57,18 +56,21 @@ MIX_FN(smix_stereo_8bit_nearest);
 MIX_FN(smix_stereo_8bit_linear);
 MIX_FN(smix_stereo_16bit_nearest);
 MIX_FN(smix_stereo_16bit_linear);
-MIX_FN(smix_mono_8bit_linear_filter);
-MIX_FN(smix_mono_16bit_linear_filter);
-MIX_FN(smix_stereo_8bit_linear_filter);
-MIX_FN(smix_stereo_16bit_linear_filter);
 MIX_FN(smix_mono_8bit_spline);
 MIX_FN(smix_mono_16bit_spline);
 MIX_FN(smix_stereo_8bit_spline);
 MIX_FN(smix_stereo_16bit_spline);
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+MIX_FN(smix_mono_8bit_linear_filter);
+MIX_FN(smix_mono_16bit_linear_filter);
+MIX_FN(smix_stereo_8bit_linear_filter);
+MIX_FN(smix_stereo_16bit_linear_filter);
 MIX_FN(smix_mono_8bit_spline_filter);
 MIX_FN(smix_mono_16bit_spline_filter);
 MIX_FN(smix_stereo_8bit_spline_filter);
 MIX_FN(smix_stereo_16bit_spline_filter);
+#endif
 
 
 /* Mixers array index:
@@ -86,10 +88,12 @@ static mixer_set nearest_mixers = {
 	smix_stereo_8bit_nearest,
 	smix_stereo_16bit_nearest,
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	smix_mono_8bit_nearest,
 	smix_mono_16bit_nearest,
 	smix_stereo_8bit_nearest,
 	smix_stereo_16bit_nearest,
+#endif
 };
 
 static mixer_set linear_mixers = {
@@ -98,10 +102,12 @@ static mixer_set linear_mixers = {
 	smix_stereo_8bit_linear,
 	smix_stereo_16bit_linear,
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	smix_mono_8bit_linear_filter,
 	smix_mono_16bit_linear_filter,
 	smix_stereo_8bit_linear_filter,
 	smix_stereo_16bit_linear_filter
+#endif
 };
 
 static mixer_set spline_mixers = {
@@ -110,10 +116,12 @@ static mixer_set spline_mixers = {
 	smix_stereo_8bit_spline,
 	smix_stereo_16bit_spline,
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	smix_mono_8bit_spline_filter,
 	smix_mono_16bit_spline_filter,
 	smix_stereo_8bit_spline_filter,
 	smix_stereo_16bit_spline_filter
+#endif
 };
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
@@ -413,10 +421,12 @@ void mixer_softmixer(struct context_data *ctx)
 					prev_r = prev_l = 0;
 				}
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 				/* "Beautiful Ones" apparently uses 0xfe as
 				 * 'no filter' :\ */
 				if (vi->filter.cutoff >= 0xfe)
 					mixer &= ~FLAG_FILTER;
+#endif
 
 				mix_fn = (*mixers)[mixer];
 
@@ -555,7 +565,9 @@ int mixer_getvoicepos(struct context_data *ctx, int voc)
 void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 {
 	struct player_data *p = &ctx->p;
+#ifndef LIBXMP_CORE_DISABLE_IT
 	struct module_data *m = &ctx->m;
+#endif
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct xmp_sample *xxs;
@@ -586,9 +598,11 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	vi->sptr = xxs->data;
 	vi->fidx |= FLAG_ACTIVE;
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	if (HAS_QUIRK(QUIRK_FILTER) && s->dsp & XMP_DSP_LOWPASS) {
 		vi->fidx |= FLAG_FILTER;
 	}
+#endif
 
 	if (xxs->flg & XMP_SAMPLE_16BIT) {
 		vi->fidx |= FLAG_16_BITS;
@@ -646,6 +660,7 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 
 void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 {
+#ifndef LIBXMP_CORE_DISABLE_IT
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
@@ -666,6 +681,7 @@ void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
 		vi->filter.b1 = val;
 		break;
 	}
+#endif
 }
 
 void mixer_setpan(struct context_data *ctx, int voc, int pan)

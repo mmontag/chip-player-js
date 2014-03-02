@@ -5,14 +5,6 @@
 #include "common.h"
 #include "hio.h"
 
-#ifndef LIBXMP_CORE_PLAYER
-#define NUM_FORMATS 51
-#define NUM_PW_FORMATS 39
-#else
-#define NUM_FORMATS 4
-#define NUM_PW_FORMATS 0
-#endif
-
 struct format_loader {
 	const char *name;
 	int (*const test)(HIO_HANDLE *, char *, const int);
@@ -22,6 +14,10 @@ struct format_loader {
 char **format_list(void);
 
 #ifndef LIBXMP_CORE_PLAYER
+
+#define NUM_FORMATS 51
+#define NUM_PW_FORMATS 39
+
 int pw_test_format(FILE *, char *, const int, struct xmp_test_info *);
 #endif
 

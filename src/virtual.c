@@ -314,6 +314,19 @@ void virt_setsmp(struct context_data *ctx, int chn, int smp)
 
 #endif
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
+void virt_setnna(struct context_data *ctx, int chn, int nna)
+{
+	struct player_data *p = &ctx->p;
+	int voc;
+
+	if ((voc = map_virt_channel(p, chn)) < 0)
+		return;
+
+	p->virt.voice_array[voc].act = nna;
+}
+
 static void check_dct(struct context_data *ctx, int i, int chn, int ins,
 			int smp, int note, int dct, int dca)
 {
@@ -338,11 +351,13 @@ static void check_dct(struct context_data *ctx, int i, int chn, int ins,
 	}
 }
 
+#endif
+
 int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		    			int note, int nna, int dct, int dca)
 {
 	struct player_data *p = &ctx->p;
-	int i, voc, vfree;
+	int voc, vfree;
 
 	if ((uint32)chn >= p->virt.virt_channels)
 		return -1;
@@ -350,10 +365,14 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	if (ins < 0)
 		smp = -1;
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	if (dct) {
+		int i;
+
 		for (i = 0; i < p->virt.maxvoc; i++)
 			check_dct(ctx, i, chn, ins, smp, note, dct, dca);
 	}
+#endif
 
 	voc = p->virt.virt_channel[chn].map;
 
@@ -386,17 +405,6 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	return chn;
 }
 
-void virt_setnna(struct context_data *ctx, int chn, int nna)
-{
-	struct player_data *p = &ctx->p;
-	int voc;
-
-	if ((voc = map_virt_channel(p, chn)) < 0)
-		return;
-
-	p->virt.voice_array[voc].act = nna;
-}
-
 void virt_setbend(struct context_data *ctx, int chn, int bend)
 {
 	struct player_data *p = &ctx->p;
@@ -418,6 +426,8 @@ void virt_voicepos(struct context_data *ctx, int chn, int pos)
 
 	mixer_voicepos(ctx, voc, pos, 0);
 }
+
+#ifndef LIBXMP_CORE_DISABLE_IT
 
 void virt_pastnote(struct context_data *ctx, int chn, int act)
 {
@@ -443,6 +453,8 @@ void virt_pastnote(struct context_data *ctx, int chn, int act)
 		}
 	}
 }
+
+#endif
 
 int virt_cstat(struct context_data *ctx, int chn)
 {

@@ -144,6 +144,8 @@
 #define VAR_SPLINE(x) \
     VAR_NORM(x)
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 #define VAR_FILTER_MONO \
     int fl1 = vi->filter.l1, fl2 = vi->filter.l2; \
     int64 a0 = vi->filter.a0, b0 = vi->filter.b0, b1 = vi->filter.b1; \
@@ -164,6 +166,8 @@
     vi->filter.r1 = fr1; \
     vi->filter.r2 = fr2; \
 } while (0)
+
+#endif
 
 #define SMIX_MIXER(f) void f(struct mixer_voice *vi, int *buffer, \
     int count, int vl, int vr, int step)
@@ -260,6 +264,8 @@ SMIX_MIXER(smix_mono_16bit_nearest)
     while (count--) { NEAREST_NEIGHBOR(); MIX_MONO(); UPDATE_POS(); }
 }
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 /* Handler for 8 bit samples, linear interpolated stereo output
  */
 SMIX_MIXER(smix_stereo_8bit_linear_filter)
@@ -307,6 +313,7 @@ SMIX_MIXER(smix_mono_16bit_linear_filter)
     SAVE_FILTER_MONO();
 }
 
+#endif
 
 /*
  * Spline mixers
@@ -353,6 +360,8 @@ SMIX_MIXER(smix_mono_16bit_spline)
     vl >>= 8;
     while (count--) { SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
 }
+
+#ifndef LIBXMP_CORE_DISABLE_IT
 
 /* Handler for 8 bit samples, spline interpolated stereo output
  */
@@ -404,3 +413,4 @@ SMIX_MIXER(smix_mono_16bit_spline_filter)
     SAVE_FILTER_MONO();
 }
 
+#endif

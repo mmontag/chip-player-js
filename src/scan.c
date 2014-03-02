@@ -287,6 +287,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    bpm = parm;
 		}
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 		if ((f1 == FX_IT_BPM && p1) || (f2 == FX_IT_BPM && p2)) {
 		    parm = (f1 == FX_IT_BPM) ? p1 : p2;
 		    alltmp += cnt_row * speed * base_time;
@@ -306,6 +307,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			bpm = parm;
 		    }
 		}
+#endif
 
 		if (f1 == FX_JUMP || f2 == FX_JUMP) {
 		    ord2 = (f1 == FX_JUMP) ? p1 : p2;

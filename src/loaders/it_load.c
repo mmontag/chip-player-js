@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 #include <time.h>
 #include "loader.h"
 #include "it.h"
@@ -1144,3 +1146,5 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
   err:
     return -1;
 }
+
+#endif /* LIBXMP_CORE_DISABLE_IT */

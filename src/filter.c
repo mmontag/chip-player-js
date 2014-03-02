@@ -23,6 +23,8 @@
  * THE SOFTWARE.
  */
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 #include "xmp.h"
 #include "common.h"
 #include "mixer.h"
@@ -165,3 +167,4 @@ void filter_setup(int srate, int cutoff, int res, int *a0, int *b0, int *b1)
 	*b1 = (int)(fb1 * (1 << FILTER_SHIFT));
 }
 
+#endif

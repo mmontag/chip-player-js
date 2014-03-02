@@ -1,7 +1,8 @@
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 /* Public domain IT sample decompressor by Olivier Lapicque */
 
 #include "loader.h"
-
 
 static inline uint32 read_bits(HIO_HANDLE *ibuf, uint32 *bitbuf, int *bitnum, int n)
 {
@@ -227,3 +228,5 @@ int itsex_decompress16(HIO_HANDLE *src, int16 *dst, int len, int it215)
 
 	return 0;
 }
+
+#endif /* LIBXMP_CORE_DISABLE_IT */

@@ -448,6 +448,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			p->frame_time = m->time_factor * m->rrate / p->bpm;
 		}
 		break;
+
+#ifndef LIBXMP_CORE_DISABLE_IT
 	case FX_IT_BPM:		/* Set IT BPM */
 		if (MSN(fxp) == 0) {	/* T0x - Tempo slide down by x */
 			p->bpm -= LSN(fxp);
@@ -470,6 +472,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			f->rowdelay_set = 1;
 		}
 		break;
+#endif
+
 	case FX_GLOBALVOL:	/* Set global volume */
 		if (fxp > m->gvolbase) {
 			p->gvol = m->gvolbase;
@@ -523,6 +527,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->pan.slide = LSN(fxp) - MSN(fxp);
 		}
 		break;
+
+#ifndef LIBXMP_CORE_DISABLE_IT
 	case FX_IT_PANSLIDE:	/* Pan slide w/ fine pan (IT) */
 		SET(PAN_SLIDE);
 		if (fxp) {
@@ -539,6 +545,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			}
 		}
 		break;
+#endif
+
 	case FX_MULTI_RETRIG:	/* Multi retrig */
 		if (fxp) {
 			xc->retrig.val = fxp;
@@ -573,6 +581,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			break;
 		}
 		break;
+
+#ifndef LIBXMP_CORE_DISABLE_IT
 	case FX_TRK_VOL:	/* Track volume setting */
 		if (fxp <= m->volbase) {
 			xc->mastervol = fxp;
@@ -655,14 +665,12 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_FLT_RESN:
 		xc->filter.resonance = fxp;
 		break;
-#if 0
-	case FX_CHORUS:
-		/* FIXME */
-		m->mod.xxc[chn].cho = fxp;
+	case FX_PANBRELLO:	/* Panbrello */
+		SET(PANBRELLO);
+		SET_LFO_NOTZERO(&xc->panbrello, LSN(fxp) << 4, MSN(fxp));
 		break;
-	case FX_REVERB:
-		/* FIXME */
-		m->mod.xxc[chn].rvb = fxp;
+	case FX_PANBRELLO_WF:	/* Panbrello waveform */
+		set_lfo_waveform(&xc->panbrello, fxp & 3);
 		break;
 #endif
 
@@ -798,13 +806,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		xc->per_flags = 0;
 		break;
 #endif
-	case FX_PANBRELLO:	/* Panbrello */
-		SET(PANBRELLO);
-		SET_LFO_NOTZERO(&xc->panbrello, LSN(fxp) << 4, MSN(fxp));
-		break;
-	case FX_PANBRELLO_WF:	/* Panbrello waveform */
-		set_lfo_waveform(&xc->panbrello, fxp & 3);
-		break;
 	default:
 #ifndef LIBXMP_CORE_PLAYER
 		extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);

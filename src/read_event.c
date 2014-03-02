@@ -610,6 +610,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	return 0;
 }
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -825,6 +827,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	return 0;
 }
 
+#endif
+
 static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -922,8 +926,10 @@ int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 		return read_event_ft2(ctx, e, chn);
 	case READ_EVENT_ST3:
 		return read_event_st3(ctx, e, chn);
+#ifndef LIBXMP_CORE_DISABLE_IT
 	case READ_EVENT_IT:
 		return read_event_it(ctx, e, chn);
+#endif
 	default:
 		return read_event_mod(ctx, e, chn);
 	}
