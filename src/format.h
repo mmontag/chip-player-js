@@ -5,8 +5,13 @@
 #include "common.h"
 #include "hio.h"
 
+#ifndef LIBXMP_CORE_PLAYER
 #define NUM_FORMATS 51
 #define NUM_PW_FORMATS 39
+#else
+#define NUM_FORMATS 4
+#define NUM_PW_FORMATS 0
+#endif
 
 struct format_loader {
 	const char *name;
