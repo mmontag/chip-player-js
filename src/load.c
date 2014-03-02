@@ -34,15 +34,14 @@
 #include <limits.h>
 #endif
 
-#if !defined(HAVE_POPEN) && defined(WIN32)
-#include "../win32/ptpopen.h"
-#endif
-
 #include "format.h"
 #include "list.h"
 #include "hio.h"
 
 #ifndef LIBXMP_CORE_PLAYER
+#if !defined(HAVE_POPEN) && defined(WIN32)
+#include "../win32/ptpopen.h"
+#endif
 #include "md5.h"
 #include "extras.h"
 #endif
