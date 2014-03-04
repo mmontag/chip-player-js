@@ -1,5 +1,4 @@
 LOCAL_PATH	:= $(call my-dir)/..
-#LOCAL_ARM_MODE	:= arm
 
 include $(CLEAR_VARS)
 
@@ -16,10 +15,9 @@ DEPACKERS_SOURCES := $(addprefix src/depackers/,$(DEPACKERS_OBJS))
 LOCAL_MODULE    := xmp
 LOCAL_CFLAGS	:= -O3 -DHAVE_MKSTEMP -DHAVE_FNMATCH -I$(LOCAL_PATH)/include \
 		   -I$(LOCAL_PATH)/src
-LOCAL_LDLIBS	:= -Lbuild/platforms/android-3/arch-arm/usr/lib -llog
 LOCAL_SRC_FILES := $(SRC_SOURCES:.o=.c.arm) \
 		   $(LOADERS_SOURCES:.o=.c) \
 		   $(PROWIZ_SOURCES:.o=.c) \
 		   $(DEPACKERS_SOURCES:.o=.c)
 
-include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_STATIC_LIBRARY)

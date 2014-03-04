@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.3.0 ():
+	- generate NDK static libraries to link with libxmp-jni
+
 4.2.5 (20140302):
 	- fix Oktalyzer sample numbering (reported by Andreas Argirakis)
 	- fix XM delay effect with invalid instrument
