@@ -1,0 +1,19 @@
+CC	= cl
+CFLAGS	= /O2 /Iinclude\coremod /Isrc /DBUILDING_DLL /DWIN32 /Dinline=__inline \
+	  /D_USE_MATH_DEFINES /DLIBXMP_CORE_PLAYER
+LD	= link
+LDFLAGS	= /DLL /RELEASE /OUT:$(DLL)
+DLL	= libxmp-coremod.dll
+
+OBJS	= @OBJS@
+
+.c.obj:
+	$(CC) /c $(CFLAGS) /Fo$*.obj $<
+
+all: $(DLL)
+
+$(DLL): $(OBJS)
+	$(LD) $(LDFLAGS) $(OBJS)
+
+clean:
+	del $(OBJS) $(DLL) *.lib *.exp
