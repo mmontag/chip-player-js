@@ -383,7 +383,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		struct xmp_sample *xxs;
 
 		if (hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET) != 0)
-		  return -1;
+			return -1;
 		smpl_offset = hio_read32b(f);
 
 		D_(D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
@@ -474,15 +474,17 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		xxs->lpe = xxs->lps + 2 * song.sample[i].replen;
 		xxs->flg = 0;
 
-		if (song.sample[i].replen > 1)
+		if (song.sample[i].replen > 1) {
 			xxs->flg |= XMP_SAMPLE_LOOP;
+		}
 
 		D_(D_INFO "  %05x %05x %05x %02x %+3d %+1d",
 				xxs->len, xxs->lps, xxs->lpe,
 				sub->vol, sub->xpo, sub->fin >> 4);
 
 		if (hio_seek(f, start + smpl_offset + 6, SEEK_SET) != 0)
-		  return -1;
+			return -1;
+		
 		if (load_sample(m, f, 0, xxs, NULL) < 0)
 			return -1;
 
