@@ -1,8 +1,13 @@
 Stable versions
 ---------------
 
-4.3.0 ():
-	- generate NDK static libraries to link with libxmp-jni
+4.2.6 ():
+	- fix volume in MED synth instruments (reported by Andreas Argirakis)
+	- fix OctaMED V5 sample transpose (reported by Andreas Argirakis)
+	- fix double free in module loaded from memory (by Arnaud Troël)
+	- fix old Soundtracker sample loops (reported by Dennis Lindroos)
+	- fix Win64 portability issues (reported by Ozkan Sezer)
+	- generate NDK static libraries
 
 4.2.5 (20140302):
 	- fix Oktalyzer sample numbering (reported by Andreas Argirakis)
