@@ -448,6 +448,9 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		sub->vol = song.sample[i].svol;
 		sub->pan = 0x80;
 		sub->xpo = song.sample[i].strans;
+		if (expdata.s_ext_entrsz > 4) {	/* Octamed V5 */
+			sub->xpo += 24 + exp_smp.default_pitch;
+		}
 		sub->sid = smp_idx;
 		sub->fin = exp_smp.finetune << 4;
 
