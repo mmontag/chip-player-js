@@ -29,6 +29,9 @@
 #ifdef HAVE_ALLOCA_H
 #include <alloca.h>
 #endif
+#ifdef WIN32
+#include <malloc.h>
+#endif
 
 #include "vorbis.h"
 
