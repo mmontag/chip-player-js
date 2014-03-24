@@ -672,8 +672,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				sub = &xxi->sub[j];
 
 				sub->pan = 0x80;
-				sub->vol = temp_inst[i].volume;
-				sub->xpo = temp_inst[i].transpose - 24;
+				sub->vol = 64;
+				sub->xpo = -24;
 				sub->sid = smp_idx;
 				sub->fin = 0 /*exp_smp.finetune*/;
 
