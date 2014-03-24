@@ -226,22 +226,28 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi = &mod->xxi[i];
+	struct xmp_sample *xxs = &mod->xxs[i];
+	struct xmp_subinstrument *sub;
+
 	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
-	mod->xxs[i].len = 2 * mh.ins[i].size;
-	mod->xxs[i].lps = mh.ins[i].loop_start;
-	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
-	mod->xxs[i].flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
-	mod->xxi[i].sub[0].vol = mh.ins[i].volume;
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
-	strncpy((char *)mod->xxi[i].name, (char *)mh.ins[i].name, 22);
-	adjust_string((char *)mod->xxi[i].name);
+	sub = &xxi->sub[0];
 
-	if (mod->xxs[i].len > 0)
-		mod->xxi[i].nsm = 1;
+	xxs->len = 2 * mh.ins[i].size - mh.ins[i].loop_start;
+	xxs->lps = 0;
+	xxs->lpe = xxs->lps + 2 * mh.ins[i].loop_size;
+	xxs->flg = mh.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+	sub->fin = (int8)(mh.ins[i].finetune << 4);
+	sub->vol = mh.ins[i].volume;
+	sub->pan = 0x80;
+	sub->sid = i;
+	strncpy((char *)xxi->name, (char *)mh.ins[i].name, 22);
+	adjust_string((char *)xxi->name);
+
+	if (xxs->len > 0)
+		xxi->nsm = 1;
     }
 
     mod->trk = mod->chn * mod->pat;
@@ -369,7 +375,21 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	if (load_sample(m, f, SAMPLE_FLAG_FULLREP, &mod->xxs[i], NULL) < 0) {
+
+	/* Skip transient part of sample.
+	 *
+	 * Dennis Lindroos <denafcm@gmail.com> reports: One main thing is
+	 * sample-looping which on all trackers up to Noisetracker 1 (i
+	 * think it was Mahoney who actually changed the loopstart to be
+	 * in WORDS) never play looped samples from the beginning, i.e. only
+	 * plays the looped part. This can be heard in old modules especially
+	 * with "analogstring", "strings2" or "strings3" samples because
+	 * these have "slow attack" that is not part of the loop and thus
+	 * they sound "sharper"..
+	 */
+	hio_seek(f, mh.ins[i].loop_start, SEEK_CUR);
+
+	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0) {
 	    return -1;
 	}
     }
