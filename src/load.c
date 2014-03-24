@@ -687,12 +687,13 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	if ((h = hio_open_mem(mem, size)) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
-	m->filename = NULL;
-	m->basename = NULL;
-	m->size = 0;
-
 	if (ctx->state > XMP_STATE_UNLOADED)
 		xmp_release_module(opaque);
+
+	m->filename = NULL;
+	m->basename = NULL;
+	m->dirname = NULL;
+	m->size = 0;
 
 	return load_module(opaque, h, NULL);
 }
