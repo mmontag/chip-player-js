@@ -40,7 +40,7 @@ extern "C" {
 #define XMP_FORMAT_UNSIGNED	(1 << 1) /* Mix to unsigned samples */
 #define XMP_FORMAT_MONO		(1 << 2) /* Mix to mono instead of stereo */
 
-/* mixer paramters for xmp_set_player() */
+/* player parameters */
 #define XMP_PLAYER_AMP		0	/* Amplification factor */
 #define XMP_PLAYER_MIX		1	/* Stereo mixing */
 #define XMP_PLAYER_INTERP	2	/* Interpolation type */
