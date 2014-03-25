@@ -35,9 +35,6 @@
 
 #include "vorbis.h"
 
-#ifdef WIN32
-#define alloca _alloca
-#endif
 
 #ifndef STB_VORBIS_HEADER_ONLY
 
