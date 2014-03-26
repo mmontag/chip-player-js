@@ -741,7 +741,11 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 
 	/* Do cut/retrig */
 	if (TEST(RETRIG)) {
-		if (--xc->retrig.count <= 0) {
+		int cond = HAS_QUIRK(QUIRK_S3MRTG) ?
+				--xc->retrig.count <= 0 :
+				--xc->retrig.count == 0;
+
+		if (cond) {
 			if (xc->retrig.type < 0x10) {
 				/* don't retrig on cut */
 				virt_voicepos(ctx, chn, 0);

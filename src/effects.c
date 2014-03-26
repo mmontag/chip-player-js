@@ -361,9 +361,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			break;
 		case EX_RETRIG:		/* Retrig note */
 			SET(RETRIG);
-			if (fxp != 0) {
-				xc->retrig.val = fxp;
-			}
+			xc->retrig.val = fxp;
 			xc->retrig.count = LSN(xc->retrig.val) + 1;
 			xc->retrig.type = 0;
 			break;
