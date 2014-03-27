@@ -488,13 +488,19 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     /* See MMD1 loader for explanation */
-    if (!strncmp(tracker_name, "MED2XM by J.Pynnone", 19))
+    if (!strncmp(tracker_name, "MED2XM by J.Pynnone", 19)) {
 	if (mod->bpm <= 10)
 	    mod->bpm = 125 * (0x35 - mod->bpm * 2) / 33;
+    }
 
-    if (!strncmp(tracker_name, "FastTracker v 2.00", 18))
+    if (!strncmp(tracker_name, "FastTracker v 2.00", 18)) {
 	strcpy(tracker_name, "old ModPlug Tracker");
+    }
 
+    if (!strncmp(tracker_name, "MilkyTracker", 12)) {
+	m->quirk |= QUIRK_MLKDLY;
+    }
+	
     set_type(m, "%s XM %d.%02d", tracker_name,
 				xfh.version >> 8, xfh.version & 0xff);
 #else

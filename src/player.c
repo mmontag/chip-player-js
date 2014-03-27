@@ -180,13 +180,14 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
     do_delay:
 	memcpy(&xc->delayed_event, e, sizeof (struct xmp_event));
 
-	if (e->ins)
+	if (e->ins) {
 		xc->delayed_ins = e->ins;
+	}
 
 	if (HAS_QUIRK(QUIRK_RTDELAY)) {
 		if (e->note == 0)
 			xc->delayed_event.note = xc->key + 1;
-		if (e->ins == 0)
+		if (e->ins == 0 && !HAS_QUIRK(QUIRK_MLKDLY))
 			xc->delayed_event.ins = xc->old_ins;
 	}
 
@@ -767,7 +768,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 
 	/* Do keyoff */
 	if (xc->keyoff) {
-		if (!--xc->keyoff)
+		if (--xc->keyoff == 0)
 			SET_NOTE(NOTE_RELEASE);
 	}
 

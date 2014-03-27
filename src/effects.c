@@ -509,7 +509,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 	case FX_KEYOFF:		/* Key off */
-		xc->keyoff = fxp;
+		xc->keyoff = fxp + 1;
 		break;
 	case FX_ENVPOS:		/* Set envelope position */
 		/* FIXME: Add OpenMPT quirk */
