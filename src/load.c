@@ -42,7 +42,7 @@
 
 #ifndef LIBXMP_CORE_PLAYER
 #if !defined(HAVE_POPEN) && defined(WIN32)
-#include "../win32/ptpopen.h"
+#include "win32/ptpopen.h"
 #endif
 #include "md5.h"
 #include "extras.h"

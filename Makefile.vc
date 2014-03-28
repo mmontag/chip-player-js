@@ -1,6 +1,6 @@
 CC	= cl
-CFLAGS	= /O2 /Iinclude /Isrc /DBUILDING_DLL /DWIN32 /Dinline=__inline \
-	  /D_USE_MATH_DEFINES
+CFLAGS	= /O2 /Iinclude /Isrc /Isrc\\win32 /DBUILDING_DLL /DWIN32 \
+	  /Dinline=__inline /D_USE_MATH_DEFINES
 LD	= link
 LDFLAGS	= /DLL /RELEASE /OUT:$(DLL)
 DLL	= libxmp.dll
