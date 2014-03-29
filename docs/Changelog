@@ -2,11 +2,16 @@ Stable versions
 ---------------
 
 4.2.6 ():
-	- fix volume in MED synth instruments (reported by Andreas Argirakis)
-	- fix OctaMED V5 sample transpose (reported by Andreas Argirakis)
+	Fix bugs reported by Andreas Argirakis:
+	- add OctaMED IFFOCT sample loader
+	- fix volume in MED synth instruments
+	- fix OctaMED V5 MMD2 sample transpose
+	- fix OctaMED 3 octave limit for sampled instruments
+	Other changes:
 	- fix double free in module loaded from memory (by Arnaud Troël)
 	- fix old Soundtracker sample loops (reported by Dennis Lindroos)
 	- fix Win64 portability issues (reported by Ozkan Sezer)
+	- fix Visual C++ nmake build issues
 	- generate NDK static libraries
 
 4.2.5 (20140302):
