@@ -488,31 +488,6 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 	}
 
-	/*
-	 * Adjust event note data in patterns
-	 */
-
-	/* Restrict non-synth instruments to 3 octave range.
-	 * Checked in MMD0 with med.egypian/med.medieval from Lemmings 2
-	 * and MED.ParasolStars, MMD1 with med.Lemmings2
-	 */
-	for (i = 0; i < mod->pat; i++) {
-		for (j = 0; j < mod->xxp[i]->rows; j++) {
-			for (k = 0; k < mod->chn; k++) {
-				event = &EVENT(i, k, j);
-
-				if (!event->note || !event->ins)
-					continue;
-
-				/* Not a synth instrument */
-				if (!MED_MODULE_EXTRAS(*m)->wav_table[event->ins - 1]) {
-					while (event->note > (48 + 36))
-						event->note -= 12;
-				}
-			}
-		}
-	}
-
 	for (i = 0; i < mod->chn; i++) {
 		mod->xxc[i].vol = song.trkvol[i];
 		mod->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;

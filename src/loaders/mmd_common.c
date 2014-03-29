@@ -458,14 +458,16 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 			struct MMD0sample *sample, int ver)
 {
 	struct xmp_module *mod = &m->mod;
+	struct xmp_instrument *xxi = &mod->xxi[i];
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
+	int j, k;
 
-	mod->xxi[i].nsm = 1;
+	xxi->nsm = 1;
 	if (subinstrument_alloc(mod, i, 1) < 0)
 		return -1;
 
-	sub = &mod->xxi[i].sub[0];
+	sub = &xxi->sub[0];
 
 	sub->vol = sample->svol;
 	sub->pan = 0x80;
@@ -504,11 +506,22 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	 * usage for both samples is length * 2 bytes.
 	 */
 
-	D_(D_INFO "  %05x%c%05x %05x %02x %+3d %+1d ",
-			xxs->len,
-			xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-			xxs->lps, xxs->lpe,
-			sub->vol, sub->xpo, sub->fin >> 4);
+        /* Restrict sampled instruments to 3 octave range.
+         * Checked in MMD0 with med.egypian/med.medieval from Lemmings 2
+         * and MED.ParasolStars, MMD1 with med.Lemmings2
+         */
+	for (j = 0; j < 9; j++) {
+		for (k = 0; k < 12; k++) {
+			int xpo = 0;
+
+			if (j <= 3)
+				xpo = 12 * (4 - j);
+			else if (j >= 7)
+				xpo = -12 * (j - 6);
+
+			xxi->map[12 * j + k].xpo = xpo;
+		}
+	}
 
 	if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
 		return -1;
@@ -537,7 +550,7 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	replen = 2 * sample->replen;
 
 	for (j = 0; j < num_oct; j++) {
-		int octave = 2 + num_oct - j;
+		int octave = 3 + num_oct - j;
 		int k;
 	
 		sub = &xxi->sub[j];
@@ -566,7 +579,7 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		/* instrument mapping */
 		for (k = 0; k < 12; k++) {
 			xxi->map[12 * octave + k].ins = j;
-			xxi->map[12 * octave + k].xpo = 12 * (1 - j);
+			xxi->map[12 * octave + k].xpo = 12 * (j - 3);
 		}
 
 		smp_idx++;
