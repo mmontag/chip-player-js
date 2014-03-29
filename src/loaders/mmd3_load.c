@@ -356,8 +356,6 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (smp_idx = i = 0; i < mod->ins; i++) {
 		int smpl_offset;
 		char name[40] = "";
-		struct xmp_subinstrument *sub;
-		struct xmp_sample *xxs;
 
 		hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET);
 		smpl_offset = hio_read32b(f);
@@ -398,12 +396,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, pos, SEEK_SET);
 
 		if (instr.type == -2) {			/* Hybrid */
-			int ret;
-
-			if (subinstrument_alloc(mod, i, 1) < 0)
-				return -1;
-
-			ret = mmd_load_hybrid_instrument(f, m, i,
+			int ret = mmd_load_hybrid_instrument(f, m, i,
 				smp_idx, &synth, &exp_smp, &song.sample[i]);
 
 			if (ret < 0)
@@ -435,65 +428,22 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 		}
 
+		/* Filter out stereo samples */
 		if ((instr.type & ~(S_16 | STEREO)) != 0)
 			continue;
 
-		/* instr type is sample */
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i, 1) < 0)
-			return -1;
+		if (instr.type == 0) {			/* Sample */
+			int ret = mmd_load_sampled_instrument(f, m, i, smp_idx,
+				&instr, &expdata, &exp_smp, &song.sample[i],
+				ver, start, smpl_offset);
 
-		sub = &mod->xxi[i].sub[0];
+			if (ret < 0)
+				return -1;
 
-		sub->vol = song.sample[i].svol;
-		sub->pan = 0x80;
-		sub->xpo = song.sample[i].strans;
-		if (expdata.s_ext_entrsz > 4) {	/* Octamed V5 */
-			sub->xpo += exp_smp.default_pitch;
-			if (ver == 2) {
-				sub->xpo += 24;		/* ??!? */
-			}
+			smp_idx++;
+
+			continue;
 		}
-		sub->sid = smp_idx;
-		sub->fin = exp_smp.finetune << 4;
-
-		xxs = &mod->xxs[smp_idx];
-
-		xxs->len = instr.length;
-		xxs->lps = 2 * song.sample[i].rep;
-		xxs->lpe = xxs->lps + 2 * song.sample[i].replen;
-		xxs->flg = 0;
-
-		if (song.sample[i].replen > 1) {
-			xxs->flg |= XMP_SAMPLE_LOOP;
-		}
-
-		if (instr.type & S_16) {
-			xxs->flg |= XMP_SAMPLE_16BIT;
-			xxs->len >>= 1;
-			xxs->lps >>= 1;
-			xxs->lpe >>= 1;
-		}
-
-		/* STEREO means that this is a stereo sample. The sample
-		 * is not interleaved. The left channel comes first,
-		 * followed by the right channel. Important: Length
-		 * specifies the size of one channel only! The actual memory
-		 * usage for both samples is length * 2 bytes.
-		 */
-
-		D_(D_INFO "  %05x%c%05x %05x %02x %+3d %+1d ",
-				xxs->len,
-				xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-				xxs->lps, xxs->lpe,
-				sub->vol, sub->xpo, sub->fin >> 4);
-
-		hio_seek(f, start + smpl_offset + 6, SEEK_SET);
-		if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
-			return -1;
-		}
-
-		smp_idx++;
 	}
 
 	hio_seek(f, start + trackvols_offset, SEEK_SET);

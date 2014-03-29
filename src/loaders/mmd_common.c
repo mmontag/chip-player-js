@@ -452,6 +452,81 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	return 0;
 }
 
+int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
+			int smp_idx, struct InstrHdr *instr,
+			struct MMD0exp *expdata, struct InstrExt *exp_smp,
+			struct MMD0sample *sample, int ver, int start,
+			int smpl_offset)
+{
+	struct xmp_module *mod = &m->mod;
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs;
+
+	mod->xxi[i].nsm = 1;
+	if (subinstrument_alloc(mod, i, 1) < 0)
+		return -1;
+
+	sub = &mod->xxi[i].sub[0];
+
+	sub->vol = sample->svol;
+	sub->pan = 0x80;
+	sub->xpo = sample->strans;
+	if (ver >= 2 && expdata->s_ext_entrsz > 4) {	/* MMD2+ */
+		sub->xpo += exp_smp->default_pitch;
+		if (ver == 2) {
+			sub->xpo += 24;			/* ??!? */
+		}
+	}
+	sub->sid = smp_idx;
+	sub->fin = exp_smp->finetune << 4;
+
+	xxs = &mod->xxs[smp_idx];
+
+	xxs->len = instr->length;
+	xxs->lps = 2 * sample->rep;
+	xxs->lpe = xxs->lps + 2 * sample->replen;
+	xxs->flg = 0;
+
+	if (sample->replen > 1) {
+		xxs->flg |= XMP_SAMPLE_LOOP;
+	}
+
+	if (instr->type & S_16) {
+		xxs->flg |= XMP_SAMPLE_16BIT;
+		xxs->len >>= 1;
+		xxs->lps >>= 1;
+		xxs->lpe >>= 1;
+	}
+
+	/* STEREO means that this is a stereo sample. The sample
+	 * is not interleaved. The left channel comes first,
+	 * followed by the right channel. Important: Length
+	 * specifies the size of one channel only! The actual memory
+	 * usage for both samples is length * 2 bytes.
+	 */
+
+	D_(D_INFO "  %05x%c%05x %05x %02x %+3d %+1d ",
+			xxs->len,
+			xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+			xxs->lps, xxs->lpe,
+			sub->vol, sub->xpo, sub->fin >> 4);
+
+	hio_seek(f, start + smpl_offset + 6, SEEK_SET);
+	if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+void mdd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
+			int smp_idx, int num_oct, struct InstrExt *exp_smp,
+			struct MMD0sample *sample)
+{
+	int size = 0;
+}
+
+
 void mmd_set_bpm(struct module_data *m, int med_8ch, int deftempo,
 						int bpm_on, int bpmlen)
 {

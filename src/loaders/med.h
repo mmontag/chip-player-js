@@ -314,6 +314,9 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *, struct module_data *m, int, int,
 		struct SynthInstr *, struct InstrExt *, struct MMD0sample *);
 int mmd_load_synth_instrument(HIO_HANDLE *, struct module_data *m, int, int,
 		struct SynthInstr *, struct InstrExt *, struct MMD0sample *);
+int mmd_load_sampled_instrument(HIO_HANDLE *, struct module_data *, int, int,
+		struct InstrHdr *, struct MMD0exp *, struct InstrExt *,
+		struct MMD0sample *, int, int, int);
 
 void mmd_set_bpm(struct module_data *, int, int, int, int);
 

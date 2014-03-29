@@ -379,8 +379,6 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (smp_idx = i = 0; i < mod->ins; i++) {
 		int smpl_offset;
 		char name[40] = "";
-		struct xmp_subinstrument *sub;
-		struct xmp_sample *xxs;
 
 		if (hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET) != 0)
 			return -1;
@@ -451,9 +449,20 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 		}
 
-		if (instr.type != 0)
-			continue;
+		if (instr.type == 0) {			/* Sample */
+			int ret = mmd_load_sampled_instrument(f, m, i, smp_idx,
+				&instr, &expdata, &exp_smp, &song.sample[i],
+				ver, start, smpl_offset);
 
+			if (ret < 0)
+				return -1;
+
+			smp_idx++;
+
+			continue;
+		}
+
+#if 0
 		/* instr type is sample */
 		mod->xxi[i].nsm = 1;
 		if (subinstrument_alloc(mod, i, 1) < 0)
@@ -489,6 +498,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 
 		smp_idx++;
+#endif
 	}
 
 	/*
