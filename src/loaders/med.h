@@ -1,5 +1,5 @@
-#ifndef XMP_MED_H
-#define XMP_MED_H
+#ifndef LIBXMP_MED_H
+#define LIBXMP_MED_H
 
 #include "common.h"
 #include "hio.h"
@@ -310,14 +310,16 @@ struct MMDDump {
 void mmd_xlat_fx(struct xmp_event *, int, int, int);
 int mmd_alloc_tables(struct module_data *, int, struct SynthInstr *);
 
-int mmd_load_hybrid_instrument(HIO_HANDLE *, struct module_data *m, int, int,
+int mmd_load_hybrid_instrument(HIO_HANDLE *, struct module_data *, int, int,
 		struct SynthInstr *, struct InstrExt *, struct MMD0sample *);
-int mmd_load_synth_instrument(HIO_HANDLE *, struct module_data *m, int, int,
+int mmd_load_synth_instrument(HIO_HANDLE *, struct module_data *, int, int,
 		struct SynthInstr *, struct InstrExt *, struct MMD0sample *);
 int mmd_load_sampled_instrument(HIO_HANDLE *, struct module_data *, int, int,
 		struct InstrHdr *, struct MMD0exp *, struct InstrExt *,
-		struct MMD0sample *, int, int, int);
+		struct MMD0sample *, int);
+int mmd_load_iffoct_instrument(HIO_HANDLE *, struct module_data *, int, int,
+		struct InstrHdr *, int, struct InstrExt *, struct MMD0sample *);
 
 void mmd_set_bpm(struct module_data *, int, int, int, int);
 
-#endif /* XMP_MED_H */
+#endif /* LIBXMP_MED_H */

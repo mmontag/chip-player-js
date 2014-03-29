@@ -455,8 +455,7 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 			int smp_idx, struct InstrHdr *instr,
 			struct MMD0exp *expdata, struct InstrExt *exp_smp,
-			struct MMD0sample *sample, int ver, int start,
-			int smpl_offset)
+			struct MMD0sample *sample, int ver)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_subinstrument *sub;
@@ -511,7 +510,6 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 			xxs->lps, xxs->lpe,
 			sub->vol, sub->xpo, sub->fin >> 4);
 
-	hio_seek(f, start + smpl_offset + 6, SEEK_SET);
 	if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
 		return -1;
 	}
@@ -519,11 +517,65 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	return 0;
 }
 
-void mdd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
-			int smp_idx, int num_oct, struct InstrExt *exp_smp,
-			struct MMD0sample *sample)
+int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
+			int smp_idx, struct InstrHdr *instr, int num_oct,
+			struct InstrExt *exp_smp, struct MMD0sample *sample)
 {
-	int size = 0;
+	struct xmp_module *mod = &m->mod;
+	struct xmp_instrument *xxi = &mod->xxi[i];
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs;
+	int size, rep, replen, j;
+
+	xxi->nsm = num_oct;
+	if (subinstrument_alloc(mod, i, num_oct) < 0)
+		return -1;
+
+	/* base octave size */
+	size = instr->length / ((1 << num_oct) - 1);
+	rep = 2 * sample->rep;
+	replen = 2 * sample->replen;
+
+	for (j = 0; j < num_oct; j++) {
+		int octave = 2 + num_oct - j;
+		int k;
+	
+		sub = &xxi->sub[j];
+	
+		sub->vol = sample->svol;
+		sub->pan = 0x80;
+		sub->xpo = sample->strans;
+		sub->sid = smp_idx;
+		sub->fin = exp_smp->finetune << 4;
+	
+		xxs = &mod->xxs[smp_idx];
+	
+		xxs->len = size;
+		xxs->lps = rep;
+		xxs->lpe = rep + replen;
+		xxs->flg = 0;
+	
+		if (sample->replen > 1) {
+			xxs->flg |= XMP_SAMPLE_LOOP;
+		}
+	
+		if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
+			return -1;
+		}
+
+		/* instrument mapping */
+		for (k = 0; k < 12; k++) {
+			xxi->map[12 * octave + k].ins = j;
+			xxi->map[12 * octave + k].xpo = 12 * (1 - j);
+		}
+
+		smp_idx++;
+		size <<= 1;
+		rep <<= 1;
+		replen <<= 1;
+	}
+
+	return 0;
 }
 
 

@@ -64,6 +64,8 @@ static int mmd1_test(HIO_HANDLE *f, char *t, const int start)
 	return 0;
 }
 
+/* Number of octaves in IFFOCT samples */
+static const int num_oct[6] = { 5, 3, 2, 4, 6, 7 };
 
 static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
@@ -190,6 +192,8 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (type == -1) {			/* type is synth? */
 			hio_seek(f, 14, SEEK_CUR);
 			mod->smp += hio_read16b(f);		/* wforms */
+		} else if (type >= 1 && type <= 6) {
+			mod->smp += num_oct[type - 1];
 		} else {
 			mod->smp++;
 		}
@@ -449,10 +453,31 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 		}
 
+		if (instr.type >= 1 && instr.type <= 6) {	/* IFFOCT */
+			int ret;
+			const int oct = num_oct[instr.type - 1];
+
+			hio_seek(f, start + smpl_offset + 6, SEEK_SET);
+
+			ret = mmd_load_iffoct_instrument(f, m, i, smp_idx,
+				&instr, oct, &exp_smp, &song.sample[i]);
+
+			if (ret < 0)
+				return -1;
+
+			smp_idx += oct;
+
+			continue;
+		}
+
 		if (instr.type == 0) {			/* Sample */
-			int ret = mmd_load_sampled_instrument(f, m, i, smp_idx,
+			int ret;
+
+			hio_seek(f, start + smpl_offset + 6, SEEK_SET);
+
+			ret = mmd_load_sampled_instrument(f, m, i, smp_idx,
 				&instr, &expdata, &exp_smp, &song.sample[i],
-				ver, start, smpl_offset);
+				ver);
 
 			if (ret < 0)
 				return -1;
@@ -461,44 +486,6 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			continue;
 		}
-
-#if 0
-		/* instr type is sample */
-		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i, 1) < 0)
-			return -1;
-
-		sub = &mod->xxi[i].sub[0];
-
-		sub->vol = song.sample[i].svol;
-		sub->pan = 0x80;
-		sub->xpo = song.sample[i].strans;
-		sub->sid = smp_idx;
-		sub->fin = exp_smp.finetune << 4;
-
-		xxs = &mod->xxs[smp_idx];
-
-		xxs->len = instr.length;
-		xxs->lps = 2 * song.sample[i].rep;
-		xxs->lpe = xxs->lps + 2 * song.sample[i].replen;
-		xxs->flg = 0;
-
-		if (song.sample[i].replen > 1) {
-			xxs->flg |= XMP_SAMPLE_LOOP;
-		}
-
-		D_(D_INFO "  %05x %05x %05x %02x %+3d %+1d",
-				xxs->len, xxs->lps, xxs->lpe,
-				sub->vol, sub->xpo, sub->fin >> 4);
-
-		if (hio_seek(f, start + smpl_offset + 6, SEEK_SET) != 0)
-			return -1;
-		
-		if (load_sample(m, f, 0, xxs, NULL) < 0)
-			return -1;
-
-		smp_idx++;
-#endif
 	}
 
 	/*

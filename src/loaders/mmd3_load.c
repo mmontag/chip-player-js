@@ -433,9 +433,13 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 
 		if (instr.type == 0) {			/* Sample */
-			int ret = mmd_load_sampled_instrument(f, m, i, smp_idx,
+			int ret;
+
+			hio_seek(f, start + smpl_offset + 6, SEEK_SET);
+
+			ret = mmd_load_sampled_instrument(f, m, i, smp_idx,
 				&instr, &expdata, &exp_smp, &song.sample[i],
-				ver, start, smpl_offset);
+				ver);
 
 			if (ret < 0)
 				return -1;
