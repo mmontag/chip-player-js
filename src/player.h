@@ -50,6 +50,7 @@ struct retrig_control {
 #define RETRIG		(1 << 18)
 #define PANBRELLO	(1 << 19)
 #define GVOL_SLIDE	(1 << 20)
+#define TEMPO_SLIDE	(1 << 21)
 
 #define NOTE_FADEOUT	(1 << 0)
 #define NOTE_RELEASE	(1 << 1)
@@ -163,6 +164,10 @@ struct channel_data {
 		int speed;	/* PTM note slide speed */
 		int count;	/* PTM note slide counter */
 	} noteslide;
+
+	struct {
+		int slide;	/* IT tempo slide */
+	} tempo;
 
 	struct {
 		int speed;

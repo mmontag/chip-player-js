@@ -230,16 +230,18 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			    } else if (h == 0xf && l != 0) {
 				gvl -= l;
 			    } else {
-		                if (m->quirk & QUIRK_VSALL)
+		                if (m->quirk & QUIRK_VSALL) {
                                     gvl += (h - l) * speed;
-				else
+				} else {
                                     gvl += (h - l) * (speed - 1);
+				}
 			    }
 			} else {
-		            if (m->quirk & QUIRK_VSALL)
+		            if (m->quirk & QUIRK_VSALL) {
                                 gvl += (h - l) * speed;
-			    else
+			    } else {
                                 gvl += (h - l) * (speed - 1);
+			    }
 			}
 		    } else {
                         if ((parm = gvol_memory) != 0)
@@ -252,9 +254,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    alltmp += cnt_row * speed * base_time;
 		    cnt_row = 0;
 		    if (parm) {
-			if (p->flags & XMP_FLAGS_VBLANK || parm < 0x20)
+			if (p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
 			    speed = parm;
-			else {
+			} else {
 			    clock += m->time_factor * alltmp / bpm;
 			    alltmp = 0;
 			    bpm = parm;
@@ -296,11 +298,11 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    alltmp = 0;
 
 		    if (MSN(parm) == 0) {
-			bpm -= LSN(parm);
+			bpm -= LSN(parm) * (speed - 1);	// approx
 			if (bpm < 0x20)
 			    bpm = 0x20;
 		    } else if (MSN(parm) == 1) {
-			bpm += LSN(parm);
+			bpm += LSN(parm) * (speed - 1);
 			if (bpm > 0xff)
 			    bpm = 0xff;
 		    } else {

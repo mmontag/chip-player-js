@@ -450,13 +450,11 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 #ifndef LIBXMP_CORE_DISABLE_IT
 	case FX_IT_BPM:		/* Set IT BPM */
 		if (MSN(fxp) == 0) {	/* T0x - Tempo slide down by x */
-			p->bpm -= LSN(fxp);
-			if (p->bpm < 0x20)
-				p->bpm = 0x20;
+			SET(TEMPO_SLIDE);
+			xc->tempo.slide = -LSN(fxp);
 		} else if (MSN(fxp) == 1) {	/* T1x - Tempo slide up by x */
-			p->bpm += LSN(fxp);
-			if ((int32) p->bpm > 0xff)
-				p->bpm = 0xff;
+			SET(TEMPO_SLIDE);
+			xc->tempo.slide = LSN(fxp);
 		} else {
 			if (fxp < XMP_MIN_BPM)
 				fxp = XMP_MIN_BPM;

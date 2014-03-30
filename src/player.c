@@ -712,6 +712,12 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 
 	xc->info_finalvol = 0;
 
+	/* IT tempo slide */
+	if (TEST(TEMPO_SLIDE) && p->frame) {
+		p->bpm += xc->tempo.slide;
+		CLAMP(p->bpm, 0x20, 0xff);
+	}
+
 	/* Do delay */
 	if (xc->delay > 0) {
 		if (--xc->delay == 0) {
@@ -847,8 +853,9 @@ static void next_order(struct context_data *ctx)
 	/* Reset persistent effects at new pattern */
 	if (HAS_QUIRK(QUIRK_PERPAT)) {
 		int chn;
-		for (chn = 0; chn < mod->chn; chn++)
+		for (chn = 0; chn < mod->chn; chn++) {
 			p->xc_data[chn].per_flags = 0;
+		}
 	}
 #endif
 }

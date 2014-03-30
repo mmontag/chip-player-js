@@ -3,9 +3,9 @@
 
 static int vals[] = {
 	80, 80, 80,	/* set tempo */
-	78, 78, 78,	/* slide down 2 */
-	79, 79, 79,	/* slide up 2 */
-	79, 79, 79,	/* nothing */
+	80, 78, 76,	/* slide down 2 */
+	76, 77, 78,	/* slide up 1 */
+	78, 78, 78,	/* nothing */
 	32, 32, 32,	/* set as 0x20 */
 	32, 32, 32,	/* slide down */
 	255, 255, 255,	/* set as 0xff */
@@ -36,10 +36,12 @@ TEST(test_effect_it_bpm)
 
 	xmp_start_player(opaque, 44100, 0);
 
+	xmp_get_frame_info(opaque, &info);
+	fail_unless(info.total_time == 4446, "total time error");
+
 	for (i = 0; i < 8 * 3; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
-		fail_unless(info.total_time == 4436, "total time error");
 		fail_unless(info.bpm == vals[i], "tempo setting error");
 	}
 }
