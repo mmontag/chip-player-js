@@ -1,11 +1,11 @@
 CC	= cl
 CFLAGS	= /O2 /Iinclude /Isrc /Isrc\win32 /DBUILDING_DLL /DWIN32 \
-	  /Dinline=__inline /D_USE_MATH_DEFINES
+	  /Dinline=__inline /DPATH_MAX=1024 /D_USE_MATH_DEFINES
 LD	= link
 LDFLAGS	= /DLL /RELEASE /OUT:$(DLL)
 DLL	= libxmp.dll
 
-OBJS	= @OBJS@
+OBJS	= @OBJS@ src\win32\ptpopen.obj
 
 .c.obj:
 	$(CC) /c $(CFLAGS) /Fo$*.obj $<
