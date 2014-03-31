@@ -6,11 +6,11 @@ Stable versions
 	- add OctaMED IFFOCT sample loader
 	- fix volume in MED synth instruments
 	- fix OctaMED V5 MMD2 sample transpose
-	- fix OctaMED 3 octave limit for sampled instruments
 	Other changes:
 	- fix double free in module loaded from memory (by Arnaud Troël)
 	- fix old Soundtracker sample loops (reported by Dennis Lindroos)
 	- fix Win64 portability issues (reported by Ozkan Sezer)
+	- fix OctaMED 3 octave limit for sampled instruments
 	- fix IT tempo slide effect
 	- fix Visual C++ nmake build issues
 	- generate NDK static libraries

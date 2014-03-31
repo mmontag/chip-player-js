@@ -128,6 +128,8 @@ int extras_get_linear_bend(struct context_data *ctx, struct channel_data *xc)
 void extras_process_fx(struct context_data *ctx, struct channel_data *xc,
 			int chn, uint8 note, uint8 fxt, uint8 fxp, int fnum)
 {
-	if (HAS_HMN_CHANNEL_EXTRAS(*xc))
+	if (HAS_MED_CHANNEL_EXTRAS(*xc))
+		med_extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
+	else if (HAS_HMN_CHANNEL_EXTRAS(*xc))
 		hmn_extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
 }

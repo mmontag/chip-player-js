@@ -102,7 +102,7 @@
 #define FX_F_VSLIDE	0xa5	/* IMF/MDL */
 #define FX_CHORUS	0xa9	/* IMF */
 #define FX_REVERB	0xaa	/* IMF */
-#define FX_MED_DECAY	0xb1	/* MMD hold/decay */
+#define FX_MED_HOLD	0xb1	/* MMD hold/decay */
 #define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
 #endif
 

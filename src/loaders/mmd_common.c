@@ -414,7 +414,7 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	if (synth->wforms == 0xffff)	
 		return 1;
 	if (synth->wforms > 64)
-	  return -1;
+		return -1;
 
 	if (med_new_instrument_extras(&mod->xxi[i]) != 0)
 		return -1;
@@ -462,6 +462,12 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
 	int j, k;
+
+	// hold & decay support
+        if (med_new_instrument_extras(xxi) != 0)
+                return -1;
+	MED_INSTRUMENT_EXTRAS(*xxi)->hold = exp_smp->hold;
+	xxi->rls = 0xfff - (exp_smp->decay << 4);
 
 	xxi->nsm = 1;
 	if (subinstrument_alloc(mod, i, 1) < 0)
@@ -539,6 +545,12 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
 	int size, rep, replen, j;
+
+	// hold & decay support
+	if (med_new_instrument_extras(xxi) != 0)
+		return -1;
+	MED_INSTRUMENT_EXTRAS(*xxi)->hold = exp_smp->hold;
+	xxi->rls = 0xfff - (exp_smp->decay << 4);
 
 	xxi->nsm = num_oct;
 	if (subinstrument_alloc(mod, i, num_oct) < 0)

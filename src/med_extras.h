@@ -7,6 +7,7 @@ struct med_instrument_extras {
 	uint32 magic;
 	int vts;		/* Volume table speed */
         int wts;		/* Waveform table speed */
+	int hold;
 };
 
 struct med_channel_extras {
@@ -30,6 +31,8 @@ struct med_channel_extras {
 	int vib_idx;		/* MED synth vibrato index */
 	int vib_wf;		/* MED synth vibrato waveform */
 	int volume;		/* MED synth note volume */
+	int hold;		/* MED note on hold flag */
+	int hold_count;		/* MED note on hold frame counter */
 };
 
 struct med_module_extras {
@@ -63,5 +66,6 @@ void med_reset_channel_extras(struct channel_data *);
 void med_release_channel_extras(struct channel_data *);
 int med_new_module_extras(struct module_data *);
 void med_release_module_extras(struct module_data *);
+void med_extras_process_fx(struct context_data *, struct channel_data *, int, uint8, uint8, uint8, int);
 
 #endif

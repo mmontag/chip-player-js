@@ -24,6 +24,7 @@
 #include "common.h"
 #include "player.h"
 #include "virtual.h"
+#include "effects.h"
 #include "med_extras.h"
 
 #ifdef __SUNPRO_C
@@ -119,8 +120,10 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 		     int new_note)
 {
 	struct module_data *m = &ctx->m;
+	struct player_data *p = &ctx->p;
 	struct med_module_extras *me;
 	struct med_channel_extras *ce;
+	struct med_instrument_extras *ie;
 	int b, jws = 0, jvs = 0, loop;
 	int temp;
 
@@ -129,6 +132,30 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 
 	me = (struct med_module_extras *)m->extra;
 	ce = (struct med_channel_extras *)xc->extra;
+	ie = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]);
+
+	ce->volume = 64;	/* we need this in extras_get_volume() */
+
+	/* Handle hold/decay */
+
+	/* FIXME: fadeout should not be engaged if the *next* event in
+	 *        this channel. So we need some kind of pre-fetch here
+	 *        to see what this next event should be.
+	 */
+
+	if (ce->hold_count) {		/* was held in the past */
+		if (!ce->hold && p->frame >= ie->hold) { /* but not now */
+			SET_NOTE(NOTE_FADEOUT);
+			ce->hold_count = 0;
+		}
+	} else if (ie->hold) {		/* has instrument hold */
+		if (p->frame >= ie->hold) {
+			SET_NOTE(NOTE_FADEOUT);
+		}
+	}
+	ce->hold = 0;
+
+	/* Handle synth */
 
 	if (me->vol_table[xc->ins] == NULL || me->wav_table[xc->ins] == NULL)
 		return;
@@ -139,8 +166,8 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 		ce->vp = ce->vc = ce->vw = 0;
 		ce->wp = ce->wc = ce->ww = 0;
 		ce->vv = 0;
-		ce->vs = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->vts;
-		ce->ws = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins])->wts;
+		ce->vs = ie->vts;
+		ce->ws = ie->wts;
 	}
 
 	if (ce->vs > 0 && ce->vc-- == 0) {
@@ -351,5 +378,16 @@ void med_release_module_extras(struct module_data *m)
         }
 
 	free(m->extra);
+}
+
+void med_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
+			int chn, uint8 note, uint8 fxt, uint8 fxp, int fnum)
+{
+	switch (fxt) {
+        case FX_MED_HOLD:
+		MED_CHANNEL_EXTRAS((*xc))->hold_count++;
+		MED_CHANNEL_EXTRAS((*xc))->hold = 1;
+		break;
+	}
 }
 

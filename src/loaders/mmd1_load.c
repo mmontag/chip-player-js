@@ -326,9 +326,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 					/* Decay */
 					if (event->ins && !event->note) {
-						event->f2t = FX_MED_DECAY;
-						event->f2p = event->ins;
-						event->ins = 0;
+						event->f2t = FX_MED_HOLD;
 					}
 
 					event->fxt = e[2];
@@ -354,9 +352,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 					/* Decay */
 					if (event->ins && !event->note) {
-						event->f2t = FX_MED_DECAY;
-						event->f2p = event->ins;
-						event->ins = 0;
+						event->f2t = FX_MED_HOLD;
 					}
 
 					event->fxt = e[1] & 0x0f;
