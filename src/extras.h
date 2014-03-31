@@ -14,4 +14,8 @@ int extras_get_period(struct context_data *, struct channel_data *);
 int extras_get_linear_bend(struct context_data *, struct channel_data *);
 void extras_process_fx(struct context_data *, struct channel_data *, int, uint8, uint8, uint8, int);
 
+
+/* FIXME */
+void med_hold_hack(struct context_data *ctx, int, int, int);
+
 #endif

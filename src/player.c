@@ -210,7 +210,8 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	}
 
 	for (chn = 0; chn < mod->chn; chn++) {
-		if (row < mod->xxt[TRACK_NUM(pat, chn)]->rows) {
+		const int num_rows = mod->xxt[TRACK_NUM(pat, chn)]->rows;
+		if (row < num_rows) {
 			event = &EVENT(pat, chn, row);
 		} else {
 			event = (struct xmp_event *)&empty_event;
@@ -219,6 +220,10 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 		if (check_delay(ctx, event, chn) == 0) {
 			if (!f->rowdelay_set || f->rowdelay > 0) {
 				read_event(ctx, event, chn);
+#ifndef LIBXMP_CORE_PLAYER
+
+				med_hold_hack(ctx, pat, chn, row);
+#endif
 			}
 		}
 	}

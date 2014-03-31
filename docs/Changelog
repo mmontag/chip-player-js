@@ -7,6 +7,7 @@ Stable versions
 	- fix volume in MED synth instruments
 	- fix OctaMED V5 MMD2 sample transpose
 	Other changes:
+	- add initial OctaMED hold/decay support
 	- fix double free in module loaded from memory (by Arnaud Troël)
 	- fix old Soundtracker sample loops (reported by Dennis Lindroos)
 	- fix Win64 portability issues (reported by Ozkan Sezer)

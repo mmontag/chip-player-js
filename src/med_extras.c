@@ -138,9 +138,13 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 
 	/* Handle hold/decay */
 
-	/* FIXME: fadeout should not be engaged if the *next* event in
-	 *        this channel. So we need some kind of pre-fetch here
-	 *        to see what this next event should be.
+	/* on the first row of a held note, continue note if ce->hold is 2
+	 * (this is set after pre-fetching the next row and see if we
+	 * continue to hold. On remaining rows with hold on, we have the
+	 * FX_MED_HOLD effect and ce->hold set to 1. On the last row, see
+	 * if ce->hold_count is set (meaning that a note was held) and
+	 * ce->hold is 0 (meaning that it's not held anymore). Then
+	 * procceed with normal frame counting until decay.
 	 */
 
 	if (ce->hold_count) {		/* was held in the past */
@@ -149,11 +153,14 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 			ce->hold_count = 0;
 		}
 	} else if (ie->hold) {		/* has instrument hold */
-		if (p->frame >= ie->hold) {
+		if (p->frame >= ie->hold && ce->hold == 0) {
 			SET_NOTE(NOTE_FADEOUT);
 		}
 	}
-	ce->hold = 0;
+
+	if (p->frame == (p->speed - 1) && ce->hold != 2) {
+		ce->hold = 0;
+	}
 
 	/* Handle synth */
 
@@ -391,3 +398,19 @@ void med_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
 	}
 }
 
+void med_hold_hack(struct context_data *ctx, int pat, int chn, int row)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	const int num_rows = mod->xxt[TRACK_NUM(pat, chn)]->rows;
+
+	if (row + 1 < num_rows) {
+		struct player_data *p = &ctx->p;
+		struct xmp_event *event = &EVENT(pat, chn, row + 1);
+		struct channel_data *xc = &p->xc_data[chn];
+
+		if (event->f2t == FX_MED_HOLD) {
+			MED_CHANNEL_EXTRAS(*xc)->hold = 2;
+		}
+	}
+}
