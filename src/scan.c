@@ -298,13 +298,29 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    alltmp = 0;
 
 		    if (MSN(parm) == 0) {
-			bpm -= LSN(parm) * (speed - 1);	// approx
-			if (bpm < 0x20)
-			    bpm = 0x20;
+		        clock += m->time_factor * base_time / bpm;
+			for (i = 1; i < speed; i++) {
+			    bpm -= LSN(parm);
+			    if (bpm < 0x20)
+				bpm = 0x20;
+		            clock += m->time_factor * base_time / bpm;
+			}
+
+			// remove one row at final bpm
+			clock -= m->time_factor * speed * base_time / bpm;
+
 		    } else if (MSN(parm) == 1) {
-			bpm += LSN(parm) * (speed - 1);
-			if (bpm > 0xff)
-			    bpm = 0xff;
+		        clock += m->time_factor * base_time / bpm;
+			for (i = 1; i < speed; i++) {
+			    bpm += LSN(parm);
+			    if (bpm > 0xff)
+				bpm = 0xff;
+		            clock += m->time_factor * base_time / bpm;
+			}
+
+			// remove one row at final bpm
+			clock -= m->time_factor * speed * base_time / bpm;
+
 		    } else {
 			bpm = parm;
 		    }

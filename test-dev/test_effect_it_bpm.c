@@ -37,7 +37,7 @@ TEST(test_effect_it_bpm)
 	xmp_start_player(opaque, 44100, 0);
 
 	xmp_get_frame_info(opaque, &info);
-	fail_unless(info.total_time == 4446, "total time error");
+	fail_unless(info.total_time == 4440, "total time error");
 
 	for (i = 0; i < 8 * 3; i++) {
 		xmp_play_frame(opaque);

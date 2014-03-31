@@ -11,6 +11,7 @@ Stable versions
 	- fix double free in module loaded from memory (by Arnaud Troël)
 	- fix old Soundtracker sample loops (reported by Dennis Lindroos)
 	- fix Win64 portability issues (reported by Ozkan Sezer)
+	- fix IT tempo slide effect
 	- fix Visual C++ nmake build issues
 	- generate NDK static libraries
 
