@@ -323,7 +323,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				event = &EVENT(i, k, j);
 				event->note = e[0] & 0x7f;
 				if (event->note)
-					event->note += 24 + song.playtransp;
+					event->note += song.playtransp - 12;
 				event->ins = e[1] & 0x3f;
 
 				/* Decay */

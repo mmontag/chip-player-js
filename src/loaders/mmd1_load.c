@@ -321,7 +321,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					event->note = e[0] & 0x7f;
 					if (event->note)
 						event->note +=
-						    48 + song.playtransp;
+						    12 + song.playtransp;
 					event->ins = e[1] & 0x3f;
 
 					/* Decay */
@@ -345,7 +345,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					event = &EVENT(i, k, j);
 					event->note = e[0] & 0x3f;
 					if (event->note)
-						event->note += 48;
+						event->note += 12;
 					event->ins =
 					    (e[1] >> 4) | ((e[0] & 0x80) >> 3)
 					    | ((e[0] & 0x40) >> 1);

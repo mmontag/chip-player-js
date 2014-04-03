@@ -364,7 +364,7 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 
 	sub->pan = 0x80;
 	sub->vol = sample->svol;
-	sub->xpo = sample->strans;
+	sub->xpo = sample->strans + 36;
 	sub->sid = smp_idx;
 	sub->fin = exp_smp->finetune;
 
@@ -432,7 +432,7 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 
 		sub->pan = 0x80;
 		sub->vol = 64;
-		sub->xpo = -24;
+		sub->xpo = 12;
 		sub->sid = smp_idx;
 		sub->fin = exp_smp->finetune;
 
@@ -477,7 +477,7 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 
 	sub->vol = sample->svol;
 	sub->pan = 0x80;
-	sub->xpo = sample->strans;
+	sub->xpo = sample->strans + 36;
 	if (ver >= 2 && expdata->s_ext_entrsz > 4) {	/* MMD2+ */
 		sub->xpo += exp_smp->default_pitch;
 		if (ver == 2) {
@@ -520,10 +520,10 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		for (k = 0; k < 12; k++) {
 			int xpo = 0;
 
-			if (j <= 3)
-				xpo = 12 * (4 - j);
-			else if (j >= 7)
-				xpo = -12 * (j - 6);
+			if (j <= 0)
+				xpo = 12 * (1 - j);
+			else if (j >= 4)
+				xpo = -12 * (j - 3);
 
 			xxi->map[12 * j + k].xpo = xpo;
 		}
@@ -545,6 +545,7 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
 	int size, rep, replen, j;
+	int start;
 
 	// hold & decay support
 	if (med_new_instrument_extras(xxi) != 0)
@@ -562,14 +563,11 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	replen = 2 * sample->replen;
 
 	for (j = 0; j < num_oct; j++) {
-		int octave = 3 + num_oct - j;
-		int k;
-	
 		sub = &xxi->sub[j];
 	
 		sub->vol = sample->svol;
 		sub->pan = 0x80;
-		sub->xpo = sample->strans;
+		sub->xpo = 24 + sample->strans;
 		sub->sid = smp_idx;
 		sub->fin = exp_smp->finetune << 4;
 	
@@ -588,16 +586,30 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 			return -1;
 		}
 
-		/* instrument mapping */
-		for (k = 0; k < 12; k++) {
-			xxi->map[12 * octave + k].ins = j;
-			xxi->map[12 * octave + k].xpo = 12 * (j - 3);
-		}
-
 		smp_idx++;
 		size <<= 1;
 		rep <<= 1;
 		replen <<= 1;
+	}
+
+	/* instrument mapping */
+	start = 6 - num_oct;
+
+	for (j = 0; j < 9; j++) {
+		int ins, k;
+
+		if (j < start) {
+			ins = 0;
+		} else if (j < (start + num_oct)) {
+			ins = j - start;
+		} else {
+			ins = num_oct - 1;
+		}
+
+		for (k = 0; k < 12; k++) {
+			xxi->map[12 * j + k].ins = ins;
+			xxi->map[12 * j + k].xpo = 12 * (ins - (num_oct -1) / 2);
+		}
 	}
 
 	return 0;
