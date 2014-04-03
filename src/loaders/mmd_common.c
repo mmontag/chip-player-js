@@ -432,7 +432,7 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 
 		sub->pan = 0x80;
 		sub->vol = 64;
-		sub->xpo = 12;
+		sub->xpo = 12 + sample->strans;
 		sub->sid = smp_idx;
 		sub->fin = exp_smp->finetune;
 
