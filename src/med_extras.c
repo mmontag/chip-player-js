@@ -134,8 +134,6 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 	ce = (struct med_channel_extras *)xc->extra;
 	ie = MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]);
 
-	ce->volume = 64;	/* we need this in extras_get_volume() */
-
 	/* Handle hold/decay */
 
 	/* on the first row of a held note, continue note if ce->hold is 2
@@ -164,8 +162,10 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 
 	/* Handle synth */
 
-	if (me->vol_table[xc->ins] == NULL || me->wav_table[xc->ins] == NULL)
+	if (me->vol_table[xc->ins] == NULL || me->wav_table[xc->ins] == NULL) {
+		ce->volume = 64;  /* we need this in extras_get_volume() */
 		return;
+	}
 
 	if (new_note) {
 		ce->arp = ce->aidx = 0;
