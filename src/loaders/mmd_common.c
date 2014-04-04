@@ -593,17 +593,17 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	}
 
 	/* instrument mapping */
-	start = 6 - num_oct;
+	start = 9 - num_oct;
 
 	for (j = 0; j < 9; j++) {
 		int ins, k;
 
 		if (j < start) {
-			ins = 0;
-		} else if (j < (start + num_oct)) {
-			ins = j - start;
-		} else {
 			ins = num_oct - 1;
+		} else if (j < (start + num_oct)) {
+			ins = start + num_oct - 1 - j;
+		} else {
+			ins = 0;
 		}
 
 		for (k = 0; k < 12; k++) {
