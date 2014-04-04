@@ -60,6 +60,8 @@ static int mmd3_test(HIO_HANDLE *f, char *t, const int start)
 	return 0;
 }
 
+/* Number of octaves in IFFOCT samples */
+static const int num_oct[6] = { 5, 3, 2, 4, 6, 7 };
 
 static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
@@ -422,6 +424,23 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			if (mmd_alloc_tables(m, i, &synth) != 0)
 				return -1;
+
+			continue;
+		}
+
+		if (instr.type >= 1 && instr.type <= 6) {	/* IFFOCT */
+			int ret;
+			const int oct = num_oct[instr.type - 1];
+
+			hio_seek(f, start + smpl_offset + 6, SEEK_SET);
+
+			ret = mmd_load_iffoct_instrument(f, m, i, smp_idx,
+				&instr, oct, &exp_smp, &song.sample[i]);
+
+			if (ret < 0)
+				return -1;
+
+			smp_idx += oct;
 
 			continue;
 		}
