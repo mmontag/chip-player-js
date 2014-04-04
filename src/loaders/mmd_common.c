@@ -536,6 +536,24 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	return 0;
 }
 
+static const char iffoct_insmap[6][9] = {
+	/* 2 */ { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	/* 3 */ { 2, 2, 2, 2, 2, 2, 1, 1, 0 },
+	/* 4 */ { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	/* 5 */ { 4, 4, 4, 4, 3, 3, 2, 1, 0 },
+	/* 6 */ { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	/* 7 */ { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+};
+
+static const char iffoct_xpomap[6][9] = {
+	/* 2 */ {  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+	/* 3 */ { 60, 48, 36, 24, 12, 12,  0,  0,-12 },
+	/* 4 */ {  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+	/* 5 */ { 12, 12, 12, 12,  0,  0,-12,-24,-36 },
+	/* 6 */ {  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+	/* 7 */ {  0,  0,  0,  0,  0,  0,  0,  0,  0 }
+};
+
 int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 			int smp_idx, struct InstrHdr *instr, int num_oct,
 			struct InstrExt *exp_smp, struct MMD0sample *sample)
@@ -544,12 +562,15 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	struct xmp_instrument *xxi = &mod->xxi[i];
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
-	int size, rep, replen, j;
-	int start;
+	int size, rep, replen, j, k;
+
+	if (num_oct < 2 || num_oct > 7)
+		return -1;
 
 	// hold & decay support
 	if (med_new_instrument_extras(xxi) != 0)
 		return -1;
+
 	MED_INSTRUMENT_EXTRAS(*xxi)->hold = exp_smp->hold;
 	xxi->rls = 0xfff - (exp_smp->decay << 4);
 
@@ -593,22 +614,11 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	}
 
 	/* instrument mapping */
-	start = 9 - num_oct;
 
 	for (j = 0; j < 9; j++) {
-		int ins, k;
-
-		if (j < start) {
-			ins = num_oct - 1;
-		} else if (j < (start + num_oct)) {
-			ins = start + num_oct - 1 - j;
-		} else {
-			ins = 0;
-		}
-
 		for (k = 0; k < 12; k++) {
-			xxi->map[12 * j + k].ins = ins;
-			xxi->map[12 * j + k].xpo = 12 * (ins - (num_oct -1) / 2);
+			xxi->map[12 * j + k].ins = iffoct_insmap[num_oct - 2][j];
+			xxi->map[12 * j + k].xpo = iffoct_xpomap[num_oct - 2][j];
 		}
 	}
 
