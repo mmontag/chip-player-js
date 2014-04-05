@@ -322,6 +322,11 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					if (event->note)
 						event->note +=
 						    12 + song.playtransp;
+
+					if (event->note < 0 || event->note >=
+								XMP_MAX_KEYS)
+						event->note = 0;
+
 					event->ins = e[1] & 0x3f;
 
 					/* Decay */
@@ -346,6 +351,11 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					event->note = e[0] & 0x3f;
 					if (event->note)
 						event->note += 12;
+
+					if (event->note < 0 || event->note >=
+								XMP_MAX_KEYS)
+						event->note = 0;
+
 					event->ins =
 					    (e[1] >> 4) | ((e[0] & 0x80) >> 3)
 					    | ((e[0] & 0x40) >> 1);
