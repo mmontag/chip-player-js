@@ -3,7 +3,7 @@ Stable versions
 
 4.2.6 ():
 	Fix bugs reported by Andreas Argirakis:
-	- add OctaMED IFFOCT sample loader
+	- add OctaMED 2 to 7 octave IFFOCT sample loader
 	- fix volume in MED synth instruments
 	- fix OctaMED V5 MMD2 sample transpose
 	Other changes:
