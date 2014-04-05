@@ -157,11 +157,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Check instrument */
 
-	if (e->ins
-#ifndef LIBXMP_CORE_PLAYER
-		   && (!HAS_MED_CHANNEL_EXTRAS(*xc) || e->note)
-#endif
-	) {
+	if (e->ins) {
 		int ins = e->ins - 1;
 		use_ins_vol = 1;
 		SET(NEW_INS);
@@ -185,21 +181,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			new_invalid_ins = 1;
 			virt_resetchannel(ctx, chn);
 		}
-
-#ifndef LIBXMP_CORE_PLAYER
-		if (HAS_MED_CHANNEL_EXTRAS(*xc)) {
-			MED_CHANNEL_EXTRAS(*xc)->arp = 0;
-			MED_CHANNEL_EXTRAS(*xc)->aidx = 0;
-		}
-#endif
 	}
-#ifndef LIBXMP_CORE_PLAYER
-	else if (HAS_MED_CHANNEL_EXTRAS(*xc)) {
-		if (e->ins && !e->note) {
-			use_ins_vol = 1;
-		}
-	}
-#endif
 
 	/* Check note */
 
@@ -840,6 +822,142 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 #endif
 
+#ifndef LIBXMP_CORE_PLAYER
+
+static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	struct channel_data *xc = &p->xc_data[chn];
+	int note;
+	struct xmp_subinstrument *sub;
+	int new_invalid_ins = 0;
+	int is_toneporta;
+	int use_ins_vol;
+
+	xc->flags = 0;
+	note = -1;
+	is_toneporta = 0;
+	use_ins_vol = 0;
+
+	if (e->fxt == FX_TONEPORTA || e->fxt == FX_TONE_VSLIDE) {
+		is_toneporta = 1;
+	}
+
+	/* Check instrument */
+
+	if (e->ins && e->note) {
+		int ins = e->ins - 1;
+		use_ins_vol = 1;
+		SET(NEW_INS);
+		xc->fadeout = 0x10000;
+		xc->offset_val = 0;
+		RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
+
+		if (IS_VALID_INSTRUMENT(ins)) {
+			if (is_toneporta) {
+				/* Get new instrument volume */
+				sub = get_subinstrument(ctx, ins, e->note);
+				if (sub != NULL) {
+					xc->volume = sub->vol;
+					use_ins_vol = 0;
+				}
+			} else {
+				xc->ins = ins;
+			}
+		} else {
+			new_invalid_ins = 1;
+			virt_resetchannel(ctx, chn);
+		}
+
+		MED_CHANNEL_EXTRAS(*xc)->arp = 0;
+		MED_CHANNEL_EXTRAS(*xc)->aidx = 0;
+	} else {
+		/* Hold */
+		if (e->ins && !e->note) {
+			use_ins_vol = 1;
+		}
+	}
+
+	/* Check note */
+
+	if (e->note) {
+		SET(NEW_NOTE);
+
+		if (e->note == XMP_KEY_OFF) {
+			SET_NOTE(NOTE_RELEASE);
+			use_ins_vol = 0;
+		} else if (!is_toneporta) {
+			xc->key = e->note - 1;
+			RESET_NOTE(NOTE_END);
+	
+			sub = get_subinstrument(ctx, xc->ins, xc->key);
+	
+			if (!new_invalid_ins && sub != NULL) {
+				int transp = mod->xxi[xc->ins].map[xc->key].xpo;
+				int smp;
+	
+				note = xc->key + sub->xpo + transp;
+				smp = sub->sid;
+	
+				if (mod->xxs[smp].len == 0) {
+					smp = -1;
+				}
+	
+				if (smp >= 0 && smp < mod->smp) {
+					set_patch(ctx, chn, xc->ins, smp, note);
+					xc->smp = smp;
+				}
+			} else {
+				xc->flags = 0;
+				use_ins_vol = 0;
+			}
+		}
+	}
+
+	sub = get_subinstrument(ctx, xc->ins, xc->key);
+
+	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
+	if (e->ins && sub != NULL)
+		reset_envelopes(ctx, xc);
+
+	/* Process new volume */
+	if (e->vol) {
+		xc->volume = e->vol - 1;
+		SET(NEW_VOL);
+	}
+
+	/* Secondary effect handled first */
+	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
+	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
+
+	if (TEST(NEW_VOL))
+		use_ins_vol = 0;
+
+	if (sub == NULL) {
+		return 0;
+	}
+
+	if (note >= 0) {
+		xc->note = note;
+
+		virt_voicepos(ctx, chn, xc->offset_val);
+		if (TEST(OFFSET) && p->flags & XMP_FLAGS_FX9BUG)
+			xc->offset_val <<= 1;
+		RESET(OFFSET);
+	}
+
+	if (use_ins_vol) {
+		xc->volume = sub->vol;
+		SET(NEW_VOL);
+	}
+
+	return 0;
+}
+
+#endif
+
 static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -890,7 +1008,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 			smp = -1;
 		if (smp >= 0 && smp < smix->smp) {
 			smp += mod->smp;
-			virt_setpatch(ctx, chn, xc->ins, smp, note, 0, 0, 0);
+			set_patch(ctx, chn, xc->ins, smp, note);
 			xc->smp = smp;
 		}
 	} else {
@@ -940,6 +1058,10 @@ int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 #ifndef LIBXMP_CORE_DISABLE_IT
 	case READ_EVENT_IT:
 		return read_event_it(ctx, e, chn);
+#endif
+#ifndef LIBXMP_CORE_PLAYER
+	case READ_EVENT_MED:
+		return read_event_med(ctx, e, chn);
 #endif
 	default:
 		return read_event_mod(ctx, e, chn);

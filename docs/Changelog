@@ -14,7 +14,8 @@ Stable versions
 	- fix OctaMED hold/decay support
 	- fix IT tempo slide effect
 	- fix Visual C++ nmake build issues
-	- generate NDK static libraries
+	- refactor OctaMED event reader
+	- generate Android NDK static libraries
 
 4.2.5 (20140302):
 	- fix Oktalyzer sample numbering (reported by Andreas Argirakis)

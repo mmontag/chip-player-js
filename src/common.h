@@ -233,6 +233,7 @@ struct module_data {
 #define READ_EVENT_FT2	1
 #define READ_EVENT_ST3	2
 #define READ_EVENT_IT	3
+#define READ_EVENT_MED	4
 	int read_event_type;
 	int smpctl;			/* sample control flags */
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];

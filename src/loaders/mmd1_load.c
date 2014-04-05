@@ -499,5 +499,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
 	}
 
+	m->read_event_type = READ_EVENT_MED;
+
 	return 0;
 }

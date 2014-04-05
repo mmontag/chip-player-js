@@ -771,5 +771,7 @@ parse_iff:
 		hio_seek(f, pos + size, SEEK_SET);
 	}
 
+	m->read_event_type = READ_EVENT_MED;
+
 	return 0;
 }
