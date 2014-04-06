@@ -109,9 +109,11 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_phase(&xc->tremolo, 0);
 
 		xc->porta.target = note_to_period(note,
-				xc->finetune, HAS_QUIRK(QUIRK_LINEAR));
-		if (xc->period < 1 || !is_toneporta)
+				xc->finetune, HAS_QUIRK(QUIRK_LINEAR),
+				xc->per_adj);
+		if (xc->period < 1 || !is_toneporta) {
 			xc->period = xc->porta.target;
+		}
 	}
 
 	xc->delay = 0;
@@ -888,14 +890,26 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 		if (e->note == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
-		} else if (!is_toneporta) {
+		} else if (!is_toneporta && IS_VALID_INSTRUMENT(xc->ins)) {
+			struct xmp_instrument *xxi = &mod->xxi[xc->ins];
+
 			xc->key = e->note - 1;
 			RESET_NOTE(NOTE_END);
+		
+			xc->per_adj = 0.0;
+			if (xxi->nsm > 1 && HAS_MED_INSTRUMENT_EXTRAS(*xxi)) {
+				/* synth or iffoct */
+				if (MED_INSTRUMENT_EXTRAS(*xxi)->vts == 0 &&
+				    MED_INSTRUMENT_EXTRAS(*xxi)->wts == 0) {
+					/* iffoct */
+					xc->per_adj = 2.0;
+				}
+			}
 	
 			sub = get_subinstrument(ctx, xc->ins, xc->key);
 	
 			if (!new_invalid_ins && sub != NULL) {
-				int transp = mod->xxi[xc->ins].map[xc->key].xpo;
+				int transp = xxi->map[xc->key].xpo;
 				int smp;
 	
 				note = xc->key + sub->xpo + transp;

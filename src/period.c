@@ -53,13 +53,21 @@ static inline double round(double val)
 #endif
 
 /* Get period from note */
-inline double note_to_period(int n, int f, int type)
+inline double note_to_period(int n, int f, int type, double adj)
 {
     double d = (double)n + (double)f / 128;
+    double per;
 
-    return type ?
+    per = type ?
 	(240.0 - d) * 16 :			/* Linear */
         13694.0 / pow(2, d / 12);		/* Amiga */
+
+#ifndef LIBXMP_CORE_PLAYER
+    if (adj > 0.1)
+	per *= adj;
+#endif
+
+    return per;
 }
 
 
@@ -88,7 +96,7 @@ int period_to_note(int p)
 
 
 /* Get pitchbend from base note and amiga period */
-int period_to_bend(double p, int n, int limit, int gliss, int type)
+int period_to_bend(double p, int n, int limit, int gliss, int type, double adj)
 {
     int b;
     double d;
@@ -111,7 +119,7 @@ int period_to_bend(double p, int n, int limit, int gliss, int type)
     if (p < MIN_PERIOD_A)
 	p = MIN_PERIOD_A;
 
-    d = note_to_period(n, 0, 0);
+    d = note_to_period(n, 0, 0, adj);
     b = round(100.0 * ((1536.0 * log(d / p) / M_LN2)));
 
     return gliss ? b / 12800 * 12800 : b;	/* Amiga */

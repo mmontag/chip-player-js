@@ -50,7 +50,7 @@ static void do_toneporta(struct module_data *m,
 		note--;
 		xc->porta.target = note_to_period(note + sub->xpo +
 			instrument->map[xc->key].xpo, sub->fin,
-			HAS_QUIRK(QUIRK_LINEAR));
+			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 	}
 	xc->porta.dir = xc->period < xc->porta.target ? 1 : -1;
 }

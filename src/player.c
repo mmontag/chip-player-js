@@ -221,7 +221,6 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 			if (!f->rowdelay_set || f->rowdelay > 0) {
 				read_event(ctx, event, chn);
 #ifndef LIBXMP_CORE_PLAYER
-
 				med_hold_hack(ctx, pat, chn, row);
 #endif
 			}
@@ -421,17 +420,19 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0, &end);
 	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
 
+#ifndef LIBXMP_CORE_PLAYER
 	/* Do note slide */
 
 	if (TEST(NOTE_SLIDE)) {
 		if (xc->noteslide.count == 0) {
 			xc->note += xc->noteslide.slide;
 			xc->period = note_to_period(xc->note, xc->finetune,
-						    HAS_QUIRK(QUIRK_LINEAR));
+					HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 			xc->noteslide.count = xc->noteslide.speed;
 		}
 		xc->noteslide.count--;
 	}
+#endif
 
 	/* Instrument vibrato */
 	vibrato = get_lfo(&xc->insvib.lfo, (1024 * (1 + xc->insvib.sweep)));
@@ -465,7 +466,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	linear_bend = period_to_bend(period + vibrato, xc->note,
 				HAS_QUIRK(QUIRK_MODRNG), xc->gliss,
-				HAS_QUIRK(QUIRK_LINEAR));
+				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 
 	/* Envelope */
 
@@ -663,7 +664,7 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 		if (TEST(FINE_NSLIDE)) {
 			xc->note += xc->noteslide.fslide;
 			xc->period = note_to_period(xc->note, xc->finetune,
-						    HAS_QUIRK(QUIRK_LINEAR));
+					 HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 		}
 #endif
 	}

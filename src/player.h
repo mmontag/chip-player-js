@@ -71,6 +71,9 @@ struct channel_data {
 	int note;		/* Note number */
 	int key;		/* Key number */
 	double period;		/* Amiga or linear period */
+#ifndef LIBXMP_CORE_PLAYER
+	double per_adj;
+#endif
 	int finetune;		/* Guess what */
 	int ins;		/* Instrument number */
 	int old_ins;		/* Last instruemnt */
@@ -158,12 +161,14 @@ struct channel_data {
 		int memory;	/* Pan slide effect memory */
 	} pan;	
 
+#ifndef LIBXMP_CORE_PLAYER
 	struct {
 		int slide;	/* PTM note slide amount */
 		int fslide;	/* OKT fine note slide amount */
 		int speed;	/* PTM note slide speed */
 		int count;	/* PTM note slide counter */
 	} noteslide;
+#endif
 
 	struct {
 		int slide;	/* IT tempo slide */
@@ -180,7 +185,9 @@ struct channel_data {
 		int resonance;	/* IT filter resonance */
 	} filter;
 
+#ifndef LIBXMP_CORE_PLAYER
 	void *extra;
+#endif
 
 	struct xmp_event delayed_event;
 	int delayed_ins;	/* IT save instrument emulation */
