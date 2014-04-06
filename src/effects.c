@@ -794,9 +794,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		if (fxp == 0)
 			RESET_PER(VOL_SLIDE);
 		break;
-	case FX_FINE2_VIBRA:	/* Fine vibrato (2x) */
+	case FX_VIBRATO2:	/* Deep vibrato (2x) */
 		SET(VIBRATO);
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 1, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 3, MSN(fxp));
 		break;
 	case FX_SPEED_CP:	/* Set speed and ... */
 		if (fxp)

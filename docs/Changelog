@@ -11,7 +11,8 @@ Stable versions
 	- fix old Soundtracker sample loops (reported by Dennis Lindroos)
 	- fix Win64 portability issues (reported by Ozkan Sezer)
 	- fix OctaMED 3 octave limit for sampled instruments
-	- fix OctaMED hold/decay support
+	- fix OctaMED hold/decay event support
+	- fix OctaMED vibrato effect depth
 	- fix IT tempo slide effect
 	- fix Visual C++ nmake build issues
 	- refactor OctaMED event reader

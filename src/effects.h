@@ -77,7 +77,6 @@
 #define FX_IT_INSTFUNC	0x83
 #define FX_FLT_CUTOFF	0x84
 #define FX_FLT_RESN	0x85
-#define FX_FINE2_VIBRA	0x86
 #define FX_IT_BPM	0x87
 #define FX_IT_ROWDELAY	0x88
 #define FX_IT_PANSLIDE	0x89
@@ -89,6 +88,7 @@
 /* MED effects */
 #define FX_HOLD_DECAY	0x90
 #define FX_SETPITCH	0x91
+#define FX_VIBRATO2	0x92
 
 /* PTM effects */
 #define FX_NSLIDE_DN	0x9c	/* IMF/PTM note slide down */

@@ -86,14 +86,16 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		/* PORTAMENTO 03
 		 * Makes precise sliding easy.
 		 */
-		/* fall-through */
+		break;
 	case 0x04:
 		/* VIBRATO 04
 		 * The left half of the argument is the vibrato speed, the
 		 * right half is the depth. If the numbers are zeros, the
 		 * previous speed and depth are used.
 		 */
-		/* fall-through */
+		/* Note: this is twice as deep as the Protracker vibrato */
+		event->fxt = FX_VIBRATO2;
+		break;
 	case 0x05:
 		/* SLIDE + FADE 05
 		 * ProTracker compatible. This command is the combination of
@@ -223,7 +225,7 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		 * ProTracker compatible. This is similar to command 04
 		 * except the depth is halved, to give greater accuracy.
 		 */
-		event->fxt = FX_FINE2_VIBRA;
+		event->fxt = FX_VIBRATO;
 		break;
 	case 0x15:
 		/* SET FINETUNE 15
