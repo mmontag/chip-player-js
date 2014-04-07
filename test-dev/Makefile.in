@@ -122,7 +122,7 @@ LOADER		= ust ac1d unic unic2 nst flt flt8 wow m15 mtm it it_oldins \
 		  dsmi stim rad pt36 psm rtm ice dbm mdl0 mdl mgt liq liq_no \
 		  emod chiptracker gdm dtm \
 		  6chn mod_adpcm4 \
-		  med3 med4 mmd0 mmd3
+		  med3 med4 mmd0 mmd3 mmd_iff3oct
 
 PROBLEMATIC	= length_data_jack \
 		  length_condom_corruption \
