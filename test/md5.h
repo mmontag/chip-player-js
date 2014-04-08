@@ -10,10 +10,10 @@
  * with every copy.
  */
 
-#ifndef XMP_MD5_H_
-#define XMP_MD5_H_
+#ifndef LIBXMP_MD5_H
+#define LIBXMP_MD5_H
 
-#include "../src/common.h"
+#include "common.h"
 
 #define	MD5_BLOCK_LENGTH		64
 #define	MD5_DIGEST_LENGTH		16
@@ -25,19 +25,9 @@ typedef struct MD5Context {
 	uint8 buffer[MD5_BLOCK_LENGTH];	/* input buffer */
 } MD5_CTX;
 
-#ifndef __sun
-#include <sys/cdefs.h>
-#endif
-
-#ifndef __sun
-__BEGIN_DECLS
-#endif
 void	 MD5Init(MD5_CTX *);
 void	 MD5Update(MD5_CTX *, const unsigned char *, size_t);
 void	 MD5Final(uint8[MD5_DIGEST_LENGTH], MD5_CTX *);
-#ifndef __sun
-__END_DECLS
-#endif
 
-#endif /* XMP_MD5_H_ */
+#endif /* LIBXMP_MD5_H */
 

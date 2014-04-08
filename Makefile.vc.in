@@ -7,6 +7,8 @@ DLL	= libxmp.dll
 
 OBJS	= @OBJS@ src\win32\ptpopen.obj
 
+TEST	= test\md5.obj test\test.obj
+
 .c.obj:
 	$(CC) /c $(CFLAGS) /Fo$*.obj $<
 
@@ -17,3 +19,8 @@ $(DLL): $(OBJS)
 
 clean:
 	del $(OBJS) $(DLL) *.lib *.exp
+
+check: $(TEST)
+	$(LD) /RELEASE /OUT:test\libxmp-test.exe $(TEST) libxmp.lib
+	copy libxmp.dll test
+	cd test & libxmp-test
