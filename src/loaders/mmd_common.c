@@ -482,9 +482,11 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	sub->xpo = sample->strans + 36;
 	if (ver >= 2 && expdata->s_ext_entrsz > 4) {	/* MMD2+ */
 		sub->xpo += exp_smp->default_pitch;
+#if 0
 		if (ver == 2) {
 			sub->xpo += 24;			/* ??!? */
 		}
+#endif
 	}
 	sub->sid = smp_idx;
 	sub->fin = exp_smp->finetune << 4;
@@ -518,18 +520,20 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
          * Checked in MMD0 with med.egypian/med.medieval from Lemmings 2
          * and MED.ParasolStars, MMD1 with med.Lemmings2
          */
+
 	for (j = 0; j < 9; j++) {
 		for (k = 0; k < 12; k++) {
 			int xpo = 0;
 
-			if (j <= 0)
+			if (j < 1)
 				xpo = 12 * (1 - j);
-			else if (j >= 4)
+			else if (j > 3)
 				xpo = -12 * (j - 3);
 
 			xxi->map[12 * j + k].xpo = xpo;
 		}
 	}
+
 
 	if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
 		return -1;
