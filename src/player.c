@@ -141,7 +141,7 @@ static void reset_channels(struct context_data *ctx)
 
 	for (i = 0; i < p->virt.num_tracks; i++) {
 		xc = &p->xc_data[i];
-		xc->masterpan = mod->xxc[i].pan;
+		xc->pan.val = mod->xxc[i].pan;
 		xc->mastervol = mod->xxc[i].vol;
 		xc->filter.cutoff = 0xff;
 	}
@@ -548,8 +548,10 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 
 	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
+/*
 	finalpan = xc->masterpan + (finalpan - 128) *
 				(128 - abs(xc->masterpan - 128)) / 128;
+*/
 
 	if (s->format & XMP_FORMAT_MONO) {
 		finalpan = 0;

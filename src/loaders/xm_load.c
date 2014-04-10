@@ -543,10 +543,6 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    /* If dynamic pan is disabled, XM modules will use the standard
-     * MOD channel panning (LRRL). Moved to module_play() --Hipolito.
-     */
-
     for (i = 0; i < mod->chn; i++) {
         mod->xxc[i].pan = 0x80;
     }

@@ -84,7 +84,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 	struct module_data *m = &ctx->m;
 
 	if (sub != NULL && note >= 0) {
-		xc->pan.val = sub->pan;
+		/* xc->pan.val = sub->pan; */
 		xc->finetune = sub->fin;
 		xc->gvl = sub->gvl;
 
@@ -224,8 +224,9 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
-	if (e->ins && sub != NULL)
+	if (e->ins && sub != NULL) {
 		reset_envelopes(ctx, xc);
+	}
 
 	/* Process new volume */
 	if (e->vol) {
@@ -356,6 +357,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* No note */
 			if (sub != NULL) {
 				xc->volume = sub->vol;
+				xc->pan.val = sub->pan;
 				SET(NEW_VOL);
 			}
 		} else {
@@ -369,6 +371,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			sub = get_subinstrument(ctx, xc->ins, key - 1);
 			if (sub != NULL) {
 				xc->volume = sub->vol;
+				xc->pan.val = sub->pan;
 			} else {
 				xc->volume = 0;
 			}
@@ -564,8 +567,9 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
-	if (e->ins && sub != NULL)
+	if (e->ins && sub != NULL) {
 		reset_envelopes(ctx, xc);
+	}
 
 	/* Process new volume */
 	if (e->vol) {
@@ -685,6 +689,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 					sub = get_subinstrument(ctx, ins, key);
 					if (sub != NULL) {
 						xc->volume = sub->vol;
+						xc->pan.val = sub->pan;
 						use_ins_vol = 0;
 					}
 				}
@@ -777,8 +782,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
-	if (note >= 0 && sub != NULL)
+	if (note >= 0 && sub != NULL) {
 		reset_envelopes(ctx, xc);
+	}
 	
 	/* Process new volume */
 	if (e->vol) {
@@ -795,8 +801,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
 	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
 
-	if (TEST(NEW_VOL))
+	if (TEST(NEW_VOL)) {
 		use_ins_vol = 0;
+	}
 
 	if (sub == NULL) {
 		return 0;
@@ -933,8 +940,12 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
-	if (e->ins && sub != NULL)
-		reset_envelopes(ctx, xc);
+	if (sub != NULL) {
+		if (note >= 0)
+			xc->pan.val = sub->pan;
+		if (e->ins)
+			reset_envelopes(ctx, xc);
+	}
 
 	/* Process new volume */
 	if (e->vol) {
