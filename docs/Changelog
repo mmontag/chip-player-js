@@ -4,6 +4,7 @@ Stable versions
 4.2.7 ():
 	- fix MMD2/3 note event mapping (reported by Andreas Argirakis)
 	- fix XM set pan effect
+	- fix IT disabled instrument pan
 
 4.2.6 (20140407):
 	Fix bugs reported by Andreas Argirakis:
