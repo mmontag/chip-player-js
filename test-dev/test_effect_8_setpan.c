@@ -26,6 +26,14 @@ static int vals_it[] = {
 	0, 0, 0			/* --- 1 ---   new inst resets to left pan */
 };
 
+static int vals_it_dp[] = {
+	128, 128, 128,		/* C-5 1 880   play instrument w/ center pan */
+	255, 255, 255,		/* --- - 8FF   set pan to right */
+	255, 255, 255,		/* F-5 - ---   instrument pan is disabled */
+	255, 255, 255,		/* --- - 8FF   set new pan */
+	255, 255, 255		/* --- 1 ---   new inst resets to left pan */
+};
+
 TEST(test_effect_8_setpan)
 {
 	xmp_context opaque;
@@ -61,7 +69,6 @@ TEST(test_effect_8_setpan)
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].pan == vals_ft2[i], "pan error");
-
 	}
 
 	xmp_restart_module(opaque);
@@ -73,7 +80,6 @@ TEST(test_effect_8_setpan)
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].pan == vals_st3[i], "pan error");
-
 	}
 
 	xmp_restart_module(opaque);
@@ -85,7 +91,17 @@ TEST(test_effect_8_setpan)
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].pan == vals_it[i], "pan error");
+	}
 
+	xmp_restart_module(opaque);
+
+	/* set instrument pan as disabled */
+	ctx->m.mod.xxi[0].sub[0].pan = -1;
+
+	for (i = 0; i < 4 * 3; i++) {
+		xmp_play_frame(opaque);
+		xmp_get_frame_info(opaque, &info);
+		fail_unless(info.channel_info[0].pan == vals_it_dp[i], "pan error");
 	}
 }
 END_TEST
