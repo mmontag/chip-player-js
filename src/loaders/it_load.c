@@ -157,7 +157,7 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
 	case 0xc:		/* Note cut */
 	case 0xd:		/* Note delay */
 	    if ((e->fxp = l) == 0)
-		e->fxp++;	/* SD0 and SC0 becomes SD1 and SC1 */
+		e->fxp++;	/* SD0 and SC0 become SD1 and SC1 */
 	    e->fxp |= h << 4;
 	    break;
 	case 0xe:		/* Pattern row delay */
@@ -654,7 +654,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    sub->nna = i2h.nna;
 		    sub->dct = i2h.dct;
 		    sub->dca = dca2nna[i2h.dca & 0x03];
-		    sub->pan = i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4;
+		    sub->pan = i2h.dfp & 0x80 ? -1 : i2h.dfp * 4;
 		    sub->ifc = i2h.ifc;
 		    sub->ifr = i2h.ifr;
 	        }

@@ -84,7 +84,6 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 	struct module_data *m = &ctx->m;
 
 	if (sub != NULL && note >= 0) {
-		/* xc->pan.val = sub->pan; */
 		xc->finetune = sub->fin;
 		xc->gvl = sub->gvl;
 
@@ -783,10 +782,12 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (sub != NULL) {
 		if (note >= 0) {
-			xc->pan.val = sub->pan;
+			if (sub->pan >= 0)
+				xc->pan.val = sub->pan;
 			reset_envelopes(ctx, xc);
 		} else if (e_ins) {
-			xc->pan.val = sub->pan;
+			if (sub->pan >= 0)
+				xc->pan.val = sub->pan;
 		}
 	}
 	
