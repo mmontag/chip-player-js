@@ -77,7 +77,6 @@ struct channel_data {
 	int old_ins;		/* Last instruemnt */
 	int old_insvol;		/* Last instrument that did set a note */
 	int smp;		/* Sample number */
-	int masterpan;		/* Master pan -- for S3M set pan effect */
 	int mastervol;		/* Master vol -- for IT track vol effect */
 	int delay;		/* Note delay in frames */
 	int keyoff;		/* Key off counter */

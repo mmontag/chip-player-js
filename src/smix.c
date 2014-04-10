@@ -155,7 +155,7 @@ int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
 		return -XMP_ERROR_INVALID;
 
 	xc = &p->xc_data[m->mod.chn + chn];
-	xc->masterpan = pan;
+	xc->pan.val = pan;
 
 	return 0;
 }

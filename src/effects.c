@@ -513,9 +513,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		/* FIXME: Add OpenMPT quirk */
 		xc->v_idx = fxp;
 		break;
-	case FX_MASTER_PAN:	/* Set master pan */
-		xc->masterpan = fxp;
-		break;
 	case FX_PANSLIDE:	/* Pan slide (XM) */
 		/* TODO: add memory */
 		SET(PAN_SLIDE);

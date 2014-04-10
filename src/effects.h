@@ -26,7 +26,6 @@
 #define FX_GVOL_SLIDE	0x11
 #define FX_KEYOFF	0x14
 #define FX_ENVPOS	0x15
-#define FX_MASTER_PAN	0x16
 #define FX_PANSLIDE	0x19
 #define FX_MULTI_RETRIG	0x1b
 #define FX_TREMOR	0x1d

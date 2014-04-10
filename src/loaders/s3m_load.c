@@ -175,7 +175,7 @@ static void xlat_fx(int c, struct xmp_event *e)
 	    e->fxt = e->fxp = 0;
 	    break;
 	case 0x8:			/* Set pan */
-	    e->fxt = FX_MASTER_PAN;
+	    e->fxt = FX_SETPAN;
 	    e->fxp = l << 4;
 	    break;
 	case 0xb:			/* Pattern loop */
