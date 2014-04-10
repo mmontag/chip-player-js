@@ -2,7 +2,7 @@
 #include "../src/effects.h"
 
 
-TEST(test_effect_setpan)
+TEST(test_player_pan)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
