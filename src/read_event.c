@@ -689,7 +689,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 					sub = get_subinstrument(ctx, ins, key);
 					if (sub != NULL) {
 						xc->volume = sub->vol;
-						xc->pan.val = sub->pan;
 						use_ins_vol = 0;
 					}
 				}
@@ -782,8 +781,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
-	if (note >= 0 && sub != NULL) {
-		reset_envelopes(ctx, xc);
+	if (sub != NULL) {
+		if (note >= 0) {
+			xc->pan.val = sub->pan;
+			reset_envelopes(ctx, xc);
+		} else if (e_ins) {
+			xc->pan.val = sub->pan;
+		}
 	}
 	
 	/* Process new volume */
