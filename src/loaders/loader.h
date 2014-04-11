@@ -21,6 +21,7 @@
 #define SAMPLE_FLAG_FULLREP	0x0200	/* Play full sample before looping */
 #define SAMPLE_FLAG_ADLIB	0x1000	/* Adlib synth instrument */
 #define SAMPLE_FLAG_HSC		0x2000	/* HSC Adlib synth instrument */
+#define SAMPLE_FLAG_ADPCM	0x4000	/* ADPCM4 encoded samples */
 
 int instrument_init(struct xmp_module *);
 int subinstrument_alloc(struct xmp_module *, int, int);

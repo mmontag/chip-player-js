@@ -598,6 +598,16 @@ skip_test:
 		hio_close(s);
 	    }
 	} else {
+	    uint8 buf[5];
+	    long pos = hio_tell(f);
+            int num = hio_read(buf, 1, 5, f);
+
+	    if (num == 5 && !memcmp(buf, "ADPCM", 5)) {
+		flags |= SAMPLE_FLAG_ADPCM;
+	    } else {
+		hio_seek(f, pos, SEEK_SET);
+	    }
+
 	    if (load_sample(m, f, flags, &mod->xxs[i], NULL) < 0)
 		return -1;
 	}

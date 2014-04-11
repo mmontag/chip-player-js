@@ -273,7 +273,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	     * It works pretty much the same way as Impulse Tracker's sample
 	     * only mode, where it will strip off the instrument data.
 	     */
-      if (xih.size < XM_INST_HEADER_SIZE + XM_INST_SIZE) {
+	    if (xih.size < XM_INST_HEADER_SIZE + XM_INST_SIZE) {
 		memset(&xi, 0, sizeof (struct xm_instrument));
 		hio_seek(f, xih.size - XM_INST_HEADER_SIZE, SEEK_CUR);
 	    } else {
@@ -384,6 +384,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	    }
 	    for (j = 0; j < xxi->nsm; j++) {
 		struct xmp_subinstrument *sub = &xxi->sub[j];
+		int flags;
 
 		D_(D_INFO " %1x: %06x%c%06x %06x %c V%02x F%+04d P%02x R%+03d",
 		    j, mod->xxs[sub->sid].len,
@@ -395,8 +396,15 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		    sub->vol, sub->fin,
 		    sub->pan, sub->xpo);
 
+		flags = SAMPLE_FLAG_DIFF;
+#ifndef LIBXMP_CORE_PLAYER
+		if (xsh[j].reserved == 0xad) {
+		    flags = SAMPLE_FLAG_ADPCM;
+		}
+#endif
+		
 		if (version > 0x0103) {
-		    if (load_sample(m, f, SAMPLE_FLAG_DIFF,
+		    if (load_sample(m, f, flags,
 					&mod->xxs[sub->sid], NULL) < 0) {
 			return -1;
 		    }

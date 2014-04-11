@@ -310,31 +310,23 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 
 	if (flags & SAMPLE_FLAG_NOLOAD) {
 		memcpy(xxs->data, buffer, bytelen);
-	} else {
+	} else
 #ifndef LIBXMP_CORE_PLAYER
-		uint8 buf[5];
-		long pos = hio_tell(f);
-		int num = hio_read(buf, 1, 5, f);
+	if (flags & SAMPLE_FLAG_ADPCM) {
+		int x2 = (bytelen + 1) >> 1;
+		char table[16];
 
-		hio_seek(f, pos, SEEK_SET);
-
-		if (num == 5 && !memcmp(buf, "ADPCM", 5)) {
-			int x2 = bytelen >> 1;
-			char table[16];
-
-			hio_seek(f, 5, SEEK_CUR);	/* Skip "ADPCM" */
-			hio_read(table, 1, 16, f);
-			hio_read(xxs->data + x2, 1, x2, f);
-			adpcm4_decoder((uint8 *)xxs->data + x2,
-				       (uint8 *)xxs->data, table, bytelen);
-		} else
+		hio_read(table, 1, 16, f);
+		hio_read(xxs->data + x2, 1, x2, f);
+		adpcm4_decoder((uint8 *)xxs->data + x2,
+			       (uint8 *)xxs->data, table, bytelen);
+	} else
 #endif
-		{
-			int x = hio_read(xxs->data, 1, bytelen, f);
-			if (x != bytelen) {
-				D_(D_WARN, "short read (%d) in sample load", x - bytelen);
-				memset(xxs->data + x, 0, bytelen - x);
-			}
+	{
+		int x = hio_read(xxs->data, 1, bytelen, f);
+		if (x != bytelen) {
+			D_(D_WARN, "short read (%d) in sample load", x - bytelen);
+			memset(xxs->data + x, 0, bytelen - x);
 		}
 	}
 
