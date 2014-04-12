@@ -296,6 +296,24 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		 */
 		event->fxt = FX_PATT_DELAY;
 		break;
+	case 0x1f:
+		/* Command 1F: NOTE DELAY AND RETRIGGER
+		 * (Protracker commands EC and ED)
+		 * Gives you accurate control over note playing. You can
+		 * delay the note any number of ticks, and initiate fast
+		 * retrigger. Level 1 = note delay value, level 2 = retrigger
+		 * value.
+		 */
+		if (MSN(event->fxp)) {
+			/* delay */
+			event->fxt = FX_EXTENDED;
+			event->fxp = 0xd0 | (event->fxp >> 4);
+		} else if (LSN(event->fxp)) {
+			/* retrig */
+			event->fxt = FX_EXTENDED;
+			event->fxp = 0x90 | (event->fxp & 0x0f);
+		}
+		break;
 	case 0x2e:
 		/* Command 2E: SET TRACK PANNING
 		 * Allows track panning to be changed during play. The track
