@@ -3,6 +3,7 @@ Stable versions
 
 4.2.7 ():
 	- add support for XM with ADPCM samples (reported by mk.bikash)
+	- add OctaMED effect 2E (reported by Andreas Argirakis)
 	- fix MMD2/3 note event mapping (reported by Andreas Argirakis)
 	- fix XM set pan effect
 	- fix IT disabled instrument pan
