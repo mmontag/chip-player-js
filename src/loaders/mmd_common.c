@@ -296,6 +296,22 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		 */
 		event->fxt = FX_PATT_DELAY;
 		break;
+	case 0x2e:
+		/* Command 2E: SET TRACK PANNING
+		 * Allows track panning to be changed during play. The track
+		 * on which the player command appears is the track affected.
+		 * The command level is in signed hex: $F0 to $10 = -16 to 16
+		 * decimal.
+		 */
+		if (event->fxp >= 0xf0 || event->fxp <= 0x10) {
+			int fxp = (signed char)event->fxp + 16;
+			fxp <<= 3;
+			if (fxp == 0x100)
+				fxp--;
+			event->fxt = FX_SETPAN;
+			event->fxp = fxp;
+		}
+		break;
 	default:
 		event->fxt = event->fxp = 0;
 		break;
