@@ -968,6 +968,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	p->row = 0;
 	p->current_time = 0;
 	p->loop_count = 0;
+	p->sequence = 0;
 
 	/* Unmute all channels and set default volume */
 	for (i = 0; i < XMP_MAX_CHANNELS; i++) {
