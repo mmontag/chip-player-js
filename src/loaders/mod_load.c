@@ -220,6 +220,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */
     int tracker_id = TRACKER_PROTRACKER;
+    int showmagic;
 
     LOAD_INIT();
 
@@ -475,6 +476,8 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 skip_test:
 
+    showmagic = 0;
+
     switch (tracker_id) {
     case TRACKER_PROTRACKER:
 	tracker = "Protracker";
@@ -507,11 +510,13 @@ skip_test:
 	break;
     case TRACKER_SCREAMTRACKER3:
 	tracker = "Scream Tracker";
+	showmagic = 1;
 	break;
 	break;
     case TRACKER_CONVERTEDST:
     case TRACKER_CONVERTED:
-	tracker = "converted";
+	tracker = "Converted";
+	showmagic = 1;
 	break;
     case TRACKER_CLONE:
 	tracker = "Protracker clone";
@@ -519,13 +524,15 @@ skip_test:
     default:
     case TRACKER_UNKNOWN_CONV:
     case TRACKER_UNKNOWN:
-	tracker = "unknown tracker/converted";
+	tracker = "Unknown tracker";
+	showmagic = 1;
 	break;
     }
 
     mod->trk = mod->chn * mod->pat;
 
-    if (!memcmp(magic, "M.K.", 4) || tracker_id == TRACKER_FLEXTRAX) {
+    if ((!memcmp(magic, "M.K.", 4) && showmagic == 0)
+			|| tracker_id == TRACKER_FLEXTRAX) {
         snprintf(mod->type, XMP_NAME_SIZE, "%s", tracker);
     } else {
         snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
