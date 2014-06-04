@@ -11,10 +11,10 @@
 #include <string.h>
 #include "prowiz.h"
 
+#define NO_NOTE 0xff
 
 static int depack_AC1D(FILE *in, FILE *out)
 {
-	uint8 NO_NOTE = 0xff;
 	uint8 c1, c2, c3, c4;
 	uint8 npos;
 	uint8 ntk_byte;
