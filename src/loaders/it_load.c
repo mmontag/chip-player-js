@@ -517,27 +517,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (~ifh.flags & IT_USE_INST)
 	mod->ins = mod->smp;
 
-    if (ifh.special & IT_HAS_MSG) {
-	if ((m->comment = malloc(ifh.msglen + 1)) == NULL)
-	    goto err4;
-	i = hio_tell(f);
-	hio_seek(f, start + ifh.msgofs, SEEK_SET);
-
-	D_(D_INFO "Message length : %d", ifh.msglen);
-
-	for (j = 0; j < ifh.msglen; j++) {
-	    b = hio_read8(f);
-	    if (b == '\r')
-		b = '\n';
-	    if ((b < 32 || b > 127) && b != '\n' && b != '\t')
-		b = '.';
-	    m->comment[j] = b;
-	}
-	m->comment[j] = 0;
-
-	hio_seek(f, i, SEEK_SET);
-    }
-
     if (instrument_init(mod) < 0)
 	goto err4;
 
@@ -1115,6 +1094,27 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     free(pp_pat);
     free(pp_smp);
     free(pp_ins);
+
+    /* Song message */
+
+    if (ifh.special & IT_HAS_MSG) {
+	if ((m->comment = malloc(ifh.msglen + 1)) != NULL) {
+	    hio_seek(f, start + ifh.msgofs, SEEK_SET);
+
+	    D_(D_INFO "Message length : %d", ifh.msglen);
+
+	    for (j = 0; j < ifh.msglen; j++) {
+	        b = hio_read8(f);
+	        if (b == '\r') {
+		    b = '\n';
+	        } else if ((b < 32 || b > 127) && b != '\n' && b != '\t') {
+		    b = '.';
+		}
+	        m->comment[j] = b;
+	    }
+	    m->comment[j] = 0;
+	}
+    }
 
     /* Format quirks */
 
