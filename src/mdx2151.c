@@ -22,6 +22,13 @@
 
 #include "class.h"
 
+#ifdef USE_NLG
+
+#include "nlg.h"
+extern NLGCTX *nlgctx;
+
+#endif
+
 /* ------------------------------------------------------------------ */
 
 typedef struct _YM2151_LFO {
@@ -106,6 +113,7 @@ typedef struct _mdx2151_instances {
 
   int        ym2151_enable;
   int        master_volume;
+  int        nlg_logging;
 
   void*      YM2151_Instance;
 } mdx2151_instances;
@@ -144,6 +152,7 @@ _mdx2151_initialize(void)
   self->ym2151_enable = FLAG_FALSE;
   self->master_volume = 127;
   self->YM2151_Instance = NULL;
+  self->nlg_logging = 1;
 
   return self;
 }
@@ -278,6 +287,16 @@ ym2151_shutdown( songdata* data )
   }
   self->YM2151_Instance = NULL;
 }
+
+
+void
+ym2151_set_logging(int flag, songdata* data )
+{
+    __GETSELF(data);
+    
+    self->nlg_logging = flag;
+}
+
 
 void
 ym2151_all_note_off( songdata *data )
@@ -764,6 +783,12 @@ reg_write( int adr, int val, songdata *data )
   if ( adr > 0x0ff ) { return; }
   self->ym2151_register_map[adr] = val;
 
+#ifdef USE_NLG
+  if (self->nlg_logging)
+  {
+      WriteNLG_Data(nlgctx, CMD_OPM, adr, val);
+  }
+#endif
   if ( self->ym2151_enable == FLAG_TRUE ) {
     YM2151WriteReg( ym2151_instance(data), adr, val );
   }

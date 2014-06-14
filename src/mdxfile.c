@@ -37,7 +37,7 @@ __load_file(MDX_DATA* mdx, char* fnam)
   int len = 0;
   int result = 0;
 
-  fp = fopen( fnam, "r" );
+  fp = fopen( fnam, "rb" );
   if ( fp == NULL ) {
     return FLAG_FALSE;
   }
@@ -45,14 +45,20 @@ __load_file(MDX_DATA* mdx, char* fnam)
   fseek(fp, 0, SEEK_END);
   len = (int)ftell(fp);
   fseek(fp, 0, SEEK_SET);
-  buf = (unsigned char *)malloc(sizeof(unsigned char)*len);
+
+  buf = (unsigned char *)malloc(sizeof(unsigned char)*(len+16));
+  memset(buf, 0, len);
+
   if (!buf) {
     fclose(fp);
     return FLAG_FALSE;
   }
 
+
   result = (int)fread( buf, 1, len, fp );
   fclose(fp);
+	
+
 
   if (result!=len) {
     free(buf);

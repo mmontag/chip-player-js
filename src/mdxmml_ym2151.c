@@ -22,6 +22,14 @@
 
 #include "class.h"
 
+#ifdef USE_NLG
+
+#include "nlg.h"
+extern NLGCTX *nlgctx;
+
+#endif
+
+
 /* ------------------------------------------------------------------ */
 /* export symbols */
 
@@ -448,6 +456,8 @@ mdx_init_track_work_area_ym2151( songdata *data )
     mdx->track[i].keyoff_disable     = FLAG_FALSE;
     mdx->track[i].last_volume_normal = FLAG_FALSE;
   }
+    
+  set_tempo(mdx->tempo, data);
 
   return 0;
 }
@@ -676,8 +686,9 @@ set_tempo( int val, songdata *data )
   __GETMDX(data);
 
   if (val<2) return; /* workaround!!! */
+
   mdx->tempo = val;
-  return;
+    return;
 }
 
 static void
@@ -968,7 +979,7 @@ set_opm_reg( int track, int v1, int v2, songdata *data )
     ym2151_set_reg( v1, v2, data );
   }
   if ( v1 == 0x12 ) {
-    mdx->tempo = v2;
+      set_tempo(v2, data);
   }
 
   return;

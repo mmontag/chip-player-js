@@ -1,10 +1,11 @@
-LIB = libmdxmini.a
+LIB = $(OBJDIR)/libmdxmini.a
 
 OBJFILES =  mdxmini.o mdx2151.o mdxmml_ym2151.o 
 OBJFILES += pdxfile.o mdxfile.o pcm8.o ym2151.o
 
+CFLAGS += -DUSE_NLG -I.
+
 SRCDIR = src
-OBJDIR = obj
 
 OBJS = $(addprefix $(OBJDIR)/,$(OBJFILES))
 
@@ -14,11 +15,7 @@ $(OBJDIR) :
 	mkdir $(OBJDIR)
 
 $(LIB) : $(OBJS)
-	$(AR) r $@ $(OBJS)
+	$(AR) rcs $@ $(OBJS)
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	$(CC) -o $@ $< -c $(CFLAGS)
-
-clean :
-	rm -rf $(OBJDIR)
-	rm -f $(LIB) 
+	$(CC) $(CFLAGS) -o $@ $< -c

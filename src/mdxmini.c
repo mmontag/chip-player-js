@@ -30,6 +30,14 @@
 #include "mdxmini.h"
 #include "class.h"
 
+#ifdef USE_NLG
+
+#include "nlg.h"
+extern NLGCTX *nlgctx;
+
+#endif
+
+
 /* ------------------------------------------------------------------ */
 #define PATH_BUF_SIZE 1024
 
@@ -75,10 +83,15 @@ static float reverb_width;
 static float reverb_dry;
 static float reverb_wet;
 
+
+extern void ym2151_set_logging( int flag, songdata * );
+
+
 /* ------------------------------------------------------------------ */
 
 int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
 {
+  data->nlg_tempo = -1;
 
   data->songdata = malloc(sizeof(songdata));
 
@@ -112,7 +125,6 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
   is_use_fragment     = FLAG_TRUE;
 
   is_output_to_stdout_in_wav = FLAG_TRUE;
-
 
   if (!self_construct(data->songdata)) {
     /* failed to create class instances */
@@ -157,7 +169,9 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
     mdx->reverb_dry          = reverb_dry;
     mdx->reverb_wet          = reverb_wet;
 
-    mdx->is_output_to_stdout_in_wav = is_output_to_stdout_in_wav; 
+    mdx->is_output_to_stdout_in_wav = is_output_to_stdout_in_wav;
+    
+    ym2151_set_logging(1, data->songdata);
 
     /* voice data load */
 
@@ -176,7 +190,6 @@ int mdx_open( t_mdxmini *data, char *filename , char *pcmdir )
 	data->channels = pcm8_get_output_channels(data->songdata);
 
 	return 0;
-
 }
 
 void mdx_set_dir ( t_mdxmini *data , char  * dir )
@@ -213,6 +226,14 @@ int mdx_next_frame ( t_mdxmini *data )
 	return 0;
 }
 
+
+// Note : tempo is Timer-B's value.
+// Timer-B
+// Tb(ms) = (1024 * (256-CLKB)) / 4000(KHz)
+//
+
+
+// unit: us
 int mdx_frame_length ( t_mdxmini *data )
 {
 	if (data->self)
@@ -227,7 +248,7 @@ void mdx_make_buffer( t_mdxmini *data, short *buf , int buffer_size )
 	mdx_parse_mml_ym2151_make_samples(buf , buffer_size, data->songdata);
 }
 
-int mdx_calc_sample( t_mdxmini *data, short *buf , int buffer_size )
+int mdx_calc_sample(t_mdxmini *data, short *buf, int buffer_size)
 {
 	int s_pos;
 	int next,frame;
@@ -239,28 +260,85 @@ int mdx_calc_sample( t_mdxmini *data, short *buf , int buffer_size )
 	{
 		if (!data->samples)
 		{
+#ifdef USE_NLG
+            if (data->nlg_tempo != data->mdx->tempo)
+            {
+                data->nlg_tempo = data->mdx->tempo;
+
+                int tempo_us = (1000 * 1024 * (256 - data->nlg_tempo)) / 4000;
+                WriteNLG_CTC(nlgctx, CMD_CTC0, 4); // 4 * 64 = 256us
+                WriteNLG_CTC(nlgctx, CMD_CTC3, (tempo_us / 256));
+
+            }
+            WriteNLG_IRQ(nlgctx);
+#endif
 			next = mdx_next_frame(data);
 			frame = mdx_frame_length(data);
 			data->samples = (data->mdx->dsp_speed * frame)/1000000;
 		}
-		if (data->samples + s_pos >= buffer_size)
-		{
-			mdx_parse_mml_ym2151_make_samples(buf + (s_pos * data->channels) , buffer_size - s_pos, data->songdata);
+        
+        int calc_len = data->samples;
+        
+		if (calc_len + s_pos >= buffer_size)
+            calc_len = buffer_size - s_pos;
+        
+        mdx_parse_mml_ym2151_make_samples(
+                buf + (s_pos * data->channels),
+                calc_len,
+                data->songdata);
 			
-			data->samples -= (buffer_size - s_pos);
-			s_pos = buffer_size;
-		}
-		else
-		{
-			mdx_parse_mml_ym2151_make_samples(buf + (s_pos * data->channels) , data->samples, data->songdata);
-			s_pos += data->samples;
-			data->samples = 0;
-		}
+        data->samples -= calc_len;
+        s_pos += calc_len;
 		
 	}while(s_pos < buffer_size);
 
 	return next;
 }
+
+int mdx_calc_log(t_mdxmini *data, short *buf, int buffer_size)
+{
+	int s_pos;
+	int next,frame;
+	
+	next = 1;
+	s_pos = 0;
+	
+	do
+	{
+		if (!data->samples)
+		{
+#ifdef USE_NLG
+            if (data->nlg_tempo != data->mdx->tempo)
+            {
+                data->nlg_tempo = data->mdx->tempo;
+                
+                int tempo_us = (1000 * 1024 * (256 - data->nlg_tempo)) / 4000;
+                WriteNLG_CTC(nlgctx, CMD_CTC0, 4); // 4 * 64 = 256us
+                WriteNLG_CTC(nlgctx, CMD_CTC3, (tempo_us / 256));
+                
+            }
+            WriteNLG_IRQ(nlgctx);
+#endif
+			next = mdx_next_frame(data);
+			frame = mdx_frame_length(data);
+			data->samples = (data->mdx->dsp_speed * frame)/1000000;
+		}
+        
+        int calc_len = data->samples;
+        
+		if (calc_len + s_pos >= buffer_size)
+            calc_len = buffer_size - s_pos;
+        
+        data->samples -= calc_len;
+        s_pos += calc_len;
+        
+		
+	}while(s_pos < buffer_size);
+    
+	return next;
+}
+
+
 
 void mdx_get_title( t_mdxmini *data, char *title )
 {
@@ -269,7 +347,11 @@ void mdx_get_title( t_mdxmini *data, char *title )
 
 int  mdx_get_length( t_mdxmini *data )
 {
-	return mdx_parse_mml_ym2151_async_get_length(data->songdata);
+    ym2151_set_logging(0, data->songdata);
+	int len = mdx_parse_mml_ym2151_async_get_length(data->songdata);
+    ym2151_set_logging(1, data->songdata);
+
+    return len;
 }
 
 int  mdx_get_tracks ( t_mdxmini *data )
@@ -287,7 +369,7 @@ void mdx_get_current_notes ( t_mdxmini *data , int *notes , int len )
 	}
 }
 
-void mdx_stop( t_mdxmini *data )
+void mdx_close(t_mdxmini *data)
 {
     /* one playing finished */
 	
@@ -320,13 +402,13 @@ _load_pdx_data(char* name, long* out_length)
   unsigned char *buf = NULL;
   
   fp = fopen(name,"rb");
+
   if (!fp)
 	return NULL;
 
-  fseek(fp , 0 ,SEEK_END);
+  fseek(fp, 0, SEEK_END);
   len = (int)ftell(fp);
-  fseek(fp , 0 , SEEK_SET);
-  
+  fseek(fp, 0, SEEK_SET);
   
   buf = (unsigned char *)malloc(sizeof(unsigned char) * len);
   if ( !buf ) {

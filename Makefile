@@ -2,48 +2,91 @@
 # Makefile
 #
 
+ifeq ($(OS),Windows_NT)
+W32 = 1
+export W32
+endif
+
+ifeq ($(W32),1)
+
+include mak/w32.mak
+EXE_SFX = .exe
+
+else
 
 include mak/general.mak
+
+endif
+
+ifeq ($(DEBUG),1)
+MODE = _debug
+endif
+
+TARGET = mdxplay$(MODE)$(EXE_SFX)
+
 CFLAGS += -Isrc
 
-SDL_LIBS = `sdl-config --libs`
-SDL_CFLAGS = `sdl-config --cflags`
+LIBS += $(SDL_LIBS)
+SLIBS += $(SDL_SLIBS)
+CFLAGS += $(SDL_CFLAGS)
+
 
 #
 # definations for packing
 #
 TITLE = mdxmini
-TARGET = mdxplay
 
 FILES = Makefile Makefile.lib Makefile.psplib $(TITLE).txt 
-FILES += fade.h sdlplay.c
+FILES += fade.h sdlplay.c 
+FILES += nlg.c nlg.h
 FILES_ORG = COPYING AUTHORS
-LIB = lib$(TITLE).a
+LIB = $(OBJDIR)/lib$(TITLE).a
 
+LIBS += $(LIB)
 
 ZIPSRC = $(TITLE)`date +"%y%m%d"`.zip
 TOUCH = touch -t `date +"%m%d0000"`
 
 
-OBJS = sdlplay.o $(LIB)
+MDXPLAY_OBJS = sdlplay.o nlg.o 
+OBJS = $(addprefix $(OBJDIR)/,$(MDXPLAY_OBJS))
+
 SRCDIR = src
 MAKDIR = mak
 
+MKLIB = mklib
 
-all : $(TARGET)
+NLGTEST = nlgtest
 
-$(TARGET) : $(OBJS)
-	$(LD) $(LFLAGS) -o $@ $(OBJS) $(SDL_LIBS)
+#
+#
+#
 
-$(LIB):
+all : $(OBJDIR) $(MKLIB) $(TARGET)
+
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+$(TARGET) : $(OBJS) $(LIB)
+	$(LD) $(LFLAGS) -o $@ $(OBJS) $(LIBS)
+
+$(LIB): $(MKLIB)
+
+$(MKLIB):
 	make -f Makefile.lib
 
-%.o : %.c
-	$(CC) -o $@ $< -c $(CFLAGS) $(SDL_CFLAGS) 
+$(OBJDIR)/%.o : %.c
+	$(CC) -o $@ $< -c $(CFLAGS)
 
-clean :
-	make -f Makefile.lib clean
-	rm -f $(TARGET) $(OBJS)
+clean:
+	rm -rf $(OBJDIR)
+	rm -f $(TARGET) $(NLGTEST)
+	
+release:
+	strip $(TARGET)
+
+test:
+	gcc -o $(NLGTEST) nlg.c -DNLG_TEST
 
 dist :
 	find . -name ".DS_Store" -exec rm -f {} \;
