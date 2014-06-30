@@ -57,10 +57,6 @@ int prepare_scan(struct context_data *);
 
 
 #ifndef LIBXMP_CORE_PLAYER
-struct tmpfilename {
-	char *name;
-	struct list_head list;
-};
 
 int decrunch_arc	(FILE *, FILE *);
 int decrunch_arcfs	(FILE *, FILE *);
@@ -98,8 +94,7 @@ enum {
 	BUILTIN_COMPRESS,
 	BUILTIN_BZIP2,
 	BUILTIN_XZ,
-	BUILTIN_LHA,
-	/* BUILTIN_ZOO, */
+	BUILTIN_LHA
 };
 
 
@@ -111,25 +106,22 @@ enum {
 #define REDIR_STDERR
 #endif
 
-#define DECRUNCH_MAX 5 /* don't recurse more than this */
 
 #define BUFLEN 16384
 
 
-static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
+static int decrunch(FILE **f, char *s, char **temp)
 {
     unsigned char b[1024];
     char *cmd;
     FILE *t;
     int fd, builtin, res;
-    char *temp2, tmp[PATH_MAX];
-#ifndef LIBXMP_CORE_PLAYER
-    struct tmpfilename *temp;
-#endif
+    char tmp[PATH_MAX];
     int headersize;
 
     cmd = NULL;
     builtin = res = 0;
+    *temp = NULL;
 
     if (get_temp_dir(tmp, PATH_MAX) < 0)
 	return 0;
@@ -254,19 +246,11 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 
     D_(D_WARN "Depacking file... ");
 
-    temp = calloc(sizeof (struct tmpfilename), 1);
-    if (!temp) {
-	D_(D_CRIT "calloc failed");
-	return -1;
-    }
-
-    temp->name = strdup(tmp);
-    if (temp->name == NULL || (fd = mkstemp(temp->name)) < 0) {
+    *temp = strdup(tmp);
+    if (*temp == NULL || (fd = mkstemp(*temp)) < 0) {
 	D_(D_CRIT "failed");
 	return -1;
     }
-
-    list_add_tail(&temp->list, head);
 
     if ((t = fdopen(fd, "w+b")) == NULL) {
 	D_(D_CRIT "failed");
@@ -298,8 +282,9 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	    fclose(t);
 	    return -1;
 	}
-	while ((n = fread(buf, 1, BSIZE, p)) > 0)
+	while ((n = fread(buf, 1, BSIZE, p)) > 0) {
 	    fwrite(buf, 1, n, t);
+	}
 	pclose (p);
     } else {
 	switch (builtin) {
@@ -345,11 +330,6 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 	case BUILTIN_LHA:
 	    res = decrunch_lha(*f, t);
 	    break;
-#if 0
-	case BUILTIN_ZOO:
-	    res = decrunch_zoo(*f, t);
-	    break;
-#endif
 	case BUILTIN_OXM:
 	    res = decrunch_oxm(*f, t);
 	    break;
@@ -369,45 +349,22 @@ static int decrunch(struct list_head *head, FILE **f, char **s, int ttl)
 
     D_(D_INFO "done");
 
+    fseek(t, 0, SEEK_SET);
     fclose(*f);
     *f = t;
- 
-    if (!--ttl) {
-	    return -1;
-    }
-    
-    temp2 = strdup(temp->name);
-    res = decrunch(head, f, &temp->name, ttl);
-    free(temp2);
-    /* Mirko: temp is now deallocated in unlink_tempfiles()
-     * not a problem, since unlink_tempfiles() is called after decrunch
-     * in loader routines
-     *
-     * free(temp);
-     */
 
     return res;
 }
-
 
 /*
  * Windows doesn't allow you to unlink an open file, so we changed the
  * temp file cleanup system to remove temporary files after we close it
  */
-static void unlink_tempfiles(struct list_head *head)
+static void unlink_tempfile(char *temp)
 {
-	struct tmpfilename *li;
-	struct list_head *tmp;
-
-	/* can't use list_for_each when freeing the node! */
-	for (tmp = head->next; tmp != head; ) {
-		li = list_entry(tmp, struct tmpfilename, list);
-		D_(D_INFO "unlink tmpfile %s", li->name);
-		unlink(li->name);
-		free(li->name);
-		list_del(&li->list);
-		tmp = tmp->next;
-		free(li);
+	if (temp) {
+		unlink(temp);
+		free(temp);
 	}
 }
 
@@ -474,8 +431,10 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	struct stat st;
 	char buf[XMP_NAME_SIZE];
 	int i;
-	struct list_head tmpfiles_list;
 	int ret = -XMP_ERROR_FORMAT;;
+#ifndef LIBXMP_CORE_PLAYER
+	char *temp;
+#endif
 
 	if (stat(path, &st) < 0)
 		return -XMP_ERROR_SYSTEM;
@@ -490,15 +449,13 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	if ((h = hio_open_file(path, "rb")) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
-	INIT_LIST_HEAD(&tmpfiles_list);
-
 #ifndef LIBXMP_CORE_PLAYER
-	if (decrunch(&tmpfiles_list, &h->f, &path, DECRUNCH_MAX) < 0) {
+	if (decrunch(&h->f, path, &temp) < 0) {
 		ret = -XMP_ERROR_DEPACK;
 		goto err;
 	}
 
-	if (hio_stat(h, &st) < 0) {/* get size after decrunch */
+	if (hio_stat(h, &st) < 0) {	/* get size after decrunch */
 		ret = -XMP_ERROR_DEPACK;
 		goto err;
 	}
@@ -530,8 +487,9 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 			fclose(h->f);
 
 #ifndef LIBXMP_CORE_PLAYER
-			unlink_tempfiles(&tmpfiles_list);
+			unlink_tempfile(temp);
 #endif
+
 			if (info != NULL && !is_prowizard) {
 				strncpy(info->name, buf, XMP_NAME_SIZE);
 				strncpy(info->type, format_loader[i]->name,
@@ -544,12 +502,12 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
     err:
 	hio_close(h);
 #ifndef LIBXMP_CORE_PLAYER
-	unlink_tempfiles(&tmpfiles_list);
+	unlink_tempfile(temp);
 #endif
 	return ret;
 }
 
-static int load_module(xmp_context opaque, HIO_HANDLE *h, struct list_head *tmpfiles_list)
+static int load_module(xmp_context opaque, HIO_HANDLE *h, char *tmpfile)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -579,8 +537,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h, struct list_head *tmpf
 	hio_close(h);
 
 #ifndef LIBXMP_CORE_PLAYER
-	if (tmpfiles_list != NULL)
-		unlink_tempfiles(tmpfiles_list);
+	unlink_tempfile(tmpfile);
 #endif
 
 	if (test_result < 0) {
@@ -614,7 +571,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	struct module_data *m = &ctx->m;
 	HIO_HANDLE *h;
 	struct stat st;
-	struct list_head tmpfiles_list;
+	char *temp;
 
 	D_(D_WARN "path = %s", path);
 
@@ -631,19 +588,17 @@ int xmp_load_module(xmp_context opaque, char *path)
 	if ((h = hio_open_file(path, "rb")) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
-	INIT_LIST_HEAD(&tmpfiles_list);
-
 #ifndef LIBXMP_CORE_PLAYER
 	D_(D_INFO "decrunch");
-	if (decrunch(&tmpfiles_list, &h->f, &path, DECRUNCH_MAX) < 0)
+	if (decrunch(&h->f, path, &temp) < 0)
 		goto err_depack;
 
 	if (hio_stat(h, &st) < 0)
 		goto err_depack;
 
-	if (st.st_size < 256) {			/* get size after decrunch */
+	if (st.st_size < 256) {		/* get size after decrunch */
 		hio_close(h);
-		unlink_tempfiles(&tmpfiles_list);
+		unlink_tempfile(temp);
 		return -XMP_ERROR_FORMAT;
 	}
 #endif
@@ -664,12 +619,12 @@ int xmp_load_module(xmp_context opaque, char *path)
 #endif
 	m->size = st.st_size;
 
-	return load_module(opaque, h, &tmpfiles_list);
+	return load_module(opaque, h, temp);
 
 #ifndef LIBXMP_CORE_PLAYER
     err_depack:
 	hio_close(h);
-	unlink_tempfiles(&tmpfiles_list);
+	unlink_tempfile(temp);
 	return -XMP_ERROR_DEPACK;
 #endif
 }
