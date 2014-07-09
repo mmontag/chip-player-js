@@ -307,7 +307,7 @@ struct MMDDump {
     UBYTE name[20];			/* name of the dump */
 };
 
-void mmd_xlat_fx(struct xmp_event *, int, int, int);
+void mmd_xlat_fx(struct xmp_event *, int, int, int, int);
 int mmd_alloc_tables(struct module_data *, int, struct SynthInstr *);
 
 int mmd_load_hybrid_instrument(HIO_HANDLE *, struct module_data *, int, int,

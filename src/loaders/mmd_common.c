@@ -58,7 +58,8 @@ static int get_8ch_tempo(int tempo)
 	}
 }
 
-void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
+void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch,
+		 int hexvol)
 {
 	switch (event->fxt) {
 	case 0x00:
@@ -150,6 +151,10 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch)
 		/* SET VOLUME 0C
 		 * Overrides the default volume of an instrument.
 		 */
+		if (!hexvol) {
+			int p = event->fxp;
+			event->fxp = (p >> 8) * 10 + (p & 0xff);
+		}
 		break;
 	case 0x0d:
 		/* VOLUME SLIDE 0D

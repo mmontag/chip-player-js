@@ -90,7 +90,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int iinfo_offset;
 	int playseq_offset;
 	int pos;
-	int bpm_on, bpmlen, med_8ch;
+	int bpm_on, bpmlen, med_8ch, hexvol;
 
 	LOAD_INIT();
 
@@ -181,6 +181,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	m->c4rate = C4_NTSC_RATE;
 	m->quirk |= song.flags & FLAG_STSLIDE ? 0 : QUIRK_VSALL | QUIRK_PBALL;
+	hexvol = song.flags & FLAG_VOLHEX;
 	med_8ch = song.flags & FLAG_8CHANNEL;
 	bpm_on = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
@@ -345,7 +346,8 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 				event->fxt = e[2];
 				event->fxp = e[3];
-				mmd_xlat_fx(event, bpm_on, bpmlen, med_8ch);
+				mmd_xlat_fx(event, bpm_on, bpmlen,
+						med_8ch, hexvol);
 			}
 		}
 	}

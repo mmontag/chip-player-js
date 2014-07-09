@@ -90,7 +90,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	uint32 songname_offset;
 	uint32 iinfo_offset;
 	int pos;
-	int bpm_on, bpmlen, med_8ch;
+	int bpm_on, bpmlen, med_8ch, hexvol;
 
 	LOAD_INIT();
 
@@ -157,6 +157,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	m->c4rate = C4_NTSC_RATE;
 	m->quirk |= song.flags & FLAG_STSLIDE ? 0 : QUIRK_VSALL | QUIRK_PBALL;
+	hexvol = song.flags & FLAG_VOLHEX;
 	med_8ch = song.flags & FLAG_8CHANNEL;
 	bpm_on = song.flags2 & FLAG2_BPM;
 	bpmlen = 1 + (song.flags2 & FLAG2_BMASK);
@@ -336,8 +337,8 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 					event->fxt = e[2];
 					event->fxp = e[3];
-					mmd_xlat_fx(event, bpm_on,
-							bpmlen, med_8ch);
+					mmd_xlat_fx(event, bpm_on, bpmlen,
+							med_8ch, hexvol);
 				}
 			}
 		} else {		/* MMD0 */
@@ -367,8 +368,8 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 					event->fxt = e[1] & 0x0f;
 					event->fxp = e[2];
-					mmd_xlat_fx(event, bpm_on,
-							bpmlen, med_8ch);
+					mmd_xlat_fx(event, bpm_on, bpmlen,
+							med_8ch, hexvol);
 				}
 			}
 		}
