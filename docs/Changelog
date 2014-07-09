@@ -1,6 +1,11 @@
 Stable versions
 ---------------
 
+4.2.8 ():
+	- fix sequence number reset on player start
+	- fix OctaMED decimal volume decoding (reported by Sami Jumppanen)
+	- disable recursive file decompression
+
 4.2.7 (20140412):
 	- add support for XM with ADPCM samples (reported by mk.bikash)
 	- add OctaMED effect 2E (reported by Andreas Argirakis)
