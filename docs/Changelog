@@ -2,9 +2,12 @@ Stable versions
 ---------------
 
 4.2.8 ():
+	Fix bugs reported by Sami Jumppanen:
+	- fix OctaMED decimal volume decoding
+	- fix MED4 sampled instrument octave range
+	- fix mishandling of MED4 effect FFD
+	Other changes:
 	- fix sequence number reset on player start
-	- fix OctaMED decimal volume decoding (reported by Sami Jumppanen)
-	- fix MED4 sampled instrument range (reported by Sami Jumppanen)
 	- disable recursive file decompression
 
 4.2.7 (20140412):
