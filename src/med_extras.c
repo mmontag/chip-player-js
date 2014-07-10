@@ -296,6 +296,8 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 				virt_setsmp(ctx, chn, xc->smp);
 			}
 		}
+		xc->period += ce->wv;
+
 	    skip_wav:
 		;
 		/* xc->period += ce->wv; */
