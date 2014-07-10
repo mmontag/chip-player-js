@@ -45,7 +45,7 @@ const struct format_loader med4_loader = {
 
 static int med4_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (hio_read32b(f) !=  MAGIC_MED4)
+	if (hio_read32b(f) != MAGIC_MED4)
 		return -1;
 
 	read_title(f, t, 0);
@@ -129,10 +129,10 @@ static inline unsigned stream_read4(struct stream* s)
 {
 	s->has_nibble = !s->has_nibble;
 	if (!s->has_nibble) {
-	  return s->value & 0x0f;
+		return s->value & 0x0f;
 	} else {
-	  s->value = hio_read8(s->f);
-	  return s->value >> 4;
+		s->value = hio_read8(s->f);
+		return s->value >> 4;
 	}
 }
 
@@ -163,13 +163,13 @@ static inline uint16 stream_read16(struct stream* s)
 static inline uint16 stream_read_aligned16(struct stream* s, int bits)
 {
 	if (bits <= 4) {
-	  return stream_read4(s) << 12;
+		return stream_read4(s) << 12;
 	} else if (bits <= 8) {
-	  return stream_read8(s) << 8;
+		return stream_read8(s) << 8;
 	} else if (bits <= 12) {
-	  return stream_read12(s) << 4;
+		return stream_read12(s) << 4;
 	} else {
-	  return stream_read16(s);
+		return stream_read16(s);
 	}
 }
 
@@ -249,7 +249,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 
 		/* read flags */
-	   	c = hio_read8(f);
+		c = hio_read8(f);
 
 		/* read instrument name */
 		size = hio_read8(f);
@@ -288,7 +288,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	printf("pat=%x len=%x\n", mod->pat, mod->len);
 #endif
 	if (mod->len > XMP_MAX_MOD_LENGTH)
-	  return -1;
+		return -1;
 	hio_read(mod->xxo, 1, mod->len, f);
 
 	/* From MED V3.00 docs:
@@ -305,9 +305,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	} else {
 		mod->bpm = 125 * tempo / 33;
 	}
-        transp = hio_read8s(f);
-        hio_read8s(f);
-        flags = hio_read8s(f);
+	transp = hio_read8s(f);
+	hio_read8s(f);
+	flags = hio_read8s(f);
 	mod->spd = hio_read8(f);
 
 	if (~flags & 0x20)	/* sliding */
@@ -435,7 +435,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			int line = y * 32 + j;
 
 			if (linemask[y] & 0x80000000) {
-			  chmsk = stream_read_aligned16(&stream, chn);
+				chmsk = stream_read_aligned16(&stream, chn);
 				for (k = 0; k < chn; k++, chmsk <<= 1) {
 					event = &EVENT(i, k, line);
 
@@ -450,7 +450,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
 
 			if (fxmask[y] & 0x80000000) {
-			  chmsk = stream_read_aligned16(&stream, chn);
+				chmsk = stream_read_aligned16(&stream, chn);
 				for (k = 0; k < chn; k++, chmsk <<= 1) {
 					event = &EVENT(i, k, line);
 
@@ -495,12 +495,12 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	mask = hio_read32b(f);
 	if (mask == MAGIC4('M','E','D','V')) {
-	  mod->smp = 0;
+		mod->smp = 0;
 
-	  if (instrument_init(mod) < 0)
-		  return -1;
-	  hio_seek(f, -4, SEEK_CUR);
-	  goto parse_iff;
+		if (instrument_init(mod) < 0)
+			return -1;
+		hio_seek(f, -4, SEEK_CUR);
+		goto parse_iff;
 	}
 	mask <<= 32;
 	mask |= hio_read32b(f);
@@ -584,7 +584,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			hio_read(synth.voltbl, 1, synth.voltbllen, f);;
 			hio_read(synth.wftbl, 1, synth.wftbllen, f);;
 
-			hio_seek(f,  pos + hio_read32b(f), SEEK_SET);
+			hio_seek(f, pos + hio_read32b(f), SEEK_SET);
 			length = hio_read32b(f);
 			type = hio_read16b(f);
 
@@ -705,8 +705,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 		}
 
-                /* instr type is sample */
-                xxi->nsm = 1;
+		/* instr type is sample */
+		xxi->nsm = 1;
 		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 		
@@ -722,7 +722,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		xxs->len = length;
 		xxs->lps = temp_inst[i].loop_start;
 		xxs->lpe = temp_inst[i].loop_end;
-		xxs->flg = temp_inst[i].loop_end > 2 ?  XMP_SAMPLE_LOOP : 0;
+		xxs->flg = temp_inst[i].loop_end > 2 ? XMP_SAMPLE_LOOP : 0;
 
 		D_(D_INFO "  %04x %04x %04x %c V%02x %+03d",
 				xxs->len, mod->xxs[smp_idx].lps, xxs->lpe,
