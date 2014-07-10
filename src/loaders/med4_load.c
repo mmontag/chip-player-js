@@ -732,6 +732,20 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (load_sample(m, f, 0, xxs, NULL) < 0)
 			return -1;
 
+		/* Limit range to 3 octave (see MED.El toro) */
+		for (j = 0; j < 9; j++) {
+			for (k = 0; k < 12; k++) {
+				int xpo = 0;
+	
+				if (j < 4)
+					xpo = 12 * (4 - j);
+				else if (j > 6)
+					xpo = -12 * (j - 6);
+	
+				xxi->map[12 * j + k].xpo = xpo;
+			}
+		}
+
 		smp_idx++;
 	}
 
