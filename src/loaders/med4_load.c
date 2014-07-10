@@ -92,8 +92,6 @@ static void fix_effect(struct xmp_event *event)
 		if (event->fxp == 0xff) {
 			event->fxp = event->fxt = 0;
 			event->vol = 1;
-		} else if (event->fxp == 0xfe) {
-			event->fxp = event->fxt = 0;
 		} else if (event->fxp == 0xf1) {
 			event->fxt = FX_EXTENDED;
 			event->fxp = (EX_RETRIG << 4) | 3;
@@ -103,6 +101,8 @@ static void fix_effect(struct xmp_event *event)
 		} else if (event->fxp == 0xf3) {
 			event->fxt = FX_EXTENDED;
 			event->fxp = (EX_DELAY << 4) | 3;
+		} else if (event->fxp > 0xf0) {
+			event->fxp = event->fxt = 0;
 		} else if (event->fxp > 10) {
 			event->fxt = FX_S3M_BPM;
 			event->fxp = 125 * event->fxp / 33;
