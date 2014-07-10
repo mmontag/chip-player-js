@@ -263,7 +263,7 @@ static int decrunch(FILE **f, char *s, char **temp)
 	char line[1024], buf[BSIZE];
 	FILE *p;
 
-	snprintf(line, 1024, cmd, *s);
+	snprintf(line, 1024, cmd, s);
 
 #ifdef WIN32
 	/* Note: The _popen function returns an invalid file opaque, if
