@@ -340,6 +340,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 */
 		}
 
+		if (e->ins == 0 && !IS_VALID_INSTRUMENT(xc->old_ins - 1)) {
+			new_invalid_ins = 1;
+		}
+
 		if (new_invalid_ins) {
 			virt_resetchannel(ctx, chn);
 		}
