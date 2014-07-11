@@ -8,6 +8,7 @@ Stable versions
 	- fix mishandling of MED4 effect FFD
 	Other changes:
 	- fix sequence number reset on player start
+	- limit note number to avoid crash (reported by Bastian Pflieger)
 	- disable recursive file decompression
 
 4.2.7 (20140412):
