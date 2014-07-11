@@ -116,6 +116,7 @@ PLAYER		= read_event scan period_amiga period_mod_range pan \
 		  it_portamento_envelope_reset it_portamento_envelope_reset_cg \
 		  xm_portamento_envelope_reset \
 		  ft2_note_noins_after_keyoff \
+		  ft2_note_noins_after_invalid_ins \
 		  invalid_period invalid_mod_length invalid_mod_channels
 
 LOADER		= ust ac1d unic unic2 nst flt flt8 wow m15 mtm it it_oldins \
