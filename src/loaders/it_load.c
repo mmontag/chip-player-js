@@ -872,8 +872,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    if (0 != hio_seek(f, start + ish.sample_ptr, SEEK_SET))
 	    	goto err4;
 
-	    //TODO: use proper unsigned values in xmp_sample structure
-	    if ((unsigned)xxs->lpe > (unsigned)xxs->len || (unsigned)xxs->lps >= (unsigned)xxs->lpe)
+	    if (xxs->lpe > xxs->len || xxs->lps >= xxs->lpe)
 	    	xxs->flg &= ~XMP_SAMPLE_LOOP;
 
 	    if (~ish.convert & IT_CVT_SIGNED)

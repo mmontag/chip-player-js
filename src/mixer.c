@@ -503,10 +503,11 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	struct xmp_sample *xxs;
 	int lps;
 
-	if (vi->smp < m->mod.smp)
+	if (vi->smp < m->mod.smp) {
  		xxs = &m->mod.xxs[vi->smp];
-	else
+	} else {
  		xxs = &ctx->smix.xxs[vi->smp - m->mod.smp];
+	}
 
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {
 		return;
