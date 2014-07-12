@@ -6,6 +6,7 @@ Stable versions
 	- fix OctaMED decimal volume decoding
 	- fix MED4 sampled instrument octave range
 	- fix mishandling of MED4 effect FFD
+	- fix MED synth waveform command CHD
 	Other changes:
 	- fix sequence number reset on player start
 	- fix stray notes in XM (reported by Andreas Argirakis)
