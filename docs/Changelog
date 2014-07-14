@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.2.8 ():
+4.2.8 (20140714):
 	Fix bugs reported by Sami Jumppanen:
 	- fix OctaMED decimal volume decoding
 	- fix MED4 sampled instrument octave range
