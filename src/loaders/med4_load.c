@@ -248,6 +248,8 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if ((int64)mask > 0)
 			continue;
 
+		num_ins = i + 1;
+
 		/* read flags */
 		c = hio_read8(f);
 
@@ -278,8 +280,6 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		temp_inst[i].loop_end = temp_inst[i].loop_start + loop_len;
 
 		copy_adjust(temp_inst[i].name, buf, 32);
-
-		num_ins++;
 	}
 
 	mod->pat = hio_read16b(f);
