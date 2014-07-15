@@ -1,6 +1,12 @@
 Stable versions
 ---------------
 
+4.2.9 ():
+	Fix bugs reported by Sami Jumppanen:
+	- fix MED4 instrument numbering
+	- fix MED effect FFF (turn note off)
+	- fix MED finetune effect parameter
+	
 4.2.8 (20140714):
 	Fix bugs reported by Sami Jumppanen:
 	- fix OctaMED decimal volume decoding
