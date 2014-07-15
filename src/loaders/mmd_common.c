@@ -235,10 +235,14 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch,
 	case 0x15:
 		/* SET FINETUNE 15
 		 * Set a finetune value for a note, overrides the default
-		 * fine tune value of the instrument.
+		 * fine tune value of the instrument. Negative numbers must
+		 * be entered as follows:
+		 *   -1 => FF    -3 => FD    -5 => FB    -7 => F9
+		 *   -2 => FE    -4 => FC    -6 => FA    -8 => F8
 		 */
 		/* FIXME */
 		event->fxt = FX_FINETUNE;
+		event->fxp = (event->fxp + 8) << 4;
 		break;
 	case 0x16:
 		/* LOOP 16
