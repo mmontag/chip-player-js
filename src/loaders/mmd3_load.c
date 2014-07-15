@@ -181,6 +181,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	m->c4rate = C4_NTSC_RATE;
 	m->quirk |= song.flags & FLAG_STSLIDE ? 0 : QUIRK_VSALL | QUIRK_PBALL;
+	m->quirk |= QUIRK_PERPAT;	/* for track finetune */
 	hexvol = song.flags & FLAG_VOLHEX;
 	med_8ch = song.flags & FLAG_8CHANNEL;
 	bpm_on = song.flags2 & FLAG2_BPM;

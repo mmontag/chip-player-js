@@ -398,6 +398,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	      fx_finetune:
 		xc->finetune = (int16) (fxp - 0x80);
 		break;
+	case FX_TRKFINETUNE:
+		xc->track_finetune = (int16) (fxp - 0x80);
+		break;
 
 	case FX_F_VSLIDE_UP:	/* Fine volume slide up */
 	    fx_f_vslide_up:

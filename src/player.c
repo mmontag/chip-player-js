@@ -426,7 +426,8 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	if (TEST(NOTE_SLIDE)) {
 		if (xc->noteslide.count == 0) {
 			xc->note += xc->noteslide.slide;
-			xc->period = note_to_period(xc->note, xc->finetune,
+			xc->period = note_to_period(xc->note,
+					xc->finetune + xc->track_finetune,
 					HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 			xc->noteslide.count = xc->noteslide.speed;
 		}
@@ -661,8 +662,9 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 #ifndef LIBXMP_CORE_PLAYER
 		if (TEST(FINE_NSLIDE)) {
 			xc->note += xc->noteslide.fslide;
-			xc->period = note_to_period(xc->note, xc->finetune,
-					 HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+			xc->period = note_to_period(xc->note,
+					xc->finetune + xc->track_finetune,
+					HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 		}
 #endif
 	}
@@ -859,6 +861,16 @@ static void next_order(struct context_data *ctx)
 		int chn;
 		for (chn = 0; chn < mod->chn; chn++) {
 			p->xc_data[chn].per_flags = 0;
+		}
+	}
+
+	/* For MED finetune effect */
+	{
+		int i;
+
+		for (i = 0; i < mod->chn; i++) {
+			struct channel_data *xc = &p->xc_data[i];
+			xc->track_finetune = 0;
 		}
 	}
 #endif

@@ -108,8 +108,8 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_phase(&xc->tremolo, 0);
 
 		xc->porta.target = note_to_period(note,
-				xc->finetune, HAS_QUIRK(QUIRK_LINEAR),
-				xc->per_adj);
+				xc->finetune + xc->track_finetune,
+				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 		if (xc->period < 1 || !is_toneporta) {
 			xc->period = xc->porta.target;
 		}
