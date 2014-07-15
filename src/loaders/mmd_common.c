@@ -203,9 +203,9 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch,
 		case 0xfe:	/* End of song */
 			event->fxt = event->fxp = 0;
 			break;
-		case 0xff:	/* Note cut */
-			event->fxt = FX_EXTENDED;
-			event->fxp = (EX_CUT << 4) | 3;
+		case 0xff:	/* Turn note off */
+			event->fxt = event->fxp = 0;
+			event->note = XMP_KEY_CUT;
 			break;
 		default:
 			event->fxt = event->fxp = 0;

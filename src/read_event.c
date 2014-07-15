@@ -906,6 +906,10 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 		if (e->note == XMP_KEY_OFF) {
 			SET_NOTE(NOTE_RELEASE);
 			use_ins_vol = 0;
+		} else if (e->note == XMP_KEY_CUT) {
+			SET_NOTE(NOTE_END);
+			xc->period = 0;
+			virt_resetchannel(ctx, chn);
 		} else if (!is_toneporta && IS_VALID_INSTRUMENT(xc->ins)) {
 			struct xmp_instrument *xxi = &mod->xxi[xc->ins];
 
