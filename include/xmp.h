@@ -313,6 +313,7 @@ EXPORT int         xmp_set_player      (xmp_context, int, int);
 EXPORT int         xmp_get_player      (xmp_context, int);
 EXPORT int         xmp_set_instrument_path (xmp_context, char *);
 EXPORT int         xmp_load_module_from_memory (xmp_context, void *, long);
+EXPORT int         xmp_load_module_from_file (xmp_context, void *);
 
 /* External sample mixer API */
 EXPORT int         xmp_start_smix       (xmp_context, int, int);

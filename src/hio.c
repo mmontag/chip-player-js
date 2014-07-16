@@ -233,7 +233,7 @@ int hio_eof(HIO_HANDLE *h)
 	}
 }
 
-HIO_HANDLE *hio_open_file(void *path, char *mode)
+HIO_HANDLE *hio_open(void *path, char *mode)
 {
 	HIO_HANDLE *h;
 
@@ -266,6 +266,20 @@ HIO_HANDLE *hio_open_mem(void *path, long size)
 	h->start = path;
 	h->pos = 0;
 	h->size = size;
+
+	return h;
+}
+
+HIO_HANDLE *hio_open_file(FILE *f)
+{
+	HIO_HANDLE *h;
+
+	h = (HIO_HANDLE *)malloc(sizeof (HIO_HANDLE));
+	if (h == NULL)
+		return NULL;
+	
+	h->type = HIO_HANDLE_TYPE_FILE;
+	h->f = f;
 
 	return h;
 }

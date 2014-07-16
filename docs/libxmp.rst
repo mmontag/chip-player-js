@@ -1,5 +1,5 @@
 
-Libxmp 4.2 API documentation
+Libxmp 4.3 API documentation
 ============================
 
 .. contents:: `Contents`
@@ -331,6 +331,26 @@ int xmp_load_module_from_memory(xmp_context c, void \*mem, long size)
       specified. If size is set to 0 certain module formats won't be
       recognized, the MD5 digest will not be set, and module-specific
       quirks won't be applied.
+ 
+  **Returns:**
+    0 if sucessful, or a negative error code in case of error.
+    Error codes can be ``-XMP_ERROR_FORMAT`` in case of an unrecognized file
+    format, ``-XMP_ERROR_LOAD`` if the file format was recognized but the
+    file loading failed, or ``-XMP_ERROR_SYSTEM`` in case of system error
+    (the system error code is set in ``errno``).
+
+.. _xmp_load_module_from_file():
+
+int xmp_load_module_from_file(xmp_context c, FILE \*f)
+``````````````````````````````````````````````````````
+
+  *[Added in libxmp 4.3]* Load a module from a stream into the specified
+  player context.
+
+  **Parameters:**
+    :c: the player context handle.
+ 
+    :f: the file stream. On return, the stream position is undefined.
  
   **Returns:**
     0 if sucessful, or a negative error code in case of error.

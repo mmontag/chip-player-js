@@ -233,7 +233,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			goto err;
 		}
 	}
-	if ((s = hio_open_file(smp_filename, "rb")) == NULL) {
+	if ((s = hio_open(smp_filename, "rb")) == NULL) {
 		fprintf(stderr, "libxmp: can't open sample file %s\n",
 								smp_filename);
 		goto err;

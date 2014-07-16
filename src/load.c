@@ -446,7 +446,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	}
 #endif
 
-	if ((h = hio_open_file(path, "rb")) == NULL)
+	if ((h = hio_open(path, "rb")) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 #ifndef LIBXMP_CORE_PLAYER
@@ -585,7 +585,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	}
 #endif
 
-	if ((h = hio_open_file(path, "rb")) == NULL)
+	if ((h = hio_open(path, "rb")) == NULL)
 		return -XMP_ERROR_SYSTEM;
 
 #ifndef LIBXMP_CORE_PLAYER
@@ -649,6 +649,31 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	m->basename = NULL;
 	m->dirname = NULL;
 	m->size = 0;
+
+	return load_module(opaque, h, NULL);
+}
+
+int xmp_load_module_from_file(xmp_context opaque, void *file)
+{
+	struct context_data *ctx = (struct context_data *)opaque;
+	struct module_data *m = &ctx->m;
+	HIO_HANDLE *h;
+	FILE *f = (FILE *)file;
+	struct stat st;
+
+	if (fstat(fileno(f), &st) < 0)
+		return -XMP_ERROR_SYSTEM;
+
+	if ((h = hio_open_file(f)) == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	if (ctx->state > XMP_STATE_UNLOADED)
+		xmp_release_module(opaque);
+
+	m->filename = NULL;
+	m->basename = NULL;
+	m->dirname = NULL;
+	m->size = st.st_size;
 
 	return load_module(opaque, h, NULL);
 }

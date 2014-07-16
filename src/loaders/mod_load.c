@@ -597,7 +597,7 @@ skip_test:
 	    char sn[256];
 	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
 	
-	    if ((s = hio_open_file(sn, "rb"))) {
+	    if ((s = hio_open(sn, "rb"))) {
 	        if (load_sample(m, s, flags, &mod->xxs[i], NULL) < 0) {
 		    hio_close(s);
 		    return -1;

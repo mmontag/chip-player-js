@@ -190,7 +190,7 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (found) {
 			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
-			if ((s = hio_open_file(path, "rb"))) {
+			if ((s = hio_open(path, "rb"))) {
 				hio_stat(s, &stat);
 				mod->xxs[i].len = stat.st_size;
 			}

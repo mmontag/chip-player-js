@@ -50,3 +50,8 @@ XMP_4.2 {
     xmp_smix_release_sample;
 } XMP_4.1;
 
+XMP_4.3 {
+  global:
+    xmp_load_module_from_file;
+} XMP_4.2;
+

@@ -180,7 +180,7 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	xxi = &smix->xxi[num];
 	xxs = &smix->xxs[num];
 
-	h = hio_open_file(path, "rb");
+	h = hio_open(path, "rb");
 	if (h == NULL) {
 		retval = -XMP_ERROR_SYSTEM;
 		goto err;
