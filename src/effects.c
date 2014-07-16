@@ -398,9 +398,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	      fx_finetune:
 		xc->finetune = (int16) (fxp - 0x80);
 		break;
-	case FX_TRKFINETUNE:
-		xc->track_finetune = (int16) (fxp - 0x80);
-		break;
 
 	case FX_F_VSLIDE_UP:	/* Fine volume slide up */
 	    fx_f_vslide_up:
@@ -626,6 +623,11 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->trackvol.fslide = MSN(fxp) - LSN(fxp);
 		}
 		break;
+
+	case FX_TRK_FINETUNE:
+		xc->track_finetune = (int16) (fxp - 0x80);
+		break;
+
 	case FX_IT_INSTFUNC:
 		switch (fxp) {
 		case 0:	/* Past note cut */

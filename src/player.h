@@ -94,7 +94,9 @@ struct channel_data {
 
 	struct lfo vibrato;
 	struct lfo tremolo;
+#ifndef LIBXMP_CORE_DISABLE_IT
 	struct lfo panbrello;
+#endif
 
 	struct {
         	int8 val[16];	/* 16 for Smaksak MegaArps */
@@ -159,6 +161,24 @@ struct channel_data {
 		int memory;	/* Pan slide effect memory */
 	} pan;	
 
+	struct {
+		int speed;
+		int count;
+		int pos;
+	} invloop;
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+	struct {
+		int slide;	/* IT tempo slide */
+	} tempo;
+
+	struct {
+		int cutoff;	/* IT filter cutoff frequency */
+		int resonance;	/* IT filter resonance */
+	} filter;
+
+#endif
+
 #ifndef LIBXMP_CORE_PLAYER
 	struct {
 		int slide;	/* PTM note slide amount */
@@ -166,24 +186,7 @@ struct channel_data {
 		int speed;	/* PTM note slide speed */
 		int count;	/* PTM note slide counter */
 	} noteslide;
-#endif
 
-	struct {
-		int slide;	/* IT tempo slide */
-	} tempo;
-
-	struct {
-		int speed;
-		int count;
-		int pos;
-	} invloop;
-
-	struct {
-		int cutoff;	/* IT filter cutoff frequency */
-		int resonance;	/* IT filter resonance */
-	} filter;
-
-#ifndef LIBXMP_CORE_PLAYER
 	void *extra;
 #endif
 
