@@ -1,11 +1,13 @@
 Stable versions
 ---------------
 
-4.2.9 ():
+4.3.0 ():
 	Fix bugs reported by Sami Jumppanen:
 	- fix MED4 instrument numbering
 	- fix MED effect FFF (turn note off)
 	- fix MED persistent finetune effect
+	Other changes:
+	- add API call to load a module from a file handle
 	
 4.2.8 (20140714):
 	Fix bugs reported by Sami Jumppanen:
