@@ -16,7 +16,7 @@ TEST(test_sample_load_8bit)
 
 	memset(&m, 0, sizeof (struct module_data));
 
-	f = hio_open_file("data/sample-8bit.raw", "rb");
+	f = hio_open("data/sample-8bit.raw", "rb");
 	fail_unless(f != NULL, "can't open sample file");
 	hio_read(buffer, 1, 101, f);
 	for (i = 0; i < 101; i++) {

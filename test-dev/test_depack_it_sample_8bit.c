@@ -11,7 +11,7 @@ TEST(test_depack_it_sample_8bit)
 	int ret;
 	char dest[10000];
 
-	f = hio_open_file("data/it-sample-8bit.raw", "rb");
+	f = hio_open("data/it-sample-8bit.raw", "rb");
 	fail_unless(f != NULL, "can't open data file");
 
 	fo = fopen(TMP_FILE, "wb");
