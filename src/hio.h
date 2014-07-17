@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stddef.h>
+#include "memio.h"
 
 #define HIO_HANDLE_TYPE(x) ((x)->type)
 
@@ -11,10 +12,10 @@ typedef struct {
 #define HIO_HANDLE_TYPE_FILE	0
 #define HIO_HANDLE_TYPE_MEMORY	1
 	int type;
-	FILE *f;
-	uint8 *start;
-	ptrdiff_t pos;
-	ptrdiff_t size;
+	union {
+		FILE *file;
+		MFILE *mem;
+	} handle;
 } HIO_HANDLE;
 
 int8	hio_read8s	(HIO_HANDLE *);

@@ -450,7 +450,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 		return -XMP_ERROR_SYSTEM;
 
 #ifndef LIBXMP_CORE_PLAYER
-	if (decrunch(&h->f, path, &temp) < 0) {
+	if (decrunch(&h->handle.file, path, &temp) < 0) {
 		ret = -XMP_ERROR_DEPACK;
 		goto err;
 	}
@@ -472,19 +472,19 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	}
 
 	for (i = 0; format_loader[i] != NULL; i++) {
-		fseek(h->f, 0, SEEK_SET);
+		fseek(h->handle.file, 0, SEEK_SET);
 		if (format_loader[i]->test(h, buf, 0) == 0) {
 			int is_prowizard = 0;
 
 #ifndef LIBXMP_CORE_PLAYER
 			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
-				fseek(h->f, 0, SEEK_SET);
-				pw_test_format(h->f, buf, 0, info);
+				fseek(h->handle.file, 0, SEEK_SET);
+				pw_test_format(h->handle.file, buf, 0, info);
 				is_prowizard = 1;
 			}
 #endif
 
-			fclose(h->f);
+			fclose(h->handle.file);
 
 #ifndef LIBXMP_CORE_PLAYER
 			unlink_tempfile(temp);
@@ -590,7 +590,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 #ifndef LIBXMP_CORE_PLAYER
 	D_(D_INFO "decrunch");
-	if (decrunch(&h->f, path, &temp) < 0)
+	if (decrunch(&h->handle.file, path, &temp) < 0)
 		goto err_depack;
 
 	if (hio_stat(h, &st) < 0)

@@ -294,8 +294,8 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	if (a) {
-		unsigned char *x = read_lzw_dynamic(f->f, buf, 13, 0, size,
-						size, XMP_LZW_QUIRK_DSYM);
+		unsigned char *x = read_lzw_dynamic(f->handle.file, buf,
+					13, 0, size, size, XMP_LZW_QUIRK_DSYM);
 		if (x == NULL) {
 			free(buf);
 			return -1;
@@ -338,8 +338,8 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	if (a) {
-		unsigned char *x = read_lzw_dynamic(f->f, buf, 13, 0, size,
-						size, XMP_LZW_QUIRK_DSYM);
+		unsigned char *x = read_lzw_dynamic(f->handle.file, buf,
+					13, 0, size, size, XMP_LZW_QUIRK_DSYM);
 		if (x == NULL) {
 			free(buf);
 			return -1;
@@ -426,8 +426,9 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (a == 1) {
 			uint8 *b = malloc(mod->xxs[i].len);
-			read_lzw_dynamic(f->f, b, 13, 0, mod->xxs[i].len,
-					mod->xxs[i].len, XMP_LZW_QUIRK_DSYM);
+			read_lzw_dynamic(f->handle.file, b, 13, 0,
+					mod->xxs[i].len, mod->xxs[i].len,
+					XMP_LZW_QUIRK_DSYM);
 			ret = load_sample(m, NULL,
 					SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
 					&mod->xxs[i], (char*)b);

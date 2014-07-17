@@ -64,7 +64,7 @@ static int pw_test(HIO_HANDLE *f, char *t, const int start)
 	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
 		return -1;
 
-	return pw_test_format(f->f, t, start, NULL);
+	return pw_test_format(f->handle.file, t, start, NULL);
 }
 
 static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
@@ -88,7 +88,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if ((fd = mkstemp(tmp)) < 0)
 		return -1;
 
-	if (pw_wizardry(fileno(f->f), fd, &name) < 0) {
+	if (pw_wizardry(fileno(f->handle.file), fd, &name) < 0) {
 		close(fd);
 		unlink(tmp);
 		return -1;
