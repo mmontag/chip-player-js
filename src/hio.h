@@ -5,16 +5,19 @@
 #include <sys/stat.h>
 #include <stddef.h>
 #include "memio.h"
+#include "zipio.h"
 
 #define HIO_HANDLE_TYPE(x) ((x)->type)
 
 typedef struct {
 #define HIO_HANDLE_TYPE_FILE	0
 #define HIO_HANDLE_TYPE_MEMORY	1
+#define HIO_HANDLE_TYPE_ZIP	2
 	int type;
 	union {
 		FILE *file;
 		MFILE *mem;
+		ZFILE *zip;
 	} handle;
 } HIO_HANDLE;
 
