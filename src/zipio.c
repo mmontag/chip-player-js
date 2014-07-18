@@ -78,6 +78,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "common.h"
 #include "zipio.h"
 #include "inflate.h"
 #include "crc.h"
@@ -549,10 +550,13 @@ static void inflate_free(void *buffer)
   free(buffer);
 }
 
+#define NAMELEN 255
+
 ZFILE *Zopen(const char *path, const char *mode)
 {
   struct ZipioState *zs;
-
+  char name[NAMELEN + 1];
+  int getnext;
   long inplen;
 
   /* Allocate the ZipioState memory area */
@@ -582,6 +586,9 @@ ZFILE *Zopen(const char *path, const char *mode)
     return NULL;
   }
 
+next_file:
+  getnext = 0;
+
   /* Read the first input buffer */
   if ((inplen = (long) fread(zs->inpbuf, 1, INPBUFSIZE, zs->OpenFile)) >= 30)
   {
@@ -596,6 +603,22 @@ ZFILE *Zopen(const char *path, const char *mode)
     GETUINT4(zs->inpbuf+22, zs->usiz);
     GETUINT2(zs->inpbuf+26, zs->flen);
     GETUINT2(zs->inpbuf+28, zs->elen);
+
+    if (zs->flen > NAMELEN)
+	getnext = 1;
+
+    memcpy(name, zs->inpbuf+30, zs->flen);
+    name[zs->flen] = 0;
+
+    if (exclude_match(name))
+	getnext = 1;
+
+    if (getnext) {
+        int ofs = (int)(30 + zs->flen + zs->elen + zs->csiz);
+	fseek(zs->OpenFile, -inplen + ofs, SEEK_CUR);
+	goto next_file;
+    }
+	
 
 #ifdef PRINTZIPHEADER
     fprintf(stderr, "local file header signature  hex %8lx\n", zs->sign);
