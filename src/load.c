@@ -68,7 +68,7 @@ int decrunch_lzx	(FILE *, FILE *);
 int decrunch_oxm	(FILE *, FILE *);
 int decrunch_xfd	(FILE *, FILE *);
 int decrunch_s404	(FILE *, FILE *);
-int decrunch_zip	(FILE *, FILE *);
+/* int decrunch_zip	(FILE *, FILE *); */
 int decrunch_gzip	(FILE *, FILE *);
 int decrunch_compress	(FILE *, FILE *);
 int decrunch_bzip2	(FILE *, FILE *);
@@ -315,9 +315,9 @@ static int decrunch(FILE **f, char *s, char **temp)
 	case BUILTIN_S404:
 	    res = decrunch_s404(*f, t);
 	    break;
-	case BUILTIN_ZIP:
+	/* case BUILTIN_ZIP:
 	    res = decrunch_zip(*f, t);
-	    break;
+	    break; */
 	case BUILTIN_GZIP:
 	    res = decrunch_gzip(*f, t);
 	    break;
