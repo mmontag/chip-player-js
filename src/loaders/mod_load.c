@@ -132,12 +132,12 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
 
     hio_seek(f, start + 20, SEEK_SET);
     for (i = 0; i < 31; i++) {
-	hio_seek(f, 22, SEEK_CUR);			/* Instrument name */
+	hio_seek(f, 22, SEEK_CUR);		/* Instrument name */
 	if (hio_read16b(f) & 0x8000)		/* test length */
 		return -1;
-	if (hio_read8(f) & 0xf0)			/* test finetune */
+	if (hio_read8(f) & 0xf0)		/* test finetune */
 		return -1;
-	if (hio_read8(f) > 0x40)			/* test volume */
+	if (hio_read8(f) > 0x40)		/* test volume */
 		return -1;
 	if (hio_read16b(f) & 0x8000)		/* test loop start */
 		return -1;
@@ -220,7 +220,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */
     int tracker_id = TRACKER_PROTRACKER;
-    int showmagic;
 
     LOAD_INIT();
 
@@ -476,8 +475,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 skip_test:
 
-    showmagic = 0;
-
     switch (tracker_id) {
     case TRACKER_PROTRACKER:
 	tracker = "Protracker";
@@ -493,8 +490,10 @@ skip_test:
 	break;
     case TRACKER_FASTTRACKER:
     case TRACKER_FASTTRACKER2:
-    case TRACKER_TAKETRACKER:
 	tracker = "Fast Tracker";
+	break;
+    case TRACKER_TAKETRACKER:
+	tracker = "Take Tracker";
 	break;
     case TRACKER_OCTALYSER:
 	tracker = "Octalyser";
@@ -510,13 +509,11 @@ skip_test:
 	break;
     case TRACKER_SCREAMTRACKER3:
 	tracker = "Scream Tracker";
-	showmagic = 1;
 	break;
 	break;
     case TRACKER_CONVERTEDST:
     case TRACKER_CONVERTED:
 	tracker = "Converted";
-	showmagic = 1;
 	break;
     case TRACKER_CLONE:
 	tracker = "Protracker clone";
@@ -525,18 +522,12 @@ skip_test:
     case TRACKER_UNKNOWN_CONV:
     case TRACKER_UNKNOWN:
 	tracker = "Unknown tracker";
-	showmagic = 1;
 	break;
     }
 
     mod->trk = mod->chn * mod->pat;
 
-    if ((!memcmp(magic, "M.K.", 4) && showmagic == 0)
-			|| tracker_id == TRACKER_FLEXTRAX) {
-        snprintf(mod->type, XMP_NAME_SIZE, "%s", tracker);
-    } else {
-        snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
-    }
+    snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
 
     MODULE_INFO();
 
