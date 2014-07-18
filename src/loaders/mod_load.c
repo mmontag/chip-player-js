@@ -527,7 +527,11 @@ skip_test:
 
     mod->trk = mod->chn * mod->pat;
 
-    snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
+    if (tracker_id == TRACKER_MODSGRAVE) {
+	snprintf(mod->type, XMP_NAME_SIZE, "%s", tracker);
+    } else {
+	snprintf(mod->type, XMP_NAME_SIZE, "%s %s", tracker, magic);
+    }
 
     MODULE_INFO();
 
