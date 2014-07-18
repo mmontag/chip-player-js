@@ -62,7 +62,7 @@
 
 #define SPLINE_INTERP() do { \
     int f = frac >> 6; \
-    smp_in = (cubic_spline_lut0[f] * sptr[pos - 1] + \
+    smp_in = (cubic_spline_lut0[f] * sptr[(int)pos - 1] + \
               cubic_spline_lut1[f] * sptr[pos    ] + \
               cubic_spline_lut3[f] * sptr[pos + 2] + \
               cubic_spline_lut2[f] * sptr[pos + 1]) >> SPLINE_SHIFT; \
@@ -134,7 +134,7 @@
 #define VAR_NORM(x) \
     register int smp_in; \
     x *sptr = vi->sptr; \
-    int pos = vi->pos; \
+    unsigned int pos = vi->pos; \
     int frac = vi->frac
 
 #define VAR_LINEAR(x) \
