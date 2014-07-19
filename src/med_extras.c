@@ -175,6 +175,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn,
 		ce->vv = 0;
 		ce->vs = ie->vts;
 		ce->ws = ie->wts;
+		ce->wv = 0;
 	}
 
 	if (ce->vs > 0 && ce->vc-- == 0) {
