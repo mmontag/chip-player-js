@@ -8,7 +8,6 @@ Stable versions
 	- fix MED persistent finetune effect
 	Other changes:
 	- add API call to load a module from a file handle
-	- read zip files directly instead of creating temporary files
 	- refactor memory I/O calls
 	- fix segfault in mixer caused by sample position overflow
 	
