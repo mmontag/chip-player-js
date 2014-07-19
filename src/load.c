@@ -138,16 +138,13 @@ static int decrunch(FILE **f, char *s, char **temp)
     } else
 #endif
 
-#if 0
     if (b[0] == 'P' && b[1] == 'K' &&
 	((b[2] == 3 && b[3] == 4) || (b[2] == '0' && b[3] == '0' &&
 	b[4] == 'P' && b[5] == 'K' && b[6] == 3 && b[7] == 4))) {
 
 	/* Zip */
 	builtin = BUILTIN_ZIP;
-    } else
-#endif
-    if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
+    } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
 	/* LHa */
 	builtin = BUILTIN_LHA;
     } else if (b[0] == 31 && b[1] == 139) {
@@ -516,7 +513,6 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h, char *tmpfile)
 	struct module_data *m = &ctx->m;
 	int i, ret;
 	int test_result, load_result;
-	int is_file = 0;
 
 	load_prologue(ctx);
 
@@ -538,15 +534,10 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h, char *tmpfile)
 		set_md5sum(h, m->md5);
 #endif
 
-	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
-		is_file = 1;
-	}
 	hio_close(h);
 
 #ifndef LIBXMP_CORE_PLAYER
-	if (is_file) {
-		unlink_tempfile(tmpfile);
-	}
+	unlink_tempfile(tmpfile);
 #endif
 
 	if (test_result < 0) {
@@ -599,18 +590,16 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 #ifndef LIBXMP_CORE_PLAYER
 	D_(D_INFO "decrunch");
-	if (HIO_HANDLE_TYPE(h) == HIO_HANDLE_TYPE_FILE) {
-		if (decrunch(&h->handle.file, path, &temp) < 0)
-			goto err_depack;
+	if (decrunch(&h->handle.file, path, &temp) < 0)
+		goto err_depack;
 
-		if (hio_stat(h, &st) < 0)
-			goto err_depack;
+	if (hio_stat(h, &st) < 0)
+		goto err_depack;
 
-		if (st.st_size < 256) {		/* get size after decrunch */
-			hio_close(h);
-			unlink_tempfile(temp);
-			return -XMP_ERROR_FORMAT;
-		}
+	if (st.st_size < 256) {		/* get size after decrunch */
+		hio_close(h);
+		unlink_tempfile(temp);
+		return -XMP_ERROR_FORMAT;
 	}
 #endif
 
