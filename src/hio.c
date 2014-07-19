@@ -222,7 +222,7 @@ HIO_HANDLE *hio_open_file(FILE *f)
 		return NULL;
 	
 	h->type = HIO_HANDLE_TYPE_FILE;
-	h->handle.file = f;
+	h->handle.file = fdopen(fileno(f), "rb");
 
 	return h;
 }
