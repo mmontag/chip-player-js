@@ -747,7 +747,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		return;
 
 #ifndef LIBXMP_CORE_PLAYER
-	play_extras(ctx, xc, chn, t == 0 && TEST(NEW_INS|NEW_NOTE));
+	play_extras(ctx, xc, chn, t);
 #endif
 
 	/* Do cut/retrig */
