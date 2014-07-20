@@ -624,10 +624,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 
-	case FX_TRK_FINETUNE:
-		xc->track_finetune = (int16) (fxp - 0x80);
-		break;
-
 	case FX_IT_INSTFUNC:
 		switch (fxp) {
 		case 0:	/* Past note cut */

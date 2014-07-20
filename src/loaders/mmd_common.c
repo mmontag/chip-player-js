@@ -240,8 +240,7 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch,
 		 *   -1 => FF    -3 => FD    -5 => FB    -7 => F9
 		 *   -2 => FE    -4 => FC    -6 => FA    -8 => F8
 		 */
-		/* FIXME */
-		event->fxt = FX_TRK_FINETUNE;
+		event->fxt = FX_FINETUNE;
 		event->fxp = (event->fxp + 8) << 4;
 		break;
 	case 0x16:

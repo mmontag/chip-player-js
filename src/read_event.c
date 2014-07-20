@@ -107,8 +107,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
 
-		xc->porta.target = note_to_period(note,
-				xc->finetune + xc->track_finetune,
+		xc->porta.target = note_to_period(note, xc->finetune,
 				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 		if (xc->period < 1 || !is_toneporta) {
 			xc->period = xc->porta.target;
@@ -853,6 +852,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 	int new_invalid_ins = 0;
 	int is_toneporta;
 	int use_ins_vol;
+	int finetune;
 
 	xc->flags = 0;
 	note = -1;
@@ -952,7 +952,13 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
+	/* Keep effect-set finetune if no instrument set */
+	finetune = xc->finetune;
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
+	if (!e->ins) {
+		xc->finetune = finetune;
+	}
+
 	if (e->ins && sub != NULL) {
 		reset_envelopes(ctx, xc);
 	}

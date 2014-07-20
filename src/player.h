@@ -73,7 +73,6 @@ struct channel_data {
 	double period;		/* Amiga or linear period */
 	double per_adj;		/* MED period/pitch adjustment factor hack */
 	int finetune;		/* Guess what */
-	int track_finetune;	/* Finetune valid for entire track */
 	int ins;		/* Instrument number */
 	int old_ins;		/* Last instruemnt */
 	int old_insvol;		/* Last instrument that did set a note */
