@@ -523,12 +523,9 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	sub->pan = 0x80;
 	sub->xpo = sample->strans + 36;
 	if (ver >= 2 && expdata->s_ext_entrsz > 4) {	/* MMD2+ */
-		sub->xpo += exp_smp->default_pitch;
-#if 0
-		if (ver == 2) {
-			sub->xpo += 24;			/* ??!? */
+		if (exp_smp->default_pitch) {
+			sub->xpo += exp_smp->default_pitch - 25;
 		}
-#endif
 	}
 	sub->sid = smp_idx;
 	sub->fin = exp_smp->finetune << 4;
