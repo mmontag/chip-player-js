@@ -321,5 +321,6 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *, struct module_data *, int, int,
 		struct InstrHdr *, int, struct InstrExt *, struct MMD0sample *);
 
 void mmd_set_bpm(struct module_data *, int, int, int, int);
+void mmd_info_text(HIO_HANDLE *, struct module_data *, int);
 
 #endif /* LIBXMP_MED_H */

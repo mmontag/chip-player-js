@@ -88,6 +88,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int expsmp_offset;
 	int songname_offset;
 	int iinfo_offset;
+	int mmdinfo_offset;
 	int playseq_offset;
 	int pos;
 	int bpm_on, bpmlen, med_8ch, hexvol;
@@ -228,6 +229,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	expdata.i_ext_entrsz = 0;
 	expsmp_offset = 0;
 	iinfo_offset = 0;
+	mmdinfo_offset = 0;
 	if (expdata_offset) {
 		hio_seek(f, start + expdata_offset, SEEK_SET);
 		hio_read32b(f);
@@ -235,8 +237,8 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		D_(D_INFO "expsmp_offset = 0x%08x", expsmp_offset);
 		expdata.s_ext_entries = hio_read16b(f);
 		expdata.s_ext_entrsz = hio_read16b(f);
-		hio_read32b(f);
-		hio_read32b(f);
+		hio_read32b(f);		/* annotxt */
+		hio_read32b(f);		/* annolen */
 		iinfo_offset = hio_read32b(f);
 		D_(D_INFO "iinfo_offset = 0x%08x", iinfo_offset);
 		expdata.i_ext_entries = hio_read16b(f);
@@ -246,14 +248,21 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read32b(f);
 		hio_read32b(f);
 		songname_offset = hio_read32b(f);
-		D_(D_INFO "songname_offset = 0x%08x", songname_offset);
 		expdata.songnamelen = hio_read32b(f);
+		hio_read32b(f);		/* dumps */
+		mmdinfo_offset = hio_read32b(f);
+
 		hio_seek(f, start + songname_offset, SEEK_SET);
 		D_(D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
 		for (i = 0; i < expdata.songnamelen; i++) {
 			if (i >= XMP_NAME_SIZE)
 				break;
 			mod->name[i] = hio_read8(f);
+		}
+
+		if (mmdinfo_offset != 0) {
+			hio_seek(f, start + mmdinfo_offset, SEEK_SET);
+			mmd_info_text(f, m, mmdinfo_offset);
 		}
 	}
 
@@ -282,9 +291,9 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->trk = mod->pat * mod->chn;
 
 	if (ver == 2)
-	    set_type(m, "OctaMED v5 MMD2");
+		set_type(m, "OctaMED v5 MMD2");
 	else
-	    set_type(m, "OctaMED Soundstudio MMD%c", '0' + ver);
+		set_type(m, "OctaMED Soundstudio MMD%c", '0' + ver);
 
 	MODULE_INFO();
 

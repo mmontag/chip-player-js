@@ -697,3 +697,23 @@ void mmd_set_bpm(struct module_data *m, int med_8ch, int deftempo,
 	}
 }
 
+
+void mmd_info_text(HIO_HANDLE *f, struct module_data *m, int offset)
+{
+	int type, len;
+
+	/* Copy song info text */
+	hio_read32b(f);		/* skip next */
+	hio_read16b(f);		/* skip reserved */
+	type = hio_read16b(f);
+	if (type == 1) {	/* 1 = ASCII */
+		len = hio_read32b(f);
+		if (len != 0) {
+			m->comment = malloc(len + 1);
+			if (m->comment == NULL)
+				return;
+			hio_read(m->comment, 1, len, f);
+			m->comment[len] = 0;
+		}
+	}
+}

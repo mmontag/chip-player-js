@@ -82,13 +82,14 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	int ver = 0;
 	int smp_idx = 0;
 	uint8 e[4];
-	uint32 song_offset;
-	uint32 blockarr_offset;
-	uint32 smplarr_offset;
-	uint32 expdata_offset;
-	uint32 expsmp_offset;
-	uint32 songname_offset;
-	uint32 iinfo_offset;
+	int song_offset;
+	int blockarr_offset;
+	int smplarr_offset;
+	int expdata_offset;
+	int expsmp_offset;
+	int songname_offset;
+	int iinfo_offset;
+	int annotxt_offset;
 	int pos;
 	int bpm_on, bpmlen, med_8ch, hexvol;
 
@@ -218,8 +219,8 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		D_(D_INFO "expsmp_offset = 0x%08x", expsmp_offset);
 		expdata.s_ext_entries = hio_read16b(f);
 		expdata.s_ext_entrsz = hio_read16b(f);
-		hio_read32b(f);
-		hio_read32b(f);
+		annotxt_offset = hio_read32b(f);
+		expdata.annolen = hio_read32b(f);
 		iinfo_offset = hio_read32b(f);
 		D_(D_INFO "iinfo_offset = 0x%08x", iinfo_offset);
 		expdata.i_ext_entries = hio_read16b(f);
@@ -229,14 +230,23 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read32b(f);
 		hio_read32b(f);
 		songname_offset = hio_read32b(f);
-		D_(D_INFO "songname_offset = 0x%08x", songname_offset);
 		expdata.songnamelen = hio_read32b(f);
+
 		hio_seek(f, start + songname_offset, SEEK_SET);
-		D_(D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
 		for (i = 0; i < expdata.songnamelen; i++) {
 			if (i >= XMP_NAME_SIZE)
 				break;
 			mod->name[i] = hio_read8(f);
+		}
+
+		/* Read annotation */
+		if (annotxt_offset != 0 && expdata.annolen != 0) {
+			m->comment = malloc(expdata.annolen + 1);
+			if (m->comment != NULL) {
+				hio_seek(f, start + annotxt_offset, SEEK_SET);
+				hio_read(m->comment, 1, expdata.annolen, f);
+				m->comment[expdata.annolen] = 0;
+			}
 		}
 	}
 
