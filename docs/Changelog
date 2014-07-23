@@ -9,8 +9,11 @@ Stable versions
 	Other changes:
 	- add API call to load a module from a file handle
 	- refactor memory I/O calls
+	- read OctaMED annotation and song info text
 	- fix segfault in mixer caused by sample position overflow
 	- fix MED synth pitch slide reset on new note
+	- fix OctaMED SS default pitch transpose (reported by Karl Churchill)
+	- fix OctaMED instrument name loading
 	
 4.2.8 (20140714):
 	Fix bugs reported by Sami Jumppanen:
