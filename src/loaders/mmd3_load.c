@@ -212,7 +212,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		type = hio_read16b(f);
 		if (type == -1) {			/* type is synth? */
 			hio_seek(f, 14, SEEK_CUR);
-			mod->smp += hio_read16b(f);		/* wforms */
+			mod->smp += hio_read16b(f);	/* wforms */
 		} else {
 			mod->smp++;
 		}
@@ -367,7 +367,6 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (smp_idx = i = 0; i < mod->ins; i++) {
 		int smpl_offset;
-		char name[40] = "";
 
 		hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET);
 		smpl_offset = hio_read32b(f);
@@ -384,9 +383,10 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		pos = hio_tell(f);
 
 		if (expdata_offset && i < expdata.i_ext_entries) {
+			struct xmp_instrument *xxi = &mod->xxi[i];
 			hio_seek(f, iinfo_offset + i * expdata.i_ext_entrsz,
 								SEEK_SET);
-			hio_read(name, 40, 1, f);
+			hio_read(&xxi->name, 40, 1, f);
 			D_(D_INFO "[%2x] %-40.40s %d", i, name, instr.type);
 		}
 

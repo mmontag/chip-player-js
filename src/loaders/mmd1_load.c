@@ -389,7 +389,6 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (smp_idx = i = 0; i < mod->ins; i++) {
 		int smpl_offset;
-		char name[40] = "";
 
 		if (hio_seek(f, start + smplarr_offset + i * 4, SEEK_SET) != 0)
 			return -1;
@@ -401,16 +400,17 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 
 		if (hio_seek(f, start + smpl_offset, SEEK_SET) != 0)
-		  return -1;
+			return -1;
 		instr.length = hio_read32b(f);
 		instr.type = hio_read16b(f);
 
 		pos = hio_tell(f);
 
 		if (expdata_offset && i < expdata.i_ext_entries) {
-		    if (hio_seek(f, iinfo_offset + i * expdata.i_ext_entrsz, SEEK_SET) != 0)
-		      return -1;
-		    hio_read(name, 40, 1, f);
+			struct xmp_instrument *xxi = &mod->xxi[i];
+			if (hio_seek(f, iinfo_offset + i * expdata.i_ext_entrsz, SEEK_SET) != 0)
+				return -1;
+			hio_read(&xxi->name, 40, 1, f);
 		}
 
 		D_(D_INFO "\n[%2x] %-40.40s %d", i, name, instr.type);
