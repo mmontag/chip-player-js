@@ -13,7 +13,7 @@ TEST(test_api_load_module_from_file)
 	f = fopen("data/test.it", "rb");
 	fail_unless(f != NULL, "open file");
 
-	ret = xmp_load_module_from_file(ctx, f);
+	ret = xmp_load_module_from_file(ctx, f, 0);
 	fclose(f);
 	fail_unless(ret == 0, "load file");
 
