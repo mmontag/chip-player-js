@@ -6,10 +6,12 @@
 #include "../src/virtual.h"
 
 /*
- Note delays retrigger envelopes.
+ A fun test for rogue note delays that outputs a nice drum beat if played
+ correctly. Combinations of note delays with and without instrument number
+ are tested.
 */
 
-TEST(test_openmpt_envretrig)
+TEST(test_openmpt_xm_delay1)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -22,10 +24,10 @@ TEST(test_openmpt_envretrig)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("openmpt/xm/envretrig.data", "r");
+	f = fopen("openmpt/xm/delay1.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "openmpt/xm/envretrig.xm");
+	xmp_load_module(opaque, "openmpt/xm/delay1.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;

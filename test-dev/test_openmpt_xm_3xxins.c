@@ -6,10 +6,13 @@
 #include "../src/virtual.h"
 
 /*
-
+ If a tone portamento effect is encountered, the instrument number next to
+ it is always interpreted as the instrument number of the currently playing
+ instrument. This test shows how the instrument envelope is reset when such
+ an event is encountered.
 */
 
-TEST(test_openmpt_envoff)
+TEST(test_openmpt_xm_3xxins)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -22,10 +25,10 @@ TEST(test_openmpt_envoff)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("openmpt/xm/EnvOff.data", "r");
+	f = fopen("openmpt/xm/3xxins.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "openmpt/xm/EnvOff.xm");
+	xmp_load_module(opaque, "openmpt/xm/3xxins.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;

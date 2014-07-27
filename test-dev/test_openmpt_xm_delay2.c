@@ -6,12 +6,15 @@
 #include "../src/virtual.h"
 
 /*
- Two tests in one: An offset effect that points beyond the sample end should
- stop playback on this channel. The note must not be picked up by further
- portamento effects.
+ Rogue note delay test. It seems that internally, Fasttracker 2 always acts
+ like the last played note is next to a note delay (EDx with x > 0) if there
+ is no note. Doing exactly this is probably the easiest way to pass this test.
+ This also explains Fasttracker 2’s behaviour if there is an instrument number
+ next to such a rogue note delay, which is shown in this test. Both channels
+ should play exactly the same combination of snare and bass sounds.
 */
 
-TEST(test_openmpt_3xx_no_old_samp)
+TEST(test_openmpt_xm_delay2)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -24,10 +27,10 @@ TEST(test_openmpt_3xx_no_old_samp)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("openmpt/xm/3xx-no-old-samp.data", "r");
+	f = fopen("openmpt/xm/delay2.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "openmpt/xm/3xx-no-old-samp.xm");
+	xmp_load_module(opaque, "openmpt/xm/delay2.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;

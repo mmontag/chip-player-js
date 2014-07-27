@@ -6,13 +6,16 @@
 #include "../src/virtual.h"
 
 /*
- If a tone portamento effect is encountered, the instrument number next to
- it is always interpreted as the instrument number of the currently playing
- instrument. This test shows how the instrument envelope is reset when such
- an event is encountered.
+ In this test, all possible combinations of the envelope sustain point and
+ envelope loops are tested, and you can see their behaviour on note-off. If
+ the sustain point is at the loop end and the sustain loop has been released,
+ don't loop anymore. Probably the most important thing for this test is that
+ in Fasttracker 2 (and Impulse Tracker), envelope position is incremented
+ before the point is evaluated, not afterwards, so when no ticks have been
+ processed yet, the envelope position should be invalid.
 */
 
-TEST(test_openmpt_3xxins)
+TEST(test_openmpt_xm_envloops)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -25,10 +28,10 @@ TEST(test_openmpt_3xxins)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("openmpt/xm/3xxins.data", "r");
+	f = fopen("openmpt/xm/EnvLoops.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "openmpt/xm/3xxins.xm");
+	xmp_load_module(opaque, "openmpt/xm/EnvLoops.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;
