@@ -90,7 +90,8 @@ OPENMPT_XM	= 3xxins \
 		  envoff \
 		  envretrig
 
-OPENMPT_MOD	= patternjump
+OPENMPT_MOD	= patternjump \
+		  portasmpchange
 
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \
