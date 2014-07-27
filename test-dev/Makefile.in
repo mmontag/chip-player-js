@@ -90,6 +90,8 @@ OPENMPT_XM	= 3xxins \
 		  envoff \
 		  envretrig
 
+OPENMPT_MOD	= patternjump
+
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \
 		  stereo_8bit_nearest stereo_16bit_nearest \
@@ -173,6 +175,8 @@ STORLEK_TESTS	= $(addprefix storlek_,$(STORLEK))
 
 OPENMPT_XM_TESTS= $(addprefix openmpt_xm_,$(OPENMPT_XM))
 
+OPENMPT_MOD_TESTS= $(addprefix openmpt_mod_,$(OPENMPT_MOD))
+
 MIXER_TESTS	= $(addprefix mixer_,$(MIXER))
 
 READ_TESTS	= $(addprefix read_,$(READ))
@@ -206,6 +210,7 @@ TESTS		= $(READ_TESTS) \
 		  $(SEQUENCER_TESTS) \
 		  $(STORLEK_TESTS) \
 		  $(OPENMPT_XM_TESTS) \
+		  $(OPENMPT_MOD_TESTS) \
 		  $(PLAYER_TESTS) \
 		  $(MIXER_TESTS) \
 		  $(SYNTH_TESTS) \
