@@ -453,9 +453,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		 * correctly.
 		 */
 		virt_voicepos(ctx, chn, xc->offset_val);
-		if (TEST(OFFSET))
-			xc->offset_val <<= 1;
-		RESET(OFFSET);
 	}
 
 	if (use_ins_vol) {
@@ -593,9 +590,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	if (note >= 0) {
 		xc->note = note;
 		virt_voicepos(ctx, chn, xc->offset_val);
-		if (TEST(OFFSET))
-			xc->offset_val <<= 1;
-		RESET(OFFSET);
 	}
 
 	if (use_ins_vol) {
@@ -820,9 +814,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	if (note >= 0) {
 		xc->note = note;
 		virt_voicepos(ctx, chn, xc->offset_val);
-		if (TEST(OFFSET))
-			xc->offset_val <<= 1;
-		RESET(OFFSET);
 	}
 
 	if (reset_env) {
@@ -983,11 +974,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (note >= 0) {
 		xc->note = note;
-
 		virt_voicepos(ctx, chn, xc->offset_val);
-		if (TEST(OFFSET) && p->flags & XMP_FLAGS_FX9BUG)
-			xc->offset_val <<= 1;
-		RESET(OFFSET);
 	}
 
 	if (use_ins_vol) {
