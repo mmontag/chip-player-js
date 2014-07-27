@@ -14,7 +14,7 @@
 a.out
 lib/
 test-dev/libxmp-covertest
-test-dev/libxmp-tests
+test-dev/libxmp-test
 
 # VC++ files
 *.suo
