@@ -87,7 +87,8 @@ OPENMPT		= 3xxins \
 		  delay1 \
 		  delay2 \
 		  envloops \
-		  envoff
+		  envoff \
+		  envretrig
 
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \
