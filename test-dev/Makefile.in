@@ -82,6 +82,9 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  24_short_envelope_loops \
 		  25_portamento_and_pitch_slide
 
+OPENMPT		= 3xxins \
+		  3xx_no_old_samp
+
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \
 		  stereo_8bit_nearest stereo_16bit_nearest \
@@ -163,6 +166,8 @@ SEQUENCER_TESTS	= prev_order_start prev_order_skip prev_order_start_seq \
 
 STORLEK_TESTS	= $(addprefix storlek_,$(STORLEK))
 
+OPENMPT_TESTS	= $(addprefix openmpt_,$(OPENMPT))
+
 MIXER_TESTS	= $(addprefix mixer_,$(MIXER))
 
 READ_TESTS	= $(addprefix read_,$(READ))
@@ -195,6 +200,7 @@ TESTS		= $(READ_TESTS) \
 		  $(EFFECT_TESTS) \
 		  $(SEQUENCER_TESTS) \
 		  $(STORLEK_TESTS) \
+		  $(OPENMPT_TESTS) \
 		  $(PLAYER_TESTS) \
 		  $(MIXER_TESTS) \
 		  $(SYNTH_TESTS) \
