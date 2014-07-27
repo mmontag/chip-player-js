@@ -2,6 +2,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "../src/mixer.h"
+#include "../src/virtual.h"
 
 /*
  Two tests in one: An offset effect that points beyond the sample end should
@@ -12,38 +14,58 @@
 TEST(test_openmpt_3xx_no_old_samp)
 {
 	xmp_context opaque;
-	struct xmp_frame_info info;
-	int time, row, frame, chan, period, volume;
+	struct context_data *ctx;
+	struct module_data *m;
+        struct player_data *p;
+        struct mixer_voice *vi;
+	struct xmp_frame_info fi;
+	int time, row, frame, chan, period, note, ins, vol, pan, pos0;
 	char line[200];
 	FILE *f;
-	int i;
+	int i, voc;
 
 	f = fopen("data/openmpt/3xx-no-old-samp.data", "r");
 
 	opaque = xmp_create_context();
 	xmp_load_module(opaque, "data/openmpt/3xx-no-old-samp.xm");
+
+	ctx = (struct context_data *)opaque;
+	m = &ctx->m;
+	p = &ctx->p;
+
 	xmp_start_player(opaque, 44100, 0);
 
 	while (1) {
-		struct xmp_channel_info *ci = &info.channel_info[i];
 		xmp_play_frame(opaque);
-		xmp_get_frame_info(opaque, &info);
-		if (info.loop_count > 0)
+		xmp_get_frame_info(opaque, &fi);
+		if (fi.loop_count > 0)
 			break;
 
-		for (i = 0; i < 2; i++) {
-			struct xmp_channel_info *ci = &info.channel_info[i];
+		for (i = 0; i < m->mod.chn; i++) {
+			struct xmp_channel_info *ci = &fi.channel_info[i];
+
+			voc = map_channel(p, i);
+			if (voc < 0)
+				continue;
+
+			vi = &p->virt.voice_array[voc];
 
 			fgets(line, 200, f);
-			sscanf(line, "%d %d %d %d %d %d",
-				&time, &row, &frame, &chan, &period, &volume);
+			sscanf(line, "%d %d %d %d %d %d %d %d %d %d",
+				&time, &row, &frame, &chan, &period,
+				&note, &ins, &vol, &pan, &pos0);
 
-			fail_unless(info.time  == time,   "time mismatch");
-			fail_unless(info.row   == row,    "row mismatch");
-			fail_unless(info.frame == frame,  "frame mismatch");
+			fail_unless(fi.time    == time,   "time mismatch");
+			fail_unless(fi.row     == row,    "row mismatch");
+			fail_unless(fi.frame   == frame,  "frame mismatch");
 			fail_unless(ci->period == period, "period mismatch");
-			fail_unless(ci->volume == volume, "volume mismatch");
+			fail_unless(vi->note   == note,   "note mismatch");
+			fail_unless(vi->ins    == ins,    "instrument");
+			fail_unless(vi->vol    == vol,    "volume mismatch");
+			fail_unless(vi->pan    == pan,    "pan mismatch");
+			fail_unless(vi->pos0   == pos0,   "position mismatch");
 		}
+		
 	}
 
 	fgets(line, 200, f);
