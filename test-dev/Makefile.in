@@ -84,6 +84,7 @@ STORLEK		= 01_arpeggio_pitch_slide \
 
 OPENMPT		= 3xxins \
 		  3xx_no_old_samp \
+		  delay1 \
 		  delay2
 
 MIXER		= interpolation_default \
