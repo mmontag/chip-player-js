@@ -86,6 +86,7 @@ OPENMPT		= 3xxins \
 		  3xx_no_old_samp \
 		  delay1 \
 		  delay2 \
+		  envloops \
 		  envoff
 
 MIXER		= interpolation_default \
