@@ -50,6 +50,7 @@ int main(int argc, char **argv)
 	p = &ctx->p;
 
 	xmp_start_player(opaque, 44100, 0);
+	xmp_set_player(opaque, XMP_PLAYER_MIX, 100);
 
 	while (xmp_play_frame(opaque) == 0) {
 		xmp_get_frame_info(opaque, &fi);

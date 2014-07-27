@@ -35,6 +35,7 @@ TEST(test_openmpt_3xxins)
 	p = &ctx->p;
 
 	xmp_start_player(opaque, 44100, 0);
+	xmp_set_player(opaque, XMP_PLAYER_MIX, 100);
 
 	while (1) {
 		xmp_play_frame(opaque);
