@@ -304,6 +304,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_JUMP:		/* Order jump */
 		p->flow.pbreak = 1;
 		p->flow.jump = fxp;
+		/* effect B resets effect D in lower channels */
+		p->flow.jumpline = 0;
 		break;
 	case FX_VOLSET:		/* Volume set */
 		SET(NEW_VOL);
