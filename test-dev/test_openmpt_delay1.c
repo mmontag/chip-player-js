@@ -24,10 +24,10 @@ TEST(test_openmpt_delay1)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("data/openmpt/delay1.data", "r");
+	f = fopen("openmpt/xm/delay1.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/openmpt/delay1.xm");
+	xmp_load_module(opaque, "openmpt/xm/delay1.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;

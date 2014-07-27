@@ -22,10 +22,10 @@ TEST(test_openmpt_envoff)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("data/openmpt/EnvOff.data", "r");
+	f = fopen("openmpt/xm/EnvOff.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/openmpt/EnvOff.xm");
+	xmp_load_module(opaque, "openmpt/xm/EnvOff.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;

@@ -24,10 +24,10 @@ TEST(test_openmpt_3xx_no_old_samp)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("data/openmpt/3xx-no-old-samp.data", "r");
+	f = fopen("openmpt/xm/3xx-no-old-samp.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/openmpt/3xx-no-old-samp.xm");
+	xmp_load_module(opaque, "openmpt/xm/3xx-no-old-samp.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;

@@ -22,10 +22,10 @@ TEST(test_openmpt_envretrig)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("data/openmpt/envretrig.data", "r");
+	f = fopen("openmpt/xm/envretrig.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/openmpt/envretrig.xm");
+	xmp_load_module(opaque, "openmpt/xm/envretrig.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;

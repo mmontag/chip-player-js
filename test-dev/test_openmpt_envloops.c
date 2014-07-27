@@ -28,10 +28,10 @@ TEST(test_openmpt_envloops)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("data/openmpt/EnvLoops.data", "r");
+	f = fopen("openmpt/xm/EnvLoops.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/openmpt/EnvLoops.xm");
+	xmp_load_module(opaque, "openmpt/xm/EnvLoops.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;

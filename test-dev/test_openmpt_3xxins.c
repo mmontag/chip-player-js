@@ -25,10 +25,10 @@ TEST(test_openmpt_3xxins)
 	FILE *f;
 	int i, voc;
 
-	f = fopen("data/openmpt/3xxins.data", "r");
+	f = fopen("openmpt/xm/3xxins.data", "r");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, "data/openmpt/3xxins.xm");
+	xmp_load_module(opaque, "openmpt/xm/3xxins.xm");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;
