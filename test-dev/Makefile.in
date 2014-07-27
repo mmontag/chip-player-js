@@ -83,7 +83,8 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  25_portamento_and_pitch_slide
 
 OPENMPT		= 3xxins \
-		  3xx_no_old_samp
+		  3xx_no_old_samp \
+		  delay2
 
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \
