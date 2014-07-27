@@ -447,12 +447,22 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	if (note >= 0) {
 		xc->note = note;
 
-		/* (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
-		 * We retrigger the sample only if we have a new note without
-		 * tone portamento, otherwise we won't play sweeps and loops
-		 * correctly.
+		/* From the OpenMPT test cases (3xx-no-old-samp.xm):
+		 * "An offset effect that points beyond the sample end should
+		 * stop playback on this channel."
 		 */
-		virt_voicepos(ctx, chn, xc->offset_val);
+
+		if (xc->offset_val >= mod->xxs[sub->sid].len) {
+			virt_resetchannel(ctx, chn);
+		} else {
+
+			/* (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
+			 * We retrigger the sample only if we have a new note
+			 * without tone portamento, otherwise we won't play
+			 * sweeps and loops correctly.
+			 */
+			virt_voicepos(ctx, chn, xc->offset_val);
+		}
 	}
 
 	if (use_ins_vol) {
