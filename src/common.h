@@ -167,6 +167,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_S3MRTG	(1 << 24)	/* S3M-style retrig when count == 0 */
 #define QUIRK_RTDELAY	(1 << 25)	/* Delay effect retrigs instrument */
 #define QUIRK_MLKDLY	(1 << 26)	/* MilkyTracker-style delay effect */
+#define QUIRK_ENVSUS	(1 << 27)	/* Key release jumps to sus point */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
@@ -174,7 +175,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 /* Format quirks */
 #define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN | QUIRK_FINEFX | \
 				 QUIRK_S3MLFO  | QUIRK_S3MRTG )
-#define QUIRKS_FT2		(QUIRK_RTDELAY | QUIRK_FINEFX )
+#define QUIRKS_FT2		(QUIRK_RTDELAY | QUIRK_FINEFX | QUIRK_ENVSUS )
 #define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_FINEFX | QUIRK_VIBALL | \
 				 QUIRK_ENVFADE | QUIRK_ITVPOR | QUIRK_KEYOFF | \
 				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_S3MLFO | \

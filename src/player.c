@@ -321,7 +321,8 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	}
 
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64, &end);
-	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE);
+	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE,
+						HAS_QUIRK(QUIRK_ENVSUS));
 	if (end && vol_envelope == 0)
 		SET_NOTE(NOTE_END);
 
@@ -418,7 +419,8 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	instrument = get_instrument(ctx, xc->ins);
 
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0, &end);
-	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE);
+	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE,
+						HAS_QUIRK(QUIRK_ENVSUS));
 
 #ifndef LIBXMP_CORE_PLAYER
 	/* Do note slide */
@@ -529,6 +531,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 static void process_pan(struct context_data *ctx, int chn, int t, int act)
 {
 	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 	struct mixer_data *s = &ctx->s;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_instrument *instrument;
@@ -539,7 +542,8 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	instrument = get_instrument(ctx, xc->ins);
 
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32, &end);
-	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE);
+	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE,
+						HAS_QUIRK(QUIRK_ENVSUS));
 
 	if (TEST(PANBRELLO)) {
 		panbrello = get_lfo(&xc->panbrello, 512);

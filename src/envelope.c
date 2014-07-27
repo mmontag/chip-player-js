@@ -63,7 +63,7 @@ int get_envelope(struct xmp_envelope *env, int x, int def, int *end)
 }
 
 
-int update_envelope(struct xmp_envelope *env, int x, int release)
+int update_envelope(struct xmp_envelope *env, int x, int release, int sus_quirk)
 {
 	int16 *data = env->data;
 	int has_loop, has_sus;
@@ -80,6 +80,17 @@ int update_envelope(struct xmp_envelope *env, int x, int release)
 	lpe = env->lpe << 1;
 	sus = env->sus << 1;
 	sue = env->sue << 1;
+
+	/* FT2 and IT envelopes behave in a different way regarding loops,
+	 * sustain and release. When the sustain point is at the end of the
+	 * envelope loop end and the key is released, FT2 escapes the loop
+	 * while IT runs another iteration. (See EnvLoops.xm in the OpenMPT
+	 * test cases.)
+	 */
+	if (has_loop && has_sus && sus == lpe) {
+		if (!sus_quirk || !release)
+			has_sus = 0;
+	}
 
 	if (env->flg & XMP_ENVELOPE_SLOOP) {
 		if (!release && has_sus) {
