@@ -92,7 +92,8 @@ OPENMPT_XM	= 3xxins \
 		  envretrig
 
 OPENMPT_IT	= porta_offset \
-		  portareset
+		  portareset \
+		  portasample
 
 OPENMPT_S3M	= portasmpchange
 
