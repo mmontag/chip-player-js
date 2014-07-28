@@ -68,7 +68,7 @@ int run_tests()
 		struct test *t = list_entry(tmp, struct test, list);
 
 		printf("%stest %d:%s %s: ",
-				color_test, total, color_none, t->name);
+				color_test, total + 1, color_none, t->name);
 		fflush(stdout);
 
 		if ((pid = fork()) == 0) {
@@ -110,7 +110,7 @@ int run_test(int num)
 		int res;
 
 		if (i == num) {
-			printf("test %d: %s: ", num, t->name);
+			printf("test %d: %s: ", num + 1, t->name);
 			res = t->func();
 			if (res != 0) {
 				printf("**fail**\n");
