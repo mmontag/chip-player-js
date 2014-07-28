@@ -89,7 +89,8 @@ OPENMPT_XM	= 3xxins \
 		  delaycut \
 		  envloops \
 		  envoff \
-		  envretrig
+		  envretrig \
+		  noteofffade
 
 OPENMPT_IT	= nomap \
 		  porta_offset \
