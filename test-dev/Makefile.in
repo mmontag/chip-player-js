@@ -91,7 +91,8 @@ OPENMPT_XM	= 3xxins \
 		  envoff \
 		  envretrig
 
-OPENMPT_IT	= porta_offset
+OPENMPT_IT	= porta_offset \
+		  portareset
 
 OPENMPT_S3M	= portasmpchange
 
