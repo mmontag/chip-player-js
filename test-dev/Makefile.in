@@ -91,6 +91,8 @@ OPENMPT_XM	= 3xxins \
 		  envoff \
 		  envretrig
 
+OPENMPT_S3M	= portasmpchange
+
 OPENMPT_MOD	= patternjump \
 		  portasmpchange
 
@@ -177,6 +179,8 @@ STORLEK_TESTS	= $(addprefix storlek_,$(STORLEK))
 
 OPENMPT_XM_TESTS= $(addprefix openmpt_xm_,$(OPENMPT_XM))
 
+OPENMPT_S3M_TESTS= $(addprefix openmpt_s3m_,$(OPENMPT_S3M))
+
 OPENMPT_MOD_TESTS= $(addprefix openmpt_mod_,$(OPENMPT_MOD))
 
 MIXER_TESTS	= $(addprefix mixer_,$(MIXER))
@@ -212,6 +216,7 @@ TESTS		= $(READ_TESTS) \
 		  $(SEQUENCER_TESTS) \
 		  $(STORLEK_TESTS) \
 		  $(OPENMPT_XM_TESTS) \
+		  $(OPENMPT_S3M_TESTS) \
 		  $(OPENMPT_MOD_TESTS) \
 		  $(PLAYER_TESTS) \
 		  $(MIXER_TESTS) \
