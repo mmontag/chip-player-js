@@ -751,7 +751,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 		if (sub != NULL) {
 			int transp = mod->xxi[candidate_ins].map[key].xpo;
-			int smp;
+			int smp, to;
 
 			note = key + sub->xpo + transp;
 			smp = sub->sid;
@@ -759,19 +759,18 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				smp = -1;
 			}
 
-			if (smp >= 0 && smp < mod->smp) {
-				int to = virt_setpatch(ctx, chn, candidate_ins,
-					smp, note, sub->nna, sub->dct,
-					sub->dca);
+			to = virt_setpatch(ctx, chn, candidate_ins,
+				smp, note, sub->nna, sub->dct, sub->dca);
 
-				if (to < 0)
-					return -1;
+			if (to < 0)
+				return -1;
 
-				if (to != chn) {
-					copy_channel(p, to, chn);
-					p->xc_data[to].flags = 0;
-				}
+			if (to != chn) {
+				copy_channel(p, to, chn);
+				p->xc_data[to].flags = 0;
+			}
 
+			if (smp >= 0) {		// Not sure if needed
 				xc->smp = smp;
 			}
 		} else {
