@@ -7,8 +7,9 @@ Stable versions
 	- fix MED effect FFF (turn note off)
 	- fix MED synth finetune effect
 	Fix bugs caught in the OpenMPT test cases:
-	- fix XM invalid offset handling
 	- add XM and IT envelope loop and sustain point quirk
+	- fix XM invalid offset handling
+	- fix IT portamento if offset effect is used
 	Other changes:
 	- add API call to load a module from a file handle
 	- add OpenMPT test cases to regression test suite
