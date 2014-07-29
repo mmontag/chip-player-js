@@ -441,7 +441,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_S3M_BPM:	/* Set S3M BPM */
             fx_s3m_bpm:
-		if (fxp) {
+		if (fxp >= 0x20) {
 			if (fxp < XMP_MIN_BPM)
 				fxp = XMP_MIN_BPM;
 			p->bpm = fxp;

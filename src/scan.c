@@ -282,11 +282,13 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if ((f1 == FX_S3M_BPM && p1) || (f2 == FX_S3M_BPM && p2)) {
 		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
-		    alltmp += cnt_row * speed * base_time;
-		    cnt_row = 0;
-		    clock += m->time_factor * alltmp / bpm;
-		    alltmp = 0;
-		    bpm = parm;
+		    if (parm >= 0x20) {
+			alltmp += cnt_row * speed * base_time;
+			cnt_row = 0;
+			clock += m->time_factor * alltmp / bpm;
+			alltmp = 0;
+			bpm = parm;
+		    }
 		}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
