@@ -780,6 +780,11 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	if (IS_VALID_INSTRUMENT(candidate_ins)) {
+		if (xc->ins != candidate_ins) {
+			xc->v_idx = 0;
+			xc->p_idx = 0;
+			xc->f_idx = 0;
+		}
 		xc->ins = candidate_ins;
 	}
 
