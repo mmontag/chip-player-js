@@ -66,9 +66,10 @@ int main(int argc, char **argv)
 
 			vi = &p->virt.voice_array[voc];
 
-			printf("%d %d %d %d %d %d %d %d %d %d\n",
+			printf("%d %d %d %d %d %d %d %d %d %d %d\n",
 				fi.time, fi.row, fi.frame, i, ci->period,
-				vi->note, vi->ins, vi->vol, vi->pan, vi->pos0);
+				vi->note, vi->ins, vi->vol, vi->pan, vi->pos0,
+				vi->filter.cutoff);
 		}
 	}
 
