@@ -92,7 +92,8 @@ OPENMPT_XM	= 3xxins \
 		  envretrig \
 		  noteofffade
 
-OPENMPT_IT	= nomap \
+OPENMPT_IT	= carrynna \
+		  nomap \
 		  porta_offset \
 		  portareset \
 		  portasample
