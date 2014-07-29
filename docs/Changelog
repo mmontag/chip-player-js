@@ -21,6 +21,8 @@ Stable versions
 	- fix OctaMED SS default pitch transpose (reported by Karl Churchill)
 	- fix OctaMED instrument name loading
 	- fix XM, S3M, IT and MED offset effect handling
+	- fix S3M set BPM effect with values < 32 (reported by Kyu S.)
+	- fix incorrect Noisetracker effect filtering (reported by Kyu S.)
 	
 4.2.8 (20140714):
 	Fix bugs reported by Sami Jumppanen:
