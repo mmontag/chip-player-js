@@ -3,13 +3,13 @@
 
 static int vals[] = {
 	80, 80, 80,	/* set tempo */
-	20, 20, 20,	/* set tempo 0x02 */
-	20, 20, 20,	/* set tempo 0x11 */
-	20, 20, 20,	/* nothing */
+	80, 80, 80,	/* set tempo 0x02 */
+	80, 80, 80,	/* set tempo 0x11 */
+	80, 80, 80,	/* nothing */
 	32, 32, 32,	/* set tempo 0x20 */
-	20, 20, 20,	/* set tempo 0x01 */
+	32, 32, 32,	/* set tempo 0x01 */
 	255, 255, 255,	/* set tempo 0xff */
-	20, 20, 20	/* set tempo 0x11 */
+	255, 255, 255	/* set tempo 0x11 */
 };
 
 TEST(test_effect_s3m_bpm)
@@ -39,8 +39,8 @@ TEST(test_effect_s3m_bpm)
 	for (i = 0; i < 8 * 3; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
-		fail_unless(info.total_time == 47232, "total time error");
 		fail_unless(info.bpm == vals[i], "tempo setting error");
 	}
+	fail_unless(info.total_time == 4431, "total time error");
 }
 END_TEST
