@@ -11,6 +11,7 @@ Stable versions
 	- fix XM invalid offset handling
 	- fix IT portamento if offset effect is used
 	- fix IT NNA on invalid sample mapping
+	- fix IT filter envelope index reset
 	Other changes:
 	- add API call to load a module from a file handle
 	- add OpenMPT test cases to regression test suite
