@@ -67,6 +67,8 @@ struct mod_magic {
 #define TRACKER_CLONE		98
 #define TRACKER_UNKNOWN		99
 
+#define TRACKER_PROBABLY_NOISETRACKER 20
+
 const struct mod_magic mod_magic[] = {
     { "M.K.", 0, TRACKER_PROTRACKER, 4 },
     { "M!K!", 1, TRACKER_PROTRACKER, 4 },
@@ -373,7 +375,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (mod->chn == 4 && mh.restart == mod->pat) {
 	tracker_id = TRACKER_SOUNDTRACKER;
     } else if (mod->chn == 4 && mh.restart == 0x78) {
-        tracker_id = TRACKER_NOISETRACKER;
+	/* Can't trust this for Noisetracker, MOD.Data City Remix has
+	 * Protracker effects and Noisetracker restart byte */
+        tracker_id = TRACKER_PROBABLY_NOISETRACKER;
     } else if (mh.restart < 0x7f) {
 	if (mod->chn == 4) {
 	    tracker_id = TRACKER_NOISETRACKER;
@@ -475,11 +479,58 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 skip_test:
 
+    mod->trk = mod->chn * mod->pat;
+
+    for (i = 0; i < mod->ins; i++) {
+	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
+		i, mod->xxi[i].name,
+		mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
+		(mh.ins[i].loop_size > 1 && mod->xxs[i].lpe > 8) ?
+			'L' : ' ', mod->xxi[i].sub[0].vol,
+		mod->xxi[i].sub[0].fin >> 4,
+		ptkloop && mod->xxs[i].lps == 0 && mh.ins[i].loop_size > 1 &&
+			mod->xxs[i].len > mod->xxs[i].lpe ? '!' : ' ');
+    }
+
+    if (pattern_init(mod) < 0)
+	return -1;
+
+    /* Load and convert patterns */
+    D_(D_INFO "Stored patterns: %d", mod->pat);
+
+    for (i = 0; i < mod->pat; i++) {
+	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	    return -1;
+
+	for (j = 0; j < (64 * mod->chn); j++) {
+	    event = &EVENT (i, j % mod->chn, j / mod->chn);
+	    hio_read (mod_event, 1, 4, f);
+
+	    /* Filter noisetracker events */
+	    if (tracker_id == TRACKER_PROBABLY_NOISETRACKER) {
+		unsigned char fxt = LSN(mod_event[2]);
+        	if ((fxt > 0x06 && fxt < 0x0a) ||  fxt == 0x0e) {
+		    tracker_id = TRACKER_UNKNOWN;
+		}
+	    }
+
+	    switch (tracker_id) {
+	    case TRACKER_PROBABLY_NOISETRACKER:
+	    case TRACKER_NOISETRACKER:
+	    	decode_noisetracker_event(event, mod_event);
+		break;
+	    default:	
+	        decode_protracker_event(event, mod_event);
+	    }
+	}
+    }
+
     switch (tracker_id) {
     case TRACKER_PROTRACKER:
 	tracker = "Protracker";
 	ptkloop = 1;
 	break;
+    case TRACKER_PROBABLY_NOISETRACKER:
     case TRACKER_NOISETRACKER:
 	tracker = "Noisetracker";
 	ptkloop = 1;
@@ -525,8 +576,6 @@ skip_test:
 	break;
     }
 
-    mod->trk = mod->chn * mod->pat;
-
     if (tracker_id == TRACKER_MODSGRAVE) {
 	snprintf(mod->type, XMP_NAME_SIZE, "%s", tracker);
     } else {
@@ -535,42 +584,8 @@ skip_test:
 
     MODULE_INFO();
 
-    for (i = 0; i < mod->ins; i++) {
-	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
-		i, mod->xxi[i].name,
-		mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
-		(mh.ins[i].loop_size > 1 && mod->xxs[i].lpe > 8) ?
-			'L' : ' ', mod->xxi[i].sub[0].vol,
-		mod->xxi[i].sub[0].fin >> 4,
-		ptkloop && mod->xxs[i].lps == 0 && mh.ins[i].loop_size > 1 &&
-			mod->xxs[i].len > mod->xxs[i].lpe ? '!' : ' ');
-    }
 
-    if (pattern_init(mod) < 0)
-	return -1;
 
-    /* Load and convert patterns */
-    D_(D_INFO "Stored patterns: %d", mod->pat);
-
-    for (i = 0; i < mod->pat; i++) {
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
-	    return -1;
-
-	for (j = 0; j < (64 * mod->chn); j++) {
-	    event = &EVENT (i, j % mod->chn, j / mod->chn);
-	    hio_read (mod_event, 1, 4, f);
-
-	    switch (tracker_id) {
-	    case TRACKER_NOISETRACKER:
-		decode_noisetracker_event(event, mod_event);
-		break;
-	    case TRACKER_PROTRACKER:
-	    default:
-		decode_protracker_event(event, mod_event);
-		break;
-	    }
-	}
-    }
 
     /* Load samples */
 
