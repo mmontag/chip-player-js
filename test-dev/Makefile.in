@@ -93,6 +93,7 @@ OPENMPT_XM	= 3xxins \
 		  noteofffade
 
 OPENMPT_IT	= carrynna \
+		  extreme_filter_test_1 \
 		  nomap \
 		  porta_offset \
 		  portareset \
