@@ -373,6 +373,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			goto fx_f_vslide_dn;
 		case EX_CUT:		/* Cut note */
 			SET(RETRIG);
+			SET_NOTE(NOTE_CUT);	/* for IT cut-carry */
 			xc->retrig.val = fxp + 1;
 			xc->retrig.count = xc->retrig.val;
 			xc->retrig.type = 0x10;

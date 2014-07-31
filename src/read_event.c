@@ -59,20 +59,21 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 	return NULL;
 }
 
-static void reset_envelopes(struct context_data *ctx, struct channel_data *xc)
+static void reset_envelopes(struct context_data *ctx, struct channel_data *xc,
+				int force_cut)
 {
 	struct xmp_instrument *xxi;
 
 	xxi = get_instrument(ctx, xc->ins);
 
 	/* Reset envelope positions */
-	if (~xxi->aei.flg & XMP_ENVELOPE_CARRY) {
+	if (force_cut || (~xxi->aei.flg & XMP_ENVELOPE_CARRY)) {
 		xc->v_idx = 0;
 	}
-	if (~xxi->pei.flg & XMP_ENVELOPE_CARRY) {
+	if (force_cut || (~xxi->pei.flg & XMP_ENVELOPE_CARRY)) {
 		xc->p_idx = 0;
 	}
-	if (~xxi->fei.flg & XMP_ENVELOPE_CARRY) {
+	if (force_cut || (~xxi->fei.flg & XMP_ENVELOPE_CARRY)) {
 		xc->f_idx = 0;
 	}
 }
@@ -223,7 +224,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc);
+		reset_envelopes(ctx, xc, 0);
 	}
 
 	/* Process new volume */
@@ -421,7 +422,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		 * But make sure we have an instrument set, see Letting go
 		 * pos 4 chn 20
 		 */
-		reset_envelopes(ctx, xc);
+		reset_envelopes(ctx, xc, 0);
 	}
 
 	/* Process new volume */
@@ -577,7 +578,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc);
+		reset_envelopes(ctx, xc, 0);
 	}
 
 	/* Process new volume */
@@ -717,7 +718,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			reset_env = 0;
 			use_ins_vol = 0;
 		} else if (key == XMP_KEY_CUT) {
-			SET_NOTE(NOTE_END);
+			SET_NOTE(NOTE_END | NOTE_CUT);
 			xc->period = 0;
 			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
@@ -739,7 +740,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 
 			if (HAS_QUIRK(QUIRK_PRENV) && e->ins)
-				reset_envelopes(ctx, xc);
+				reset_envelopes(ctx, xc, 0);
 		}
 	}
 
@@ -795,7 +796,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		if (note >= 0) {
 			if (sub->pan >= 0)
 				xc->pan.val = sub->pan;
-			reset_envelopes(ctx, xc);
+			reset_envelopes(ctx, xc, TEST_NOTE(NOTE_CUT));
+			RESET_NOTE(NOTE_CUT);
 		} else if (e_ins) {
 			if (sub->pan >= 0)
 				xc->pan.val = sub->pan;
@@ -965,7 +967,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc);
+		reset_envelopes(ctx, xc, 0);
 	}
 
 	/* Process new volume */
@@ -1069,7 +1071,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 
 	set_effect_defaults(ctx, note, sub, xc, 0);
 	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc);
+		reset_envelopes(ctx, xc, 0);
 	}
 
 	xc->volume = e->vol - 1;
