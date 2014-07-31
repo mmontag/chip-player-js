@@ -690,7 +690,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 					key = xc->key + 1;
 				}
 			}
-			if (xc->ins != ins) {
+			if (xc->ins != ins && (!is_toneporta || !HAS_QUIRK(QUIRK_PRENV))) {
 				not_same_ins = 1;
 				candidate_ins = ins;
 				if (is_toneporta) {
