@@ -92,15 +92,15 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 
 		if (sub->ifc & 0x80) {
 			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
-		} else {
+		} /*else {
 			xc->filter.cutoff = 0xff;
-		}
+		} */
 
 		if (sub->ifr & 0x80) {
 			xc->filter.resonance = (sub->ifr - 0x80) * 2;
-		} else {
+		} /* else {
 			xc->filter.resonance = 0;
-		}
+		} */
 
 		set_lfo_depth(&xc->insvib.lfo, sub->vde);
 		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
