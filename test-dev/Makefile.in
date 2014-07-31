@@ -100,7 +100,8 @@ OPENMPT_IT	= carrynna \
 		  nomap \
 		  porta_offset \
 		  portareset \
-		  portasample
+		  portasample \
+		  portasamplecompat
 
 OPENMPT_S3M	= portasmpchange
 
