@@ -94,6 +94,7 @@ OPENMPT_XM	= 3xxins \
 
 OPENMPT_IT	= carrynna \
 		  cut_carry \
+		  envreset \
 		  extreme_filter_test_1 \
 		  nomap \
 		  porta_offset \
