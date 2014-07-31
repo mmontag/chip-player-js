@@ -76,6 +76,8 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc,
 	if (force_cut || (~xxi->fei.flg & XMP_ENVELOPE_CARRY)) {
 		xc->f_idx = 0;
 	}
+
+	RESET_NOTE(NOTE_ENV_END);
 }
 
 static void set_effect_defaults(struct context_data *ctx, int note,
@@ -705,6 +707,11 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			new_invalid_ins = 1;
 			xc->flags = 0;
 			use_ins_vol = 0;
+		}
+
+		if (TEST_NOTE(NOTE_ENV_END)) {
+			/* Reset if the previous envelope has finished */
+			reset_envelopes(ctx, xc, 1);
 		}
 	}
 
