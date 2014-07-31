@@ -509,7 +509,8 @@ skip_test:
 	    /* Filter noisetracker events */
 	    if (tracker_id == TRACKER_PROBABLY_NOISETRACKER) {
 		unsigned char fxt = LSN(mod_event[2]);
-        	if ((fxt > 0x06 && fxt < 0x0a) ||  fxt == 0x0e) {
+		unsigned char fxp = LSN(mod_event[3]);
+        	if ((fxt > 0x06 && fxt < 0x0a) ||  (fxt == 0x0e && fxp > 1)) {
 		    tracker_id = TRACKER_UNKNOWN;
 		}
 	    }
