@@ -88,7 +88,7 @@ int update_envelope(struct xmp_envelope *env, int x, int release, int sus_quirk)
 	 * test cases.)
 	 */
 	if (has_loop && has_sus && sus == lpe) {
-		if (!sus_quirk || !release)
+		if (sus_quirk && !release)
 			has_sus = 0;
 	}
 
