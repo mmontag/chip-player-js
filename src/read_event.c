@@ -708,11 +708,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			xc->flags = 0;
 			use_ins_vol = 0;
 		}
-
-		if (TEST_NOTE(NOTE_ENV_END)) {
-			/* Reset if the previous envelope has finished */
-			reset_envelopes(ctx, xc, 1);
-		}
 	}
 
 	/* Check note */
@@ -785,6 +780,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			xc->flags = 0;
 			use_ins_vol = 0;
 		}
+	}
+
+	/* Reset in case of new instrument and the previous envelope has
+	 * finished (OpenMPT test EnvReset.it). This must take place after
+	 * channel copies in case of NNA (see test/test.it)
+	 */
+	if (e_ins && TEST_NOTE(NOTE_ENV_END)) {
+		reset_envelopes(ctx, xc, 1);
 	}
 
 	if (IS_VALID_INSTRUMENT(candidate_ins)) {
