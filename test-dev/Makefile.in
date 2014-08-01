@@ -90,6 +90,7 @@ OPENMPT_XM	= 3xxins \
 		  envloops \
 		  envoff \
 		  envretrig \
+		  noteoff \
 		  noteofffade
 
 OPENMPT_IT	= carrynna \
