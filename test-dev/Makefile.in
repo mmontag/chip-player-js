@@ -91,7 +91,8 @@ OPENMPT_XM	= 3xxins \
 		  envoff \
 		  envretrig \
 		  noteoff \
-		  noteofffade
+		  noteofffade \
+		  pickup
 
 OPENMPT_IT	= carrynna \
 		  cut_carry \
