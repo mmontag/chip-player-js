@@ -84,8 +84,6 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 				struct xmp_subinstrument *sub,
 				struct channel_data *xc, int is_toneporta)
 {
-	struct module_data *m = &ctx->m;
-
 	if (sub != NULL && note >= 0) {
 		xc->finetune = sub->fin;
 		xc->gvl = sub->gvl;
@@ -109,12 +107,6 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 
 		set_lfo_phase(&xc->vibrato, 0);
 		set_lfo_phase(&xc->tremolo, 0);
-
-		xc->porta.target = note_to_period(note, xc->finetune,
-				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
-		if (xc->period < 1 || !is_toneporta) {
-			xc->period = xc->porta.target;
-		}
 	}
 
 	xc->delay = 0;
@@ -124,6 +116,21 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 	xc->arpeggio.val[0] = 0;
 	xc->arpeggio.count = 0;
 	xc->arpeggio.size = 1;
+}
+
+static void set_period(struct context_data *ctx, int note,
+				struct xmp_subinstrument *sub,
+				struct channel_data *xc, int is_toneporta)
+{
+	struct module_data *m = &ctx->m;
+
+	if (sub != NULL && note >= 0) {
+		xc->porta.target = note_to_period(note, xc->finetune,
+				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+		if (xc->period < 1 || !is_toneporta) {
+			xc->period = xc->porta.target;
+		}
+	}
 }
 
 
@@ -238,6 +245,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Secondary effect handled first */
 	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
 	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
+	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL))
 		use_ins_vol = 0;
@@ -419,6 +427,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
+
 	if (ins && sub != NULL) {
 		/* Reset envelopes on new instrument, see olympic.xm pos 10
 		 * But make sure we have an instrument set, see Letting go
@@ -441,6 +450,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Secondary effect handled first */
 	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
 	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
+	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL))
 		use_ins_vol = 0;
@@ -594,6 +604,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Secondary effect handled first */
 	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
 	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
+	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL))
 		use_ins_vol = 0;
@@ -829,6 +840,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	 */
 	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
 	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
+	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL)) {
 		use_ins_vol = 0;
@@ -990,6 +1002,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Secondary effect handled first */
 	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
 	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
+	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL)) {
 		use_ins_vol = 0;
@@ -1081,6 +1094,8 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	}
 
 	set_effect_defaults(ctx, note, sub, xc, 0);
+	set_period(ctx, note, sub, xc, 0);
+
 	if (e->ins && sub != NULL) {
 		reset_envelopes(ctx, xc, 0);
 	}
