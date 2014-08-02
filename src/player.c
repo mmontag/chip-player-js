@@ -466,8 +466,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	period += extras_get_period(ctx, xc);
 #endif
 
-	linear_bend = period_to_bend(period + vibrato, xc->note,
-				HAS_QUIRK(QUIRK_MODRNG), xc->gliss,
+	linear_bend = period_to_bend(period + vibrato, xc->note, xc->gliss,
 				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 
 	/* Envelope */
@@ -493,6 +492,12 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
 	xc->info_period = note_to_period_mix(xc->note, linear_bend);
+
+	if (HAS_QUIRK(QUIRK_MODRNG)) {
+		CLAMP(xc->info_period, MIN_PERIOD_A << 12, MAX_PERIOD_A << 12); 
+	} else if (xc->info_period <  (1 << 12)) {
+		xc->info_period = (1 << 12);
+	}
 
 	virt_setbend(ctx, chn, linear_bend);
 
@@ -671,18 +676,18 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 #endif
 	}
 
+	if (HAS_QUIRK(QUIRK_LINEAR)) {
+		CLAMP(xc->period, MIN_PERIOD_L, MAX_PERIOD_L);
+	} else if (HAS_QUIRK(QUIRK_MODRNG)) {
+		CLAMP(xc->period, MIN_PERIOD_A, MAX_PERIOD_A);
+	}
+
 	/* Check for invalid periods (from Toru Egashira's NSPmod)
 	 * panic.s3m has negative periods
 	 * ambio.it uses low (~8) period values
 	 */
 	if (xc->period < 1) {
 		xc->volume = 0;
-	}
-
-	if (HAS_QUIRK(QUIRK_LINEAR)) {
-		CLAMP(xc->period, MIN_PERIOD_L, MAX_PERIOD_L);
-	} else {
-		CLAMP(xc->period, MIN_PERIOD_A, MAX_PERIOD_A);
 	}
 
 	xc->arpeggio.count++;
