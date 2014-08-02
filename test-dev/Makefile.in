@@ -111,7 +111,8 @@ OPENMPT_IT	= carrynna \
 OPENMPT_S3M	= freqlimits \
 		  portasmpchange
 
-OPENMPT_MOD	= patternjump \
+OPENMPT_MOD	= amigalimitsfinetune \
+		  patternjump \
 		  portasmpchange
 
 MIXER		= interpolation_default \
