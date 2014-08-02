@@ -108,7 +108,8 @@ OPENMPT_IT	= carrynna \
 		  portasample \
 		  portasamplecompat
 
-OPENMPT_S3M	= portasmpchange
+OPENMPT_S3M	= freqlimits \
+		  portasmpchange
 
 OPENMPT_MOD	= patternjump \
 		  portasmpchange
