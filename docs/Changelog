@@ -10,6 +10,7 @@ Stable versions
 	- add XM and IT envelope loop and sustain point quirk
 	- fix XM invalid offset handling
 	- fix XM note release reset on new volume
+	- fix XM pattern loader to honor header size
 	- fix IT portamento if offset effect is used
 	- fix IT NNA on invalid sample mapping
 	- fix IT filter envelope index reset
@@ -29,6 +30,7 @@ Stable versions
 	- fix XM, S3M, IT and MED offset effect handling
 	- fix S3M set BPM effect with values < 32 (reported by Kyu S.)
 	- fix incorrect Noisetracker effect filtering (reported by Kyu S.)
+	- fix finetune effect
 	
 4.2.8 (20140714):
 	Fix bugs reported by Sami Jumppanen:
