@@ -26,14 +26,18 @@ TEST(test_player_period_mod_range)
 
 	xmp_start_player(opaque, 44100, 0);
 
-	new_event(ctx, 0, 0, 0, 49, 1, 0, 0x0f, 1, 0, 0);
-	new_event(ctx, 0, 1, 0, 48, 1, 0, 0, 0, 0, 0);
-	new_event(ctx, 0, 2, 0, 47, 1, 0, 0, 0, 0, 0);
-	new_event(ctx, 0, 3, 0, 84, 1, 0, 0, 0, 0, 0);
-	new_event(ctx, 0, 4, 0, 85, 1, 0, 0, 0, 0, 0);
-	new_event(ctx, 0, 5, 0, 86, 1, 0, 0, 0, 0, 0);
+	new_event(ctx, 0, 0, 0, 50, 1, 0, 0x0f, 1, 0, 0);
+	new_event(ctx, 0, 1, 0, 49, 1, 0, 0, 0, 0, 0);
+	new_event(ctx, 0, 2, 0, 48, 1, 0, 0, 0, 0, 0);
+	new_event(ctx, 0, 3, 0, 83, 1, 0, 0, 0, 0, 0);
+	new_event(ctx, 0, 4, 0, 84, 1, 0, 0, 0, 0, 0);
+	new_event(ctx, 0, 5, 0, 85, 1, 0, 0, 0, 0, 0);
 
 	/* test note limits */
+	xmp_play_frame(opaque);
+	xmp_get_frame_info(opaque, &info);
+	fail_unless(PERIOD == 808, "Bad period");
+	
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
 	fail_unless(PERIOD == 856, "Bad period");
@@ -44,7 +48,7 @@ TEST(test_player_period_mod_range)
 	
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
-	fail_unless(PERIOD == 961, "Bad period");
+	fail_unless(PERIOD == 120, "Bad period");
 	
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
@@ -54,10 +58,6 @@ TEST(test_player_period_mod_range)
 	xmp_get_frame_info(opaque, &info);
 	fail_unless(PERIOD == 107, "Bad period");
 	
-	xmp_play_frame(opaque);
-	xmp_get_frame_info(opaque, &info);
-	fail_unless(PERIOD == 101, "Bad period");
-	
 	xmp_restart_module(opaque);
 
 	/* test again with mod range on */
@@ -65,15 +65,19 @@ TEST(test_player_period_mod_range)
 
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
+	fail_unless(PERIOD == 808, "Bad period");
+	
+	xmp_play_frame(opaque);
+	xmp_get_frame_info(opaque, &info);
 	fail_unless(PERIOD == 856, "Bad period");
 	
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
-	fail_unless(PERIOD == 907, "Bad period");
+	fail_unless(PERIOD == 856, "Bad period");
 	
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
-	fail_unless(PERIOD == 907, "Bad period");
+	fail_unless(PERIOD == 120, "Bad period");
 	
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
@@ -81,11 +85,7 @@ TEST(test_player_period_mod_range)
 	
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
-	fail_unless(PERIOD == 108, "Bad period");
-	
-	xmp_play_frame(opaque);
-	xmp_get_frame_info(opaque, &info);
-	fail_unless(PERIOD == 108, "Bad period");
+	fail_unless(PERIOD == 113, "Bad period");
 	
 	
 	xmp_restart_module(opaque);

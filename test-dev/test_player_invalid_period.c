@@ -34,21 +34,21 @@ TEST(test_player_invalid_period)
 	xc->period = 1;
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
-	fail_unless(info.channel_info[0].period == 32767, "period error");
+	fail_unless(info.channel_info[0].period == 4096, "period error");
 	fail_unless(info.channel_info[0].volume == 64, "period error");
 
 	/* Frame 2 */
 	xc->period = 0;
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
-	fail_unless(info.channel_info[0].period == 32767, "period error");
+	fail_unless(info.channel_info[0].period == 4096, "period error");
 	fail_unless(info.channel_info[0].volume == 64, "period error");
 
 	/* Frame 3 -- periods are updated in update_frequency() so it
 	 * will appear one frame later **/
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);
-	fail_unless(info.channel_info[0].period == 32767, "period error");
+	fail_unless(info.channel_info[0].period == 4096, "period error");
 	fail_unless(info.channel_info[0].volume == 0, "period error");
 }
 END_TEST
