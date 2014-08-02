@@ -494,7 +494,9 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	xc->info_period = note_to_period_mix(xc->note, linear_bend);
 
 	if (HAS_QUIRK(QUIRK_MODRNG)) {
-		CLAMP(xc->info_period, MIN_PERIOD_A << 12, MAX_PERIOD_A << 12); 
+		CLAMP(xc->info_period,
+			note_to_period(83, xc->finetune, 0, 0) * 4096,
+			note_to_period(48, xc->finetune, 0, 0) * 4096);
 	} else if (xc->info_period <  (1 << 12)) {
 		xc->info_period = (1 << 12);
 	}
@@ -679,7 +681,8 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 	if (HAS_QUIRK(QUIRK_LINEAR)) {
 		CLAMP(xc->period, MIN_PERIOD_L, MAX_PERIOD_L);
 	} else if (HAS_QUIRK(QUIRK_MODRNG)) {
-		CLAMP(xc->period, MIN_PERIOD_A, MAX_PERIOD_A);
+		CLAMP(xc->period, note_to_period(83, xc->finetune, 0, 0),
+				  note_to_period(48, xc->finetune, 0, 0));
 	}
 
 	/* Check for invalid periods (from Toru Egashira's NSPmod)
