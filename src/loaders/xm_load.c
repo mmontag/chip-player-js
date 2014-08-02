@@ -69,6 +69,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
     struct xmp_event *event;
     uint8 *patbuf, *pat, b;
     int i, j, r;
+    int headsize = version > 0x0102 ? 9 : 8;
 
     mod->pat++;
     if (pattern_init(mod) < 0)
@@ -84,6 +85,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 	xph.packing = hio_read8(f);
 	xph.rows = version > 0x0102 ? hio_read16l(f) : hio_read8(f) + 1;
 	xph.datasize = hio_read16l(f);
+	hio_seek(f, xph.length - headsize, SEEK_CUR);
 
 	r = xph.rows;
 	if (r == 0)
