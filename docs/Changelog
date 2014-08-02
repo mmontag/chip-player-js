@@ -8,6 +8,7 @@ Stable versions
 	- fix MED synth finetune effect
 	Fix bugs caught in the OpenMPT test cases:
 	- add XM and IT envelope loop and sustain point quirk
+	- fix Amiga limits for notes with finetune
 	- fix XM invalid offset handling
 	- fix XM note release reset on new volume
 	- fix XM pattern loader to honor header size
