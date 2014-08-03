@@ -287,22 +287,6 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 			xc->fadeout = 0;
 			SET_NOTE(NOTE_END);
 		}
-
-		if (xc->fadeout == 0) {
-			/* Setting volume to 0 instead of resetting the channel
-			 * will use more CPU but allows portamento after keyoff
-			 * to continue the sample instead of resetting it.
-			 * This is used in Decibelter - Cosmic 'Wegian Mamas.xm
-			 * Only reset the channel in virtual channel mode so we
-			 * can release it.
-			 */
-			if (HAS_QUIRK(QUIRK_VIRTUAL)) {
-				virt_resetchannel(ctx, chn);
-				return;
-			} else {
-				xc->volume = 0;
-			}
-		}
 	}
 
 	switch (check_envelope_fade(&instrument->aei, xc->v_idx)) {
