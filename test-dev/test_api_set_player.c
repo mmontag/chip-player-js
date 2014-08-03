@@ -6,6 +6,27 @@ TEST(test_api_set_player)
 	int ret;
 
 	opaque = xmp_create_context();
+
+	/* sample */
+	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
+	fail_unless((ret & XMP_SMPCTL_SKIP) == 0, "default sample ctl");
+	ret = xmp_set_player(opaque, XMP_PLAYER_SMPCTL, XMP_SMPCTL_SKIP);
+	fail_unless(ret == 0, "error setting flags");
+	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
+	fail_unless((ret & XMP_SMPCTL_SKIP) != 0, "skip sample ctl");
+	ret = xmp_set_player(opaque, XMP_PLAYER_SMPCTL, 0);
+	fail_unless(ret == 0, "error setting flags");
+
+	/* default pan */
+	ret = xmp_get_player(opaque, XMP_PLAYER_DEFPAN);
+	fail_unless(ret == 100, "default pan");
+	ret = xmp_set_player(opaque, XMP_PLAYER_DEFPAN, 0);
+	fail_unless(ret == 0, "error setting default pan");
+	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
+	fail_unless(ret == 0, "default pan");
+	ret = xmp_set_player(opaque, XMP_PLAYER_DEFPAN, 100);
+	fail_unless(ret == 0, "error setting default pan");
+
 	xmp_load_module(opaque, "data/test.xm");
 	xmp_start_player(opaque, 8000, XMP_FORMAT_MONO);
 
@@ -110,14 +131,6 @@ TEST(test_api_set_player)
 	fail_unless(ret == 0, "error setting cflags");
 	ret = xmp_get_player(opaque, XMP_PLAYER_CFLAGS);
 	fail_unless(ret == (XMP_FLAGS_VBLANK | XMP_FLAGS_FX9BUG | XMP_FLAGS_FIXLOOP), "can't get XMP_PLAYER_CFLAGS");
-
-	/* sample */
-	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
-	fail_unless((ret & XMP_SMPCTL_SKIP) == 0, "default sample ctl");
-	ret = xmp_set_player(opaque, XMP_PLAYER_SMPCTL, XMP_SMPCTL_SKIP);
-	fail_unless(ret == 0, "error setting flags");
-	ret = xmp_get_player(opaque, XMP_PLAYER_SMPCTL);
-	fail_unless((ret & XMP_SMPCTL_SKIP) != 0, "skip sample ctl");
 
 	/* volume */
 	ret = xmp_set_player(opaque, XMP_PLAYER_VOLUME, 0);
