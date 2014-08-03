@@ -323,8 +323,11 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64, &end);
 	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE,
 						HAS_QUIRK(QUIRK_ENVSUS));
-	if (end && vol_envelope == 0)
-		SET_NOTE(NOTE_END|NOTE_ENV_END);
+	if (end) {
+		if (vol_envelope == 0)
+			SET_NOTE(NOTE_END);
+		SET_NOTE(NOTE_ENV_END);
+	}
 
 	/* If note ended in background channel, we can safely reset it */
 	if (TEST_NOTE(NOTE_END) && chn >= p->virt.num_tracks) {
