@@ -43,6 +43,7 @@ xmp_context xmp_create_context()
 	}
 
 	ctx->state = XMP_STATE_UNLOADED;
+	ctx->m.defpan = 100;
 
 	return (xmp_context)ctx;
 }
@@ -263,9 +264,12 @@ int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 #ifdef USE_VERSIONED_SYMBOLS
 extern int xmp_set_player_v41__(xmp_context, int, int)
 	__attribute__((alias("xmp_set_player_v40__")));
+extern int xmp_set_player_v43__(xmp_context, int, int)
+	__attribute__((alias("xmp_set_player_v40__")));
 
 asm(".symver xmp_set_player_v40__, xmp_set_player@XMP_4.0");
-asm(".symver xmp_set_player_v41__, xmp_set_player@@XMP_4.1");
+asm(".symver xmp_set_player_v41__, xmp_set_player@XMP_4.1");
+asm(".symver xmp_set_player_v43__, xmp_set_player@@XMP_4.3");
 
 #define xmp_set_player__ xmp_set_player_v40__
 #else
@@ -280,8 +284,13 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
 
-	if (ctx->state < XMP_STATE_PLAYING)
+	if (parm == XMP_PLAYER_SMPCTL || parm == XMP_PLAYER_DEFPAN) {
+		/* these should be set before loading the module */
+		if (ctx->state >= XMP_STATE_LOADED)
+			return -XMP_ERROR_STATE;
+	} else if (ctx->state < XMP_STATE_PLAYING) {
 		return -XMP_ERROR_STATE;
+	}
 
 	switch (parm) {
 	case XMP_PLAYER_AMP:
@@ -314,6 +323,8 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 			scan_sequences(ctx);
 		ret = 0;
 		break; }
+
+	/* 4.1 */
 	case XMP_PLAYER_CFLAGS: {
 		int vblank = p->flags & XMP_FLAGS_VBLANK;
 		p->flags = val;
@@ -337,6 +348,14 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 			ret = 0;
 		}
 		break;
+
+	/* 4.3 */
+	case XMP_PLAYER_DEFPAN:
+		if (val >= 0 && val <= 100) {
+			m->defpan = val;
+			ret = 0;
+		}
+		break;
 	}
 
 	return ret;
@@ -347,10 +366,13 @@ extern int xmp_get_player_v41__(xmp_context, int)
 	__attribute__((alias("xmp_get_player_v40__")));
 extern int xmp_get_player_v42__(xmp_context, int)
 	__attribute__((alias("xmp_get_player_v40__")));
+extern int xmp_get_player_v43__(xmp_context, int)
+	__attribute__((alias("xmp_get_player_v40__")));
 
 asm(".symver xmp_get_player_v40__, xmp_get_player@XMP_4.0");
 asm(".symver xmp_get_player_v41__, xmp_get_player@XMP_4.1");
-asm(".symver xmp_get_player_v42__, xmp_get_player@@XMP_4.2");
+asm(".symver xmp_get_player_v42__, xmp_get_player@XMP_4.2");
+asm(".symver xmp_get_player_v43__, xmp_get_player@@XMP_4.3");
 
 #define xmp_get_player__ xmp_get_player_v40__
 #else
@@ -365,8 +387,11 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
 
-	if (parm != XMP_PLAYER_STATE && ctx->state < XMP_STATE_PLAYING)
+	if (parm == XMP_PLAYER_SMPCTL || parm == XMP_PLAYER_DEFPAN) {
+		// can read these at any time
+	} else if (parm != XMP_PLAYER_STATE && ctx->state < XMP_STATE_PLAYING) {
 		return -XMP_ERROR_STATE;
+	}
 
 	switch (parm) {
 	case XMP_PLAYER_AMP:
@@ -384,6 +409,8 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	case XMP_PLAYER_FLAGS:
 		ret = p->player_flags;
 		break;
+
+	/* 4.1 */
 	case XMP_PLAYER_CFLAGS:
 		ret = p->flags;
 		break;
@@ -396,8 +423,15 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	case XMP_PLAYER_SMIX_VOLUME:
 		ret = p->smix_vol;
 		break;
+
+	/* 4.2 */
 	case XMP_PLAYER_STATE:
 		ret = ctx->state;
+		break;
+
+	/* 4.3 */
+	case XMP_PLAYER_DEFPAN:
+		ret = m->defpan;
 		break;
 	}
 

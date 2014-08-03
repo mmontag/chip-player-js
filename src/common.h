@@ -237,6 +237,7 @@ struct module_data {
 #define READ_EVENT_MED	4
 	int read_event_type;
 	int smpctl;			/* sample control flags */
+	int defpan;			/* default pan setting */
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
 
 	int num_sequences;

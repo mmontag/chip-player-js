@@ -219,7 +219,8 @@ void load_prologue(struct context_data *ctx)
 	m->time_factor = DEFAULT_TIME_FACTOR;
 
 	for (i = 0; i < 64; i++) {
-		m->mod.xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
+		int pan = (((i + 1) / 2) % 2) * 0xff;
+		m->mod.xxc[i].pan = 0x80 + (pan - 0x80) * m->defpan / 100;
 		m->mod.xxc[i].vol = 0x40;
 		m->mod.xxc[i].flg = 0;
 	}
