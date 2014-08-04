@@ -50,6 +50,13 @@
 	} \
 } while (0)
 
+#define EFFECT_MEMORY_SETONLY(p, m) do { \
+	EFFECT_MEMORY__((p), (m)); \
+	if (HAS_QUIRK(QUIRK_S3MPMEM)) { \
+		if ((p) != 0) { xc->vol.memory = (p); } \
+	} \
+} while (0)
+
 
 static void do_toneporta(struct module_data *m,
                                 struct channel_data *xc, int note)
@@ -179,9 +186,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 
 		do_toneporta(m, xc, note);
 
-		EFFECT_MEMORY(fxp, xc->porta.memory);
+		EFFECT_MEMORY_SETONLY(fxp, xc->porta.memory);
 
-		if (fxp) {
+		if (fxp != 0) {
 			if (HAS_QUIRK(QUIRK_UNISLD)) /* IT compatible Gxx off */
 				xc->freq.memory = fxp;
 			xc->porta.slide = fxp;
@@ -190,12 +197,14 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 
 	case FX_VIBRATO:	/* Vibrato */
-		EFFECT_MEMORY(fxp, xc->vibrato.memory);
+		EFFECT_MEMORY_SETONLY(fxp, xc->vibrato.memory);
+
 		SET(VIBRATO);
 		SET_LFO_NOTZERO(&xc->vibrato.lfo, LSN(fxp) << 2, MSN(fxp));
 		break;
 	case FX_FINE_VIBRATO:	/* Fine vibrato */
-		EFFECT_MEMORY(fxp, xc->vibrato.memory);
+		EFFECT_MEMORY_SETONLY(fxp, xc->vibrato.memory);
+
 		SET(VIBRATO);
 		SET_LFO_NOTZERO(&xc->vibrato.lfo, LSN(fxp), MSN(fxp));
 		break;
@@ -211,7 +220,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		goto fx_volslide;
 
 	case FX_TREMOLO:	/* Tremolo */
-		EFFECT_MEMORY(fxp, xc->tremolo.memory);
+		EFFECT_MEMORY_SETONLY(fxp, xc->tremolo.memory);
 		SET(TREMOLO);
 		SET_LFO_NOTZERO(&xc->tremolo.lfo, LSN(fxp), MSN(fxp));
 		break;
@@ -553,7 +562,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		SET(RETRIG);
 		break;
 	case FX_TREMOR:		/* Tremor */
-		EFFECT_MEMORY(fxp, xc->tremor.memory);
+		EFFECT_MEMORY_SETONLY(fxp, xc->tremor.memory);
 		if (MSN(fxp) == 0)
 			fxp |= 0x10;
 		if (LSN(fxp) == 0)
@@ -791,7 +800,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			RESET_PER(VOL_SLIDE);
 		break;
 	case FX_VIBRATO2:	/* Deep vibrato (2x) */
-		EFFECT_MEMORY(fxp, xc->vibrato.memory);
+		EFFECT_MEMORY_SETONLY(fxp, xc->vibrato.memory);
 		SET(VIBRATO);
 		SET_LFO_NOTZERO(&xc->vibrato.lfo, LSN(fxp) << 3, MSN(fxp));
 		break;
