@@ -109,6 +109,7 @@ OPENMPT_IT	= carrynna \
 		  portasamplecompat
 
 OPENMPT_S3M	= freqlimits \
+		  parammemory \
 		  portasmpchange
 
 OPENMPT_MOD	= amigalimitsfinetune \
