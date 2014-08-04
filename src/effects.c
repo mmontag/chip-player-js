@@ -335,8 +335,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		fxp &= 0x0f;
 		switch (fxt) {
 		case EX_F_PORTA_UP:	/* Fine portamento up */
+		    EFFECT_MEMORY(fxp, xc->fine_porta.up_memory);
 		    goto fx_f_porta_up;
 		case EX_F_PORTA_DN:	/* Fine portamento down */
+		    EFFECT_MEMORY(fxp, xc->fine_porta.down_memory);
 		    goto fx_f_porta_dn;
 		case EX_GLISS:		/* Glissando toggle */
 			xc->gliss = fxp;
@@ -431,19 +433,17 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_F_PORTA_UP:	/* Fine portamento up */
 	    fx_f_porta_up:
-		SET(FINE_BEND);
-		if (fxp)
+		if (fxp) {
+			SET(FINE_BEND);
 			xc->freq.fslide = -fxp;
-		else if (xc->freq.slide > 0)
-			xc->freq.slide *= -1;
+		}
 		break;
 	case FX_F_PORTA_DN:	/* Fine portamento down */
 	    fx_f_porta_dn:
-		SET(FINE_BEND);
-		if (fxp)
+		if (fxp) {
+			SET(FINE_BEND);
 			xc->freq.fslide = fxp;
-		else if (xc->freq.slide < 0)
-			xc->freq.slide *= -1;
+		} 
 		break;
 	case FX_PATT_DELAY:
 	    fx_patt_delay:

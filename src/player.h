@@ -167,6 +167,11 @@ struct channel_data {
 	} porta;
 
 	struct {
+		int up_memory;	/* FT2 has separate memories for these */
+		int down_memory;/* cases (see Porta-LinkMem.xm) */
+	} fine_porta;
+
+	struct {
 		int val;	/* Current pan value */
 		int slide;	/* Pan slide value */
 		int fslide;	/* Pan fine slide value */
