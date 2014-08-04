@@ -94,7 +94,8 @@ OPENMPT_XM	= 3xxins \
 		  noteofffade \
 		  offsetrange \
 		  pathead \
-		  pickup
+		  pickup \
+		  porta_linkmem
 
 OPENMPT_IT	= carrynna \
 		  cut_carry \
