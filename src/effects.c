@@ -531,6 +531,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_ENVPOS:		/* Set envelope position */
 		/* FIXME: Add OpenMPT quirk */
 		xc->v_idx = fxp;
+		xc->f_idx = fxp;
+		xc->p_idx = fxp;
 		break;
 	case FX_PANSLIDE:	/* Pan slide (XM) */
 		/* TODO: add memory */
