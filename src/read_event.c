@@ -105,8 +105,8 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
 		xc->insvib.sweep = sub->vsw;
 
-		set_lfo_phase(&xc->vibrato, 0);
-		set_lfo_phase(&xc->tremolo, 0);
+		set_lfo_phase(&xc->vibrato.lfo, 0);
+		set_lfo_phase(&xc->tremolo.lfo, 0);
 	}
 
 	xc->delay = 0;

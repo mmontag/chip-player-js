@@ -57,6 +57,12 @@
 	} \
 } while (0)
 
+#define EFFECT_MEMORY_S3M(p) do { \
+	if (HAS_QUIRK(QUIRK_S3MPMEM)) { \
+		EFFECT_MEMORY__((p), xc->vol.memory); \
+	} \
+} while (0)
+
 
 static void do_toneporta(struct module_data *m,
                                 struct channel_data *xc, int note)
@@ -324,6 +330,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		p->flow.jumpline = 10 * MSN(fxp) + LSN(fxp);
 		break;
 	case FX_EXTENDED:	/* Extended effect */
+		EFFECT_MEMORY_S3M(fxp);
 		fxt = fxp >> 4;
 		fxp &= 0x0f;
 		switch (fxt) {
@@ -444,6 +451,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 
 	case FX_S3M_SPEED:	/* Set S3M speed */
+		EFFECT_MEMORY_S3M(fxp);
 	    fx_s3m_speed:
 		if (fxp)
 			p->speed = fxp;
@@ -552,6 +560,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 #endif
 
 	case FX_MULTI_RETRIG:	/* Multi retrig */
+		EFFECT_MEMORY_S3M(fxp);
 		if (fxp) {
 			xc->retrig.val = fxp;
 		}
@@ -562,7 +571,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		SET(RETRIG);
 		break;
 	case FX_TREMOR:		/* Tremor */
-		EFFECT_MEMORY_SETONLY(fxp, xc->tremor.memory);
+		EFFECT_MEMORY(fxp, xc->tremor.memory);
 		if (MSN(fxp) == 0)
 			fxp |= 0x10;
 		if (LSN(fxp) == 0)

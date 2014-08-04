@@ -326,8 +326,8 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 #endif
 
 	if (TEST(TREMOLO)) {
-		finalvol += get_lfo(&xc->tremolo, 1 << 6);
-		update_lfo(&xc->tremolo);
+		finalvol += get_lfo(&xc->tremolo.lfo, 1 << 6);
+		update_lfo(&xc->tremolo.lfo);
 	}
 
 	CLAMP(finalvol, 0, m->volbase);
@@ -435,7 +435,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 	/* Vibrato */
 	if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
 		int shift = HAS_QUIRK(QUIRK_VIBHALF) ? 10 : 9;
-		int vib = get_lfo(&xc->vibrato, 1 << shift);
+		int vib = get_lfo(&xc->vibrato.lfo, 1 << shift);
 
 		if (HAS_QUIRK(QUIRK_VIBINV)) {
 			vibrato -= vib;
@@ -444,7 +444,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		}
 
 		if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
-			update_lfo(&xc->vibrato);
+			update_lfo(&xc->vibrato.lfo);
 		}
 	}
 
@@ -540,8 +540,8 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 						HAS_QUIRK(QUIRK_ENVSUS));
 
 	if (TEST(PANBRELLO)) {
-		panbrello = get_lfo(&xc->panbrello, 512);
-		update_lfo(&xc->panbrello);
+		panbrello = get_lfo(&xc->panbrello.lfo, 512);
+		update_lfo(&xc->panbrello.lfo);
 	}
 
 	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
