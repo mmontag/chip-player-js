@@ -30,6 +30,7 @@ Stable versions
 	- fix OctaMED SS default pitch transpose (reported by Karl Churchill)
 	- fix OctaMED instrument name loading
 	- fix XM, S3M, IT and MED offset effect handling
+	- fix S3M shared effect parameter memory
 	- fix S3M set BPM effect with values < 32 (reported by Kyu S.)
 	- fix incorrect Noisetracker effect filtering (reported by Kyu S.)
 	- fix finetune effect

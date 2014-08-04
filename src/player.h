@@ -93,10 +93,21 @@ struct channel_data {
 	uint16 p_idx;		/* Pan envelope index */
 	uint16 f_idx;		/* Freq envelope index */
 
-	struct lfo vibrato;
-	struct lfo tremolo;
+	struct {
+		struct lfo lfo;
+		int memory;
+	} vibrato;
+
+	struct {
+		struct lfo lfo;
+		int memory;
+	} tremolo;
+
 #ifndef LIBXMP_CORE_DISABLE_IT
-	struct lfo panbrello;
+	struct {
+		struct lfo lfo;
+		int memory;
+	} panbrello;
 #endif
 
 	struct {

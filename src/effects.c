@@ -38,6 +38,18 @@
 	if ((rate) != 0) set_lfo_rate(lfo, rate); \
 } while (0)
 
+#define EFFECT_MEMORY__(p, m) do { \
+	if ((p) == 0) { (p) = (m); } else { (m) = (p); } \
+} while (0)
+
+#define EFFECT_MEMORY(p, m) do { \
+	if (HAS_QUIRK(QUIRK_S3MPMEM)) { \
+		EFFECT_MEMORY__((p), xc->vol.memory); \
+	} else { \
+		EFFECT_MEMORY__((p), (m)); \
+	} \
+} while (0)
+
 
 static void do_toneporta(struct module_data *m,
                                 struct channel_data *xc, int note)
@@ -76,11 +88,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 	case FX_S3M_ARPEGGIO:
-		if (fxp == 0) {
-			fxp = xc->arpeggio.memory;
-		} else {
-			xc->arpeggio.memory = fxp;
-		}
+		EFFECT_MEMORY(fxp, xc->arpeggio.memory);
 		goto fx_arpeggio;
 #ifndef LIBXMP_CORE_PLAYER
 	case FX_OKT_ARP3:
@@ -110,11 +118,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 #endif
 	case FX_PORTA_UP:	/* Portamento up */
-		if (fxp == 0) {
-			fxp = xc->freq.memory;
-		} else {
-			xc->freq.memory = fxp;
-		}
+		EFFECT_MEMORY(fxp, xc->freq.memory);
 
 		if (HAS_QUIRK(QUIRK_FINEFX)
 		    && (fnum == 0 || !HAS_QUIRK(QUIRK_ITVPOR))) {
@@ -140,11 +144,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 	case FX_PORTA_DN:	/* Portamento down */
-		if (fxp == 0) {
-			fxp = xc->freq.memory;
-		} else {
-			xc->freq.memory = fxp;
-		}
+		EFFECT_MEMORY(fxp, xc->freq.memory);
 
 		if (HAS_QUIRK(QUIRK_FINEFX)
 		    && (fnum == 0 || !HAS_QUIRK(QUIRK_ITVPOR))) {
@@ -179,27 +179,25 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 
 		do_toneporta(m, xc, note);
 
-		if (fxp) {
-			xc->porta.memory = fxp;
-			if (HAS_QUIRK(QUIRK_UNISLD)) /* IT compatible Gxx off */
-				xc->freq.memory = fxp;
-		} else {
-			fxp = xc->porta.memory;
-		}
+		EFFECT_MEMORY(fxp, xc->porta.memory);
 
 		if (fxp) {
+			if (HAS_QUIRK(QUIRK_UNISLD)) /* IT compatible Gxx off */
+				xc->freq.memory = fxp;
 			xc->porta.slide = fxp;
 		}
 		SET(TONEPORTA);
 		break;
 
 	case FX_VIBRATO:	/* Vibrato */
+		EFFECT_MEMORY(fxp, xc->vibrato.memory);
 		SET(VIBRATO);
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 2, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato.lfo, LSN(fxp) << 2, MSN(fxp));
 		break;
-	case FX_FINE_VIBRATO:	/* Fine vibrato (4x) */
+	case FX_FINE_VIBRATO:	/* Fine vibrato */
+		EFFECT_MEMORY(fxp, xc->vibrato.memory);
 		SET(VIBRATO);
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp), MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato.lfo, LSN(fxp), MSN(fxp));
 		break;
 
 	case FX_TONE_VSLIDE:	/* Toneporta + vol slide */
@@ -213,8 +211,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		goto fx_volslide;
 
 	case FX_TREMOLO:	/* Tremolo */
+		EFFECT_MEMORY(fxp, xc->tremolo.memory);
 		SET(TREMOLO);
-		SET_LFO_NOTZERO(&xc->tremolo, LSN(fxp), MSN(fxp));
+		SET_LFO_NOTZERO(&xc->tremolo.lfo, LSN(fxp), MSN(fxp));
 		break;
 
 	case FX_SETPAN:		/* Set pan */
@@ -330,7 +329,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			fxp &= 3;
 			if (HAS_QUIRK(QUIRK_S3MLFO) && fxp == 2)
 				fxp |= 0x10;
-			set_lfo_waveform(&xc->vibrato, fxp);
+			set_lfo_waveform(&xc->vibrato.lfo, fxp);
 			break;
 		case EX_FINETUNE:	/* Set finetune */
 			fxp <<= 4;
@@ -359,7 +358,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			}
 			break;
 		case EX_TREMOLO_WF:	/* Set tremolo waveform */
-			set_lfo_waveform(&xc->tremolo, fxp & 3);
+			set_lfo_waveform(&xc->tremolo.lfo, fxp & 3);
 			break;
 		case EX_RETRIG:		/* Retrig note */
 			SET(RETRIG);
@@ -554,11 +553,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		SET(RETRIG);
 		break;
 	case FX_TREMOR:		/* Tremor */
-		if (fxp != 0) {
-			xc->tremor.memory = fxp;
-		} else {
-			fxp = xc->tremor.memory;
-		}
+		EFFECT_MEMORY(fxp, xc->tremor.memory);
 		if (MSN(fxp) == 0)
 			fxp |= 0x10;
 		if (LSN(fxp) == 0)
@@ -664,10 +659,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_PANBRELLO:	/* Panbrello */
 		SET(PANBRELLO);
-		SET_LFO_NOTZERO(&xc->panbrello, LSN(fxp) << 4, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->panbrello.lfo, LSN(fxp) << 4, MSN(fxp));
 		break;
 	case FX_PANBRELLO_WF:	/* Panbrello waveform */
-		set_lfo_waveform(&xc->panbrello, fxp & 3);
+		set_lfo_waveform(&xc->panbrello.lfo, fxp & 3);
 		break;
 #endif
 
@@ -760,7 +755,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		} else {
 			RESET_PER(VIBRATO);
 		}
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 2, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato.lfo, LSN(fxp) << 2, MSN(fxp));
 		break;
 	case FX_PER_PORTA_UP:	/* Persistent portamento up */
 		SET_PER(PITCHBEND);
@@ -796,8 +791,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			RESET_PER(VOL_SLIDE);
 		break;
 	case FX_VIBRATO2:	/* Deep vibrato (2x) */
+		EFFECT_MEMORY(fxp, xc->vibrato.memory);
 		SET(VIBRATO);
-		SET_LFO_NOTZERO(&xc->vibrato, LSN(fxp) << 3, MSN(fxp));
+		SET_LFO_NOTZERO(&xc->vibrato.lfo, LSN(fxp) << 3, MSN(fxp));
 		break;
 	case FX_SPEED_CP:	/* Set speed and ... */
 		if (fxp)
