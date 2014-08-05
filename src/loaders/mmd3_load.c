@@ -342,8 +342,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 						event->note -= 12;
 				};
 
-				if (event->note < 0 || event->note >=
-								XMP_MAX_KEYS)
+				if (event->note >= XMP_MAX_KEYS)
 					event->note = 0;
 
 				event->ins = e[1] & 0x3f;
