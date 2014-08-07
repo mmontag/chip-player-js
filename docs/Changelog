@@ -13,6 +13,7 @@ Stable versions
 	- fix XM note release reset on new volume
 	- fix XM pattern loader to honor header size
 	- fix XM fine pitch slide effect memory
+	- fix XM finetune effect
 	- fix IT portamento if offset effect is used
 	- fix IT NNA on invalid sample mapping
 	- fix IT filter envelope index reset
