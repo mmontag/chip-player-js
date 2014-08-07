@@ -74,7 +74,7 @@ static void do_toneporta(struct module_data *m,
 	if (note >= 1 && note <= 0x80 && (uint32)xc->ins < m->mod.ins) {
 		note--;
 		xc->porta.target = note_to_period(note + sub->xpo +
-			instrument->map[xc->key].xpo, sub->fin,
+			instrument->map[xc->key].xpo, xc->finetune,
 			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 	}
 	xc->porta.dir = xc->period < xc->porta.target ? 1 : -1;
@@ -351,7 +351,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			break;
 		case EX_FINETUNE:	/* Set finetune */
 			fxp <<= 4;
-			goto fx_finetune;
+			if (!HAS_QUIRK(QUIRK_XMFINE) || note > 0)
+				goto fx_finetune;
+			break;
 		case EX_PATTERN_LOOP:	/* Loop pattern */
 			if (fxp == 0) {
 				/* mark start of loop */
