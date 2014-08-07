@@ -91,6 +91,7 @@ OPENMPT_XM	= 3xxins \
 		  envloops \
 		  envoff \
 		  envretrig \
+		  finetune \
 		  notelimit2 \
 		  noteoff \
 		  noteofffade \
