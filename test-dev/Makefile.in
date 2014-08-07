@@ -109,7 +109,8 @@ OPENMPT_IT	= carrynna \
 		  porta_offset \
 		  portareset \
 		  portasample \
-		  portasamplecompat
+		  portasamplecompat \
+		  swaptest
 
 OPENMPT_S3M	= freqlimits \
 		  parammemory \
