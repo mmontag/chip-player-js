@@ -106,6 +106,7 @@ OPENMPT_IT	= carrynna \
 		  envreset \
 		  extreme_filter_test_1 \
 		  filterenvreset \
+		  freqreset_noins \
 		  nomap \
 		  porta_offset \
 		  portareset \
