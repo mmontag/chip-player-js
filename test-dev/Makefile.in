@@ -108,6 +108,7 @@ OPENMPT_IT	= carrynna \
 		  filterenvreset \
 		  freqreset_noins \
 		  nomap \
+		  noteoff2 \
 		  porta_offset \
 		  portareset \
 		  portasample \
