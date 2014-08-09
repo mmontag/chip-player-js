@@ -110,6 +110,7 @@ OPENMPT_IT	= carrynna \
 		  filterenvreset \
 		  freqreset_noins \
 		  gxsmp \
+		  ins_flt_porta_reset \
 		  nomap \
 		  noteoff2 \
 		  porta_offset \
