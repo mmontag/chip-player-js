@@ -107,6 +107,7 @@ OPENMPT_IT	= carrynna \
 		  envloops \
 		  envreset \
 		  extreme_filter_test_1 \
+		  filter_7f \
 		  filterenvreset \
 		  freqreset_noins \
 		  gxsmp \
