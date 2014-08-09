@@ -647,22 +647,21 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	int candidate_ins;
 	int reset_env;
 	int use_ins_vol;
-	unsigned char e_note, e_ins;
+	struct xmp_event ev;
 
-	e_note = e->note;
-	e_ins = e->ins;
+	memcpy(&ev, e, sizeof (struct xmp_event));
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
-	if (e_ins) {
+	if (ev.ins) {
 		xc->delayed_ins = 0;
-	} else if (e_note && xc->delayed_ins) {
-		e_ins = xc->delayed_ins;
+	} else if (ev.note && xc->delayed_ins) {
+		ev.ins = xc->delayed_ins;
 		xc->delayed_ins = 0;
 	}
 
 	xc->flags = 0;
 	note = -1;
-	key = e_note;
+	key = ev.note;
 	not_same_ins = 0;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
@@ -672,20 +671,20 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	candidate_ins = xc->ins;
 
 	/* Notes with unmapped instruments are ignored */
-	if (e_ins && e_ins <= mod->ins && e_note && e_note <= XMP_MAX_KEYS) {
-		int ins = e_ins - 1;
-		int key = e_note - 1;
+	if (ev.ins && ev.ins <= mod->ins && ev.note && ev.note <= XMP_MAX_KEYS) {
+		int ins = ev.ins - 1;
+		int key = ev.note - 1;
 
-		if (IS_VALID_INSTRUMENT(ins)) {
-			if (mod->xxi[ins].map[key].ins == 0xff) {
+		if (ins < mod->ins) {
+			int smp = mod->xxi[ins].map[key].ins;
+			if (smp == 0xff || smp >= mod->smp) {
 				candidate_ins = ins;
-				e_note = 0;
-				e_ins = 0;
+				memset(&ev, 0, sizeof(struct xmp_event));
 			};
 		}
 	}
 
-	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
+	if (IS_TONEPORTA(ev.fxt) || IS_TONEPORTA(ev.f2t)) {
 		is_toneporta = 1;
 	}
 
@@ -695,8 +694,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	/* Check instrument */
 
-	if (e_ins) {
-		int ins = e_ins - 1;
+	if (ev.ins) {
+		int ins = ev.ins - 1;
 
 		if (!is_release || (!is_toneporta || xc->ins != ins)) {
 			SET(NEW_INS);
@@ -769,7 +768,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				key = 0;
 			}
 
-			if (HAS_QUIRK(QUIRK_PRENV) && e->ins)
+			if (HAS_QUIRK(QUIRK_PRENV) && ev.ins)
 				reset_envelopes(ctx, xc, 0);
 		}
 	}
@@ -814,7 +813,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	 * finished (OpenMPT test EnvReset.it). This must take place after
 	 * channel copies in case of NNA (see test/test.it)
 	 */
-	if (e_ins && TEST_NOTE(NOTE_ENV_END)) {
+	if (ev.ins && TEST_NOTE(NOTE_ENV_END)) {
 		reset_envelopes(ctx, xc, 1);
 	}
 
@@ -835,15 +834,15 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				xc->pan.val = sub->pan;
 			reset_envelopes(ctx, xc, TEST_NOTE(NOTE_CUT));
 			RESET_NOTE(NOTE_CUT);
-		} else if (e_ins) {
+		} else if (ev.ins) {
 			if (sub->pan >= 0)
 				xc->pan.val = sub->pan;
 		}
 	}
 	
 	/* Process new volume */
-	if (e->vol) {
-		xc->volume = e->vol - 1;
+	if (ev.vol) {
+		xc->volume = ev.vol - 1;
 		SET(NEW_VOL);
 	}
 
@@ -853,8 +852,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* According to Storlek test 25, Impulse Tracker handles the volume
 	 * column effects last.
 	 */
-	process_fx(ctx, xc, chn, e_note, e->fxt, e->fxp, 0);
-	process_fx(ctx, xc, chn, e_note, e->f2t, e->f2p, 1);
+	process_fx(ctx, xc, chn, ev.note, ev.fxt, ev.fxp, 0);
+	process_fx(ctx, xc, chn, ev.note, ev.f2t, ev.f2p, 1);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL)) {
