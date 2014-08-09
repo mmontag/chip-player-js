@@ -12,6 +12,7 @@ Stable versions
 	- fix XM invalid offset handling
 	- fix XM note release reset on new volume
 	- fix XM pattern loader to honor header size
+	- fix XM fine volume slide effect memory
 	- fix XM fine pitch slide effect memory
 	- fix XM finetune effect
 	- fix IT portamento if offset effect is used

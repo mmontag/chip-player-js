@@ -142,6 +142,11 @@ struct channel_data {
 	} vol;
 
 	struct {
+		int up_memory;	/* Fine volume slide up memory (XM) */
+		int down_memory;/* Fine volume slide up memory (XM) */
+	} fine_vol;
+
+	struct {
 		int slide;	/* Global volume slide value */
 		int fslide;	/* Fine global volume slide value */
 		int memory;	/* Global volume memory is saved per channel */

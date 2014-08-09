@@ -387,8 +387,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->retrig.type = 0;
 			break;
 		case EX_F_VSLIDE_UP:	/* Fine volume slide up */
+			EFFECT_MEMORY(fxp, xc->fine_vol.up_memory);
 			goto fx_f_vslide_up;
 		case EX_F_VSLIDE_DN:	/* Fine volume slide down */
+			EFFECT_MEMORY(fxp, xc->fine_vol.down_memory);
 			goto fx_f_vslide_dn;
 		case EX_CUT:		/* Cut note */
 			SET(RETRIG);
@@ -422,16 +424,16 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 
 	case FX_F_VSLIDE_UP:	/* Fine volume slide up */
+		EFFECT_MEMORY(fxp, xc->fine_vol.up_memory);
 	    fx_f_vslide_up:
 		SET(FINE_VOLS);
-		if (fxp)
-			xc->vol.fslide = fxp;
+		xc->vol.fslide = fxp;
 		break;
 	case FX_F_VSLIDE_DN:	/* Fine volume slide down */
+		EFFECT_MEMORY(fxp, xc->fine_vol.up_memory);
 	    fx_f_vslide_dn:
 		SET(FINE_VOLS);
-		if (fxp)
-			xc->vol.fslide = -fxp;
+		xc->vol.fslide = -fxp;
 		break;
 	case FX_F_PORTA_UP:	/* Fine portamento up */
 	    fx_f_porta_up:
