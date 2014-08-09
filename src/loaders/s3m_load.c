@@ -278,7 +278,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if (sfh.mv & 0x80) {	/* stereo */
 		int x = sfh.chset[i] & S3M_CH_PAN;
-		mod->xxc[i].pan = (x & 0x0f) < 8 ? 0x00 : 0xff;
+		mod->xxc[i].pan = (x & 0x0f) < 8 ? 0x30 : 0xc0;
 	} else {
 		mod->xxc[i].pan = 0x80;
 	}
