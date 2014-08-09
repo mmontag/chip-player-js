@@ -21,6 +21,7 @@ Stable versions
 	- fix IT envelope carry on note cut events
 	- fix IT envelope reset on new instrument
 	- fix IT instrument change on portamento in compatible GXX mode
+	- fix IT unmapped sample parsing
 	- fix IT filter cutoff reset
 	Other changes:
 	- add API call to load a module from a file handle

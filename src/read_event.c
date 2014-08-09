@@ -647,21 +647,22 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	int candidate_ins;
 	int reset_env;
 	int use_ins_vol;
-	unsigned char e_ins;
+	unsigned char e_note, e_ins;
 
+	e_note = e->note;
 	e_ins = e->ins;
 
 	/* Emulate Impulse Tracker "always read instrument" bug */
 	if (e_ins) {
 		xc->delayed_ins = 0;
-	} else if (e->note && xc->delayed_ins) {
+	} else if (e_note && xc->delayed_ins) {
 		e_ins = xc->delayed_ins;
 		xc->delayed_ins = 0;
 	}
 
 	xc->flags = 0;
 	note = -1;
-	key = e->note;
+	key = e_note;
 	not_same_ins = 0;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
@@ -669,6 +670,20 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	reset_env = 0;
 	use_ins_vol = 0;
 	candidate_ins = xc->ins;
+
+	/* Notes with unmapped instruments are ignored */
+	if (e_ins && e_ins <= mod->ins && e_note && e_note <= XMP_MAX_KEYS) {
+		int ins = e_ins - 1;
+		int key = e_note - 1;
+
+		if (IS_VALID_INSTRUMENT(ins)) {
+			if (mod->xxi[ins].map[key].ins == 0xff) {
+				candidate_ins = ins;
+				e_note = 0;
+				e_ins = 0;
+			};
+		}
+	}
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 		is_toneporta = 1;
@@ -838,8 +853,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* According to Storlek test 25, Impulse Tracker handles the volume
 	 * column effects last.
 	 */
-	process_fx(ctx, xc, chn, e->note, e->fxt, e->fxp, 0);
-	process_fx(ctx, xc, chn, e->note, e->f2t, e->f2p, 1);
+	process_fx(ctx, xc, chn, e_note, e->fxt, e->fxp, 0);
+	process_fx(ctx, xc, chn, e_note, e->f2t, e->f2p, 1);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL)) {
