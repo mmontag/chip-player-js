@@ -172,7 +172,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		    break;
 		case 0x0c:	/* Set panning */
 		    event->f2t = FX_SETPAN;
-		    event->f2p = ((event->vol - 0xc0) << 4) + 8;
+		    event->f2p = (event->vol - 0xc0) << 4;
 		    break;
 		case 0x0d:	/* Pan slide left */
 		    event->f2t = FX_PANSLIDE;
