@@ -98,6 +98,7 @@ OPENMPT_XM	= 3xxins \
 		  noteoff \
 		  noteofffade \
 		  offsetrange \
+		  panmemory2 \
 		  pathead \
 		  pickup \
 		  porta_linkmem
