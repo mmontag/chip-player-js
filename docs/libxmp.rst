@@ -341,8 +341,8 @@ int xmp_load_module_from_memory(xmp_context c, void \*mem, long size)
 
 .. _xmp_load_module_from_file():
 
-int xmp_load_module_from_file(xmp_context c, FILE \*f)
-``````````````````````````````````````````````````````
+int xmp_load_module_from_file(xmp_context c, FILE \*f, long size)
+`````````````````````````````````````````````````````````````````
 
   *[Added in libxmp 4.3]* Load a module from a stream into the specified
   player context.
@@ -352,6 +352,11 @@ int xmp_load_module_from_file(xmp_context c, FILE \*f)
  
     :f: the file stream. On return, the stream position is undefined.
  
+    :size: the size of the module, or 0 if the size is unknown or not
+      specified. If size is set to 0 certain module formats won't be
+      recognized, the MD5 digest will not be set, and module-specific
+      quirks won't be applied.
+
   **Returns:**
     0 if sucessful, or a negative error code in case of error.
     Error codes can be ``-XMP_ERROR_FORMAT`` in case of an unrecognized file
@@ -759,6 +764,7 @@ int xmp_get_player(xmp_context c, int param)
         XMP_PLAYER_SMPCTL   /* Control sample loading */
         XMP_PLAYER_VOLUME   /* Player master volume */
         XMP_PLAYER_STATE    /* Current player state*/
+        XMP_PLAYER_DEFPAN   /* Default pan separation */
 
       See ``xmp_set_player`` for the list of valid values for each parameter.
       Valid states are::
@@ -790,6 +796,7 @@ int xmp_set_player(xmp_context c, int param, int val)
         XMP_PLAYER_CFLAGS   /* Player flags for current module*/
         XMP_PLAYER_SMPCTL   /* Control sample loading */
         XMP_PLAYER_VOLUME   /* Player master volume */
+        XMP_PLAYER_DEFPAN   /* Default pan separation */
 
     :val: the value to set. Valid values are:
 
