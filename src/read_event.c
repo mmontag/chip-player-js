@@ -439,9 +439,11 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Process new volume */
 	if (e->vol) {
 		xc->volume = e->vol - 1;
-		xc->fadeout = 0x10000;		/* OpenMPT NoteOff.xm */
 		SET(NEW_VOL);
-		RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
+		if (TEST_NOTE(NOTE_END)) {	/* m5v-nine.xm */
+			xc->fadeout = 0x10000;	/* OpenMPT NoteOff.xm */
+			RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
+		}
 	}
 
 	/* FT2: always reset sample offset */
