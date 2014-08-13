@@ -173,15 +173,16 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
 
             switch (command)
             {
-            case 0x03:
+            case 0x03:		/* set volume */
             {
                 if (events != NULL)
                 {
-                    events[position].vol = param+1;
+                    events[position].fxt = FX_VOLSET;
+                    events[position].fxp = param;
                 }
                 break;
             }
-            case 0x04:
+            case 0x04:		/* stop effect */
             {
                 if (events != NULL)
                 {
@@ -189,7 +190,38 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 }
                 break;
             }
-            case 0x08:
+            case 0x05:		/* repeat */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_EXTENDED;
+                    if (param == 0) {
+                        events[position].fxp = 0x50;
+                    } else {
+                        events[position].fxp = 0x60 | (param & 0x0f);
+                    }
+                }
+                break;
+            }
+            case 0x06:		/* lowpass filter on */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_EXTENDED;
+                    events[position].fxp = 0x01;
+                }
+                break;
+            }
+            case 0x07:		/* lowpass filter off */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_EXTENDED;
+                    events[position].fxp = 0x01;
+                }
+                break;
+            }
+            case 0x08:		/* set tempo */
             {
                 if (events != NULL)
                 {
@@ -198,7 +230,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 }
                 break;
             }
-            case 0x09:
+            case 0x09:		/* set instrument */
             {
                 if (events != NULL)
                 {
@@ -207,15 +239,33 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
 
                 break;
             }
-            case 0x0B:
+            case 0x0a:		/* arpeggio */
             {
                 if (events != NULL)
                 {
-                    events[position].fxt |= FX_PER_TPORTA;
+                    events[position].fxt = FX_ARPEGGIO;
+                    events[position].fxp = param;
                 }
                 break;
             }
-            case 0x0e:
+            case 0x0B:		/* tone portamento */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_PER_TPORTA;
+                }
+                break;
+            }
+            case 0x0d:		/* volume slide */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_VOLSLIDE;
+                    events[position].fxp = param;
+                }
+                break;
+            }
+            case 0x0e:		/* portamento up */
             {
                 if (events != NULL)
                 {
@@ -224,7 +274,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 }
                 break;
             }
-            case 0x0F:
+            case 0x0F:		/* portamento down */
             {
                 if (events != NULL)
                 {
@@ -233,9 +283,18 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 }
                 break;
             }
-            case 0x10:
+            case 0x10:		/* delay */
             {
                 position += param;
+                break;
+            }
+            case 0x11:		/* position jump */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_JUMP;
+                    events[position].fxp = param;
+                }
                 break;
             }
             default:
@@ -244,7 +303,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 fprintf(stderr, "ABK UNPROCESSED COMMAND: %x,%x\n", command, param);
                 break;
             }
-            }
+        }
         }
         else
         {
@@ -355,7 +414,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    snprintf(mod->type, XMP_NAME_SIZE, "ABK (AMOS Music Bank)");
+    set_type(m, "AMOS Music Bank");
 
     if (read_abk_song(f, &song, AMOS_MAIN_HEADER + main_header.songs_offset) < 0)
     {
