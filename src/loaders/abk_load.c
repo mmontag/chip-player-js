@@ -217,7 +217,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 if (events != NULL)
                 {
                     events[position].fxt = FX_EXTENDED;
-                    events[position].fxp = 0x01;
+                    events[position].fxp = 0x00;
                 }
                 break;
             }
