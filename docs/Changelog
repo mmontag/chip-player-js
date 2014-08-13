@@ -27,6 +27,7 @@ Stable versions
 	- add API call to load a module from a file handle
 	- add API call to set default pan separation value
 	- add OpenMPT test cases to regression test suite
+	- add AMOS Music Bank loader (by Stephen Leary)
 	- refactor memory I/O calls
 	- read OctaMED annotation and song info text
 	- fix segfault in mixer caused by sample position overflow
