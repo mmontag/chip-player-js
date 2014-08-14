@@ -52,7 +52,7 @@ struct abk_song
 
 struct abk_playlist
 {
-    uint8	length;
+    uint16	length;
     uint16	*pattern;
 };
 
@@ -76,7 +76,7 @@ struct abk_instrument
  * @param playlist_offset the offset to the playlist sections.
  * @param playlist this structure is populated with the result.
  */
-static void read_abk_playlist(HIO_HANDLE *f, uint16 playlist_offset, struct abk_playlist *playlist)
+static void read_abk_playlist(HIO_HANDLE *f, uint32 playlist_offset, struct abk_playlist *playlist)
 {
     uint16 playdata;
     int arraysize;
@@ -93,7 +93,7 @@ static void read_abk_playlist(HIO_HANDLE *f, uint16 playlist_offset, struct abk_
 
     playdata = hio_read16b(f);
 
-    while (playdata != 0xFFFF)
+    while((playdata != 0xFFFF) && (playdata != 0xFFFE))
     {
         /* i hate doing a realloc in a loop
            but i'd rather not traverse the list twice.*/
@@ -159,7 +159,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
 
     patdata = hio_read16b(f);
 
-    while (patdata != 0x8000)
+    while ((patdata != 0x8000))
     {
         if (patdata == 0x9100)
         {
@@ -315,6 +315,11 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
         }
 
         patdata = hio_read16b(f);
+		
+		if (hio_eof(f))
+		{
+			break;
+		}
     }
 
     hio_seek(f, storepos, SEEK_SET);
@@ -361,6 +366,108 @@ static void read_abk_inst(HIO_HANDLE *f, struct abk_instrument *inst, uint32 ins
 
     hio_read(inst->sample_name, 1, 16, f);
 }
+
+static void sortandsize(uint32 size, uint32 *inptrs, uint32 *outptrs, uint32 end)
+{
+	uint32 i,j,tmp;
+	
+	// dumb bubble sort
+	for (i = 0; i < size; i++)
+	{
+		for (j = i+1; j < size; j++)
+		{
+			if (inptrs[j] < inptrs[i])
+			{
+				// exchange items.
+				tmp = inptrs[j];
+				inptrs[j] = inptrs[i];
+				inptrs[i] = tmp;
+			}
+		}
+	}
+	
+	for (i = 0; i < (size-1); i++)
+	{
+		 outptrs[i] = inptrs[i+1] - inptrs[i];
+	}
+	
+	outptrs[size - 1] = end - inptrs[size-1];
+}
+
+static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_offset, uint32 inst_section_size)
+{
+	uint16 i,j;
+	uint16 count; 
+	uint32 savepos;
+	struct abk_instrument *inst;
+		
+	savepos = hio_tell(f);
+	
+	hio_seek(f, inst_section_offset, SEEK_SET);
+	count = hio_read16b(f);
+	
+	inst = (struct abk_instrument*) malloc(count * sizeof(struct abk_instrument));
+	memset(inst, 0, count * sizeof(struct abk_instrument));
+	
+	uint32 *offsets = (uint32 *) malloc(count * sizeof(uint32));
+	uint32 *sizes = (uint32 *) malloc(count * sizeof(uint32));
+	
+	for (i = 0; i < count; i++)
+    {		
+        read_abk_inst(f, &inst[i], AMOS_MAIN_HEADER + inst_section_offset);
+		offsets[i] = inst[i].sample_offset;
+	}
+	
+	/* should have all the instruments. 
+	 * now we need to fix all the lengths */
+	sortandsize(count, offsets, sizes, inst_section_size);
+	
+	// update the ordered struct.
+	for (i = 0; i < count; i++)
+    {
+		for (j = 0; j < count; j++)
+		{
+			if (inst[i].sample_offset == offsets[j])
+			{
+				inst[i].sample_length = sizes[j]/2;
+				break;
+			}
+		}
+	}
+	 
+	hio_seek(f, savepos, SEEK_SET);
+	return inst;
+}
+
+#define ABK_HEADER_SECTION_COUNT 3
+
+static uint32 abk_inst_section_size(struct abk_header *head, int size)
+{
+	int i;
+	uint32 result = 0;
+	
+	uint32 offsets[ABK_HEADER_SECTION_COUNT];
+	uint32 sizes[ABK_HEADER_SECTION_COUNT];
+	
+	offsets[0] = head->instruments_offset;
+	offsets[1] = head->patterns_offset;
+	offsets[2] = head->songs_offset;
+	
+	memset(sizes, 0, ABK_HEADER_SECTION_COUNT*sizeof(uint32));
+	
+	sortandsize(ABK_HEADER_SECTION_COUNT, offsets, sizes, size);
+	
+	for (i=0;i<3;i++)
+	{
+		if (offsets[i] == head->instruments_offset)
+		{
+			result = sizes[i];
+		}
+	}
+	
+	return result;
+}
+
 static int abk_test (HIO_HANDLE *f, char *t, const int start)
 {
     uint64 music;
@@ -392,19 +499,26 @@ static int abk_test (HIO_HANDLE *f, char *t, const int start)
 
 static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
-    int i,j;
+    int i,j,k;
     uint16 pattern;
     uint32 first_sample_offset;
+	uint32 inst_section_size;
+	uint32 file_size;
 	
+	uint8 *bad_patterns; /* skip these patterns and dont encode them */
 	struct xmp_module *mod = &m->mod;
 
     struct abk_header main_header;
-    struct abk_instrument ci;
+    struct abk_instrument *ci;
     struct abk_song song;
     struct abk_playlist playlist;
 
+	ci = NULL;
     pattern = 0;
     first_sample_offset = 0;
+	
+	hio_seek(f, 0, SEEK_END);
+	file_size = hio_tell(f);
 
     hio_seek(f, AMOS_MAIN_HEADER, SEEK_SET);
 
@@ -412,6 +526,9 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     main_header.songs_offset = hio_read32b(f);
     main_header.patterns_offset = hio_read32b(f);
 
+	inst_section_size = abk_inst_section_size(&main_header, file_size - AMOS_MAIN_HEADER);
+	D_(D_INFO "Sample Bytes: %d", inst_section_size);
+	
     LOAD_INIT();
 
     set_type(m, "AMOS Music Bank");
@@ -447,19 +564,17 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     D_(D_INFO "Instruments: %d", mod->ins);
 	
+	/* read all the instruments in */
+	ci = read_abk_insts(f, AMOS_MAIN_HEADER + main_header.instruments_offset, inst_section_size);
+	
     for (i = 0; i < mod->ins; i++)
-    {
-        /* allocate an instrment */
-        memset(&ci, 0, sizeof(ci));
-		
+    {		
 		if (subinstrument_alloc(mod, i, 1) < 0)
 	    {
 			return -1;
 		}
-
-        read_abk_inst(f, &ci, AMOS_MAIN_HEADER + main_header.instruments_offset);
-
-        mod->xxs[i].len = (ci.sample_length)<<1;
+		
+        mod->xxs[i].len = (ci[i].sample_length)<<1;
         
 		if (mod->xxs[i].len > 0)
 		{
@@ -469,7 +584,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         /* store the location of the first sample so we can read them later. */
         if (first_sample_offset == 0)
         {
-            first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci.sample_offset;
+            first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci[i].sample_offset;
         }
 
         /* TODO: do the repeating stuff. */
@@ -477,11 +592,11 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         mod->xxs[i].lpe = 0;
         mod->xxs[i].flg = 0;
 
-		mod->xxi[i].sub[0].vol = ci.sample_volume;
+		mod->xxi[i].sub[0].vol = ci[i].sample_volume;
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
 
-		instrument_name(mod, i, (uint8*)ci.sample_name, 16);
+		instrument_name(mod, i, (uint8*)ci[i].sample_name, 16);
 
 		D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
 		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -499,22 +614,18 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     read_abk_playlist(f, song.playlist_offset[0], &playlist);
 
-    for (j=0; j< playlist.length; j++)
-    {
-		mod->xxo[j] = playlist.pattern[j];
-    }
-
     /* move to the start of the instruments section */
     /* then convert the patterns one at a time. there is a pattern for each channel.*/
     hio_seek(f, AMOS_MAIN_HEADER + main_header.patterns_offset + 2, SEEK_SET);
 
     mod->len = 0;
+	
+	bad_patterns = (uint8 *) malloc(sizeof(int)*mod->pat);
+	memset(bad_patterns, 0, sizeof(int)*mod->pat);
 
-    for (i = 0; i < mod->pat; i++)
+	i = 0;
+    for (j = 0; j < mod->pat; j++)
     {
-        /* increment the length */
-        mod->len++;
-		
         pattern = hio_read16b(f);
         hio_seek(f, -2L, SEEK_CUR);
 
@@ -522,17 +633,47 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         /* we'll use that size to define the row size then do the conversion.*/
         uint8 patternsize = read_abk_pattern(f, NULL, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
 		
+		if (patternsize == 0)
+		{
+			 bad_patterns[j] = 1;
+			 D_(D_WARN "Zero length pattern detected: %d", j);
+			 continue;
+		}
+		
+		 /* increment the length */
+        mod->len++;
+		
 		if (pattern_tracks_alloc(mod, i, patternsize) < 0)
 		{
 			return -1;
 		}
 		
-        for (j = 0; j  < mod->chn; j++)
+        for (k = 0; k  < mod->chn; k++)
         {
             pattern = hio_read16b(f);
-            read_abk_pattern(f,  mod->xxt[(i*mod->chn)+j]->event, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
+            read_abk_pattern(f,  mod->xxt[(i*mod->chn)+k]->event, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
         }
+		
+		i++;
     }
+	
+	i = 0;
+	for (j=0; j< playlist.length; j++)
+    {
+		if (bad_patterns[j] == 0)
+		{
+			mod->xxo[i++] = playlist.pattern[j];
+		}
+		else
+		{
+			D_(D_WARN "Skipping playlist item: %i", playlist.pattern[j]);
+		}
+    }
+	
+	/* free up some memory here */
+	/* TODO: a bunch of the structs leak */
+	free(bad_patterns);
+
 	
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
