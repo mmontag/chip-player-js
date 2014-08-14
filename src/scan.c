@@ -129,6 +129,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	pat = mod->xxo[ord];
 	info = &m->xxo_info[ord];
 
+	/* Allow more complex order reuse only in main sequence */
 	if (ep != 0 && p->sequence_control[ord] != 0xff) {
 	    break;
 	}
@@ -143,8 +144,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    continue;
 	}
 
-	if (break_row < mod->xxp[pat]->rows && m->scan_cnt[ord][break_row])
+	if (break_row < mod->xxp[pat]->rows && m->scan_cnt[ord][break_row]) {
 	    break;
+	}
 
 	info->gvl = gvl;
 	info->bpm = bpm;
