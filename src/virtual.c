@@ -222,6 +222,11 @@ static int map_virt_channel(struct player_data *p, int chn)
 	return voc;
 }
 
+int virt_mapchannel(struct context_data *ctx, int chn)
+{
+	return map_virt_channel(&ctx->p, chn);
+}
+
 void virt_resetchannel(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;

@@ -694,6 +694,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		is_release = 1;
 	}
 
+	if (!HAS_QUIRK(QUIRK_VIRTUAL) && virt_mapchannel(ctx, chn) < 0) {
+		is_toneporta = 0;
+	}
+
 	/* Check instrument */
 
 	if (ev.ins) {
