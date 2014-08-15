@@ -145,6 +145,7 @@ static int read_abk_song(HIO_HANDLE *f, struct abk_song *song, uint32 songs_sect
 
 static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 pattern_offset_abs)
 {
+	int lastnote =0;
     uint8 position;
     uint8 command;
     uint8 param;
@@ -286,6 +287,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             case 0x10:		/* delay */
             {
                 position += param;
+				lastnote = 0;
                 break;
             }
             case 0x11:		/* position jump */
@@ -307,11 +309,20 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
         }
         else
         {
+			if (lastnote != 0)
+			{
+				position++;
+			}
+			
+			lastnote = period_to_note(patdata & 0x0fff);
+			
             if (events != NULL)
             {
                 /* convert the note from amiga period format to xmp's internal format.*/
-                events[position].note = period_to_note(patdata & 0x0fff);
+                events[position].note = lastnote;
             }
+			
+			
         }
 
         patdata = hio_read16b(f);
@@ -626,12 +637,21 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	i = 0;
     for (j = 0; j < mod->pat; j++)
     {
-        pattern = hio_read16b(f);
-        hio_seek(f, -2L, SEEK_CUR);
+        uint32 savepos = hio_tell(f);
 
         /* just read the size first time.*/
         /* we'll use that size to define the row size then do the conversion.*/
-        uint8 patternsize = read_abk_pattern(f, NULL, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
+	
+        uint16 patternsize = 0;
+		
+		for (k = 0; k  < mod->chn; k++)
+        {
+            pattern = hio_read16b(f);
+			uint16 tmp = read_abk_pattern(f, NULL, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
+			patternsize = tmp > patternsize ? tmp : patternsize;
+		}
+		
+		hio_seek(f, savepos, SEEK_SET);
 		
 		if (patternsize == 0)
 		{
