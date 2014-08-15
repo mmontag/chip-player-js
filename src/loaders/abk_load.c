@@ -447,6 +447,10 @@ static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_
 	}
 	 
 	hio_seek(f, savepos, SEEK_SET);
+
+	free(sizes);
+	free(offsets);
+
 	return inst;
 }
 
@@ -619,6 +623,8 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 	 }
 	 
+    free(ci);
+
     /* figure out the playlist order.
      * TODO: if the 4 channels arent in the same order then
      * we need to fail here. */
@@ -692,6 +698,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	
 	/* free up some memory here */
 	/* TODO: a bunch of the structs leak */
+	free(playlist.pattern);
 	free(bad_patterns);
 
 	
