@@ -39,6 +39,9 @@ The Authors
 - Kevin Langman <langman@earthling.net>
   * OS/2 port
 
+- Stephen Leary <sleary@vavi.co.uk>
+  * AMOS Music Bank format loader
+
 - Claudio Matsuoka <cmatsuoka@gmail.com>
   * main player coding
   * module loaders
