@@ -318,7 +318,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint32 *pp_pat;		/* Pointers to patterns */
     uint8 last_fxp[64];
     int dca2nna[] = { 0, 2, 3 };
-    int new_fx;
+    int new_fx, sample_mode;
 
     LOAD_INIT();
 
@@ -378,11 +378,13 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->spd = ifh.is;
     mod->bpm = ifh.it;
 
+    sample_mode = ~ifh.flags & IT_USE_INST;
+
     if (ifh.flags & IT_LINEAR_FREQ) {
        m->quirk |= QUIRK_LINEAR;
     }
 
-    if ((ifh.flags & IT_USE_INST) && ifh.cmwt >= 0x200) {
+    if (!sample_mode && ifh.cmwt >= 0x200) {
        m->quirk |= QUIRK_INSVOL;
     }
 
@@ -454,7 +456,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	} else if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0217) {
 	    strcpy(tracker_name, "ModPlug Tracker 1.16");
 	    /* ModPlug Tracker files aren't really IMPM 2.00 */
-	    ifh.cmwt = ifh.flags & IT_USE_INST ? 0x214 : 0x100;	
+	    ifh.cmwt = sample_mode ? 0x100 : 0x214;	
 	} else if (ifh.cwt == 0x0216) {
 	    strcpy(tracker_name, "Impulse Tracker 2.14v3");
 	} else if (ifh.cwt == 0x0217) {
@@ -518,11 +520,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     MODULE_INFO();
 
     D_(D_INFO "Instrument/FX mode: %s/%s",
-			ifh.flags & IT_USE_INST ? ifh.cmwt >= 0x200 ?
-			"new" : "old" : "sample",
-			ifh.flags & IT_OLD_FX ? "old" : "IT");
+			sample_mode ? "sample" : ifh.cmwt >= 0x200 ?
+			"new" : "old", ifh.flags & IT_OLD_FX ? "old" : "IT");
 
-    if (~ifh.flags & IT_USE_INST)
+    if (sample_mode)
 	mod->ins = mod->smp;
 
     if (instrument_init(mod) < 0)
@@ -539,7 +540,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	struct xmp_instrument *xxi = &mod->xxi[i];
 
-	if ((ifh.flags & IT_USE_INST) && (ifh.cmwt >= 0x200)) {
+	if (!sample_mode && ifh.cmwt >= 0x200) {
 	    /* New instrument format */
 	    if (hio_seek(f, start + pp_ins[i], SEEK_SET) != 0)
 	    	goto err4;
@@ -663,7 +664,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		i2h.ifr
 	    );
 
-	} else if (ifh.flags & IT_USE_INST) {
+	} else if (!sample_mode) {
 	    /* Old instrument format */
 	    hio_seek(f, start + pp_ins[i], SEEK_SET);
 
@@ -780,7 +781,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	struct xmp_sample *xxs = &mod->xxs[i];
 
-	if (~ifh.flags & IT_USE_INST) {
+	if (sample_mode) {
 	    mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
 	    if (mod->xxi[i].sub == NULL)
 		goto err4;
@@ -829,7 +830,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	xxs->flg |= ish.flags & IT_SMP_LOOP ? XMP_SAMPLE_LOOP : 0;
 	xxs->flg |= ish.flags & IT_SMP_BLOOP ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
-	if (~ifh.flags & IT_USE_INST) {
+	if (sample_mode) {
 	    /* Create an instrument for each sample */
 	    mod->xxi[i].sub[0].vol = ish.vol;
 	    mod->xxi[i].sub[0].pan = 0x80;
@@ -842,8 +843,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	D_(D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
 		    "%02x%02x %02x%02x %5d ",
-		    i, ifh.flags & IT_USE_INST ?
-				mod->xxi[i].name : xxs->name,
+		    i, sample_mode ? xxs->name : mod->xxi[i].name,
 		    xxs->len,
 		    ish.flags & IT_SMP_16BIT ? '+' : ' ',
 		    MIN(xxs->lps, 0xfffff), MIN(xxs->lpe, 0xfffff),
@@ -1137,6 +1137,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	m->quirk |= QUIRK_VIBHALF | QUIRK_VIBINV;
     } else {
 	m->quirk &= ~QUIRK_VIBALL;
+    }
+
+    if (sample_mode) {
+	m->quirk &= ~QUIRK_VIRTUAL;
     }
 
     m->gvolbase = 0x80;
