@@ -30,7 +30,8 @@
 static int abk_test (HIO_HANDLE *, char *, const int);
 static int abk_load (struct module_data *, HIO_HANDLE *, const int);
 
-struct format_loader abk_loader = {
+struct format_loader abk_loader =
+{
     "AMOS Music Bank",
     abk_test,
     abk_load
@@ -50,12 +51,26 @@ struct abk_song
     char   	song_name[AMOS_STRING_LEN];
 };
 
+/**
+ * @class abk_playlist
+ * @author stephen
+ * @date 08/15/14
+ * @file abk_load.c
+ * @brief represents an ABK playlist.
+ */
 struct abk_playlist
 {
     uint16	length;
     uint16	*pattern;
 };
 
+/**
+ * @class abk_instrument
+ * @author stephen
+ * @date 08/15/14
+ * @file abk_load.c
+ * @brief represents an ABK instrument.
+ */
 struct abk_instrument
 {
     uint32 sample_offset;
@@ -68,6 +83,19 @@ struct abk_instrument
 
     char   sample_name[AMOS_STRING_LEN];
 };
+
+
+
+static void free_abk_playlist(struct abk_playlist *playlist)
+{
+    if (playlist->pattern != NULL)
+    {
+        free(playlist->pattern);
+    }
+
+    playlist->length = 0;
+}
+
 
 /**
  * @brief read the ABK playlist out from the file stream. This method malloc's some memory for the playlist
@@ -136,7 +164,7 @@ static int read_abk_song(HIO_HANDLE *f, struct abk_song *song, uint32 songs_sect
     song->tempo = hio_read16b(f);
 
     /* unused. just progress the file pointer forward */
-    (void)hio_read16b(f);
+    (void) hio_read16b(f);
 
     hio_read(song->song_name, 1, AMOS_STRING_LEN, f);
 
@@ -145,10 +173,12 @@ static int read_abk_song(HIO_HANDLE *f, struct abk_song *song, uint32 songs_sect
 
 static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 pattern_offset_abs)
 {
-	int lastnote =0;
     uint8 position;
     uint8 command;
     uint8 param;
+    uint8 inst;
+
+    uint16 delay;
     uint16 patdata;
 
     uint32 storepos;
@@ -156,8 +186,10 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
 
     /* count how many abk positions are used in this pattern */
     position = 0;
+
     hio_seek(f, pattern_offset_abs, SEEK_SET);
 
+    /* read the first bit of pattern data */
     patdata = hio_read16b(f);
 
     while ((patdata != 0x8000))
@@ -196,9 +228,12 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 if (events != NULL)
                 {
                     events[position].fxt = FX_EXTENDED;
-                    if (param == 0) {
+                    if (param == 0)
+                    {
                         events[position].fxp = 0x50;
-                    } else {
+                    }
+                    else
+                    {
                         events[position].fxp = 0x60 | (param & 0x0f);
                     }
                 }
@@ -235,7 +270,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             {
                 if (events != NULL)
                 {
-                    events[position].ins = param+1;
+                    inst = param + 1;
                 }
 
                 break;
@@ -287,7 +322,6 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             case 0x10:		/* delay */
             {
                 position += param;
-				lastnote = 0;
                 break;
             }
             case 0x11:		/* position jump */
@@ -305,32 +339,49 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 fprintf(stderr, "ABK UNPROCESSED COMMAND: %x,%x\n", command, param);
                 break;
             }
-        }
+            }
         }
         else
         {
-			if (lastnote != 0)
-			{
-				position++;
-			}
-			
-			lastnote = period_to_note(patdata & 0x0fff);
-			
-            if (events != NULL)
+            if (patdata & 0x4000)
             {
-                /* convert the note from amiga period format to xmp's internal format.*/
-                events[position].note = lastnote;
+                /* old note format.*/
+                /* old note format is 2 x 2 byte words with bit 14 set on the first word */
+                /* WORD 1: 0x4XXD | X = dont care, D = delay to apply after note.
+                 * WORD 2: 0xXPPP | PPP = Amiga Period */
+
+                delay = patdata & 0x000F;
+                patdata = hio_read16b(f);
+
+                if (events != NULL)
+                {
+                    /* convert the note from amiga period format to xmp's internal format.*/
+                    events[position].note = period_to_note(patdata & 0x0fff);
+                    events[position].ins = inst;
+                }
+
+                /* now add on the delay */
+                position += delay;
             }
-			
-			
+            else /* new note format */
+            {
+                if (events != NULL)
+                {
+                    /* convert the note from amiga period format to xmp's internal format.*/
+                    events[position].note = period_to_note(patdata & 0x0fff);
+                    events[position].ins = inst;
+                }
+            }
         }
 
+        /* read the data for the next pass round the loop */
         patdata = hio_read16b(f);
-		
-		if (hio_eof(f))
-		{
-			break;
-		}
+
+        /* check for an EOF while reading */
+        if (hio_eof(f))
+        {
+            break;
+        }
     }
 
     hio_seek(f, storepos, SEEK_SET);
@@ -338,6 +389,12 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
     return position;
 }
 
+/**
+ * @brief Read a single abk instrument.
+ * @param f the io handle
+ * @param inst the instrument structure (prealloc'd)
+ * @param inst_section_offset offset to the instrument section.
+ */
 static void read_abk_inst(HIO_HANDLE *f, struct abk_instrument *inst, uint32 inst_section_offset)
 {
     uint32 sampleLength;
@@ -358,12 +415,16 @@ static void read_abk_inst(HIO_HANDLE *f, struct abk_instrument *inst, uint32 ins
     if (repeat == 0)
     {
         /* the sample does not repeat*/
+        inst->repeat_offset = 0;
+        inst->repeat_length = 0;
+
         inst->sample_length = hio_read16b(f);
         (void) hio_read16b(f);
     }
     else
     {
-        inst->repeat_length = hio_read32b(f);
+        inst->repeat_offset = hio_read16b(f);
+        inst->repeat_length = hio_read16b(f);
     }
 
     inst->sample_volume = hio_read16b(f);
@@ -378,109 +439,115 @@ static void read_abk_inst(HIO_HANDLE *f, struct abk_instrument *inst, uint32 ins
     hio_read(inst->sample_name, 1, 16, f);
 }
 
+/**
+ * @brief takes an unsorted list of offsets, sorts them and produces a size of each one.
+ * @param size the size of the list.
+ * @param inptrs the list of offsets.
+ * @param outptrs a preallocated list for the result.
+ * @param end the very end. Used to calculate the last size.
+ */
 static void sortandsize(uint32 size, uint32 *inptrs, uint32 *outptrs, uint32 end)
 {
-	uint32 i,j,tmp;
-	
-	// dumb bubble sort
-	for (i = 0; i < size; i++)
-	{
-		for (j = i+1; j < size; j++)
-		{
-			if (inptrs[j] < inptrs[i])
-			{
-				// exchange items.
-				tmp = inptrs[j];
-				inptrs[j] = inptrs[i];
-				inptrs[i] = tmp;
-			}
-		}
-	}
-	
-	for (i = 0; i < (size-1); i++)
-	{
-		 outptrs[i] = inptrs[i+1] - inptrs[i];
-	}
-	
-	outptrs[size - 1] = end - inptrs[size-1];
+    uint32 i,j,tmp;
+
+    /* dumb bubble sort */
+    for (i = 0; i < size; i++)
+    {
+        for (j = i+1; j < size; j++)
+        {
+            if (inptrs[j] < inptrs[i])
+            {
+                // exchange items.
+                tmp = inptrs[j];
+                inptrs[j] = inptrs[i];
+                inptrs[i] = tmp;
+            }
+        }
+    }
+
+    for (i = 0; i < (size-1); i++)
+    {
+        outptrs[i] = inptrs[i+1] - inptrs[i];
+    }
+
+    outptrs[size - 1] = end - inptrs[size-1];
 }
 
 static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_offset, uint32 inst_section_size)
 {
-	uint16 i,j;
-	uint16 count; 
-	uint32 savepos;
-	struct abk_instrument *inst;
-		
-	savepos = hio_tell(f);
-	
-	hio_seek(f, inst_section_offset, SEEK_SET);
-	count = hio_read16b(f);
-	
-	inst = (struct abk_instrument*) malloc(count * sizeof(struct abk_instrument));
-	memset(inst, 0, count * sizeof(struct abk_instrument));
-	
-	uint32 *offsets = (uint32 *) malloc(count * sizeof(uint32));
-	uint32 *sizes = (uint32 *) malloc(count * sizeof(uint32));
-	
-	for (i = 0; i < count; i++)
-    {		
-        read_abk_inst(f, &inst[i], AMOS_MAIN_HEADER + inst_section_offset);
-		offsets[i] = inst[i].sample_offset;
-	}
-	
-	/* should have all the instruments. 
-	 * now we need to fix all the lengths */
-	sortandsize(count, offsets, sizes, inst_section_size);
-	
-	// update the ordered struct.
-	for (i = 0; i < count; i++)
+    uint16 i,j;
+    uint16 count;
+    uint32 savepos;
+    struct abk_instrument *inst;
+
+    savepos = hio_tell(f);
+
+    hio_seek(f, inst_section_offset, SEEK_SET);
+    count = hio_read16b(f);
+
+    inst = (struct abk_instrument*) malloc(count * sizeof(struct abk_instrument));
+    memset(inst, 0, count * sizeof(struct abk_instrument));
+
+    uint32 *offsets = (uint32 *) malloc(count * sizeof(uint32));
+    uint32 *sizes = (uint32 *) malloc(count * sizeof(uint32));
+
+    for (i = 0; i < count; i++)
     {
-		for (j = 0; j < count; j++)
-		{
-			if (inst[i].sample_offset == offsets[j])
-			{
-				inst[i].sample_length = sizes[j]/2;
-				break;
-			}
-		}
-	}
-	 
-	hio_seek(f, savepos, SEEK_SET);
+        read_abk_inst(f, &inst[i], AMOS_MAIN_HEADER + inst_section_offset);
+        offsets[i] = inst[i].sample_offset;
+    }
 
-	free(sizes);
-	free(offsets);
+    /* should have all the instruments.
+     * now we need to fix all the lengths */
+    sortandsize(count, offsets, sizes, inst_section_size);
 
-	return inst;
+    // update the ordered struct.
+    for (i = 0; i < count; i++)
+    {
+        for (j = 0; j < count; j++)
+        {
+            if (inst[i].sample_offset == offsets[j])
+            {
+                inst[i].sample_length = sizes[j]/2;
+                break;
+            }
+        }
+    }
+
+    free(offsets);
+    free(sizes);
+
+    hio_seek(f, savepos, SEEK_SET);
+    return inst;
 }
 
 #define ABK_HEADER_SECTION_COUNT 3
 
 static uint32 abk_inst_section_size(struct abk_header *head, int size)
 {
-	int i;
-	uint32 result = 0;
-	
-	uint32 offsets[ABK_HEADER_SECTION_COUNT];
-	uint32 sizes[ABK_HEADER_SECTION_COUNT];
-	
-	offsets[0] = head->instruments_offset;
-	offsets[1] = head->patterns_offset;
-	offsets[2] = head->songs_offset;
-	
-	memset(sizes, 0, ABK_HEADER_SECTION_COUNT*sizeof(uint32));
-	
-	sortandsize(ABK_HEADER_SECTION_COUNT, offsets, sizes, size);
-	
-	for (i=0;i<3;i++)
-	{
-		if (offsets[i] == head->instruments_offset)
-		{
-			result = sizes[i];
-		}
-	}
-	
-	return result;
+    int i;
+    uint32 result = 0;
+
+    uint32 offsets[ABK_HEADER_SECTION_COUNT];
+    uint32 sizes[ABK_HEADER_SECTION_COUNT];
+
+    offsets[0] = head->instruments_offset;
+    offsets[1] = head->patterns_offset;
+    offsets[2] = head->songs_offset;
+
+    memset(sizes, 0, ABK_HEADER_SECTION_COUNT*sizeof(uint32));
+
+    sortandsize(ABK_HEADER_SECTION_COUNT, offsets, sizes, size);
+
+    for (i=0; i<3; i++)
+    {
+        if (offsets[i] == head->instruments_offset)
+        {
+            result = sizes[i];
+        }
+    }
+
+    return result;
 }
 
 static int abk_test (HIO_HANDLE *f, char *t, const int start)
@@ -517,23 +584,23 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int i,j,k;
     uint16 pattern;
     uint32 first_sample_offset;
-	uint32 inst_section_size;
-	uint32 file_size;
-	
-	uint8 *bad_patterns; /* skip these patterns and dont encode them */
-	struct xmp_module *mod = &m->mod;
+    uint32 inst_section_size;
+    uint32 file_size;
+
+    uint8 *bad_patterns; /* skip these patterns and dont encode them */
+    struct xmp_module *mod = &m->mod;
 
     struct abk_header main_header;
     struct abk_instrument *ci;
     struct abk_song song;
     struct abk_playlist playlist;
 
-	ci = NULL;
+    ci = NULL;
     pattern = 0;
     first_sample_offset = 0;
-	
-	hio_seek(f, 0, SEEK_END);
-	file_size = hio_tell(f);
+
+    hio_seek(f, 0, SEEK_END);
+    file_size = hio_tell(f);
 
     hio_seek(f, AMOS_MAIN_HEADER, SEEK_SET);
 
@@ -541,9 +608,9 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     main_header.songs_offset = hio_read32b(f);
     main_header.patterns_offset = hio_read32b(f);
 
-	inst_section_size = abk_inst_section_size(&main_header, file_size - AMOS_MAIN_HEADER);
-	D_(D_INFO "Sample Bytes: %d", inst_section_size);
-	
+    inst_section_size = abk_inst_section_size(&main_header, file_size - AMOS_MAIN_HEADER);
+    D_(D_INFO "Sample Bytes: %d", inst_section_size);
+
     LOAD_INIT();
 
     set_type(m, "AMOS Music Bank");
@@ -559,7 +626,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     hio_seek(f, AMOS_MAIN_HEADER + main_header.patterns_offset, SEEK_SET);
 
-    mod->chn = 4;
+    mod->chn = AMOS_ABK_CHANNELS;
     mod->pat = hio_read16b(f);
     mod->trk = mod->chn * mod->pat;
 
@@ -570,32 +637,32 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     hio_seek(f, AMOS_MAIN_HEADER + main_header.instruments_offset + 2, SEEK_SET);
 
-	 /* Read and convert instruments and samples */
-	 
+    /* Read and convert instruments and samples */
+
     if (instrument_init(mod) < 0)
-	{
-		return -1;
-	}
+    {
+        return -1;
+    }
 
     D_(D_INFO "Instruments: %d", mod->ins);
-	
-	/* read all the instruments in */
-	ci = read_abk_insts(f, AMOS_MAIN_HEADER + main_header.instruments_offset, inst_section_size);
-	
+
+    /* read all the instruments in */
+    ci = read_abk_insts(f, AMOS_MAIN_HEADER + main_header.instruments_offset, inst_section_size);
+
     for (i = 0; i < mod->ins; i++)
-    {		
-		if (subinstrument_alloc(mod, i, 1) < 0)
-	    {
-			return -1;
-		}
-		
+    {
+        if (subinstrument_alloc(mod, i, 1) < 0)
+        {
+            return -1;
+        }
+
         mod->xxs[i].len = (ci[i].sample_length)<<1;
-        
-		if (mod->xxs[i].len > 0)
-		{
-			mod->xxi[i].nsm = 1;
-		}
-		
+
+        if (mod->xxs[i].len > 0)
+        {
+            mod->xxi[i].nsm = 1;
+        }
+
         /* store the location of the first sample so we can read them later. */
         if (first_sample_offset == 0)
         {
@@ -603,27 +670,25 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         }
 
         /* TODO: do the repeating stuff. */
-        mod->xxs[i].lps = 0;
-        mod->xxs[i].lpe = 0;
-        mod->xxs[i].flg = 0;
+        mod->xxs[i].lps = ci[i].repeat_offset;
+        mod->xxs[i].lpe = ci[i].repeat_length<<1;
+        mod->xxs[i].flg = ci[i].repeat_length > 1 ? XMP_SAMPLE_LOOP : 0;
 
-		mod->xxi[i].sub[0].vol = ci[i].sample_volume;
-		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxi[i].sub[0].sid = i;
+        mod->xxi[i].sub[0].vol = ci[i].sample_volume;
+        mod->xxi[i].sub[0].pan = 0x80;
+        mod->xxi[i].sub[0].sid = i;
 
-		instrument_name(mod, i, (uint8*)ci[i].sample_name, 16);
+        instrument_name(mod, i, (uint8*)ci[i].sample_name, 16);
 
-		D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
-		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
-		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
+        D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
+           mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
+           mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
 
-	 if (pattern_init(mod) < 0)
-	 {
-		return -1;
-	 }
-	 
-    free(ci);
+    if (pattern_init(mod) < 0)
+    {
+        return -1;
+    }
 
     /* figure out the playlist order.
      * TODO: if the 4 channels arent in the same order then
@@ -636,90 +701,96 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_seek(f, AMOS_MAIN_HEADER + main_header.patterns_offset + 2, SEEK_SET);
 
     mod->len = 0;
-	
-	bad_patterns = (uint8 *) malloc(sizeof(int)*mod->pat);
-	memset(bad_patterns, 0, sizeof(int)*mod->pat);
 
-	i = 0;
+    bad_patterns = (uint8 *) malloc(sizeof(int)*mod->pat);
+    memset(bad_patterns, 0, sizeof(int)*mod->pat);
+
+    i = 0;
     for (j = 0; j < mod->pat; j++)
     {
         uint32 savepos = hio_tell(f);
 
         /* just read the size first time.*/
         /* we'll use that size to define the row size then do the conversion.*/
-	
+
         uint16 patternsize = 0;
-		
-		for (k = 0; k  < mod->chn; k++)
+
+        for (k = 0; k  < mod->chn; k++)
         {
             pattern = hio_read16b(f);
-			uint16 tmp = read_abk_pattern(f, NULL, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
-			patternsize = tmp > patternsize ? tmp : patternsize;
-		}
-		
-		hio_seek(f, savepos, SEEK_SET);
-		
-		if (patternsize == 0)
-		{
-			 bad_patterns[j] = 1;
-			 D_(D_WARN "Zero length pattern detected: %d", j);
-			 continue;
-		}
-		
-		 /* increment the length */
+            uint16 tmp = read_abk_pattern(f, NULL, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
+
+            if ((k > 0) && (tmp != patternsize))
+            {
+                D_(D_WARN "Pattern lengths do not match for pattern: %d", j);
+            }
+
+            patternsize = tmp > patternsize ? tmp : patternsize;
+        }
+
+        hio_seek(f, savepos, SEEK_SET);
+
+        if (patternsize == 0)
+        {
+            bad_patterns[j] = 1;
+            D_(D_WARN "Zero length pattern detected: %d", j);
+            continue;
+        }
+
+        /* increment the length */
         mod->len++;
-		
-		if (pattern_tracks_alloc(mod, i, patternsize) < 0)
-		{
-			return -1;
-		}
-		
+
+        if (pattern_tracks_alloc(mod, i, patternsize) < 0)
+        {
+            free(bad_patterns);
+            return -1;
+        }
+
         for (k = 0; k  < mod->chn; k++)
         {
             pattern = hio_read16b(f);
             read_abk_pattern(f,  mod->xxt[(i*mod->chn)+k]->event, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
         }
-		
-		i++;
-    }
-	
-	i = 0;
-	for (j=0; j< playlist.length; j++)
-    {
-		if (bad_patterns[j] == 0)
-		{
-			mod->xxo[i++] = playlist.pattern[j];
-		}
-		else
-		{
-			D_(D_WARN "Skipping playlist item: %i", playlist.pattern[j]);
-		}
-    }
-	
-	/* free up some memory here */
-	/* TODO: a bunch of the structs leak */
-	free(playlist.pattern);
-	free(bad_patterns);
 
-	
+        i++;
+    }
+
+    i = 0;
+    for (j=0; j< playlist.length; j++)
+    {
+        if (bad_patterns[j] == 0)
+        {
+            mod->xxo[i++] = playlist.pattern[j];
+        }
+        else
+        {
+            D_(D_WARN "Skipping playlist item: %i", playlist.pattern[j]);
+        }
+    }
+
+    /* free up some memory here */
+    free(bad_patterns);
+    free(ci);
+    free_abk_playlist(&playlist);
+
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
-   	D_(D_INFO "Stored tracks: %d", mod->trk);
+    D_(D_INFO "Stored tracks: %d", mod->trk);
 
     /* Read samples */
     hio_seek(f, first_sample_offset, SEEK_SET);
-	
+
     D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++)
     {
         if (mod->xxs[i].len <= 2)
             continue;
-			
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
-	    {
-			return -1;
-		}
+
+        if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+        {
+            return -1;
+        }
     }
 
     return 0;
