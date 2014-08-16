@@ -367,11 +367,18 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 /* old note format is 2 x 2 byte words with bit 14 set on the first word */
                 /* WORD 1: 0x4XXD | X = dont care, D = delay to apply after note.
                  * WORD 2: 0xXPPP | PPP = Amiga Period */
-
-                delay = patdata & 0x000F;
+				
+                delay = patdata;
                 patdata = hio_read16b(f);
+                delay = delay & 0x00FF;
+				
+				if ((patdata == 0) && (delay == 0))
+				{
+					// a zero note ends the pattern.
+					break;
+				}
 
-                if (events != NULL)
+                if ((events != NULL) && (patdata != 0))
                 {
                     /* convert the note from amiga period format to xmp's internal format.*/
                     events[position].note = period_to_note(patdata & 0x0fff);
