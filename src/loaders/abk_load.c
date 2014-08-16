@@ -26,6 +26,7 @@
 #define AMOS_STRING_LEN 0x10
 #define AMOS_BASE_FREQ 8192
 #define AMOS_ABK_CHANNELS 4
+#define ABK_HEADER_SECTION_COUNT 3
 
 static int abk_test (HIO_HANDLE *, char *, const int);
 static int abk_load (struct module_data *, HIO_HANDLE *, const int);
@@ -37,6 +38,10 @@ struct format_loader abk_loader =
     abk_load
 };
 
+/**
+ * @class abk_header
+ * @brief represents the main ABK header.
+ */
 struct abk_header
 {
     uint32	instruments_offset;
@@ -44,6 +49,10 @@ struct abk_header
     uint32	patterns_offset;
 };
 
+/**
+ * @class abk_song
+ * @brief represents a song in an ABK module.
+ */
 struct abk_song
 {
     uint32	playlist_offset[AMOS_ABK_CHANNELS];
@@ -53,9 +62,6 @@ struct abk_song
 
 /**
  * @class abk_playlist
- * @author stephen
- * @date 08/15/14
- * @file abk_load.c
  * @brief represents an ABK playlist.
  */
 struct abk_playlist
@@ -66,9 +72,6 @@ struct abk_playlist
 
 /**
  * @class abk_instrument
- * @author stephen
- * @date 08/15/14
- * @file abk_load.c
  * @brief represents an ABK instrument.
  */
 struct abk_instrument
@@ -83,7 +86,6 @@ struct abk_instrument
 
     char   sample_name[AMOS_STRING_LEN];
 };
-
 
 
 static void free_abk_playlist(struct abk_playlist *playlist)
@@ -171,12 +173,20 @@ static int read_abk_song(HIO_HANDLE *f, struct abk_song *song, uint32 songs_sect
     return 0;
 }
 
+/**
+ * @brief reads an ABK pattern into a xmp_event structure. 
+ * @param f stream to read data from.
+ * @param events events object to populate.
+ * @param pattern_offset_abs the absolute file offset to the start of the patter to read.
+ * @return returns the size of the pattern.
+ */
 static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 pattern_offset_abs)
 {
     uint8 position;
     uint8 command;
     uint8 param;
     uint8 inst = 0;
+    uint8 jumped = 0;
     uint8 per_command = 0;
     uint8 per_param = 0;
 
@@ -194,7 +204,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
     /* read the first bit of pattern data */
     patdata = hio_read16b(f);
 
-    while ((patdata != 0x8000))
+    while ((patdata != 0x8000) && (jumped == 0))
     {
         if (patdata == 0x9100)
         {
@@ -345,6 +355,8 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 {
                     events[position].fxt = FX_JUMP;
                     events[position].fxp = param;
+					/* break out of the loop because we've jumped.*/
+					jumped = 1;
                 }
                 break;
             }
@@ -362,18 +374,18 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             {
                 /* old note format.*/
                 /* old note format is 2 x 2 byte words with bit 14 set on the first word */
-                /* WORD 1: 0x4XXD | X = dont care, D = delay to apply after note.
+                /* WORD 1: 0x4XDD | X = dont care, D = delay to apply after note. (Usually in 7FDD form).
                  * WORD 2: 0xXPPP | PPP = Amiga Period */
-				
+
                 delay = patdata;
                 patdata = hio_read16b(f);
                 delay = delay & 0x00FF;
-				
-				if ((patdata == 0) && (delay == 0))
-				{
-					// a zero note ends the pattern.
-					break;
-				}
+
+                if ((patdata == 0) && (delay == 0))
+                {
+                    /* a zero note, with zero delay ends the pattern */
+                    break;
+                }
 
                 if ((events != NULL) && (patdata != 0))
                 {
@@ -479,7 +491,7 @@ static void sortandsize(uint32 size, uint32 *inptrs, uint32 *outptrs, uint32 end
         {
             if (inptrs[j] < inptrs[i])
             {
-                // exchange items.
+                /* exchange items */
                 tmp = inptrs[j];
                 inptrs[j] = inptrs[i];
                 inptrs[i] = tmp;
@@ -523,7 +535,7 @@ static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_
      * now we need to fix all the lengths */
     sortandsize(count, offsets, sizes, inst_section_size);
 
-    // update the ordered struct.
+    /* update the ordered struct. */
     for (i = 0; i < count; i++)
     {
         for (j = 0; j < count; j++)
@@ -543,8 +555,12 @@ static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_
     return inst;
 }
 
-#define ABK_HEADER_SECTION_COUNT 3
-
+/**
+ * @brief compute the size of the instrument data section.
+ * @param head the main ABK header (populated)
+ * @param size the size of the entire file from the start of the main header.
+ * @return the size of the instruments section.
+ */
 static uint32 abk_inst_section_size(struct abk_header *head, int size)
 {
     int i;
@@ -759,9 +775,6 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
             continue;
         }
 
-        /* increment the length */
-        mod->len++;
-
         if (pattern_tracks_alloc(mod, i, patternsize) < 0)
         {
             free(bad_patterns);
@@ -777,11 +790,15 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         i++;
     }
 
+	/* now push all the patterns into the module and set the length */
     i = 0;
+	
     for (j=0; j< playlist.length; j++)
     {
-        if (bad_patterns[j] == 0)
+        if (bad_patterns[playlist.pattern[j]] == 0)
         {
+            /* increment the length */
+            mod->len++;
             mod->xxo[i++] = playlist.pattern[j];
         }
         else
