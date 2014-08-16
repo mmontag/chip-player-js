@@ -206,6 +206,24 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
 
             switch (command)
             {
+            case 0x01:		/* pitch slide up */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_PORTA_UP;
+                    events[position].fxp = param;
+                }
+                break;
+            }
+            case 0x02:		/* pitch slide down */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_PORTA_DN;
+                    events[position].fxp = param;
+                }
+                break;
+            }
             case 0x03:		/* set volume */
             {
                 if (events != NULL)
@@ -239,21 +257,21 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 }
                 break;
             }
-            case 0x06:		/* lowpass filter on */
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_EXTENDED;
-                    events[position].fxp = 0x01;
-                }
-                break;
-            }
-            case 0x07:		/* lowpass filter off */
+            case 0x06:		/* lowpass filter off */
             {
                 if (events != NULL)
                 {
                     events[position].fxt = FX_EXTENDED;
                     events[position].fxp = 0x00;
+                }
+                break;
+            }
+            case 0x07:		/* lowpass filter on */
+            {
+                if (events != NULL)
+                {
+                    events[position].fxt = FX_EXTENDED;
+                    events[position].fxp = 0x01;
                 }
                 break;
             }
