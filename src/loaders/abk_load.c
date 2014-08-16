@@ -176,7 +176,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
     uint8 position;
     uint8 command;
     uint8 param;
-    uint8 inst;
+    uint8 inst = 0;
 
     uint16 delay;
     uint16 patdata;
