@@ -177,6 +177,8 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
     uint8 command;
     uint8 param;
     uint8 inst = 0;
+    uint8 per_command = 0;
+    uint8 per_param = 0;
 
     uint16 delay;
     uint16 patdata;
@@ -204,9 +206,15 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             command = (patdata >> 8) & 0x7F;
             param = patdata & 0x007F;
 
+            if (command != 0x09 && command != 0x0b && command != 0x0c && command < 0x10) {
+                per_command = 0;
+                per_param = 0;
+            }
+
             switch (command)
             {
-            case 0x01:		/* pitch slide up */
+            case 0x01:		/* portamento up */
+            case 0x0e:
             {
                 if (events != NULL)
                 {
@@ -215,7 +223,8 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 }
                 break;
             }
-            case 0x02:		/* pitch slide down */
+            case 0x02:		/* portamento down */
+            case 0x0f:
             {
                 if (events != NULL)
                 {
@@ -235,10 +244,6 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             }
             case 0x04:		/* stop effect */
             {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_PER_CANCEL;
-                }
                 break;
             }
             case 0x05:		/* repeat */
@@ -295,19 +300,20 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             }
             case 0x0a:		/* arpeggio */
             {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_ARPEGGIO;
-                    events[position].fxp = param;
-                }
+                per_command = FX_ARPEGGIO;
+                per_param = param;
                 break;
             }
-            case 0x0B:		/* tone portamento */
+            case 0x0b:		/* tone portamento */
             {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_PER_TPORTA;
-                }
+                per_command = FX_TONEPORTA;
+                per_param = param;
+                break;
+            }
+            case 0x0c:		/* vibrato */
+            {
+                per_command = FX_VIBRATO;
+                per_param = param;
                 break;
             }
             case 0x0d:		/* volume slide */
@@ -319,27 +325,18 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 }
                 break;
             }
-            case 0x0e:		/* portamento up */
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_PORTA_UP;
-                    events[position].fxp = param;
-                }
-                break;
-            }
-            case 0x0F:		/* portamento down */
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_PORTA_DN;
-                    events[position].fxp = param;
-                }
-                break;
-            }
             case 0x10:		/* delay */
             {
-                position += param;
+                if (events != NULL && (per_command != 0 || per_param != 0)) {
+                    int i;
+                    for (i = 0; i < param; i++) {
+                        events[position].fxt = per_command;
+                        events[position].fxp = per_param;
+                        position++;
+                    }
+                } else {
+		    position += param;
+		}
                 break;
             }
             case 0x11:		/* position jump */
