@@ -282,7 +282,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             }
             case 0x08:		/* set tempo */
             {
-                if (events != NULL)
+                if (events != NULL && param != 0)
                 {
                     events[position].fxt = FX_SPEED;
                     events[position].fxp = 100/param;
