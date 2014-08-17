@@ -13,7 +13,9 @@ static int vals[] = {
 	1, 1, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
 	10, 10, 10, 10,		/* slide 0xf2 */
-	10, 10, 10, 10		/* slide 0x1f */
+	10, 10, 10, 10,		/* slide 0x00 */
+	10, 10, 10, 10,		/* slide 0x1f */
+	10, 10, 10, 10		/* slide 0x00 */
 };
 
 static int vals_fine[] = {
@@ -27,7 +29,9 @@ static int vals_fine[] = {
 	1, 1, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
 	10, 8, 8, 8,		/* fine slide down 2 */
-	8, 9, 9, 9		/* fine slide up 1 */
+	8, 6, 6, 6,		/* continue */
+	6, 7, 7, 7,		/* fine slide up 1 */
+	7, 8, 8, 8		/* continue */
 };
 
 static int vals_pdn[] = {
@@ -41,7 +45,9 @@ static int vals_pdn[] = {
 	1, 1, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
 	10, 10, 8, 6,		/* slide 0xf2 */
-	4, 4, 0, 0		/* slide 0x1f */
+	4, 4, 2, 0,		/* continue */
+	0, 0, 0, 0,		/* slide 0x1f */
+	0, 0, 0, 0		/* continue */
 };
 
 TEST(test_effect_a_volslide)
@@ -72,12 +78,14 @@ TEST(test_effect_a_volslide)
 
 	new_event(ctx, 0, 8, 0, 0, 0, 0, FX_VOLSET, 0x0a, 0, 0);
 	new_event(ctx, 0, 9, 0, 0, 0, 0, FX_VOLSLIDE, 0xf2, 0, 0);
-	new_event(ctx, 0, 10, 0, 0, 0, 0, FX_VOLSLIDE, 0x1f, 0, 0);
+	new_event(ctx, 0, 10, 0, 0, 0, 0, FX_VOLSLIDE, 0x00, 0, 0);
+	new_event(ctx, 0, 11, 0, 0, 0, 0, FX_VOLSLIDE, 0x1f, 0, 0);
+	new_event(ctx, 0, 12, 0, 0, 0, 0, FX_VOLSLIDE, 0x00, 0, 0);
 
 	/* play it */
 	xmp_start_player(opaque, 44100, 0);
 
-	for (i = 0; i < 11 * 4; i++) {
+	for (i = 0; i < 13 * 4; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].volume == vals[i], "volume slide error");
@@ -88,7 +96,7 @@ TEST(test_effect_a_volslide)
 	set_quirk(ctx, QUIRK_FINEFX, READ_EVENT_MOD);
 	xmp_restart_module(opaque);
 
-	for (i = 0; i < 11 * 4; i++) {
+	for (i = 0; i < 13 * 4; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].volume == vals_fine[i], "volume slide error");
@@ -99,7 +107,7 @@ TEST(test_effect_a_volslide)
 	set_quirk(ctx, QUIRK_VOLPDN, READ_EVENT_MOD);
 	xmp_restart_module(opaque);
 
-	for (i = 0; i < 11 * 4; i++) {
+	for (i = 0; i < 13 * 4; i++) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &info);
 		fail_unless(info.channel_info[0].volume == vals_pdn[i], "volume slide error");
