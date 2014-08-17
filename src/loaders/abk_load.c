@@ -216,7 +216,7 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             command = (patdata >> 8) & 0x7F;
             param = patdata & 0x007F;
 
-            if (command != 0x03 && command != 0x09 && command != 0x0b && command != 0x0c && command < 0x10) {
+            if (command != 0x03 && command != 0x09 && command != 0x0b && command != 0x0c && command != 0x0d && command < 0x10) {
                 per_command = 0;
                 per_param = 0;
             }
@@ -328,10 +328,12 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             }
             case 0x0d:		/* volume slide */
             {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_VOLSLIDE;
-                    events[position].fxp = param;
+		if (param != 0) {
+                    per_command = FX_VOLSLIDE;
+                    per_param = param;
+                } else {
+                    per_command = 0;
+                    per_param = 0;
                 }
                 break;
             }
