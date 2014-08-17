@@ -1,8 +1,7 @@
 /* Extended Module Player
  * AMOS/STOS Music Bank Loader
  *
- * Copyright (C) 2014 Stephen J Leary
- * Copyright (C) 1996-2014 Claudio Matsuoka and Hipolito Carraro Jr
+ * Copyright (C) 2014 Stephen J Leary and Claudio Matsuoka
  *
  * This file is part of the Extended Module Player and is distributed
  * under the terms of the GNU General Public License. See doc/COPYING
@@ -225,109 +224,58 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             {
             case 0x01:		/* portamento up */
             case 0x0e:
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_PORTA_UP;
-                    events[position].fxp = param;
-                }
+                events[position].fxt = FX_PORTA_UP;
+                events[position].fxp = param;
                 break;
-            }
             case 0x02:		/* portamento down */
             case 0x0f:
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_PORTA_DN;
-                    events[position].fxp = param;
-                }
+                events[position].fxt = FX_PORTA_DN;
+                events[position].fxp = param;
                 break;
-            }
             case 0x03:		/* set volume */
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_VOLSET;
-                    events[position].fxp = param;
-                }
+                events[position].fxt = FX_VOLSET;
+                events[position].fxp = param;
                 break;
-            }
             case 0x04:		/* stop effect */
-            {
                 break;
-            }
             case 0x05:		/* repeat */
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_EXTENDED;
-                    if (param == 0)
-                    {
-                        events[position].fxp = 0x50;
-                    }
-                    else
-                    {
-                        events[position].fxp = 0x60 | (param & 0x0f);
-                    }
+                events[position].fxt = FX_EXTENDED;
+                if (param == 0) {
+                    events[position].fxp = 0x50;
+                } else {
+                    events[position].fxp = 0x60 | (param & 0x0f);
                 }
                 break;
-            }
             case 0x06:		/* lowpass filter off */
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_EXTENDED;
-                    events[position].fxp = 0x00;
-                }
+                events[position].fxt = FX_EXTENDED;
+                events[position].fxp = 0x00;
                 break;
-            }
             case 0x07:		/* lowpass filter on */
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_EXTENDED;
-                    events[position].fxp = 0x01;
-                }
+                events[position].fxt = FX_EXTENDED;
+                events[position].fxp = 0x01;
                 break;
-            }
             case 0x08:		/* set tempo */
-            {
-                if (events != NULL && param != 0)
-                {
+                if (param > 0) {
                     events[position].fxt = FX_SPEED;
                     events[position].fxp = 100/param;
                 }
                 break;
-            }
             case 0x09:		/* set instrument */
-            {
-                if (events != NULL)
-                {
-                    inst = param + 1;
-                }
-
+                inst = param + 1;
                 break;
-            }
             case 0x0a:		/* arpeggio */
-            {
                 per_command = FX_ARPEGGIO;
                 per_param = param;
                 break;
-            }
             case 0x0b:		/* tone portamento */
-            {
                 per_command = FX_TONEPORTA;
                 per_param = param;
                 break;
-            }
             case 0x0c:		/* vibrato */
-            {
                 per_command = FX_VIBRATO;
                 per_param = param;
                 break;
-            }
             case 0x0d:		/* volume slide */
-            {
 		if (param != 0) {
                     per_command = FX_VOLSLIDE;
                     per_param = param;
@@ -336,10 +284,8 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                     per_param = 0;
                 }
                 break;
-            }
             case 0x10:		/* delay */
-            {
-                if (events != NULL && (per_command != 0 || per_param != 0)) {
+                if (per_command != 0 || per_param != 0) {
                     int i;
                     for (i = 0; i < param && position < 64; i++) {
                         events[position].fxt = per_command;
@@ -353,24 +299,16 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
 		    jumped = 1;
 		}
                 break;
-            }
             case 0x11:		/* position jump */
-            {
-                if (events != NULL)
-                {
-                    events[position].fxt = FX_JUMP;
-                    events[position].fxp = param;
-                    /* break out of the loop because we've jumped.*/
-                    jumped = 1;
-                }
+                events[position].fxt = FX_JUMP;
+                events[position].fxp = param;
+                /* break out of the loop because we've jumped.*/
+                jumped = 1;
                 break;
-            }
             default:
-            {
                 /* write out an error for any unprocessed commands.*/
-                fprintf(stderr, "ABK UNPROCESSED COMMAND: %x,%x\n", command, param);
+                D_(D_WARN "ABK UNPROCESSED COMMAND: %x,%x\n", command, param);
                 break;
-            }
             }
         }
         else
@@ -385,13 +323,13 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 delay = patdata & 0xff;
                 patdata = hio_read16b(f);
 
-                if ((patdata == 0) && (delay == 0))
+                if (patdata == 0 && delay == 0)
                 {
                     /* a zero note, with zero delay ends the pattern */
                     break;
                 }
 
-                if ((events != NULL) && (patdata != 0))
+                if (patdata != 0)
                 {
                     /* convert the note from amiga period format to xmp's internal format.*/
                     events[position].note = period_to_note(patdata & 0x0fff);
@@ -406,12 +344,9 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             }
             else /* new note format */
             {
-                if (events != NULL)
-                {
-                    /* convert the note from amiga period format to xmp's internal format.*/
-                    events[position].note = period_to_note(patdata & 0x0fff);
-                    events[position].ins = inst;
-                }
+                /* convert the note from amiga period format to xmp's internal format.*/
+                events[position].note = period_to_note(patdata & 0x0fff);
+                events[position].ins = inst;
             }
         }
 
@@ -501,7 +436,6 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint32 inst_section_size;
     uint32 file_size;
 
-    uint8 *bad_patterns; /* skip these patterns and dont encode them */
     struct xmp_module *mod = &m->mod;
 
     struct abk_header main_header;
@@ -622,46 +556,11 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     mod->len = 0;
 
-    bad_patterns = (uint8 *) malloc(sizeof(int)*mod->pat);
-    memset(bad_patterns, 0, sizeof(int)*mod->pat);
-
     i = 0;
     for (j = 0; j < mod->pat; j++)
     {
-#if 0
-        uint32 savepos = hio_tell(f);
-
-        /* just read the size first time.*/
-        /* we'll use that size to define the row size then do the conversion.*/
-
-        uint16 patternsize = 0;
-
-        for (k = 0; k  < mod->chn; k++)
-        {
-            pattern = hio_read16b(f);
-            uint16 tmp = read_abk_pattern(f, NULL, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
-
-            if ((k > 0) && (tmp != patternsize))
-            {
-                D_(D_WARN "Pattern lengths do not match for pattern: %d", j);
-            }
-
-            patternsize = tmp > patternsize ? tmp : patternsize;
-        }
-
-        hio_seek(f, savepos, SEEK_SET);
-
-        if (patternsize == 0)
-        {
-            bad_patterns[j] = 1;
-            D_(D_WARN "Zero length pattern detected: %d", j);
-            continue;
-        }
-#endif
-
         if (pattern_tracks_alloc(mod, i, 64) < 0)
         {
-            free(bad_patterns);
             return -1;
         }
 
@@ -674,30 +573,21 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         i++;
     }
 
-	/* now push all the patterns into the module and set the length */
+    /* now push all the patterns into the module and set the length */
     i = 0;
 	
     for (j=0; j< playlist.length; j++)
     {
-        if (bad_patterns[playlist.pattern[j]] == 0)
-        {
-            /* increment the length */
-            mod->len++;
-            mod->xxo[i++] = playlist.pattern[j];
-        }
-        else
-        {
-            D_(D_WARN "Skipping playlist item: %i", playlist.pattern[j]);
-        }
+        /* increment the length */
+        mod->len++;
+        mod->xxo[i++] = playlist.pattern[j];
     }
 
     /* free up some memory here */
-    free(bad_patterns);
     free(ci);
     free_abk_playlist(&playlist);
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
-
     D_(D_INFO "Stored tracks: %d", mod->trk);
 
     /* Read samples */
