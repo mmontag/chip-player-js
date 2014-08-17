@@ -339,13 +339,16 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
             {
                 if (events != NULL && (per_command != 0 || per_param != 0)) {
                     int i;
-                    for (i = 0; i < param; i++) {
+                    for (i = 0; i < param && position < 64; i++) {
                         events[position].fxt = per_command;
                         events[position].fxp = per_param;
                         position++;
                     }
                 } else {
 		    position += param;
+		}
+		if (position >= 64) {
+		    jumped = 1;
 		}
                 break;
             }
@@ -377,9 +380,8 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 /* WORD 1: 0x4XDD | X = dont care, D = delay to apply after note. (Usually in 7FDD form).
                  * WORD 2: 0xXPPP | PPP = Amiga Period */
 
-                delay = patdata;
+                delay = patdata & 0xff;
                 patdata = hio_read16b(f);
-                delay = delay & 0x00FF;
 
                 if ((patdata == 0) && (delay == 0))
                 {
@@ -396,6 +398,9 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
 
                 /* now add on the delay */
                 position += delay;
+		if (position >= 64) {
+			break;
+		}
             }
             else /* new note format */
             {
@@ -416,6 +421,9 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
         {
             break;
         }
+    }
+    if (position < 64) {
+	events[position - 1].f2t = FX_BREAK;
     }
 
     hio_seek(f, storepos, SEEK_SET);
@@ -618,6 +626,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     i = 0;
     for (j = 0; j < mod->pat; j++)
     {
+#if 0
         uint32 savepos = hio_tell(f);
 
         /* just read the size first time.*/
@@ -646,8 +655,9 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
             D_(D_WARN "Zero length pattern detected: %d", j);
             continue;
         }
+#endif
 
-        if (pattern_tracks_alloc(mod, i, patternsize) < 0)
+        if (pattern_tracks_alloc(mod, i, 64) < 0)
         {
             free(bad_patterns);
             return -1;
