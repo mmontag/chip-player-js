@@ -35,6 +35,7 @@ Stable versions
 	- fix OctaMED SS default pitch transpose (reported by Karl Churchill)
 	- fix OctaMED instrument name loading
 	- fix XM, S3M, IT and MED offset effect handling
+	- fix fine volume slide memory (reported by Alexander Null)
 	- fix IT portamento in sample mode (reported by Alexander Null)
 	- fix S3M shared effect parameter memory
 	- fix S3M default pan positions

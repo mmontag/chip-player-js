@@ -261,11 +261,15 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 				xc->vol.memory = fxp;
 				fxp &= 0x0f;
 				goto fx_f_vslide_dn;
-			} else if (fxp == 0x00) {
-				if ((fxp = xc->vol.memory) != 0)
-					goto fx_volslide;
 			}
 		}
+
+		/* recover memory */
+		if (fxp == 0x00) {
+			if ((fxp = xc->vol.memory) != 0)
+				goto fx_volslide;
+		}
+
 		SET(VOL_SLIDE);
 
 		/* Skaven's 2nd reality (S3M) has volslide parameter D7 => pri
@@ -275,10 +279,11 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		 * of Sounds.xm
 		 */
 		if (fxp) {
+			xc->vol.memory = fxp;
 			h = MSN(fxp);
 			l = LSN(fxp);
 			if (HAS_QUIRK(QUIRK_VOLPDN)) {
-				if ((xc->vol.memory = fxp))
+				if (fxp)
 					xc->vol.slide = l ? -l : h;
 			} else {
 				if (l == 0)
