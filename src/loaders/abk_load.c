@@ -80,7 +80,7 @@ struct abk_instrument
     uint32 sample_length;
 
     uint32 repeat_offset;
-    uint16 repeat_length;
+    uint16 repeat_end;
 
     uint16 sample_volume;
 
@@ -432,35 +432,11 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
 static void read_abk_inst(HIO_HANDLE *f, struct abk_instrument *inst, uint32 inst_section_offset)
 {
     uint32 sampleLength;
-    uint32 savepos;
-    uint16 repeat;
 
     inst->sample_offset = hio_read32b(f);
     inst->repeat_offset = hio_read32b(f);
-
-    savepos = hio_tell(f);
-
-    hio_seek(f, inst_section_offset + inst->repeat_offset, SEEK_SET);
-
-    repeat = hio_read16b(f);
-
-    hio_seek(f, savepos, SEEK_SET);
-
-    if (repeat == 0)
-    {
-        /* the sample does not repeat*/
-        inst->repeat_offset = 0;
-        inst->repeat_length = 0;
-
-        inst->sample_length = hio_read16b(f);
-        (void) hio_read16b(f);
-    }
-    else
-    {
-        inst->repeat_offset = hio_read16b(f);
-        inst->repeat_length = hio_read16b(f);
-    }
-
+    inst->sample_length = hio_read16b(f);
+    inst->repeat_end = hio_read16b(f);
     inst->sample_volume = hio_read16b(f);
     sampleLength = hio_read16b(f);
 
@@ -471,6 +447,7 @@ static void read_abk_inst(HIO_HANDLE *f, struct abk_instrument *inst, uint32 ins
     }
 
     hio_read(inst->sample_name, 1, 16, f);
+/*printf("%-16.16s  %04x %04x %04x %04x %02x  %04x\n", inst->sample_name, inst->sample_offset, inst->repeat_offset, inst->sample_length, inst->repeat_end, inst->sample_volume, inst_section_offset);*/
 }
 
 /**
@@ -509,7 +486,7 @@ static void sortandsize(uint32 size, uint32 *inptrs, uint32 *outptrs, uint32 end
 
 static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_offset, uint32 inst_section_size)
 {
-    uint16 i,j;
+    uint16 i;
     uint16 count;
     uint32 savepos;
     struct abk_instrument *inst;
@@ -535,6 +512,7 @@ static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_
      * now we need to fix all the lengths */
     sortandsize(count, offsets, sizes, inst_section_size);
 
+#if 0
     /* update the ordered struct. */
     for (i = 0; i < count; i++)
     {
@@ -547,6 +525,7 @@ static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_
             }
         }
     }
+#endif
 
     free(offsets);
     free(sizes);
@@ -704,13 +683,24 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         /* store the location of the first sample so we can read them later. */
         if (first_sample_offset == 0)
         {
-            first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci[i].sample_offset;
+            first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci[0].sample_offset;
         }
 
-        /* TODO: do the repeating stuff. */
-        mod->xxs[i].lps = ci[i].repeat_offset;
-        mod->xxs[i].lpe = ci[i].repeat_length<<1;
-        mod->xxs[i].flg = ci[i].repeat_length > 1 ? XMP_SAMPLE_LOOP : 0;
+        /* the repeating stuff. */
+        if (ci[i].repeat_offset > ci[i].sample_offset)
+        {
+            mod->xxs[i].lps = (ci[i].repeat_offset - ci[i].sample_offset) << 1;
+        }
+        else
+        {
+            mod->xxs[i].lps = 0;
+        }
+        mod->xxs[i].lpe = ci[i].repeat_end;
+        if (mod->xxs[i].lpe > 2) {
+            mod->xxs[i].lpe <<= 1;
+            mod->xxs[i].flg = XMP_SAMPLE_LOOP;
+        }
+/*printf("%02x lps=%04x lpe=%04x\n", i,  mod->xxs[i].lps, mod->xxs[i].lpe);*/
 
         mod->xxi[i].sub[0].vol = ci[i].sample_volume;
         mod->xxi[i].sub[0].pan = 0x80;
