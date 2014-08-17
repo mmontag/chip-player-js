@@ -512,21 +512,6 @@ static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_
      * now we need to fix all the lengths */
     sortandsize(count, offsets, sizes, inst_section_size);
 
-#if 0
-    /* update the ordered struct. */
-    for (i = 0; i < count; i++)
-    {
-        for (j = 0; j < count; j++)
-        {
-            if (inst[i].sample_offset == offsets[j])
-            {
-                inst[i].sample_length = sizes[j]/2;
-                break;
-            }
-        }
-    }
-#endif
-
     free(offsets);
     free(sizes);
 
@@ -683,7 +668,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         /* store the location of the first sample so we can read them later. */
         if (first_sample_offset == 0)
         {
-            first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci[0].sample_offset;
+            first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci[i].sample_offset;
         }
 
         /* the repeating stuff. */
