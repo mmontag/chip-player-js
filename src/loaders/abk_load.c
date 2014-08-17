@@ -355,8 +355,8 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 {
                     events[position].fxt = FX_JUMP;
                     events[position].fxp = param;
-					/* break out of the loop because we've jumped.*/
-					jumped = 1;
+                    /* break out of the loop because we've jumped.*/
+                    jumped = 1;
                 }
                 break;
             }
@@ -423,136 +423,38 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
     return position;
 }
 
-/**
- * @brief Read a single abk instrument.
- * @param f the io handle
- * @param inst the instrument structure (prealloc'd)
- * @param inst_section_offset offset to the instrument section.
- */
-static void read_abk_inst(HIO_HANDLE *f, struct abk_instrument *inst, uint32 inst_section_offset)
-{
-    uint32 sampleLength;
-
-    inst->sample_offset = hio_read32b(f);
-    inst->repeat_offset = hio_read32b(f);
-    inst->sample_length = hio_read16b(f);
-    inst->repeat_end = hio_read16b(f);
-    inst->sample_volume = hio_read16b(f);
-    sampleLength = hio_read16b(f);
-
-    /* detect a potential bug where the sample length is not specified (and we might already know the length) */
-    if (sampleLength > 4)
-    {
-        inst->sample_length = sampleLength;
-    }
-
-    hio_read(inst->sample_name, 1, 16, f);
-/*printf("%-16.16s  %04x %04x %04x %04x %02x  %04x\n", inst->sample_name, inst->sample_offset, inst->repeat_offset, inst->sample_length, inst->repeat_end, inst->sample_volume, inst_section_offset);*/
-}
-
-/**
- * @brief takes an unsorted list of offsets, sorts them and produces a size of each one.
- * @param size the size of the list.
- * @param inptrs the list of offsets.
- * @param outptrs a preallocated list for the result.
- * @param end the very end. Used to calculate the last size.
- */
-static void sortandsize(uint32 size, uint32 *inptrs, uint32 *outptrs, uint32 end)
-{
-    uint32 i,j,tmp;
-
-    /* dumb bubble sort */
-    for (i = 0; i < size; i++)
-    {
-        for (j = i+1; j < size; j++)
-        {
-            if (inptrs[j] < inptrs[i])
-            {
-                /* exchange items */
-                tmp = inptrs[j];
-                inptrs[j] = inptrs[i];
-                inptrs[i] = tmp;
-            }
-        }
-    }
-
-    for (i = 0; i < (size-1); i++)
-    {
-        outptrs[i] = inptrs[i+1] - inptrs[i];
-    }
-
-    outptrs[size - 1] = end - inptrs[size-1];
-}
-
-static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_offset, uint32 inst_section_size)
+static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_size, int count)
 {
     uint16 i;
-    uint16 count;
-    uint32 savepos;
     struct abk_instrument *inst;
-
-    savepos = hio_tell(f);
-
-    hio_seek(f, inst_section_offset, SEEK_SET);
-    count = hio_read16b(f);
 
     inst = (struct abk_instrument*) malloc(count * sizeof(struct abk_instrument));
     memset(inst, 0, count * sizeof(struct abk_instrument));
 
-    uint32 *offsets = (uint32 *) malloc(count * sizeof(uint32));
-    uint32 *sizes = (uint32 *) malloc(count * sizeof(uint32));
-
     for (i = 0; i < count; i++)
     {
-        read_abk_inst(f, &inst[i], AMOS_MAIN_HEADER + inst_section_offset);
-        offsets[i] = inst[i].sample_offset;
+        uint32 sampleLength;
+    
+        inst[i].sample_offset = hio_read32b(f);
+        inst[i].repeat_offset = hio_read32b(f);
+        inst[i].sample_length = hio_read16b(f);
+        inst[i].repeat_end = hio_read16b(f);
+        inst[i].sample_volume = hio_read16b(f);
+        sampleLength = hio_read16b(f);
+    
+        /* detect a potential bug where the sample length is not specified (and we might already know the length) */
+        if (sampleLength > 4)
+        {
+            inst[i].sample_length = sampleLength;
+        }
+    
+        hio_read(inst[i].sample_name, 1, 16, f);
     }
 
-    /* should have all the instruments.
-     * now we need to fix all the lengths */
-    sortandsize(count, offsets, sizes, inst_section_size);
-
-    free(offsets);
-    free(sizes);
-
-    hio_seek(f, savepos, SEEK_SET);
     return inst;
 }
 
-/**
- * @brief compute the size of the instrument data section.
- * @param head the main ABK header (populated)
- * @param size the size of the entire file from the start of the main header.
- * @return the size of the instruments section.
- */
-static uint32 abk_inst_section_size(struct abk_header *head, int size)
-{
-    int i;
-    uint32 result = 0;
-
-    uint32 offsets[ABK_HEADER_SECTION_COUNT];
-    uint32 sizes[ABK_HEADER_SECTION_COUNT];
-
-    offsets[0] = head->instruments_offset;
-    offsets[1] = head->patterns_offset;
-    offsets[2] = head->songs_offset;
-
-    memset(sizes, 0, ABK_HEADER_SECTION_COUNT*sizeof(uint32));
-
-    sortandsize(ABK_HEADER_SECTION_COUNT, offsets, sizes, size);
-
-    for (i=0; i<3; i++)
-    {
-        if (offsets[i] == head->instruments_offset)
-        {
-            result = sizes[i];
-        }
-    }
-
-    return result;
-}
-
-static int abk_test (HIO_HANDLE *f, char *t, const int start)
+static int abk_test(HIO_HANDLE *f, char *t, const int start)
 {
     uint64 music;
 
@@ -610,7 +512,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     main_header.songs_offset = hio_read32b(f);
     main_header.patterns_offset = hio_read32b(f);
 
-    inst_section_size = abk_inst_section_size(&main_header, file_size - AMOS_MAIN_HEADER);
+    inst_section_size = main_header.instruments_offset;
     D_(D_INFO "Sample Bytes: %d", inst_section_size);
 
     LOAD_INIT();
@@ -637,8 +539,6 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->ins = hio_read16b(f);
     mod->smp = mod->ins;
 
-    hio_seek(f, AMOS_MAIN_HEADER + main_header.instruments_offset + 2, SEEK_SET);
-
     /* Read and convert instruments and samples */
 
     if (instrument_init(mod) < 0)
@@ -649,7 +549,10 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->ins);
 
     /* read all the instruments in */
-    ci = read_abk_insts(f, AMOS_MAIN_HEADER + main_header.instruments_offset, inst_section_size);
+    ci = read_abk_insts(f, inst_section_size, mod->ins);
+
+    /* store the location of the first sample so we can read them later. */
+    first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci[0].sample_offset;
 
     for (i = 0; i < mod->ins; i++)
     {
@@ -658,17 +561,11 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
             return -1;
         }
 
-        mod->xxs[i].len = (ci[i].sample_length)<<1;
+        mod->xxs[i].len = ci[i].sample_length << 1;
 
         if (mod->xxs[i].len > 0)
         {
             mod->xxi[i].nsm = 1;
-        }
-
-        /* store the location of the first sample so we can read them later. */
-        if (first_sample_offset == 0)
-        {
-            first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci[i].sample_offset;
         }
 
         /* the repeating stuff. */
