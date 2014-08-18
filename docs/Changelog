@@ -6,6 +6,10 @@ Stable versions
 	- fix MED4 instrument numbering
 	- fix MED effect FFF (turn note off)
 	- fix MED synth finetune effect
+	Fix bugs reported by Alexander Null:
+	- fix fine volume slide memory
+	- fix IT portamento after note end in sample mode
+	- fix S3M portamento after note end
 	Fix bugs caught in the OpenMPT test cases:
 	- add XM and IT envelope loop and sustain point quirk
 	- fix Amiga limits for notes with finetune
@@ -35,8 +39,6 @@ Stable versions
 	- fix OctaMED SS default pitch transpose (reported by Karl Churchill)
 	- fix OctaMED instrument name loading
 	- fix XM, S3M, IT and MED offset effect handling
-	- fix fine volume slide memory (reported by Alexander Null)
-	- fix IT portamento in sample mode (reported by Alexander Null)
 	- fix S3M shared effect parameter memory
 	- fix S3M default pan positions
 	- fix S3M set BPM effect with values < 32 (reported by Kyu S.)

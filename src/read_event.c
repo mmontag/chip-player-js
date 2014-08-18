@@ -512,6 +512,10 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		is_toneporta = 1;
 	}
 
+	if (virt_mapchannel(ctx, chn) < 0) {
+		is_toneporta = 0;
+	}
+
 	/* Check instrument */
 
 	if (e->ins) {
