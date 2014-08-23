@@ -320,7 +320,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int synth = 1;
 #endif
 	int32 *buf_pos;
-	void (*mix_fn)();
+	void (*mix_fn)(struct mixer_voice *, int *, int, int, int, int);
 	mixer_set *mixers;
 
 	switch (s->interp) {
