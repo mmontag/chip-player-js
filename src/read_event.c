@@ -711,7 +711,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			SET(NEW_INS);
 			use_ins_vol = 1;
 			reset_env = 1;
-			xc->fadeout = 0x10000;
 		}
 		xc->per_flags = 0;
 
@@ -777,9 +776,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			} else {
 				key = 0;
 			}
-
-			if (HAS_QUIRK(QUIRK_PRENV) && ev.ins)
-				reset_envelopes(ctx, xc, 0);
 		}
 	}
 
@@ -816,6 +812,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		} else {
 			xc->flags = 0;
 			use_ins_vol = 0;
+		}
+	}
+
+	/* Do after virtual channel copy */
+	if (is_toneporta) {
+		if (HAS_QUIRK(QUIRK_PRENV) && ev.ins) {
+			reset_envelopes(ctx, xc, 0);
 		}
 	}
 
@@ -881,6 +884,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (reset_env) {
 		RESET_NOTE(NOTE_RELEASE | NOTE_FADEOUT);
+		/* Set after copying to new virtual channel (see ambio.it) */
+		xc->fadeout = 0x10000;
 	}
 
 	if (use_ins_vol) {
