@@ -1158,6 +1158,7 @@ int xmp_play_buffer(xmp_context opaque, void *out_buffer, int size, int loop)
 	/* Reset internal state
 	 * Syncs buffer start with frame start */
 	if (out_buffer == NULL) {
+		p->loop_count = 0;
 		p->buffer_data.consumed = 0;
 		p->buffer_data.in_size = 0;
 		return 0;
