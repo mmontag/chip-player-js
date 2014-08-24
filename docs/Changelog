@@ -44,6 +44,7 @@ Stable versions
 	- fix S3M default pan positions
 	- fix S3M set BPM effect with values < 32 (reported by Kyu S.)
 	- fix incorrect Noisetracker effect filtering (reported by Kyu S.)
+	- fix period limits for (possibly non-Amiga) Protracker clones
 	- fix loop counter reset on play buffer reset
 	- fix finetune effect
 	

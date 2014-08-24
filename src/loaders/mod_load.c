@@ -270,7 +270,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 	tracker_id = mod->chn & 1 ? TRACKER_TAKETRACKER : TRACKER_FASTTRACKER2;
 	detected = 1;
-	m->quirk &= ~QUIRK_MODRNG;
     }
 
     strncpy(mod->name, (char *) mh.name, 20);
@@ -389,7 +388,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     if (mod->chn != 4 && mh.restart == 0x7f) {
 	tracker_id = TRACKER_SCREAMTRACKER3;
-	m->quirk &= ~QUIRK_MODRNG;
 	m->read_event_type = READ_EVENT_ST3;
     }
 
@@ -442,7 +440,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    	    tracker_id = TRACKER_PROTRACKER;
 		} else if (mod->chn == 6 || mod->chn == 8) {
 	    	    tracker_id = TRACKER_FASTTRACKER;	/* FastTracker 1.01? */
-		    m->quirk &= ~QUIRK_MODRNG;
 		} else {
 	    	    tracker_id = TRACKER_UNKNOWN;
 		}
@@ -469,7 +466,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    if (mod->chn == 4 || mod->chn == 6 || mod->chn == 8) {
 	    	tracker_id = TRACKER_FASTTRACKER;
-	        m->quirk &= ~QUIRK_MODRNG;
 		goto skip_test;
 	    }
 
@@ -543,9 +539,11 @@ skip_test:
     case TRACKER_FASTTRACKER:
     case TRACKER_FASTTRACKER2:
 	tracker = "Fast Tracker";
+	m->quirk &= ~QUIRK_MODRNG;
 	break;
     case TRACKER_TAKETRACKER:
 	tracker = "Take Tracker";
+	m->quirk &= ~QUIRK_MODRNG;
 	break;
     case TRACKER_OCTALYSER:
 	tracker = "Octalyser";
@@ -561,7 +559,7 @@ skip_test:
 	break;
     case TRACKER_SCREAMTRACKER3:
 	tracker = "Scream Tracker";
-	break;
+	m->quirk &= ~QUIRK_MODRNG;
 	break;
     case TRACKER_CONVERTEDST:
     case TRACKER_CONVERTED:
@@ -569,11 +567,13 @@ skip_test:
 	break;
     case TRACKER_CLONE:
 	tracker = "Protracker clone";
+	m->quirk &= ~QUIRK_MODRNG;
 	break;
     default:
     case TRACKER_UNKNOWN_CONV:
     case TRACKER_UNKNOWN:
 	tracker = "Unknown tracker";
+	m->quirk &= ~QUIRK_MODRNG;
 	break;
     }
 
@@ -584,8 +584,6 @@ skip_test:
     }
 
     MODULE_INFO();
-
-
 
 
     /* Load samples */
