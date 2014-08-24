@@ -33,7 +33,7 @@ AC_DEFUN([AC_CHECK_DEFINED],[
   AS_VAR_POPDEF([ac_var])dnl
 ])
 
-case "$host_cpu" in
+case "${host_cpu}" in
 powerpc64)
   CFLAGS="${CFLAGS} -m64"
   LDFLAGS="${LDFLAGS} -m64"
@@ -41,7 +41,7 @@ powerpc64)
 esac
 
 case "${host_os}" in
-cygwin*)
+cygwin* | mint*)
   enable_static=yes
   enable_shared=no
   ;;
