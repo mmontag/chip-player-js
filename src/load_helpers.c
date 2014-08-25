@@ -287,7 +287,7 @@ int prepare_scan(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	int i, ord;
 
-	if (mod->xxo == NULL || mod->xxp == NULL || mod->xxt == NULL)
+	if (mod->xxp == NULL || mod->xxt == NULL)
 		return -XMP_ERROR_LOAD;
 	ord = 0;
 	while (ord < mod->len && mod->xxo[ord] >= mod->pat) {
