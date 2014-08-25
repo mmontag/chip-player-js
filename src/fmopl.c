@@ -706,7 +706,7 @@ static void OPLCloseTable( OPL_STATE *ST )
 	free(ST->VIB_TABLE);
 }
 
-#ifndef XMP_OPL_CSM
+#ifdef XMP_OPL_CSM
 /* CSM Key Controll */
 INLINE void CSMKeyControll(OPL_CH *CH)
 {
