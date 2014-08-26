@@ -109,7 +109,6 @@ static int get_cmod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	for (i = 0; i < 4; i++) {
 		j = hio_read16b(f);
 		for (k = ! !j; k >= 0; k--) {
-			mod->xxc[mod->chn].pan = (((i + 1) / 2) % 2) * 0xff;
 			mod->chn++;
 		}
 	}
