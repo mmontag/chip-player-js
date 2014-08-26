@@ -10,6 +10,7 @@ TEST(test_loader_okt)
 	f = fopen("data/format_okt.data", "r");
 
 	opaque = xmp_create_context();
+	xmp_set_player(opaque, XMP_PLAYER_DEFPAN, 100);
 	ret = xmp_load_module(opaque, "data/m/OKT.Yes-PartII");
 	fail_unless(ret == 0, "module load");
 
