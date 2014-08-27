@@ -92,8 +92,8 @@ int decrunch_xfd (FILE *f1, FILE *f2)
 	{
 		xfdobj->xfdbi_SourceBufLen = plen;
 		xfdobj->xfdbi_SourceBuffer = packed;
-		xfdobj->xfdbi_Flags = XFDFB_RECOGEXTERN | XFDFB_RECOGTARGETLEN;
-		xfdobj->xfdbi_PackerFlags = XFDPFB_RECOGLEN;
+		xfdobj->xfdbi_Flags = XFDFF_RECOGEXTERN | XFDFF_RECOGTARGETLEN;
+		/* xfdobj->xfdbi_PackerFlags = XFDPFF_RECOGLEN; */
 		if(xfdRecogBuffer(xfdobj))
 		{
 			xfdobj->xfdbi_TargetBufMemType = MEMF_ANY;
