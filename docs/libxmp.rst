@@ -298,7 +298,9 @@ int xmp_test_module(char \*path, struct xmp_test_info \*test_info)
 int xmp_load_module(xmp_context c, char \*path)
 ```````````````````````````````````````````````
 
-  Load a module into the specified player context.
+  Load a module into the specified player context. (Certain player flags,
+  such as ``XMP_PLAYER_SMPCTL`` and ``XMP_PLAYER_DEFPAN``, must be set
+  before loading the module, see `xmp_set_player()`_ for more information.)
 
   **Parameters:**
     :c: the player context handle.
@@ -482,12 +484,41 @@ int xmp_play_frame(xmp_context c)
     0 if sucessful, ``-XMP_END`` if the module ended or was stopped, or
     ``-XMP_ERROR_STATE`` if the player is not in playing state.
 
+.. _xmp_play_buffer():
+
+int xmp_play_buffer(xmp_context c, void \*buffer, int size, int loop)
+`````````````````````````````````````````````````````````````````````
+
+  *[Added in libxmp 4.1]* Fill the buffer with PCM data up to the specified
+  size. This is a convenience function that calls `xmp_play_frame()`_
+  internally to fill the user-supplied buffer. **Don't call both
+  xmp_play_frame() and xmp_play_buffer() in the same replay loop.**
+  If you don't need equally sized data chunks, `xmp_play_frame()`_
+  may result in better performance. Also note that silence is added
+  at the end of a buffer if the module ends and no loop is to be performed.
+
+  **Parameters:**
+    :c: the player context handle.
+
+    :buffer: the buffer to fill with PCM data, or NULL to reset the
+     internal state.
+
+    :size: the buffer size in bytes.
+
+    :loop: stop replay when the loop counter reaches the specified
+     value, or 0 to disable loop checking.
+
+  **Returns:**
+    0 if sucessful, ``-XMP_END`` if module was stopped or the loop counter
+    was reached, or ``-XMP_ERROR_STATE`` if the player is not in playing
+    state.
+
 .. _xmp_get_frame_info():
 
 void xmp_get_frame_info(xmp_context c, struct xmp_frame_info \*info)
 ````````````````````````````````````````````````````````````````````
 
-  Retrieve current frame data.
+  Retrieve the current frame data.
  
   **Parameters:**
     :c: the player context handle.
@@ -534,43 +565,19 @@ void xmp_get_frame_info(xmp_context c, struct xmp_frame_info \*info)
       contain the pointer to the sound buffer PCM data and its size. The
       buffer size will be no larger than ``XMP_MAX_FRAMESIZE``.
  
-.. _xmp_play_buffer():
-
-int xmp_play_buffer(xmp_context c, void \*buffer, int size, int loop)
-`````````````````````````````````````````````````````````````````````
-
-  *[Added in libxmp 4.1]* Fill the buffer with PCM data up to the specified
-  size. This is a convenience function that calls `xmp_play_frame()`_
-  internally to fill the user-supplied buffer -- don't call both functions
-  in the same replay loop, choose one of them. If you don't need equally
-  sized data chunks, `xmp_play_frame()`_ will result in better performance.
-
-  **Parameters:**
-    :c: the player context handle.
-
-    :buffer: the buffer to fill with PCM data, or NULL to reset the
-     internal state.
-
-    :size: buffer size in bytes.
-
-    :loop: stop replay when the loop counter reaches the specified
-     value, or 0 to disable loop checking.
-
-  **Returns:**
-    0 if sucessful, ``-XMP_END`` if module was stopped or the loop counter
-    was reached, or ``-XMP_ERROR_STATE`` if the player is not in playing
-    state.
-
 .. _xmp_end_player():
 
 void xmp_end_player(xmp_context c)
 ``````````````````````````````````
 
-  End module replay and releases player memory.
+  End module replay and release player memory.
  
   **Parameters:**
     :c: the player context handle.
 
+.. raw:: pdf
+
+    PageBreak
 
 Player control
 ~~~~~~~~~~~~~~
@@ -720,6 +727,10 @@ void xmp_inject_event(xmp_context c, int channel, struct xmp_event \*event)
             unsigned char _flag;  /* Internal (reserved) flags */
         };
 
+
+.. raw:: pdf
+
+    PageBreak
 
 Player parameter setting
 ~~~~~~~~~~~~~~~~~~~~~~~~
