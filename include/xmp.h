@@ -23,6 +23,8 @@ extern "C" {
 # define EXPORT __attribute__((visibility ("default")))
 #elif defined(__SUNPRO_C)
 # define EXPORT __global
+#elif defined(EMSCRIPTEN)
+# define EXPORT EMSCRIPTEN_KEEPALIVE
 #else
 # define EXPORT 
 #endif

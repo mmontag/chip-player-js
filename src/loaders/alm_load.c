@@ -174,7 +174,7 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* ALM is LRLR, not LRRL */
     for (i = 0; i < mod->chn; i++)
-	mod->xxc[i].pan = (i % 2) * 0xff;
+	mod->xxc[i].pan = DEFPAN((i % 2) * 0xff);
 
     return 0;
 }

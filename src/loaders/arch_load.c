@@ -418,8 +418,9 @@ static int arch_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	iff_release(handle);
 
-	for (i = 0; i < mod->chn; i++)
-		mod->xxc[i].pan = (((i + 3) / 2) % 2) * 0xff;
+	for (i = 0; i < mod->chn; i++) {
+		mod->xxc[i].pan = DEFPAN((((i + 3) / 2) % 2) * 0xff);
+	}
 
 	return 0;
 }

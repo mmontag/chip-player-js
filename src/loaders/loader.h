@@ -23,6 +23,8 @@
 #define SAMPLE_FLAG_HSC		0x2000	/* HSC Adlib synth instrument */
 #define SAMPLE_FLAG_ADPCM	0x4000	/* ADPCM4 encoded samples */
 
+#define DEFPAN(x) (0x80 + ((x) - 0x80) * m->defpan / 100)
+
 int instrument_init(struct xmp_module *);
 int subinstrument_alloc(struct xmp_module *, int, int);
 int pattern_init(struct xmp_module *);

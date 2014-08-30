@@ -505,7 +505,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (i = 0; i < mod->chn; i++) {
 		mod->xxc[i].vol = song.trkvol[i];
-		mod->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;
+		mod->xxc[i].pan = DEFPAN((((i + 1) / 2) % 2) * 0xff);
 	}
 
 	m->read_event_type = READ_EVENT_MED;

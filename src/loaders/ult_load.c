@@ -226,7 +226,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    x8 = hio_read8(f);
 	    mod->xxc[i].pan = 255 * x8 / 15;
 	} else {
-	    mod->xxc[i].pan = (((i + 1) / 2) % 2) * 0xff;	/* ??? */
+	    mod->xxc[i].pan = DEFPAN((((i + 1) / 2) % 2) * 0xff); /* ??? */
 	}
     }
 

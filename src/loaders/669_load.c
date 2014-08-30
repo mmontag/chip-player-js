@@ -219,8 +219,9 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    return -1;
     }
 
-    for (i = 0; i < mod->chn; i++)
-	mod->xxc[i].pan = (i % 2) * 0xff;
+    for (i = 0; i < mod->chn; i++) {
+	mod->xxc[i].pan = DEFPAN((i % 2) * 0xff);
+    }
 
     m->quirk |= QUIRK_PERPAT;	    /* Cancel persistent fx at each new pat */
 
