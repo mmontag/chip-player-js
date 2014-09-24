@@ -233,6 +233,8 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 				ce->volume = b;
 		}
 
+	    skip_vol:
+
 		/* volume envelope */
 		if (ce->env_wav >= 0) {
 			int sid = mod->xxi[xc->ins].sub[ce->env_wav].sid;
@@ -250,8 +252,6 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 
 		ce->volume += ce->vv;
 		CLAMP(ce->volume, 0, 64);
-
-	    skip_vol:
 
 		if (ce->ww > 0) {
 			ce->ww--;
@@ -321,10 +321,11 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 				virt_setsmp(ctx, chn, xc->smp);
 			}
 		}
-		xc->period += ce->wv;
 
 	    skip_wav:
-		;
+
+		xc->period += ce->wv;
+
 		/* xc->period += ce->wv; */
 	}
 
