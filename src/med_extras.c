@@ -121,6 +121,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 {
 	struct module_data *m = &ctx->m;
 	struct player_data *p = &ctx->p;
+	struct xmp_module *mod = &m->mod;
 	struct med_module_extras *me;
 	struct med_channel_extras *ce;
 	struct med_instrument_extras *ie;
@@ -178,6 +179,8 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 		ce->wv = 0;
 		ce->vs = ie->vts;
 		ce->ws = ie->wts;
+		ce->env_wav = -1;
+		ce->env_idx = 0;
 	}
 
 	if (ce->vs > 0 && ce->vc-- == 0) {
@@ -189,6 +192,8 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 		}
 
 		loop = jws = 0;
+
+		/* Volume commands */
 
 	    next_vt:
 		switch (b = VT) {
@@ -209,7 +214,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 			break;
 		case 0xf5:	/* EN2 */
 		case 0xf4:	/* EN1 */
-			VT_SKIP;	/* Not implemented */
+			ce->env_wav = VT;
 			break;
 		case 0xf3:	/* CHU */
 			ce->vv = VT;
@@ -228,6 +233,21 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 				ce->volume = b;
 		}
 
+		/* volume envelope */
+		if (ce->env_wav >= 0) {
+			int sid = mod->xxi[xc->ins].sub[ce->env_wav].sid;
+			struct xmp_sample *xxs = &mod->xxs[sid];
+			if (xxs->len == 0x80) {		/* sanity check */
+				ce->volume = ((int8)xxs->data[ce->env_idx] + 0x80) >> 2;
+				ce->env_idx++;
+
+				if (ce->env_idx >= 0x80) {
+					ce->env_idx = 0;
+					ce->env_wav = -1;
+				}
+			}
+		}
+
 		ce->volume += ce->vv;
 		CLAMP(ce->volume, 0, 64);
 
@@ -239,6 +259,8 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 		}
 
 		loop = jvs = 0;
+
+		/* Waveform commands */
 
 	    next_wt:
 		switch (b = WT) {

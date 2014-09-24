@@ -33,6 +33,8 @@ struct med_channel_extras {
 	int volume;		/* MED synth note volume */
 	int hold;		/* MED note on hold flag */
 	int hold_count;		/* MED note on hold frame counter */
+	int env_wav;		/* MED synth volume envelope waveform */
+	int env_idx;		/* MED synth volume envelope index */
 };
 
 struct med_module_extras {

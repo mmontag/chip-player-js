@@ -36,6 +36,7 @@ Stable versions
 	- read OctaMED annotation and song info text
 	- fix segfault in mixer caused by sample position overflow
 	- fix MED synth pitch slide reset on new note
+	- fix MED synth EN1 command handling (reported by 
 	- fix OctaMED SS default pitch transpose (reported by Karl Churchill)
 	- fix OctaMED instrument name loading
 	- fix XM, S3M, IT and MED offset effect handling
