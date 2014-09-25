@@ -181,6 +181,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 		ce->ws = ie->wts;
 		ce->env_wav = -1;
 		ce->env_idx = 0;
+		ce->flags &= ~MED_SYNTH_ENV_LOOP;
 	}
 
 	if (ce->vs > 0 && ce->vc-- == 0) {
@@ -213,6 +214,9 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 			jws = VT;
 			break;
 		case 0xf5:	/* EN2 */
+			ce->env_wav = VT;
+			ce->flags |= MED_SYNTH_ENV_LOOP;
+			break;
 		case 0xf4:	/* EN1 */
 			ce->env_wav = VT;
 			break;
@@ -244,8 +248,10 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 				ce->env_idx++;
 
 				if (ce->env_idx >= 0x80) {
+					if (~ce->flags & MED_SYNTH_ENV_LOOP) {
+						ce->env_wav = -1;
+					}
 					ce->env_idx = 0;
-					ce->env_wav = -1;
 				}
 			}
 		}

@@ -35,6 +35,8 @@ struct med_channel_extras {
 	int hold_count;		/* MED note on hold frame counter */
 	int env_wav;		/* MED synth volume envelope waveform */
 	int env_idx;		/* MED synth volume envelope index */
+#define MED_SYNTH_ENV_LOOP (1 << 0)
+	int flags;		/* flags */
 };
 
 struct med_module_extras {

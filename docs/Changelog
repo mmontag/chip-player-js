@@ -37,7 +37,7 @@ Stable versions
 	- fix segfault in mixer caused by sample position overflow
 	- fix MED synth pitch slide reset on new note
 	- fix MED synth volume change during wait command
-	- fix MED synth EN1 command handling (reported by Stefan Martens) 
+	- fix MED synth envelope loop handling (reported by Stefan Martens) 
 	- fix OctaMED SS default pitch transpose (reported by Karl Churchill)
 	- fix OctaMED instrument name loading
 	- fix XM, S3M, IT and MED offset effect handling
