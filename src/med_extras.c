@@ -169,19 +169,19 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 	}
 
 	if (t == 0 && TEST(NEW_NOTE)) {
-		ce->arp = ce->aidx = 0;
 		ce->period = xc->period;
 		if (TEST(NEW_INS)) {
+			ce->arp = ce->aidx = 0;
 			ce->vp = ce->vc = ce->vw = 0;
 			ce->wp = ce->wc = ce->ww = 0;
+			ce->env_wav = -1;
+			ce->env_idx = 0;
+			ce->flags &= ~MED_SYNTH_ENV_LOOP;
+			ce->vv = 0;
+			ce->wv = 0;
+			ce->vs = ie->vts;
+			ce->ws = ie->wts;
 		}
-		ce->vv = 0;
-		ce->wv = 0;
-		ce->vs = ie->vts;
-		ce->ws = ie->wts;
-		ce->env_wav = -1;
-		ce->env_idx = 0;
-		ce->flags &= ~MED_SYNTH_ENV_LOOP;
 	}
 
 	if (ce->vs > 0 && ce->vc-- == 0) {
@@ -331,8 +331,6 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 	    skip_wav:
 
 		xc->period += ce->wv;
-
-		/* xc->period += ce->wv; */
 	}
 
 	if (jws) {
