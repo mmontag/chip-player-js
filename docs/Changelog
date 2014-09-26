@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.0 ():
+4.3.0 (20140926):
 	Fix bugs reported by Sami Jumppanen:
 	- fix MED4 instrument numbering
 	- fix MED effect FFF (turn note off)
