@@ -20,7 +20,9 @@ int     mseek(MFILE *, long, int);
 long    mtell(MFILE *);
 int     mclose(MFILE *);
 int	meof(MFILE *);
+#ifndef LIBXMP_CORE_PLAYER
 int	mstat(MFILE *, struct stat *);
+#endif
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,23 @@
+Stable versions
+---------------
+
+4.3.0 (20140927):
+	- rebranded as libxmp-lite
+	- build from the same source tree as the full libxmp
+
+4.2.7 (20140412):
+	- fix library name in pkg-config file (by Chris Spiegel)
+	- fix XM set pan effect
+	- fix IT disabled instrument pan
+
+4.2.6 (20140407):
+	- add configure option to disable IT support
+	- minor Visual C++ port fixes
+	- add Visual C++ nmake Makefile
+	- fix double free in module loaded from memory (by Arnaud Troël)
+	- fix Win64 portability issues (reported by Ozkan Sezer)
+	- fix IT tempo slide effect
+	- generate Android NDK static libraries
+
+4.2.0 (20140302):
+	- forked from libxmp 4.2.5 and removed unnecessary features

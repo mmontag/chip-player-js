@@ -4,11 +4,11 @@ VERSION_RELEASE	= 0
 
 VERSION		= $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
 
-# This dylib will support anything linked against COMPAT_VERSION through VERSION
+# The dylib will support anything linked against COMPAT_VERSION through VERSION
 COMPAT_VERSION	= $(VERSION_MAJOR)
 
 CC		= @CC@
-CFLAGS		= -c @CFLAGS@ @DEFS@ -D_REENTRANT
+CFLAGS		= -c @CFLAGS@ @DEFS@ -D_REENTRANT -DLIBXMP_CORE_PLAYER
 LD		= @CC@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
@@ -21,39 +21,36 @@ datarootdir	= @datarootdir@
 BINDIR		= @bindir@
 LIBDIR		= @libdir@
 MANDIR		= @mandir@/man3
-INCLUDEDIR	= @includedir@
+INCLUDEDIR	= @includedir@/libxmp-lite
 LD_VERSCRIPT	= @LD_VERSCRIPT@
 SHELL		= /bin/sh
 
-DIST		= libxmp-$(VERSION)
-DFILES		= README INSTALL install-sh configure configure.ac config.sub \
-		  config.guess Makefile.in libxmp.pc.in libxmp.map Makefile.vc
-DDIRS		= docs include src loaders prowiz depackers win32 test
+DIST		= libxmp-lite-$(VERSION)
+DFILES		= README INSTALL Changelog install-sh configure configure.ac \
+		  config.sub config.guess Makefile.in libxmp-lite.pc.in \
+		  Makefile.vc libxmp.map
+DDIRS		= include src loaders test
 V		= 0
-LIB		= libxmp.a
-SOLIB		= libxmp.so
+LIB		= libxmp-lite.a
+SOLIB		= libxmp-lite.so
 SHLIB		= $(SOLIB).$(VERSION)
 SONAME		= $(SOLIB).$(VERSION_MAJOR)
-DLL		= libxmp.dll
-DYLIB		= libxmp.$(VERSION_MAJOR).dylib
-GCLIB		= libxmp-gc.a
+DLL		= libxmp-lite.dll
+DYLIB		= libxmp-lite.$(VERSION_MAJOR).dylib
+GCLIB		= libxmp-lite-gc.a
 
 all: @STATIC@ @SHARED@
 
-include docs/Makefile
-include include/Makefile
+include include/libxmp-lite/Makefile
 include src/Makefile
 include src/loaders/Makefile
-include src/loaders/prowizard/Makefile
-include src/depackers/Makefile
-include src/win32/Makefile
 include test/Makefile
 
 LOBJS = $(OBJS:.o=.lo)
 
 GCOBJS = $(OBJS:.o=.gco)
 
-CFLAGS += -Iinclude -Isrc
+CFLAGS += -Iinclude/libxmp-lite -Isrc
 
 .SUFFIXES: .c .o .lo .a .so .dll .in .gco .gcda .gcno
 
@@ -99,7 +96,7 @@ lib/$(SHLIB): $(LOBJS)
 
 lib/$(DLL): $(OBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/libxmp_dll.a -o $@ $(OBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp-lite.def,--out-implib,lib/libxmp-lite_dll.a -o $@ $(OBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -113,7 +110,7 @@ lib/$(DYLIB): $(LOBJS)
 	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,$(COMPAT_VERSION),-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
-	ln -sf $(DYLIB) lib/libxmp.dylib
+	ln -sf $(DYLIB) lib/libxmp-lite.dylib
 
 lib/$(GCLIB): $(GCOBJS)
 	@mkdir -p lib
@@ -135,7 +132,7 @@ install: all
 	@if [ -f lib/$(DYLIB) ]; then \
 		echo "Installing $(DYLIB)..."; \
 		$(INSTALL) -m755 lib/$(DYLIB) $(DESTDIR)$(LIBDIR); \
-		ln -sf $(DYLIB) $(DESTDIR)$(LIBDIR)/libxmp.dylib; \
+		ln -sf $(DYLIB) $(DESTDIR)$(LIBDIR)/libxmp-lite.dylib; \
 	fi
 	@if [ -f lib/$(SHLIB) ]; then \
 		echo "Installing $(SHLIB)..."; \
@@ -144,10 +141,10 @@ install: all
 		ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/$(SOLIB); \
 	fi
 	@echo "Installing xmp.h..."
-	@$(INSTALL) -m644 include/xmp.h $(DESTDIR)$(INCLUDEDIR)
-	@echo "Installing libxmp.pc..."
+	@$(INSTALL) -m644 include/libxmp-lite/xmp.h $(DESTDIR)$(INCLUDEDIR)
+	@echo "Installing libxmp-lite.pc..."
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
-	@$(INSTALL) -m644 libxmp.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
+	@$(INSTALL) -m644 libxmp-lite.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
 
 depend:
 	@echo Building dependencies...
@@ -158,7 +155,7 @@ depend:
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 	    
-dist: version-prepare all-docs dist-prepare vc-prepare dist-subdirs
+dist: version-prepare dist-prepare vc-prepare dist-subdirs
 
 dist-prepare:
 	./config.status
@@ -197,9 +194,9 @@ $(OBJS): Makefile
 $(LOBJS): Makefile
 
 version-prepare:
-	sed -i -e '/^Version: /s/:.*/: $(VERSION)/g' libxmp.pc.in
+	sed -i -e '/^Version: /s/:.*/: $(VERSION)/g' libxmp-lite.pc.in
 	vercode=`printf "0x%02x%02x%02x" $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_RELEASE)`; \
-	sed -i -e "s/\(^#define XMP_VERSION\).*/\1 \"$(VERSION)\"/;s/\(^#define XMP_VERCODE\).*/\1 $$vercode/;s/\(^#define XMP_VER_MAJOR\).*/\1 $(VERSION_MAJOR)/;s/\(^#define XMP_VER_MINOR\).*/\1 $(VERSION_MINOR)/;s/\(^#define XMP_VER_RELEASE\).*/\1 $(VERSION_RELEASE)/" include/xmp.h
+	sed -i -e "s/\(^#define XMP_VERSION\).*/\1 \"$(VERSION)\"/;s/\(^#define XMP_VERCODE\).*/\1 $$vercode/;s/\(^#define XMP_VER_MAJOR\).*/\1 $(VERSION_MAJOR)/;s/\(^#define XMP_VER_MINOR\).*/\1 $(VERSION_MINOR)/;s/\(^#define XMP_VER_RELEASE\).*/\1 $(VERSION_RELEASE)/" include/libxmp-lite/xmp.h
 	./config.status
 
 sinclude depend
