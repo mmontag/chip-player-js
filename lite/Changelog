@@ -4,6 +4,39 @@ Stable versions
 4.3.0 (20140927):
 	- rebranded as libxmp-lite
 	- build from the same source tree as the full libxmp
+	- fix fine volume slide memory
+	- fix IT portamento after note end in sample mode
+	- fix S3M portamento after note end
+	- add XM and IT envelope loop and sustain point quirk
+	- fix Amiga limits for notes with finetune
+	- fix XM invalid offset handling
+	- fix XM note release reset on new volume
+	- fix XM pattern loader to honor header size
+	- fix XM fine volume slide effect memory
+	- fix XM fine pitch slide effect memory
+	- fix XM finetune effect
+	- fix IT portamento if offset effect is used
+	- fix IT NNA on invalid sample mapping
+	- fix IT filter envelope index reset
+	- fix IT envelope carry on note cut events
+	- fix IT envelope reset on new instrument
+	- fix IT instrument change on portamento in compatible GXX mode
+	- fix IT unmapped sample parsing
+	- fix IT filter cutoff reset
+	- add API call to load a module from a file handle
+	- add API call to set default pan separation value
+	- refactor memory I/O calls
+	- fix segfault in mixer caused by sample position overflow
+	- fix XM, S3M, IT and MED offset effect handling
+	- fix IT fadeout and envelope reset on new virtual channel
+	- fix S3M shared effect parameter memory
+	- fix S3M default pan positions
+	- fix S3M set BPM effect with values < 32 (reported by Kyu S.)
+	- fix loop counter reset on play buffer reset
+	- fix finetune effect
+	- fix sequence number reset on player start
+	- fix stray notes in XM (reported by Andreas Argirakis)
+	- limit note number to avoid crash (reported by Bastian Pflieger)
 
 4.2.7 (20140412):
 	- fix library name in pkg-config file (by Chris Spiegel)
