@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.3.1 ():
+	- fix STM empty note event read
+
 4.3.0 (20140926):
 	Fix bugs reported by Sami Jumppanen:
 	- fix MED4 instrument numbering
