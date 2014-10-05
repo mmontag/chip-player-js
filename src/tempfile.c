@@ -32,21 +32,34 @@
 #include <unistd.h>
 #include "tempfile.h"
 
+
 #ifdef WIN32
+
 int mkstemp(char *);
-#endif
 
 static int get_temp_dir(char *buf, int size)
 {
-#if defined WIN32
 	const char def[] = "C:\\WINDOWS\\TEMP";
 	char *tmp = getenv("TEMP");
 
 	strncpy(buf, tmp ? tmp : def, size);
 	strncat(buf, "\\", size);
+
+	return 0;
+}
+
 #elif defined __AMIGA__
+
+static int get_temp_dir(char *buf, int size)
+{
 	strncpy(buf, "T:", size);
+	return 0;
+}
+
 #elif defined ANDROID
+
+static int get_temp_dir(char *buf, int size)
+{
 #define APPDIR "/sdcard/Xmp for Android"
 	struct stat st;
 	if (stat(APPDIR, &st) < 0) {
@@ -58,16 +71,25 @@ static int get_temp_dir(char *buf, int size)
 			return -1;
 	}
 	strncpy(buf, APPDIR "/tmp/", size);
+
+	return 0;
+}
+
 #else
+
+static int get_temp_dir(char *buf, int size)
+{
 	const char def[] = "/tmp";
 	char *tmp = getenv("TMPDIR");
 
 	strncpy(buf, tmp ? tmp : def, size);
 	strncat(buf, "/", size);
-#endif
 
 	return 0;
 }
+
+#endif
+
 
 FILE *make_temp_file(char **filename) {
 	char tmp[PATH_MAX];
