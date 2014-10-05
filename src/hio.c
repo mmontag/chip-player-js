@@ -248,24 +248,6 @@ int hio_close(HIO_HANDLE *h)
 
 #ifndef LIBXMP_CORE_PLAYER
 
-HIO_HANDLE *hio_open_fd(int fd, char *mode)
-{
-	HIO_HANDLE *h;
-	
-	h = (HIO_HANDLE *)malloc(sizeof (HIO_HANDLE));
-	if (h == NULL)
-		return NULL;
-	
-	h->type = HIO_HANDLE_TYPE_FILE;
-	h->handle.file = fdopen(fd, mode);
-	if (h->handle.file == NULL) {
-		free(h);
-		return NULL;
-	}
-
-	return h;
-}
-
 int hio_stat(HIO_HANDLE *h, struct stat *st)
 {
 	switch (HIO_HANDLE_TYPE(h)) {

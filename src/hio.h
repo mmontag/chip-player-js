@@ -32,7 +32,6 @@ long	hio_tell	(HIO_HANDLE *);
 int	hio_eof		(HIO_HANDLE *);
 HIO_HANDLE *hio_open	(void *, char *);
 HIO_HANDLE *hio_open_mem  (void *, long);
-HIO_HANDLE *hio_open_fd	  (int, char *);
 HIO_HANDLE *hio_open_file (FILE *);
 int	hio_close	(HIO_HANDLE *);
 int	hio_stat	(HIO_HANDLE *, struct stat *);
