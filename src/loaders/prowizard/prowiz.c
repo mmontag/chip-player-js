@@ -85,7 +85,7 @@ int pw_write_zero(FILE *out, int len)
 int pw_wizardry(FILE *file_in, FILE *file_out, char **name)
 {
 	struct stat st;
-	int size = -1, in_size;
+	int in_size;
 	uint8 *data;
 	char title[21];
 	int i;
@@ -124,11 +124,8 @@ int pw_wizardry(FILE *file_in, FILE *file_out, char **name)
 	}
 
 	fseek(file_in, 0, SEEK_SET);
-	size = pw_format[i]->depack(file_in, file_out);
-
-	if (size < 0) {
+	if (pw_format[i]->depack(file_in, file_out) < 0)
 		return -1;
-	}
 
 	free(data);
 
