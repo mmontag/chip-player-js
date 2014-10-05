@@ -127,6 +127,7 @@ int pw_wizardry(FILE *file_in, FILE *file_out, char **name)
 	if (pw_format[i]->depack(file_in, file_out) < 0)
 		return -1;
 
+	fflush(file_out);
 	free(data);
 
 	if (name != NULL) {
