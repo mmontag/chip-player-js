@@ -39,6 +39,7 @@
 #include "format.h"
 #include "list.h"
 #include "hio.h"
+#include "tempfile.h"
 
 #ifndef LIBXMP_CORE_PLAYER
 #if !defined(HAVE_POPEN) && defined(WIN32)
@@ -115,18 +116,12 @@ static int decrunch(FILE **f, char *s, char **temp)
     unsigned char b[1024];
     char *cmd;
     FILE *t;
-    int fd, builtin, res;
-    char tmp[PATH_MAX];
+    int builtin, res;
     int headersize;
 
     cmd = NULL;
     builtin = res = 0;
     *temp = NULL;
-
-    if (get_temp_dir(tmp, PATH_MAX) < 0)
-	return 0;
-
-    strncat(tmp, "xmp_XXXXXX", PATH_MAX - 10);
 
     fseek(*f, 0, SEEK_SET);
     if ((headersize = fread(b, 1, 1024, *f)) < 100)	/* minimum valid file size */
@@ -246,16 +241,8 @@ static int decrunch(FILE **f, char *s, char **temp)
 
     D_(D_WARN "Depacking file... ");
 
-    *temp = strdup(tmp);
-    if (*temp == NULL || (fd = mkstemp(*temp)) < 0) {
-	D_(D_CRIT "failed");
+    if ((t = make_temp_file(temp)) == NULL)
 	return -1;
-    }
-
-    if ((t = fdopen(fd, "w+b")) == NULL) {
-	D_(D_CRIT "failed");
-	return -1;
-    }
 
     if (cmd) {
 #define BSIZE 0x4000
@@ -354,18 +341,6 @@ static int decrunch(FILE **f, char *s, char **temp)
     *f = t;
 
     return res;
-}
-
-/*
- * Windows doesn't allow you to unlink an open file, so we changed the
- * temp file cleanup system to remove temporary files after we close it
- */
-static void unlink_tempfile(char *temp)
-{
-	if (temp) {
-		unlink(temp);
-		free(temp);
-	}
 }
 
 static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
@@ -487,7 +462,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 			fclose(h->handle.file);
 
 #ifndef LIBXMP_CORE_PLAYER
-			unlink_tempfile(temp);
+			unlink_temp_file(temp);
 #endif
 
 			if (info != NULL && !is_prowizard) {
@@ -502,7 +477,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
     err:
 	hio_close(h);
 #ifndef LIBXMP_CORE_PLAYER
-	unlink_tempfile(temp);
+	unlink_temp_file(temp);
 #endif
 	return ret;
 }
@@ -537,7 +512,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h, char *tmpfile)
 	hio_close(h);
 
 #ifndef LIBXMP_CORE_PLAYER
-	unlink_tempfile(tmpfile);
+	unlink_temp_file(tmpfile);
 #endif
 
 	if (test_result < 0) {
@@ -571,7 +546,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	struct module_data *m = &ctx->m;
 	HIO_HANDLE *h;
 	struct stat st;
-	char *temp;
+	char *temp_name;
 
 	D_(D_WARN "path = %s", path);
 
@@ -590,7 +565,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 #ifndef LIBXMP_CORE_PLAYER
 	D_(D_INFO "decrunch");
-	if (decrunch(&h->handle.file, path, &temp) < 0)
+	if (decrunch(&h->handle.file, path, &temp_name) < 0)
 		goto err_depack;
 
 	if (hio_stat(h, &st) < 0)
@@ -598,7 +573,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	if (st.st_size < 256) {		/* get size after decrunch */
 		hio_close(h);
-		unlink_tempfile(temp);
+		unlink_temp_file(temp_name);
 		return -XMP_ERROR_FORMAT;
 	}
 #endif
@@ -619,12 +594,12 @@ int xmp_load_module(xmp_context opaque, char *path)
 #endif
 	m->size = st.st_size;
 
-	return load_module(opaque, h, temp);
+	return load_module(opaque, h, temp_name);
 
 #ifndef LIBXMP_CORE_PLAYER
     err_depack:
 	hio_close(h);
-	unlink_tempfile(temp);
+	unlink_temp_file(temp_name);
 	return -XMP_ERROR_DEPACK;
 #endif
 }

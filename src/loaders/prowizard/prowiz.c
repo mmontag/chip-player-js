@@ -82,22 +82,13 @@ int pw_write_zero(FILE *out, int len)
 	return 0;
 }
 
-int pw_wizardry(int in, int out, char **name)
+int pw_wizardry(FILE *file_in, FILE *file_out, char **name)
 {
 	struct stat st;
 	int size = -1, in_size;
 	uint8 *data;
-	FILE *file_in, *file_out;
 	char title[21];
 	int i;
-
-	file_in = fdopen(dup(in), "rb");
-	if (file_in == NULL)
-		return -1;
-
-	file_out = fdopen(dup(out), "w+b");
-	if (file_out == NULL)
-		return -1;
 
 	if (fstat(fileno(file_in), &st) < 0)
 		in_size = -1;
@@ -138,9 +129,6 @@ int pw_wizardry(int in, int out, char **name)
 	if (size < 0) {
 		return -1;
 	}
-
-	fclose(file_out);
-	fclose(file_in);
 
 	free(data);
 

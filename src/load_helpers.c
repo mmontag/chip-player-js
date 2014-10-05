@@ -128,39 +128,6 @@ int exclude_match(char *name)
 	return 0;
 }
 
-int get_temp_dir(char *buf, int size)
-{
-#if defined WIN32
-	const char def[] = "C:\\WINDOWS\\TEMP";
-	char *tmp = getenv("TEMP");
-
-	strncpy(buf, tmp ? tmp : def, size);
-	strncat(buf, "\\", size);
-#elif defined __AMIGA__
-	strncpy(buf, "T:", size);
-#elif defined ANDROID
-#define APPDIR "/sdcard/Xmp for Android"
-	struct stat st;
-	if (stat(APPDIR, &st) < 0) {
-		if (mkdir(APPDIR, 0777) < 0)
-			return -1;
-	}
-	if (stat(APPDIR "/tmp", &st) < 0) {
-		if (mkdir(APPDIR "/tmp", 0777) < 0)
-			return -1;
-	}
-	strncpy(buf, APPDIR "/tmp/", size);
-#else
-	const char def[] = "/tmp";
-	char *tmp = getenv("TMPDIR");
-
-	strncpy(buf, tmp ? tmp : def, size);
-	strncat(buf, "/", size);
-#endif
-
-	return 0;
-}
-
 #endif /* LIBXMP_CORE_PLAYER */
 
 char *adjust_string(char *s)

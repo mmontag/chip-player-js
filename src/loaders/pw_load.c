@@ -16,6 +16,7 @@
 #include "mod.h"
 #include "period.h"
 #include "prowizard/prowiz.h"
+#include "tempfile.h"
 
 extern struct list_head *checked_format;
 
@@ -67,41 +68,30 @@ static int pw_test(HIO_HANDLE *f, char *t, const int start)
 	return pw_test_format(f->handle.file, t, start, NULL);
 }
 
-static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
+static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	struct mod_header mh;
 	uint8 mod_event[4];
+	HIO_HANDLE *f;
+	FILE *temp;
 	char *name;
-	char tmp[PATH_MAX];
+	char *temp_name;
 	int i, j;
-	int fd;
 
 	/* Prowizard depacking */
 
-	if (get_temp_dir(tmp, PATH_MAX) < 0)
-		return -1;
+	if ((temp = make_temp_file(&temp_name)) == NULL)
+		goto err;
 
-	strncat(tmp, "xmp_XXXXXX", PATH_MAX - 10);
-
-	if ((fd = mkstemp(tmp)) < 0)
-		return -1;
-
-	if (pw_wizardry(fileno(f->handle.file), fd, &name) < 0) {
-		close(fd);
-		unlink(tmp);
-		return -1;
-	}
-
-	if ((f = hio_open_fd(fd, "w+b")) == NULL) {
-		close(fd);
-		unlink(tmp);
-		return -1;
-	}
-
-
+	if (pw_wizardry(h->handle.file, temp, &name) < 0)
+		goto err2;
+	
 	/* Module loading */
+
+	if ((f = hio_open_file(temp)) == NULL)
+		goto err2;
 
 	LOAD_INIT();
 
@@ -120,7 +110,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(&mh.magic, 4, 1, f);
 
 	if (memcmp(mh.magic, "M.K.", 4))
-		goto err;
+		goto err3;
 		
 	mod->ins = 31;
 	mod->smp = mod->ins;
@@ -145,11 +135,11 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	MODULE_INFO();
 
 	if (instrument_init(mod) < 0)
-	    return -1;
+		goto err3;
 
 	for (i = 0; i < mod->ins; i++) {
 		if (subinstrument_alloc(mod, i, 1) < 0)
-			return -1;
+			goto err3;
 
 		mod->xxs[i].len = 2 * mh.ins[i].size;
 		mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
@@ -175,14 +165,14 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	if (pattern_init(mod) < 0)
-		return -1;
+		goto err3;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
 		if (pattern_tracks_alloc(mod, i, 64) < 0)
-			return -1;
+			goto err3;
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
@@ -198,15 +188,19 @@ static int pw_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 	for (i = 0; i < mod->smp; i++) {
 		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
-			goto err;
+			goto err3;
 	}
 
 	hio_close(f);
-	unlink(tmp);
+	fclose(temp);
+	unlink_temp_file(temp_name);
 	return 0;
 
-err:
+    err3:
 	hio_close(f);
-	unlink(tmp);
+    err2:
+	fclose(temp);
+	unlink_temp_file(temp_name);
+    err:
 	return -1;
 }

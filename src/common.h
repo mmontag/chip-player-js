@@ -386,11 +386,6 @@ uint32	readmem24b		(uint8 *);
 uint32	readmem32l		(uint8 *);
 uint32	readmem32b		(uint8 *);
 
-int	get_temp_dir		(char *, int);
-#ifdef WIN32
-int	mkstemp			(char *);
-#endif
-
 struct xmp_instrument *get_instrument(struct context_data *, int);
 struct xmp_sample *get_sample(struct context_data *, int);
 

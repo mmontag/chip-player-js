@@ -31,7 +31,7 @@ struct pw_format {
 	struct list_head list;
 };
 
-int pw_wizardry(int, int, char **);
+int pw_wizardry(FILE *, FILE *, char **);
 int pw_move_data(FILE *, FILE *, int);
 int pw_write_zero(FILE *, int);
 /* int pw_enable(char *, int); */
