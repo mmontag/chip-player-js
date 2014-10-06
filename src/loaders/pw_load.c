@@ -192,7 +192,6 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	}
 
 	hio_close(f);
-	fclose(temp);
 	unlink_temp_file(temp_name);
 	return 0;
 

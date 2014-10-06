@@ -234,7 +234,7 @@ HIO_HANDLE *hio_open_file(FILE *f)
 		return NULL;
 	
 	h->type = HIO_HANDLE_TYPE_FILE;
-	h->handle.file = fdopen(fileno(f), "rb");
+	h->handle.file = f /*fdopen(fileno(f), "rb")*/;
 	h->size = get_size(f);
 
 	return h;

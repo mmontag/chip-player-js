@@ -470,7 +470,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	return ret;
 }
 
-static int load_module(xmp_context opaque, HIO_HANDLE *h, char *tmpfile)
+static int load_module(xmp_context opaque, HIO_HANDLE *h)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
@@ -495,12 +495,6 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h, char *tmpfile)
 #ifndef LIBXMP_CORE_PLAYER
 	if (test_result == 0 && load_result == 0)
 		set_md5sum(h, m->md5);
-#endif
-
-	hio_close(h);
-
-#ifndef LIBXMP_CORE_PLAYER
-	unlink_temp_file(tmpfile);
 #endif
 
 	if (test_result < 0) {
@@ -536,6 +530,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	struct stat st;
 	char *temp_name;
 	long size;
+	int ret;
 
 	D_(D_WARN "path = %s", path);
 
@@ -581,7 +576,14 @@ int xmp_load_module(xmp_context opaque, char *path)
 #endif
 	m->size = size;
 
-	return load_module(opaque, h, temp_name);
+	ret = load_module(opaque, h);
+	hio_close(h);
+
+#ifndef LIBXMP_CORE_PLAYER
+	unlink_temp_file(temp_name);
+#endif
+
+	return ret;
 
 #ifndef LIBXMP_CORE_PLAYER
     err_depack:
@@ -596,6 +598,7 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	HIO_HANDLE *h;
+	int ret;
 
 	/* Use size < 0 for unknown/undetermined size */
 	if (size == 0)
@@ -612,7 +615,11 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	m->dirname = NULL;
 	m->size = 0;
 
-	return load_module(opaque, h, NULL);
+	ret = load_module(opaque, h);
+
+	hio_close(h);
+
+	return ret;
 }
 
 int xmp_load_module_from_file(xmp_context opaque, void *file, long size)
@@ -620,11 +627,8 @@ int xmp_load_module_from_file(xmp_context opaque, void *file, long size)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	HIO_HANDLE *h;
-	FILE *f = (FILE *)file;
-	struct stat st;
-
-	if (fstat(fileno(f), &st) < 0)
-		return -XMP_ERROR_SYSTEM;
+	FILE *f = fdopen(fileno(file), "rb");
+	int ret;
 
 	if ((h = hio_open_file(f)) == NULL)
 		return -XMP_ERROR_SYSTEM;
@@ -635,9 +639,13 @@ int xmp_load_module_from_file(xmp_context opaque, void *file, long size)
 	m->filename = NULL;
 	m->basename = NULL;
 	m->dirname = NULL;
-	m->size = st.st_size;
+	m->size = hio_size(h);
 
-	return load_module(opaque, h, NULL);
+	ret = load_module(opaque, h);
+
+	hio_close(h);
+
+	return ret;
 }
 
 void xmp_release_module(xmp_context opaque)
