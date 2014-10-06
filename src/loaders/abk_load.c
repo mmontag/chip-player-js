@@ -20,7 +20,6 @@
 
 #define AMOS_BANK 0x416d426b
 #define AMOS_MUSIC_TYPE 0x0003
-#define AMOS_MUSIC_TEXT 0x4D75736963202020
 #define AMOS_MAIN_HEADER 0x14L
 #define AMOS_STRING_LEN 0x10
 #define AMOS_BASE_FREQ 8192
@@ -401,7 +400,7 @@ static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_
 
 static int abk_test(HIO_HANDLE *f, char *t, const int start)
 {
-    uint64 music;
+    char music[8];
 
     if (hio_read32b(f) != AMOS_BANK)
     {
@@ -416,11 +415,9 @@ static int abk_test(HIO_HANDLE *f, char *t, const int start)
     /* skip over length and chip/fastmem.*/
     hio_seek(f, 6, SEEK_CUR);
 
-    music = hio_read32b(f); /* get the "Music   " */
-    music = music << 32;
-    music |= hio_read32b(f);
+    hio_read(music, 1, 8, f);	/* get the "Music   " */
 
-    if (music != (unsigned long long)AMOS_MUSIC_TEXT)
+    if (memcmp(music, "Music   ", 8))
     {
         return -1;
     }

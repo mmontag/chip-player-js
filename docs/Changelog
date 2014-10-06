@@ -3,6 +3,7 @@ Stable versions
 
 4.3.1 ():
 	- fix STM empty note event read
+	- fix ABK loader test in Win32
 	- code cleanup
 
 4.3.0 (20140926):
