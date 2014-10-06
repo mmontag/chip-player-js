@@ -29,6 +29,4 @@ dist-subdirs: $(addprefix dist-,$(DDIRS))
 
 dist-dist:
 	(cd  $(DIST); autoconf; ./configure)
-	$(MAKE) -C $(DIST) dist distcheck
-
-
+	$(MAKE) -C $(DIST) dist distcheck || false

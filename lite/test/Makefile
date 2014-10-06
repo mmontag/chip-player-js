@@ -16,7 +16,7 @@ check: $(TEST_PATH)/libxmp-test
 	cd $(TEST_PATH); LD_LIBRARY_PATH=../lib DYLD_LIBRARY_PATH=../lib LIBRARY_PATH=../lib:$$LIBRARY_PATH PATH=$$PATH:../lib ./libxmp-test
 
 $(TEST_PATH)/libxmp-test: $(T_OBJS)
-	@CMD='$(LD) -o $@ $(T_OBJS) $(LIBS) -Llib -lxmp'; \
+	@CMD='$(LD) -o $@ $(T_OBJS) $(LIBS) -Llib -lxmp-lite'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
