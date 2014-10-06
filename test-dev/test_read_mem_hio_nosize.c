@@ -9,7 +9,6 @@ TEST(test_read_mem_hio_nosize)
 	int i;
 	unsigned int x;
 	HIO_HANDLE *h;
-	struct stat st;
 
 	for (i = 0; i < 100; i++)
 		mem[i] = i;
@@ -17,9 +16,8 @@ TEST(test_read_mem_hio_nosize)
 	h = hio_open_mem(mem, -1);
 	fail_unless(h != NULL, "hio_open");
 
-	x = hio_stat(h, &st);
-	fail_unless(x == 0, "hio_stat");
-	fail_unless(st.st_size == -1, "hio_stat size");
+	x = hio_size(h);
+	fail_unless(x == -1, "hio_size");
 
 	x = hio_read8(h);
 	fail_unless(x == 0x00, "hio_read8");

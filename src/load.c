@@ -24,11 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#ifndef LIBXMP_CORE_PLAYER
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
 #include <errno.h>
 #ifdef __native_client__
 #include <sys/syslimits.h>
@@ -348,12 +343,8 @@ static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
 	unsigned char buf[BUFLEN];
 	MD5_CTX ctx;
 	int bytes_read;
-	struct stat st;
 
-	if (hio_stat(f, &st) < 0)
-		return;
-
-	if (st.st_size <= 0) {
+	if (hio_size(f) <= 0) {
 		memset(digest, 0, 16);
 		return;
 	}
@@ -430,16 +421,12 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 		goto err;
 	}
 
-	if (hio_stat(h, &st) < 0) {	/* get size after decrunch */
-		ret = -XMP_ERROR_DEPACK;
-		goto err;
-	}
-#endif
-
-	if (st.st_size < 256) {		/* set minimum valid module size */
+	/* get size after decrunch */
+	if (hio_size(h) < 256) {	/* set minimum valid module size */
 		ret = -XMP_ERROR_FORMAT;
 		goto err;
 	}
+#endif
 
 	if (info != NULL) {
 		*info->name = 0;	/* reset name prior to testing */
@@ -547,6 +534,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 	HIO_HANDLE *h;
 	struct stat st;
 	char *temp_name;
+	long size;
 
 	D_(D_WARN "path = %s", path);
 
@@ -568,10 +556,8 @@ int xmp_load_module(xmp_context opaque, char *path)
 	if (decrunch(&h->handle.file, path, &temp_name) < 0)
 		goto err_depack;
 
-	if (hio_stat(h, &st) < 0)
-		goto err_depack;
-
-	if (st.st_size < 256) {		/* get size after decrunch */
+	size = hio_size(h);
+	if (size < 256) {		/* get size after decrunch */
 		hio_close(h);
 		unlink_temp_file(temp_name);
 		return -XMP_ERROR_FORMAT;
@@ -592,7 +578,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	m->filename = path;	/* For ALM, SSMT, etc */
 #endif
-	m->size = st.st_size;
+	m->size = size;
 
 	return load_module(opaque, h, temp_name);
 

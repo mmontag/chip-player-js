@@ -22,17 +22,26 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef LIBXMP_CORE_PLAYER
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
 #include <limits.h>
 #include <errno.h>
 #include "common.h"
 #include "hio.h"
 #include "mdataio.h"
 
+static long get_size(FILE *f)
+{
+	long size, pos;
+
+	pos = ftell(f);
+	if (pos >= 0) {
+		fseek(f, 0, SEEK_END);
+		size = ftell(f);
+		fseek(f, pos, SEEK_SET);
+		return size;
+	} else {
+		return pos;
+	}
+}
 
 int8 hio_read8s(HIO_HANDLE *h)
 {
@@ -191,6 +200,8 @@ HIO_HANDLE *hio_open(void *path, char *mode)
 	if (h->handle.file == NULL)
 		goto err2;
 
+	h->size = get_size(h->handle.file);
+
 	return h;
 
     err2:
@@ -209,6 +220,7 @@ HIO_HANDLE *hio_open_mem(void *ptr, long size)
 	
 	h->type = HIO_HANDLE_TYPE_MEMORY;
 	h->handle.mem = mopen(ptr, size);
+	h->size = size;
 
 	return h;
 }
@@ -223,6 +235,7 @@ HIO_HANDLE *hio_open_file(FILE *f)
 	
 	h->type = HIO_HANDLE_TYPE_FILE;
 	h->handle.file = fdopen(fileno(f), "rb");
+	h->size = get_size(f);
 
 	return h;
 }
@@ -246,19 +259,7 @@ int hio_close(HIO_HANDLE *h)
 	return ret;
 }
 
-#ifndef LIBXMP_CORE_PLAYER
-
-int hio_stat(HIO_HANDLE *h, struct stat *st)
+long hio_size(HIO_HANDLE *h)
 {
-	switch (HIO_HANDLE_TYPE(h)) {
-	case HIO_HANDLE_TYPE_FILE:
-		return fstat(fileno(h->handle.file), st);
-	case HIO_HANDLE_TYPE_MEMORY:
-		return mstat(h->handle.mem, st);
-	default:
-		return -1;
-	}
+	return h->size;
 }
-
-#endif
-

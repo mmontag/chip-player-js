@@ -11,9 +11,6 @@
  */
 
 #include <ctype.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include "loader.h"
 #include "mod.h"
 #include "period.h"
@@ -40,11 +37,11 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
     int pat, smp_size;
     struct st_header mh;
     uint8 mod_event[4];
-    struct stat st;
+    long size;
 
-    hio_stat(f, &st);
+    size = hio_size(f);
 
-    if (st.st_size < 600)
+    if (size < 600)
 	return -1;
 
     smp_size = 0;
@@ -117,7 +114,7 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
     if (smp_size < 8)
 	return -1;
 
-    if (st.st_size < (600 + pat * 1024 + smp_size))
+    if (size < (600 + pat * 1024 + smp_size))
 	return -1;
 
     for (i = 0; i < pat; i++) {

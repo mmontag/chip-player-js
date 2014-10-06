@@ -36,9 +36,6 @@
  */
 
 #include <ctype.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <limits.h>
 #include "loader.h"
 #include "mod.h"
@@ -100,8 +97,8 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
 {
     int i;
     char buf[4];
-    struct stat st;
     int smp_size, num_pat;
+    long size;
 
     hio_seek(f, start + 1080, SEEK_SET);
     if (hio_read(buf, 1, 4, f) < 4)
@@ -160,7 +157,7 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
      */
 
     /* get file size */
-    hio_stat(f, &st);
+    size = hio_size(f);
     smp_size = 0;
     hio_seek(f, start + 20, SEEK_SET);
 
@@ -183,7 +180,7 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
     }
     num_pat++;
 
-    if (start + 1084 + num_pat * 0x300 + smp_size == st.st_size)
+    if (start + 1084 + num_pat * 0x300 + smp_size == size)
 	return -1;
 
   found:

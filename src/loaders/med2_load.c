@@ -29,8 +29,6 @@
 #else
 #include <limits.h>
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "period.h"
 #include "loader.h"
 
@@ -181,7 +179,6 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		char ins_path[256];
 		char name[256];
 		HIO_HANDLE *s = NULL;
-		struct stat stat;
 		int found;
 
 		get_instrument_path(m, ins_path, 256);
@@ -191,8 +188,7 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (found) {
 			snprintf(path, PATH_MAX, "%s/%s", ins_path, name);
 			if ((s = hio_open(path, "rb"))) {
-				hio_stat(s, &stat);
-				mod->xxs[i].len = stat.st_size;
+				mod->xxs[i].len = hio_size(s);
 			}
 		}
 
