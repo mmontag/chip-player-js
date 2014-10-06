@@ -256,7 +256,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	struct stat st;
 	char buf[XMP_NAME_SIZE];
 	int i;
-	int ret = -XMP_ERROR_FORMAT;;
+	int ret = -XMP_ERROR_FORMAT;
 #ifndef LIBXMP_CORE_PLAYER
 	char *temp = NULL;
 #endif
@@ -320,10 +320,12 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 		}
 	}
 
+#ifndef LIBXMP_CORE_PLAYER
     err:
 	hio_close(h);
-#ifndef LIBXMP_CORE_PLAYER
 	unlink_temp_file(temp);
+#else
+	hio_close(h);
 #endif
 	return ret;
 }
@@ -383,11 +385,13 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 int xmp_load_module(xmp_context opaque, char *path)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
+#ifndef LIBXMP_CORE_PLAYER
 	struct module_data *m = &ctx->m;
+	long size;
+	char *temp_name;
+#endif
 	HIO_HANDLE *h;
 	struct stat st;
-	char *temp_name;
-	long size;
 	int ret;
 
 	D_(D_WARN "path = %s", path);
@@ -431,8 +435,8 @@ int xmp_load_module(xmp_context opaque, char *path)
 		return -XMP_ERROR_SYSTEM;
 
 	m->filename = path;	/* For ALM, SSMT, etc */
-#endif
 	m->size = size;
+#endif
 
 	ret = load_module(opaque, h);
 	hio_close(h);
