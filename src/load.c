@@ -76,84 +76,17 @@ static struct depacker *depacker_list[] = {
 	NULL
 };
 
-
 int test_oxm		(FILE *);
-
-
-#if defined __EMX__ || defined WIN32
-#define REDIR_STDERR "2>NUL"
-#elif defined unix || defined __unix__
-#define REDIR_STDERR "2>/dev/null"
-#else
-#define REDIR_STDERR
-#endif
-
 
 #define BUFLEN 16384
 
-
-static int decrunch(HIO_HANDLE **h, char *s, char **temp)
+static int execute_command(char *cmd, char *filename, FILE *t)
 {
-    unsigned char b[1024];
-    char *cmd;
-    FILE *f, *t;
-    int builtin, res;
-    int headersize;
-    int i;
-    struct depacker *depacker = NULL;
-
-    cmd = NULL;
-    builtin = res = 0;
-    *temp = NULL;
-    f = (*h)->handle.file;
-
-    fseek(f, 0, SEEK_SET);
-    if ((headersize = fread(b, 1, 1024, f)) < 100)	/* minimum valid file size */
-	return 0;
-
-    for (i = 0; depacker_list[i] != NULL; i++) {
-	if (depacker_list[i]->test(b)) {
-	    depacker = depacker_list[i];
-	}
-    }
-
-    if (depacker == NULL) {
-        if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
-    	    /* MO3 */
-    	    cmd = "unmo3 -s \"%s\" STDOUT";
-        } else if (memcmp(b, "Rar", 3) == 0) {
-    	    /* rar */
-    	    cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
-    	        "-x*.exe -x*.com \"%s\"";
-        } else if (test_oxm(f) == 0) {
-    	    /* oggmod */
-    	    depacker = &oxm_depacker;
-        }
-    }
-
-    fseek(f, 0, SEEK_SET);
-
-    if (depacker == NULL && cmd == NULL)
-	return 0;
-
-#if defined ANDROID || defined __native_client__
-    /* Don't use external helpers in android */
-    if (cmd)
-	return 0;
-#endif
-
-    D_(D_WARN "Depacking file... ");
-
-    if ((t = make_temp_file(temp)) == NULL)
-	return -1;
-
-    if (cmd) {
-#define BSIZE 0x4000
-	int n;
-	char line[1024], buf[BSIZE];
+	char line[1024], buf[BUFLEN];
 	FILE *p;
+	int n;
 
-	snprintf(line, 1024, cmd, s);
+	snprintf(line, 1024, cmd, filename);
 
 #ifdef WIN32
 	/* Note: The _popen function returns an invalid file opaque, if
@@ -163,34 +96,105 @@ static int decrunch(HIO_HANDLE **h, char *s, char **temp)
 	 * read the section "Creating a Child Process with Redirected Input
 	 * and Output" in the Win32 SDK. -- Mirko 
 	 */
-	if ((p = popen(line, "rb")) == NULL) {
+	p = popen(line, "rb");
 #else
 	/* Linux popen fails with "rb" */
-	if ((p = popen(line, "r")) == NULL) {
+	p = popen(line, "r");
 #endif
-	    D_(D_CRIT "failed");
-	    fclose(t);
+
+	if (p == NULL) {
 	    return -1;
 	}
-	while ((n = fread(buf, 1, BSIZE, p)) > 0) {
+
+	while ((n = fread(buf, 1, BUFLEN, p)) > 0) {
 	    fwrite(buf, 1, n, t);
 	}
+
 	pclose (p);
-    } else if (depacker) {
-	if (depacker->depack(f, t) < 0) {
-	    D_(D_CRIT "failed");
-	    fclose(t);
-	    return -1;
+
+	return 0;
+}
+
+static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
+{
+	unsigned char b[1024];
+	char *cmd;
+	FILE *f, *t;
+	int builtin, res;
+	int headersize;
+	int i;
+	struct depacker *depacker = NULL;
+
+	cmd = NULL;
+	builtin = res = 0;
+	*temp = NULL;
+	f = (*h)->handle.file;
+
+	fseek(f, 0, SEEK_SET);
+	headersize = fread(b, 1, 1024, f);
+	if (headersize < 100)	/* minimum valid file size */
+		return 0;
+
+	/* Check built-in depackers */
+	for (i = 0; depacker_list[i] != NULL; i++) {
+		if (depacker_list[i]->test(b)) {
+			depacker = depacker_list[i];
+		}
 	}
-    }
 
-    D_(D_INFO "done");
+	/* Check external commands */
+	if (depacker == NULL) {
+		if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
+			/* MO3 */
+			cmd = "unmo3 -s \"%s\" STDOUT";
+		} else if (memcmp(b, "Rar", 3) == 0) {
+			/* rar */
+			cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
+			    "-x*.exe -x*.com \"%s\"";
+		} else if (test_oxm(f) == 0) {
+			/* oggmod */
+			depacker = &oxm_depacker;
+		}
+	}
 
-    fseek(t, 0, SEEK_SET);
-    hio_close(*h);
-    *h = hio_open_file(t);
+	fseek(f, 0, SEEK_SET);
 
-    return res;
+	if (depacker == NULL && cmd == NULL)
+		return 0;
+
+#if defined ANDROID || defined __native_client__
+	/* Don't use external helpers in android */
+	if (cmd)
+		return 0;
+#endif
+
+	D_(D_WARN "Depacking file... ");
+
+	if ((t = make_temp_file(temp)) == NULL)
+		return -1;
+
+	/* Depack file */
+	if (cmd) {
+		if (execute_command(cmd, filename, t) < 0) {
+			D_(D_CRIT "failed");
+			fclose(t);
+			return -1;
+		}
+	} else if (depacker) {
+		if (depacker->depack(f, t) < 0) {
+			D_(D_CRIT "failed");
+			fclose(t);
+			return -1;
+		}
+	}
+
+	D_(D_INFO "done");
+
+	fseek(t, 0, SEEK_SET);
+	hio_close(*h);
+	*h = hio_open_file(t);
+
+	return res;
 }
 
 static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
