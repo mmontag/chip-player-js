@@ -177,13 +177,11 @@ static int decrunch(HIO_HANDLE **h, char *s, char **temp)
 	}
 	pclose (p);
     } else if (depacker) {
-	depacker->depack(f, t);
-    }
-
-    if (res < 0) {
-	D_(D_CRIT "failed");
-	fclose(t);
-	return -1;
+	if (depacker->depack(f, t) < 0) {
+	    D_(D_CRIT "failed");
+	    fclose(t);
+	    return -1;
+	}
     }
 
     D_(D_INFO "done");
