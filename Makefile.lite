@@ -22,10 +22,14 @@ vc-prepare:
 	@echo Generate Makefile.vc
 	@sed -e 's!@OBJS@!$(subst /,\\,$(OBJS:.o=.obj))!' $(DIST)/Makefile.vc.in > $(DIST)/Makefile.vc
 
-dist-subdirs: $(addprefix dist-,$(DDIRS))
+dist-subdirs: dist-makefile $(addprefix dist-,$(DDIRS))
 	(cd lite; tar cf - .) | (cd $(DIST); tar xf -)
 	mkdir -p $(DIST)/include/libxmp-lite
 	cp include/xmp.h $(DIST)/include/libxmp-lite/
+
+dist-makefile:
+	head -3 Makefile.in > lite/Makefile.in
+	cat lite/Makefile.in.in >> lite/Makefile.in
 
 dist-dist:
 	(cd  $(DIST); autoconf; ./configure)
