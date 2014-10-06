@@ -106,20 +106,21 @@ enum {
 #define BUFLEN 16384
 
 
-static int decrunch(FILE **f, char *s, char **temp)
+static int decrunch(HIO_HANDLE **h, char *s, char **temp)
 {
     unsigned char b[1024];
     char *cmd;
-    FILE *t;
+    FILE *f, *t;
     int builtin, res;
     int headersize;
 
     cmd = NULL;
     builtin = res = 0;
     *temp = NULL;
+    f = (*h)->handle.file;
 
-    fseek(*f, 0, SEEK_SET);
-    if ((headersize = fread(b, 1, 1024, *f)) < 100)	/* minimum valid file size */
+    fseek(f, 0, SEEK_SET);
+    if ((headersize = fread(b, 1, 1024, f)) < 100)	/* minimum valid file size */
 	return 0;
 
 #if defined __AMIGA__ && !defined __AROS__
@@ -185,7 +186,7 @@ static int decrunch(FILE **f, char *s, char **temp)
     } else if (memcmp(b, "S404", 4) == 0) {
 	/* Stonecracker */
 	builtin = BUILTIN_S404;
-    } else if (test_oxm(*f) == 0) {
+    } else if (test_oxm(f) == 0) {
 	/* oggmod */
 	builtin = BUILTIN_OXM;
     }
@@ -223,7 +224,7 @@ static int decrunch(FILE **f, char *s, char **temp)
 	}
     }
 
-    fseek(*f, 0, SEEK_SET);
+    fseek(f, 0, SEEK_SET);
 
     if (builtin == 0 && cmd == NULL)
 	return 0;
@@ -271,53 +272,53 @@ static int decrunch(FILE **f, char *s, char **temp)
     } else {
 	switch (builtin) {
 	case BUILTIN_PP:    
-	    res = decrunch_pp(*f, t);
+	    res = decrunch_pp(f, t);
 	    break;
 	case BUILTIN_ARC:
-	    res = decrunch_arc(*f, t);
+	    res = decrunch_arc(f, t);
 	    break;
 	case BUILTIN_ARCFS:
-	    res = decrunch_arcfs(*f, t);
+	    res = decrunch_arcfs(f, t);
 	    break;
 	case BUILTIN_SQSH:    
-	    res = decrunch_sqsh(*f, t);
+	    res = decrunch_sqsh(f, t);
 	    break;
 	case BUILTIN_MMCMP:    
-	    res = decrunch_mmcmp(*f, t);
+	    res = decrunch_mmcmp(f, t);
 	    break;
 	case BUILTIN_MUSE:    
-	    res = decrunch_muse(*f, t);
+	    res = decrunch_muse(f, t);
 	    break;
 	case BUILTIN_LZX:    
-	    res = decrunch_lzx(*f, t);
+	    res = decrunch_lzx(f, t);
 	    break;
 	case BUILTIN_S404:
-	    res = decrunch_s404(*f, t);
+	    res = decrunch_s404(f, t);
 	    break;
 	case BUILTIN_ZIP:
-	    res = decrunch_zip(*f, t);
+	    res = decrunch_zip(f, t);
 	    break;
 	case BUILTIN_GZIP:
-	    res = decrunch_gzip(*f, t);
+	    res = decrunch_gzip(f, t);
 	    break;
 	case BUILTIN_COMPRESS:
-	    res = decrunch_compress(*f, t);
+	    res = decrunch_compress(f, t);
 	    break;
 	case BUILTIN_BZIP2:
-	    res = decrunch_bzip2(*f, t);
+	    res = decrunch_bzip2(f, t);
 	    break;
 	case BUILTIN_XZ:
-	    res = decrunch_xz(*f, t);
+	    res = decrunch_xz(f, t);
 	    break;
 	case BUILTIN_LHA:
-	    res = decrunch_lha(*f, t);
+	    res = decrunch_lha(f, t);
 	    break;
 	case BUILTIN_OXM:
-	    res = decrunch_oxm(*f, t);
+	    res = decrunch_oxm(f, t);
 	    break;
 #ifdef AMIGA
 	case BUILTIN_XFD:
-	    res = decrunch_xfd(*f, t);
+	    res = decrunch_xfd(f, t);
 	    break;
 #endif
 	}
@@ -332,8 +333,8 @@ static int decrunch(FILE **f, char *s, char **temp)
     D_(D_INFO "done");
 
     fseek(t, 0, SEEK_SET);
-    fclose(*f);
-    *f = t;
+    hio_close(*h);
+    *h = hio_open_file(t);
 
     return res;
 }
@@ -399,7 +400,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	int i;
 	int ret = -XMP_ERROR_FORMAT;;
 #ifndef LIBXMP_CORE_PLAYER
-	char *temp;
+	char *temp = NULL;
 #endif
 
 	if (stat(path, &st) < 0)
@@ -416,7 +417,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 		return -XMP_ERROR_SYSTEM;
 
 #ifndef LIBXMP_CORE_PLAYER
-	if (decrunch(&h->handle.file, path, &temp) < 0) {
+	if (decrunch(&h, path, &temp) < 0) {
 		ret = -XMP_ERROR_DEPACK;
 		goto err;
 	}
@@ -553,7 +554,7 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 #ifndef LIBXMP_CORE_PLAYER
 	D_(D_INFO "decrunch");
-	if (decrunch(&h->handle.file, path, &temp_name) < 0)
+	if (decrunch(&h, path, &temp_name) < 0)
 		goto err_depack;
 
 	size = hio_size(h);
