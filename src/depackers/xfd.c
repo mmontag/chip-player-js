@@ -69,7 +69,33 @@ void close_xfd(struct xfdBufferInfo *xfdobj, struct local_data *data)
 	}
 }
 
-int decrunch_xfd (FILE *f1, FILE *f2)
+static char *_test_xfd(unsigned char *buffer, int length)
+{
+	char *ret = NULL;
+	struct xfdBufferInfo *xfdobj;
+	struct local_data data;
+
+	if(xfdobj=open_xfd(&data))
+	{
+		xfdobj->xfdbi_SourceBuffer = buffer;
+		xfdobj->xfdbi_SourceBufLen = length;
+		xfdobj->xfdbi_Flags = XFDFB_RECOGTARGETLEN | XFDFB_RECOGEXTERN;
+
+		if(xfdRecogBuffer(xfdobj))
+		{
+			ret = xfdobj->xfdbi_PackerName;
+		}
+		close_xfd(xfdobj, &data);
+	}
+	return(ret);
+}
+
+static int test_xfd(unsigned char *b)
+{
+	return _test_xfd(b, 1024) != NULL;
+}
+
+static int decrunch_xfd(FILE *f1, FILE *f2)
 {
     struct xfdBufferInfo *xfdobj;
     uint8 *packed;
@@ -113,25 +139,9 @@ int decrunch_xfd (FILE *f1, FILE *f2)
 	return(ret);
 }
 
-char *test_xfd	(unsigned char *buffer, int length)
-{
-	char *ret = NULL;
-	struct xfdBufferInfo *xfdobj;
-	struct local_data data;
-
-	if(xfdobj=open_xfd(&data))
-	{
-		xfdobj->xfdbi_SourceBuffer = buffer;
-		xfdobj->xfdbi_SourceBufLen = length;
-		xfdobj->xfdbi_Flags = XFDFB_RECOGTARGETLEN | XFDFB_RECOGEXTERN;
-
-		if(xfdRecogBuffer(xfdobj))
-		{
-			ret = xfdobj->xfdbi_PackerName;
-		}
-		close_xfd(xfdobj, &data);
-	}
-	return(ret);
-}
+struct depacker xfd_depacker = {
+	test_xfd,
+	decrunch_xfd
+};
 
 #endif /* AMIGA */

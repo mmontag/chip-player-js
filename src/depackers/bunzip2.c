@@ -40,6 +40,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include "common.h"
+#include "depacker.h"
 #include "crc32.h"
 
 /* Constants for huffman coding */
@@ -553,9 +554,14 @@ static int start_bunzip(bunzip_data **bdp, FILE *in, char *inbuf, int len)
 	return RETVAL_OK;
 }
 
+static int test_bzip2(unsigned char *b)
+{
+	return b[0] == 'B' && b[1] == 'Z' && b[2] == 'h';
+}
+
 /* Example usage: decompress src_fd to dst_fd.  (Stops at end of bzip data,
    not end of file.) */
-int decrunch_bzip2(FILE *src, FILE *dst)
+static int decrunch_bzip2(FILE *src, FILE *dst)
 {
 	char *outbuf;
 	bunzip_data *bd;
@@ -581,20 +587,7 @@ int decrunch_bzip2(FILE *src, FILE *dst)
 	return i == 0 ? 0 : -1;
 }
 
-#ifdef TESTING
-
-static char * const bunzip_errors[]={NULL,"Bad file checksum","Not bzip data",
-		"Unexpected input EOF","Unexpected output EOF","Data error",
-		 "Out of memory","Obsolete (pre 0.9.5) bzip format not supported."};
-
-/* Dumb little test thing, decompress stdin to stdout */
-int main(int argc, char *argv[])
-{
-	int i=uncompressStream(0,1);
-	char c;
-
-	if(i) fprintf(stderr,"%s\n", bunzip_errors[-i]);
-    else if(read(0,&c,1)) fprintf(stderr,"Trailing garbage ignored\n");
-	return -i;
-}
-#endif
+struct depacker bzip2_depacker = {
+	test_bzip2,
+	decrunch_bzip2
+};

@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "common.h"
+#include "depacker.h"
 #include "readrle.h"
 #include "readhuff.h"
 #include "readlzw.h"
@@ -169,7 +170,12 @@ static int arcfs_extract(FILE *in, FILE *out)
 	return exitval;
 }
 
-int decrunch_arcfs(FILE * f, FILE * fo)
+static int test_arcfs(unsigned char *b)
+{
+	return !memcmp(b, "Archive\0", 8);
+}
+
+static int decrunch_arcfs(FILE * f, FILE * fo)
 {
 	int ret;
 
@@ -182,3 +188,8 @@ int decrunch_arcfs(FILE * f, FILE * fo)
 
 	return 0;
 }
+
+struct depacker arcfs_depacker = {
+	test_arcfs,
+	decrunch_arcfs
+};

@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
+#include "depacker.h"
 
 struct io {
 	uint8 *src;
@@ -287,7 +288,12 @@ static int unsqsh(uint8 *src, uint8 *dest, int len)
 
 }
 
-int decrunch_sqsh(FILE * f, FILE * fo)
+static int test_sqsh(unsigned char *b)
+{
+	return memcmp(b, "XPKF", 4) == 0 && memcmp(b + 8, "SQSH", 4) == 0;
+}
+
+static int decrunch_sqsh(FILE * f, FILE * fo)
 {
 	unsigned char *src, *dest;
 	int srclen, destlen;
@@ -329,3 +335,8 @@ int decrunch_sqsh(FILE * f, FILE * fo)
     err:
 	return -1;
 }
+
+struct depacker sqsh_depacker = {
+	test_sqsh,
+	decrunch_sqsh
+};

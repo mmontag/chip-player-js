@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "depacker.h"
 
 #define	MAGIC_1		31	/* First byte of compressed file */
 #define	MAGIC_2		157	/* Second byte of compressed file */
@@ -39,6 +40,11 @@ typedef long int cmp_code_int;
 #define	clear_htab()		memset(htab, -1, sizeof(htab))
 #define	clear_tab_prefixof()	memset(codetab, 0, 256);
 
+static int test_compress(unsigned char *b)
+{
+	return b[0] == 31 && b[1] == 157;
+}
+
 /*
  * Decompress stdin to stdout.  This routine adapts to the codes in the
  * file building the "string" table on-the-fly; requiring no table to
@@ -46,7 +52,7 @@ typedef long int cmp_code_int;
  * with those of the compress() routine.  See the definitions above.
  */
 
-int decrunch_compress(FILE * in, FILE * out)
+static int decrunch_compress(FILE * in, FILE * out)
 {
 	char_type *stackp;
 	code_int code;
@@ -257,3 +263,8 @@ int decrunch_compress(FILE * in, FILE * out)
 
 	return 0;
 }
+
+struct depacker compress_depacker = {
+	test_compress,
+	decrunch_compress
+};

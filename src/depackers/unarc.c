@@ -26,7 +26,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "common.h"
+#include "depacker.h"
 #include "readrle.h"
 #include "readhuff.h"
 #include "readlzw.h"
@@ -306,7 +308,50 @@ static int arc_extract(FILE *in, FILE *out)
 	return exitval;
 }
 
-int decrunch_arc(FILE *f, FILE *fo)
+static int test_arc(unsigned char *b)
+{
+	if (b[0] == 0x1a) {
+		int x = b[1] & 0x7f;
+		int i, flag = 0;
+		long size;
+
+		/* check file name */
+		for (i = 0; i < 13; i++) {
+			if (b[2 + i] == 0) {
+				if (i == 0)	/* name can't be empty */
+					flag = 1;
+				break;
+			}
+			if (!isprint(b[2 + i])) { /* name must be printable */
+				flag = 1;
+				break;
+			}
+		}
+
+		size = readmem32l(b + 15);	/* max file size is 512KB */
+		if (size < 0 || size > 512 * 1024)
+			flag = 1;
+
+		if (flag == 0) {
+			if (x >= 1 && x <= 9 && x != 7) {
+				/* Arc */
+				return 1;
+			} else if (x == 0x7f) {
+				/* !Spark */
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static int decrunch_arc(FILE *f, FILE *fo)
 {
 	return arc_extract(f, fo);
 }
+
+struct depacker arc_depacker = {
+	test_arc,
+	decrunch_arc
+};

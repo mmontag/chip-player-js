@@ -11,6 +11,7 @@
 #include <string.h>
 #include "vorbis.h"
 #include "common.h"
+#include "depacker.h"
 
 #define MAGIC_OGGS	0x4f676753
 
@@ -142,7 +143,7 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 	return (char *)pcm;
 }
 
-int decrunch_oxm(FILE *f, FILE *fo)
+static int decrunch_oxm(FILE *f, FILE *fo)
 {
 	int i, j, pos;
 	int hlen, npat, len, plen;
@@ -222,3 +223,8 @@ int decrunch_oxm(FILE *f, FILE *fo)
 
 	return 0;
 }
+
+struct depacker oxm_depacker = {
+	NULL,
+	decrunch_oxm
+};

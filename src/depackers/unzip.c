@@ -19,6 +19,7 @@ Michael Kohn <mike@mikekohn.net>
 #include <time.h>
 #include <unistd.h>
 #include "common.h"
+#include "depacker.h"
 #include "inflate.h"
 #include "crc32.h"
 
@@ -255,7 +256,14 @@ char name[1024];
   { return -1; }
 }
 
-int decrunch_zip(FILE *in, FILE *out)
+static int test_zip(unsigned char *b)
+{
+	return b[0] == 'P' && b[1] == 'K' &&
+		((b[2] == 3 && b[3] == 4) || (b[2] == '0' && b[3] == '0' &&
+		b[4] == 'P' && b[5] == 'K' && b[6] == 3 && b[7] == 4));
+}
+
+static int decrunch_zip(FILE *in, FILE *out)
 {
   int offset;
 
@@ -270,3 +278,8 @@ int decrunch_zip(FILE *in, FILE *out)
 
   return 0;
 }
+
+struct depacker zip_depacker = {
+	test_zip,
+	decrunch_zip
+};

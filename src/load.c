@@ -51,47 +51,33 @@ void load_prologue(struct context_data *);
 void load_epilogue(struct context_data *);
 int prepare_scan(struct context_data *);
 
-
 #ifndef LIBXMP_CORE_PLAYER
 
-int decrunch_arc	(FILE *, FILE *);
-int decrunch_arcfs	(FILE *, FILE *);
-int decrunch_sqsh	(FILE *, FILE *);
-int decrunch_pp		(FILE *, FILE *);
-int decrunch_mmcmp	(FILE *, FILE *);
-int decrunch_muse	(FILE *, FILE *);
-int decrunch_lzx	(FILE *, FILE *);
-int decrunch_oxm	(FILE *, FILE *);
-int decrunch_xfd	(FILE *, FILE *);
-int decrunch_s404	(FILE *, FILE *);
-int decrunch_zip	(FILE *, FILE *);
-int decrunch_gzip	(FILE *, FILE *);
-int decrunch_compress	(FILE *, FILE *);
-int decrunch_bzip2	(FILE *, FILE *);
-int decrunch_xz		(FILE *, FILE *);
-int decrunch_lha	(FILE *, FILE *);
-/* int decrunch_zoo	(FILE *, FILE *); */
-int test_oxm		(FILE *);
-char *test_xfd		(unsigned char *, int);
+#include "depacker.h"
 
-enum {
-	BUILTIN_PP = 0x01,
-	BUILTIN_SQSH,
-	BUILTIN_MMCMP,
-	BUILTIN_ARC,
-	BUILTIN_ARCFS,
-	BUILTIN_S404,
-	BUILTIN_OXM,
-	BUILTIN_XFD,
-	BUILTIN_MUSE,
-	BUILTIN_LZX,
-	BUILTIN_ZIP,
-	BUILTIN_GZIP,
-	BUILTIN_COMPRESS,
-	BUILTIN_BZIP2,
-	BUILTIN_XZ,
-	BUILTIN_LHA
+static struct depacker *depacker_list[] = {
+#if defined __AMIGA__ && !defined __AROS__
+	&xfd_depacker,
+#endif
+	&zip_depacker,
+	&lha_depacker,
+	&gzip_depacker,
+	&bzip2_depacker,
+	&xz_depacker,
+	&compress_depacker,
+	&pp_depacker,
+	&sqsh_depacker,
+	&arcfs_depacker,
+	&mmcmp_depacker,
+	&muse_depacker,
+	&lzx_depacker,
+	&s404_depacker,
+	&arc_depacker,
+	NULL
 };
+
+
+int test_oxm		(FILE *);
 
 
 #if defined __EMX__ || defined WIN32
@@ -113,6 +99,8 @@ static int decrunch(HIO_HANDLE **h, char *s, char **temp)
     FILE *f, *t;
     int builtin, res;
     int headersize;
+    int i;
+    struct depacker *depacker = NULL;
 
     cmd = NULL;
     builtin = res = 0;
@@ -123,110 +111,29 @@ static int decrunch(HIO_HANDLE **h, char *s, char **temp)
     if ((headersize = fread(b, 1, 1024, f)) < 100)	/* minimum valid file size */
 	return 0;
 
-#if defined __AMIGA__ && !defined __AROS__
-    if (test_xfd(b, 1024)) {
-	builtin = BUILTIN_XFD;
-    } else
-#endif
-
-    if (b[0] == 'P' && b[1] == 'K' &&
-	((b[2] == 3 && b[3] == 4) || (b[2] == '0' && b[3] == '0' &&
-	b[4] == 'P' && b[5] == 'K' && b[6] == 3 && b[7] == 4))) {
-
-	/* Zip */
-	builtin = BUILTIN_ZIP;
-    } else if (b[2] == '-' && b[3] == 'l' && b[4] == 'h') {
-	/* LHa */
-	builtin = BUILTIN_LHA;
-    } else if (b[0] == 31 && b[1] == 139) {
-	/* gzip */
-	builtin = BUILTIN_GZIP;
-    } else if (b[0] == 'B' && b[1] == 'Z' && b[2] == 'h') {
-	/* bzip2 */
-	builtin = BUILTIN_BZIP2;
-    } else if (b[0] == 0xfd && b[3] == 'X' && b[4] == 'Z' && b[5] == 0x00) {
-	/* xz */
-	builtin = BUILTIN_XZ;
-#if 0
-    } else if (b[0] == 'Z' && b[1] == 'O' && b[2] == 'O' && b[3] == ' ') {
-	/* zoo */
-	builtin = BUILTIN_ZOO;
-#endif
-    } else if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
-	/* MO3 */
-	cmd = "unmo3 -s \"%s\" STDOUT";
-    } else if (b[0] == 31 && b[1] == 157) {
-	/* compress */
-	builtin = BUILTIN_COMPRESS;
-    } else if (memcmp(b, "PP20", 4) == 0) {
-	/* PowerPack */
-	builtin = BUILTIN_PP;
-    } else if (memcmp(b, "XPKF", 4) == 0 && memcmp(b + 8, "SQSH", 4) == 0) {
-	/* SQSH */
-	builtin = BUILTIN_SQSH;
-    } else if (!memcmp(b, "Archive\0", 8)) {
-	/* ArcFS */
-	builtin = BUILTIN_ARCFS;
-    } else if (memcmp(b, "ziRCONia", 8) == 0) {
-	/* MMCMP */
-	builtin = BUILTIN_MMCMP;
-    } else if (memcmp(b, "MUSE", 4) == 0 && readmem32b(b + 4) == 0xdeadbeaf) {
-	/* J2B MUSE */
-	builtin = BUILTIN_MUSE;
-    } else if (memcmp(b, "MUSE", 4) == 0 && readmem32b(b + 4) == 0xdeadbabe) {
-	/* MOD2J2B MUSE */
-	builtin = BUILTIN_MUSE;
-    } else if (memcmp(b, "LZX", 3) == 0) {
-	/* LZX */
-	builtin = BUILTIN_LZX;
-    } else if (memcmp(b, "Rar", 3) == 0) {
-	/* rar */
-	cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
-	    "-x*.exe -x*.com \"%s\"";
-    } else if (memcmp(b, "S404", 4) == 0) {
-	/* Stonecracker */
-	builtin = BUILTIN_S404;
-    } else if (test_oxm(f) == 0) {
-	/* oggmod */
-	builtin = BUILTIN_OXM;
+    for (i = 0; depacker_list[i] != NULL; i++) {
+	if (depacker_list[i]->test(b)) {
+	    depacker = depacker_list[i];
+	}
     }
 
-    if (builtin == 0 && cmd == NULL && b[0] == 0x1a) {
-	int x = b[1] & 0x7f;
-	int i, flag = 0;
-	long size;
-	
-	/* check file name */
-	for (i = 0; i < 13; i++) {
-	    if (b[2 + i] == 0) {
-		if (i == 0)		/* name can't be empty */
-		    flag = 1;
-		break;
-	    }
-	    if (!isprint(b[2 + i])) {	/* name must be printable */
-		flag = 1;
-		break;
-	    }
-	}
-
-	size = readmem32l(b + 15);	/* max file size is 512KB */
-	if (size < 0 || size > 512 * 1024)
-		flag = 1;
-
-        if (flag == 0) {
-	    if (x >= 1 && x <= 9 && x != 7) {
-		/* Arc */
-		builtin = BUILTIN_ARC;
-	    } else if (x == 0x7f) {
-		/* !Spark */
-		builtin = BUILTIN_ARC;
-	    }
-	}
+    if (depacker == NULL) {
+        if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
+    	    /* MO3 */
+    	    cmd = "unmo3 -s \"%s\" STDOUT";
+        } else if (memcmp(b, "Rar", 3) == 0) {
+    	    /* rar */
+    	    cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
+    	        "-x*.exe -x*.com \"%s\"";
+        } else if (test_oxm(f) == 0) {
+    	    /* oggmod */
+    	    depacker = &oxm_depacker;
+        }
     }
 
     fseek(f, 0, SEEK_SET);
 
-    if (builtin == 0 && cmd == NULL)
+    if (depacker == NULL && cmd == NULL)
 	return 0;
 
 #if defined ANDROID || defined __native_client__
@@ -269,59 +176,8 @@ static int decrunch(HIO_HANDLE **h, char *s, char **temp)
 	    fwrite(buf, 1, n, t);
 	}
 	pclose (p);
-    } else {
-	switch (builtin) {
-	case BUILTIN_PP:    
-	    res = decrunch_pp(f, t);
-	    break;
-	case BUILTIN_ARC:
-	    res = decrunch_arc(f, t);
-	    break;
-	case BUILTIN_ARCFS:
-	    res = decrunch_arcfs(f, t);
-	    break;
-	case BUILTIN_SQSH:    
-	    res = decrunch_sqsh(f, t);
-	    break;
-	case BUILTIN_MMCMP:    
-	    res = decrunch_mmcmp(f, t);
-	    break;
-	case BUILTIN_MUSE:    
-	    res = decrunch_muse(f, t);
-	    break;
-	case BUILTIN_LZX:    
-	    res = decrunch_lzx(f, t);
-	    break;
-	case BUILTIN_S404:
-	    res = decrunch_s404(f, t);
-	    break;
-	case BUILTIN_ZIP:
-	    res = decrunch_zip(f, t);
-	    break;
-	case BUILTIN_GZIP:
-	    res = decrunch_gzip(f, t);
-	    break;
-	case BUILTIN_COMPRESS:
-	    res = decrunch_compress(f, t);
-	    break;
-	case BUILTIN_BZIP2:
-	    res = decrunch_bzip2(f, t);
-	    break;
-	case BUILTIN_XZ:
-	    res = decrunch_xz(f, t);
-	    break;
-	case BUILTIN_LHA:
-	    res = decrunch_lha(f, t);
-	    break;
-	case BUILTIN_OXM:
-	    res = decrunch_oxm(f, t);
-	    break;
-#ifdef AMIGA
-	case BUILTIN_XFD:
-	    res = decrunch_xfd(f, t);
-	    break;
-#endif
-	}
+    } else if (depacker) {
+	depacker->depack(f, t);
     }
 
     if (res < 0) {

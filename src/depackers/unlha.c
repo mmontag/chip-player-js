@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
+#include "depacker.h"
 
 #define LZHUFF0_METHOD          0x2D6C6830      /* -lh0- */
 #define LZHUFF1_METHOD          0x2D6C6831      /* -lh1- */
@@ -1686,7 +1687,11 @@ static int get_header(FILE *f, struct lha_data *data)
 	return 0;
 }
 
-int decrunch_lha(FILE *in, FILE *out)
+static int test_lha(unsigned char *b) {
+	return b[2] == '-' && b[3] == 'l' && b[4] == 'h';
+}
+
+static int decrunch_lha(FILE *in, FILE *out)
 {
 	struct lha_data data;
 
@@ -1695,11 +1700,11 @@ int decrunch_lha(FILE *in, FILE *out)
 			break;
 
 #if 0
-printf("method = %x\n", data.method);
-printf("name = %s\n", data.name);
-printf("packed size = %d\n", data.packed_size);
-printf("original size = %d\n", data.original_size);
-printf("position = %lx\n", ftell(in));
+		printf("method = %x\n", data.method);
+		printf("name = %s\n", data.name);
+		printf("packed size = %d\n", data.packed_size);
+		printf("original size = %d\n", data.original_size);
+		printf("position = %lx\n", ftell(in));
 #endif
 
 		if (exclude_match(data.name)) {
@@ -1712,3 +1717,7 @@ printf("position = %lx\n", ftell(in));
 	return -1;
 }
 
+struct depacker lha_depacker = {
+	test_lha,
+	decrunch_lha
+};

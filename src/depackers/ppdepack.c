@@ -23,8 +23,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
 #include "common.h"
+#include "depacker.h"
 
 #define val(p) ((p)[0]<<16 | (p)[1] << 8 | (p)[2])
 
@@ -170,7 +170,12 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
   return success;
 }
 
-int decrunch_pp(FILE *f, FILE *fo)
+static int test_pp(unsigned char *b)
+{
+	return memcmp(b, "PP20", 4) == 0;
+}
+
+static int decrunch_pp(FILE *f, FILE *fo)
 {
     uint8 *packed /*, *unpacked */;
     int plen, unplen;
@@ -244,3 +249,8 @@ err1:
 err:
     return -1;
 }
+
+struct depacker pp_depacker = {
+	test_pp,
+	decrunch_pp
+};

@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
+#include "depacker.h"
 #include "crc32.h"
 
 #if 0
@@ -1072,7 +1073,12 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
     return result;
 }
 
-int decrunch_lzx(FILE *f, FILE *fo)
+static int test_lzx(unsigned char *b)
+{
+	return memcmp(b, "LZX", 3) == 0;
+}
+
+static int decrunch_lzx(FILE *f, FILE *fo)
 {
 	struct LZXDecrData *decr;
 
@@ -1093,3 +1099,8 @@ int decrunch_lzx(FILE *f, FILE *fo)
 
 	return 0;
 }
+
+struct depacker lzx_depacker = {
+	test_lzx,
+	decrunch_lzx
+};

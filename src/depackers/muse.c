@@ -9,10 +9,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
+#include "depacker.h"
 #include "inflate.h"
 
+static int test_muse(unsigned char *b)
+{
+	return memcmp(b, "MUSE", 4) == 0 && readmem32b(b + 4) == 0xdeadbeaf;
+}
 
-int decrunch_muse(FILE *f, FILE *fo)                          
+static int decrunch_muse(FILE *f, FILE *fo)                          
 {                                                          
 	uint32 checksum;
   
@@ -21,3 +26,8 @@ int decrunch_muse(FILE *f, FILE *fo)
 
 	return 0;
 }
+
+struct depacker muse_depacker = {
+	test_muse,
+	decrunch_muse
+};

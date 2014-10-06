@@ -18,8 +18,8 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
 #include "common.h"
+#include "depacker.h"
 
 /* #include "compat.h" 
 
@@ -271,8 +271,12 @@ static void decompressS404(uint8 *src, uint8 *orgdst,
   }
 }
 
+static int test_s404(unsigned char *b)
+{
+	return memcmp(b, "S404", 4) == 0;
+}
 
-int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
+static int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
 {
   int32 oLen, sLen, pLen;
   uint8 *dst = NULL;
@@ -316,10 +320,7 @@ int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
   return -1;
 }
 
-
-#if 0
-struct decruncher decruncher_s404 = {
-    .name = "StoneCracker S404",
-    .decrunch = decrunch_s404
+struct depacker s404_depacker = {
+	test_s404,
+	decrunch_s404
 };
-#endif

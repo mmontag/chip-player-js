@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "common.h"
 #include "inflate.h"
+#include "depacker.h"
 #include "crc32.h"
 
 /* See RFC1952 for further information */
@@ -41,7 +42,12 @@ struct member {
 	uint8 os;
 };
 
-int decrunch_gzip(FILE *in, FILE *out)
+static int test_gzip(unsigned char *b)
+{
+	return b[0] == 31 && b[1] == 139;
+}
+
+static int decrunch_gzip(FILE *in, FILE *out)
 {
 	struct member member;
 	int val, c;
@@ -102,3 +108,7 @@ int decrunch_gzip(FILE *in, FILE *out)
 	return 0;
 }
 
+struct depacker gzip_depacker = {
+	test_gzip,
+	decrunch_gzip
+};

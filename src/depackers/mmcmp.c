@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "common.h"
+#include "depacker.h"
 
 #define MMCMP_COMP	0x0001
 #define MMCMP_DELTA	0x0002
@@ -242,7 +243,12 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub,
 	}
 }
 
-int decrunch_mmcmp(FILE *in, FILE *out)
+static int test_mmcmp(unsigned char *b)
+{
+	return memcmp(b, "ziRCONia", 8) == 0;
+}
+
+static int decrunch_mmcmp(FILE *in, FILE *out)
 {
 	struct header h;
 	uint32 *table;
@@ -322,3 +328,8 @@ int decrunch_mmcmp(FILE *in, FILE *out)
 	free(table);
 	return -1;
 }
+
+struct depacker mmcmp_depacker = {
+	test_mmcmp,
+	decrunch_mmcmp
+};
