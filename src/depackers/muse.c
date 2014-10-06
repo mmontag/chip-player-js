@@ -14,7 +14,15 @@
 
 static int test_muse(unsigned char *b)
 {
-	return memcmp(b, "MUSE", 4) == 0 && readmem32b(b + 4) == 0xdeadbeaf;
+	if (memcmp(b, "MUSE", 4) == 0) {
+		uint32 r = readmem32b(b + 4);
+		/* MOD2J2B uses 0xdeadbabe */
+		if (r == 0xdeadbeaf || r == 0xdeadbabe) {
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 static int decrunch_muse(FILE *f, FILE *fo)                          
