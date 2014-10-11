@@ -94,9 +94,9 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	ih.magic = hio_read32b(f);
 
 	if (ih.magic == MAGIC_IT10)
-		set_type(m, "Ice Tracker IT10");
+		set_type(m, "Ice Tracker");
 	else if (ih.magic == MAGIC_MTN_)
-		set_type(m, "Soundtracker 2.6 MTN");
+		set_type(m, "Soundtracker 2.6");
 	else
 		return -1;
 
@@ -127,7 +127,7 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		xxs->lpe = xxs->lps + 2 * ih.ins[i].loop_size;
 		xxs->flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 		xxi->sub[0].vol = ih.ins[i].volume;
-		xxi->sub[0].fin = (int8) (ih.ins[i].finetune << 4);
+		/* xxi->sub[0].fin = (int8)(ih.ins[i].finetune << 4); */
 		xxi->sub[0].pan = 0x80;
 		xxi->sub[0].sid = i;
 
