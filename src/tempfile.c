@@ -58,6 +58,9 @@ static int get_temp_dir(char *buf, int size)
 
 #elif defined ANDROID
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 static int get_temp_dir(char *buf, int size)
 {
 #define APPDIR "/sdcard/Xmp for Android"
