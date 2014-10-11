@@ -65,6 +65,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     struct xmp_event* event;
     int i, pat;
     struct ord_data *info;
+#ifndef LIBXMP_CORE_PLAYER
+    int ice_speed;
+#endif
 
     if (mod->len == 0)
 	return 0;
@@ -84,6 +87,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
     speed = mod->spd;
     base_time = m->rrate;
+    ice_speed = 0;
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>
      *
@@ -258,6 +262,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    if (parm) {
 			if (p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
 			    speed = parm;
+#ifndef LIBXMP_CORE_PLAYER
+			    ice_speed = 0;
+#endif
 			} else {
 			    clock += m->time_factor * alltmp / bpm;
 			    alltmp = 0;
@@ -273,6 +280,12 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		if (f2 == FX_SPEED_CP) {
 		    f2 = FX_S3M_SPEED;
 		}
+
+		/* ST2.6 speed processing */
+
+		if (f1 == FX_ICE_SPEED) {
+		    ice_speed = (MSN(p1) << 8) | LSN(p1);
+		}
 #endif
 
 		if ((f1 == FX_S3M_SPEED && p1) || (f2 == FX_S3M_SPEED && p2)) {
@@ -280,6 +293,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    alltmp += cnt_row * speed * base_time;
 		    cnt_row  = 0;
 		    speed = parm;
+#ifndef LIBXMP_CORE_PLAYER
+		    ice_speed = 0;
+#endif
 		}
 
 		if ((f1 == FX_S3M_BPM && p1) || (f2 == FX_S3M_BPM && p2)) {
@@ -310,7 +326,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		            clock += m->time_factor * base_time / bpm;
 			}
 
-			// remove one row at final bpm
+			/* remove one row at final bpm */
 			clock -= m->time_factor * speed * base_time / bpm;
 
 		    } else if (MSN(parm) == 1) {
@@ -322,7 +338,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		            clock += m->time_factor * base_time / bpm;
 			}
 
-			// remove one row at final bpm
+			/* remove one row at final bpm */
 			clock -= m->time_factor * speed * base_time / bpm;
 
 		    } else {
@@ -379,6 +395,19 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		row = loop_row[--loop_chn] - 1;
 		loop_chn = 0;
 	    }
+
+#ifndef LIBXMP_CORE_PLAYER
+	    if (ice_speed) {
+	        alltmp += cnt_row * speed * base_time;
+	        cnt_row  = 0;
+		if (ice_speed & 0x10000) {
+			speed = (ice_speed & 0xff00) >> 8;
+		} else {
+			speed = ice_speed & 0xff;
+		}
+		ice_speed ^= 0x10000;
+	    }
+#endif
 	}
 
 	if (break_row && pdelay) {

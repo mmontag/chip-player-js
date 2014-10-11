@@ -1131,6 +1131,17 @@ int xmp_play_frame(xmp_context opaque)
 		}
 
 		read_row(ctx, mod->xxo[p->ord], p->row);
+
+#ifndef LIBXMP_CORE_PLAYER
+		if (p->ice_speed) {
+			if  (p->ice_speed & 0x10000) {
+				p->speed = (p->ice_speed & 0xff00) >> 8;
+			} else {
+				p->speed = p->ice_speed & 0xff;
+			}
+			p->ice_speed ^= 0x10000;
+		}
+#endif
 	}
 
 	inject_event(ctx);

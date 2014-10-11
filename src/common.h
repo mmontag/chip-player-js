@@ -329,6 +329,11 @@ struct player_data {
 		int in_size;
 		char *in_buffer;
 	} buffer_data;
+
+#ifndef LIBXMP_CORE_PLAYER
+	int ice_speed;			/* For IceTracker speed effect */
+#endif
+
 };
 
 struct mixer_data {

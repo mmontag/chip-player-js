@@ -1,9 +1,23 @@
 /* Extended Module Player
  * Copyright (C) 1996-2014 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU Lesser General Public License. See COPYING.LIB
- * for more information.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 /* Loader for Soundtracker 2.6/Ice Tracker modules */
@@ -102,25 +116,31 @@ static int ice_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi;
+	struct xmp_sample *xxs;
+
 	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
-	mod->xxs[i].len = 2 * ih.ins[i].len;
-	mod->xxs[i].lps = 2 * ih.ins[i].loop_start;
-	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * ih.ins[i].loop_size;
-	mod->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxi[i].sub[0].vol = ih.ins[i].volume;
-	mod->xxi[i].sub[0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
+	xxi = &mod->xxi[i];
+	xxs = &mod->xxs[i];
 
-	if (mod->xxs[i].len > 0)
-		mod->xxi[i].nsm = 1;
+	xxs->len = 2 * ih.ins[i].len;
+	xxs->lps = 2 * ih.ins[i].loop_start;
+	xxs->lpe = xxs->lps + 2 * ih.ins[i].loop_size;
+	xxs->flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+	xxi->sub[0].vol = ih.ins[i].volume;
+	xxi->sub[0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
+	xxi->sub[0].pan = 0x80;
+	xxi->sub[0].sid = i;
+
+	if (xxs->len > 0)
+		xxi->nsm = 1;
 
 	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c %02x %01x",
-		i, ih.ins[i].name, mod->xxs[i].len, mod->xxs[i].lps,
-		mod->xxs[i].lpe, mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
+		i, ih.ins[i].name, xxs->len, xxs->lps,
+		xxs->lpe, xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		xxi->sub[0].vol, xxi->sub[0].fin >> 4);
     }
 
     if (pattern_init(mod) < 0)
@@ -147,8 +167,14 @@ static int ice_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (j = 0; j < mod->xxt[i]->rows; j++) {
 	    event = &mod->xxt[i]->event[j];
-	    hio_read (ev, 1, 4, f);
+	    hio_read(ev, 1, 4, f);
 	    decode_protracker_event(event, ev);
+
+            if (event->fxt == FX_SPEED) {
+		if (MSN(event->fxp) && LSN(event->fxp)) {
+			event->fxt = FX_ICE_SPEED;
+		}
+	    }
 	}
     }
 
