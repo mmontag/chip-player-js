@@ -20,7 +20,7 @@ static int depack_xann(FILE *in, FILE *out)
 	uint8 note, ins, fxt, fxp;
 	uint8 fine, vol;
 	uint8 pdata[1025];
-	int i, j, l;
+	int i, j, k;
 	int size, ssize = 0;
 	int lsize;
 
@@ -39,11 +39,11 @@ static int depack_xann(FILE *in, FILE *out)
 		vol = read8(in);		/* read volume */
 		j = read32b(in);		/* read loop start address */
 		lsize = read16b(in);		/* read loop size */
-		l = read32b(in);		/* read sample address */
+		k = read32b(in);		/* read sample address */
 		write16b(out, size = read16b(in)); 	/* sample size */
 		ssize += size * 2;
 
-		j = j - l;			/* calculate loop start value */
+		j = j - k;			/* calculate loop start value */
 		write8(out, fine);		/* write fine */
 		write8(out, vol);		/* write vol */
 		write16b(out, j / 2);		/* write loop start */
@@ -56,10 +56,10 @@ static int depack_xann(FILE *in, FILE *out)
 	fseek(in, 0, SEEK_SET);
 
 	for (pat = c5 = 0; c5 < 128; c5++) {
-		l = read32b(in);
-		if (l == 0)
+		k = read32b(in);
+		if (k == 0)
 			break;
-		ptable[c5] = ((l - 0x3c) / 1024) - 1;
+		ptable[c5] = ((k - 0x3c) / 1024) - 1;
 		if (ptable[c5] > pat)
 			pat = ptable[c5];
 	}
@@ -198,56 +198,52 @@ static int depack_xann(FILE *in, FILE *out)
 
 static int test_xann(uint8 *data, char *t, int s)
 {
-	int i = 0, j, k, l, m;
-	int start = 0;
+	int i;
 
 	PW_REQUEST_DATA(s, 2048);
 
 	/* test 1 */
-	if (data[i + 3] != 0x3c)
+	if (data[3] != 0x3c)
 		return -1;
 
 	/* test 2 */
-	for (l = 0; l < 128; l++) {
-		j = (data[start + l * 4] << 24)
-			+ (data[start + l * 4 + 1] << 16)
-			+ (data[start + l * 4 + 2] << 8)
-			+ data[start + l * 4 + 3];
-		k = (j / 4) * 4;
+	for (i = 0; i < 128; i++) {
+		uint32 j = readmem32b(data + i * 4);
+		uint32 k = j & ~3;
 		if (k != j || j > 132156)
 			return -1;
 	}
 
 #if 0
 	/* test 3 */
-	if ((size - start) < 2108)
+	if (size < 2108)
 		return -1;
 #endif
 
 	/* test 4 */
-	for (j = 0; j < 64; j++) {
-		if (data[start + 3 + j * 4] != 0x3c &&
-			data[start + 3 + j * 4] != 0x00) {
+	for (i = 0; i < 64; i++) {
+		if (data[3 + i * 4] != 0x3c &&
+			data[3 + i * 4] != 0) {
 			return -1;
 		}
 	}
 
 	/* test 5 */
-	for (j = 0; j < 31; j++) {
-		if (data[start + 519 + 16 * j] > 0x40)
+	for (i = 0; i < 31; i++) {
+		if (data[519 + 16 * i] > 0x40)
 			return -1;
 	}
 
 	/* test #6  (address of samples) */
-	for (l = 0; l < 30; l++) {
-		k = readmem32b(data + start + 526 + 16 * l);
-		j = readmem16b(data + start + 524 + 16 * l) * 2;
-		m = readmem32b(data + start + 520 + 16 * (l + 1));
+	for (i = 0; i < 30; i++) {
+		uint32 j = readmem32b(data + 526 + 16 * i);
+		/* j = readmem16b(data + 524 + 16 * i) * 2; */
+		uint32 k = readmem32b(data + 520 + 16 * (i + 1));
 
-		if (k < 2108 || m < 2108)
+		if (j < 2108 || k < 2108)
 			return -1;
 
-		if (k > m)
+		if (j > k)
 			return -1;
 	}
 
@@ -255,12 +251,12 @@ static int test_xann(uint8 *data, char *t, int s)
 	/* test #7  first pattern data .. */
 	for (j = 0; j < 256; j++) {
 #if 0
-		k = data[start + j * 4 + 1085] / 2;
+		k = data[j * 4 + 1085] / 2;
 		l = k * 2;
-		if (data[start + j * 4 + 1085] != l)
+		if (data[j * 4 + 1085] != l)
 			return -1;
 #endif
-		if (data[start + j * 4 + 1085] & 1)
+		if (data[j * 4 + 1085] & 1)
 			return -1;
 	}
 #endif
