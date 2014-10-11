@@ -87,7 +87,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
     speed = mod->spd;
     base_time = m->rrate;
+#ifndef LIBXMP_CORE_PLAYER
     ice_speed = 0;
+#endif
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>
      *
