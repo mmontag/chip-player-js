@@ -104,8 +104,8 @@ static int depack_GMC(FILE *in, FILE *out)
 
 static int test_GMC(uint8 *data, char *t, int s)
 {
-	int j, k, l, m, n, o;
-	int start = 0;
+	int i, j, k;
+	int ssize, numpat;
 
 	PW_REQUEST_DATA(s, 1024);
 
@@ -119,58 +119,54 @@ static int test_GMC(uint8 *data, char *t, int s)
 #endif
 
 	/* samples descriptions */
-	m = 0;
-	j = 0;
-	for (k = 0; k < 15; k++) {
-		o = (data[start + 16 * k + 4] << 8) + data[start + 16 * k + 5];
-		n = (data[start + 16 * k + 12] << 8) +
-		    data[start + 16 * k + 13];
-		o *= 2;
+	ssize = 0;
+	for (i = 0; i < 15; i++) {
+		int len, lsize;
+		uint8 *d = data + 16 * i;
 
 		/* volumes */
-		if (data[start + 7 + (16 * k)] > 0x40)
+		if (d[7] > 0x40)
 			return -1;
+
+		len = readmem16b(d + 4) << 1;
+		lsize = readmem16b(d + 12);
 
 		/* size */
-		if (o > 0xFFFF)
+		if (len > 0xffff)
 			return -1;
 
-		if (n > o)
+		if (lsize > len)
 			return -1;
 
-		m += o;
-		if (o != 0)
-			j = k + 1;
+		ssize += len;
 	}
-	if (m <= 4)
+	if (ssize <= 4)
 		return -1;
-	/* j is the highest not null sample */
 
 	/* pattern table size */
-	if (data[start + 243] > 0x64 || data[start + 243] == 0x00)
+	if (data[243] > 0x64 || data[243] == 0)
 		return -1;
 
 	/* pattern order table */
-	l = 0;
-	for (n = 0; n < 100; n++) {
-		k = readmem16b(data + start + 244 + n * 2);
+	numpat = 0;
+	for (i = 0; i < 100; i++) {
+		k = readmem16b(data + 244 + i * 2);
 		if (k & 0x03ff)
 			return -1;
-		l = ((k >> 10) > l) ? k >> 10 : l;
+		if ((k >> 10) > numpat)
+			numpat = k >> 10;
 	}
-	l++;
+	numpat++;
 
-	/* l is the number of pattern */
-	if (l == 1 || l > 0x64)
+	if (numpat == 1 || numpat > 100)
 		return -1;
 
-	PW_REQUEST_DATA(s, 444 + k * 1024 + n * 4 + 3);
+	PW_REQUEST_DATA(s, 444 + k * 1024 + i * 4 + 3);
 
 	/* test pattern data */
-	o = data[start + 243];
-	for (k = 0; k < l; k++) {
-		for (n = 0; n < 256; n++) {
-			int offset = start + 444 + k * 1024 + n * 4;
+	for (i = 0; i < numpat; i++) {
+		for (j = 0; j < 256; j++) {
+			int offset = 444 + i * 1024 + j * 4;
 			uint8 *d = &data[offset];
 
 			if (offset > (PW_TEST_CHUNK - 4))
@@ -181,7 +177,8 @@ static int test_GMC(uint8 *data, char *t, int s)
 				return -1;
 #if 0
 			/* Test fails with Jumping Jackson */
-			if (((d[2] & 0xf0) >> 4) > j)
+			/* x is the highest jot jull sample */
+			if (((d[2] & 0xf0) >> 4) > x)
 				return -1;
 #endif
 			if ((d[2] & 0x0f) == 3 && d[3] > 0x40)
@@ -190,7 +187,7 @@ static int test_GMC(uint8 *data, char *t, int s)
 			if ((d[2] & 0x0f) == 4 && d[3] > 0x63)
 				return -1;
 
-			if ((d[2] & 0x0f) == 5 && d[3] > (o + 1))
+			if ((d[2] & 0x0f) == 5 && d[3] > (data[243] + 1))
 				return -1;
 
 			if ((d[2] & 0x0f) == 6 && d[3] >= 0x02)
