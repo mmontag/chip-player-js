@@ -177,7 +177,8 @@ LOADER		= ust ac1d unic unic2 nst flt flt8 wow m15 mtm it it_oldins \
 
 PROBLEMATIC	= length_data_jack \
 		  length_condom_corruption \
-		  length_klisje_paa_klisje
+		  length_klisje_paa_klisje \
+		  length_killvictor
 
 SYNTH		= adlib #spectrum
 
