@@ -4,6 +4,7 @@ Stable versions
 4.3.1 ():
 	- fix STM empty note event read
 	- fix ABK loader test in Win32
+	- fix invalid memory access in XM event reader
 	- refactor depacking code
 	- code cleanup
 
