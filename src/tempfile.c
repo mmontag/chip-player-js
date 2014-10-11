@@ -32,7 +32,6 @@
 #include <unistd.h>
 #include "tempfile.h"
 
-
 #ifdef WIN32
 
 int mkstemp(char *);
@@ -79,11 +78,13 @@ static int get_temp_dir(char *buf, int size)
 
 static int get_temp_dir(char *buf, int size)
 {
-	const char def[] = "/tmp";
 	char *tmp = getenv("TMPDIR");
 
-	strncpy(buf, tmp ? tmp : def, size);
-	strncat(buf, "/", size);
+	if (tmp) {
+		snprintf(buf, size, "%s/", tmp);
+	} else {
+		strncpy(buf, "/tmp/", size);
+	}
 
 	return 0;
 }
