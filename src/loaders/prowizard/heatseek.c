@@ -14,7 +14,7 @@
 
 static int depack_crb(FILE *in, FILE *out)
 {
-	uint8 c1, c2, c3, c4;
+	uint8 c1;
 	uint8 ptable[128];
 	uint8 pat_pos, pat_max;
 	uint8 pat[1024];
@@ -63,28 +63,19 @@ static int depack_crb(FILE *in, FILE *out)
 
 				c1 = read8(in);
 				if (c1 == 0x80) {
-					c2 = read8(in);
-					c3 = read8(in);
-					c4 = read8(in);
-					k += c4;
+					k += read24b(in);
 					continue;
 				}
 				if (c1 == 0xc0) {
-					c2 = read8(in);
-					c3 = read8(in);
-					c4 = read8(in);
+					m = read24b(in);
 					l = ftell(in);
-					fseek(in, taddr[((c3 << 8) + c4) / 4],
-								SEEK_SET);
+					fseek(in, taddr[m >> 2], SEEK_SET);
 					for (m = 0; m < 64; m++) {
 						int x = m * 16 + j * 4;
 
 						c1 = read8(in);
 						if (c1 == 0x80) {
-							c2 = read8(in);
-							c3 = read8(in);
-							c4 = read8(in);
-							m += c4;
+							m += read24b(in);
 							continue;
 						}
 						pat[x] = c1;
@@ -113,44 +104,46 @@ static int depack_crb(FILE *in, FILE *out)
 
 static int test_crb(uint8 *data, char *t, int s)
 {
-	int j, k, l, m, n, o;
-	int start = 0, ssize;
+	int i, j, k;
+	int ssize, max, idx;
 
 	PW_REQUEST_DATA (s, 378);
 
 	/* size of the pattern table */
-	if (data[start + 248] > 0x7f || data[start + 248] == 0x00)
+	if (data[248] > 0x7f || data[248] == 0x00)
 		return -1;
 
 	/* test noisetracker byte */
-	if (data[start + 249] != 0x7f)
+	if (data[249] != 0x7f)
 		return -1;
 
 	/* test samples */
 	ssize = 0;
-	for (k = 0; k < 31; k++) {
-		if (data[start + 2 + k * 8] > 0x0f)
+	for (i = 0; i < 31; i++) {
+		int len, start, lsize;
+		uint8 *d = data + i * 8;
+
+		if (d[2] > 0x0f)
 			return -1;
 
 		/* test volumes */
-		if (data[start + 3 + k * 8] > 0x40)
+		if (d[3] > 0x40)
 			return -1;
 
-		j = readmem16b(data + start + k * 8) * 2;	/* size */
-		m = readmem16b(data + start + k * 8 + 4) * 2;	/* loop start */
-		n = readmem16b(data + start + k * 8 + 6) * 2;	/* loop size */
+		len = readmem16b(d) << 1;		/* size */
+		start = readmem16b(d + 4) << 1;		/* loop start */
+		lsize = readmem16b(d + 6) << 1;		/* loop size */
 
-		if (j > 0xffff || m > 0xffff || n > 0xffff)
+		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
 			return -1;
 
-		/* n != 2 test added by claudio -- asle, please check! */
-		if (n != 0 && n != 2 && (m + n) > j)
+		if (lsize != 0 && lsize != 2 && (start + lsize) > len)
 			return -1;
 
-		if (m != 0 && n <= 2)
+		if (start != 0 && lsize <= 2)
 			return -1;
 
-		ssize += j;
+		ssize += len;
 	}
 
 /* printf ("3\n"); */
@@ -158,43 +151,43 @@ static int test_crb(uint8 *data, char *t, int s)
 		return -1;
 
 	/* test pattern table */
-	l = 0;
-	for (j = 0; j < 128; j++) {
-		if (data[start + 250 + j] > 0x7f)
-			return -1;
-		if (data[start + 250 + j] > l)
-			l = data[start + 250 + j];
+	{
+		uint8 *d = data + 250;
+		max = 0;
+		for (i = 0; i < 128; i++) {
+			if (d[i] > 0x7f)
+				return -1;
+			if (d[i] > max)
+				max = data[250 + i];
+		}
+
+		/* FIXME */
+		PW_REQUEST_DATA(s, 379 + 4 * max * 4 * 64);
 	}
 
-	/* FIXME */
-	PW_REQUEST_DATA (s, 379 + 4 * l * 4 * 64);
-
 	/* test notes */
-	k = 0;
-	j = 0;
-	for (m = 0; m <= l; m++) {
-		for (n = 0; n < 4; n++) {
-			for (o = 0; o < 64; o++) {
-				switch (data[start + 378 + j] & 0xC0) {
+	idx = 0;
+	for (i = 0; i <= max; i++) {
+		for (j = 0; j < 4; j++) {
+			for (k = 0; k < 64; k++) {
+				uint8 *d = data + 378 + idx;
+				switch (d[0] & 0xC0) {
 				case 0x00:
-					if ((data[start + 378 + j] & 0x0F) > 0x03)
+					if ((d[0] & 0x0F) > 0x03)
 						return -1;
-					k += 4;
-					j += 4;
+					idx += 4;
 					break;
 				case 0x80:
-					if (data[start + 379 + j] != 0x00)
+					if (d[1] != 0)
 						return -1;
-					o += data[start + 381 + j];
-					j += 4;
-					k += 4;
+					k += d[3];
+					idx += 4;
 					break;
 				case 0xC0:
-					if (data[start + 379 + j] != 0x00)
+					if (d[1] != 0)
 						return -1;
-					o = 100;
-					j += 4;
-					k += 4;
+					k = 100;
+					idx += 4;
 					break;
 				default:
 					break;
