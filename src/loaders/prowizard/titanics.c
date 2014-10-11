@@ -134,63 +134,66 @@ static int depack_titanics(FILE *in, FILE *out)
 
 static int test_titanics(uint8 *data, char *t, int s)
 {
-	int j, k, l, m, n, o;
-	int start = 0, ssize;
+	int i;
+	int ssize;
 
 	PW_REQUEST_DATA(s, 182);
 
 	/* test samples */
-	n = ssize = 0;
-	for (k = 0; k < 15; k++) {
-		if (data[start + 7 + k * 12] > 0x40)
+	ssize = 0;
+	for (i = 0; i < 15; i++) {
+		int len, start, lsize;
+		int addr;
+		uint8 *d = data + i * 12;
+
+		if (d[7] > 0x40)
 			return -1;
 			
-		if (data[start + 6 + k * 12] != 0x00)
+		if (d[6] != 0)
 			return -1;
 
-		o = readmem32b(data + start + k * 12);
-		if (/*o > in_size ||*/ (o < 180 && o != 0))
+		addr = readmem32b(d);
+		if (/*addr > in_size ||*/ addr != 0 && addr < 180)
 			return -1;
 
-		j = readmem16b(data + start + k * 12 + 4);	/* size */
-		l = readmem16b(data + start + k * 12 + 8);	/* loop start */
-		m = readmem16b(data + start + k * 12 + 10);	/* loop size */
+		len = readmem16b(d + 4);	/* size */
+		start = readmem16b(d + 8);	/* loop start */
+		lsize = readmem16b(d + 10);	/* loop size */
 
-		if (l > j || m > (j + 1) || j > 32768)
+		if (start > len || lsize > (len + 1) || len > 32768)
 			return -1;
 
-		if (m == 0)
+		if (lsize == 0)
 			return -1;
 
-		if (j == 0 && (l != 0 || m != 1))
+		if (len == 0 && (start != 0 || lsize != 1))
 			return -1;
 
-		ssize += j;
+		ssize += len;
 	}
 
-	if (ssize < 2)
+	if (ssize < 2) {
 		return -1;
+	}
 
 	/* test pattern addresses */
-	o = -1;
-	for (l = k = 0; k < 256; k += 2) {
-		if (readmem16b(data + start + k + 180) == 0xffff) {
-			o = 0;
-			break;
+	{
+		int addr = 0;
+
+		for (i = 0; i < 256; i += 2) {
+			addr = readmem16b(data + i + 180);
+	
+			if (addr == 0xffff)
+				break;
+	
+			if (addr < 180)
+				return -1;
 		}
-
-		j = readmem16b(data + start + k + 180);
-		if (j < 180)
+	
+		if (addr != 0xffff) {
 			return -1;
-
-		if (j > l)
-			l = j;
+		}
 	}
-
-	if (o == -1)
-		return -1;
-
-	/* l is the max addr of the pattern addrs */
 
 	pw_read_title(NULL, t, 0);
 
