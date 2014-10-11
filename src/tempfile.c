@@ -1,9 +1,4 @@
-#ifdef __SUNPRO_C
-#pragma error_messages (off,E_EMPTY_TRANSLATION_UNIT)
-#endif
-
-#ifndef LIBXMP_CORE_PLAYER
-/*
+/* Extended Module Player
  * Copyright (C) 1996-2014 Claudio Matsuoka and Hipolito Carraro Jr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,6 +19,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+#ifdef __SUNPRO_C
+#pragma error_messages (off,E_EMPTY_TRANSLATION_UNIT)
+#endif
+
+#ifndef LIBXMP_CORE_PLAYER
 
 #include <stdio.h>
 #include <stdlib.h>
