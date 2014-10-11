@@ -26,7 +26,7 @@ static int depack_pha(FILE *in, FILE *out)
 	int i, j, k;
 	int paddr1[128];
 	int paddr2[128];
-	int tmp_ptr, tmp1, tmp2;
+	int tmp_ptr, tmp;
 	int pat_addr;
 	int psize;
 	int size, ssize = 0;
@@ -97,12 +97,13 @@ restart:
 	for (i = 0; i < 128; i++) {
 		for (j = 0; j < i; j++) {
 			if (paddr1[i] < paddr1[j]) {
-				tmp2 = pnum[j];
+				tmp = pnum[j];
 				pnum[j] = pnum[i];
-				pnum[i] = tmp2;
-				tmp1 = paddr1[j];
+				pnum[i] = tmp;
+
+				tmp = paddr1[j];
 				paddr1[j] = paddr1[i];
-				paddr1[i] = tmp1;
+				paddr1[i] = tmp;
 				goto restart;
 			}
 		}
@@ -135,10 +136,11 @@ restart:
 	}
 
 	for (c1 = 0; c1 < 128; c1++) {
-		for (c2 = 0; c2 < 128; c2++)
+		for (c2 = 0; c2 < 128; c2++) {
 			if (paddr[c1] == paddr1[c2]) {
 				pnum1[c1] = c2;
 			}
+		}
 	}
 
 	memset(pnum, 0, 128);
@@ -244,10 +246,10 @@ restart:
 	return 0;
 }
 
-static int test_pha (uint8 *data, char *t, int s)
+static int test_pha(uint8 *data, char *t, int s)
 {
-	int j, k, l, m, n;
-	int start = 0, ssize;
+	int i;
+	int ptr, ssize;
 
 	PW_REQUEST_DATA(s, 451 + 128 * 4);
 
@@ -255,47 +257,38 @@ static int test_pha (uint8 *data, char *t, int s)
 		return -1;
 
 	/* test #2 (volumes,sample addresses and whole sample size) */
-	l = 0;
-	for (j = 0; j < 31; j++) {
-		/* sample size */
-		n = readmem16b(data + start + j * 14) * 2;
-		l += n;
+	ssize = 0;
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 14;
 
-		if (data[start + j * 14 + 3] > 0x40)
+		/* sample size */
+		ssize += readmem16b(d) << 1;
+
+		if (d[3] > 0x40)
 			return -1;
 
 		/* loop start */
-		m = readmem16b(data + start + j * 14 + 4) * 2;
-
-		if (m > l)
+		if ((readmem16b(d + 4) << 1) > ssize)
 			return -1;
 
 		/* address of sample data */
-		k = readmem32b(data + start + j * 14 + 8);
-
-		if (k < 0x3C0)
+		if (readmem32b(d + 8) < 0x3c0)
 			return -1;
 	}
 
-	if (l <= 2 || l > (31 * 65535))
+	if (ssize <= 2 || ssize > 31 * 65535)
 		return -1;
 
 	/* test #3 (addresses of pattern in file ... ptk_tableible ?) */
 	/* l is the whole sample size */
 	/* ssize is used here as a variable ... set to 0 afterward */
-	l += 960;
-	k = 0;
-	for (j = 0; j < 128; j++) {
-		ssize = readmem32b(data + start + 448 + j * 4);
 
-		if (ssize > k)
-			k = ssize;
+	for (i = 0; i < 128; i++) {
+		ptr = readmem32b(data + 448 + i * 4);
 
-		if ((ssize + 2) < l)
+		if (ptr + 2 - 960 < ssize)
 			return -1;
 	}
-	ssize = 0;
-	/* k is the highest pattern data address */
 
 	pw_read_title(NULL, t, 0);
 
