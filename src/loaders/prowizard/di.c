@@ -10,7 +10,7 @@
 #include "prowiz.h"
 
 
-static int depack_di(FILE * in, FILE * out)
+static int depack_di(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3;
 	uint8 note, ins, fxt, fxp;
@@ -20,9 +20,9 @@ static int depack_di(FILE * in, FILE * out)
 	uint16 paddr[128];
 	uint8 tmp[50];
 	int i, k;
-	int seq_offs, pat_offs, smp_offs;
+	int seq_offs, /*pat_offs,*/ smp_offs;
+	int size, ssize;
 	int pos;
-	int size, ssize = 0;
 
 	memset(ptable, 0, 128);
 	memset(ptk_tab, 0, 5);
@@ -32,9 +32,10 @@ static int depack_di(FILE * in, FILE * out)
 
 	nins = read16b(in);
 	seq_offs = read32b(in);
-	pat_offs = read32b(in);
+	/*pat_offs =*/ read32b(in);
 	smp_offs = read32b(in);
 
+	ssize = 0;
 	for (i = 0; i < nins; i++) {
 		pw_write_zero(out, 22);			/* name */
 		write16b(out, size = read16b(in));	/* size */
@@ -50,7 +51,7 @@ static int depack_di(FILE * in, FILE * out)
 		fwrite(tmp, 30, 1, out);
 
 	pos = ftell(in);
-	fseek (in, seq_offs, 0);
+	fseek(in, seq_offs, SEEK_SET);
 
 	i = 0;
 	do {
@@ -71,7 +72,8 @@ static int depack_di(FILE * in, FILE * out)
 
 	write32b(out, PW_MOD_MAGIC);
 
-	fseek(in, pos, 0);
+	fseek(in, pos, SEEK_SET);
+
 	for (i = 0; i <= max; i++)
 		paddr[i] = read16b(in);
 
@@ -116,7 +118,7 @@ static int depack_di(FILE * in, FILE * out)
 		}
 	}
 
-	fseek(in, smp_offs, 0);
+	fseek(in, smp_offs, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;
@@ -125,8 +127,9 @@ static int depack_di(FILE * in, FILE * out)
 
 static int test_di (uint8 *data, char *t, int s)
 {
-	int ssize, start = 0;
-	int j, k, l, m, n, o;
+	int i;
+	int numsmp, ssize, psize;
+	int ptab_offs, pat_offs, smp_offs;
 
 	PW_REQUEST_DATA (s, 21);
 
@@ -139,49 +142,49 @@ static int test_di (uint8 *data, char *t, int s)
 #endif
 
 	/* test #2  (number of sample) */
-	k = readmem16b(data + start);
-	if (k > 31)
+	numsmp = readmem16b(data);
+	if (numsmp > 31)
 		return -1;
 
 	/* test #3 (finetunes and whole sample size) */
-	/* k = number of samples */
-	l = 0;
-	for (j = 0; j < k; j++) {
-		o = readmem16b(data + start + 14) * 2;
-		m = readmem16b(data + start + 18) * 2;
-		n = readmem16b(data + start + 20) * 2;
+	ssize = 0;
+	for (i = 0; i < numsmp; i++) {
+		int len = readmem16b(data + 14) << 1;
+		int start = readmem16b(data + 18) << 1;
+		int lsize = readmem16b(data + 20) << 1;
+		uint8 *d = data + i * 8;
 
-		if (o > 0xffff || m > 0xffff || n > 0xffff)
+		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
 			return -1;
 
-		if (m + n > o)
+		if (start + lsize > len)
 			return -1;
 
-		if (data[start + 16 + j * 8] > 0x0f)
+		if (d[16] > 0x0f)
 			return -1;
 
-		if (data[start + 17 + j * 8] > 0x40)
+		if (d[17] > 0x40)
 			return -1;
 
 		/* get total size of samples */
-		l += o;
+		ssize += len;
 	}
-	if (l <= 2)
+	if (ssize <= 2) {
 		return -1;
+	}
 
 	/* test #4 (addresses of pattern in file ... ptk_tableible ?) */
-	/* k is still the number of sample */
 
-	ssize = k * 8 + 2;
+	psize = numsmp * 8 + 2;
 
-	j = readmem32b(data + start + 2);	/* address of pattern table */
-	k = readmem32b(data + start + 6);	/* address of pattern data */
-	l = readmem32b(data + start + 10);	/* address of sample data */
+	ptab_offs = readmem32b(data + 2);	/* address of pattern table */
+	pat_offs = readmem32b(data + 6);	/* address of pattern data */
+	smp_offs = readmem32b(data + 10);	/* address of sample data */
 
-	if (k <= j || l <= j || l <= k)
+	if (pat_offs <= ptab_offs || smp_offs <= ptab_offs || smp_offs <= pat_offs)
 		return -1;
 
-	if (k - j > 128)
+	if (pat_offs - ptab_offs > 128)
 		return -1;
 
 #if 0
@@ -190,32 +193,32 @@ static int test_di (uint8 *data, char *t, int s)
 #endif
 
 	/* test #4,1 :) */
-	if (j < ssize)
+	if (ptab_offs < psize)
 		return -1;
 
 #if 0
 	/* test #5 */
-	if ((k + start) > in_size) {
+	if ((pat_offs + start) > in_size) {
 		Test = BAD;
 		return;
 	}
 #endif
 
-	PW_REQUEST_DATA (s, start + k - 1);
+	PW_REQUEST_DATA(s, pat_offs - 1);
 
 	/* test pattern table reliability */
-	for (m = j; m < (k - 1); m++) {
-		if (data[start + m] > 0x80)
+	for (i = ptab_offs; i < pat_offs - 1; i++) {
+		if (data[i] > 0x80)
 			return -1;
 	}
 
 	/* test #6  ($FF at the end of pattern list ?) */
-	if (data[start + k - 1] != 0xFF)
+	if (data[pat_offs - 1] != 0xff)
 		return -1;
 
-	/* test #7 (addres of sample data > $FFFF ? ) */
+	/* test #7 (address of sample data > $FFFF ? ) */
 	/* l is still the address of the sample data */
-	if (l > 65535)
+	if (smp_offs > 65535)
 		return -1;
 
 	pw_read_title(NULL, t, 0);
