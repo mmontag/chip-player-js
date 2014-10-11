@@ -86,17 +86,6 @@ struct abk_instrument
 };
 
 
-static void free_abk_playlist(struct abk_playlist *playlist)
-{
-    if (playlist->pattern != NULL)
-    {
-        free(playlist->pattern);
-    }
-
-    playlist->length = 0;
-}
-
-
 /**
  * @brief read the ABK playlist out from the file stream. This method malloc's some memory for the playlist
  * and can realloc if the playlist is very long.
@@ -431,7 +420,6 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint16 pattern;
     uint32 first_sample_offset;
     uint32 inst_section_size;
-    uint32 file_size;
 
     struct xmp_module *mod = &m->mod;
 
@@ -439,13 +427,6 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct abk_instrument *ci;
     struct abk_song song;
     struct abk_playlist playlist;
-
-    ci = NULL;
-    pattern = 0;
-    first_sample_offset = 0;
-
-    hio_seek(f, 0, SEEK_END);
-    file_size = hio_tell(f);
 
     hio_seek(f, AMOS_MAIN_HEADER, SEEK_SET);
 
@@ -499,6 +480,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     {
         if (subinstrument_alloc(mod, i, 1) < 0)
         {
+            free(ci);
             return -1;
         }
 
@@ -536,6 +518,8 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
            mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
 
+    free(ci);
+
     if (pattern_init(mod) < 0)
     {
         return -1;
@@ -558,6 +542,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     {
         if (pattern_tracks_alloc(mod, i, 64) < 0)
         {
+            free(playlist.pattern);
             return -1;
         }
 
@@ -581,8 +566,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     /* free up some memory here */
-    free(ci);
-    free_abk_playlist(&playlist);
+    free(playlist.pattern);
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
     D_(D_INFO "Stored tracks: %d", mod->trk);
