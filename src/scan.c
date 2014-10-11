@@ -159,6 +159,10 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	info->speed = speed;
 	info->time = clock + m->time_factor * alltmp / bpm;
 
+#ifndef LIBXMP_CORE_PLAYER
+	info->st26_speed = st26_speed;
+#endif
+
 	if (info->start_row == 0 && ord != 0) {
 	    if (ord == ep) {
 		clock_rst = clock + m->time_factor * alltmp / bpm;

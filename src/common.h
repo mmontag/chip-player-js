@@ -203,6 +203,9 @@ struct ord_data {
 	int gvl;
 	int time;
 	int start_row;
+#ifndef LIBXMP_CORE_PLAYER
+	int st26_speed;
+#endif
 };
 
 

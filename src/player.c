@@ -933,6 +933,24 @@ void player_set_fadeout(struct context_data *ctx, int chn)
 #endif
 
 
+static void update_from_ord_info(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct ord_data *oinfo = &m->xxo_info[p->ord];
+
+	if (oinfo->speed)
+		p->speed = oinfo->speed;
+	p->bpm = oinfo->bpm;
+	p->gvol = oinfo->gvl;
+	p->current_time = oinfo->time;
+	p->frame_time = m->time_factor * m->rrate / p->bpm;
+
+#ifndef LIBXMP_CORE_PLAYER
+	p->st26_speed = oinfo->st26_speed;
+#endif
+}
+
 int xmp_start_player(xmp_context opaque, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -995,10 +1013,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 		f->end_point = p->scan[0].num;
 	}
 
-	p->gvol = m->xxo_info[p->ord].gvl;
-	p->bpm = m->xxo_info[p->ord].bpm;
-	p->speed = m->xxo_info[p->ord].speed;
-	p->frame_time = m->time_factor * m->rrate / p->bpm;
+	update_from_ord_info(ctx);
 
 	if (virt_on(ctx, mod->chn + smix->chn) != 0) {
 		ret = -XMP_ERROR_INTERNAL;
@@ -1101,11 +1116,7 @@ int xmp_play_frame(xmp_context opaque)
 
 		next_order(ctx);
 
-		if (m->xxo_info[p->ord].speed)
-			p->speed = m->xxo_info[p->ord].speed;
-		p->bpm = m->xxo_info[p->ord].bpm;
-		p->gvol = m->xxo_info[p->ord].gvl;
-		p->current_time = m->xxo_info[p->ord].time;
+		update_from_ord_info(ctx);
 
 		virt_reset(ctx);
 		reset_channels(ctx);
