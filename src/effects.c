@@ -465,7 +465,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		if (fxp) {
 			p->speed = fxp;
 #ifndef LIBXMP_CORE_PLAYER
-			p->ice_speed = 0;
+			p->st26_speed = 0;
 #endif
 		}
 		break;
@@ -709,7 +709,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	 * nibble is set (i.e. F30 is the same as F03).
 	 */
 	case FX_ICE_SPEED:
-		p->ice_speed = (MSN(fxp) << 8) | LSN(fxp);
+		p->st26_speed = (MSN(fxp) << 8) | LSN(fxp);
 		break;
 
 	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
@@ -843,7 +843,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		if (fxp) {
 			p->speed = fxp;
 #ifndef LIBXMP_CORE_PLAYER
-			p->ice_speed = 0;
+			p->st26_speed = 0;
 #endif
 		}
 		/* fall through */

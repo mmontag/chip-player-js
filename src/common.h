@@ -331,7 +331,7 @@ struct player_data {
 	} buffer_data;
 
 #ifndef LIBXMP_CORE_PLAYER
-	int ice_speed;			/* For IceTracker speed effect */
+	int st26_speed;			/* For IceTracker speed effect */
 #endif
 
 };

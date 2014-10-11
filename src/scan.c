@@ -66,7 +66,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     int i, pat;
     struct ord_data *info;
 #ifndef LIBXMP_CORE_PLAYER
-    int ice_speed;
+    int st26_speed;
 #endif
 
     if (mod->len == 0)
@@ -88,7 +88,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     speed = mod->spd;
     base_time = m->rrate;
 #ifndef LIBXMP_CORE_PLAYER
-    ice_speed = 0;
+    st26_speed = 0;
 #endif
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>
@@ -265,7 +265,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			if (p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
 			    speed = parm;
 #ifndef LIBXMP_CORE_PLAYER
-			    ice_speed = 0;
+			    st26_speed = 0;
 #endif
 			} else {
 			    clock += m->time_factor * alltmp / bpm;
@@ -286,7 +286,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		/* ST2.6 speed processing */
 
 		if (f1 == FX_ICE_SPEED) {
-		    ice_speed = (MSN(p1) << 8) | LSN(p1);
+		    st26_speed = (MSN(p1) << 8) | LSN(p1);
 		}
 #endif
 
@@ -296,7 +296,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    cnt_row  = 0;
 		    speed = parm;
 #ifndef LIBXMP_CORE_PLAYER
-		    ice_speed = 0;
+		    st26_speed = 0;
 #endif
 		}
 
@@ -399,15 +399,15 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    }
 
 #ifndef LIBXMP_CORE_PLAYER
-	    if (ice_speed) {
+	    if (st26_speed) {
 	        alltmp += cnt_row * speed * base_time;
 	        cnt_row  = 0;
-		if (ice_speed & 0x10000) {
-			speed = (ice_speed & 0xff00) >> 8;
+		if (st26_speed & 0x10000) {
+			speed = (st26_speed & 0xff00) >> 8;
 		} else {
-			speed = ice_speed & 0xff;
+			speed = st26_speed & 0xff;
 		}
-		ice_speed ^= 0x10000;
+		st26_speed ^= 0x10000;
 	    }
 #endif
 	}
