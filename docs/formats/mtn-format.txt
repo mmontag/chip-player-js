@@ -4,8 +4,8 @@ Soundtracker 2.6 / Ice Tracker file format
 Soundtracker 2.6 written by MnemoTroN/Spreadpoint, 05-Nov-1990
 IceTracker by Icepic, v1.1 10-Jan-1993
 
-Format description by Claudio Matsuoka <claudio@helllabs.org>, 24-Jan-2000
-Both trackers available in Exotica (and probably Aminet).
+Format description by Claudio Matsuoka, 24-Jan-2000. Updated 11-Oct-2014
+with speed command information by Saga Musix.
 
 
 Soundtracker 2.6 module format, also used by Ice Tracker, is closely related
@@ -26,7 +26,14 @@ From the Ice Tracker documentation:
    previously required. Play around with it and you'll get
    the idea.
 
-That's what you want? That's what you get. Follow me:
+There's also a difference in command F (set speed): when both nibbles of
+an Fxx command are set, SoundTracker 2.6 applies both values alternatingly,
+first the high nibble, then the low nibble on the next row, then the high
+nibble again... If only the high nibble is set, it should act like if only
+the low nibble is set (i.e. F30 is the same as F03).
+
+
+Format description:
 
 Offset Size     Description
 ------ -------- ----------------------------------------------------
@@ -94,7 +101,7 @@ Effects (ST26):
  f : set speed         
 
 
-Example:
+Examples:
 
  Header:
 
