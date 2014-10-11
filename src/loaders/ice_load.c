@@ -130,7 +130,7 @@ static int ice_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	xxs->lpe = xxs->lps + 2 * ih.ins[i].loop_size;
 	xxs->flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
 	xxi->sub[0].vol = ih.ins[i].volume;
-	xxi->sub[0].fin = ((int16)ih.ins[i].finetune / 0x48) << 4;
+	xxi->sub[0].fin = (int8)(ih.ins[i].finetune << 4);
 	xxi->sub[0].pan = 0x80;
 	xxi->sub[0].sid = i;
 
