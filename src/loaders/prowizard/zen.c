@@ -134,68 +134,58 @@ static int depack_zen(FILE *in, FILE *out)
 
 static int test_zen(uint8 *data, char *t, int s)
 {
-	int j, k, l, m, n, o;
-	int start = 0, ssize;
+	int i;
+	int len, pat_ofs;
 
 	PW_REQUEST_DATA(s, 9 + 16 * 31);
 
 	/* test #2 */
-	l = readmem32b(data + start);
-	if (l < 502 || l > 2163190L)
+	pat_ofs = readmem32b(data);
+	if (pat_ofs < 502 || pat_ofs > 2163190L)
 		return -1;
-	/* l is the address of the pattern list */
 
-	for (k = 0; k < 31; k++) {
-		/* volumes */
-		if (data[start + 9 + (16 * k)] > 0x40)
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + 16 * i;
+		if (d[9] > 0x40)
 			return -1;
 
 		/* finetune */
-		if (readmem16b(data + start + 6 + (k * 16)) % 72)
+		if (readmem16b(d + 6) % 72)
 			return -1;
 	}
 
 	/* smp sizes .. */
-	n = 0;
-	for (k = 0; k < 31; k++) {
-		o = readmem16b(data + start + 10 + k * 16) * 2;
-		m = readmem16b(data + start + 12 + k * 16) * 2;
-		j = readmem32b(data + start + 14 + k * 16);
+	for (i = 0; i < 31; i++) {
+		int size = readmem16b(data + 10 + i * 16) << 1;
+		int lsize = readmem16b(data + 12 + i * 16) << 1;
+		int sdata = readmem32b(data + 14 + i * 16);
 
 		/* sample size and loop size > 64k ? */
-		if (o > 0xFFFF || m > 0xFFFF)
+		if (size > 0xffff || lsize > 0xffff)
 			return -1;
 
 		/* sample address < pattern table address? */
-		if (j < l)
+		if (sdata < pat_ofs)
 			return -1;
 
 #if 0
 		/* too big an address ? */
-		if (j > in_size) {
+		if (sdata > in_size) {
 			Test = BAD;
 			return;
 		}
 #endif
-
-		/* get the nbr of the highest sample address and its size */
-		if (j > n) {
-			n = j;
-			ssize = o;
-		}
 	}
-	/* n is the highest sample data address */
-	/* ssize is the size of the same sample */
 
 	/* test size of the pattern list */
-	j = data[start + 5];
-	if (j > 0x7f || j == 0)
+	len = data[5];
+	if (len == 0 || len > 0x7f)
 		return -1;
 
-	PW_REQUEST_DATA(s, start + l + j * 4 + 4);
+	PW_REQUEST_DATA(s, pat_ofs + len * 4 + 4);
 
 	/* test if the end of pattern list is $FFFFFFFF */
-	if (readmem32b(data + start + l + j * 4) != 0xffffffff)
+	if (readmem32b(data + pat_ofs + len * 4) != 0xffffffff)
 		return -1;
 
 	/* n is the highest address of a sample data */
