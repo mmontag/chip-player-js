@@ -15,7 +15,7 @@ static int depack_unic2(FILE *in, FILE *out)
 	uint8 c1, c2, c3, c4;
 	uint8 npat, maxpat;
 	uint8 ins, note, fxt, fxp;
-	uint8 fine = 0;
+	uint8 fine;
 	uint8 tmp[1025];
 	int i, j, k, l;
 	int ssize = 0;
@@ -28,7 +28,10 @@ static int depack_unic2(FILE *in, FILE *out)
 		write8(out, 0);
 
 		/* fine on ? */
-		j = read16b(in);
+		c1 = read8(in);
+		c2 = read8(in);
+		j = (c1 << 8) + c2;
+
 		if (j != 0) {
 			if (j < 256)
 				fine = 0x10 - c2;
