@@ -338,118 +338,114 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
 
 static int theplayer_test(uint8 *data, char *t, int s, int version)
 {
-	int j, k, l, m, n, o;
-	int start = 0, ssize;
+	int i;
+	int len, num_pat, num_ins, sdata;
 
 	/* FIXME: add PW_REQUEST_DATA */
 
 	/* number of pattern (real) */
-	/* m is the real number of pattern */
-	m = data[start + 2];
-	if (m > 0x7f || m == 0)
+	num_pat = data[2];
+	if (num_pat == 0 || num_pat > 0x7f)
 		return -1;
 
 	/* number of sample */
-	/* k is the number of sample */
-	k = (data[start + 3] & 0x3F);
-	if (k > 0x1F || k == 0)
+	num_ins = (data[3] & 0x3f);
+	if (num_ins == 0 || num_ins > 0x1f)
 		return -1;
 
-	for (l = 0; l < k; l++) {
+	for (i = 0; i < num_ins; i++) {
 		/* test volumes */
-		if (data[start + 7 + l * 6] > 0x40)
+		if (data[i * 6 + 7] > 0x40)
 			return -1;
 		/* test finetunes */
-		if (data[start + 6 + l * 6] > 0x0F)
+		if (data[i * 6 + 6] > 0x0f)
 			return -1;
 	}
 
 	/* test sample sizes and loop start */
-	ssize = 0;
-	for (n = 0; n < k; n++) {
-		o = readmem16b(data + start + n * 6 + 4);
-		if ((o < 0xffdf && o > 0x8000) || o == 0)
+	for (i = 0; i < num_ins; i++) {
+		int start, size = readmem16b(data + i * 6 + 4);
+
+		if ((size < 0xffdf && size > 0x8000) || size == 0)
 			return -1;
 
-		if (o < 0xff00)
-			ssize += o * 2;
+		/* if (size < 0xff00)
+			ssize += size * 2; */
 
-		j = readmem16b(data + start + 8 + n * 6);
-		if (j != 0xffff && j >= o)
+		start = readmem16b(data + i * 6 + 8);
+		if (start != 0xffff && start >= size)
 			return -1;
 
-		if (o > 0xffdf) {
-			if (0xffff - o > k)
+		if (size > 0xffdf) {
+			if (0xffff - size > num_ins)
 				return -1;
 		}
 	}
 
 	/* test sample data address */
-	/* j is the address of the sample data */
-	j = readmem16b(data + start);
-	if (j < k * 6 + 4 + m * 8)
+	/* sdata is the address of the sample data */
+	sdata = readmem16b(data);
+	if (sdata < num_ins * 6 + 4 + num_pat * 8)
 		return -1;
 
 	/* test track table */
-	for (l = 0; l < m * 4; l++) {
-		o = readmem16b(data + start + 4 + k * 6 + l * 2);
-		if (o + k * 6 + 4 + m * 8 > j)
+	for (i = 0; i < num_pat * 4; i++) {
+		int x = readmem16b(data + 4 + num_ins * 6 + i * 2);
+		if (x + num_ins * 6 + 4 + num_pat * 8 > sdata)
 			return -1;
 	}
 
-	/* test pattern table */
-	l = 0;
-	o = 0;
 
 	/* first, test if we dont oversize the input file */
-	PW_REQUEST_DATA(s, start + k * 6 + 4 + m * 8);
+	PW_REQUEST_DATA(s, num_ins * 6 + 4 + num_pat * 8);
 
-	while (data[start + k * 6 + 4 + m * 8 + l] != 0xff && l < 128) {
+	/* test pattern table */
+	len = 0;
+	while (1) {
+		int pat = data[num_ins * 6 + 4 + num_pat * 8 + len];
+
+		if (pat == 0xff || len >= 128)
+			break;
+
 		if (version >= 0x60) {
-			if (data[start + k * 6 + 4 + m * 8 + l] > m - 1)
+			if (pat > num_pat - 1)
 				return -1;
 		} else {
-                	if (data[start + k * 6 + 4 + m * 8 + l] & 0x01)
+                	if (pat & 0x01)
                        		return -1;
 
-                	if (data[start + k * 6 + 4 + m * 8 + l] > m * 2)
+                	if (pat > num_pat * 2)
 				return -1;
 		}
 
-		if (data[start + k * 6 + 4 + m * 8 + l] > o)
-			o = data[start + k * 6 + 4 + m * 8 + l];
-		l++;
+		len++;
 	}
 
 	/* are we beside the sample data address ? */
-	if (k * 6 + 4 + m * 8 + l > j)
+	if (num_ins * 6 + 4 + num_pat * 8 + len > sdata)
 		return -1;
 
-	if (l == 0 || l == 128)
+	if (len == 0 || len == 128)
 		return -1;
-
-	if (version >= 0x60)
-		o++;
-	else
-		o = o / 2 + 1;
-	/* o is the highest number of pattern */
 
 	/* test notes ... pfiew */
 
-	PW_REQUEST_DATA(s, start + j + 1);
+	PW_REQUEST_DATA(s, sdata + 1);
 
-	l += 1;
-	for (n = k * 6 + 4 + m * 8 + l; n < j; n++) {
-		if (~data[start + n] & 0x80) {
-			if (data[start + n] > 0x49)
-				return -1;
+	len++;
+	for (i = num_ins * 6 + 4 + num_pat * 8 + len; i < sdata; i++) {
+		uint8 *d = data + i;
+		int ins;
 
-			if ((((data[start + n] << 4) & 0x10) |
-				((data[start + n + 1] >> 4) & 0x0F)) > k)
+		if (~d[0] & 0x80) {
+			if (d[0] > 0x49)
 				return -1;
-			n += 2;
+			ins = ((d[0] << 4) & 0x10) | ((d[1] >> 4) & 0x0f);
+			if (ins > num_ins)
+				return -1;
+			i += 2;
 		} else {
-			n += 3;
+			i += 3;
 		}
 	}
 
