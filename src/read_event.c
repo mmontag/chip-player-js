@@ -47,7 +47,7 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 	struct xmp_module *mod = &m->mod;
 	struct xmp_instrument *instrument;
 
-	if (ins >= 0 && ins < mod->ins) {
+	if (IS_VALID_INSTRUMENT(ins)) {
 		instrument = &mod->xxi[ins];
 		if (key >= 0 && key < XMP_MAX_KEYS) {
 			int mapped = instrument->map[key].ins;
@@ -403,13 +403,13 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		xc->fadeout = 0x10000;
 		RESET_NOTE(NOTE_END);
 
-		if (xc->ins >= 0 && xc->ins < mod->ins) {
+		sub = get_subinstrument(ctx, xc->ins, key);
+
+		if (sub != NULL) {
 			if (~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_ON) {
 				RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
 			}
 		}
-
-		sub = get_subinstrument(ctx, xc->ins, key);
 
 		if (!new_invalid_ins && sub != NULL) {
 			int transp = mod->xxi[xc->ins].map[key].xpo;
