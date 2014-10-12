@@ -112,9 +112,8 @@ static int depack_nru(FILE *in, FILE *out)
 
 static int test_nru(uint8 *data, char *t, int s)
 {
-	int i, j, k, l;
-	int start = 0;
-	int ssize;
+	int i;
+	int len, psize, ssize;
 
 	PW_REQUEST_DATA(s, 1500);
 
@@ -125,63 +124,59 @@ static int test_nru(uint8 *data, char *t, int s)
 	}
 #endif
 
-	if (readmem32b(data + start + 1080) != PW_MOD_MAGIC)
+	if (readmem32b(data + 1080) != PW_MOD_MAGIC)
 		return -1;
 
 	/* test 2 */
 	ssize = 0;
 	for (i = 0; i < 31; i++)
-		ssize += 2 * readmem16b(data + start + 6 + i * 16);
+		ssize += 2 * readmem16b(data + 6 + i * 16);
 	if (ssize == 0)
 		return -1;
 
 	/* test #3 volumes */
 	for (i = 0; i < 31; i++) {
-		if (data[start + 1 + i * 16] > 0x40)
+		if (data[1 + i * 16] > 0x40)
 			return -1;
 	}
 
 	/* test #4  pattern list size */
-	l = data[start + 950];
-	if (l > 127 || l == 0) {
+	len = data[950];
+	if (len == 0 || len > 127) {
 		return -1;
 	}
 
 	/* l holds the size of the pattern list */
-	k = 0;
-	for (j = 0; j < l; j++) {
-		if (data[start + 952 + j] > k)
-			k = data[start + 952 + j];
-		if (data[start + 952 + j] > 127) {
+	psize = 0;
+	for (i = 0; i < len; i++) {
+		int x = data[952 + i];
+		if (x > psize)
+			psize = x;
+		if (x > 127) {
 			return -1;
 		}
 	}
-	/* k holds the highest pattern number */
 	/* test last patterns of the pattern list = 0 ? */
-	while (j != 128) {
-		if (data[start + 952 + j] != 0) {
+	while (i != 128) {
+		if (data[952 + i] != 0) {
 			return -1;
 		}
-		j++;
+		i++;
 	}
-	/* k is the number of pattern in the file (-1) */
-	k += 1;
 
+	psize++;
+	psize <<= 8;
 
 	/* test #5 pattern data ... */
-	for (j = 0; j < (k << 8); j++) {
+	for (i = 0; i < psize; i++) {
+		uint8 *d = data + 1084 + i * 4;
 		/* note > 48h ? */
-		if (data[start + 1086 + j * 4] > 0x48) {
+		if (d[2] > 0x48)
 			return -1;
-		}
-		l = data[start + 1087 + j * 4];
-		if (l & 0x07) {
+		if (d[3] & 0x07)
 			return -1;
-		}
-		l = data[start + 1084 + j * 4];
-		if (l & 0x03) {
+		if (d[0] & 0x03)
 			return -1;
-		}
 	}
 
 	pw_read_title(NULL, t, 0);
