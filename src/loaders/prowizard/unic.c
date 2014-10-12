@@ -124,27 +124,141 @@ static int depack_unic (FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_unic_id (uint8 *data, char *t, int s)
+static int check_instruments(uint8 *data)
 {
-	int j, k, l, n;
-	int start = 0, ssize;
+	int ssize, max_ins;
+	int i;
+
+	ssize = 0;
+	max_ins = 0;
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 30;
+		int len = readmem16b(d + 42) << 1;
+		int start = readmem16b(d + 46) << 1;
+		int lsize = readmem16b(d + 48) << 1;
+		int fine;
+
+		ssize += len;
+		if (lsize != 0 && (len + 2) < (start + lsize))
+			return -1;
+
+		/* samples too big ? */
+		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
+			return -1;
+
+		/* volume too big */
+		if (d[45] > 0x40)
+			return -1;
+
+		/* finetune ... */
+		fine = readmem16b(d + 40);
+		if ((fine != 0 && len == 0) || (fine > 8 && fine < 247))
+			return -1;
+
+		/* loop start but no replen ? */
+		if (start != 0 && lsize <= 2)
+			return -1;
+
+		if (d[45] != 0 && len == 0)
+			return -1;
+
+		/* get the highest !0 sample */
+		if (len != 0)
+			max_ins = i + 1;
+	}
+	if (ssize <= 2) {
+		return -1;
+	}
+
+	return max_ins;
+}
+
+static int check_pattern_list_size(uint8 *data)
+{
+	int len, psize;
+	int i;
+
+	/* test #4  pattern list size */
+	len = data[950];
+	if (len == 0 || len > 127)
+		return -1;
+
+	psize = 0;
+	for (i = 0; i < len; i++) {
+		int x = data[952 + i];
+		if (x > 127)
+			return -1;
+		if (x > psize)
+			psize = x;
+	}
+
+	/* test last patterns of the pattern list = 0 ? */
+	for (; i != 128; i++) {
+		if (data[952 + i] != 0)
+			return -1;
+	}
+
+	psize++;
+	psize <<= 8;
+
+	return psize;
+}
+
+static int check_pattern(uint8 *data, int s, int psize, int max_ins, int offset)
+{
+	int i;
+
+	PW_REQUEST_DATA(s, offset + psize * 3 + 2);
+
+	for (i = 0; i < psize; i++) {
+		uint8 *d = data + offset + i * 3;
+		int ins;
+
+		/* relative note number + last bit of sample > $34 ? */
+		if (d[0] > 0x74)
+			return -1;
+		if ((d[0] & 0x3F) > 0x24)
+			return -1;
+		if ((d[1] & 0x0F) == 0x0C && d[2] > 0x40)
+			return -1;
+
+		if ((d[1] & 0x0F) == 0x0B && d[2] > 0x7F)
+			return -1;
+
+		if ((d[1] & 0x0F) == 0x0D && d[2] > 0x40)
+			return -1;
+
+		ins = ((d[0] >> 2) & 0x30) | ((d[2] >> 4) & 0x0F);
+
+		if (ins > max_ins)
+			return -1;
+	}
+
+	return 0;
+}
+
+static int test_unic_id(uint8 *data, char *t, int s)
+{
+	int i;
+	int psize, ssize;
 
 	/* test 1 */
 	PW_REQUEST_DATA(s, 1084);
 
-	if (readmem32b(data + start + 1080) != MAGIC_M_K_)
+	if (readmem32b(data + 1080) != MAGIC_M_K_)
 		return -1;
 
 	/* test 2 */
 	ssize = 0;
-	for (k = 0; k < 31; k++) {
-		int x = start + k * 30;
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 30;
+		int size, end;
 
-		j = readmem16b(data + x + 42) * 2;
-		ssize += j;
-		n = (readmem16b(data + x + 46) + readmem16b(data + x + 48)) * 2;
+		size = readmem16b(d + 42) << 1;
+		ssize += size;
+		end = (readmem16b(d + 46) + readmem16b(d + 48)) << 1;
 
-		if ((j + 2) < n)
+		if ((size + 2) < end)
 			return -1;
 	}
 
@@ -152,48 +266,21 @@ static int test_unic_id (uint8 *data, char *t, int s)
 		return -1;
 
 	/* test #3  finetunes & volumes */
-	for (k = 0; k < 31; k++) {
-		int x = start + k * 30;
-
-		if (data[x + 40] > 0x0f || data[x + 44] || data[x + 45] > 0x40)
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 30;
+		if (d[40] > 0x0f || d[44] != 0 || d[45] > 0x40)
 			return -1;
 	}
 
 	/* test #4  pattern list size */
-	l = data[start + 950];
-	if (l > 127 || l == 0)
+	psize = check_pattern_list_size(data);
+	if (psize < 0)
 		return -1;
-	/* l holds the size of the pattern list */
 
-	k = 0;
-	for (j = 0; j < l; j++) {
-		if (data[start + 952 + j] > k)
-			k = data[start + 952 + j];
-		if (data[start + 952 + j] > 127)
-			return -1;
-	}
-	/* k holds the highest pattern number */
-
-	/* test last patterns of the pattern list = 0 ? */
-	while (j != 128) {
-		if (data[start + 952 + j] != 0)
-			return -1;
-		j++;
-	}
-	/* k is the number of pattern in the file (-1) */
-	k++;
-
-	PW_REQUEST_DATA(s, 1084 + k * 256 * 3);
-
-#if 0
 	/* test #5 pattern data ... */
-	if (((k * 768) + 1084 + start) > in_size)
-		return -1;
-#endif
-
-	for (j = 0; j < (k << 8); j++) {
+	for (i = 0; i < psize; i++) {
 		/* relative note number + last bit of sample > $34 ? */
-		if (data[start + 1084 + j * 3] > 0x74)
+		if (data[1084 + i * 3] > 0x74)
 			return -1;
 	}
 
@@ -202,241 +289,66 @@ static int test_unic_id (uint8 *data, char *t, int s)
 	return 0;
 }
 
-static int test_unic_emptyid (uint8 *data, char *t, int s)
+static int test_unic_emptyid(uint8 *data, char *t, int s)
 {
-	int j, k, l, m, n, o;
-	int start = 0, ssize;
+	int psize, max_ins;
 
 	/* test 1 */
 	PW_REQUEST_DATA(s, 1084);
 
 	/* test #2 ID = $00000000 ? */
-	if (readmem32b(data + start + 1080) != MAGIC_0000)
+	if (readmem32b(data + 1080) != MAGIC_0000)
 		return -1;
 
 	/* test 2,5 :) */
-	ssize = 0;
-	o = 0;
-	for (k = 0; k < 31; k++) {
-		int x = start + k * 30, y;
-
-		j = readmem16b(data + x + 42) * 2;
-		m = readmem16b(data + x + 46) * 2;
-		n = readmem16b(data + x + 48) * 2;
-		ssize += j;
-
-		if (n != 0 && (j + 2) < (m + n))
-			return -1;
-
-		if (j > 0xffff || m > 0xffff || n > 0xffff)
-			return -1;
-
-		if (data[x + 45] > 0x40)
-			return -1;
-
-		/* finetune ... */
-		y = readmem16b(data + x + 40);
-		if ((y != 0 && j == 0) || (y > 8 && y < 247))
-			return -1;
-
-		/* loop start but no replen ? */
-		if (m != 0 && n <= 2)
-			return -1;
-
-		if (data[x + 45] != 0 && j == 0)
-			return -1;
-
-		/* get the highest !0 sample */
-		if (j != 0)
-			o = j + 1;
-	}
-
-	if (ssize <= 2)
+	max_ins = check_instruments(data);
+	if (max_ins < 0)
 		return -1;
 
 	/* test #4  pattern list size */
-	l = data[start + 950];
-	if (l > 127 || l == 0)
+	psize = check_pattern_list_size(data);
+	if (psize < 0)
 		return -1;
-	/* l holds the size of the pattern list */
 
-	k = 0;
-	for (j = 0; j < l; j++) {
-		if (data[start + 952 + j] > k)
-			k = data[start + 952 + j];
-		if (data[start + 952 + j] > 127)
-			return -1;
-	}
-	/* k holds the highest pattern number */
-
-	/* test last patterns of the pattern list = 0 ? */
-	while (j != 128) {
-		if (data[start + 952 + j] != 0)
-			return -1;
-		j += 1;
-	}
-	/* k is the number of pattern in the file (-1) */
-	k += 1;
-
-#if 0
 	/* test #5 pattern data ... */
-	if ((k * 768 + 1084 + start) > in_size)
+	if (check_pattern(data, s, psize, max_ins, 1084) < 0)
 		return -1;
-#endif
-
-	PW_REQUEST_DATA(s, 1084 + k * 256 * 3 + 2);
-
-	for (j = 0; j < (k << 8); j++) {
-		int y = start + 1084 + j * 3;
-
-		/* relative note number + last bit of sample > $34 ? */
-		if (data[y] > 0x74)
-			return -1;
-
-		if ((data[y] & 0x3F) > 0x24)
-			return -1;
-
-		if ((data[y + 1] & 0x0F) == 0x0C
-			&& data[y + 2] > 0x40)
-			return -1;
-
-		if ((data[y + 1] & 0x0F) == 0x0B
-			&& data[y + 2] > 0x7F)
-			return -1;
-
-		if ((data[y + 1] & 0x0F) == 0x0D
-			&& data[y + 2] > 0x40)
-			return -1;
-
-		n = ((data[y] >> 2) & 0x30) |
-			((data[start + 1085 + j * 3 + 1] >> 4) & 0x0F);
-
-		if (n > o)
-			return -1;
-	}
 
 	pw_read_title(data, t, 20);
 
 	return 0;
 }
 
-static int test_unic_noid (uint8 *data, char *t, int s)
+static int test_unic_noid(uint8 *data, char *t, int s)
 {
-	int j, k, l, m, n, o;
-	int start = 0, ssize;
+	int i;
+	int psize, max_ins;
 
 	/* test 1 */
 	PW_REQUEST_DATA(s, 1084);
 
 	/* test #2 ID = $00000000 ? */
-	if (readmem32b(data + start + 1080) == MAGIC_0000)
+	if (readmem32b(data + 1080) == MAGIC_0000)
 		return -1;
 
 	/* test 2,5 :) */
-	ssize = 0;
-	o = 0;
-	for (k = 0; k < 31; k++) {
-		int x = start + k * 30, y;
-
-		j = readmem16b(data + x + 42) * 2;
-		m = readmem16b(data + x + 46) * 2;
-		n = readmem16b(data + x + 48) * 2;
-
-		ssize += j;
-		if (n != 0 && (j + 2) < (m + n))
-			return -1;
-
-		/* samples too big ? */
-		if (j > 0xffff || m > 0xffff || n > 0xffff)
-			return -1;
-
-		/* volume too big */
-		if (data[x + 45] > 0x40)
-			return -1;
-
-		/* finetune ... */
-		y = readmem16b(data + x + 40);
-		if ((y != 0 && j == 0) || (y > 8 && y < 247))
-			return -1;
-
-		/* loop start but no replen ? */
-		if (m != 0 && n <= 2)
-			return -1;
-
-		if (data[x + 45] != 0 && j == 0)
-			return -1;
-
-		/* get the highest !0 sample */
-		if (j != 0)
-			o = j + 1;
-	}
-	if (ssize <= 2)
+	max_ins = check_instruments(data);
+	if (max_ins < 0)
 		return -1;
 
 	/* test #4  pattern list size */
-	l = data[start + 950];
-	if (l > 127 || l == 0)
+	psize = check_pattern_list_size(data);
+	if (psize < 0)
 		return -1;
-	/* l holds the size of the pattern list */
-
-	k = 0;
-	for (j = 0; j < l; j++) {
-		if (data[start + 952 + j] > k)
-			k = data[start + 952 + j];
-		if (data[start + 952 + j] > 127)
-			return -1;
-	}
-	/* k holds the highest pattern number */
-
-	/* test last patterns of the pattern list = 0 ? */
-	while (j != 128) {
-		if (data[start + 952 + j] != 0)
-			return -1;
-		j += 1;
-	}
-	/* k is the number of pattern in the file (-1) */
-	k += 1;
 
 	/* test #5 pattern data ... */
-	/* o is the highest !0 sample */
-
-#if 0
-	if (((k * 768) + 1080 + start) > in_size) {
-		Test = BAD;
-		return;
-	}
-#endif
-
-	PW_REQUEST_DATA(s, 1080 + k * 256 * 3 + 2);
-
-	for (j = 0; j < (k << 8); j++) {
-		int y = start + 1080 + j * 3;
-
-		/* relative note number + last bit of sample > $34 ? */
-		if (data[y] > 0x74)
-			return -1;
-		if ((data[y] & 0x3F) > 0x24)
-			return -1;
-		if ((data[y + 1] & 0x0F) == 0x0C && data[y + 2] > 0x40)
-			return -1;
-
-		if ((data[y + 1] & 0x0F) == 0x0B && data[y + 2] > 0x7F)
-			return -1;
-
-		if ((data[y + 1] & 0x0F) == 0x0D && data[y + 2] > 0x40)
-			return -1;
-
-		n = ((data[y] >> 2) & 0x30) |
-			((data[start + 1081 + j * 3 + 1] >> 4) & 0x0F);
-
-		if (n > o)
-			return -1;
-	}
+	if (check_pattern(data, s, psize, max_ins, 1080) < 0)
+		return -1;
 
 	/* test #6  title coherent ? */
-	for (j = 0; j < 20; j++) {
-		if ((data[start + j] != 0 && data[start + j] < 32) ||
-			data[start + j] > 180)
+	for (i = 0; i < 20; i++) {
+		if ((data[i] != 0 && data[i] < 32) ||
+			data[i] > 180)
 			return -1;
 	}
 
