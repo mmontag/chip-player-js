@@ -62,7 +62,12 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 static void reset_envelopes(struct context_data *ctx, struct channel_data *xc,
 				int force_cut)
 {
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
 	struct xmp_instrument *xxi;
+
+	if (!IS_VALID_INSTRUMENT(xc->ins))
+		return;
 
 	xxi = get_instrument(ctx, xc->ins);
 

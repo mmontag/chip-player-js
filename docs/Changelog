@@ -6,6 +6,7 @@ Stable versions
 	- fix ABK loader test in Win32
 	- fix XM invalid memory access in event reader
 	- fix ST2.6 speed effect (reported by Saga Musix)
+	- fix crash in envelope reset with invalid instrument
 	- refactor depacking code
 	- code cleanup
 
