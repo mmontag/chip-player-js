@@ -1,8 +1,8 @@
 /*
  * ac1d.c   Copyright (C) 1996-1997 Asle / ReDoX
- *	    Copyright (C) 2006-2007 Claudio Matsuoka
+ *	    Modified in 2006,2007,2014 by Claudio Matsuoka
  *
- * Converts AC1D packed MODs back to PTK MODs
+ * Converts ac1d packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
  */
@@ -13,7 +13,7 @@
 
 #define NO_NOTE 0xff
 
-static int depack_AC1D(FILE *in, FILE *out)
+static int depack_ac1d(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 npos;
@@ -131,10 +131,9 @@ static int depack_AC1D(FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_AC1D(uint8 *data, char *t, int s)
+static int test_ac1d(uint8 *data, char *t, int s)
 {
-	int j, k;
-	int start = 0;
+	int i;
 
 	PW_REQUEST_DATA(s, 896);
 
@@ -143,18 +142,18 @@ static int test_AC1D(uint8 *data, char *t, int s)
 		return -1;
 
 	/* test #2 */
-	if (data[start] > 0x7f)
+	if (data[0] > 0x7f)
 		return -1;
 
 	/* test #4 */
-	for (k = 0; k < 31; k++) {
-		if (data[start + 10 + 8 * k] > 0x0f)
+	for (i = 0; i < 31; i++) {
+		if (data[10 + 8 * i] > 0x0f)
 			return -1;
 	}
 
 	/* test #5 */
-	for (j = 0; j < 128; j++) {
-		if (data[start + 768 + j] > 0x7f)
+	for (i = 0; i < 128; i++) {
+		if (data[768 + i] > 0x7f)
 			return -1;
 	}
 
@@ -165,7 +164,7 @@ static int test_AC1D(uint8 *data, char *t, int s)
 
 const struct pw_format pw_ac1d = {
 	"AC1D Packer",
-	test_AC1D,
-	depack_AC1D
+	test_ac1d,
+	depack_ac1d
 };
 
