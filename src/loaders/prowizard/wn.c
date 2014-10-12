@@ -68,8 +68,6 @@ static int depack_wn(FILE *in, FILE * out)
 
 static int test_wn(uint8 *data, char *t, int s)
 {
-	int start = 0;
-
 	PW_REQUEST_DATA(s, 1082);
 
 	/* test 1 */
@@ -77,11 +75,11 @@ static int test_wn(uint8 *data, char *t, int s)
 		return -1;
 
 	/* test 2 */
-	if (data[start + 951] != 0x7f)
+	if (data[951] != 0x7f)
 		return -1;
 
 	/* test 3 */
-	if (data[start + 950] > 0x7f)
+	if (data[950] > 0x7f)
 		return -1;
 
 	pw_read_title(data, t, 20);
