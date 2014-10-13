@@ -544,19 +544,25 @@ void xmp_release_module(xmp_context opaque)
 	if (mod->pat > 0)
 		free(mod->xxp);
 
-	for (i = 0; i < mod->ins; i++) {
-		free(mod->xxi[i].sub);
-		free(mod->xxi[i].extra);
+	if (mod->xxi != NULL) {
+		for (i = 0; i < mod->ins; i++) {
+			free(mod->xxi[i].sub);
+			free(mod->xxi[i].extra);
+		}
+		if (mod->ins > 0) {
+			free(mod->xxi);
+		}
 	}
-	if (mod->ins > 0)
-		free(mod->xxi);
 
-	for (i = 0; i < mod->smp; i++) {
-		if (mod->xxs[i].data != NULL)
-			free(mod->xxs[i].data - 4);
+	if (mod->xxs != NULL) {
+		for (i = 0; i < mod->smp; i++) {
+			if (mod->xxs[i].data != NULL)
+				free(mod->xxs[i].data - 4);
+		}
+		if (mod->smp > 0) {
+			free(mod->xxs);
+		}
 	}
-	if (mod->smp > 0)
-		free(mod->xxs);
 
 	if (m->scan_cnt) {
 		for (i = 0; i < mod->len; i++)
