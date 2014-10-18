@@ -1020,6 +1020,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 		goto err;
 	}
 
+	f->delay = 0;
 	f->jumpline = 0;
 	f->jump = -1;
 	f->pbreak = 0;
