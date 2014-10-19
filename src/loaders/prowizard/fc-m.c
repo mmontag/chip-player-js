@@ -1,8 +1,9 @@
 /*
  * FC-M_Packer.c   Copyright (C) 1997 Asle / ReDoX
- *                 Copyright (c) 2006-2007 Claudio Matsuoka
  *
  * Converts back to ptk FC-M packed MODs
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -69,7 +70,6 @@ static int depack_fcm(FILE *in, FILE *out)
 
 static int test_fcm(uint8 *data, char *t, int s)
 {
-	int start = 0;
 	int j;
 
 	PW_REQUEST_DATA(s, 37 + 8 * 31);
@@ -80,16 +80,16 @@ static int test_fcm(uint8 *data, char *t, int s)
 		return -1;
 
 	/* test 1 */
-	if (data[start + 4] != 0x01)
+	if (data[4] != 0x01)
 		return -1;
 
 	/* test 2 */
-	if (data[start + 5] != 0x00)
+	if (data[5] != 0x00)
 		return -1;
 
 	/* test 3 */
 	for (j = 0; j < 31; j++) {
-		if (data[start + 37 + 8 * j] > 0x40)
+		if (data[37 + 8 * j] > 0x40)
 			return -1;
 	}
 
