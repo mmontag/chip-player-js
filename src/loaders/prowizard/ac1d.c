@@ -26,7 +26,7 @@ static int depack_ac1d(FILE *in, FILE *out)
 	int ssize = 0;
 	int paddr[128];
 	int psize[128];
-	int tsize1, tsize2, tsize3;
+	/*int tsize1, tsize2, tsize3;*/
 	int i, j, k;
 
 	memset(paddr, 0, 128 * 4);
@@ -71,16 +71,15 @@ static int depack_ac1d(FILE *in, FILE *out)
 	/* pattern data */
 	for (i = 0; i < npat; i++) {
 		fseek(in, paddr[i], SEEK_SET);
-		tsize1 = read32b(in);
-		tsize2 = read32b(in);
-		tsize3 = read32b(in);
+		/*tsize1 =*/ read32b(in);
+		/*tsize2 =*/ read32b(in);
+		/*tsize3 =*/ read32b(in);
 
 		memset(tmp, 0, 1024);
 		for (k = 0; k < 4; k++) {
 			for (j = 0; j < 64; j++) {
 				int x = j * 16 + k * 4;
 
-				note = ins = fxt = fxp = 0x00;
 				c1 = read8(in);
 				if (c1 & 0x80) {
 					c4 = c1 & 0x7f;
@@ -108,8 +107,6 @@ static int depack_ac1d(FILE *in, FILE *out)
 				}
 
 				if ((c2 & 0x0f) == 0x07) {
-					fxt = 0x00;
-					fxp = 0x00;
 					tmp[x + 2] = (ins << 4) & 0xf0;
 					continue;
 				}

@@ -56,7 +56,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	uint8 buf[1024];
 	uint32 p_ord, p_chn, p_pat, p_ins;
 	uint32 p_smp[64];
-	int type, ver, mode;
+	int type, ver /*, mode*/;
  
 	LOAD_INIT();
 
@@ -65,24 +65,24 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(buf, 1, 60, f);
 	strncpy(mod->name, (char *)buf, XMP_NAME_SIZE);
 
-	type = hio_read8(f);	/* song type */
+	type = hio_read8(f);		/* song type */
 	ver = hio_read8(f);		/* song version */
-	mode = hio_read8(f);	/* pattern version */
+	/*mode =*/ hio_read8(f);	/* pattern version */
 
-	if (type & 0x01)	/* song mode not supported */
+	if (type & 0x01)		/* song mode not supported */
 		return -1;
 
 	set_type(m, "Protracker Studio PSM %d.%02d", MSN(ver), LSN(ver));
 
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);
-	hio_read8(f);		/* master volume */
-	hio_read16l(f);		/* song length */
+	hio_read8(f);			/* master volume */
+	hio_read16l(f);			/* song length */
 	mod->len = hio_read16l(f);
 	mod->pat = hio_read16l(f);
 	mod->ins = hio_read16l(f);
-	hio_read16l(f);               /* ignore channels to play */
-	mod->chn = hio_read16l(f);    /* use channels to proceed */
+	hio_read16l(f);			/* ignore channels to play */
+	mod->chn = hio_read16l(f);	/* use channels to proceed */
 	mod->smp = mod->ins;
 	mod->trk = mod->pat * mod->chn;
 

@@ -80,7 +80,7 @@ static int pt3_test(HIO_HANDLE *f, char *t, const int start)
 static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
-	int flags;
+	/* int flags; */
 	/* int day, month, year, hour, min, sec;
 	int dhour, dmin, dsec; */
 
@@ -90,7 +90,7 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->pat = hio_read16b(f);
 	mod->gvl = hio_read16b(f);
 	mod->bpm = hio_read16b(f);
-	flags = hio_read16b(f);
+	/*flags =*/ hio_read16b(f);
 	/*day   =*/ hio_read16b(f);
 	/*month =*/ hio_read16b(f);
 	/*year  =*/ hio_read16b(f);

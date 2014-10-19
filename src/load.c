@@ -120,13 +120,13 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 	unsigned char b[1024];
 	char *cmd;
 	FILE *f, *t;
-	int builtin, res;
+	int res;
 	int headersize;
 	int i;
 	struct depacker *depacker = NULL;
 
 	cmd = NULL;
-	builtin = res = 0;
+	res = 0;
 	*temp = NULL;
 	f = (*h)->handle.file;
 

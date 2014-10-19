@@ -249,7 +249,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 	int i, j;
-	int ver, infolen, sn[64];
+	int /*ver,*/ infolen, sn[64];
 	uint32 a, b;
 	uint8 *buf;
 	int size, ret;
@@ -259,7 +259,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, 8, SEEK_CUR);	/* BASSTRAK */
 
-	ver = hio_read8(f);
+	/*ver =*/ hio_read8(f);
 	set_type(m, "Digital Symphony");
 
 	mod->chn = hio_read8(f);
