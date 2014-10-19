@@ -1,8 +1,9 @@
 /*
  * Digital_Illusion.c   Copyright (C) 1997 Asle / ReDoX
- *			Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts DI packed MODs back to PTK MODs
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -125,7 +126,7 @@ static int depack_di(FILE *in, FILE *out)
 }
 
 
-static int test_di (uint8 *data, char *t, int s)
+static int test_di(uint8 *data, char *t, int s)
 {
 	int i;
 	int numsmp, ssize, psize;

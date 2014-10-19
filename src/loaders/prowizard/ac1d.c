@@ -1,10 +1,11 @@
 /*
  * ac1d.c   Copyright (C) 1996-1997 Asle / ReDoX
- *	    Modified in 2006,2007,2014 by Claudio Matsuoka
  *
  * Converts ac1d packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <stdlib.h>
