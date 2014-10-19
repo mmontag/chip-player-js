@@ -1,8 +1,9 @@
 /*
  * NoisePacker_v2.c   Copyright (C) 1997 Asle / ReDoX
- *                    Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts NoisePacked MODs back to ptk
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -18,7 +19,7 @@ static int depack_np2(FILE *in, FILE *out)
 	int len, nins, npat;
 	int max_addr;
 	int size, ssize = 0;
-	int tsize;
+	/*int tsize;*/
 	int trk_addr[128][4];
 	int i, j, k;
 	int trk_start;
@@ -26,16 +27,16 @@ static int depack_np2(FILE *in, FILE *out)
 	memset(ptable, 0, 128);
 	memset(trk_addr, 0, 128 * 4 * 4);
 
-	c1 = read8(in);			/* read number of samples */
+	c1 = read8(in);				/* read number of samples */
 	c2 = read8(in);
 	nins = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
 
-	pw_write_zero(out, 20);		/* write title */
+	pw_write_zero(out, 20);			/* write title */
 
 	read8(in);
-	len = read8(in) / 2;		/* read size of pattern list */
-	read16b(in);			/* 2 unknown bytes */
-	tsize = read16b(in);		/* read track data size */
+	len = read8(in) / 2;			/* read size of pattern list */
+	read16b(in);				/* 2 unknown bytes */
+	/*tsize =*/ read16b(in);		/* read track data size */
 
 	/* read sample descriptions */
 	for (i = 0; i < nins; i++) {
@@ -138,8 +139,8 @@ static int depack_np2(FILE *in, FILE *out)
 
 static int test_np2(uint8 *data, char *t, int s)
 {
-	int j, k, l, o, m, n;
-	int start, ssize;
+        int num_ins, ssize, hdr_size, ptab_size, trk_size, max_pptr;
+        int i;
 
 	PW_REQUEST_DATA (s, 1024);
 
@@ -150,103 +151,92 @@ static int test_np2(uint8 *data, char *t, int s)
 	}
 #endif
 
-	start = 0;
-
-	/* j is the size of the pattern list (*2) */
-	j = (data[start + 2] << 8) + data[start + 3];
-	if (j & 1 || j == 0)
+	/* size of the pattern list (*2) */
+	ptab_size = (data[2] << 8) + data[3];
+	if (ptab_size == 0 || ptab_size & 1)
 		return - 1;
 
-	/* test nbr of samples */
-	if ((data[start + 1] & 0x0f) != 0x0C)
+	/* test number of samples */
+	if ((data[1] & 0x0f) != 0x0c)
 		return -1;
 
-	/* l is the number of samples */
-	l = ((data[start] << 4) & 0xf0) | ((data[start + 1] >> 4) & 0x0f);
-	if (l > 0x1f || l == 0)
+	/* number of samples */
+	num_ins = ((data[0] << 4) & 0xf0) | ((data[1] >> 4) & 0x0f);
+	if (num_ins == 0 || num_ins > 0x1f)
 		return -1;
 
 	/* test volumes */
-	for (k = 0; k < l; k++) {
-		if (data[start + 15 + k * 16] > 0x40)
+	for (i = 0; i < num_ins; i++) {
+		if (data[15 + i * 16] > 0x40)
 			return -1;
 	}
 
 	/* test sample sizes */
 	ssize = 0;
-	for (k = 0; k < l; k++) {
-		int x = start + k * 16;
+	for (i = 0; i < num_ins; i++) {
+		uint8 *d = data + i * 16;
 
-		o = 2 * ((data[x + 12] << 8) + data[x + 13]);
-		m = 2 * ((data[x + 20] << 8) + data[x + 21]);
-		n = 2 * ((data[x + 22] << 8) + data[x + 23]);
+		int len = readmem16b(d + 12) << 1;
+		int start = readmem16b(d + 20) << 1;
+		int lsize = readmem16b(d + 22) << 1;
 
-		if (o > 0xffff || m > 0xffff || n > 0xffff)
+		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
 			return -1;
 
-		if ((m + n) > (o + 2))
+		if (start + lsize > len + 2)
 			return -1;
 
-		if (n != 0 && m == 0)
+		if (start == 0 && lsize != 0)
 			return -1;
 
-		ssize += o;
+		ssize += len;
 	}
 
 	if (ssize <= 4)
 		return -1;
 
-	l *= 16;
-	l += 8 + 4;
-	/* l is now the size of the header 'til the end of sample descriptions */
+	/* size of the header 'til the end of sample descriptions */
+	hdr_size = num_ins * 16 + 8 + 4;
 
 	/* test pattern table */
-	n = 0;
-	for (k = 0; k < j; k += 2) {
-		m = ((data[start + l + k] << 8) + data[start + l + k + 1]);
-		if (((m / 8) * 8) != m)
+	max_pptr = 0;
+	for (i = 0; i < ptab_size; i += 2) {
+		int pptr = readmem16b(data + hdr_size + i);
+		if (pptr & 0x07)
 			return -1;
-		if (m > n)
-			n = m;
+		if (pptr > max_pptr)
+			max_pptr = pptr;
 	}
 
-	l += j + n + 8;
+	/* max_pptr is the highest pattern number (*8) */
 
 	/* paske on a que l'address du dernier pattern... */
-	/* l is now the size of the header 'til the end of the track list */
-	/* n is the highest pattern number (*8) */
+	/* size of the header 'til the end of the track list */
+	hdr_size += ptab_size + max_pptr + 8;
 
 	/* test track data size */
-	k = (data[start + 6] << 8) + data[start + 7];
-	if (k < 192 || ((k / 192) * 192) != k)
+	trk_size = readmem16b(data + 6);
+	if (trk_size < 192 || (trk_size & 0x3f))
 		return -1;
 
-	PW_REQUEST_DATA (s, k + l + 16);
+	PW_REQUEST_DATA (s, hdr_size + trk_size + 16);
 
 	/* test notes */
-	j = ((data[start] << 4) & 0xf0) | ((data[start + 1] >> 4) & 0x0f);
-	for (m = 0; m < k; m += 3) {
-		if (data[start + l + m] > 0x49) {
-			printf ("Fail 1 on m = %d\n", m);
+	for (i = 0; i < trk_size; i += 3) {
+		uint8 *d = data + hdr_size + i;
+
+		if (d[0] > 0x49) {
 			return -1;
 		}
 
-		if ((((data[start + l + m] << 4) & 0x10) |
-			((data[start + l + m + 1] >> 4) & 0x0f)) > j) {
-			printf ("Fail 2 on m = %d", m);
+		if ((((d[0] << 4) & 0x10) | ((d[1] >> 4) & 0x0f)) > num_ins) {
 			return -1;
 		}
 
-		n = (data[start + l + m + 1] & 0x0F);
-		if (n == 0 && data[start + l + m + 2] != 0x00) {
-			printf ("Fail 3 on m = %d", m);
+		if ((d[1] & 0x0f) == 0 && d[2] != 0) {
 			return -1;
 		}
 	}
-
-	/* ssize is the size of the sample data */
-	/* l is the size of the header 'til the track datas */
-	/* k is the size of the track datas */
 
 	pw_read_title(NULL, t, 0);
 
