@@ -229,7 +229,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	expdata.i_ext_entrsz = 0;
 	expsmp_offset = 0;
 	iinfo_offset = 0;
-	mmdinfo_offset = 0;
+
 	if (expdata_offset) {
 		hio_seek(f, start + expdata_offset, SEEK_SET);
 		hio_read32b(f);

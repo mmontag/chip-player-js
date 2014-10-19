@@ -152,25 +152,33 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi;
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs;
+
 	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
-	mod->xxs[i].len = ins_size[i];
-	mod->xxs[i].lps = ins[i].loop_start;
-	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * ins[i].loop_length;
-	mod->xxs[i].flg = ins[i].loop_length > 1 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxi[i].nsm = 1;
-	mod->xxi[i].sub[0].vol = ins[i].volume;
-	mod->xxi[i].sub[0].fin = (int8)(ins[i].finetune << 4); 
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
+	xxi = &mod->xxi[i];
+	xxs = &mod->xxs[i];
+	sub = &xxi->sub[0];
+
+	xxs->len = ins_size[i];
+	xxs->lps = ins[i].loop_start;
+	xxs->lpe = xxs->lps + 2 * ins[i].loop_length;
+	xxs->flg = ins[i].loop_length > 1 ? XMP_SAMPLE_LOOP : 0;
+	xxi->nsm = 1;
+	sub->vol = ins[i].volume;
+	sub->fin = (int8)(ins[i].finetune << 4);
+	sub->pan = 0x80;
+	sub->sid = i;
 
 	instrument_name(mod, i, ins[i].name, 22);
 
 	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c  %02x %+d",
-		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
-		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol,
-		mod->xxi[i].sub[0].fin >> 4);
+		i, xxi->name, xxs->len, xxs->lps, xxs->lpe,
+		xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol,
+		sub->fin >> 4);
     }
 
     if (pattern_init(mod) < 0)
