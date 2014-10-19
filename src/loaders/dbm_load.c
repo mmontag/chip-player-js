@@ -166,7 +166,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		//printf("rows = %d, size = %d\n", mod->xxp[i]->rows, sz);
 
 		r = 0;
-		c = -1;
+		/*c = -1;*/
 
 		while (sz > 0) {
 			//printf("  offset=%x,  sz = %d, ", hio_tell(f), sz);
@@ -176,7 +176,6 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 			if (c == 0) {
 				r++;
-				c = -1;
 				continue;
 			}
 			c--;
@@ -185,10 +184,13 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			if (--sz <= 0) break;
 			//printf("    n = %d\n", n);
 
-			if (c >= mod->chn || r >= mod->xxp[i]->rows)
+			if (c >= mod->chn || r >= mod->xxp[i]->rows) {
 				event = &dummy;
-			else
+			} else {
 				event = &EVENT(i, c, r);
+			}
+
+			memset(event, 0, sizeof (struct xmp_event));
 
 			if (n & 0x01) {
 				x = hio_read8(f);
