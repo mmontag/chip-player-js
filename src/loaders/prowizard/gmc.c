@@ -1,8 +1,9 @@
 /*
  * gmc.c    Copyright (C) 1997 Sylvain "Asle" Chipaux
- *          Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Depacks musics in the Game Music Creator format and saves in ptk.
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -15,7 +16,7 @@ static int depack_GMC(FILE *in, FILE *out)
 	uint8 tmp[1024];
 	uint8 ptable[128];
 	uint8 max;
-	uint8 PatPos;
+	uint8 pat_pos;
 	uint16 len, looplen;
 	long ssize = 0;
 	long i = 0, j = 0;
@@ -27,7 +28,8 @@ static int depack_GMC(FILE *in, FILE *out)
 	for (i = 0; i < 15; i++) {
 		pw_write_zero(out, 22);		/* name */
 		read32b(in);			/* bypass 4 address bytes */
-		write16b(out, len = read16b(in));	/* size */
+		len = read16b(in);
+		write16b(out, len);		/* size */
 		ssize += len * 2;
 		read8(in);
 		write8(out, 0);			/* finetune */
@@ -37,7 +39,7 @@ static int depack_GMC(FILE *in, FILE *out)
 		looplen = read16b(in);		/* loop size */
 		write16b(out, looplen > 2 ? len - looplen : 0);
 		write16b(out, looplen <= 2 ? 1 : looplen);
-		read16b(in);	/* always zero? */
+		read16b(in);			/* always zero? */
 	}
 
 	memset(tmp, 0, 30);
@@ -46,7 +48,7 @@ static int depack_GMC(FILE *in, FILE *out)
 		fwrite(tmp, 30, 1, out);
 
 	fseek(in, 0xf3, 0);
-	write8(out, PatPos = read8(in));	/* pattern list size */
+	write8(out, pat_pos = read8(in));	/* pattern list size */
 	write8(out, 0x7f);			/* ntk byte */
 
 	/* read and write size of pattern list */
@@ -112,7 +114,6 @@ static int test_GMC(uint8 *data, char *t, int s)
 #if 0
 	/* test #1 */
 	if (i < 7) {
-/*printf ( "#1\n" );*/
 		return -1;
 	}
 	start = i - 7;
