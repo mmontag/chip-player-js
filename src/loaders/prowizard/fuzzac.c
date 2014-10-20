@@ -1,6 +1,5 @@
 /*
  * fuzzac.c   Copyright (C) 1997 Asle / ReDoX
- *            Modified by Claudio Matsuoka
  *
  * Converts Fuzzac packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
@@ -11,6 +10,8 @@
  *      pattern order (most of the time the list is generated badly ..).
  *      Dont know why I did it for this depacker because I've but one
  *      exemple file ! :)
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -166,36 +167,34 @@ static int depack_fuzz(FILE *in, FILE *out)
 	return 0;
 }
 
-static int test_fuzz (uint8 *data, char *t, int s)
+static int test_fuzz(uint8 *data, char *t, int s)
 {
-	int j, k;
-	int start = 0, ssize = 0;
+	int i;
 
 	if (readmem32b(data) != MAGIC4('M','1','.','0'))
 		return -1;
 
 	/* test finetune */
-	for (k = 0; k < 31; k++) {
-		if (data[start + 72 + k * 68] > 0x0f)
+	for (i = 0; i < 31; i++) {
+		if (data[72 + i * 68] > 0x0f)
 			return -1;
 	}
 
 	/* test volumes */
-	for (k = 0; k < 31; k++) {
-		if (data[start + 73 + k * 68] > 0x40)
+	for (i = 0; i < 31; i++) {
+		if (data[73 + i * 68] > 0x40)
 			return -1;
 	}
 
 	/* test sample sizes */
-	for (k = 0; k < 31; k++) {
-		j = readmem16b(data + start + k * 68 + 66);
-		if (j > 0x8000)
+	for (i = 0; i < 31; i++) {
+		int len = readmem16b(data + i * 68 + 66);
+		if (len > 0x8000)
 			return -1;
-		ssize += j * 2;
 	}
 
 	/* test size of pattern list */
-	if (data[start + 2114] == 0x00)
+	if (data[2114] == 0x00)
 		return -1;
 
 	pw_read_title(NULL, t, 0);
