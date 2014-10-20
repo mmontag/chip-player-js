@@ -1,8 +1,9 @@
-    /*
+/*
  * Kefrens_Sound_Machine.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
- *                           Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Depacks musics in the Kefrens Sound Machine format and saves in ptk.
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>

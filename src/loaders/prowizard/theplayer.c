@@ -180,8 +180,6 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     uint8 *tdata;
     uint8 ptable[128];
     int isize[31];
-/*  uint8 PACK[31];*/
-/*  uint8 DELTA[31];*/
     uint8 delta = 0;
     uint8 pack = 0;
     int taddr[128][4];
@@ -191,7 +189,7 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     int i, j, k;
     int smp_size[31];
     int saddr[31];
-    int unpacked_ssize;
+    /*int unpacked_ssize;*/
     int val;
     uint8 buf[1024];
 
@@ -220,7 +218,7 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
 
     if (version >= 0x60 && nins & 0x40) {
 	/* Some samples are packed -- depacking not implemented */
-	pack = 1;
+	/* pack = 1; */
 
 	free(tdata);
 	return -1;
@@ -229,7 +227,7 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     nins &= 0x3f;
 
     if (pack == 1)
-	unpacked_ssize = read32b(in);	/* unpacked sample data size */
+	/* unpacked_ssize =*/ read32b(in);	/* unpacked sample data size */
 
     pw_write_zero(out, 20);		/* write title */
 

@@ -1,10 +1,11 @@
 /*
  * Heatseeker_mc1.0.c   Copyright (C) 1997 Asle / ReDoX
- *			Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts back to ptk Heatseeker packed MODs
  *
  * Asle's note: There's a good job ! .. gosh !.
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -146,7 +147,7 @@ static int test_crb(uint8 *data, char *t, int s)
 		ssize += len;
 	}
 
-/* printf ("3\n"); */
+	/* printf ("3\n"); */
 	if (ssize <= 4)
 		return -1;
 
