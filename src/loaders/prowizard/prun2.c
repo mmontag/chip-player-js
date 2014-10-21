@@ -1,8 +1,9 @@
 /*
  * ProRunner2.c   Copyright (C) 1996-1999 Asle / ReDoX
- *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts ProRunner v2 packed MODs back to Protracker
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -82,20 +83,9 @@ static int depack_pru2(FILE *in, FILE *out)
 			}
 
 			/* rol previous values */
-			v[0][0] = v[1][0];
-			v[0][1] = v[1][1];
-			v[0][2] = v[1][2];
-			v[0][3] = v[1][3];
-
-			v[1][0] = v[2][0];
-			v[1][1] = v[2][1];
-			v[1][2] = v[2][2];
-			v[1][3] = v[2][3];
-
-			v[2][0] = v[3][0];
-			v[2][1] = v[3][1];
-			v[2][2] = v[3][2];
-			v[2][3] = v[3][3];
+			memcpy(&v[0], &v[1], 4);
+			memcpy(&v[1], &v[2], 4);
+			memcpy(&v[2], &v[3], 4);
 
 			v[3][0] = c1;
 			v[3][1] = c2;
@@ -113,11 +103,10 @@ static int depack_pru2(FILE *in, FILE *out)
 static int test_pru2(uint8 *data, char *t, int s)
 {
 	int k;
-	int start = 0;
 
 	PW_REQUEST_DATA(s, 12 + 31 * 8);
 
-	if (data[0]!='S' || data[1]!='N' || data[2]!='T' || data[3]!='!')
+	if (readmem32b(data) != 0x534e5421)
 		return -1;
 
 #if 0
@@ -130,13 +119,13 @@ static int test_pru2(uint8 *data, char *t, int s)
 
 	/* test volumes */
 	for (k = 0; k < 31; k++) {
-		if (data[start + 11 + k * 8] > 0x40)
+		if (data[11 + k * 8] > 0x40)
 			return -1;
 	}
 
 	/* test finetunes */
 	for (k = 0; k < 31; k++) {
-		if (data[start + 10 + k * 8] > 0x0F)
+		if (data[10 + k * 8] > 0x0F)
 			return -1;
 	}
 
