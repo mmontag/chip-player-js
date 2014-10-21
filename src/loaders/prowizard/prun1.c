@@ -1,8 +1,9 @@
 /*
  * ProRunner1.c   Copyright (C) 1996 Asle / ReDoX
- *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts MODs packed with Prorunner v1.0
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -79,20 +80,17 @@ static int depack_pru1 (FILE *in, FILE *out)
 
 static int test_pru1(uint8 *data, char *t, int s)
 {
-	int start = 0;
+	PW_REQUEST_DATA(s, 1084);
 
-	PW_REQUEST_DATA(s, 1080);
-
-	if (data[1080] != 'S' || data[1081] != 'N' ||
-		data[1082] != 'T' || data[1083] != '.')
+	if (readmem32b(data + 1080) != 0x534e542e)	/* "SNT." */
 		return -1;
 
 	/* test 2 */
-	if (data[start + 951] != 0x7f)
+	if (data[951] != 0x7f)
 		return -1;
 
 	/* test 3 */
-	if (data[start + 950] > 0x7f)
+	if (data[950] > 0x7f)
 		return -1;
 
 	pw_read_title(data, t, 20);
