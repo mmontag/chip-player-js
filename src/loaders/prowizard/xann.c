@@ -1,8 +1,9 @@
 /*
  * XANN_Packer.c   Copyright (C) 1997 Asle / ReDoX
- *                 Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * XANN Packer to Protracker.
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -76,6 +77,8 @@ static int depack_xann(FILE *in, FILE *out)
 
 	for (i = 0; i < pat; i++) {
 		for (j = 0; j < 256; j++) {
+			uint8 *p = pdata + j * 4;
+
 			ins = (read8(in) >> 3) & 0x1f;
 			note = read8(in);
 			fxt = read8(in);
@@ -179,12 +182,12 @@ static int depack_xann(FILE *in, FILE *out)
 				break;
 			}
 
-			pdata[j * 4] = (ins & 0xf0);
-			pdata[j * 4] |= ptk_table[(note / 2)][0];
-			pdata[j * 4 + 1] = ptk_table[(note / 2)][1];
-			pdata[j * 4 + 2] = ((ins << 4) & 0xf0);
-			pdata[j * 4 + 2] |= fxt;
-			pdata[j * 4 + 3] = fxp;
+			p[0] = ins & 0xf0;
+			p[0] |= ptk_table[note >> 1][0];
+			p[1] = ptk_table[note >> 1][1];
+			p[2] = (ins << 4) & 0xf0;
+			p[2] |= fxt;
+			p[3] = fxp;
 		}
 
 		fwrite(pdata, 1024, 1, out);

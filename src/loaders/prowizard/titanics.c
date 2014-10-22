@@ -1,6 +1,7 @@
 /*
  * TitanicsPlayer.c  Copyright (C) 2007 Sylvain "Asle" Chipaux
- * xmp version Copyright (C) 2009 Claudio Matsuoka
+ *
+ * Modified in 2009,2014 by Claudio Matsuoka
  */
 
 /*

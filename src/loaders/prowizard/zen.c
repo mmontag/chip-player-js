@@ -1,8 +1,9 @@
 /*
  * Zen_Packer.c   Copyright (C) 1998 Asle / ReDoX
- *                Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts ZEN packed MODs back to PTK MODs
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
