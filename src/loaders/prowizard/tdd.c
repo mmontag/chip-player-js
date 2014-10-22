@@ -1,8 +1,9 @@
 /*
  * tdd.c   Copyright (C) 1999 Asle / ReDoX
- *         Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts TDD packed MODs back to PTK MODs
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -107,109 +108,108 @@ static int depack_tdd(FILE *in, FILE *out)
 
 static int test_tdd(uint8 *data, char *t, int s)
 {
-	int j, k, l, m, n;
-	int start = 0, ssize;
+	int i;
+	int ssize, psize, pdata_ofs;
 
 	PW_REQUEST_DATA (s, 564);
 
 	/* test #2 (volumes,sample addresses and whole sample size) */
 	ssize = 0;
-	for (j = 0; j < 31; j++) {
-		uint8 *d = data + start + j * 14;
-
-		k = readmem32b(d + 130);	/* sample address */
-		l = readmem16b(d + 134);	/* sample size */
-		m = readmem32b(d + 138);	/* loop start address */
-		n = readmem16b(d + 142);	/* loop size (replen) */
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 14;
+		int addr = readmem32b(d + 130);	/* sample address */
+		int size = readmem16b(d + 134);	/* sample size */
+		int sadr = readmem32b(d + 138);	/* loop start address */
+		int lsiz = readmem16b(d + 142);	/* loop size (replen) */
 
 		/* volume > 40h ? */
-		if (data[start + j * 14 + 137] > 0x40)
+		if (d[137] > 0x40)
 			return -1;
 
 		/* loop start addy < sampl addy ? */
-		if (m < k)
+		if (sadr < addr)
 			return -1;
 
 		/* addy < 564 ? */
-		if (k < 564 || m < 564)
+		if (addr < 564 || sadr < 564)
 			return -1;
 
 		/* loop start > size ? */
-		if (m - k > l)
+		if (sadr - addr > size)
 			return -1;
 
 		/* loop start+replen > size ? */
-		if (m - k + n > l + 2)
+		if (sadr - addr + lsiz > size + 2)
 			return -1;
 
-		ssize += l;
+		ssize += size;
 	}
 
-	if (ssize <= 2 || ssize > (31 * 65535))
+	if (ssize <= 2 || ssize > 31 * 65535)
 		return -1;
 
 #if 0
 	/* test #3 (addresses of pattern in file ... ptk_tableible ?) */
 	/* ssize is the whole sample size :) */
 	if ((ssize + 564) > in_size) {
-/*printf ( "#3 (start:%ld)\n" , start );*/
 		Test = BAD;
 		return;
 	}
 #endif
 
 	/* test size of pattern list */
-	if (data[start] > 0x7f || data[start] == 0x00)
+	if (data[0] == 0 || data[0] > 0x7f)
 		return -1;
 
 	/* test pattern list */
-	k = 0;
-	for (j = 0; j < 128; j++) {
-		if (data[start + j + 2] > 0x7f)
+	psize = 0;
+	for (i = 0; i < 128; i++) {
+		int pat = data[i + 2];
+		if (pat > 0x7f)
 			return -1;
-		if (data[start + j + 2] > k)
-			k = data[start + j + 2];
+		if (pat > psize)
+			psize = pat;
 	}
-	k += 1;
-	k *= 1024;
+	psize++;
+	psize <<= 10;
 
 	/* test end of pattern list */
-	for (j = data[start] + 2; j < 128; j++) {
-		if (data[start + j + 2] != 0)
+	for (i = data[0] + 2; i < 128; i++) {
+		if (data[i + 2] != 0)
 			return -1;
 	}
 
 #if 0
 	/* test if not out of file range */
-	if ((start + ssize + 564 + k) > in_size)
+	if ((ssize + 564 + k) > in_size)
 		return -1;
 #endif
 
 	/* ssize is the whole sample data size */
-	/* k is the whole pattern data size */
 	/* test pattern data now ... */
-	l = start + 564 + ssize;
-	/* l points on pattern data */
+	pdata_ofs = 564 + ssize;
 
-	for (j = 0; j < k; j += 4) {
+	for (i = 0; i < psize; i += 4) {
+		uint8 *d = data + pdata_ofs + i;
+
 		/* sample number > 31 ? */
-		if (data[l + j] > 0x1f)
+		if (d[0] > 0x1f)
 			return -1;
 
 		/* note > 0x48 (36*2) */
-		if (data[l + j + 1] > 0x48 || (data[l + j + 1] & 0x01) == 0x01)
+		if (d[1] > 0x48 || (d[1] & 0x01) == 0x01)
 			return -1;
 
 		/* fx=C and fxtArg > 64 ? */
-		if ((data[l + j + 2] & 0x0f) == 0x0c && data[l + j + 3] > 0x40)
+		if ((d[2] & 0x0f) == 0x0c && d[3] > 0x40)
 			return -1;
 
 		/* fx=D and fxtArg > 64 ? */
-		if ((data[l + j + 2] & 0x0f) == 0x0d && data[l + j + 3] > 0x40)
+		if ((d[2] & 0x0f) == 0x0d && d[3] > 0x40)
 			return -1;
 
 		/* fx=B and fxtArg > 127 ? */
-		if ((data[l + j + 2] & 0x0f) == 0x0b)
+		if ((d[2] & 0x0f) == 0x0b)
 			return -1;
 	}
 
