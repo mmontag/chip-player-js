@@ -1,8 +1,9 @@
 /*
  * StarTrekker_Packer.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
- *                        Copyright (C) 2006-2009 Claudio Matsuoka
  *
  * Converts back to ptk StarTrekker packed MODs
+ *
+ * Modified in 2006,2009,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -180,9 +181,8 @@ static int depack_starpack(FILE *in, FILE *out)
 
 static int test_starpack(uint8 *data, char *t, int s)
 {
-	int start = 0;
-	int j, k, l, m;
-	int ssize;
+	int i;
+	int plist_size, len, sdata_ofs, pdata_ofs;
 
 #if 0
 	/* test 1 */
@@ -193,110 +193,93 @@ static int test_starpack(uint8 *data, char *t, int s)
 #endif
 
 	/* test 2 */
-	l = (data[start + 268] << 8) + data[start + 269];
-	if (l & 0x03)
+	plist_size = readmem16b(data + 268);
+	if (plist_size & 0x03)
 		return -1;
 
-	k = l / 4;
-	if (k == 0 || k > 127)
+	len = plist_size >> 2;
+	if (len == 0 || len > 127)
 		return -1;
 
-	if (data[start + 784] != 0)
+	if (data[784] != 0)
 		return -1;
 
 	/* test #3  smp size < loop start + loop size ? */
-	/* l is still the size of the pattern list */
-	for (k = 0; k < 31; k++) {
-		j = (((data[start + 20 + k * 8] << 8) + data[start + 21 + k * 8]) * 2);
-		ssize = (((data[start + 24 + k * 8] << 8) + data[start + 25 + k * 8]) * 2) + (((data[start + 26 + k * 8] << 8) + data[start + 27 + k * 8]) * 2);
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 8;
+		int size = readmem16b(d + 20) << 1;
+		int lend = (readmem16b(d + 24) + readmem16b(d + 26)) << 1;
 
-		if ((j + 2) < ssize)
+		if (lend > size + 2)
 			return -1;
 	}
 
 	/* test #4  finetunes & volumes */
-	/* l is still the size of the pattern list */
-	for (k = 0; k < 31; k++) {
-		if ((data[start + 22 + k * 8] > 0x0f) || (data[start + 23 + k * 8] > 0x40))
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 8;
+		if (d[22] > 0x0f || d[23] > 0x40)
 			return -1;
 	}
 
 	/* test #5  pattern addresses > sample address ? */
-	/* l is still the size of the pattern list */
 	/* get sample data address */
 #if 0
 	if ((start + 0x314) > in_size) {
-/*printf ( "#5,-1 (Start:%ld)\n" , start );*/
 		Test = BAD;
 		return;
 	}
 #endif
-	/* k gets address of sample data */
-	k = (data[start + 784] << 24)
-		+ (data[start + 785] << 16)
-		+ (data[start + 786] << 8)
-		+ data[start + 787];
+	/* address of sample data */
+	sdata_ofs = readmem32b(data + 784);
+
 #if 0
 	if ((k + start) > in_size) {
 		Test = BAD;
 		return;
 	}
 #endif
-	if (k < 788)
+	if (sdata_ofs < 788)
 		return -1;
 
-	/* k is the address of the sample data */
 	/* pattern addresses > sample address ? */
-	for (j = 0; j < l; j += 4) {
-		/* m gets each pattern address */ m =
-			(data[start + 272 + j] << 24) +
-			(data[start + 273 + j] << 16)
-			+ (data[start + 274 + j] << 8)
-			+ data[start + 275 + j];
-		if (m > k)
+	for (i = 0; i < len; i += 4) {
+		/* each pattern address */
+		if (readmem32b(data + i + 272) > sdata_ofs)
 			return -1;
 	}
 
 	/* test last patterns of the pattern list == 0 ? */
-	for (j += 2; j < 128; j++) {
-		m = (data[start + 272 + j * 4] << 24) +
-			(data[start + 273 + j * 4] << 16) +
-			(data[start + 274 + j * 4] << 8)
-			+ data[start + 275 + j * 4];
-		if (m != 0)
+	for (i += 2; i < 128; i++) {
+		if (readmem32b(data + i * 4 + 272) != 0)
 			return -1;
 	}
 
 	/* test pattern data */
-	/* k is the address of the sample data */
-	j = start + 788;
-	/* j points on pattern data */
-	while (j < (k + start - 4)) {
-		if (data[j] == 0x80) {
-			j += 1;
+	pdata_ofs = 788;
+	while (pdata_ofs < sdata_ofs + 4) {
+		uint8 *d = data + pdata_ofs;
+
+		if (d[0] == 0x80) {
+			pdata_ofs++;
 			continue;
 		}
 
-		if (data[j] > 0x80)
+		if (d[0] > 0x80)
 			return -1;
 
-		/* empty row ? ... not ptk_tableible ! */
-		if ((data[j] == 0x00) &&
-			(data[j + 1] == 0x00) &&
-			(data[j + 2] == 0x00) &&
-			(data[j + 3] == 0x00)) {
+		/* empty row ? ... not possible ! */
+		if (readmem32b(d) == 0)
 			return - 1;
-		}
 
 		/* fx = C .. arg > 64 ? */
-		if (((data[j + 2] * 0x0f) == 0x0C) && (data[j + 3] > 0x40))
+		if ((d[2] * 0x0f) == 0x0c && d[3] > 0x40)
 			return - 1;
 
 		/* fx = D .. arg > 64 ? */
-		if (((data[j + 2] * 0x0f) == 0x0D) && (data[j + 3] > 0x40))
+		if ((d[2] * 0x0f) == 0x0d && d[3] > 0x40)
 			return - 1;
 
-		j += 4;
+		pdata_ofs += 4;
 	}
 
 	pw_read_title(data, t, 20);
