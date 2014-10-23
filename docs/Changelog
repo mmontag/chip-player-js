@@ -12,6 +12,7 @@ Stable versions
 	- fix EMOD instrument finetune (reported by Andreas Argirakis)
 	- fix ST2.6 speed effect (reported by Saga Musix)
 	- fix crash in envelope reset with invalid instrument
+	- fix module titles and instrument names in Mac OS X
 	- fix row delay initialization on new module
 	- refactor depacking code
 	- code cleanup

@@ -118,16 +118,6 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 #endif	/* !_MSC_VER */
 
-#ifdef HAVE_STRLCPY
-#undef strncpy
-#define strncpy strlcpy
-#endif
-
-#ifdef HAVE_STRLCAT
-#undef strncat
-#define strncat strlcat
-#endif
-
 #ifdef _MSC_VER
 #define dup _dup
 #define fileno _fileno
