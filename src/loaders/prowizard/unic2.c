@@ -1,8 +1,9 @@
 /*
  * Unic_Tracker_2.c   Copyright (C) 1997 Asle / ReDoX
- *                    Copyright 2006-2007 Claudio Matsuoka
  *
  * Convert Unic Tracker 2 MODs to Protracker
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -17,12 +18,15 @@ static int depack_unic2(FILE *in, FILE *out)
 	uint8 ins, note, fxt, fxp;
 	uint8 fine;
 	uint8 tmp[1025];
-	int i, j, k, l;
-	int ssize = 0;
+	int i, j;
+	int ssize;
 
 	pw_write_zero(out, 20);		/* title */
 
+	ssize = 0;
 	for (i = 0; i < 31; i++) {
+		int len, start, lsize;
+
 		pw_move_data(out, in, 20);	/* sample name */
 		write8(out, 0);
 		write8(out, 0);
@@ -42,22 +46,23 @@ static int depack_unic2(FILE *in, FILE *out)
 		}
 
 		/* smp size */
-		write16b(out, l = read16b(in));
-		ssize += l * 2;
+		len = read16b(in);
+		write16b(out, len);
+		ssize += len << 1;
 
 		read8(in);
 		write8(out, fine);		/* fine */
 		write8(out, read8(in));		/* vol */
 
-		j = read16b(in);		/* loop start */
-		k = read16b(in);		/* loop size */
+		start = read16b(in);		/* loop start */
+		lsize = read16b(in);		/* loop size */
 
-		if ((((j * 2) + k) <= l) && (j != 0)) {
-			j *= 2;
+		if (start * 2 + lsize <= len && start != 0) {
+			start <<= 1;
 		}
 
-		write16b(out, j);
-		write16b(out, k);
+		write16b(out, start);
+		write16b(out, lsize);
 	}
 
 	write8(out, npat = read8(in));		/* number of pattern */
