@@ -1,8 +1,9 @@
 /*
  * TrackerPacker_v3.c   Copyright (C) 1998 Asle / ReDoX
- *                      Copyright (C) 2007 Claudio Matsuoka
  *
  * Converts tp3 packed MODs back to PTK MODs
+ *
+ * Modified in 2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -17,7 +18,7 @@ static int depack_tp3(FILE *in, FILE *out)
 	uint8 pdata[1024];
 	uint8 tmp[50];
 	uint8 note, ins, fxt, fxp;
-	uint8 npat, nsmp;
+	uint8 npat, nins;
 	uint8 len;
 	int trk_ofs[128][4];
 	int i = 0, j = 0, k;
@@ -30,9 +31,9 @@ static int depack_tp3(FILE *in, FILE *out)
 
 	fseek(in, 8, SEEK_CUR);
 	pw_move_data(out, in, 20);		/* title */
-	nsmp = read16b(in) / 8;			/* number of sample */
+	nins = read16b(in) / 8;			/* number of sample */
 
-	for (i = 0; i < nsmp; i++) {
+	for (i = 0; i < nins; i++) {
 		pw_write_zero(out, 22);		/*sample name */
 
 		c3 = read8(in);			/* read finetune */
@@ -92,7 +93,7 @@ static int depack_tp3(FILE *in, FILE *out)
 			fseek(in, pat_ofs + trk_ofs[i][j], SEEK_SET);
 
 			for (k = 0; k < 64; k++) {
-				int x = k * 16 + j * 4;
+				uint8 *p = pdata + k * 16 + j * 4;
 
 				c1 = read8(in);
 				if ((c1 & 0xc0) == 0xc0) {
@@ -114,8 +115,8 @@ static int depack_tp3(FILE *in, FILE *out)
 					}
 					if (fxt == 0x08)
 						fxt = 0x00;
-					pdata[x + 2] = fxt;
-					pdata[x + 3] = fxp;
+					p[2] = fxt;
+					p[3] = fxp;
 					continue;
 				}
 
@@ -131,10 +132,10 @@ static int depack_tp3(FILE *in, FILE *out)
 				fxt = c2 & 0x0f;
 
 				if (fxt == 0x00) {
-					pdata[x] = ins & 0xf0;
-					pdata[x] |= ptk_table[note][0];
-					pdata[x + 1] = ptk_table[note][1];
-					pdata[x + 2] = (ins << 4) & 0xf0;
+					p[0] = ins & 0xf0;
+					p[0] |= ptk_table[note][0];
+					p[1] = ptk_table[note][1];
+					p[2] = (ins << 4) & 0xf0;
 					continue;
 				}
 
@@ -144,20 +145,18 @@ static int depack_tp3(FILE *in, FILE *out)
 					fxt = 0x00;
 
 				fxp = c3;
-				if ((fxt == 0x05) || (fxt == 0x06)
-					|| (fxt == 0x0A)) {
-					if (fxp > 0x80)
+				if (fxt == 0x05 || fxt == 0x06 || fxt == 0x0a) {
+					if (fxp > 0x80) {
 						fxp = 0x100 - fxp;
-					else if (fxp <= 0x80)
+					} else if (fxp <= 0x80) {
 						fxp = (fxp << 4) & 0xf0;
+					}
 				}
 
-				pdata[x] = ins & 0xf0;
-				pdata[x] |= ptk_table[note][0];
-				pdata[x + 1] = ptk_table[note][1];
-				pdata[x + 2] = (ins << 4) & 0xf0;
-				pdata[x + 2] |= fxt;
-				pdata[x + 3] = fxp;
+				p[0] = (ins & 0xf0) | ptk_table[note][0];
+				p[1] = ptk_table[note][1];
+				p[2] = ((ins << 4) & 0xf0) | fxt;
+				p[3] = fxp;
 			}
 			where = ftell(in);
 			if (where > max_trk_ofs)
@@ -178,9 +177,8 @@ static int depack_tp3(FILE *in, FILE *out)
 
 static int test_tp3(uint8 *data, char *t, int s)
 {
-	int start = 0;
-	int j, k, l, m, n;
-	int ssize;
+	int i;
+	int npat, nins, ssize;
 
 	PW_REQUEST_DATA(s, 1024);
 
@@ -188,59 +186,52 @@ static int test_tp3(uint8 *data, char *t, int s)
 		return -1;
 
 	/* number of sample */
-	l = readmem16b(data + start + 28);
+	nins = readmem16b(data + 28);
 
-	if (l & 0x07 || l == 0)
+	if (nins == 0 || nins & 0x07)
 		return -1;
 
-	l /= 8;
+	nins >>= 3;
 
-	/* l is the number of sample */
+	for (i = 0; i < nins; i++) {
+		uint8 *d = data + i * 8;
 
-	/* test finetunes */
-	for (k = 0; k < l; k++) {
-		if (data[start + 30 + k * 8] > 0x0f)
+		/* test finetunes */
+		if (d[30] > 0x0f)
 			return -1;
-	}
 
-	/* test volumes */
-	for (k = 0; k < l; k++) {
-		if (data[start + 31 + k * 8] > 0x40)
+		/* test volumes */
+		if (d[31] > 0x40)
 			return - 1;
 	}
 
 	/* test sample sizes */
 	ssize = 0;
-	for (k = 0; k < l; k++) {
-		int x = start + k * 8;
+	for (i = 0; i < nins; i++) {
+		uint8 *d = data + i * 8;
+		int len = readmem16b(d + 32) << 1;	/* size */
+		int start = readmem16b(d + 34) << 1;	/* loop start */
+		int lsize = readmem16b(d + 36) << 1;	/* loop size */
 
-		j = readmem16b(data + x + 32) * 2;	/* size */
-		m = readmem16b(data + x + 34) * 2;	/* loop start */
-		n = readmem16b(data + x + 36) * 2;	/* loop size */
-
-		if (j > 0xffff || m > 0xffff || n > 0xffff)
+		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
 			return -1;
 
-		if (m + n > j + 2)
+		if (start + lsize > len + 2)
 			return -1;
 
-		if (m != 0 && n == 0)
+		if (start != 0 && lsize == 0)
 			return -1;
 
-		ssize += j;
+		ssize += len;
 	}
 
 	if (ssize <= 4)
 		return -1;
 
 	/* pattern list size */
-	j = data[start + l * 8 + 31];
-	if (l == 0 || l > 128)
+	npat = data[nins * 8 + 31];
+	if (npat == 0 || npat > 128)
 		return -1;
-
-	/* j is the size of the pattern list */
-	/* l is the number of sample */
-	/* ssize is the sample data size */
 
 	pw_read_title(data + 8, t, 20);
 
