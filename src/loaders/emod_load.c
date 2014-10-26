@@ -94,7 +94,7 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE * f, void *parm)
 		xxs->len = 2 * hio_read16b(f);
 		hio_read(xxi->name, 1, 20, f);
 		xxs->flg = hio_read8(f) & 1 ? XMP_SAMPLE_LOOP : 0;
-		sub->fin = hio_read8(f);
+		sub->fin = hio_read8s(f) << 4;
 		xxs->lps = 2 * hio_read16b(f);
 		xxs->lpe = xxs->lps + 2 * hio_read16b(f);
 		hio_read32b(f);	/* ptr */

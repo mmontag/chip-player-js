@@ -5,6 +5,7 @@ Stable versions
 	- fix STM empty note event read
 	- fix ABK loader test in Win32
 	- fix XM invalid memory access in event reader
+	- fix EMOD instrument finetune (reported by Andreas Argirakis)
 	- fix ST2.6 speed effect (reported by Saga Musix)
 	- fix crash in envelope reset with invalid instrument
 	- fix row delay initialization on new module
