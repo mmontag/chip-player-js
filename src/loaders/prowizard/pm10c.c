@@ -14,9 +14,9 @@
 static int depack_p10c(FILE *in, FILE *out)
 {
 	uint8 c1, c2;
-	short pat_max = 0;
-	long tmp_ptr, tmp1, tmp2;
-	short refmax = 0;
+	int pat_max;
+	int tmp_ptr, tmp1, tmp2;
+	int refmax;
 	uint8 pnum[128];
 	uint8 pnum1[128];
 	int paddr[128];
@@ -27,7 +27,7 @@ static int depack_p10c(FILE *in, FILE *out)
 	uint8 *reftab;
 	uint8 pat[128][1024];
 	int i, j, k, l;
-	int size, ssize = 0;
+	int size, ssize;
 	int psize;
 	int smp_ofs;
 	uint8 fin[31];
@@ -50,6 +50,7 @@ static int depack_p10c(FILE *in, FILE *out)
 	/* bypass replaycode routine */
 	fseek(in, 4460, SEEK_SET);
 
+	ssize = 0;
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);			/*sample name */
 		write16b(out, size = read16b(in));	/* size */
@@ -141,7 +142,9 @@ restart:
 
 	/* go back to pattern data starting address */
 	fseek(in, 5222, SEEK_SET);
+
 	/* now, reading all pattern data to get the max value of note */
+	refmax = 0;
 	for (j = 0; j < psize; j += 2) {
 		int x = read16b(in);
 		if (x > refmax)
@@ -162,21 +165,21 @@ restart:
 		for (i = 0; i < 64; i++) {
 			for (k = 0; k < 4; k++) {
 				uint8 *p = &pat[j][i * 16 + k * 4];
-				int fine, ins, per, fxt, x;
+				int x = read16b(in) << 2;
+				int fine, ins, per, fxt;
 
-				x = read16b(in);
-				memcpy(p, &reftab[x * 4], 4);
+				memcpy(p, &reftab[x], 4);
 
 				ins = ((p[2] >> 4) & 0x0f) | (p[0] & 0xf0);
 				if (ins != 0) {
 					oldins[k] = ins;
 				}
 
-				per = ((p[0] & 0x0f) << 8) + p[1];
+				per = ((p[0] & 0x0f) << 8) | p[1];
 				fxt = p[2] & 0x0f;
-				fine = fin[oldins[k] - 1 ];
+				fine = fin[oldins[k] - 1];
 
-				if (per != 0 && fine != 0) {
+				if (per != 0 && oldins[k] > 0 && fine != 0) {
 					for (l = 0; l < 36; l++) {
 						if (tun_table[fine][l] == per) {
 							p[0] &= 0xf0;
