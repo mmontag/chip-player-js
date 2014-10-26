@@ -1,9 +1,10 @@
 /*
  * Unic_Tracker.c   Copyright (C) 1997 Asle / ReDoX
- *		    Copyright (C) 2006-2007 Claudio Matsuoka
  * 
  * Unic tracked MODs to Protracker
  * both with or without ID Unic files will be converted
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -14,10 +15,8 @@
 #define MAGIC_M_K_	MAGIC4('M','.','K','.')
 #define MAGIC_0000	MAGIC4(0x0,0x0,0x0,0x0)
 
-#define ON 1
-#define OFF 2
 
-static int depack_unic (FILE *in, FILE *out)
+static int depack_unic(FILE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 npat;
@@ -25,14 +24,16 @@ static int depack_unic (FILE *in, FILE *out)
 	uint8 ins, note, fxt, fxp;
 	uint8 fine;
 	uint8 tmp[1025];
-	uint8 loop_status = OFF;	/* standard /2 */
-	int i = 0, j = 0, k = 0, l = 0;
-	int ssize = 0;
+	int i, j;
+	int ssize;
 	uint32 id;
 
 	pw_move_data(out, in, 20);		/* title */
 
+	ssize = 0;
 	for (i = 0; i < 31; i++) {
+		int len, start, lsize;
+
 		pw_move_data(out, in, 20);	/* sample name */
 		write8(out, 0);
 		write8(out, 0);
@@ -51,25 +52,26 @@ static int depack_unic (FILE *in, FILE *out)
 		}
 
 		/* smp size */
-		write16b(out, l = read16b(in));
-		ssize += l * 2;
+		len = read16b(in);
+		write16b(out, len);
+		ssize += len * 2;
 
 		read8(in);
 		write8(out, fine);		/* fine */
 		write8(out, read8(in));		/* vol */
-		j = read16b(in);		/* loop start */
-		k = read16b(in);		/* loop size */
+		start = read16b(in);		/* loop start */
+		lsize = read16b(in);		/* loop size */
 
-		if ((((j * 2) + k) <= l) && (j != 0)) {
-			loop_status = ON;
-			j *= 2;
+		if (start * 2 + lsize <= len && start != 0) {
+			start <<= 1;
 		}
 
-		write16b(out, j);
-		write16b(out, k);
+		write16b(out, start);
+		write16b(out, lsize);
 	}
 
-	write8(out, npat = read8(in));		/* number of pattern */
+	npat = read8(in);
+	write8(out, npat);			/* number of pattern */
 	write8(out, 0x7f);			/* noisetracker byte */
 	read8(in);
 
