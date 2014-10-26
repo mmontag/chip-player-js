@@ -1,6 +1,7 @@
 /*
  * NovoTrade.c   Copyright (C) 2007 Asle / ReDoX
- * xmp version Copyright (C) 2009 Claudio Matsuoka
+ *
+ * Modified in 2009,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -102,21 +103,20 @@ static int depack_ntp(FILE *in, FILE *out)
 static int test_ntp(uint8 *data, char *t, int s)
 {
 	int j, k;
-	int start = 0;
 
 	PW_REQUEST_DATA(s, 64);
-	if (readmem32b(data + start) != MAGIC4('M','O','D','U'))
+	if (readmem32b(data) != MAGIC4('M','O','D','U'))
 		return -1;
 
-	j = readmem16b(data + start + 20) + 4;		/* "BODY" tag */
-	k = readmem16b(data + start + 28) + j + 4;	/* "SAMP" tag */
+	j = readmem16b(data + 20) + 4;		/* "BODY" tag */
+	k = readmem16b(data + 28) + j + 4;	/* "SAMP" tag */
 
 	PW_REQUEST_DATA(s, j + 4);
-	if (readmem32b(data + start + j) != MAGIC4('B','O','D','Y'))
+	if (readmem32b(data + j) != MAGIC4('B','O','D','Y'))
 		return -1;
 
 	PW_REQUEST_DATA(s, k + 4);
-	if (readmem32b(data + start + k) != MAGIC4('S','A','M','P'))
+	if (readmem32b(data + k) != MAGIC4('S','A','M','P'))
 		return -1;
 
 	pw_read_title(data + 4, t, 16);

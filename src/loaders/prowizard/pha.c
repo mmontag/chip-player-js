@@ -1,9 +1,10 @@
 /*
  * PhaPacker.c   Copyright (C) 1996-1999 Asle / ReDoX
- *               Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts PHA packed MODs back to PTK MODs
  * nth revision :(.
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
