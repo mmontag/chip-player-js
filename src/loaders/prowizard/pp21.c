@@ -1,10 +1,11 @@
 /*
  * ProPacker_21.c   Copyright (C) 1997 Sylvain "Asle" Chipaux
- *		    Copyright (C) 2006-2009 Claudio Matsuoka
  *
  * Converts PP21 packed MODs back to PTK MODs
  * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
  * would not exist !!!
+ *
+ * Modified in 2006,2009,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -99,62 +100,60 @@ static int depack_pp21(FILE *in, FILE *out)
 
 static int test_pp21(uint8 *data, char *t, int s)
 {
-	int j, k, l;
-	int start = 0;
-	int ssize;
+	int i;
+	int ssize, tsize, npat, max_ref;
 
-	l = 0;
-	for (j = 0; j < 31; j++) {
-		k = ((data[start + j * 8] << 8) + data[start + 1 + j * 8]) * 2;
-		l += k;
+	ssize = 0;
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 8;
+		int len = readmem16b(d) << 1;
+		int start = readmem16b(d + 4) << 1;
+
+		ssize += len;
 
 		/* finetune > 0x0f ? */
-		if (data[start + 2 + 8 * j] > 0x0f)
+		if (d[2] > 0x0f)
 			return -1;
 
 		/* loop start > size ? */
-		if ((((data[start + 4 + j * 8] << 8) + data[start + 5 + j * 8]) * 2) > k)
+		if (start > len)
 			return -1;
 	}
 
-	if (l <= 2)
+	if (ssize <= 2)
 		return -1;
 
 	/* test #3   about size of pattern list */
-	l = data[start + 248];
-	if (l > 127 || l == 0)
+	npat = data[248];
+	if (npat == 0 || npat > 127)
 		return -1;
 
 	/* get the highest track value */
-	k = 0;
-	for (j = 0; j < 512; j++) {
-		l = data[start + 250 + j];
-		if (l > k)
-			k = l;
+	tsize = 0;
+	for (i = 0; i < 512; i++) {
+		int trk = data[250 + i];
+		if (trk > tsize)
+			tsize = trk;
 	}
-	/* k is the highest track number */
-	k += 1;
-	k *= 64;
+
+	tsize++;
+	tsize <<= 6;
 
 	/* test #4  track data value > $4000 ? */
-	/* ssize used as a variable .. set to 0 afterward */
-	ssize = 0;
-	for (j = 0; j < k; j++) {
-		l = (data[start + 762 + j * 2] << 8) + data[start + 763 + j * 2];
-		if (l > ssize)
-			ssize = l;
+	max_ref = 0;
+	for (i = 0; i < tsize; i++) {
+		int ref = readmem16b(data + i * 2 + 762);
 
-		if (l > 0x4000)
+		if (ref > 0x4000)
 			return -1;
+
+		if (ref > max_ref)
+			max_ref = ref;
+
 	}
 
 	/* test #5  reference table size *4 ? */
-	/* ssize is the highest reference number */
-	k *= 2;
-	l = (data[start + k + 762] << 24) + (data[start + k + 763] << 16) +
-			(data[start + k + 764] << 8) + data[start + k + 765];
-
-	if (l != ((ssize + 1) * 4))
+	if (readmem32b(data + (tsize << 1) + 762) != (max_ref + 1) * 4)
 		return -1;
 
 	pw_read_title(NULL, t, 0);

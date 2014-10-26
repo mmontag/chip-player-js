@@ -1,8 +1,9 @@
 /*
  *  NoiseRunner.c	Copyright (C) 1997 Asle / ReDoX
- *			Copyright (C) 2010 Claudio Matsuoka
  *
  *  Converts NoiseRunner packed MODs back to Protracker
+ *
+ *  Modified in 2010,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
