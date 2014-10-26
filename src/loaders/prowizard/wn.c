@@ -1,8 +1,9 @@
 /*
  * Wanton_Packer.c   Copyright (C) 1997 Asle / ReDoX
- *                   Copyright (C) 2006-2007 Claudio Matsuoka
  *
  * Converts MODs converted with Wanton packer
+ *
+ * Modified in 2006,2007,2014 by Claudio Matsuoka
  */
 
 #include <string.h>

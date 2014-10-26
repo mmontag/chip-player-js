@@ -1,6 +1,7 @@
 /*
  * Hornet_Packer.c Copyright (C) 1997 Asle / ReDoX
- * xmp version Copyright (C) 2009 Claudio Matsuoka
+ *
+ * Modified in 2009,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -78,7 +79,6 @@ static int depack_hrt(FILE *in, FILE *out)
 static int test_hrt(uint8 *data, char *t, int s)
 {
 	int i;
-	int start = 0;
 
 	PW_REQUEST_DATA(s, 1084);
 
@@ -86,14 +86,15 @@ static int test_hrt(uint8 *data, char *t, int s)
 		return -1;
 
 	for (i = 0; i < 31; i++) {
+		uint8 *d = data + 20 + i * 30;
+
 		/* test finetune */
-		if (data[start + 20 + i * 30 + 24] > 0x0f)
+		if (d[24] > 0x0f)
 			return -1;
 
 		/* test volume */
-		if (data[start + 20 + i * 30 + 25] > 0x40)
+		if (d[25] > 0x40)
 			return -1;
-		
 	}
 
 	pw_read_title(data, t, 20);
