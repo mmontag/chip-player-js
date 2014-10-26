@@ -46,6 +46,7 @@
 #include <process.h>
 #define getpid _getpid
 #define open _open
+typedef int pid_t;
 #endif
 
 int mkstemp(char *template)
