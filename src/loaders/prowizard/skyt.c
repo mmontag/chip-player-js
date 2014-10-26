@@ -1,6 +1,7 @@
 /*
  *   Skyt_Packer.c   Copyright (C) 1997 Asle / ReDoX
- *   Changes for xmp Copyright (C) 2009 Claudio Matsuoka
+ *
+ *   Modified in 2009,2014 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -89,18 +90,17 @@ static int depack_skyt(FILE *in, FILE *out)
 
 static int test_skyt(uint8 *data, char *t, int s)
 {
-	int start = 0;
 	int i;
 
 	PW_REQUEST_DATA(s, 8 * 31 + 12);
 
 	/* test 2 */
 	for (i = 0; i < 31; i++) {
-		if (data[start + 8 * i + 4] > 0x40)
+		if (data[8 * i + 4] > 0x40)
 			return -1;
 	}
 
-	if (readmem32b(data + start + 256) != MAGIC4('S','K','Y','T'))
+	if (readmem32b(data + 256) != MAGIC4('S','K','Y','T'))
 		return -1;
 
 	pw_read_title(NULL, t, 0);
