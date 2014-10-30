@@ -500,6 +500,8 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	if (instrument->fei.flg & XMP_ENVELOPE_FLT) {
 		cutoff = xc->filter.cutoff * frq_envelope >> 8;
+		if (cutoff > 0xfd)
+			cutoff = 0xfd;
 	} else {
 		cutoff = xc->filter.cutoff;
 	}
