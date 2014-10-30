@@ -110,6 +110,8 @@ OPENMPT_IT	= carrynna \
 		  extreme_filter_test_1 \
 		  filter_7f \
 		  filterenvreset \
+		  filter_nna \
+		  flt_env_carry \
 		  freqreset_noins \
 		  gxsmp \
 		  ins_flt_porta_reset \
