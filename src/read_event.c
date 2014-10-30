@@ -26,6 +26,7 @@
 #include "effects.h"
 #include "virtual.h"
 #include "period.h"
+#include "envelope.h"
 
 #ifndef LIBXMP_CORE_PLAYER
 #include "med_extras.h"
@@ -69,20 +70,32 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc,
 	if (!IS_VALID_INSTRUMENT(xc->ins))
 		return;
 
+	RESET_NOTE(NOTE_ENV_END);
+
+	if (force_cut) {
+		xc->v_idx = 0;
+		xc->p_idx = 0;
+		xc->f_idx = 0;
+		return;
+	}
+
 	xxi = get_instrument(ctx, xc->ins);
 
 	/* Reset envelope positions */
-	if (force_cut || (~xxi->aei.flg & XMP_ENVELOPE_CARRY)) {
+	if (~xxi->aei.flg & XMP_ENVELOPE_CARRY) {
 		xc->v_idx = 0;
 	}
-	if (force_cut || (~xxi->pei.flg & XMP_ENVELOPE_CARRY)) {
+	if (~xxi->pei.flg & XMP_ENVELOPE_CARRY) {
 		xc->p_idx = 0;
 	}
-	if (force_cut || (~xxi->fei.flg & XMP_ENVELOPE_CARRY)) {
+
+	if (xxi->fei.flg & XMP_ENVELOPE_CARRY) {
+		if (check_envelope_end(&xxi->fei, xc->f_idx)) {
+			xc->f_idx = -1;
+		}
+	} else {
 		xc->f_idx = 0;
 	}
-
-	RESET_NOTE(NOTE_ENV_END);
 }
 
 static void set_effect_defaults(struct context_data *ctx, int note,

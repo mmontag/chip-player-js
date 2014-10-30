@@ -89,9 +89,9 @@ struct channel_data {
 	int offset;		/* Sample offset memory */
 	int offset_val;		/* Sample offset */
 
-	uint16 v_idx;		/* Volume envelope index */
-	uint16 p_idx;		/* Pan envelope index */
-	uint16 f_idx;		/* Freq envelope index */
+	int v_idx;		/* Volume envelope index */
+	int p_idx;		/* Pan envelope index */
+	int f_idx;		/* Freq envelope index */
 
 	struct {
 		struct lfo lfo;

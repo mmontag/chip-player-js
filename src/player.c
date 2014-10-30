@@ -458,7 +458,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 
 	/* Envelope */
 
-	if (~instrument->fei.flg & XMP_ENVELOPE_FLT) {
+	if (xc->f_idx >= 0 && (~instrument->fei.flg & XMP_ENVELOPE_FLT)) {
 		/* IT pitch envelopes are always linear, even in Amiga period
 		 * mode. Each unit in the envelope scale is 1/25 semitone.
 		 */
@@ -498,7 +498,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 		return;
 	}
 
-	if (instrument->fei.flg & XMP_ENVELOPE_FLT) {
+	if (xc->f_idx >= 0 && (instrument->fei.flg & XMP_ENVELOPE_FLT)) {
 		cutoff = xc->filter.cutoff * frq_envelope >> 8;
 		if (cutoff > 0xfd)
 			cutoff = 0xfd;
