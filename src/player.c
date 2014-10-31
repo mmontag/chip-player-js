@@ -264,7 +264,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	struct xmp_instrument *instrument;
 	int finalvol;
 	uint16 vol_envelope;
-	int gvol, end;
+	int gvol;
 
 	instrument = get_instrument(ctx, xc->ins);
 
@@ -304,14 +304,14 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 		}
 	}
 
-	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64, &end);
-	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE,
-						HAS_QUIRK(QUIRK_ENVSUS));
-	if (end) {
+	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
+	if (check_envelope_end(&instrument->aei, xc->v_idx)) {
 		if (vol_envelope == 0)
 			SET_NOTE(NOTE_END);
 		SET_NOTE(NOTE_ENV_END);
 	}
+	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE,
+						HAS_QUIRK(QUIRK_ENVSUS));
 
 	/* If note ended in background channel, we can safely reset it */
 	if (TEST_NOTE(NOTE_END) && chn >= p->virt.num_tracks) {
@@ -401,11 +401,10 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 #ifndef LIBXMP_CORE_DISABLE_IT
 	int cutoff, resonance;
 #endif
-	int end;
 
 	instrument = get_instrument(ctx, xc->ins);
 
-	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0, &end);
+	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE,
 						HAS_QUIRK(QUIRK_ENVSUS));
 
@@ -533,11 +532,10 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	struct xmp_instrument *instrument;
 	int finalpan, panbrello = 0;
 	int pan_envelope;
-	int end;
 
 	instrument = get_instrument(ctx, xc->ins);
 
-	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32, &end);
+	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE,
 						HAS_QUIRK(QUIRK_ENVSUS));
 

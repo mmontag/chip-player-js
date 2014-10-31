@@ -31,7 +31,7 @@ int check_envelope_end(struct xmp_envelope *env, int x)
 	int index;
 
 	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0)
-		return 1;
+		return 0;
 
 	index = (env->npt - 1) * 2;
 
@@ -45,13 +45,11 @@ int check_envelope_end(struct xmp_envelope *env, int x)
 	return 0;
 }
 
-int get_envelope(struct xmp_envelope *env, int x, int def, int *end)
+int get_envelope(struct xmp_envelope *env, int x, int def)
 {
 	int x1, x2, y1, y2;
 	int16 *data = env->data;
 	int index;
-
-	*end = 0;
 
 	if (x < 0 || ~env->flg & XMP_ENVELOPE_ON || env->npt <= 0)
 		return def;
@@ -60,9 +58,6 @@ int get_envelope(struct xmp_envelope *env, int x, int def, int *end)
 
 	x1 = data[index];		/* last node */
 	if (x >= x1 || index == 0) { 
-		if (~env->flg & XMP_ENVELOPE_LOOP) {
-			*end = 1;
-		}
 		return data[index + 1];
 	}
 

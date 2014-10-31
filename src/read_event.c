@@ -70,7 +70,7 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc,
 	if (!IS_VALID_INSTRUMENT(xc->ins))
 		return;
 
-	RESET_NOTE(NOTE_ENV_END);
+ 	RESET_NOTE(NOTE_ENV_END);
 
 	if (force_cut) {
 		xc->v_idx = 0;
