@@ -2,6 +2,7 @@ Stable versions
 ---------------
 
 4.3.1 ():
+	- fix IT filter envelope range
 	- fix IT envelope carry after envelope end
 	- fix XM invalid memory access in event reader
 	- fix STM empty note event read
