@@ -219,6 +219,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */
     int tracker_id = TRACKER_PROTRACKER;
+    int has_loop_0 = 0;
 
     LOAD_INIT();
 
@@ -366,6 +367,15 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	goto skip_test;
     }
 
+    /* Check if has instruments with loop size 0 */
+    for (i = 0; i < 31; i++) {
+	if (mh.ins[i].loop_size == 0)
+	    break;
+    }
+    if (i < 31) {
+        has_loop_0 = 1;
+    }
+
     /* Test Protracker-like files
      */
     if (mod->chn == 4 && mh.restart == mod->pat) {
@@ -389,21 +399,13 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     if (mod->chn == 4 && mh.restart == 0x7f) {
-	for (i = 0; i < 31; i++) {
-	    if (mh.ins[i].loop_size == 0)
-		break;
-	}
-	if (i < 31) {
+	if (has_loop_0) {
 	    tracker_id = TRACKER_CLONE;
 	}
     }
 
     if (mh.restart != 0x78 && mh.restart < 0x7f) {
-	for (i = 0; i < 31; i++) {
-	    if (mh.ins[i].loop_size == 0)
-		break;
-	}
-	if (i == 31) {	/* All loops are size 2 or greater */
+	if (!has_loop_0) {	/* All loops are size 2 or greater */
 	    for (i = 0; i < 31; i++) {
 		if (mh.ins[i].size == 1 && mh.ins[i].volume == 0) {
 		    tracker_id = TRACKER_CONVERTED;
@@ -496,16 +498,30 @@ skip_test:
 	    return -1;
 
 	for (j = 0; j < (64 * mod->chn); j++) {
+            int period;
+
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    hio_read (mod_event, 1, 4, f);
+
+	    /* Check out-of-range notes in Amiga trackers */
+	    period = ((int)(LSN(mod_event[0])) << 8) | mod_event[1];
+	    if (period != 0 && period < 108 && (
+			tracker_id == TRACKER_PROTRACKER ||
+			tracker_id == TRACKER_NOISETRACKER ||
+			tracker_id == TRACKER_PROBABLY_NOISETRACKER ||
+			tracker_id == TRACKER_SOUNDTRACKER)) {	/* note > B-3 */
+		tracker_id = TRACKER_UNKNOWN;
+	    }
 
 	    /* Filter noisetracker events */
 	    if (tracker_id == TRACKER_PROBABLY_NOISETRACKER) {
 		unsigned char fxt = LSN(mod_event[2]);
 		unsigned char fxp = LSN(mod_event[3]);
-        	if ((fxt > 0x06 && fxt < 0x0a) ||  (fxt == 0x0e && fxp > 1)) {
+
+        	if ((fxt > 0x06 && fxt < 0x0a) || (fxt == 0x0e && fxp > 1)) {
 		    tracker_id = TRACKER_UNKNOWN;
 		}
+
 	    }
 
 	    switch (tracker_id) {
