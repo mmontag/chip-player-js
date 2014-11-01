@@ -174,7 +174,7 @@ LOADER		= ust ac1d unic unic2 nst flt flt8 wow m15 mtm it it_oldins \
 		  xm102 j2b okt 669 s3m stm stx sfx masi imf ptm far asylum \
 		  dsmi stim rad pt36 psm rtm ice dbm mdl0 mdl mgt liq liq_no \
 		  emod chiptracker gdm dtm abk \
-		  6chn mod_adpcm4 xm_adpcm \
+		  6chn mod_adpcm4 mod_noterange xm_adpcm \
 		  med3 med4 mmd0 mmd3 mmd_iff3oct
 
 PROBLEMATIC	= length_data_jack \
