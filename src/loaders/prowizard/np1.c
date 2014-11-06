@@ -15,27 +15,23 @@ static int depack_np1(FILE *in, FILE *out)
 {
 	uint8 tmp[1024];
 	uint8 c1, c2, c3, c4;
-	uint8 len;
-	uint8 nins;
 	uint8 ptable[128];
-	uint8 npat = 0;
+	int len, nins, npat;
 	int max_addr;
 	int size, ssize = 0;
 	/*int tsize;*/
-	int taddr[128][4];
-	int i = 0, j = 0, k;
-	int tdata;
+	int trk_addr[128][4];
+	int i, j, k;
+	int trk_start;
 
 	memset(ptable, 0, 128);
-	memset(taddr, 0, 128 * 4 * 4);
+	memset(trk_addr, 0, 128 * 4 * 4);
 
-	/* read number of sample */
-	c1 = read8(in);
+	c1 = read8(in);				/* read number of samples */
 	c2 = read8(in);
 	nins = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
 
-	/* write title */
-	pw_write_zero(out, 20);
+	pw_write_zero(out, 20);			/* write title */
 
 	len = read16b(in) / 2;			/* size of pattern list */
 	read16b(in);				/* 2 unknown bytes */
@@ -45,7 +41,7 @@ static int depack_np1(FILE *in, FILE *out)
 	for (i = 0; i < nins; i++) {
 		read32b(in);			/* bypass 4 unknown bytes */
 		pw_write_zero(out, 22);		/* sample name */
-		write16b(out, size = read16b(in));	/* sample size */
+		write16b(out, size = read16b(in));	/* size */
 		ssize += size * 2;
 		write8(out, read8(in));		/* finetune */
 		write8(out, read8(in));		/* volume */
@@ -64,40 +60,40 @@ static int depack_np1(FILE *in, FILE *out)
 	write8(out, len);		/* write size of pattern list */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
-	read16b(in);	/* bypass 2 bytes ... seems always the same as in $02 */
-	read16b(in);	/* bypass 2 other bytes which meaning is beside me */
+	fseek(in, 2, SEEK_CUR);		/* always $02? */
+	fseek(in, 2, SEEK_CUR);		/* unknown */
 
 	/* read pattern table */
 	npat = 0;
 	for (i = 0; i < len; i++) {
-		ptable[i] = read16b(in);
+		ptable[i] = read16b(in) >> 3;
 		if (ptable[i] > npat)
 			npat = ptable[i];
 	}
 	npat++;
 
-	fwrite(ptable, 128, 1, out);		/* write pattern table */
-	write32b(out, PW_MOD_MAGIC);		/* write ptk ID */
+	fwrite(ptable, 128, 1, out);	/* write pattern table */
+	write32b(out, PW_MOD_MAGIC);	/* write ptk ID */
 
 	/* read tracks addresses per pattern */
 	max_addr = 0;
 	for (i = 0; i < npat; i++) {
-		if ((taddr[i][0] = read16b(in)) > max_addr)
-			max_addr = taddr[i][0];
-		if ((taddr[i][1] = read16b(in)) > max_addr)
-			max_addr = taddr[i][1];
-		if ((taddr[i][2] = read16b(in)) > max_addr)
-			max_addr = taddr[i][2];
-		if ((taddr[i][3] = read16b(in)) > max_addr)
-			max_addr = taddr[i][3];
+		if ((trk_addr[i][0] = read16b(in)) > max_addr)
+			max_addr = trk_addr[i][0];
+		if ((trk_addr[i][1] = read16b(in)) > max_addr)
+			max_addr = trk_addr[i][1];
+		if ((trk_addr[i][2] = read16b(in)) > max_addr)
+			max_addr = trk_addr[i][2];
+		if ((trk_addr[i][3] = read16b(in)) > max_addr)
+			max_addr = trk_addr[i][3];
 	}
-	tdata = ftell(in);
+	trk_start = ftell(in);
 
 	/* the track data now ... */
 	for (i = 0; i < npat; i++) {
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
-			fseek(in, tdata + taddr[i][3 - j], 0);
+			fseek(in, trk_start + trk_addr[i][3 - j], SEEK_SET);
 			for (k = 0; k < 64; k++) {
 				int x = k * 16 + j * 4;
 
@@ -121,7 +117,7 @@ static int depack_np1(FILE *in, FILE *out)
 					c3 = c3 > 0x80 ? 0x100 - c3 :
 							(c3 << 4) & 0xf0;
 					break;
-				case 0x0B:
+				case 0x0b:
 					c3 = (c3 + 4) / 2;
 					break;
 				}
@@ -134,7 +130,7 @@ static int depack_np1(FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	fseek(in, max_addr + 192 + tdata, 0);
+	fseek(in, max_addr + 192 + trk_start, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;

@@ -10,6 +10,7 @@ Stable versions
 	- fix ABK loader test in Win32
 	- fix MOD period range enforcing (reported by Jason Gibson)
 	- fix EMOD instrument finetune (reported by Andreas Argirakis)
+	- fix NoisePacker1 loader (reported by Andreas Argirakis)
 	- fix ST2.6 speed effect (reported by Saga Musix)
 	- fix crash in envelope reset with invalid instrument
 	- fix module titles and instrument names in Mac OS X
