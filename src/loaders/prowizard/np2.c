@@ -33,8 +33,7 @@ static int depack_np2(FILE *in, FILE *out)
 
 	pw_write_zero(out, 20);			/* write title */
 
-	read8(in);
-	len = read8(in) / 2;			/* read size of pattern list */
+	len = read16b(in) / 2;			/* size of pattern list */
 	read16b(in);				/* 2 unknown bytes */
 	/*tsize =*/ read16b(in);		/* read track data size */
 
@@ -65,7 +64,8 @@ static int depack_np2(FILE *in, FILE *out)
 	fseek(in, 2, SEEK_CUR);		/* unknown */
 
 	/* read pattern table */
-	for (npat = i = 0; i < len; i++) {
+	npat = 0;
+	for (i = 0; i < len; i++) {
 		ptable[i] = read16b(in) / 8;
 		if (ptable[i] > npat)
 			npat = ptable[i];
@@ -76,7 +76,8 @@ static int depack_np2(FILE *in, FILE *out)
 	write32b(out, PW_MOD_MAGIC);	/* write ptk ID */
 
 	/* read tracks addresses per pattern */
-	for (max_addr = i = 0; i < npat; i++) {
+	max_addr = 0;
+	for (i = 0; i < npat; i++) {
 		if ((trk_addr[i][0] = read16b(in)) > max_addr)
 			max_addr = trk_addr[i][0];
 		if ((trk_addr[i][1] = read16b(in)) > max_addr)
@@ -123,6 +124,7 @@ static int depack_np2(FILE *in, FILE *out)
 					c3 = (c3 + 4) / 2;
 					break;
 				}
+
 				tmp[x + 2] = c2;
 				tmp[x + 3] = c3;
 			}
@@ -139,17 +141,10 @@ static int depack_np2(FILE *in, FILE *out)
 
 static int test_np2(uint8 *data, char *t, int s)
 {
-        int num_ins, ssize, hdr_size, ptab_size, trk_size, max_pptr;
-        int i;
+	int num_ins, ssize, hdr_size, ptab_size, trk_size, max_pptr;
+	int i;
 
-	PW_REQUEST_DATA (s, 1024);
-
-#if 0
-	if (i < 15) {
-		Test = BAD;
-		return;
-	}
-#endif
+	PW_REQUEST_DATA(s, 1024);
 
 	/* size of the pattern list (*2) */
 	ptab_size = (data[2] << 8) + data[3];
@@ -219,7 +214,7 @@ static int test_np2(uint8 *data, char *t, int s)
 	if (trk_size < 192 || (trk_size & 0x3f))
 		return -1;
 
-	PW_REQUEST_DATA (s, hdr_size + trk_size + 16);
+	PW_REQUEST_DATA(s, hdr_size + trk_size + 16);
 
 	/* test notes */
 	for (i = 0; i < trk_size; i += 3) {
@@ -244,7 +239,7 @@ static int test_np2(uint8 *data, char *t, int s)
 }
 
 const struct pw_format pw_np2 = {
-	"Noisepacker v2",
+	"NoisePacker v2",
 	test_np2,
 	depack_np2
 };

@@ -20,7 +20,7 @@ static int depack_np3(FILE *in, FILE *out)
 	uint8 c1, c2, c3, c4;
 	uint8 ptable[128];
 	int len, nins, npat;
-	int max_addr, smp_addr = 0;
+	int max_addr, smp_addr;
 	int size, ssize = 0;
 	/*int tsize;*/
 	int trk_addr[128][4];
@@ -36,8 +36,7 @@ static int depack_np3(FILE *in, FILE *out)
 
 	pw_write_zero(out, 20);			/* write title */
 
-	read8(in);
-	len = read8(in) / 2;			/* read size of pattern list */
+	len = read16b(in) / 2;			/* size of pattern list */
 	read16b(in);				/* 2 unknown bytes */
 	/*tsize =*/ read16b(in);		/* read track data size */
 
@@ -62,11 +61,12 @@ static int depack_np3(FILE *in, FILE *out)
 	write8(out, len);		/* write size of pattern list */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
-	read16b(in);	/* bypass 2 bytes ... seems always the same as in $02 */
-	read16b(in);	/* bypass 2 other bytes which meaning is beside me */
+	fseek(in, 2, SEEK_CUR);		/* always $02? */
+	fseek(in, 2, SEEK_CUR);		/* unknown */
 
 	/* read pattern table */
-	for (npat = i = 0; i < len; i++) {
+	npat = 0;
+	for (i = 0; i < len; i++) {
 		ptable[i] = read16b(in) / 8;
 		if (ptable[i] > npat)
 			npat = ptable[i];
@@ -90,6 +90,7 @@ static int depack_np3(FILE *in, FILE *out)
 	trk_start = ftell(in);
 
 	/* the track data now ... */
+	smp_addr = 0;
 	for (i = 0; i < npat; i++) {
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
@@ -141,6 +142,7 @@ static int depack_np3(FILE *in, FILE *out)
 		fwrite(tmp, 1024, 1, out);
 	}
 
+	/* sample data */
 	if (smp_addr & 1)
 		smp_addr++;
 	fseek(in, smp_addr, SEEK_SET);
@@ -151,8 +153,8 @@ static int depack_np3(FILE *in, FILE *out)
 
 static int test_np3(uint8 *data, char *t, int s)
 {
-        int num_ins, ssize, hdr_size, ptab_size, trk_size, max_pptr;
-        int i;
+	int num_ins, ssize, hdr_size, ptab_size, trk_size, max_pptr;
+	int i;
 
 	PW_REQUEST_DATA(s, 10);
 
@@ -257,7 +259,7 @@ static int test_np3(uint8 *data, char *t, int s)
 }
 
 const struct pw_format pw_np3 = {
-	"Noisepacker v3",
+	"NoisePacker v3",
 	test_np3,
 	depack_np3
 };
