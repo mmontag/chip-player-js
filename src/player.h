@@ -223,7 +223,7 @@ struct channel_data {
 };
 
 
-void process_fx(struct context_data *, struct channel_data *, int, uint8, uint8, uint8, int);
+void process_fx(struct context_data *, struct channel_data *, int, struct xmp_event *, int);
 void filter_setup(int, int, int, int*, int*, int *);
 int read_event(struct context_data *, struct xmp_event *, int);
 

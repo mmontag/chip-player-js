@@ -82,13 +82,23 @@ static void do_toneporta(struct module_data *m,
 
 
 void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
-		uint8 note, uint8 fxt, uint8 fxp, int fnum)
+		struct xmp_event *e, int fnum)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
+	uint8 note, fxp, fxt;
 	int h, l;
+
+	note = e->note;
+	if (fnum == 0) {
+		fxt = e->fxt;
+		fxp = e->fxp;
+	} else {
+		fxt = e->f2t;
+		fxp = e->f2p;
+	}
 
 	switch (fxt) {
 	case FX_ARPEGGIO:
