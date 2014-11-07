@@ -6,10 +6,9 @@
 #include "../src/virtual.h"
 
 /*
- Key off at tick 0 (K00) is very dodgy command. If there is a note next to it,
- the note is ignored. If there is a volume column command or instrument next
- to it and the current instrument has no volume envelope, the note is faded
- out instead of being cut.
+ More K00 fun! You should ignore any note or instrument data next to a K00
+ effect. Probably the best thing to do is to wipe them from your internal
+ channel memory in such a situation.
 */
 
 TEST(test_openmpt_xm_keyoff2)
