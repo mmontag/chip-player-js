@@ -201,7 +201,7 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	struct xmp_module *mod = &m->mod;
 	struct player_data *p = &ctx->p;
 	struct flow_control *f = &p->flow;
-	struct xmp_event *event;
+	struct xmp_event event;
 
 	/* FIXME: workaround for pattern delay + break) */
 	if (f->skip_fetch) {
@@ -212,14 +212,14 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	for (chn = 0; chn < mod->chn; chn++) {
 		const int num_rows = mod->xxt[TRACK_NUM(pat, chn)]->rows;
 		if (row < num_rows) {
-			event = &EVENT(pat, chn, row);
+			memcpy(&event, &EVENT(pat, chn, row), sizeof (event));
 		} else {
-			event = (struct xmp_event *)&empty_event;
+			memcpy(&event, &empty_event, sizeof (event));
 		}
 
-		if (check_delay(ctx, event, chn) == 0) {
+		if (check_delay(ctx, &event, chn) == 0) {
 			if (!f->rowdelay_set || f->rowdelay > 0) {
-				read_event(ctx, event, chn);
+				read_event(ctx, &event, chn);
 #ifndef LIBXMP_CORE_PLAYER
 				med_hold_hack(ctx, pat, chn, row);
 #endif
@@ -767,6 +767,12 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		}
         }
 
+	/* Do keyoff */
+	if (xc->keyoff) {
+		if (--xc->keyoff == 0)
+			SET_NOTE(NOTE_RELEASE);
+	}
+
 	process_volume(ctx, chn, t, act);
 	process_frequency(ctx, chn, t, act);
 	process_pan(ctx, chn, t, act);
@@ -774,12 +780,6 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	update_volume(ctx, chn, t);
 	update_frequency(ctx, chn, t);
 	update_pan(ctx, chn, t);
-
-	/* Do keyoff */
-	if (xc->keyoff) {
-		if (--xc->keyoff == 0)
-			SET_NOTE(NOTE_RELEASE);
-	}
 
 	if (HAS_QUIRK(QUIRK_INVLOOP)) {
 		update_invloop(m, xc);

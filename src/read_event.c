@@ -300,6 +300,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	int new_invalid_ins;
 	int is_toneporta;
 	int use_ins_vol;
+	int k00 = 0;
 
 	xc->flags = 0;
 	note = -1;
@@ -308,6 +309,25 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	new_invalid_ins = 0;
 	is_toneporta = 0;
 	use_ins_vol = 0;
+
+	/* From the OpenMPT key_off.xm test case:
+	 * "Key off at tick 0 (K00) is very dodgy command. If there is a note
+	 *  next to it, the note is ignored. If there is a volume column
+	 *  command or instrument next to it and the current instrument has
+	 *  no volume envelope, the note is faded out instead of being cut."
+	 */
+	if (e->fxt == FX_KEYOFF && e->fxp == 0) {
+		k00 = 1;
+		key = 0;
+
+		if (ins || e->f2t) {
+			if (IS_VALID_INSTRUMENT(xc->ins) &&
+			    ~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_ON) {
+				SET_NOTE(NOTE_FADEOUT);
+				e->fxt = 0;
+			}
+		}
+	}
 
 	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
 		is_toneporta = 1;
@@ -329,7 +349,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		use_ins_vol = 1;
 		xc->fadeout = 0x10000;
 		xc->per_flags = 0;
-		RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
+		RESET_NOTE(NOTE_RELEASE);
+		if (!k00) {
+			RESET_NOTE(NOTE_FADEOUT);
+		}
 
 		if (IS_VALID_INSTRUMENT(ins - 1)) {
 			if (!is_toneporta)
@@ -411,7 +434,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
+	if (key > 0 && (uint32)key <= XMP_MAX_KEYS) {
 		xc->key = --key;
 		xc->fadeout = 0x10000;
 		RESET_NOTE(NOTE_END);
@@ -449,7 +472,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 
-	if (ins && sub != NULL) {
+	if (ins && sub != NULL && !k00) {
 		/* Reset envelopes on new instrument, see olympic.xm pos 10
 		 * But make sure we have an instrument set, see Letting go
 		 * pos 4 chn 20
