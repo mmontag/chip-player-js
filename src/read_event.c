@@ -301,11 +301,14 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	int is_toneporta;
 	int use_ins_vol;
 	int k00 = 0;
+	struct xmp_event ev;
+
+	memcpy(&ev, e, sizeof (struct xmp_event));
 
 	xc->flags = 0;
 	note = -1;
-	key = e->note;
-	ins = e->ins;
+	key = ev.note;
+	ins = ev.ins;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
 	use_ins_vol = 0;
@@ -316,20 +319,20 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	 *  command or instrument next to it and the current instrument has
 	 *  no volume envelope, the note is faded out instead of being cut."
 	 */
-	if (e->fxt == FX_KEYOFF && e->fxp == 0) {
+	if (ev.fxt == FX_KEYOFF && ev.fxp == 0) {
 		k00 = 1;
 		key = 0;
 
-		if (ins || e->vol || e->f2t) {
+		if (ins || ev.vol || ev.f2t) {
 			if (IS_VALID_INSTRUMENT(xc->ins) &&
 			    ~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_ON) {
 				SET_NOTE(NOTE_FADEOUT);
-				e->fxt = 0;
+				ev.fxt = 0;
 			}
 		}
 	}
 
-	if (IS_TONEPORTA(e->fxt) || IS_TONEPORTA(e->f2t)) {
+	if (IS_TONEPORTA(ev.fxt) || IS_TONEPORTA(ev.f2t)) {
 		is_toneporta = 1;
 	}
 
@@ -344,7 +347,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Do this regardless if the instrument is invalid or not */
-	if (e->ins) {
+	if (ev.ins) {
 		SET(NEW_INS);
 		use_ins_vol = 1;
 		xc->fadeout = 0x10000;
@@ -391,7 +394,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 */
 		}
 
-		if (e->ins == 0 && !IS_VALID_INSTRUMENT(xc->old_ins - 1)) {
+		if (ev.ins == 0 && !IS_VALID_INSTRUMENT(xc->old_ins - 1)) {
 			new_invalid_ins = 1;
 		}
 
@@ -481,8 +484,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Process new volume */
-	if (e->vol) {
-		xc->volume = e->vol - 1;
+	if (ev.vol) {
+		xc->volume = ev.vol - 1;
 		SET(NEW_VOL);
 		if (TEST_NOTE(NOTE_END)) {	/* m5v-nine.xm */
 			xc->fadeout = 0x10000;	/* OpenMPT NoteOff.xm */
@@ -494,8 +497,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	xc->offset_val = 0;
 
 	/* Secondary effect handled first */
-	process_fx(ctx, xc, chn, e, 1);
-	process_fx(ctx, xc, chn, e, 0);
+	process_fx(ctx, xc, chn, &ev, 1);
+	process_fx(ctx, xc, chn, &ev, 0);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL))
