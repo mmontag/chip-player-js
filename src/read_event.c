@@ -320,7 +320,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		k00 = 1;
 		key = 0;
 
-		if (ins || e->f2t) {
+		if (ins || e->vol || e->f2t) {
 			if (IS_VALID_INSTRUMENT(xc->ins) &&
 			    ~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_ON) {
 				SET_NOTE(NOTE_FADEOUT);
