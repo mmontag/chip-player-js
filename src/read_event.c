@@ -377,32 +377,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Check note */
 
-	if (key) {
-		SET(NEW_NOTE);
-
-		if (key == XMP_KEY_OFF) {
-			SET_NOTE(NOTE_RELEASE);
-			use_ins_vol = 0;
-		} else if (is_toneporta) {
-			/* set key to 0 so we can have the tone portamento from
-			 * the original note (see funky_stars.xm pos 5 ch 9)
-			 */
-			key = 0;
-
-			/* And do the same if there's no keyoff (see comic
-			 * bakery remix.xm pos 1 ch 3)
-			 */
-		}
-
-		if (ev.ins == 0 && !IS_VALID_INSTRUMENT(xc->old_ins - 1)) {
-			new_invalid_ins = 1;
-		}
-
-		if (new_invalid_ins) {
-			virt_resetchannel(ctx, chn);
-		}
-	}
-
 	/* FT2: Retrieve old instrument volume */
 	if (ins) {
 		struct xmp_subinstrument *sub;
@@ -437,12 +411,51 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
+	if (key) {
+		SET(NEW_NOTE);
+
+		if (key == XMP_KEY_OFF) {
+			SET_NOTE(NOTE_RELEASE);
+			use_ins_vol = 0;
+		} else if (is_toneporta) {
+			/* set key to 0 so we can have the tone portamento from
+			 * the original note (see funky_stars.xm pos 5 ch 9)
+			 */
+			key = 0;
+
+			/* And do the same if there's no keyoff (see comic
+			 * bakery remix.xm pos 1 ch 3)
+			 */
+		}
+
+		if (ev.ins == 0 && !IS_VALID_INSTRUMENT(xc->old_ins - 1)) {
+			new_invalid_ins = 1;
+		}
+
+		if (new_invalid_ins) {
+			virt_resetchannel(ctx, chn);
+		}
+	}
+
+
+	/* Check note range -- see OpenMPT test NoteLimit.xm */
+	if (key > 0 && (uint32)key <= XMP_MAX_KEYS) {
+		int k = key - 1;
+		sub = get_subinstrument(ctx, xc->ins, k);
+		if (!new_invalid_ins && sub != NULL) {
+			int transp = mod->xxi[xc->ins].map[k].xpo;
+			int k2 = k + sub->xpo + transp;
+			if (k2 < 12 || k2 > 130) {
+				key = 0;
+				RESET(NEW_NOTE);
+			}
+		}
+	}
+
 	if (key > 0 && (uint32)key <= XMP_MAX_KEYS) {
 		xc->key = --key;
 		xc->fadeout = 0x10000;
 		RESET_NOTE(NOTE_END);
-
-		sub = get_subinstrument(ctx, xc->ins, key);
 
 		if (sub != NULL) {
 			if (~mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_ON) {
