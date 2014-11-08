@@ -270,7 +270,9 @@ static int test_unic_id(uint8 *data, char *t, int s)
 	/* test #3  finetunes & volumes */
 	for (i = 0; i < 31; i++) {
 		uint8 *d = data + i * 30;
-		if (d[40] > 0x0f || d[44] != 0 || d[45] > 0x40)
+		if ((int8)d[40] < -8 || (int8)d[40] > 7)
+			return -1;
+		if (d[44] != 0 || d[45] > 0x40)
 			return -1;
 	}
 
