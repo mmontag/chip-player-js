@@ -105,7 +105,8 @@ OPENMPT_XM	= 3xxins \
 		  panmemory2 \
 		  pathead \
 		  pickup \
-		  porta_linkmem
+		  porta_linkmem \
+		  toneportamentomemory
 
 OPENMPT_IT	= carrynna \
 		  cut_carry \
