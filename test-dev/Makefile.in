@@ -99,6 +99,7 @@ OPENMPT_XM	= 3xxins \
 		  notelimit \
 		  notelimit2 \
 		  noteoff \
+		  noteoff2 \
 		  noteofffade \
 		  noteoffvolume \
 		  offsetrange \
