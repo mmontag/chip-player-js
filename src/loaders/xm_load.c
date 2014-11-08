@@ -132,7 +132,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		}
 
 		if (event->note == 0x61)
-		    event->note = XMP_KEY_OFF;
+		    event->note = event->ins ? XMP_KEY_FADE : XMP_KEY_OFF;
 		else if (event->note > 0)
 		    event->note += 12;
 

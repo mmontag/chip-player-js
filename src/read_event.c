@@ -434,6 +434,9 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			} else {
 				SET_NOTE(NOTE_FADEOUT);
 			}
+		} else if (key == XMP_KEY_FADE) {
+			/* Handle keyoff + instrument case (NoteOff2.xm) */
+			SET_NOTE(NOTE_FADEOUT);
 		} else if (is_toneporta) {
 			/* set key to 0 so we can have the tone portamento from
 			 * the original note (see funky_stars.xm pos 5 ch 9)
