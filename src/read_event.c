@@ -415,8 +415,18 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_NOTE);
 
 		if (key == XMP_KEY_OFF) {
-			SET_NOTE(NOTE_RELEASE);
-			use_ins_vol = 0;
+			/* OpenMPT NoteOffVolume.xm:
+			 * "If an instrument has no volume envelope, a note-off
+			 *  command should cut the sample completely - unless
+			 *  there is a volume command next it. This applies to
+			 *  both volume commands (volume and effect column)."
+			 */
+			if (ev.vol == 0 && ev.fxt != FX_VOLSET) {
+				SET_NOTE(NOTE_RELEASE);
+				use_ins_vol = 0;
+			} else {
+				SET_NOTE(NOTE_FADEOUT);
+			}
 		} else if (is_toneporta) {
 			/* set key to 0 so we can have the tone portamento from
 			 * the original note (see funky_stars.xm pos 5 ch 9)
@@ -438,7 +448,14 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 
-	/* Check note range -- see OpenMPT test NoteLimit.xm */
+	/* Check note range -- from the OpenMPT test NoteLimit.xm:
+	 * "I think one of the first things Fasttracker 2 does when parsing a
+	 *  pattern cell is calculating the “real” note (i.e. pattern note +
+	 *  sample transpose), and if this “real” note falls out of its note
+	 *  range, it is ignored completely (wiped from its internal channel
+	 *  memory). The instrument number next it, however, is not affected
+	 *  and remains in the memory."
+	 */
 	if (key > 0 && (uint32)key <= XMP_MAX_KEYS) {
 		int k = key - 1;
 		sub = get_subinstrument(ctx, xc->ins, k);
@@ -526,7 +543,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 		/* From the OpenMPT test cases (3xx-no-old-samp.xm):
 		 * "An offset effect that points beyond the sample end should
-		 * stop playback on this channel."
+		 *  stop playback on this channel."
 		 */
 
 		if (xc->offset_val >= mod->xxs[sub->sid].len) {
