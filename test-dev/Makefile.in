@@ -96,6 +96,7 @@ OPENMPT_XM	= 3xxins \
 		  finevol_linkmem \
 		  key_off \
 		  keyoff2 \
+		  notelimit \
 		  notelimit2 \
 		  noteoff \
 		  noteofffade \
