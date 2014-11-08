@@ -415,13 +415,20 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_NOTE);
 
 		if (key == XMP_KEY_OFF) {
+			int env_on = 0;
+
 			/* OpenMPT NoteOffVolume.xm:
 			 * "If an instrument has no volume envelope, a note-off
 			 *  command should cut the sample completely - unless
 			 *  there is a volume command next it. This applies to
 			 *  both volume commands (volume and effect column)."
 			 */
-			if (ev.vol == 0 && ev.fxt != FX_VOLSET) {
+			if (IS_VALID_INSTRUMENT(xc->ins) &&
+			    (mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_ON)) {
+				env_on = 1;
+			}
+			
+			if (env_on || (ev.vol == 0 && ev.fxt != FX_VOLSET)) {
 				SET_NOTE(NOTE_RELEASE);
 				use_ins_vol = 0;
 			} else {
