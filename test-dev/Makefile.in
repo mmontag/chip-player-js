@@ -100,6 +100,7 @@ OPENMPT_XM	= 3xxins \
 		  notelimit2 \
 		  noteoff \
 		  noteofffade \
+		  noteoffvolume \
 		  offsetrange \
 		  panmemory2 \
 		  pathead \
