@@ -185,6 +185,27 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		case 0x0f:	/* Tone portamento */
 		    event->f2t = FX_TONEPORTA;
 		    event->f2p = (event->vol - 0xf0) << 4;
+
+		    /* From OpenMPT TonePortamentoMemory.xm:
+		     * "Another nice bug (...) is the combination of both
+		     *  portamento commands (Mx and 3xx) in the same cell:
+		     *  The 3xx parameter is ignored completely, and the Mx
+		     *  parameter is doubled. (M2 3FF is the same as M4 000)
+		     */
+		    if (event->fxt == FX_TONEPORTA || event->fxt == FX_TONE_VSLIDE) {
+			if (event->fxt == FX_TONEPORTA) {
+			    event->fxt = 0;
+			} else {
+			    event->fxt = FX_VOLSLIDE;
+			}
+			event->fxp = 0;
+
+			if (event->f2p < 0x80) {
+				event->f2p <<= 1;
+			} else {
+				event->f2p = 0xff;
+			}
+		    }
 		    break;
 		}
 		event->vol = 0;

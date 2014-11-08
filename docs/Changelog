@@ -7,6 +7,7 @@ Stable versions
 	- fix IT envelope carry after envelope end
 	- fix XM note off with volume command
 	- fix XM K00 effect handling
+	- fix XM portamento with volume column portamento
 	- fix XM note limits
 	Other changes:
 	- fix IT tone portamento in first note (reported by Jan Engelhardt)
