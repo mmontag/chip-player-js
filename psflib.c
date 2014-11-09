@@ -12,6 +12,7 @@
 #include <strings.h>
 #endif
 
+#undef strdup
 #define strdup(s) my_strdup(s)
 
 static char * my_strdup(const char * s)
