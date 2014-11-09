@@ -281,8 +281,8 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	if (TEST_NOTE(NOTE_FADEOUT | NOTE_RELEASE) || act == VIRT_ACTION_FADE
 	    || act == VIRT_ACTION_OFF) {
-		if (xc->fadeout > instrument->rls) {
-			xc->fadeout -= instrument->rls;
+		if (xc->fadeout > xc->ins_fade) {
+			xc->fadeout -= xc->ins_fade;
 		} else {
 			xc->fadeout = 0;
 			SET_NOTE(NOTE_END);

@@ -204,6 +204,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 				}
 			} else {
 				xc->ins = ins;
+				xc->ins_fade = mod->xxi[ins].rls;
 			}
 		} else {
 			new_invalid_ins = 1;
@@ -389,6 +390,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			if (sub != NULL) {
 				xc->volume = sub->vol;
 				xc->pan.val = sub->pan;
+				xc->ins_fade = mod->xxi[xc->old_insvol].rls;
 				SET(NEW_VOL);
 			}
 		} else {
@@ -403,6 +405,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			if (sub != NULL) {
 				xc->volume = sub->vol;
 				xc->pan.val = sub->pan;
+				xc->ins_fade = mod->xxi[xc->ins].rls;
 			} else {
 				xc->volume = 0;
 			}
@@ -620,6 +623,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 				not_same_ins = 1;
 				if (!is_toneporta) {
 					xc->ins = ins;
+					xc->ins_fade = mod->xxi[ins].rls;
 				} else {
 					/* Get new instrument volume */
 					sub = get_subinstrument(ctx, ins, e->note);
@@ -927,6 +931,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			reset_envelopes(ctx, xc, 1);
 		}
 		xc->ins = candidate_ins;
+		xc->ins_fade = mod->xxi[candidate_ins].rls;
 	}
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
@@ -1033,6 +1038,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 				}
 			} else {
 				xc->ins = ins;
+				xc->ins_fade = mod->xxi[ins].rls;
 			}
 		} else {
 			new_invalid_ins = 1;
@@ -1172,6 +1178,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	RESET_NOTE(NOTE_RELEASE);
 
 	xc->ins = ins;
+	xc->ins_fade = mod->xxi[ins].rls;
 
 	if (ins >= mod->ins && ins < mod->ins + smix->ins)
 		is_smix_ins = 1;

@@ -8,7 +8,7 @@ Stable versions
 	- fix XM note off with volume command
 	- fix XM K00 effect handling
 	- fix XM portamento with volume column portamento
-	- fix XM fadeout on keyoff with instrument
+	- fix XM keyoff with instrument
 	- fix XM note limits
 	Fix bugs reported by Andreas Argirakis:
 	- fix MOD false positive for UNIC Tracker modules
