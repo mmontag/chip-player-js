@@ -11,6 +11,7 @@ Stable versions
 	- fix XM fadeout on keyoff with instrument
 	- fix XM note limits
 	Fix bugs reported by Andreas Argirakis:
+	- fix MOD false positive for UNIC Tracker modules
 	- fix EMOD instrument finetune 
 	- fix UNIC Tracker instrument finetune test
 	- fix NoisePacker1 loader

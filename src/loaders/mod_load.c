@@ -93,10 +93,26 @@ const struct format_loader mod_loader = {
     mod_load
 };
 
+static int validate_pattern(uint8 *buf)
+{
+	int i, j;
+
+	for (i = 0; i < 64; i++) {
+		for (j = 0; j < 4; j++) {
+			uint8 *d = buf + (i * 4 + j) * 4;
+			if ((d[0] >> 4) > 1)
+				return -1;
+		}
+	}
+
+	return 0;
+}
+
 static int mod_test(HIO_HANDLE *f, char *t, const int start)
 {
     int i;
     char buf[4];
+    uint8 pat_buf[1024];
     int smp_size, num_pat;
     long size;
 
@@ -177,8 +193,17 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
     }
     num_pat++;
 
+    /* see if module size matches UNIC */
     if (start + 1084 + num_pat * 0x300 + smp_size == size)
 	return -1;
+
+    /* validate pattern data in an attempt to catch UNICs with MOD size */
+    for (i = 0; i < num_pat; i++) {
+	hio_seek(f, start + 1084 + 1024 * i, SEEK_SET);
+	hio_read(pat_buf, 1024, 1, f);
+	if (validate_pattern(pat_buf) < 0)
+	    return -1;
+    }
 
   found:
     hio_seek(f, start + 0, SEEK_SET);
