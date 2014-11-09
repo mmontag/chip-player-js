@@ -91,6 +91,7 @@ STX		ST Music Interface Kit	1.0, 1.1
 
 Game formats:
 
+ABK		AMOS Sound Bank		-
 AMF		Asylum Music Format	1.0
 -		Digital Illusions	-
 -		Game Music Creator	-
