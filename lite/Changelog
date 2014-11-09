@@ -1,6 +1,21 @@
 Stable versions
 ---------------
 
+4.3.1 (20141109):
+	- fix IT filter envelope range
+	- fix IT envelope carry after envelope end
+	- fix IT tone portamento in first note (reported by Jan Engelhardt)
+	- fix XM note off with volume command
+	- fix XM K00 effect handling
+	- fix XM portamento with volume column portamento
+	- fix XM keyoff with instrument
+	- fix XM note limits
+	- fix XM invalid memory access in event reader
+	- fix MOD period range enforcing (reported by Jason Gibson)
+	- fix crash in envelope reset with invalid instrument
+	- fix module titles and instrument names in Mac OS X
+	- fix row delay initialization on new module
+
 4.3.0 (20140927):
 	- rebranded as libxmp-lite
 	- build from the same source tree as the full libxmp

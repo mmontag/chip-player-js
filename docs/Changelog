@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.1 ():
+4.3.1 (20141109):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT filter envelope range
 	- fix IT envelope carry after envelope end

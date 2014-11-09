@@ -12,6 +12,8 @@ include lite/src/loaders/Makefile
 include test/Makefile
 
 dist: dist-prepare vc-prepare dist-subdirs dist-dist
+	mv $(DIST)/libxmp-lite-*.tar.gz .
+	ls -l libxmp-lite-*.tar.gz
 
 dist-prepare:
 	rm -Rf $(DIST)
