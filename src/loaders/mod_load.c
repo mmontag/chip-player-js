@@ -144,9 +144,6 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
     }
 
-    if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
-	goto found;
-
     /* Test for UNIC tracker modules
      *
      * From Gryzor's Pro-Wizard PW_FORMATS-Engl.guide:
