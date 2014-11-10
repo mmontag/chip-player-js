@@ -321,4 +321,3 @@ int compare_module(struct xmp_module *mod, FILE *f)
 
 	return 0;
 }
-

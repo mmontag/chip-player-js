@@ -36,6 +36,7 @@ int play_frame(struct context_data *);
 int compare_module(struct xmp_module *, FILE *);
 int compare_md5(unsigned char *, char *);
 int check_md5(char *, char *);
+void compare_mixer_data(char *, char *);
 void convert_endian(unsigned char *, int);
 void create_simple_module(struct context_data *, int, int);
 void set_order(struct context_data *, int, int);
