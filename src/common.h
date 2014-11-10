@@ -162,6 +162,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_ENVSUS	(1 << 27)	/* Key release jumps to sus point */
 #define QUIRK_S3MPMEM	(1 << 28)	/* S3M-style parameter memory */
 #define QUIRK_XMFINE	(1 << 29)	/* XM-style fine tune */
+#define QUIRK_RSTCHN	(1 << 30)	/* Reset channel on sample end */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
@@ -174,7 +175,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_FINEFX | QUIRK_VIBALL | \
 				 QUIRK_ENVFADE | QUIRK_ITVPOR | QUIRK_KEYOFF | \
 				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_S3MLFO | \
-				 QUIRK_IGSTPOR | QUIRK_S3MRTG )
+				 QUIRK_IGSTPOR | QUIRK_S3MRTG | QUIRK_RSTCHN )
 
 /* DSP effects */
 #define DSP_EFFECT_CUTOFF	0x02

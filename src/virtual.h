@@ -33,5 +33,4 @@ void	virt_resetvoice		(struct context_data *, int, int);
 void	virt_reset		(struct context_data *);
 int	virt_getroot		(struct context_data *, int);
 
-
 #endif /* LIBXMP_VIRTUAL_H */

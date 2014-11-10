@@ -27,6 +27,7 @@
 #include "virtual.h"
 #include "mixer.h"
 #include "period.h"
+#include "player.h"	/* for set_sample_end() */
 
 #ifndef LIBXMP_CORE_PLAYER
 #include "synth.h"
@@ -300,6 +301,27 @@ static void anticlick(struct context_data *ctx, int voc, int vol, int pan,
 	}
 }
 
+static void set_sample_end(struct context_data *ctx, int voc, int end)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
+	struct channel_data *xc;
+
+	if ((uint32)voc >= p->virt.maxvoc)
+		return;
+
+	xc = &p->xc_data[vi->chn];
+
+	if (end) {
+		SET_NOTE(NOTE_SAMPLE_END);
+		if (HAS_QUIRK(QUIRK_RSTCHN)) {
+			virt_resetvoice(ctx, voc, 0);
+		}
+	} else {
+		RESET_NOTE(NOTE_SAMPLE_END);
+	}
+}
 
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
@@ -457,7 +479,7 @@ void mixer_softmixer(struct context_data *ctx)
 			/* First sample loop run */
 			if (~xxs->flg & XMP_SAMPLE_LOOP) {
 				anticlick(ctx, voc, 0, 0, buf_pos, size);
-				virt_resetvoice(ctx, voc, 0);
+				set_sample_end(ctx, voc, 1);
 				size = 0;
 				continue;
 			}
@@ -585,6 +607,8 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	if (~s->format & XMP_FORMAT_MONO) {
 		vi->fidx |= FLAG_STEREO;
 	}
+
+	set_sample_end(ctx, voc, 0);
 
 #ifndef LIBXMP_CORE_PLAYER
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {

@@ -380,7 +380,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	else
 		finalvol = finalvol * p->smix_vol / 100;
 
-	xc->info_finalvol = finalvol;
+	xc->info_finalvol = TEST_NOTE(NOTE_SAMPLE_END) ? 0 :finalvol;
 
 	virt_setvol(ctx, chn, finalvol);
 }
@@ -932,7 +932,6 @@ void player_set_fadeout(struct context_data *ctx, int chn)
 
 #endif
 
-
 static void update_from_ord_info(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
@@ -1366,4 +1365,3 @@ void xmp_get_frame_info(xmp_context opaque, struct xmp_frame_info *info)
 		}
 	}
 }
-
