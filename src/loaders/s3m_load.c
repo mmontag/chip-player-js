@@ -301,6 +301,8 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->pat++;
     if (mod->pat > sfh.patnum)
 	mod->pat = sfh.patnum;
+    if (mod->pat == 0)
+	goto err3;
 
     mod->trk = mod->pat * mod->chn;
     /* Load and convert header */
