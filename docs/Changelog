@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.1 (20141110):
+4.3.1 (20141111):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT filter envelope range
 	- fix IT envelope carry after envelope end
@@ -22,6 +22,7 @@ Stable versions
 	- fix ABK loader test in Win32
 	- fix MOD period range enforcing (reported by Jason Gibson)
 	- fix ST2.6 speed effect (reported by Saga Musix)
+	- fix corner case memory leak in S3M loader
 	- fix retrig of single-shot samples after the end of the sample
 	- fix crash in envelope reset with invalid instrument
 	- fix module titles and instrument names in Mac OS X

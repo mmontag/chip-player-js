@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.1 (20141109):
+4.3.1 (20141111):
 	- fix IT filter envelope range
 	- fix IT envelope carry after envelope end
 	- fix IT tone portamento in first note (reported by Jan Engelhardt)
@@ -12,6 +12,8 @@ Stable versions
 	- fix XM note limits
 	- fix XM invalid memory access in event reader
 	- fix MOD period range enforcing (reported by Jason Gibson)
+	- fix corner case memory leak in S3M loader
+	- fix retrig of single-shot samples after the end of the sample
 	- fix crash in envelope reset with invalid instrument
 	- fix module titles and instrument names in Mac OS X
 	- fix row delay initialization on new module
