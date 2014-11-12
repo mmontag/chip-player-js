@@ -116,8 +116,7 @@ int med_linear_bend(struct context_data *ctx, struct channel_data *xc)
 }
 
 
-void med_play_extras(struct context_data *ctx, struct channel_data *xc,
-			int chn, int t)
+void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 {
 	struct module_data *m = &ctx->m;
 	struct player_data *p = &ctx->p;
@@ -168,7 +167,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc,
 		return;
 	}
 
-	if (t == 0 && TEST(NEW_NOTE)) {
+	if (p->frame == 0 && TEST(NEW_NOTE)) {
 		ce->period = xc->period;
 		if (TEST(NEW_INS)) {
 			ce->arp = ce->aidx = 0;

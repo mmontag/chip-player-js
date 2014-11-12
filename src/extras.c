@@ -84,8 +84,7 @@ void reset_channel_extras(struct context_data *ctx, struct channel_data *xc)
  * Player extras
  */
 
-void play_extras(struct context_data *ctx, struct channel_data *xc,
-			int chn, int t)
+void play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 {
 	struct module_data *m = &ctx->m;
 
@@ -93,9 +92,9 @@ void play_extras(struct context_data *ctx, struct channel_data *xc,
 		return;
 
         if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		med_play_extras(ctx, xc, chn, t);
+		med_play_extras(ctx, xc, chn);
         else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		hmn_play_extras(ctx, xc, chn, t);
+		hmn_play_extras(ctx, xc, chn);
 }
 
 int extras_get_volume(struct context_data *ctx, struct channel_data *xc)

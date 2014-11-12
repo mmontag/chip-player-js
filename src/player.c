@@ -256,7 +256,7 @@ static inline int get_channel_vol(struct context_data *ctx, int chn)
 
 #define DOENV_RELEASE ((TEST_NOTE(NOTE_RELEASE) || act == VIRT_ACTION_OFF))
 
-static void process_volume(struct context_data *ctx, int chn, int t, int act)
+static void process_volume(struct context_data *ctx, int chn, int act)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -327,7 +327,9 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 
 	if (TEST(TREMOLO)) {
 		finalvol += get_lfo(&xc->tremolo.lfo, 1 << 6);
-		update_lfo(&xc->tremolo.lfo);
+		if (p->frame != 0) {
+			update_lfo(&xc->tremolo.lfo);
+		}
 	}
 
 	CLAMP(finalvol, 0, m->volbase);
@@ -385,7 +387,7 @@ static void process_volume(struct context_data *ctx, int chn, int t, int act)
 	virt_setvol(ctx, chn, finalvol);
 }
 
-static void process_frequency(struct context_data *ctx, int chn, int t, int act)
+static void process_frequency(struct context_data *ctx, int chn, int act)
 {
 #ifndef LIBXMP_CORE_DISABLE_IT
 	struct mixer_data *s = &ctx->s;
@@ -442,7 +444,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 			vibrato += vib;
 		}
 
-		if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
+		if (p->frame % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
 			update_lfo(&xc->vibrato.lfo);
 		}
 	}
@@ -523,7 +525,7 @@ static void process_frequency(struct context_data *ctx, int chn, int t, int act)
 #endif
 }
 
-static void process_pan(struct context_data *ctx, int chn, int t, int act)
+static void process_pan(struct context_data *ctx, int chn, int act)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -560,7 +562,7 @@ static void process_pan(struct context_data *ctx, int chn, int t, int act)
 	virt_setpan(ctx, chn, finalpan);
 }
 
-static void update_volume(struct context_data *ctx, int chn, int t)
+static void update_volume(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -569,7 +571,7 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 	/* Volume slides happen in all frames but the first, except when the
 	 * "volume slide on all frames" flag is set.
 	 */
-	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_VSALL)) {
+	if (p->frame % p->speed != 0 || HAS_QUIRK(QUIRK_VSALL)) {
 		if (TEST(GVOL_SLIDE)) {
 			p->gvol += xc->gvol.slide;
 		}
@@ -599,7 +601,7 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 		}
 	}
 
-	if (t % p->speed == 0) {
+	if (p->frame % p->speed == 0) {
 		/* Process "fine" effects */
 		if (TEST(FINE_VOLS))
 			xc->volume += xc->vol.fslide;
@@ -617,13 +619,13 @@ static void update_volume(struct context_data *ctx, int chn, int t)
 	CLAMP(xc->mastervol, 0, m->volbase);
 }
 
-static void update_frequency(struct context_data *ctx, int chn, int t)
+static void update_frequency(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	if (t % p->speed != 0 || HAS_QUIRK(QUIRK_PBALL)) {
+	if (p->frame % p->speed != 0 || HAS_QUIRK(QUIRK_PBALL)) {
 		if (TEST(PITCHBEND) || TEST_PER(PITCHBEND)) {
 			xc->period += xc->freq.slide;
 		}
@@ -651,7 +653,7 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 		} 
 	}
 
-	if (t % p->speed == 0) {
+	if (p->frame % p->speed == 0) {
 		if (TEST(FINE_BEND)) {
 			xc->period += xc->freq.fslide;
 		}
@@ -684,13 +686,13 @@ static void update_frequency(struct context_data *ctx, int chn, int t)
 	xc->arpeggio.count %= xc->arpeggio.size;
 }
 
-static void update_pan(struct context_data *ctx, int chn, int t)
+static void update_pan(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
 
 	if (TEST(PAN_SLIDE)) {
-		if (t % p->speed == 0) {
+		if (p->frame % p->speed == 0) {
 			xc->pan.val += xc->pan.fslide;
 		} else {
 			xc->pan.val += xc->pan.slide;
@@ -704,7 +706,7 @@ static void update_pan(struct context_data *ctx, int chn, int t)
 	}
 }
 
-static void play_channel(struct context_data *ctx, int chn, int t)
+static void play_channel(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct smix_data *smix = &ctx->smix;
@@ -731,11 +733,11 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 	act = virt_cstat(ctx, chn);
 	if (act == VIRT_INVALID) {
 		/* We need this to keep processing global volume slides */
-		update_volume(ctx, chn, t);
+		update_volume(ctx, chn);
 		return;
 	}
 
-	if (t == 0 && act != VIRT_ACTIVE) {
+	if (p->frame == 0 && act != VIRT_ACTIVE) {
 		if (!IS_VALID_INSTRUMENT_OR_SFX(xc->ins) || act == VIRT_ACTION_CUT) {
 			virt_resetchannel(ctx, chn);
 			return;
@@ -746,7 +748,7 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 		return;
 
 #ifndef LIBXMP_CORE_PLAYER
-	play_extras(ctx, xc, chn, t);
+	play_extras(ctx, xc, chn);
 #endif
 
 	/* Do cut/retrig */
@@ -773,13 +775,13 @@ static void play_channel(struct context_data *ctx, int chn, int t)
 			SET_NOTE(NOTE_RELEASE);
 	}
 
-	process_volume(ctx, chn, t, act);
-	process_frequency(ctx, chn, t, act);
-	process_pan(ctx, chn, t, act);
+	process_volume(ctx, chn, act);
+	process_frequency(ctx, chn, act);
+	process_pan(ctx, chn, act);
 
-	update_volume(ctx, chn, t);
-	update_frequency(ctx, chn, t);
-	update_pan(ctx, chn, t);
+	update_volume(ctx, chn);
+	update_frequency(ctx, chn);
+	update_pan(ctx, chn);
 
 	if (HAS_QUIRK(QUIRK_INVLOOP)) {
 		update_invloop(m, xc);
@@ -1159,7 +1161,7 @@ int xmp_play_frame(xmp_context opaque)
 
 	/* play_frame */
 	for (i = 0; i < p->virt.virt_channels; i++) {
-		play_channel(ctx, i, p->frame);
+		play_channel(ctx, i);
 	}
 
 	p->frame_time = m->time_factor * m->rrate / p->bpm;

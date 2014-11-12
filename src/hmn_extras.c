@@ -53,15 +53,15 @@ int hmn_linear_bend(struct context_data *ctx, struct channel_data *xc)
 	return 0;
 }
 
-void hmn_play_extras(struct context_data *ctx, struct channel_data *xc,
-			int chn, int t)
+void hmn_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 {
+	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct hmn_channel_extras *ce = xc->extra;
 	struct xmp_instrument *xxi;
 	int pos, waveform, volume;
 
-	if (t == 0 && TEST(NEW_NOTE|NEW_INS)) {
+	if (p->frame == 0 && TEST(NEW_NOTE|NEW_INS)) {
 		ce->datapos = 0;
 	}
 

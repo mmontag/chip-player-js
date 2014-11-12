@@ -146,6 +146,15 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		    event->note += 12;
 		}
 
+		if (event->fxt == 0x0e) {
+			switch (event->fxp) {
+			case 0x43:
+			case 0x73:
+				event->fxp--;
+				break;
+			}
+		}
+
 		if (!event->vol)
 		    continue;
 

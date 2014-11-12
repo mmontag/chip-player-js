@@ -36,7 +36,7 @@ struct hmn_module_extras {
 	(HMN_MODULE_EXTRAS(x) != NULL && \
 	 HMN_MODULE_EXTRAS(x)->magic == HMN_EXTRAS_MAGIC)
 
-void hmn_play_extras(struct context_data *, struct channel_data *, int, int);
+void hmn_play_extras(struct context_data *, struct channel_data *, int);
 void hmn_set_arpeggio(struct channel_data *, int);
 int hmn_linear_bend(struct context_data *, struct channel_data *);
 int hmn_new_instrument_extras(struct xmp_instrument *);
