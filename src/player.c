@@ -327,7 +327,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	if (TEST(TREMOLO)) {
 		finalvol += get_lfo(&xc->tremolo.lfo, 1 << 6);
-		if (p->frame != 0) {
+		if (p->frame % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
 			update_lfo(&xc->tremolo.lfo);
 		}
 	}
