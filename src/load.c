@@ -293,14 +293,14 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 	}
 
 	for (i = 0; format_loader[i] != NULL; i++) {
-		fseek(h->handle.file, 0, SEEK_SET);
+		hio_seek(h, 0, SEEK_SET);
 		if (format_loader[i]->test(h, buf, 0) == 0) {
 			int is_prowizard = 0;
 
 #ifndef LIBXMP_CORE_PLAYER
 			if (strcmp(format_loader[i]->name, "prowizard") == 0) {
-				fseek(h->handle.file, 0, SEEK_SET);
-				pw_test_format(h->handle.file, buf, 0, info);
+				hio_seek(h, 0, SEEK_SET);
+				pw_test_format(h, buf, 0, info);
 				is_prowizard = 1;
 			}
 #endif
@@ -475,7 +475,7 @@ int xmp_load_module_from_memory(xmp_context opaque, void *mem, long size)
 	m->filename = NULL;
 	m->basename = NULL;
 	m->dirname = NULL;
-	m->size = 0;
+	m->size = size;
 
 	ret = load_module(opaque, h);
 

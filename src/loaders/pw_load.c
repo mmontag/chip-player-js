@@ -45,7 +45,7 @@ const struct format_loader pw_loader = {
 
 #define BUF_SIZE 0x10000
 
-int pw_test_format(FILE *f, char *t, const int start,
+int pw_test_format(HIO_HANDLE *f, char *t, const int start,
 		   struct xmp_test_info *info)
 {
 	unsigned char *b;
@@ -56,7 +56,7 @@ int pw_test_format(FILE *f, char *t, const int start,
 	if (b == NULL)
 		return -1;
 
-	fread(b, s, 1, f);
+	hio_read(b, s, 1, f);
 
 	while ((extra = pw_check(b, s, info)) > 0) {
 		unsigned char *buf = realloc(b, s + extra);
@@ -65,7 +65,7 @@ int pw_test_format(FILE *f, char *t, const int start,
 			return -1;
 		}
 		b = buf;
-		fread(b + s, extra, 1, f);
+		hio_read(b + s, extra, 1, f);
 		s += extra;
 	}
 
@@ -76,10 +76,7 @@ int pw_test_format(FILE *f, char *t, const int start,
 
 static int pw_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (HIO_HANDLE_TYPE(f) != HIO_HANDLE_TYPE_FILE)
-		return -1;
-
-	return pw_test_format(f->handle.file, t, start, NULL);
+	return pw_test_format(f, t, start, NULL);
 }
 
 static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)

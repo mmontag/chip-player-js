@@ -5,6 +5,8 @@ Stable versions
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM tremolo and vibrato waveforms
 	- fix tremolo rate
+	Other changes:
+	- allow loading of packed formats from memory
 
 4.3.1 (20141111):
 	Fix bugs caught in the OpenMPT test cases:
