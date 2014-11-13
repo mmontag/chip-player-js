@@ -18,7 +18,7 @@ void Depack_PP10 (FILE * in, FILE * out)
 	short Max;
 	long i = 0, j = 0, k = 0;
 	long ssize = 0;
-	// FILE *in,*out;
+	// HIO_HANDLE *in,*out;
 
 	if (Save_Status == BAD)
 		return;

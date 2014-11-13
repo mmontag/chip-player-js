@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_tp3(FILE *in, FILE *out)
+static int depack_tp3(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 pnum[128];
@@ -29,24 +29,24 @@ static int depack_tp3(FILE *in, FILE *out)
 	memset(trk_ofs, 0, 128 * 4 * 4);
 	memset(pnum, 0, 128);
 
-	fseek(in, 8, SEEK_CUR);
+	hio_seek(in, 8, SEEK_CUR);
 	pw_move_data(out, in, 20);		/* title */
-	nins = read16b(in) / 8;			/* number of sample */
+	nins = hio_read16b(in) / 8;			/* number of sample */
 
 	for (i = 0; i < nins; i++) {
 		pw_write_zero(out, 22);		/*sample name */
 
-		c3 = read8(in);			/* read finetune */
-		c4 = read8(in);			/* read volume */
+		c3 = hio_read8(in);			/* read finetune */
+		c4 = hio_read8(in);			/* read volume */
 
-		write16b(out, size = read16b(in)); /* size */
+		write16b(out, size = hio_read16b(in)); /* size */
 		ssize += size * 2;
 
 		write8(out, c3);		/* write finetune */
 		write8(out, c4);		/* write volume */
 
-		write16b(out, read16b(in));	/* loop start */
-		write16b(out, read16b(in));	/* loop size */
+		write16b(out, hio_read16b(in));	/* loop start */
+		write16b(out, hio_read16b(in));	/* loop size */
 	}
 
 	memset(tmp, 0, 30);
@@ -56,12 +56,12 @@ static int depack_tp3(FILE *in, FILE *out)
 		fwrite(tmp, 30, 1, out);
 
 	/* read size of pattern table */
-	read8(in);
-	write8(out, len = read8(in));		/* sequence length */
+	hio_read8(in);
+	write8(out, len = hio_read8(in));		/* sequence length */
 	write8(out, 0x7f);			/* ntk byte */
 
 	for (npat = i = 0; i < len; i++) {
-		pnum[i] = read16b(in) / 8;
+		pnum[i] = hio_read16b(in) / 8;
 		if (pnum[i] > npat)
 			npat = pnum[i];
 	}
@@ -72,7 +72,7 @@ static int depack_tp3(FILE *in, FILE *out)
 
 	for (i = 0; i <= npat; i++) {
 		for (j = 0; j < 4; j++) {
-			trk_ofs[i][j] = read16b(in);
+			trk_ofs[i][j] = hio_read16b(in);
 			if (trk_ofs[i][j] > max_trk_ofs)
 				max_trk_ofs = trk_ofs[i][j];
 		}
@@ -81,7 +81,7 @@ static int depack_tp3(FILE *in, FILE *out)
 	fwrite(pnum, 128, 1, out);		/* write pattern list */
 	write32b(out, PW_MOD_MAGIC);		/* ID string */
 
-	pat_ofs = ftell(in) + 2;
+	pat_ofs = hio_tell(in) + 2;
 
 	/* pattern datas */
 	for (i = 0; i <= npat; i++) {
@@ -90,12 +90,12 @@ static int depack_tp3(FILE *in, FILE *out)
 		for (j = 0; j < 4; j++) {
 			int where;
 
-			fseek(in, pat_ofs + trk_ofs[i][j], SEEK_SET);
+			hio_seek(in, pat_ofs + trk_ofs[i][j], SEEK_SET);
 
 			for (k = 0; k < 64; k++) {
 				uint8 *p = pdata + k * 16 + j * 4;
 
-				c1 = read8(in);
+				c1 = hio_read8(in);
 				if ((c1 & 0xc0) == 0xc0) {
 					k += (0x100 - c1);
 					k -= 1;
@@ -103,7 +103,7 @@ static int depack_tp3(FILE *in, FILE *out)
 				}
 
 				if ((c1 & 0xc0) == 0x80) {
-					c2 = read8(in);
+					c2 = hio_read8(in);
 					fxt = (c1 >> 1) & 0x0f;
 					fxp = c2;
 					if ((fxt == 0x05) || (fxt == 0x06)
@@ -120,7 +120,7 @@ static int depack_tp3(FILE *in, FILE *out)
 					continue;
 				}
 
-				c2 = read8(in);
+				c2 = hio_read8(in);
 
 				ins = ((c2 >> 4) & 0x0f) | ((c1 >> 2) & 0x10);
 
@@ -139,7 +139,7 @@ static int depack_tp3(FILE *in, FILE *out)
 					continue;
 				}
 
-				c3 = read8(in);
+				c3 = hio_read8(in);
 
 				if (fxt == 0x08)
 					fxt = 0x00;
@@ -158,7 +158,7 @@ static int depack_tp3(FILE *in, FILE *out)
 				p[2] = ((ins << 4) & 0xf0) | fxt;
 				p[3] = fxp;
 			}
-			where = ftell(in);
+			where = hio_tell(in);
 			if (where > max_trk_ofs)
 				max_trk_ofs = where;
 		}
@@ -169,7 +169,7 @@ static int depack_tp3(FILE *in, FILE *out)
 	if (max_trk_ofs & 0x01)
 		max_trk_ofs += 1;
 
-	fseek(in, max_trk_ofs, SEEK_SET);
+	hio_seek(in, max_trk_ofs, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;

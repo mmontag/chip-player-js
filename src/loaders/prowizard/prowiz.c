@@ -62,9 +62,18 @@ const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
 	NULL
 };
 
-int pw_move_data(FILE *out, FILE *in, int len)
+int pw_move_data(FILE *out, HIO_HANDLE *in, int len)
 {
-	return move_data(out, in, len);
+	uint8 buf[1024];
+	int l;
+
+	do {
+		l = hio_read(buf, 1, len > 1024 ? 1024 : len, in);
+		fwrite(buf, 1, l, out);
+		len -= l;
+	} while (l > 0 && len > 0);
+
+	return 0;
 }
 
 int pw_write_zero(FILE *out, int len)
@@ -82,18 +91,14 @@ int pw_write_zero(FILE *out, int len)
 	return 0;
 }
 
-int pw_wizardry(FILE *file_in, FILE *file_out, char **name)
+int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 {
-	struct stat st;
 	int in_size;
 	uint8 *data;
 	char title[21];
 	int i;
 
-	if (fstat(fileno(file_in), &st) < 0)
-		in_size = -1;
-	else
-		in_size = st.st_size;
+	in_size = hio_size(file_in);
 
 	/* printf ("input file size : %d\n", in_size); */
 	if (in_size < MIN_FILE_LENGHT)
@@ -105,7 +110,7 @@ int pw_wizardry(FILE *file_in, FILE *file_out, char **name)
 		perror("Couldn't allocate memory");
 		return -1;
 	}
-	fread(data, in_size, 1, file_in);
+	hio_read(data, in_size, 1, file_in);
 
 
   /********************************************************************/
@@ -123,7 +128,7 @@ int pw_wizardry(FILE *file_in, FILE *file_out, char **name)
 		return -1;
 	}
 
-	fseek(file_in, 0, SEEK_SET);
+	hio_seek(file_in, 0, SEEK_SET);
 	if (pw_format[i]->depack(file_in, file_out) < 0)
 		return -1;
 

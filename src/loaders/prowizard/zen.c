@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_zen(FILE *in, FILE *out)
+static int depack_zen(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 finetune, vol;
@@ -31,34 +31,34 @@ static int depack_zen(FILE *in, FILE *out)
 	memset(paddr_Real, 0, 128 * 4);
 	memset(ptable, 0, 128);
 
-	ptable_addr = read32b(in);	/* read pattern table address */
-	pat_max = read8(in);		/* read patmax */
-	pat_pos = read8(in);		/* read size of pattern table */
+	ptable_addr = hio_read32b(in);	/* read pattern table address */
+	pat_max = hio_read8(in);		/* read patmax */
+	pat_pos = hio_read8(in);		/* read size of pattern table */
 
 	pw_write_zero(out, 20);		/* write title */
 
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);			/* sample name */
 
-		finetune = read16b(in) / 0x48;		/* read finetune */
+		finetune = hio_read16b(in) / 0x48;		/* read finetune */
 
-		read8(in);
-		vol = read8(in);			/* read volume */
+		hio_read8(in);
+		vol = hio_read8(in);			/* read volume */
 
-		write16b(out, size = read16b(in));	/* read sample size */
+		write16b(out, size = hio_read16b(in));	/* read sample size */
 		ssize += size * 2;
 
 		write8(out, finetune);			/* write finetune */
 		write8(out, vol);			/* write volume */
 
-		size = read16b(in);			/* read loop size */
+		size = hio_read16b(in);			/* read loop size */
 
-		k = read32b(in);			/* sample start addr */
+		k = hio_read32b(in);			/* sample start addr */
 		if (k < sdata_addr)
 			sdata_addr = k;
 
 		/* read loop start address */
-		j = (read32b(in) - k) / 2;
+		j = (hio_read32b(in) - k) / 2;
 
 		write16b(out, j);	/* write loop start */
 		write16b(out, size);	/* write loop size */
@@ -68,9 +68,9 @@ static int depack_zen(FILE *in, FILE *out)
 	write8(out, 0x7f);		/* write ntk byte */
 
 	/* read pattern table .. */
-	fseek(in, ptable_addr, SEEK_SET);
+	hio_seek(in, ptable_addr, SEEK_SET);
 	for (i = 0; i < pat_pos; i++)
-		paddr[i] = read32b(in);
+		paddr[i] = hio_read32b(in);
 
 	/* deduce pattern list */
 	c4 = 0;
@@ -101,12 +101,12 @@ static int depack_zen(FILE *in, FILE *out)
 	/*printf ( "converting pattern datas " ); */
 	for (i = 0; i <= pat_max; i++) {
 		memset(pat, 0, 1024);
-		fseek(in, paddr_Real[i], SEEK_SET);
+		hio_seek(in, paddr_Real[i], SEEK_SET);
 		for (j = 0; j < 256; j++) {
-			c1 = read8(in);
-			c2 = read8(in);
-			c3 = read8(in);
-			c4 = read8(in);
+			c1 = hio_read8(in);
+			c2 = hio_read8(in);
+			c3 = hio_read8(in);
+			c4 = hio_read8(in);
 
 			note = (c2 & 0x7f) / 2;
 			fxp = c4;
@@ -127,7 +127,7 @@ static int depack_zen(FILE *in, FILE *out)
 	/*printf ( " ok\n" ); */
 
 	/* sample data */
-	fseek(in, sdata_addr, SEEK_SET);
+	hio_seek(in, sdata_addr, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;

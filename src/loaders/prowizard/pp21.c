@@ -13,7 +13,7 @@
 #include "prowiz.h"
 
 
-static int depack_pp21(FILE *in, FILE *out)
+static int depack_pp21(HIO_HANDLE *in, FILE *out)
 {
 	uint8 ptable[128];
 	int max = 0;
@@ -35,21 +35,21 @@ static int depack_pp21(FILE *in, FILE *out)
 
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);		/* sample name */
-		write16b(out, size = read16b(in));
+		write16b(out, size = hio_read16b(in));
 		ssize += size * 2;
-		write8(out, read8(in));		/* finetune */
-		write8(out, read8(in));		/* volume */
-		write16b(out, read16b(in));	/* loop start */
-		write16b(out, read16b(in));	/* loop size */
+		write8(out, hio_read8(in));		/* finetune */
+		write8(out, hio_read8(in));		/* volume */
+		write16b(out, hio_read16b(in));	/* loop start */
+		write16b(out, hio_read16b(in));	/* loop size */
 	}
 
-	write8(out, numpat = read8(in));	/* number of patterns */
-	write8(out, read8(in));			/* NoiseTracker restart byte */
+	write8(out, numpat = hio_read8(in));	/* number of patterns */
+	write8(out, hio_read8(in));			/* NoiseTracker restart byte */
 
 	max = 0;
 	for (j = 0; j < 4; j++) {
 		for (i = 0; i < 128; i++) {
-			trk[j][i] = read8(in);
+			trk[j][i] = hio_read8(in);
 			if (trk[j][i] > max)
 				max = trk[j][i];
 		}
@@ -68,15 +68,15 @@ static int depack_pp21(FILE *in, FILE *out)
 	/*printf ("Highest track number : %d\n", max); */
 	for (j = 0; j <= max; j++) {
 		for (i = 0; i < 64; i++)
-			tptr[j][i] = read16b(in);
+			tptr[j][i] = hio_read16b(in);
 	}
 
 	/* read "reference table" size */
-	tabsize = read32b(in);
+	tabsize = hio_read32b(in);
 
 	/* read "reference Table" */
 	tab = (uint8 *)malloc(tabsize);
-	fread(tab, tabsize, 1, in);
+	hio_read(tab, tabsize, 1, in);
 
 	for (i = 0; i < numpat; i++) {
 		memset(buf, 0, 1024);

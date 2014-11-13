@@ -22,7 +22,7 @@ void Depack_PM01 (FILE * in, FILE * out)
 	long i = 0, j = 0, k = 0, l = 0;
 	long ssize = 0;
 	long Pattern_Address[128];
-	// FILE *in,*out;
+	// HIO_HANDLE *in,*out;
 
 #include "tuning.h"
 #include "ptktable.h"

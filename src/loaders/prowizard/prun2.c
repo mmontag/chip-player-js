@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_pru2(FILE *in, FILE *out)
+static int depack_pru2(HIO_HANDLE *in, FILE *out)
 {
 	uint8 header[2048];
 	uint8 c1, c2, c3, c4;
@@ -27,35 +27,35 @@ static int depack_pru2(FILE *in, FILE *out)
 
 	pw_write_zero(out, 20);				/* title */
 
-	fseek(in, 8, SEEK_SET);
+	hio_seek(in, 8, SEEK_SET);
 
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);			/*sample name */
-		write16b(out, size = read16b(in));	/* size */
+		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, read8(in));			/* finetune */
-		write8(out, read8(in));			/* volume */
-		write16b(out, read16b(in));		/* loop start */
-		write16b(out, read16b(in));		/* loop size */
+		write8(out, hio_read8(in));			/* finetune */
+		write8(out, hio_read8(in));			/* volume */
+		write16b(out, hio_read16b(in));		/* loop start */
+		write16b(out, hio_read16b(in));		/* loop size */
 	}
 
-	write8(out, npat = read8(in));			/* number of patterns */
-	write8(out, read8(in));				/* noisetracker byte */
+	write8(out, npat = hio_read8(in));			/* number of patterns */
+	write8(out, hio_read8(in));				/* noisetracker byte */
 
 	for (i = 0; i < 128; i++) {
-		write8(out, c1 = read8(in));
+		write8(out, c1 = hio_read8(in));
 		max = (c1 > max) ? c1 : max;
 	}
 
 	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data stuff */
-	fseek(in, 770, SEEK_SET);
+	hio_seek(in, 770, SEEK_SET);
 
 	for (i = 0; i <= max; i++) {
 		for (j = 0; j < 256; j++) {
 			c1 = c2 = c3 = c4 = 0;
-			header[0] = read8(in);
+			header[0] = hio_read8(in);
 			if (header[0] == 0x80) {
 				write32b(out, 0);
 			} else if (header[0] == 0xC0) {
@@ -65,8 +65,8 @@ static int depack_pru2(FILE *in, FILE *out)
 				c3 = v[0][2];
 				c4 = v[0][3];
 			} else if (header[0] != 0xC0 && header[0] != 0xC0) {
-				header[1] = read8(in);
-				header[2] = read8(in);
+				header[1] = hio_read8(in);
+				header[2] = hio_read8(in);
 
 				c1 = (header[1] & 0x80) >> 3;
 				c1 |= ptk_table[(header[0] >> 1)][0];

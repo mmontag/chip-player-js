@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_di(FILE *in, FILE *out)
+static int depack_di(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3;
 	uint8 note, ins, fxt, fxp;
@@ -31,32 +31,32 @@ static int depack_di(FILE *in, FILE *out)
 
 	pw_write_zero(out, 20);			/* title */
 
-	nins = read16b(in);
-	seq_offs = read32b(in);
-	/*pat_offs =*/ read32b(in);
-	smp_offs = read32b(in);
+	nins = hio_read16b(in);
+	seq_offs = hio_read32b(in);
+	/*pat_offs =*/ hio_read32b(in);
+	smp_offs = hio_read32b(in);
 
 	ssize = 0;
 	for (i = 0; i < nins; i++) {
 		pw_write_zero(out, 22);			/* name */
-		write16b(out, size = read16b(in));	/* size */
+		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, read8(in));			/* finetune */
-		write8(out, read8(in));			/* volume */
-		write16b(out, read16b(in));		/* loop start */
-		write16b(out, read16b(in));		/* loop size */
+		write8(out, hio_read8(in));			/* finetune */
+		write8(out, hio_read8(in));			/* volume */
+		write16b(out, hio_read16b(in));		/* loop start */
+		write16b(out, hio_read16b(in));		/* loop size */
 	}
 
 	memset(tmp, 0, 50);
 	for (i = nins; i < 31; i++)
 		fwrite(tmp, 30, 1, out);
 
-	pos = ftell(in);
-	fseek(in, seq_offs, SEEK_SET);
+	pos = hio_tell(in);
+	hio_seek(in, seq_offs, SEEK_SET);
 
 	i = 0;
 	do {
-		c1 = read8(in);
+		c1 = hio_read8(in);
 		ptable[i++] = c1;
 	} while (c1 != 0xff);
 
@@ -73,18 +73,18 @@ static int depack_di(FILE *in, FILE *out)
 
 	write32b(out, PW_MOD_MAGIC);
 
-	fseek(in, pos, SEEK_SET);
+	hio_seek(in, pos, SEEK_SET);
 
 	for (i = 0; i <= max; i++)
-		paddr[i] = read16b(in);
+		paddr[i] = hio_read16b(in);
 
 	for (i = 0; i <= max; i++) {
-		fseek(in, paddr[i], 0);
+		hio_seek(in, paddr[i], 0);
 		for (k = 0; k < 256; k++) {	/* 256 = 4 voices * 64 rows */
 			memset(ptk_tab, 0, 5);
-			c1 = read8(in);
+			c1 = hio_read8(in);
 			if ((c1 & 0x80) == 0) {
-				c2 = read8(in);
+				c2 = hio_read8(in);
 				note = ((c1 << 4) & 0x30) | ((c2 >> 4) & 0x0f);
 				ptk_tab[0] = ptk_table[note][0];
 				ptk_tab[1] = ptk_table[note][1];
@@ -103,8 +103,8 @@ static int depack_di(FILE *in, FILE *out)
 				fwrite (ptk_tab, 4, 1, out);
 				continue;
 			}
-			c2 = read8(in);
-			c3 = read8(in);
+			c2 = hio_read8(in);
+			c3 = hio_read8(in);
 			note = (((c1 << 4) & 0x30) | ((c2 >> 4) & 0x0f));
 			ptk_tab[0] = ptk_table[note][0];
 			ptk_tab[1] = ptk_table[note][1];
@@ -119,7 +119,7 @@ static int depack_di(FILE *in, FILE *out)
 		}
 	}
 
-	fseek(in, smp_offs, SEEK_SET);
+	hio_seek(in, smp_offs, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;

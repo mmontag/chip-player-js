@@ -10,7 +10,7 @@
 #include "prowiz.h"
 
 
-static int depack_kris(FILE *in, FILE *out)
+static int depack_kris(HIO_HANDLE *in, FILE *out)
 {
 	uint8 tmp[1024];
 	uint8 c3;
@@ -29,34 +29,34 @@ static int depack_kris(FILE *in, FILE *out)
 	memset(tdata, 0, 512 << 8);
 
 	pw_move_data(out, in, 20);			/* title */
-	fseek(in, 2, SEEK_CUR);
+	hio_seek(in, 2, SEEK_CUR);
 
 	/* 31 samples */
 	for (i = 0; i < 31; i++) {
 		/* sample name */
-		fread(tmp, 22, 1, in);
+		hio_read(tmp, 22, 1, in);
 		if (tmp[0] == 0x01)
 			tmp[0] = 0x00;
 		fwrite(tmp, 22, 1, out);
 
-		write16b(out, size = read16b(in));	/* size */
+		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, read8(in));			/* fine */
-		write8(out, read8(in));			/* volume */
-		write16b(out, read16b(in) / 2);		/* loop start */
-		write16b(out, read16b(in));		/* loop size */
+		write8(out, hio_read8(in));			/* fine */
+		write8(out, hio_read8(in));			/* volume */
+		write16b(out, hio_read16b(in) / 2);		/* loop start */
+		write16b(out, hio_read16b(in));		/* loop size */
 	}
 
-	read32b(in);			/* bypass ID "KRIS" */
-	write8(out, npat = read8(in));	/* number of pattern in pattern list */
-	write8(out, read8(in));		/* Noisetracker restart byte */
+	hio_read32b(in);			/* bypass ID "KRIS" */
+	write8(out, npat = hio_read8(in));	/* number of pattern in pattern list */
+	write8(out, hio_read8(in));		/* Noisetracker restart byte */
 
 	/* pattern table (read,count and write) */
 	c3 = 0;
 	k = 0;
 	for (i = 0; i < 128; i++, k++) {
 		for (j = 0; j < 4; j++) {
-			taddr[k][j] = read16b(in);
+			taddr[k][j] = hio_read16b(in);
 			if (taddr[k][j] > maxtaddr)
 				maxtaddr = taddr[k][j];
 		}
@@ -77,12 +77,12 @@ static int depack_kris(FILE *in, FILE *out)
 
 	max = c3 - 1;
 	write32b(out, PW_MOD_MAGIC);	/* ptk ID */
-	read16b(in);			/* bypass two unknown bytes */
+	hio_read16b(in);			/* bypass two unknown bytes */
 
 	/* Track data ... */
 	for (i = 0; i <= (maxtaddr / 256); i += 1) {
 		memset(tmp, 0, 1024);
-		fread(tmp, 256, 1, in);
+		hio_read(tmp, 256, 1, in);
 
 		for (j = 0; j < 64 * 4; j += 4) {
 			note = tmp[j];

@@ -5,7 +5,7 @@
  * STIM Packer to Protracker.
  ********************************************************
  * 13 april 1999 : Update
- *   - no more open() of input file ... so no more fread() !.
+ *   - no more open() of input file ... so no more hio_read() !.
  *     It speeds-up the process quite a bit :).
  */
 
@@ -39,7 +39,7 @@ static int depack_stim (uint8 *data, FILE * out)
 	int idata_addr[31];
 	int isize[31];
 	int start = 0;
-	int w = start;	/* main pointer to prevent fread() */
+	int w = start;	/* main pointer to prevent hio_read() */
 
 	memset(tmp, 0, 1025);
 	memset(ptable, 0, 128);

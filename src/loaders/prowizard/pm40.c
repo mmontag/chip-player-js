@@ -38,7 +38,7 @@ void Depack_PM40 (FILE * in, FILE * out)
 	uint8 FLAG = OFF;
 	uint8 ptk_table[37][2];
 	uint8 note, ins;
-	// FILE *in,*out;
+	// HIO_HANDLE *in,*out;
 
 	if (Save_Status == BAD)
 		return;

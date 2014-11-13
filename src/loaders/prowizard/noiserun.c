@@ -17,7 +17,7 @@ static int fine_table[] = {
 };
 
 
-static int depack_nru(FILE *in, FILE *out)
+static int depack_nru(HIO_HANDLE *in, FILE *out)
 {
 	uint8 tmp[1025];
 	uint8 ptable[128];
@@ -34,15 +34,15 @@ static int depack_nru(FILE *in, FILE *out)
 		int vol, size, addr, start, lsize;
 
 		pw_write_zero(out, 22);		/* sample name */
-		read8(in);			/* bypass 0x00 */
-		vol = read8(in);		/* read volume */
-		addr = read32b(in);		/* read sample address */
-		write16b(out, size = read16b(in)); /* read/write sample size */
+		hio_read8(in);			/* bypass 0x00 */
+		vol = hio_read8(in);		/* read volume */
+		addr = hio_read32b(in);		/* read sample address */
+		write16b(out, size = hio_read16b(in)); /* read/write sample size */
 		ssize += size * 2;
-		start = read32b(in);		/* read loop start address */
+		start = hio_read32b(in);		/* read loop start address */
 
-		lsize = read16b(in);		/* read loop size */
-		fine = read16b(in);		/* read finetune ?!? */
+		lsize = hio_read16b(in);		/* read loop size */
+		fine = hio_read16b(in);		/* read finetune ?!? */
 
 		for (j = 0; j < 16; j++) {
 			if (fine == fine_table[j]) {
@@ -59,13 +59,13 @@ static int depack_nru(FILE *in, FILE *out)
 		write16b(out, lsize);		/* write loop size */
 	}
 
-	fseek(in, 950, SEEK_SET);
-	write8(out, read8(in));			/* size of pattern list */
-	write8(out, read8(in));			/* ntk byte */
+	hio_seek(in, 950, SEEK_SET);
+	write8(out, hio_read8(in));			/* size of pattern list */
+	write8(out, hio_read8(in));			/* ntk byte */
 
 	/* pattern table */
 	max_pat = 0;
-	fread(ptable, 128, 1, in);
+	hio_read(ptable, 128, 1, in);
 	fwrite(ptable, 128, 1, out);
 	for (i = 0; i < 128; i++) {
 		if (ptable[i] > max_pat)
@@ -76,10 +76,10 @@ static int depack_nru(FILE *in, FILE *out)
 	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data */
-	fseek (in, 0x043c, SEEK_SET);
+	hio_seek(in, 0x043c, SEEK_SET);
 	for (i = 0; i < max_pat; i++) {
 		memset(pat_data, 0, 1025);
-		fread(tmp, 1024, 1, in);
+		hio_read(tmp, 1024, 1, in);
 		for (j = 0; j < 256; j++) {
 			ins = (tmp[j * 4 + 3] >> 3) & 0x1f;
 			note = tmp[j * 4 + 2];

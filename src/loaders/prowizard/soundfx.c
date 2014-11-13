@@ -16,7 +16,7 @@ void Depack_SoundFX13 (FILE * in, FILE * out)
 	uint8 PatPos;
 	long ssize = 0;
 	long i = 0, j = 0;
-	// FILE *in,*out;
+	// HIO_HANDLE *in,*out;
 
 	if (Save_Status == BAD)
 		return;

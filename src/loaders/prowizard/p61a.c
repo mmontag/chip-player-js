@@ -17,7 +17,7 @@
 #include "prowiz.h"
 
 
-static int depack_p61a(FILE *in, FILE *out)
+static int depack_p61a(HIO_HANDLE *in, FILE *out)
 {
     uint8 c1, c2, c3, c4, c5, c6;
     long max_row;
@@ -53,9 +53,9 @@ static int depack_p61a(FILE *in, FILE *out)
     }
 
     saddr[0] = 0;
-    sdata_addr = read16b(in);		/* read sample data address */
-    npat = read8(in);			/* read Real number of pattern */
-    nins = read8(in);			/* read number of samples */
+    sdata_addr = hio_read16b(in);		/* read sample data address */
+    npat = hio_read8(in);			/* read Real number of pattern */
+    nins = hio_read8(in);			/* read number of samples */
 
     if (nins & 0x80) {
 	/* Samples are saved as delta values */
@@ -70,7 +70,7 @@ static int depack_p61a(FILE *in, FILE *out)
 
     /* read unpacked sample data size */
     if (use_packed == 1)
-	Unpacked_Sample_Data_Size = read32b(in);
+	Unpacked_Sample_Data_Size = hio_read32b(in);
 
     pw_write_zero(out, 20);		/* write title */
 
@@ -78,7 +78,7 @@ static int depack_p61a(FILE *in, FILE *out)
     for (i = 0; i < nins; i++) {
 	pw_write_zero(out, 22);		/* write sample name */
 
-	j = isize[i] = read16b(in);	/* sample size */
+	j = isize[i] = hio_read16b(in);	/* sample size */
 
 	if (j > 0xff00) {
 	    smp_size[i] = smp_size[0xffff - j];
@@ -94,16 +94,16 @@ static int depack_p61a(FILE *in, FILE *out)
 	j = smp_size[i] / 2;
 	write16b(out, isize[i]);
 
-	c1 = read8(in);			/* finetune */
+	c1 = hio_read8(in);			/* finetune */
 	if (c1 & 0x40)
 	    PACK[i] = 1;
 	c1 &= 0x3f;
 	write8(out, c1);
 
-	write8(out, read8(in));		/* volume */
+	write8(out, hio_read8(in));		/* volume */
 
 	/* loop start */
-	x = read16b(in);
+	x = hio_read16b(in);
 	if (x == 0xffff) {
 	    write16b(out, 0x0000);
 	    write16b(out, 0x0001);
@@ -122,12 +122,12 @@ static int depack_p61a(FILE *in, FILE *out)
     /* read tracks addresses per pattern */
     for (i = 0; i < npat; i++) {
 	for (j = 0; j < 4; j++)
-	    taddr[i][j] = read16b(in);
+	    taddr[i][j] = hio_read16b(in);
     }
 
     /* pattern table */
     for (len = 0; len < 128; len++) {
-	c1 = read8(in);
+	c1 = hio_read8(in);
 	if (c1 == 0xff)
 	    break;
 	ptable[len] = c1;		/* <--- /2 in p50a */
@@ -138,27 +138,27 @@ static int depack_p61a(FILE *in, FILE *out)
     fwrite(ptable, 128, 1, out);	/* write pattern table */
     write32b(out, PW_MOD_MAGIC);	/* write ptk ID */
 
-    tdata_addr = ftell(in);
+    tdata_addr = hio_tell(in);
 
     /* rewrite the track data */
     for (i = 0; i < npat; i++) {
 	max_row = 63;
 	for (j = 0; j < 4; j++) {
-	    fseek(in, taddr[i][j] + tdata_addr, SEEK_SET);
+	    hio_seek(in, taddr[i][j] + tdata_addr, SEEK_SET);
 	    for (k = 0; k <= max_row; k++) {
 		uint8 *x = &tdata[i * 4 + j][k * 4];
-		c1 = read8(in);
+		c1 = hio_read8(in);
 
 	        /* case no fxt nor fxtArg  (3 bytes) */
 	        if ((c1 & 0x70) == 0x70 && c1 != 0xff && c1 != 0x7F) {
-		    c2 = read8(in);
+		    c2 = hio_read8(in);
 	            c6 = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0e);
 	            *x++ = (c2 & 0x10) | (ptk_table[c6 / 2][0]);
 	            *x++ = ptk_table[c6 / 2][1];
 	            *x++ = (c2 << 4) & 0xf0;
 
 	            if (c1 & 0x80) {
-			c3 = read8(in);
+			c3 = hio_read8(in);
 	                if (c3 < 0x80) {
 	                    k += c3;
 	                    continue;
@@ -179,7 +179,7 @@ static int depack_p61a(FILE *in, FILE *out)
 
 	        /* case no sample number nor relative note number */
 	        if ((c1 & 0x70) == 0x60 && c1 != 0xff) {
-		    c2 = read8(in);
+		    c2 = hio_read8(in);
 	            c6 = c1 & 0x0f;
 	            if (c6 == 0x08)
 	                c1 -= 0x08;
@@ -198,7 +198,7 @@ static int depack_p61a(FILE *in, FILE *out)
 			break;
 	            }
 	            if (c1 & 0x80) {
-			c3 = read8(in);
+			c3 = hio_read8(in);
 	                if (c3 < 0x80) {	/* bypass c3 rows */
 	                    k += c3;
 	                    continue;
@@ -216,9 +216,9 @@ static int depack_p61a(FILE *in, FILE *out)
 	        /* end of case no Sample number nor Relative not number */
 
 	        if ((c1 & 0x80) == 0x80 && c1 != 0xff) {
-		    c2 = read8(in);
-		    c3 = read8(in);
-		    c4 = read8(in);
+		    c2 = hio_read8(in);
+		    c3 = hio_read8(in);
+		    c4 = hio_read8(in);
 	            c1 &= 0x7f;
 
 		    *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
@@ -271,38 +271,38 @@ static int depack_p61a(FILE *in, FILE *out)
 	                /*k += 1; */
 	                continue;
 	            }
-		    c2 = read8(in);
+		    c2 = hio_read8(in);
 	            if (c2 < 0x40) {	/* bypass c2 rows */
 	                k += c2;
 	                continue;
 	            }
 	            c2 -= 0x40;
-		    c3 = read8(in);
+		    c3 = hio_read8(in);
 	            z = c3;
 	            if (c2 >= 0x80) {
 	                c2 -= 0x80;
-			c4 = read8(in);
+			c4 = hio_read8(in);
 	                z = (c3 << 8) + c4;
 	            }
-	            a = ftell(in);
+	            a = hio_tell(in);
 	            c5 = c2;
 
-	            fseek(in, -z, SEEK_CUR);
+	            hio_seek(in, -z, SEEK_CUR);
 
 	            for (l = 0; l <= c5 && k <= max_row; l++, k++) {
-			c1 = read8(in);
+			c1 = hio_read8(in);
 			x = &tdata[i * 4 + j][k * 4];
 
 	                /* case no fxt nor fxtArg  (3 bytes) */
 	                if ((c1 & 0x70) == 0x70 && c1 != 0xff && c1 != 0x7f) {
-			    c2 = read8(in);
+			    c2 = hio_read8(in);
 	                    c6 = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0e);
 	                    *x++ = (c2 & 0x10) | ptk_table[c6 / 2][0];
 	                    *x++ = ptk_table[c6 / 2][1];
 	                    *x++ = (c2 << 4) & 0xf0;
 
 	                    if (c1 & 0x80) {
-				c3 = read8(in);
+				c3 = hio_read8(in);
 	                        if (c3 < 0x80) {	/* bypass c3 rows */
 	                            k += c3;
 	                            continue;
@@ -322,7 +322,7 @@ static int depack_p61a(FILE *in, FILE *out)
 
 	                /* case no sample number nor relative note number */
 	                if ((c1 & 0x60) == 0x60 && c1 != 0xff && c1 != 0x7f) {
-			    c2 = read8(in);
+			    c2 = hio_read8(in);
 	                    c6 = c1 & 0x0f;
 	                    if (c6 == 0x08)
 	                        c1 -= 0x08;
@@ -344,7 +344,7 @@ static int depack_p61a(FILE *in, FILE *out)
 	                    }
 
 	                    if (c1 & 0x80) {
-				c3 = read8(in);
+				c3 = hio_read8(in);
 	                        if (c3 < 0x80) {	/* bypass c3 rows */
 	                            k += c3;
 	                            continue;
@@ -362,9 +362,9 @@ static int depack_p61a(FILE *in, FILE *out)
 	                /* end of case no sample nor relative note number */
 
 	                if ((c1 & 0x80) && c1 != 0xff && c1 != 0x7f) {
-			    c2 = read8(in);
-			    c3 = read8(in);
-			    c4 = read8(in);
+			    c2 = hio_read8(in);
+			    c3 = hio_read8(in);
+			    c4 = hio_read8(in);
 	                    c1 &= 0x7f;
 
 	                    *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
@@ -415,7 +415,7 @@ static int depack_p61a(FILE *in, FILE *out)
 	                        /*k += 1; */
 	                        continue;
 	                    }
-			    c2 = read8(in);
+			    c2 = hio_read8(in);
 	                    if (c2 < 0x40) {	/* bypass c2 rows */
 	                        k += c2;
 	                        continue;
@@ -423,8 +423,8 @@ static int depack_p61a(FILE *in, FILE *out)
 	                    continue;
 	                }
 
-			c2 = read8(in);
-			c3 = read8(in);
+			c2 = hio_read8(in);
+			c3 = hio_read8(in);
 
 	                *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
 	                *x++ = ptk_table[c1 / 2][1];
@@ -438,13 +438,13 @@ static int depack_p61a(FILE *in, FILE *out)
 	                    c3 = c3 > 0x7f ? (0x100 - c3) << 4 : c3;
 	                *x++ = c3;
 	            }
-	            fseek(in, a, SEEK_SET);
+	            hio_seek(in, a, SEEK_SET);
 	            k -= 1;
 	            continue;
 	        }
 
-		c2 = read8(in);
-		c3 = read8(in);
+		c2 = hio_read8(in);
+		c3 = hio_read8(in);
 
 	        *x++ = ((c1 << 4) & 0x10) | ptk_table[c1 / 2][0];
 	        *x++ = ptk_table[c1 / 2][1];
@@ -483,16 +483,16 @@ static int depack_p61a(FILE *in, FILE *out)
     }
 
     /* go to sample data address */
-    fseek (in, sdata_addr, 0);
+    hio_seek(in, sdata_addr, SEEK_SET);
 
     /* read and write sample data */
 
     /*printf ( "writing sample data ... " ); */
     for (i = 0; i < nins; i++) {
-	fseek(in, sdata_addr + saddr[i], 0);
+	hio_seek(in, sdata_addr + saddr[i], 0);
 	smp_buffer = malloc(smp_size[i]);
 	memset(smp_buffer, 0, smp_size[i]);
-	fread(smp_buffer, smp_size[i], 1, in);
+	hio_read(smp_buffer, smp_size[i], 1, in);
 	if (use_delta == 1) {
 	    c1 = 0;
 	    for (j = 1; j < smp_size[i]; j++) {

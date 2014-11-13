@@ -19,7 +19,7 @@ void Depack_PM (FILE * in, FILE * out)
 	uint8 Max = 0x00;
 	long ssize = 0;
 	long i = 0;
-	// FILE *in,*out;
+	// HIO_HANDLE *in,*out;
 
 	if (Save_Status == BAD)
 		return;

@@ -12,7 +12,7 @@
 #include "prowiz.h"
 
 
-static int depack_pha(FILE *in, FILE *out)
+static int depack_pha(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2;
 	uint8 pnum[128];
@@ -46,29 +46,29 @@ static int depack_pha(FILE *in, FILE *out)
 
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);			/*sample name */
-		write16b(out, size = read16b(in));	/* size */
+		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		read8(in);
+		hio_read8(in);
 		write8(out, 0);				/* finetune byte */
-		write8(out, read8(in));			/* volume */
-		write16b(out, read16b(in));		/* loop start */
-		write16b(out, read16b(in));		/* loop size */
+		write8(out, hio_read8(in));			/* volume */
+		write16b(out, hio_read16b(in));		/* loop start */
+		write16b(out, hio_read16b(in));		/* loop size */
 
-		read32b(in);
+		hio_read32b(in);
 
-		c1 = read8(in);
+		c1 = hio_read8(in);
 		if(c1 != 0x00)
 			c1 += 0x0b;
 		fseek(out, -6, SEEK_END);
 		write8(out, c1);
 		fseek(out, 0, SEEK_END);
-		fseek(in, 1, SEEK_CUR);
+		hio_seek(in, 1, SEEK_CUR);
 	}
 
-	fseek(in, 14, SEEK_CUR);		/* bypass unknown 14 bytes */
+	hio_seek(in, 14, SEEK_CUR);		/* bypass unknown 14 bytes */
 
 	for (i = 0; i < 128; i++)
-		paddr[i] = read32b(in);
+		paddr[i] = hio_read32b(in);
 
 	/* ordering of patterns addresses */
 
@@ -173,8 +173,8 @@ restart:
 
 	write32b(out, PW_MOD_MAGIC);		/* ID string */
 
-	smp_addr = ftell(in);
-	fseek(in, pat_addr, SEEK_SET);
+	smp_addr = hio_tell(in);
+	hio_seek(in, pat_addr, SEEK_SET);
 
 	/* pattern datas */
 	/* read ALL pattern data */
@@ -188,7 +188,7 @@ restart:
 #endif
 	psize = npat * 1024;
 	pdata = (uint8 *) malloc (psize);
-	psize = fread(pdata, 1, psize, in);
+	psize = hio_read(pdata, 1, psize, in);
 	npat += 1;		/* coz first value is $00 */
 	pat = (uint8 *)malloc(npat * 1024);
 	memset(pat, 0, npat * 1024);
@@ -241,7 +241,7 @@ restart:
 	free(pat);
 
 	/* Sample data */
-	fseek(in, smp_addr, SEEK_SET);
+	hio_seek(in, smp_addr, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;

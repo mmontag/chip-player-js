@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_starpack(FILE *in, FILE *out)
+static int depack_starpack(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4, c5;
 	uint8 pnum[128];
@@ -37,20 +37,20 @@ static int depack_starpack(FILE *in, FILE *out)
 
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);		/* sample name */
-		write16b(out, size = read16b(in));	/* size */
+		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += 2 * size;
-		write8(out, read8(in));		/* finetune */
-		write8(out, read8(in));		/* volume */
-		write16b(out, read16b(in));	/* loop start */
-		write16b(out, read16b(in));	/* loop size */
+		write8(out, hio_read8(in));		/* finetune */
+		write8(out, hio_read8(in));		/* volume */
+		write16b(out, hio_read16b(in));	/* loop start */
+		write16b(out, hio_read16b(in));	/* loop size */
 	}
 
-	pat_pos = read16b(in);			/* size of pattern table */
+	pat_pos = hio_read16b(in);			/* size of pattern table */
 
-	fseek(in, 2, SEEK_CUR);			/* bypass $0000 unknown bytes */
+	hio_seek(in, 2, SEEK_CUR);			/* bypass $0000 unknown bytes */
 
 	for (i = 0; i < 128; i++)
-		paddr[i] = read32b(in);
+		paddr[i] = hio_read32b(in);
 
 	/* ordering of patterns addresses */
 
@@ -141,8 +141,8 @@ static int depack_starpack(FILE *in, FILE *out)
 	write32b(out, PW_MOD_MAGIC);		/* M.K. */
 
 	/* read sample data address */
-	fseek(in, 0x310, SEEK_SET);
-	smp_addr = read32b(in) + 0x314;
+	hio_seek(in, 0x310, SEEK_SET);
+	smp_addr = hio_read32b(in) + 0x314;
 
 	/* pattern data */
 	num_pat += 1;
@@ -151,12 +151,12 @@ static int depack_starpack(FILE *in, FILE *out)
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
 				int ofs = j * 16 + k * 4;
-				c1 = read8(in);
+				c1 = hio_read8(in);
 				if (c1 == 0x80)
 					continue;
-				c2 = read8(in);
-				c3 = read8(in);
-				c4 = read8(in);
+				c2 = hio_read8(in);
+				c3 = hio_read8(in);
+				c4 = hio_read8(in);
 				buffer[ofs] = c1 & 0x0f;
 				buffer[ofs + 1] = c2;
 				buffer[ofs + 2] = c3 & 0x0f;
@@ -173,7 +173,7 @@ static int depack_starpack(FILE *in, FILE *out)
 	/*printf ( "\n" ); */
 
 	/* sample data */
-	fseek(in, smp_addr, 0);
+	hio_seek(in, smp_addr, 0);
 	pw_move_data(out, in, ssize);
 
 	return 0;

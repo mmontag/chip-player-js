@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_p10c(FILE *in, FILE *out)
+static int depack_p10c(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2;
 	int pat_max;
@@ -48,24 +48,24 @@ static int depack_p10c(FILE *in, FILE *out)
 	pw_write_zero(out, 20);				/* title */
 
 	/* bypass replaycode routine */
-	fseek(in, 4460, SEEK_SET);
+	hio_seek(in, 4460, SEEK_SET);
 
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);			/*sample name */
-		write16b(out, size = read16b(in));	/* size */
+		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, fin[i] = read8(in));	/* fin */
-		write8(out, read8(in));			/* volume */
-		write16b(out, read16b(in));		/* loop start */
-		write16b(out, read16b(in));		/* loop size */
+		write8(out, fin[i] = hio_read8(in));	/* fin */
+		write8(out, hio_read8(in));			/* volume */
+		write16b(out, hio_read16b(in));		/* loop start */
+		write16b(out, hio_read16b(in));		/* loop size */
 	}
 
-	write8(out, num_pat = read16b(in) / 4);		/* pat table lenght */
+	write8(out, num_pat = hio_read16b(in) / 4);		/* pat table lenght */
 	write8(out, 0x7f);				/* NoiseTracker byte */
 
 	for (i = 0; i < 128; i++)
-		paddr[i] = read32b(in);
+		paddr[i] = hio_read32b(in);
 
 	/* ordering of patterns addresses */
 
@@ -137,16 +137,16 @@ restart:
 	/* a little pre-calc code ... no other way to deal with these unknown
 	 * pattern data sizes ! :(
 	 */
-	fseek(in, 4456, SEEK_SET);
-	psize = read32b(in);
+	hio_seek(in, 4456, SEEK_SET);
+	psize = hio_read32b(in);
 
 	/* go back to pattern data starting address */
-	fseek(in, 5222, SEEK_SET);
+	hio_seek(in, 5222, SEEK_SET);
 
 	/* now, reading all pattern data to get the max value of note */
 	refmax = 0;
 	for (j = 0; j < psize; j += 2) {
-		int x = read16b(in);
+		int x = hio_read16b(in);
 		if (x > refmax)
 			refmax = x;
 	}
@@ -155,17 +155,17 @@ restart:
 	refmax++;		/* coz 1st value is 0 ! */
 	i = refmax * 4;		/* coz each block is 4 bytes long */
 	reftab = (uint8 *) malloc(i);
-	fread(reftab, i, 1, in);
+	hio_read(reftab, i, 1, in);
 
 	/* go back to pattern data starting address */
-	fseek(in, 5222, SEEK_SET);
+	hio_seek(in, 5222, SEEK_SET);
 
 	for (j = 0; j <= pat_max; j++) {
 		int flag = 0;
 		for (i = 0; i < 64; i++) {
 			for (k = 0; k < 4; k++) {
 				uint8 *p = &pat[j][i * 16 + k * 4];
-				int x = read16b(in) << 2;
+				int x = hio_read16b(in) << 2;
 				int fine, ins, per, fxt;
 
 				memcpy(p, &reftab[x], 4);
@@ -206,9 +206,9 @@ restart:
 
 	free(reftab);
 
-	fseek(in, 4452, SEEK_SET);
-	smp_ofs = read32b(in);
-	fseek(in, 4456 + smp_ofs, SEEK_SET);
+	hio_seek(in, 4452, SEEK_SET);
+	smp_ofs = hio_read32b(in);
+	hio_seek(in, 4456 + smp_ofs, SEEK_SET);
 
 	pw_move_data(out, in, ssize);
 

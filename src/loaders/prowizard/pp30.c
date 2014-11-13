@@ -23,7 +23,7 @@ void Depack_PP30 (FILE * in, FILE * out)
 	long i = 0, j = 0;
 	long ssize = 0;
 	long RTS = 0;		/* Reference Table Size */
-	// FILE *in,*out;
+	// HIO_HANDLE *in,*out;
 
 	if (Save_Status == BAD)
 		return;

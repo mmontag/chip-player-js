@@ -27,7 +27,7 @@ void Depack_TP1 (FILE * in, FILE * out)
 	long Start_Pat_Address = 999999l;
 	long Whole_Sample_Size = 0;
 	long Sample_Data_Address;
-	// FILE *in,*out;
+	// HIO_HANDLE *in,*out;
 
 #include "ptktable.h"
 

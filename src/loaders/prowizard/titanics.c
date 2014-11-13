@@ -20,7 +20,7 @@ static int cmplong(const void *a, const void *b)
 }
 
 
-static int depack_titanics(FILE *in, FILE *out)
+static int depack_titanics(HIO_HANDLE *in, FILE *out)
 {
 	uint8 buf[1024];
 	long pat_addr[128];
@@ -38,14 +38,14 @@ static int depack_titanics(FILE *in, FILE *out)
 	pw_write_zero(out, 20);			/* write title */
 
 	for (i = 0; i < 15; i++) {
-		smp_addr[i] = read32b(in);
+		smp_addr[i] = hio_read32b(in);
 		pw_write_zero(out, 22);		/* write name */
-		write16b(out, smp_size[i] = read16b(in));
+		write16b(out, smp_size[i] = hio_read16b(in));
 		smp_size[i] *= 2;
-		write8(out, read8(in));		/* finetune */
-		write8(out, read8(in));		/* volume */
-		write16b(out, read16b(in));	/* loop start */
-		write16b(out, read16b(in));	/* loop size */
+		write8(out, hio_read8(in));		/* finetune */
+		write8(out, hio_read8(in));		/* volume */
+		write16b(out, hio_read16b(in));	/* loop start */
+		write16b(out, hio_read16b(in));	/* loop size */
 	}
 	for (i = 15; i < 31; i++) {
 		pw_write_zero(out, 22);		/* write name */
@@ -57,7 +57,7 @@ static int depack_titanics(FILE *in, FILE *out)
 	}
 
 	/* pattern list */
-	fread(buf, 2, 128, in);
+	hio_read(buf, 2, 128, in);
 	for (pat = 0; pat < 128; pat++) {
 		if (buf[pat * 2] == 0xff)
 			break;
@@ -93,13 +93,13 @@ static int depack_titanics(FILE *in, FILE *out)
 		uint8 x, y, c;
 		int note;
 
-		fseek(in, pat_addr_final[i], SEEK_SET);
+		hio_seek(in, pat_addr_final[i], SEEK_SET);
 
 		memset(buf, 0, 1024);
-		x = read8(in);
+		x = hio_read8(in);
 
 		for (k = 0; k < 64; ) {			/* row number */
-			y = read8(in);
+			y = hio_read8(in);
 			c = (y >> 6) * 4;		/* channel */
 
 			note = y & 0x3f;
@@ -108,14 +108,14 @@ static int depack_titanics(FILE *in, FILE *out)
 				buf[k * 16 + c] = ptk_table[note][0];
 				buf[k * 16 + c + 1] = ptk_table[note][1];
 			}
-			buf[k * 16 + c + 2] = read8(in);
-			buf[k * 16 + c + 3] = read8(in);
+			buf[k * 16 + c + 2] = hio_read8(in);
+			buf[k * 16 + c + 3] = hio_read8(in);
 
 			if (x & 0x80)
 				break;
 
 			/* next event */
-			x = read8(in);
+			x = hio_read8(in);
 			k += x & 0x7f;
 		}
 
@@ -125,7 +125,7 @@ static int depack_titanics(FILE *in, FILE *out)
 	/* sample data */
 	for (i = 0; i < 15; i++) {
 		if (smp_addr[i]) {
-			fseek(in, smp_addr[i], SEEK_SET);
+			hio_seek(in, smp_addr[i], SEEK_SET);
 			pw_move_data(out, in, smp_size[i]);
 		}
 	}

@@ -13,7 +13,7 @@
 #include "prowiz.h"
 
 
-static int depack_crb(FILE *in, FILE *out)
+static int depack_crb(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1;
 	uint8 ptable[128];
@@ -31,21 +31,21 @@ static int depack_crb(FILE *in, FILE *out)
 	/* read and write sample descriptions */
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);			/*sample name */
-		write16b(out, size = read16b(in));	/* size */
+		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, read8(in));			/* finetune */
-		write8(out, read8(in));			/* volume */
-		write16b(out, read16b(in));		/* loop start */
-		size = read16b(in);			/* loop size */
+		write8(out, hio_read8(in));			/* finetune */
+		write8(out, hio_read8(in));			/* volume */
+		write16b(out, hio_read16b(in));		/* loop start */
+		size = hio_read16b(in);			/* loop size */
 		write16b(out, size ? size : 1);
 	}
 
-	write8(out, pat_pos = read8(in));		/* pat table length */
-	write8(out, read8(in)); 			/* NoiseTracker byte */
+	write8(out, pat_pos = hio_read8(in));		/* pat table length */
+	write8(out, hio_read8(in)); 			/* NoiseTracker byte */
 
 	/* read and write pattern list and get highest patt number */
 	for (pat_max = i = 0; i < 128; i++) {
-		write8(out, c1 = read8(in));
+		write8(out, c1 = hio_read8(in));
 		if (c1 > pat_max)
 			pat_max = c1;
 	}
@@ -58,40 +58,40 @@ static int depack_crb(FILE *in, FILE *out)
 	for (i = 0; i < pat_max; i++) {
 		memset(pat, 0, 1024);
 		for (j = 0; j < 4; j++) {
-			taddr[i * 4 + j] = ftell(in);
+			taddr[i * 4 + j] = hio_tell(in);
 			for (k = 0; k < 64; k++) {
 				int y = k * 16 + j * 4;
 
-				c1 = read8(in);
+				c1 = hio_read8(in);
 				if (c1 == 0x80) {
-					k += read24b(in);
+					k += hio_read24b(in);
 					continue;
 				}
 				if (c1 == 0xc0) {
-					m = read24b(in);
-					l = ftell(in);
-					fseek(in, taddr[m >> 2], SEEK_SET);
+					m = hio_read24b(in);
+					l = hio_tell(in);
+					hio_seek(in, taddr[m >> 2], SEEK_SET);
 					for (m = 0; m < 64; m++) {
 						int x = m * 16 + j * 4;
 
-						c1 = read8(in);
+						c1 = hio_read8(in);
 						if (c1 == 0x80) {
-							m += read24b(in);
+							m += hio_read24b(in);
 							continue;
 						}
 						pat[x] = c1;
-						pat[x + 1] = read8(in);
-						pat[x + 2] = read8(in);
-						pat[x + 3] = read8(in);
+						pat[x + 1] = hio_read8(in);
+						pat[x + 2] = hio_read8(in);
+						pat[x + 3] = hio_read8(in);
 					}
-					fseek (in, l, 0);	/* SEEK_SET */
+					hio_seek(in, l, SEEK_SET);
 					k += 100;
 					continue;
 				}
 				pat[y] = c1;
-				pat[y + 1] = read8(in);
-				pat[y + 2] = read8(in);
-				pat[y + 3] = read8(in);
+				pat[y + 1] = hio_read8(in);
+				pat[y + 2] = hio_read8(in);
+				pat[y + 3] = hio_read8(in);
 			}
 		}
 		fwrite (pat, 1024, 1, out);

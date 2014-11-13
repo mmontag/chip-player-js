@@ -13,7 +13,7 @@
 #define PAT_DATA_ADDRESS 0x43C
 
 
-static int depack_xann(FILE *in, FILE *out)
+static int depack_xann(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c5;
 	uint8 ptable[128];
@@ -31,17 +31,17 @@ static int depack_xann(FILE *in, FILE *out)
 	pw_write_zero(out, 20);			/* title */
 
 	/* 31 samples */
-	fseek(in, SMP_DESC_ADDRESS, SEEK_SET);
+	hio_seek(in, SMP_DESC_ADDRESS, SEEK_SET);
 
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);		/* sample name */
 
-		fine = read8(in);		/* read finetune */
-		vol = read8(in);		/* read volume */
-		j = read32b(in);		/* read loop start address */
-		lsize = read16b(in);		/* read loop size */
-		k = read32b(in);		/* read sample address */
-		write16b(out, size = read16b(in)); 	/* sample size */
+		fine = hio_read8(in);		/* read finetune */
+		vol = hio_read8(in);		/* read volume */
+		j = hio_read32b(in);		/* read loop start address */
+		lsize = hio_read16b(in);		/* read loop size */
+		k = hio_read32b(in);		/* read sample address */
+		write16b(out, size = hio_read16b(in)); 	/* sample size */
 		ssize += size * 2;
 
 		j = j - k;			/* calculate loop start value */
@@ -50,14 +50,14 @@ static int depack_xann(FILE *in, FILE *out)
 		write16b(out, j / 2);		/* write loop start */
 		write16b(out, lsize);		/* write loop size */
 
-		read16b(in);			/* bypass two unknown bytes */
+		hio_read16b(in);			/* bypass two unknown bytes */
 	}
 
 	/* pattern table */
-	fseek(in, 0, SEEK_SET);
+	hio_seek(in, 0, SEEK_SET);
 
 	for (pat = c5 = 0; c5 < 128; c5++) {
-		k = read32b(in);
+		k = hio_read32b(in);
 		if (k == 0)
 			break;
 		ptable[c5] = ((k - 0x3c) / 1024) - 1;
@@ -73,16 +73,16 @@ static int depack_xann(FILE *in, FILE *out)
 	write32b(out, PW_MOD_MAGIC);	/* write Protracker's ID */
 
 	/* pattern data */
-	fseek(in, PAT_DATA_ADDRESS, SEEK_SET);
+	hio_seek(in, PAT_DATA_ADDRESS, SEEK_SET);
 
 	for (i = 0; i < pat; i++) {
 		for (j = 0; j < 256; j++) {
 			uint8 *p = pdata + j * 4;
 
-			ins = (read8(in) >> 3) & 0x1f;
-			note = read8(in);
-			fxt = read8(in);
-			fxp = read8(in);
+			ins = (hio_read8(in) >> 3) & 0x1f;
+			note = hio_read8(in);
+			fxt = hio_read8(in);
+			fxp = hio_read8(in);
 
 			switch (fxt) {
 			case 0x00:	/* no fxt */

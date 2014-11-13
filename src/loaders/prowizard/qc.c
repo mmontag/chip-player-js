@@ -18,7 +18,7 @@ const struct pw_format pw_emod = {
 	depack_emod
 };
 
-static int depack_emod (FILE *in, FILE *out)
+static int depack_emod (HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4, c5;
 	uint8 pat_pos;

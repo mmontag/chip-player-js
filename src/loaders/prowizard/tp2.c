@@ -4,7 +4,7 @@
  * Converts TP2 packed MODs back to PTK MODs
  ********************************************************
  * 13 april 1999 : Update
- *   - no more open() of input file ... so no more fread() !.
+ *   - no more open() of input file ... so no more hio_read() !.
  *     It speeds-up the process quite a bit :).
  *
 */
@@ -27,7 +27,7 @@ void Depack_TP2 (FILE * in, FILE * out)
 	long Start_Pat_Address = 999999l;
 	long Whole_Sample_Size = 0;
 	long Max_Track_Address = 0;
-	long Where = start;	/* main pointer to prevent fread() */
+	long Where = start;	/* main pointer to prevent hio_read() */
 	// FILE *out;
 
 #include "ptktable.h"

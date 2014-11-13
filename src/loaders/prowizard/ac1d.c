@@ -14,7 +14,7 @@
 
 #define NO_NOTE 0xff
 
-static int depack_ac1d(FILE *in, FILE *out)
+static int depack_ac1d(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 npos;
@@ -33,26 +33,26 @@ static int depack_ac1d(FILE *in, FILE *out)
 	memset(paddr, 0, 128 * 4);
 	memset(psize, 0, 128 * 4);
 
-	npos = read8(in);
-	ntk_byte = read8(in);
-	read16b(in);			/* bypass ID */
-	saddr = read32b(in);		/* sample data address */
+	npos = hio_read8(in);
+	ntk_byte = hio_read8(in);
+	hio_read16b(in);			/* bypass ID */
+	saddr = hio_read32b(in);		/* sample data address */
 
 	pw_write_zero(out, 20);		/* write title */
 
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);		/* name */
-		write16b(out, size = read16b(in));	/* size */
+		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, read8(in));		/* finetune */
-		write8(out, read8(in));		/* volume */
-		write16b(out, read16b(in));	/* loop start */
-		write16b(out, read16b(in));	/* loop size */
+		write8(out, hio_read8(in));		/* finetune */
+		write8(out, hio_read8(in));		/* volume */
+		write16b(out, hio_read16b(in));	/* loop start */
+		write16b(out, hio_read16b(in));	/* loop size */
 	}
 
 	/* pattern addresses */
 	for (npat = 0; npat < 128; npat++) {
-		paddr[npat] = read32b(in);
+		paddr[npat] = hio_read32b(in);
 		if (paddr[npat] == 0)
 			break;
 	}
@@ -64,31 +64,31 @@ static int depack_ac1d(FILE *in, FILE *out)
 	write8(out, npos);		/* write number of pattern pos */
 	write8(out, ntk_byte);		/* write "noisetracker" byte */
 
-	fseek(in, 0x300, SEEK_SET);	/* go to pattern table .. */
+	hio_seek(in, 0x300, SEEK_SET);	/* go to pattern table .. */
 	pw_move_data(out, in, 128);	/* pattern table */
 	
 	write32b(out, PW_MOD_MAGIC);	/* M.K. */
 
 	/* pattern data */
 	for (i = 0; i < npat; i++) {
-		fseek(in, paddr[i], SEEK_SET);
-		/*tsize1 =*/ read32b(in);
-		/*tsize2 =*/ read32b(in);
-		/*tsize3 =*/ read32b(in);
+		hio_seek(in, paddr[i], SEEK_SET);
+		/*tsize1 =*/ hio_read32b(in);
+		/*tsize2 =*/ hio_read32b(in);
+		/*tsize3 =*/ hio_read32b(in);
 
 		memset(tmp, 0, 1024);
 		for (k = 0; k < 4; k++) {
 			for (j = 0; j < 64; j++) {
 				int x = j * 16 + k * 4;
 
-				c1 = read8(in);
+				c1 = hio_read8(in);
 				if (c1 & 0x80) {
 					c4 = c1 & 0x7f;
 					j += (c4 - 1);
 					continue;
 				}
 
-				c2 = read8(in);
+				c2 = hio_read8(in);
 				ins = ((c1 & 0xc0) >> 2) | ((c2 >> 4) & 0x0f);
 				note = c1 & 0x3f;
 
@@ -112,7 +112,7 @@ static int depack_ac1d(FILE *in, FILE *out)
 					continue;
 				}
 
-				c3 = read8(in);
+				c3 = hio_read8(in);
 				fxt = c2 & 0x0f;
 				fxp = c3;
 				tmp[x + 2] = ((ins << 4) & 0xf0) | fxt;
@@ -123,7 +123,7 @@ static int depack_ac1d(FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	fseek(in, saddr, 0);
+	hio_seek(in, saddr, 0);
 	pw_move_data(out, in, ssize);
 
 	return 0;

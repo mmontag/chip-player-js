@@ -14,7 +14,7 @@
 #include "prowiz.h"
 
 
-static int depack_np3(FILE *in, FILE *out)
+static int depack_np3(HIO_HANDLE *in, FILE *out)
 {
 	uint8 tmp[1024];
 	uint8 c1, c2, c3, c4;
@@ -30,19 +30,19 @@ static int depack_np3(FILE *in, FILE *out)
 	memset(ptable, 0, 128);
 	memset(trk_addr, 0, 128 * 4 * 4);
 
-	c1 = read8(in);				/* read number of samples */
-	c2 = read8(in);
+	c1 = hio_read8(in);				/* read number of samples */
+	c2 = hio_read8(in);
 	nins = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
 
 	pw_write_zero(out, 20);			/* write title */
 
-	len = read16b(in) / 2;			/* size of pattern list */
-	read16b(in);				/* 2 unknown bytes */
-	/*tsize =*/ read16b(in);		/* read track data size */
+	len = hio_read16b(in) / 2;			/* size of pattern list */
+	hio_read16b(in);				/* 2 unknown bytes */
+	/*tsize =*/ hio_read16b(in);		/* read track data size */
 
 	/* read sample descriptions */
 	for (i = 0; i < nins; i++) {
-		fread(tmp, 1, 16, in);
+		hio_read(tmp, 1, 16, in);
 		pw_write_zero(out, 22);		/* sample name */
 		write16b(out, size = readmem16b(tmp + 6));
 		ssize += size * 2;
@@ -61,13 +61,13 @@ static int depack_np3(FILE *in, FILE *out)
 	write8(out, len);		/* write size of pattern list */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
-	fseek(in, 2, SEEK_CUR);		/* always $02? */
-	fseek(in, 2, SEEK_CUR);		/* unknown */
+	hio_seek(in, 2, SEEK_CUR);		/* always $02? */
+	hio_seek(in, 2, SEEK_CUR);		/* unknown */
 
 	/* read pattern table */
 	npat = 0;
 	for (i = 0; i < len; i++) {
-		ptable[i] = read16b(in) / 8;
+		ptable[i] = hio_read16b(in) / 8;
 		if (ptable[i] > npat)
 			npat = ptable[i];
 	}
@@ -78,32 +78,32 @@ static int depack_np3(FILE *in, FILE *out)
 
 	/* read tracks addresses per pattern */
 	for (max_addr = i = 0; i < npat; i++) {
-		if ((trk_addr[i][0] = read16b(in)) > max_addr)
+		if ((trk_addr[i][0] = hio_read16b(in)) > max_addr)
 			max_addr = trk_addr[i][0];
-		if ((trk_addr[i][1] = read16b(in)) > max_addr)
+		if ((trk_addr[i][1] = hio_read16b(in)) > max_addr)
 			max_addr = trk_addr[i][1];
-		if ((trk_addr[i][2] = read16b(in)) > max_addr)
+		if ((trk_addr[i][2] = hio_read16b(in)) > max_addr)
 			max_addr = trk_addr[i][2];
-		if ((trk_addr[i][3] = read16b(in)) > max_addr)
+		if ((trk_addr[i][3] = hio_read16b(in)) > max_addr)
 			max_addr = trk_addr[i][3];
 	}
-	trk_start = ftell(in);
+	trk_start = hio_tell(in);
 
 	/* the track data now ... */
 	smp_addr = 0;
 	for (i = 0; i < npat; i++) {
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
-			fseek(in, trk_start + trk_addr[i][3 - j], SEEK_SET);
+			hio_seek(in, trk_start + trk_addr[i][3 - j], SEEK_SET);
 			for (k = 0; k < 64; k++) {
 				int x = k * 16 + j * 4;
 
-				if ((c1 = read8(in)) >= 0x80) {
+				if ((c1 = hio_read8(in)) >= 0x80) {
 					k += (0x100 - c1) - 1;
 					continue;
 				}
-				c2 = read8(in);
-				c3 = read8(in);
+				c2 = hio_read8(in);
+				c3 = hio_read8(in);
 				c4 = (c1 & 0xfe) / 2;
 
 				tmp[x] = ((c1 << 4) & 0x10) | ptk_table[c4][0];
@@ -136,8 +136,8 @@ static int depack_np3(FILE *in, FILE *out)
 					break;
 			}
 
-			if (ftell(in) > smp_addr)
-				smp_addr = ftell(in);
+			if (hio_tell(in) > smp_addr)
+				smp_addr = hio_tell(in);
 		}
 		fwrite(tmp, 1024, 1, out);
 	}
@@ -145,7 +145,7 @@ static int depack_np3(FILE *in, FILE *out)
 	/* sample data */
 	if (smp_addr & 1)
 		smp_addr++;
-	fseek(in, smp_addr, SEEK_SET);
+	hio_seek(in, smp_addr, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;

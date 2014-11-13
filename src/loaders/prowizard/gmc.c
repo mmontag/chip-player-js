@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_GMC(FILE *in, FILE *out)
+static int depack_GMC(HIO_HANDLE *in, FILE *out)
 {
 	uint8 tmp[1024];
 	uint8 ptable[128];
@@ -27,19 +27,19 @@ static int depack_GMC(FILE *in, FILE *out)
 
 	for (i = 0; i < 15; i++) {
 		pw_write_zero(out, 22);		/* name */
-		read32b(in);			/* bypass 4 address bytes */
-		len = read16b(in);
+		hio_read32b(in);			/* bypass 4 address bytes */
+		len = hio_read16b(in);
 		write16b(out, len);		/* size */
 		ssize += len * 2;
-		read8(in);
+		hio_read8(in);
 		write8(out, 0);			/* finetune */
-		write8(out, read8(in));		/* volume */
-		read32b(in);			/* bypass 4 address bytes */
+		write8(out, hio_read8(in));		/* volume */
+		hio_read32b(in);			/* bypass 4 address bytes */
 
-		looplen = read16b(in);		/* loop size */
+		looplen = hio_read16b(in);		/* loop size */
 		write16b(out, looplen > 2 ? len - looplen : 0);
 		write16b(out, looplen <= 2 ? 1 : looplen);
-		read16b(in);			/* always zero? */
+		hio_read16b(in);			/* always zero? */
 	}
 
 	memset(tmp, 0, 30);
@@ -47,14 +47,14 @@ static int depack_GMC(FILE *in, FILE *out)
 	for (i = 0; i < 16; i++)
 		fwrite(tmp, 30, 1, out);
 
-	fseek(in, 0xf3, 0);
-	write8(out, pat_pos = read8(in));	/* pattern list size */
+	hio_seek(in, 0xf3, 0);
+	write8(out, pat_pos = hio_read8(in));	/* pattern list size */
 	write8(out, 0x7f);			/* ntk byte */
 
 	/* read and write size of pattern list */
 	/*printf ( "Creating the pattern table ... " ); */
 	for (i = 0; i < 100; i++)
-		ptable[i] = read16b(in) / 1024;
+		ptable[i] = hio_read16b(in) / 1024;
 	fwrite(ptable, 128, 1, out);
 
 	/* get number of pattern */
@@ -67,10 +67,10 @@ static int depack_GMC(FILE *in, FILE *out)
 	write32b(out, PW_MOD_MAGIC);
 
 	/* pattern data */
-	fseek(in, 444, SEEK_SET);
+	hio_seek(in, 444, SEEK_SET);
 	for (i = 0; i <= max; i++) {
 		memset(tmp, 0, 1024);
-		fread(tmp, 1024, 1, in);
+		hio_read(tmp, 1024, 1, in);
 		for (j = 0; j < 256; j++) {
 			switch (tmp[(j * 4) + 2] & 0x0f) {
 			case 3:	/* replace by C */

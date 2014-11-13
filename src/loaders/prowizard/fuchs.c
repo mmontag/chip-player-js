@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_fuchs(FILE *in, FILE *out)
+static int depack_fuchs(HIO_HANDLE *in, FILE *out)
 {
 	uint8 *tmp;
 	uint8 max_pat;
@@ -27,26 +27,26 @@ static int depack_fuchs(FILE *in, FILE *out)
 	pw_write_zero(out, 1080);		/* write ptk header */
 	fseek(out, 0, SEEK_SET);
 	pw_move_data(out, in, 10);		/* read/write title */
-	/*ssize =*/ read32b(in);		/* read all sample data size */
+	/*ssize =*/ hio_read32b(in);		/* read all sample data size */
 
 	/* read/write sample sizes */
 	for (i = 0; i < 16; i++) {
 		fseek(out, 42 + i * 30, SEEK_SET);
-		smp_len[i] = read16b(in);
+		smp_len[i] = hio_read16b(in);
 		write16b(out, smp_len[i] / 2);
 	}
 
 	/* read/write volumes */
 	for (i = 0; i < 16; i++) {
 		fseek(out, 45 + i * 30, SEEK_SET);
-		fseek(in, 1, SEEK_CUR);
-		write8(out, read8(in));
+		hio_seek(in, 1, SEEK_CUR);
+		write8(out, hio_read8(in));
 	}
 
 	/* read/write loop start */
 	for (i = 0; i < 16; i++) {
 		fseek(out, 46 + i * 30, SEEK_SET);
-		loop_start[i] = read16b(in);
+		loop_start[i] = hio_read16b(in);
 		write8(out, loop_start[i] / 2);
 	}
 
@@ -75,8 +75,8 @@ static int depack_fuchs(FILE *in, FILE *out)
 	/* read number of pattern to play */
 	fseek(out, 950, SEEK_SET);
 	/* bypass empty byte (saved wiz a WORD ..) */
-	fseek(in, 1, SEEK_CUR);
-	write8(out, read8(in));
+	hio_seek(in, 1, SEEK_CUR);
+	write8(out, hio_read8(in));
 
 	/* write ntk byte */
 	write8(out, 0x7f);
@@ -84,8 +84,8 @@ static int depack_fuchs(FILE *in, FILE *out)
 	/* read/write pattern list */
 	for (max_pat = i = 0; i < 40; i++) {
 		uint8 pat;
-		fseek(in, 1, SEEK_CUR);
-		pat = read8(in);
+		hio_seek(in, 1, SEEK_CUR);
+		pat = hio_read8(in);
 		write8(out, pat);
 		if (pat > max_pat)
 			max_pat = pat;
@@ -98,14 +98,14 @@ static int depack_fuchs(FILE *in, FILE *out)
 	/* now, the pattern data */
 
 	/* bypass the "SONG" ID */
-	fseek(in, 4, 1);
+	hio_seek(in, 4, 1);
 
 	/* read pattern data size */
-	pat_size = read32b(in);
+	pat_size = hio_read32b(in);
 
 	/* read pattern data */
 	tmp = (uint8 *)malloc(pat_size);
-	fread(tmp, pat_size, 1, in);
+	hio_read(tmp, pat_size, 1, in);
 
 	/* convert shits */
 	for (i = 0; i < pat_size; i += 4) {
@@ -121,7 +121,7 @@ static int depack_fuchs(FILE *in, FILE *out)
 	free(tmp);
 
 	/* read/write sample data */
-	fseek (in, 4, SEEK_CUR);	/* bypass "INST" Id */
+	hio_seek(in, 4, SEEK_CUR);	/* bypass "INST" Id */
 	for (i = 0; i < 16; i++) {
 		if (smp_len[i] != 0)
 			pw_move_data(out, in, smp_len[i]);

@@ -36,7 +36,7 @@ static uint8 set_event(uint8 *x, uint8 c1, uint8 c2, uint8 c3)
 #define track(p,c,r) tdata[((int)(p) * 4 + (c)) * 512 + (r) * 4]
 
 
-static void decode_pattern(FILE *in, int npat, uint8 *tdata, int tdata_addr, int taddr[128][4])
+static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int tdata_addr, int taddr[128][4])
 {
     int i, j, k, l;
     int max_row;
@@ -48,17 +48,17 @@ static void decode_pattern(FILE *in, int npat, uint8 *tdata, int tdata_addr, int
 	max_row = 63;
 
 	for (j = 0; j < 4; j++) {
-	    fseek(in, taddr[i][j] + tdata_addr, SEEK_SET);
+	    hio_seek(in, taddr[i][j] + tdata_addr, SEEK_SET);
 
 	    for (k = 0; k <= max_row; k++) {
 		uint8 *x = &track(i, j, k);
-		c1 = read8(in);
-		c2 = read8(in);
-		c3 = read8(in);
+		c1 = hio_read8(in);
+		c2 = hio_read8(in);
+		c3 = hio_read8(in);
 
 		/* case 2 */
 		if (c1 & 0x80 && c1 != 0x80) {
-		    c4 = read8(in);		/* number of empty rows */
+		    c4 = hio_read8(in);		/* number of empty rows */
 		    c1 = 0xff - c1;		/* relative note number */
 
 		    effect = set_event(x, c1, c2, c3);
@@ -96,20 +96,20 @@ static void decode_pattern(FILE *in, int npat, uint8 *tdata, int tdata_addr, int
 		if (c1 == 0x80) {
 		    int lines;
 
-		    c4 = read8(in);
-		    pos = ftell(in);
+		    c4 = hio_read8(in);
+		    pos = hio_tell(in);
 		    lines = c2;
-		    fseek(in, -(((int)c3 << 8) + c4), SEEK_CUR);
+		    hio_seek(in, -(((int)c3 << 8) + c4), SEEK_CUR);
 
 		    for (l = 0; l <= lines; l++, k++) {
 			x = &track(i, j, k);
 
-			c1 = read8(in);
-			c2 = read8(in);
-			c3 = read8(in);
+			c1 = hio_read8(in);
+			c2 = hio_read8(in);
+			c3 = hio_read8(in);
 
 			if (c1 & 0x80 && c1 != 0x80) {
-			    c4 = read8(in);
+			    c4 = hio_read8(in);
 			    c1 = 0xff - c1;
 
 			    if (k >= 64)
@@ -146,7 +146,7 @@ static void decode_pattern(FILE *in, int npat, uint8 *tdata, int tdata_addr, int
 			set_event(x, c1, c2, c3);
 		    }
 
-		    fseek(in, pos, SEEK_SET);
+		    hio_seek(in, pos, SEEK_SET);
 		    k--;
 		    continue;
 		}
@@ -170,7 +170,7 @@ static void decode_pattern(FILE *in, int npat, uint8 *tdata, int tdata_addr, int
 }
 
 
-static int theplayer_depack(FILE *in, FILE *out, int version)
+static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
 {
     uint8 c1, c3;
     signed char *smp_buffer;
@@ -207,9 +207,9 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     }*/
 
     saddr[0] = 0;
-    sdata_addr = read16b(in);		/* read sample data address */
-    npat = read8(in);			/* read real number of patterns */
-    nins = read8(in);			/* read number of samples */
+    sdata_addr = hio_read16b(in);		/* read sample data address */
+    npat = hio_read8(in);			/* read real number of patterns */
+    nins = hio_read8(in);			/* read number of samples */
 
     if (nins & 0x80) {
 	/* Samples saved as delta values */
@@ -227,7 +227,7 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     nins &= 0x3f;
 
     if (pack == 1)
-	/* unpacked_ssize =*/ read32b(in);	/* unpacked sample data size */
+	/* unpacked_ssize =*/ hio_read32b(in);	/* unpacked sample data size */
 
     pw_write_zero(out, 20);		/* write title */
 
@@ -235,7 +235,7 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     for (i = 0; i < nins; i++) {
 	pw_write_zero(out, 22);		/* name */
 
-	j = isize[i] = read16b(in);	/* sample size */
+	j = isize[i] = hio_read16b(in);	/* sample size */
 
 	if (j > 0xff00) {
 	    smp_size[i] = smp_size[0xffff - j];
@@ -252,13 +252,13 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
 
 	write16b(out, isize[i]);	/* size */
 
-	c1 = read8(in);			/* finetune */
+	c1 = hio_read8(in);			/* finetune */
 	/*if (c1 & 0x40)
 	    PACK[i] = 1;*/
 	write8(out, c1 & 0x3f);
 
-	write8(out, read8(in));		/* volume */
-	val = read16b(in);		/* loop start */
+	write8(out, hio_read8(in));		/* volume */
+	val = hio_read16b(in);		/* loop start */
 
 	if (val == 0xffff) {
 	    write16b(out, 0x0000);	/* loop start */
@@ -278,12 +278,12 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     /* read tracks addresses per pattern */
     for (i = 0; i < npat; i++) {
 	for (j = 0; j < 4; j++)
-	    taddr[i][j] = read16b(in);
+	    taddr[i][j] = hio_read16b(in);
     }
 
     /* pattern table */
     for (pat_pos = 0; pat_pos < 128; pat_pos++) {
-	c1 = read8(in);
+	c1 = hio_read8(in);
 	if (c1 == 0xff)
 	    break;
 	ptable[pat_pos] = version >= 0x60 ? c1 : c1 / 2; /* <--- /2 in p50a */
@@ -293,7 +293,7 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
     fwrite(ptable, 128, 1, out);	/* write pattern table */
     write32b(out, PW_MOD_MAGIC);	/* M.K. */
 
-    tdata_addr = ftell(in);
+    tdata_addr = hio_tell(in);
 
     /* patterns */
     decode_pattern(in, npat, tdata, tdata_addr, taddr);
@@ -312,10 +312,10 @@ static int theplayer_depack(FILE *in, FILE *out, int version)
 
     /* read and write sample data */
     for (i = 0; i < nins; i++) {
-	fseek(in, sdata_addr + saddr[i], SEEK_SET);
+	hio_seek(in, sdata_addr + saddr[i], SEEK_SET);
 	smp_buffer = malloc(smp_size[i]);
 	memset(smp_buffer, 0, smp_size[i]);
-	fread(smp_buffer, smp_size[i], 1, in);
+	hio_read(smp_buffer, smp_size[i], 1, in);
 	if (delta == 1) {
 	    for (j = 1; j < smp_size[i]; j++) {
 		c3 = 0x100 - smp_buffer[j] + smp_buffer[j - 1];
@@ -454,7 +454,7 @@ static int theplayer_test(uint8 *data, char *t, int s, int version)
 
 
 
-static int depack_p50a(FILE *in, FILE *out)
+static int depack_p50a(HIO_HANDLE *in, FILE *out)
 {
 	return theplayer_depack(in, out, 0x50);
 }
@@ -472,7 +472,7 @@ const struct pw_format pw_p50a = {
 
 
 
-static int depack_p60a(FILE *in, FILE *out)
+static int depack_p60a(HIO_HANDLE *in, FILE *out)
 {
 	return theplayer_depack(in, out, 0x60);
 }

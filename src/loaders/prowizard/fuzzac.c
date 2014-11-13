@@ -19,7 +19,7 @@
 #include "prowiz.h"
 
 
-static int depack_fuzz(FILE *in, FILE *out)
+static int depack_fuzz(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1;
 	uint8 data[1024];
@@ -37,34 +37,34 @@ static int depack_fuzz(FILE *in, FILE *out)
 	memset(tidx_real, 0, 128 * 4);
 	memset(ord, 0, 128);
 
-	read32b(in);			/* bypass ID */
-	read16b(in);			/* bypass 2 unknown bytes */
+	hio_read32b(in);			/* bypass ID */
+	hio_read16b(in);			/* bypass 2 unknown bytes */
 	pw_write_zero(out, 20);		/* write title */
 
 	for (i = 0; i < 31; i++) {
 		pw_move_data(out, in, 22);	/*sample name */
-		fseek(in, 38, SEEK_CUR);
-		write16b(out, size = read16b(in));
+		hio_seek(in, 38, SEEK_CUR);
+		write16b(out, size = hio_read16b(in));
 		ssize += size * 2;
-		lps = read16b(in);		/* loop start */
-		lsz = read16b(in);		/* loop size */
-		write8(out, read8(in));		/* finetune */
-		write8(out, read8(in));		/* volume */
+		lps = hio_read16b(in);		/* loop start */
+		lsz = hio_read16b(in);		/* loop size */
+		write8(out, hio_read8(in));		/* finetune */
+		write8(out, hio_read8(in));		/* volume */
 		write16b(out, lps);
 		write16b(out, lsz > 0 ? lsz : 1);
 	}
 
-	write8(out, len = read8(in));	/* size of pattern list */
-	ntrk = read8(in);		/* read the number of tracks */
+	write8(out, len = hio_read8(in));	/* size of pattern list */
+	ntrk = hio_read8(in);		/* read the number of tracks */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
 	/* place file pointer at track number list address */
-	fseek(in, 2118, SEEK_SET);
+	hio_seek(in, 2118, SEEK_SET);
 
 	/* read tracks numbers */
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < len; j++)
-			fread(&tidx[j][i * 4], 1, 4, in);
+			hio_read(&tidx[j][i * 4], 1, 4, in);
 	}
 
 	/* sort tracks numbers */
@@ -137,17 +137,17 @@ static int depack_fuzz(FILE *in, FILE *out)
 		memset(data, 0, 1024);
 		memset(track, 0, 4 << 8);
 
-		fseek(in, l + (tidx_real[i][0] << 8), SEEK_SET);
-		fread(track[0], 256, 1, in);
+		hio_seek(in, l + (tidx_real[i][0] << 8), SEEK_SET);
+		hio_read(track[0], 256, 1, in);
 
-		fseek(in, l + (tidx_real[i][1] << 8), SEEK_SET);
-		fread(track[1], 256, 1, in);
+		hio_seek(in, l + (tidx_real[i][1] << 8), SEEK_SET);
+		hio_read(track[1], 256, 1, in);
 
-		fseek(in, l + (tidx_real[i][2] << 8), SEEK_SET);
-		fread(track[2], 256, 1, in);
+		hio_seek(in, l + (tidx_real[i][2] << 8), SEEK_SET);
+		hio_read(track[2], 256, 1, in);
 
-		fseek(in, l + (tidx_real[i][3] << 8), SEEK_SET);
-		fread(track[3], 256, 1, in);
+		hio_seek(in, l + (tidx_real[i][3] << 8), SEEK_SET);
+		hio_read(track[3], 256, 1, in);
 
 		for (j = 0; j < 64; j++) {
 			memcpy(&data[j * 16     ], &track[0][j * 4], 4);
@@ -161,7 +161,7 @@ static int depack_fuzz(FILE *in, FILE *out)
 
 	/* sample data */
 	/* bypass the "SEnd" unidentified ID */
-	fseek(in, l + (ntrk << 8) + 4, SEEK_SET);
+	hio_seek(in, l + (ntrk << 8) + 4, SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;

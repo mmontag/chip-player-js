@@ -99,7 +99,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	if ((temp = make_temp_file(&temp_name)) == NULL)
 		goto err;
 
-	if (pw_wizardry(h->handle.file, temp, &name) < 0)
+	if (pw_wizardry(h, temp, &name) < 0)
 		goto err2;
 	
 	/* Module loading */

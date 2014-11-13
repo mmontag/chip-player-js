@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_wn(FILE *in, FILE * out)
+static int depack_wn(HIO_HANDLE *in, FILE * out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 npat, max;
@@ -24,15 +24,15 @@ static int depack_wn(FILE *in, FILE * out)
 
 	/* get whole sample size */
 	for (i = 0; i < 31; i++) {
-		fseek(in, 42 + i * 30, SEEK_SET);
-		ssize += read16b(in) * 2;
+		hio_seek(in, 42 + i * 30, SEEK_SET);
+		ssize += hio_read16b(in) * 2;
 	}
 
 	/* read size of pattern list */
-	fseek(in, 950, SEEK_SET);
-	write8(out, npat = read8(in));
+	hio_seek(in, 950, SEEK_SET);
+	write8(out, npat = hio_read8(in));
 
-	fread(tmp, 129, 1, in);
+	hio_read(tmp, 129, 1, in);
 	fwrite(tmp, 129, 1, out);
 
 	/* write ptk's ID */
@@ -46,13 +46,13 @@ static int depack_wn(FILE *in, FILE * out)
 	max++;
 
 	/* pattern data */
-	fseek(in, 1084, SEEK_SET);
+	hio_seek(in, 1084, SEEK_SET);
 	for (i = 0; i < max; i++) {
 		for (j = 0; j < 256; j++) {
-			c1 = read8(in);
-			c2 = read8(in);
-			c3 = read8(in);
-			c4 = read8(in);
+			c1 = hio_read8(in);
+			c2 = hio_read8(in);
+			c3 = hio_read8(in);
+			c4 = hio_read8(in);
 
 			write8(out, c1 * 0xf0 | ptk_table[c1 / 2][0]);
 			write8(out, ptk_table[c1 / 2][1]);

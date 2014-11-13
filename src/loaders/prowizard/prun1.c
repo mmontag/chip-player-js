@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_pru1 (FILE *in, FILE *out)
+static int depack_pru1 (HIO_HANDLE *in, FILE *out)
 {
 	uint8 header[2048];
 	uint8 c1, c2, c3, c4;
@@ -24,7 +24,7 @@ static int depack_pru1 (FILE *in, FILE *out)
 	memset(ptable, 0, 128);
 
 	/* read and write whole header */
-	fread(header, 950, 1, in);
+	hio_read(header, 950, 1, in);
 	fwrite(header, 950, 1, out);
 
 	/* get whole sample size */
@@ -33,12 +33,12 @@ static int depack_pru1 (FILE *in, FILE *out)
 	}
 
 	/* read and write size of pattern list */
-	write8(out, npat = read8(in));
+	write8(out, npat = hio_read8(in));
 
 	memset(header, 0, 2048);
 
 	/* read and write ntk byte and pattern list */
-	fread(header, 129, 1, in);
+	hio_read(header, 129, 1, in);
 	fwrite(header, 129, 1, out);
 
 	/* write ID */
@@ -52,13 +52,13 @@ static int depack_pru1 (FILE *in, FILE *out)
 	}
 
 	/* pattern data */
-	fseek (in, 1084, SEEK_SET);
+	hio_seek(in, 1084, SEEK_SET);
 	for (i = 0; i <= max; i++) {
 		for (j = 0; j < 256; j++) {
-			header[0] = read8(in);
-			header[1] = read8(in);
-			header[2] = read8(in);
-			header[3] = read8(in);
+			header[0] = hio_read8(in);
+			header[1] = hio_read8(in);
+			header[2] = hio_read8(in);
+			header[3] = hio_read8(in);
 			c1 = header[0] & 0xf0;
 			c3 = (header[0] & 0x0f) << 4;
 			c3 |= header[2];

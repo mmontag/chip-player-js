@@ -5,6 +5,7 @@
 #include "list.h"
 #include "common.h"
 #include "format.h"
+#include "hio.h"
 
 #define MIN_FILE_LENGHT 2048
 
@@ -27,12 +28,12 @@
 struct pw_format {
 	char *name;
 	int (*test)(uint8 *, char *, int);
-	int (*depack)(FILE *, FILE *);
+	int (*depack)(HIO_HANDLE *, FILE *);
 	struct list_head list;
 };
 
-int pw_wizardry(FILE *, FILE *, char **);
-int pw_move_data(FILE *, FILE *, int);
+int pw_wizardry(HIO_HANDLE *, FILE *, char **);
+int pw_move_data(FILE *, HIO_HANDLE *, int);
 int pw_write_zero(FILE *, int);
 /* int pw_enable(char *, int); */
 int pw_check(unsigned char *, int, struct xmp_test_info *);

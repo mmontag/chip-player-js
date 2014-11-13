@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_unic2(FILE *in, FILE *out)
+static int depack_unic2(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 npat, maxpat;
@@ -32,8 +32,8 @@ static int depack_unic2(FILE *in, FILE *out)
 		write8(out, 0);
 
 		/* fine on ? */
-		c1 = read8(in);
-		c2 = read8(in);
+		c1 = hio_read8(in);
+		c2 = hio_read8(in);
 		j = (c1 << 8) + c2;
 
 		if (j != 0) {
@@ -46,16 +46,16 @@ static int depack_unic2(FILE *in, FILE *out)
 		}
 
 		/* smp size */
-		len = read16b(in);
+		len = hio_read16b(in);
 		write16b(out, len);
 		ssize += len << 1;
 
-		read8(in);
+		hio_read8(in);
 		write8(out, fine);		/* fine */
-		write8(out, read8(in));		/* vol */
+		write8(out, hio_read8(in));		/* vol */
 
-		start = read16b(in);		/* loop start */
-		lsize = read16b(in);		/* loop size */
+		start = hio_read16b(in);		/* loop start */
+		lsize = hio_read16b(in);		/* loop size */
 
 		if (start * 2 + lsize <= len && start != 0) {
 			start <<= 1;
@@ -65,11 +65,11 @@ static int depack_unic2(FILE *in, FILE *out)
 		write16b(out, lsize);
 	}
 
-	write8(out, npat = read8(in));		/* number of pattern */
+	write8(out, npat = hio_read8(in));		/* number of pattern */
 	write8(out, 0x7f);			/* noisetracker byte */
-	read8(in);
+	hio_read8(in);
 
-	fread(tmp, 128, 1, in);
+	hio_read(tmp, 128, 1, in);
 	fwrite(tmp, 128, 1, out);		/* pat table */
 
 	/* get highest pattern number */
@@ -84,9 +84,9 @@ static int depack_unic2(FILE *in, FILE *out)
 	/* pattern data */
 	for (i = 0; i < maxpat; i++) {
 		for (j = 0; j < 256; j++) {
-			c1 = read8(in);
-			c2 = read8(in);
-			c3 = read8(in);
+			c1 = hio_read8(in);
+			c2 = hio_read8(in);
+			c3 = hio_read8(in);
 
 			ins = ((c1 >> 2) & 0x10) | ((c2 >> 4) & 0x0f);
 			note = c1 & 0x3f;

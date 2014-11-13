@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_ksm(FILE *in, FILE *out)
+static int depack_ksm(HIO_HANDLE *in, FILE *out)
 {
 	uint8 tmp[1024];
 	uint8 c1, c5;
@@ -30,25 +30,25 @@ static int depack_ksm(FILE *in, FILE *out)
 	memset(real_tnum, 0, 128 * 4);
 
 	/* title */
-	fseek(in, 2, SEEK_SET);
+	hio_seek(in, 2, SEEK_SET);
 	pw_move_data(out, in, 13);
 	pw_write_zero(out, 7);
 
 	/* read and write whole header */
 	/*printf ( "Converting sample headers ... " ); */
-	fseek(in, 32, SEEK_SET);
+	hio_seek(in, 32, SEEK_SET);
 	for (i = 0; i < 15; i++) {
 		pw_write_zero(out, 22);		/* write name */
-		fseek(in, 20, SEEK_CUR);	/* 16 unknown/4 addr bytes */
-		write16b(out, (k = read16b(in)) / 2); /* size */
+		hio_seek(in, 20, SEEK_CUR);	/* 16 unknown/4 addr bytes */
+		write16b(out, (k = hio_read16b(in)) / 2); /* size */
 		ssize += k;
 		write8(out, 0);			/* finetune */
-		write8(out, read8(in));		/* volume */
-		read8(in);			/* bypass 1 unknown byte */
-		write16b(out, (j = read16b(in)) / 2);	/* loop start */
+		write8(out, hio_read8(in));		/* volume */
+		hio_read8(in);			/* bypass 1 unknown byte */
+		write16b(out, (j = hio_read16b(in)) / 2);	/* loop start */
 		j = k - j;
 		write16b(out, j != k ? j / 2 : 1);	/* loop size */
-		fseek(in, 6, SEEK_CUR);		/* bypass 6 unknown bytes */
+		hio_seek(in, 6, SEEK_CUR);		/* bypass 6 unknown bytes */
 	}
 
 	memset(tmp, 0, 30);
@@ -57,12 +57,12 @@ static int depack_ksm(FILE *in, FILE *out)
 		fwrite(tmp, 30, 1, out);
 
 	/* pattern list */
-	fseek (in, 512, 0);
+	hio_seek(in, 512, SEEK_SET);
 	for (max_trknum = len = 0; len < 128; len++) {
-		fread(&trknum[len][0], 1, 1, in);
-		fread(&trknum[len][1], 1, 1, in);
-		fread(&trknum[len][2], 1, 1, in);
-		fread(&trknum[len][3], 1, 1, in);
+		hio_read(&trknum[len][0], 1, 1, in);
+		hio_read(&trknum[len][1], 1, 1, in);
+		hio_read(&trknum[len][2], 1, 1, in);
+		hio_read(&trknum[len][3], 1, 1, in);
 		if (trknum[len][0] == 0xFF)
 			break;
 		if (trknum[len][0] > max_trknum)
@@ -145,8 +145,8 @@ static int depack_ksm(FILE *in, FILE *out)
 		memset(tdata, 0, 192 * 4);
 
 		for (k = 0; k < 4; k++) {
-			fseek(in, 1536 + 192 * real_tnum[i][k], SEEK_SET);
-			fread(tdata[k], 192, 1, in);
+			hio_seek(in, 1536 + 192 * real_tnum[i][k], SEEK_SET);
+			hio_read(tdata[k], 192, 1, in);
 		}
 
 		for (j = 0; j < 64; j++) {
@@ -166,7 +166,7 @@ static int depack_ksm(FILE *in, FILE *out)
 	}
 
 	/* sample data */
-	fseek(in, 1536 + (192 * (max_trknum + 1)), SEEK_SET);
+	hio_seek(in, 1536 + (192 * (max_trknum + 1)), SEEK_SET);
 	pw_move_data(out, in, ssize);
 
 	return 0;
