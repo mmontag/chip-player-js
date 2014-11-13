@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include "test.h"
 
-static unsigned char buffer[8192];
+#define BUFFER_SIZE 256000
+
+static unsigned char *buffer;
+
 
 TEST(test_api_load_module_from_memory)
 {
@@ -10,11 +13,13 @@ TEST(test_api_load_module_from_memory)
 	int ret, size;
 	FILE *f;
 
+	buffer = malloc(BUFFER_SIZE);
+	fail_unless(buffer != NULL, "buffer allocation");
 
 	ctx = xmp_create_context();
 	f = fopen("data/test.xm", "rb");
 	fail_unless(f != NULL, "can't open module");
-	size = fread(buffer, 1, 8192, f);
+	size = fread(buffer, 1, BUFFER_SIZE, f);
 	fclose(f);
 
 	/* valid file */
@@ -26,7 +31,7 @@ TEST(test_api_load_module_from_memory)
 
 	f = fopen("data/test.it", "rb");
 	fail_unless(f != NULL, "can't open module");
-	size = fread(buffer, 1, 8192, f);
+	size = fread(buffer, 1, BUFFER_SIZE, f);
 	fclose(f);
 
 	/* and reload without releasing */
@@ -41,7 +46,7 @@ TEST(test_api_load_module_from_memory)
 	xmp_release_module(ctx);
 	f = fopen("data/m/reborning.mod", "rb");
 	fail_unless(f != NULL, "can't open module");
-	size = fread(buffer, 1, 8192, f);
+	size = fread(buffer, 1, BUFFER_SIZE, f);
 	fclose(f);
 
 	ret = xmp_load_module_from_memory(ctx, buffer, size);
@@ -50,5 +55,20 @@ TEST(test_api_load_module_from_memory)
 	xmp_get_frame_info(ctx, &fi);
 	fail_unless(fi.total_time == 107520, "module duration");
 
+
+	/* load through a prowizard converter */
+	xmp_release_module(ctx);
+	f = fopen("data/m/mod.sad-song", "rb");
+	fail_unless(f != NULL, "can't open module");
+	size = fread(buffer, 1, BUFFER_SIZE, f);
+	fclose(f);
+
+	ret = xmp_load_module_from_memory(ctx, buffer, size);
+	fail_unless(ret == 0, "load file");
+
+	xmp_get_frame_info(ctx, &fi);
+	fail_unless(fi.total_time == 235520, "module duration");
+
+	free(buffer);
 }
 END_TEST
