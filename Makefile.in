@@ -1,6 +1,6 @@
 VERSION_MAJOR	= 4
 VERSION_MINOR	= 3
-VERSION_RELEASE	= 1
+VERSION_RELEASE	= 2
 
 VERSION		= $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
 
@@ -198,6 +198,7 @@ $(LOBJS): Makefile
 
 version-prepare:
 	sed -i -e '/^Version: /s/:.*/: $(VERSION)/g' libxmp.pc.in
+	sed -i -e '/^Version: /s/:.*/: $(VERSION)/g' lite/libxmp-lite.pc.in
 	vercode=`printf "0x%02x%02x%02x" $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_RELEASE)`; \
 	sed -i -e "s/\(^#define XMP_VERSION\).*/\1 \"$(VERSION)\"/;s/\(^#define XMP_VERCODE\).*/\1 $$vercode/;s/\(^#define XMP_VER_MAJOR\).*/\1 $(VERSION_MAJOR)/;s/\(^#define XMP_VER_MINOR\).*/\1 $(VERSION_MINOR)/;s/\(^#define XMP_VER_RELEASE\).*/\1 $(VERSION_RELEASE)/" include/xmp.h
 	./config.status
