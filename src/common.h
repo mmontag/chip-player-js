@@ -163,6 +163,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_S3MPMEM	(1 << 28)	/* S3M-style parameter memory */
 #define QUIRK_XMFINE	(1 << 29)	/* XM-style fine tune */
 #define QUIRK_RSTCHN	(1 << 30)	/* Reset channel on sample end */
+#define QUIRK_FT2LOOP	(1 << 31)	/* FT2 pattern loop bug */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
@@ -171,7 +172,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN | QUIRK_FINEFX | \
 				 QUIRK_S3MPMEM | QUIRK_S3MRTG | QUIRK_S3MLFO )
 #define QUIRKS_FT2		(QUIRK_RTDELAY | QUIRK_FINEFX | QUIRK_ENVSUS | \
-				 QUIRK_XMFINE  )
+				 QUIRK_XMFINE  | QUIRK_FT2LOOP )
 #define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_FINEFX | QUIRK_VIBALL | \
 				 QUIRK_ENVFADE | QUIRK_ITVPOR | QUIRK_KEYOFF | \
 				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_S3MLFO | \
