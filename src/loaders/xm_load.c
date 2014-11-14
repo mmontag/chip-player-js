@@ -520,6 +520,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->bpm = xfh.bpm;
 
     m->quirk |= xfh.flags & XM_LINEAR_PERIOD_MODE ? QUIRK_LINEAR : 0;
+    m->quirk |= QUIRK_FT2LOOP;
 
     memcpy(mod->xxo, xfh.order, mod->len);
     tracker_name[20] = 0;
@@ -534,18 +535,22 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 #ifndef LIBXMP_CORE_PLAYER
     if (xfh.headersz == 0x0113) {
 	strcpy(tracker_name, "unknown tracker");
+        m->quirk &= ~QUIRK_FT2LOOP;
     } else if (*tracker_name == 0) {
 	strcpy(tracker_name, "Digitrakker");	/* best guess */
+        m->quirk &= ~QUIRK_FT2LOOP;
     }
 
     /* See MMD1 loader for explanation */
     if (!strncmp(tracker_name, "MED2XM by J.Pynnone", 19)) {
 	if (mod->bpm <= 10)
 	    mod->bpm = 125 * (0x35 - mod->bpm * 2) / 33;
+        m->quirk &= ~QUIRK_FT2LOOP;
     }
 
     if (!strncmp(tracker_name, "FastTracker v 2.00", 18)) {
 	strcpy(tracker_name, "old ModPlug Tracker");
+        m->quirk &= ~QUIRK_FT2LOOP;
     }
 
     if (!strncmp(tracker_name, "MilkyTracker", 12)) {
