@@ -6,6 +6,7 @@ Stable versions
 	- fix XM tremolo and vibrato waveforms
 	- fix tremolo rate
 	Other changes:
+	- add emulation of the FT2 pattern loop bug (by Eugene Toder)
 	- allow loading of packed formats from memory
 
 4.3.1 (20141111):
