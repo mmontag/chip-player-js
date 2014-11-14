@@ -187,7 +187,7 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 	if (HAS_QUIRK(QUIRK_RTDELAY)) {
 		if (e->note == 0)
 			xc->delayed_event.note = xc->key + 1;
-		if (e->ins == 0 && !HAS_QUIRK(QUIRK_MLKDLY))
+		if (e->ins == 0)
 			xc->delayed_event.ins = xc->old_ins;
 	}
 

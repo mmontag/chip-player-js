@@ -553,10 +553,6 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
         m->quirk &= ~QUIRK_FT2LOOP;
     }
 
-    if (!strncmp(tracker_name, "MilkyTracker", 12)) {
-	m->quirk |= QUIRK_MLKDLY;
-    }
-	
     set_type(m, "%s XM %d.%02d", tracker_name,
 				xfh.version >> 8, xfh.version & 0xff);
 #else

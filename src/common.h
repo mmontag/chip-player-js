@@ -158,12 +158,11 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_S3MLFO	(1 << 23)	/* S3M-style LFO waveforms */
 #define QUIRK_S3MRTG	(1 << 24)	/* S3M-style retrig when count == 0 */
 #define QUIRK_RTDELAY	(1 << 25)	/* Delay effect retrigs instrument */
-#define QUIRK_MLKDLY	(1 << 26)	/* MilkyTracker-style delay effect */
+#define QUIRK_FT2LOOP	(1 << 26)	/* FT2 pattern loop bug */
 #define QUIRK_ENVSUS	(1 << 27)	/* Key release jumps to sus point */
 #define QUIRK_S3MPMEM	(1 << 28)	/* S3M-style parameter memory */
 #define QUIRK_XMFINE	(1 << 29)	/* XM-style fine tune */
 #define QUIRK_RSTCHN	(1 << 30)	/* Reset channel on sample end */
-#define QUIRK_FT2LOOP	(1 << 31)	/* FT2 pattern loop bug */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))
 
