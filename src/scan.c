@@ -391,6 +391,8 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			    }
 			} else { 
 			    loop_row[chn] = row;
+			    if (HAS_QUIRK(QUIRK_FT2LOOP))
+				break_row = row;
 			}
 		    }
 		}

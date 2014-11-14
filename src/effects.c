@@ -373,6 +373,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			if (fxp == 0) {
 				/* mark start of loop */
 				f->loop[chn].start = p->row;
+				if (HAS_QUIRK(QUIRK_FT2LOOP))
+				  p->flow.jumpline = p->row;
 			} else {
 				/* end of loop */
 				if (f->loop[chn].count) {
