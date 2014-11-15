@@ -27,7 +27,7 @@ TEST(test_module_length_roadblast)
 	}
 	xmp_end_player(opaque);
 
-	fail_unless(time / 1000 - fi.total_time < 500, "elapsed time");
+	fail_unless(time / 1000 == fi.total_time, "elapsed time");
 
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
