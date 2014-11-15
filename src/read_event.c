@@ -151,6 +151,29 @@ static void set_period(struct context_data *ctx, int note,
 	}
 }
 
+/* From OpenMPT Porta-Pickup.xm:
+ * "An instrument number should not reset the current portamento target. The
+ *  portamento target is valid until a new target is specified by combining a
+ *  note and a portamento effect."
+ */
+static void set_period_ft2(struct context_data *ctx, int note,
+				struct xmp_subinstrument *sub,
+				struct channel_data *xc, int is_toneporta)
+{
+	struct module_data *m = &ctx->m;
+
+	if ((note > 0 && is_toneporta) || xc->porta.target == 0) {
+		xc->porta.target = note_to_period(note, xc->finetune,
+				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+	}
+	if (sub != NULL && note >= 0) {
+		if (xc->period < 1 || !is_toneporta) {
+			xc->period = note_to_period(note, xc->finetune,
+				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+		}
+	}
+}
+
 
 #ifndef LIBXMP_CORE_PLAYER
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE \
@@ -548,7 +571,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Secondary effect handled first */
 	process_fx(ctx, xc, chn, &ev, 1);
 	process_fx(ctx, xc, chn, &ev, 0);
-	set_period(ctx, note, sub, xc, is_toneporta);
+	set_period_ft2(ctx, note, sub, xc, is_toneporta);
 
 	if (TEST(NEW_VOL))
 		use_ins_vol = 0;
