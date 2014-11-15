@@ -28,6 +28,8 @@ dist-subdirs: dist-makefile $(addprefix dist-,$(DDIRS))
 	(cd lite; tar cf - .) | (cd $(DIST); tar xf -)
 	mkdir -p $(DIST)/include/libxmp-lite
 	cp include/xmp.h $(DIST)/include/libxmp-lite/
+	mkdir -p $(DIST)/jni
+	cp jni/Application.mk $(DIST)/jni/Application.mk
 
 dist-makefile:
 	head -3 Makefile.in > lite/Makefile.in
