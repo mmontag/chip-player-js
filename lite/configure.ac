@@ -1,6 +1,5 @@
 dnl AC_CONFIG_AUX_DIR(./scripts)
 AC_INIT
-0>confdefs.h
 AC_ARG_ENABLE(it,     [  --disable-it            Don't build IT format support])
 AC_ARG_ENABLE(static, [  --enable-static         Build static library])
 AC_ARG_ENABLE(shared, [  --disable-shared        Don't build shared library])
@@ -10,6 +9,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 AC_C_BIGENDIAN
+0>confdefs.h
 
 dnl XMP_TRY_COMPILE(<message>,<cache-var>,<flags>,<program>,<ifyes>,<ifno>)
 AC_DEFUN([XMP_TRY_COMPILE],[
