@@ -108,6 +108,7 @@ OPENMPT_XM	= 3xxins \
 		  pathead \
 		  pickup \
 		  porta_linkmem \
+		  porta_pickup \
 		  toneportamentomemory \
 		  tremolowaveforms
 

@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "../include/xmp.h"
 #include "../src/common.h"
 #include "../src/mixer.h"
 #include "../src/virtual.h"
+#include "../src/player.h"
 
 
 static int map_channel(struct player_data *p, int chn)
@@ -59,9 +59,10 @@ int main(int argc, char **argv)
 
 		for (i = 0; i < m->mod.chn; i++) {
 			struct xmp_channel_info *ci = &fi.channel_info[i];
+			struct channel_data *xc = &p->xc_data[i];
 
 			voc = map_channel(p, i);
-			if (voc < 0)
+			if (voc < 0 || TEST_NOTE(NOTE_SAMPLE_END))
 				continue;
 
 			vi = &p->virt.voice_array[voc];
