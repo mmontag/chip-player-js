@@ -833,7 +833,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 		/* portamento_after_keyoff.it test case */
 		if (is_release && is_toneporta && !key) {
-			if (TEST_NOTE(NOTE_SET)) {
+			if (HAS_QUIRK(QUIRK_PRENV) || TEST_NOTE(NOTE_SET)) {
 				is_toneporta = 0;
 				reset_envelopes(ctx, xc, 0);
 			}
@@ -898,10 +898,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			SET_NOTE(NOTE_RELEASE);
 			reset_env = 0;
 			use_ins_vol = 0;
-			if (HAS_QUIRK(QUIRK_PRENV))
-				SET_NOTE(NOTE_END);
 		} else {
-			/* portamento_after_keyoff.it */
+			/* portamento_after_keyoff.it test case */
 			reset_env = 1;
 
 			if (is_toneporta) {
