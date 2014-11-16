@@ -822,7 +822,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		is_toneporta = 0;
 	}
 
-	if (xc->period <= 0) {
+	if (xc->period <= 0 || TEST_NOTE(NOTE_END)) {
 		is_toneporta = 0;
 	}
 
@@ -889,16 +889,20 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			use_ins_vol = 0;
 			if (HAS_QUIRK(QUIRK_PRENV))
 				SET_NOTE(NOTE_END);
-		} else if (is_toneporta) {
+		} else {
+			/* portamento_after_keyoff.it */
+			reset_env = 1;
 
-			/* Always retrig on tone portamento: Fix portamento in
-			 * 7spirits.s3m, mod.Biomechanoid
-			 */
-			if (not_same_ins || TEST_NOTE(NOTE_END)) {
-				SET(NEW_INS);
-				RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
-			} else {
-				key = 0;
+			if (is_toneporta) {
+				/* Always retrig on tone portamento: Fix
+				 * portamento in 7spirits.s3m, mod.Biomechanoid
+			 	 */
+				if (not_same_ins || TEST_NOTE(NOTE_END)) {
+					SET(NEW_INS);
+					RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
+				} else {
+					key = 0;
+				}
 			}
 		}
 	}
