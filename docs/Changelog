@@ -8,7 +8,7 @@ Stable versions
 	- fix XM tremolo and vibrato waveforms
 	- fix tremolo rate
 	Other changes:
-	- fix IT portamento after note end
+	- fix IT portamento after keyoff and note end
 	- fix IT fadeout reset on new note
 	- add emulation of the FT2 pattern loop bug (by Eugene Toder)
 	- allow loading of packed formats from memory

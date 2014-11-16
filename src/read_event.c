@@ -831,6 +831,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	if (ev.ins) {
 		int ins = ev.ins - 1;
 
+		/* portamento_after_keyoff.it test case */
+		if (is_release && is_toneporta && !key) {
+			if (TEST_NOTE(NOTE_SET)) {
+				is_toneporta = 0;
+				reset_envelopes(ctx, xc, 0);
+			}
+		}
+
 		if (!is_release || (!is_toneporta || xc->ins != ins)) {
 			SET(NEW_INS);
 			use_ins_vol = 1;
@@ -849,6 +857,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				} else {
 					key = xc->key + 1;
 				}
+
+				RESET_NOTE(NOTE_SET);
 			}
 			if (xc->ins != ins && (!is_toneporta || !HAS_QUIRK(QUIRK_PRENV))) {
 				not_same_ins = 1;
@@ -874,6 +884,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (key && !new_invalid_ins) {
 		SET(NEW_NOTE);
+		SET_NOTE(NOTE_SET);
 
 		if (key == XMP_KEY_FADE) {
 			SET_NOTE(NOTE_FADEOUT);
@@ -1012,7 +1023,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	if (reset_env) {
-		RESET_NOTE(NOTE_RELEASE | NOTE_FADEOUT);
+		if (ev.note) {
+			RESET_NOTE(NOTE_RELEASE | NOTE_FADEOUT);
+		}
 		/* Set after copying to new virtual channel (see ambio.it) */
 		xc->fadeout = 0x10000;
 	}
