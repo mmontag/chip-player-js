@@ -560,11 +560,13 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		xc->p_idx = fxp;
 		break;
 	case FX_PANSLIDE:	/* Pan slide (XM) */
-		/* TODO: add memory */
+		EFFECT_MEMORY(fxp, xc->pan.memory);
 		SET(PAN_SLIDE);
-		if (fxp) {
-			xc->pan.slide = LSN(fxp) - MSN(fxp);
-		}
+		xc->pan.slide = LSN(fxp) - MSN(fxp);
+		break;
+	case FX_PANSL_NOMEM:	/* Pan slide (XM volume column) */
+		SET(PAN_SLIDE);
+		xc->pan.slide = LSN(fxp) - MSN(fxp);
 		break;
 
 #ifndef LIBXMP_CORE_DISABLE_IT

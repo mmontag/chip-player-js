@@ -117,5 +117,6 @@
 #define FX_F_PORTA_DN	0xb0	/* MMD */
 #define FX_PATT_DELAY	0xb3	/* MMD */
 #define FX_S3M_ARPEGGIO	0xb4
+#define FX_PANSL_NOMEM	0xb5	/* XM volume column */
 
 #endif /* LIBXMP_EFFECTS_H */

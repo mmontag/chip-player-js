@@ -5,6 +5,7 @@ Stable versions
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM portamento target reset on new instrument
 	- fix XM portamento with offset
+	- fix XM pan slide memory
 	- fix XM tremolo and vibrato waveforms
 	- fix tremolo rate
 	Other changes:

@@ -194,11 +194,11 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		    event->f2p = (event->vol - 0xc0) << 4;
 		    break;
 		case 0x0d:	/* Pan slide left */
-		    event->f2t = FX_PANSLIDE;
+		    event->f2t = FX_PANSL_NOMEM;
 		    event->f2p = (event->vol - 0xd0) << 4;
 		    break;
 		case 0x0e:	/* Pan slide right */
-		    event->f2t = FX_PANSLIDE;
+		    event->f2t = FX_PANSL_NOMEM;
 		    event->f2p = event->vol - 0xe0;
 		    break;
 		case 0x0f:	/* Tone portamento */
