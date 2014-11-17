@@ -133,6 +133,7 @@ OPENMPT_IT	= carrynna \
 		  portasample \
 		  portasamplecompat \
 		  retrig \
+		  retrig_short \
 		  swaptest
 
 OPENMPT_S3M	= freqlimits \
