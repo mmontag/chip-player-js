@@ -118,6 +118,7 @@ OPENMPT_IT	= carrynna \
 		  envloops \
 		  envreset \
 		  extreme_filter_test_1 \
+		  fade_porta \
 		  filter_7f \
 		  filterenvreset \
 		  filter_nna \
