@@ -370,6 +370,24 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		ins = 0;
 	}
 
+	/* FT2: Retrieve old instrument volume */
+	if (ins) {
+		if (key == 0 || key >= XMP_KEY_OFF) {
+			struct xmp_subinstrument *sub;
+
+			/* Previous instrument */
+			sub = get_subinstrument(ctx, xc->ins, xc->key);
+
+			/* No note */
+			if (sub != NULL) {
+				xc->volume = sub->vol;
+				xc->pan.val = sub->pan;
+				xc->ins_fade = mod->xxi[xc->ins].rls;
+				SET(NEW_VOL);
+			}
+		}
+	}
+
 	/* Do this regardless if the instrument is invalid or not */
 	if (ev.ins) {
 		SET(NEW_INS);
@@ -401,22 +419,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	/* Check note */
 
-	/* FT2: Retrieve old instrument volume */
 	if (ins) {
-		struct xmp_subinstrument *sub;
+		if (key > 0 && key < XMP_KEY_OFF) {
+			struct xmp_subinstrument *sub;
 
-		if (key == 0 || key >= XMP_KEY_OFF) {
-			/* Previous instrument */
-			sub = get_subinstrument(ctx, xc->old_insvol, xc->key);
-
-			/* No note */
-			if (sub != NULL) {
-				xc->volume = sub->vol;
-				xc->pan.val = sub->pan;
-				xc->ins_fade = mod->xxi[xc->old_insvol].rls;
-				SET(NEW_VOL);
-			}
-		} else {
 			/* Retrieve volume when we have note */
 
 			/* and only if we have instrument, otherwise we're in
@@ -432,7 +438,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			} else {
 				xc->volume = 0;
 			}
-			xc->old_insvol = xc->ins;
 			SET(NEW_VOL);
 		}
 	}
