@@ -114,12 +114,6 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 			event->vol = *pat++;
 		    if (b & XM_EVENT_FXTYPE_FOLLOWS) {
 			event->fxt = *pat++;
-#if 0
-			if (event->fxt == FX_GLOBALVOL)
-			    event->fxt = FX_TRK_VOL;
-			if (event->fxt == FX_G_VOLSLIDE)
-			    event->fxt = FX_TRK_VSLIDE;
-#endif
 		    }
 		    if (b & XM_EVENT_FXPARM_FOLLOWS)
 			event->fxp = *pat++;

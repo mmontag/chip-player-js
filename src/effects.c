@@ -292,16 +292,12 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->vol.memory = fxp;
 			h = MSN(fxp);
 			l = LSN(fxp);
-			if (HAS_QUIRK(QUIRK_VOLPDN)) {
-				if (fxp)
+			if (fxp) {
+				if (HAS_QUIRK(QUIRK_VOLPDN)) {
 					xc->vol.slide = l ? -l : h;
-			} else {
-				if (l == 0)
-					xc->vol.slide = h;
-				else if (h == 0)
-					xc->vol.slide = -l;
-				else
-					RESET(VOL_SLIDE);
+				} else {
+					xc->vol.slide = h ? h : -l;
+				}
 			}
 		}
 
@@ -322,12 +318,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		if (fxp) {
 			h = MSN(fxp);
 			l = LSN(fxp);
-			if (l == 0)
-				xc->vol.slide2 = h;
-			else if (h == 0)
-				xc->vol.slide2 = -l;
-			else
-				RESET(VOL_SLIDE_2);
+			xc->vol.slide2 = h ? h : -l;
 		}		
 		break;
 	case FX_JUMP:		/* Order jump */
@@ -537,11 +528,11 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 					xc->gvol.slide = 0;
 					xc->gvol.fslide = -l;
 				} else {
-					xc->gvol.slide = h - l;
+					xc->gvol.slide = h ? h : -l;
 					xc->gvol.fslide = 0;
 				}
 			} else {
-				xc->gvol.slide = h - l;
+				xc->gvol.slide = h ? h : -l;
 				xc->gvol.fslide = 0;
 			}
 		} else {
@@ -645,19 +636,18 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 				goto fx_trk_fvslide;
 			}
 		}
-		SET(TRK_VSLIDE);
 
+		SET(TRK_VSLIDE);
 		if (fxp) {
 			h = MSN(fxp);
 			l = LSN(fxp);
 
 			xc->trackvol.memory = fxp;
-			if (l == 0)
-				xc->trackvol.slide = h;
-			else if (h == 0)
-				xc->trackvol.slide = -l;
-			else
-				RESET(TRK_VSLIDE);
+			if (HAS_QUIRK(QUIRK_VOLPDN)) {
+				xc->trackvol.slide = l ? -l : h;
+			} else {
+				xc->trackvol.slide = h ? h : -l;
+			}
 		}
 
 		break;
@@ -759,12 +749,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		if (fxp) {
 			h = MSN(fxp);
 			l = LSN(fxp);
-			if (l == 0)
-				xc->vol.fslide = h;
-			else if (h == 0)
-				xc->vol.fslide = -l;
-			else
-				RESET(FINE_VOLS);
+			xc->vol.fslide = h ? h : -l;
 		}		
 		break;
 	case FX_NSLIDE_DN:
