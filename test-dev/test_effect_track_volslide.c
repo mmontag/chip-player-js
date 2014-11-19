@@ -12,8 +12,8 @@ static int vals[] = {
 	1, 1, 1, 1,		/* set 1 */
 	1, 1, 0, 0,		/* down 1 */
 	10, 10, 10, 10,		/* set 10 */
-	10, 10, 10, 10,		/* slide 0xf2 */
-	10, 10, 10, 10		/* slide 0x1f */
+	10, 10, 25, 40,		/* slide 0xf2 */
+	55, 55, 56, 57		/* slide 0x1f */
 };
 
 static int vals_fine[] = {

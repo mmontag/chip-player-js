@@ -14,11 +14,11 @@ static int vals[] = {
 	10, 10, 10, 10,		/* set 10 */
 	10, 8, 8, 8,		/* fine slide down 2 */
 	8, 9, 9, 9,		/* fine slide up 1 */
-	9, 9, 9, 9,		/* do nothing */
+	9, 10, 10, 10,		/* memory */
 	32, 32, 32, 32,		/* set 32 */
 	32, 32, 30, 28,		/* down 2 */
 	26, 26, 29, 32,		/* up 3 */
-	35, 35, 35, 35		/* do nothing */
+	35, 35, 38, 41		/* memory */
 };
 
 TEST(test_effect_volslide)
@@ -49,13 +49,13 @@ TEST(test_effect_volslide)
 	new_event(ctx, 0, 8, 0, 0, 0, 0, FX_VOLSET, 0x0a, 0, 0);
 	new_event(ctx, 0, 9, 0, 0, 0, 0, FX_F_VSLIDE, 0x02, 0, 0);
 	new_event(ctx, 0, 10, 0, 0, 0, 0, FX_F_VSLIDE, 0x10, 0, 0);
-	new_event(ctx, 0, 11, 0, 0, 0, 0, FX_F_VSLIDE, 0x35, 0, 0);
+	new_event(ctx, 0, 11, 0, 0, 0, 0, FX_F_VSLIDE, 0x00, 0, 0);
 
 	/* secondary volslide */
 	new_event(ctx, 0, 12, 0, 0, 0, 0, FX_VOLSET, 0x20, 0, 0);
 	new_event(ctx, 0, 13, 0, 0, 0, 0, FX_VOLSLIDE_2, 0x02, 0, 0);
 	new_event(ctx, 0, 14, 0, 0, 0, 0, FX_VOLSLIDE_2, 0x30, 0, 0);
-	new_event(ctx, 0, 15, 0, 0, 0, 0, FX_VOLSLIDE_2, 0x35, 0, 0);
+	new_event(ctx, 0, 15, 0, 0, 0, 0, FX_VOLSLIDE_2, 0x00, 0, 0);
 
 	/* play it */
 	xmp_start_player(opaque, 44100, 0);
