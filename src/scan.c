@@ -152,7 +152,10 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 	if (break_row < mod->xxp[pat]->rows && m->scan_cnt[ord][break_row]) {
 	    break;
+	} else if (break_row >= mod->xxp[pat]->rows) {
+	    break_row = 0;
 	}
+
 
 	info->gvl = gvl;
 	info->bpm = bpm;
