@@ -12,6 +12,7 @@ Stable versions
 	- fix IT portamento after keyoff and note end
 	- fix IT fadeout reset on new note
 	- fix MOD/XM volume up+down priority (reported by Jason Gibson)
+	- fix set sample offset effect (by Dennis Lindroos)
 	- add emulation of the FT2 pattern loop bug (by Eugene Toder)
 	- allow loading of packed formats from memory
 	- code cleanup
