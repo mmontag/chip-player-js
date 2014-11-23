@@ -545,8 +545,12 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 		vi->end = xxs->len;
 	}
 
-	if (pos >= vi->end) {		/* Happens often in MED synth */
-		pos = 0;
+	if (pos >= vi->end) {
+		if (xxs->flg & XMP_SAMPLE_LOOP) {
+			pos = xxs->lps;
+		} else {
+			pos = xxs->len;
+		}
 	}
 
 	vi->pos = pos;
