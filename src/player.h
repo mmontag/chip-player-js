@@ -88,8 +88,6 @@ struct channel_data {
 	int gliss;		/* Glissando active */
 	int volume;		/* Current volume */
 	int gvl;		/* Global volume for instrument for IT */
-	int offset;		/* Sample offset memory */
-	int offset_val;		/* Sample offset */
 
 	int v_idx;		/* Volume envelope index */
 	int p_idx;		/* Pan envelope index */
@@ -123,6 +121,11 @@ struct channel_data {
 		struct lfo lfo;
 		int sweep;
 	} insvib;
+
+	struct {
+		int val;
+		int memory;
+	} offset;
 
 	struct {
 		int val;	/* Retrig value */

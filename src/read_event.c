@@ -214,7 +214,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		SET(NEW_INS);
 		xc->fadeout = 0x10000;	/* for painlace.mod pat 0 ch 3 echo */
 		xc->per_flags = 0;
-		xc->offset_val = 0;
+		xc->offset.val = 0;
 		RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
@@ -299,9 +299,9 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	if (note >= 0) {
 		xc->note = note;
 
-		virt_voicepos(ctx, chn, xc->offset_val);
+		virt_voicepos(ctx, chn, xc->offset.val);
 		if (TEST(OFFSET) && p->flags & XMP_FLAGS_FX9BUG)
-			xc->offset_val <<= 1;
+			xc->offset.val <<= 1;
 		RESET(OFFSET);
 	}
 
@@ -571,7 +571,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* FT2: always reset sample offset */
-	xc->offset_val = 0;
+	xc->offset.val = 0;
 
 	/* Secondary effect handled first */
 	process_fx(ctx, xc, chn, &ev, 1);
@@ -593,7 +593,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		 *  stop playback on this channel."
 		 */
 
-		if (xc->offset_val >= mod->xxs[sub->sid].len) {
+		if (xc->offset.val >= mod->xxs[sub->sid].len) {
 			virt_resetchannel(ctx, chn);
 		} else {
 
@@ -602,7 +602,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 * without tone portamento, otherwise we won't play
 			 * sweeps and loops correctly.
 			 */
-			virt_voicepos(ctx, chn, xc->offset_val);
+			virt_voicepos(ctx, chn, xc->offset.val);
 		}
 	}
 
@@ -648,7 +648,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		use_ins_vol = 1;
 		xc->fadeout = 0x10000;
 		xc->per_flags = 0;
-		xc->offset_val = 0;
+		xc->offset.val = 0;
 		RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
@@ -689,7 +689,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 			 * 7spirits.s3m, mod.Biomechanoid
 			 */
 			if (not_same_ins) {
-				xc->offset_val = 0;
+				xc->offset.val = 0;
 			}
 		} else {
 			xc->key = e->note - 1;
@@ -746,7 +746,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (note >= 0) {
 		xc->note = note;
-		virt_voicepos(ctx, chn, xc->offset_val);
+		virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
 	if (use_ins_vol) {
@@ -1003,7 +1003,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	/* IT: always reset sample offset */
-	xc->offset_val = 0;
+	xc->offset.val = 0;
 
 	/* According to Storlek test 25, Impulse Tracker handles the volume
 	 * column effects last.
@@ -1022,7 +1022,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (note >= 0) {
 		xc->note = note;
-		virt_voicepos(ctx, chn, xc->offset_val);
+		virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
 	if (reset_env) {
@@ -1074,7 +1074,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 		use_ins_vol = 1;
 		SET(NEW_INS);
 		xc->fadeout = 0x10000;
-		xc->offset_val = 0;
+		xc->offset.val = 0;
 		RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
@@ -1189,7 +1189,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (note >= 0) {
 		xc->note = note;
-		virt_voicepos(ctx, chn, xc->offset_val);
+		virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
 	if (use_ins_vol) {
@@ -1223,7 +1223,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	SET(NEW_INS);
 	xc->fadeout = 0x10000;
 	xc->per_flags = 0;
-	xc->offset_val = 0;
+	xc->offset.val = 0;
 	RESET_NOTE(NOTE_RELEASE);
 
 	xc->ins = ins;
@@ -1280,7 +1280,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	SET(NEW_VOL);
 
 	xc->note = note;
-	virt_voicepos(ctx, chn, xc->offset_val);
+	virt_voicepos(ctx, chn, xc->offset.val);
 
 	return 0;
 }

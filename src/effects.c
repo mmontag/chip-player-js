@@ -245,12 +245,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		xc->pan.val = fxp;
 		break;
 	case FX_OFFSET:		/* Set sample offset */
+		EFFECT_MEMORY(fxp, xc->offset.memory);
 		SET(OFFSET);
-		if (fxp) {
-			xc->offset_val = xc->offset = fxp << 8;
-		} else {
-			xc->offset_val = xc->offset;
-		}
+		xc->offset.val = fxp << 8;
 		break;
 	case FX_VOLSLIDE:	/* Volume slide */
 	      fx_volslide:
