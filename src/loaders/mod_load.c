@@ -58,6 +58,7 @@ struct mod_magic {
 #define TRACKER_FLEXTRAX	8
 #define TRACKER_MODSGRAVE	9
 #define TRACKER_SCREAMTRACKER3	10
+#define TRACKER_OPENMPT		11
 #define TRACKER_UNKNOWN_CONV	95
 #define TRACKER_CONVERTEDST	96
 #define TRACKER_CONVERTED	97
@@ -242,6 +243,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int ptkloop = 0;			/* Protracker loop */
     int tracker_id = TRACKER_PROTRACKER;
     int has_loop_0 = 0;
+    int has_vol_in_empty_ins = 0;
 
     LOAD_INIT();
 
@@ -391,11 +393,18 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Check if has instruments with loop size 0 */
     for (i = 0; i < 31; i++) {
-	if (mh.ins[i].loop_size == 0)
+	if (mh.ins[i].loop_size == 0) {
+            has_loop_0 = 1;
 	    break;
+	}
     }
-    if (i < 31) {
-        has_loop_0 = 1;
+
+    /* Check if has instruments with size 0 and volume > 0 */
+    for (i = 0; i < 31; i++) {
+	if (mh.ins[i].size == 0 && mh.ins[i].volume > 0) {
+	    has_vol_in_empty_ins = 1;
+	    break;
+	}
     }
 
     /* Test Protracker-like files
@@ -407,7 +416,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 * Protracker effects and Noisetracker restart byte */
         tracker_id = TRACKER_PROBABLY_NOISETRACKER;
     } else if (mh.restart < 0x7f) {
-	if (mod->chn == 4) {
+	if (mod->chn == 4 && !has_vol_in_empty_ins) {
 	    tracker_id = TRACKER_NOISETRACKER;
 	} else {
 	    tracker_id = TRACKER_UNKNOWN;
@@ -444,7 +453,9 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1) {
 			switch (mod->chn) {
 			case 4:
-			    tracker_id = TRACKER_NOISETRACKER;	/* or Octalyser */
+			    tracker_id = has_vol_in_empty_ins ?
+				TRACKER_OPENMPT :
+				TRACKER_NOISETRACKER;	/* or Octalyser */
 			    break;
 			case 6:
 			case 8:
@@ -603,6 +614,9 @@ skip_test:
     case TRACKER_CLONE:
 	tracker = "Protracker clone";
 	m->quirk &= ~QUIRK_MODRNG;
+	break;
+    case TRACKER_OPENMPT:
+	tracker = "OpenMPT";
 	break;
     default:
     case TRACKER_UNKNOWN_CONV:
