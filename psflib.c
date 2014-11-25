@@ -435,7 +435,7 @@ static int psf_load_internal( psf_load_state * state, const char * file_name )
             while ( tag->next ) tag = tag->next;
             while ( tag )
             {
-                state->info_target( state->info_context, tag->name, tag->value );
+                if ( state->info_target( state->info_context, tag->name, tag->value ) ) goto error_free_tags;
                 tag = tag->prev;
             }
         }
