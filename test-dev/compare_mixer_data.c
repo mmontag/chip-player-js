@@ -57,6 +57,7 @@ void compare_mixer_data(char *mod, char *data)
 			fail_unless(fi.time    == time,   "time mismatch");
 			fail_unless(fi.row     == row,    "row mismatch");
 			fail_unless(fi.frame   == frame,  "frame mismatch");
+			fail_unless(i          == chan,   "channel mismatch");
 			fail_unless(ci->period == period, "period mismatch");
 			fail_unless(vi->note   == note,   "note mismatch");
 			fail_unless(vi->ins    == ins,    "instrument");
