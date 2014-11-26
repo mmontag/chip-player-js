@@ -15,6 +15,7 @@ Stable versions
 	- fix set sample offset effect (by Dennis Lindroos)
 	- add emulation of the FT2 pattern loop bug (by Eugene Toder)
 	- allow loading of packed formats from memory
+	- allow loading of OpenMPT MOD files with large samples
 	- code cleanup
 
 4.3.1 (20141111):
