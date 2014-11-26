@@ -15,7 +15,7 @@ TEST(test_module_length_condom_corruption)
 	xmp_get_frame_info(opaque, &fi);
 
 	fail_unless(mi.mod->len == 45, "module length");
-	fail_unless(fi.total_time == 207470, "estimated time");
+	fail_unless(fi.total_time == 207358, "estimated time");
 
 	xmp_start_player(opaque, 8000, 0);
 	while (xmp_play_frame(opaque) == 0) {
@@ -27,7 +27,7 @@ TEST(test_module_length_condom_corruption)
 	}
 	xmp_end_player(opaque);
 
-	fail_unless(time / 1000 - fi.total_time < 500, "elapsed time");
+	fail_unless(time / 1000 - fi.total_time < 50, "elapsed time");
 
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);

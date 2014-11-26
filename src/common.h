@@ -277,7 +277,6 @@ struct player_data {
 		int pbreak;
 		int jump;
 		int delay;
-		int skip_fetch;		/* To emulate delay + break quirk */
 		int jumpline;
 		int loop_chn;
 	

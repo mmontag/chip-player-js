@@ -59,7 +59,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     int alltmp;
     double clock, clock_rst;
     int loop_chn, loop_flg;
-    int pdelay = 0, skip_fetch;
+    int pdelay = 0;
     int loop_stk[XMP_MAX_CHANNELS];
     int loop_row[XMP_MAX_CHANNELS];
     struct xmp_event* event;
@@ -112,7 +112,6 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
     gvol_memory = break_row = cnt_row = alltmp = 0;
     clock_rst = clock = 0.0;
-    skip_fetch = 0;
 
     while (42) {
 	if ((uint32)++ord >= mod->len) {
@@ -211,17 +210,10 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		event = &EVENT(mod->xxo[ord], chn, row);
 
-		/* Pattern delay + pattern break cause target row events
-		 * to be ignored
-		 */
-		if (skip_fetch) {
-		    f1 = p1 = f2 = p2 = 0;
-		} else {
-		    f1 = event->fxt;
-		    p1 = event->fxp;
-		    f2 = event->f2t;
-		    p2 = event->f2p;
-		}
+		f1 = event->fxt;
+		p1 = event->fxp;
+		f2 = event->f2t;
+		p2 = event->f2p;
 
 		if (f1 == FX_GLOBALVOL || f2 == FX_GLOBALVOL) {
 		    gvl = (f1 == FX_GLOBALVOL) ? p1 : p2;
@@ -400,7 +392,6 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    }
 		}
 	    }
-	    skip_fetch = 0;
 
 	    if (loop_chn) {
 		row = loop_row[--loop_chn] - 1;
@@ -422,7 +413,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	}
 
 	if (break_row && pdelay) {
-	    skip_fetch = 1;
+	    break_row++;
 	}
 
 	if (ord2 >= 0) {
