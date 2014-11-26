@@ -634,6 +634,7 @@ skip_test:
 	break;
     case TRACKER_OPENMPT:
 	tracker = "OpenMPT";
+	ptkloop = 1;
 	break;
     default:
     case TRACKER_UNKNOWN_CONV:
