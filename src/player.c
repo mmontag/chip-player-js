@@ -203,12 +203,6 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	struct flow_control *f = &p->flow;
 	struct xmp_event *event;
 
-	/* FIXME: workaround for pattern delay + break) */
-	if (f->skip_fetch) {
-		f->skip_fetch = 0;
-		return;
-	}
-
 	for (chn = 0; chn < mod->chn; chn++) {
 		const int num_rows = mod->xxt[TRACK_NUM(pat, chn)]->rows;
 		if (row < num_rows) {
@@ -870,15 +864,6 @@ static void next_row(struct context_data *ctx)
 	struct player_data *p = &ctx->p;
 	struct flow_control *f = &p->flow;
 
-	/* If break during pattern delay, next row is skipped.
-	 * See corruption.mod order 1D (pattern 0D) last line:
-	 * EE2 + D31 ignores D00 in order 1C line 31
-	 * Reported by The Welder <welder@majesty.net>, Jan 14 2012
-	 */
-	if (f->delay && f->pbreak) {
-		f->skip_fetch = 1;
-	}
-
 	p->frame = 0;
 	f->delay = 0;
 
@@ -1125,6 +1110,13 @@ int xmp_play_frame(xmp_context opaque)
 	} else {
 		p->frame++;
 		if (p->frame >= (p->speed * (1 + f->delay))) {
+			/* If break during pattern delay, next row is skipped.
+			 * See corruption.mod order 1D (pattern 0D) last line:
+			 * EE2 + D31 ignores D00 in order 1C line 31. Reported
+			 * by The Welder <welder@majesty.net>, Jan 14 2012
+			 */
+			if (f->delay && f->pbreak)
+				next_row(ctx);
 			next_row(ctx);
 		}
 	}
