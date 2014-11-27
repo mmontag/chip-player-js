@@ -65,7 +65,7 @@ int mkstemp(char *template)
 
 	do {
 		int fd;
-		fd = open(template, O_RDWR | O_CREAT | O_EXCL, 0600);
+		fd = open(template, O_RDWR | O_CREAT | O_EXCL | O_BINARY, 0600);
 		if (fd >= 0 || errno != EEXIST)
 			return fd;
 		i = start + 1;

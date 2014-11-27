@@ -102,7 +102,7 @@ FILE *make_temp_file(char **filename) {
 	int fd;
 
 	if (get_temp_dir(tmp, PATH_MAX) < 0)
-		return 0;
+		return NULL;
 
 	strncat(tmp, "xmp_XXXXXX", PATH_MAX - 10);
 
