@@ -350,6 +350,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if (f1 == FX_JUMP || f2 == FX_JUMP) {
 		    ord2 = (f1 == FX_JUMP) ? p1 : p2;
+		    break_row = 0;
 		    last_row = 0;
 		}
 
