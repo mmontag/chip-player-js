@@ -49,6 +49,10 @@
 typedef int pid_t;
 #endif
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 int mkstemp(char *template)
 {
 	int start, i;
