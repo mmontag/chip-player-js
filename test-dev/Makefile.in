@@ -145,7 +145,8 @@ OPENMPT_S3M	= freqlimits \
 OPENMPT_MOD	= amigalimitsfinetune \
 		  delaybreak \
 		  patternjump \
-		  portasmpchange
+		  portasmpchange \
+		  ptoffset
 
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \

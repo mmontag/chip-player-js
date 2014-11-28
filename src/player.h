@@ -124,6 +124,7 @@ struct channel_data {
 
 	struct {
 		int val;
+		int val2;	/* For fx9 bug emulation */
 		int memory;
 	} offset;
 

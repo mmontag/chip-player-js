@@ -696,12 +696,15 @@ skip_test:
 	}
     }
 
-    if (mod->chn > 4) {
+    if (tracker_id == TRACKER_PROTRACKER || tracker_id == TRACKER_OPENMPT) {
+	m->quirk |= QUIRK_PROTRACK;
+    } else if (tracker_id == TRACKER_SCREAMTRACKER3) {
+	m->quirk |= QUIRKS_ST3;
+	m->read_event_type = READ_EVENT_ST3;
+    } else if (mod->chn > 4) {
 	m->quirk &= ~QUIRK_MODRNG;
 	m->quirk |= QUIRKS_FT2;
 	m->read_event_type = READ_EVENT_FT2;
-    } else if (strcmp(tracker, "Protracker") == 0) {
-	m->quirk |= QUIRK_INVLOOP;
     }
 
     return 0;

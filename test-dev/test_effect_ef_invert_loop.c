@@ -18,7 +18,7 @@ TEST(test_effect_ef_invert_loop)
 	m = &ctx->m;
 
 	create_simple_module(ctx, 2, 2);
-	set_quirk(ctx, QUIRK_INVLOOP, READ_EVENT_MOD);
+	set_quirk(ctx, QUIRK_PROTRACK, READ_EVENT_MOD);
 	h = hio_open("data/sample-square-8bit.raw", "rb");
 	fail_unless(h != NULL, "can't open sample file");
 	

@@ -8,6 +8,7 @@ Stable versions
 	- fix XM pan slide memory
 	- fix XM tremolo and vibrato waveforms
 	- fix MOD pattern break with pattern delay
+	- fix MOD Protracker offset bug emulation
 	- fix tremolo rate
 	Other changes:
 	- fix IT portamento after keyoff and note end
@@ -18,6 +19,7 @@ Stable versions
 	- add emulation of the FT2 pattern loop bug (by Eugene Toder)
 	- allow loading of packed formats from memory
 	- allow loading of OpenMPT MOD files with large samples
+	- enable offset bug emulation by default for Protracker MODs
 	- code cleanup
 
 4.3.1 (20141111):
