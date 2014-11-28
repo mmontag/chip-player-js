@@ -215,7 +215,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	m->quirk &= ~QUIRK_MODRNG;
 	m->quirk |= QUIRKS_FT2;
 	m->read_event_type = READ_EVENT_FT2;
-	m->quirk |= QUIRK_INVLOOP;
     }
 
     return 0;

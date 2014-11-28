@@ -68,6 +68,8 @@ static const struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
  */
 
 
+#ifndef LIBXMP_CORE_PLAYER
+
 /* From http://www.un4seen.com/forum/?topic=7554.0
  *
  * "Invert loop" effect replaces (!) sample data bytes within loop with their
@@ -105,6 +107,8 @@ static void update_invloop(struct module_data *m, struct channel_data *xc)
 		}
 	}
 }
+
+#endif
 
 static void reset_channels(struct context_data *ctx)
 {
@@ -773,9 +777,11 @@ static void play_channel(struct context_data *ctx, int chn)
 	update_frequency(ctx, chn);
 	update_pan(ctx, chn);
 
+#ifndef LIBXMP_CORE_PLAYER
 	if (HAS_QUIRK(QUIRK_PROTRACK)) {
 		update_invloop(m, xc);
 	}
+#endif
 
 	xc->info_position = virt_getvoicepos(ctx, chn);
 }
