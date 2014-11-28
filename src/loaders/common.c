@@ -254,7 +254,7 @@ void decode_protracker_event(struct xmp_event *event, uint8 *mod_event)
 
 void disable_continue_fx(struct xmp_event *event)
 {
-	if (!event->fxp) {
+	if (event->fxp == 0) {
 		switch (event->fxt) {
 		case 0x05:
 			event->fxt = 0x03;
@@ -266,6 +266,10 @@ void disable_continue_fx(struct xmp_event *event)
 		case 0x02:
 		case 0x0a:
 			event->fxt = 0x00;
+		}
+	} else if (event->fxt == 0x0e) {
+		if (event->fxp == 0xa0 || event->fxp == 0xb0) {
+			event->fxt = event->fxp = 0;
 		}
 	}
 }
