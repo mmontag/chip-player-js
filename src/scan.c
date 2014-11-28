@@ -360,6 +360,11 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    last_row = 0;
 		}
 
+		if (f1 == FX_IT_ROWDELAY) {
+	    		m->scan_cnt[ord][row] += p1 & 0x0f;
+			alltmp += (p1 & 0x0f) * speed * base_time;
+		}
+
 		if (f1 == FX_EXTENDED || f2 == FX_EXTENDED) {
 		    parm = (f1 == FX_EXTENDED) ? p1 : p2;
 

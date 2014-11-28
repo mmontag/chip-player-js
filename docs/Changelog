@@ -13,6 +13,7 @@ Stable versions
 	Other changes:
 	- fix IT portamento after keyoff and note end
 	- fix IT fadeout reset on new note
+	- fix IT pattern row delay scan
 	- fix MOD/XM volume up+down priority (reported by Jason Gibson)
 	- fix MOD fine volume slide memory (reported by Dennis Lindroos)
 	- fix set sample offset effect (by Dennis Lindroos)
