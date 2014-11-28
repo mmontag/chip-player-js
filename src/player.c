@@ -96,16 +96,12 @@ static void update_invloop(struct module_data *m, struct channel_data *xc)
 		xc->invloop.count = 0;
 		len = xxs->lpe - xxs->lps;	
 
-		if (HAS_QUIRK(QUIRK_FUNKIT)) {
-			/* FIXME: not implemented */
-		} else {
-			if (++xc->invloop.pos > len) {
-				xc->invloop.pos = 0;
-			}
+		if (++xc->invloop.pos > len) {
+			xc->invloop.pos = 0;
+		}
 
-			if (~xxs->flg & XMP_SAMPLE_16BIT) {
-				xxs->data[xxs->lps + xc->invloop.pos] ^= 0xff;
-			}
+		if (~xxs->flg & XMP_SAMPLE_16BIT) {
+			xxs->data[xxs->lps + xc->invloop.pos] ^= 0xff;
 		}
 	}
 }
@@ -777,7 +773,7 @@ static void play_channel(struct context_data *ctx, int chn)
 	update_frequency(ctx, chn);
 	update_pan(ctx, chn);
 
-	if (HAS_QUIRK(QUIRK_INVLOOP)) {
+	if (HAS_QUIRK(QUIRK_PROTRACK)) {
 		update_invloop(m, xc);
 	}
 

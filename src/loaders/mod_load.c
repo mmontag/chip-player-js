@@ -697,7 +697,7 @@ skip_test:
     }
 
     if (tracker_id == TRACKER_PROTRACKER || tracker_id == TRACKER_OPENMPT) {
-	m->quirk |= QUIRK_INVLOOP;
+	m->quirk |= QUIRK_PROTRACK;
     } else if (tracker_id == TRACKER_SCREAMTRACKER3) {
 	m->quirk |= QUIRKS_ST3;
 	m->read_event_type = READ_EVENT_ST3;

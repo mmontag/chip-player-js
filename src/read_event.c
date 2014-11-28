@@ -301,9 +301,12 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
-	if (TEST(OFFSET) && p->flags & XMP_FLAGS_FX9BUG)
-		xc->offset.val += xc->offset.val2;
-	RESET(OFFSET);
+	if (TEST(OFFSET)) {
+		if (HAS_QUIRK(QUIRK_PROTRACK) || p->flags & XMP_FLAGS_FX9BUG) {
+			xc->offset.val += xc->offset.val2;
+		}
+		RESET(OFFSET);
+	}
 
 	if (use_ins_vol) {
 		xc->volume = sub->vol;

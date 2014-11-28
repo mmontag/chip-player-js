@@ -19,6 +19,7 @@ Stable versions
 	- add emulation of the FT2 pattern loop bug (by Eugene Toder)
 	- allow loading of packed formats from memory
 	- allow loading of OpenMPT MOD files with large samples
+	- enable offset bug emulation by default for Protracker MODs
 	- code cleanup
 
 4.3.1 (20141111):
