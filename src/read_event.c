@@ -838,6 +838,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (ev.ins) {
 		int ins = ev.ins - 1;
+		int set_new_ins = 0;
 
 		/* portamento_after_keyoff.it test case */
 		if (is_release && is_toneporta && !key) {
@@ -847,7 +848,31 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 		}
 
-		if (!is_release || (!is_toneporta || xc->ins != ins)) {
+		if (!is_release) {
+			set_new_ins = 1;
+		}
+
+		if (is_toneporta) {
+			if (xc->ins != ins) {
+				set_new_ins = 1;
+			} else {
+				/* also set if mapped sample is different,
+				 * see OpenMPT PortaInsNum.it
+				 */
+				struct xmp_subinstrument *s1, *s2;
+				s1 = get_subinstrument(ctx, ins, key - 1);
+				s2 = get_subinstrument(ctx, ins, xc->note);
+				if (s1 && s2 && s1->sid != s2->sid) {
+					set_new_ins = 1;
+					/* not same sample, actually */
+					not_same_ins = 1;
+				}
+			}
+		} else {
+			set_new_ins = 1;
+		}
+
+		if (set_new_ins) {
 			SET(NEW_INS);
 			use_ins_vol = 1;
 			reset_env = 1;
