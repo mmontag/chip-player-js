@@ -56,7 +56,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     int parm, gvol_memory, f1, f2, p1, p2, ord, ord2;
     int row, last_row, break_row, cnt_row;
     int gvl, bpm, speed, base_time, chn;
-    int alltmp;
+    int frame_count;
     double clock, clock_rst;
     int loop_chn, loop_flg;
     int pdelay = 0;
@@ -110,7 +110,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     ord2 = -1;
     ord = ep - 1;
 
-    gvol_memory = break_row = cnt_row = alltmp = 0;
+    gvol_memory = break_row = cnt_row = frame_count = 0;
     clock_rst = clock = 0.0;
 
     while (42) {
@@ -159,7 +159,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	info->gvl = gvl;
 	info->bpm = bpm;
 	info->speed = speed;
-	info->time = clock + m->time_factor * alltmp / bpm;
+	info->time = clock + m->time_factor * frame_count * base_time / bpm;
 
 #ifndef LIBXMP_CORE_PLAYER
 	info->st26_speed = st26_speed;
@@ -167,7 +167,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 	if (info->start_row == 0 && ord != 0) {
 	    if (ord == ep) {
-		clock_rst = clock + m->time_factor * alltmp / bpm;
+		clock_rst = clock + m->time_factor * frame_count * base_time / bpm;
 	    }
 
 	    info->start_row = break_row;
@@ -258,7 +258,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if ((f1 == FX_SPEED && p1) || (f2 == FX_SPEED && p2)) {
 		    parm = (f1 == FX_SPEED) ? p1 : p2;
-		    alltmp += cnt_row * speed * base_time;
+		    frame_count += cnt_row * speed;
 		    cnt_row = 0;
 		    if (parm) {
 			if (p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
@@ -267,8 +267,8 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			    st26_speed = 0;
 #endif
 			} else {
-			    clock += m->time_factor * alltmp / bpm;
-			    alltmp = 0;
+			    clock += m->time_factor * frame_count * base_time / bpm;
+			    frame_count = 0;
 			    bpm = parm;
 			}
 		    }
@@ -291,7 +291,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if ((f1 == FX_S3M_SPEED && p1) || (f2 == FX_S3M_SPEED && p2)) {
 		    parm = (f1 == FX_S3M_SPEED) ? p1 : p2;
-		    alltmp += cnt_row * speed * base_time;
+		    frame_count += cnt_row * speed;
 		    cnt_row  = 0;
 		    speed = parm;
 #ifndef LIBXMP_CORE_PLAYER
@@ -302,10 +302,10 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		if ((f1 == FX_S3M_BPM && p1) || (f2 == FX_S3M_BPM && p2)) {
 		    parm = (f1 == FX_S3M_BPM) ? p1 : p2;
 		    if (parm >= 0x20) {
-			alltmp += cnt_row * speed * base_time;
+			frame_count += cnt_row * speed;
 			cnt_row = 0;
-			clock += m->time_factor * alltmp / bpm;
-			alltmp = 0;
+			clock += m->time_factor * frame_count * base_time / bpm;
+			frame_count = 0;
 			bpm = parm;
 		    }
 		}
@@ -313,10 +313,10 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 #ifndef LIBXMP_CORE_DISABLE_IT
 		if ((f1 == FX_IT_BPM && p1) || (f2 == FX_IT_BPM && p2)) {
 		    parm = (f1 == FX_IT_BPM) ? p1 : p2;
-		    alltmp += cnt_row * speed * base_time;
+		    frame_count += cnt_row * speed;
 		    cnt_row = 0;
-		    clock += m->time_factor * alltmp / bpm;
-		    alltmp = 0;
+		    clock += m->time_factor * frame_count * base_time / bpm;
+		    frame_count = 0;
 
 		    if (MSN(parm) == 0) {
 		        clock += m->time_factor * base_time / bpm;
@@ -362,7 +362,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if (f1 == FX_IT_ROWDELAY) {
 	    		m->scan_cnt[ord][row] += p1 & 0x0f;
-			alltmp += (p1 & 0x0f) * speed * base_time;
+			frame_count += (p1 & 0x0f) * speed;
 		}
 
 		if (f1 == FX_EXTENDED || f2 == FX_EXTENDED) {
@@ -370,7 +370,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		    if ((parm >> 4) == EX_PATT_DELAY) {
 			pdelay = parm & 0x0f;
-			alltmp += pdelay * speed * base_time;
+			frame_count += pdelay * speed;
 		    }
 
 		    if ((parm >> 4) == EX_PATTERN_LOOP) {
@@ -406,7 +406,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 #ifndef LIBXMP_CORE_PLAYER
 	    if (st26_speed) {
-	        alltmp += cnt_row * speed * base_time;
+	        frame_count += cnt_row * speed;
 	        cnt_row  = 0;
 		if (st26_speed & 0x10000) {
 			speed = (st26_speed & 0xff00) >> 8;
@@ -427,7 +427,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    ord2 = -1;
 	}
 
-	alltmp += cnt_row * speed * base_time;
+	frame_count += cnt_row * speed;
 	cnt_row = 0;
     }
     row = break_row;
@@ -438,9 +438,9 @@ end_module:
     p->scan[chain].ord = ord;
 
     clock -= clock_rst;
-    alltmp += cnt_row * speed * base_time;
+    frame_count += cnt_row * speed;
 
-    return (clock + m->time_factor * alltmp / bpm);
+    return (clock + m->time_factor * frame_count * base_time / bpm);
 }
 
 int get_sequence(struct context_data *ctx, int ord)
