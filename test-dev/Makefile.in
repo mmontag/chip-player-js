@@ -116,6 +116,7 @@ OPENMPT_XM	= 3xxins \
 
 OPENMPT_IT	= carrynna \
 		  cut_carry \
+		  emptyslot \
 		  envloops \
 		  envreset \
 		  extreme_filter_test_1 \
