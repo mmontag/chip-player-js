@@ -805,16 +805,24 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	candidate_ins = xc->ins;
 
 	/* Notes with unmapped instruments are ignored */
-	if (ev.ins && ev.ins <= mod->ins && ev.note && ev.note <= XMP_MAX_KEYS) {
-		int ins = ev.ins - 1;
-		int key = ev.note - 1;
+	if (ev.ins) {
+		if (ev.ins <= mod->ins && ev.note && ev.note <= XMP_MAX_KEYS) {
+			int ins = ev.ins - 1;
+			int key = ev.note - 1;
 
-		if (ins < mod->ins) {
-			int smp = mod->xxi[ins].map[key].ins;
-			if (smp == 0xff || smp >= mod->smp) {
-				candidate_ins = ins;
-				memset(&ev, 0, sizeof(struct xmp_event));
-			};
+			if (ins < mod->ins) {
+				int smp = mod->xxi[ins].map[key].ins;
+				if (smp == 0xff || smp >= mod->smp) {
+					candidate_ins = ins;
+					memset(&ev, 0, sizeof (ev));
+				};
+			}
+		}
+	} else {
+		if (ev.note && ev.note <= XMP_MAX_KEYS) {
+			if (!IS_VALID_INSTRUMENT(xc->old_ins - 1)) {
+				new_invalid_ins = 1;
+			}
 		}
 	}
 

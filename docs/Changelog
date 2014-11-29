@@ -3,6 +3,7 @@ Stable versions
 
 4.3.2 ():
 	Fix bugs caught in the OpenMPT test cases:
+	- fix IT invalid instrument number recovery
 	- fix XM portamento target reset on new instrument
 	- fix XM portamento with offset
 	- fix XM pan slide memory
