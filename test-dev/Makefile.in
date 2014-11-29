@@ -123,6 +123,7 @@ OPENMPT_IT	= carrynna \
 		  filter_7f \
 		  filterenvreset \
 		  filter_nna \
+		  finevolcolslide \
 		  flt_env_carry \
 		  freqreset_noins \
 		  gxsmp \
