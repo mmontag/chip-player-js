@@ -129,6 +129,7 @@ OPENMPT_IT	= carrynna \
 		  freqreset_noins \
 		  gxsmp \
 		  ins_flt_porta_reset \
+		  instrumentnumberchange \
 		  nomap \
 		  noteoff2 \
 		  porta_offset \
