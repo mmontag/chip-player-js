@@ -18,12 +18,16 @@ void compare_mixer_data(char *mod, char *data)
 	int time, row, frame, chan, period, note, ins, vol, pan, pos0, cutoff;
 	char line[200];
 	FILE *f;
-	int i, voc;
+	int i, voc, ret;
 
 	f = fopen(data, "r");
+	fail_unless(f != NULL, "can't open data file");
 
 	opaque = xmp_create_context();
-	xmp_load_module(opaque, mod);
+	fail_unless(opaque != NULL, "can't create context");
+
+	ret = xmp_load_module(opaque, mod);
+	fail_unless(ret == 0, "can't load module");
 
 	ctx = (struct context_data *)opaque;
 	m = &ctx->m;
