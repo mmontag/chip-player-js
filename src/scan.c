@@ -58,9 +58,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     int gvl, bpm, speed, base_time, chn;
     int frame_count;
     double time, start_time;
-    int loop_chn, loop_flg;
+    int loop_chn, loop_count;
     int pdelay = 0;
-    int loop_stk[XMP_MAX_CHANNELS];
+    int loop_stack[XMP_MAX_CHANNELS];
     int loop_row[XMP_MAX_CHANNELS];
     struct xmp_event* event;
     int i, pat;
@@ -78,9 +78,10 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			mod->xxp[pat]->rows ? mod->xxp[pat]->rows : 1);
     }
 
-    memset(loop_stk, 0, sizeof(int) * mod->chn);
+    memset(loop_stack, 0, sizeof(int) * mod->chn);
     memset(loop_row, 0, sizeof(int) * mod->chn);
-    loop_chn = loop_flg = 0;
+    loop_count = 0;
+    loop_chn = -1;
 
     gvl = mod->gvl;
     bpm = mod->bpm;
@@ -196,7 +197,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    if (row_count > 512)	/* was 255, but Global trash goes to 318 */
 		goto end_module;
 
-	    if (!loop_flg && m->scan_cnt[ord][row]) {
+	    if (!loop_count && m->scan_cnt[ord][row]) {
 		row_count--;
 		goto end_module;
 	    }
@@ -346,6 +347,11 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			bpm = parm;
 		    }
 		}
+
+		if (f1 == FX_IT_ROWDELAY) {
+	    		m->scan_cnt[ord][row] += p1 & 0x0f;
+			frame_count += (p1 & 0x0f) * speed;
+		}
 #endif
 
 		if (f1 == FX_JUMP || f2 == FX_JUMP) {
@@ -360,11 +366,6 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    last_row = 0;
 		}
 
-		if (f1 == FX_IT_ROWDELAY) {
-	    		m->scan_cnt[ord][row] += p1 & 0x0f;
-			frame_count += (p1 & 0x0f) * speed;
-		}
-
 		if (f1 == FX_EXTENDED || f2 == FX_EXTENDED) {
 		    parm = (f1 == FX_EXTENDED) ? p1 : p2;
 
@@ -375,23 +376,25 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		    if ((parm >> 4) == EX_PATTERN_LOOP) {
 			if (parm &= 0x0f) {
-			    if (loop_stk[chn]) {
-				if (--loop_stk[chn])
-				    loop_chn = chn + 1;
+			    /* Loop end */
+			    if (loop_stack[chn]) {
+				if (--loop_stack[chn])
+				    loop_chn = chn;
 				else {
-				    loop_flg--;
+				    loop_count--;
 				    if (m->quirk & QUIRK_S3MLOOP)
-					loop_row[chn] = row + 1;
+					loop_row[chn] = row;
 				}
 			    } else {
-				if (loop_row[chn] <= row) {
-				    loop_stk[chn] = parm;
-				    loop_chn = chn + 1;
-				    loop_flg++;
+				if (loop_row[chn] < row) {
+				    loop_stack[chn] = parm;
+				    loop_chn = chn;
+				    loop_count++;
 				}
 			    }
 			} else { 
-			    loop_row[chn] = row;
+			    /* Loop start */
+			    loop_row[chn] = row - 1;
 			    if (HAS_QUIRK(QUIRK_FT2LOOP))
 				break_row = row;
 			}
@@ -399,9 +402,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		}
 	    }
 
-	    if (loop_chn) {
-		row = loop_row[--loop_chn] - 1;
-		loop_chn = 0;
+	    if (loop_chn >= 0) {
+		row = loop_row[loop_chn];
+		loop_chn = -1;
 	    }
 
 #ifndef LIBXMP_CORE_PLAYER
