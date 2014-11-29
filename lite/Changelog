@@ -1,6 +1,24 @@
 Stable versions
 ---------------
 
+4.3.2 (20141130):
+	- fix IT invalid instrument number recovery
+	- fix XM portamento target reset on new instrument
+	- fix XM portamento with offset
+	- fix XM pan slide memory
+	- fix XM tremolo and vibrato waveforms
+	- fix MOD pattern break with pattern delay
+	- fix MOD Protracker offset bug emulation
+	- fix tremolo rate
+	- fix IT portamento after keyoff and note end
+	- fix IT fadeout reset on new note
+	- fix IT pattern row delay scan
+	- fix MOD/XM volume up+down priority (reported by Jason Gibson)
+	- fix MOD fine volume slide memory (reported by Dennis Lindroos)
+	- fix set sample offset effect (by Dennis Lindroos)
+	- add emulation of the FT2 pattern loop bug (by Eugene Toder)
+	- code cleanup
+
 4.3.1 (20141111):
 	- fix IT filter envelope range
 	- fix IT envelope carry after envelope end
