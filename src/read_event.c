@@ -863,7 +863,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		if (is_toneporta) {
 			if (xc->ins != ins) {
 				set_new_ins = 1;
-			} else {
+			} else if (!HAS_QUIRK(QUIRK_PRENV)) {
 				/* also set if mapped sample is different,
 				 * see OpenMPT PortaInsNum.it
 				 */
