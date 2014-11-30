@@ -128,6 +128,7 @@ OPENMPT_IT	= carrynna \
 		  flt_env_carry \
 		  freqreset_noins \
 		  gxsmp \
+		  gxxtest \
 		  ins_flt_porta_reset \
 		  instrumentnumberchange \
 		  nomap \
