@@ -902,14 +902,21 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				RESET_NOTE(NOTE_SET);
 			}
 			if (xc->ins != ins && (!is_toneporta || !HAS_QUIRK(QUIRK_PRENV))) {
-				not_same_ins = 1;
+				struct xmp_subinstrument *s1, *s2;
+				s1 = get_subinstrument(ctx, xc->ins, xc->key);
+				s2 = get_subinstrument(ctx, ins, key - 1);
+
 				candidate_ins = ins;
-				if (is_toneporta) {
-					/* Get new instrument volume */
-					sub = get_subinstrument(ctx, ins, key);
-					if (sub != NULL) {
-						xc->volume = sub->vol;
-						use_ins_vol = 0;
+
+				if (!s1 || !s2 || s1->sid != s2->sid) {
+					not_same_ins = 1;
+					if (is_toneporta) {
+						/* Get new instrument volume */
+						sub = get_subinstrument(ctx, ins, key);
+						if (sub != NULL) {
+							xc->volume = sub->vol;
+							use_ins_vol = 0;
+						}
 					}
 				}
 			}
