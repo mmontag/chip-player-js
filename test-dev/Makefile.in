@@ -87,6 +87,7 @@ OPENMPT_XM	= 3xxins \
 		  3xx_no_old_samp \
 		  delay1 \
 		  delay2 \
+		  delay3 \
 		  delaycut \
 		  e90 \
 		  envloops \
