@@ -51,6 +51,9 @@ struct retrig_control {
 #define PANBRELLO	(1 << 19)
 #define GVOL_SLIDE	(1 << 20)
 #define TEMPO_SLIDE	(1 << 21)
+#define VENV_PAUSE	(1 << 22)
+#define PENV_PAUSE	(1 << 23)
+#define FENV_PAUSE	(1 << 24)
 
 #define NOTE_FADEOUT	(1 << 0)
 #define NOTE_RELEASE	(1 << 1)

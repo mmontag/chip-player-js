@@ -306,8 +306,12 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 			SET_NOTE(NOTE_END);
 		SET_NOTE(NOTE_ENV_END);
 	}
-	xc->v_idx = update_envelope(&instrument->aei, xc->v_idx, DOENV_RELEASE,
-						HAS_QUIRK(QUIRK_ENVSUS));
+
+	if (!TEST_PER(VENV_PAUSE)) {
+		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
+				DOENV_RELEASE, HAS_QUIRK(QUIRK_ENVSUS));
+	}
+
 
 	/* If note ended in background channel, we can safely reset it */
 	if (TEST_NOTE(NOTE_END) && chn >= p->virt.num_tracks) {
@@ -403,8 +407,10 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	instrument = get_instrument(ctx, xc->ins);
 
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
-	xc->f_idx = update_envelope(&instrument->fei, xc->f_idx, DOENV_RELEASE,
-						HAS_QUIRK(QUIRK_ENVSUS));
+	if (!TEST_PER(FENV_PAUSE)) {
+		xc->f_idx = update_envelope(&instrument->fei, xc->f_idx,
+				DOENV_RELEASE, HAS_QUIRK(QUIRK_ENVSUS));
+	}
 
 #ifndef LIBXMP_CORE_PLAYER
 	/* Do note slide */
@@ -534,8 +540,10 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	instrument = get_instrument(ctx, xc->ins);
 
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
-	xc->p_idx = update_envelope(&instrument->pei, xc->p_idx, DOENV_RELEASE,
-						HAS_QUIRK(QUIRK_ENVSUS));
+	if (!TEST_PER(PENV_PAUSE)) {
+		xc->p_idx = update_envelope(&instrument->pei, xc->p_idx,
+				DOENV_RELEASE, HAS_QUIRK(QUIRK_ENVSUS));
+	}
 
 	if (TEST(PANBRELLO)) {
 		panbrello = get_lfo(&xc->panbrello.lfo, 512);

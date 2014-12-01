@@ -683,8 +683,22 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			virt_setnna(ctx, chn, XMP_INST_NNA_FADE);
 			break;
 		case 7:	/* Turn off volume envelope */
+			SET_PER(VENV_PAUSE);
 			break;
 		case 8:	/* Turn on volume envelope */
+			RESET_PER(VENV_PAUSE);
+			break;
+		case 9:	/* Turn off pan envelope */
+			SET_PER(PENV_PAUSE);
+			break;
+		case 0xa:	/* Turn on pan envelope */
+			RESET_PER(PENV_PAUSE);
+			break;
+		case 0xb:	/* Turn off pitch envelope */
+			SET_PER(FENV_PAUSE);
+			break;
+		case 0xc:	/* Turn on pitch envelope */
+			RESET_PER(FENV_PAUSE);
 			break;
 		}
 		break;
