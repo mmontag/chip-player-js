@@ -386,11 +386,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 					loop_row[chn] = row;
 				}
 			    } else {
-				if (loop_row[chn] < row) {
-				    loop_stack[chn] = parm;
-				    loop_chn = chn;
-				    loop_count++;
-				}
+				loop_stack[chn] = parm;
+				loop_chn = chn;
+				loop_count++;
 			    }
 			} else { 
 			    /* Loop start */

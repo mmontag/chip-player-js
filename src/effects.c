@@ -380,10 +380,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 							    p->row + 1;
 					}
 				} else {
-					if (f->loop[chn].start <= p->row) {
-						f->loop[chn].count = fxp;
-						f->loop_chn = ++chn;
-					}
+					f->loop[chn].count = fxp;
+					f->loop_chn = ++chn;
 				}
 			}
 			break;
