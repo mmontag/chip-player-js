@@ -79,8 +79,7 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 	return ((y2 - y1) * (x - x1) / (x2 - x1)) + y1;
 }
 
-
-int update_envelope(struct xmp_envelope *env, int x, int release, int sus_quirk)
+static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 {
 	int16 *data = env->data;
 	int has_loop, has_sus;
@@ -108,9 +107,50 @@ int update_envelope(struct xmp_envelope *env, int x, int release, int sus_quirk)
 	 * test cases.)
 	 */
 	if (has_loop && has_sus && sus == lpe) {
-		if (sus_quirk && !release)
+		if (!release)
 			has_sus = 0;
 	}
+
+	/* FT2 doesn't have sustain loop */
+	if (!release && has_sus && x == data[sus]) {
+		/* stay in the sustain point */
+		x--;
+	}
+
+	if (x < 0xffff)	{	/* increment tick */
+		x++;
+	}
+
+	if (has_loop && x >= data[lpe]) {
+		if (!(release && has_sus && sus == lpe))
+			x = data[lps];
+	}
+
+	return x;
+}
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+
+static int update_envelope_it(struct xmp_envelope *env, int x, int release)
+{
+	int16 *data = env->data;
+	int has_loop, has_sus;
+	int lpe, lps, sus, sue;
+
+	if (x < 0)
+		return -1;
+
+	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0) {
+		return x;
+	}
+
+	has_loop = env->flg & XMP_ENVELOPE_LOOP;
+	has_sus = env->flg & XMP_ENVELOPE_SUS;
+
+	lps = env->lps << 1;
+	lpe = env->lpe << 1;
+	sus = env->sus << 1;
+	sue = env->sue << 1;
 
 	if (env->flg & XMP_ENVELOPE_SLOOP) {
 		if (!release && has_sus) {
@@ -137,6 +177,19 @@ int update_envelope(struct xmp_envelope *env, int x, int release, int sus_quirk)
 	}
 
 	return x;
+}
+
+#endif
+
+int update_envelope(struct xmp_envelope *env, int x, int release, int it_env)
+{
+#ifndef LIBXMP_CORE_DISABLE_IT
+	return it_env ?
+		update_envelope_it(env, x, release) :
+		update_envelope_xm(env, x, release);
+#else
+	return update_envelope_xm(env, x, release);
+#endif
 }
 
 
