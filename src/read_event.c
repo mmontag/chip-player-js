@@ -60,8 +60,25 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 	return NULL;
 }
 
-static void reset_envelopes(struct context_data *ctx, struct channel_data *xc,
-				int force_cut)
+static void reset_envelopes(struct context_data *ctx, struct channel_data *xc)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	if (!IS_VALID_INSTRUMENT(xc->ins))
+		return;
+
+ 	RESET_NOTE(NOTE_ENV_END);
+
+	xc->v_idx = 0;
+	xc->p_idx = 0;
+	xc->f_idx = 0;
+}
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+
+static void reset_envelopes_carry(struct context_data *ctx,
+				struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
@@ -71,13 +88,6 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc,
 		return;
 
  	RESET_NOTE(NOTE_ENV_END);
-
-	if (force_cut) {
-		xc->v_idx = 0;
-		xc->p_idx = 0;
-		xc->f_idx = 0;
-		return;
-	}
 
 	xxi = get_instrument(ctx, xc->ins);
 
@@ -97,6 +107,8 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc,
 		xc->f_idx = 0;
 	}
 }
+
+#endif
 
 static void set_effect_defaults(struct context_data *ctx, int note,
 				struct xmp_subinstrument *sub,
@@ -275,7 +287,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc, 0);
+		reset_envelopes(ctx, xc);
 	}
 
 	/* Process new volume */
@@ -560,7 +572,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		 * But make sure we have an instrument set, see Letting go
 		 * pos 4 chn 20
 		 */
-		reset_envelopes(ctx, xc, 0);
+		reset_envelopes(ctx, xc);
 	}
 
 	/* Process new volume */
@@ -726,7 +738,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc, 0);
+		reset_envelopes(ctx, xc);
 	}
 
 	/* Process new volume */
@@ -852,7 +864,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		if (is_release && is_toneporta && !key) {
 			if (HAS_QUIRK(QUIRK_PRENV) || TEST_NOTE(NOTE_SET)) {
 				is_toneporta = 0;
-				reset_envelopes(ctx, xc, 0);
+				reset_envelopes_carry(ctx, xc);
 			}
 		}
 
@@ -1003,7 +1015,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* Do after virtual channel copy */
 	if (is_toneporta) {
 		if (HAS_QUIRK(QUIRK_PRENV) && ev.ins) {
-			reset_envelopes(ctx, xc, 0);
+			reset_envelopes_carry(ctx, xc);
 		}
 	}
 
@@ -1012,13 +1024,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	 * channel copies in case of NNA (see test/test.it)
 	 */
 	if (ev.ins && TEST_NOTE(NOTE_ENV_END)) {
-		reset_envelopes(ctx, xc, 1);
+		reset_envelopes(ctx, xc);
 	}
 
 	if (IS_VALID_INSTRUMENT(candidate_ins)) {
 		if (xc->ins != candidate_ins) {
 			/* Reset envelopes if instrument changes */
-			reset_envelopes(ctx, xc, 1);
+			reset_envelopes(ctx, xc);
 		}
 		xc->ins = candidate_ins;
 		xc->ins_fade = mod->xxi[candidate_ins].rls;
@@ -1031,7 +1043,11 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		if (note >= 0) {
 			if (sub->pan >= 0)
 				xc->pan.val = sub->pan;
-			reset_envelopes(ctx, xc, TEST_NOTE(NOTE_CUT));
+			if (TEST_NOTE(NOTE_CUT)) {
+				reset_envelopes(ctx, xc);
+			} else {
+				reset_envelopes_carry(ctx, xc);
+			}
 			RESET_NOTE(NOTE_CUT);
 		} else if (ev.ins) {
 			if (sub->pan >= 0)
@@ -1208,7 +1224,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc, 0);
+		reset_envelopes(ctx, xc);
 	}
 
 	/* Process new volume */
@@ -1316,7 +1332,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	set_period(ctx, note, sub, xc, 0);
 
 	if (e->ins && sub != NULL) {
-		reset_envelopes(ctx, xc, 0);
+		reset_envelopes(ctx, xc);
 	}
 
 	xc->volume = e->vol - 1;
