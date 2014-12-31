@@ -8,7 +8,6 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 AC_C_BIGENDIAN
-0>confdefs.h
 
 dnl XMP_TRY_COMPILE(<message>,<cache-var>,<flags>,<program>,<ifyes>,<ifno>)
 AC_DEFUN([XMP_TRY_COMPILE],[
