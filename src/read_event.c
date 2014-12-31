@@ -342,6 +342,16 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	int k00 = 0;
 	struct xmp_event ev;
 
+	/* From the OpenMPT DelayCombination.xm test case:
+         * "Naturally, Fasttracker 2 ignores notes next to an out-of-range
+	 *  note delay. However, to check whether the delay is out of range,
+	 *  it is simply compared against the current song speed, not taking
+	 *  any pattern delays into account."
+	 */
+	if (p->frame >= p->speed) {
+		return 0;
+	}
+
 	memcpy(&ev, e, sizeof (struct xmp_event));
 
 	xc->flags = 0;
