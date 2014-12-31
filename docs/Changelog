@@ -1,11 +1,13 @@
 Stable versions
 ---------------
 
-4.3.3 ():
+4.3.3 (20141231):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM note delay volume with no note or instrument set
+	- fix XM out-of-range note delays with pattern delays
 	Other changes:
 	- fix XM envelope loop length (reported by Per Törner)
+	- fix big-endian detection in configuration (by Andreas Schwab)
 
 4.3.2 (20141130):
 	Fix bugs caught in the OpenMPT test cases:
