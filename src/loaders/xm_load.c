@@ -127,12 +127,8 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 
 		if (event->note == 0x61) {
 		    /* See OpenMPT keyoff+instr.xm test case */
-		    if (event->fxt == 0x0e && (event->fxp >> 4) == 0x0d) {
-			if (event->ins) {
-				event->note = event->fxp = event->fxt = 0;
-			} else {
-				event->note = XMP_KEY_OFF;
-			}
+		    if (event->fxt == 0x0e && MSN(event->fxp) == 0x0d) {
+			event->note = XMP_KEY_OFF;
 		    } else {
 		    	event->note = event->ins ? XMP_KEY_FADE : XMP_KEY_OFF;
 		    }

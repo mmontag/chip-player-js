@@ -59,7 +59,6 @@ static const struct retrig_control rval[] = {
 	
 };
 
-static const struct xmp_event empty_event = { 0, 0, 0, 0, 0, 0, 0 };
 
 /*
  * "Anyway I think this is the most brilliant piece of crap we
@@ -203,19 +202,38 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 	struct xmp_module *mod = &m->mod;
 	struct player_data *p = &ctx->p;
 	struct flow_control *f = &p->flow;
-	struct xmp_event *event;
+	struct xmp_event ev;
 
 	for (chn = 0; chn < mod->chn; chn++) {
 		const int num_rows = mod->xxt[TRACK_NUM(pat, chn)]->rows;
 		if (row < num_rows) {
-			event = &EVENT(pat, chn, row);
+			memcpy(&ev, &EVENT(pat, chn, row), sizeof(ev));
 		} else {
-			event = (struct xmp_event *)&empty_event;
+			memset(&ev, 0, sizeof(ev));
 		}
 
-		if (check_delay(ctx, event, chn) == 0) {
+		if (ev.note == XMP_KEY_OFF) {
+			int env_on = 0;
+			int ins = ev.ins - 1;
+
+			if (IS_VALID_INSTRUMENT(ins) &&
+			    (mod->xxi[ins].aei.flg & XMP_ENVELOPE_ON)) {
+				env_on = 1;
+			}
+
+			if (ev.fxt == FX_EXTENDED && MSN(ev.fxp) == EX_DELAY) {
+				if (ev.ins && (LSN(ev.fxp) || env_on)) {
+					if (LSN(ev.fxp)) {
+						ev.note = 0;
+					}
+					ev.fxp = ev.fxt = 0;
+				}
+			}
+		}
+
+		if (check_delay(ctx, &ev, chn) == 0) {
 			if (!f->rowdelay_set || f->rowdelay > 0) {
-				read_event(ctx, event, chn);
+				read_event(ctx, &ev, chn);
 #ifndef LIBXMP_CORE_PLAYER
 				med_hold_hack(ctx, pat, chn, row);
 #endif

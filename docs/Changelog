@@ -2,6 +2,8 @@ Stable versions
 ---------------
 
 4.3.4 ():
+	Fix bugs caught in the OpenMPT test cases:
+	- fix XM keyoff+delay combinations
 
 4.3.3 (20141231):
 	Fix bugs caught in the OpenMPT test cases:
