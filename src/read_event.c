@@ -494,7 +494,10 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* See OpenMPT keyoff+instr.xm, pattern 2 row 0x40 */
 			if (env_on && ev.fxt == FX_EXTENDED &&
 			    (ev.fxp >> 4) == EX_DELAY) {
-				RESET_NOTE(NOTE_RELEASE);
+				/* See OpenMPT OffDelay.xm test case */
+				if ((ev.fxp & 0xf) != 0) {
+					RESET_NOTE(NOTE_RELEASE);
+				}
 			}
 		} else if (key == XMP_KEY_FADE) {
 			/* Handle keyoff + instrument case (NoteOff2.xm) */
