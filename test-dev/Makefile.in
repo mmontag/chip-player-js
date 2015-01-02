@@ -105,6 +105,7 @@ OPENMPT_XM	= 3xxins \
 		  noteoff2 \
 		  noteofffade \
 		  noteoffvolume \
+		  offdelay \
 		  offsetrange \
 		  panmemory2 \
 		  panslidemem \
