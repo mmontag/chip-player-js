@@ -109,6 +109,18 @@ static void update_invloop(struct module_data *m, struct channel_data *xc)
 
 #endif
 
+static int is_first_frame(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+
+	if (m->read_event_type == READ_EVENT_IT) {
+		return p->frame % p->speed == 0;
+	} else {
+		return p->frame == 0;
+	}
+}
+
 static void reset_channels(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
@@ -351,7 +363,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	if (TEST(TREMOLO)) {
 		finalvol += get_lfo(&xc->tremolo.lfo, 1 << 6);
-		if (p->frame % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
+		if (!is_first_frame(ctx) || HAS_QUIRK(QUIRK_VIBALL)) {
 			update_lfo(&xc->tremolo.lfo);
 		}
 	}
@@ -470,7 +482,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 			vibrato += vib;
 		}
 
-		if (p->frame % p->speed != 0 || HAS_QUIRK(QUIRK_VIBALL)) {
+		if (!is_first_frame(ctx) || HAS_QUIRK(QUIRK_VIBALL)) {
 			update_lfo(&xc->vibrato.lfo);
 		}
 	}
@@ -653,7 +665,7 @@ static void update_frequency(struct context_data *ctx, int chn)
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	if (p->frame % p->speed != 0 || HAS_QUIRK(QUIRK_PBALL)) {
+	if (!is_first_frame(ctx) || HAS_QUIRK(QUIRK_PBALL)) {
 		if (TEST(PITCHBEND) || TEST_PER(PITCHBEND)) {
 			xc->period += xc->freq.slide;
 		}
@@ -681,23 +693,19 @@ static void update_frequency(struct context_data *ctx, int chn)
 		} 
 	}
 
-	if (p->frame % p->speed == 0) {
-
-		/* Perform at multiples of speed if IT, frame 0 otherwise */
-		if (m->read_event_type == READ_EVENT_IT || p->frame == 0) {
-			if (TEST(FINE_BEND)) {
-				xc->period += xc->freq.fslide;
-			}
+	if (is_first_frame(ctx)) {
+		if (TEST(FINE_BEND)) {
+			xc->period += xc->freq.fslide;
+		}
 
 #ifndef LIBXMP_CORE_PLAYER
-			if (TEST(FINE_NSLIDE)) {
-				xc->note += xc->noteslide.fslide;
-				xc->period = note_to_period(xc->note,
-					xc->finetune, HAS_QUIRK(QUIRK_LINEAR),
-					xc->per_adj);
-			}
-#endif
+		if (TEST(FINE_NSLIDE)) {
+			xc->note += xc->noteslide.fslide;
+			xc->period = note_to_period(xc->note,
+				xc->finetune, HAS_QUIRK(QUIRK_LINEAR),
+				xc->per_adj);
 		}
+#endif
 	}
 
 	if (HAS_QUIRK(QUIRK_LINEAR)) {
@@ -725,7 +733,7 @@ static void update_pan(struct context_data *ctx, int chn)
 	struct channel_data *xc = &p->xc_data[chn];
 
 	if (TEST(PAN_SLIDE)) {
-		if (p->frame % p->speed == 0) {
+		if (is_first_frame(ctx)) {
 			xc->pan.val += xc->pan.fslide;
 		} else {
 			xc->pan.val += xc->pan.slide;
@@ -751,7 +759,7 @@ static void play_channel(struct context_data *ctx, int chn)
 	xc->info_finalvol = 0;
 
 	/* IT tempo slide */
-	if (TEST(TEMPO_SLIDE) && p->frame) {
+	if (!is_first_frame(ctx) && TEST(TEMPO_SLIDE)) {
 		p->bpm += xc->tempo.slide;
 		CLAMP(p->bpm, 0x20, 0xff);
 	}
