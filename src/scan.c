@@ -152,10 +152,11 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	}
 
 	/* Loops can cross pattern boundaries, so check if we're not looping */
-	if (break_row < mod->xxp[pat]->rows && m->scan_cnt[ord][break_row]
-		&& !inside_loop) {
-	    break;
-	} else if (break_row >= mod->xxp[pat]->rows) {
+	if (break_row < mod->xxp[pat]->rows) {
+	    if (m->scan_cnt[ord][break_row] && !inside_loop) {
+	        break;
+	    }
+	} else {
 	    break_row = 0;
 	}
 
@@ -361,6 +362,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    ord2 = (f1 == FX_JUMP) ? p1 : p2;
 		    break_row = 0;
 		    last_row = 0;
+
+		    /* prevent infinite loop, see OpenMPT PatLoop-Various.xm */
+		    inside_loop = 0;
 		}
 
 		if (f1 == FX_BREAK || f2 == FX_BREAK) {
