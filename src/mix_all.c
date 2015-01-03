@@ -42,7 +42,7 @@
 #define LINEAR_INTERP() do { \
     smp_l1 = sptr[pos]; \
     smp_dt = sptr[pos + 1] - smp_l1; \
-    smp_in = smp_l1 + ((frac * smp_dt) >> SMIX_SHIFT); \
+    smp_in = smp_l1 + (((frac >> 1) * smp_dt) >> (SMIX_SHIFT - 1)); \
 } while (0)
 
 

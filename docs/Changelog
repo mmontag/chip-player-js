@@ -5,6 +5,8 @@ Stable versions
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM keyoff+delay combinations
 	- fix channel volume and instrument initialization
+	Other changes:
+	- fix overflow in linear interpolator (reported by Jochen Goernitz)
 
 4.3.3 (20141231):
 	Fix bugs caught in the OpenMPT test cases:
