@@ -6,6 +6,7 @@ Stable versions
 	- fix XM keyoff+delay combinations
 	- fix XM fine pitch slide with pattern delay
 	- fix channel volume and instrument initialization
+	- fix end of module detection inside a loop
 	Other changes:
 	- fix overflow in linear interpolator (reported by Jochen Goernitz)
 

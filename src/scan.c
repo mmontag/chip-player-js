@@ -58,9 +58,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     int gvl, bpm, speed, base_time, chn;
     int frame_count;
     double time, start_time;
-    int loop_chn, loop_count;
+    int loop_chn, loop_num, inside_loop;
     int pdelay = 0;
-    int loop_stack[XMP_MAX_CHANNELS];
+    int loop_count[XMP_MAX_CHANNELS];
     int loop_row[XMP_MAX_CHANNELS];
     struct xmp_event* event;
     int i, pat;
@@ -78,9 +78,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			mod->xxp[pat]->rows ? mod->xxp[pat]->rows : 1);
     }
 
-    memset(loop_stack, 0, sizeof(int) * mod->chn);
+    memset(loop_count, 0, sizeof(int) * mod->chn);
     memset(loop_row, 0, sizeof(int) * mod->chn);
-    loop_count = 0;
+    loop_num = 0;
     loop_chn = -1;
 
     gvl = mod->gvl;
@@ -113,6 +113,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
     gvol_memory = break_row = row_count = frame_count = 0;
     start_time = time = 0.0;
+    inside_loop = 0;
 
     while (42) {
 	if ((uint32)++ord >= mod->len) {
@@ -150,7 +151,9 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    continue;
 	}
 
-	if (break_row < mod->xxp[pat]->rows && m->scan_cnt[ord][break_row]) {
+	/* Loops can cross pattern boundaries, so check if we're not looping */
+	if (break_row < mod->xxp[pat]->rows && m->scan_cnt[ord][break_row]
+		&& !inside_loop) {
 	    break;
 	} else if (break_row >= mod->xxp[pat]->rows) {
 	    break_row = 0;
@@ -197,7 +200,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    if (row_count > 512)	/* was 255, but Global trash goes to 318 */
 		goto end_module;
 
-	    if (!loop_count && m->scan_cnt[ord][row]) {
+	    if (!loop_num && m->scan_cnt[ord][row]) {
 		row_count--;
 		goto end_module;
 	    }
@@ -377,22 +380,26 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    if ((parm >> 4) == EX_PATTERN_LOOP) {
 			if (parm &= 0x0f) {
 			    /* Loop end */
-			    if (loop_stack[chn]) {
-				if (--loop_stack[chn])
+			    if (loop_count[chn]) {
+				if (--loop_count[chn]) {
+				    /* next iteraction */
 				    loop_chn = chn;
-				else {
-				    loop_count--;
+				} else {
+				    /* finish looping */
+				    loop_num--;
+				    inside_loop = 0;
 				    if (m->quirk & QUIRK_S3MLOOP)
 					loop_row[chn] = row;
 				}
 			    } else {
-				loop_stack[chn] = parm;
+				loop_count[chn] = parm;
 				loop_chn = chn;
-				loop_count++;
+				loop_num++;
 			    }
 			} else { 
 			    /* Loop start */
 			    loop_row[chn] = row - 1;
+			    inside_loop = 1;
 			    if (HAS_QUIRK(QUIRK_FT2LOOP))
 				break_row = row;
 			}
