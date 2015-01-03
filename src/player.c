@@ -682,17 +682,22 @@ static void update_frequency(struct context_data *ctx, int chn)
 	}
 
 	if (p->frame % p->speed == 0) {
-		if (TEST(FINE_BEND)) {
-			xc->period += xc->freq.fslide;
-		}
+
+		/* Perform at multiples of speed if IT, frame 0 otherwise */
+		if (m->read_event_type == READ_EVENT_IT || p->frame == 0) {
+			if (TEST(FINE_BEND)) {
+				xc->period += xc->freq.fslide;
+			}
 
 #ifndef LIBXMP_CORE_PLAYER
-		if (TEST(FINE_NSLIDE)) {
-			xc->note += xc->noteslide.fslide;
-			xc->period = note_to_period(xc->note, xc->finetune,
-					HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
-		}
+			if (TEST(FINE_NSLIDE)) {
+				xc->note += xc->noteslide.fslide;
+				xc->period = note_to_period(xc->note,
+					xc->finetune, HAS_QUIRK(QUIRK_LINEAR),
+					xc->per_adj);
+			}
 #endif
+		}
 	}
 
 	if (HAS_QUIRK(QUIRK_LINEAR)) {

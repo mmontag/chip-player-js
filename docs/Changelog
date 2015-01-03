@@ -4,6 +4,7 @@ Stable versions
 4.3.4 ():
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM keyoff+delay combinations
+	- fix XM fine pitch slide with pattern delay
 	- fix channel volume and instrument initialization
 	Other changes:
 	- fix overflow in linear interpolator (reported by Jochen Goernitz)
