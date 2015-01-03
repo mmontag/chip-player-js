@@ -114,6 +114,7 @@ OPENMPT_XM	= 3xxins \
 		  patterndelays \
 		  patterndelaysretrig \
 		  patloop_break \
+		  patloop_weird \
 		  pickup \
 		  porta_linkmem \
 		  porta_offset \

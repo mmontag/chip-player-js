@@ -7,7 +7,7 @@
 #include "../src/mixer.h"
 #include "../src/virtual.h"
 
-void compare_mixer_data(char *mod, char *data)
+void compare_mixer_data_loops(char *mod, char *data, int loops)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -39,7 +39,7 @@ void compare_mixer_data(char *mod, char *data)
 	while (1) {
 		xmp_play_frame(opaque);
 		xmp_get_frame_info(opaque, &fi);
-		if (fi.loop_count > 0)
+		if (fi.loop_count >= loops)
 			break;
 
 		for (i = 0; i < m->mod.chn; i++) {
@@ -82,4 +82,9 @@ void compare_mixer_data(char *mod, char *data)
 	xmp_end_player(opaque);
 	xmp_release_module(opaque);
 	xmp_free_context(opaque);
+}
+
+void compare_mixer_data(char *mod, char *data)
+{
+	compare_mixer_data_loops(mod, data, 1);
 }
