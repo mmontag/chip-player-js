@@ -112,6 +112,7 @@ OPENMPT_XM	= 3xxins \
 		  panslidemem \
 		  pathead \
 		  patterndelays \
+		  patterndelaysretrig \
 		  pickup \
 		  porta_linkmem \
 		  porta_offset \
