@@ -128,13 +128,19 @@ static void reset_channels(struct context_data *ctx)
 		memset(xc, 0, sizeof (struct channel_data));
 		xc->extra = extra;
 		reset_channel_extras(ctx, xc);
-		xc->ins = xc->key = -1;
+		xc->ins = 0;
+		xc->old_ins = 1;	/* raw value */
+		xc->key = -1;
+		xc->volume = m->volbase;
 	}
 #else
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		xc = &p->xc_data[i];
 		memset(xc, 0, sizeof (struct channel_data));
-		xc->ins = xc->key = -1;
+		xc->ins = 0;
+		xc->old_ins = 1;	/* raw value */
+		xc->key = -1;
+		xc->volume = m->volbase;
 	}
 #endif
 
