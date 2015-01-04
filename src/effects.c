@@ -357,7 +357,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			break;
 		case EX_FINETUNE:	/* Set finetune */
 			fxp <<= 4;
-			if (!HAS_QUIRK(QUIRK_XMFINE) || note > 0)
+			if (m->read_event_type != READ_EVENT_FT2 || note > 0)
 				goto fx_finetune;
 			break;
 		case EX_PATTERN_LOOP:	/* Loop pattern */
