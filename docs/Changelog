@@ -11,6 +11,8 @@ Stable versions
 	Other changes:
 	- fix overflow in linear interpolator (reported by Jochen Goernitz)
 	- fix MTM invalid track load (reported by Douglas Carmichael)
+	- fix MASI note volume (reported by Francisco Pareja-Lecaros)
+	- fix MASI note tuning (reported by Francisco Pareja-Lecaros)
 
 4.3.3 (20141231):
 	Fix bugs caught in the OpenMPT test cases:

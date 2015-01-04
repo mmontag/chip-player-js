@@ -276,9 +276,9 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 				uint8 note = hio_read8(f);
 				rowlen--;
 				if (data->sinaria)
-					note += 37;
+					note += 36;
 				else
-					note = (note >> 4) * 12 + (note & 0x0f) + 2 + 12;
+					note = (note >> 4) * 12 + (note & 0x0f) + 1 + 12;
 				event->note = note;
 			}
 
@@ -288,7 +288,7 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			}
 	
 			if (flag & 0x20) {
-				event->vol = hio_read8(f) / 2;
+				event->vol = hio_read8(f) / 2 + 1;
 				rowlen--;
 			}
 	
@@ -303,8 +303,9 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 					case 0x0: {
 						uint8 note;
 						note = (fxt>>4)*12 +
-							(fxt & 0x0f) + 2;
+							(fxt & 0x0f) + 1;
 						event->note = note;
+abort();
 						fxt = FX_TONEPORTA;
 						fxp = (fxp + 1) * 2;
 						break; }
