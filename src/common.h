@@ -154,7 +154,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_VIBALL	(1 << 20)	/* Vibrato in all frames */
 #define QUIRK_VIBINV	(1 << 21)	/* Vibrato has inverse waveform */
 #define QUIRK_PRENV	(1 << 22)	/* Portamento resets envelope & fade */
-#define QUIRK_S3MLFO	(1 << 23)	/* S3M-style LFO waveforms */
+/*#define QUIRK_S3MLFO	(1 << 23)*/	/* S3M-style LFO waveforms */
 #define QUIRK_S3MRTG	(1 << 24)	/* S3M-style retrig when count == 0 */
 #define QUIRK_RTDELAY	(1 << 25)	/* Delay effect retrigs instrument */
 #define QUIRK_FT2LOOP	(1 << 26)	/* FT2 pattern loop bug */
@@ -168,12 +168,12 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 /* Format quirks */
 #define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN | QUIRK_FINEFX | \
-				 QUIRK_S3MPMEM | QUIRK_S3MRTG | QUIRK_S3MLFO )
+				 QUIRK_S3MPMEM | QUIRK_S3MRTG )
 #define QUIRKS_FT2		(QUIRK_RTDELAY | QUIRK_FINEFX | QUIRK_XMFINE )
 #define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_FINEFX | QUIRK_VIBALL | \
 				 QUIRK_ENVFADE | QUIRK_ITVPOR | QUIRK_KEYOFF | \
-				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_S3MLFO | \
-				 QUIRK_IGSTPOR | QUIRK_S3MRTG | QUIRK_RSTCHN )
+				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_RSTCHN | \
+				 QUIRK_IGSTPOR | QUIRK_S3MRTG )
 
 /* DSP effects */
 #define DSP_EFFECT_CUTOFF	0x02

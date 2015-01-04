@@ -5,6 +5,7 @@ Stable versions
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM keyoff+delay combinations
 	- fix XM fine pitch slide with pattern delay
+	- fix XM vibrato rampdown waveform
 	- fix channel volume and instrument initialization
 	- fix end of module detection inside a loop
 	Other changes:

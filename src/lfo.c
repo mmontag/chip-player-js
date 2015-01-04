@@ -36,7 +36,7 @@ static const int sine_wave[WAVEFORM_SIZE] = {
 
 /* LFO */
 
-int get_lfo(struct lfo *lfo, int div)
+static int get_lfo_mod(struct lfo *lfo, int div)
 {
 	int val;
 
@@ -56,15 +56,74 @@ int get_lfo(struct lfo *lfo, int div)
 	case 3: /* random */
 		val = ((rand() & 0x1ff) - 256);
 		break;
-	case 0x12: /* S3M square */
-		val = lfo->phase < WAVEFORM_SIZE / 2 ? 255 : 0;
-		break;
 	default:
 		return 0;
 	}
 
 	return val * lfo->depth / div;
 }
+
+static int get_lfo_st3(struct lfo *lfo, int div)
+{
+	if (lfo->rate == 0 || div == 0)
+		return 0;
+
+	/* S3M square */
+	if (lfo->type == 2) {
+		int val = lfo->phase < WAVEFORM_SIZE / 2 ? 255 : 0;
+		return val * lfo->depth / div;
+	}
+
+	return get_lfo_mod(lfo, div);
+}
+
+/* From OpenMPT VibratoWaveforms.xm:
+ * "Generally the vibrato and tremolo tables are identical to those that
+ *  ProTracker uses, but the vibrato’s “ramp down” table is upside down."
+ */
+static int get_lfo_ft2(struct lfo *lfo, int div)
+{
+	if (lfo->rate == 0 || div == 0)
+		return 0;
+
+	/* FT2 ramp */
+	if (lfo->type == 1) {
+		int phase = (lfo->phase + (WAVEFORM_SIZE >> 1)) % WAVEFORM_SIZE;
+		int val = (phase << 3) - 255;
+		return val * lfo->depth / div;
+	}
+
+	return get_lfo_mod(lfo, div);
+}
+
+static int get_lfo_it(struct lfo *lfo, int div)
+{
+	if (lfo->rate == 0 || div == 0)
+		return 0;
+
+	return get_lfo_st3(lfo, div);
+}
+
+int get_lfo(struct context_data *ctx, struct lfo *lfo, int div, int is_vibrato)
+{
+	struct module_data *m = &ctx->m;
+
+	switch (m->read_event_type) {
+	case READ_EVENT_ST3:
+		return get_lfo_st3(lfo, div);
+	case READ_EVENT_FT2:
+		if (is_vibrato) {
+			return get_lfo_ft2(lfo, div);
+		} else {
+			return get_lfo_mod(lfo, div);
+		}
+	case READ_EVENT_IT:
+		return get_lfo_it(lfo, div);
+	default:
+		return get_lfo_mod(lfo, div);
+	}
+}
+
 
 void update_lfo(struct lfo *lfo)
 {
