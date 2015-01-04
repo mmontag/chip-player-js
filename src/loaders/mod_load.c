@@ -544,18 +544,22 @@ skip_test:
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
+	long pos;
+
 	if (pattern_tracks_alloc(mod, i, 64) < 0)
 	    return -1;
+
+	pos = hio_tell(f);
 
 	for (j = 0; j < (64 * mod->chn); j++) {
             int period;
 
-	    event = &EVENT (i, j % mod->chn, j / mod->chn);
-	    hio_read (mod_event, 1, 4, f);
+	    event = &EVENT(i, j % mod->chn, j / mod->chn);
+	    hio_read(mod_event, 1, 4, f);
 
 	    /* Check out-of-range notes in Amiga trackers */
 	    period = ((int)(LSN(mod_event[0])) << 8) | mod_event[1];
-	    if (period != 0 && period < 108 && (
+	    if (period != 0 && (period < 108 || period > 907) && (
 			tracker_id == TRACKER_PROTRACKER ||
 			tracker_id == TRACKER_NOISETRACKER ||
 			tracker_id == TRACKER_PROBABLY_NOISETRACKER ||
@@ -573,6 +577,13 @@ skip_test:
 		}
 
 	    }
+	}
+
+	hio_seek(f, pos, SEEK_SET);
+
+	for (j = 0; j < (64 * mod->chn); j++) {
+	    event = &EVENT(i, j % mod->chn, j / mod->chn);
+	    hio_read(mod_event, 1, 4, f);
 
 	    switch (tracker_id) {
 	    case TRACKER_PROBABLY_NOISETRACKER:
