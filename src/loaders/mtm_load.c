@@ -56,7 +56,7 @@ const struct format_loader mtm_loader = {
 	mtm_load
 };
 
-static int mtm_test(HIO_HANDLE * f, char *t, const int start)
+static int mtm_test(HIO_HANDLE *f, char *t, const int start)
 {
 	uint8 buf[4];
 
@@ -72,14 +72,13 @@ static int mtm_test(HIO_HANDLE * f, char *t, const int start)
 	return 0;
 }
 
-static int mtm_load(struct module_data *m, HIO_HANDLE * f, const int start)
+static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	struct xmp_module *mod = &m->mod;
 	int i, j;
 	struct mtm_file_header mfh;
 	struct mtm_instrument_header mih;
 	uint8 mt[192];
-	uint16 mp[32];
 
 	LOAD_INIT();
 
@@ -204,10 +203,17 @@ static int mtm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			return -1;
 
 		mod->xxp[i]->rows = 64;
-		for (j = 0; j < 32; j++)
-			mp[j] = hio_read16l(f);
-		for (j = 0; j < mod->chn; j++)
-			mod->xxp[i]->index[j] = mp[j];
+		for (j = 0; j < 32; j++) {
+			int track = hio_read16l(f);
+
+			if (track >= mod->trk) {
+				track = 0;
+			}
+
+			if (j < mod->chn) {
+				mod->xxp[i]->index[j] = track;
+			}
+		}
 	}
 
 	/* Comments */
