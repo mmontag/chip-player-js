@@ -120,7 +120,8 @@ OPENMPT_XM	= 3xxins \
 		  porta_offset \
 		  porta_pickup \
 		  toneportamentomemory \
-		  tremolowaveforms
+		  tremolowaveforms \
+		  vibratowaveforms
 
 OPENMPT_IT	= carrynna \
 		  cut_carry \
