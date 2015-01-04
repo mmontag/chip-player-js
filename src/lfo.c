@@ -96,6 +96,8 @@ static int get_lfo_ft2(struct lfo *lfo, int div)
 	return get_lfo_mod(lfo, div);
 }
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+
 static int get_lfo_it(struct lfo *lfo, int div)
 {
 	if (lfo->rate == 0 || div == 0)
@@ -103,6 +105,8 @@ static int get_lfo_it(struct lfo *lfo, int div)
 
 	return get_lfo_st3(lfo, div);
 }
+
+#endif
 
 int get_lfo(struct context_data *ctx, struct lfo *lfo, int div, int is_vibrato)
 {
@@ -117,8 +121,10 @@ int get_lfo(struct context_data *ctx, struct lfo *lfo, int div, int is_vibrato)
 		} else {
 			return get_lfo_mod(lfo, div);
 		}
+#ifndef LIBXMP_CORE_DISABLE_IT
 	case READ_EVENT_IT:
 		return get_lfo_it(lfo, div);
+#endif
 	default:
 		return get_lfo_mod(lfo, div);
 	}
