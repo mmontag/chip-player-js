@@ -246,7 +246,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		 * "Another chapter of weird FT2 bugs: Note-Off + Note Delay
 		 *  + Volume Column Panning = Panning effect is ignored."
 		 */
-		if (m->read_event_type != READ_EVENT_FT2  /* Not FT2 */
+		if (!HAS_QUIRK(QUIRK_FT2BUGS)		/* If not FT2 */
 		    || fnum == 0			/* or not vol column */
 		    || e->note != XMP_KEY_OFF		/* or not keyoff */
 		    || e->fxt != FX_EXTENDED		/* or not delay */
@@ -367,14 +367,14 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			break;
 		case EX_FINETUNE:	/* Set finetune */
 			fxp <<= 4;
-			if (m->read_event_type != READ_EVENT_FT2 || note > 0)
+			if (!HAS_QUIRK(QUIRK_FT2BUGS) || note > 0)
 				goto fx_finetune;
 			break;
 		case EX_PATTERN_LOOP:	/* Loop pattern */
 			if (fxp == 0) {
 				/* mark start of loop */
 				f->loop[chn].start = p->row;
-				if (HAS_QUIRK(QUIRK_FT2LOOP))
+				if (HAS_QUIRK(QUIRK_FT2BUGS))
 				  p->flow.jumpline = p->row;
 			} else {
 				/* end of loop */
@@ -553,10 +553,24 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		xc->keyoff = fxp + 1;
 		break;
 	case FX_ENVPOS:		/* Set envelope position */
-		/* FIXME: Add OpenMPT quirk */
+		/* From OpenMPT SetEnvPos.xm:
+		 * "When using the Lxx effect, Fasttracker 2 only sets the
+		 *  panning envelope position if the volume envelope’s sustain
+		 *  flag is set.
+		 */
+		if (HAS_QUIRK(QUIRK_FT2BUGS)) {
+			struct xmp_instrument *instrument;
+			instrument = get_instrument(ctx, xc->ins);
+			if (instrument != NULL) {
+				if (instrument->aei.flg & XMP_ENVELOPE_SUS) {
+					xc->p_idx = fxp;
+				}
+			}
+		} else {
+			xc->p_idx = fxp;
+		}
 		xc->v_idx = fxp;
 		xc->f_idx = fxp;
-		xc->p_idx = fxp;
 		break;
 	case FX_PANSLIDE:	/* Pan slide (XM) */
 		EFFECT_MEMORY(fxp, xc->pan.memory);

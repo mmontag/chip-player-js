@@ -404,7 +404,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			    /* Loop start */
 			    loop_row[chn] = row - 1;
 			    inside_loop = 1;
-			    if (HAS_QUIRK(QUIRK_FT2LOOP))
+			    if (HAS_QUIRK(QUIRK_FT2BUGS))
 				break_row = row;
 			}
 		    }

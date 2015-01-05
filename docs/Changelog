@@ -7,6 +7,7 @@ Stable versions
 	- fix XM fine pitch slide with pattern delay
 	- fix XM vibrato rampdown waveform
 	- fix XM volume column pan with keyoff and delay
+	- fix XM pan envelope position setting
 	- fix channel volume and instrument initialization
 	- fix end of module detection inside a loop
 	Fix bugs reported by Francisco Pareja-Lecaros:
