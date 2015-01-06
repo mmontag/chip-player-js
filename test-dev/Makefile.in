@@ -120,6 +120,7 @@ OPENMPT_XM	= 3xxins \
 		  porta_linkmem \
 		  porta_offset \
 		  porta_pickup \
+		  setenvpos \
 		  toneportamentomemory \
 		  tremolowaveforms \
 		  vibratowaveforms
