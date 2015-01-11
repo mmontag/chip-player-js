@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.4 ():
+4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM keyoff+delay combinations
 	- fix XM fine pitch slide with pattern delay
