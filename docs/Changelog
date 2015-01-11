@@ -17,6 +17,7 @@ Stable versions
 	Other changes:
 	- fix overflow in linear interpolator (reported by Jochen Goernitz)
 	- fix MTM invalid track load (reported by Douglas Carmichael)
+	- add ProPacker 3.0 loader
 
 4.3.3 (20141231):
 	Fix bugs caught in the OpenMPT test cases:
