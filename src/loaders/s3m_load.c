@@ -254,7 +254,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     copy_adjust(mod->name, sfh.name, 28);
 
-    pp_ins = calloc (2, sfh.insnum);
+    pp_ins = calloc(2, sfh.insnum);
     if (pp_ins == NULL)
 	goto err;
 
@@ -505,6 +505,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(&sih.dosname, 13, 1, f);	/* DOS file name */
 	sih.memseg = hio_read16l(f);		/* Pointer to sample data */
 	sih.length = hio_read32l(f);		/* Length */
+
+	/* ST3 limit */
+	if ((sfh.version >> 12) == 1 && sih.length > 64000)
+		sih.length = 64000;
+
 	sih.loopbeg = hio_read32l(f);		/* Loop begin */
 	sih.loopend = hio_read32l(f);		/* Loop end */
 	sih.vol = hio_read8(f);			/* Volume */
