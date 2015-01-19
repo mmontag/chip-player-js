@@ -267,10 +267,12 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    row_count = 0;
 		    if (parm) {
 			if (p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
-			    speed = parm;
+			    if (parm > 0) {
+			        speed = parm;
 #ifndef LIBXMP_CORE_PLAYER
-			    st26_speed = 0;
+			        st26_speed = 0;
 #endif
+                            }
 			} else {
 			    time += m->time_factor * frame_count * base_time / bpm;
 			    frame_count = 0;
@@ -289,19 +291,25 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		/* ST2.6 speed processing */
 
-		if (f1 == FX_ICE_SPEED) {
-		    st26_speed = (MSN(p1) << 8) | LSN(p1);
+		if (f1 == FX_ICE_SPEED && p1) {
+		    if (LSN(p1)) {
+		        st26_speed = (MSN(p1) << 8) | LSN(p1);
+		    } else {
+			st26_speed = MSN(p1);
+		    }
 		}
 #endif
 
 		if ((f1 == FX_S3M_SPEED && p1) || (f2 == FX_S3M_SPEED && p2)) {
 		    parm = (f1 == FX_S3M_SPEED) ? p1 : p2;
-		    frame_count += row_count * speed;
-		    row_count  = 0;
-		    speed = parm;
+		    if (parm > 0) {
+		        frame_count += row_count * speed;
+		        row_count  = 0;
+		        speed = parm;
 #ifndef LIBXMP_CORE_PLAYER
-		    st26_speed = 0;
+		        st26_speed = 0;
 #endif
+		    }
 		}
 
 		if ((f1 == FX_S3M_BPM && p1) || (f2 == FX_S3M_BPM && p2)) {

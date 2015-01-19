@@ -749,7 +749,13 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	 * nibble is set (i.e. F30 is the same as F03).
 	 */
 	case FX_ICE_SPEED:
-		p->st26_speed = (MSN(fxp) << 8) | LSN(fxp);
+		if (fxp) {
+			if (LSN(fxp)) {
+				p->st26_speed = (MSN(fxp) << 8) | LSN(fxp);
+			} else {
+				p->st26_speed = MSN(fxp);
+			}
+		}
 		break;
 
 	case FX_VOLSLIDE_UP:	/* Vol slide with uint8 arg */
