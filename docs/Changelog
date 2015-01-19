@@ -4,6 +4,7 @@ Stable versions
 4.3.5 ():
 	Fix crashes detected with zzuf:
 	- enforce S3M maximum sample size for ST3
+	- add sanity check for sample loop start
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:

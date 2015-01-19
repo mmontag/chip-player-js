@@ -245,9 +245,9 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	}
 #endif
 
-	/* Empty samples
+	/* Empty or invalid samples
 	 */
-	if (xxs->len == 0) {
+	if (xxs->len <= 0) {
 		return 0;
 	}
 
@@ -262,6 +262,9 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 
 	/* Loop parameters sanity check
 	 */
+	if (xxs->lps < 0) {
+		xxs->lps = 0;
+	}
 	if (xxs->lpe > xxs->len) {
 		xxs->lpe = xxs->len;
 	}
