@@ -368,6 +368,12 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 		return -XMP_ERROR_LOAD;
 	}
 
+	/* Sanity check */
+	if (m->mod.chn >= XMP_MAX_CHANNELS) {
+		xmp_release_module(opaque);
+		return -XMP_ERROR_LOAD;
+	}
+
 	adjust_string(m->mod.name);
 	load_epilogue(ctx);
 

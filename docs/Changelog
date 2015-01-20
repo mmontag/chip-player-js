@@ -5,7 +5,9 @@ Stable versions
 	Fix crashes detected with zzuf:
 	- enforce S3M maximum sample size for ST3
 	- add sanity check for sample loop start
+	- add sanity check for speed 0
 	- add sanity check for invalid XM effects
+	- add sanity check for maximum number of channels
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:
