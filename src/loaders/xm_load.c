@@ -125,6 +125,19 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		    event->fxp = *pat++;
 		}
 
+		/* Sanity check */
+		switch (event->fxt) {
+		case 18: case 19:
+		case 22: case 23: case 24:
+		case 26:
+		case 28:
+		case 30: case 31: case 32:
+			event->fxt = 0;
+		}
+		if (event->fxt > 34) {
+			event->fxt = 0;
+		}
+
 		if (event->note == 0x61) {
 		    /* See OpenMPT keyoff+instr.xm test case */
 		    if (event->fxt == 0x0e && MSN(event->fxp) == 0x0d) {
