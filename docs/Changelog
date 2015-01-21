@@ -8,6 +8,7 @@ Stable versions
 	- add sanity check for speed 0
 	- add sanity check for invalid XM effects
 	- add sanity check for maximum number of channels
+	- add sanity check for number of points in IT envelope
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:

@@ -265,6 +265,14 @@ static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env, HIO_
 
     env->flg = hio_read8(f);
     env->num = hio_read8(f);
+
+    /* Sanity check */
+    if (env->num >= XMP_MAX_ENV_POINTS) {
+	env->flg = 0;
+	env->num = 0;
+	return;
+    }
+
     env->lpb = hio_read8(f);
     env->lpe = hio_read8(f);
     env->slb = hio_read8(f);
