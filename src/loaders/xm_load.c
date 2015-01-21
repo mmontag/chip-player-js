@@ -295,7 +295,6 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	 * will not work if file has trailing garbage.
 	 */
 	if (hio_eof(f)) {
-		mod->ins = i;
 		break;
 	}
 
@@ -306,7 +305,6 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 
 	/* Sanity check */
 	if (xih.samples > 0x10 || (xih.samples > 0 && xih.sh_size > 0x100)) {
-		mod->ins = i;
 		break;
 	}
 

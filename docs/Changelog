@@ -13,6 +13,7 @@ Stable versions
 	- add sanity check for maximum sample size
 	- add sanity check for invalid envelope points
 	- add sanity check for basic module parameters
+	- add sanity check for instrument release after load error
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:
