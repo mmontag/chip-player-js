@@ -94,14 +94,7 @@ const struct format_loader s3m_loader = {
 
 static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 {
-    int ffi;
-
-    hio_seek(f, start + 42, SEEK_SET);
-
-    ffi = hio_read16l(f);
-    if (ffi != 1 && ffi != 2)
-	return -1;
-
+    hio_seek(f, start + 44, SEEK_SET);
     if (hio_read32b(f) != MAGIC_SCRM)
 	return -1;
 
@@ -230,6 +223,12 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     sfh.flags = hio_read16l(f);		/* Flags */
     sfh.version = hio_read16l(f);	/* Tracker ID and version */
     sfh.ffi = hio_read16l(f);		/* File format information */
+
+    /* Sanity check */
+    if (sfh.ffi != 1 && sfh.ffi != 2) {
+	goto err;
+    }
+
     sfh.magic = hio_read32b(f);		/* 'SCRM' */
     sfh.gv = hio_read8(f);		/* Global volume */
     sfh.is = hio_read8(f);		/* Initial speed */
