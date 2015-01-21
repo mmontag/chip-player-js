@@ -10,6 +10,7 @@ Stable versions
 	- add sanity check for maximum number of channels
 	- add sanity check for number of points in IT envelope
 	- add sanity check for S3M file format information
+	- add sanity check for S3M sample size
 	- add sanity check for maximum sample size
 	- add sanity check for invalid envelope points
 	- add sanity check for basic module parameters
