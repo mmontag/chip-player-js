@@ -9,6 +9,7 @@ Stable versions
 	- add sanity check for invalid XM effects
 	- add sanity check for maximum number of channels
 	- add sanity check for number of points in IT envelope
+	- add sanity check for S3M file format information
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:

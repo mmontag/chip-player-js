@@ -94,7 +94,14 @@ const struct format_loader s3m_loader = {
 
 static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 {
-    hio_seek(f, start + 44, SEEK_SET);
+    int ffi;
+
+    hio_seek(f, start + 42, SEEK_SET);
+
+    ffi = hio_read16l(f);
+    if (ffi != 1 && ffi != 2)
+	return -1;
+
     if (hio_read32b(f) != MAGIC_SCRM)
 	return -1;
 
@@ -566,7 +573,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
 
-	ret = load_sample(m, f, (sfh.ffi - 1) * SAMPLE_FLAG_UNS, xxs, NULL);
+	ret = load_sample(m, f, sfh.ffi == 1 ? 0 : SAMPLE_FLAG_UNS, xxs, NULL);
 	if (ret < 0)
 		goto err3;
     }
