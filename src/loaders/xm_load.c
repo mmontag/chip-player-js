@@ -401,6 +401,11 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		xxs = &mod->xxs[sample_num];
 
 		xsh[j].length = hio_read32l(f);		/* Sample length */
+
+		/* Sanity check */
+		if (xsh[j].length > MAX_SAMPLE_SIZE)
+			return -1;
+
 		xsh[j].loop_start = hio_read32l(f);	/* Sample loop start */
 		xsh[j].loop_length = hio_read32l(f);	/* Sample loop length */
 		xsh[j].volume = hio_read8(f);		/* Volume */

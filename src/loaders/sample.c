@@ -23,9 +23,6 @@
 #include "common.h"
 #include "loader.h"
 
-/* Arbitrary limit to prevent unreasonably large allocations */
-#define MAX_SAMPLE_SIZE	0x01000000
-
 #ifndef LIBXMP_CORE_PLAYER
 #include "synth.h"
 
