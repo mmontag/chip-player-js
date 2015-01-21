@@ -153,8 +153,30 @@ char *adjust_string(char *s)
 
 static void check_envelope(struct xmp_envelope *env)
 {
-	if (env->npt <= 0 || env->lps >= env->npt || env->lpe >= env->npt)
+	int i;
+
+	/* Disable envelope if invalid number of points */
+	if (env->npt <= 0 || env->npt > XMP_MAX_ENV_POINTS) {
+		env->flg &= ~XMP_ENVELOPE_ON;
+	}
+
+	/* Disable envelope loop if invalid loop parameters */
+	if (env->lps >= env->npt || env->lpe >= env->npt) {
 		env->flg &= ~XMP_ENVELOPE_LOOP;
+	}
+
+	/* Disable envelope if invalid envelope points */
+	if (env->flg & XMP_ENVELOPE_ON) {
+		int prev_x = env->data[0];
+		for (i = 1; i < env->npt; i++) {
+			int x = env->data[i * 2];
+			if (x == prev_x) {
+				env->flg &= ~XMP_ENVELOPE_ON;
+				break;
+			}
+			prev_x = x;
+		}
+	}
 }
 
 void load_prologue(struct context_data *ctx)
@@ -217,7 +239,7 @@ void load_epilogue(struct context_data *ctx)
 		mod->rst = 0;
 	}
 
-	/* Sanity check */
+	/* Sanity check for tempo and BPM */
 	if (mod->spd == 0) {
 		mod->spd = 6;
 	}

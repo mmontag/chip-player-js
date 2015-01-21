@@ -23,6 +23,9 @@
 #include "common.h"
 #include "loader.h"
 
+/* Arbitrary limit to prevent unreasonably large allocations */
+#define MAX_SAMPLE_SIZE	0x01000000
+
 #ifndef LIBXMP_CORE_PLAYER
 #include "synth.h"
 
@@ -253,8 +256,10 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 
 	/* Skip sample loading
 	 * FIXME: fails for ADPCM samples
+	 *
+	 * + Sanity check: skip huge samples (likely corrupt module)
 	 */
-	if (m && m->smpctl & XMP_SMPCTL_SKIP) {
+	if (xxs->len > MAX_SAMPLE_SIZE || (m && m->smpctl & XMP_SMPCTL_SKIP)) {
 		if (~flags & SAMPLE_FLAG_NOLOAD)
 			hio_seek(f, xxs->len, SEEK_CUR);
 		return 0;
