@@ -540,15 +540,23 @@ void xmp_release_module(xmp_context opaque)
 	release_module_extras(ctx);
 #endif
 
-	for (i = 0; i < mod->trk; i++)
-		free(mod->xxt[i]);
-	if (mod->trk > 0)
-		free(mod->xxt);
+	if (mod->xxt != NULL) {
+		for (i = 0; i < mod->trk; i++) {
+			free(mod->xxt[i]);
+		}
+		if (mod->trk > 0) {
+			free(mod->xxt);
+		}
+	}
 
-	for (i = 0; i < mod->pat; i++)
-		free(mod->xxp[i]);
-	if (mod->pat > 0)
-		free(mod->xxp);
+	if (mod->xxp != NULL) {
+		for (i = 0; i < mod->pat; i++) {
+			free(mod->xxp[i]);
+		}
+		if (mod->pat > 0) {
+			free(mod->xxp);
+		}
+	}
 
 	if (mod->xxi != NULL) {
 		for (i = 0; i < mod->ins; i++) {
