@@ -231,6 +231,13 @@ void load_epilogue(struct context_data *ctx)
 
     	mod->gvl = m->gvolbase;
 
+	/* Sanity check for module parameters */
+	CLAMP(mod->len, 0, 255);
+	CLAMP(mod->pat, 0, 255);
+	CLAMP(mod->ins, 0, 255);
+	CLAMP(mod->smp, 0, 255);
+	CLAMP(mod->chn, 0, XMP_MAX_CHANNELS);
+
 	/* Fix cases where the restart value is invalid e.g. kc_fall8.xm
 	 * from http://aminet.net/mods/mvp/mvp_0002.lha (reported by
 	 * Ralf Hoffmann <ralf@boomerangsworld.de>)
@@ -240,10 +247,10 @@ void load_epilogue(struct context_data *ctx)
 	}
 
 	/* Sanity check for tempo and BPM */
-	if (mod->spd == 0) {
+	if (mod->spd <= 0 || mod->spd > 255) {
 		mod->spd = 6;
 	}
-	if (mod->bpm == 0) {
+	if (mod->bpm <= 0 || mod->bpm > 255) {
 		mod->bpm = 125;
 	}
 
