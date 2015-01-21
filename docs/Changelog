@@ -15,6 +15,7 @@ Stable versions
 	- add sanity check for basic module parameters
 	- add sanity check for XM loader basic module parameters
 	- add sanity check for instrument release after load error
+	- add sanity check for XM header size
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:

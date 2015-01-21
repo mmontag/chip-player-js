@@ -85,6 +85,11 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 	xph.length = hio_read32l(f);
 	xph.packing = hio_read8(f);
 	xph.rows = version > 0x0102 ? hio_read16l(f) : hio_read8(f) + 1;
+
+	/* Sanity check */
+	if (xph.rows > 255)
+	    return -1;
+
 	xph.datasize = hio_read16l(f);
 	hio_seek(f, xph.length - headsize, SEEK_CUR);
 
@@ -497,6 +502,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int i, j;
     struct xm_file_header xfh;
     char tracker_name[21];
+    int len;
 
     LOAD_INIT();
 
@@ -515,8 +521,13 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     xfh.tempo = hio_read16l(f);		/* Default tempo */
     xfh.bpm = hio_read16l(f);		/* Default BPM */
 
+    /* Sanity check */
+    len = xfh.headersz - 0x14;
+    if (len > 256)
+	return -1;
+
     /* Honor header size -- needed by BoobieSqueezer XMs */
-    hio_read(&xfh.order, xfh.headersz - 0x14, 1, f); /* Pattern order table */
+    hio_read(&xfh.order, len, 1, f); /* Pattern order table */
 
     strncpy(mod->name, (char *)xfh.name, 20);
 
