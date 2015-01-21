@@ -521,13 +521,24 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     strncpy(mod->name, (char *)xfh.name, 20);
 
     mod->len = xfh.songlen;
-    mod->rst = xfh.restart;
     mod->chn = xfh.channels;
     mod->pat = xfh.patterns;
-    mod->trk = mod->chn * mod->pat + 1;
     mod->ins = xfh.instruments;
+
+    /* Sanity check */
+    if (mod->len > 255)
+	return -1;
+    if (mod->chn > XMP_MAX_CHANNELS)
+	return -1;
+    if (mod->pat > 255)
+	return -1;
+    if (mod->ins > 255)
+	return -1;
+
+    mod->rst = xfh.restart;
     mod->spd = xfh.tempo;
     mod->bpm = xfh.bpm;
+    mod->trk = mod->chn * mod->pat + 1;
 
     m->quirk |= xfh.flags & XM_LINEAR_PERIOD_MODE ? QUIRK_LINEAR : 0;
 
