@@ -14,10 +14,10 @@ Stable versions
 	- add sanity check for maximum sample size
 	- add sanity check for invalid envelope points
 	- add sanity check for basic module parameters
-	- add sanity check for XM loader basic module parameters
 	- add sanity check for instrument release after load error
 	- add sanity check for XM header size
-	- add sanity check for XM sample size
+	- add sanity check for XM basic paramters and sample size
+	- add sanity check for IT basic paramters and sample size
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:

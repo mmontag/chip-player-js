@@ -367,6 +367,16 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->smp = ifh.smpnum;
     mod->pat = ifh.patnum;
 
+    /* Sanity check */
+    if (mod->len > 255)
+	return -1;
+    if (mod->ins > 255)
+	return -1;
+    if (mod->smp > 255)
+	return -1;
+    if (mod->pat > 255)
+	return -1;
+
     if (mod->ins) {
         pp_ins = calloc(4, mod->ins);
         if (pp_ins == NULL)
@@ -832,6 +842,11 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    xxs->flg = XMP_SAMPLE_16BIT;
 	}
 	xxs->len = ish.length;
+
+	/* Sanity check */
+	if (xxs->len > MAX_SAMPLE_SIZE)
+	    return -1;
+
 	xxs->lps = ish.loopbeg;
 	xxs->lpe = ish.loopend;
 
