@@ -111,7 +111,7 @@ static int test_tdd(uint8 *data, char *t, int s)
 	int i;
 	int ssize, psize, pdata_ofs;
 
-	PW_REQUEST_DATA (s, 564);
+	PW_REQUEST_DATA(s, 564);
 
 	/* test #2 (volumes,sample addresses and whole sample size) */
 	ssize = 0;
@@ -188,6 +188,8 @@ static int test_tdd(uint8 *data, char *t, int s)
 	/* ssize is the whole sample data size */
 	/* test pattern data now ... */
 	pdata_ofs = 564 + ssize;
+
+	PW_REQUEST_DATA(s, 564 + ssize + psize);
 
 	for (i = 0; i < psize; i += 4) {
 		uint8 *d = data + pdata_ofs + i;
