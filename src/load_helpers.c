@@ -250,9 +250,7 @@ void load_epilogue(struct context_data *ctx)
 	if (mod->spd <= 0 || mod->spd > 255) {
 		mod->spd = 6;
 	}
-	if (mod->bpm <= 0 || mod->bpm > 255) {
-		mod->bpm = 125;
-	}
+	CLAMP(mod->bpm, XMP_MIN_BPM, 255);
 
 	/* Set appropriate values for instrument volumes and subinstrument
 	 * global volumes when QUIRK_INSVOL is not set, to keep volume values
