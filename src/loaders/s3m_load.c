@@ -228,6 +228,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (sfh.ffi != 1 && sfh.ffi != 2) {
 	goto err;
     }
+    if (sfh.ordnum > 255 || sfh.insnum > 255 || sfh.patnum > 255) {
+	goto err;
+    }
 
     sfh.magic = hio_read32b(f);		/* 'SCRM' */
     sfh.gv = hio_read8(f);		/* Global volume */
