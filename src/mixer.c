@@ -416,13 +416,14 @@ void mixer_softmixer(struct context_data *ctx)
 			if (vi->pos >= vi->end) {
 				samples = 0;
 			} else {
-				samples = 1 + (((int64)(vi->end - vi->pos) <<
+				int64 s = 1 + (((int64)(vi->end - vi->pos) <<
 					SMIX_SHIFT) - vi->frac) / step;
-			}
+				/* ...inside the tick boundaries */
+				if (s > size) {
+					s = size;
+				}
 
-			/* ...inside the tick boundaries */
-			if (samples > size) {
-				samples = size;
+				samples = s;
 			}
 
 			if (vi->vol) {
