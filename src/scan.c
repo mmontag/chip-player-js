@@ -78,8 +78,10 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 			mod->xxp[pat]->rows ? mod->xxp[pat]->rows : 1);
     }
 
-    memset(loop_count, 0, sizeof(int) * mod->chn);
-    memset(loop_row, 0, sizeof(int) * mod->chn);
+    for (i = 0; i < mod->chn; i++) {
+	loop_count[i] = 0;
+	loop_row[i] = -1;
+    }
     loop_num = 0;
     loop_chn = -1;
 
