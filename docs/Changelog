@@ -2,7 +2,7 @@ Stable versions
 ---------------
 
 4.3.5 ():
-	Fix crashes detected with zzuf:
+	Fix crashes with fuzzed files (reported by Lionel Debroux):
 	- add sanity check for ST3 S3M maximum sample size
 	- add sanity check for sample loop start
 	- add sanity check for speed 0
@@ -18,6 +18,7 @@ Stable versions
 	- add sanity check for XM basic parameters and sample size
 	- add sanity check for IT basic parameters and sample size
 	- add sanity check for S3M basic parameters and sample size
+	- fix mixer index overflow with large samples
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:
