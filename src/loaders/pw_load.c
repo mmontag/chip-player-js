@@ -131,8 +131,6 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	memcpy(mod->xxo, mh.order, 128);
 
 	for (i = 0; i < 128; i++) {
-		if (mod->chn > 4)
-			mod->xxo[i] >>= 1;
 		if (mod->xxo[i] > mod->pat)
 			mod->pat = mod->xxo[i];
 	}

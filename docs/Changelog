@@ -19,6 +19,7 @@ Stable versions
 	- add sanity check for IT basic parameters and sample size
 	- add sanity check for S3M basic parameters and sample size
 	- fix mixer index overflow with large samples
+	- fix Eureka Packer prowizard depacker
 	Other changes:
 	- fix loop processing error in scan (reported by Lionel Debroux)
 

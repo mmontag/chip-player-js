@@ -133,12 +133,12 @@ static int test_eu(uint8 *data, char *t, int s)
 	max_pat = 0;
 	for (i = 0; i < len; i++) {
 		int pat = data[952 + i];
-		if (pat > max_pat)
-			max_pat = pat;
 		if (pat > 127)
 			return -1;
+		if (pat > max_pat)
+			max_pat = pat;
 	}
-	for (i += 2; i < 128; i++) {
+	for (/*i += 2*/; i < 128; i++) {
 		if (data[952 + i] != 0)
 			return -1;
 	}
