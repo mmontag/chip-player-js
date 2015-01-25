@@ -211,6 +211,16 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(&rh.panning, 32, 1, f);
 	rh.extraDataSize = hio_read32l(f);
 
+	/* Sanity check */
+	if (rh.nposition > 255)
+		return -1;
+	if (rh.ntrack > 32)
+		return -1;
+	if (rh.npattern > 255)
+		return -1;
+	if (rh.ninstr > 255)
+		return -1;
+
 	if (version >= 0x0112)
 		hio_seek(f, 32, SEEK_CUR);		/* skip original name */
 
