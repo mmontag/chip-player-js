@@ -40,7 +40,13 @@ static int ssn_test(HIO_HANDLE *f, char *t, const int start)
     if (id != 0x6966 && id != 0x4a4e)
 	return -1;
 
-    hio_seek(f, 238, SEEK_CUR);
+    hio_seek(f, 110, SEEK_SET);
+    if (hio_read8(f) > 64)
+	return -1;
+    if (hio_read8(f) > 128)
+	return -1;
+
+    hio_seek(f, 240, SEEK_SET);
     if (hio_read8(f) != 0xff)
 	return -1;
 
@@ -144,6 +150,10 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sih.length = hio_read32l(f);		/* Instrument size */
 	sih.loop_start = hio_read32l(f);	/* Instrument loop start */
 	sih.loopend = hio_read32l(f);		/* Instrument loop end */
+
+	/* Sanity check */
+	if (sih.length > MAX_SAMPLE_SIZE)
+	    return -1;
 
 	mod->xxs[i].len = sih.length;
 	mod->xxs[i].lps = sih.loop_start;
