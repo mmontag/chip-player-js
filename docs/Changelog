@@ -18,6 +18,7 @@ Stable versions
 	- add sanity check for XM basic parameters and sample size
 	- add sanity check for IT basic parameters and sample size
 	- add sanity check for S3M basic parameters and sample size
+	- add sanity check for MTM basic parameters and sample size
 	- add sanity check for RTM basic parameters
 	- add more tests to 669 file detection
 	- fix mixer index overflow with large samples

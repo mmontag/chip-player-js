@@ -95,6 +95,9 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mfh.channels = hio_read8(f);	/* Number of tracks per pattern */
 	hio_read(&mfh.pan, 32, 1, f);	/* Pan positions for each channel */
 
+	if (mfh.channels > XMP_MAX_CHANNELS)
+		return -1;
+
 #if 0
 	if (strncmp((char *)mfh.magic, "MTM", 3))
 		return -1;
@@ -120,44 +123,52 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Read and convert instruments */
 	for (i = 0; i < mod->ins; i++) {
+		struct xmp_instrument *xxi = &mod->xxi[i];
+		struct xmp_sample *xxs = &mod->xxs[i];
+		struct xmp_subinstrument *sub;
+
 		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
+		sub = &xxi->sub[0];
+
 		hio_read(&mih.name, 22, 1, f);	/* Instrument name */
 		mih.length = hio_read32l(f);	/* Instrument length in bytes */
-		mih.loop_start = hio_read32l(f);	/* Sample loop start */
+
+		if (mih.length > MAX_SAMPLE_SIZE)
+			return -1;
+
+		mih.loop_start = hio_read32l(f); /* Sample loop start */
 		mih.loopend = hio_read32l(f);	/* Sample loop end */
 		mih.finetune = hio_read8(f);	/* Finetune */
 		mih.volume = hio_read8(f);	/* Playback volume */
 		mih.attr = hio_read8(f);	/* &0x01: 16bit sample */
 
-		mod->xxs[i].len = mih.length;
-		mod->xxs[i].lps = mih.loop_start;
-		mod->xxs[i].lpe = mih.loopend;
-		mod->xxs[i].flg = mod->xxs[i].lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
+		xxs->len = mih.length;
+		xxs->lps = mih.loop_start;
+		xxs->lpe = mih.loopend;
+		xxs->flg = xxs->lpe ? XMP_SAMPLE_LOOP : 0;	/* 1 == Forward loop */
 		if (mfh.attr & 1) {
-			mod->xxs[i].flg |= XMP_SAMPLE_16BIT;
-			mod->xxs[i].len >>= 1;
-			mod->xxs[i].lps >>= 1;
-			mod->xxs[i].lpe >>= 1;
+			xxs->flg |= XMP_SAMPLE_16BIT;
+			xxs->len >>= 1;
+			xxs->lps >>= 1;
+			xxs->lpe >>= 1;
 		}
 
-		mod->xxi[i].sub[0].vol = mih.volume;
-		mod->xxi[i].sub[0].fin = mih.finetune;
-		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxi[i].sub[0].sid = i;
+		sub->vol = mih.volume;
+		sub->fin = mih.finetune;
+		sub->pan = 0x80;
+		sub->sid = i;
 
 		instrument_name(mod, i, mih.name, 22);
 
-		if (mod->xxs[i].len > 0)
+		if (xxs->len > 0)
 			mod->xxi[i].nsm = 1;
 
 		D_(D_INFO "[%2X] %-22.22s %04x%c%04x %04x %c V%02x F%+03d\n", i,
-		   mod->xxi[i].name, mod->xxs[i].len,
-		   mod->xxs[i].flg & XMP_SAMPLE_16BIT ? '+' : ' ',
-		   mod->xxs[i].lps, mod->xxs[i].lpe,
-		   mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		   mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin - 0x80);
+		   xxi->name, xxs->len, xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
+		   xxs->lps, xxs->lpe, xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		   sub->vol, sub->fin - 0x80);
 	}
 
 	hio_read(mod->xxo, 1, 128, f);
