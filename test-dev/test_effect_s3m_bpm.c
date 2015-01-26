@@ -3,13 +3,13 @@
 
 static int vals[] = {
 	80, 80, 80,	/* set tempo */
-	80, 80, 80,	/* set tempo 0x02 */
-	80, 80, 80,	/* set tempo 0x11 */
-	80, 80, 80,	/* nothing */
+	20, 20, 20,	/* set tempo 0x02 */
+	20, 20, 20,	/* set tempo 0x11 */
+	20, 20, 20,	/* nothing */
 	32, 32, 32,	/* set tempo 0x20 */
-	32, 32, 32,	/* set tempo 0x01 */
+	20, 20, 20,	/* set tempo 0x01 */
 	255, 255, 255,	/* set tempo 0xff */
-	255, 255, 255	/* set tempo 0x11 */
+	20, 20, 20	/* set tempo 0x11 */
 };
 
 TEST(test_effect_s3m_bpm)

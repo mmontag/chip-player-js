@@ -152,6 +152,11 @@ static void xlat_fx(int c, struct xmp_event *e)
     uint8 h = MSN (e->fxp), l = LSN (e->fxp);
 
     switch (e->fxt = fx[e->fxt]) {
+    case FX_S3M_BPM:
+	if (e->fxp < 0x20) {
+	    e->fxp = e->fxt = 0;
+	}
+	break;
     case FX_S3M_EXTENDED:		/* Extended effects */
 	e->fxt = FX_EXTENDED;
 	switch (h) {

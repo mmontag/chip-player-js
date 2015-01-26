@@ -482,12 +482,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_S3M_BPM:	/* Set S3M BPM */
             fx_s3m_bpm:
-		if (fxp >= 0x20) {
-			if (fxp < XMP_MIN_BPM)
-				fxp = XMP_MIN_BPM;
-			p->bpm = fxp;
-			p->frame_time = m->time_factor * m->rrate / p->bpm;
-		}
+		if (fxp < XMP_MIN_BPM)
+			fxp = XMP_MIN_BPM;
+		p->bpm = fxp;
+		p->frame_time = m->time_factor * m->rrate / p->bpm;
 		break;
 
 #ifndef LIBXMP_CORE_DISABLE_IT
