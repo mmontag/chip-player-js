@@ -24,6 +24,7 @@ Stable versions
 	- fix Eureka Packer prowizard depacker
 	Other changes:
 	- fix loop processing error in scan (reported by Lionel Debroux)
+	- fix minimum BPM value for MED (reported by cspiegel)
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:
