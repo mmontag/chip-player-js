@@ -481,19 +481,15 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 	case FX_S3M_BPM:	/* Set S3M BPM */
-            fx_s3m_bpm:
-		if (m->time_factor > 9) {
-			/* Use this for the standard time factor */
-			if (fxp < XMP_MIN_BPM)
-				fxp = XMP_MIN_BPM;
-		} else {
-			/* MED allows us to use a lower minimum BPM */
-			if (fxp < 10)
-				fxp = 10;
-		}
+	    fx_s3m_bpm: {
+		/* Lower time factor in MED allows lower BPM values */
+		int min_bpm = (int)(0.5 + m->time_factor * XMP_MIN_BPM / 10);
+		if (fxp < min_bpm)
+			fxp = min_bpm;
 		p->bpm = fxp;
 		p->frame_time = m->time_factor * m->rrate / p->bpm;
 		break;
+	}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 	case FX_IT_BPM:		/* Set IT BPM */
