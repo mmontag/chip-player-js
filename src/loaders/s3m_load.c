@@ -98,6 +98,10 @@ static int s3m_test(HIO_HANDLE *f, char *t, const int start)
     if (hio_read32b(f) != MAGIC_SCRM)
 	return -1;
 
+    hio_seek(f, start + 28, SEEK_SET);
+    if (hio_read16b(f) != 0x1a10)
+	return -1;
+
     hio_seek(f, start + 0, SEEK_SET);
     read_title(f, t, 28);
 
