@@ -542,7 +542,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->ins = xfh.instruments;
 
     /* Sanity check */
-    if (mod->len > 255)
+    if (mod->len > 256)
 	return -1;
     if (mod->chn > XMP_MAX_CHANNELS)
 	return -1;
