@@ -132,6 +132,9 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		mod->xxp[i]->rows = ver >= 0x0e ? hio_read16l(f) : 64;
 
+		if (mod->xxp[i]->rows > 256)
+			return -1;
+
 		for (j = 0; j < mod->chn; j++) {
 			uint16 t = hio_read16l(f);
 			mod->xxp[i]->index[j] = t;
@@ -301,17 +304,16 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		for (j = 0; j < size; j++) {
 			t1 = hio_read8(f);			/* row */
-
-			/* Sanity check */
-			if (t1 > 64)
-				return -1;
-
 			t2 = hio_read8(f);			/* type */
 			t3 = hio_read8(f);			/* parameter */
 /*printf("track %d row %d: %02x %02x %02x\n", i, t1, t1, t2, t3);*/
 
 			if (t1 == 0xff && t2 == 0xff && t3 == 0xff)
 				break;
+
+			/* Sanity check */
+			if (t1 > mod->xxt[i]->rows)
+				return -1;
 
 			event = &mod->xxt[i]->event[t1];
 
