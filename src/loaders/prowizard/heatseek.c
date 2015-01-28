@@ -70,6 +70,11 @@ static int depack_crb(HIO_HANDLE *in, FILE *out)
 				if (c1 == 0xc0) {
 					m = hio_read24b(in);
 					l = hio_tell(in);
+
+					/* Sanity check */
+					if (m >= 2048)
+						return -1;
+
 					hio_seek(in, taddr[m >> 2], SEEK_SET);
 					for (m = 0; m < 64; m++) {
 						int x = m * 16 + j * 4;
