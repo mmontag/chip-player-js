@@ -55,6 +55,7 @@ struct huffman_tree_t
 
 #define DIST_CODES_SIZE 30
 #define HUFFMAN_TREE_SIZE 1024
+#define DYN_HUFF_TRANS_SIZE 19
 
 static const int length_codes[29] = { 3,4,5,6,7,8,9,10,11,13,15,17,19,
                          23,27,31,35,43,51,59,67,83,99,115,
@@ -73,7 +74,8 @@ static const int dist_extra_bits[30] = { 0,0,0,0,1,1,2,2,3,3,
                             4,4,5,5,6,6,7,7,8,8,
                             9,9,10,10,11,11,12,12,13,13 };
 
-static const int dyn_huff_trans[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5,
+static const int dyn_huff_trans[DYN_HUFF_TRANS_SIZE] = {
+                           16, 17, 18, 0, 8, 7, 9, 6, 10, 5,
                            11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
 static const unsigned char reverse[256] = {
@@ -106,6 +108,7 @@ int print_binary(int b, int l)
 }
 #endif
 
+#if 0
 static int kunzip_inflate_free(struct inflate_data *data)
 {
   if (data->huffman_tree_len_static!=0)
@@ -113,6 +116,7 @@ static int kunzip_inflate_free(struct inflate_data *data)
 
   return 0;
 }
+#endif
 
 #if 0
 static unsigned int get_alder(FILE *out)
@@ -512,6 +516,10 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
   hlit=(reverse[hlit]>>3)+257;
   hdist=(reverse[hdist]>>3)+1;
   hclen=(reverse[hclen]>>4)+4;
+
+  /* Sanity check */
+  if (hclen >= DYN_HUFF_TRANS_SIZE)
+    return -1;
 
 /* printf("%d %d %d\n",hclen,sizeof(struct huffman_tree_t),hclen*sizeof(struct huffman_tree_t)); */
 
@@ -1078,8 +1086,9 @@ if (!is_zip) {
 
       /* Dynamic Huffman */
       res = load_dynamic_huffman(in,&huffman,&bitstream,huffman_tree_len,huffman_tree_dist);
-      if (res < 0) 
+      if (res < 0) {
         goto err4;
+      }
 
       decompress(in, &huffman, &bitstream, huffman_tree_len, huffman_tree_dist, out, &data);
 
@@ -1108,7 +1117,7 @@ if (!is_zip) {
 
   *checksum=huffman.checksum^0xffffffff;
 
-  kunzip_inflate_free(&data);
+  free(data.huffman_tree_len_static);
 
   /* for gzip */
   if (bitstream.bitptr == 8) {
@@ -1119,7 +1128,7 @@ if (!is_zip) {
   return 0;
 
  err4:
-  kunzip_inflate_free(&data);
+  free(data.huffman_tree_len_static);
  err3:
   free(huffman_tree_dist);
  err2:
