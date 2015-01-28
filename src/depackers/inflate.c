@@ -54,10 +54,12 @@ struct huffman_tree_t
 };
 
 #define DIST_CODES_SIZE 30
+#define LENGTH_CODES_SIZE 29
 #define HUFFMAN_TREE_SIZE 1024
 #define DYN_HUFF_TRANS_SIZE 19
 
-static const int length_codes[29] = { 3,4,5,6,7,8,9,10,11,13,15,17,19,
+static const int length_codes[LENGTH_CODES_SIZE] = {
+                         3,4,5,6,7,8,9,10,11,13,15,17,19,
                          23,27,31,35,43,51,59,67,83,99,115,
                          131,163,195,227,258 };
 
@@ -769,6 +771,11 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
   fflush(stdout);
 #endif
       code=code-257;
+
+      /* Sanity check */
+      if (code >= LENGTH_CODES_SIZE)
+        return -1;
+
       len=length_codes[code];
       if (length_extra_bits[code]!=0)
       {
