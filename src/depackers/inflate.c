@@ -1074,7 +1074,9 @@ if (!is_zip) {
 	  goto err4;
       }
 
-      decompress(in, &huffman, &bitstream, data.huffman_tree_len_static, 0, out, &data);
+      if (decompress(in, &huffman, &bitstream, data.huffman_tree_len_static, 0, out, &data) < 0) {
+          return -1;
+      }
 /*
       free(huffman_tree_len);
       huffman_tree_len=0;
@@ -1090,7 +1092,9 @@ if (!is_zip) {
         goto err4;
       }
 
-      decompress(in, &huffman, &bitstream, huffman_tree_len, huffman_tree_dist, out, &data);
+      if (decompress(in, &huffman, &bitstream, huffman_tree_len, huffman_tree_dist, out, &data) < 0) {
+          return -1;
+      }
 
     }
       else
