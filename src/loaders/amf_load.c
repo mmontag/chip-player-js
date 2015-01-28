@@ -301,6 +301,11 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		for (j = 0; j < size; j++) {
 			t1 = hio_read8(f);			/* row */
+
+			/* Sanity check */
+			if (t1 > 64)
+				return -1;
+
 			t2 = hio_read8(f);			/* type */
 			t3 = hio_read8(f);			/* parameter */
 /*printf("track %d row %d: %02x %02x %02x\n", i, t1, t1, t2, t3);*/
