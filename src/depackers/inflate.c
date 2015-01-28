@@ -54,6 +54,7 @@ struct huffman_tree_t
 };
 
 #define DIST_CODES_SIZE 30
+#define HUFFMAN_TREE_SIZE 1024
 
 static const int length_codes[29] = { 3,4,5,6,7,8,9,10,11,13,15,17,19,
                          23,27,31,35,43,51,59,67,83,99,115,
@@ -711,6 +712,12 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
         curr_leaf=huffman_tree_len[curr_leaf].right;
       }
 
+      /* Sanity check */
+      if (curr_leaf >= HUFFMAN_TREE_SIZE) {
+	fprintf(stderr, "inflate: corrupt huffman tree\n");
+	return -1;
+      }
+
       bitstream->bitptr-=1;
       bitstream->holding>>=1;
     }
@@ -828,11 +835,18 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
             curr_leaf=huffman_tree_dist[curr_leaf].right;
           }
 
+          /* Sanity check */
+          if (curr_leaf >= HUFFMAN_TREE_SIZE) {
+	    fprintf(stderr, "inflate: corrupt huffman tree\n");
+	    return -1;
+          }
+
           bitstream->bitptr-=1;
           bitstream->holding>>=1;
         }
       }
 
+      /* Sanity check */
       if (code >= DIST_CODES_SIZE) {
 	fprintf(stderr, "inflate: corrupt input\n");
         return -1;
@@ -938,13 +952,17 @@ int inflate(FILE *in, FILE *out, uint32 *checksum, int is_zip)
 
   data.huffman_tree_len_static=0;
 
-  huffman_tree_len=malloc(1024*sizeof(struct huffman_tree_t));
+  huffman_tree_len=malloc(HUFFMAN_TREE_SIZE * sizeof(struct huffman_tree_t));
   if (huffman_tree_len == NULL)
     goto err;
 
-  huffman_tree_dist=malloc(1024*sizeof(struct huffman_tree_t));
+  memset(huffman_tree_len, 0xff, HUFFMAN_TREE_SIZE * sizeof(struct huffman_tree_t));
+
+  huffman_tree_dist=malloc(HUFFMAN_TREE_SIZE * sizeof(struct huffman_tree_t));
   if (huffman_tree_dist == NULL)
     goto err2;
+
+  memset(huffman_tree_dist, 0xff, HUFFMAN_TREE_SIZE * sizeof(struct huffman_tree_t));
 
   huffman.window_ptr=0;
 
