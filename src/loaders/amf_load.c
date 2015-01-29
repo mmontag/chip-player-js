@@ -122,7 +122,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
-	mod->xxp = calloc(sizeof(struct xmp_pattern *), mod->pat + 1);
+	mod->xxp = calloc(sizeof(struct xmp_pattern *), mod->pat);
 	if (mod->xxp == NULL)
 		return -1;
 
@@ -296,7 +296,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint8 t1, t2, t3;
 		int size;
 
-		if (track_alloc(mod, i, 64) < 0)
+		if (track_alloc(mod, i, 64) < 0)	/* FIXME! */
 			return -1;
 
 		size = hio_read24l(f);
@@ -312,7 +312,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				break;
 
 			/* Sanity check */
-			if (t1 > mod->xxt[i]->rows)
+			if (t1 >= mod->xxt[i]->rows)
 				return -1;
 
 			event = &mod->xxt[i]->event[t1];
@@ -479,7 +479,6 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				event->fxt = fxt;
 				event->fxp = fxp;
 			}
-
 		}
 	}
 
