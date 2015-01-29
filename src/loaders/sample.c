@@ -424,20 +424,17 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 				lpe += (xxs->lpe - xxs->lps) * 2;
 			}
-			xxs->data[lpe] = xxs->data[lpe - 2];
-			xxs->data[lpe + 1] = xxs->data[lpe - 1];
-			for (i = 0; i < 6; i++) {
-				xxs->data[lpe + 2 + i] = xxs->data[lps + i];
+
+			for (i = 0; i < 8; i++) {
+				xxs->data[lpe + i] = xxs->data[lps + i];
 			}
 		} else {
 			int lpe = xxs->lpe + unroll_extralen;
 			int lps = xxs->lps;
-			xxs->data[lpe] = xxs->data[lpe - 1];
-			for (i = 0; i < 3; i++) {
-				xxs->data[lpe + 1 + i] = xxs->data[lps + i];
+			for (i = 0; i < 4; i++) {
+				xxs->data[lpe + i] = xxs->data[lps + i];
 			}
 		}
 	}
-
 	return 0;
 }
