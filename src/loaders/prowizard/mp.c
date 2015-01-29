@@ -126,6 +126,8 @@ static int test_mp_noid(uint8 *data, char *t, int s)
 	psize++;
 	psize <<= 8;
 
+	PW_REQUEST_DATA(s, (psize + 1) * 4);
+
 	/* test #5  ptk notes .. gosh ! (testing all patterns !) */
 	for (i = 0; i < psize; i++) {
 		uint8 *d = data + i * 4;
