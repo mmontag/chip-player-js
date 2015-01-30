@@ -26,6 +26,7 @@ Stable versions
 	Other changes:
 	- fix loop processing error in scan (reported by Lionel Debroux)
 	- fix minimum BPM value for MED (reported by cspiegel)
+	- fix sample loop adjustment (by Emmanuel Julien)
 
 4.3.4 (20150111):
 	Fix bugs caught in the OpenMPT test cases:
