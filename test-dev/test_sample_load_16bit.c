@@ -66,10 +66,10 @@ TEST(test_sample_load_16bit)
 	hio_seek(f, 0, SEEK_SET);
 	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
-	fail_unless(s.data[160] == s.data[158], "sample adjust error");
-	fail_unless(s.data[161] == s.data[159], "sample adjust error");
-	fail_unless(s.data[162] == s.data[40], "sample adjust error");
-	fail_unless(s.data[163] == s.data[41], "sample adjust error");
+	fail_unless(s.data[160] == s.data[40], "sample adjust error");
+	fail_unless(s.data[161] == s.data[41], "sample adjust error");
+	fail_unless(s.data[162] == s.data[42], "sample adjust error");
+	fail_unless(s.data[163] == s.data[43], "sample adjust error");
 
 	/* load sample from w/ bidirectional loop */
 	SET(101, 0, 102, XMP_SAMPLE_16BIT | XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
@@ -78,10 +78,10 @@ TEST(test_sample_load_16bit)
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lpe == 101, "didn't fix invalid loop end");
 	fail_unless(memcmp(s.data, buffer, 404) == 0, "sample unroll error");
-	fail_unless(s.data[404] == s.data[402], "sample adjust error");
-	fail_unless(s.data[405] == s.data[403], "sample adjust error");
-	fail_unless(s.data[406] == s.data[0], "sample adjust error");
-	fail_unless(s.data[407] == s.data[1], "sample adjust error");
+	fail_unless(s.data[404] == s.data[0], "sample adjust error");
+	fail_unless(s.data[405] == s.data[1], "sample adjust error");
+	fail_unless(s.data[406] == s.data[2], "sample adjust error");
+	fail_unless(s.data[407] == s.data[3], "sample adjust error");
 
 }
 END_TEST

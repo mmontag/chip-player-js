@@ -61,8 +61,8 @@ TEST(test_sample_load_8bit)
 	hio_seek(f, 0, SEEK_SET);
 	load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
-	fail_unless(s.data[80] == s.data[79], "sample adjust error");
-	fail_unless(s.data[81] == s.data[20], "sample adjust error");
+	fail_unless(s.data[80] == s.data[20], "sample adjust error");
+	fail_unless(s.data[81] == s.data[21], "sample adjust error");
 
 	/* load sample from w/ bidirectional loop */
 	SET(101, 0, 102, XMP_SAMPLE_LOOP | XMP_SAMPLE_LOOP_BIDIR);
