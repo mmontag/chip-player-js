@@ -170,8 +170,7 @@ void load_prologue(struct context_data *ctx)
 	int i;
 
 	/* Reset variables */
-	memset(m->mod.name, 0, XMP_NAME_SIZE);
-	memset(m->mod.type, 0, XMP_NAME_SIZE);
+	memset(&m->mod, 0, sizeof (struct module_data));
 	m->rrate = PAL_RATE;
 	m->c4rate = C4_PAL_RATE;
 	m->volbase = 0x40;
