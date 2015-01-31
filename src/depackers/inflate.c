@@ -285,7 +285,7 @@ printf("load_fixed_huffman()\n");
   return 0;
 }
 
-static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int count, int *hclen_code_length, int *hclen_code, struct huffman_tree_t *huffman_tree)
+static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int len_size, int count, int *hclen_code_length, int *hclen_code, struct huffman_tree_t *huffman_tree)
 {
   int r,t,c,x;
   int code,curr_code;
@@ -385,6 +385,11 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
       bitstream->holding=bitstream->holding&((1<<bitstream->bitptr)-1);
 
       c=x+11;
+
+      /* Sanity check */
+      if (r + c >= len_size)
+        return -1;
+
       memset(&lengths[r],0,sizeof(int)*c);
       r=r+c;
 
@@ -540,16 +545,18 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
 
   for (t=0; t<hclen; t++)
   {
+    int len;
+
     if (bitstream->bitptr<3)
     {
       bitstream->holding=reverse[getc(in)]+(bitstream->holding<<8);
       bitstream->bitptr+=8;
     }
 
-    hclen_code_lengths[dyn_huff_trans[t]]=(bitstream->holding>>(bitstream->bitptr-3));
-    hclen_code_lengths[dyn_huff_trans[t]]=reverse[hclen_code_lengths[dyn_huff_trans[t]]]>>5;
-    bitstream->bitptr-=3;
-    bitstream->holding=bitstream->holding&((1<<bitstream->bitptr)-1);
+    len = bitstream->holding >> (bitstream->bitptr-3);
+    hclen_code_lengths[dyn_huff_trans[t]] = reverse[len] >> 5;
+    bitstream->bitptr -= 3;
+    bitstream->holding = bitstream->holding&((1<<bitstream->bitptr)-1);
   }
 
 #ifdef DEBUG
@@ -623,7 +630,7 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
   memset(huffman->len,0,288*sizeof(int));
   /* memset(huffman->code,0,288*sizeof(int)); */
 
-  res = load_codes(in,bitstream,huffman->len,hlit,hclen_code_lengths,hclen_code,huffman_tree_len);
+  res = load_codes(in,bitstream,huffman->len,288,hlit,hclen_code_lengths,hclen_code,huffman_tree_len);
   if (res < 0)
     return -1;
 
@@ -654,7 +661,7 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
     memset(huffman->dist_len,0,33*sizeof(int));
     /* memset(huffman->dist_code,0,33*sizeof(int)); */
 
-    res = load_codes(in,bitstream,huffman->dist_len,hdist,hclen_code_lengths,hclen_code,huffman_tree_dist);
+    res = load_codes(in,bitstream,huffman->dist_len,33,hdist,hclen_code_lengths,hclen_code,huffman_tree_dist);
     if (res < 0)
       return -1;
 
