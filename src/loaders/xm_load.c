@@ -88,7 +88,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 
 	/* Sanity check */
 	if (xph.rows > 255)
-	    return -1;
+	    goto err;
 
 	xph.datasize = hio_read16l(f);
 	hio_seek(f, xph.length - headsize, SEEK_CUR);
@@ -98,31 +98,52 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 	    r = 0x100;
 
 	if (pattern_tracks_alloc(mod, i, r) < 0)
-	    return -1;
+	    goto err;
 
 	if (xph.datasize) {
-	    pat = patbuf = calloc(1, xph.datasize);
-	    if (patbuf == NULL)
-		return -1;
+	    int size = xph.datasize;
 
-	    hio_read(patbuf, 1, xph.datasize, f);
+	    pat = patbuf = calloc(1, size);
+	    if (patbuf == NULL)
+		goto err;
+
+	    hio_read(patbuf, 1, size, f);
 	    for (j = 0; j < (mod->chn * r); j++) {
-		if ((pat - patbuf) >= xph.datasize)
-		    break;
+
+		/*if ((pat - patbuf) >= xph.datasize)
+		    break;*/
+
 		event = &EVENT(i, j % mod->chn, j / mod->chn);
 		if ((b = *pat++) & XM_EVENT_PACKING) {
-		    if (b & XM_EVENT_NOTE_FOLLOWS)
+		    if (b & XM_EVENT_NOTE_FOLLOWS) {
+			if (--size < 0)
+			    goto err2;
 			event->note = *pat++;
-		    if (b & XM_EVENT_INSTRUMENT_FOLLOWS)
+		    }
+		    if (b & XM_EVENT_INSTRUMENT_FOLLOWS) {
+			if (--size < 0)
+			    goto err2;
 			event->ins = *pat++;
-		    if (b & XM_EVENT_VOLUME_FOLLOWS)
+		    }
+		    if (b & XM_EVENT_VOLUME_FOLLOWS) {
+			if (--size < 0)
+			    goto err2;
 			event->vol = *pat++;
+		    }
 		    if (b & XM_EVENT_FXTYPE_FOLLOWS) {
+			if (--size < 0)
+			    goto err2;
 			event->fxt = *pat++;
 		    }
-		    if (b & XM_EVENT_FXPARM_FOLLOWS)
+		    if (b & XM_EVENT_FXPARM_FOLLOWS) {
+			if (--size < 0)
+			    goto err2;
 			event->fxp = *pat++;
+		    }
 		} else {
+                    size -=4;
+		    if (size < 0)
+			goto err2;
 		    event->note = b;
 		    event->ins = *pat++;
 		    event->vol = *pat++;
@@ -246,7 +267,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		}
 		event->vol = 0;
 	    }
-	    free (patbuf);
+	    free(patbuf);
 	}
     }
 
@@ -255,18 +276,23 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 	int t = i * mod->chn;
 
 	if (pattern_alloc(mod, i) < 0)
-	    return -1;
+	    goto err;
 
 	mod->xxp[i]->rows = 64;
 
 	if (track_alloc(mod, t, 64) < 0)
-	    return -1;
+	    goto err;
 
 	for (j = 0; j < mod->chn; j++)
 	    mod->xxp[i]->index[j] = t;
     }
 
     return 0;
+
+  err2:
+    free(patbuf);
+  err:
+    return -1;
 }
 
 /* Packed structures size */
