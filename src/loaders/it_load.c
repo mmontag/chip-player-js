@@ -368,14 +368,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->pat = ifh.patnum;
 
     /* Sanity check */
-    if (mod->len > 255)
-	return -1;
-    if (mod->ins > 255)
-	return -1;
-    if (mod->smp > 255)
-	return -1;
-    if (mod->pat > 255)
-	return -1;
+    if (mod->len > 255 || mod->ins > 255 || mod->smp > 255 || mod->pat > 255) {
+	goto err;
+    }
 
     if (mod->ins) {
         pp_ins = calloc(4, mod->ins);
@@ -936,12 +931,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 							&mod->xxs[i], buf);
 		if (ret < 0) {
 		    free(buf);
-		    return -1;
+                    goto err4;
 		}
 		free (buf);
 	    } else {
 		if (load_sample(m, f, cvt, &mod->xxs[i], NULL) < 0)
-		    return -1;
+                    goto err4;
 	    }
 	}
     }
