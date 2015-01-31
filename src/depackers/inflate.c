@@ -525,7 +525,7 @@ static int load_dynamic_huffman(FILE *in, struct huffman_t *huffman, struct bits
   hclen=(reverse[hclen]>>4)+4;
 
   /* Sanity check */
-  if (hclen >= DYN_HUFF_TRANS_SIZE)
+  if (hclen > DYN_HUFF_TRANS_SIZE)
     return -1;
 
 /* printf("%d %d %d\n",hclen,sizeof(struct huffman_tree_t),hclen*sizeof(struct huffman_tree_t)); */
