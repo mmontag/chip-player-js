@@ -6,7 +6,7 @@
  *                 reduced to only one FREAD.
  *                 Speed-up and Binary smaller.
  *
- * Modified in 2006,2007,2014 by Claudio Matsuoka
+ * Modified in 2006,2007,2014,2015 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -30,14 +30,14 @@ static int depack_np3(HIO_HANDLE *in, FILE *out)
 	memset(ptable, 0, 128);
 	memset(trk_addr, 0, 128 * 4 * 4);
 
-	c1 = hio_read8(in);				/* read number of samples */
+	c1 = hio_read8(in);			/* read number of samples */
 	c2 = hio_read8(in);
 	nins = ((c1 << 4) & 0xf0) | ((c2 >> 4) & 0x0f);
 
 	pw_write_zero(out, 20);			/* write title */
 
-	len = hio_read16b(in) / 2;			/* size of pattern list */
-	hio_read16b(in);				/* 2 unknown bytes */
+	len = hio_read16b(in) >> 1;		/* size of pattern list */
+	hio_read16b(in);			/* 2 unknown bytes */
 	/*tsize =*/ hio_read16b(in);		/* read track data size */
 
 	/* read sample descriptions */
@@ -61,8 +61,8 @@ static int depack_np3(HIO_HANDLE *in, FILE *out)
 	write8(out, len);		/* write size of pattern list */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
-	hio_seek(in, 2, SEEK_CUR);		/* always $02? */
-	hio_seek(in, 2, SEEK_CUR);		/* unknown */
+	hio_seek(in, 2, SEEK_CUR);	/* always $02? */
+	hio_seek(in, 2, SEEK_CUR);	/* unknown */
 
 	/* read pattern table */
 	npat = 0;
@@ -160,7 +160,7 @@ static int test_np3(uint8 *data, char *t, int s)
 
 	/* size of the pattern table */
 	ptab_size = readmem16b(data + 2);
-	if (ptab_size == 0 || ptab_size & 0x01)
+	if (ptab_size == 0 || ptab_size & 0x01 || ptab_size > 0xff)
 		return -1;
 
 	/* test number of samples */
@@ -170,6 +170,8 @@ static int test_np3(uint8 *data, char *t, int s)
 	num_ins = ((data[0] << 4) & 0xf0) | ((data[1] >> 4) & 0x0f);
 	if (num_ins == 0 || num_ins > 0x1f)
 		return -1;
+
+	PW_REQUEST_DATA(s, 15 + num_ins * 16);
 
 	/* test volumes */
 	for (i = 0; i < num_ins; i++) {
@@ -203,11 +205,13 @@ static int test_np3(uint8 *data, char *t, int s)
 	/* size of the header 'til the end of sample descriptions */
 	hdr_size = num_ins * 16 + 8 + 4;
 
+	PW_REQUEST_DATA(s, hdr_size + ptab_size + 2);
+
 	/* test pattern table */
 	max_pptr = 0;
 	for (i = 0; i < ptab_size; i += 2) {
 		int pptr = readmem16b(data + hdr_size + i);
-		if (pptr & 0x07)
+		if (pptr & 0x07 || pptr > 0x400)
 			return -1;
 		if (pptr > max_pptr)
 			max_pptr = pptr;
@@ -224,7 +228,7 @@ static int test_np3(uint8 *data, char *t, int s)
 	if (trk_size <= 63)
 		return -1;
 
-	PW_REQUEST_DATA(s, hdr_size + trk_size);
+	PW_REQUEST_DATA(s, hdr_size + trk_size + 2);
 
 	/* test notes */
 	/* re-calculate the number of sample */

@@ -20,7 +20,7 @@ Stable versions
 	- add more tests to 669 file detection
 	- fix mixer index overflow with large samples
 	- fix prowizard data request response
-	- fix Eureka Packer prowizard depacker
+	- fix EU/NP1/NP2/NP3 prowizard depackers
 	- reset module data before loading module
 	Other changes:
 	- fix loop processing error in scan (reported by Lionel Debroux)
