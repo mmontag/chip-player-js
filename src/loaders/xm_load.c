@@ -87,7 +87,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 	xph.rows = version > 0x0102 ? hio_read16l(f) : hio_read8(f) + 1;
 
 	/* Sanity check */
-	if (xph.rows > 255)
+	if (xph.rows > 256)
 	    goto err;
 
 	xph.datasize = hio_read16l(f);
