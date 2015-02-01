@@ -396,7 +396,9 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
     }
       else
     {
+#ifdef DEBUG
       fprintf(stderr, "inflate: error in bitstream reading in literal code length %d\n",t);
+#endif
       return -1;
     }
   }
@@ -731,7 +733,9 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
 
       /* Sanity check */
       if (curr_leaf >= HUFFMAN_TREE_SIZE) {
+#ifdef DEBUG
 	fprintf(stderr, "inflate: corrupt huffman tree\n");
+#endif
 	return -1;
       }
 
@@ -859,7 +863,9 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
 
           /* Sanity check */
           if (curr_leaf >= HUFFMAN_TREE_SIZE) {
+#ifdef DEBUG
 	    fprintf(stderr, "inflate: corrupt huffman tree\n");
+#endif
 	    return -1;
           }
 
@@ -870,7 +876,9 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
 
       /* Sanity check */
       if (code >= DIST_CODES_SIZE) {
+#ifdef DEBUG
 	fprintf(stderr, "inflate: corrupt input\n");
+#endif
         return -1;
       }
 
