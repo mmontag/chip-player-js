@@ -108,7 +108,7 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 	/* alloc mem */
 	data = (uint8 *)malloc (in_size + 4096);	/* slack added */
 	if (data == NULL) {
-		perror("Couldn't allocate memory");
+		/*perror("Couldn't allocate memory");*/
 		return -1;
 	}
 	hio_read(data, in_size, 1, file_in);
@@ -130,8 +130,10 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 	}
 
 	hio_seek(file_in, 0, SEEK_SET);
-	if (pw_format[i]->depack(file_in, file_out) < 0)
+	if (pw_format[i]->depack(file_in, file_out) < 0) {
+		free(data);
 		return -1;
+	}
 
 	fflush(file_out);
 	free(data);
