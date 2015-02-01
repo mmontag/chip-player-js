@@ -105,10 +105,18 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_read(&sfh.message, 108, 1, f);	/* Song message */
     sfh.nos = hio_read8(f);		/* Number of samples (0-64) */
     sfh.nop = hio_read8(f);		/* Number of patterns (0-128) */
+
+    /* Sanity check */
+    if (sfh.nop > 128)
+	return -1;
+
     sfh.loop = hio_read8(f);		/* Loop order number */
-    hio_read(&sfh.order, 128, 1, f);	/* Order list */
-    hio_read(&sfh.speed, 128, 1, f);	/* Tempo list for patterns */
-    hio_read(&sfh.pbrk, 128, 1, f);	/* Break list for patterns */
+    if (hio_read(&sfh.order, 1, 128, f) != 128)	/* Order list */
+	return -1;
+    if (hio_read(&sfh.speed, 1, 128, f) != 128)	/* Tempo list for patterns */
+	return -1;
+    if (hio_read(&sfh.pbrk, 1, 128, f) != 128) 	/* Break list for patterns */
+	return -1;
 
     mod->chn = 8;
     mod->ins = sfh.nos;
