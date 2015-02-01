@@ -1730,7 +1730,8 @@ static int get_header(FILE *f, struct lha_data *data)
 }
 
 static int test_lha(unsigned char *b) {
-	return b[2] == '-' && b[3] == 'l' && b[4] == 'h';
+	return b[2] == '-' && b[3] == 'l' && b[4] == 'h' && b[6] == '-' &&
+		b[20] <= 3;
 }
 
 static int decrunch_lha(FILE *in, FILE *out)

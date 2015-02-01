@@ -139,6 +139,8 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 	for (i = 0; depacker_list[i] != NULL; i++) {
 		if (depacker_list[i]->test(b)) {
 			depacker = depacker_list[i];
+			D_(D_INFO "Use depacker %d", i);
+			break;
 		}
 	}
 
@@ -159,13 +161,16 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 
 	fseek(f, 0, SEEK_SET);
 
-	if (depacker == NULL && cmd == NULL)
+	if (depacker == NULL && cmd == NULL) {
+		D_(D_INFO "Not packed");
 		return 0;
+	}
 
 #if defined ANDROID || defined __native_client__
 	/* Don't use external helpers in android */
-	if (cmd)
+	if (cmd) {
 		return 0;
+	}
 #endif
 
 	D_(D_WARN "Depacking file... ");
@@ -175,12 +180,14 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 
 	/* Depack file */
 	if (cmd) {
+		D_(D_INFO "External depacker: %s", cmd);
 		if (execute_command(cmd, filename, t) < 0) {
 			D_(D_CRIT "failed");
 			fclose(t);
 			return -1;
 		}
 	} else if (depacker) {
+		D_(D_INFO "Internal depacker");
 		if (depacker->depack(f, t) < 0) {
 			D_(D_CRIT "failed");
 			fclose(t);
