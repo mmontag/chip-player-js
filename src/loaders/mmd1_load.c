@@ -421,7 +421,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			hio_read(&xxi->name, 40, 1, f);
 		}
 
-		D_(D_INFO "\n[%2x] %-40.40s %d", i, name, instr.type);
+		D_(D_INFO "\n[%2x] %-40.40s %d", i, mod->xxi[i].name, instr.type);
 
 		exp_smp.finetune = 0;
 		if (expdata_offset && i < expdata.s_ext_entries) {

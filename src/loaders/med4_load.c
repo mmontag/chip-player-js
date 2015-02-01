@@ -53,21 +53,6 @@ static int med4_test(HIO_HANDLE *f, char *t, const int start)
 	return 0;
 }
 
-#ifdef DEBUG
-static const char *inst_type[] = {
-	"HYB",		/* -2 */
-	"SYN",		/* -1 */
-	"SMP",		/*  0 */
-	"I5O",		/*  1 */
-	"I3O",		/*  2 */
-	"I2O",		/*  3 */
-	"I4O",		/*  4 */
-	"I6O",		/*  5 */
-	"I7O",		/*  6 */
-	"EXT",		/*  7 */
-};
-#endif
-
 const unsigned MAX_CHANNELS = 16;
 
 static void fix_effect(struct xmp_event *event)

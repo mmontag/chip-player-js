@@ -395,7 +395,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			hio_seek(f, iinfo_offset + i * expdata.i_ext_entrsz,
 								SEEK_SET);
 			hio_read(&xxi->name, 40, 1, f);
-			D_(D_INFO "[%2x] %-40.40s %d", i, name, instr.type);
+			D_(D_INFO "[%2x] %-40.40s %d", i, mod->xxi[i].name, instr.type);
 		}
 
 		exp_smp.finetune = 0;
