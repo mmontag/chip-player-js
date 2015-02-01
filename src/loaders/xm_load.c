@@ -114,6 +114,10 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		    break;*/
 
 		event = &EVENT(i, j % mod->chn, j / mod->chn);
+
+		if (--size < 0)
+		    goto err2;
+
 		if ((b = *pat++) & XM_EVENT_PACKING) {
 		    if (b & XM_EVENT_NOTE_FOLLOWS) {
 			if (--size < 0)
