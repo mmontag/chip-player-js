@@ -16,7 +16,7 @@ Stable versions
 	- add sanity check for instrument release after load error
 	- add sanity check for XM header size
 	- add sanity check for XM/IT/S3M/MTM/RTM parameters and sample size
-	- add sanity checks to inflate decompressor
+	- add sanity checks to inflate and lha decompressors
 	- add more tests to 669 file detection
 	- fix mixer index overflow with large samples
 	- fix prowizard data request response
