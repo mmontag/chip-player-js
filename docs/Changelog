@@ -17,10 +17,11 @@ Stable versions
 	- add sanity check for XM header size
 	- add sanity check for XM/IT/S3M/MTM/RTM parameters and sample size
 	- add sanity checks to inflate and lha decompressors
-	- add more tests to 669 file detection
+	- add more tests to 669/NO file detection
 	- fix mixer index overflow with large samples
 	- fix prowizard data request response
 	- fix EU/NP1/NP2/NP3 prowizard depackers
+	- fix crash caused by invalid patterns in order list
 	- reset module data before loading module
 	Other changes:
 	- fix loop processing error in scan (reported by Lionel Debroux)

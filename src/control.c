@@ -86,9 +86,11 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 				return;
 			}
 
-			while (mod->xxo[pos] == 0xfe && pos > start) {
+			while (mod->xxo[pos] == 0xfe) {
 				if (dir < 0) {
-					pos--;
+					if (pos > start) {
+						pos--;
+					}
 				} else {
 					pos++;
 				}
@@ -97,8 +99,9 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 			if (pos > p->scan[seq].ord) {
 				f->end_point = 0;
 			} else {
-				f->num_rows = mod->xxp[mod->xxo[p->ord]]->rows;
+				f->num_rows = mod->xxp[mod->xxo[pos]]->rows;
 				f->end_point = p->scan[seq].num;
+				f->jumpline = 0;
 			}
 		}
 
