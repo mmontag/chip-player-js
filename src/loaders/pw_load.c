@@ -56,7 +56,7 @@ int pw_test_format(HIO_HANDLE *f, char *t, const int start,
 	if (b == NULL)
 		return -1;
 
-	hio_read(b, s, 1, f);
+	s = hio_read(b, 1, s, f);
 
 	while ((extra = pw_check(b, s, info)) > 0) {
 		unsigned char *buf = realloc(b, s + extra);
@@ -65,7 +65,12 @@ int pw_test_format(HIO_HANDLE *f, char *t, const int start,
 			return -1;
 		}
 		b = buf;
-		hio_read(b + s, extra, 1, f);
+
+		if (hio_read(b + s, extra, 1, f) == 0) {
+			free(b);
+			return -1;
+		}
+
 		s += extra;
 	}
 

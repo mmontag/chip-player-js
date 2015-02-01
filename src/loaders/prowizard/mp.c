@@ -62,12 +62,11 @@ static int depack_mp(HIO_HANDLE *in, FILE *out)
 static int test_mp_noid(uint8 *data, char *t, int s)
 {
 	int i;
-	int len, psize, ssize, hdr_ssize;
+	int len, psize, hdr_ssize;
 
 #if 0
-	if (i < 3) {
-		Test = BAD;
-		return;
+	if (s < 378) {
+		return - 1;
 	}
 #endif
 
@@ -126,19 +125,20 @@ static int test_mp_noid(uint8 *data, char *t, int s)
 	psize++;
 	psize <<= 8;
 
-	PW_REQUEST_DATA(s, (psize + 1) * 4);
+	PW_REQUEST_DATA(s, 378 + psize * 4);
 
 	/* test #5  ptk notes .. gosh ! (testing all patterns !) */
 	for (i = 0; i < psize; i++) {
-		uint8 *d = data + i * 4;
+		uint8 *d = data + 378 + i * 4;
+		uint16 data;
 
 		/* MadeInCroatia has l == 74 */
-		if (d[378] > 19 && d[378] != 74)
+		if (*d > 19 && *d != 74)
 			return -1;
 
-		ssize = readmem16b(d + 378) & 0x0fff;
+		data = readmem16b(d) & 0x0fff;
 
-		if (ssize > 0 && ssize < 0x71)
+		if (data > 0 && data < 0x71)
 			return -1;
 	}
 

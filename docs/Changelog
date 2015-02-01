@@ -19,6 +19,7 @@ Stable versions
 	- add sanity checks to inflate decompressor
 	- add more tests to 669 file detection
 	- fix mixer index overflow with large samples
+	- fix prowizard data request response
 	- fix Eureka Packer prowizard depacker
 	- reset module data before loading module
 	Other changes:
