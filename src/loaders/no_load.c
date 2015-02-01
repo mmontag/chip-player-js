@@ -39,10 +39,36 @@ const struct format_loader no_loader = {
 
 static int no_test(HIO_HANDLE *f, char *t, const int start)
 {
+	int nsize;
+	int i;
+
+	hio_seek(f, start, SEEK_CUR);
+
 	if (hio_read32b(f) != 0x4e4f0000)		/* NO 0x00 0x00 */
 		return -1;
 
-	read_title(f, t, hio_read8(f));
+	nsize = hio_read8(f);
+
+	/* test title */
+	for (i = 0; i < nsize; i++) {
+		if (hio_read8(f) == 0)
+			return -1;
+	}
+
+	hio_seek(f, 11, SEEK_CUR);
+
+	/* test number of channels */
+	if (hio_read8(f) > 16)
+		return -1;
+
+	hio_seek(f, start + 5, SEEK_SET);
+
+	if (nsize > XMP_NAME_SIZE) {
+		read_title(f, t, XMP_NAME_SIZE);
+		hio_seek(f, nsize - XMP_NAME_SIZE, SEEK_CUR);
+	} else {
+		read_title(f, t, nsize);
+	}
 
 	return 0;
 }
