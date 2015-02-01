@@ -839,8 +839,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	xxs->len = ish.length;
 
 	/* Sanity check */
-	if (xxs->len > MAX_SAMPLE_SIZE)
-	    return -1;
+	if (xxs->len > MAX_SAMPLE_SIZE) {
+	    goto err4;
+	}
 
 	xxs->lps = ish.loopbeg;
 	xxs->lpe = ish.loopend;
