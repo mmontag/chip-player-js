@@ -556,9 +556,18 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     xfh.tempo = hio_read16l(f);		/* Default tempo */
     xfh.bpm = hio_read16l(f);		/* Default BPM */
 
-    /* Sanity check */
+    /* Sanity checks */
+    if (xfh.songlen > 255 || xfh.patterns > 255 || xfh.instruments > 255)
+	return -1;
+
+    if (xfh.restart > 255 || xfh.channels > XMP_MAX_CHANNELS)
+        return -1;
+
+    if (xfh.tempo <= 0 || xfh.tempo >= 32 || xfh.bpm < 32 || xfh.bpm > 255)
+	return -1;
+
     len = xfh.headersz - 0x14;
-    if (len > 256)
+    if (len < 0 || len > 256)
 	return -1;
 
     /* Honor header size -- needed by BoobieSqueezer XMs */
@@ -570,17 +579,6 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->chn = xfh.channels;
     mod->pat = xfh.patterns;
     mod->ins = xfh.instruments;
-
-    /* Sanity check */
-    if (mod->len > 256)
-	return -1;
-    if (mod->chn > XMP_MAX_CHANNELS)
-	return -1;
-    if (mod->pat > 255)
-	return -1;
-    if (mod->ins > 255)
-	return -1;
-
     mod->rst = xfh.restart;
     mod->spd = xfh.tempo;
     mod->bpm = xfh.bpm;
