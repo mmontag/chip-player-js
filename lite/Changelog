@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.5 (20150201):
+4.3.5 ():
 	- add sanity check for ST3 S3M maximum sample size
 	- add sanity check for sample loop start
 	- add sanity check for speed 0
