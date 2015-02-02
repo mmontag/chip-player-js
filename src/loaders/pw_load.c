@@ -101,13 +101,17 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	if ((temp = make_temp_file(&temp_name)) == NULL)
 		goto err;
 
-	if (pw_wizardry(h, temp, &name) < 0)
+	if (pw_wizardry(h, temp, &name) < 0) {
+		fclose(temp);
 		goto err2;
+	}
 	
 	/* Module loading */
 
-	if ((f = hio_open_file(temp)) == NULL)
+	if ((f = hio_open_file(temp)) == NULL) {
+		fclose(temp);
 		goto err2;
+	}
 
 	LOAD_INIT();
 
@@ -212,7 +216,6 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
     err3:
 	hio_close(f);
     err2:
-	fclose(temp);
 	unlink_temp_file(temp_name);
     err:
 	return -1;
