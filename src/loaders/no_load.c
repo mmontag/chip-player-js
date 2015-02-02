@@ -39,7 +39,7 @@ const struct format_loader no_loader = {
 
 static int no_test(HIO_HANDLE *f, char *t, const int start)
 {
-	int nsize;
+	int nsize, pat, chn;
 	int i;
 
 	hio_seek(f, start, SEEK_CUR);
@@ -48,6 +48,8 @@ static int no_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	nsize = hio_read8(f);
+	if (nsize != 20)
+		return -1;
 
 	/* test title */
 	for (i = 0; i < nsize; i++) {
@@ -55,10 +57,18 @@ static int no_test(HIO_HANDLE *f, char *t, const int start)
 			return -1;
 	}
 
-	hio_seek(f, 11, SEEK_CUR);
+	hio_seek(f, 9, SEEK_CUR);
+
+	/* test number of patterns */
+	pat = hio_read8(f);
+	if (pat == 0)
+		return -1;
+
+	hio_read8(f);
 
 	/* test number of channels */
-	if (hio_read8(f) > 16)
+	chn = hio_read8(f);
+	if (chn <= 0 || chn > 16)
 		return -1;
 
 	hio_seek(f, start + 5, SEEK_SET);
