@@ -331,6 +331,10 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
 
     if (t<=15)
     {
+      /* Sanity check */
+      if (r >= len_size)
+        return -1;
+
       lengths[r++]=t;
     }
       else
@@ -351,6 +355,10 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
       bitstream->bitptr-=2;
       bitstream->holding=bitstream->holding&((1<<bitstream->bitptr)-1);
 
+      /* Sanity check */
+      if (r + x + 3 >= len_size)
+        return -1;
+
       for (c=0; c<x+3; c++)
       { lengths[r++]=code; }
     }
@@ -368,6 +376,11 @@ static int load_codes(FILE *in, struct bitstream_t *bitstream, int *lengths, int
       bitstream->holding=bitstream->holding&((1<<bitstream->bitptr)-1);
 
       c=x+3;
+
+      /* Sanity check */
+      if (r + c >= len_size)
+        return -1;
+
       memset(&lengths[r],0,sizeof(int)*c);
       r=r+c;
     }
