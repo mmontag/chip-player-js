@@ -39,7 +39,7 @@ TEST(test_api_load_module_from_memory)
 	fail_unless(ret == 0, "load file");
 
 	xmp_get_frame_info(ctx, &fi);
-	fail_unless(fi.total_time == 15360, "module duration");
+	fail_unless(fi.total_time == 7680, "module duration");
 
 
 	/* reported crashing in 4.2.0 by Andreas Argirakis */

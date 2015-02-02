@@ -382,14 +382,6 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 		return -XMP_ERROR_LOAD;
 	}
 
-	/* Check orders */
-	for (i = 0; i < mod->len; i++) {
-		if (mod->xxo[i] < 0xfe && mod->xxo[i] >= mod->pat) {
-			/* Do something with invalid patterns */
-			mod->xxo[i] = 0;
-		}
-	}
-
 	adjust_string(mod->name);
 	load_epilogue(ctx);
 
