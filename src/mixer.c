@@ -454,7 +454,7 @@ void mixer_softmixer(struct context_data *ctx)
 				mix_fn = (*mixers)[mixer];
 
 				/* Call the output handler */
-				if (samples >= 0) {
+				if (samples >= 0 && vi->sptr != NULL) {
 					mix_fn(vi, buf_pos, samples, vol_l,
 								vol_r, step);
 					buf_pos += mix_size;

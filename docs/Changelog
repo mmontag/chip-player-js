@@ -21,6 +21,7 @@ Stable versions
 	- fix mixer index overflow with large samples
 	- fix prowizard data request response
 	- fix EU/NP1/NP2/NP3 prowizard depackers
+	- fix crash on attempt to play invalid sample
 	- reset module data before loading module
 	Other changes:
 	- fix loop processing error in scan (reported by Lionel Debroux)
