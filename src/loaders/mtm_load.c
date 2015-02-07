@@ -92,6 +92,11 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mfh.samples = hio_read8(f);	/* Number of samples */
 	mfh.attr = hio_read8(f);	/* Always zero */
 	mfh.rows = hio_read8(f);	/* Number rows per track */
+
+	/* Sanity check */
+	if (mfh.rows != 64)
+		return -1;
+
 	mfh.channels = hio_read8(f);	/* Number of tracks per pattern */
 	hio_read(&mfh.pan, 32, 1, f);	/* Pan positions for each channel */
 
