@@ -120,7 +120,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     while (42) {
 	if ((uint32)++ord >= mod->len) {
 	    if (mod->rst > mod->len || mod->xxo[mod->rst] >= mod->pat) {
-		ord = m->seq_data[chain].entry_point;
+		ord = ep;
 	    } else {
 		if (get_sequence(ctx, mod->rst) == chain) {
 	            ord = mod->rst;
