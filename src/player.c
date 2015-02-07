@@ -1107,6 +1107,23 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	return ret;
 }
 
+static void check_end_of_module(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct flow_control *f = &p->flow;
+
+	/* check end of module */
+	if (p->ord == p->scan[p->sequence].ord &&
+			p->row == p->scan[p->sequence].row) {
+		if (f->end_point == 0) {
+			p->loop_count++;
+			f->end_point = p->scan[p->sequence].num;
+			/* return -1; */
+		}
+		f->end_point--;
+	}
+}
+
 int xmp_play_frame(xmp_context opaque)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
@@ -1168,8 +1185,10 @@ int xmp_play_frame(xmp_context opaque)
 			 * EE2 + D31 ignores D00 in order 1C line 31. Reported
 			 * by The Welder <welder@majesty.net>, Jan 14 2012
 			 */
-			if (f->delay && f->pbreak)
+			if (f->delay && f->pbreak) {
 				next_row(ctx);
+				check_end_of_module(ctx);
+			}
 			next_row(ctx);
 		}
 	}
@@ -1177,16 +1196,8 @@ int xmp_play_frame(xmp_context opaque)
 	/* check new row */
 
 	if (p->frame == 0) {			/* first frame in row */
-		/* check end of module */
-	    	if (p->ord == p->scan[p->sequence].ord &&
-				p->row == p->scan[p->sequence].row) {
-			if (f->end_point == 0) {
-				p->loop_count++;
-				f->end_point = p->scan[p->sequence].num;
-				/* return -1; */
-			}
-			f->end_point--;
-		}
+
+		check_end_of_module(ctx);
 
 		read_row(ctx, mod->xxo[p->ord], p->row);
 
