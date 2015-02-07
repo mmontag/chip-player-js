@@ -186,22 +186,27 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (i == 0)
 			continue;
 
-		hio_read(&mt, 3, 64, f);
+		if (hio_read(&mt, 3, 64, f) != 64)
+			return -1;
+
 		for (j = 0; j < 64; j++) {
-			if ((mod->xxt[i]->event[j].note = mt[j * 3] >> 2))
-				mod->xxt[i]->event[j].note += 37;
-			mod->xxt[i]->event[j].ins =
-			    ((mt[j * 3] & 0x3) << 4) + MSN(mt[j * 3 + 1]);
-			mod->xxt[i]->event[j].fxt = LSN(mt[j * 3 + 1]);
-			mod->xxt[i]->event[j].fxp = mt[j * 3 + 2];
-			if (mod->xxt[i]->event[j].fxt > FX_SPEED)
-				mod->xxt[i]->event[j].fxt =
-				    mod->xxt[i]->event[j].fxp = 0;
+			struct xmp_event *e = &mod->xxt[i]->event[j];
+			uint8 *d = mt + j * 3;
+
+			if ((e->note = d[0] >> 2)) {
+				e->note += 37;
+			}
+			e->ins = ((d[0] & 0x3) << 4) + MSN(d[1]);
+			e->fxt = LSN(d[1]);
+			e->fxp = d[2];
+			if (e->fxt > FX_SPEED) {
+				e->fxt = e->fxp = 0;
+			}
+
 			/* Set pan effect translation */
-			if ((mod->xxt[i]->event[j].fxt == FX_EXTENDED) &&
-			    (MSN(mod->xxt[i]->event[j].fxp) == 0x8)) {
-				mod->xxt[i]->event[j].fxt = FX_SETPAN;
-				mod->xxt[i]->event[j].fxp <<= 4;
+			if (e->fxt == FX_EXTENDED && MSN(e->fxp) == 0x8) {
+				e->fxt = FX_SETPAN;
+				e->fxp <<= 4;
 			}
 		}
 	}
