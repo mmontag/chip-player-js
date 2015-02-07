@@ -1185,7 +1185,8 @@ int xmp_play_frame(xmp_context opaque)
 			 * EE2 + D31 ignores D00 in order 1C line 31. Reported
 			 * by The Welder <welder@majesty.net>, Jan 14 2012
 			 */
-			if (f->delay && f->pbreak) {
+			if (HAS_QUIRK(QUIRK_PROTRACK) && f->delay && f->pbreak)
+			{
 				next_row(ctx);
 				check_end_of_module(ctx);
 			}
