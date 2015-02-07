@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.5 ():
+4.3.5 (20150207):
 	- add sanity check for ST3 S3M maximum sample size
 	- add sanity check for sample loop start
 	- add sanity check for speed 0
@@ -16,6 +16,8 @@ Stable versions
 	- add sanity check for XM header size
 	- add sanity check for XM/IT/S3M parameters and sample size
 	- fix mixer index overflow with large samples
+	- fix crash on attempt to play invalid sample
+	- fix infinite loop in break+delay quirk
 	- reset module data before loading module
 	Other changes:
 	- fix loop processing error in scan (reported by Lionel Debroux)
