@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.3.6 ():
+	- fix instrument number in channel initialization
+
 4.3.5 (20150207):
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
 	- add sanity check for ST3 S3M maximum sample size
