@@ -4,6 +4,7 @@ Stable versions
 4.3.6 ():
 	- fix instrument number in channel initialization
 	- fix sample size limit (reported by Jochen Goernitz)
+	- fix loading of OpenMPT 1.17 IT modules (reported by Dane Bush)
 
 4.3.5 (20150207):
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
