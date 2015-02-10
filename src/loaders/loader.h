@@ -10,7 +10,7 @@
 #include "hio.h"
 
 /* Arbitrary limit to prevent unreasonably large allocations */
-#define MAX_SAMPLE_SIZE		0x400000
+#define MAX_SAMPLE_SIZE		0x00800000
 
 /* Sample flags */
 #define SAMPLE_FLAG_DIFF	0x0001	/* Differential */
