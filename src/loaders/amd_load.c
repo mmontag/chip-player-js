@@ -167,9 +167,14 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 	}
 	mod->trk++;
 
+	/* Sanity check */
+	if (mod->trk > mod->pat * 9) {
+		return -1;
+	}
+
 	stored_tracks = hio_read16l(f);
 
-	D_(D_INFO "Stored tracks: %d", w);
+	D_(D_INFO "Stored tracks: %d", stored_tracks);
 
 	mod->xxt = calloc(sizeof(struct xmp_track *), mod->trk);
 	if (mod->xxt == NULL)
@@ -177,6 +182,12 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 
 	for (i = 0; i < stored_tracks; i++) {
 		w = hio_read16l(f);
+
+		/* Sanity check */
+		if (w >= mod->trk) {
+			return -1;
+		}
+
 		if (track_alloc(mod, w, 64) < 0)
 			return -1;
 

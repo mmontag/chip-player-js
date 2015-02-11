@@ -5,7 +5,8 @@ Stable versions
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
 	- add sanity check to GDM loader
 	- add sanity check to MDL pattern loader
-	- add sanity check for number of channels in MMD
+	- add sanity check to AMD number of patterns
+	- add sanity check to MMD1/3 number of channels
 	Other changes:
 	- fix instrument number in channel initialization
 	- fix sample size limit (reported by Jochen Goernitz)
