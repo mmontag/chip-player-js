@@ -465,21 +465,23 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    struct xmp_event *ev = &track->event[row];
 
 	    j = hio_read8(f);
+
 	    len--;
 	    switch (j & 0x03) {
 	    case 0:
 		row += j >> 2;
-	        /* ev = &track->event[row]; */
 		break;
 	    case 1:
+		/* Sanity check */
+		if (row + (j >> 2) > 255)
+		    return -1;
+
 		for (k = 0; k <= (j >> 2); k++)
-		    memcpy (&ev[k], &ev[-1], sizeof (struct xmp_event));
+		    memcpy(&ev[k], &ev[-1], sizeof (struct xmp_event));
 		row += k - 1;
-	        /* ev = &track->event[row]; */
 		break;
 	    case 2:
-		memcpy (ev, &track->event[j >> 2],
-		    sizeof (struct xmp_event));
+		memcpy(ev, &track->event[j >> 2], sizeof (struct xmp_event));
 		break;
 	    case 3:
 		if (j & MDL_NOTE_FOLLOWS) {
