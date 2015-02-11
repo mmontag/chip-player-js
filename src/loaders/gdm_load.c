@@ -298,6 +298,11 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			if (c == 0) {
 				r++;
+
+				/* Sanity check */
+				if (r >= 64)
+					return -1;
+
 				continue;
 			}
 
