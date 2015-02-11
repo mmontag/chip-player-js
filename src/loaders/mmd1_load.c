@@ -279,6 +279,11 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->chn = block.numtracks;
 	}
 
+	/* Sanity check */
+	if (mod->chn > XMP_MAX_CHANNELS) {
+		return -1;
+	}
+
 	mod->trk = mod->pat * mod->chn;
 
 	set_type(m, ver == 0 ? mod->chn > 4 ? "OctaMED 2.00 MMD0" :

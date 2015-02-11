@@ -4,6 +4,7 @@ Stable versions
 4.3.6 ():
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
 	- add sanity check to GDM loader
+	- add sanity check for number of channels in MMD
 	Other changes:
 	- fix instrument number in channel initialization
 	- fix sample size limit (reported by Jochen Goernitz)
