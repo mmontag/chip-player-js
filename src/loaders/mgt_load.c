@@ -181,6 +181,10 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		rows = hio_read16b(f);
 
+		/* Sanity check */
+		if (rows > 255)
+			return -1;
+
 		if (track_alloc(mod, i, rows) < 0)
 			return -1;
 
@@ -190,6 +194,10 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			b = hio_read8(f);
 			j += b & 0x03;
+
+			/* Sanity check */
+			if (j >= rows)
+				return -1;
 
 			note = 0;
 			event = &mod->xxt[i]->event[j];
