@@ -168,8 +168,9 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			do {
 				c = hio_read8(f);	/* Channel number */
 
-				if ((c & 0x7f) >= mod->chn) {
-					D_(D_CRIT "** Whoops! channel = %d\n", c);
+				/* Sanity check */
+				if ((c & 0x7f) >= mod->chn || (r & 0x7f) >= 64) {
+					return -1;
 				}
 
 				event = &EVENT(i, c & 0x7f, r & 0x7f);
