@@ -225,6 +225,16 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		D_(D_INFO "iinfo_offset = 0x%08x", iinfo_offset);
 		expdata.i_ext_entries = hio_read16b(f);
 		expdata.i_ext_entrsz = hio_read16b(f);
+
+		/* Sanity check */
+		if (expsmp_offset < 0 ||
+		    expdata.s_ext_entries < 0 ||
+		    expdata.s_ext_entrsz < 0 ||
+		    annotxt_offset < 0 ||
+		    iinfo_offset < 0) {
+			return -1;
+		}
+
 		hio_read32b(f);
 		hio_read32b(f);
 		hio_read32b(f);
