@@ -454,7 +454,7 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		synth->wf[j] = hio_read32b(f);
 
 	/* Sanity check */
-	if (synth->voltbllen > 128 || synth->wftbllen > 128) {
+	if (synth->voltbllen > 128 || synth->wftbllen > 128 || synth->wforms > 256) {
 		return -1;
 	}
 

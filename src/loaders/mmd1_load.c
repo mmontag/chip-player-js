@@ -196,8 +196,15 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read32b(f);				/* length */
 		type = hio_read16b(f);
 		if (type == -1) {			/* type is synth? */
+			int wforms;
 			hio_seek(f, 14, SEEK_CUR);
-			mod->smp += hio_read16b(f);		/* wforms */
+			wforms = hio_read16b(f);
+
+			/* Sanity check */
+			if (wforms > 256)
+				return -1;
+
+			mod->smp += wforms;
 		} else if (type >= 1 && type <= 6) {
 			mod->smp += num_oct[type - 1];
 		} else {
