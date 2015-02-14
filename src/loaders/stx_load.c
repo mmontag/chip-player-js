@@ -163,6 +163,10 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
     sfh.unknown8 = hio_read16l(f);
     hio_read(&sfh.magic2, 4, 1, f);
 
+    /* Sanity check */
+    if (sfh.patnum > 254 || sfh.insnum > 256 || sfh.ordnum > 256)
+	return -1;
+
     /* BMOD2STM does not convert pitch */
     if (!strncmp ((char *) sfh.magic, "BMOD2STM", 8))
 	bmod2stm = 1;

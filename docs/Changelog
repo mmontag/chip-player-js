@@ -8,6 +8,7 @@ Stable versions
 	- add sanity check to RAD pattern loader
 	- add sanity check to MGT pattern loader
 	- add sanity check to AMD number of patterns
+	- add sanity check to STX number of patterns
 	- add sanity check to MMD1/3 number of channels
 	Other changes:
 	- fix instrument number in channel initialization
