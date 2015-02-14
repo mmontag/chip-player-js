@@ -447,6 +447,13 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     main_header.songs_offset = hio_read32b(f);
     main_header.patterns_offset = hio_read32b(f);
 
+    /* Sanity check */
+    if (main_header.instruments_offset > 0x00100000 ||
+        main_header.songs_offset > 0x00100000 ||
+        main_header.patterns_offset > 0x00100000) {
+            return -1;
+    }
+
     inst_section_size = main_header.instruments_offset;
     D_(D_INFO "Sample Bytes: %d", inst_section_size);
 
@@ -473,6 +480,11 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_seek(f, AMOS_MAIN_HEADER + main_header.instruments_offset, SEEK_SET);
     mod->ins = hio_read16b(f);
     mod->smp = mod->ins;
+
+    /* Sanity check */
+    if (mod->pat > 256 || mod->ins > 255) {
+	return -1;
+    }
 
     /* Read and convert instruments and samples */
 
