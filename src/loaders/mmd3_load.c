@@ -481,6 +481,8 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 		} else if ((instr.type & ~(S_16 | STEREO)) != 0) {
 			/* Filter out stereo samples */
+			D_(D_WARN "stereo sample unsupported");
+			mod->xxi[i].nsm = 0;
 			continue;
 		} else if (instr.type == 0) {		/* Sample */
 			int ret;
@@ -499,6 +501,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 		} else {
 			/* Invalid instrument type */
+			D_(D_CRIT "invalid instrument type");
 			return -1;
 		}
 	}

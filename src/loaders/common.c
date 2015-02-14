@@ -100,6 +100,7 @@ int tracks_in_pattern_alloc(struct xmp_module *mod, int num)
 {
 	int i;
 
+	D_(D_INFO "Alloc %d tracks of %d rows", mod->chn, mod->xxp[num]->rows);
 	for (i = 0; i < mod->chn; i++) {
 		int t = num * mod->chn + i;
 		int rows = mod->xxp[num]->rows;
