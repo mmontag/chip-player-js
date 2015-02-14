@@ -7,10 +7,11 @@ Stable versions
 	- add sanity check to MDL pattern loader
 	- add sanity check to RAD pattern loader
 	- add sanity check to MGT pattern loader
-	- add sanity check to AMD number of patterns
-	- add sanity check to STX number of patterns
-	- add sanity check to MMD1/3 number of channels
-	- add sanity check to MMD1/3 instrument type
+	- add sanity check to OKT sample chunk loader
+	- add sanity check for AMD number of patterns
+	- add sanity check for STX number of patterns
+	- add sanity check for MMD1/3 number of channels
+	- add sanity check for MMD1/3 instrument type
 	Other changes:
 	- fix instrument number in channel initialization
 	- fix sample size limit (reported by Jochen Goernitz)

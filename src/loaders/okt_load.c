@@ -123,6 +123,10 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int i, j;
 	int looplen;
 
+	/* Sanity check */
+	if (size != 36 * 32)
+		return -1;
+
 	/* Should be always 36 */
 	mod->ins = size / 32;	/* sizeof(struct okt_instrument_header); */
 	mod->smp = mod->ins;
