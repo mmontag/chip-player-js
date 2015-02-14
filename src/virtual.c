@@ -122,9 +122,6 @@ void virt_off(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 
-	if (p->virt.virt_channels < 1)
-		return;
-
 	p->virt.virt_used = p->virt.maxvoc = 0;
 	p->virt.virt_channels = 0;
 	p->virt.num_tracks = 0;
