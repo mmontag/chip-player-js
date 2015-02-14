@@ -91,8 +91,17 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sh.len = hio_read16b(f);
 	sh.pat = hio_read16b(f);
 	hio_read(&sh.order, 128, 1, f);
-	for (i = 0; i < 64; i++)
+
+	/* Sanity check */
+	if (sh.nos > 31 || sh.len > 256 || sh.pat > 64) {
+		return -1;
+	}
+
+	for (i = 0; i < 64; i++) {
 		sh.pataddr[i] = hio_read32b(f) + 0x0c;
+		if (sh.pataddr[i] > 0x00100000)
+			return -1;
+	}
 
 	mod->len = sh.len;
 	mod->pat = sh.pat;
