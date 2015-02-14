@@ -424,6 +424,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		for (j = 0; j < 32; j++) {
 			int line = y * 32 + j;
 
+			if (line >= rows)
+				break;
+
 			if (linemask[y] & 0x80000000) {
 				chmsk = stream_read_aligned16(&stream, chn);
 				for (k = 0; k < chn; k++, chmsk <<= 1) {
