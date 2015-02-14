@@ -291,8 +291,15 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		tracker_name, lh.version >> 8, lh.version & 0x00ff);
 
     if (lh.version > 0) {
-	for (i = 0; i < mod->chn; i++)
-	    mod->xxc[i].pan = hio_read8(f) << 2;
+	for (i = 0; i < mod->chn; i++) {
+	    uint8 pan = hio_read8(f);
+
+	    /* Sanity check */
+	    if (pan >= 64)
+		return -1;
+
+	    mod->xxc[i].pan = pan << 2;
+	}
 
 	for (i = 0; i < mod->chn; i++)
 	    mod->xxc[i].vol = hio_read8(f);
@@ -485,11 +492,11 @@ next_row:
 	    row = 0;
 	    x2 = 0;
 	    channel++;
+	}
 
-	    /* FIXME */
-	    if (channel >= mod->chn) {
-		channel = 0;
-	    }
+	/* Sanity check */
+	if (channel >= mod->chn) {
+	    channel = 0;
 	}
 
 	goto read_event;
