@@ -455,8 +455,11 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 			sample->strans,
 			exp_smp->finetune);
 
-	if (synth->wforms == 0xffff)	
+	if (synth->wforms == 0xffff) {
+		xxi->nsm = 0;
 		return 1;
+	}
+
 	if (synth->wforms > 64)
 		return -1;
 
