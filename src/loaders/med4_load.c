@@ -334,6 +334,11 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, size + plen - 4, SEEK_CUR);
 	}
 
+	/* Sanity check */
+	if (mod->chn > 16) {
+		return -1;
+	}
+
 	mod->trk = mod->chn * mod->pat;
 
 	if (pattern_init(mod) < 0)
