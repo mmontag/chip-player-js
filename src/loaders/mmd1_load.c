@@ -138,8 +138,12 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 	song.numblocks = hio_read16b(f);
 	song.songlen = hio_read16b(f);
-	if (song.songlen > 256)
-	  return -1;
+
+	/* Sanity check */
+	if (song.numblocks > 255 || song.songlen > 256) {
+		return -1;
+	}
+
 	D_(D_INFO "song.songlen = %d", song.songlen);
 	for (i = 0; i < 256; i++)
 		song.playseq[i] = hio_read8(f);

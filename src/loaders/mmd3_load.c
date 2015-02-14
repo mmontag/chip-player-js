@@ -174,8 +174,15 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read32b(f);
 	hio_read32b(f);
 	mod->len = hio_read16b(f);
-	for (i = 0; i < mod->len; i++)
+
+	/* Sanity check */
+	if (mod->len > 255) {
+		return -1;
+	}
+
+	for (i = 0; i < mod->len; i++) {
 		mod->xxo[i] = hio_read16b(f);
+	}
 
 	/*
 	 * convert header
