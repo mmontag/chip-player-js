@@ -196,6 +196,11 @@ static int get_plen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_module *mod = &m->mod;
 
 	mod->len = hio_read16b(f);
+
+	/* Sanity check */
+	if (mod->len > 256)
+		return -1;
+
 	D_(D_INFO "Module length: %d", mod->len);
 
 	return 0;
@@ -205,7 +210,8 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
-	hio_read(mod->xxo, 1, mod->len, f);
+	if (hio_read(mod->xxo, 1, mod->len, f) != mod->len)
+		return -1;
 
 	return 0;
 }
