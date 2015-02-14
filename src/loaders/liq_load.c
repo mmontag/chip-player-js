@@ -347,6 +347,11 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	lp.size = hio_read32l(f);
 	lp.reserved = hio_read32l(f);
 
+	/* Sanity check */
+	if (lp.rows > 256) {
+	    return -1;
+	}
+
 	D_(D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
 
 	mod->xxp[i]->rows = lp.rows;
@@ -437,6 +442,11 @@ test_event:
 	    xlat_fx (channel, event); 
 	    while (x2) {
 	        row++;
+
+		/* Sanity check */
+		if (row >= lp.rows)
+		    return -1;
+
 		memcpy(&EVENT(i, channel, row), event, sizeof (struct xmp_event));
 		x2--;
 	    }
