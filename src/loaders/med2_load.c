@@ -111,15 +111,26 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat = hio_read16b(f);
 	mod->trk = mod->chn * mod->pat;
 
-	hio_read(mod->xxo, 1, 100, f);
+	if (hio_read(mod->xxo, 1, 100, f) != 100)
+		return -1;
+
 	mod->len = hio_read16b(f);
 
-	mod->spd = 192 / hio_read16b(f);
+	/* Sanity check */
+	if (mod->pat > 256 || mod->len > 100)
+		return -1;
+
+	k = hio_read16b(f);
+	if (k < 1) {
+		return -1;
+	}
+
+	mod->spd = 192 / k;
 
 	hio_read16b(f);			/* flags */
-	sliding = hio_read16b(f);		/* sliding */
+	sliding = hio_read16b(f);	/* sliding */
 	hio_read32b(f);			/* jumping mask */
-	hio_seek(f, 16, SEEK_CUR);		/* rgb */
+	hio_seek(f, 16, SEEK_CUR);	/* rgb */
 
 	MODULE_INFO();
 

@@ -4,6 +4,7 @@ Stable versions
 4.3.6 ():
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
 	- add sanity check to STIM loader
+	- add sanity check to MED2/3 loader
 	- add sanity check to GDM loader
 	- add sanity check to MDL pattern loader
 	- add sanity check to RAD pattern loader
