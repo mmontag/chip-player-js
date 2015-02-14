@@ -418,7 +418,8 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			D_(D_INFO "[%2x] %-40.40s %d", i, mod->xxi[i].name, instr.type);
 		}
 
-		exp_smp.finetune = 0;
+		memset(&exp_smp, 0, sizeof(struct InstrExt));
+
 		if (expdata_offset && i < expdata.s_ext_entries) {
 			hio_seek(f, expsmp_offset + i * expdata.s_ext_entrsz,
 							SEEK_SET);
