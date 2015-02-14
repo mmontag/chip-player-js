@@ -390,6 +390,11 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	hio_read(synth->voltbl, 1, 128, f);;
 	hio_read(synth->wftbl, 1, 128, f);;
 
+	/* Sanity check */
+	if (synth->voltbllen > 128 || synth->wftbllen > 128) {
+		return -1;
+	}
+
 	hio_seek(f, pos - 6 + hio_read32b(f), SEEK_SET);
 	length = hio_read32b(f);
 	type = hio_read16b(f);
@@ -447,6 +452,11 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	hio_read(synth->wftbl, 1, 128, f);;
 	for (j = 0; j < 64; j++)
 		synth->wf[j] = hio_read32b(f);
+
+	/* Sanity check */
+	if (synth->voltbllen > 128 || synth->wftbllen > 128) {
+		return -1;
+	}
 
 	D_(D_INFO "  VS:%02x WS:%02x WF:%02x %02x %+3d %+1d",
 			synth->volspeed, synth->wfspeed,
@@ -510,7 +520,7 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	struct xmp_sample *xxs;
 	int j, k;
 
-	// hold & decay support
+	/* hold & decay support */
         if (med_new_instrument_extras(xxi) != 0)
                 return -1;
 	MED_INSTRUMENT_EXTRAS(*xxi)->hold = exp_smp->hold;
