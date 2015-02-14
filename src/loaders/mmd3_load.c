@@ -441,9 +441,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				return -1;
 
 			continue;
-		}
-
-		if (instr.type == -1) {			/* Synthetic */
+		} else if (instr.type == -1) {		/* Synthetic */
 			int ret = mmd_load_synth_instrument(f, m, i, smp_idx,
 				&synth, &exp_smp, &song.sample[i]);
 
@@ -459,9 +457,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				return -1;
 
 			continue;
-		}
-
-		if (instr.type >= 1 && instr.type <= 6) {	/* IFFOCT */
+		} else if (instr.type >= 1 && instr.type <= 6) { /* IFFOCT */
 			int ret;
 			const int oct = num_oct[instr.type - 1];
 
@@ -476,13 +472,10 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			smp_idx += oct;
 
 			continue;
-		}
-
-		/* Filter out stereo samples */
-		if ((instr.type & ~(S_16 | STEREO)) != 0)
+		} else if ((instr.type & ~(S_16 | STEREO)) != 0) {
+			/* Filter out stereo samples */
 			continue;
-
-		if (instr.type == 0) {			/* Sample */
+		} else if (instr.type == 0) {		/* Sample */
 			int ret;
 
 			hio_seek(f, start + smpl_offset + 6, SEEK_SET);
@@ -497,6 +490,9 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			smp_idx++;
 
 			continue;
+		} else {
+			/* Invalid instrument type */
+			return -1;
 		}
 	}
 

@@ -10,6 +10,7 @@ Stable versions
 	- add sanity check to AMD number of patterns
 	- add sanity check to STX number of patterns
 	- add sanity check to MMD1/3 number of channels
+	- add sanity check to MMD1/3 instrument type
 	Other changes:
 	- fix instrument number in channel initialization
 	- fix sample size limit (reported by Jochen Goernitz)
