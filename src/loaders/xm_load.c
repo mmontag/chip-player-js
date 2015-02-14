@@ -557,7 +557,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     xfh.bpm = hio_read16l(f);		/* Default BPM */
 
     /* Sanity checks */
-    if (xfh.songlen > 255 || xfh.patterns > 255 || xfh.instruments > 255)
+    if (xfh.songlen > 256 || xfh.patterns > 255 || xfh.instruments > 255)
 	return -1;
 
     if (xfh.restart > 255 || xfh.channels > XMP_MAX_CHANNELS)
