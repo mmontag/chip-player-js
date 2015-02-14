@@ -627,7 +627,11 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	if (num_oct < 2 || num_oct > 7)
 		return -1;
 
-	// hold & decay support
+	/* Sanity check */
+	if (smp_idx + num_oct > mod->smp)
+		return -1;
+
+	/* hold & decay support */
 	if (med_new_instrument_extras(xxi) != 0)
 		return -1;
 
