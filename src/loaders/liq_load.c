@@ -261,6 +261,11 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
     lh.len = hio_read16l(f);
     lh.hdrsz = hio_read16l(f);
 
+    /* Sanity check */
+    if (lh.chn > XMP_MAX_CHANNELS || lh.pat > 256 || lh.ins > 256 || lh.len > 256) {
+	return -1;
+    }
+
     if ((lh.version >> 8) == 0) {
 	lh.hdrsz = lh.len;
 	lh.len = 0;
