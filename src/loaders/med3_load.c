@@ -276,6 +276,11 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->trk = mod->chn * mod->pat;
 
 	mod->len = hio_read16b(f);
+
+	/* Sanity check */
+	if (mod->len > 256 || mod->pat > 256)
+		return -1;
+
 	hio_read(mod->xxo, 1, mod->len, f);
 	mod->spd = hio_read16b(f);
 	if (mod->spd > 10) {
