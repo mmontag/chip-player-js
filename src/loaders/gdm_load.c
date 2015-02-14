@@ -185,7 +185,9 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
 
-		hio_read(buffer, 32, 1, f);
+		if (hio_read(buffer, 1, 32, f) != 32)
+			return -1;
+
 		instrument_name(mod, i, buffer, 32);
 		hio_seek(f, 12, SEEK_CUR);		/* skip filename */
 		hio_read8(f);			/* skip EMS handle */
