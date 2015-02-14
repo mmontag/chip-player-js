@@ -632,6 +632,12 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			synth.volspeed = hio_read8(f);
 			synth.wfspeed = hio_read8(f);
 			synth.wforms = hio_read16b(f);
+
+			/* Sanity check */
+			if (synth.voltbllen > 128 || synth.wftbllen > 128) {
+				return -1;
+			}
+
 			hio_read(synth.voltbl, 1, synth.voltbllen, f);;
 			hio_read(synth.wftbl, 1, synth.wftbllen, f);;
 			if (synth.wforms == 0xffff)	
