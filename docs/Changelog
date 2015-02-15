@@ -6,6 +6,7 @@ Stable versions
 	- add sanity check to STIM loader
 	- add sanity check to MED2/3/4 loader
 	- add sanity check to GDM loader
+	- add sanity check to DBM loader
 	- add sanity check to LIQ loader and remove assertions
 	- add sanity check to MDL pattern loader
 	- add sanity check to RAD pattern loader

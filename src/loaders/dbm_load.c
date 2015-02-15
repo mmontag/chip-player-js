@@ -67,6 +67,10 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->pat = hio_read16b(f);
 	mod->chn = hio_read16b(f);
 
+	/* Sanity check */
+	if (mod->ins > 255 || mod->pat > 256 || mod->chn > XMP_MAX_CHANNELS)
+		return -1;
+
 	mod->trk = mod->pat * mod->chn;
 
 	if (instrument_init(mod) < 0)
