@@ -1742,7 +1742,7 @@ static float inverse_db_table[256] =
 int8 integer_divide_table[DIVTAB_NUMER][DIVTAB_DENOM]; // 2KB
 #endif
 
-static __forceinline void draw_line(float *output, int x0, int y0, int x1, int y1, int n)
+static __forceinline int draw_line(float *output, int x0, int y0, int x1, int y1, int n)
 {
    int dy = y1 - y0;
    int adx = x1 - x0;
@@ -1751,6 +1751,11 @@ static __forceinline void draw_line(float *output, int x0, int y0, int x1, int y
    int x=x0,y=y0;
    int err = 0;
    int sy;
+
+   /* Sanity check */
+   if (adx == 0) {
+	return -1;
+   }
 
 #ifdef STB_VORBIS_DIVIDE_TABLE
    if (adx < DIVTAB_DENOM && ady < DIVTAB_NUMER) {
@@ -1787,6 +1792,8 @@ static __forceinline void draw_line(float *output, int x0, int y0, int x1, int y
          y += base;
       LINE_OP(output[x], inverse_db_table[y]);
    }
+
+   return 0;
 }
 
 static int residue_decode(vorb *f, Codebook *book, float *target, int offset, int n, int rtype)
@@ -2852,7 +2859,8 @@ static int do_floor(vorb *f, Mapping *map, int i, int n, float *target, YTYPE *f
          {
             int hy = finalY[j] * g->floor1_multiplier;
             int hx = g->Xlist[j];
-            draw_line(target, lx,ly, hx,hy, n2);
+            if (draw_line(target, lx,ly, hx,hy, n2) < 0)
+		return FALSE;
             lx = hx, ly = hy;
          }
       }
