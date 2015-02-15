@@ -1439,6 +1439,12 @@ static int codebook_decode(vorb *f, Codebook *c, float *output, int len)
 #endif
 
    z *= c->dimensions;
+
+   /* Sanity check */
+   if (len + z > c->entries * c->dimensions) {
+     return FALSE;
+   }
+
    if (c->sequence_p) {
       float last = CODEBOOK_ELEMENT_BASE(c);
       for (i=0; i < len; ++i) {
@@ -3586,6 +3592,12 @@ static int start_decoder(vorb *f)
 
          #ifdef STB_VORBIS_CODEBOOK_FLOATS
          if (c->lookup_type == 2 && c->sequence_p) {
+
+            /* Sanity check */
+            if (c->lookup_values > c->entries * c->dimensions) {
+               return FALSE;
+            }
+
             for (j=1; j < (int) c->lookup_values; ++j)
                c->multiplicands[j] = c->multiplicands[j-1];
             c->sequence_p = 0;
