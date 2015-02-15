@@ -1441,12 +1441,18 @@ static int codebook_decode(vorb *f, Codebook *c, float *output, int len)
    z *= c->dimensions;
 
    /* Sanity check */
-   if (c->sparse) {
-      if (len + z > c->sorted_entries * c->dimensions) {
-         return FALSE;
+   if (c->lookup_type == 2) {
+      if (c->sparse) {
+         if (len + z > c->sorted_entries * c->dimensions) {
+            return FALSE;
+         }
+      } else {
+         if (len + z > c->entries * c->dimensions) {
+            return FALSE;
+         }
       }
    } else {
-      if (len + z > c->entries * c->dimensions) {
+      if (len + z > c->lookup_values) {
          return FALSE;
       }
    }
@@ -1788,8 +1794,15 @@ static __forceinline int draw_line(float *output, int x0, int y0, int x1, int y1
       if (err >= adx) {
          err -= adx;
          y += sy;
-      } else
+      } else {
          y += base;
+      }
+
+      /* Sanity check */
+      if (y >= 256) {
+        return -1;
+      }
+
       LINE_OP(output[x], inverse_db_table[y]);
    }
 
@@ -3608,18 +3621,17 @@ static int start_decoder(vorb *f)
          if (c->lookup_type == 2 && c->sequence_p) {
 
             /* Sanity check */
-	    if (c->sparse) {
+            if (c->sparse) {
                if (c->lookup_values > c->sorted_entries * c->dimensions) {
                   return FALSE;
                }
-	    } else {
+            } else {
                if (c->lookup_values > c->entries * c->dimensions) {
                   return FALSE;
                }
-	    }
+            }
 
             for (j=1; j < (int) c->lookup_values; ++j)
-printf("j=%d (%d)\n", j, c->entries * c->dimensions);
                c->multiplicands[j] = c->multiplicands[j-1];
             c->sequence_p = 0;
          }
