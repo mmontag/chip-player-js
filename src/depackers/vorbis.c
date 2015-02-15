@@ -3544,6 +3544,12 @@ static int start_decoder(vorb *f)
                             //   !STB_VORBIS_DIVIDES_IN_CODEBOOK
                          #endif
                   div *= c->lookup_values;
+
+                  /* Sanity check */
+                  if (div == 0) {
+                    free(mults);
+                    return FALSE;
+                  }
                }
             }
             setup_temp_free(f, mults,sizeof(mults[0])*c->lookup_values);
