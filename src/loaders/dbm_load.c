@@ -97,6 +97,11 @@ static int get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->len = hio_read16b(f);
 	D_(D_INFO "Song length: %d patterns", mod->len);
 
+	/* Sanity check */
+	if (mod->len > 256) {
+		return -1;
+	}
+
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = hio_read16b(f);
 
