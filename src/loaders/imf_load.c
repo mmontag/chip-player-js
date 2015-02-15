@@ -255,6 +255,11 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_read(&ih.unused2, 8, 1, f);
     ih.magic = hio_read32b(f);
 
+    /* Sanity check */
+    if (ih.len > 256 || ih.pat > 256 || ih.ins > 255) {
+	return -1;
+    }
+
     for (i = 0; i < 32; i++) {
 	hio_read(&ih.chn[i].name, 12, 1, f);
 	ih.chn[i].status = hio_read8(f);
@@ -265,10 +270,9 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     hio_read(&ih.pos, 256, 1, f);
 
-#if 0
-    if (ih.magic != MAGIC_IM10)
+    if (ih.magic != MAGIC_IM10) {
 	return -1;
-#endif
+    }
 
     copy_adjust(mod->name, (uint8 *)ih.name, 32);
 
@@ -303,9 +307,10 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->trk = mod->pat * mod->chn;
  
     memcpy(mod->xxo, ih.pos, mod->len);
-    for (i = 0; i < mod->len; i++)
+    for (i = 0; i < mod->len; i++) {
 	if (mod->xxo[i] == 0xff)
 	    mod->xxo[i]--;
+    }
 
     m->c4rate = C4_NTSC_RATE;
 
@@ -317,9 +322,18 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
+        int rows;
+
 	pat_len = hio_read16l(f) - 4;
 
-	if (pattern_tracks_alloc(mod, i, hio_read16l(f)) < 0)
+        rows = hio_read16l(f);
+
+	/* Sanity check */
+	if (rows > 256) {
+	    return -1;
+	}
+
+	if (pattern_tracks_alloc(mod, i, rows) < 0)
 	    return -1;
 
 	r = 0;
@@ -332,8 +346,13 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		continue;
 	    }
 
+	    /* Sanity check */
+	    if (r >= rows) {
+		return -1;
+	    }
+
 	    c = b & IMF_CH_MASK;
-	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
+	    event = c >= mod->chn ? &dummy : &EVENT(i, c, r);
 
 	    if (b & IMF_NI_FOLLOW) {
 		n = hio_read8(f);
