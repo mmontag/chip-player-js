@@ -858,8 +858,12 @@ static int lookup1_values(int entries, int dim)
    int r = (int) floor(exp((float) log((float) entries) / dim));
    if ((int) floor(pow((float) r+1, dim)) <= entries)   // (int) cast for MinGW warning;
       ++r;                                              // floor() to avoid _ftol() when non-CRT
-   assert(pow((float) r+1, dim) > entries);
-   assert((int) floor(pow((float) r, dim)) <= entries); // (int),floor() as above
+   if (pow((float) r+1, dim) <= entries) {
+      return -1;
+   }
+   if ((int) floor(pow((float) r, dim)) > entries) {	// (int),floor() as above
+      return -1;
+   }
    return r;
 }
 
@@ -3512,6 +3516,11 @@ static int start_decoder(vorb *f)
          c->sequence_p = get_bits(f,1);
          if (c->lookup_type == 1) {
             c->lookup_values = lookup1_values(c->entries, c->dimensions);
+
+	    /* Sanity check */
+            if (c->lookup_values <= 0) {
+              return FALSE;
+            }
          } else {
             c->lookup_values = c->entries * c->dimensions;
          }
