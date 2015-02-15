@@ -262,7 +262,7 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
     lh.hdrsz = hio_read16l(f);
 
     /* Sanity check */
-    if (lh.chn > XMP_MAX_CHANNELS || lh.pat > 256 || lh.ins > 256 || lh.len > 256) {
+    if (lh.chn > XMP_MAX_CHANNELS || lh.pat > 256 || lh.ins > 256) {
 	return -1;
     }
 
@@ -270,6 +270,10 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	lh.hdrsz = lh.len;
 	lh.len = 0;
 	hio_seek(f, -2, SEEK_CUR);
+    }
+
+    if (lh.len > 256) {
+	return -1;
     }
 
     mod->spd = lh.speed;
