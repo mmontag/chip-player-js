@@ -93,6 +93,11 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 	int16 *pcm16;
 	uint32 id;
 
+	/* Sanity check */
+	if (len < 4) {
+		return NULL;
+	}
+
 	/*size =*/ read32l(f);
 	id = read32b(f);
 	fseek(f, -8, SEEK_CUR);
