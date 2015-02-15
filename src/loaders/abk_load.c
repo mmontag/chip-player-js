@@ -180,7 +180,7 @@ static int read_abk_song(HIO_HANDLE *f, struct abk_song *song, uint32 songs_sect
  * @param pattern_offset_abs the absolute file offset to the start of the patter to read.
  * @return returns the size of the pattern.
  */
-static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 pattern_offset_abs)
+static int read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 pattern_offset_abs)
 {
     uint8 position;
     uint8 command;
@@ -307,9 +307,13 @@ static uint16 read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 p
                 jumped = 1;
                 break;
             default:
+#if 0
                 /* write out an error for any unprocessed commands.*/
                 D_(D_WARN "ABK UNPROCESSED COMMAND: %x,%x\n", command, param);
                 break;
+#else
+		return -1;
+#endif
             }
         }
         else
@@ -571,10 +575,13 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
             return -1;
         }
 
-        for (k = 0; k  < mod->chn; k++)
+        for (k = 0; k < mod->chn; k++)
         {
             pattern = hio_read16b(f);
-            read_abk_pattern(f,  mod->xxt[(i*mod->chn)+k]->event, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern);
+            if (read_abk_pattern(f,  mod->xxt[(i*mod->chn)+k]->event, AMOS_MAIN_HEADER + main_header.patterns_offset + pattern) < 0) {
+    		free(playlist.pattern);
+		return -1;
+	    }
         }
 
         i++;
