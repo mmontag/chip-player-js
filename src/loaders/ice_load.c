@@ -93,6 +93,17 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	hio_read(&ih.ord, 128 * 4, 1, f);
 	ih.magic = hio_read32b(f);
 
+	/* Sanity check */
+	if (ih.len > 128) {
+		return -1;
+	}
+	for (i = 0; i < ih.len; i++) {
+		for (j = 0; j < 4; j++) {
+			if (ih.ord[i][j] >= ih.trk)
+				return -1;
+		}
+	}
+
 	if (ih.magic == MAGIC_IT10)
 		set_type(m, "Ice Tracker");
 	else if (ih.magic == MAGIC_MTN_)
