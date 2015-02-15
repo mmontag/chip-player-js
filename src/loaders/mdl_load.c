@@ -443,10 +443,23 @@ static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
     struct xmp_module *mod = &m->mod;
-    int i, j, k, row, len;
+    int i, j, k, row, len, max_trk;
     struct xmp_track *track;
 
     mod->trk = hio_read16l(f) + 1;
+
+    /* Sanity check */
+    max_trk = 0;
+    for (i = 0; i < mod->pat; i++) {
+	for (j = 0; j < mod->chn; j++) {
+	    if (max_trk < mod->xxp[i]->index[j])
+		max_trk = mod->xxp[i]->index[j];
+	}
+    }
+    if (max_trk >= mod->trk) {
+	return -1;
+    }
+
     if ((mod->xxt = calloc(sizeof (struct xmp_track *), mod->trk)) == NULL)
 	return -1;
 
