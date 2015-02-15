@@ -1441,8 +1441,14 @@ static int codebook_decode(vorb *f, Codebook *c, float *output, int len)
    z *= c->dimensions;
 
    /* Sanity check */
-   if (len + z > c->entries * c->dimensions) {
-     return FALSE;
+   if (c->sparse) {
+      if (len + z > c->sorted_entries * c->dimensions) {
+         return FALSE;
+      }
+   } else {
+      if (len + z > c->entries * c->dimensions) {
+         return FALSE;
+      }
    }
 
    if (c->sequence_p) {
@@ -3594,11 +3600,18 @@ static int start_decoder(vorb *f)
          if (c->lookup_type == 2 && c->sequence_p) {
 
             /* Sanity check */
-            if (c->lookup_values > c->entries * c->dimensions) {
-               return FALSE;
-            }
+	    if (c->sparse) {
+               if (c->lookup_values > c->sorted_entries * c->dimensions) {
+                  return FALSE;
+               }
+	    } else {
+               if (c->lookup_values > c->entries * c->dimensions) {
+                  return FALSE;
+               }
+	    }
 
             for (j=1; j < (int) c->lookup_values; ++j)
+printf("j=%d (%d)\n", j, c->entries * c->dimensions);
                c->multiplicands[j] = c->multiplicands[j-1];
             c->sequence_p = 0;
          }
