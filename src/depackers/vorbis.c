@@ -729,7 +729,7 @@ static int compute_codewords(Codebook *c, uint8 *len, int n, uint32 *values)
       // trivial to prove, but it seems true and the assert never
       // fires, so!
       while (z > 0 && !available[z]) --z;
-      if (z == 0) { assert(0); return FALSE; }
+      if (z == 0) { /*assert(0);*/ return FALSE; }
       res = available[z];
       available[z] = 0;
       add_entry(c, bit_reverse(res), i, m++, len[i], values);
