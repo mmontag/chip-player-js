@@ -358,6 +358,11 @@ static int get_chunk_in(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->spd = hio_read8(f);
     mod->bpm = hio_read8(f);
 
+    /* Sanity check */
+    if (mod->len > 256 || mod->rst > 255) {
+	return -1;
+    }
+
     for (i = 0; i < 32; i++) {
 	uint8 chinfo = hio_read8(f);
 	if (chinfo & 0x80)
@@ -397,6 +402,7 @@ static int get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	hio_seek(f, 16, SEEK_CUR);		/* Skip pattern name */
 	for (j = 0; j < chn; j++) {
 	    x = hio_read16l(f);
+
 	    if (j < mod->chn)
 		mod->xxp[i]->index[j] = x;
 	}
@@ -409,7 +415,7 @@ static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
-    uint16 x16;
+    uint16 x;
 
     mod->pat = hio_read8(f);
 
@@ -424,9 +430,10 @@ static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	mod->xxp[i]->rows = 64;
 
 	for (j = 0; j < 32; j++) {
-	    x16 = hio_read16l(f);
+	    x = hio_read16l(f);
+
 	    if (j < mod->chn)
-		mod->xxp[i]->index[j] = x16;
+		mod->xxp[i]->index[j] = x;
 	}
     }
 
