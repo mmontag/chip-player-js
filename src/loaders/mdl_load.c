@@ -484,6 +484,11 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	for (row = 0; len;) {
 	    struct xmp_event *ev = &track->event[row];
 
+	    /* Sanity check */
+	    if (row > 256) {
+		goto err2;
+	    }
+
 	    j = hio_read8(f);
 
 	    len--;
@@ -501,6 +506,10 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 		row += k - 1;
 		break;
 	    case 2:
+		/* Sanity check */
+		if ((j >> 2) == row) {
+		    return -1;
+		}
 		memcpy(ev, &track->event[j >> 2], sizeof (struct xmp_event));
 		break;
 	    case 3:
