@@ -93,6 +93,12 @@ static int get_s_q_(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->len = hio_read16b(f);
 	mod->rst = hio_read16b(f);
+
+	/* Sanity check */
+	if (mod->len > 256 || mod->rst > 255) {
+		return -1;
+	}
+
 	hio_read32b(f);	/* reserved */
 
 	for (maxpat = i = 0; i < 128; i++) {
@@ -204,6 +210,11 @@ static int get_dapt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read32b(f);	/* 0xffffffff */
 	pat = hio_read16b(f);
 	rows = hio_read16b(f);
+
+	/* Sanity check */
+	if (pat >= mod->pat || rows > 256) {
+		return -1;
+	}
 
 	for (i = data->last_pat; i <= pat; i++) {
 		if (pattern_tracks_alloc(mod, i, rows) < 0)
