@@ -305,7 +305,6 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 						note = (fxt>>4)*12 +
 							(fxt & 0x0f) + 1;
 						event->note = note;
-abort();
 						fxt = FX_TONEPORTA;
 						fxp = (fxp + 1) * 2;
 						break; }
