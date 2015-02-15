@@ -107,7 +107,16 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	while ((b = hio_read8(f)) != 0) {
-		hio_read(sid, 1, 11, f);
+
+		/* Sanity check */
+		if (b > mod->ins) {
+			return -1;
+		}
+
+		if (hio_read(sid, 1, 11, f) != 11) {
+			return -1;
+		}
+
 		if (load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
 					&mod->xxs[b - 1], (char *)sid) < 0) {
 			return -1;
