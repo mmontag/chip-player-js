@@ -587,14 +587,17 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         i++;
     }
 
-    /* now push all the patterns into the module and set the length */
-    i = 0;
+    /* Sanity check */
+    if (playlist.length > 256) {
+	return -1;
+    }
 	
-    for (j=0; j< playlist.length; j++)
+    mod->len = playlist.length;
+
+    /* now push all the patterns into the module and set the length */
+    for (i = 0; i < playlist.length; i++)
     {
-        /* increment the length */
-        mod->len++;
-        mod->xxo[i++] = playlist.pattern[j];
+        mod->xxo[i] = playlist.pattern[i];
     }
 
     /* free up some memory here */
