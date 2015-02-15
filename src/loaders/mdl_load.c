@@ -485,7 +485,7 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    struct xmp_event *ev = &track->event[row];
 
 	    /* Sanity check */
-	    if (row > 256) {
+	    if (row > 255) {
 		goto err2;
 	    }
 
