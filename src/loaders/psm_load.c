@@ -86,6 +86,12 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->smp = mod->ins;
 	mod->trk = mod->pat * mod->chn;
 
+	/* Sanity check */
+	if (mod->len > 256 || mod->pat > 256 || mod->ins > 255 ||
+	    mod->chn > XMP_MAX_CHANNELS) {
+		return -1;
+        }
+
 	p_ord = hio_read32l(f);
 	p_chn = hio_read32l(f);
 	p_pat = hio_read32l(f);
