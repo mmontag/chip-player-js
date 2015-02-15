@@ -260,7 +260,11 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		event->fxp |= (EX_F_VSLIDE_DN << 4);
 		break;
 	    case FX_SPEED:
-		event->fxp = 8 * 60 / event->fxp;
+		if (event->fxp != 0) {
+			event->fxp = 8 * 60 / event->fxp;
+		} else {
+			event->fxt = 0;
+		}
 		break;
 	    }
 	}
