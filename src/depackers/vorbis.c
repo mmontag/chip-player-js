@@ -1440,8 +1440,9 @@ static int codebook_decode(vorb *f, Codebook *c, float *output, int len)
 
    z *= c->dimensions;
 
+#if 0
    /* Sanity check */
-   if (c->lookup_type == 2) {
+   if (c->lookup_type == 1) {
       if (c->sparse) {
          if (len + z > c->sorted_entries * c->dimensions) {
             return FALSE;
@@ -1456,6 +1457,7 @@ static int codebook_decode(vorb *f, Codebook *c, float *output, int len)
          return FALSE;
       }
    }
+#endif
 
    if (c->sequence_p) {
       float last = CODEBOOK_ELEMENT_BASE(c);
@@ -1788,6 +1790,12 @@ static __forceinline int draw_line(float *output, int x0, int y0, int x1, int y1
 #endif
    ady -= abs(base) * adx;
    if (x1 > n) x1 = n;
+
+   /* Sanity check */
+   if (x >= n * 2 || y >= 256) {
+     return -1;
+   }
+
    LINE_OP(output[x], inverse_db_table[y]);
    for (++x; x < x1; ++x) {
       err += ady;
@@ -3035,6 +3043,10 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
             }
 
 #ifdef STB_VORBIS_NO_DEFER_FLOOR
+	    /* Sanity check */
+	    if (n >= f->blocksize_1)
+		return FALSE;
+
             do_floor(f, map, i, n, f->floor_buffers[i], finalY, step2_flag);
 #else
             // defer final floor computation until _after_ residue
