@@ -273,11 +273,12 @@ static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
 	iff_handle handle;
 	struct local_data data;
+	struct xmp_module *mod = &m->mod;
 	int ret, i;
 
 	LOAD_INIT();
 
-	data.pflag = data.sflag = 0;
+	memset(&data, 0, sizeof (struct local_data));
 	
 	handle = iff_new();
 	if (handle == NULL)
@@ -300,10 +301,13 @@ static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (ret < 0)
 		return -1;
 
-	//fix rest patterns
-	for (i = data.last_pat; i < m->mod.pat; i++) {
-		if (pattern_tracks_alloc(&m->mod, i, 64) < 0)
-			return -1;
+	/* alloc remaining patterns */
+	if (mod->xxp != NULL) {
+		for (i = data.last_pat; i < mod->pat; i++) {
+			if (pattern_tracks_alloc(mod, i, 64) < 0) {
+				return -1;
+			}
+		}
 	}
 
 	return 0;

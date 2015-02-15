@@ -386,8 +386,10 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	load_epilogue(ctx);
 
 	ret = prepare_scan(ctx);
-	if (ret < 0)
+	if (ret < 0) {
+		xmp_release_module(opaque);
 		return ret;
+	}
 
 	scan_sequences(ctx);
 
