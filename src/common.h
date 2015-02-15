@@ -188,6 +188,9 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 #define MAX_SEQUENCES		16
 
+/* Arbitrary limit to prevent unreasonably large allocations */
+#define MAX_SAMPLE_SIZE		0x00800000
+
 struct ord_data {
 	int speed;
 	int bpm;

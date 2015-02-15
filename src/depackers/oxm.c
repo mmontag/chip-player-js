@@ -189,6 +189,8 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 		/* Read sample headers */
 		for (j = 0; j < nsmp; j++) {
 			xi[j].len = read32l(f);
+			if (xi[j].len > MAX_SAMPLE_SIZE)
+				return -1;
 			fread(xi[j].buf, 1, 36, f);
 		}
 
