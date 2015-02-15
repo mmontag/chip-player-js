@@ -567,7 +567,7 @@ static void *setup_malloc(vorb *f, int sz)
       return p;
    }
 #endif
-   return sz ? malloc(sz) : NULL;
+   return sz ? calloc(sz, 1) : NULL;
 }
 
 static void setup_free(vorb *f, void *p)
@@ -728,6 +728,12 @@ static int compute_codewords(Codebook *c, uint8 *len, int n, uint32 *values)
       // more than one free leaf at a given level, isn't totally
       // trivial to prove, but it seems true and the assert never
       // fires, so!
+
+      /* Sanity check */
+      if (z >= 32) {
+        return FALSE;
+      }
+
       while (z > 0 && !available[z]) --z;
       if (z == 0) { /*assert(0);*/ return FALSE; }
       res = available[z];
