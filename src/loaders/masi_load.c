@@ -310,6 +310,7 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 						break; }
 					default:
 D_(D_CRIT "p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
+						return -1;
 					}
 				} else
 				switch (fxt) {
