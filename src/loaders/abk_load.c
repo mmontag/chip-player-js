@@ -144,7 +144,7 @@ static int read_abk_song(HIO_HANDLE *f, struct abk_song *song, uint32 songs_sect
     int i;
     uint32 song_section;
 
-    /* move to the start of the songs data sectio */
+    /* move to the start of the songs data section */
     hio_seek(f, songs_section_offset, SEEK_SET);
 
     if (hio_read16b(f) != 1)
@@ -589,6 +589,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Sanity check */
     if (playlist.length > 256) {
+    	free(playlist.pattern);
 	return -1;
     }
 	
