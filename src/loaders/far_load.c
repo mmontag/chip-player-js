@@ -197,6 +197,11 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
 
+	/* Sanity check */
+	if (mod->xxp[i]->rows > 256) {
+	    return -1;
+	}
+
 	if (tracks_in_pattern_alloc(mod, i) < 0)
 	    return -1;
 
