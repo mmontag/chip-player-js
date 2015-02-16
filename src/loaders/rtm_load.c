@@ -292,6 +292,12 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 				if (c & 0x01) {		/* set track */
 					j = hio_read8(f);
+
+					/* Sanity check */
+					if (j >= mod->chn) {
+						return -1;
+					}
+
 					event = &EVENT(i, j, r);
 				}
 				if (c & 0x02) {		/* read note */
