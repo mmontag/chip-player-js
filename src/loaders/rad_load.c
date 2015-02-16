@@ -172,6 +172,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			if ((r & 0x7f) >= 64) {
 				D_(D_CRIT "** Whoops! row = %d\n", r);
+				return -1;
 			}
 
 			do {
