@@ -499,7 +499,7 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    case 1:
 		/* Sanity check */
 		if (row + (j >> 2) > 255)
-		    return -1;
+		    goto err2;
 
 		for (k = 0; k <= (j >> 2); k++)
 		    memcpy(&ev[k], &ev[-1], sizeof (struct xmp_event));
@@ -508,7 +508,7 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    case 2:
 		/* Sanity check */
 		if ((j >> 2) == row) {
-		    return -1;
+		    goto err2;
 		}
 		memcpy(ev, &track->event[j >> 2], sizeof (struct xmp_event));
 		break;
