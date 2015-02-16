@@ -3741,6 +3741,12 @@ static int start_decoder(vorb *f)
       if (f->residue_types[i] > 2) return error(f, VORBIS_invalid_setup);
       r->begin = get_bits(f, 24);
       r->end = get_bits(f, 24);
+
+      /* Sanity check */
+      if (r->end - r->begin > 1024) {
+        return FALSE;
+      }
+
       r->part_size = get_bits(f,24)+1;
       r->classifications = get_bits(f,6)+1;
       r->classbook = get_bits(f,8);
