@@ -2048,7 +2048,7 @@ static int decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int 
                      int n = r->part_size;
 
                      /* Sanity check */
-                     if (offset >= n/2) {
+                     if (offset >= f->blocksize_1) {
                         return FALSE;
                      }
 
