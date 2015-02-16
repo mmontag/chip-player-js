@@ -269,6 +269,11 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		rp.nrows = hio_read16l(f);
 		rp.datasize = hio_read32l(f);
 
+		/* Sanity check */
+		if (rp.ntrack > rh.ntrack || rp.nrows > 256) {
+			return -1;
+		}
+
 		offset += 42 + oh.headerSize + rp.datasize;
 
 		if (pattern_tracks_alloc(mod, i, rp.nrows) < 0)
@@ -281,11 +286,9 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				if (c == 0)		/* next row */
 					break;
 
-				/* should never happen! */
+				/* Sanity check */
 				if (j >= rp.ntrack) {
-					D_(D_CRIT "error: decoding "
-						"pattern %d row %d", i, r);
-					break;
+					return -1;
 				}
 
 				event = &EVENT(i, j, r);
@@ -294,7 +297,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					j = hio_read8(f);
 
 					/* Sanity check */
-					if (j >= mod->chn) {
+					if (j >= rp.ntrack) {
 						return -1;
 					}
 
