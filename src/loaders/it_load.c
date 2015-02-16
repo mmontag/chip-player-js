@@ -484,7 +484,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     case 0x08:
     case 0x7f:
 	if (ifh.cwt == 0x0888) {
-	    strcpy(tracker_name, "OpenMPT 1.17+");
+	    strcpy(tracker_name, "OpenMPT 1.17");
 	} else if (ifh.cwt == 0x7fff) {
 	    strcpy(tracker_name, "munch.py");
 	} else {
