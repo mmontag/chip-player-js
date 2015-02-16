@@ -190,6 +190,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 /* Arbitrary limit to prevent unreasonably large allocations */
 #define MAX_SAMPLE_SIZE		0x00800000
+#define MAX_SAMPLES		1024
 
 struct ord_data {
 	int speed;

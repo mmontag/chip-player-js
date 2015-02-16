@@ -36,7 +36,6 @@
 #include "loader.h"
 #include "xm.h"
 
-#define MAX_SAMP 1024
 
 static int xm_test (HIO_HANDLE *, char *, const int);
 static int xm_load (struct module_data *, HIO_HANDLE *, const int);
@@ -315,7 +314,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
     D_(D_INFO "Instruments: %d", mod->ins);
 
     /* ESTIMATED value! We don't know the actual value at this point */
-    mod->smp = MAX_SAMP;
+    mod->smp = MAX_SAMPLES;
 
     if (instrument_init(mod) < 0)
 	return -1;

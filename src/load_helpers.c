@@ -216,10 +216,10 @@ void load_epilogue(struct context_data *ctx)
     	mod->gvl = m->gvolbase;
 
 	/* Sanity check for module parameters */
-	CLAMP(mod->len, 0, 255);
-	CLAMP(mod->pat, 0, 255);
+	CLAMP(mod->len, 0, XMP_MAX_MOD_LENGTH);
+	CLAMP(mod->pat, 0, 256);
 	CLAMP(mod->ins, 0, 255);
-	CLAMP(mod->smp, 0, 255);
+	CLAMP(mod->smp, 0, MAX_SAMPLES);
 	CLAMP(mod->chn, 0, XMP_MAX_CHANNELS);
 
 	/* Fix cases where the restart value is invalid e.g. kc_fall8.xm

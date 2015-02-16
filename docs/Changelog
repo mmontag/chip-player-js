@@ -16,6 +16,7 @@ Stable versions
 	- fix instrument number in channel initialization
 	- fix sample size limit (reported by Jochen Goernitz)
 	- fix loading of OpenMPT 1.17 IT modules (reported by Dane Bush)
+	- fix sample number limit (reported by Lionel Debroux)
 	- fix Oktalyzer sample loop (by Dennis Lindroos)
 
 4.3.5 (20150207):
