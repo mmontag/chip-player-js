@@ -101,6 +101,11 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	/*dmin  =*/ hio_read16b(f);
 	/*dsec  =*/ hio_read16b(f);
 
+	/* Sanity check */
+	if (mod->ins > 255 || mod->len > 256 || mod->pat > 255) {
+		return -1;
+	}
+
 	MODULE_INFO();
 
 	/*D_(D_INFO "Creation date: %02d/%02d/%02d %02d:%02d:%02d",
@@ -162,6 +167,11 @@ static int pt3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	iff_release(handle);
+
+	/* Sanity check */
+	if (m->mod.smp <= 0) {
+		return -1;
+	}
 
 	return 0;
 }
