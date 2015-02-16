@@ -3536,7 +3536,10 @@ static int start_decoder(vorb *f)
       }
 
       if (!compute_codewords(c, lengths, c->entries, values)) {
-         if (c->sparse) setup_temp_free(f, values, 0);
+         if (c->sparse) {
+            setup_temp_free(f, values, 0);
+            setup_temp_free(f, lengths, c->entries);
+         }
          return error(f, VORBIS_invalid_setup);
       }
 
