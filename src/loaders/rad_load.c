@@ -109,7 +109,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	while ((b = hio_read8(f)) != 0) {
 
 		/* Sanity check */
-		if (b > mod->ins) {
+		if (b > mod->ins || mod->xxs[b - 1].data != NULL) {
 			return -1;
 		}
 
