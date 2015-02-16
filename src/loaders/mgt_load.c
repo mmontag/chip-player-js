@@ -102,6 +102,11 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read8(f);			/* master L */
 	hio_read8(f);			/* master R */
 
+	/* Sanity check */
+	if (mod->len > 256 || mod->rst > 255) {
+		return -1;
+	}
+
 	for (i = 0; i < mod->chn; i++) {
 		hio_read16b(f);		/* pan */
 	}
