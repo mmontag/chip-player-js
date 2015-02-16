@@ -188,6 +188,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     for (i = 0; i < mod->pat; i++) {
 	uint8 brk, note, ins, vol, fxb;
+	int rows;
 
 	if (pattern_alloc(mod, i) < 0)
 	    return -1;
@@ -195,12 +196,14 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (!ffh2.patsize[i])
 	    continue;
 
-	mod->xxp[i]->rows = (ffh2.patsize[i] - 2) / 64;
+	rows = (ffh2.patsize[i] - 2) / 64;
 
 	/* Sanity check */
-	if (mod->xxp[i]->rows > 256) {
+	if (rows <= 0 || rows > 256) {
 	    return -1;
 	}
+
+	mod->xxp[i]->rows = rows;
 
 	if (tracks_in_pattern_alloc(mod, i) < 0)
 	    return -1;
@@ -306,15 +309,18 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(&fih.name, 32, 1, f);	/* Instrument name */
 	fih.length = hio_read32l(f);	/* Length of sample (up to 64Kb) */
 	fih.finetune = hio_read8(f);	/* Finetune (unsuported) */
-	fih.volume = hio_read8(f);		/* Volume (unsuported?) */
-	fih.loop_start = hio_read32l(f);	/* Loop start */
+	fih.volume = hio_read8(f);	/* Volume (unsuported?) */
+	fih.loop_start = hio_read32l(f);/* Loop start */
 	fih.loopend = hio_read32l(f);	/* Loop end */
 	fih.sampletype = hio_read8(f);	/* 1=16 bit sample */
 	fih.loopmode = hio_read8(f);
 
-	fih.length &= 0xffff;
-	fih.loop_start &= 0xffff;
-	fih.loopend &= 0xffff;
+	/* Sanity check */
+	if (fih.length > 0x10000 || fih.loop_start > 0x10000 ||
+            fih.loopend > 0x10000) {
+		return -1;
+	}
+
 	mod->xxs[i].len = fih.length;
 	mod->xxs[i].lps = fih.loop_start;
 	mod->xxs[i].lpe = fih.loopend;
