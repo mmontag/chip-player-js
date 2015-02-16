@@ -133,26 +133,32 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    hio_read32b(f);				/* File magic: 'FAR\xfe' */
-    hio_read(&ffh.name, 40, 1, f);		/* Song name */
-    hio_read(&ffh.crlf, 3, 1, f);		/* 0x0d 0x0a 0x1A */
+    hio_read32b(f);			/* File magic: 'FAR\xfe' */
+    hio_read(&ffh.name, 40, 1, f);	/* Song name */
+    hio_read(&ffh.crlf, 3, 1, f);	/* 0x0d 0x0a 0x1A */
     ffh.headersize = hio_read16l(f);	/* Remaining header size in bytes */
     ffh.version = hio_read8(f);		/* Version MSN=major, LSN=minor */
     hio_read(&ffh.ch_on, 16, 1, f);	/* Channel on/off switches */
     hio_seek(f, 9, SEEK_CUR);		/* Current editing values */
     ffh.tempo = hio_read8(f);		/* Default tempo */
-    hio_read(&ffh.pan, 16, 1, f);		/* Channel pan definitions */
-    hio_read32l(f);				/* Grid, mode (for editor) */
-    ffh.textlen = hio_read16l(f);		/* Length of embedded text */
+    hio_read(&ffh.pan, 16, 1, f);	/* Channel pan definitions */
+    hio_read32l(f);			/* Grid, mode (for editor) */
+    ffh.textlen = hio_read16l(f);	/* Length of embedded text */
+
+    /* Sanity check */
+    if (ffh.tempo == 0) {
+	return -1;
+    }
 
     hio_seek(f, ffh.textlen, SEEK_CUR);	/* Skip song text */
 
     hio_read(&ffh2.order, 256, 1, f);	/* Orders */
-    ffh2.patterns = hio_read8(f);		/* Number of stored patterns (?) */
-    ffh2.songlen = hio_read8(f);		/* Song length in patterns */
-    ffh2.restart = hio_read8(f);		/* Restart pos */
-    for (i = 0; i < 256; i++)
-	ffh2.patsize[i] = hio_read16l(f);	/* Size of each pattern in bytes */
+    ffh2.patterns = hio_read8(f);	/* Number of stored patterns (?) */
+    ffh2.songlen = hio_read8(f);	/* Song length in patterns */
+    ffh2.restart = hio_read8(f);	/* Restart pos */
+    for (i = 0; i < 256; i++) {
+	ffh2.patsize[i] = hio_read16l(f); /* Size of each pattern in bytes */
+    }
 
     mod->chn = 16;
     /*mod->pat=ffh2.patterns; (Error in specs? --claudio) */
