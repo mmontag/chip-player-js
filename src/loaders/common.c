@@ -105,6 +105,10 @@ int tracks_in_pattern_alloc(struct xmp_module *mod, int num)
 		int t = num * mod->chn + i;
 		int rows = mod->xxp[num]->rows;
 
+		/* Sanity check */
+		if (t >= mod->trk)
+			return -1;
+
 		if (track_alloc(mod, t, rows) < 0)
 			return -1;
 
