@@ -116,8 +116,14 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* Sequence */
 
 	hio_seek(f, start + seq_ptr, SEEK_SET);
-	for (i = 0; i < mod->len; i++)
+	for (i = 0; i < mod->len; i++) {
 		mod->xxo[i] = hio_read16b(f);
+
+		/* Sanity check */
+		if (mod->xxo[i] >= mod->pat) {
+			return -1;
+		}
+	}
 
 	/* Instruments */
 
@@ -135,6 +141,12 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read(mod->xxi[i].name, 1, 32, f);
 		sdata[i] = hio_read32b(f);
 		mod->xxs[i].len = hio_read32b(f);
+
+		/* Sanity check */
+		if (mod->xxs[i].len > MAX_SAMPLE_SIZE) {
+			return -1;
+		}
+
 		mod->xxs[i].lps = hio_read32b(f);
 		mod->xxs[i].lpe = mod->xxs[i].lps + hio_read32b(f);
 		hio_read32b(f);
