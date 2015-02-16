@@ -1836,7 +1836,7 @@ static int residue_decode(vorb *f, Codebook *book, float *target, int offset, in
    return TRUE;
 }
 
-static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int rn, uint8 *do_not_decode)
+static int decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int rn, uint8 *do_not_decode)
 {
    int i,j,pass;
    Residue *r = f->residue_config + rn;
@@ -2046,6 +2046,12 @@ static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int
                      float *target = residue_buffers[j];
                      int offset = r->begin + pcount * r->part_size;
                      int n = r->part_size;
+
+                     /* Sanity check */
+                     if (offset >= n/2) {
+                        return FALSE;
+                     }
+
                      Codebook *book = f->codebooks + b;
                      if (!residue_decode(f, book, target, offset, n, rtype))
                         goto done;
@@ -2061,6 +2067,8 @@ static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int
   done:
    stb_prof(0);
    temp_alloc_restore(f,temp_alloc_point);
+
+   return TRUE;
 }
 
 
