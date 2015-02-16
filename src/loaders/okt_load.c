@@ -149,8 +149,8 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 		/* Sample size is always rounded down */
 		xxs->len = hio_read32b(f) & ~1;
-		xxs->lps = hio_read16b(f);
-		looplen = hio_read16b(f);
+		xxs->lps = hio_read16b(f) << 1;
+		looplen = hio_read16b(f) << 1;
 		xxs->lpe = xxs->lps + looplen;
 		xxs->flg = looplen > 2 ? XMP_SAMPLE_LOOP : 0;
 
