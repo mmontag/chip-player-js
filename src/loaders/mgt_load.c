@@ -303,9 +303,11 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	/* Extra track */
-	mod->xxt[0] = calloc(sizeof(struct xmp_track) +
+	if (mod->trk > 0) {
+		mod->xxt[0] = calloc(sizeof(struct xmp_track) +
 			sizeof(struct xmp_event) * 64 - 1, 1);
-	mod->xxt[0]->rows = 64;
+		mod->xxt[0]->rows = 64;
+	}
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
