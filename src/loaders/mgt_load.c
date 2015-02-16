@@ -308,12 +308,29 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + pat_ptr, SEEK_SET);
 
 	for (i = 0; i < mod->pat; i++) {
+		int rows;
+
 		if (pattern_alloc(mod, i) < 0)
 			return -1;
 
-		mod->xxp[i]->rows = hio_read16b(f);
+		rows = hio_read16b(f);
+
+		/* Sanity check */
+		if (rows > 256) {
+			return -1;
+		}
+
+		mod->xxp[i]->rows = rows;
+
 		for (j = 0; j < mod->chn; j++) {
-			mod->xxp[i]->index[j] = hio_read16b(f) - 1;
+			int track = hio_read16b(f) - 1;
+
+			/* Sanity check */
+			if (track >= mod->trk) {
+				return -1;
+			}
+
+			mod->xxp[i]->index[j] = track;
 		}
 	}
 
