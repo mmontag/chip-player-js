@@ -184,7 +184,7 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 		w = hio_read16l(f);
 
 		/* Sanity check */
-		if (w >= mod->trk) {
+		if (w >= mod->trk || mod->xxt[w] != NULL) {
 			return -1;
 		}
 
