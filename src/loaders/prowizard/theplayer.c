@@ -133,7 +133,7 @@ static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int tdata_add
 			    }
 			    c4 = 0x100 - c4;
 
-			    for (l = 0; l < c4; l++) {
+			    while (c4--) {
 				if (++k >= 64)
 				    break;
 

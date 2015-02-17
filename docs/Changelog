@@ -18,6 +18,7 @@ Stable versions
 	- fix loading of OpenMPT 1.17 IT modules (reported by Dane Bush)
 	- fix sample number limit (reported by Lionel Debroux)
 	- fix Oktalyzer sample loop (by Dennis Lindroos)
+	- fix ThePlayer pattern decoding
 
 4.3.5 (20150207):
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
