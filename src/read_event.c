@@ -125,6 +125,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		} else if (~xxi->fei.flg & XMP_ENVELOPE_FLT) {
 			xc->filter.cutoff = 0xff;
 		}
+		xc->filter.envelope = 0x100;
 
 		if (sub->ifr & 0x80) {
 			xc->filter.resonance = (sub->ifr - 0x80) * 2;

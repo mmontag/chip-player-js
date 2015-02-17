@@ -542,9 +542,10 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	}
 
 	if (xc->f_idx >= 0 && (instrument->fei.flg & XMP_ENVELOPE_FLT)) {
-		cutoff = xc->filter.cutoff * frq_envelope >> 8;
-		if (cutoff > 0xfd)
-			cutoff = 0xfd;
+		if (frq_envelope < 0xfe) {
+			xc->filter.envelope = frq_envelope;
+		}
+		cutoff = xc->filter.cutoff * xc->filter.envelope >> 8;
 	} else {
 		cutoff = xc->filter.cutoff;
 	}

@@ -211,6 +211,7 @@ struct channel_data {
 	struct {
 		int cutoff;	/* IT filter cutoff frequency */
 		int resonance;	/* IT filter resonance */
+		int envelope;	/* IT filter envelope */
 	} filter;
 
 #endif
