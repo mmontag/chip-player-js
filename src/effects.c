@@ -754,7 +754,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 	case FX_FLT_CUTOFF:
-		xc->filter.cutoff = fxp;
+		if (fxp < 0xfe || xc->filter.resonance > 0) {
+			xc->filter.cutoff = fxp;
+		}
 		break;
 	case FX_FLT_RESN:
 		xc->filter.resonance = fxp;

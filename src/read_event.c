@@ -115,14 +115,16 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 				struct channel_data *xc, int is_toneporta)
 {
 	if (sub != NULL && note >= 0) {
+		struct xmp_instrument *xxi = &ctx->m.mod.xxi[xc->ins];
+
 		xc->finetune = sub->fin;
 		xc->gvl = sub->gvl;
 
 		if (sub->ifc & 0x80) {
 			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
-		} /*else {
+		} else if (~xxi->fei.flg & XMP_ENVELOPE_FLT) {
 			xc->filter.cutoff = 0xff;
-		} */
+		}
 
 		if (sub->ifr & 0x80) {
 			xc->filter.resonance = (sub->ifr - 0x80) * 2;
