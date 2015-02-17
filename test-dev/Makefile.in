@@ -136,6 +136,7 @@ OPENMPT_IT	= carrynna \
 		  filterenvreset \
 		  filter_nna \
 		  filter_reset \
+		  filter_reset_carry \
 		  finevolcolslide \
 		  flt_env_carry \
 		  freqreset_noins \
