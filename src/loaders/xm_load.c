@@ -339,6 +339,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 
 	/* Sanity check */
 	if (xih.samples > 0x10 || (xih.samples > 0 && xih.sh_size > 0x100)) {
+		D_(D_CRIT "Sanity check: %d %d", xih.samples, xih.sh_size);
 		break;
 	}
 
@@ -556,18 +557,27 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     xfh.bpm = hio_read16l(f);		/* Default BPM */
 
     /* Sanity checks */
-    if (xfh.songlen > 256 || xfh.patterns > 256 || xfh.instruments > 255)
+    if (xfh.songlen > 256 || xfh.patterns > 256 || xfh.instruments > 255) {
+	D_(D_CRIT "Sanity check: %d %d %d", xfh.songlen, xfh.patterns,
+							xfh.instruments);
 	return -1;
+    }
 
-    if (xfh.restart > 255 || xfh.channels > XMP_MAX_CHANNELS)
+    if (xfh.restart > 255 || xfh.channels > XMP_MAX_CHANNELS) {
+	D_(D_CRIT "Sanity check: %d %d", xfh.restart, xfh.channels);
         return -1;
+    }
 
-    if (xfh.tempo <= 0 || xfh.tempo >= 32 || xfh.bpm < 32 || xfh.bpm > 255)
+    if (xfh.tempo < 0 || xfh.tempo >= 32 || xfh.bpm < 32 || xfh.bpm > 255) {
+	D_(D_CRIT "Sanity check: %d %d", xfh.tempo, xfh.bpm);
 	return -1;
+    }
 
     len = xfh.headersz - 0x14;
-    if (len < 0 || len > 256)
+    if (len < 0 || len > 256) {
+	D_(D_CRIT "Sanity check: %d", len);
 	return -1;
+    }
 
     /* Honor header size -- needed by BoobieSqueezer XMs */
     hio_read(&xfh.order, len, 1, f); /* Pattern order table */
