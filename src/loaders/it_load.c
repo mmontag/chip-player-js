@@ -211,16 +211,16 @@ static void xlat_volfx(struct xmp_event *event)
     if (b <= 0x40) {
 	event->vol = b + 1;
     } else if (b >= 65 && b <= 74) {	/* A */
-	event->f2t = FX_EXTENDED;
-	event->f2p = (EX_F_VSLIDE_UP << 4) | (b - 65);
+	event->f2t = FX_F_VSLIDE_UP_2;
+	event->f2p = b - 65;
     } else if (b >= 75 && b <= 84) {	/* B */
-	event->f2t = FX_EXTENDED;
-	event->f2p = (EX_F_VSLIDE_DN << 4) | (b - 75);
+	event->f2t = FX_F_VSLIDE_DN_2;
+	event->f2p = b - 75;
     } else if (b >= 85 && b <= 94) {	/* C */
-	event->f2t = FX_VOLSLIDE_2;
-	event->f2p = (b - 85) << 4;
+	event->f2t = FX_VSLIDE_UP_2;
+	event->f2p = b - 85;
     } else if (b >= 95 && b <= 104) {	/* D */
-	event->f2t = FX_VOLSLIDE_2;
+	event->f2t = FX_VSLIDE_DN_2;
 	event->f2p = b - 95;
     } else if (b >= 105 && b <= 114) {	/* E */
 	event->f2t = FX_PORTA_DN;

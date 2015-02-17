@@ -54,6 +54,7 @@ struct retrig_control {
 #define VENV_PAUSE	(1 << 22)
 #define PENV_PAUSE	(1 << 23)
 #define FENV_PAUSE	(1 << 24)
+#define FINE_VOLS_2	(1 << 25)
 
 #define NOTE_FADEOUT	(1 << 0)
 #define NOTE_RELEASE	(1 << 1)
@@ -148,6 +149,10 @@ struct channel_data {
 		int fslide;	/* Fine volume slide value */
 		int slide2;	/* Volume slide value */
 		int memory;	/* Volume slide effect memory */
+#ifndef LIBXMP_CORE_DISABLE_IT
+		int fslide2;
+		int memory2;	/* Volume slide effect memory */
+#endif
 	} vol;
 
 	struct {

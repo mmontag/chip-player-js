@@ -451,6 +451,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		SET(FINE_VOLS);
 		xc->vol.fslide = -fxp;
 		break;
+
 	case FX_F_PORTA_UP:	/* Fine portamento up */
 	    fx_f_porta_up:
 		if (fxp) {
@@ -512,6 +513,33 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			f->rowdelay_set = 1;
 		}
 		break;
+
+	/* From the OpenMPT VolColMemory.it test case:
+	 * "Volume column commands a, b, c and d (volume slide) share one
+	 *  effect memory, but it should not be shared with Dxy in the effect
+	 *  column. 
+	 */
+	case FX_VSLIDE_UP_2:	/* Fine volume slide up */
+		EFFECT_MEMORY(fxp, xc->vol.memory2);
+		SET(VOL_SLIDE_2);
+		xc->vol.slide2 = fxp;
+		break;
+	case FX_VSLIDE_DN_2:	/* Fine volume slide down */
+		EFFECT_MEMORY(fxp, xc->vol.memory2);
+		SET(VOL_SLIDE_2);
+		xc->vol.slide2 = -fxp;
+		break;
+	case FX_F_VSLIDE_UP_2:	/* Fine volume slide up */
+		EFFECT_MEMORY(fxp, xc->vol.memory2);
+		SET(FINE_VOLS_2);
+		xc->vol.fslide2 = fxp;
+		break;
+	case FX_F_VSLIDE_DN_2:	/* Fine volume slide down */
+		EFFECT_MEMORY(fxp, xc->vol.memory2);
+		SET(FINE_VOLS_2);
+		xc->vol.fslide2 = -fxp;
+		break;
+
 #endif
 
 	case FX_GLOBALVOL:	/* Set global volume */

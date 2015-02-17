@@ -119,4 +119,8 @@
 #define FX_S3M_ARPEGGIO	0xb4
 #define FX_PANSL_NOMEM	0xb5	/* XM volume column */
 
+#define FX_VSLIDE_UP_2	0xc0	/* IT volume column volume slide */
+#define FX_VSLIDE_DN_2	0xc1
+#define FX_F_VSLIDE_UP_2 0xc2
+#define FX_F_VSLIDE_DN_2 0xc3
 #endif /* LIBXMP_EFFECTS_H */

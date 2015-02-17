@@ -650,6 +650,11 @@ static void update_volume(struct context_data *ctx, int chn)
 		if (TEST(FINE_VOLS))
 			xc->volume += xc->vol.fslide;
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+		if (TEST(FINE_VOLS_2))
+			xc->volume += xc->vol.fslide2;
+#endif
+
 		if (TEST(TRK_FVSLIDE))
 			xc->mastervol += xc->trackvol.fslide;
 
