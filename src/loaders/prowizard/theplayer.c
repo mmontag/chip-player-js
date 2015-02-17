@@ -36,13 +36,16 @@ static uint8 set_event(uint8 *x, uint8 c1, uint8 c2, uint8 c3)
 #define track(p,c,r) tdata[((int)(p) * 4 + (c)) * 512 + (r) * 4]
 
 
-static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int tdata_addr, int taddr[128][4])
+static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int taddr[128][4])
 {
     int i, j, k, l;
     int max_row;
     int effect;
+    long tdata_addr;
     long pos;
     uint8 c1, c2, c3, c4;
+
+    tdata_addr = hio_tell(in);
 
     for (i = 0; i < npat; i++) {
 	max_row = 63;
@@ -63,11 +66,11 @@ static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int tdata_add
 
 		    effect = set_event(x, c1, c2, c3);
 
-		    if (effect == 0x0d) {		/* pattern break */
+		    if (effect == 0x0d) {	/* pattern break */
 			max_row = k;
 			break;
 		    }
-		    if (effect == 0x0b) {		/* pattern jump */
+		    if (effect == 0x0b) {	/* pattern jump */
 			max_row = k;
 			break;
 		    }
@@ -127,7 +130,7 @@ static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int tdata_add
 				k = l = 9999;
 				continue;
 			    }
-			    if (c4 < 0x80) {	/* skip rows */
+			    if (c4 < 0x80) {		/* skip rows */
 				k += c4;
 				continue;
 			    }
@@ -183,7 +186,6 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
     uint8 delta = 0;
     uint8 pack = 0;
     int taddr[128][4];
-    int tdata_addr = 0;
     int sdata_addr = 0;
     int ssize = 0;
     int i, j, k;
@@ -252,12 +254,12 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
 
 	write16b(out, isize[i]);	/* size */
 
-	c1 = hio_read8(in);			/* finetune */
+	c1 = hio_read8(in);		/* finetune */
 	/*if (c1 & 0x40)
 	    PACK[i] = 1;*/
 	write8(out, c1 & 0x3f);
 
-	write8(out, hio_read8(in));		/* volume */
+	write8(out, hio_read8(in));	/* volume */
 	val = hio_read16b(in);		/* loop start */
 
 	if (val == 0xffff) {
@@ -293,10 +295,8 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
     fwrite(ptable, 128, 1, out);	/* write pattern table */
     write32b(out, PW_MOD_MAGIC);	/* M.K. */
 
-    tdata_addr = hio_tell(in);
-
     /* patterns */
-    decode_pattern(in, npat, tdata, tdata_addr, taddr);
+    decode_pattern(in, npat, tdata, taddr);
 
     /* write pattern data */
     for (i = 0; i < npat; i++) {
