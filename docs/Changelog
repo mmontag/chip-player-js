@@ -2,6 +2,8 @@ Stable versions
 ---------------
 
 4.3.6 ():
+	Fix bugs caught in the OpenMPT test cases:
+	- fix volume column volume slide effect memory
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
 	- add sanity check to MED2/3/4 loader
 	- add sanity check to STIM/GDM/DBM/LIQ/ICE/PSM/PTM loader
