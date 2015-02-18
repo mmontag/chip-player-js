@@ -156,6 +156,7 @@ OPENMPT_IT	= carrynna \
 		  retrig_short \
 		  s7xinsnum \
 		  swaptest \
+		  swing3 \
 		  volcolmemory
 
 OPENMPT_S3M	= freqlimits \
