@@ -496,8 +496,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	period += extras_get_period(ctx, xc);
 #endif
 
-	linear_bend = period_to_bend(period + vibrato, xc->note, xc->gliss,
-				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+	linear_bend = period_to_bend(period + vibrato, xc->note,
+			TEST(GLISSANDO), HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 
 	/* Envelope */
 

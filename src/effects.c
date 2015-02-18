@@ -359,7 +359,11 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		    EFFECT_MEMORY(fxp, xc->fine_porta.down_memory);
 		    goto fx_f_porta_dn;
 		case EX_GLISS:		/* Glissando toggle */
-			xc->gliss = fxp;
+			if (fxp) {
+				SET(GLISSANDO);
+			} else {
+				RESET(GLISSANDO);
+			}
 			break;
 		case EX_VIBRATO_WF:	/* Set vibrato waveform */
 			fxp &= 3;

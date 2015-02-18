@@ -658,6 +658,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    sub->pan = i2h.dfp & 0x80 ? -1 : i2h.dfp * 4;
 		    sub->ifc = i2h.ifc;
 		    sub->ifr = i2h.ifr;
+                    sub->rvv = ((int)i2h.rp << 8) | i2h.rv;
 	        }
 	    }
 

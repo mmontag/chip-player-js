@@ -169,7 +169,7 @@ struct xmp_instrument {
 		int vde;		/* Vibrato depth */
 		int vra;		/* Vibrato rate */
 		int vsw;		/* Vibrato sweep */
-		int rvv;		/* Random volume variation (IT) */
+		int rvv;		/* Random volume/pan variation (IT) */
 		int sid;		/* Sample number */
 #define XMP_INST_NNA_CUT	0x00
 #define XMP_INST_NNA_CONT	0x01
