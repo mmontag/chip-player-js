@@ -39,7 +39,7 @@ int check_md5(char *, char *);
 int check_randomness(int *, int, double);
 void compare_mixer_data(char *, char *);
 void compare_mixer_data_loops(char *, char *, int);
-void compare_mixer_data_nopan(char *, char *);
+void compare_mixer_data_no_rv(char *, char *);
 void convert_endian(unsigned char *, int);
 void create_simple_module(struct context_data *, int, int);
 void set_order(struct context_data *, int, int);

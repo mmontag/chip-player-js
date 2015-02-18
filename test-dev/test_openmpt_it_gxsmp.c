@@ -7,7 +7,7 @@
 
 TEST(test_openmpt_it_gxsmp)
 {
-	compare_mixer_data_nopan(
+	compare_mixer_data_no_rv(
 		"openmpt/it/gxsmp.it",
 		"openmpt/it/gxsmp.data");
 }
