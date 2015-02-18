@@ -23,6 +23,7 @@ Stable versions
 	- fix sample number limit (reported by Lionel Debroux)
 	- fix Oktalyzer sample loop (by Dennis Lindroos)
 	- fix ThePlayer pattern decoding
+	- implement IT random volume variation
 	- implement IT random pan variation
 
 4.3.5 (20150207):
