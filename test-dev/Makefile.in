@@ -150,6 +150,7 @@ OPENMPT_IT	= carrynna \
 		  portareset \
 		  portasample \
 		  portasamplecompat \
+		  randompan \
 		  retrig \
 		  retrig_short \
 		  s7xinsnum \
