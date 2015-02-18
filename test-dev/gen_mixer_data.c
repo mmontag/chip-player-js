@@ -40,6 +40,8 @@ int main(int argc, char **argv)
 	}
 
 	opaque = xmp_create_context();
+	srand(8364);
+
 	if (xmp_load_module(opaque, argv[1]) < 0) {
 		fprintf(stderr, "can't load module\n");
 		exit(1);

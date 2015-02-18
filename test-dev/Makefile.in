@@ -381,3 +381,5 @@ $(TEST_PATH)/all_tests.c: $(TEST_PATH)/Makefile
 	for i in $(TEST_NAMES); do \
 		echo "declare_test($$i);" >> $@; \
 	done
+
+$(addprefix $(SRC_PATH)/,$(TEST_INTERNAL)): $(SRC_PATH)/player.h

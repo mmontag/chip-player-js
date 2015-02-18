@@ -26,6 +26,8 @@ void compare_mixer_data_loops(char *mod, char *data, int loops)
 	opaque = xmp_create_context();
 	fail_unless(opaque != NULL, "can't create context");
 
+	srand(8364);
+
 	ret = xmp_load_module(opaque, mod);
 	fail_unless(ret == 0, "can't load module");
 
