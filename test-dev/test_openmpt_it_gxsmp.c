@@ -7,6 +7,8 @@
 
 TEST(test_openmpt_it_gxsmp)
 {
-	compare_mixer_data("openmpt/it/gxsmp.it", "openmpt/it/gxsmp.data");
+	compare_mixer_data_nopan(
+		"openmpt/it/gxsmp.it",
+		"openmpt/it/gxsmp.data");
 }
 END_TEST

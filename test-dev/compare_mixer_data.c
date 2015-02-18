@@ -7,7 +7,7 @@
 #include "../src/mixer.h"
 #include "../src/virtual.h"
 
-void compare_mixer_data_loops(char *mod, char *data, int loops)
+static void _compare_mixer_data(char *mod, char *data, int loops, int ignore_pan)
 {
 	xmp_context opaque;
 	struct context_data *ctx;
@@ -25,8 +25,6 @@ void compare_mixer_data_loops(char *mod, char *data, int loops)
 
 	opaque = xmp_create_context();
 	fail_unless(opaque != NULL, "can't create context");
-
-	srand(8364);
 
 	ret = xmp_load_module(opaque, mod);
 	fail_unless(ret == 0, "can't load module");
@@ -68,7 +66,9 @@ void compare_mixer_data_loops(char *mod, char *data, int loops)
 			fail_unless(vi->note   == note,   "note mismatch");
 			fail_unless(vi->ins    == ins,    "instrument");
 			fail_unless(vi->vol    == vol,    "volume mismatch");
-			fail_unless(vi->pan    == pan,    "pan mismatch");
+			if (!ignore_pan) {
+				fail_unless(vi->pan == pan, "pan mismatch");
+			}
 			fail_unless(vi->pos0   == pos0,   "position mismatch");
 			if (num >= 11) {
 				fail_unless(vi->filter.cutoff == cutoff,
@@ -88,5 +88,15 @@ void compare_mixer_data_loops(char *mod, char *data, int loops)
 
 void compare_mixer_data(char *mod, char *data)
 {
-	compare_mixer_data_loops(mod, data, 1);
+	_compare_mixer_data(mod, data, 1, 0);
+}
+
+void compare_mixer_data_loops(char *mod, char *data, int loops)
+{
+	_compare_mixer_data(mod, data, loops, 0);
+}
+
+void compare_mixer_data_nopan(char *mod, char *data)
+{
+	_compare_mixer_data(mod, data, 1, 1);
 }

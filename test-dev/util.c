@@ -1,8 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "test.h"
 
 #define BUFLEN 16384
+
+int check_randomness(int *array, int size, double sdev)
+{
+	int i;
+	double avg = 0.0;
+	double dev = 0.0;
+
+	for (i = 0; i < size; i++) {
+		avg += array[i];
+	}
+	avg /= size;
+
+	for (i = 0; i < size; i++) {
+		dev += pow(avg - array[i], 2);
+	}
+
+	dev = sqrt(dev / size);
+
+	return dev > sdev;
+}
 
 int compare_md5(unsigned char *d, char *digest)
 {
