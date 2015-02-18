@@ -77,6 +77,7 @@ STORLEK		= 01_arpeggio_pitch_slide \
 		  17_pattern_row_delay \
 		  18_sample_number_new_note \
 		  19_random_waveform \
+		  20_pan_swing_and_set_pan \
 		  21_pitch_slide_limits \
 		  22_zero_cut_and_delay \
 		  23_portamento_with_no_note \
