@@ -1,3 +1,5 @@
+This is a half assed attempt to replace Project64 with Mupen64plus, for a hoped better compatibility, and support for nicer recompiler cores for x86 and x86_64.
+
 TODO:
 
 * Get it working at all
