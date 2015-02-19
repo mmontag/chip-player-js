@@ -157,6 +157,7 @@ OPENMPT_IT	= carrynna \
 		  s7xinsnum \
 		  swaptest \
 		  swing1 \
+		  swing2 \
 		  swing3 \
 		  volcolmemory
 
