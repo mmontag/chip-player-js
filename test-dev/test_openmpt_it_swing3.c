@@ -33,7 +33,7 @@ TEST(test_openmpt_it_swing3)
 	}
 
 	/* Check pan randomness */
-	fail_unless(check_randomness(values, 64, 10), "randomness error");
+	fail_unless(check_randomness(values, 64, 5), "randomness error");
 
 	xmp_end_player(opaque);
 	xmp_release_module(opaque);
