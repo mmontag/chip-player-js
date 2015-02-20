@@ -40,6 +40,11 @@ void usf_clear(void * state)
     
     USF_STATE->save_state = malloc( 0x80275c );
     USF_STATE->save_state_size = 0x80275c;
+    
+    for (offset = 0; offset < 0x10000; offset += 4)
+    {
+        USF_STATE->EmptySpace[offset / 4] = (uint32_t)((offset << 16) | offset);
+    }
 }
 
 void usf_set_hle_audio(void * state, int enable)

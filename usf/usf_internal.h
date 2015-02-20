@@ -285,6 +285,7 @@ struct usf_state
     unsigned char cpu_byte;
     unsigned short cpu_hword;
     unsigned long long cpu_dword, *rdword;
+    uint32_t EmptySpace[0x10000/4];
     
     void (*readmem[0x10000])(usf_state_t *);
     void (*readmemb[0x10000])(usf_state_t *);

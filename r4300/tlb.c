@@ -100,5 +100,6 @@ unsigned int virtual_to_physical_address(usf_state_t * state, unsigned int addre
     //getchar();
     TLB_refill_exception(state,addresse,w);
     //return 0x80000000;
-    return 0x00000000;
+    //return 0x00000000;
+    return state->PC->addr;
 }

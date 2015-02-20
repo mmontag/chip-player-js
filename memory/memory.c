@@ -1156,7 +1156,12 @@ unsigned int *fast_mem_access(usf_state_t * state, unsigned int address)
     if (address < RDRAM_MAX_SIZE)
         return (unsigned int*)((unsigned char*)state->g_rdram + address);
     else if (address >= 0x10000000)
-        return (unsigned int*)((unsigned char*)state->g_rom + address - 0x10000000);
+    {
+        if ((address - 0x10000000) < state->g_rom_size)
+            return (unsigned int*)((unsigned char*)state->g_rom + address - 0x10000000);
+        else
+            return (unsigned int*)((unsigned char*)state->EmptySpace + (address & 0xFFFF));
+    }
     else if ((address & 0xffffe000) == 0x04000000)
         return (unsigned int*)((unsigned char*)state->g_sp.mem + (address & 0x1ffc));
     else

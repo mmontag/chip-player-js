@@ -50,6 +50,10 @@ enum sp_registers2
     SP_REGS2_COUNT
 };
 
+enum
+{
+    SP_STATUS_INTR_BREAK = 0x040
+};
 
 struct rsp_core
 {

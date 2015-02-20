@@ -35,10 +35,20 @@ void real_run_rsp(usf_state_t * state, uint32_t cycles)
 {
     (void)cycles;
 
-    if (state->enable_hle_audio)
-        hle_execute(&state->hle);
-    else
-        run_task(state);
+    if (state->g_sp.regs[SP_STATUS_REG] & 0x00000003)
+    {
+        message(state, "SP_STATUS_HALT", 3);
+        return;
+    }
+    switch (*(unsigned int *)(state->DMEM + 0xFC0))
+    { /* Simulation barrier to redirect processing externally. */
+        case 0x00000002: /* OSTask.type == M_AUDTASK */
+            if (state->enable_hle_audio == 0)
+                break;
+            hle_execute(&state->hle);
+            return;
+    }
+    run_task(state);
 }
 
 int32_t init_rsp_lle(usf_state_t * state)

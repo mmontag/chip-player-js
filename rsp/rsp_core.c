@@ -21,6 +21,8 @@
 
 #include "usf/usf.h"
 
+#include "usf/usf_internal.h"
+
 #include "rsp_lle/rsp_lle.h"
 
 #include "rsp_core.h"
@@ -269,20 +271,45 @@ int write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mas
 void do_SP_Task(struct rsp_core* sp)
 {
     uint32_t save_pc = sp->regs2[SP_PC_REG] & ~0xfff;
-
-    if (sp->mem[0xfc0/4] == 2)
+    switch (sp->mem[0xfc0/4])
     {
-        //audio.processAList();
-        sp->regs2[SP_PC_REG] &= 0xfff;
-        real_run_rsp(sp->r4300->state, 0xFFFFFFFF);
-        sp->regs2[SP_PC_REG] |= save_pc;
-
-        update_count(sp->r4300->state);
-        if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
-            add_interupt_event(sp->r4300->state, SP_INT, 4000/*500*/);
-        sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_SP;
-        sp->regs[SP_STATUS_REG] &= ~0x303;
+        case 1:
+            sp->r4300->mi.regs[MI_INTR_REG] |= MI_INTR_DP;
+            
+            sp->regs[SP_STATUS_REG] |= 0x0203;
+            if ((sp->regs[SP_STATUS_REG] & SP_STATUS_INTR_BREAK) != 0)
+                sp->r4300->mi.regs[MI_INTR_REG] |= MI_INTR_SP;
+    
+            if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP)
+                add_interupt_event(sp->r4300->state, DP_INT, 4000);
+            sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_DP;
+            
+            sp->r4300->state->g_dp.dpc_regs[DPC_STATUS_REG] &= ~0x0002;
+            return;
+            
+            break;
+            
+        case 2:
+            break;
+            
+        default:
+            break;
     }
+
+    sp->regs2[SP_PC_REG] &= 0xfff;
+    real_run_rsp(sp->r4300->state, 0xFFFFFFFF);
+    sp->regs2[SP_PC_REG] |= save_pc;
+
+    sp->regs[SP_STATUS_REG] |= 0x0203;
+    
+    if ((sp->regs[SP_STATUS_REG] & SP_STATUS_INTR_BREAK) != 0)
+        sp->r4300->mi.regs[MI_INTR_REG] |= MI_INTR_SP;
+    
+    update_count(sp->r4300->state);
+    if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
+        add_interupt_event(sp->r4300->state, SP_INT, 4000/*500*/);
+    sp->r4300->mi.regs[MI_INTR_REG] &= ~(MI_INTR_SP|MI_INTR_DP);
+    sp->regs[SP_STATUS_REG] &= ~0x303;
 }
 
 void rsp_interrupt_event(struct rsp_core* sp)
