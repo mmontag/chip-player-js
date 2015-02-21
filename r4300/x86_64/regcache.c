@@ -88,7 +88,10 @@ void free_registers_move_start(usf_state_t * state)
 void free_register(usf_state_t * state, int reg)
 {
   precomp_instr *last;
-   
+  
+  if (state->last_access[reg] == (precomp_instr *) 0xFFFFFFFFFFFFFFFFULL)
+    unlock_register(state, reg);
+
   if (state->last_access[reg] != NULL)
     last = state->last_access[reg]+1;
   else

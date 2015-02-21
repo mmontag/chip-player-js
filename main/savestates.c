@@ -608,7 +608,8 @@ static int savestates_load_pj64(usf_state_t * state, unsigned char * ptr, unsign
         for (i = 0; i < 0x100000; i++)
             state->invalid_code[i] = 1;
     }
-    generic_jump_to(state, state->last_addr);
+    if (state->r4300emu != CORE_DYNAREC)
+        generic_jump_to(state, state->last_addr);
 #endif
 
     // assert(savestateData+savestateSize == curr)
