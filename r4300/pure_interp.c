@@ -170,21 +170,23 @@ static void InterpretOpcode(usf_state_t * state);
 #include <stdio.h>
 #include <inttypes.h>
 
-//#include "debugger/dbg_decoder.h"
+#ifdef DEBUG_INFO
+#include "debugger/dbg_decoder.h"
+#include <string.h>
+#endif
 
 void InterpretOpcode(usf_state_t * state)
 {
 	uint32_t op = *fast_mem_access(state, state->PC->addr);
-#if 0
+#ifdef DEBUG_INFO
     {
+        const char padding[] = "                ";
         char instr[256];
         char arguments[256];
         r4300_decode_op(op, instr, arguments, state->PC->addr);
-        fprintf(stderr, "%08x: %s\t%s\n", state->PC->addr, instr, arguments);
-        if (state->interp_PC.addr == 0x80327ea4)
-        {
-            int i = rand();
-        }
+        strcat(instr, padding);
+        instr[16] = '\0';
+        fprintf(stderr, "%08x: %s %s\n", state->PC->addr, instr, arguments);
     }
 #endif
 	switch ((op >> 26) & 0x3F) {

@@ -271,6 +271,9 @@ int write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mas
 void do_SP_Task(struct rsp_core* sp)
 {
     uint32_t save_pc = sp->regs2[SP_PC_REG] & ~0xfff;
+#ifdef DEBUG_INFO
+    fprintf(stderr, "RSP Task:");
+#endif
     switch (sp->mem[0xfc0/4])
     {
         case 1:
@@ -279,9 +282,20 @@ void do_SP_Task(struct rsp_core* sp)
             sp->regs[SP_STATUS_REG] |= 0x0203;
             if ((sp->regs[SP_STATUS_REG] & SP_STATUS_INTR_BREAK) != 0)
                 sp->r4300->mi.regs[MI_INTR_REG] |= MI_INTR_SP;
-    
+
+#ifdef DEBUG_INFO
+            fprintf(stderr, " DList");
+#endif
             if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP)
+            {
+#ifdef DEBUG_INFO
+                fprintf(stderr, " - interrupt");
+#endif
                 add_interupt_event(sp->r4300->state, DP_INT, 4000);
+            }
+#ifdef DEBUG_INFO
+            fprintf(stderr, "\n");
+#endif
             sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_DP;
             
             sp->r4300->state->g_dp.dpc_regs[DPC_STATUS_REG] &= ~0x0002;
@@ -290,6 +304,9 @@ void do_SP_Task(struct rsp_core* sp)
             break;
             
         case 2:
+#ifdef DEBUG_INFO
+            fprintf(stderr, " AList");
+#endif
             break;
             
         default:
@@ -303,7 +320,15 @@ void do_SP_Task(struct rsp_core* sp)
     sp->regs[SP_STATUS_REG] |= 0x0203;
     
     if ((sp->regs[SP_STATUS_REG] & SP_STATUS_INTR_BREAK) != 0)
+    {
+#ifdef DEBUG_INFO
+        fprintf(stderr, " - interrupt");
+#endif
         sp->r4300->mi.regs[MI_INTR_REG] |= MI_INTR_SP;
+    }
+#ifdef DEBUG_INFO
+    fprintf(stderr, "\n");
+#endif
     
     update_count(sp->r4300->state);
     if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
