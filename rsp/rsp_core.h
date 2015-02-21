@@ -101,4 +101,8 @@ void do_SP_Task(struct rsp_core* sp);
 
 void rsp_interrupt_event(struct rsp_core* sp);
 
+// For use by the LLE RSP
+void dma_sp_write(struct rsp_core* sp);
+void dma_sp_read(struct rsp_core* sp);
+
 #endif

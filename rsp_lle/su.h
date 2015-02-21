@@ -231,61 +231,15 @@ MT_CMD_CLOCK       ,MT_READ_ONLY       ,MT_READ_ONLY       ,MT_READ_ONLY
 };
 void SP_DMA_READ(usf_state_t * state)
 {
-    register unsigned int length;
-    register unsigned int count;
-    register unsigned int skip;
-
-    length = (state->g_sp.regs[SP_RD_LEN_REG] & 0x00000FFF) >>  0;
-    count  = (state->g_sp.regs[SP_RD_LEN_REG] & 0x000FF000) >> 12;
-    skip   = (state->g_sp.regs[SP_RD_LEN_REG] & 0xFFF00000) >> 20;
-    /* length |= 07; // already corrected by mtc0 */
-    ++length;
-    ++count;
-    skip += length;
-    do
-    { /* `count` always starts > 0, so we begin with `do` instead of `while`. */
-        unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
-        register unsigned int i = 0;
-
-        --count;
-        do
-        {
-            offC = (count*length + state->g_sp.regs[SP_MEM_ADDR_REG] + i) & 0x00001FF8;
-            offD = (count*skip + state->g_sp.regs[SP_DRAM_ADDR_REG] + i) & 0x00FFFFF8;
-            memcpy(state->DMEM + offC, (unsigned char *)state->g_rdram + offD, 8);
-            i += 0x008;
-        } while (i < length);
-    } while (count);
+    // Write to RSP, read from RDRAM
+    dma_sp_write(&state->g_sp);
     state->g_sp.regs[SP_DMA_BUSY_REG] = 0x00000000;
     state->g_sp.regs[SP_STATUS_REG] &= ~0x00000004; /* SP_STATUS_DMABUSY */
 }
 void SP_DMA_WRITE(usf_state_t * state)
 {
-    register unsigned int length;
-    register unsigned int count;
-    register unsigned int skip;
-
-    length = (state->g_sp.regs[SP_WR_LEN_REG] & 0x00000FFF) >>  0;
-    count  = (state->g_sp.regs[SP_WR_LEN_REG] & 0x000FF000) >> 12;
-    skip   = (state->g_sp.regs[SP_WR_LEN_REG] & 0xFFF00000) >> 20;
-    /* length |= 07; // already corrected by mtc0 */
-    ++length;
-    ++count;
-    skip += length;
-    do
-    { /* `count` always starts > 0, so we begin with `do` instead of `while`. */
-        unsigned int offC, offD; /* SP cache and dynamic DMA pointers */
-        register unsigned int i = 0;
-
-        --count;
-        do
-        {
-            offC = (count*length + state->g_sp.regs[SP_MEM_ADDR_REG] + i) & 0x00001FF8;
-            offD = (count*skip + state->g_sp.regs[SP_DRAM_ADDR_REG] + i) & 0x00FFFFF8;
-            memcpy((unsigned char *)state->g_rdram + offD, state->DMEM + offC, 8);
-            i += 0x000008;
-        } while (i < length);
-    } while (count);
+    // Read from RSP, write to RDRAM
+    dma_sp_read(&state->g_sp);
     state->g_sp.regs[SP_DMA_BUSY_REG] = 0x00000000;
     state->g_sp.regs[SP_STATUS_REG] &= ~0x00000004; /* SP_STATUS_DMABUSY */
 }

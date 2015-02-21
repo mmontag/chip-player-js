@@ -37,7 +37,7 @@
 
 #include <string.h>
 
-static void dma_sp_write(struct rsp_core* sp)
+void dma_sp_write(struct rsp_core* sp)
 {
     unsigned int i,j;
 
@@ -63,7 +63,7 @@ static void dma_sp_write(struct rsp_core* sp)
     }
 }
 
-static void dma_sp_read(struct rsp_core* sp)
+void dma_sp_read(struct rsp_core* sp)
 {
     unsigned int i,j;
 
