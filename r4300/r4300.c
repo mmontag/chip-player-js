@@ -272,7 +272,7 @@ void r4300_execute(usf_state_t * state)
 #ifdef NEW_DYNAREC
         new_dyna_start(state);
 #else
-        dyna_start(state, dynarec_setup_code);
+        dyna_start(state, (void*)dynarec_setup_code);
         state->PC++;
 #endif
     }

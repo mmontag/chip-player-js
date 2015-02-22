@@ -80,7 +80,7 @@ void HleWarnMessage(void* user_defined, const char *message, ...)
 
 void HleCheckInterrupts(void* user_defined)
 {
-    check_interupt((usf_state_t*)user_defined);
+    //check_interupt((usf_state_t*)user_defined);
 }
 
 void HleProcessDlistList(void* user_defined)

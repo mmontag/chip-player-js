@@ -127,7 +127,6 @@ static void connect_all(
 */
 void main_start(usf_state_t * state)
 {
-    size_t i;
     unsigned int disable_extra_mem;
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
@@ -135,7 +134,7 @@ void main_start(usf_state_t * state)
 
     /* set some other core parameters based on the config file values */
     state->no_compiled_jump = 0;
-    state->g_delay_si = 0;
+    state->g_delay_si = 1;
     disable_extra_mem = 0;
     state->count_per_op = COUNT_PER_OP_DEFAULT;
     if (state->count_per_op <= 0)
