@@ -36,7 +36,7 @@ NOINLINE void run_task(usf_state_t * state)
             state->MFC0_count[i] = 0;
     }
     PC = FIT_IMEM(state->g_sp.regs2[SP_PC_REG]);
-    while ((SP_STATUS_REG & 0x00000001) == 0x00000000)
+    while ((state->g_sp.regs[SP_STATUS_REG] & 0x00000001) == 0x00000000)
     {
         register uint32_t inst;
 
@@ -121,7 +121,7 @@ EX:
                             if (state->g_sp.regs[SP_STATUS_REG] & 0x00000040)
                             { /* SP_STATUS_INTR_BREAK */
                                 state->g_r4300.mi.regs[MI_INTR_REG] |= 0x00000001;
-                                check_interupt(state);
+                                //check_interupt(state);
                             }
                             CONTINUE
                         case 040: /* ADD */
@@ -482,7 +482,7 @@ BRANCH:
     if (state->g_sp.regs[SP_STATUS_REG] & 0x00000002) /* normal exit, from executing BREAK */
         return;
     else if (state->g_r4300.mi.regs[MI_INTR_REG] & 0x00000001) /* interrupt set by MTC0 to break */
-        check_interupt(state);
+        /*check_interupt(state)*/;
     else if (CFG_WAIT_FOR_CPU_HOST != 0) /* plugin system hack to re-sync */
         {}
     else if (state->g_sp.regs[SP_SEMAPHORE_REG] != 0x00000000) /* semaphore lock fixes */
