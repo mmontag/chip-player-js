@@ -164,6 +164,7 @@ void usf_push_audio_samples(void *opaque, const void * buffer, size_t size)
     samplesTodo = size;
     if (samplesTodo > state->sample_buffer_count)
         samplesTodo = state->sample_buffer_count;
+    state->sample_buffer_count -= samplesTodo;
     
     samplesOut = state->sample_buffer;
     size -= samplesTodo;
@@ -212,7 +213,7 @@ const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * 
     
     if ( !USF_STATE->MemoryState )
     {
-        if ( usf_startup( USF_STATE ) < 0 )
+        if ( usf_startup( state ) < 0 )
             return USF_STATE->last_error;
     }
     
