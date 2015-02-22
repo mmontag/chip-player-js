@@ -47,6 +47,16 @@ void usf_clear(void * state)
     }
 }
 
+void usf_set_compare(void * state, int enable)
+{
+    USF_STATE->enablecompare = enable;
+}
+
+void usf_set_fifo_full(void * state, int enable)
+{
+    USF_STATE->enableFIFOfull = enable;
+}
+
 void usf_set_hle_audio(void * state, int enable)
 {
     USF_STATE->enable_hle_audio = enable;

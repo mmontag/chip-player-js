@@ -446,7 +446,8 @@ static void compare_int_handler(usf_state_t * state)
     add_interupt_event_count(state, COMPARE_INT, state->g_cp0_regs[CP0_COMPARE_REG]);
     state->g_cp0_regs[CP0_COUNT_REG]-=state->count_per_op;
 
-    raise_maskable_interrupt(state, 0x8000);
+    if (state->enablecompare)
+        raise_maskable_interrupt(state, 0x8000);
 }
 
 static void hw2_int_handler(usf_state_t * state)

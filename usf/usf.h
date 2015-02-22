@@ -24,6 +24,12 @@ size_t usf_get_state_size();
    without calling usf_shutdown first, or else you will leak memory. */
 void usf_clear(void * state);
 
+/* These are both required functions before calling usf_render.
+   Their values are assumed to be zero, unless the respective
+   _enablecompare or _enablefifofull tags are present in the file. */
+void usf_set_compare(void * state, int enable);
+void usf_set_fifo_full(void * state, int enable);
+    
 /* This option should speed up decoding significantly, at the expense
    of accuracy, and potentially emulation bugs. */
 void usf_set_hle_audio(void * state, int enable);

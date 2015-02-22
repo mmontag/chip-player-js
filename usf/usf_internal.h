@@ -235,6 +235,9 @@ struct usf_state
     // rsp_hle
     struct hle_t hle;
 
+    // options from file tags
+    uint32_t enablecompare, enableFIFOfull;
+    
     // options for decoding
     uint32_t enable_hle_audio;
     
