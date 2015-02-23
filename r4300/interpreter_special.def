@@ -400,8 +400,10 @@ DECLARE_INSTRUCTION(DSRA32)
    ADD_TO_PC(1);
 }
 
+/* Idle loop hack from 64th Note */
 DECLARE_INSTRUCTION(BREAK)
 {
    state->g_cp0_regs[CP0_COUNT_REG] = state->next_interupt;
+   gen_interupt(state);
    ADD_TO_PC(1);
 }

@@ -31,6 +31,7 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "osal/preproc.h"
 #include "r4300/recomph.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
@@ -139,7 +140,7 @@ void passe2(usf_state_t * state, precomp_instr *dest, int start, int end, precom
       {
         DebugMessage(state, M64MSG_ERROR, "assembler pass2 error: offset too big for relative jump from %p to %p",
                      (block->code + jmp_offset_loc + 4), addr_dest);
-        asm(" int $3; ");
+        OSAL_BREAKPOINT_INTERRUPT
       }
     }
   }
@@ -156,7 +157,7 @@ void passe2(usf_state_t * state, precomp_instr *dest, int start, int end, precom
     {
       DebugMessage(state, M64MSG_ERROR, "assembler pass2 error: offset too big between mem target: %p and code position: %p",
                    state->riprel_table[i].global_dst, rel_offset_ptr);
-      asm(" int $3; ");
+      OSAL_BREAKPOINT_INTERRUPT
     }
     *((int *) rel_offset_ptr) = (int) rip_rel_offset;
   }
@@ -181,7 +182,7 @@ void jump_end_rel8(usf_state_t * state)
   if (jump_vec > 127 || jump_vec < -128)
   {
     DebugMessage(state, M64MSG_ERROR, "Error: 8-bit relative jump too long! From %x to %x", state->g_jump_start8, jump_end);
-    asm(" int $3; ");
+    OSAL_BREAKPOINT_INTERRUPT
   }
 
   state->code_length = state->g_jump_start8 - 1;

@@ -38,6 +38,9 @@ void usf_clear(void * state)
     USF_STATE->floor_mode = 0x73F;
     USF_STATE->precomp_instr_size = sizeof(precomp_instr);
     
+    // USF_STATE->g_rom = 0;
+    // USF_STATE->g_rom_size = 0;
+    
     USF_STATE->save_state = malloc( 0x80275c );
     USF_STATE->save_state_size = 0x80275c;
     
@@ -87,6 +90,8 @@ int usf_upload_section(void * state, const uint8_t * data, size_t size)
 
             if ( start + len > USF_STATE->g_rom_size )
             {
+                void * new_rom;
+                int old_rom_size = USF_STATE->g_rom_size;
                 while ( start + len > USF_STATE->g_rom_size )
                 {
                     if (!USF_STATE->g_rom_size)
@@ -95,9 +100,12 @@ int usf_upload_section(void * state, const uint8_t * data, size_t size)
                         USF_STATE->g_rom_size *= 2;
                 }
                 
-                USF_STATE->g_rom = realloc( USF_STATE->g_rom, USF_STATE->g_rom_size );
-                if ( !USF_STATE->g_rom )
+                new_rom = realloc( USF_STATE->g_rom, USF_STATE->g_rom_size );
+                if ( !new_rom )
                     return -1;
+                
+                USF_STATE->g_rom = (unsigned char *) new_rom;
+                memset(USF_STATE->g_rom + old_rom_size, 0, USF_STATE->g_rom_size - old_rom_size);
             }
             
             memcpy( USF_STATE->g_rom + start, data, len );
@@ -133,23 +141,32 @@ int usf_upload_section(void * state, const uint8_t * data, size_t size)
 	return 0;
 }
 
-static int usf_startup(void * state)
+static int usf_startup(usf_state_t * state)
 {
     // Detect the Ramsize before the memory allocation
+    if (state->save_state == NULL || state->g_rom == NULL)
+    {
+        DebugMessage(state, 1, "Either ROM or Save State is missing\n");
+        return -1;
+    }
 	
-	if(get_le32(USF_STATE->save_state + 4) == 0x400000) {
+	if(get_le32(state->save_state + 4) == 0x400000) {
         void * savestate;
-		savestate = realloc(USF_STATE->save_state, 0x40275c);
+		savestate = realloc(state->save_state, 0x40275c);
         if ( savestate )
-            USF_STATE->save_state = savestate;
-        USF_STATE->save_state_size = 0x40275c;
+            state->save_state = savestate;
+        state->save_state_size = 0x40275c;
 	}
     
-    open_rom(USF_STATE);
+    open_rom(state);
 
-    main_start(USF_STATE);
+    if (main_start(state) != M64ERR_SUCCESS)
+    {
+        DebugMessage(state, 1, "Invalid Project64 Save State\n");
+        return -1;
+    }
     
-    USF_STATE->MemoryState = 1;
+    state->MemoryState = 1;
     
     return 0;
 }
@@ -223,7 +240,7 @@ const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * 
     
     if ( !USF_STATE->MemoryState )
     {
-        if ( usf_startup( state ) < 0 )
+        if ( usf_startup( USF_STATE ) < 0 )
             return USF_STATE->last_error;
     }
     
@@ -280,6 +297,4 @@ void usf_shutdown(void * state)
     free(USF_STATE->save_state);
     USF_STATE->save_state = 0;
     close_rom(USF_STATE);
-    free(USF_STATE->g_rom);
-    USF_STATE->g_rom = 0;
 }

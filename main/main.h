@@ -41,7 +41,7 @@ enum { RDRAM_MAX_SIZE = 0x800000 };
 /* globals */
 void main_message(usf_state_t *, m64p_msg_level level, unsigned int osd_corner, const char *format, ...);
 
-void main_start(usf_state_t *);
+m64p_error main_start(usf_state_t *);
 void main_run(usf_state_t *);
 
 #endif /* __MAIN_H__ */

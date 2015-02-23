@@ -68,6 +68,9 @@ static inline uint32_t ai_reg(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
+/* This is for enablefifofull */
+void ai_fifo_queue_int(struct ai_controller* ai);
+
 void set_audio_format(struct ai_controller* ai, unsigned int frequency, unsigned int bits);
 void push_audio_samples(struct ai_controller* ai, const void* buffer, size_t size);
 

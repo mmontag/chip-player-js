@@ -35,14 +35,12 @@
 
 #include <string.h>
 
-enum
-{
-    AI_STATUS_BUSY = 0x40000000,
-    AI_STATUS_FULL = 0x80000000
-};
+/* Clang complains that 0x80000000 is too large for enumerators, which it says must be 'int' */
+static const uint32_t AI_STATUS_BUSY = 0x40000000;
+static const uint32_t AI_STATUS_FULL = 0x80000000;
 
 
-static uint32_t get_remaining_dma_length(usf_state_t * state, struct ai_controller* ai)
+static uint32_t get_remaining_dma_length(struct ai_controller* ai)
 {
     unsigned int next_ai_event;
     unsigned int remaining_dma_duration;
@@ -50,36 +48,36 @@ static uint32_t get_remaining_dma_length(usf_state_t * state, struct ai_controll
     if (ai->fifo[0].duration == 0)
         return 0;
 
-    update_count(state);
-    next_ai_event = get_event(state, AI_INT);
+    update_count(ai->r4300->state);
+    next_ai_event = get_event(ai->r4300->state, AI_INT);
     if (next_ai_event == 0)
         return 0;
 
-    remaining_dma_duration = next_ai_event - state->g_cp0_regs[CP0_COUNT_REG];
+    remaining_dma_duration = next_ai_event - ai->r4300->state->g_cp0_regs[CP0_COUNT_REG];
 
     if (remaining_dma_duration >= 0x80000000)
         return 0;
 
-    return (uint64_t)remaining_dma_duration * ai->fifo[0].length / ai->fifo[0].duration;
+    return (uint32_t)((uint64_t)remaining_dma_duration * ai->fifo[0].length / ai->fifo[0].duration);
 }
 
-static unsigned int get_dma_duration(usf_state_t * state, struct ai_controller* ai)
+static unsigned int get_dma_duration(struct ai_controller* ai)
 {
-    unsigned int samples_per_sec = state->ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
+    unsigned int samples_per_sec = ai->r4300->state->ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
 
-    return ((uint64_t)ai->regs[AI_LEN_REG]*ai->vi->delay*state->ROM_PARAMS.vilimit)
-        / (4 * samples_per_sec);
+    return (uint32_t)(((uint64_t)ai->regs[AI_LEN_REG]*ai->vi->delay*ai->r4300->state->ROM_PARAMS.vilimit)
+        / (4 * samples_per_sec));
 }
 
 
-static void do_dma(usf_state_t * state, struct ai_controller* ai, const struct ai_dma* dma)
+static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
 {
     /* lazy initialization of sample format */
     if (ai->samples_format_changed)
     {
         unsigned int frequency = (ai->regs[AI_DACRATE_REG] == 0)
             ? 44100
-            : state->ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
+            : ai->r4300->state->ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
 
         unsigned int bits = (ai->regs[AI_BITRATE_REG] == 0)
             ? 16
@@ -94,20 +92,30 @@ static void do_dma(usf_state_t * state, struct ai_controller* ai, const struct a
     push_audio_samples(ai, &ai->ri->rdram.dram[dma->address/4], dma->length);
 
     /* schedule end of dma event */
-    update_count(state);
-    add_interupt_event(state, AI_INT, dma->duration);
+    update_count(ai->r4300->state);
+    if (!(ai->regs[AI_STATUS_REG] & AI_STATUS_FULL))
+        add_interupt_event(ai->r4300->state, AI_INT, dma->duration);
 }
 
-static void fifo_push(usf_state_t * state, struct ai_controller* ai)
+void ai_fifo_queue_int(struct ai_controller* ai)
 {
-    unsigned int duration = get_dma_duration(state, ai);
+    add_interupt_event(ai->r4300->state, AI_INT, get_dma_duration(ai));
+}
+
+static void fifo_push(struct ai_controller* ai)
+{
+    unsigned int duration = get_dma_duration(ai);
 
     if (ai->regs[AI_STATUS_REG] & AI_STATUS_BUSY)
     {
         ai->fifo[1].address = ai->regs[AI_DRAM_ADDR_REG];
         ai->fifo[1].length = ai->regs[AI_LEN_REG];
         ai->fifo[1].duration = duration;
-        ai->regs[AI_STATUS_REG] |= AI_STATUS_FULL;
+        
+        if (ai->r4300->state->enableFIFOfull)
+            ai->regs[AI_STATUS_REG] |= AI_STATUS_FULL;
+        else
+            do_dma(ai, &ai->fifo[1]);
     }
     else
     {
@@ -116,11 +124,11 @@ static void fifo_push(usf_state_t * state, struct ai_controller* ai)
         ai->fifo[0].duration = duration;
         ai->regs[AI_STATUS_REG] |= AI_STATUS_BUSY;
 
-        do_dma(state, ai, &ai->fifo[0]);
+        do_dma(ai, &ai->fifo[0]);
     }
 }
 
-static void fifo_pop(usf_state_t * state, struct ai_controller* ai)
+static void fifo_pop(struct ai_controller* ai)
 {
     if (ai->regs[AI_STATUS_REG] & AI_STATUS_FULL)
     {
@@ -129,7 +137,7 @@ static void fifo_pop(usf_state_t * state, struct ai_controller* ai)
         ai->fifo[0].duration = ai->fifo[1].duration;
         ai->regs[AI_STATUS_REG] &= ~AI_STATUS_FULL;
 
-        do_dma(state, ai, &ai->fifo[0]);
+        do_dma(ai, &ai->fifo[0]);
     }
     else
     {
@@ -174,7 +182,7 @@ int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
 
     if (reg == AI_LEN_REG)
     {
-        *value = get_remaining_dma_length(ai->r4300->state, ai);
+        *value = get_remaining_dma_length(ai);
     }
     else
     {
@@ -193,7 +201,7 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     {
     case AI_LEN_REG:
         masked_write(&ai->regs[AI_LEN_REG], value, mask);
-        fifo_push(ai->r4300->state, ai);
+        fifo_push(ai);
         return 0;
 
     case AI_STATUS_REG:
@@ -217,7 +225,7 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
 void ai_end_of_dma_event(struct ai_controller* ai)
 {
-    fifo_pop(ai->r4300->state, ai);
+    fifo_pop(ai);
     raise_rcp_interrupt(ai->r4300, MI_INTR_AI);
 }
 

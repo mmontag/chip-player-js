@@ -598,7 +598,7 @@ static void build_wrapper(usf_state_t * state, precomp_instr *instr, unsigned ch
        {
          DebugMessage(state, M64MSG_ERROR, "build_wrapper error: reg[%i] offset too big for relative address from %p to %p",
                 i, (&state->reg[0]), instr->reg_cache_infos.needed_registers[i]);
-         asm(" int $3; ");
+         OSAL_BREAKPOINT_INTERRUPT
        }
      }
    }

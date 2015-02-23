@@ -1070,6 +1070,7 @@ void gendsra32(usf_state_t * state)
 #endif
 }
 
+/* Idle loop hack from 64th Note */
 void genbreak(usf_state_t * state)
 {
    gencallinterp(state, (unsigned long long)state->current_instruction_table.BREAK, 0);

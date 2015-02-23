@@ -180,6 +180,7 @@ static void RSYSCALL(usf_state_t * state)
    state->recomp_func = gensyscall;
 }
 
+/* Idle loop hack from 64th Note */
 static void RBREAK(usf_state_t * state)
 {
    state->dst->ops = state->current_instruction_table.BREAK;

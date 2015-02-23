@@ -125,7 +125,7 @@ static void connect_all(
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
-void main_start(usf_state_t * state)
+m64p_error main_start(usf_state_t * state)
 {
     unsigned int disable_extra_mem;
 
@@ -157,7 +157,13 @@ void main_start(usf_state_t * state)
     r4300_reset_soft(state);
     r4300_begin(state);
 
-    savestates_load(state, state->save_state, state->save_state_size, 0);
+    if (!savestates_load(state, state->save_state, state->save_state_size, 0))
+        return M64ERR_INVALID_STATE;
+    
+    if (state->enableFIFOfull)
+        ai_fifo_queue_int(&state->g_ai);
+    
+    return M64ERR_SUCCESS;
 }
 
 void main_run(usf_state_t * state)
