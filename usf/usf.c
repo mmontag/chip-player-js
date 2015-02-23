@@ -14,6 +14,8 @@
 #include "r4300/cached_interp.h"
 #include "r4300/r4300.h"
 
+#include "resampler.h"
+
 size_t usf_get_state_size()
 {
     return sizeof(usf_state_t) + 8192;
@@ -48,6 +50,10 @@ void usf_clear(void * state)
     {
         USF_STATE->EmptySpace[offset / 4] = (uint32_t)((offset << 16) | offset);
     }
+    
+    resampler_init();
+    
+    USF_STATE->resampler = resampler_create();
     
 #ifdef DEBUG_INFO
     USF_STATE->debug_log = fopen("/tmp/lazyusf.log", "w");
@@ -244,7 +250,7 @@ void usf_push_audio_samples(void *opaque, const void * buffer, size_t size)
         DebugMessage(state, 1, "Sample buffer full!");
 }
 
-const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * sample_rate)
+static const char * usf_render_internal(void * state, int16_t * buffer, size_t count, int32_t * sample_rate)
 {
     USF_STATE->last_error = 0;
     USF_STATE->error_message[0] = '\0';
@@ -293,12 +299,65 @@ const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * 
     return USF_STATE->last_error;
 }
 
+const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * sample_rate)
+{
+    if ( sample_rate )
+        *sample_rate = 44100;
+    if ( !buffer )
+    {
+        return usf_render_internal(state, buffer, (float)count * (float)USF_STATE->SampleRate / 44100.0f, NULL);
+    }
+    while ( count )
+    {
+        const char * err;
+        
+        while ( USF_STATE->samples_in_buffer_2 && resampler_get_free_count(USF_STATE->resampler) )
+        {
+            int i = 0, j = resampler_get_free_count(USF_STATE->resampler);
+            if (j > USF_STATE->samples_in_buffer_2)
+                j = (int)USF_STATE->samples_in_buffer_2;
+            for (i = 0; i < j; ++i)
+            {
+                resampler_write_sample(USF_STATE->resampler, USF_STATE->samplebuf2[i*2], USF_STATE->samplebuf2[i*2+1]);
+            }
+            memmove(USF_STATE->samplebuf2, USF_STATE->samplebuf2 + i * 2, (USF_STATE->samples_in_buffer_2 - i) * sizeof(short) * 2);
+            USF_STATE->samples_in_buffer_2 -= i;
+        }
+        
+        while ( count && resampler_get_sample_count(USF_STATE->resampler) )
+        {
+            resampler_get_sample(USF_STATE->resampler, buffer, buffer + 1);
+            resampler_remove_sample(USF_STATE->resampler, 1);
+            buffer += 2;
+            --count;
+        }
+        
+        if (!count)
+            break;
+        
+        if (USF_STATE->samples_in_buffer_2)
+            continue;
+    
+        err = usf_render_internal(state, USF_STATE->samplebuf2, 4096, 0);
+        if (err)
+            return err;
+        
+        USF_STATE->samples_in_buffer_2 = 4096;
+        
+        resampler_set_rate(USF_STATE->resampler, (float)USF_STATE->SampleRate / 44100.0f);
+    }
+    
+    return 0;
+}
+
 void usf_restart(void * state)
 {
     if ( USF_STATE->MemoryState )
         savestates_load(state, USF_STATE->save_state, USF_STATE->save_state_size, 0);
     
     USF_STATE->samples_in_buffer = 0;
+    
+    resampler_clear(USF_STATE->resampler);
 }
 
 void usf_shutdown(void * state)
@@ -311,4 +370,6 @@ void usf_shutdown(void * state)
 #ifdef DEBUG_INFO
     fclose(USF_STATE->debug_log);
 #endif
+    resampler_delete(USF_STATE->resampler);
+    USF_STATE->resampler = 0;
 }

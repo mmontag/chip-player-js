@@ -264,6 +264,10 @@ struct usf_state
     int16_t samplebuf[16384];
     size_t samples_in_buffer;
     
+    void * resampler;
+    int16_t samplebuf2[8192];
+    size_t samples_in_buffer_2;
+    
     // This buffer does not really need to be that large, as it is likely
     // to only accumulate a handlful of error messages, at which point
     // emulation is immediately halted and the messages are returned to
