@@ -41,7 +41,7 @@ void usf_clear(void * state)
     // USF_STATE->g_rom = 0;
     // USF_STATE->g_rom_size = 0;
     
-    USF_STATE->save_state = malloc( 0x80275c );
+    USF_STATE->save_state = calloc( 1, 0x80275c );
     USF_STATE->save_state_size = 0x80275c;
     
     for (offset = 0; offset < 0x10000; offset += 4)
@@ -121,6 +121,8 @@ int usf_upload_section(void * state, const uint8_t * data, size_t size)
 
 	if(temp == 0x34365253) {
 		uint32_t len, start;
+        
+        if ( !USF_STATE->save_state ) return -1;
         
         if ( size < 4 ) return -1;
         len = get_le32( data ); data += 4; size -= 4;
