@@ -127,15 +127,19 @@ static void connect_all(
 */
 m64p_error main_start(usf_state_t * state)
 {
+    unsigned int RDRAMSize;
     unsigned int disable_extra_mem;
 
+    memcpy(&RDRAMSize, state->save_state + 4, 4);
+    to_little_endian_buffer(&RDRAMSize, 4, 1);
+    
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     state->r4300emu = 0;
 
     /* set some other core parameters based on the config file values */
     state->no_compiled_jump = 0;
     state->g_delay_si = 1;
-    disable_extra_mem = 0;
+    disable_extra_mem = RDRAMSize == 0x400000;
     state->count_per_op = COUNT_PER_OP_DEFAULT;
     if (state->count_per_op <= 0)
         state->count_per_op = state->ROM_PARAMS.countperop;

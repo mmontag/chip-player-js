@@ -486,7 +486,9 @@ static int savestates_load_pj64(usf_state_t * state, unsigned char * ptr, unsign
     state->g_vi.regs[VI_V_BURST_REG] = GETDATA(curr, uint32_t);
     state->g_vi.regs[VI_X_SCALE_REG] = GETDATA(curr, uint32_t);
     state->g_vi.regs[VI_Y_SCALE_REG] = GETDATA(curr, uint32_t);
-    // TODO vi delay?
+    state->g_vi.delay = (state->g_vi.regs[VI_V_SYNC_REG] == 0)
+                      ? 500000
+                      : (state->g_vi.regs[VI_V_SYNC_REG] + 1)*1500;
 
     // ai_register
     state->g_ai.regs[AI_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);

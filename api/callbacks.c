@@ -40,14 +40,19 @@ void DebugMessage(usf_state_t * state, int level, const char *message, ...)
   va_list args;
   size_t len;
 
-  if ( level > 1 )
+  if (
+#ifdef DEBUG_INFO
+      1 ||
+#endif
+      level > 1 )
   {
 #ifdef DEBUG_INFO
       char buffer[1024];
       va_start(args, message);
       vsprintf(buffer, message, args);
       va_end(args);
-      fprintf(stderr, "%s\n", buffer);
+      fprintf(state->debug_log, "%s\n", buffer);
+      if ( level > 1 )
 #endif
     return;
   }

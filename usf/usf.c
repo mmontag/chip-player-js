@@ -48,6 +48,10 @@ void usf_clear(void * state)
     {
         USF_STATE->EmptySpace[offset / 4] = (uint32_t)((offset << 16) | offset);
     }
+    
+#ifdef DEBUG_INFO
+    USF_STATE->debug_log = fopen("/tmp/lazyusf.log", "w");
+#endif
 }
 
 void usf_set_compare(void * state, int enable)
@@ -145,13 +149,18 @@ int usf_upload_section(void * state, const uint8_t * data, size_t size)
 
 static int usf_startup(usf_state_t * state)
 {
-    // Detect the Ramsize before the memory allocation
-    if (state->save_state == NULL || state->g_rom == NULL)
+    if (state->g_rom == NULL)
     {
-        DebugMessage(state, 1, "Either ROM or Save State is missing\n");
+        state->g_rom_size = 0;
+    }
+    
+    if (state->save_state == NULL)
+    {
+        DebugMessage(state, 1, "Save State is missing\n");
         return -1;
     }
 	
+    // Detect the Ramsize before the memory allocation
 	if(get_le32(state->save_state + 4) == 0x400000) {
         void * savestate;
 		savestate = realloc(state->save_state, 0x40275c);
@@ -299,4 +308,7 @@ void usf_shutdown(void * state)
     free(USF_STATE->save_state);
     USF_STATE->save_state = 0;
     close_rom(USF_STATE);
+#ifdef DEBUG_INFO
+    fclose(USF_STATE->debug_log);
+#endif
 }

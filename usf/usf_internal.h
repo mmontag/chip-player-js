@@ -20,12 +20,16 @@
 
 #include "rsp_hle/hle.h"
 
+#include <stdio.h>
+
 struct usf_state_helper
 {
     size_t offset_to_structure;
 };
 
+#ifdef DEBUG_INFO
 #include <stdio.h>
+#endif
 
 #ifndef RCPREG_DEFINED
 #define RCPREG_DEFINED
@@ -420,6 +424,11 @@ struct usf_state
     int dirty[8];
     int is64bits[8];
     unsigned long long *r0;
+#endif
+    
+    // logging
+#ifdef DEBUG_INFO
+    FILE * debug_log;
 #endif
 };
 

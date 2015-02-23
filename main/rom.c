@@ -51,7 +51,8 @@ static int rom_system_type_to_vi_limit(m64p_system_type system_type);
 
 m64p_error open_rom(usf_state_t * state)
 {
-    memcpy(&state->ROM_HEADER, state->g_rom, sizeof(m64p_rom_header));
+    if (state->g_rom_size >= sizeof(m64p_rom_header))
+        memcpy(&state->ROM_HEADER, state->g_rom, sizeof(m64p_rom_header));
 
     /* add some useful properties to ROM_PARAMS */
     state->ROM_PARAMS.systemtype = SYSTEM_NTSC /*rom_country_code_to_system_type(ROM_HEADER.Country_code)*/;

@@ -186,7 +186,7 @@ void InterpretOpcode(usf_state_t * state)
         r4300_decode_op(op, instr, arguments, state->PC->addr);
         strcat(instr, padding);
         instr[16] = '\0';
-        fprintf(stderr, "%08x: %s %s\n", state->PC->addr, instr, arguments);
+        fprintf(state->debug_log, "%08x: %s %s\n", state->PC->addr, instr, arguments);
     }
 #endif
 	switch ((op >> 26) & 0x3F) {

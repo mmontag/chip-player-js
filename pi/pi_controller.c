@@ -102,7 +102,7 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
     {
         pi->regs[PI_STATUS_REG] |= 3;
         update_count(state);
-        add_interupt_event(state, PI_INT, longueur/8);
+        add_interupt_event(state, PI_INT, 0);
 
         return;
     }
@@ -157,7 +157,7 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
 
     pi->regs[PI_STATUS_REG] |= 3;
     update_count(state);
-    add_interupt_event(state, PI_INT, longueur/8);
+    add_interupt_event(state, PI_INT, 0);
 
     return;
 }

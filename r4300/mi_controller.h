@@ -49,6 +49,7 @@ enum mi_intr
 struct mi_controller
 {
     uint32_t regs[MI_REGS_COUNT];
+    uint32_t AudioIntrReg;
 };
 
 static inline uint32_t mi_reg(uint32_t address)

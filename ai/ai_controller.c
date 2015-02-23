@@ -72,6 +72,10 @@ static unsigned int get_dma_duration(struct ai_controller* ai)
 
 static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
 {
+#ifdef DEBUG_INFO
+    fprintf(ai->r4300->state->debug_log, "Audio DMA push: %d %d\n", dma->address, dma->length);
+#endif
+
     /* lazy initialization of sample format */
     if (ai->samples_format_changed)
     {
@@ -94,7 +98,10 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
     /* schedule end of dma event */
     update_count(ai->r4300->state);
     if (!(ai->regs[AI_STATUS_REG] & AI_STATUS_FULL))
+    {
+        remove_event(ai->r4300->state, AI_INT);
         add_interupt_event(ai->r4300->state, AI_INT, dma->duration);
+    }
 }
 
 void ai_fifo_queue_int(struct ai_controller* ai)
@@ -206,6 +213,7 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
     case AI_STATUS_REG:
         clear_rcp_interrupt(ai->r4300, MI_INTR_AI);
+        ai->r4300->mi.AudioIntrReg &= ~MI_INTR_AI;
         return 0;
 
     case AI_BITRATE_REG:
@@ -226,6 +234,7 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 void ai_end_of_dma_event(struct ai_controller* ai)
 {
     fifo_pop(ai);
+    ai->r4300->mi.AudioIntrReg |= MI_INTR_AI;
     raise_rcp_interrupt(ai->r4300, MI_INTR_AI);
 }
 

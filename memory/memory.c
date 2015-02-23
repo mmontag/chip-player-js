@@ -1081,7 +1081,8 @@ int init_memory(usf_state_t * state)
 
     state->fast_memory = 1;
 
-    init_cic_using_ipl3(state, &state->g_si.pif.cic, state->g_rom + 0x40);
+    if (state->g_rom && state->g_rom_size >= 0xfc0)
+        init_cic_using_ipl3(state, &state->g_si.pif.cic, state->g_rom + 0x40);
 
     init_r4300(&state->g_r4300);
     init_rdp(&state->g_dp);

@@ -156,7 +156,7 @@ void r4300_reset_soft(usf_state_t * state)
     unsigned int reset_type = 0;            /* 0:ColdReset, 1:NMI */
     unsigned int s7 = 0;                    /* ??? */
     unsigned int tv_type = get_tv_type(state);   /* 0:PAL, 1:NTSC, 2:MPAL */
-    uint32_t bsd_dom1_config = *(uint32_t*)state->g_rom;
+    uint32_t bsd_dom1_config = (state->g_rom && state->g_rom_size >= 4) ? *(uint32_t*)state->g_rom : 0;
 
     state->g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
     state->g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
@@ -179,7 +179,8 @@ void r4300_reset_soft(usf_state_t * state)
 
     state->g_r4300.mi.regs[MI_INTR_REG] &= ~(MI_INTR_PI | MI_INTR_VI | MI_INTR_AI | MI_INTR_SP);
 
-    memcpy((unsigned char*)state->g_sp.mem+0x40, state->g_rom+0x40, 0xfc0);
+    if (state->g_rom && state->g_rom_size >= 0xfc0)
+        memcpy((unsigned char*)state->g_sp.mem+0x40, state->g_rom+0x40, 0xfc0);
 
     state->reg[19] = rom_type;     /* s3 */
     state->reg[20] = tv_type;      /* s4 */

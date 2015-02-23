@@ -353,14 +353,17 @@ void check_interupt(usf_state_t * state)
 {
     struct node* event;
 
+    state->g_r4300.mi.regs[MI_INTR_REG] &= ~MI_INTR_AI;
+    state->g_r4300.mi.regs[MI_INTR_REG] |= state->g_r4300.mi.AudioIntrReg & MI_INTR_AI;
+    
 #ifdef DEBUG_INFO
     if (state->g_r4300.mi.regs[MI_INTR_REG])
-        fprintf(stderr, "Interrupt %d - ", state->g_r4300.mi.regs[MI_INTR_REG]);
+        fprintf(state->debug_log, "Interrupt %d - ", state->g_r4300.mi.regs[MI_INTR_REG]);
 #endif
     if (state->g_r4300.mi.regs[MI_INTR_REG] & state->g_r4300.mi.regs[MI_INTR_MASK_REG])
     {
 #ifdef DEBUG_INFO
-        fprintf(stderr, "triggered\n");
+        fprintf(state->debug_log, "triggered\n");
 #endif
         state->g_cp0_regs[CP0_CAUSE_REG] = (state->g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
     }
@@ -368,7 +371,7 @@ void check_interupt(usf_state_t * state)
     {
 #ifdef DEBUG_INFO
         if (state->g_r4300.mi.regs[MI_INTR_REG])
-            fprintf(stderr, "masked\n");
+            fprintf(state->debug_log, "masked\n");
 #endif
         state->g_cp0_regs[CP0_CAUSE_REG] &= ~0x400;
     }
