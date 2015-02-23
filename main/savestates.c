@@ -613,6 +613,7 @@ static int savestates_load_pj64(usf_state_t * state, unsigned char * ptr, unsign
     }
     *(void **)&state->return_address = (void *)&dummy;
     generic_jump_to(state, state->last_addr);
+    *(void **)&state->return_address = (void *)0;
 #endif
 
     // assert(savestateData+savestateSize == curr)
