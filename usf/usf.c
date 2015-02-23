@@ -305,6 +305,19 @@ const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * 
         *sample_rate = 44100;
     if ( !buffer )
     {
+        resampler_clear(USF_STATE->resampler);
+        count = (size_t)((uint64_t)count * USF_STATE->SampleRate / 44100);
+        if (count > USF_STATE->samples_in_buffer_2)
+        {
+            count -= USF_STATE->samples_in_buffer_2;
+            USF_STATE->samples_in_buffer_2 = 0;
+        }
+        else
+        {
+            USF_STATE->samples_in_buffer_2 -= count;
+            memmove(USF_STATE->samplebuf2, USF_STATE->samplebuf2 + 8192 - USF_STATE->samples_in_buffer_2 * 2, USF_STATE->samples_in_buffer_2 * sizeof(short) * 2);
+            return 0;
+        }
         return usf_render_internal(state, buffer, (float)count * (float)USF_STATE->SampleRate / 44100.0f, NULL);
     }
     while ( count )
