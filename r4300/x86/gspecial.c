@@ -21,6 +21,10 @@
 
 #include <stdio.h>
 
+#include "usf/usf.h"
+
+#include "usf/usf_internal.h"
+
 #include "assemble.h"
 #include "interpret.h"
 
@@ -32,1127 +36,1134 @@
 #include "r4300/cp0.h"
 #include "r4300/exception.h"
 
-void gensll(void)
+void gensll(usf_state_t * state)
 {
 #ifdef INTERPRET_SLL
-   gencallinterp((unsigned int)cached_interpreter_table.SLL, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SLL, 0);
 #else
-   int rt = allocate_register((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd, rt);
-   shl_reg32_imm8(rd, dst->f.r.sa);
+   mov_reg32_reg32(state, rd, rt);
+   shl_reg32_imm8(state, rd, state->dst->f.r.sa);
 #endif
 }
 
-void gensrl(void)
+void gensrl(usf_state_t * state)
 {
 #ifdef INTERPRET_SRL
-   gencallinterp((unsigned int)cached_interpreter_table.SRL, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SRL, 0);
 #else
-   int rt = allocate_register((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd, rt);
-   shr_reg32_imm8(rd, dst->f.r.sa);
+   mov_reg32_reg32(state, rd, rt);
+   shr_reg32_imm8(state, rd, state->dst->f.r.sa);
 #endif
 }
 
-void gensra(void)
+void gensra(usf_state_t * state)
 {
 #ifdef INTERPRET_SRA
-   gencallinterp((unsigned int)cached_interpreter_table.SRA, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SRA, 0);
 #else
-   int rt = allocate_register((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd, rt);
-   sar_reg32_imm8(rd, dst->f.r.sa);
+   mov_reg32_reg32(state, rd, rt);
+   sar_reg32_imm8(state, rd, state->dst->f.r.sa);
 #endif
 }
 
-void gensllv(void)
+void gensllv(usf_state_t * state)
 {
 #ifdef INTERPRET_SLLV
-   gencallinterp((unsigned int)cached_interpreter_table.SLLV, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SLLV, 0);
 #else
    int rt, rd;
-   allocate_register_manually(ECX, (unsigned int *)dst->f.r.rs);
+   allocate_register_manually(state, ECX, (unsigned int *)state->dst->f.r.rs);
    
-   rt = allocate_register((unsigned int *)dst->f.r.rt);
-   rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rd != ECX)
      {
-    mov_reg32_reg32(rd, rt);
-    shl_reg32_cl(rd);
+    mov_reg32_reg32(state, rd, rt);
+    shl_reg32_cl(state, rd);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rt);
-    shl_reg32_cl(temp);
-    mov_reg32_reg32(rd, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rt);
+    shl_reg32_cl(state, temp);
+    mov_reg32_reg32(state, rd, temp);
      }
 #endif
 }
 
-void gensrlv(void)
+void gensrlv(usf_state_t * state)
 {
 #ifdef INTERPRET_SRLV
-   gencallinterp((unsigned int)cached_interpreter_table.SRLV, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SRLV, 0);
 #else
    int rt, rd;
-   allocate_register_manually(ECX, (unsigned int *)dst->f.r.rs);
+   allocate_register_manually(state, ECX, (unsigned int *)state->dst->f.r.rs);
    
-   rt = allocate_register((unsigned int *)dst->f.r.rt);
-   rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rd != ECX)
      {
-    mov_reg32_reg32(rd, rt);
-    shr_reg32_cl(rd);
+    mov_reg32_reg32(state, rd, rt);
+    shr_reg32_cl(state, rd);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rt);
-    shr_reg32_cl(temp);
-    mov_reg32_reg32(rd, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rt);
+    shr_reg32_cl(state, temp);
+    mov_reg32_reg32(state, rd, temp);
      }
 #endif
 }
 
-void gensrav(void)
+void gensrav(usf_state_t * state)
 {
 #ifdef INTERPRET_SRAV
-   gencallinterp((unsigned int)cached_interpreter_table.SRAV, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SRAV, 0);
 #else
    int rt, rd;
-   allocate_register_manually(ECX, (unsigned int *)dst->f.r.rs);
+   allocate_register_manually(state, ECX, (unsigned int *)state->dst->f.r.rs);
    
-   rt = allocate_register((unsigned int *)dst->f.r.rt);
-   rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rd != ECX)
      {
-    mov_reg32_reg32(rd, rt);
-    sar_reg32_cl(rd);
+    mov_reg32_reg32(state, rd, rt);
+    sar_reg32_cl(state, rd);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rt);
-    sar_reg32_cl(temp);
-    mov_reg32_reg32(rd, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rt);
+    sar_reg32_cl(state, temp);
+    mov_reg32_reg32(state, rd, temp);
      }
 #endif
 }
 
-void genjr(void)
+void genjr(usf_state_t * state)
 {
 #ifdef INTERPRET_JR
-   gencallinterp((unsigned int)cached_interpreter_table.JR, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.JR, 1);
 #else
-   static unsigned int precomp_instr_size = sizeof(precomp_instr);
    unsigned int diff =
-     (unsigned int)(&dst->local_addr) - (unsigned int)(dst);
+     (unsigned int)(&state->dst->local_addr) - (unsigned int)(state->dst);
    unsigned int diff_need =
-     (unsigned int)(&dst->reg_cache_infos.need_map) - (unsigned int)(dst);
+     (unsigned int)(&state->dst->reg_cache_infos.need_map) - (unsigned int)(state->dst);
    unsigned int diff_wrap =
-     (unsigned int)(&dst->reg_cache_infos.jump_wrapper) - (unsigned int)(dst);
+     (unsigned int)(&state->dst->reg_cache_infos.jump_wrapper) - (unsigned int)(state->dst);
    
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.JR, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.JR, 1);
     return;
      }
    
-   free_all_registers();
-   simplify_access();
-   mov_eax_memoffs32((unsigned int *)dst->f.i.rs);
-   mov_memoffs32_eax((unsigned int *)&local_rs);
+   free_all_registers(state);
+   simplify_access(state);
+   mov_eax_memoffs32(state, (unsigned int *)state->dst->f.i.rs);
+   mov_memoffs32_eax(state, (unsigned int *)&state->local_rs);
    
-   gendelayslot();
+   gendelayslot(state);
    
-   mov_eax_memoffs32((unsigned int *)&local_rs);
-   mov_memoffs32_eax((unsigned int *)&last_addr);
+   mov_eax_memoffs32(state, (unsigned int *)&state->local_rs);
+   mov_memoffs32_eax(state, (unsigned int *)&state->last_addr);
    
-   gencheck_interupt_reg();
+   gencheck_interupt_reg(state);
    
-   mov_eax_memoffs32((unsigned int *)&local_rs);
-   mov_reg32_reg32(EBX, EAX);
-   and_eax_imm32(0xFFFFF000);
-   cmp_eax_imm32(dst_block->start & 0xFFFFF000);
-   je_near_rj(0);
+   mov_eax_memoffs32(state, (unsigned int *)&state->local_rs);
+   mov_reg32_reg32(state, EBX, EAX);
+   and_eax_imm32(state, 0xFFFFF000);
+   cmp_eax_imm32(state, state->dst_block->start & 0xFFFFF000);
+   je_near_rj(state, 0);
 
-   jump_start_rel32();
+   jump_start_rel32(state);
    
-   mov_m32_reg32(&jump_to_address, EBX);
-   mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
-   call_reg32(EAX);
+   mov_m32_reg32(state, &state->jump_to_address, EBX);
+   mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst+1));
+   mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
+   push_reg32(state, EBP);
+   call_reg32(state, EAX);
+   add_reg32_imm8(state, ESP, 4);
    
-   jump_end_rel32();
+   jump_end_rel32(state);
    
-   mov_reg32_reg32(EAX, EBX);
-   sub_eax_imm32(dst_block->start);
-   shr_reg32_imm8(EAX, 2);
-   mul_m32((unsigned int *)(&precomp_instr_size));
+   mov_reg32_reg32(state, EAX, EBX);
+   sub_eax_imm32(state, state->dst_block->start);
+   shr_reg32_imm8(state, EAX, 2);
+   mul_m32(state, (unsigned int *)(&state->precomp_instr_size));
    
-   mov_reg32_preg32pimm32(EBX, EAX, (unsigned int)(dst_block->block)+diff_need);
-   cmp_reg32_imm32(EBX, 1);
-   jne_rj(7);
+   mov_reg32_preg32pimm32(state, EBX, EAX, (unsigned int)(state->dst_block->block)+diff_need);
+   cmp_reg32_imm32(state, EBX, 1);
+   jne_rj(state, 7);
    
-   add_eax_imm32((unsigned int)(dst_block->block)+diff_wrap); // 5
-   jmp_reg32(EAX); // 2
+   add_eax_imm32(state, (unsigned int)(state->dst_block->block)+diff_wrap); // 5
+   jmp_reg32(state, EAX); // 2
    
-   mov_reg32_preg32pimm32(EAX, EAX, (unsigned int)(dst_block->block)+diff);
-   add_reg32_m32(EAX, (unsigned int *)(&dst_block->code));
+   mov_reg32_preg32pimm32(state, EAX, EAX, (unsigned int)(state->dst_block->block)+diff);
+   add_reg32_m32(state, EAX, (unsigned int *)(&state->dst_block->code));
    
-   jmp_reg32(EAX);
+   jmp_reg32(state, EAX);
 #endif
 }
 
-void genjalr(void)
+void genjalr(usf_state_t * state)
 {
 #ifdef INTERPRET_JALR
-   gencallinterp((unsigned int)cached_interpreter_table.JALR, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.JALR, 0);
 #else
-   static unsigned int precomp_instr_size = sizeof(precomp_instr);
    unsigned int diff =
-     (unsigned int)(&dst->local_addr) - (unsigned int)(dst);
+     (unsigned int)(&state->dst->local_addr) - (unsigned int)(state->dst);
    unsigned int diff_need =
-     (unsigned int)(&dst->reg_cache_infos.need_map) - (unsigned int)(dst);
+     (unsigned int)(&state->dst->reg_cache_infos.need_map) - (unsigned int)(state->dst);
    unsigned int diff_wrap =
-     (unsigned int)(&dst->reg_cache_infos.jump_wrapper) - (unsigned int)(dst);
+     (unsigned int)(&state->dst->reg_cache_infos.jump_wrapper) - (unsigned int)(state->dst);
    
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.JALR, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.JALR, 1);
     return;
      }
    
-   free_all_registers();
-   simplify_access();
-   mov_eax_memoffs32((unsigned int *)dst->f.r.rs);
-   mov_memoffs32_eax((unsigned int *)&local_rs);
+   free_all_registers(state);
+   simplify_access(state);
+   mov_eax_memoffs32(state, (unsigned int *)state->dst->f.r.rs);
+   mov_memoffs32_eax(state, (unsigned int *)&state->local_rs);
    
-   gendelayslot();
+   gendelayslot(state);
    
-   mov_m32_imm32((unsigned int *)(dst-1)->f.r.rd, dst->addr+4);
-   if ((dst->addr+4) & 0x80000000)
-     mov_m32_imm32(((unsigned int *)(dst-1)->f.r.rd)+1, 0xFFFFFFFF);
+   mov_m32_imm32(state, (unsigned int *)(state->dst-1)->f.r.rd, state->dst->addr+4);
+   if ((state->dst->addr+4) & 0x80000000)
+     mov_m32_imm32(state, ((unsigned int *)(state->dst-1)->f.r.rd)+1, 0xFFFFFFFF);
    else
-     mov_m32_imm32(((unsigned int *)(dst-1)->f.r.rd)+1, 0);
+     mov_m32_imm32(state, ((unsigned int *)(state->dst-1)->f.r.rd)+1, 0);
    
-   mov_eax_memoffs32((unsigned int *)&local_rs);
-   mov_memoffs32_eax((unsigned int *)&last_addr);
+   mov_eax_memoffs32(state, (unsigned int *)&state->local_rs);
+   mov_memoffs32_eax(state, (unsigned int *)&state->last_addr);
    
-   gencheck_interupt_reg();
+   gencheck_interupt_reg(state);
    
-   mov_eax_memoffs32((unsigned int *)&local_rs);
-   mov_reg32_reg32(EBX, EAX);
-   and_eax_imm32(0xFFFFF000);
-   cmp_eax_imm32(dst_block->start & 0xFFFFF000);
-   je_near_rj(0);
+   mov_eax_memoffs32(state, (unsigned int *)&state->local_rs);
+   mov_reg32_reg32(state, EBX, EAX);
+   and_eax_imm32(state, 0xFFFFF000);
+   cmp_eax_imm32(state, state->dst_block->start & 0xFFFFF000);
+   je_near_rj(state, 0);
 
-   jump_start_rel32();
+   jump_start_rel32(state);
    
-   mov_m32_reg32(&jump_to_address, EBX);
-   mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
-   call_reg32(EAX);
+   mov_m32_reg32(state, &state->jump_to_address, EBX);
+   mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst+1));
+   mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
+   push_reg32(state, EBP);
+   call_reg32(state, EAX);
+   add_reg32_imm8(state, ESP, 4);
    
-   jump_end_rel32();
+   jump_end_rel32(state);
    
-   mov_reg32_reg32(EAX, EBX);
-   sub_eax_imm32(dst_block->start);
-   shr_reg32_imm8(EAX, 2);
-   mul_m32((unsigned int *)(&precomp_instr_size));
+   mov_reg32_reg32(state, EAX, EBX);
+   sub_eax_imm32(state, state->dst_block->start);
+   shr_reg32_imm8(state, EAX, 2);
+   mul_m32(state, (unsigned int *)(&state->precomp_instr_size));
    
-   mov_reg32_preg32pimm32(EBX, EAX, (unsigned int)(dst_block->block)+diff_need);
-   cmp_reg32_imm32(EBX, 1);
-   jne_rj(7);
+   mov_reg32_preg32pimm32(state, EBX, EAX, (unsigned int)(state->dst_block->block)+diff_need);
+   cmp_reg32_imm32(state, EBX, 1);
+   jne_rj(state, 7);
    
-   add_eax_imm32((unsigned int)(dst_block->block)+diff_wrap); // 5
-   jmp_reg32(EAX); // 2
+   add_eax_imm32(state, (unsigned int)(state->dst_block->block)+diff_wrap); // 5
+   jmp_reg32(state, EAX); // 2
    
-   mov_reg32_preg32pimm32(EAX, EAX, (unsigned int)(dst_block->block)+diff);
-   add_reg32_m32(EAX, (unsigned int *)(&dst_block->code));
+   mov_reg32_preg32pimm32(state, EAX, EAX, (unsigned int)(state->dst_block->block)+diff);
+   add_reg32_m32(state, EAX, (unsigned int *)(&state->dst_block->code));
    
-   jmp_reg32(EAX);
+   jmp_reg32(state, EAX);
 #endif
 }
 
-void gensyscall(void)
+void gensyscall(usf_state_t * state)
 {
 #ifdef INTERPRET_SYSCALL
-   gencallinterp((unsigned int)cached_interpreter_table.SYSCALL, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SYSCALL, 0);
 #else
-   free_all_registers();
-   simplify_access();
-   mov_m32_imm32(&g_cp0_regs[CP0_CAUSE_REG], 8 << 2);
-   gencallinterp((unsigned int)exception_general, 0);
+   free_all_registers(state);
+   simplify_access(state);
+   mov_m32_imm32(state, &state->g_cp0_regs[CP0_CAUSE_REG], 8 << 2);
+   gencallinterp(state, (unsigned int)exception_general, 0);
 #endif
 }
 
-void gensync(void)
+void gensync(usf_state_t * state)
 {
 }
 
-void genmfhi(void)
+void genmfhi(usf_state_t * state)
 {
 #ifdef INTERPRET_MFHI
-   gencallinterp((unsigned int)cached_interpreter_table.MFHI, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.MFHI, 0);
 #else
-   int rd1 = allocate_64_register1_w((unsigned int*)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int*)dst->f.r.rd);
-   int hi1 = allocate_64_register1((unsigned int*)&hi);
-   int hi2 = allocate_64_register2((unsigned int*)&hi);
+   int rd1 = allocate_64_register1_w(state, (unsigned int*)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int*)state->dst->f.r.rd);
+   int hi1 = allocate_64_register1(state, (unsigned int*)&state->hi);
+   int hi2 = allocate_64_register2(state, (unsigned int*)&state->hi);
    
-   mov_reg32_reg32(rd1, hi1);
-   mov_reg32_reg32(rd2, hi2);
+   mov_reg32_reg32(state, rd1, hi1);
+   mov_reg32_reg32(state, rd2, hi2);
 #endif
 }
 
-void genmthi(void)
+void genmthi(usf_state_t * state)
 {
 #ifdef INTERPRET_MTHI
-   gencallinterp((unsigned int)cached_interpreter_table.MTHI, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.MTHI, 0);
 #else
-   int hi1 = allocate_64_register1_w((unsigned int*)&hi);
-   int hi2 = allocate_64_register2_w((unsigned int*)&hi);
-   int rs1 = allocate_64_register1((unsigned int*)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int*)dst->f.r.rs);
+   int hi1 = allocate_64_register1_w(state, (unsigned int*)&state->hi);
+   int hi2 = allocate_64_register2_w(state, (unsigned int*)&state->hi);
+   int rs1 = allocate_64_register1(state, (unsigned int*)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int*)state->dst->f.r.rs);
    
-   mov_reg32_reg32(hi1, rs1);
-   mov_reg32_reg32(hi2, rs2);
+   mov_reg32_reg32(state, hi1, rs1);
+   mov_reg32_reg32(state, hi2, rs2);
 #endif
 }
 
-void genmflo(void)
+void genmflo(usf_state_t * state)
 {
 #ifdef INTERPRET_MFLO
-   gencallinterp((unsigned int)cached_interpreter_table.MFLO, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.MFLO, 0);
 #else
-   int rd1 = allocate_64_register1_w((unsigned int*)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int*)dst->f.r.rd);
-   int lo1 = allocate_64_register1((unsigned int*)&lo);
-   int lo2 = allocate_64_register2((unsigned int*)&lo);
+   int rd1 = allocate_64_register1_w(state, (unsigned int*)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int*)state->dst->f.r.rd);
+   int lo1 = allocate_64_register1(state, (unsigned int*)&state->lo);
+   int lo2 = allocate_64_register2(state, (unsigned int*)&state->lo);
    
-   mov_reg32_reg32(rd1, lo1);
-   mov_reg32_reg32(rd2, lo2);
+   mov_reg32_reg32(state, rd1, lo1);
+   mov_reg32_reg32(state, rd2, lo2);
 #endif
 }
 
-void genmtlo(void)
+void genmtlo(usf_state_t * state)
 {
 #ifdef INTERPRET_MTLO
-   gencallinterp((unsigned int)cached_interpreter_table.MTLO, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.MTLO, 0);
 #else
-   int lo1 = allocate_64_register1_w((unsigned int*)&lo);
-   int lo2 = allocate_64_register2_w((unsigned int*)&lo);
-   int rs1 = allocate_64_register1((unsigned int*)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int*)dst->f.r.rs);
+   int lo1 = allocate_64_register1_w(state, (unsigned int*)&state->lo);
+   int lo2 = allocate_64_register2_w(state, (unsigned int*)&state->lo);
+   int rs1 = allocate_64_register1(state, (unsigned int*)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int*)state->dst->f.r.rs);
    
-   mov_reg32_reg32(lo1, rs1);
-   mov_reg32_reg32(lo2, rs2);
+   mov_reg32_reg32(state, lo1, rs1);
+   mov_reg32_reg32(state, lo2, rs2);
 #endif
 }
 
-void gendsllv(void)
+void gendsllv(usf_state_t * state)
 {
 #ifdef INTERPRET_DSLLV
-   gencallinterp((unsigned int)cached_interpreter_table.DSLLV, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSLLV, 0);
 #else
    int rt1, rt2, rd1, rd2;
-   allocate_register_manually(ECX, (unsigned int *)dst->f.r.rs);
+   allocate_register_manually(state, ECX, (unsigned int *)state->dst->f.r.rs);
    
-   rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rd1 != ECX && rd2 != ECX)
      {
-    mov_reg32_reg32(rd1, rt1);
-    mov_reg32_reg32(rd2, rt2);
-    shld_reg32_reg32_cl(rd2,rd1);
-    shl_reg32_cl(rd1);
-    test_reg32_imm32(ECX, 0x20);
-    je_rj(4);
-    mov_reg32_reg32(rd2, rd1); // 2
-    xor_reg32_reg32(rd1, rd1); // 2
+    mov_reg32_reg32(state, rd1, rt1);
+    mov_reg32_reg32(state, rd2, rt2);
+    shld_reg32_reg32_cl(state, rd2,rd1);
+    shl_reg32_cl(state, rd1);
+    test_reg32_imm32(state, ECX, 0x20);
+    je_rj(state, 4);
+    mov_reg32_reg32(state, rd2, rd1); // 2
+    xor_reg32_reg32(state, rd1, rd1); // 2
      }
    else
      {
     int temp1, temp2;
-    force_32(ECX);
-    temp1 = lru_register();
-    temp2 = lru_register_exc1(temp1);
-    free_register(temp1);
-    free_register(temp2);
+    force_32(state, ECX);
+    temp1 = lru_register(state);
+    temp2 = lru_register_exc1(state, temp1);
+    free_register(state, temp1);
+    free_register(state, temp2);
     
-    mov_reg32_reg32(temp1, rt1);
-    mov_reg32_reg32(temp2, rt2);
-    shld_reg32_reg32_cl(temp2, temp1);
-    shl_reg32_cl(temp1);
-    test_reg32_imm32(ECX, 0x20);
-    je_rj(4);
-    mov_reg32_reg32(temp2, temp1); // 2
-    xor_reg32_reg32(temp1, temp1); // 2
+    mov_reg32_reg32(state, temp1, rt1);
+    mov_reg32_reg32(state, temp2, rt2);
+    shld_reg32_reg32_cl(state, temp2, temp1);
+    shl_reg32_cl(state, temp1);
+    test_reg32_imm32(state, ECX, 0x20);
+    je_rj(state, 4);
+    mov_reg32_reg32(state, temp2, temp1); // 2
+    xor_reg32_reg32(state, temp1, temp1); // 2
     
-    mov_reg32_reg32(rd1, temp1);
-    mov_reg32_reg32(rd2, temp2);
+    mov_reg32_reg32(state, rd1, temp1);
+    mov_reg32_reg32(state, rd2, temp2);
      }
 #endif
 }
 
-void gendsrlv(void)
+void gendsrlv(usf_state_t * state)
 {
 #ifdef INTERPRET_DSRLV
-   gencallinterp((unsigned int)cached_interpreter_table.DSRLV, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSRLV, 0);
 #else
    int rt1, rt2, rd1, rd2;
-   allocate_register_manually(ECX, (unsigned int *)dst->f.r.rs);
+   allocate_register_manually(state, ECX, (unsigned int *)state->dst->f.r.rs);
    
-   rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rd1 != ECX && rd2 != ECX)
      {
-    mov_reg32_reg32(rd1, rt1);
-    mov_reg32_reg32(rd2, rt2);
-    shrd_reg32_reg32_cl(rd1,rd2);
-    shr_reg32_cl(rd2);
-    test_reg32_imm32(ECX, 0x20);
-    je_rj(4);
-    mov_reg32_reg32(rd1, rd2); // 2
-    xor_reg32_reg32(rd2, rd2); // 2
+    mov_reg32_reg32(state, rd1, rt1);
+    mov_reg32_reg32(state, rd2, rt2);
+    shrd_reg32_reg32_cl(state, rd1,rd2);
+    shr_reg32_cl(state, rd2);
+    test_reg32_imm32(state, ECX, 0x20);
+    je_rj(state, 4);
+    mov_reg32_reg32(state, rd1, rd2); // 2
+    xor_reg32_reg32(state, rd2, rd2); // 2
      }
    else
      {
     int temp1, temp2;
-    force_32(ECX);
-    temp1 = lru_register();
-    temp2 = lru_register_exc1(temp1);
-    free_register(temp1);
-    free_register(temp2);
+    force_32(state, ECX);
+    temp1 = lru_register(state);
+    temp2 = lru_register_exc1(state, temp1);
+    free_register(state, temp1);
+    free_register(state, temp2);
     
-    mov_reg32_reg32(temp1, rt1);
-    mov_reg32_reg32(temp2, rt2);
-    shrd_reg32_reg32_cl(temp1, temp2);
-    shr_reg32_cl(temp2);
-    test_reg32_imm32(ECX, 0x20);
-    je_rj(4);
-    mov_reg32_reg32(temp1, temp2); // 2
-    xor_reg32_reg32(temp2, temp2); // 2
+    mov_reg32_reg32(state, temp1, rt1);
+    mov_reg32_reg32(state, temp2, rt2);
+    shrd_reg32_reg32_cl(state, temp1, temp2);
+    shr_reg32_cl(state, temp2);
+    test_reg32_imm32(state, ECX, 0x20);
+    je_rj(state, 4);
+    mov_reg32_reg32(state, temp1, temp2); // 2
+    xor_reg32_reg32(state, temp2, temp2); // 2
     
-    mov_reg32_reg32(rd1, temp1);
-    mov_reg32_reg32(rd2, temp2);
+    mov_reg32_reg32(state, rd1, temp1);
+    mov_reg32_reg32(state, rd2, temp2);
      }
 #endif
 }
 
-void gendsrav(void)
+void gendsrav(usf_state_t * state)
 {
 #ifdef INTERPRET_DSRAV
-   gencallinterp((unsigned int)cached_interpreter_table.DSRAV, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSRAV, 0);
 #else
    int rt1, rt2, rd1, rd2;
-   allocate_register_manually(ECX, (unsigned int *)dst->f.r.rs);
+   allocate_register_manually(state, ECX, (unsigned int *)state->dst->f.r.rs);
    
-   rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rd1 != ECX && rd2 != ECX)
      {
-    mov_reg32_reg32(rd1, rt1);
-    mov_reg32_reg32(rd2, rt2);
-    shrd_reg32_reg32_cl(rd1,rd2);
-    sar_reg32_cl(rd2);
-    test_reg32_imm32(ECX, 0x20);
-    je_rj(5);
-    mov_reg32_reg32(rd1, rd2); // 2
-    sar_reg32_imm8(rd2, 31); // 3
+    mov_reg32_reg32(state, rd1, rt1);
+    mov_reg32_reg32(state, rd2, rt2);
+    shrd_reg32_reg32_cl(state, rd1,rd2);
+    sar_reg32_cl(state, rd2);
+    test_reg32_imm32(state, ECX, 0x20);
+    je_rj(state, 5);
+    mov_reg32_reg32(state, rd1, rd2); // 2
+    sar_reg32_imm8(state, rd2, 31); // 3
      }
    else
      {
     int temp1, temp2;
-    force_32(ECX);
-    temp1 = lru_register();
-    temp2 = lru_register_exc1(temp1);
-    free_register(temp1);
-    free_register(temp2);
+    force_32(state, ECX);
+    temp1 = lru_register(state);
+    temp2 = lru_register_exc1(state, temp1);
+    free_register(state, temp1);
+    free_register(state, temp2);
     
-    mov_reg32_reg32(temp1, rt1);
-    mov_reg32_reg32(temp2, rt2);
-    shrd_reg32_reg32_cl(temp1, temp2);
-    sar_reg32_cl(temp2);
-    test_reg32_imm32(ECX, 0x20);
-    je_rj(5);
-    mov_reg32_reg32(temp1, temp2); // 2
-    sar_reg32_imm8(temp2, 31); // 3
+    mov_reg32_reg32(state, temp1, rt1);
+    mov_reg32_reg32(state, temp2, rt2);
+    shrd_reg32_reg32_cl(state, temp1, temp2);
+    sar_reg32_cl(state, temp2);
+    test_reg32_imm32(state, ECX, 0x20);
+    je_rj(state, 5);
+    mov_reg32_reg32(state, temp1, temp2); // 2
+    sar_reg32_imm8(state, temp2, 31); // 3
     
-    mov_reg32_reg32(rd1, temp1);
-    mov_reg32_reg32(rd2, temp2);
+    mov_reg32_reg32(state, rd1, temp1);
+    mov_reg32_reg32(state, rd2, temp2);
      }
 #endif
 }
 
-void genmult(void)
+void genmult(usf_state_t * state)
 {
 #ifdef INTERPRET_MULT
-   gencallinterp((unsigned int)cached_interpreter_table.MULT, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.MULT, 0);
 #else
    int rs, rt;
-   allocate_register_manually_w(EAX, (unsigned int *)&lo, 0);
-   allocate_register_manually_w(EDX, (unsigned int *)&hi, 0);
-   rs = allocate_register((unsigned int*)dst->f.r.rs);
-   rt = allocate_register((unsigned int*)dst->f.r.rt);
-   mov_reg32_reg32(EAX, rs);
-   imul_reg32(rt);
+   allocate_register_manually_w(state, EAX, (unsigned int *)&state->lo, 0);
+   allocate_register_manually_w(state, EDX, (unsigned int *)&state->hi, 0);
+   rs = allocate_register(state, (unsigned int*)state->dst->f.r.rs);
+   rt = allocate_register(state, (unsigned int*)state->dst->f.r.rt);
+   mov_reg32_reg32(state, EAX, rs);
+   imul_reg32(state, rt);
 #endif
 }
 
-void genmultu(void)
+void genmultu(usf_state_t * state)
 {
 #ifdef INTERPRET_MULTU
-   gencallinterp((unsigned int)cached_interpreter_table.MULTU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.MULTU, 0);
 #else
    int rs, rt;
-   allocate_register_manually_w(EAX, (unsigned int *)&lo, 0);
-   allocate_register_manually_w(EDX, (unsigned int *)&hi, 0);
-   rs = allocate_register((unsigned int*)dst->f.r.rs);
-   rt = allocate_register((unsigned int*)dst->f.r.rt);
-   mov_reg32_reg32(EAX, rs);
-   mul_reg32(rt);
+   allocate_register_manually_w(state, EAX, (unsigned int *)&state->lo, 0);
+   allocate_register_manually_w(state, EDX, (unsigned int *)&state->hi, 0);
+   rs = allocate_register(state, (unsigned int*)state->dst->f.r.rs);
+   rt = allocate_register(state, (unsigned int*)state->dst->f.r.rt);
+   mov_reg32_reg32(state, EAX, rs);
+   mul_reg32(state, rt);
 #endif
 }
 
-void gendiv(void)
+void gendiv(usf_state_t * state)
 {
 #ifdef INTERPRET_DIV
-   gencallinterp((unsigned int)cached_interpreter_table.DIV, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DIV, 0);
 #else
    int rs, rt;
-   allocate_register_manually_w(EAX, (unsigned int *)&lo, 0);
-   allocate_register_manually_w(EDX, (unsigned int *)&hi, 0);
-   rs = allocate_register((unsigned int*)dst->f.r.rs);
-   rt = allocate_register((unsigned int*)dst->f.r.rt);
-   cmp_reg32_imm32(rt, 0);
-   je_rj((rs == EAX ? 0 : 2) + 1 + 2);
-   mov_reg32_reg32(EAX, rs); // 0 or 2
-   cdq(); // 1
-   idiv_reg32(rt); // 2
+   allocate_register_manually_w(state, EAX, (unsigned int *)&state->lo, 0);
+   allocate_register_manually_w(state, EDX, (unsigned int *)&state->hi, 0);
+   rs = allocate_register(state, (unsigned int*)state->dst->f.r.rs);
+   rt = allocate_register(state, (unsigned int*)state->dst->f.r.rt);
+   cmp_reg32_imm32(state, rt, 0);
+   je_rj(state, (rs == EAX ? 0 : 2) + 1 + 2);
+   mov_reg32_reg32(state, EAX, rs); // 0 or 2
+   cdq(state); // 1
+   idiv_reg32(state, rt); // 2
 #endif
 }
 
-void gendivu(void)
+void gendivu(usf_state_t * state)
 {
 #ifdef INTERPRET_DIVU
-   gencallinterp((unsigned int)cached_interpreter_table.DIVU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DIVU, 0);
 #else
    int rs, rt;
-   allocate_register_manually_w(EAX, (unsigned int *)&lo, 0);
-   allocate_register_manually_w(EDX, (unsigned int *)&hi, 0);
-   rs = allocate_register((unsigned int*)dst->f.r.rs);
-   rt = allocate_register((unsigned int*)dst->f.r.rt);
-   cmp_reg32_imm32(rt, 0);
-   je_rj((rs == EAX ? 0 : 2) + 2 + 2);
-   mov_reg32_reg32(EAX, rs); // 0 or 2
-   xor_reg32_reg32(EDX, EDX); // 2
-   div_reg32(rt); // 2
+   allocate_register_manually_w(state, EAX, (unsigned int *)&state->lo, 0);
+   allocate_register_manually_w(state, EDX, (unsigned int *)&state->hi, 0);
+   rs = allocate_register(state, (unsigned int*)state->dst->f.r.rs);
+   rt = allocate_register(state, (unsigned int*)state->dst->f.r.rt);
+   cmp_reg32_imm32(state, rt, 0);
+   je_rj(state, (rs == EAX ? 0 : 2) + 2 + 2);
+   mov_reg32_reg32(state, EAX, rs); // 0 or 2
+   xor_reg32_reg32(state, EDX, EDX); // 2
+   div_reg32(state, rt); // 2
 #endif
 }
 
-void gendmult(void)
+void gendmult(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.DMULT, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DMULT, 0);
 }
 
-void gendmultu(void)
+void gendmultu(usf_state_t * state)
 {
 #ifdef INTERPRET_DMULTU
-   gencallinterp((unsigned int)cached_interpreter_table.DMULTU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DMULTU, 0);
 #else
-   free_all_registers();
-   simplify_access();
+   free_all_registers(state);
+   simplify_access(state);
    
-   mov_eax_memoffs32((unsigned int *)dst->f.r.rs);
-   mul_m32((unsigned int *)dst->f.r.rt); // EDX:EAX = temp1
-   mov_memoffs32_eax((unsigned int *)(&lo));
+   mov_eax_memoffs32(state, (unsigned int *)state->dst->f.r.rs);
+   mul_m32(state, (unsigned int *)state->dst->f.r.rt); // EDX:EAX = temp1
+   mov_memoffs32_eax(state, (unsigned int *)(&state->lo));
    
-   mov_reg32_reg32(EBX, EDX); // EBX = temp1>>32
-   mov_eax_memoffs32((unsigned int *)dst->f.r.rs);
-   mul_m32((unsigned int *)(dst->f.r.rt)+1);
-   add_reg32_reg32(EBX, EAX);
-   adc_reg32_imm32(EDX, 0);
-   mov_reg32_reg32(ECX, EDX); // ECX:EBX = temp2
+   mov_reg32_reg32(state, EBX, EDX); // EBX = temp1>>32
+   mov_eax_memoffs32(state, (unsigned int *)state->dst->f.r.rs);
+   mul_m32(state, (unsigned int *)(state->dst->f.r.rt)+1);
+   add_reg32_reg32(state, EBX, EAX);
+   adc_reg32_imm32(state, EDX, 0);
+   mov_reg32_reg32(state, ECX, EDX); // ECX:EBX = temp2
    
-   mov_eax_memoffs32((unsigned int *)(dst->f.r.rs)+1);
-   mul_m32((unsigned int *)dst->f.r.rt); // EDX:EAX = temp3
+   mov_eax_memoffs32(state, (unsigned int *)(state->dst->f.r.rs)+1);
+   mul_m32(state, (unsigned int *)state->dst->f.r.rt); // EDX:EAX = temp3
    
-   add_reg32_reg32(EBX, EAX);
-   adc_reg32_imm32(ECX, 0); // ECX:EBX = result2
-   mov_m32_reg32((unsigned int*)(&lo)+1, EBX);
+   add_reg32_reg32(state, EBX, EAX);
+   adc_reg32_imm32(state, ECX, 0); // ECX:EBX = result2
+   mov_m32_reg32(state, (unsigned int*)(&state->lo)+1, EBX);
    
-   mov_reg32_reg32(ESI, EDX); // ESI = temp3>>32
-   mov_eax_memoffs32((unsigned int *)(dst->f.r.rs)+1);
-   mul_m32((unsigned int *)(dst->f.r.rt)+1);
-   add_reg32_reg32(EAX, ESI);
-   adc_reg32_imm32(EDX, 0); // EDX:EAX = temp4
+   mov_reg32_reg32(state, ESI, EDX); // ESI = temp3>>32
+   mov_eax_memoffs32(state, (unsigned int *)(state->dst->f.r.rs)+1);
+   mul_m32(state, (unsigned int *)(state->dst->f.r.rt)+1);
+   add_reg32_reg32(state, EAX, ESI);
+   adc_reg32_imm32(state, EDX, 0); // EDX:EAX = temp4
    
-   add_reg32_reg32(EAX, ECX);
-   adc_reg32_imm32(EDX, 0); // EDX:EAX = result3
-   mov_memoffs32_eax((unsigned int *)(&hi));
-   mov_m32_reg32((unsigned int *)(&hi)+1, EDX);
+   add_reg32_reg32(state, EAX, ECX);
+   adc_reg32_imm32(state, EDX, 0); // EDX:EAX = result3
+   mov_memoffs32_eax(state,(unsigned int *)(&state->hi));
+   mov_m32_reg32(state, (unsigned int *)(&state->hi)+1, EDX);
 #endif
 }
 
-void genddiv(void)
+void genddiv(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.DDIV, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DDIV, 0);
 }
 
-void genddivu(void)
+void genddivu(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.DDIVU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DDIVU, 0);
 }
 
-void genadd(void)
+void genadd(usf_state_t * state)
 {
 #ifdef INTERPRET_ADD
-   gencallinterp((unsigned int)cached_interpreter_table.ADD, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.ADD, 0);
 #else
-   int rs = allocate_register((unsigned int *)dst->f.r.rs);
-   int rt = allocate_register((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rs = allocate_register(state, (unsigned int *)state->dst->f.r.rs);
+   int rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt != rd && rs != rd)
      {
-    mov_reg32_reg32(rd, rs);
-    add_reg32_reg32(rd, rt);
+    mov_reg32_reg32(state, rd, rs);
+    add_reg32_reg32(state, rd, rt);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs);
-    add_reg32_reg32(temp, rt);
-    mov_reg32_reg32(rd, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs);
+    add_reg32_reg32(state, temp, rt);
+    mov_reg32_reg32(state, rd, temp);
      }
 #endif
 }
 
-void genaddu(void)
+void genaddu(usf_state_t * state)
 {
 #ifdef INTERPRET_ADDU
-   gencallinterp((unsigned int)cached_interpreter_table.ADDU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.ADDU, 0);
 #else
-   int rs = allocate_register((unsigned int *)dst->f.r.rs);
-   int rt = allocate_register((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rs = allocate_register(state, (unsigned int *)state->dst->f.r.rs);
+   int rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt != rd && rs != rd)
      {
-    mov_reg32_reg32(rd, rs);
-    add_reg32_reg32(rd, rt);
+    mov_reg32_reg32(state, rd, rs);
+    add_reg32_reg32(state, rd, rt);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs);
-    add_reg32_reg32(temp, rt);
-    mov_reg32_reg32(rd, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs);
+    add_reg32_reg32(state, temp, rt);
+    mov_reg32_reg32(state, rd, temp);
      }
 #endif
 }
 
-void gensub(void)
+void gensub(usf_state_t * state)
 {
 #ifdef INTERPRET_SUB
-   gencallinterp((unsigned int)cached_interpreter_table.SUB, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SUB, 0);
 #else
-   int rs = allocate_register((unsigned int *)dst->f.r.rs);
-   int rt = allocate_register((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rs = allocate_register(state, (unsigned int *)state->dst->f.r.rs);
+   int rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt != rd && rs != rd)
      {
-    mov_reg32_reg32(rd, rs);
-    sub_reg32_reg32(rd, rt);
+    mov_reg32_reg32(state, rd, rs);
+    sub_reg32_reg32(state, rd, rt);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs);
-    sub_reg32_reg32(temp, rt);
-    mov_reg32_reg32(rd, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs);
+    sub_reg32_reg32(state, temp, rt);
+    mov_reg32_reg32(state, rd, temp);
      }
 #endif
 }
 
-void gensubu(void)
+void gensubu(usf_state_t * state)
 {
 #ifdef INTERPRET_SUBU
-   gencallinterp((unsigned int)cached_interpreter_table.SUBU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SUBU, 0);
 #else
-   int rs = allocate_register((unsigned int *)dst->f.r.rs);
-   int rt = allocate_register((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rs = allocate_register(state, (unsigned int *)state->dst->f.r.rs);
+   int rt = allocate_register(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt != rd && rs != rd)
      {
-    mov_reg32_reg32(rd, rs);
-    sub_reg32_reg32(rd, rt);
+    mov_reg32_reg32(state, rd, rs);
+    sub_reg32_reg32(state, rd, rt);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs);
-    sub_reg32_reg32(temp, rt);
-    mov_reg32_reg32(rd, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs);
+    sub_reg32_reg32(state, temp, rt);
+    mov_reg32_reg32(state, rd, temp);
      }
 #endif
 }
 
-void genand(void)
+void genand(usf_state_t * state)
 {
 #ifdef INTERPRET_AND
-   gencallinterp((unsigned int)cached_interpreter_table.AND, 0);
+   gencallinterp((unsigned int)state->current_instruction_table.AND, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt1 != rd1 && rs1 != rd1)
      {
-    mov_reg32_reg32(rd1, rs1);
-    mov_reg32_reg32(rd2, rs2);
-    and_reg32_reg32(rd1, rt1);
-    and_reg32_reg32(rd2, rt2);
+    mov_reg32_reg32(state, rd1, rs1);
+    mov_reg32_reg32(state, rd2, rs2);
+    and_reg32_reg32(state, rd1, rt1);
+    and_reg32_reg32(state, rd2, rt2);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs1);
-    and_reg32_reg32(temp, rt1);
-    mov_reg32_reg32(rd1, temp);
-    mov_reg32_reg32(temp, rs2);
-    and_reg32_reg32(temp, rt2);
-    mov_reg32_reg32(rd2, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs1);
+    and_reg32_reg32(state, temp, rt1);
+    mov_reg32_reg32(state, rd1, temp);
+    mov_reg32_reg32(state, temp, rs2);
+    and_reg32_reg32(state, temp, rt2);
+    mov_reg32_reg32(state, rd2, temp);
      }
 #endif
 }
 
-void genor(void)
+void genor(usf_state_t * state)
 {
 #ifdef INTERPRET_OR
-   gencallinterp((unsigned int)cached_interpreter_table.OR, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.OR, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt1 != rd1 && rs1 != rd1)
      {
-    mov_reg32_reg32(rd1, rs1);
-    mov_reg32_reg32(rd2, rs2);
-    or_reg32_reg32(rd1, rt1);
-    or_reg32_reg32(rd2, rt2);
+    mov_reg32_reg32(state, rd1, rs1);
+    mov_reg32_reg32(state, rd2, rs2);
+    or_reg32_reg32(state, rd1, rt1);
+    or_reg32_reg32(state, rd2, rt2);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs1);
-    or_reg32_reg32(temp, rt1);
-    mov_reg32_reg32(rd1, temp);
-    mov_reg32_reg32(temp, rs2);
-    or_reg32_reg32(temp, rt2);
-    mov_reg32_reg32(rd2, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs1);
+    or_reg32_reg32(state, temp, rt1);
+    mov_reg32_reg32(state, rd1, temp);
+    mov_reg32_reg32(state, temp, rs2);
+    or_reg32_reg32(state, temp, rt2);
+    mov_reg32_reg32(state, rd2, temp);
      }
 #endif
 }
 
-void genxor(void)
+void genxor(usf_state_t * state)
 {
 #ifdef INTERPRET_XOR
-   gencallinterp((unsigned int)cached_interpreter_table.XOR, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.XOR, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt1 != rd1 && rs1 != rd1)
      {
-    mov_reg32_reg32(rd1, rs1);
-    mov_reg32_reg32(rd2, rs2);
-    xor_reg32_reg32(rd1, rt1);
-    xor_reg32_reg32(rd2, rt2);
+    mov_reg32_reg32(state, rd1, rs1);
+    mov_reg32_reg32(state, rd2, rs2);
+    xor_reg32_reg32(state, rd1, rt1);
+    xor_reg32_reg32(state, rd2, rt2);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs1);
-    xor_reg32_reg32(temp, rt1);
-    mov_reg32_reg32(rd1, temp);
-    mov_reg32_reg32(temp, rs2);
-    xor_reg32_reg32(temp, rt2);
-    mov_reg32_reg32(rd2, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs1);
+    xor_reg32_reg32(state, temp, rt1);
+    mov_reg32_reg32(state, rd1, temp);
+    mov_reg32_reg32(state, temp, rs2);
+    xor_reg32_reg32(state, temp, rt2);
+    mov_reg32_reg32(state, rd2, temp);
      }
 #endif
 }
 
-void gennor(void)
+void gennor(usf_state_t * state)
 {
 #ifdef INTERPRET_NOR
-   gencallinterp((unsigned int)cached_interpreter_table.NOR, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.NOR, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt1 != rd1 && rs1 != rd1)
      {
-    mov_reg32_reg32(rd1, rs1);
-    mov_reg32_reg32(rd2, rs2);
-    or_reg32_reg32(rd1, rt1);
-    or_reg32_reg32(rd2, rt2);
-    not_reg32(rd1);
-    not_reg32(rd2);
+    mov_reg32_reg32(state, rd1, rs1);
+    mov_reg32_reg32(state, rd2, rs2);
+    or_reg32_reg32(state, rd1, rt1);
+    or_reg32_reg32(state, rd2, rt2);
+    not_reg32(state, rd1);
+    not_reg32(state, rd2);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs1);
-    or_reg32_reg32(temp, rt1);
-    mov_reg32_reg32(rd1, temp);
-    mov_reg32_reg32(temp, rs2);
-    or_reg32_reg32(temp, rt2);
-    mov_reg32_reg32(rd2, temp);
-    not_reg32(rd1);
-    not_reg32(rd2);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs1);
+    or_reg32_reg32(state, temp, rt1);
+    mov_reg32_reg32(state, rd1, temp);
+    mov_reg32_reg32(state, temp, rs2);
+    or_reg32_reg32(state, temp, rt2);
+    mov_reg32_reg32(state, rd2, temp);
+    not_reg32(state, rd1);
+    not_reg32(state, rd2);
      }
 #endif
 }
 
-void genslt(void)
+void genslt(usf_state_t * state)
 {
 #ifdef INTERPRET_SLT
-   gencallinterp((unsigned int)cached_interpreter_table.SLT, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SLT, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   cmp_reg32_reg32(rs2, rt2);
-   jl_rj(13);
-   jne_rj(4); // 2
-   cmp_reg32_reg32(rs1, rt1); // 2
-   jl_rj(7); // 2
-   mov_reg32_imm32(rd, 0); // 5
-   jmp_imm_short(5); // 2
-   mov_reg32_imm32(rd, 1); // 5
+   cmp_reg32_reg32(state, rs2, rt2);
+   jl_rj(state, 13);
+   jne_rj(state, 4); // 2
+   cmp_reg32_reg32(state, rs1, rt1); // 2
+   jl_rj(state, 7); // 2
+   mov_reg32_imm32(state, rd, 0); // 5
+   jmp_imm_short(state, 5); // 2
+   mov_reg32_imm32(state, rd, 1); // 5
 #endif
 }
 
-void gensltu(void)
+void gensltu(usf_state_t * state)
 {
 #ifdef INTERPRET_SLTU
-   gencallinterp((unsigned int)cached_interpreter_table.SLTU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.SLTU, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   cmp_reg32_reg32(rs2, rt2);
-   jb_rj(13);
-   jne_rj(4); // 2
-   cmp_reg32_reg32(rs1, rt1); // 2
-   jb_rj(7); // 2
-   mov_reg32_imm32(rd, 0); // 5
-   jmp_imm_short(5); // 2
-   mov_reg32_imm32(rd, 1); // 5
+   cmp_reg32_reg32(state, rs2, rt2);
+   jb_rj(state, 13);
+   jne_rj(state, 4); // 2
+   cmp_reg32_reg32(state, rs1, rt1); // 2
+   jb_rj(state, 7); // 2
+   mov_reg32_imm32(state, rd, 0); // 5
+   jmp_imm_short(state, 5); // 2
+   mov_reg32_imm32(state, rd, 1); // 5
 #endif
 }
 
-void gendadd(void)
+void gendadd(usf_state_t * state)
 {
 #ifdef INTERPRET_DADD
-   gencallinterp((unsigned int)cached_interpreter_table.DADD, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DADD, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt1 != rd1 && rs1 != rd1)
      {
-    mov_reg32_reg32(rd1, rs1);
-    mov_reg32_reg32(rd2, rs2);
-    add_reg32_reg32(rd1, rt1);
-    adc_reg32_reg32(rd2, rt2);
+    mov_reg32_reg32(state, rd1, rs1);
+    mov_reg32_reg32(state, rd2, rs2);
+    add_reg32_reg32(state, rd1, rt1);
+    adc_reg32_reg32(state, rd2, rt2);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs1);
-    add_reg32_reg32(temp, rt1);
-    mov_reg32_reg32(rd1, temp);
-    mov_reg32_reg32(temp, rs2);
-    adc_reg32_reg32(temp, rt2);
-    mov_reg32_reg32(rd2, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs1);
+    add_reg32_reg32(state, temp, rt1);
+    mov_reg32_reg32(state, rd1, temp);
+    mov_reg32_reg32(state, temp, rs2);
+    adc_reg32_reg32(state, temp, rt2);
+    mov_reg32_reg32(state, rd2, temp);
      }
 #endif
 }
 
-void gendaddu(void)
+void gendaddu(usf_state_t * state)
 {
 #ifdef INTERPRET_DADDU
-   gencallinterp((unsigned int)cached_interpreter_table.DADDU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DADDU, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt1 != rd1 && rs1 != rd1)
      {
-    mov_reg32_reg32(rd1, rs1);
-    mov_reg32_reg32(rd2, rs2);
-    add_reg32_reg32(rd1, rt1);
-    adc_reg32_reg32(rd2, rt2);
+    mov_reg32_reg32(state, rd1, rs1);
+    mov_reg32_reg32(state, rd2, rs2);
+    add_reg32_reg32(state, rd1, rt1);
+    adc_reg32_reg32(state, rd2, rt2);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs1);
-    add_reg32_reg32(temp, rt1);
-    mov_reg32_reg32(rd1, temp);
-    mov_reg32_reg32(temp, rs2);
-    adc_reg32_reg32(temp, rt2);
-    mov_reg32_reg32(rd2, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs1);
+    add_reg32_reg32(state, temp, rt1);
+    mov_reg32_reg32(state, rd1, temp);
+    mov_reg32_reg32(state, temp, rs2);
+    adc_reg32_reg32(state, temp, rt2);
+    mov_reg32_reg32(state, rd2, temp);
      }
 #endif
 }
 
-void gendsub(void)
+void gendsub(usf_state_t * state)
 {
 #ifdef INTERPRET_DSUB
-   gencallinterp((unsigned int)cached_interpreter_table.DSUB, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSUB, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt1 != rd1 && rs1 != rd1)
      {
-    mov_reg32_reg32(rd1, rs1);
-    mov_reg32_reg32(rd2, rs2);
-    sub_reg32_reg32(rd1, rt1);
-    sbb_reg32_reg32(rd2, rt2);
+    mov_reg32_reg32(state, rd1, rs1);
+    mov_reg32_reg32(state, rd2, rs2);
+    sub_reg32_reg32(state, rd1, rt1);
+    sbb_reg32_reg32(state, rd2, rt2);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs1);
-    sub_reg32_reg32(temp, rt1);
-    mov_reg32_reg32(rd1, temp);
-    mov_reg32_reg32(temp, rs2);
-    sbb_reg32_reg32(temp, rt2);
-    mov_reg32_reg32(rd2, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs1);
+    sub_reg32_reg32(state, temp, rt1);
+    mov_reg32_reg32(state, rd1, temp);
+    mov_reg32_reg32(state, temp, rs2);
+    sbb_reg32_reg32(state, temp, rt2);
+    mov_reg32_reg32(state, rd2, temp);
      }
 #endif
 }
 
-void gendsubu(void)
+void gendsubu(usf_state_t * state)
 {
 #ifdef INTERPRET_DSUBU
-   gencallinterp((unsigned int)cached_interpreter_table.DSUBU, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSUBU, 0);
 #else
-   int rs1 = allocate_64_register1((unsigned int *)dst->f.r.rs);
-   int rs2 = allocate_64_register2((unsigned int *)dst->f.r.rs);
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rs1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rs);
+   int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rs);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
    if (rt1 != rd1 && rs1 != rd1)
      {
-    mov_reg32_reg32(rd1, rs1);
-    mov_reg32_reg32(rd2, rs2);
-    sub_reg32_reg32(rd1, rt1);
-    sbb_reg32_reg32(rd2, rt2);
+    mov_reg32_reg32(state, rd1, rs1);
+    mov_reg32_reg32(state, rd2, rs2);
+    sub_reg32_reg32(state, rd1, rt1);
+    sbb_reg32_reg32(state, rd2, rt2);
      }
    else
      {
-    int temp = lru_register();
-    free_register(temp);
-    mov_reg32_reg32(temp, rs1);
-    sub_reg32_reg32(temp, rt1);
-    mov_reg32_reg32(rd1, temp);
-    mov_reg32_reg32(temp, rs2);
-    sbb_reg32_reg32(temp, rt2);
-    mov_reg32_reg32(rd2, temp);
+    int temp = lru_register(state);
+    free_register(state, temp);
+    mov_reg32_reg32(state, temp, rs1);
+    sub_reg32_reg32(state, temp, rt1);
+    mov_reg32_reg32(state, rd1, temp);
+    mov_reg32_reg32(state, temp, rs2);
+    sbb_reg32_reg32(state, temp, rt2);
+    mov_reg32_reg32(state, rd2, temp);
      }
 #endif
 }
 
-void genteq(void)
+void genteq(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.TEQ, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.TEQ, 0);
 }
 
-void gendsll(void)
+void gendsll(usf_state_t * state)
 {
 #ifdef INTERPRET_DSLL
-   gencallinterp((unsigned int)cached_interpreter_table.DSLL, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSLL, 0);
 #else
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd1, rt1);
-   mov_reg32_reg32(rd2, rt2);
-   shld_reg32_reg32_imm8(rd2, rd1, dst->f.r.sa);
-   shl_reg32_imm8(rd1, dst->f.r.sa);
-   if (dst->f.r.sa & 0x20)
+   mov_reg32_reg32(state, rd1, rt1);
+   mov_reg32_reg32(state, rd2, rt2);
+   shld_reg32_reg32_imm8(state, rd2, rd1, state->dst->f.r.sa);
+   shl_reg32_imm8(state, rd1, state->dst->f.r.sa);
+   if (state->dst->f.r.sa & 0x20)
      {
-    mov_reg32_reg32(rd2, rd1);
-    xor_reg32_reg32(rd1, rd1);
+    mov_reg32_reg32(state, rd2, rd1);
+    xor_reg32_reg32(state, rd1, rd1);
      }
 #endif
 }
 
-void gendsrl(void)
+void gendsrl(usf_state_t * state)
 {
 #ifdef INTERPRET_DSRL
-   gencallinterp((unsigned int)cached_interpreter_table.DSRL, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSRL, 0);
 #else
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd1, rt1);
-   mov_reg32_reg32(rd2, rt2);
-   shrd_reg32_reg32_imm8(rd1, rd2, dst->f.r.sa);
-   shr_reg32_imm8(rd2, dst->f.r.sa);
-   if (dst->f.r.sa & 0x20)
+   mov_reg32_reg32(state, rd1, rt1);
+   mov_reg32_reg32(state, rd2, rt2);
+   shrd_reg32_reg32_imm8(state, rd1, rd2, state->dst->f.r.sa);
+   shr_reg32_imm8(state, rd2, state->dst->f.r.sa);
+   if (state->dst->f.r.sa & 0x20)
      {
-    mov_reg32_reg32(rd1, rd2);
-    xor_reg32_reg32(rd2, rd2);
+    mov_reg32_reg32(state, rd1, rd2);
+    xor_reg32_reg32(state, rd2, rd2);
      }
 #endif
 }
 
-void gendsra(void)
+void gendsra(usf_state_t * state)
 {
 #ifdef INTERPRET_DSRA
-   gencallinterp((unsigned int)cached_interpreter_table.DSRA, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSRA, 0);
 #else
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd1, rt1);
-   mov_reg32_reg32(rd2, rt2);
-   shrd_reg32_reg32_imm8(rd1, rd2, dst->f.r.sa);
-   sar_reg32_imm8(rd2, dst->f.r.sa);
-   if (dst->f.r.sa & 0x20)
+   mov_reg32_reg32(state, rd1, rt1);
+   mov_reg32_reg32(state, rd2, rt2);
+   shrd_reg32_reg32_imm8(state, rd1, rd2, state->dst->f.r.sa);
+   sar_reg32_imm8(state, rd2, state->dst->f.r.sa);
+   if (state->dst->f.r.sa & 0x20)
      {
-    mov_reg32_reg32(rd1, rd2);
-    sar_reg32_imm8(rd2, 31);
+    mov_reg32_reg32(state, rd1, rd2);
+    sar_reg32_imm8(state, rd2, 31);
      }
 #endif
 }
 
-void gendsll32(void)
+void gendsll32(usf_state_t * state)
 {
 #ifdef INTERPRET_DSLL32
-   gencallinterp((unsigned int)cached_interpreter_table.DSLL32, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSLL32, 0);
 #else
-   int rt1 = allocate_64_register1((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rt1 = allocate_64_register1(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd2, rt1);
-   shl_reg32_imm8(rd2, dst->f.r.sa);
-   xor_reg32_reg32(rd1, rd1);
+   mov_reg32_reg32(state, rd2, rt1);
+   shl_reg32_imm8(state, rd2, state->dst->f.r.sa);
+   xor_reg32_reg32(state, rd1, rd1);
 #endif
 }
 
-void gendsrl32(void)
+void gendsrl32(usf_state_t * state)
 {
 #ifdef INTERPRET_DSRL32
-   gencallinterp((unsigned int)cached_interpreter_table.DSRL32, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSRL32, 0);
 #else
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd1 = allocate_64_register1_w((unsigned int *)dst->f.r.rd);
-   int rd2 = allocate_64_register2_w((unsigned int *)dst->f.r.rd);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd1 = allocate_64_register1_w(state, (unsigned int *)state->dst->f.r.rd);
+   int rd2 = allocate_64_register2_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd1, rt2);
-   shr_reg32_imm8(rd1, dst->f.r.sa);
-   xor_reg32_reg32(rd2, rd2);
+   mov_reg32_reg32(state, rd1, rt2);
+   shr_reg32_imm8(state, rd1, state->dst->f.r.sa);
+   xor_reg32_reg32(state, rd2, rd2);
 #endif
 }
 
-void gendsra32(void)
+void gendsra32(usf_state_t * state)
 {
 #ifdef INTERPRET_DSRA32
-   gencallinterp((unsigned int)cached_interpreter_table.DSRA32, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DSRA32, 0);
 #else
-   int rt2 = allocate_64_register2((unsigned int *)dst->f.r.rt);
-   int rd = allocate_register_w((unsigned int *)dst->f.r.rd);
+   int rt2 = allocate_64_register2(state, (unsigned int *)state->dst->f.r.rt);
+   int rd = allocate_register_w(state, (unsigned int *)state->dst->f.r.rd);
    
-   mov_reg32_reg32(rd, rt2);
-   sar_reg32_imm8(rd, dst->f.r.sa);
+   mov_reg32_reg32(state, rd, rt2);
+   sar_reg32_imm8(state, rd, state->dst->f.r.sa);
 #endif
+}
+
+void genbreak(usf_state_t * state)
+{
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BREAK, 0);
 }
 

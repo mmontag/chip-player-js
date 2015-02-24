@@ -19,6 +19,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "usf/usf.h"
+
+#include "usf/usf_internal.h"
+
 #include "assemble.h"
 #include "interpret.h"
 
@@ -27,29 +31,29 @@
 #include "r4300/ops.h"
 #include "r4300/cp1.h"
 
-void gencvt_s_l(void)
+void gencvt_s_l(usf_state_t * state)
 {
 #ifdef INTERPRET_CVT_S_L
-   gencallinterp((unsigned int)cached_interpreter_table.CVT_S_L, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.CVT_S_L, 0);
 #else
-   gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_double[dst->f.cf.fs]));
-   fild_preg32_qword(EAX);
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_simple[dst->f.cf.fd]));
-   fstp_preg32_dword(EAX);
+   gencheck_cop1_unusable(state);
+   mov_eax_memoffs32(state, (unsigned int*)(&state->reg_cop1_double[state->dst->f.cf.fs]));
+   fild_preg32_qword(state, EAX);
+   mov_eax_memoffs32(state, (unsigned int*)(&state->reg_cop1_simple[state->dst->f.cf.fd]));
+   fstp_preg32_dword(state, EAX);
 #endif
 }
 
-void gencvt_d_l(void)
+void gencvt_d_l(usf_state_t * state)
 {
 #ifdef INTERPRET_CVT_D_L
-   gencallinterp((unsigned int)cached_interpreter_table.CVT_D_L, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.CVT_D_L, 0);
 #else
-   gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_double[dst->f.cf.fs]));
-   fild_preg32_qword(EAX);
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_double[dst->f.cf.fd]));
-   fstp_preg32_qword(EAX);
+   gencheck_cop1_unusable(state);
+   mov_eax_memoffs32(state, (unsigned int*)(&state->reg_cop1_double[state->dst->f.cf.fs]));
+   fild_preg32_qword(state, EAX);
+   mov_eax_memoffs32(state, (unsigned int*)(&state->reg_cop1_double[state->dst->f.cf.fd]));
+   fstp_preg32_qword(state, EAX);
 #endif
 }
 

@@ -21,6 +21,10 @@
 
 #include <stdio.h>
 
+#include "usf/usf.h"
+
+#include "usf/usf_internal.h"
+
 #include "assemble.h"
 
 #include "r4300/cached_interp.h"
@@ -30,14 +34,14 @@
 #include "r4300/ops.h"
 
 //static unsigned int pMFC0 = (unsigned int)(MFC0);
-void genmfc0(void)
+void genmfc0(usf_state_t * state)
 {
-    gencallinterp((unsigned int)cached_interpreter_table.MFC0, 0);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.MFC0, 0);
 }
 
 //static unsigned int pMTC0 = (unsigned int)(MTC0);
-void genmtc0(void)
+void genmtc0(usf_state_t * state)
 {
-    gencallinterp((unsigned int)cached_interpreter_table.MTC0, 0);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.MTC0, 0);
 }
 

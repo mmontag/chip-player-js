@@ -21,6 +21,10 @@
 
 #include <stdio.h>
 
+#include "usf/usf.h"
+
+#include "usf/usf_internal.h"
+
 #include "assemble.h"
 #include "interpret.h"
 
@@ -33,104 +37,104 @@
 
 #include "memory/memory.h"
 
-void genmfc1(void)
+void genmfc1(usf_state_t * state)
 {
 #ifdef INTERPRET_MFC1
-   gencallinterp((unsigned int)cached_interpreter_table.MFC1, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.MFC1, 0);
 #else
-   gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_simple[dst->f.r.nrd]));
-   mov_reg32_preg32(EBX, EAX);
-   mov_m32_reg32((unsigned int*)dst->f.r.rt, EBX);
-   sar_reg32_imm8(EBX, 31);
-   mov_m32_reg32(((unsigned int*)dst->f.r.rt)+1, EBX);
+   gencheck_cop1_unusable(state);
+   mov_eax_memoffs32(state, (unsigned int*)(&state->reg_cop1_simple[state->dst->f.r.nrd]));
+   mov_reg32_preg32(state, EBX, EAX);
+   mov_m32_reg32(state, (unsigned int*)state->dst->f.r.rt, EBX);
+   sar_reg32_imm8(state, EBX, 31);
+   mov_m32_reg32(state, ((unsigned int*)state->dst->f.r.rt)+1, EBX);
 #endif
 }
 
-void gendmfc1(void)
+void gendmfc1(usf_state_t * state)
 {
 #ifdef INTERPRET_DMFC1
-   gencallinterp((unsigned int)cached_interpreter_table.DMFC1, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DMFC1, 0);
 #else
-   gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_double[dst->f.r.nrd]));
-   mov_reg32_preg32(EBX, EAX);
-   mov_reg32_preg32pimm32(ECX, EAX, 4);
-   mov_m32_reg32((unsigned int*)dst->f.r.rt, EBX);
-   mov_m32_reg32(((unsigned int*)dst->f.r.rt)+1, ECX);
+   gencheck_cop1_unusable(state);
+   mov_eax_memoffs32(state, (unsigned int*)(&state->reg_cop1_double[state->dst->f.r.nrd]));
+   mov_reg32_preg32(state, EBX, EAX);
+   mov_reg32_preg32pimm32(state, ECX, EAX, 4);
+   mov_m32_reg32(state, (unsigned int*)state->dst->f.r.rt, EBX);
+   mov_m32_reg32(state, ((unsigned int*)state->dst->f.r.rt)+1, ECX);
 #endif
 }
 
-void gencfc1(void)
+void gencfc1(usf_state_t * state)
 {
 #ifdef INTERPRET_CFC1
-   gencallinterp((unsigned int)cached_interpreter_table.CFC1, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.CFC1, 0);
 #else
-   gencheck_cop1_unusable();
-   if(dst->f.r.nrd == 31) mov_eax_memoffs32((unsigned int*)&FCR31);
-   else mov_eax_memoffs32((unsigned int*)&FCR0);
-   mov_memoffs32_eax((unsigned int*)dst->f.r.rt);
-   sar_reg32_imm8(EAX, 31);
-   mov_memoffs32_eax(((unsigned int*)dst->f.r.rt)+1);
+   gencheck_cop1_unusable(state);
+   if(state->dst->f.r.nrd == 31) mov_eax_memoffs32(state, (unsigned int*)&state->FCR31);
+   else mov_eax_memoffs32(state, (unsigned int*)&state->FCR0);
+   mov_memoffs32_eax(state, (unsigned int*)state->dst->f.r.rt);
+   sar_reg32_imm8(state, EAX, 31);
+   mov_memoffs32_eax(state, ((unsigned int*)state->dst->f.r.rt)+1);
 #endif
 }
 
-void genmtc1(void)
+void genmtc1(usf_state_t * state)
 {
 #ifdef INTERPRET_MTC1
-   gencallinterp((unsigned int)cached_interpreter_table.MTC1, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.MTC1, 0);
 #else
-   gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)dst->f.r.rt);
-   mov_reg32_m32(EBX, (unsigned int*)(&reg_cop1_simple[dst->f.r.nrd]));
-   mov_preg32_reg32(EBX, EAX);
+   gencheck_cop1_unusable(state);
+   mov_eax_memoffs32(state, (unsigned int*)state->dst->f.r.rt);
+   mov_reg32_m32(state, EBX, (unsigned int*)(&state->reg_cop1_simple[state->dst->f.r.nrd]));
+   mov_preg32_reg32(state, EBX, EAX);
 #endif
 }
 
-void gendmtc1(void)
+void gendmtc1(usf_state_t * state)
 {
 #ifdef INTERPRET_DMTC1
-   gencallinterp((unsigned int)cached_interpreter_table.DMTC1, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.DMTC1, 0);
 #else
-   gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)dst->f.r.rt);
-   mov_reg32_m32(EBX, ((unsigned int*)dst->f.r.rt)+1);
-   mov_reg32_m32(EDX, (unsigned int*)(&reg_cop1_double[dst->f.r.nrd]));
-   mov_preg32_reg32(EDX, EAX);
-   mov_preg32pimm32_reg32(EDX, 4, EBX);
+   gencheck_cop1_unusable(state);
+   mov_eax_memoffs32(state, (unsigned int*)state->dst->f.r.rt);
+   mov_reg32_m32(state, EBX, ((unsigned int*)state->dst->f.r.rt)+1);
+   mov_reg32_m32(state, EDX, (unsigned int*)(&state->reg_cop1_double[state->dst->f.r.nrd]));
+   mov_preg32_reg32(state, EDX, EAX);
+   mov_preg32pimm32_reg32(state, EDX, 4, EBX);
 #endif
 }
 
-void genctc1(void)
+void genctc1(usf_state_t * state)
 {
 #ifdef INTERPRET_CTC1
-   gencallinterp((unsigned int)cached_interpreter_table.CTC1, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.CTC1, 0);
 #else
-   gencheck_cop1_unusable();
+   gencheck_cop1_unusable(state);
    
-   if (dst->f.r.nrd != 31) return;
-   mov_eax_memoffs32((unsigned int*)dst->f.r.rt);
-   mov_memoffs32_eax((unsigned int*)&FCR31);
-   and_eax_imm32(3);
+   if (state->dst->f.r.nrd != 31) return;
+   mov_eax_memoffs32(state, (unsigned int*)state->dst->f.r.rt);
+   mov_memoffs32_eax(state, (unsigned int*)&state->FCR31);
+   and_eax_imm32(state, 3);
    
-   cmp_eax_imm32(0);
-   jne_rj(12);
-   mov_m32_imm32((unsigned int*)&rounding_mode, 0x33F); // 10
-   jmp_imm_short(48); // 2
+   cmp_eax_imm32(state, 0);
+   jne_rj(state, 12);
+   mov_m32_imm32(state, (unsigned int*)&state->rounding_mode, 0x33F); // 10
+   jmp_imm_short(state, 48); // 2
    
-   cmp_eax_imm32(1); // 5
-   jne_rj(12); // 2
-   mov_m32_imm32((unsigned int*)&rounding_mode, 0xF3F); // 10
-   jmp_imm_short(29); // 2
+   cmp_eax_imm32(state, 1); // 5
+   jne_rj(state, 12); // 2
+   mov_m32_imm32(state, (unsigned int*)&state->rounding_mode, 0xF3F); // 10
+   jmp_imm_short(state, 29); // 2
    
-   cmp_eax_imm32(2); // 5
-   jne_rj(12); // 2
-   mov_m32_imm32((unsigned int*)&rounding_mode, 0xB3F); // 10
-   jmp_imm_short(10); // 2
+   cmp_eax_imm32(state, 2); // 5
+   jne_rj(state, 12); // 2
+   mov_m32_imm32(state, (unsigned int*)&state->rounding_mode, 0xB3F); // 10
+   jmp_imm_short(state, 10); // 2
    
-   mov_m32_imm32((unsigned int*)&rounding_mode, 0x73F); // 10
+   mov_m32_imm32(state, (unsigned int*)&state->rounding_mode, 0x73F); // 10
    
-   fldcw_m16((unsigned short*)&rounding_mode);
+   fldcw_m16(state, (unsigned short*)&state->rounding_mode);
 #endif
 }
 

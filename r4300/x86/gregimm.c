@@ -21,6 +21,10 @@
 
 #include <stdio.h>
 
+#include "usf/usf.h"
+
+#include "usf/usf_internal.h"
+
 #include "assemble.h"
 #include "interpret.h"
 
@@ -33,546 +37,546 @@
 
 #include "memory/memory.h"
 
-static void genbltz_test(void)
+static void genbltz_test(usf_state_t * state)
 {
-   int rs_64bit = is64((unsigned int *)dst->f.i.rs);
+   int rs_64bit = is64(state, (unsigned int *)state->dst->f.i.rs);
    
    if (!rs_64bit)
      {
-    int rs = allocate_register((unsigned int *)dst->f.i.rs);
+    int rs = allocate_register(state, (unsigned int *)state->dst->f.i.rs);
     
-    cmp_reg32_imm32(rs, 0);
-    jge_rj(12);
-    mov_m32_imm32((unsigned int *)(&branch_taken), 1); // 10
-    jmp_imm_short(10); // 2
-    mov_m32_imm32((unsigned int *)(&branch_taken), 0); // 10
+    cmp_reg32_imm32(state, rs, 0);
+    jge_rj(state, 12);
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 1); // 10
+    jmp_imm_short(state, 10); // 2
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 0); // 10
      }
    else if (rs_64bit == -1)
      {
-    cmp_m32_imm32(((unsigned int *)dst->f.i.rs)+1, 0);
-    jge_rj(12);
-    mov_m32_imm32((unsigned int *)(&branch_taken), 1); // 10
-    jmp_imm_short(10); // 2
-    mov_m32_imm32((unsigned int *)(&branch_taken), 0); // 10
+    cmp_m32_imm32(state, ((unsigned int *)state->dst->f.i.rs)+1, 0);
+    jge_rj(state, 12);
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 1); // 10
+    jmp_imm_short(state, 10); // 2
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 0); // 10
      }
    else
      {
-    int rs2 = allocate_64_register2((unsigned int *)dst->f.i.rs);
+    int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.i.rs);
     
-    cmp_reg32_imm32(rs2, 0);
-    jge_rj(12);
-    mov_m32_imm32((unsigned int *)(&branch_taken), 1); // 10
-    jmp_imm_short(10); // 2
-    mov_m32_imm32((unsigned int *)(&branch_taken), 0); // 10
+    cmp_reg32_imm32(state, rs2, 0);
+    jge_rj(state, 12);
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 1); // 10
+    jmp_imm_short(state, 10); // 2
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 0); // 10
      }
 }
 
-void genbltz(void)
+void genbltz(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZ
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZ, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZ, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZ, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZ, 1);
     return;
      }
    
-   genbltz_test();
-   gendelayslot();
-   gentest();
+   genbltz_test(state);
+   gendelayslot(state);
+   gentest(state);
 #endif
 }
 
-void genbltz_out(void)
+void genbltz_out(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZ_OUT
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZ_OUT, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZ_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZ_OUT, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZ_OUT, 1);
     return;
      }
    
-   genbltz_test();
-   gendelayslot();
-   gentest_out();
+   genbltz_test(state);
+   gendelayslot(state);
+   gentest_out(state);
 #endif
 }
 
-void genbltz_idle(void)
+void genbltz_idle(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZ_IDLE
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZ_IDLE, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZ_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZ_IDLE, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZ_IDLE, 1);
     return;
      }
    
-   genbltz_test();
-   gentest_idle();
-   genbltz();
+   genbltz_test(state);
+   gentest_idle(state);
+   genbltz(state);
 #endif
 }
 
-static void genbgez_test(void)
+static void genbgez_test(usf_state_t * state)
 {
-   int rs_64bit = is64((unsigned int *)dst->f.i.rs);
+   int rs_64bit = is64(state, (unsigned int *)state->dst->f.i.rs);
    
    if (!rs_64bit)
      {
-    int rs = allocate_register((unsigned int *)dst->f.i.rs);
+    int rs = allocate_register(state, (unsigned int *)state->dst->f.i.rs);
     
-    cmp_reg32_imm32(rs, 0);
-    jl_rj(12);
-    mov_m32_imm32((unsigned int *)(&branch_taken), 1); // 10
-    jmp_imm_short(10); // 2
-    mov_m32_imm32((unsigned int *)(&branch_taken), 0); // 10
+    cmp_reg32_imm32(state, rs, 0);
+    jl_rj(state, 12);
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 1); // 10
+    jmp_imm_short(state, 10); // 2
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 0); // 10
      }
    else if (rs_64bit == -1)
      {
-    cmp_m32_imm32(((unsigned int *)dst->f.i.rs)+1, 0);
-    jl_rj(12);
-    mov_m32_imm32((unsigned int *)(&branch_taken), 1); // 10
-    jmp_imm_short(10); // 2
-    mov_m32_imm32((unsigned int *)(&branch_taken), 0); // 10
+    cmp_m32_imm32(state, ((unsigned int *)state->dst->f.i.rs)+1, 0);
+    jl_rj(state, 12);
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 1); // 10
+    jmp_imm_short(state, 10); // 2
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 0); // 10
      }
    else
      {
-    int rs2 = allocate_64_register2((unsigned int *)dst->f.i.rs);
+    int rs2 = allocate_64_register2(state, (unsigned int *)state->dst->f.i.rs);
     
-    cmp_reg32_imm32(rs2, 0);
-    jl_rj(12);
-    mov_m32_imm32((unsigned int *)(&branch_taken), 1); // 10
-    jmp_imm_short(10); // 2
-    mov_m32_imm32((unsigned int *)(&branch_taken), 0); // 10
+    cmp_reg32_imm32(state, rs2, 0);
+    jl_rj(state, 12);
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 1); // 10
+    jmp_imm_short(state, 10); // 2
+    mov_m32_imm32(state, (unsigned int *)(&state->branch_taken), 0); // 10
      }
 }
 
-void genbgez(void)
+void genbgez(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZ
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZ, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZ, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZ, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZ, 1);
     return;
      }
    
-   genbgez_test();
-   gendelayslot();
-   gentest();
+   genbgez_test(state);
+   gendelayslot(state);
+   gentest(state);
 #endif
 }
 
-void genbgez_out(void)
+void genbgez_out(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZ_OUT
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZ_OUT, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZ_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZ_OUT, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZ_OUT, 1);
     return;
      }
    
-   genbgez_test();
-   gendelayslot();
-   gentest_out();
+   genbgez_test(state);
+   gendelayslot(state);
+   gentest_out(state);
 #endif
 }
 
-void genbgez_idle(void)
+void genbgez_idle(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZ_IDLE
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZ_IDLE, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZ_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZ_IDLE, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZ_IDLE, 1);
     return;
      }
    
-   genbgez_test();
-   gentest_idle();
-   genbgez();
+   genbgez_test(state);
+   gentest_idle(state);
+   genbgez(state);
 #endif
 }
 
-void genbltzl(void)
+void genbltzl(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZL
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZL, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZL, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZL, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZL, 1);
     return;
      }
    
-   genbltz_test();
-   free_all_registers();
-   gentestl();
+   genbltz_test(state);
+   free_all_registers(state);
+   gentestl(state);
 #endif
 }
 
-void genbltzl_out(void)
+void genbltzl_out(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZL_OUT
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZL_OUT, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZL_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZL_OUT, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZL_OUT, 1);
     return;
      }
    
-   genbltz_test();
-   free_all_registers();
-   gentestl_out();
+   genbltz_test(state);
+   free_all_registers(state);
+   gentestl_out(state);
 #endif
 }
 
-void genbltzl_idle(void)
+void genbltzl_idle(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZL_IDLE
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZL_IDLE, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZL_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZL_IDLE, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZL_IDLE, 1);
     return;
      }
    
-   genbltz_test();
-   gentest_idle();
-   genbltzl();
+   genbltz_test(state);
+   gentest_idle(state);
+   genbltzl(state);
 #endif
 }
 
-void genbgezl(void)
+void genbgezl(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZL
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZL, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZL, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZL, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZL, 1);
     return;
      }
    
-   genbgez_test();
-   free_all_registers();
-   gentestl();
+   genbgez_test(state);
+   free_all_registers(state);
+   gentestl(state);
 #endif
 }
 
-void genbgezl_out(void)
+void genbgezl_out(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZL_OUT
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZL_OUT, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZL_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZL_OUT, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZL_OUT, 1);
     return;
      }
    
-   genbgez_test();
-   free_all_registers();
-   gentestl_out();
+   genbgez_test(state);
+   free_all_registers(state);
+   gentestl_out(state);
 #endif
 }
 
-void genbgezl_idle(void)
+void genbgezl_idle(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZL_IDLE
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZL_IDLE, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZL_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZL_IDLE, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZL_IDLE, 1);
     return;
      }
    
-   genbgez_test();
-   gentest_idle();
-   genbgezl();
+   genbgez_test(state);
+   gentest_idle(state);
+   genbgezl(state);
 #endif
 }
 
-static void genbranchlink(void)
+static void genbranchlink(usf_state_t * state)
 {
-   int r31_64bit = is64((unsigned int*)&reg[31]);
+   int r31_64bit = is64(state, (unsigned int*)&state->reg[31]);
    
    if (!r31_64bit)
      {
-    int r31 = allocate_register_w((unsigned int *)&reg[31]);
+    int r31 = allocate_register_w(state, (unsigned int *)&state->reg[31]);
     
-    mov_reg32_imm32(r31, dst->addr+8);
+    mov_reg32_imm32(state, r31, state->dst->addr+8);
      }
    else if (r31_64bit == -1)
      {
-    mov_m32_imm32((unsigned int *)&reg[31], dst->addr + 8);
-    if (dst->addr & 0x80000000)
-      mov_m32_imm32(((unsigned int *)&reg[31])+1, 0xFFFFFFFF);
+    mov_m32_imm32(state, (unsigned int *)&state->reg[31], state->dst->addr + 8);
+    if (state->dst->addr & 0x80000000)
+      mov_m32_imm32(state, ((unsigned int *)&state->reg[31])+1, 0xFFFFFFFF);
     else
-      mov_m32_imm32(((unsigned int *)&reg[31])+1, 0);
+      mov_m32_imm32(state, ((unsigned int *)&state->reg[31])+1, 0);
      }
    else
      {
-    int r311 = allocate_64_register1_w((unsigned int *)&reg[31]);
-    int r312 = allocate_64_register2_w((unsigned int *)&reg[31]);
+    int r311 = allocate_64_register1_w(state, (unsigned int *)&state->reg[31]);
+    int r312 = allocate_64_register2_w(state, (unsigned int *)&state->reg[31]);
     
-    mov_reg32_imm32(r311, dst->addr+8);
-    if (dst->addr & 0x80000000)
-      mov_reg32_imm32(r312, 0xFFFFFFFF);
+    mov_reg32_imm32(state, r311, state->dst->addr+8);
+    if (state->dst->addr & 0x80000000)
+      mov_reg32_imm32(state, r312, 0xFFFFFFFF);
     else
-      mov_reg32_imm32(r312, 0);
+      mov_reg32_imm32(state, r312, 0);
      }
 }
 
-void genbltzal(void)
+void genbltzal(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZAL
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZAL, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZAL, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZAL, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZAL, 1);
     return;
      }
    
-   genbltz_test();
-   genbranchlink();
-   gendelayslot();
-   gentest();
+   genbltz_test(state);
+   genbranchlink(state);
+   gendelayslot(state);
+   gentest(state);
 #endif
 }
 
-void genbltzal_out(void)
+void genbltzal_out(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZAL_OUT
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZAL_OUT, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZAL_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZAL_OUT, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZAL_OUT, 1);
     return;
      }
    
-   genbltz_test();
-   genbranchlink();
-   gendelayslot();
-   gentest_out();
+   genbltz_test(state);
+   genbranchlink(state);
+   gendelayslot(state);
+   gentest_out(state);
 #endif
 }
 
-void genbltzal_idle(void)
+void genbltzal_idle(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZAL_IDLE
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZAL_IDLE, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZAL_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZAL_IDLE, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZAL_IDLE, 1);
     return;
      }
    
-   genbltz_test();
-   genbranchlink();
-   gentest_idle();
-   genbltzal();
+   genbltz_test(state);
+   genbranchlink(state);
+   gentest_idle(state);
+   genbltzal(state);
 #endif
 }
 
-void genbgezal(void)
+void genbgezal(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZAL
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZAL, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZAL, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZAL, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZAL, 1);
     return;
      }
    
-   genbgez_test();
-   genbranchlink();
-   gendelayslot();
-   gentest();
+   genbgez_test(state);
+   genbranchlink(state);
+   gendelayslot(state);
+   gentest(state);
 #endif
 }
 
-void genbgezal_out(void)
+void genbgezal_out(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZAL_OUT
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZAL_OUT, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZAL_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZAL_OUT, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZAL_OUT, 1);
     return;
      }
    
-   genbgez_test();
-   genbranchlink();
-   gendelayslot();
-   gentest_out();
+   genbgez_test(state);
+   genbranchlink(state);
+   gendelayslot(state);
+   gentest_out(state);
 #endif
 }
 
-void genbgezal_idle(void)
+void genbgezal_idle(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZAL_IDLE
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZAL_IDLE, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZAL_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZAL_IDLE, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZAL_IDLE, 1);
     return;
      }
    
-   genbgez_test();
-   genbranchlink();
-   gentest_idle();
-   genbgezal();
+   genbgez_test(state);
+   genbranchlink(state);
+   gentest_idle(state);
+   genbgezal(state);
 #endif
 }
 
-void genbltzall(void)
+void genbltzall(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZALL
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZALL, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZALL, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZALL, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZALL, 1);
     return;
      }
    
-   genbltz_test();
-   genbranchlink();
-   free_all_registers();
-   gentestl();
+   genbltz_test(state);
+   genbranchlink(state);
+   free_all_registers(state);
+   gentestl(state);
 #endif
 }
 
-void genbltzall_out(void)
+void genbltzall_out(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZALL_OUT
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZALL_OUT, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZALL_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZALL_OUT, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZALL_OUT, 1);
     return;
      }
    
-   genbltz_test();
-   genbranchlink();
-   free_all_registers();
-   gentestl_out();
+   genbltz_test(state);
+   genbranchlink(state);
+   free_all_registers(state);
+   gentestl_out(state);
 #endif
 }
 
-void genbltzall_idle(void)
+void genbltzall_idle(usf_state_t * state)
 {
 #ifdef INTERPRET_BLTZALL_IDLE
-   gencallinterp((unsigned int)cached_interpreter_table.BLTZALL_IDLE, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZALL_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BLTZALL_IDLE, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BLTZALL_IDLE, 1);
     return;
      }
    
-   genbltz_test();
-   genbranchlink();
-   gentest_idle();
-   genbltzall();
+   genbltz_test(state);
+   genbranchlink(state);
+   gentest_idle(state);
+   genbltzall(state);
 #endif
 }
 
-void genbgezall(void)
+void genbgezall(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZALL
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZALL, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZALL, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZALL, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZALL, 1);
     return;
      }
    
-   genbgez_test();
-   genbranchlink();
-   free_all_registers();
-   gentestl();
+   genbgez_test(state);
+   genbranchlink(state);
+   free_all_registers(state);
+   gentestl(state);
 #endif
 }
 
-void genbgezall_out(void)
+void genbgezall_out(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZALL_OUT
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZALL_OUT, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZALL_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZALL_OUT, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZALL_OUT, 1);
     return;
      }
    
-   genbgez_test();
-   genbranchlink();
-   free_all_registers();
-   gentestl_out();
+   genbgez_test(state);
+   genbranchlink(state);
+   free_all_registers(state);
+   gentestl_out(state);
 #endif
 }
 
-void genbgezall_idle(void)
+void genbgezall_idle(usf_state_t * state)
 {
 #ifdef INTERPRET_BGEZALL_IDLE
-   gencallinterp((unsigned int)cached_interpreter_table.BGEZALL_IDLE, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZALL_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC && 
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((state->dst->addr & 0xFFF) == 0xFFC &&
+       (state->dst->addr < 0x80000000 || state->dst->addr >= 0xC0000000))||state->no_compiled_jump)
      {
-    gencallinterp((unsigned int)cached_interpreter_table.BGEZALL_IDLE, 1);
+    gencallinterp(state, (unsigned int)state->current_instruction_table.BGEZALL_IDLE, 1);
     return;
      }
    
-   genbgez_test();
-   genbranchlink();
-   gentest_idle();
-   genbgezall();
+   genbgez_test(state);
+   genbranchlink(state);
+   gentest_idle(state);
+   genbgezall(state);
 #endif
 }
 

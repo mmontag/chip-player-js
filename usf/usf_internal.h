@@ -388,38 +388,54 @@ struct usf_state
     
     int init_length;
 
+#ifdef DYNAREC
     // r4300/(x86|x86_64)/assemble.c
     unsigned int g_jump_start8/* = 0*/;
     unsigned int g_jump_start32/* = 0*/;
     
     jump_table *jumps_table/* = NULL*/;
     int jumps_number/* = 0*/, max_jumps_number/* = 0*/;
-    
+
     // r4300/x86_64/assemble.c
 #if defined(__x86_64__)
     riprelative_table *riprel_table/* = NULL*/;
     int riprel_number/* = 0*/, max_riprel_number/* = 0*/;
 #endif
     
-    // r4300/x86_64/gr4300.c
+    // r4300/(x86|x86_64)/gr4300.c
     precomp_instr fake_instr;
     
     int branch_taken/* = 0*/;
     
-    // r4300/(x86|x86_64)/rjump.c
-    
     // r4300/(x86|x86_64)/gspecial.c
     unsigned int precomp_instr_size/* = sizeof(precomp_instr)*/;
     
+    // r4300/x86/rjump.c
+#if defined(__i386__)
+    long save_esp;
+    long save_eip;
+    
+    unsigned long *return_address;
+#endif
+    
     // r4300/x86_64/rjump.c
 #if defined(__x86_64__)
-    // that's where the dynarec will restart when going back from a C function
     unsigned long long *return_address;
 
     long long save_rsp/* = 0*/;
     long long save_rip/* = 0*/;
 #endif
 
+    // r4300/x86/regcache.c
+#if defined(__i386__)
+    unsigned int* reg_content[8];
+    precomp_instr* last_access[8];
+    precomp_instr* free_since[8];
+    int dirty[8];
+    int r64[8];
+    unsigned int* r0;
+#endif
+    
     // r4300/x86_64/regcache.c
 #if defined(__x86_64__)
     unsigned long long * reg_content[8];
@@ -428,6 +444,8 @@ struct usf_state
     int dirty[8];
     int is64bits[8];
     unsigned long long *r0;
+#endif
+
 #endif
     
     // logging

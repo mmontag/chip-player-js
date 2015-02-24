@@ -21,149 +21,125 @@
 
 #include <stdio.h>
 
+#include "usf/usf.h"
+
+#include "usf/usf_internal.h"
+
 #include "regcache.h"
 
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/recomph.h"
 
-static unsigned int* reg_content[8];
-static precomp_instr* last_access[8];
-static precomp_instr* free_since[8];
-static int dirty[8];
-static int r64[8];
-static unsigned int* r0;
-
-void init_cache(precomp_instr* start)
+void init_cache(usf_state_t * state, precomp_instr* start)
 {
    int i;
    for (i=0; i<8; i++)
      {
-    last_access[i] = NULL;
-    free_since[i] = start;
+    state->last_access[i] = NULL;
+    state->free_since[i] = start;
      }
-     r0 = (unsigned int*)reg;
+     state->r0 = (unsigned int*)state->reg;
 }
 
-void free_all_registers(void)
+void free_all_registers(usf_state_t * state)
 {
-#if defined(PROFILE_R4300)
-  int freestart = code_length;
-  int flushed = 0;
-#endif
-
    int i;
    for (i=0; i<8; i++)
      {
-#if defined(PROFILE_R4300)
-    if (last_access[i] && dirty[i]) flushed = 1;
-#endif
-    if (last_access[i]) free_register(i);
+    if (state->last_access[i]) free_register(state, i);
     else
       {
-         while (free_since[i] <= dst)
+         while (state->free_since[i] <= state->dst)
            {
-          free_since[i]->reg_cache_infos.needed_registers[i] = NULL;
-          free_since[i]++;
+          state->free_since[i]->reg_cache_infos.needed_registers[i] = NULL;
+          state->free_since[i]++;
            }
       }
      }
-
-#if defined(PROFILE_R4300)
-  if (flushed == 1)
-  {
-    long x86addr = (long) ((*inst_pointer) + freestart);
-    int mipsop = -5;
-    fwrite(&mipsop, 1, 4, pfProfile); /* -5 = regcache flushing */
-    fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to start of register cache flushing instructions
-    x86addr = (long) ((*inst_pointer) + code_length);
-    fwrite(&src, 1, 4, pfProfile); // write 4-byte MIPS opcode for current instruction
-    fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
-  }
-#endif
 }
 
 // this function frees a specific X86 GPR
-void free_register(int reg)
+void free_register(usf_state_t * state, int reg)
 {
    precomp_instr *last;
    
-   if (last_access[reg] != NULL &&
-       r64[reg] != -1 && (int)reg_content[reg] != (int)reg_content[r64[reg]]-4)
+   if (state->last_access[reg] != NULL &&
+       state->r64[reg] != -1 && (int)state->reg_content[reg] != (int)state->reg_content[state->r64[reg]]-4)
      {
-    free_register(r64[reg]);
+    free_register(state, state->r64[reg]);
     return;
      }
    
-   if (last_access[reg] != NULL) last = last_access[reg]+1;
-   else last = free_since[reg];
+   if (state->last_access[reg] != NULL) last = state->last_access[reg]+1;
+   else last = state->free_since[reg];
    
-   while (last <= dst)
+   while (last <= state->dst)
      {
-    if (last_access[reg] != NULL && dirty[reg])
-      last->reg_cache_infos.needed_registers[reg] = reg_content[reg];
+    if (state->last_access[reg] != NULL && state->dirty[reg])
+      last->reg_cache_infos.needed_registers[reg] = state->reg_content[reg];
     else
       last->reg_cache_infos.needed_registers[reg] = NULL;
     
-    if (last_access[reg] != NULL && r64[reg] != -1)
+    if (state->last_access[reg] != NULL && state->r64[reg] != -1)
       {
-         if (dirty[r64[reg]])
-           last->reg_cache_infos.needed_registers[r64[reg]] = reg_content[r64[reg]];
+         if (state->dirty[state->r64[reg]])
+           last->reg_cache_infos.needed_registers[state->r64[reg]] = state->reg_content[state->r64[reg]];
          else
-           last->reg_cache_infos.needed_registers[r64[reg]] = NULL;
+           last->reg_cache_infos.needed_registers[state->r64[reg]] = NULL;
       }
     
     last++;
      }
-   if (last_access[reg] == NULL) 
+   if (state->last_access[reg] == NULL)
      {
-    free_since[reg] = dst+1;
+    state->free_since[reg] = state->dst+1;
     return;
      }
    
-   if (dirty[reg]) 
+   if (state->dirty[reg])
      {
-    mov_m32_reg32(reg_content[reg], reg);
-    if (r64[reg] == -1)
+    mov_m32_reg32(state, state->reg_content[reg], reg);
+    if (state->r64[reg] == -1)
       {
-         sar_reg32_imm8(reg, 31);
-         mov_m32_reg32((unsigned int*)reg_content[reg]+1, reg);
+         sar_reg32_imm8(state, reg, 31);
+         mov_m32_reg32(state, (unsigned int*)state->reg_content[reg]+1, reg);
       }
-    else mov_m32_reg32(reg_content[r64[reg]], r64[reg]);
+    else mov_m32_reg32(state, state->reg_content[state->r64[reg]], state->r64[reg]);
      }
-   last_access[reg] = NULL;
-   free_since[reg] = dst+1;
-   if (r64[reg] != -1)
+   state->last_access[reg] = NULL;
+   state->free_since[reg] = state->dst+1;
+   if (state->r64[reg] != -1)
      {
-    last_access[r64[reg]] = NULL;
-    free_since[r64[reg]] = dst+1;
+    state->last_access[state->r64[reg]] = NULL;
+    state->free_since[state->r64[reg]] = state->dst+1;
      }
 }
 
-int lru_register(void)
+int lru_register(usf_state_t * state)
 {
    unsigned int oldest_access = 0xFFFFFFFF;
    int i, reg = 0;
    for (i=0; i<8; i++)
      {
-    if (i != ESP && (unsigned int)last_access[i] < oldest_access)
+    if (i != ESP && i != EBP && (unsigned int)state->last_access[i] < oldest_access)
       {
-         oldest_access = (int)last_access[i];
+         oldest_access = (int)state->last_access[i];
          reg = i;
       }
      }
    return reg;
 }
 
-int lru_register_exc1(int exc1)
+int lru_register_exc1(usf_state_t * state, int exc1)
 {
    unsigned int oldest_access = 0xFFFFFFFF;
    int i, reg = 0;
    for (i=0; i<8; i++)
      {
-    if (i != ESP && i != exc1 && (unsigned int)last_access[i] < oldest_access)
+    if (i != ESP && i != EBP && i != exc1 && (unsigned int)state->last_access[i] < oldest_access)
       {
-         oldest_access = (int)last_access[i];
+         oldest_access = (int)state->last_access[i];
          reg = i;
       }
      }
@@ -174,7 +150,7 @@ int lru_register_exc1(int exc1)
 // if there was another value before it's cleanly removed of the
 // register cache. After that, the register number is returned.
 // If data are already cached, the function only returns the register number
-int allocate_register(unsigned int *addr)
+int allocate_register(usf_state_t * state, unsigned int *addr)
 {
    unsigned int oldest_access = 0xFFFFFFFF;
    int reg = 0, i;
@@ -184,26 +160,26 @@ int allocate_register(unsigned int *addr)
      {
     for (i=0; i<8; i++)
       {
-         if (last_access[i] != NULL && reg_content[i] == addr)
+         if (state->last_access[i] != NULL && state->reg_content[i] == addr)
            {
-          precomp_instr *last = last_access[i]+1;
+          precomp_instr *last = state->last_access[i]+1;
           
-          while (last <= dst)
+          while (last <= state->dst)
             {
-               last->reg_cache_infos.needed_registers[i] = reg_content[i];
+               last->reg_cache_infos.needed_registers[i] = state->reg_content[i];
                last++;
             }
-          last_access[i] = dst;
-          if (r64[i] != -1) 
+          state->last_access[i] = state->dst;
+          if (state->r64[i] != -1)
             {
-               last = last_access[r64[i]]+1;
+               last = state->last_access[state->r64[i]]+1;
                
-               while (last <= dst)
+               while (last <= state->dst)
              {
-                last->reg_cache_infos.needed_registers[r64[i]] = reg_content[r64[i]];
+                last->reg_cache_infos.needed_registers[state->r64[i]] = state->reg_content[state->r64[i]];
                 last++;
              }
-               last_access[r64[i]] = dst;
+               state->last_access[state->r64[i]] = state->dst;
             }
           
           return i;
@@ -214,34 +190,34 @@ int allocate_register(unsigned int *addr)
    // if it's not cached, we take the least recently used register
    for (i=0; i<8; i++)
      {
-    if (i != ESP && (unsigned int)last_access[i] < oldest_access)
+    if (i != ESP && i != EBP && (unsigned int)state->last_access[i] < oldest_access)
       {
-         oldest_access = (int)last_access[i];
+         oldest_access = (int)state->last_access[i];
          reg = i;
       }
      }
    
-   if (last_access[reg]) free_register(reg);
+   if (state->last_access[reg]) free_register(state, reg);
    else
      {
-    while (free_since[reg] <= dst)
+    while (state->free_since[reg] <= state->dst)
       {
-         free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
-         free_since[reg]++;
+         state->free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
+         state->free_since[reg]++;
       }
      }
    
-   last_access[reg] = dst;
-   reg_content[reg] = addr;
-   dirty[reg] = 0;
-   r64[reg] = -1;
+   state->last_access[reg] = state->dst;
+   state->reg_content[reg] = addr;
+   state->dirty[reg] = 0;
+   state->r64[reg] = -1;
    
    if (addr != NULL)
      {
-    if (addr == r0 || addr == r0+1)
-      xor_reg32_reg32(reg, reg);
+    if (addr == state->r0 || addr == state->r0+1)
+      xor_reg32_reg32(state, reg, reg);
     else
-      mov_reg32_m32(reg, addr);
+      mov_reg32_m32(state, reg, addr);
      }
    
    return reg;
@@ -249,28 +225,28 @@ int allocate_register(unsigned int *addr)
 
 // this function is similar to allocate_register except it loads
 // a 64 bits value, and return the register number of the LSB part
-int allocate_64_register1(unsigned int *addr)
+int allocate_64_register1(usf_state_t * state, unsigned int *addr)
 {
    int reg1, reg2, i;
    
    // is it already cached as a 32 bits value ?
    for (i=0; i<8; i++)
      {
-    if (last_access[i] != NULL && reg_content[i] == addr)
+    if (state->last_access[i] != NULL && state->reg_content[i] == addr)
       {
-         if (r64[i] == -1)
+         if (state->r64[i] == -1)
            {
-          allocate_register(addr);
-          reg2 = allocate_register(dirty[i] ? NULL : addr+1);
-          r64[i] = reg2;
-          r64[reg2] = i;
+          allocate_register(state, addr);
+          reg2 = allocate_register(state, state->dirty[i] ? NULL : addr+1);
+          state->r64[i] = reg2;
+          state->r64[reg2] = i;
           
-          if (dirty[i])
+          if (state->dirty[i])
             {
-               reg_content[reg2] = addr+1;
-               dirty[reg2] = 1;
-               mov_reg32_reg32(reg2, i);
-               sar_reg32_imm8(reg2, 31);
+               state->reg_content[reg2] = addr+1;
+               state->dirty[reg2] = 1;
+               mov_reg32_reg32(state, reg2, i);
+               sar_reg32_imm8(state, reg2, 31);
             }
           
           return i;
@@ -278,38 +254,38 @@ int allocate_64_register1(unsigned int *addr)
       }
      }
    
-   reg1 = allocate_register(addr);
-   reg2 = allocate_register(addr+1);
-   r64[reg1] = reg2;
-   r64[reg2] = reg1;
+   reg1 = allocate_register(state, addr);
+   reg2 = allocate_register(state, addr+1);
+   state->r64[reg1] = reg2;
+   state->r64[reg2] = reg1;
    
    return reg1;
 }
 
 // this function is similar to allocate_register except it loads
 // a 64 bits value, and return the register number of the MSB part
-int allocate_64_register2(unsigned int *addr)
+int allocate_64_register2(usf_state_t * state, unsigned int *addr)
 {
    int reg1, reg2, i;
    
    // is it already cached as a 32 bits value ?
    for (i=0; i<8; i++)
      {
-    if (last_access[i] != NULL && reg_content[i] == addr)
+    if (state->last_access[i] != NULL && state->reg_content[i] == addr)
       {
-         if (r64[i] == -1)
+         if (state->r64[i] == -1)
            {
-          allocate_register(addr);
-          reg2 = allocate_register(dirty[i] ? NULL : addr+1);
-          r64[i] = reg2;
-          r64[reg2] = i;
+          allocate_register(state, addr);
+          reg2 = allocate_register(state, state->dirty[i] ? NULL : addr+1);
+          state->r64[i] = reg2;
+          state->r64[reg2] = i;
           
-          if (dirty[i])
+          if (state->dirty[i])
             {
-               reg_content[reg2] = addr+1;
-               dirty[reg2] = 1;
-               mov_reg32_reg32(reg2, i);
-               sar_reg32_imm8(reg2, 31);
+               state->reg_content[reg2] = addr+1;
+               state->dirty[reg2] = 1;
+               mov_reg32_reg32(state, reg2, i);
+               sar_reg32_imm8(state, reg2, 31);
             }
           
           return reg2;
@@ -317,10 +293,10 @@ int allocate_64_register2(unsigned int *addr)
       }
      }
    
-   reg1 = allocate_register(addr);
-   reg2 = allocate_register(addr+1);
-   r64[reg1] = reg2;
-   r64[reg2] = reg1;
+   reg1 = allocate_register(state, addr);
+   reg2 = allocate_register(state, addr+1);
+   state->r64[reg1] = reg2;
+   state->r64[reg2] = reg1;
    
    return reg2;
 }
@@ -329,21 +305,21 @@ int allocate_64_register2(unsigned int *addr)
 // and then, it returns 1  if it's a 64 bit value
 //                      0  if it's a 32 bit value
 //                      -1 if it's not cached
-int is64(unsigned int *addr)
+int is64(usf_state_t * state, unsigned int *addr)
 {
    int i;
    for (i=0; i<8; i++)
      {
-    if (last_access[i] != NULL && reg_content[i] == addr)
+    if (state->last_access[i] != NULL && state->reg_content[i] == addr)
       {
-         if (r64[i] == -1) return 0;
+         if (state->r64[i] == -1) return 0;
          return 1;
       }
      }
    return -1;
 }
 
-int allocate_register_w(unsigned int *addr)
+int allocate_register_w(usf_state_t * state, unsigned int *addr)
 {
    unsigned int oldest_access = 0xFFFFFFFF;
    int reg = 0, i;
@@ -351,28 +327,28 @@ int allocate_register_w(unsigned int *addr)
    // is it already cached ?
    for (i=0; i<8; i++)
      {
-    if (last_access[i] != NULL && reg_content[i] == addr)
+    if (state->last_access[i] != NULL && state->reg_content[i] == addr)
       {
-         precomp_instr *last = last_access[i]+1;
+         precomp_instr *last = state->last_access[i]+1;
          
-         while (last <= dst)
+         while (last <= state->dst)
            {
           last->reg_cache_infos.needed_registers[i] = NULL;
           last++;
            }
-         last_access[i] = dst;
-         dirty[i] = 1;
-         if (r64[i] != -1)
+         state->last_access[i] = state->dst;
+         state->dirty[i] = 1;
+         if (state->r64[i] != -1)
            {
-          last = last_access[r64[i]]+1;
-          while (last <= dst)
+          last = state->last_access[state->r64[i]]+1;
+          while (last <= state->dst)
             {
-               last->reg_cache_infos.needed_registers[r64[i]] = NULL;
+               last->reg_cache_infos.needed_registers[state->r64[i]] = NULL;
                last++;
             }
-          free_since[r64[i]] = dst+1;
-          last_access[r64[i]] = NULL;
-          r64[i] = -1;
+          state->free_since[state->r64[i]] = state->dst+1;
+          state->last_access[state->r64[i]] = NULL;
+          state->r64[i] = -1;
            }
          
          return i;
@@ -382,392 +358,392 @@ int allocate_register_w(unsigned int *addr)
    // if it's not cached, we take the least recently used register
    for (i=0; i<8; i++)
      {
-    if (i != ESP && (unsigned int)last_access[i] < oldest_access)
+    if (i != ESP && i != EBP && (unsigned int)state->last_access[i] < oldest_access)
       {
-         oldest_access = (int)last_access[i];
+         oldest_access = (int)state->last_access[i];
          reg = i;
       }
      }
    
-   if (last_access[reg]) free_register(reg);
+   if (state->last_access[reg]) free_register(state, reg);
    else
      {
-    while (free_since[reg] <= dst)
+    while (state->free_since[reg] <= state->dst)
       {
-         free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
-         free_since[reg]++;
+         state->free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
+         state->free_since[reg]++;
       }
      }
    
-   last_access[reg] = dst;
-   reg_content[reg] = addr;
-   dirty[reg] = 1;
-   r64[reg] = -1;
+   state->last_access[reg] = state->dst;
+   state->reg_content[reg] = addr;
+   state->dirty[reg] = 1;
+   state->r64[reg] = -1;
    
    return reg;
 }
 
-int allocate_64_register1_w(unsigned int *addr)
+int allocate_64_register1_w(usf_state_t * state, unsigned int *addr)
 {
    int reg1, reg2, i;
    
    // is it already cached as a 32 bits value ?
    for (i=0; i<8; i++)
      {
-    if (last_access[i] != NULL && reg_content[i] == addr)
+    if (state->last_access[i] != NULL && state->reg_content[i] == addr)
       {
-         if (r64[i] == -1)
+         if (state->r64[i] == -1)
            {
-          allocate_register_w(addr);
-          reg2 = lru_register();
-          if (last_access[reg2]) free_register(reg2);
+          allocate_register_w(state, addr);
+          reg2 = lru_register(state);
+          if (state->last_access[reg2]) free_register(state, reg2);
           else
           {
-            while (free_since[reg2] <= dst)
+            while (state->free_since[reg2] <= state->dst)
             {
-              free_since[reg2]->reg_cache_infos.needed_registers[reg2] = NULL;
-              free_since[reg2]++;
+              state->free_since[reg2]->reg_cache_infos.needed_registers[reg2] = NULL;
+              state->free_since[reg2]++;
             }
           }
-          r64[i] = reg2;
-          r64[reg2] = i;
-          last_access[reg2] = dst;
+          state->r64[i] = reg2;
+          state->r64[reg2] = i;
+          state->last_access[reg2] = state->dst;
           
-          reg_content[reg2] = addr+1;
-          dirty[reg2] = 1;
-          mov_reg32_reg32(reg2, i);
-          sar_reg32_imm8(reg2, 31);
+          state->reg_content[reg2] = addr+1;
+          state->dirty[reg2] = 1;
+          mov_reg32_reg32(state, reg2, i);
+          sar_reg32_imm8(state, reg2, 31);
           
           return i;
            }
          else
            {
-          last_access[i] = dst;
-          last_access[r64[i]] = dst;
-          dirty[i] = dirty[r64[i]] = 1;
+          state->last_access[i] = state->dst;
+          state->last_access[state->r64[i]] = state->dst;
+          state->dirty[i] = state->dirty[state->r64[i]] = 1;
           return i;
            }
       }
      }
    
-   reg1 = allocate_register_w(addr);
-   reg2 = lru_register();
-   if (last_access[reg2]) free_register(reg2);
+   reg1 = allocate_register_w(state, addr);
+   reg2 = lru_register(state);
+   if (state->last_access[reg2]) free_register(state, reg2);
    else
      {
-    while (free_since[reg2] <= dst)
+    while (state->free_since[reg2] <= state->dst)
       {
-         free_since[reg2]->reg_cache_infos.needed_registers[reg2] = NULL;
-         free_since[reg2]++;
+         state->free_since[reg2]->reg_cache_infos.needed_registers[reg2] = NULL;
+         state->free_since[reg2]++;
       }
      }
-   r64[reg1] = reg2;
-   r64[reg2] = reg1;
-   last_access[reg2] = dst;
-   reg_content[reg2] = addr+1;
-   dirty[reg2] = 1;
+   state->r64[reg1] = reg2;
+   state->r64[reg2] = reg1;
+   state->last_access[reg2] = state->dst;
+   state->reg_content[reg2] = addr+1;
+   state->dirty[reg2] = 1;
    
    return reg1;
 }
 
-int allocate_64_register2_w(unsigned int *addr)
+int allocate_64_register2_w(usf_state_t * state, unsigned int *addr)
 {
    int reg1, reg2, i;
    
    // is it already cached as a 32 bits value ?
    for (i=0; i<8; i++)
      {
-    if (last_access[i] != NULL && reg_content[i] == addr)
+    if (state->last_access[i] != NULL && state->reg_content[i] == addr)
       {
-         if (r64[i] == -1)
+         if (state->r64[i] == -1)
            {
-          allocate_register_w(addr);
-          reg2 = lru_register();
-          if (last_access[reg2]) free_register(reg2);
+          allocate_register_w(state, addr);
+          reg2 = lru_register(state);
+          if (state->last_access[reg2]) free_register(state, reg2);
           else
           {
-            while (free_since[reg2] <= dst)
+            while (state->free_since[reg2] <= state->dst)
             {
-              free_since[reg2]->reg_cache_infos.needed_registers[reg2] = NULL;
-              free_since[reg2]++;
+              state->free_since[reg2]->reg_cache_infos.needed_registers[reg2] = NULL;
+              state->free_since[reg2]++;
             }
           }
-          r64[i] = reg2;
-          r64[reg2] = i;
-          last_access[reg2] = dst;
+          state->r64[i] = reg2;
+          state->r64[reg2] = i;
+          state->last_access[reg2] = state->dst;
           
-          reg_content[reg2] = addr+1;
-          dirty[reg2] = 1;
-          mov_reg32_reg32(reg2, i);
-          sar_reg32_imm8(reg2, 31);
+          state->reg_content[reg2] = addr+1;
+          state->dirty[reg2] = 1;
+          mov_reg32_reg32(state, reg2, i);
+          sar_reg32_imm8(state, reg2, 31);
           
           return reg2;
            }
          else
            {
-          last_access[i] = dst;
-          last_access[r64[i]] = dst;
-          dirty[i] = dirty[r64[i]] = 1;
-          return r64[i];
+          state->last_access[i] = state->dst;
+          state->last_access[state->r64[i]] = state->dst;
+          state->dirty[i] = state->dirty[state->r64[i]] = 1;
+          return state->r64[i];
            }
       }
      }
    
-   reg1 = allocate_register_w(addr);
-   reg2 = lru_register();
-   if (last_access[reg2]) free_register(reg2);
+   reg1 = allocate_register_w(state, addr);
+   reg2 = lru_register(state);
+   if (state->last_access[reg2]) free_register(state, reg2);
    else
      {
-    while (free_since[reg2] <= dst)
+    while (state->free_since[reg2] <= state->dst)
       {
-         free_since[reg2]->reg_cache_infos.needed_registers[reg2] = NULL;
-         free_since[reg2]++;
+         state->free_since[reg2]->reg_cache_infos.needed_registers[reg2] = NULL;
+         state->free_since[reg2]++;
       }
      }
-   r64[reg1] = reg2;
-   r64[reg2] = reg1;
-   last_access[reg2] = dst;
-   reg_content[reg2] = addr+1;
-   dirty[reg2] = 1;
+   state->r64[reg1] = reg2;
+   state->r64[reg2] = reg1;
+   state->last_access[reg2] = state->dst;
+   state->reg_content[reg2] = addr+1;
+   state->dirty[reg2] = 1;
    
    return reg2;
 }
 
-void set_register_state(int reg, unsigned int *addr, int d)
+void set_register_state(usf_state_t * state, int reg, unsigned int *addr, int d)
 {
-   last_access[reg] = dst;
-   reg_content[reg] = addr;
-   r64[reg] = -1;
-   dirty[reg] = d;
+   state->last_access[reg] = state->dst;
+   state->reg_content[reg] = addr;
+   state->r64[reg] = -1;
+   state->dirty[reg] = d;
 }
 
-void set_64_register_state(int reg1, int reg2, unsigned int *addr, int d)
+void set_64_register_state(usf_state_t * state, int reg1, int reg2, unsigned int *addr, int d)
 {
-   last_access[reg1] = dst;
-   last_access[reg2] = dst;
-   reg_content[reg1] = addr;
-   reg_content[reg2] = addr+1;
-   r64[reg1] = reg2;
-   r64[reg2] = reg1;
-   dirty[reg1] = d;
-   dirty[reg2] = d;
+   state->last_access[reg1] = state->dst;
+   state->last_access[reg2] = state->dst;
+   state->reg_content[reg1] = addr;
+   state->reg_content[reg2] = addr+1;
+   state->r64[reg1] = reg2;
+   state->r64[reg2] = reg1;
+   state->dirty[reg1] = d;
+   state->dirty[reg2] = d;
 }
 
-void force_32(int reg)
+void force_32(usf_state_t * state, int reg)
 {
-   if (r64[reg] != -1)
+   if (state->r64[reg] != -1)
      {
-    precomp_instr *last = last_access[reg]+1;
+    precomp_instr *last = state->last_access[reg]+1;
     
-    while (last <= dst)
+    while (last <= state->dst)
       {
-         if (dirty[reg])
-           last->reg_cache_infos.needed_registers[reg] = reg_content[reg];
+         if (state->dirty[reg])
+           last->reg_cache_infos.needed_registers[reg] = state->reg_content[reg];
          else
            last->reg_cache_infos.needed_registers[reg] = NULL;
          
-         if (dirty[r64[reg]])
-           last->reg_cache_infos.needed_registers[r64[reg]] = reg_content[r64[reg]];
+         if (state->dirty[state->r64[reg]])
+           last->reg_cache_infos.needed_registers[state->r64[reg]] = state->reg_content[state->r64[reg]];
          else
-           last->reg_cache_infos.needed_registers[r64[reg]] = NULL;
+           last->reg_cache_infos.needed_registers[state->r64[reg]] = NULL;
          
          last++;
       }
     
-    if (dirty[reg]) 
+    if (state->dirty[reg])
       {
-         mov_m32_reg32(reg_content[reg], reg);
-         mov_m32_reg32(reg_content[r64[reg]], r64[reg]);
-         dirty[reg] = 0;
+         mov_m32_reg32(state, state->reg_content[reg], reg);
+         mov_m32_reg32(state, state->reg_content[state->r64[reg]], state->r64[reg]);
+         state->dirty[reg] = 0;
       }
-    last_access[r64[reg]] = NULL;
-    free_since[r64[reg]] = dst+1;
-    r64[reg] = -1;
+    state->last_access[state->r64[reg]] = NULL;
+    state->free_since[state->r64[reg]] = state->dst+1;
+    state->r64[reg] = -1;
      }
 }
 
-void allocate_register_manually(int reg, unsigned int *addr)
+void allocate_register_manually(usf_state_t * state, int reg, unsigned int *addr)
 {
    int i;
    
-   if (last_access[reg] != NULL && reg_content[reg] == addr)
+   if (state->last_access[reg] != NULL && state->reg_content[reg] == addr)
      {
-    precomp_instr *last = last_access[reg]+1;
+    precomp_instr *last = state->last_access[reg]+1;
          
-    while (last <= dst)
+    while (last <= state->dst)
       {
-         last->reg_cache_infos.needed_registers[reg] = reg_content[reg];
+         last->reg_cache_infos.needed_registers[reg] = state->reg_content[reg];
          last++;
       }
-    last_access[reg] = dst;
-    if (r64[reg] != -1) 
+    state->last_access[reg] = state->dst;
+    if (state->r64[reg] != -1)
       {
-         last = last_access[r64[reg]]+1;
+         last = state->last_access[state->r64[reg]]+1;
          
-         while (last <= dst)
+         while (last <= state->dst)
            {
-          last->reg_cache_infos.needed_registers[r64[reg]] = reg_content[r64[reg]];
+          last->reg_cache_infos.needed_registers[state->r64[reg]] = state->reg_content[state->r64[reg]];
           last++;
            }
-         last_access[r64[reg]] = dst;
+         state->last_access[state->r64[reg]] = state->dst;
       }
     return;
      }
    
-   if (last_access[reg]) free_register(reg);
+   if (state->last_access[reg]) free_register(state, reg);
    else
      {
-    while (free_since[reg] <= dst)
+    while (state->free_since[reg] <= state->dst)
       {
-         free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
-         free_since[reg]++;
+         state->free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
+         state->free_since[reg]++;
       }
      }
    
    // is it already cached ?
    for (i=0; i<8; i++)
      {
-    if (last_access[i] != NULL && reg_content[i] == addr)
+    if (state->last_access[i] != NULL && state->reg_content[i] == addr)
       {
-         precomp_instr *last = last_access[i]+1;
+         precomp_instr *last = state->last_access[i]+1;
          
-         while (last <= dst)
+         while (last <= state->dst)
            {
-          last->reg_cache_infos.needed_registers[i] = reg_content[i];
+          last->reg_cache_infos.needed_registers[i] = state->reg_content[i];
           last++;
            }
-         last_access[i] = dst;
-         if (r64[i] != -1) 
+         state->last_access[i] = state->dst;
+         if (state->r64[i] != -1)
            {
-          last = last_access[r64[i]]+1;
+          last = state->last_access[state->r64[i]]+1;
           
-          while (last <= dst)
+          while (last <= state->dst)
             {
-               last->reg_cache_infos.needed_registers[r64[i]] = reg_content[r64[i]];
+               last->reg_cache_infos.needed_registers[state->r64[i]] = state->reg_content[state->r64[i]];
                last++;
             }
-          last_access[r64[i]] = dst;
+          state->last_access[state->r64[i]] = state->dst;
            }
          
-         mov_reg32_reg32(reg, i);
-         last_access[reg] = dst;
-         r64[reg] = r64[i];
-         if (r64[reg] != -1) r64[r64[reg]] = reg;
-         dirty[reg] = dirty[i];
-         reg_content[reg] = reg_content[i];
-         free_since[i] = dst+1;
-         last_access[i] = NULL;
+         mov_reg32_reg32(state, reg, i);
+         state->last_access[reg] = state->dst;
+         state->r64[reg] = state->r64[i];
+         if (state->r64[reg] != -1) state->r64[state->r64[reg]] = reg;
+         state->dirty[reg] = state->dirty[i];
+         state->reg_content[reg] = state->reg_content[i];
+         state->free_since[i] = state->dst+1;
+         state->last_access[i] = NULL;
          
          return;
       }
      }
    
-   last_access[reg] = dst;
-   reg_content[reg] = addr;
-   dirty[reg] = 0;
-   r64[reg] = -1;
+   state->last_access[reg] = state->dst;
+   state->reg_content[reg] = addr;
+   state->dirty[reg] = 0;
+   state->r64[reg] = -1;
    
    if (addr != NULL)
      {
-    if (addr == r0 || addr == r0+1)
-      xor_reg32_reg32(reg, reg);
+    if (addr == state->r0 || addr == state->r0+1)
+      xor_reg32_reg32(state, reg, reg);
     else
-      mov_reg32_m32(reg, addr);
+      mov_reg32_m32(state, reg, addr);
      }
 }
 
-void allocate_register_manually_w(int reg, unsigned int *addr, int load)
+void allocate_register_manually_w(usf_state_t * state, int reg, unsigned int *addr, int load)
 {
    int i;
    
-   if (last_access[reg] != NULL && reg_content[reg] == addr)
+   if (state->last_access[reg] != NULL && state->reg_content[reg] == addr)
      {
-    precomp_instr *last = last_access[reg]+1;
+    precomp_instr *last = state->last_access[reg]+1;
          
-    while (last <= dst)
+    while (last <= state->dst)
       {
-         last->reg_cache_infos.needed_registers[reg] = reg_content[reg];
+         last->reg_cache_infos.needed_registers[reg] = state->reg_content[reg];
          last++;
       }
-    last_access[reg] = dst;
+    state->last_access[reg] = state->dst;
     
-    if (r64[reg] != -1) 
+    if (state->r64[reg] != -1)
       {
-         last = last_access[r64[reg]]+1;
+         last = state->last_access[state->r64[reg]]+1;
          
-         while (last <= dst)
+         while (last <= state->dst)
            {
-          last->reg_cache_infos.needed_registers[r64[reg]] = reg_content[r64[reg]];
+          last->reg_cache_infos.needed_registers[state->r64[reg]] = state->reg_content[state->r64[reg]];
           last++;
            }
-         last_access[r64[reg]] = NULL;
-         free_since[r64[reg]] = dst+1;
-         r64[reg] = -1;
+         state->last_access[state->r64[reg]] = NULL;
+         state->free_since[state->r64[reg]] = state->dst+1;
+         state->r64[reg] = -1;
       }
-    dirty[reg] = 1;
+    state->dirty[reg] = 1;
     return;
      }
    
-   if (last_access[reg]) free_register(reg);
+   if (state->last_access[reg]) free_register(state, reg);
    else
      {
-    while (free_since[reg] <= dst)
+    while (state->free_since[reg] <= state->dst)
       {
-         free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
-         free_since[reg]++;
+         state->free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
+         state->free_since[reg]++;
       }
      }
    
    // is it already cached ?
    for (i=0; i<8; i++)
      {
-    if (last_access[i] != NULL && reg_content[i] == addr)
+    if (state->last_access[i] != NULL && state->reg_content[i] == addr)
       {
-         precomp_instr *last = last_access[i]+1;
+         precomp_instr *last = state->last_access[i]+1;
          
-         while (last <= dst)
+         while (last <= state->dst)
            {
-          last->reg_cache_infos.needed_registers[i] = reg_content[i];
+          last->reg_cache_infos.needed_registers[i] = state->reg_content[i];
           last++;
            }
-         last_access[i] = dst;
-         if (r64[i] != -1)
+         state->last_access[i] = state->dst;
+         if (state->r64[i] != -1)
            {
-          last = last_access[r64[i]]+1;
-          while (last <= dst)
+          last = state->last_access[state->r64[i]]+1;
+          while (last <= state->dst)
             {
-               last->reg_cache_infos.needed_registers[r64[i]] = NULL;
+               last->reg_cache_infos.needed_registers[state->r64[i]] = NULL;
                last++;
             }
-          free_since[r64[i]] = dst+1;
-          last_access[r64[i]] = NULL;
-          r64[i] = -1;
+          state->free_since[state->r64[i]] = state->dst+1;
+          state->last_access[state->r64[i]] = NULL;
+          state->r64[i] = -1;
            }
          
          if (load)
-           mov_reg32_reg32(reg, i);
-         last_access[reg] = dst;
-         dirty[reg] = 1;
-         r64[reg] = -1;
-         reg_content[reg] = reg_content[i];
-         free_since[i] = dst+1;
-         last_access[i] = NULL;
+           mov_reg32_reg32(state, reg, i);
+         state->last_access[reg] = state->dst;
+         state->dirty[reg] = 1;
+         state->r64[reg] = -1;
+         state->reg_content[reg] = state->reg_content[i];
+         state->free_since[i] = state->dst+1;
+         state->last_access[i] = NULL;
          
          return;
       }
      }
    
-   last_access[reg] = dst;
-   reg_content[reg] = addr;
-   dirty[reg] = 1;
-   r64[reg] = -1;
+   state->last_access[reg] = state->dst;
+   state->reg_content[reg] = addr;
+   state->dirty[reg] = 1;
+   state->r64[reg] = -1;
    
    if (addr != NULL && load)
      {
-    if (addr == r0 || addr == r0+1)
-      xor_reg32_reg32(reg, reg);
+    if (addr == state->r0 || addr == state->r0+1)
+      xor_reg32_reg32(state, reg, reg);
     else
-      mov_reg32_m32(reg, addr);
+      mov_reg32_m32(state, reg, addr);
      }
 }
 
@@ -784,18 +760,11 @@ void allocate_register_manually_w(int reg, unsigned int *addr, int load)
 // 0x8B (reg<<3)|5 0xXXXXXXXX mov edi, [XXXXXXXX]
 // 0xC3 ret
 // total : 62 bytes
-static void build_wrapper(precomp_instr *instr, unsigned char* code, precomp_block* block)
+static void build_wrapper(usf_state_t * state, precomp_instr *instr, unsigned char* code, precomp_block* block)
 {
    int i;
    int j=0;
 
-#if defined(PROFILE_R4300)
-   long x86addr = (long) code;
-   int mipsop = -4;
-   fwrite(&mipsop, 1, 4, pfProfile); // write 4-byte MIPS opcode
-   fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
-#endif
-   
    code[j++] = 0x81;
    code[j++] = 0xEC;
    code[j++] = 0x04;
@@ -830,7 +799,7 @@ static void build_wrapper(precomp_instr *instr, unsigned char* code, precomp_blo
    code[j++] = 0xC3;
 }
 
-void build_wrappers(precomp_instr *instr, int start, int end, precomp_block* block)
+void build_wrappers(usf_state_t * state, precomp_instr *instr, int start, int end, precomp_block* block)
 {
    int i, reg;;
    for (i=start; i<end; i++)
@@ -841,17 +810,17 @@ void build_wrappers(precomp_instr *instr, int start, int end, precomp_block* blo
          if (instr[i].reg_cache_infos.needed_registers[reg] != NULL)
            {
           instr[i].reg_cache_infos.need_map = 1;
-          build_wrapper(&instr[i], instr[i].reg_cache_infos.jump_wrapper, block);
+          build_wrapper(state, &instr[i], instr[i].reg_cache_infos.jump_wrapper, block);
           break;
            }
       }
      }
 }
 
-void simplify_access(void)
+void simplify_access(usf_state_t * state)
 {
    int i;
-   dst->local_addr = code_length;
-   for(i=0; i<8; i++) dst->reg_cache_infos.needed_registers[i] = NULL;
+   state->dst->local_addr = state->code_length;
+   for(i=0; i<8; i++) state->dst->reg_cache_infos.needed_registers[i] = NULL;
 }
 

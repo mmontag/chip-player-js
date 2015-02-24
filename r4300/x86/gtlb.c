@@ -21,6 +21,10 @@
 
 #include <stdio.h>
 
+#include "usf/usf.h"
+
+#include "usf/usf_internal.h"
+
 #include "assemble.h"
 
 #include "r4300/cached_interp.h"
@@ -28,9 +32,9 @@
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
 
-void gentlbwi(void)
+void gentlbwi(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.TLBWI, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.TLBWI, 0);
    /*dst->local_addr = code_length;
    mov_m32_imm32((void *)(&PC), (unsigned int)(dst));
    mov_reg32_imm32(EAX, (unsigned int)(TLBWI));
@@ -38,9 +42,9 @@ void gentlbwi(void)
    genupdate_system(0);*/
 }
 
-void gentlbp(void)
+void gentlbp(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.TLBP, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.TLBP, 0);
    /*dst->local_addr = code_length;
    mov_m32_imm32((void *)(&PC), (unsigned int)(dst));
    mov_reg32_imm32(EAX, (unsigned int)(TLBP));
@@ -48,9 +52,9 @@ void gentlbp(void)
    genupdate_system(0);*/
 }
 
-void gentlbr(void)
+void gentlbr(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.TLBR, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.TLBR, 0);
    /*dst->local_addr = code_length;
    mov_m32_imm32((void *)(&PC), (unsigned int)(dst));
    mov_reg32_imm32(EAX, (unsigned int)(TLBR));
@@ -58,9 +62,9 @@ void gentlbr(void)
    genupdate_system(0);*/
 }
 
-void generet(void)
+void generet(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.ERET, 1);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.ERET, 1);
    /*dst->local_addr = code_length;
    mov_m32_imm32((void *)(&PC), (unsigned int)(dst));
    genupdate_system(0);
@@ -70,8 +74,8 @@ void generet(void)
    jmp_reg32(EAX);*/
 }
 
-void gentlbwr(void)
+void gentlbwr(usf_state_t * state)
 {
-   gencallinterp((unsigned int)cached_interpreter_table.TLBWR, 0);
+   gencallinterp(state, (unsigned int)state->current_instruction_table.TLBWR, 0);
 }
 

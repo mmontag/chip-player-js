@@ -211,7 +211,11 @@ static void dynarec_setup_code()
 {
    usf_state_t * state;
    asm volatile
+#ifdef __x86_64__
     (" mov %%r15, (%[state])       \n"
+#else
+    (" mov %%ebp, (%[state])       \n"
+#endif
      :
      : [state]"r"(&state)
      : "memory"
