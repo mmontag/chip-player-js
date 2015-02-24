@@ -312,7 +312,7 @@ const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * 
             count -= USF_STATE->samples_in_buffer_2;
             USF_STATE->samples_in_buffer_2 = 0;
         }
-        else
+        else if (count)
         {
             USF_STATE->samples_in_buffer_2 -= count;
             memmove(USF_STATE->samplebuf2, USF_STATE->samplebuf2 + 8192 - USF_STATE->samples_in_buffer_2 * 2, USF_STATE->samples_in_buffer_2 * sizeof(short) * 2);
