@@ -389,6 +389,10 @@ struct usf_state
     int init_length;
 
 #ifdef DYNAREC
+#ifdef _MSC_VER
+#define __i386__
+#endif
+
     // r4300/(x86|x86_64)/assemble.c
     unsigned int g_jump_start8/* = 0*/;
     unsigned int g_jump_start32/* = 0*/;

@@ -38,8 +38,10 @@ void usf_clear(void * state)
     USF_STATE->round_mode = 0x33F;
     USF_STATE->ceil_mode = 0xB3F;
     USF_STATE->floor_mode = 0x73F;
-    USF_STATE->precomp_instr_size = sizeof(precomp_instr);
-    
+#ifdef DYNAREC
+	USF_STATE->precomp_instr_size = sizeof(precomp_instr);
+#endif
+
     // USF_STATE->g_rom = 0;
     // USF_STATE->g_rom_size = 0;
     

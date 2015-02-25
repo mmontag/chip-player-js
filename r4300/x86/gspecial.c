@@ -200,7 +200,7 @@ void genjr(usf_state_t * state)
    mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
    push_reg32(state, EBP);
    call_reg32(state, EAX);
-   add_reg32_imm8(state, ESP, 4);
+   pop_reg32(state, EBP);
    
    jump_end_rel32(state);
    
@@ -273,8 +273,8 @@ void genjalr(usf_state_t * state)
    mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
    push_reg32(state, EBP);
    call_reg32(state, EAX);
-   add_reg32_imm8(state, ESP, 4);
-   
+   pop_reg32(state, EBP);
+
    jump_end_rel32(state);
    
    mov_reg32_reg32(state, EAX, EBX);

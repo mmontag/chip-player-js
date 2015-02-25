@@ -1004,6 +1004,10 @@ void gendsra32(usf_state_t * state)
 {
 }
 
+void genbreak(usf_state_t * state)
+{
+}
+
 /* From gtlb.c */
 
 void gentlbwi(usf_state_t * state)

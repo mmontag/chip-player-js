@@ -34,6 +34,7 @@ enum pak_type
 
 struct game_controller
 {
+	uint32_t padding;
 };
 
 int game_controller_is_connected(struct game_controller* cont, enum pak_type* pak);

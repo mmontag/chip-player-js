@@ -63,7 +63,11 @@ void DebugMessage(usf_state_t * state, int level, const char *message, ...)
     state->error_message[ len++ ] = '\n';
 
   va_start(args, message);
+#if _MSC_VER >= 1300
+  vsprintf_s(state->error_message + len, 16384 - len, message, args);
+#else
   vsprintf(state->error_message + len, message, args);
+#endif
   va_end(args);
     
   state->last_error = state->error_message;

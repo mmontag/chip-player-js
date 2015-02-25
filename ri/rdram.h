@@ -47,12 +47,14 @@ struct rdram
     size_t dram_size;
 };
 
-static inline uint32_t rdram_reg(uint32_t address)
+#include "osal/preproc.h"
+
+static osal_inline uint32_t rdram_reg(uint32_t address)
 {
     return (address & 0x3ff) >> 2;
 }
 
-static inline uint32_t rdram_dram_address(uint32_t address)
+static osal_inline uint32_t rdram_dram_address(uint32_t address)
 {
     return (address & 0xffffff) >> 2;
 }

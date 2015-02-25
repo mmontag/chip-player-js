@@ -59,15 +59,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 typedef int (*readfn)(void*,uint32_t,uint32_t*);
 typedef int (*writefn)(void*,uint32_t,uint32_t,uint32_t);
 
-static inline unsigned int bshift(uint32_t address)
+static osal_inline unsigned int bshift(uint32_t address)
 {
     return ((address & 3) ^ 3) << 3;
 }
 
-static inline unsigned int hshift(uint32_t address)
+static osal_inline unsigned int hshift(uint32_t address)
 {
     return ((address & 2) ^ 2) << 3;
 }

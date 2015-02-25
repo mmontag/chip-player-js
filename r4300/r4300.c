@@ -207,6 +207,10 @@ void r4300_reset_soft(usf_state_t * state)
 }
 
 #if !defined(NO_ASM)
+#ifdef _MSC_VER
+static void dynarec_setup_code(usf_state_t * state)
+{
+#else
 static void dynarec_setup_code()
 {
    usf_state_t * state;
@@ -220,12 +224,13 @@ static void dynarec_setup_code()
      : [state]"r"(&state)
      : "memory"
      );
+#endif
    // The dynarec jumps here after we call dyna_start and it prepares
    // Here we need to prepare the initial code block and jump to it
    jump_to(state->last_addr);
 
    // Prevent segfault on failed jump_to
-   if (!state->actual->block || !state->actual->code)
+   if (!state->actual || !state->actual->block || !state->actual->code)
       dyna_stop(state);
 }
 #endif

@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct r4300_core;
 struct ri_controller;
 struct vi_controller;
@@ -63,7 +65,7 @@ struct ai_controller
     struct vi_controller* vi;
 };
 
-static inline uint32_t ai_reg(uint32_t address)
+static osal_inline uint32_t ai_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

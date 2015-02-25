@@ -58,7 +58,9 @@ struct pi_controller
     struct ri_controller* ri;
 };
 
-static inline uint32_t pi_reg(uint32_t address)
+#include "osal/preproc.h"
+
+static osal_inline uint32_t pi_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

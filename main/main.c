@@ -134,7 +134,7 @@ m64p_error main_start(usf_state_t * state)
     to_little_endian_buffer(&RDRAMSize, 4, 1);
     
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
-    state->r4300emu = 0;
+    state->r4300emu = 2;
 
     /* set some other core parameters based on the config file values */
     state->no_compiled_jump = 0;

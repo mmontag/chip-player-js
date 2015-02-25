@@ -58,7 +58,9 @@
 
 #endif
 
-static inline void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
+#include "osal/preproc.h"
+
+static osal_inline void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
 {
     *dst = (*dst & ~mask) | (value & mask);
 }

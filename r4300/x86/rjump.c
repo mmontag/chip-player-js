@@ -43,9 +43,15 @@ void dyna_jump(usf_state_t * state)
     }
 
     if (state->PC->reg_cache_infos.need_map)
+#ifdef _MSC_VER
+		state->return_address = (unsigned long *) (state->PC->reg_cache_infos.jump_wrapper);
+	else
+		state->return_address = (unsigned long *) (state->actual->code + state->PC->local_addr);
+#else
         *state->return_address = (unsigned long) (state->PC->reg_cache_infos.jump_wrapper);
     else
         *state->return_address = (unsigned long) (state->actual->code + state->PC->local_addr);
+#endif
 }
 
 #if defined(WIN32) && !defined(__GNUC__) /* this warning disable only works if placed outside of the scope of a function */
@@ -66,24 +72,32 @@ void dyna_start(usf_state_t * state, void *code)
      push ebx
      push esi
      push edi
-     mov state->save_esp, esp
+	 mov ebx, code
+	 mov ebp, state
+     mov [ebp].save_esp, esp
      call point1
      jmp point2
    point1:
      pop eax
-     mov state->save_eip, eax
+     mov [ebp].save_eip, eax
 
      sub esp, 0x10
      and esp, 0xfffffff0
-     mov state->return_address, esp
-     sub state->return_address, 4
-     mov ebp, state
 
-     mov eax, code
-     call eax
+   point3:
+	 push ebp
+	 sub esp, 0x28
+	 push ebp
+     call ebx
+	 pop ebp
+	 add esp, 0x28
+	 pop ebp
+
+	 mov ebx, [ebp].return_address
+	 jmp point3
+
    point2:
-     mov state, ebp
-     mov esp, state->save_esp
+     mov esp, [ebp].save_esp
      pop edi
      pop esi
      pop ebx
@@ -158,7 +172,11 @@ void dyna_stop(usf_state_t * state)
     DebugMessage(state, M64MSG_WARNING, "instruction pointer is 0 at dyna_stop()");
   else
   {
+#ifdef _MSC_VER
+    *state->return_address = (unsigned long *) state->save_eip;
+#else
     *state->return_address = (unsigned long) state->save_eip;
+#endif
   }
 }
 

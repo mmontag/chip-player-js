@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct cart_rom
 {
     uint8_t* rom;
@@ -33,7 +35,7 @@ struct cart_rom
     uint32_t last_write;
 };
 
-static inline uint32_t rom_address(uint32_t address)
+static osal_inline uint32_t rom_address(uint32_t address)
 {
     return (address & 0x03fffffc);
 }

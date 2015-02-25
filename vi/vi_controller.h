@@ -56,7 +56,9 @@ struct vi_controller
     struct r4300_core* r4300;
 };
 
-static inline uint32_t vi_reg(uint32_t address)
+#include "osal/preproc.h"
+
+static osal_inline uint32_t vi_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

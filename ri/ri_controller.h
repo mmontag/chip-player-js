@@ -46,7 +46,9 @@ struct ri_controller
     struct rdram rdram;
 };
 
-static inline uint32_t ri_reg(uint32_t address)
+#include "osal/preproc.h"
+
+static osal_inline uint32_t ri_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

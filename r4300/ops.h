@@ -22,6 +22,8 @@
 #ifndef M64P_R4300_OPS_H
 #define M64P_R4300_OPS_H
 
+#include "osal/preproc.h"
+
 typedef struct _cpu_instruction_table
 {
 	/* All jump/branch instructions (except JR and JALR) have three versions:
@@ -307,7 +309,7 @@ typedef struct _cpu_instruction_table
 
 	// Special instructions
 	void (*SYSCALL)(usf_state_t *);
-    void (*BREAK)(usf_state_t *);
+	void (*BREAK)(usf_state_t *);
 
 	// Exception instructions
 	void (*TEQ)(usf_state_t *);

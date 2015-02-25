@@ -28,6 +28,8 @@
 /* FIXME: use forward declaration for precomp_block */
 #include "recomp.h"
 
+#include "osal/preproc.h"
+
 extern const cpu_instruction_table cached_interpreter_table;
 
 void init_blocks(usf_state_t *);
