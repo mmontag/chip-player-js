@@ -207,18 +207,20 @@ void r4300_reset_soft(usf_state_t * state)
 }
 
 #if !defined(NO_ASM)
-#ifdef _MSC_VER
-static void dynarec_setup_code(usf_state_t * state)
-{
-#else
 static void dynarec_setup_code()
 {
    usf_state_t * state;
+#ifdef _MSC_VER
+   _asm
+   {
+	   mov state, esi
+   }
+#else
    asm volatile
 #ifdef __x86_64__
     (" mov %%r15, (%[state])       \n"
 #else
-    (" mov %%ebp, (%[state])       \n"
+    (" mov %%esi, (%[state])       \n"
 #endif
      :
      : [state]"r"(&state)

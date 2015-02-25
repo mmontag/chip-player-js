@@ -43,15 +43,9 @@ void dyna_jump(usf_state_t * state)
     }
 
     if (state->PC->reg_cache_infos.need_map)
-#ifdef _MSC_VER
-		state->return_address = (unsigned long *) (state->PC->reg_cache_infos.jump_wrapper);
-	else
-		state->return_address = (unsigned long *) (state->actual->code + state->PC->local_addr);
-#else
         *state->return_address = (unsigned long) (state->PC->reg_cache_infos.jump_wrapper);
     else
         *state->return_address = (unsigned long) (state->actual->code + state->PC->local_addr);
-#endif
 }
 
 #if defined(WIN32) && !defined(__GNUC__) /* this warning disable only works if placed outside of the scope of a function */
@@ -73,31 +67,22 @@ void dyna_start(usf_state_t * state, void *code)
      push esi
      push edi
 	 mov ebx, code
-	 mov ebp, state
-     mov [ebp].save_esp, esp
+	 mov esi, state
+     mov [esi].save_esp, esp
      call point1
      jmp point2
    point1:
      pop eax
-     mov [ebp].save_eip, eax
+     mov [esi].save_eip, eax
 
      sub esp, 0x10
      and esp, 0xfffffff0
+     mov [esi].return_address, esp
+     sub [esi].return_address, 4
 
-   point3:
-	 push ebp
-	 sub esp, 0x28
-	 push ebp
      call ebx
-	 pop ebp
-	 add esp, 0x28
-	 pop ebp
-
-	 mov ebx, [ebp].return_address
-	 jmp point3
-
    point2:
-     mov esp, [ebp].save_esp
+     mov esp, [esi].save_esp
      pop edi
      pop esi
      pop ebx
@@ -134,22 +119,22 @@ void dyna_start(usf_state_t * state, void *code)
      STORE_EBX
      " pushl %%esi \n"
      " pushl %%edi \n"
-     " movl %[state], %%ebp \n"
-     " movl %%esp, %c[save_esp](%%ebp) \n"
+     " movl %[state], %%esi \n"
+     " movl %%esp, %c[save_esp](%%esi) \n"
      " call    1f              \n"
      " jmp     2f              \n"
      "1:                       \n"
      " popl %%eax              \n"
-     " movl %%eax, %c[save_eip](%%ebp) \n"
+     " movl %%eax, %c[save_eip](%%esi) \n"
 
      " subl $16, %%esp         \n" /* save 16 bytes of padding just in case */
      " andl $-16, %%esp        \n" /* align stack on 16-byte boundary for OSX */
-     " movl %%esp, %c[return_address](%%ebp) \n"
-     " subl $4, %c[return_address](%%ebp) \n"
+     " movl %%esp, %c[return_address](%%esi) \n"
+     " subl $4, %c[return_address](%%esi) \n"
 
      " call *%[codeptr]        \n"
      "2:                       \n"
-     " movl %c[save_esp](%%ebp), %%esp \n"
+     " movl %c[save_esp](%%esi), %%esp \n"
      " popl %%edi \n"
      " popl %%esi \n"
      LOAD_EBX
@@ -172,11 +157,7 @@ void dyna_stop(usf_state_t * state)
     DebugMessage(state, M64MSG_WARNING, "instruction pointer is 0 at dyna_stop()");
   else
   {
-#ifdef _MSC_VER
-    *state->return_address = (unsigned long *) state->save_eip;
-#else
     *state->return_address = (unsigned long) state->save_eip;
-#endif
   }
 }
 

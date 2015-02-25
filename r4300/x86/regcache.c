@@ -122,7 +122,7 @@ int lru_register(usf_state_t * state)
    int i, reg = 0;
    for (i=0; i<8; i++)
      {
-    if (i != ESP && i != EBP && (unsigned int)state->last_access[i] < oldest_access)
+    if (i != ESP && i != ESI && (unsigned int)state->last_access[i] < oldest_access)
       {
          oldest_access = (int)state->last_access[i];
          reg = i;
@@ -137,7 +137,7 @@ int lru_register_exc1(usf_state_t * state, int exc1)
    int i, reg = 0;
    for (i=0; i<8; i++)
      {
-    if (i != ESP && i != EBP && i != exc1 && (unsigned int)state->last_access[i] < oldest_access)
+    if (i != ESP && i != ESI && i != exc1 && (unsigned int)state->last_access[i] < oldest_access)
       {
          oldest_access = (int)state->last_access[i];
          reg = i;
@@ -190,7 +190,7 @@ int allocate_register(usf_state_t * state, unsigned int *addr)
    // if it's not cached, we take the least recently used register
    for (i=0; i<8; i++)
      {
-    if (i != ESP && i != EBP && (unsigned int)state->last_access[i] < oldest_access)
+    if (i != ESP && i != ESI && (unsigned int)state->last_access[i] < oldest_access)
       {
          oldest_access = (int)state->last_access[i];
          reg = i;
@@ -358,7 +358,7 @@ int allocate_register_w(usf_state_t * state, unsigned int *addr)
    // if it's not cached, we take the least recently used register
    for (i=0; i<8; i++)
      {
-    if (i != ESP && i != EBP && (unsigned int)state->last_access[i] < oldest_access)
+    if (i != ESP && i != ESI && (unsigned int)state->last_access[i] < oldest_access)
       {
          oldest_access = (int)state->last_access[i];
          reg = i;
