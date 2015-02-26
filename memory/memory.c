@@ -913,7 +913,7 @@ static void write_ddd(usf_state_t * state)
 #define W(x) write_ ## x ## b, write_ ## x ## h, write_ ## x, write_ ## x ## d
 #define RW(x) R(x), W(x)
 
-int init_memory(usf_state_t * state)
+int init_memory(usf_state_t * state, uint32_t rdram_size)
 {
     int i;
 
@@ -924,12 +924,12 @@ int init_memory(usf_state_t * state)
     }
 
     /* map RDRAM */
-    for(i = 0; i < /*0x40*/0x80; ++i)
+    for(i = 0; i < /*0x40*/(rdram_size >> 16); ++i)
     {
         map_region(state, 0x8000+i, M64P_MEM_RDRAM, RW(rdram));
         map_region(state, 0xa000+i, M64P_MEM_RDRAM, RW(rdram));
     }
-    for(i = /*0x40*/0x80; i < 0x3f0; ++i)
+    for(i = /*0x40*/(rdram_size >> 16); i < 0x3f0; ++i)
     {
         map_region(state, 0x8000+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(state, 0xa000+i, M64P_MEM_NOTHING, RW(nothing));

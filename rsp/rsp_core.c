@@ -296,9 +296,9 @@ void do_SP_Task(struct rsp_core* sp)
         
         update_count(sp->r4300->state);
         if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
-            add_interupt_event(sp->r4300->state, SP_INT, 1000);
+            add_interupt_event(sp->r4300->state, SP_INT, sp->r4300->state->g_delay_sp ? 1000 : 0);
         if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP)
-            add_interupt_event(sp->r4300->state, DP_INT, 1000);
+            add_interupt_event(sp->r4300->state, DP_INT, sp->r4300->state->g_delay_dp ? 1000 : 0);
 #ifdef DEBUG_INFO
         if (sp->r4300->mi.regs[MI_INTR_REG])
             fprintf(sp->r4300->state->debug_log, " - interrupts fired %d", sp->r4300->mi.regs[MI_INTR_REG]);
@@ -318,7 +318,7 @@ void do_SP_Task(struct rsp_core* sp)
         
         update_count(sp->r4300->state);
         if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
-            add_interupt_event(sp->r4300->state, SP_INT, 4000/*500*/);
+            add_interupt_event(sp->r4300->state, SP_INT, sp->r4300->state->g_delay_sp ? 4000/*500*/: 0);
 #ifdef DEBUG_INFO
         if (sp->r4300->mi.regs[MI_INTR_REG])
             fprintf(sp->r4300->state->debug_log, " - interrupt fired %d", sp->r4300->mi.regs[MI_INTR_REG]);
@@ -338,7 +338,9 @@ void do_SP_Task(struct rsp_core* sp)
         
         update_count(sp->r4300->state);
         if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
+        {
             add_interupt_event(sp->r4300->state, SP_INT, 0/*100*/);
+        }
 #ifdef DEBUG_INFO
         if (sp->r4300->mi.regs[MI_INTR_REG])
             fprintf(sp->r4300->state->debug_log, " - interrupt fired %d", sp->r4300->mi.regs[MI_INTR_REG]);

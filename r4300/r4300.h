@@ -36,6 +36,8 @@ void r4300_begin(usf_state_t *);
 void r4300_execute(usf_state_t *);
 void r4300_end(usf_state_t *);
 
+void r4300_checkpoint(usf_state_t *);
+
 /* Jump to the given address. This works for all r4300 emulator, but is slower.
  * Use this for common code which can be executed from any r4300 emulator. */ 
 void generic_jump_to(usf_state_t *, unsigned int address);

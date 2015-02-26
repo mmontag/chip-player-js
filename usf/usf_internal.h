@@ -287,9 +287,17 @@ struct usf_state
     struct rdp_core g_dp;
     struct rsp_core g_sp;
     
+    // Compatibility with USF sets dictates that these all remain zero
     int g_delay_si/* = 0*/;
+    int g_delay_ai/* = 0*/;
+    int g_delay_pi/* = 0*/;
+    int g_delay_sp/* = 0*/;
+    int g_delay_dp/* = 0*/;
     
     int g_gs_vi_counter/* = 0*/;
+    
+    unsigned int g_timer_checkpoint;
+    size_t last_sample_buffer_count;
 
     // memory/memory.c
     unsigned int address, cpu_word;

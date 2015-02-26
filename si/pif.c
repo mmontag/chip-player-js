@@ -21,6 +21,8 @@
 
 #include "usf/usf.h"
 
+#include "usf/usf_internal.h"
+
 #include "pif.h"
 #include "n64_cic_nus_6105.h"
 #include "si_controller.h"
@@ -103,7 +105,10 @@ int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         {
             si->pif.ram[0x3f] = 0;
             update_count(si->r4300->state);
-            add_interupt_event(si->r4300->state, SI_INT, /*0x100*/0x900);
+            if (si->r4300->state->g_delay_si)
+                add_interupt_event(si->r4300->state, SI_INT, /*0x100*/0x900);
+            else
+                signal_rcp_interrupt(si->r4300, SI_INT);
         }
         else
         {

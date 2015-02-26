@@ -65,7 +65,7 @@ static osal_inline void masked_write(uint32_t* dst, uint32_t value, uint32_t mas
     *dst = (*dst & ~mask) | (value & mask);
 }
 
-int init_memory(usf_state_t *);
+int init_memory(usf_state_t *, uint32_t rdram_size);
 
 void map_region(usf_state_t *,
                 uint16_t region,

@@ -54,7 +54,7 @@ static void dma_pi_read(usf_state_t * state, struct pi_controller* pi)
 
     pi->regs[PI_STATUS_REG] |= 1;
     update_count(state);
-    add_interupt_event(state, PI_INT, 0x1000/*pi->regs[PI_RD_LEN_REG]*/);
+    add_interupt_event(state, PI_INT, state->g_delay_pi ? 0x1000/*pi->regs[PI_RD_LEN_REG]*/ : 0);
 }
 
 static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
@@ -77,7 +77,7 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
 
         pi->regs[PI_STATUS_REG] |= 1;
         update_count(state);
-        add_interupt_event(state, PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000);
+        add_interupt_event(state, PI_INT, state->g_delay_pi ? /*pi->regs[PI_WR_LEN_REG]*/0x1000 : 0);
 
         return;
     }
@@ -86,7 +86,7 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
     {
         pi->regs[PI_STATUS_REG] |= 1;
         update_count(state);
-        add_interupt_event(state, PI_INT, 0x1000);
+        add_interupt_event(state, PI_INT, state->g_delay_pi ? 0x1000 : 0);
 
         return;
     }
@@ -102,7 +102,7 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
     {
         pi->regs[PI_STATUS_REG] |= 3;
         update_count(state);
-        add_interupt_event(state, PI_INT, 0);
+        add_interupt_event(state, PI_INT, state->g_delay_pi ? longueur/8 : 0);
 
         return;
     }
@@ -157,7 +157,7 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
 
     pi->regs[PI_STATUS_REG] |= 3;
     update_count(state);
-    add_interupt_event(state, PI_INT, 0);
+    add_interupt_event(state, PI_INT, state->g_delay_pi ? longueur/8 : 0);
 
     return;
 }

@@ -503,6 +503,8 @@ static void nmi_int_handler(usf_state_t * state)
 
 void gen_interupt(usf_state_t * state)
 {
+    r4300_checkpoint(state);
+    
     if (state->stop == 1)
     {
         state->g_gs_vi_counter = 0; // debug

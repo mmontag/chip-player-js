@@ -138,7 +138,7 @@ m64p_error main_start(usf_state_t * state)
 
     /* set some other core parameters based on the config file values */
     state->no_compiled_jump = 0;
-    state->g_delay_si = 1;
+    //state->g_delay_si = 1;
     disable_extra_mem = RDRAMSize == 0x400000;
     state->count_per_op = COUNT_PER_OP_DEFAULT;
     if (state->count_per_op <= 0)
@@ -149,7 +149,7 @@ m64p_error main_start(usf_state_t * state)
                 state->g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
                 state->g_rom, state->g_rom_size);
 
-    init_memory(state);
+    init_memory(state, (disable_extra_mem == 0) ? 0x800000 : 0x400000);
 
     /* connect external audio sink to AI component */
     state->g_ai.user_data = state;

@@ -417,6 +417,12 @@ static inline void ja_rj(usf_state_t * state, unsigned char saut)
    put8(state, saut);
 }
 
+static inline void jb_rj(usf_state_t * state, unsigned char saut)
+{
+   put8(state, 0x72);
+   put8(state, saut);
+}
+
 static inline void jae_rj(usf_state_t * state, unsigned char saut)
 {
    put8(state, 0x73);

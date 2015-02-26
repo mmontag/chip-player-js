@@ -100,13 +100,13 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
     if (!(ai->regs[AI_STATUS_REG] & AI_STATUS_FULL))
     {
         remove_event(ai->r4300->state, AI_INT);
-        add_interupt_event(ai->r4300->state, AI_INT, dma->duration);
+        add_interupt_event(ai->r4300->state, AI_INT, ai->r4300->state->g_delay_ai ? dma->duration : 0);
     }
 }
 
 void ai_fifo_queue_int(struct ai_controller* ai)
 {
-    add_interupt_event(ai->r4300->state, AI_INT, get_dma_duration(ai));
+    add_interupt_event(ai->r4300->state, AI_INT, ai->r4300->state->g_delay_ai ? get_dma_duration(ai) : 0);
 }
 
 static void fifo_push(struct ai_controller* ai)

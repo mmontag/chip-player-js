@@ -34,7 +34,7 @@
 
 void reset_hard(usf_state_t * state)
 {
-    init_memory(state);
+    init_memory(state, 0x800000);
     r4300_reset_hard(state);
     r4300_reset_soft(state);
     state->last_addr = 0xa4000040;
