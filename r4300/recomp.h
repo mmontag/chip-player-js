@@ -24,6 +24,8 @@
 
 #include <stddef.h>
 
+#include "osal/preproc.h"
+
 #ifndef PRECOMP_STRUCTS
 #define PRECOMP_STRUCTS
 
@@ -35,7 +37,7 @@
 
 typedef struct _precomp_instr
 {
-   void (*ops)(usf_state_t * state);
+   void (osal_fastcall *ops)(usf_state_t * state);
    union
      {
     struct

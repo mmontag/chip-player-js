@@ -77,10 +77,11 @@ void dyna_start(usf_state_t * state, void *code)
 
      sub esp, 0x10
      and esp, 0xfffffff0
-     mov [esi].return_address, esp
-     sub [esi].return_address, 4
+	 mov [esi].return_address, esp
+	 sub [esi].return_address, 4
 
      call ebx
+
    point2:
      mov esp, [esi].save_esp
      pop edi

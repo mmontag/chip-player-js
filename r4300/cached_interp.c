@@ -43,10 +43,10 @@
 
 #define PCADDR state->PC->addr
 #define ADD_TO_PC(x) state->PC += x;
-#define DECLARE_INSTRUCTION(name) static void name(usf_state_t * state)
+#define DECLARE_INSTRUCTION(name) static void osal_fastcall name(usf_state_t * state)
 
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
-   static void name(usf_state_t * state) \
+   static void osal_fastcall name(usf_state_t * state) \
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
@@ -78,7 +78,7 @@
       state->last_addr = state->PC->addr; \
       if (state->next_interupt <= state->g_cp0_regs[CP0_COUNT_REG]) gen_interupt(state); \
    } \
-   static void name##_OUT(usf_state_t * state) \
+   static void osal_fastcall name##_OUT(usf_state_t * state) \
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
@@ -110,7 +110,7 @@
       state->last_addr = state->PC->addr; \
       if (state->next_interupt <= state->g_cp0_regs[CP0_COUNT_REG]) gen_interupt(state); \
    } \
-   static void name##_IDLE(usf_state_t * state) \
+   static void osal_fastcall name##_IDLE(usf_state_t * state) \
    { \
       const int take_jump = (condition); \
       int skip; \
@@ -134,8 +134,8 @@
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning
 #if defined(__GNUC__)
-  static void JR_IDLE(usf_state_t *) __attribute__((used));
-  static void JALR_IDLE(usf_state_t *) __attribute__((used));
+  static void osal_fastcall JR_IDLE(usf_state_t *) __attribute__((used));
+  static void osal_fastcall JALR_IDLE(usf_state_t *) __attribute__((used));
 #endif
 
 #include "interpreter.def"
@@ -143,7 +143,7 @@
 // -----------------------------------------------------------
 // Flow control 'fake' instructions
 // -----------------------------------------------------------
-static void FIN_BLOCK(usf_state_t * state)
+static void osal_fastcall FIN_BLOCK(usf_state_t * state)
 {
    if (!state->delay_slot)
      {
@@ -180,7 +180,7 @@ Used by dynarec only, check should be unnecessary
      }
 }
 
-static void NOTCOMPILED(usf_state_t * state)
+static void osal_fastcall NOTCOMPILED(usf_state_t * state)
 {
    unsigned int *mem = fast_mem_access(state, state->blocks[state->PC->addr>>12]->start);
 
@@ -200,7 +200,7 @@ called before NOTCOMPILED would have been executed
      dyna_jump(state);
 }
 
-static void NOTCOMPILED2(usf_state_t * state)
+static void osal_fastcall NOTCOMPILED2(usf_state_t * state)
 {
    NOTCOMPILED(state);
 }
@@ -488,7 +488,7 @@ const cpu_instruction_table cached_interpreter_table = {
    NOTCOMPILED2
 };
 
-static unsigned int update_invalid_addr(usf_state_t * state, unsigned int addr)
+static unsigned int osal_fastcall update_invalid_addr(usf_state_t * state, unsigned int addr)
 {
    if (addr >= 0x80000000 && addr < 0xc0000000)
      {
@@ -513,7 +513,7 @@ static unsigned int update_invalid_addr(usf_state_t * state, unsigned int addr)
 }
 
 #define addr state->jump_to_address
-void jump_to_func(usf_state_t * state)
+void osal_fastcall jump_to_func(usf_state_t * state)
 {
    unsigned int paddr;
    if (state->skip_jump) return;
@@ -541,7 +541,7 @@ void jump_to_func(usf_state_t * state)
 }
 #undef addr
 
-void init_blocks(usf_state_t * state)
+void osal_fastcall init_blocks(usf_state_t * state)
 {
    int i;
    for (i=0; i<0x100000; i++)
@@ -551,7 +551,7 @@ void init_blocks(usf_state_t * state)
    }
 }
 
-void free_blocks(usf_state_t * state)
+void osal_fastcall free_blocks(usf_state_t * state)
 {
    int i;
    for (i=0; i<0x100000; i++)

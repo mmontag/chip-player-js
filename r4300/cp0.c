@@ -39,7 +39,7 @@
 #endif
 
 /* global functions */
-int check_cop1_unusable(usf_state_t * state)
+int osal_fastcall check_cop1_unusable(usf_state_t * state)
 {
    if (!(state->g_cp0_regs[CP0_STATUS_REG] & 0x20000000))
      {

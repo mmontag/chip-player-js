@@ -61,8 +61,8 @@
 
 #include "osal/preproc.h"
 
-typedef int (*readfn)(void*,uint32_t,uint32_t*);
-typedef int (*writefn)(void*,uint32_t,uint32_t,uint32_t);
+typedef int (*readfn)(void*, uint32_t, uint32_t*);
+typedef int (*writefn)(void*, uint32_t, uint32_t, uint32_t);
 
 static osal_inline unsigned int bshift(uint32_t address)
 {
@@ -147,7 +147,7 @@ static int writed(writefn write_word, void* opaque, uint32_t address, uint64_t v
 }
 
 
-static void invalidate_code(usf_state_t * state, uint32_t address)
+static void osal_fastcall invalidate_code(usf_state_t * state, uint32_t address)
 {
     if (state->r4300emu != CORE_PURE_INTERPRETER && !state->invalid_code[address>>12])
         if (state->blocks[address>>12]->block[(address&0xFFF)/4].ops !=
@@ -156,71 +156,71 @@ static void invalidate_code(usf_state_t * state, uint32_t address)
 }
 
 
-static void read_nothing(usf_state_t * state)
+static void osal_fastcall read_nothing(usf_state_t * state)
 {
     *state->rdword = 0;
 }
 
-static void read_nothingb(usf_state_t * state)
+static void osal_fastcall read_nothingb(usf_state_t * state)
 {
     *state->rdword = 0;
 }
 
-static void read_nothingh(usf_state_t * state)
+static void osal_fastcall read_nothingh(usf_state_t * state)
 {
     *state->rdword = 0;
 }
 
-static void read_nothingd(usf_state_t * state)
+static void osal_fastcall read_nothingd(usf_state_t * state)
 {
     *state->rdword = 0;
 }
 
-static void write_nothing(usf_state_t * state)
+static void osal_fastcall write_nothing(usf_state_t * state)
 {
 }
 
-static void write_nothingb(usf_state_t * state)
+static void osal_fastcall write_nothingb(usf_state_t * state)
 {
 }
 
-static void write_nothingh(usf_state_t * state)
+static void osal_fastcall write_nothingh(usf_state_t * state)
 {
 }
 
-static void write_nothingd(usf_state_t * state)
+static void osal_fastcall write_nothingd(usf_state_t * state)
 {
 }
 
-static void read_nomem(usf_state_t * state)
+static void osal_fastcall read_nomem(usf_state_t * state)
 {
     state->address = virtual_to_physical_address(state,state->address,0);
     if (state->address == 0x00000000) return;
     read_word_in_memory();
 }
 
-static void read_nomemb(usf_state_t * state)
+static void osal_fastcall read_nomemb(usf_state_t * state)
 {
     state->address = virtual_to_physical_address(state,state->address,0);
     if (state->address == 0x00000000) return;
     read_byte_in_memory();
 }
 
-static void read_nomemh(usf_state_t * state)
+static void osal_fastcall read_nomemh(usf_state_t * state)
 {
     state->address = virtual_to_physical_address(state,state->address,0);
     if (state->address == 0x00000000) return;
     read_hword_in_memory();
 }
 
-static void read_nomemd(usf_state_t * state)
+static void osal_fastcall read_nomemd(usf_state_t * state)
 {
     state->address = virtual_to_physical_address(state,state->address,0);
     if (state->address == 0x00000000) return;
     read_dword_in_memory();
 }
 
-static void write_nomem(usf_state_t * state)
+static void osal_fastcall write_nomem(usf_state_t * state)
 {
     invalidate_code(state,state->address);
     state->address = virtual_to_physical_address(state,state->address,1);
@@ -228,7 +228,7 @@ static void write_nomem(usf_state_t * state)
     write_word_in_memory();
 }
 
-static void write_nomemb(usf_state_t * state)
+static void osal_fastcall write_nomemb(usf_state_t * state)
 {
     invalidate_code(state,state->address);
     state->address = virtual_to_physical_address(state,state->address,1);
@@ -236,7 +236,7 @@ static void write_nomemb(usf_state_t * state)
     write_byte_in_memory();
 }
 
-static void write_nomemh(usf_state_t * state)
+static void osal_fastcall write_nomemh(usf_state_t * state)
 {
     invalidate_code(state,state->address);
     state->address = virtual_to_physical_address(state,state->address,1);
@@ -244,7 +244,7 @@ static void write_nomemh(usf_state_t * state)
     write_hword_in_memory();
 }
 
-static void write_nomemd(usf_state_t * state)
+static void osal_fastcall write_nomemd(usf_state_t * state)
 {
     invalidate_code(state,state->address);
     state->address = virtual_to_physical_address(state,state->address,1);
@@ -253,601 +253,601 @@ static void write_nomemd(usf_state_t * state)
 }
 
 
-void read_rdram(usf_state_t * state)
+void osal_fastcall read_rdram(usf_state_t * state)
 {
     readw(read_rdram_dram, &state->g_ri, state->address, state->rdword);
 }
 
-void read_rdramb(usf_state_t * state)
+void osal_fastcall read_rdramb(usf_state_t * state)
 {
     readb(read_rdram_dram, &state->g_ri, state->address, state->rdword);
 }
 
-void read_rdramh(usf_state_t * state)
+void osal_fastcall read_rdramh(usf_state_t * state)
 {
     readh(read_rdram_dram, &state->g_ri, state->address, state->rdword);
 }
 
-void read_rdramd(usf_state_t * state)
+void osal_fastcall read_rdramd(usf_state_t * state)
 {
     readd(read_rdram_dram, &state->g_ri, state->address, state->rdword);
 }
 
-void write_rdram(usf_state_t * state)
+void osal_fastcall write_rdram(usf_state_t * state)
 {
     writew(write_rdram_dram, &state->g_ri, state->address, state->cpu_word);
 }
 
-void write_rdramb(usf_state_t * state)
+void osal_fastcall write_rdramb(usf_state_t * state)
 {
     writeb(write_rdram_dram, &state->g_ri, state->address, state->cpu_byte);
 }
 
-void write_rdramh(usf_state_t * state)
+void osal_fastcall write_rdramh(usf_state_t * state)
 {
     writeh(write_rdram_dram, &state->g_ri, state->address, state->cpu_hword);
 }
 
-void write_rdramd(usf_state_t * state)
+void osal_fastcall write_rdramd(usf_state_t * state)
 {
     writed(write_rdram_dram, &state->g_ri, state->address, state->cpu_dword);
 }
 
 
-static void read_rdramreg(usf_state_t * state)
+static void osal_fastcall read_rdramreg(usf_state_t * state)
 {
     readw(read_rdram_regs, &state->g_ri, state->address, state->rdword);
 }
 
-static void read_rdramregb(usf_state_t * state)
+static void osal_fastcall read_rdramregb(usf_state_t * state)
 {
     readb(read_rdram_regs, &state->g_ri, state->address, state->rdword);
 }
 
-static void read_rdramregh(usf_state_t * state)
+static void osal_fastcall read_rdramregh(usf_state_t * state)
 {
     readh(read_rdram_regs, &state->g_ri, state->address, state->rdword);
 }
 
-static void read_rdramregd(usf_state_t * state)
+static void osal_fastcall read_rdramregd(usf_state_t * state)
 {
     readd(read_rdram_regs, &state->g_ri, state->address, state->rdword);
 }
 
-static void write_rdramreg(usf_state_t * state)
+static void osal_fastcall write_rdramreg(usf_state_t * state)
 {
     writew(write_rdram_regs, &state->g_ri, state->address, state->cpu_word);
 }
 
-static void write_rdramregb(usf_state_t * state)
+static void osal_fastcall write_rdramregb(usf_state_t * state)
 {
     writeb(write_rdram_regs, &state->g_ri, state->address, state->cpu_byte);
 }
 
-static void write_rdramregh(usf_state_t * state)
+static void osal_fastcall write_rdramregh(usf_state_t * state)
 {
     writeh(write_rdram_regs, &state->g_ri, state->address, state->cpu_hword);
 }
 
-static void write_rdramregd(usf_state_t * state)
+static void osal_fastcall write_rdramregd(usf_state_t * state)
 {
     writed(write_rdram_regs, &state->g_ri, state->address, state->cpu_dword);
 }
 
 
-static void read_rspmem(usf_state_t * state)
+static void osal_fastcall read_rspmem(usf_state_t * state)
 {
     readw(read_rsp_mem, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspmemb(usf_state_t * state)
+static void osal_fastcall read_rspmemb(usf_state_t * state)
 {
     readb(read_rsp_mem, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspmemh(usf_state_t * state)
+static void osal_fastcall read_rspmemh(usf_state_t * state)
 {
     readh(read_rsp_mem, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspmemd(usf_state_t * state)
+static void osal_fastcall read_rspmemd(usf_state_t * state)
 {
     readd(read_rsp_mem, &state->g_sp, state->address, state->rdword);
 }
 
-static void write_rspmem(usf_state_t * state)
+static void osal_fastcall write_rspmem(usf_state_t * state)
 {
     writew(write_rsp_mem, &state->g_sp, state->address, state->cpu_word);
 }
 
-static void write_rspmemb(usf_state_t * state)
+static void osal_fastcall write_rspmemb(usf_state_t * state)
 {
     writeb(write_rsp_mem, &state->g_sp, state->address, state->cpu_byte);
 }
 
-static void write_rspmemh(usf_state_t * state)
+static void osal_fastcall write_rspmemh(usf_state_t * state)
 {
     writeh(write_rsp_mem, &state->g_sp, state->address, state->cpu_hword);
 }
 
-static void write_rspmemd(usf_state_t * state)
+static void osal_fastcall write_rspmemd(usf_state_t * state)
 {
     writed(write_rsp_mem, &state->g_sp, state->address, state->cpu_dword);
 }
 
 
-static void read_rspreg(usf_state_t * state)
+static void osal_fastcall read_rspreg(usf_state_t * state)
 {
     readw(read_rsp_regs, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspregb(usf_state_t * state)
+static void osal_fastcall read_rspregb(usf_state_t * state)
 {
     readb(read_rsp_regs, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspregh(usf_state_t * state)
+static void osal_fastcall read_rspregh(usf_state_t * state)
 {
     readh(read_rsp_regs, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspregd(usf_state_t * state)
+static void osal_fastcall read_rspregd(usf_state_t * state)
 {
     readd(read_rsp_regs, &state->g_sp, state->address, state->rdword);
 }
 
-static void write_rspreg(usf_state_t * state)
+static void osal_fastcall write_rspreg(usf_state_t * state)
 {
     writew(write_rsp_regs, &state->g_sp, state->address, state->cpu_word);
 }
 
-static void write_rspregb(usf_state_t * state)
+static void osal_fastcall write_rspregb(usf_state_t * state)
 {
     writeb(write_rsp_regs, &state->g_sp, state->address, state->cpu_byte);
 }
 
-static void write_rspregh(usf_state_t * state)
+static void osal_fastcall write_rspregh(usf_state_t * state)
 {
     writeh(write_rsp_regs, &state->g_sp, state->address, state->cpu_hword);
 }
 
-static void write_rspregd(usf_state_t * state)
+static void osal_fastcall write_rspregd(usf_state_t * state)
 {
     writed(write_rsp_regs, &state->g_sp, state->address, state->cpu_dword);
 }
 
 
-static void read_rspreg2(usf_state_t * state)
+static void osal_fastcall read_rspreg2(usf_state_t * state)
 {
     readw(read_rsp_regs2, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspreg2b(usf_state_t * state)
+static void osal_fastcall read_rspreg2b(usf_state_t * state)
 {
     readb(read_rsp_regs2, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspreg2h(usf_state_t * state)
+static void osal_fastcall read_rspreg2h(usf_state_t * state)
 {
     readh(read_rsp_regs2, &state->g_sp, state->address, state->rdword);
 }
 
-static void read_rspreg2d(usf_state_t * state)
+static void osal_fastcall read_rspreg2d(usf_state_t * state)
 {
     readd(read_rsp_regs2, &state->g_sp, state->address, state->rdword);
 }
 
-static void write_rspreg2(usf_state_t * state)
+static void osal_fastcall write_rspreg2(usf_state_t * state)
 {
     writew(write_rsp_regs2, &state->g_sp, state->address, state->cpu_word);
 }
 
-static void write_rspreg2b(usf_state_t * state)
+static void osal_fastcall write_rspreg2b(usf_state_t * state)
 {
     writeb(write_rsp_regs2, &state->g_sp, state->address, state->cpu_byte);
 }
 
-static void write_rspreg2h(usf_state_t * state)
+static void osal_fastcall write_rspreg2h(usf_state_t * state)
 {
     writeh(write_rsp_regs2, &state->g_sp, state->address, state->cpu_hword);
 }
 
-static void write_rspreg2d(usf_state_t * state)
+static void osal_fastcall write_rspreg2d(usf_state_t * state)
 {
     writed(write_rsp_regs2, &state->g_sp, state->address, state->cpu_dword);
 }
 
 
-static void read_dp(usf_state_t * state)
+static void osal_fastcall read_dp(usf_state_t * state)
 {
     readw(read_dpc_regs, &state->g_dp, state->address, state->rdword);
 }
 
-static void read_dpb(usf_state_t * state)
+static void osal_fastcall read_dpb(usf_state_t * state)
 {
     readb(read_dpc_regs, &state->g_dp, state->address, state->rdword);
 }
 
-static void read_dph(usf_state_t * state)
+static void osal_fastcall read_dph(usf_state_t * state)
 {
     readh(read_dpc_regs, &state->g_dp, state->address, state->rdword);
 }
 
-static void read_dpd(usf_state_t * state)
+static void osal_fastcall read_dpd(usf_state_t * state)
 {
     readd(read_dpc_regs, &state->g_dp, state->address, state->rdword);
 }
 
-static void write_dp(usf_state_t * state)
+static void osal_fastcall write_dp(usf_state_t * state)
 {
     writew(write_dpc_regs, &state->g_dp, state->address, state->cpu_word);
 }
 
-static void write_dpb(usf_state_t * state)
+static void osal_fastcall write_dpb(usf_state_t * state)
 {
     writeb(write_dpc_regs, &state->g_dp, state->address, state->cpu_byte);
 }
 
-static void write_dph(usf_state_t * state)
+static void osal_fastcall write_dph(usf_state_t * state)
 {
     writeh(write_dpc_regs, &state->g_dp, state->address, state->cpu_hword);
 }
 
-static void write_dpd(usf_state_t * state)
+static void osal_fastcall write_dpd(usf_state_t * state)
 {
     writed(write_dpc_regs, &state->g_dp, state->address, state->cpu_dword);
 }
 
 
-static void read_dps(usf_state_t * state)
+static void osal_fastcall read_dps(usf_state_t * state)
 {
     readw(read_dps_regs, &state->g_dp, state->address, state->rdword);
 }
 
-static void read_dpsb(usf_state_t * state)
+static void osal_fastcall read_dpsb(usf_state_t * state)
 {
     readb(read_dps_regs, &state->g_dp, state->address, state->rdword);
 }
 
-static void read_dpsh(usf_state_t * state)
+static void osal_fastcall read_dpsh(usf_state_t * state)
 {
     readh(read_dps_regs, &state->g_dp, state->address, state->rdword);
 }
 
-static void read_dpsd(usf_state_t * state)
+static void osal_fastcall read_dpsd(usf_state_t * state)
 {
     readd(read_dps_regs, &state->g_dp, state->address, state->rdword);
 }
 
-static void write_dps(usf_state_t * state)
+static void osal_fastcall write_dps(usf_state_t * state)
 {
     writew(write_dps_regs, &state->g_dp, state->address, state->cpu_word);
 }
 
-static void write_dpsb(usf_state_t * state)
+static void osal_fastcall write_dpsb(usf_state_t * state)
 {
     writeb(write_dps_regs, &state->g_dp, state->address, state->cpu_byte);
 }
 
-static void write_dpsh(usf_state_t * state)
+static void osal_fastcall write_dpsh(usf_state_t * state)
 {
     writeh(write_dps_regs, &state->g_dp, state->address, state->cpu_hword);
 }
 
-static void write_dpsd(usf_state_t * state)
+static void osal_fastcall write_dpsd(usf_state_t * state)
 {
     writed(write_dps_regs, &state->g_dp, state->address, state->cpu_dword);
 }
 
 
-static void read_mi(usf_state_t * state)
+static void osal_fastcall read_mi(usf_state_t * state)
 {
     readw(read_mi_regs, &state->g_r4300, state->address, state->rdword);
 }
 
-static void read_mib(usf_state_t * state)
+static void osal_fastcall read_mib(usf_state_t * state)
 {
     readb(read_mi_regs, &state->g_r4300, state->address, state->rdword);
 }
 
-static void read_mih(usf_state_t * state)
+static void osal_fastcall read_mih(usf_state_t * state)
 {
     readh(read_mi_regs, &state->g_r4300, state->address, state->rdword);
 }
 
-static void read_mid(usf_state_t * state)
+static void osal_fastcall read_mid(usf_state_t * state)
 {
     readd(read_mi_regs, &state->g_r4300, state->address, state->rdword);
 }
 
-static void write_mi(usf_state_t * state)
+static void osal_fastcall write_mi(usf_state_t * state)
 {
     writew(write_mi_regs, &state->g_r4300, state->address, state->cpu_word);
 }
 
-static void write_mib(usf_state_t * state)
+static void osal_fastcall write_mib(usf_state_t * state)
 {
     writeb(write_mi_regs, &state->g_r4300, state->address, state->cpu_byte);
 }
 
-static void write_mih(usf_state_t * state)
+static void osal_fastcall write_mih(usf_state_t * state)
 {
     writeh(write_mi_regs, &state->g_r4300, state->address, state->cpu_hword);
 }
 
-static void write_mid(usf_state_t * state)
+static void osal_fastcall write_mid(usf_state_t * state)
 {
     writed(write_mi_regs, &state->g_r4300, state->address, state->cpu_dword);
 }
 
 
-static void read_vi(usf_state_t * state)
+static void osal_fastcall read_vi(usf_state_t * state)
 {
     readw(read_vi_regs, &state->g_vi, state->address, state->rdword);
 }
 
-static void read_vib(usf_state_t * state)
+static void osal_fastcall read_vib(usf_state_t * state)
 {
     readb(read_vi_regs, &state->g_vi, state->address, state->rdword);
 }
 
-static void read_vih(usf_state_t * state)
+static void osal_fastcall read_vih(usf_state_t * state)
 {
     readh(read_vi_regs, &state->g_vi, state->address, state->rdword);
 }
 
-static void read_vid(usf_state_t * state)
+static void osal_fastcall read_vid(usf_state_t * state)
 {
     readd(read_vi_regs, &state->g_vi, state->address, state->rdword);
 }
 
-static void write_vi(usf_state_t * state)
+static void osal_fastcall write_vi(usf_state_t * state)
 {
     writew(write_vi_regs, &state->g_vi, state->address, state->cpu_word);
 }
 
-static void write_vib(usf_state_t * state)
+static void osal_fastcall write_vib(usf_state_t * state)
 {
     writeb(write_vi_regs, &state->g_vi, state->address, state->cpu_byte);
 }
 
-static void write_vih(usf_state_t * state)
+static void osal_fastcall write_vih(usf_state_t * state)
 {
     writeh(write_vi_regs, &state->g_vi, state->address, state->cpu_hword);
 }
 
-static void write_vid(usf_state_t * state)
+static void osal_fastcall write_vid(usf_state_t * state)
 {
     writed(write_vi_regs, &state->g_vi, state->address, state->cpu_dword);
 }
 
 
-static void read_ai(usf_state_t * state)
+static void osal_fastcall read_ai(usf_state_t * state)
 {
     readw(read_ai_regs, &state->g_ai, state->address, state->rdword);
 }
 
-static void read_aib(usf_state_t * state)
+static void osal_fastcall read_aib(usf_state_t * state)
 {
     readb(read_ai_regs, &state->g_ai, state->address, state->rdword);
 }
 
-static void read_aih(usf_state_t * state)
+static void osal_fastcall read_aih(usf_state_t * state)
 {
     readh(read_ai_regs, &state->g_ai, state->address, state->rdword);
 }
 
-static void read_aid(usf_state_t * state)
+static void osal_fastcall read_aid(usf_state_t * state)
 {
     readd(read_ai_regs, &state->g_ai, state->address, state->rdword);
 }
 
-static void write_ai(usf_state_t * state)
+static void osal_fastcall write_ai(usf_state_t * state)
 {
     writew(write_ai_regs, &state->g_ai, state->address, state->cpu_word);
 }
 
-static void write_aib(usf_state_t * state)
+static void osal_fastcall write_aib(usf_state_t * state)
 {
     writeb(write_ai_regs, &state->g_ai, state->address, state->cpu_byte);
 }
 
-static void write_aih(usf_state_t * state)
+static void osal_fastcall write_aih(usf_state_t * state)
 {
     writeh(write_ai_regs, &state->g_ai, state->address, state->cpu_hword);
 }
 
-static void write_aid(usf_state_t * state)
+static void osal_fastcall write_aid(usf_state_t * state)
 {
     writed(write_ai_regs, &state->g_ai, state->address, state->cpu_dword);
 }
 
 
-static void read_pi(usf_state_t * state)
+static void osal_fastcall read_pi(usf_state_t * state)
 {
     readw(read_pi_regs, &state->g_pi, state->address, state->rdword);
 }
 
-static void read_pib(usf_state_t * state)
+static void osal_fastcall read_pib(usf_state_t * state)
 {
     readb(read_pi_regs, &state->g_pi, state->address, state->rdword);
 }
 
-static void read_pih(usf_state_t * state)
+static void osal_fastcall read_pih(usf_state_t * state)
 {
     readh(read_pi_regs, &state->g_pi, state->address, state->rdword);
 }
 
-static void read_pid(usf_state_t * state)
+static void osal_fastcall read_pid(usf_state_t * state)
 {
     readd(read_pi_regs, &state->g_pi, state->address, state->rdword);
 }
 
-static void write_pi(usf_state_t * state)
+static void osal_fastcall write_pi(usf_state_t * state)
 {
     writew(write_pi_regs, &state->g_pi, state->address, state->cpu_word);
 }
 
-static void write_pib(usf_state_t * state)
+static void osal_fastcall write_pib(usf_state_t * state)
 {
     writeb(write_pi_regs, &state->g_pi, state->address, state->cpu_byte);
 }
 
-static void write_pih(usf_state_t * state)
+static void osal_fastcall write_pih(usf_state_t * state)
 {
     writeh(write_pi_regs, &state->g_pi, state->address, state->cpu_hword);
 }
 
-static void write_pid(usf_state_t * state)
+static void osal_fastcall write_pid(usf_state_t * state)
 {
     writed(write_pi_regs, &state->g_pi, state->address, state->cpu_dword);
 }
 
 
-static void read_ri(usf_state_t * state)
+static void osal_fastcall read_ri(usf_state_t * state)
 {
     readw(read_ri_regs, &state->g_ri, state->address, state->rdword);
 }
 
-static void read_rib(usf_state_t * state)
+static void osal_fastcall read_rib(usf_state_t * state)
 {
     readb(read_ri_regs, &state->g_ri, state->address, state->rdword);
 }
 
-static void read_rih(usf_state_t * state)
+static void osal_fastcall read_rih(usf_state_t * state)
 {
     readh(read_ri_regs, &state->g_ri, state->address, state->rdword);
 }
 
-static void read_rid(usf_state_t * state)
+static void osal_fastcall read_rid(usf_state_t * state)
 {
     readd(read_ri_regs, &state->g_ri, state->address, state->rdword);
 }
 
-static void write_ri(usf_state_t * state)
+static void osal_fastcall write_ri(usf_state_t * state)
 {
     writew(write_ri_regs, &state->g_ri, state->address, state->cpu_word);
 }
 
-static void write_rib(usf_state_t * state)
+static void osal_fastcall write_rib(usf_state_t * state)
 {
     writeb(write_ri_regs, &state->g_ri, state->address, state->cpu_byte);
 }
 
-static void write_rih(usf_state_t * state)
+static void osal_fastcall write_rih(usf_state_t * state)
 {
     writeh(write_ri_regs, &state->g_ri, state->address, state->cpu_hword);
 }
 
-static void write_rid(usf_state_t * state)
+static void osal_fastcall write_rid(usf_state_t * state)
 {
     writed(write_ri_regs, &state->g_ri, state->address, state->cpu_dword);
 }
 
 
-static void read_si(usf_state_t * state)
+static void osal_fastcall read_si(usf_state_t * state)
 {
     readw(read_si_regs, &state->g_si, state->address, state->rdword);
 }
 
-static void read_sib(usf_state_t * state)
+static void osal_fastcall read_sib(usf_state_t * state)
 {
     readb(read_si_regs, &state->g_si, state->address, state->rdword);
 }
 
-static void read_sih(usf_state_t * state)
+static void osal_fastcall read_sih(usf_state_t * state)
 {
     readh(read_si_regs, &state->g_si, state->address, state->rdword);
 }
 
-static void read_sid(usf_state_t * state)
+static void osal_fastcall read_sid(usf_state_t * state)
 {
     readd(read_si_regs, &state->g_si, state->address, state->rdword);
 }
 
-static void write_si(usf_state_t * state)
+static void osal_fastcall write_si(usf_state_t * state)
 {
     writew(write_si_regs, &state->g_si, state->address, state->cpu_word);
 }
 
-static void write_sib(usf_state_t * state)
+static void osal_fastcall write_sib(usf_state_t * state)
 {
     writeb(write_si_regs, &state->g_si, state->address, state->cpu_byte);
 }
 
-static void write_sih(usf_state_t * state)
+static void osal_fastcall write_sih(usf_state_t * state)
 {
     writeh(write_si_regs, &state->g_si, state->address, state->cpu_hword);
 }
 
-static void write_sid(usf_state_t * state)
+static void osal_fastcall write_sid(usf_state_t * state)
 {
     writed(write_si_regs, &state->g_si, state->address, state->cpu_dword);
 }
 
 
-static void read_rom(usf_state_t * state)
+static void osal_fastcall read_rom(usf_state_t * state)
 {
     readw(read_cart_rom, &state->g_pi, state->address, state->rdword);
 }
 
-static void read_romb(usf_state_t * state)
+static void osal_fastcall read_romb(usf_state_t * state)
 {
     readb(read_cart_rom, &state->g_pi, state->address, state->rdword);
 }
 
-static void read_romh(usf_state_t * state)
+static void osal_fastcall read_romh(usf_state_t * state)
 {
     readh(read_cart_rom, &state->g_pi, state->address, state->rdword);
 }
 
-static void read_romd(usf_state_t * state)
+static void osal_fastcall read_romd(usf_state_t * state)
 {
     readd(read_cart_rom, &state->g_pi, state->address, state->rdword);
 }
 
-static void write_rom(usf_state_t * state)
+static void osal_fastcall write_rom(usf_state_t * state)
 {
     writew(write_cart_rom, &state->g_pi, state->address, state->cpu_word);
 }
 
 
-static void read_pif(usf_state_t * state)
+static void osal_fastcall read_pif(usf_state_t * state)
 {
     readw(read_pif_ram, &state->g_si, state->address, state->rdword);
 }
 
-static void read_pifb(usf_state_t * state)
+static void osal_fastcall read_pifb(usf_state_t * state)
 {
     readb(read_pif_ram, &state->g_si, state->address, state->rdword);
 }
 
-static void read_pifh(usf_state_t * state)
+static void osal_fastcall read_pifh(usf_state_t * state)
 {
     readh(read_pif_ram, &state->g_si, state->address, state->rdword);
 }
 
-static void read_pifd(usf_state_t * state)
+static void osal_fastcall read_pifd(usf_state_t * state)
 {
     readd(read_pif_ram, &state->g_si, state->address, state->rdword);
 }
 
-static void write_pif(usf_state_t * state)
+static void osal_fastcall write_pif(usf_state_t * state)
 {
     writew(write_pif_ram, &state->g_si, state->address, state->cpu_word);
 }
 
-static void write_pifb(usf_state_t * state)
+static void osal_fastcall write_pifb(usf_state_t * state)
 {
     writeb(write_pif_ram, &state->g_si, state->address, state->cpu_byte);
 }
 
-static void write_pifh(usf_state_t * state)
+static void osal_fastcall write_pifh(usf_state_t * state)
 {
     writeh(write_pif_ram, &state->g_si, state->address, state->cpu_hword);
 }
 
-static void write_pifd(usf_state_t * state)
+static void osal_fastcall write_pifd(usf_state_t * state)
 {
     writed(write_pif_ram, &state->g_si, state->address, state->cpu_dword);
 }
@@ -869,42 +869,42 @@ static int write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_
     return 0;
 }
 
-static void read_dd(usf_state_t * state)
+static void osal_fastcall read_dd(usf_state_t * state)
 {
     readw(read_dd_regs, NULL, state->address, state->rdword);
 }
 
-static void read_ddb(usf_state_t * state)
+static void osal_fastcall read_ddb(usf_state_t * state)
 {
     readb(read_dd_regs, NULL, state->address, state->rdword);
 }
 
-static void read_ddh(usf_state_t * state)
+static void osal_fastcall read_ddh(usf_state_t * state)
 {
     readh(read_dd_regs, NULL, state->address, state->rdword);
 }
 
-static void read_ddd(usf_state_t * state)
+static void osal_fastcall read_ddd(usf_state_t * state)
 {
     readd(read_dd_regs, NULL, state->address, state->rdword);
 }
 
-static void write_dd(usf_state_t * state)
+static void osal_fastcall write_dd(usf_state_t * state)
 {
     writew(write_dd_regs, NULL, state->address, state->cpu_word);
 }
 
-static void write_ddb(usf_state_t * state)
+static void osal_fastcall write_ddb(usf_state_t * state)
 {
     writeb(write_dd_regs, NULL, state->address, state->cpu_byte);
 }
 
-static void write_ddh(usf_state_t * state)
+static void osal_fastcall write_ddh(usf_state_t * state)
 {
     writeh(write_dd_regs, NULL, state->address, state->cpu_hword);
 }
 
-static void write_ddd(usf_state_t * state)
+static void osal_fastcall write_ddd(usf_state_t * state)
 {
     writed(write_dd_regs, NULL, state->address, state->cpu_dword);
 }
@@ -1101,10 +1101,10 @@ int init_memory(usf_state_t * state, uint32_t rdram_size)
 
 static void map_region_r(usf_state_t * state,
         uint16_t region,
-        void (*read8)(usf_state_t *),
-        void (*read16)(usf_state_t *),
-        void (*read32)(usf_state_t *),
-        void (*read64)(usf_state_t *))
+		void (osal_fastcall *read8)(usf_state_t *),
+		void (osal_fastcall *read16)(usf_state_t *),
+		void (osal_fastcall *read32)(usf_state_t *),
+		void (osal_fastcall *read64)(usf_state_t *))
 {
     {
         state->readmemb[region] = read8;
@@ -1116,10 +1116,10 @@ static void map_region_r(usf_state_t * state,
 
 static void map_region_w(usf_state_t * state,
         uint16_t region,
-        void (*write8)(usf_state_t *),
-        void (*write16)(usf_state_t *),
-        void (*write32)(usf_state_t *),
-        void (*write64)(usf_state_t *))
+		void (osal_fastcall *write8)(usf_state_t *),
+		void (osal_fastcall *write16)(usf_state_t *),
+		void (osal_fastcall *write32)(usf_state_t *),
+		void (osal_fastcall *write64)(usf_state_t *))
 {
     {
         state->writememb[region] = write8;
@@ -1132,21 +1132,21 @@ static void map_region_w(usf_state_t * state,
 void map_region(usf_state_t * state,
                 uint16_t region,
                 int type,
-                void (*read8)(usf_state_t *),
-                void (*read16)(usf_state_t *),
-                void (*read32)(usf_state_t *),
-                void (*read64)(usf_state_t *),
-                void (*write8)(usf_state_t *),
-                void (*write16)(usf_state_t *),
-                void (*write32)(usf_state_t *),
-                void (*write64)(usf_state_t *))
+				void (osal_fastcall *read8)(usf_state_t *),
+				void (osal_fastcall *read16)(usf_state_t *),
+				void (osal_fastcall *read32)(usf_state_t *),
+				void (osal_fastcall *read64)(usf_state_t *),
+				void (osal_fastcall *write8)(usf_state_t *),
+				void (osal_fastcall *write16)(usf_state_t *),
+				void (osal_fastcall *write32)(usf_state_t *),
+				void (osal_fastcall *write64)(usf_state_t *))
 {
     (void)type;
     map_region_r(state, region, read8, read16, read32, read64);
     map_region_w(state, region, write8, write16, write32, write64);
 }
 
-unsigned int *fast_mem_access(usf_state_t * state, unsigned int address)
+unsigned int * osal_fastcall fast_mem_access(usf_state_t * state, unsigned int address)
 {
     /* This code is performance critical, specially on pure interpreter mode.
      * Removing error checking saves some time, but the emulator may crash. */

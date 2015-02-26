@@ -32,7 +32,7 @@ void init_interupt(usf_state_t *);
 // (e.g. in the middle of an instruction)
 void raise_maskable_interrupt(usf_state_t *, uint32_t cause);
 
-void gen_interupt(usf_state_t *);
+void osal_fastcall gen_interupt(usf_state_t *);
 void check_interupt(usf_state_t *);
 
 void translate_event_queue(usf_state_t *, unsigned int base);

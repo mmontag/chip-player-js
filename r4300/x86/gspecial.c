@@ -198,9 +198,8 @@ void genjr(usf_state_t * state)
    mov_m32_reg32(state, &state->jump_to_address, EBX);
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst+1));
    mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
-   push_reg32(state, ESI);
+   mov_reg32_reg32(state, ECX, ESI);
    call_reg32(state, EAX);
-   add_reg32_imm8(state, ESP, 4);
    
    jump_end_rel32(state);
    
@@ -271,9 +270,8 @@ void genjalr(usf_state_t * state)
    mov_m32_reg32(state, &state->jump_to_address, EBX);
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst+1));
    mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
-   push_reg32(state, ESI);
+   mov_reg32_reg32(state, ECX, ESI);
    call_reg32(state, EAX);
-   add_reg32_imm8(state, ESP, 4);
 
    jump_end_rel32(state);
    
@@ -613,10 +611,10 @@ void gendmultu(usf_state_t * state)
    adc_reg32_imm32(state, ECX, 0); // ECX:EBX = result2
    mov_m32_reg32(state, (unsigned int*)(&state->lo)+1, EBX);
    
-   mov_reg32_reg32(state, ESI, EDX); // ESI = temp3>>32
+   mov_reg32_reg32(state, EDI, EDX); // EDI = temp3>>32
    mov_eax_memoffs32(state, (unsigned int *)(state->dst->f.r.rs)+1);
    mul_m32(state, (unsigned int *)(state->dst->f.r.rt)+1);
-   add_reg32_reg32(state, EAX, ESI);
+   add_reg32_reg32(state, EAX, EDI);
    adc_reg32_imm32(state, EDX, 0); // EDX:EAX = temp4
    
    add_reg32_reg32(state, EAX, ECX);

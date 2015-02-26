@@ -37,291 +37,291 @@ typedef struct _cpu_instruction_table
 	 * increase Count until the point where the next interrupt happens. */
 
 	// Load and store instructions
-	void (*LB)(usf_state_t *);
-	void (*LBU)(usf_state_t *);
-	void (*LH)(usf_state_t *);
-	void (*LHU)(usf_state_t *);
-	void (*LW)(usf_state_t *);
-	void (*LWL)(usf_state_t *);
-	void (*LWR)(usf_state_t *);
-	void (*SB)(usf_state_t *);
-	void (*SH)(usf_state_t *);
-	void (*SW)(usf_state_t *);
-	void (*SWL)(usf_state_t *);
-	void (*SWR)(usf_state_t *);
+	void (osal_fastcall *LB)(usf_state_t *);
+	void (osal_fastcall *LBU)(usf_state_t *);
+	void (osal_fastcall *LH)(usf_state_t *);
+	void (osal_fastcall *LHU)(usf_state_t *);
+	void (osal_fastcall *LW)(usf_state_t *);
+	void (osal_fastcall *LWL)(usf_state_t *);
+	void (osal_fastcall *LWR)(usf_state_t *);
+	void (osal_fastcall *SB)(usf_state_t *);
+	void (osal_fastcall *SH)(usf_state_t *);
+	void (osal_fastcall *SW)(usf_state_t *);
+	void (osal_fastcall *SWL)(usf_state_t *);
+	void (osal_fastcall *SWR)(usf_state_t *);
 
-	void (*LD)(usf_state_t *);
-	void (*LDL)(usf_state_t *);
-	void (*LDR)(usf_state_t *);
-	void (*LL)(usf_state_t *);
-	void (*LWU)(usf_state_t *);
-	void (*SC)(usf_state_t *);
-	void (*SD)(usf_state_t *);
-	void (*SDL)(usf_state_t *);
-	void (*SDR)(usf_state_t *);
-	void (*SYNC)(usf_state_t *);
+	void (osal_fastcall *LD)(usf_state_t *);
+	void (osal_fastcall *LDL)(usf_state_t *);
+	void (osal_fastcall *LDR)(usf_state_t *);
+	void (osal_fastcall *LL)(usf_state_t *);
+	void (osal_fastcall *LWU)(usf_state_t *);
+	void (osal_fastcall *SC)(usf_state_t *);
+	void (osal_fastcall *SD)(usf_state_t *);
+	void (osal_fastcall *SDL)(usf_state_t *);
+	void (osal_fastcall *SDR)(usf_state_t *);
+	void (osal_fastcall *SYNC)(usf_state_t *);
 
 	// Arithmetic instructions (ALU immediate)
-	void (*ADDI)(usf_state_t *);
-	void (*ADDIU)(usf_state_t *);
-	void (*SLTI)(usf_state_t *);
-	void (*SLTIU)(usf_state_t *);
-	void (*ANDI)(usf_state_t *);
-	void (*ORI)(usf_state_t *);
-	void (*XORI)(usf_state_t *);
-	void (*LUI)(usf_state_t *);
+	void (osal_fastcall *ADDI)(usf_state_t *);
+	void (osal_fastcall *ADDIU)(usf_state_t *);
+	void (osal_fastcall *SLTI)(usf_state_t *);
+	void (osal_fastcall *SLTIU)(usf_state_t *);
+	void (osal_fastcall *ANDI)(usf_state_t *);
+	void (osal_fastcall *ORI)(usf_state_t *);
+	void (osal_fastcall *XORI)(usf_state_t *);
+	void (osal_fastcall *LUI)(usf_state_t *);
 
-	void (*DADDI)(usf_state_t *);
-	void (*DADDIU)(usf_state_t *);
+	void (osal_fastcall *DADDI)(usf_state_t *);
+	void (osal_fastcall *DADDIU)(usf_state_t *);
 
 	// Arithmetic instructions (3-operand)
-	void (*ADD)(usf_state_t *);
-	void (*ADDU)(usf_state_t *);
-	void (*SUB)(usf_state_t *);
-	void (*SUBU)(usf_state_t *);
-	void (*SLT)(usf_state_t *);
-	void (*SLTU)(usf_state_t *);
-	void (*AND)(usf_state_t *);
-	void (*OR)(usf_state_t *);
-	void (*XOR)(usf_state_t *);
-	void (*NOR)(usf_state_t *);
+	void (osal_fastcall *ADD)(usf_state_t *);
+	void (osal_fastcall *ADDU)(usf_state_t *);
+	void (osal_fastcall *SUB)(usf_state_t *);
+	void (osal_fastcall *SUBU)(usf_state_t *);
+	void (osal_fastcall *SLT)(usf_state_t *);
+	void (osal_fastcall *SLTU)(usf_state_t *);
+	void (osal_fastcall *AND)(usf_state_t *);
+	void (osal_fastcall *OR)(usf_state_t *);
+	void (osal_fastcall *XOR)(usf_state_t *);
+	void (osal_fastcall *NOR)(usf_state_t *);
 
-	void (*DADD)(usf_state_t *);
-	void (*DADDU)(usf_state_t *);
-	void (*DSUB)(usf_state_t *);
-	void (*DSUBU)(usf_state_t *);
+	void (osal_fastcall *DADD)(usf_state_t *);
+	void (osal_fastcall *DADDU)(usf_state_t *);
+	void (osal_fastcall *DSUB)(usf_state_t *);
+	void (osal_fastcall *DSUBU)(usf_state_t *);
 
 	// Multiply and divide instructions
-	void (*MULT)(usf_state_t *);
-	void (*MULTU)(usf_state_t *);
-	void (*DIV)(usf_state_t *);
-	void (*DIVU)(usf_state_t *);
-	void (*MFHI)(usf_state_t *);
-	void (*MTHI)(usf_state_t *);
-	void (*MFLO)(usf_state_t *);
-	void (*MTLO)(usf_state_t *);
+	void (osal_fastcall *MULT)(usf_state_t *);
+	void (osal_fastcall *MULTU)(usf_state_t *);
+	void (osal_fastcall *DIV)(usf_state_t *);
+	void (osal_fastcall *DIVU)(usf_state_t *);
+	void (osal_fastcall *MFHI)(usf_state_t *);
+	void (osal_fastcall *MTHI)(usf_state_t *);
+	void (osal_fastcall *MFLO)(usf_state_t *);
+	void (osal_fastcall *MTLO)(usf_state_t *);
 
-	void (*DMULT)(usf_state_t *);
-	void (*DMULTU)(usf_state_t *);
-	void (*DDIV)(usf_state_t *);
-	void (*DDIVU)(usf_state_t *);
+	void (osal_fastcall *DMULT)(usf_state_t *);
+	void (osal_fastcall *DMULTU)(usf_state_t *);
+	void (osal_fastcall *DDIV)(usf_state_t *);
+	void (osal_fastcall *DDIVU)(usf_state_t *);
 
 	// Jump and branch instructions
-	void (*J)(usf_state_t *);
-	void (*J_OUT)(usf_state_t *);
-	void (*J_IDLE)(usf_state_t *);
-	void (*JAL)(usf_state_t *);
-	void (*JAL_OUT)(usf_state_t *);
-	void (*JAL_IDLE)(usf_state_t *);
-	void (*JR)(usf_state_t *);
-	void (*JALR)(usf_state_t *);
-	void (*BEQ)(usf_state_t *);
-	void (*BEQ_OUT)(usf_state_t *);
-	void (*BEQ_IDLE)(usf_state_t *);
-	void (*BNE)(usf_state_t *);
-	void (*BNE_OUT)(usf_state_t *);
-	void (*BNE_IDLE)(usf_state_t *);
-	void (*BLEZ)(usf_state_t *);
-	void (*BLEZ_OUT)(usf_state_t *);
-	void (*BLEZ_IDLE)(usf_state_t *);
-	void (*BGTZ)(usf_state_t *);
-	void (*BGTZ_OUT)(usf_state_t *);
-	void (*BGTZ_IDLE)(usf_state_t *);
-	void (*BLTZ)(usf_state_t *);
-	void (*BLTZ_OUT)(usf_state_t *);
-	void (*BLTZ_IDLE)(usf_state_t *);
-	void (*BGEZ)(usf_state_t *);
-	void (*BGEZ_OUT)(usf_state_t *);
-	void (*BGEZ_IDLE)(usf_state_t *);
-	void (*BLTZAL)(usf_state_t *);
-	void (*BLTZAL_OUT)(usf_state_t *);
-	void (*BLTZAL_IDLE)(usf_state_t *);
-	void (*BGEZAL)(usf_state_t *);
-	void (*BGEZAL_OUT)(usf_state_t *);
-	void (*BGEZAL_IDLE)(usf_state_t *);
+	void (osal_fastcall *J)(usf_state_t *);
+	void (osal_fastcall *J_OUT)(usf_state_t *);
+	void (osal_fastcall *J_IDLE)(usf_state_t *);
+	void (osal_fastcall *JAL)(usf_state_t *);
+	void (osal_fastcall *JAL_OUT)(usf_state_t *);
+	void (osal_fastcall *JAL_IDLE)(usf_state_t *);
+	void (osal_fastcall *JR)(usf_state_t *);
+	void (osal_fastcall *JALR)(usf_state_t *);
+	void (osal_fastcall *BEQ)(usf_state_t *);
+	void (osal_fastcall *BEQ_OUT)(usf_state_t *);
+	void (osal_fastcall *BEQ_IDLE)(usf_state_t *);
+	void (osal_fastcall *BNE)(usf_state_t *);
+	void (osal_fastcall *BNE_OUT)(usf_state_t *);
+	void (osal_fastcall *BNE_IDLE)(usf_state_t *);
+	void (osal_fastcall *BLEZ)(usf_state_t *);
+	void (osal_fastcall *BLEZ_OUT)(usf_state_t *);
+	void (osal_fastcall *BLEZ_IDLE)(usf_state_t *);
+	void (osal_fastcall *BGTZ)(usf_state_t *);
+	void (osal_fastcall *BGTZ_OUT)(usf_state_t *);
+	void (osal_fastcall *BGTZ_IDLE)(usf_state_t *);
+	void (osal_fastcall *BLTZ)(usf_state_t *);
+	void (osal_fastcall *BLTZ_OUT)(usf_state_t *);
+	void (osal_fastcall *BLTZ_IDLE)(usf_state_t *);
+	void (osal_fastcall *BGEZ)(usf_state_t *);
+	void (osal_fastcall *BGEZ_OUT)(usf_state_t *);
+	void (osal_fastcall *BGEZ_IDLE)(usf_state_t *);
+	void (osal_fastcall *BLTZAL)(usf_state_t *);
+	void (osal_fastcall *BLTZAL_OUT)(usf_state_t *);
+	void (osal_fastcall *BLTZAL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BGEZAL)(usf_state_t *);
+	void (osal_fastcall *BGEZAL_OUT)(usf_state_t *);
+	void (osal_fastcall *BGEZAL_IDLE)(usf_state_t *);
 
-	void (*BEQL)(usf_state_t *);
-	void (*BEQL_OUT)(usf_state_t *);
-	void (*BEQL_IDLE)(usf_state_t *);
-	void (*BNEL)(usf_state_t *);
-	void (*BNEL_OUT)(usf_state_t *);
-	void (*BNEL_IDLE)(usf_state_t *);
-	void (*BLEZL)(usf_state_t *);
-	void (*BLEZL_OUT)(usf_state_t *);
-	void (*BLEZL_IDLE)(usf_state_t *);
-	void (*BGTZL)(usf_state_t *);
-	void (*BGTZL_OUT)(usf_state_t *);
-	void (*BGTZL_IDLE)(usf_state_t *);
-	void (*BLTZL)(usf_state_t *);
-	void (*BLTZL_OUT)(usf_state_t *);
-	void (*BLTZL_IDLE)(usf_state_t *);
-	void (*BGEZL)(usf_state_t *);
-	void (*BGEZL_OUT)(usf_state_t *);
-	void (*BGEZL_IDLE)(usf_state_t *);
-	void (*BLTZALL)(usf_state_t *);
-	void (*BLTZALL_OUT)(usf_state_t *);
-	void (*BLTZALL_IDLE)(usf_state_t *);
-	void (*BGEZALL)(usf_state_t *);
-	void (*BGEZALL_OUT)(usf_state_t *);
-	void (*BGEZALL_IDLE)(usf_state_t *);
-	void (*BC1TL)(usf_state_t *);
-	void (*BC1TL_OUT)(usf_state_t *);
-	void (*BC1TL_IDLE)(usf_state_t *);
-	void (*BC1FL)(usf_state_t *);
-	void (*BC1FL_OUT)(usf_state_t *);
-	void (*BC1FL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BEQL)(usf_state_t *);
+	void (osal_fastcall *BEQL_OUT)(usf_state_t *);
+	void (osal_fastcall *BEQL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BNEL)(usf_state_t *);
+	void (osal_fastcall *BNEL_OUT)(usf_state_t *);
+	void (osal_fastcall *BNEL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BLEZL)(usf_state_t *);
+	void (osal_fastcall *BLEZL_OUT)(usf_state_t *);
+	void (osal_fastcall *BLEZL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BGTZL)(usf_state_t *);
+	void (osal_fastcall *BGTZL_OUT)(usf_state_t *);
+	void (osal_fastcall *BGTZL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BLTZL)(usf_state_t *);
+	void (osal_fastcall *BLTZL_OUT)(usf_state_t *);
+	void (osal_fastcall *BLTZL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BGEZL)(usf_state_t *);
+	void (osal_fastcall *BGEZL_OUT)(usf_state_t *);
+	void (osal_fastcall *BGEZL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BLTZALL)(usf_state_t *);
+	void (osal_fastcall *BLTZALL_OUT)(usf_state_t *);
+	void (osal_fastcall *BLTZALL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BGEZALL)(usf_state_t *);
+	void (osal_fastcall *BGEZALL_OUT)(usf_state_t *);
+	void (osal_fastcall *BGEZALL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BC1TL)(usf_state_t *);
+	void (osal_fastcall *BC1TL_OUT)(usf_state_t *);
+	void (osal_fastcall *BC1TL_IDLE)(usf_state_t *);
+	void (osal_fastcall *BC1FL)(usf_state_t *);
+	void (osal_fastcall *BC1FL_OUT)(usf_state_t *);
+	void (osal_fastcall *BC1FL_IDLE)(usf_state_t *);
 
 	// Shift instructions
-	void (*SLL)(usf_state_t *);
-	void (*SRL)(usf_state_t *);
-	void (*SRA)(usf_state_t *);
-	void (*SLLV)(usf_state_t *);
-	void (*SRLV)(usf_state_t *);
-	void (*SRAV)(usf_state_t *);
+	void (osal_fastcall *SLL)(usf_state_t *);
+	void (osal_fastcall *SRL)(usf_state_t *);
+	void (osal_fastcall *SRA)(usf_state_t *);
+	void (osal_fastcall *SLLV)(usf_state_t *);
+	void (osal_fastcall *SRLV)(usf_state_t *);
+	void (osal_fastcall *SRAV)(usf_state_t *);
 
-	void (*DSLL)(usf_state_t *);
-	void (*DSRL)(usf_state_t *);
-	void (*DSRA)(usf_state_t *);
-	void (*DSLLV)(usf_state_t *);
-	void (*DSRLV)(usf_state_t *);
-	void (*DSRAV)(usf_state_t *);
-	void (*DSLL32)(usf_state_t *);
-	void (*DSRL32)(usf_state_t *);
-	void (*DSRA32)(usf_state_t *);
+	void (osal_fastcall *DSLL)(usf_state_t *);
+	void (osal_fastcall *DSRL)(usf_state_t *);
+	void (osal_fastcall *DSRA)(usf_state_t *);
+	void (osal_fastcall *DSLLV)(usf_state_t *);
+	void (osal_fastcall *DSRLV)(usf_state_t *);
+	void (osal_fastcall *DSRAV)(usf_state_t *);
+	void (osal_fastcall *DSLL32)(usf_state_t *);
+	void (osal_fastcall *DSRL32)(usf_state_t *);
+	void (osal_fastcall *DSRA32)(usf_state_t *);
 
 	// COP0 instructions
-	void (*MTC0)(usf_state_t *);
-	void (*MFC0)(usf_state_t *);
+	void (osal_fastcall *MTC0)(usf_state_t *);
+	void (osal_fastcall *MFC0)(usf_state_t *);
 
-	void (*TLBR)(usf_state_t *);
-	void (*TLBWI)(usf_state_t *);
-	void (*TLBWR)(usf_state_t *);
-	void (*TLBP)(usf_state_t *);
-	void (*CACHE)(usf_state_t *);
-	void (*ERET)(usf_state_t *);
+	void (osal_fastcall *TLBR)(usf_state_t *);
+	void (osal_fastcall *TLBWI)(usf_state_t *);
+	void (osal_fastcall *TLBWR)(usf_state_t *);
+	void (osal_fastcall *TLBP)(usf_state_t *);
+	void (osal_fastcall *CACHE)(usf_state_t *);
+	void (osal_fastcall *ERET)(usf_state_t *);
 
 	// COP1 instructions
-	void (*LWC1)(usf_state_t *);
-	void (*SWC1)(usf_state_t *);
-	void (*MTC1)(usf_state_t *);
-	void (*MFC1)(usf_state_t *);
-	void (*CTC1)(usf_state_t *);
-	void (*CFC1)(usf_state_t *);
-	void (*BC1T)(usf_state_t *);
-	void (*BC1T_OUT)(usf_state_t *);
-	void (*BC1T_IDLE)(usf_state_t *);
-	void (*BC1F)(usf_state_t *);
-	void (*BC1F_OUT)(usf_state_t *);
-	void (*BC1F_IDLE)(usf_state_t *);
+	void (osal_fastcall *LWC1)(usf_state_t *);
+	void (osal_fastcall *SWC1)(usf_state_t *);
+	void (osal_fastcall *MTC1)(usf_state_t *);
+	void (osal_fastcall *MFC1)(usf_state_t *);
+	void (osal_fastcall *CTC1)(usf_state_t *);
+	void (osal_fastcall *CFC1)(usf_state_t *);
+	void (osal_fastcall *BC1T)(usf_state_t *);
+	void (osal_fastcall *BC1T_OUT)(usf_state_t *);
+	void (osal_fastcall *BC1T_IDLE)(usf_state_t *);
+	void (osal_fastcall *BC1F)(usf_state_t *);
+	void (osal_fastcall *BC1F_OUT)(usf_state_t *);
+	void (osal_fastcall *BC1F_IDLE)(usf_state_t *);
 
-	void (*DMFC1)(usf_state_t *);
-	void (*DMTC1)(usf_state_t *);
-	void (*LDC1)(usf_state_t *);
-	void (*SDC1)(usf_state_t *);
+	void (osal_fastcall *DMFC1)(usf_state_t *);
+	void (osal_fastcall *DMTC1)(usf_state_t *);
+	void (osal_fastcall *LDC1)(usf_state_t *);
+	void (osal_fastcall *SDC1)(usf_state_t *);
 
-	void (*CVT_S_D)(usf_state_t *);
-	void (*CVT_S_W)(usf_state_t *);
-	void (*CVT_S_L)(usf_state_t *);
-	void (*CVT_D_S)(usf_state_t *);
-	void (*CVT_D_W)(usf_state_t *);
-	void (*CVT_D_L)(usf_state_t *);
-	void (*CVT_W_S)(usf_state_t *);
-	void (*CVT_W_D)(usf_state_t *);
-	void (*CVT_L_S)(usf_state_t *);
-	void (*CVT_L_D)(usf_state_t *);
+	void (osal_fastcall *CVT_S_D)(usf_state_t *);
+	void (osal_fastcall *CVT_S_W)(usf_state_t *);
+	void (osal_fastcall *CVT_S_L)(usf_state_t *);
+	void (osal_fastcall *CVT_D_S)(usf_state_t *);
+	void (osal_fastcall *CVT_D_W)(usf_state_t *);
+	void (osal_fastcall *CVT_D_L)(usf_state_t *);
+	void (osal_fastcall *CVT_W_S)(usf_state_t *);
+	void (osal_fastcall *CVT_W_D)(usf_state_t *);
+	void (osal_fastcall *CVT_L_S)(usf_state_t *);
+	void (osal_fastcall *CVT_L_D)(usf_state_t *);
 
-	void (*ROUND_W_S)(usf_state_t *);
-	void (*ROUND_W_D)(usf_state_t *);
-	void (*ROUND_L_S)(usf_state_t *);
-	void (*ROUND_L_D)(usf_state_t *);
+	void (osal_fastcall *ROUND_W_S)(usf_state_t *);
+	void (osal_fastcall *ROUND_W_D)(usf_state_t *);
+	void (osal_fastcall *ROUND_L_S)(usf_state_t *);
+	void (osal_fastcall *ROUND_L_D)(usf_state_t *);
 
-	void (*TRUNC_W_S)(usf_state_t *);
-	void (*TRUNC_W_D)(usf_state_t *);
-	void (*TRUNC_L_S)(usf_state_t *);
-	void (*TRUNC_L_D)(usf_state_t *);
+	void (osal_fastcall *TRUNC_W_S)(usf_state_t *);
+	void (osal_fastcall *TRUNC_W_D)(usf_state_t *);
+	void (osal_fastcall *TRUNC_L_S)(usf_state_t *);
+	void (osal_fastcall *TRUNC_L_D)(usf_state_t *);
 
-	void (*CEIL_W_S)(usf_state_t *);
-	void (*CEIL_W_D)(usf_state_t *);
-	void (*CEIL_L_S)(usf_state_t *);
-	void (*CEIL_L_D)(usf_state_t *);
+	void (osal_fastcall *CEIL_W_S)(usf_state_t *);
+	void (osal_fastcall *CEIL_W_D)(usf_state_t *);
+	void (osal_fastcall *CEIL_L_S)(usf_state_t *);
+	void (osal_fastcall *CEIL_L_D)(usf_state_t *);
 
-	void (*FLOOR_W_S)(usf_state_t *);
-	void (*FLOOR_W_D)(usf_state_t *);
-	void (*FLOOR_L_S)(usf_state_t *);
-	void (*FLOOR_L_D)(usf_state_t *);
+	void (osal_fastcall *FLOOR_W_S)(usf_state_t *);
+	void (osal_fastcall *FLOOR_W_D)(usf_state_t *);
+	void (osal_fastcall *FLOOR_L_S)(usf_state_t *);
+	void (osal_fastcall *FLOOR_L_D)(usf_state_t *);
 
-	void (*ADD_S)(usf_state_t *);
-	void (*ADD_D)(usf_state_t *);
+	void (osal_fastcall *ADD_S)(usf_state_t *);
+	void (osal_fastcall *ADD_D)(usf_state_t *);
 
-	void (*SUB_S)(usf_state_t *);
-	void (*SUB_D)(usf_state_t *);
+	void (osal_fastcall *SUB_S)(usf_state_t *);
+	void (osal_fastcall *SUB_D)(usf_state_t *);
 
-	void (*MUL_S)(usf_state_t *);
-	void (*MUL_D)(usf_state_t *);
+	void (osal_fastcall *MUL_S)(usf_state_t *);
+	void (osal_fastcall *MUL_D)(usf_state_t *);
 
-	void (*DIV_S)(usf_state_t *);
-	void (*DIV_D)(usf_state_t *);
+	void (osal_fastcall *DIV_S)(usf_state_t *);
+	void (osal_fastcall *DIV_D)(usf_state_t *);
 	
-	void (*ABS_S)(usf_state_t *);
-	void (*ABS_D)(usf_state_t *);
+	void (osal_fastcall *ABS_S)(usf_state_t *);
+	void (osal_fastcall *ABS_D)(usf_state_t *);
 
-	void (*MOV_S)(usf_state_t *);
-	void (*MOV_D)(usf_state_t *);
+	void (osal_fastcall *MOV_S)(usf_state_t *);
+	void (osal_fastcall *MOV_D)(usf_state_t *);
 
-	void (*NEG_S)(usf_state_t *);
-	void (*NEG_D)(usf_state_t *);
+	void (osal_fastcall *NEG_S)(usf_state_t *);
+	void (osal_fastcall *NEG_D)(usf_state_t *);
 
-	void (*SQRT_S)(usf_state_t *);
-	void (*SQRT_D)(usf_state_t *);
+	void (osal_fastcall *SQRT_S)(usf_state_t *);
+	void (osal_fastcall *SQRT_D)(usf_state_t *);
 
-	void (*C_F_S)(usf_state_t *);
-	void (*C_F_D)(usf_state_t *);
-	void (*C_UN_S)(usf_state_t *);
-	void (*C_UN_D)(usf_state_t *);
-	void (*C_EQ_S)(usf_state_t *);
-	void (*C_EQ_D)(usf_state_t *);
-	void (*C_UEQ_S)(usf_state_t *);
-	void (*C_UEQ_D)(usf_state_t *);
-	void (*C_OLT_S)(usf_state_t *);
-	void (*C_OLT_D)(usf_state_t *);
-	void (*C_ULT_S)(usf_state_t *);
-	void (*C_ULT_D)(usf_state_t *);
-	void (*C_OLE_S)(usf_state_t *);
-	void (*C_OLE_D)(usf_state_t *);
-	void (*C_ULE_S)(usf_state_t *);
-	void (*C_ULE_D)(usf_state_t *);
-	void (*C_SF_S)(usf_state_t *);
-	void (*C_SF_D)(usf_state_t *);
-	void (*C_NGLE_S)(usf_state_t *);
-	void (*C_NGLE_D)(usf_state_t *);
-	void (*C_SEQ_S)(usf_state_t *);
-	void (*C_SEQ_D)(usf_state_t *);
-	void (*C_NGL_S)(usf_state_t *);
-	void (*C_NGL_D)(usf_state_t *);
-	void (*C_LT_S)(usf_state_t *);
-	void (*C_LT_D)(usf_state_t *);
-	void (*C_NGE_S)(usf_state_t *);
-	void (*C_NGE_D)(usf_state_t *);
-	void (*C_LE_S)(usf_state_t *);
-	void (*C_LE_D)(usf_state_t *);
-	void (*C_NGT_S)(usf_state_t *);
-	void (*C_NGT_D)(usf_state_t *);
+	void (osal_fastcall *C_F_S)(usf_state_t *);
+	void (osal_fastcall *C_F_D)(usf_state_t *);
+	void (osal_fastcall *C_UN_S)(usf_state_t *);
+	void (osal_fastcall *C_UN_D)(usf_state_t *);
+	void (osal_fastcall *C_EQ_S)(usf_state_t *);
+	void (osal_fastcall *C_EQ_D)(usf_state_t *);
+	void (osal_fastcall *C_UEQ_S)(usf_state_t *);
+	void (osal_fastcall *C_UEQ_D)(usf_state_t *);
+	void (osal_fastcall *C_OLT_S)(usf_state_t *);
+	void (osal_fastcall *C_OLT_D)(usf_state_t *);
+	void (osal_fastcall *C_ULT_S)(usf_state_t *);
+	void (osal_fastcall *C_ULT_D)(usf_state_t *);
+	void (osal_fastcall *C_OLE_S)(usf_state_t *);
+	void (osal_fastcall *C_OLE_D)(usf_state_t *);
+	void (osal_fastcall *C_ULE_S)(usf_state_t *);
+	void (osal_fastcall *C_ULE_D)(usf_state_t *);
+	void (osal_fastcall *C_SF_S)(usf_state_t *);
+	void (osal_fastcall *C_SF_D)(usf_state_t *);
+	void (osal_fastcall *C_NGLE_S)(usf_state_t *);
+	void (osal_fastcall *C_NGLE_D)(usf_state_t *);
+	void (osal_fastcall *C_SEQ_S)(usf_state_t *);
+	void (osal_fastcall *C_SEQ_D)(usf_state_t *);
+	void (osal_fastcall *C_NGL_S)(usf_state_t *);
+	void (osal_fastcall *C_NGL_D)(usf_state_t *);
+	void (osal_fastcall *C_LT_S)(usf_state_t *);
+	void (osal_fastcall *C_LT_D)(usf_state_t *);
+	void (osal_fastcall *C_NGE_S)(usf_state_t *);
+	void (osal_fastcall *C_NGE_D)(usf_state_t *);
+	void (osal_fastcall *C_LE_S)(usf_state_t *);
+	void (osal_fastcall *C_LE_D)(usf_state_t *);
+	void (osal_fastcall *C_NGT_S)(usf_state_t *);
+	void (osal_fastcall *C_NGT_D)(usf_state_t *);
 
 	// Special instructions
-	void (*SYSCALL)(usf_state_t *);
-	void (*BREAK)(usf_state_t *);
+	void (osal_fastcall *SYSCALL)(usf_state_t *);
+	void (osal_fastcall *BREAK)(usf_state_t *);
 
 	// Exception instructions
-	void (*TEQ)(usf_state_t *);
+	void (osal_fastcall *TEQ)(usf_state_t *);
 
 	// Emulator helper functions
-	void (*NOP)(usf_state_t *);          // No operation (used to nullify R0 writes)
-	void (*RESERVED)(usf_state_t *);     // Reserved instruction handler
-	void (*NI)(usf_state_t *);	        // Not implemented instruction handler
+	void (osal_fastcall *NOP)(usf_state_t *);          // No operation (used to nullify R0 writes)
+	void (osal_fastcall *RESERVED)(usf_state_t *);     // Reserved instruction handler
+	void (osal_fastcall *NI)(usf_state_t *);	        // Not implemented instruction handler
 
-	void (*FIN_BLOCK)(usf_state_t *);    // Handler for the end of a block
-	void (*NOTCOMPILED)(usf_state_t *);  // Handler for not yet compiled code
-	void (*NOTCOMPILED2)(usf_state_t *); // TODOXXX
+	void (osal_fastcall *FIN_BLOCK)(usf_state_t *);    // Handler for the end of a block
+	void (osal_fastcall *NOTCOMPILED)(usf_state_t *);  // Handler for not yet compiled code
+	void (osal_fastcall *NOTCOMPILED2)(usf_state_t *); // TODOXXX
 } cpu_instruction_table;
 
 #endif /* M64P_R4300_OPS_H_*/

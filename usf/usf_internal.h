@@ -1,6 +1,8 @@
 #ifndef _USF_INTERNAL_H_
 #define _USF_INTERNAL_H_
 
+#include "osal/preproc.h"
+
 #include "main/main.h"
 #include "main/rom.h"
 
@@ -129,7 +131,7 @@ typedef struct _tlb
 
 typedef struct _precomp_instr
 {
-    void (*ops)(usf_state_t * state);
+	void (osal_fastcall *ops)(usf_state_t * state);
     union
     {
         struct
@@ -306,14 +308,14 @@ struct usf_state
     unsigned long long cpu_dword, *rdword;
     uint32_t EmptySpace[0x10000/4];
     
-    void (*readmem[0x10000])(usf_state_t *);
-    void (*readmemb[0x10000])(usf_state_t *);
-    void (*readmemh[0x10000])(usf_state_t *);
-    void (*readmemd[0x10000])(usf_state_t *);
-    void (*writemem[0x10000])(usf_state_t *);
-    void (*writememb[0x10000])(usf_state_t *);
-    void (*writememh[0x10000])(usf_state_t *);
-    void (*writememd[0x10000])(usf_state_t *);
+    void (osal_fastcall *readmem[0x10000])(usf_state_t *);
+	void (osal_fastcall *readmemb[0x10000])(usf_state_t *);
+	void (osal_fastcall *readmemh[0x10000])(usf_state_t *);
+	void (osal_fastcall *readmemd[0x10000])(usf_state_t *);
+	void (osal_fastcall *writemem[0x10000])(usf_state_t *);
+	void (osal_fastcall *writememb[0x10000])(usf_state_t *);
+	void (osal_fastcall *writememh[0x10000])(usf_state_t *);
+	void (osal_fastcall *writememd[0x10000])(usf_state_t *);
 
     // main/rom.c
     unsigned char* g_rom/* = NULL*/;

@@ -113,7 +113,7 @@ void TLB_refill_exception(usf_state_t * state, unsigned int address, int w)
      }
 }
 
-void exception_general(usf_state_t * state)
+void osal_fastcall exception_general(usf_state_t * state)
 {
    update_count(state);
    state->g_cp0_regs[CP0_STATUS_REG] |= 2;

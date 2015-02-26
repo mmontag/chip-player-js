@@ -25,7 +25,7 @@
 #include "usf/usf.h"
 
 void TLB_refill_exception(usf_state_t *, unsigned int addresse, int w);
-void exception_general(usf_state_t *);
+void osal_fastcall exception_general(usf_state_t *);
 
 #endif /* M64P_R4300_EXCEPTION_H */
 

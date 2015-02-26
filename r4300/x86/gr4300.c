@@ -48,27 +48,27 @@ static void genupdate_count(usf_state_t * state, unsigned int addr)
 
 static void gencheck_interupt(usf_state_t * state, unsigned int instr_structure)
 {
+   free_register(state, ECX);
    mov_eax_memoffs32(state, &state->next_interupt);
    cmp_reg32_m32(state, EAX, &state->g_cp0_regs[CP0_COUNT_REG]);
-   ja_rj(state, 21);
+   ja_rj(state, 19);
    mov_m32_imm32(state, (unsigned int*)(&state->PC), instr_structure); // 10
    mov_reg32_imm32(state, EAX, (unsigned int)gen_interupt); // 5
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EAX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
 }
 
 static void gencheck_interupt_out(usf_state_t * state, unsigned int addr)
 {
+   free_register(state, ECX);
    mov_eax_memoffs32(state, &state->next_interupt);
    cmp_reg32_m32(state, EAX, &state->g_cp0_regs[CP0_COUNT_REG]);
-   ja_rj(state, 31);
+   ja_rj(state, 29);
    mov_m32_imm32(state, (unsigned int*)(&state->fake_instr.addr), addr); // 10
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(&state->fake_instr)); // 10
    mov_reg32_imm32(state, EAX, (unsigned int)gen_interupt); // 5
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EAX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
 }
 
 static void genbeq_test(usf_state_t * state)
@@ -301,9 +301,8 @@ void gennotcompiled(usf_state_t * state)
 
     mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst));
     mov_reg32_imm32(state, EAX, (unsigned int)state->current_instruction_table.NOTCOMPILED);
-	push_reg32(state, ESI);
+	mov_reg32_reg32(state, ECX, ESI);
     call_reg32(state, EAX);
-    add_reg32_imm8(state, ESP, 4);
 }
 
 void genlink_subblock(usf_state_t * state)
@@ -320,15 +319,15 @@ void gencallinterp(usf_state_t * state, unsigned long addr, int jump)
      mov_m32_imm32(state, (unsigned int*)(&state->dyna_interp), 1);
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst));
    mov_reg32_imm32(state, EAX, addr);
-   push_reg32(state, ESI);
+   mov_reg32_reg32(state, ECX, ESI);
    call_reg32(state, EAX);
    if (jump)
      {
     mov_m32_imm32(state, (unsigned int*)(&state->dyna_interp), 0);
     mov_reg32_imm32(state, EAX, (unsigned int)dyna_jump);
-    call_reg32(state, EAX);
+	mov_reg32_reg32(state, ECX, ESI);
+	call_reg32(state, EAX);
      }
-    add_reg32_imm8(state, ESP, 4);
 }
 
 void gendelayslot(usf_state_t * state)
@@ -359,15 +358,15 @@ void genfin_block(usf_state_t * state)
 
 void gencheck_interupt_reg(usf_state_t * state) // addr is in EAX
 {
+   free_register(state, ECX);
    mov_reg32_m32(state, EBX, &state->next_interupt);
    cmp_reg32_m32(state, EBX, &state->g_cp0_regs[CP0_COUNT_REG]);
-   ja_rj(state, 26);
+   ja_rj(state, 24);
    mov_memoffs32_eax(state, (unsigned int*)(&state->fake_instr.addr)); // 5
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(&state->fake_instr)); // 10
    mov_reg32_imm32(state, EAX, (unsigned int)gen_interupt); // 5
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EAX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
 }
 
 void gennop(usf_state_t * state)
@@ -419,9 +418,9 @@ void genj_out(usf_state_t * state)
    mov_m32_imm32(state, &state->jump_to_address, naddr);
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst+1));
    mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
-   push_reg32(state, ESI);
+   free_register(state, ECX);
+   mov_reg32_reg32(state, ECX, ESI);
    call_reg32(state, EAX);
-   add_reg32_imm8(state, ESP, 4);
 #endif
 }
 
@@ -508,9 +507,9 @@ void genjal_out(usf_state_t * state)
    mov_m32_imm32(state, &state->jump_to_address, naddr);
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst+1));
    mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
-   push_reg32(state, ESI);
+   free_register(state, ECX);
+   mov_reg32_reg32(state, ECX, ESI);
    call_reg32(state, EAX);
-   add_reg32_imm8(state, ESP, 4);
 #endif
 }
 
@@ -586,9 +585,9 @@ void gentest_out(usf_state_t * state)
    mov_m32_imm32(state, &state->jump_to_address, state->dst->addr + (state->dst-1)->f.i.immediate*4);
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst+1));
    mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
-   push_reg32(state, ESI);
+   free_register(state, ECX);
+   mov_reg32_reg32(state, ECX, ESI);
    call_reg32(state, EAX);
-   add_reg32_imm8(state, ESP, 4);
    
    jump_end_rel32(state);
 
@@ -994,9 +993,9 @@ void gentestl_out(usf_state_t * state)
    mov_m32_imm32(state, &state->jump_to_address, state->dst->addr + (state->dst-1)->f.i.immediate*4);
    mov_m32_imm32(state, (unsigned int*)(&state->PC), (unsigned int)(state->dst+1));
    mov_reg32_imm32(state, EAX, (unsigned int)jump_to_func);
-   push_reg32(state, ESI);
+   free_register(state, ECX);
+   mov_reg32_reg32(state, ECX, ESI);
    call_reg32(state, EAX);
-   add_reg32_imm8(state, ESP, 4);
    
    jump_end_rel32(state);
 
@@ -1269,16 +1268,15 @@ void genlb(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmemb);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdramb);
      }
-   je_rj(state, 51);
+   je_rj(state, 49);
    
    mov_m32_imm32(state, (unsigned int *)&state->PC, (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_imm32(state, (unsigned int *)(&state->rdword), (unsigned int)state->dst->f.i.rt); // 10
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmemb); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    movsx_reg32_m8(state, EAX, (unsigned char *)state->dst->f.i.rt); // 7
    jmp_imm_short(state, 16); // 2
    
@@ -1311,16 +1309,15 @@ void genlh(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmemh);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdramh);
      }
-   je_rj(state, 51);
+   je_rj(state, 49);
    
    mov_m32_imm32(state, (unsigned int *)&state->PC, (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_imm32(state, (unsigned int *)(&state->rdword), (unsigned int)state->dst->f.i.rt); // 10
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmemh); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    movsx_reg32_m16(state, EAX, (unsigned short *)state->dst->f.i.rt); // 7
    jmp_imm_short(state, 16); // 2
    
@@ -1358,16 +1355,15 @@ void genlw(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmem);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdram);
      }
-   je_rj(state, 49);
+   je_rj(state, 47);
    
    mov_m32_imm32(state, (unsigned int *)&state->PC, (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_imm32(state, (unsigned int *)(&state->rdword), (unsigned int)state->dst->f.i.rt); // 10
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmem); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(state->dst->f.i.rt)); // 5
    jmp_imm_short(state, 12); // 2
    
@@ -1399,16 +1395,15 @@ void genlbu(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmemb);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdramb);
      }
-   je_rj(state, 50);
+   je_rj(state, 48);
    
    mov_m32_imm32(state, (unsigned int *)&state->PC, (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_imm32(state, (unsigned int *)(&state->rdword), (unsigned int)state->dst->f.i.rt); // 10
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmemb); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_reg32_m32(state, EAX, (unsigned int *)state->dst->f.i.rt); // 6
    jmp_imm_short(state, 15); // 2
    
@@ -1443,16 +1438,15 @@ void genlhu(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmemh);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdramh);
      }
-   je_rj(state, 50);
+   je_rj(state, 48);
    
    mov_m32_imm32(state, (unsigned int *)&state->PC, (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_imm32(state, (unsigned int *)(&state->rdword), (unsigned int)state->dst->f.i.rt); // 10
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmemh); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_reg32_m32(state, EAX, (unsigned int *)state->dst->f.i.rt); // 6
    jmp_imm_short(state, 15); // 2
    
@@ -1492,16 +1486,15 @@ void genlwu(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmem);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdram);
      }
-   je_rj(state, 49);
+   je_rj(state, 47);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_imm32(state, (unsigned int *)(&state->rdword), (unsigned int)state->dst->f.i.rt); // 10
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmem); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(state->dst->f.i.rt)); // 5
    jmp_imm_short(state, 12); // 2
    
@@ -1536,16 +1529,15 @@ void gensb(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->writememb);
     cmp_reg32_imm32(state, EAX, (unsigned int)write_rdramb);
      }
-   je_rj(state, 45);
+   je_rj(state, 43);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m8_reg8(state, (unsigned char *)(&state->cpu_byte), CL); // 6
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->writememb); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(&state->address)); // 5
    jmp_imm_short(state, 17); // 2
    
@@ -1595,16 +1587,15 @@ void gensh(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->writememh);
     cmp_reg32_imm32(state, EAX, (unsigned int)write_rdramh);
      }
-   je_rj(state, 46);
+   je_rj(state, 44);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m16_reg16(state, (unsigned short *)(&state->cpu_hword), CX); // 7
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->writememh); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(&state->address)); // 5
    jmp_imm_short(state, 18); // 2
    
@@ -1659,16 +1650,15 @@ void gensw(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->writemem);
     cmp_reg32_imm32(state, EAX, (unsigned int)write_rdram);
      }
-   je_rj(state, 45);
+   je_rj(state, 43);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_reg32(state, (unsigned int *)(&state->cpu_word), ECX); // 6
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->writemem); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(&state->address)); // 5
    jmp_imm_short(state, 14); // 2
    
@@ -1745,7 +1735,7 @@ void genlwc1(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmem);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdram);
      }
-   je_rj(state, 46);
+   je_rj(state, 44);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
@@ -1753,9 +1743,8 @@ void genlwc1(usf_state_t * state)
    mov_m32_reg32(state, (unsigned int *)(&state->rdword), EDX); // 6
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmem); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    jmp_imm_short(state, 20); // 2
    
    and_reg32_imm32(state, EBX, 0x7FFFFF); // 6
@@ -1786,7 +1775,7 @@ void genldc1(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmemd);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdramd);
      }
-   je_rj(state, 46);
+   je_rj(state, 44);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
@@ -1794,9 +1783,8 @@ void genldc1(usf_state_t * state)
    mov_m32_reg32(state, (unsigned int *)(&state->rdword), EDX); // 6
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmemd); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    jmp_imm_short(state, 32); // 2
    
    and_reg32_imm32(state, EBX, 0x7FFFFF); // 6
@@ -1833,16 +1821,15 @@ void genld(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->readmemd);
     cmp_reg32_imm32(state, EAX, (unsigned int)read_rdramd);
      }
-   je_rj(state, 55);
+   je_rj(state, 53);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_imm32(state, (unsigned int *)(&state->rdword), (unsigned int)state->dst->f.i.rt); // 10
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->readmemd); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(state->dst->f.i.rt)); // 5
    mov_reg32_m32(state, ECX, (unsigned int *)(state->dst->f.i.rt)+1); // 6
    jmp_imm_short(state, 18); // 2
@@ -1878,16 +1865,15 @@ void genswc1(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->writemem);
     cmp_reg32_imm32(state, EAX, (unsigned int)write_rdram);
      }
-   je_rj(state, 45);
+   je_rj(state, 43);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
    mov_m32_reg32(state, (unsigned int *)(&state->cpu_word), ECX); // 6
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->writemem); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(&state->address)); // 5
    jmp_imm_short(state, 14); // 2
    
@@ -1921,9 +1907,9 @@ void gensdc1(usf_state_t * state)
 #else
    gencheck_cop1_unusable(state);
    
-   mov_reg32_m32(state, ESI, (unsigned int*)(&state->reg_cop1_double[state->dst->f.lf.ft]));
-   mov_reg32_preg32(state, ECX, ESI);
-   mov_reg32_preg32pimm32(state, EDX, ESI, 4);
+   mov_reg32_m32(state, EDI, (unsigned int*)(&state->reg_cop1_double[state->dst->f.lf.ft]));
+   mov_reg32_preg32(state, ECX, EDI);
+   mov_reg32_preg32pimm32(state, EDX, EDI, 4);
    mov_eax_memoffs32(state, (unsigned int *)(&state->reg[state->dst->f.lf.base]));
    add_eax_imm32(state, (int)state->dst->f.lf.offset);
    mov_reg32_reg32(state, EBX, EAX);
@@ -1938,7 +1924,7 @@ void gensdc1(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->writememd);
     cmp_reg32_imm32(state, EAX, (unsigned int)write_rdramd);
      }
-   je_rj(state, 51);
+   je_rj(state, 49);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
@@ -1946,9 +1932,8 @@ void gensdc1(usf_state_t * state)
    mov_m32_reg32(state, (unsigned int *)(&state->cpu_dword)+1, EDX); // 6
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->writememd); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(&state->address)); // 5
    jmp_imm_short(state, 20); // 2
    
@@ -2000,7 +1985,7 @@ void gensd(usf_state_t * state)
     mov_reg32_preg32x4pimm32(state, EAX, EAX, (unsigned int)state->writememd);
     cmp_reg32_imm32(state, EAX, (unsigned int)write_rdramd);
      }
-   je_rj(state, 51);
+   je_rj(state, 49);
    
    mov_m32_imm32(state, (unsigned int *)(&state->PC), (unsigned int)(state->dst+1)); // 10
    mov_m32_reg32(state, (unsigned int *)(&state->address), EBX); // 6
@@ -2008,9 +1993,8 @@ void gensd(usf_state_t * state)
    mov_m32_reg32(state, (unsigned int *)(&state->cpu_dword)+1, EDX); // 6
    shr_reg32_imm8(state, EBX, 16); // 3
    mov_reg32_preg32x4pimm32(state, EBX, EBX, (unsigned int)state->writememd); // 7
-   push_reg32(state, ESI); // 1
+   mov_reg32_reg32(state, ECX, ESI); // 2
    call_reg32(state, EBX); // 2
-   add_reg32_imm8(state, ESP, 4); // 3
    mov_eax_memoffs32(state, (unsigned int *)(&state->address)); // 5
    jmp_imm_short(state, 20); // 2
    

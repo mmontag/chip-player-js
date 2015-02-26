@@ -54,7 +54,7 @@ enum {
     CP0_REGS_COUNT = 32
 };
 
-int check_cop1_unusable(usf_state_t *);
+int osal_fastcall check_cop1_unusable(usf_state_t *);
 void update_count(usf_state_t *);
 
 #endif /* M64P_R4300_CP0_H */

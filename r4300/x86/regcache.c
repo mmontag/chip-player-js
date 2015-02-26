@@ -128,6 +128,10 @@ int lru_register(usf_state_t * state)
          reg = i;
       }
      }
+   if (oldest_access == 0xFFFFFFFF)
+   {
+	   int i = rand();
+   }
    return reg;
 }
 
@@ -143,6 +147,10 @@ int lru_register_exc1(usf_state_t * state, int exc1)
          reg = i;
       }
      }
+   if (oldest_access == 0xFFFFFFFF)
+   {
+	   int i = rand();
+   }
    return reg;
 }
 
@@ -197,6 +205,10 @@ int allocate_register(usf_state_t * state, unsigned int *addr)
       }
      }
    
+   if (oldest_access == 0xFFFFFFFF)
+   {
+	   int i = rand();
+   }
    if (state->last_access[reg]) free_register(state, reg);
    else
      {
@@ -365,6 +377,11 @@ int allocate_register_w(usf_state_t * state, unsigned int *addr)
       }
      }
    
+   if (oldest_access == 0xFFFFFFFF)
+   {
+	   int i = rand();
+   }
+
    if (state->last_access[reg]) free_register(state, reg);
    else
      {

@@ -70,37 +70,37 @@ int init_memory(usf_state_t *, uint32_t rdram_size);
 void map_region(usf_state_t *,
                 uint16_t region,
                 int type,
-                void (*read8)(usf_state_t *),
-                void (*read16)(usf_state_t *),
-                void (*read32)(usf_state_t *),
-                void (*read64)(usf_state_t *),
-                void (*write8)(usf_state_t *),
-                void (*write16)(usf_state_t *),
-                void (*write32)(usf_state_t *),
-                void (*write64)(usf_state_t *));
+				void (osal_fastcall *read8)(usf_state_t *),
+				void (osal_fastcall *read16)(usf_state_t *),
+				void (osal_fastcall *read32)(usf_state_t *),
+				void (osal_fastcall *read64)(usf_state_t *),
+				void (osal_fastcall *write8)(usf_state_t *),
+				void (osal_fastcall *write16)(usf_state_t *),
+				void (osal_fastcall *write32)(usf_state_t *),
+				void (osal_fastcall *write64)(usf_state_t *));
 
 /* XXX: cannot make them static because of dynarec + rdp fb */
-void read_rdram(usf_state_t *);
-void read_rdramb(usf_state_t *);
-void read_rdramh(usf_state_t *);
-void read_rdramd(usf_state_t *);
-void write_rdram(usf_state_t *);
-void write_rdramb(usf_state_t *);
-void write_rdramh(usf_state_t *);
-void write_rdramd(usf_state_t *);
-void read_rdramFB(usf_state_t *);
-void read_rdramFBb(usf_state_t *);
-void read_rdramFBh(usf_state_t *);
-void read_rdramFBd(usf_state_t *);
-void write_rdramFB(usf_state_t *);
-void write_rdramFBb(usf_state_t *);
-void write_rdramFBh(usf_state_t *);
-void write_rdramFBd(usf_state_t *);
+void osal_fastcall read_rdram(usf_state_t *);
+void osal_fastcall read_rdramb(usf_state_t *);
+void osal_fastcall read_rdramh(usf_state_t *);
+void osal_fastcall read_rdramd(usf_state_t *);
+void osal_fastcall write_rdram(usf_state_t *);
+void osal_fastcall write_rdramb(usf_state_t *);
+void osal_fastcall write_rdramh(usf_state_t *);
+void osal_fastcall write_rdramd(usf_state_t *);
+void osal_fastcall read_rdramFB(usf_state_t *);
+void osal_fastcall read_rdramFBb(usf_state_t *);
+void osal_fastcall read_rdramFBh(usf_state_t *);
+void osal_fastcall read_rdramFBd(usf_state_t *);
+void osal_fastcall write_rdramFB(usf_state_t *);
+void osal_fastcall write_rdramFBb(usf_state_t *);
+void osal_fastcall write_rdramFBh(usf_state_t *);
+void osal_fastcall write_rdramFBd(usf_state_t *);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
  * Useful for getting fast access to a zone with executable code. */
-unsigned int *fast_mem_access(usf_state_t *, unsigned int address);
+unsigned int * osal_fastcall fast_mem_access(usf_state_t *, unsigned int address);
 
 #endif
 
