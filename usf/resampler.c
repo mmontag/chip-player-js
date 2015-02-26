@@ -284,7 +284,7 @@ static void resampler_fill_and_remove_delay(resampler * r)
         int delay = resampler_output_delay( r );
         r->delay_removed = 0;
         while ( delay-- )
-            resampler_remove_sample( r, 1 );
+            resampler_remove_sample( r );
     }
 }
 
@@ -317,7 +317,7 @@ void resampler_get_sample(void *_r, short * ls, short * rs)
     }
 }
 
-void resampler_remove_sample(void *_r, int decay)
+void resampler_remove_sample(void *_r)
 {
     resampler * r = ( resampler * ) _r;
     if ( r->read_filled > 0 )

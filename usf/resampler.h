@@ -30,20 +30,6 @@ void resampler_delete(void *);
 void * resampler_dup(const void *);
 void resampler_dup_inplace(void *, const void *);
 
-enum
-{
-    RESAMPLER_QUALITY_MIN = 0,
-    RESAMPLER_QUALITY_ZOH = 0,
-    RESAMPLER_QUALITY_BLEP = 1,
-    RESAMPLER_QUALITY_LINEAR = 2,
-    RESAMPLER_QUALITY_BLAM = 3,
-    RESAMPLER_QUALITY_CUBIC = 4,
-    RESAMPLER_QUALITY_SINC = 5,
-    RESAMPLER_QUALITY_MAX = 5
-};
-
-void resampler_set_quality(void *, int quality);
-
 int resampler_get_free_count(void *);
 void resampler_write_sample(void *, short sample_l, short sample_r);
 void resampler_set_rate( void *, double new_factor );
@@ -51,7 +37,6 @@ int resampler_ready(void *);
 void resampler_clear(void *);
 int resampler_get_sample_count(void *);
 void resampler_get_sample(void *, short * sample_l, short * sample_r);
-float resampler_get_sample_float(void *);
-void resampler_remove_sample(void *, int decay);
+void resampler_remove_sample(void *);
 
 #endif

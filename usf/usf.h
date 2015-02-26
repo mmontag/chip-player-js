@@ -56,6 +56,9 @@ int usf_upload_section(void * state, const uint8_t * data, size_t size);
    Returns 0 on success, or a pointer to the last error message on failure. */
 const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * sample_rate);
 
+/* Same as above, only resampling to the specified rate */
+const char * usf_render_resampled(void * state, int16_t * buffer, size_t count, int32_t sample_rate);
+
 /* Reloads the ROM and save state, effectively restarting emulation. Also
    discards any buffered sample data. */
 void usf_restart(void * state);

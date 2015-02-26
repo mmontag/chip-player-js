@@ -252,7 +252,7 @@ void usf_push_audio_samples(void *opaque, const void * buffer, size_t size)
         DebugMessage(state, 1, "Sample buffer full!");
 }
 
-static const char * usf_render_internal(void * state, int16_t * buffer, size_t count, int32_t * sample_rate)
+const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * sample_rate)
 {
     USF_STATE->last_error = 0;
     USF_STATE->error_message[0] = '\0';
@@ -301,14 +301,23 @@ static const char * usf_render_internal(void * state, int16_t * buffer, size_t c
     return USF_STATE->last_error;
 }
 
-const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * sample_rate)
+const char * usf_render_resampled(void * state, int16_t * buffer, size_t count, int32_t sample_rate)
 {
-    if ( sample_rate )
-        *sample_rate = 44100;
     if ( !buffer )
     {
+        unsigned long samples_buffered = resampler_get_sample_count( USF_STATE->resampler );
         resampler_clear(USF_STATE->resampler);
-        count = (size_t)((uint64_t)count * USF_STATE->SampleRate / 44100);
+        if (samples_buffered)
+        {
+            unsigned long samples_to_remove = samples_buffered;
+            if (samples_to_remove > count)
+                samples_to_remove = count;
+            while (samples_to_remove--)
+                resampler_remove_sample(USF_STATE->resampler);
+            if (!count)
+                return 0;
+        }
+        count = (size_t)((uint64_t)count * USF_STATE->SampleRate / sample_rate);
         if (count > USF_STATE->samples_in_buffer_2)
         {
             count -= USF_STATE->samples_in_buffer_2;
@@ -320,7 +329,7 @@ const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * 
             memmove(USF_STATE->samplebuf2, USF_STATE->samplebuf2 + 8192 - USF_STATE->samples_in_buffer_2 * 2, USF_STATE->samples_in_buffer_2 * sizeof(short) * 2);
             return 0;
         }
-        return usf_render_internal(state, buffer, count, NULL);
+        return usf_render(state, buffer, count, NULL);
     }
     while ( count )
     {
@@ -342,7 +351,7 @@ const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * 
         while ( count && resampler_get_sample_count(USF_STATE->resampler) )
         {
             resampler_get_sample(USF_STATE->resampler, buffer, buffer + 1);
-            resampler_remove_sample(USF_STATE->resampler, 1);
+            resampler_remove_sample(USF_STATE->resampler);
             buffer += 2;
             --count;
         }
@@ -353,13 +362,13 @@ const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * 
         if (USF_STATE->samples_in_buffer_2)
             continue;
     
-        err = usf_render_internal(state, USF_STATE->samplebuf2, 4096, 0);
+        err = usf_render(state, USF_STATE->samplebuf2, 4096, 0);
         if (err)
             return err;
         
         USF_STATE->samples_in_buffer_2 = 4096;
         
-        resampler_set_rate(USF_STATE->resampler, (float)USF_STATE->SampleRate / 44100.0f);
+        resampler_set_rate(USF_STATE->resampler, (float)USF_STATE->SampleRate / (float)sample_rate);
     }
     
     return 0;
