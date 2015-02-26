@@ -272,6 +272,12 @@ void r4300_begin(usf_state_t * state)
     }
 }
 
+void r4300_reset_checkpoint(usf_state_t * state, unsigned int new_cp0_count)
+{
+    unsigned int diff = state->g_cp0_regs[CP0_COUNT_REG] - state->g_timer_checkpoint;
+    state->g_timer_checkpoint = new_cp0_count - diff;
+}
+     
 void r4300_checkpoint(usf_state_t * state)
 {
     if (state->g_cp0_regs[CP0_COUNT_REG] - state->g_timer_checkpoint >= state->count_per_op * 20000000)

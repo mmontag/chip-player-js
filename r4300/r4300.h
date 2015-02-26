@@ -36,6 +36,7 @@ void r4300_begin(usf_state_t *);
 void r4300_execute(usf_state_t *);
 void r4300_end(usf_state_t *);
 
+void r4300_reset_checkpoint(usf_state_t * state, unsigned int new_cp0_count);
 void r4300_checkpoint(usf_state_t *);
 
 /* Jump to the given address. This works for all r4300 emulator, but is slower.
