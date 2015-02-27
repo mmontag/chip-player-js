@@ -85,7 +85,8 @@ void HleCheckInterrupts(void* user_defined)
 
 void HleProcessDlistList(void* user_defined)
 {
-    /* disabled */
+    usf_state_t * state = (usf_state_t *) user_defined;
+    state->g_r4300.mi.regs[MI_INTR_REG] |= MI_INTR_DP;
 }
 
 void HleProcessAlistList(void* user_defined)
