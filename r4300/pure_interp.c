@@ -180,13 +180,10 @@ void InterpretOpcode(usf_state_t * state)
 	uint32_t op = *fast_mem_access(state, state->PC->addr);
 #ifdef DEBUG_INFO
     {
-        const char padding[] = "                ";
         char instr[256];
         char arguments[256];
         r4300_decode_op(op, instr, arguments, state->PC->addr);
-        strcat(instr, padding);
-        instr[16] = '\0';
-        fprintf(state->debug_log, "%08x: %s %s\n", state->PC->addr, instr, arguments);
+        fprintf(state->debug_log, "%08x: %-16s %s\n", state->PC->addr, instr, arguments);
     }
 #endif
 	switch ((op >> 26) & 0x3F) {
