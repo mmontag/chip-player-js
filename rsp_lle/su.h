@@ -46,7 +46,7 @@ NOINLINE static void res_S(usf_state_t * state)
 #define LINK_OFF    (BASE_OFF + 0x004)
 static void set_PC(usf_state_t * state, int address)
 {
-    state->temp_PC = 0x04001000 + (address & 0xFFC);
+    state->temp_PC = (address & 0xFFC);
 #ifndef EMULATE_STATIC_PC
     state->stage = 1;
 #endif

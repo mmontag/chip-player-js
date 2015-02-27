@@ -464,7 +464,7 @@ EX:
                 message( state, "RSP execution presumably caught in an infinite loop", 3 );
                 break;
             }
-            state->g_sp.regs2[SP_PC_REG] = 0x04001000 + PC;
+            state->g_sp.regs2[SP_PC_REG] = PC;
         }
         continue;
 #else
@@ -478,7 +478,7 @@ BRANCH:
         goto EX;
 #endif
     }
-    state->g_sp.regs2[SP_PC_REG] = 0x04001000 | FIT_IMEM(PC);
+    state->g_sp.regs2[SP_PC_REG] = FIT_IMEM(PC);
     if (state->g_sp.regs[SP_STATUS_REG] & 0x00000002) /* normal exit, from executing BREAK */
         return;
     else if (state->g_r4300.mi.regs[MI_INTR_REG] & 0x00000001) /* interrupt set by MTC0 to break */
