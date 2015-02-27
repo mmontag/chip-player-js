@@ -47,6 +47,14 @@ void real_run_rsp(usf_state_t * state, uint32_t cycles)
                 break;
             hle_execute(&state->hle);
             return;
+            
+      /* XXX USF sets should not be processing DLists, but several of them
+         require them at least once to boot properly. And for some reason,
+         with this emulator core, Iconoclast's RSP core is not up to the
+         task of running the DLists, so this HLE will do instead. */
+        case 0x00000001:
+            hle_execute(&state->hle);
+            return;
     }
     run_task(state);
 }
