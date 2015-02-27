@@ -500,6 +500,7 @@ static int savestates_load_pj64(usf_state_t * state, unsigned char * ptr, unsign
     state->g_ai.regs[AI_DACRATE_REG]   = GETDATA(curr, uint32_t);
     state->g_ai.regs[AI_BITRATE_REG]   = GETDATA(curr, uint32_t);
     state->g_ai.samples_format_changed = 1;
+    state->g_ai.regs[AI_STATUS_REG]    = 0; // XXX USF
 
     // pi_register
     state->g_pi.regs[PI_DRAM_ADDR_REG]    = GETDATA(curr, uint32_t);
