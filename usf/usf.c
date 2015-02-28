@@ -377,9 +377,13 @@ const char * usf_render_resampled(void * state, int16_t * buffer, size_t count, 
 void usf_restart(void * state)
 {
     if ( USF_STATE->MemoryState )
-        savestates_load(state, USF_STATE->save_state, USF_STATE->save_state_size, 0);
+    {
+        r4300_end(USF_STATE);
+        USF_STATE->MemoryState = 0;
+    }
     
     USF_STATE->samples_in_buffer = 0;
+    USF_STATE->samples_in_buffer_2 = 0;
     
     resampler_clear(USF_STATE->resampler);
 }
@@ -387,7 +391,6 @@ void usf_restart(void * state)
 void usf_shutdown(void * state)
 {
     r4300_end(USF_STATE);
-    free_blocks(USF_STATE);
     free(USF_STATE->save_state);
     USF_STATE->save_state = 0;
     close_rom(USF_STATE);
