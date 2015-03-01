@@ -398,10 +398,11 @@ void mixer_softmixer(struct context_data *ctx)
 			continue;
 		}
 
-		if (vi->smp < mod->smp)
+		if (vi->smp < mod->smp) {
 			xxs = &mod->xxs[vi->smp];
-		else
+		} else {
 			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
+		}
 
 		lps = xxs->lps;
 		lpe = xxs->lpe;
@@ -411,6 +412,12 @@ void mixer_softmixer(struct context_data *ctx)
 		}
 
 		for (size = s->ticksize; size > 0; ) {
+			int split_noloop = 0;
+
+			if (p->xc_data[vi->chn].split) {
+				split_noloop = 1;
+			}
+
 			/* How many samples we can write before the loop break
 			 * or sample end... */
 			if (vi->pos >= vi->end) {
@@ -478,7 +485,7 @@ void mixer_softmixer(struct context_data *ctx)
 				continue;
 
 			/* First sample loop run */
-			if (~xxs->flg & XMP_SAMPLE_LOOP) {
+			if ((~xxs->flg & XMP_SAMPLE_LOOP) || split_noloop) {
 				anticlick(ctx, voc, 0, 0, buf_pos, size);
 				set_sample_end(ctx, voc, 1);
 				size = 0;

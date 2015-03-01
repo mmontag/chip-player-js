@@ -165,6 +165,13 @@ static void reset_channels(struct context_data *ctx)
 		xc->pan.val = mod->xxc[i].pan;
 		xc->mastervol = mod->xxc[i].vol;
 		xc->filter.cutoff = 0xff;
+		
+		/* Amiga split channel */
+		if (mod->xxc[i].flg & XMP_CHANNEL_SPLIT) {
+			xc->split = ((mod->xxc[i].flg & 0x30) >> 4) + 1;
+		} else {
+			xc->split = 0;
+		}
 	}
 }
 

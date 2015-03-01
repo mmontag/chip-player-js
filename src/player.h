@@ -90,7 +90,7 @@ struct channel_data {
 	int keyoff;		/* Key off counter */
 	int fadeout;		/* Current fadeout (release) value */
 	int ins_fade;		/* Instrument fadeout value */
-	int gliss;		/* Glissando active */
+	int split;		/* Split channel */
 	int volume;		/* Current volume */
 	int gvl;		/* Global volume for instrument for IT */
 
