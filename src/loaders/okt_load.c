@@ -103,13 +103,15 @@ static const int fx[] = {
 static int get_cmod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
-	int i, j, k;
+	int i;
 
 	mod->chn = 0;
 	for (i = 0; i < 4; i++) {
-		j = hio_read16b(f);
-		for (k = ! !j; k >= 0; k--) {
+		if (hio_read16b(f) == 0) {
 			mod->chn++;
+		} else {
+			mod->xxc[mod->chn++].flg |= XMP_CHANNEL_SPLIT |(i << 4);
+			mod->xxc[mod->chn++].flg |= XMP_CHANNEL_SPLIT |(i << 4);
 		}
 	}
 
