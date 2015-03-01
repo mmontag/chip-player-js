@@ -21,11 +21,13 @@ Stable versions
 	- fix sample size limit (reported by Jochen Goernitz)
 	- fix loading of OpenMPT 1.17 IT modules (reported by Dane Bush)
 	- fix sample number limit (reported by Lionel Debroux)
+	- fix Oktalyzer split channel replay (reported by Dennis Lindroos)
 	- fix Oktalyzer sample loop (by Dennis Lindroos)
 	- fix ThePlayer pattern decoding
 	- fix XM loading for MED2XM modules (reported by Lorence Lombardo)
-	- implement IT random volume variation
-	- implement IT random pan variation
+	- add support to Amiga split channel loop and volume setting
+	- add IT random volume variation
+	- add IT random pan variation
 
 4.3.5 (20150207):
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
