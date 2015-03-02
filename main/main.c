@@ -170,7 +170,11 @@ m64p_error main_start(usf_state_t * state)
         return M64ERR_INVALID_STATE;
     
     if (state->enableFIFOfull)
+    {
+        state->g_delay_ai = 1;
         ai_fifo_queue_int(&state->g_ai);
+        state->g_ai.regs[AI_STATUS_REG] |= 0x40000000;
+    }
     
     return M64ERR_SUCCESS;
 }

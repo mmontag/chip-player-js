@@ -501,8 +501,6 @@ static int savestates_load_pj64(usf_state_t * state, unsigned char * ptr, unsign
     state->g_ai.regs[AI_BITRATE_REG]   = GETDATA(curr, uint32_t);
     state->g_ai.samples_format_changed = 1;
     // XXX USF
-    if (state->enableFIFOfull)
-        ai_fifo_queue_int(&state->g_ai);
     state->g_ai.regs[AI_STATUS_REG] = 0;
 
     // pi_register
