@@ -305,9 +305,6 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, xc, chn, e, 0);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
-	if (TEST(NEW_VOL))
-		use_ins_vol = 0;
-
 	if (sub == NULL) {
 		return 0;
 	}
@@ -324,9 +321,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		RESET(OFFSET);
 	}
 
-	if (use_ins_vol) {
+	if (use_ins_vol && !TEST(NEW_VOL)) {
 		xc->volume = sub->vol;
-		SET(NEW_VOL);
 	}
 
 	return 0;
@@ -615,9 +611,6 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, xc, chn, &ev, 0);
 	set_period_ft2(ctx, note, sub, xc, is_toneporta);
 
-	if (TEST(NEW_VOL))
-		use_ins_vol = 0;
-
 	if (sub == NULL) {
 		return 0;
 	}
@@ -643,9 +636,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	if (use_ins_vol) {
+	if (use_ins_vol && !TEST(NEW_VOL)) {
 		xc->volume = sub->vol;
-		SET(NEW_VOL);
 	}
 
 	return 0;
@@ -774,9 +766,6 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, xc, chn, e, 0);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
-	if (TEST(NEW_VOL))
-		use_ins_vol = 0;
-
 	if (sub == NULL) {
 		return 0;
 	}
@@ -786,9 +775,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
-	if (use_ins_vol) {
+	if (use_ins_vol && !TEST(NEW_VOL)) {
 		xc->volume = sub->vol;
-		SET(NEW_VOL);
 	}
 
 	/* ST3: check QUIRK_ST3GVOL only in ST3 event reader */
@@ -1101,10 +1089,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	process_fx(ctx, xc, chn, &ev, 1);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
-	if (TEST(NEW_VOL)) {
-		use_ins_vol = 0;
-	}
-
 	if (sub == NULL) {
 		return 0;
 	}
@@ -1122,7 +1106,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		xc->fadeout = 0x10000;
 	}
 
-	if (use_ins_vol) {
+	if (use_ins_vol && !TEST(NEW_VOL)) {
 		int vol_swing = sub->rvv & 0xff;
 		CLAMP(vol_swing, 0, 100);
 
@@ -1132,7 +1116,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			xc->volume = (xc->volume *
 				(rand() % 65) * vol_swing) / (64 * 100);
 		}
-		SET(NEW_VOL);
 	}
 
 	return 0;
@@ -1276,10 +1259,6 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 	process_fx(ctx, xc, chn, e, 0);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
-	if (TEST(NEW_VOL)) {
-		use_ins_vol = 0;
-	}
-
 	if (sub == NULL) {
 		return 0;
 	}
@@ -1289,9 +1268,8 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 		virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
-	if (use_ins_vol) {
+	if (use_ins_vol && !TEST(NEW_VOL)) {
 		xc->volume = sub->vol;
-		SET(NEW_VOL);
 	}
 
 	return 0;
@@ -1374,7 +1352,6 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	}
 
 	xc->volume = e->vol - 1;
-	SET(NEW_VOL);
 
 	xc->note = note;
 	virt_voicepos(ctx, chn, xc->offset.val);
