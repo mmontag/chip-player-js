@@ -79,7 +79,10 @@ static const int fx[] = {
 	FX_OKT_ARP3,		/* 10 */
 	FX_OKT_ARP4,		/* 11 */
 	FX_OKT_ARP5,		/* 12 */
+#if 0
 	FX_NSLIDE_DN,		/* 13 */
+#endif
+	FX_VOLSET,		/* 13 */
 	NONE,
 	NONE,			/* 15 - filter */
 	NONE,
