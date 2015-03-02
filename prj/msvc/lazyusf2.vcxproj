@@ -80,6 +80,7 @@
     <ClCompile Include="..\..\si\n64_cic_nus_6105.c" />
     <ClCompile Include="..\..\si\pif.c" />
     <ClCompile Include="..\..\si\si_controller.c" />
+    <ClCompile Include="..\..\usf\barray.c" />
     <ClCompile Include="..\..\usf\resampler.c" />
     <ClCompile Include="..\..\usf\usf.c" />
     <ClCompile Include="..\..\vi\vi_controller.c" />
@@ -200,6 +201,7 @@
     <ClInclude Include="..\..\si\pif.h" />
     <ClInclude Include="..\..\si\si_controller.h" />
     <ClInclude Include="..\..\usf\resampler.h" />
+    <ClInclude Include="..\..\usf\barray.h" />
     <ClInclude Include="..\..\usf\usf.h" />
     <ClInclude Include="..\..\usf\usf_internal.h" />
     <ClInclude Include="..\..\vi\vi_controller.h" />

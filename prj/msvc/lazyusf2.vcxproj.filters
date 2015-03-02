@@ -210,6 +210,9 @@
     <ClCompile Include="..\..\usf\resampler.c">
       <Filter>usf</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\usf\barray.c">
+      <Filter>usf</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\usf\usf.c">
       <Filter>usf</Filter>
     </ClCompile>
@@ -591,6 +594,9 @@
       <Filter>si</Filter>
     </ClInclude>
     <ClInclude Include="..\..\usf\resampler.h">
+      <Filter>usf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\usf\barray.h">
       <Filter>usf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\usf\usf.h">
