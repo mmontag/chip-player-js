@@ -1,5 +1,5 @@
 
-CFLAGS = -g -c
+CFLAGS = -c
 
 OBJS_RECOMPILER_32 = r4300/x86/assemble.o r4300/x86/gbc.o r4300/x86/gcop0.o r4300/x86/gcop1.o r4300/x86/gcop1_d.o r4300/x86/gcop1_l.o r4300/x86/gcop1_s.o r4300/x86/gcop1_w.o r4300/x86/gr4300.o r4300/x86/gregimm.o r4300/x86/gspecial.o r4300/x86/gtlb.o r4300/x86/regcache.o r4300/x86/rjump.o
 
@@ -10,13 +10,16 @@ OBJS = ai/ai_controller.o api/callbacks.o main/main.o main/rom.o main/savestates
 OPTS = -O3 -DDYNAREC -I.
 ROPTS = -O3 -DARCH_MIN_SSE2 -I.
 
-all: liblazyusf.a bench
+all: liblazyusf.a bench dumpresampled
 
 liblazyusf.a : $(OBJS)
 	$(AR) rcs $@ $^
 
 bench : test/bench.o liblazyusf.a
-	$(CC) -g -o $@ $^ ../psflib/libpsflib.a -lz
+	$(CC) -o $@ $^ ../psflib/libpsflib.a -lz
+
+dumpresampled : test/dumpresampled.o liblazyusf.a
+	$(CC) -o $@ $^ ../psflib/libpsflib.a -lz
 
 .c.o:
 	$(CC) $(CFLAGS) $(OPTS) -o $@ $*.c
@@ -27,6 +30,9 @@ rsp_lle/rsp.o: rsp_lle/rsp.c
 test/bench.o: test/bench.c
 	$(CC) $(CFLAGS) $(OPTS) -I../psflib -o $@ $^
 
+test/dumpresampled.o: test/dumpresampled.c
+	$(CC) $(CFLAGS) $(OPTS) -I../psflib -o $@ $^
+
 clean:
-	rm -f $(OBJS) liblazyusf.a test/bench.o bench > /dev/null
+	rm -f $(OBJS) liblazyusf.a test/bench.o bench test/dumpresampled.o dumpresampled > /dev/null
 
