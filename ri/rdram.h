@@ -71,4 +71,7 @@ int write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t ma
 int read_rdram_dram(void* opaque, uint32_t address, uint32_t* value);
 int write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
+int read_rdram_dram_tracked(void* opaque, uint32_t address, uint32_t* value);
+int write_rdram_dram_tracked(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
 #endif

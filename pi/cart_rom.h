@@ -48,4 +48,6 @@ void init_cart_rom(struct cart_rom* cart_rom);
 int read_cart_rom(void* opaque, uint32_t address, uint32_t* value);
 int write_cart_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
+int read_cart_rom_tracked(void* opaque, uint32_t address, uint32_t* value);
+
 #endif

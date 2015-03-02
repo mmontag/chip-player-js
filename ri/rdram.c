@@ -21,6 +21,10 @@
 
 #include "usf/usf.h"
 
+#include "usf/usf_internal.h"
+
+#include "usf/barray.h"
+
 #include "rdram.h"
 #include "ri_controller.h"
 
@@ -81,6 +85,34 @@ int write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t ma
 
     masked_write(&ri->rdram.dram[addr], value, mask);
 
+    return 0;
+}
+
+int read_rdram_dram_tracked(void* opaque, uint32_t address, uint32_t* value)
+{
+    usf_state_t* state = (usf_state_t*) opaque;
+    struct ri_controller* ri = &state->g_ri;
+    uint32_t addr = rdram_dram_address(address);
+    
+    if (!bit_array_test(state->barray_ram_written_first, addr / 4))
+        bit_array_set(state->barray_ram_read, addr / 4);
+
+    *value = ri->rdram.dram[addr];
+    
+    return 0;
+}
+
+int write_rdram_dram_tracked(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    usf_state_t* state = (usf_state_t*) opaque;
+    struct ri_controller* ri = &state->g_ri;
+    uint32_t addr = rdram_dram_address(address);
+    
+    if (mask && !bit_array_test(state->barray_ram_read, addr / 4))
+        bit_array_set(state->barray_ram_written_first, addr / 4);
+    
+    masked_write(&ri->rdram.dram[addr], value, mask);
+    
     return 0;
 }
 

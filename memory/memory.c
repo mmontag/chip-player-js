@@ -294,6 +294,47 @@ void osal_fastcall write_rdramd(usf_state_t * state)
 }
 
 
+void osal_fastcall read_rdram_tracked(usf_state_t * state)
+{
+    readw(read_rdram_dram_tracked, state, state->address, state->rdword);
+}
+
+void osal_fastcall read_rdram_trackedb(usf_state_t * state)
+{
+    readb(read_rdram_dram_tracked, state, state->address, state->rdword);
+}
+
+void osal_fastcall read_rdram_trackedh(usf_state_t * state)
+{
+    readh(read_rdram_dram_tracked, state, state->address, state->rdword);
+}
+
+void osal_fastcall read_rdram_trackedd(usf_state_t * state)
+{
+    readd(read_rdram_dram_tracked, state, state->address, state->rdword);
+}
+
+void osal_fastcall write_rdram_tracked(usf_state_t * state)
+{
+    writew(write_rdram_dram_tracked, state, state->address, state->cpu_word);
+}
+
+void osal_fastcall write_rdram_trackedb(usf_state_t * state)
+{
+    writeb(write_rdram_dram_tracked, state, state->address, state->cpu_byte);
+}
+
+void osal_fastcall write_rdram_trackedh(usf_state_t * state)
+{
+    writeh(write_rdram_dram_tracked, state, state->address, state->cpu_hword);
+}
+
+void osal_fastcall write_rdram_trackedd(usf_state_t * state)
+{
+    writed(write_rdram_dram_tracked, state, state->address, state->cpu_dword);
+}
+
+
 static void osal_fastcall read_rdramreg(usf_state_t * state)
 {
     readw(read_rdram_regs, &state->g_ri, state->address, state->rdword);
@@ -812,6 +853,27 @@ static void osal_fastcall write_rom(usf_state_t * state)
 }
 
 
+static void osal_fastcall read_rom_tracked(usf_state_t * state)
+{
+    readw(read_cart_rom_tracked, state, state->address, state->rdword);
+}
+
+static void osal_fastcall read_rom_trackedb(usf_state_t * state)
+{
+    readb(read_cart_rom_tracked, state, state->address, state->rdword);
+}
+
+static void osal_fastcall read_rom_trackedh(usf_state_t * state)
+{
+    readh(read_cart_rom_tracked, state, state->address, state->rdword);
+}
+
+static void osal_fastcall read_rom_trackedd(usf_state_t * state)
+{
+    readd(read_cart_rom_tracked, state, state->address, state->rdword);
+}
+
+
 static void osal_fastcall read_pif(usf_state_t * state)
 {
     readw(read_pif_ram, &state->g_si, state->address, state->rdword);
@@ -924,10 +986,21 @@ int init_memory(usf_state_t * state, uint32_t rdram_size)
     }
 
     /* map RDRAM */
-    for(i = 0; i < /*0x40*/(rdram_size >> 16); ++i)
+    if (state->enable_trimming_mode)
     {
-        map_region(state, 0x8000+i, M64P_MEM_RDRAM, RW(rdram));
-        map_region(state, 0xa000+i, M64P_MEM_RDRAM, RW(rdram));
+        for(i = 0; i < /*0x40*/(rdram_size >> 16); ++i)
+        {
+            map_region(state, 0x8000+i, M64P_MEM_RDRAM, RW(rdram_tracked));
+            map_region(state, 0xa000+i, M64P_MEM_RDRAM, RW(rdram_tracked));
+        }
+    }
+    else
+    {
+        for(i = 0; i < /*0x40*/(rdram_size >> 16); ++i)
+        {
+            map_region(state, 0x8000+i, M64P_MEM_RDRAM, RW(rdram));
+            map_region(state, 0xa000+i, M64P_MEM_RDRAM, RW(rdram));
+        }
     }
     for(i = /*0x40*/(rdram_size >> 16); i < 0x3f0; ++i)
     {
@@ -1060,11 +1133,23 @@ int init_memory(usf_state_t * state, uint32_t rdram_size)
     }
 
     /* map cart ROM */
-    for(i = 0; i < (state->g_rom_size >> 16); ++i)
+    if (state->enable_trimming_mode)
     {
-        map_region(state, 0x9000+i, M64P_MEM_ROM, R(rom), W(nothing));
-        map_region(state, 0xb000+i, M64P_MEM_ROM, R(rom),
-                   write_nothingb, write_nothingh, write_rom, write_nothingd);
+        for(i = 0; i < (state->g_rom_size >> 16); ++i)
+        {
+            map_region(state, 0x9000+i, M64P_MEM_ROM, R(rom_tracked), W(nothing));
+            map_region(state, 0xb000+i, M64P_MEM_ROM, R(rom_tracked),
+                       write_nothingb, write_nothingh, write_rom, write_nothingd);
+        }
+    }
+    else
+    {
+        for(i = 0; i < (state->g_rom_size >> 16); ++i)
+        {
+            map_region(state, 0x9000+i, M64P_MEM_ROM, R(rom), W(nothing));
+            map_region(state, 0xb000+i, M64P_MEM_ROM, R(rom),
+                       write_nothingb, write_nothingh, write_rom, write_nothingd);
+        }
     }
     for(i = (state->g_rom_size >> 16); i < 0xfc0; ++i)
     {

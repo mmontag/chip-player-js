@@ -21,6 +21,10 @@
 
 #include "usf/usf.h"
 
+#include "usf/usf_internal.h"
+
+#include "usf/barray.h"
+
 #include "cart_rom.h"
 #include "pi_controller.h"
 
@@ -60,6 +64,28 @@ int write_cart_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     struct pi_controller* pi = (struct pi_controller*)opaque;
     pi->cart_rom.last_write = value & mask;
 
+    return 0;
+}
+
+
+int read_cart_rom_tracked(void* opaque, uint32_t address, uint32_t* value)
+{
+    usf_state_t* state = (usf_state_t*)opaque;
+    struct pi_controller* pi = &state->g_pi;
+    uint32_t addr = rom_address(address);
+    
+    if (pi->cart_rom.last_write != 0)
+    {
+        *value = pi->cart_rom.last_write;
+        pi->cart_rom.last_write = 0;
+    }
+    else
+    {
+        bit_array_set(state->barray_rom, addr / 4);
+        
+        *value = *(uint32_t*)(pi->cart_rom.rom + addr);
+    }
+    
     return 0;
 }
 

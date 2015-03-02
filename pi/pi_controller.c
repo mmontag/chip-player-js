@@ -23,6 +23,8 @@
 
 #include "usf/usf_internal.h"
 
+#include "usf/barray.h"
+
 #include "pi_controller.h"
 
 #define M64P_CORE_PROTOTYPES 1
@@ -117,8 +119,13 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
         {
             unsigned long rdram_address1 = pi->regs[PI_DRAM_ADDR_REG]+i+0x80000000;
             unsigned long rdram_address2 = pi->regs[PI_DRAM_ADDR_REG]+i+0xa0000000;
+            unsigned long rom_address = (((pi->regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF)+i);
+
+            if (state->enable_trimming_mode)
+                bit_array_set(state->barray_rom, rom_address / 4);
+            
             ((unsigned char*)pi->ri->rdram.dram)[(pi->regs[PI_DRAM_ADDR_REG]+i)^S8]=
-                pi->cart_rom.rom[(((pi->regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF)+i)^S8];
+                pi->cart_rom.rom[rom_address^S8];
 
             if (!state->invalid_code[rdram_address1>>12])
             {
@@ -147,8 +154,11 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
     {
         for (i=0; i<(int)longueur; i++)
         {
+            unsigned long rom_address = (((pi->regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF)+i);
+            if (state->enable_trimming_mode)
+                bit_array_set(state->barray_rom, rom_address / 4);
             ((unsigned char*)pi->ri->rdram.dram)[(pi->regs[PI_DRAM_ADDR_REG]+i)^S8]=
-                pi->cart_rom.rom[(((pi->regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF)+i)^S8];
+                pi->cart_rom.rom[rom_address^S8];
         }
     }
 

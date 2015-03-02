@@ -90,7 +90,7 @@ void dyna_start(usf_state_t * state, void *code)
      pop ebp
    }
 #elif defined(__GNUC__) && defined(__i386__)
-  #if defined(__PIC__) && !defined(__APPLE__)
+  #if defined(__PIC__)
     /* for -fPIC (shared libraries) */
     #ifndef __GNUC_PREREQ
     #  if defined __GNUC__ && defined __GNUC_MINOR__
