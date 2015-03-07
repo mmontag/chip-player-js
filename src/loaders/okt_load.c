@@ -79,10 +79,7 @@ static const int fx[] = {
 	FX_OKT_ARP3,		/* 10 */
 	FX_OKT_ARP4,		/* 11 */
 	FX_OKT_ARP5,		/* 12 */
-#if 0
 	FX_NSLIDE_DN,		/* 13 */
-#endif
-	FX_VOLSET,		/* 13 */
 	NONE,
 	NONE,			/* 15 - filter */
 	NONE,
@@ -110,12 +107,18 @@ static int get_cmod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->chn = 0;
 	for (i = 0; i < 4; i++) {
+		int pan = (((i + 1) / 2) % 2) * 0xff;
+		int p = 0x80 + (pan - 0x80) * m->defpan / 100;
+
 		if (hio_read16b(f) == 0) {
-			mod->chn++;
+			mod->xxc[mod->chn++].pan = p;
 		} else {
-			mod->xxc[mod->chn++].flg |= XMP_CHANNEL_SPLIT |(i << 4);
-			mod->xxc[mod->chn++].flg |= XMP_CHANNEL_SPLIT |(i << 4);
+			mod->xxc[mod->chn].flg |= XMP_CHANNEL_SPLIT | (i << 4);
+			mod->xxc[mod->chn++].pan = p;
+			mod->xxc[mod->chn].flg |= XMP_CHANNEL_SPLIT | (i << 4);
+			mod->xxc[mod->chn++].pan = p;
 		}
+
 	}
 
 	return 0;
