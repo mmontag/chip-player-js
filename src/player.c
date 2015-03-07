@@ -484,6 +484,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 			xc->noteslide.count = xc->noteslide.speed;
 		}
 		xc->noteslide.count--;
+
+		virt_setnote(ctx, chn, xc->note);
 	}
 #endif
 

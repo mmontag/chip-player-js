@@ -23,6 +23,7 @@ Stable versions
 	- fix sample number limit (reported by Lionel Debroux)
 	- fix Oktalyzer split channel replay (reported by Dennis Lindroos)
 	- fix Oktalyzer sample loop (by Dennis Lindroos)
+	- fix Oktalyzer note slide up/down effect
 	- fix ThePlayer pattern decoding
 	- fix XM loading for MED2XM modules (reported by Lorence Lombardo)
 	- add support to Amiga split channel loop and volume setting

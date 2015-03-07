@@ -355,6 +355,18 @@ static void check_dct(struct context_data *ctx, int i, int chn, int ins,
 
 #endif
 
+/* For note slides */
+void virt_setnote(struct context_data *ctx, int chn, int note)
+{
+	struct player_data *p = &ctx->p;
+	int voc;
+
+	if ((voc = map_virt_channel(p, chn)) < 0)
+		return;
+
+	mixer_setnote(ctx, voc, note);
+}
+
 int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		    			int note, int nna, int dct, int dca)
 {
@@ -399,14 +411,6 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	}
 
 	mixer_setpatch(ctx, voc, smp);
-
-	/* FIXME: Workaround for crash on notes that are too high
-	 *        see 6nations.it (+114 transposition on instrument 16)
-	 */
-	if (note > 149) {
-		note = 149;
-	}
-
 	mixer_setnote(ctx, voc, note);
 	p->virt.voice_array[voc].ins = ins;
 	p->virt.voice_array[voc].act = nna;

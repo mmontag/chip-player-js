@@ -653,6 +653,13 @@ void mixer_setnote(struct context_data *ctx, int voc, int note)
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
+	/* FIXME: Workaround for crash on notes that are too high
+	 *        see 6nations.it (+114 transposition on instrument 16)
+	 */
+	if (note > 149) {
+		note = 149;
+	}
+
 	vi->note = note;
 	vi->period = note_to_period_mix(note, 0);
 	vi->attack = SLOW_ATTACK;
