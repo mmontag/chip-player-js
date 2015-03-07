@@ -255,7 +255,7 @@ void virt_setvol(struct context_data *ctx, int chn, int vol)
 
 	mixer_setvol(ctx, voc, vol);
 
-	if (!(vol || chn < p->virt.num_tracks))
+	if (vol == 0 && chn >= p->virt.num_tracks)
 		virt_resetvoice(ctx, voc, 1);
 }
 
