@@ -437,14 +437,15 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 		/* Also set the volume of the paired channel */
 		for (i = 0; i < m->mod.chn; i++) {
-			if (i != chn && p->xc_data[i].split == xc->split) {
+			if (i < chn && p->xc_data[i].split == xc->split) {
 				virt_setvol(ctx, i, finalvol);
+				virt_setvol(ctx, chn, finalvol);
 				break;
 			}
 		}
+	} else {
+		virt_setvol(ctx, chn, finalvol);
 	}
-
-	virt_setvol(ctx, chn, finalvol);
 }
 
 static void process_frequency(struct context_data *ctx, int chn, int act)
