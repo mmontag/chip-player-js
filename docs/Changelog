@@ -17,6 +17,7 @@ Stable versions
 	- add sanity check for STX number of patterns
 	- add sanity check for MMD1/3 number of channels
 	- add sanity check for MMD1/3 instrument type
+	- add sanity check for IT old instrument loading
 	- add sanity checks and fix memory leaks in the Vorbis decoder
 	Other changes:
 	- fix instrument number in channel initialization

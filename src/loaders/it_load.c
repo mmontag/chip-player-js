@@ -700,14 +700,19 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    i1h.nos = hio_read8(f);
 	    i1h.rsvd2 = hio_read8(f);
 
-	    hio_read(&i1h.name, 26, 1, f);
+	    if (hio_read(&i1h.name, 1, 26, f) != 26)
+		return -1;
 
 	    fix_name(i1h.name, 26);
 
-	    hio_read(&i1h.rsvd3, 6, 1, f);
-	    hio_read(&i1h.keys, 240, 1, f);
-	    hio_read(&i1h.epoint, 200, 1, f);
-	    hio_read(&i1h.enode, 50, 1, f);
+	    if (hio_read(&i1h.rsvd3, 1, 6, f) != 6)
+		return -1;
+	    if (hio_read(&i1h.keys, 1, 240, f) != 240)
+		return -1;
+	    if (hio_read(&i1h.epoint, 1, 200, f) != 200)
+		return -1;
+	    if (hio_read(&i1h.enode, 1, 50, f) != 50)
+		return -1;
 
 	    copy_adjust(xxi->name, i1h.name, 25);
 
@@ -731,7 +736,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    xxi->aei.sus = i1h.sls;
 	    xxi->aei.sue = i1h.sle;
 
-	    for (k = 0; i1h.enode[k * 2] != 0xff; k++);
+	    for (k = 0; k < 25 && i1h.enode[k * 2] != 0xff; k++);
+
+	    /* Sanity check */
+	    if (k >= 25 || i1h.enode[k * 2] != 0xff)
+		return -1;
+
 	    for (xxi->aei.npt = k; k--; ) {
 		xxi->aei.data[k * 2] = i1h.enode[k * 2];
 		xxi->aei.data[k * 2 + 1] = i1h.enode[k * 2 + 1];
