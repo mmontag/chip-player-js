@@ -11,6 +11,7 @@ Stable versions
 	- add sanity check to STIM/GDM/DBM/LIQ/ICE/PSM/PTM loader
 	- add sanity check to MDL/RAD/MGT/IMF/RTM/DT pattern loader
 	- add sanity check to OKT sample chunk loader
+	- add sanity check to Archimedes Tracker format test
 	- add sanity check for AMD number of patterns
 	- add sanity check for STX number of patterns
 	- add sanity check for MMD1/3 number of channels

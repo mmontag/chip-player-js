@@ -64,14 +64,19 @@ static uint8 convert_vol(uint8 vol) {
 
 static int arch_test(HIO_HANDLE *f, char *t, const int start)
 {
-	if (hio_read32b(f) != MAGIC_MUSX)
+	if (hio_read32b(f) != MAGIC_MUSX) {
 		return -1;
+	}
 
 	hio_read32l(f);
 
 	while (!hio_eof(f)) {
 		uint32 id = hio_read32b(f);
 		uint32 len = hio_read32l(f);
+
+		if (len < 0 || len > 0x100000) {
+			return -1;
+		}
 
 		if (id == MAGIC_MNAM) {
 			read_title(f, t, 32);
