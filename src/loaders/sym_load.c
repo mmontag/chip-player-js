@@ -281,6 +281,10 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (~sn[i] & 0x80) {
 			mod->xxs[i].len = hio_read24l(f) << 1;
 			mod->xxi[i].nsm = 1;
+
+			/* Sanity check */
+			if (mod->xxs[i].len > 0x80000)
+				return -1;
 		}
 	}
 
@@ -327,11 +331,18 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		for (j = 0; j < mod->chn; j++) {
 			int idx = 2 * (i * mod->chn + j);
-			mod->xxp[i]->index[j] = readptr16l(&buf[idx]);
+			int t = readptr16l(&buf[idx]);
 
-			if (mod->xxp[i]->index[j] == 0x1000) /* empty trk */
-				mod->xxp[i]->index[j] = mod->trk - 1;
+			/* Sanity check */
+			if (t >= mod->trk - 1) {
+				free(buf);
+				return -1;
+			}
+	
+			if (t == 0x1000) /* empty trk */
+				t = mod->trk - 1;
 
+			mod->xxp[i]->index[j] = t;
 		}
 		mod->xxo[i] = i;
 	}
