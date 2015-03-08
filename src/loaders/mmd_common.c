@@ -520,6 +520,10 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	struct xmp_sample *xxs;
 	int j, k;
 
+	/* Sanity check */
+	if (smp_idx >= mod->smp)
+		return -1;
+
 	/* hold & decay support */
         if (med_new_instrument_extras(xxi) != 0)
                 return -1;
