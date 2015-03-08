@@ -231,7 +231,7 @@ static int unsqsh_block(struct io *io, uint8 *dest_start, uint8 *dest_end)
 	return 0;
 }
 
-static int unsqsh(uint8 *src, uint8 *dest, int destlen)
+static int unsqsh(uint8 *src, int srclen, uint8 *dest, int destlen)
 {
 	int len = destlen;
 	int decrunched = 0;
@@ -261,6 +261,11 @@ static int unsqsh(uint8 *src, uint8 *dest, int destlen)
 
 		unpacked_size = readmem16b(c);	/* unpacked */
 		c += 2;
+
+		/* Sanity check */
+		if (c + packed_size + 3 > src + srclen) {
+			return -1;
+		}
 
 		io.src = c + 2;
 		memcpy(bc, c + packed_size, 3);
@@ -345,7 +350,7 @@ static int decrunch_sqsh(FILE * f, FILE * fo)
 	if (fread(src, srclen - 8, 1, f) != 1)
 		goto err3;
 
-	if (unsqsh(src, dest, destlen) != destlen)
+	if (unsqsh(src, srclen, dest, destlen) != destlen)
 		goto err3;
 
 	if (fwrite(dest, destlen, 1, fo) != 1)
