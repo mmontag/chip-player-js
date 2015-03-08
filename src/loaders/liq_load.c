@@ -379,6 +379,10 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
  */
 
 read_event:
+	/* Sanity check */
+	if (i >= mod->pat || channel >= mod->chn || row >= mod->xxp[i]->rows)
+	    return -1;
+
 	event = &EVENT(i, channel, row);
 
 	if (x2) {
