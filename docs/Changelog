@@ -13,6 +13,7 @@ Stable versions
 	- add sanity check to OKT sample chunk loader
 	- add sanity check to Archimedes Tracker format test
 	- add sanity check to SQSH depacker
+	- add sanity check to arc depacker
 	- add sanity check for AMD number of patterns
 	- add sanity check for STX number of patterns
 	- add sanity check for MMD1/3 number of channels
