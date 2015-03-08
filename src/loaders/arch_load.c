@@ -229,7 +229,8 @@ static int get_mnam(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 
-	hio_read(mod->name, 1, 32, f);
+	if (hio_read(mod->name, 1, 32, f) != 32)
+		return -1;
 
 	return 0;
 }
@@ -247,6 +248,10 @@ static int get_mlen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->len = hio_read32l(f);
 
+	/* Sanity check */
+	if (mod->len > 0xff)
+		return -1;
+
 	return 0;
 }
 
@@ -256,6 +261,10 @@ static int get_pnum(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->pat = hio_read32l(f);
 
+	/* Sanity check */
+	if (mod->pat > 64 )
+		return -1;
+
 	return 0;
 }
 
@@ -263,7 +272,8 @@ static int get_plen(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct local_data *data = (struct local_data *)parm;
 
-	hio_read(data->rows, 1, 64, f);
+	if (hio_read(data->rows, 1, 64, f) != 64)
+		return -1;
 
 	return 0;
 }
@@ -295,6 +305,10 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		if (pattern_init(mod) < 0)
 			return -1;
 	}
+
+	/* Sanity check */
+	if (data->max_pat >= mod->pat || data->max_pat >= 64)
+		return -1;
 
         i = data->max_pat;
 
@@ -358,8 +372,12 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	{
 		/* should usually be 0x14 but zero is not unknown */
 		int name_len = hio_read32l(f);
-		if (name_len < 32)
-			hio_read(mod->xxi[i].name, 1, name_len, f);
+
+		/* Sanity check */
+		if (name_len < 0 || name_len > 32)
+			return -1;
+
+		hio_read(mod->xxi[i].name, 1, name_len, f);
 	}
 
 	if (hio_read32b(f) != MAGIC_SVOL)	/* SVOL */
