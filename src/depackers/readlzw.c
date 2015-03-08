@@ -84,7 +84,7 @@ data->quirk = q;
 data->global_use_rle=use_rle;
 data->maxstr=(1<<max_bits);
 
-if((data_out=malloc(orig_len))==NULL) {
+if((data_out=calloc(1, orig_len))==NULL) {
   //fprintf(stderr,"nomarch: out of memory!\n");
   return NULL;
 }

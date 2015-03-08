@@ -359,7 +359,10 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 		}
 	} else {
-		hio_read(buf, 1, size, f);
+		if (hio_read(buf, 1, size, f) != size) {
+			free(buf);
+			return -1;
+		}
 	}
 
 	for (i = 0; i < mod->trk - 1; i++) {
