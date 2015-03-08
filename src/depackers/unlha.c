@@ -404,6 +404,11 @@ static int read_c_len(struct LhADecrData *dat)
           c = getbits(dat, 4) + 3;
         else
           c = getbits(dat, CBIT) + 20;
+
+	/* Sanity check */
+	if (i + c >= NC)
+	  return -1;
+
         while(--c >= 0)
           dat->d.st.c_len[i++] = 0;
       }
