@@ -289,8 +289,13 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	a = hio_read8(f);		/* track name length */
+	if (a > 32) {
+		hio_read(mod->name, 1, 32, f);
+		hio_seek(f, a - 32, SEEK_SET);
+	} else {
+		hio_read(mod->name, 1, a, f);
+	}
 
-	hio_read(mod->name, 1, a, f);
 	hio_read(&allowed_effects, 1, 8, f);
 
 	MODULE_INFO();
