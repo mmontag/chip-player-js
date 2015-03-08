@@ -413,6 +413,10 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ii.nsm = hio_read16l(f);
 	ii.magic = hio_read32b(f);
 
+	/* Sanity check */
+	if (ii.nsm > 255)
+	    return -1;
+
 	if (ii.magic != MAGIC_II10)
 	    return -2;
 
