@@ -81,7 +81,7 @@ static int get_bits_final(struct io *io, int count)
 	return r;
 }
 
-static int copy_data(struct io *io, int d1, int *data)
+static int copy_data(struct io *io, int d1, int *data, uint8 *dest_start, uint8 *dest_end)
 {
 	uint8 *copy_src;
 	int dest_offset, count, copy_len;
@@ -127,7 +127,13 @@ static int copy_data(struct io *io, int d1, int *data)
 
 	copy_src = io->dest + dest_offset - get_bits(io, count) - 1;
 
+	/* Sanity check */
+	if (copy_src < dest_start || copy_src + copy_len >= dest_end) {
+		return -1;
+	}
+
 	do {
+		//printf("dest=%p src=%p end=%p\n", io->dest, copy_src, dest_end);
 		*io->dest++ = *copy_src++;
 	} while (copy_len--);
 
@@ -136,7 +142,7 @@ static int copy_data(struct io *io, int d1, int *data)
 	return d1;
 }
 
-static void unsqsh_block(struct io *io, uint8 *dest_end)
+static int unsqsh_block(struct io *io, uint8 *dest_start, uint8 *dest_end)
 {
 	int d1, d2, data, unpack_len, count, old_count;
 
@@ -149,7 +155,9 @@ static void unsqsh_block(struct io *io, uint8 *dest_end)
 	do {
 		if (d1 < 8) {
 			if (get_bits(io, 1)) {
-				d1 = copy_data(io, d1, &data);
+				d1 = copy_data(io, d1, &data, dest_start, dest_end);
+				if (d1 < 0)
+					return -1;
 				d2 -= d2 >> 3;
 				continue;
 			} 
@@ -172,7 +180,9 @@ static void unsqsh_block(struct io *io, uint8 *dest_end)
 				}
 			} else {
 				if (get_bits(io, 1) == 0) {
-					d1 = copy_data(io, d1, &data);
+					d1 = copy_data(io, d1, &data, dest_start, dest_end);
+					if (d1 < 0)
+						return -1;
 	      				d2 -= d2 >> 3;
 					continue;
 				}
@@ -217,6 +227,8 @@ static void unsqsh_block(struct io *io, uint8 *dest_end)
 		d2 -= d2 >> 3;
 
 	} while (io->dest < dest_end);
+
+	return 0;
 }
 
 static int unsqsh(uint8 *src, uint8 *dest, int destlen)
@@ -226,12 +238,14 @@ static int unsqsh(uint8 *src, uint8 *dest, int destlen)
 	int type;
 	int sum, packed_size, unpacked_size;
 	int lchk;
-	uint8 *c, *dest_end;
+	uint8 *c, *dest_start, *dest_end;
 	uint8 bc[3];
 	struct io io;
 
 	io.src = src;
 	io.dest = dest;
+
+	dest_start = io.dest;
 
 	c = src + 20;
 
@@ -285,7 +299,9 @@ static int unsqsh(uint8 *src, uint8 *dest, int destlen)
 		c += packed_size;
 		dest_end = io.dest + unpacked_size;
 
-		unsqsh_block(&io, dest_end);
+		if (unsqsh_block(&io, dest_start, dest_end) < 0) {
+			return -1;
+		}
 		
 		io.dest = dest_end;
 	}
