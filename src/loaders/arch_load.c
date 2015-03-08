@@ -25,6 +25,12 @@
 
 #define MAGIC_MUSX	MAGIC4('M','U','S','X')
 #define MAGIC_MNAM	MAGIC4('M','N','A','M')
+#define MAGIC_SNAM	MAGIC4('S','N','A','M')
+#define MAGIC_SVOL	MAGIC4('S','V','O','L')
+#define MAGIC_SLEN	MAGIC4('S','L','E','N')
+#define MAGIC_ROFS	MAGIC4('R','O','F','S')
+#define MAGIC_RLEN	MAGIC4('R','L','E','N')
+#define MAGIC_SDAT	MAGIC4('S','D','A','T')
 
 
 static int arch_test (HIO_HANDLE *, char *, const int);
@@ -346,28 +352,39 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	if (subinstrument_alloc(mod, i, 1) < 0)
 		return -1;
 
-	hio_read32l(f);	/* SNAM */
+	if (hio_read32b(f) != MAGIC_SNAM)	/* SNAM */
+		return -1;
+
 	{
 		/* should usually be 0x14 but zero is not unknown */
 		int name_len = hio_read32l(f);
 		if (name_len < 32)
 			hio_read(mod->xxi[i].name, 1, name_len, f);
 	}
-	hio_read32l(f);	/* SVOL */
+
+	if (hio_read32b(f) != MAGIC_SVOL)	/* SVOL */
+		return -1;
 	hio_read32l(f);
 	/* mod->xxi[i].sub[0].vol = convert_vol(hio_read32l(f)); */
 	mod->xxi[i].sub[0].vol = hio_read32l(f) & 0xff;
-	hio_read32l(f);	/* SLEN */
+
+	if (hio_read32b(f) != MAGIC_SLEN)	/* SLEN */
+		return -1;
 	hio_read32l(f);
 	mod->xxs[i].len = hio_read32l(f);
-	hio_read32l(f);	/* ROFS */
+
+	if (hio_read32b(f) != MAGIC_ROFS)	/* ROFS */
+		return -1;
 	hio_read32l(f);
 	mod->xxs[i].lps = hio_read32l(f);
-	hio_read32l(f);	/* RLEN */
+
+	if (hio_read32b(f) != MAGIC_RLEN)	/* RLEN */
+		return -1;
 	hio_read32l(f);
 	mod->xxs[i].lpe = hio_read32l(f);
 
-	hio_read32l(f);	/* SDAT */
+	if (hio_read32b(f) != MAGIC_SDAT)	/* SDAT */
+		return -1;
 	hio_read32l(f);
 	hio_read32l(f);	/* 0x00000000 */
 
