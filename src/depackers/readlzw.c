@@ -84,6 +84,9 @@ data->quirk = q;
 data->global_use_rle=use_rle;
 data->maxstr=(1<<max_bits);
 
+if (data->maxstr > REALMAXSTR)
+  return NULL;
+
 if((data_out=calloc(1, orig_len))==NULL) {
   //fprintf(stderr,"nomarch: out of memory!\n");
   return NULL;
@@ -227,6 +230,9 @@ unsigned char *convert_lzw_dynamic(unsigned char *data_in,
 						orig_len, q, data);
 
 	/* Sanity check */
+	if (d == NULL) {
+		goto err2;
+	}
 	if (d + orig_len != data->io.data_out_point) {
 		free(d);
 		goto err2;
