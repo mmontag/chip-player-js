@@ -219,8 +219,9 @@ static void unsqsh_block(struct io *io, uint8 *dest_end)
 	} while (io->dest < dest_end);
 }
 
-static int unsqsh(uint8 *src, uint8 *dest, int len)
+static int unsqsh(uint8 *src, uint8 *dest, int destlen)
 {
+	int len = destlen;
 	int decrunched = 0;
 	int type;
 	int sum, packed_size, unpacked_size;
@@ -273,7 +274,12 @@ static int unsqsh(uint8 *src, uint8 *dest, int len)
 		}
 
 		len -= unpacked_size;
-		decrunched += unpacked_size;;
+		decrunched += unpacked_size;
+
+		/* Sanity check */
+		if (decrunched > destlen) {
+			return -1;
+		}
 
 		packed_size = (packed_size + 3) & 0xfffc;
 		c += packed_size;
@@ -307,6 +313,8 @@ static int decrunch_sqsh(FILE * f, FILE * fo)
 		goto err;
 
 	destlen = read32b(f);
+	if (destlen < 0 || destlen > 0x100000)
+		goto err;
 
 	if ((src = malloc(srclen + 3)) == NULL)
 		goto err;
