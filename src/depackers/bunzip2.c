@@ -349,7 +349,8 @@ got_huff_bits:
 		   literal used is the one at the head of the mtfSymbol array.) */
 		if(runPos) {
 			runPos=0;
-			if(dbufCount+t>=dbufSize) return RETVAL_DATA_ERROR;
+			if(t < 0 || t > dbufSize || dbufCount+t>=dbufSize)
+				return RETVAL_DATA_ERROR;
 
 			uc = symToByte[mtfSymbol[0]];
 			byteCount[uc] += t;
