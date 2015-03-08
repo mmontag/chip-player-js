@@ -342,7 +342,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
-	int i, ret;
+	int i, j, ret;
 	int test_result, load_result;
 
 	load_prologue(ctx);
@@ -381,6 +381,17 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	if (mod->chn > XMP_MAX_CHANNELS || mod->len > XMP_MAX_MOD_LENGTH) {
 		xmp_release_module(opaque);
 		return -XMP_ERROR_LOAD;
+	}
+
+	/* Sanity check */
+	for (i = 0; i < mod->pat; i++) {
+		for (j = 0; j < mod->chn; j++) {
+			int t = mod->xxp[i]->index[j];
+			if (t >= mod->trk || mod->xxt[t] == NULL) {
+				xmp_release_module(opaque);
+				return -XMP_ERROR_LOAD;
+			}
+		}
 	}
 
 	adjust_string(mod->name);
