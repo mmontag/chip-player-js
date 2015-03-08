@@ -74,6 +74,7 @@ static int arch_test(HIO_HANDLE *f, char *t, const int start)
 		uint32 id = hio_read32b(f);
 		uint32 len = hio_read32l(f);
 
+		/* Sanity check */
 		if (len < 0 || len > 0x100000) {
 			return -1;
 		}
@@ -191,6 +192,11 @@ static int get_mvox(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->chn = hio_read32l(f);
 
+	/* Sanity check */
+	if (mod->chn < 1 || mod->chn > 8) {
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -200,9 +206,11 @@ static int get_ster(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct local_data *data = (struct local_data *)parm;
 	int i;
 
-	hio_read(data->ster, 1, 8, f);
+	if (hio_read(data->ster, 1, 8, f) != 8) {
+		return -1;
+	}
 	
-	for (i=0; i < mod->chn; i++) {
+	for (i = 0; i < mod->chn; i++) {
 		if (data->ster[i] > 0 && data->ster[i] < 8) {
 			mod->xxc[i].pan = 42 * data->ster[i] - 40;
 		}
