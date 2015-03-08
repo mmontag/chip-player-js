@@ -464,6 +464,10 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    is.dram = hio_read32l(f);
 	    is.magic = hio_read32b(f);
 
+            /* Sanity check */
+            if (is.len > 0x100000 || is.lps > 0x100000 || is.lpe > 0x100000)
+		return -1;
+
 	    mod->xxi[i].sub[j].sid = smp_num;
 	    mod->xxi[i].sub[j].vol = is.vol;
 	    mod->xxi[i].sub[j].pan = is.pan;
@@ -482,7 +486,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    D_(D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
 
-	    c2spd_to_note (is.rate, &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
+	    c2spd_to_note(is.rate, &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
 
 	    if (!mod->xxs[smp_num].len)
 		continue;
