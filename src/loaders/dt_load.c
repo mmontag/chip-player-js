@@ -212,7 +212,10 @@ static int get_dapt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	rows = hio_read16b(f);
 
 	/* Sanity check */
-	if (pat >= mod->pat || rows > 256) {
+	if (pat < 0 || pat >= mod->pat || rows < 0 || rows > 256) {
+		return -1;
+	}
+	if (pat < data->last_pat) {
 		return -1;
 	}
 

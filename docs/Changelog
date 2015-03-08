@@ -13,6 +13,7 @@ Stable versions
 	- add sanity check to OKT sample chunk loader
 	- add sanity check to IMF sample loader
 	- add sanity check to LIQ pattern loader
+	- add sanity check to DTM pattern loader
 	- add sanity check to Archimedes Tracker format test
 	- add sanity check to Digital Symphony track loader
 	- add sanity check to SQSH depacker
