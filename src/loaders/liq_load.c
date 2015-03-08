@@ -392,6 +392,10 @@ read_event:
 	x1 = hio_read8(f);
 
 test_event:
+	/* Sanity check */
+	if (i >= mod->pat || channel >= mod->chn || row >= mod->xxp[i]->rows)
+		return -1;
+
 	event = &EVENT(i, channel, row);
 	D_(D_INFO "* count=%ld chan=%d row=%d event=%02x",
 				hio_tell(f) - count, channel, row, x1);
