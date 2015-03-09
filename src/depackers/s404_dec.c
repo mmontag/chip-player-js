@@ -115,7 +115,7 @@ static int checkS404File(uint32 *buf, /*size_t len,*/
 }
 
 
-static void decompressS404(uint8 *src, uint8 *orgdst,
+static int decompressS404(uint8 *src, uint8 *orgdst,
 			   int32 dst_length, int32 src_length)
 {
   uint16 w;
@@ -263,12 +263,14 @@ static void decompressS404(uint8 *src, uint8 *orgdst,
       while (n-- > 0) {
         /* printf("Copying: %02X\n",dst[w]); */
 	dst--;
-	assert(dst >= orgdst);
-	assert((dst + w + 1) < (orgdst + dst_length));
+	if (dst < orgdst || (dst + w + 1) >= (orgdst + dst_length))
+            return -1;
 	*dst = dst[w + 1];
       }
     }
   }
+
+  return 0;
 }
 
 static int test_s404(unsigned char *b)
@@ -302,7 +304,9 @@ static int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
   }
 
   /* src + 16 skips S404 header */
-  decompressS404(src + 16, dst, oLen, pLen);
+  if (decompressS404(src + 16, dst, oLen, pLen) < 0) {
+      goto error1;
+  }
 
   if (fwrite(dst, oLen, 1, out) == 0) {
       /*fprintf(stderr,"S404 Error: fwrite() failed..\n");*/

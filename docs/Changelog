@@ -17,11 +17,7 @@ Stable versions
 	- add sanity check to MMD sample loader
 	- add sanity check to Archimedes Tracker format test
 	- add sanity check to Digital Symphony track loader
-	- add sanity check to SQSH depacker
-	- add sanity check to bzip2 depacker
-	- add sanity check to arc depacker
-	- add sanity check to lha depacker
-	- add sanity check to lzx depacker
+	- add sanity checks to SQSH, bzip2, arc, lha, lzx and S404 depackers
 	- add sanity check for AMD number of patterns
 	- add sanity check for STX number of patterns
 	- add sanity check for MMD1/3 number of channels
