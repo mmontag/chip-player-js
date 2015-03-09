@@ -1721,6 +1721,10 @@ static int get_header(FILE *f, struct lha_data *data)
 		while ((size = read16l(f)) != 0) {
 			int type = read8(f);
 			if (type == 0x01) {
+				/* Sanity check */
+				if (size - 3 > 256)
+					return -1;
+
 				fread(data->name, 1, size - 3, f);
 			} else {
 				fseek(f, size - 3, SEEK_CUR);
