@@ -103,6 +103,10 @@ static int depack_fuchs(HIO_HANDLE *in, FILE *out)
 	/* read pattern data size */
 	pat_size = hio_read32b(in);
 
+	/* Sanity check */
+	if (pat_size <= 0 || pat_size > 0x20000)
+		return -1;
+
 	/* read pattern data */
 	tmp = (uint8 *)malloc(pat_size);
 	hio_read(tmp, pat_size, 1, in);
