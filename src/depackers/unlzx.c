@@ -477,6 +477,7 @@ static int read_literal_table(struct LZXDecrData *decr)
     uint32 symbol, pos, count, fix, max_symbol;
     uint8 *src;
     int abort = 0;
+    int x;
 
     control = decr->control;
     shift = decr->shift;
@@ -653,7 +654,18 @@ static int read_literal_table(struct LZXDecrData *decr)
 			control += *src++ << (8 + shift);
 			control += *src++ << shift;
 		    }
-		    symbol = table_four[decr->literal_len[pos] + 17 - symbol];
+
+                    /* Sanity check */
+                    if (pos >= 768)
+                        return -1;
+
+                    x = decr->literal_len[pos] + 17 - symbol;
+
+                    /* Sanity check */
+                    if (x >= 34)
+                        return -1;
+
+		    symbol = table_four[x];
 
 		    while (pos < max_symbol && count--)
 			decr->literal_len[pos++] = symbol;

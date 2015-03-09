@@ -21,6 +21,7 @@ Stable versions
 	- add sanity check to bzip2 depacker
 	- add sanity check to arc depacker
 	- add sanity check to lha depacker
+	- add sanity check to lzx depacker
 	- add sanity check for AMD number of patterns
 	- add sanity check for STX number of patterns
 	- add sanity check for MMD1/3 number of channels
