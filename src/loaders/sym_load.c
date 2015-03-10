@@ -264,6 +264,11 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->chn = hio_read8(f);
 	mod->len = mod->pat = hio_read16l(f);
+
+	/* Sanity check */
+	if (mod->pat >= 256)
+		return -1;
+
 	mod->trk = hio_read16l(f);	/* Symphony patterns are actually tracks */
 	infolen = hio_read24l(f);
 
@@ -324,7 +329,10 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 		}
 	} else {
-		hio_read(buf, 1, size, f);
+		if (hio_read(buf, 1, size, f) != size) {
+			free(buf);
+			return -1;
+		}
 	}
 
 	for (i = 0; i < mod->len; i++) {	/* len == pat */
