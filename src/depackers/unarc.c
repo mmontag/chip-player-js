@@ -232,6 +232,7 @@ static int arc_extract(FILE *in, FILE *out)
 	switch (hdr.method) {
 	case 2:		/* no compression */
 		orig_data = data;
+		hdr.orig_size = hdr.compressed_size;
 		break;
 
 #if 0
