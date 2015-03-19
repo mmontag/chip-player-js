@@ -4579,7 +4579,8 @@ static int vorbis_seek_frame_from_page(stb_vorbis *f, uint32 page_start, uint32 
       frame_start += data_to_skip;
    } else {
       f->previous_length = 0;
-      vorbis_pump_first_frame(f);
+      if (vorbis_pump_first_frame(f) < 0)
+         return -1;
    }
 
    // at this point, the NEXT decoded frame will generate the desired sample
@@ -4829,7 +4830,8 @@ stb_vorbis * stb_vorbis_open_file_section(FILE *file, int close_on_free, int *er
       f = vorbis_alloc(&p);
       if (f) {
          *f = p;
-         vorbis_pump_first_frame(f);
+         if (vorbis_pump_first_frame(f) < 0)
+            return NULL;
          return f;
       }
    }
@@ -4874,7 +4876,8 @@ stb_vorbis * stb_vorbis_open_memory(unsigned char *data, int len, int *error, st
       f = vorbis_alloc(&p);
       if (f) {
          *f = p;
-         vorbis_pump_first_frame(f);
+         if (vorbis_pump_first_frame(f) < 0)
+            return NULL;
          return f;
       }
    }
