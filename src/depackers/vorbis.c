@@ -3779,6 +3779,12 @@ static int start_decoder(vorb *f)
             }
          }
       }
+
+      /* Sanity check */
+      if (r->classbook >= f->codebook_count) {
+         return -1;
+      }
+
       // precompute the classifications[] array to avoid inner-loop mod/divide
       // call it 'classdata' since we already have r->classifications
       r->classdata = (uint8 **) setup_malloc(f, sizeof(*r->classdata) * f->codebooks[r->classbook].entries);
