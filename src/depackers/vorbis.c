@@ -2858,7 +2858,6 @@ static float *get_window(vorb *f, int len)
    len <<= 1;
    if (len == f->blocksize_0) return f->window[0];
    if (len == f->blocksize_1) return f->window[1];
-   assert(0);
    return NULL;
 }
 
@@ -3252,6 +3251,12 @@ static int vorbis_finish_frame(stb_vorbis *f, int len, int left, int right)
    if (f->previous_length) {
       int i,j, n = f->previous_length;
       float *w = get_window(f, n);
+
+      /* Sanity check */
+      if (w == NULL) {
+         return -1;
+      }
+
       for (i=0; i < f->channels; ++i) {
          for (j=0; j < n; ++j)
             f->channel_buffers[i][left+j] =
@@ -3289,11 +3294,14 @@ static int vorbis_finish_frame(stb_vorbis *f, int len, int left, int right)
    return right - left;
 }
 
-static void vorbis_pump_first_frame(stb_vorbis *f)
+static int vorbis_pump_first_frame(stb_vorbis *f)
 {
    int len, right, left;
-   if (vorbis_decode_packet(f, &len, &left, &right))
-      vorbis_finish_frame(f, len, left, right);
+   if (vorbis_decode_packet(f, &len, &left, &right)) {
+      if (vorbis_finish_frame(f, len, left, right) < 0)
+         return -1;
+   }
+   return 0;
 }
 
 #ifndef STB_VORBIS_NO_PUSHDATA_API
@@ -4207,6 +4215,12 @@ int stb_vorbis_decode_frame_pushdata(
 
    // success!
    len = vorbis_finish_frame(f, len, left, right);
+
+   /* Sanity check */
+   if (len < 0) {
+      return -1;
+   }
+
    for (i=0; i < f->channels; ++i)
       f->outputs[i] = f->channel_buffers[i] + left;
 
@@ -4784,6 +4798,12 @@ int stb_vorbis_get_frame_float(stb_vorbis *f, int *channels, float ***output)
    }
 
    len = vorbis_finish_frame(f, len, left, right);
+
+   /* Sanity check */
+   if (len < 0) {
+      return -1;
+   }
+
    for (i=0; i < f->channels; ++i)
       f->outputs[i] = f->channel_buffers[i] + left;
 
