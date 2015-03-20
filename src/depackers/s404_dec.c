@@ -172,7 +172,11 @@ static int decompressS404(uint8 *src, uint8 *orgdst,
         w = x;
 
         /*printf("1+001+1111+[4] -> [8] -> %02X\n",w);*/
-	assert(dst > orgdst);
+	/*assert(dst > orgdst);*/
+        if (orgdst >= dst) {
+          return -1;
+        }
+
         *--dst = w;
       }
     } else {
