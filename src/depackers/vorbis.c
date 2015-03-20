@@ -4616,7 +4616,8 @@ static int vorbis_seek_base(stb_vorbis *f, unsigned int sample_number, int fine)
       sample_number = f->p_last.last_decoded_sample-1;
 
    if (sample_number < f->p_first.last_decoded_sample) {
-      vorbis_seek_frame_from_page(f, p[0].page_start, 0, sample_number, fine);
+      if (vorbis_seek_frame_from_page(f, p[0].page_start, 0, sample_number, fine) < 0)
+         return -1;
       return 0;
    } else {
       int attempts=0;
@@ -4676,7 +4677,8 @@ static int vorbis_seek_base(stb_vorbis *f, unsigned int sample_number, int fine)
       }
 
       if (p[0].last_decoded_sample <= sample_number && sample_number < p[1].last_decoded_sample) {
-         vorbis_seek_frame_from_page(f, p[1].page_start, p[0].last_decoded_sample, sample_number, fine);
+         if (vorbis_seek_frame_from_page(f, p[1].page_start, p[0].last_decoded_sample, sample_number, fine) < 0)
+            return -1;
          return 0;
       }
       return error(f, VORBIS_seek_failed);
@@ -5032,6 +5034,11 @@ int stb_vorbis_get_frame_short(stb_vorbis *f, int num_c, short **buffer, int num
 {
    float **output;
    int len = stb_vorbis_get_frame_float(f, NULL, &output);
+
+   /* Sanity check */
+   if (len < 0)
+      return -1;
+
    if (len > num_samples) len = num_samples;
    if (len)
       convert_samples_short(num_c, buffer, 0, f->channels, output, 0, len);
