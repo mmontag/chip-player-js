@@ -81,7 +81,7 @@ static int arch_test(HIO_HANDLE *f, char *t, const int start)
 		uint32 len = hio_read32l(f);
 
 		/* Sanity check */
-		if (len < 0 || len > 0x100000) {
+		if (len > 0x100000) {
 			return -1;
 		}
 
