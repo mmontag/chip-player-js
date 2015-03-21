@@ -53,7 +53,7 @@ iff_handle iff_new()
 static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
-	long size;
+	int size;
 	char id[17] = "";
 
 	if (hio_read(id, 1, data->id_size, f) != data->id_size)
@@ -81,7 +81,7 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 		size -= data->id_size + 4;
 
 	if (size < 0)
-		return 1;
+		return -1;
 
 	return iff_process(opaque, m, id, size, f, parm);
 }
