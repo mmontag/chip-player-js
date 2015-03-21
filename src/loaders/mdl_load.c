@@ -801,6 +801,9 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    break;
 	case 1: 
 	    len = hio_read32l(f);
+            /* Sanity check */
+            if (len <= 0 || len > MAX_SAMPLE_SIZE)
+                goto err2;
 	    if ((buf = malloc(len + 4)) == NULL)
 		goto err2;
 	    hio_read(buf, 1, len, f);
@@ -809,6 +812,9 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    break;
 	case 2:
 	    len = hio_read32l(f);
+            /* Sanity check */
+            if (len <= 0 || len > MAX_SAMPLE_SIZE)
+                goto err2;
 	    if ((buf = malloc(len + 4)) == NULL)
 		goto err2;
 	    hio_read(buf, 1, len, f);
