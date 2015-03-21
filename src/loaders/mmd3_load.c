@@ -305,7 +305,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	/* Sanity check */
-	if (mod->chn > XMP_MAX_CHANNELS)
+	if (mod->chn <= 0 || mod->chn > XMP_MAX_CHANNELS)
 		return -1;
 
 	mod->trk = mod->pat * mod->chn;
