@@ -266,7 +266,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = mod->pat = hio_read16l(f);
 
 	/* Sanity check */
-	if (mod->pat >= 256)
+	if (mod->chn > 8 || mod->pat > 256)
 		return -1;
 
 	mod->trk = hio_read16l(f);	/* Symphony patterns are actually tracks */

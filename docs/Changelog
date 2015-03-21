@@ -15,8 +15,8 @@ Stable versions
 	- add sanity check to Digital Symphony track loader
 	- add sanity checks to SQSH, bzip2, arc, lha, lzx and S404 depackers
 	- add sanity check for AMD/STX number of patterns
-	- add sanity check for MMD1/3 number of channels
-	- add sanity check for MMD1/3 instrument type
+	- add sanity check for DSYM/MMD1/MMD3 number of channels
+	- add sanity check for MMD1/MMD3 instrument type
 	- add sanity check for IT old instrument loading
 	- add sanity checks and fix memory leaks in the Vorbis decoder
 	Other changes:
