@@ -313,6 +313,11 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				continue;
 			}
 
+			/* Sanity check */
+			if ((c & 0x1f) >= mod->chn || r >= 64) {
+				return -1;
+			}
+
 			event = &EVENT(i, c & 0x1f, r);
 
 			if (c & 0x20) {		/* note and sample follows */
