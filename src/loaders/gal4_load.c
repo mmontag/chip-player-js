@@ -83,6 +83,11 @@ static int get_main(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read16l(f);		/* unknown - 0xff00 */
 	hio_read8(f);		/* unknown - 0x80 */
 
+	/* Sanity check */
+	if (mod->chn > 32) {
+		return -1;
+	}
+
 	return 0;
 }
 
