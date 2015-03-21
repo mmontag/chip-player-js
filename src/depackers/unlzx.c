@@ -1097,7 +1097,7 @@ static int decrunch_lzx(FILE *f, FILE *fo)
 	if (fo == NULL)
 		return -1;
 
-	decr = malloc(sizeof(struct LZXDecrData));
+	decr = calloc(1, sizeof(struct LZXDecrData));
 	if (decr == NULL)
 		return -1;
 
