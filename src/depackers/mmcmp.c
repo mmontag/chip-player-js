@@ -297,9 +297,10 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 		block.num_bits   = read16l(in);
 
                 /* Sanity check */
-		if (block.unpk_size < 0 || block.pk_size < 0) {
+		if (block.unpk_size <= 0 || block.pk_size <= 0)
 			goto err2;
-		}
+		if (block.sub_blk <= 0)
+			goto err2;
 
 		sub_block = malloc(block.sub_blk * sizeof (struct sub_block));
 		if (sub_block == NULL)
