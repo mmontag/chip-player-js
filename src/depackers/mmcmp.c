@@ -256,11 +256,11 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 
 	/* Read file header */
 	if (read32l(in) != 0x4352697A)		/* ziRC */
-		return -1;
+		goto err;
 	if (read32l(in) != 0x61694e4f)		/* ONia */
-		return -1;
+		goto err;
 	if (read16l(in) < 14)			/* header size */
-		return -1;
+		goto err;
 
 	/* Read header */
 	h.version = read16l(in);
@@ -271,13 +271,13 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 	h.fmt_comp = read8(in);
 
 	if (h.nblocks == 0)
-		return -1;
+		goto err;
 
 	/* Block table */
 	fseek(in, h.blktable, SEEK_SET);
 	table = malloc(h.nblocks * 4);
 	if (table == NULL)
-		return -1;
+		goto err;
 
 	for (i = 0; i < h.nblocks; i++) {
 		table[i] = read32l(in);
@@ -296,13 +296,25 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 		block.tt_entries = read16l(in);
 		block.num_bits   = read16l(in);
 
+                /* Sanity check */
+		if (block.unpk_size < 0 || block.pk_size < 0) {
+			goto err2;
+		}
+
 		sub_block = malloc(block.sub_blk * sizeof (struct sub_block));
 		if (sub_block == NULL)
-			goto err;
+			goto err2;
 
 		for (j = 0; j < block.sub_blk; j++) {
 			sub_block[j].unpk_pos  = read32l(in);
 			sub_block[j].unpk_size = read32l(in);
+
+	                /* Sanity check */
+			if (sub_block[j].unpk_pos < 0 ||
+			    sub_block[j].unpk_size < 0) {
+				free(sub_block);
+				goto err2;
+			}
 		}
 
 		block.tt_entries += ftell(in);
@@ -324,8 +336,9 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 	free(table);
 	return 0;
 
-    err:
+    err2:
 	free(table);
+    err:
 	return -1;
 }
 
