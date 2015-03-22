@@ -726,6 +726,10 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		sub->xpo = temp_inst[i].transpose;
 		sub->sid = smp_idx;
 
+		/* Sanity check */
+		if (smp_idx >= mod->smp)
+			return -1;
+
 		xxs = &mod->xxs[smp_idx];
 
 		xxs->len = length;
