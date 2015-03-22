@@ -385,6 +385,10 @@ static int get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     int i, j, chn;
     int x;
 
+    /* Sanity check */
+    if (mod->pat != 0)
+        return -1;
+
     mod->pat = hio_read8(f);
 
     if ((mod->xxp = calloc(sizeof (struct xmp_pattern *), mod->pat)) == NULL)
@@ -416,6 +420,10 @@ static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     struct xmp_module *mod = &m->mod;
     int i, j;
     uint16 x;
+
+    /* Sanity check */
+    if (mod->pat != 0)
+        return -1;
 
     mod->pat = hio_read8(f);
 
