@@ -81,6 +81,11 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read16b(f);			/* reserved */
 	hio_read32b(f);			/* reserved */
 
+	/* Sanity check */
+	if (mod->ins > 64) {
+		return -1;
+	}
+
 	sng_ptr = hio_read32b(f);
 	seq_ptr = hio_read32b(f);
 	ins_ptr = hio_read32b(f);

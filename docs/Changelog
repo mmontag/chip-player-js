@@ -8,7 +8,7 @@ Stable versions
 	- fix IT filter envelope memory
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
 	- add sanity check to MED2/3/4 loader
-	- add sanity check to STIM/GDM/DBM/LIQ/ICE/PSM/PTM loader
+	- add sanity check to STIM/GDM/DBM/LIQ/ICE/PSM/PTM/MGT loader
 	- add sanity check to MDL/RAD/MGT/IMF/RTM/DT/LIQ/DTM pattern loader
 	- add sanity check to OKT/IMF/MMD/MDL sample loader
 	- add sanity check to Archimedes Tracker format test
