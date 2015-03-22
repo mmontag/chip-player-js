@@ -392,6 +392,8 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (smp_num = i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi = &mod->xxi[i];
+
 	hio_read(&ii.name, 32, 1, f);
 	hio_read(&ii.map, 120, 1, f);
 	hio_read(&ii.unused, 8, 1, f);
@@ -420,37 +422,44 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (ii.magic != MAGIC_II10)
 	    return -2;
 
-	mod->xxi[i].nsm = ii.nsm;
+	xxi->nsm = ii.nsm;
 
-        if (mod->xxi[i].nsm) {
-	    if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
+        if (xxi->nsm > 0) {
+	    if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
 		return -1;
 	}
 
 	adjust_string ((char *) ii.name);
-	strncpy ((char *) mod->xxi[i].name, ii.name, 24);
+	strncpy ((char *) xxi->name, ii.name, 24);
 
 	for (j = 0; j < 108; j++) {
-		mod->xxi[i].map[j + 12].ins = ii.map[j];
+		xxi->map[j + 12].ins = ii.map[j];
 	}
 
 	D_(D_INFO "[%2X] %-31.31s %2d %4x %c", i, ii.name, ii.nsm,
 		ii.fadeout, ii.env[0].flg & 0x01 ? 'V' : '-');
 
-	mod->xxi[i].aei.npt = ii.env[0].npt;
-	mod->xxi[i].aei.sus = ii.env[0].sus;
-	mod->xxi[i].aei.lps = ii.env[0].lps;
-	mod->xxi[i].aei.lpe = ii.env[0].lpe;
-	mod->xxi[i].aei.flg = ii.env[0].flg & 0x01 ? XMP_ENVELOPE_ON : 0;
-	mod->xxi[i].aei.flg |= ii.env[0].flg & 0x02 ? XMP_ENVELOPE_SUS : 0;
-	mod->xxi[i].aei.flg |= ii.env[0].flg & 0x04 ?  XMP_ENVELOPE_LOOP : 0;
+	xxi->aei.npt = ii.env[0].npt;
+	xxi->aei.sus = ii.env[0].sus;
+	xxi->aei.lps = ii.env[0].lps;
+	xxi->aei.lpe = ii.env[0].lpe;
+	xxi->aei.flg = ii.env[0].flg & 0x01 ? XMP_ENVELOPE_ON : 0;
+	xxi->aei.flg |= ii.env[0].flg & 0x02 ? XMP_ENVELOPE_SUS : 0;
+	xxi->aei.flg |= ii.env[0].flg & 0x04 ?  XMP_ENVELOPE_LOOP : 0;
 
-	for (j = 0; j < mod->xxi[i].aei.npt; j++) {
-	    mod->xxi[i].aei.data[j * 2] = ii.vol_env[j * 2];
-	    mod->xxi[i].aei.data[j * 2 + 1] = ii.vol_env[j * 2 + 1];
+	/* Sanity check */
+	if (xxi->aei.npt >= XMP_MAX_ENV_POINTS) {
+	    return -1;
+	}
+
+	for (j = 0; j < xxi->aei.npt; j++) {
+	    xxi->aei.data[j * 2] = ii.vol_env[j * 2];
+	    xxi->aei.data[j * 2 + 1] = ii.vol_env[j * 2 + 1];
 	}
 
 	for (j = 0; j < ii.nsm; j++, smp_num++) {
+            struct xmp_subinstrument *sub = &xxi->sub[j];
+            struct xmp_sample *xxs = &mod->xxs[smp_num];
 	    int sid;
 
 	    hio_read(&is.name, 13, 1, f);
@@ -472,30 +481,30 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
             if (is.len > 0x100000 || is.lps > 0x100000 || is.lpe > 0x100000)
 		return -1;
 
-	    mod->xxi[i].sub[j].sid = smp_num;
-	    mod->xxi[i].sub[j].vol = is.vol;
-	    mod->xxi[i].sub[j].pan = is.pan;
-	    mod->xxs[smp_num].len = is.len;
-	    mod->xxs[smp_num].lps = is.lps;
-	    mod->xxs[smp_num].lpe = is.lpe;
-	    mod->xxs[smp_num].flg = is.flg & 1 ? XMP_SAMPLE_LOOP : 0;
+	    sub->sid = smp_num;
+	    sub->vol = is.vol;
+	    sub->pan = is.pan;
+	    xxs->len = is.len;
+	    xxs->lps = is.lps;
+	    xxs->lpe = is.lpe;
+	    xxs->flg = is.flg & 1 ? XMP_SAMPLE_LOOP : 0;
 
 	    if (is.flg & 4) {
-	        mod->xxs[smp_num].flg |= XMP_SAMPLE_16BIT;
-	        mod->xxs[smp_num].len >>= 1;
-	        mod->xxs[smp_num].lps >>= 1;
-	        mod->xxs[smp_num].lpe >>= 1;
+	        xxs->flg |= XMP_SAMPLE_16BIT;
+	        xxs->len >>= 1;
+	        xxs->lps >>= 1;
+	        xxs->lpe >>= 1;
 	    }
 
 	    D_(D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
 
-	    c2spd_to_note(is.rate, &mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
+	    c2spd_to_note(is.rate, &sub->xpo, &sub->fin);
 
-	    if (!mod->xxs[smp_num].len)
+	    if (xxs->len <= 0)
 		continue;
 
-	    sid = mod->xxi[i].sub[j].sid;
+	    sid = sub->sid;
 	    if (load_sample(m, f, 0, &mod->xxs[sid], NULL) < 0)
 		return -1;
 	}
