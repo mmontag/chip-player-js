@@ -389,6 +389,11 @@ static int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
     goto error;
   }
 
+  /* Sanity check */
+  if (pLen + 16 >= st.st_size) {
+    goto error;
+  }
+
   if ((dst = malloc(oLen)) == NULL) {
     /*fprintf(stderr,"S404 Error: malloc(%d) failed..\n", oLen);*/
     goto error;
