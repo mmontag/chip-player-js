@@ -754,7 +754,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
 		c = j < 120 ? i1h.keys[j * 2 + 1] - 1 : -1;
-		if (c < 0) {
+		if (c < 0 || c >= 120) {
 		    xxi->map[j].ins = 0;
 		    xxi->map[j].xpo = 0;
 		    continue;
