@@ -487,6 +487,10 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		struct xmp_subinstrument *sub = &xxi->sub[j];
 		struct xmp_sample *xxs = &mod->xxs[smp_idx];
 
+		/* Sanity check */
+		if (j >= xxi->nsm || smp_idx >= mod->smp)
+			return -1;
+
 		sub->pan = 0x80;
 		sub->vol = 64;
 		sub->xpo = 12 + sample->strans;
