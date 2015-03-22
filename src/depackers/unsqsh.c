@@ -340,7 +340,7 @@ static int decrunch_sqsh(FILE * f, FILE * fo)
 	srclen = read32b(f);
 
 	/* Sanity check */
-	if (srclen <= 0 || srclen > 0x100000)
+	if (srclen <= 8 || srclen > 0x100000)
 		goto err;
 
 	if (read32b(f) != 0x53515348)	/* SQSH */
