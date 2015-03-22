@@ -250,6 +250,11 @@ static int unsqsh(uint8 *src, int srclen, uint8 *dest, int destlen)
 	c = src + 20;
 
 	while (len) {
+		/* Sanity check */
+		if (c >= src + srclen) {
+			return -1;
+		}
+
 		type = *c++;
 		c++;			/* hchk */
 
@@ -263,6 +268,10 @@ static int unsqsh(uint8 *src, int srclen, uint8 *dest, int destlen)
 		c += 2;
 
 		/* Sanity check */
+		if (packed_size <= 0 || unpacked_size <= 0) {
+			return -1;
+		}
+
 		if (c + packed_size + 3 > src + srclen) {
 			return -1;
 		}
