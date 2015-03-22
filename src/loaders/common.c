@@ -77,7 +77,7 @@ int pattern_init(struct xmp_module *mod)
 int pattern_alloc(struct xmp_module *mod, int num)
 {
 	/* Sanity check */
-	if (num >= mod->pat || mod->xxp[num] != NULL)
+	if (num < 0 || num >= mod->pat || mod->xxp[num] != NULL)
 		return -1;
 
 	mod->xxp[num] = calloc(1, sizeof (struct xmp_pattern) +
@@ -124,8 +124,13 @@ int tracks_in_pattern_alloc(struct xmp_module *mod, int num)
 
 int pattern_tracks_alloc(struct xmp_module *mod, int num, int rows)
 {
+	/* Sanity check */
+	if (rows < 0 || rows > 256)
+		return -1;
+
 	if (pattern_alloc(mod, num) < 0)
 		return -1;
+
 	mod->xxp[num]->rows = rows;
 
 	if (tracks_in_pattern_alloc(mod, num) < 0)
