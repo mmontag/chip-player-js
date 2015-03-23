@@ -1,6 +1,18 @@
 Stable versions
 ---------------
 
+4.3.6 (20150322):
+	- fix IT volume column volume slide effect memory
+	- fix IT default filter cutoff on new note
+	- fix IT filter envelope memory
+	- add sanity check for IT old instrument loading
+	- fix instrument number in channel initialization
+	- fix sample size limit (reported by Jochen Goernitz)
+	- fix loading of OpenMPT 1.17 IT modules (reported by Dane Bush)
+	- fix XM loading for MED2XM modules (reported by Lorence Lombardo)
+	- add IT random volume variation
+	- add IT random pan variation
+
 4.3.5 (20150207):
 	- add sanity check for ST3 S3M maximum sample size
 	- add sanity check for sample loop start
@@ -19,7 +31,6 @@ Stable versions
 	- fix crash on attempt to play invalid sample
 	- fix infinite loop in break+delay quirk
 	- reset module data before loading module
-	Other changes:
 	- fix loop processing error in scan (reported by Lionel Debroux)
 	- fix sample loop adjustment (by Emmanuel Julien)
 

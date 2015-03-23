@@ -3,7 +3,7 @@ Stable versions
 
 4.3.6 (20150322):
 	Fix bugs caught in the OpenMPT test cases:
-	- fix volume column volume slide effect memory
+	- fix IT volume column volume slide effect memory
 	- fix IT default filter cutoff on new note
 	- fix IT filter envelope memory
 	Fix crashes with fuzzed files (reported by Lionel Debroux):
