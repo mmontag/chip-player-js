@@ -1,6 +1,8 @@
 Stable versions
 ---------------
 
+4.3.7 ():
+
 4.3.6 (20150322):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT volume column volume slide effect memory
