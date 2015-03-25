@@ -387,7 +387,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	for (i = 0; i < mod->pat; i++) {
 		for (j = 0; j < mod->chn; j++) {
 			int t = mod->xxp[i]->index[j];
-			if (t >= mod->trk || mod->xxt[t] == NULL) {
+			if (t < 0 || t >= mod->trk || mod->xxt[t] == NULL) {
 				xmp_release_module(opaque);
 				return -XMP_ERROR_LOAD;
 			}
