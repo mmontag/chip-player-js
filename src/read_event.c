@@ -943,6 +943,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				}
 			}
 		} else {
+			if (HAS_QUIRK(QUIRK_ITSMP)) {
+				xc->volume = 0;
+			}
+
 			/* Ignore invalid instruments */
 			new_invalid_ins = 1;
 			xc->flags = 0;
