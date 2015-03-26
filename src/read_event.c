@@ -913,10 +913,11 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			/* valid ins */
 
 			if (!key) {
-				/* See OpenMPT scx.it */
-				if (HAS_QUIRK(QUIRK_ITSMP)) {
-					key = xc->key + 1;
-				} else
+				/* Retrig in new ins in sample mode */
+				if (HAS_QUIRK(QUIRK_ITSMP) && TEST_NOTE(NOTE_END)) {
+					virt_voicepos(ctx, chn, 0);
+				}
+
 				/* IT: Reset note for every new != ins */
 				if (xc->ins == ins) {
 					SET(NEW_INS);
@@ -1026,12 +1027,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			if (smp >= 0) {		/* Not sure if needed */
 				xc->smp = smp;
 			}
-
-			/* In sample mode lone volumes don't retrig ins */
-			if (ev.vol && HAS_QUIRK(QUIRK_ITSMP)) {
-				xc->volume = ev.vol - 1;
-				SET(NEW_VOL);
-			}
 		} else {
 			xc->flags = 0;
 			use_ins_vol = 0;
@@ -1090,7 +1085,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 	
 	/* Process new volume */
-	if (ev.vol && !HAS_QUIRK(QUIRK_ITSMP)) {
+	if (ev.vol && (!TEST_NOTE(NOTE_CUT) || ev.ins != 0)) {
 		xc->volume = ev.vol - 1;
 		SET(NEW_VOL);
 	}

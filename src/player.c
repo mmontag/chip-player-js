@@ -835,6 +835,8 @@ static void play_channel(struct context_data *ctx, int chn)
 			if (xc->retrig.type < 0x10) {
 				/* don't retrig on cut */
 				virt_voicepos(ctx, chn, 0);
+			} else {
+				SET_NOTE(NOTE_END);
 			}
 			xc->volume += rval[xc->retrig.type].s;
 			xc->volume *= rval[xc->retrig.type].m;
