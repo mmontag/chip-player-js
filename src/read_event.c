@@ -913,6 +913,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			/* valid ins */
 
 			if (!key) {
+				/* See OpenMPT scx.it */
+				if (HAS_QUIRK(QUIRK_ITSMP)) {
+					key = xc->key + 1;
+				} else
 				/* IT: Reset note for every new != ins */
 				if (xc->ins == ins) {
 					SET(NEW_INS);
@@ -923,6 +927,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 				RESET_NOTE(NOTE_SET);
 			}
+
 			if (xc->ins != ins && (!is_toneporta || !HAS_QUIRK(QUIRK_PRENV))) {
 				struct xmp_subinstrument *s1, *s2;
 				s1 = get_subinstrument(ctx, xc->ins, xc->key);
@@ -943,6 +948,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				}
 			}
 		} else {
+			/* In sample mode invalid ins cut previous ins */
 			if (HAS_QUIRK(QUIRK_ITSMP)) {
 				xc->volume = 0;
 			}
@@ -1020,6 +1026,12 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			if (smp >= 0) {		/* Not sure if needed */
 				xc->smp = smp;
 			}
+
+			/* In sample mode lone volumes don't retrig ins */
+			if (ev.vol && HAS_QUIRK(QUIRK_ITSMP)) {
+				xc->volume = ev.vol - 1;
+				SET(NEW_VOL);
+			}
 		} else {
 			xc->flags = 0;
 			use_ins_vol = 0;
@@ -1078,7 +1090,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 	
 	/* Process new volume */
-	if (ev.vol) {
+	if (ev.vol && !HAS_QUIRK(QUIRK_ITSMP)) {
 		xc->volume = ev.vol - 1;
 		SET(NEW_VOL);
 	}
