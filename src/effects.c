@@ -74,7 +74,7 @@ static void do_toneporta(struct module_data *m,
 	if (note >= 1 && note <= 0x80 && (uint32)xc->ins < m->mod.ins) {
 		note--;
 		xc->porta.target = note_to_period(note + sub->xpo +
-			instrument->map[xc->key].xpo, xc->finetune,
+			instrument->map[xc->key_porta].xpo, xc->finetune,
 			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 	}
 	xc->porta.dir = xc->period < xc->porta.target ? 1 : -1;
@@ -90,6 +90,11 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	struct flow_control *f = &p->flow;
 	uint8 note, fxp, fxt;
 	int h, l;
+
+	/* key_porta is IT only */
+	if (m->read_event_type != READ_EVENT_IT) {
+		xc->key_porta = xc->key;
+	}
 
 	note = e->note;
 	if (fnum == 0) {

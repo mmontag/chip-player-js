@@ -98,6 +98,8 @@ struct channel_data {
 	int p_idx;		/* Pan envelope index */
 	int f_idx;		/* Freq envelope index */
 
+	int key_porta;		/* Key number for portamento target
+				 * -- needed to handle IT portamento xpo */
 	struct {
 		struct lfo lfo;
 		int memory;

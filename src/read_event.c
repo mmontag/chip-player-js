@@ -1016,6 +1016,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 					SET(NEW_INS);
 					RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
 				} else {
+					if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
+						xc->key_porta = key - 1;
+					}
 					key = 0;
 				}
 			}
