@@ -1377,6 +1377,10 @@ int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 	if (e->ins != 0)
 		xc->old_ins = e->ins;
 
+	if (TEST_NOTE(NOTE_SAMPLE_END)) {
+		SET_NOTE(NOTE_END);
+	}
+
 	if (chn >= m->mod.chn) {
 		return read_event_smix(ctx, e, chn);
 	} else switch (m->read_event_type) {
