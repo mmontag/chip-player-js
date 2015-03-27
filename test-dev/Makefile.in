@@ -145,6 +145,7 @@ OPENMPT_IT	= carrynna \
 		  gxxtest \
 		  ins_flt_porta_reset \
 		  instrumentnumberchange \
+		  linearslides \
 		  nomap \
 		  noteoff2 \
 		  porta_offset \
