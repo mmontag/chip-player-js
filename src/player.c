@@ -351,7 +351,9 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	if (check_envelope_end(&instrument->aei, xc->v_idx)) {
 		if (vol_envelope == 0)
 			SET_NOTE(NOTE_END);
-		SET_NOTE(NOTE_ENV_END);
+
+		//if (~instrument->aei.flg & XMP_ENVELOPE_ON || ~instrument->aei.flg & XMP_ENVELOPE_CARRY || xc->ins_fade == 0 || xc->fadeout <= xc->ins_fade)
+			SET_NOTE(NOTE_ENV_END);
 	}
 
 	if (!TEST_PER(VENV_PAUSE)) {

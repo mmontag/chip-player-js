@@ -789,6 +789,20 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
+static int check_fadeout(struct context_data *ctx, struct channel_data *xc, int ins)
+{
+	struct xmp_instrument *xxi = get_instrument(ctx, ins);
+
+	if (xxi == NULL) {
+		return 1;
+	}
+
+	return (~xxi->aei.flg & XMP_ENVELOPE_ON ||
+		~xxi->aei.flg & XMP_ENVELOPE_CARRY ||
+		xc->ins_fade == 0 ||
+		xc->fadeout <= xc->ins_fade);
+}
+
 static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -1038,14 +1052,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		}
 	}
 
-	/* Reset in case of new instrument and the previous envelope has
-	 * finished (OpenMPT test EnvReset.it). This must take place after
-	 * channel copies in case of NNA (see test/test.it)
-	 */
-	if (ev.ins && TEST_NOTE(NOTE_ENV_END)) {
-		reset_envelopes(ctx, xc);
-	}
-
 	if (IS_VALID_INSTRUMENT(candidate_ins)) {
 		if (xc->ins != candidate_ins) {
 			/* Reset envelopes if instrument changes */
@@ -1053,6 +1059,19 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		}
 		xc->ins = candidate_ins;
 		xc->ins_fade = mod->xxi[candidate_ins].rls;
+	}
+
+	/* Reset in case of new instrument and the previous envelope has
+	 * finished (OpenMPT test EnvReset.it). This must take place after
+	 * channel copies in case of NNA (see test/test.it)
+	 * Also if we have envelope in carry mode, check fadeout
+	 */
+	if (ev.ins && TEST_NOTE(NOTE_ENV_END)) {
+		if (check_fadeout(ctx, xc, candidate_ins)) {
+			reset_envelopes(ctx, xc);
+		} else {
+			reset_env = 0;
+		}
 	}
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
