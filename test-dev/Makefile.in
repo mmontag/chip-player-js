@@ -162,6 +162,7 @@ OPENMPT_IT	= carrynna \
 		  swing1 \
 		  swing2 \
 		  swing3 \
+		  vol_env_carry \
 		  volcolmemory
 
 OPENMPT_S3M	= freqlimits \
