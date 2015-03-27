@@ -1171,7 +1171,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     if (sample_mode) {
-	m->quirk &= ~QUIRK_VIRTUAL;
+	m->quirk &= ~(QUIRK_VIRTUAL | QUIRK_RSTCHN);
     }
 
     m->gvolbase = 0x80;
