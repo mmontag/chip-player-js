@@ -156,6 +156,7 @@ OPENMPT_IT	= carrynna \
 		  retrig_short \
 		  s7xinsnum \
 		  samplenumberchange \
+		  scx \
 		  swaptest \
 		  swing1 \
 		  swing2 \
