@@ -803,6 +803,21 @@ static int check_fadeout(struct context_data *ctx, struct channel_data *xc, int 
 		xc->fadeout <= xc->ins_fade);
 }
 
+static int check_invalid_sample(struct context_data *ctx, int ins, int key)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+
+	if (ins < mod->ins) {
+		int smp = mod->xxi[ins].map[key].ins;
+		if (smp == 0xff || smp >= mod->smp) {
+			return 1;
+		};
+	}
+
+	return 0;
+}
+
 static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -845,16 +860,12 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* Notes with unmapped instruments are ignored */
 	if (ev.ins) {
 		if (ev.ins <= mod->ins && ev.note && ev.note <= XMP_MAX_KEYS) {
-			int ins = ev.ins - 1;
-			int key = ev.note - 1;
 
-			if (ins < mod->ins) {
-				int smp = mod->xxi[ins].map[key].ins;
-				if (smp == 0xff || smp >= mod->smp) {
-					candidate_ins = ins;
-					memset(&ev, 0, sizeof (ev));
-				};
+			if (check_invalid_sample(ctx, ev.ins - 1, ev.note - 1)) {
+				candidate_ins = ev.ins - 1;
+				memset(&ev, 0, sizeof (ev));
 			}
+
 		}
 	} else {
 		if (ev.note && ev.note <= XMP_MAX_KEYS) {
