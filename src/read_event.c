@@ -858,10 +858,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		is_release = 1;
 	}
 
-	if (sample_mode && virt_mapchannel(ctx, chn) < 0) {
-		is_toneporta = 0;
-	}
-
 	if (xc->period <= 0 || TEST_NOTE(NOTE_END)) {
 		is_toneporta = 0;
 	}
