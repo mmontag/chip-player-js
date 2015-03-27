@@ -803,6 +803,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	int candidate_ins;
 	int reset_env;
 	int use_ins_vol;
+	int sample_mode;
 	struct xmp_event ev;
 
 	memcpy(&ev, e, sizeof (struct xmp_event));
@@ -825,6 +826,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	reset_env = 0;
 	use_ins_vol = 0;
 	candidate_ins = xc->ins;
+	sample_mode = !HAS_QUIRK(QUIRK_VIRTUAL);
 
 	/* Notes with unmapped instruments are ignored */
 	if (ev.ins) {
@@ -856,7 +858,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		is_release = 1;
 	}
 
-	if (!HAS_QUIRK(QUIRK_VIRTUAL) && virt_mapchannel(ctx, chn) < 0) {
+	if (sample_mode && virt_mapchannel(ctx, chn) < 0) {
 		is_toneporta = 0;
 	}
 
@@ -914,7 +916,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 			if (!key) {
 				/* Retrig in new ins in sample mode */
-				if (HAS_QUIRK(QUIRK_ITSMP) && TEST_NOTE(NOTE_END)) {
+				if (sample_mode && TEST_NOTE(NOTE_END)) {
 					virt_voicepos(ctx, chn, 0);
 				}
 
@@ -950,7 +952,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 		} else {
 			/* In sample mode invalid ins cut previous ins */
-			if (HAS_QUIRK(QUIRK_ITSMP)) {
+			if (sample_mode) {
 				xc->volume = 0;
 			}
 

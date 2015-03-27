@@ -394,15 +394,11 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     sample_mode = ~ifh.flags & IT_USE_INST;
 
     if (ifh.flags & IT_LINEAR_FREQ) {
-       m->quirk |= QUIRK_LINEAR;
+        m->quirk |= QUIRK_LINEAR;
     }
 
-    if (sample_mode) {
-        m->quirk |= QUIRK_ITSMP;
-    } else {
-        if (ifh.cmwt >= 0x200) {
-            m->quirk |= QUIRK_INSVOL;
-        }
+    if (!sample_mode && ifh.cmwt >= 0x200) {
+        m->quirk |= QUIRK_INSVOL;
     }
 
     for (i = 0; i < 64; i++) {
