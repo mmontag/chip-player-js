@@ -9,6 +9,7 @@ Stable versions
 	- fix IT tone portamento with sample changes
 	Other changes:
 	- fix IT random volume variation
+	- fix pattern initialization sanity check
 
 4.3.6 (20150322):
 	Fix bugs caught in the OpenMPT test cases:

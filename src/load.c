@@ -373,23 +373,26 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	}
 
 	if (load_result < 0) {
-		xmp_release_module(opaque);
-		return -XMP_ERROR_LOAD;
+		goto err_load;
 	}
 
 	/* Sanity check */
 	if (mod->chn > XMP_MAX_CHANNELS || mod->len > XMP_MAX_MOD_LENGTH) {
-		xmp_release_module(opaque);
-		return -XMP_ERROR_LOAD;
+		goto err_load;
 	}
 
 	/* Sanity check */
+	if (mod->xxp == NULL) {
+		goto err_load;
+	}
 	for (i = 0; i < mod->pat; i++) {
+		if (mod->xxp[i] == NULL) {
+			goto err_load;
+		}
 		for (j = 0; j < mod->chn; j++) {
 			int t = mod->xxp[i]->index[j];
 			if (t < 0 || t >= mod->trk || mod->xxt[t] == NULL) {
-				xmp_release_module(opaque);
-				return -XMP_ERROR_LOAD;
+				goto err_load;
 			}
 		}
 	}
@@ -408,6 +411,10 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	ctx->state = XMP_STATE_LOADED;
 
 	return 0;
+
+    err_load:
+	xmp_release_module(opaque);
+	return -XMP_ERROR_LOAD;
 }
 
 int xmp_load_module(xmp_context opaque, char *path)
