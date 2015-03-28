@@ -227,6 +227,7 @@ struct module_data {
 	int c4rate;			/* C4 replay rate */
 	int volbase;			/* Volume base */
 	int gvolbase;			/* Global volume base */
+	int gvol;			/* Global volume */
 	int *vol_table;			/* Volume translation table */
 	int quirk;			/* player quirks */
 #define READ_EVENT_MOD	0

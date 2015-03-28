@@ -174,7 +174,7 @@ void load_prologue(struct context_data *ctx)
 	m->rrate = PAL_RATE;
 	m->c4rate = C4_PAL_RATE;
 	m->volbase = 0x40;
-	m->gvolbase = 0x40;
+	m->gvol = m->gvolbase = 0x40;
 	m->vol_table = NULL;
 	m->quirk = 0;
 	m->read_event_type = READ_EVENT_MOD;
@@ -213,7 +213,7 @@ void load_epilogue(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	int i, j;
 
-    	mod->gvl = m->gvolbase;
+    	mod->gvl = m->gvol;
 
 	/* Sanity check for module parameters */
 	CLAMP(mod->len, 0, XMP_MAX_MOD_LENGTH);

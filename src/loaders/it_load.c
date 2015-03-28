@@ -354,6 +354,11 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     ifh.sep = hio_read8(f);
     ifh.pwd = hio_read8(f);
 
+    /* Sanity check */
+    if (ifh.gv > 0x80 || ifh.mv > 0x80) {
+        goto err;
+    }
+
     ifh.msglen = hio_read16l(f);
     ifh.msgofs = hio_read32l(f);
     ifh.rsvd = hio_read32l(f);
@@ -1168,6 +1173,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     m->gvolbase = 0x80;
+    m->gvol = ifh.gv;
     m->read_event_type = READ_EVENT_IT;
 
     return 0;
