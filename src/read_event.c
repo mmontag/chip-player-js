@@ -855,6 +855,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		xc->delayed_ins = 0;
 	}
 
+	/* Keyoff + instrument retrigs current instrument in old fx mode */
+	if (HAS_QUIRK(QUIRK_ITOLDFX)) {
+		if (ev.note == XMP_KEY_OFF && IS_VALID_INSTRUMENT(ev.ins -1)) {
+			ev.note = xc->key + 1;
+			ev.ins = xc->ins + 1;
+		}
+	}
+
 	xc->flags = 0;
 	note = -1;
 	key = ev.note;

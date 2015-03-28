@@ -154,7 +154,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_VIBALL	(1 << 20)	/* Vibrato in all frames */
 #define QUIRK_VIBINV	(1 << 21)	/* Vibrato has inverse waveform */
 #define QUIRK_PRENV	(1 << 22)	/* Portamento resets envelope & fade */
-/*#define QUIRK_ITSMP	(1 << 23)*/	/* IT sample mode */
+#define QUIRK_ITOLDFX	(1 << 23)	/* IT old effects mode */
 #define QUIRK_S3MRTG	(1 << 24)	/* S3M-style retrig when count == 0 */
 #define QUIRK_RTDELAY	(1 << 25)	/* Delay effect retrigs instrument */
 #define QUIRK_FT2BUGS	(1 << 26)	/* FT2 bug compatibility */

@@ -8,6 +8,7 @@ Stable versions
 	- fix IT envelope handling with carry and fadeout
 	- fix IT tone portamento with sample changes
 	- fix IT initial global volume setting
+	- fix IT keyoff with instrument in old effects mode
 	Other changes:
 	- fix IT random volume variation
 	- fix pattern initialization sanity check
