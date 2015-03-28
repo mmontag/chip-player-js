@@ -187,9 +187,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define MED_TIME_FACTOR		2.64
 
 #define MAX_SEQUENCES		16
-
-/* Arbitrary limit to prevent unreasonably large allocations */
-#define MAX_SAMPLE_SIZE		0x00800000
+#define MAX_SAMPLE_SIZE		0x10000000
 #define MAX_SAMPLES		1024
 
 struct ord_data {
