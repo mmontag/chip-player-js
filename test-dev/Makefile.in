@@ -149,6 +149,7 @@ OPENMPT_IT	= carrynna \
 		  linearslides \
 		  nomap \
 		  noteoff2 \
+		  noteoff3 \
 		  porta_offset \
 		  portainsnum \
 		  portainsnumcompat \
