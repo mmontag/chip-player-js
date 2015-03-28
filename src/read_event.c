@@ -42,6 +42,16 @@ static inline void copy_channel(struct player_data *p, int to, int from)
 	}
 }
 
+static inline int has_note_event(struct xmp_event *e)
+{
+	return (e->note && e->note <= XMP_MAX_KEYS);
+}
+
+static inline int is_valid_note(int note)
+{
+	return (note >= 0 && note < XMP_MAX_KEYS);
+}
+
 static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 						   int ins, int key)
 {
@@ -51,7 +61,7 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 
 	if (IS_VALID_INSTRUMENT(ins)) {
 		instrument = &mod->xxi[ins];
-		if (key >= 0 && key < XMP_MAX_KEYS) {
+		if (is_valid_note(key)) {
 			int mapped = instrument->map[key].ins;
 			if (mapped != 0xff && mapped >= 0 && mapped < instrument->nsm)
 			  	return &instrument->sub[mapped];
@@ -536,7 +546,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	 *  memory). The instrument number next it, however, is not affected
 	 *  and remains in the memory."
 	 */
-	if (key > 0 && (uint32)key <= XMP_MAX_KEYS) {
+	if (is_valid_note(key - 1)) {
 		int k = key - 1;
 		sub = get_subinstrument(ctx, xc->ins, k);
 		if (!new_invalid_ins && sub != NULL) {
@@ -549,7 +559,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 	}
 
-	if (key > 0 && (uint32)key <= XMP_MAX_KEYS) {
+	if (is_valid_note(key - 1)) {
 		xc->key = --key;
 		xc->fadeout = 0x10000;
 		RESET_NOTE(NOTE_END);
@@ -859,7 +869,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	/* Notes with unmapped instruments are ignored */
 	if (ev.ins) {
-		if (ev.ins <= mod->ins && ev.note && ev.note <= XMP_MAX_KEYS) {
+		if (ev.ins <= mod->ins && has_note_event(&ev)) {
 			int ins = ev.ins - 1;
 			if (check_invalid_sample(ctx, ins, ev.note - 1)) {
 				candidate_ins = ins;
@@ -867,7 +877,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 		}
 	} else {
-		if (ev.note && ev.note <= XMP_MAX_KEYS) {
+		if (has_note_event(&ev)) {
 			int ins = xc->old_ins - 1;
 			if (!IS_VALID_INSTRUMENT(ins)) {
 				new_invalid_ins = 1;
@@ -1016,7 +1026,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 					SET(NEW_INS);
 					RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
 				} else {
-					if ((uint32)key <= XMP_MAX_KEYS && key > 0) {
+					if (is_valid_note(key - 1)) {
 						xc->key_porta = key - 1;
 					}
 					key = 0;
@@ -1025,7 +1035,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		}
 	}
 
-	if ((uint32)key <= XMP_MAX_KEYS && key > 0 && !new_invalid_ins) {
+	if (is_valid_note(key - 1) && !new_invalid_ins) {
 		xc->key = --key;
 		RESET_NOTE(NOTE_END);
 
