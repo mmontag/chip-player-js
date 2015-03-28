@@ -141,6 +141,7 @@ OPENMPT_IT	= carrynna \
 		  finevolcolslide \
 		  flt_env_carry \
 		  freqreset_noins \
+		  globalvol_invalid \
 		  gxsmp \
 		  gxxtest \
 		  ins_flt_porta_reset \
