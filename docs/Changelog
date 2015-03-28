@@ -7,6 +7,8 @@ Stable versions
 	- fix note end detection in IT sample mode
 	- fix IT envelope handling with carry and fadeout
 	- fix IT tone portamento with sample changes
+	Other changes:
+	- fix IT random volume variation
 
 4.3.6 (20150322):
 	Fix bugs caught in the OpenMPT test cases:

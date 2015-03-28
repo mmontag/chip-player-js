@@ -1167,8 +1167,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		xc->volume = sub->vol;
 
 		if (vol_swing) {
-			xc->volume = (xc->volume *
-				(rand() % 65) * vol_swing) / (64 * 100);
+			xc->volume = (xc->volume * (100 - vol_swing) + 
+				(rand() % (xc->volume + 1)) * vol_swing) / 100;
 		}
 	}
 
