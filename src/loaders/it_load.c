@@ -432,13 +432,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 
-    /* S3M skips pattern 0xfe */
-    for (i = 0; i < (mod->len - 1); i++) {
-	if (mod->xxo[i] == 0xfe) {
-	    memmove(&mod->xxo[i], &mod->xxo[i + 1], mod->len - i - 1);
-	    mod->len--;
-	}
-    }
     for (i = 0; i < mod->ins; i++)
 	pp_ins[i] = hio_read32l(f);
     for (i = 0; i < mod->smp; i++)
