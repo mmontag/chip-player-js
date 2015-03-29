@@ -3,8 +3,8 @@ Stable versions
 
 4.3.7 ():
 	Fix bugs caught in the OpenMPT test cases:
-	- fix note cut on invalid sample in IT sample mode
-	- fix note end detection in IT sample mode
+	- fix IT sample mode note cut on invalid sample
+	- fix IT sample mode note end detection
 	- fix IT envelope handling with carry and fadeout
 	- fix IT tone portamento with sample changes
 	- fix IT initial global volume setting
