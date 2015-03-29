@@ -82,6 +82,7 @@
 #define FX_PANBRELLO	0x8a
 #define FX_PANBRELLO_WF	0x8b
 #define FX_HIOFFSET	0x8c
+#define FX_SURROUND	0x8d
 #endif
 
 #ifndef LIBXMP_CORE_PLAYER

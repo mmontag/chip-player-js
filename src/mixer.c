@@ -377,8 +377,13 @@ void mixer_softmixer(struct context_data *ctx)
 		vi->pos0 = vi->pos;
 
 		buf_pos = s->buf32;
-		vol_r = vi->vol * (0x80 - vi->pan);
-		vol_l = vi->vol * (0x80 + vi->pan);
+		if (vi->pan == PAN_SURROUND) {
+			vol_r = vi->vol * 0x80;
+			vol_l = -vi->vol * 0x80;
+		} else {
+			vol_r = vi->vol * (0x80 - vi->pan);
+			vol_l = vi->vol * (0x80 + vi->pan);
+		}
 
 #ifndef LIBXMP_CORE_PLAYER
 		if (vi->fidx & FLAG_SYNTH) {

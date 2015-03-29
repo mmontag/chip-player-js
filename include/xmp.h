@@ -105,6 +105,7 @@ struct xmp_channel {
 #define XMP_CHANNEL_SYNTH	(1 << 0)  /* Channel is synthesized */
 #define XMP_CHANNEL_MUTE  	(1 << 1)  /* Channel is muted */
 #define XMP_CHANNEL_SPLIT	(1 << 2)  /* Split Amiga channel in bits 5-4 */
+#define XMP_CHANNEL_SURROUND	(1 << 3)  /* Surround channel */
 	int flg;			/* Channel flags */
 };
 

@@ -20,6 +20,7 @@ struct mixer_voice {
 	int root;		/* */
 	unsigned int age;	/* */
 	int note;		/* */
+#define PAN_SURROUND 0x8000
 	int pan;		/* */
 	int vol;		/* */
 	int period;		/* current period */

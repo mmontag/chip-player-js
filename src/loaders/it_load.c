@@ -148,8 +148,9 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
 	    e->fxt = FX_SETPAN;
 	    e->fxp = l << 4;
 	    break;
-	case 0x9:		/* 0x91 = set surround -- NOT IMPLEMENTED */
-	    e->fxt = e->fxp = 0;
+	case 0x9:		/* 0x91 = set surround */
+            e->fxt = FX_SURROUND;
+	    e->fxp = l;
 	    break;
 	case 0xa:		/* High offset */
             e->fxt = FX_HIOFFSET;
