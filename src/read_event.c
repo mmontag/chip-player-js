@@ -1142,7 +1142,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	/* IT: always reset sample offset */
-	xc->offset.val = 0;
+	xc->offset.val &= ~0xffff;
 
 	/* According to Storlek test 25, Impulse Tracker handles the volume
 	 * column effects last.

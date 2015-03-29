@@ -263,7 +263,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		EFFECT_MEMORY(fxp, xc->offset.memory);
 		SET(OFFSET);
 		if (note) {
-			xc->offset.val = xc->offset.val2 = fxp << 8;
+			xc->offset.val &= xc->offset.val & ~0xffff;
+			xc->offset.val |= fxp << 8;
+			xc->offset.val2 = fxp << 8;
 		}
 		if (e->ins) {
 			xc->offset.val2 = fxp << 8;
@@ -776,6 +778,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_PANBRELLO_WF:	/* Panbrello waveform */
 		set_lfo_waveform(&xc->panbrello.lfo, fxp & 3);
+		break;
+	case FX_HIOFFSET:	/* High offset */
+		xc->offset.val &= 0xffff;
+		xc->offset.val |= fxp << 16;
 		break;
 #endif
 

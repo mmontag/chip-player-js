@@ -151,6 +151,10 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
 	case 0x9:		/* 0x91 = set surround -- NOT IMPLEMENTED */
 	    e->fxt = e->fxp = 0;
 	    break;
+	case 0xa:		/* High offset */
+            e->fxt = FX_HIOFFSET;
+            e->fxp = l;
+            break;
 	case 0xb:		/* Pattern loop */
 	    e->fxp = 0x60 | l;
 	    break;
@@ -197,7 +201,6 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
     if (e->fxt == FX_OFFSET && e->f2t == FX_TONEPORTA) {
         e->f2t = e->f2p = 0;
     }
-
 }
 
 

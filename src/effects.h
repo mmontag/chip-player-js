@@ -81,6 +81,7 @@
 #define FX_IT_PANSLIDE	0x89
 #define FX_PANBRELLO	0x8a
 #define FX_PANBRELLO_WF	0x8b
+#define FX_HIOFFSET	0x8c
 #endif
 
 #ifndef LIBXMP_CORE_PLAYER
@@ -123,4 +124,5 @@
 #define FX_VSLIDE_DN_2	0xc1
 #define FX_F_VSLIDE_UP_2 0xc2
 #define FX_F_VSLIDE_DN_2 0xc3
+
 #endif /* LIBXMP_EFFECTS_H */
