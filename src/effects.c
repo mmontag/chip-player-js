@@ -257,7 +257,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		    || e->fxt != FX_EXTENDED		/* or not delay */
 		    || MSN(e->fxp) != EX_DELAY) {
 			xc->pan.val = fxp;
-			RESET_PER(SURROUND);
+			xc->pan.surround = 0;
 		}
 		break;
 	case FX_OFFSET:		/* Set sample offset */
@@ -785,11 +785,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		xc->offset.val |= fxp << 16;
 		break;
 	case FX_SURROUND:
-		if (fxp) {
-			SET_PER(SURROUND);
-		} else {
-			RESET_PER(SURROUND);
-		}
+		xc->pan.surround = fxp;
 		break;
 #endif
 

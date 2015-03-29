@@ -161,7 +161,7 @@ struct it_sample_header {
 	uint8 dosname[12];	/* DOS filename */
 	uint8 zero;		/* Always zero */
 	uint8 gvl;		/* Global volume for instrument */
-	uint8 flags;		/* Instrument flags */
+	uint8 flags;		/* Sample flags */
 	uint8 vol;		/* Volume */
 	uint8 name[26];		/* ASCIIZ sample name */
 	uint8 convert;		/* Sample flags */

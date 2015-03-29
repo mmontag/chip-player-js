@@ -12,7 +12,9 @@ Stable versions
 	- fix pattern initialization sanity check
 	- fix ++ pattern handling in IT loader (reported by honguito98)
 	- add IT high offset command (SAx)
-	- add IT surround channel command (S9x)
+	- add IT surround command (S9x)
+	- add IT surround channel support
+	- add IT sample pan setting support
 
 4.3.6 (20150322):
 	- fix IT volume column volume slide effect memory

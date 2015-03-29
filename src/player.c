@@ -172,6 +172,11 @@ static void reset_channels(struct context_data *ctx)
 		} else {
 			xc->split = 0;
 		}
+
+		/* Surround channel */
+		if (mod->xxc[i].flg & XMP_CHANNEL_SURROUND) {
+			xc->pan.surround = 1;
+		}
 	}
 }
 
@@ -619,7 +624,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
 
-	if (s->format & XMP_FORMAT_MONO || TEST_PER(SURROUND)) {
+	if (s->format & XMP_FORMAT_MONO || xc->pan.surround) {
 		finalpan = 0;
 	} else {
 		finalpan = (finalpan - 0x80) * s->mix / 100;
@@ -629,7 +634,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 	xc->info_finalpan = finalpan + 0x80;
 
-	if (TEST_PER(SURROUND)) {
+	if (xc->pan.surround) {
 		virt_setpan(ctx, chn, PAN_SURROUND);
 	} else {
 		virt_setpan(ctx, chn, finalpan);
@@ -1234,9 +1239,7 @@ int xmp_play_frame(xmp_context opaque)
 	/* check new row */
 
 	if (p->frame == 0) {			/* first frame in row */
-
 		check_end_of_module(ctx);
-
 		read_row(ctx, mod->xxo[p->ord], p->row);
 
 #ifndef LIBXMP_CORE_PLAYER

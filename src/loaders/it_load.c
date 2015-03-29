@@ -413,8 +413,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < 64; i++) {
 	struct xmp_channel *xxc = &mod->xxc[i];
 
-	if (ifh.chpan[i] == 100)	/* Surround -> center */
-	    ifh.chpan[i] = 32;
+	if (ifh.chpan[i] == 100) {	/* Surround -> center */
+	    mod->xxc[i].flg |= XMP_CHANNEL_SURROUND;
+        }
 
 	if (ifh.chpan[i] & 0x80) {	/* Channel mute */
 	    ifh.chvol[i] = 0;
@@ -903,6 +904,11 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    sub->vsw = (0xff - ish.vir) >> 1;
 
 		    c2spd_to_note(ish.c5spd, &mod->xxi[j].sub[k].xpo, &mod->xxi[j].sub[k].fin);
+
+                    /* Set sample pan (overrides subinstrument) */
+                    if (ish.dfp & 0x80) {
+                        sub->pan = (ish.dfp & 0x7f) * 4;
+                    }
 		}
 	    }
 	}

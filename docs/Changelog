@@ -15,7 +15,9 @@ Stable versions
 	- fix ++ pattern handling in IT loader (reported by honguito98)
 	- fix Soundtracker short rip loading (reported by Shlomi Fish)
 	- add IT high offset command (SAx)
-	- add IT surround channel command (S9x)
+	- add IT surround command (S9x)
+	- add IT surround channel support
+	- add IT sample pan setting support
 
 4.3.6 (20150322):
 	Fix bugs caught in the OpenMPT test cases:

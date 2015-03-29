@@ -1116,8 +1116,11 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			int pan_swing = (sub->rvv & 0xff00) >> 8;
 			CLAMP(pan_swing, 0, 64);
 
-			if (sub->pan >= 0)
+			if (sub->pan >= 0) {
 				xc->pan.val = sub->pan;
+				xc->pan.surround = 0;
+			}
+
 			if (TEST_NOTE(NOTE_CUT)) {
 				reset_envelopes(ctx, xc);
 			} else {
