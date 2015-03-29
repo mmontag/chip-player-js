@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.7 ():
+4.3.7 (20150329):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT sample mode note cut on invalid sample
 	- fix IT sample mode note end detection
