@@ -373,7 +373,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->pat = ifh.patnum;
 
     /* Sanity check */
-    if (mod->len > 256 || mod->ins > 255 || mod->smp > 255 || mod->pat > 255) {
+    if (mod->ins > 255 || mod->smp > 255 || mod->pat > 255) {
 	goto err;
     }
 
