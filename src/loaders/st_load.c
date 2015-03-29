@@ -48,7 +48,7 @@ static const int period[] = {
 static int st_test(HIO_HANDLE *f, char *t, const int start)
 {
     int i, j, k;
-    int pat, smp_size;
+    int pat, ins, smp_size;
     struct st_header mh;
     uint8 mod_event[4];
     long size;
@@ -128,17 +128,19 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
     if (smp_size < 8)
 	return -1;
 
-    if (size < (600 + pat * 1024 + smp_size))
-	return -1;
-
-    for (i = 0; i < pat; i++) {
+    for (ins = i = 0; i < pat; i++) {
 	for (j = 0; j < (64 * 4); j++) {
-	    int p;
+	    int p, s;
 	
-	    hio_read (mod_event, 1, 4, f);
+	    hio_read(mod_event, 1, 4, f);
 
-	    if (MSN(mod_event[0]))	/* sample number > 15 */
+            s = (mod_event[0] & 0xf0) | MSN(mod_event[2]);
+
+	    if (s > 15)		/* sample number > 15 */
 		return -1;
+
+            if (s > ins)	/* find highest used sample */
+                ins = s;
 
 	    p = 256 * LSN(mod_event[0]) + mod_event[1];
 
@@ -157,6 +159,18 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 	}
     }
 
+    /* Check if file was cut before any unused samples */
+    if (size < 600 + pat * 1024 + smp_size) {
+        int ss;
+        for (ss = i = 0; i < ins; i++) {
+            ss += 2 * mh.ins[i].size;
+        }
+
+        if (size < 600 + pat * 1024 + ss) {
+            return -1;
+        }
+    }
+
     hio_seek(f, start, SEEK_SET);
     read_title(f, t, 20);
 
@@ -171,13 +185,17 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct xmp_event ev, *event;
     struct st_header mh;
     uint8 mod_event[4];
-    int ust = 1, serr = 0;
+    int ust = 1;
     /* int lps_mult = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2; */
     char *modtype;
     int fxused;
     int pos;
+    int used_ins;		/* Number of samples actually used */
+    long size;
 
     LOAD_INIT();
+
+    size = hio_size(f);
 
     mod->ins = 15;
     mod->smp = mod->ins;
@@ -273,7 +291,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (j = 0; j < (64 * mod->chn); j++) {
 	    hio_read (mod_event, 1, 4, f);
 
-	    decode_protracker_event (&ev, mod_event);
+	    decode_protracker_event(&ev, mod_event);
 
 	    if (ev.fxt)
 		fxused |= 1 << ev.fxt;
@@ -317,10 +335,6 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    if (serr) {
-	D_(D_CRIT "File size error: %d", serr);
-    }
-
     hio_seek(f, start + pos, SEEK_SET);
 
     if (pattern_init(mod) < 0)
@@ -330,6 +344,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
+    used_ins = 0;
     for (i = 0; i < mod->pat; i++) {
 	if (pattern_tracks_alloc(mod, i, 64) < 0)
 	    return -1;
@@ -339,6 +354,9 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    hio_read (mod_event, 1, 4, f);
 
 	    decode_protracker_event(event, mod_event);
+
+            if (ev.ins > used_ins)
+                used_ins = ev.ins;
 	}
     }
 
@@ -383,7 +401,9 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     D_(D_INFO "Stored samples: %d", mod->smp);
 
-    for (i = 0; i < mod->smp; i++) {
+    for (i = 0; i < mod->ins; i++) {
+        int val;
+
 	if (!mod->xxs[i].len)
 	    continue;
 
@@ -400,7 +420,14 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	hio_seek(f, mh.ins[i].loop_start, SEEK_CUR);
 
-	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0) {
+	val = load_sample(m, f, 0, &mod->xxs[i], NULL);
+
+        /* Samples actually used in the module are mandatory, and errors
+         * loading unused samples won't be fatal. This will allow us to load
+         * ripped modules cut after the last used sample, such as sll7.mod
+         * (reported by Shlomi Fish).
+         */
+        if (i < used_ins && val < 0) {
 	    return -1;
 	}
     }
