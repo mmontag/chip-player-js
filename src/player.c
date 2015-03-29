@@ -597,16 +597,13 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
-	struct xmp_module *mod = &m->mod;
 	struct mixer_data *s = &ctx->s;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_instrument *instrument;
 	int finalpan, panbrello = 0;
 	int pan_envelope;
-	int surround;
 
 	instrument = get_instrument(ctx, xc->ins);
-	surround = mod->xxc[chn].flg & XMP_CHANNEL_SURROUND;
 
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 	if (!TEST_PER(PENV_PAUSE)) {
@@ -622,7 +619,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
 
-	if (s->format & XMP_FORMAT_MONO || surround) {
+	if (s->format & XMP_FORMAT_MONO || TEST_PER(SURROUND)) {
 		finalpan = 0;
 	} else {
 		finalpan = (finalpan - 0x80) * s->mix / 100;
@@ -632,7 +629,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 	xc->info_finalpan = finalpan + 0x80;
 
-	if (surround) {
+	if (TEST_PER(SURROUND)) {
 		virt_setpan(ctx, chn, PAN_SURROUND);
 	} else {
 		virt_setpan(ctx, chn, finalpan);

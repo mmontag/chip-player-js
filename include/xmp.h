@@ -105,7 +105,6 @@ struct xmp_channel {
 #define XMP_CHANNEL_SYNTH	(1 << 0)  /* Channel is synthesized */
 #define XMP_CHANNEL_MUTE  	(1 << 1)  /* Channel is muted */
 #define XMP_CHANNEL_SPLIT	(1 << 2)  /* Split Amiga channel in bits 5-4 */
-#define XMP_CHANNEL_SURROUND	(1 << 3)  /* Surround channel */
 	int flg;			/* Channel flags */
 };
 
@@ -232,7 +231,7 @@ struct xmp_module {
 	struct xmp_track **xxt;		/* Tracks */
 	struct xmp_instrument *xxi;	/* Instruments */
 	struct xmp_sample *xxs;		/* Samples */
-	struct xmp_channel xxc[64];	/* Channel info */
+	struct xmp_channel xxc[XMP_MAX_CHANNELS]; /* Channel info */
 	unsigned char xxo[XMP_MAX_MOD_LENGTH];	/* Orders */
 };
 

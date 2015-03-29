@@ -56,6 +56,7 @@ struct retrig_control {
 #define FENV_PAUSE	(1 << 24)
 #define FINE_VOLS_2	(1 << 25)
 #define GLISSANDO	(1 << 26)
+#define SURROUND	(1 << 27)
 
 #define NOTE_FADEOUT	(1 << 0)
 #define NOTE_RELEASE	(1 << 1)
