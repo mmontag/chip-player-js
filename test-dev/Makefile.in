@@ -162,6 +162,7 @@ OPENMPT_IT	= carrynna \
 		  s7xinsnum \
 		  samplenumberchange \
 		  scx \
+		  smpinspansurround \
 		  swaptest \
 		  swing1 \
 		  swing2 \
