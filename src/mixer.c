@@ -457,10 +457,11 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
-				/* "Beautiful Ones" apparently uses 0xfe as
-				 * 'no filter' :\ */
-				if (vi->filter.cutoff >= 0xfe)
+				/* See OpenMPT env-flt-max.it */
+				if (vi->filter.cutoff >= 0xfe &&
+                                    vi->filter.resonance == 0) {
 					mixer &= ~FLAG_FILTER;
+				}
 #endif
 
 				mix_fn = (*mixers)[mixer];

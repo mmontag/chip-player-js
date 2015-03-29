@@ -9,6 +9,7 @@ Stable versions
 	- fix IT tone portamento with sample changes
 	- fix IT initial global volume setting
 	- fix IT keyoff with instrument in old effects mode
+	- fix IT filter maximum values with resonance
 	Other changes:
 	- fix IT random volume variation
 	- fix pattern initialization sanity check
