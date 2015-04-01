@@ -352,20 +352,17 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		}
 	}
 
-	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
-	if (check_envelope_end(&instrument->aei, xc->v_idx)) {
-		if (vol_envelope == 0)
-			SET_NOTE(NOTE_END);
-
-		//if (~instrument->aei.flg & XMP_ENVELOPE_ON || ~instrument->aei.flg & XMP_ENVELOPE_CARRY || xc->ins_fade == 0 || xc->fadeout <= xc->ins_fade)
-			SET_NOTE(NOTE_ENV_END);
-	}
-
 	if (!TEST_PER(VENV_PAUSE)) {
 		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
 			DOENV_RELEASE, m->read_event_type == READ_EVENT_IT);
 	}
 
+	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
+	if (check_envelope_end(&instrument->aei, xc->v_idx)) {
+		if (vol_envelope == 0)
+			SET_NOTE(NOTE_END);
+			SET_NOTE(NOTE_ENV_END);
+	}
 
 	/* If note ended in background channel, we can safely reset it */
 	if (TEST_NOTE(NOTE_END) && chn >= p->virt.num_tracks) {
@@ -474,11 +471,11 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	instrument = get_instrument(ctx, xc->ins);
 
-	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 	if (!TEST_PER(FENV_PAUSE)) {
 		xc->f_idx = update_envelope(&instrument->fei, xc->f_idx,
 			DOENV_RELEASE, m->read_event_type == READ_EVENT_IT);
 	}
+	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 
 #ifndef LIBXMP_CORE_PLAYER
 	/* Do note slide */
@@ -610,11 +607,11 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 	instrument = get_instrument(ctx, xc->ins);
 
-	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 	if (!TEST_PER(PENV_PAUSE)) {
 		xc->p_idx = update_envelope(&instrument->pei, xc->p_idx,
 			DOENV_RELEASE, m->read_event_type == READ_EVENT_IT);
 	}
+	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 
 	if (TEST(PANBRELLO)) {
 		panbrello = get_lfo(ctx, &xc->panbrello.lfo, 512, 0);

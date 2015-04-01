@@ -81,9 +81,9 @@ static void reset_envelopes(struct context_data *ctx, struct channel_data *xc)
 
  	RESET_NOTE(NOTE_ENV_END);
 
-	xc->v_idx = 0;
-	xc->p_idx = 0;
-	xc->f_idx = 0;
+	xc->v_idx = -1;
+	xc->p_idx = -1;
+	xc->f_idx = -1;
 }
 
 #ifndef LIBXMP_CORE_DISABLE_IT
@@ -104,18 +104,18 @@ static void reset_envelopes_carry(struct context_data *ctx,
 
 	/* Reset envelope positions */
 	if (~xxi->aei.flg & XMP_ENVELOPE_CARRY) {
-		xc->v_idx = 0;
+		xc->v_idx = -1;
 	}
 	if (~xxi->pei.flg & XMP_ENVELOPE_CARRY) {
-		xc->p_idx = 0;
+		xc->p_idx = -1;
 	}
 
 	if (xxi->fei.flg & XMP_ENVELOPE_CARRY) {
 		if (check_envelope_end(&xxi->fei, xc->f_idx)) {
-			xc->f_idx = -1;
+			xc->f_idx = -2;
 		}
 	} else {
-		xc->f_idx = 0;
+		xc->f_idx = -1;
 	}
 }
 
