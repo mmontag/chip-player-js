@@ -85,6 +85,10 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 	int has_loop, has_sus;
 	int lpe, lps, sus, sue;
 
+	if (x < 0xffff)	{	/* increment tick */
+		x++;
+	}
+
 	if (x < 0)
 		return -1;
 
@@ -115,10 +119,6 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 	if (!release && has_sus && x == data[sus]) {
 		/* stay in the sustain point */
 		x--;
-	}
-
-	if (x < 0xffff)	{	/* increment tick */
-		x++;
 	}
 
 	if (has_loop && x >= data[lpe]) {
