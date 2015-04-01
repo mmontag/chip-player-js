@@ -424,7 +424,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		use_ins_vol = 1;
 		xc->fadeout = 0x10000;
 		xc->per_flags = 0;
-		RESET_NOTE(NOTE_RELEASE);
+		RESET_NOTE(NOTE_RELEASE|NOTE_PRERELEASE);
 		if (!k00) {
 			RESET_NOTE(NOTE_FADEOUT);
 		}
@@ -479,6 +479,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			int env_on = 0;
 			int vol_set = ev.vol != 0 || ev.fxt == FX_VOLSET;
 			int delay_fx = ev.fxt == FX_EXTENDED && ev.fxp == 0xd0;
+			struct xmp_envelope *env = NULL;
 
 			/* OpenMPT NoteOffVolume.xm:
 			 * "If an instrument has no volume envelope, a note-off
@@ -489,13 +490,24 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 * ...and unless we have a keyoff+delay without setting
 			 * an instrument. See OffDelay.xm.
 			 */
-			if (IS_VALID_INSTRUMENT(xc->ins) &&
-			    (mod->xxi[xc->ins].aei.flg & XMP_ENVELOPE_ON)) {
-				env_on = 1;
+			if (IS_VALID_INSTRUMENT(xc->ins)) {
+				env = &mod->xxi[xc->ins].aei;
+				if (env->flg & XMP_ENVELOPE_ON) {
+					env_on = 1;
+				}
 			}
 			
 			if (env_on || (!vol_set && (!ev.ins || !delay_fx))) {
-				SET_NOTE(NOTE_RELEASE);
+				if (env && (~env->flg & XMP_ENVELOPE_LOOP) &&
+				    xc->v_idx == env->data[env->sus << 1]) {
+					/* See OpenMPT EnvOff.xm. In certain
+					 * cases a release event is effective
+					 * only in the next frame
+					 */
+					SET_NOTE(NOTE_PRERELEASE);
+				} else {
+					SET_NOTE(NOTE_RELEASE);
+				}
 				use_ins_vol = 0;
 			} else {
 				SET_NOTE(NOTE_FADEOUT);
@@ -506,7 +518,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			    (ev.fxp >> 4) == EX_DELAY) {
 				/* See OpenMPT OffDelay.xm test case */
 				if ((ev.fxp & 0xf) != 0) {
-					RESET_NOTE(NOTE_RELEASE);
+					RESET_NOTE(NOTE_RELEASE|NOTE_PRERELEASE);
 				}
 			}
 		} else if (key == XMP_KEY_FADE) {

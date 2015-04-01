@@ -364,6 +364,10 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 			SET_NOTE(NOTE_ENV_END);
 	}
 
+	if (TEST_NOTE(NOTE_PRERELEASE)) {
+		SET_NOTE(NOTE_RELEASE);
+	}
+
 	/* If note ended in background channel, we can safely reset it */
 	if (TEST_NOTE(NOTE_END) && chn >= p->virt.num_tracks) {
 		virt_resetchannel(ctx, chn);

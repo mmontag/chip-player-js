@@ -162,6 +162,11 @@ static void check_envelope(struct xmp_envelope *env)
 	if (env->lps >= env->npt || env->lpe >= env->npt) {
 		env->flg &= ~XMP_ENVELOPE_LOOP;
 	}
+
+	/* Disable envelope loop if invalid sustain */
+	if (env->sus >= env->npt) {
+		env->flg &= ~XMP_ENVELOPE_ON;
+	}
 }
 
 void load_prologue(struct context_data *ctx)
