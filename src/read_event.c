@@ -109,12 +109,7 @@ static void reset_envelopes_carry(struct context_data *ctx,
 	if (~xxi->pei.flg & XMP_ENVELOPE_CARRY) {
 		xc->p_idx = -1;
 	}
-
-	if (xxi->fei.flg & XMP_ENVELOPE_CARRY) {
-		if (check_envelope_end(&xxi->fei, xc->f_idx)) {
-			xc->f_idx = -2;
-		}
-	} else {
+	if (~xxi->fei.flg & XMP_ENVELOPE_CARRY) {
 		xc->f_idx = -1;
 	}
 }
