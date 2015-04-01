@@ -159,6 +159,7 @@ OPENMPT_IT	= carrynna \
 		  randompan \
 		  retrig \
 		  retrig_short \
+		  s77 \
 		  s7xinsnum \
 		  samplenumberchange \
 		  scx \
