@@ -116,12 +116,12 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 	}
 
 	/* FT2 doesn't have sustain loop */
-	if (!release && has_sus && x == data[sus]) {
+	if (!release && has_sus && x > data[sus]) {
 		/* stay in the sustain point */
 		x--;
 	}
 
-	if (has_loop && x >= data[lpe]) {
+	if (has_loop && x > data[lpe]) {
 		if (!(release && has_sus && sus == lpe))
 			x = data[lps];
 	}
