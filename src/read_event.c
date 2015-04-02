@@ -335,7 +335,9 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 static int sustain_check(struct xmp_envelope *env, int idx)
 {
-	return (env && (~env->flg & XMP_ENVELOPE_LOOP) &&
+	return (env &&
+		(env->flg & XMP_ENVELOPE_ON) &&
+		(~env->flg & XMP_ENVELOPE_LOOP) &&
 		idx == env->data[env->sus << 1]);
 }
 
@@ -1031,7 +1033,15 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			xc->period = 0;
 			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
-			SET_NOTE(NOTE_RELEASE);
+			struct xmp_envelope *env = NULL;
+			if (IS_VALID_INSTRUMENT(xc->ins)) {
+				env = &mod->xxi[xc->ins].aei;
+			}
+			if (sustain_check(env, xc->v_idx)) {
+				SET_NOTE(NOTE_SUSEXIT);
+			} else {
+				SET_NOTE(NOTE_RELEASE);
+			}
 			reset_env = 0;
 			use_ins_vol = 0;
 		} else {
@@ -1044,7 +1054,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			 	 */
 				if (not_same_ins || TEST_NOTE(NOTE_END)) {
 					SET(NEW_INS);
-					RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
+					RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT|NOTE_FADEOUT);
 				} else {
 					if (is_valid_note(key - 1)) {
 						xc->key_porta = key - 1;
@@ -1177,7 +1187,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (reset_env) {
 		if (ev.note) {
-			RESET_NOTE(NOTE_RELEASE | NOTE_FADEOUT);
+			RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT|NOTE_FADEOUT);
 		}
 		/* Set after copying to new virtual channel (see ambio.it) */
 		xc->fadeout = 0x10000;
