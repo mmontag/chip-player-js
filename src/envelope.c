@@ -158,7 +158,7 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release)
 
 	if (env->flg & XMP_ENVELOPE_SLOOP) {
 		if (!release && has_sus) {
-			if (x > data[sue])
+			if (x == data[sue] + 1)
 				x = data[sus];
 		} else if (has_loop) {
 			if (x > data[lpe])
