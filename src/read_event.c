@@ -333,6 +333,12 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	return 0;
 }
 
+static int sustain_check(struct xmp_envelope *env, int idx)
+{
+	return (env && (~env->flg & XMP_ENVELOPE_LOOP) &&
+		idx == env->data[env->sus << 1]);
+}
+
 static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -424,7 +430,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		use_ins_vol = 1;
 		xc->fadeout = 0x10000;
 		xc->per_flags = 0;
-		RESET_NOTE(NOTE_RELEASE|NOTE_PRERELEASE);
+		RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT);
 		if (!k00) {
 			RESET_NOTE(NOTE_FADEOUT);
 		}
@@ -498,13 +504,12 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 			
 			if (env_on || (!vol_set && (!ev.ins || !delay_fx))) {
-				if (env && (~env->flg & XMP_ENVELOPE_LOOP) &&
-				    xc->v_idx == env->data[env->sus << 1]) {
+				if (sustain_check(env, xc->v_idx)) {
 					/* See OpenMPT EnvOff.xm. In certain
 					 * cases a release event is effective
 					 * only in the next frame
 					 */
-					SET_NOTE(NOTE_PRERELEASE);
+					SET_NOTE(NOTE_SUSEXIT);
 				} else {
 					SET_NOTE(NOTE_RELEASE);
 				}
@@ -518,7 +523,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			    (ev.fxp >> 4) == EX_DELAY) {
 				/* See OpenMPT OffDelay.xm test case */
 				if ((ev.fxp & 0xf) != 0) {
-					RESET_NOTE(NOTE_RELEASE|NOTE_PRERELEASE);
+					RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT);
 				}
 			}
 		} else if (key == XMP_KEY_FADE) {

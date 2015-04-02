@@ -364,10 +364,6 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		SET_NOTE(NOTE_ENV_END);
 	}
 
-	if (TEST_NOTE(NOTE_PRERELEASE)) {
-		SET_NOTE(NOTE_RELEASE);
-	}
-
 	/* If note ended in background channel, we can safely reset it */
 	if (TEST_NOTE(NOTE_END) && chn >= p->virt.num_tracks) {
 		virt_resetchannel(ctx, chn);
@@ -876,6 +872,10 @@ static void play_channel(struct context_data *ctx, int chn)
 		update_invloop(m, xc);
 	}
 #endif
+
+	if (TEST_NOTE(NOTE_SUSEXIT)) {
+		SET_NOTE(NOTE_RELEASE);
+	}
 
 	xc->info_position = virt_getvoicepos(ctx, chn);
 }
