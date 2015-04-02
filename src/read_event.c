@@ -1170,7 +1170,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	xc->offset.val &= ~0xffff;
 
 	/* According to Storlek test 25, Impulse Tracker handles the volume
-	 * column effects last.
+	 * column effects after the standard effects.
 	 */
 	process_fx(ctx, xc, chn, &ev, 0);
 	process_fx(ctx, xc, chn, &ev, 1);

@@ -272,6 +272,9 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 				med_hold_hack(ctx, pat, chn, row);
 #endif
 			}
+		} else {
+			/* Reset flags. See SlideDelay.it */
+			p->xc_data[chn].flags = 0;
 		}
 	}
 }
