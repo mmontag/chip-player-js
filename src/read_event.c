@@ -241,7 +241,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		if (IS_VALID_INSTRUMENT(ins)) {
 			if (is_toneporta) {
 				/* Get new instrument volume */
-				sub = get_subinstrument(ctx, ins, e->note);
+				sub = get_subinstrument(ctx, ins, e->note - 1);
 				if (sub != NULL) {
 					xc->volume = sub->vol;
 					use_ins_vol = 0;
@@ -713,7 +713,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 					xc->ins_fade = mod->xxi[ins].rls;
 				} else {
 					/* Get new instrument volume */
-					sub = get_subinstrument(ctx, ins, e->note);
+					sub = get_subinstrument(ctx, ins, e->note - 1);
 					if (sub != NULL) {
 						xc->volume = sub->vol;
 						use_ins_vol = 0;
@@ -1247,7 +1247,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 		if (IS_VALID_INSTRUMENT(ins)) {
 			if (is_toneporta) {
 				/* Get new instrument volume */
-				sub = get_subinstrument(ctx, ins, e->note);
+				sub = get_subinstrument(ctx, ins, e->note - 1);
 				if (sub != NULL) {
 					xc->volume = sub->vol;
 					use_ins_vol = 0;
