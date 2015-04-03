@@ -131,7 +131,7 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
-static int update_envelope_it(struct xmp_envelope *env, int x, int release)
+static int update_envelope_it(struct xmp_envelope *env, int x, int release, int key_off)
 {
 	int16 *data = env->data;
 	int has_loop, has_sus;
@@ -158,11 +158,15 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release)
 
 	if (env->flg & XMP_ENVELOPE_SLOOP) {
 		if (!release && has_sus) {
-			if (x == data[sue] + 1)
+			if (x == data[sue] + 1) {
+				/* Sustain loop */
 				x = data[sus];
+			}
 		} else if (has_loop) {
-			if (x > data[lpe])
+			if (x > data[lpe]) {
+				/* Envelope loop */
 				x = data[lps];
+			}
 		}
 	} else {
 		if (!release && has_sus && x == data[sus]) {
@@ -171,8 +175,10 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release)
 		}
 
 		if (has_loop && x > data[lpe]) {
-	    		if (!(release && has_sus && sus == lpe))
+	    		if (!(release && has_sus && sus == lpe)) {
+				/* Envelope loop */
 				x = data[lps];
+			}
 		}
 	}
 
@@ -181,11 +187,11 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release)
 
 #endif
 
-int update_envelope(struct xmp_envelope *env, int x, int release, int it_env)
+int update_envelope(struct xmp_envelope *env, int x, int release, int key_off, int it_env)
 {
 #ifndef LIBXMP_CORE_DISABLE_IT
 	return it_env ?
-		update_envelope_it(env, x, release) :
+		update_envelope_it(env, x, release, key_off) :
 		update_envelope_xm(env, x, release);
 #else
 	return update_envelope_xm(env, x, release);

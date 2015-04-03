@@ -357,7 +357,8 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	if (!TEST_PER(VENV_PAUSE)) {
 		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
-			DOENV_RELEASE, m->read_event_type == READ_EVENT_IT);
+					DOENV_RELEASE, TEST(KEY_OFF),
+					m->read_event_type == READ_EVENT_IT);
 	}
 
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
@@ -476,7 +477,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	if (!TEST_PER(FENV_PAUSE)) {
 		xc->f_idx = update_envelope(&instrument->fei, xc->f_idx,
-			DOENV_RELEASE, m->read_event_type == READ_EVENT_IT);
+					DOENV_RELEASE, TEST(KEY_OFF),
+					m->read_event_type == READ_EVENT_IT);
 	}
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 
@@ -612,7 +614,8 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 	if (!TEST_PER(PENV_PAUSE)) {
 		xc->p_idx = update_envelope(&instrument->pei, xc->p_idx,
-			DOENV_RELEASE, m->read_event_type == READ_EVENT_IT);
+					DOENV_RELEASE, TEST(KEY_OFF),
+					m->read_event_type == READ_EVENT_IT);
 	}
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 

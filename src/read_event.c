@@ -1020,6 +1020,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	/* Check note */
 
+	RESET(KEY_OFF);
 	if (key && !new_invalid_ins) {
 		SET(NEW_NOTE);
 		SET_NOTE(NOTE_SET);
@@ -1042,6 +1043,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			} else {
 				SET_NOTE(NOTE_RELEASE);
 			}
+			SET(KEY_OFF);
 			reset_env = 0;
 			use_ins_vol = 0;
 		} else {
