@@ -69,11 +69,6 @@ int get_envelope(struct xmp_envelope *env, int x, int def)
 	/* interpolate */
 	y1 = data[index + 1];
 	x2 = data[index + 2];
-
-	if (env->flg & XMP_ENVELOPE_LOOP && index == (env->lpe << 1)) {
-		index = (env->lps - 1) * 2;
-	}
-
 	y2 = data[index + 3];
 
 	return x2 == x1 ? y2 : ((y2 - y1) * (x - x1) / (x2 - x1)) + y1;
