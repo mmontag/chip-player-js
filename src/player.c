@@ -1243,7 +1243,12 @@ int xmp_play_frame(xmp_context opaque)
 		}
 	}
 
-	/* check new row */
+	for (i = 0; i < mod->chn; i++) {
+		struct channel_data *xc = &p->xc_data[i];
+		RESET(KEY_OFF);
+	}
+
+	/* check new r w */
 
 	if (p->frame == 0) {			/* first frame in row */
 		check_end_of_module(ctx);
