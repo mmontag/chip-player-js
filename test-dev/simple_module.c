@@ -124,7 +124,8 @@ void set_instrument_envelope_sus(struct context_data *ctx, int ins, int sus)
 	struct xmp_module *mod = &m->mod;
 
 	mod->xxi[ins].aei.sus = sus;
-	mod->xxi[ins].aei.flg |= XMP_ENVELOPE_SUS;
+	mod->xxi[ins].aei.sue = sus;
+	mod->xxi[ins].aei.flg |= XMP_ENVELOPE_SUS | XMP_ENVELOPE_SLOOP;
 }
 
 void set_instrument_fadeout(struct context_data *ctx, int ins, int fade)
