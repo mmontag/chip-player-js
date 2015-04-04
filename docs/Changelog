@@ -4,6 +4,7 @@ Stable versions
 4.3.8 ():
 	Fix bugs caught in the OpenMPT test cases:
 	- fix pre-increment of envelope indexes
+	- fix IT note release at end of envelope sustain loop
 	- reset channel flags in case of delay effect
 	Other changes:
 	- fix MMD3 16-bit samples (reported by jbb666)
