@@ -174,10 +174,8 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release, int 
 				/* stay in the sustain point */
 				x--;
 			}
-		}
-
-		if (has_loop && x > data[lpe]) {
-	    		if (!(release && has_sus && sus == lpe)) {
+		} else if (has_loop) {
+			if (x > data[lpe]) {
 				/* Envelope loop */
 				x = data[lps];
 			}
