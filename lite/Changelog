@@ -1,6 +1,13 @@
 Stable versions
 ---------------
 
+4.3.8 (20150404):
+	- fix pre-increment of envelope indexes
+	- fix IT note release at end of envelope sustain loop
+	- reset channel flags in case of delay effect
+	- refactor XM envelopes
+	- refactor IT envelopes
+
 4.3.7 (20150329):
 	- fix IT sample mode note cut on invalid sample
 	- fix IT sample mode note end detection

@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.8 ():
+4.3.8 (20150404):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix pre-increment of envelope indexes
 	- fix IT note release at end of envelope sustain loop
