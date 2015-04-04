@@ -100,13 +100,13 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 
 	/* If enabled, stay at the sustain point */
 	if (has_sus && !release) {
-		if (x > data[sus]) {
+		if (x >= data[sus]) {
 			x = data[sus];
 		}
 	}
 
 	/* Envelope loops */
-	if (has_loop && x > data[lpe]) {
+	if (has_loop && x >= data[lpe]) {
 		if (!(release && has_sus && sus == lpe))
 			x = data[lps];
 	}
