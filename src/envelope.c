@@ -153,32 +153,20 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release, int 
 	sus = env->sus << 1;
 	sue = env->sue << 1;
 
-	if (env->flg & XMP_ENVELOPE_SLOOP) {
-		/* Release at the end of a sustain loop, run another loop */
-		if (has_sus && key_off && x == data[sue] + 1) {
+	/* Release at the end of a sustain loop, run another loop */
+	if (has_sus && key_off && x == data[sue] + 1) {
+		x = data[sus];
+	} else
+	/* If enabled, stay in the sustain loop */
+	if (has_sus && !release) {
+		if (x == data[sue] + 1) {
 			x = data[sus];
-		} else if (has_sus && !release) {
-			if (x == data[sue] + 1) {
-				/* Sustain loop */
-				x = data[sus];
-			}
-		} else if (has_loop) {
-			if (x > data[lpe]) {
-				/* Envelope loop */
-				x = data[lps];
-			}
 		}
-	} else {
-		if (has_sus && !release) {
-			if (x == data[sus]) {	/* Why not +1? */
-				/* stay in the sustain point */
-				x--;
-			}
-		} else if (has_loop) {
-			if (x > data[lpe]) {
-				/* Envelope loop */
-				x = data[lps];
-			}
+	} else
+	/* Finally, execute the envelope loop */
+	if (has_loop) {
+		if (x > data[lpe]) {
+			x = data[lps];
 		}
 	}
 
