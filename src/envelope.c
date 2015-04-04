@@ -78,18 +78,7 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 {
 	int16 *data = env->data;
 	int has_loop, has_sus;
-	int lpe, lps, sus, sue;
-
-	if (x < 0xffff)	{	/* increment tick */
-		x++;
-	}
-
-	if (x < 0)
-		return -1;
-
-	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0) {
-		return x;
-	}
+	int lpe, lps, sus;
 
 	has_loop = env->flg & XMP_ENVELOPE_LOOP;
 	has_sus = env->flg & XMP_ENVELOPE_SUS;
@@ -97,7 +86,6 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 	lps = env->lps << 1;
 	lpe = env->lpe << 1;
 	sus = env->sus << 1;
-	sue = env->sue << 1;
 
 	/* FT2 and IT envelopes behave in a different way regarding loops,
 	 * sustain and release. When the sustain point is at the end of the
@@ -134,17 +122,6 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release, int 
 	int has_loop, has_sus;
 	int lpe, lps, sus, sue;
 
-	if (x < 0xffff)	{	/* increment tick */
-		x++;
-	}
-
-	if (x < 0)
-		return -1;
-
-	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0) {
-		return x;
-	}
-
 	has_loop = env->flg & XMP_ENVELOPE_LOOP;
 	has_sus = env->flg & XMP_ENVELOPE_SUS;
 
@@ -177,6 +154,18 @@ static int update_envelope_it(struct xmp_envelope *env, int x, int release, int 
 
 int update_envelope(struct xmp_envelope *env, int x, int release, int key_off, int it_env)
 {
+	if (x < 0xffff)	{	/* increment tick */
+		x++;
+	}
+
+	if (x < 0) {
+		return -1;
+	}
+
+	if (~env->flg & XMP_ENVELOPE_ON || env->npt <= 0) {
+		return x;
+	}
+
 #ifndef LIBXMP_CORE_DISABLE_IT
 	return it_env ?
 		update_envelope_it(env, x, release, key_off) :
