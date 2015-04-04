@@ -131,6 +131,7 @@ OPENMPT_IT	= carrynna \
 		  emptyslot \
 		  envloopescape \
 		  envloops \
+		  envofflength \
 		  envreset \
 		  extreme_filter_test_1 \
 		  fade_porta \
