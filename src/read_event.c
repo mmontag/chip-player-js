@@ -1097,20 +1097,19 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				smp = -1;
 			}
 
-			if (not_same_smp) {
-				fix_period(ctx, chn, sub);
-				virt_setpatch(ctx, chn, candidate_ins, smp,
-					note, 0, XMP_INST_DCT_INST, 0);
-			} else {
-				to = virt_setpatch(ctx, chn, candidate_ins, smp,
-					note, sub->nna, sub->dct, sub->dca);
+			fix_period(ctx, chn, sub);
 
-				if (to < 0)
-					return -1;
-				if (to != chn) {
-					copy_channel(p, to, chn);
-					p->xc_data[to].flags = 0;
-				}
+			if (not_same_smp) {
+				virt_resetchannel(ctx, chn);
+			}
+			to = virt_setpatch(ctx, chn, candidate_ins, smp,
+				note, sub->nna, sub->dct, sub->dca);
+
+			if (to < 0)
+				return -1;
+			if (to != chn) {
+				copy_channel(p, to, chn);
+				p->xc_data[to].flags = 0;
 			}
 
 			if (smp >= 0) {		/* Not sure if needed */
