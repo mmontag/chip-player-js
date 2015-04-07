@@ -1097,9 +1097,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				smp = -1;
 			}
 
-			fix_period(ctx, chn, sub);
-
 			if (not_same_smp) {
+				fix_period(ctx, chn, sub);
 				virt_resetchannel(ctx, chn);
 			}
 			to = virt_setpatch(ctx, chn, candidate_ins, smp,
