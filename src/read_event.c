@@ -856,6 +856,18 @@ static void fix_period(struct context_data *ctx, int chn, struct xmp_subinstrume
 	}
 }
 
+static int is_same_sid(struct context_data *ctx, int chn, int ins, int key)
+{
+	struct player_data *p = &ctx->p;
+	struct channel_data *xc = &p->xc_data[chn];
+	struct xmp_subinstrument *s1, *s2;
+
+	s1 = get_subinstrument(ctx, ins, key);
+	s2 = get_subinstrument(ctx, xc->ins, xc->key);
+
+	return (s1 && s2 && s1->sid == s2->sid);
+}
+
 static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -940,7 +952,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (ev.ins) {
 		int ins = ev.ins - 1;
-		int set_new_ins = 0;
+		int set_new_ins = 1;
 
 		/* portamento_after_keyoff.it test case */
 		if (is_release && is_toneporta && !key) {
@@ -950,28 +962,17 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 		}
 
-		if (!is_release) {
-			set_new_ins = 1;
-		}
-
-		if (is_toneporta) {
-			if (xc->ins != ins) {
-				set_new_ins = 1;
-			} else if (!HAS_QUIRK(QUIRK_PRENV)) {
-				/* also set if mapped sample is different,
-				 * see OpenMPT PortaInsNum.it
-				 */
-				struct xmp_subinstrument *s1, *s2;
-				s1 = get_subinstrument(ctx, ins, key - 1);
-				s2 = get_subinstrument(ctx, ins, xc->note);
-				if (s1 && s2 && s1->sid != s2->sid) {
-					set_new_ins = 1;
-					not_same_ins = 1;
+		if (is_toneporta && xc->ins == ins) {
+			if (!HAS_QUIRK(QUIRK_PRENV)) {
+				if (is_same_sid(ctx, chn, ins, key - 1)) {
+					/* same instrument and same sample */
+					set_new_ins = !is_release;
+				} else {
+					/* same instrument, different sample */
+					not_same_ins = 1; /* need this too */
 					not_same_smp = 1;
 				}
 			}
-		} else {
-			set_new_ins = 1;
 		}
 
 		if (set_new_ins) {
@@ -1002,13 +1003,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 
 			if (xc->ins != ins && (!is_toneporta || !HAS_QUIRK(QUIRK_PRENV))) {
-				struct xmp_subinstrument *s1, *s2;
-				s1 = get_subinstrument(ctx, xc->ins, xc->key);
-				s2 = get_subinstrument(ctx, ins, key - 1);
-
 				candidate_ins = ins;
 
-				if (!s1 || !s2 || s1->sid != s2->sid) {
+				if (!is_same_sid(ctx, chn, ins, key - 1)) {
 					not_same_ins = 1;
 					if (is_toneporta) {
 						/* Get new instrument volume */
