@@ -145,6 +145,7 @@ OPENMPT_IT	= carrynna \
 		  freqreset_noins \
 		  globalvol_invalid \
 		  gxsmp \
+		  gxsmp2 \
 		  gxxtest \
 		  ins_flt_porta_reset \
 		  instrumentnumberchange \
