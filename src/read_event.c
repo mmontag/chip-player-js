@@ -842,6 +842,20 @@ static int check_invalid_sample(struct context_data *ctx, int ins, int key)
 	return 0;
 }
 
+static void fix_period(struct context_data *ctx, int chn, struct xmp_subinstrument *sub)
+{
+	if (sub->nna == XMP_INST_NNA_CONT) {
+		struct player_data *p = &ctx->p;
+		struct module_data *m = &ctx->m;
+		struct channel_data *xc = &p->xc_data[chn];
+		struct xmp_instrument *xxi = get_instrument(ctx, xc->ins);
+
+		xc->period = note_to_period(xc->key + sub->xpo +
+			xxi->map[xc->key_porta].xpo, xc->finetune,
+			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+	}
+}
+
 static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
@@ -850,7 +864,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	struct channel_data *xc = &p->xc_data[chn];
 	int note, key;
 	struct xmp_subinstrument *sub;
-	int not_same_ins;
+	int not_same_ins, not_same_smp;
 	int new_invalid_ins;
 	int is_toneporta, is_release;
 	int candidate_ins;
@@ -881,6 +895,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	note = -1;
 	key = ev.note;
 	not_same_ins = 0;
+	not_same_smp = 0;
 	new_invalid_ins = 0;
 	is_toneporta = 0;
 	is_release = 0;
@@ -951,8 +966,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				s2 = get_subinstrument(ctx, ins, xc->note);
 				if (s1 && s2 && s1->sid != s2->sid) {
 					set_new_ins = 1;
-					/* not same sample, actually */
 					not_same_ins = 1;
+					not_same_smp = 1;
 				}
 			}
 		} else {
@@ -1082,15 +1097,20 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				smp = -1;
 			}
 
-			to = virt_setpatch(ctx, chn, candidate_ins,
-				smp, note, sub->nna, sub->dct, sub->dca);
+			if (not_same_smp) {
+				fix_period(ctx, chn, sub);
+				virt_setpatch(ctx, chn, candidate_ins, smp,
+					note, 0, XMP_INST_DCT_INST, 0);
+			} else {
+				to = virt_setpatch(ctx, chn, candidate_ins, smp,
+					note, sub->nna, sub->dct, sub->dca);
 
-			if (to < 0)
-				return -1;
-
-			if (to != chn) {
-				copy_channel(p, to, chn);
-				p->xc_data[to].flags = 0;
+				if (to < 0)
+					return -1;
+				if (to != chn) {
+					copy_channel(p, to, chn);
+					p->xc_data[to].flags = 0;
+				}
 			}
 
 			if (smp >= 0) {		/* Not sure if needed */
