@@ -953,8 +953,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* Off-Porta.it */
 	if (is_toneporta && ev.fxt == FX_OFFSET) {
 		is_toneporta = 0;
-		toneporta_offset = 1;
-		RESET_NOTE(NOTE_ENV_END);
+ 		if (!HAS_QUIRK(QUIRK_PRENV)) {
+			toneporta_offset = 1;
+			RESET_NOTE(NOTE_ENV_END);
+		}
 	}
 
 	/* Check instrument */
@@ -1179,7 +1181,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 			if (TEST_NOTE(NOTE_CUT)) {
 				reset_envelopes(ctx, xc);
-			} else if (HAS_QUIRK(QUIRK_PRENV) || !toneporta_offset) {
+			} else if (!toneporta_offset) {
 				reset_envelopes_carry(ctx, xc);
 			}
 			RESET_NOTE(NOTE_CUT);

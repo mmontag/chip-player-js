@@ -153,6 +153,7 @@ OPENMPT_IT	= carrynna \
 		  nomap \
 		  noteoff2 \
 		  noteoff3 \
+		  off_porta \
 		  porta_offset \
 		  portainsnum \
 		  portainsnumcompat \
