@@ -154,6 +154,7 @@ OPENMPT_IT	= carrynna \
 		  noteoff2 \
 		  noteoff3 \
 		  off_porta \
+		  off_porta_compatgxx \
 		  porta_offset \
 		  portainsnum \
 		  portainsnumcompat \
