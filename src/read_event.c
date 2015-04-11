@@ -883,6 +883,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	int reset_env;
 	int use_ins_vol;
 	int sample_mode;
+	int toneporta_offset;
 	struct xmp_event ev;
 
 	memcpy(&ev, e, sizeof (struct xmp_event));
@@ -915,6 +916,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	use_ins_vol = 0;
 	candidate_ins = xc->ins;
 	sample_mode = !HAS_QUIRK(QUIRK_VIRTUAL);
+	toneporta_offset = 0;
 
 	/* Notes with unmapped instruments are ignored */
 	if (ev.ins) {
@@ -946,6 +948,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (xc->period <= 0 || TEST_NOTE(NOTE_END)) {
 		is_toneporta = 0;
+	}
+
+	/* Off-Porta.it */
+	if (is_toneporta && ev.fxt == FX_OFFSET) {
+		is_toneporta = 0;
+		toneporta_offset = 1;
+		RESET_NOTE(NOTE_ENV_END);
 	}
 
 	/* Check instrument */
@@ -1146,6 +1155,15 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		}
 	}
 
+	if (reset_env) {
+		if (ev.note) {
+			RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT|NOTE_FADEOUT);
+		}
+		/* Set after copying to new virtual channel (see ambio.it) */
+		xc->fadeout = 0x10000;
+	}
+
+
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
@@ -1161,7 +1179,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 			if (TEST_NOTE(NOTE_CUT)) {
 				reset_envelopes(ctx, xc);
-			} else {
+			} else if (HAS_QUIRK(QUIRK_PRENV) || !toneporta_offset) {
 				reset_envelopes_carry(ctx, xc);
 			}
 			RESET_NOTE(NOTE_CUT);
@@ -1199,14 +1217,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	if (note >= 0) {
 		xc->note = note;
 		virt_voicepos(ctx, chn, xc->offset.val);
-	}
-
-	if (reset_env) {
-		if (ev.note) {
-			RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT|NOTE_FADEOUT);
-		}
-		/* Set after copying to new virtual channel (see ambio.it) */
-		xc->fadeout = 0x10000;
 	}
 
 	if (use_ins_vol && !TEST(NEW_VOL)) {
