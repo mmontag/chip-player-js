@@ -294,7 +294,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    if (!mod->chn) {
+    if (mod->chn == 0) {
 	if (!strncmp(magic + 2, "CH", 2) &&
 	    isdigit((int)magic[0]) && isdigit((int)magic[1])) {
 	    mod->chn = (*magic - '0') * 10 + magic[1] - '0';
@@ -649,9 +649,6 @@ skip_test:
     case TRACKER_OPENMPT:
 	tracker = "OpenMPT";
 	ptkloop = 1;
-	if (out_of_range) {
-	    m->quirk &= ~QUIRK_MODRNG;
-	}
 	break;
     default:
     case TRACKER_UNKNOWN_CONV:
@@ -659,6 +656,10 @@ skip_test:
 	tracker = "Unknown tracker";
 	m->quirk &= ~QUIRK_MODRNG;
 	break;
+    }
+
+    if (out_of_range) {
+	m->quirk &= ~QUIRK_MODRNG;
     }
 
     if (tracker_id == TRACKER_MODSGRAVE) {
