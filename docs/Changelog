@@ -5,6 +5,9 @@ Stable versions
 	Fix bugs caught in the OpenMPT test cases:
 	- Fix IT tone portamento on sample change and NNA
 	- Fix IT tone portamento with offset
+	Other changes:
+	- Detect Amiga frequency limits in OpenMPT MOD files (reported by
+	  Mirko Buffoni)
 
 4.3.8 (20150404):
 	Fix bugs caught in the OpenMPT test cases:

@@ -256,6 +256,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     int tracker_id = TRACKER_PROTRACKER;
     int has_loop_0 = 0;
     int has_vol_in_empty_ins = 0;
+    int out_of_range = 0;
 
     LOAD_INIT();
 
@@ -527,7 +528,7 @@ skip_test:
     mod->trk = mod->chn * mod->pat;
 
     for (i = 0; i < mod->ins; i++) {
-	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c\n",
+	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d %c",
 		i, mod->xxi[i].name,
 		mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		(mh.ins[i].loop_size > 1 && mod->xxs[i].lpe > 8) ?
@@ -559,12 +560,14 @@ skip_test:
 
 	    /* Check out-of-range notes in Amiga trackers */
 	    period = ((int)(LSN(mod_event[0])) << 8) | mod_event[1];
-	    if (period != 0 && (period < 108 || period > 907) && (
-			tracker_id == TRACKER_PROTRACKER ||
-			tracker_id == TRACKER_NOISETRACKER ||
-			tracker_id == TRACKER_PROBABLY_NOISETRACKER ||
-			tracker_id == TRACKER_SOUNDTRACKER)) {	/* note > B-3 */
-		tracker_id = TRACKER_UNKNOWN;
+	    if (period != 0 && (period < 108 || period > 907)) {
+		out_of_range = 1;
+		if (tracker_id == TRACKER_PROTRACKER ||
+		    tracker_id == TRACKER_NOISETRACKER ||
+		    tracker_id == TRACKER_PROBABLY_NOISETRACKER ||
+		    tracker_id == TRACKER_SOUNDTRACKER) {   /* note > B-3 */
+			tracker_id = TRACKER_UNKNOWN;
+		}
 	    }
 
 	    /* Filter noisetracker events */
@@ -646,6 +649,9 @@ skip_test:
     case TRACKER_OPENMPT:
 	tracker = "OpenMPT";
 	ptkloop = 1;
+	if (out_of_range) {
+	    m->quirk &= ~QUIRK_MODRNG;
+	}
 	break;
     default:
     case TRACKER_UNKNOWN_CONV:
