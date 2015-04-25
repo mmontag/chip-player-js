@@ -14,7 +14,7 @@
 
 #include "nlg.h"
 
-NLGCTX *nlgctx;
+extern NLGCTX *nlgctx;
 
 #define MDXMINI_VERSION "2014-06-01"
 

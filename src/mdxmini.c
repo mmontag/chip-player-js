@@ -33,7 +33,7 @@
 #ifdef USE_NLG
 
 #include "nlg.h"
-extern NLGCTX *nlgctx;
+NLGCTX *nlgctx;
 
 #endif
 
