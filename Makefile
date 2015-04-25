@@ -38,7 +38,7 @@ TITLE = mdxmini
 
 FILES = Makefile Makefile.lib Makefile.psplib $(TITLE).txt 
 FILES += fade.h sdlplay.c 
-FILES += nlg.c nlg.h
+FILES += src/nlg.c src/nlg.h
 FILES_ORG = COPYING AUTHORS
 LIB = $(OBJDIR)/lib$(TITLE).a
 
@@ -75,7 +75,10 @@ $(LIB): $(MKLIB)
 $(MKLIB):
 	make -f Makefile.lib
 
-$(OBJDIR)/%.o : %.c
+$(OBJDIR)/nlg.o: src/nlg.c
+	$(CC) -o $@ $< -c $(CFLAGS)
+
+$(OBJDIR)/sdlplay.o: sdlplay.c
 	$(CC) -o $@ $< -c $(CFLAGS)
 
 clean:
@@ -86,7 +89,7 @@ release:
 	strip $(TARGET)
 
 test:
-	gcc -o $(NLGTEST) nlg.c -DNLG_TEST
+	gcc -o $(NLGTEST) src/nlg.c -DNLG_TEST
 
 dist :
 	find . -name ".DS_Store" -exec rm -f {} \;
