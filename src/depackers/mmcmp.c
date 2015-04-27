@@ -299,6 +299,8 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
                 /* Sanity check */
 		if (block.unpk_size <= 0 || block.pk_size <= 0)
 			goto err2;
+		if (block.tt_entries < 0 || block.pk_size <= block.tt_entries)
+			goto err2;
 		if (block.sub_blk <= 0)
 			goto err2;
 
