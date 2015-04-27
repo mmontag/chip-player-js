@@ -340,7 +340,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	/* Sanity check */
 	if (xih.samples > 0x10 || (xih.samples > 0 && xih.sh_size > 0x100)) {
 		D_(D_CRIT "Sanity check: %d %d", xih.samples, xih.sh_size);
-		break;
+		return -1;
 	}
 
 	instrument_name(mod, i, xih.name, 22);
