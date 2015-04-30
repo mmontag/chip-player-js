@@ -282,6 +282,8 @@ void r4300_checkpoint(usf_state_t * state)
 {
     if (state->g_cp0_regs[CP0_COUNT_REG] - state->g_timer_checkpoint >= state->count_per_op * 20000000)
     {
+		if (state->g_cp0_regs[CP0_COUNT_REG] - state->g_timer_checkpoint >= 0x20000000)
+			return; // XXX Animal Crossing false alarms, only seems to affect 32 bit builds
         if (state->last_sample_buffer_count == state->sample_buffer_count)
         {
             DebugMessage(state, 1, "Emulator appears to be stuck!");
