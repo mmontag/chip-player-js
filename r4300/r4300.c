@@ -272,33 +272,8 @@ void r4300_begin(usf_state_t * state)
     }
 }
 
-void r4300_reset_checkpoint(usf_state_t * state, unsigned int new_cp0_count)
-{
-    unsigned int diff = state->g_cp0_regs[CP0_COUNT_REG] - state->g_timer_checkpoint;
-    state->g_timer_checkpoint = new_cp0_count - diff;
-}
-     
-void r4300_checkpoint(usf_state_t * state)
-{
-    if (state->g_cp0_regs[CP0_COUNT_REG] - state->g_timer_checkpoint >= state->count_per_op * 20000000)
-    {
-		if (state->g_cp0_regs[CP0_COUNT_REG] - state->g_timer_checkpoint >= 0x20000000)
-			return; // XXX Animal Crossing false alarms, only seems to affect 32 bit builds
-        if (state->last_sample_buffer_count == state->sample_buffer_count)
-        {
-            DebugMessage(state, 1, "Emulator appears to be stuck!");
-            return;
-        }
-        state->last_sample_buffer_count = state->sample_buffer_count;
-        state->g_timer_checkpoint = state->g_cp0_regs[CP0_COUNT_REG];
-    }
-}
-
 void r4300_execute(usf_state_t * state)
 {
-    state->g_timer_checkpoint = state->g_cp0_regs[CP0_COUNT_REG];
-    state->last_sample_buffer_count = state->sample_buffer_count;
-    
     if (state->r4300emu == CORE_PURE_INTERPRETER)
     {
         pure_interpreter(state);
@@ -321,10 +296,7 @@ void r4300_execute(usf_state_t * state)
             return;
 
         while (!state->stop)
-        {
-            r4300_checkpoint(state);
             state->PC->ops(state);
-        }
     }
 }
 
