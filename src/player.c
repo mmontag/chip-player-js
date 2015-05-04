@@ -439,20 +439,19 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	xc->info_finalvol = TEST_NOTE(NOTE_SAMPLE_END) ? 0 :finalvol;
 
+	virt_setvol(ctx, chn, finalvol);
+
 	/* Check Amiga split channel */
 	if (xc->split) {
 		int i;
 
 		/* Also set the volume of the paired channel */
-		for (i = 0; i < m->mod.chn; i++) {
-			if (i < chn && p->xc_data[i].split == xc->split) {
+		for (i = 0; i < chn; i++) {
+			if (p->xc_data[i].split == xc->split) {
 				virt_setvol(ctx, i, finalvol);
-				virt_setvol(ctx, chn, finalvol);
 				break;
 			}
 		}
-	} else {
-		virt_setvol(ctx, chn, finalvol);
 	}
 }
 

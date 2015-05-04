@@ -7,6 +7,7 @@ Stable versions
 	- Fix IT tone portamento with offset
 	Other changes:
 	- Detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
+	- Fix problems in Amiga split channels (reported by Gabriele Orioli)
 
 4.3.8 (20150404):
 	Fix bugs caught in the OpenMPT test cases:
