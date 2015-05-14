@@ -7,10 +7,22 @@ extern "C"
 #endif
 
 // Audio Drivers
-#define AUDDRV_WINMM
 #define AUDDRV_WAVEWRITE
+
+#ifdef WIN32
+
+#define AUDDRV_WINMM
 #define AUDDRV_DSOUND
 #define AUDDRV_XAUD2
+
+#else
+
+#define AUDDRV_OSS
+//#define AUDDRV_SADA
+#define AUDDRV_ALSA
+#define AUDDRV_LIBAO
+
+#endif
 
 
 #include "AudioStructs.h"

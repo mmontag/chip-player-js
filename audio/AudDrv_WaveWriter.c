@@ -10,6 +10,10 @@
 #include "AudioStream.h"
 
 
+#ifdef _MSC_VER
+#define	strdup	_strdup
+#endif
+
 #pragma pack(1)
 typedef struct
 {
@@ -180,7 +184,7 @@ UINT8 WavWrt_SetFileName(void* drvObj, const char* fileName)
 	
 	if (drv->fileName != NULL)
 		free(drv->fileName);
-	drv->fileName = _strdup(fileName);
+	drv->fileName = strdup(fileName);
 	
 	return AERR_OK;
 }

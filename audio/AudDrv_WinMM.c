@@ -13,6 +13,10 @@
 #include "AudioStream.h"
 
 
+#ifdef _MSC_VER
+#define	strdup	_strdup
+#endif
+
 #ifdef NEED_WAVEFMT
 #pragma pack(1)
 typedef struct
@@ -129,7 +133,7 @@ UINT8 WinMM_Init(void)
 	retValMM = waveOutGetDevCapsA(WAVE_MAPPER, &woCaps, sizeof(WAVEOUTCAPSA));
 	if (retValMM == MMSYSERR_NOERROR)
 	{
-		deviceList.devNames[devLstID] = _strdup(woCaps.szPname);
+		deviceList.devNames[devLstID] = strdup(woCaps.szPname);
 		devLstID ++;
 	}
 	for (curDev = 0; curDev < numDevs; curDev ++)
@@ -137,7 +141,7 @@ UINT8 WinMM_Init(void)
 		retValMM = waveOutGetDevCapsA(curDev, &woCaps, sizeof(WAVEOUTCAPSA));
 		if (retValMM == MMSYSERR_NOERROR)
 		{
-			deviceList.devNames[devLstID] = _strdup(woCaps.szPname);
+			deviceList.devNames[devLstID] = strdup(woCaps.szPname);
 			devLstID ++;
 		}
 	}
@@ -418,7 +422,7 @@ UINT32 WinMM_GetLatency(void* drvObj)
 	UINT32 smplsBehind;
 	
 	BufCheck(drv);
-	bufBehind = drv->BlocksPlayed - drv->BlocksSent;
+	bufBehind = drv->BlocksSent - drv->BlocksPlayed;
 	smplsBehind = drv->bufSmpls * bufBehind;
 	return smplsBehind * 1000 / drv->waveFmt.nSamplesPerSec;
 }

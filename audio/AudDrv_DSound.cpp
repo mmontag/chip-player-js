@@ -19,6 +19,10 @@
 #define EXT_C	extern "C"
 
 
+#ifdef _MSC_VER
+#define	strdup	_strdup
+#endif
+
 typedef struct _dsound_device
 {
 	GUID devGUID;
@@ -134,8 +138,8 @@ static BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCSTR lpcstrDescription,
 		memcpy(&tempDev->devGUID, &GUID_NULL, sizeof(GUID));
 	else
 		memcpy(&tempDev->devGUID, lpGuid, sizeof(GUID));
-	tempDev->devName = _strdup(lpcstrDescription);
-	tempDev->devModule = _strdup(lpcstrModule);
+	tempDev->devName = strdup(lpcstrDescription);
+	tempDev->devModule = strdup(lpcstrModule);
 	devLstCount ++;
 	
 	return TRUE;
@@ -458,8 +462,9 @@ UINT8 DSound_WriteData(void* drvObj, UINT32 dataSize, void* data)
 UINT32 DSound_GetLatency(void* drvObj)
 {
 	DRV_DSND* drv = (DRV_DSND*)drvObj;
-	DWORD readPos;
 	UINT32 bytesBehind;
+#if 0
+	DWORD readPos;
 	HRESULT retVal;
 	
 	retVal = drv->dSndBuf->GetCurrentPosition(&readPos, NULL);
@@ -467,9 +472,12 @@ UINT32 DSound_GetLatency(void* drvObj)
 		return 0;
 	
 	if (drv->writePos >= readPos)
-		bytesBehind = readPos - drv->writePos;
+		bytesBehind = drv->writePos - readPos;
 	else
 		bytesBehind = (drv->bufSize - readPos) + drv->writePos;
+#else
+	bytesBehind = drv->bufSize - GetFreeBytes(drv);
+#endif
 	return bytesBehind * 1000 / drv->waveFmt.nAvgBytesPerSec;
 }
 

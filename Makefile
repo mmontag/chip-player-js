@@ -5,35 +5,36 @@
 #
 ########################
 
-# Uncomment if you build on Windows using MinGW.
+# Set to 1 if you build on Windows using MinGW.
 WINDOWS = 1
+
+ifeq ($(WINDOWS), 0)
+USE_BSD_AUDIO = 0
+USE_ALSA = 1
+USE_LIBAO = 1
+endif
 
 CC = gcc
 CPP = g++
 PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
-ifdef WINDOWS
+CFLAGS := -O3 -g0 $(CFLAGS) -I. -Ilibs/include_mingw
+#MAINFLAGS += -D__BIG_ENDIAN__
+
+
+ifeq ($(WINDOWS), 1)
 # MinGW defines __WINDOWS__, Visual Studio defines WIN32
 MAINFLAGS += -DWIN32 -D _WIN32_WINNT=0x500
 endif
 
-#MAINFLAGS += -D__BIG_ENDIAN__
-
-# -- General Compile Flags --
-CFLAGS := -O3 -g0 $(CFLAGS) -I. -Ilibs/include_mingw
-
-ifdef WINDOWS
+ifeq ($(WINDOWS), 1)
 # for Windows, add kernel32 and winmm (Multimedia APIs)
 LDFLAGS += -lkernel32 -lwinmm -ldsound -luuid -lole32
 else
 # for Linux, add librt (clock stuff) and libpthread (threads)
 LDFLAGS += -lrt -lpthread -pthread
 MAINFLAGS += -pthread -DSHARE_PREFIX=\"$(PREFIX)\"
-endif
-
-ifdef USE_LIBAO
-LDFLAGS += -lao
 endif
 
 # add Library Path, if defined
@@ -53,10 +54,36 @@ MAINOBJS = \
 	$(OBJ)/main.o
 AUDIOOBJS = \
 	$(AUDIOOBJ)/AudioStream.o \
-	$(AUDIOOBJ)/AudDrv_WaveWriter.o \
+	$(AUDIOOBJ)/AudDrv_WaveWriter.o
+
+ifeq ($(WINDOWS), 1)
+AUDIOOBJS += \
 	$(AUDIOOBJ)/AudDrv_WinMM.o \
 	$(AUDIOOBJ)/AudDrv_DSound.o \
 	$(AUDIOOBJ)/AudDrv_XAudio2.o
+endif
+
+ifneq ($(WINDOWS), 1)
+ifneq ($(USE_BSD_AUDIO), 1)
+AUDIOOBJS += \
+	$(AUDIOOBJ)/AudDrv_OSS.o
+else
+AUDIOOBJS += \
+	$(AUDIOOBJ)/AudDrv_SADA.o
+endif
+
+ifeq ($(USE_ALSA), 1)
+AUDIOOBJS += \
+	$(AUDIOOBJ)/AudDrv_ALSA.o
+LDFLAGS += -lasound
+endif
+endif
+
+ifeq ($(USE_LIBAO), 1)
+AUDIOOBJS += \
+	$(AUDIOOBJ)/AudDrv_libao.o
+LDFLAGS += -lao
+endif
 
 
 all:	audiotest
@@ -66,7 +93,7 @@ audiotest:	$(AUDIOOBJS) $(MAINOBJS)
 	@$(CC) $(VGMPLAY_OBJS) $(MAINOBJS) $(AUDIOOBJS) $(LDFLAGS) -o audiotest
 	@echo Done.
 
-# compile the chip-emulator c-files
+# compile the audio library c-files
 $(AUDIOOBJ)/%.o:	$(AUDIOSRC)/%.c
 	@echo Compiling $< ...
 	@mkdir -p $(@D)

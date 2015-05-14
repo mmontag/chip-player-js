@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 	}
 	
 	devList = AudioDrv_GetDeviceList(audDrv);
-	printf("%u devices found.\n", devList->devCount);
+	printf("%u device%s found.\n", devList->devCount, (devList->devCount == 1) ? "" : "s");
 	for (curDrv = 0; curDrv < devList->devCount; curDrv ++)
 		printf("    Device %u: %s\n", curDrv, devList->devNames[curDrv]);
 	
@@ -165,6 +165,8 @@ int main(int argc, char* argv[])
 	}
 	
 	getchar();
+	printf("Current Latency: %u ms\n", AudioDrv_GetLatency(audDrv));
+	
 	retVal = AudioDrv_Stop(audDrv);
 	if (audDrvLog != NULL)
 		retVal = AudioDrv_Stop(audDrvLog);
