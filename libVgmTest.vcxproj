@@ -93,7 +93,7 @@
     <ClCompile Include="audio\AudDrv_WinMM.c" />
     <ClCompile Include="audio\AudDrv_XAudio2.cpp" />
     <ClCompile Include="audio\AudioStream.c" />
-    <ClCompile Include="main.c" />
+    <ClCompile Include="audiotest.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

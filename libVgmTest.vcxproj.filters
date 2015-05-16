@@ -44,7 +44,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
+    <ClCompile Include="audiotest.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="audio\AudDrv_WinMM.c">
