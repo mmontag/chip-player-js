@@ -3,6 +3,8 @@ language: c
 compiler:
   - gcc
   - clang
+  - '"clang -fsanitize=address"'
+  - '"clang -fsanitize=memory"'
 
 os:
   - linux
