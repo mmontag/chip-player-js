@@ -331,6 +331,7 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 		int x = hio_read(xxs->data, 1, bytelen, f);
 		if (x != bytelen) {
 			D_(D_WARN "short read (%d) in sample load", x - bytelen);
+			memset(xxs->data + x, 0, bytelen - x);
 			return -1;
 		}
 	}
