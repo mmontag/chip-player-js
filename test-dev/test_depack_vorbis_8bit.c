@@ -26,15 +26,14 @@ TEST(test_depack_vorbis_8bit)
 	buf = malloc(st.st_size);
 	fail_unless(buf != NULL, "can't alloc raw buffer");
 	fread(buf, 1, st.st_size, f);
+	fclose(f);
 
-	pcm8 = (int8 *)info.mod->xxs[0].data;
+	pcm8 = (int8 *)info.mod->xxs[4].data;
 
 	for (i = 0; i < 5492; i++) {
 		if (pcm8[i] != buf[i])
-			fail_unless(abs(pcm8[i] - buf[i]) >= 1, "data error");
+			printf("%d %d\n", pcm8[i], buf[i]);
+			fail_unless(abs(pcm8[i] - buf[i]) <= 1, "data error");
 	}
-
-	fclose(f);
-
 }
 END_TEST

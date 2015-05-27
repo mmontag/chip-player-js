@@ -26,15 +26,15 @@ TEST(test_depack_vorbis)
 	buf = malloc(st.st_size);
 	fail_unless(buf != NULL, "can't alloc raw buffer");
 	fread(buf, 1, st.st_size, f);
+	fclose(f);
 
 	pcm16 = (int16 *)info.mod->xxs[0].data;
 
-	for (i = 0; i < 9376; i++) {
+	for (i = 0; i < (9376 / 2); i++) {
 		if (pcm16[i] != buf[i])
-			fail_unless(abs(pcm16[i] - buf[i]) >= 1, "data error");
+			fail_unless(abs(pcm16[i] - buf[i]) <= 1, "data error");
 	}
 
-	fclose(f);
 
 }
 END_TEST
