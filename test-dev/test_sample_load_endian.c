@@ -11,7 +11,7 @@ TEST(test_sample_load_endian)
 
 	memset(&m, 0, sizeof (struct module_data));
 
-	xxs.len = 10;
+	xxs.len = 5;
 	xxs.flg = XMP_SAMPLE_16BIT;
 
 	/* Our input sample is big-endian */
