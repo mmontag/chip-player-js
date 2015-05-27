@@ -1417,10 +1417,11 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	RESET_NOTE(NOTE_RELEASE);
 
 	xc->ins = ins;
-	xc->ins_fade = mod->xxi[ins].rls;
 
-	if (ins >= mod->ins && ins < mod->ins + smix->ins)
+	if (ins >= mod->ins && ins < mod->ins + smix->ins) {
 		is_smix_ins = 1;
+		xc->ins_fade = smix->xxi[xc->ins - mod->ins].rls;
+	}
 
 	SET(NEW_NOTE);
 
