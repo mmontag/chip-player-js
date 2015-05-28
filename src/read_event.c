@@ -120,8 +120,18 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 				struct xmp_subinstrument *sub,
 				struct channel_data *xc, int is_toneporta)
 {
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	struct smix_data *smix = &ctx->smix;
+	
 	if (sub != NULL && note >= 0) {
-		struct xmp_instrument *xxi = &ctx->m.mod.xxi[xc->ins];
+		struct xmp_instrument *xxi;
+
+		if (xc->ins >= mod->ins) {
+			xxi = &smix->xxi[xc->ins - mod->ins];
+		} else {
+			xxi = &mod->xxi[xc->ins];
+		}
 
 		xc->finetune = sub->fin;
 		xc->gvl = sub->gvl;
