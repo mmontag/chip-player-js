@@ -377,6 +377,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->pat = ifh.patnum;
 
     memset(lastevent, 0, L_CHANNELS * sizeof (struct xmp_event));
+    memset(&dummy, 0, sizeof (struct xmp_event));
 
     /* Sanity check */
     if (mod->ins > 255 || mod->smp > 255 || mod->pat > 255) {
@@ -1086,7 +1087,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	     * real number of channels before loading the patterns and
 	     * we don't want to set it to 64 channels.
 	     */
-	    event = c >= mod->chn || r >= mod->xxp[i]->rows ? &dummy : &EVENT (i, c, r);
+            if (c >= mod->chn || r >= mod->xxp[i]->rows) {
+                event = &dummy;
+            } else {
+                event = &EVENT(i, c, r);
+            }
+
 	    if (mask[c] & 0x01) {
 		b = hio_read8(f);
 
