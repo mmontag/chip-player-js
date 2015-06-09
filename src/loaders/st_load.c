@@ -402,8 +402,6 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored samples: %d", mod->smp);
 
     for (i = 0; i < mod->ins; i++) {
-        int val;
-
 	if (!mod->xxs[i].len)
 	    continue;
 
@@ -420,14 +418,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	hio_seek(f, mh.ins[i].loop_start, SEEK_CUR);
 
-	val = load_sample(m, f, 0, &mod->xxs[i], NULL);
-
-        /* Samples actually used in the module are mandatory, and errors
-         * loading unused samples won't be fatal. This will allow us to load
-         * ripped modules cut after the last used sample, such as sll7.mod
-         * (reported by Shlomi Fish).
-         */
-        if (i < used_ins && val < 0) {
+	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0) {
 	    return -1;
 	}
     }

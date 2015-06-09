@@ -8,6 +8,7 @@ Stable versions
 	Other changes:
 	- Detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
 	- Fix problems in Amiga split channels (reported by Gabriele Orioli)
+	- Allow short sample reads (reported by Adam Purkrt)
 
 4.3.8 (20150404):
 	Fix bugs caught in the OpenMPT test cases:
