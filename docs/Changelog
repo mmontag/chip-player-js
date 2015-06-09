@@ -3,12 +3,14 @@ Stable versions
 
 4.3.9 ():
 	Fix bugs caught in the OpenMPT test cases:
-	- Fix IT tone portamento on sample change and NNA
-	- Fix IT tone portamento with offset
+	- fix IT tone portamento on sample change and NNA
+	- fix IT tone portamento with offset
+	Fix problems caused by fuzzed files (reported by Jonathan Neuschäfer):
+	- add sanity check to IT instrument name loader
 	Other changes:
-	- Detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
-	- Fix problems in Amiga split channels (reported by Gabriele Orioli)
-	- Allow short sample reads (reported by Adam Purkrt)
+	- detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
+	- fix problems in Amiga split channels (reported by Gabriele Orioli)
+	- allow short sample reads (reported by Adam Purkrt)
 
 4.3.8 (20150404):
 	Fix bugs caught in the OpenMPT test cases:

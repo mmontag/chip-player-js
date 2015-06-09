@@ -579,7 +579,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    i2h.nos = hio_read8(f);
 	    i2h.rsvd1 = hio_read8(f);
-	    hio_read(&i2h.name, 26, 1, f);
+
+            if (hio_read(&i2h.name, 1, 26, f) != 26) {
+                goto err4;
+            }
 
 	    fix_name(i2h.name, 26);
 
@@ -703,8 +706,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    i1h.nos = hio_read8(f);
 	    i1h.rsvd2 = hio_read8(f);
 
-	    if (hio_read(&i1h.name, 1, 26, f) != 26)
-		goto err4;
+	    if (hio_read(&i1h.name, 1, 26, f) != 26) {
+                goto err4;
+            }
 
 	    fix_name(i1h.name, 26);
 
@@ -823,7 +827,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ish.gvl = hio_read8(f);
 	ish.flags = hio_read8(f);
 	ish.vol = hio_read8(f);
-	hio_read(&ish.name, 26, 1, f);
+
+	if (hio_read(&ish.name, 1, 26, f) != 26) {
+	    goto err4;
+	}
 
 	fix_name(ish.name, 26);
 
