@@ -471,13 +471,12 @@ void mixer_softmixer(struct context_data *ctx)
 					mix_fn(vi, buf_pos, samples, vol_l,
 								vol_r, step);
 					buf_pos += mix_size;
-				}
 
-				/* For Hipolito's anticlick routine */
-				idx = 0;
-				if (mix_size >= 2) {
-					vi->sright = buf_pos[idx - 2] - prev_r;
-					vi->sleft = buf_pos[idx - 1] - prev_l;
+					/* For Hipolito's anticlick routine */
+					if (mix_size >= 2) {
+						vi->sright = buf_pos[-2] - prev_r;
+						vi->sleft = buf_pos[-1] - prev_l;
+					}
 				}
 			}
 
