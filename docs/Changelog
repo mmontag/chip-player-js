@@ -8,7 +8,7 @@ Stable versions
 	Fix problems caused by fuzzed files (reported by Jonathan Neuschäfer):
 	- add sanity check to IT instrument name loader
 	- add sanity check to IT loader instrument mapping
-	- add sanity check to AMF loader basic module parameters
+	- add sanity check to AMF module parameters and event loading
 	- initialize IT loader last event data
 	Other changes:
 	- detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
