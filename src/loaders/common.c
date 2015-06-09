@@ -91,7 +91,7 @@ int pattern_alloc(struct xmp_module *mod, int num)
 int track_alloc(struct xmp_module *mod, int num, int rows)
 {
 	/* Sanity check */
-	if (num >= mod->trk || mod->xxt[num] != NULL)
+	if (num <= 0 || num >= mod->trk || mod->xxt[num] != NULL)
 		return -1;
 
 	mod->xxt[num] = calloc(sizeof (struct xmp_track) +
