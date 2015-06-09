@@ -593,7 +593,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    i2h.mch = hio_read8(f);
 	    i2h.mpr = hio_read8(f);
 	    i2h.mbnk = hio_read16l(f);
-	    hio_read(&i2h.keys, 240, 1, f);
+
+            if (hio_read(&i2h.keys, 1, 240, f) != 240) {
+                goto err4; 
+            }
 
 	    copy_adjust(xxi->name, i2h.name, 25);
 	    xxi->rls = i2h.fadeout << 6;
@@ -634,7 +637,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    for (k = j = 0; j < 120; j++) {
 		c = i2h.keys[j * 2 + 1] - 1;
-		if (c < 0) {
+		if (c < 0 || c >= 120) {
 		    xxi->map[j].ins = 0xff;	/* No sample */
 		    xxi->map[j].xpo = 0;
 		    continue;

@@ -7,6 +7,7 @@ Stable versions
 	- fix IT tone portamento with offset
 	Fix problems caused by fuzzed files (reported by Jonathan Neuschäfer):
 	- add sanity check to IT instrument name loader
+	- add sanity check to IT loader instrument mapping
 	- add sanity check to AMF loader basic module parameters
 	- initialize IT loader last event data
 	Other changes:
