@@ -376,6 +376,8 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->smp = ifh.smpnum;
     mod->pat = ifh.patnum;
 
+    memset(lastevent, 0, L_CHANNELS * sizeof (struct xmp_event));
+
     /* Sanity check */
     if (mod->ins > 255 || mod->smp > 255 || mod->pat > 255) {
 	goto err;
@@ -983,7 +985,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + pp_pat[i], SEEK_SET);
 	pat_len = hio_read16l(f) /* - 4*/;
 	hio_read16l(f);
-	memset (mask, 0, L_CHANNELS);
+	memset(mask, 0, L_CHANNELS);
 	hio_read16l(f);
 	hio_read16l(f);
 
@@ -1059,7 +1061,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (tracks_in_pattern_alloc(mod, i) < 0)
 	    goto err4;
 
-	memset (mask, 0, L_CHANNELS);
+	memset(mask, 0, L_CHANNELS);
 	hio_read16l(f);
 	hio_read16l(f);
 
