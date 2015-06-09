@@ -86,6 +86,11 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->trk = hio_read16l(f);
 	mod->chn = hio_read8(f);
 
+	/* Sanity check */
+	if (mod->ins == 0 || mod->len == 0 || mod->trk == 0 || mod->chn == 0) {
+		return -1;
+	}
+
 	mod->smp = mod->ins;
 	mod->pat = mod->len;
 
@@ -260,7 +265,6 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		t = hio_read16l(f);
 		trkmap[i] = t;
 		if (t > newtrk) newtrk = t;
-/*printf("%d -> %d\n", i, t);*/
 	}
 
 	for (i = 0; i < mod->pat; i++) {		/* read track table */
@@ -273,7 +277,6 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (k < 0 || k >= mod->trk)
 				k = 0;
 			mod->xxp[i]->index[j] = trkmap[k];
-/*printf("mod->xxp[%d]->info[%d].index = %d (k = %d)\n", i, j, trkmap[k], k);*/
 		}
 	}
 

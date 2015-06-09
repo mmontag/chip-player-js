@@ -7,6 +7,7 @@ Stable versions
 	- fix IT tone portamento with offset
 	Fix problems caused by fuzzed files (reported by Jonathan Neuschäfer):
 	- add sanity check to IT instrument name loader
+	- add sanity check to AMF loader basic module parameters
 	Other changes:
 	- detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
 	- fix problems in Amiga split channels (reported by Gabriele Orioli)
