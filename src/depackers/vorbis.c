@@ -708,6 +708,10 @@ static int compute_codewords(Codebook *c, uint8 *len, int n, uint32 *values)
    memset(available, 0, sizeof(available));
    // find the first entry
    for (k=0; k < n; ++k) if (len[k] < NO_CODE) break;
+
+   // sanity check
+   if (len[k] >= 32) return -1;
+
    if (k == n) { assert(c->sorted_entries == 0); return TRUE; }
    // add to the list
    add_entry(c, 0, k, m++, len[k], values);
