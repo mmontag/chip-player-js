@@ -13,7 +13,6 @@
 
 static int depack_starpack(HIO_HANDLE *in, FILE *out)
 {
-	uint8 c1, c2, c3, c4, c5;
 	uint8 pnum[128];
 	uint8 pnum_tmp[128];
 	uint8 pat_pos;
@@ -39,25 +38,30 @@ static int depack_starpack(HIO_HANDLE *in, FILE *out)
 		pw_write_zero(out, 22);		/* sample name */
 		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += 2 * size;
-		write8(out, hio_read8(in));		/* finetune */
-		write8(out, hio_read8(in));		/* volume */
+		write8(out, hio_read8(in));	/* finetune */
+		write8(out, hio_read8(in));	/* volume */
 		write16b(out, hio_read16b(in));	/* loop start */
 		write16b(out, hio_read16b(in));	/* loop size */
 	}
 
-	pat_pos = hio_read16b(in);			/* size of pattern table */
+	pat_pos = hio_read16b(in);		/* size of pattern table */
 
-	hio_seek(in, 2, SEEK_CUR);			/* bypass $0000 unknown bytes */
+	if (pat_pos >= 128) {
+		return -1;
+	}
 
-	for (i = 0; i < 128; i++)
+	hio_seek(in, 2, SEEK_CUR);		/* bypass $0000 unknown bytes */
+
+	for (i = 0; i < 128; i++) {
 		paddr[i] = hio_read32b(in);
+	}
 
 	/* ordering of patterns addresses */
 
 	tmp_ptr = 0;
 	for (i = 0; i < pat_pos; i++) {
 		if (i == 0) {
-			pnum[0] = 0x00;
+			pnum[0] = 0;
 			tmp_ptr++;
 			continue;
 		}
@@ -150,7 +154,9 @@ static int depack_starpack(HIO_HANDLE *in, FILE *out)
 		memset(buffer, 0, 1024);
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
+				uint8 c1, c2, c3, c4, c5;
 				int ofs = j * 16 + k * 4;
+
 				c1 = hio_read8(in);
 				if (c1 == 0x80)
 					continue;
