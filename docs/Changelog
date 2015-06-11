@@ -5,7 +5,9 @@ Stable versions
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT tone portamento on sample change and NNA
 	- fix IT tone portamento with offset
-	Fix problems caused by fuzzed files (reported by Jonathan Neuschäfer):
+	Fix problems caused by fuzz files (reported by Lionel Debroux):
+	- add sanity check to RTM envelope points
+	Fix problems caused by fuzz files (reported by Jonathan Neuschäfer):
 	- add sanity check to IT instrument name loader
 	- add sanity check to IT loader instrument mapping
 	- add sanity check to AMF module parameters and event loading

@@ -167,7 +167,8 @@ static int read_object_header(HIO_HANDLE *f, struct ObjectHeader *h, char *id)
 	h->rc = hio_read8(f);
 	if (h->rc != 0x20)
 		return -1;
-	hio_read(&h->name, 32, 1, f);
+	if (hio_read(&h->name, 1, 32, f) != 32)
+		return -1;
 	h->eof = hio_read8(f);
 	h->version = hio_read16l(f);
 	h->headerSize = hio_read16l(f);
@@ -359,9 +360,15 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		ri.nsample = hio_read8(f);
 		ri.flags = hio_read16l(f);	/* bit 0 : default panning enabled */
-		hio_read(&ri.table, 120, 1, f);
+		if (hio_read(&ri.table, 1, 120, f) != 120)
+			return -1;
 
 		ri.volumeEnv.npoint = hio_read8(f);
+
+		/* Sanity check */
+		if (ri.volumeEnv.npoint >= 12)
+			return -1;
+
 		for (j = 0; j < 12; j++) {
 			ri.volumeEnv.point[j].x = hio_read32l(f);
 			ri.volumeEnv.point[j].y = hio_read32l(f);
@@ -372,6 +379,11 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		ri.volumeEnv.flags = hio_read16l(f); /* bit 0:enable 1:sus 2:loop */
 		
 		ri.panningEnv.npoint = hio_read8(f);
+
+		/* Sanity check */
+		if (ri.panningEnv.npoint >= 12)
+			return -1;
+
 		for (j = 0; j < 12; j++) {
 			ri.panningEnv.point[j].x = hio_read32l(f);
 			ri.panningEnv.point[j].y = hio_read32l(f);
