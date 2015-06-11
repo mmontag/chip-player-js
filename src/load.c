@@ -148,13 +148,16 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 	if (depacker == NULL) {
 		if (b[0] == 'M' && b[1] == 'O' && b[2] == '3') {
 			/* MO3 */
+			D_(D_INFO "mo3");
 			cmd = "unmo3 -s \"%s\" STDOUT";
 		} else if (memcmp(b, "Rar", 3) == 0) {
 			/* rar */
+			D_(D_INFO "rar");
 			cmd = "unrar p -inul -xreadme -x*.diz -x*.nfo -x*.txt "
 			    "-x*.exe -x*.com \"%s\"";
 		} else if (test_oxm(f) == 0) {
 			/* oggmod */
+			D_(D_INFO "oggmod");
 			depacker = &oxm_depacker;
 		}
 	}

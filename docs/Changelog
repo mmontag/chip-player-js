@@ -7,6 +7,7 @@ Stable versions
 	- fix IT tone portamento with offset
 	Fix problems caused by fuzz files (reported by Lionel Debroux):
 	- add sanity check to RTM envelope points
+	- add sanity check to Oxm depacker
 	Fix problems caused by fuzz files (reported by Jonathan Neuschäfer):
 	- add sanity check to IT instrument name loader
 	- add sanity check to IT loader instrument mapping

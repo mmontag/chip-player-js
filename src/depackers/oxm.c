@@ -154,7 +154,7 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 {
 	int i, j, pos;
 	int hlen, npat, len, plen;
-	int nins, nsmp;
+	int nins, nsmp, size;
 	uint32 ilen;
 	uint8 buf[1024];
 	struct xm_instrument xi[256];
@@ -182,27 +182,40 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 
 	for (i = 0; i < nins; i++) {
 		ilen = read32l(f);
-		if (ilen > 1024)
+		if (ilen > 1024) {
+			D_(D_CRIT "ilen=%d\n", ilen);
 			return -1;
+		}
 		fseek(f, -4, SEEK_CUR);
 		fread(buf, ilen, 1, f);		/* instrument header */
 		buf[26] = 0;
 		fwrite(buf, ilen, 1, fo);
 		nsmp = readmem16l(buf + 27);
+		size = readmem32l(buf + 29);
 
-		if (nsmp == 0)
+		if (nsmp == 0) {
 			continue;
+		}
+
+		/* Sanity check */
+		if (nsmp > 0x10 || (nsmp > 0 && size > 0x100)) {
+			D_(D_CRIT "Sanity check: nsmp=%d size=%d", nsmp, size);
+			return -1;
+		}
 
 		/* Read sample headers */
 		for (j = 0; j < nsmp; j++) {
 			xi[j].len = read32l(f);
-			if (xi[j].len > MAX_SAMPLE_SIZE)
+			if (xi[j].len > MAX_SAMPLE_SIZE) {
+				D_(D_CRIT "sample %d len = %d", j, xi[j].len);
 				return -1;
+			}
 			fread(xi[j].buf, 1, 36, f);
 		}
 
 		/* Read samples */
 		for (j = 0; j < nsmp; j++) {
+			D_(D_INFO "sample=%d len=%d\n", j, xi[j].len);
 			if (xi[j].len > 0) {
 				int res = 8;
 				if (xi[j].buf[10] & 0x10)
@@ -210,8 +223,9 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 				pcm[j] = oggdec(f, xi[j].len, res, &newlen);
 				xi[j].len = newlen;
 
-				if (pcm[j] == NULL)
+				if (pcm[j] == NULL) {
 					return -1;
+				}
 			}
 		}
 

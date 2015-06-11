@@ -34,7 +34,7 @@
 #endif
 
 #include "vorbis.h"
-
+#include "common.h"
 
 #ifndef STB_VORBIS_HEADER_ONLY
 
@@ -5178,12 +5178,16 @@ int stb_vorbis_decode_memory(uint8 *mem, int len, int *channels, short **output)
 {
    int data_len, offset, total, limit, error;
    short *data;
+
+   D_(D_INFO "vorbis_decode_memory (len=%d)", len);
+
    stb_vorbis *v = stb_vorbis_open_memory(mem, len, &error, NULL);
    if (v == NULL) return -1;
    limit = v->channels * 4096;
    *channels = v->channels;
    offset = data_len = 0;
    total = limit;
+   D_(D_INFO "total=%d\n", total);
    data = (short *) malloc(total * sizeof(*data));
    if (data == NULL) {
       stb_vorbis_close(v);
@@ -5194,6 +5198,7 @@ int stb_vorbis_decode_memory(uint8 *mem, int len, int *channels, short **output)
       if (n == 0) break;
       data_len += n;
       offset += n * v->channels;
+      D_(D_INFO "offset=%d, limit=%d, total=%d", offset, limit, total);
       if (offset + limit > total) {
 	 short *data2;
 	 total *= 2;
