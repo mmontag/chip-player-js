@@ -9,6 +9,7 @@ Stable versions
 	- add sanity check to RTM loader envelope points
 	- add sanity check to MMD hybrid instrument loader
 	- add sanity check to Starpack converter
+	- add sanity check to Fuzzac converter
 	- add sanity check to Oxm/vorbis depacker
 	- add sanity check to lha depacker
 	- add sanity check to MMCMP depacker

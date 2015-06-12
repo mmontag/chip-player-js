@@ -54,7 +54,13 @@ static int depack_fuzz(HIO_HANDLE *in, FILE *out)
 		write16b(out, lsz > 0 ? lsz : 1);
 	}
 
-	write8(out, len = hio_read8(in));	/* size of pattern list */
+	len = hio_read8(in);		/* size of pattern list */
+
+	/* Sanity check */
+	if (len > 128)
+		return -1;
+
+	write8(out, len);
 	ntrk = hio_read8(in);		/* read the number of tracks */
 	write8(out, 0x7f);		/* write noisetracker byte */
 
