@@ -3379,9 +3379,8 @@ static int start_decoder(vorb *f)
    uint8 header[6], x,y;
    int len,i,j,k, max_submaps = 0;
    int longest_floorlist=0;
-
+   int val;
    // first page, first packet
-
    if (!start_page(f))                              return FALSE;
    // validate page flag
    if (!(f->page_flag & PAGEFLAG_first_page))       return error(f, VORBIS_invalid_first_page);
@@ -3397,8 +3396,9 @@ static int start_decoder(vorb *f)
    if (!vorbis_validate(header))                    return error(f, VORBIS_invalid_first_page);
    // vorbis_version
    if (get32(f) != 0)                               return error(f, VORBIS_invalid_first_page);
-   f->channels = get8(f); if (!f->channels)         return error(f, VORBIS_invalid_first_page);
-   if (f->channels > STB_VORBIS_MAX_CHANNELS)       return error(f, VORBIS_too_many_channels);
+   val = get8(f); if (val == 0)                     return error(f, VORBIS_invalid_first_page);
+   if (val > STB_VORBIS_MAX_CHANNELS)               return error(f, VORBIS_too_many_channels);
+   f->channels = val;
    f->sample_rate = get32(f); if (!f->sample_rate)  return error(f, VORBIS_invalid_first_page);
    get32(f); // bitrate_maximum
    get32(f); // bitrate_nominal
