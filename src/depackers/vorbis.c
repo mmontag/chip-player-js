@@ -588,7 +588,7 @@ static void *setup_temp_malloc(vorb *f, int sz)
       return (char *) f->alloc.alloc_buffer + f->temp_offset;
    }
 #endif
-   return malloc(sz);
+   return calloc(sz, 1);
 }
 
 static void setup_temp_free(vorb *f, void *p, size_t sz)
@@ -787,7 +787,7 @@ static int uint32_compare(const void *p, const void *q)
 
 static int include_in_sort(Codebook *c, uint8 len)
 {
-   if (c->sparse) { assert(len != NO_CODE); return TRUE; }
+   if (c->sparse) { return (len != NO_CODE); }
    if (len == NO_CODE) return FALSE;
    if (len > STB_VORBIS_FAST_HUFFMAN_LENGTH) return TRUE;
    return FALSE;
