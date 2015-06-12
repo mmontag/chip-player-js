@@ -378,6 +378,11 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	int length, type;
 	int pos = hio_tell(f);
 
+	/* Sanity check */
+	if (smp_idx >= mod->smp) {
+		return -1;
+	}
+
 	synth->defaultdecay = hio_read8(f);
 	hio_seek(f, 3, SEEK_CUR);
 	synth->rep = hio_read16b(f);
