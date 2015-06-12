@@ -303,6 +303,17 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 			goto err2;
 		if (block.sub_blk <= 0)
 			goto err2;
+		if (block.flags & MMCMP_COMP) {
+			if (block.flags & MMCMP_16BIT) {
+				if (block.num_bits >= 16) {
+					goto err2;
+				}
+			} else {
+				if (block.num_bits >= 8) {
+					goto err2;
+				}
+			}
+		}
 
 		sub_block = malloc(block.sub_blk * sizeof (struct sub_block));
 		if (sub_block == NULL)
