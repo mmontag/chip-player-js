@@ -8,6 +8,7 @@ Stable versions
 	Fix problems caused by fuzz files (reported by Lionel Debroux):
 	- add sanity check to RTM loader envelope points
 	- add sanity check to MMD hybrid instrument loader
+	- add sanity check to MDL sample depacker
 	- add sanity check to Starpack converter
 	- add sanity check to Fuzzac converter
 	- add sanity check to Oxm/vorbis depacker

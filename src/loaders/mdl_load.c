@@ -271,7 +271,7 @@ static unsigned int get_bits(char i, uint8 **buf, int *len, struct bits *bits)
  *	xxx1s => byte = <xxx>; if s=1 then byte = byte xor 255
  */
 
-static void unpack_sample8(uint8 *t, uint8 *f, int len, int l)
+static int unpack_sample8(uint8 *t, uint8 *f, int len, int l)
 {
     int i, s;
     uint8 b, d;
@@ -281,6 +281,10 @@ static void unpack_sample8(uint8 *t, uint8 *f, int len, int l)
     get_bits(0, &f, &len, &bits);
 
     for (i = b = d = 0; i < l; i++) {
+	/* Sanity check */
+        if (len < 0)
+            return -1;
+
 	s = get_bits(1, &f, &len, &bits);
 	if (get_bits(1, &f, &len, &bits)) {
 	    b = get_bits(3, &f, &len, &bits);
@@ -297,6 +301,8 @@ static void unpack_sample8(uint8 *t, uint8 *f, int len, int l)
 	d += b;
 	*t++ = d;
     }
+
+    return 0;
 }
 
 /*
@@ -311,7 +317,7 @@ static void unpack_sample8(uint8 *t, uint8 *f, int len, int l)
  * Go on this way for the whole sample!
  */
 
-static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
+static int unpack_sample16(uint8 *t, uint8 *f, int len, int l)
 {
     int i, lo, s;
     uint8 b, d;
@@ -321,6 +327,10 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
     get_bits(0, &f, &len, &bits);
 
     for (i = lo = b = d = 0; i < l; i++) {
+	/* Sanity check */
+        if (len < 0)
+            return -1;
+
 	lo = get_bits(8, &f, &len, &bits);
 	s = get_bits(1, &f, &len, &bits);
 	if (get_bits(1, &f, &len, &bits)) {
@@ -339,6 +349,8 @@ static void unpack_sample16(uint8 *t, uint8 *f, int len, int l)
 	*t++ = lo;
 	*t++ = d;
     }
+
+    return 0;
 }
 
 
@@ -816,11 +828,10 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
                 goto err2;
 	    if ((buf = malloc(len + 4)) == NULL)
 		goto err2;
-	    if (hio_read(buf, 1, len, f) != len) {
-                free(buf);
-                goto err2;
-            }
-	    unpack_sample8(smpbuf, buf, len, xxs->len);
+	    if (hio_read(buf, 1, len, f) != len)
+                goto err3;
+            if (unpack_sample8(smpbuf, buf, len, xxs->len) < 0)
+                goto err3;
 	    free(buf);
 	    break;
 	case 2:
@@ -830,11 +841,10 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
                 goto err2;
 	    if ((buf = malloc(len + 4)) == NULL)
 		goto err2;
-	    if (hio_read(buf, 1, len, f) != len) {
-                free(buf);
-                goto err2;
-            }
-	    unpack_sample16(smpbuf, buf, len, xxs->len);
+	    if (hio_read(buf, 1, len, f) != len)
+                goto err3;
+            if (unpack_sample16(smpbuf, buf, len, xxs->len) < 0)
+                goto err3;
 	    free(buf);
 	    break;
 	default:
@@ -849,7 +859,8 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     }
 
     return 0;
-
+  err3:
+    free(buf);
   err2:
     free(smpbuf);
   err:
