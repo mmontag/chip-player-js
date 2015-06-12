@@ -60,16 +60,37 @@ struct local_data {
 static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
+	int val;
 
-	mod->ins = hio_read16b(f);
-	mod->smp = hio_read16b(f);
+	val = hio_read16b(f);
+	if (val < 0 || val > 255) {
+		D_(D_CRIT "Invalid number of instruments: %d", val);
+		goto err;
+	}
+	mod->ins = val;
+
+	val = hio_read16b(f);
+	if (val < 0) {
+		D_(D_CRIT "Invalid number of samples: %d", val);
+		goto err2;
+	}
+	mod->smp = val;
+
 	hio_read16b(f);			/* Songs */
-	mod->pat = hio_read16b(f);
-	mod->chn = hio_read16b(f);
 
-	/* Sanity check */
-	if (mod->ins > 255 || mod->pat > 256 || mod->chn > XMP_MAX_CHANNELS)
-		return -1;
+	val = hio_read16b(f);
+	if (val < 0 || val > 256) {
+		D_(D_CRIT "Invalid number of patterns: %d", val);
+		goto err3;
+	}
+	mod->pat = val;
+
+	val = hio_read16b(f);
+	if (val < 0 || val > XMP_MAX_CHANNELS) {
+		D_(D_CRIT "Invalid number of channels: %d", val);
+		goto err4;
+	}
+	mod->chn = val;
 
 	mod->trk = mod->pat * mod->chn;
 
@@ -77,6 +98,15 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		return -1;
 
 	return 0;
+
+    err4:
+	mod->pat = 0;
+    err3:
+	mod->smp = 0;
+    err2:
+	mod->ins = 0;
+    err:
+	return -1;
 }
 
 static int get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)

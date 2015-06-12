@@ -151,6 +151,8 @@ int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
 	list_for_each(tmp, &data->iff_list) {
 		i = list_entry(tmp, struct iff_info, list);
 		if (id && !strncmp(id, i->id, data->id_size)) {
+			D_(D_WARN "Load IFF chunk %s (%d) @ %d", id,
+						data->id_size, pos);
 			if (i->loader(m, size, f, parm) < 0)
 				return -1;
 			break;
