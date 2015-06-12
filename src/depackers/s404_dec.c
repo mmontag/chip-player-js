@@ -390,7 +390,7 @@ static int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
   }
 
   /* Sanity check */
-  if (pLen + 16 >= st.st_size) {
+  if (oLen < 0 || pLen < 0 || pLen + 16 < 0 || pLen + 16 >= st.st_size) {
     goto error;
   }
 
