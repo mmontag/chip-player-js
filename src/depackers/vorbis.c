@@ -4806,6 +4806,11 @@ int stb_vorbis_get_frame_float(stb_vorbis *f, int *channels, float ***output)
       return 0;
    }
 
+   /* Sanity check */
+   if (len > f->blocksize_1) {
+      return -1;
+   }
+
    len = vorbis_finish_frame(f, len, left, right);
 
    /* Sanity check */
