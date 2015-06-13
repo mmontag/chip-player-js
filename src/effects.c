@@ -69,7 +69,13 @@ static void do_toneporta(struct module_data *m,
 {
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
 	int mapped = instrument->map[xc->key].ins;
-	struct xmp_subinstrument *sub = &instrument->sub[mapped];
+	struct xmp_subinstrument *sub;
+
+	if (mapped >= instrument->nsm) {
+		mapped = 0;
+	}
+
+	sub = &instrument->sub[mapped];
 
 	if (note >= 1 && note <= 0x80 && (uint32)xc->ins < m->mod.ins) {
 		note--;
