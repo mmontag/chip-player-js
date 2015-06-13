@@ -568,11 +568,6 @@ static int xm_load(struct module_data *m, HIO_HANDLE *f, const int start)
         return -1;
     }
 
-    if (xfh.tempo < 0) {
-	D_(D_CRIT "Sanity check: %d", xfh.tempo);
-        return -1;
-    }
-
     if (xfh.tempo >= 32 || xfh.bpm < 32 || xfh.bpm > 255) {
         if (memcmp("MED2XM", xfh.tracker, 6)) {
 	    D_(D_CRIT "Sanity check: %d %d", xfh.tempo, xfh.bpm);

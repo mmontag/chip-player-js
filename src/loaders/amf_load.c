@@ -327,7 +327,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			} else if (t2 == 0x7f) {	/* copy previous */
 
 				/* Sanity check */
-				if (t1 <= 0 || t1 > 256) {
+				if (t1 == 0 || t1 > 256) {
 					return -1;
 				}
 

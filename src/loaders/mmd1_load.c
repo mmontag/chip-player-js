@@ -239,8 +239,6 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		/* Sanity check */
 		if (expsmp_offset < 0 ||
-		    expdata.s_ext_entries < 0 ||
-		    expdata.s_ext_entrsz < 0 ||
 		    annotxt_offset < 0 ||
                     expdata.annolen > 0x10000 ||
 		    iinfo_offset < 0) {

@@ -252,10 +252,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		expdata.i_ext_entrsz = hio_read16b(f);
 
 		/* Sanity check */
-		if (expsmp_offset < 0 ||
-		    expdata.s_ext_entries < 0 ||
-		    expdata.s_ext_entrsz < 0 ||
-		    iinfo_offset < 0) {
+		if (expsmp_offset < 0 || iinfo_offset < 0) {
 			return -1;
 		}
 
