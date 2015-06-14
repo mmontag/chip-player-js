@@ -824,6 +824,8 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	case 1: 
 	    len = hio_read32l(f);
             /* Sanity check */
+            if (xxs->flg & XMP_SAMPLE_16BIT)
+                goto err2;
             if (len <= 0 || len > 0x80000)  /* Max compressed sample size */
                 goto err2;
 	    if ((buf = malloc(len + 4)) == NULL)
@@ -837,6 +839,8 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	case 2:
 	    len = hio_read32l(f);
             /* Sanity check */
+            if (~xxs->flg & XMP_SAMPLE_16BIT)
+                goto err2;
             if (len <= 0 || len > MAX_SAMPLE_SIZE)
                 goto err2;
 	    if ((buf = malloc(len + 4)) == NULL)
