@@ -3613,7 +3613,10 @@ static int start_decoder(vorb *f)
             int len, sparse = c->sparse;
             // pre-expand the lookup1-style multiplicands, to avoid a divide in the inner loop
             if (sparse) {
-               if (c->sorted_entries == 0) goto skip;
+               if (c->sorted_entries == 0) {
+                  setup_temp_free(f,mults,sizeof(mults[0])*c->lookup_values);
+                  goto skip;
+               }
                c->multiplicands = (codetype *) setup_malloc(f, sizeof(c->multiplicands[0]) * c->sorted_entries * c->dimensions);
             } else
                c->multiplicands = (codetype *) setup_malloc(f, sizeof(c->multiplicands[0]) * c->entries        * c->dimensions);

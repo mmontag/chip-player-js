@@ -13,6 +13,7 @@ Stable versions
 	- add sanity check to Fuzzac converter
 	- add sanity check to Oxm/vorbis depacker
 	- add sanity check to lha/MMCMP/s404 depacker
+	- fix memory leak in vorbis decoder
 	- fix error handling in DBM module parameters sanity check
 	Fix problems caused by fuzz files (reported by Jonathan Neuschäfer):
 	- add sanity check to IT instrument name loader
