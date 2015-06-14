@@ -62,6 +62,11 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_module *mod = &m->mod;
 	int val;
 
+	/* Sanity check */
+	if (mod->ins != 0) {
+		return -1;
+	}
+ 
 	val = hio_read16b(f);
 	if (val < 0 || val > 255) {
 		D_(D_CRIT "Invalid number of instruments: %d", val);
