@@ -2054,7 +2054,7 @@ static int decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int 
                      int n = r->part_size;
 
                      /* Sanity check */
-                     if (offset >= f->blocksize_1) {
+                     if (offset + n >= f->blocksize_1) {
                         return FALSE;
                      }
 
@@ -3116,7 +3116,9 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
       }
       r = map->submap_residue[i];
       t = f->residue_types[r];
-      decode_residue(f, residue_buffers, ch, n2, r, do_not_decode);
+      if (!decode_residue(f, residue_buffers, ch, n2, r, do_not_decode)) {
+         return FALSE;
+      }
    }
 
 #ifndef STB_VORBIS_NO_ALLOC_BUFFER
