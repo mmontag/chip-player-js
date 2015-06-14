@@ -440,7 +440,8 @@ static int get_song_2(struct module_data *m, int size, HIO_HANDLE *f, void *parm
 			hio_read8(f);		/* ? */
 			break;
 		default:
-			printf("channel %d: %02x %02x\n", i, c, hio_read8(f));
+			/*printf("channel %d: %02x %02x\n", i, c, hio_read8(f));*/
+			return -1;
 		}
 	}
 
