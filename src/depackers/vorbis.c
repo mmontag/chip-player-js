@@ -2067,6 +2067,10 @@ static int decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int 
          }
          #ifndef STB_VORBIS_DIVIDES_IN_RESIDUE
          ++class_set;
+         /* Sanity check */
+         if (class_set >= part_read) {
+             return FALSE;
+         }
          #endif
       }
    }
