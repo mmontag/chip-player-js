@@ -126,7 +126,8 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 
     sfx2.len = hio_read8(f);
     sfx2.restart = hio_read8(f);
-    hio_read(&sfx2.order, 128, 1, f);
+    if (hio_read(&sfx2.order, 1, 128, f) != 128)
+        return -1;
 
     mod->len = sfx2.len;
     if (mod->len > 0x7f)
