@@ -712,6 +712,7 @@ static int compute_codewords(Codebook *c, uint8 *len, int n, uint32 *values)
    for (k=0; k < n; ++k) if (len[k] < NO_CODE) break;
 
    // sanity check
+   if (k == n) return -1;
    if (len[k] >= 32) return -1;
 
    if (k == n) { assert(c->sorted_entries == 0); return TRUE; }
