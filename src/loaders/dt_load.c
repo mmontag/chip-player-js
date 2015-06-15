@@ -91,6 +91,11 @@ static int get_s_q_(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_module *mod = &m->mod;
 	int i, maxpat;
 
+	/* Sanity check */
+	if (mod->pat != 0) {
+		return -1;
+	}
+
 	mod->len = hio_read16b(f);
 	mod->rst = hio_read16b(f);
 
