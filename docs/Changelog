@@ -19,6 +19,7 @@ Stable versions
 	Other changes:
 	- detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
 	- fix problems in Amiga split channels (reported by Gabriele Orioli)
+	- fix global volume on restart to invalid row (reported by Adam Purkrt)
 	- allow short sample reads (reported by Adam Purkrt)
 	- address problems reported by clang sanitizer
 

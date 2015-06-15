@@ -153,24 +153,28 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    continue;
 	}
 
-	/* Loops can cross pattern boundaries, so check if we're not looping */
-	if (break_row < mod->xxp[pat]->rows) {
-	    if (m->scan_cnt[ord][break_row] && !inside_loop) {
-	        break;
-	    }
-	} else {
-	    break_row = 0;
-	}
+        if (break_row >= mod->xxp[pat]->rows) {
+            break_row = 0;
+        }
 
+        /* Loops can cross pattern boundaries, so check if we're not looping */
+        if (m->scan_cnt[ord][break_row] && !inside_loop) {
+            break;
+        }
 
-	info->gvl = gvl;
-	info->bpm = bpm;
-	info->speed = speed;
-	info->time = time + m->time_factor * frame_count * base_time / bpm;
-
+        /* Don't update pattern information if we're inside a loop, otherwise
+         * a loop containing e.g. a global volume fade can make the pattern
+         * start with the wrong volume.
+         */
+        if (!inside_loop) {
+            info->gvl = gvl;
+            info->bpm = bpm;
+            info->speed = speed;
+            info->time = time + m->time_factor * frame_count * base_time / bpm;
 #ifndef LIBXMP_CORE_PLAYER
-	info->st26_speed = st26_speed;
+            info->st26_speed = st26_speed;
 #endif
+        }
 
 	if (info->start_row == 0 && ord != 0) {
 	    if (ord == ep) {
@@ -200,7 +204,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	     * (...) it dies at the end of position 2F
 	     */
 
-	    if (row_count > 512)	/* was 255, but Global trash goes to 318 */
+	    if (row_count > 512)  /* was 255, but Global trash goes to 318 */
 		goto end_module;
 
 	    if (!loop_num && m->scan_cnt[ord][row]) {
