@@ -131,7 +131,7 @@ static void reset_channels(struct context_data *ctx)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct channel_data *xc;
-	int i;
+	int i, j;
 
 #ifndef LIBXMP_CORE_PLAYER
 	m->synth->reset(ctx);
@@ -169,6 +169,15 @@ static void reset_channels(struct context_data *ctx)
 		/* Amiga split channel */
 		if (mod->xxc[i].flg & XMP_CHANNEL_SPLIT) {
 			xc->split = ((mod->xxc[i].flg & 0x30) >> 4) + 1;
+			/* Connect split channel pairs */
+			for (j = 0; j < i; j++) {
+				if (mod->xxc[j].flg & XMP_CHANNEL_SPLIT) {
+					if (p->xc_data[j].split == xc->split) {
+						p->xc_data[j].pair = i;
+						xc->pair = j;
+					}
+				}
+			}
 		} else {
 			xc->split = 0;
 		}
@@ -437,21 +446,13 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	else
 		finalvol = finalvol * p->smix_vol / 100;
 
-	xc->info_finalvol = TEST_NOTE(NOTE_SAMPLE_END) ? 0 :finalvol;
+	xc->info_finalvol = TEST_NOTE(NOTE_SAMPLE_END) ? 0 : finalvol;
 
 	virt_setvol(ctx, chn, finalvol);
 
 	/* Check Amiga split channel */
 	if (xc->split) {
-		int i;
-
-		/* Also set the volume of the paired channel */
-		for (i = 0; i < chn; i++) {
-			if (p->xc_data[i].split == xc->split) {
-				virt_setvol(ctx, i, finalvol);
-				break;
-			}
-		}
+		virt_setvol(ctx, xc->pair, finalvol);
 	}
 }
 
@@ -703,6 +704,10 @@ static void update_volume(struct context_data *ctx, int chn)
 	CLAMP(xc->volume, 0, m->volbase);
 	CLAMP(p->gvol, 0, m->gvolbase);
 	CLAMP(xc->mastervol, 0, m->volbase);
+
+	if (xc->split) {
+		p->xc_data[xc->pair].volume = xc->volume;
+	}
 }
 
 static void update_frequency(struct context_data *ctx, int chn)

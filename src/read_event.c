@@ -253,7 +253,12 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 				/* Get new instrument volume */
 				sub = get_subinstrument(ctx, ins, e->note - 1);
 				if (sub != NULL) {
-					xc->volume = sub->vol;
+					/* Dennis Lindroos: instrument volume
+					 * is not used on split channels
+					 */
+					if (!xc->split) {
+						xc->volume = sub->vol;
+					}
 					use_ins_vol = 0;
 				}
 			} else {
@@ -336,7 +341,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		RESET(OFFSET);
 	}
 
-	if (use_ins_vol && !TEST(NEW_VOL)) {
+	if (use_ins_vol && !TEST(NEW_VOL) && !xc->split) {
 		xc->volume = sub->vol;
 	}
 

@@ -93,6 +93,7 @@ struct channel_data {
 	int fadeout;		/* Current fadeout (release) value */
 	int ins_fade;		/* Instrument fadeout value */
 	int split;		/* Split channel */
+	int pair;		/* Split channel pair */
 	int volume;		/* Current volume */
 	int gvl;		/* Global volume for instrument for IT */
 

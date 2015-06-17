@@ -20,6 +20,8 @@ Stable versions
 	- detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
 	- fix problems in Amiga split channels (reported by Gabriele Orioli)
 	- fix global volume on restart to invalid row (reported by Adam Purkrt)
+	- fix Oktalyzer note slide effect (by Dennis Lindroos)
+	- fix Oktalyzer volume setting in split channels (by Dennis Lindroos)
 	- allow short sample reads (reported by Adam Purkrt)
 	- address problems reported by clang sanitizer
 

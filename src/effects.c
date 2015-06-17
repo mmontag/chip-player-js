@@ -356,6 +356,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_VOLSET:		/* Volume set */
 		SET(NEW_VOL);
 		xc->volume = fxp;
+		if (xc->split) {
+			p->xc_data[xc->pair].volume = xc->volume;
+		}
 		break;
 	case FX_BREAK:		/* Pattern break */
 		p->flow.pbreak = 1;
