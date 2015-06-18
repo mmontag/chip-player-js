@@ -29,3 +29,7 @@ player-openal-buffer: player-openal-buffer.o
 
 player-sdl: player-sdl.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lSDL $(LIBS)
+
+player-sdl-smix: player-sdl-smix.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lSDL $(LIBS)
+
