@@ -26,3 +26,6 @@ player-openal: player-openal.o
 
 player-openal-buffer: player-openal-buffer.o
 	$(LD) -o $@ $(LDFLAGS) $+ -lopenal $(LIBS)
+
+player-sdl: player-sdl.o
+	$(LD) -o $@ $(LDFLAGS) $+ -lSDL $(LIBS)
