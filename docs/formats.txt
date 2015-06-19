@@ -58,7 +58,6 @@ Atari tracker formats:
 
 MOD		Octalyser		CD61, CD81
 DTM		Digital Tracker		1.9
-GTK (*)		Graoumf Tracker		GTK1, GTK4
 MGT		Megatracker		-
 
 Acorn tracker formats:
