@@ -766,23 +766,24 @@ int xmp_get_player(xmp_context c, int param)
     :param: player parameter to get.
       Valid parameters are::
 
-        XMP_PLAYER_AMP      /* Amplification factor */
-        XMP_PLAYER_MIX      /* Stereo mixing */
-        XMP_PLAYER_INTERP   /* Interpolation type */
-        XMP_PLAYER_DSP      /* DSP effect flags */
-        XMP_PLAYER_FLAGS    /* Player flags */
-        XMP_PLAYER_CFLAGS   /* Player flags for current module*/
-        XMP_PLAYER_SMPCTL   /* Control sample loading */
-        XMP_PLAYER_VOLUME   /* Player master volume */
-        XMP_PLAYER_STATE    /* Current player state*/
-        XMP_PLAYER_DEFPAN   /* Default pan separation */
+        XMP_PLAYER_AMP         /* Amplification factor */
+        XMP_PLAYER_MIX         /* Stereo mixing */
+        XMP_PLAYER_INTERP      /* Interpolation type */
+        XMP_PLAYER_DSP         /* DSP effect flags */
+        XMP_PLAYER_FLAGS       /* Player flags */
+        XMP_PLAYER_CFLAGS      /* Player flags for current module*/
+        XMP_PLAYER_SMPCTL      /* Control sample loading */
+        XMP_PLAYER_VOLUME      /* Player master volume */
+        XMP_PLAYER_STATE       /* Current player state*/
+        XMP_PLAYER_SMIX_VOLUME /* SMIX Volume */
+        XMP_PLAYER_DEFPAN      /* Default pan separation */
 
       See ``xmp_set_player`` for the list of valid values for each parameter.
       Valid states are::
 
-        XMP_STATE_UNLOADED  /* Context created */
-        XMP_STATE_LOADED    /* Module loaded */
-        XMP_STATE_PLAYING   /* Module playing */
+        XMP_STATE_UNLOADED     /* Context created */
+        XMP_STATE_LOADED       /* Module loaded */
+        XMP_STATE_PLAYING      /* Module playing */
 
   **Returns:**
     The parameter value, or ``-XMP_ERROR_STATE`` if the parameter is not
@@ -799,15 +800,16 @@ int xmp_set_player(xmp_context c, int param, int val)
     :param: player parameter to set.
       Valid parameters are::
 
-        XMP_PLAYER_AMP      /* Amplification factor */
-        XMP_PLAYER_MIX      /* Stereo mixing */
-        XMP_PLAYER_INTERP   /* Interpolation type */
-        XMP_PLAYER_DSP      /* DSP effect flags */
-        XMP_PLAYER_FLAGS    /* Player flags */
-        XMP_PLAYER_CFLAGS   /* Player flags for current module*/
-        XMP_PLAYER_SMPCTL   /* Control sample loading */
-        XMP_PLAYER_VOLUME   /* Player master volume */
-        XMP_PLAYER_DEFPAN   /* Default pan separation */
+        XMP_PLAYER_AMP         /* Amplification factor */
+        XMP_PLAYER_MIX         /* Stereo mixing */
+        XMP_PLAYER_INTERP      /* Interpolation type */
+        XMP_PLAYER_DSP         /* DSP effect flags */
+        XMP_PLAYER_FLAGS       /* Player flags */
+        XMP_PLAYER_CFLAGS      /* Player flags for current module*/
+        XMP_PLAYER_SMPCTL      /* Control sample loading */
+        XMP_PLAYER_VOLUME      /* Player master volume */
+        XMP_PLAYER_SMIX_VOLUME /* SMIX Volume */
+        XMP_PLAYER_DEFPAN      /* Default pan separation */
 
     :val: the value to set. Valid values are:
 
@@ -844,7 +846,8 @@ int xmp_set_player(xmp_context c, int param, int val)
         loading large sample data, and is useful when duration information
         is needed for a module that won't be played immediately.
 
-      * *[Added in libxmp 4.2]* Set the player master volume, in a 0-100 scale.
+      * *[Added in libxmp 4.2]* The player master volume or the external
+        sample mixer master volume: 0-100 scale.
 
   **Returns:**
     0 if parameter was correctly set, ``-XMP_ERROR_INVALID`` if
@@ -988,10 +991,10 @@ int xmp_smix_play_instrument(xmp_context c, int ins, int note, int vol, int chn)
 
     :note: the note number to play (60 = middle C).
 
-    :vol: the volume to use (0 to the maximum volume value used by the
-      current module.
+    :vol: the volume to use (range: 0 to the maximum volume value used by the
+      current module).
 
-    :chn: the reserved channe to use to play the instrument.
+    :chn: the reserved channel to use to play the instrument.
 
   **Returns:**
     0 if the instrument was correctly played, ``-XMP_ERROR_INVALID`` in
