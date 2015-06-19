@@ -46,10 +46,8 @@ static void sdl_deinit()
 
 static void play_instrument(xmp_context ctx, int ins)
 {
-	if (ins >= 0 && ins < 9) {
-		if (xmp_smix_play_instrument(ctx, ins, 60, 64, 0) == 0) {
-			printf("play instrument %d\n", ins + 1);
-		}
+	if (xmp_smix_play_instrument(ctx, ins - 1, 60, 64, 0) == 0) {
+		printf("play instrument %d\n", ins);
 	}
 }
 
@@ -90,8 +88,12 @@ int main(int argc, char **argv)
 			SDL_PauseAudio(0);
 
 			while (playing) {
-				int ins = getc(stdin);
-				play_instrument(ctx, ins - '1');
+				int ins;
+				printf("Instrument to play: ");
+				scanf("%d", &ins);
+				if (ins > 0 && ins <= mi.mod->ins) {
+					play_instrument(ctx, ins);
+				}
 			}
 			xmp_end_player(ctx);
 		}
