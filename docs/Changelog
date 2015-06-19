@@ -22,6 +22,7 @@ Stable versions
 	- fix global volume on restart to invalid row (reported by Adam Purkrt)
 	- fix Oktalyzer note slide effect (by Dennis Lindroos)
 	- fix Oktalyzer volume setting in split channels (by Dennis Lindroos)
+	- fix external sample mixer for IT files (reported by honguito98)
 	- allow short sample reads (reported by Adam Purkrt)
 	- address problems reported by clang sanitizer
 

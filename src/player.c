@@ -130,6 +130,7 @@ static void reset_channels(struct context_data *ctx)
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	struct smix_data *smix = &ctx->smix;
 	struct channel_data *xc;
 	int i, j;
 
@@ -162,9 +163,15 @@ static void reset_channels(struct context_data *ctx)
 
 	for (i = 0; i < p->virt.num_tracks; i++) {
 		xc = &p->xc_data[i];
-		xc->pan.val = mod->xxc[i].pan;
-		xc->mastervol = mod->xxc[i].vol;
 		xc->filter.cutoff = 0xff;
+
+		if (i >= mod->chn && i < mod->chn + smix->chn) {
+			xc->mastervol = 0x40;
+			xc->pan.val = 0x80;
+		} else {
+			xc->mastervol = mod->xxc[i].vol;
+			xc->pan.val = mod->xxc[i].pan;
+		}
 		
 		/* Amiga split channel */
 		if (mod->xxc[i].flg & XMP_CHANNEL_SPLIT) {
@@ -1252,7 +1259,7 @@ int xmp_play_frame(xmp_context opaque)
 		RESET(KEY_OFF);
 	}
 
-	/* check new r w */
+	/* check new row */
 
 	if (p->frame == 0) {			/* first frame in row */
 		check_end_of_module(ctx);
