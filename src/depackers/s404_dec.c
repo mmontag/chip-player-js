@@ -148,7 +148,10 @@ static int decompressS404(uint8 *src, uint8 *orgdst,
     /*printf("oLen: %d _bl: %02X, _bb: %04X, w: %04X\n",oLen,_bl,_bb,w);*/
 
     if (w < 0x100) {
-      assert(dst > orgdst);
+      /*assert(dst > orgdst);*/
+      if (orgdst >= dst) {
+        return -1;
+      }
       *--dst = w;
       /*printf("0+[8] -> %02X\n",w);*/
       oLen--;
