@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.9 ():
+4.3.9 (20150623):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT tone portamento on sample change and NNA
 	- fix IT tone portamento with offset
