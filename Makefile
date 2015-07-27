@@ -22,6 +22,9 @@ PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
 CFLAGS := -O3 -g0 $(CFLAGS) -I. -Ilibs/include_mingw
+CCFLAGS = -std=gnu99
+CPPFLAGS = -std=gnu++98
+#CFLAGS += -Wall -Wextra -Wpedantic
 ARFLAGS = -cr
 
 # add Library Path, if defined
@@ -29,22 +32,24 @@ ifdef LD_LIBRARY_PATH
 LDFLAGS += -L $(LD_LIBRARY_PATH)
 endif
 
-#MAINFLAGS += -D__BIG_ENDIAN__
+#CFLAGS += -D__BIG_ENDIAN__
 
 
 ifeq ($(WINDOWS), 1)
-# MinGW defines __WINDOWS__, Visual Studio defines WIN32
-# also assume Windows 2000 and later for GetConsoleWindow API call
-MAINFLAGS += -DWIN32 -D _WIN32_WINNT=0x500
+# assume Windows 2000 and later for GetConsoleWindow API call
+CFLAGS += -D _WIN32_WINNT=0x500
 endif
 
 ifeq ($(WINDOWS), 1)
 # for Windows, add kernel32 and winmm (Multimedia APIs)
 LDFLAGS += -lkernel32 -lwinmm -ldsound -luuid -lole32
 else
-# for Linux, add librt (clock stuff) and libpthread (threads)
+# for Linux add libpthread (threads)
 LDFLAGS += -lrt -lpthread -pthread
-MAINFLAGS += -pthread -DSHARE_PREFIX=\"$(PREFIX)\"
+CFLAGS += -pthread -DSHARE_PREFIX=\"$(PREFIX)\"
+
+# add librt (clock stuff)
+#LDFLAGS += -lrt
 endif
 
 SRC = .
@@ -72,6 +77,7 @@ LIBAUDOBJS += \
 	$(LIBAUDOBJ)/AudDrv_WinMM.o \
 	$(LIBAUDOBJ)/AudDrv_DSound.o \
 	$(LIBAUDOBJ)/AudDrv_XAudio2.o
+	#$(LIBAUDOBJ)/AudDrv_WASAPI.o	# MinGW lacks the required header files
 endif
 
 ifneq ($(WINDOWS), 1)
@@ -100,7 +106,7 @@ endif
 
 all:	audiotest
 
-audiotest:	libaudio $(AUD_MAINOBJS)
+audiotest:	dirs libaudio $(AUD_MAINOBJS)
 	@echo Linking audiotest ...
 	@$(CC) $(AUD_MAINOBJS) $(LIBAUD_A) $(LDFLAGS) -o audiotest
 	@echo Done.
@@ -110,22 +116,17 @@ libaudio:	$(LIBAUDOBJS)
 	@$(RM) $@
 	@$(AR) $(ARFLAGS) $(LIBAUD_A) $(LIBAUDOBJS)
 
-# compile the audio library c-files
-$(LIBAUDOBJ)/%.o:	$(LIBAUDSRC)/%.c
-	@echo Compiling $< ...
-	@mkdir -p $(@D)
-	@$(CC) $(CFLAGS) $(MAINFLAGS) -c $< -o $@
 
-$(LIBAUDOBJ)/%.o:	$(LIBAUDSRC)/%.cpp
-	@echo Compiling $< ...
-	@mkdir -p $(@D)
-	@$(CPP) $(CFLAGS) $(MAINFLAGS) -c $< -o $@
+dirs:
+	@mkdir -p $(OBJDIRS)
 
-# compile the main c-files
-$(OBJ)/%.o:	$(SRC)/%.c
+$(OBJ)/%.o: $(SRC)/%.c
 	@echo Compiling $< ...
-	@mkdir -p $(@D)
-	@$(CC) $(CFLAGS) $(MAINFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(CCFLAGS) -c $< -o $@
+
+$(OBJ)/%.o: $(SRC)/%.cpp
+	@echo Compiling $< ...
+	@$(CPP) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 clean:
 	@echo Deleting object files ...

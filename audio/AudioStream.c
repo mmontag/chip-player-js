@@ -10,12 +10,12 @@
 #include "AudioStream.h"
 
 
-#ifdef AUDDRV_WINMM
-extern AUDIO_DRV audDrv_WinMM;
-#endif
-
 #ifdef AUDDRV_WAVEWRITE
 extern AUDIO_DRV audDrv_WaveWrt;
+#endif
+
+#ifdef AUDDRV_WINMM
+extern AUDIO_DRV audDrv_WinMM;
 #endif
 #ifdef AUDDRV_DSOUND
 extern AUDIO_DRV audDrv_DSound;
@@ -23,17 +23,20 @@ extern AUDIO_DRV audDrv_DSound;
 #ifdef AUDDRV_XAUD2
 extern AUDIO_DRV audDrv_XAudio2;
 #endif
+#ifdef AUDDRV_WASAPI
+extern AUDIO_DRV audDrv_WASAPI;
+#endif
 
 #ifdef AUDDRV_OSS
 extern AUDIO_DRV audDrv_OSS;
 #endif
-#ifdef AUDDRV_LIBAO
+#ifdef AUDDRV_SADA
 extern AUDIO_DRV audDrv_SADA;
 #endif
 #ifdef AUDDRV_ALSA
 extern AUDIO_DRV audDrv_ALSA;
 #endif
-#ifdef AUDDRV_OSS
+#ifdef AUDDRV_LIBAO
 extern AUDIO_DRV audDrv_LibAO;
 #endif
 
@@ -50,6 +53,9 @@ AUDIO_DRV* audDrivers[] =
 #endif
 #ifdef AUDDRV_XAUD2
 	&audDrv_XAudio2,
+#endif
+#ifdef AUDDRV_WASAPI
+	&audDrv_WASAPI,
 #endif
 #ifdef AUDDRV_OSS
 	&audDrv_OSS,

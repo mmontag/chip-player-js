@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="audio\AudDrv_DSound.cpp" />
+    <ClCompile Include="audio\AudDrv_WASAPI.cpp" />
     <ClCompile Include="audio\AudDrv_WaveWriter.c" />
     <ClCompile Include="audio\AudDrv_WinMM.c" />
     <ClCompile Include="audio\AudDrv_XAudio2.cpp" />

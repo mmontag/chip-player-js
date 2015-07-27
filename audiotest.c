@@ -1,11 +1,15 @@
-#ifdef WIN32
+#ifdef _WIN32
 //#define _WIN32_WINNT	0x500	// for GetConsoleWindow()
 #include <windows.h>
+#ifdef _DEBUG
+#include <crtdbg.h>
 #endif
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 int __cdecl _getch(void);	// from conio.h
 #else
 #define _getch	getchar
@@ -19,6 +23,15 @@ int __cdecl _getch(void);	// from conio.h
 int main(int argc, char* argv[]);
 static void SetupDirectSound(void* audDrv);
 static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
+
+
+#pragma pack(1)
+typedef struct
+{
+	UINT16 lsb16;
+	INT8 msb8;
+} SMPL24BIT;
+#pragma pack()
 
 
 static UINT32 smplSize;
@@ -131,6 +144,7 @@ int main(int argc, char* argv[])
 	
 	opts = AudioDrv_GetOptions(audDrv);
 	opts->numChannels = 1;
+	opts->numBitsPerSmpl = 16;
 	smplSize = opts->numChannels * opts->numBitsPerSmpl / 8;
 	if (audDrvLog != NULL)
 	{
@@ -178,32 +192,79 @@ Exit_DrvDeinit:
 Exit_Deinit:
 	Audio_Deinit();
 	printf("Done.\n");
-	//_getch();
+	
+#if _DEBUG
+	if (_CrtDumpMemoryLeaks())
+		_getch();
+#endif
+	
 	return 0;
 }
 
 static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 {
 	UINT32 smplCount;
-	INT16* SmplPtr;
+	UINT8* SmplPtr8;
+	INT16* SmplPtr16;
+	SMPL24BIT* SmplPtr24;
+	INT32* SmplPtr32;
 	UINT32 curSmpl;
 	
 	smplCount = bufSize / smplSize;
-	SmplPtr = (INT16*)data;
-	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++)
+	switch(smplSize)
 	{
-		if ((curSmpl / (smplCount / 16)) < 15)
-			SmplPtr[curSmpl] = +0x1000;
-		else
-			SmplPtr[curSmpl] = -0x1000;
+	case 2:
+		SmplPtr16 = (INT16*)data;
+		for (curSmpl = 0; curSmpl < smplCount; curSmpl ++)
+		{
+			if ((curSmpl / (smplCount / 16)) < 15)
+				SmplPtr16[curSmpl] = +0x1000;
+			else
+				SmplPtr16[curSmpl] = -0x1000;
+		}
+		break;
+	case 1:
+		SmplPtr8 = (UINT8*)data;
+		for (curSmpl = 0; curSmpl < smplCount; curSmpl ++)
+		{
+			if ((curSmpl / (smplCount / 16)) < 15)
+				SmplPtr8[curSmpl] = 0x90;
+			else
+				SmplPtr8[curSmpl] = 0x70;
+		}
+		break;
+	case 3:
+		SmplPtr24 = (SMPL24BIT*)data;
+		for (curSmpl = 0; curSmpl < smplCount; curSmpl ++)
+		{
+			SmplPtr24[curSmpl].lsb16 = 0x00;
+			if ((curSmpl / (smplCount / 16)) < 15)
+				SmplPtr24[curSmpl].msb8 = +0x10;
+			else
+				SmplPtr24[curSmpl].msb8 = -0x10;
+		}
+		break;
+	case 4:
+		SmplPtr32 = (INT32*)data;
+		for (curSmpl = 0; curSmpl < smplCount; curSmpl ++)
+		{
+			if ((curSmpl / (smplCount / 16)) < 15)
+				SmplPtr32[curSmpl] = +0x10000000;
+			else
+				SmplPtr32[curSmpl] = -0x10000000;
+		}
+		break;
+	default:
+		curSmpl = 0;
+		break;
 	}
 	
-	return smplCount * smplSize;
+	return curSmpl * smplSize;
 }
 
 static void SetupDirectSound(void* audDrv)
 {
-#ifdef WIN32
+#ifdef _WIN32
 	void* aDrv;
 	HWND hWndConsole;
 	
@@ -214,7 +275,7 @@ static void SetupDirectSound(void* audDrv)
 	hWndConsole = GetDesktopWindow();	// not as nice, but works
 #endif
 	DSound_SetHWnd(aDrv, hWndConsole);
-#endif	// WIN32
+#endif	// _WIN32
 	
 	return;
 }

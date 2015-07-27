@@ -89,6 +89,7 @@ static DWORD WINAPI XAudio2Thread(void* Arg);
 
 static AUDIO_OPTS defOptions;
 static AUDIO_DEV_LIST deviceList;
+static UINT32* devListIDs;
 
 static UINT8 isInit = 0;
 static UINT32 activeDrivers;
@@ -112,6 +113,7 @@ UINT8 XAudio2_Init(void)
 	
 	deviceList.devCount = 0;
 	deviceList.devNames = NULL;
+	devListIDs = NULL;
 	
 	retVal = CoInitialize(NULL);
 	if (! (retVal == S_OK || retVal == S_FALSE))
@@ -124,13 +126,15 @@ UINT8 XAudio2_Init(void)
 	retVal = xAudIntf->GetDeviceCount(&deviceList.devCount);
 	if (retVal != S_OK)
 		return AERR_API_ERR;
-	deviceList.devNames = (char**)malloc(sizeof(char*) * deviceList.devCount);
+	deviceList.devNames = (char**)malloc(deviceList.devCount * sizeof(char*));
+	devListIDs = (UINT32*)malloc(deviceList.devCount * sizeof(UINT32));
 	devLstID = 0;
 	for (curDev = 0; curDev < deviceList.devCount; curDev ++)
 	{
 		retVal = xAudIntf->GetDeviceDetails(curDev, &xDevData);
 		if (retVal == S_OK)
 		{
+			devListIDs[devLstID] = curDev;
 			devNameSize = wcslen(xDevData.DisplayName) + 1;
 			deviceList.devNames[devLstID] = (char*)malloc(devNameSize);
 			wcstombs(deviceList.devNames[devLstID], xDevData.DisplayName, devNameSize);
@@ -166,6 +170,7 @@ UINT8 XAudio2_Deinit(void)
 		free(deviceList.devNames[curDev]);
 	deviceList.devCount = 0;
 	free(deviceList.devNames);	deviceList.devNames = NULL;
+	free(devListIDs);			devListIDs = NULL;
 	
 	CoUninitialize();
 	isInit = 0;
@@ -258,7 +263,8 @@ UINT8 XAudio2_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* au
 		return AERR_API_ERR;
 	
 	retVal = drv->xAudIntf->CreateMasteringVoice(&drv->xaMstVoice,
-				XAUDIO2_DEFAULT_CHANNELS, drv->waveFmt.nSamplesPerSec, 0x00, deviceID, NULL);
+				XAUDIO2_DEFAULT_CHANNELS, drv->waveFmt.nSamplesPerSec, 0x00,
+				devListIDs[deviceID], NULL);
 	if (retVal != S_OK)
 		return AERR_API_ERR;
 	
@@ -385,24 +391,22 @@ UINT8 XAudio2_WriteData(void* drvObj, UINT32 dataSize, void* data)
 	if (dataSize > drv->bufSize)
 		return AERR_TOO_MUCH_DATA;
 	
-	while(1)
+	drv->xaSrcVoice->GetState(&xaVocState);
+	while(xaVocState.BuffersQueued >= drv->bufCount)
 	{
+		Sleep(1);
 		drv->xaSrcVoice->GetState(&xaVocState);
-		if (xaVocState.BuffersQueued < drv->bufCount)
-		{
-			tempXABuf = &drv->xaBufs[drv->writeBuf];
-			memcpy((void*)tempXABuf->pAudioData, data, dataSize);
-			tempXABuf->AudioBytes = dataSize;
-			
-			retVal = drv->xaSrcVoice->SubmitSourceBuffer(tempXABuf, NULL);
-			drv->writeBuf ++;
-			if (drv->writeBuf >= drv->bufCount)
-				drv->writeBuf -= drv->bufCount;
-			return AERR_OK;
-		}
 	}
 	
-	return AERR_BUSY;
+	tempXABuf = &drv->xaBufs[drv->writeBuf];
+	memcpy((void*)tempXABuf->pAudioData, data, dataSize);
+	tempXABuf->AudioBytes = dataSize;
+	
+	retVal = drv->xaSrcVoice->SubmitSourceBuffer(tempXABuf, NULL);
+	drv->writeBuf ++;
+	if (drv->writeBuf >= drv->bufCount)
+		drv->writeBuf -= drv->bufCount;
+	return AERR_OK;
 }
 
 

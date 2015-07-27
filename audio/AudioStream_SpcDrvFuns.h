@@ -11,7 +11,7 @@ extern "C"
 #endif
 
 
-#ifdef AUDDRV_WINMM
+#ifdef AUDDRV_WAVEWRITE
 UINT8 WavWrt_SetFileName(void* drvObj, const char* fileName);
 const char* WavWrt_GetFileName(void* drvObj);
 #endif

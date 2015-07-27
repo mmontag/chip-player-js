@@ -79,6 +79,7 @@ typedef struct _audio_driver
 #define ADRVSIG_WINMM	0x10	// [Windows] WinMM
 #define ADRVSIG_DSOUND	0x11	// [Windows] DirectSound
 #define ADRVSIG_XAUD2	0x12	// [Windows] XAudio2
+#define ADRVSIG_WASAPI	0x13	// [Windows] Windows Audio Session API
 #define ADRVSIG_OSS		0x20	// [Linux] Open Sound System (/dev/dsp)
 #define ADRVSIG_SADA	0x21	// [NetBSD] Solaris Audio Device Architecture (/dev/audio)
 #define ADRVSIG_ALSA 	0x22	// [Linux] Advanced Linux Sound Architecture

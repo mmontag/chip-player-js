@@ -102,6 +102,7 @@ AUDIO_DRV audDrv_WinMM =
 
 static AUDIO_OPTS defOptions;
 static AUDIO_DEV_LIST deviceList;
+static UINT* devListIDs;
 
 static UINT8 isInit = 0;
 static UINT32 activeDrivers;
@@ -116,7 +117,7 @@ UINT8 WinMM_IsAvailable(void)
 
 UINT8 WinMM_Init(void)
 {
-	UINT32 numDevs;
+	UINT numDevs;
 	WAVEOUTCAPSA woCaps;
 	UINT32 curDev;
 	UINT32 devLstID;
@@ -127,12 +128,14 @@ UINT8 WinMM_Init(void)
 	
 	numDevs = waveOutGetNumDevs();
 	deviceList.devCount = 1 + numDevs;
-	deviceList.devNames = (char**)malloc(sizeof(char*) * deviceList.devCount);
+	deviceList.devNames = (char**)malloc(deviceList.devCount * sizeof(char*));
+	devListIDs = (UINT*)malloc(deviceList.devCount * sizeof(UINT));
 	devLstID = 0;
 	
 	retValMM = waveOutGetDevCapsA(WAVE_MAPPER, &woCaps, sizeof(WAVEOUTCAPSA));
 	if (retValMM == MMSYSERR_NOERROR)
 	{
+		devListIDs[devLstID] = WAVE_MAPPER;
 		deviceList.devNames[devLstID] = strdup(woCaps.szPname);
 		devLstID ++;
 	}
@@ -141,6 +144,7 @@ UINT8 WinMM_Init(void)
 		retValMM = waveOutGetDevCapsA(curDev, &woCaps, sizeof(WAVEOUTCAPSA));
 		if (retValMM == MMSYSERR_NOERROR)
 		{
+			devListIDs[devLstID] = curDev;
 			deviceList.devNames[devLstID] = strdup(woCaps.szPname);
 			devLstID ++;
 		}
@@ -173,6 +177,7 @@ UINT8 WinMM_Deinit(void)
 		free(deviceList.devNames[curDev]);
 	deviceList.devCount = 0;
 	free(deviceList.devNames);	deviceList.devNames = NULL;
+	free(devListIDs);			devListIDs = NULL;
 	
 	isInit = 0;
 	
@@ -238,6 +243,8 @@ UINT8 WinMM_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	
 	if (drv->devState != 0)
 		return 0xD0;	// already running
+	if (deviceID >= deviceList.devCount)
+		return AERR_INVALID_DEV;
 	
 	drv->audDrvPtr = audDrvParam;
 	if (options == NULL)
@@ -255,10 +262,7 @@ UINT8 WinMM_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	drv->bufSize = drv->waveFmt.nBlockAlign * drv->bufSmpls;
 	drv->bufCount = options->numBuffers ? options->numBuffers : 10;
 	
-	if (deviceID == 0)
-		woDevID = WAVE_MAPPER;
-	else
-		woDevID = deviceID - 1;
+	woDevID = devListIDs[deviceID];
 	retValMM = waveOutOpen(&drv->hWaveOut, woDevID, &drv->waveFmt, 0x00, 0x00, CALLBACK_NULL);
 	if (retValMM != MMSYSERR_NOERROR)
 		return 0xC0;		// waveOutOpen failed
@@ -401,12 +405,12 @@ UINT8 WinMM_WriteData(void* drvObj, UINT32 dataSize, void* data)
 		for (curBuf = 0; curBuf < drv->bufCount; curBuf ++)
 		{
 			tempWavHdr = &drv->waveHdrs[curBuf];
-			if (drv->waveHdrs[curBuf].dwFlags & WHDR_DONE)
+			if (tempWavHdr->dwFlags & WHDR_DONE)
 			{
-				memcpy(drv->waveHdrs[curBuf].lpData, data, dataSize);
-				drv->waveHdrs[curBuf].dwBufferLength = dataSize;
+				memcpy(tempWavHdr->lpData, data, dataSize);
+				tempWavHdr->dwBufferLength = dataSize;
 				
-				WriteBuffer(drv, &drv->waveHdrs[curBuf]);
+				WriteBuffer(drv, tempWavHdr);
 				return AERR_OK;
 			}
 		}

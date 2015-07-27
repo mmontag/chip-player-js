@@ -9,11 +9,14 @@ extern "C"
 // Audio Drivers
 #define AUDDRV_WAVEWRITE
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #define AUDDRV_WINMM
 #define AUDDRV_DSOUND
 #define AUDDRV_XAUD2
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+#define AUDDRV_WASAPI	// no WASAPI for MS VC6 or MinGW
+#endif
 
 #else
 

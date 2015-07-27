@@ -62,5 +62,8 @@
     <ClCompile Include="audio\AudDrv_XAudio2.cpp">
       <Filter>SoundOutput</Filter>
     </ClCompile>
+    <ClCompile Include="audio\AudDrv_WASAPI.cpp">
+      <Filter>SoundOutput</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

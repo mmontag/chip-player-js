@@ -419,6 +419,9 @@ static UINT32 GetFreeBytes(DRV_DSND* drv)
 	DWORD writeEndPos;
 	
 	retVal = drv->dSndBuf->GetCurrentPosition(NULL, &writeEndPos);
+	if (retVal != DS_OK)
+		return 0;
+	
 	if (drv->writePos <= writeEndPos)
 		return writeEndPos - drv->writePos;
 	else
@@ -445,17 +448,12 @@ UINT8 DSound_WriteData(void* drvObj, UINT32 dataSize, void* data)
 	if (dataSize > drv->bufSegSize)
 		return AERR_TOO_MUCH_DATA;
 	
-	while(1)
-	{
-		freeBytes = GetFreeBytes(drv);
-		if (freeBytes >= dataSize)
-		{
-			WriteBuffer(drv, dataSize, data);
-			return AERR_OK;
-		}
-	}
+	freeBytes = GetFreeBytes(drv);
+	while(freeBytes < dataSize)
+		Sleep(1);
 	
-	return AERR_BUSY;
+	WriteBuffer(drv, dataSize, data);
+	return AERR_OK;
 }
 
 
@@ -484,7 +482,6 @@ UINT32 DSound_GetLatency(void* drvObj)
 static DWORD WINAPI DirectSoundThread(void* Arg)
 {
 	DRV_DSND* drv = (DRV_DSND*)Arg;
-	UINT32 freeBytes;
 	UINT32 wrtBytes;
 	UINT32 didBuffers;	// number of processed buffers
 	
@@ -492,13 +489,11 @@ static DWORD WINAPI DirectSoundThread(void* Arg)
 	{
 		didBuffers = 0;
 		
-		freeBytes = GetFreeBytes(drv);
-		while(freeBytes >= drv->bufSegSize && drv->FillBuffer != NULL)
+		while(GetFreeBytes(drv) >= drv->bufSegSize && drv->FillBuffer != NULL)
 		{
 			wrtBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSegSize, drv->bufSpace);
 			WriteBuffer(drv, wrtBytes, drv->bufSpace);
 			didBuffers ++;
-			freeBytes -= wrtBytes;
 		}
 		if (! didBuffers)
 			Sleep(1);

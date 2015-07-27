@@ -239,7 +239,7 @@ UINT8 SADA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	drv->sadaParams.play.sample_rate = drv->waveFmt.nSamplesPerSec;
 	drv->sadaParams.play.channels = drv->waveFmt.nChannels;
 	drv->sadaParams.play.precision = drv->waveFmt.wBitsPerSample;
-	if (drv->waveFmt.wBitsPerSample== 8)
+	if (drv->waveFmt.wBitsPerSample == 8)
 		drv->sadaParams.play.encoding = AUDIO_ENCODING_ULINEAR;
 	else
 		drv->sadaParams.play.encoding = AUDIO_ENCODING_SLINEAR;

@@ -354,7 +354,7 @@ static void* AoThread(void* Arg)
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
 			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSize, drv->bufSpace);
-			retVal = ao_play(drv->hDevAO, drv->bufSpace, bufBytes);
+			retVal = ao_play(drv->hDevAO, (char*)drv->bufSpace, bufBytes);
 			didBuffers ++;
 		}
 		if (! didBuffers)
