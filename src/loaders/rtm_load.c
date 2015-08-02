@@ -484,7 +484,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
  			xxs = &mod->xxs[smpnum];
 
-			copy_adjust(xxs->name, (uint8 *)oh.name, 32);
+			copy_adjust(xxs->name, (uint8 *)oh.name, 31);
 
 			xxs->len = rs.length;
 			xxs->lps = rs.loopbegin;
