@@ -333,15 +333,19 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    }
 
 	    if (b & S3M_FX_FOLLOWS) {
-		event->fxt = fx[hio_read8(f)];
-		event->fxp = hio_read8(f);
-		switch (event->fxt) {
-		case FX_SPEED:
-		    event->fxp = MSN (event->fxp);
-		    break;
-		case FX_NONE:
-		    event->fxp = event->fxt = 0;
-		    break;
+		int t = hio_read8(f);
+		int p = hio_read8(f);
+		if (t <= 10) {
+		    event->fxt = fx[t];
+		    event->fxp = p;
+		    switch (event->fxt) {
+		    case FX_SPEED:
+		        event->fxp = MSN(event->fxp);
+		        break;
+		    case FX_NONE:
+		        event->fxp = event->fxt = 0;
+		        break;
+		    }
 		}
 	    }
 	}
