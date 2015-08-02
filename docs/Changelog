@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.3.10 ():
+	- fix IT envelope release + fadeout (reported by NoSuck)
+
 4.3.9 (20150623):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT tone portamento on sample change and NNA
