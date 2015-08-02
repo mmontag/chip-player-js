@@ -7,6 +7,9 @@ Stable versions
 	- fix out of bounds access in XM envelope points
 	- fix out of bounds read in STX effect decoding
 	- fix RTM maximum sample name length
+	- fix AC1D converter number of patterns underflow
+	- add sanity check to smix sample loading
+	- remove dead code from NO loader
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 
