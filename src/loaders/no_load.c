@@ -73,12 +73,7 @@ static int no_test(HIO_HANDLE *f, char *t, const int start)
 
 	hio_seek(f, start + 5, SEEK_SET);
 
-	if (nsize > XMP_NAME_SIZE) {
-		read_title(f, t, XMP_NAME_SIZE);
-		hio_seek(f, nsize - XMP_NAME_SIZE, SEEK_CUR);
-	} else {
-		read_title(f, t, nsize);
-	}
+	read_title(f, t, nsize);
 
 	return 0;
 }
