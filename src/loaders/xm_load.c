@@ -402,12 +402,12 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		xxi->pei.lpe = xi.p_end;
 		xxi->pei.flg = xi.p_type;
 
-		if (xxi->aei.npt <= 0 || xxi->aei.npt > XMP_MAX_ENV_POINTS)
+		if (xxi->aei.npt <= 0 || xxi->aei.npt > 12 /*XMP_MAX_ENV_POINTS*/)
 		    xxi->aei.flg &= ~XMP_ENVELOPE_ON;
 		else
 		    memcpy(xxi->aei.data, xi.v_env, xxi->aei.npt * 4);
 
-		if (xxi->pei.npt <= 0 || xxi->pei.npt > XMP_MAX_ENV_POINTS)
+		if (xxi->pei.npt <= 0 || xxi->pei.npt > 12 /*XMP_MAX_ENV_POINTS*/)
 		    xxi->pei.flg &= ~XMP_ENVELOPE_ON;
 		else
 		    memcpy(xxi->pei.data, xi.p_env, xxi->pei.npt * 4);
