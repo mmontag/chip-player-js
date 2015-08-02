@@ -111,6 +111,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
     if (sfx.magic != MAGIC_SONG)
 	return -1;
 
+    mod->chn = 4;
     mod->ins = nins;
     mod->smp = mod->ins;
     mod->bpm = 14565 * 122 / sfx.delay;
