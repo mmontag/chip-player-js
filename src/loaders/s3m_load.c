@@ -287,7 +287,8 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     /* m->volbase = 4096 / sfh.gv; */
     mod->spd = sfh.is;
     mod->bpm = sfh.it;
-
+    mod->chn = 0;
+    
     for (i = 0; i < 32; i++) {
 	if (sfh.chset[i] == S3M_CH_OFF)
 	    continue;
