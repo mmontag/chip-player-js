@@ -291,11 +291,12 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    for (mod->chn = i = 0; i < 32; i++) {
-	if (ih.chn[i].status != 0x00)
-	    mod->chn = i + 1;
-	else
+    mod->chn = 0;
+    for (i = 0; i < 32; i++) {
+	if (ih.chn[i].status == 0x00)
 	    continue;
+
+	mod->chn = i + 1;
 	mod->xxc[i].pan = ih.chn[i].pan;
 #if 0
 	/* FIXME */
@@ -304,6 +305,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxc[i].flg |= XMP_CHANNEL_FX;
 #endif
     }
+
     mod->trk = mod->pat * mod->chn;
  
     memcpy(mod->xxo, ih.pos, mod->len);
