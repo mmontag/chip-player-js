@@ -2,6 +2,12 @@ Stable versions
 ---------------
 
 4.3.10 ():
+	Fix bugs reported by Coverity Scan:
+	- fix out of bounds access in IT envelope points
+	- fix out of bounds access in XM envelope points
+	- fix out of bounds read in STX effect decoding
+	- fix RTM maximum sample name length
+	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 
 4.3.9 (20150623):
