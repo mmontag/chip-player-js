@@ -154,6 +154,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	if (!strncmp((char *)sfh.magic, "BMOD2STM", 8))
 		bmod2stm = 1;
 
+	mod->chn = 4;
 	mod->pat = sfh.patterns;
 	mod->trk = mod->pat * mod->chn;
 	mod->spd = MSN(sfh.tempo);
