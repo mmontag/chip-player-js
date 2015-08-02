@@ -197,6 +197,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     size = hio_size(f);
 
+    mod->chn = 4;
     mod->ins = 15;
     mod->smp = mod->ins;
     smp_size = 0;
