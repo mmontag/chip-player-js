@@ -103,6 +103,7 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 	}
 
+	mod->chn = 4;
 	mod->len = sh.len;
 	mod->pat = sh.pat;
 	mod->ins = sh.nos;
