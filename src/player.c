@@ -332,6 +332,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	int finalvol;
 	uint16 vol_envelope;
 	int gvol;
+	int fade = 0;
 
 	instrument = get_instrument(ctx, xc->ins);
 
@@ -341,13 +342,33 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	 * In XM it depends on envelope (see graff-strange_land.xm vs
 	 * Decibelter - Cosmic 'Wegian Mamas.xm)
 	 */
-	if (!HAS_QUIRK(QUIRK_KEYOFF)) {
-		if (TEST_NOTE(NOTE_RELEASE) && !(instrument->aei.flg & XMP_ENVELOPE_ON))
-			xc->fadeout = 0;
+	if (HAS_QUIRK(QUIRK_KEYOFF)) {
+		/* If IT, only apply fadeout on note release if we don't
+		 * have envelope, or if we have envelope loop
+		 */
+		if (TEST_NOTE(NOTE_RELEASE) || act == VIRT_ACTION_OFF) {
+			if ((~instrument->aei.flg & XMP_ENVELOPE_ON) ||
+			    (instrument->aei.flg & XMP_ENVELOPE_LOOP)) {
+				fade = 1;
+			}
+		}
+	} else {
+		if (~instrument->aei.flg & XMP_ENVELOPE_ON) {
+			if (TEST_NOTE(NOTE_RELEASE)) {
+				xc->fadeout = 0;
+			}
+		}
+
+		if (TEST_NOTE(NOTE_RELEASE) || act == VIRT_ACTION_OFF) {
+			fade = 1;
+		}
 	}
 
-	if (TEST_NOTE(NOTE_FADEOUT | NOTE_RELEASE) || act == VIRT_ACTION_FADE
-	    || act == VIRT_ACTION_OFF) {
+	if (TEST_NOTE(NOTE_FADEOUT) || act == VIRT_ACTION_FADE) {
+		fade = 1;
+	}
+
+	if (fade) {
 		if (xc->fadeout > xc->ins_fade) {
 			xc->fadeout -= xc->ins_fade;
 		} else {
