@@ -56,6 +56,10 @@ static int depack_ac1d(HIO_HANDLE *in, FILE *out)
 		if (paddr[npat] == 0)
 			break;
 	}
+	if (npat == 0) {
+		return -1;
+	}
+
 	npat--;
 
 	for (i = 0; i < (npat - 1); i++)
