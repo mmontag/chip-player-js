@@ -216,12 +216,24 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 	}
 
 	rate = hio_read32l(h);
+	if (rate == 0) {
+		retval = -XMP_ERROR_FORMAT;
+		goto err2;
+	}
 
 	hio_seek(h, 34, SEEK_SET);
 	bits = hio_read16l(h);
+	if (bits == 0) {
+		retval = -XMP_ERROR_FORMAT;
+		goto err2;
+	}
 
 	hio_seek(h, 40, SEEK_SET);
 	size = hio_read32l(h) / (bits / 8);
+	if (size == 0) {
+		retval = -XMP_ERROR_FORMAT;
+		goto err2;
+	}
 
 	c2spd_to_note(rate, &xxi->sub[0].xpo, &xxi->sub[0].fin);
 
