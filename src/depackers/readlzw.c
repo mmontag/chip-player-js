@@ -262,6 +262,7 @@ unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
 
 	if ((buf2 = malloc(in_len)) == NULL) {
 		//perror("read_lzw_dynamic");
+		free(data);
 		return NULL;
 	}
 
