@@ -15,18 +15,39 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common_def.h">
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="audio\AudioStream.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="stdbool.h">
+    <ClInclude Include="audio\AudioStream_LstFuncs.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="stdtype.h">
+    <ClInclude Include="audio\AudioStream_SpcDrvFuns.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="audio\AudioStructs.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="audiotest.c">
+    <ClCompile Include="audio\AudDrv_DSound.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="audio\AudDrv_WASAPI.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="audio\AudDrv_WaveWriter.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="audio\AudDrv_WinMM.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="audio\AudDrv_XAudio2.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="audio\AudioStream.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

@@ -104,7 +104,7 @@ UINT8 XAudio2_Init(void)
 	HRESULT retVal;
 	UINT32 curDev;
 	UINT32 devLstID;
-	UINT32 devNameSize;
+	size_t devNameSize;
 	IXAudio2* xAudIntf;
 	XAUDIO2_DEVICE_DETAILS xDevData;
 	

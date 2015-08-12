@@ -78,21 +78,28 @@ LIBAUDOBJS += \
 	$(LIBAUDOBJ)/AudDrv_DSound.o \
 	$(LIBAUDOBJ)/AudDrv_XAudio2.o
 	#$(LIBAUDOBJ)/AudDrv_WASAPI.o	# MinGW lacks the required header files
+CFLAGS += -D AUDDRV_WINMM
+CFLAGS += -D AUDDRV_DSOUND
+CFLAGS += -D AUDDRV_XAUD2
+#CFLAGS += -D AUDDRV_WASAPI
 endif
 
 ifneq ($(WINDOWS), 1)
 ifneq ($(USE_BSD_AUDIO), 1)
 LIBAUDOBJS += \
 	$(LIBAUDOBJ)/AudDrv_OSS.o
+CFLAGS += -D AUDDRV_OSS
 else
 LIBAUDOBJS += \
 	$(LIBAUDOBJ)/AudDrv_SADA.o
+CFLAGS += -D AUDDRV_SADA
 endif
 
 ifeq ($(USE_ALSA), 1)
 LIBAUDOBJS += \
 	$(LIBAUDOBJ)/AudDrv_ALSA.o
 LDFLAGS += -lasound
+CFLAGS += -D AUDDRV_ALSA
 endif
 endif
 
@@ -100,6 +107,7 @@ ifeq ($(USE_LIBAO), 1)
 LIBAUDOBJS += \
 	$(LIBAUDOBJ)/AudDrv_libao.o
 LDFLAGS += -lao
+CFLAGS += -D AUDDRV_LIBAO
 endif
 
 

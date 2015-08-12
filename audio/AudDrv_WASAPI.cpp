@@ -138,7 +138,7 @@ UINT8 WASAPI_Init(void)
 	UINT devCount;
 	UINT32 curDev;
 	UINT32 devLstID;
-	UINT32 devNameSize;
+	size_t devNameSize;
 	IMMDeviceEnumerator* devEnum;
 	IMMDeviceCollection* devList;
 	IMMDevice* audDev;

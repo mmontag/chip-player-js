@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>	// for memcpy() etc.
 
-#include <common.h>	// stdtype.h, INLINE
+#include <common_def.h>	// stdtype.h, INLINE
 
 #include "AudioStream.h"
 
@@ -64,9 +64,9 @@ UINT8 WavWrt_IsBusy(void* drvObj);
 UINT8 WavWrt_WriteData(void* drvObj, UINT32 dataSize, void* data);
 UINT32 WavWrt_GetLatency(void* drvObj);
 
-INLINE int fputLE16(UINT16 Value, FILE* hFile);
-INLINE int fputLE32(UINT32 Value, FILE* hFile);
-INLINE int fputBE32(UINT32 Value, FILE* hFile);
+INLINE size_t fputLE16(UINT16 Value, FILE* hFile);
+INLINE size_t fputLE32(UINT32 Value, FILE* hFile);
+INLINE size_t fputBE32(UINT32 Value, FILE* hFile);
 
 
 AUDIO_DRV audDrv_WaveWrt =
@@ -301,7 +301,7 @@ UINT8 WavWrt_WriteData(void* drvObj, UINT32 dataSize, void* data)
 	if (drv->hFile == NULL)
 		return AERR_NOT_OPEN;
 	
-	wrtBytes = fwrite(data, 0x01, dataSize, drv->hFile);
+	wrtBytes = (UINT32)fwrite(data, 0x01, dataSize, drv->hFile);
 	if (! wrtBytes)
 		return AERR_FILE_ERR;
 	drv->wrtDataBytes += wrtBytes;
@@ -315,7 +315,7 @@ UINT32 WavWrt_GetLatency(void* drvObj)
 }
 
 
-INLINE int fputLE16(UINT16 Value, FILE* hFile)
+INLINE size_t fputLE16(UINT16 Value, FILE* hFile)
 {
 #ifndef VGM_BIG_ENDIAN
 	return fwrite(&Value, 0x02, 1, hFile);
@@ -328,7 +328,7 @@ INLINE int fputLE16(UINT16 Value, FILE* hFile)
 #endif
 }
 
-INLINE int fputLE32(UINT32 Value, FILE* hFile)
+INLINE size_t fputLE32(UINT32 Value, FILE* hFile)
 {
 #ifndef VGM_BIG_ENDIAN
 	return fwrite(&Value, 0x04, 1, hFile);
@@ -343,7 +343,7 @@ INLINE int fputLE32(UINT32 Value, FILE* hFile)
 #endif
 }
 
-INLINE int fputBE32(UINT32 Value, FILE* hFile)
+INLINE size_t fputBE32(UINT32 Value, FILE* hFile)
 {
 #ifndef VGM_BIG_ENDIAN
 	UINT8 dataArr[0x04];

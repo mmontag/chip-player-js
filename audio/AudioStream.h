@@ -7,6 +7,7 @@ extern "C"
 #endif
 
 // Audio Drivers
+/*
 #define AUDDRV_WAVEWRITE
 
 #ifdef _WIN32
@@ -26,7 +27,7 @@ extern "C"
 #define AUDDRV_LIBAO
 
 #endif
-
+*/
 
 #include "AudioStructs.h"
 

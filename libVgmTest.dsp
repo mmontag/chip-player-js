@@ -37,12 +37,12 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "Release_VC6"
-# PROP Intermediate_Dir "Release_VC6"
+# PROP Output_Dir "obj\libVgmTest\Release_VC6"
+# PROP Intermediate_Dir "obj\libVgmTest\Release_VC6"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "./" /I "libs/include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "./" /D "AUDDRV_WAVEWRITE" /D "AUDDRV_WINMM" /D "AUDDRV_DSOUND" /D "AUDDRV_XAUD2" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
 # ADD RSC /l 0x407 /d "NDEBUG"
@@ -51,7 +51,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib winmm.lib dsound.lib ole32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 libAudio_VC6.lib kernel32.lib user32.lib winmm.lib dsound.lib ole32.lib /nologo /subsystem:console /machine:I386 /libpath:"bin"
 
 !ELSEIF  "$(CFG)" == "libVgmTest - Win32 Debug"
 
@@ -62,12 +62,12 @@ LINK32=link.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "Debug_VC6"
-# PROP Intermediate_Dir "Debug_VC6"
+# PROP Output_Dir "obj\libVgmTest\Debug_VC6"
+# PROP Intermediate_Dir "obj\libVgmTest\Debug_VC6"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "./" /I "libs/include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "./" /D "AUDDRV_WAVEWRITE" /D "AUDDRV_WINMM" /D "AUDDRV_DSOUND" /D "AUDDRV_XAUD2" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x407 /d "_DEBUG"
 # ADD RSC /l 0x407 /d "_DEBUG"
@@ -76,7 +76,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib winmm.lib dsound.lib ole32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 libAudio_VC6d.lib kernel32.lib user32.lib winmm.lib dsound.lib ole32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"bin"
 
 !ENDIF 
 
@@ -97,7 +97,7 @@ SOURCE=.\audiotest.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\common.h
+SOURCE=.\common_def.h
 # End Source File
 # Begin Source File
 
@@ -111,46 +111,6 @@ SOURCE=.\stdtype.h
 # Begin Group "Ressourcendateien"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
-# End Group
-# Begin Group "SoundOutput"
-
-# PROP Default_Filter "c;cpp;h"
-# Begin Source File
-
-SOURCE=.\audio\AudDrv_DSound.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\audio\AudDrv_WaveWriter.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\audio\AudDrv_WinMM.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\audio\AudDrv_XAudio2.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\audio\AudioStream.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\audio\AudioStream.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\audio\AudioStream_LstFuncs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\audio\AudioStream_SpcDrvFuns.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\audio\AudioStructs.h
-# End Source File
 # End Group
 # End Target
 # End Project
