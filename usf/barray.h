@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#define BARRAY_DECORATE USF
+
 #ifdef BARRAY_DECORATE
 #define PASTE(a,b) a ## b
 #define EVALUATE(a,b) PASTE(a,b)
