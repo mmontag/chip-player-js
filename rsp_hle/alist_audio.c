@@ -276,8 +276,21 @@ void alist_process_audio(struct hle_t* hle)
         MIXER,          INTERLEAVE,     POLEF,          SETLOOP
     };
 
+    #ifdef DEBUG_INFO
+    static const char * ABI_names[0x10] = {
+      "SPNOOP",        "ADPCM",        "CLEARBUFF",    "ENVMIXER",
+      "LOADBUFF",      "RESAMPLE",     "SAVEBUFF",     "SEGMENT",
+      "SETBUFF",       "SETVOL",       "DMEMMOVE",     "LOADADPCM",
+      "MIXER",         "INTERLEAVE",   "POLEF",        "SETLOOP"
+    };
+    #endif
+
     clear_segments(hle);
+    #ifdef DEBUG_INFO
+    alist_process(hle, ABI, 0x10, ABI_names);
+    #else
     alist_process(hle, ABI, 0x10);
+    #endif
 }
 
 void alist_process_audio_ge(struct hle_t* hle)
@@ -289,8 +302,21 @@ void alist_process_audio_ge(struct hle_t* hle)
         MIXER,          INTERLEAVE,     POLEF,          SETLOOP
     };
 
+    #ifdef DEBUG_INFO
+    static const char * ABI_names[0x10] = {
+      "SPNOOP",        "ADPCM",        "CLEARBUFF",    "ENVMIXER_GE",
+      "LOADBUFF",      "RESAMPLE",     "SAVEBUFF",     "SEGMENT",
+      "SETBUFF",       "SETVOL",       "DMEMMOVE",     "LOADADPCM",
+      "MIXER",         "INTERLEAVE",   "POLEF",        "SETLOOP"
+    };
+    #endif
+
     clear_segments(hle);
+    #ifdef DEBUG_INFO
+    alist_process(hle, ABI, 0x10, ABI_names);
+    #else
     alist_process(hle, ABI, 0x10);
+    #endif
 }
 
 void alist_process_audio_bc(struct hle_t* hle)
@@ -302,6 +328,19 @@ void alist_process_audio_bc(struct hle_t* hle)
         MIXER,          INTERLEAVE,     POLEF,          SETLOOP
     };
 
+    #ifdef DEBUG_INFO
+    static const char * ABI_names[0x10] = {
+      "SPNOOP",        "ADPCM",        "CLEARBUFF",    "ENVMIXER_GE",
+      "LOADBUFF",      "RESAMPLE",     "SAVEBUFF",     "SEGMENT",
+      "SETBUFF",       "SETVOL",       "DMEMMOVE",     "LOADADPCM",
+      "MIXER",         "INTERLEAVE",   "POLEF",        "SETLOOP"
+    };
+    #endif
+
     clear_segments(hle);
+    #ifdef DEBUG_INFO
+    alist_process(hle, ABI, 0x10, ABI_names);
+    #else
     alist_process(hle, ABI, 0x10);
+    #endif
 }

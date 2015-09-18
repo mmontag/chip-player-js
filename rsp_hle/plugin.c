@@ -35,7 +35,22 @@
 /* Global functions needed by HLE core */
 void HleVerboseMessage(void* user_defined, const char *message, ...)
 {
-    /* discard verbose message */
+  #ifdef DEBUG_INFO
+  usf_state_t* state;
+  va_list ap;
+  size_t len;
+
+  state = (usf_state_t*)user_defined;
+
+  if (state->debug_log)
+  {
+    va_start( ap, message );
+    vfprintf( state->debug_log, message, ap );
+    va_end( ap );
+
+    fputs( "\n", state->debug_log );
+  }
+  #endif
 }
 
 void HleErrorMessage(void* user_defined, const char *message, ...)
@@ -63,17 +78,17 @@ void HleWarnMessage(void* user_defined, const char *message, ...)
     usf_state_t* state;
     va_list ap;
     size_t len;
-    
+
     state = (usf_state_t*)user_defined;
     len = strlen( state->error_message );
-    
+
     if ( len )
         state->error_message[ len++ ] = '\n';
-    
+
     va_start( ap, message );
     vsprintf( state->error_message + len, message, ap );
     va_end( ap );
-    
+
     state->last_error = state->error_message;
     state->stop = 1;
 }

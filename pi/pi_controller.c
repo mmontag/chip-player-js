@@ -63,9 +63,10 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
 {
     unsigned int longueur;
     int i;
-    
+
 #ifdef DEBUG_INFO
-    fprintf(state->debug_log, "PI DMA WRITE: %08x to %08x for %08x bytes\n", pi->regs[PI_CART_ADDR_REG], pi->regs[PI_DRAM_ADDR_REG], pi->regs[PI_WR_LEN_REG] + 1);
+    if (state->debug_log)
+      fprintf(state->debug_log, "PI DMA WRITE: %08x to %08x for %08x bytes\n", pi->regs[PI_CART_ADDR_REG], pi->regs[PI_DRAM_ADDR_REG], pi->regs[PI_WR_LEN_REG] + 1);
 #endif
 
     if (pi->regs[PI_CART_ADDR_REG] < 0x10000000)
@@ -131,7 +132,7 @@ static void dma_pi_write(usf_state_t * state, struct pi_controller* pi)
                         bit_array_set(state->barray_ram_written_first, ram_address / 4);
                 }
             }
-            
+
             ((unsigned char*)pi->ri->rdram.dram)[ram_address^S8]=
                 pi->cart_rom.rom[rom_address^S8];
 

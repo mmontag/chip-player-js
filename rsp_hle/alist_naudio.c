@@ -274,7 +274,18 @@ void alist_process_naudio(struct hle_t* hle)
         MIXER,          INTERLEAVE,     NAUDIO_02B0,    SETLOOP
     };
 
+    #ifdef DEBUG_INFO
+    static const char * ABI_names[0x10] = {
+       "SPNOOP",       "ADPCM",        "CLEARBUFF",    "ENVMIXER",
+       "LOADBUFF",     "RESAMPLE",     "SAVEBUFF",     "NAUDIO_0000",
+       "NAUDIO_0000",  "SETVOL",       "DMEMMOVE",     "LOADADPCM",
+       "MIXER",        "INTERLEAVE",   "NAUDIO_02B0",  "SETLOOP"
+    };
+
+    alist_process(hle, ABI, 0x10, ABI_names);
+    #else
     alist_process(hle, ABI, 0x10);
+    #endif
 }
 
 void alist_process_naudio_bk(struct hle_t* hle)
@@ -287,7 +298,18 @@ void alist_process_naudio_bk(struct hle_t* hle)
         MIXER,          INTERLEAVE,     NAUDIO_02B0,    SETLOOP
     };
 
+    #ifdef DEBUG_INFO
+    static const char * ABI_names[0x10] = {
+       "SPNOOP",       "ADPCM",        "CLEARBUFF",    "ENVMIXER",
+       "LOADBUFF",     "RESAMPLE",     "SAVEBUFF",     "NAUDIO_0000",
+       "NAUDIO_0000",  "SETVOL",       "DMEMMOVE",     "LOADADPCM",
+       "MIXER",        "INTERLEAVE",   "NAUDIO_02B0",  "SETLOOP"
+    };
+
+    alist_process(hle, ABI, 0x10, ABI_names);
+    #else
     alist_process(hle, ABI, 0x10);
+    #endif
 }
 
 void alist_process_naudio_dk(struct hle_t* hle)
@@ -300,7 +322,18 @@ void alist_process_naudio_dk(struct hle_t* hle)
         MIXER,          INTERLEAVE,     NAUDIO_02B0,    SETLOOP
     };
 
+    #ifdef DEBUG_INFO
+    static const char * ABI_names[0x10] = {
+       "SPNOOP",       "ADPCM",        "CLEARBUFF",    "ENVMIXER",
+       "LOADBUFF",     "RESAMPLE",     "SAVEBUFF",     "MIXER",
+       "MIXER",        "SETVOL",       "DMEMMOVE",     "LOADADPCM",
+       "MIXER",        "INTERLEAVE",   "NAUDIO_02B0",  "SETLOOP"
+    };
+
+    alist_process(hle, ABI, 0x10, ABI_names);
+    #else
     alist_process(hle, ABI, 0x10);
+    #endif
 }
 
 void alist_process_naudio_mp3(struct hle_t* hle)
@@ -312,7 +345,18 @@ void alist_process_naudio_mp3(struct hle_t* hle)
         MIXER,          INTERLEAVE,     NAUDIO_14,      SETLOOP
     };
 
+    #ifdef DEBUG_INFO
+    static const char * ABI_names[0x10] = {
+       "UNKNOWN",      "ADPCM",        "CLEARBUFF",    "ENVMIXER",
+       "LOADBUFF",     "RESAMPLE",     "SAVEBUFF",     "MP3",
+       "MP3ADDY",      "SETVOL",       "DMEMMOVE",     "LOADADPCM",
+       "MIXER",        "INTERLEAVE",   "NAUDIO_14",    "SETLOOP"
+    };
+
+    alist_process(hle, ABI, 0x10, ABI_names);
+    #else
     alist_process(hle, ABI, 0x10);
+    #endif
 }
 
 void alist_process_naudio_cbfd(struct hle_t* hle)
@@ -325,5 +369,16 @@ void alist_process_naudio_cbfd(struct hle_t* hle)
         MIXER,          INTERLEAVE,     NAUDIO_14,      SETLOOP
     };
 
+    #ifdef DEBUG_INFO
+    static const char * ABI_names[0x10] = {
+       "UNKNOWN",      "ADPCM",        "CLEARBUFF",    "ENVMIXER",
+       "LOADBUFF",     "RESAMPLE",     "SAVEBUFF",     "MP3",
+       "MP3ADDY",      "SETVOL",       "DMEMMOVE",     "LOADADPCM",
+       "MIXER",        "INTERLEAVE",   "NAUDIO_14",    "SETLOOP"
+    };
+
+    alist_process(hle, ABI, 0x10, ABI_names);
+    #else
     alist_process(hle, ABI, 0x10);
+    #endif
 }

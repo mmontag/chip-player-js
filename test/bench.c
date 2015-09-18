@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "../usf/usf.h"
 
@@ -63,7 +64,7 @@ static unsigned long parse_time_crap(const char *input)
     unsigned long multiplier = 1000;
     const char * ptr = input;
     unsigned long colon_count = 0;
-    
+
     while (*ptr && ((*ptr >= '0' && *ptr <= '9') || *ptr == ':'))
     {
         colon_count += *ptr == ':';
@@ -74,7 +75,7 @@ static unsigned long parse_time_crap(const char *input)
     if (*ptr) ++ptr;
     while (*ptr && *ptr >= '0' && *ptr <= '9') ++ptr;
     if (*ptr) return BORK_TIME;
-    
+
     ptr = strrchr(input, ':');
     if (!ptr)
         ptr = input;
@@ -99,7 +100,7 @@ static unsigned long parse_time_crap(const char *input)
         while (ptr > input && *ptr != ':') --ptr;
         multiplier *= 60;
     }
-    
+
     return value;
 }
 
@@ -111,37 +112,75 @@ static int usf_info(void * context, const char * name, const char * value)
         enable_compare = 1;
     else if (!strcasecmp(name, "_enablefifofull") && *value)
         enable_fifo_full = 1;
-    
+
     return 0;
+}
+
+double get_seconds()
+{
+  struct timeval t;
+  struct timezone tz;
+
+  gettimeofday(&t, &tz);
+
+  return (double)(t.tv_sec) + (double)(t.tv_usec) * 0.000001;
 }
 
 int main(int argc, char ** argv)
 {
 	if ( argc == 2 || argc == 3 )
 	{
+        double seconds_start, seconds_end, seconds_last;
+
         int32_t sample_rate;
-        
+        int32_t samples_to_render, samples_last;
+
         state = (unsigned char *) malloc(usf_get_state_size());
-        
+
         usf_clear(state);
- 
+
 		if ( psf_load( argv[1], &stdio_callbacks, 0x21, usf_loader, 0, usf_info, 0, 1 ) <= 0 )
             return 1;
-        
+
         usf_set_compare(state, enable_compare);
         usf_set_fifo_full(state, enable_fifo_full);
-        
+
         if (argc == 3)
             usf_set_hle_audio(state, 1);
-        
+
         usf_render(state, 0, 0, &sample_rate);
-        
-        usf_render(state, 0, length_ms * sample_rate / 1000, &sample_rate);
-        
+
+        samples_to_render = length_ms * sample_rate / 1000;
+        samples_last = 0;
+
+        seconds_start = seconds_last = get_seconds();
+
+        while (samples_to_render > 0)
+        {
+          #ifdef DEBUG_INFO
+          if (samples_last == 6589000)
+          {
+            fprintf(stderr, "Log started.\n");
+            usf_log_start(state);
+          }
+          #endif
+          usf_render(state, 0, 1000, &sample_rate);
+          samples_to_render -= 1000;
+          seconds_end = get_seconds();
+          if (seconds_end - seconds_last >= 0.5)
+          {
+            fprintf(stderr, "Lag block starting at sample: %d\n", samples_last);
+          }
+          seconds_last = seconds_end;
+          samples_last += 1000;
+        }
+
+        fprintf(stderr, "\n");
+
         usf_shutdown(state);
-        
+
         free(state);
 	}
-    
+
     return 0;
 }

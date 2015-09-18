@@ -96,7 +96,11 @@ static int16_t ramp_step(struct ramp_t* ramp)
 }
 
 /* global functions */
+#ifdef DEBUG_INFO
+void alist_process(struct hle_t* hle, const acmd_callback_t abi[], unsigned int abi_size, const char* abi_names[])
+#else
 void alist_process(struct hle_t* hle, const acmd_callback_t abi[], unsigned int abi_size)
+#endif
 {
     uint32_t w1, w2;
     unsigned int acmd;
@@ -111,7 +115,12 @@ void alist_process(struct hle_t* hle, const acmd_callback_t abi[], unsigned int 
         acmd = (w1 >> 24) & 0x7f;
 
         if (acmd < abi_size)
+        {
+            #ifdef DEBUG_INFO
+              HleVerboseMessage(hle->user_defined, "HLE: %s (%08x %08x)", abi_names[acmd], w1, w2);
+            #endif
             (*abi[acmd])(hle, w1, w2);
+        }
         else
             HleWarnMessage(hle->user_defined, "Invalid ABI command %u", acmd);
     }
@@ -1020,4 +1029,3 @@ void alist_iirf(
     dram_store_u16(hle, (uint16_t*)&ibuf[(index-2)&3], address+8, 2);
     dram_store_u16(hle, (uint16_t*)&ibuf[(index-1)&3], address+10, 2);
 }
-

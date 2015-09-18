@@ -30,7 +30,11 @@ struct hle_t;
 
 typedef void (*acmd_callback_t)(struct hle_t* hle, uint32_t w1, uint32_t w2);
 
+#ifdef DEBUG_INFO
+void alist_process(struct hle_t* hle, const acmd_callback_t abi[], unsigned int abi_size, const char* abi_names[]);
+#else
 void alist_process(struct hle_t* hle, const acmd_callback_t abi[], unsigned int abi_size);
+#endif
 uint32_t alist_get_address(struct hle_t* hle, uint32_t so, const uint32_t *segments, size_t n);
 void alist_set_address(struct hle_t* hle, uint32_t so, uint32_t *segments, size_t n);
 void alist_clear(struct hle_t* hle, uint16_t dmem, uint16_t count);
