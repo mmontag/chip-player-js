@@ -169,7 +169,7 @@ int main(int argc, char ** argv)
           seconds_end = get_seconds();
           if (seconds_end - seconds_last >= 0.5)
           {
-            fprintf(stderr, "Lag block starting at sample: %d\n", samples_last);
+            fprintf(stderr, "Lag block starting at sample: %d - took %f seconds.\n", samples_last, seconds_end - seconds_last);
           }
           seconds_last = seconds_end;
           samples_last += 1000;
