@@ -463,7 +463,7 @@ static int read_description(struct local_data *data)
 {
 	/* read the text at the beginning */
 	read_block(data->desc.text, 20L, data);
-	data->desc.text[20] = '\0';
+	data->desc.text[19] = '\0';
 
 	/* try to read the magic words */
 	if ((data->desc.magic = read32l(data->in)) != (uint32)0xfdc4a7dcL)
