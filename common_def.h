@@ -1,5 +1,5 @@
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __COMMON_DEF_H__
+#define __COMMON_DEF_H__
 
 #include "stdtype.h"
 #include "stdbool.h"
@@ -14,4 +14,4 @@
 #endif
 #endif	// INLINE
 
-#endif	// __COMMON_H__
+#endif	// __COMMON_DEF_H__

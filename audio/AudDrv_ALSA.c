@@ -67,6 +67,7 @@ UINT8 ALSA_Pause(void* drvObj);
 UINT8 ALSA_Resume(void* drvObj);
 
 UINT8 ALSA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT32 ALSA_GetBufferSize(void* drvObj);
 UINT8 ALSA_IsBusy(void* drvObj);
 UINT8 ALSA_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
@@ -87,7 +88,7 @@ AUDIO_DRV audDrv_ALSA =
 	ALSA_Start, ALSA_Stop,
 	ALSA_Pause, ALSA_Resume,
 	
-	ALSA_SetCallback,
+	ALSA_SetCallback, ALSA_GetBufferSize,
 	ALSA_IsBusy, ALSA_WriteData,
 	
 	ALSA_GetLatency,
@@ -371,6 +372,13 @@ UINT8 ALSA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
+}
+
+UINT32 ALSA_GetBufferSize(void* drvObj)
+{
+	DRV_ALSA* drv = (DRV_ALSA*)drvObj;
+	
+	return drv->bufSize;
 }
 
 UINT8 ALSA_IsBusy(void* drvObj)

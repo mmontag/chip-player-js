@@ -67,6 +67,7 @@ UINT8 LibAO_Pause(void* drvObj);
 UINT8 LibAO_Resume(void* drvObj);
 
 UINT8 LibAO_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT32 LibAO_GetBufferSize(void* drvObj);
 UINT8 LibAO_IsBusy(void* drvObj);
 UINT8 LibAO_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
@@ -86,7 +87,7 @@ AUDIO_DRV audDrv_LibAO =
 	LibAO_Start, LibAO_Stop,
 	LibAO_Pause, LibAO_Resume,
 	
-	LibAO_SetCallback,
+	LibAO_SetCallback, LibAO_GetBufferSize,
 	LibAO_IsBusy, LibAO_WriteData,
 	
 	LibAO_GetLatency,
@@ -305,6 +306,13 @@ UINT8 LibAO_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
+}
+
+UINT32 LibAO_GetBufferSize(void* drvObj)
+{
+	DRV_AO* drv = (DRV_AO*)drvObj;
+	
+	return drv->bufSize;
 }
 
 UINT8 LibAO_IsBusy(void* drvObj)

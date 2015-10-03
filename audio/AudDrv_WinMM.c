@@ -72,6 +72,7 @@ UINT8 WinMM_Pause(void* drvObj);
 UINT8 WinMM_Resume(void* drvObj);
 
 UINT8 WinMM_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT32 WinMM_GetBufferSize(void* drvObj);
 UINT8 WinMM_IsBusy(void* drvObj);
 UINT8 WinMM_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
@@ -93,7 +94,7 @@ AUDIO_DRV audDrv_WinMM =
 	WinMM_Start, WinMM_Stop,
 	WinMM_Pause, WinMM_Resume,
 	
-	WinMM_SetCallback,
+	WinMM_SetCallback, WinMM_GetBufferSize,
 	WinMM_IsBusy, WinMM_WriteData,
 	
 	WinMM_GetLatency,
@@ -373,6 +374,13 @@ UINT8 WinMM_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
+}
+
+UINT32 WinMM_GetBufferSize(void* drvObj)
+{
+	DRV_WINMM* drv = (DRV_WINMM*)drvObj;
+	
+	return drv->bufSize;
 }
 
 UINT8 WinMM_IsBusy(void* drvObj)

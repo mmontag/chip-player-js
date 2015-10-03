@@ -126,6 +126,7 @@ static UINT32 DoDataForwarding(void* Params, UINT32 bufSize, void* data);
 //UINT8 AudioDrv_DataForward_Add(void* drvStruct, const void* destDrvStruct);
 //UINT8 AudioDrv_DataForward_Remove(void* drvStruct, const void* destDrvStruct);
 //UINT8 AudioDrv_DataForward_RemoveAll(void* drvStruct);
+//UINT32 AudioDrv_GetBufferSize(void* drvStruct);
 //UINT8 AudioDrv_IsBusy(void* drvStruct);
 //UINT8 AudioDrv_WriteData(void* drvStruct, UINT32 dataSize, void* data);
 //UINT32 AudioDrv_GetLatency(void* drvStruct);
@@ -470,6 +471,14 @@ UINT8 AudioDrv_DataForward_RemoveAll(void* drvStruct)
 	if (audInst->drvStruct != NULL)
 		audInst->drvStruct->SetCallback(audInst->drvData, audInst->mainCallback);
 	return AERR_OK;
+}
+
+UINT32 AudioDrv_GetBufferSize(void* drvStruct)
+{
+	ADRV_INSTANCE* audInst = (ADRV_INSTANCE*)drvStruct;
+	AUDIO_DRV* aDrv = audInst->drvStruct;
+	
+	return aDrv->GetBufferSize(audInst->drvData);
 }
 
 UINT8 AudioDrv_IsBusy(void* drvStruct)

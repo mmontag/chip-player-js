@@ -60,6 +60,7 @@ UINT8 WavWrt_Stop(void* drvObj);
 UINT8 WavWrt_PauseResume(void* drvObj);
 
 UINT8 WavWrt_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT32 WavWrt_GetBufferSize(void* drvObj);
 UINT8 WavWrt_IsBusy(void* drvObj);
 UINT8 WavWrt_WriteData(void* drvObj, UINT32 dataSize, void* data);
 UINT32 WavWrt_GetLatency(void* drvObj);
@@ -81,7 +82,7 @@ AUDIO_DRV audDrv_WaveWrt =
 	WavWrt_Start, WavWrt_Stop,
 	WavWrt_PauseResume, WavWrt_PauseResume,
 	
-	WavWrt_SetCallback,
+	WavWrt_SetCallback, WavWrt_GetBufferSize,
 	WavWrt_IsBusy, WavWrt_WriteData,
 	
 	WavWrt_GetLatency,
@@ -113,8 +114,8 @@ UINT8 WavWrt_Init(void)
 	defOptions.sampleRate = 44100;
 	defOptions.numChannels = 2;
 	defOptions.numBitsPerSmpl = 16;
-	defOptions.usecPerBuf = 10000;	// 10 ms per buffer
-	defOptions.numBuffers = 10;	// 100 ms latency
+	defOptions.usecPerBuf = 0;	// the Wave Writer has no buffer
+	defOptions.numBuffers = 0;
 	
 	
 	activeDrivers = 0;
@@ -286,6 +287,11 @@ UINT8 WavWrt_PauseResume(void* drvObj)
 UINT8 WavWrt_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 {
 	return AERR_NO_SUPPORT;
+}
+
+UINT32 WavWrt_GetBufferSize(void* drvObj)
+{
+	return 0;
 }
 
 UINT8 WavWrt_IsBusy(void* drvObj)

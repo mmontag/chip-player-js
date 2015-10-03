@@ -52,6 +52,7 @@ UINT8 AudioDrv_DataForward_Add(void* drvStruct, const void* destDrvStruct);
 UINT8 AudioDrv_DataForward_Remove(void* drvStruct, const void* destDrvStruct);
 UINT8 AudioDrv_DataForward_RemoveAll(void* drvStruct);
 
+UINT32 AudioDrv_GetBufferSize(void* drvStruct);
 UINT8 AudioDrv_IsBusy(void* drvStruct);
 UINT8 AudioDrv_WriteData(void* drvStruct, UINT32 dataSize, void* data);
 UINT32 AudioDrv_GetLatency(void* drvStruct);

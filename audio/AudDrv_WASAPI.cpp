@@ -65,6 +65,8 @@ EXT_C UINT8 WASAPI_Pause(void* drvObj);
 EXT_C UINT8 WASAPI_Resume(void* drvObj);
 
 EXT_C UINT8 WASAPI_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+EXT_C UINT32 WASAPI_GetBufferSize(void* drvObj);
+static UINT32 GetFreeSamples(DRV_WASAPI* drv);
 EXT_C UINT8 WASAPI_IsBusy(void* drvObj);
 EXT_C UINT8 WASAPI_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
@@ -86,7 +88,7 @@ AUDIO_DRV audDrv_WASAPI =
 	WASAPI_Start, WASAPI_Stop,
 	WASAPI_Pause, WASAPI_Resume,
 	
-	WASAPI_SetCallback,
+	WASAPI_SetCallback, WASAPI_GetBufferSize,
 	WASAPI_IsBusy, WASAPI_WriteData,
 	
 	WASAPI_GetLatency,
@@ -486,6 +488,13 @@ UINT8 WASAPI_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
+}
+
+UINT32 WASAPI_GetBufferSize(void* drvObj)
+{
+	DRV_WASAPI* drv = (DRV_WASAPI*)drvObj;
+	
+	return drv->bufSize;
 }
 
 static UINT32 GetFreeSamples(DRV_WASAPI* drv)

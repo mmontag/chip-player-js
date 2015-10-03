@@ -177,6 +177,7 @@ int main(int argc, char* argv[])
 		if (audDrvLog != NULL)
 			AudioDrv_DataForward_Add(audDrv, audDrvLog);
 	}
+	printf("Buffer Size: %u bytes\n", AudioDrv_GetBufferSize(audDrv));
 	
 	getchar();
 	printf("Current Latency: %u ms\n", AudioDrv_GetLatency(audDrv));

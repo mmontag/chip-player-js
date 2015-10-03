@@ -63,6 +63,7 @@ typedef struct _audio_driver
 	AUDFUNC_DRVCOMMON Resume;
 	
 	AUDFUNC_DRVSETCB SetCallback;
+	AUDFUNC_DRVRET32 GetBufferSize;	// returns bytes, 0 = unbuffered
 	AUDFUNC_DRVCOMMON IsBusy;
 	AUDFUNC_DRVWRTDATA WriteData;
 	

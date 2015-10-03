@@ -69,6 +69,7 @@ EXT_C UINT8 DSound_Pause(void* drvObj);
 EXT_C UINT8 DSound_Resume(void* drvObj);
 
 EXT_C UINT8 DSound_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+EXT_C UINT32 DSound_GetBufferSize(void* drvObj);
 static UINT32 GetFreeBytes(DRV_DSND* drv);
 EXT_C UINT8 DSound_IsBusy(void* drvObj);
 EXT_C UINT8 DSound_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -99,7 +100,7 @@ AUDIO_DRV audDrv_DSound =
 	DSound_Start, DSound_Stop,
 	DSound_Pause, DSound_Resume,
 	
-	DSound_SetCallback,
+	DSound_SetCallback, DSound_GetBufferSize,
 	DSound_IsBusy, DSound_WriteData,
 	
 	DSound_GetLatency,
@@ -411,6 +412,13 @@ UINT8 DSound_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
+}
+
+UINT32 DSound_GetBufferSize(void* drvObj)
+{
+	DRV_DSND* drv = (DRV_DSND*)drvObj;
+	
+	return drv->bufSegSize;
 }
 
 static UINT32 GetFreeBytes(DRV_DSND* drv)

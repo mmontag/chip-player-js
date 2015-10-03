@@ -56,6 +56,7 @@ EXT_C UINT8 XAudio2_Pause(void* drvObj);
 EXT_C UINT8 XAudio2_Resume(void* drvObj);
 
 EXT_C UINT8 XAudio2_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+EXT_C UINT32 XAudio2_GetBufferSize(void* drvObj);
 EXT_C UINT8 XAudio2_IsBusy(void* drvObj);
 EXT_C UINT8 XAudio2_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
@@ -77,7 +78,7 @@ AUDIO_DRV audDrv_XAudio2 =
 	XAudio2_Start, XAudio2_Stop,
 	XAudio2_Pause, XAudio2_Resume,
 	
-	XAudio2_SetCallback,
+	XAudio2_SetCallback, XAudio2_GetBufferSize,
 	XAudio2_IsBusy, XAudio2_WriteData,
 	
 	XAudio2_GetLatency,
@@ -367,6 +368,13 @@ UINT8 XAudio2_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
+}
+
+UINT32 XAudio2_GetBufferSize(void* drvObj)
+{
+	DRV_XAUD2* drv = (DRV_XAUD2*)drvObj;
+	
+	return drv->bufSize;
 }
 
 UINT8 XAudio2_IsBusy(void* drvObj)

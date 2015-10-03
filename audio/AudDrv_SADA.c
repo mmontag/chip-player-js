@@ -73,6 +73,7 @@ UINT8 SADA_Pause(void* drvObj);
 UINT8 SADA_Resume(void* drvObj);
 
 UINT8 SADA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT32 SADA_GetBufferSize(void* drvObj);
 UINT8 SADA_IsBusy(void* drvObj);
 UINT8 SADA_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
@@ -92,7 +93,7 @@ AUDIO_DRV audDrv_SADA =
 	SADA_Start, SADA_Stop,
 	SADA_Pause, SADA_Resume,
 	
-	SADA_SetCallback,
+	SADA_SetCallback, SADA_GetBufferSize,
 	SADA_IsBusy, SADA_WriteData,
 	
 	SADA_GetLatency,
@@ -338,6 +339,13 @@ UINT8 SADA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 #else
 	return AERR_NO_SUPPORT;
 #endif
+}
+
+UINT32 SADA_GetBufferSize(void* drvObj)
+{
+	DRV_SADA* drv = (DRV_SADA*)drvObj;
+	
+	return drv->bufSize;
 }
 
 UINT8 SADA_IsBusy(void* drvObj)

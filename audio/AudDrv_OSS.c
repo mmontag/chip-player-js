@@ -82,6 +82,7 @@ UINT8 OSS_Pause(void* drvObj);
 UINT8 OSS_Resume(void* drvObj);
 
 UINT8 OSS_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT32 OSS_GetBufferSize(void* drvObj);
 UINT8 OSS_IsBusy(void* drvObj);
 UINT8 OSS_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
@@ -101,7 +102,7 @@ AUDIO_DRV audDrv_OSS =
 	OSS_Start, OSS_Stop,
 	OSS_Pause, OSS_Resume,
 	
-	OSS_SetCallback,
+	OSS_SetCallback, OSS_GetBufferSize,
 	OSS_IsBusy, OSS_WriteData,
 	
 	OSS_GetLatency,
@@ -392,6 +393,13 @@ UINT8 OSS_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
 #else
 	return AERR_NO_SUPPORT;
 #endif
+}
+
+UINT32 OSS_GetBufferSize(void* drvObj)
+{
+	DRV_OSS* drv = (DRV_OSS*)drvObj;
+	
+	return drv->bufSize;
 }
 
 UINT8 OSS_IsBusy(void* drvObj)
