@@ -47,14 +47,21 @@ UINT8 AudioDrv_Stop(void* drvStruct);
 UINT32 AudioDrv_Pause(void* drvStruct);
 UINT32 AudioDrv_Resume(void* drvStruct);
 
+// sets a callback function that will be called whenever a buffer is free
 UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback);
+// Using Data Forwarding, you can tell the audio system to send a copy of all
+// data the audio driver receives to one or multiple other drivers.
+// This can be used e.g. to log all data that is played.
 UINT8 AudioDrv_DataForward_Add(void* drvStruct, const void* destDrvStruct);
 UINT8 AudioDrv_DataForward_Remove(void* drvStruct, const void* destDrvStruct);
 UINT8 AudioDrv_DataForward_RemoveAll(void* drvStruct);
 
+// returns the maximum number of bytes that can be written using AudioDrv_WriteData()
+// Note: only valid after calling AudioDrv_Start()
 UINT32 AudioDrv_GetBufferSize(void* drvStruct);
 UINT8 AudioDrv_IsBusy(void* drvStruct);
 UINT8 AudioDrv_WriteData(void* drvStruct, UINT32 dataSize, void* data);
+// returns current latency of the audio device in milliseconds
 UINT32 AudioDrv_GetLatency(void* drvStruct);
 
 #ifdef __cplusplus
