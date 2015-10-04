@@ -24,6 +24,7 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 
 	memset(header, 0, 2048);
 	memset(ptable, 0, 128);
+	memset(v, 0, 16);
 
 	pw_write_zero(out, 20);				/* title */
 
@@ -33,14 +34,14 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 		pw_write_zero(out, 22);			/*sample name */
 		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		write8(out, hio_read8(in));			/* finetune */
-		write8(out, hio_read8(in));			/* volume */
+		write8(out, hio_read8(in));		/* finetune */
+		write8(out, hio_read8(in));		/* volume */
 		write16b(out, hio_read16b(in));		/* loop start */
 		write16b(out, hio_read16b(in));		/* loop size */
 	}
 
-	write8(out, npat = hio_read8(in));			/* number of patterns */
-	write8(out, hio_read8(in));				/* noisetracker byte */
+	write8(out, npat = hio_read8(in));		/* number of patterns */
+	write8(out, hio_read8(in));			/* noisetracker byte */
 
 	for (i = 0; i < 128; i++) {
 		write8(out, c1 = hio_read8(in));
@@ -58,13 +59,13 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 			header[0] = hio_read8(in);
 			if (header[0] == 0x80) {
 				write32b(out, 0);
-			} else if (header[0] == 0xC0) {
+			} else if (header[0] == 0xc0) {
 				fwrite(v[0], 4, 1, out);
 				c1 = v[0][0];
 				c2 = v[0][1];
 				c3 = v[0][2];
 				c4 = v[0][3];
-			} else if (header[0] != 0xC0 && header[0] != 0xC0) {
+			} else if (header[0] != 0xc0 && header[0] != 0xC0) {
 				header[1] = hio_read8(in);
 				header[2] = hio_read8(in);
 
