@@ -14,6 +14,7 @@ Stable versions
 	- fix resource leak in MFP loader
 	- fix resource leak in Chiptracker loader
 	- fix resource leak in Startrekker loader
+	- fix resource leak in module load error handling
 	- add sanity check to smix sample loading
 	- remove dead code from NO loader
 	Other changes:

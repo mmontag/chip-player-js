@@ -434,8 +434,9 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 	D_(D_WARN "path = %s", path);
 
-	if (stat(path, &st) < 0)
+	if (stat(path, &st) < 0) {
 		return -XMP_ERROR_SYSTEM;
+	}
 
 #ifndef _MSC_VER
 	if (S_ISDIR(st.st_mode)) {
@@ -444,19 +445,21 @@ int xmp_load_module(xmp_context opaque, char *path)
 	}
 #endif
 
-	if ((h = hio_open(path, "rb")) == NULL)
+	if ((h = hio_open(path, "rb")) == NULL) {
 		return -XMP_ERROR_SYSTEM;
+	}
 
 #ifndef LIBXMP_CORE_PLAYER
 	D_(D_INFO "decrunch");
-	if (decrunch(&h, path, &temp_name) < 0)
-		goto err_depack;
+	if (decrunch(&h, path, &temp_name) < 0) {
+		ret = -XMP_ERROR_DEPACK;
+		goto err;
+	}
 
 	size = hio_size(h);
 	if (size < 256) {		/* get size after decrunch */
-		hio_close(h);
-		unlink_temp_file(temp_name);
-		return -XMP_ERROR_FORMAT;
+		ret = -XMP_ERROR_FORMAT;
+		goto err;
 	}
 #endif
 
@@ -465,12 +468,16 @@ int xmp_load_module(xmp_context opaque, char *path)
 
 #ifndef LIBXMP_CORE_PLAYER
 	m->dirname = get_dirname(path);
-	if (m->dirname == NULL)
-		return -XMP_ERROR_SYSTEM;
+	if (m->dirname == NULL) {
+		ret = -XMP_ERROR_SYSTEM;
+		goto err;
+	}
 
 	m->basename = get_basename(path);
-	if (m->basename == NULL)
-		return -XMP_ERROR_SYSTEM;
+	if (m->basename == NULL) {
+		ret = -XMP_ERROR_SYSTEM;
+		goto err;
+	}
 
 	m->filename = path;	/* For ALM, SSMT, etc */
 	m->size = size;
@@ -486,10 +493,10 @@ int xmp_load_module(xmp_context opaque, char *path)
 	return ret;
 
 #ifndef LIBXMP_CORE_PLAYER
-    err_depack:
+    err:
 	hio_close(h);
 	unlink_temp_file(temp_name);
-	return -XMP_ERROR_DEPACK;
+	return ret;
 #endif
 }
 
