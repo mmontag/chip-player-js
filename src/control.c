@@ -64,7 +64,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
-	int seq, start;
+	int seq;
 
 	/* If dir is 0, we can jump to a different sequence */
 	if (dir == 0) {
@@ -73,12 +73,13 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 		seq = p->sequence;
 	}
 
-	if (seq == 0xff)
+	if (seq == 0xff) {
 		return;
-
-	start = m->seq_data[seq].entry_point;
+	}
 
 	if (seq >= 0) {
+		int start = m->seq_data[seq].entry_point;
+
 		p->sequence = seq;
 
 		if (pos >= 0) {
