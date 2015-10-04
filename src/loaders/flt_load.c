@@ -93,7 +93,7 @@ struct am_instrument {
 	int16 fq;		/* base frequency */
 };
 
-static int is_am_instrument(FILE * nt, int i)
+static int is_am_instrument(FILE *nt, int i)
 {
 	char buf[2];
 	int16 wf;
@@ -114,7 +114,7 @@ static int is_am_instrument(FILE * nt, int i)
 	return 1;
 }
 
-static int read_am_instrument(struct module_data *m, FILE * nt, int i)
+static int read_am_instrument(struct module_data *m, FILE *nt, int i)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_instrument *xxi = &mod->xxi[i];
@@ -348,10 +348,11 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	hio_read(&mh.order, 128, 1, f);
 	hio_read(&mh.magic, 4, 1, f);
 
-	if (mh.magic[3] == '4')
+	if (mh.magic[3] == '4') {
 		mod->chn = 4;
-	else
+	} else {
 		mod->chn = 8;
+	}
 
 	mod->ins = 31;
 	mod->smp = mod->ins;
@@ -375,7 +376,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	MODULE_INFO();
 
 	if (instrument_init(mod) < 0)
-		return -1;
+		goto err;
 
 	for (i = 0; i < mod->ins; i++) {
 		struct xmp_instrument *xxi = &mod->xxi[i];
