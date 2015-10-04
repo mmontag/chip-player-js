@@ -137,7 +137,11 @@ void virt_reset(struct context_data *ctx)
 	if (p->virt.virt_channels < 1)
 		return;
 
-	mixer_numvoices(ctx, p->virt.maxvoc);
+	/* CID 129203 (#1 of 1): Useless call (USELESS_CALL)
+	 * Call is only useful for its return value, which is ignored. 
+	 *
+	 * mixer_numvoices(ctx, p->virt.maxvoc);
+	 */
 
 	memset(p->virt.voice_array, 0,
 	       p->virt.maxvoc * sizeof(struct mixer_voice));
