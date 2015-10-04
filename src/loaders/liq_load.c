@@ -303,9 +303,17 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->chn; i++) {
 	    uint8 pan = hio_read8(f);
 
-	    /* Sanity check */
-	    if (pan >= 64)
-		return -1;
+            if (pan >= 64) {
+	        if (pan == 64) {
+                    pan = 63;
+                } else if (pan == 66) {
+		    pan = 31;
+                    mod->xxc[i].flg |= XMP_CHANNEL_SURROUND;
+                } else {
+                    /* Sanity check */
+                    return -1;
+                }
+            }
 
 	    mod->xxc[i].pan = pan << 2;
 	}

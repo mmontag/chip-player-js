@@ -23,6 +23,7 @@ Stable versions
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
+	- fix LIQ pan setting and surround channel
 
 4.3.9 (20150623):
 	Fix bugs caught in the OpenMPT test cases:
