@@ -14,7 +14,6 @@
 static int depack_pru2(HIO_HANDLE *in, FILE *out)
 {
 	uint8 header[2048];
-	uint8 c1, c2, c3, c4;
 	uint8 npat;
 	uint8 ptable[128];
 	uint8 max = 0;
@@ -44,8 +43,9 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 	write8(out, hio_read8(in));			/* noisetracker byte */
 
 	for (i = 0; i < 128; i++) {
-		write8(out, c1 = hio_read8(in));
-		max = (c1 > max) ? c1 : max;
+		uint8 x;
+		write8(out, x = hio_read8(in));
+		max = (x > max) ? x : max;
 	}
 
 	write32b(out, PW_MOD_MAGIC);
@@ -55,32 +55,27 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 
 	for (i = 0; i <= max; i++) {
 		for (j = 0; j < 256; j++) {
-			c1 = c2 = c3 = c4 = 0;
+			uint8 c[4];
+			memset(c, 0, 4);
 			header[0] = hio_read8(in);
 			if (header[0] == 0x80) {
 				write32b(out, 0);
 			} else if (header[0] == 0xc0) {
 				fwrite(v[0], 4, 1, out);
-				c1 = v[0][0];
-				c2 = v[0][1];
-				c3 = v[0][2];
-				c4 = v[0][3];
-			} else if (header[0] != 0xc0 && header[0] != 0xC0) {
+				memcpy(c, v[0], 4);
+			} else {
 				header[1] = hio_read8(in);
 				header[2] = hio_read8(in);
 
-				c1 = (header[1] & 0x80) >> 3;
-				c1 |= ptk_table[(header[0] >> 1)][0];
-				c2 = ptk_table[(header[0] >> 1)][1];
-				c3 = (header[1] & 0x70) << 1;
-				c3 |= (header[0] & 0x01) << 4;
-				c3 |= (header[1] & 0x0f);
-				c4 = header[2];
+				c[0] = (header[1] & 0x80) >> 3;
+				c[0] |= ptk_table[(header[0] >> 1)][0];
+				c[1] = ptk_table[(header[0] >> 1)][1];
+				c[2] = (header[1] & 0x70) << 1;
+				c[2] |= (header[0] & 0x01) << 4;
+				c[2] |= (header[1] & 0x0f);
+				c[3] = header[2];
 
-				write8(out, c1);
-				write8(out, c2);
-				write8(out, c3);
-				write8(out, c4);
+				fwrite(c, 1, 4, out);
 			}
 
 			/* rol previous values */
@@ -88,10 +83,7 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 			memcpy(&v[1], &v[2], 4);
 			memcpy(&v[2], &v[3], 4);
 
-			v[3][0] = c1;
-			v[3][1] = c2;
-			v[3][2] = c3;
-			v[3][3] = c4;
+			memcpy(v[3], c, 4);
 		}
 	}
 
