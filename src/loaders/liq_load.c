@@ -472,7 +472,7 @@ test_event:
 
 	/* unpacked data */
 	D_ (D_INFO "  [unpacked data]");
-	if (x1 != 0xff)
+	if (x1 < 0xfe)
 	    event->note = 1 + 36 + x1;
 	else if (x1 == 0xfe)
 	    event->note = XMP_KEY_OFF;

@@ -15,6 +15,7 @@ Stable versions
 	- fix resource leak in Chiptracker loader
 	- fix resource leak in Startrekker loader
 	- fix resource leak in module load error handling
+	- fix event decoding in LIQ loader
 	- add sanity check to smix sample loading
 	- remove dead code from NO loader
 	- remove dead code from GMC prowizard converter
