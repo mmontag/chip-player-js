@@ -24,6 +24,7 @@ Stable versions
 	- remove unnecessary seeks in format loaders
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
+	- fix SFX set volume effect (reported by Lamar McLouth)
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
 	- fix LIQ pan setting and surround channel
 	- refactor ProRunner2 event decoding

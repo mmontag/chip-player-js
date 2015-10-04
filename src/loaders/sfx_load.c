@@ -217,8 +217,8 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 		event->fxt = FX_VOLSLIDE_DN;
 		break;
 	    case 0x6:			/* Set volume (attenuation) */
-		event->fxt = FX_VOLSET;
-		event->fxp = 0x40 - ev[3];
+		event->fxt = FX_ATTENUATE;
+		event->fxp = ev[3];
 		break;
 	    case 0x3:			/* LED on */
 	    case 0x4:			/* LED off */

@@ -17,6 +17,9 @@ big-endian.
 Update: effects description added based on the replayer code sent by BuZz
 (Sound Abspiel Routine zu Sound FX (C) 1988 LINEL Switzerland)
 
+Update2 (Oct/2015): effect 6xx fixed based on MOD.AMC-Slide sent by
+Lamar McLouth.
+
 Here is the format description in "Asle" style:
 
 
@@ -74,7 +77,7 @@ Effects:
   3xx	LED on (set bit 0 at address 0xbfe001)
   4xx	LED off (clear bit 0 at address 0xbfe001)
   5xx	Volume up (add xx to current volume)
-  6xx	Set volume (like Protracker Cyy where yy = 64 - xx)
+  6xx	Set volume (like Protracker Cyy where yy = instrument volume - xx)
   7xx	Set step up
   8xx	Set step down
 

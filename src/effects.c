@@ -799,6 +799,13 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 #endif
 
 #ifndef LIBXMP_CORE_PLAYER
+
+	/* Used in SFX to reduce the volume of the playing instrument */
+	case FX_ATTENUATE:
+		SET(NEW_VOL);
+		xc->volume = m->mod.xxi[xc->ins].sub[0].vol - fxp;
+		break;
+
 	/* Saga Musix says:
 	 *
 	 * "When both nibbles of an Fxx command are set, SoundTracker 2.6
