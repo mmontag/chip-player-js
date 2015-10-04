@@ -21,7 +21,7 @@
  */
 
 /* AMF loader written based on the format specs by Miodrag Vallat with
- * fixes by Andre Timmermans
+ * fixes by Andre Timmermans.
  *
  * The AMF format is the internal format used by DSMI, the DOS Sound and Music
  * Interface, which is the engine of DMP. As DMP was able to play more and more
@@ -303,13 +303,11 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 
 		size = hio_read24l(f);
-/*printf("TRACK %d SIZE %d\n", i, size);*/
 
 		for (j = 0; j < size; j++) {
 			t1 = hio_read8(f);			/* row */
 			t2 = hio_read8(f);			/* type */
 			t3 = hio_read8(f);			/* parameter */
-/*printf("track %d row %d: %02x %02x %02x\n", i, t1, t1, t2, t3);*/
 
 			if (t1 == 0xff && t2 == 0xff && t3 == 0xff)
 				break;
@@ -327,7 +325,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			} else if (t2 == 0x7f) {	/* copy previous */
 
 				/* Sanity check */
-				if (t1 == 0 || t1 > 256) {
+				if (t1 == 0) {
 					return -1;
 				}
 
