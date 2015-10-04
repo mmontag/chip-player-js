@@ -241,8 +241,10 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		if (load_sample(m, s, SAMPLE_FLAG_FULLREP,
-				  &mod->xxs[mod->xxi[i].sub[0].sid], NULL) < 0)
+				&mod->xxs[mod->xxi[i].sub[0].sid], NULL) < 0) {
+			free(s);
 			return -1;
+		}
 	}
 
 	hio_close(s);
