@@ -101,8 +101,11 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 	if (mh.ins[i].size > 0x8000)
 	    return -1;
 
-	if ((mh.ins[i].loop_start >> 1) > 0x8000)
-	    return -1;
+	/* This test is always false, disable it
+	 *
+	 * if ((mh.ins[i].loop_start >> 1) > 0x8000)
+	 *    return -1;
+	 */
 
 	if (mh.ins[i].loop_size > 0x8000)
 	    return -1;

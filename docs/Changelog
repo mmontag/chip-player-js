@@ -18,6 +18,7 @@ Stable versions
 	- fix event decoding in LIQ loader
 	- add sanity check to smix sample loading
 	- remove dead code from NO loader
+	- remove dead code from Soundtracker loader
 	- remove dead code from GMC prowizard converter
 	- remove unnecessary seeks in format loaders
 	Other changes:
