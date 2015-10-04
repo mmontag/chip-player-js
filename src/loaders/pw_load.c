@@ -98,22 +98,23 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 
 	/* Prowizard depacking */
 
-	if ((temp = make_temp_file(&temp_name)) == NULL)
+	if ((temp = make_temp_file(&temp_name)) == NULL) {
 		goto err;
+	}
 
 	if (pw_wizardry(h, temp, &name) < 0) {
-		fclose(temp);
 		goto err2;
 	}
 	
 	/* Module loading */
 
 	if ((f = hio_open_file(temp)) == NULL) {
-		fclose(temp);
 		goto err2;
 	}
 
-	LOAD_INIT();
+	if (hio_seek(f, 0, start) < 0) {
+		goto err2;
+	}
 
 	hio_read(&mh.name, 20, 1, f);
 	for (i = 0; i < 31; i++) {
@@ -129,8 +130,9 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	hio_read(&mh.order, 128, 1, f);
 	hio_read(&mh.magic, 4, 1, f);
 
-	if (memcmp(mh.magic, "M.K.", 4))
+	if (memcmp(mh.magic, "M.K.", 4)) {
 		goto err3;
+	}
 		
 	mod->ins = 31;
 	mod->smp = mod->ins;
@@ -152,8 +154,9 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	snprintf(mod->type, XMP_NAME_SIZE, "%s", name);
 	MODULE_INFO();
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(mod) < 0) {
 		goto err3;
+	}
 
 	for (i = 0; i < mod->ins; i++) {
 		if (subinstrument_alloc(mod, i, 1) < 0)
@@ -182,8 +185,9 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 			     mod->xxi[i].sub[0].fin >> 4);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (pattern_init(mod) < 0) {
 		goto err3;
+	}
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -216,6 +220,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
     err3:
 	hio_close(f);
     err2:
+	fclose(temp);
 	unlink_temp_file(temp_name);
     err:
 	return -1;

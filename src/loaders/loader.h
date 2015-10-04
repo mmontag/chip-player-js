@@ -53,9 +53,7 @@ extern const int arch_vol_table[];
 #define MAGIC4(a,b,c,d) \
     (((uint32)(a)<<24)|((uint32)(b)<<16)|((uint32)(c)<<8)|(d))
 
-#define LOAD_INIT() do { \
-    hio_seek(f, start, SEEK_SET); \
-} while (0)
+#define LOAD_INIT()
 
 #define MODULE_INFO() do { \
     D_(D_WARN "Module title: \"%s\"", m->mod.name); \
