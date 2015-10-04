@@ -17,6 +17,7 @@ Stable versions
 	- fix resource leak in module load error handling
 	- add sanity check to smix sample loading
 	- remove dead code from NO loader
+	- remove dead code from GMC prowizard converter
 	- remove unnecessary seeks in format loaders
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)

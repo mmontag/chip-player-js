@@ -27,19 +27,19 @@ static int depack_GMC(HIO_HANDLE *in, FILE *out)
 
 	for (i = 0; i < 15; i++) {
 		pw_write_zero(out, 22);		/* name */
-		hio_read32b(in);			/* bypass 4 address bytes */
+		hio_read32b(in);		/* bypass 4 address bytes */
 		len = hio_read16b(in);
 		write16b(out, len);		/* size */
 		ssize += len * 2;
 		hio_read8(in);
 		write8(out, 0);			/* finetune */
-		write8(out, hio_read8(in));		/* volume */
-		hio_read32b(in);			/* bypass 4 address bytes */
+		write8(out, hio_read8(in));	/* volume */
+		hio_read32b(in);		/* bypass 4 address bytes */
 
-		looplen = hio_read16b(in);		/* loop size */
+		looplen = hio_read16b(in);	/* loop size */
 		write16b(out, looplen > 2 ? len - looplen : 0);
 		write16b(out, looplen <= 2 ? 1 : looplen);
-		hio_read16b(in);			/* always zero? */
+		hio_read16b(in);		/* always zero? */
 	}
 
 	memset(tmp, 0, 30);
@@ -173,9 +173,13 @@ static int test_GMC(uint8 *data, char *t, int s)
 			if (offset > (PW_TEST_CHUNK - 4))
 				return -1;
 				
+#if 0
 			/* First test fails with Jumping Jackson */
+			/* Second test never succeeds! */
 			if (/*d[0] > 0x03 ||*/ (d[2] & 0x0f) >= 0x90)
 				return -1;
+#endif
+
 #if 0
 			/* Test fails with Jumping Jackson */
 			/* x is the highest jot jull sample */
