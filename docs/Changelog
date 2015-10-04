@@ -12,6 +12,7 @@ Stable versions
 	- fix Vorbis depacker usage of uninitialized data
 	- fix negative array index read when setting position
 	- fix resource leak in MFP loader
+	- fix resource leak in Chiptracker loader
 	- add sanity check to smix sample loading
 	- remove dead code from NO loader
 	Other changes:

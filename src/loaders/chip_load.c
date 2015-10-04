@@ -60,8 +60,9 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	if ((tidx = calloc(1, 1024)) == NULL)
+	if ((tidx = calloc(1, 1024)) == NULL) {
 		goto err;
+	}
 
 	hio_read(&mh.name, 20, 1, f);
 	hio_read16b(f);
@@ -114,7 +115,7 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		struct xmp_subinstrument *sub;
 
 		if (subinstrument_alloc(mod, i, 1) < 0)
-			goto err;
+			goto err2;
 
 		sub = &xxi->sub[0];
 
