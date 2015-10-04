@@ -9,6 +9,7 @@ Stable versions
 	- fix RTM maximum sample name length
 	- fix AC1D converter number of patterns underflow
 	- fix PRU2 usage of uninitialized data
+	- fix Vorbis depacker usage of uninitialized data
 	- add sanity check to smix sample loading
 	- remove dead code from NO loader
 	Other changes:

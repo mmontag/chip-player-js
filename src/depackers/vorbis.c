@@ -3097,12 +3097,15 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
          zero_channel[map->chan[i].magnitude] = zero_channel[map->chan[i].angle] = FALSE;
       }
 
-// RESIDUE DECODE
+   // RESIDUE DECODE
    for (i=0; i < map->submaps; ++i) {
       float *residue_buffers[STB_VORBIS_MAX_CHANNELS];
       int r,t;
       uint8 do_not_decode[256];
       int ch = 0;
+
+      memset(do_not_decode, 0, 256);
+
       for (j=0; j < f->channels; ++j) {
          if (map->chan[j].mux == i) {
             if (zero_channel[j]) {
