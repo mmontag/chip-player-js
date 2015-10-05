@@ -113,7 +113,7 @@ static void block_copy(struct block *block, struct sub_block *sub,
 	}
 }
 
-static void block_unpack_16bit(struct block *block, struct sub_block *sub,
+static int block_unpack_16bit(struct block *block, struct sub_block *sub,
 			       FILE *in, FILE *out)
 {
 	struct bit_buffer bb;
@@ -124,8 +124,12 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub,
 	bb.count = 0;
 	bb.buffer = 0;
 
-	fseek(out, sub->unpk_pos, SEEK_SET);
-	fseek(in, block->tt_entries, SEEK_SET);
+	if (fseek(out, sub->unpk_pos, SEEK_SET) < 0) {
+		return -1;
+	}
+	if (fseek(in, block->tt_entries, SEEK_SET) < 0) {
+		return -1;
+	}
 
 	for (j = 0; j < block->sub_blk; ) {
 		uint32 size = sub[j].unpk_size >> 1;
@@ -178,9 +182,11 @@ static void block_unpack_16bit(struct block *block, struct sub_block *sub,
 			fseek(out, sub[j].unpk_pos, SEEK_SET);
 		}
 	}
+
+	return 0;
 }
 
-static void block_unpack_8bit(struct block *block, struct sub_block *sub,
+static int block_unpack_8bit(struct block *block, struct sub_block *sub,
 			      FILE *in, FILE *out)
 {
 	struct bit_buffer bb;
@@ -189,7 +195,9 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub,
 	uint32 j, oldval = 0;
 	uint8 ptable[0x100];
 
-	fread(ptable, 1, 0x100, in);
+	if (fread(ptable, 1, 0x100, in) != 0x100) {
+		return -1;
+	}
 
 	bb.count = 0;
 	bb.buffer = 0;
@@ -241,6 +249,8 @@ static void block_unpack_8bit(struct block *block, struct sub_block *sub,
 			fseek(out, sub[j].unpk_pos, SEEK_SET);
 		}
 	}
+
+	return 0;
 }
 
 static int test_mmcmp(unsigned char *b)
@@ -338,10 +348,16 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 			block_copy(&block, sub_block, in, out);
 		} else if (block.flags & MMCMP_16BIT) {
 			/* Data is 16-bit packed */
-			block_unpack_16bit(&block, sub_block, in, out);
+			if (block_unpack_16bit(&block, sub_block, in, out) < 0) {
+				free(sub_block);
+				goto err2;
+			}
 		} else {
 			/* Data is 8-bit packed */
-			block_unpack_8bit(&block, sub_block, in, out);
+			if (block_unpack_8bit(&block, sub_block, in, out) < 0) {
+				free(sub_block);
+				goto err2;
+			}
 		}
 
 		free(sub_block);
