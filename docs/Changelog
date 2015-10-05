@@ -22,6 +22,7 @@ Stable versions
 	- remove dead code from GMC prowizard converter
 	- remove dead code in virtual channel manager reset
 	- remove unnecessary seeks in format loaders
+	- prevent division by zero in memory I/O
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 	- fix SFX set volume effect (reported by Lamar McLouth)
