@@ -207,6 +207,7 @@ static void set_period_ft2(struct context_data *ctx, int note,
 
 
 #ifndef LIBXMP_CORE_PLAYER
+#define IS_SFX_PITCH(x) ((x) == FX_PITCH_ADD || (x) == FX_PITCH_SUB)
 #define IS_TONEPORTA(x) ((x) == FX_TONEPORTA || (x) == FX_TONE_VSLIDE \
 		|| (x) == FX_PER_TPORTA)
 #else
@@ -323,7 +324,16 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	/* Secondary effect handled first */
 	process_fx(ctx, xc, chn, e, 1);
 	process_fx(ctx, xc, chn, e, 0);
-	set_period(ctx, note, sub, xc, is_toneporta);
+
+#ifndef LIBXMP_CORE_PLAYER
+	if (IS_SFX_PITCH(e->fxt)) {
+ 		xc->period = note_to_period(note, xc->finetune,
+                                HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+	} else
+#endif
+	{
+		set_period(ctx, note, sub, xc, is_toneporta);
+	}
 
 	if (sub == NULL) {
 		return 0;

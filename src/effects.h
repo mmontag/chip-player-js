@@ -106,7 +106,10 @@
 #define FX_REVERB	0xaa	/* IMF */
 #define FX_MED_HOLD	0xb1	/* MMD hold/decay */
 #define FX_MEGAARP	0xb2	/* Smaksak effect 7: MegaArp */
-#define FX_ATTENUATE	0xb6	/* SFX volume setting */
+#define FX_VOL_ADD	0xb6	/* SFX change volume up */
+#define FX_VOL_SUB	0xb7	/* SFX change volume down */
+#define FX_PITCH_ADD	0xb8	/* SFX add steps to current note */
+#define FX_PITCH_SUB	0xb9	/* SFX add steps to current note */
 #endif
 
 #define FX_S3M_SPEED	0xa3	/* S3M */

@@ -103,7 +103,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 
     sfx.magic = hio_read32b(f);
     sfx.delay = hio_read16b(f);
-    if (sfx.delay < 178)//min value for 10000bpm
+    if (sfx.delay < 178)	/* min value for 10000bpm */
 	return -1;
 
     hio_read(&sfx.unknown, 14, 1, f);
@@ -171,7 +171,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 	xxs->flg = ins[i].loop_length > 1 ? XMP_SAMPLE_LOOP : 0;
 	xxi->nsm = 1;
 	sub->vol = ins[i].volume;
-	sub->fin = (int8)(ins[i].finetune << 4);
+	sub->fin = (int8)(ins[i].finetune << 4);	/* unsure */
 	sub->pan = 0x80;
 	sub->sid = i;
 
@@ -201,7 +201,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 	    event->fxp = ev[3];
 
 	    switch (LSN(ev[2])) {
-	    case 0x1:			/* Arpeggio */
+	    case 0x01:			/* Arpeggio */
 		event->fxt = FX_ARPEGGIO;
 		break;
 	    case 0x02:			/* Pitch bend */
@@ -213,17 +213,20 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 		    event->fxp &= 0x0f;
 		}
 		break;
-	    case 0x5:			/* Volume up */
-		event->fxt = FX_VOLSLIDE_DN;
+	    case 0x5:			/* Add to volume */
+		event->fxt = FX_VOL_ADD;
 		break;
-	    case 0x6:			/* Set volume (attenuation) */
-		event->fxt = FX_ATTENUATE;
-		event->fxp = ev[3];
+	    case 0x6:			/* Subtract from volume */
+		event->fxt = FX_VOL_SUB;
+		break;
+	    case 0x7:			/* Add semitones to period */
+		event->fxt = FX_PITCH_ADD;
+		break;
+	    case 0x8:			/* Subtract semitones from period */
+		event->fxt = FX_PITCH_SUB;
 		break;
 	    case 0x3:			/* LED on */
 	    case 0x4:			/* LED off */
-	    case 0x7:			/* Set step up */
-	    case 0x8:			/* Set step down */
 	    default:
 		event->fxt = event->fxp = 0;
 		break;
@@ -231,7 +234,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, 
 	}
     }
 
-    m->quirk |= QUIRK_MODRNG;
+    m->quirk |= QUIRK_MODRNG | QUIRK_PBALL;
 
     /* Read samples */
 

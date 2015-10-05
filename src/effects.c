@@ -86,7 +86,6 @@ static void do_toneporta(struct module_data *m,
 	xc->porta.dir = xc->period < xc->porta.target ? 1 : -1;
 }
 
-
 void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		struct xmp_event *e, int fnum)
 {
@@ -800,10 +799,40 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 
 #ifndef LIBXMP_CORE_PLAYER
 
-	/* Used in SFX to reduce the volume of the playing instrument */
-	case FX_ATTENUATE:
+	/* SFX effects */
+	case FX_VOL_ADD:
+		if (!IS_VALID_INSTRUMENT(xc->ins)) {
+			break;
+		}
+		SET(NEW_VOL);
+		xc->volume = m->mod.xxi[xc->ins].sub[0].vol + fxp;
+		if (xc->volume > m->volbase) {
+			xc->volume = m->volbase;
+		}
+		break;
+	case FX_VOL_SUB:
+		if (!IS_VALID_INSTRUMENT(xc->ins)) {
+			break;
+		}
 		SET(NEW_VOL);
 		xc->volume = m->mod.xxi[xc->ins].sub[0].vol - fxp;
+		if (xc->volume < 0) {
+			xc->volume =0;
+		}
+		break;
+	case FX_PITCH_ADD:
+		SET_PER(TONEPORTA);
+		xc->porta.target = note_to_period(note - 1, xc->finetune, 0, 0)
+			+ fxp;
+		xc->porta.slide = 2;
+		xc->porta.dir = 1;
+		break;
+	case FX_PITCH_SUB:
+		SET_PER(TONEPORTA);
+		xc->porta.target = note_to_period(note - 1, xc->finetune, 0, 0)
+			- fxp;
+		xc->porta.slide = 2;
+		xc->porta.dir = -1;
 		break;
 
 	/* Saga Musix says:

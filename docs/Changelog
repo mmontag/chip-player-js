@@ -25,7 +25,7 @@ Stable versions
 	- prevent division by zero in memory I/O
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
-	- fix SFX set volume effect (reported by Lamar McLouth)
+	- fix SFX effects 5, 6, 7, and 8 (reported by Lamar McLouth)
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
 	- fix LIQ pan setting and surround channel
 	- refactor ProRunner2 event decoding
