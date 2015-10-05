@@ -28,8 +28,8 @@ static int depack_pp21_pp30(HIO_HANDLE *in, FILE *out, int is_30)
 	uint8 buf[1024];
 	int i, j;
 	int size;
-	int ssize = 0;
-	int tabsize = 0;		/* Reference Table Size */
+	int ssize;
+	int tabsize;		/* Reference Table Size */
 
 	memset(ptable, 0, 128);
 	memset(trk, 0, 4 * 128);
@@ -37,6 +37,7 @@ static int depack_pp21_pp30(HIO_HANDLE *in, FILE *out, int is_30)
 
 	pw_write_zero(out, 20);			/* title */
 
+	ssize = 0;
 	for (i = 0; i < 31; i++) {
 		pw_write_zero(out, 22);		/* sample name */
 		write16b(out, size = hio_read16b(in));
@@ -66,7 +67,6 @@ static int depack_pp21_pp30(HIO_HANDLE *in, FILE *out, int is_30)
 
 	write32b(out, PW_MOD_MAGIC);		/* M.K. */
 
-
 	/* PATTERN DATA code starts here */
 
 	/*printf ("Highest track number : %d\n", max); */
@@ -81,6 +81,9 @@ static int depack_pp21_pp30(HIO_HANDLE *in, FILE *out, int is_30)
 
 	/* read "reference table" size */
 	tabsize = hio_read32b(in);
+	if (tabsize == 0) {
+		return -1;
+	}
 
 	/* read "reference Table" */
 	tab = (uint8 *)malloc(tabsize);
