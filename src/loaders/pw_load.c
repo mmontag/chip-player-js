@@ -113,7 +113,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	}
 
 	if (hio_seek(f, 0, start) < 0) {
-		goto err2;
+		goto err3;
 	}
 
 	hio_read(&mh.name, 20, 1, f);
