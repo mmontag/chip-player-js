@@ -31,7 +31,7 @@ static int depack_p4x (HIO_HANDLE *in, FILE *out)
 	uint8 len, npat, nsmp;
 	uint8 sample, mynote, note[2];
 	uint8 tr[512][256];
-	short track_addr[128][4];
+	uint16 track_addr[128][4];
 	int trkdat_ofs, trktab_ofs, smp_ofs;
 	int ssize = 0;
 	int SampleAddress[31];
@@ -60,20 +60,26 @@ static int depack_p4x (HIO_HANDLE *in, FILE *out)
 #endif
 
 	npat = hio_read8(in);		/* read Real number of pattern */
-	len = hio_read8(in);		/* read number of pattern in list */
+	len = hio_read8(in);		/* read number of patterns in list */
+
+	/* Sanity check */
+	if (len >= 128) {
+		return -1;
+	}
+
 	nsmp = hio_read8(in);		/* read number of samples */
 	hio_read8(in);			/* bypass empty byte */
 	trkdat_ofs = hio_read32b(in);	/* read track data address */
 	trktab_ofs = hio_read32b(in);	/* read track table address */
-	smp_ofs = hio_read32b(in);		/* read sample data address */
+	smp_ofs = hio_read32b(in);	/* read sample data address */
 
 	pw_write_zero(out, 20);		/* write title */
 
 	/* sample headers stuff */
 	for (i = 0; i < nsmp; i++) {
-		ins.addr = hio_read32b(in);		/* read sample address */
+		ins.addr = hio_read32b(in);		/* sample address */
 		SampleAddress[i] = ins.addr;
-		ins.size = hio_read16b(in);		/* read sample size */
+		ins.size = hio_read16b(in);		/* sample size */
 		SampleSize[i] = ins.size * 2;
 		ssize += SampleSize[i];
 		ins.loop_addr = hio_read32b(in);	/* loop start */
@@ -81,13 +87,13 @@ static int depack_p4x (HIO_HANDLE *in, FILE *out)
 		ins.fine = 0;
 		if (id == MAGIC_P40A || id == MAGIC_P40B)
 			ins.fine = hio_read16b(in);	/* finetune */
-		hio_read8(in);			/* bypass 00h */
+		hio_read8(in);				/* bypass 00h */
 		ins.vol = hio_read8(in);		/* read vol */
 		if (id == MAGIC_P41A)
 			ins.fine = hio_read16b(in);	/* finetune */
 
 		/* writing now */
-		pw_write_zero(out, 22);		/* sample name */
+		pw_write_zero(out, 22);			/* sample name */
 		write16b(out, ins.size);
 		write8(out, ins.fine / 74);
 		write8(out, ins.vol);
