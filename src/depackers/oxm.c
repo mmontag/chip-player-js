@@ -56,10 +56,14 @@ int test_oxm(FILE *f)
 
 	for (i = 0; i < nins; i++) {
 		ilen = read32l(f);
-		if (ilen > 263)
+		if (ilen > 263) {
 			return -1;
+		}
 		fseek(f, -4, SEEK_CUR);
-		fread(buf, ilen, 1, f);		/* instrument header */
+
+		if (fread(buf, 1, ilen, f) != ilen) { /* instrument header */
+			return -1;
+		}
 		nsmp = readmem16l(buf + 27);
 
 		if (nsmp > 255)

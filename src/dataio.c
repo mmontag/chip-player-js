@@ -25,7 +25,7 @@
 
 inline uint8 read8(FILE *f)
 {
-	uint8 x = 0;
+	uint8 x = 0xff;
 	fread(&x, 1, 1, f);
 	return x;
 }
