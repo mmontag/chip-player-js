@@ -769,10 +769,10 @@ parse_iff:
 	while (!hio_eof(f)) {
 		int32 id, size, s2, pos, ver;
 
-		if ((id = hio_read32b(f)) < 0)
+		if ((id = hio_read32b(f)) <= 0)
 			break;
 
-		if ((size = hio_read32b(f)) < 0)
+		if ((size = hio_read32b(f)) <= 0)
 			break;
 
 		pos = hio_tell(f);
