@@ -1499,7 +1499,13 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
 	
           if(c <= UCHAR_MAX)
           {
-            text[dd->loc++] = fputc(c, out);
+            int res = fputc(c, out);
+            if (res < 0) {
+              free(dd->text);
+              free(dd);
+              return -1;
+            }
+            text[dd->loc++] = res;
             dd->loc &= dicsiz;
             dd->count++;
           }
