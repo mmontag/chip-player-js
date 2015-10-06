@@ -28,6 +28,7 @@ Stable versions
 	- remove dead code in virtual channel manager reset
 	- remove unnecessary seeks in format loaders
 	- prevent division by zero in memory I/O
+	- change IFF info ID from string to binary buffer
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 	- fix SFX effects 5, 6, 7, and 8 (reported by Lamar McLouth)

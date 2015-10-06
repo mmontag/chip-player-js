@@ -22,7 +22,7 @@ struct iff_header {
 };
 
 struct iff_info {
-	char id[5];
+	char id[4];
 	int (*loader)(struct module_data *, int, HIO_HANDLE *, void *);
 	struct list_head list;
 };

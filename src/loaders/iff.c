@@ -113,7 +113,7 @@ int iff_register(iff_handle opaque, char *id,
 	if (f == NULL)
 		return -1;
 
-	strncpy(f->id, id, 5);
+	memcpy(f->id, id, 4);
 	f->loader = loader;
 
 	list_add_tail(&f->list, &data->iff_list);
@@ -150,7 +150,7 @@ int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
 
 	list_for_each(tmp, &data->iff_list) {
 		i = list_entry(tmp, struct iff_info, list);
-		if (id && !strncmp(id, i->id, data->id_size)) {
+		if (id && !memcmp(id, i->id, data->id_size)) {
 			D_(D_WARN "Load IFF chunk %s (%ld) @ %d",
 							id, size, pos);
 			if (i->loader(m, size, f, parm) < 0)
