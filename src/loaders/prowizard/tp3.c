@@ -31,13 +31,13 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 
 	hio_seek(in, 8, SEEK_CUR);
 	pw_move_data(out, in, 20);		/* title */
-	nins = hio_read16b(in) / 8;			/* number of sample */
+	nins = hio_read16b(in) / 8;		/* number of sample */
 
 	for (i = 0; i < nins; i++) {
 		pw_write_zero(out, 22);		/*sample name */
 
-		c3 = hio_read8(in);			/* read finetune */
-		c4 = hio_read8(in);			/* read volume */
+		c3 = hio_read8(in);		/* read finetune */
+		c4 = hio_read8(in);		/* read volume */
 
 		write16b(out, size = hio_read16b(in)); /* size */
 		ssize += size * 2;
@@ -57,7 +57,13 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 
 	/* read size of pattern table */
 	hio_read8(in);
-	write8(out, len = hio_read8(in));		/* sequence length */
+	write8(out, len = hio_read8(in));	/* sequence length */
+
+	/* Sanity check */
+	if (len >= 128) {
+		return -1;
+	}
+
 	write8(out, 0x7f);			/* ntk byte */
 
 	for (npat = i = 0; i < len; i++) {

@@ -20,6 +20,7 @@ Stable versions
 	- add sanity check to PP21 format converter
 	- add sanity check to P40 and P61A format converters
 	- add sanity check to Zen Packer format converter
+	- add sanity check to TP3 format converter
 	- add error handling to MMCMP depacker
 	- remove dead code from NO loader
 	- remove dead code from Soundtracker loader
