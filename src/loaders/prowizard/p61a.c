@@ -23,9 +23,9 @@ static int depack_p61a(HIO_HANDLE *in, FILE *out)
     long max_row;
     uint8 tmp[1024];
     signed char *smp_buffer;
-    int len = 0;
-    int npat = 0;
-    int nins = 0;
+    int len;
+    int npat;
+    int nins;
     uint8 tdata[512][256];
     uint8 ptable[128];
     int isize[31];
@@ -49,13 +49,19 @@ static int depack_p61a(HIO_HANDLE *in, FILE *out)
     memset(isize, 0, 31 * 2);
     for (i = 0; i < 31; i++) {
 	PACK[i] = 0;
-/*    DELTA[i] = 0;*/
+	/* DELTA[i] = 0;*/
     }
 
     saddr[0] = 0;
-    sdata_addr = hio_read16b(in);		/* read sample data address */
-    npat = hio_read8(in);			/* read Real number of pattern */
-    nins = hio_read8(in);			/* read number of samples */
+    sdata_addr = hio_read16b(in);	/* read sample data address */
+    npat = hio_read8(in);		/* read real number of pattern */
+
+    /* Sanity check */
+    if (npat >= 128) {
+        return -1;
+    }
+
+    nins = hio_read8(in);		/* read number of samples */
 
     if (nins & 0x80) {
 	/* Samples are saved as delta values */
