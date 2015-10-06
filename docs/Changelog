@@ -29,6 +29,7 @@ Stable versions
 	- remove unnecessary seeks in format loaders
 	- prevent division by zero in memory I/O
 	- change IFF info ID from string to binary buffer
+	- better IFF error handling
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 	- fix SFX effects 5, 6, 7, and 8 (reported by Lamar McLouth)

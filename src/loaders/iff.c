@@ -56,8 +56,9 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 	int size;
 	char id[17] = "";
 
-	if (hio_read(id, 1, data->id_size, f) != data->id_size)
+	if (hio_read(id, 1, data->id_size, f) != data->id_size) {
 		return 1;
+	}
 
 	if (data->flags & IFF_SKIP_EMBEDDED) {
 		/* embedded RIFF hack */
@@ -65,7 +66,9 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 			hio_read32b(f);
 			hio_read32b(f);
 			/* read first chunk ID instead */
-			hio_read(id, 1, data->id_size, f);
+			if (hio_read(id, 1, data->id_size, f) != data->id_size){
+				return 1;
+			}
 		}
 	}
 
@@ -151,15 +154,17 @@ int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
 	list_for_each(tmp, &data->iff_list) {
 		i = list_entry(tmp, struct iff_info, list);
 		if (id && !memcmp(id, i->id, data->id_size)) {
-			D_(D_WARN "Load IFF chunk %s (%ld) @ %d",
-							id, size, pos);
-			if (i->loader(m, size, f, parm) < 0)
+			D_(D_WARN "Load IFF chunk %s (%ld) @%d", id, size, pos);
+			if (i->loader(m, size, f, parm) < 0) {
 				return -1;
+			}
 			break;
 		}
 	}
 
-	hio_seek(f, pos + size, SEEK_SET);
+	if (hio_seek(f, pos + size, SEEK_SET) < 0) {
+		return -1;
+	}
 
 	return 0;
 }
