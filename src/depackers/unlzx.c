@@ -1057,9 +1057,13 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 	    break;
 	}
 
+#if 0
 	if (abort)
 	    break;		/* a read error occured */
 
+	/* CID 129002 (#1 of 1): Logically dead code (DEADCODE)
+	 * dead_error_begin: Execution cannot reach this statement: 
+	 */
 	temp_node = decr->filename_list;	/* free the list now */
 	while ((node = temp_node)) {
 	    temp_node = node->next;
@@ -1072,6 +1076,7 @@ static int extract_archive(FILE * in_file, struct LZXDecrData *decr)
 	    /* perror("FSeek(Data)"); */
 	    break;
 	}
+#endif
 
     } while (!abort);
 
