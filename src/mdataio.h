@@ -12,14 +12,16 @@ static inline ptrdiff_t CAN_READ(MFILE *m)
 	return INT_MAX;
 }
 
+static inline uint8 mread8(MFILE *m)
+{
+	uint8 x = 0xff;
+	mread(&x, 1, 1, m);
+	return x;
+}
+
 static inline int8 mread8s(MFILE *m)
 {
 	return (int8)mgetc(m);
-}
-
-static inline uint8 mread8(MFILE *m)
-{
-	return (uint8)mgetc(m);
 }
 
 static inline uint16 mread16l(MFILE *m)
