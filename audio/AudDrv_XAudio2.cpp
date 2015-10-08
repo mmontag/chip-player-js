@@ -122,11 +122,17 @@ UINT8 XAudio2_Init(void)
 	
 	retVal = XAudio2Create(&xAudIntf, 0x00, XAUDIO2_DEFAULT_PROCESSOR);
 	if (retVal != S_OK)
+	{
+		CoUninitialize();
 		return AERR_API_ERR;
+	}
 	
 	retVal = xAudIntf->GetDeviceCount(&deviceList.devCount);
 	if (retVal != S_OK)
+	{
+		CoUninitialize();
 		return AERR_API_ERR;
+	}
 	deviceList.devNames = (char**)malloc(deviceList.devCount * sizeof(char*));
 	devListIDs = (UINT32*)malloc(deviceList.devCount * sizeof(UINT32));
 	devLstID = 0;

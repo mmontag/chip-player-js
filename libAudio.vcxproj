@@ -63,26 +63,26 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir);libs\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);libs\include_vc;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir);libs\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);libs\include_vc;$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)_$(Platform)d</TargetName>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir);libs\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);libs\include_vc;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir);libs\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);libs\include_vc;$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)_$(Platform)</TargetName>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)bin\</OutDir>
