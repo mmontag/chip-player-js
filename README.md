@@ -52,6 +52,7 @@ That example is a simple audio player based on SDL Audio usage.
 To build that example you will need to have installed SDL2 library.
 
 # Todo
+* Fix infinite loop causes swapped loopEnd and loopStart (when loopEnd goes before loopStart)
 * Time based Seek/Tell support
 * Support of title and other meta-tags retrieving
 * Support of real-time listening of incoming MIDI-commands.
