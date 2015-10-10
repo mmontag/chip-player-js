@@ -4,102 +4,95 @@ ARCHDIR=archives/
 NOGZIPARCHIVES=1
 
 ARCHFILES=\
-	adlmidi.cpp adlmidi.h \
-	dbopl.cpp dbopl.h \
-	adldata.cpp adldata.hh \
-	dumpbank.cc dumpmiles.cc \
-	gen_adldata.cc \
+	src/adlmidi.cpp src/adlmidi.h \
+	src/dbopl.cpp src/dbopl.h \
+	src/adldata.cpp src/adldata.hh \
+	src/dumpbank/dumpbank.cc src/dumpmiles/dumpmiles.cc \
+	src/gen_adldata/gen_adldata.cc \
 	midiplay.bas \
 	progdesc.php \
 	make.rules \
 	fraction.h \
 	\
-	bnk_files/drum.bnk \
-	bnk_files/file131.bnk \
-	bnk_files/file132.bnk \
-	bnk_files/file133.bnk \
-	bnk_files/file134.bnk \
-	bnk_files/file142.bnk \
-	bnk_files/file143.bnk \
-	bnk_files/file144.bnk \
-	bnk_files/file145.bnk \
-	bnk_files/file159.bnk \
-	bnk_files/file167.bnk \
-	bnk_files/file168.bnk \
-	bnk_files/hamdrum.bnk \
-	bnk_files/hammelo.bnk \
-	bnk_files/intdrum.bnk \
-	bnk_files/intmelo.bnk \
-	bnk_files/melodic.bnk \
-	bnk_files/rickdrum.bnk \
-	bnk_files/rickmelo.bnk \
-	bnk_files/d2drum.bnk \
-	bnk_files/d2melo.bnk \
-	bnk_files/normdrum.bnk \
-	bnk_files/normmelo.bnk \
-	bnk_files/ssdrum.bnk \
-	bnk_files/ssmelo.bnk \
-	doom2/genmidi.htc \
-	doom2/genmidi.op2 \
-	doom2/default.op2 \
-	ibk_files/game.ibk \
-	ibk_files/mt_fm.ibk \
-	ibk_files/soccer-genmidi.ibk \
-	ibk_files/soccer-percs.ibk \
-	ibk_files/nitemare_3d.ibk \
-	op3_files/fat2.op3 \
-	op3_files/fat4.op3 \
-	op3_files/jv_2op.op3 \
-	op3_files/wallace.op3 \
-	opl_files/file12.opl \
-	opl_files/file13.opl \
-	opl_files/file15.opl \
-	opl_files/file16.opl \
-	opl_files/file17.opl \
-	opl_files/file19.opl \
-	opl_files/file20.opl \
-	opl_files/file21.opl \
-	opl_files/file23.opl \
-	opl_files/file24.opl \
-	opl_files/file25.opl \
-	opl_files/file26.opl \
-	opl_files/file27.opl \
-	opl_files/file29.opl \
-	opl_files/file30.opl \
-	opl_files/file31.opl \
-	opl_files/file32.opl \
-	opl_files/file34.opl \
-	opl_files/file35.opl \
-	opl_files/file36.opl \
-	opl_files/file37.opl \
-	opl_files/file41.opl \
-	opl_files/file42.opl \
-	opl_files/file47.opl \
-	opl_files/file48.opl \
-	opl_files/file49.opl \
-	opl_files/file50.opl \
-	opl_files/file53.opl \
-	opl_files/file54.opl \
-	opl_files/sample.ad \
-	opl_files/sample.opl \
-	opl_files/sc3.opl \
-	opl_files/simfarm.ad \
-	opl_files/simfarm.opl \
-	opl_files/warcraft.ad \
-	opl_files/nemesis.opl \
-	opl_files/nhlpa.opl \
-	tmb_files/d3dtimbr.tmb \
-	tmb_files/swtimbr.tmb \
-	raptor/genmidi.op2
+	fm_banks/bnk_files/drum.bnk \
+	fm_banks/bnk_files/file131.bnk \
+	fm_banks/bnk_files/file132.bnk \
+	fm_banks/bnk_files/file133.bnk \
+	fm_banks/bnk_files/file134.bnk \
+	fm_banks/bnk_files/file142.bnk \
+	fm_banks/bnk_files/file143.bnk \
+	fm_banks/bnk_files/file144.bnk \
+	fm_banks/bnk_files/file145.bnk \
+	fm_banks/bnk_files/file159.bnk \
+	fm_banks/bnk_files/file167.bnk \
+	fm_banks/bnk_files/file168.bnk \
+	fm_banks/bnk_files/hamdrum.bnk \
+	fm_banks/bnk_files/hammelo.bnk \
+	fm_banks/bnk_files/intdrum.bnk \
+	fm_banks/bnk_files/intmelo.bnk \
+	fm_banks/bnk_files/melodic.bnk \
+	fm_banks/bnk_files/rickdrum.bnk \
+	fm_banks/bnk_files/rickmelo.bnk \
+	fm_banks/bnk_files/d2drum.bnk \
+	fm_banks/bnk_files/d2melo.bnk \
+	fm_banks/bnk_files/normdrum.bnk \
+	fm_banks/bnk_files/normmelo.bnk \
+	fm_banks/bnk_files/ssdrum.bnk \
+	fm_banks/bnk_files/ssmelo.bnk \
+	fm_banks/doom2/genmidi.htc \
+	fm_banks/doom2/genmidi.op2 \
+	fm_banks/doom2/default.op2 \
+	fm_banks/ibk_files/game.ibk \
+	fm_banks/ibk_files/mt_fm.ibk \
+	fm_banks/ibk_files/soccer-genmidi.ibk \
+	fm_banks/ibk_files/soccer-percs.ibk \
+	fm_banks/ibk_files/nitemare_3d.ibk \
+	fm_banks/op3_files/fat2.op3 \
+	fm_banks/op3_files/fat4.op3 \
+	fm_banks/op3_files/jv_2op.op3 \
+	fm_banks/op3_files/wallace.op3 \
+	fm_banks/opl_files/file12.opl \
+	fm_banks/opl_files/file13.opl \
+	fm_banks/opl_files/file15.opl \
+	fm_banks/opl_files/file16.opl \
+	fm_banks/opl_files/file17.opl \
+	fm_banks/opl_files/file19.opl \
+	fm_banks/opl_files/file20.opl \
+	fm_banks/opl_files/file21.opl \
+	fm_banks/opl_files/file23.opl \
+	fm_banks/opl_files/file24.opl \
+	fm_banks/opl_files/file25.opl \
+	fm_banks/opl_files/file26.opl \
+	fm_banks/opl_files/file27.opl \
+	fm_banks/opl_files/file29.opl \
+	fm_banks/opl_files/file30.opl \
+	fm_banks/opl_files/file31.opl \
+	fm_banks/opl_files/file32.opl \
+	fm_banks/opl_files/file34.opl \
+	fm_banks/opl_files/file35.opl \
+	fm_banks/opl_files/file36.opl \
+	fm_banks/opl_files/file37.opl \
+	fm_banks/opl_files/file41.opl \
+	fm_banks/opl_files/file42.opl \
+	fm_banks/opl_files/file47.opl \
+	fm_banks/opl_files/file48.opl \
+	fm_banks/opl_files/file49.opl \
+	fm_banks/opl_files/file50.opl \
+	fm_banks/opl_files/file53.opl \
+	fm_banks/opl_files/file54.opl \
+	fm_banks/opl_files/sample.ad \
+	fm_banks/opl_files/sample.opl \
+	fm_banks/opl_files/sc3.opl \
+	fm_banks/opl_files/simfarm.ad \
+	fm_banks/opl_files/simfarm.opl \
+	fm_banks/opl_files/warcraft.ad \
+	fm_banks/opl_files/nemesis.opl \
+	fm_banks/opl_files/nhlpa.opl \
+	fm_banks/tmb_files/d3dtimbr.tmb \
+	fm_banks/tmb_files/swtimbr.tmb \
+	fm_banks/raptor/genmidi.op2
 
 INSTALLPROGS=adlmidi
-
-#clean:
-#	${RM_F} obj
-#	${RM} dumpbank
-#	${RM} dumpmiles
-#	${RM} gen_adldata
-#	${RM} libadlmidi.so
 
 all: directories libadlmidi.so gen_adldata dumpmiles dumpbank
 
@@ -136,6 +129,11 @@ dumpbank: obj/dumpbank.o
 
 obj/dumpbank.o: src/dumpbank/dumpbank.cc
 	$(CXX) $(CPPFLAGS) $<  $(DEBUG)  -c -o $@ 
+
+.PHONY: clean
+
+clean:
+	${RM_F} obj bin
 
 include depfun.mak
 
