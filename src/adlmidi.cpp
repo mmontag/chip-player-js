@@ -32,6 +32,9 @@
     #endif
 #endif
 
+#ifdef _WIN32
+#undef NO_OLDNAMES
+#endif
 #include <vector>
 #include <string>
 #include <sstream>
