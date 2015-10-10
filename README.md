@@ -53,6 +53,8 @@ To build that example you will need to have installed SDL2 library.
 
 # Todo
 * Fix infinite loop causes swapped loopEnd and loopStart (when loopEnd goes before loopStart)
+* Fix sielent volume tracks (when initial voule is zero, tracks wouldn't be playd even after applying fading in volume events)
+* Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 * Time based Seek/Tell support
 * Support of title and other meta-tags retrieving
 * Support of real-time listening of incoming MIDI-commands.
