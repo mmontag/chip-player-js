@@ -1,9 +1,23 @@
 /* Extended Module Player
  * Copyright (C) 1996-2015 Claudio Matsuoka and Hipolito Carraro Jr
  *
- * This file is part of the Extended Module Player and is distributed
- * under the terms of the GNU Lesser General Public License. See COPYING.LIB
- * for more information.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 #include <stdio.h>
@@ -30,28 +44,34 @@ int test_oxm(FILE *f)
 	int slen[256];
 	uint8 buf[1024];
 
-	fseek(f, 0, SEEK_SET);
+	if (fseek(f, 0, SEEK_SET) < 0)
+		return -1;
 	if (fread(buf, 1, 16, f) < 16)
 		return -1;
 	if (memcmp(buf, "Extended Module:", 16))
 		return -1;
 	
-	fseek(f, 60, SEEK_SET);
+	if (fseek(f, 60, SEEK_SET) < 0)
+		return -1;
 	hlen = read32l(f);
-	fseek(f, 6, SEEK_CUR);
+	if (fseek(f, 6, SEEK_CUR) < 0)
+		return -1;
 	npat = read16l(f);
 	nins = read16l(f);
 
 	if (npat > 256 || nins > 128)
 		return -1;
 	
-	fseek(f, 60 + hlen, SEEK_SET);
+	if (fseek(f, 60 + hlen, SEEK_SET) < 0)
+		return -1;
 
 	for (i = 0; i < npat; i++) {
 		len = read32l(f);
-		fseek(f, 3, SEEK_CUR);
+		if (fseek(f, 3, SEEK_CUR) < 0)
+			return -1;
 		plen = read16l(f);
-		fseek(f, len - 9 + plen, SEEK_CUR);
+		if (fseek(f, len - 9 + plen, SEEK_CUR) < 0)
+			return -1;
 	}
 
 	for (i = 0; i < nins; i++) {
@@ -59,8 +79,9 @@ int test_oxm(FILE *f)
 		if (ilen > 263) {
 			return -1;
 		}
-		fseek(f, -4, SEEK_CUR);
-
+		if (fseek(f, -4, SEEK_CUR) < 0) {
+			return -1;
+		}
 		if (fread(buf, 1, ilen, f) != ilen) { /* instrument header */
 			return -1;
 		}
@@ -74,7 +95,9 @@ int test_oxm(FILE *f)
 		/* Read instrument data */
 		for (j = 0; j < nsmp; j++) {
 			slen[j] = read32l(f);
-			fseek(f, 36, SEEK_CUR);
+			if (fseek(f, 36, SEEK_CUR) < 0) {
+				return -1;
+			}
 		}
 
 		/* Read samples */
@@ -82,7 +105,8 @@ int test_oxm(FILE *f)
 			read32b(f);
 			if (read32b(f) == MAGIC_OGGS)
 				return 0;
-			fseek(f, slen[j] - 8, SEEK_CUR);
+			if (fseek(f, slen[j] - 8, SEEK_CUR) < 0)
+				return -1;
 		}
 	}
 
@@ -104,7 +128,8 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 
 	/*size =*/ read32l(f);
 	id = read32b(f);
-	fseek(f, -8, SEEK_CUR);
+	if (fseek(f, -8, SEEK_CUR) < 0)
+		return NULL;
 
 	if ((data = calloc(1, len)) == NULL)
 		return NULL;
@@ -165,26 +190,26 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 	char *pcm[256];
 	int newlen = 0;
 
-	fseek(f, 60, SEEK_SET);
+	(void) fseek(f, 60, SEEK_SET);
 	hlen = read32l(f);
-	fseek(f, 6, SEEK_CUR);
+	(void) fseek(f, 6, SEEK_CUR);
 	npat = read16l(f);
 	nins = read16l(f);
 	
-	fseek(f, 60 + hlen, SEEK_SET);
+	(void) fseek(f, 60 + hlen, SEEK_SET);
 
 	for (i = 0; i < npat; i++) {
 		len = read32l(f);
-		fseek(f, 3, SEEK_CUR);
+		(void) fseek(f, 3, SEEK_CUR);
 		plen = read16l(f);
-		fseek(f, len - 9 + plen, SEEK_CUR);
+		(void) fseek(f, len - 9 + plen, SEEK_CUR);
 	}
 
 	pos = ftell(f);
 	if (pos < 0) {
 		return -1;
 	}
-	fseek(f, 0, SEEK_SET);
+	(void) fseek(f, 0, SEEK_SET);
 	move_data(fo, f, pos);			/* module header + patterns */
 
 	for (i = 0; i < nins; i++) {
@@ -193,7 +218,7 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 			D_(D_CRIT "ilen=%d\n", ilen);
 			return -1;
 		}
-		fseek(f, -4, SEEK_CUR);
+		(void) fseek(f, -4, SEEK_CUR);
 		fread(buf, ilen, 1, f);		/* instrument header */
 		buf[26] = 0;
 		fwrite(buf, ilen, 1, fo);
@@ -217,7 +242,9 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 				D_(D_CRIT "sample %d len = %d", j, xi[j].len);
 				return -1;
 			}
-			fread(xi[j].buf, 1, 36, f);
+			if (fread(xi[j].buf, 1, 36, f) != 36) {
+				return -1;
+			}
 		}
 
 		/* Read samples */
