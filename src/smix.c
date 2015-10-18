@@ -208,7 +208,10 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		goto err2;
 	}
 
-	hio_seek(h, 22, SEEK_SET);
+	if (hio_seek(h, 22, SEEK_SET) < 0) {
+		retval = -XMP_ERROR_SYSTEM;
+		goto err2;
+	}
 	chn = hio_read16l(h);
 	if (chn != 1) {
 		retval = -XMP_ERROR_FORMAT;
@@ -221,14 +224,20 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		goto err2;
 	}
 
-	hio_seek(h, 34, SEEK_SET);
+	if (hio_seek(h, 34, SEEK_SET) < 0) {
+		retval = -XMP_ERROR_SYSTEM;
+		goto err2;
+	}
 	bits = hio_read16l(h);
 	if (bits == 0) {
 		retval = -XMP_ERROR_FORMAT;
 		goto err2;
 	}
 
-	hio_seek(h, 40, SEEK_SET);
+	if (hio_seek(h, 40, SEEK_SET) < 0) {
+		retval = -XMP_ERROR_SYSTEM;
+		goto err2;
+	}
 	size = hio_read32l(h) / (bits / 8);
 	if (size == 0) {
 		retval = -XMP_ERROR_FORMAT;
