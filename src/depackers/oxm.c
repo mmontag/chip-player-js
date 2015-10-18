@@ -181,6 +181,9 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 	}
 
 	pos = ftell(f);
+	if (pos < 0) {
+		return -1;
+	}
 	fseek(f, 0, SEEK_SET);
 	move_data(fo, f, pos);			/* module header + patterns */
 
