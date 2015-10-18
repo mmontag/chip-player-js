@@ -307,8 +307,9 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 
 	/* add guard bytes before the buffer for higher order interpolation */
 	xxs->data = malloc(bytelen + extralen + unroll_extralen + 4);
-	if (xxs->data == NULL)
-		return -1;
+	if (xxs->data == NULL) {
+		goto err;
+	}
 
 	*(uint32 *)xxs->data = 0;
 	xxs->data += 4;
@@ -321,8 +322,12 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 		int x2 = (bytelen + 1) >> 1;
 		char table[16];
 
-		hio_read(table, 1, 16, f);
-		hio_read(xxs->data + x2, 1, x2, f);
+		if (hio_read(table, 1, 16, f) != 16) {
+			goto err2;
+		}
+		if (hio_read(xxs->data + x2, 1, x2, f) != x2) {
+			goto err2;
+		}
 		adpcm4_decoder((uint8 *)xxs->data + x2,
 			       (uint8 *)xxs->data, table, bytelen);
 	} else
@@ -436,5 +441,11 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 			}
 		}
 	}
+
 	return 0;
+
+    err2:
+	free(xxs->data - 4);
+    err:
+	return -1;
 }
