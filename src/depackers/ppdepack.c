@@ -184,7 +184,9 @@ static int decrunch_pp(FILE *f, FILE *fo)
     if (fo == NULL)
         goto err;
 
-    fstat(fileno(f), &st);
+    if (fstat(fileno(f), &st) < 0)
+	goto err;
+
     plen = st.st_size;
     //counter = 0;
 
