@@ -247,9 +247,14 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		retval = -XMP_ERROR_SYSTEM;
 		goto err2;
 	}
-
-	hio_seek(h, 44, SEEK_SET);
-	hio_read(xxs->data, 1, size, h);
+	if (hio_seek(h, 44, SEEK_SET) < 0) {
+		retval = -XMP_ERROR_SYSTEM;
+		goto err2;
+	}
+	if (hio_read(xxs->data, 1, size, h) != size) {
+		retval = -XMP_ERROR_SYSTEM;
+		goto err2;
+	}
 	hio_close(h);
 
 	return 0;
