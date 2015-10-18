@@ -70,7 +70,7 @@ static int get_main(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int flags;
 	
 	hio_read(buf, 1, 64, f);
-	strncpy(mod->name, buf, 64);
+	strncpy(mod->name, buf, 63);	/* ensure string terminator */
 	set_type(m, "Galaxy Music System 4.0");
 
 	flags = hio_read8(f);

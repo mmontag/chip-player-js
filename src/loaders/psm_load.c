@@ -63,7 +63,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read32b(f);
 
 	hio_read(buf, 1, 60, f);
-	strncpy(mod->name, (char *)buf, XMP_NAME_SIZE);
+	strncpy(mod->name, (char *)buf, 60);
 
 	type = hio_read8(f);		/* song type */
 	ver = hio_read8(f);		/* song version */
