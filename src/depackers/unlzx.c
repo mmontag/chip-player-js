@@ -1106,7 +1106,8 @@ static int decrunch_lzx(FILE *f, FILE *fo)
 	if (decr == NULL)
 		return -1;
 
-	fseek(f, 10, SEEK_CUR);	/* skip header */
+	if (fseek(f, 10, SEEK_CUR) < 0)		/* skip header */
+		return -1;
 
 	crc32_init_A();
 	decr->outfile = fo;
