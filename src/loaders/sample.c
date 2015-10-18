@@ -230,8 +230,9 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 		}
 
 		xxs->data = malloc(size + 4);
-		if (xxs->data == NULL)
+		if (xxs->data == NULL) {
 			return -1;
+		}
 
 		*(uint32 *)xxs->data = 0;
 		xxs->data += 4;
@@ -257,8 +258,10 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 	 * + Sanity check: skip huge samples (likely corrupt module)
 	 */
 	if (xxs->len > MAX_SAMPLE_SIZE || (m && m->smpctl & XMP_SMPCTL_SKIP)) {
-		if (~flags & SAMPLE_FLAG_NOLOAD)
+		if (~flags & SAMPLE_FLAG_NOLOAD) {
+			/* coverity[check_return] */
 			hio_seek(f, xxs->len, SEEK_CUR);
+		}
 		return 0;
 	}
 
