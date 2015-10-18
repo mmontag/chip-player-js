@@ -34,9 +34,13 @@ static long get_size(FILE *f)
 
 	pos = ftell(f);
 	if (pos >= 0) {
-		fseek(f, 0, SEEK_END);
+		if (fseek(f, 0, SEEK_END) < 0) {
+			return -1;
+		}
 		size = ftell(f);
-		fseek(f, pos, SEEK_SET);
+		if (fseek(f, pos, SEEK_SET) < 0) {
+			return -1;
+		}
 		return size;
 	} else {
 		return pos;
@@ -201,9 +205,13 @@ HIO_HANDLE *hio_open(void *path, char *mode)
 		goto err2;
 
 	h->size = get_size(h->handle.file);
+	if (h->size < 0)
+		goto err3;
 
 	return h;
 
+    err3:
+	fclose(h->handle.file);
     err2:
 	free(h);
     err:
