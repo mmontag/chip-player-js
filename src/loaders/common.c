@@ -189,7 +189,7 @@ void read_title(HIO_HANDLE *f, char *t, int s)
 
 	memset(t, 0, s + 1);
 
-	hio_read(buf, 1, s, f);
+	hio_read(buf, 1, s, f);		/* coverity[check_return] */
 	buf[s] = 0;
 	copy_adjust(t, buf, s);
 }
