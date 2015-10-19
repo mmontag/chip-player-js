@@ -17,6 +17,7 @@ typedef struct {
 		FILE *file;
 		MFILE *mem;
 	} handle;
+	int error;
 } HIO_HANDLE;
 
 int8	hio_read8s	(HIO_HANDLE *);

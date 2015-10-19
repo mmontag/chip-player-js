@@ -145,38 +145,68 @@ uint32 hio_read32b(HIO_HANDLE *h)
 
 size_t hio_read(void *buf, size_t size, size_t num, HIO_HANDLE *h)
 {
+	size_t ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return fread(buf, size, num, h->handle.file);
+		ret = fread(buf, size, num, h->handle.file);
+		if (ret != num) {
+			h->error = errno;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread(buf, size, num, h->handle.mem);
-	default:
-		return 0;
+		ret = mread(buf, size, num, h->handle.mem);
+		if (ret != num) {
+			h->error = errno;
+		}
+		break;
 	}
+
+	return ret;
 }
 
 int hio_seek(HIO_HANDLE *h, long offset, int whence)
 {
+	int ret = -1;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return fseek(h->handle.file, offset, whence);
+		ret = fseek(h->handle.file, offset, whence);
+		if (ret < 0) {
+			h->error = errno;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mseek(h->handle.mem, offset, whence);
-	default:
-		return -1;
+		ret = mseek(h->handle.mem, offset, whence);
+		if (ret < 0) {
+			h->error = errno;
+		}
+		break;
 	}
+
+	return ret;
 }
 
 long hio_tell(HIO_HANDLE *h)
 {
+	long ret = -1;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return ftell(h->handle.file);
+		ret = ftell(h->handle.file);
+		if (ret < 0) {
+			h->error = errno;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mtell(h->handle.mem);
-	default:
-		return -1;
+		ret = mtell(h->handle.mem);
+		if (ret < 0) {
+			h->error = errno;
+		}
+		break;
 	}
+
+	return ret;
 }
 
 int hio_eof(HIO_HANDLE *h)
