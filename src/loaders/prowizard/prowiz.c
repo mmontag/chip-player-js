@@ -111,9 +111,7 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 		/*perror("Couldn't allocate memory");*/
 		return -1;
 	}
-	if (hio_read(data, 1, in_size, file_in) != in_size) {
-		return -1;
-	}
+	hio_read(data, in_size, 1, file_in);
 
 
   /********************************************************************/
