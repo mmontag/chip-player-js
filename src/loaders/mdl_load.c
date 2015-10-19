@@ -384,11 +384,9 @@ static int get_chunk_in(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	mod->xxc[i].pan = chinfo << 1;
     }
     mod->chn = i;
-    (void) hio_seek(f, 32 - i - 1, SEEK_CUR);
+    hio_seek(f, 32 - i - 1, SEEK_CUR);
 
-    if (hio_read(mod->xxo, 1, mod->len, f) != mod->len) {
-        return -1;
-    }
+    hio_read(mod->xxo, 1, mod->len, f);
 
     MODULE_INFO();
 
@@ -419,7 +417,7 @@ static int get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	chn = hio_read8(f);
 	mod->xxp[i]->rows = (int)hio_read8(f) + 1;
 
-	(void) hio_seek(f, 16, SEEK_CUR);	/* Skip pattern name */
+	hio_seek(f, 16, SEEK_CUR);		/* Skip pattern name */
 	for (j = 0; j < chn; j++) {
 	    x = hio_read16l(f);
 
@@ -612,9 +610,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	data->i_index[i] = hio_read8(f);
 	xxi->nsm = hio_read8(f);
-	if (hio_read(buf, 1, 32, f) != 32) {
-            return -1;
-        }
+	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
 	adjust_string(buf);
 	strncpy((char *)xxi->name, buf, 32);
@@ -699,14 +695,12 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	struct xmp_sample *xxs = &mod->xxs[i];
 
 	data->s_index[i] = hio_read8(f);	/* Sample number */
-	if (hio_read(buf, 1, 32, f) != 32) {
-            return -1;
-        }
+	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
 	adjust_string(buf);
 	strncpy(xxs->name, buf, 32);
 
-	(void) hio_seek(f, 8, SEEK_CUR);	/* Sample filename */
+	hio_seek(f, 8, SEEK_CUR);		/* Sample filename */
 
 	data->c2spd[i] = hio_read32l(f);
 
@@ -768,12 +762,10 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	sub = &mod->xxi[i].sub[0];
 	sub->sid = data->i_index[i] = data->s_index[i] = hio_read8(f);
 
-	if (hio_read(buf, 1, 32, f) != 32) {
-            return -1;
-        }
+	hio_read(buf, 1, 32, f);
 	buf[32] = 0;
 	adjust_string(buf);			/* Sample name */
-	(void) hio_seek(f, 8, SEEK_CUR);	/* Sample filename */
+	hio_seek(f, 8, SEEK_CUR);	/* Sample filename */
 	strncpy(mod->xxi[i].name, buf, 32);
 
 	data->c2spd[i] = hio_read16l(f);
@@ -827,9 +819,7 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	switch (data->packinfo[i]) {
 	case 0:
-	    if (hio_read(smpbuf, 1, len, f) != len) {
-                goto err;
-            }
+	    hio_read(smpbuf, 1, len, f);
 	    break;
 	case 1: 
 	    len = hio_read32l(f);
@@ -895,9 +885,7 @@ static int get_chunk_ve(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     for (i = 0; i < data->v_envnum; i++) {
 	data->v_env[i].num = hio_read8(f);
-	if (hio_read(data->v_env[i].data, 1, 30, f) != 30) {
-            return -1;
-        }
+	hio_read(data->v_env[i].data, 1, 30, f);
 	data->v_env[i].sus = hio_read8(f);
 	data->v_env[i].loop = hio_read8(f);
     }
@@ -919,9 +907,7 @@ static int get_chunk_pe(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     for (i = 0; i < data->p_envnum; i++) {
 	data->p_env[i].num = hio_read8(f);
-	if (hio_read(data->p_env[i].data, 1, 30, f) != 30) {
-            return -1;
-        }
+	hio_read(data->p_env[i].data, 1, 30, f);
 	data->p_env[i].sus = hio_read8(f);
 	data->p_env[i].loop = hio_read8(f);
     }
@@ -943,9 +929,7 @@ static int get_chunk_fe(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     for (i = 0; i < data->f_envnum; i++) {
 	data->f_env[i].num = hio_read8(f);
-	if (hio_read(data->f_env[i].data, 1, 30, f) != 30) {
-            return -1;
-	}
+	hio_read(data->f_env[i].data, 1, 30, f);
 	data->f_env[i].sus = hio_read8(f);
 	data->f_env[i].loop = hio_read8(f);
     }
