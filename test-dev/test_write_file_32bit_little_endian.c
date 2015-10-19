@@ -12,7 +12,7 @@ TEST(test_write_file_32bit_little_endian)
 	fclose(f);
 
 	f = fopen("write_test", "rb");
-	x = read32l(f);
+	x = read32l(f, NULL);
 	fail_unless(x == 0x12345678, "read error");
 }
 END_TEST

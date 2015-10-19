@@ -22,6 +22,7 @@ Stable versions
 	- add sanity check to Zen Packer format converter
 	- add sanity check to TP3 format converter
 	- add error handling to MMCMP depacker
+	- add error handling to many I/O operations
 	- remove dead code from NO loader
 	- remove dead code from Soundtracker loader
 	- remove dead code from GMC format converter

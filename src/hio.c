@@ -49,98 +49,161 @@ static long get_size(FILE *f)
 
 int8 hio_read8s(HIO_HANDLE *h)
 {
+	int err;
+	int8 ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return read8s(h->handle.file);
+		ret = read8s(h->handle.file, &err);
+		if (err != 0) {
+			h->error = err;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread8s(h->handle.mem);
-	default:
-		return 0;
+		ret = mread8s(h->handle.mem);
+		break;
 	}
+
+	return ret;
 }
 
 uint8 hio_read8(HIO_HANDLE *h)
 {
+	int err;
+	uint8 ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return read8(h->handle.file);
+		ret = read8(h->handle.file, &err);
+		if (err != 0) {
+			h->error = err;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread8(h->handle.mem);
-	default:
-		return 0;
+		ret = mread8(h->handle.mem);
+		break;
 	}
+
+	return ret;
 }
 
 uint16 hio_read16l(HIO_HANDLE *h)
 {
+	int err;
+	uint16 ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return read16l(h->handle.file);
+		ret = read16l(h->handle.file, &err);
+		if (err != 0) {
+			h->error = err;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread16l(h->handle.mem);
-	default:
-		return 0;
+		ret = mread16l(h->handle.mem);
+		break;
 	}
+
+	return ret;
 }
 
 uint16 hio_read16b(HIO_HANDLE *h)
 {
+	int err;
+	uint16 ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return read16b(h->handle.file);
+		ret = read16b(h->handle.file, &err);
+		if (err != 0) {
+			h->error = err;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread16b(h->handle.mem);
-	default:
-		return 0;
+		ret = mread16b(h->handle.mem);
+		break;
 	}
+
+	return ret;
 }
 
 uint32 hio_read24l(HIO_HANDLE *h)
 {
+	int err;
+	uint32 ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return read24l(h->handle.file); 
+		ret = read24l(h->handle.file, &err); 
+		if (err != 0) {
+			h->error = err;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread24l(h->handle.mem); 
-	default:
-		return 0;
+		ret = mread24l(h->handle.mem); 
+		break;
 	}
+
+	return ret;
 }
 
 uint32 hio_read24b(HIO_HANDLE *h)
 {
+	int err;
+	uint32 ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return read24b(h->handle.file);
+		ret = read24b(h->handle.file, &err);
+		if (err != 0) {
+			h->error = err;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread24b(h->handle.mem);
-	default:
-		return 0;
+		ret = mread24b(h->handle.mem);
+		break;
 	}
+
+	return ret;
 }
 
 uint32 hio_read32l(HIO_HANDLE *h)
 {
+	int err;
+	uint32 ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return read32l(h->handle.file);
+		ret = read32l(h->handle.file, &err);
+		if (err != 0) {
+			h->error = err;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread32l(h->handle.mem);
-	default:
-		return 0;
+		ret = mread32l(h->handle.mem);
+		break;
 	}
+
+	return ret;
 }
 
 uint32 hio_read32b(HIO_HANDLE *h)
 {
+	int err;
+	uint32 ret = 0;
+
 	switch (HIO_HANDLE_TYPE(h)) {
 	case HIO_HANDLE_TYPE_FILE:
-		return read32b(h->handle.file);
+		ret = read32b(h->handle.file, &err);
+		if (err != 0) {
+			h->error = err;
+		}
+		break;
 	case HIO_HANDLE_TYPE_MEMORY:
-		return mread32b(h->handle.mem);
-	default:
-		return 0;
+		ret = mread32b(h->handle.mem);
 	}
+
+	return ret;
 }
 
 size_t hio_read(void *buf, size_t size, size_t num, HIO_HANDLE *h)

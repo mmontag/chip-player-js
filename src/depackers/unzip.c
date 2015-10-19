@@ -42,8 +42,8 @@ struct zip_file_header
 
 #define QUIET
 
-#define read_int(x) read32l(x)
-#define read_word(x) read16l(x)
+#define read_int(x) read32l(x, NULL)
+#define read_word(x) read16l(x, NULL)
 
 /*-------------------------- fileio.c ---------------------------*/
 

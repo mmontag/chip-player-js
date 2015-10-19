@@ -1684,6 +1684,7 @@ static int get_header(FILE *f, struct lha_data *data)
 {
 	uint8 buf[21];
 	int size, level, namelen;
+	int error;
 
 	memset(data, 0, sizeof(struct lha_data));
 	if (fread(buf, 1, 21, f) != 21)
@@ -1696,21 +1697,44 @@ static int get_header(FILE *f, struct lha_data *data)
 		data->method = readmem32b(buf + 2);
 		data->packed_size = readmem32l(buf + 7);
 		data->original_size = readmem32l(buf + 11);
-		namelen = read8(f);
-		fread(data->name, 1, namelen, f);
-		data->crc = read16l(f);
-		fseek(f, size + 2 - 24 - namelen, SEEK_CUR);
+		namelen = read8(f, &error);
+		if (error != 0) {
+			return -1;
+		}
+		if (fread(data->name, 1, namelen, f) != namelen) {
+			return -1;
+		}
+		data->crc = read16l(f, &error);
+		if (error != 0) {
+			return -1;
+		}
+		if (fseek(f, size + 2 - 24 - namelen, SEEK_CUR) < 0) {
+			return -1;
+		}
 		break;
 	case 1:
 		size = buf[0];
 		data->method = readmem32b(buf + 2);
 		data->packed_size = readmem32l(buf + 7);
 		data->original_size = readmem32l(buf + 11);
-		namelen = read8(f);
-		fread(data->name, 1, namelen, f);
-		data->crc = read16l(f);
-		fseek(f, size - (22 + namelen) - 2, SEEK_CUR);
-		while ((size = read16l(f)) != 0) {
+		namelen = read8(f, &error);
+		if (error != 0) {
+			return -1;
+		}
+		if (fread(data->name, 1, namelen, f) != namelen) {
+			return -1;
+		}
+		data->crc = read16l(f, &error);
+		if (error != 0) {
+			return -1;
+		}
+		if (fseek(f, size - (22 + namelen) - 2, SEEK_CUR) < 0) {
+			return -1;
+		}
+		while ((size = read16l(f, &error)) != 0) {
+			if (error != 0) {
+				return -1;
+			}
 			fseek(f, size - 2, SEEK_CUR);
 			data->packed_size -= size;
 		}
@@ -1722,19 +1746,36 @@ static int get_header(FILE *f, struct lha_data *data)
 		data->method = readmem32b(buf + 2);
 		data->packed_size = readmem32l(buf + 7);
 		data->original_size = readmem32l(buf + 11);
-		data->crc = read16l(f);
-		read8(f);		/* skip OS id */
-		while ((size = read16l(f)) != 0) {
-			int type = read8(f);
+		data->crc = read16l(f, &error);
+		if (error != 0) {
+			return -1;
+		}
+		read8(f, &error);		/* skip OS id */
+		if (error != 0) {
+			return -1;
+		}
+		while ((size = read16l(f, &error)) != 0) {
+			int type;
 			int s = size - 3;
+			if (error != 0) {
+				return -1;
+			}
+			type = read8(f, &error);
+			if (error != 0) {
+				return -1;
+			}
 			if (type == 0x01) {
 				/* Sanity check */
-				if (s < 0 || s > 256)
+				if (s < 0 || s > 256) {
 					return -1;
-
-				fread(data->name, 1, s, f);
+				}
+				if (fread(data->name, 1, s, f) != s) {
+					return -1;
+				}
 			} else {
-				fseek(f, s, SEEK_CUR);
+				if (fseek(f, s, SEEK_CUR) < 0) {
+					return -1;
+				}
 			}
 		}
 		break;

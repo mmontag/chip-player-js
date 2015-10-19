@@ -95,6 +95,7 @@ struct am_instrument {
 
 static int is_am_instrument(FILE *nt, int i)
 {
+	int err;
 	char buf[2];
 	int16 wf;
 
@@ -107,8 +108,8 @@ static int is_am_instrument(FILE *nt, int i)
 		return 0;
 
 	fseek(nt, 24, SEEK_CUR);
-	wf = read16b(nt);
-	if (wf < 0 || wf > 3)
+	wf = read16b(nt, &err);
+	if (err != 0 || wf < 0 || wf > 3)
 		return 0;
 
 	return 1;
@@ -124,24 +125,40 @@ static int read_am_instrument(struct module_data *m, FILE *nt, int i)
 	struct am_instrument am;
 	char *wave;
 	int a, b;
+	int err;
 	int8 am_noise[1024];
 
 	fseek(nt, 144 + i * 120 + 2 + 4, SEEK_SET);
-	am.l0 = read16b(nt);
-	am.a1l = read16b(nt);
-	am.a1s = read16b(nt);
-	am.a2l = read16b(nt);
-	am.a2s = read16b(nt);
-	am.sl = read16b(nt);
-	am.ds = read16b(nt);
-	am.st = read16b(nt);
-	read16b(nt);
-	am.rs = read16b(nt);
-	am.wf = read16b(nt);
-	am.p_fall = -(int16) read16b(nt);
-	am.v_amp = read16b(nt);
-	am.v_spd = read16b(nt);
-	am.fq = read16b(nt);
+	am.l0 = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.a1l = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.a1s = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.a2l = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.a2s = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.sl = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.ds = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.st = read16b(nt, &err);
+	if (err != 0) return -1;
+	read16b(nt, &err);
+	if (err != 0) return -1;
+	am.rs = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.wf = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.p_fall = -(int16) read16b(nt, &err);
+	if (err != 0) return -1;
+	am.v_amp = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.v_spd = read16b(nt, &err);
+	if (err != 0) return -1;
+	am.fq = read16b(nt, &err);
+	if (err != 0) return -1;
 
 #if 0
 	printf

@@ -12,7 +12,7 @@ TEST(test_write_file_32bit_big_endian)
 	fclose(f);
 
 	f = fopen("write_test", "rb");
-	x = read32b(f);
+	x = read32b(f, NULL);
 	fail_unless(x == 0x12345678, "read error");
 }
 END_TEST

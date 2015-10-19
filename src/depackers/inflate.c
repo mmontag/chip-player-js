@@ -6,8 +6,8 @@
 #include "inflate.h"
 #include "crc32.h"
 
-#define read_int_b(x) read32b(x)
-#define read_word(x) read16l(x)
+#define read_int_b(x) read32b(x, NULL)
+#define read_word(x) read16l(x, NULL)
 
 #define ZIP
 #undef DEBUG

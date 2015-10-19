@@ -43,6 +43,7 @@ int test_oxm(FILE *f)
 	uint32 ilen;
 	int slen[256];
 	uint8 buf[1024];
+	int error;
 
 	if (fseek(f, 0, SEEK_SET) < 0)
 		return -1;
@@ -53,11 +54,13 @@ int test_oxm(FILE *f)
 	
 	if (fseek(f, 60, SEEK_SET) < 0)
 		return -1;
-	hlen = read32l(f);
-	if (fseek(f, 6, SEEK_CUR) < 0)
+	hlen = read32l(f, &error);
+	if (error != 0 || fseek(f, 6, SEEK_CUR) < 0)
 		return -1;
-	npat = read16l(f);
-	nins = read16l(f);
+	npat = read16l(f, &error);
+	if (error != 0) return -1;
+	nins = read16l(f, &error);
+	if (error != 0) return -1;
 
 	if (npat > 256 || nins > 128)
 		return -1;
@@ -66,16 +69,17 @@ int test_oxm(FILE *f)
 		return -1;
 
 	for (i = 0; i < npat; i++) {
-		len = read32l(f);
-		if (fseek(f, 3, SEEK_CUR) < 0)
+		len = read32l(f, &error);
+		if (error != 0 || fseek(f, 3, SEEK_CUR) < 0)
 			return -1;
-		plen = read16l(f);
-		if (fseek(f, len - 9 + plen, SEEK_CUR) < 0)
+		plen = read16l(f, &error);
+		if (error != 0 || fseek(f, len - 9 + plen, SEEK_CUR) < 0)
 			return -1;
 	}
 
 	for (i = 0; i < nins; i++) {
-		ilen = read32l(f);
+		ilen = read32l(f, &error);
+		if (error != 0) return -1;
 		if (ilen > 263) {
 			return -1;
 		}
@@ -86,6 +90,7 @@ int test_oxm(FILE *f)
 			return -1;
 		}
 		nsmp = readmem16l(buf + 27);
+		if (error != 0) return -1;
 
 		if (nsmp > 255)
 			return -1;
@@ -94,7 +99,10 @@ int test_oxm(FILE *f)
 
 		/* Read instrument data */
 		for (j = 0; j < nsmp; j++) {
-			slen[j] = read32l(f);
+			slen[j] = read32l(f, &error);
+			if (error != 0) {
+				return -1;
+			}
 			if (fseek(f, 36, SEEK_CUR) < 0) {
 				return -1;
 			}
@@ -102,8 +110,8 @@ int test_oxm(FILE *f)
 
 		/* Read samples */
 		for (j = 0; j < nsmp; j++) {
-			read32b(f);
-			if (read32b(f) == MAGIC_OGGS)
+			read32b(f, NULL);
+			if (read32b(f, NULL) == MAGIC_OGGS)
 				return 0;
 			if (fseek(f, slen[j] - 8, SEEK_CUR) < 0)
 				return -1;
@@ -120,22 +128,27 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 	uint8 *data, *pcm;
 	int16 *pcm16 = NULL;
 	uint32 id;
+	int error;
 
 	/* Sanity check */
 	if (len < 4) {
 		return NULL;
 	}
 
-	/*size =*/ read32l(f);
-	id = read32b(f);
-	if (fseek(f, -8, SEEK_CUR) < 0)
+	/*size =*/ read32l(f, &error);
+	if (error != 0)
+		return NULL;
+	id = read32b(f, &error);
+	if (error != 0 || fseek(f, -8, SEEK_CUR) < 0)
 		return NULL;
 
 	if ((data = calloc(1, len)) == NULL)
 		return NULL;
 
-	read32b(f);
-	fread(data, 1, len - 4, f);
+	read32b(f, &error);
+	if (error != 0 || fread(data, 1, len - 4, f) != len - 4) {
+		return NULL;
+	}
 
 	if (id != MAGIC_OGGS) {		/* copy input data if not Ogg file */
 		*newlen = len;
@@ -191,17 +204,17 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 	int newlen = 0;
 
 	(void) fseek(f, 60, SEEK_SET);
-	hlen = read32l(f);
+	hlen = read32l(f, NULL);
 	(void) fseek(f, 6, SEEK_CUR);
-	npat = read16l(f);
-	nins = read16l(f);
+	npat = read16l(f, NULL);
+	nins = read16l(f, NULL);
 	
 	(void) fseek(f, 60 + hlen, SEEK_SET);
 
 	for (i = 0; i < npat; i++) {
-		len = read32l(f);
+		len = read32l(f, NULL);
 		(void) fseek(f, 3, SEEK_CUR);
-		plen = read16l(f);
+		plen = read16l(f, NULL);
 		(void) fseek(f, len - 9 + plen, SEEK_CUR);
 	}
 
@@ -213,13 +226,13 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 	move_data(fo, f, pos);			/* module header + patterns */
 
 	for (i = 0; i < nins; i++) {
-		ilen = read32l(f);
+		ilen = read32l(f, NULL);
 		if (ilen > 1024) {
 			D_(D_CRIT "ilen=%d\n", ilen);
 			return -1;
 		}
 		(void) fseek(f, -4, SEEK_CUR);
-		fread(buf, ilen, 1, f);		/* instrument header */
+		(void) fread(buf, ilen, 1, f);		/* instrument header */
 		buf[26] = 0;
 		fwrite(buf, ilen, 1, fo);
 		nsmp = readmem16l(buf + 27);
@@ -237,7 +250,7 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 
 		/* Read sample headers */
 		for (j = 0; j < nsmp; j++) {
-			xi[j].len = read32l(f);
+			xi[j].len = read32l(f, NULL);
 			if (xi[j].len > MAX_SAMPLE_SIZE) {
 				D_(D_CRIT "sample %d len = %d", j, xi[j].len);
 				return -1;

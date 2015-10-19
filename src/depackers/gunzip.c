@@ -55,37 +55,37 @@ static int decrunch_gzip(FILE *in, FILE *out)
 
 	crc32_init_A();
 
-	member.id1 = read8(in);
-	member.id2 = read8(in);
-	member.cm  = read8(in);
-	member.flg = read8(in);
-	member.mtime = read32l(in);
-	member.xfl = read8(in);
-	member.os  = read8(in);
+	member.id1 = read8(in, NULL);
+	member.id2 = read8(in, NULL);
+	member.cm  = read8(in, NULL);
+	member.flg = read8(in, NULL);
+	member.mtime = read32l(in, NULL);
+	member.xfl = read8(in, NULL);
+	member.os  = read8(in, NULL);
 
 	if (member.cm != 0x08) {
 		return -1;
 	}
 
 	if (member.flg & FLAG_FEXTRA) {
-		int xlen = read16l(in);
+		int xlen = read16l(in, NULL);
 		fseek(in, xlen, SEEK_CUR);
 	}
 
 	if (member.flg & FLAG_FNAME) {
 		do {
-			c = read8(in);
+			c = read8(in, NULL);
 		} while (c != 0);
 	}
 
 	if (member.flg & FLAG_FCOMMENT) {
 		do {
-			c = read8(in);
+			c = read8(in, NULL);
 		} while (c != 0);
 	}
 
 	if (member.flg & FLAG_FHCRC) {
-		read16l(in);
+		read16l(in, NULL);
 	}
 	
 	val = inflate(in, out, &crc, 1);
@@ -94,13 +94,13 @@ static int decrunch_gzip(FILE *in, FILE *out)
 	}
 
 	/* Check CRC32 */
-	val = read32l(in);
+	val = read32l(in, NULL);
 	if (val != crc) {
 		return -1;
 	}
 
 	/* Check file size */
-	val = read32l(in);
+	val = read32l(in, NULL);
 	if (val != ftell(out)) {
 		return -1;
 	}

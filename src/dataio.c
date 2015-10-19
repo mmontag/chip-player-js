@@ -20,85 +20,114 @@
  * THE SOFTWARE.
  */
 
+#include <errno.h>
 #include "common.h"
 
 
-inline uint8 read8(FILE *f)
+inline uint8 read8(FILE *f, int *err)
 {
 	uint8 x = 0xff;
-	fread(&x, 1, 1, f);
+
+	if (fread(&x, 1, 1, f) != 1 && err != NULL) {
+		*err = errno;
+	} else if (err != NULL) {
+		*err = 0;
+	}
+
 	return x;
 }
 
-int8 read8s(FILE *f)
+int8 read8s(FILE *f, int *err)
 {
-	return (int8)fgetc(f);
+	int8 x = 0;
+
+	if (fread(&x, 1, 1, f) != 1 && err != NULL) {
+		*err = errno;
+	} else if (err != NULL) {
+		*err = 0;
+	}
+
+	return x;
 }
 
-uint16 read16l(FILE *f)
+uint16 read16l(FILE *f, int *err)
 {
-	uint32 a, b;
+	uint8 x[2] = { 0xff, 0xff };
 
-	a = read8(f);
-	b = read8(f);
+	if (fread(&x, 1, 2, f) != 2 && err != NULL) {
+		*err = errno;
+	} else if (err != NULL) {
+		*err = 0;
+	}
 
-	return (b << 8) | a;
+	return ((uint16)x[1] << 8) | x[0];
 }
 
-uint16 read16b(FILE *f)
+uint16 read16b(FILE *f, int *err)
 {
-	uint32 a, b;
+	uint8 x[2] = { 0xff, 0xff };
 
-	a = read8(f);
-	b = read8(f);
+	if (fread(&x, 1, 2, f) != 2 && err != NULL) {
+		*err = errno;
+	} else if (err != NULL) {
+		*err = 0;
+	}
 
-	return (a << 8) | b;
+	return ((uint16)x[0] << 8) | x[1];
 }
 
-uint32 read24l(FILE *f)
+uint32 read24l(FILE *f, int *err)
 {
-	uint32 a, b, c;
+	uint8 x[3] = { 0xff, 0xff, 0xff };
 
-	a = read8(f);
-	b = read8(f);
-	c = read8(f);
+	if (fread(&x, 1, 3, f) != 3 && err != NULL) {
+		*err = errno;
+	} else if (err != NULL) {
+		*err = 0;
+	}
 
-	return (c << 16) | (b << 8) | a;
+	return ((uint32)x[2] << 16) | ((uint32)x[1] << 8) | x[0];
 }
 
-uint32 read24b(FILE *f)
+uint32 read24b(FILE *f, int *err)
 {
-	uint32 a, b, c;
+	uint8 x[3] = { 0xff, 0xff, 0xff };
 
-	a = read8(f);
-	b = read8(f);
-	c = read8(f);
+	if (fread(&x, 1, 3, f) != 3 && err != NULL) {
+		*err = errno;
+	} else if (err != NULL) {
+		*err = 0;
+	}
 
-	return (a << 16) | (b << 8) | c;
+	return ((uint32)x[0] << 16) | ((uint32)x[1] << 8) | x[2];
 }
 
-uint32 read32l(FILE *f)
+uint32 read32l(FILE *f, int *err)
 {
-	uint32 a, b, c, d;
+	uint8 x[4] = { 0xff, 0xff, 0xff, 0xff };
 
-	a = read8(f);
-	b = read8(f);
-	c = read8(f);
-	d = read8(f);
+	if (fread(&x, 1, 4, f) != 4 && err != NULL) {
+		*err = errno;
+	} else if (err != NULL) {
+		*err = 0;
+	}
 
-	return (d << 24) | (c << 16) | (b << 8) | a;
+	return ((uint32)x[3] << 24) | ((uint32)x[2] << 16) |
+					((uint32)x[1] << 8) | x[0];
 }
 
-uint32 read32b(FILE *f)
+uint32 read32b(FILE *f, int *err)
 {
-	uint32 a, b, c, d;
+	uint8 x[4] = { 0xff, 0xff, 0xff, 0xff };
 
-	a = read8(f);
-	b = read8(f);
-	c = read8(f);
-	d = read8(f);
+	if (fread(&x, 1, 4, f) != 4 && err != NULL) {
+		*err = errno;
+	} else if (err != NULL) {
+		*err = 0;
+	}
 
-	return (a << 24) | (b << 16) | (c << 8) | d;
+	return ((uint32)x[0] << 24) | ((uint32)x[1] << 16) |
+					((uint32)x[2] << 8) | x[3];
 }
 
 uint16 readmem16l(uint8 *m)

@@ -12,7 +12,7 @@ TEST(test_write_file_16bit_little_endian)
 	fclose(f);
 
 	f = fopen("write_test", "rb");
-	x = read16l(f);
+	x = read16l(f, NULL);
 	fail_unless(x == 0x1234, "read error");
 }
 END_TEST

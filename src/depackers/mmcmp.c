@@ -92,7 +92,7 @@ static uint32 get_bits(FILE *f, int n, struct bit_buffer *bb)
 	}
 
 	while (bb->count < 24) {
-		bb->buffer |= read8(f) << bb->count;
+		bb->buffer |= read8(f, NULL) << bb->count;
 		bb->count += 8;
 	}
 
@@ -265,22 +265,29 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 	struct header h;
 	uint32 *table;
 	uint32 i, j;
+	int error;
 
 	/* Read file header */
-	if (read32l(in) != 0x4352697A)		/* ziRC */
+	if (read32l(in, NULL) != 0x4352697A)		/* ziRC */
 		goto err;
-	if (read32l(in) != 0x61694e4f)		/* ONia */
+	if (read32l(in, NULL) != 0x61694e4f)		/* ONia */
 		goto err;
-	if (read16l(in) < 14)			/* header size */
+	if (read16l(in, NULL) < 14)			/* header size */
 		goto err;
 
 	/* Read header */
-	h.version = read16l(in);
-	h.nblocks = read16l(in);
-	h.filesize = read32l(in);
-	h.blktable = read32l(in);
-	h.glb_comp = read8(in);
-	h.fmt_comp = read8(in);
+	h.version = read16l(in, &error);
+	if (error != 0) goto err;
+	h.nblocks = read16l(in, &error);
+	if (error != 0) goto err;
+	h.filesize = read32l(in, &error);
+	if (error != 0) goto err;
+	h.blktable = read32l(in, &error);
+	if (error != 0) goto err;
+	h.glb_comp = read8(in, &error);
+	if (error != 0) goto err;
+	h.fmt_comp = read8(in, &error);
+	if (error != 0) goto err;
 
 	if (h.nblocks == 0)
 		goto err;
@@ -292,7 +299,8 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 		goto err;
 
 	for (i = 0; i < h.nblocks; i++) {
-		table[i] = read32l(in);
+		table[i] = read32l(in, &error);
+		if (error != 0) goto err2;
 	}
 
 	for (i = 0; i < h.nblocks; i++) {
@@ -300,13 +308,20 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 		struct sub_block *sub_block;
 
 		fseek(in, table[i], SEEK_SET);
-		block.unpk_size  = read32l(in);
-		block.pk_size    = read32l(in);
-		block.xor_chk    = read32l(in);
-		block.sub_blk    = read16l(in);
-		block.flags      = read16l(in);
-		block.tt_entries = read16l(in);
-		block.num_bits   = read16l(in);
+		block.unpk_size  = read32l(in, &error);
+		if (error != 0) goto err2;
+		block.pk_size    = read32l(in, &error);
+		if (error != 0) goto err2;
+		block.xor_chk    = read32l(in, &error);
+		if (error != 0) goto err2;
+		block.sub_blk    = read16l(in, &error);
+		if (error != 0) goto err2;
+		block.flags      = read16l(in, &error);
+		if (error != 0) goto err2;
+		block.tt_entries = read16l(in, &error);
+		if (error != 0) goto err2;
+		block.num_bits   = read16l(in, &error);
+		if (error != 0) goto err2;
 
                 /* Sanity check */
 		if (block.unpk_size <= 0 || block.pk_size <= 0)
@@ -332,8 +347,10 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 			goto err2;
 
 		for (j = 0; j < block.sub_blk; j++) {
-			sub_block[j].unpk_pos  = read32l(in);
-			sub_block[j].unpk_size = read32l(in);
+			sub_block[j].unpk_pos  = read32l(in, &error);
+			if (error != 0) goto err2;
+			sub_block[j].unpk_size = read32l(in, &error);
+			if (error != 0) goto err2;
 
 	                /* Sanity check */
 			if (sub_block[j].unpk_pos < 0 ||

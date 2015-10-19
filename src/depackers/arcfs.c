@@ -38,19 +38,28 @@ static int read_file_header(FILE *in, struct archived_file_header_tag *hdrp)
 {
 	int hlen, start /*, ver*/;
 	int i;
+	int error;
 
-	fseek(in, 8, SEEK_CUR);			/* skip magic */
-	hlen = read32l(in) / 36;
-	start = read32l(in);
-	/*ver =*/ read32l(in);
+	if (fseek(in, 8, SEEK_CUR) < 0)		/* skip magic */
+		return -1;
+	hlen = read32l(in, &error) / 36;
+	if (error != 0) return -1;
+	start = read32l(in, &error);
+	if (error != 0) return -1;
+	/*ver =*/ read32l(in, &error);
+	if (error != 0) return -1;
 
-	read32l(in);
-	/*ver =*/ read32l(in);
+	read32l(in, &error);
+	if (error != 0) return -1;
+	/*ver =*/ read32l(in, &error);
+	if (error != 0) return -1;
 
-	fseek(in, 68, SEEK_CUR);		/* reserved */
+	if (fseek(in, 68, SEEK_CUR) < 0)	/* reserved */
+		return -1;
 
 	for (i = 0; i < hlen; i++) {
-		int x = read8(in);
+		int x = read8(in, &error);
+		if (error != 0) return -1;
 
 		if (x == 0)			/* end? */
 			break;
@@ -58,12 +67,18 @@ static int read_file_header(FILE *in, struct archived_file_header_tag *hdrp)
 		hdrp->method = x & 0x7f;
 		fread(hdrp->name, 1, 11, in);
 		hdrp->name[12] = 0;
-		hdrp->orig_size = read32l(in);
-		read32l(in);
-		read32l(in);
-		x = read32l(in);
-		hdrp->compressed_size = read32l(in);
-		hdrp->offset = read32l(in);
+		hdrp->orig_size = read32l(in, &error);
+		if (error != 0) return -1;
+		read32l(in, &error);
+		if (error != 0) return -1;
+		read32l(in, &error);
+		if (error != 0) return -1;
+		x = read32l(in, &error);
+		if (error != 0) return -1;
+		hdrp->compressed_size = read32l(in, &error);
+		if (error != 0) return -1;
+		hdrp->offset = read32l(in, &error);
+		if (error != 0) return -1;
 
 		if (x == 1)			/* deleted */
 			continue;
@@ -79,7 +94,7 @@ static int read_file_header(FILE *in, struct archived_file_header_tag *hdrp)
 		break;
 	}
 
-	return 1;
+	return 0;
 }
 
 /* read file data, assuming header has just been read from in
@@ -111,7 +126,7 @@ static int arcfs_extract(FILE *in, FILE *out)
 	unsigned char *data, *orig_data;
 	int exitval = 0;
 
-	if (!read_file_header(in, &hdr))
+	if (read_file_header(in, &hdr) < 0)
 		return -1;
 
 	if (hdr.method == 0)

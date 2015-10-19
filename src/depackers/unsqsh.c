@@ -334,19 +334,19 @@ static int decrunch_sqsh(FILE * f, FILE * fo)
 	unsigned char *src, *dest;
 	int srclen, destlen;
 
-	if (read32b(f) != 0x58504b46)	/* XPKF */
+	if (read32b(f, NULL) != 0x58504b46)	/* XPKF */
 		goto err;
 
-	srclen = read32b(f);
+	srclen = read32b(f, NULL);
 
 	/* Sanity check */
 	if (srclen <= 8 || srclen > 0x100000)
 		goto err;
 
-	if (read32b(f) != 0x53515348)	/* SQSH */
+	if (read32b(f, NULL) != 0x53515348)	/* SQSH */
 		goto err;
 
-	destlen = read32b(f);
+	destlen = read32b(f, NULL);
 	if (destlen < 0 || destlen > 0x100000)
 		goto err;
 

@@ -12,7 +12,7 @@ TEST(test_write_file_8bit)
 	fclose(f);
 
 	f = fopen("write_test", "rb");
-	x = read8(f);
+	x = read8(f, NULL);
 	fail_unless(x == 0x66, "read error");
 }
 END_TEST
