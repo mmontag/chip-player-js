@@ -294,10 +294,11 @@ static int decrunch_zip(FILE *in, FILE *out)
   if (offset < 0)
     return -1;
 
-  fseek(in, offset, SEEK_SET);
+  if (fseek(in, offset, SEEK_SET) < 0)
+    return -1;
 
   if (kunzip_file_with_name(in,out) < 0)
-     return -1;
+    return -1;
 
   return 0;
 }
