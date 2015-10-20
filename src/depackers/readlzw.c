@@ -257,27 +257,41 @@ unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
 	struct local_data *data;
 
 	if ((data = malloc(sizeof (struct local_data))) == NULL) {
-		return NULL;
+		goto err;
 	}
 
 	if ((buf2 = malloc(in_len)) == NULL) {
 		//perror("read_lzw_dynamic");
-		free(data);
-		return NULL;
+		goto err2;
 	}
 
 	pos = ftell(f);
-	fread(buf2, 1, in_len, f);
+	if (fread(buf2, 1, in_len, f) != in_len) {
+		if (~q & XMP_LZW_QUIRK_DSYM) {
+			goto err3;
+		}
+	}
 	b = _convert_lzw_dynamic(buf2, max_bits, use_rle, in_len, orig_len, q, data);
 	memcpy(buf, b, orig_len);
 	size = q & NOMARCH_QUIRK_ALIGN4 ? ALIGN4(data->nomarch_input_size) :
 						data->nomarch_input_size;
-	fseek(f, pos + size, SEEK_SET);
+	if (fseek(f, pos + size, SEEK_SET) < 0) {
+		goto err4;
+	}
 	free(b);
 	free(buf2);
 	free(data);
 
 	return buf;
+
+    err4:
+        free(b);
+    err3:
+        free(buf2);
+    err2:
+	free(data);
+    err:
+        return NULL;
 }
 
 /* uggghhhh, this is agonisingly painful. It turns out that
