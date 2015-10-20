@@ -93,29 +93,24 @@ struct am_instrument {
 	int16 fq;		/* base frequency */
 };
 
-static int is_am_instrument(FILE *nt, int i)
+static int is_am_instrument(HIO_HANDLE *nt, int i)
 {
-	int err;
 	char buf[2];
 	int16 wf;
 
-	fseek(nt, 144 + i * 120, SEEK_SET);
-
-	if (fread(buf, 1, 2, nt) < 2)
-		return 0;
-
+	hio_seek(nt, 144 + i * 120, SEEK_SET);
+	hio_read(buf, 1, 2, nt);
 	if (memcmp(buf, "AM", 2))
 		return 0;
-
-	fseek(nt, 24, SEEK_CUR);
-	wf = read16b(nt, &err);
-	if (err != 0 || wf < 0 || wf > 3)
+	hio_seek(nt, 24, SEEK_CUR);
+	wf = hio_read16b(nt);
+	if (hio_error(nt) || wf < 0 || wf > 3)
 		return 0;
 
 	return 1;
 }
 
-static int read_am_instrument(struct module_data *m, FILE *nt, int i)
+static int read_am_instrument(struct module_data *m, HIO_HANDLE *nt, int i)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_instrument *xxi = &mod->xxi[i];
@@ -125,40 +120,28 @@ static int read_am_instrument(struct module_data *m, FILE *nt, int i)
 	struct am_instrument am;
 	char *wave;
 	int a, b;
-	int err;
 	int8 am_noise[1024];
 
-	fseek(nt, 144 + i * 120 + 2 + 4, SEEK_SET);
-	am.l0 = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.a1l = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.a1s = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.a2l = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.a2s = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.sl = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.ds = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.st = read16b(nt, &err);
-	if (err != 0) return -1;
-	read16b(nt, &err);
-	if (err != 0) return -1;
-	am.rs = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.wf = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.p_fall = -(int16) read16b(nt, &err);
-	if (err != 0) return -1;
-	am.v_amp = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.v_spd = read16b(nt, &err);
-	if (err != 0) return -1;
-	am.fq = read16b(nt, &err);
-	if (err != 0) return -1;
+	hio_seek(nt, 144 + i * 120 + 2 + 4, SEEK_SET);
+	am.l0  = hio_read16b(nt);
+	am.a1l = hio_read16b(nt);
+	am.a1s = hio_read16b(nt);
+	am.a2l = hio_read16b(nt);
+	am.a2s = hio_read16b(nt);
+	am.sl  = hio_read16b(nt);
+	am.ds  = hio_read16b(nt);
+	am.st  = hio_read16b(nt);
+	hio_read16b(nt);
+	am.rs  = hio_read16b(nt);
+	am.wf  = hio_read16b(nt);
+	am.p_fall = -(int16) hio_read16b(nt);
+	am.v_amp = hio_read16b(nt);
+	am.v_spd = hio_read16b(nt);
+	am.fq  = hio_read16b(nt);
+
+	if (hio_error(nt)) {
+		return -1;
+	}
 
 #if 0
 	printf
@@ -314,7 +297,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	char *tracker;
 	char filename[1024];
 	char buf[16];
-	FILE *nt;
+	HIO_HANDLE *nt;
 	int am_synth;
 
 	LOAD_INIT();
@@ -322,15 +305,15 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	/* See if we have the synth parameters file */
 	am_synth = 0;
 	snprintf(filename, 1024, "%s%s.NT", m->dirname, m->basename);
-	if ((nt = fopen(filename, "rb")) == NULL) {
+	if ((nt = hio_open(filename, "rb")) == NULL) {
 		snprintf(filename, 1024, "%s%s.nt", m->dirname, m->basename);
-		if ((nt = fopen(filename, "rb")) == NULL) {
+		if ((nt = hio_open(filename, "rb")) == NULL) {
 			snprintf(filename, 1024, "%s%s.AS", m->dirname,
 				 m->basename);
-			if ((nt = fopen(filename, "rb")) == NULL) {
+			if ((nt = hio_open(filename, "rb")) == NULL) {
 				snprintf(filename, 1024, "%s%s.as", m->dirname,
 					 m->basename);
-				nt = fopen(filename, "rb");
+				nt = hio_open(filename, "rb");
 			}
 		}
 	}
@@ -338,7 +321,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	tracker = "Startrekker";
 
 	if (nt) {
-		if (fread(buf, 1, 16, nt) != 16) {
+		if (hio_read(buf, 1, 16, nt) != 16) {
 			goto err;
 		}
 		if (memcmp(buf, "ST1.2 ModuleINFO", 16) == 0) {
@@ -486,14 +469,14 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 
 	if (nt) {
-		fclose(nt);
+		hio_close(nt);
 	}
 
 	return 0;
 
       err:
 	if (nt) {
-		fclose(nt);
+		hio_close(nt);
 	}
 
 	return -1;
