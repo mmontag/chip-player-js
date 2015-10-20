@@ -116,7 +116,7 @@ int iff_register(iff_handle opaque, char *id,
 	if (f == NULL)
 		return -1;
 
-	strncpy(f->id, id, 4);	/* coverity[buffer_size_warning] */
+	strncpy(f->id, id, 4);
 	f->loader = loader;
 
 	list_add_tail(&f->list, &data->iff_list);
