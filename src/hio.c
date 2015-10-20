@@ -284,6 +284,13 @@ int hio_eof(HIO_HANDLE *h)
 	}
 }
 
+int hio_error(HIO_HANDLE *h)
+{
+	int error = h->error;
+	h->error = 0;
+	return error;
+}
+
 HIO_HANDLE *hio_open(void *path, char *mode)
 {
 	HIO_HANDLE *h;

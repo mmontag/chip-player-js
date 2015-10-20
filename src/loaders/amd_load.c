@@ -188,6 +188,9 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 
 	for (i = 0; i < stored_tracks; i++) {
 		w = hio_read16l(f);
+		if (hio_error(f)) {
+			return -1;
+		}
 
 		/* Sanity check */
 		if (w >= mod->trk || mod->xxt[w] != NULL) {
@@ -203,6 +206,9 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 
 			/* check event packing */
 			b = hio_read8(f);	/* Effect parameter */
+			if (hio_error(f)) {
+				return -1;
+			}
 			if (b & 0x80) {
 				r += (b & 0x7f) - 1;
 				continue;
@@ -234,6 +240,9 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read(&afh.ins[i].reg, 11, 1, f);
 	}
 	afh.len = hio_read8(f);
+	if (afh.len >= 128) {
+		return -1;
+	}
 	afh.pat = hio_read8(f);
 	hio_read(&afh.order, 128, 1, f);
 	hio_read(&afh.magic, 9, 1, f);
