@@ -54,7 +54,11 @@ int t;
 
   for (t=0; t<count; t++)
   {
-    s[t]=getc(in);
+    int x = getc(in);
+    if (x < 0) {
+      return -1;
+    }
+    s[t]=x;
   }
 
   s[t]=0;
@@ -163,8 +167,11 @@ struct inflate_data data;
   if (header.extra_field == NULL)
     goto err2;
 
-  read_chars(in,header.file_name,header.file_name_length);
-  read_chars(in,(char *)header.extra_field,header.extra_field_length);
+  if (read_chars(in,header.file_name,header.file_name_length) < 0)
+    goto err2;
+
+  if (read_chars(in,(char *)header.extra_field,header.extra_field_length) < 0)
+    goto err2;
 
   marker=ftell(in);
 
@@ -235,7 +242,11 @@ char name[1024];
       if (name_size > 1023) {
 	name_size = 1023;
       }
-      read_chars(in,name,name_size);
+
+      if (read_chars(in,name,name_size) < 0) {
+        return -1;
+      }
+
       name[name_size]=0;
 
       fseek(in,marker,SEEK_SET); /* and part 2 of nasty code */
