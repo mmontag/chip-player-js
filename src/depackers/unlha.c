@@ -1476,9 +1476,7 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
           memset(text, ' ', (size_t) dicsiz);
 
         if (DecodeStart(dd) < 0) {
-          free(dd->text);
-          free(dd);
-          return -1;
+          goto error;
         }
 
         --dicsiz; /* now used with AND */
@@ -1489,9 +1487,7 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
 
           c = DecodeC(dd);
           if (c < 0) {
-            free(dd->text);
-            free(dd);
-            return -1;  
+            goto error;
           }
 
 	  if (dd->error)
@@ -1501,9 +1497,7 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
           {
             int res = fputc(c, out);
             if (res < 0) {
-              free(dd->text);
-              free(dd);
-              return -1;
+              goto error;
             }
             text[dd->loc++] = res;
             dd->loc &= dicsiz;
@@ -1516,7 +1510,11 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
             dd->count += c;
             while(c--)
             {
-              text[dd->loc++] = fputc(text[i++ & dicsiz], out);
+              int res = fputc(text[i++ & dicsiz], out);
+              if (res < 0) {
+                goto error;
+              }        
+              text[dd->loc++] = res;
               dd->loc &= dicsiz;
             }
           }
@@ -1532,6 +1530,11 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
   else
     err = -1;
   return err;
+
+error:
+  free(dd->text);
+  free(dd);
+  return -1;
 }
 
 /*
