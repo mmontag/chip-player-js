@@ -208,7 +208,9 @@ static int decrunch_pp(FILE *f, FILE *fo)
 	 goto err;
     }
 
-    fread (packed, plen, 1, f);
+    if (fread(packed, 1, plen, f) != plen) {
+         goto err;
+    }
 
     /* Hmmh... original pp20 only support efficiency from 9 9 9 9 up to 9 10 12 13, afaik
      * but the xfd detection code says this... *sigh*
