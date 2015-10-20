@@ -204,8 +204,12 @@ static int block_unpack_8bit(struct block *block, struct sub_block *sub,
 	bb.count = 0;
 	bb.buffer = 0;
 
-	fseek(out, sub->unpk_pos, SEEK_SET);
-	fseek(in, block->tt_entries, SEEK_SET);
+	if (fseek(out, sub->unpk_pos, SEEK_SET) < 0) {
+		return -1;
+	}
+	if (fseek(in, block->tt_entries, SEEK_SET) < 0) {
+		return -1;
+	}
 
 	for (j = 0; j < block->sub_blk; ) {
 		uint32 size = sub[j].unpk_size;
