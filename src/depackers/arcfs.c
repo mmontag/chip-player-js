@@ -65,7 +65,9 @@ static int read_file_header(FILE *in, struct archived_file_header_tag *hdrp)
 			break;
 
 		hdrp->method = x & 0x7f;
-		fread(hdrp->name, 1, 11, in);
+		if (fread(hdrp->name, 1, 11, in) != 11) {
+			return -1;
+		}
 		hdrp->name[12] = 0;
 		hdrp->orig_size = read32l(in, &error);
 		if (error != 0) return -1;
@@ -108,16 +110,22 @@ static unsigned char *read_file_data(FILE *in,
 	unsigned char *data;
 	int siz = hdrp->compressed_size;
 
-	if ((data = malloc(siz)) == NULL)
-		return NULL;
-
-	fseek(in, hdrp->offset, SEEK_SET);
+	if ((data = malloc(siz)) == NULL) {
+		goto err;
+	}
+	if (fseek(in, hdrp->offset, SEEK_SET) < 0) {
+		goto err2;
+	}
 	if (fread(data, 1, siz, in) != siz) {
-		free(data);
-		data = NULL;
+		goto err2;
 	}
 
 	return data;
+
+    err2:
+	free(data);
+    err:
+	return NULL;
 }
 
 static int arcfs_extract(FILE *in, FILE *out)
