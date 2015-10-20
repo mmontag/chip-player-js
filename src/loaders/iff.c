@@ -31,8 +31,8 @@
 
 struct iff_data {
 	struct list_head iff_list;
-	int id_size;
-	int flags;
+	unsigned id_size;
+	unsigned flags;
 };
 
 iff_handle iff_new()
