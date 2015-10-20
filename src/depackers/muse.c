@@ -29,10 +29,11 @@ static int decrunch_muse(FILE *f, FILE *fo)
 {                                                          
 	uint32 checksum;
   
-	fseek(f, 24, SEEK_SET);
-	inflate(f, fo, &checksum, 0);
+	if (fseek(f, 24, SEEK_SET) < 0) {
+		return -1;
+	}
 
-	return 0;
+	return inflate(f, fo, &checksum, 0);
 }
 
 struct depacker muse_depacker = {
