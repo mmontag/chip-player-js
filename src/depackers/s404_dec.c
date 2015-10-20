@@ -385,7 +385,9 @@ static int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
   src = buf = malloc(st.st_size);
   if (src == NULL)
     return -1;
-  fread(buf, 1, st.st_size, in);
+  if (fread(buf, 1, st.st_size, in) != st.st_size) {
+    goto error;
+  }
 
   if (checkS404File((uint32 *) src, /*s,*/ &oLen, &pLen, &sLen)) {
     /*fprintf(stderr,"S404 Error: checkS404File() failed..\n");*/
