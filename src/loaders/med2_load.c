@@ -203,11 +203,14 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
 		}
 
-		if (mod->xxs[i].len > 0)
+		if (mod->xxs[i].len > 0) {
 			mod->xxi[i].nsm = 1;
+		}
 
-		if (!strlen((char *)mod->xxi[i].name) && !mod->xxs[i].len)
+		if (!strlen((char *)mod->xxi[i].name) && !mod->xxs[i].len) {
+			hio_close(s);
 			continue;
+		}
 
 		D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
 			i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
