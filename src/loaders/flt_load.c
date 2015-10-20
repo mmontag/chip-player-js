@@ -338,7 +338,9 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	tracker = "Startrekker";
 
 	if (nt) {
-		fread(buf, 1, 16, nt);
+		if (fread(buf, 1, 16, nt) != 16) {
+			goto err;
+		}
 		if (memcmp(buf, "ST1.2 ModuleINFO", 16) == 0) {
 			am_synth = 1;
 			tracker = "Startrekker 1.2";
