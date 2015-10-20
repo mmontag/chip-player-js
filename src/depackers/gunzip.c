@@ -69,7 +69,9 @@ static int decrunch_gzip(FILE *in, FILE *out)
 
 	if (member.flg & FLAG_FEXTRA) {
 		int xlen = read16l(in, NULL);
-		fseek(in, xlen, SEEK_CUR);
+		if (fseek(in, xlen, SEEK_CUR) < 0) {
+			return -1;
+		}
 	}
 
 	if (member.flg & FLAG_FNAME) {
