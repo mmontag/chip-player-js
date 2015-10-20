@@ -231,8 +231,12 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 			D_(D_CRIT "ilen=%d\n", ilen);
 			return -1;
 		}
-		(void) fseek(f, -4, SEEK_CUR);
-		(void) fread(buf, ilen, 1, f);		/* instrument header */
+		if (fseek(f, -4, SEEK_CUR) < 0) {
+			return -1;
+		}
+		if (fread(buf, ilen, 1, f) != 1) {	/* instrument header */
+			return -1;
+		}
 		buf[26] = 0;
 		fwrite(buf, ilen, 1, fo);
 		nsmp = readmem16l(buf + 27);
