@@ -525,6 +525,10 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 skip_test:
 
+    if (mod->chn >= XMP_MAX_CHANNELS) {
+        return -1;
+    }
+
     mod->trk = mod->chn * mod->pat;
 
     for (i = 0; i < mod->ins; i++) {
