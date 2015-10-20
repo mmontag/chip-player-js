@@ -147,6 +147,7 @@ static char *oggdec(FILE *f, int len, int res, int *newlen)
 
 	read32b(f, &error);
 	if (error != 0 || fread(data, 1, len - 4, f) != len - 4) {
+		free(data);
 		return NULL;
 	}
 
