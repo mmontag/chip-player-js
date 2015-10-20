@@ -1014,8 +1014,16 @@ int inflate(FILE *in, FILE *out, uint32 *checksum, int is_zip)
 #endif
 
 if (!is_zip) {
-  CMF=getc(in);
-  FLG=getc(in);
+  int x;
+  if ((x = getc(in)) < 0) {
+    goto err3;
+  }
+  CMF=x;
+
+  if ((x = getc(in)) < 0) {
+    goto err3;
+  }
+  FLG=x;
 
 #ifdef DEBUG
   printf("   CMF: %d\n",CMF);
