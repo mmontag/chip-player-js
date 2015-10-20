@@ -209,7 +209,7 @@ static int decrunch_pp(FILE *f, FILE *fo)
     }
 
     if (fread(packed, 1, plen, f) != plen) {
-         goto err;
+         goto err1;
     }
 
     /* Hmmh... original pp20 only support efficiency from 9 9 9 9 up to 9 10 12 13, afaik
