@@ -1098,7 +1098,11 @@ if (!is_zip) {
 
       for (t=0; t<block_len; t++)
       {
-        huffman.window[huffman.window_ptr++]=getc(in);
+        res = getc(in);
+        if (res < 0) {
+          goto err3;
+        }
+        huffman.window[huffman.window_ptr++]=res;
 
         if (huffman.window_ptr>=WINDOW_SIZE)
         {
