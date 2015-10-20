@@ -250,9 +250,11 @@ static int block_unpack_8bit(struct block *block, struct sub_block *sub,
 		if (pos >= size) {
 			if (++j >= block->sub_blk)
 				break;
-;
+
 			pos = 0;
-			fseek(out, sub[j].unpk_pos, SEEK_SET);
+			if (fseek(out, sub[j].unpk_pos, SEEK_SET) < 0) {
+				return -1;
+			}
 		}
 	}
 
