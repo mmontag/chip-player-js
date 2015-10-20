@@ -1738,7 +1738,9 @@ static int get_header(FILE *f, struct lha_data *data)
 			if (error != 0) {
 				return -1;
 			}
-			fseek(f, size - 2, SEEK_CUR);
+			if (fseek(f, size - 2, SEEK_CUR) < 0) {
+				return -1;
+			}
 			data->packed_size -= size;
 		}
 		break;
@@ -1811,7 +1813,9 @@ static int decrunch_lha(FILE *in, FILE *out)
 #endif
 
 		if (exclude_match(data.name)) {
-			fseek(in, data.packed_size, SEEK_CUR);
+			if (fseek(in, data.packed_size, SEEK_CUR) < 0) {
+				return -1;
+			}
 			continue;
 		}
 		return LhA_Decrunch(in, out, data.original_size, data.method);
