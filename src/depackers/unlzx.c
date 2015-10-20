@@ -1100,14 +1100,14 @@ static int decrunch_lzx(FILE *f, FILE *fo)
 	struct LZXDecrData *decr;
 
 	if (fo == NULL)
-		return -1;
+		goto err;
 
 	decr = calloc(1, sizeof(struct LZXDecrData));
 	if (decr == NULL)
-		return -1;
+		goto err;
 
 	if (fseek(f, 10, SEEK_CUR) < 0)		/* skip header */
-		return -1;
+		goto err2;
 
 	crc32_init_A();
 	decr->outfile = fo;
@@ -1116,6 +1116,11 @@ static int decrunch_lzx(FILE *f, FILE *fo)
 	free(decr);
 
 	return 0;
+
+    err2:
+	free(decr);
+    err:
+	return -1;
 }
 
 struct depacker lzx_depacker = {
