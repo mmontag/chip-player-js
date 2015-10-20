@@ -201,7 +201,9 @@ struct inflate_data data;
   free(header.file_name);
   free(header.extra_field);
 
-  fseek(in,marker+header.compressed_size,SEEK_SET);
+  if (fseek(in,marker+header.compressed_size,SEEK_SET) < 0) {
+    goto err;
+  }
 
   if ((header.general_purpose_bit_flag&8)!=0)
   {
@@ -231,12 +233,18 @@ char name[1024];
   while(1)
   {
     curr=ftell(in);
+    if (curr < 0) {
+      return -1;
+    }
     i=read_zip_header(in,&header);
     if (i==-1) break;
 
     /*if (skip_offset<0 || curr>skip_offset)*/
     {
       marker=ftell(in);  /* nasty code.. please make it nice later */
+      if (marker < 0) {
+        return -1;
+      }
 
       name_size = header.file_name_length;
       if (name_size > 1023) {
@@ -249,16 +257,20 @@ char name[1024];
 
       name[name_size]=0;
 
-      fseek(in,marker,SEEK_SET); /* and part 2 of nasty code */
+      if (fseek(in,marker,SEEK_SET) < 0) { /* and part 2 of nasty code */
+        return -1;
+      }
 
       if (!exclude_match(name)) {
         break;
       }
     }
 
-    fseek(in,header.compressed_size+
+    if (fseek(in,header.compressed_size+
              header.file_name_length+
-             header.extra_field_length,SEEK_CUR);
+             header.extra_field_length,SEEK_CUR) < 0) {
+      return -1;
+    }
   }
 
   if (i!=-1)
