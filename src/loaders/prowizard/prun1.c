@@ -59,6 +59,12 @@ static int depack_pru1 (HIO_HANDLE *in, FILE *out)
 			header[1] = hio_read8(in);
 			header[2] = hio_read8(in);
 			header[3] = hio_read8(in);
+
+			/* Sanity check */
+			if (header[1] >= 37) {
+				return -1;
+			}
+
 			c1 = header[0] & 0xf0;
 			c3 = (header[0] & 0x0f) << 4;
 			c3 |= header[2];
