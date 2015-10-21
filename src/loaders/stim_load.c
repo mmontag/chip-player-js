@@ -93,7 +93,7 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(&sh.order, 128, 1, f);
 
 	/* Sanity check */
-	if (sh.nos > 31 || sh.len > 256 || sh.pat > 64) {
+	if (sh.nos > 31 || sh.len > 128 || sh.pat > 64) {
 		return -1;
 	}
 
