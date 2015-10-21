@@ -84,6 +84,10 @@ static int depack_xann(HIO_HANDLE *in, FILE *out)
 			fxt = hio_read8(in);
 			fxp = hio_read8(in);
 
+			if (hio_error(in) || note >= 74) {
+				return -1;
+			}
+
 			switch (fxt) {
 			case 0x00:	/* no fxt */
 				fxt = 0x00;
