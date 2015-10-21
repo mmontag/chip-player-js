@@ -299,6 +299,7 @@ HIO_HANDLE *hio_open(void *path, char *mode)
 	if (h == NULL)
 		goto err;
 	
+	h->error = 0;
 	h->type = HIO_HANDLE_TYPE_FILE;
 	h->handle.file = fopen(path, mode);
 	if (h->handle.file == NULL)
@@ -326,6 +327,7 @@ HIO_HANDLE *hio_open_mem(void *ptr, long size)
 	if (h == NULL)
 		return NULL;
 	
+	h->error = 0;
 	h->type = HIO_HANDLE_TYPE_MEMORY;
 	h->handle.mem = mopen(ptr, size);
 	h->size = size;
@@ -341,6 +343,7 @@ HIO_HANDLE *hio_open_file(FILE *f)
 	if (h == NULL)
 		return NULL;
 	
+	h->error = 0;
 	h->type = HIO_HANDLE_TYPE_FILE;
 	h->handle.file = f /*fdopen(fileno(f), "rb")*/;
 	h->size = get_size(f);
