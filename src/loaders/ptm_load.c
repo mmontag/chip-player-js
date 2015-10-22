@@ -131,8 +131,8 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     /* Sanity check */
-    if (pfh.ordnum > 256 || pfh.insnum > 255 || pfh.patnum > 256 ||
-      pfh.chnnum > XMP_MAX_CHANNELS) {
+    if (pfh.ordnum > 256 || pfh.insnum > 255 || pfh.patnum > 128 ||
+      pfh.chnnum > 32) {
 	return -1;
     }
 
