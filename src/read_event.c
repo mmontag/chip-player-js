@@ -1460,8 +1460,9 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 
 	if (is_smix_ins) {
 		sub = &smix->xxi[xc->ins - mod->ins].sub[0];
-		if (sub == NULL)
+		if (sub == NULL) {
 			return 0;
+		}
 
 		note = xc->key + sub->xpo;
 		smp = sub->sid;
@@ -1475,6 +1476,9 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	} else {
 		transp = mod->xxi[xc->ins].map[xc->key].xpo;
 		sub = get_subinstrument(ctx, xc->ins, xc->key);
+		if (sub == NULL) {
+			return 0;
+		}
 		note = xc->key + sub->xpo + transp;
 		smp = sub->sid;
 		if (mod->xxs[smp].len == 0)
@@ -1488,7 +1492,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	set_effect_defaults(ctx, note, sub, xc, 0);
 	set_period(ctx, note, sub, xc, 0);
 
-	if (e->ins && sub != NULL) {
+	if (e->ins) {
 		reset_envelopes(ctx, xc);
 	}
 
