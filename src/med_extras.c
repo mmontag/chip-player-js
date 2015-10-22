@@ -293,7 +293,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 			while (WT != 0xfd) ;
 			break;
 		case 0xfa:	/* JVS */
-			jws = WT;
+			jvs = WT;
 			break;
 		case 0xf7:	/* VWF */
 			ce->vwf = WT;
