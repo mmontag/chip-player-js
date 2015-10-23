@@ -90,7 +90,6 @@ int test_oxm(FILE *f)
 			return -1;
 		}
 		nsmp = readmem16l(buf + 27);
-		if (error != 0) return -1;
 
 		if (nsmp > 255)
 			return -1;
