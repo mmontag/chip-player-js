@@ -58,7 +58,11 @@ static int depack_crb(HIO_HANDLE *in, FILE *out)
 	for (i = 0; i < pat_max; i++) {
 		memset(pat, 0, 1024);
 		for (j = 0; j < 4; j++) {
-			taddr[i * 4 + j] = hio_tell(in);
+			int x = hio_tell(in);
+			if (x < 0) {
+				return -1;
+			}
+			taddr[i * 4 + j] = x;
 			for (k = 0; k < 64; k++) {
 				int y = k * 16 + j * 4;
 
@@ -72,7 +76,7 @@ static int depack_crb(HIO_HANDLE *in, FILE *out)
 					l = hio_tell(in);
 
 					/* Sanity check */
-					if (m >= 2048)
+					if (l < 0 || m >= 2048)
 						return -1;
 
 					hio_seek(in, taddr[m >> 2], SEEK_SET);
