@@ -24,7 +24,7 @@ struct smp {
 	uint8 vol;
 };
 
-static int depack_p4x (HIO_HANDLE *in, FILE *out)
+static int depack_p4x(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4, c5;
 	uint8 tmp[1024];
@@ -184,7 +184,9 @@ static int depack_p4x (HIO_HANDLE *in, FILE *out)
 					continue;
 				}
 
-				a = hio_tell(in);
+				if ((a = hio_tell(in)) < 0) {
+					return -1;
+				}
 
 				c5 = c2;
 				b = (c3 << 8) + c4 + trkdat_ofs + 4;
