@@ -36,7 +36,7 @@ static uint8 set_event(uint8 *x, uint8 c1, uint8 c2, uint8 c3)
 #define track(p,c,r) tdata[((int)(p) * 4 + (c)) * 512 + (r) * 4]
 
 
-static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int taddr[128][4])
+static int decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int taddr[128][4])
 {
     int i, j, k, l;
     int max_row;
@@ -45,7 +45,9 @@ static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int taddr[128
     long pos;
     uint8 c1, c2, c3, c4;
 
-    tdata_addr = hio_tell(in);
+    if ((tdata_addr = hio_tell(in)) < 0) {
+        return -1;
+    }
 
     for (i = 0; i < npat; i++) {
 	max_row = 63;
@@ -100,7 +102,9 @@ static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int taddr[128
 		    int lines;
 
 		    c4 = hio_read8(in);
-		    pos = hio_tell(in);
+		    if ((pos = hio_tell(in)) < 0) {
+                        return -1;
+                    }
 		    lines = c2;
 		    hio_seek(in, -(((int)c3 << 8) + c4), SEEK_CUR);
 
@@ -170,6 +174,8 @@ static void decode_pattern(HIO_HANDLE *in, int npat, uint8 *tdata, int taddr[128
 	    }
 	}
     }
+
+    return 0;
 }
 
 
@@ -296,7 +302,10 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
     write32b(out, PW_MOD_MAGIC);	/* M.K. */
 
     /* patterns */
-    decode_pattern(in, npat, tdata, taddr);
+    if (decode_pattern(in, npat, tdata, taddr) < 0) {
+        free(tdata);
+        return -1;
+    }
 
     /* write pattern data */
     for (i = 0; i < npat; i++) {
