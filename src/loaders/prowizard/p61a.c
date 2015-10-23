@@ -144,7 +144,9 @@ static int depack_p61a(HIO_HANDLE *in, FILE *out)
     fwrite(ptable, 128, 1, out);	/* write pattern table */
     write32b(out, PW_MOD_MAGIC);	/* write ptk ID */
 
-    tdata_addr = hio_tell(in);
+    if ((tdata_addr = hio_tell(in)) < 0) {
+        return -1;
+    }
 
     /* rewrite the track data */
     for (i = 0; i < npat; i++) {
@@ -290,7 +292,9 @@ static int depack_p61a(HIO_HANDLE *in, FILE *out)
 			c4 = hio_read8(in);
 	                z = (c3 << 8) + c4;
 	            }
-	            a = hio_tell(in);
+	            if ((a = hio_tell(in)) < 0) {
+                        return -1;
+                    }
 	            c5 = c2;
 
 	            hio_seek(in, -z, SEEK_CUR);
