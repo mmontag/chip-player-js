@@ -94,6 +94,8 @@ static int depack_np3(HIO_HANDLE *in, FILE *out)
 	for (i = 0; i < npat; i++) {
 		memset(tmp, 0, 1024);
 		for (j = 0; j < 4; j++) {
+			int x;
+
 			hio_seek(in, trk_start + trk_addr[i][3 - j], SEEK_SET);
 			for (k = 0; k < 64; k++) {
 				int x = k * 16 + j * 4;
@@ -136,8 +138,13 @@ static int depack_np3(HIO_HANDLE *in, FILE *out)
 					break;
 			}
 
-			if (hio_tell(in) > smp_addr)
-				smp_addr = hio_tell(in);
+			x = hio_tell(in);
+			if (x < 0) {
+				return -1;
+			}
+			if (x > smp_addr) {
+				smp_addr = x;
+			}
 		}
 		fwrite(tmp, 1024, 1, out);
 	}
