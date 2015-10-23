@@ -74,17 +74,19 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 
 	size = (data->flags & IFF_LITTLE_ENDIAN) ? hio_read32l(f) : hio_read32b(f);
 
-	if (data->flags & IFF_CHUNK_ALIGN2)
+	if (data->flags & IFF_CHUNK_ALIGN2) {
 		size = (size + 1) & ~1;
+	}
 
-	if (data->flags & IFF_CHUNK_ALIGN4)
+	if (data->flags & IFF_CHUNK_ALIGN4) {
 		size = (size + 3) & ~3;
+	}
 
-	if (data->flags & IFF_FULL_CHUNK_SIZE)
+	if (data->flags & IFF_FULL_CHUNK_SIZE) {
+		if (size < data->id_size + 4)
+			return -1;
 		size -= data->id_size + 4;
-
-	if (size < 0)
-		return -1;
+	}
 
 	return iff_process(opaque, m, id, size, f, parm);
 }
