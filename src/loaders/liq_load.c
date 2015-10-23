@@ -138,7 +138,7 @@ static const uint8 fx[] = {
 	FX_VIBRATO,
 	NONE,
 	FX_TONE_VSLIDE,
-	FX_VIBRA_VSLIDE,
+	FX_VIBRA_VSLIDE
 };
 
 
@@ -505,7 +505,7 @@ test_event:
 	event->fxp = x1;
 
 	/* Sanity check */
-	if (event->fxt > 26) {
+	if (event->fxt > 24) {
 		return -1;
 	}
 
