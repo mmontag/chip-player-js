@@ -3,8 +3,7 @@ Stable versions
 
 4.3.10 ():
 	Fix bugs reported by Coverity Scan:
-	- fix out of bounds access in IT envelope points
-	- fix out of bounds access in XM envelope points
+	- fix out of bounds access in IT/XM/MDL/IMF envelopes
 	- fix out of bounds read in STX effect decoding
 	- fix RTM maximum sample name length
 	- fix AC1D converter number of patterns underflow

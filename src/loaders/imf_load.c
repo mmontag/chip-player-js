@@ -450,7 +450,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	xxi->aei.flg |= ii.env[0].flg & 0x04 ?  XMP_ENVELOPE_LOOP : 0;
 
 	/* Sanity check */
-	if (xxi->aei.npt >= XMP_MAX_ENV_POINTS) {
+	if (xxi->aei.npt >= 16) {
 	    return -1;
 	}
 
