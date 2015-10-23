@@ -100,7 +100,7 @@ static void fix_env(int i, struct xmp_envelope *ei, struct mdl_envelope *env,
 
     if (index[i] >= 0) {
 	ei->flg = XMP_ENVELOPE_ON;
-	ei->npt = 16;
+	ei->npt = 15;
 
 	for (j = 0; j < envnum; j++) {
     	    if (index[i] == env[j].num) {
