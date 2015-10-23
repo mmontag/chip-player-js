@@ -193,8 +193,10 @@ static int read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 patt
     uint16 delay;
     uint16 patdata;
 
-    uint32 storepos;
-    storepos = hio_tell(f);
+    int storepos;
+    if ((storepos = hio_tell(f)) < 0) {
+        return -1;
+    }
 
     /* count how many abk positions are used in this pattern */
     position = 0;
