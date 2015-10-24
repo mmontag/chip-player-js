@@ -738,7 +738,7 @@ void mmd_info_text(HIO_HANDLE *f, struct module_data *m, int offset)
 	type = hio_read16b(f);
 	if (type == 1) {	/* 1 = ASCII */
 		len = hio_read32b(f);
-		if (len != 0 && len < 0xffffffff) {
+		if (len != 0 && len < 0x7fffffff) {
 			m->comment = malloc(len + 1);
 			if (m->comment == NULL)
 				return;
