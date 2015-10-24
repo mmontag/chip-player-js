@@ -247,7 +247,7 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		return -1;
 
 	for (j = 0; j < rows * mod->chn; j++) {
-		uint8 note, ins;
+		uint8 note, ins, fxt;
 
 		e = &EVENT(data->pattern, j % mod->chn, j / mod->chn);
 		memset(e, 0, sizeof(struct xmp_event));
@@ -260,7 +260,11 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			e->ins = 1 + ins;
 		}
 
-		e->fxt = fx[hio_read8(f)];
+		fxt = hio_read8(f);
+		if (fxt >= 32) {
+			return -1;
+		}
+		e->fxt = fx[fxt];
 		e->fxp = hio_read8(f);
 
 		if ((e->fxt == FX_VOLSET) && (e->fxp > 0x40)) {
