@@ -192,7 +192,10 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/*
 	 * Check if we have a MEDV chunk at the end of the file
 	 */
-	pos = hio_tell(f);
+	if ((pos = hio_tell(f)) < 0) {
+		return -1;
+	}
+
 	hio_seek(f, 0, SEEK_END);
 	if (hio_tell(f) > 2000) {
 		hio_seek(f, -1024, SEEK_CUR);
@@ -319,7 +322,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Scan patterns to determine number of channels */
 	mod->chn = 0;
-	pos = hio_tell(f);
+	if ((pos = hio_tell(f)) < 0) {
+		return -1;
+	}
 
 	for (i = 0; i < mod->pat; i++) {
 		int size, plen, chn;
@@ -363,10 +368,13 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 #endif
 
 		size = hio_read8(f);	/* pattern control block */
-		pos = hio_tell(f);
-		chn = hio_read8(f);
-		if (chn > mod->chn)
+		if ((pos = hio_tell(f)) < 0) {
 			return -1;
+		}
+		chn = hio_read8(f);
+		if (chn > mod->chn) {
+			return -1;
+		}
 		rows = (int)hio_read8(f) + 1;
 		plen = hio_read16b(f);
 #ifdef MED4_DEBUG
@@ -514,7 +522,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			_len = hio_read32b(f);
 			_type = (int16)hio_read16b(f);
-			_pos = hio_tell(f);
+			if ((_pos = hio_tell(f)) < 0) {
+				return -1;
+			}
 
 			if (_type == 0 || _type == -2) {
 				num_smp++;
@@ -562,6 +572,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (type == -2) {			/* Hybrid */
 			int length, type;
 			int pos = hio_tell(f);
+			if (pos < 0) {
+				return -1;
+			}
 
 			hio_read32b(f);	/* ? - MSH 00 */
 			hio_read16b(f);	/* ? - ffff */
@@ -631,6 +644,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (type == -1) {		/* Synthetic */
 			int pos = hio_tell(f);
+			if (pos < 0) {
+				return -1;
+			}
 
 			hio_read32b(f);	/* ? - MSH 00 */
 			hio_read16b(f);	/* ? - ffff */
@@ -775,7 +791,9 @@ parse_iff:
 		if ((size = hio_read32b(f)) <= 0)
 			break;
 
-		pos = hio_tell(f);
+		if ((pos = hio_tell(f)) < 0) {
+			return -1;
+		}
 
 		switch (id) {
 		case MAGIC4('M','E','D','V'):
