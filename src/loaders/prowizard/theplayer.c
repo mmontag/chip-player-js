@@ -190,7 +190,7 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
     uint8 ptable[128];
     int isize[31];
     uint8 delta = 0;
-    uint8 pack = 0;
+    /*uint8 pack = 0;*/
     int taddr[128][4];
     int sdata_addr = 0;
     int ssize = 0;
@@ -234,8 +234,10 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
 
     nins &= 0x3f;
 
+#if 0
     if (pack == 1)
 	/* unpacked_ssize =*/ hio_read32b(in);	/* unpacked sample data size */
+#endif
 
     pw_write_zero(out, 20);		/* write title */
 
