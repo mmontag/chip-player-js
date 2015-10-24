@@ -48,10 +48,13 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 	}
 
 	memset(tmp, 0, 50);
-	for (i = nins; i < 31; i++)
+	for (i = nins; i < 31; i++) {
 		fwrite(tmp, 30, 1, out);
+	}
 
-	pos = hio_tell(in);
+	if ((pos = hio_tell(in)) < 0) {
+		return -1;
+	}
 	hio_seek(in, seq_offs, SEEK_SET);
 
 	i = 0;
