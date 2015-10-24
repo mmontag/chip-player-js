@@ -710,8 +710,13 @@ skip_test:
 	    }
 	} else {
 	    uint8 buf[5];
-	    long pos = hio_tell(f);
-            int num = hio_read(buf, 1, 5, f);
+            long pos;
+            int num;
+
+	    if ((pos = hio_tell(f)) < 0) {
+                return -1;
+            }
+            num = hio_read(buf, 1, 5, f);
 
 	    if (num == 5 && !memcmp(buf, "ADPCM", 5)) {
 		flags |= SAMPLE_FLAG_ADPCM;
