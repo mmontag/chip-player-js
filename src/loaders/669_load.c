@@ -244,7 +244,7 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    event->fxp = LSN(ev[2]);
 		    break;
 		case FX_PER_VIBRATO:
-		    event->fxp = 0x40 || LSN(ev[2]);
+		    event->fxp = 0x40 | LSN(ev[2]);
 		    break;
 		case FX_FINETUNE:
 		    event->fxp = 0x80 + (LSN(ev[2]) << 4);
