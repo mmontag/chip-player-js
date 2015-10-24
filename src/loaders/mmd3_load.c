@@ -398,14 +398,17 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		D_(D_INFO "sample %d smpl_offset = 0x%08x", i, smpl_offset);
 
-		if (smpl_offset == 0)
+		if (smpl_offset == 0) {
 			continue;
+		}
 
 		hio_seek(f, start + smpl_offset, SEEK_SET);
 		instr.length = hio_read32b(f);
 		instr.type = hio_read16b(f);
 
-		pos = hio_tell(f);
+		if ((pos = hio_tell(f)) < 0) {
+			return -1;
+		}
 
 		if (expdata_offset && i < expdata.i_ext_entries) {
 			struct xmp_instrument *xxi = &mod->xxi[i];
