@@ -448,6 +448,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	    if (b & S3M_FX_FOLLOWS) {
 		event->fxt = hio_read8(f);
+		if (event->fxt > 26) {
+                    goto err3;
+		}
 		event->fxp = hio_read8(f);
 		xlat_fx(c, event);
 		pat_len -= 2;
