@@ -159,6 +159,9 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint8 b;
 		uint32 len, start, end;
 		long pos = hio_tell(f);
+		if (pos < 0) {
+			return -1;
+		}
 		for (i = 0; i < mod->ins; i++) {
 			b = hio_read8(f);
 			if (b != 0 && b != 1) {
