@@ -209,6 +209,9 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 	npat = read16l(f, NULL);
 	nins = read16l(f, NULL);
 	
+	if (npat > 256 || nins > 128)
+		return -1;
+
 	(void) fseek(f, 60 + hlen, SEEK_SET);
 
 	for (i = 0; i < npat; i++) {
