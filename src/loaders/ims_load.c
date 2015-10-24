@@ -118,8 +118,8 @@ static int ims_test(HIO_HANDLE *f, char *t, const int start)
 
     ih.len = hio_read8(f);
     ih.zero = hio_read8(f);
-    hio_read (&ih.orders, 128, 1, f);
-    hio_read (&ih.magic, 4, 1, f);
+    hio_read(&ih.orders, 128, 1, f);
+    hio_read(&ih.magic, 4, 1, f);
   
     if (ih.zero > 1)		/* not sure what this is */
 	return -1;
@@ -177,6 +177,9 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     ih.len = hio_read8(f);
+    if (ih.len > 128) {
+        return -1;
+    }
     ih.zero = hio_read8(f);
     hio_read (&ih.orders, 128, 1, f);
     hio_read (&ih.magic, 4, 1, f);
