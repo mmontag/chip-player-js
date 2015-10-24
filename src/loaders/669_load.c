@@ -107,7 +107,7 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
     sfh.nop = hio_read8(f);		/* Number of patterns (0-128) */
 
     /* Sanity check */
-    if (sfh.nop > 128)
+    if (sfh.nos > 64 || sfh.nop > 128)
 	return -1;
 
     sfh.loop = hio_read8(f);		/* Loop order number */
