@@ -558,6 +558,9 @@ skip_test:
 	    return -1;
 
 	pos = hio_tell(f);
+	if (pos < 0) {
+		return -1;
+	}
 
 	for (j = 0; j < (64 * mod->chn); j++) {
             int period;
