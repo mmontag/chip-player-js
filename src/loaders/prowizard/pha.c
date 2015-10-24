@@ -42,27 +42,31 @@ static int depack_pha(HIO_HANDLE *in, FILE *out)
 	memset(onote, 0, 4 * 4);
 	memset(ocpt, 0, 4 * 2);
 
-	pw_write_zero(out, 20);			/* title */
+	pw_write_zero(out, 20);				/* title */
 
 	for (i = 0; i < 31; i++) {
-		pw_write_zero(out, 22);			/*sample name */
+		int vol, fin, lps, lsz;
+
+		pw_write_zero(out, 22);			/* sample name */
 		write16b(out, size = hio_read16b(in));	/* size */
 		ssize += size * 2;
-		hio_read8(in);
-		write8(out, 0);				/* finetune byte */
-		write8(out, hio_read8(in));			/* volume */
-		write16b(out, hio_read16b(in));		/* loop start */
-		write16b(out, hio_read16b(in));		/* loop size */
+		hio_read8(in);				/* ??? */
+		
+		vol = hio_read8(in);			/* volume */
+		lps = hio_read16b(in);			/* loop start */
+		lsz = hio_read16b(in);			/* loop size */
+		hio_read32b(in);			/* sample address */
+		hio_read8(in);				/* ??? */
 
-		hio_read32b(in);
+		fin = hio_read8(in);			/* finetune - 11 */
+		if (fin != 0) {
+			fin += 11;
+		}
+		write8(out, fin);
+		write8(out, vol);
+		write16b(out, lps);
+		write16b(out, lsz);
 
-		c1 = hio_read8(in);
-		if(c1 != 0x00)
-			c1 += 0x0b;
-		fseek(out, -6, SEEK_END);
-		write8(out, c1);
-		fseek(out, 0, SEEK_END);
-		hio_seek(in, 1, SEEK_CUR);
 	}
 
 	hio_seek(in, 14, SEEK_CUR);		/* bypass unknown 14 bytes */
