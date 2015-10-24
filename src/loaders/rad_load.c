@@ -92,7 +92,9 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* Read instruments */
 	D_(D_INFO "Read instruments");
 
-	pos = hio_tell(f);
+	if ((pos = hio_tell(f)) < 0) {
+		return -1;
+	}
 
 	mod->ins = 0;
 	while ((b = hio_read8(f)) != 0) {
