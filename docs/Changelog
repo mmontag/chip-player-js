@@ -16,6 +16,7 @@ Stable versions
 	- fix resource leak in module load error handling
 	- fix event decoding in LIQ loader
 	- fix JVS command parameter in MED synth
+	- fix 669 effect decoding
 	- fix sanity check in PTM orders loading
 	- add sanity check to smix sample loading
 	- add sanity check to PP21 format converter

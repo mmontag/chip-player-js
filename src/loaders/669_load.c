@@ -232,7 +232,7 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		 * command was encountered, there will be no effect (except
 		 * for command 'f', it always changes the speed). 
 		 */
-		if (MSN(ev[2] < 5) && !event->ins)
+		if (MSN(ev[2]) < 5 && !event->ins)
 		    continue;
 
 		event->fxt = fx[MSN(ev[2])];
