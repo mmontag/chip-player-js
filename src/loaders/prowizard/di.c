@@ -11,11 +11,34 @@
 #include "prowiz.h"
 
 
+static int write_event(uint8 c1, uint8 c2, uint8 fxp, FILE *out)
+{
+	uint8 note, ins, fxt;
+	uint8 p[4];
+
+	note = ((c1 << 4) & 0x30) | ((c2 >> 4) & 0x0f);
+	if (note >= 37) {
+		/* di.nightmare has note 49! */
+		uint32 x = 0;
+		fwrite(&x, 4, 1, out);
+		return 0;
+	}
+	p[0] = ptk_table[note][0];
+	p[1] = ptk_table[note][1];
+	ins = (c1 >> 2) & 0x1f;
+	p[0] |= (ins & 0xf0);
+	p[2] = (ins << 4) & 0xf0;
+	fxt = c2 & 0x0f;
+	p[2] |= fxt;
+	p[3] = fxp;
+	fwrite(p, 4, 1, out);
+
+	return 0;
+}
+
 static int depack_di(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3;
-	uint8 note, ins, fxt, fxp;
-	uint8 ptk_tab[4];
 	uint8 nins, npat, max;
 	uint8 ptable[128];
 	uint16 paddr[128];
@@ -83,41 +106,22 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 	for (i = 0; i <= max; i++) {
 		hio_seek(in, paddr[i], 0);
 		for (k = 0; k < 256; k++) {	/* 256 = 4 voices * 64 rows */
-			memset(ptk_tab, 0, 4);
 			c1 = hio_read8(in);
 			if ((c1 & 0x80) == 0) {
 				c2 = hio_read8(in);
-				note = ((c1 << 4) & 0x30) | ((c2 >> 4) & 0x0f);
-				ptk_tab[0] = ptk_table[note][0];
-				ptk_tab[1] = ptk_table[note][1];
-				ins = (c1 >> 2) & 0x1f;
-				ptk_tab[0] |= (ins & 0xf0);
-				ptk_tab[2] = (ins << 4) & 0xf0;
-				fxt = c2 & 0x0f;
-				ptk_tab[2] |= fxt;
-				fxp = 0x00;
-				ptk_tab[3] = fxp;
-				fwrite (ptk_tab, 4, 1, out);
-				continue;
+				if (write_event(c1, c2, 0, out) < 0) {
+					return -1;
+				}
+			} else if (c1 == 0xff) {
+				uint32 x = 0;
+				fwrite(&x, 1, 4, out);
+			} else {
+				c2 = hio_read8(in);
+				c3 = hio_read8(in);
+				if (write_event(c1, c2, c3, out) < 0) {
+					return -1;
+				}
 			}
-			if (c1 == 0xff) {
-				memset(ptk_tab, 0, 4);
-				fwrite(ptk_tab, 4, 1, out);
-				continue;
-			}
-			c2 = hio_read8(in);
-			c3 = hio_read8(in);
-			note = (((c1 << 4) & 0x30) | ((c2 >> 4) & 0x0f));
-			ptk_tab[0] = ptk_table[note][0];
-			ptk_tab[1] = ptk_table[note][1];
-			ins = (c1 >> 2) & 0x1f;
-			ptk_tab[0] |= (ins & 0xf0);
-			ptk_tab[2] = (ins << 4) & 0xf0;
-			fxt = c2 & 0x0f;
-			ptk_tab[2] |= fxt;
-			fxp = c3;
-			ptk_tab[3] = fxp;
-			fwrite(ptk_tab, 4, 1, out);
 		}
 	}
 

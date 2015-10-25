@@ -4308,11 +4308,11 @@ and 768 (300h)
 
   0000 0000  0000 0000  0000 0000
   ||    ||      | |  |  |       |
- -| \\  /  \\    /   \\/    \\     /
-|  sample relativ effect  effect
-|  number  note           value
-|         number
-|------------description bit set to 1
+  | \  /  \    /   \/    \     /
+  |  sample relativ effect  effect
+  |  number  note           value
+  |         number
+  |------------description bit set to 1
 
 *second case
 
