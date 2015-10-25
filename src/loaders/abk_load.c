@@ -480,17 +480,24 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     mod->chn = AMOS_ABK_CHANNELS;
     mod->pat = hio_read16b(f);
+
+    /* Sanity check */
+    if (mod->pat > 256) {
+        return -1;
+    }
+
     mod->trk = mod->chn * mod->pat;
 
     /* move to the start of the instruments section. */
     hio_seek(f, AMOS_MAIN_HEADER + main_header.instruments_offset, SEEK_SET);
     mod->ins = hio_read16b(f);
-    mod->smp = mod->ins;
 
     /* Sanity check */
-    if (mod->pat > 256 || mod->ins > 255) {
+    if (mod->ins > 255) {
 	return -1;
     }
+
+    mod->smp = mod->ins;
 
     /* Read and convert instruments and samples */
 
