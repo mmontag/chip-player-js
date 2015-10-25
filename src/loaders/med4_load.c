@@ -272,10 +272,15 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->pat = hio_read16b(f);
 	mod->len = hio_read16b(f);
+
+	if (hio_error(f)) {
+		return -1;
+	}
+
 #ifdef MED4_DEBUG
 	printf("pat=%x len=%x\n", mod->pat, mod->len);
 #endif
-	if (mod->len > XMP_MAX_MOD_LENGTH)
+	if (mod->pat > 256 || mod->len > XMP_MAX_MOD_LENGTH)
 		return -1;
 	hio_read(mod->xxo, 1, mod->len, f);
 

@@ -97,6 +97,9 @@ static int get_ordr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	int i;
 
 	mod->len = hio_read8(f);
+	if (hio_error(f)) {
+		return -1;
+	}
 
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = hio_read8(f);

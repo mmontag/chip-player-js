@@ -82,7 +82,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read32b(f);			/* reserved */
 
 	/* Sanity check */
-	if (mod->ins > 64) {
+	if (mod->chn > XMP_MAX_CHANNELS || mod->ins > 64) {
 		return -1;
 	}
 

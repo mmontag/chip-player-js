@@ -175,7 +175,7 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 	stored_tracks = hio_read16l(f);
 	
 	/* Sanity check */
-	if (stored_tracks <= 0) {
+	if (hio_error(f) || stored_tracks <= 0) {
 		return -1;
 	}
 

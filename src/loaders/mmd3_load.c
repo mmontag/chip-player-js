@@ -265,6 +265,10 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read32b(f);		/* dumps */
 		mmdinfo_offset = hio_read32b(f);
 
+		if (hio_error(f)) {
+			return -1;
+		}
+
 		hio_seek(f, start + songname_offset, SEEK_SET);
 		D_(D_INFO "expdata.songnamelen = %d", expdata.songnamelen);
 		for (i = 0; i < expdata.songnamelen; i++) {
