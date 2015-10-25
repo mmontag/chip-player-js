@@ -151,6 +151,10 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		sfh.ins[i].paralen = hio_read16l(f);	/* Length in paragraphs */
 	}
 
+	if (hio_error(f)) {
+		return -1;
+	}
+
 	if (!strncmp((char *)sfh.magic, "BMOD2STM", 8))
 		bmod2stm = 1;
 
