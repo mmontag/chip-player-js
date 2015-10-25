@@ -90,6 +90,12 @@ static int depack_unic2(HIO_HANDLE *in, FILE *out)
 
 			ins = ((c1 >> 2) & 0x10) | ((c2 >> 4) & 0x0f);
 			note = c1 & 0x3f;
+
+			/* Sanity check */
+			if (note >= 37) {
+				return -1;
+			}
+
 			fxt = c2 & 0x0f;
 			fxp = c3;
 
