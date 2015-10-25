@@ -107,6 +107,12 @@ static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_read(&dh.unknown, 19, 1, f);
     dh.pat = hio_read8(f);
     dh.len = hio_read8(f);
+
+    /* Sanity check */
+    if (dh.len > 127) {
+        return -1;
+    }
+
     hio_read(&dh.ord, 128, 1, f);
 
     for (i = 0; i < 31; i++)
