@@ -160,7 +160,7 @@ int pw_check(unsigned char *b, int s, struct xmp_test_info *info)
 			if (info != NULL) {
 				memcpy(info->name, title, 21);
 				strncpy(info->type, pw_format[i]->name,
-							XMP_NAME_SIZE);
+							XMP_NAME_SIZE - 1);
 			}
 			return 0;
 		}
