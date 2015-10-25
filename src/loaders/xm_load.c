@@ -91,6 +91,9 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 
 	xph.datasize = hio_read16l(f);
 	hio_seek(f, xph.length - headsize, SEEK_CUR);
+	if (hio_error(f)) {
+            goto err;
+	}
 
 	r = xph.rows;
 	if (r == 0)
