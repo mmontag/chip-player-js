@@ -283,7 +283,10 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mh.restart = hio_read8(f);
     hio_read(&mh.order, 128, 1, f);
     memset(magic, 0, 8);
-    hio_read(magic, 4, 1, f);
+    hio_read(magic, 1, 4, f);
+    if (hio_error(f)) {
+        return -1;
+    }
 
     for (i = 0; mod_magic[i].ch; i++) {
 	if (!(strncmp (magic, mod_magic[i].magic, 4))) {
