@@ -40,18 +40,24 @@ static int depack_skyt(HIO_HANDLE *in, FILE *out)
 	hio_read32b(in);
 	hio_read32b(in);			/* bypass "SKYT" ID */
 
-	write8(out, pat_pos = hio_read8(in) + 1);	/* pattern table lenght */
+	pat_pos = hio_read8(in) + 1;		/* pattern table lenght */
+	if (pat_pos >= 128) {
+		return -1;
+	}
+	write8(out, pat_pos);
 	write8(out, 0x7f);			/* write NoiseTracker byte */
 
 	/* read track numbers ... and deduce pattern list */
 	for (i = 0; i < pat_pos; i++) {
-		for (j = 0; j < 4; j++)
+		for (j = 0; j < 4; j++) {
 			trkval[i][j] = hio_read16b(in);
+		}
 	}
 
 	/* write pseudo pattern list */
-	for (i = 0; i < 128; i++)
+	for (i = 0; i < 128; i++) {
 		write8(out, i < pat_pos ? i : 0);
+	}
 
 	write32b(out, PW_MOD_MAGIC);		/* write ptk's ID */
 
