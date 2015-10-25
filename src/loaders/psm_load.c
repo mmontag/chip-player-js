@@ -121,6 +121,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		hio_read(buf, 1, 13, f);	/* sample filename */
 		hio_read(buf, 1, 24, f);	/* sample description */
+		buf[24] = 0;			/* add string termination */
 		strncpy((char *)mod->xxi[i].name, (char *)buf, 24);
 		adjust_string((char *)mod->xxi[i].name);
 		p_smp[i] = hio_read32l(f);
