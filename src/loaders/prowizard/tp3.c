@@ -165,8 +165,12 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 				p[3] = fxp;
 			}
 			where = hio_tell(in);
-			if (where > max_trk_ofs)
+			if (where < 0) {
+				return -1;
+			}
+			if (where > max_trk_ofs) {
 				max_trk_ofs = where;
+			}
 		}
 		fwrite(pdata, 1024, 1, out);
 	}
