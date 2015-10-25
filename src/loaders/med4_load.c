@@ -514,7 +514,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mask <<= 1;	/* no instrument #0 */
 
 	/* obtain number of samples */
-	pos = hio_tell(f);
+	if ((pos = hio_tell(f)) < 0) {
+		return -1;
+	}
 	num_smp = 0;
 	{
 		int _len, _type;
