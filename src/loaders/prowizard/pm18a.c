@@ -50,8 +50,8 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 		ssize += size * 2;
 		write8(out, fin[i] = hio_read8(in));	/* finetune table */
 		write8(out, hio_read8(in));		/* volume */
-		write16b(out, hio_read16b(in));	/* loop start */
-		write16b(out, hio_read16b(in));	/* loop size */
+		write16b(out, hio_read16b(in));		/* loop start */
+		write16b(out, hio_read16b(in));		/* loop size */
 	}
 
 	write8(out, num_pat = hio_read16b(in) / 4);	/* pattern table length */
@@ -131,7 +131,11 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 
 				per = ((p[0] & 0x0f) << 8) | p[1];
 				fxt = p[2] & 0x0f;
-				fine = fin[oldins[k] - 1];
+				if (oldins[k] > 0 && oldins[k] < 32) {
+					fine = fin[oldins[k] - 1];
+				} else {
+					fine = 0;
+				}
 
 				/* Sanity check */
 				if (fine >= 16) {
