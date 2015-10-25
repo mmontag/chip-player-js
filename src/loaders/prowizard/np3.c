@@ -37,6 +37,9 @@ static int depack_np3(HIO_HANDLE *in, FILE *out)
 	pw_write_zero(out, 20);			/* write title */
 
 	len = hio_read16b(in) >> 1;		/* size of pattern list */
+	if (len > 128) {
+		return -1;
+	}
 	hio_read16b(in);			/* 2 unknown bytes */
 	/*tsize =*/ hio_read16b(in);		/* read track data size */
 

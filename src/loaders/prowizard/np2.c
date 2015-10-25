@@ -68,8 +68,12 @@ static int depack_np2(HIO_HANDLE *in, FILE *out)
 	npat = 0;
 	for (i = 0; i < len; i++) {
 		ptable[i] = hio_read16b(in) >> 3;
-		if (ptable[i] > npat)
+		if (ptable[i] > 255) {
+			return -1;
+		}
+		if (ptable[i] > npat) {
 			npat = ptable[i];
+		}
 	}
 	npat++;
 
