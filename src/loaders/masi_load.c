@@ -253,6 +253,9 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read(data->pnam + i * 8, 1, data->sinaria ? 8 : 4, f);
 
 	rows = hio_read16l(f);
+	if (hio_error(f)) {
+		return -1;
+	}
 
 	if (pattern_tracks_alloc(mod, i, rows) < 0)
 		return -1;
@@ -261,6 +264,9 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	do {
 		rowlen = hio_read16l(f) - 2;
+		if (hio_error(f)) {
+			return -1;
+		}
 		while (rowlen > 0) {
 			flag = hio_read8(f);
 	
