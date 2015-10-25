@@ -87,7 +87,8 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->chn = hio_read8(f);
 
 	/* Sanity check */
-	if (mod->ins == 0 || mod->len == 0 || mod->trk == 0 || mod->chn == 0) {
+	if (mod->ins == 0 || mod->len == 0 || mod->trk == 0
+		|| mod->chn == 0 || mod->chn > XMP_MAX_CHANNELS) {
 		return -1;
 	}
 
