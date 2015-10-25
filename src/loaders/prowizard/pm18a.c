@@ -183,11 +183,11 @@ static int test_p18a(uint8 * data, char *t, int s)
 	if (data[21] != 0xd2)
 		return -1;
 
+#if 0
 	/* test 3 */
 	PW_REQUEST_DATA(s, 4460);
-	/*j =*/ readmem32b(data + 4456);
+	j = readmem32b(data + 4456);
 
-#if 0
 	if ((start + j + 4456) > in_size) {
 		Test = BAD;
 		return;
