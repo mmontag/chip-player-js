@@ -15,7 +15,7 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3;
 	uint8 note, ins, fxt, fxp;
-	uint8 ptk_tab[5];
+	uint8 ptk_tab[4];
 	uint8 nins, npat, max;
 	uint8 ptable[128];
 	uint16 paddr[128];
@@ -26,8 +26,7 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 	int pos;
 
 	memset(ptable, 0, 128);
-	memset(ptk_tab, 0, 5);
-	memset(paddr, 0, 128);
+	memset(paddr, 0, 256);
 
 	pw_write_zero(out, 20);			/* title */
 
@@ -84,7 +83,7 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 	for (i = 0; i <= max; i++) {
 		hio_seek(in, paddr[i], 0);
 		for (k = 0; k < 256; k++) {	/* 256 = 4 voices * 64 rows */
-			memset(ptk_tab, 0, 5);
+			memset(ptk_tab, 0, 4);
 			c1 = hio_read8(in);
 			if ((c1 & 0x80) == 0) {
 				c2 = hio_read8(in);
@@ -102,8 +101,8 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 				continue;
 			}
 			if (c1 == 0xff) {
-				memset(ptk_tab, 0, 5);
-				fwrite (ptk_tab, 4, 1, out);
+				memset(ptk_tab, 0, 4);
+				fwrite(ptk_tab, 4, 1, out);
 				continue;
 			}
 			c2 = hio_read8(in);
