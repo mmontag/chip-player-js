@@ -24,115 +24,68 @@
 #include "common.h"
 
 
-inline uint8 read8(FILE *f, int *err)
+static void read_data(FILE *f, uint8 *x, int n, int v, int *err)
 {
-	uint8 x;
-
-	if (fread(&x, 1, 1, f) != 1) {
-		if  (err != NULL) {
-			*err = errno;
+	if (fread(x, 1, n, f) != n) {
+		if (err != NULL) {
+			if (ferror(f)) {
+				*err = errno;
+			} else {
+				*err = feof(f) ? EOF : -2;
+			}
 		}
-		x = 0xff;
+		memset(x, v, n);
 	} else if (err != NULL) {
 		*err = 0;
 	}
+}
 
+inline uint8 read8(FILE *f, int *err)
+{
+	uint8 x;
+	read_data(f, &x, 1, 0xff, err);
 	return x;
 }
 
 int8 read8s(FILE *f, int *err)
 {
 	int8 x;
-
-	if (fread(&x, 1, 1, f) != 1) {
-		if (err != NULL) {
-			*err = errno;
-		}
-		x = 0;
-	} else if (err != NULL) {
-		*err = 0;
-	}
-
+	read_data(f, (uint8 *)&x, 1, 0, err);
 	return x;
 }
 
 uint16 read16l(FILE *f, int *err)
 {
 	uint8 x[2];
-
-	if (fread(&x, 1, 2, f) != 2) {
-		if (err != NULL) {
-			*err = errno;
-		}
-		memset(x, 0xff, 2);
-	} else if (err != NULL) {
-		*err = 0;
-	}
-
+	read_data(f, x, 2, 0xff, err);
 	return ((uint16)x[1] << 8) | x[0];
 }
 
 uint16 read16b(FILE *f, int *err)
 {
 	uint8 x[2];
-
-	if (fread(&x, 1, 2, f) != 2) {
-		if (err != NULL) {
-			*err = errno;
-		}
-		memset(x, 0xff, 2);
-	} else if (err != NULL) {
-		*err = 0;
-	}
-
+	read_data(f, x, 2, 0xff, err);
 	return ((uint16)x[0] << 8) | x[1];
 }
 
 uint32 read24l(FILE *f, int *err)
 {
 	uint8 x[3];
-
-	if (fread(&x, 1, 3, f) != 3) {
-		if (err != NULL) {
-			*err = errno;
-		}
-		memset(x, 0xff, 3);
-	} else if (err != NULL) {
-		*err = 0;
-	}
-
+	read_data(f, x, 3, 0xff, err);
 	return ((uint32)x[2] << 16) | ((uint32)x[1] << 8) | x[0];
 }
 
 uint32 read24b(FILE *f, int *err)
 {
 	uint8 x[3];
-
-	if (fread(&x, 1, 3, f) != 3) {
-		if (err != NULL) {
-			*err = errno;
-		}
-		memset(x, 0xff, 3);
-	} else if (err != NULL) {
-		*err = 0;
-	}
-
+	read_data(f, x, 3, 0xff, err);
 	return ((uint32)x[0] << 16) | ((uint32)x[1] << 8) | x[2];
 }
 
 uint32 read32l(FILE *f, int *err)
 {
 	uint8 x[4];
-
-	if (fread(&x, 1, 4, f) != 4) {
-		if (err != NULL) {
-			*err = errno;
-		}
-		memset(x, 0xff, 4);
-	} else if (err != NULL) {
-		*err = 0;
-	}
-
+	read_data(f, x, 4, 0xff, err);
 	return ((uint32)x[3] << 24) | ((uint32)x[2] << 16) |
 					((uint32)x[1] << 8) | x[0];
 }
@@ -140,16 +93,7 @@ uint32 read32l(FILE *f, int *err)
 uint32 read32b(FILE *f, int *err)
 {
 	uint8 x[4];
-
-	if (fread(&x, 1, 4, f) != 4) {
-		if (err != NULL) {
-			*err = errno;
-		}
-		memset(x, 0xff, 4);
-	} else if (err != NULL) {
-		*err = 0;
-	}
-
+	read_data(f, x, 4, 0xff, err);
 	return ((uint32)x[0] << 24) | ((uint32)x[1] << 16) |
 					((uint32)x[2] << 8) | x[3];
 }

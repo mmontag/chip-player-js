@@ -157,6 +157,11 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	song.mastervol = hio_read8(f);
 	song.numsamples = hio_read8(f);
 
+	/* Sanity check */
+	if (song.numsamples > 63) {
+		return -1;
+	}
+
 	/*
 	 * convert header
 	 */

@@ -155,6 +155,10 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 
 		nsize = hio_read8(f);
+		if (hio_error(f)) {
+			return -1;
+		}
+
 		hasname = 0;
 		for (j = 0; j < nsize; j++) {
 			uint8 x = hio_read8(f);
