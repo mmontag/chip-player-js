@@ -57,7 +57,7 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 	char id[17] = "";
 
 	if (hio_read(id, 1, data->id_size, f) != data->id_size) {
-		hio_error(f);		/* clear error flag */
+		(void)hio_error(f);	/* clear error flag */
 		return 1;
 	}
 
