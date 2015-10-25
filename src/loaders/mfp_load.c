@@ -154,17 +154,13 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = mod->pat = hio_read8(f);
 	hio_read8(f);		/* restart */
 
-	for (i = 0; i < 128; i++)
-		mod->xxo[i] = hio_read8(f);
-
-#if 0
 	for (i = 0; i < 128; i++) {
 		mod->xxo[i] = hio_read8(f);
-		if (mod->xxo[i] > mod->pat)
-			mod->pat = mod->xxo[i];
 	}
-	mod->pat++;
-#endif
+
+	if (hio_error(f)) {
+		return -1;
+	}
 
 	mod->trk = mod->pat * mod->chn;
 
