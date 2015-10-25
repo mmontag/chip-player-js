@@ -89,7 +89,12 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mfh.patterns = hio_read8(f);	/* Number of patterns saved */
 	mfh.modlen = hio_read8(f);	/* Module length */
 	mfh.extralen = hio_read16l(f);	/* Length of the comment field */
+
 	mfh.samples = hio_read8(f);	/* Number of samples */
+	if (mfh.samples > 63) {
+		return -1;
+	}
+
 	mfh.attr = hio_read8(f);	/* Always zero */
 
 	mfh.rows = hio_read8(f);	/* Number rows per track */
