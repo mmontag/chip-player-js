@@ -155,6 +155,11 @@ static int depack_ksm(HIO_HANDLE *in, FILE *out)
 			for (k = 0; k < 4; k++) {
 				uint8 *t = &tdata[k][j * 3];
 
+				/* Sanity check */
+				if (t[0] >= 37) {
+					return -1;
+				}
+
 				memcpy(tmp + x + k * 4, ptk_table[t[0]], 2);
 				if ((t[1] & 0x0f) == 0x0d)
 					t[1] -= 0x03;
