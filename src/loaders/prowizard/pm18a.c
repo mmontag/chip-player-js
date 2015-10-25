@@ -96,6 +96,9 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 	refmax = 0;
 	for (j = 0; j < psize; j += 2) {
 		int x = hio_read16b(in);
+		if (hio_error(in)) {
+			return -1;
+		}
 		if (x > refmax)
 			refmax = x;
 	}
@@ -103,7 +106,10 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 	/* read "reference table" */
 	refmax += 1;			/* 1st value is 0 ! */
 	i = refmax * 4;			/* each block is 4 bytes long */
-	reftab = (uint8 *) malloc(i);
+	if ((reftab = (uint8 *)malloc(i)) == NULL) {
+		return -1;
+	}
+	
 	hio_read(reftab, i, 1, in);
 	hio_seek(in, 5226, SEEK_SET);	/* back to pattern data start */
 
@@ -126,6 +132,11 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 				per = ((p[0] & 0x0f) << 8) | p[1];
 				fxt = p[2] & 0x0f;
 				fine = fin[oldins[k] - 1];
+
+				/* Sanity check */
+				if (fine >= 16) {
+					goto err;
+				}
 
 				if (per != 0 && oldins[k] > 0 && fine != 0) {
 					for (l = 0; l < 36; l++) {
@@ -164,6 +175,10 @@ static int depack_p18a(HIO_HANDLE *in, FILE *out)
 	pw_move_data(out, in, ssize);
 
 	return 0;
+
+    err:
+	free(reftab);
+	return -1;
 }
 
 static int test_p18a(uint8 * data, char *t, int s)
