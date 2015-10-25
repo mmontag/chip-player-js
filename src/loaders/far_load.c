@@ -160,6 +160,10 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ffh2.patsize[i] = hio_read16l(f); /* Size of each pattern in bytes */
     }
 
+    if (hio_error(f)) {
+        return -1;
+    }
+
     mod->chn = 16;
     /*mod->pat=ffh2.patterns; (Error in specs? --claudio) */
     mod->len = ffh2.songlen;
