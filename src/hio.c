@@ -214,7 +214,11 @@ size_t hio_read(void *buf, size_t size, size_t num, HIO_HANDLE *h)
 	case HIO_HANDLE_TYPE_FILE:
 		ret = fread(buf, size, num, h->handle.file);
 		if (ret != num) {
-			h->error = errno;
+			if (ferror(h->handle.file)) {
+				h->error = errno;
+			} else {
+				h->error = feof(h->handle.file) ? EOF : -2;
+			}
 		}
 		break;
 	case HIO_HANDLE_TYPE_MEMORY:
