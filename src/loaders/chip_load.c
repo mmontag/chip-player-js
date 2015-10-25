@@ -78,6 +78,12 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read(&mh.magic, 4, 1, f);
 	mh.len = hio_read8(f);
+
+	/* Sanity check */
+	if (mh.len > 128) {
+		return -1;
+	}
+
 	mh.restart = hio_read8(f);
 	hio_read(tidx, 1024, 1, f);
 	hio_read16b(f);
