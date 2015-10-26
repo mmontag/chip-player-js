@@ -98,13 +98,12 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 
 			hio_seek(in, pat_ofs + trk_ofs[i][j], SEEK_SET);
 
-			for (k = 0; k < 64; k++) {
+			for (k = 0; k >= 0 && k < 64; k++) {
 				uint8 *p = pdata + k * 16 + j * 4;
 
 				c1 = hio_read8(in);
 				if ((c1 & 0xc0) == 0xc0) {
-					k += (0x100 - c1);
-					k -= 1;
+					k += 0x100 - c1 - 1;
 					continue;
 				}
 
