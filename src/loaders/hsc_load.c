@@ -117,7 +117,7 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (instrument_init(mod) < 0)
 	return -1;
 
-    hio_read (buf, 1, 128 * 12, f);
+    hio_read(buf, 1, 128 * 12, f);
     sid = buf;
     for (i = 0; i < mod->ins; i++, sid += 12) {
 	if (subinstrument_alloc(mod, i, 1) < 0)
@@ -138,8 +138,8 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Read orders */
     for (pat = i = 0; i < 51; i++) {
-	hio_read (&mod->xxo[i], 1, 1, f);
-	if (mod->xxo[i] & 0x80)
+	mod->xxo[i] = hio_read8(f);
+	if (mod->xxo[i] > 127)
 	    break;			/* FIXME: jump line */
 	if (mod->xxo[i] > pat)
 	    pat = mod->xxo[i];
@@ -165,7 +165,7 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
         for (r = 0; r < mod->xxp[i]->rows; r++) {
             for (c = 0; c < 9; c++) {
-	        hio_read (e, 1, 2, f);
+	        hio_read(e, 1, 2, f);
 	        event = &EVENT (i, c, r);
 		if (e[0] & 0x80) {
 		    ins[c] = e[1] + 1;
