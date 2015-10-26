@@ -397,6 +397,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_instrument *xxi = &mod->xxi[i];
 
 	hio_read(&ii.name, 32, 1, f);
+	ii.name[31] = 0;
 	hio_read(&ii.map, 120, 1, f);
 	hio_read(&ii.unused, 8, 1, f);
 	for (j = 0; j < 32; j++)
