@@ -163,7 +163,13 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		len = hio_read16l(f) - 4;
 		rows = hio_read8(f);
+		if (rows > 64) {
+			return -1;
+		}
 		chan = hio_read8(f);
+		if (chan > 32) {
+			return -1;
+		}
 
 		if (pattern_tracks_alloc(mod, i, rows) < 0)
 			return -1;
