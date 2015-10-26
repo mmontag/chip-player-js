@@ -81,7 +81,7 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Sanity check */
 	if (mh.len > 128) {
-		return -1;
+		goto err2;
 	}
 
 	mh.restart = hio_read8(f);

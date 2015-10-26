@@ -108,6 +108,12 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_read(&ffh.order, 256, 1, f);
     hio_read(&ffh.pbrk, 128, 1, f);
 
+    for (i = 0; i < 128; i++) {
+        if (ffh.pbrk[i] >= 64) {
+            return -1;
+        }
+    }
+
     for (i = 0; i < 64; i++) {
 	hio_read(&ffh.fih[i].name, 19, 1, f);
 	ffh.fih[i].loop_start = hio_read32l(f);
