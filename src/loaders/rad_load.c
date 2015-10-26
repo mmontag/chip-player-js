@@ -137,7 +137,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Read orders */
 	mod->len = hio_read8(f);
-	if (hio_error(f)) {
+	if (hio_error(f) || mod->len >= 128) {
 		return -1;
 	}
 
