@@ -129,10 +129,15 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 
 				ins = ((c2 >> 4) & 0x0f) | ((c1 >> 2) & 0x10);
 
-				if ((c1 & 0x40) == 0x40)
+				if ((c1 & 0x40) == 0x40) {
 					note = 0x7f - c1;
-				else
+				} else {
 					note = c1 & 0x3f;
+				}
+
+				if (note >= 37) {
+					return -1;
+				}
 
 				fxt = c2 & 0x0f;
 
