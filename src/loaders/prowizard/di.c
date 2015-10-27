@@ -54,6 +54,11 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 	pw_write_zero(out, 20);			/* title */
 
 	nins = hio_read16b(in);
+	/* Sanity check */
+	if (nins > 31) {
+		return -1;
+	}
+
 	seq_offs = hio_read32b(in);
 	/*pat_offs =*/ hio_read32b(in);
 	smp_offs = hio_read32b(in);
