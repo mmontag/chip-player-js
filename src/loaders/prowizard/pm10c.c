@@ -61,7 +61,14 @@ static int depack_p10c(HIO_HANDLE *in, FILE *out)
 		write16b(out, hio_read16b(in));		/* loop size */
 	}
 
-	write8(out, num_pat = hio_read16b(in) / 4);		/* pat table lenght */
+	num_pat = hio_read16b(in) / 4;			/* pat table length */
+
+	/* Sanity check */
+	if (num_pat > 128) {
+		return -1;
+	}
+
+	write8(out, num_pat);
 	write8(out, 0x7f);				/* NoiseTracker byte */
 
 	for (i = 0; i < 128; i++)
