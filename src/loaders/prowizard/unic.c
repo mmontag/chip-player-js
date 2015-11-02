@@ -101,6 +101,10 @@ static int depack_unic(HIO_HANDLE *in, FILE *out)
 			c2 = hio_read8(in);
 			c3 = hio_read8(in);
 
+			if (hio_error(in)) {
+				return -1;
+			}
+
 			ins = ((c1 >> 2) & 0x10) | ((c2 >> 4) & 0x0f);
 			note = c1 & 0x3f;
 			fxt = c2 & 0x0f;

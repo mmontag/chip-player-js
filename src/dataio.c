@@ -30,7 +30,7 @@
 } while (0)
 
 #define set_error(x) do {		\
-	if (err != NULL) *err = x;	\
+	if (err != NULL) *err = (x);	\
 } while (0)
 
 

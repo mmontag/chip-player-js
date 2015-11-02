@@ -68,10 +68,20 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 	}
 
 	nsmp = hio_read8(in);		/* read number of samples */
+
+	/* Sanity check */
+	if (nsmp > 31) {
+		return -1;
+	}
+
 	hio_read8(in);			/* bypass empty byte */
 	trkdat_ofs = hio_read32b(in);	/* read track data address */
 	trktab_ofs = hio_read32b(in);	/* read track table address */
 	smp_ofs = hio_read32b(in);	/* read sample data address */
+
+	if (hio_error(in)) {
+		return -1;
+	}
 
 	pw_write_zero(out, 20);		/* write title */
 

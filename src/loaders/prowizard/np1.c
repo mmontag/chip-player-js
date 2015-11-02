@@ -103,6 +103,10 @@ static int depack_np1(HIO_HANDLE *in, FILE *out)
 				c3 = hio_read8(in);
 				c4 = (c1 & 0xfe) / 2;
 
+				if (hio_error(in)) {
+					return -1;
+				}
+
 				tmp[x] = ((c1 << 4) & 0x10) | ptk_table[c4][0];
 				tmp[x + 1] = ptk_table[c4][1];
 

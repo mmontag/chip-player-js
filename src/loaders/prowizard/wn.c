@@ -54,6 +54,10 @@ static int depack_wn(HIO_HANDLE *in, FILE * out)
 			c3 = hio_read8(in);
 			c4 = hio_read8(in);
 
+			if (hio_error(in)) {
+				return -1;
+			}
+
 			write8(out, c1 * 0xf0 | ptk_table[c1 / 2][0]);
 			write8(out, ptk_table[c1 / 2][1]);
 			write8(out, ((c2 << 4) & 0xf0) | c3);
