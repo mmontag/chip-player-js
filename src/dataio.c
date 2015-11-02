@@ -24,78 +24,136 @@
 #include "common.h"
 
 
-static void read_data(FILE *f, uint8 *x, int n, int v, int *err)
-{
-	if (fread(x, 1, n, f) != n) {
-		if (err != NULL) {
-			if (ferror(f)) {
-				*err = errno;
-			} else {
-				*err = feof(f) ? EOF : -2;
-			}
-		}
-		memset(x, v, n);
-	} else if (err != NULL) {
-		*err = 0;
-	}
-}
+#define read_byte(x) do {		\
+	(x) = fgetc(f);			\
+	if ((x) < 0)  goto error;	\
+} while (0)
+
+#define set_error(x) do {		\
+	if (err != NULL) *err = x;	\
+} while (0)
+
 
 inline uint8 read8(FILE *f, int *err)
 {
-	uint8 x;
-	read_data(f, &x, 1, 0xff, err);
-	return x;
+	int a;
+
+	read_byte(a);
+	set_error(0);
+	return a;
+
+   error:
+	set_error(ferror(f) ? errno : EOF);
+	return 0xff;
 }
 
 int8 read8s(FILE *f, int *err)
 {
-	int8 x;
-	read_data(f, (uint8 *)&x, 1, 0, err);
-	return x;
+	int a;
+
+	read_byte(a);
+	set_error(0);
+	return (int8)a;
+
+   error:
+	set_error(ferror(f) ? errno : EOF);
+	return 0;
 }
 
 uint16 read16l(FILE *f, int *err)
 {
-	uint8 x[2];
-	read_data(f, x, 2, 0xff, err);
-	return ((uint16)x[1] << 8) | x[0];
+	int a, b;
+
+	read_byte(a);
+	read_byte(b);
+
+	set_error(0);
+	return ((uint16)b << 8) | a;
+
+    error:
+	set_error(ferror(f) ? errno : EOF);
+	return 0xffff;
 }
 
 uint16 read16b(FILE *f, int *err)
 {
-	uint8 x[2];
-	read_data(f, x, 2, 0xff, err);
-	return ((uint16)x[0] << 8) | x[1];
+	int a, b;
+
+	read_byte(a);
+	read_byte(b);
+
+	set_error(0);
+	return (a << 8) | b;
+
+    error:
+	set_error(ferror(f) ? errno : EOF);
+	return 0xffff;
 }
 
 uint32 read24l(FILE *f, int *err)
 {
-	uint8 x[3];
-	read_data(f, x, 3, 0xff, err);
-	return ((uint32)x[2] << 16) | ((uint32)x[1] << 8) | x[0];
+	int a, b, c;
+
+	read_byte(a);
+	read_byte(b);
+	read_byte(c);
+	
+	set_error(0);
+	return (c << 16) | (b << 8) | a;
+
+    error:
+	set_error(ferror(f) ? errno : EOF);
+	return 0xffffff;
 }
 
 uint32 read24b(FILE *f, int *err)
 {
-	uint8 x[3];
-	read_data(f, x, 3, 0xff, err);
-	return ((uint32)x[0] << 16) | ((uint32)x[1] << 8) | x[2];
+	int a, b, c;
+
+	read_byte(a);
+	read_byte(b);
+	read_byte(c);
+	
+	set_error(0);
+	return (a << 16) | (b << 8) | c;
+
+    error:
+	set_error(ferror(f) ? errno : EOF);
+	return 0xffffff;
 }
 
 uint32 read32l(FILE *f, int *err)
 {
-	uint8 x[4];
-	read_data(f, x, 4, 0xff, err);
-	return ((uint32)x[3] << 24) | ((uint32)x[2] << 16) |
-					((uint32)x[1] << 8) | x[0];
+	int a, b, c, d;
+
+	read_byte(a);
+	read_byte(b);
+	read_byte(c);
+	read_byte(d);
+
+	set_error(0);
+	return (d << 24) | (c << 16) | (b << 8) | a;
+
+    error:
+	set_error(ferror(f) ? errno : EOF);
+	return 0xffffffff;
 }
 
 uint32 read32b(FILE *f, int *err)
 {
-	uint8 x[4];
-	read_data(f, x, 4, 0xff, err);
-	return ((uint32)x[0] << 24) | ((uint32)x[1] << 16) |
-					((uint32)x[2] << 8) | x[3];
+	int a, b, c, d;
+
+	read_byte(a);
+	read_byte(b);
+	read_byte(c);
+	read_byte(d);
+
+	set_error(0);
+	return (a << 24) | (b << 16) | (c << 8) | d;
+
+    error:
+	set_error(ferror(f) ? errno : EOF);
+	return 0xffffffff;
 }
 
 uint16 readmem16l(uint8 *m)
