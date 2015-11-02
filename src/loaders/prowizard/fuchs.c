@@ -16,89 +16,81 @@ static int depack_fuchs(HIO_HANDLE *in, FILE *out)
 	uint8 *tmp;
 	uint8 max_pat;
 	/*int ssize;*/
-	int smp_len[16];
-	int loop_start[16];
-	int pat_size;
-	int i;
+	uint8 data[1080];
+	unsigned smp_len[16];
+	unsigned loop_start[16];
+	unsigned pat_size;
+	unsigned i;
 
 	memset(smp_len, 0, 16 * 4);
 	memset(loop_start, 0, 16 * 4);
+	memset(data, 0, 1080);
 
-	pw_write_zero(out, 1080);		/* write ptk header */
-	fseek(out, 0, SEEK_SET);
-	pw_move_data(out, in, 10);		/* read/write title */
+	hio_read(data, 1, 10, in);		/* read/write title */
 	/*ssize =*/ hio_read32b(in);		/* read all sample data size */
 
 	/* read/write sample sizes */
 	for (i = 0; i < 16; i++) {
-		fseek(out, 42 + i * 30, SEEK_SET);
 		smp_len[i] = hio_read16b(in);
-		write16b(out, smp_len[i] / 2);
+		data[42 + i * 30] = smp_len[i] >> 9;
+		data[43 + i * 30] = smp_len[i] >> 1;
 	}
 
 	/* read/write volumes */
 	for (i = 0; i < 16; i++) {
-		fseek(out, 45 + i * 30, SEEK_SET);
-		hio_seek(in, 1, SEEK_CUR);
-		write8(out, hio_read8(in));
+		data[45 + i * 30] = hio_read16b(in);
 	}
 
 	/* read/write loop start */
 	for (i = 0; i < 16; i++) {
-		fseek(out, 46 + i * 30, SEEK_SET);
 		loop_start[i] = hio_read16b(in);
-		write8(out, loop_start[i] / 2);
+		data[46 + i * 30] = loop_start[i] >> 1;
 	}
 
 	/* write replen */
 	for (i = 0; i < 16; i++) {
 		int loop_size;
 
-		fseek(out, 48 + i * 30, SEEK_SET);
 		loop_size = smp_len[i] - loop_start[i];
 		if (loop_size == 0 || loop_start[i] == 0) {
-			write16b(out, 0x0001);
+			data[49 + i * 30] = 1;
 		} else {
-			write16b(out, loop_size / 2);
+			data[48 + i * 30] = loop_size >> 9;
+			data[49 + i * 30] = loop_size >> 1;
 		}
 	}
 
 	/* fill replens up to 31st sample wiz $0001 */
 	for (i = 16; i < 31; i++) {
-		fseek(out, 48 + i * 30, SEEK_SET);
-		write16b(out, 0x0001);
+		data[49 + i * 30] = 1;
 	}
 
 	/* that's it for the samples ! */
 	/* now, the pattern list */
 
 	/* read number of pattern to play */
-	fseek(out, 950, SEEK_SET);
-	/* bypass empty byte (saved wiz a WORD ..) */
-	hio_seek(in, 1, SEEK_CUR);
-	write8(out, hio_read8(in));
-
-	/* write ntk byte */
-	write8(out, 0x7f);
+	data[950] = hio_read16b(in);
+	data[951] = 0x7f;
 
 	/* read/write pattern list */
 	for (max_pat = i = 0; i < 40; i++) {
-		uint8 pat;
-		hio_seek(in, 1, SEEK_CUR);
-		pat = hio_read8(in);
-		write8(out, pat);
-		if (pat > max_pat)
+		uint8 pat = hio_read16b(in);
+		data[952 + i] = pat;
+		if (pat > max_pat) {
 			max_pat = pat;
+		}
 	}
 
 	/* write ptk's ID */
-	fseek(out, 0, SEEK_END);
+	if (fwrite(data, 1, 1080, out) != 1080) {
+		return -1;
+	}
 	write32b(out, PW_MOD_MAGIC);
 
 	/* now, the pattern data */
 
 	/* bypass the "SONG" ID */
-	hio_seek(in, 4, 1);
+	hio_read32b(in);
 
 	/* read pattern data size */
 	pat_size = hio_read32b(in);
@@ -125,7 +117,7 @@ static int depack_fuchs(HIO_HANDLE *in, FILE *out)
 	free(tmp);
 
 	/* read/write sample data */
-	hio_seek(in, 4, SEEK_CUR);	/* bypass "INST" Id */
+	hio_read32b(in);			/* bypass "INST" Id */
 	for (i = 0; i < 16; i++) {
 		if (smp_len[i] != 0)
 			pw_move_data(out, in, smp_len[i]);
