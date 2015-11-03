@@ -1466,7 +1466,11 @@ static int32 LhA_Decrunch(FILE *in, FILE *out, int size, uint32 Method)
 
       dicsiz = 1 << dd->DicBit;
 
+#ifdef ENABLE_LARC
       offset = (Method == LARC_METHOD || Method == PMARC2_METHOD) ? 0x100 - 2 : 0x100 - 3;
+#else
+      offset = 0x100 - 3;
+#endif
 
       if((text = dd->text = calloc(dicsiz, 1)))
       {
