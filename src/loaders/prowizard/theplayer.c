@@ -201,9 +201,9 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
     int val;
     uint8 buf[1024];
 
-    tdata = calloc(512, 256);
-    if (tdata == NULL)
+    if ((tdata = calloc(512, 256)) == NULL) {
 	return -1;
+    }
 
     memset(taddr, 0, 128 * 4 * 4);
     memset(ptable, 0, 128);
@@ -217,6 +217,13 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
     saddr[0] = 0;
     sdata_addr = hio_read16b(in);		/* read sample data address */
     npat = hio_read8(in);			/* read real number of patterns */
+
+    /* Sanity check */
+    if (npat > 128) {
+	free(tdata);
+        return -1;
+    }
+
     nins = hio_read8(in);			/* read number of samples */
 
     if (nins & 0x80) {
@@ -233,6 +240,12 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
     }
 
     nins &= 0x3f;
+
+    /* Sanity check */
+    if (nins > 31) {
+	free(tdata);
+        return -1;
+    }
 
 #if 0
     if (pack == 1)
