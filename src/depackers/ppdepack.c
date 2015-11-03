@@ -26,7 +26,7 @@
 #include "common.h"
 #include "depacker.h"
 
-#define val(p) ((p)[0]<<16 | (p)[1] << 8 | (p)[2])
+/* #define val(p) ((p)[0]<<16 | (p)[1] << 8 | (p)[2]) */
 
 
 static int savefile(FILE *fo, void *mem, size_t length)
@@ -145,7 +145,7 @@ static int ppdepack(uint8 *data, size_t len, FILE *fo)
     return -1;
   }
 
-  outlen = (data[len-4]<<16) | (data[len-3]<<8) | data[len-2];
+  outlen = readmem24b(data + len - 4);
 
   /* fprintf(stderr, "decrunched length = %u bytes\n", outlen); */
 
@@ -228,12 +228,12 @@ static int decrunch_pp(FILE *f, FILE *fo)
     }
 
 
-    if (((((val (packed +4) ) * 256 ) + packed[7] ) & 0xf0f0f0f0) != 0 ) {
+    if (((readmem24b(packed +4)  * 256  + packed[7]) & 0xf0f0f0f0) != 0 ) {
 	 /*fprintf(stderr, "invalid efficiency(?)\n");*/
          goto err1;
     }
 
-    unplen = val (packed + plen - 4);
+    unplen = readmem24b(packed + plen - 4);
     if (!unplen) {
 	 /*fprintf(stderr, "not a powerpacked file\n");*/
          goto err1;
