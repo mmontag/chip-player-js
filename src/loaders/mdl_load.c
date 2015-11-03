@@ -504,12 +504,14 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
             			sizeof (struct xmp_event) * 255);
 
 	for (row = 0; len;) {
-	    struct xmp_event *ev = &track->event[row];
+	    struct xmp_event *ev;
 
 	    /* Sanity check */
 	    if (row > 255) {
 		goto err2;
 	    }
+
+            ev = &track->event[row];
 
 	    j = hio_read8(f);
 
