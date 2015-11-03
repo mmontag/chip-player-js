@@ -80,18 +80,15 @@ static int read_file_header(FILE * in, struct archived_file_header_tag *hdrp)
 		return 0;
 
 	/* extract the bits from buf */
-	hdrp->compressed_size =
-	    (buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24));
-	hdrp->date = (buf[4] | (buf[5] << 8));
-	hdrp->time = (buf[6] | (buf[7] << 8));
-	hdrp->crc = (buf[8] | (buf[9] << 8));	/* yes, only 16-bit CRC */
+	hdrp->compressed_size = readmem32l(buf);
+	hdrp->date = readmem16l(buf + 4);
+	hdrp->time = readmem16l(buf + 6);
+	hdrp->crc  = readmem16l(buf + 8);	/* yes, only 16-bit CRC */
 	hdrp->has_crc = 1;
 	if (hdrp->method == 1)
 		hdrp->orig_size = hdrp->compressed_size;
 	else
-		hdrp->orig_size =
-		    (buf[10] | (buf[11] << 8) | (buf[12] << 16) |
-		     (buf[13] << 24));
+		hdrp->orig_size = readmem32l(buf + 10);
 
 	/* make *sure* name is asciiz */
 	hdrp->name[12] = 0;
