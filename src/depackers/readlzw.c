@@ -470,6 +470,12 @@ while(bitsfilled<numbits)
     data->dc_bitbox&=0xff;
     data->dc_bitbox<<=got;
     bitsfilled+=got;
+    
+    /* Sanity check */
+    if (bitsfilled > numbits) {
+      return 0;
+    }
+
     (*newcode)|=((data->dc_bitbox>>8)<<(numbits-bitsfilled));
     data->dc_bitsleft-=got;
     }
