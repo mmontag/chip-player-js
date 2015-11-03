@@ -48,7 +48,14 @@ static int depack_pp21_pp30(HIO_HANDLE *in, FILE *out, int is_30)
 		write16b(out, hio_read16b(in));	/* loop size */
 	}
 
-	write8(out, numpat = hio_read8(in));	/* number of patterns */
+	numpat = hio_read8(in);			/* number of patterns */
+
+	/* Sanity check */
+	if (numpat > 128) {
+		return -1;
+	}
+
+	write8(out, numpat);			/* number of patterns */
 	write8(out, hio_read8(in));		/* NoiseTracker restart byte */
 
 	max = 0;
