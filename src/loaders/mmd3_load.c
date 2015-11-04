@@ -421,8 +421,11 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (expdata_offset && i < expdata.i_ext_entries) {
 			struct xmp_instrument *xxi = &mod->xxi[i];
-			hio_seek(f, iinfo_offset + i * expdata.i_ext_entrsz,
-								SEEK_SET);
+			int offset = iinfo_offset + i * expdata.i_ext_entrsz;
+
+			if (offset < 0 || hio_seek(f, offset, SEEK_SET) < 0) {
+				return -1;
+			}
 			hio_read(&xxi->name, 40, 1, f);
 			D_(D_INFO "[%2x] %-40.40s %d", i, mod->xxi[i].name, instr.type);
 		}
@@ -430,8 +433,11 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		memset(&exp_smp, 0, sizeof(struct InstrExt));
 
 		if (expdata_offset && i < expdata.s_ext_entries) {
-			hio_seek(f, expsmp_offset + i * expdata.s_ext_entrsz,
-							SEEK_SET);
+			int offset = expsmp_offset + i * expdata.s_ext_entrsz;
+
+			if (offset < 0 || hio_seek(f, offset, SEEK_SET) < 0) {
+				return -1;
+			}
 			exp_smp.hold = hio_read8(f);
 			exp_smp.decay = hio_read8(f);
 			exp_smp.suppress_midi_off = hio_read8(f);
