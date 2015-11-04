@@ -31,6 +31,11 @@
 #include <string.h>
 #include <limits.h>
 #include <unistd.h>
+
+#ifdef HAVE_UMASK
+#include <sys/stat.h>
+#endif
+
 #include "tempfile.h"
 
 #ifdef WIN32
@@ -109,6 +114,9 @@ FILE *make_temp_file(char **filename) {
 	if ((*filename = strdup(tmp)) == NULL)
 		goto err;
 
+#ifdef HAVE_UMASK
+	umask(0177);
+#endif
 	if ((fd = mkstemp(*filename)) < 0)
 		goto err2;
 
