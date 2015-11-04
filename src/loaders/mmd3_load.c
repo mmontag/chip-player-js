@@ -304,10 +304,11 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, start + block_offset, SEEK_SET);
 
 		block.numtracks = hio_read16b(f);
-		block.lines = hio_read16b(f);
+		/* block.lines = */ hio_read16b(f);
 
-		if (block.numtracks > mod->chn)
+		if (block.numtracks > mod->chn) {
 			mod->chn = block.numtracks;
+		}
 	}
 
 	/* Sanity check */

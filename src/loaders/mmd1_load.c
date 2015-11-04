@@ -294,14 +294,15 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (ver > 0) {
 			block.numtracks = hio_read16b(f);
-			block.lines = hio_read16b(f);
+			/* block.lines = */ hio_read16b(f);
 		} else {
 			block.numtracks = hio_read8(f);
-			block.lines = hio_read8(f);
+			/* block.lines = */ hio_read8(f);
 		}
 
-		if (block.numtracks > mod->chn)
+		if (block.numtracks > mod->chn) {
 			mod->chn = block.numtracks;
+		}
 	}
 
 	/* Sanity check */
