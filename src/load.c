@@ -178,33 +178,40 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 
 	D_(D_WARN "Depacking file... ");
 
-	if ((t = make_temp_file(temp)) == NULL)
+	if ((t = make_temp_file(temp)) == NULL) {
 		return -1;
+	}
 
 	/* Depack file */
 	if (cmd) {
 		D_(D_INFO "External depacker: %s", cmd);
 		if (execute_command(cmd, filename, t) < 0) {
 			D_(D_CRIT "failed");
-			fclose(t);
-			return -1;
+			goto err;
 		}
 	} else if (depacker) {
 		D_(D_INFO "Internal depacker");
 		if (depacker->depack(f, t) < 0) {
 			D_(D_CRIT "failed");
-			fclose(t);
-			return -1;
+			goto err;
 		}
 	}
 
 	D_(D_INFO "done");
 
-	fseek(t, 0, SEEK_SET);
+	if (fseek(t, 0, SEEK_SET) < 0) {
+		D_(D_CRIT "fseek error");
+		goto err;
+	}
+
 	hio_close(*h);
 	*h = hio_open_file(t);
 
 	return res;
+
+    err:
+	fclose(t);
+	return -1;
 }
 
 static void set_md5sum(HIO_HANDLE *f, unsigned char *digest)
