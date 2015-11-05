@@ -222,7 +222,14 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			masksz++;
 		}
 	}
-	mask <<= 8 * (sizeof(mask) - masksz);
+
+	/* CID 128662 (#1 of 1): Bad bit shift operation (BAD_SHIFT)
+	 * large_shift: left shifting by more than 63 bits has undefined
+	 * behavior.
+	 */
+	if (masksz > 0) {
+		mask <<= 8 * (sizeof(mask) - masksz);
+	}
 	/*printf("m0=%x mask=%x\n", m0, mask);*/
 
 	/* read instrument names in temporary space */
