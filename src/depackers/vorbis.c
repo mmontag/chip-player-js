@@ -903,8 +903,14 @@ static void compute_bitreverse(int n, uint16 *rev)
 {
    int ld = ilog(n) - 1; // ilog is off-by-one from normal definitions
    int i, n8 = n >> 3;
-   for (i=0; i < n8; ++i)
-      rev[i] = (bit_reverse(i) >> (32-ld+3)) << 2;
+   for (i=0; i < n8; ++i) {
+      /* CID 128660 (#1 of 1): Bad bit shift operation (BAD_SHIFT)
+       * large_shift: right shifting by more than 31 bits has undefined
+       * behavior. The shift amount, 32 - ld + 3, is 36.
+       */
+      int s = 32-ld+3;
+      rev[i] = s > 31 ? 0 : (bit_reverse(i) >> s) << 2;
+   }
 }
 
 static int init_blocksize(vorb *f, int b, int n)
