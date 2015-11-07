@@ -130,10 +130,10 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 	*temp = NULL;
 	f = (*h)->handle.file;
 
-	fseek(f, 0, SEEK_SET);
 	headersize = fread(b, 1, 1024, f);
-	if (headersize < 100)	/* minimum valid file size */
+	if (headersize < 100) {	/* minimum valid file size */
 		return 0;
+	}
 
 	/* Check built-in depackers */
 	for (i = 0; depacker_list[i] != NULL; i++) {
@@ -179,7 +179,7 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 	D_(D_WARN "Depacking file... ");
 
 	if ((t = make_temp_file(temp)) == NULL) {
-		return -1;
+		goto err;
 	}
 
 	/* Depack file */
@@ -187,13 +187,13 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 		D_(D_INFO "External depacker: %s", cmd);
 		if (execute_command(cmd, filename, t) < 0) {
 			D_(D_CRIT "failed");
-			goto err;
+			goto err2;
 		}
 	} else if (depacker) {
 		D_(D_INFO "Internal depacker");
 		if (depacker->depack(f, t) < 0) {
 			D_(D_CRIT "failed");
-			goto err;
+			goto err2;
 		}
 	}
 
@@ -201,7 +201,7 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 
 	if (fseek(t, 0, SEEK_SET) < 0) {
 		D_(D_CRIT "fseek error");
-		goto err;
+		goto err2;
 	}
 
 	hio_close(*h);
@@ -209,8 +209,9 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 
 	return res;
 
-    err:
+    err2:
 	fclose(t);
+    err:
 	return -1;
 }
 
