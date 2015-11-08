@@ -203,31 +203,41 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi;
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs;
+
 	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
-	mod->xxs[i].len = 2 * ih.ins[i].size;
-	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * ih.ins[i].loop_size;
-	mod->xxs[i].flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxi[i].sub[0].fin = 0; /* ih.ins[i].finetune; */
-	mod->xxi[i].sub[0].vol = ih.ins[i].volume;
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
-	mod->xxi[i].rls = 0xfff;
+	xxi = &mod->xxi[i];
+	sub = &xxi->sub[0];
+	xxs = &mod->xxs[i];
 
-	if (mod->xxs[i].len > 0)
-		mod->xxi[i].nsm = 1;
+	xxs->len = 2 * ih.ins[i].size;
+	xxs->lps = 2 * ih.ins[i].loop_start;
+	xxs->lpe = xxs->lps + 2 * ih.ins[i].loop_size;
+	xxs->flg = ih.ins[i].loop_size > 1 ? XMP_SAMPLE_LOOP : 0;
+	sub->fin = 0; /* ih.ins[i].finetune; */
+	sub->vol = ih.ins[i].volume;
+	sub->pan = 0x80;
+	sub->sid = i;
+	//mod->xxi[i].rls = 0xfff;
+
+	if (xxs->len > 0) {
+		xxi->nsm = 1;
+	}
 
 	instrument_name(mod, i, ih.ins[i].name, 20);
 
 	D_(D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x %+d",
-		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
-		mod->xxs[i].lpe, ih.ins[i].loop_size > 1 ? 'L' : ' ',
-		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
+		i, xxi->name, xxs->len, xxs->lps, xxs->lpe,
+		ih.ins[i].loop_size > 1 ? 'L' : ' ', sub->vol, sub->fin >> 4);
     }
 
-    if (pattern_init(mod) < 0)
+    if (pattern_init(mod) < 0) {
 	return -1;
+    }
 
     /* Load and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -238,7 +248,7 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (j = 0; j < 0x100; j++) {
 	    event = &EVENT (i, j & 0x3, j >> 2);
-	    hio_read (ims_event, 1, 3, f);
+	    hio_read(ims_event, 1, 3, f);
 
 	    /* Event format:
 	     *

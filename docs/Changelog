@@ -38,6 +38,7 @@ Stable versions
 	- fix IT envelope release + fadeout (reported by NoSuck)
 	- fix SFX effects 5, 6, 7, and 8 (reported by Lamar McLouth)
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
+	- fix IMS sample loop start
 	- fix LIQ pan setting and surround channel
 	- refactor ProRunner2 event decoding
 
