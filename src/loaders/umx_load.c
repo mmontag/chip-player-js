@@ -114,17 +114,19 @@ static int umx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 
 		if (i > 44 && id == MAGIC_SCRM) {
+			i -= 44;
 			if (hio_seek(f, i, SEEK_SET) < 0) {
 				return -1;
 			}
-			return s3m_loader.loader(m, f, i - 44);
+			return s3m_loader.loader(m, f, i);
 		}
 
 		if (i > 1080 && id == MAGIC_M_K_) {
+			i -= 1080;
 			if (hio_seek(f, i, SEEK_SET) < 0) {
 				return -1;
 			}
-			return mod_loader.loader(m, f, i - 1080);
+			return mod_loader.loader(m, f, i);
 		}
 	}
 	
