@@ -17,6 +17,7 @@ Stable versions
 	- fix event decoding in LIQ loader
 	- fix JVS command parameter in MED synth
 	- fix 669 effect decoding
+	- fix memory violation in LZX decompressor
 	- fix sanity check in PTM orders loading
 	- add sanity check to smix sample loading
 	- add sanity check to PP21 format converter
@@ -28,7 +29,7 @@ Stable versions
 	- remove dead code from NO loader
 	- remove dead code from Soundtracker loader
 	- remove dead code from GMC format converter
-	- remove dead code from LZX depacker
+	- remove dead code from LZX decompressor
 	- remove dead code in virtual channel manager reset
 	- remove unnecessary seeks in format loaders
 	- prevent division by zero in memory I/O

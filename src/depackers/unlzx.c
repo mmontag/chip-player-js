@@ -143,7 +143,8 @@ struct LZXDecrData {
     uint8 literal_len[768];
     uint16 literal_table[5120];
 
-    uint8 read_buffer[16384];	/* have a reasonable sized read buffer */
+    /* Was 16384, coverity scan reported overrun */
+    uint8 read_buffer[16385];	/* have a reasonable sized read buffer */
     uint8 buffer[258 + 65536 + 258];	/* allow overrun for speed */
 };
 
