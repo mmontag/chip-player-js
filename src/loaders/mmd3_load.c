@@ -496,11 +496,11 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			smp_idx += oct;
 
 			continue;
-		} /* else if ((instr.type & ~(S_16 | STEREO)) != 0) {
+		} else if ((instr.type & ~(S_16 | STEREO)) != 0) {
 			D_(D_WARN "stereo sample unsupported");
 			mod->xxi[i].nsm = 0;
 			continue;
-		} */ else if ((instr.type & ~S_16) == 0) {	/* Sample */
+		} else if ((instr.type & ~S_16) == 0) {	/* Sample */
 			int ret;
 
 			hio_seek(f, start + smpl_offset + 6, SEEK_SET);
