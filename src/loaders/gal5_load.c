@@ -362,6 +362,15 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	iff_release(handle);
 
+	/* Alloc missing patterns */
+	for (i = 0; i < mod->pat; i++) {
+		if (mod->xxp[i] == NULL) {
+			if (pattern_tracks_alloc(mod, i, 64) < 0) {
+				return -1;
+			}
+		}
+	}
+
 	for (i = 0; i < mod->chn; i++) {
 		mod->xxc[i].pan = data.chn_pan[i] * 2;
 	}
