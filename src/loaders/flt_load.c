@@ -457,8 +457,10 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	for (i = 0; i < mod->smp; i++) {
 		if (mod->xxs[i].len == 0) {
 			if (am_synth && is_am_instrument(nt, i)) {
-				if (read_am_instrument(m, nt, i) < 0)
+				if (read_am_instrument(m, nt, i) < 0) {
+					D_(D_CRIT "Missing nt file");
 					goto err;
+				}
 			}
 			continue;
 		}
