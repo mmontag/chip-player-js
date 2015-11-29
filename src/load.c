@@ -362,6 +362,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	test_result = load_result = -1;
 	for (i = 0; format_loader[i] != NULL; i++) {
 		hio_seek(h, 0, SEEK_SET);
+		hio_error(h);	/* clean error flag */
 		D_(D_WARN "test %s", format_loader[i]->name);
 		test_result = format_loader[i]->test(h, NULL, 0);
 		if (test_result == 0) {
