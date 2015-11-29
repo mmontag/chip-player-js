@@ -99,17 +99,33 @@ static int umx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < TEST_SIZE; i++, b++) {
 		id = readmem32b(b);
 
-		if (!memcmp(b, "Extended Module:", 16))
+		if (!memcmp(b, "Extended Module:", 16)) {
+			if (hio_seek(f, i, SEEK_SET) < 0) {
+				return -1;
+			}
 			return xm_loader.loader(m, f, i);
+		}
 
-		if (id == MAGIC_IMPM)
+		if (id == MAGIC_IMPM) {
+			if (hio_seek(f, i, SEEK_SET) < 0) {
+				return -1;
+			}
 			return it_loader.loader(m, f, i);
+		}
 
-		if (i > 44 && id == MAGIC_SCRM)
+		if (i > 44 && id == MAGIC_SCRM) {
+			if (hio_seek(f, i, SEEK_SET) < 0) {
+				return -1;
+			}
 			return s3m_loader.loader(m, f, i - 44);
+		}
 
-		if (i > 1080 && id == MAGIC_M_K_)
+		if (i > 1080 && id == MAGIC_M_K_) {
+			if (hio_seek(f, i, SEEK_SET) < 0) {
+				return -1;
+			}
 			return mod_loader.loader(m, f, i - 1080);
+		}
 	}
 	
 	return -1;

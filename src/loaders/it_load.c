@@ -335,7 +335,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     LOAD_INIT();
 
     /* Load and convert header */
-    hio_read32b(f);		/* magic */
+    if (hio_read32b(f) != MAGIC_IMPM) {
+	return -1;
+    }
 
     hio_read(&ifh.name, 26, 1, f);
     ifh.hilite_min = hio_read8(f);
@@ -825,7 +827,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		goto err4;
 	}
 
-	hio_seek(f, start + pp_smp[i], SEEK_SET);
+	if (hio_seek(f, start + pp_smp[i], SEEK_SET) < 0) {
+	    goto err4;
+        }
 
 	ish.magic = hio_read32b(f);
 	hio_read(&ish.dosname, 12, 1, f);
@@ -837,6 +841,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (hio_read(&ish.name, 1, 26, f) != 26) {
 	    goto err4;
 	}
+
+        if (hio_error(f)) {
+            goto err4;
+        }
 
 	fix_name(ish.name, 26);
 
