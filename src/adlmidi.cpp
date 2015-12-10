@@ -59,6 +59,7 @@
 #include "adlmidi.h"
 
 #ifdef ADLMIDI_buildAsApp
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #endif
 
@@ -357,23 +358,23 @@ public:
     }
 };
 
-static const char MIDIsymbols[256+1] =
-"PPPPPPhcckmvmxbd"  // Ins  0-15
-"oooooahoGGGGGGGG"  // Ins 16-31
-"BBBBBBBBVVVVVHHM"  // Ins 32-47
-"SSSSOOOcTTTTTTTT"  // Ins 48-63
-"XXXXTTTFFFFFFFFF"  // Ins 64-79
-"LLLLLLLLpppppppp"  // Ins 80-95
-"XXXXXXXXGGGGGTSS"  // Ins 96-111
-"bbbbMMMcGXXXXXXX"  // Ins 112-127
-"????????????????"  // Prc 0-15
-"????????????????"  // Prc 16-31
-"???DDshMhhhCCCbM"  // Prc 32-47
-"CBDMMDDDMMDDDDDD"  // Prc 48-63
-"DDDDDDDDDDDDDDDD"  // Prc 64-79
-"DD??????????????"  // Prc 80-95
-"????????????????"  // Prc 96-111
-"????????????????"; // Prc 112-127
+//static const char MIDIsymbols[256+1] =
+//"PPPPPPhcckmvmxbd"  // Ins  0-15
+//"oooooahoGGGGGGGG"  // Ins 16-31
+//"BBBBBBBBVVVVVHHM"  // Ins 32-47
+//"SSSSOOOcTTTTTTTT"  // Ins 48-63
+//"XXXXTTTFFFFFFFFF"  // Ins 64-79
+//"LLLLLLLLpppppppp"  // Ins 80-95
+//"XXXXXXXXGGGGGTSS"  // Ins 96-111
+//"bbbbMMMcGXXXXXXX"  // Ins 112-127
+//"????????????????"  // Prc 0-15
+//"????????????????"  // Prc 16-31
+//"???DDshMhhhCCCbM"  // Prc 32-47
+//"CBDMMDDDMMDDDDDD"  // Prc 48-63
+//"DDDDDDDDDDDDDDDD"  // Prc 64-79
+//"DD??????????????"  // Prc 80-95
+//"????????????????"  // Prc 96-111
+//"????????????????"; // Prc 112-127
 
 static const char PercussionMap[256] =
 "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"//GM
@@ -514,7 +515,8 @@ class MIDIplay
 public:
     std::string musTitle;
     fraction<long> InvDeltaTicks, Tempo;
-    bool loopStart, loopEnd;
+    bool loopStart, loopEnd, invalidLoop;
+    long loopStart_ticks, loopEnd_ticks;
     OPL3 opl;
 public:
     static unsigned long ReadBEInt(const void* buffer, unsigned nbytes)
@@ -829,6 +831,7 @@ public:
             }
         }
         loopStart = true;
+        invalidLoop = false;
 
         opl.Reset(); // Reset AdLib
         //opl.Reset(); // ...twice (just in case someone misprogrammed OPL3 previously)
@@ -1044,6 +1047,7 @@ private:
             }
         }
     }
+
     void HandleEvent(size_t tk)
     {
         unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
@@ -1296,7 +1300,7 @@ private:
                         break;
                     case 7: // Change volume
                         Ch[MidCh].volume = value;
-                        //NoteUpdate_All(MidCh, Upd_Volume);
+                        NoteUpdate_All(MidCh, Upd_Volume);
                         break;
                     case 64: // Enable/disable sustain
                         Ch[MidCh].sustain = value;
@@ -2099,7 +2103,6 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer*device, int sampleCount, int *out)
 
 #ifdef ADLMIDI_buildAsApp
 
-#undef main
 int main(int argc, char** argv)
 {
 
