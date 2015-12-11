@@ -138,7 +138,7 @@ static ADRV_LOAD* audDrvLoaded = NULL;
 static UINT32 runDevCount = 0;
 static ADRV_INSTANCE* runDevices = NULL;
 
-static bool isInit;
+static bool isInit = false;
 
 
 #include "AudioStream_LstFuncs.h"

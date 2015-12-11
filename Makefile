@@ -56,13 +56,19 @@ SRC = .
 OBJ = obj
 LIBAUDSRC = $(SRC)/audio
 LIBAUDOBJ = $(OBJ)/audio
+LIBEMUSRC = $(SRC)/emu
+LIBEMUOBJ = $(OBJ)/emu
 
 OBJDIRS = \
 	$(OBJ) \
-	$(LIBAUDOBJ)
+	$(LIBAUDOBJ) \
+	$(LIBEMUOBJ) \
+	$(LIBEMUOBJ)/additional
 
 ALL_LIBS = \
-	$(LIBAUD_A)
+	$(LIBAUD_A) \
+	$(LIBEMU_A)
+
 
 #### Audio Output Library ####
 AUD_MAINOBJS = \
@@ -111,8 +117,24 @@ CFLAGS += -D AUDDRV_LIBAO
 endif
 
 
+#### Sound Emulation Library ####
+EMU_MAINOBJS = \
+	$(OBJ)/emutest.o
+LIBEMU_A = $(OBJ)/libemu.a
+LIBEMUOBJS = \
+	$(LIBEMUOBJ)/SoundEmu.o \
+	$(LIBEMUOBJ)/sn764intf.o \
+	$(LIBEMUOBJ)/sn76496.o \
+	$(LIBEMUOBJ)/sn76489.o \
+	$(LIBEMUOBJ)/additional/panning.o
 
-all:	audiotest
+
+AUDEMU_MAINOBJS = \
+	$(OBJ)/audemutest.o
+
+
+
+all:	audiotest emutest audemutest
 
 audiotest:	dirs libaudio $(AUD_MAINOBJS)
 	@echo Linking audiotest ...
@@ -123,6 +145,21 @@ libaudio:	$(LIBAUDOBJS)
 	@echo Archiving libaudio.a ...
 	@$(RM) $@
 	@$(AR) $(ARFLAGS) $(LIBAUD_A) $(LIBAUDOBJS)
+
+emutest:	dirs libemu $(EMU_MAINOBJS)
+	@echo Linking emutest ...
+	@$(CC) $(EMU_MAINOBJS) $(LIBEMU_A) $(LDFLAGS) -o emutest
+	@echo Done.
+
+libemu:	$(LIBEMUOBJS)
+	@echo Archiving libemu.a ...
+	@$(RM) $@
+	@$(AR) $(ARFLAGS) $(LIBEMU_A) $(LIBEMUOBJS)
+
+audemutest:	dirs libaudio libemu $(AUDEMU_MAINOBJS)
+	@echo Linking audemutest ...
+	@$(CC) $(AUDEMU_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -o audemutest
+	@echo Done.
 
 
 dirs:

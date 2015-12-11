@@ -26,7 +26,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="emutest.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
     <ClCompile Include="audiotest.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="audemutest.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
