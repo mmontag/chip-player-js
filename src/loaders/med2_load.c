@@ -208,7 +208,9 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 
 		if (!strlen((char *)mod->xxi[i].name) && !mod->xxs[i].len) {
-			hio_close(s);
+			if (s != NULL) {
+				hio_close(s);
+			}
 			continue;
 		}
 
@@ -221,8 +223,9 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (s != NULL) {
 			int ret = load_sample(m, s, 0, &mod->xxs[i], NULL);
 			hio_close(s);
-			if (ret < 0)
+			if (ret < 0) {
 				return -1;
+			}
 		}
 	}
 
