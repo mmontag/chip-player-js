@@ -220,7 +220,7 @@ PLAYER		= read_event scan period_amiga period_mod_range pan \
 		  it_portamento_after_keyoff it_portamento_after_keyoff_cg \
 		  it_portamento_after_cut_fade it_portamento_after_cut_fade_cg \
 		  it_portamento_envelope_reset it_portamento_envelope_reset_cg \
-		  xm_portamento_envelope_reset \
+		  xm_portamento_envelope_reset xm_portamento_target \
 		  ft2_note_noins_after_keyoff \
 		  ft2_note_noins_after_invalid_ins \
 		  invalid_period invalid_mod_length invalid_mod_channels
