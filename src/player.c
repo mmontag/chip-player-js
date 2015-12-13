@@ -751,23 +751,25 @@ static void update_frequency(struct context_data *ctx, int chn)
 
 		/* Do tone portamento */
 		if (TEST(TONEPORTA) || TEST_PER(TONEPORTA)) {
-			int end = 0;
-			if (xc->porta.dir > 0) {
-				xc->period += xc->porta.slide;
-				if (xc->period >= xc->porta.target)
-					end = 1;
-			} else {
-				xc->period -= xc->porta.slide;
-				if (xc->period <= xc->porta.target)
-					end = 1;
-			}
+			if (xc->porta.target > 0) {
+				int end = 0;
+				if (xc->porta.dir > 0) {
+					xc->period += xc->porta.slide;
+					if (xc->period >= xc->porta.target)
+						end = 1;
+				} else {
+					xc->period -= xc->porta.slide;
+					if (xc->period <= xc->porta.target)
+						end = 1;
+				}
 
-			if (end) {
-				/* reached end */
-				xc->period = xc->porta.target;
-				xc->porta.dir = 0;
-				RESET(TONEPORTA);
-				RESET_PER(TONEPORTA);
+				if (end) {
+					/* reached end */
+					xc->period = xc->porta.target;
+					xc->porta.dir = 0;
+					RESET(TONEPORTA);
+					RESET_PER(TONEPORTA);
+				}
 			}
 		} 
 	}

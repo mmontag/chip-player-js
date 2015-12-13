@@ -193,7 +193,7 @@ static void set_period_ft2(struct context_data *ctx, int note,
 {
 	struct module_data *m = &ctx->m;
 
-	if ((note > 0 && is_toneporta) || xc->porta.target == 0) {
+	if (note > 0 && is_toneporta) {
 		xc->porta.target = note_to_period(note, xc->finetune,
 				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 	}
