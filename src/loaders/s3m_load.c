@@ -528,9 +528,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sih.memseg = hio_read16l(f);		/* Pointer to sample data */
 	sih.length = hio_read32l(f);		/* Length */
 
+#if 0
 	/* ST3 limit */
 	if ((sfh.version >> 12) == 1 && sih.length > 64000)
 		sih.length = 64000;
+#endif
 
 	if (sih.length > MAX_SAMPLE_SIZE)
 		return -1;

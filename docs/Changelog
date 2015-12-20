@@ -41,6 +41,7 @@ Stable versions
 	- fix pattern loading in Galaxy 4 and 5 (reported by Anton Zab)
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
 	- fix tone portamento target setting (reported by Georgy Lomsadze)
+	- disable ST3 sample size limit (reported by Jochen Goernitz)
 	- fix IMS sample loop start
 	- fix LIQ pan setting and surround channel
 	- refactor ProRunner2 event decoding
