@@ -54,5 +54,5 @@ extern const struct adlinsdata
     unsigned short ms_sound_koff;
 } adlins[];
 extern const unsigned short banks[][256];
-extern const char* const banknames[66];
+extern const char* const banknames[67];
 

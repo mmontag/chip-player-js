@@ -1103,7 +1103,10 @@ int main()
 	
 	LoadIBK("fm_banks/ibk_files/my-gmopl.ibk", 		65, "b65M", false);
     LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 65, "b65P", true);
-	
+
+	LoadIBK("fm_banks/ibk_files/JOconnel.IBK", 		66, "b66M", false);
+    LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 66, "b66P", true);
+
     //LoadBNK("bnk_files/grassman1.bnk", 63, "b63", false);
     //LoadBNK("bnk_files/grassman2.bnk", 64, "b64", false);
 
@@ -1182,7 +1185,8 @@ int main()
      "TMB (Duke Nukem 3D)",
      "TMB (Shadow Warrior)",
      "DMX (Raptor)",
-	 "SB (Modded GMOPL by Wohlstand)"
+	 "SB (Modded GMOPL by Wohlstand)",
+	 "SB (Jammey O'Connel's bank)"
     };
 
 #if 0
