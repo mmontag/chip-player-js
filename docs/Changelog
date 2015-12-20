@@ -45,6 +45,7 @@ Stable versions
 	- fix crash in Prowizard error handling
 	- fix IMS sample loop start
 	- fix LIQ pan setting and surround channel
+	- add sanity check for IFF chunk size
 	- refactor ProRunner2 event decoding
 
 4.3.9 (20150623):

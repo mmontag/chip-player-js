@@ -13,6 +13,8 @@
 #define IFF_SKIP_EMBEDDED	0x10
 #define IFF_CHUNK_TRUNC4	0x20
 
+#define IFF_MAX_CHUNK_SIZE	0x400000
+
 typedef void *iff_handle;
 
 struct iff_header {

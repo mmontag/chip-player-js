@@ -73,7 +73,15 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 		}
 	}
 
-	size = (data->flags & IFF_LITTLE_ENDIAN) ? hio_read32l(f) : hio_read32b(f);
+	if (data->flags & IFF_LITTLE_ENDIAN) {
+		size = hio_read32l(f);
+	} else {
+		size = hio_read32b(f);
+	}
+
+	if (hio_error(f) || size > IFF_MAX_CHUNK_SIZE) {
+		return -1;
+	}
 
 	if (data->flags & IFF_CHUNK_ALIGN2) {
 		size = (size + 1) & ~1;
