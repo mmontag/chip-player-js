@@ -56,10 +56,12 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 	unsigned size;
 	char id[17] = "";
 
+	D_(D_INFO "chunk id size: %d", data->id_size);
 	if (hio_read(id, 1, data->id_size, f) != data->id_size) {
 		(void)hio_error(f);	/* clear error flag */
 		return 1;
 	}
+	D_(D_INFO "chunk id: [%s]", id);
 
 	if (data->flags & IFF_SKIP_EMBEDDED) {
 		/* embedded RIFF hack */
@@ -78,8 +80,9 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 	} else {
 		size = hio_read32b(f);
 	}
+	D_(D_INFO "size: %d", size);
 
-	if (hio_error(f) || size > IFF_MAX_CHUNK_SIZE) {
+	if (hio_error(f)) {
 		return -1;
 	}
 
@@ -170,6 +173,9 @@ int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
 		i = list_entry(tmp, struct iff_info, list);
 		if (id && !memcmp(id, i->id, data->id_size)) {
 			D_(D_WARN "Load IFF chunk %s (%ld) @%d", id, size, pos);
+			if (size > IFF_MAX_CHUNK_SIZE) {
+				return -1;
+			}
 			if (i->loader(m, size, f, parm) < 0) {
 				return -1;
 			}
