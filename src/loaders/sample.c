@@ -447,8 +447,10 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 
 	return 0;
 
+#ifndef LIBXMP_CORE_PLAYER
     err2:
 	free(xxs->data - 4);
+#endif
     err:
 	return -1;
 }
