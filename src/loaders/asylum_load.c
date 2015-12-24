@@ -85,10 +85,14 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		uint8 insbuf[37];
 
-		if (subinstrument_alloc(mod, i, 1) < 0)	
+		if (subinstrument_alloc(mod, i, 1) < 0)	{
 			return -1;
+		}
 
-		hio_read(insbuf, 1, 37, f);
+		if (hio_read(insbuf, 1, 37, f) != 37) {
+			return -1;
+		}
+
 		instrument_name(mod, i, insbuf, 22);
 		mod->xxi[i].sub[0].fin = (int8)(insbuf[22] << 4);
 		mod->xxi[i].sub[0].vol = insbuf[23];
@@ -137,6 +141,9 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			event->ins = hio_read8(f);
 			event->fxt = hio_read8(f);
 			event->fxp = hio_read8(f);
+			if (hio_error(f)) {
+				return -1;
+			}
 		}
 	}
 
