@@ -459,6 +459,12 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     row = break_row;
 
 end_module:
+
+    /* Sanity check */
+    if (mod->xxo[ord] >= mod->pat) {
+        row = 0;
+    }
+
     p->scan[chain].num = m->scan_cnt[ord][row];
     p->scan[chain].row = row;
     p->scan[chain].ord = ord;
