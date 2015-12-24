@@ -271,6 +271,11 @@ static int make_table(struct LhADecrData *dat, int16 nchar, uint8 bitlen[], int1
   for(j = 0; j < nchar; j++)
   {
     k = bitlen[j];
+
+    /* Sanity check */
+    if(k >= 17)
+      return -1;
+
     if(k == 0)
       continue;
     l = start[k] + weight[k];
@@ -288,8 +293,13 @@ static int make_table(struct LhADecrData *dat, int16 nchar, uint8 bitlen[], int1
     }
     else
     {
+      /* Sanity check */
+      if(k >= 17)
+        return -1;
+
       /* code not in table */
-      p = &table[(i = start[k]) >> m];
+      i = start[k];
+      p = &table[i >> m];
       i <<= tablebits;
       n = k - tablebits;
       /* make tree (n length) */

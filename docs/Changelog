@@ -42,6 +42,7 @@ Stable versions
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
 	- fix tone portamento target setting (reported by Georgy Lomsadze)
 	- disable ST3 sample size limit (reported by Jochen Goernitz)
+	- add sanity checks to LHA depacker (reported by Jonathan Neuschäfer)
 	- fix crash in Prowizard error handling
 	- fix IMS sample loop start
 	- fix LIQ pan setting and surround channel
