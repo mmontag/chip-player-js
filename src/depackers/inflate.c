@@ -717,7 +717,11 @@ int decompress(FILE *in, struct huffman_t *huffman, struct bitstream_t *bitstrea
       {
         /* bitstream->holding+=(getc(in)<<bitstream->bitptr); */
         /* bitstream->bitptr+=8; */
-        bitstream->holding=getc(in);
+        int x = getc(in);
+        if (x == EOF) {
+          return -1;
+        }
+        bitstream->holding=x;
         bitstream->bitptr=8;
       }
 #ifdef DEBUG
