@@ -421,12 +421,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_channel *xxc = &mod->xxc[i];
 
 	if (ifh.chpan[i] == 100) {	/* Surround -> center */
-	    mod->xxc[i].flg |= XMP_CHANNEL_SURROUND;
+	    xxc->flg |= XMP_CHANNEL_SURROUND;
         }
 
 	if (ifh.chpan[i] & 0x80) {	/* Channel mute */
 	    ifh.chvol[i] = 0;
-	    mod->xxc[i].flg |= XMP_CHANNEL_MUTE;
+	    xxc->flg |= XMP_CHANNEL_MUTE;
 	}
 
 	if (ifh.flags & IT_STEREO) {

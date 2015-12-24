@@ -388,12 +388,22 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 		goto err_load;
 	}
 
-	/* Sanity check */
+	/* Sanity check: number of channels, module length */
 	if (mod->chn > XMP_MAX_CHANNELS || mod->len > XMP_MAX_MOD_LENGTH) {
 		goto err_load;
 	}
 
-	/* Sanity check */
+	/* Sanity check: channel pan */
+	for (i = 0; i < mod->chn; i++) {
+		if (mod->xxc[i].vol < 0 || mod->xxc[i].vol > 0xff) {
+			goto err_load;
+		}
+		if (mod->xxc[i].pan < 0 || mod->xxc[i].pan > 0xff) {
+			goto err_load;
+		}
+	}
+
+	/* Sanity check: patterns */
 	if (mod->xxp == NULL) {
 		goto err_load;
 	}
