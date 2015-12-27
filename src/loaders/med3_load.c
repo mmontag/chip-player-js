@@ -70,7 +70,7 @@ static int med3_test(HIO_HANDLE *f, char *t, const int start)
 
 static uint8 get_nibble(uint8 *mem, uint16 *nbnum)
 {
-	uint8 *mloc = mem + (*nbnum / 2),res;
+	uint8 *mloc = mem + (*nbnum / 2), res;
 
 	if(*nbnum & 0x1)
 		res = *mloc & 0x0f;
@@ -81,19 +81,19 @@ static uint8 get_nibble(uint8 *mem, uint16 *nbnum)
 	return res;
 }
 
-static uint16 get_nibbles(uint8 *mem,uint16 *nbnum,uint8 nbs)
+static uint16 get_nibbles(uint8 *mem, uint16 *nbnum, uint8 nbs)
 {
 	uint16 res = 0;
 
 	while (nbs--) {
 		res <<= 4;
-		res |= get_nibble(mem,nbnum);
+		res |= get_nibble(mem, nbnum);
 	}
 
 	return res;
 }
 
-static int unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
+static int unpack_block(struct module_data *m, uint16 bnum, uint8 *from, uint16 convsz)
 {
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
@@ -107,8 +107,9 @@ static int unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 
 	/*from += 16;*/
 	patbuf = to = calloc(3, 4 * 64);
-	if (to == NULL)
-		return -1;
+	if (to == NULL) {
+		goto err;
+	}
 
 	for (i = 0; i < 64; i++) {
 		if (i == 32) {
@@ -117,6 +118,11 @@ static int unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 		}
 
 		if (*lmptr & MASK) {
+			if (trkn / 2 > convsz) {
+				goto err2;
+			}	
+			convsz -= trkn / 2;
+
 			lmsk = get_nibbles(fromst, &fromn, (uint8)(trkn / 4));
 			lmsk <<= (16 - trkn);
 			tmpto = to;
@@ -134,6 +140,11 @@ static int unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 		}
 
 		if (*fxptr & MASK) {
+			if (trkn / 2 > convsz) {
+				goto err2;
+			}	
+			convsz -= trkn / 2;
+
 			lmsk = get_nibbles(fromst,&fromn,(uint8)(trkn / 4));
 			lmsk <<= (16 - trkn);
 			tmpto = to;
@@ -212,6 +223,11 @@ static int unpack_block(struct module_data *m, uint16 bnum, uint8 *from)
 	free(patbuf);
 
 	return 0;
+
+     err2:
+	free(patbuf);
+     err:
+	return -1;
 }
 
 
@@ -368,9 +384,12 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
                 else
 			*(conv + 3) = hio_read32b(f);
 
-		hio_read(conv + 4, 1, convsz, f);
+		if (hio_read(conv + 4, 1, convsz, f) != convsz) {
+			free(conv);
+			return -1;
+		}
 
-                if (unpack_block(m, i, (uint8 *)conv) < 0) {
+                if (unpack_block(m, i, (uint8 *)conv, convsz) < 0) {
 			free(conv);
 			return -1;
 		}

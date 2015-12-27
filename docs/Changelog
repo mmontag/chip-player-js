@@ -35,6 +35,9 @@ Stable versions
 	- prevent division by zero in memory I/O
 	- change IFF info ID from string to binary buffer
 	- better IFF error handling
+	Fix problems caused by fuzz files (reported by Jonathan Neuschäfer):
+	- add sanity checks to LHA depacker
+	- add sanity checks to MED3 loader
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 	- fix SFX effects 5, 6, 7, and 8 (reported by Lamar McLouth)
@@ -42,7 +45,6 @@ Stable versions
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
 	- fix tone portamento target setting (reported by Georgy Lomsadze)
 	- disable ST3 sample size limit (reported by Jochen Goernitz)
-	- add sanity checks to LHA depacker (reported by Jonathan Neuschäfer)
 	- fix crash in Prowizard error handling
 	- fix IMS sample loop start
 	- fix LIQ pan setting and surround channel
