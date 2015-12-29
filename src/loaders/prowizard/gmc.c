@@ -168,7 +168,11 @@ static int test_GMC(uint8 *data, char *t, int s)
 	for (i = 0; i < numpat; i++) {
 		for (j = 0; j < 256; j++) {
 			int offset = 444 + i * 1024 + j * 4;
-			uint8 *d = &data[offset];
+			uint8 *d;
+
+			PW_REQUEST_DATA(s, offset + 4);
+
+			d = &data[offset];
 
 			if (offset > (PW_TEST_CHUNK - 4))
 				return -1;

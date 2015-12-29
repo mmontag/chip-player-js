@@ -38,6 +38,9 @@ Stable versions
 	Fix problems caused by fuzz files (reported by Jonathan Neuschäfer):
 	- add sanity checks to LHA depacker
 	- add sanity checks to MED3 loader
+	- add sanity checks to ABK loader
+	- add sanity checks to Fuchs converter
+	- add sanity checks to GMC converter
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 	- fix SFX effects 5, 6, 7, and 8 (reported by Lamar McLouth)

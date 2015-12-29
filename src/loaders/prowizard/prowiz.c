@@ -106,13 +106,12 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 		return -2;
 	}
 
-	/* alloc mem */
-	data = (uint8 *)malloc (in_size + 4096);	/* slack added */
-	if (data == NULL) {
-		/*perror("Couldn't allocate memory");*/
+	if ((data = (uint8 *)malloc(in_size)) == NULL) {
 		goto err;
 	}
-	hio_read(data, in_size, 1, file_in);
+	if (hio_read(data, 1, in_size, file_in) != in_size) {
+		goto err;
+	}
 
 
   /********************************************************************/
