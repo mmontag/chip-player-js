@@ -110,7 +110,7 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 		goto err;
 	}
 	if (hio_read(data, 1, in_size, file_in) != in_size) {
-		goto err;
+		goto err2;
 	}
 
 

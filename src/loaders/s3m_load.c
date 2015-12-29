@@ -548,8 +548,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		sih.length = 64000;
 #endif
 
-	if (sih.length > MAX_SAMPLE_SIZE)
-		return -1;
+	if (sih.length > MAX_SAMPLE_SIZE) {
+            goto err3;
+	}
 
 	sih.loopbeg = hio_read32l(f);		/* Loop begin */
 	sih.loopend = hio_read32l(f);		/* Loop end */
