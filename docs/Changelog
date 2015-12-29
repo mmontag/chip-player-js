@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.10 (20151224):
+4.3.10 (20151231):
 	Fix bugs reported by Coverity Scan:
 	- fix out of bounds access in IT/XM/MDL/IMF envelopes
 	- fix out of bounds read in STX effect decoding
