@@ -129,7 +129,7 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 	}
 
 	if (hio_error(file_in)) {
-		// reset error flag
+		/* reset error flag */
 	}
 
 	hio_seek(file_in, 0, SEEK_SET);
