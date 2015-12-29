@@ -87,6 +87,10 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 	}
 
 	if (data->flags & IFF_CHUNK_ALIGN2) {
+		/* Sanity check */
+		if (size > 0xfffffffe) {
+			return -1;
+		}
 		size = (size + 1) & ~1;
 	}
 
