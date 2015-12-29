@@ -156,7 +156,9 @@ static int read_abk_song(HIO_HANDLE *f, struct abk_song *song, uint32 songs_sect
 
     song_section = hio_read32b(f);
 
-    hio_seek(f, songs_section_offset + song_section, SEEK_SET);
+    if (hio_seek(f, songs_section_offset + song_section, SEEK_SET) < 0) {
+        return -1;
+    }
 
     for (i=0; i<AMOS_ABK_CHANNELS; i++)
     {
@@ -168,7 +170,9 @@ static int read_abk_song(HIO_HANDLE *f, struct abk_song *song, uint32 songs_sect
     /* unused. just progress the file pointer forward */
     (void) hio_read16b(f);
 
-    hio_read(song->song_name, 1, AMOS_STRING_LEN, f);
+    if (hio_read(song->song_name, 1, AMOS_STRING_LEN, f) != AMOS_STRING_LEN) {
+        return -1;
+    }
 
     return 0;
 }
@@ -400,7 +404,10 @@ static struct abk_instrument* read_abk_insts(HIO_HANDLE *f, uint32 inst_section_
             inst[i].sample_length = sampleLength;
         }
     
-        hio_read(inst[i].sample_name, 1, 16, f);
+        if (hio_read(inst[i].sample_name, 1, 16, f) != 16) {
+            free(inst);
+            return NULL;
+	}
     }
 
     return inst;
@@ -510,6 +517,9 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* read all the instruments in */
     ci = read_abk_insts(f, inst_section_size, mod->ins);
+    if (ci == NULL) {
+        return -1;
+    }
 
     /* store the location of the first sample so we can read them later. */
     first_sample_offset = AMOS_MAIN_HEADER + main_header.instruments_offset + ci[0].sample_offset;
