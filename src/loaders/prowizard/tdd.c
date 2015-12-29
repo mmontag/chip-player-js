@@ -13,7 +13,7 @@
 
 static int depack_tdd(HIO_HANDLE *in, FILE *out)
 {
-	uint8 *tmp;
+	uint8 tmp[1024];
 	uint8 pat[1024];
 	uint8 pmax;
 	int i, j, k;
@@ -28,9 +28,10 @@ static int depack_tdd(HIO_HANDLE *in, FILE *out)
 	pw_write_zero(out, 1080);
 
 	/* read/write pattern list + size and ntk byte */
-	tmp = (uint8 *)malloc(130);
-	memset(tmp, 0, 130);
-	fseek(out, 950, 0);
+	if (fseek(out, 950, SEEK_SET) < 0) {
+		return -1;
+	}
+
 	hio_read(tmp, 130, 1, in);
 	fwrite(tmp, 130, 1, out);
 
@@ -39,11 +40,13 @@ static int depack_tdd(HIO_HANDLE *in, FILE *out)
 			pmax = tmp[i + 2];
 		}
 	}
-	free(tmp);
 
 	/* sample descriptions */
 	for (i = 0; i < 31; i++) {
-		fseek(out, 42 + (i * 30), SEEK_SET);
+		if (fseek(out, 42 + (i * 30), SEEK_SET) < 0) {
+			return -1;
+		}
+
 		/* sample address */
 		saddr[i] = hio_read32b(in);
 
@@ -60,18 +63,26 @@ static int depack_tdd(HIO_HANDLE *in, FILE *out)
 	}
 
 	/* bypass Samples datas */
-	hio_seek(in, ssize, SEEK_CUR);
+	if (hio_seek(in, ssize, SEEK_CUR) < 0) {
+		return -1;
+	}
 
 	/* write ptk's ID string */
-	fseek(out, 0, SEEK_END);
+	if (fseek(out, 0, SEEK_END) < 0) {
+		return -1;
+	}
+
 	write32b(out, PW_MOD_MAGIC);
 
 	/* read/write pattern data */
-	tmp = (uint8 *)malloc(1024);
 	for (i = 0; i <= pmax; i++) {
 		memset(tmp, 0, 1024);
 		memset(pat, 0, 1024);
-		hio_read(tmp, 1024, 1, in);
+
+		if (hio_read(tmp, 1, 1024, in) != 1024) {
+			return -1;
+		}
+
 		for (j = 0; j < 64; j++) {
 			for (k = 0; k < 4; k++) {
 				int x = j * 16 + k * 4;
@@ -91,9 +102,10 @@ static int depack_tdd(HIO_HANDLE *in, FILE *out)
 				pat[x + 1] = ptk_table[tmp[x + 1] / 2][1];
 			}
 		}
-		fwrite(pat, 1024, 1, out);
+		if (fwrite(pat, 1, 1024, out) != 1024) {
+			return -1;
+		}
 	}
-	free(tmp);
 
 	/* Sample data */
 	for (i = 0; i < 31; i++) {
