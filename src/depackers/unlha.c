@@ -293,9 +293,14 @@ static int make_table(struct LhADecrData *dat, int16 nchar, uint8 bitlen[], int1
     }
     else
     {
+#if 0
+      /* CID 156018 (#1 of 1): Logically dead code (DEADCODE)
+       * dead_error_line: Execution cannot reach this statement: return -1;
+       */
       /* Sanity check */
       if(k >= 17)
         return -1;
+#endif
 
       /* code not in table */
       i = start[k];
