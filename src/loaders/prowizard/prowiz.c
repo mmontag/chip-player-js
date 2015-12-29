@@ -102,14 +102,15 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 	in_size = hio_size(file_in);
 
 	/* printf ("input file size : %d\n", in_size); */
-	if (in_size < MIN_FILE_LENGHT)
+	if (in_size < MIN_FILE_LENGHT) {
 		return -2;
+	}
 
 	/* alloc mem */
 	data = (uint8 *)malloc (in_size + 4096);	/* slack added */
 	if (data == NULL) {
 		/*perror("Couldn't allocate memory");*/
-		return -1;
+		goto err;
 	}
 	hio_read(data, in_size, 1, file_in);
 
@@ -125,14 +126,20 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 	}
 
 	if (pw_format[i] == NULL) {
-		free(data);
-		return -1;
+		goto err2;
+	}
+
+	if (hio_error(file_in)) {
+		// reset error flag
 	}
 
 	hio_seek(file_in, 0, SEEK_SET);
 	if (pw_format[i]->depack(file_in, file_out) < 0) {
-		free(data);
-		return -1;
+		goto err2;
+	}
+
+	if (hio_error(file_in)) {
+		goto err2;
 	}
 
 	fflush(file_out);
@@ -143,6 +150,11 @@ int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
 	}
 
 	return 0;
+
+    err2:
+	free(data);
+    err:
+	return -1;
 }
 
 int pw_check(unsigned char *b, int s, struct xmp_test_info *info)

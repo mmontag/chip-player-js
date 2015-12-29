@@ -101,7 +101,10 @@ static int depack_fuchs(HIO_HANDLE *in, FILE *out)
 
 	/* read pattern data */
 	tmp = (uint8 *)malloc(pat_size);
-	hio_read(tmp, pat_size, 1, in);
+	if (hio_read(tmp, 1, pat_size, in) != pat_size) {
+		free(tmp);
+		return -1;
+	}
 
 	/* convert shits */
 	for (i = 0; i < pat_size; i += 4) {
