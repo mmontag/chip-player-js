@@ -234,6 +234,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     sfh.ffi = hio_read16l(f);		/* File format information */
 
     /* Sanity check */
+    if (hio_error(f)) {
+	goto err;
+    }
     if (sfh.ffi != 1 && sfh.ffi != 2) {
 	goto err;
     }
@@ -253,6 +256,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     sfh.special = hio_read16l(f);	/* Ptr to special custom data */
     hio_read(sfh.chset, 32, 1, f);	/* Channel settings */
 
+    if (hio_error(f)) {
+	goto err;
+    }
 #if 0
     if (sfh.magic != MAGIC_SCRM)
 	return -1;
@@ -276,7 +282,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     if (pp_ins == NULL)
 	goto err;
 
-    pp_pat = calloc (2, sfh.patnum);
+    pp_pat = calloc(2, sfh.patnum);
     if (pp_pat == NULL)
 	goto err2;
 
@@ -310,6 +316,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = XMP_MAX_MOD_LENGTH;
 	hio_read(mod->xxo, 1, mod->len, f);
 	hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR);
+    } 
+    if (hio_error(f)) {
+        goto err3;
     }
 
     mod->pat = -1;
@@ -417,6 +426,10 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	while (pat_len >= 0 && r < mod->xxp[i]->rows) {
 	    b = hio_read8(f);
 
+            if (hio_error(f)) {
+                goto err3;
+            }
+
 	    if (b == S3M_EOR) {
 		r++;
 		continue;
@@ -474,8 +487,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_subinstrument *sub;
 
 	xxi->sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	if (xxi->sub == NULL)
+	if (xxi->sub == NULL) {
 	    goto err3;
+        }
 
 	sub = &xxi->sub[0];
 
@@ -594,8 +608,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
 
 	ret = load_sample(m, f, sfh.ffi == 1 ? 0 : SAMPLE_FLAG_UNS, xxs, NULL);
-	if (ret < 0)
+	if (ret < 0) {
 		goto err3;
+	}
     }
 
     free(pp_pat);
