@@ -657,7 +657,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 		xxi->rls = x;
 
 	    sub->vra = hio_read8(f);	/* vibrato rate */
-	    sub->vde = hio_read8(f) >> 1;	/* vibrato depth */
+	    sub->vde = hio_read8(f) << 1;	/* vibrato depth */
 	    sub->vsw = hio_read8(f);	/* vibrato sweep */
 	    sub->vwf = hio_read8(f);	/* vibrato waveform */
 	    hio_read8(f);		/* Reserved */

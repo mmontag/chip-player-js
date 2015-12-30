@@ -11,7 +11,7 @@ struct lfo {
 };
 
 
-int get_lfo(struct context_data *, struct lfo *, int, int);
+int get_lfo(struct context_data *, struct lfo *, int);
 void update_lfo(struct lfo *);
 void set_lfo_phase(struct lfo *, int);
 void set_lfo_depth(struct lfo *, int);

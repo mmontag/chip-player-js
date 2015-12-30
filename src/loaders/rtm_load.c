@@ -472,7 +472,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			sub->vol = rs.defaultvolume * rs.basevolume / 0x40;
 			sub->pan = 0x80 + rs.panning * 2;
 			sub->vwf = ri.vibflg;
-			sub->vde = ri.vibdepth;
+			sub->vde = ri.vibdepth << 2;
 			sub->vra = ri.vibrate;
 			sub->vsw = ri.vibsweep;
 			sub->sid = smpnum;

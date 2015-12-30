@@ -454,7 +454,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		sub->xpo = xsh[j].relnote;
 		sub->fin = xsh[j].finetune;
 		sub->vwf = xi.y_wave;
-		sub->vde = xi.y_depth;
+		sub->vde = xi.y_depth << 2;
 		sub->vra = xi.y_rate;
 		sub->vsw = xi.y_sweep;
 		sub->sid = sample_num;

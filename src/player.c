@@ -418,7 +418,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 #endif
 
 	if (TEST(TREMOLO)) {
-		finalvol += get_lfo(ctx, &xc->tremolo.lfo, 1 << 6, 0);
+		finalvol += get_lfo(ctx, &xc->tremolo.lfo, 0) / (1 << 6);
 		if (!is_first_frame(ctx) || HAS_QUIRK(QUIRK_VIBALL)) {
 			update_lfo(&xc->tremolo.lfo);
 		}
@@ -493,10 +493,10 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc = &p->xc_data[chn];
 	struct xmp_instrument *instrument;
-	double period;
+	double period, vibrato;
 	int linear_bend;
 	int frq_envelope;
-	int arp, vibrato;
+	int arp;
 #ifndef LIBXMP_CORE_DISABLE_IT
 	int cutoff, resonance;
 #endif
@@ -527,7 +527,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 #endif
 
 	/* Instrument vibrato */
-	vibrato = get_lfo(ctx, &xc->insvib.lfo, (1024 * (1 + xc->insvib.sweep)), 1);
+	vibrato = 1.0 * get_lfo(ctx, &xc->insvib.lfo, 1) /
+				(4096 * (1 + xc->insvib.sweep));
 	update_lfo(&xc->insvib.lfo);
 	if (xc->insvib.sweep > 1) {
 		xc->insvib.sweep -= 2;
@@ -538,7 +539,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	/* Vibrato */
 	if (TEST(VIBRATO) || TEST_PER(VIBRATO)) {
 		int shift = HAS_QUIRK(QUIRK_VIBHALF) ? 10 : 9;
-		int vib = get_lfo(ctx, &xc->vibrato.lfo, 1 << shift, 1);
+		int vib = get_lfo(ctx, &xc->vibrato.lfo, 1) / (1 << shift);
 
 		if (HAS_QUIRK(QUIRK_VIBINV)) {
 			vibrato -= vib;
@@ -648,7 +649,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 
 	if (TEST(PANBRELLO)) {
-		panbrello = get_lfo(ctx, &xc->panbrello.lfo, 512, 0);
+		panbrello = get_lfo(ctx, &xc->panbrello.lfo, 0) / 512;
 		update_lfo(&xc->panbrello.lfo);
 	}
 

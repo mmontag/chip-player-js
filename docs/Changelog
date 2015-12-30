@@ -47,6 +47,7 @@ Stable versions
 	- fix pattern loading in Galaxy 4 and 5 (reported by Anton Zab)
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
 	- fix tone portamento target setting (reported by Georgy Lomsadze)
+	- fix IT autovibrato depth (reported by Travis Evans)
 	- disable ST3 sample size limit (reported by Jochen Goernitz)
 	- fix crash in Prowizard error handling
 	- fix IMS sample loop start

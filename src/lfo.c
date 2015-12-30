@@ -36,11 +36,11 @@ static const int sine_wave[WAVEFORM_SIZE] = {
 
 /* LFO */
 
-static int get_lfo_mod(struct lfo *lfo, int div)
+static int get_lfo_mod(struct lfo *lfo)
 {
 	int val;
 
-	if (lfo->rate == 0 || div == 0)
+	if (lfo->rate == 0)
 		return 0;
 
 	switch (lfo->type) {
@@ -60,73 +60,74 @@ static int get_lfo_mod(struct lfo *lfo, int div)
 		return 0;
 	}
 
-	return val * lfo->depth / div;
+	return val * lfo->depth;
 }
 
-static int get_lfo_st3(struct lfo *lfo, int div)
+static int get_lfo_st3(struct lfo *lfo)
 {
-	if (lfo->rate == 0 || div == 0)
+	if (lfo->rate == 0) {
 		return 0;
+	}
 
 	/* S3M square */
 	if (lfo->type == 2) {
 		int val = lfo->phase < WAVEFORM_SIZE / 2 ? 255 : 0;
-		return val * lfo->depth / div;
+		return val * lfo->depth;
 	}
 
-	return get_lfo_mod(lfo, div);
+	return get_lfo_mod(lfo);
 }
 
 /* From OpenMPT VibratoWaveforms.xm:
  * "Generally the vibrato and tremolo tables are identical to those that
  *  ProTracker uses, but the vibrato’s “ramp down” table is upside down."
  */
-static int get_lfo_ft2(struct lfo *lfo, int div)
+static int get_lfo_ft2(struct lfo *lfo)
 {
-	if (lfo->rate == 0 || div == 0)
+	if (lfo->rate == 0)
 		return 0;
 
 	/* FT2 ramp */
 	if (lfo->type == 1) {
 		int phase = (lfo->phase + (WAVEFORM_SIZE >> 1)) % WAVEFORM_SIZE;
 		int val = (phase << 3) - 255;
-		return val * lfo->depth / div;
+		return val * lfo->depth;
 	}
 
-	return get_lfo_mod(lfo, div);
+	return get_lfo_mod(lfo);
 }
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
-static int get_lfo_it(struct lfo *lfo, int div)
+static int get_lfo_it(struct lfo *lfo)
 {
-	if (lfo->rate == 0 || div == 0)
+	if (lfo->rate == 0)
 		return 0;
 
-	return get_lfo_st3(lfo, div);
+	return get_lfo_st3(lfo);
 }
 
 #endif
 
-int get_lfo(struct context_data *ctx, struct lfo *lfo, int div, int is_vibrato)
+int get_lfo(struct context_data *ctx, struct lfo *lfo, int is_vibrato)
 {
 	struct module_data *m = &ctx->m;
 
 	switch (m->read_event_type) {
 	case READ_EVENT_ST3:
-		return get_lfo_st3(lfo, div);
+		return get_lfo_st3(lfo);
 	case READ_EVENT_FT2:
 		if (is_vibrato) {
-			return get_lfo_ft2(lfo, div);
+			return get_lfo_ft2(lfo);
 		} else {
-			return get_lfo_mod(lfo, div);
+			return get_lfo_mod(lfo);
 		}
 #ifndef LIBXMP_CORE_DISABLE_IT
 	case READ_EVENT_IT:
-		return get_lfo_it(lfo, div);
+		return get_lfo_it(lfo);
 #endif
 	default:
-		return get_lfo_mod(lfo, div);
+		return get_lfo_mod(lfo);
 	}
 }
 

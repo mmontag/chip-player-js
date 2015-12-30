@@ -173,7 +173,7 @@ static int read_am_instrument(struct module_data *m, HIO_HANDLE *nt, int i)
 	xxi->nsm = 1;
 	xxi->sub[0].xpo = -12 * am.fq;
 	xxi->sub[0].vwf = 0;
-	xxi->sub[0].vde = am.v_amp;
+	xxi->sub[0].vde = am.v_amp << 2;
 	xxi->sub[0].vra = am.v_spd;
 
 	/*

@@ -231,7 +231,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	vsw = hio_read8(f);			/* vibrato sweep */
 	hio_read8(f);			/* unknown */
 	hio_read8(f);			/* unknown */
-	vde = hio_read8(f) / 4;		/* vibrato depth */
+	vde = hio_read8(f);		/* vibrato depth */
 	vra = hio_read16l(f) / 16;		/* vibrato speed */
 	hio_read8(f);			/* unknown */
 
