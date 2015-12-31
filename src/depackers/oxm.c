@@ -45,36 +45,40 @@ int test_oxm(FILE *f)
 	uint8 buf[1024];
 	int error;
 
-	if (fseek(f, 0, SEEK_SET) < 0)
+	if (fseek(f, 0, SEEK_SET) < 0) {
 		return -1;
-	if (fread(buf, 1, 16, f) < 16)
-		return -1;
-	if (memcmp(buf, "Extended Module:", 16))
-		return -1;
-	
-	if (fseek(f, 60, SEEK_SET) < 0)
-		return -1;
-	hlen = read32l(f, &error);
-	if (error != 0 || fseek(f, 6, SEEK_CUR) < 0)
-		return -1;
-	npat = read16l(f, &error);
-	if (error != 0) return -1;
-	nins = read16l(f, &error);
-	if (error != 0) return -1;
+	}
 
-	if (npat > 256 || nins > 128)
+	if (fread(buf, 1, 80, f) != 80) {
 		return -1;
+	}
+
+	hlen = readmem32l(buf + 60);
+	npat = readmem16l(buf + 70);
+	nins = readmem16l(buf + 72);
+
+	if (memcmp(buf, "Extended Module:", 16)) {
+		return -1;
+	}
 	
-	if (fseek(f, 60 + hlen, SEEK_SET) < 0)
+	if (npat > 256 || nins > 128) {
 		return -1;
+	}
+	
+	if (fseek(f, 60 + hlen, SEEK_SET) < 0) {
+		return -1;
+	}
 
 	for (i = 0; i < npat; i++) {
-		len = read32l(f, &error);
-		if (error != 0 || fseek(f, 3, SEEK_CUR) < 0)
+		if (fread(buf, 1, 9, f) != 9) {
 			return -1;
-		plen = read16l(f, &error);
-		if (error != 0 || fseek(f, len - 9 + plen, SEEK_CUR) < 0)
+		}
+		len = readmem32l(buf);
+		plen = readmem16l(buf + 7);
+
+		if (fseek(f, len - 9 + plen, SEEK_CUR) < 0) {
 			return -1;
+		}
 	}
 
 	for (i = 0; i < nins; i++) {
@@ -203,29 +207,41 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 	char *pcm[256];
 	int newlen = 0;
 
-	(void) fseek(f, 60, SEEK_SET);
-	hlen = read32l(f, NULL);
-	(void) fseek(f, 6, SEEK_CUR);
-	npat = read16l(f, NULL);
-	nins = read16l(f, NULL);
-	
-	if (npat > 256 || nins > 128)
+	if (fread(buf, 1, 80, f) != 80) {
 		return -1;
+	}
 
-	(void) fseek(f, 60 + hlen, SEEK_SET);
+	hlen = readmem32l(buf + 60);
+	npat = readmem16l(buf + 70);
+	nins = readmem16l(buf + 72);
+
+	if (npat > 256 || nins > 128) {
+		return -1;
+	}
+
+	if (fseek(f, 60 + hlen, SEEK_SET) < 0) {
+		return -1;
+	}
 
 	for (i = 0; i < npat; i++) {
-		len = read32l(f, NULL);
-		(void) fseek(f, 3, SEEK_CUR);
-		plen = read16l(f, NULL);
-		(void) fseek(f, len - 9 + plen, SEEK_CUR);
+		if (fread(buf, 1, 9, f) != 9) {
+			return -1;
+		}
+		len = readmem32l(buf);
+		plen = readmem16l(buf + 7);
+
+		if (fseek(f, len - 9 + plen, SEEK_CUR) < 0) {
+			return -1;
+		}
 	}
 
 	pos = ftell(f);
 	if (pos < 0) {
 		return -1;
 	}
-	(void) fseek(f, 0, SEEK_SET);
+	if (fseek(f, 0, SEEK_SET) < 0) {
+		return -1;
+	}
 	move_data(fo, f, pos);			/* module header + patterns */
 
 	for (i = 0; i < nins; i++) {
