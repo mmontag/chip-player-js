@@ -1,6 +1,37 @@
 Stable versions
 ---------------
 
+4.3.10 (20151231):
+	Fix bugs reported by Coverity Scan:
+	- fix out of bounds access in IT/XM envelopes
+	- fix negative array index read when setting position
+	- fix resource leak in module load error handling
+	- add sanity check to smix sample loading
+	- add error handling to many I/O operations
+	- remove dead code in virtual channel manager reset
+	- remove unnecessary seeks in format loaders
+	- prevent division by zero in memory I/O
+	Other changes:
+	- fix IT envelope release + fadeout (reported by NoSuck)
+	- fix IT autovibrato depth (reported by Travis Evans)
+	- fix tone portamento target setting (reported by Georgy Lomsadze)
+	- disable ST3 sample size limit (reported by Jochen Goernitz)
+
+4.3.9 (20150623):
+	Fix bugs caught in the OpenMPT test cases:
+	- fix IT tone portamento on sample change and NNA
+	- fix IT tone portamento with offset
+	Fix problems caused by fuzz files (reported by Jonathan Neuschäfer):
+	- add sanity check to IT instrument name loader
+	- add sanity check to IT loader instrument mapping
+	- initialize IT loader last event data
+	Other changes:
+	- detect Amiga frequency limits in MOD (reported by Mirko Buffoni)
+	- fix global volume on restart to invalid row (reported by Adam Purkrt)
+	- fix external sample mixer for IT files (reported by honguito98)
+	- allow short sample reads (reported by Adam Purkrt)
+	- address problems reported by clang sanitizer
+
 4.3.8 (20150404):
 	- fix pre-increment of envelope indexes
 	- fix IT note release at end of envelope sustain loop
