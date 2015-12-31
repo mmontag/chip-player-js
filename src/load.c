@@ -162,7 +162,9 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 		}
 	}
 
-	fseek(f, 0, SEEK_SET);
+	if (fseek(f, 0, SEEK_SET) < 0) {
+		goto err;
+	}
 
 	if (depacker == NULL && cmd == NULL) {
 		D_(D_INFO "Not packed");
