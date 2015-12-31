@@ -299,10 +299,13 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 		goto err;
 
 	/* Block table */
-	fseek(in, h.blktable, SEEK_SET);
-	table = malloc(h.nblocks * 4);
-	if (table == NULL)
+	if (fseek(in, h.blktable, SEEK_SET) < 0) {
 		goto err;
+	}
+
+	if ((table = malloc(h.nblocks * 4)) == NULL) {
+		goto err;
+	}
 
 	for (i = 0; i < h.nblocks; i++) {
 		table[i] = read32l(in, &error);
@@ -312,22 +315,23 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 	for (i = 0; i < h.nblocks; i++) {
 		struct block block;
 		struct sub_block *sub_block;
+		uint8 buf[20];
 
-		fseek(in, table[i], SEEK_SET);
-		block.unpk_size  = read32l(in, &error);
-		if (error != 0) goto err2;
-		block.pk_size    = read32l(in, &error);
-		if (error != 0) goto err2;
-		block.xor_chk    = read32l(in, &error);
-		if (error != 0) goto err2;
-		block.sub_blk    = read16l(in, &error);
-		if (error != 0) goto err2;
-		block.flags      = read16l(in, &error);
-		if (error != 0) goto err2;
-		block.tt_entries = read16l(in, &error);
-		if (error != 0) goto err2;
-		block.num_bits   = read16l(in, &error);
-		if (error != 0) goto err2;
+		if (fseek(in, table[i], SEEK_SET) < 0) {
+			goto err2;
+		}
+
+		if (fread(buf, 1, 20, in) != 20) {
+			goto err2;
+		}
+
+		block.unpk_size  = readmem32l(buf);
+		block.pk_size    = readmem32l(buf + 4);
+		block.xor_chk    = readmem32l(buf + 8);
+		block.sub_blk    = readmem16l(buf + 12);
+		block.flags      = readmem16l(buf + 14);
+		block.tt_entries = readmem16l(buf + 16);
+		block.num_bits   = readmem16l(buf + 18);
 
                 /* Sanity check */
 		if (block.unpk_size <= 0 || block.pk_size <= 0)
@@ -353,10 +357,15 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 			goto err2;
 
 		for (j = 0; j < block.sub_blk; j++) {
-			sub_block[j].unpk_pos  = read32l(in, &error);
-			if (error != 0) goto err2;
-			sub_block[j].unpk_size = read32l(in, &error);
-			if (error != 0) goto err2;
+			uint8 buf[8];
+
+			if (fread(buf, 1, 8, in) != 8) {
+				free(sub_block);
+				goto err2;
+			}
+
+			sub_block[j].unpk_pos  = readmem32l(buf);
+			sub_block[j].unpk_size = readmem32l(buf + 4);
 
 	                /* Sanity check */
 			if (sub_block[j].unpk_pos < 0 ||
