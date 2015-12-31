@@ -298,6 +298,10 @@ UINT8 DSound_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	drv->bufSegCount = options->numBuffers ? options->numBuffers : 10;
 	drv->bufSize = drv->bufSegSize * drv->bufSegCount;
 	
+	retVal = CoInitialize(NULL);	// call again, in case Init() was called by another thread
+	if (! (retVal == S_OK || retVal == S_FALSE))
+		return AERR_API_ERR;
+	
 	if (! memcmp(&devList[deviceID].devGUID, &GUID_NULL, sizeof(GUID)))
 		devGUID = NULL;	// default device
 	else
@@ -375,6 +379,7 @@ UINT8 DSound_Stop(void* drvObj)
 	drv->dSndIntf->Release();
 	drv->dSndIntf = NULL;
 	
+	CoUninitialize();
 	drv->devState = 0;
 	
 	return AERR_OK;

@@ -265,6 +265,10 @@ UINT8 XAudio2_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* au
 	drv->bufSize = drv->waveFmt.nBlockAlign * drv->bufSmpls;
 	drv->bufCount = options->numBuffers ? options->numBuffers : 10;
 	
+	retVal = CoInitialize(NULL);	// call again, in case Init() was called by another thread
+	if (! (retVal == S_OK || retVal == S_FALSE))
+		return AERR_API_ERR;
+	
 	retVal = XAudio2Create(&drv->xAudIntf, 0x00, XAUDIO2_DEFAULT_PROCESSOR);
 	if (retVal != S_OK)
 		return AERR_API_ERR;
@@ -337,6 +341,7 @@ UINT8 XAudio2_Stop(void* drvObj)
 	free(drv->xaBufs);		drv->xaBufs = NULL;
 	free(drv->bufSpace);	drv->bufSpace = NULL;
 	
+	CoUninitialize();
 	drv->devState = 0;
 	
 	return AERR_OK;

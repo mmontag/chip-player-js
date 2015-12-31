@@ -31,8 +31,10 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
 static UINT32 smplSize;
 static void* audDrv;
 static DEV_INFO snDefInf;
+static RESMPL_STATE snResmpl;
 static UINT32 smplAlloc;
 static DEV_SMPL* smplData[2];
+static volatile bool canRender;
 
 int main(int argc, char* argv[])
 {
@@ -47,7 +49,7 @@ int main(int argc, char* argv[])
 	SN76496_CFG snCfg;
 	//DEV_INFO snDefInf;
 	DEVFUNC_WRITE_A8D8 snWrite;
-	UINT8 curReg;
+	//UINT8 curReg;
 	
 	Audio_Init();
 	drvCount = Audio_GetDriverCount();
@@ -99,11 +101,13 @@ int main(int argc, char* argv[])
 	}
 	
 	opts = AudioDrv_GetOptions(audDrv);
-	opts->sampleRate = snDefInf.sampleRate;
+	//opts->sampleRate = snDefInf.sampleRate;
+	//opts->sampleRate = 96000;
 	opts->numChannels = 2;
 	opts->numBitsPerSmpl = 16;
 	smplSize = opts->numChannels * opts->numBitsPerSmpl / 8;
 	
+	canRender = false;
 	AudioDrv_SetCallback(audDrv, FillBuffer);
 	printf("Opening Device %u ...\n", idWavOutDev);
 	retVal = AudioDrv_Start(audDrv, idWavOutDev);
@@ -114,12 +118,22 @@ int main(int argc, char* argv[])
 	}
 	
 	smplAlloc = AudioDrv_GetBufferSize(audDrv) / smplSize;
-	smplData[0] = (DEV_SMPL*)malloc(smplAlloc * sizeof(DEV_SMPL));
-	smplData[1] = (DEV_SMPL*)malloc(smplAlloc * sizeof(DEV_SMPL));
+	smplData[0] = (DEV_SMPL*)malloc(smplAlloc * sizeof(DEV_SMPL) * 2);
+	smplData[1] = &smplData[0][smplAlloc];
 	
 	snDefInf.Reset(snDefInf.dataPtr);
+	
+	snResmpl.ResampleMode = 0xFF;
+	snResmpl.SmpRateSrc = snDefInf.sampleRate;
+	snResmpl.SmpRateDst = opts->sampleRate;
+	snResmpl.VolumeL = 0x100;	snResmpl.VolumeR = 0x100;
+	snResmpl.StreamUpdate = snDefInf.Update;
+	snResmpl.SU_DataPtr = snDefInf.dataPtr;
+	SndEmu_ResamplerInit(&snResmpl);
+	canRender = true;
+	
 	snWrite = (DEVFUNC_WRITE_A8D8)snDefInf.rwFuncs.Write;
-	snWrite(snDefInf.dataPtr, 1, 0xDE);
+	/*snWrite(snDefInf.dataPtr, 1, 0xDE);
 	for (curReg = 0x8; curReg < 0xE; curReg += 0x2)
 	{
 		snWrite(snDefInf.dataPtr, 0, (curReg << 4) | 0x0F);
@@ -127,13 +141,17 @@ int main(int argc, char* argv[])
 		snWrite(snDefInf.dataPtr, 0, (curReg << 4) | 0x10);
 	}
 	snWrite(snDefInf.dataPtr, 0, 0xE0 | 0x00);
-	snWrite(snDefInf.dataPtr, 0, 0xE0 | 0x10);
+	snWrite(snDefInf.dataPtr, 0, 0xE0 | 0x10);*/
+	snWrite(snDefInf.dataPtr, 0, 0x8B);
+	snWrite(snDefInf.dataPtr, 0, 0x06);
+	snWrite(snDefInf.dataPtr, 0, 0x90);
 	
 	getchar();
 	
 	retVal = AudioDrv_Stop(audDrv);
-	free(smplData[0]);	smplData[0] = NULL;
-	free(smplData[1]);	smplData[1] = NULL;
+	SndEmu_ResamplerDeinit(&snResmpl);
+	free(smplData[0]);
+	smplData[0] = NULL;	smplData[1] = NULL;
 	
 Exit_SndDrvDeinit:
 	SndEmu_Stop(&snDefInf);
@@ -156,17 +174,32 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	UINT32 smplCount;
 	INT16* SmplPtr16;
 	UINT32 curSmpl;
+	WAVE_32BS* smplDataW = (WAVE_32BS*)smplData[0];
+	
+	if (! canRender)
+	{
+		memset(data, 0x00, bufSize);
+		return bufSize;
+	}
 	
 	smplCount = bufSize / smplSize;
-	snDefInf.Update(snDefInf.dataPtr, smplCount, smplData);
+	memset(smplData[0], 0, bufSize);
+	memset(smplData[1], 0, bufSize);
+	//snDefInf.Update(snDefInf.dataPtr, smplCount, smplData);
+	SndEmu_ResamplerExecute(&snResmpl, smplCount, smplDataW);
 	switch(smplSize)
 	{
 	case 4:
 		SmplPtr16 = (INT16*)data;
-		for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
+		/*for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
 		{
 			SmplPtr16[0] = smplData[0][curSmpl];
 			SmplPtr16[1] = smplData[1][curSmpl];
+		}*/
+		for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
+		{
+			SmplPtr16[0] = smplDataW[curSmpl].L >> 8;
+			SmplPtr16[1] = smplDataW[curSmpl].R >> 8;
 		}
 		break;
 	default:

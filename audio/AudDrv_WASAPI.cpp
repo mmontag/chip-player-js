@@ -365,6 +365,10 @@ UINT8 WASAPI_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	bufTime = (REFERENCE_TIME)10000000 * drv->bufSmpls * drv->bufCount;
 	bufTime = (bufTime + options->sampleRate / 2) / options->sampleRate;
 	
+	retVal = CoInitialize(NULL);	// call again, in case Init() was called by another thread
+	if (! (retVal == S_OK || retVal == S_FALSE))
+		return AERR_API_ERR;
+	
 	retVal = CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
 								IID_IMMDeviceEnumerator, (void**)&drv->devEnum);
 	if (retVal != S_OK)
@@ -425,6 +429,7 @@ StartErr_HasDev:
 	drv->audDev->Release();		drv->audDev = NULL;
 StartErr_DevEnum:
 	drv->devEnum->Release();	drv->devEnum = NULL;
+	CoUninitialize();
 	return errVal;
 }
 
@@ -451,6 +456,7 @@ UINT8 WASAPI_Stop(void* drvObj)
 	drv->audDev->Release();		drv->audDev = NULL;
 	drv->devEnum->Release();	drv->devEnum = NULL;
 	
+	CoUninitialize();
 	drv->devState = 0;
 	
 	return AERR_OK;
