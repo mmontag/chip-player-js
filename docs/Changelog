@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.3.11 ():
+	- fix lite build with IT support disabled
+
 4.3.10 (20151231):
 	Fix bugs reported by Coverity Scan:
 	- fix out of bounds access in IT/XM/MDL/IMF envelopes
