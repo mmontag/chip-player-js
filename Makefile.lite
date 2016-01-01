@@ -11,7 +11,7 @@ include lite/src/Makefile
 include lite/src/loaders/Makefile
 include test/Makefile
 
-dist: dist-prepare vc-prepare dist-subdirs dist-dist
+dist: dist-prepare vc-prepare dist-subdirs dist-dist check-no-it
 	mv $(DIST)/libxmp-lite-*.tar.gz .
 	ls -l libxmp-lite-*.tar.gz
 
@@ -38,3 +38,8 @@ dist-makefile:
 dist-dist:
 	(cd  $(DIST); autoconf; ./configure)
 	$(MAKE) -C $(DIST) dist distcheck || false
+
+check-no-it:
+	(cd  $(DIST); autoconf; ./configure --disable-it)
+	$(MAKE) -C $(DIST) || false
+
