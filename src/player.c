@@ -132,7 +132,7 @@ static void reset_channels(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	struct smix_data *smix = &ctx->smix;
 	struct channel_data *xc;
-	int i, j;
+	int i;
 
 #ifndef LIBXMP_CORE_PLAYER
 	m->synth->reset(ctx);
@@ -163,7 +163,6 @@ static void reset_channels(struct context_data *ctx)
 
 	for (i = 0; i < p->virt.num_tracks; i++) {
 		xc = &p->xc_data[i];
-		xc->filter.cutoff = 0xff;
 
 		if (i >= mod->chn && i < mod->chn + smix->chn) {
 			xc->mastervol = 0x40;
@@ -173,8 +172,13 @@ static void reset_channels(struct context_data *ctx)
 			xc->pan.val = mod->xxc[i].pan;
 		}
 		
+#ifndef LIBXMP_CORE_DISABLE_IT
+		xc->filter.cutoff = 0xff;
+
 		/* Amiga split channel */
 		if (mod->xxc[i].flg & XMP_CHANNEL_SPLIT) {
+			int j;
+
 			xc->split = ((mod->xxc[i].flg & 0x30) >> 4) + 1;
 			/* Connect split channel pairs */
 			for (j = 0; j < i; j++) {
@@ -188,6 +192,7 @@ static void reset_channels(struct context_data *ctx)
 		} else {
 			xc->split = 0;
 		}
+#endif
 
 		/* Surround channel */
 		if (mod->xxc[i].flg & XMP_CHANNEL_SURROUND) {
@@ -648,10 +653,12 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	}
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	if (TEST(PANBRELLO)) {
 		panbrello = get_lfo(ctx, &xc->panbrello.lfo, 0) / 512;
 		update_lfo(&xc->panbrello.lfo);
 	}
+#endif
 
 	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
@@ -840,11 +847,13 @@ static void play_channel(struct context_data *ctx, int chn)
 
 	xc->info_finalvol = 0;
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	/* IT tempo slide */
 	if (!is_first_frame(ctx) && TEST(TEMPO_SLIDE)) {
 		p->bpm += xc->tempo.slide;
 		CLAMP(p->bpm, 0x20, 0xff);
 	}
+#endif
 
 	/* Do delay */
 	if (xc->delay > 0) {

@@ -136,6 +136,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		xc->finetune = sub->fin;
 		xc->gvl = sub->gvl;
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 		if (sub->ifc & 0x80) {
 			xc->filter.cutoff = (sub->ifc - 0x80) * 2;
 		} else if (~xxi->fei.flg & XMP_ENVELOPE_FLT) {
@@ -148,6 +149,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		} /* else {
 			xc->filter.resonance = 0;
 		} */
+#endif
 
 		set_lfo_depth(&xc->insvib.lfo, sub->vde);
 		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
