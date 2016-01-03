@@ -32,7 +32,6 @@ void mdx_set_rate(int freq);
 void mdx_set_dir(t_mdxmini *data, char *dir);
 int  mdx_open(t_mdxmini *data, char *filename, char *pcmdir);
 void mdx_close(t_mdxmini *data);
-void mdx_disp_info(t_mdxmini *data);
 
 int  mdx_next_frame(t_mdxmini *data);
 int  mdx_frame_length(t_mdxmini *data);
