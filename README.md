@@ -90,7 +90,7 @@ while (are_samples_remaining == 1)
     // The integers for these channels indicate the index of the PCM sample in use;
     // this is less informative than the note value, but a visualization might
     // still be able to use this.
-    for (int i = 8; i <= number_of_channels; i++) {
+    for (int i = 8; i < number_of_channels; i++) {
         printf("Sample for PCM channel %i is %i\n", i, notes[i]);
     }
 
