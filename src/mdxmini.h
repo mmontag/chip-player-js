@@ -43,9 +43,6 @@ void  mdx_get_title(t_mdxmini *data, char *title);
 int   mdx_get_length(t_mdxmini *data);
 void  mdx_set_max_loop(t_mdxmini *data, int loop);
 
-int  mdx_get_buffer_size(t_mdxmini *data);
-int  mdx_get_sample_size(t_mdxmini *data);
-
 int  mdx_get_tracks(t_mdxmini *data);
 void mdx_get_current_notes(t_mdxmini *data, int *notes, int len);
 
