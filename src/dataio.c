@@ -34,7 +34,7 @@
 } while (0)
 
 
-inline uint8 read8(FILE *f, int *err)
+uint8 read8(FILE *f, int *err)
 {
 	int a;
 
