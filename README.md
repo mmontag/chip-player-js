@@ -102,6 +102,14 @@ while (are_samples_remaining == 1)
 mdx_close(&data);
 ```
 
+Programs using mdxmini
+======================
+
+* [MDXPLAYER for Android](https://github.com/mistydemeo/mdxplayer), by BouKiCHi
+* [ruby-mdxplayer](https://github.com/mistydemeo/ruby-mdxplay)
+* [Paula](https://github.com/mistydemeo/paula)
+* [Modizer](http://yoyofr.blogspot.ca/p/modizer.html) by [yoyofr](http://yoyofr.blogspot.ca)
+
 Credits
 =======
 
