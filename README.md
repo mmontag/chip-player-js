@@ -106,7 +106,7 @@ Programs using mdxmini
 ======================
 
 * [MDXPLAYER for Android](https://github.com/mistydemeo/mdxplayer), by BouKiCHi
-* [ruby-mdxplayer](https://github.com/mistydemeo/ruby-mdxplay)
+* [ruby-mdxplay](https://github.com/mistydemeo/ruby-mdxplay)
 * [Paula](https://github.com/mistydemeo/paula)
 * [Modizer](http://yoyofr.blogspot.ca/p/modizer.html) by [yoyofr](http://yoyofr.blogspot.ca)
 
