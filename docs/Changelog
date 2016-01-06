@@ -2,8 +2,9 @@ Stable versions
 ---------------
 
 4.3.11 ():
-	- fix lite build with IT support disabled
 	- fix Visual C++ build (reported by Jochen Goernitz)
+	- fix lite build with IT support disabled
+	- fix build with gcc 2.95 in Haiku
 
 4.3.10 (20151231):
 	Fix bugs reported by Coverity Scan:

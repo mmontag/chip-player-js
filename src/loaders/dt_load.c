@@ -265,12 +265,14 @@ static int get_dait(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	}
 
 	if (size > 2) {
+		int ret;
+
 		/* Sanity check */
 		if (data->insnum >= mod->ins) {
 			return -1;
 		}
 
-		int ret = load_sample(m, f, SAMPLE_FLAG_BIGEND,
+		ret = load_sample(m, f, SAMPLE_FLAG_BIGEND,
 			&mod->xxs[mod->xxi[data->insnum].sub[0].sid], NULL);
 
 		if (ret < 0)

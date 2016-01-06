@@ -2056,6 +2056,8 @@ static int decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int 
                   #endif
                   int b = r->residue_books[c][pass];
                   if (b >= 0) {
+                     Codebook *book;
+
                      float *target = residue_buffers[j];
                      int offset = r->begin + pcount * r->part_size;
                      int n = r->part_size;
@@ -2065,7 +2067,7 @@ static int decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int 
                         return FALSE;
                      }
 
-                     Codebook *book = f->codebooks + b;
+                     book = f->codebooks + b;
                      if (!residue_decode(f, book, target, offset, n, rtype))
                         goto done;
                   }
@@ -5208,10 +5210,11 @@ int stb_vorbis_decode_memory(uint8 *mem, int len, int *channels, short **output)
 {
    int data_len, offset, total, limit, error;
    short *data;
+   stb_vorbis *v;
 
    D_(D_INFO "vorbis_decode_memory (len=%d)", len);
 
-   stb_vorbis *v = stb_vorbis_open_memory(mem, len, &error, NULL);
+   v = stb_vorbis_open_memory(mem, len, &error, NULL);
    if (v == NULL) return -1;
    limit = v->channels * 4096;
    *channels = v->channels;
