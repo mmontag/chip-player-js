@@ -415,7 +415,9 @@ class MIDIplay
         std::vector<TrackInfo> track;
 
         Position(): began(false), wait(0.0), track() { }
-    } CurrentPosition, LoopBeginPosition;
+    };
+    Position CurrentPosition, LoopBeginPosition, trackBeginPosition;
+
 
     std::map<std::string, unsigned> devices;
     std::map<unsigned/*track*/, unsigned/*channel begin index*/> current_device;
@@ -515,8 +517,12 @@ class MIDIplay
 public:
     std::string musTitle;
     fraction<long> InvDeltaTicks, Tempo;
-    bool loopStart, loopEnd, invalidLoop;
-    long loopStart_ticks, loopEnd_ticks;
+    bool    trackStart,
+            loopStart,
+            loopEnd,
+            loopStart_passed /*Tells that "loopStart" already passed*/,
+            invalidLoop /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/,
+            loopStart_hit /*loopStart entry was hited in previous tick*/;
     OPL3 opl;
 public:
     static unsigned long ReadBEInt(const void* buffer, unsigned nbytes)
@@ -830,8 +836,11 @@ public:
                 CurrentPosition.track[tk].delay = ReadVarLen(tk);
             }
         }
-        loopStart = true;
+        trackStart = true;
+        loopStart  = true;
+        loopStart_passed = false;
         invalidLoop = false;
+        loopStart_hit = false;
 
         opl.Reset(); // Reset AdLib
         //opl.Reset(); // ...twice (just in case someone misprogrammed OPL3 previously)
@@ -1029,17 +1038,33 @@ private:
         // ^HACK: CHRONO TRIGGER LOOP
         */
 
+        if(loopStart_hit && (loopStart||loopEnd)) //Avoid invalid loops
+        {
+            invalidLoop=true;
+            loopStart = false;
+            loopEnd = false;
+            LoopBeginPosition=trackBeginPosition;
+        } else {
+            loopStart_hit=false;
+        }
+
         if(loopStart)
         {
+            if(trackStart)
+            {
+                trackBeginPosition=RowBeginPosition;
+                trackStart=false;
+            }
             LoopBeginPosition = RowBeginPosition;
             loopStart = false;
+            loopStart_hit=true;
         }
         if(shortest < 0 || loopEnd)
         {
             // Loop if song end reached
             loopEnd         = false;
             CurrentPosition = LoopBeginPosition;
-            shortest        = 0;
+            shortest = 0;
             if(opl._parent->QuitWithoutLooping==1)
             {
                 opl._parent->QuitFlag = 1;
@@ -1068,8 +1093,28 @@ private:
             CurrentPosition.track[tk].ptr += length;
             if(evtype == 0x2F) { CurrentPosition.track[tk].status = -1; return; }
             if(evtype == 0x51) { Tempo = InvDeltaTicks * fraction<long>( (long) ReadBEInt(data.data(), data.size())); return; }
-            if(evtype == 6 && data == "loopStart") loopStart = true;
-            if(evtype == 6 && data == "loopEnd"  ) loopEnd   = true;
+            if(evtype == 6)
+            {
+                for(size_t i=0;i<data.size();i++)
+                {
+                    if(data[i]<='Z' && data[i]>='A')
+                        data[i]=data[i]-('Z'-'z');
+                }
+
+                if( (data == "loopstart") && (!invalidLoop) )
+                {
+                    loopStart = true;
+                    loopStart_passed=true;
+                }
+
+                if( (data == "loopend") && (!invalidLoop) )
+                {
+                    if((loopStart_passed) && (!loopStart))
+                        loopEnd=true;
+                    else
+                        invalidLoop=true;
+                }
+            }
             if(evtype == 9) current_device[tk] = ChooseDevice(data);
 //            if(evtype >= 1 && evtype <= 6)
 //                UI.PrintLn("Meta %d: %s", evtype, data.c_str());
