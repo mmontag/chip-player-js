@@ -133,7 +133,11 @@ void mmd_xlat_fx(struct xmp_event *event, int bpm_on, int bpmlen, int med_8ch,
 		 * This sets the secondary tempo (the number of timing
 		 * pulses per note). The argument must be from 01 to 20.
 		 */
-		event->fxt = FX_SPEED;
+		if (event->fxp >= 1 && event->fxp <= 20) {
+			event->fxt = FX_SPEED;
+		} else {
+			event->fxt = event->fxp = 0;
+		}
 		break;
 	case 0x0a:
 		/* 0A not mentioned but it's Protracker-compatible */
