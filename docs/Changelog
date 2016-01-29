@@ -2,6 +2,9 @@ Stable versions
 ---------------
 
 4.3.11 ():
+	Fix bugs caught in the OpenMPT test cases:
+	- fix XM arpeggio clamp
+	Other changes:
 	- fix Visual C++ build (reported by Jochen Goernitz)
 	- fix lite build with IT support disabled
 	- fix build with gcc 2.95 in Haiku

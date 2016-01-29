@@ -577,6 +577,16 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	/* Arpeggio */
 
 	arp = xc->arpeggio.val[xc->arpeggio.count];
+
+	/* OpenMPT ArpeggioClamp.xm */
+	if (HAS_QUIRK(QUIRK_FT2BUGS)) {
+		if (xc->note + arp > 107) {
+			if (xc->arpeggio.count > 0) {
+				arp = 108 - xc->note;
+			}
+		}
+	}
+	
 	if (arp != 0) {
 		linear_bend += (100 << 7) * arp;
 	}
