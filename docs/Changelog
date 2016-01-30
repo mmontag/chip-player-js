@@ -2,6 +2,10 @@ Stable versions
 ---------------
 
 4.3.11 ():
+	Fix bugs caught in the OpenMPT test cases:
+	- fix FT2 XM arpeggio clamp
+	- fix FT2 XM arpeggio + pitch slide
+	Other changes:
 	- fix range of MMD effect 9 (reported by Lamar McLouth)
 	- fix Visual C++ build (reported by Jochen Goernitz)
 	- fix lite build with IT support disabled

@@ -562,8 +562,15 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	period += extras_get_period(ctx, xc);
 #endif
 
+	/* Arpeggio */
+
+	arp = xc->arpeggio.val[xc->arpeggio.count];
+
+	/* Pitch bend */
+
 	linear_bend = period_to_bend(period + vibrato, xc->note,
-			TEST(GLISSANDO), HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+			TEST(GLISSANDO) || (HAS_QUIRK(QUIRK_FT2BUGS) && arp),
+			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 
 	/* Envelope */
 
@@ -574,9 +581,15 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		linear_bend += frq_envelope << 7;
 	}
 
-	/* Arpeggio */
-
-	arp = xc->arpeggio.val[xc->arpeggio.count];
+	/* OpenMPT ArpeggioClamp.xm */
+	if (HAS_QUIRK(QUIRK_FT2BUGS)) {
+		if (xc->note + arp > 107) {
+			if (xc->arpeggio.count > 0) {
+				arp = 108 - xc->note;
+			}
+		}
+	}
+	
 	if (arp != 0) {
 		linear_bend += (100 << 7) * arp;
 	}
