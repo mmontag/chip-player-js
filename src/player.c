@@ -321,6 +321,55 @@ static inline int get_channel_vol(struct context_data *ctx, int chn)
 	return p->channel_vol[root];
 }
 
+static int tremor_ft2(struct context_data *ctx, int chn, int finalvol)
+{
+	struct player_data *p = &ctx->p;
+	struct channel_data *xc = &p->xc_data[chn];
+
+	if (xc->tremor.up || xc->tremor.down) {
+		if (xc->tremor.count == 0) {
+			/* end of down cycle, set up counter for up  */
+			xc->tremor.count = xc->tremor.up | 0x80;
+		} else if (xc->tremor.count == 0x80) {
+			/* end of up cycle, set up counter for down */
+			xc->tremor.count = xc->tremor.down;
+		}
+
+		if (p->frame != 0) {
+			xc->tremor.count--;
+		}
+
+		if (~xc->tremor.count & 0x80) {
+			finalvol = 0;
+		}
+	}
+
+	return finalvol;
+}
+
+static int tremor_s3m(struct context_data *ctx, int chn, int finalvol)
+{
+	struct player_data *p = &ctx->p;
+	struct channel_data *xc = &p->xc_data[chn];
+
+	if (xc->tremor.up || xc->tremor.down) {
+		if (xc->tremor.count == 0) {
+			/* end of down cycle, set up counter for up  */
+			xc->tremor.count = xc->tremor.up | 0x80;
+		} else if (xc->tremor.count == 0x80) {
+			/* end of up cycle, set up counter for down */
+			xc->tremor.count = xc->tremor.down;
+		}
+
+		xc->tremor.count--;
+
+		if (~xc->tremor.count & 0x80) {
+			finalvol = 0;
+		}
+	}
+
+	return finalvol;
+}
 
 /*
  * Update channel data
@@ -458,22 +507,10 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
 	}
 
-	if (xc->tremor.up || xc->tremor.down) {
-		if (xc->tremor.count == 0) {
-			/* end of down cycle, set up counter for up  */
-			xc->tremor.count = xc->tremor.up | 0x80;
-		} else if (xc->tremor.count == 0x80) {
-			/* end of up cycle, set up counter for down */
-			xc->tremor.count = xc->tremor.down;
-		}
-
-		if (m->read_event_type != READ_EVENT_FT2 || p->frame != 0) {
-			xc->tremor.count--;
-		}
-
-		if (~xc->tremor.count & 0x80) {
-			finalvol = 0;
-		}
+	if (m->read_event_type == READ_EVENT_FT2) {
+		finalvol = tremor_ft2(ctx, chn, finalvol);
+	} else {
+		finalvol = tremor_s3m(ctx, chn, finalvol);
 	}
 
 	if (chn < m->mod.chn) {
