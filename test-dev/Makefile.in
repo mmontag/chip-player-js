@@ -131,7 +131,8 @@ OPENMPT_XM	= 3xxins \
 		  tremorrecover \
 		  vibratowaveforms
 
-OPENMPT_IT	= carrynna \
+OPENMPT_IT	= autovibrato_reset \
+		  carrynna \
 		  cut_carry \
 		  emptyslot \
 		  envloopescape \
