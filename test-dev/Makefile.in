@@ -126,6 +126,7 @@ OPENMPT_XM	= 3xxins \
 		  setenvpos \
 		  toneportamentomemory \
 		  tremolowaveforms \
+		  tremor \
 		  vibratowaveforms
 
 OPENMPT_IT	= carrynna \
