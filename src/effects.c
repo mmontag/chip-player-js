@@ -663,20 +663,17 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_TREMOR:			/* Tremor */
 		EFFECT_MEMORY(fxp, xc->tremor.memory);
-		xc->tremor.count |= 0x80;
-		xc->tremor.up = MSN(fxp); // + 1;
-		xc->tremor.down = LSN(fxp); // + 1;
-		SET(TREMOR);
-		break;
-	case FX_S3M_TREMOR:		/* S3M tremor */
-		EFFECT_MEMORY(fxp, xc->tremor.memory);
 		xc->tremor.up = MSN(fxp);
 		xc->tremor.down = LSN(fxp);
-		if (xc->tremor.up == 0) {
-			xc->tremor.up++;
-		}
-		if (xc->tremor.down == 0) {
-			xc->tremor.down++;
+		if (m->read_event_type == READ_EVENT_FT2) {
+			xc->tremor.count |= 0x80;
+		} else {
+			if (xc->tremor.up == 0) {
+				xc->tremor.up++;
+			}
+			if (xc->tremor.down == 0) {
+				xc->tremor.down++;
+			}
 		}
 		SET(TREMOR);
 		break;

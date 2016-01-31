@@ -122,7 +122,7 @@ static const uint8 fx[] = {
     FX_JUMP,		FX_BREAK,
     FX_VOLSLIDE,	FX_PORTA_DN,
     FX_PORTA_UP,	FX_TONEPORTA,
-    FX_VIBRATO,		FX_S3M_TREMOR,
+    FX_VIBRATO,		FX_TREMOR,
     FX_ARPEGGIO
 };
 

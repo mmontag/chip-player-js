@@ -158,7 +158,7 @@ static const uint8 fx[] = {
 	NONE /* fine offset */,
 	FX_KEYOFF,
 	FX_MULTI_RETRIG,
-	FX_S3M_TREMOR,
+	FX_TREMOR,
 	FX_JUMP,
 	FX_BREAK,
 	FX_GLOBALVOL,
