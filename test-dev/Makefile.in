@@ -128,6 +128,7 @@ OPENMPT_XM	= 3xxins \
 		  tremolowaveforms \
 		  tremor \
 		  tremorinstr \
+		  tremorrecover \
 		  vibratowaveforms
 
 OPENMPT_IT	= carrynna \
