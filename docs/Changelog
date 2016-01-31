@@ -6,6 +6,7 @@ Stable versions
 	- fix FT2 XM arpeggio clamp
 	- fix FT2 XM arpeggio + pitch slide
 	- fix XM tremor effect handling
+	- fix XM tremor recover after volume setting
 	Other changes:
 	- fix range of MMD effect 9 (reported by Lamar McLouth)
 	- fix Visual C++ build (reported by Jochen Goernitz)

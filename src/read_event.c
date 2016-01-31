@@ -394,6 +394,14 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 	memcpy(&ev, e, sizeof (struct xmp_event));
 
+	/* From OpenMPT TremorReset.xm test case:
+	 * "Even if a tremor effect muted the sample on a previous row, volume
+	 *  commands should be able to override this effect."
+	 */
+	if (ev.vol) {
+		xc->tremor.count &= ~0x80;
+	}
+
 	xc->flags = 0;
 	note = -1;
 	key = ev.note;
