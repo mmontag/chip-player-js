@@ -458,26 +458,29 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
 	}
 
-	if (xc->tremor.val) {
+	if (xc->tremor.up || xc->tremor.down) {
 		if (xc->tremor.count == 0) {
 			/* end of down cycle, set up counter for up  */
-			xc->tremor.count = MSN(xc->tremor.val) | 0x80;
+			xc->tremor.count = xc->tremor.up | 0x80;
 		} else if (xc->tremor.count == 0x80) {
 			/* end of up cycle, set up counter for down */
-			xc->tremor.count = LSN(xc->tremor.val);
+			xc->tremor.count = xc->tremor.down;
 		}
 
-		xc->tremor.count--;
+		if (m->read_event_type != READ_EVENT_FT2 || p->frame != 0) {
+			xc->tremor.count--;
+		}
 
 		if (~xc->tremor.count & 0x80) {
 			finalvol = 0;
 		}
 	}
 
-	if (chn < m->mod.chn)
+	if (chn < m->mod.chn) {
 		finalvol = finalvol * p->master_vol / 100;
-	else
+	} else {
 		finalvol = finalvol * p->smix_vol / 100;
+	}
 
 	xc->info_finalvol = TEST_NOTE(NOTE_SAMPLE_END) ? 0 : finalvol;
 

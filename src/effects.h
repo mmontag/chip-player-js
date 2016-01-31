@@ -115,6 +115,7 @@
 #define FX_S3M_SPEED	0xa3	/* S3M */
 #define FX_VOLSLIDE_2	0xa4
 #define FX_FINETUNE	0xa6
+#define FX_S3M_TREMOR	0xa7	/* S3M/IT */
 #define FX_S3M_BPM	0xab	/* S3M */
 #define FX_FINE_VIBRATO	0xac	/* S3M/PTM/IMF/LIQ */
 #define FX_F_VSLIDE_UP	0xad	/* MMD */

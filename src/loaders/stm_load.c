@@ -110,7 +110,7 @@ static const uint8 fx[] = {
 	FX_PORTA_UP,	/* F - Slide up at speed [INFO] */
 	FX_TONEPORTA,	/* G - Slide to the note specified at speed [INFO] */
 	FX_VIBRATO,	/* H - Vibrato; Hi-nibble, speed. Lo-nibble, size */
-	FX_TREMOR,	/* I - Tremor; Hi-nibble, ontime. Lo-nibble, offtime */
+	FX_S3M_TREMOR,	/* I - Tremor; Hi-nibble, ontime. Lo-nibble, offtime */
 	FX_ARPEGGIO	/* J - Arpeggio */
 };
 

@@ -161,7 +161,7 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 	}
 
 	xc->delay = 0;
-	xc->tremor.val = 0;
+	xc->tremor.up = xc->tremor.down = 0;
 
 	/* Reset arpeggio */
 	xc->arpeggio.val[0] = 0;

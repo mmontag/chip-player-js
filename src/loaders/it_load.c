@@ -76,7 +76,7 @@ static const uint8 fx[] = {
 	/* F */ FX_PORTA_UP,
 	/* G */ FX_TONEPORTA,
 	/* H */ FX_VIBRATO,
-	/* I */ FX_TREMOR,
+	/* I */ FX_S3M_TREMOR,
 	/* J */ FX_S3M_ARPEGGIO,
 	/* K */ FX_VIBRA_VSLIDE,
 	/* L */ FX_TONE_VSLIDE,
@@ -182,7 +182,7 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
 	    e->fxp *= 2;
 	}
 	break;
-    case FX_TREMOR:
+    case FX_S3M_TREMOR:
 	if (!new_fx && e->fxp != 0) {
 	   e->fxp = ((MSN(e->fxp) + 1) << 4) | (LSN(e->fxp) + 1);
 	}

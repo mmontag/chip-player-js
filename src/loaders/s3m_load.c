@@ -129,7 +129,7 @@ static const uint8 fx[] =
 	FX_PORTA_UP,		/* Fxx  Slide up by xx */
 	FX_TONEPORTA,		/* Gxx  Tone portamento with speed xx */
 	FX_VIBRATO,		/* Hxy  Vibrato with speed x and depth y */
-	FX_TREMOR,		/* Ixy  Tremor with ontime x and offtime y */
+	FX_S3M_TREMOR,		/* Ixy  Tremor with ontime x and offtime y */
 	FX_S3M_ARPEGGIO,	/* Jxy  Arpeggio with halfnote additions */
 	FX_VIBRA_VSLIDE,	/* Kxy  Dual command: H00 and Dxy */
 	FX_TONE_VSLIDE,		/* Lxy  Dual command: G00 and Dxy */

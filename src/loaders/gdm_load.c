@@ -73,7 +73,7 @@ void fix_effect(uint8 *fxt, uint8 *fxp)
 	case 0x07:			/* same as protracker */
 		break;
 	case 0x08:
-		*fxt = FX_TREMOR;
+		*fxt = FX_S3M_TREMOR;
 		break;
 	case 0x09:
 	case 0x0a:
