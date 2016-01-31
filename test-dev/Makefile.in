@@ -180,7 +180,8 @@ OPENMPT_IT	= autovibrato_reset \
 		  swing2 \
 		  swing3 \
 		  vol_env_carry \
-		  volcolmemory
+		  volcolmemory \
+		  wnoteoff
 
 OPENMPT_S3M	= freqlimits \
 		  parammemory \
