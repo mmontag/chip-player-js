@@ -1003,9 +1003,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		int set_new_ins = 1;
 
 		/* portamento_after_keyoff.it test case */
-		if (is_release && is_toneporta && !key) {
-			if (HAS_QUIRK(QUIRK_PRENV) || TEST_NOTE(NOTE_SET)) {
-				is_toneporta = 0;
+		if (is_release && !key) {
+			if (is_toneporta) {
+				if (HAS_QUIRK(QUIRK_PRENV) || TEST_NOTE(NOTE_SET)) {
+					is_toneporta = 0;
+					reset_envelopes_carry(ctx, xc);
+				}
+			} else {
+				/* fixes OpenMPT wnoteoff.it */
 				reset_envelopes_carry(ctx, xc);
 			}
 		}
