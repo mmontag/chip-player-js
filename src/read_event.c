@@ -480,6 +480,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 				key = 0;
 			}
 		}
+
+		xc->tremor.count = 0x20;
 	}
 
 	/* Check note */

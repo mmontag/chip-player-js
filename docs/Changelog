@@ -5,6 +5,7 @@ Stable versions
 	Fix bugs caught in the OpenMPT test cases:
 	- fix FT2 XM arpeggio clamp
 	- fix FT2 XM arpeggio + pitch slide
+	- fix XM tremor effect handling
 	Other changes:
 	- fix range of MMD effect 9 (reported by Lamar McLouth)
 	- fix Visual C++ build (reported by Jochen Goernitz)

@@ -326,20 +326,21 @@ static int tremor_ft2(struct context_data *ctx, int chn, int finalvol)
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	if (xc->tremor.up || xc->tremor.down) {
-		if (xc->tremor.count == 0) {
-			/* end of down cycle, set up counter for up  */
-			xc->tremor.count = xc->tremor.up | 0x80;
-		} else if (xc->tremor.count == 0x80) {
-			/* end of up cycle, set up counter for down */
-			xc->tremor.count = xc->tremor.down;
+	if (xc->tremor.count & 0x80) {
+		if (TEST(TREMOR) && p->frame != 0) {
+			xc->tremor.count &= ~0x20;
+			if (xc->tremor.count == 0x80) {
+				/* end of down cycle, set up counter for up  */
+				xc->tremor.count = xc->tremor.up | 0xc0;
+			} else if (xc->tremor.count == 0xc0) {
+				/* end of up cycle, set up counter for down */
+				xc->tremor.count = xc->tremor.down | 0x80;
+			} else {
+				xc->tremor.count--;
+			}
 		}
 
-		if (p->frame != 0) {
-			xc->tremor.count--;
-		}
-
-		if (~xc->tremor.count & 0x80) {
+		if ((xc->tremor.count & 0xe0) == 0x80) {
 			finalvol = 0;
 		}
 	}
@@ -352,7 +353,7 @@ static int tremor_s3m(struct context_data *ctx, int chn, int finalvol)
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
 
-	if (xc->tremor.up || xc->tremor.down) {
+	if (TEST(TREMOR)) {
 		if (xc->tremor.count == 0) {
 			/* end of down cycle, set up counter for up  */
 			xc->tremor.count = xc->tremor.up | 0x80;

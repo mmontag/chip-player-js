@@ -663,8 +663,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_TREMOR:			/* Tremor */
 		EFFECT_MEMORY(fxp, xc->tremor.memory);
-		xc->tremor.up = MSN(fxp) + 1;
-		xc->tremor.down = LSN(fxp) + 1;
+		xc->tremor.count |= 0x80;
+		xc->tremor.up = MSN(fxp); // + 1;
+		xc->tremor.down = LSN(fxp); // + 1;
+		SET(TREMOR);
 		break;
 	case FX_S3M_TREMOR:		/* S3M tremor */
 		EFFECT_MEMORY(fxp, xc->tremor.memory);
@@ -676,6 +678,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		if (xc->tremor.down == 0) {
 			xc->tremor.down++;
 		}
+		SET(TREMOR);
 		break;
 	case FX_XF_PORTA:	/* Extra fine portamento */
 	      fx_xf_porta:

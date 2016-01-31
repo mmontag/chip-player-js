@@ -57,6 +57,7 @@ struct retrig_control {
 #define FINE_VOLS_2	(1 << 25)
 #define GLISSANDO	(1 << 26)
 #define KEY_OFF		(1 << 27)	/* for IT release on envloop end */
+#define TREMOR		(1 << 28)	/* for XM tremor */
 
 #define NOTE_FADEOUT	(1 << 0)
 #define NOTE_RELEASE	(1 << 1)
