@@ -697,7 +697,7 @@ skip_test:
 	if (!mod->xxs[i].len)
 	    continue;
 
-	flags = ptkloop ? SAMPLE_FLAG_FULLREP : 0;
+	flags = (ptkloop && mod->xxs[i].lps == 0) ? SAMPLE_FLAG_FULLREP : 0;
 
 	if (ptsong) {
 	    HIO_HANDLE *s;
