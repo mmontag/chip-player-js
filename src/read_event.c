@@ -682,9 +682,12 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		/* From the OpenMPT test cases (3xx-no-old-samp.xm):
 		 * "An offset effect that points beyond the sample end should
 		 *  stop playback on this channel."
+		 *
+		 * ... except in Skale Tracker (and possibly others), so make this a
+		 *  FastTracker2 quirk. See Armada Tanks game.it (actually an XM).
+		 *  Reported by Vladislav Suschikh.
 		 */
-
-		if (xc->offset.val >= mod->xxs[sub->sid].len) {
+		if (HAS_QUIRK(QUIRK_FT2BUGS) && xc->offset.val >= mod->xxs[sub->sid].len) {
 			virt_resetchannel(ctx, chn);
 		} else {
 
