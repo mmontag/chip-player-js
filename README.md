@@ -42,7 +42,7 @@ You need to make in the any IDE a library project and put into it next files
 
 * dbopl.cpp    - DOSBOX OPL Emulation code
 * adlmidi.cpp  - code of library
-*adldata.cpp	 - Automatically generated dump of FM banks from "fm_banks" directory
+* adldata.cpp	 - Automatically generated dump of FM banks from "fm_banks" directory
                via "gen_adldata" tool
 
 # Example
