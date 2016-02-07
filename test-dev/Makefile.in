@@ -192,6 +192,7 @@ OPENMPT_MOD	= amigalimitsfinetune \
 		  delaybreak \
 		  patternjump \
 		  portasmpchange \
+		  portatarget \
 		  ptoffset
 
 MIXER		= interpolation_default \
