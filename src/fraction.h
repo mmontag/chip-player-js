@@ -84,7 +84,7 @@ void fraction<inttype>::Optim()
 {
     /* Euclidean algorithm */
     inttype n1, n2;
-    if(abs(num1) < abs(num2))
+    if(labs(num1) < labs(num2))
         n1 = num1, n2 = num2;
     else
         n1 = num2, n2 = num1;
