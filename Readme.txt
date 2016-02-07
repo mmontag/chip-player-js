@@ -77,4 +77,6 @@ Changelog
 1.0.0	2015-10-10
  * First release of library
 
-
+1.0.1   2015-01-15
+ * Fixed freezing on invalid loop points (for cases when loopEnd going before loopStart or both points are at same position)
+ * Enabled volume updating while note is playing
