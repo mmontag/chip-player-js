@@ -265,7 +265,8 @@ struct Handler {
 	void Generate( void(*AddSamples_m32)(Bitu,Bit32s*),
 	               void(*AddSamples_s32)(Bitu,Bit32s*),
 	               Bitu samples );
-	void Init( Bitu rate );
+    void GenerateArr(Bit32s* out, Bitu *samples );
+    void Init( Bitu rate );
 };
 
 

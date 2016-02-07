@@ -1551,8 +1551,19 @@ void Handler::Generate( void(*AddSamples_m32)(Bitu,Bit32s*),
 		AddSamples_m32( samples, buffer );
 	} else {
 		chip.GenerateBlock3( samples, buffer );
-		AddSamples_s32( samples, buffer );
+        AddSamples_s32( samples, buffer );
 	}
+}
+
+void Handler::GenerateArr(Bit32s* out, Bitu *samples )
+{
+    if ( GCC_UNLIKELY(*samples > 512) )
+        *samples = 512;
+    if ( !chip.opl3Active ) {
+        chip.GenerateBlock2( *samples, out );
+    } else {
+        chip.GenerateBlock3( *samples, out );
+    }
 }
 
 void Handler::Init( Bitu rate ) {
