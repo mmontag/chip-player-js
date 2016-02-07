@@ -809,6 +809,9 @@ static void update_frequency(struct context_data *ctx, int chn)
 	if (!is_first_frame(ctx) || HAS_QUIRK(QUIRK_PBALL)) {
 		if (TEST(PITCHBEND) || TEST_PER(PITCHBEND)) {
 			xc->period += xc->freq.slide;
+			if (HAS_QUIRK(QUIRK_PROTRACK)) {
+				xc->porta.target = xc->period;
+			}
 		}
 
 		/* Do tone portamento */
@@ -831,6 +834,10 @@ static void update_frequency(struct context_data *ctx, int chn)
 					xc->porta.dir = 0;
 					RESET(TONEPORTA);
 					RESET_PER(TONEPORTA);
+
+					if (HAS_QUIRK(QUIRK_PROTRACK)) {
+						xc->porta.target = -1;
+					}
 				}
 			}
 		} 

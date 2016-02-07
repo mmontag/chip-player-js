@@ -169,6 +169,14 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 	xc->arpeggio.size = 1;
 }
 
+/* From OpenMPT PortaTarget.mod:
+ * "A new note (with no portamento command next to it) does not reset the
+ *  portamento target. That is, if a previous portamento has not finished yet,
+ *  calling 3xx or 5xx after the new note will slide it towards the old target.
+ *  Once the portamento target period is reached, the target is reset. This
+ *  means that if the period is modified by another slide (e.g. 1xx or 2xx),
+ *  a following 3xx will not slide back to the original target."
+ */
 static void set_period(struct context_data *ctx, int note,
 				struct xmp_subinstrument *sub,
 				struct channel_data *xc, int is_toneporta)
@@ -176,10 +184,14 @@ static void set_period(struct context_data *ctx, int note,
 	struct module_data *m = &ctx->m;
 
 	if (sub != NULL && note >= 0) {
-		xc->porta.target = note_to_period(note, xc->finetune,
+		double per = note_to_period(note, xc->finetune,
 				HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+
+		if (!HAS_QUIRK(QUIRK_PROTRACK) || (note > 0 && is_toneporta)) {
+			xc->porta.target = per;
+		}
 		if (xc->period < 1 || !is_toneporta) {
-			xc->period = xc->porta.target;
+			xc->period = per;
 		}
 	}
 }
