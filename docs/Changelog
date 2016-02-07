@@ -11,7 +11,8 @@ Stable versions
 	Other changes:
 	- fix range of MMD effect 9 (reported by Lamar McLouth)
 	- fix Visual C++ build (reported by Jochen Goernitz)
-	- fix invalid offset in Skale Tracker XM (reported by Vladislav Suschikh)
+	- fix invalid sample offset handling in Skale Tracker XM (reported by
+	  Vladislav Suschikh)
 	- fix Protracker sample loop to use full repeat only if start is 0
 	- fix lite build with IT support disabled
 	- fix build with gcc 2.95 in Haiku
