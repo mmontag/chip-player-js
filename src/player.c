@@ -633,7 +633,17 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	
 	if (arp != 0) {
 		linear_bend += (100 << 7) * arp;
+
+		/* OpenMPT ArpWrapAround.mod */
+		if (HAS_QUIRK(QUIRK_PROTRACK)) {
+			if (xc->note + arp > 84) {
+				linear_bend -= 12800 * (3 * 12);
+			} else if (xc->note + arp > 83) {
+				virt_setvol(ctx, chn, 0);
+			}
+		}
 	}
+
 
 #ifndef LIBXMP_CORE_PLAYER
 	linear_bend += extras_get_linear_bend(ctx, xc);
