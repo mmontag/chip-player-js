@@ -65,7 +65,11 @@ static struct xmp_subinstrument *get_subinstrument(struct context_data *ctx,
 			int mapped = instrument->map[key].ins;
 			if (mapped != 0xff && mapped >= 0 && mapped < instrument->nsm)
 			  	return &instrument->sub[mapped];
-	  }
+		} else {
+			if (mod->xxi[ins].nsm > 0) {
+				return &instrument->sub[0];
+			}
+		}
 	}
 
 	return NULL;
@@ -133,7 +137,9 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 			xxi = &mod->xxi[xc->ins];
 		}
 
-		xc->finetune = sub->fin;
+		if (!HAS_QUIRK(QUIRK_PROTRACK)) {
+			xc->finetune = sub->fin;
+		}
 		xc->gvl = sub->gvl;
 
 #ifndef LIBXMP_CORE_DISABLE_IT
@@ -190,6 +196,7 @@ static void set_period(struct context_data *ctx, int note,
 		if (!HAS_QUIRK(QUIRK_PROTRACK) || (note > 0 && is_toneporta)) {
 			xc->porta.target = per;
 		}
+
 		if (xc->period < 1 || !is_toneporta) {
 			xc->period = per;
 		}
@@ -264,9 +271,10 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 		RESET_NOTE(NOTE_RELEASE|NOTE_FADEOUT);
 
 		if (IS_VALID_INSTRUMENT(ins)) {
+			sub = get_subinstrument(ctx, ins, e->note - 1);
+
 			if (is_toneporta) {
 				/* Get new instrument volume */
-				sub = get_subinstrument(ctx, ins, e->note - 1);
 				if (sub != NULL) {
 					/* Dennis Lindroos: instrument volume
 					 * is not used on split channels
@@ -279,6 +287,12 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			} else {
 				xc->ins = ins;
 				xc->ins_fade = mod->xxi[ins].rls;
+
+				if (sub != NULL) {
+					if (HAS_QUIRK(QUIRK_PROTRACK)) {
+						xc->finetune = sub->fin;
+					}
+				}
 			}
 		} else {
 			new_invalid_ins = 1;

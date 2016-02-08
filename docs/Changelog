@@ -10,6 +10,7 @@ Stable versions
 	- fix IT instrument after keyoff
 	- fix Protracker tone portamento target setting
 	- fix Protracker arpeggio wraparound
+	- fix Protracker finetune setting
 	Other changes:
 	- fix range of MMD effect 9 (reported by Lamar McLouth)
 	- fix Visual C++ build (reported by Jochen Goernitz)
