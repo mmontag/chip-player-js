@@ -191,6 +191,7 @@ OPENMPT_S3M	= freqlimits \
 OPENMPT_MOD	= amigalimitsfinetune \
 		  arpwraparound \
 		  delaybreak \
+		  finetune \
 		  patternjump \
 		  portasmpchange \
 		  portatarget \
