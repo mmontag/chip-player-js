@@ -294,8 +294,10 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 #endif
 			}
 		} else {
-			/* Reset flags. See SlideDelay.it */
-			p->xc_data[chn].flags = 0;
+			if (m->read_event_type == READ_EVENT_IT) {
+				/* Reset flags. See SlideDelay.it */
+				p->xc_data[chn].flags = 0;
+			}
 		}
 	}
 }
