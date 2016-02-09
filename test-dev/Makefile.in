@@ -186,6 +186,7 @@ OPENMPT_IT	= autovibrato_reset \
 
 OPENMPT_S3M	= freqlimits \
 		  parammemory \
+		  patterndelaysretrig \
 		  portasmpchange
 
 OPENMPT_MOD	= amigalimitsfinetune \
