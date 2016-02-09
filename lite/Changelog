@@ -1,6 +1,24 @@
 Stable versions
 ---------------
 
+4.3.11 (20160209):
+	Fix bugs caught in the OpenMPT test cases:
+	- fix FT2 XM arpeggio clamp
+	- fix FT2 XM arpeggio + pitch slide
+	- fix XM tremor effect handling
+	- fix XM tremor recover after volume setting
+	- fix IT instrument after keyoff
+	- fix S3M first frame test in pattern delay
+	- fix Protracker tone portamento target setting
+	- fix Protracker arpeggio wraparound
+	- fix Protracker finetune setting
+	Other changes:
+	- fix Visual C++ build (reported by Jochen Goernitz)
+	- fix invalid sample offset handling in Skale Tracker XM (reported by
+	  Vladislav Suschikh)
+	- fix Protracker sample loop to use full repeat only if start is 0
+	- fix lite build with IT support disabled
+
 4.3.10 (20151231):
 	Fix bugs reported by Coverity Scan:
 	- fix out of bounds access in IT/XM envelopes

@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.11 ():
+4.3.11 (20160209):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix FT2 XM arpeggio clamp
 	- fix FT2 XM arpeggio + pitch slide
