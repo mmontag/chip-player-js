@@ -184,7 +184,8 @@ OPENMPT_IT	= autovibrato_reset \
 		  volcolmemory \
 		  wnoteoff
 
-OPENMPT_S3M	= freqlimits \
+OPENMPT_S3M	= amigalimits \
+		  freqlimits \
 		  parammemory \
 		  patterndelaysretrig \
 		  portasmpchange
