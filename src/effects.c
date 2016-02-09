@@ -492,7 +492,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_PATT_DELAY:
 	    fx_patt_delay:
-		p->flow.delay = fxp;
+		if (m->read_event_type != READ_EVENT_ST3 || !p->flow.delay) {
+			p->flow.delay = fxp;
+		}
 		break;
 
 	case FX_S3M_SPEED:	/* Set S3M speed */
