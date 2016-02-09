@@ -391,8 +391,10 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    parm = (f1 == FX_EXTENDED) ? p1 : p2;
 
 		    if ((parm >> 4) == EX_PATT_DELAY) {
-			pdelay = parm & 0x0f;
-			frame_count += pdelay * speed;
+			if (m->read_event_type != READ_EVENT_ST3 || !pdelay) {
+			    pdelay = parm & 0x0f;
+			    frame_count += pdelay * speed;
+                        }
 		    }
 
 		    if ((parm >> 4) == EX_PATTERN_LOOP) {
