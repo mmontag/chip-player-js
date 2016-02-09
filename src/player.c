@@ -112,17 +112,18 @@ static void update_invloop(struct module_data *m, struct channel_data *xc)
 static int is_first_frame(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
-#ifndef LIBXMP_CORE_DISABLE_IT
 	struct module_data *m = &ctx->m;
 
-	if (m->read_event_type == READ_EVENT_IT) {
+	switch (m->read_event_type) {
+#ifndef LIBXMP_CORE_DISABLE_IT
+	case READ_EVENT_IT:
+		/* fall through */
+#endif
+	case READ_EVENT_ST3:
 		return p->frame % p->speed == 0;
-	} else {
+	default:
 		return p->frame == 0;
 	}
-#else
-	return p->frame == 0;
-#endif
 }
 
 static void reset_channels(struct context_data *ctx)

@@ -8,6 +8,7 @@ Stable versions
 	- fix XM tremor effect handling
 	- fix XM tremor recover after volume setting
 	- fix IT instrument after keyoff
+	- fix S3M first frame test in pattern delay
 	- fix Protracker tone portamento target setting
 	- fix Protracker arpeggio wraparound
 	- fix Protracker finetune setting
