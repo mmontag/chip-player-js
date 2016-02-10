@@ -31,10 +31,14 @@ is also available in man page and PDF formats.
 SUPPORTED FORMATS
 
 See docs/formats.txt for the list of supported formats. By default,
-Noisetracker and Protracker modules are played in Protracker 3.15
-style and multichannel variations in Fast Tracker II style (see
-docs/tracker_notes.txt for details). Multifile formats (Startrekker AM,
-Soundsmith, ALM, etc). must have all files in the same directory.
+Protracker modules are played with a reasonable mix of Protracker 2/3
+quirks (because certain Protracker 1/2 bugs are just too weird and
+generally not worth emulating). Other Amiga 4 channel MODs are played with
+a generic Noisetracker/Protracker-style replayer, Scream Tracker III MODs
+are played with a Scream Tracker style replayer and multichannel MOD
+variations are played with a Fasttracker II style replayer. Multifile
+formats (Startrekker AM, Magnetic Fields, etc). must have all files in
+the same directory.
 
 
 SUPPORTED PACKERS
