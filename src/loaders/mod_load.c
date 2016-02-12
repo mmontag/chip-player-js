@@ -571,16 +571,9 @@ skip_test:
 	    event = &EVENT(i, j % mod->chn, j / mod->chn);
 	    hio_read(mod_event, 1, 4, f);
 
-	    /* Check out-of-range notes in Amiga trackers */
 	    period = ((int)(LSN(mod_event[0])) << 8) | mod_event[1];
 	    if (period != 0 && (period < 108 || period > 907)) {
 		out_of_range = 1;
-		if (tracker_id == TRACKER_PROTRACKER ||
-		    tracker_id == TRACKER_NOISETRACKER ||
-		    tracker_id == TRACKER_PROBABLY_NOISETRACKER ||
-		    tracker_id == TRACKER_SOUNDTRACKER) {   /* note > B-3 */
-			tracker_id = TRACKER_UNKNOWN;
-		}
 	    }
 
 	    /* Filter noisetracker events */
@@ -591,9 +584,22 @@ skip_test:
         	if ((fxt > 0x06 && fxt < 0x0a) || (fxt == 0x0e && fxp > 1)) {
 		    tracker_id = TRACKER_UNKNOWN;
 		}
-
 	    }
 	}
+
+        if (out_of_range) {
+            if (tracker_id == TRACKER_UNKNOWN && mh.restart == 0x7f) {
+	        tracker_id = TRACKER_SCREAMTRACKER3;
+            }
+
+	    /* Check out-of-range notes in Amiga trackers */
+            if (tracker_id == TRACKER_PROTRACKER ||
+                    tracker_id == TRACKER_NOISETRACKER ||
+                    tracker_id == TRACKER_PROBABLY_NOISETRACKER ||
+                    tracker_id == TRACKER_SOUNDTRACKER) {   /* note > B-3 */
+                tracker_id = TRACKER_UNKNOWN;
+            }
+        }
 
 	hio_seek(f, pos, SEEK_SET);
 
