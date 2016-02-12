@@ -448,15 +448,15 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->rst = mh.restart;
     }
 
-    if (mod->chn != 4 && mh.restart == 0x7f) {
-	tracker_id = TRACKER_SCREAMTRACKER3;
-	m->read_event_type = READ_EVENT_ST3;
-    }
-
-    if (mod->chn == 4 && mh.restart == 0x7f) {
-	if (has_loop_0) {
-	    tracker_id = TRACKER_CLONE;
-	}
+    if (mh.restart == 0x7f) {
+        if (mod->chn == 4) {
+	    if (has_loop_0) {
+	        tracker_id = TRACKER_CLONE;
+	    }
+        } else {
+	    tracker_id = TRACKER_SCREAMTRACKER3;
+	    m->read_event_type = READ_EVENT_ST3;
+        }
     }
 
     if (mh.restart != 0x78 && mh.restart < 0x7f) {
