@@ -148,29 +148,21 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
 
     hio_seek(f, start + 20, SEEK_SET);
     for (i = 0; i < 31; i++) {
+	uint8 x;
+
 	hio_seek(f, 22, SEEK_CUR);		/* Instrument name */
 
 	/* OpenMPT can create mods with large samples */
 	hio_read16b(f);				/* sample size */
-	if (hio_read8(f) & 0xf0)		/* test finetune */
+
+	/* Chris Spiegel tells me that sandman.mod can have 0x20 in finetune */
+	x = hio_read8(f);
+	if (x & 0xf0 && x != 0x20)		/* test finetune */
 		return -1;
 	if (hio_read8(f) > 0x40)		/* test volume */
 		return -1;
 	hio_read16b(f);				/* loop start */
 	hio_read16b(f);				/* loop size */
-
-#if 0
-	if (hio_read16b(f) & 0x8000)		/* test length */
-		return -1;
-	if (hio_read8(f) & 0xf0)		/* test finetune */
-		return -1;
-	if (hio_read8(f) > 0x40)		/* test volume */
-		return -1;
-	if (hio_read16b(f) & 0x8000)		/* test loop start */
-		return -1;
-	if (hio_read16b(f) & 0x8000)		/* test loop size */
-		return -1;
-#endif
     }
 
     /* Test for UNIC tracker modules
