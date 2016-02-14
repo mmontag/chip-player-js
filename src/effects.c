@@ -369,11 +369,11 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		fxp &= 0x0f;
 		switch (fxt) {
 		case EX_F_PORTA_UP:	/* Fine portamento up */
-		    EFFECT_MEMORY(fxp, xc->fine_porta.up_memory);
-		    goto fx_f_porta_up;
+			EFFECT_MEMORY(fxp, xc->fine_porta.up_memory);
+			goto fx_f_porta_up;
 		case EX_F_PORTA_DN:	/* Fine portamento down */
-		    EFFECT_MEMORY(fxp, xc->fine_porta.down_memory);
-		    goto fx_f_porta_dn;
+			EFFECT_MEMORY(fxp, xc->fine_porta.down_memory);
+			goto fx_f_porta_dn;
 		case EX_GLISS:		/* Glissando toggle */
 			if (fxp) {
 				SET(GLISSANDO);
