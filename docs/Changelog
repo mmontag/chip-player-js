@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.3.12 ():
+	- fix IT pattern break in hexadecimal (reported by StarFox008)
+
 4.3.11 (20160212):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix FT2 XM arpeggio clamp
