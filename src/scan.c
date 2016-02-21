@@ -383,7 +383,11 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 		if (f1 == FX_BREAK || f2 == FX_BREAK) {
 		    parm = (f1 == FX_BREAK) ? p1 : p2;
-		    break_row = 10 * MSN(parm) + LSN(parm);
+                    if (HAS_QUIRK(QUIRK_HEXBRK)) {
+		        break_row = parm;
+                    } else {
+		        break_row = 10 * MSN(parm) + LSN(parm);
+                    }
 		    last_row = 0;
 		}
 
