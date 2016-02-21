@@ -363,7 +363,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     case 1:
 	snprintf(tracker_name, 40, "Scream Tracker %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
-	m->quirk |= QUIRK_ST3GVOL;
+	m->quirk |= QUIRK_ST3BUGS;
 	break;
     case 2:
 	snprintf(tracker_name, 40, "Imago Orpheus %d.%02x",
@@ -382,6 +382,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     case 5:
 	snprintf(tracker_name, 40, "OpenMPT %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
+	m->quirk |= QUIRK_ST3BUGS;
 	break;
     case 4:
 	if (sfh.version != 0x4100) {
