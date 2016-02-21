@@ -41,7 +41,7 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 		  volslide track_volslide \
 		  okt_arpeggio per_slide per_toneporta \
 		  panbrello globalvol gvol_slide s3m_bpm it_bpm fine_vibrato \
-		  it_panslide it_vcol_g \
+		  it_panslide it_vcol_g it_break_to_row \
 		  pastnote_cut pastnote_off pastnote_fade \
 		  set_nna_cut set_nna_cont set_nna_off set_nna_fade \
 		  note_slide note_slide_retrig \
