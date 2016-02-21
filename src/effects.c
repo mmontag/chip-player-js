@@ -42,8 +42,11 @@
 	if ((p) == 0) { (p) = (m); } else { (m) = (p); } \
 } while (0)
 
+/* ST3 effect memory is not a bug, but it's a weird implementation and it's
+ * unlikely to be supported in anything other than ST3 (or OpenMPT).
+ */
 #define EFFECT_MEMORY(p, m) do { \
-	if (HAS_QUIRK(QUIRK_S3MPMEM)) { \
+	if (HAS_QUIRK(QUIRK_ST3BUGS)) { \
 		EFFECT_MEMORY__((p), xc->vol.memory); \
 	} else { \
 		EFFECT_MEMORY__((p), (m)); \
@@ -52,13 +55,13 @@
 
 #define EFFECT_MEMORY_SETONLY(p, m) do { \
 	EFFECT_MEMORY__((p), (m)); \
-	if (HAS_QUIRK(QUIRK_S3MPMEM)) { \
+	if (HAS_QUIRK(QUIRK_ST3BUGS)) { \
 		if ((p) != 0) { xc->vol.memory = (p); } \
 	} \
 } while (0)
 
 #define EFFECT_MEMORY_S3M(p) do { \
-	if (HAS_QUIRK(QUIRK_S3MPMEM)) { \
+	if (HAS_QUIRK(QUIRK_ST3BUGS)) { \
 		EFFECT_MEMORY__((p), xc->vol.memory); \
 	} \
 } while (0)
