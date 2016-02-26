@@ -67,6 +67,7 @@ struct retrig_control {
 #define NOTE_SAMPLE_END	(1 << 5)
 #define NOTE_SET	(1 << 6)	/* for IT portamento after keyoff */
 #define NOTE_SUSEXIT	(1 << 7)	/* for delayed note release */
+#define NOTE_KEY_CUT	(1 << 8)	/* note cut with XMP_KEY_CUT event */
 
 #define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0)
 #define IS_VALID_INSTRUMENT_OR_SFX(x) (((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0) || (smix->ins > 0 && (uint32)(x) < mod->ins + smix->ins))

@@ -1066,7 +1066,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		if (IS_VALID_INSTRUMENT(ins)) {
 			/* valid ins */
 
-			if (!key) {
+			/* See OpenMPT StoppedInstrSwap.it for cut case */
+			if (!key && !TEST_NOTE(NOTE_KEY_CUT)) {
 				/* Retrig in new ins in sample mode */
 				if (sample_mode && TEST_NOTE(NOTE_END)) {
 					virt_voicepos(ctx, chn, 0);
@@ -1122,7 +1123,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			reset_env = 0;
 			use_ins_vol = 0;
 		} else if (key == XMP_KEY_CUT) {
-			SET_NOTE(NOTE_END | NOTE_CUT);
+			SET_NOTE(NOTE_END | NOTE_CUT | NOTE_KEY_CUT);
 			xc->period = 0;
 			virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
