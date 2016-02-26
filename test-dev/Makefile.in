@@ -177,6 +177,7 @@ OPENMPT_IT	= autovibrato_reset \
 		  samplenumberchange \
 		  scx \
 		  smpinspansurround \
+		  stoppedinstrswap \
 		  swaptest \
 		  swing1 \
 		  swing2 \
