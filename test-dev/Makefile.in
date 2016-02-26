@@ -160,6 +160,7 @@ OPENMPT_IT	= autovibrato_reset \
 		  nomap \
 		  noteoff2 \
 		  noteoff3 \
+		  noteoffinstr \
 		  off_porta \
 		  off_porta_compatgxx \
 		  porta_offset \
