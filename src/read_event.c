@@ -1160,6 +1160,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	if (is_valid_note(key - 1) && !new_invalid_ins) {
+		if (TEST_NOTE(NOTE_CUT)) {
+			use_ins_vol = 1;	/* See OpenMPT NoteOffInstr.it */
+		}
 		xc->key = --key;
 		RESET_NOTE(NOTE_END);
 
@@ -1268,8 +1271,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	
 	/* Process new volume */
 	if (ev.vol && (!TEST_NOTE(NOTE_CUT) || ev.ins != 0)) {
-		xc->volume = ev.vol - 1;
-		SET(NEW_VOL);
+		if (key != XMP_KEY_OFF) {	/* See OpenMPT NoteOffInstr.it */
+			xc->volume = ev.vol - 1;
+			SET(NEW_VOL);
+		}
 	}
 
 	/* IT: always reset sample offset */
