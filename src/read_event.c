@@ -34,19 +34,6 @@
 #endif
 
 
-static inline void copy_channel(struct player_data *p, int to, int from)
-{
-	if (to > 0 && to != from) {
-		memcpy(&p->xc_data[to], &p->xc_data[from],
-					sizeof (struct channel_data));
-	}
-}
-
-static inline int has_note_event(struct xmp_event *e)
-{
-	return (e->note && e->note <= XMP_MAX_KEYS);
-}
-
 static inline int is_valid_note(int note)
 {
 	return (note >= 0 && note < XMP_MAX_KEYS);
@@ -877,6 +864,19 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 }
 
 #ifndef LIBXMP_CORE_DISABLE_IT
+
+static inline void copy_channel(struct player_data *p, int to, int from)
+{
+	if (to > 0 && to != from) {
+		memcpy(&p->xc_data[to], &p->xc_data[from],
+					sizeof (struct channel_data));
+	}
+}
+
+static inline int has_note_event(struct xmp_event *e)
+{
+	return (e->note && e->note <= XMP_MAX_KEYS);
+}
 
 static int check_fadeout(struct context_data *ctx, struct channel_data *xc, int ins)
 {
