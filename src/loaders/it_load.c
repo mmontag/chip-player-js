@@ -70,7 +70,7 @@ static const uint8 fx[] = {
 	/*   */ FX_NONE,
 	/* A */ FX_S3M_SPEED,
 	/* B */ FX_JUMP,
-	/* C */ FX_BREAK,
+	/* C */ FX_IT_BREAK,
 	/* D */ FX_VOLSLIDE,
 	/* E */ FX_PORTA_DN,
 	/* F */ FX_PORTA_UP,

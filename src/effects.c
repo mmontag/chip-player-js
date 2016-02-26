@@ -364,11 +364,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_BREAK:		/* Pattern break */
 		p->flow.pbreak = 1;
-		if (HAS_QUIRK(QUIRK_HEXBRK)) {
-			p->flow.jumpline = fxp;
-		} else {
-			p->flow.jumpline = 10 * MSN(fxp) + LSN(fxp);
-		}
+		p->flow.jumpline = 10 * MSN(fxp) + LSN(fxp);
 		break;
 	case FX_EXTENDED:	/* Extended effect */
 		EFFECT_MEMORY_S3M(fxp);
@@ -571,6 +567,10 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		EFFECT_MEMORY(fxp, xc->vol.memory2);
 		SET(FINE_VOLS_2);
 		xc->vol.fslide2 = -fxp;
+		break;
+	case FX_IT_BREAK:	/* Pattern break with hex parameter */
+		p->flow.pbreak = 1;
+		p->flow.jumpline = fxp;
 		break;
 
 #endif

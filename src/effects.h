@@ -83,6 +83,7 @@
 #define FX_PANBRELLO_WF	0x8b
 #define FX_HIOFFSET	0x8c
 #define FX_SURROUND	0x8d
+#define FX_IT_BREAK	0x8e	/* like FX_BREAK with hex parameter */
 #endif
 
 #ifndef LIBXMP_CORE_PLAYER
