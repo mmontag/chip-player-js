@@ -191,6 +191,7 @@ OPENMPT_S3M	= amigalimits \
 		  freqlimits \
 		  parammemory \
 		  patterndelaysretrig \
+		  periodlimit \
 		  portasmpchange
 
 OPENMPT_MOD	= amigalimitsfinetune \
