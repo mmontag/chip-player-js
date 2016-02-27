@@ -366,8 +366,9 @@ void mixer_softmixer(struct context_data *ctx)
 	for (voc = 0; voc < p->virt.maxvoc; voc++) {
 		vi = &p->virt.voice_array[voc];
 
-		if (vi->chn < 0)
+		if (vi->chn < 0) {
 			continue;
+		}
 
 		if (vi->period < 1) {
 			virt_resetvoice(ctx, voc, 1);

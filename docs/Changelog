@@ -7,6 +7,7 @@ Stable versions
 	- fix IT note recover after cut
 	- fix IT instrument without note after note cut event
 	- fix XM glissando effect
+	- fix Scream Tracker 3 period limits
 	Other changes:
 	- fix IT pattern break in hexadecimal (reported by StarFox008)
 

@@ -612,6 +612,23 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	/* Pitch bend */
 
+
+ 	/* From OpenMPT PeriodLimit.s3m:
+	 * "ScreamTracker 3 limits the final output period to be at least 64,
+	 *  i.e. when playing a note that is too high or when sliding the
+	 *  period lower than 64, the output period will simply be clamped to
+	 *  64. However, when reaching a period of 0 through slides, the
+	 *  output on the channel should be stopped."
+	 */
+	/* ST3 uses periods*4, so the limit is 16. Adjusted to the exact
+	 * A6 value because we compute periods in floating point.
+	 */
+	if (HAS_QUIRK(QUIRK_ST3BUGS)) {
+		if (period < 16.236899) {	/* A6 */
+			period = 16.236899;
+		}
+	}
+
 	linear_bend = period_to_bend(period + vibrato, xc->note,
 			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 
@@ -889,16 +906,16 @@ static void update_frequency(struct context_data *ctx, int chn)
 				  note_to_period(48, xc->finetune, 0, 0));
 	}
 
+	xc->arpeggio.count++;
+	xc->arpeggio.count %= xc->arpeggio.size;
+
 	/* Check for invalid periods (from Toru Egashira's NSPmod)
 	 * panic.s3m has negative periods
 	 * ambio.it uses low (~8) period values
 	 */
-	if (xc->period < 1) {
-		xc->volume = 0;
+	if (xc->period < 0.25) {
+		virt_setvol(ctx, chn, 0);
 	}
-
-	xc->arpeggio.count++;
-	xc->arpeggio.count %= xc->arpeggio.size;
 }
 
 static void update_pan(struct context_data *ctx, int chn)
