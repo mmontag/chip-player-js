@@ -6,6 +6,7 @@ Stable versions
 	- fix IT note off with instrument
 	- fix IT note recover after cut
 	- fix IT instrument without note after note cut event
+	- fix XM glissando effect
 	Other changes:
 	- fix IT pattern break in hexadecimal (reported by StarFox008)
 

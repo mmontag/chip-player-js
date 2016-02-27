@@ -613,8 +613,19 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	/* Pitch bend */
 
 	linear_bend = period_to_bend(period + vibrato, xc->note,
-			TEST(GLISSANDO) || (HAS_QUIRK(QUIRK_FT2BUGS) && arp),
 			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+
+	if (TEST_NOTE(NOTE_GLISSANDO) && TEST(TONEPORTA)) {
+		if (linear_bend > 0) {
+			linear_bend = (linear_bend + 6400) / 12800 * 12800;
+		} else if (linear_bend < 0) {
+			linear_bend = (linear_bend - 6400) / 12800 * 12800;
+		}
+	}
+
+	if (HAS_QUIRK(QUIRK_FT2BUGS) && arp) {
+		linear_bend = linear_bend / 12800 * 12800;
+	}
 
 	/* Envelope */
 

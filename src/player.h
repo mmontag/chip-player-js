@@ -55,9 +55,8 @@ struct retrig_control {
 #define PENV_PAUSE	(1 << 23)
 #define FENV_PAUSE	(1 << 24)
 #define FINE_VOLS_2	(1 << 25)
-#define GLISSANDO	(1 << 26)
-#define KEY_OFF		(1 << 27)	/* for IT release on envloop end */
-#define TREMOR		(1 << 28)	/* for XM tremor */
+#define KEY_OFF		(1 << 26)	/* for IT release on envloop end */
+#define TREMOR		(1 << 27)	/* for XM tremor */
 
 #define NOTE_FADEOUT	(1 << 0)
 #define NOTE_RELEASE	(1 << 1)
@@ -68,6 +67,7 @@ struct retrig_control {
 #define NOTE_SET	(1 << 6)	/* for IT portamento after keyoff */
 #define NOTE_SUSEXIT	(1 << 7)	/* for delayed note release */
 #define NOTE_KEY_CUT	(1 << 8)	/* note cut with XMP_KEY_CUT event */
+#define NOTE_GLISSANDO	(1 << 9)
 
 #define IS_VALID_INSTRUMENT(x) ((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0)
 #define IS_VALID_INSTRUMENT_OR_SFX(x) (((uint32)(x) < mod->ins && mod->xxi[(x)].nsm > 0) || (smix->ins > 0 && (uint32)(x) < mod->ins + smix->ins))
@@ -94,10 +94,11 @@ struct channel_data {
 	int keyoff;		/* Key off counter */
 	int fadeout;		/* Current fadeout (release) value */
 	int ins_fade;		/* Instrument fadeout value */
-	int split;		/* Split channel */
-	int pair;		/* Split channel pair */
 	int volume;		/* Current volume */
 	int gvl;		/* Global volume for instrument for IT */
+
+	uint8 split;		/* Split channel */
+	uint8 pair;		/* Split channel pair */
 
 	int v_idx;		/* Volume envelope index */
 	int p_idx;		/* Pan envelope index */
