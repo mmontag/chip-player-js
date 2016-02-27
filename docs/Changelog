@@ -10,6 +10,7 @@ Stable versions
 	- fix Scream Tracker 3 period limits
 	Other changes:
 	- fix IT pattern break in hexadecimal (reported by StarFox008)
+	- fix S3M subsong detection (reported by knight-ryu12)
 
 4.3.11 (20160212):
 	Fix bugs caught in the OpenMPT test cases:
