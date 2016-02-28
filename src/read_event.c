@@ -1248,6 +1248,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			int pan_swing = (sub->rvv & 0xff00) >> 8;
 			CLAMP(pan_swing, 0, 64);
 
+			/* Reset pan, see OpenMPT PanReset.it */
 			if (sub->pan >= 0) {
 				xc->pan.val = sub->pan;
 				xc->pan.surround = 0;
@@ -1264,9 +1265,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				xc->pan.val = (xc->pan.val * (64 - pan_swing) +
 					(rand() % 256) * pan_swing) >> 6;
 			}
-		} else if (ev.ins) {
-			if (sub->pan >= 0)
-				xc->pan.val = sub->pan;
 		}
 	}
 	
