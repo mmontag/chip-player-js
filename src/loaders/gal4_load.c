@@ -96,13 +96,14 @@ static int get_ordr(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	mod->len = hio_read8(f);
+	mod->len = hio_read8(f) + 1;
 	if (hio_error(f)) {
 		return -1;
 	}
 
-	for (i = 0; i < mod->len; i++)
+	for (i = 0; i < mod->len; i++) {
 		mod->xxo[i] = hio_read8(f);
+	}
 
 	return 0;
 }

@@ -13,6 +13,7 @@ Stable versions
 	Other changes:
 	- fix IT pattern break in hexadecimal (reported by StarFox008)
 	- fix S3M subsong detection (reported by knight-ryu12)
+	- fix Galaxy Music System 4.0 song length (reported by Anton Zab)
 
 4.3.11 (20160212):
 	Fix bugs caught in the OpenMPT test cases:
