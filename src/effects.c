@@ -249,7 +249,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		goto fx_volslide;
 
 	case FX_TREMOLO:	/* Tremolo */
-		EFFECT_MEMORY_SETONLY(fxp, xc->tremolo.memory);
+		EFFECT_MEMORY(fxp, xc->tremolo.memory);
 		SET(TREMOLO);
 		SET_LFO_NOTZERO(&xc->tremolo.lfo, LSN(fxp), MSN(fxp));
 		break;

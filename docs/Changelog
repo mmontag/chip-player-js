@@ -8,6 +8,7 @@ Stable versions
 	- fix IT instrument without note after note cut event
 	- fix XM glissando effect
 	- fix Scream Tracker 3 period limits
+	- fix Scream Tracker 3 tremolo memory
 	Other changes:
 	- fix IT pattern break in hexadecimal (reported by StarFox008)
 	- fix S3M subsong detection (reported by knight-ryu12)
