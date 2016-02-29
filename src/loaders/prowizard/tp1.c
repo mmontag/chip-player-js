@@ -1,132 +1,78 @@
 /*
- *   TrackerPacker_v1.c   1998 (c) Asle / ReDoX
+ * TrackerPacker_v1.c  Copyright (C) 1998 Asle / ReDoX
  *
  * Converts TP1 packed MODs back to PTK MODs
- * thanks to Gryzor and his ProWizard tool ! ... without it, this prog
- * would not exist !!!
  *
-*/
+ * Modified in 2016 by Claudio Matsuoka
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
 
-void Depack_TP1 (FILE * in, FILE * out)
+static int depack_tp1(HIO_HANDLE *in, FILE *out)
 {
 	uint8 c1, c2, c3, c4;
-	uint8 ptk_table[37][2];
 	uint8 pnum[128];
-	uint8 Pattern[1024];
-	uint8 *tmp;
+	uint8 pdata[1024];
 	uint8 note, ins, fxt, fxp;
-	uint8 PatMax = 0x00;
-	uint8 PatPos;
-	long paddr[128];
-	long i = 0, j = 0;
-	long paddr_tmp[128];
-	long tmp_ptr;
-	long Start_Pat_Address = 999999l;
-	long Whole_Sample_Size = 0;
-	long Sample_Data_Address;
-	// HIO_HANDLE *in,*out;
-
-#include "ptktable.h"
-
-	if (Save_Status == BAD)
-		return;
+	uint8 npat = 0x00;
+	uint8 len;
+	int i, j;
+	int pat_ofs = 999999;
+	int paddr[128];
+	int paddr_ord[128];
+	int size, ssize = 0;
+	int smp_ofs;
 
 	memset(paddr, 0, 128 * 4);
-	memset(paddr_tmp, 0, 128 * 4);
+	memset(paddr_ord, 0, 128 * 4);
 	memset(pnum, 0, 128);
 
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
-
-	/* title */
-	fseek (in, 8, 0);	/* SEEK_SET */
-	tmp = (uint8 *) malloc (20);
-	memset(tmp, 0, 20);
-	fread (tmp, 20, 1, in);
-	fwrite (tmp, 20, 1, out);
-	free (tmp);
-
-	/* sample data address */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	Sample_Data_Address =
-		(c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
-/*printf ( "sample data address : %ld\n" , Sample_Data_Address );*/
+	hio_read32b(in);			/* skip magic */
+	hio_read32b(in);			/* skip size */
+	pw_move_data(out, in, 20);		/* title */
+	smp_ofs = hio_read32b(in);		/* sample data address */
 
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
-		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
+		pw_write_zero(out, 22);		/* sample name */
 
-		/* read fine */
-		fread (&c3, 1, 1, in);
+		c3 = hio_read8(in);		/* read finetune */
+		c4 = hio_read8(in);		/* read volume */
 
-		/* read volume */
-		fread (&c4, 1, 1, in);
+		write16b(out, size = hio_read16b(in)); /* size */
+		ssize += size * 2;
 
-		/* size */
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		Whole_Sample_Size += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		write8(out, c3);		/* write finetune */
+		write8(out, c4);		/* write volume */
 
-		/* write finetune */
-		fwrite (&c3, 1, 1, out);
-
-		/* write volume */
-		fwrite (&c4, 1, 1, out);
-
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-
+		write16b(out, hio_read16b(in));	/* loop start */
+		write16b(out, hio_read16b(in));	/* loop size */
 	}
-	/*printf ( "Whole sample size : %ld\n" , Whole_Sample_Size ); */
 
 	/* read size of pattern table */
-	fseek (in, 281, 0);
-	fread (&PatPos, 1, 1, in);
-	PatPos += 0x01;
-	fwrite (&PatPos, 1, 1, out);
+	len = hio_read16b(in) + 1;
+	write8(out, len);
 
 	/* ntk byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
+	write8(out, 0x7f);
 
-	for (i = 0; i < PatPos; i++) {
-		fseek (in, 2, 1);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		paddr[i] = (c3 << 8) + c4;
-		if (Start_Pat_Address > paddr[i])
-			Start_Pat_Address = paddr[i];
-/*fprintf ( info , "%3ld: %ld\n" , i,paddr[i] );*/
+	for (i = 0; i < len; i++) {
+		paddr[i] = hio_read32b(in);
+		if (hio_error(in)) {
+			return -1;
+		}
+		if (pat_ofs > paddr[i]) {
+			pat_ofs = paddr[i];
+		}
 	}
 
-	/* ordering of patterns addresses */
+	/* ordering of pattern addresses */
+	pnum[0] = 0;
+	paddr_ord[0] = paddr[0];
+	npat = 1;
 
-	tmp_ptr = 0;
-	for (i = 0; i < PatPos; i++) {
-		if (i == 0) {
-			pnum[0] = 0x00;
-			paddr_tmp[tmp_ptr] = paddr[tmp_ptr];
-			tmp_ptr++;
-			continue;
-		}
-
+	for (i = 1; i < len; i++) {
 		for (j = 0; j < i; j++) {
 			if (paddr[i] == paddr[j]) {
 				pnum[i] = pnum[j];
@@ -134,181 +80,129 @@ void Depack_TP1 (FILE * in, FILE * out)
 			}
 		}
 		if (j == i) {
-			paddr_tmp[tmp_ptr] = paddr[i];
-			pnum[i] = tmp_ptr++;
+			paddr_ord[npat] = paddr[i];
+			pnum[i] = npat++;
 		}
 	}
 
-/*
-  for ( i=0 ; i<PatPos ; i++ )
-  {
-    fprintf ( info , "%x, %ld\n" , pnum[i],paddr_tmp[i] );
-  }
-*/
-
-
-	PatMax = tmp_ptr;
-	/*printf ( "Highest pattern number : %d\n" , PatMax-1 ); */
-
-
-	/* write pattern list */
-	fwrite (pnum, 128, 1, out);
-
-
-	/* ID string */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-
-	/*printf ( "address of the first pattern : %ld\n" , Start_Pat_Address ); */
-	fseek (in, Start_Pat_Address, 0);
+	fwrite(pnum, 128, 1, out);		/* write pattern list */
+	write32b(out, PW_MOD_MAGIC);		/* ID string */
 
 	/* pattern datas */
-
-	j = 0;
-	/*printf ( "converting pattern data " ); */
-	for (i = 0; i < PatMax; i++) {
-/*fprintf ( info , "\npattern %ld: (at: %ld)\n\n" , i,paddr_tmp[i] );*/
-		fseek (in, paddr_tmp[i], 0);
-		memset(Pattern, 0, 1024);
+	for (i = 0; i < npat; i++) {
+		if (hio_seek(in, 794 + paddr_ord[i] - pat_ofs, SEEK_SET) < 0) {
+			return -1;
+		}
+		memset(pdata, 0, 1024);
 		for (j = 0; j < 256; j++) {
-			fread (&c1, 1, 1, in);
-/*fprintf ( info , "%ld: %2x," , k , c1 );*/
-			if (c1 == 0xC0) {
-/*fprintf ( info , " <--- empty\n" );*/
-				continue;
-			}
-			if ((c1 & 0xC0) == 0x80) {
-				fread (&c2, 1, 1, in);
-/*fprintf ( info , "%2x ,\n" , c2 );*/
-				fxt = (c1 >> 2) & 0x0f;
-				fxp = c2;
-				Pattern[j * 4 + 2] = fxt;
-				Pattern[j * 4 + 3] = fxp;
-				continue;
-			}
-			fread (&c2, 1, 1, in);
-			fread (&c3, 1, 1, in);
-/*fprintf ( info , "%2x, %2x\n" , c2 , c3 );*/
+			uint8 *p = pdata + j * 4;
 
+			c1 = hio_read8(in);
+			if (c1 == 0xc0) {
+				continue;
+			}
+			if ((c1 & 0xc0) == 0x80) {
+				fxt = (c1 >> 2) & 0x0f;
+				fxp = hio_read8(in);
+				p[2] = fxt;
+				p[3] = fxp;
+				continue;
+			}
+
+			c2 = hio_read8(in);
+			c3 = hio_read8(in);
+
+			note = (c1 & 0xfe) >> 1;
+
+			if (note > 36) {
+				return -1;
+			}
+			
 			ins = ((c2 >> 4) & 0x0f) | ((c1 << 4) & 0x10);
-			note = c1 & 0xFE;
-			fxt = c2 & 0x0F;
+			fxt = c2 & 0x0f;
 			fxp = c3;
 
-			Pattern[j * 4] = ins & 0xf0;
-			Pattern[j * 4] |= ptk_table[(note / 2)][0];
-			Pattern[j * 4 + 1] = ptk_table[(note / 2)][1];
-			Pattern[j * 4 + 2] = (ins << 4) & 0xf0;
-			Pattern[j * 4 + 2] |= fxt;
-			Pattern[j * 4 + 3] = fxp;
+			p[0] = (ins & 0xf0) | ptk_table[note][0];
+			p[1] = ptk_table[note][1];
+			p[2] = ((ins << 4) & 0xf0) | fxt;
+			p[3] = fxp;
 		}
-		fwrite (Pattern, 1024, 1, out);
-		/*printf ( "." ); */
+
+		fwrite(pdata, 1024, 1, out);
 	}
-	/*printf ( "\n" ); */
 
 	/* Sample data */
-	fseek (in, Sample_Data_Address, 0);	/* SEEK_SET */
-	tmp = (uint8 *) malloc (Whole_Sample_Size);
-	fread (tmp, Whole_Sample_Size, 1, in);
-	fwrite (tmp, Whole_Sample_Size, 1, out);
-	free (tmp);
+	if (hio_seek(in, smp_ofs, SEEK_SET) < 0) {
+		return -1;
+	}
+	pw_move_data(out, in, ssize);
 
-
-	Crap ("TP1:Tracker Packer 1", BAD, BAD, out);
-
-	fflush (in);
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
-
-void testTP1 (void)
+static int test_tp1(uint8 *data, char *t, int s)
 {
-	start = i;
+	int i;
+	int len, size, smp_ofs;
+
+	PW_REQUEST_DATA(s, 1024);
+
+	if (memcmp(data, "MEXX", 4)) {
+		return -1;
+	}
 
 	/* size of the module */
-	ssize =
-		((data[start + 4] << 24) +
-		(data[start + 5] << 16) +
-		(data[start + 6] << 8) +
-		data[start + 7]);
-	if ((ssize < 794) || (ssize > 2129178l)) {
-		Test = BAD;
-		return;
+	size = readmem32b(data + 4);
+	if (size < 794 || size > 2129178) {
+		return -1;
 	}
 
-	/* test finetunes */
-	for (k = 0; k < 31; k++) {
-		if (data[start + 32 + k * 8] > 0x0f) {
-			Test = BAD;
-			return;
-		}
-	}
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 8 + 32;
 
-	/* test volumes */
-	for (k = 0; k < 31; k++) {
-		if (data[start + 33 + k * 8] > 0x40) {
-			Test = BAD;
-			return;
-		}
+		/* test finetunes */
+		if (d[0] > 0x0f)
+			return -1;
+
+		/* test volumes */
+		if (d[1] > 0x40)
+			return -1;
 	}
 
 	/* sample data address */
-	l = ((data[start + 28] << 24) +
-		(data[start + 29] << 16) +
-		(data[start + 30] << 8) +
-		data[start + 31]);
-	if ((l == 0) || (l > ssize)) {
-		Test = BAD;
-		return;
+	smp_ofs = readmem32b(data + 28);
+	if (smp_ofs == 0 || smp_ofs > size) {
+		return -1;
 	}
 
 	/* test sample sizes */
-	for (k = 0; k < 31; k++) {
-		j =
-			(data[start + k * 8 + 34] << 8) +
-			data[start + k * 8 + 35];
-		m =
-			(data[start + k * 8 + 36] << 8) +
-			data[start + k * 8 + 37];
-		n =
-			(data[start + k * 8 + 38] << 8) +
-			data[start + k * 8 + 39];
-		j *= 2;
-		m *= 2;
-		n *= 2;
-		if ((j > 0xFFFF) || (m > 0xFFFF) || (n > 0xFFFF)) {
-/*printf ( "#5 Start:%ld\n" , start );*/
-			Test = BAD;
-			return;
-		}
-		if ((m + n) > (j + 2)) {
-/*printf ( "#5,1 Start:%ld\n" , start );*/
-			Test = BAD;
-			return;
-		}
-		if ((m != 0) && (n <= 2)) {
-/*printf ( "#5,2 Start:%ld\n" , start );*/
-			Test = BAD;
-			return;
-		}
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 8 + 32;
+		int len = readmem16b(d + 2) << 1;	/* size */
+		int start = readmem16b(d + 4) << 1;	/* loop start */
+		int lsize = readmem16b(d + 6) << 1;	/* loop size */
+
+		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
+			return -1;
+
+		if (start + lsize > len + 2)
+			return -1;
+
+		if (start != 0 && lsize == 0)
+			return -1;
 	}
 
 	/* pattern list size */
-	l = data[start + 281];
-	if ((l == 0) || (l > 128)) {
-		Test = BAD;
-		return;
+	len = data[281];
+	if (len == 0 || len > 128) {
+		return -1;
 	}
 
-	/* ssize is the size of the module :) */
-	Test = GOOD;
+	return 0;
 }
+
+const struct pw_format pw_tp1 = {
+	"Tracker Packer v1",
+	test_tp1,
+	depack_tp1
+};

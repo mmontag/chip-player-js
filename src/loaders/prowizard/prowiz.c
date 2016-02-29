@@ -33,8 +33,9 @@ const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
 	&pw_pha,
 	&pw_wn,
 	&pw_unic_id,
-	&pw_tp2,
 	&pw_tp3,
+	&pw_tp2,
+	&pw_tp1,
 	&pw_skyt,
 
 	/* No signature */

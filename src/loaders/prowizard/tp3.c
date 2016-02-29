@@ -21,7 +21,7 @@ static int depack_tp23(HIO_HANDLE *in, FILE *out, int ver)
 	uint8 npat, nins;
 	uint8 len;
 	int trk_ofs[128][4];
-	int i = 0, j = 0, k;
+	int i, j, k;
 	int pat_ofs = 999999;
 	int size, ssize = 0;
 	int max_trk_ofs = 0;
@@ -52,8 +52,9 @@ static int depack_tp23(HIO_HANDLE *in, FILE *out, int ver)
 	memset(tmp, 0, 30);
 	tmp[29] = 0x01;
 
-	for (; i < 31; i++)
+	for (; i < 31; i++) {
 		fwrite(tmp, 30, 1, out);
+	}
 
 	/* read size of pattern table */
 	hio_read8(in);
