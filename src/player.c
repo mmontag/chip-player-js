@@ -1063,12 +1063,14 @@ static void next_order(struct context_data *ctx)
 	struct flow_control *f = &p->flow;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
+	int mark;
 
 	do {
     		p->ord++;
 
 		/* Restart module */
-		if (p->ord >= mod->len || mod->xxo[p->ord] == 0xff) {
+		mark = HAS_QUIRK(QUIRK_MARKER) && mod->xxo[p->ord] == 0xff;
+		if (p->ord >= mod->len || mark) {
 			if (mod->rst > mod->len ||
 			    mod->xxo[mod->rst] >= mod->pat ||
 			    p->ord < m->seq_data[p->sequence].entry_point) {
@@ -1331,8 +1333,13 @@ int xmp_play_frame(xmp_context opaque)
 	if (ctx->state < XMP_STATE_PLAYING)
 		return -XMP_ERROR_STATE;
 
-	if (mod->len <= 0 || mod->xxo[p->ord] == 0xff)
+	if (mod->len <= 0) {
 		return -XMP_END;
+	}
+
+	if (HAS_QUIRK(QUIRK_MARKER) && mod->xxo[p->ord] == 0xff) {
+		return -XMP_END;
+	}
 
 	/* check reposition */
 	if (p->ord != p->pos) {

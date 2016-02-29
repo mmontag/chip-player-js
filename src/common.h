@@ -158,7 +158,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_S3MRTG	(1 << 24)	/* S3M-style retrig when count == 0 */
 #define QUIRK_RTDELAY	(1 << 25)	/* Delay effect retrigs instrument */
 #define QUIRK_FT2BUGS	(1 << 26)	/* FT2 bug compatibility */
-/*#define QUIRK_HEXBRK	(1 << 27)*/	/* Pattern breaks in hexadecimal */
+#define QUIRK_MARKER	(1 << 27)	/* Patterns 0xfe and 0xff reserved */
 /*#define QUIRK_S3MPMEM	(1 << 28)*/	/* S3M-style parameter memory */
 /*#define QUIRK_XMFINE	(1 << 29)*/	/* XM-style fine tune */
 #define QUIRK_RSTCHN	(1 << 30)	/* Reset channel on sample end */
@@ -168,12 +168,12 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 
 /* Format quirks */
 #define QUIRKS_ST3		(QUIRK_S3MLOOP | QUIRK_VOLPDN | QUIRK_FINEFX | \
-				 QUIRK_S3MRTG )
+				 QUIRK_S3MRTG  | QUIRK_MARKER)
 #define QUIRKS_FT2		(QUIRK_RTDELAY | QUIRK_FINEFX )
 #define QUIRKS_IT		(QUIRK_S3MLOOP | QUIRK_FINEFX | QUIRK_VIBALL | \
 				 QUIRK_ENVFADE | QUIRK_ITVPOR | QUIRK_KEYOFF | \
 				 QUIRK_VIRTUAL | QUIRK_FILTER | QUIRK_RSTCHN | \
-				 QUIRK_IGSTPOR | QUIRK_S3MRTG )
+				 QUIRK_IGSTPOR | QUIRK_S3MRTG | QUIRK_MARKER )
 
 /* DSP effects */
 #define DSP_EFFECT_CUTOFF	0x02

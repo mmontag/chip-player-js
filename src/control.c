@@ -65,6 +65,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
 	int seq;
+	int has_marker;
 
 	/* If dir is 0, we can jump to a different sequence */
 	if (dir == 0) {
@@ -77,6 +78,8 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 		return;
 	}
 
+	has_marker = HAS_QUIRK(QUIRK_MARKER);
+
 	if (seq >= 0) {
 		int start = m->seq_data[seq].entry_point;
 
@@ -85,7 +88,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 		if (pos >= 0) {
 			int pat;
 
-			while (mod->xxo[pos] == 0xfe) {
+			while (has_marker && mod->xxo[pos] == 0xfe) {
 				if (dir < 0) {
 					if (pos > start) {
 						pos--;
@@ -97,7 +100,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 			pat = mod->xxo[pos];
 
 			if (pat < mod->pat) {
-				if (pat == 0xff) {
+				if (has_marker && pat == 0xff) {
 					return;
 				}
 

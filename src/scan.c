@@ -64,6 +64,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     int loop_row[XMP_MAX_CHANNELS];
     struct xmp_event* event;
     int i, pat;
+    int has_marker;
     struct ord_data *info;
 #ifndef LIBXMP_CORE_PLAYER
     int st26_speed;
@@ -93,6 +94,8 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 #ifndef LIBXMP_CORE_PLAYER
     st26_speed = 0;
 #endif
+
+    has_marker = HAS_QUIRK(QUIRK_MARKER);
 
     /* By erlk ozlr <erlk.ozlr@gmail.com>
      *
@@ -130,7 +133,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    }
 	   
 	    pat = mod->xxo[ord];
-	    if (pat == S3M_END) {
+	    if (has_marker && pat == S3M_END) {
 		break;
 	    }
 	} 
@@ -146,7 +149,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 
 	/* All invalid patterns skipped, only S3M_END aborts replay */
 	if (pat >= mod->pat) {
-	    if (pat == S3M_END) {
+	    if (has_marker && pat == S3M_END) {
 		ord = mod->len;
 	        continue;
 	    }
