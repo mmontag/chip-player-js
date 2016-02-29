@@ -12,6 +12,8 @@ TEST(test_prev_order_skip)
 	p = &ctx->p;
 
  	create_simple_module(ctx, 2, 2);
+	set_quirk(ctx, QUIRK_MARKER, READ_EVENT_MOD);
+
 	set_order(ctx, 0, 0);
 	set_order(ctx, 1, 0xfe);
 	set_order(ctx, 2, 0);
