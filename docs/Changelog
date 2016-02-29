@@ -14,7 +14,8 @@ Stable versions
 	- fix IT pattern break in hexadecimal (reported by StarFox008)
 	- fix S3M subsong detection (reported by knight-ryu12)
 	- fix S3M/IT special marker handling (reported by knight-ryu12)
-	- fix Galaxy Music System 4.0 song length (reported by Anton Zab)
+	- fix Galaxy Music System 4.0 song length (reported by AntonZab)
+	- Add support to TrackerPacker v2
 
 4.3.11 (20160212):
 	Fix bugs caught in the OpenMPT test cases:
@@ -80,7 +81,7 @@ Stable versions
 	Other changes:
 	- fix IT envelope release + fadeout (reported by NoSuck)
 	- fix SFX effects 5, 6, 7, and 8 (reported by Lamar McLouth)
-	- fix pattern loading in Galaxy 4 and 5 (reported by Anton Zab)
+	- fix pattern loading in Galaxy 4 and 5 (reported by AntonZab)
 	- fix memory leak in LZW decompressor (by Chris Spiegel)
 	- fix tone portamento target setting (reported by Georgy Lomsadze)
 	- fix IT autovibrato depth (reported by Travis Evans)

@@ -12,7 +12,7 @@
 
 void Depack_TP1 (FILE * in, FILE * out)
 {
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
+	uint8 c1, c2, c3, c4;
 	uint8 ptk_table[37][2];
 	uint8 pnum[128];
 	uint8 Pattern[1024];

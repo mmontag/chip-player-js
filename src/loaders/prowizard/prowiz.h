@@ -79,6 +79,7 @@ extern const struct pw_format pw_starpack;
 extern const struct pw_format pw_stim;
 extern const struct pw_format pw_tdd;
 extern const struct pw_format pw_titanics;
+extern const struct pw_format pw_tp2;
 extern const struct pw_format pw_tp3;
 extern const struct pw_format pw_unic_emptyid;
 extern const struct pw_format pw_unic_id;

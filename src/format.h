@@ -16,7 +16,7 @@ char **format_list(void);
 #ifndef LIBXMP_CORE_PLAYER
 
 #define NUM_FORMATS 52
-#define NUM_PW_FORMATS 40
+#define NUM_PW_FORMATS 41
 
 int pw_test_format(HIO_HANDLE *, char *, const int, struct xmp_test_info *);
 #endif

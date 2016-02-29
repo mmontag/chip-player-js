@@ -1,9 +1,9 @@
 /*
  * TrackerPacker_v3.c   Copyright (C) 1998 Asle / ReDoX
  *
- * Converts tp3 packed MODs back to PTK MODs
+ * Converts tp2/tp3 packed MODs back to PTK MODs
  *
- * Modified in 2007,2014 by Claudio Matsuoka
+ * Modified in 2007,2014,2016 by Claudio Matsuoka
  */
 
 #include <string.h>
@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int depack_tp3(HIO_HANDLE *in, FILE *out)
+static int depack_tp23(HIO_HANDLE *in, FILE *out, int ver)
 {
 	uint8 c1, c2, c3, c4;
 	uint8 pnum[128];
@@ -109,10 +109,14 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 
 				if ((c1 & 0xc0) == 0x80) {
 					c2 = hio_read8(in);
-					fxt = (c1 >> 1) & 0x0f;
+					if (ver == 2) {
+						fxt = (c1 >> 2) & 0x0f;
+					} else {
+						fxt = (c1 >> 1) & 0x0f;
+					}
 					fxp = c2;
 					if ((fxt == 0x05) || (fxt == 0x06)
-						|| (fxt == 0x0A)) {
+						|| (fxt == 0x0a)) {
 						if (fxp > 0x80)
 							fxp = 0x100 - fxp;
 						else if (fxp <= 0x80)
@@ -129,24 +133,42 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 
 				ins = ((c2 >> 4) & 0x0f) | ((c1 >> 2) & 0x10);
 
-				if ((c1 & 0x40) == 0x40) {
-					note = 0x7f - c1;
+				if (ver == 2) {
+					note = (c1 & 0xfe) >> 1;
+
+					if (note >= 37) {
+						return -1;
+					}
+
+					fxt = c2 & 0x0f;
+
+					if (fxt == 0x00) {
+						p[0] = ins & 0xf0;
+						p[0] |= ptk_table[note][0];
+						p[1] = ptk_table[note][1];
+						p[2] = ((ins << 4) & 0xf0) | fxt;
+						continue;
+					}
 				} else {
-					note = c1 & 0x3f;
-				}
-
-				if (note >= 37) {
-					return -1;
-				}
-
-				fxt = c2 & 0x0f;
-
-				if (fxt == 0x00) {
-					p[0] = ins & 0xf0;
-					p[0] |= ptk_table[note][0];
-					p[1] = ptk_table[note][1];
-					p[2] = (ins << 4) & 0xf0;
-					continue;
+					if ((c1 & 0x40) == 0x40) {
+						note = 0x7f - c1;
+					} else {
+						note = c1 & 0x3f;
+					}
+	
+					if (note >= 37) {
+						return -1;
+					}
+	
+					fxt = c2 & 0x0f;
+	
+					if (fxt == 0x00) {
+						p[0] = ins & 0xf0;
+						p[0] |= ptk_table[note][0];
+						p[1] = ptk_table[note][1];
+						p[2] = (ins << 4) & 0xf0;
+						continue;
+					}
 				}
 
 				c3 = hio_read8(in);
@@ -180,8 +202,9 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 	}
 
 	/* Sample data */
-	if (max_trk_ofs & 0x01)
+	if (ver > 2 && max_trk_ofs & 0x01) {
 		max_trk_ofs += 1;
+	}
 
 	hio_seek(in, max_trk_ofs, SEEK_SET);
 	pw_move_data(out, in, ssize);
@@ -189,14 +212,24 @@ static int depack_tp3(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_tp3(uint8 *data, char *t, int s)
+static int depack_tp3(HIO_HANDLE *in, FILE *out)
+{
+	return depack_tp23(in, out, 3);
+}
+
+static int depack_tp2(HIO_HANDLE *in, FILE *out)
+{
+	return depack_tp23(in, out, 2);
+}
+
+static int test_tp23(uint8 *data, char *t, int s, char *magic)
 {
 	int i;
 	int npat, nins, ssize;
 
 	PW_REQUEST_DATA(s, 1024);
 
-	if (memcmp(data, "CPLX_TP3", 8))
+	if (memcmp(data, magic, 8))
 		return -1;
 
 	/* number of sample */
@@ -216,7 +249,7 @@ static int test_tp3(uint8 *data, char *t, int s)
 
 		/* test volumes */
 		if (d[31] > 0x40)
-			return - 1;
+			return -1;
 	}
 
 	/* test sample sizes */
@@ -252,8 +285,24 @@ static int test_tp3(uint8 *data, char *t, int s)
 	return 0;
 }
 
+static int test_tp3(uint8 *data, char *t, int s)
+{
+	return test_tp23(data, t, s, "CPLX_TP3");
+}
+
+static int test_tp2(uint8 *data, char *t, int s)
+{
+	return test_tp23(data, t, s, "MEXX_TP2");
+}
+
 const struct pw_format pw_tp3 = {
 	"Tracker Packer v3",
 	test_tp3,
 	depack_tp3
+};
+
+const struct pw_format pw_tp2 = {
+	"Tracker Packer v2",
+	test_tp2,
+	depack_tp2
 };
