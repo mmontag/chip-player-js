@@ -46,7 +46,7 @@ EFFECTS		= 0_arpeggio 1_slide_up 2_slide_down \
 		  set_nna_cut set_nna_cont set_nna_off set_nna_fade \
 		  note_slide note_slide_retrig \
 		  persistent_slide persistent_vslide persistent_vibrato \
-		  it_g00_nosuck
+		  it_g00_nosuck it_l00_nosuck
 
 API		= get_format_list create_context free_context \
 		  test_module load_module load_module_from_memory \
