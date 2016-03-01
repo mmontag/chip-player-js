@@ -15,6 +15,7 @@ Stable versions
 	- fix S3M subsong detection (reported by knight-ryu12)
 	- fix S3M/IT special marker handling (reported by knight-ryu12)
 	- fix Galaxy Music System 4.0 song length (reported by AntonZab)
+	- fix tone portamento memory without note (reported by NoSuck)
 	- Add TrackerPacker v1 format converter
 	- Add TrackerPacker v2 format converter
 	- Add ProPacker 1.0 format converter

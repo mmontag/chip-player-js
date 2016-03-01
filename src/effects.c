@@ -206,15 +206,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 	case FX_TONEPORTA:	/* Tone portamento */
-		if (HAS_QUIRK(QUIRK_IGSTPOR)) {
-			if (note == 0 && xc->porta.dir == 0)
-				break;
-		}
-		if (!IS_VALID_INSTRUMENT(xc->ins))
-			break;
-
-		do_toneporta(m, xc, note);
-
 		EFFECT_MEMORY_SETONLY(fxp, xc->porta.memory);
 
 		if (fxp != 0) {
@@ -222,6 +213,17 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 				xc->freq.memory = fxp;
 			xc->porta.slide = fxp;
 		}
+
+		if (HAS_QUIRK(QUIRK_IGSTPOR)) {
+			if (note == 0 && xc->porta.dir == 0)
+				break;
+		}
+
+		if (!IS_VALID_INSTRUMENT(xc->ins))
+			break;
+
+		do_toneporta(m, xc, note);
+
 		SET(TONEPORTA);
 		break;
 
