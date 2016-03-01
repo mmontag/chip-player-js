@@ -1,267 +1,187 @@
 /*
- *   ProPacker_v1.0   1997 (c) Asle / ReDoX
+ * ProPacker_v1.0 Copyright (C) 1997 Asle / ReDoX
  *
  * Converts back to ptk ProPacker v1 MODs
  *
-*/
+ * Modified in 2016 by Claudio Matsuoka
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
 
-void Depack_PP10 (FILE * in, FILE * out)
+static int depack_pp10(HIO_HANDLE *in, FILE *out)
 {
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
-	uint8 Tracks_Numbers[4][128];
-	uint8 pat_pos;
-	uint8 *tmp;
-	uint8 Pattern[1024];
-	short Max;
-	long i = 0, j = 0, k = 0;
-	long ssize = 0;
-	// HIO_HANDLE *in,*out;
+	uint8 c1;
+	uint8 trk_num[4][128];
+	uint8 len;
+	uint8 tmp[8];
+	uint8 pdata[1024];
+	int i, j, k;
+	int ntrk, size, ssize = 0;
 
-	if (Save_Status == BAD)
-		return;
+	memset(trk_num, 0, 128 * 4);
 
-	memset(Tracks_Numbers, 0, 128 * 4);
-
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
-
-	/* write title */
-	for (i = 0; i < 20; i++)
-		fwrite (&c1, 1, 1, out);
+	pw_write_zero(out, 20);				/* write title */
 
 	/* read and write sample descriptions */
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
-		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
 
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* finetune */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		if ((c1 == 0x00) && (c2 == 0x00))
-			c2 = 0x01;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		if (hio_read(tmp, 1, 8, in) != 8) {
+			return -1;
+		}
+
+		pw_write_zero(out, 22);			/* sample name */
+
+		size = readmem16b(tmp);			/* size */
+		ssize += size * 2;
+
+		if (tmp[4] == 0 && tmp[5] == 0) {	/* loop size */
+			tmp[5] = 1;
+		}
+
+		if (fwrite(tmp, 1, 8, out) != 8) {
+			return -1;
+		}
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* read and write pattern table lenght */
-	fread (&pat_pos, 1, 1, in);
-	fwrite (&pat_pos, 1, 1, out);
-	/*printf ( "Size of pattern list : %d\n" , pat_pos ); */
+	len = hio_read8(in);			/* pattern table lenght */
+	write8(out, len);
 
-	/* read and write NoiseTracker byte */
-	fread (&c1, 1, 1, in);
-	fwrite (&c1, 1, 1, out);
+	c1 = hio_read8(in);			/* Noisetracker byte */
+	write8(out, c1);
 
 	/* read track list and get highest track number */
-	Max = 0;
-	for (j = 0; j < 4; j++) {
+	for (ntrk = j = 0; j < 4; j++) {
 		for (i = 0; i < 128; i++) {
-			fread (&Tracks_Numbers[j][i], 1, 1, in);
-			if (Tracks_Numbers[j][i] > Max)
-				Max = Tracks_Numbers[j][i];
-		}
-	}
-	/*printf ( "highest track number : %d\n" , Max+1 ); */
-
-	/* write pattern table "as is" ... */
-	for (c1 = 0x00; c1 < pat_pos; c1++)
-		fwrite (&c1, 1, 1, out);
-	c2 = 0x00;
-	for (; c1 < 128; c1++)
-		fwrite (&c2, 1, 1, out);
-
-	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-
-	/* track/pattern data */
-
-	for (i = 0; i < pat_pos; i++) {
-/*fprintf ( info , "\n\n\nPattern %ld :\n" , i );*/
-		memset(Pattern, 0, 1024);
-		for (j = 0; j < 4; j++) {
-			fseek (in, 762 + (Tracks_Numbers[j][i] << 8), 0);	/* SEEK_SET */
-/*fprintf ( info , "Voice %ld :\n" , j );*/
-			for (k = 0; k < 64; k++) {
-				fread (&c1, 1, 1, in);
-				fread (&c2, 1, 1, in);
-				fread (&c3, 1, 1, in);
-				fread (&c4, 1, 1, in);
-/*fprintf ( info , "%2x , %2x , %2x  (%ld)\n" , c2 , c3 , c4 ,ftell (in));*/
-				Pattern[k * 16 + j * 4] = c1;
-				Pattern[k * 16 + j * 4 + 1] = c2;
-				Pattern[k * 16 + j * 4 + 2] = c3;
-				Pattern[k * 16 + j * 4 + 3] = c4;
+			trk_num[j][i] = hio_read8(in);
+			if (trk_num[j][i] > ntrk) {
+				ntrk = trk_num[j][i];
 			}
 		}
-		fwrite (Pattern, 1024, 1, out);
-		/*printf ( "+" ); */
 	}
-	/*printf ( "\n" ); */
 
+	/* write pattern table "as is" ... */
+	for (i = 0; i < len; i++) {
+		write8(out, i);
+	}
+	pw_write_zero(out, 128 - i);
+	write32b(out, PW_MOD_MAGIC);		/* ID string */
+
+	/* track/pattern data */
+	for (i = 0; i < len; i++) {
+		memset(pdata, 0, 1024);
+		for (j = 0; j < 4; j++) {
+			hio_seek(in, 762 + (trk_num[j][i] << 8), SEEK_SET);
+			for (k = 0; k < 64; k++) {
+				hio_read(pdata + k * 16 + j * 4, 1, 4, in);
+			}
+		}
+		fwrite(pdata, 1024, 1, out);
+	}
 
 	/* now, lets put file pointer at the beginning of the sample datas */
-	fseek (in, 762 + ((Max + 1) << 8), 0);	/* SEEK_SET */
+	if (hio_seek(in, 762 + ((ntrk + 1) << 8), SEEK_SET) < 0) {
+		return -1;
+	}
 
 	/* sample data */
-	tmp = (uint8 *) malloc (ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	pw_move_data(out, in, ssize);
 
-	/* crap */
-	Crap ("PP10:ProPacker v1.0", BAD, BAD, out);
-
-	fflush (in);
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
-
-void testPP10 (void)
+static int test_pp10(uint8 *data, char *t, int s)
 {
+	int i;
+	int ntrk, ssize;
+
+	PW_REQUEST_DATA(s, 1024);
+
+#if 0
 	/* test #1 */
 	if (i < 3) {
-/*printf ( "#1 (i:%ld)\n" , i );*/
 		Test = BAD;
 		return;
 	}
 	start = i - 3;
+#endif
 
 	/* noisetracker byte */
-	if (data[start + 249] > 0x7f) {
-		Test = BAD;
-/*printf ( "#1,1 (start:%ld)\n" , start );*/
-		return;
+	if (data[249] > 0x7f) {
+		return -1;
 	}
 
 	/* test #2 */
 	ssize = 0;
-	for (j = 0; j < 31; j++) {
-		k =
-			(((data[start + j * 8] << 8) +
-				 data[start + 1 +
-					j * 8]) * 2);
-		l =
-			(((data[start + j * 8 + 4] << 8) +
-				 data[start + 5 +
-					j * 8]) * 2);
-		/* loop size */
-		m =
-			(((data[start + j * 8 + 6] << 8) +
-				 data[start + 7 +
-					j * 8]) * 2);
-		if (m == 0) {
-/*printf ( "#1,98 (start:%ld) (k:%ld) (l:%ld) (m:%ld)\n" , start,k,l,m );*/
-			Test = BAD;
-			return;
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 8;
+		int size = readmem16b(d) << 1;
+		int start = readmem16b(d + 4) << 1;
+		int lsize = readmem16b(d + 6) << 1;
+
+		ssize += size;
+
+		if (lsize == 0) {
+			return -1;
 		}
-		if ((l != 0) && (m <= 2)) {
-/*printf ( "#1,99 (start:%ld) (k:%ld) (l:%ld) (m:%ld)\n" , start,k,l,m );*/
-			Test = BAD;
-			return;
+		if (start != 0 && lsize <= 2) {
+			return -1;
 		}
-		if ((l + m) > (k + 2)) {
-/*printf ( "#2,0 (start:%ld) (k:%ld) (l:%ld) (m:%ld)\n" , start,k,l,m );*/
-			Test = BAD;
-			return;
+		if (start + lsize > size + 2) {
+			return -1;
 		}
-		if ((l != 0) && (m == 0)) {
-/*printf ( "#2,01 (start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
+#if 0
+		if (start != 0 && lsize == 0) {
+			return -1;
 		}
-		ssize += k;
-		/* finetune > 0x0f ? */
-		if (data[start + 2 + 8 * j] > 0x0f) {
-/*printf ( "#2 (start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
+#endif
+		if (d[2] > 0x0f) {		/* finetune > 0x0f ? */
+			return -1;
 		}
-		/* volume > 0x40 ? */
-		if (data[start + 3 + 8 * j] > 0x40) {
-/*printf ( "#2,1 (start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
+
+		if (d[3] > 0x40) {		/* volume > 0x40 ? */
+			return -1;
 		}
-		/* loop start > size ? */
-		if ((((data[start + 4 + j * 8] << 8) +
-					data[start + 5 +
-						j * 8]) * 2) > k) {
-			Test = BAD;
-/*printf ( "#2,2 (start:%ld)\n" , start );*/
-			return;
+
+		if (start > size) {		/* loop start > size ? */
+			return -1;
 		}
-		/* size > 0xffff ? */
-		if (k > 0xFFFF) {
-			Test = BAD;
-/*printf ( "#2,3 (start:%ld)\n" , start );*/
-			return;
+
+		if (size > 0xffff) {		/* size > 0xffff ? */
+			return -1;
 		}
 	}
+
 	if (ssize <= 2) {
-/*printf ( "#2,4 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
+		return -1;
 	}
-	/* ssize = whole sample size */
 
 	/* test #3   about size of pattern list */
-	l = data[start + 248];
-	if ((l > 127) || (l == 0)) {
-/*printf ( "#3 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
+	if (data[248] == 0 || data[248] > 127) {
+		return -1;
 	}
 
 	/* get the highest track value */
-	k = 0;
-	for (j = 0; j < 512; j++) {
-		l = data[start + 250 + j];
-		if (l > k)
-			k = l;
-	}
-	/* k is the highest track number */
-	k += 1;
-	k *= 64;
-
-	/* track data test */
-	for (j = 0; j < k; j++) {
-		if (data[start + 762 + j * 4] > 0x13) {
-			Test = BAD;
-			ssize = 0;
-/*printf ( "#3,1 (start:%ld)\n" , start );*/
-			return;
+	for (ntrk = i = 0; i < 512; i++) {
+		if (data[250 + i] > ntrk) {
+			ntrk = data[250 + i];
 		}
 	}
-	k *= 4;
+	ntrk++;
 
-	/* ssize is the sample data size */
-	/* k is the track data size */
-	Test = GOOD;
+	for (i = 0; i < ntrk * 64; i++) {
+		if (data[762 + i * 4] > 0x13) {
+			return -1;
+		}
+	}
+
+	return 0;
 }
+
+const struct pw_format pw_pp10 = {
+	"ProPacker 1.0",
+	test_pp10,
+	depack_pp10
+};
+

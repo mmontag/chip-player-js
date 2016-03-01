@@ -46,6 +46,7 @@ const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
 	&pw_p4x,
 	&pw_pp21,
 	&pw_pp30,
+	&pw_pp10,
 	&pw_p50a,
 	&pw_p60a,
 	&pw_p61a,

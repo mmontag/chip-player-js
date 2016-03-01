@@ -17,6 +17,7 @@ Stable versions
 	- fix Galaxy Music System 4.0 song length (reported by AntonZab)
 	- Add support to TrackerPacker v1
 	- Add support to TrackerPacker v2
+	- Add support to ProPacker 1.0
 
 4.3.11 (20160212):
 	Fix bugs caught in the OpenMPT test cases:

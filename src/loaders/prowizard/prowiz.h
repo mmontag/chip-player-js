@@ -70,6 +70,7 @@ extern const struct pw_format pw_p50a;
 extern const struct pw_format pw_p60a;
 extern const struct pw_format pw_p61a;
 extern const struct pw_format pw_pha;
+extern const struct pw_format pw_pp10;
 extern const struct pw_format pw_pp21;
 extern const struct pw_format pw_pp30;
 extern const struct pw_format pw_pru1;
