@@ -19,7 +19,6 @@ Stable versions
 	- Add TrackerPacker v1 format converter
 	- Add TrackerPacker v2 format converter
 	- Add ProPacker 1.0 format converter
-	- Add Promizer 0.1 format converter
 
 4.3.11 (20160212):
 	Fix bugs caught in the OpenMPT test cases:
