@@ -168,6 +168,9 @@ static int test_pp10(uint8 *data, char *t, int s)
 			ntrk = data[250 + i];
 		}
 	}
+
+	PW_REQUEST_DATA(s, 762 + ntrk * 64);
+
 	ntrk++;
 
 	for (i = 0; i < ntrk * 64; i++) {

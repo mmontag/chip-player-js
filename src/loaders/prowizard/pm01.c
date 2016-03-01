@@ -1,152 +1,117 @@
 /*
- *   Promizer_0.1_Packer.c   1997 (c) Asle / ReDoX
+ * Promizer_0.1_Packer.c Copyright (C) 1997 Asle / ReDoX
  *
  * Converts back to ptk Promizer 0.1 packed MODs
  *
-*/
+ * Modified in 2016 by Claudio Matsuoka
+ */
 
 #include <string.h>
 #include <stdlib.h>
+#include "prowiz.h"
 
-void Depack_PM01 (FILE * in, FILE * out)
+static int depack_pm01(HIO_HANDLE *in, FILE *out)
 {
-	uint8 c1 = 0x00, c2 = 0x00, c3 = 0x00, c4 = 0x00;
 	uint8 ptable[128];
-	uint8 pat_pos;
-	uint8 pat_max;
-	uint8 ptk_table[37][2];
-	uint8 *tmp;
-	uint8 *PatternData;
+	uint8 len;
+	uint8 npat;
+	uint8 tmp[1024];
+	uint8 pdata[1024];
 	uint8 fin[31];
 	uint8 Old_ins_Nbr[4];
-	long i = 0, j = 0, k = 0, l = 0;
-	long ssize = 0;
-	long Pattern_Address[128];
-	// HIO_HANDLE *in,*out;
-
-#include "tuning.h"
-#include "ptktable.h"
-
-	if (Save_Status == BAD)
-		return;
+	int i, j;
+	int psize, size, ssize = 0;
+	int pat_ofs[128];
 
 	memset(ptable, 0, 128);
-	memset(Pattern_Address, 0, 128 * 4);
+	memset(pat_ofs, 0, 128 * 4);
 	memset(fin, 0, 31);
 	memset(Old_ins_Nbr, 0, 4);
 
-	// in = fdopen (fd_in, "rb");
-	// sprintf ( Depacked_OutName , "%ld.mod" , Cpt_Filename-1 );
-	// out = fdopen (fd_out, "w+b");
-
-	/* write title */
-	for (i = 0; i < 20; i++)	/* title */
-		fwrite (&c1, 1, 1, out);
+	pw_write_zero(out, 20);			/* title */
 
 	/* read and write sample descriptions */
 	for (i = 0; i < 31; i++) {
-		c1 = 0x00;
-		for (j = 0; j < 22; j++)	/*sample name */
-			fwrite (&c1, 1, 1, out);
 
-		fread (&c1, 1, 1, in);	/* size */
-		fread (&c2, 1, 1, in);
-		ssize += (((c1 << 8) + c2) * 2);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* finetune */
-		fin[i] = c1;
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* volume */
-		fwrite (&c1, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop start */
-		fread (&c2, 1, 1, in);
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
-		fread (&c1, 1, 1, in);	/* loop size */
-		fread (&c2, 1, 1, in);
-		if ((c1 == 0x00) && (c2 == 0x00))
-			c2 = 0x01;
-		fwrite (&c1, 1, 1, out);
-		fwrite (&c2, 1, 1, out);
+		if (hio_read(tmp, 1, 8, in) != 8) {
+			return -1;
+		}
+
+		pw_write_zero(out, 22);			/* sample name */
+
+		size = readmem16b(tmp);			/* size */
+		ssize += size * 2;
+
+		fin[i] = tmp[2];
+
+		if (tmp[4] == 0 && tmp[5] == 0) {	/* loop size */
+			tmp[5] = 1;
+		}
+
+		if (fwrite(tmp, 1, 8, out) != 8) {
+			return -1;
+		}
 	}
-	/*printf ( "Whole sample size : %ld\n" , ssize ); */
 
-	/* pattern table lenght */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	pat_pos = ((c1 << 8) + c2) / 4;
-	fwrite (&pat_pos, 1, 1, out);
-	/*printf ( "Size of pattern list : %d\n" , pat_pos ); */
-
-	/* write NoiseTracker byte */
-	c1 = 0x7f;
-	fwrite (&c1, 1, 1, out);
+	len = hio_read16b(in) >> 2;		/* pattern table lenght */
+	write8(out, len);
+	write8(out, 0x7f);			/* write NoiseTracker byte */
 
 	/* read pattern address list */
 	for (i = 0; i < 128; i++) {
-		fread (&c1, 1, 1, in);
-		fread (&c2, 1, 1, in);
-		fread (&c3, 1, 1, in);
-		fread (&c4, 1, 1, in);
-		Pattern_Address[i] =
-			(c1 << 24) + (c2 << 16) +
-			(c3 << 8) + c4;
+		pat_ofs[i] = hio_read32b(in);
 	}
 
 	/* deduce pattern list and write it */
-	pat_max = 0x00;
-	for (i = 0; i < 128; i++) {
-		ptable[i] = Pattern_Address[i] / 1024;
-		fwrite (&ptable[i], 1, 1, out);
-		if (ptable[i] > pat_max)
-			pat_max = ptable[i];
+	for (npat = i = 0; i < 128; i++) {
+		ptable[i] = pat_ofs[i] / 1024;
+		write8(out, ptable[i]);
+		if (ptable[i] > npat) {
+			npat = ptable[i];
+		}
 	}
-	pat_max += 1;
-	/*printf ( "Number of pattern : %d\n" , pat_max ); */
+	npat++;
 
-	/* write ptk's ID */
-	c1 = 'M';
-	c2 = '.';
-	c3 = 'K';
-	fwrite (&c1, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
-	fwrite (&c3, 1, 1, out);
-	fwrite (&c2, 1, 1, out);
+	write32b(out, PW_MOD_MAGIC);		/* ID string */
 
-	/* get pattern data size */
-	fread (&c1, 1, 1, in);
-	fread (&c2, 1, 1, in);
-	fread (&c3, 1, 1, in);
-	fread (&c4, 1, 1, in);
-	j = (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
-	/*printf ( "Size of the pattern data : %ld\n" , j ); */
+	psize = hio_read32b(in);		/* get pattern data size */
+
+	if (npat * 1024 != psize) {
+		return -1;
+	}
 
 	/* read and XOR pattern data */
-	tmp = (uint8 *) malloc (j);
-	PatternData = (uint8 *) malloc (j);
-	memset(tmp, 0, j);
-	fread (tmp, j, 1, in);
-	for (k = 0; k < j; k++) {
-		if (k % 4 == 3) {
-			PatternData[k] =
-				((240 - (tmp[k] & 0xf0)) +
-				(tmp[k] & 0x0f));
-			continue;
+	for (i = 0; i < npat; i++) {
+		memset(pdata, 0, 1024);
+		if (hio_read(pdata, 1, 1024, in) != 1024) {
+			return -1;
 		}
-		PatternData[k] = 255 - tmp[k];
+
+		for (j = 0; j < 1024; j++) {
+			if (j % 4 == 3) {
+				pdata[j] = (240 - (pdata[j] & 0xf0)) +
+						(pdata[j] & 0x0f);
+				continue;
+			}
+			pdata[j] = pdata[j] ^ 0xff;
+		}
+
+		if (fwrite(pdata, 1, 1024, out) != 1024) {
+			return -1;
+		}
 	}
 
+#if 0
 	/* all right, now, let's take care of these 'finetuned' value ... pfff */
 	Old_ins_Nbr[0] = Old_ins_Nbr[1] = Old_ins_Nbr[2] = Old_ins_Nbr[3] =
 		0x1f;
 	memset(tmp, 0, j);
 	for (i = 0; i < j / 4; i++) {
-		c1 = PatternData[i * 4] & 0x0f;
-		c2 = PatternData[i * 4 + 1];
+		c1 = pdata[i * 4] & 0x0f;
+		c2 = pdata[i * 4 + 1];
 		k = (c1 << 8) + c2;
 		c3 =
-			(PatternData[i * 4] & 0xf0) | ((PatternData[i * 4 +
+			(pdata[i * 4] & 0xf0) | ((pdata[i * 4 +
 					   2] >> 4) & 0x0f);
 		if (c3 == 0)
 			c3 = Old_ins_Nbr[i % 4];
@@ -161,157 +126,106 @@ void Depack_PM01 (FILE * in, FILE * out)
 				}
 			}
 		} else {
-			tmp[i * 4] = PatternData[i * 4] & 0x0f;
-			tmp[i * 4 + 1] = PatternData[i * 4 + 1];
+			tmp[i * 4] = pdata[i * 4] & 0x0f;
+			tmp[i * 4 + 1] = pdata[i * 4 + 1];
 		}
-		tmp[i * 4] |= (PatternData[i * 4] & 0xf0);
-		tmp[i * 4 + 2] = PatternData[i * 4 + 2];
-		tmp[i * 4 + 3] = PatternData[i * 4 + 3];
+		tmp[i * 4] |= (pdata[i * 4] & 0xf0);
+		tmp[i * 4 + 2] = pdata[i * 4 + 2];
+		tmp[i * 4 + 3] = pdata[i * 4 + 3];
 	}
-	fwrite (tmp, j, 1, out);
-	free (tmp);
-	free (PatternData);
+#endif
 
 	/* sample data */
-	tmp = (uint8 *) malloc (ssize);
-	fread (tmp, ssize, 1, in);
-	fwrite (tmp, ssize, 1, out);
-	free (tmp);
+	pw_move_data(out, in, ssize);
 
-	/* crap */
-	Crap ("PM01:Promizer 0.1", BAD, BAD, out);
-
-	fflush (in);
-	fflush (out);
-
-	printf ("done\n");
-	return;			/* useless ... but */
+	return 0;
 }
 
-#include <string.h>
-#include <stdlib.h>
 
-void testPM01 (void)
+static int test_pm01(uint8 *data, char *t, int s)
 {
+	int i;
+	int len, psize, ssize;
+
+	PW_REQUEST_DATA(s, 1024);
+
+#if 0
 	/* test #1 */
 	if (i < 3) {
-/*printf ( "#1 (i:%ld)\n" , i );*/
 		Test = BAD;
 		return;
 	}
+#endif
 
 	/* test #2 */
-	start = i - 3;
-	l = 0;
-	for (j = 0; j < 31; j++) {
-		k =
-			(((data[start + j * 8] << 8) +
-				 data[start + 1 +
-					j * 8]) * 2);
-		l += k;
-		/* finetune > 0x0f ? */
-		if (data[start + 2 + 8 * j] > 0x0f) {
-/*printf ( "#2 (start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
+	for (i = 0; i < 31; i++) {
+		uint8 *d = data + i * 8;
+		int size = readmem16b(data) << 1;
+		int start = readmem16b(data + 4) << 1;
+		int lsize = readmem16b(data + 6) << 1;
+
+		ssize += size;
+
+		if (d[2] > 0x0f) {		/* finetune > 0x0f ? */
+			return -1;
 		}
+
 		/* loop start > size ? */
-		if ((((data[start + 4 + j * 8] << 8) +
-					data[start + 5 +
-						j * 8]) * 2) > k) {
-			Test = BAD;
-/*printf ( "#2,1 (start:%ld)\n" , start );*/
-			return;
+		if (start > size || lsize > size) {
+			return -1;
 		}
-	}
-	if (l <= 2) {
-/*printf ( "#2,2 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
+
+		if (lsize <= 2) {
+			return -1;
+		}
 	}
 
 	/* test #3   about size of pattern list */
-	l =
-		(data[start + 248] << 8) +
-		data[start + 249];
-	k = l / 4;
-	if ((k * 4) != l) {
-/*printf ( "#3 (start:%ld)(l:%ld)(k:%ld)\n" , start,l,k );*/
-		Test = BAD;
-		return;
+	len = readmem16b(data + 248);
+	if (len & 0x03) {
+		return -1;
 	}
-	if (k > 127) {
-/*printf ( "#3,1 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
-	}
-	if (l == 0) {
-/*printf ( "#3,2 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
+	len >>= 2;
+
+	if (len == 0 || len > 127) {
+		return -1;
 	}
 
 	/* test #4  size of all the pattern data */
 	/* k contains the size of the pattern list */
-	l = (data[start + 762] << 24)
-		+ (data[start + 743] << 16)
-		+ (data[start + 764] << 8)
-		+ data[start + 765];
-	if ((l < 1024) || (l > 131072)) {
-/*printf ( "#4 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
+	psize = readmem32b(data + 762);
+	if (psize < 1024 || psize > 131072) {
+		return -1;
 	}
 
 	/* test #5  first pattern address != $00000000 ? */
-	l = (data[start + 250] << 24)
-		+ (data[start + 251] << 16)
-		+ (data[start + 252] << 8)
-		+ data[start + 253];
-	if (l != 0) {
-/*printf ( "#5 (start:%ld)\n" , start );*/
-		Test = BAD;
-		return;
+	if (readmem32b(data + 250) != 0) {
+		return -1;
 	}
 
 	/* test #6  pattern addresses */
-	/* k is still ths size of the pattern list */
-	for (j = 0; j < k; j++) {
-		l =
-			(data[start + 250 +
-				 j * 4] << 24) +
-			(data[start + 251 +
-				j * 4] << 16) +
-			(data[start + 252 + j * 4] << 8)
-			+ data[start + 253 + j * 4];
-		if (l > 131072) {
-/*printf ( "#6 (start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
-		}
-		if (((l / 1024) * 1024) != l) {
-			Test = BAD;
-			return;
+	for (i = 0; i < len; i++) {
+		int addr = readmem32b(data + 250 + i * 4);
+		if (addr & 0x3ff || addr > 131072) {
+			return -1;
 		}
 	}
 
 	/* test #7  last patterns in pattern table != $00000000 ? */
-	j += 4;		/* just to be sure */
-	while (j != 128) {
-		l =
-			(data[start + 250 +
-				 j * 4] << 24) +
-			(data[start + 251 +
-				j * 4] << 16) +
-			(data[start + 252 + j * 4] << 8)
-			+ data[start + 253 + j * 4];
-		if (l != 0) {
-/*printf ( "#7 (start:%ld)\n" , start );*/
-			Test = BAD;
-			return;
+	i += 4;		/* just to be sure */
+	for (; i < 128; i++) {
+		int addr = readmem32b(data + 250 + i * 4);
+		if (addr != 0) {
+			return -1;
 		}
-		j += 1;
 	}
 
-	Test = GOOD;
+	return 0;
 }
+
+const struct pw_format pw_pm01 = {
+	"Promizer 0.1",
+	test_pm01,
+	depack_pm01
+};
+

@@ -62,6 +62,7 @@ const struct pw_format *const pw_format[NUM_PW_FORMATS + 1] = {
 	&pw_tdd,
 	&pw_starpack,
 	&pw_gmc,
+	&pw_pm01,
 	&pw_titanics,
 	NULL
 };

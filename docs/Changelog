@@ -15,9 +15,10 @@ Stable versions
 	- fix S3M subsong detection (reported by knight-ryu12)
 	- fix S3M/IT special marker handling (reported by knight-ryu12)
 	- fix Galaxy Music System 4.0 song length (reported by AntonZab)
-	- Add support to TrackerPacker v1
-	- Add support to TrackerPacker v2
-	- Add support to ProPacker 1.0
+	- Add TrackerPacker v1 format converter
+	- Add TrackerPacker v2 format converter
+	- Add ProPacker 1.0 format converter
+	- Add Promizer 0.1 format converter
 
 4.3.11 (20160212):
 	Fix bugs caught in the OpenMPT test cases:

@@ -61,7 +61,7 @@ extern const struct pw_format pw_np2;
 extern const struct pw_format pw_np3;
 extern const struct pw_format pw_nru;
 extern const struct pw_format pw_ntp;
-extern const struct pw_format pw_p01;
+extern const struct pw_format pw_pm01;
 extern const struct pw_format pw_p10c;
 extern const struct pw_format pw_p18a;
 extern const struct pw_format pw_p20;
