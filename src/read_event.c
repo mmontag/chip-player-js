@@ -1272,17 +1272,15 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			RESET_NOTE(NOTE_CUT);
 
 			if (pan_swing) {
-				xc->pan.val = 0x80 + (((xc->pan.val - 0x80) *
-					(64 - pan_swing) + ((rand() % 256) -
-					128) * pan_swing) >> 6);
-				CLAMP(xc->pan.val, 0, 256);
+				xc->pan.val = (xc->pan.val * (64 - pan_swing) +
+					((rand() % 256) * pan_swing)) >> 6;
 			}
 		}
 	}
 	
 	/* Process new volume */
 	if (ev.vol && (!TEST_NOTE(NOTE_CUT) || ev.ins != 0)) {
-		if (key != XMP_KEY_OFF) {	/* See OpenMPT NoteOffInstr.it */
+		if (key != XMP_KEY_OFF) {    /* See OpenMPT NoteOffInstr.it */
 			xc->volume = ev.vol - 1;
 			SET(NEW_VOL);
 		}
