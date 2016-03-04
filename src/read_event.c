@@ -1172,6 +1172,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		if (sub != NULL) {
 			int transp = mod->xxi[candidate_ins].map[key].xpo;
 			int smp, to;
+			int rvv;
 
 			note = key + sub->xpo + transp;
 			smp = sub->sid;
@@ -1185,6 +1186,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 			to = virt_setpatch(ctx, chn, candidate_ins, smp,
 				note, sub->nna, sub->dct, sub->dca);
+
+			rvv = sub->rvv & 0xff;
+			CLAMP(rvv, 0, 100);
+			xc->rvv = rand() % (rvv + 1);
 
 			if (to < 0)
 				return -1;
@@ -1296,15 +1301,15 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	if (use_ins_vol && !TEST(NEW_VOL)) {
-		int vol_swing = sub->rvv & 0xff;
-		CLAMP(vol_swing, 0, 100);
+		//int vol_swing = sub->rvv & 0xff;
+		//CLAMP(vol_swing, 0, 100);
 
 		xc->volume = sub->vol;
 
-		if (vol_swing) {
-			xc->volume = (xc->volume * (100 - vol_swing) + 
-				(rand() % (xc->volume + 1)) * vol_swing) / 100;
-		}
+		//if (vol_swing) {
+		//	xc->volume = (xc->volume * (100 - vol_swing) + 
+		//		(rand() % (xc->volume + 1)) * vol_swing) / 100;
+		//}
 	}
 
 	return 0;

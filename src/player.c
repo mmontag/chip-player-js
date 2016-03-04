@@ -475,6 +475,10 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	finalvol = xc->volume;
 #endif
 
+	if (m->read_event_type == READ_EVENT_IT) {
+		finalvol = xc->volume * (100 - xc->rvv) / 100;
+	}
+
 	if (TEST(TREMOLO)) {
 		finalvol += get_lfo(ctx, &xc->tremolo.lfo, 0) / (1 << 6);
 		if (!is_first_frame(ctx) || HAS_QUIRK(QUIRK_VIBALL)) {
