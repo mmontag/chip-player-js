@@ -97,7 +97,7 @@ struct channel_data {
 	int volume;		/* Current volume */
 	int gvl;		/* Global volume for instrument for IT */
 
-	int rvv;
+	int rvv;		/* Random volume variation */
 
 	uint8 split;		/* Split channel */
 	uint8 pair;		/* Split channel pair */

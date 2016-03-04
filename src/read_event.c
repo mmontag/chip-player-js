@@ -1187,9 +1187,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			to = virt_setpatch(ctx, chn, candidate_ins, smp,
 				note, sub->nna, sub->dct, sub->dca);
 
+			/* Random value for volume swing */
 			rvv = sub->rvv & 0xff;
-			CLAMP(rvv, 0, 100);
-			xc->rvv = rand() % (rvv + 1);
+			if (rvv) {
+				CLAMP(rvv, 0, 100);
+				xc->rvv = rand() % (rvv + 1);
+			} else {
+				xc->rvv = 0;
+			}
 
 			if (to < 0)
 				return -1;
@@ -1267,8 +1272,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			RESET_NOTE(NOTE_CUT);
 
 			if (pan_swing) {
-				xc->pan.val = (xc->pan.val * (64 - pan_swing) +
-					(rand() % 256) * pan_swing) >> 6;
+				xc->pan.val = 0x80 + (((xc->pan.val - 0x80) *
+					(64 - pan_swing) + ((rand() % 256) -
+					128) * pan_swing) >> 6);
+				CLAMP(xc->pan.val, 0, 256);
 			}
 		}
 	}
