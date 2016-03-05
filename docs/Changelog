@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.12 ():
+4.3.12 (20150305):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT note off with instrument
 	- fix IT note recover after cut

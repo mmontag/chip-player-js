@@ -1,6 +1,23 @@
 Stable versions
 ---------------
 
+4.3.12 (20150305):
+	Fix bugs caught in the OpenMPT test cases:
+	- fix IT note off with instrument
+	- fix IT note recover after cut
+	- fix IT instrument without note after note cut event
+	- fix IT pan reset on new note instead of new instrument
+	- fix IT volume swing problems
+	- fix XM glissando effect
+	- fix Scream Tracker 3 period limits
+	- fix Scream Tracker 3 tremolo memory
+	Other changes:
+	- fix IT pattern break in hexadecimal (reported by StarFox008)
+	- fix S3M subsong detection (reported by knight-ryu12)
+	- fix S3M/IT special marker handling (reported by knight-ryu12)
+	- fix tone portamento memory without note (reported by NoSuck)
+	- fix IT pan swing limits
+
 4.3.11 (20160212):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix FT2 XM arpeggio clamp
