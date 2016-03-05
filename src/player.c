@@ -762,13 +762,17 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
 
+	if (m->read_event_type == READ_EVENT_IT) {
+		finalpan = finalpan + xc->rpv * 4;
+	}
+
+	CLAMP(finalpan, 0, 255);
+
 	if (s->format & XMP_FORMAT_MONO || xc->pan.surround) {
 		finalpan = 0;
 	} else {
 		finalpan = (finalpan - 0x80) * s->mix / 100;
 	}
-
-	CLAMP(finalpan, -128, 127);
 
 	xc->info_finalpan = finalpan + 0x80;
 

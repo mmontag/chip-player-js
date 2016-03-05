@@ -98,6 +98,7 @@ struct channel_data {
 	int gvl;		/* Global volume for instrument for IT */
 
 	int rvv;		/* Random volume variation */
+	int rpv;		/* Random pan variation */
 
 	uint8 split;		/* Split channel */
 	uint8 pair;		/* Split channel pair */

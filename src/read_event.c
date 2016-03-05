@@ -1196,6 +1196,15 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				xc->rvv = 0;
 			}
 
+			/* Random value for pan swing */
+			rvv = (sub->rvv & 0xff00) >> 8;
+			if (rvv) {
+				CLAMP(rvv, 0, 64);
+				xc->rpv = rand() % (rvv + 1) - 32;
+			} else {
+				xc->rpv = 0;
+			}
+
 			if (to < 0)
 				return -1;
 			if (to != chn) {
@@ -1255,8 +1264,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (sub != NULL) {
 		if (note >= 0) {
-			int pan_swing = (sub->rvv & 0xff00) >> 8;
-			CLAMP(pan_swing, 0, 64);
+			//int pan_swing = (sub->rvv & 0xff00) >> 8;
+			//CLAMP(pan_swing, 0, 64);
 
 			/* Reset pan, see OpenMPT PanReset.it */
 			if (sub->pan >= 0) {
@@ -1271,10 +1280,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 			RESET_NOTE(NOTE_CUT);
 
-			if (pan_swing) {
-				xc->pan.val = (xc->pan.val * (64 - pan_swing) +
-					((rand() % 256) * pan_swing)) >> 6;
-			}
+			//if (pan_swing) {
+			//	xc->pan.val = (xc->pan.val * (64 - pan_swing) +
+			//		((rand() % 256) * pan_swing)) >> 6;
+			//}
 		}
 	}
 	
@@ -1306,15 +1315,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	if (use_ins_vol && !TEST(NEW_VOL)) {
-		//int vol_swing = sub->rvv & 0xff;
-		//CLAMP(vol_swing, 0, 100);
-
 		xc->volume = sub->vol;
-
-		//if (vol_swing) {
-		//	xc->volume = (xc->volume * (100 - vol_swing) + 
-		//		(rand() % (xc->volume + 1)) * vol_swing) / 100;
-		//}
 	}
 
 	return 0;
