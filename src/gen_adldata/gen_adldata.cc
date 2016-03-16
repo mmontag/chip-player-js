@@ -21,15 +21,17 @@ struct insdata
 {
     unsigned char data[11];
     signed char   finetune;
+    bool          diff;
     bool operator==(const insdata& b) const
     {
-        return std::memcmp(data, b.data, 11) == 0 && finetune == b.finetune;
+        return std::memcmp(data, b.data, 11) == 0 && finetune == b.finetune && diff == b.diff;
     }
     bool operator< (const insdata& b) const
     {
         int c = std::memcmp(data, b.data, 11);
         if(c != 0) return c < 0;
         if(finetune != b.finetune) return finetune < b.finetune;
+        if(diff != b.diff) return (!diff)==(b.diff);
         return 0;
     }
     bool operator!=(const insdata& b) const { return !operator==(b); }
@@ -39,6 +41,7 @@ struct ins
     size_t insno1, insno2;
     unsigned char notenum;
     bool pseudo4op;
+    double fine_tune;
 
     bool operator==(const ins& b) const
     {
@@ -100,11 +103,10 @@ static size_t InsertIns(
 
     in.insno1 = insno;
   }
-  if(id != id2)
+  if( id != id2 )
   {
     std::map<insdata, std::pair<size_t,std::set<std::string> > >::iterator
         i = insdatatab.lower_bound(id2);
-
     size_t insno2 = ~0;
     if(i == insdatatab.end() || i->first != id2)
     {
@@ -157,8 +159,8 @@ static size_t InsertIns(
 size_t InsertNoSoundIns()
 {
     // { 0x0F70700,0x0F70710, 0xFF,0xFF, 0x0,+0 },
-    insdata tmp1 = { {0x00, 0x10, 0x07, 0x07, 0xF7, 0xF7, 0x00, 0x00, 0xFF, 0xFF, 0x00}, 0 };
-    struct ins tmp2 = { 0, 0, 0, 0 };
+    insdata tmp1 = { {0x00, 0x10, 0x07, 0x07, 0xF7, 0xF7, 0x00, 0x00, 0xFF, 0xFF, 0x00}, 0, 0 };
+    struct ins tmp2 = { 0, 0, 0, 0.0, 0 };
     return InsertIns(tmp1, tmp1, tmp2, "nosound");
 }
 
@@ -246,10 +248,12 @@ static void LoadBNK(const char* fn, unsigned bank, const char* prefix, bool is_f
         tmp.data[9] = op2[0]*0x40 + op2[8]; // KSL , LEVEL
         tmp.data[10] = op1[2]*2 + op1[12]; // FEEDBACK, ADDITIVEFLAG
         tmp.finetune = 0;
+        tmp.diff=false;
         // Note: op2[2] and op2[12] are unused and contain garbage.
         ins tmp2;
         tmp2.notenum = is_fat ? voice_num : (percussive ? usage_flag : 0);
         tmp2.pseudo4op = false;
+        tmp2.fine_tune = 0.0;
 
         if(is_fat) tmp.data[10] ^= 1;
 
@@ -351,6 +355,7 @@ static void LoadBNK2(const char* fn, unsigned bank, const char* prefix,
             tmp[a].data[8] = ops[a*2+0][1];
             tmp[a].data[9] = ops[a*2+1][1];
             tmp[a].finetune = TTTTTTTT;
+            tmp[a].diff=false;
         }
         tmp[0].data[10] = C4xxxFFFC & 0x0F;
         tmp[1].data[10] = (tmp[0].data[10] & 0x0E) | (C4xxxFFFC >> 7);
@@ -358,6 +363,7 @@ static void LoadBNK2(const char* fn, unsigned bank, const char* prefix,
         ins tmp2;
         tmp2.notenum = (gmno & 128) ? 35 : 0;
         tmp2.pseudo4op = false;
+        tmp2.fine_tune = 0.0;
 
         if(xxP24NNN & 8)
         {
@@ -431,6 +437,8 @@ static void LoadDoom(const char* fn, unsigned bank, const char* prefix)
         Doom_opl_instr& ins = *(Doom_opl_instr*) &data[offset2];
 
         insdata tmp[2];
+        tmp[0].diff=false;
+        tmp[1].diff=true;
         for(unsigned index=0; index<2; ++index)
         {
             const Doom_OPL2instrument& src = ins.patchdata[index];
@@ -445,11 +453,12 @@ static void LoadDoom(const char* fn, unsigned bank, const char* prefix)
             tmp[index].data[8] = src.scale_1 | src.level_1;
             tmp[index].data[9] = src.scale_2 | src.level_2;
             tmp[index].data[10] = src.feedback;
-            tmp[index].finetune = src.basenote + 12;
+            tmp[index].finetune = src.basenote+12;
         }
         struct ins tmp2;
         tmp2.notenum  = ins.note;
         tmp2.pseudo4op = false;
+        tmp2.fine_tune = 0.0;
         while(tmp2.notenum && tmp2.notenum < 20)
         {
             tmp2.notenum += 12;
@@ -465,7 +474,13 @@ static void LoadDoom(const char* fn, unsigned bank, const char* prefix)
         else // Double instrument
         {
             tmp2.pseudo4op = true;
-            size_t resno = InsertIns(tmp[0],tmp[1],tmp2, std::string(1,'\377')+name, name2);
+            tmp2.fine_tune = ( ((double)ins.finetune-128.0)*15.625)/1000.0;
+            if(ins.finetune==129)
+                tmp2.fine_tune=0.000025;
+            else if(ins.finetune==127)
+                tmp2.fine_tune=-0.000025;
+            //printf("/*DOOM FINE TUNE (flags %000X instrument is %d) IS %d -> %lf*/\n", ins.flags, a, ins.finetune, tmp2.fine_tune);
+            size_t resno = InsertIns(tmp[0], tmp[1], tmp2, std::string(1,'\377')+name, name2);
             SetBank(bank, gmno, resno);
         }
 
@@ -534,6 +549,7 @@ static void LoadMiles(const char* fn, unsigned bank, const char* prefix)
         {
             unsigned o = offset + 3 + i*11;
             tmp[i].finetune = (gmno < 128 && i == 0) ? notenum : 0;
+            tmp[i].diff=false;
             tmp[i].data[0] = data[o+0];  // 20
             tmp[i].data[8] = data[o+1];  // 40 (vol)
             tmp[i].data[2] = data[o+2];  // 60
@@ -559,6 +575,7 @@ static void LoadMiles(const char* fn, unsigned bank, const char* prefix)
             struct ins tmp2;
             tmp2.notenum  = gmno < 128 ? 0 : data[offset+3];
             tmp2.pseudo4op = false;
+            tmp2.fine_tune = 0.0;
             std::string name;
             if(midi_index >= 0) name = std::string(1,'\377')+MidiInsName[midi_index];
             size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2);
@@ -611,9 +628,11 @@ static void LoadIBK(const char* fn, unsigned bank, const char* prefix, bool perc
         tmp.data[10] = data[offset2+10];
         // [+11] seems to be used also, what is it for?
         tmp.finetune = 0;
+        tmp.diff=false;
         struct ins tmp2;
         tmp2.notenum  = gmno < 128 ? 0 : 35;
         tmp2.pseudo4op = false;
+        tmp2.fine_tune = 0.0;
 
         size_t resno = InsertIns(tmp,tmp, tmp2, std::string(1,'\377')+name, name2);
         SetBank(bank, gmno, resno);
@@ -659,6 +678,7 @@ static void LoadJunglevision(const char* fn, unsigned bank, const char* prefix)
         tmp[0].data[9] = data[offset + 9];
         tmp[0].data[10] = data[offset + 7] & ~0x30;
         tmp[0].finetune = 0;
+        tmp[0].diff=false;
 
         tmp[1].data[0] = data[offset + 2 + 11];
         tmp[1].data[1] = data[offset + 8 + 11];
@@ -672,10 +692,12 @@ static void LoadJunglevision(const char* fn, unsigned bank, const char* prefix)
         tmp[1].data[9] = data[offset + 9 + 11];
         tmp[1].data[10] = data[offset + 7 + 11] & ~0x30;
         tmp[1].finetune = 0;
+        tmp[1].diff=false;
 
         struct ins tmp2;
         tmp2.notenum  = data[offset + 1];
         tmp2.pseudo4op = false;
+        tmp2.fine_tune = 0.0;
 
         while(tmp2.notenum && tmp2.notenum < 20)
         {
@@ -735,10 +757,12 @@ static void LoadTMB(const char* fn, unsigned bank, const char* prefix)
         tmp.data[9] = data[offset + 3];
         tmp.data[10] = data[offset + 10];
         tmp.finetune = 0; //data[offset + 12];
+        tmp.diff=false;
 
         struct ins tmp2;
         tmp2.notenum   = data[offset + 11];
         tmp2.pseudo4op = false;
+        tmp2.fine_tune = 0.0;
 
         std::string name;
         if(midi_index >= 0) name = std::string(1,'\377')+MidiInsName[midi_index];
@@ -766,11 +790,13 @@ static void LoadBisqwit(const char* fn, unsigned bank, const char* prefix)
         struct ins tmp2;
         tmp2.notenum = std::fgetc(fp);
         tmp2.pseudo4op = false;
+        tmp2.fine_tune = 0.0;
 
         insdata tmp[2];
         for(int side=0; side<2; ++side)
         {
             tmp[side].finetune = std::fgetc(fp);
+            tmp[side].diff=false;
             std::fread(tmp[side].data, 1, 11, fp);
         }
 
@@ -1254,13 +1280,14 @@ int main()
               + (i->first.data[5] << 16)
               + (i->first.data[3] << 8)
               + (i->first.data[1] << 0);
-            printf("0x%07X,0x%07X, 0x%02X,0x%02X, 0x%X,%+d",
+            printf("0x%07X,0x%07X, 0x%02X,0x%02X, 0x%X, %+d, %s",
                 carrier_E862,
                 modulator_E862,
                 i->first.data[8],
                 i->first.data[9],
                 i->first.data[10],
-                i->first.finetune);
+                i->first.finetune,
+                i->first.diff?"true":"false");
 
             std::string names;
             for(std::set<std::string>::const_iterator
@@ -1301,13 +1328,14 @@ int main()
             unsigned flags = (i->first.pseudo4op ? 1 : 0) | (info.nosound ? 2 : 0);
 
             printf("    {");
-            printf("%4d,%4d,%3d, %d, %6ld,%6ld",
+            printf("%4d,%4d,%3d, %d, %6ld,%6ld,%lf",
                 (unsigned) i->first.insno1,
                 (unsigned) i->first.insno2,
                 (int)(i->first.notenum),
                 flags,
                 info.ms_sound_kon,
-                info.ms_sound_koff);
+                info.ms_sound_koff,
+                   i->first.fine_tune);
             std::string names;
             for(std::set<std::string>::const_iterator
                 j = i->second.second.begin();
@@ -1331,7 +1359,7 @@ int main()
     std::map<unsigned, std::vector<unsigned> > bank_data;
     for(unsigned bank=0; bank<bankcount; ++bank)
     {
-        bool redundant = true;
+        //bool redundant = true;
         std::vector<unsigned> data(256);
         for(unsigned p=0; p<256; ++p)
         {

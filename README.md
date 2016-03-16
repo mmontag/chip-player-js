@@ -52,8 +52,6 @@ That example is a simple audio player based on SDL Audio usage.
 To build that example you will need to have installed SDL2 library.
 
 # Todo
-* Fix infinite loop causes swapped loopEnd and loopStart (when loopEnd goes before loopStart)
-* Fix sielent volume tracks (when initial voule is zero, tracks wouldn't be playd even after applying fading in volume events)
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 * Time based Seek/Tell support
 * Support of title and other meta-tags retrieving
@@ -61,7 +59,14 @@ To build that example you will need to have installed SDL2 library.
   That will allow to use library as software MIDI Output device
   to play any MIDI via this library.
 
-# Changelog	
+# Changelog
+## 1.0.2	2016-03-16
+ * Fixed infinite loop causes swapped loopEnd and loopStart (when loopEnd goes before loopStart)
+ * Fixed sielent volume tracks (when initial voule is zero, tracks wouldn't be playd even after applying fading in volume events)
+ * More accurate fine tuning for second voice for DMX-based banks (playback now is more like original DOOM than before!)
+ * Library's Output data now in short format (no more need to do extra conversions to make 16-bit audio stream from every 16-bit
+   sample stored into each 32-bit integer)
+
 ## 1.0.0	2015-10-10
  * First release of library
 

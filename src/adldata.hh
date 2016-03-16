@@ -2,7 +2,7 @@
  * libADLMIDI is a free MIDI to WAV conversion library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2015 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2016 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -41,6 +41,8 @@ extern const struct adldata
     unsigned char feedconn; // Feedback/connection bits for the channel
 
     signed char finetune;
+
+    bool diff;
 } adl[];
 
 extern const struct adlinsdata
@@ -52,6 +54,7 @@ extern const struct adlinsdata
     unsigned char flags;
     unsigned short ms_sound_kon;  // Number of milliseconds it produces sound;
     unsigned short ms_sound_koff;
+    double fine_tune;
 } adlins[];
 extern const unsigned short banks[][256];
 extern const char* const banknames[67];
