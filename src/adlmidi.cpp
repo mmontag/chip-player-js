@@ -595,10 +595,12 @@ public:
             {
                 switch(rel_to)
                 {
-                    case SET: mp_tell=pos;
-                    case END: mp_tell=mp_size-pos;
-                    case CUR: mp_tell+=pos;
+                    case SET: mp_tell=pos;break;
+                    case END: mp_tell=mp_size-pos;break;
+                    case CUR: mp_tell+=pos;break;
                 }
+                if(mp_tell > mp_size)
+                    mp_tell = mp_size;
             }
         }
 
@@ -706,7 +708,7 @@ public:
             fr.seek(7-(4+4+2+2+2), SEEK_CUR);
             is_GMF = true;
         }
-        else if(std::memcmp(HeaderBuf, "MUS\1x1A", 4) == 0)
+        else if(std::memcmp(HeaderBuf, "MUS\x1A", 4) == 0)
         {
             // MUS/DMX files (Doom)
             fr.seek(8-(4+4+2+2+2), SEEK_CUR);
@@ -759,6 +761,7 @@ public:
 
         static const unsigned char EndTag[4] = {0xFF,0x2F,0x00,0x00};
 
+        int totalGotten=0;
         for(size_t tk = 0; tk < TrackCount; ++tk)
         {
             // Read track header
@@ -787,6 +790,7 @@ public:
                     special_event_buf[3] = fr.getc(); // port index
                     special_event_buf[4] = fr.getc(); // port value
                     unsigned delay = fr.getc(); delay += 256 * fr.getc();
+                    totalGotten+=4;
 
                     //if(special_event_buf[3] <= 8) continue;
 
@@ -828,6 +832,7 @@ public:
                 // Read track data
                 TrackData[tk].resize(TrackLength);
                 fsize=fr.read(&TrackData[tk][0], 1, TrackLength);
+                totalGotten+=fsize;
                 if(is_GMF || is_MUS)
                 {
                     TrackData[tk].insert(TrackData[tk].end(), EndTag+0, EndTag+4);
@@ -836,6 +841,12 @@ public:
                 CurrentPosition.track[tk].delay = ReadVarLen(tk);
             }
         }
+        if(totalGotten==0)
+        {
+            ADLMIDI_ErrorString=fr._fileName+": Empty track data\n";
+            return false;
+        }
+
         trackStart = true;
         loopStart  = true;
         loopStart_passed = false;
@@ -980,7 +991,7 @@ private:
 
                     if((adlins[insmeta].flags & adlinsdata::Flag_Pseudo4op) && ins == adlins[insmeta].adlno2)
                     {
-                        phase = 0.125; // Detune the note slightly (this is what Doom does)
+                        phase = adlins[insmeta].fine_tune;//0.125; // Detune the note slightly (this is what Doom does)
                     }
 
                     if(Ch[MidCh].vibrato && d.vibdelay >= Ch[MidCh].vibdelay)
@@ -1902,7 +1913,7 @@ ADLMIDI_EXPORT int adl_setNumCards(ADL_MIDIPlayer *device, int numCards)
 
 ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
 {
-    const unsigned NumBanks = sizeof(banknames)/sizeof(*banknames);
+    const unsigned NumBanks = 67;//sizeof(banknames)/sizeof(*banknames);
     int bankno = bank;
     if(bankno < 0)
         bankno = 0;
