@@ -141,24 +141,34 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
+	struct xmp_instrument *xxi;
+	struct xmp_subinstrument *sub;
+	struct xmp_sample *xxs;
+
 	if (subinstrument_alloc(mod, i, 1) < 0)
 	    return -1;
 
-	mod->xxs[i].len = 2 * mh.ins[i].size;
-	mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
-	mod->xxs[i].lpe = mod->xxs[i].lps + 2 * mh.ins[i].loop_size;
-	if (mod->xxs[i].lpe > mod->xxs[i].len)
-		mod->xxs[i].lpe = mod->xxs[i].len;
-	mod->xxs[i].flg = (mh.ins[i].loop_size > 1 && mod->xxs[i].lpe >= 4) ?
+	xxi = &mod->xxi[i];
+	sub = &xxi->sub[0];
+	xxs = &mod->xxs[i];
+
+	xxs->len = 2 * mh.ins[i].size;
+	xxs->lps = 2 * mh.ins[i].loop_start;
+	xxs->lpe = xxs->lps + 2 * mh.ins[i].loop_size;
+	if (xxs->lpe > xxs->len) {
+		xxs->lpe = xxs->len;
+	}
+	xxs->flg = (mh.ins[i].loop_size > 1 && xxs->lpe >= 4) ?
 		XMP_SAMPLE_LOOP : 0;
-	mod->xxi[i].sub[0].fin = (int8)(mh.ins[i].finetune << 4);
-	mod->xxi[i].sub[0].vol = mh.ins[i].volume;
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
+	sub->fin = (int8)(mh.ins[i].finetune << 4);
+	sub->vol = mh.ins[i].volume;
+	sub->pan = 0x80;
+	sub->sid = i;
 	instrument_name(mod, i, mh.ins[i].name, 22);
 
-	if (mod->xxs[i].len > 0)
-		mod->xxi[i].nsm = 1;
+	if (xxs->len > 0) {
+		xxi->nsm = 1;
+	}
     }
 
     mod->trk = mod->chn * mod->pat;
