@@ -396,24 +396,296 @@ static void identify_tracker(struct module_data *m, struct it_file_header ifh)
 #endif
 }
 
+static int load_old_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
+{
+    int inst_map[120], inst_rmap[XMP_MAX_KEYS];
+    struct it_instrument1_header i1h;
+    int c, k, j;
+
+    i1h.magic = hio_read32b(f);
+    hio_read(&i1h.dosname, 12, 1, f);
+
+    i1h.zero = hio_read8(f);
+    i1h.flags = hio_read8(f);
+    i1h.vls = hio_read8(f);
+    i1h.vle = hio_read8(f);
+    i1h.sls = hio_read8(f);
+    i1h.sle = hio_read8(f);
+    i1h.rsvd1 = hio_read16l(f);
+    i1h.fadeout = hio_read16l(f);
+
+    i1h.nna = hio_read8(f);
+    i1h.dnc = hio_read8(f);
+    i1h.trkvers = hio_read16l(f);
+    i1h.nos = hio_read8(f);
+    i1h.rsvd2 = hio_read8(f);
+
+    if (hio_error(f)) {
+        return -1;
+    }
+
+    if (hio_read(&i1h.name, 1, 26, f) != 26) {
+        return -1;
+    }
+
+    fix_name(i1h.name, 26);
+
+    if (hio_read(&i1h.rsvd3, 1, 6, f) != 6)
+        return -1;
+    if (hio_read(&i1h.keys, 1, 240, f) != 240)
+        return -1;
+    if (hio_read(&i1h.epoint, 1, 200, f) != 200)
+        return -1;
+    if (hio_read(&i1h.enode, 1, 50, f) != 50)
+        return -1;
+
+    copy_adjust(xxi->name, i1h.name, 25);
+
+    xxi->rls = i1h.fadeout << 7;
+
+    xxi->aei.flg = 0;
+    if (i1h.flags & IT_ENV_ON) {
+	xxi->aei.flg |= XMP_ENVELOPE_ON;
+    }
+    if (i1h.flags & IT_ENV_LOOP) {
+	xxi->aei.flg |= XMP_ENVELOPE_LOOP;
+    }
+    if (i1h.flags & IT_ENV_SLOOP) {
+	xxi->aei.flg |= XMP_ENVELOPE_SUS | XMP_ENVELOPE_SLOOP;
+    }
+    if (i1h.flags & IT_ENV_CARRY) {
+	xxi->aei.flg |= XMP_ENVELOPE_SUS | XMP_ENVELOPE_CARRY;
+    }
+    xxi->aei.lps = i1h.vls;
+    xxi->aei.lpe = i1h.vle;
+    xxi->aei.sus = i1h.sls;
+    xxi->aei.sue = i1h.sle;
+
+    for (k = 0; k < 25 && i1h.enode[k * 2] != 0xff; k++);
+
+    /* Sanity check */
+    if (k >= 25 || i1h.enode[k * 2] != 0xff) {
+        return -1;
+    }
+
+    for (xxi->aei.npt = k; k--; ) {
+	xxi->aei.data[k * 2] = i1h.enode[k * 2];
+	xxi->aei.data[k * 2 + 1] = i1h.enode[k * 2 + 1];
+    }
+    
+    /* See how many different instruments we have */
+    for (j = 0; j < 120; j++)
+	inst_map[j] = -1;
+
+    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
+	c = j < 120 ? i1h.keys[j * 2 + 1] - 1 : -1;
+	if (c < 0 || c >= 120) {
+	    xxi->map[j].ins = 0;
+	    xxi->map[j].xpo = 0;
+	    continue;
+	}
+	if (inst_map[c] == -1) {
+	    inst_map[c] = k;
+	    inst_rmap[k] = c;
+	    k++;
+	}
+	xxi->map[j].ins = inst_map[c];
+	xxi->map[j].xpo = i1h.keys[j * 2] - j;
+    }
+
+    xxi->nsm = k;
+    xxi->vol = 0x40;
+
+    if (k) {
+	xxi->sub = calloc(sizeof (struct xmp_subinstrument), k);
+ 	if (xxi->sub == NULL) {
+            return -1;
+        }
+
+	for (j = 0; j < k; j++) {
+	    struct xmp_subinstrument *sub = &xxi->sub[j];
+
+	    sub->sid = inst_rmap[j];
+	    sub->nna = i1h.nna;
+	    sub->dct = i1h.dnc ? XMP_INST_DCT_NOTE : XMP_INST_DCT_OFF;
+	    sub->dca = XMP_INST_DCA_CUT;
+	    sub->pan = 0x80;
+        }
+    }
+
+    D_(D_INFO "[%2X] %-26.26s %d %-4.4s %4d %2d %c%c%c %3d",
+	i, i1h.name,
+	i1h.nna,
+	i1h.dnc ? "on" : "off",
+	i1h.fadeout,
+	xxi->aei.npt,
+	xxi->aei.flg & XMP_ENVELOPE_ON ? 'V' : '-',
+	xxi->aei.flg & XMP_ENVELOPE_LOOP ? 'L' : '-',
+	xxi->aei.flg & XMP_ENVELOPE_SUS ? 'S' : '-',
+	xxi->nsm
+    );
+
+    return 0;
+}
+
+static int load_new_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
+{
+    int inst_map[120], inst_rmap[XMP_MAX_KEYS];
+    struct it_instrument2_header i2h;
+    struct it_envelope env;
+    int dca2nna[] = { 0, 2, 3 };
+    int c, k, j;
+
+    i2h.magic = hio_read32b(f);
+    if (i2h.magic != MAGIC_IMPI) {
+        return -1;
+    }
+    hio_read(&i2h.dosname, 12, 1, f);
+    i2h.zero = hio_read8(f);
+    i2h.nna = hio_read8(f);
+    i2h.dct = hio_read8(f);
+    i2h.dca = hio_read8(f);
+    i2h.fadeout = hio_read16l(f);
+
+    i2h.pps = hio_read8(f);
+    i2h.ppc = hio_read8(f);
+    i2h.gbv = hio_read8(f);
+    i2h.dfp = hio_read8(f);
+    i2h.rv = hio_read8(f);
+    i2h.rp = hio_read8(f);
+    i2h.trkvers = hio_read16l(f);
+
+    i2h.nos = hio_read8(f);
+    i2h.rsvd1 = hio_read8(f);
+
+    if (hio_error(f)) {
+        return -1;
+    }
+
+    if (hio_read(&i2h.name, 1, 26, f) != 26) {
+        return -1;
+    }
+
+    fix_name(i2h.name, 26);
+
+    i2h.ifc = hio_read8(f);
+    i2h.ifr = hio_read8(f);
+    i2h.mch = hio_read8(f);
+    i2h.mpr = hio_read8(f);
+    i2h.mbnk = hio_read16l(f);
+
+    if (hio_read(&i2h.keys, 1, 240, f) != 240) {
+        return -1; 
+    }
+
+    copy_adjust(xxi->name, i2h.name, 25);
+    xxi->rls = i2h.fadeout << 6;
+
+    /* Envelopes */
+
+    read_envelope(&xxi->aei, &env, f);
+    read_envelope(&xxi->pei, &env, f);
+    read_envelope(&xxi->fei, &env, f);
+	    
+    if (xxi->pei.flg & XMP_ENVELOPE_ON) {
+	for (j = 0; j < xxi->pei.npt; j++)
+	    xxi->pei.data[j * 2 + 1] += 32;
+    }
+
+    if (xxi->aei.flg & XMP_ENVELOPE_ON && xxi->aei.npt == 0)
+	xxi->aei.npt = 1;
+    if (xxi->pei.flg & XMP_ENVELOPE_ON && xxi->pei.npt == 0)
+	xxi->pei.npt = 1;
+    if (xxi->fei.flg & XMP_ENVELOPE_ON && xxi->fei.npt == 0)
+	xxi->fei.npt = 1;
+
+    if (env.flg & IT_ENV_FILTER) {
+	xxi->fei.flg |= XMP_ENVELOPE_FLT;
+	for (j = 0; j < env.num; j++) {
+	    xxi->fei.data[j * 2 + 1] += 32;
+	    xxi->fei.data[j * 2 + 1] *= 4;
+	}
+    } else {
+	/* Pitch envelope is *50 to get fine interpolation */
+	for (j = 0; j < env.num; j++)
+	    xxi->fei.data[j * 2 + 1] *= 50;
+    }
+
+    /* See how many different instruments we have */
+    for (j = 0; j < 120; j++)
+	inst_map[j] = -1;
+
+    for (k = j = 0; j < 120; j++) {
+	c = i2h.keys[j * 2 + 1] - 1;
+	if (c < 0 || c >= 120) {
+	    xxi->map[j].ins = 0xff;	/* No sample */
+	    xxi->map[j].xpo = 0;
+	    continue;
+	}
+	if (inst_map[c] == -1) {
+	    inst_map[c] = k;
+	    inst_rmap[k] = c;
+	    k++;
+	}
+	xxi->map[j].ins = inst_map[c];
+	xxi->map[j].xpo = i2h.keys[j * 2] - j;
+    }
+
+    xxi->nsm = k;
+    xxi->vol = i2h.gbv >> 1;
+
+    if (k) {
+	xxi->sub = calloc(sizeof (struct xmp_subinstrument), k);
+	if (xxi->sub == NULL)
+	    return -1;
+
+	for (j = 0; j < k; j++) {
+	    struct xmp_subinstrument *sub = &xxi->sub[j];
+
+	    sub->sid = inst_rmap[j];
+	    sub->nna = i2h.nna;
+	    sub->dct = i2h.dct;
+	    sub->dca = dca2nna[i2h.dca & 0x03];
+	    sub->pan = i2h.dfp & 0x80 ? -1 : i2h.dfp * 4;
+	    sub->ifc = i2h.ifc;
+	    sub->ifr = i2h.ifr;
+                   sub->rvv = ((int)i2h.rp << 8) | i2h.rv;
+        }
+    }
+
+    D_(D_INFO "[%2X] %-26.26s %d %d %d %4d %4d  %2x "
+		"%02x %c%c%c %3d %02x %02x",
+	i, i2h.name,
+	i2h.nna, i2h.dct, i2h.dca,
+	i2h.fadeout,
+	i2h.gbv,
+	i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4,
+	i2h.rv,
+	xxi->aei.flg & XMP_ENVELOPE_ON ? 'V' : '-',
+	xxi->pei.flg & XMP_ENVELOPE_ON ? 'P' : '-',
+	env.flg & 0x01 ? env.flg & 0x80 ? 'F' : 'P' : '-',
+	xxi->nsm,
+	i2h.ifc,
+	i2h.ifr
+    );
+
+    return 0;
+}
+
+
 static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int r, c, i, j, k, pat_len;
     struct xmp_event *event, dummy, lastevent[L_CHANNELS];
     struct it_file_header ifh;
-    struct it_instrument1_header i1h;
-    struct it_instrument2_header i2h;
     struct it_sample_header ish;
-    struct it_envelope env;
     uint8 b, mask[L_CHANNELS];
     int max_ch;
-    int inst_map[120], inst_rmap[XMP_MAX_KEYS];
     uint32 *pp_ins;		/* Pointers to instruments */
     uint32 *pp_smp;		/* Pointers to samples */
     uint32 *pp_pat;		/* Pointers to patterns */
     uint8 last_fxp[64];
-    int dca2nna[] = { 0, 2, 3 };
     int new_fx, sample_mode;
 
     LOAD_INIT();
@@ -568,267 +840,23 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if (!sample_mode && ifh.cmwt >= 0x200) {
 	    /* New instrument format */
-	    if (hio_seek(f, start + pp_ins[i], SEEK_SET) != 0)
-	    	goto err4;
-
-	    i2h.magic = hio_read32b(f);
-            if (i2h.magic != MAGIC_IMPI) {
-                goto err4;
-            }
-	    hio_read(&i2h.dosname, 12, 1, f);
-	    i2h.zero = hio_read8(f);
-	    i2h.nna = hio_read8(f);
-	    i2h.dct = hio_read8(f);
-	    i2h.dca = hio_read8(f);
-	    i2h.fadeout = hio_read16l(f);
-
-	    i2h.pps = hio_read8(f);
-	    i2h.ppc = hio_read8(f);
-	    i2h.gbv = hio_read8(f);
-	    i2h.dfp = hio_read8(f);
-	    i2h.rv = hio_read8(f);
-	    i2h.rp = hio_read8(f);
-	    i2h.trkvers = hio_read16l(f);
-
-	    i2h.nos = hio_read8(f);
-	    i2h.rsvd1 = hio_read8(f);
-
-            if (hio_error(f)) {
+            if (hio_seek(f, start + pp_ins[i], SEEK_SET) < 0) {
                 goto err4;
             }
 
-            if (hio_read(&i2h.name, 1, 26, f) != 26) {
+            if (load_new_instrument(xxi, f) < 0) {
                 goto err4;
             }
-
-	    fix_name(i2h.name, 26);
-
-	    i2h.ifc = hio_read8(f);
-	    i2h.ifr = hio_read8(f);
-	    i2h.mch = hio_read8(f);
-	    i2h.mpr = hio_read8(f);
-	    i2h.mbnk = hio_read16l(f);
-
-            if (hio_read(&i2h.keys, 1, 240, f) != 240) {
-                goto err4; 
-            }
-
-	    copy_adjust(xxi->name, i2h.name, 25);
-	    xxi->rls = i2h.fadeout << 6;
-
-	    /* Envelopes */
-
-	    read_envelope(&xxi->aei, &env, f);
-	    read_envelope(&xxi->pei, &env, f);
-	    read_envelope(&xxi->fei, &env, f);
-	    
-	    if (xxi->pei.flg & XMP_ENVELOPE_ON) {
-		for (j = 0; j < xxi->pei.npt; j++)
-		    xxi->pei.data[j * 2 + 1] += 32;
-	    }
-
-	    if (xxi->aei.flg & XMP_ENVELOPE_ON && xxi->aei.npt == 0)
-		xxi->aei.npt = 1;
-	    if (xxi->pei.flg & XMP_ENVELOPE_ON && xxi->pei.npt == 0)
-		xxi->pei.npt = 1;
-	    if (xxi->fei.flg & XMP_ENVELOPE_ON && xxi->fei.npt == 0)
-		xxi->fei.npt = 1;
-
-	    if (env.flg & IT_ENV_FILTER) {
-		xxi->fei.flg |= XMP_ENVELOPE_FLT;
-		for (j = 0; j < env.num; j++) {
-		    xxi->fei.data[j * 2 + 1] += 32;
-		    xxi->fei.data[j * 2 + 1] *= 4;
-		}
-	    } else {
-		/* Pitch envelope is *50 to get fine interpolation */
-		for (j = 0; j < env.num; j++)
-		    xxi->fei.data[j * 2 + 1] *= 50;
-	    }
-
-	    /* See how many different instruments we have */
-	    for (j = 0; j < 120; j++)
-		inst_map[j] = -1;
-
-	    for (k = j = 0; j < 120; j++) {
-		c = i2h.keys[j * 2 + 1] - 1;
-		if (c < 0 || c >= 120) {
-		    xxi->map[j].ins = 0xff;	/* No sample */
-		    xxi->map[j].xpo = 0;
-		    continue;
-		}
-		if (inst_map[c] == -1) {
-		    inst_map[c] = k;
-		    inst_rmap[k] = c;
-		    k++;
-		}
-		xxi->map[j].ins = inst_map[c];
-		xxi->map[j].xpo = i2h.keys[j * 2] - j;
-	    }
-
-	    xxi->nsm = k;
-	    xxi->vol = i2h.gbv >> 1;
-
-	    if (k) {
-		xxi->sub = calloc(sizeof (struct xmp_subinstrument), k);
-		if (xxi->sub == NULL)
-		    goto err4;
-
-		for (j = 0; j < k; j++) {
-		    struct xmp_subinstrument *sub = &xxi->sub[j];
-
-		    sub->sid = inst_rmap[j];
-		    sub->nna = i2h.nna;
-		    sub->dct = i2h.dct;
-		    sub->dca = dca2nna[i2h.dca & 0x03];
-		    sub->pan = i2h.dfp & 0x80 ? -1 : i2h.dfp * 4;
-		    sub->ifc = i2h.ifc;
-		    sub->ifr = i2h.ifr;
-                    sub->rvv = ((int)i2h.rp << 8) | i2h.rv;
-	        }
-	    }
-
-	    D_(D_INFO "[%2X] %-26.26s %d %d %d %4d %4d  %2x "
-			"%02x %c%c%c %3d %02x %02x",
-		i, i2h.name,
-		i2h.nna, i2h.dct, i2h.dca,
-		i2h.fadeout,
-		i2h.gbv,
-		i2h.dfp & 0x80 ? 0x80 : i2h.dfp * 4,
-		i2h.rv,
-		xxi->aei.flg & XMP_ENVELOPE_ON ? 'V' : '-',
-		xxi->pei.flg & XMP_ENVELOPE_ON ? 'P' : '-',
-		env.flg & 0x01 ? env.flg & 0x80 ? 'F' : 'P' : '-',
-		xxi->nsm,
-		i2h.ifc,
-		i2h.ifr
-	    );
 
 	} else if (!sample_mode) {
 	    /* Old instrument format */
-	    hio_seek(f, start + pp_ins[i], SEEK_SET);
-
-	    i1h.magic = hio_read32b(f);
-	    hio_read(&i1h.dosname, 12, 1, f);
-
-	    i1h.zero = hio_read8(f);
-	    i1h.flags = hio_read8(f);
-	    i1h.vls = hio_read8(f);
-	    i1h.vle = hio_read8(f);
-	    i1h.sls = hio_read8(f);
-	    i1h.sle = hio_read8(f);
-	    i1h.rsvd1 = hio_read16l(f);
-	    i1h.fadeout = hio_read16l(f);
-
-	    i1h.nna = hio_read8(f);
-	    i1h.dnc = hio_read8(f);
-	    i1h.trkvers = hio_read16l(f);
-	    i1h.nos = hio_read8(f);
-	    i1h.rsvd2 = hio_read8(f);
-
-            if (hio_error(f)) {
+	    if (hio_seek(f, start + pp_ins[i], SEEK_SET) < 0) {
                 goto err4;
             }
 
-	    if (hio_read(&i1h.name, 1, 26, f) != 26) {
+            if (load_old_instrument(xxi, f) < 0) {
                 goto err4;
             }
-
-	    fix_name(i1h.name, 26);
-
-	    if (hio_read(&i1h.rsvd3, 1, 6, f) != 6)
-		goto err4;
-	    if (hio_read(&i1h.keys, 1, 240, f) != 240)
-		goto err4;
-	    if (hio_read(&i1h.epoint, 1, 200, f) != 200)
-		goto err4;
-	    if (hio_read(&i1h.enode, 1, 50, f) != 50)
-		goto err4;
-
-	    copy_adjust(xxi->name, i1h.name, 25);
-
-	    xxi->rls = i1h.fadeout << 7;
-
-	    xxi->aei.flg = 0;
-	    if (i1h.flags & IT_ENV_ON) {
-		xxi->aei.flg |= XMP_ENVELOPE_ON;
-	    }
-	    if (i1h.flags & IT_ENV_LOOP) {
-		xxi->aei.flg |= XMP_ENVELOPE_LOOP;
-	    }
-	    if (i1h.flags & IT_ENV_SLOOP) {
-		xxi->aei.flg |= XMP_ENVELOPE_SUS | XMP_ENVELOPE_SLOOP;
-	    }
-	    if (i1h.flags & IT_ENV_CARRY) {
-		xxi->aei.flg |= XMP_ENVELOPE_SUS | XMP_ENVELOPE_CARRY;
-	    }
-	    xxi->aei.lps = i1h.vls;
-	    xxi->aei.lpe = i1h.vle;
-	    xxi->aei.sus = i1h.sls;
-	    xxi->aei.sue = i1h.sle;
-
-	    for (k = 0; k < 25 && i1h.enode[k * 2] != 0xff; k++);
-
-	    /* Sanity check */
-	    if (k >= 25 || i1h.enode[k * 2] != 0xff) {
-		goto err4;
-	    }
-
-	    for (xxi->aei.npt = k; k--; ) {
-		xxi->aei.data[k * 2] = i1h.enode[k * 2];
-		xxi->aei.data[k * 2 + 1] = i1h.enode[k * 2 + 1];
-	    }
-	    
-	    /* See how many different instruments we have */
-	    for (j = 0; j < 120; j++)
-		inst_map[j] = -1;
-
-	    for (k = j = 0; j < XMP_MAX_KEYS; j++) {
-		c = j < 120 ? i1h.keys[j * 2 + 1] - 1 : -1;
-		if (c < 0 || c >= 120) {
-		    xxi->map[j].ins = 0;
-		    xxi->map[j].xpo = 0;
-		    continue;
-		}
-		if (inst_map[c] == -1) {
-		    inst_map[c] = k;
-		    inst_rmap[k] = c;
-		    k++;
-		}
-		xxi->map[j].ins = inst_map[c];
-		xxi->map[j].xpo = i1h.keys[j * 2] - j;
-	    }
-
-	    xxi->nsm = k;
-	    xxi->vol = i2h.gbv >> 1;
-
-	    if (k) {
-		xxi->sub = calloc(sizeof (struct xmp_subinstrument), k);
- 		if (xxi->sub == NULL)
-		    goto err4;
-
-		for (j = 0; j < k; j++) {
-		    struct xmp_subinstrument *sub = &xxi->sub[j];
-
-		    sub->sid = inst_rmap[j];
-		    sub->nna = i1h.nna;
-		    sub->dct = i1h.dnc ? XMP_INST_DCT_NOTE : XMP_INST_DCT_OFF;
-		    sub->dca = XMP_INST_DCA_CUT;
-		    sub->pan = 0x80;
-	        }
-	    }
-
-	    D_(D_INFO "[%2X] %-26.26s %d %-4.4s %4d %2d %c%c%c %3d",
-		i, i1h.name,
-		i1h.nna,
-		i1h.dnc ? "on" : "off",
-		i1h.fadeout,
-		xxi->aei.npt,
-		xxi->aei.flg & XMP_ENVELOPE_ON ? 'V' : '-',
-		xxi->aei.flg & XMP_ENVELOPE_LOOP ? 'L' : '-',
-		xxi->aei.flg & XMP_ENVELOPE_SUS ? 'S' : '-',
-		xxi->nsm
-	    );
 	}
     }
 
