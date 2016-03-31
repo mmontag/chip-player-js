@@ -101,7 +101,7 @@ int itsex_decompress8 (HIO_HANDLE *, void *, int, int);
 int itsex_decompress16 (HIO_HANDLE *, void *, int, int);
 
 
-static void xlat_fx(int c, struct xmp_event *e, uint8 * last_fxp, int new_fx)
+static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
 {
 	uint8 h = MSN(e->fxp), l = LSN(e->fxp);
 
@@ -408,7 +408,7 @@ static void identify_tracker(struct module_data *m, struct it_file_header ifh)
 #endif
 }
 
-static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE * f)
+static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 {
 	int inst_map[120], inst_rmap[XMP_MAX_KEYS];
 	struct it_instrument1_header i1h;
@@ -857,18 +857,131 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	return 0;
 }
 
+static int load_it_pattern(struct module_data *m, int i, int new_fx,
+			   HIO_HANDLE *f)
+{
+	struct xmp_module *mod = &m->mod;
+	struct xmp_event *event, dummy, lastevent[L_CHANNELS];
+	uint8 mask[L_CHANNELS];
+	uint8 last_fxp[64];
+
+	int r, c, pat_len;
+	uint8 b;
+
+	r = 0;
+
+	memset(last_fxp, 0, 64);
+	memset(lastevent, 0, L_CHANNELS * sizeof(struct xmp_event));
+	memset(&dummy, 0, sizeof(struct xmp_event));
+
+	pat_len = hio_read16l(f) /* - 4 */ ;
+	mod->xxp[i]->rows = hio_read16l(f);
+
+	if (tracks_in_pattern_alloc(mod, i) < 0)
+		return -1;
+
+	memset(mask, 0, L_CHANNELS);
+	hio_read16l(f);
+	hio_read16l(f);
+
+	while (--pat_len >= 0) {
+		b = hio_read8(f);
+		if (!b) {
+			r++;
+			continue;
+		}
+		c = (b - 1) & 63;
+
+		if (b & 0x80) {
+			mask[c] = hio_read8(f);
+			pat_len--;
+		}
+		/*
+		 * WARNING: we IGNORE events in disabled channels. Disabled
+		 * channels should be muted only, but we don't know the
+		 * real number of channels before loading the patterns and
+		 * we don't want to set it to 64 channels.
+		 */
+		if (c >= mod->chn || r >= mod->xxp[i]->rows) {
+			event = &dummy;
+		} else {
+			event = &EVENT(i, c, r);
+		}
+
+		if (mask[c] & 0x01) {
+			b = hio_read8(f);
+
+			/* From ittech.txt:
+			 * Note ranges from 0->119 (C-0 -> B-9)
+			 * 255 = note off, 254 = notecut
+			 * Others = note fade (already programmed into IT's player
+			 *                     but not available in the editor)
+			 */
+			switch (b) {
+			case 0xff:	/* key off */
+				b = XMP_KEY_OFF;
+				break;
+			case 0xfe:	/* cut */
+				b = XMP_KEY_CUT;
+				break;
+			default:
+				if (b > 119) {	/* fade */
+					b = XMP_KEY_FADE;
+				} else {
+					b++;	/* note */
+				}
+			}
+			lastevent[c].note = event->note = b;
+			pat_len--;
+		}
+		if (mask[c] & 0x02) {
+			b = hio_read8(f);
+			lastevent[c].ins = event->ins = b;
+			pat_len--;
+		}
+		if (mask[c] & 0x04) {
+			b = hio_read8(f);
+			lastevent[c].vol = event->vol = b;
+			xlat_volfx(event);
+			pat_len--;
+		}
+		if (mask[c] & 0x08) {
+			b = hio_read8(f);
+			event->fxt = b;
+			event->fxp = hio_read8(f);
+			xlat_fx(c, event, last_fxp, new_fx);
+			lastevent[c].fxt = event->fxt;
+			lastevent[c].fxp = event->fxp;
+			pat_len -= 2;
+		}
+		if (mask[c] & 0x10) {
+			event->note = lastevent[c].note;
+		}
+		if (mask[c] & 0x20) {
+			event->ins = lastevent[c].ins;
+		}
+		if (mask[c] & 0x40) {
+			event->vol = lastevent[c].vol;
+			xlat_volfx(event);
+		}
+		if (mask[c] & 0x80) {
+			event->fxt = lastevent[c].fxt;
+			event->fxp = lastevent[c].fxp;
+		}
+	}
+
+	return 0;
+}
+
 static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
-    int r, c, i, j, pat_len;
-    struct xmp_event *event, dummy, lastevent[L_CHANNELS];
+    int c, i, j;
     struct it_file_header ifh;
-    uint8 b, mask[L_CHANNELS];
     int max_ch;
     uint32 *pp_ins;		/* Pointers to instruments */
     uint32 *pp_smp;		/* Pointers to samples */
     uint32 *pp_pat;		/* Pointers to patterns */
-    uint8 last_fxp[64];
     int new_fx, sample_mode;
 
     LOAD_INIT();
@@ -917,9 +1030,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->ins = ifh.insnum;
     mod->smp = ifh.smpnum;
     mod->pat = ifh.patnum;
-
-    memset(lastevent, 0, L_CHANNELS * sizeof (struct xmp_event));
-    memset(&dummy, 0, sizeof (struct xmp_event));
 
     /* Sanity check */
     if (mod->ins > 255 || mod->smp > 255 || mod->pat > 255) {
@@ -1063,6 +1173,9 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
      */
     max_ch = 0;
     for (i = 0; i < mod->pat; i++) {
+uint8 mask[L_CHANNELS];
+	int pat_len;
+
 	/* If the offset to a pattern is 0, the pattern is empty */
 	if (pp_pat[i] == 0)
 	    continue;
@@ -1075,7 +1188,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read16l(f);
 
 	while (--pat_len >= 0) {
-	    b = hio_read8(f);
+	    int b = hio_read8(f);
 	    if (b == 0)
 		continue;
 
@@ -1114,8 +1227,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->chn = max_ch + 1;
     mod->trk = mod->pat * mod->chn;
 
-    memset(last_fxp, 0, 64);
-
     if (pattern_init(mod) < 0)
 	goto err4;
 
@@ -1124,8 +1235,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if (pattern_alloc(mod, i) < 0)
 	    goto err4;
-
-	r = 0;
 
 	/* If the offset to a pattern is 0, the pattern is empty */
 	if (pp_pat[i] == 0) {
@@ -1139,101 +1248,13 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    continue;
 	}
 
-	hio_seek(f, start + pp_pat[i], SEEK_SET);
-	pat_len = hio_read16l(f) /* - 4*/;
-	mod->xxp[i]->rows = hio_read16l(f);
+	if (hio_seek(f, start + pp_pat[i], SEEK_SET) < 0) {
+            goto err4;
+        }
 
-	if (tracks_in_pattern_alloc(mod, i) < 0)
-	    goto err4;
-
-	memset(mask, 0, L_CHANNELS);
-	hio_read16l(f);
-	hio_read16l(f);
-
-	while (--pat_len >= 0) {
-	    b = hio_read8(f);
-	    if (!b) {
-		r++;
-		continue;
-	    }
-	    c = (b - 1) & 63;
-
-	    if (b & 0x80) {
-		mask[c] = hio_read8(f);
-		pat_len--;
-	    }
-	    /*
-	     * WARNING: we IGNORE events in disabled channels. Disabled
-	     * channels should be muted only, but we don't know the
-	     * real number of channels before loading the patterns and
-	     * we don't want to set it to 64 channels.
-	     */
-            if (c >= mod->chn || r >= mod->xxp[i]->rows) {
-                event = &dummy;
-            } else {
-                event = &EVENT(i, c, r);
-            }
-
-	    if (mask[c] & 0x01) {
-		b = hio_read8(f);
-
-		/* From ittech.txt:
-		 * Note ranges from 0->119 (C-0 -> B-9)
-		 * 255 = note off, 254 = notecut
-		 * Others = note fade (already programmed into IT's player
-		 *                     but not available in the editor)
-		 */
-		switch (b) {
-		case 0xff:	/* key off */
-		    b = XMP_KEY_OFF;
-		    break;
-		case 0xfe:	/* cut */
-		    b = XMP_KEY_CUT;
-		    break;
-		default:
-		    if (b > 119)	/* fade */
-			b = XMP_KEY_FADE;
-		    else
-                        b++;	/* note */
-		}
-		lastevent[c].note = event->note = b;
-		pat_len--;
-	    }
-	    if (mask[c] & 0x02) {
-		b = hio_read8(f);
-		lastevent[c].ins = event->ins = b;
-		pat_len--;
-	    }
-	    if (mask[c] & 0x04) {
-		b = hio_read8(f);
-		lastevent[c].vol = event->vol = b;
-		xlat_volfx(event);
-		pat_len--;
-	    }
-	    if (mask[c] & 0x08) {
-		b = hio_read8(f);
-		event->fxt = b;
-		event->fxp = hio_read8(f);
-		xlat_fx(c, event, last_fxp, new_fx);
-		lastevent[c].fxt = event->fxt;
-		lastevent[c].fxp = event->fxp;
-		pat_len -= 2;
-	    }
-	    if (mask[c] & 0x10) {
-		event->note = lastevent[c].note;
-	    }
-	    if (mask[c] & 0x20) {
-		event->ins = lastevent[c].ins;
-	    }
-	    if (mask[c] & 0x40) {
-		event->vol = lastevent[c].vol;
-		xlat_volfx(event);
-	    }
-	    if (mask[c] & 0x80) {
-		event->fxt = lastevent[c].fxt;
-		event->fxp = lastevent[c].fxp;
-	    }
-	}
+	if (load_it_pattern(m, i, new_fx, f) < 0) {
+            goto err4;
+        }
     }
 
     free(pp_pat);
@@ -1249,7 +1270,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    D_(D_INFO "Message length : %d", ifh.msglen);
 
 	    for (j = 0; j < ifh.msglen; j++) {
-	        b = hio_read8(f);
+	        int b = hio_read8(f);
 	        if (b == '\r') {
 		    b = '\n';
 	        } else if ((b < 32 || b > 127) && b != '\n' && b != '\t') {
