@@ -168,7 +168,7 @@ static void xlat_fx(int c, struct xmp_event *e)
 	    e->fxp = LSN (e->fxp) | (EX_GLISS << 4);
 	    break;
 	case 0x2:			/* Finetune */
-	    e->fxp = LSN (e->fxp) | (EX_FINETUNE << 4);
+	    e->fxp = ((LSN(e->fxp) - 8) & 0x0f) | (EX_FINETUNE << 4);
 	    break;
 	case 0x3:			/* Vibrato wave */
 	    e->fxp = LSN (e->fxp) | (EX_VIBRATO_WF << 4);

@@ -121,8 +121,8 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
 	case 0x1:		/* Glissando */
 	    e->fxp = 0x30 | l;
 	    break;
-	case 0x2:		/* Finetune */
-	    e->fxp = 0x50 | l;
+	case 0x2:		/* Finetune -- not supported */
+	    e->fxt = e->fxp = 0;
 	    break;
 	case 0x3:		/* Vibrato wave */
 	    e->fxp = 0x40 | l;

@@ -182,6 +182,10 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 		}
 
 		if (event->fxt == 0x0e) {
+			if (MSN(event->fxp) == EX_FINETUNE) {
+				unsigned char val = (LSN(event->fxp) - 8) & 0xf;
+				event->fxp = (EX_FINETUNE << 4) | val;
+			}
 			switch (event->fxp) {
 			case 0x43:
 			case 0x73:
