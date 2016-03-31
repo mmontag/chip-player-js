@@ -539,7 +539,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	return 0;
 }
 
-static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE * f)
+static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 {
 	int inst_map[120], inst_rmap[XMP_MAX_KEYS];
 	struct it_instrument2_header i2h;
@@ -681,7 +681,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE * f)
 }
 
 static int load_it_sample(struct module_data *m, int i, int start,
-			  int sample_mode, HIO_HANDLE * f)
+			  int sample_mode, HIO_HANDLE *f)
 {
 	struct it_sample_header ish;
 	struct xmp_module *mod = &m->mod;
@@ -975,348 +975,349 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 
 static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
-    struct xmp_module *mod = &m->mod;
-    int c, i, j;
-    struct it_file_header ifh;
-    int max_ch;
-    uint32 *pp_ins;		/* Pointers to instruments */
-    uint32 *pp_smp;		/* Pointers to samples */
-    uint32 *pp_pat;		/* Pointers to patterns */
-    int new_fx, sample_mode;
+	struct xmp_module *mod = &m->mod;
+	int c, i, j;
+	struct it_file_header ifh;
+	int max_ch;
+	uint32 *pp_ins;		/* Pointers to instruments */
+	uint32 *pp_smp;		/* Pointers to samples */
+	uint32 *pp_pat;		/* Pointers to patterns */
+	int new_fx, sample_mode;
 
-    LOAD_INIT();
+	LOAD_INIT();
 
-    /* Load and convert header */
-    ifh.magic = hio_read32b(f);
-    if (ifh.magic != MAGIC_IMPM) {
-	return -1;
-    }
-
-    hio_read(&ifh.name, 26, 1, f);
-    ifh.hilite_min = hio_read8(f);
-    ifh.hilite_maj = hio_read8(f);
-
-    ifh.ordnum = hio_read16l(f);
-    ifh.insnum = hio_read16l(f);
-    ifh.smpnum = hio_read16l(f);
-    ifh.patnum = hio_read16l(f);
-
-    ifh.cwt = hio_read16l(f);
-    ifh.cmwt = hio_read16l(f);
-    ifh.flags = hio_read16l(f);
-    ifh.special = hio_read16l(f);
-
-    ifh.gv = hio_read8(f);
-    ifh.mv = hio_read8(f);
-    ifh.is = hio_read8(f);
-    ifh.it = hio_read8(f);
-    ifh.sep = hio_read8(f);
-    ifh.pwd = hio_read8(f);
-
-    /* Sanity check */
-    if (ifh.gv > 0x80 || ifh.mv > 0x80) {
-        goto err;
-    }
-
-    ifh.msglen = hio_read16l(f);
-    ifh.msgofs = hio_read32l(f);
-    ifh.rsvd = hio_read32l(f);
-
-    hio_read(&ifh.chpan, 64, 1, f);
-    hio_read(&ifh.chvol, 64, 1, f);
-
-    strncpy(mod->name, (char *)ifh.name, XMP_NAME_SIZE);
-    mod->len = ifh.ordnum;
-    mod->ins = ifh.insnum;
-    mod->smp = ifh.smpnum;
-    mod->pat = ifh.patnum;
-
-    /* Sanity check */
-    if (mod->ins > 255 || mod->smp > 255 || mod->pat > 255) {
-	goto err;
-    }
-
-    if (mod->ins) {
-        pp_ins = calloc(4, mod->ins);
-        if (pp_ins == NULL)
-	    goto err;
-    } else {
-	pp_ins = NULL;
-    }
-
-    pp_smp = calloc(4, mod->smp);
-    if (pp_smp == NULL)
-	goto err2;
-
-    pp_pat = calloc(4, mod->pat);
-    if (pp_pat == NULL)
-	goto err3;
-
-    mod->spd = ifh.is;
-    mod->bpm = ifh.it;
-
-    sample_mode = ~ifh.flags & IT_USE_INST;
-
-    if (ifh.flags & IT_LINEAR_FREQ) {
-        m->quirk |= QUIRK_LINEAR;
-    }
-
-    if (!sample_mode && ifh.cmwt >= 0x200) {
-        m->quirk |= QUIRK_INSVOL;
-    }
-
-    for (i = 0; i < 64; i++) {
-	struct xmp_channel *xxc = &mod->xxc[i];
-
-	if (ifh.chpan[i] == 100) {	/* Surround -> center */
-	    xxc->flg |= XMP_CHANNEL_SURROUND;
-        }
-
-	if (ifh.chpan[i] & 0x80) {	/* Channel mute */
-	    ifh.chvol[i] = 0;
-	    xxc->flg |= XMP_CHANNEL_MUTE;
+	/* Load and convert header */
+	ifh.magic = hio_read32b(f);
+	if (ifh.magic != MAGIC_IMPM) {
+		return -1;
 	}
 
-	if (ifh.flags & IT_STEREO) {
-	    xxc->pan = (int)ifh.chpan[i] * 0x80 >> 5;
-	    if (xxc->pan > 0xff)
-		xxc->pan = 0xff;
+	hio_read(&ifh.name, 26, 1, f);
+	ifh.hilite_min = hio_read8(f);
+	ifh.hilite_maj = hio_read8(f);
+
+	ifh.ordnum = hio_read16l(f);
+	ifh.insnum = hio_read16l(f);
+	ifh.smpnum = hio_read16l(f);
+	ifh.patnum = hio_read16l(f);
+
+	ifh.cwt = hio_read16l(f);
+	ifh.cmwt = hio_read16l(f);
+	ifh.flags = hio_read16l(f);
+	ifh.special = hio_read16l(f);
+
+	ifh.gv = hio_read8(f);
+	ifh.mv = hio_read8(f);
+	ifh.is = hio_read8(f);
+	ifh.it = hio_read8(f);
+	ifh.sep = hio_read8(f);
+	ifh.pwd = hio_read8(f);
+
+	/* Sanity check */
+	if (ifh.gv > 0x80 || ifh.mv > 0x80) {
+		goto err;
+	}
+
+	ifh.msglen = hio_read16l(f);
+	ifh.msgofs = hio_read32l(f);
+	ifh.rsvd = hio_read32l(f);
+
+	hio_read(&ifh.chpan, 64, 1, f);
+	hio_read(&ifh.chvol, 64, 1, f);
+
+	strncpy(mod->name, (char *)ifh.name, XMP_NAME_SIZE);
+	mod->len = ifh.ordnum;
+	mod->ins = ifh.insnum;
+	mod->smp = ifh.smpnum;
+	mod->pat = ifh.patnum;
+
+	/* Sanity check */
+	if (mod->ins > 255 || mod->smp > 255 || mod->pat > 255) {
+		goto err;
+	}
+
+	if (mod->ins) {
+		pp_ins = calloc(4, mod->ins);
+		if (pp_ins == NULL)
+			goto err;
 	} else {
-	    xxc->pan = 0x80;
+		pp_ins = NULL;
 	}
 
-	xxc->vol = ifh.chvol[i];
-    }
-    if (mod->len <= XMP_MAX_MOD_LENGTH) {
-    	hio_read(mod->xxo, 1, mod->len, f);
-    } else {
-    	hio_read(mod->xxo, 1, XMP_MAX_MOD_LENGTH, f);
-    	hio_seek(f, mod->len - XMP_MAX_MOD_LENGTH, SEEK_CUR);
-    	mod->len = XMP_MAX_MOD_LENGTH;
-    }
+	pp_smp = calloc(4, mod->smp);
+	if (pp_smp == NULL)
+		goto err2;
 
-    new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
+	pp_pat = calloc(4, mod->pat);
+	if (pp_pat == NULL)
+		goto err3;
 
-    for (i = 0; i < mod->ins; i++)
-	pp_ins[i] = hio_read32l(f);
-    for (i = 0; i < mod->smp; i++)
-	pp_smp[i] = hio_read32l(f);
-    for (i = 0; i < mod->pat; i++)
-	pp_pat[i] = hio_read32l(f);
+	mod->spd = ifh.is;
+	mod->bpm = ifh.it;
 
-    m->c4rate = C4_NTSC_RATE;
+	sample_mode = ~ifh.flags & IT_USE_INST;
 
-    identify_tracker(m, ifh);
-
-    MODULE_INFO();
-
-    D_(D_INFO "Instrument/FX mode: %s/%s",
-			sample_mode ? "sample" : ifh.cmwt >= 0x200 ?
-			"new" : "old", ifh.flags & IT_OLD_FX ? "old" : "IT");
-
-    if (sample_mode)
-	mod->ins = mod->smp;
-
-    if (instrument_init(mod) < 0)
-	goto err4;
-
-    D_(D_INFO "Instruments: %d", mod->ins);
-
-    for (i = 0; i < mod->ins; i++) {
-	/*
-	 * IT files can have three different instrument types: 'New'
-	 * instruments, 'old' instruments or just samples. We need a
-	 * different loader for each of them.
-	 */
-
-	struct xmp_instrument *xxi = &mod->xxi[i];
+	if (ifh.flags & IT_LINEAR_FREQ) {
+		m->quirk |= QUIRK_LINEAR;
+	}
 
 	if (!sample_mode && ifh.cmwt >= 0x200) {
-	    /* New instrument format */
-            if (hio_seek(f, start + pp_ins[i], SEEK_SET) < 0) {
-                goto err4;
-            }
-
-            if (load_new_it_instrument(xxi, f) < 0) {
-                goto err4;
-            }
-
-	} else if (!sample_mode) {
-	    /* Old instrument format */
-	    if (hio_seek(f, start + pp_ins[i], SEEK_SET) < 0) {
-                goto err4;
-            }
-
-            if (load_old_it_instrument(xxi, f) < 0) {
-                goto err4;
-            }
-	}
-    }
-
-    D_(D_INFO "Stored Samples: %d", mod->smp);
-
-    for (i = 0; i < mod->smp; i++) {
-
-	if (hio_seek(f, start + pp_smp[i], SEEK_SET) < 0) {
-	    goto err4;
-        }
-
-        if (load_it_sample(m, i, start, sample_mode, f) < 0) {
-            goto err4;
-        }
-    }
-
-    D_(D_INFO "Stored Patterns: %d", mod->pat);
-
-    /* Effects in muted channels are processed, so scan patterns first to
-     * see the real number of channels
-     */
-    max_ch = 0;
-    for (i = 0; i < mod->pat; i++) {
-uint8 mask[L_CHANNELS];
-	int pat_len;
-
-	/* If the offset to a pattern is 0, the pattern is empty */
-	if (pp_pat[i] == 0)
-	    continue;
-
-	hio_seek(f, start + pp_pat[i], SEEK_SET);
-	pat_len = hio_read16l(f) /* - 4*/;
-	hio_read16l(f);
-	memset(mask, 0, L_CHANNELS);
-	hio_read16l(f);
-	hio_read16l(f);
-
-	while (--pat_len >= 0) {
-	    int b = hio_read8(f);
-	    if (b == 0)
-		continue;
-
-	    c = (b - 1) & 63;
-
-	    if (c > max_ch)
-		max_ch = c;
-
-	    if (b & 0x80) {
-		mask[c] = hio_read8(f);
-		pat_len--;
-	    }
-
-	    if (mask[c] & 0x01) {
-		hio_read8(f);
-		pat_len--;
-	    }
-	    if (mask[c] & 0x02) {
-		hio_read8(f);
-		pat_len--;
-	    }
-	    if (mask[c] & 0x04) {
-		hio_read8(f);
-		pat_len--;
-	    }
-	    if (mask[c] & 0x08) {
-		hio_read8(f);
-		hio_read8(f);
-		pat_len -= 2;
-	    }
-	}
-    }
-
-    /* Set the number of channels actually used
-     */
-    mod->chn = max_ch + 1;
-    mod->trk = mod->pat * mod->chn;
-
-    if (pattern_init(mod) < 0)
-	goto err4;
-
-    /* Read patterns */
-    for (i = 0; i < mod->pat; i++) {
-
-	if (pattern_alloc(mod, i) < 0)
-	    goto err4;
-
-	/* If the offset to a pattern is 0, the pattern is empty */
-	if (pp_pat[i] == 0) {
-	    mod->xxp[i]->rows = 64;
-	    for (j = 0; j < mod->chn; j++) {
-		int tnum = i * mod->chn + j;
-		if (track_alloc(mod, tnum, 64) < 0)
-		    goto err4;
-		mod->xxp[i]->index[j] = tnum;
-	    }
-	    continue;
+		m->quirk |= QUIRK_INSVOL;
 	}
 
-	if (hio_seek(f, start + pp_pat[i], SEEK_SET) < 0) {
-            goto err4;
-        }
+	for (i = 0; i < 64; i++) {
+		struct xmp_channel *xxc = &mod->xxc[i];
 
-	if (load_it_pattern(m, i, new_fx, f) < 0) {
-            goto err4;
-        }
-    }
-
-    free(pp_pat);
-    free(pp_smp);
-    free(pp_ins);
-
-    /* Song message */
-
-    if (ifh.special & IT_HAS_MSG) {
-	if ((m->comment = malloc(ifh.msglen + 1)) != NULL) {
-	    hio_seek(f, start + ifh.msgofs, SEEK_SET);
-
-	    D_(D_INFO "Message length : %d", ifh.msglen);
-
-	    for (j = 0; j < ifh.msglen; j++) {
-	        int b = hio_read8(f);
-	        if (b == '\r') {
-		    b = '\n';
-	        } else if ((b < 32 || b > 127) && b != '\n' && b != '\t') {
-		    b = '.';
+		if (ifh.chpan[i] == 100) {	/* Surround -> center */
+			xxc->flg |= XMP_CHANNEL_SURROUND;
 		}
-	        m->comment[j] = b;
-	    }
-	    m->comment[j] = 0;
+
+		if (ifh.chpan[i] & 0x80) {	/* Channel mute */
+			ifh.chvol[i] = 0;
+			xxc->flg |= XMP_CHANNEL_MUTE;
+		}
+
+		if (ifh.flags & IT_STEREO) {
+			xxc->pan = (int)ifh.chpan[i] * 0x80 >> 5;
+			if (xxc->pan > 0xff)
+				xxc->pan = 0xff;
+		} else {
+			xxc->pan = 0x80;
+		}
+
+		xxc->vol = ifh.chvol[i];
 	}
-    }
+	if (mod->len <= XMP_MAX_MOD_LENGTH) {
+		hio_read(mod->xxo, 1, mod->len, f);
+	} else {
+		hio_read(mod->xxo, 1, XMP_MAX_MOD_LENGTH, f);
+		hio_seek(f, mod->len - XMP_MAX_MOD_LENGTH, SEEK_CUR);
+		mod->len = XMP_MAX_MOD_LENGTH;
+	}
 
-    /* Format quirks */
+	new_fx = ifh.flags & IT_OLD_FX ? 0 : 1;
 
-    m->quirk |= QUIRKS_IT;
+	for (i = 0; i < mod->ins; i++)
+		pp_ins[i] = hio_read32l(f);
+	for (i = 0; i < mod->smp; i++)
+		pp_smp[i] = hio_read32l(f);
+	for (i = 0; i < mod->pat; i++)
+		pp_pat[i] = hio_read32l(f);
 
-    if (ifh.flags & IT_LINK_GXX) {
-	m->quirk |= QUIRK_PRENV;
-    } else {
-	m->quirk |= QUIRK_UNISLD;
-    } 
+	m->c4rate = C4_NTSC_RATE;
 
-    if (new_fx) {
-	m->quirk |= QUIRK_VIBHALF | QUIRK_VIBINV;
-    } else {
-	m->quirk &= ~QUIRK_VIBALL;
-	m->quirk |= QUIRK_ITOLDFX;
-    }
+	identify_tracker(m, ifh);
 
-    if (sample_mode) {
-	m->quirk &= ~(QUIRK_VIRTUAL | QUIRK_RSTCHN);
-    }
+	MODULE_INFO();
 
-    m->gvolbase = 0x80;
-    m->gvol = ifh.gv;
-    m->read_event_type = READ_EVENT_IT;
+	D_(D_INFO "Instrument/FX mode: %s/%s",
+	   sample_mode ? "sample" : ifh.cmwt >= 0x200 ?
+	   "new" : "old", ifh.flags & IT_OLD_FX ? "old" : "IT");
 
-    return 0;
+	if (sample_mode)
+		mod->ins = mod->smp;
 
-  err4:
-    free(pp_pat);
-  err3:
-    free(pp_smp);
-  err2:
-    free(pp_ins);
-  err:
-    return -1;
+	if (instrument_init(mod) < 0)
+		goto err4;
+
+	D_(D_INFO "Instruments: %d", mod->ins);
+
+	for (i = 0; i < mod->ins; i++) {
+		/*
+		 * IT files can have three different instrument types: 'New'
+		 * instruments, 'old' instruments or just samples. We need a
+		 * different loader for each of them.
+		 */
+
+		struct xmp_instrument *xxi = &mod->xxi[i];
+
+		if (!sample_mode && ifh.cmwt >= 0x200) {
+			/* New instrument format */
+			if (hio_seek(f, start + pp_ins[i], SEEK_SET) < 0) {
+				goto err4;
+			}
+
+			if (load_new_it_instrument(xxi, f) < 0) {
+				goto err4;
+			}
+
+		} else if (!sample_mode) {
+			/* Old instrument format */
+			if (hio_seek(f, start + pp_ins[i], SEEK_SET) < 0) {
+				goto err4;
+			}
+
+			if (load_old_it_instrument(xxi, f) < 0) {
+				goto err4;
+			}
+		}
+	}
+
+	D_(D_INFO "Stored Samples: %d", mod->smp);
+
+	for (i = 0; i < mod->smp; i++) {
+
+		if (hio_seek(f, start + pp_smp[i], SEEK_SET) < 0) {
+			goto err4;
+		}
+
+		if (load_it_sample(m, i, start, sample_mode, f) < 0) {
+			goto err4;
+		}
+	}
+
+	D_(D_INFO "Stored Patterns: %d", mod->pat);
+
+	/* Effects in muted channels are processed, so scan patterns first to
+	 * see the real number of channels
+	 */
+	max_ch = 0;
+	for (i = 0; i < mod->pat; i++) {
+		uint8 mask[L_CHANNELS];
+		int pat_len;
+
+		/* If the offset to a pattern is 0, the pattern is empty */
+		if (pp_pat[i] == 0)
+			continue;
+
+		hio_seek(f, start + pp_pat[i], SEEK_SET);
+		pat_len = hio_read16l(f) /* - 4 */ ;
+		hio_read16l(f);
+		memset(mask, 0, L_CHANNELS);
+		hio_read16l(f);
+		hio_read16l(f);
+
+		while (--pat_len >= 0) {
+			int b = hio_read8(f);
+			if (b == 0)
+				continue;
+
+			c = (b - 1) & 63;
+
+			if (c > max_ch)
+				max_ch = c;
+
+			if (b & 0x80) {
+				mask[c] = hio_read8(f);
+				pat_len--;
+			}
+
+			if (mask[c] & 0x01) {
+				hio_read8(f);
+				pat_len--;
+			}
+			if (mask[c] & 0x02) {
+				hio_read8(f);
+				pat_len--;
+			}
+			if (mask[c] & 0x04) {
+				hio_read8(f);
+				pat_len--;
+			}
+			if (mask[c] & 0x08) {
+				hio_read8(f);
+				hio_read8(f);
+				pat_len -= 2;
+			}
+		}
+	}
+
+	/* Set the number of channels actually used
+	 */
+	mod->chn = max_ch + 1;
+	mod->trk = mod->pat * mod->chn;
+
+	if (pattern_init(mod) < 0)
+		goto err4;
+
+	/* Read patterns */
+	for (i = 0; i < mod->pat; i++) {
+
+		if (pattern_alloc(mod, i) < 0)
+			goto err4;
+
+		/* If the offset to a pattern is 0, the pattern is empty */
+		if (pp_pat[i] == 0) {
+			mod->xxp[i]->rows = 64;
+			for (j = 0; j < mod->chn; j++) {
+				int tnum = i * mod->chn + j;
+				if (track_alloc(mod, tnum, 64) < 0)
+					goto err4;
+				mod->xxp[i]->index[j] = tnum;
+			}
+			continue;
+		}
+
+		if (hio_seek(f, start + pp_pat[i], SEEK_SET) < 0) {
+			goto err4;
+		}
+
+		if (load_it_pattern(m, i, new_fx, f) < 0) {
+			goto err4;
+		}
+	}
+
+	free(pp_pat);
+	free(pp_smp);
+	free(pp_ins);
+
+	/* Song message */
+
+	if (ifh.special & IT_HAS_MSG) {
+		if ((m->comment = malloc(ifh.msglen + 1)) != NULL) {
+			hio_seek(f, start + ifh.msgofs, SEEK_SET);
+
+			D_(D_INFO "Message length : %d", ifh.msglen);
+
+			for (j = 0; j < ifh.msglen; j++) {
+				int b = hio_read8(f);
+				if (b == '\r') {
+					b = '\n';
+				} else if ((b < 32 || b > 127) && b != '\n'
+					   && b != '\t') {
+					b = '.';
+				}
+				m->comment[j] = b;
+			}
+			m->comment[j] = 0;
+		}
+	}
+
+	/* Format quirks */
+
+	m->quirk |= QUIRKS_IT;
+
+	if (ifh.flags & IT_LINK_GXX) {
+		m->quirk |= QUIRK_PRENV;
+	} else {
+		m->quirk |= QUIRK_UNISLD;
+	}
+
+	if (new_fx) {
+		m->quirk |= QUIRK_VIBHALF | QUIRK_VIBINV;
+	} else {
+		m->quirk &= ~QUIRK_VIBALL;
+		m->quirk |= QUIRK_ITOLDFX;
+	}
+
+	if (sample_mode) {
+		m->quirk &= ~(QUIRK_VIRTUAL | QUIRK_RSTCHN);
+	}
+
+	m->gvolbase = 0x80;
+	m->gvol = ifh.gv;
+	m->read_event_type = READ_EVENT_IT;
+
+	return 0;
+
+err4:
+	free(pp_pat);
+err3:
+	free(pp_smp);
+err2:
+	free(pp_ins);
+err:
+	return -1;
 }
 
 #endif /* LIBXMP_CORE_DISABLE_IT */
