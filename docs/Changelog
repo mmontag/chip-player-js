@@ -3,6 +3,8 @@ Stable versions
 
 4.3.13 ():
 	- fix MOD vs XM set finetune effect
+	- fix IT old instrument volume
+	- code refactoring and cleanup
 
 4.3.12 (20160305):
 	Fix bugs caught in the OpenMPT test cases:
