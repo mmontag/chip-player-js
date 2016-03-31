@@ -32,32 +32,32 @@
 #define MAGIC_IMPS	MAGIC4('I','M','P','S')
 
 
-static int it_test (HIO_HANDLE *, char *, const int);
-static int it_load (struct module_data *, HIO_HANDLE *, const int);
+static int it_test(HIO_HANDLE *, char *, const int);
+static int it_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader it_loader = {
-    "Impulse Tracker",
-    it_test,
-    it_load
+	"Impulse Tracker",
+	it_test,
+	it_load
 };
 
 #ifdef WIN32
-struct tm *localtime_r(const time_t *timep, struct tm *result)
+struct tm *localtime_r(const time_t * timep, struct tm *result)
 {
-    /* Note: Win32 localtime() is thread-safe */
-    memcpy(result, localtime(timep), sizeof(struct tm));
-    return result;
+	/* Note: Win32 localtime() is thread-safe */
+	memcpy(result, localtime(timep), sizeof(struct tm));
+	return result;
 }
 #endif
 
-static int it_test(HIO_HANDLE *f, char *t, const int start)
+static int it_test(HIO_HANDLE * f, char *t, const int start)
 {
-    if (hio_read32b(f) != MAGIC_IMPM)
-	return -1;
+	if (hio_read32b(f) != MAGIC_IMPM)
+		return -1;
 
-    read_title(f, t, 26);
+	read_title(f, t, 26);
 
-    return 0;
+	return 0;
 }
 
 
@@ -101,213 +101,225 @@ int itsex_decompress8 (HIO_HANDLE *, void *, int, int);
 int itsex_decompress16 (HIO_HANDLE *, void *, int, int);
 
 
-static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
+static void xlat_fx(int c, struct xmp_event *e, uint8 * last_fxp, int new_fx)
 {
-    uint8 h = MSN(e->fxp), l = LSN(e->fxp);
+	uint8 h = MSN(e->fxp), l = LSN(e->fxp);
 
-    switch (e->fxt = fx[e->fxt]) {
-    case FX_XTND:		/* Extended effect */
-	e->fxt = FX_EXTENDED;
+	switch (e->fxt = fx[e->fxt]) {
+	case FX_XTND:		/* Extended effect */
+		e->fxt = FX_EXTENDED;
 
-	if (h == 0 && e->fxp == 0) {
-	    e->fxp = last_fxp[c];
-	    h = MSN(e->fxp);
-	    l = LSN(e->fxp);
-	} else {
-	    last_fxp[c] = e->fxp;
-	}
+		if (h == 0 && e->fxp == 0) {
+			e->fxp = last_fxp[c];
+			h = MSN(e->fxp);
+			l = LSN(e->fxp);
+		} else {
+			last_fxp[c] = e->fxp;
+		}
 
-	switch (h) {
-	case 0x1:		/* Glissando */
-	    e->fxp = 0x30 | l;
-	    break;
-	case 0x2:		/* Finetune -- not supported */
-	    e->fxt = e->fxp = 0;
-	    break;
-	case 0x3:		/* Vibrato wave */
-	    e->fxp = 0x40 | l;
-	    break;
-	case 0x4:		/* Tremolo wave */
-	    e->fxp = 0x70 | l;
-	    break;
-	case 0x5:		/* Panbrello wave */
-	    if (l <= 3) {
-	    	e->fxt = FX_PANBRELLO_WF;
-	    	e->fxp = l;
-	    } else {
+		switch (h) {
+		case 0x1:	/* Glissando */
+			e->fxp = 0x30 | l;
+			break;
+		case 0x2:	/* Finetune -- not supported */
+			e->fxt = e->fxp = 0;
+			break;
+		case 0x3:	/* Vibrato wave */
+			e->fxp = 0x40 | l;
+			break;
+		case 0x4:	/* Tremolo wave */
+			e->fxp = 0x70 | l;
+			break;
+		case 0x5:	/* Panbrello wave */
+			if (l <= 3) {
+				e->fxt = FX_PANBRELLO_WF;
+				e->fxp = l;
+			} else {
+				e->fxt = e->fxp = 0;
+			}
+			break;
+		case 0x6:	/* Pattern delay */
+			e->fxp = 0xe0 | l;
+			break;
+		case 0x7:	/* Instrument functions */
+			e->fxt = FX_IT_INSTFUNC;
+			e->fxp &= 0x0f;
+			break;
+		case 0x8:	/* Set pan position */
+			e->fxt = FX_SETPAN;
+			e->fxp = l << 4;
+			break;
+		case 0x9:	/* 0x91 = set surround */
+			e->fxt = FX_SURROUND;
+			e->fxp = l;
+			break;
+		case 0xa:	/* High offset */
+			e->fxt = FX_HIOFFSET;
+			e->fxp = l;
+			break;
+		case 0xb:	/* Pattern loop */
+			e->fxp = 0x60 | l;
+			break;
+		case 0xc:	/* Note cut */
+		case 0xd:	/* Note delay */
+			if ((e->fxp = l) == 0)
+				e->fxp++;  /* SD0 and SC0 become SD1 and SC1 */
+			e->fxp |= h << 4;
+			break;
+		case 0xe:	/* Pattern row delay */
+			e->fxt = FX_IT_ROWDELAY;
+			e->fxp = l;
+			break;
+		default:
+			e->fxt = e->fxp = 0;
+		}
+		break;
+	case FX_FLT_CUTOFF:
+		if (e->fxp > 0x7f && e->fxp < 0x90) {	/* Resonance */
+			e->fxt = FX_FLT_RESN;
+			e->fxp = (e->fxp - 0x80) * 16;
+		} else {	/* Cutoff */
+			e->fxp *= 2;
+		}
+		break;
+	case FX_TREMOR:
+		if (!new_fx && e->fxp != 0) {
+			e->fxp = ((MSN(e->fxp) + 1) << 4) | (LSN(e->fxp) + 1);
+		}
+		break;
+	case FX_GLOBALVOL:
+		if (e->fxp > 0x80) {	/* See storlek test 16 */
+			e->fxt = e->fxp = 0;
+		}
+		break;
+	case FX_NONE:		/* No effect */
 		e->fxt = e->fxp = 0;
-	    }
-	    break;
-	case 0x6:		/* Pattern delay */
-	    e->fxp = 0xe0 | l;
-	    break;
-	case 0x7:		/* Instrument functions */
-	    e->fxt = FX_IT_INSTFUNC;
-	    e->fxp &= 0x0f;
-	    break;
-	case 0x8:		/* Set pan position */
-	    e->fxt = FX_SETPAN;
-	    e->fxp = l << 4;
-	    break;
-	case 0x9:		/* 0x91 = set surround */
-            e->fxt = FX_SURROUND;
-	    e->fxp = l;
-	    break;
-	case 0xa:		/* High offset */
-            e->fxt = FX_HIOFFSET;
-            e->fxp = l;
-            break;
-	case 0xb:		/* Pattern loop */
-	    e->fxp = 0x60 | l;
-	    break;
-	case 0xc:		/* Note cut */
-	case 0xd:		/* Note delay */
-	    if ((e->fxp = l) == 0)
-		e->fxp++;	/* SD0 and SC0 become SD1 and SC1 */
-	    e->fxp |= h << 4;
-	    break;
-	case 0xe:		/* Pattern row delay */
-	    e->fxt = FX_IT_ROWDELAY;
-	    e->fxp = l;
-	    break;
-	default:
-	    e->fxt = e->fxp = 0;
+		break;
 	}
-	break;
-    case FX_FLT_CUTOFF:
-	if (e->fxp > 0x7f && e->fxp < 0x90) {	/* Resonance */
-	    e->fxt = FX_FLT_RESN;
-	    e->fxp = (e->fxp - 0x80) * 16;
-	} else {		/* Cutoff */
-	    e->fxp *= 2;
-	}
-	break;
-    case FX_TREMOR:
-	if (!new_fx && e->fxp != 0) {
-	   e->fxp = ((MSN(e->fxp) + 1) << 4) | (LSN(e->fxp) + 1);
-	}
-	break;
-    case FX_GLOBALVOL:
-	if (e->fxp > 0x80) {	/* See storlek test 16 */
-		e->fxt = e->fxp = 0;
-	}
-	break;
-    case FX_NONE:		/* No effect */
-	e->fxt = e->fxp = 0;
-	break;
-    }
 
-    /* Impulse Tracker ignores the portamento command if there is an
-     * portamento command next to an offset command
-     */
-    if (e->fxt == FX_OFFSET && e->f2t == FX_TONEPORTA) {
-        e->f2t = e->f2p = 0;
-    }
+	/* Impulse Tracker ignores the portamento command if there is an
+	 * portamento command next to an offset command
+	 */
+	if (e->fxt == FX_OFFSET && e->f2t == FX_TONEPORTA) {
+		e->f2t = e->f2p = 0;
+	}
 }
 
 
 static void xlat_volfx(struct xmp_event *event)
 {
-    int b;
+	int b;
 
-    b = event->vol;
-    event->vol = 0;
+	b = event->vol;
+	event->vol = 0;
 
-    if (b <= 0x40) {
-	event->vol = b + 1;
-    } else if (b >= 65 && b <= 74) {	/* A */
-	event->f2t = FX_F_VSLIDE_UP_2;
-	event->f2p = b - 65;
-    } else if (b >= 75 && b <= 84) {	/* B */
-	event->f2t = FX_F_VSLIDE_DN_2;
-	event->f2p = b - 75;
-    } else if (b >= 85 && b <= 94) {	/* C */
-	event->f2t = FX_VSLIDE_UP_2;
-	event->f2p = b - 85;
-    } else if (b >= 95 && b <= 104) {	/* D */
-	event->f2t = FX_VSLIDE_DN_2;
-	event->f2p = b - 95;
-    } else if (b >= 105 && b <= 114) {	/* E */
-	event->f2t = FX_PORTA_DN;
-	event->f2p = (b - 105) << 2;
-    } else if (b >= 115 && b <= 124) {	/* F */
-	event->f2t = FX_PORTA_UP;
-	event->f2p = (b - 115) << 2;
-    } else if (b >= 128 && b <= 192) {	/* pan */
-	if (b == 192)
-	    b = 191;
-	event->f2t = FX_SETPAN;
-	event->f2p = (b - 128) << 2;
-    } else if (b >= 193 && b <= 202) {	/* G */
-	event->f2t = FX_TONEPORTA;
-	event->f2p = (b - 193) << 2;
-    } else if (b >= 203 && b <= 212) {	/* H */
-	event->f2t = FX_VIBRATO;
-	event->f2p = b - 203;
-    }
+	if (b <= 0x40) {
+		event->vol = b + 1;
+	} else if (b >= 65 && b <= 74) {	/* A */
+		event->f2t = FX_F_VSLIDE_UP_2;
+		event->f2p = b - 65;
+	} else if (b >= 75 && b <= 84) {	/* B */
+		event->f2t = FX_F_VSLIDE_DN_2;
+		event->f2p = b - 75;
+	} else if (b >= 85 && b <= 94) {	/* C */
+		event->f2t = FX_VSLIDE_UP_2;
+		event->f2p = b - 85;
+	} else if (b >= 95 && b <= 104) {	/* D */
+		event->f2t = FX_VSLIDE_DN_2;
+		event->f2p = b - 95;
+	} else if (b >= 105 && b <= 114) {	/* E */
+		event->f2t = FX_PORTA_DN;
+		event->f2p = (b - 105) << 2;
+	} else if (b >= 115 && b <= 124) {	/* F */
+		event->f2t = FX_PORTA_UP;
+		event->f2p = (b - 115) << 2;
+	} else if (b >= 128 && b <= 192) {	/* pan */
+		if (b == 192) {
+			b = 191;
+		}
+		event->f2t = FX_SETPAN;
+		event->f2p = (b - 128) << 2;
+	} else if (b >= 193 && b <= 202) {	/* G */
+		event->f2t = FX_TONEPORTA;
+		event->f2p = (b - 193) << 2;
+	} else if (b >= 203 && b <= 212) {	/* H */
+		event->f2t = FX_VIBRATO;
+		event->f2p = b - 203;
+	}
 }
 
 
 static void fix_name(uint8 *s, int l)
 {
-    int i;
+	int i;
 
-    /* IT names can have 0 at start of data, replace with space */
-    for (l--, i = 0; i < l; i++) {
-	if (s[i] == 0)
-	    s[i] = ' ';
-    }
-    for (i--; i >= 0 && s[i] == ' '; i--) {
-	if (s[i] == ' ')
-	    s[i] = 0;
-    }
+	/* IT names can have 0 at start of data, replace with space */
+	for (l--, i = 0; i < l; i++) {
+		if (s[i] == 0)
+			s[i] = ' ';
+	}
+	for (i--; i >= 0 && s[i] == ' '; i--) {
+		if (s[i] == ' ')
+			s[i] = 0;
+	}
 }
 
 
-static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env, HIO_HANDLE *f)
+static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
+			  HIO_HANDLE *f)
 {
-    int j;
+	int j;
 
-    env->flg = hio_read8(f);
-    env->num = hio_read8(f);
+	env->flg = hio_read8(f);
+	env->num = hio_read8(f);
 
-    /* Sanity check */
-    if (env->num >= XMP_MAX_ENV_POINTS) {
-	env->flg = 0;
-	env->num = 0;
-	return;
-    }
+	/* Sanity check */
+	if (env->num >= XMP_MAX_ENV_POINTS) {
+		env->flg = 0;
+		env->num = 0;
+		return;
+	}
 
-    env->lpb = hio_read8(f);
-    env->lpe = hio_read8(f);
-    env->slb = hio_read8(f);
-    env->sle = hio_read8(f);
+	env->lpb = hio_read8(f);
+	env->lpe = hio_read8(f);
+	env->slb = hio_read8(f);
+	env->sle = hio_read8(f);
 
-    for (j = 0; j < 25; j++) {
-    	env->node[j].y = hio_read8(f);
-    	env->node[j].x = hio_read16l(f);
-    }
+	for (j = 0; j < 25; j++) {
+		env->node[j].y = hio_read8(f);
+		env->node[j].x = hio_read16l(f);
+	}
 
-    env->unused = hio_read8(f);
+	env->unused = hio_read8(f);
 
-    ei->flg = env->flg & IT_ENV_ON ? XMP_ENVELOPE_ON : 0;
-    ei->flg |= env->flg & IT_ENV_LOOP ? XMP_ENVELOPE_LOOP : 0;
-    ei->flg |= env->flg & IT_ENV_SLOOP ? (XMP_ENVELOPE_SUS|XMP_ENVELOPE_SLOOP) : 0;
-    ei->flg |= env->flg & IT_ENV_CARRY ? XMP_ENVELOPE_CARRY : 0;
-    ei->npt = env->num;
-    ei->sus = env->slb;
-    ei->sue = env->sle;
-    ei->lps = env->lpb;
-    ei->lpe = env->lpe;
+	ei->flg = env->flg & IT_ENV_ON ? XMP_ENVELOPE_ON : 0;
 
-    if (ei->npt > 0 && ei->npt < 25 /* XMP_MAX_ENV_POINTS */) {
-    	for (j = 0; j < ei->npt; j++) {
-    		ei->data[j * 2] = env->node[j].x;
-    		ei->data[j * 2 + 1] = env->node[j].y;
-    	}
-    } else {
-    	ei->flg &= ~XMP_ENVELOPE_ON;
-    }
+	if (env->flg & IT_ENV_LOOP) {
+		ei->flg |= XMP_ENVELOPE_LOOP;
+	}
+
+	if (env->flg & IT_ENV_SLOOP) {
+		ei->flg |= XMP_ENVELOPE_SUS | XMP_ENVELOPE_SLOOP;
+	}
+
+	if (env->flg & IT_ENV_CARRY) {
+		ei->flg |= XMP_ENVELOPE_CARRY;
+	}
+
+	ei->npt = env->num;
+	ei->sus = env->slb;
+	ei->sue = env->sle;
+	ei->lps = env->lpb;
+	ei->lpe = env->lpe;
+
+	if (ei->npt > 0 && ei->npt < 25 /* XMP_MAX_ENV_POINTS */ ) {
+		for (j = 0; j < ei->npt; j++) {
+			ei->data[j * 2] = env->node[j].x;
+			ei->data[j * 2 + 1] = env->node[j].y;
+		}
+	} else {
+		ei->flg &= ~XMP_ENVELOPE_ON;
+	}
 }
 
 static void identify_tracker(struct module_data *m, struct it_file_header ifh)
