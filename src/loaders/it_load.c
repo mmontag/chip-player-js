@@ -396,7 +396,7 @@ static void identify_tracker(struct module_data *m, struct it_file_header ifh)
 #endif
 }
 
-static int load_old_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
+static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 {
     int inst_map[120], inst_rmap[XMP_MAX_KEYS];
     struct it_instrument1_header i1h;
@@ -528,7 +528,7 @@ static int load_old_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
     return 0;
 }
 
-static int load_new_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
+static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 {
     int inst_map[120], inst_rmap[XMP_MAX_KEYS];
     struct it_instrument2_header i2h;
@@ -672,14 +672,186 @@ static int load_new_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
     return 0;
 }
 
+static int load_it_sample(struct module_data *m, int i, int start, int sample_mode, HIO_HANDLE *f)
+{
+    struct it_sample_header ish;
+    struct xmp_module *mod = &m->mod;
+    struct xmp_sample *xxs;
+    int j, k;
+
+    if (sample_mode) {
+        mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
+        if (mod->xxi[i].sub == NULL) {
+	    return -1;
+        }
+    }
+
+    ish.magic = hio_read32b(f);
+    if (ish.magic != MAGIC_IMPS) {
+        return -1;
+    }
+
+    xxs = &mod->xxs[i];
+
+    hio_read(&ish.dosname, 12, 1, f);
+    ish.zero = hio_read8(f);
+    ish.gvl = hio_read8(f);
+    ish.flags = hio_read8(f);
+    ish.vol = hio_read8(f);
+
+    if (hio_error(f)) {
+        return -1;
+    }
+
+    if (hio_read(&ish.name, 1, 26, f) != 26) {
+	return -1;
+    }
+
+    fix_name(ish.name, 26);
+
+    ish.convert = hio_read8(f);
+    ish.dfp = hio_read8(f);
+    ish.length = hio_read32l(f);
+    ish.loopbeg = hio_read32l(f);
+    ish.loopend = hio_read32l(f);
+    ish.c5spd = hio_read32l(f);
+    ish.sloopbeg = hio_read32l(f);
+    ish.sloopend = hio_read32l(f);
+    ish.sample_ptr = hio_read32l(f);
+
+    ish.vis = hio_read8(f);
+    ish.vid = hio_read8(f);
+    ish.vir = hio_read8(f);
+    ish.vit = hio_read8(f);
+
+    /* Changed to continue to allow use-brdg.it and use-funk.it to
+     * load correctly (both IT 2.04)
+     */
+    if (ish.magic != MAGIC_IMPS)
+        return 0;
+	
+    if (ish.flags & IT_SMP_16BIT) {
+	xxs->flg = XMP_SAMPLE_16BIT;
+    }
+    xxs->len = ish.length;
+
+    /* Sanity check */
+    if (xxs->len > MAX_SAMPLE_SIZE) {
+	return -1;
+    }
+
+    xxs->lps = ish.loopbeg;
+    xxs->lpe = ish.loopend;
+
+    xxs->flg |= ish.flags & IT_SMP_LOOP ? XMP_SAMPLE_LOOP : 0;
+    xxs->flg |= ish.flags & IT_SMP_BLOOP ? XMP_SAMPLE_LOOP_BIDIR : 0;
+
+    if (sample_mode) {
+        /* Create an instrument for each sample */
+        mod->xxi[i].sub[0].vol = ish.vol;
+        mod->xxi[i].sub[0].pan = 0x80;
+        mod->xxi[i].sub[0].sid = i;
+        mod->xxi[i].nsm = !!(xxs->len);
+        instrument_name(mod, i, ish.name, 25);
+    } else {
+	copy_adjust(xxs->name, ish.name, 25);
+    }
+
+    D_(D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
+	    "%02x%02x %02x%02x %5d ",
+	    i, sample_mode ? xxs->name : mod->xxi[i].name,
+	    xxs->len,
+	    ish.flags & IT_SMP_16BIT ? '+' : ' ',
+	    MIN(xxs->lps, 0xfffff), MIN(xxs->lpe, 0xfffff),
+	    MIN(ish.sloopbeg, 0xfffff), MIN(ish.sloopend, 0xfffff),
+	    ish.flags, ish.convert,
+	    ish.vol, ish.gvl, ish.c5spd);
+
+    /* Convert C5SPD to relnote/finetune
+     *
+     * In IT we can have a sample associated with two or more
+     * instruments, but c5spd is a sample attribute -- so we must
+     * scan all xmp instruments to set the correct transposition
+     */
+	
+    for (j = 0; j < mod->ins; j++) {
+        for (k = 0; k < mod->xxi[j].nsm; k++) {
+	    struct xmp_subinstrument *sub = &mod->xxi[j].sub[k];
+	    if (sub->sid == i) {
+		sub->vol = ish.vol;
+		sub->gvl = ish.gvl;
+		sub->vra = ish.vis;	/* sample to sub-instrument vibrato */
+		sub->vde = ish.vid >> 1;
+		sub->vwf = ish.vit;
+		sub->vsw = (0xff - ish.vir) >> 1;
+
+		c2spd_to_note(ish.c5spd, &mod->xxi[j].sub[k].xpo, &mod->xxi[j].sub[k].fin);
+
+                /* Set sample pan (overrides subinstrument) */
+                if (ish.dfp & 0x80) {
+                    sub->pan = (ish.dfp & 0x7f) * 4;
+                }
+	    }
+	}
+    }
+
+    if (ish.flags & IT_SMP_SAMPLE && xxs->len > 1) {
+        int cvt = 0;
+
+	if (0 != hio_seek(f, start + ish.sample_ptr, SEEK_SET))
+	   return -1;
+
+	if (xxs->lpe > xxs->len || xxs->lps >= xxs->lpe)
+	   xxs->flg &= ~XMP_SAMPLE_LOOP;
+
+	if (~ish.convert & IT_CVT_SIGNED)
+	    cvt |= SAMPLE_FLAG_UNS;
+
+	/* compressed samples */
+	if (ish.flags & IT_SMP_COMP) {
+	    uint8 *buf;
+	    int ret;
+
+	    buf = calloc(1, xxs->len * 2);
+	    if (buf == NULL)
+		    return -1;
+
+	    if (ish.flags & IT_SMP_16BIT) {
+	        itsex_decompress16(f, buf, xxs->len, 
+					ish.convert & IT_CVT_DIFF);
+
+#ifdef WORDS_BIGENDIAN
+	        /* decompression generates native-endian samples, but
+		 * we want little-endian */
+		cvt |= SAMPLE_FLAG_BIGEND;
+#endif
+	    } else {
+		itsex_decompress8(f, buf, xxs->len, 
+					ish.convert & IT_CVT_DIFF);
+	    }
+
+	    ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
+							&mod->xxs[i], buf);
+	    if (ret < 0) {
+		free(buf);
+                return -1;
+	    }
+	    free (buf);
+        } else {
+	    if (load_sample(m, f, cvt, &mod->xxs[i], NULL) < 0)
+                return -1;
+	}
+    }
+
+    return 0;
+}
 
 static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
-    int r, c, i, j, k, pat_len;
+    int r, c, i, j, pat_len;
     struct xmp_event *event, dummy, lastevent[L_CHANNELS];
     struct it_file_header ifh;
-    struct it_sample_header ish;
     uint8 b, mask[L_CHANNELS];
     int max_ch;
     uint32 *pp_ins;		/* Pointers to instruments */
@@ -844,7 +1016,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
                 goto err4;
             }
 
-            if (load_new_instrument(xxi, f) < 0) {
+            if (load_new_it_instrument(xxi, f) < 0) {
                 goto err4;
             }
 
@@ -854,7 +1026,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
                 goto err4;
             }
 
-            if (load_old_instrument(xxi, f) < 0) {
+            if (load_old_it_instrument(xxi, f) < 0) {
                 goto err4;
             }
 	}
@@ -863,171 +1035,14 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored Samples: %d", mod->smp);
 
     for (i = 0; i < mod->smp; i++) {
-	struct xmp_sample *xxs = &mod->xxs[i];
-
-	if (sample_mode) {
-	    mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
-	    if (mod->xxi[i].sub == NULL)
-		goto err4;
-	}
 
 	if (hio_seek(f, start + pp_smp[i], SEEK_SET) < 0) {
 	    goto err4;
         }
 
-	ish.magic = hio_read32b(f);
-	if (ish.magic != MAGIC_IMPS) {
-	    goto err4;
-	}
-	hio_read(&ish.dosname, 12, 1, f);
-	ish.zero = hio_read8(f);
-	ish.gvl = hio_read8(f);
-	ish.flags = hio_read8(f);
-	ish.vol = hio_read8(f);
-
-        if (hio_error(f)) {
+        if (load_it_sample(m, i, start, sample_mode, f) < 0) {
             goto err4;
         }
-
-	if (hio_read(&ish.name, 1, 26, f) != 26) {
-	    goto err4;
-	}
-
-	fix_name(ish.name, 26);
-
-	ish.convert = hio_read8(f);
-	ish.dfp = hio_read8(f);
-	ish.length = hio_read32l(f);
-	ish.loopbeg = hio_read32l(f);
-	ish.loopend = hio_read32l(f);
-	ish.c5spd = hio_read32l(f);
-	ish.sloopbeg = hio_read32l(f);
-	ish.sloopend = hio_read32l(f);
-	ish.sample_ptr = hio_read32l(f);
-
-	ish.vis = hio_read8(f);
-	ish.vid = hio_read8(f);
-	ish.vir = hio_read8(f);
-	ish.vit = hio_read8(f);
-
-	/* Changed to continue to allow use-brdg.it and use-funk.it to
-	 * load correctly (both IT 2.04)
-	 */
-	if (ish.magic != MAGIC_IMPS)
-	    continue;
-	
-	if (ish.flags & IT_SMP_16BIT) {
-	    xxs->flg = XMP_SAMPLE_16BIT;
-	}
-	xxs->len = ish.length;
-
-	/* Sanity check */
-	if (xxs->len > MAX_SAMPLE_SIZE) {
-	    goto err4;
-	}
-
-	xxs->lps = ish.loopbeg;
-	xxs->lpe = ish.loopend;
-
-	xxs->flg |= ish.flags & IT_SMP_LOOP ? XMP_SAMPLE_LOOP : 0;
-	xxs->flg |= ish.flags & IT_SMP_BLOOP ? XMP_SAMPLE_LOOP_BIDIR : 0;
-
-	if (sample_mode) {
-	    /* Create an instrument for each sample */
-	    mod->xxi[i].sub[0].vol = ish.vol;
-	    mod->xxi[i].sub[0].pan = 0x80;
-	    mod->xxi[i].sub[0].sid = i;
-	    mod->xxi[i].nsm = !!(xxs->len);
-	    instrument_name(mod, i, ish.name, 25);
-	} else {
-	    copy_adjust(xxs->name, ish.name, 25);
-	}
-
-	D_(D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
-		    "%02x%02x %02x%02x %5d ",
-		    i, sample_mode ? xxs->name : mod->xxi[i].name,
-		    xxs->len,
-		    ish.flags & IT_SMP_16BIT ? '+' : ' ',
-		    MIN(xxs->lps, 0xfffff), MIN(xxs->lpe, 0xfffff),
-		    MIN(ish.sloopbeg, 0xfffff), MIN(ish.sloopend, 0xfffff),
-		    ish.flags, ish.convert,
-		    ish.vol, ish.gvl, ish.c5spd);
-
-	/* Convert C5SPD to relnote/finetune
-	 *
-	 * In IT we can have a sample associated with two or more
-	 * instruments, but c5spd is a sample attribute -- so we must
-	 * scan all xmp instruments to set the correct transposition
-	 */
-	
-	for (j = 0; j < mod->ins; j++) {
-	    for (k = 0; k < mod->xxi[j].nsm; k++) {
-		struct xmp_subinstrument *sub = &mod->xxi[j].sub[k];
-		if (sub->sid == i) {
-		    sub->vol = ish.vol;
-		    sub->gvl = ish.gvl;
-		    sub->vra = ish.vis;	/* sample to sub-instrument vibrato */
-		    sub->vde = ish.vid >> 1;
-		    sub->vwf = ish.vit;
-		    sub->vsw = (0xff - ish.vir) >> 1;
-
-		    c2spd_to_note(ish.c5spd, &mod->xxi[j].sub[k].xpo, &mod->xxi[j].sub[k].fin);
-
-                    /* Set sample pan (overrides subinstrument) */
-                    if (ish.dfp & 0x80) {
-                        sub->pan = (ish.dfp & 0x7f) * 4;
-                    }
-		}
-	    }
-	}
-
-	if (ish.flags & IT_SMP_SAMPLE && xxs->len > 1) {
-	    int cvt = 0;
-
-	    if (0 != hio_seek(f, start + ish.sample_ptr, SEEK_SET))
-	    	goto err4;
-
-	    if (xxs->lpe > xxs->len || xxs->lps >= xxs->lpe)
-	    	xxs->flg &= ~XMP_SAMPLE_LOOP;
-
-	    if (~ish.convert & IT_CVT_SIGNED)
-		cvt |= SAMPLE_FLAG_UNS;
-
-	    /* compressed samples */
-	    if (ish.flags & IT_SMP_COMP) {
-		uint8 *buf;
-	    	int ret;
-
-		buf = calloc(1, xxs->len * 2);
-		if (buf == NULL)
-		    goto err4;
-
-		if (ish.flags & IT_SMP_16BIT) {
-		    itsex_decompress16(f, buf, xxs->len, 
-					ish.convert & IT_CVT_DIFF);
-
-#ifdef WORDS_BIGENDIAN
-		    /* decompression generates native-endian samples, but
-		     * we want little-endian */
-		    cvt |= SAMPLE_FLAG_BIGEND;
-#endif
-		} else {
-		    itsex_decompress8(f, buf, xxs->len, 
-					ish.convert & IT_CVT_DIFF);
-		}
-
-		ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
-							&mod->xxs[i], buf);
-		if (ret < 0) {
-		    free(buf);
-                    goto err4;
-		}
-		free (buf);
-	    } else {
-		if (load_sample(m, f, cvt, &mod->xxs[i], NULL) < 0)
-                    goto err4;
-	    }
-	}
     }
 
     D_(D_INFO "Stored Patterns: %d", mod->pat);
