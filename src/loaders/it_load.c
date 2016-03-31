@@ -310,6 +310,92 @@ static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env, HIO_
     }
 }
 
+static void identify_tracker(struct module_data *m, struct it_file_header ifh)
+{
+#ifndef LIBXMP_CORE_PLAYER
+    char tracker_name[40];
+    int sample_mode = ~ifh.flags & IT_USE_INST;
+
+    switch (ifh.cwt >> 8) {
+    case 0x00:
+	strcpy(tracker_name, "unmo3");
+	break;
+    case 0x01:
+    case 0x02:		/* test from Schism Tracker sources */
+	if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0214
+		&& ifh.flags == 9 && ifh.special == 0
+		&& ifh.hilite_maj == 0 && ifh.hilite_min == 0
+		&& ifh.insnum == 0 && ifh.patnum + 1 == ifh.ordnum
+		&& ifh.gv == 128 && ifh.mv == 100 && ifh.is == 1
+		&& ifh.sep == 128 && ifh.pwd == 0
+		&& ifh.msglen == 0 && ifh.msgofs == 0 && ifh.rsvd == 0)
+	{
+                strcpy(tracker_name, "OpenSPC conversion");
+	} else if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0217) {
+	    strcpy(tracker_name, "ModPlug Tracker 1.16");
+	    /* ModPlug Tracker files aren't really IMPM 2.00 */
+	    ifh.cmwt = sample_mode ? 0x100 : 0x214;	
+	} else if (ifh.cwt == 0x0216) {
+	    strcpy(tracker_name, "Impulse Tracker 2.14v3");
+	} else if (ifh.cwt == 0x0217) {
+	    strcpy(tracker_name, "Impulse Tracker 2.14v5");
+	} else if (ifh.cwt == 0x0214 && !memcmp(&ifh.rsvd, "CHBI", 4)) {
+	    strcpy(tracker_name, "Chibi Tracker");
+	} else {
+	    snprintf(tracker_name, 40, "Impulse Tracker %d.%02x",
+			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
+	}
+	break;
+    case 0x08:
+    case 0x7f:
+	if (ifh.cwt == 0x0888) {
+	    strcpy(tracker_name, "OpenMPT 1.17");
+	} else if (ifh.cwt == 0x7fff) {
+	    strcpy(tracker_name, "munch.py");
+	} else {
+	    snprintf(tracker_name, 40, "unknown (%04x)", ifh.cwt);
+	}
+	break;
+    default:
+	switch (ifh.cwt >> 12) {
+	case 0x1: {
+	    uint16 cwtv = ifh.cwt & 0x0fff;
+	    struct tm version;
+	    time_t version_sec;
+
+	    if (cwtv > 0x50) {
+		version_sec = ((cwtv - 0x050) * 86400) + 1254355200;
+		if (localtime_r(&version_sec, &version)) {
+		    snprintf(tracker_name, 40, "Schism Tracker %04d-%02d-%02d",
+				version.tm_year + 1900, version.tm_mon + 1,
+				version.tm_mday);
+                }
+	    } else {
+	    	snprintf(tracker_name, 40, "Schism Tracker 0.%x", cwtv);
+	    }
+	    break; }
+	case 0x5:
+	    snprintf(tracker_name, 40, "OpenMPT %d.%02x",
+			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
+	    if (memcmp(&ifh.rsvd, "OMPT", 4))
+		strncat(tracker_name, " (compat.)", 40);
+	    break;
+	case 0x06:
+	    snprintf(tracker_name, 40, "BeRoTracker %d.%02x",
+			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
+	    break;
+	default:
+	    snprintf(tracker_name, 40, "unknown (%04x)", ifh.cwt);
+	}
+    }
+
+    set_type(m, "%s IT %d.%02x", tracker_name,
+			ifh.cmwt >> 8, ifh.cmwt & 0xff);
+#else
+    set_type(m, "Impulse Tracker");
+#endif
+}
+
 static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
@@ -323,9 +409,6 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint8 b, mask[L_CHANNELS];
     int max_ch;
     int inst_map[120], inst_rmap[XMP_MAX_KEYS];
-#ifndef LIBXMP_CORE_PLAYER
-    char tracker_name[40];
-#endif
     uint32 *pp_ins;		/* Pointers to instruments */
     uint32 *pp_smp;		/* Pointers to samples */
     uint32 *pp_pat;		/* Pointers to patterns */
@@ -458,87 +541,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->c4rate = C4_NTSC_RATE;
 
-#ifndef LIBXMP_CORE_PLAYER
-    /* Identify tracker */
-
-    switch (ifh.cwt >> 8) {
-    case 0x00:
-	strcpy(tracker_name, "unmo3");
-	break;
-    case 0x01:
-    case 0x02:		/* test from Schism Tracker sources */
-	if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0214
-		&& ifh.flags == 9 && ifh.special == 0
-		&& ifh.hilite_maj == 0 && ifh.hilite_min == 0
-		&& ifh.insnum == 0 && ifh.patnum + 1 == ifh.ordnum
-		&& ifh.gv == 128 && ifh.mv == 100 && ifh.is == 1
-		&& ifh.sep == 128 && ifh.pwd == 0
-		&& ifh.msglen == 0 && ifh.msgofs == 0 && ifh.rsvd == 0)
-	{
-                strcpy(tracker_name, "OpenSPC conversion");
-	} else if (ifh.cmwt == 0x0200 && ifh.cwt == 0x0217) {
-	    strcpy(tracker_name, "ModPlug Tracker 1.16");
-	    /* ModPlug Tracker files aren't really IMPM 2.00 */
-	    ifh.cmwt = sample_mode ? 0x100 : 0x214;	
-	} else if (ifh.cwt == 0x0216) {
-	    strcpy(tracker_name, "Impulse Tracker 2.14v3");
-	} else if (ifh.cwt == 0x0217) {
-	    strcpy(tracker_name, "Impulse Tracker 2.14v5");
-	} else if (ifh.cwt == 0x0214 && !memcmp(&ifh.rsvd, "CHBI", 4)) {
-	    strcpy(tracker_name, "Chibi Tracker");
-	} else {
-	    snprintf(tracker_name, 40, "Impulse Tracker %d.%02x",
-			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
-	}
-	break;
-    case 0x08:
-    case 0x7f:
-	if (ifh.cwt == 0x0888) {
-	    strcpy(tracker_name, "OpenMPT 1.17");
-	} else if (ifh.cwt == 0x7fff) {
-	    strcpy(tracker_name, "munch.py");
-	} else {
-	    snprintf(tracker_name, 40, "unknown (%04x)", ifh.cwt);
-	}
-	break;
-    default:
-	switch (ifh.cwt >> 12) {
-	case 0x1: {
-	    uint16 cwtv = ifh.cwt & 0x0fff;
-	    struct tm version;
-	    time_t version_sec;
-
-	    if (cwtv > 0x50) {
-		version_sec = ((cwtv - 0x050) * 86400) + 1254355200;
-		if (localtime_r(&version_sec, &version)) {
-		    snprintf(tracker_name, 40, "Schism Tracker %04d-%02d-%02d",
-				version.tm_year + 1900, version.tm_mon + 1,
-				version.tm_mday);
-                }
-	    } else {
-	    	snprintf(tracker_name, 40, "Schism Tracker 0.%x", cwtv);
-	    }
-	    break; }
-	case 0x5:
-	    snprintf(tracker_name, 40, "OpenMPT %d.%02x",
-			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
-	    if (memcmp(&ifh.rsvd, "OMPT", 4))
-		strncat(tracker_name, " (compat.)", 40);
-	    break;
-	case 0x06:
-	    snprintf(tracker_name, 40, "BeRoTracker %d.%02x",
-			(ifh.cwt & 0x0f00) >> 8, ifh.cwt & 0xff);
-	    break;
-	default:
-	    snprintf(tracker_name, 40, "unknown (%04x)", ifh.cwt);
-	}
-    }
-
-    set_type(m, "%s IT %d.%02x", tracker_name,
-			ifh.cmwt >> 8, ifh.cmwt & 0xff);
-#else
-    set_type(m, "Impulse Tracker");
-#endif
+    identify_tracker(m, ifh);
 
     MODULE_INFO();
 
