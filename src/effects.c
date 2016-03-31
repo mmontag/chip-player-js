@@ -392,9 +392,8 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			set_lfo_waveform(&xc->vibrato.lfo, fxp);
 			break;
 		case EX_FINETUNE:	/* Set finetune */
-			fxp = (fxp << 4) - 0x80;
 			if (!HAS_QUIRK(QUIRK_FT2BUGS) || note > 0) {
-				xc->finetune = (int16) (fxp - 0x80);
+				xc->finetune = (int8)(fxp << 4);
 			}
 			break;
 		case EX_PATTERN_LOOP:	/* Loop pattern */
