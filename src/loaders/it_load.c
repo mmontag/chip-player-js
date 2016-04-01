@@ -949,6 +949,9 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 		}
 		if (mask[c] & 0x08) {
 			b = hio_read8(f);
+			if (b > 26) {
+				return -1;
+			}
 			event->fxt = b;
 			event->fxp = hio_read8(f);
 			xlat_fx(c, event, last_fxp, new_fx);
