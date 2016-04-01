@@ -6,6 +6,7 @@ Stable versions
 	- fix IT old instrument volume
 	- fix IT panbrello speed
 	- fix IT default pan in new instrument (reported by Hai Shalom)
+	- fix S3M X effect in Impulse modules (reported by Hai Shalom)
 	- code refactoring and cleanup
 
 4.3.12 (20160305):
