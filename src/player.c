@@ -755,7 +755,9 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 #ifndef LIBXMP_CORE_DISABLE_IT
 	if (TEST(PANBRELLO)) {
 		panbrello = get_lfo(ctx, &xc->panbrello.lfo, 0) / 512;
-		update_lfo(&xc->panbrello.lfo);
+		if (is_first_frame(ctx)) {
+			update_lfo(&xc->panbrello.lfo);
+		}
 	}
 #endif
 
