@@ -556,6 +556,12 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	i2h.nna = hio_read8(f);
 	i2h.dct = hio_read8(f);
 	i2h.dca = hio_read8(f);
+
+	/* Sanity check */
+	if (i2h.dca > 2) {
+		return -1;
+	}
+
 	i2h.fadeout = hio_read16l(f);
 
 	i2h.pps = hio_read8(f);
