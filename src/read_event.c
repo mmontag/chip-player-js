@@ -1264,9 +1264,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	set_effect_defaults(ctx, note, sub, xc, is_toneporta);
 	if (sub != NULL) {
 		if (note >= 0) {
-			//int pan_swing = (sub->rvv & 0xff00) >> 8;
-			//CLAMP(pan_swing, 0, 64);
-
 			/* Reset pan, see OpenMPT PanReset.it */
 			if (sub->pan >= 0) {
 				xc->pan.val = sub->pan;
@@ -1279,11 +1276,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 				reset_envelopes_carry(ctx, xc);
 			}
 			RESET_NOTE(NOTE_CUT);
-
-			//if (pan_swing) {
-			//	xc->pan.val = (xc->pan.val * (64 - pan_swing) +
-			//		((rand() % 256) * pan_swing)) >> 6;
-			//}
 		}
 	}
 	

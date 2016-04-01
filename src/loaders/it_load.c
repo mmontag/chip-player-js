@@ -800,6 +800,8 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				/* Set sample pan (overrides subinstrument) */
 				if (ish.dfp & 0x80) {
 					sub->pan = (ish.dfp & 0x7f) * 4;
+				} else {
+					sub->pan = -1;
 				}
 			}
 		}

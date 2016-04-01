@@ -4,7 +4,8 @@ Stable versions
 4.3.13 ():
 	- fix MOD vs XM set finetune effect
 	- fix IT old instrument volume
-	- fix IT panbrello speed (reported by Hai Shalom)
+	- fix IT panbrello speed
+	- fix IT default pan in new instrument (reported by Hai Shalom)
 	- code refactoring and cleanup
 
 4.3.12 (20160305):
