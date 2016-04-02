@@ -537,7 +537,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_IT_ROWDELAY:
 		if (!f->rowdelay_set) {
 			f->rowdelay = fxp;
-			f->rowdelay_set = 1;
+			f->rowdelay_set = 3;
 		}
 		break;
 

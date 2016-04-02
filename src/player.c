@@ -789,6 +789,7 @@ static void update_volume(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+	struct flow_control *f = &p->flow;
 	struct channel_data *xc = &p->xc_data[chn];
 
 	/* Volume slides happen in all frames but the first, except when the
@@ -826,19 +827,32 @@ static void update_volume(struct context_data *ctx, int chn)
 
 	if (p->frame % p->speed == 0) {
 		/* Process "fine" effects */
-		if (TEST(FINE_VOLS))
+		if (TEST(FINE_VOLS)) {
 			xc->volume += xc->vol.fslide;
+		}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
-		if (TEST(FINE_VOLS_2))
-			xc->volume += xc->vol.fslide2;
+		if (TEST(FINE_VOLS_2)) {
+			/* OpenMPT FineVolColSlide.it:
+			 * Unlike fine volume slides in the effect column,
+			 * fine volume slides in the volume column are only
+			 * ever executed on the first tick -- not on multiples
+			 * of the first tick if there is a pattern delay. 
+			 */
+			if (!f->rowdelay_set || f->rowdelay_set & 2) {
+				xc->volume += xc->vol.fslide2;
+			}
+		}
+		f->rowdelay_set &= ~2;
 #endif
 
-		if (TEST(TRK_FVSLIDE))
+		if (TEST(TRK_FVSLIDE)) {
 			xc->mastervol += xc->trackvol.fslide;
+		}
 
-		if (TEST(GVOL_SLIDE))
+		if (TEST(GVOL_SLIDE)) {
 			p->gvol += xc->gvol.fslide;
+		}
 	}
 
 	/* Clamp volumes */

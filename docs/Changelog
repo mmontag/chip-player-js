@@ -2,6 +2,9 @@ Stable versions
 ---------------
 
 4.3.13 ():
+	Fix bugs caught in the OpenMPT test cases:
+	- fix IT fine volume column volume slide with row delay
+	Other changes:
 	- fix MOD vs XM set finetune effect
 	- fix IT old instrument volume
 	- fix IT panbrello speed
