@@ -522,7 +522,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 			sub->dct =
 			    i1h.dnc ? XMP_INST_DCT_NOTE : XMP_INST_DCT_OFF;
 			sub->dca = XMP_INST_DCA_CUT;
-			sub->pan = 0x80;
+			sub->pan = -1;
 		}
 	}
 
@@ -806,7 +806,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				/* Set sample pan (overrides subinstrument) */
 				if (ish.dfp & 0x80) {
 					sub->pan = (ish.dfp & 0x7f) * 4;
-				} else {
+				} else if (sample_mode) {
 					sub->pan = -1;
 				}
 			}

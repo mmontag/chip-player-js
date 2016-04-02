@@ -270,6 +270,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			xc->pan.surround = 0;
 		}
 		xc->rpv = 0;	/* storlek_20: set pan overrides random pan */
+		xc->pan.surround = 0;
 		break;
 	case FX_OFFSET:		/* Set sample offset */
 		EFFECT_MEMORY(fxp, xc->offset.memory);
