@@ -144,7 +144,7 @@ static const uint8 fx[] =
 	FX_FINE_VIBRATO,	/* Uxx  Fine vibrato */
 	FX_GLOBALVOL,		/* Vxx  Set global volume */
 	NONE,
-	NONE,
+	FX_SETPAN,		/* Xxx  Set pan (Impulse/Schism/OpenMPT) */
 	NONE,
 	NONE
 };
@@ -219,6 +219,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
     uint16 *pp_ins;		/* Parapointers to instruments */
     uint16 *pp_pat;		/* Parapointers to patterns */
     int ret;
+    int extra_effects = 0;	/* Impulse tracker S3M effects */
 
     LOAD_INIT();
 
@@ -380,16 +381,19 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		snprintf(tracker_name, 40, "Impulse Tracker %d.%02x",
 			(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	}
+	extra_effects = 1;
 	break;
     case 5:
 	snprintf(tracker_name, 40, "OpenMPT %d.%02x",
 		(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 	m->quirk |= QUIRK_ST3BUGS;
+	extra_effects = 1;
 	break;
     case 4:
 	if (sfh.version != 0x4100) {
 		snprintf(tracker_name, 40, "Schism Tracker %d.%02x",
 			(sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
+		extra_effects = 1;
 		break;
 	}
 	/* fall through */
@@ -469,6 +473,11 @@ static int s3m_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 		event->fxp = hio_read8(f);
 		xlat_fx(c, event);
+
+		if (!extra_effects && event->fxt == FX_SETPAN) {
+		    event->fxt = event->fxp = 0;
+		}
+
 		pat_len -= 2;
 	    }
 	}
