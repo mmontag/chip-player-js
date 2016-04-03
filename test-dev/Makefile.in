@@ -169,6 +169,7 @@ OPENMPT_IT	= autovibrato_reset \
 		  porta_offset \
 		  portainsnum \
 		  portainsnumcompat \
+		  portajuststoppednote \
 		  portareset \
 		  portasample \
 		  portasamplecompat \
