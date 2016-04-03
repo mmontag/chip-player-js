@@ -1200,7 +1200,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			rvv = (sub->rvv & 0xff00) >> 8;
 			if (rvv) {
 				CLAMP(rvv, 0, 64);
-				xc->rpv = rand() % (rvv + 1) - 32;
+				xc->rpv = rand() % (rvv + 1) - (rvv / 2);
 			} else {
 				xc->rpv = 0;
 			}
