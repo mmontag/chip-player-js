@@ -8,9 +8,9 @@ Stable versions
 	- fix MOD vs XM set finetune effect
 	- fix IT old instrument volume
 	- fix IT panbrello speed
-	- fix IT random pan variation
+	- fix IT random pan variation left bias
 	- fix IT default pan in sample mode (reported by Hai Shalom)
-	- fix S3M X effect in Impulse modules (reported by Hai Shalom)
+	- fix S3M X effect in Impulse Tracker modules (reported by Hai Shalom)
 	- code refactoring and cleanup
 
 4.3.12 (20160305):
