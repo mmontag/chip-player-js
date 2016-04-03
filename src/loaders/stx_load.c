@@ -38,7 +38,6 @@
 #include "s3m.h"
 #include "period.h"
 
-
 struct stx_file_header {
 	uint8 name[20];		/* Song name */
 	uint8 magic[8];		/* !Scream! */
@@ -83,294 +82,295 @@ struct stx_instrument_header {
 	uint8 magic[4];		/* Reserved (for 'SCRS') */
 };
 
-
-static int stx_test (HIO_HANDLE *, char *, const int);
-static int stx_load (struct module_data *, HIO_HANDLE *, const int);
+static int stx_test(HIO_HANDLE *, char *, const int);
+static int stx_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader stx_loader = {
-    "STMIK 0.2",
-    stx_test,
-    stx_load
+	"STMIK 0.2",
+	stx_test,
+	stx_load
 };
 
-static int stx_test(HIO_HANDLE *f, char *t, const int start)
+static int stx_test(HIO_HANDLE * f, char *t, const int start)
 {
-    char buf[8];
+	char buf[8];
 
-    hio_seek(f, start + 20, SEEK_SET);
-    if (hio_read(buf, 1, 8, f) < 8)
-	return -1;
-    if (memcmp(buf, "!Scream!", 8) && memcmp(buf, "BMOD2STM", 8))
-	return -1;
+	hio_seek(f, start + 20, SEEK_SET);
+	if (hio_read(buf, 1, 8, f) < 8)
+		return -1;
+	if (memcmp(buf, "!Scream!", 8) && memcmp(buf, "BMOD2STM", 8))
+		return -1;
 
-    hio_seek(f, start + 60, SEEK_SET);
-    if (hio_read(buf, 1, 4, f) < 4)
-	return -1;
-    if (memcmp(buf, "SCRM", 4))
-	return -1;
+	hio_seek(f, start + 60, SEEK_SET);
+	if (hio_read(buf, 1, 4, f) < 4)
+		return -1;
+	if (memcmp(buf, "SCRM", 4))
+		return -1;
 
-    hio_seek(f, start + 0, SEEK_SET);
-    read_title(f, t, 20);
+	hio_seek(f, start + 0, SEEK_SET);
+	read_title(f, t, 20);
 
-    return 0;
+	return 0;
 }
 
 #define FX_NONE 0xff
 
 static const uint8 fx[] = {
-    FX_NONE,		FX_SPEED,
-    FX_JUMP,		FX_BREAK,
-    FX_VOLSLIDE,	FX_PORTA_DN,
-    FX_PORTA_UP,	FX_TONEPORTA,
-    FX_VIBRATO,		FX_TREMOR,
-    FX_ARPEGGIO
+	FX_NONE, FX_SPEED,
+	FX_JUMP, FX_BREAK,
+	FX_VOLSLIDE, FX_PORTA_DN,
+	FX_PORTA_UP, FX_TONEPORTA,
+	FX_VIBRATO, FX_TREMOR,
+	FX_ARPEGGIO
 };
-
 
 static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
-    struct xmp_module *mod = &m->mod;
-    int c, r, i, broken = 0;
-    struct xmp_event *event = 0, dummy;
-    struct stx_file_header sfh;
-    struct stx_instrument_header sih;
-    uint8 n, b;
-    uint16 x16;
-    int bmod2stm = 0;
-    uint16 *pp_ins;		/* Parapointers to instruments */
-    uint16 *pp_pat;		/* Parapointers to patterns */
+	struct xmp_module *mod = &m->mod;
+	int c, r, i, broken = 0;
+	struct xmp_event *event = 0, dummy;
+	struct stx_file_header sfh;
+	struct stx_instrument_header sih;
+	uint8 n, b;
+	uint16 x16;
+	int bmod2stm = 0;
+	uint16 *pp_ins;		/* Parapointers to instruments */
+	uint16 *pp_pat;		/* Parapointers to patterns */
 
-    LOAD_INIT();
+	LOAD_INIT();
 
-    hio_read(&sfh.name, 20, 1, f);
-    hio_read(&sfh.magic, 8, 1, f);
-    sfh.psize = hio_read16l(f);
-    sfh.unknown1 = hio_read16l(f);
-    sfh.pp_pat = hio_read16l(f);
-    sfh.pp_ins = hio_read16l(f);
-    sfh.pp_chn = hio_read16l(f);
-    sfh.unknown2 = hio_read16l(f);
-    sfh.unknown3 = hio_read16l(f);
-    sfh.gvol = hio_read8(f);
-    sfh.tempo = hio_read8(f);
-    sfh.unknown4 = hio_read16l(f);
-    sfh.unknown5 = hio_read16l(f);
-    sfh.patnum = hio_read16l(f);
-    sfh.insnum = hio_read16l(f);
-    sfh.ordnum = hio_read16l(f);
-    sfh.unknown6 = hio_read16l(f);
-    sfh.unknown7 = hio_read16l(f);
-    sfh.unknown8 = hio_read16l(f);
-    hio_read(&sfh.magic2, 4, 1, f);
+	hio_read(&sfh.name, 20, 1, f);
+	hio_read(&sfh.magic, 8, 1, f);
+	sfh.psize = hio_read16l(f);
+	sfh.unknown1 = hio_read16l(f);
+	sfh.pp_pat = hio_read16l(f);
+	sfh.pp_ins = hio_read16l(f);
+	sfh.pp_chn = hio_read16l(f);
+	sfh.unknown2 = hio_read16l(f);
+	sfh.unknown3 = hio_read16l(f);
+	sfh.gvol = hio_read8(f);
+	sfh.tempo = hio_read8(f);
+	sfh.unknown4 = hio_read16l(f);
+	sfh.unknown5 = hio_read16l(f);
+	sfh.patnum = hio_read16l(f);
+	sfh.insnum = hio_read16l(f);
+	sfh.ordnum = hio_read16l(f);
+	sfh.unknown6 = hio_read16l(f);
+	sfh.unknown7 = hio_read16l(f);
+	sfh.unknown8 = hio_read16l(f);
+	hio_read(&sfh.magic2, 4, 1, f);
 
-    /* Sanity check */
-    if (sfh.patnum > 254 || sfh.insnum > 256 || sfh.ordnum > 256)
-	return -1;
+	/* Sanity check */
+	if (sfh.patnum > 254 || sfh.insnum > 256 || sfh.ordnum > 256)
+		return -1;
 
-    /* BMOD2STM does not convert pitch */
-    if (!strncmp ((char *) sfh.magic, "BMOD2STM", 8))
-	bmod2stm = 1;
+	/* BMOD2STM does not convert pitch */
+	if (!strncmp((char *)sfh.magic, "BMOD2STM", 8))
+		bmod2stm = 1;
 
 #if 0
-    if ((strncmp ((char *) sfh.magic, "!Scream!", 8) &&
-	!bmod2stm) || strncmp ((char *) sfh.magic2, "SCRM", 4))
-	return -1;
+	if ((strncmp((char *)sfh.magic, "!Scream!", 8) &&
+	     !bmod2stm) || strncmp((char *)sfh.magic2, "SCRM", 4))
+		return -1;
 #endif
 
-    mod->ins = sfh.insnum;
-    mod->pat = sfh.patnum;
-    mod->trk = mod->pat * mod->chn;
-    mod->len = sfh.ordnum;
-    mod->spd = MSN (sfh.tempo);
-    mod->smp = mod->ins;
-    m->c4rate = C4_NTSC_RATE;
+	mod->ins = sfh.insnum;
+	mod->pat = sfh.patnum;
+	mod->trk = mod->pat * mod->chn;
+	mod->len = sfh.ordnum;
+	mod->spd = MSN(sfh.tempo);
+	mod->smp = mod->ins;
+	m->c4rate = C4_NTSC_RATE;
 
-    /* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
-     * length encoded in the first two bytes of the pattern (like S3M).
-     */
-    hio_seek(f, start + (sfh.pp_pat << 4), SEEK_SET);
-    x16 = hio_read16l(f);
-    hio_seek(f, start + (x16 << 4), SEEK_SET);
-    x16 = hio_read16l(f);
-    if (x16 == sfh.psize)
-	broken = 1;
+	/* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
+	 * length encoded in the first two bytes of the pattern (like S3M).
+	 */
+	hio_seek(f, start + (sfh.pp_pat << 4), SEEK_SET);
+	x16 = hio_read16l(f);
+	hio_seek(f, start + (x16 << 4), SEEK_SET);
+	x16 = hio_read16l(f);
+	if (x16 == sfh.psize)
+		broken = 1;
 
-    strncpy(mod->name, (char *)sfh.name, 20);
-    if (bmod2stm)
-	set_type(m, "BMOD2STM STX");
-    else
-	snprintf(mod->type, XMP_NAME_SIZE, "STM2STX 1.%d", broken ? 0 : 1);
+	strncpy(mod->name, (char *)sfh.name, 20);
+	if (bmod2stm)
+		set_type(m, "BMOD2STM STX");
+	else
+		snprintf(mod->type, XMP_NAME_SIZE, "STM2STX 1.%d",
+			 broken ? 0 : 1);
 
-    MODULE_INFO();
- 
-    pp_pat = calloc (2, mod->pat);
-    if (pp_pat == NULL)
-	goto err;
+	MODULE_INFO();
 
-    pp_ins = calloc (2, mod->ins);
-    if (pp_ins == NULL)
-	goto err2;
+	pp_pat = calloc(2, mod->pat);
+	if (pp_pat == NULL)
+		goto err;
 
-    /* Read pattern pointers */
-    hio_seek(f, start + (sfh.pp_pat << 4), SEEK_SET);
-    for (i = 0; i < mod->pat; i++)
-	pp_pat[i] = hio_read16l(f);
+	pp_ins = calloc(2, mod->ins);
+	if (pp_ins == NULL)
+		goto err2;
 
-    /* Read instrument pointers */
-    hio_seek(f, start + (sfh.pp_ins << 4), SEEK_SET);
-    for (i = 0; i < mod->ins; i++)
-	pp_ins[i] = hio_read16l(f);
+	/* Read pattern pointers */
+	hio_seek(f, start + (sfh.pp_pat << 4), SEEK_SET);
+	for (i = 0; i < mod->pat; i++)
+		pp_pat[i] = hio_read16l(f);
 
-    /* Skip channel table (?) */
-    hio_seek(f, start + (sfh.pp_chn << 4) + 32, SEEK_SET);
+	/* Read instrument pointers */
+	hio_seek(f, start + (sfh.pp_ins << 4), SEEK_SET);
+	for (i = 0; i < mod->ins; i++)
+		pp_ins[i] = hio_read16l(f);
 
-    /* Read orders */
-    for (i = 0; i < mod->len; i++) {
-	mod->xxo[i] = hio_read8(f);
-	hio_seek(f, 4, SEEK_CUR);
-    }
- 
-    if (instrument_init(mod) < 0)
-	goto err3;
+	/* Skip channel table (?) */
+	hio_seek(f, start + (sfh.pp_chn << 4) + 32, SEEK_SET);
 
-    /* Read and convert instruments and samples */
-
-    for (i = 0; i < mod->ins; i++) {
-	if (subinstrument_alloc(mod, i, 1) < 0)
-	    goto err3;
-
-	hio_seek(f, start + (pp_ins[i] << 4), SEEK_SET);
-
-	sih.type = hio_read8(f);
-	hio_read(&sih.dosname, 13, 1, f);
-	sih.memseg = hio_read16l(f);
-	sih.length = hio_read32l(f);
-	sih.loopbeg = hio_read32l(f);
-	sih.loopend = hio_read32l(f);
-	sih.vol = hio_read8(f);
-	sih.rsvd1 = hio_read8(f);
-	sih.pack = hio_read8(f);
-	sih.flags = hio_read8(f);
-	sih.c2spd = hio_read16l(f);
-	sih.rsvd2 = hio_read16l(f);
-	hio_read(&sih.rsvd3, 4, 1, f);
-	sih.int_gp = hio_read16l(f);
-	sih.int_512 = hio_read16l(f);
-	sih.int_last = hio_read32l(f);
-	hio_read(&sih.name, 28, 1, f);
-	hio_read(&sih.magic, 4, 1, f);
-
-	mod->xxs[i].len = sih.length;
-	mod->xxs[i].lps = sih.loopbeg;
-	mod->xxs[i].lpe = sih.loopend;
-	if (mod->xxs[i].lpe == 0xffff)
-	    mod->xxs[i].lpe = 0;
-	mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
-	mod->xxi[i].sub[0].vol = sih.vol;
-	mod->xxi[i].sub[0].pan = 0x80;
-	mod->xxi[i].sub[0].sid = i;
-	mod->xxi[i].nsm = 1;
-
-	instrument_name(mod, i, sih.name, 12);
-
-	D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
-		mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
-		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-		mod->xxi[i].sub[0].vol, sih.c2spd);
-
-	sih.c2spd = 8363 * sih.c2spd / 8448;
-	c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
-    }
-
-    if (pattern_init(mod) < 0)
-	goto err3;
-
-    /* Read and convert patterns */
-    D_(D_INFO "Stored patterns: %d", mod->pat);
-
-    for (i = 0; i < mod->pat; i++) {
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
-	    goto err3;
-
-	if (pp_pat[i] == 0)
-	    continue;
-
-	hio_seek(f, start + (pp_pat[i] << 4), SEEK_SET);
-	if (broken)
-	    hio_seek(f, 2, SEEK_CUR);
-
-	for (r = 0; r < 64; ) {
-	    b = hio_read8(f);
-
-	    if (b == S3M_EOR) {
-		r++;
-		continue;
-	    }
-
-	    c = b & S3M_CH_MASK;
-	    event = c >= mod->chn ? &dummy : &EVENT (i, c, r);
-
-	    if (b & S3M_NI_FOLLOW) {
-		n = hio_read8(f);
-
-		switch (n) {
-		case 255:
-		    n = 0;
-		    break;	/* Empty note */
-		case 254:
-		    n = XMP_KEY_OFF;
-		    break;	/* Key off */
-		default:
-		    n = 37 + 12 * MSN (n) + LSN (n);
-		}
-
-		event->note = n;
-		event->ins = hio_read8(f);;
-	    }
-
-	    if (b & S3M_VOL_FOLLOWS) {
-		event->vol = hio_read8(f) + 1;
-	    }
-
-	    if (b & S3M_FX_FOLLOWS) {
-		int t = hio_read8(f);
-		int p = hio_read8(f);
-		if (t <= 10) {
-		    event->fxt = fx[t];
-		    event->fxp = p;
-		    switch (event->fxt) {
-		    case FX_SPEED:
-		        event->fxp = MSN(event->fxp);
-		        break;
-		    case FX_NONE:
-		        event->fxp = event->fxt = 0;
-		        break;
-		    }
-		}
-	    }
+	/* Read orders */
+	for (i = 0; i < mod->len; i++) {
+		mod->xxo[i] = hio_read8(f);
+		hio_seek(f, 4, SEEK_CUR);
 	}
-    }
 
-    free (pp_ins);
-    free (pp_pat);
+	if (instrument_init(mod) < 0)
+		goto err3;
 
-    /* Read samples */
-    D_(D_INFO "Stored samples: %d", mod->smp);
+	/* Read and convert instruments and samples */
 
-    for (i = 0; i < mod->ins; i++) {
-	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
-	    goto err;
-    }
+	for (i = 0; i < mod->ins; i++) {
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			goto err3;
 
-    m->quirk |= QUIRK_VSALL | QUIRKS_ST3;
-    m->read_event_type = READ_EVENT_ST3;
+		hio_seek(f, start + (pp_ins[i] << 4), SEEK_SET);
 
-    return 0;
+		sih.type = hio_read8(f);
+		hio_read(&sih.dosname, 13, 1, f);
+		sih.memseg = hio_read16l(f);
+		sih.length = hio_read32l(f);
+		sih.loopbeg = hio_read32l(f);
+		sih.loopend = hio_read32l(f);
+		sih.vol = hio_read8(f);
+		sih.rsvd1 = hio_read8(f);
+		sih.pack = hio_read8(f);
+		sih.flags = hio_read8(f);
+		sih.c2spd = hio_read16l(f);
+		sih.rsvd2 = hio_read16l(f);
+		hio_read(&sih.rsvd3, 4, 1, f);
+		sih.int_gp = hio_read16l(f);
+		sih.int_512 = hio_read16l(f);
+		sih.int_last = hio_read32l(f);
+		hio_read(&sih.name, 28, 1, f);
+		hio_read(&sih.magic, 4, 1, f);
 
-  err3:
-    free(pp_ins);
-  err2:
-    free(pp_pat);
-  err:
-    return -1;
+		mod->xxs[i].len = sih.length;
+		mod->xxs[i].lps = sih.loopbeg;
+		mod->xxs[i].lpe = sih.loopend;
+		if (mod->xxs[i].lpe == 0xffff)
+			mod->xxs[i].lpe = 0;
+		mod->xxs[i].flg = mod->xxs[i].lpe > 0 ? XMP_SAMPLE_LOOP : 0;
+		mod->xxi[i].sub[0].vol = sih.vol;
+		mod->xxi[i].sub[0].pan = 0x80;
+		mod->xxi[i].sub[0].sid = i;
+		mod->xxi[i].nsm = 1;
+
+		instrument_name(mod, i, sih.name, 12);
+
+		D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
+		   mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
+		   mod->xxs[i].lpe,
+		   mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
+		   mod->xxi[i].sub[0].vol, sih.c2spd);
+
+		sih.c2spd = 8363 * sih.c2spd / 8448;
+		c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo,
+			      &mod->xxi[i].sub[0].fin);
+	}
+
+	if (pattern_init(mod) < 0)
+		goto err3;
+
+	/* Read and convert patterns */
+	D_(D_INFO "Stored patterns: %d", mod->pat);
+
+	for (i = 0; i < mod->pat; i++) {
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
+			goto err3;
+
+		if (pp_pat[i] == 0)
+			continue;
+
+		hio_seek(f, start + (pp_pat[i] << 4), SEEK_SET);
+		if (broken)
+			hio_seek(f, 2, SEEK_CUR);
+
+		for (r = 0; r < 64;) {
+			b = hio_read8(f);
+
+			if (b == S3M_EOR) {
+				r++;
+				continue;
+			}
+
+			c = b & S3M_CH_MASK;
+			event = c >= mod->chn ? &dummy : &EVENT(i, c, r);
+
+			if (b & S3M_NI_FOLLOW) {
+				n = hio_read8(f);
+
+				switch (n) {
+				case 255:
+					n = 0;
+					break;	/* Empty note */
+				case 254:
+					n = XMP_KEY_OFF;
+					break;	/* Key off */
+				default:
+					n = 37 + 12 * MSN(n) + LSN(n);
+				}
+
+				event->note = n;
+				event->ins = hio_read8(f);;
+			}
+
+			if (b & S3M_VOL_FOLLOWS) {
+				event->vol = hio_read8(f) + 1;
+			}
+
+			if (b & S3M_FX_FOLLOWS) {
+				int t = hio_read8(f);
+				int p = hio_read8(f);
+				if (t <= 10) {
+					event->fxt = fx[t];
+					event->fxp = p;
+					switch (event->fxt) {
+					case FX_SPEED:
+						event->fxp = MSN(event->fxp);
+						break;
+					case FX_NONE:
+						event->fxp = event->fxt = 0;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	free(pp_ins);
+	free(pp_pat);
+
+	/* Read samples */
+	D_(D_INFO "Stored samples: %d", mod->smp);
+
+	for (i = 0; i < mod->ins; i++) {
+		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+			goto err;
+	}
+
+	m->quirk |= QUIRK_VSALL | QUIRKS_ST3;
+	m->read_event_type = READ_EVENT_ST3;
+
+	return 0;
+
+err3:
+	free(pp_ins);
+err2:
+	free(pp_pat);
+err:
+	return -1;
 }
