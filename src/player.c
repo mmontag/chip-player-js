@@ -789,7 +789,9 @@ static void update_volume(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
+#ifndef LIBXMP_CORE_DISABLE_IT
 	struct flow_control *f = &p->flow;
+#endif
 	struct channel_data *xc = &p->xc_data[chn];
 
 	/* Volume slides happen in all frames but the first, except when the

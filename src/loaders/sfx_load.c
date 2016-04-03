@@ -35,225 +35,223 @@
 
 #define MAGIC_SONG	MAGIC4('S','O','N','G')
 
-
-static int sfx_test (HIO_HANDLE *, char *, const int);
-static int sfx_load (struct module_data *, HIO_HANDLE *, const int);
+static int sfx_test(HIO_HANDLE *, char *, const int);
+static int sfx_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader sfx_loader = {
-    "SoundFX v1.3/2.0",
-    sfx_test,
-    sfx_load
+	"SoundFX v1.3/2.0",
+	sfx_test,
+	sfx_load
 };
 
-static int sfx_test(HIO_HANDLE *f, char *t, const int start)
+static int sfx_test(HIO_HANDLE * f, char *t, const int start)
 {
-    uint32 a, b;
+	uint32 a, b;
 
-    hio_seek(f, 4 * 15, SEEK_CUR);
-    a = hio_read32b(f);
-    hio_seek(f, 4 * 15, SEEK_CUR);
-    b = hio_read32b(f);
+	hio_seek(f, 4 * 15, SEEK_CUR);
+	a = hio_read32b(f);
+	hio_seek(f, 4 * 15, SEEK_CUR);
+	b = hio_read32b(f);
 
-    if (a != MAGIC_SONG && b != MAGIC_SONG)
-	return -1;
+	if (a != MAGIC_SONG && b != MAGIC_SONG)
+		return -1;
 
-    read_title(f, t, 0);
+	read_title(f, t, 0);
 
-    return 0;
+	return 0;
 }
 
-
 struct sfx_ins {
-    uint8 name[22];		/* Instrument name */
-    uint16 len;			/* Sample length in words */
-    uint8 finetune;		/* Finetune */
-    uint8 volume;		/* Volume (0-63) */
-    uint16 loop_start;		/* Sample loop start in bytes */
-    uint16 loop_length;		/* Sample loop length in words */
+	uint8 name[22];		/* Instrument name */
+	uint16 len;		/* Sample length in words */
+	uint8 finetune;		/* Finetune */
+	uint8 volume;		/* Volume (0-63) */
+	uint16 loop_start;	/* Sample loop start in bytes */
+	uint16 loop_length;	/* Sample loop length in words */
 };
 
 struct sfx_header {
-    uint32 magic;		/* 'SONG' */
-    uint16 delay;		/* Delay value (tempo), default is 0x38e5 */
-    uint16 unknown[7];		/* ? */
+	uint32 magic;		/* 'SONG' */
+	uint16 delay;		/* Delay value (tempo), default is 0x38e5 */
+	uint16 unknown[7];	/* ? */
 };
 
 struct sfx_header2 {
-    uint8 len;			/* Song length */
-    uint8 restart;		/* Restart pos (?) */
-    uint8 order[128];		/* Order list */
+	uint8 len;		/* Song length */
+	uint8 restart;		/* Restart pos (?) */
+	uint8 order[128];	/* Order list */
 };
 
-
-static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins, const int start)
+static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins,
+			  const int start)
 {
-    struct xmp_module *mod = &m->mod;
-    int i, j;
-    struct xmp_event *event;
-    struct sfx_header sfx;
-    struct sfx_header2 sfx2;
-    uint8 ev[4];
-    int ins_size[31];
-    struct sfx_ins ins[31];	/* Instruments */
+	struct xmp_module *mod = &m->mod;
+	int i, j;
+	struct xmp_event *event;
+	struct sfx_header sfx;
+	struct sfx_header2 sfx2;
+	uint8 ev[4];
+	int ins_size[31];
+	struct sfx_ins ins[31];	/* Instruments */
 
-    LOAD_INIT();
+	LOAD_INIT();
 
-    for (i = 0; i < nins; i++)
-	ins_size[i] = hio_read32b(f);
+	for (i = 0; i < nins; i++)
+		ins_size[i] = hio_read32b(f);
 
-    sfx.magic = hio_read32b(f);
-    sfx.delay = hio_read16b(f);
-    if (sfx.delay < 178)	/* min value for 10000bpm */
-	return -1;
+	sfx.magic = hio_read32b(f);
+	sfx.delay = hio_read16b(f);
+	if (sfx.delay < 178)	/* min value for 10000bpm */
+		return -1;
 
-    hio_read(&sfx.unknown, 14, 1, f);
+	hio_read(&sfx.unknown, 14, 1, f);
 
-    if (sfx.magic != MAGIC_SONG)
-	return -1;
+	if (sfx.magic != MAGIC_SONG)
+		return -1;
 
-    mod->chn = 4;
-    mod->ins = nins;
-    mod->smp = mod->ins;
-    mod->bpm = 14565 * 122 / sfx.delay;
+	mod->chn = 4;
+	mod->ins = nins;
+	mod->smp = mod->ins;
+	mod->bpm = 14565 * 122 / sfx.delay;
 
-    for (i = 0; i < mod->ins; i++) {
-	hio_read(&ins[i].name, 22, 1, f);
-	ins[i].len = hio_read16b(f);
-	ins[i].finetune = hio_read8(f);
-	ins[i].volume = hio_read8(f);
-	ins[i].loop_start = hio_read16b(f);
-	ins[i].loop_length = hio_read16b(f);
-    }
-
-    sfx2.len = hio_read8(f);
-    sfx2.restart = hio_read8(f);
-    if (hio_read(&sfx2.order, 1, 128, f) != 128)
-        return -1;
-
-    mod->len = sfx2.len;
-    if (mod->len > 0x7f)
-	return -1;
-
-    memcpy (mod->xxo, sfx2.order, mod->len);
-    for (mod->pat = i = 0; i < mod->len; i++)
-	if (mod->xxo[i] > mod->pat)
-	    mod->pat = mod->xxo[i];
-    mod->pat++;
-
-    mod->trk = mod->chn * mod->pat;
-
-    if (mod->ins == 15) {
-        set_type(m, "SoundFX 1.3");
-    } else {
-        set_type(m, "SoundFX 2.0");
-    }
-
-    MODULE_INFO();
-
-    if (instrument_init(mod) < 0)
-	return -1;
-
-    for (i = 0; i < mod->ins; i++) {
-	struct xmp_instrument *xxi;
-	struct xmp_subinstrument *sub;
-	struct xmp_sample *xxs;
-
-	if (subinstrument_alloc(mod, i, 1) < 0)
-	    return -1;
-
-	xxi = &mod->xxi[i];
-	xxs = &mod->xxs[i];
-	sub = &xxi->sub[0];
-
-	xxs->len = ins_size[i];
-	xxs->lps = ins[i].loop_start;
-	xxs->lpe = xxs->lps + 2 * ins[i].loop_length;
-	xxs->flg = ins[i].loop_length > 1 ? XMP_SAMPLE_LOOP : 0;
-	xxi->nsm = 1;
-	sub->vol = ins[i].volume;
-	sub->fin = (int8)(ins[i].finetune << 4);	/* unsure */
-	sub->pan = 0x80;
-	sub->sid = i;
-
-	instrument_name(mod, i, ins[i].name, 22);
-
-	D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c  %02x %+d",
-		i, xxi->name, xxs->len, xxs->lps, xxs->lpe,
-		xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol,
-		sub->fin >> 4);
-    }
-
-    if (pattern_init(mod) < 0)
-	return -1;
-
-    D_(D_INFO "Stored patterns: %d", mod->pat);
-
-    for (i = 0; i < mod->pat; i++) {
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
-	    return -1;
-
-	for (j = 0; j < 64 * mod->chn; j++) {
-	    event = &EVENT(i, j % mod->chn, j / mod->chn);
-	    hio_read(ev, 1, 4, f);
-
-	    event->note = period_to_note((LSN (ev[0]) << 8) | ev[1]);
-	    event->ins = (MSN (ev[0]) << 4) | MSN (ev[2]);
-	    event->fxp = ev[3];
-
-	    switch (LSN(ev[2])) {
-	    case 0x01:			/* Arpeggio */
-		event->fxt = FX_ARPEGGIO;
-		break;
-	    case 0x02:			/* Pitch bend */
-		if (event->fxp >> 4) {
-		    event->fxt = FX_PORTA_DN;
-		    event->fxp >>= 4;
-		} else if (event->fxp & 0x0f) {
-		    event->fxt = FX_PORTA_UP;
-		    event->fxp &= 0x0f;
-		}
-		break;
-	    case 0x5:			/* Add to volume */
-		event->fxt = FX_VOL_ADD;
-		break;
-	    case 0x6:			/* Subtract from volume */
-		event->fxt = FX_VOL_SUB;
-		break;
-	    case 0x7:			/* Add semitones to period */
-		event->fxt = FX_PITCH_ADD;
-		break;
-	    case 0x8:			/* Subtract semitones from period */
-		event->fxt = FX_PITCH_SUB;
-		break;
-	    case 0x3:			/* LED on */
-	    case 0x4:			/* LED off */
-	    default:
-		event->fxt = event->fxp = 0;
-		break;
-	    }
+	for (i = 0; i < mod->ins; i++) {
+		hio_read(&ins[i].name, 22, 1, f);
+		ins[i].len = hio_read16b(f);
+		ins[i].finetune = hio_read8(f);
+		ins[i].volume = hio_read8(f);
+		ins[i].loop_start = hio_read16b(f);
+		ins[i].loop_length = hio_read16b(f);
 	}
-    }
 
-    m->quirk |= QUIRK_MODRNG | QUIRK_PBALL;
+	sfx2.len = hio_read8(f);
+	sfx2.restart = hio_read8(f);
+	if (hio_read(&sfx2.order, 1, 128, f) != 128)
+		return -1;
 
-    /* Read samples */
+	mod->len = sfx2.len;
+	if (mod->len > 0x7f)
+		return -1;
 
-    D_(D_INFO "Stored samples: %d", mod->smp);
+	memcpy(mod->xxo, sfx2.order, mod->len);
+	for (mod->pat = i = 0; i < mod->len; i++)
+		if (mod->xxo[i] > mod->pat)
+			mod->pat = mod->xxo[i];
+	mod->pat++;
 
-    for (i = 0; i < mod->ins; i++) {
-	if (mod->xxs[i].len <= 2)
-	    continue;
-	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
-	    return -1;
-    }
+	mod->trk = mod->chn * mod->pat;
 
-    return 0;
+	if (mod->ins == 15) {
+		set_type(m, "SoundFX 1.3");
+	} else {
+		set_type(m, "SoundFX 2.0");
+	}
+
+	MODULE_INFO();
+
+	if (instrument_init(mod) < 0)
+		return -1;
+
+	for (i = 0; i < mod->ins; i++) {
+		struct xmp_instrument *xxi;
+		struct xmp_subinstrument *sub;
+		struct xmp_sample *xxs;
+
+		if (subinstrument_alloc(mod, i, 1) < 0)
+			return -1;
+
+		xxi = &mod->xxi[i];
+		xxs = &mod->xxs[i];
+		sub = &xxi->sub[0];
+
+		xxs->len = ins_size[i];
+		xxs->lps = ins[i].loop_start;
+		xxs->lpe = xxs->lps + 2 * ins[i].loop_length;
+		xxs->flg = ins[i].loop_length > 1 ? XMP_SAMPLE_LOOP : 0;
+		xxi->nsm = 1;
+		sub->vol = ins[i].volume;
+		sub->fin = (int8) (ins[i].finetune << 4);	/* unsure */
+		sub->pan = 0x80;
+		sub->sid = i;
+
+		instrument_name(mod, i, ins[i].name, 22);
+
+		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c  %02x %+d",
+		   i, xxi->name, xxs->len, xxs->lps, xxs->lpe,
+		   xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol,
+		   sub->fin >> 4);
+	}
+
+	if (pattern_init(mod) < 0)
+		return -1;
+
+	D_(D_INFO "Stored patterns: %d", mod->pat);
+
+	for (i = 0; i < mod->pat; i++) {
+		if (pattern_tracks_alloc(mod, i, 64) < 0)
+			return -1;
+
+		for (j = 0; j < 64 * mod->chn; j++) {
+			event = &EVENT(i, j % mod->chn, j / mod->chn);
+			hio_read(ev, 1, 4, f);
+
+			event->note = period_to_note((LSN(ev[0]) << 8) | ev[1]);
+			event->ins = (MSN(ev[0]) << 4) | MSN(ev[2]);
+			event->fxp = ev[3];
+
+			switch (LSN(ev[2])) {
+			case 0x01:	/* Arpeggio */
+				event->fxt = FX_ARPEGGIO;
+				break;
+			case 0x02:	/* Pitch bend */
+				if (event->fxp >> 4) {
+					event->fxt = FX_PORTA_DN;
+					event->fxp >>= 4;
+				} else if (event->fxp & 0x0f) {
+					event->fxt = FX_PORTA_UP;
+					event->fxp &= 0x0f;
+				}
+				break;
+			case 0x5:	/* Add to volume */
+				event->fxt = FX_VOL_ADD;
+				break;
+			case 0x6:	/* Subtract from volume */
+				event->fxt = FX_VOL_SUB;
+				break;
+			case 0x7:	/* Add semitones to period */
+				event->fxt = FX_PITCH_ADD;
+				break;
+			case 0x8:	/* Subtract semitones from period */
+				event->fxt = FX_PITCH_SUB;
+				break;
+			case 0x3:	/* LED on */
+			case 0x4:	/* LED off */
+			default:
+				event->fxt = event->fxp = 0;
+				break;
+			}
+		}
+	}
+
+	m->quirk |= QUIRK_MODRNG | QUIRK_PBALL;
+
+	/* Read samples */
+
+	D_(D_INFO "Stored samples: %d", mod->smp);
+
+	for (i = 0; i < mod->ins; i++) {
+		if (mod->xxs[i].len <= 2)
+			continue;
+		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+			return -1;
+	}
+
+	return 0;
 }
-
 
 static int sfx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
-    if (sfx_13_20_load(m, f, 15, start) < 0)
-	return sfx_13_20_load(m, f, 31, start);
-    return 0;
+	if (sfx_13_20_load(m, f, 15, start) < 0)
+		return sfx_13_20_load(m, f, 31, start);
+
+	return 0;
 }
