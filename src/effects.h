@@ -82,7 +82,6 @@
 #define FX_PANBRELLO	0x8a
 #define FX_PANBRELLO_WF	0x8b
 #define FX_HIOFFSET	0x8c
-#define FX_SURROUND	0x8d
 #define FX_IT_BREAK	0x8e	/* like FX_BREAK with hex parameter */
 #endif
 
@@ -113,6 +112,7 @@
 #define FX_PITCH_SUB	0xb9	/* SFX add steps to current note */
 #endif
 
+#define FX_SURROUND	0x8d	/* S3M/IT */
 #define FX_S3M_SPEED	0xa3	/* S3M */
 #define FX_VOLSLIDE_2	0xa4
 #define FX_FINETUNE	0xa6

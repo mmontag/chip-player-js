@@ -701,6 +701,9 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 			break;
 		}
 		break;
+	case FX_SURROUND:
+		xc->pan.surround = fxp;
+		break;
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 	case FX_TRK_VOL:	/* Track volume setting */
@@ -811,9 +814,6 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_HIOFFSET:	/* High offset */
 		xc->offset.val &= 0xffff;
 		xc->offset.val |= fxp << 16;
-		break;
-	case FX_SURROUND:
-		xc->pan.surround = fxp;
 		break;
 #endif
 
