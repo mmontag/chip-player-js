@@ -1,6 +1,18 @@
 Stable versions
 ---------------
 
+4.3.13 (20160417):
+	Fix bugs caught in the OpenMPT test cases:
+	- fix IT volume column fine volume slide with row delay
+	Other changes:
+	- fix MOD vs XM set finetune effect
+	- fix IT old instrument volume
+	- fix IT panbrello speed
+	- fix IT random pan variation left bias
+	- fix IT default pan in sample mode (reported by Hai Shalom)
+	- fix S3M set pan effect (reported by Hai Shalom and Johannes Schultz)
+	- code refactoring and cleanup
+
 4.3.12 (20150305):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT note off with instrument

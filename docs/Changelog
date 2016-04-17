@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.3.13 ():
+4.3.13 (20160417):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT volume column fine volume slide with row delay
 	Other changes:
@@ -10,7 +10,7 @@ Stable versions
 	- fix IT panbrello speed
 	- fix IT random pan variation left bias
 	- fix IT default pan in sample mode (reported by Hai Shalom)
-	- fix S3M X effect in Impulse Tracker modules (reported by Hai Shalom)
+	- fix S3M set pan effect (reported by Hai Shalom and Johannes Schultz)
 	- code refactoring and cleanup
 
 4.3.12 (20160305):
