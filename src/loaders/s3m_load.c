@@ -142,7 +142,7 @@ static const uint8 fx[] = {
 	FX_FINE_VIBRATO,	/* Uxx  Fine vibrato */
 	FX_GLOBALVOL,		/* Vxx  Set global volume */
 	NONE,
-	FX_SETPAN,		/* Xxx  Set pan (Impulse/Schism/OpenMPT) */
+	FX_SETPAN,		/* Xxx  Set pan */
 	NONE,
 	NONE
 };
@@ -193,6 +193,27 @@ static void xlat_fx(int c, struct xmp_event *e)
 				e->fxt = e->fxp = 0;
 		}
 		break;
+	case FX_SETPAN:
+		/* Saga Musix says: "The X effect in S3M files is not
+		 * exclusive to IT and clones. You will find tons of S3Ms made
+		 * with ST3 itself using this effect (and relying on an
+		 * external player being used). X in S3M also behaves
+		 * differently than in IT, which your code does not seem to
+		 * handle: X00 - X80 is left... right, XA4 is surround (like
+		 * S91 in IT), other values are not supposed to do anything.
+		 */
+		if (e->fxp == 0xa4) {
+			// surround
+			e->fxt = FX_SURROUND;
+			e->fxp = 1;
+		} else {
+			int pan = e->fxp << 1;
+			if (pan > 0xff) {
+				pan = 0xff;
+			}
+			e->fxp = pan;
+		}
+		break;
 	case NONE:		/* No effect */
 		e->fxt = e->fxp = 0;
 		break;
@@ -216,7 +237,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	uint16 *pp_ins;			/* Parapointers to instruments */
 	uint16 *pp_pat;			/* Parapointers to patterns */
 	int ret;
-	int extra_effects = 0;		/* Impulse tracker S3M effects */
 
 	LOAD_INIT();
 
@@ -381,20 +401,17 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 				 (sfh.version & 0x0f00) >> 8,
 				 sfh.version & 0xff);
 		}
-		extra_effects = 1;
 		break;
 	case 5:
 		snprintf(tracker_name, 40, "OpenMPT %d.%02x",
 			 (sfh.version & 0x0f00) >> 8, sfh.version & 0xff);
 		m->quirk |= QUIRK_ST3BUGS;
-		extra_effects = 1;
 		break;
 	case 4:
 		if (sfh.version != 0x4100) {
 			snprintf(tracker_name, 40, "Schism Tracker %d.%02x",
 				 (sfh.version & 0x0f00) >> 8,
 				 sfh.version & 0xff);
-			extra_effects = 1;
 			break;
 		}
 		/* fall through */
@@ -474,10 +491,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 				}
 				event->fxp = hio_read8(f);
 				xlat_fx(c, event);
-
-				if (!extra_effects && event->fxt == FX_SETPAN) {
-					event->fxt = event->fxp = 0;
-				}
 
 				pat_len -= 2;
 			}
