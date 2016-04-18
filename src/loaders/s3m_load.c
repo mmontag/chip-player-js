@@ -207,7 +207,7 @@ static void xlat_fx(int c, struct xmp_event *e)
 			e->fxt = FX_SURROUND;
 			e->fxp = 1;
 		} else {
-			int pan = e->fxp << 1;
+			int pan = ((int)e->fxp) << 1;
 			if (pan > 0xff) {
 				pan = 0xff;
 			}
