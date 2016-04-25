@@ -236,11 +236,131 @@ static int is_st_ins(char *s)
 }
 
 
+static int get_tracker_id(struct module_data *m, struct mod_header *mh, int id)
+{
+    struct xmp_module *mod = &m->mod;
+    int has_loop_0 = 0;
+    int has_vol_in_empty_ins = 0;
+    int i;
+
+    /* Check if has instruments with loop size 0 */
+    for (i = 0; i < 31; i++) {
+	if (mh->ins[i].loop_size == 0) {
+            has_loop_0 = 1;
+	    break;
+	}
+    }
+
+    /* Check if has instruments with size 0 and volume > 0 */
+    for (i = 0; i < 31; i++) {
+	if (mh->ins[i].size == 0 && mh->ins[i].volume > 0) {
+	    has_vol_in_empty_ins = 1;
+	    break;
+	}
+    }
+
+    /* Test Protracker-like files
+     */
+    if (mod->chn == 4 && mh->restart == mod->pat) {
+	id = TRACKER_SOUNDTRACKER;
+    } else if (mod->chn == 4 && mh->restart == 0x78) {
+	/* Can't trust this for Noisetracker, MOD.Data City Remix has
+	 * Protracker effects and Noisetracker restart byte */
+        id = TRACKER_PROBABLY_NOISETRACKER;
+    } else if (mh->restart < 0x7f) {
+	if (mod->chn == 4 && !has_vol_in_empty_ins) {
+	    id = TRACKER_NOISETRACKER;
+	} else {
+	    id = TRACKER_UNKNOWN;
+	}
+	mod->rst = mh->restart;
+    }
+
+    if (mh->restart == 0x7f) {
+        if (mod->chn == 4) {
+	    if (has_loop_0) {
+	        id = TRACKER_CLONE;
+	    }
+        } else {
+	    id = TRACKER_SCREAMTRACKER3;
+	    m->read_event_type = READ_EVENT_ST3;
+        }
+    }
+
+    if (mh->restart != 0x78 && mh->restart < 0x7f) {
+	if (!has_loop_0) {	/* All loops are size 2 or greater */
+	    for (i = 0; i < 31; i++) {
+		if (mh->ins[i].size == 1 && mh->ins[i].volume == 0) {
+		    return TRACKER_CONVERTED;
+		}
+	    }
+
+	    for (i = 0; i < 31; i++) {
+	        if (is_st_ins((char *)mh->ins[i].name))
+		    break;
+	    }
+	    if (i == 31) {	/* No st- instruments */
+	        for (i = 0; i < 31; i++) {
+		    if (mh->ins[i].size == 0 && mh->ins[i].loop_size == 1) {
+			switch (mod->chn) {
+			case 4:
+			    id = has_vol_in_empty_ins ?
+				TRACKER_OPENMPT :
+				TRACKER_NOISETRACKER;	/* or Octalyser */
+			    break;
+			case 6:
+			case 8:
+		            id = TRACKER_OCTALYSER;
+			    break;
+			default:
+		            id = TRACKER_UNKNOWN;
+			}
+		        return id;
+		    }
+	        }
+
+		if (mod->chn == 4) {
+	    	    id = TRACKER_PROTRACKER;
+		} else if (mod->chn == 6 || mod->chn == 8) {
+	    	    id = TRACKER_FASTTRACKER;	/* FastTracker 1.01? */
+		} else {
+	    	    id = TRACKER_UNKNOWN;
+		}
+	    }
+	} else {	/* Has loops with 0 size */
+	    for (i = 15; i < 31; i++) {
+	        if (strlen((char *)mh->ins[i].name) || mh->ins[i].size > 0)
+		    break;
+	    }
+	    if (i == 31 && is_st_ins((char *)mh->ins[14].name)) {
+		return TRACKER_CONVERTEDST;
+	    }
+
+	    /* Assume that Fast Tracker modules won't have ST- instruments */
+	    for (i = 0; i < 31; i++) {
+	        if (is_st_ins((char *)mh->ins[i].name))
+		    break;
+	    }
+	    if (i < 31) {
+		return TRACKER_UNKNOWN_CONV;
+	    }
+
+	    if (mod->chn == 4 || mod->chn == 6 || mod->chn == 8) {
+	    	return TRACKER_FASTTRACKER;
+	    }
+
+	    id = TRACKER_UNKNOWN;	/* ??!? */
+	}
+    }
+
+    return id;
+}
+
 static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
-    int smp_size, /*pat_size,*/ wow, ptsong = 0;
+    int smp_size, ptsong = 0;
     struct xmp_event *event;
     struct mod_header mh;
     uint8 mod_event[4];
@@ -249,8 +369,6 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */
     int tracker_id = TRACKER_PROTRACKER;
-    int has_loop_0 = 0;
-    int has_vol_in_empty_ins = 0;
     int out_of_range = 0;
 
     LOAD_INIT();
@@ -405,133 +523,20 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
      * the module is an 8 channel WOW.
      */
 
-    if ((wow = (!strncmp(magic, "M.K.", 4) &&
-		(0x43c + mod->pat * 32 * 0x40 + smp_size == m->size)))) {
+    if ((!strncmp(magic, "M.K.", 4) &&
+		(0x43c + mod->pat * 32 * 0x40 + smp_size == m->size))) {
 	mod->chn = 8;
 	tracker_id = TRACKER_MODSGRAVE;
-	goto skip_test;
     }
-
-    /* Test for Protracker song files
-     */
+    /* Test for Protracker song files */
     else if ((ptsong = (!strncmp((char *)magic, "M.K.", 4) &&
 		(0x43c + mod->pat * 0x400 == m->size)))) {
 	tracker_id = TRACKER_PROTRACKER;
 	goto skip_test;
     }
-
-    /* Check if has instruments with loop size 0 */
-    for (i = 0; i < 31; i++) {
-	if (mh.ins[i].loop_size == 0) {
-            has_loop_0 = 1;
-	    break;
-	}
-    }
-
-    /* Check if has instruments with size 0 and volume > 0 */
-    for (i = 0; i < 31; i++) {
-	if (mh.ins[i].size == 0 && mh.ins[i].volume > 0) {
-	    has_vol_in_empty_ins = 1;
-	    break;
-	}
-    }
-
-    /* Test Protracker-like files
-     */
-    if (mod->chn == 4 && mh.restart == mod->pat) {
-	tracker_id = TRACKER_SOUNDTRACKER;
-    } else if (mod->chn == 4 && mh.restart == 0x78) {
-	/* Can't trust this for Noisetracker, MOD.Data City Remix has
-	 * Protracker effects and Noisetracker restart byte */
-        tracker_id = TRACKER_PROBABLY_NOISETRACKER;
-    } else if (mh.restart < 0x7f) {
-	if (mod->chn == 4 && !has_vol_in_empty_ins) {
-	    tracker_id = TRACKER_NOISETRACKER;
-	} else {
-	    tracker_id = TRACKER_UNKNOWN;
-	}
-	mod->rst = mh.restart;
-    }
-
-    if (mh.restart == 0x7f) {
-        if (mod->chn == 4) {
-	    if (has_loop_0) {
-	        tracker_id = TRACKER_CLONE;
-	    }
-        } else {
-	    tracker_id = TRACKER_SCREAMTRACKER3;
-	    m->read_event_type = READ_EVENT_ST3;
-        }
-    }
-
-    if (mh.restart != 0x78 && mh.restart < 0x7f) {
-	if (!has_loop_0) {	/* All loops are size 2 or greater */
-	    for (i = 0; i < 31; i++) {
-		if (mh.ins[i].size == 1 && mh.ins[i].volume == 0) {
-		    tracker_id = TRACKER_CONVERTED;
-		    goto skip_test;
-		}
-	    }
-
-	    for (i = 0; i < 31; i++) {
-	        if (is_st_ins((char *)mh.ins[i].name))
-		    break;
-	    }
-	    if (i == 31) {	/* No st- instruments */
-	        for (i = 0; i < 31; i++) {
-		    if (mh.ins[i].size == 0 && mh.ins[i].loop_size == 1) {
-			switch (mod->chn) {
-			case 4:
-			    tracker_id = has_vol_in_empty_ins ?
-				TRACKER_OPENMPT :
-				TRACKER_NOISETRACKER;	/* or Octalyser */
-			    break;
-			case 6:
-			case 8:
-		            tracker_id = TRACKER_OCTALYSER;
-			    break;
-			default:
-		            tracker_id = TRACKER_UNKNOWN;
-			}
-		        goto skip_test;
-		    }
-	        }
-
-		if (mod->chn == 4) {
-	    	    tracker_id = TRACKER_PROTRACKER;
-		} else if (mod->chn == 6 || mod->chn == 8) {
-	    	    tracker_id = TRACKER_FASTTRACKER;	/* FastTracker 1.01? */
-		} else {
-	    	    tracker_id = TRACKER_UNKNOWN;
-		}
-	    }
-	} else {	/* Has loops with 0 size */
-	    for (i = 15; i < 31; i++) {
-	        if (strlen((char *)mh.ins[i].name) || mh.ins[i].size > 0)
-		    break;
-	    }
-	    if (i == 31 && is_st_ins((char *)mh.ins[14].name)) {
-		tracker_id = TRACKER_CONVERTEDST;
-		goto skip_test;
-	    }
-
-	    /* Assume that Fast Tracker modules won't have ST- instruments */
-	    for (i = 0; i < 31; i++) {
-	        if (is_st_ins((char *)mh.ins[i].name))
-		    break;
-	    }
-	    if (i < 31) {
-		tracker_id = TRACKER_UNKNOWN_CONV;
-		goto skip_test;
-	    }
-
-	    if (mod->chn == 4 || mod->chn == 6 || mod->chn == 8) {
-	    	tracker_id = TRACKER_FASTTRACKER;
-		goto skip_test;
-	    }
-
-	    tracker_id = TRACKER_UNKNOWN;	/* ??!? */
-	}
+    /* something else */
+    else {
+        tracker_id = get_tracker_id(m, &mh, tracker_id);
     }
 
 skip_test:
