@@ -258,6 +258,7 @@ PROBLEMATIC	= length_data_jack \
 		  length_condom_corruption \
 		  length_klisje_paa_klisje \
 		  length_killvictor \
+		  length_nebulos \
 		  length_roadblast \
 		  length_ode2ptk
 
