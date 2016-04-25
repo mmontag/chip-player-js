@@ -235,125 +235,143 @@ static int is_st_ins(char *s)
 	return 1;
 }
 
-
 static int get_tracker_id(struct module_data *m, struct mod_header *mh, int id)
 {
-    struct xmp_module *mod = &m->mod;
-    int has_loop_0 = 0;
-    int has_vol_in_empty_ins = 0;
-    int i;
+	struct xmp_module *mod = &m->mod;
+	int has_loop_0 = 0;
+	int has_vol_in_empty_ins = 0;
+	int i;
 
-    /* Check if has instruments with loop size 0 */
-    for (i = 0; i < 31; i++) {
-	if (mh->ins[i].loop_size == 0) {
-            has_loop_0 = 1;
-	    break;
-	}
-    }
-
-    /* Check if has instruments with size 0 and volume > 0 */
-    for (i = 0; i < 31; i++) {
-	if (mh->ins[i].size == 0 && mh->ins[i].volume > 0) {
-	    has_vol_in_empty_ins = 1;
-	    break;
-	}
-    }
-
-    /* Test Protracker-like files
-     */
-    if (mod->chn == 4 && mh->restart == mod->pat) {
-	id = TRACKER_SOUNDTRACKER;
-    } else if (mod->chn == 4 && mh->restart == 0x78) {
-	/* Can't trust this for Noisetracker, MOD.Data City Remix has
-	 * Protracker effects and Noisetracker restart byte */
-        id = TRACKER_PROBABLY_NOISETRACKER;
-    } else if (mh->restart < 0x7f) {
-	if (mod->chn == 4 && !has_vol_in_empty_ins) {
-	    id = TRACKER_NOISETRACKER;
-	} else {
-	    id = TRACKER_UNKNOWN;
-	}
-	mod->rst = mh->restart;
-    }
-
-    if (mh->restart == 0x7f) {
-        if (mod->chn == 4) {
-	    if (has_loop_0) {
-	        id = TRACKER_CLONE;
-	    }
-        } else {
-	    id = TRACKER_SCREAMTRACKER3;
-	    m->read_event_type = READ_EVENT_ST3;
-        }
-    }
-
-    if (mh->restart != 0x78 && mh->restart < 0x7f) {
-	if (!has_loop_0) {	/* All loops are size 2 or greater */
-	    for (i = 0; i < 31; i++) {
-		if (mh->ins[i].size == 1 && mh->ins[i].volume == 0) {
-		    return TRACKER_CONVERTED;
+	/* Check if has instruments with loop size 0 */
+	for (i = 0; i < 31; i++) {
+		if (mh->ins[i].loop_size == 0) {
+			has_loop_0 = 1;
+			break;
 		}
-	    }
+	}
 
-	    for (i = 0; i < 31; i++) {
-	        if (is_st_ins((char *)mh->ins[i].name))
-		    break;
-	    }
-	    if (i == 31) {	/* No st- instruments */
-	        for (i = 0; i < 31; i++) {
-		    if (mh->ins[i].size == 0 && mh->ins[i].loop_size == 1) {
-			switch (mod->chn) {
-			case 4:
-			    id = has_vol_in_empty_ins ?
-				TRACKER_OPENMPT :
-				TRACKER_NOISETRACKER;	/* or Octalyser */
-			    break;
-			case 6:
-			case 8:
-		            id = TRACKER_OCTALYSER;
-			    break;
-			default:
-		            id = TRACKER_UNKNOWN;
-			}
-		        return id;
-		    }
-	        }
+	/* Check if has instruments with size 0 and volume > 0 */
+	for (i = 0; i < 31; i++) {
+		if (mh->ins[i].size == 0 && mh->ins[i].volume > 0) {
+			has_vol_in_empty_ins = 1;
+			break;
+		}
+	}
 
+	/*
+	 * Test Protracker-like files
+	 */
+	if (mh->restart == mod->pat) {
 		if (mod->chn == 4) {
-	    	    id = TRACKER_PROTRACKER;
-		} else if (mod->chn == 6 || mod->chn == 8) {
-	    	    id = TRACKER_FASTTRACKER;	/* FastTracker 1.01? */
+			id = TRACKER_SOUNDTRACKER;
 		} else {
-	    	    id = TRACKER_UNKNOWN;
+			id = TRACKER_UNKNOWN;
 		}
-	    }
-	} else {	/* Has loops with 0 size */
-	    for (i = 15; i < 31; i++) {
-	        if (strlen((char *)mh->ins[i].name) || mh->ins[i].size > 0)
-		    break;
-	    }
-	    if (i == 31 && is_st_ins((char *)mh->ins[14].name)) {
-		return TRACKER_CONVERTEDST;
-	    }
-
-	    /* Assume that Fast Tracker modules won't have ST- instruments */
-	    for (i = 0; i < 31; i++) {
-	        if (is_st_ins((char *)mh->ins[i].name))
-		    break;
-	    }
-	    if (i < 31) {
-		return TRACKER_UNKNOWN_CONV;
-	    }
-
-	    if (mod->chn == 4 || mod->chn == 6 || mod->chn == 8) {
-	    	return TRACKER_FASTTRACKER;
-	    }
-
-	    id = TRACKER_UNKNOWN;	/* ??!? */
+	} else if (mh->restart == 0x78) {
+		if (mod->chn == 4) {
+			/* Can't trust this for Noisetracker, MOD.Data City Remix
+			 * has Protracker effects and Noisetracker restart byte
+			 */
+			id = TRACKER_PROBABLY_NOISETRACKER;
+		} else {
+			id = TRACKER_UNKNOWN;
+		}
+		return id;
+	} else if (mh->restart < 0x7f) {
+		if (mod->chn == 4 && !has_vol_in_empty_ins) {
+			id = TRACKER_NOISETRACKER;
+		} else {
+			id = TRACKER_UNKNOWN; /* ? */
+		}
+		mod->rst = mh->restart;
+	} else if (mh->restart == 0x7f) {
+		if (mod->chn == 4) {
+			if (has_loop_0) {
+				id = TRACKER_CLONE;
+			}
+		} else {
+			id = TRACKER_SCREAMTRACKER3;
+		}
+		return id;
+	} else if (mh->restart > 0x7f) {
+		id = TRACKER_UNKNOWN; /* ? */
+		return id;
 	}
-    }
 
-    return id;
+	if (!has_loop_0) { /* All loops are size 2 or greater */
+
+		for (i = 0; i < 31; i++) {
+			if (mh->ins[i].size == 1 && mh->ins[i].volume == 0) {
+				return TRACKER_CONVERTED;
+			}
+		}
+
+		for (i = 0; i < 31; i++) {
+			if (is_st_ins((char *)mh->ins[i].name))
+				break;
+		}
+		if (i == 31) {	/* No st- instruments */
+			for (i = 0; i < 31; i++) {
+				if (mh->ins[i].size != 0
+				    || mh->ins[i].loop_size != 1) {
+					continue;
+				}
+
+				switch (mod->chn) {
+				case 4:
+					if (has_vol_in_empty_ins) {
+						id = TRACKER_OPENMPT;
+					} else {
+						id = TRACKER_NOISETRACKER;
+						/* or Octalyser */
+					}
+					break;
+				case 6:
+				case 8:
+					id = TRACKER_OCTALYSER;
+					break;
+				default:
+					id = TRACKER_UNKNOWN;
+				}
+				return id;
+			}
+
+			if (mod->chn == 4) {
+				id = TRACKER_PROTRACKER;
+			} else if (mod->chn == 6 || mod->chn == 8) {
+				/* FastTracker 1.01? */
+				id = TRACKER_FASTTRACKER;
+			} else {
+				id = TRACKER_UNKNOWN;
+			}
+		}
+	} else { /* Has loops with size 0 */
+		for (i = 15; i < 31; i++) {
+			if (strlen((char *)mh->ins[i].name)
+			    || mh->ins[i].size > 0)
+				break;
+		}
+		if (i == 31 && is_st_ins((char *)mh->ins[14].name)) {
+			return TRACKER_CONVERTEDST;
+		}
+
+		/* Assume that Fast Tracker modules won't have ST- instruments */
+		for (i = 0; i < 31; i++) {
+			if (is_st_ins((char *)mh->ins[i].name))
+				break;
+		}
+		if (i < 31) {
+			return TRACKER_UNKNOWN_CONV;
+		}
+
+		if (mod->chn == 4 || mod->chn == 6 || mod->chn == 8) {
+			return TRACKER_FASTTRACKER;
+		}
+
+		id = TRACKER_UNKNOWN;	/* ??!? */
+	}
+
+	return id;
 }
 
 static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
