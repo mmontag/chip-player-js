@@ -275,7 +275,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 		    frame_count += row_count * speed;
 		    row_count = 0;
 		    if (parm) {
-			if (p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
+			if (HAS_QUIRK(QUIRK_NOBPM) || p->flags & XMP_FLAGS_VBLANK || parm < 0x20) {
 			    if (parm > 0) {
 			        speed = parm;
 #ifndef LIBXMP_CORE_PLAYER

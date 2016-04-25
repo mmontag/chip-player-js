@@ -453,8 +453,12 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		break;
 	case FX_SPEED:		/* Set speed */
+		if (HAS_QUIRK(QUIRK_NOBPM) || p->flags & XMP_FLAGS_VBLANK) {
+			goto fx_s3m_speed;
+		}
+
 		/* speedup.xm needs BPM = 20 */
-		if (p->flags & XMP_FLAGS_VBLANK || fxp < 0x20) {
+		if (fxp < 0x20) {
 			goto fx_s3m_speed;
 		} else {
 			goto fx_s3m_bpm;

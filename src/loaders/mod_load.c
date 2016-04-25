@@ -631,10 +631,12 @@ skip_test:
     case TRACKER_PROBABLY_NOISETRACKER:
     case TRACKER_NOISETRACKER:
 	tracker = "Noisetracker";
+	m->quirk |= QUIRK_NOBPM;
 	ptkloop = 1;
 	break;
     case TRACKER_SOUNDTRACKER:
 	tracker = "Soundtracker";
+	m->quirk |= QUIRK_NOBPM;
 	ptkloop = 1;
 	break;
     case TRACKER_FASTTRACKER:

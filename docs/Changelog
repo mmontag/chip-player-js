@@ -3,6 +3,7 @@ Stable versions
 
 4.3.14 ():
 	- Fix S3M channel reset on sample end (reported by Alexander Null)
+	- Fix Noisetracker MOD speed setting (reported by Tero Auvinen)
 
 4.3.13 (20160417):
 	Fix bugs caught in the OpenMPT test cases:

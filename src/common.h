@@ -159,7 +159,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_RTDELAY	(1 << 25)	/* Delay effect retrigs instrument */
 #define QUIRK_FT2BUGS	(1 << 26)	/* FT2 bug compatibility */
 #define QUIRK_MARKER	(1 << 27)	/* Patterns 0xfe and 0xff reserved */
-/*#define QUIRK_S3MPMEM	(1 << 28)*/	/* S3M-style parameter memory */
+#define QUIRK_NOBPM	(1 << 28)	/* Adjust speed only, no BPM */
 /*#define QUIRK_XMFINE	(1 << 29)*/	/* XM-style fine tune */
 #define QUIRK_RSTCHN	(1 << 30)	/* Reset channel on sample end */
 
