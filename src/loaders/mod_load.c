@@ -41,10 +41,10 @@
 #include "mod.h"
 
 struct mod_magic {
-    char *magic;
-    int flag;
-    int id;
-    int ch;
+	char *magic;
+	int flag;
+	int id;
+	int ch;
 };
 
 #define TRACKER_PROTRACKER	0
@@ -68,30 +68,29 @@ struct mod_magic {
 #define TRACKER_PROBABLY_NOISETRACKER 20
 
 const struct mod_magic mod_magic[] = {
-    { "M.K.", 0, TRACKER_PROTRACKER, 4 },
-    { "M!K!", 1, TRACKER_PROTRACKER, 4 },
-    { "M&K!", 1, TRACKER_NOISETRACKER, 4 },
-    { "N.T.", 1, TRACKER_NOISETRACKER, 4 },
-    { "6CHN", 0, TRACKER_FASTTRACKER, 6 },
-    { "8CHN", 0, TRACKER_FASTTRACKER, 8 },
-    { "CD61", 1, TRACKER_OCTALYSER, 6 },	/* Atari STe/Falcon */
-    { "CD81", 1, TRACKER_OCTALYSER, 8 },	/* Atari STe/Falcon */
-    { "TDZ4", 1, TRACKER_TAKETRACKER, 4 },	/* see XModule SaveTracker.c */
-    { "FA04", 1, TRACKER_DIGITALTRACKER, 4 },	/* Atari Falcon */
-    { "FA06", 1, TRACKER_DIGITALTRACKER, 6 },	/* Atari Falcon */
-    { "FA08", 1, TRACKER_DIGITALTRACKER, 8 },	/* Atari Falcon */
-    { "NSMS", 1, TRACKER_UNKNOWN, 4 },		/* in Kingdom.mod */
-    { "", 0 }
+	{"M.K.", 0, TRACKER_PROTRACKER, 4},
+	{"M!K!", 1, TRACKER_PROTRACKER, 4},
+	{"M&K!", 1, TRACKER_NOISETRACKER, 4},
+	{"N.T.", 1, TRACKER_NOISETRACKER, 4},
+	{"6CHN", 0, TRACKER_FASTTRACKER, 6},
+	{"8CHN", 0, TRACKER_FASTTRACKER, 8},
+	{"CD61", 1, TRACKER_OCTALYSER, 6},	/* Atari STe/Falcon */
+	{"CD81", 1, TRACKER_OCTALYSER, 8},	/* Atari STe/Falcon */
+	{"TDZ4", 1, TRACKER_TAKETRACKER, 4},	/* see XModule SaveTracker.c */
+	{"FA04", 1, TRACKER_DIGITALTRACKER, 4},	/* Atari Falcon */
+	{"FA06", 1, TRACKER_DIGITALTRACKER, 6},	/* Atari Falcon */
+	{"FA08", 1, TRACKER_DIGITALTRACKER, 8},	/* Atari Falcon */
+	{"NSMS", 1, TRACKER_UNKNOWN, 4},	/* in Kingdom.mod */
+	{"", 0}
 };
 
-
-static int mod_test (HIO_HANDLE *, char *, const int);
-static int mod_load (struct module_data *, HIO_HANDLE *, const int);
+static int mod_test(HIO_HANDLE *, char *, const int);
+static int mod_load(struct module_data *, HIO_HANDLE *, const int);
 
 const struct format_loader mod_loader = {
-    "Amiga Protracker/Compatible",
-    mod_test,
-    mod_load
+	"Amiga Protracker/Compatible",
+	mod_test,
+	mod_load
 };
 
 static int validate_pattern(uint8 *buf)
@@ -101,135 +100,139 @@ static int validate_pattern(uint8 *buf)
 	for (i = 0; i < 64; i++) {
 		for (j = 0; j < 4; j++) {
 			uint8 *d = buf + (i * 4 + j) * 4;
-			if ((d[0] >> 4) > 1)
+			if ((d[0] >> 4) > 1) {
 				return -1;
+			}
 		}
 	}
 
 	return 0;
 }
 
-static int mod_test(HIO_HANDLE *f, char *t, const int start)
+static int mod_test(HIO_HANDLE * f, char *t, const int start)
 {
-    int i;
-    char buf[4];
-    uint8 pat_buf[1024];
-    int smp_size, num_pat;
-    long size;
+	int i;
+	char buf[4];
+	uint8 pat_buf[1024];
+	int smp_size, num_pat;
+	long size;
 
-    hio_seek(f, start + 1080, SEEK_SET);
-    if (hio_read(buf, 1, 4, f) < 4)
-	return -1;
-
-    if (!strncmp(buf + 2, "CH", 2) && isdigit((int)buf[0]) && isdigit((int)buf[1])) {
-	i = (buf[0] - '0') * 10 + buf[1] - '0';
-	if (i > 0 && i <= 32) {
-	    goto found;
-	}
-    }
-
-    if (!strncmp(buf + 1, "CHN", 3) && isdigit((int)*buf)) {
-	if (*buf - '0') {
-	    goto found;
-	}
-    }
-
-    for (i = 0; mod_magic[i].ch; i++) {
-	if (!memcmp(buf, mod_magic[i].magic, 4))
-	    break;
-    }
-    if (mod_magic[i].ch == 0)
-	return -1;
-
-    /*
-     * Sanity check to prevent loading NoiseRunner and other module
-     * formats with valid magic at offset 1080
-     */
-
-    hio_seek(f, start + 20, SEEK_SET);
-    for (i = 0; i < 31; i++) {
-	uint8 x;
-
-	hio_seek(f, 22, SEEK_CUR);		/* Instrument name */
-
-	/* OpenMPT can create mods with large samples */
-	hio_read16b(f);				/* sample size */
-
-	/* Chris Spiegel tells me that sandman.mod can have 0x20 in finetune */
-	x = hio_read8(f);
-	if (x & 0xf0 && x != 0x20)		/* test finetune */
+	hio_seek(f, start + 1080, SEEK_SET);
+	if (hio_read(buf, 1, 4, f) < 4) {
 		return -1;
-	if (hio_read8(f) > 0x40)		/* test volume */
+	}
+
+	if (!strncmp(buf + 2, "CH", 2) && isdigit((int)buf[0])
+	    && isdigit((int)buf[1])) {
+		i = (buf[0] - '0') * 10 + buf[1] - '0';
+		if (i > 0 && i <= 32) {
+			goto found;
+		}
+	}
+
+	if (!strncmp(buf + 1, "CHN", 3) && isdigit((int)*buf)) {
+		if (*buf - '0') {
+			goto found;
+		}
+	}
+
+	for (i = 0; mod_magic[i].ch; i++) {
+		if (!memcmp(buf, mod_magic[i].magic, 4))
+			break;
+	}
+	if (mod_magic[i].ch == 0) {
 		return -1;
-	hio_read16b(f);				/* loop start */
-	hio_read16b(f);				/* loop size */
-    }
+	}
 
-    /* Test for UNIC tracker modules
-     *
-     * From Gryzor's Pro-Wizard PW_FORMATS-Engl.guide:
-     * ``The UNIC format is very similar to Protracker... At least in the
-     * heading... same length : 1084 bytes. Even the "M.K." is present,
-     * sometimes !! Maybe to disturb the rippers.. hehe but Pro-Wizard
-     * doesn't test this only!''
-     */
+	/*
+	 * Sanity check to prevent loading NoiseRunner and other module
+	 * formats with valid magic at offset 1080
+	 */
 
-    /* get file size */
-    size = hio_size(f);
-    smp_size = 0;
-    hio_seek(f, start + 20, SEEK_SET);
+	hio_seek(f, start + 20, SEEK_SET);
+	for (i = 0; i < 31; i++) {
+		uint8 x;
 
-    /* get samples size */
-    for (i = 0; i < 31; i++) {
-	hio_seek(f, 22, SEEK_CUR);
-	smp_size += 2 * hio_read16b(f);		/* Length in 16-bit words */
-	hio_seek(f, 6, SEEK_CUR);
-    } 
+		hio_seek(f, 22, SEEK_CUR);	/* Instrument name */
 
-    /* get number of patterns */
-    num_pat = 0;
-    hio_seek(f, start + 952, SEEK_SET);
-    for (i = 0; i < 128; i++) {
-	uint8 x = hio_read8(f);
-	if (x > 0x7f)
-		break;
-	if (x > num_pat)
-	    num_pat = x;
-    }
-    num_pat++;
+		/* OpenMPT can create mods with large samples */
+		hio_read16b(f);	/* sample size */
 
-    /* see if module size matches UNIC */
-    if (start + 1084 + num_pat * 0x300 + smp_size == size)
-	return -1;
+		/* Chris Spiegel tells me that sandman.mod has 0x20 in finetune */
+		x = hio_read8(f);
+		if (x & 0xf0 && x != 0x20)	/* test finetune */
+			return -1;
+		if (hio_read8(f) > 0x40)	/* test volume */
+			return -1;
+		hio_read16b(f);	/* loop start */
+		hio_read16b(f);	/* loop size */
+	}
 
-    /* validate pattern data in an attempt to catch UNICs with MOD size */
-    for (i = 0; i < num_pat; i++) {
-	hio_seek(f, start + 1084 + 1024 * i, SEEK_SET);
-	hio_read(pat_buf, 1024, 1, f);
-	if (validate_pattern(pat_buf) < 0)
-	    return -1;
-    }
+	/* Test for UNIC tracker modules
+	 *
+	 * From Gryzor's Pro-Wizard PW_FORMATS-Engl.guide:
+	 * ``The UNIC format is very similar to Protracker... At least in the
+	 * heading... same length : 1084 bytes. Even the "M.K." is present,
+	 * sometimes !! Maybe to disturb the rippers.. hehe but Pro-Wizard
+	 * doesn't test this only!''
+	 */
 
-  found:
-    hio_seek(f, start + 0, SEEK_SET);
-    read_title(f, t, 20);
+	/* get file size */
+	size = hio_size(f);
+	smp_size = 0;
+	hio_seek(f, start + 20, SEEK_SET);
 
-    return 0;
+	/* get samples size */
+	for (i = 0; i < 31; i++) {
+		hio_seek(f, 22, SEEK_CUR);
+		smp_size += 2 * hio_read16b(f);	/* Length in 16-bit words */
+		hio_seek(f, 6, SEEK_CUR);
+	}
+
+	/* get number of patterns */
+	num_pat = 0;
+	hio_seek(f, start + 952, SEEK_SET);
+	for (i = 0; i < 128; i++) {
+		uint8 x = hio_read8(f);
+		if (x > 0x7f)
+			break;
+		if (x > num_pat)
+			num_pat = x;
+	}
+	num_pat++;
+
+	/* see if module size matches UNIC */
+	if (start + 1084 + num_pat * 0x300 + smp_size == size)
+		return -1;
+
+	/* validate pattern data in an attempt to catch UNICs with MOD size */
+	for (i = 0; i < num_pat; i++) {
+		hio_seek(f, start + 1084 + 1024 * i, SEEK_SET);
+		hio_read(pat_buf, 1024, 1, f);
+		if (validate_pattern(pat_buf) < 0)
+			return -1;
+	}
+
+found:
+	hio_seek(f, start + 0, SEEK_SET);
+	read_title(f, t, 20);
+
+	return 0;
 }
 
 
-static int is_st_ins (char *s)
+static int is_st_ins(char *s)
 {
-    if (s[0] != 's' && s[0] != 'S')
-	return 0;
-    if (s[1] != 't' && s[1] != 'T')
-	return 0;
-    if (s[2] != '-' || s[5] != ':')
-	return 0;
-    if (!isdigit((int)s[3]) || !isdigit((int)s[4]))
-	return 0;
+	if (s[0] != 's' && s[0] != 'S')
+		return 0;
+	if (s[1] != 't' && s[1] != 'T')
+		return 0;
+	if (s[2] != '-' || s[5] != ':')
+		return 0;
+	if (!isdigit((int)s[3]) || !isdigit((int)s[4]))
+		return 0;
 
-    return 1;
+	return 1;
 }
 
 
