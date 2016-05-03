@@ -377,8 +377,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	m->c4rate = C4_NTSC_RATE;
 
-	if (sfh.version == 0x1300)
+	if (sfh.version == 0x1300) {
 		m->quirk |= QUIRK_VSALL;
+	}
 
 #ifndef LIBXMP_CORE_PLAYER
 	switch (sfh.version >> 12) {
@@ -401,6 +402,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 				 (sfh.version & 0x0f00) >> 8,
 				 sfh.version & 0xff);
 		}
+		m->quirk |= QUIRK_RSTCHN;
 		break;
 	case 5:
 		snprintf(tracker_name, 40, "OpenMPT %d.%02x",
@@ -412,6 +414,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			snprintf(tracker_name, 40, "Schism Tracker %d.%02x",
 				 (sfh.version & 0x0f00) >> 8,
 				 sfh.version & 0xff);
+			m->quirk |= QUIRK_RSTCHN;
 			break;
 		}
 		/* fall through */
@@ -426,6 +429,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	set_type(m, "%s S3M", tracker_name);
 #else
 	set_type(m, "Scream Tracker 3");
+	m->quirk |= QUIRK_ST3BUGS;
 #endif
 
 	MODULE_INFO();
