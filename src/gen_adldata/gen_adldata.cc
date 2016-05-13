@@ -1124,7 +1124,7 @@ int main()
 
     LoadTMB("fm_banks/tmb_files/d3dtimbr.tmb", 62, "duke");
     LoadTMB("fm_banks/tmb_files/swtimbr.tmb",  63, "sw");
-
+    
     LoadDoom("fm_banks/raptor/genmidi.op2", 64, "rapt");
 	
 	LoadIBK("fm_banks/ibk_files/my-gmopl.ibk", 		65, "b65M", false);
@@ -1132,6 +1132,8 @@ int main()
 
 	LoadIBK("fm_banks/ibk_files/JOconnel.IBK", 		66, "b66M", false);
     LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 66, "b66P", true);
+
+    LoadTMB("fm_banks/tmb_files/default.tmb",  67, "3drm67");
 
     //LoadBNK("bnk_files/grassman1.bnk", 63, "b63", false);
     //LoadBNK("bnk_files/grassman2.bnk", 64, "b64", false);
@@ -1212,7 +1214,8 @@ int main()
      "TMB (Shadow Warrior)",
      "DMX (Raptor)",
 	 "SB (Modded GMOPL by Wohlstand)",
-	 "SB (Jammey O'Connel's bank)"
+	 "SB (Jammey O'Connel's bank)",
+	 "TMB (Default bank of Build Engine)"
     };
 
 #if 0
