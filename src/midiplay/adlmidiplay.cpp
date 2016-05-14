@@ -177,7 +177,7 @@ int main(int argc, char** argv)
 
     while(1)
     {
-        int buff[4096];
+        short buff[4096];
         unsigned long gotten=adl_play(myDevice, 4096, buff);
         if(gotten<=0) break;
 
