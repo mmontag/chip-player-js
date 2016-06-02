@@ -116,7 +116,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	switch (fxt) {
 	case FX_ARPEGGIO:
 	      fx_arpeggio:
-		if (fxp != 0) {
+		if (!HAS_QUIRK(QUIRK_ARPMEM) || fxp != 0) {
 			xc->arpeggio.val[0] = 0;
 			xc->arpeggio.val[1] = MSN(fxp);
 			xc->arpeggio.val[2] = LSN(fxp);

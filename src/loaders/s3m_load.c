@@ -651,7 +651,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 #ifndef LIBXMP_CORE_PLAYER
 	m->synth = &synth_adlib;
 #endif
-	m->quirk |= QUIRKS_ST3;
+	m->quirk |= QUIRKS_ST3 | QUIRK_ARPMEM;
 	m->read_event_type = READ_EVENT_ST3;
 
 	return 0;

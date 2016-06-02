@@ -516,7 +516,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->smp = smp_num;
     mod->xxs = realloc(mod->xxs, sizeof (struct xmp_sample) * mod->smp);
 
-    m->quirk |= QUIRK_FILTER | QUIRKS_ST3;
+    m->quirk |= QUIRK_FILTER | QUIRKS_ST3 | QUIRK_ARPMEM;
     m->read_event_type = READ_EVENT_ST3;
 
     return 0;

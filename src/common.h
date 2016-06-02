@@ -135,7 +135,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_S3MLOOP	(1 << 0)	/* S3M loop mode */
 #define QUIRK_ENVFADE	(1 << 1)	/* Fade at end of envelope */
 #define QUIRK_PROTRACK	(1 << 2)	/* Use Protracker-specific quirks */
-#define QUIRK_ST3BUGS	(1 << 4)	/* ST 3 weird global volume effect */
+#define QUIRK_ST3BUGS	(1 << 4)	/* Scream Tracker 3 bug compatibility */
 #define QUIRK_FINEFX	(1 << 5)	/* Enable 0xf/0xe for fine effects */
 #define QUIRK_VSALL	(1 << 6)	/* Volume slides in all frames */
 #define QUIRK_PBALL	(1 << 7)	/* Pitch bending in all frames */
@@ -160,7 +160,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_FT2BUGS	(1 << 26)	/* FT2 bug compatibility */
 #define QUIRK_MARKER	(1 << 27)	/* Patterns 0xfe and 0xff reserved */
 #define QUIRK_NOBPM	(1 << 28)	/* Adjust speed only, no BPM */
-/*#define QUIRK_XMFINE	(1 << 29)*/	/* XM-style fine tune */
+#define QUIRK_ARPMEM	(1 << 29)	/* Arpeggio has memory (S3M_ARPEGGIO) */
 #define QUIRK_RSTCHN	(1 << 30)	/* Reset channel on sample end */
 
 #define HAS_QUIRK(x)	(m->quirk & (x))

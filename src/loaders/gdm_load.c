@@ -364,5 +364,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 	}
 
+	m->quirk |= QUIRK_ARPMEM;
+
 	return 0;
 }

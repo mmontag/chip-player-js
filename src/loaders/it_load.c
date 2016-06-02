@@ -1298,7 +1298,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Format quirks */
 
-	m->quirk |= QUIRKS_IT;
+	m->quirk |= QUIRKS_IT | QUIRK_ARPMEM;
 
 	if (ifh.flags & IT_LINK_GXX) {
 		m->quirk |= QUIRK_PRENV;
