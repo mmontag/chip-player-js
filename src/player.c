@@ -690,10 +690,23 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		}
 	}
 
-	if (HAS_QUIRK(QUIRK_FT2BUGS) && arp) {
-		linear_bend = linear_bend / 12800 * 12800;
-	}
+	if (HAS_QUIRK(QUIRK_FT2BUGS)) {
+		if  (arp) {
+			linear_bend = linear_bend / 12800 * 12800;
+		}
 
+#if 0
+		/* OpenMPT ArpeggioClamp.xm */
+		if (p->frame > 0) {
+			if (xc->note + arp > 107) {
+				if (p->speed - (p->frame % p->speed) > 0) {
+					arp = 108 - xc->note;
+				}
+			}
+		}
+#endif
+	}
+	
 	/* Envelope */
 
 	if (xc->f_idx >= 0 && (~instrument->fei.flg & XMP_ENVELOPE_FLT)) {
@@ -703,17 +716,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		linear_bend += frq_envelope << 7;
 	}
 
-#if 0
-	/* OpenMPT ArpeggioClamp.xm */
-	if (HAS_QUIRK(QUIRK_FT2BUGS)) {
-		if (xc->note + arp > 107) {
-			if (xc->arpeggio.count > 0) {
-				arp = 108 - xc->note;
-			}
-		}
-	}
-#endif
-	
+	/* Arpeggio */
+
 	if (arp != 0) {
 		linear_bend += (100 << 7) * arp;
 
