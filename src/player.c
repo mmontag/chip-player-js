@@ -141,16 +141,11 @@ static int ft2_arpeggio(struct context_data *ctx, struct channel_data *xc)
 		return 0;
 	}
 
-	i = p->speed - p->frame;
-	while (i <= 0) {
-		i += p->speed;
-	}
+	i = p->speed - (p->frame % p->speed);
 
 	if (i == 16) {
 		return 0;
-	}
-
-	if (i > 16) {
+	} else if (i > 16) {
 		return xc->arpeggio.val[2];
 	}
 
