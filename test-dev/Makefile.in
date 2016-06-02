@@ -88,6 +88,7 @@ STORLEK		= 01_arpeggio_pitch_slide \
 OPENMPT_XM	= 3xxins \
 		  3xx_no_old_samp \
 		  3xx_no_old_samp_noft \
+		  arpeggio \
 		  arpeggioclamp \
 		  arpslide \
 		  delay1 \
