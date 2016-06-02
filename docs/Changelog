@@ -2,6 +2,9 @@ Stable versions
 ---------------
 
 4.3.14 ():
+	Fix bugs caught in the OpenMPT test cases:
+	- fix XM arpeggio in FastTracker 2 compatible mode
+	Other changes:
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
 	- code refactoring and cleanup

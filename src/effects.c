@@ -126,6 +126,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_S3M_ARPEGGIO:
 		EFFECT_MEMORY(fxp, xc->arpeggio.memory);
 		goto fx_arpeggio;
+
 #ifndef LIBXMP_CORE_PLAYER
 	case FX_OKT_ARP3:
 		if (fxp != 0) {
