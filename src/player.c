@@ -693,18 +693,14 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	if (HAS_QUIRK(QUIRK_FT2BUGS)) {
 		if  (arp) {
 			linear_bend = linear_bend / 12800 * 12800;
-		}
 
-#if 0
-		/* OpenMPT ArpeggioClamp.xm */
-		if (p->frame > 0) {
+			/* OpenMPT ArpeggioClamp.xm */
 			if (xc->note + arp > 107) {
 				if (p->speed - (p->frame % p->speed) > 0) {
 					arp = 108 - xc->note;
 				}
 			}
 		}
-#endif
 	}
 	
 	/* Envelope */
