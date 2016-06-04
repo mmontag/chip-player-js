@@ -402,7 +402,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 				 (sfh.version & 0x0f00) >> 8,
 				 sfh.version & 0xff);
 		}
-		m->quirk |= QUIRK_RSTCHN;
 		break;
 	case 5:
 		snprintf(tracker_name, 40, "OpenMPT %d.%02x",
@@ -414,7 +413,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			snprintf(tracker_name, 40, "Schism Tracker %d.%02x",
 				 (sfh.version & 0x0f00) >> 8,
 				 sfh.version & 0xff);
-			m->quirk |= QUIRK_RSTCHN;
 			break;
 		}
 		/* fall through */

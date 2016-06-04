@@ -294,6 +294,10 @@ void load_epilogue(struct context_data *ctx)
 	} else if (p->flags & XMP_FLAGS_ST3) {
 		m->quirk = QUIRKS_ST3 | QUIRK_ARPMEM | QUIRK_ST3BUGS;
 		m->read_event_type = READ_EVENT_ST3;
+	} else if (p->flags & XMP_FLAGS_ST3GUS) {
+		m->quirk = QUIRKS_ST3 | QUIRK_ARPMEM | QUIRK_ST3BUGS;
+		m->quirk &= ~QUIRK_RSTCHN;
+		m->read_event_type = READ_EVENT_ST3;
 	} else if (p->flags & XMP_FLAGS_XM) {
 		m->quirk = QUIRKS_FT2;
 		m->read_event_type = READ_EVENT_FT2;
