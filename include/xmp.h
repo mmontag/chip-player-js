@@ -54,6 +54,7 @@ extern "C" {
 #define XMP_PLAYER_STATE	8	/* Internal player state */
 #define XMP_PLAYER_SMIX_VOLUME	9	/* SMIX volume */
 #define XMP_PLAYER_DEFPAN	10	/* Default pan setting */
+#define XMP_PLAYER_MODE 	11	/* Force player mode */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
@@ -73,16 +74,19 @@ extern "C" {
 #define XMP_FLAGS_VBLANK	(1 << 0) /* Use vblank timing */
 #define XMP_FLAGS_FX9BUG	(1 << 1) /* Emulate FX9 bug */
 #define XMP_FLAGS_FIXLOOP	(1 << 2) /* Emulate sample loop bug */
-#define XMP_FLAGS_MOD		(1 << 3) /* Play as a generic MOD player */
-#define XMP_FLAGS_NOISETRACKER	(1 << 4) /* Play using Noisetracker quirks */
-#define XMP_FLAGS_PROTRACKER	(1 << 5) /* Play using Protracker quirks */
-#define XMP_FLAGS_S3M		(1 << 6) /* Play as a generic S3M player */
-#define XMP_FLAGS_ST3		(1 << 7) /* Play using ST3 bug emulation */
-#define XMP_FLAGS_ST3GUS	(1 << 9) /* Play using ST3+GUS quirks */
-#define XMP_FLAGS_XM		(1 << 10) /* Play as a generic XM player */
-#define XMP_FLAGS_FT2		(1 << 11) /* Play using FT2 bug emulation */
-#define XMP_FLAGS_IT		(1 << 12) /* Play using IT quirks */
-#define XMP_FLAGS_ITSMP		(1 << 13) /* Play using IT sample mode quirks */
+
+/* player modes */
+#define XMP_MODE_AUTO		0	/* Autodetect mode (default) */
+#define XMP_MODE_MOD		1	/* Play as a generic MOD player */
+#define XMP_MODE_NOISETRACKER	2	/* Play using Noisetracker quirks */
+#define XMP_MODE_PROTRACKER	3	/* Play using Protracker quirks */
+#define XMP_MODE_S3M		4	/* Play as a generic S3M player */
+#define XMP_MODE_ST3		5	/* Play using ST3 bug emulation */
+#define XMP_MODE_ST3GUS		6	/* Play using ST3+GUS quirks */
+#define XMP_MODE_XM		7	/* Play as a generic XM player */
+#define XMP_MODE_FT2		8	/* Play using FT2 bug emulation */
+#define XMP_MODE_IT		9	/* Play using IT quirks */
+#define XMP_MODE_ITSMP		10	/* Play using IT sample mode quirks */
 
 /* sample flags */
 #define XMP_SMPCTL_SKIP		(1 << 0) /* Don't load samples */

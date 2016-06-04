@@ -372,6 +372,12 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 			ret = 0;
 		}
 		break;
+
+	/* 4.4 */
+	case XMP_PLAYER_MODE:
+		p->mode = val;
+		ret = 0;
+		break;
 	}
 
 	return ret;
@@ -451,6 +457,11 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	/* 4.3 */
 	case XMP_PLAYER_DEFPAN:
 		ret = m->defpan;
+		break;
+
+	/* 4.4 */
+	case XMP_PLAYER_MODE:
+		ret = p->mode;
 		break;
 	}
 
