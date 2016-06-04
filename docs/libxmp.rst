@@ -232,7 +232,7 @@ char \*\*xmp_get_format_list()
 
   Query the list of supported module formats.
 
-  :Returns:
+  **Returns:**
     a NULL-terminated array of strings containing the names
     of all supported module formats.
 
@@ -664,7 +664,7 @@ int xmp_seek_time(xmp_context c, int time)
 
 .. _xmp_channel_mute():
 
-int xmp_channel_mute(xmp_context c, int channel, int status)
+int xmp_channel_mute(xmp_context c, int chn, int status)
 ````````````````````````````````````````````````````````````
 
   Mute or unmute the specified channel.
@@ -672,7 +672,7 @@ int xmp_channel_mute(xmp_context c, int channel, int status)
   **Parameters:**
     :c: the player context handle.
  
-    :channel: the channel to mute or unmute.
+    :chn: the channel to mute or unmute.
  
     :status: 0 to mute channel, 1 to unmute or -1 to query the
       current channel status.
@@ -683,7 +683,7 @@ int xmp_channel_mute(xmp_context c, int channel, int status)
 
 .. _xmp_channel_vol():
 
-int xmp_channel_vol(xmp_context c, int channel, int vol)
+int xmp_channel_vol(xmp_context c, int chn, int vol)
 ````````````````````````````````````````````````````````
 
   Set or retrieve the volume of the specified channel.
@@ -691,7 +691,7 @@ int xmp_channel_vol(xmp_context c, int channel, int vol)
   **Parameters:**
     :c: the player context handle.
  
-    :channel: the channel to set or get volume.
+    :chn: the channel to set or get volume.
  
     :vol: a value from 0-100 to set the channel volume, or -1 to retrieve
       the current volume.
@@ -703,7 +703,7 @@ int xmp_channel_vol(xmp_context c, int channel, int vol)
 
 .. _xmp_inject_event():
 
-void xmp_inject_event(xmp_context c, int channel, struct xmp_event \*event)
+void xmp_inject_event(xmp_context c, int chn, struct xmp_event \*event)
 ```````````````````````````````````````````````````````````````````````````
 
   Dynamically insert a new event into a playing module.
@@ -711,7 +711,7 @@ void xmp_inject_event(xmp_context c, int channel, struct xmp_event \*event)
   **Parameters:**
     :c: the player context handle.
 
-    :channel: the channel to insert the new event.
+    :chn: the channel to insert the new event.
 
     :event: the event to insert.
       ``struct xmp_event`` is defined as::
@@ -777,6 +777,7 @@ int xmp_get_player(xmp_context c, int param)
         XMP_PLAYER_STATE       /* Current player state*/
         XMP_PLAYER_SMIX_VOLUME /* SMIX Volume */
         XMP_PLAYER_DEFPAN      /* Default pan separation */
+        XMP_PLAYER_MODE        /* Player personality */
 
       See ``xmp_set_player`` for the list of valid values for each parameter.
       Valid states are::
@@ -788,6 +789,10 @@ int xmp_get_player(xmp_context c, int param)
   **Returns:**
     The parameter value, or ``-XMP_ERROR_STATE`` if the parameter is not
     ``XMP_PLAYER_STATE`` and the player is not in playing state.
+
+.. raw:: pdf
+
+    PageBreak
 
 .. _xmp_set_player():
 
@@ -810,65 +815,80 @@ int xmp_set_player(xmp_context c, int param, int val)
         XMP_PLAYER_VOLUME      /* Player master volume */
         XMP_PLAYER_SMIX_VOLUME /* SMIX Volume */
         XMP_PLAYER_DEFPAN      /* Default pan separation */
+        XMP_PLAYER_MODE        /* Player personality */
 
-    :val: the value to set. Valid values are:
+    :val: the value to set. Valid values depend on the parameter being set.
 
-      * Amplification factor: ranges from 0 to 3. Default value is 1.
+    **Valid values:**
+ 
+    * Amplification factor: ranges from 0 to 3. Default value is 1.
 
-      * Stereo mixing: percentual left/right channel separation. Default is 70.
+    * Stereo mixing: percentual left/right channel separation.  Default is 70.
 
-      * Interpolation type: can be one of the following values::
+    * Interpolation type: can be one of the following values::
 
           XMP_INTERP_NEAREST  /* Nearest neighbor */
           XMP_INTERP_LINEAR   /* Linear (default) */
           XMP_INTERP_SPLINE   /* Cubic spline */
 
-      * DSP effects flags: enable or disable DSP effects. Valid effects are::
+    * DSP effects flags: enable or disable DSP effects. Valid effects are::
 
           XMP_DSP_LOWPASS     /* Lowpass filter effect */
           XMP_DSP_ALL         /* All effects */
 
-      * Player flags: tweakable player parameters. These are intended to be
-        used in cases when the module relies on a format quirk and tracker
-        detection fails. Valid flags are::
-
+    * Player flags: tweakable player parameters. Valid flags are::
+        
           XMP_FLAGS_VBLANK    /* Use vblank timing */
           XMP_FLAGS_FX9BUG    /* Emulate Protracker 2.x FX9 bug */
           XMP_FLAGS_FIXLOOP   /* Make sample loop value / 2 */
-          XMP_FLAGS_MOD       /* Play as a generic MOD player */
-          XMP_FLAGS_NOISETRACKER /* Play using Noisetracker quirks */
-          XMP_FLAGS_PROTRACKER /* Play using Protracker quirks */
-          XMP_FLAGS_S3M       /* Play as a generic S3M player */
-          XMP_FLAGS_ST3       /* Play using ST3 bug emulation */
-          XMP_FLAGS_ST3GUS    /* Play using ST3+GUS quirks */
-          XMP_FLAGS_XM        /* Play as a generic XM player */
-          XMP_FLAGS_FT2       /* Play using FT2 bug emulation */
-          XMP_FLAGS_IT        /* Play using IT quirks */
-          XMP_FLAGS_ITSMP     /* Play using IT sample mode quirks */
 
-      * *[Added in libxmp 4.1]* Player flags for current module: same flags
-        as above but after applying module-specific quirks (if any).
+    * *[Added in libxmp 4.1]* Player flags for current module: same flags
+      as above but after applying module-specific quirks (if any).
 
-      * *[Added in libxmp 4.1]* Control sample load. Valid values are::
+    * *[Added in libxmp 4.1]* Sample control: Valid values are::
 
           XMP_SMPCTL_SKIP     /* Don't load samples */
  
-        Disabling sample loading when loading a module allows allows
-        computation of module duration without decompressing and
-        loading large sample data, and is useful when duration information
-        is needed for a module that won't be played immediately.
+    * Disabling sample loading when loading a module allows allows
+      computation of module duration without decompressing and
+      loading large sample data, and is useful when duration information
+      is needed for a module that won't be played immediately.
 
-      * *[Added in libxmp 4.2]* The player master volume or the external
-        sample mixer master volume: 0-100 scale.
+    * *[Added in libxmp 4.2]* Player volumes: Set the player master volume
+      or the external sample mixer master volume. Valid values are 0 to 100.
+
+    * *[Added in libxmp 4.3]* Default pan separation: percentual left/right
+      pan separation in formats with only left and right channels. Default
+      is 100%.
+
+.. raw:: pdf
+
+    PageBreak
+
+..
+
+    * *[Added in libxmp 4.4]* Player personality: The player can be forced to
+      emulate a specific tracker in cases where the module relies on a format
+      quirk and tracker detection fails. Valid modes are::
+
+          XMP_MODE_AUTO         /* Autodetect mode (default) */
+          XMP_MODE_MOD          /* Play as a generic MOD player */
+          XMP_MODE_NOISETRACKER /* Play using Noisetracker quirks */
+          XMP_MODE_PROTRACKER   /* Play using Protracker 1/2 quirks */
+          XMP_MODE_S3M          /* Play as a generic S3M player */
+          XMP_MODE_ST3          /* Play using ST3 bug emulation */
+          XMP_MODE_ST3GUS       /* Play using ST3+GUS quirks */
+          XMP_MODE_XM           /* Play as a generic XM player */
+          XMP_MODE_FT2          /* Play using FT2 bug emulation */
+          XMP_MODE_IT           /* Play using IT quirks */
+          XMP_MODE_ITSMP        /* Play using IT sample mode quirks */
+
 
   **Returns:**
     0 if parameter was correctly set, ``-XMP_ERROR_INVALID`` if
     parameter or values are out of the valid ranges, or ``-XMP_ERROR_STATE``
     if the player is not in playing state.
 
-.. raw:: pdf
-
-    PageBreak
 
 External sample mixer API
 -------------------------

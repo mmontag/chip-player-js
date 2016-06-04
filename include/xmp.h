@@ -54,7 +54,7 @@ extern "C" {
 #define XMP_PLAYER_STATE	8	/* Internal player state */
 #define XMP_PLAYER_SMIX_VOLUME	9	/* SMIX volume */
 #define XMP_PLAYER_DEFPAN	10	/* Default pan setting */
-#define XMP_PLAYER_MODE 	11	/* Force player mode */
+#define XMP_PLAYER_MODE 	11	/* Player personality */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
