@@ -1,12 +1,13 @@
 Stable versions
 ---------------
 
-4.3.14 ():
+4.4.0 ():
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM arpeggio in FastTracker 2 compatible mode
 	Other changes:
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
+	- add flags to configure player personality
 	- code refactoring and cleanup
 
 4.3.13 (20160417):

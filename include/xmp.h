@@ -5,11 +5,11 @@
 extern "C" {
 #endif
 
-#define XMP_VERSION "4.3.14"
-#define XMP_VERCODE 0x04030e
+#define XMP_VERSION "4.4.0"
+#define XMP_VERCODE 0x040400
 #define XMP_VER_MAJOR 4
-#define XMP_VER_MINOR 3
-#define XMP_VER_RELEASE 14
+#define XMP_VER_MINOR 4
+#define XMP_VER_RELEASE 0
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
 # if defined(BUILDING_STATIC)
@@ -73,6 +73,16 @@ extern "C" {
 #define XMP_FLAGS_VBLANK	(1 << 0) /* Use vblank timing */
 #define XMP_FLAGS_FX9BUG	(1 << 1) /* Emulate FX9 bug */
 #define XMP_FLAGS_FIXLOOP	(1 << 2) /* Emulate sample loop bug */
+#define XMP_FLAGS_MOD		(1 << 3) /* Play as a generic MOD player */
+#define XMP_FLAGS_NST		(1 << 4) /* Play using Noisetracker quirks */
+#define XMP_FLAGS_PTK		(1 << 5) /* Play using Protracker quirks */
+#define XMP_FLAGS_S3M		(1 << 6) /* Play as a generic S3M player */
+#define XMP_FLAGS_ST3		(1 << 7) /* Play using ST3 bug emulation */
+#define XMP_FLAGS_ST3GUS	(1 << 9) /* Play using ST3+GUS quirks */
+#define XMP_FLAGS_XM		(1 << 10) /* Play as a generic XM player */
+#define XMP_FLAGS_FT2		(1 << 11) /* Play using FT2 bug emulation */
+#define XMP_FLAGS_IT		(1 << 12) /* Play using IT quirks */
+#define XMP_FLAGS_ITSMP		(1 << 13) /* Play using IT sample mode quirks */
 
 /* sample flags */
 #define XMP_SMPCTL_SKIP		(1 << 0) /* Don't load samples */

@@ -57,3 +57,9 @@ XMP_4.3 {
     xmp_load_module_from_file;
 } XMP_4.2;
 
+XMP_4.4 {
+  global:
+    xmp_set_player;
+    xmp_get_player;
+} XMP_4.3;
+

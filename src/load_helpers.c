@@ -276,6 +276,39 @@ void load_epilogue(struct context_data *ctx)
 #ifndef LIBXMP_CORE_PLAYER
 	module_quirks(ctx);
 #endif
+
+	/* Process player personality flags */
+
+	if (p->flags & XMP_FLAGS_MOD) {
+		m->quirk = 0;
+		m->read_event_type = READ_EVENT_MOD;
+	} else if (p->flags & XMP_FLAGS_NST) {
+		m->quirk = QUIRK_NOBPM | QUIRK_MODRNG;
+		m->read_event_type = READ_EVENT_MOD;
+	} else if (p->flags & XMP_FLAGS_PTK) {
+		m->quirk = QUIRK_MODRNG | QUIRK_PROTRACK;
+		m->read_event_type = READ_EVENT_MOD;
+	} else if (p->flags & XMP_FLAGS_S3M) {
+		m->quirk = QUIRKS_ST3 | QUIRK_ARPMEM;
+		m->read_event_type = READ_EVENT_ST3;
+	} else if (p->flags & XMP_FLAGS_ST3) {
+		m->quirk = QUIRKS_ST3 | QUIRK_ARPMEM | QUIRK_ST3BUGS;
+		m->read_event_type = READ_EVENT_ST3;
+	} else if (p->flags & XMP_FLAGS_XM) {
+		m->quirk = QUIRKS_FT2;
+		m->read_event_type = READ_EVENT_FT2;
+	} else if (p->flags & XMP_FLAGS_FT2) {
+		m->quirk = QUIRKS_FT2 | QUIRK_FT2BUGS;
+		m->read_event_type = READ_EVENT_FT2;
+	} else if (p->flags & XMP_FLAGS_IT) {
+		m->quirk = QUIRKS_IT | QUIRK_VIBHALF | QUIRK_VIBINV;
+		m->read_event_type = READ_EVENT_IT;
+	} else if (p->flags & XMP_FLAGS_ITSMP) {
+		m->quirk = QUIRKS_IT | QUIRK_VIBHALF | QUIRK_VIBINV;
+		m->quirk &= ~(QUIRK_VIRTUAL | QUIRK_RSTCHN);
+		m->read_event_type = READ_EVENT_IT;
+	}
+	
 }
 
 int prepare_scan(struct context_data *ctx)
