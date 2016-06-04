@@ -54,7 +54,7 @@ const struct module_quirk mq[] = {
 	{
 		{ 0x36, 0x6e, 0xc0, 0xfa, 0x96, 0x2a, 0xeb, 0xee,
 	  	  0x03, 0x4a, 0xa2, 0xdb, 0xaa, 0x49, 0xaa, 0xea },
-		XMP_FLAGS_FX9BUG
+		XMP_FLAGS_PROTRACKER
 	},
 
 	/* mod.souvenir of china */
@@ -75,8 +75,11 @@ const struct module_quirk mq[] = {
 	{
 		{ 0xe9, 0x98, 0x01, 0x2c, 0x70, 0x0e, 0xb4, 0x3a,
 		  0xf0, 0x32, 0x17, 0x11, 0x30, 0x58, 0x29, 0xb2 },
-		XMP_FLAGS_VBLANK
+		XMP_FLAGS_NOISETRACKER
 	},
+
+#if 0
+	/* -- Already covered by Noisetracker fingerprinting -- */
 
 	/* Another version of Klisje paa klisje sent by Steve Fernandez */
 	{
@@ -91,6 +94,7 @@ const struct module_quirk mq[] = {
 		  0xa9, 0x85, 0xbe, 0xbf, 0x90, 0x2e, 0x42, 0xdc },
 		XMP_FLAGS_VBLANK
 	},
+#endif
 
 	{
 		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -282,10 +286,10 @@ void load_epilogue(struct context_data *ctx)
 	if (p->flags & XMP_FLAGS_MOD) {
 		m->quirk = 0;
 		m->read_event_type = READ_EVENT_MOD;
-	} else if (p->flags & XMP_FLAGS_NST) {
+	} else if (p->flags & XMP_FLAGS_NOISETRACKER) {
 		m->quirk = QUIRK_NOBPM | QUIRK_MODRNG;
 		m->read_event_type = READ_EVENT_MOD;
-	} else if (p->flags & XMP_FLAGS_PTK) {
+	} else if (p->flags & XMP_FLAGS_PROTRACKER) {
 		m->quirk = QUIRK_MODRNG | QUIRK_PROTRACK;
 		m->read_event_type = READ_EVENT_MOD;
 	} else if (p->flags & XMP_FLAGS_S3M) {

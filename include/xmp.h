@@ -74,8 +74,8 @@ extern "C" {
 #define XMP_FLAGS_FX9BUG	(1 << 1) /* Emulate FX9 bug */
 #define XMP_FLAGS_FIXLOOP	(1 << 2) /* Emulate sample loop bug */
 #define XMP_FLAGS_MOD		(1 << 3) /* Play as a generic MOD player */
-#define XMP_FLAGS_NST		(1 << 4) /* Play using Noisetracker quirks */
-#define XMP_FLAGS_PTK		(1 << 5) /* Play using Protracker quirks */
+#define XMP_FLAGS_NOISETRACKER	(1 << 4) /* Play using Noisetracker quirks */
+#define XMP_FLAGS_PROTRACKER	(1 << 5) /* Play using Protracker quirks */
 #define XMP_FLAGS_S3M		(1 << 6) /* Play as a generic S3M player */
 #define XMP_FLAGS_ST3		(1 << 7) /* Play using ST3 bug emulation */
 #define XMP_FLAGS_ST3GUS	(1 << 9) /* Play using ST3+GUS quirks */
