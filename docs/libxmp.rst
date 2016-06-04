@@ -1,5 +1,5 @@
 
-Libxmp 4.3 API documentation
+Libxmp 4.4 API documentation
 ============================
 
 .. contents:: `Contents`
@@ -828,11 +828,23 @@ int xmp_set_player(xmp_context c, int param, int val)
           XMP_DSP_LOWPASS     /* Lowpass filter effect */
           XMP_DSP_ALL         /* All effects */
 
-      * Player flags: tweakable player parameters. Valid flags are::
+      * Player flags: tweakable player parameters. These are intended to be
+        used in cases when the module relies on a format quirk and tracker
+        detection fails. Valid flags are::
 
           XMP_FLAGS_VBLANK    /* Use vblank timing */
           XMP_FLAGS_FX9BUG    /* Emulate Protracker 2.x FX9 bug */
           XMP_FLAGS_FIXLOOP   /* Make sample loop value / 2 */
+          XMP_FLAGS_MOD       /* Play as a generic MOD player */
+          XMP_FLAGS_NOISETRACKER /* Play using Noisetracker quirks */
+          XMP_FLAGS_PROTRACKER /* Play using Protracker quirks */
+          XMP_FLAGS_S3M       /* Play as a generic S3M player */
+          XMP_FLAGS_ST3       /* Play using ST3 bug emulation */
+          XMP_FLAGS_ST3GUS    /* Play using ST3+GUS quirks */
+          XMP_FLAGS_XM        /* Play as a generic XM player */
+          XMP_FLAGS_FT2       /* Play using FT2 bug emulation */
+          XMP_FLAGS_IT        /* Play using IT quirks */
+          XMP_FLAGS_ITSMP     /* Play using IT sample mode quirks */
 
       * *[Added in libxmp 4.1]* Player flags for current module: same flags
         as above but after applying module-specific quirks (if any).
