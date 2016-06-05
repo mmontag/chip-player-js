@@ -29,8 +29,8 @@
 #else
 #include <limits.h>
 #endif
-#include "period.h"
 #include "loader.h"
+#include "period.h"
 
 #define MAGIC_MED2	MAGIC4('M','E','D',2)
 

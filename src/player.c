@@ -612,7 +612,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	if (TEST(NOTE_SLIDE)) {
 		if (xc->noteslide.count == 0) {
 			xc->note += xc->noteslide.slide;
-			xc->period = note_to_period(xc->note, xc->finetune,
+			xc->period = note_to_period(ctx, xc->note, xc->finetune,
 					HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 			xc->noteslide.count = xc->noteslide.speed;
 		}
@@ -679,7 +679,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		}
 	}
 
-	linear_bend = period_to_bend(period + vibrato, xc->note,
+	linear_bend = period_to_bend(ctx, period + vibrato, xc->note,
 			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 
 	if (TEST_NOTE(NOTE_GLISSANDO) && TEST(TONEPORTA)) {
@@ -719,9 +719,9 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 		/* OpenMPT ArpWrapAround.mod */
 		if (HAS_QUIRK(QUIRK_PROTRACK)) {
-			if (xc->note + arp > 84) {
+			if (xc->note + arp > MAX_NOTE_MOD + 1) {
 				linear_bend -= 12800 * (3 * 12);
-			} else if (xc->note + arp > 83) {
+			} else if (xc->note + arp > MAX_NOTE_MOD) {
 				virt_setvol(ctx, chn, 0);
 			}
 		}
@@ -738,8 +738,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	if (HAS_QUIRK(QUIRK_MODRNG)) {
 		CLAMP(xc->info_period,
-			note_to_period(83, xc->finetune, 0, 0) * 4096,
-			note_to_period(48, xc->finetune, 0, 0) * 4096);
+			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0, 0) * 4096,
+			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0, 0) * 4096);
 	} else if (xc->info_period <  (1 << 12)) {
 		xc->info_period = (1 << 12);
 	}
@@ -966,7 +966,7 @@ static void update_frequency(struct context_data *ctx, int chn)
 #ifndef LIBXMP_CORE_PLAYER
 		if (TEST(FINE_NSLIDE)) {
 			xc->note += xc->noteslide.fslide;
-			xc->period = note_to_period(xc->note,
+			xc->period = note_to_period(ctx, xc->note,
 				xc->finetune, HAS_QUIRK(QUIRK_LINEAR),
 				xc->per_adj);
 		}
@@ -976,8 +976,9 @@ static void update_frequency(struct context_data *ctx, int chn)
 	if (HAS_QUIRK(QUIRK_LINEAR)) {
 		CLAMP(xc->period, MIN_PERIOD_L, MAX_PERIOD_L);
 	} else if (HAS_QUIRK(QUIRK_MODRNG)) {
-		CLAMP(xc->period, note_to_period(83, xc->finetune, 0, 0),
-				  note_to_period(48, xc->finetune, 0, 0));
+		CLAMP(xc->period,
+			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0, 0),
+			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0, 0));
 	}
 
 	xc->arpeggio.count++;

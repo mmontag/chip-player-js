@@ -29,8 +29,8 @@
  * - MAS_UTrack_V004: Ultra Tracker version 1.6
  */
 
-#include "period.h"
 #include "loader.h"
+#include "period.h"
 
 
 static int ult_test (HIO_HANDLE *, char *, const int);

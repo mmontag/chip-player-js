@@ -24,8 +24,8 @@
  * by Nir Oren. Tested with Shell.liq sent by Adi Sapir.
  */
 
-#include "period.h"
 #include "loader.h"
+#include "period.h"
 
 
 struct liq_header {
