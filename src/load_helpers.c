@@ -285,16 +285,63 @@ void load_epilogue(struct context_data *ctx)
 		check_envelope(&mod->xxi[i].pei);
 	}
 
+	p->mode = XMP_MODE_AUTO;
 	p->flags = p->player_flags;
 #ifndef LIBXMP_CORE_PLAYER
 	module_quirks(ctx);
 #endif
+	set_player_mode(ctx);
+}
 
-	/* Process player personality flags */
+int prepare_scan(struct context_data *ctx)
+{
+	struct module_data *m = &ctx->m;
+	struct xmp_module *mod = &m->mod;
+	int i, ord;
+
+	if (mod->xxp == NULL || mod->xxt == NULL)
+		return -XMP_ERROR_LOAD;
+	ord = 0;
+	while (ord < mod->len && mod->xxo[ord] >= mod->pat) {
+		ord++;
+	}
+
+	if (ord >= mod->len) {
+		mod->len = 0;
+		return 0;
+	}
+
+	m->scan_cnt = calloc(sizeof (char *), mod->len);
+	if (m->scan_cnt == NULL)
+		return -XMP_ERROR_SYSTEM;
+
+	for (i = 0; i < mod->len; i++) {
+		int pat_idx = mod->xxo[i];
+		struct xmp_pattern *pat;
+
+		/* Add pattern if referenced in orders */
+		if (pat_idx < mod->pat && !mod->xxp[pat_idx]) {
+			if (pattern_alloc(mod, pat_idx) < 0)
+				return -XMP_ERROR_SYSTEM;
+		}
+
+		pat = pat_idx >= mod->pat ? NULL : mod->xxp[pat_idx];
+		m->scan_cnt[i] = calloc(1, pat && pat->rows ? pat->rows : 1);
+		if (m->scan_cnt[i] == NULL)
+			return -XMP_ERROR_SYSTEM;
+	}
+ 
+	return 0;
+}
+
+/* Process player personality flags */
+int set_player_mode(struct context_data *ctx)
+{
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	int q;
 
 	switch (p->mode) {
-		int q;
-
 	case XMP_MODE_AUTO:
 		break;
 	case XMP_MODE_MOD:
@@ -344,46 +391,10 @@ void load_epilogue(struct context_data *ctx)
 		m->quirk &= ~(QUIRK_VIRTUAL | QUIRK_RSTCHN);
 		m->read_event_type = READ_EVENT_IT;
 		break;
-	}
-}
-
-int prepare_scan(struct context_data *ctx)
-{
-	struct module_data *m = &ctx->m;
-	struct xmp_module *mod = &m->mod;
-	int i, ord;
-
-	if (mod->xxp == NULL || mod->xxt == NULL)
-		return -XMP_ERROR_LOAD;
-	ord = 0;
-	while (ord < mod->len && mod->xxo[ord] >= mod->pat) {
-		ord++;
+	default:
+		return -1;
 	}
 
-	if (ord >= mod->len) {
-		mod->len = 0;
-		return 0;
-	}
-
-	m->scan_cnt = calloc(sizeof (char *), mod->len);
-	if (m->scan_cnt == NULL)
-		return -XMP_ERROR_SYSTEM;
-
-	for (i = 0; i < mod->len; i++) {
-		int pat_idx = mod->xxo[i];
-		struct xmp_pattern *pat;
-
-		/* Add pattern if referenced in orders */
-		if (pat_idx < mod->pat && !mod->xxp[pat_idx]) {
-			if (pattern_alloc(mod, pat_idx) < 0)
-				return -XMP_ERROR_SYSTEM;
-		}
-
-		pat = pat_idx >= mod->pat ? NULL : mod->xxp[pat_idx];
-		m->scan_cnt[i] = calloc(1, pat && pat->rows ? pat->rows : 1);
-		if (m->scan_cnt[i] == NULL)
-			return -XMP_ERROR_SYSTEM;
-	}
- 
 	return 0;
 }
+

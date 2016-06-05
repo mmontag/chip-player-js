@@ -376,6 +376,8 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 	/* 4.4 */
 	case XMP_PLAYER_MODE:
 		p->mode = val;
+		set_player_mode(ctx);
+		scan_sequences(ctx);
 		ret = 0;
 		break;
 	}

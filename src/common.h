@@ -366,6 +366,7 @@ int	exclude_match		(char *);
 int	prepare_scan		(struct context_data *);
 int	scan_sequences		(struct context_data *);
 int	get_sequence		(struct context_data *, int);
+int	set_player_mode		(struct context_data *);
 
 int8	read8s			(FILE *, int *err);
 uint8	read8			(FILE *, int *err);
