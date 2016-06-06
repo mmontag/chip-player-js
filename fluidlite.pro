@@ -1,4 +1,6 @@
 TEMPLATE = lib
+CONFIG += staticlib
+
 INCLUDEPATH += src
 INCLUDEPATH += include
 INCLUDEPATH += libogg-1.3.2/include

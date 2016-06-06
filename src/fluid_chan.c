@@ -52,8 +52,8 @@ new_fluid_channel(fluid_synth_t* synth, int num)
 void
 fluid_channel_init(fluid_channel_t* chan)
 {
-  chan->prognum = (chan->channum == 9)? 0 : chan->channum;
-  chan->banknum = (chan->channum == 9)? 128 : 0;
+  chan->prognum = 0;
+  chan->banknum = 0;
   chan->sfontnum = 0;
 
   if (chan->preset) delete_fluid_preset (chan->preset);

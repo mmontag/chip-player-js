@@ -5,7 +5,9 @@ FluidLite is a very light version of FluidSynth
 designed to be hardware, platform and external dependency independant.
 It only uses standard C libraries.
 
-It also adds support for SF3 files (SF2 files compressed with ogg vorbis).
+It also adds support for SF3 files (SF2 files compressed with ogg vorbis)
+and remove the constraint of channel 9 (doesn't have to be a drum kit) :
+select bank 128 to use drum kits on any channel.
 
 FluidLite keeps very minimal functionnalities (settings and synth),
 therefore MIDI file reading, realtime MIDI events and audio output must be
@@ -17,8 +19,6 @@ Usage:
 include "fluidlite.h"
 
 fluid_settings_t* settings=new_fluid_settings();
-fluid_settings_setint(settings, "synth.sample-rate", 44100);
-
 fluid_synth_t* synth=new_fluid_synth(settings);
 fluid_synth_sfload(synth, "soundfont.sf3",1);
 
@@ -38,9 +38,3 @@ fclose(file);
 
 delete_fluid_synth(synth);
 delete_fluid_settings(settings);
-
-Recommended Tools:
-=================
-
-MidiEditor (MIDI file editor)
-Polyphone (SoundFont editor)

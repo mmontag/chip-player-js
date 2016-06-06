@@ -1207,16 +1207,7 @@ fluid_synth_program_change(fluid_synth_t* synth, int chan, int prognum)
   if (synth->verbose)
     FLUID_LOG(FLUID_INFO, "prog\t%d\t%d\t%d", chan, banknum, prognum);
 
-  /* Special handling of channel 10 (or 9 counting from 0). channel
-   * 10 is the percussion channel.
-   *
-   * FIXME - Shouldn't hard code bank selection for channel 10.  I think this
-   * is a hack for MIDI files that do bank changes in GM mode.  Proper way to
-   * handle this would probably be to ignore bank changes when in GM mode.
-   */
-  if (channel->channum == 9)
-    preset = fluid_synth_find_preset(synth, DRUM_INST_BANK, prognum);
-  else preset = fluid_synth_find_preset(synth, banknum, prognum);
+  preset = fluid_synth_find_preset(synth, banknum, prognum); //if (channel->channum == 9) fluid_synth_find_preset(synth, DRUM_INST_BANK, prognum);
 
   /* Fallback to another preset if not found */
   if (!preset)
@@ -1225,7 +1216,7 @@ fluid_synth_program_change(fluid_synth_t* synth, int chan, int prognum)
     subst_prog = prognum;
 
     /* Melodic instrument? */
-    if (channel->channum != 9 && banknum != DRUM_INST_BANK)
+    if (banknum != DRUM_INST_BANK)
     {
       subst_bank = 0;
 
@@ -2000,10 +1991,7 @@ fluid_synth_free_voice_by_kill(fluid_synth_t* synth)
      * Typically, drum notes are triggered only very briefly, they run most
      * of the time in release phase.
      */
-    if (voice->chan == 9){
-      this_voice_prio += 4000;
-
-    } else if (_RELEASED(voice)){
+    if (_RELEASED(voice)){
       /* The key for this voice has been released. Consider it much less important
        * than a voice, which is still held.
        */
