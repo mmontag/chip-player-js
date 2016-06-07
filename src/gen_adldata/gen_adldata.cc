@@ -676,7 +676,7 @@ static void LoadJunglevision(const char* fn, unsigned bank, const char* prefix)
         tmp[0].data[7] = data[offset + 12];
         tmp[0].data[8] = data[offset + 3];
         tmp[0].data[9] = data[offset + 9];
-        tmp[0].data[10] = data[offset + 7] & ~0x30;
+        tmp[0].data[10] = data[offset + 7] & 0x0F;//~0x30;
         tmp[0].finetune = 0;
         tmp[0].diff=false;
 
@@ -690,7 +690,7 @@ static void LoadJunglevision(const char* fn, unsigned bank, const char* prefix)
         tmp[1].data[7] = data[offset + 12 + 11];
         tmp[1].data[8] = data[offset + 3 + 11];
         tmp[1].data[9] = data[offset + 9 + 11];
-        tmp[1].data[10] = data[offset + 7 + 11] & ~0x30;
+        tmp[1].data[10] = data[offset + 7 + 11] & 0x0F;//~0x30;
         tmp[1].finetune = 0;
         tmp[1].diff=false;
 
@@ -1134,6 +1134,8 @@ int main()
     LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 66, "b66P", true);
 
     LoadTMB("fm_banks/tmb_files/default.tmb",  67, "3drm67");
+    
+    LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
 
     //LoadBNK("bnk_files/grassman1.bnk", 63, "b63", false);
     //LoadBNK("bnk_files/grassman2.bnk", 64, "b64", false);
@@ -1215,7 +1217,8 @@ int main()
      "DMX (Raptor)",
 	 "SB (Modded GMOPL by Wohlstand)",
 	 "SB (Jammey O'Connel's bank)",
-	 "TMB (Default bank of Build Engine)"
+	 "TMB (Default bank of Build Engine)",
+     "OP3 (4op bank by James Alan Nguyen)"
     };
 
 #if 0

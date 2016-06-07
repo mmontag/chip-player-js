@@ -57,5 +57,5 @@ extern const struct adlinsdata
     double fine_tune;
 } adlins[];
 extern const unsigned short banks[][256];
-extern const char* const banknames[68];
+extern const char* const banknames[];
 

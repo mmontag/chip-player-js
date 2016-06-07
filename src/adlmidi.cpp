@@ -1913,7 +1913,7 @@ ADLMIDI_EXPORT int adl_setNumCards(ADL_MIDIPlayer *device, int numCards)
 
 ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
 {
-    const unsigned NumBanks = 68;//sizeof(banknames)/sizeof(*banknames);
+    const unsigned NumBanks = 69;//sizeof(banknames)/sizeof(*banknames);
     int bankno = bank;
     if(bankno < 0)
         bankno = 0;
