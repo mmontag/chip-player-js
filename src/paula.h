@@ -2,6 +2,7 @@
 #define LIBXMP_PAULA_H
 
 /* 131072 to 0, 2048 entries */
+#define PAULA_HZ 3546895
 #define MINIMUM_INTERVAL 16
 #define BLEP_SCALE 17
 #define BLEP_SIZE 2048

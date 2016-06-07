@@ -8,7 +8,7 @@
 #include "precomp_blep.h"
 
 /* return output simulated as series of bleps */
-int16 output_sample(struct paula_data *paula, int tabnum)
+static int16 output_sample(struct paula_data *paula, int tabnum)
 {
 	int i;
 	int32 output;
@@ -29,7 +29,7 @@ int16 output_sample(struct paula_data *paula, int tabnum)
 	return output;
 }
 
-void input_sample(struct paula_data *paula, int16 sample)
+static void input_sample(struct paula_data *paula, int16 sample)
 {
 	if (sample != paula->global_output_level) {
 		/* Start a new blep: level is the difference, age (or phase) is 0 clocks. */
@@ -50,7 +50,7 @@ void input_sample(struct paula_data *paula, int16 sample)
 	}
 }
 
-void clock(struct paula_data *paula, unsigned int cycles)
+static void clock(struct paula_data *paula, unsigned int cycles)
 {
 	int i;
 
@@ -62,4 +62,15 @@ void clock(struct paula_data *paula, unsigned int cycles)
 		}
 	}
 }
+
+void smix_mono_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
+		int count, int vl, int vr, int step, int led)
+{
+}
+
+void smix_stereo_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
+		int count, int vl, int vr, int step, int led)
+{
+}
+
 #endif /* !LIBXMP_CORE_PLAYER */
