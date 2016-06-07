@@ -38,6 +38,10 @@ typedef unsigned long long uint64;
 typedef signed long long int64;
 #endif
 
+#ifndef LIBXMP_CORE_PLAYER
+#include "paula.h"
+#endif
+
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
 #define NTSC_RATE	208.0		/* 1 / (60Hz * 80us)		  */
@@ -348,6 +352,10 @@ struct mixer_data {
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
 	int pbase;		/* period base */
+
+#ifndef LIBXMP_CORE_PLAYER
+	struct paula_data paula; /* Paula emulation state */
+#endif
 };
 
 struct context_data {

@@ -1,3 +1,4 @@
+#ifndef LIBXMP_CORE_PLAYER
 /*
  * Based on Antti S. Lankila's reference code, modified for libxmp
  * by Claudio Matsuoka.
@@ -61,3 +62,4 @@ void clock(struct paula_data *paula, unsigned int cycles)
 		}
 	}
 }
+#endif /* !LIBXMP_CORE_PLAYER */

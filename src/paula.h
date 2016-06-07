@@ -27,4 +27,4 @@ struct paula_data {
 	struct blep_state blepstate[MAX_BLEPS];
 };
 
-#endif /* LIBXMP_PAULA_H */
+#endif /* !LIBXMP_PAULA_H */

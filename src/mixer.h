@@ -1,6 +1,10 @@
 #ifndef LIBXMP_MIXER_H
 #define LIBXMP_MIXER_H
 
+#ifndef LIBXMP_CORE_PLAYER
+#include "paula.h"
+#endif
+
 #define SMIX_C4NOTE	6864
 
 #define SMIX_NUMVOC	128	/* default number of softmixer voices */
@@ -50,6 +54,10 @@ struct mixer_voice {
 
 	int attack;		/* ramp up anticlick */
 	int sample_loop;	/* set if sample has looped */
+
+#ifndef LIBXMP_CORE_PLAYER
+	struct paula_data *paula; /* pointer to paula state */
+#endif
 };
 
 int	mixer_on		(struct context_data *, int, int, int);
