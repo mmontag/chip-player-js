@@ -10,8 +10,8 @@
 
 /* the structure that holds data of bleps */
 struct blep_state {
-	int level;
-	int age;
+	int16 level;
+	int16 age;
 };
 
 struct paula_data {
@@ -27,7 +27,7 @@ struct paula_data {
 	 * sense to limit it to some higher value such as 16. */
 	struct blep_state blepstate[MAX_BLEPS];
 
-	int remainder;
+	double remainder;
 };
 
 #endif /* !LIBXMP_PAULA_H */

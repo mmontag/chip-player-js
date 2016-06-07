@@ -9,8 +9,8 @@
 #include "paula.h"
 #include "precomp_blep.h"
 
-#define UPDATE_POS() do { \
-    frac += MINIMUM_INTERVAL; \
+#define UPDATE_POS(x) do { \
+    frac += (x); \
     pos += frac >> SMIX_SHIFT; \
     frac &= SMIX_MASK; \
 } while (0)
@@ -21,7 +21,7 @@ void paula_init(struct context_data *ctx, struct paula_data *paula)
 
 	paula->global_output_level = 0;
 	paula->active_bleps = 0;
-	paula->remainder = s->freq / PAULA_HZ;
+	paula->remainder = (double)PAULA_HZ / s->freq;
 }
 
 /* return output simulated as series of bleps */
@@ -71,6 +71,10 @@ static void clock(struct paula_data *paula, unsigned int cycles)
 {
 	int i;
 
+	if (cycles <= 0) {
+		return;
+	}
+
 	for (i = 0; i < paula->active_bleps; i++) {
 		paula->blepstate[i].age += cycles;
 		if (paula->blepstate[i].age >= BLEP_SIZE) {
@@ -83,32 +87,35 @@ static void clock(struct paula_data *paula, unsigned int cycles)
 void smix_mono_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
 		int count, int vl, int vr, int step, int led)
 {
-	int num_in, smp_out;
-	uint8 *sptr = vi->sptr;
+	int num_in, smp_in, ministep;
+	int8 *sptr = vi->sptr;
 	unsigned int pos = vi->pos;
+	double cinc = (double)PAULA_HZ / s->freq;
 	int frac = vi->frac;
 	int i;
 
-	num_in = s->paula.remainder / MINIMUM_INTERVAL;
+	while (count--) {
+		num_in = s->paula.remainder / MINIMUM_INTERVAL;
+		ministep = step / num_in;	
 
-	/* input is always sampled at a higher rate than output */
-	for (i = 0; i < num_in; i++) {
+		/* input is always sampled at a higher rate than output */
+		for (i = 0; i < num_in - 1; i++) {
+			input_sample(&s->paula, sptr[pos]);
+			clock(&s->paula, MINIMUM_INTERVAL);
+			UPDATE_POS(ministep);
+		}
 		input_sample(&s->paula, sptr[pos]);
-		UPDATE_POS();
-		clock(&s->paula, MINIMUM_INTERVAL);
+		s->paula.remainder -= num_in * MINIMUM_INTERVAL;
+
+		clock(&s->paula, (int)s->paula.remainder);
+		smp_in = output_sample(&s->paula, led ? 0 : 1);
+		clock(&s->paula, MINIMUM_INTERVAL - (int)s->paula.remainder);
+
+		s->paula.remainder += cinc;
+		*(buffer++) += smp_in * vl;
+
+		UPDATE_POS(step - (num_in - 1) * ministep);
 	}
-	s->paula.remainder -= num_in * MINIMUM_INTERVAL;
-
-	clock(&s->paula, s->paula.remainder);
-	smp_out = output_sample(&s->paula, led ? 0 : 1);
-	clock(&s->paula, MINIMUM_INTERVAL - s->paula.remainder);
-
-	s->paula.remainder += PAULA_HZ / s->freq;
-}
-
-void smix_stereo_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
-		int count, int vl, int vr, int step, int led)
-{
 }
 
 #endif /* !LIBXMP_CORE_PLAYER */

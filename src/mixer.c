@@ -125,6 +125,14 @@ static mixer_set spline_mixers = {
 #endif
 };
 
+
+#ifndef LIBXMP_CORE_PLAYER
+void	smix_mono_a500	(struct mixer_data *, struct mixer_voice *, int *,
+			 int, int, int, int, int);
+void	paula_init	(struct context_data *, struct paula_data *);
+#endif
+
+
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
 static void downmix_int_8bit(char *dest, int32 *src, int num, int amp, int offs)
 {
@@ -469,8 +477,9 @@ void mixer_softmixer(struct context_data *ctx)
 
 				/* Call the output handler */
 				if (samples >= 0 && vi->sptr != NULL) {
-					mix_fn(vi, buf_pos, samples, vol_l,
-								vol_r, step);
+					/*mix_fn(vi, buf_pos, samples, vol_l,
+								vol_r, step);*/
+					smix_mono_a500(&ctx->s, vi, buf_pos, samples, vol_l, vol_r, step, 0);
 					buf_pos += mix_size;
 
 					/* For Hipolito's anticlick routine */
@@ -775,6 +784,10 @@ int mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 	s->dsp = XMP_DSP_LOWPASS;	/* enable filters by default */
 	s->numvoc = SMIX_NUMVOC;
 	s->dtright = s->dtleft = 0;
+
+#ifndef LIBXMP_CORE_PLAYER
+	paula_init(ctx, &s->paula);
+#endif
 
 	return 0;
 
