@@ -26,6 +26,8 @@ struct paula_data {
 	 * For Paula, minimum event interval could be even 1, but it makes
 	 * sense to limit it to some higher value such as 16. */
 	struct blep_state blepstate[MAX_BLEPS];
+
+	int remainder;
 };
 
 #endif /* !LIBXMP_PAULA_H */

@@ -4,8 +4,25 @@
  * by Claudio Matsuoka.
  */
 #include "common.h"
+#include "virtual.h"
+#include "mixer.h"
 #include "paula.h"
 #include "precomp_blep.h"
+
+#define UPDATE_POS() do { \
+    frac += MINIMUM_INTERVAL; \
+    pos += frac >> SMIX_SHIFT; \
+    frac &= SMIX_MASK; \
+} while (0)
+
+void paula_init(struct context_data *ctx, struct paula_data *paula)
+{
+	struct mixer_data *s = &ctx->s;
+
+	paula->global_output_level = 0;
+	paula->active_bleps = 0;
+	paula->remainder = s->freq / PAULA_HZ;
+}
 
 /* return output simulated as series of bleps */
 static int16 output_sample(struct paula_data *paula, int tabnum)
@@ -66,6 +83,27 @@ static void clock(struct paula_data *paula, unsigned int cycles)
 void smix_mono_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
 		int count, int vl, int vr, int step, int led)
 {
+	int num_in, smp_out;
+	uint8 *sptr = vi->sptr;
+	unsigned int pos = vi->pos;
+	int frac = vi->frac;
+	int i;
+
+	num_in = s->paula.remainder / MINIMUM_INTERVAL;
+
+	/* input is always sampled at a higher rate than output */
+	for (i = 0; i < num_in; i++) {
+		input_sample(&s->paula, sptr[pos]);
+		UPDATE_POS();
+		clock(&s->paula, MINIMUM_INTERVAL);
+	}
+	s->paula.remainder -= num_in * MINIMUM_INTERVAL;
+
+	clock(&s->paula, s->paula.remainder);
+	smp_out = output_sample(&s->paula, led ? 0 : 1);
+	clock(&s->paula, MINIMUM_INTERVAL - s->paula.remainder);
+
+	s->paula.remainder += PAULA_HZ / s->freq;
 }
 
 void smix_stereo_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
