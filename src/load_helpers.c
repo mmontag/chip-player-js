@@ -88,14 +88,14 @@ const struct module_quirk mq[] = {
 		  0xb7, 0xe6, 0xb3, 0x94, 0x8b, 0x21, 0x07, 0x63 },
 		XMP_FLAGS_VBLANK
 	},
+#endif
 
-	/* "((((( nebulos )))))" sent by Tero Auvinen */
+	/* "((((( nebulos )))))" sent by Tero Auvinen (AMP version) */
 	{
 		{ 0x51, 0x6e, 0x8d, 0xcc, 0x35, 0x7d, 0x50, 0xde,
 		  0xa9, 0x85, 0xbe, 0xbf, 0x90, 0x2e, 0x42, 0xdc },
-		XMP_FLAGS_VBLANK
+		0, XMP_MODE_NOISETRACKER
 	},
-#endif
 
 	/* Purple Motion's Sundance.mod, Music Channel BBS edit */
 	{
