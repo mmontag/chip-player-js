@@ -73,7 +73,6 @@ int virt_on(struct context_data *ctx, int num)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
-	struct mixer_data *s = &ctx->s;
 	int i;
 
 	p->virt.num_tracks = num;
@@ -97,10 +96,6 @@ int virt_on(struct context_data *ctx, int num)
 	for (i = 0; i < p->virt.maxvoc; i++) {
 		p->virt.voice_array[i].chn = FREE;
 		p->virt.voice_array[i].root = FREE;
-#ifndef LIBXMP_CORE_PLAYER
-		/* hack to make paula state available to mixers */
-		p->virt.voice_array[i].paula = &s->paula;
-#endif
 	}
 
 	p->virt.virt_channel = malloc(p->virt.virt_channels *
