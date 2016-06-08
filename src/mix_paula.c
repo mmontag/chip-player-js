@@ -139,11 +139,25 @@ SMIX_MIXER(smix_mono_a500)
 	while (count--) { PAULA_SIMULATION(0); MIX_MONO(); }
 } 
 
+SMIX_MIXER(smix_mono_a500_filter)
+{
+	VAR_PAULA(int8);
+
+	while (count--) { PAULA_SIMULATION(1); MIX_MONO(); }
+} 
+
 SMIX_MIXER(smix_stereo_a500)
 {
 	VAR_PAULA(int8);
 
 	while (count--) { PAULA_SIMULATION(0); MIX_STEREO(); }
+} 
+
+SMIX_MIXER(smix_stereo_a500_filter)
+{
+	VAR_PAULA(int8);
+
+	while (count--) { PAULA_SIMULATION(1); MIX_STEREO(); }
 } 
 
 #endif /* LIBXMP_PAULA_SIMULATOR */

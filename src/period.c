@@ -188,8 +188,8 @@ double note_to_period(struct context_data *ctx, int n, int f, int type, double a
     struct module_data *m = &ctx->m;
 
 	/* If mod replayer, modrng and classic play are active */
-	if (m->read_event_type == READ_EVENT_MOD) {
-		if (p->flags & XMP_FLAGS_CLASSIC && HAS_QUIRK(QUIRK_MODRNG)) {
+	if (p->flags & XMP_FLAGS_CLASSIC) {
+		if (IS_CLASSIC_MOD()) {
 			return note_to_period_pt(n, f);
 		}
 	}

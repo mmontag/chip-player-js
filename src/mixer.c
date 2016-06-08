@@ -79,7 +79,9 @@ MIX_FN(smix_stereo_16bit_spline_filter);
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 MIX_FN(smix_mono_a500);
+MIX_FN(smix_mono_a500_filter);
 MIX_FN(smix_stereo_a500);
+MIX_FN(smix_stereo_a500_filter);
 #endif
 
 /* Mixers array index:
@@ -132,6 +134,19 @@ static mixer_set spline_mixers = {
 	smix_stereo_16bit_spline_filter
 #endif
 };
+
+#ifdef LIBXMP_PAULA_SIMULATOR
+static mixer_set a500_mixers = {
+	smix_mono_a500,
+	NULL,
+	smix_stereo_a500,
+	NULL,
+	smix_mono_a500_filter,
+	NULL,
+	smix_stereo_a500_filter,
+	NULL
+};
+#endif
 
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
@@ -353,6 +368,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int32 *buf_pos;
 	void (*mix_fn)(struct mixer_voice *, int *, int, int, int, int);
 	mixer_set *mixers;
+	mixer_set *classic_mixers;
 
 	switch (s->interp) {
 	case XMP_INTERP_NEAREST:
@@ -367,6 +383,14 @@ void mixer_softmixer(struct context_data *ctx)
 	default:
 		mixers = &linear_mixers;
 	}
+
+	classic_mixers = mixers;
+
+#ifdef LIBXMP_PAULA_SIMULATOR
+	if (IS_CLASSIC_MOD()) {
+		classic_mixers = &a500_mixers;
+	}
+#endif
 
 	mixer_prepare(ctx);
 

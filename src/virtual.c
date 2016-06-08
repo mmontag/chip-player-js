@@ -114,7 +114,7 @@ int virt_on(struct context_data *ctx, int num)
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 	/* Initialize Paula simulator */
-	if (m->read_event_type == READ_EVENT_MOD && HAS_QUIRK(QUIRK_MODRNG)) {
+	if (IS_CLASSIC_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
 			p->virt.voice_array[i].paula = calloc(1, sizeof (struct paula_state));
 			if (p->virt.voice_array[i].paula == NULL) {
@@ -143,7 +143,7 @@ int virt_on(struct context_data *ctx, int num)
 	free(p->virt.voice_array);
 #ifdef LIBXMP_PAULA_SIMULATOR
       err1:
-	if (m->read_event_type == READ_EVENT_MOD && HAS_QUIRK(QUIRK_MODRNG)) {
+	if (IS_CLASSIC_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
 			free(p->virt.voice_array[i].paula);
 		}
@@ -156,8 +156,10 @@ int virt_on(struct context_data *ctx, int num)
 void virt_off(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
+#ifdef LIBXMP_PAULA_SIMULATOR
 	struct module_data *m = &ctx->m;
 	int i;
+#endif
 
 	p->virt.virt_used = p->virt.maxvoc = 0;
 	p->virt.virt_channels = 0;
@@ -165,7 +167,7 @@ void virt_off(struct context_data *ctx)
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 	/* Free Paula simulator state */
-	if (m->read_event_type == READ_EVENT_MOD && HAS_QUIRK(QUIRK_MODRNG)) {
+	if (IS_CLASSIC_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
 			free(p->virt.voice_array[i].paula);
 		}
