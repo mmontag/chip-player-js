@@ -33,6 +33,10 @@
 #include "synth.h"
 #endif
 
+#ifdef LIBXMP_PAULA_SIMULATOR
+#include "paula.h"
+#endif
+
 
 #define FLAG_16_BITS	0x01
 #define FLAG_STEREO	0x02
@@ -73,6 +77,12 @@ MIX_FN(smix_stereo_8bit_spline_filter);
 MIX_FN(smix_stereo_16bit_spline_filter);
 #endif
 
+#ifdef LIBXMP_PAULA_SIMULATOR
+MIX_FN(smix_mono_a500);
+MIX_FN(smix_mono_a500_filter);
+MIX_FN(smix_stereo_a500);
+MIX_FN(smix_stereo_a500_filter);
+#endif
 
 /* Mixers array index:
  *
@@ -124,6 +134,20 @@ static mixer_set spline_mixers = {
 	smix_stereo_16bit_spline_filter
 #endif
 };
+
+#ifdef LIBXMP_PAULA_SIMULATOR
+static mixer_set a500_mixers = {
+	smix_mono_a500,
+	NULL,
+	smix_stereo_a500,
+	NULL,
+	smix_mono_a500_filter,
+	NULL,
+	smix_stereo_a500_filter,
+	NULL
+};
+#endif
+
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
 static void downmix_int_8bit(char *dest, int32 *src, int num, int amp, int offs)
@@ -359,6 +383,14 @@ void mixer_softmixer(struct context_data *ctx)
 		mixers = &linear_mixers;
 	}
 
+#ifdef LIBXMP_PAULA_SIMULATOR
+	if (p->flags & XMP_FLAGS_CLASSIC) {
+		if (IS_CLASSIC_MOD()) {
+			mixers = &a500_mixers;
+		}
+	}
+#endif
+
 	mixer_prepare(ctx);
 
 	rampdown(ctx, -1, NULL, 0);	/* Anti-click */
@@ -465,12 +497,15 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 #endif
 
+				/* Switch between classic and modern mixers */
 				mix_fn = (*mixers)[mixer];
 
 				/* Call the output handler */
 				if (samples >= 0 && vi->sptr != NULL) {
-					mix_fn(vi, buf_pos, samples, vol_l,
-								vol_r, step);
+					if (mix_fn != NULL) {
+						mix_fn(vi, buf_pos, samples,
+								vol_l, vol_r, step);
+					}
 					buf_pos += mix_size;
 
 					/* For Hipolito's anticlick routine */

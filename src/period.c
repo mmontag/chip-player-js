@@ -45,6 +45,111 @@ static const int period_amiga[] = {
     0x0e2b, 0x0e11, 0x0df7, 0x0ddd, 0x0dc3, 0x0daa, 0x0d91, 0x0d78,  /* B  */
 };
 
+
+#ifndef LIBXMP_PAULA_SIMULATOR
+/*
+ * Period table from the Protracker V2.1A play routine
+ */
+static int pt_period_table[16][36] = {
+	/* Tuning 0, Normal */
+	{
+		856,808,762,720,678,640,604,570,538,508,480,453,
+		428,404,381,360,339,320,302,285,269,254,240,226,
+		214,202,190,180,170,160,151,143,135,127,120,113
+	},
+	/* Tuning 1 */
+	{
+		850,802,757,715,674,637,601,567,535,505,477,450,
+		425,401,379,357,337,318,300,284,268,253,239,225,
+		213,201,189,179,169,159,150,142,134,126,119,113
+	},
+	/* Tuning 2 */
+	{
+		844,796,752,709,670,632,597,563,532,502,474,447,
+		422,398,376,355,335,316,298,282,266,251,237,224,
+		211,199,188,177,167,158,149,141,133,125,118,112
+	},
+	/* Tuning 3 */
+	{
+		838,791,746,704,665,628,592,559,528,498,470,444,
+		419,395,373,352,332,314,296,280,264,249,235,222,
+		209,198,187,176,166,157,148,140,132,125,118,111
+	},
+	/* Tuning 4 */
+	{
+		832,785,741,699,660,623,588,555,524,495,467,441,
+		416,392,370,350,330,312,294,278,262,247,233,220,
+		208,196,185,175,165,156,147,139,131,124,117,110
+	},
+	/* Tuning 5 */
+	{
+		826,779,736,694,655,619,584,551,520,491,463,437,
+		413,390,368,347,328,309,292,276,260,245,232,219,
+		206,195,184,174,164,155,146,138,130,123,116,109
+	},
+	/* Tuning 6 */
+	{
+		820,774,730,689,651,614,580,547,516,487,460,434,
+		410,387,365,345,325,307,290,274,258,244,230,217,
+		205,193,183,172,163,154,145,137,129,122,115,109
+	},
+	/* Tuning 7 */
+	{
+		814,768,725,684,646,610,575,543,513,484,457,431,
+		407,384,363,342,323,305,288,272,256,242,228,216,
+		204,192,181,171,161,152,144,136,128,121,114,108
+	},
+	/* Tuning -8 */
+	{
+		907,856,808,762,720,678,640,604,570,538,508,480,
+		453,428,404,381,360,339,320,302,285,269,254,240,
+		226,214,202,190,180,170,160,151,143,135,127,120
+	},
+	/* Tuning -7 */
+	{
+		900,850,802,757,715,675,636,601,567,535,505,477,
+		450,425,401,379,357,337,318,300,284,268,253,238,
+		225,212,200,189,179,169,159,150,142,134,126,119
+	},
+	/* Tuning -6 */
+	{
+		894,844,796,752,709,670,632,597,563,532,502,474,
+		447,422,398,376,355,335,316,298,282,266,251,237,
+		223,211,199,188,177,167,158,149,141,133,125,118
+	},
+	/* Tuning -5 */
+	{
+		887,838,791,746,704,665,628,592,559,528,498,470,
+		444,419,395,373,352,332,314,296,280,264,249,235,
+		222,209,198,187,176,166,157,148,140,132,125,118
+	},
+	/* Tuning -4 */
+	{
+		881,832,785,741,699,660,623,588,555,524,494,467,
+		441,416,392,370,350,330,312,294,278,262,247,233,
+		220,208,196,185,175,165,156,147,139,131,123,117
+	},
+	/* Tuning -3 */
+	{
+		875,826,779,736,694,655,619,584,551,520,491,463,
+		437,413,390,368,347,328,309,292,276,260,245,232,
+		219,206,195,184,174,164,155,146,138,130,123,116
+	},
+	/* Tuning -2 */
+	{
+		868,820,774,730,689,651,614,580,547,516,487,460,
+		434,410,387,365,345,325,307,290,274,258,244,230,
+		217,205,193,183,172,163,154,145,137,129,122,115
+	},
+	/* Tuning -1 */
+	{
+		862,814,768,725,684,646,610,575,543,513,484,457,
+		431,407,384,363,342,323,305,288,272,256,242,228,
+		216,203,192,181,171,161,152,144,136,128,121,114
+	}
+};
+#endif
+
 #ifdef _MSC_VER
 static inline double round(double val)
 {    
@@ -52,11 +157,45 @@ static inline double round(double val)
 }
 #endif
 
-/* Get period from note */
-inline double note_to_period(int n, int f, int type, double adj)
+#ifndef LIBXMP_PAULA_SIMULATOR
+/* Get period from note using Protracker tuning */
+static inline int note_to_period_pt(int n, int f)
 {
-    double d = (double)n + (double)f / 128;
-    double per;
+	if (n < MIN_NOTE_MOD || n > MAX_NOTE_MOD) {
+		return -1;
+	}
+
+	n -= 48;
+	f >>= 4;
+	if (f < -8 || f > 7) {
+		return 0;
+	}
+
+	if (f < 0) {
+		f += 16;
+	}
+
+	return pt_period_table[f][n];
+}
+#endif
+
+/* Get period from note */
+double note_to_period(struct context_data *ctx, int n, int f, int type, double adj)
+{
+    double d, per;
+#ifndef LIBXMP_PAULA_SIMULATOR
+    struct player_data *p = &ctx->p;
+    struct module_data *m = &ctx->m;
+
+	/* If mod replayer, modrng and classic play are active */
+	if (p->flags & XMP_FLAGS_CLASSIC) {
+		if (IS_CLASSIC_MOD()) {
+			return note_to_period_pt(n, f);
+		}
+	}
+#endif
+
+    d = (double)n + (double)f / 128;
 
     per = type ?
 	(240.0 - d) * 16 :			/* Linear */
@@ -70,14 +209,12 @@ inline double note_to_period(int n, int f, int type, double adj)
     return per;
 }
 
-
 /* For the software mixer */
 int note_to_period_mix(int n, int b)
 {
     double d = (double)n + (double)b / 12800;
     return (int)(8192.0 * XMP_PERIOD_BASE / pow(2, d / 12));
 }
-
 
 /* Get note from period using the Amiga frequency table */
 /* This function is used only by the MOD loader */
@@ -94,9 +231,8 @@ int period_to_note(int p)
     return n - (f >> 2);
 }
 
-
 /* Get pitchbend from base note and amiga period */
-int period_to_bend(double p, int n, int type, double adj)
+int period_to_bend(struct context_data *ctx, double p, int n, int type, double adj)
 {
     double d;
 
@@ -107,10 +243,9 @@ int period_to_bend(double p, int n, int type, double adj)
     	return 100 * (8 * (((240 - n) << 4) - p));	/* Linear */
     }
 
-    d = note_to_period(n, 0, 0, adj);
+    d = note_to_period(ctx, n, 0, 0, adj);
     return round(100.0 * ((1536.0 * log(d / p) / M_LN2)));	/* Amiga */
 }
-
 
 /* Convert finetune = 1200 * log2(C2SPD/8363))
  *

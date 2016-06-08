@@ -370,7 +370,7 @@ dist-test:
 	cp -RPp $(addprefix $(TEST_PATH)/,$(TEST_DFILES)) $(DIST)/$(TEST_PATH)
 
 clean:
-	rm -f *.o core *~ $(TEST_OBJS)
+	rm -f *.o core *~ $(T_OBJS)
 
 #
 # Utilities

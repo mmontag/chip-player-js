@@ -23,8 +23,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include "common.h"
 #include "virtual.h"
 #include "mixer.h"
+
+#ifdef LIBXMP_PAULA_SIMULATOR
+#include "paula.h"
+#endif
 
 #define	FREE	-1
 
@@ -53,6 +58,9 @@ void virt_resetvoice(struct context_data *ctx, int voc, int mute)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
+#ifdef LIBXMP_PAULA_SIMULATOR
+	struct paula_state *paula;
+#endif
 
 	if ((uint32)voc >= p->virt.maxvoc)
 		return;
@@ -64,7 +72,13 @@ void virt_resetvoice(struct context_data *ctx, int voc, int mute)
 	p->virt.virt_used--;
 	p->virt.virt_channel[vi->root].count--;
 	p->virt.virt_channel[vi->chn].map = FREE;
+#ifdef LIBXMP_PAULA_SIMULATOR
+	paula = vi->paula;
+#endif
 	memset(vi, 0, sizeof(struct mixer_voice));
+#ifdef LIBXMP_PAULA_SIMULATOR
+	vi->paula = paula;
+#endif
 	vi->chn = vi->root = FREE;
 }
 
@@ -98,10 +112,23 @@ int virt_on(struct context_data *ctx, int num)
 		p->virt.voice_array[i].root = FREE;
 	}
 
+#ifdef LIBXMP_PAULA_SIMULATOR
+	/* Initialize Paula simulator */
+	if (IS_CLASSIC_MOD()) {
+		for (i = 0; i < p->virt.maxvoc; i++) {
+			p->virt.voice_array[i].paula = calloc(1, sizeof (struct paula_state));
+			if (p->virt.voice_array[i].paula == NULL) {
+				goto err1;
+			}
+			paula_init(ctx, p->virt.voice_array[i].paula);
+		}
+	}
+#endif
+
 	p->virt.virt_channel = malloc(p->virt.virt_channels *
 				sizeof(struct virt_channel));
 	if (p->virt.virt_channel == NULL)
-		goto err1;
+		goto err2;
 
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		p->virt.virt_channel[i].map = FREE;
@@ -112,8 +139,16 @@ int virt_on(struct context_data *ctx, int num)
 
 	return 0;
 
-      err1:
+      err2:
 	free(p->virt.voice_array);
+#ifdef LIBXMP_PAULA_SIMULATOR
+      err1:
+	if (IS_CLASSIC_MOD()) {
+		for (i = 0; i < p->virt.maxvoc; i++) {
+			free(p->virt.voice_array[i].paula);
+		}
+	}
+#endif
       err:
 	return -1;
 }
@@ -121,10 +156,24 @@ int virt_on(struct context_data *ctx, int num)
 void virt_off(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
+#ifdef LIBXMP_PAULA_SIMULATOR
+	struct module_data *m = &ctx->m;
+	int i;
+#endif
 
 	p->virt.virt_used = p->virt.maxvoc = 0;
 	p->virt.virt_channels = 0;
 	p->virt.num_tracks = 0;
+
+#ifdef LIBXMP_PAULA_SIMULATOR
+	/* Free Paula simulator state */
+	if (IS_CLASSIC_MOD()) {
+		for (i = 0; i < p->virt.maxvoc; i++) {
+			free(p->virt.voice_array[i].paula);
+		}
+	}
+#endif
+
 	free(p->virt.voice_array);
 	free(p->virt.virt_channel);
 }
@@ -134,8 +183,9 @@ void virt_reset(struct context_data *ctx)
 	struct player_data *p = &ctx->p;
 	int i;
 
-	if (p->virt.virt_channels < 1)
+	if (p->virt.virt_channels < 1) {
 		return;
+	}
 
 	/* CID 129203 (#1 of 1): Useless call (USELESS_CALL)
 	 * Call is only useful for its return value, which is ignored. 
@@ -143,11 +193,17 @@ void virt_reset(struct context_data *ctx)
 	 * mixer_numvoices(ctx, p->virt.maxvoc);
 	 */
 
-	memset(p->virt.voice_array, 0,
-	       p->virt.maxvoc * sizeof(struct mixer_voice));
 	for (i = 0; i < p->virt.maxvoc; i++) {
-		p->virt.voice_array[i].chn = FREE;
-		p->virt.voice_array[i].root = FREE;
+		struct mixer_voice *vi = &p->virt.voice_array[i];
+#ifdef LIBXMP_PAULA_SIMULATOR
+		struct paula_state *paula = vi->paula;
+#endif
+		memset(vi, 0, sizeof(struct mixer_voice));
+#ifdef LIBXMP_PAULA_SIMULATOR
+		vi->paula = paula;
+#endif
+		vi->chn = FREE;
+		vi->root = FREE;
 	}
 
 	for (i = 0; i < p->virt.virt_channels; i++) {

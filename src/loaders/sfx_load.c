@@ -30,8 +30,8 @@
  * uses 31 samples [instead of 15].
  */
 
-#include "period.h"
 #include "loader.h"
+#include "period.h"
 
 #define MAGIC_SONG	MAGIC4('S','O','N','G')
 

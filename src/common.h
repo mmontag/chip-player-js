@@ -38,6 +38,10 @@ typedef unsigned long long uint64;
 typedef signed long long int64;
 #endif
 
+#ifndef LIBXMP_CORE_PLAYER
+#define LIBXMP_PAULA_SIMULATOR
+#endif
+
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
 #define NTSC_RATE	208.0		/* 1 / (60Hz * 80us)		  */
@@ -189,6 +193,9 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define MAX_SEQUENCES		16
 #define MAX_SAMPLE_SIZE		0x10000000
 #define MAX_SAMPLES		1024
+
+/* Classic mode */
+#define IS_CLASSIC_MOD()	(m->read_event_type == READ_EVENT_MOD && HAS_QUIRK(QUIRK_MODRNG))
 
 struct ord_data {
 	int speed;

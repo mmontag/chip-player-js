@@ -67,9 +67,10 @@
 } while (0)
 
 
-static void do_toneporta(struct module_data *m,
+static void do_toneporta(struct context_data *ctx,
                                 struct channel_data *xc, int note)
 {
+	struct module_data *m = &ctx->m;
 	struct xmp_instrument *instrument = &m->mod.xxi[xc->ins];
 	int mapped = instrument->map[xc->key].ins;
 	struct xmp_subinstrument *sub;
@@ -82,7 +83,7 @@ static void do_toneporta(struct module_data *m,
 
 	if (note >= 1 && note <= 0x80 && (uint32)xc->ins < m->mod.ins) {
 		note--;
-		xc->porta.target = note_to_period(note + sub->xpo +
+		xc->porta.target = note_to_period(ctx, note + sub->xpo +
 			instrument->map[xc->key_porta].xpo, xc->finetune,
 			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
 	}
@@ -223,7 +224,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
 
-		do_toneporta(m, xc, note);
+		do_toneporta(ctx, xc, note);
 
 		SET(TONEPORTA);
 		break;
@@ -244,7 +245,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_TONE_VSLIDE:	/* Toneporta + vol slide */
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
-		do_toneporta(m, xc, note);
+		do_toneporta(ctx, xc, note);
 		SET(TONEPORTA);
 		goto fx_volslide;
 	case FX_VIBRA_VSLIDE:	/* Vibrato + vol slide */
@@ -847,14 +848,14 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_PITCH_ADD:
 		SET_PER(TONEPORTA);
-		xc->porta.target = note_to_period(note - 1, xc->finetune, 0, 0)
+		xc->porta.target = note_to_period(ctx, note - 1, xc->finetune, 0, 0)
 			+ fxp;
 		xc->porta.slide = 2;
 		xc->porta.dir = 1;
 		break;
 	case FX_PITCH_SUB:
 		SET_PER(TONEPORTA);
-		xc->porta.target = note_to_period(note - 1, xc->finetune, 0, 0)
+		xc->porta.target = note_to_period(ctx, note - 1, xc->finetune, 0, 0)
 			- fxp;
 		xc->porta.slide = 2;
 		xc->porta.dir = -1;
@@ -979,7 +980,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		if (!IS_VALID_INSTRUMENT(xc->ins))
 			break;
 		SET_PER(TONEPORTA);
-		do_toneporta(m, xc, note);
+		do_toneporta(ctx, xc, note);
 		xc->porta.slide = fxp;
 		if (fxp == 0)
 			RESET_PER(TONEPORTA);
