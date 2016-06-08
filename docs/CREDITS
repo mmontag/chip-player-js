@@ -39,6 +39,9 @@ The Authors
 - Kevin Langman <langman@earthling.net>
   * OS/2 port
 
+- Antti S. Lankila <alankila@bel.fi>
+  * Amiga sound model and processing algorithm
+
 - Stephen Leary <sleary@vavi.co.uk>
   * AMOS Music Bank format loader
 

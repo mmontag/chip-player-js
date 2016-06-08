@@ -4,10 +4,12 @@ Stable versions
 4.4.0 ():
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM arpeggio in FastTracker 2 compatible mode
+	- fix MOD vibrato and tremolo in Protracker compatible mode
 	Other changes:
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
-	- add flags to configure player personality
+	- add Antti Lankila's Amiga 500 modeling mixer
+	- add flags to configure player mode
 	- code refactoring and cleanup
 
 4.3.13 (20160417):
