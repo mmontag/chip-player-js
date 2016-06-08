@@ -368,7 +368,6 @@ void mixer_softmixer(struct context_data *ctx)
 	int32 *buf_pos;
 	void (*mix_fn)(struct mixer_voice *, int *, int, int, int, int);
 	mixer_set *mixers;
-	mixer_set *classic_mixers;
 
 	switch (s->interp) {
 	case XMP_INTERP_NEAREST:
@@ -384,11 +383,11 @@ void mixer_softmixer(struct context_data *ctx)
 		mixers = &linear_mixers;
 	}
 
-	classic_mixers = mixers;
-
 #ifdef LIBXMP_PAULA_SIMULATOR
-	if (IS_CLASSIC_MOD()) {
-		classic_mixers = &a500_mixers;
+	if (p->flags & XMP_FLAGS_CLASSIC) {
+		if (IS_CLASSIC_MOD()) {
+			mixers = &a500_mixers;
+		}
 	}
 #endif
 
@@ -499,16 +498,14 @@ void mixer_softmixer(struct context_data *ctx)
 #endif
 
 				/* Switch between classic and modern mixers */
-				if (p->flags & XMP_FLAGS_CLASSIC) {
-					mix_fn = (*classic_mixers)[mixer];
-				} else {
-					mix_fn = (*mixers)[mixer];
-				}
+				mix_fn = (*mixers)[mixer];
 
 				/* Call the output handler */
 				if (samples >= 0 && vi->sptr != NULL) {
-					mix_fn(vi, buf_pos, samples, vol_l,
-								vol_r, step);
+					if (mix_fn != NULL) {
+						mix_fn(vi, buf_pos, samples,
+								vol_l, vol_r, step);
+					}
 					buf_pos += mix_size;
 
 					/* For Hipolito's anticlick routine */
