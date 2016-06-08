@@ -498,13 +498,17 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 #endif
 
-				mix_fn = (*mixers)[mixer];
+				/* Switch between classic and modern mixers */
+				if (p->flags & XMP_FLAGS_CLASSIC) {
+					mix_fn = (*classic_mixers)[mixer];
+				} else {
+					mix_fn = (*mixers)[mixer];
+				}
 
 				/* Call the output handler */
 				if (samples >= 0 && vi->sptr != NULL) {
-					/*mix_fn(vi, buf_pos, samples, vol_l,
-								vol_r, step);*/
-					smix_stereo_a500(vi, buf_pos, samples, vol_l, vol_r, step);
+					mix_fn(vi, buf_pos, samples, vol_l,
+								vol_r, step);
 					buf_pos += mix_size;
 
 					/* For Hipolito's anticlick routine */
