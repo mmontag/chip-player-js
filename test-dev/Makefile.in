@@ -205,7 +205,8 @@ OPENMPT_MOD	= amigalimitsfinetune \
 		  patternjump \
 		  portasmpchange \
 		  portatarget \
-		  ptoffset
+		  ptoffset \
+		  vibratoreset
 
 MIXER		= interpolation_default \
 		  mono_8bit_nearest mono_16bit_nearest \
