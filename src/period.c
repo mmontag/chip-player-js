@@ -46,7 +46,7 @@ static const int period_amiga[] = {
 };
 
 
-#ifndef LIBXMP_CORE_PLAYER
+#ifndef LIBXMP_PAULA_SIMULATOR
 /*
  * Period table from the Protracker V2.1A play routine
  */
@@ -157,7 +157,7 @@ static inline double round(double val)
 }
 #endif
 
-#ifndef LIBXMP_CORE_PLAYER
+#ifndef LIBXMP_PAULA_SIMULATOR
 /* Get period from note using Protracker tuning */
 static inline int note_to_period_pt(int n, int f)
 {
@@ -166,7 +166,7 @@ static inline int note_to_period_pt(int n, int f)
 	}
 
 	n -= 48;
-	f >>= 5;
+	f >>= 4;
 	if (f < -8 || f > 7) {
 		return 0;
 	}
@@ -183,7 +183,7 @@ static inline int note_to_period_pt(int n, int f)
 double note_to_period(struct context_data *ctx, int n, int f, int type, double adj)
 {
     double d, per;
-#ifndef LIBXMP_CORE_PLAYER
+#ifndef LIBXMP_PAULA_SIMULATOR
     struct player_data *p = &ctx->p;
     struct module_data *m = &ctx->m;
 
