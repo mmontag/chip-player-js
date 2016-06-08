@@ -1126,9 +1126,8 @@ int main()
     LoadTMB("fm_banks/tmb_files/swtimbr.tmb",  63, "sw");
     
     LoadDoom("fm_banks/raptor/genmidi.op2", 64, "rapt");
-	
-	LoadIBK("fm_banks/ibk_files/my-gmopl.ibk", 		65, "b65M", false);
-    LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 65, "b65P", true);
+
+	LoadJunglevision("fm_banks/op3_files/fat2_modded.op3", 65, "b65M");
 
 	LoadIBK("fm_banks/ibk_files/JOconnel.IBK", 		66, "b66M", false);
     LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 66, "b66P", true);
@@ -1215,7 +1214,7 @@ int main()
      "TMB (Duke Nukem 3D)",
      "TMB (Shadow Warrior)",
      "DMX (Raptor)",
-	 "SB (Modded GMOPL by Wohlstand)",
+	 "OP3 (Modded GMOPL by Wohlstand)",
 	 "SB (Jammey O'Connel's bank)",
 	 "TMB (Default bank of Build Engine)",
      "OP3 (4op bank by James Alan Nguyen)"
