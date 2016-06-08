@@ -58,6 +58,9 @@ void virt_resetvoice(struct context_data *ctx, int voc, int mute)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
+#ifdef LIBXMP_PAULA_SIMULATOR
+	struct paula_state *paula;
+#endif
 
 	if ((uint32)voc >= p->virt.maxvoc)
 		return;
@@ -69,7 +72,13 @@ void virt_resetvoice(struct context_data *ctx, int voc, int mute)
 	p->virt.virt_used--;
 	p->virt.virt_channel[vi->root].count--;
 	p->virt.virt_channel[vi->chn].map = FREE;
+#ifdef LIBXMP_PAULA_SIMULATOR
+	paula = vi->paula;
+#endif
 	memset(vi, 0, sizeof(struct mixer_voice));
+#ifdef LIBXMP_PAULA_SIMULATOR
+	vi->paula = paula;
+#endif
 	vi->chn = vi->root = FREE;
 }
 
@@ -183,11 +192,16 @@ void virt_reset(struct context_data *ctx)
 	 */
 
 	for (i = 0; i < p->virt.maxvoc; i++) {
-		struct paula_state *paula = p->virt.voice_array[i].paula;
-		memset(&p->virt.voice_array[i], 0, sizeof(struct mixer_voice));
-		p->virt.voice_array[i].paula = paula;
-		p->virt.voice_array[i].chn = FREE;
-		p->virt.voice_array[i].root = FREE;
+		struct mixer_voice *vi = &p->virt.voice_array[i];
+#ifdef LIBXMP_PAULA_SIMULATOR
+		struct paula_state *paula = vi->paula;
+#endif
+		memset(vi, 0, sizeof(struct mixer_voice));
+#ifdef LIBXMP_PAULA_SIMULATOR
+		vi->paula = paula;
+#endif
+		vi->chn = FREE;
+		vi->root = FREE;
 	}
 
 	for (i = 0; i < p->virt.virt_channels; i++) {

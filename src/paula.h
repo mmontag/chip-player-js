@@ -28,11 +28,10 @@ struct paula_state {
 	struct blep_state blepstate[MAX_BLEPS];
 
 	double remainder;
+	double fdiv;
 };
 
 
-void	smix_mono_a500	(struct mixer_data *, struct mixer_voice *, int *,
-			 int, int, int, int, int);
 void	paula_init	(struct context_data *, struct paula_state *);
 
 #endif /* !LIBXMP_PAULA_H */

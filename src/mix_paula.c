@@ -10,19 +10,14 @@
 #include "paula.h"
 #include "precomp_blep.h"
 
-#define UPDATE_POS(x) do { \
-    frac += (x); \
-    pos += frac >> SMIX_SHIFT; \
-    frac &= SMIX_MASK; \
-} while (0)
-
 void paula_init(struct context_data *ctx, struct paula_state *paula)
 {
 	struct mixer_data *s = &ctx->s;
 
 	paula->global_output_level = 0;
 	paula->active_bleps = 0;
-	paula->remainder = (double)PAULA_HZ / s->freq;
+	paula->fdiv = (double)PAULA_HZ / s->freq;
+	paula->remainder = paula->fdiv;
 }
 
 /* return output simulated as series of bleps */
@@ -85,38 +80,70 @@ static void clock(struct paula_state *paula, unsigned int cycles)
 	}
 }
 
-void smix_mono_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
-			int count, int vl, int vr, int step, int led)
+#define UPDATE_POS(x) do { \
+	frac += (x); \
+	pos += frac >> SMIX_SHIFT; \
+	frac &= SMIX_MASK; \
+} while (0)
+
+#define PAULA_SIMULATION(x) do { \
+	int num_in = vi->paula->remainder / MINIMUM_INTERVAL; \
+	int ministep = step / num_in; \
+	int i; \
+	\
+	/* input is always sampled at a higher rate than output */ \
+	for (i = 0; i < num_in - 1; i++) { \
+		input_sample(vi->paula, sptr[pos]); \
+		clock(vi->paula, MINIMUM_INTERVAL); \
+		UPDATE_POS(ministep); \
+	} \
+	input_sample(vi->paula, sptr[pos]); \
+	vi->paula->remainder -= num_in * MINIMUM_INTERVAL; \
+	\
+	clock(vi->paula, (int)vi->paula->remainder); \
+	smp_in = output_sample(vi->paula, (x)); \
+	clock(vi->paula, MINIMUM_INTERVAL - (int)vi->paula->remainder); \
+	UPDATE_POS(step - (num_in - 1) * ministep); \
+	\
+	vi->paula->remainder += vi->paula->fdiv; \
+} while (0)
+
+#define MIX_MONO() do { \
+	*(buffer++) += smp_in * vl; \
+} while (0)
+
+#define MIX_STEREO() do { \
+	if (vi->pan < 0) { \
+		*(buffer++) += smp_in * (vi->vol << 8); \
+		buffer++; \
+	} else { \
+		buffer++; \
+		*(buffer++) += smp_in * (vi->vol << 8); \
+	} \
+} while (0)
+
+#define VAR_NORM(x) \
+    int smp_in; \
+    x *sptr = vi->sptr; \
+    unsigned int pos = vi->pos; \
+    int frac = vi->frac
+
+#define VAR_PAULA(x) \
+    VAR_NORM(x)
+
+
+SMIX_MIXER(smix_mono_a500)
 {
-	int num_in, smp_in, ministep;
-	int8 *sptr = vi->sptr;
-	unsigned int pos = vi->pos;
-	double cinc = (double)PAULA_HZ / s->freq;
-	int frac = vi->frac;
-	int i;
+	VAR_PAULA(int8);
 
-	while (count--) {
-		num_in = vi->paula->remainder / MINIMUM_INTERVAL;
-		ministep = step / num_in;	
+	while (count--) { PAULA_SIMULATION(0); MIX_MONO(); }
+} 
 
-		/* input is always sampled at a higher rate than output */
-		for (i = 0; i < num_in - 1; i++) {
-			input_sample(vi->paula, sptr[pos]);
-			clock(vi->paula, MINIMUM_INTERVAL);
-			UPDATE_POS(ministep);
-		}
-		input_sample(vi->paula, sptr[pos]);
-		vi->paula->remainder -= num_in * MINIMUM_INTERVAL;
+SMIX_MIXER(smix_stereo_a500)
+{
+	VAR_PAULA(int8);
 
-		clock(vi->paula, (int)vi->paula->remainder);
-		smp_in = output_sample(vi->paula, led ? 0 : 1);
-		clock(vi->paula, MINIMUM_INTERVAL - (int)vi->paula->remainder);
-
-		vi->paula->remainder += cinc;
-		*(buffer++) += smp_in * vl;
-
-		UPDATE_POS(step - (num_in - 1) * ministep);
-	}
-}
+	while (count--) { PAULA_SIMULATION(0); MIX_STEREO(); }
+} 
 
 #endif /* LIBXMP_PAULA_SIMULATOR */

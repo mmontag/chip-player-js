@@ -77,6 +77,10 @@ MIX_FN(smix_stereo_8bit_spline_filter);
 MIX_FN(smix_stereo_16bit_spline_filter);
 #endif
 
+#ifdef LIBXMP_PAULA_SIMULATOR
+MIX_FN(smix_mono_a500);
+MIX_FN(smix_stereo_a500);
+#endif
 
 /* Mixers array index:
  *
@@ -476,7 +480,7 @@ void mixer_softmixer(struct context_data *ctx)
 				if (samples >= 0 && vi->sptr != NULL) {
 					/*mix_fn(vi, buf_pos, samples, vol_l,
 								vol_r, step);*/
-					smix_mono_a500(&ctx->s, vi, buf_pos, samples, vol_l, vol_r, step, 0);
+					smix_stereo_a500(vi, buf_pos, samples, vol_l, vol_r, step);
 					buf_pos += mix_size;
 
 					/* For Hipolito's anticlick routine */

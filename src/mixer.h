@@ -18,6 +18,9 @@
 #include "paula.h"
 #endif
 
+#define SMIX_MIXER(f) void f(struct mixer_voice *vi, int *buffer, \
+	int count, int vl, int vr, int step)
+
 struct mixer_voice {
 	int chn;		/* channel number */
 	int root;		/* */
