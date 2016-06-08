@@ -1,9 +1,10 @@
-#ifndef LIBXMP_CORE_PLAYER
+#include "common.h"
+
+#ifdef LIBXMP_PAULA_SIMULATOR
 /*
  * Based on Antti S. Lankila's reference code, modified for libxmp
  * by Claudio Matsuoka.
  */
-#include "common.h"
 #include "virtual.h"
 #include "mixer.h"
 #include "paula.h"
@@ -15,7 +16,7 @@
     frac &= SMIX_MASK; \
 } while (0)
 
-void paula_init(struct context_data *ctx, struct paula_data *paula)
+void paula_init(struct context_data *ctx, struct paula_state *paula)
 {
 	struct mixer_data *s = &ctx->s;
 
@@ -25,7 +26,7 @@ void paula_init(struct context_data *ctx, struct paula_data *paula)
 }
 
 /* return output simulated as series of bleps */
-static int16 output_sample(struct paula_data *paula, int tabnum)
+static int16 output_sample(struct paula_state *paula, int tabnum)
 {
 	int i;
 	int32 output;
@@ -46,7 +47,7 @@ static int16 output_sample(struct paula_data *paula, int tabnum)
 	return output;
 }
 
-static void input_sample(struct paula_data *paula, int16 sample)
+static void input_sample(struct paula_state *paula, int16 sample)
 {
 	if (sample != paula->global_output_level) {
 		/* Start a new blep: level is the difference, age (or phase) is 0 clocks. */
@@ -67,7 +68,7 @@ static void input_sample(struct paula_data *paula, int16 sample)
 	}
 }
 
-static void clock(struct paula_data *paula, unsigned int cycles)
+static void clock(struct paula_state *paula, unsigned int cycles)
 {
 	int i;
 
@@ -85,7 +86,7 @@ static void clock(struct paula_data *paula, unsigned int cycles)
 }
 
 void smix_mono_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
-		int count, int vl, int vr, int step, int led)
+			int count, int vl, int vr, int step, int led)
 {
 	int num_in, smp_in, ministep;
 	int8 *sptr = vi->sptr;
@@ -95,27 +96,27 @@ void smix_mono_a500(struct mixer_data *s, struct mixer_voice *vi, int *buffer,
 	int i;
 
 	while (count--) {
-		num_in = s->paula.remainder / MINIMUM_INTERVAL;
+		num_in = vi->paula->remainder / MINIMUM_INTERVAL;
 		ministep = step / num_in;	
 
 		/* input is always sampled at a higher rate than output */
 		for (i = 0; i < num_in - 1; i++) {
-			input_sample(&s->paula, sptr[pos]);
-			clock(&s->paula, MINIMUM_INTERVAL);
+			input_sample(vi->paula, sptr[pos]);
+			clock(vi->paula, MINIMUM_INTERVAL);
 			UPDATE_POS(ministep);
 		}
-		input_sample(&s->paula, sptr[pos]);
-		s->paula.remainder -= num_in * MINIMUM_INTERVAL;
+		input_sample(vi->paula, sptr[pos]);
+		vi->paula->remainder -= num_in * MINIMUM_INTERVAL;
 
-		clock(&s->paula, (int)s->paula.remainder);
-		smp_in = output_sample(&s->paula, led ? 0 : 1);
-		clock(&s->paula, MINIMUM_INTERVAL - (int)s->paula.remainder);
+		clock(vi->paula, (int)vi->paula->remainder);
+		smp_in = output_sample(vi->paula, led ? 0 : 1);
+		clock(vi->paula, MINIMUM_INTERVAL - (int)vi->paula->remainder);
 
-		s->paula.remainder += cinc;
+		vi->paula->remainder += cinc;
 		*(buffer++) += smp_in * vl;
 
 		UPDATE_POS(step - (num_in - 1) * ministep);
 	}
 }
 
-#endif /* !LIBXMP_CORE_PLAYER */
+#endif /* LIBXMP_PAULA_SIMULATOR */

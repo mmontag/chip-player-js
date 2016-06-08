@@ -23,8 +23,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include "common.h"
 #include "virtual.h"
 #include "mixer.h"
+
+#ifdef LIBXMP_PAULA_SIMULATOR
+#include "paula.h"
+#endif
 
 #define	FREE	-1
 
@@ -98,10 +103,23 @@ int virt_on(struct context_data *ctx, int num)
 		p->virt.voice_array[i].root = FREE;
 	}
 
+#ifdef LIBXMP_PAULA_SIMULATOR
+	/* Initialize Paula simulator */
+	if (m->read_event_type == READ_EVENT_MOD && HAS_QUIRK(QUIRK_MODRNG)) {
+		for (i = 0; i < p->virt.maxvoc; i++) {
+			p->virt.voice_array[i].paula = calloc(1, sizeof (struct paula_state));
+			if (p->virt.voice_array[i].paula == NULL) {
+				goto err1;
+			}
+			paula_init(ctx, p->virt.voice_array[i].paula);
+		}
+	}
+#endif
+
 	p->virt.virt_channel = malloc(p->virt.virt_channels *
 				sizeof(struct virt_channel));
 	if (p->virt.virt_channel == NULL)
-		goto err1;
+		goto err2;
 
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		p->virt.virt_channel[i].map = FREE;
@@ -112,8 +130,16 @@ int virt_on(struct context_data *ctx, int num)
 
 	return 0;
 
-      err1:
+      err2:
 	free(p->virt.voice_array);
+#ifdef LIBXMP_PAULA_SIMULATOR
+      err1:
+	if (m->read_event_type == READ_EVENT_MOD && HAS_QUIRK(QUIRK_MODRNG)) {
+		for (i = 0; i < p->virt.maxvoc; i++) {
+			free(p->virt.voice_array[i].paula);
+		}
+	}
+#endif
       err:
 	return -1;
 }
@@ -121,10 +147,22 @@ int virt_on(struct context_data *ctx, int num)
 void virt_off(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
+	int i;
 
 	p->virt.virt_used = p->virt.maxvoc = 0;
 	p->virt.virt_channels = 0;
 	p->virt.num_tracks = 0;
+
+#ifdef LIBXMP_PAULA_SIMULATOR
+	/* Free Paula simulator state */
+	if (m->read_event_type == READ_EVENT_MOD && HAS_QUIRK(QUIRK_MODRNG)) {
+		for (i = 0; i < p->virt.maxvoc; i++) {
+			free(p->virt.voice_array[i].paula);
+		}
+	}
+#endif
+
 	free(p->virt.voice_array);
 	free(p->virt.virt_channel);
 }
@@ -134,8 +172,9 @@ void virt_reset(struct context_data *ctx)
 	struct player_data *p = &ctx->p;
 	int i;
 
-	if (p->virt.virt_channels < 1)
+	if (p->virt.virt_channels < 1) {
 		return;
+	}
 
 	/* CID 129203 (#1 of 1): Useless call (USELESS_CALL)
 	 * Call is only useful for its return value, which is ignored. 
@@ -143,9 +182,10 @@ void virt_reset(struct context_data *ctx)
 	 * mixer_numvoices(ctx, p->virt.maxvoc);
 	 */
 
-	memset(p->virt.voice_array, 0,
-	       p->virt.maxvoc * sizeof(struct mixer_voice));
 	for (i = 0; i < p->virt.maxvoc; i++) {
+		struct paula_state *paula = p->virt.voice_array[i].paula;
+		memset(&p->virt.voice_array[i], 0, sizeof(struct mixer_voice));
+		p->virt.voice_array[i].paula = paula;
 		p->virt.voice_array[i].chn = FREE;
 		p->virt.voice_array[i].root = FREE;
 	}

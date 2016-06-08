@@ -39,7 +39,7 @@ typedef signed long long int64;
 #endif
 
 #ifndef LIBXMP_CORE_PLAYER
-#include "paula.h"
+#define LIBXMP_PAULA_SIMULATOR
 #endif
 
 /* Constants */
@@ -352,10 +352,6 @@ struct mixer_data {
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
 	int pbase;		/* period base */
-
-#ifndef LIBXMP_CORE_PLAYER
-	struct paula_data paula; /* Paula emulation state */
-#endif
 };
 
 struct context_data {

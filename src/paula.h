@@ -14,7 +14,7 @@ struct blep_state {
 	int16 age;
 };
 
-struct paula_data {
+struct paula_state {
 	/* the instantenous value of Paula output */
 	int16 global_output_level;
 
@@ -29,5 +29,10 @@ struct paula_data {
 
 	double remainder;
 };
+
+
+void	smix_mono_a500	(struct mixer_data *, struct mixer_voice *, int *,
+			 int, int, int, int, int);
+void	paula_init	(struct context_data *, struct paula_state *);
 
 #endif /* !LIBXMP_PAULA_H */

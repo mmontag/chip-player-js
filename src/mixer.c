@@ -33,6 +33,10 @@
 #include "synth.h"
 #endif
 
+#ifdef LIBXMP_PAULA_SIMULATOR
+#include "paula.h"
+#endif
+
 
 #define FLAG_16_BITS	0x01
 #define FLAG_STEREO	0x02
@@ -124,13 +128,6 @@ static mixer_set spline_mixers = {
 	smix_stereo_16bit_spline_filter
 #endif
 };
-
-
-#ifndef LIBXMP_CORE_PLAYER
-void	smix_mono_a500	(struct mixer_data *, struct mixer_voice *, int *,
-			 int, int, int, int, int);
-void	paula_init	(struct context_data *, struct paula_data *);
-#endif
 
 
 /* Downmix 32bit samples to 8bit, signed or unsigned, mono or stereo output */
@@ -784,10 +781,6 @@ int mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 	s->dsp = XMP_DSP_LOWPASS;	/* enable filters by default */
 	s->numvoc = SMIX_NUMVOC;
 	s->dtright = s->dtleft = 0;
-
-#ifndef LIBXMP_CORE_PLAYER
-	paula_init(ctx, &s->paula);
-#endif
 
 	return 0;
 
