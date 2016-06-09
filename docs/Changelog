@@ -10,6 +10,7 @@ Stable versions
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
 	- add Antti Lankila's Amiga 500 modeling mixer
 	- add flags to configure player mode
+	- limit Oktalyzer modules to MOD note range
 	- code refactoring and cleanup
 
 4.3.13 (20160417):

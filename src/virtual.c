@@ -287,6 +287,10 @@ int virt_mapchannel(struct context_data *ctx, int chn)
 void virt_resetchannel(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
+	struct mixer_voice *vi;
+#ifdef LIBXMP_PAULA_SIMULATOR
+	struct paula_state *paula;
+#endif
 	int voc;
 
 	if ((voc = map_virt_channel(p, chn)) < 0)
@@ -297,8 +301,16 @@ void virt_resetchannel(struct context_data *ctx, int chn)
 	p->virt.virt_used--;
 	p->virt.virt_channel[p->virt.voice_array[voc].root].count--;
 	p->virt.virt_channel[chn].map = FREE;
-	memset(&p->virt.voice_array[voc], 0, sizeof(struct mixer_voice));
-	p->virt.voice_array[voc].chn = p->virt.voice_array[voc].root = FREE;
+
+	vi = &p->virt.voice_array[voc];
+#ifdef LIBXMP_PAULA_SIMULATOR
+	paula = vi->paula;
+#endif
+	memset(vi, 0, sizeof(struct mixer_voice));
+#ifdef LIBXMP_PAULA_SIMULATOR
+	vi->paula = paula;
+#endif
+	vi->chn = vi->root = FREE;
 }
 
 void virt_setvol(struct context_data *ctx, int chn, int vol)
