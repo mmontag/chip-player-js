@@ -7,7 +7,9 @@ Stable versions
 	Other changes:
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
-	- add flags to configure player personality
+	- add Antti Lankila's Paula audio simulation
+	- add flags to configure player mode
+	- limit Oktalyzer modules to MOD note range
 	- code refactoring and cleanup
 
 4.3.13 (20160417):
