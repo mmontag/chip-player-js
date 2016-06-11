@@ -465,6 +465,20 @@ int xmp_get_player__(xmp_context opaque, int parm)
 	case XMP_PLAYER_MODE:
 		ret = p->mode;
 		break;
+	case XMP_PLAYER_MIXER_TYPE:
+		ret = XMP_MIXER_STANDARD;
+		if (p->flags & XMP_FLAGS_CLASSIC) {
+			if (IS_CLASSIC_MOD()) {
+#ifdef LIBXMP_PAULA_SIMULATOR
+				if (p->filter) {
+					ret = XMP_MIXER_A500F;
+				} else {
+					ret = XMP_MIXER_A500;
+				}
+#endif
+			}
+		}
+		break;
 	}
 
 	return ret;

@@ -51,10 +51,11 @@ extern "C" {
 #define XMP_PLAYER_CFLAGS	5	/* Player flags for current module */
 #define XMP_PLAYER_SMPCTL	6	/* Sample control flags */
 #define XMP_PLAYER_VOLUME	7	/* Player module volume */
-#define XMP_PLAYER_STATE	8	/* Internal player state */
+#define XMP_PLAYER_STATE	8	/* Internal player state (read only) */
 #define XMP_PLAYER_SMIX_VOLUME	9	/* SMIX volume */
 #define XMP_PLAYER_DEFPAN	10	/* Default pan setting */
 #define XMP_PLAYER_MODE 	11	/* Player personality */
+#define XMP_PLAYER_MIXER_TYPE	12	/* Current mixer (read only) */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
@@ -88,6 +89,11 @@ extern "C" {
 #define XMP_MODE_FT2		8	/* Play using FT2 bug emulation */
 #define XMP_MODE_IT		9	/* Play using IT quirks */
 #define XMP_MODE_ITSMP		10	/* Play using IT sample mode quirks */
+
+/* mixer types */
+#define XMP_MIXER_STANDARD	0	/* Standard mixer */
+#define XMP_MIXER_A500		1	/* Amiga 500 */
+#define XMP_MIXER_A500F		2	/* Amiga 500 with led filter */
 
 /* sample flags */
 #define XMP_SMPCTL_SKIP		(1 << 0) /* Don't load samples */
