@@ -807,6 +807,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	struct xmp_instrument *instrument;
 	int finalpan, panbrello = 0;
 	int pan_envelope;
+	int channel_pan;
 
 	instrument = get_instrument(ctx, xc->ins);
 
@@ -825,7 +826,17 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	}
 #endif
 
-	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
+	channel_pan = xc->pan.val;
+
+#ifdef LIBXMP_PAULA_SIMULATOR
+	if (p->flags & XMP_FLAGS_CLASSIC) {
+		if (IS_CLASSIC_MOD()) {
+			channel_pan = channel_pan < 0x80 ? 0 : 0xff;
+		}
+	}
+#endif
+
+	finalpan = channel_pan + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
 
 	if (IS_PLAYER_MODE_IT()) {

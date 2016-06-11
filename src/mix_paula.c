@@ -113,13 +113,8 @@ static void clock(struct paula_state *paula, unsigned int cycles)
 } while (0)
 
 #define MIX_STEREO() do { \
-	if (vi->pan < 0) { \
-		*(buffer++) += smp_in * (vi->vol << 8); \
-		buffer++; \
-	} else { \
-		buffer++; \
-		*(buffer++) += smp_in * (vi->vol << 8); \
-	} \
+	*(buffer++) += smp_in * vr; \
+	*(buffer++) += smp_in * vl; \
 } while (0)
 
 #define VAR_NORM(x) \
