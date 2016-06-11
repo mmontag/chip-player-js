@@ -690,7 +690,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		EFFECT_MEMORY(fxp, xc->tremor.memory);
 		xc->tremor.up = MSN(fxp);
 		xc->tremor.down = LSN(fxp);
-		if (m->read_event_type == READ_EVENT_FT2) {
+		if (IS_PLAYER_MODE_FT2()) {
 			xc->tremor.count |= 0x80;
 		} else {
 			if (xc->tremor.up == 0) {

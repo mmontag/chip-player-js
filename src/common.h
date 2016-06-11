@@ -195,7 +195,12 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define MAX_SAMPLES		1024
 
 /* Classic mode */
-#define IS_CLASSIC_MOD()	(m->read_event_type == READ_EVENT_MOD && HAS_QUIRK(QUIRK_MODRNG))
+#define IS_PLAYER_MODE_MOD()	(m->read_event_type == READ_EVENT_MOD)
+#define IS_PLAYER_MODE_FT2()	(m->read_event_type == READ_EVENT_FT2)
+#define IS_PLAYER_MODE_ST3()	(m->read_event_type == READ_EVENT_ST3)
+#define IS_PLAYER_MODE_IT()	(m->read_event_type == READ_EVENT_IT)
+#define IS_PLAYER_MODE_MED()	(m->read_event_type == READ_EVENT_MED)
+#define IS_CLASSIC_MOD()	(IS_PLAYER_MODE_MOD() && HAS_QUIRK(QUIRK_MODRNG))
 
 struct ord_data {
 	int speed;

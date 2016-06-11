@@ -338,7 +338,7 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 #endif
 			}
 		} else {
-			if (m->read_event_type == READ_EVENT_IT) {
+			if (IS_PLAYER_MODE_IT()) {
 				/* Reset flags. See SlideDelay.it */
 				p->xc_data[chn].flags = 0;
 			}
@@ -495,14 +495,14 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	if (!TEST_PER(VENV_PAUSE)) {
 		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
-					DOENV_RELEASE, TEST(KEY_OFF),
-					m->read_event_type == READ_EVENT_IT);
+			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
 	}
 
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
 	if (check_envelope_end(&instrument->aei, xc->v_idx)) {
-		if (vol_envelope == 0)
+		if (vol_envelope == 0) {
 			SET_NOTE(NOTE_END);
+		}
 		SET_NOTE(NOTE_ENV_END);
 	}
 
@@ -518,7 +518,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	finalvol = xc->volume;
 #endif
 
-	if (m->read_event_type == READ_EVENT_IT) {
+	if (IS_PLAYER_MODE_IT()) {
 		finalvol = xc->volume * (100 - xc->rvv) / 100;
 	}
 
@@ -562,7 +562,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 		finalvol = (finalvol * instrument->vol * xc->gvl) >> 12;
 	}
 
-	if (m->read_event_type == READ_EVENT_FT2) {
+	if (IS_PLAYER_MODE_FT2()) {
 		finalvol = tremor_ft2(ctx, chn, finalvol);
 	} else {
 		finalvol = tremor_s3m(ctx, chn, finalvol);
@@ -605,8 +605,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	if (!TEST_PER(FENV_PAUSE)) {
 		xc->f_idx = update_envelope(&instrument->fei, xc->f_idx,
-					DOENV_RELEASE, TEST(KEY_OFF),
-					m->read_event_type == READ_EVENT_IT);
+			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
 	}
 	frq_envelope = get_envelope(&instrument->fei, xc->f_idx, 0);
 
@@ -813,8 +812,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 	if (!TEST_PER(PENV_PAUSE)) {
 		xc->p_idx = update_envelope(&instrument->pei, xc->p_idx,
-					DOENV_RELEASE, TEST(KEY_OFF),
-					m->read_event_type == READ_EVENT_IT);
+			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
 	}
 	pan_envelope = get_envelope(&instrument->pei, xc->p_idx, 32);
 
@@ -830,7 +828,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	finalpan = xc->pan.val + panbrello + (pan_envelope - 32) *
 				(128 - abs(xc->pan.val - 128)) / 32;
 
-	if (m->read_event_type == READ_EVENT_IT) {
+	if (IS_PLAYER_MODE_IT()) {
 		finalpan = finalpan + xc->rpv * 4;
 	}
 
