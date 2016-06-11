@@ -160,10 +160,6 @@ void virt_off(struct context_data *ctx)
 	int i;
 #endif
 
-	p->virt.virt_used = p->virt.maxvoc = 0;
-	p->virt.virt_channels = 0;
-	p->virt.num_tracks = 0;
-
 #ifdef LIBXMP_PAULA_SIMULATOR
 	/* Free Paula simulator state */
 	if (IS_CLASSIC_MOD()) {
@@ -172,6 +168,10 @@ void virt_off(struct context_data *ctx)
 		}
 	}
 #endif
+
+	p->virt.virt_used = p->virt.maxvoc = 0;
+	p->virt.virt_channels = 0;
+	p->virt.num_tracks = 0;
 
 	free(p->virt.voice_array);
 	free(p->virt.virt_channel);
