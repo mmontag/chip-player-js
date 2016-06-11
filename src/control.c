@@ -331,12 +331,7 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 		ret = 0;
 		break;
 	case XMP_PLAYER_FLAGS: {
-		int vblank = p->flags & XMP_FLAGS_VBLANK;
 		p->player_flags = val;
-		p->flags |= val;
-		if (vblank != (p->flags & XMP_FLAGS_VBLANK)) {
-			scan_sequences(ctx);
-		}
 		ret = 0;
 		break; }
 
