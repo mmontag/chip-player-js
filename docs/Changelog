@@ -9,6 +9,7 @@ Stable versions
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
 	- add Antti Lankila's Amiga 500 modeling mixer
+	- add support to filter effect E0 in Amiga mods
 	- add flags to configure player mode
 	- limit Oktalyzer modules to MOD note range
 	- code refactoring and cleanup

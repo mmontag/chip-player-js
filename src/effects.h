@@ -32,6 +32,7 @@
 #define FX_XF_PORTA	0x21
 
 /* Protracker extended effects */
+#define EX_FILTER	0x00
 #define EX_F_PORTA_UP	0x01
 #define EX_F_PORTA_DN	0x02
 #define EX_GLISS	0x03

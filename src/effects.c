@@ -377,6 +377,13 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		fxt = fxp >> 4;
 		fxp &= 0x0f;
 		switch (fxt) {
+#ifdef LIBXMP_PAULA_SIMULATOR
+		case EX_FILTER:		/* Amiga led filter */
+			if (IS_CLASSIC_MOD()) {
+				p->filter = !(fxp & 1);
+			}
+			break;
+#endif
 		case EX_F_PORTA_UP:	/* Fine portamento up */
 			EFFECT_MEMORY(fxp, xc->fine_porta.up_memory);
 			goto fx_f_porta_up;

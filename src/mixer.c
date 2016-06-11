@@ -141,9 +141,21 @@ static mixer_set a500_mixers = {
 	NULL,
 	smix_stereo_a500,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+
+
+static mixer_set a500led_mixers = {
 	smix_mono_a500_filter,
 	NULL,
 	smix_stereo_a500_filter,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL
 };
 #endif
@@ -386,7 +398,11 @@ void mixer_softmixer(struct context_data *ctx)
 #ifdef LIBXMP_PAULA_SIMULATOR
 	if (p->flags & XMP_FLAGS_CLASSIC) {
 		if (IS_CLASSIC_MOD()) {
-			mixers = &a500_mixers;
+			if (p->filter) {
+				mixers = &a500led_mixers;
+			} else {
+				mixers = &a500_mixers;
+			}
 		}
 	}
 #endif
@@ -497,7 +513,6 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 #endif
 
-				/* Switch between classic and modern mixers */
 				mix_fn = (*mixers)[mixer];
 
 				/* Call the output handler */

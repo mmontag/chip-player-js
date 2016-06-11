@@ -338,7 +338,9 @@ struct player_data {
 #ifndef LIBXMP_CORE_PLAYER
 	int st26_speed;			/* For IceTracker speed effect */
 #endif
-
+#ifdef LIBXMP_PAULA_SIMULATOR
+	int filter;			/* Amiga led filter */
+#endif
 };
 
 struct mixer_data {
