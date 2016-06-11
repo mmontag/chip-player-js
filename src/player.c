@@ -761,6 +761,17 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		return;
 	}
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+	/* Simulate Amiga filter using the IT LPF. For better sound,
+	 * use the classic mixer with modeled A500 sound.
+	 */
+	if (~p->flags & XMP_FLAGS_CLASSIC) {
+		if (IS_CLASSIC_MOD()) {
+			xc->filter.cutoff = p->filter ? 0xd0 : 0xff;
+		}
+	}
+#endif
+
 	if (xc->f_idx >= 0 && (instrument->fei.flg & XMP_ENVELOPE_FLT)) {
 		if (frq_envelope < 0xfe) {
 			xc->filter.envelope = frq_envelope;
