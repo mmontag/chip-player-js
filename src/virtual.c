@@ -118,7 +118,7 @@ int virt_on(struct context_data *ctx, int num)
 		for (i = 0; i < p->virt.maxvoc; i++) {
 			p->virt.voice_array[i].paula = calloc(1, sizeof (struct paula_state));
 			if (p->virt.voice_array[i].paula == NULL) {
-				goto err1;
+				goto err2;
 			}
 			paula_init(ctx, p->virt.voice_array[i].paula);
 		}
@@ -140,15 +140,14 @@ int virt_on(struct context_data *ctx, int num)
 	return 0;
 
       err2:
-	free(p->virt.voice_array);
 #ifdef LIBXMP_PAULA_SIMULATOR
-      err1:
 	if (IS_CLASSIC_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
 			free(p->virt.voice_array[i].paula);
 		}
 	}
 #endif
+	free(p->virt.voice_array);
       err:
 	return -1;
 }
