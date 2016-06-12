@@ -50,7 +50,7 @@ static const int period_amiga[] = {
 /*
  * Period table from the Protracker V2.1A play routine
  */
-static int pt_period_table[16][36] = {
+static uint16 pt_period_table[16][36] = {
 	/* Tuning 0, Normal */
 	{
 		856,808,762,720,678,640,604,570,538,508,480,453,
@@ -175,7 +175,7 @@ static inline int note_to_period_pt(int n, int f)
 		f += 16;
 	}
 
-	return pt_period_table[f][n];
+	return (int)pt_period_table[f][n];
 }
 #endif
 

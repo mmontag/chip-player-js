@@ -1,7 +1,6 @@
 
-DOCS_DFILES	= Makefile COPYING.LIB CREDITS Changelog tracker_notes.txt \
-		  formats.txt adlib_sb.txt fixloop.txt \
-		  libxmp.rst custom.style $(DOCS_FILES)
+DOCS_DFILES	= Makefile COPYING.LIB CREDITS Changelog formats.txt \
+		  fixloop.txt libxmp.rst custom.style $(DOCS_FILES)
 
 DOCS_PATH	= docs
 
