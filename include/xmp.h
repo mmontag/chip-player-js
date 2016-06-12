@@ -75,7 +75,7 @@ extern "C" {
 #define XMP_FLAGS_VBLANK	(1 << 0) /* Use vblank timing */
 #define XMP_FLAGS_FX9BUG	(1 << 1) /* Emulate FX9 bug */
 #define XMP_FLAGS_FIXLOOP	(1 << 2) /* Emulate sample loop bug */
-#define XMP_FLAGS_CLASSIC	(1 << 3) /* Emulate original replayer sound */
+#define XMP_FLAGS_CLASSIC	(1 << 3) /* Prefer original replayer sound */
 
 /* player modes */
 #define XMP_MODE_AUTO		0	/* Autodetect mode (default) */

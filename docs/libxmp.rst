@@ -50,6 +50,12 @@ Concepts
   libxmp is used to provide background music to games or other applications
   where sound effects can be played in response to events or user actions
 
+* **Classic mixer:** *[Added in libxmp 4.4]*
+  Certain formats may use special mixers modeled after the original hardware
+  used to play the format, providing more realist sound at the expense of
+  CPU usage. Currently Amiga formats such as Protracker can use a mixer
+  modeled after the Amiga 500, with or without the led filter.
+
 A simple example
 ~~~~~~~~~~~~~~~~
 
@@ -774,17 +780,25 @@ int xmp_get_player(xmp_context c, int param)
         XMP_PLAYER_CFLAGS      /* Player flags for current module*/
         XMP_PLAYER_SMPCTL      /* Control sample loading */
         XMP_PLAYER_VOLUME      /* Player master volume */
-        XMP_PLAYER_STATE       /* Current player state*/
+        XMP_PLAYER_STATE       /* Current player state (read only) */
         XMP_PLAYER_SMIX_VOLUME /* SMIX Volume */
         XMP_PLAYER_DEFPAN      /* Default pan separation */
         XMP_PLAYER_MODE        /* Player personality */
+        XMP_PLAYER_MIXER_TYPE  /* Current mixer (read only) */
 
-      See ``xmp_set_player`` for the list of valid values for each parameter.
       Valid states are::
 
         XMP_STATE_UNLOADED     /* Context created */
         XMP_STATE_LOADED       /* Module loaded */
         XMP_STATE_PLAYING      /* Module playing */
+
+      Valid mixer types are::
+
+        XMP_MIXER_STANDARD      /* Standard mixer */
+        XMP_MIXER_A500          /* Amiga 500 */
+        XMP_MIXER_A500F         /* Amiga 500 with led filter */
+
+      See ``xmp_set_player`` for the rest of valid values for each parameter.
 
   **Returns:**
     The parameter value, or ``-XMP_ERROR_STATE`` if the parameter is not
@@ -841,6 +855,7 @@ int xmp_set_player(xmp_context c, int param, int val)
           XMP_FLAGS_VBLANK    /* Use vblank timing */
           XMP_FLAGS_FX9BUG    /* Emulate Protracker 2.x FX9 bug */
           XMP_FLAGS_FIXLOOP   /* Make sample loop value / 2 */
+          XMP_FLAGS_CLASSIC   /* Prefer original replayer sound */
 
     * *[Added in libxmp 4.1]* Player flags for current module: same flags
       as above but after applying module-specific quirks (if any).
@@ -883,12 +898,29 @@ int xmp_set_player(xmp_context c, int param, int val)
           XMP_MODE_IT           /* Play using IT quirks */
           XMP_MODE_ITSMP        /* Play using IT sample mode quirks */
 
+      By default, formats similar to S3M such as PTM or IMF will use S3M
+      replayer (without Scream Tracker 3 quirks/bug emulation), and formats
+      similar to XM such as RTM and MDL will use the XM replayer (without             FT2 quirks/bug emulation).
+
+      Multichannel MOD files will use the XM replayer, and Scream Tracker 3
+      MOD files will use S3M replayer with ST3 quirks. S3M files will use
+      the most appropriate replayer according to the tracker used to create
+      the file, and enable Scream Tracker 3 quirks and bugs only if created
+      using ST3. XM files will be played with FT2 bugs and quirks only if
+      created using Fast Tracker II.
+
+      Modules created with OpenMPT will be played with all bugs and quirks
+      of the original trackers.
 
   **Returns:**
     0 if parameter was correctly set, ``-XMP_ERROR_INVALID`` if
     parameter or values are out of the valid ranges, or ``-XMP_ERROR_STATE``
     if the player is not in playing state.
 
+
+.. raw:: pdf
+
+    PageBreak
 
 External sample mixer API
 -------------------------
