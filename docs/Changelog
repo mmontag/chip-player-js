@@ -6,6 +6,7 @@ Stable versions
 	- fix XM arpeggio in FastTracker 2 compatible mode
 	- fix MOD vibrato and tremolo in Protracker compatible mode
 	Other changes:
+	- fix XM note delay and retrig quirk (reported by Leilei)
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
 	- add Antti Lankila's Amiga 500 modeling mixer

@@ -283,7 +283,7 @@ static int check_delay(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	if (HAS_QUIRK(QUIRK_RTDELAY)) {
-		if (e->vol == 0 && e->f2t == 0 && e->ins == 0 && e->note == 0)
+		if (e->vol == 0 && e->f2t == 0 && e->ins == 0 && e->note != XMP_KEY_OFF)
 			xc->delayed_event.vol = xc->volume + 1;
 		if (e->note == 0)
 			xc->delayed_event.note = xc->key + 1;
