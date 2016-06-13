@@ -466,8 +466,9 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 
 			/* No note */
 			if (sub != NULL) {
+				int p = mod->xxc[chn].pan - 128;
 				xc->volume = sub->vol;
-				xc->pan.val = sub->pan;
+				xc->pan.val = p + ((sub->pan - 128) * (128 - abs(p))) / 128 + 128;
 				xc->ins_fade = mod->xxi[xc->ins].rls;
 				SET(NEW_VOL);
 			}
@@ -520,8 +521,9 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			/* Current instrument */
 			sub = get_subinstrument(ctx, xc->ins, key - 1);
 			if (sub != NULL) {
+				int p = mod->xxc[chn].pan - 128;
 				xc->volume = sub->vol;
-				xc->pan.val = sub->pan;
+				xc->pan.val = p + ((sub->pan - 128) * (128 - abs(p))) / 128 + 128;
 				xc->ins_fade = mod->xxi[xc->ins].rls;
 			} else {
 				xc->volume = 0;
