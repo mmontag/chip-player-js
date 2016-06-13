@@ -6,8 +6,9 @@ designed to be hardware, platform and external dependency independant.
 It only uses standard C libraries.
 
 It also adds support for SF3 files (SF2 files compressed with ogg vorbis)
-and remove the constraint of channel 9 (doesn't have to be a drum kit) :
-select bank 128 to use drum kits on any channel.
+and an additional setting to remove the constraint of channel 9 (drums):
+fluid_settings_setstr(settings, "synth.drums-channel.active", "no");
+you can still select bank 128 on any channel to use drum kits.
 
 FluidLite keeps very minimal functionnalities (settings and synth),
 therefore MIDI file reading, realtime MIDI events and audio output must be

@@ -133,7 +133,7 @@ FLUIDSYNTH_API int fluid_settings_is_realtime(fluid_settings_t* settings, const 
 
 /** returns 1 if the value has been set, 0 otherwise */
 FLUIDSYNTH_API 
-int fluid_settings_setstr(fluid_settings_t* settings, const char* name, char* str);
+int fluid_settings_setstr(fluid_settings_t* settings, const char* name, const char* str);
 
 /** 
     Get the value of a string setting. If the value does not exists,

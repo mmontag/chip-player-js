@@ -43,7 +43,7 @@ typedef struct {
 } fluid_str_setting_t;
 
 static fluid_str_setting_t*
-new_fluid_str_setting(char* value, char* def, int hints, fluid_str_update_t fun, void* data)
+new_fluid_str_setting(const char* value, char* def, int hints, fluid_str_update_t fun, void* data)
 {
   fluid_str_setting_t* str;
   str = FLUID_NEW(fluid_str_setting_t);
@@ -471,7 +471,7 @@ int fluid_settings_is_realtime(fluid_settings_t* settings, const char* name)
   }
 }
 
-int fluid_settings_setstr(fluid_settings_t* settings, const char* name, char* str)
+int fluid_settings_setstr(fluid_settings_t* settings, const char* name, const char* str)
 {
   char* tokens[MAX_SETTINGS_TOKENS];
   char buf[MAX_SETTINGS_LABEL+1];

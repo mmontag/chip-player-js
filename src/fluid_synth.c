@@ -104,6 +104,7 @@ void fluid_synth_settings(fluid_settings_t* settings)
   fluid_settings_register_str(settings, "synth.chorus.active", "yes", 0, NULL, NULL);
   fluid_settings_register_str(settings, "synth.ladspa.active", "no", 0, NULL, NULL);
   fluid_settings_register_str(settings, "midi.portname", "", 0, NULL, NULL);
+  fluid_settings_register_str(settings, "synth.drums-channel.active", "yes", 0, NULL, NULL);
 
   fluid_settings_register_int(settings, "synth.polyphony",
 			     256, 16, 4096, 0, NULL, NULL);
@@ -540,6 +541,9 @@ new_fluid_synth(fluid_settings_t *settings)
     FLUID_LOG(FLUID_ERR, "Out of memory");
     goto error_recovery;
   }
+
+  if(fluid_settings_str_equal(settings, "synth.drums-channel.active", "yes"))
+      fluid_synth_bank_select(synth,9,DRUM_INST_BANK);
 
   return synth;
 
