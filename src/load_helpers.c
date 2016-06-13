@@ -285,6 +285,7 @@ void load_epilogue(struct context_data *ctx)
 		check_envelope(&mod->xxi[i].pei);
 	}
 
+	p->filter = 0;
 	p->mode = XMP_MODE_AUTO;
 	p->flags = p->player_flags;
 #ifndef LIBXMP_CORE_PLAYER
