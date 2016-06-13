@@ -19,18 +19,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 typedef struct
    {
-   unsigned char SAVEK[ 2 ];
-   unsigned char Level[ 2 ];
-   unsigned char Env1[ 2 ];
-   unsigned char Env2[ 2 ];
-   unsigned char Wave[ 2 ];
-   unsigned char Feedback;
-   signed   char Transpose;
-   signed   char Velocity;
+   unsigned char SAVEK[ 2 ];//0 1
+   unsigned char Level[ 2 ];//2 3
+   unsigned char Env1[ 2 ];// 4 5
+   unsigned char Env2[ 2 ];// 6 7
+   unsigned char Wave[ 2 ];// 8 9
+   unsigned char Feedback;// 10
+   signed   char Transpose;//11
+   signed   char Velocity;// 12
    } TIMBRE;
 
 TIMBRE ADLIB_TimbreBank[ 256 ] =
    {
+        //0  1          2  3       4   5        6   7        8  9    10 11
       { { 33, 33 }, { 143, 6 }, { 242, 242 }, { 69, 118 }, { 0, 0 }, 8, 0 },
       { { 49, 33 }, { 75, 0 }, { 242, 242 }, { 84, 86 }, { 0, 0 }, 8, 0 },
       { { 49, 33 }, { 73, 0 }, { 242, 242 }, { 85, 118 }, { 0, 0 }, 8, 0 },
@@ -159,6 +160,7 @@ TIMBRE ADLIB_TimbreBank[ 256 ] =
       { { 14, 208 }, { 0, 0 }, { 246, 79 }, { 0, 245 }, { 0, 3 }, 14, 0 },
       { { 38, 228 }, { 0, 0 }, { 255, 18 }, { 1, 22 }, { 0, 1 }, 14, 0 },
       { { 0, 0 }, { 0, 0 }, { 243, 246 }, { 240, 201 }, { 0, 2 }, 14, 0 },
+        //0   1        2  3        4  5         6   7      8  9    10 11
       { { 16, 17 }, { 68, 0 }, { 248, 243 }, { 119, 6 }, { 2, 0 }, 8, 35 },
       { { 16, 17 }, { 68, 0 }, { 248, 243 }, { 119, 6 }, { 2, 0 }, 8, 35 },
       { { 16, 17 }, { 68, 0 }, { 248, 243 }, { 119, 6 }, { 2, 0 }, 8, 35 },
