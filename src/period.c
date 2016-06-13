@@ -133,7 +133,7 @@ static uint16 pt_period_table[16][36] = {
 
 #ifdef _MSC_VER
 static inline double round(double val)
-{    
+{
 	return floor(val + 0.5);
 }
 #endif
@@ -161,12 +161,13 @@ static inline int note_to_period_pt(int n, int f)
 #endif
 
 /* Get period from note */
-double note_to_period(struct context_data *ctx, int n, int f, int type, double adj)
+double note_to_period(struct context_data *ctx, int n, int f, int type,
+		      double adj)
 {
-    double d, per;
+	double d, per;
 #ifdef LIBXMP_PAULA_SIMULATOR
-    struct player_data *p = &ctx->p;
-    struct module_data *m = &ctx->m;
+	struct player_data *p = &ctx->p;
+	struct module_data *m = &ctx->m;
 
 	/* If mod replayer, modrng and classic play are active */
 	if (p->flags & XMP_FLAGS_CLASSIC) {
@@ -176,48 +177,54 @@ double note_to_period(struct context_data *ctx, int n, int f, int type, double a
 	}
 #endif
 
-    d = (double)n + (double)f / 128;
+	d = (double)n + (double)f / 128;
 
-    per = type ?
-	(240.0 - d) * 16 :			/* Linear */
-        13694.0 / pow(2, d / 12);		/* Amiga */
+	per = type ? (240.0 - d) * 16 :	/* Linear */
+	    13694.0 / pow(2, d / 12);	/* Amiga */
 
 #ifndef LIBXMP_CORE_PLAYER
-    if (adj > 0.1)
-	per *= adj;
+	if (adj > 0.1) {
+		per *= adj;
+	}
 #endif
 
-    return per;
+	return per;
 }
 
 /* For the software mixer */
 int note_to_period_mix(int n, int b)
 {
-    double d = (double)n + (double)b / 12800;
-    return (int)(8192.0 * XMP_PERIOD_BASE / pow(2, d / 12));
+	double d = (double)n + (double)b / 12800;
+	return (int)(8192.0 * XMP_PERIOD_BASE / pow(2, d / 12));
 }
 
 /* Get note from period */
 /* This function is used only by the MOD loader */
 int period_to_note(int p)
 {
-    return round(log(pow(13694.0 / p, 12)) / M_LN2) + 1;
+	if (p <= 0) {
+		return 0;
+	}
+
+	return round(log(pow(13694.0 / p, 12)) / M_LN2) + 1;
 }
 
 /* Get pitchbend from base note and amiga period */
-int period_to_bend(struct context_data *ctx, double p, int n, int type, double adj)
+int period_to_bend(struct context_data *ctx, double p, int n, int type,
+		   double adj)
 {
-    double d;
+	double d;
 
-    if (n == 0)
-	return 0;
+	if (n == 0) {
+		return 0;
+	}
 
-    if (type) {
-    	return 100 * (8 * (((240 - n) << 4) - p));	/* Linear */
-    }
+	if (type) {
+		return 100 * (8 * (((240 - n) << 4) - p));	/* Linear */
+	}
 
-    d = note_to_period(ctx, n, 0, 0, adj);
-    return round(100.0 * ((1536.0 * log(d / p) / M_LN2)));	/* Amiga */
+	d = note_to_period(ctx, n, 0, 0, adj);
+	return round(100.0 * ((1536.0 * log(d / p) / M_LN2)));	/* Amiga */
 }
 
 /* Convert finetune = 1200 * log2(C2SPD/8363))
@@ -228,14 +235,14 @@ int period_to_bend(struct context_data *ctx, double p, int n, int type, double a
  */
 void c2spd_to_note(int c2spd, int *n, int *f)
 {
-    int c;
+	int c;
 
-    if (c2spd == 0) {
-	*n = *f = 0;
-	return;
-    }
+	if (c2spd == 0) {
+		*n = *f = 0;
+		return;
+	}
 
-    c = (int)(1536.0 * log((double)c2spd / 8363) / M_LN2);
-    *n = c / 128;
-    *f = c % 128;
+	c = (int)(1536.0 * log((double)c2spd / 8363) / M_LN2);
+	*n = c / 128;
+	*f = c % 128;
 }
