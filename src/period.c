@@ -206,7 +206,7 @@ int period_to_note(int p)
 		return 0;
 	}
 
-	return round(log(pow(13694.0 / p, 12)) / M_LN2) + 1;
+	return round(12.0 * log(13694.0 / p) / M_LN2) + 1;
 }
 
 /* Get pitchbend from base note and amiga period */
