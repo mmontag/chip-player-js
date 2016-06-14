@@ -60,6 +60,11 @@ static int fluid_synth_initialized = 0;
 static void fluid_synth_init(void);
 static void init_dither(void);
 
+static int fluid_synth_sysex_midi_tuning (fluid_synth_t *synth, const char *data,
+                                          int len, char *response,
+                                          int *response_len, int avail_response,
+                                          int *handled, int dryrun);
+
 /* default modulators
  * SF2.01 page 52 ff:
  *
@@ -552,6 +557,26 @@ new_fluid_synth(fluid_settings_t *settings)
   return NULL;
 }
 
+/**
+ * Set sample rate of the synth.
+ * NOTE: This function is currently experimental and should only be
+ * used when no voices or notes are active, and before any rendering calls.
+ * @param synth FluidSynth instance
+ * @param sample_rate New sample rate (Hz)
+ * @since 1.1.2
+ */
+void
+fluid_synth_set_sample_rate(fluid_synth_t* synth, float sample_rate)
+{
+    for (int i = 0; i < synth->nvoice; i++) {
+      delete_fluid_voice(synth->voice[i]);
+      synth->voice[i] = new_fluid_voice(synth->sample_rate);
+    }
+
+    delete_fluid_chorus(synth->chorus);
+    synth->chorus = new_fluid_chorus(synth->sample_rate);
+}
+
 /*
  * delete_fluid_synth
  */
@@ -859,6 +884,281 @@ fluid_synth_get_cc(fluid_synth_t* synth, int chan, int num, int* pval)
   }
 
   *pval = synth->channel[chan]->cc[num];
+  return FLUID_OK;
+}
+
+/**
+ * Process a MIDI SYSEX (system exclusive) message.
+ * @param synth FluidSynth instance
+ * @param data Buffer containing SYSEX data (not including 0xF0 and 0xF7)
+ * @param len Length of data in buffer
+ * @param response Buffer to store response to or NULL to ignore
+ * @param response_len IN/OUT parameter, in: size of response buffer, out:
+ *   amount of data written to response buffer (if FLUID_FAILED is returned and
+ *   this value is non-zero, it indicates the response buffer is too small)
+ * @param handled Optional location to store boolean value if message was
+ *   recognized and handled or not (set to TRUE if it was handled)
+ * @param dryrun TRUE to just do a dry run but not actually execute the SYSEX
+ *   command (useful for checking if a SYSEX message would be handled)
+ * @return FLUID_OK on success, FLUID_FAILED otherwise
+ * @since 1.1.0
+ */
+/* SYSEX format (0xF0 and 0xF7 not passed to this function):
+ * Non-realtime:    0xF0 0x7E <DeviceId> [BODY] 0xF7
+ * Realtime:        0xF0 0x7F <DeviceId> [BODY] 0xF7
+ * Tuning messages: 0xF0 0x7E/0x7F <DeviceId> 0x08 <sub ID2> [BODY] <ChkSum> 0xF7
+ */
+int
+fluid_synth_sysex(fluid_synth_t *synth, const char *data, int len,
+                  char *response, int *response_len, int *handled, int dryrun)
+{
+  int avail_response = 0;
+
+  if (handled) *handled = 0; //FALSE
+
+  if (response_len)
+  {
+    avail_response = *response_len;
+    *response_len = 0;
+  }
+
+  if(!(synth != NULL)) return FLUID_FAILED;
+  if(!(data != NULL)) return FLUID_FAILED;
+  if(!(len > 0)) return FLUID_FAILED;
+  if(!(!response || response_len)) return FLUID_FAILED;
+
+  if (len < 4) return FLUID_OK;
+
+  /* MIDI tuning SYSEX message? */
+  if ((data[0] == MIDI_SYSEX_UNIV_NON_REALTIME || data[0] == MIDI_SYSEX_UNIV_REALTIME)
+      && data[2] == MIDI_SYSEX_MIDI_TUNING_ID)
+      //&& (data[1] == synth->device_id || data[1] == MIDI_SYSEX_DEVICE_ID_ALL) -> we don't handle device id
+  {
+    int result;
+    //fluid_synth_api_enter(synth); -> we don't handle mutex
+    result = fluid_synth_sysex_midi_tuning (synth, data, len, response,
+                        response_len, avail_response,
+                        handled, dryrun);
+
+    return result;
+  }
+  return FLUID_OK;
+}
+
+/* Handler for MIDI tuning SYSEX messages */
+static int
+fluid_synth_sysex_midi_tuning (fluid_synth_t *synth, const char *data, int len,
+                               char *response, int *response_len, int avail_response,
+                               int *handled, int dryrun)
+{
+  int realtime, msgid;
+  int bank = 0, prog, channels;
+  double tunedata[128];
+  int keys[128];
+  char name[17];
+  int note, frac, frac2;
+  uint8 chksum;
+  int i, count, index;
+  const char *dataptr;
+  char *resptr;
+
+  realtime = data[0] == MIDI_SYSEX_UNIV_REALTIME;
+  msgid = data[3];
+
+  switch (msgid)
+  {
+    case MIDI_SYSEX_TUNING_BULK_DUMP_REQ:
+    case MIDI_SYSEX_TUNING_BULK_DUMP_REQ_BANK:
+      if (data[3] == MIDI_SYSEX_TUNING_BULK_DUMP_REQ)
+      {
+        if (len != 5 || data[4] & 0x80 || !response)
+          return FLUID_OK;
+
+        *response_len = 406;
+        prog = data[4];
+      }
+      else
+      {
+        if (len != 6 || data[4] & 0x80 || data[5] & 0x80 || !response)
+          return FLUID_OK;
+
+        *response_len = 407;
+        bank = data[4];
+        prog = data[5];
+      }
+
+      if (dryrun)
+      {
+        if (handled) *handled = 1; //TRUE
+        return FLUID_OK;
+      }
+
+      if (avail_response < *response_len) return FLUID_FAILED;
+
+      /* Get tuning data, return if tuning not found */
+      if (fluid_synth_tuning_dump (synth, bank, prog, name, 17, tunedata) == FLUID_FAILED)
+      {
+        *response_len = 0;
+        return FLUID_OK;
+      }
+
+      resptr = response;
+
+      *resptr++ = MIDI_SYSEX_UNIV_NON_REALTIME;
+      *resptr++ = 0; //no synth->device_id
+      *resptr++ = MIDI_SYSEX_MIDI_TUNING_ID;
+      *resptr++ = MIDI_SYSEX_TUNING_BULK_DUMP;
+
+      if (msgid == MIDI_SYSEX_TUNING_BULK_DUMP_REQ_BANK)
+        *resptr++ = bank;
+
+      *resptr++ = prog;
+      strncpy(resptr, name, 16); //FLUID_STRNCPY
+      resptr += 16;
+
+      for (i = 0; i < 128; i++)
+      {
+        note = tunedata[i] / 100.0;
+        fluid_clip (note, 0, 127);
+
+        frac = ((tunedata[i] - note * 100.0) * 16384.0 + 50.0) / 100.0;
+        fluid_clip (frac, 0, 16383);
+
+        *resptr++ = note;
+        *resptr++ = frac >> 7;
+        *resptr++ = frac & 0x7F;
+      }
+
+      if (msgid == MIDI_SYSEX_TUNING_BULK_DUMP_REQ)
+      {  /* NOTE: Checksum is not as straight forward as the bank based messages */
+        chksum = MIDI_SYSEX_UNIV_NON_REALTIME ^ MIDI_SYSEX_MIDI_TUNING_ID
+          ^ MIDI_SYSEX_TUNING_BULK_DUMP ^ prog;
+
+        for (i = 21; i < 128 * 3 + 21; i++)
+          chksum ^= response[i];
+      }
+      else
+      {
+        for (i = 1, chksum = 0; i < 406; i++)
+          chksum ^= response[i];
+      }
+
+      *resptr++ = chksum & 0x7F;
+
+      if (handled) *handled = 1; //TRUE
+      break;
+    case MIDI_SYSEX_TUNING_NOTE_TUNE:
+    case MIDI_SYSEX_TUNING_NOTE_TUNE_BANK:
+      dataptr = data + 4;
+
+      if (msgid == MIDI_SYSEX_TUNING_NOTE_TUNE)
+      {
+        if (len < 10 || data[4] & 0x80 || data[5] & 0x80 || len != data[5] * 4 + 6)
+          return FLUID_OK;
+      }
+      else
+      {
+        if (len < 11 || data[4] & 0x80 || data[5] & 0x80 || data[6] & 0x80
+            || len != data[5] * 4 + 7)
+          return FLUID_OK;
+
+        bank = *dataptr++;
+      }
+
+      if (dryrun)
+      {
+        if (handled) *handled = 1; //TRUE
+        return FLUID_OK;
+      }
+
+      prog = *dataptr++;
+      count = *dataptr++;
+
+      for (i = 0, index = 0; i < count; i++)
+      {
+        note = *dataptr++;
+        if (note & 0x80) return FLUID_OK;
+        keys[index] = note;
+
+        note = *dataptr++;
+        frac = *dataptr++;
+        frac2 = *dataptr++;
+
+        if (note & 0x80 || frac & 0x80 || frac2 & 0x80)
+          return FLUID_OK;
+
+        frac = frac << 7 | frac2;
+
+        /* No change pitch value?  Doesn't really make sense to send that, but.. */
+        if (note == 0x7F && frac == 16383) continue;
+
+        tunedata[index] = note * 100.0 + (frac * 100.0 / 16384.0);
+        index++;
+      }
+
+      if (index > 0)
+      {
+        if (fluid_synth_tune_notes (synth, bank, prog, index, keys, tunedata,
+                                    realtime) == FLUID_FAILED)
+          return FLUID_FAILED;
+      }
+
+      if (handled) *handled = 1; //TRUE
+      break;
+    case MIDI_SYSEX_TUNING_OCTAVE_TUNE_1BYTE:
+    case MIDI_SYSEX_TUNING_OCTAVE_TUNE_2BYTE:
+      if ((msgid == MIDI_SYSEX_TUNING_OCTAVE_TUNE_1BYTE && len != 19)
+          || (msgid == MIDI_SYSEX_TUNING_OCTAVE_TUNE_2BYTE && len != 31))
+        return FLUID_OK;
+
+      if (data[4] & 0x80 || data[5] & 0x80 || data[6] & 0x80)
+        return FLUID_OK;
+
+      if (dryrun)
+      {
+        if (handled) *handled = 1; //TRUE
+        return FLUID_OK;
+      }
+
+      channels = (data[4] & 0x03) << 14 | data[5] << 7 | data[6];
+
+      if (msgid == MIDI_SYSEX_TUNING_OCTAVE_TUNE_1BYTE)
+      {
+        for (i = 0; i < 12; i++)
+        {
+          frac = data[i + 7];
+          if (frac & 0x80) return FLUID_OK;
+          tunedata[i] = (int)frac - 64;
+        }
+      }
+      else
+      {
+        for (i = 0; i < 12; i++)
+        {
+          frac = data[i * 2 + 7];
+          frac2 = data[i * 2 + 8];
+          if (frac & 0x80 || frac2 & 0x80) return FLUID_OK;
+          tunedata[i] = (((int)frac << 7 | (int)frac2) - 8192) * (200.0 / 16384.0);
+        }
+      }
+
+      if (fluid_synth_activate_octave_tuning (synth, 0, 0, "SYSEX",
+                                              tunedata, realtime) == FLUID_FAILED)
+        return FLUID_FAILED;
+
+      if (channels)
+      {
+        for (i = 0; i < 16; i++)
+        {
+          if (channels & (1 << i))
+            fluid_synth_activate_tuning (synth, i, 0, 0, realtime);
+        }
+      }
+
+      if (handled) *handled = 1; //TRUE
+      break;
+  }
+
   return FLUID_OK;
 }
 
@@ -2720,9 +3020,17 @@ int fluid_synth_create_key_tuning(fluid_synth_t* synth,
 
 int fluid_synth_create_octave_tuning(fluid_synth_t* synth,
 				    int bank, int prog,
-                    const char* name, double* pitch)
+                    const char* name, const double* pitch)
 {
-  fluid_tuning_t* tuning = fluid_synth_create_tuning(synth, bank, prog, name);
+    fluid_tuning_t* tuning;
+
+    if(!(synth != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(bank >= 0 && bank < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(prog >= 0 && prog < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(name != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(pitch != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
+
+  tuning = fluid_synth_create_tuning(synth, bank, prog, name);
   if (tuning == NULL) {
     return FLUID_FAILED;
   }
@@ -2730,19 +3038,53 @@ int fluid_synth_create_octave_tuning(fluid_synth_t* synth,
   return FLUID_OK;
 }
 
+/**
+ * Activate an octave tuning on every octave in the MIDI note scale.
+ * @param synth FluidSynth instance
+ * @param bank Tuning bank number (0-127), not related to MIDI instrument bank
+ * @param prog Tuning preset number (0-127), not related to MIDI instrument program
+ * @param name Label name for this tuning
+ * @param pitch Array of pitch values (length of 12 for each note of an octave
+ *   starting at note C, values are number of offset cents to add to the normal
+ *   tuning amount)
+ * @param apply TRUE to apply new tuning in realtime to existing notes which
+ *   are using the replaced tuning (if any), FALSE otherwise
+ * @return FLUID_OK on success, FLUID_FAILED otherwise
+ * @since 1.1.0
+ */
+int
+fluid_synth_activate_octave_tuning(fluid_synth_t* synth, int bank, int prog,
+                                   const char* name, const double* pitch, int apply)
+{
+  return fluid_synth_create_octave_tuning(synth,bank,prog,name,pitch);
+}
+
+
 int fluid_synth_tune_notes(fluid_synth_t* synth, int bank, int prog,
 			  int len, int *key, double* pitch, int apply)
 {
-  fluid_tuning_t* tuning = fluid_synth_get_tuning(synth, bank, prog);
-  int i;
+    fluid_tuning_t* old_tuning, *new_tuning;
 
-  if (tuning == NULL) {
-    return FLUID_FAILED;
-  }
+    if(!(synth != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(bank >= 0 && bank < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(prog >= 0 && prog < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(len > 0)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(key != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(pitch != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
 
-  for (i = 0; i < len; i++) {
-    fluid_tuning_set_pitch(tuning, key[i], pitch[i]);
-  }
+    old_tuning = fluid_synth_get_tuning (synth, bank, prog);
+
+    if (old_tuning)
+      new_tuning = fluid_tuning_duplicate(old_tuning);
+    else new_tuning = new_fluid_tuning ("Unnamed", bank, prog);
+
+    if (new_tuning == NULL) {
+        return FLUID_FAILED;
+    }
+
+    for (int i = 0; i < len; i++) {
+        fluid_tuning_set_pitch(new_tuning, key[i], pitch[i]);
+    }
 
   return FLUID_OK;
 }
@@ -2750,7 +3092,13 @@ int fluid_synth_tune_notes(fluid_synth_t* synth, int bank, int prog,
 int fluid_synth_select_tuning(fluid_synth_t* synth, int chan,
 			     int bank, int prog)
 {
-  fluid_tuning_t* tuning = fluid_synth_get_tuning(synth, bank, prog);
+    fluid_tuning_t* tuning;
+
+    if(!(synth != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(bank >= 0 && bank < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
+    if(!(prog >= 0 && prog < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
+
+  tuning = fluid_synth_get_tuning(synth, bank, prog);
 
   if (tuning == NULL) {
     return FLUID_FAILED;
@@ -2763,6 +3111,26 @@ int fluid_synth_select_tuning(fluid_synth_t* synth, int chan,
   fluid_channel_set_tuning(synth->channel[chan], synth->tuning[bank][prog]);
 
   return FLUID_OK;
+}
+
+/**
+ * Activate a tuning scale on a MIDI channel.
+ * @param synth FluidSynth instance
+ * @param chan MIDI channel number (0 to MIDI channel count - 1)
+ * @param bank Tuning bank number (0-127), not related to MIDI instrument bank
+ * @param prog Tuning preset number (0-127), not related to MIDI instrument program
+ * @param apply TRUE to apply tuning change to active notes, FALSE otherwise
+ * @return FLUID_OK on success, FLUID_FAILED otherwise
+ * @since 1.1.0
+ *
+ * NOTE: A default equal tempered scale will be created, if no tuning exists
+ * on the given bank and prog.
+ */
+int
+fluid_synth_activate_tuning(fluid_synth_t* synth, int chan, int bank, int prog,
+                            int apply)
+{
+    return fluid_synth_select_tuning(synth,chan,bank,prog);
 }
 
 int fluid_synth_reset_tuning(fluid_synth_t* synth, int chan)

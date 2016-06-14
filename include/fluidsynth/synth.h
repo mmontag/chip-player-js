@@ -55,6 +55,8 @@ extern "C" {
    */
 FLUIDSYNTH_API fluid_synth_t* new_fluid_synth(fluid_settings_t* settings);
 
+FLUIDSYNTH_API void fluid_synth_set_sample_rate(fluid_synth_t* synth, float sample_rate);
+
 
   /** 
    * Deletes the synthesizer previously created with new_fluid_synth.
@@ -106,6 +108,10 @@ FLUIDSYNTH_API int fluid_synth_get_pitch_wheel_sens(fluid_synth_t* synth, int ch
 
   /** Send a program change message. Returns 0 if no error occurred, -1 otherwise. */
 FLUIDSYNTH_API int fluid_synth_program_change(fluid_synth_t* synth, int chan, int program);
+
+FLUIDSYNTH_API int fluid_synth_channel_pressure(fluid_synth_t* synth, int chan, int val);
+FLUIDSYNTH_API int fluid_synth_sysex(fluid_synth_t *synth, const char *data, int len,
+                                     char *response, int *response_len, int *handled, int dryrun);
 
   /** Select a bank. Returns 0 if no error occurred, -1 otherwise. */
 FLUIDSYNTH_API 
@@ -478,7 +484,11 @@ int fluid_synth_create_key_tuning(fluid_synth_t* synth, int tuning_bank, int tun
   */
 FLUIDSYNTH_API 
 int fluid_synth_create_octave_tuning(fluid_synth_t* synth, int tuning_bank, int tuning_prog,
-                                    const char* name, double* pitch);
+                                    const char* name, const double* pitch);
+
+FLUIDSYNTH_API
+int fluid_synth_activate_octave_tuning(fluid_synth_t* synth, int bank, int prog,
+                                       const char* name, const double* pitch, int apply);
 
   /** Request a note tuning changes. Both they 'keys' and 'pitches'
       arrays should be of length 'num_pitches'. If 'apply' is non-zero,
@@ -507,6 +517,8 @@ int fluid_synth_tune_notes(fluid_synth_t* synth, int tuning_bank, int tuning_pro
   */
 FLUIDSYNTH_API 
 int fluid_synth_select_tuning(fluid_synth_t* synth, int chan, int tuning_bank, int tuning_prog);
+
+int fluid_synth_activate_tuning(fluid_synth_t* synth, int chan, int bank, int prog, int apply);
 
   /** Set the tuning to the default well-tempered tuning on a channel.
 

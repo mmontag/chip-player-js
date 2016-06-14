@@ -78,6 +78,8 @@ typedef enum {
 
 /** Integer types  */
 
+typedef signed char       sint8;
+typedef unsigned char     uint8;
 typedef signed short       sint16;
 typedef unsigned short     uint16;
 typedef signed int         sint32;

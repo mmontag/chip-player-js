@@ -136,10 +136,6 @@ struct _fluid_synth_t
   fluid_tuning_t* cur_tuning;         /** current tuning in the iteration */
 
   //midi router and mutex disabled
-
-#ifdef LADSPA
-  fluid_LADSPA_FxUnit_t* LADSPA_FxUnit; /** Effects unit for LADSPA support */
-#endif
 };
 
 /** returns 1 if the value has been set, 0 otherwise */
