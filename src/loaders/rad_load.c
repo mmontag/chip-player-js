@@ -207,10 +207,21 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					b = hio_read8(f); /* Effect parameter */
 					event->fxp = b;
 
-					/* FIXME: tempo setting */
-					if (event->fxt == 0x0f
-					    && event->fxp <= 2)
-						event->fxp = 6;
+					switch (event->fxt) {
+					case 0x0a:
+						if (event->fxp > 0 && event->fxp < 50) {
+							event->fxt = FX_VOLSLIDE_DN;
+						} else if (event->fxp > 50 && event->fxp < 100) {
+							event->fxt = FX_VOLSLIDE_UP;
+						}
+						break;
+					case 0x0f:
+						/* FIXME: tempo setting */
+					    	if (event->fxp <= 2) {
+							event->fxp = 6;
+						}
+						break;
+					}
 				}
 			} while (~c & 0x80);
 		} while (~r & 0x80);
@@ -223,7 +234,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	m->synth = &synth_adlib;
 
-	m->quirk |= QUIRK_LINEAR;
+	m->quirk |= QUIRK_LINEAR | QUIRK_VSALL | QUIRK_PBALL | QUIRK_VIBALL;
 
 	return 0;
 }
