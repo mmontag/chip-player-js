@@ -292,7 +292,7 @@ static void synth_setvol(struct context_data *ctx, int c, int vol)
 		vol = 63;
 
 	/* Check if operator 1 produces sound */
-	if (opl_read(a, 0xc8 + c)) {
+	if (opl_read(a, 0xc0 + c) & 1) {
 		ofs = register_offset[0][c];
 		b = opl_read(a, 0x40 + ofs);
 		opl_write(a, 0x40 + ofs, (b & 0xc0) | (63 - vol));
