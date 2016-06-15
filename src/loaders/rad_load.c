@@ -98,7 +98,9 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->ins = 0;
 	while ((b = hio_read8(f)) != 0) {
-		mod->ins = b;
+		if (b > mod->ins) {
+			mod->ins = b;
+		}
 		if (hio_seek(f, 11, SEEK_CUR) < 0) {
 			return -1;
 		}
@@ -122,12 +124,12 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			goto err2;
 		}
 
-		if (hio_read(&buf[b * 11], 1, 11, f) != 11) {
+		if (hio_read(&buf[(b - 1) * 11], 1, 11, f) != 11) {
 			goto err2;
 		}
 
 		if (load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
-					&mod->xxs[b - 1], &buf[b * 11]) < 0) {
+					&mod->xxs[b - 1], &buf[(b - 1) * 11]) < 0) {
 			goto err2;
 		}
 	}
