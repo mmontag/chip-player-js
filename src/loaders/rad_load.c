@@ -140,7 +140,6 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 		mod->xxi[i].sub[0].vol = 63 - (buf[i * 11 + 3] & 63);
 		mod->xxi[i].sub[0].pan = 0x80;
-		mod->xxi[i].sub[0].xpo = -1;
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].nsm = 1;
 	}
@@ -214,7 +213,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				if (event->note == 15)
 					event->note = XMP_KEY_OFF;
 				else if (event->note)
-					event->note += 26 +
+					event->note += 25 +
 						12 * ((b & 0x70) >> 4);
 
 				b = hio_read8(f);	/* Inst + effect */
