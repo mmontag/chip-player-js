@@ -777,9 +777,5 @@ skip_test:
 	m->read_event_type = READ_EVENT_FT2;
     }
 
-    if (IS_CLASSIC_MOD()) {
-        m->quirk |= QUIRK_FILTER;
-    }
-
     return 0;
 }
