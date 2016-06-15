@@ -113,7 +113,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		goto err;
 	}
 
-	if ((buf = malloc(11 * mod->ins)) == NULL) {
+	if ((buf = calloc(mod->ins, 11)) == NULL) {
 		goto err;
 	}
 
