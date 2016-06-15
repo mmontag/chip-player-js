@@ -200,7 +200,7 @@ unsigned char OPLRead(FM_OPL *OPL,int a);
 int OPLTimerOver(FM_OPL *OPL,int c);
 
 /* YM3626/YM3812 local section - changed to use with xmp */
-void YM3812UpdateOne(FM_OPL *OPL, FMSAMPLE *bk, int len, int st, int vl, int vr);
+void YM3812UpdateOne(FM_OPL *OPL, FMSAMPLE *bk, int len, int st);
 
 void Y8950UpdateOne(FM_OPL *OPL, void *buffer, int length);
 

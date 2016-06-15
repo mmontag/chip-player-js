@@ -1044,7 +1044,7 @@ static void OPL_UnLockTable( OPL_STATE *ST )
 
 /*** Prototype changed to use with xmp ***/
 /* ---------- update one of chip ----------- */
-void YM3812UpdateOne(FM_OPL *OPL, FMSAMPLE *bk, int len, int vl, int vr, int st)
+void YM3812UpdateOne(FM_OPL *OPL, FMSAMPLE *bk, int len, int st)
 {
 	int data;
 	UINT32 amsCnt  = OPL->amsCnt;
@@ -1089,8 +1089,8 @@ void YM3812UpdateOne(FM_OPL *OPL, FMSAMPLE *bk, int len, int vl, int vr, int st)
 
 		/* store to sound buffer - changed to use with xmp */
 		if (st) 
-			*(bk++) += data * vr;
-		*(bk++) += data * vl;
+			*(bk++) += data << 10;
+		*(bk++) += data << 10;
 	}
 
 	OPL->amsCnt = amsCnt;

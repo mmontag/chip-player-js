@@ -38,8 +38,8 @@ struct adlib {
 #define YM3812Init(num,clock,rate) \
 		((((struct adlib *)(SYNTH_CHIP(ctx)))->ym3812 = OPLCreate(OPL_TYPE_IO, clock, rate)) != NULL)
 #define YM3812Shutdown()	OPLDestroy(a->ym3812)
-#define YM3812UpdateOne(which,tmp_bk,count,vl,vr,stereo) \
-		YM3812UpdateOne(a->ym3812, tmp_bk, count, vl, vr, stereo)
+#define YM3812UpdateOne(which,tmp_bk,count,stereo) \
+		YM3812UpdateOne(a->ym3812, tmp_bk, count, stereo)
 #endif
 
 #define NUM_SYNTH_CHANNEL 9
@@ -291,12 +291,14 @@ static void synth_setvol(struct context_data *ctx, int c, int vol)
 	if (vol > 63)
 		vol = 63;
 
+#if 0
 	/* Check if operator 1 produces sound */
 	if (opl_read(a, 0xc0 + c) & 1) {
 		ofs = register_offset[0][c];
 		b = opl_read(a, 0x40 + ofs);
 		opl_write(a, 0x40 + ofs, (b & 0xc0) | (63 - vol));
 	}
+#endif
 
 	ofs = register_offset[1][c];
 	b = opl_read(a, 0x40 + ofs);
@@ -354,7 +356,7 @@ static void synth_mixer(struct context_data *ctx, int32 *tmp_bk, int count, int 
 	if (!tmp_bk)
 		return;
 
-	YM3812UpdateOne(0, tmp_bk, count, vl, vr, stereo);
+	YM3812UpdateOne(0, tmp_bk, count, stereo);
 }
 
 
