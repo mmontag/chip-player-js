@@ -82,20 +82,18 @@ static void convert_vidc_to_linear(uint8 *p, int l)
 /* Convert HSC OPL2 instrument data to SBI instrument data */
 static void convert_hsc_to_sbi(uint8 *a)
 {
-	uint8 b[11];
+	uint8 x;
 	int i;
 
-	for (i = 0; i < 10; i += 2) {
-		uint8 x;
+	for (i = 0; i < 8; i += 2) {
 		x = a[i];
 		a[i] = a[i + 1];
 		a[i + 1] = x;
 	}
 
-	memcpy(b, a, 11);
-	a[8] = b[10];
-	a[10] = b[9];
-	a[9] = b[8];
+	x = a[8];
+	a[8] = a[10];
+	a[10] = x;
 }
 
 
