@@ -30,6 +30,70 @@
 #include "vorbis/codec.h"
 #include "vorbis/vorbisenc.h"
 #include "vorbis/vorbisfile.h"
+
+struct VorbisData {
+    int pos;          // current position in audio->data()
+    char* data;
+    int datasize;
+};
+
+static struct VorbisData vorbisData;
+
+static size_t ovRead(void* ptr, size_t size, size_t nmemb, void* datasource);
+static int ovSeek(void* datasource, ogg_int64_t offset, int whence);
+static long ovTell(void* datasource);
+
+static ov_callbacks ovCallbacks = { ovRead, ovSeek, 0, ovTell };
+
+//---------------------------------------------------------
+//   ovRead
+//---------------------------------------------------------
+
+static size_t ovRead(void* ptr, size_t size, size_t nmemb, void* datasource)
+{
+    struct VorbisData* vd = (struct VorbisData*)datasource;
+    size_t n = size * nmemb;
+    if (vd->datasize < (int)vd->pos + (int)n)
+        n = vd->datasize - vd->pos;
+    if (n) {
+        const char* src = vd->data + vd->pos;
+        memcpy(ptr, src, n);
+        vd->pos += n;
+    }
+
+    return n;
+}
+
+//---------------------------------------------------------
+//   ovSeek
+//---------------------------------------------------------
+
+static int ovSeek(void* datasource, ogg_int64_t offset, int whence)
+{
+    struct VorbisData* vd = (struct VorbisData*)datasource;
+    switch(whence) {
+    case SEEK_SET:
+        vd->pos = offset;
+        break;
+    case SEEK_CUR:
+        vd->pos += offset;
+        break;
+    case SEEK_END:
+        vd->pos = vd->datasize - offset;
+        break;
+    }
+    return 0;
+}
+
+//---------------------------------------------------------
+//   ovTell
+//---------------------------------------------------------
+
+static long ovTell(void* datasource)
+{
+    struct VorbisData* vd = (struct VorbisData*)datasource;
+    return vd->pos;
+}
 #endif
 
 /***************************************************************
@@ -73,12 +137,7 @@ fluid_sfont_t* fluid_defsfloader_load(fluid_sfloader_t* loader, const char* file
     return NULL;
   }
 
-  if (fluid_defsfont_load(defsfont, filename) == FLUID_FAILED) {
-    delete_fluid_defsfont(defsfont);
-    return NULL;
-  }
-
-  sfont = FLUID_NEW(fluid_sfont_t);
+  sfont = loader->data ? (fluid_sfont_t*)loader->data : FLUID_NEW(fluid_sfont_t);
   if (sfont == NULL) {
     FLUID_LOG(FLUID_ERR, "Out of memory");
     return NULL;
@@ -90,6 +149,11 @@ fluid_sfont_t* fluid_defsfloader_load(fluid_sfloader_t* loader, const char* file
   sfont->get_preset = fluid_defsfont_sfont_get_preset;
   sfont->iteration_start = fluid_defsfont_sfont_iteration_start;
   sfont->iteration_next = fluid_defsfont_sfont_iteration_next;
+
+  if (fluid_defsfont_load(defsfont, filename) == FLUID_FAILED) {
+    delete_fluid_defsfont(defsfont);
+    return NULL;
+  }
 
   return sfont;
 }
@@ -456,6 +520,63 @@ fluid_sample_t* fluid_defsfont_get_sample(fluid_defsfont_t* sfont, char *s)
     sample = (fluid_sample_t*) fluid_list_get(list);
 
     if (FLUID_STRCMP(sample->name, s) == 0) {
+
+        if (sample->sampletype & FLUID_SAMPLETYPE_OGG_VORBIS)
+        {
+      #if SF3_SUPPORT
+            short *sampledata_ogg=NULL;
+            int sampledata_size=0;
+
+            OggVorbis_File vf;
+            vorbisData.pos  = 0;
+            vorbisData.data = (char*)sample->data+sample->start;
+            vorbisData.datasize = (sample->end + 1 - sample->start);
+            if (ov_open_callbacks(&vorbisData, &vf, 0, 0, ovCallbacks) == 0)
+            {
+                char buffer[4096];
+                int numberRead = 0;
+                int section = 0;
+                do {
+                    numberRead = ov_read(&vf, buffer, 4096, 0, 2, 1, &section);
+                    sampledata_ogg=realloc(sampledata_ogg,sampledata_size+numberRead);
+                    if(numberRead>0)
+                    {
+                        memcpy((char*)(sampledata_ogg)+sampledata_size,buffer,numberRead);
+                        sampledata_size+=numberRead;
+                    }
+                } while (numberRead>0);
+
+                ov_clear(&vf);
+            }
+
+          // point sample data to uncompressed data stream
+          sample->data = sampledata_ogg;
+          sample->start = 0;
+          sample->end = sampledata_size/sizeof(short) - 1;
+
+          /* loop is fowled?? (cluck cluck :) */
+          if (sample->loopend > sample->end ||
+              sample->loopstart >= sample->loopend ||
+              sample->loopstart <= sample->start)
+          {
+            /* can pad loop by 8 samples and ensure at least 4 for loop (2*8+4) */
+            if ((sample->end - sample->start) >= 20)
+            {
+              sample->loopstart = sample->start + 8;
+              sample->loopend = sample->end - 8;
+            }
+            else /* loop is fowled, sample is tiny (can't pad 8 samples) */
+            {
+              sample->loopstart = sample->start + 1;
+              sample->loopend = sample->end - 1;
+            }
+          }
+          sample->sampletype=FLUID_SAMPLETYPE_OGG_VORBIS_UNPACKED;
+          fluid_voice_optimize_sample(sample);
+      #endif
+        }
+
+
       return sample;
     }
   }
@@ -1595,7 +1716,7 @@ new_fluid_sample()
 int
 delete_fluid_sample(fluid_sample_t* sample)
 {
-    if (sample->sampletype & FLUID_SAMPLETYPE_OGG_VORBIS)
+    if (sample->sampletype & FLUID_SAMPLETYPE_OGG_VORBIS_UNPACKED)
     {
 #if SF3_SUPPORT
       if (sample->data)
@@ -1619,72 +1740,6 @@ fluid_sample_in_rom(fluid_sample_t* sample)
 /*
  * fluid_sample_import_sfont
  */
-#if SF3_SUPPORT
-struct VorbisData {
-    int pos;          // current position in audio->data()
-    char* data;
-    int datasize;
-};
-
-static struct VorbisData vorbisData;
-
-static size_t ovRead(void* ptr, size_t size, size_t nmemb, void* datasource);
-static int ovSeek(void* datasource, ogg_int64_t offset, int whence);
-static long ovTell(void* datasource);
-
-static ov_callbacks ovCallbacks = { ovRead, ovSeek, 0, ovTell };
-
-//---------------------------------------------------------
-//   ovRead
-//---------------------------------------------------------
-
-static size_t ovRead(void* ptr, size_t size, size_t nmemb, void* datasource)
-{
-    struct VorbisData* vd = (struct VorbisData*)datasource;
-    size_t n = size * nmemb;
-    if (vd->datasize < (int)vd->pos + (int)n)
-        n = vd->datasize - vd->pos;
-    if (n) {
-        const char* src = vd->data + vd->pos;
-        memcpy(ptr, src, n);
-        vd->pos += n;
-    }
-
-    return n;
-}
-
-//---------------------------------------------------------
-//   ovSeek
-//---------------------------------------------------------
-
-static int ovSeek(void* datasource, ogg_int64_t offset, int whence)
-{
-    struct VorbisData* vd = (struct VorbisData*)datasource;
-    switch(whence) {
-    case SEEK_SET:
-        vd->pos = offset;
-        break;
-    case SEEK_CUR:
-        vd->pos += offset;
-        break;
-    case SEEK_END:
-        vd->pos = vd->datasize - offset;
-        break;
-    }
-    return 0;
-}
-
-//---------------------------------------------------------
-//   ovTell
-//---------------------------------------------------------
-
-static long ovTell(void* datasource)
-{
-    struct VorbisData* vd = (struct VorbisData*)datasource;
-    return vd->pos;
-}
-#endif
-
 int
 fluid_sample_import_sfont(fluid_sample_t* sample, SFSample* sfsample, fluid_defsfont_t* sfont)
 {
@@ -1701,55 +1756,7 @@ fluid_sample_import_sfont(fluid_sample_t* sample, SFSample* sfsample, fluid_defs
 
   if (sample->sampletype & FLUID_SAMPLETYPE_OGG_VORBIS)
   {
-#if SF3_SUPPORT
-      short *sampledata_ogg=NULL;
-      int sampledata_size=0;
 
-      OggVorbis_File vf;
-      vorbisData.pos  = 0;
-      vorbisData.data = (char*)sample->data+sample->start;
-      vorbisData.datasize = (sample->end + 1 - sample->start);
-      if (ov_open_callbacks(&vorbisData, &vf, 0, 0, ovCallbacks) == 0)
-      {
-          char buffer[4096];
-          int numberRead = 0;
-          int section = 0;
-          do {
-              numberRead = ov_read(&vf, buffer, 4096, 0, 2, 1, &section);
-              sampledata_ogg=realloc(sampledata_ogg,sampledata_size+numberRead);
-              if(numberRead>0)
-              {
-                  memcpy((char*)(sampledata_ogg)+sampledata_size,buffer,numberRead);
-                  sampledata_size+=numberRead;
-              }
-          } while (numberRead>0);
-
-          ov_clear(&vf);
-      }
-
-    // point sample data to uncompressed data stream
-    sample->data = sampledata_ogg;
-    sample->start = 0;
-    sample->end = sampledata_size/sizeof(short) - 1;
-
-    /* loop is fowled?? (cluck cluck :) */
-    if (sample->loopend > sample->end ||
-        sample->loopstart >= sample->loopend ||
-        sample->loopstart <= sample->start)
-    {
-      /* can pad loop by 8 samples and ensure at least 4 for loop (2*8+4) */
-      if ((sample->end - sample->start) >= 20)
-      {
-        sample->loopstart = sample->start + 8;
-        sample->loopend = sample->end - 8;
-      }
-      else /* loop is fowled, sample is tiny (can't pad 8 samples) */
-      {
-        sample->loopstart = sample->start + 1;
-        sample->loopend = sample->end - 1;
-      }
-    }
-#endif
   }
 
   if (sample->sampletype & FLUID_SAMPLETYPE_ROM) {

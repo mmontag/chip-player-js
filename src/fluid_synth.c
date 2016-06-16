@@ -2523,22 +2523,19 @@ fluid_synth_sfload(fluid_synth_t* synth, const char* filename, int reset_presets
   for (list = synth->loaders; list; list = fluid_list_next(list)) {
     loader = (fluid_sfloader_t*) fluid_list_get(list);
 
-    sfont = fluid_sfloader_load(loader, filename);
+    sfont = FLUID_NEW(fluid_sfont_t);
+    sfont->id = ++synth->sfont_id;
+    synth->sfont = fluid_list_prepend(synth->sfont, sfont);
 
-    if (sfont != NULL) {
+    loader->data = sfont;
+    fluid_sfloader_load(loader, filename);
+    loader->data = NULL;
 
-      sfont->id = ++synth->sfont_id;
 
-      /* insert the sfont as the first one on the list */
-      synth->sfont = fluid_list_prepend(synth->sfont, sfont);
-
-      /* reset the presets for all channels */
-      if (reset_presets) {
-	fluid_synth_program_reset(synth);
-      }
-
-      return (int) sfont->id;
+    if (reset_presets) {
+        fluid_synth_program_reset(synth);
     }
+    return (int) sfont->id;
   }
 
   FLUID_LOG(FLUID_ERR, "Failed to load SoundFont \"%s\"", filename);

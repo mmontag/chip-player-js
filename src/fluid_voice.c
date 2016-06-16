@@ -1935,7 +1935,7 @@ int fluid_voice_optimize_sample(fluid_sample_t* s)
   int i;
 
   /* ignore ROM and other(?) invalid samples */
-  if (!s->valid) return (FLUID_OK);
+  if (!s->valid || s->sampletype == FLUID_SAMPLETYPE_OGG_VORBIS) return (FLUID_OK);
 
   if (!s->amplitude_that_reaches_noise_floor_is_valid){ /* Only once */
     /* Scan the loop */

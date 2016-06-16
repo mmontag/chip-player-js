@@ -183,6 +183,7 @@ struct _fluid_sample_t
 #define FLUID_SAMPLETYPE_LEFT	4
 #define FLUID_SAMPLETYPE_LINKED	8
 #define FLUID_SAMPLETYPE_OGG_VORBIS	0x10 /**< Flag for #fluid_sample_t \a sampletype field for Ogg Vorbis compressed samples */
+#define FLUID_SAMPLETYPE_OGG_VORBIS_UNPACKED    0x20
 #define FLUID_SAMPLETYPE_ROM	0x8000
 
 
