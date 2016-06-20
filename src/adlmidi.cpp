@@ -595,9 +595,9 @@ public:
             {
                 switch(rel_to)
                 {
-                    case SET: mp_tell=pos;break;
-                    case END: mp_tell=mp_size-pos;break;
-                    case CUR: mp_tell+=pos;break;
+                    case SET: mp_tell = pos; break;
+                    case END: mp_tell = mp_size-pos; break;
+                    case CUR: mp_tell+= pos; break;
                 }
                 if(mp_tell > mp_size)
                     mp_tell = mp_size;
@@ -611,9 +611,10 @@ public:
             else
             {
                 int pos=0;
-                while( (pos < (size*num)) &&(mp_tell<mp_size))
+                int maxSize = (size*num);
+                while( (pos < maxSize) && (mp_tell < mp_size) )
                 {
-                    ((char*)buf)[pos]=((char*)mp)[mp_tell];
+                    ((unsigned char*)buf)[pos]=((unsigned char*)mp)[mp_tell];
                     mp_tell++;
                     pos++;
                 }
@@ -621,14 +622,17 @@ public:
             }
         }
 
-        char getc()
+        int getc()
         {
             if(fp)
                 return std::getc(fp);
             else
             {
-                if(mp_tell>=mp_size) mp_tell=mp_size-1;
-                char x=((char*)mp)[mp_tell];mp_tell++;
+                if(mp_tell>=mp_size)
+                {
+                    return -1;
+                }
+                int x=((unsigned char*)mp)[mp_tell]; mp_tell++;
                 return x;
             }
         }
@@ -719,25 +723,25 @@ public:
         else
         {
             // Try parsing as an IMF file
-           {
-            unsigned end = (unsigned char)HeaderBuf[0] + 256*(unsigned char)HeaderBuf[1];
-            if(!end || (end & 3)) goto not_imf;
+            {
+                unsigned end = (unsigned char)HeaderBuf[0] + 256*(unsigned char)HeaderBuf[1];
+                if(!end || (end & 3)) goto not_imf;
 
-            long backup_pos = fr.tell();
-            unsigned sum1 = 0, sum2 = 0;
-            fr.seek(2, SEEK_SET);
-            for(unsigned n=0; n<42; ++n)
-            {
-                unsigned value1 = fr.getc(); value1 += fr.getc() << 8; sum1 += value1;
-                unsigned value2 = fr.getc(); value2 += fr.getc() << 8; sum2 += value2;
+                long backup_pos = fr.tell();
+                unsigned sum1 = 0, sum2 = 0;
+                fr.seek(2, SEEK_SET);
+                for(unsigned n=0; n<42; ++n)
+                {
+                    unsigned value1 = fr.getc(); value1 += fr.getc() << 8; sum1 += value1;
+                    unsigned value2 = fr.getc(); value2 += fr.getc() << 8; sum2 += value2;
+                }
+                fr.seek(backup_pos, SEEK_SET);
+                if(sum1 > sum2)
+                {
+                    is_IMF = true;
+                    DeltaTicks = 1;
+                }
             }
-            fr.seek(backup_pos, SEEK_SET);
-            if(sum1 > sum2)
-            {
-                is_IMF = true;
-                DeltaTicks = 1;
-            }
-           }
 
             if(!is_IMF)
             {
@@ -790,7 +794,7 @@ public:
                     special_event_buf[3] = fr.getc(); // port index
                     special_event_buf[4] = fr.getc(); // port value
                     unsigned delay = fr.getc(); delay += 256 * fr.getc();
-                    totalGotten+=4;
+                    totalGotten += 4;
 
                     //if(special_event_buf[3] <= 8) continue;
 
@@ -806,6 +810,7 @@ public:
                 CurrentPosition.track[tk].delay = 0;
                 CurrentPosition.began = true;
                 //std::fprintf(stderr, "Done reading IMF file\n");
+                opl.NumFourOps = 0; //Don't use 4-operator channels for IMF playing!
             }
             else
             {
@@ -1127,14 +1132,15 @@ private:
                 }
             }
             if(evtype == 9) current_device[tk] = ChooseDevice(data);
-//            if(evtype >= 1 && evtype <= 6)
-//                UI.PrintLn("Meta %d: %s", evtype, data.c_str());
+            //if(evtype >= 1 && evtype <= 6)
+            //    UI.PrintLn("Meta %d: %s", evtype, data.c_str());
 
             if(evtype == 0xE3) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
             {
                 unsigned char i = data[0], v = data[1];
                 if( (i&0xF0) == 0xC0 ) v |= 0x30;
-                //fprintf(stderr, "OPL poke %02X, %02X\n", i,v);
+                //std::printf("OPL poke %02X, %02X\n", i, v);
+                //std::fflush(stdout);
                 opl.Poke(0, i,v);
             }
             return;
