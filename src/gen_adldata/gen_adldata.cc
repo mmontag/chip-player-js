@@ -233,6 +233,7 @@ static void LoadBNK(const char* fn, unsigned bank, const char* prefix, bool is_f
                     + (op1[ 5] << 5) // SUSTAIN FLAG
                     + (op1[11] << 4) // SCALING FLAG
                      + op1[ 1];      // FREQMUL
+                     
         tmp.data[1] = (op2[ 9] << 7)
                     + (op2[10] << 6)
                     + (op2[ 5] << 5)
@@ -1127,12 +1128,15 @@ int main()
     
     LoadDoom("fm_banks/raptor/genmidi.op2", 64, "rapt");
 
-	LoadJunglevision("fm_banks/op3_files/fat2_modded.op3", 65, "b65M");
+	//LoadJunglevision("fm_banks/op3_files/fat2_modded.op3", 65, "b65M");
+    LoadTMB("fm_banks/op3_files/gmopl_wohl_mod.tmb",  65, "b65");
 
-	LoadIBK("fm_banks/ibk_files/JOconnel.IBK", 		66, "b66M", false);
-    LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 66, "b66P", true);
+	//LoadIBK("fm_banks/ibk_files/JOconnel.IBK", 		66, "b66M", false);
+    //LoadIBK("fm_banks/ibk_files/my-gmopldrums.IBK", 66, "b66P", true);
+    LoadTMB("fm_banks/op3_files/gmoconel.tmb",  66, "b66");
 
     LoadTMB("fm_banks/tmb_files/default.tmb",  67, "3drm67");
+    //LoadDoom("fm_banks/doom2/wolfinstein.op2", 67, "wolf"); //Small experiment!
     
     LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
 
