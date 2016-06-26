@@ -250,8 +250,9 @@ static int alloc_voice(struct context_data *ctx, int chn)
 	}
 
 	/* not found */
-	if (i == p->virt.maxvoc)
+	if (i == p->virt.maxvoc) {
 		i = free_voice(ctx);
+	}
 
 	p->virt.virt_channel[chn].count++;
 	p->virt.virt_used++;

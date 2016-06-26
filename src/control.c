@@ -44,6 +44,7 @@ xmp_context xmp_create_context()
 
 	ctx->state = XMP_STATE_UNLOADED;
 	ctx->m.defpan = 100;
+	ctx->s.numvoc = SMIX_NUMVOC;
 
 	return (xmp_context)ctx;
 }
@@ -299,10 +300,17 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 	struct mixer_data *s = &ctx->s;
 	int ret = -XMP_ERROR_INVALID;
 
+
 	if (parm == XMP_PLAYER_SMPCTL || parm == XMP_PLAYER_DEFPAN) {
 		/* these should be set before loading the module */
-		if (ctx->state >= XMP_STATE_LOADED)
+		if (ctx->state >= XMP_STATE_LOADED) {
 			return -XMP_ERROR_STATE;
+		}
+	} else if (parm == XMP_PLAYER_VOICES) {
+		/* these should be set before start playing */
+		if (ctx->state >= XMP_STATE_PLAYING) {
+			return -XMP_ERROR_STATE;
+		}
 	} else if (ctx->state < XMP_STATE_PLAYING) {
 		return -XMP_ERROR_STATE;
 	}
@@ -374,6 +382,9 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 		set_player_mode(ctx);
 		scan_sequences(ctx);
 		ret = 0;
+		break;
+	case XMP_PLAYER_VOICES:
+		s->numvoc = val;
 		break;
 	}
 
@@ -473,6 +484,9 @@ int xmp_get_player__(xmp_context opaque, int parm)
 #endif
 			}
 		}
+		break;
+	case XMP_PLAYER_VOICES:
+		ret = s->numvoc;
 		break;
 	}
 

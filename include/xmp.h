@@ -56,6 +56,7 @@ extern "C" {
 #define XMP_PLAYER_DEFPAN	10	/* Default pan setting */
 #define XMP_PLAYER_MODE 	11	/* Player personality */
 #define XMP_PLAYER_MIXER_TYPE	12	/* Current mixer (read only) */
+#define XMP_PLAYER_VOICES	13	/* Maximum number of mixer voices */
 
 /* interpolation types */
 #define XMP_INTERP_NEAREST	0	/* Nearest neighbor */
