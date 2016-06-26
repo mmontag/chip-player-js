@@ -785,6 +785,7 @@ int xmp_get_player(xmp_context c, int param)
         XMP_PLAYER_DEFPAN      /* Default pan separation */
         XMP_PLAYER_MODE        /* Player personality */
         XMP_PLAYER_MIXER_TYPE  /* Current mixer (read only) */
+        XMP_PLAYER_VOICES      /* Maximum number of mixer voices */
 
       Valid states are::
 
@@ -830,6 +831,7 @@ int xmp_set_player(xmp_context c, int param, int val)
         XMP_PLAYER_SMIX_VOLUME /* SMIX Volume */
         XMP_PLAYER_DEFPAN      /* Default pan separation */
         XMP_PLAYER_MODE        /* Player personality */
+        XMP_PLAYER_VOICES      /* Maximum number of mixer voices */
 
     :val: the value to set. Valid values depend on the parameter being set.
 
@@ -911,6 +913,11 @@ int xmp_set_player(xmp_context c, int param, int val)
 
       Modules created with OpenMPT will be played with all bugs and quirks
       of the original trackers.
+
+    * *[Added in libxmp 4.4]* Maximum number of mixer voices: the maximum
+      number of virtual channels that can be used to play the module. If
+      set too high, modules with voice leaks can cause excessive CPU usage.
+      Default is 128.
 
   **Returns:**
     0 if parameter was correctly set, ``-XMP_ERROR_INVALID`` if
