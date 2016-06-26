@@ -231,9 +231,11 @@ static int free_voice(struct context_data *ctx)
 	}
 
 	/* Free voice */
-	p->virt.virt_channel[p->virt.voice_array[num].chn].map = FREE;
-	p->virt.virt_channel[p->virt.voice_array[num].root].count--;
-	p->virt.virt_used--;
+	if (num >= 0) {
+		p->virt.virt_channel[p->virt.voice_array[num].chn].map = FREE;
+		p->virt.virt_channel[p->virt.voice_array[num].root].count--;
+		p->virt.virt_used--;
+	}
 
 	return num;
 }
@@ -254,12 +256,14 @@ static int alloc_voice(struct context_data *ctx, int chn)
 		i = free_voice(ctx);
 	}
 
-	p->virt.virt_channel[chn].count++;
-	p->virt.virt_used++;
+	if (i >= 0) {
+		p->virt.virt_channel[chn].count++;
+		p->virt.virt_used++;
 
-	p->virt.voice_array[i].chn = chn;
-	p->virt.voice_array[i].root = chn;
-	p->virt.virt_channel[chn].map = i;
+		p->virt.voice_array[i].chn = chn;
+		p->virt.voice_array[i].root = chn;
+		p->virt.virt_channel[chn].map = i;
+	}
 
 	return i;
 }
@@ -466,6 +470,10 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		if (p->virt.voice_array[voc].act) {
 			vfree = alloc_voice(ctx, chn);
 
+			if (vfree < 0) {
+				return -1;
+			}
+
 			for (chn = p->virt.num_tracks;
 			     p->virt.virt_channel[chn++].map > FREE;) ;
 
@@ -475,6 +483,9 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		}
 	} else {
 		voc = alloc_voice(ctx, chn);
+		if (voc < 0) {
+			return -1;
+		}
 	}
 
 	if (smp < 0) {

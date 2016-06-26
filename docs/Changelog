@@ -9,6 +9,8 @@ Stable versions
 	- fix XM replayer note delay and retrig quirk
 	- fix XM replayer channel pan
 	- fix MOD loader period to note conversion
+	Fix issues reported by Lionel Debroux:
+	- fix virtual channel deallocation error handling
 	Other changes:
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
@@ -16,6 +18,7 @@ Stable versions
 	- add Antti Lankila's Amiga 500 modeling mixer
 	- add support to filter effect E0 in Amiga mods
 	- add flags to configure player mode
+	- add option to set the maximum number of virtual channels
 	- limit Oktalyzer modules to MOD note range
 	- code refactoring and cleanup
 
