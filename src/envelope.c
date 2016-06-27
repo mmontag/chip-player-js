@@ -98,6 +98,17 @@ static int update_envelope_xm(struct xmp_envelope *env, int x, int release)
 			has_sus = 0;
 	}
 
+	/* If the envelope point is set to somewhere after the sustain point
+	 * or sustain loop, enable release to prevent the envelope point to
+	 * return to the sustain point or loop start. (See Filip Skutela's
+	 * farewell_tear.xm.)
+	 */
+	if (has_loop && x > data[lpe] + 1) {
+		release = 1;
+	} else if (has_sus && x > data[sus] + 1) {
+		release = 1;
+	}
+
 	/* If enabled, stay at the sustain point */
 	if (has_sus && !release) {
 		if (x >= data[sus]) {
