@@ -432,7 +432,6 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	struct xmp_instrument *instrument;
 	int finalvol;
 	uint16 vol_envelope;
-	int gvol;
 	int fade = 0;
 
 	instrument = get_instrument(ctx, xc->ins);
@@ -537,14 +536,8 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	finalvol = (finalvol * xc->fadeout) >> 6;	/* 16 bit output */
 
-	if (HAS_QUIRK(QUIRK_ST3BUGS)) {
-		gvol = 0x40;
-	} else {
-		gvol = p->gvol;
-	}
-
-	finalvol = (uint32)(vol_envelope * gvol * xc->mastervol / m->gvolbase *
-				((int)finalvol * 0x40 / m->volbase)) >> 18;
+	finalvol = (uint32)(vol_envelope * p->gvol * xc->mastervol /
+		m->gvolbase * ((int)finalvol * 0x40 / m->volbase)) >> 18;
 
 	/* Apply channel volume */
 	finalvol = finalvol * get_channel_vol(ctx, chn) / 100;

@@ -11,6 +11,7 @@ Stable versions
 	- fix MOD loader period to note conversion
 	Fix issues reported by Lionel Debroux:
 	- fix virtual channel deallocation error handling
+	- fix S3M global volume effect
 	Other changes:
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
