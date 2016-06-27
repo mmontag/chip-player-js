@@ -37,7 +37,6 @@
 #endif
 
 #include <fnmatch.h>
-#include "synth.h"
 
 /*
  * Handle special "module quirks" that can't be detected automatically
@@ -218,7 +217,6 @@ void load_prologue(struct context_data *ctx)
     	m->mod.rst = 0;
 
 #ifndef LIBXMP_CORE_PLAYER
-	m->synth = &synth_null;
 	m->extra = NULL;
 #endif
 	m->time_factor = DEFAULT_TIME_FACTOR;

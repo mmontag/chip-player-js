@@ -29,10 +29,6 @@
 #include "period.h"
 #include "player.h"	/* for set_sample_end() */
 
-#ifndef LIBXMP_CORE_PLAYER
-#include "synth.h"
-#endif
-
 #ifdef LIBXMP_PAULA_SIMULATOR
 #include "paula.h"
 #endif
@@ -374,9 +370,6 @@ void mixer_softmixer(struct context_data *ctx)
 	int vol_l, vol_r, step, voc;
 	int prev_l, prev_r;
 	int lps, lpe;
-#ifndef LIBXMP_CORE_PLAYER
-	int synth = 1;
-#endif
 	int32 *buf_pos;
 	void (*mix_fn)(struct mixer_voice *, int *, int, int, int, int);
 	mixer_set *mixers;
@@ -433,18 +426,6 @@ void mixer_softmixer(struct context_data *ctx)
 			vol_r = vi->vol * (0x80 - vi->pan);
 			vol_l = vi->vol * (0x80 + vi->pan);
 		}
-
-#ifndef LIBXMP_CORE_PLAYER
-		if (vi->fidx & FLAG_SYNTH) {
-			if (synth) {
-				m->synth->mixer(ctx, buf_pos, s->ticksize,
-						vol_l >> 7, vol_r >> 7,
-						vi->fidx & FLAG_STEREO);
-				synth = 0;
-			}
-			continue;
-		}
-#endif
 
 		step = ((int64)s->pbase << 24) / vi->period;
 
@@ -678,14 +659,6 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 
 	set_sample_end(ctx, voc, 0);
 
-#ifndef LIBXMP_CORE_PLAYER
-	if (xxs->flg & XMP_SAMPLE_SYNTH) {
-		vi->fidx |= FLAG_SYNTH;
-		m->synth->setpatch(ctx, voc, xxs->data);
-		return;
-	}
-#endif
-
 	mixer_setvol(ctx, voc, 0);
 
 	vi->sptr = xxs->data;
@@ -725,17 +698,8 @@ void mixer_setbend(struct context_data *ctx, int voc, int bend)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
-#ifndef LIBXMP_CORE_PLAYER
-	struct module_data *m = &ctx->m;
-#endif
 
 	vi->period = note_to_period_mix(vi->note, bend);
-
-#ifndef LIBXMP_CORE_PLAYER
-	if (vi->fidx & FLAG_SYNTH) {
-		m->synth->setnote(ctx, voc, vi->note, bend >> 7);
-	}
-#endif
 }
 
 void mixer_setvol(struct context_data *ctx, int voc, int vol)
@@ -743,20 +707,12 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
-#ifndef LIBXMP_CORE_PLAYER
-	struct module_data *m = &ctx->m;
-#endif
 
-	if (s->interp > XMP_INTERP_NEAREST)
+	if (s->interp > XMP_INTERP_NEAREST) {
 		anticlick(ctx, voc, vol, vi->pan, NULL, 0);
+	}
 
 	vi->vol = vol;
-
-#ifndef LIBXMP_CORE_PLAYER
-	if (vi->fidx & FLAG_SYNTH) {
-		m->synth->setvol(ctx, voc, vol >> 4);
-	}
-#endif
 }
 
 void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)

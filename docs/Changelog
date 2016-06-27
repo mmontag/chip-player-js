@@ -23,6 +23,7 @@ Stable versions
 	- add flags to configure player mode
 	- add option to set the maximum number of virtual channels
 	- limit Oktalyzer modules to MOD note range
+	- remove broken synth chip and Adlib emulation suport
 	- code refactoring and cleanup
 
 4.3.13 (20160417):

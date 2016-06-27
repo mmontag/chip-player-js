@@ -45,7 +45,6 @@
 #include "player.h"
 #include "mixer.h"
 #ifndef LIBXMP_CORE_PLAYER
-#include "synth.h"
 #include "extras.h"
 #endif
 
@@ -179,8 +178,6 @@ static void reset_channels(struct context_data *ctx)
 	int i;
 
 #ifndef LIBXMP_CORE_PLAYER
-	m->synth->reset(ctx);
-
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		void *extra;
 
@@ -1275,9 +1272,6 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 {
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct player_data *p = &ctx->p;
-#ifndef LIBXMP_CORE_PLAYER
-	struct mixer_data *s = &ctx->s;
-#endif
 	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
@@ -1364,13 +1358,6 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 		if (new_channel_extras(ctx, xc) < 0)
 			goto err2;
 	}
-
-	if (m->synth->init(ctx, s->freq) < 0) {
-		ret = -XMP_ERROR_INTERNAL;
-		goto err2;
-	}
-
-	m->synth->reset(ctx);
 #endif
 	reset_channels(ctx);
 
@@ -1581,7 +1568,6 @@ void xmp_end_player(xmp_context opaque)
 	struct player_data *p = &ctx->p;
 	struct flow_control *f = &p->flow;
 #ifndef LIBXMP_CORE_PLAYER
-	struct module_data *m = &ctx->m;
 	struct channel_data *xc;
 	int i;
 #endif
@@ -1600,9 +1586,6 @@ void xmp_end_player(xmp_context opaque)
 #endif
 
 	virt_off(ctx);
-#ifndef LIBXMP_CORE_PLAYER
-	m->synth->deinit(ctx);
-#endif
 
 	free(p->xc_data);
 	free(f->loop);

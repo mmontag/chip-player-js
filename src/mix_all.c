@@ -25,10 +25,6 @@
 #include "mixer.h"
 #include "precomp_lut.h"
 
-#ifndef LIBXMP_CORE_PLAYER
-#include "synth.h"
-#endif
-
 /* Mixers
  *
  * To increase performance eight mixers are defined, one for each

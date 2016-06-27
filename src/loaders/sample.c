@@ -24,7 +24,6 @@
 #include "loader.h"
 
 #ifndef LIBXMP_CORE_PLAYER
-#include "synth.h"
 
 /*
  * From the Audio File Formats (version 2.5)

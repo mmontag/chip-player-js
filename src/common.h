@@ -251,17 +251,10 @@ struct module_data {
 	int smpctl;			/* sample control flags */
 	int defpan;			/* default pan setting */
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];
-
 	int num_sequences;
 	struct xmp_sequence seq_data[MAX_SEQUENCES];
-
 	char *instrument_path;
-
 	void *extra;			/* format-specific extra fields */
-
-	const struct synth_info *synth;
-	void *synth_chip;
-
 	char **scan_cnt;		/* scan counters */
 };
 
