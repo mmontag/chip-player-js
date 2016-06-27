@@ -12,6 +12,7 @@ Stable versions
 	Fix issues reported by Lionel Debroux:
 	- fix virtual channel deallocation error handling
 	- fix S3M global volume effect
+	- accept S3M modules with invalid effects
 	Other changes:
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)

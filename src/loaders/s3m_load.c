@@ -152,6 +152,12 @@ static void xlat_fx(int c, struct xmp_event *e)
 {
 	uint8 h = MSN(e->fxp), l = LSN(e->fxp);
 
+	if (e->fxt > 26) {
+		D_(D_WARN "invalid effect %02x", e->fxt);
+		e->fxt = e->fxp = 0;
+		return;
+	}
+
 	switch (e->fxt = fx[e->fxt]) {
 	case FX_S3M_BPM:
 		if (e->fxp < 0x20) {
@@ -488,9 +494,6 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 			if (b & S3M_FX_FOLLOWS) {
 				event->fxt = hio_read8(f);
-				if (event->fxt > 26) {
-					goto err3;
-				}
 				event->fxp = hio_read8(f);
 				xlat_fx(c, event);
 
