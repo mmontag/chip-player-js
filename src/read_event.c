@@ -1143,7 +1143,10 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			use_ins_vol = 0;
 		} else {
 			/* portamento_after_keyoff.it test case */
-			reset_env = 1;
+			/* also see suburban_streets o13 c45 */
+			if (ev.ins || !is_toneporta) {
+				reset_env = 1;
+			}
 
 			if (is_toneporta) {
 				/* Always retrig on tone portamento: Fix
