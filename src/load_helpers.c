@@ -202,6 +202,7 @@ void load_prologue(struct context_data *ctx)
 	m->vol_table = NULL;
 	m->quirk = 0;
 	m->read_event_type = READ_EVENT_MOD;
+	m->period_type = PERIOD_AMIGA;
 	m->comment = NULL;
 	m->scan_cnt = NULL;
 

@@ -91,7 +91,8 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->smp = mod->ins;
     mod->chn = 0;
 
-    m->quirk |= (QUIRK_MODRNG | QUIRK_PROTRACK);
+    m->quirk |= QUIRK_PROTRACK;
+    m->period_type = PERIOD_MODRNG;
 
     hio_read(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
@@ -222,9 +223,10 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     if (mod->chn > 4) {
-	m->quirk &= ~(QUIRK_MODRNG | QUIRK_PROTRACK);
+	m->quirk &= ~QUIRK_PROTRACK;
 	m->quirk |= QUIRKS_FT2;
 	m->read_event_type = READ_EVENT_FT2;
+	m->period_type = PERIOD_AMIGA;
     }
 
     return 0;
