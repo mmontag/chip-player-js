@@ -74,7 +74,7 @@ extern const struct format_loader stim_loader;
 /* extern const struct format_loader coco_loader; */
 /* extern const struct format_loader mtp_loader; */
 extern const struct format_loader ims_loader;
-extern const struct format_loader ssn_loader;
+extern const struct format_loader c669_loader;
 extern const struct format_loader fnk_loader;
 /* extern const struct format_loader amd_loader; */
 /* extern const struct format_loader rad_loader; */
@@ -142,7 +142,7 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	/* &coco_loader, */
 	/* &mtp_loader, */
 	&ims_loader,
-	&ssn_loader,
+	&c669_loader,
 	&fnk_loader,
 	/* &amd_loader, */
 	/* &rad_loader, */

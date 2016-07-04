@@ -23,16 +23,16 @@
 #include "loader.h"
 
 
-static int ssn_test (HIO_HANDLE *, char *, const int);
-static int ssn_load (struct module_data *, HIO_HANDLE *, const int);
+static int c669_test (HIO_HANDLE *, char *, const int);
+static int c669_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader ssn_loader = {
+const struct format_loader c669_loader = {
     "Composer 669",
-    ssn_test,
-    ssn_load
+    c669_test,
+    c669_load
 };
 
-static int ssn_test(HIO_HANDLE *f, char *t, const int start)
+static int c669_test(HIO_HANDLE *f, char *t, const int start)
 {
     uint16 id;
 
@@ -57,7 +57,7 @@ static int ssn_test(HIO_HANDLE *f, char *t, const int start)
 }
 
 
-struct ssn_file_header {
+struct c669_file_header {
     uint8 marker[2];		/* 'if'=standard, 'JN'=extended */
     uint8 message[108];		/* Song message */
     uint8 nos;			/* Number of samples (0-64) */
@@ -68,7 +68,7 @@ struct ssn_file_header {
     uint8 pbrk[128];		/* Break list for patterns */
 };
 
-struct ssn_instrument_header {
+struct c669_instrument_header {
     uint8 name[13];		/* ASCIIZ instrument name */
     uint32 length;		/* Instrument length */
     uint32 loop_start;		/* Instrument loop start */
@@ -90,13 +90,13 @@ static const uint8 fx[] = {
 };
 
 
-static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
+static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 {
     struct xmp_module *mod = &m->mod;
     int i, j;
     struct xmp_event *event;
-    struct ssn_file_header sfh;
-    struct ssn_instrument_header sih;
+    struct c669_file_header sfh;
+    struct c669_instrument_header sih;
     uint8 ev[3];
 
     LOAD_INIT();
