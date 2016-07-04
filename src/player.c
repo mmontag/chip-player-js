@@ -738,7 +738,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		CLAMP(xc->info_period,
 			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0) * 4096,
 			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0) * 4096);
-	} else if (xc->info_period <  (1 << 12)) {
+	} else if (xc->info_period < (1 << 12)) {
 		xc->info_period = (1 << 12);
 	}
 

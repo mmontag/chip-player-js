@@ -182,6 +182,9 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 	case PERIOD_LINEAR:
 		per = (240.0 - d) * 16;		/* Linear */
 		break;
+	case PERIOD_HZ:
+		per = d * 440 / 70;		/* Hz */
+		break;
 	default:
 	    	per = 13694.0 / pow(2, d / 12);	/* Amiga */
 	}
@@ -226,10 +229,13 @@ int period_to_bend(struct context_data *ctx, double p, int n, double adj)
 	switch (m->period_type) {
 	case PERIOD_LINEAR:
 		return 100 * (8 * (((240 - n) << 4) - p));
+	case PERIOD_HZ:
+		d = note_to_period(ctx, n, 0, adj);
+		return round(100.0 * 768.0 * log(p / d));
 	default:
 		/* Amiga */
 		d = note_to_period(ctx, n, 0, adj);
-		return round(100.0 * ((1536.0 * log(d / p) / M_LN2)));
+		return round(100.0 * ((1536.0 / M_LN2) * log(d / p)));
 	}
 }
 
