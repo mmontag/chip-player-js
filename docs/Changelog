@@ -13,6 +13,7 @@ Stable versions
 	- fix virtual channel deallocation error handling
 	- fix S3M global volume effect
 	- fix IT envelope reset on tone portamento
+	- fix IT volume column tone portamento
 	- fix XM envelope position setting
 	- fix FT2 arpeggio+portamento quirk with finetunes
 	- accept S3M modules with invalid effects

@@ -240,8 +240,12 @@ static void xlat_volfx(struct xmp_event *event)
 		event->f2t = FX_SETPAN;
 		event->f2p = (b - 128) << 2;
 	} else if (b >= 193 && b <= 202) {	/* G */
+		uint8 val[9] = {
+			0x01, 0x04, 0x08, 0x10, 0x20,
+			0x40, 0x60, 0x80, 0xff
+		};
 		event->f2t = FX_TONEPORTA;
-		event->f2p = (b - 193) << 2;
+		event->f2p = val[b - 193];
 	} else if (b >= 203 && b <= 212) {	/* H */
 		event->f2t = FX_VIBRATO;
 		event->f2p = b - 203;
