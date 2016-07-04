@@ -282,7 +282,7 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    m->quirk |= QUIRK_MODRNG;
+    m->period_type = PERIOD_MODRNG;
 
     /* Load samples */
 

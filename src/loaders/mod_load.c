@@ -397,7 +397,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     smp_size = 0;
     /*pat_size = 0;*/
 
-    m->quirk |= QUIRK_MODRNG;
+    m->period_type = PERIOD_MODRNG;
 
     hio_read(&mh.name, 20, 1, f);
     for (i = 0; i < 31; i++) {
@@ -663,11 +663,11 @@ skip_test:
     case TRACKER_FASTTRACKER:
     case TRACKER_FASTTRACKER2:
 	tracker = "Fast Tracker";
-	m->quirk &= ~QUIRK_MODRNG;
+	m->period_type = PERIOD_AMIGA;
 	break;
     case TRACKER_TAKETRACKER:
 	tracker = "Take Tracker";
-	m->quirk &= ~QUIRK_MODRNG;
+	m->period_type = PERIOD_AMIGA;
 	break;
     case TRACKER_OCTALYSER:
 	tracker = "Octalyser";
@@ -683,7 +683,7 @@ skip_test:
 	break;
     case TRACKER_SCREAMTRACKER3:
 	tracker = "Scream Tracker";
-	m->quirk &= ~QUIRK_MODRNG;
+	m->period_type = PERIOD_AMIGA;
 	break;
     case TRACKER_CONVERTEDST:
     case TRACKER_CONVERTED:
@@ -691,7 +691,7 @@ skip_test:
 	break;
     case TRACKER_CLONE:
 	tracker = "Protracker clone";
-	m->quirk &= ~QUIRK_MODRNG;
+	m->period_type = PERIOD_AMIGA;
 	break;
     case TRACKER_OPENMPT:
 	tracker = "OpenMPT";
@@ -701,12 +701,12 @@ skip_test:
     case TRACKER_UNKNOWN_CONV:
     case TRACKER_UNKNOWN:
 	tracker = "Unknown tracker";
-	m->quirk &= ~QUIRK_MODRNG;
+	m->period_type = PERIOD_AMIGA;
 	break;
     }
 
     if (out_of_range) {
-	m->quirk &= ~QUIRK_MODRNG;
+	m->period_type = PERIOD_AMIGA;
     }
 
     if (tracker_id == TRACKER_MODSGRAVE) {
@@ -772,9 +772,9 @@ skip_test:
 	m->quirk |= QUIRKS_ST3;
 	m->read_event_type = READ_EVENT_ST3;
     } else if (mod->chn > 4) {
-	m->quirk &= ~QUIRK_MODRNG;
 	m->quirk |= QUIRKS_FT2;
 	m->read_event_type = READ_EVENT_FT2;
+	m->period_type = PERIOD_AMIGA;
     }
 
     return 0;

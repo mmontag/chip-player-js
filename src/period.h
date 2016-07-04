@@ -13,10 +13,10 @@
 #define MIN_NOTE_MOD	48
 #define MAX_NOTE_MOD	83
 
-double	note_to_period		(struct context_data *, int, int, int, double);
+double	note_to_period		(struct context_data *, int, int, double);
 int	note_to_period_mix	(int, int);
 int	period_to_note		(int);
-int	period_to_bend		(struct context_data *, double, int, int, double);
+int	period_to_bend		(struct context_data *, double, int, double);
 void	c2spd_to_note		(int, int *, int *);
 
 #endif /* LIBXMP_PERIOD_H */

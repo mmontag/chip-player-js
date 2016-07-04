@@ -346,39 +346,40 @@ int set_player_mode(struct context_data *ctx)
 	case XMP_MODE_MOD:
 		m->quirk = 0;
 		m->read_event_type = READ_EVENT_MOD;
+		m->period_type = PERIOD_AMIGA;
 		break;
 	case XMP_MODE_NOISETRACKER:
-		m->quirk = QUIRK_NOBPM | QUIRK_MODRNG;
+		m->quirk = QUIRK_NOBPM;
 		m->read_event_type = READ_EVENT_MOD;
+		m->period_type = PERIOD_MODRNG;
 		break;
 	case XMP_MODE_PROTRACKER:
-		m->quirk = QUIRK_MODRNG | QUIRK_PROTRACK;
+		m->quirk = QUIRK_PROTRACK;
 		m->read_event_type = READ_EVENT_MOD;
+		m->period_type = PERIOD_MODRNG;
 		break;
 	case XMP_MODE_S3M:
-		q = m->quirk & (QUIRK_MODRNG | QUIRK_VSALL | QUIRK_ARPMEM);
+		q = m->quirk & (QUIRK_VSALL | QUIRK_ARPMEM);
 		m->quirk = QUIRKS_ST3 | q;
 		m->read_event_type = READ_EVENT_ST3;
 		break;
 	case XMP_MODE_ST3:
-		q = m->quirk & (QUIRK_MODRNG | QUIRK_VSALL | QUIRK_ARPMEM);
+		q = m->quirk & (QUIRK_VSALL | QUIRK_ARPMEM);
 		m->quirk = QUIRKS_ST3 | QUIRK_ST3BUGS | q;
 		m->read_event_type = READ_EVENT_ST3;
 		break;
 	case XMP_MODE_ST3GUS:
-		q = m->quirk & (QUIRK_MODRNG | QUIRK_VSALL | QUIRK_ARPMEM);
+		q = m->quirk & (QUIRK_VSALL | QUIRK_ARPMEM);
 		m->quirk = QUIRKS_ST3 | QUIRK_ST3BUGS | q;
 		m->quirk &= ~QUIRK_RSTCHN;
 		m->read_event_type = READ_EVENT_ST3;
 		break;
 	case XMP_MODE_XM:
-		q = m->quirk & QUIRK_LINEAR;
-		m->quirk = QUIRKS_FT2 | q;
+		m->quirk = QUIRKS_FT2;
 		m->read_event_type = READ_EVENT_FT2;
 		break;
 	case XMP_MODE_FT2:
-		q = m->quirk & QUIRK_LINEAR;
-		m->quirk = QUIRKS_FT2 | QUIRK_FT2BUGS | q;
+		m->quirk = QUIRKS_FT2 | QUIRK_FT2BUGS;
 		m->read_event_type = READ_EVENT_FT2;
 		break;
 	case XMP_MODE_IT:

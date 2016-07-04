@@ -147,8 +147,8 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_VOLPDN	(1 << 9)	/* Set priority to volume slide down */
 #define QUIRK_UNISLD	(1 << 10)	/* Unified pitch slide/portamento */
 #define QUIRK_ITVPOR	(1 << 11)	/* Disable fine bends in IT vol fx */
-#define QUIRK_LINEAR	(1 << 12)	/* Linear periods */
-#define QUIRK_MODRNG	(1 << 13)	/* Limit periods to MOD range */
+/*#define QUIRK_LINEAR	(1 << 12)*/	/* Linear periods */
+/*#define QUIRK_MODRNG	(1 << 13)*/	/* Limit periods to MOD range */
 #define QUIRK_INSVOL	(1 << 14)	/* Use instrument volume */
 #define QUIRK_VIRTUAL	(1 << 15)	/* Enable virtual channels */
 #define QUIRK_FILTER	(1 << 16)	/* Enable filter */
@@ -200,7 +200,10 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define IS_PLAYER_MODE_ST3()	(m->read_event_type == READ_EVENT_ST3)
 #define IS_PLAYER_MODE_IT()	(m->read_event_type == READ_EVENT_IT)
 #define IS_PLAYER_MODE_MED()	(m->read_event_type == READ_EVENT_MED)
-#define IS_CLASSIC_MOD()	(IS_PLAYER_MODE_MOD() && HAS_QUIRK(QUIRK_MODRNG))
+#define IS_PERIOD_MODRNG()	(m->period_type == PERIOD_MODRNG)
+#define IS_PERIOD_LINEAR()	(m->period_type == PERIOD_LINEAR)
+
+#define IS_CLASSIC_MOD()	(IS_PLAYER_MODE_MOD() && IS_PERIOD_MODRNG())
 
 struct ord_data {
 	int speed;
@@ -248,6 +251,11 @@ struct module_data {
 #define READ_EVENT_IT	3
 #define READ_EVENT_MED	4
 	int read_event_type;
+#define PERIOD_AMIGA	0
+#define PERIOD_MODRNG	1
+#define PERIOD_LINEAR	2
+#define PERIOD_HZ	3
+	int period_type;
 	int smpctl;			/* sample control flags */
 	int defpan;			/* default pan setting */
 	struct ord_data xxo_info[XMP_MAX_MOD_LENGTH];

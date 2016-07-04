@@ -307,7 +307,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		goto err2;
 
 	if (sfh.flags & S3M_AMIGA_RANGE)
-		m->quirk |= QUIRK_MODRNG;
+		m->period_type = PERIOD_MODRNG;
 	if (sfh.flags & S3M_ST300_VOLS)
 		m->quirk |= QUIRK_VSALL;
 	/* m->volbase = 4096 / sfh.gv; */

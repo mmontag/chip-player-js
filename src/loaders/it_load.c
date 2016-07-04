@@ -1077,7 +1077,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sample_mode = ~ifh.flags & IT_USE_INST;
 
 	if (ifh.flags & IT_LINEAR_FREQ) {
-		m->quirk |= QUIRK_LINEAR;
+		m->period_type = PERIOD_LINEAR;
 	}
 
 	if (!sample_mode && ifh.cmwt >= 0x200) {

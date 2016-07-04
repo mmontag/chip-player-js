@@ -358,7 +358,7 @@ static int okt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	iff_release(handle);
 
-	m->quirk |= QUIRK_MODRNG;
+	m->period_type = PERIOD_MODRNG;
 
 	return 0;
 }

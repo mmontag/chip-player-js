@@ -171,8 +171,8 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->bpm = 4 * mod->bpm / 5;
     mod->trk = mod->chn * mod->pat;
 
-    /* FNK allows mode per instrument but we don't, so use linear like 669 */
-    m->quirk |= QUIRK_LINEAR;
+    /* FNK allows mode per instrument but we don't, so use linear for all */
+    m->period_type = PERIOD_LINEAR;
 
     MODULE_INFO();
     /* D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year); */

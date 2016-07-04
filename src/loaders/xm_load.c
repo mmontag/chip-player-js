@@ -636,7 +636,8 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	mod->bpm = xfh.bpm;
 	mod->trk = mod->chn * mod->pat + 1;
 
-	m->quirk |= xfh.flags & XM_LINEAR_PERIOD_MODE ? QUIRK_LINEAR : 0;
+	m->period_type = xfh.flags & XM_LINEAR_PERIOD_MODE ?
+				PERIOD_LINEAR : PERIOD_AMIGA;
 
 	memcpy(mod->xxo, xfh.order, mod->len);
 	tracker_name[20] = 0;

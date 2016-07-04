@@ -75,7 +75,7 @@ static int get_main(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	flags = hio_read8(f);
 	if (~flags & 0x01)
-		m->quirk = QUIRK_LINEAR;
+		m->period_type = PERIOD_LINEAR;
 	mod->chn = hio_read8(f);
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);

@@ -282,7 +282,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->pat = ih.pat;
 
     if (ih.flg & 0x01)
-	m->quirk |= QUIRK_LINEAR;
+	m->period_type = PERIOD_LINEAR;
 
     mod->spd = ih.tpo;
     mod->bpm = ih.bpm;

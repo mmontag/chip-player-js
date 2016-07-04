@@ -606,7 +606,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		if (xc->noteslide.count == 0) {
 			xc->note += xc->noteslide.slide;
 			xc->period = note_to_period(ctx, xc->note, xc->finetune,
-					HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+					xc->per_adj);
 			xc->noteslide.count = xc->noteslide.speed;
 		}
 		xc->noteslide.count--;
@@ -676,7 +676,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	}
 
 	linear_bend = period_to_bend(ctx, period + vibrato, xc->note,
-			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+							xc->per_adj);
 
 	if (TEST_NOTE(NOTE_GLISSANDO) && TEST(TONEPORTA)) {
 		if (linear_bend > 0) {
@@ -734,10 +734,10 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	xc->info_pitchbend = linear_bend >> 7;
 	xc->info_period = note_to_period_mix(xc->note, linear_bend);
 
-	if (HAS_QUIRK(QUIRK_MODRNG)) {
+	if (IS_PERIOD_MODRNG()) {
 		CLAMP(xc->info_period,
-			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0, 0) * 4096,
-			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0, 0) * 4096);
+			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0) * 4096,
+			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0) * 4096);
 	} else if (xc->info_period <  (1 << 12)) {
 		xc->info_period = (1 << 12);
 	}
@@ -975,18 +975,20 @@ static void update_frequency(struct context_data *ctx, int chn)
 		if (TEST(FINE_NSLIDE)) {
 			xc->note += xc->noteslide.fslide;
 			xc->period = note_to_period(ctx, xc->note,
-				xc->finetune, HAS_QUIRK(QUIRK_LINEAR),
-				xc->per_adj);
+				xc->finetune, xc->per_adj);
 		}
 #endif
 	}
 
-	if (HAS_QUIRK(QUIRK_LINEAR)) {
+	switch (m->period_type) {
+	case PERIOD_LINEAR:
 		CLAMP(xc->period, MIN_PERIOD_L, MAX_PERIOD_L);
-	} else if (HAS_QUIRK(QUIRK_MODRNG)) {
+		break;
+	case PERIOD_MODRNG:
 		CLAMP(xc->period,
-			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0, 0),
-			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0, 0));
+			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0),
+			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0));
+		break;
 	}
 
 	xc->arpeggio.count++;

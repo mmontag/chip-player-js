@@ -136,6 +136,13 @@ void set_instrument_fadeout(struct context_data *ctx, int ins, int fade)
 	mod->xxi[ins].rls = fade;
 }
 
+void set_period_type(struct context_data *ctx, int type)
+{
+	struct module_data *m = &ctx->m;
+
+	m->period_type = type;
+}
+
 void set_quirk(struct context_data *ctx, int quirk, int read_mode)
 {
 	struct module_data *m = &ctx->m;

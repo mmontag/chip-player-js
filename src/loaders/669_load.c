@@ -132,7 +132,7 @@ static int ssn_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->bpm = 76;		/* adjusted using Flux/sober.669 */
     mod->smp = mod->ins;
 
-    m->quirk |= QUIRK_LINEAR;
+    m->period_type = PERIOD_HZ;
 
     copy_adjust(mod->name, sfh.message, 36);
     set_type(m, strncmp((char *)sfh.marker, "if", 2) ?

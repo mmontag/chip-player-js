@@ -382,7 +382,8 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		   mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].fin >> 4);
 	}
 
-	m->quirk |= QUIRK_MODRNG | QUIRK_NOBPM;
+	m->quirk |= QUIRK_NOBPM;
+	m->period_type = PERIOD_MODRNG;
 
 	/* Perform the necessary conversions for Ultimate Soundtracker */
 	if (ust) {

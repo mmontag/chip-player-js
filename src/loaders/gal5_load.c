@@ -79,7 +79,7 @@ static int get_init(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	set_type(m, "Galaxy Music System 5.0");
 	flags = hio_read8(f);	/* bit 0: Amiga period */
 	if (~flags & 0x01)
-		m->quirk |= QUIRK_LINEAR;
+		m->period_type = PERIOD_LINEAR;
 	mod->chn = hio_read8(f);
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);

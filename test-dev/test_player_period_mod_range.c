@@ -61,7 +61,8 @@ TEST(test_player_period_mod_range)
 	xmp_restart_module(opaque);
 
 	/* test again with mod range on */
-	set_quirk(ctx, QUIRK_MODRNG, READ_EVENT_MOD);
+	set_quirk(ctx, 0, READ_EVENT_MOD);
+	set_period_type(ctx, PERIOD_MODRNG);
 
 	xmp_play_frame(opaque);
 	xmp_get_frame_info(opaque, &info);

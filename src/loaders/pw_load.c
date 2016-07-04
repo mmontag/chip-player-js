@@ -204,7 +204,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 		}
 	}
 
-	m->quirk |= QUIRK_MODRNG;
+	m->period_type = PERIOD_MODRNG;
 
 	/* Load samples */
 

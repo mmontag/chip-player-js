@@ -245,7 +245,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_close(s);
 
-	m->quirk |= QUIRK_MODRNG;
+	m->period_type = PERIOD_MODRNG;
 
 	return 0;
 

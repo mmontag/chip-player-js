@@ -138,7 +138,7 @@ static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->trk = mod->pat * mod->chn;
     mod->len = dh.len + 1;
 
-    m->quirk |= QUIRK_MODRNG;
+    m->period_type = PERIOD_MODRNG;
 
     copy_adjust(mod->name, dh.title, 32);
     set_type(m, "DIGI Booster %-4.4s", dh.vstr);

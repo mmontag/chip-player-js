@@ -232,7 +232,8 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins,
 		}
 	}
 
-	m->quirk |= QUIRK_MODRNG | QUIRK_PBALL;
+	m->quirk |= QUIRK_PBALL;
+	m->period_type = PERIOD_MODRNG;
 
 	/* Read samples */
 

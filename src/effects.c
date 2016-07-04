@@ -85,7 +85,7 @@ static void do_toneporta(struct context_data *ctx,
 		note--;
 		xc->porta.target = note_to_period(ctx, note + sub->xpo +
 			instrument->map[xc->key_porta].xpo, xc->finetune,
-			HAS_QUIRK(QUIRK_LINEAR), xc->per_adj);
+			xc->per_adj);
 	}
 	xc->porta.dir = xc->period < xc->porta.target ? 1 : -1;
 }
@@ -853,14 +853,14 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		break;
 	case FX_PITCH_ADD:
 		SET_PER(TONEPORTA);
-		xc->porta.target = note_to_period(ctx, note - 1, xc->finetune, 0, 0)
+		xc->porta.target = note_to_period(ctx, note - 1, xc->finetune, 0)
 			+ fxp;
 		xc->porta.slide = 2;
 		xc->porta.dir = 1;
 		break;
 	case FX_PITCH_SUB:
 		SET_PER(TONEPORTA);
-		xc->porta.target = note_to_period(ctx, note - 1, xc->finetune, 0, 0)
+		xc->porta.target = note_to_period(ctx, note - 1, xc->finetune, 0)
 			- fxp;
 		xc->porta.slide = 2;
 		xc->porta.dir = -1;

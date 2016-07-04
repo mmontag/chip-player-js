@@ -71,7 +71,7 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE * f, void *parm)
 	mod->ins = hio_read8(f);
 	mod->smp = mod->ins;
 
-	m->quirk |= QUIRK_MODRNG;
+	m->period_type = PERIOD_MODRNG;
 
 	snprintf(mod->type, XMP_NAME_SIZE, "Quadra Composer EMOD v%d", ver);
 	MODULE_INFO();
