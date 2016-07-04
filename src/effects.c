@@ -1009,15 +1009,14 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 	case FX_SPEED_CP:	/* Set speed and ... */
 		if (fxp) {
 			p->speed = fxp;
-#ifndef LIBXMP_CORE_PLAYER
 			p->st26_speed = 0;
-#endif
 		}
 		/* fall through */
 	case FX_PER_CANCEL:	/* Cancel persistent effects */
 		xc->per_flags = 0;
 		break;
-#endif
+
+	/* 669 effects */
 
 	case FX_669_PORTA_UP:	/* 669 portamento up */
 		SET_PER(PITCHBEND);
@@ -1052,6 +1051,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		}
 		SET_LFO_NOTZERO(&xc->vibrato.lfo, 669, 1);
 		break;
+#endif
 
 	default:
 #ifndef LIBXMP_CORE_PLAYER
