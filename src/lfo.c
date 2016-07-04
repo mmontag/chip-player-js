@@ -56,6 +56,11 @@ static int get_lfo_mod(struct lfo *lfo)
 	case 3: /* random */
 		val = ((rand() & 0x1ff) - 256);
 		break;
+#ifndef LIBXMP_CORE_PLAYER
+	case 669: /* 669 vibrato */
+		val = lfo->phase & 1;
+		break;
+#endif
 	default:
 		return 0;
 	}

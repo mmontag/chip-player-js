@@ -81,11 +81,11 @@ struct c669_instrument_header {
 /* Effects bug fixed by Miod Vallat <miodrag@multimania.com> */
 
 static const uint8 fx[] = {
-    FX_PER_PORTA_UP,
-    FX_PER_PORTA_DN,
-    FX_PER_TPORTA,
-    FX_FINETUNE,
-    FX_PER_VIBRATO,
+    FX_669_PORTA_UP,
+    FX_669_PORTA_DN,
+    FX_669_TPORTA,
+    FX_669_FINETUNE,
+    FX_669_VIBRATO,
     FX_SPEED_CP
 };
 
@@ -129,10 +129,11 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->len = i;
     memcpy (mod->xxo, sfh.order, mod->len);
     mod->spd = 6;
-    mod->bpm = 76;		/* adjusted using Flux/sober.669 */
+    mod->bpm = 78;
     mod->smp = mod->ins;
 
     m->period_type = PERIOD_HZ;
+    m->c4rate = C4_NTSC_RATE;
 
     copy_adjust(mod->name, sfh.message, 36);
     set_type(m, strncmp((char *)sfh.marker, "if", 2) ?
@@ -229,23 +230,10 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		    continue;
 
 		event->fxt = fx[MSN(ev[2])];
+		event->fxp = LSN(ev[2]);
 
-		switch (event->fxt) {
-		case FX_PER_PORTA_UP:
-		case FX_PER_PORTA_DN:
-		case FX_PER_TPORTA:
-		    event->fxp = LSN(ev[2]);
-		    break;
-		case FX_PER_VIBRATO:
-		    event->fxp = 0x40 | LSN(ev[2]);
-		    break;
-		case FX_FINETUNE:
-		    event->fxp = 0x80 + (LSN(ev[2]) << 4);
-		    break;
-		case FX_SPEED_CP:
-		    event->fxp = LSN(ev[2]);
+		if (event->fxt == FX_SPEED_CP) {
 		    event->f2t = FX_PER_CANCEL;
-		    break;
 		}
 	    }
 	}
@@ -265,7 +253,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxc[i].pan = DEFPAN((i % 2) * 0xff);
     }
 
-    m->quirk |= QUIRK_PERPAT;	    /* Cancel persistent fx at each new pat */
+    m->quirk |= QUIRK_PBALL|QUIRK_PERPAT;
 
     return 0;
 }

@@ -16,6 +16,10 @@ Stable versions
 	- fix XM envelope position setting
 	- fix FT2 arpeggio+portamento quirk with finetunes
 	- accept S3M modules with invalid effects
+	Fix issues reported by Saga Musix:
+	- fix 669 effects when no instrument number is specified
+	- fix 669 effects to be frequency-based
+	- fix 669 initial tempo
 	Other changes:
 	- fix S3M channel reset on sample end (reported by Alexander Null)
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
@@ -24,6 +28,7 @@ Stable versions
 	- add support to filter effect E0 in Amiga mods
 	- add flags to configure player mode
 	- add option to set the maximum number of virtual channels
+	- add frequency-based "period" mode
 	- limit Oktalyzer modules to MOD note range
 	- remove broken synth chip and Adlib emulation suport
 	- code refactoring and cleanup

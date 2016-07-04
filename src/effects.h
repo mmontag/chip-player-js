@@ -58,7 +58,7 @@
 #define FX_F_NSLIDE_DN	0x75
 #define FX_F_NSLIDE_UP	0x76
 
-/* Persistent effects -- for 669, FNK and FAR */
+/* Persistent effects -- for FNK and FAR */
 #define FX_PER_PORTA_DN	0x78
 #define FX_PER_PORTA_UP	0x79
 #define FX_PER_TPORTA	0x7a
@@ -67,6 +67,13 @@
 #define FX_PER_VSLD_DN	0x7d
 #define FX_SPEED_CP	0x7e
 #define FX_PER_CANCEL	0x7f
+
+/* 669 frequency based effects */
+#define FX_669_PORTA_UP	0x60
+#define FX_669_PORTA_DN	0x61
+#define FX_669_TPORTA	0x62
+#define FX_669_FINETUNE	0x63
+#define FX_669_VIBRATO	0x64
 #endif
 
 #ifndef LIBXMP_CORE_DISABLE_IT

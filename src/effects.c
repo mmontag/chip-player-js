@@ -1018,6 +1018,41 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		xc->per_flags = 0;
 		break;
 #endif
+
+	case FX_669_PORTA_UP:	/* 669 portamento up */
+		SET_PER(PITCHBEND);
+		xc->freq.slide = 80 * fxp;
+		if ((xc->freq.memory = fxp) == 0)
+			RESET_PER(PITCHBEND);
+		break;
+	case FX_669_PORTA_DN:	/* 669 portamento down */
+		SET_PER(PITCHBEND);
+		xc->freq.slide = -80 * fxp;
+		if ((xc->freq.memory = fxp) == 0)
+			RESET_PER(PITCHBEND);
+		break;
+	case FX_669_TPORTA:	/* 669 tone portamento */
+		if (!IS_VALID_INSTRUMENT(xc->ins))
+			break;
+		SET_PER(TONEPORTA);
+		do_toneporta(ctx, xc, note);
+		xc->porta.slide = 40 * fxp;
+		if (fxp == 0)
+			RESET_PER(TONEPORTA);
+		break;
+	case FX_669_FINETUNE:	/* 669 finetune */
+		xc->finetune = 80 * (int8)fxp;
+		break;
+	case FX_669_VIBRATO:	/* 669 vibrato */
+		if (LSN(fxp) != 0) {
+			set_lfo_waveform(&xc->vibrato.lfo, 669);
+			SET_PER(VIBRATO);
+		} else {
+			RESET_PER(VIBRATO);
+		}
+		SET_LFO_NOTZERO(&xc->vibrato.lfo, 669, 1);
+		break;
+
 	default:
 #ifndef LIBXMP_CORE_PLAYER
 		extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
