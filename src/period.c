@@ -182,7 +182,7 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 	case PERIOD_LINEAR:
 		per = (240.0 - d) * 16;			/* Linear */
 		break;
-	case PERIOD_HZ:
+	case PERIOD_CSPD:
 		per = 8363.0 * pow(2, n / 12) / 32 + f;	/* Hz */
 		break;
 	default:
@@ -229,7 +229,7 @@ int period_to_bend(struct context_data *ctx, double p, int n, double adj)
 	switch (m->period_type) {
 	case PERIOD_LINEAR:
 		return 100 * (8 * (((240 - n) << 4) - p));
-	case PERIOD_HZ:
+	case PERIOD_CSPD:
 		d = note_to_period(ctx, n, 0, adj);
 		return round(100.0 * (1536.0 / M_LN2) * log(p / d));
 	default:

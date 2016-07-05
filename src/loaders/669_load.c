@@ -132,7 +132,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->bpm = 78;
     mod->smp = mod->ins;
 
-    m->period_type = PERIOD_HZ;
+    m->period_type = PERIOD_CSPD;
     m->c4rate = C4_NTSC_RATE;
 
     copy_adjust(mod->name, sfh.message, 36);

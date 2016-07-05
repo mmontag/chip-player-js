@@ -202,7 +202,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define IS_PLAYER_MODE_MED()	(m->read_event_type == READ_EVENT_MED)
 #define IS_PERIOD_MODRNG()	(m->period_type == PERIOD_MODRNG)
 #define IS_PERIOD_LINEAR()	(m->period_type == PERIOD_LINEAR)
-#define IS_PERIOD_HZ()		(m->period_type == PERIOD_HZ)
+#define IS_PERIOD_CSPD()	(m->period_type == PERIOD_CSPD)
 
 #define IS_CLASSIC_MOD()	(IS_PLAYER_MODE_MOD() && IS_PERIOD_MODRNG())
 
@@ -255,7 +255,7 @@ struct module_data {
 #define PERIOD_AMIGA	0
 #define PERIOD_MODRNG	1
 #define PERIOD_LINEAR	2
-#define PERIOD_HZ	3
+#define PERIOD_CSPD	3
 	int period_type;
 	int smpctl;			/* sample control flags */
 	int defpan;			/* default pan setting */
