@@ -22,9 +22,7 @@
 #ifndef _FLUID_PHASE_H
 #define _FLUID_PHASE_H
 
-#if HAVE_CONFIG_H
 #include "fluid_config.h"
-#endif
 
 /*
  *  phase

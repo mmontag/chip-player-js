@@ -28,9 +28,7 @@
  *                         INCLUDES
  */
 
-#if HAVE_CONFIG_H
 #include "fluid_config.h"
-#endif
 #include "fluidsynth_priv.h"
 #include "fluid_list.h"
 #include "fluid_rev.h"

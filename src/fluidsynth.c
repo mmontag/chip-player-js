@@ -18,9 +18,7 @@
  * 02111-1307, USA
  */
 
-#if HAVE_CONFIG_H
 #include "fluid_config.h"
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
