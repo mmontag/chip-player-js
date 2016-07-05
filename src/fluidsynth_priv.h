@@ -22,7 +22,7 @@
 #ifndef _FLUIDSYNTH_PRIV_H
 #define _FLUIDSYNTH_PRIV_H
 
-#include "config.h"
+#include "fluid_config.h"
 
 #if HAVE_STRING_H
 #include <string.h>

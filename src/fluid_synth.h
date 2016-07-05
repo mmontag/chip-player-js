@@ -29,7 +29,7 @@
  */
 
 #if HAVE_CONFIG_H
-#include "config.h"
+#include "fluid_config.h"
 #endif
 #include "fluidsynth_priv.h"
 #include "fluid_list.h"
