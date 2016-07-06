@@ -44,8 +44,6 @@ list(APPEND SOURCES
     src/fluid_sys.c
     src/fluid_tuning.c
     src/fluid_voice.c
-    libogg-1.3.2/src/bitwise.c
-    libogg-1.3.2/src/framing.c
 )
 
 # Dependencies:
@@ -82,9 +80,19 @@ if (NOT LIBVORBIS_FOUND)
     message(WARNING "Using libvorbis shipped sources.")
 endif()
 
+pkg_check_modules(LIBOGG ogg>=1.3.2)
+if (NOT LIBOGG_FOUND)
+    list(APPEND SOURCES
+        libogg-1.3.2/src/bitwise.c
+        libogg-1.3.2/src/framing.c
+    )
+    set(LIBOGG_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libogg-1.3.2/include)
+    message(WARNING "Using libogg shipped sources.")
+endif()
+
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/libogg-1.3.2/include)
+include_directories(${LIBOGG_INCLUDE_DIRS})
 include_directories(${LIBVORBIS_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
