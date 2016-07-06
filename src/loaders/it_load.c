@@ -316,7 +316,7 @@ static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 	ei->lps = env->lpb;
 	ei->lpe = env->lpe;
 
-	if (ei->npt > 0 && ei->npt < 25 /* XMP_MAX_ENV_POINTS */ ) {
+	if (ei->npt > 0 && ei->npt <= 25 /* XMP_MAX_ENV_POINTS */ ) {
 		for (j = 0; j < ei->npt; j++) {
 			ei->data[j * 2] = env->node[j].x;
 			ei->data[j * 2 + 1] = env->node[j].y;
