@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+include(FindPkgConfig)
+
 project(fluidlite)
 
 list(APPEND HEADERS
@@ -44,35 +46,46 @@ list(APPEND SOURCES
     src/fluid_voice.c
     libogg-1.3.2/src/bitwise.c
     libogg-1.3.2/src/framing.c
-    libvorbis-1.3.5/lib/vorbisenc.c
-    libvorbis-1.3.5/lib/info.c
-    libvorbis-1.3.5/lib/analysis.c
-    libvorbis-1.3.5/lib/bitrate.c
-    libvorbis-1.3.5/lib/block.c
-    libvorbis-1.3.5/lib/codebook.c
-    libvorbis-1.3.5/lib/envelope.c
-    libvorbis-1.3.5/lib/floor0.c
-    libvorbis-1.3.5/lib/floor1.c
-    libvorbis-1.3.5/lib/lookup.c
-    libvorbis-1.3.5/lib/lpc.c
-    libvorbis-1.3.5/lib/lsp.c
-    libvorbis-1.3.5/lib/mapping0.c
-    libvorbis-1.3.5/lib/mdct.c
-    libvorbis-1.3.5/lib/psy.c
-    libvorbis-1.3.5/lib/registry.c
-    libvorbis-1.3.5/lib/res0.c
-    libvorbis-1.3.5/lib/sharedbook.c
-    libvorbis-1.3.5/lib/smallft.c
-    libvorbis-1.3.5/lib/vorbisfile.c
-    libvorbis-1.3.5/lib/window.c
-    libvorbis-1.3.5/lib/synthesis.c
 )
+
+# Dependencies:
+pkg_check_modules(LIBVORBIS vorbis>=1.3.5)
+if (NOT LIBVORBIS_FOUND)
+    list(APPEND SOURCES
+        libvorbis-1.3.5/lib/vorbisenc.c
+        libvorbis-1.3.5/lib/info.c
+        libvorbis-1.3.5/lib/analysis.c
+        libvorbis-1.3.5/lib/bitrate.c
+        libvorbis-1.3.5/lib/block.c
+        libvorbis-1.3.5/lib/codebook.c
+        libvorbis-1.3.5/lib/envelope.c
+        libvorbis-1.3.5/lib/floor0.c
+        libvorbis-1.3.5/lib/floor1.c
+        libvorbis-1.3.5/lib/lookup.c
+        libvorbis-1.3.5/lib/lpc.c
+        libvorbis-1.3.5/lib/lsp.c
+        libvorbis-1.3.5/lib/mapping0.c
+        libvorbis-1.3.5/lib/mdct.c
+        libvorbis-1.3.5/lib/psy.c
+        libvorbis-1.3.5/lib/registry.c
+        libvorbis-1.3.5/lib/res0.c
+        libvorbis-1.3.5/lib/sharedbook.c
+        libvorbis-1.3.5/lib/smallft.c
+        libvorbis-1.3.5/lib/vorbisfile.c
+        libvorbis-1.3.5/lib/window.c
+        libvorbis-1.3.5/lib/synthesis.c
+    )
+    list(APPEND LIBVORBIS_INCLUDE_DIRS
+        ${CMAKE_SOURCE_DIR}/libvorbis-1.3.5/include
+        ${CMAKE_SOURCE_DIR}/libvorbis-1.3.5/lib
+    )
+    message(WARNING "Using libvorbis shipped sources.")
+endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/libogg-1.3.2/include)
-include_directories(${CMAKE_SOURCE_DIR}/libvorbis-1.3.5/include)
-include_directories(${CMAKE_SOURCE_DIR}/libvorbis-1.3.5/lib)
+include_directories(${LIBVORBIS_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
