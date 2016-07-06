@@ -78,24 +78,6 @@ static void convert_vidc_to_linear(uint8 *p, int l)
 	}
 }
 
-/* Convert HSC OPL2 instrument data to SBI instrument data */
-static void convert_hsc_to_sbi(uint8 *a)
-{
-	uint8 x;
-	int i;
-
-	for (i = 0; i < 8; i += 2) {
-		x = a[i];
-		a[i] = a[i + 1];
-		a[i + 1] = x;
-	}
-
-	x = a[8];
-	a[8] = a[10];
-	a[10] = x;
-}
-
-
 static void adpcm4_decoder(uint8 *inp, uint8 *outp, char *tab, int len)
 {
 	char delta = 0;
@@ -220,25 +202,6 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 #ifndef LIBXMP_CORE_PLAYER
 	/* Adlib FM patches */
 	if (flags & SAMPLE_FLAG_ADLIB) {
-		const int size = 11;
-
-		if (flags & SAMPLE_FLAG_HSC) {
-			convert_hsc_to_sbi(buffer);
-		}
-
-		xxs->data = malloc(size + 4);
-		if (xxs->data == NULL) {
-			return -1;
-		}
-
-		*(uint32 *)xxs->data = 0;
-		xxs->data += 4;
-
-		memcpy(xxs->data, buffer, size);
-
-		xxs->flg |= XMP_SAMPLE_SYNTH;
-		xxs->len = size;
-
 		return 0;
 	}
 #endif
