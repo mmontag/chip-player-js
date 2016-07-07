@@ -23,7 +23,7 @@ list(APPEND HEADERS
     src/fluid_tuning.h
     src/fluid_voice.h
     src/fluidsynth_priv.h
-    src/config.h
+    src/fluid_config.h
     src/fluid_midi.h
 )
 
