@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 include(FindPkgConfig)
 
@@ -23,7 +23,7 @@ list(APPEND HEADERS
     src/fluid_tuning.h
     src/fluid_voice.h
     src/fluidsynth_priv.h
-    src/config.h
+    src/fluid_config.h
     src/fluid_midi.h
 )
 
@@ -97,6 +97,7 @@ include_directories(${LIBVORBIS_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
+set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 99)
 install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION lib)
 install(FILES ${HEADERS} DESTINATION include)
 
