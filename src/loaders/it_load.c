@@ -196,13 +196,6 @@ static void xlat_fx(int c, struct xmp_event *e, uint8 *last_fxp, int new_fx)
 		e->fxt = e->fxp = 0;
 		break;
 	}
-
-	/* Impulse Tracker ignores the portamento command if there is an
-	 * portamento command next to an offset command
-	 */
-	if (e->fxt == FX_OFFSET && e->f2t == FX_TONEPORTA) {
-		e->f2t = e->f2p = 0;
-	}
 }
 
 
