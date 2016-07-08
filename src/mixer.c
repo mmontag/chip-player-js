@@ -439,6 +439,30 @@ void mixer_softmixer(struct context_data *ctx)
 			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
 		}
 
+		if (xxs->flg & XMP_SAMPLE_SLOOP && ~vi->flags & VOICE_RELEASE) {
+			if (vi->pos < m->xsmp[vi->smp].lpe) {
+				xxs = &m->xsmp[vi->smp];
+			}
+		}
+
+	if (xxs->flg & XMP_SAMPLE_LOOP) {
+		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
+			vi->end = xxs->len;
+		} else {
+			vi->end = xxs->lpe;
+		}
+	} else {
+		vi->end = xxs->len;
+	}
+
+	if (vi->pos >= vi->end) {
+		if (xxs->flg & XMP_SAMPLE_LOOP) {
+			vi->pos = xxs->lps;
+		} else {
+			vi->pos = xxs->len;
+		}
+	}
+
 		lps = xxs->lps;
 		lpe = xxs->lpe;
 
@@ -713,6 +737,18 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	}
 
 	vi->vol = vol;
+}
+
+void mixer_release(struct context_data *ctx, int voc, int rel)
+{
+	struct player_data *p = &ctx->p;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
+
+	if (rel) {
+		vi->flags |= VOICE_RELEASE;
+	} else {
+		vi->flags &= ~VOICE_RELEASE;
+	}
 }
 
 void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)

@@ -768,10 +768,15 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	xxs->flg |= ish.flags & IT_SMP_SLOOP ? XMP_SAMPLE_SLOOP : 0;
 	xxs->flg |= ish.flags & IT_SMP_BSLOOP ? XMP_SAMPLE_SLOOP_BIDIR : 0;
 
-	if (xxs->flg & XMP_SAMPLE_SLOOP) {
+	if (ish.flags & IT_SMP_SLOOP) {
 		memcpy(xsmp, xxs, sizeof (struct xmp_sample));
 		xsmp->lps = ish.sloopbeg;
 		xsmp->lpe = ish.sloopend;
+		xsmp->flg |= XMP_SAMPLE_LOOP;
+		xsmp->flg &= ~XMP_SAMPLE_LOOP_BIDIR;
+		if (ish.flags & IT_SMP_BSLOOP) {
+			xsmp->flg |= XMP_SAMPLE_LOOP_BIDIR;
+		}
 	}
 
 	if (sample_mode) {
