@@ -656,6 +656,7 @@ void xmp_release_module(xmp_context opaque)
 	free(m->dirname);
 	free(m->basename);
 
+	memset(ctx, 0, sizeof (struct context_data));
 }
 
 void xmp_scan_module(xmp_context opaque)

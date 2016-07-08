@@ -355,6 +355,27 @@ static void set_sample_end(struct context_data *ctx, int voc, int end)
 	}
 }
 
+static void adjust_voice_end(struct mixer_voice *vi, struct xmp_sample *xxs)
+{
+	if (xxs->flg & XMP_SAMPLE_LOOP) {
+		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
+			vi->end = xxs->len;
+		} else {
+			vi->end = xxs->lpe;
+		}
+	} else {
+		vi->end = xxs->len;
+	}
+
+	if (vi->pos >= vi->end) {
+		if (xxs->flg & XMP_SAMPLE_LOOP) {
+			vi->pos = xxs->lps;
+		} else {
+			vi->pos = xxs->len;
+		}
+	}
+}
+
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
@@ -439,29 +460,14 @@ void mixer_softmixer(struct context_data *ctx)
 			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
 		}
 
-		if (xxs->flg & XMP_SAMPLE_SLOOP && ~vi->flags & VOICE_RELEASE) {
-			if (vi->pos < m->xsmp[vi->smp].lpe) {
-				xxs = &m->xsmp[vi->smp];
+		if (xxs->flg & XMP_SAMPLE_SLOOP) {
+			if (~vi->flags & VOICE_RELEASE) {
+				if (vi->pos < m->xsmp[vi->smp].lpe) {
+					xxs = &m->xsmp[vi->smp];
+				}
 			}
+			adjust_voice_end(vi, xxs);
 		}
-
-	if (xxs->flg & XMP_SAMPLE_LOOP) {
-		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
-			vi->end = xxs->len;
-		} else {
-			vi->end = xxs->lpe;
-		}
-	} else {
-		vi->end = xxs->len;
-	}
-
-	if (vi->pos >= vi->end) {
-		if (xxs->flg & XMP_SAMPLE_LOOP) {
-			vi->pos = xxs->lps;
-		} else {
-			vi->pos = xxs->len;
-		}
-	}
 
 		lps = xxs->lps;
 		lpe = xxs->lpe;
@@ -604,26 +610,10 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 		return;
 	}
 
-	if (xxs->flg & XMP_SAMPLE_LOOP) {
-		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
-			vi->end = xxs->len;
-		} else {
-			vi->end = xxs->lpe;
-		}
-	} else {
-		vi->end = xxs->len;
-	}
-
-	if (pos >= vi->end) {
-		if (xxs->flg & XMP_SAMPLE_LOOP) {
-			pos = xxs->lps;
-		} else {
-			pos = xxs->len;
-		}
-	}
-
 	vi->pos = pos;
 	vi->frac = frac;
+
+	adjust_voice_end(vi, xxs);
 
 	lps = xxs->lps;
 	if (p->flags & XMP_FLAGS_FIXLOOP) {
