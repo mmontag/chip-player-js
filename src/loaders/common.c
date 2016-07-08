@@ -41,7 +41,7 @@ int instrument_init(struct xmp_module *mod)
 	}
 
 	if (mod->smp > 0) {
-		mod->xxs = calloc (sizeof (struct xmp_sample), mod->smp);
+		mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp);
 		if (mod->xxs == NULL)
 			return -1;
 	}

@@ -265,6 +265,7 @@ struct module_data {
 	char *instrument_path;
 	void *extra;			/* format-specific extra fields */
 	char **scan_cnt;		/* scan counters */
+	struct xmp_sample *xsmp;	/* sustain loop samples */
 };
 
 

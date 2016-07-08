@@ -696,7 +696,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 {
 	struct it_sample_header ish;
 	struct xmp_module *mod = &m->mod;
-	struct xmp_sample *xxs;
+	struct xmp_sample *xxs, *xsmp;
 	int j, k;
 
 	if (sample_mode) {
@@ -712,6 +712,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	}
 
 	xxs = &mod->xxs[i];
+	xsmp = &m->xsmp[i];
 
 	hio_read(&ish.dosname, 12, 1, f);
 	ish.zero = hio_read8(f);
@@ -762,9 +763,16 @@ static int load_it_sample(struct module_data *m, int i, int start,
 
 	xxs->lps = ish.loopbeg;
 	xxs->lpe = ish.loopend;
-
 	xxs->flg |= ish.flags & IT_SMP_LOOP ? XMP_SAMPLE_LOOP : 0;
 	xxs->flg |= ish.flags & IT_SMP_BLOOP ? XMP_SAMPLE_LOOP_BIDIR : 0;
+	xxs->flg |= ish.flags & IT_SMP_SLOOP ? XMP_SAMPLE_SLOOP : 0;
+	xxs->flg |= ish.flags & IT_SMP_BSLOOP ? XMP_SAMPLE_SLOOP_BIDIR : 0;
+
+	if (xxs->flg & XMP_SAMPLE_SLOOP) {
+		memcpy(xsmp, xxs, sizeof (struct xmp_sample));
+		xsmp->lps = ish.sloopbeg;
+		xsmp->lpe = ish.sloopend;
+	}
 
 	if (sample_mode) {
 		/* Create an instrument for each sample */
@@ -854,14 +862,33 @@ static int load_it_sample(struct module_data *m, int i, int start,
 						  ish.convert & IT_CVT_DIFF);
 			}
 
+			if (ish.flags & IT_SMP_SLOOP) {
+				long pos = hio_tell(f);
+				ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD |
+							cvt, &m->xsmp[i], buf);
+				if (ret < 0) {
+					free(buf);
+					return -1;
+				}
+				hio_seek(f, pos, SEEK_SET);
+			}
+
 			ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
 					  &mod->xxs[i], buf);
 			if (ret < 0) {
 				free(buf);
 				return -1;
 			}
+
 			free(buf);
 		} else {
+			if (ish.flags & IT_SMP_SLOOP) {
+				long pos = hio_tell(f);
+				if (load_sample(m, f, cvt, &m->xsmp[i], NULL) < 0)
+					return -1;
+				hio_seek(f, pos, SEEK_SET);
+			}
+
 			if (load_sample(m, f, cvt, &mod->xxs[i], NULL) < 0)
 				return -1;
 		}
@@ -1135,6 +1162,14 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	if (instrument_init(mod) < 0)
 		goto err4;
+
+	/* Alloc extra samples for sustain loop */
+	if (mod->smp > 0) {
+		m->xsmp = calloc(sizeof (struct xmp_sample), mod->smp);
+		if (m->xsmp == NULL) {
+			goto err4;
+		}
+	}
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 

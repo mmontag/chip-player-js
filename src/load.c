@@ -635,6 +635,15 @@ void xmp_release_module(xmp_context opaque)
 		free(mod->xxs);
 	}
 
+	if (m->xsmp != NULL) {
+		for (i = 0; i < mod->smp; i++) {
+			if (m->xsmp[i].data != NULL) {
+				free(m->xsmp[i].data - 4);
+			}
+		}
+		free(m->xsmp);
+	}
+
 	if (m->scan_cnt) {
 		for (i = 0; i < mod->len; i++)
 			free(m->scan_cnt[i]);
