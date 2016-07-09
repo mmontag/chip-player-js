@@ -366,14 +366,6 @@ static void adjust_voice_end(struct mixer_voice *vi, struct xmp_sample *xxs)
 	} else {
 		vi->end = xxs->len;
 	}
-
-	if (vi->pos >= vi->end) {
-		if (xxs->flg & XMP_SAMPLE_LOOP) {
-			vi->pos = xxs->lps;
-		} else {
-			vi->pos = xxs->len;
-		}
-	}
 }
 
 /* Fill the output buffer calling one of the handlers. The buffer contains
@@ -466,14 +458,19 @@ void mixer_softmixer(struct context_data *ctx)
 					xxs = &m->xsmp[vi->smp];
 				}
 			}
-			adjust_voice_end(vi, xxs);
 		}
+
+		adjust_voice_end(vi, xxs);
 
 		lps = xxs->lps;
 		lpe = xxs->lpe;
 
 		if (p->flags & XMP_FLAGS_FIXLOOP) {
 			lps >>= 1;
+		}
+
+		if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+			vi->end += (xxs->lpe - lps);
 		}
 
 		for (size = s->ticksize; size > 0; ) {
@@ -614,6 +611,15 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	vi->frac = frac;
 
 	adjust_voice_end(vi, xxs);
+
+	if (vi->pos >= vi->end) {
+		if (xxs->flg & XMP_SAMPLE_LOOP) {
+			vi->pos = xxs->lps;
+		} else {
+			vi->pos = xxs->len;
+		}
+		vi->frac = 0;
+	}
 
 	lps = xxs->lps;
 	if (p->flags & XMP_FLAGS_FIXLOOP) {
