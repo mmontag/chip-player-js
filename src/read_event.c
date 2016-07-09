@@ -948,6 +948,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	int sample_mode;
 	int toneporta_offset;
 	int disabled_toneporta;
+	int retrig_ins;
 	struct xmp_event ev;
 
 	memcpy(&ev, e, sizeof (struct xmp_event));
@@ -958,14 +959,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	} else if (ev.note && xc->delayed_ins) {
 		ev.ins = xc->delayed_ins;
 		xc->delayed_ins = 0;
-	}
-
-	/* Keyoff + instrument retrigs current instrument in old fx mode */
-	if (HAS_QUIRK(QUIRK_ITOLDFX)) {
-		if (ev.note == XMP_KEY_OFF && IS_VALID_INSTRUMENT(ev.ins -1)) {
-			ev.note = xc->key + 1;
-			ev.ins = xc->ins + 1;
-		}
 	}
 
 	xc->flags = 0;
@@ -982,6 +975,14 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	sample_mode = !HAS_QUIRK(QUIRK_VIRTUAL);
 	toneporta_offset = 0;
 	disabled_toneporta = 0;
+	retrig_ins = 0;
+
+	/* Keyoff + instrument retrigs current instrument in old fx mode */
+	if (HAS_QUIRK(QUIRK_ITOLDFX)) {
+		if (ev.note == XMP_KEY_OFF && IS_VALID_INSTRUMENT(ev.ins -1)) {
+			retrig_ins = 1;
+		}
+	}
 
 	/* Notes with unmapped instruments are ignored */
 	if (ev.ins) {
@@ -1150,9 +1151,6 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			}
 
 			if (is_toneporta) {
-				/* Always retrig on tone portamento: Fix
-				 * portamento in 7spirits.s3m, mod.Biomechanoid
-			 	 */
 				if (not_same_ins || TEST_NOTE(NOTE_END)) {
 					SET(NEW_INS);
 					RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT|NOTE_FADEOUT);
@@ -1228,7 +1226,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	}
 
 	/* Do after virtual channel copy */
-	if (is_toneporta) {
+	if (is_toneporta || retrig_ins) {
 		if (HAS_QUIRK(QUIRK_PRENV) && ev.ins) {
 			reset_envelopes_carry(ctx, xc);
 		}
@@ -1264,6 +1262,13 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		xc->fadeout = 0x10000;
 	}
 
+	/* See OpenMPT wnoteoff.it vs noteoff3.it */
+	if (retrig_ins && not_same_ins) {
+		SET(NEW_INS);
+		virt_voicepos(ctx, chn, 0);
+		xc->fadeout = 0x10000;
+		RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT|NOTE_FADEOUT);
+	}
 
 	sub = get_subinstrument(ctx, xc->ins, xc->key);
 
