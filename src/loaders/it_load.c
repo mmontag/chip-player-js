@@ -869,6 +869,10 @@ static int load_it_sample(struct module_data *m, int i, int start,
 
 			if (ish.flags & IT_SMP_SLOOP) {
 				long pos = hio_tell(f);
+				if (pos < 0) {
+					free(buf);
+					return -1;
+				}
 				ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD |
 							cvt, &m->xsmp[i], buf);
 				if (ret < 0) {
@@ -889,6 +893,9 @@ static int load_it_sample(struct module_data *m, int i, int start,
 		} else {
 			if (ish.flags & IT_SMP_SLOOP) {
 				long pos = hio_tell(f);
+				if (pos < 0) {
+					return -1;
+				}
 				if (load_sample(m, f, cvt, &m->xsmp[i], NULL) < 0)
 					return -1;
 				hio_seek(f, pos, SEEK_SET);
