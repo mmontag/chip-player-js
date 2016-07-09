@@ -32,6 +32,7 @@ Stable versions
 	- add flags to configure player mode
 	- add option to set the maximum number of virtual channels
 	- add frequency-based "period" mode
+	- add support to IT sample sustain loop
 	- limit Oktalyzer modules to MOD note range
 	- remove broken synth chip and Adlib emulation suport
 	- code refactoring and cleanup

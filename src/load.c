@@ -635,6 +635,7 @@ void xmp_release_module(xmp_context opaque)
 		free(mod->xxs);
 	}
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	if (m->xsmp != NULL) {
 		for (i = 0; i < mod->smp; i++) {
 			if (m->xsmp[i].data != NULL) {
@@ -643,6 +644,7 @@ void xmp_release_module(xmp_context opaque)
 		}
 		free(m->xsmp);
 	}
+#endif
 
 	if (m->scan_cnt) {
 		for (i = 0; i < mod->len; i++)

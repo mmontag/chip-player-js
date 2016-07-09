@@ -452,6 +452,7 @@ void mixer_softmixer(struct context_data *ctx)
 			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
 		}
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 		if (xxs->flg & XMP_SAMPLE_SLOOP) {
 			if (~vi->flags & VOICE_RELEASE) {
 				if (vi->pos < m->xsmp[vi->smp].lpe) {
@@ -461,6 +462,7 @@ void mixer_softmixer(struct context_data *ctx)
 		}
 
 		adjust_voice_end(vi, xxs);
+#endif
 
 		lps = xxs->lps;
 		lpe = xxs->lpe;
