@@ -453,7 +453,7 @@ void mixer_softmixer(struct context_data *ctx)
 		}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
-		if (xxs->flg & XMP_SAMPLE_SLOOP) {
+		if (xxs->flg & XMP_SAMPLE_SLOOP && vi->smp < mod->smp) {
 			if (~vi->flags & VOICE_RELEASE) {
 				if (vi->pos < m->xsmp[vi->smp].lpe) {
 					xxs = &m->xsmp[vi->smp];
