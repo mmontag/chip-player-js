@@ -1096,6 +1096,8 @@ static void play_channel(struct context_data *ctx, int chn)
 			SET_NOTE(NOTE_RELEASE);
 	}
 
+	virt_release(ctx, chn, TEST_NOTE(NOTE_RELEASE));
+
 	process_volume(ctx, chn, act);
 	process_frequency(ctx, chn, act);
 	process_pan(ctx, chn, act);

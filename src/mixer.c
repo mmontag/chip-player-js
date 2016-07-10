@@ -355,6 +355,19 @@ static void set_sample_end(struct context_data *ctx, int voc, int end)
 	}
 }
 
+static void adjust_voice_end(struct mixer_voice *vi, struct xmp_sample *xxs)
+{
+	if (xxs->flg & XMP_SAMPLE_LOOP) {
+		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
+			vi->end = xxs->len;
+		} else {
+			vi->end = xxs->lpe;
+		}
+	} else {
+		vi->end = xxs->len;
+	}
+}
+
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
@@ -366,7 +379,7 @@ void mixer_softmixer(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs;
 	struct mixer_voice *vi;
-	int samples, size;
+	int samples, size, usmp;
 	int vol_l, vol_r, step, voc;
 	int prev_l, prev_r;
 	int lps, lpe;
@@ -439,12 +452,32 @@ void mixer_softmixer(struct context_data *ctx)
 			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
 		}
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+		if (xxs->flg & XMP_SAMPLE_SLOOP && vi->smp < mod->smp) {
+			if (~vi->flags & VOICE_RELEASE) {
+				if (vi->pos < m->xsmp[vi->smp].lpe) {
+					xxs = &m->xsmp[vi->smp];
+				}
+			}
+		}
+
+		adjust_voice_end(vi, xxs);
+#endif
+
 		lps = xxs->lps;
 		lpe = xxs->lpe;
 
 		if (p->flags & XMP_FLAGS_FIXLOOP) {
 			lps >>= 1;
 		}
+
+		if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+			vi->end += (xxs->lpe - lps);
+		}
+
+		/* Check undersampling corner case */
+		usmp = vi->end <= vi->pos || ((vi->end - vi->pos)
+				<< SMIX_SHIFT < step && vi->frac == 0);
 
 		for (size = s->ticksize; size > 0; ) {
 			int split_noloop = 0;
@@ -458,8 +491,8 @@ void mixer_softmixer(struct context_data *ctx)
 			if (vi->pos >= vi->end) {
 				samples = 0;
 			} else {
-				int64 s = 1 + (((int64)(vi->end - vi->pos) <<
-					SMIX_SHIFT) - vi->frac) / step;
+				int64 s = (((int64)(vi->end - vi->pos) <<
+					SMIX_SHIFT) - vi->frac) / step + usmp;
 				/* ...inside the tick boundaries */
 				if (s > size) {
 					s = size;
@@ -500,7 +533,7 @@ void mixer_softmixer(struct context_data *ctx)
 				if (samples >= 0 && vi->sptr != NULL) {
 					if (mix_fn != NULL) {
 						mix_fn(vi, buf_pos, samples,
-								vol_l, vol_r, step);
+							vol_l, vol_r, step);
 					}
 					buf_pos += mix_size;
 
@@ -513,6 +546,7 @@ void mixer_softmixer(struct context_data *ctx)
 			}
 
 			vi->frac += step * samples;
+
 			vi->pos += vi->frac >> SMIX_SHIFT;
 			vi->frac &= SMIX_MASK;
 
@@ -529,7 +563,14 @@ void mixer_softmixer(struct context_data *ctx)
 				continue;
 			}
 
-			vi->pos -= lpe - lps;	/* forward loop */
+			/* Reposition for next loop */
+			if (!usmp) {
+				vi->frac += step;
+				vi->pos += vi->frac >> SMIX_SHIFT;
+				vi->frac &= SMIX_MASK;
+			}
+
+			vi->pos -= lpe - lps;		/* forward loop */
 			vi->end = lpe;
 			vi->sample_loop = 1;
 
@@ -580,26 +621,19 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 		return;
 	}
 
-	if (xxs->flg & XMP_SAMPLE_LOOP) {
-		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
-			vi->end = xxs->len;
-		} else {
-			vi->end = xxs->lpe;
-		}
-	} else {
-		vi->end = xxs->len;
-	}
-
-	if (pos >= vi->end) {
-		if (xxs->flg & XMP_SAMPLE_LOOP) {
-			pos = xxs->lps;
-		} else {
-			pos = xxs->len;
-		}
-	}
-
 	vi->pos = pos;
 	vi->frac = frac;
+
+	adjust_voice_end(vi, xxs);
+
+	if (vi->pos >= vi->end) {
+		if (xxs->flg & XMP_SAMPLE_LOOP) {
+			vi->pos = xxs->lps;
+		} else {
+			vi->pos = xxs->len;
+		}
+		vi->frac = 0;
+	}
 
 	lps = xxs->lps;
 	if (p->flags & XMP_FLAGS_FIXLOOP) {
@@ -713,6 +747,18 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	}
 
 	vi->vol = vol;
+}
+
+void mixer_release(struct context_data *ctx, int voc, int rel)
+{
+	struct player_data *p = &ctx->p;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
+
+	if (rel) {
+		vi->flags |= VOICE_RELEASE;
+	} else {
+		vi->flags &= ~VOICE_RELEASE;
+	}
 }
 
 void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)

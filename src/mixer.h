@@ -40,6 +40,8 @@ struct mixer_voice {
 	int act;		/* nna info & status of voice */
 	int sleft;		/* last left sample output, in 32bit */
 	int sright;		/* last right sample output, in 32bit */
+#define VOICE_RELEASE (1 << 0)
+	int flags;		/* flags */
 	void *sptr;		/* sample pointer */
 #ifdef LIBXMP_PAULA_SIMULATOR
 	struct paula_state *paula; /* paula simulation state */
@@ -74,5 +76,6 @@ void	mixer_voicepos		(struct context_data *, int, int, int);
 int	mixer_getvoicepos	(struct context_data *, int);
 void	mixer_setnote		(struct context_data *, int, int);
 void	mixer_setbend		(struct context_data *, int, int);
+void	mixer_release		(struct context_data *, int, int);
 
 #endif /* LIBXMP_MIXER_H */

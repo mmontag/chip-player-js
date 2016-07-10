@@ -635,6 +635,17 @@ void xmp_release_module(xmp_context opaque)
 		free(mod->xxs);
 	}
 
+#ifndef LIBXMP_CORE_DISABLE_IT
+	if (m->xsmp != NULL) {
+		for (i = 0; i < mod->smp; i++) {
+			if (m->xsmp[i].data != NULL) {
+				free(m->xsmp[i].data - 4);
+			}
+		}
+		free(m->xsmp);
+	}
+#endif
+
 	if (m->scan_cnt) {
 		for (i = 0; i < mod->len; i++)
 			free(m->scan_cnt[i]);
@@ -647,6 +658,7 @@ void xmp_release_module(xmp_context opaque)
 	free(m->dirname);
 	free(m->basename);
 
+	memset(ctx, 0, sizeof (struct context_data));
 }
 
 void xmp_scan_module(xmp_context opaque)

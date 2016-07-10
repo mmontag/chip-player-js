@@ -32,6 +32,7 @@ int	virt_mapchannel		(struct context_data *, int);
 void	virt_resetchannel	(struct context_data *, int);
 void	virt_resetvoice		(struct context_data *, int, int);
 void	virt_reset		(struct context_data *);
+void	virt_release		(struct context_data *, int, int);
 int	virt_getroot		(struct context_data *, int);
 
 #endif /* LIBXMP_VIRTUAL_H */

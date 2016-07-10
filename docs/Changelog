@@ -27,11 +27,13 @@ Stable versions
 	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
 	- fix IT loader DCA sanity check (reported by Paul Gomez Givera)
 	- fix IT envelope reset after offset with portamento
+	- fix bidirectional sample interpolation
 	- add Antti Lankila's Amiga 500 modeling mixer
 	- add support to filter effect E0 in Amiga mods
 	- add flags to configure player mode
 	- add option to set the maximum number of virtual channels
 	- add frequency-based "period" mode
+	- add support to IT sample sustain loop
 	- limit Oktalyzer modules to MOD note range
 	- remove broken synth chip and Adlib emulation suport
 	- code refactoring and cleanup
