@@ -379,7 +379,7 @@ void mixer_softmixer(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs;
 	struct mixer_voice *vi;
-	int samples, size;
+	int samples, size, usmp;
 	int vol_l, vol_r, step, voc;
 	int prev_l, prev_r;
 	int lps, lpe;
@@ -475,6 +475,10 @@ void mixer_softmixer(struct context_data *ctx)
 			vi->end += (xxs->lpe - lps);
 		}
 
+		/* Check undersampling corner case */
+		usmp = vi->end <= vi->pos || ((vi->end - vi->pos)
+				<< SMIX_SHIFT < step && vi->frac == 0);
+
 		for (size = s->ticksize; size > 0; ) {
 			int split_noloop = 0;
 
@@ -488,7 +492,7 @@ void mixer_softmixer(struct context_data *ctx)
 				samples = 0;
 			} else {
 				int64 s = (((int64)(vi->end - vi->pos) <<
-					SMIX_SHIFT) - vi->frac) / step;
+					SMIX_SHIFT) - vi->frac) / step + usmp;
 				/* ...inside the tick boundaries */
 				if (s > size) {
 					s = size;
@@ -542,6 +546,7 @@ void mixer_softmixer(struct context_data *ctx)
 			}
 
 			vi->frac += step * samples;
+
 			vi->pos += vi->frac >> SMIX_SHIFT;
 			vi->frac &= SMIX_MASK;
 
@@ -559,9 +564,11 @@ void mixer_softmixer(struct context_data *ctx)
 			}
 
 			/* Reposition for next loop */
-			vi->frac += step;
-			vi->pos += vi->frac >> SMIX_SHIFT;
-			vi->frac &= SMIX_MASK;
+			if (!usmp) {
+				vi->frac += step;
+				vi->pos += vi->frac >> SMIX_SHIFT;
+				vi->frac &= SMIX_MASK;
+			}
 
 			vi->pos -= lpe - lps;		/* forward loop */
 			vi->end = lpe;
