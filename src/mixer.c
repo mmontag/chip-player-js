@@ -500,6 +500,9 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 
 				samples = s;
+				if (samples > 0) {
+					usmp = 0;
+				}
 			}
 
 			if (vi->vol) {
