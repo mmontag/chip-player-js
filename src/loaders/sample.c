@@ -385,20 +385,20 @@ int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_samp
 
 	/* Fix sample at loop */
 	if (xxs->flg & XMP_SAMPLE_LOOP) {
+		int lpe = xxs->lpe;
+		int lps = xxs->lps;
+
+		if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+			lpe += lpe - lps;
+		}
+
 		if (xxs->flg & XMP_SAMPLE_16BIT) {
-			int lpe = xxs->lpe * 2;
-			int lps = xxs->lps * 2;
-
-			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-				lpe += (xxs->lpe - xxs->lps) * 2;
-			}
-
+			lpe <<= 1;
+			lps <<= 1;
 			for (i = 0; i < 8; i++) {
 				xxs->data[lpe + i] = xxs->data[lps + i];
 			}
 		} else {
-			int lpe = xxs->lpe + unroll_extralen;
-			int lps = xxs->lps;
 			for (i = 0; i < 4; i++) {
 				xxs->data[lpe + i] = xxs->data[lps + i];
 			}
