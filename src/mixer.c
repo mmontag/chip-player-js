@@ -484,8 +484,10 @@ void mixer_softmixer(struct context_data *ctx)
 
 			/* How many samples we can write before the loop break
 			 * or sample end... */
-			{
-				double s = ((double)vi->end - vi->pos) / step;
+			if (vi->pos >= vi->end) {
+				samples = 0;
+			} else {
+				double s = ((double)vi->end - vi->pos - 1) / step;
 				/* ...inside the tick boundaries */
 				if (s > size) {
 					s = size;
@@ -554,12 +556,13 @@ void mixer_softmixer(struct context_data *ctx)
 			}
 
 			/* Reposition for next loop */
-			vi->pos -= lpe - lps;	/* forward loop */
+			vi->pos += step;
+			vi->pos -= lpe - lps;		/* forward loop */
 			vi->end = lpe;
 			vi->sample_loop = 1;
 
 			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-				vi->end += lpe - lps;
+				vi->end += lpe - lps;	/* unrolled loop */
 				vi->pos -= lpe - lps;	/* forward loop */
 			}
 		}
