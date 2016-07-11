@@ -29,8 +29,8 @@ struct mixer_voice {
 #define PAN_SURROUND 0x8000
 	int pan;		/* */
 	int vol;		/* */
-	int period;		/* current period */
-	double pos;	/* position in sample */
+	double period;		/* current period */
+	double pos;		/* position in sample */
 	int pos0;		/* position in sample before mixing */
 	int fidx;		/* function index */
 	int ins;		/* instrument number */
