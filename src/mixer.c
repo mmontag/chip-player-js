@@ -440,8 +440,7 @@ void mixer_softmixer(struct context_data *ctx)
 			vol_l = vi->vol * (0x80 + vi->pan);
 		}
 
-		step = s->pbase / vi->period;
-printf("%d step=%lf\n", voc, step);
+		step = s->pbase / vi->period / 32;
 
 		if (step < 0.001) {	/* otherwise m5v-nwlf.it crashes */
 			continue;
@@ -485,9 +484,7 @@ printf("%d step=%lf\n", voc, step);
 
 			/* How many samples we can write before the loop break
 			 * or sample end... */
-			if (vi->pos >= vi->end) {
-				samples = 0;
-			} else {
+			{
 				double s = ((double)vi->end - vi->pos) / step;
 				/* ...inside the tick boundaries */
 				if (s > size) {
@@ -557,9 +554,7 @@ printf("%d step=%lf\n", voc, step);
 			}
 
 			/* Reposition for next loop */
-			vi->pos += step;
-
-			vi->pos -= lpe - lps;		/* forward loop */
+			vi->pos += step - (lpe - lps);	/* forward loop */
 			vi->end = lpe;
 			vi->sample_loop = 1;
 
