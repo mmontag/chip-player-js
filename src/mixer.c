@@ -440,7 +440,7 @@ void mixer_softmixer(struct context_data *ctx)
 			vol_l = vi->vol * (0x80 + vi->pan);
 		}
 
-		step = s->pbase / vi->period / 32;
+		step = s->pbase / vi->period;
 
 		if (step < 0.001) {	/* otherwise m5v-nwlf.it crashes */
 			continue;
@@ -541,7 +541,7 @@ void mixer_softmixer(struct context_data *ctx)
 			vi->pos += step * samples;
 
 			/* No more samples in this tick */
-			size -= samples;
+			size -= (int)samples;
 			if (size <= 0)
 				continue;
 
@@ -554,7 +554,7 @@ void mixer_softmixer(struct context_data *ctx)
 			}
 
 			/* Reposition for next loop */
-			vi->pos += step - (lpe - lps);	/* forward loop */
+			vi->pos -= lpe - lps;	/* forward loop */
 			vi->end = lpe;
 			vi->sample_loop = 1;
 
