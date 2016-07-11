@@ -202,7 +202,7 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 int note_to_period_mix(int n, int b)
 {
 	double d = (double)n + (double)b / 12800;
-	return (int)(8192.0 * XMP_PERIOD_BASE / pow(2, d / 12));
+	return (int)(/*8192.0 **/ XMP_PERIOD_BASE / pow(2, d / 12));
 }
 
 /* Get note from period */

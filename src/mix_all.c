@@ -131,7 +131,7 @@
     register int smp_in; \
     x *sptr = vi->sptr; \
     unsigned int pos = vi->pos; \
-    int frac = vi->frac
+    int frac = (1 << SMIX_SHIFT) * (vi->pos - (int)vi->pos)
 
 #define VAR_LINEAR(x) \
     VAR_NORM(x); \
