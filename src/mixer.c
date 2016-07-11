@@ -22,7 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-
+#include <math.h>
 #include "common.h"
 #include "virtual.h"
 #include "mixer.h"
@@ -540,12 +540,13 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 			}
 
-			vi->pos += step * samples;
+			vi->pos += step * ceil(samples);
 
 			/* No more samples in this tick */
 			size -= (int)samples;
-			if (size <= 0)
+			if (size <= 0) {
 				continue;
+			}
 
 			/* First sample loop run */
 			if ((~xxs->flg & XMP_SAMPLE_LOOP) || split_noloop) {
