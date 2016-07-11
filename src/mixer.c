@@ -380,7 +380,7 @@ void mixer_softmixer(struct context_data *ctx)
 	struct xmp_sample *xxs;
 	struct mixer_voice *vi;
 	double samples, size, step;
-	int vol_l, vol_r, voc;
+	int vol_l, vol_r, voc, usmp;
 	int prev_l, prev_r;
 	int lps, lpe;
 	int32 *buf_pos;
@@ -475,6 +475,7 @@ void mixer_softmixer(struct context_data *ctx)
 			vi->end += (xxs->lpe - lps);
 		}
 
+		usmp = 0;
 		for (size = s->ticksize; size > 0; ) {
 			int split_noloop = 0;
 
@@ -484,16 +485,20 @@ void mixer_softmixer(struct context_data *ctx)
 
 			/* How many samples we can write before the loop break
 			 * or sample end... */
-			/*if (vi->pos >= vi->end) {
+			if (vi->pos >= vi->end) {
 				samples = 0;
-			} else*/ {
-				double s = ((double)vi->end - vi->pos) / step;
+				usmp = 1;
+			} else {
+				double s = ((double)vi->end - vi->pos) / step + usmp;
 				/* ...inside the tick boundaries */
 				if (s > size) {
 					s = size;
 				}
 
 				samples = s;
+				if (samples > 0) {
+					usmp = 0;
+				}
 			}
 
 			if (vi->vol) {
