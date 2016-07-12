@@ -489,7 +489,7 @@ void mixer_softmixer(struct context_data *ctx)
 				samples = 0;
 				usmp = 1;
 			} else {
-				double s = ((double)vi->end - vi->pos) / step + usmp;
+				double s = 1 + ((double)vi->end - vi->pos) / step;
 				/* ...inside the tick boundaries */
 				if (s > size) {
 					s = size;
@@ -545,7 +545,7 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 			}
 
-			vi->pos += step * ceil(samples);
+			vi->pos += step * ceil(samples - 1 + usmp);
 
 			/* No more samples in this tick */
 			size -= (int)samples;
