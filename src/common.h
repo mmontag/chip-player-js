@@ -53,7 +53,7 @@ typedef signed long long int64;
 /* [Amiga] CPU clock = 1.6 * PCCF = 7.0937892 MHz */
 
 #define DEFAULT_AMPLIFY	1
-#define DEFAULT_MIX	70
+#define DEFAULT_MIX	100
 
 #define MSN(x)		(((x)&0xf0)>>4)
 #define LSN(x)		((x)&0x0f)
