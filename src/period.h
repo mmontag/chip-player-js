@@ -1,6 +1,8 @@
 #ifndef LIBXMP_PERIOD_H
 #define LIBXMP_PERIOD_H
 
+#define PERIOD_BASE	13696.0		/* C0 period */
+
 /* Macros for period conversion */
 #define NOTE_B0		11
 #define NOTE_Bb0	(NOTE_B0 + 1)

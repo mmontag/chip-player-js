@@ -735,7 +735,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
-	xc->info_period = period;
+	xc->info_period = period * 4096;
 
 	if (IS_PERIOD_MODRNG()) {
 		CLAMP(xc->info_period,

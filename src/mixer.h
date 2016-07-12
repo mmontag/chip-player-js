@@ -1,7 +1,7 @@
 #ifndef LIBXMP_MIXER_H
 #define LIBXMP_MIXER_H
 
-#define SMIX_C4NOTE	214.0
+#define SMIX_C4NOTE	428.0
 
 #define SMIX_NUMVOC	128	/* default number of softmixer voices */
 #define SMIX_SHIFT	16
