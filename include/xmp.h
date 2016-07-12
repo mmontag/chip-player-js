@@ -265,7 +265,7 @@ struct xmp_test_info {
 	char type[XMP_NAME_SIZE];	/* Module format */
 };
 
-#define XMP_PERIOD_BASE	6847		/* C4 period */
+#define XMP_PERIOD_BASE	6848		/* C9 period */
 
 struct xmp_module_info {
 	unsigned char md5[16];		/* MD5 message digest */

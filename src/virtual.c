@@ -509,7 +509,7 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 	return chn;
 }
 
-void virt_setbend(struct context_data *ctx, int chn, int bend)
+void virt_setperiod(struct context_data *ctx, int chn, double period)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -517,7 +517,7 @@ void virt_setbend(struct context_data *ctx, int chn, int bend)
 	if ((voc = map_virt_channel(p, chn)) < 0)
 		return;
 
-	mixer_setbend(ctx, voc, bend);
+	mixer_setperiod(ctx, voc, period);
 }
 
 void virt_voicepos(struct context_data *ctx, int chn, int pos)

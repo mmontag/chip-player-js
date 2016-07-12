@@ -1,7 +1,7 @@
 #ifndef LIBXMP_MIXER_H
 #define LIBXMP_MIXER_H
 
-#define SMIX_C4NOTE	214.5
+#define SMIX_C4NOTE	214.0
 
 #define SMIX_NUMVOC	128	/* default number of softmixer voices */
 #define SMIX_SHIFT	16
@@ -74,7 +74,7 @@ void	mixer_setpatch		(struct context_data *, int, int);
 void	mixer_voicepos		(struct context_data *, int, double);
 int	mixer_getvoicepos	(struct context_data *, int);
 void	mixer_setnote		(struct context_data *, int, int);
-void	mixer_setbend		(struct context_data *, int, int);
+void	mixer_setperiod		(struct context_data *, int, double);
 void	mixer_release		(struct context_data *, int, int);
 
 #endif /* LIBXMP_MIXER_H */

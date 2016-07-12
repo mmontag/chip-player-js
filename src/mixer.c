@@ -718,12 +718,12 @@ void mixer_setnote(struct context_data *ctx, int voc, int note)
 	vi->attack = SLOW_ATTACK;
 }
 
-void mixer_setbend(struct context_data *ctx, int voc, int bend)
+void mixer_setperiod(struct context_data *ctx, int voc, double period)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-	vi->period = note_to_period_mix(vi->note, bend);
+	vi->period = period;
 }
 
 void mixer_setvol(struct context_data *ctx, int voc, int vol)

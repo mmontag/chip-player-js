@@ -730,9 +730,12 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	linear_bend += extras_get_linear_bend(ctx, xc);
 #endif
 
+	period = note_to_period_mix(xc->note, linear_bend);
+	virt_setperiod(ctx, chn, period);
+
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
-	xc->info_period = note_to_period_mix(xc->note, linear_bend);
+	xc->info_period = period;
 
 	if (IS_PERIOD_MODRNG()) {
 		CLAMP(xc->info_period,
@@ -742,7 +745,6 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		xc->info_period = (1 << 12);
 	}
 
-	virt_setbend(ctx, chn, linear_bend);
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
