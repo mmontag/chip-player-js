@@ -368,6 +368,21 @@ static void adjust_voice_end(struct mixer_voice *vi, struct xmp_sample *xxs)
 	}
 }
 
+static void loop_reposition(struct mixer_voice *vi, struct xmp_sample *xxs)
+{
+	int loop_size = xxs->lpe - xxs->lps;
+
+	/* Reposition for next loop */
+	vi->pos -= loop_size;		/* forward loop */
+	vi->end = xxs->lpe;
+	vi->sample_loop = 1;
+
+	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		vi->end += loop_size;	/* unrolled loop */
+		vi->pos -= loop_size;	/* forward loop */
+	}
+}
+
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
@@ -379,7 +394,8 @@ void mixer_softmixer(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs;
 	struct mixer_voice *vi;
-	double samples, size, step;
+	double step;
+	int samples, size;
 	int vol_l, vol_r, voc, usmp;
 	int prev_l, prev_r;
 	int lps, lpe;
@@ -472,7 +488,7 @@ void mixer_softmixer(struct context_data *ctx)
 		}
 
 		if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-			vi->end += (xxs->lpe - lps);
+			vi->end += lpe - lps;
 		}
 
 		usmp = 0;
@@ -489,7 +505,7 @@ void mixer_softmixer(struct context_data *ctx)
 				samples = 0;
 				usmp = 1;
 			} else {
-				double s = 1 + ((double)vi->end - vi->pos) / step;
+				int s = ceil(((double)vi->end - vi->pos) / step);
 				/* ...inside the tick boundaries */
 				if (s > size) {
 					s = size;
@@ -545,11 +561,15 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 			}
 
-			vi->pos += step * ceil(samples - 1 + usmp);
+			vi->pos += step * (samples + usmp);
 
 			/* No more samples in this tick */
-			size -= (int)samples;
+			size -= samples;
 			if (size <= 0) {
+				if (vi->pos + step > vi->end) {
+					vi->pos += step;
+					loop_reposition(vi, xxs);
+				}
 				continue;
 			}
 
@@ -561,15 +581,7 @@ void mixer_softmixer(struct context_data *ctx)
 				continue;
 			}
 
-			/* Reposition for next loop */
-			vi->pos -= lpe - lps;		/* forward loop */
-			vi->end = lpe;
-			vi->sample_loop = 1;
-
-			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-				vi->end += lpe - lps;	/* unrolled loop */
-				vi->pos -= lpe - lps;	/* forward loop */
-			}
+			loop_reposition(vi, xxs);
 		}
 	}
 
