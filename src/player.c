@@ -811,12 +811,15 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 	channel_pan = xc->pan.val;
 
+#if 0
 #ifdef LIBXMP_PAULA_SIMULATOR
+	/* Always use 100% pan separation in Amiga mode */
 	if (p->flags & XMP_FLAGS_CLASSIC) {
 		if (IS_CLASSIC_MOD()) {
 			channel_pan = channel_pan < 0x80 ? 0 : 0xff;
 		}
 	}
+#endif
 #endif
 
 	finalpan = channel_pan + panbrello + (pan_envelope - 32) *
