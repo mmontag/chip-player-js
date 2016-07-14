@@ -675,8 +675,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	 * A6 value because we compute periods in floating point.
 	 */
 	if (HAS_QUIRK(QUIRK_ST3BUGS)) {
-		if (period < 16.236899) {	/* A6 */
-			period = 16.236899;
+		if (period < 16.239270) {	/* A6 */
+			period = 16.239270;
 		}
 	}
 
