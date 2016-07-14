@@ -1,7 +1,7 @@
 #ifndef LIBXMP_MIXER_H
 #define LIBXMP_MIXER_H
 
-#define SMIX_C4NOTE	6864
+#define SMIX_C4NOTE	428.0
 
 #define SMIX_NUMVOC	128	/* default number of softmixer voices */
 #define SMIX_SHIFT	16
@@ -29,10 +29,9 @@ struct mixer_voice {
 #define PAN_SURROUND 0x8000
 	int pan;		/* */
 	int vol;		/* */
-	int period;		/* current period */
-	unsigned int pos;	/* position in sample */
+	double period;		/* current period */
+	double pos;		/* position in sample */
 	int pos0;		/* position in sample before mixing */
-	int frac;		/* interpolation */
 	int fidx;		/* function index */
 	int ins;		/* instrument number */
 	int smp;		/* sample number */
@@ -72,10 +71,10 @@ int	mixer_numvoices		(struct context_data *, int);
 void	mixer_softmixer		(struct context_data *);
 void	mixer_reset		(struct context_data *);
 void	mixer_setpatch		(struct context_data *, int, int);
-void	mixer_voicepos		(struct context_data *, int, int, int);
+void	mixer_voicepos		(struct context_data *, int, double);
 int	mixer_getvoicepos	(struct context_data *, int);
 void	mixer_setnote		(struct context_data *, int, int);
-void	mixer_setbend		(struct context_data *, int, int);
+void	mixer_setperiod		(struct context_data *, int, double);
 void	mixer_release		(struct context_data *, int, int);
 
 #endif /* LIBXMP_MIXER_H */

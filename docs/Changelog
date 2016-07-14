@@ -1,9 +1,10 @@
 Stable versions
 ---------------
 
-4.4.0 (20160710):
+4.4.0 ():
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM arpeggio in FastTracker 2 compatible mode
+	- fix IT bidirectional loop sample length
 	- fix MOD vibrato and tremolo in Protracker compatible mode
 	Fix multichannel MOD issues reported by Leilei:
 	- fix XM replayer note delay and retrig quirk
@@ -28,6 +29,7 @@ Stable versions
 	- fix IT loader DCA sanity check (reported by Paul Gomez Givera)
 	- fix IT envelope reset after offset with portamento
 	- fix bidirectional sample interpolation
+	- fix mixer resampling and tuning issues
 	- add Antti Lankila's Amiga 500 modeling mixer
 	- add support to filter effect E0 in Amiga mods
 	- add flags to configure player mode

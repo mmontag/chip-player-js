@@ -649,6 +649,11 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	period += extras_get_period(ctx, xc);
 #endif
 
+	/* Sanity check */
+	if (period < 0.1) {
+		period = 0.1;
+	} 
+
 	/* Arpeggio */
 
 	if (HAS_QUIRK(QUIRK_FT2BUGS)) {
@@ -670,8 +675,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	 * A6 value because we compute periods in floating point.
 	 */
 	if (HAS_QUIRK(QUIRK_ST3BUGS)) {
-		if (period < 16.236899) {	/* A6 */
-			period = 16.236899;
+		if (period < 16.239270) {	/* A6 */
+			period = 16.239270;
 		}
 	}
 
@@ -730,9 +735,12 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	linear_bend += extras_get_linear_bend(ctx, xc);
 #endif
 
+	period = note_to_period_mix(xc->note, linear_bend);
+	virt_setperiod(ctx, chn, period);
+
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
-	xc->info_period = note_to_period_mix(xc->note, linear_bend);
+	xc->info_period = period * 4096;
 
 	if (IS_PERIOD_MODRNG()) {
 		CLAMP(xc->info_period,
@@ -742,7 +750,6 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		xc->info_period = (1 << 12);
 	}
 
-	virt_setbend(ctx, chn, linear_bend);
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
@@ -809,12 +816,15 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 	channel_pan = xc->pan.val;
 
+#if 0
 #ifdef LIBXMP_PAULA_SIMULATOR
+	/* Always use 100% pan separation in Amiga mode */
 	if (p->flags & XMP_FLAGS_CLASSIC) {
 		if (IS_CLASSIC_MOD()) {
 			channel_pan = channel_pan < 0x80 ? 0 : 0xff;
 		}
 	}
+#endif
 #endif
 
 	finalpan = channel_pan + panbrello + (pan_envelope - 32) *

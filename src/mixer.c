@@ -22,7 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-
+#include <math.h>
 #include "common.h"
 #include "virtual.h"
 #include "mixer.h"
@@ -368,6 +368,34 @@ static void adjust_voice_end(struct mixer_voice *vi, struct xmp_sample *xxs)
 	}
 }
 
+static void loop_reposition(struct context_data *ctx, struct mixer_voice *vi, struct xmp_sample *xxs)
+{
+#ifndef LIBXMP_CORE_DISABLE_IT
+	struct module_data *m = &ctx->m;
+#endif
+	int loop_size = xxs->lpe - xxs->lps;
+
+	/* Reposition for next loop */
+	vi->pos -= loop_size;		/* forward loop */
+	vi->end = xxs->lpe;
+	vi->sample_loop = 1;
+
+	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		vi->end += loop_size;	/* unrolled loop */
+		vi->pos -= loop_size;	/* forward loop */
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+		/* OpenMPT Bidi-Loops.it: "In Impulse Tracker’s software mixer,
+		 * ping-pong loops are shortened by one sample. 
+		 */
+		if (IS_PLAYER_MODE_IT()) {
+			vi->end--;
+			vi->pos++;
+		}
+#endif
+	}
+}
+
 /* Fill the output buffer calling one of the handlers. The buffer contains
  * sound for one tick (a PAL frame or 1/50s for standard vblank-timed mods)
  */
@@ -379,8 +407,9 @@ void mixer_softmixer(struct context_data *ctx)
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs;
 	struct mixer_voice *vi;
-	int samples, size, usmp;
-	int vol_l, vol_r, step, voc;
+	double step;
+	int samples, size;
+	int vol_l, vol_r, voc, usmp;
 	int prev_l, prev_r;
 	int lps, lpe;
 	int32 *buf_pos;
@@ -440,9 +469,9 @@ void mixer_softmixer(struct context_data *ctx)
 			vol_l = vi->vol * (0x80 + vi->pan);
 		}
 
-		step = ((int64)s->pbase << 24) / vi->period;
+		step = s->pbase / vi->period;
 
-		if (step == 0) {	/* otherwise m5v-nwlf.it crashes */
+		if (step < 0.001) {	/* otherwise m5v-nwlf.it crashes */
 			continue;
 		}
 
@@ -472,13 +501,16 @@ void mixer_softmixer(struct context_data *ctx)
 		}
 
 		if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-			vi->end += (xxs->lpe - lps);
+			vi->end += lpe - lps;
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+			if (IS_PLAYER_MODE_IT()) {
+				vi->end--;
+			}
+#endif
 		}
 
-		/* Check undersampling corner case */
-		usmp = vi->end <= vi->pos || ((vi->end - vi->pos)
-				<< SMIX_SHIFT < step && vi->frac == 0);
-
+		usmp = 0;
 		for (size = s->ticksize; size > 0; ) {
 			int split_noloop = 0;
 
@@ -492,8 +524,7 @@ void mixer_softmixer(struct context_data *ctx)
 				samples = 0;
 				usmp = 1;
 			} else {
-				int64 s = (((int64)(vi->end - vi->pos) <<
-					SMIX_SHIFT) - vi->frac) / step + usmp;
+				int s = ceil(((double)vi->end - vi->pos) / step);
 				/* ...inside the tick boundaries */
 				if (s > size) {
 					s = size;
@@ -537,7 +568,7 @@ void mixer_softmixer(struct context_data *ctx)
 				if (samples >= 0 && vi->sptr != NULL) {
 					if (mix_fn != NULL) {
 						mix_fn(vi, buf_pos, samples,
-							vol_l, vol_r, step);
+							vol_l, vol_r, step * (1 << SMIX_SHIFT));
 					}
 					buf_pos += mix_size;
 
@@ -549,15 +580,17 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 			}
 
-			vi->frac += step * samples;
-
-			vi->pos += vi->frac >> SMIX_SHIFT;
-			vi->frac &= SMIX_MASK;
+			vi->pos += step * samples;
 
 			/* No more samples in this tick */
-			size -= samples;
-			if (size <= 0)
+			size -= samples + usmp;
+			if (size <= 0) {
+				if (vi->pos + step > vi->end) {
+					vi->pos += step;
+					loop_reposition(ctx, vi, xxs);
+				}
 				continue;
+			}
 
 			/* First sample loop run */
 			if ((~xxs->flg & XMP_SAMPLE_LOOP) || split_noloop) {
@@ -567,21 +600,7 @@ void mixer_softmixer(struct context_data *ctx)
 				continue;
 			}
 
-			/* Reposition for next loop */
-			if (!usmp) {
-				vi->frac += step;
-				vi->pos += vi->frac >> SMIX_SHIFT;
-				vi->frac &= SMIX_MASK;
-			}
-
-			vi->pos -= lpe - lps;		/* forward loop */
-			vi->end = lpe;
-			vi->sample_loop = 1;
-
-			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-				vi->end += lpe - lps;
-				vi->pos -= lpe - lps;	/* forward loop */
-			}
+			loop_reposition(ctx, vi, xxs);
 		}
 	}
 
@@ -607,7 +626,7 @@ void mixer_softmixer(struct context_data *ctx)
 	s->dtright = s->dtleft = 0;
 }
 
-void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
+void mixer_voicepos(struct context_data *ctx, int voc, double pos)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -626,7 +645,6 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	}
 
 	vi->pos = pos;
-	vi->frac = frac;
 
 	adjust_voice_end(vi, xxs);
 
@@ -636,7 +654,6 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 		} else {
 			vi->pos = xxs->len;
 		}
-		vi->frac = 0;
 	}
 
 	lps = xxs->lps;
@@ -646,6 +663,12 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 
 	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 		vi->end += (xxs->lpe - lps);
+
+#ifndef LIBXMP_CORE_DISABLE_IT
+		if (IS_PLAYER_MODE_IT()) {
+			vi->end--;
+		}
+#endif
 	}
 
 	vi->attack = SLOW_ATTACK;
@@ -712,7 +735,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 		vi->fidx |= FLAG_16_BITS;
 	}
 
-	mixer_voicepos(ctx, voc, 0, 0);
+	mixer_voicepos(ctx, voc, 0);
 }
 
 void mixer_setnote(struct context_data *ctx, int voc, int note)
@@ -732,12 +755,12 @@ void mixer_setnote(struct context_data *ctx, int voc, int note)
 	vi->attack = SLOW_ATTACK;
 }
 
-void mixer_setbend(struct context_data *ctx, int voc, int bend)
+void mixer_setperiod(struct context_data *ctx, int voc, double period)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-	vi->period = note_to_period_mix(vi->note, bend);
+	vi->period = period;
 }
 
 void mixer_setvol(struct context_data *ctx, int voc, int vol)

@@ -136,6 +136,7 @@ OPENMPT_XM	= 3xxins \
 		  vibratowaveforms
 
 OPENMPT_IT	= autovibrato_reset \
+		  bidi_loops \
 		  carrynna \
 		  cut_carry \
 		  emptyslot \

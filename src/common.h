@@ -364,7 +364,7 @@ struct mixer_data {
 	int ticksize;
 	int dtright;		/* anticlick control, right channel */
 	int dtleft;		/* anticlick control, left channel */
-	int pbase;		/* period base */
+	double pbase;		/* period base */
 };
 
 struct context_data {

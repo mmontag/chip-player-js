@@ -265,8 +265,6 @@ struct xmp_test_info {
 	char type[XMP_NAME_SIZE];	/* Module format */
 };
 
-#define XMP_PERIOD_BASE	6847		/* C4 period */
-
 struct xmp_module_info {
 	unsigned char md5[16];		/* MD5 message digest */
 	int vol_base;			/* Volume scale */
@@ -297,7 +295,7 @@ struct xmp_frame_info {			/* Current frame information */
 	int sequence;			/* Current sequence */
 
 	struct xmp_channel_info {	/* Current channel information */
-		unsigned int period;	/* Sample period */
+		unsigned int period;	/* Sample period (* 4096) */
 		unsigned int position;	/* Sample position */
 		short pitchbend;	/* Linear bend from base note*/
 		unsigned char note;	/* Current base note number */

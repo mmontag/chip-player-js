@@ -17,7 +17,7 @@ Amiga limits: 907 to 108
 /* Get period from note */
 static int note_to_period(int n)
 {
-        return round (13694.0 / pow(2, (double)n / 12));
+        return round (13696.0 / pow(2, (double)n / 12));
 }
 
 static void check_arpeggio_okt3(xmp_context opaque, int note, int val, int spd)

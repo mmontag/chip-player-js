@@ -186,7 +186,7 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 		per = 8363.0 * pow(2, n / 12) / 32 + f;	/* Hz */
 		break;
 	default:
-		per = 13694.0 / pow(2, d / 12);		/* Amiga */
+		per = PERIOD_BASE / pow(2, d / 12);	/* Amiga */
 	}
 
 #ifndef LIBXMP_CORE_PLAYER
@@ -199,10 +199,10 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 }
 
 /* For the software mixer */
-int note_to_period_mix(int n, int b)
+double note_to_period_mix(int n, int b)
 {
 	double d = (double)n + (double)b / 12800;
-	return (int)(8192.0 * XMP_PERIOD_BASE / pow(2, d / 12));
+	return PERIOD_BASE / pow(2, d / 12);
 }
 
 /* Get note from period */
@@ -213,7 +213,7 @@ int period_to_note(int p)
 		return 0;
 	}
 
-	return round(12.0 * log(13694.0 / p) / M_LN2) + 1;
+	return round(12.0 * log(PERIOD_BASE / p) / M_LN2) + 1;
 }
 
 /* Get pitchbend from base note and amiga period */

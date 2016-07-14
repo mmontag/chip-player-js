@@ -1,6 +1,8 @@
 #ifndef LIBXMP_PERIOD_H
 #define LIBXMP_PERIOD_H
 
+#define PERIOD_BASE	13696.0		/* C0 period */
+
 /* Macros for period conversion */
 #define NOTE_B0		11
 #define NOTE_Bb0	(NOTE_B0 + 1)
@@ -14,7 +16,7 @@
 #define MAX_NOTE_MOD	83
 
 double	note_to_period		(struct context_data *, int, int, double);
-int	note_to_period_mix	(int, int);
+double	note_to_period_mix	(int, int);
 int	period_to_note		(int);
 int	period_to_bend		(struct context_data *, double, int, double);
 void	c2spd_to_note		(int, int *, int *);
