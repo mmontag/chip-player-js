@@ -649,6 +649,11 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	period += extras_get_period(ctx, xc);
 #endif
 
+	/* Sanity check */
+	if (period < 0.1) {
+		period = 0.1;
+	} 
+
 	/* Arpeggio */
 
 	if (HAS_QUIRK(QUIRK_FT2BUGS)) {
