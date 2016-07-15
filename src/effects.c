@@ -378,7 +378,7 @@ void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		fxp &= 0x0f;
 		switch (fxt) {
 		case EX_FILTER:		/* Amiga led filter */
-			if (IS_CLASSIC_MOD()) {
+			if (IS_AMIGA_MOD()) {
 				p->filter = !(fxp & 1);
 			}
 			break;

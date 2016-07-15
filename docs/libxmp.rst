@@ -50,9 +50,9 @@ Concepts
   libxmp is used to provide background music to games or other applications
   where sound effects can be played in response to events or user actions
 
-* **Classic mixer:** *[Added in libxmp 4.4]*
+* **Amiga mixer:** *[Added in libxmp 4.4]*
   Certain formats may use special mixers modeled after the original hardware
-  used to play the format, providing more realist sound at the expense of
+  used to play the format, providing more realistic sound at the expense of
   CPU usage. Currently Amiga formats such as Protracker can use a mixer
   modeled after the Amiga 500, with or without the led filter.
 
@@ -857,7 +857,7 @@ int xmp_set_player(xmp_context c, int param, int val)
           XMP_FLAGS_VBLANK    /* Use vblank timing */
           XMP_FLAGS_FX9BUG    /* Emulate Protracker 2.x FX9 bug */
           XMP_FLAGS_FIXLOOP   /* Make sample loop value / 2 */
-          XMP_FLAGS_CLASSIC   /* Prefer original replayer sound */
+          XMP_FLAGS_A500      /* Use Paula mixer in Amiga modules */
 
     * *[Added in libxmp 4.1]* Player flags for current module: same flags
       as above but after applying module-specific quirks (if any).

@@ -114,7 +114,7 @@ int virt_on(struct context_data *ctx, int num)
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 	/* Initialize Paula simulator */
-	if (IS_CLASSIC_MOD()) {
+	if (IS_AMIGA_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
 			p->virt.voice_array[i].paula = calloc(1, sizeof (struct paula_state));
 			if (p->virt.voice_array[i].paula == NULL) {
@@ -141,7 +141,7 @@ int virt_on(struct context_data *ctx, int num)
 
       err2:
 #ifdef LIBXMP_PAULA_SIMULATOR
-	if (IS_CLASSIC_MOD()) {
+	if (IS_AMIGA_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
 			free(p->virt.voice_array[i].paula);
 		}
@@ -162,7 +162,7 @@ void virt_off(struct context_data *ctx)
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 	/* Free Paula simulator state */
-	if (IS_CLASSIC_MOD()) {
+	if (IS_AMIGA_MOD()) {
 		for (i = 0; i < p->virt.maxvoc; i++) {
 			free(p->virt.voice_array[i].paula);
 		}

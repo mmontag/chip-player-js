@@ -169,8 +169,8 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 	struct player_data *p = &ctx->p;
 
 	/* If mod replayer, modrng and classic play are active */
-	if (p->flags & XMP_FLAGS_CLASSIC) {
-		if (IS_CLASSIC_MOD()) {
+	if (p->flags & XMP_FLAGS_A500) {
+		if (IS_AMIGA_MOD()) {
 			return note_to_period_pt(n, f);
 		}
 	}

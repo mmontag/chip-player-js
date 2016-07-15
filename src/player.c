@@ -819,8 +819,8 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 #if 0
 #ifdef LIBXMP_PAULA_SIMULATOR
 	/* Always use 100% pan separation in Amiga mode */
-	if (p->flags & XMP_FLAGS_CLASSIC) {
-		if (IS_CLASSIC_MOD()) {
+	if (p->flags & XMP_FLAGS_A500) {
+		if (IS_AMIGA_MOD()) {
 			channel_pan = channel_pan < 0x80 ? 0 : 0xff;
 		}
 	}

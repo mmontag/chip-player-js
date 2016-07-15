@@ -204,7 +204,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define IS_PERIOD_LINEAR()	(m->period_type == PERIOD_LINEAR)
 #define IS_PERIOD_CSPD()	(m->period_type == PERIOD_CSPD)
 
-#define IS_CLASSIC_MOD()	(IS_PLAYER_MODE_MOD() && IS_PERIOD_MODRNG())
+#define IS_AMIGA_MOD()	(IS_PLAYER_MODE_MOD() && IS_PERIOD_MODRNG())
 
 struct ord_data {
 	int speed;
