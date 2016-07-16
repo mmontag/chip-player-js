@@ -168,7 +168,7 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 #ifdef LIBXMP_PAULA_SIMULATOR
 	struct player_data *p = &ctx->p;
 
-	/* If mod replayer, modrng and classic play are active */
+	/* If mod replayer, modrng and Amiga mixing are active */
 	if (p->flags & XMP_FLAGS_A500) {
 		if (IS_AMIGA_MOD()) {
 			return note_to_period_pt(n, f);

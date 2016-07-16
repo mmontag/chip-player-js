@@ -194,7 +194,6 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define MAX_SAMPLE_SIZE		0x10000000
 #define MAX_SAMPLES		1024
 
-/* Classic mode */
 #define IS_PLAYER_MODE_MOD()	(m->read_event_type == READ_EVENT_MOD)
 #define IS_PLAYER_MODE_FT2()	(m->read_event_type == READ_EVENT_FT2)
 #define IS_PLAYER_MODE_ST3()	(m->read_event_type == READ_EVENT_ST3)
