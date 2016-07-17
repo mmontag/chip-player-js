@@ -126,7 +126,9 @@ static void clock(struct paula_state *paula, unsigned int cycles)
     int frac = (1 << SMIX_SHIFT) * (vi->pos - (int)vi->pos)
 
 #define VAR_PAULA(x) \
-    VAR_NORM(x)
+    VAR_NORM(x); \
+    vl <<= 8; \
+    vr <<= 8
 
 
 SMIX_MIXER(smix_mono_a500)

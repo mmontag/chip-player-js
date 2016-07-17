@@ -512,7 +512,7 @@ void mixer_softmixer(struct context_data *ctx)
 
 					if (mix_fn != NULL) {
 						mix_fn(vi, buf_pos, samples,
-							vol_l, vol_r, step * (1 << SMIX_SHIFT), rsize, delta_l, delta_r);
+							vol_l >> 8, vol_r >> 8, step * (1 << SMIX_SHIFT), rsize, delta_l, delta_r);
 					}
 
 					buf_pos += mix_size;
