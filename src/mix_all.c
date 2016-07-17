@@ -104,12 +104,8 @@
 } while (0)
 
 #define MIX_MONO_AC() do { \
-    if (count > ramp) { \
-        *(buffer++) += smp_in * old_vl; \
-        old_vl += delta_l; \
-    } else { \
-        *(buffer++) += smp_in * vl; \
-    } \
+    *(buffer++) += smp_in * old_vl; \
+    old_vl += delta_l; \
 } while (0)
 
 #define MIX_MONO_AC_FILTER() do { \
@@ -222,7 +218,13 @@ SMIX_MIXER(smix_mono_8bit_linear)
 {
     VAR_LINEAR(int8);
 
-    while (count--) { LINEAR_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
+    for (; count > ramp; count--) {
+	LINEAR_INTERP(); MIX_MONO_AC(); UPDATE_POS();
+    }
+    
+    for (; count; count--) {
+	LINEAR_INTERP(); MIX_MONO(); UPDATE_POS();
+    }
 }
 
 
@@ -233,7 +235,14 @@ SMIX_MIXER(smix_mono_16bit_linear)
     VAR_LINEAR(int16);
 
     vl >>= 8;
-    while (count--) { LINEAR_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
+
+    for (; count > ramp; count--) {
+        LINEAR_INTERP(); MIX_MONO_AC(); UPDATE_POS();
+    }
+
+    for (; count; count--) {
+        LINEAR_INTERP(); MIX_MONO(); UPDATE_POS();
+    }
 }
 
 
@@ -340,7 +349,13 @@ SMIX_MIXER(smix_mono_8bit_spline)
 {
     VAR_SPLINE(int8);
 
-    while (count--) { SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
+    for (; count > ramp; count--) {
+        SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS();
+    }
+
+    for (; count; count--) {
+        SPLINE_INTERP(); MIX_MONO(); UPDATE_POS();
+    }
 }
 
 
@@ -351,7 +366,14 @@ SMIX_MIXER(smix_mono_16bit_spline)
     VAR_SPLINE(int16);
 
     vl >>= 8;
-    while (count--) { SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS(); }
+
+    for (; count > ramp; count--) {
+        SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS();
+    }
+
+    for (; count; count--) {
+        SPLINE_INTERP(); MIX_MONO(); UPDATE_POS();
+    }
 }
 
 #ifndef LIBXMP_CORE_DISABLE_IT
