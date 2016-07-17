@@ -18,6 +18,7 @@ Stable versions
 	- fix IT volume column tone portamento
 	- fix XM envelope position setting
 	- fix FT2 arpeggio+portamento quirk with finetunes
+	- fix mixer anticlick routines
 	- accept S3M modules with invalid effects
 	Fix issues reported by Saga Musix:
 	- fix 669 effects when no instrument number is specified

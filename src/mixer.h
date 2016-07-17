@@ -13,13 +13,14 @@
 #define SLOW_ATTACK_SHIFT 4
 #define SLOW_ATTACK	(1 << SLOW_ATTACK_SHIFT)
 #define SLOW_RELEASE	16
+#define ANTICLICK_SHIFT	3
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 #include "paula.h"
 #endif
 
 #define SMIX_MIXER(f) void f(struct mixer_voice *vi, int *buffer, \
-	int count, int vl, int vr, int step)
+	int count, int vl, int vr, int step, int ramp, int delta_l, int delta_r)
 
 struct mixer_voice {
 	int chn;		/* channel number */
@@ -37,9 +38,12 @@ struct mixer_voice {
 	int smp;		/* sample number */
 	int end;		/* loop end */
 	int act;		/* nna info & status of voice */
+	int old_vl;		/* previous volume, left channel */
+	int old_vr;		/* previous volume, right channel */
 	int sleft;		/* last left sample output, in 32bit */
 	int sright;		/* last right sample output, in 32bit */
-#define VOICE_RELEASE (1 << 0)
+#define VOICE_RELEASE	(1 << 0)
+#define ANTICLICK	(1 << 1)	
 	int flags;		/* flags */
 	void *sptr;		/* sample pointer */
 #ifdef LIBXMP_PAULA_SIMULATOR

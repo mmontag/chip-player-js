@@ -80,6 +80,8 @@ static void clock(struct paula_state *paula, unsigned int cycles)
 	}
 }
 
+#define LOOP for (; count; count--)
+
 #define UPDATE_POS(x) do { \
 	frac += (x); \
 	pos += frac >> SMIX_SHIFT; \
@@ -124,35 +126,37 @@ static void clock(struct paula_state *paula, unsigned int cycles)
     int frac = (1 << SMIX_SHIFT) * (vi->pos - (int)vi->pos)
 
 #define VAR_PAULA(x) \
-    VAR_NORM(x)
+    VAR_NORM(x); \
+    vl <<= 8; \
+    vr <<= 8
 
 
 SMIX_MIXER(smix_mono_a500)
 {
 	VAR_PAULA(int8);
 
-	while (count--) { PAULA_SIMULATION(0); MIX_MONO(); }
+	LOOP { PAULA_SIMULATION(0); MIX_MONO(); }
 } 
 
 SMIX_MIXER(smix_mono_a500_filter)
 {
 	VAR_PAULA(int8);
 
-	while (count--) { PAULA_SIMULATION(1); MIX_MONO(); }
+	LOOP { PAULA_SIMULATION(1); MIX_MONO(); }
 } 
 
 SMIX_MIXER(smix_stereo_a500)
 {
 	VAR_PAULA(int8);
 
-	while (count--) { PAULA_SIMULATION(0); MIX_STEREO(); }
+	LOOP { PAULA_SIMULATION(0); MIX_STEREO(); }
 } 
 
 SMIX_MIXER(smix_stereo_a500_filter)
 {
 	VAR_PAULA(int8);
 
-	while (count--) { PAULA_SIMULATION(1); MIX_STEREO(); }
+	LOOP { PAULA_SIMULATION(1); MIX_STEREO(); }
 } 
 
 #endif /* LIBXMP_PAULA_SIMULATOR */
