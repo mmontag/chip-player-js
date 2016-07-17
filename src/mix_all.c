@@ -284,7 +284,7 @@ SMIX_MIXER(smix_stereo_16bit_linear)
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
-/* Handler for 8 bit samples, linear interpolated mono output
+/* Handler for 8 bit samples, filtered linear interpolated mono output
  */
 SMIX_MIXER(smix_mono_8bit_linear_filter)
 {
@@ -292,7 +292,7 @@ SMIX_MIXER(smix_mono_8bit_linear_filter)
     VAR_FILTER_MONO;
 
     LOOP_AC { LINEAR_INTERP(); MIX_MONO_FILTER_AC(); UPDATE_POS(); }
-    LOOP_AC { LINEAR_INTERP(); MIX_MONO_FILTER(); UPDATE_POS(); }
+    LOOP    { LINEAR_INTERP(); MIX_MONO_FILTER(); UPDATE_POS(); }
 
     SAVE_FILTER_MONO();
 }
