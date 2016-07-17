@@ -230,6 +230,7 @@ static void do_anticlick(struct context_data *ctx, int voc, int32 *buf, int coun
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	int smp_l, smp_r, max_x2;
+	int discharge = s->ticksize >> ANTICLICK_SHIFT;
 
 	smp_r = vi->sright;
 	smp_l = vi->sleft;
@@ -241,7 +242,9 @@ static void do_anticlick(struct context_data *ctx, int voc, int32 *buf, int coun
 
 	if (buf == NULL) {
 		buf = s->buf32;
-		count = s->ticksize >> ANTICLICK_SHIFT;
+		count = discharge;
+	} else if (count > discharge) {
+		count = discharge;
 	}
 
 	if (count <= 0) {
