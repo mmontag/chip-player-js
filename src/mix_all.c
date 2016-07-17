@@ -80,11 +80,7 @@
 } while (0)
 
 #define MIX_STEREO_AC() do { \
-    if (vi->attack) { \
-	int a = SLOW_ATTACK - vi->attack; \
-	*(buffer++) += (smp_in * vr * a) >> SLOW_ATTACK_SHIFT; \
-	*(buffer++) += (smp_in * vl * a) >> SLOW_ATTACK_SHIFT; \
-	vi->attack--; \
+    if (old_vl != vl || old_vr != vr) { \
     } else { \
 	*(buffer++) += smp_in * vr; \
 	*(buffer++) += smp_in * vl; \
@@ -108,11 +104,11 @@
 } while (0)
 
 #define MIX_MONO_AC() do { \
-    if (vi->attack) { \
-	*(buffer++) += (smp_in * vl * (SLOW_ATTACK - vi->attack)) >> SLOW_ATTACK_SHIFT; \
-	vi->attack--; \
+    if (count > ramp) { \
+        *(buffer++) += smp_in * old_vl; \
+        old_vl += delta_l; \
     } else { \
-	*(buffer++) += smp_in * vl; \
+        *(buffer++) += smp_in * vl; \
     } \
 } while (0)
 
@@ -135,9 +131,13 @@
 
 #define VAR_LINEAR(x) \
     VAR_NORM(x); \
+    int old_vl = vi->old_vl; \
+    int old_vr = vi->old_vr; \
     int smp_l1, smp_dt
 
 #define VAR_SPLINE(x) \
+    int old_vl = vi->old_vl; \
+    int old_vr = vi->old_vr; \
     VAR_NORM(x)
 
 #ifndef LIBXMP_CORE_DISABLE_IT

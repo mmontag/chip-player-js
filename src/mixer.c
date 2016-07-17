@@ -87,7 +87,7 @@ MIX_FN(smix_stereo_a500_filter);
  * bit 2: 0=unfiltered, 1=filtered
  */
 
-typedef void (*mixer_set[])(struct mixer_voice *, int *, int, int, int, int);
+typedef void (*mixer_set[])(struct mixer_voice *, int *, int, int, int, int, int, int, int);
 
 static mixer_set nearest_mixers = {
 	smix_mono_8bit_nearest,
@@ -217,24 +217,18 @@ void mixer_prepare(struct context_data *ctx)
 }
 
 
-/* Hipolito's rampdown anticlick */
-static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
+/* Ok, it's messy, but it works :-) Hipolito */
+static void anticlick(struct context_data *ctx, int voc, int32 *buf, int count)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	int smp_l, smp_r;
-	int dec_l, dec_r;
+	int max_l, max_r, max_x2;
 
-	if (voc < 0) {
-		/* initialize */
-		smp_r = s->dtright;
-		smp_l = s->dtleft;
-	} else {
-		struct mixer_voice *vi = &p->virt.voice_array[voc];
-		smp_r = vi->sright;
-		smp_l = vi->sleft;
-		vi->sright = vi->sleft = 0;
-	}
+	smp_r = vi->sright;
+	smp_l = vi->sleft;
+	vi->sright = vi->sleft = 0;
 
 	if (smp_l == 0 && smp_r == 0) {
 		return;
@@ -242,94 +236,27 @@ static void rampdown(struct context_data *ctx, int voc, int32 *buf, int count)
 
 	if (buf == NULL) {
 		buf = s->buf32;
-		count = SLOW_RELEASE;
+		count = s->ticksize >> 3;
 	}
 
 	if (count <= 0) {
 		return;
 	}
 
-	dec_r = smp_r / count;
-	dec_l = smp_l / count;
+	max_r = smp_r;
+	max_l = smp_l;
+	max_x2 = count * count;
 
-	while ((smp_r || smp_l) && count--) {
+	while (count--) {
+
+		int val_l = count * max_l / max_x2 * count;
+		int val_r = count * max_r / max_x2 * count;
+
 		if (~s->format & XMP_FORMAT_MONO) {
-			if (dec_r > 0) {
-				if (smp_r > dec_r) {
-					smp_r -= dec_r;
-					*buf += smp_r;
-				} else {
-					smp_r = 0;
-				}
-			} else {
-				if (smp_r < dec_r) {
-					smp_r -= dec_r;
-					*buf += smp_r;
-				} else {
-					smp_r = 0;
-				}
-			}
-			buf++;
+			*buf++ += val_r;
 		}
 
-		if (dec_l > 0) {
-			if (smp_l > dec_l) {
-				smp_l -= dec_l;
-				*buf += smp_l;
-			} else {
-				smp_l = 0;
-			}
-		} else {
-			if (smp_l < dec_l) {
-				smp_l -= dec_l;
-				*buf += smp_l;
-			} else {
-				smp_l = 0;
-			}
-		}
-		buf++;
-	}
-}
-
-
-/* Ok, it's messy, but it works :-) Hipolito */
-static void anticlick(struct context_data *ctx, int voc, int vol, int pan,
-		      int32 *buf, int count)
-{
-	int oldvol, newvol, pan0;
-	struct player_data *p = &ctx->p;
-	struct mixer_data *s = &ctx->s;
-	struct mixer_voice *vi = &p->virt.voice_array[voc];
-
-	/* From: Mirko Buffoni <mirbuf@gmail.com>
-	 * To: Claudio Matsuoka <cmatsuoka@gmail.com>
-	 * Date: Nov 29, 2007 6:45 AM
-	 *  
-	 * Put PAN SEPARATION to 100. Then it crashes. Other modules crash when
-	 * PAN SEPARATION = 100, (...) moving separation one step behind, stop
-	 * crashes.
-	 */
-	pan0 = vi->pan;
-	if (pan0 < -127) {
-		pan0 = -127;
-	}
-
-	if (vi->vol) {
-		oldvol = vi->vol * (0x80 - pan0);
-		newvol = vol * (0x80 - pan);
-		vi->sright -= (int64)vi->sright * newvol / oldvol;
-
-		oldvol = vi->vol * (0x80 + pan0);
-		newvol = vol * (0x80 + pan);
-		vi->sleft -= (int64)vi->sleft * newvol / oldvol;
-	}
-
-	if (!buf) {
-		s->dtright += vi->sright;
-		s->dtleft += vi->sleft;
-		vi->sright = vi->sleft = 0;
-	} else {
-		rampdown(ctx, voc, buf, count);
+		*buf++ += val_l;
 	}
 }
 
@@ -413,7 +340,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int prev_l, prev_r;
 	int lps, lpe;
 	int32 *buf_pos;
-	void (*mix_fn)(struct mixer_voice *, int *, int, int, int, int);
+	void (*mix_fn)(struct mixer_voice *, int *, int, int, int, int, int, int, int);
 	mixer_set *mixers;
 
 	switch (s->interp) {
@@ -444,13 +371,18 @@ void mixer_softmixer(struct context_data *ctx)
 
 	mixer_prepare(ctx);
 
-	rampdown(ctx, -1, NULL, 0);	/* Anti-click */
-
 	for (voc = 0; voc < p->virt.maxvoc; voc++) {
 		vi = &p->virt.voice_array[voc];
 
 		if (vi->chn < 0) {
 			continue;
+		}
+
+		if (vi->flags & ANTICLICK) {
+			if (s->interp > XMP_INTERP_NEAREST) {
+				anticlick(ctx, voc, NULL, 0);
+			}
+			vi->flags &= ~ANTICLICK;
 		}
 
 		if (vi->period < 1) {
@@ -510,6 +442,10 @@ void mixer_softmixer(struct context_data *ctx)
 #endif
 		}
 
+		int rampsize = s->ticksize >> 3;
+		int delta_l = (vol_l - vi->old_vl) / rampsize;
+		int delta_r = (vol_r - vi->old_vr) / rampsize;
+
 		usmp = 0;
 		for (size = s->ticksize; size > 0; ) {
 			int split_noloop = 0;
@@ -566,11 +502,24 @@ void mixer_softmixer(struct context_data *ctx)
 
 				/* Call the output handler */
 				if (samples >= 0 && vi->sptr != NULL) {
+					int rsize = 0;
+
+					if (rampsize > samples) {
+						rampsize -= samples;
+					} else {
+						rsize = samples - rampsize;
+						rampsize = 0;
+					}
+
 					if (mix_fn != NULL) {
 						mix_fn(vi, buf_pos, samples,
-							vol_l, vol_r, step * (1 << SMIX_SHIFT));
+							vol_l, vol_r, step * (1 << SMIX_SHIFT), rsize, delta_l, delta_r);
 					}
+
 					buf_pos += mix_size;
+					vi->old_vl += samples * delta_l;
+					vi->old_vr += samples * delta_r;
+
 
 					/* For Hipolito's anticlick routine */
 					if (mix_size >= 2) {
@@ -594,7 +543,7 @@ void mixer_softmixer(struct context_data *ctx)
 
 			/* First sample loop run */
 			if ((~xxs->flg & XMP_SAMPLE_LOOP) || split_noloop) {
-				anticlick(ctx, voc, 0, 0, buf_pos, size);
+				anticlick(ctx, voc, buf_pos, size);
 				set_sample_end(ctx, voc, 1);
 				size = 0;
 				continue;
@@ -602,6 +551,9 @@ void mixer_softmixer(struct context_data *ctx)
 
 			loop_reposition(ctx, vi, xxs);
 		}
+
+		vi->old_vl = vol_l;
+		vi->old_vr = vol_r;
 	}
 
 	/* Render final frame */
@@ -724,6 +676,9 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 
 	vi->sptr = xxs->data;
 	vi->fidx |= FLAG_ACTIVE;
+	vi->old_vl = 0;
+	vi->old_vr = 0;
+	vi->flags |= ANTICLICK;
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 	if (HAS_QUIRK(QUIRK_FILTER) && s->dsp & XMP_DSP_LOWPASS) {
@@ -736,6 +691,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	}
 
 	mixer_voicepos(ctx, voc, 0);
+
 }
 
 void mixer_setnote(struct context_data *ctx, int voc, int note)
@@ -753,6 +709,7 @@ void mixer_setnote(struct context_data *ctx, int voc, int note)
 	vi->note = note;
 	vi->period = note_to_period_mix(note, 0);
 	vi->attack = SLOW_ATTACK;
+	vi->flags |= ANTICLICK;
 }
 
 void mixer_setperiod(struct context_data *ctx, int voc, double period)
@@ -769,9 +726,9 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
-	if (s->interp > XMP_INTERP_NEAREST) {
+	/*if (s->interp > XMP_INTERP_NEAREST) {
 		anticlick(ctx, voc, vol, vi->pan, NULL, 0);
-	}
+	}*/
 
 	vi->vol = vol;
 }
