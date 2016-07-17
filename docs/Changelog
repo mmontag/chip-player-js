@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.4.0 ():
+4.4.0 (20160717):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM arpeggio in FastTracker 2 compatible mode
 	- fix IT bidirectional loop sample length
