@@ -367,15 +367,15 @@ void mixer_softmixer(struct context_data *ctx)
 	for (voc = 0; voc < p->virt.maxvoc; voc++) {
 		vi = &p->virt.voice_array[voc];
 
-		if (vi->chn < 0) {
-			continue;
-		}
-
 		if (vi->flags & ANTICLICK) {
 			if (s->interp > XMP_INTERP_NEAREST) {
 				anticlick(ctx, voc, NULL, 0);
 			}
 			vi->flags &= ~ANTICLICK;
+		}
+
+		if (vi->chn < 0) {
+			continue;
 		}
 
 		if (vi->period < 1) {
@@ -718,6 +718,10 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
+
+	if (vol == 0) {
+		vi->flags |= ANTICLICK;
+	}
 
 	/*if (s->interp > XMP_INTERP_NEAREST) {
 		anticlick(ctx, voc, vol, vi->pan, NULL, 0);
