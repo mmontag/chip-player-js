@@ -216,9 +216,15 @@ void mixer_prepare(struct context_data *ctx)
 	memset(s->buf32, 0, bytelen);
 }
 
+static void anticlick(struct mixer_voice *vi)
+{
+	vi->flags |= ANTICLICK;
+	vi->old_vl = 0;
+	vi->old_vr = 0;
+}
 
 /* Ok, it's messy, but it works :-) Hipolito */
-static void anticlick(struct context_data *ctx, int voc, int32 *buf, int count)
+static void do_anticlick(struct context_data *ctx, int voc, int32 *buf, int count)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
@@ -369,7 +375,7 @@ void mixer_softmixer(struct context_data *ctx)
 
 		if (vi->flags & ANTICLICK) {
 			if (s->interp > XMP_INTERP_NEAREST) {
-				anticlick(ctx, voc, NULL, 0);
+				do_anticlick(ctx, voc, NULL, 0);
 			}
 			vi->flags &= ~ANTICLICK;
 		}
@@ -536,7 +542,7 @@ void mixer_softmixer(struct context_data *ctx)
 
 			/* First sample loop run */
 			if ((~xxs->flg & XMP_SAMPLE_LOOP) || split_noloop) {
-				anticlick(ctx, voc, buf_pos, size);
+				do_anticlick(ctx, voc, buf_pos, size);
 				set_sample_end(ctx, voc, 1);
 				size = 0;
 				continue;
@@ -616,7 +622,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, double pos)
 #endif
 	}
 
-	vi->attack = SLOW_ATTACK;
+	anticlick(vi);
 }
 
 int mixer_getvoicepos(struct context_data *ctx, int voc)
@@ -669,9 +675,8 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 
 	vi->sptr = xxs->data;
 	vi->fidx |= FLAG_ACTIVE;
-	vi->old_vl = 0;
-	vi->old_vr = 0;
-	vi->flags |= ANTICLICK;
+
+	anticlick(vi);
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 	if (HAS_QUIRK(QUIRK_FILTER) && s->dsp & XMP_DSP_LOWPASS) {
@@ -701,8 +706,8 @@ void mixer_setnote(struct context_data *ctx, int voc, int note)
 
 	vi->note = note;
 	vi->period = note_to_period_mix(note, 0);
-	vi->attack = SLOW_ATTACK;
-	vi->flags |= ANTICLICK;
+
+	anticlick(vi);
 }
 
 void mixer_setperiod(struct context_data *ctx, int voc, double period)
@@ -719,7 +724,7 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
 	if (vol == 0) {
-		vi->flags |= ANTICLICK;
+		anticlick(vi);
 	}
 
 	vi->vol = vol;
