@@ -47,7 +47,7 @@
 #define LIM16_HI	 32767
 #define LIM16_LO	-32768
 
-#define MIX_FN(x) void x (struct mixer_voice *, int *, int, int, int, int)
+#define MIX_FN(x) void x(struct mixer_voice *, int *, int, int, int, int, int, int, int)
 
 MIX_FN(smix_mono_8bit_nearest);
 MIX_FN(smix_mono_8bit_linear);
@@ -716,7 +716,6 @@ void mixer_setperiod(struct context_data *ctx, int voc, double period)
 void mixer_setvol(struct context_data *ctx, int voc, int vol)
 {
 	struct player_data *p = &ctx->p;
-	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 
 	if (vol == 0) {
