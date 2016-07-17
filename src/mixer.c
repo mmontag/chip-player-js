@@ -252,10 +252,10 @@ static void do_anticlick(struct context_data *ctx, int voc, int32 *buf, int coun
 
 	while (count--) {
 		if (~s->format & XMP_FORMAT_MONO) {
-			*buf++ += count * smp_r / max_x2 * count;
+			*buf++ += (count * (smp_r >> 10) / max_x2 * count) << 10;
 		}
 
-		*buf++ += count * smp_l / max_x2 * count;
+		*buf++ += (count * (smp_l >> 10) / max_x2 * count) << 10;
 	}
 }
 
