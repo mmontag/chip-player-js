@@ -223,8 +223,7 @@ static void anticlick(struct context_data *ctx, int voc, int32 *buf, int count)
 	struct player_data *p = &ctx->p;
 	struct mixer_data *s = &ctx->s;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
-	int smp_l, smp_r;
-	int max_l, max_r, max_x2;
+	int smp_l, smp_r, max_x2;
 
 	smp_r = vi->sright;
 	smp_l = vi->sleft;
@@ -236,27 +235,21 @@ static void anticlick(struct context_data *ctx, int voc, int32 *buf, int count)
 
 	if (buf == NULL) {
 		buf = s->buf32;
-		count = s->ticksize >> 3;
+		count = s->ticksize >> ANTICLICK_SHIFT;
 	}
 
 	if (count <= 0) {
 		return;
 	}
 
-	max_r = smp_r;
-	max_l = smp_l;
 	max_x2 = count * count;
 
 	while (count--) {
-
-		int val_l = count * max_l / max_x2 * count;
-		int val_r = count * max_r / max_x2 * count;
-
 		if (~s->format & XMP_FORMAT_MONO) {
-			*buf++ += val_r;
+			*buf++ += count * smp_r / max_x2 * count;
 		}
 
-		*buf++ += val_l;
+		*buf++ += count * smp_l / max_x2 * count;
 	}
 }
 
@@ -442,7 +435,7 @@ void mixer_softmixer(struct context_data *ctx)
 #endif
 		}
 
-		int rampsize = s->ticksize >> 3;
+		int rampsize = s->ticksize >> ANTICLICK_SHIFT;
 		int delta_l = (vol_l - vi->old_vl) / rampsize;
 		int delta_r = (vol_r - vi->old_vr) / rampsize;
 

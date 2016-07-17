@@ -70,21 +70,51 @@
     frac &= SMIX_MASK; \
 } while (0)
 
+#define MIX_MONO() do { \
+    *(buffer++) += smp_in * vl; \
+} while (0)
+
+#define MIX_MONO_16BIT() do { \
+    *(buffer++) += smp_in * vl; \
+} while (0)
+
+#define MIX_MONO_AC() do { \
+    *(buffer++) += smp_in * old_vl; old_vl += delta_l; \
+} while (0)
+
+#define MIX_MONO_AC_16BIT() do { \
+    *(buffer++) += smp_in * (old_vl >> 8); old_vl += delta_l; \
+} while (0)
+
+#define MIX_MONO_AC_FILTER() do { \
+    sl = (a0 * smp_in * vl + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
+    fl2 = fl1; fl1 = sl; \
+    if (vi->attack) { \
+	*(buffer++) += (sl * (SLOW_ATTACK - vi->attack)) >> SLOW_ATTACK_SHIFT; \
+	vi->attack--; \
+    } else { \
+	*(buffer++) += sl; \
+    } \
+} while (0)
+
 #define MIX_STEREO() do { \
     *(buffer++) += smp_in * vr; \
     *(buffer++) += smp_in * vl; \
 } while (0)
 
-#define MIX_MONO() do { \
+#define MIX_STEREO_16BIT() do { \
+    *(buffer++) += smp_in * vr; \
     *(buffer++) += smp_in * vl; \
 } while (0)
 
 #define MIX_STEREO_AC() do { \
-    if (old_vl != vl || old_vr != vr) { \
-    } else { \
-	*(buffer++) += smp_in * vr; \
-	*(buffer++) += smp_in * vl; \
-    } \
+    *(buffer++) += smp_in * old_vr; old_vr += delta_r; \
+    *(buffer++) += smp_in * old_vl; old_vl += delta_l; \
+} while (0)
+
+#define MIX_STEREO_AC_16BIT() do { \
+    *(buffer++) += smp_in * (old_vr >> 8); old_vr += delta_r; \
+    *(buffer++) += smp_in * (old_vl >> 8); old_vl += delta_l; \
 } while (0)
 
 #define MIX_STEREO_AC_FILTER() do { \
@@ -99,22 +129,6 @@
 	vi->attack--; \
     } else { \
 	*(buffer++) += sr; \
-	*(buffer++) += sl; \
-    } \
-} while (0)
-
-#define MIX_MONO_AC() do { \
-    *(buffer++) += smp_in * old_vl; \
-    old_vl += delta_l; \
-} while (0)
-
-#define MIX_MONO_AC_FILTER() do { \
-    sl = (a0 * smp_in * vl + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
-    fl2 = fl1; fl1 = sl; \
-    if (vi->attack) { \
-	*(buffer++) += (sl * (SLOW_ATTACK - vi->attack)) >> SLOW_ATTACK_SHIFT; \
-	vi->attack--; \
-    } else { \
 	*(buffer++) += sl; \
     } \
 } while (0)
@@ -171,7 +185,14 @@
 SMIX_MIXER(smix_stereo_8bit_linear)
 {
     VAR_LINEAR(int8);
-    while (count--) { LINEAR_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
+
+    for (; count > ramp; count--) {
+        LINEAR_INTERP(); MIX_STEREO_AC(); UPDATE_POS();
+    }
+
+    for (; count; count--) {
+        LINEAR_INTERP(); MIX_STEREO(); UPDATE_POS();
+    }
 }
 
 
@@ -181,9 +202,16 @@ SMIX_MIXER(smix_stereo_16bit_linear)
 {
     VAR_LINEAR(int16);
 
-    vl >>= 8;
     vr >>= 8;
-    while (count--) { LINEAR_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
+    vl >>= 8;
+
+    for (; count > ramp; count--) {
+        LINEAR_INTERP(); MIX_STEREO_AC_16BIT(); UPDATE_POS();
+    }
+
+    for (; count; count--) {
+        LINEAR_INTERP(); MIX_STEREO_16BIT(); UPDATE_POS();
+    }
 }
 
 
@@ -204,7 +232,8 @@ SMIX_MIXER(smix_stereo_16bit_nearest)
 
     vl >>= 8;
     vr >>= 8;
-    while (count--) { NEAREST_NEIGHBOR(); MIX_STEREO(); UPDATE_POS(); }
+
+    while (count--) { NEAREST_NEIGHBOR(); MIX_STEREO_16BIT(); UPDATE_POS(); }
 }
 
 
@@ -237,11 +266,11 @@ SMIX_MIXER(smix_mono_16bit_linear)
     vl >>= 8;
 
     for (; count > ramp; count--) {
-        LINEAR_INTERP(); MIX_MONO_AC(); UPDATE_POS();
+        LINEAR_INTERP(); MIX_MONO_AC_16BIT(); UPDATE_POS();
     }
 
     for (; count; count--) {
-        LINEAR_INTERP(); MIX_MONO(); UPDATE_POS();
+        LINEAR_INTERP(); MIX_MONO_16BIT(); UPDATE_POS();
     }
 }
 
@@ -327,7 +356,13 @@ SMIX_MIXER(smix_stereo_8bit_spline)
 {
     VAR_SPLINE(int8);
 
-    while (count--) { SPLINE_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
+    for (; count > ramp; count--) {
+        SPLINE_INTERP(); MIX_STEREO_AC(); UPDATE_POS();
+    }
+
+    for (; count; count--) {
+        SPLINE_INTERP(); MIX_STEREO(); UPDATE_POS();
+    }
 }
 
 
@@ -339,7 +374,14 @@ SMIX_MIXER(smix_stereo_16bit_spline)
 
     vl >>= 8;
     vr >>= 8;
-    while (count--) { SPLINE_INTERP(); MIX_STEREO_AC(); UPDATE_POS(); }
+
+    for (; count > ramp; count--) {
+        SPLINE_INTERP(); MIX_STEREO_AC_16BIT(); UPDATE_POS();
+    }
+
+    for (; count; count--) {
+        SPLINE_INTERP(); MIX_STEREO_16BIT(); UPDATE_POS();
+    }
 }
 
 
@@ -365,14 +407,15 @@ SMIX_MIXER(smix_mono_16bit_spline)
 {
     VAR_SPLINE(int16);
 
+    vr >>= 8;
     vl >>= 8;
 
     for (; count > ramp; count--) {
-        SPLINE_INTERP(); MIX_MONO_AC(); UPDATE_POS();
+        SPLINE_INTERP(); MIX_MONO_AC_16BIT(); UPDATE_POS();
     }
 
     for (; count; count--) {
-        SPLINE_INTERP(); MIX_MONO(); UPDATE_POS();
+        SPLINE_INTERP(); MIX_MONO_16BIT(); UPDATE_POS();
     }
 }
 

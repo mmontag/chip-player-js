@@ -13,6 +13,7 @@
 #define SLOW_ATTACK_SHIFT 4
 #define SLOW_ATTACK	(1 << SLOW_ATTACK_SHIFT)
 #define SLOW_RELEASE	16
+#define ANTICLICK_SHIFT	3
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 #include "paula.h"
