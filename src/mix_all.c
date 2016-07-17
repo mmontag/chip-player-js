@@ -92,20 +92,16 @@
     *(buffer++) += sl; \
 } while (0)
 
-#define PROCESS_MONO_FILTER_AC() do { \
-    sl = (a0 * smp_in * vl + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
-    fl2 = fl1; fl1 = sl; \
-    *(buffer++) += sl * vl; old_vl += delta_l; \
-} while (0)
-
 #define MIX_MONO_FILTER_AC() do { \
     int vl = old_vl; \
-    PROCESS_MONO_FILTER_AC(); \
+    MIX_MONO_FILTER(); \
+    old_vl += delta_l; \
 } while (0)
 
 #define MIX_MONO_FILTER_AC_16BIT() do { \
     int vl = old_vl >> 8; \
-    PROCESS_MONO_FILTER_AC(); \
+    MIX_MONO_FILTER(); \
+    old_vl += delta_l; \
 } while (0)
 
 #define MIX_STEREO() do { \
@@ -128,29 +124,24 @@
     fr2 = fr1; fr1 = sr; \
     sl = (a0 * smp_in * vl + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
     fl2 = fl1; fl1 = sl; \
-    *(buffer++) += sr * vr; \
-    *(buffer++) += sl * vl; \
-} while (0)
-
-#define PROCESS_STEREO_FILTER_AC() do { \
-    sr = (a0 * smp_in * vr + b0 * fr1 + b1 * fr2) >> FILTER_SHIFT; \
-    fr2 = fr1; fr1 = sr; \
-    sl = (a0 * smp_in * vl + b0 * fl1 + b1 * fl2) >> FILTER_SHIFT; \
-    fl2 = fl1; fl1 = sl; \
-    *(buffer++) += sr * vr; old_vr += delta_r; \
-    *(buffer++) += sl * vl; old_vl += delta_l; \
+    *(buffer++) += sr; \
+    *(buffer++) += sl; \
 } while (0)
 
 #define MIX_STEREO_FILTER_AC() do { \
     int vr = old_vr; \
     int vl = old_vl; \
-    PROCESS_STEREO_FILTER_AC(); \
+    MIX_STEREO_FILTER(); \
+    old_vr += delta_r; \
+    old_vl += delta_l; \
 } while (0)
 
 #define MIX_STEREO_FILTER_AC_16BIT() do { \
     int vr = old_vr >> 8; \
     int vl = old_vl >> 8; \
-    PROCESS_STEREO_FILTER_AC(); \
+    MIX_STEREO_FILTER(); \
+    old_vr += delta_r; \
+    old_vl += delta_l; \
 } while (0)
 
 #define VAR_NORM(x) \
