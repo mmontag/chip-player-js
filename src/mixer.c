@@ -723,10 +723,6 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 		vi->flags |= ANTICLICK;
 	}
 
-	/*if (s->interp > XMP_INTERP_NEAREST) {
-		anticlick(ctx, voc, vol, vi->pan, NULL, 0);
-	}*/
-
 	vi->vol = vol;
 }
 
