@@ -98,7 +98,7 @@ int main()
 
 	MD5Final(digest, &ctx);
 
-	if (compare_md5(digest, "ec7f9a83a32cea7e37fd367f231eb2f0") < 0) {
+	if (compare_md5(digest, "8ddeaa84bf9d90fd3b3c0a19453d005b") < 0) {
 		printf("rendering error\n");
 		goto err;
 	}
