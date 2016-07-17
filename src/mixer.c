@@ -284,7 +284,7 @@ static void set_sample_end(struct context_data *ctx, int voc, int end)
 static void adjust_voice_end(struct mixer_voice *vi, struct xmp_sample *xxs)
 {
 	if (xxs->flg & XMP_SAMPLE_LOOP) {
-		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
+		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && (~vi->flags & SAMPLE_LOOP)) {
 			vi->end = xxs->len;
 		} else {
 			vi->end = xxs->lpe;
@@ -304,7 +304,7 @@ static void loop_reposition(struct context_data *ctx, struct mixer_voice *vi, st
 	/* Reposition for next loop */
 	vi->pos -= loop_size;		/* forward loop */
 	vi->end = xxs->lpe;
-	vi->sample_loop = 1;
+	vi->flags |= SAMPLE_LOOP;
 
 	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 		vi->end += loop_size;	/* unrolled loop */
@@ -661,7 +661,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	vi->smp = smp;
 	vi->vol = 0;
 	vi->pan = 0;
-	vi->sample_loop = 0;
+	vi->flags &= ~SAMPLE_LOOP;
 
 	vi->fidx = 0;
 
@@ -803,7 +803,7 @@ int mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 	s->format = format;
 	s->amplify = DEFAULT_AMPLIFY;
 	s->mix = DEFAULT_MIX;
-	s->pbase = SMIX_C4NOTE * c4rate / s->freq;
+	s->pbase = C4_PERIOD * c4rate / s->freq;
 	s->interp = XMP_INTERP_LINEAR;	/* default interpolation type */
 	s->dsp = XMP_DSP_LOWPASS;	/* enable filters by default */
 	/* s->numvoc = SMIX_NUMVOC; */

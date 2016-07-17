@@ -1,18 +1,13 @@
 #ifndef LIBXMP_MIXER_H
 #define LIBXMP_MIXER_H
 
-#define SMIX_C4NOTE	428.0
+#define C4_PERIOD	428.0
 
 #define SMIX_NUMVOC	128	/* default number of softmixer voices */
 #define SMIX_SHIFT	16
 #define SMIX_MASK	0xffff
 
 #define FILTER_SHIFT	16
-
-/* Anticlick ramps */
-#define SLOW_ATTACK_SHIFT 4
-#define SLOW_ATTACK	(1 << SLOW_ATTACK_SHIFT)
-#define SLOW_RELEASE	16
 #define ANTICLICK_SHIFT	3
 
 #ifdef LIBXMP_PAULA_SIMULATOR
@@ -25,7 +20,6 @@
 struct mixer_voice {
 	int chn;		/* channel number */
 	int root;		/* */
-	unsigned int age;	/* */
 	int note;		/* */
 #define PAN_SURROUND 0x8000
 	int pan;		/* */
@@ -33,7 +27,7 @@ struct mixer_voice {
 	double period;		/* current period */
 	double pos;		/* position in sample */
 	int pos0;		/* position in sample before mixing */
-	int fidx;		/* function index */
+	int fidx;		/* mixer function index */
 	int ins;		/* instrument number */
 	int smp;		/* sample number */
 	int end;		/* loop end */
@@ -44,12 +38,14 @@ struct mixer_voice {
 	int sright;		/* last right sample output, in 32bit */
 #define VOICE_RELEASE	(1 << 0)
 #define ANTICLICK	(1 << 1)	
+#define SAMPLE_LOOP	(1 << 2)
 	int flags;		/* flags */
 	void *sptr;		/* sample pointer */
 #ifdef LIBXMP_PAULA_SIMULATOR
 	struct paula_state *paula; /* paula simulation state */
 #endif
 
+#ifndef LIBXMP_CORE_DISABLE_IT
 	struct {
 		int r1;		/* filter variables */
 		int r2;
@@ -61,9 +57,7 @@ struct mixer_voice {
 		int cutoff;
 		int resonance;
 	} filter;
-
-	int attack;		/* ramp up anticlick */
-	int sample_loop;	/* set if sample has looped */
+#endif
 };
 
 int	mixer_on		(struct context_data *, int, int, int);
