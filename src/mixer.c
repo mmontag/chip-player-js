@@ -513,6 +513,11 @@ void mixer_softmixer(struct context_data *ctx)
 						rampsize = 0;
 					}
 
+					if (delta_l == 0 && delta_r == 0) {
+						/* no need to ramp */
+						rsize = samples;
+					}
+
 					if (mix_fn != NULL) {
 						mix_fn(vi, buf_pos, samples,
 							vol_l >> 8, vol_r >> 8, step * (1 << SMIX_SHIFT), rsize, delta_l, delta_r);
