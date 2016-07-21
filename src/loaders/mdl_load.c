@@ -604,7 +604,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->ins = hio_read8(f);
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
@@ -747,7 +747,7 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     if ((data->packinfo = calloc(sizeof (int), mod->smp)) == NULL)
@@ -1035,8 +1035,7 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    for (k = 0; k < mod->smp; k++) {
 		if (mod->xxi[i].sub[j].sid == data.s_index[k]) {
 		    mod->xxi[i].sub[j].sid = k;
-		    c2spd_to_note(data.c2spd[k],
-			&mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
+                    m->c5spd[k] = data.c2spd[k];
 		    break;
 		}
 	    }

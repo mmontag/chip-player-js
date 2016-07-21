@@ -177,7 +177,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	/* Read and convert instruments and samples */
@@ -206,9 +206,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		   mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		   mod->xxi[i].sub[0].vol, sfh.ins[i].c2spd);
 
-		sfh.ins[i].c2spd = 8363 * sfh.ins[i].c2spd / 8448;
-		c2spd_to_note(sfh.ins[i].c2spd, &mod->xxi[i].sub[0].xpo,
-			      &mod->xxi[i].sub[0].fin);
+		m->c5spd[i] = sfh.ins[i].c2spd;
 	}
 
 	hio_read(mod->xxo, 1, 128, f);

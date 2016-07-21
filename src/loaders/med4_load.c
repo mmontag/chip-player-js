@@ -510,7 +510,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (mask == MAGIC4('M','E','D','V')) {
 		mod->smp = 0;
 
-		if (instrument_init(mod) < 0)
+		if (instrument_init(m) < 0)
 			return -1;
 		hio_seek(f, -4, SEEK_CUR);
 		goto parse_iff;
@@ -554,7 +554,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->smp = num_smp;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);

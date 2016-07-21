@@ -166,7 +166,7 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 	}
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	D_(D_INFO "Stored samples: %d", mod->smp);

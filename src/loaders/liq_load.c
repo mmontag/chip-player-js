@@ -542,7 +542,7 @@ next_pattern:
 
     /* Read and convert instruments */
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     D_(D_INFO "Instruments: %d", mod->ins);
@@ -625,7 +625,8 @@ next_pattern:
 		xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol, sub->gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
 
-	c2spd_to_note(li.c2spd, &sub->xpo, &sub->fin);
+	m->c5spd[i] = li.c2spd;
+
 	hio_seek(f, li.hdrsz - 0x90, SEEK_CUR);
 
 	if (xxs->len == 0)

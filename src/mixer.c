@@ -374,6 +374,8 @@ void mixer_softmixer(struct context_data *ctx)
 	mixer_prepare(ctx);
 
 	for (voc = 0; voc < p->virt.maxvoc; voc++) {
+		int c5spd;
+
 		vi = &p->virt.voice_array[voc];
 
 		if (vi->flags & ANTICLICK) {
@@ -403,16 +405,18 @@ void mixer_softmixer(struct context_data *ctx)
 			vol_l = vi->vol * (0x80 + vi->pan);
 		}
 
-		step = s->pbase / vi->period;
+		if (vi->smp < mod->smp) {
+			xxs = &mod->xxs[vi->smp];
+			c5spd = m->c5spd[vi->smp];	/* FIXME */
+		} else {
+			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
+			c5spd = m->c4rate;		/* FIXME */
+		}
+
+		step = C4_PERIOD * c5spd / s->freq / vi->period;
 
 		if (step < 0.001) {	/* otherwise m5v-nwlf.it crashes */
 			continue;
-		}
-
-		if (vi->smp < mod->smp) {
-			xxs = &mod->xxs[vi->smp];
-		} else {
-			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
 		}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
@@ -811,7 +815,7 @@ int mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 	s->format = format;
 	s->amplify = DEFAULT_AMPLIFY;
 	s->mix = DEFAULT_MIX;
-	s->pbase = C4_PERIOD * c4rate / s->freq;
+	/* s->pbase = C4_PERIOD * c4rate / s->freq; */
 	s->interp = XMP_INTERP_LINEAR;	/* default interpolation type */
 	s->dsp = XMP_DSP_LOWPASS;	/* enable filters by default */
 	/* s->numvoc = SMIX_NUMVOC; */
