@@ -633,7 +633,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, double pos)
 	anticlick(vi);
 }
 
-int mixer_getvoicepos(struct context_data *ctx, int voc)
+double mixer_getvoicepos(struct context_data *ctx, int voc)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];

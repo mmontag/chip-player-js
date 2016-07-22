@@ -368,7 +368,7 @@ void virt_seteffect(struct context_data *ctx, int chn, int type, int val)
 	mixer_seteffect(ctx, voc, type, val);
 }
 
-int virt_getvoicepos(struct context_data *ctx, int chn)
+double virt_getvoicepos(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
@@ -520,7 +520,7 @@ void virt_setperiod(struct context_data *ctx, int chn, double period)
 	mixer_setperiod(ctx, voc, period);
 }
 
-void virt_voicepos(struct context_data *ctx, int chn, int pos)
+void virt_voicepos(struct context_data *ctx, int chn, double pos)
 {
 	struct player_data *p = &ctx->p;
 	int voc;
