@@ -480,6 +480,8 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	data.cur_ins = 0;
 	offset = hio_tell(f);
 
+	m->c5rate = C5_NTSC_RATE;
+
 	handle = iff_new();
 	if (handle == NULL)
 		goto err;

@@ -109,6 +109,8 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read(buf, 1, 16, f);
 	}
 
+	m->c5rate = C5_NTSC_RATE;
+
 	MODULE_INFO();
  
 

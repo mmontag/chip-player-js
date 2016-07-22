@@ -86,6 +86,8 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->smp = mod->ins;
 	mod->trk = mod->pat * mod->chn;
 
+	m->c5rate = C5_NTSC_RATE;
+
 	/* Sanity check */
 	if (mod->len > 256 || mod->pat > 256 || mod->ins > 255 ||
 	    mod->chn > XMP_MAX_CHANNELS) {

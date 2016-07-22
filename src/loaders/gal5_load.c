@@ -300,6 +300,8 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (handle == NULL)
 		return -1;
 
+	m->c5rate = C5_NTSC_RATE;
+
 	/* IFF chunk IDs */
 	ret = iff_register(handle, "INIT", get_init);		/* Galaxy 5.0 */
 	ret |= iff_register(handle, "ORDR", get_ordr);

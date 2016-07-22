@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.4.1 ():
+	- fix c5spd handling in several formats
+
 4.4.0 (20160719):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix XM arpeggio in FastTracker 2 compatible mode

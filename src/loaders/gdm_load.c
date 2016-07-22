@@ -153,6 +153,8 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxc[i].pan = 0x80 + (panmap[i] - 8) * 16;
 	}
 
+	m->c5rate = C5_NTSC_RATE;
+
 	mod->gvl = hio_read8(f);
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);

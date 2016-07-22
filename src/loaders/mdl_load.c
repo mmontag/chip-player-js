@@ -370,6 +370,7 @@ static int get_chunk_in(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     hio_read8(f);			/* gvol */
     mod->spd = hio_read8(f);
     mod->bpm = hio_read8(f);
+    m->c5rate = C5_NTSC_RATE;
 
     /* Sanity check */
     if (mod->len > 256 || mod->rst > 255) {

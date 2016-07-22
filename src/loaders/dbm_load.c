@@ -365,6 +365,8 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, 10, SEEK_CUR);
 	hio_read(name, 1, 44, f);
 
+	m->c5rate = C5_NTSC_RATE;
+
 	handle = iff_new();
 	if (handle == NULL)
 		return -1;

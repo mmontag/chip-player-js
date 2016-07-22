@@ -413,7 +413,7 @@ void mixer_softmixer(struct context_data *ctx)
 			c5spd = m->c5rate;		/* FIXME */
 		}
 
-		step = C4_PERIOD * c5spd / s->freq / vi->period;
+		step = C5_PERIOD * c5spd / s->freq / vi->period;
 
 		if (step < 0.001) {	/* otherwise m5v-nwlf.it crashes */
 			continue;
@@ -799,7 +799,7 @@ int mixer_numvoices(struct context_data *ctx, int num)
 	}
 }
 
-int mixer_on(struct context_data *ctx, int rate, int format, int c5rate)
+int mixer_on(struct context_data *ctx, int rate, int format)
 {
 	struct mixer_data *s = &ctx->s;
 

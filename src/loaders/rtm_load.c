@@ -240,6 +240,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->spd = rh.speed;
 	mod->bpm = rh.tempo;
 
+	m->c5rate = C5_NTSC_RATE;
 	m->period_type = rh.flags & 0x01 ? PERIOD_LINEAR : PERIOD_AMIGA;
 
 	MODULE_INFO();

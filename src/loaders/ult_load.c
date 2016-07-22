@@ -123,6 +123,8 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
     ufh.name[0] = 0;
     set_type(m, "Ultra Tracker %s ULT V%04d", verstr[ver - 1], ver);
 
+    m->c5rate = C5_NTSC_RATE;
+
     MODULE_INFO();
 
     hio_seek(f, ufh.msgsize * 32, SEEK_CUR);

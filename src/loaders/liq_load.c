@@ -284,6 +284,7 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->len = lh.len;
     mod->trk = mod->chn * mod->pat;
 
+    m->c5rate = C5_NTSC_RATE;
     m->quirk |= QUIRK_INSVOL;
 
     strncpy(mod->name, (char *)lh.name, 30);
