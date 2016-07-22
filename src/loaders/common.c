@@ -43,7 +43,7 @@ int c5spd_alloc(struct module_data *m)
 	}
 
 	for (i = 0; i < mod->smp; i++) {
-		m->c5spd[i] = m->c4rate;
+		m->c5spd[i] = m->c5rate;
 	}
 
 	return 0;

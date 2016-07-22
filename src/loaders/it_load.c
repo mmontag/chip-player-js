@@ -1157,7 +1157,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->pat; i++)
 		pp_pat[i] = hio_read32l(f);
 
-	m->c4rate = C4_NTSC_RATE;
+	m->c5rate = C5_NTSC_RATE;
 
 	identify_tracker(m, &ifh);
 

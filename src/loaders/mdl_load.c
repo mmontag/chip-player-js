@@ -989,7 +989,7 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     set_type(m, "Digitrakker MDL %d.%d", MSN(*buf), LSN(*buf));
 
     m->volbase = 0xff;
-    m->c4rate = C4_NTSC_RATE;
+    m->c5rate = C5_NTSC_RATE;
 
     data.v_envnum = data.p_envnum = data.f_envnum = 0;
     data.s_index = calloc(256, sizeof (int));

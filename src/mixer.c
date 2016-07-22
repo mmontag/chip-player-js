@@ -410,7 +410,7 @@ void mixer_softmixer(struct context_data *ctx)
 			c5spd = m->c5spd[vi->smp];	/* FIXME */
 		} else {
 			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
-			c5spd = m->c4rate;		/* FIXME */
+			c5spd = m->c5rate;		/* FIXME */
 		}
 
 		step = C4_PERIOD * c5spd / s->freq / vi->period;
@@ -799,7 +799,7 @@ int mixer_numvoices(struct context_data *ctx, int num)
 	}
 }
 
-int mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
+int mixer_on(struct context_data *ctx, int rate, int format, int c5rate)
 {
 	struct mixer_data *s = &ctx->s;
 
@@ -815,7 +815,7 @@ int mixer_on(struct context_data *ctx, int rate, int format, int c4rate)
 	s->format = format;
 	s->amplify = DEFAULT_AMPLIFY;
 	s->mix = DEFAULT_MIX;
-	/* s->pbase = C4_PERIOD * c4rate / s->freq; */
+	/* s->pbase = C4_PERIOD * c5rate / s->freq; */
 	s->interp = XMP_INTERP_LINEAR;	/* default interpolation type */
 	s->dsp = XMP_DSP_LOWPASS;	/* enable filters by default */
 	/* s->numvoc = SMIX_NUMVOC; */

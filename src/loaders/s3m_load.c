@@ -377,7 +377,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
-	m->c4rate = C4_NTSC_RATE;
+	m->c5rate = C5_NTSC_RATE;
 
 	if (sfh.version == 0x1300) {
 		m->quirk |= QUIRK_VSALL;

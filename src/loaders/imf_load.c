@@ -314,7 +314,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    mod->xxo[i]--;
     }
 
-    m->c4rate = C4_NTSC_RATE;
+    m->c5rate = C5_NTSC_RATE;
 
     if (pattern_init(mod) < 0)
 	return -1;

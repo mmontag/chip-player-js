@@ -164,7 +164,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	mod->spd = MSN(sfh.tempo);
 	mod->ins = 31;
 	mod->smp = mod->ins;
-	m->c4rate = C4_NTSC_RATE;
+	m->c5rate = C5_NTSC_RATE;
 
 	copy_adjust(mod->name, sfh.name, 20);
 

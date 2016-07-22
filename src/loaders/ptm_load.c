@@ -148,7 +148,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->bpm = 125;
 	memcpy(mod->xxo, pfh.order, 256);
 
-	m->c4rate = C4_NTSC_RATE;
+	m->c5rate = C5_NTSC_RATE;
 
 	copy_adjust(mod->name, pfh.name, 28);
 	set_type(m, "Poly Tracker PTM %d.%02x", pfh.vermaj, pfh.vermin);

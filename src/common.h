@@ -45,8 +45,8 @@ typedef signed long long int64;
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
 #define NTSC_RATE	208.0		/* 1 / (60Hz * 80us)		  */
-#define C4_PAL_RATE	8287		/* 7093789.2 / period (C4) * 2	  */
-#define C4_NTSC_RATE	8363		/* 7159090.5 / period (C4) * 2	  */
+#define C5_PAL_RATE	8287		/* 7093789.2 / period(C5) * 2	  */
+#define C5_NTSC_RATE	8363		/* 7159090.5 / period(C5) * 2	  */
 
 /* [Amiga] PAL color carrier frequency (PCCF) = 4.43361825 MHz */
 /* [Amiga] CPU clock = 1.6 * PCCF = 7.0937892 MHz */
@@ -238,7 +238,7 @@ struct module_data {
 	int size;			/* File size */
 	double rrate;			/* Replay rate */
 	double time_factor;		/* Time conversion constant */
-	int c4rate;			/* C4 replay rate */
+	int c5rate;			/* C5 replay rate */
 	int volbase;			/* Volume base */
 	int gvolbase;			/* Global volume base */
 	int gvol;			/* Global volume */

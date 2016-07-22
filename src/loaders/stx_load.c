@@ -180,7 +180,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = sfh.ordnum;
 	mod->spd = MSN(sfh.tempo);
 	mod->smp = mod->ins;
-	m->c4rate = C4_NTSC_RATE;
+	m->c5rate = C5_NTSC_RATE;
 
 	/* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
 	 * length encoded in the first two bytes of the pattern (like S3M).

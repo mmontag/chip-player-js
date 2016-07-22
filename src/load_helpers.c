@@ -196,7 +196,7 @@ void load_prologue(struct context_data *ctx)
 	/* Reset variables */
 	memset(&m->mod, 0, sizeof (struct xmp_module));
 	m->rrate = PAL_RATE;
-	m->c4rate = C4_PAL_RATE;
+	m->c5rate = C5_PAL_RATE;
 	m->volbase = 0x40;
 	m->gvol = m->gvolbase = 0x40;
 	m->vol_table = NULL;

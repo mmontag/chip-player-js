@@ -133,7 +133,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->smp = mod->ins;
 
     m->period_type = PERIOD_CSPD;
-    m->c4rate = C4_NTSC_RATE;
+    m->c5rate = C5_NTSC_RATE;
 
     copy_adjust(mod->name, sfh.message, 36);
     set_type(m, strncmp((char *)sfh.marker, "if", 2) ?
