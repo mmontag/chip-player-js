@@ -32,11 +32,27 @@
 #include "period.h"
 #include "loader.h"
 
+int c5spd_alloc(struct module_data *m)
+{
+	struct xmp_module *mod = &m->mod;
+	int i;
+
+	m->c5spd = malloc(sizeof (int) * mod->smp);
+	if (m->c5spd == NULL) {
+		return -1;
+	}
+
+	for (i = 0; i < mod->smp; i++) {
+		m->c5spd[i] = m->c4rate;
+	}
+
+	return 0;
+}
+
 /* FIXME: should be struct xmp_module *mod) */
 int instrument_init(struct module_data *m)
 {
 	struct xmp_module *mod = &m->mod;
-	int i;
 
 	if (mod->ins > 0) {
 		mod->xxi = calloc(sizeof (struct xmp_instrument), mod->ins);
@@ -49,14 +65,8 @@ int instrument_init(struct module_data *m)
 		if (mod->xxs == NULL) {
 			return -1;
 		}
-		m->c5spd = malloc(sizeof (int) * mod->smp);
-		if (m->c5spd == NULL) {
-			return -1;
-		}
 
-		for (i = 0; i < mod->smp; i++) {
-			m->c5spd[i] = m->c4rate;
-		}
+		return c5spd_alloc(m);
 	}
 
 	return 0;

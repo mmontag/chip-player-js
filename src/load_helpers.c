@@ -205,6 +205,7 @@ void load_prologue(struct context_data *ctx)
 	m->period_type = PERIOD_AMIGA;
 	m->comment = NULL;
 	m->scan_cnt = NULL;
+	m->c5spd = NULL;
 
 	/* Set defaults */
     	m->mod.pat = 0;

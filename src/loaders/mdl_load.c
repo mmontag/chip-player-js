@@ -82,7 +82,6 @@ struct local_data {
     int *v_index;	/* volume envelope */
     int *p_index;	/* pan envelope */
     int *f_index;	/* pitch envelope */
-    int *c2spd;
     int *packinfo;
     int v_envnum;
     int p_envnum;
@@ -686,6 +685,8 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->smp = hio_read8(f);
     if ((mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp)) == NULL)
 	return -1;
+    if (c5spd_alloc(m) < 0)
+        return -1;
 
     data->packinfo = calloc(sizeof (int), mod->smp);
     if (data->packinfo == NULL)
@@ -704,7 +705,7 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	hio_seek(f, 8, SEEK_CUR);		/* Sample filename */
 
-	data->c2spd[i] = hio_read32l(f);
+	m->c5spd[i] = hio_read32l(f);
 
 	xxs->len = hio_read32l(f);
 	xxs->lps = hio_read32l(f);
@@ -729,7 +730,7 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 			xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 			xxs->lps, xxs->lpe,
 			xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
-			data->c2spd[i], data->packinfo[i]);
+			m->c5spd[i], data->packinfo[i]);
     }
 
     return 0;
@@ -770,7 +771,7 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	hio_seek(f, 8, SEEK_CUR);	/* Sample filename */
 	strncpy(mod->xxi[i].name, buf, 31);
 
-	data->c2spd[i] = hio_read16l(f);
+	m->c5spd[i] = hio_read16l(f);
 
 	xxs->len = hio_read32l(f);
 	xxs->lps = hio_read32l(f);
@@ -792,7 +793,7 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	data->packinfo[i] = (x & 0x0c) >> 2;
 
 	D_(D_INFO "[%2X] %-32.32s %5d V%02x %05x%c %05x %05x %d",
-		data->i_index[i], buf, data->c2spd[i], sub->vol,
+		data->i_index[i], buf, m->c5spd[i], sub->vol,
 		xxs->len, xxs->flg & XMP_SAMPLE_16BIT ? '+' : ' ',
 		xxs->lps, xxs->lpe, data->packinfo[i]);
     }
@@ -996,7 +997,6 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     data.v_index = malloc(256 * sizeof (int));
     data.p_index = malloc(256 * sizeof (int));
     data.f_index = malloc(256 * sizeof (int));
-    data.c2spd = calloc(256, sizeof (int));
 
     for (i = 0; i < 256; i++) {
 	data.v_index[i] = data.p_index[i] = data.f_index[i] = -1;
@@ -1035,7 +1035,6 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    for (k = 0; k < mod->smp; k++) {
 		if (mod->xxi[i].sub[j].sid == data.s_index[k]) {
 		    mod->xxi[i].sub[j].sid = k;
-                    m->c5spd[k] = data.c2spd[k];
 		    break;
 		}
 	    }
@@ -1043,7 +1042,6 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
   err:
-    free(data.c2spd);
     free(data.f_index);
     free(data.p_index);
     free(data.v_index);
