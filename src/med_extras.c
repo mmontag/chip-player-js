@@ -322,11 +322,8 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 		default:
 			xxi = &m->mod.xxi[xc->ins];
 			if (b < xxi->nsm && xxi->sub[b].sid != xc->smp) {
-				double pos;
 				xc->smp = xxi->sub[b].sid;
-				pos = virt_getvoicepos(ctx, chn);
 				virt_setsmp(ctx, chn, xc->smp);
-				virt_voicepos(ctx, chn, pos);
 			}
 		}
 

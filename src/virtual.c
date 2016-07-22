@@ -385,6 +385,7 @@ void virt_setsmp(struct context_data *ctx, int chn, int smp)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi;
+	double pos;
 	int voc;
 
 	if ((voc = map_virt_channel(p, chn)) < 0)
@@ -394,8 +395,9 @@ void virt_setsmp(struct context_data *ctx, int chn, int smp)
 	if (vi->smp == smp)
 		return;
 
-	mixer_setpatch(ctx, voc, smp);
-	mixer_voicepos(ctx, voc, vi->pos);	/* Restore old position */
+	pos = mixer_getvoicepos(ctx, voc);
+	mixer_setpatch(ctx, voc, smp, 0);
+	mixer_voicepos(ctx, voc, pos, 0);	/* Restore old position */
 }
 
 #endif
@@ -501,7 +503,7 @@ int virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		return chn;	/* was -1 */
 	}
 
-	mixer_setpatch(ctx, voc, smp);
+	mixer_setpatch(ctx, voc, smp, 1);
 	mixer_setnote(ctx, voc, note);
 	p->virt.voice_array[voc].ins = ins;
 	p->virt.voice_array[voc].act = nna;
@@ -528,7 +530,7 @@ void virt_voicepos(struct context_data *ctx, int chn, double pos)
 	if ((voc = map_virt_channel(p, chn)) < 0)
 		return;
 
-	mixer_voicepos(ctx, voc, pos);
+	mixer_voicepos(ctx, voc, pos, 1);
 }
 
 #ifndef LIBXMP_CORE_DISABLE_IT

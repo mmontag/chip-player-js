@@ -585,7 +585,7 @@ void mixer_softmixer(struct context_data *ctx)
 	s->dtright = s->dtleft = 0;
 }
 
-void mixer_voicepos(struct context_data *ctx, int voc, double pos)
+void mixer_voicepos(struct context_data *ctx, int voc, double pos, int ac)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -630,7 +630,9 @@ void mixer_voicepos(struct context_data *ctx, int voc, double pos)
 #endif
 	}
 
-	anticlick(vi);
+	if (ac) {
+		anticlick(vi);
+	}
 }
 
 double mixer_getvoicepos(struct context_data *ctx, int voc)
@@ -654,7 +656,7 @@ double mixer_getvoicepos(struct context_data *ctx, int voc)
 	return vi->pos;
 }
 
-void mixer_setpatch(struct context_data *ctx, int voc, int smp)
+void mixer_setpatch(struct context_data *ctx, int voc, int smp, int ac)
 {
 	struct player_data *p = &ctx->p;
 #ifndef LIBXMP_CORE_DISABLE_IT
@@ -684,8 +686,6 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 	vi->sptr = xxs->data;
 	vi->fidx |= FLAG_ACTIVE;
 
-	anticlick(vi);
-
 #ifndef LIBXMP_CORE_DISABLE_IT
 	if (HAS_QUIRK(QUIRK_FILTER) && s->dsp & XMP_DSP_LOWPASS) {
 		vi->fidx |= FLAG_FILTER;
@@ -696,8 +696,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp)
 		vi->fidx |= FLAG_16_BITS;
 	}
 
-	mixer_voicepos(ctx, voc, 0);
-
+	mixer_voicepos(ctx, voc, 0, ac);
 }
 
 void mixer_setnote(struct context_data *ctx, int voc, int note)
