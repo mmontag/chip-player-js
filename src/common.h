@@ -45,7 +45,6 @@ typedef signed long long int64;
 /* Constants */
 #define PAL_RATE	250.0		/* 1 / (50Hz * 80us)		  */
 #define NTSC_RATE	208.0		/* 1 / (60Hz * 80us)		  */
-#define C4_FREQ		130812		/* 440Hz / (2 ^ (21 / 12)) * 1000 */
 #define C4_PAL_RATE	8287		/* 7093789.2 / period (C4) * 2	  */
 #define C4_NTSC_RATE	8363		/* 7159090.5 / period (C4) * 2	  */
 
