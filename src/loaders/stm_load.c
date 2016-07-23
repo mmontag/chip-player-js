@@ -206,7 +206,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		   mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		   mod->xxi[i].sub[0].vol, sfh.ins[i].c2spd);
 
-		sfh.ins[i].c2spd = 8363 * sfh.ins[i].c2spd / 8448;
+		sfh.ins[i].c2spd = sfh.ins[i].c2spd;
 		c2spd_to_note(sfh.ins[i].c2spd, &mod->xxi[i].sub[0].xpo,
 			      &mod->xxi[i].sub[0].fin);
 	}

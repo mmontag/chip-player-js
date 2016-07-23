@@ -135,11 +135,12 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].lpe = hio_read32l(f);
 		finetune = (int8)(hio_read8(f) << 4);
 		mod->xxi[i].sub[0].vol = hio_read8(f);
-		c2spd = 8363 * hio_read16l(f) / 8448;
+		c2spd = hio_read16l(f);
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxs[i].flg = flags & 0x80 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxs[i].flg |= flags & 0x20 ? XMP_SAMPLE_LOOP_BIDIR : 0;
+
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo,
 						&mod->xxi[i].sub[0].fin);
 		mod->xxi[i].sub[0].fin += finetune;

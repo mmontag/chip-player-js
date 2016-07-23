@@ -223,7 +223,6 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		xxs->flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
 		sub->vol, finetune, srate);
 
-	srate = 8363 * srate / 8448;
 	c2spd_to_note(srate, &sub->xpo, &sub->fin);
 	sub->fin += finetune;
 
