@@ -148,14 +148,14 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->bpm = 125;
 	memcpy(mod->xxo, pfh.order, 256);
 
-	m->c4rate = C4_NTSC_RATE;
+	m->c5rate = C5_NTSC_RATE;
 
 	copy_adjust(mod->name, pfh.name, 28);
 	set_type(m, "Poly Tracker PTM %d.%02x", pfh.vermaj, pfh.vermin);
 
 	MODULE_INFO();
 
-	if (instrument_init(mod) < 0) {
+	if (instrument_init(m) < 0) {
 		return -1;
 	}
 
@@ -233,7 +233,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		   sub->vol, pih.c4spd);
 
 		/* Convert C4SPD to relnote/finetune */
-		c2spd_to_note(pih.c4spd, &sub->xpo, &sub->fin);
+		m->c5spd[i] = pih.c4spd;
 	}
 
 	if (pattern_init(mod) < 0)

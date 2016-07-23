@@ -196,7 +196,7 @@ void load_prologue(struct context_data *ctx)
 	/* Reset variables */
 	memset(&m->mod, 0, sizeof (struct xmp_module));
 	m->rrate = PAL_RATE;
-	m->c4rate = C4_PAL_RATE;
+	m->c5rate = C5_PAL_RATE;
 	m->volbase = 0x40;
 	m->gvol = m->gvolbase = 0x40;
 	m->vol_table = NULL;
@@ -205,6 +205,7 @@ void load_prologue(struct context_data *ctx)
 	m->period_type = PERIOD_AMIGA;
 	m->comment = NULL;
 	m->scan_cnt = NULL;
+	m->c5spd = NULL;
 
 	/* Set defaults */
     	m->mod.pat = 0;

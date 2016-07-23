@@ -1304,7 +1304,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	if (ctx->state > XMP_STATE_LOADED)
 		xmp_end_player(opaque);
 
-	if (mixer_on(ctx, rate, format, m->c4rate) < 0)
+	if (mixer_on(ctx, rate, format) < 0)
 		return -XMP_ERROR_INTERNAL;
 
 	p->master_vol = 100;

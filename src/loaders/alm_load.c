@@ -113,7 +113,7 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->ins = 31;
     mod->trk = mod->pat * mod->chn;
     mod->smp = mod->ins;
-    m->c4rate = C4_NTSC_RATE;
+    m->c5rate = C5_NTSC_RATE;
 
     set_type(m, "Aley's Module");
 
@@ -138,7 +138,7 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     /* Read and convert instruments and samples */

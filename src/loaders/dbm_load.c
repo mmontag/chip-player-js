@@ -99,7 +99,7 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->trk = mod->pat * mod->chn;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	return 0;
@@ -175,7 +175,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxs[snum].flg = flags & 0x03 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxs[snum].flg |= flags & 0x02 ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
-		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+                m->c5spd[mod->xxi[i].sub[0].sid] = c2spd;
 
 		D_(D_INFO "[%2X] %-30.30s #%02X V%02x P%02x %5d",
 			i, mod->xxi[i].name, snum,
@@ -364,6 +364,8 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, 10, SEEK_CUR);
 	hio_read(name, 1, 44, f);
+
+	m->c5rate = C5_NTSC_RATE;
 
 	handle = iff_new();
 	if (handle == NULL)

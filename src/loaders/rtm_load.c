@@ -240,6 +240,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->spd = rh.speed;
 	mod->bpm = rh.tempo;
 
+	m->c5rate = C5_NTSC_RATE;
 	m->period_type = rh.flags & 0x01 ? PERIOD_LINEAR : PERIOD_AMIGA;
 
 	MODULE_INFO();
@@ -336,7 +337,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* ESTIMATED value! We don't know the actual value at this point */
 	mod->smp = MAX_SAMP;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	smpnum = 0;
@@ -467,7 +468,8 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			rs.basenote = hio_read8(f);
 			rs.panning = hio_read8(f);
 
-			c2spd_to_note(rs.basefreq, &sub->xpo, &sub->fin);
+                        m->c5spd[sub->sid] = rs.basefreq;
+
 			sub->xpo += 48 - rs.basenote;
 			sub->vol = rs.defaultvolume * rs.basevolume / 0x40;
 			sub->pan = 0x80 + rs.panning * 2;

@@ -86,6 +86,8 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->smp = mod->ins;
 	mod->trk = mod->pat * mod->chn;
 
+	m->c5rate = C5_NTSC_RATE;
+
 	/* Sanity check */
 	if (mod->len > 256 || mod->pat > 256 || mod->ins > 255 ||
 	    mod->chn > XMP_MAX_CHANNELS) {
@@ -108,13 +110,12 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + p_chn, SEEK_SET);
 	hio_read(buf, 1, 16, f);
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	hio_seek(f, start + p_ins, SEEK_SET);
 	for (i = 0; i < mod->ins; i++) {
-		uint16 flags, c2spd;
-		int finetune;
+		uint16 flags;
 
 		if (subinstrument_alloc(mod, i, 1) < 0)
 			return -1;
@@ -131,16 +132,13 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].len = hio_read32l(f); 
 		mod->xxs[i].lps = hio_read32l(f);
 		mod->xxs[i].lpe = hio_read32l(f);
-		finetune = (int8)(hio_read8(f) << 4);
+		mod->xxi[i].sub[0].fin = (int8)(hio_read8(f) << 4);
 		mod->xxi[i].sub[0].vol = hio_read8(f);
-		c2spd = 8363 * hio_read16l(f) / 8448;
+		m->c5spd[i] = hio_read16l(f);
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxs[i].flg = flags & 0x80 ? XMP_SAMPLE_LOOP : 0;
 		mod->xxs[i].flg |= flags & 0x20 ? XMP_SAMPLE_LOOP_BIDIR : 0;
-		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo,
-						&mod->xxi[i].sub[0].fin);
-		mod->xxi[i].sub[0].fin += finetune;
 
 		if (mod->xxs[i].len > 0)
 			mod->xxi[i].nsm = 1;

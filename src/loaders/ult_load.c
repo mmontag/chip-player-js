@@ -123,6 +123,8 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
     ufh.name[0] = 0;
     set_type(m, "Ultra Tracker %s ULT V%04d", verstr[ver - 1], ver);
 
+    m->c5rate = C5_NTSC_RATE;
+
     MODULE_INFO();
 
     hio_seek(f, ufh.msgsize * 32, SEEK_CUR);
@@ -132,7 +134,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Read and convert instruments */
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     D_(D_INFO "Instruments: %d", mod->ins);
@@ -215,8 +217,9 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		mod->xxi[i].sub[0].vol, uih.finetune, uih.c2spd);
 
-	if (ver > 3)
-	    c2spd_to_note(uih.c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+	if (ver > 3) {
+            m->c5spd[i] = uih.c2spd;
+        }
     }
 
     hio_read(&ufh2.order, 256, 1, f);

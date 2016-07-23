@@ -817,9 +817,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				sub->vwf = ish.vit;
 				sub->vsw = (0xff - ish.vir) >> 1;
 
-				c2spd_to_note(ish.c5spd,
-					      &mod->xxi[j].sub[k].xpo,
-					      &mod->xxi[j].sub[k].fin);
+                                m->c5spd[sub->sid] = ish.c5spd;
 
 				/* Set sample pan (overrides subinstrument) */
 				if (ish.dfp & 0x80) {
@@ -1159,7 +1157,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->pat; i++)
 		pp_pat[i] = hio_read32l(f);
 
-	m->c4rate = C4_NTSC_RATE;
+	m->c5rate = C5_NTSC_RATE;
 
 	identify_tracker(m, &ifh);
 
@@ -1172,7 +1170,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (sample_mode)
 		mod->ins = mod->smp;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		goto err4;
 
 	/* Alloc extra samples for sustain loop */

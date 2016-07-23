@@ -192,7 +192,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/*
 	 * convert header
 	 */
-	m->c4rate = C4_NTSC_RATE;
+	m->c5rate = C5_NTSC_RATE;
 	m->quirk |= song.flags & FLAG_STSLIDE ? 0 : QUIRK_VSALL | QUIRK_PBALL;
 	hexvol = song.flags & FLAG_VOLHEX;
 	med_8ch = song.flags & FLAG_8CHANNEL;
@@ -395,7 +395,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	D_(D_WARN "read instruments");
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);

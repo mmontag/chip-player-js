@@ -223,8 +223,8 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		xxs->flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
 		sub->vol, finetune, srate);
 
-	srate = 8363 * srate / 8448;
-	c2spd_to_note(srate, &sub->xpo, &sub->fin);
+	m->c5spd[i] = srate;
+
 	sub->fin += finetune;
 
 	hio_seek(f, 16, SEEK_CUR);
@@ -480,6 +480,8 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	data.cur_ins = 0;
 	offset = hio_tell(f);
 
+	m->c5rate = C5_NTSC_RATE;
+
 	handle = iff_new();
 	if (handle == NULL)
 		goto err;
@@ -518,7 +520,7 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		goto err3;
 
 	if (pattern_init(mod) < 0)

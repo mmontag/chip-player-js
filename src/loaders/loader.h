@@ -25,7 +25,8 @@
 
 #define DEFPAN(x) (0x80 + ((x) - 0x80) * m->defpan / 100)
 
-int instrument_init(struct xmp_module *);
+int c5spd_alloc(struct module_data *);
+int instrument_init(struct module_data *);
 int subinstrument_alloc(struct xmp_module *, int, int);
 int pattern_init(struct xmp_module *);
 int pattern_alloc(struct xmp_module *, int);

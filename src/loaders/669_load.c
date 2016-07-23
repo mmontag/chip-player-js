@@ -133,7 +133,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->smp = mod->ins;
 
     m->period_type = PERIOD_CSPD;
-    m->c4rate = C4_NTSC_RATE;
+    m->c5rate = C5_NTSC_RATE;
 
     copy_adjust(mod->name, sfh.message, 36);
     set_type(m, strncmp((char *)sfh.marker, "if", 2) ?
@@ -147,7 +147,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     
     /* Read and convert instruments and samples */
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     D_(D_INFO "Instruments: %d", mod->pat);

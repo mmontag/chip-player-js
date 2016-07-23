@@ -109,6 +109,8 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read(buf, 1, 16, f);
 	}
 
+	m->c5rate = C5_NTSC_RATE;
+
 	MODULE_INFO();
  
 
@@ -149,7 +151,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Instruments */
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	/* Probe for 2-byte loop start 1.0 format
@@ -221,7 +223,9 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxs[i].len = hio_read32l(f);
 		c2spd = hio_read16l(f);
-		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+
+		m->c5spd[i] = c2spd;
+
 		mod->xxi[i].sub[0].vol = hio_read8(f);
 
 		/*
