@@ -159,6 +159,7 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = hio_read16b(f);
 	mod->rst = hio_read16b(f);
 	m->volbase = 0x100;
+	m->c4rate = C4_NTSC_RATE;
 
 	MODULE_INFO();
 

@@ -369,6 +369,8 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (handle == NULL)
 		return -1;
 
+	m->c4rate = C4_NTSC_RATE;
+
 	/* IFF chunk IDs */
 	ret = iff_register(handle, "INFO", get_info);
 	ret |= iff_register(handle, "SONG", get_song);
@@ -383,6 +385,7 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	strncpy(mod->name, name, XMP_NAME_SIZE);
 	snprintf(mod->type, XMP_NAME_SIZE, "DigiBooster Pro %d.%02x DBM0",
 					version >> 8, version & 0xff);
+
 	MODULE_INFO();
 
 	/* Load IFF chunks */

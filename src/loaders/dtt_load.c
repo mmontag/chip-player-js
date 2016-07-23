@@ -80,6 +80,8 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	
 	hio_read(mod->xxo, 1, (mod->len + 3) & ~3L, f);
 
+	m->c4rate = C4_NTSC_RATE;
+
 	MODULE_INFO();
 
 	for (i = 0; i < mod->pat; i++) {

@@ -337,6 +337,8 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = i;
     }
 
+    m->c4rate = C4_NTSC_RATE;
+
     MODULE_INFO();
 
     if (pattern_init(mod) < 0)

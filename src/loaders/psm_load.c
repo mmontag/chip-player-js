@@ -100,6 +100,8 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* should be this way but fails with Silverball song 6 */
 	//mod->flg |= ~type & 0x02 ? XXM_FLG_MODRNG : 0;
 
+	m->c4rate = C4_NTSC_RATE;
+
 	MODULE_INFO();
 
 	hio_seek(f, start + p_ord, SEEK_SET);

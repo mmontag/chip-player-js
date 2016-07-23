@@ -425,6 +425,8 @@ static int dmf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(mod->name, 30, 1, f);
 	hio_seek(f, 20, SEEK_CUR);
 	hio_read(date, 3, 1, f);
+
+	m->c4rate = C4_NTSC_RATE;
 	
 	MODULE_INFO();
 	D_(D_INFO "Creation date: %02d/%02d/%04d", date[0],

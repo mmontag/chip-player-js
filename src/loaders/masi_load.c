@@ -516,6 +516,8 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	set_type(m, data.sinaria ?
 		"Sinaria PSM" : "Epic MegaGames MASI PSM");
 
+	m->c4rate = C4_NTSC_RATE;
+
 	MODULE_INFO();
 
 	if (instrument_init(mod) < 0)

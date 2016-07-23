@@ -115,6 +115,8 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->chn; i++) {
 		hio_read16b(f);		/* pan */
 	}
+
+	m->c4rate = C4_NTSC_RATE;
 	
 	MODULE_INFO();
 

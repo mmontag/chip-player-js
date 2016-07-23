@@ -380,6 +380,8 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (handle == NULL)
 		return -1;
 
+	m->c4rate = C4_NTSC_RATE;
+
 	/* IFF chunk IDs */
 	ret = iff_register(handle, "MAIN", get_main);
 	ret |= iff_register(handle, "ORDR", get_ordr);

@@ -636,6 +636,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	mod->bpm = xfh.bpm;
 	mod->trk = mod->chn * mod->pat + 1;
 
+	m->c4rate = C4_NTSC_RATE;
 	m->period_type = xfh.flags & XM_LINEAR_PERIOD_MODE ?
 				PERIOD_LINEAR : PERIOD_AMIGA;
 

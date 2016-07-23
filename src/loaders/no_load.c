@@ -142,6 +142,8 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, 255 - i, SEEK_CUR);
 	mod->len = i;
 
+	m->c4rate = C4_NTSC_RATE;
+
 	MODULE_INFO();
 
 	if (instrument_init(mod) < 0)
