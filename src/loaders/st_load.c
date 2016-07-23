@@ -260,7 +260,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		smp_size += 2 * mh.ins[i].size;
 	}
 
-	if (instrument_init(m) < 0) {
+	if (instrument_init(mod) < 0) {
 		return -1;
 	}
 

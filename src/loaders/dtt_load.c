@@ -95,7 +95,7 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			plen[i] = x;
 	}
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	/* Read instrument names */

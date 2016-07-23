@@ -198,7 +198,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
-	int i, srate, flags;
+	int i, srate, finetune, flags;
 	int has_unsigned_sample;
 
 	hio_read32b(f);		/* 42 01 00 00 */
@@ -256,7 +256,9 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		has_unsigned_sample = 1;
 
 	srate = hio_read32l(f);
-	m->c5spd[i] = srate;
+	finetune = 0;
+	c2spd_to_note(srate, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+	mod->xxi[i].sub[0].fin += finetune;
 
 	hio_read32l(f);			/* 0x00000000 */
 	hio_read32l(f);			/* unknown */
@@ -300,8 +302,6 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (handle == NULL)
 		return -1;
 
-	m->c5rate = C5_NTSC_RATE;
-
 	/* IFF chunk IDs */
 	ret = iff_register(handle, "INIT", get_init);		/* Galaxy 5.0 */
 	ret |= iff_register(handle, "ORDR", get_ordr);
@@ -328,7 +328,7 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	if (pattern_init(mod) < 0)

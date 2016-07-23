@@ -213,7 +213,7 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat++;
 	mod->trk = mod->chn * mod->pat;
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {

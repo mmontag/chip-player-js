@@ -109,7 +109,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, pos, SEEK_SET);
 	mod->smp = mod->ins;
 
-	if (instrument_init(m) < 0) {
+	if (instrument_init(mod) < 0) {
 		goto err;
 	}
 

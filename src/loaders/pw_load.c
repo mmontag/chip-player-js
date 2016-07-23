@@ -155,7 +155,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	snprintf(mod->type, XMP_NAME_SIZE, "%s", name);
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0) {
+	if (instrument_init(mod) < 0) {
 		goto err3;
 	}
 

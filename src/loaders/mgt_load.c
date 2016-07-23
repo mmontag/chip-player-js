@@ -107,8 +107,6 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read8(f);			/* master L */
 	hio_read8(f);			/* master R */
 
-	m->c5rate = C5_NTSC_RATE;
-
 	/* Sanity check */
 	if (mod->len > 256 || mod->rst > 255) {
 		return -1;
@@ -134,7 +132,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Instruments */
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	hio_seek(f, start + ins_ptr, SEEK_SET);
@@ -159,7 +157,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read32b(f);
 		hio_read32b(f);
 		c2spd = hio_read32b(f);
-		m->c5spd[i] = c2spd;
+		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 		mod->xxi[i].sub[0].vol = hio_read16b(f) >> 4;
 		hio_read8(f);		/* vol L */
 		hio_read8(f);		/* vol R */

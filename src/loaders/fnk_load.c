@@ -177,7 +177,7 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     MODULE_INFO();
     /* D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year); */
 
-    if (instrument_init(m) < 0)
+    if (instrument_init(mod) < 0)
 	return -1;
 
     /* Convert instruments */

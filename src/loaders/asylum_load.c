@@ -59,12 +59,12 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	LOAD_INIT();
 
-	hio_seek(f, 32, SEEK_CUR);		/* skip magic */
-	mod->spd = hio_read8(f);		/* initial speed */
-	mod->bpm = hio_read8(f);		/* initial BPM */
-	mod->ins = hio_read8(f);		/* number of instruments */
-	mod->pat = hio_read8(f);		/* number of patterns */
-	mod->len = hio_read8(f);		/* module length */
+	hio_seek(f, 32, SEEK_CUR);			/* skip magic */
+	mod->spd = hio_read8(f);			/* initial speed */
+	mod->bpm = hio_read8(f);			/* initial BPM */
+	mod->ins = hio_read8(f);			/* number of instruments */
+	mod->pat = hio_read8(f);			/* number of patterns */
+	mod->len = hio_read8(f);			/* module length */
 	hio_read8(f);
 
 	hio_read(mod->xxo, 1, mod->len, f);	/* read orders */
@@ -78,7 +78,7 @@ static int asylum_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	/* Read and convert instruments and samples */

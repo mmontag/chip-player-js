@@ -76,7 +76,7 @@ static int get_emic(struct module_data *m, int size, HIO_HANDLE * f, void *parm)
 	snprintf(mod->type, XMP_NAME_SIZE, "Quadra Composer EMOD v%d", ver);
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {

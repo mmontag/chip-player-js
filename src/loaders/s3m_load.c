@@ -377,7 +377,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
-	m->c5rate = C5_NTSC_RATE;
+	m->c4rate = C4_NTSC_RATE;
 
 	if (sfh.version == 0x1300) {
 		m->quirk |= QUIRK_VSALL;
@@ -501,7 +501,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	D_(D_INFO "Stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
 	D_(D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		goto err3;
 
 	/* Read and convert instruments and samples */
@@ -551,7 +551,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 			xxi->nsm = 1;
 			sub->vol = sah.vol;
-			m->c5spd[i] = sah.c2spd;
+			c2spd_to_note(sah.c2spd, &sub->xpo, &sub->fin);
 			sub->xpo += 12;
 			ret =
 			    load_sample(m, f, SAMPLE_FLAG_ADLIB, xxs,
@@ -631,7 +631,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		   xxs->lps, mod->xxs[i].lpe,
 		   xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol, sih.c2spd);
 
-		m->c5spd[i] = sih.c2spd;
+		c2spd_to_note(sih.c2spd, &sub->xpo, &sub->fin);
 
 		hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
 

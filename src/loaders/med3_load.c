@@ -246,7 +246,7 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->ins = mod->smp = 32;
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	/* read instrument names */

@@ -314,7 +314,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    mod->xxo[i]--;
     }
 
-    m->c5rate = C5_NTSC_RATE;
+    m->c4rate = C4_NTSC_RATE;
 
     if (pattern_init(mod) < 0)
 	return -1;
@@ -386,7 +386,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    if (instrument_init(m) < 0)
+    if (instrument_init(mod) < 0)
 	return -1;
 
     /* Read and convert instruments and samples */
@@ -502,7 +502,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    D_(D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
 
-            m->c5spd[smp_num] = is.rate;
+	    c2spd_to_note(is.rate, &sub->xpo, &sub->fin);
 
 	    if (xxs->len <= 0)
 		continue;

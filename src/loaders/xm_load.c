@@ -357,7 +357,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
     /* ESTIMATED value! We don't know the actual value at this point */
     mod->smp = MAX_SAMPLES;
 
-    if (instrument_init(m) < 0)
+    if (instrument_init(mod) < 0)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {

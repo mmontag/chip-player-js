@@ -131,14 +131,14 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
-	int i;
+	int i, c2spd;
 	uint8 name[30];
 
 	mod->ins = mod->smp = hio_read16b(f);
 
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
@@ -170,7 +170,8 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		}
 
 		hio_read32b(f);		/* midi note (0x00300000) */
-		m->c5spd[i] = hio_read32b(f);	/* frequency */
+		c2spd = hio_read32b(f);	/* frequency */
+		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
 		/* It's strange that we have both c2spd and finetune */
 		mod->xxi[i].sub[0].fin += fine;
@@ -297,8 +298,6 @@ static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	handle = iff_new();
 	if (handle == NULL)
 		return -1;
-
-	m->c5rate = C5_NTSC_RATE;
 
 	/* IFF chunk IDs */
 	ret = iff_register(handle, "D.T.", get_d_t_);

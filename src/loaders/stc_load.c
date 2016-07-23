@@ -238,7 +238,7 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Read instruments */
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	hio_seek(f, 27, SEEK_SET);

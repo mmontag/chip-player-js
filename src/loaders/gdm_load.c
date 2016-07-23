@@ -153,8 +153,6 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxc[i].pan = 0x80 + (panmap[i] - 8) * 16;
 	}
 
-	m->c5rate = C5_NTSC_RATE;
-
 	mod->gvl = hio_read8(f);
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);
@@ -178,7 +176,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, start + ins_ofs, SEEK_SET);
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
@@ -203,8 +201,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		
 		mod->xxi[i].sub[0].vol = vol > 0x40 ? 0x40 : vol;
 		mod->xxi[i].sub[0].pan = pan > 15 ? 0x80 : 0x80 + (pan - 8) * 16;
-
-		m->c5spd[i] = c4spd;
+		c2spd_to_note(c4spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxs[i].flg = 0;

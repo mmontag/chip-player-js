@@ -180,7 +180,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->len = sfh.ordnum;
 	mod->spd = MSN(sfh.tempo);
 	mod->smp = mod->ins;
-	m->c5rate = C5_NTSC_RATE;
+	m->c4rate = C4_NTSC_RATE;
 
 	/* STM2STX 1.0 released with STMIK 0.2 converts STMs with the pattern
 	 * length encoded in the first two bytes of the pattern (like S3M).
@@ -228,7 +228,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, 4, SEEK_CUR);
 	}
 
-	if (instrument_init(m) < 0)
+	if (instrument_init(mod) < 0)
 		goto err3;
 
 	/* Read and convert instruments and samples */
@@ -277,7 +277,9 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		   mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		   mod->xxi[i].sub[0].vol, sih.c2spd);
 
-                m->c5spd[i] = sih.c2spd;
+		sih.c2spd = 8363 * sih.c2spd / 8448;
+		c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo,
+			      &mod->xxi[i].sub[0].fin);
 	}
 
 	if (pattern_init(mod) < 0)

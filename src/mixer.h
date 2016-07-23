@@ -1,7 +1,7 @@
 #ifndef LIBXMP_MIXER_H
 #define LIBXMP_MIXER_H
 
-#define C5_PERIOD	428.0
+#define C4_PERIOD	428.0
 
 #define SMIX_NUMVOC	128	/* default number of softmixer voices */
 #define SMIX_SHIFT	16
@@ -60,7 +60,7 @@ struct mixer_voice {
 #endif
 };
 
-int	mixer_on		(struct context_data *, int, int);
+int	mixer_on		(struct context_data *, int, int, int);
 void	mixer_off		(struct context_data *);
 void    mixer_setvol		(struct context_data *, int, int);
 void    mixer_seteffect		(struct context_data *, int, int, int);

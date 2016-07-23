@@ -646,8 +646,6 @@ void xmp_release_module(xmp_context opaque)
 	}
 #endif
 
-	free(m->c5spd);
-
 	if (m->scan_cnt) {
 		for (i = 0; i < mod->len; i++)
 			free(m->scan_cnt[i]);

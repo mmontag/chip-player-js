@@ -2,7 +2,6 @@ Stable versions
 ---------------
 
 4.4.1 ():
-	- fix c5spd handling in several formats
 	- disable anticlick in MED synth instruments
 
 4.4.0 (20160719):
