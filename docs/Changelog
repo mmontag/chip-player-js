@@ -2,6 +2,7 @@ Stable versions
 ---------------
 
 4.4.1 ():
+	- disable anticlick in His Master's Noise instruments
 	- disable anticlick in MED synth instruments
 
 4.4.0 (20160719):
