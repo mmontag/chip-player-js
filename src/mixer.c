@@ -681,7 +681,7 @@ void mixer_setpatch(struct context_data *ctx, int voc, int smp, int ac)
 
 	set_sample_end(ctx, voc, 0);
 
-	mixer_setvol(ctx, voc, 0);
+	/*mixer_setvol(ctx, voc, 0);*/
 
 	vi->sptr = xxs->data;
 	vi->fidx |= FLAG_ACTIVE;
