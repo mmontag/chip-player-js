@@ -486,6 +486,8 @@ void mixer_softmixer(struct context_data *ctx)
 				if (samples > 0) {
 					prev_r = buf_pos[mix_size - 2];
 					prev_l = buf_pos[mix_size - 1];
+				} else {
+					prev_r = prev_l = 0;
 				}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
