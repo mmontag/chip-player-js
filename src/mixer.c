@@ -475,7 +475,6 @@ void mixer_softmixer(struct context_data *ctx)
 			}
 
 			if (vi->vol) {
-				int idx;
 				int mix_size = samples;
 				int mixer = vi->fidx & FIDX_FLAGMASK;
 
@@ -484,12 +483,9 @@ void mixer_softmixer(struct context_data *ctx)
 				}
 
 				/* For Hipolito's anticlick routine */
-				idx = mix_size;
-				if (mix_size >= 2) {
-					prev_r = buf_pos[idx - 2];
-					prev_l = buf_pos[idx - 1];
-				} else {
-					prev_r = prev_l = 0;
+				if (samples > 0) {
+					prev_r = buf_pos[mix_size - 2];
+					prev_l = buf_pos[mix_size - 1];
 				}
 
 #ifndef LIBXMP_CORE_DISABLE_IT
@@ -529,10 +525,8 @@ void mixer_softmixer(struct context_data *ctx)
 
 
 					/* For Hipolito's anticlick routine */
-					if (mix_size >= 2) {
-						vi->sright = buf_pos[-2] - prev_r;
-						vi->sleft = buf_pos[-1] - prev_l;
-					}
+					vi->sright = buf_pos[-2] - prev_r;
+					vi->sleft = buf_pos[-1] - prev_l;
 				}
 			}
 
