@@ -769,9 +769,11 @@ skip_test:
     if (tracker_id == TRACKER_PROTRACKER || tracker_id == TRACKER_OPENMPT) {
 	m->quirk |= QUIRK_PROTRACK;
     } else if (tracker_id == TRACKER_SCREAMTRACKER3) {
+	m->c4rate = C4_NTSC_RATE;
 	m->quirk |= QUIRKS_ST3;
 	m->read_event_type = READ_EVENT_ST3;
-    } else if (mod->chn > 4) {
+    } else if (tracker_id == TRACKER_FASTTRACKER || tracker_id == TRACKER_FASTTRACKER2 || tracker_id == TRACKER_TAKETRACKER || tracker_id == TRACKER_MODSGRAVE || mod->chn > 4) {
+	m->c4rate = C4_NTSC_RATE;
 	m->quirk |= QUIRKS_FT2;
 	m->read_event_type = READ_EVENT_FT2;
 	m->period_type = PERIOD_AMIGA;
