@@ -503,7 +503,7 @@ void mixer_softmixer(struct context_data *ctx)
 				mix_fn = (*mixers)[mixer];
 
 				/* Call the output handler */
-				if (samples >= 0 && vi->sptr != NULL) {
+				if (samples > 0 && vi->sptr != NULL) {
 					int rsize = 0;
 
 					if (rampsize > samples) {
