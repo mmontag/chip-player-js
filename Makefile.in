@@ -38,6 +38,9 @@ DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION_MAJOR).dylib
 GCLIB		= libxmp-gc.a
 
+# https://github.com/cmatsuoka/libxmp/issues/1
+DYLIB_COMPAT	= @DYLIB_COMPAT@
+
 all: @STATIC@ @SHARED@
 
 include docs/Makefile
@@ -110,7 +113,7 @@ lib/$(DLL): $(OBJS)
 
 lib/$(DYLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,$(COMPAT_VERSION),-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,$(DYLIB_COMPAT)-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(DYLIB) lib/libxmp.dylib
