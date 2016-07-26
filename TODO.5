@@ -9,10 +9,17 @@
 - add support to sample rate to decouple period/pitch
   * needed to adjust MED IFFOCT octave offset
   * needed to properly map IT samples
+  * rate affects period flag per sample
 
 - add missing IT fields to instrument/sample
   * random pan variation
   * sample sustain loop
+
+- true bidirectional sample loop processing
+  * saves memory used to unroll loops
+  * saves memory used to unroll sustain loops
+
+- remove direct access to strucutre pointers
 
 - lower MIN_BPM to 10
 
