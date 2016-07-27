@@ -3,7 +3,7 @@ AC_INIT
 AC_ARG_ENABLE(static, [  --enable-static         Build static library])
 AC_ARG_ENABLE(shared, [  --disable-shared        Don't build shared library])
 AC_SUBST(LD_VERSCRIPT)
-AC_SUBST(DYLIB_COMPAT)
+AC_SUBST(DARWIN_VERSION)
 AC_CANONICAL_HOST
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -42,12 +42,7 @@ esac
 
 case "${host_os}" in
 darwin*)
-  darwin_ver="`echo ${host_os#darwin}|cut -f1 -d'.'`"
-  if test "$darwin_ver" -le 9; then
-    DYLIB_COMPAT=""
-  else
-    DYLIB_COMPAT='-compatibility_version,$(COMPAT_VERSION),'
-  fi
+  DARWIN_VERSION="`echo ${host_os#darwin}|cut -f1 -d'.'`"
   ;;
 cygwin* | mint*)
   enable_static=yes
