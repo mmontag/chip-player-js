@@ -2,6 +2,7 @@ Stable versions
 ---------------
 
 4.4.1 ():
+	- fix MacOS Tiger build issues (reported by Misty De Meo)
 	- fix anticlick when rendering only one sample
 	- disable anticlick in His Master's Noise instruments
 	- disable anticlick in MED synth instruments
