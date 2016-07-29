@@ -5,26 +5,21 @@ include(FindPkgConfig)
 project(fluidlite)
 
 list(APPEND HEADERS
-    src/fluid_chan.h
-    src/fluid_chorus.h
-    src/fluid_conv.h
-    src/fluid_defsfont.h
-    src/fluid_gen.h
-    src/fluid_hash.h
-    src/fluid_list.h
-    src/fluid_mod.h
-    src/fluid_phase.h
-    src/fluid_ramsfont.h
-    src/fluid_rev.h
-    src/fluid_settings.h
-    src/fluid_sfont.h
-    src/fluid_synth.h
-    src/fluid_sys.h
-    src/fluid_tuning.h
-    src/fluid_voice.h
-    src/fluidsynth_priv.h
-    src/fluid_config.h
-    src/fluid_midi.h
+    include/fluidlite.h
+    )
+
+list(APPEND SCOPED_HEADERS
+    include/fluidsynth/types.h
+    include/fluidsynth/settings.h
+    include/fluidsynth/synth.h
+    include/fluidsynth/sfont.h
+    include/fluidsynth/ramsfont.h
+    include/fluidsynth/log.h
+    include/fluidsynth/misc.h
+    include/fluidsynth/mod.h
+    include/fluidsynth/gen.h
+    include/fluidsynth/voice.h
+    include/fluidsynth/version.h
 )
 
 list(APPEND SOURCES
@@ -100,4 +95,5 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 99)
 install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION lib)
 install(FILES ${HEADERS} DESTINATION include)
+install(FILES ${SCOPED_HEADERS} DESTINATION include/fluidsynth)
 
