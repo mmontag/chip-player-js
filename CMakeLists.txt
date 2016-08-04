@@ -73,6 +73,9 @@ if (NOT LIBVORBIS_FOUND)
         ${CMAKE_SOURCE_DIR}/libvorbis-1.3.5/lib
     )
     message(WARNING "Using libvorbis shipped sources.")
+else()
+    message(STATUS "Using pkg-config provided libvorbis")
+    set(ADDITIONAL_LIBS "-lvorbisfile -lvorbis")
 endif()
 
 pkg_check_modules(LIBOGG ogg>=1.3.2)
@@ -83,6 +86,9 @@ if (NOT LIBOGG_FOUND)
     )
     set(LIBOGG_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libogg-1.3.2/include)
     message(WARNING "Using libogg shipped sources.")
+else()
+    message(STATUS "Using pkg-config provided libogg")
+    string(CONCAT ADDITIONAL_LIBS ${ADDITIONAL_LIBS} " -logg")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
@@ -92,8 +98,11 @@ include_directories(${LIBVORBIS_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
+configure_file(fluidlite.pc.in fluidlite.pc @ONLY)
+
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 99)
 install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION lib)
 install(FILES ${HEADERS} DESTINATION include)
 install(FILES ${SCOPED_HEADERS} DESTINATION include/fluidsynth)
+install(FILES fluidlite.pc DESTINATION lib/pkgconfig)
 
