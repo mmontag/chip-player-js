@@ -568,7 +568,8 @@ new_fluid_synth(fluid_settings_t *settings)
 void
 fluid_synth_set_sample_rate(fluid_synth_t* synth, float sample_rate)
 {
-    for (int i = 0; i < synth->nvoice; i++) {
+    int i;
+    for (i = 0; i < synth->nvoice; i++) {
       delete_fluid_voice(synth->voice[i]);
       synth->voice[i] = new_fluid_voice(synth->sample_rate);
     }
@@ -3061,6 +3062,7 @@ int fluid_synth_tune_notes(fluid_synth_t* synth, int bank, int prog,
 			  int len, int *key, double* pitch, int apply)
 {
     fluid_tuning_t* old_tuning, *new_tuning;
+    int i;
 
     if(!(synth != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
     if(!(bank >= 0 && bank < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
@@ -3079,7 +3081,7 @@ int fluid_synth_tune_notes(fluid_synth_t* synth, int bank, int prog,
         return FLUID_FAILED;
     }
 
-    for (int i = 0; i < len; i++) {
+    for (i = 0; i < len; i++) {
         fluid_tuning_set_pitch(new_tuning, key[i], pitch[i]);
     }
 
