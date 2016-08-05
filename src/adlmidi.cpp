@@ -1409,6 +1409,12 @@ private:
                     case 113: break; // Related to pitch-bender, used by missimp.mid in Duke3D
                     case  6: SetRPN(MidCh, value, true); break;
                     case 38: SetRPN(MidCh, value, false); break;
+                    case 111://LoopStart unofficial controller
+                        if(!invalidLoop)
+                        {
+                            loopStart = true;
+                            loopStart_passed=true;
+                        } break;
                     default: break;
                         //UI.PrintLn("Ctrl %d <- %d (ch %u)", ctrlno, value, MidCh);
                 }
