@@ -3,7 +3,7 @@
 ==================================================================================
 
 Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
-ADLMIDI Library API:   Copyright (c) 2015 Vitaly Novichkov <admin@wohlnet.ru>
+ADLMIDI Library API:   Copyright (c) 2015-2016 Vitaly Novichkov <admin@wohlnet.ru>
 
 Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
 =========================================
@@ -80,3 +80,4 @@ Changelog
 1.0.1   2015-01-15
  * Fixed freezing on invalid loop points (for cases when loopEnd going before loopStart or both points are at same position)
  * Enabled volume updating while note is playing
+
