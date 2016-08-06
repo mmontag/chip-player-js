@@ -60,6 +60,11 @@ To build that example you will need to have installed SDL2 library.
   to play any MIDI via this library.
 
 # Changelog
+## 1.0.3	2016-08-06
+ * Added handling of 111'th controller as "loopStart" (which used by RPG-Maker)
+ * Fixed infinite loop caused by blank MIDI-files (add extra second of waiting if over 10000 0-waiting loops are been detected)
+ * Fixed damaged playing of IMF files (cased by wrong implementation of getc() function where return type must be int, not unsigned char)
+
 ## 1.0.2	2016-03-16
  * Fixed infinite loop causes swapped loopEnd and loopStart (when loopEnd goes before loopStart)
  * Fixed sielent volume tracks (when initial voule is zero, tracks wouldn't be playd even after applying fading in volume events)

@@ -873,11 +873,18 @@ public:
     double Tick(double s, double granularity)
     {
         if(CurrentPosition.began) CurrentPosition.wait -= s;
-        while(CurrentPosition.wait <= granularity * 0.5)
+        int AntiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
+        while( (CurrentPosition.wait <= granularity * 0.5) && (AntiFreezeCounter>0) )
         {
             //std::fprintf(stderr, "wait = %g...\n", CurrentPosition.wait);
             ProcessEvents();
+            if(CurrentPosition.wait <= 0.0)
+                AntiFreezeCounter--;
         }
+
+        if(AntiFreezeCounter <= 0)
+            CurrentPosition.wait += 1.0;/* Add extra 1 second when over 10000 events
+                                           with zero delay are been detected */
 
         for(unsigned c = 0; c < opl.NumChannels; ++c)
             ch[c].AddAge(s * 1000);
