@@ -10,9 +10,11 @@
   * needed to adjust MED IFFOCT octave offset
   * needed to properly map IT samples
 
-- add missing IT fields to instrument/sample
+- add missing fields to instrument/sample
   * random pan variation
   * sample sustain loop
+  * c5spd that affects transposition
+  * c5spd that doesn't affect transposition (MDL, MED multisamples)
 
 - lower MIN_BPM to 10
 
@@ -21,4 +23,4 @@
 - alloc buffer externally?
 
 - flags and mixer info in frame_info
-  * to check if classic mixers are in use
+  * to inform mixer type in use
