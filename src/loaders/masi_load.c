@@ -519,7 +519,7 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		goto err3;
 
 	if (pattern_init(mod) < 0)

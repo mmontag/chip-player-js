@@ -139,7 +139,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->ins = size / 32;	/* sizeof(struct okt_instrument_header); */
 	mod->smp = mod->ins;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	for (j = i = 0; i < mod->ins; i++) {

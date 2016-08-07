@@ -544,7 +544,7 @@ next_pattern:
 
     /* Read and convert instruments */
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     D_(D_INFO "Instruments: %d", mod->ins);

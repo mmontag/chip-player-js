@@ -114,7 +114,7 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
     MODULE_INFO();
 
     /* Read instruments */
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     hio_read(buf, 1, 128 * 12, f);

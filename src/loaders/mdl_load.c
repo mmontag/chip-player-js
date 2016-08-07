@@ -604,7 +604,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->ins = hio_read8(f);
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
@@ -686,6 +686,8 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->smp = hio_read8(f);
     if ((mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp)) == NULL)
 	return -1;
+    if ((m->xtra = calloc(sizeof (struct extra_sample_data), mod->smp)) == NULL)
+        return -1;
 
     data->packinfo = calloc(sizeof (int), mod->smp);
     if (data->packinfo == NULL)
@@ -712,6 +714,8 @@ static int get_chunk_is(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	xxs->flg = xxs->lpe > 0 ? XMP_SAMPLE_LOOP : 0;
 	xxs->lpe = xxs->lps + xxs->lpe;
+
+        m->xtra[i].c5spd = (double)data->c2spd[i];
 
 	hio_read8(f);				/* Volume in DMDL 0.0 */
 	x = hio_read8(f);
@@ -747,7 +751,7 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     if ((data->packinfo = calloc(sizeof (int), mod->smp)) == NULL)
@@ -851,7 +855,7 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
                 goto err3;
             if (unpack_sample16(smpbuf, buf, len, xxs->len) < 0)
                 goto err3;
-	    free(buf);
+
 	    break;
 	default:
 	    /* Sanity check */
@@ -1035,8 +1039,8 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    for (k = 0; k < mod->smp; k++) {
 		if (mod->xxi[i].sub[j].sid == data.s_index[k]) {
 		    mod->xxi[i].sub[j].sid = k;
-		    c2spd_to_note(data.c2spd[k],
-			&mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);
+		    /*c2spd_to_note(data.c2spd[k],
+			&mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);*/
 		    break;
 		}
 	    }

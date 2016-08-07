@@ -148,7 +148,7 @@ static int digi_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->len; i++)
 	mod->xxo[i] = dh.ord[i];
  
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     /* Read and convert instruments and samples */

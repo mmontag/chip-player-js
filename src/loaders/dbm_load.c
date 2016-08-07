@@ -99,7 +99,7 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->trk = mod->pat * mod->chn;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	return 0;

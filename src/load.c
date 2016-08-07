@@ -633,6 +633,7 @@ void xmp_release_module(xmp_context opaque)
 			}
 		}
 		free(mod->xxs);
+		free(m->xtra);
 	}
 
 #ifndef LIBXMP_CORE_DISABLE_IT

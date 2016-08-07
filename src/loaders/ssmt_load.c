@@ -79,7 +79,7 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
 	mod->ins = mod->smp = 15;
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {

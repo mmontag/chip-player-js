@@ -395,7 +395,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 */
 	D_(D_WARN "read instruments");
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);

@@ -203,7 +203,7 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	m->vol_table = (int *)arch_vol_table;

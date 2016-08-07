@@ -337,7 +337,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* ESTIMATED value! We don't know the actual value at this point */
 	mod->smp = MAX_SAMP;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	smpnum = 0;
