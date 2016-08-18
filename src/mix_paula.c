@@ -63,7 +63,7 @@ static void input_sample(struct paula_state *paula, int16 sample)
 	}
 }
 
-static void clock(struct paula_state *paula, unsigned int cycles)
+static void do_clock(struct paula_state *paula, unsigned int cycles)
 {
 	int i;
 
@@ -96,15 +96,15 @@ static void clock(struct paula_state *paula, unsigned int cycles)
 	/* input is always sampled at a higher rate than output */ \
 	for (i = 0; i < num_in - 1; i++) { \
 		input_sample(vi->paula, sptr[pos]); \
-		clock(vi->paula, MINIMUM_INTERVAL); \
+		do_clock(vi->paula, MINIMUM_INTERVAL); \
 		UPDATE_POS(ministep); \
 	} \
 	input_sample(vi->paula, sptr[pos]); \
 	vi->paula->remainder -= num_in * MINIMUM_INTERVAL; \
 	\
-	clock(vi->paula, (int)vi->paula->remainder); \
+	do_clock(vi->paula, (int)vi->paula->remainder); \
 	smp_in = output_sample(vi->paula, (x)); \
-	clock(vi->paula, MINIMUM_INTERVAL - (int)vi->paula->remainder); \
+	do_clock(vi->paula, MINIMUM_INTERVAL - (int)vi->paula->remainder); \
 	UPDATE_POS(step - (num_in - 1) * ministep); \
 	\
 	vi->paula->remainder += vi->paula->fdiv; \
