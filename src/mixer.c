@@ -537,9 +537,11 @@ void mixer_softmixer(struct context_data *ctx)
 			/* No more samples in this tick */
 			size -= samples + usmp;
 			if (size <= 0) {
-				if (vi->pos + step > vi->end) {
-					vi->pos += step;
-					loop_reposition(ctx, vi, xxs);
+				if (xxs->flg & XMP_SAMPLE_LOOP) {
+					if (vi->pos + step > vi->end) {
+						vi->pos += step;
+						loop_reposition(ctx, vi, xxs);
+					}
 				}
 				continue;
 			}
