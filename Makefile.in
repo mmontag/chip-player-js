@@ -37,6 +37,16 @@ SONAME		= $(SOLIB).$(VERSION_MAJOR)
 DLL		= libxmp.dll
 DYLIB		= libxmp.$(VERSION_MAJOR).dylib
 GCLIB		= libxmp-gc.a
+DYLIB_COMPAT	= -compatibility_version,$(COMPAT_VERSION),
+
+DARWIN_VERSION	= @DARWIN_VERSION@
+
+# https://github.com/cmatsuoka/libxmp/issues/1
+ifneq ($(DARWIN_VERSION),"")
+  ifeq ($(shell test $(DARWIN_VERSION) -lt 9 && echo true), true)
+    DYLIB_COMPAT = ""
+  endif
+endif
 
 all: @STATIC@ @SHARED@
 
@@ -110,7 +120,7 @@ lib/$(DLL): $(OBJS)
 
 lib/$(DYLIB): $(LOBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,-compatibility_version,$(COMPAT_VERSION),-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -dynamiclib -Wl,-headerpad_max_install_names,-undefined,dynamic_lookup,$(DYLIB_COMPAT)-current_version,$(VERSION),-install_name,$(prefix)/lib/$(DYLIB) -o $@ $(LOBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 	ln -sf $(DYLIB) lib/libxmp.dylib

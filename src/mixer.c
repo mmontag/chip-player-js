@@ -484,7 +484,9 @@ void mixer_softmixer(struct context_data *ctx)
 
 				/* For Hipolito's anticlick routine */
 				if (samples > 0) {
-					prev_r = buf_pos[mix_size - 2];
+					if (~s->format & XMP_FORMAT_MONO) {
+						prev_r = buf_pos[mix_size - 2];
+					}
 					prev_l = buf_pos[mix_size - 1];
 				} else {
 					prev_r = prev_l = 0;
@@ -501,7 +503,7 @@ void mixer_softmixer(struct context_data *ctx)
 				mix_fn = (*mixers)[mixer];
 
 				/* Call the output handler */
-				if (samples >= 0 && vi->sptr != NULL) {
+				if (samples > 0 && vi->sptr != NULL) {
 					int rsize = 0;
 
 					if (rampsize > samples) {
@@ -527,7 +529,9 @@ void mixer_softmixer(struct context_data *ctx)
 
 
 					/* For Hipolito's anticlick routine */
-					vi->sright = buf_pos[-2] - prev_r;
+					if (~s->format & XMP_FORMAT_MONO) {
+						vi->sright = buf_pos[-2] - prev_r;
+					}
 					vi->sleft = buf_pos[-1] - prev_l;
 				}
 			}
