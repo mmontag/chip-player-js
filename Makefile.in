@@ -42,7 +42,7 @@ DYLIB_COMPAT	= -compatibility_version,$(COMPAT_VERSION),
 DARWIN_VERSION	= @DARWIN_VERSION@
 
 # https://github.com/cmatsuoka/libxmp/issues/1
-ifneq ($(DARWIN_VERSION),"")
+ifneq ($(DARWIN_VERSION),)
   ifeq ($(shell test $(DARWIN_VERSION) -lt 9 && echo true), true)
     DYLIB_COMPAT = ""
   endif
