@@ -1172,7 +1172,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (sample_mode)
 		mod->ins = mod->smp;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		goto err4;
 
 	/* Alloc extra samples for sustain loop */

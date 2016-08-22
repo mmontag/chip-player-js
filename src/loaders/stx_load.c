@@ -228,7 +228,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, 4, SEEK_CUR);
 	}
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		goto err3;
 
 	/* Read and convert instruments and samples */

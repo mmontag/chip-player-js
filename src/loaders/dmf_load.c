@@ -283,7 +283,7 @@ static int get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->ins = mod->smp = hio_read8(f);
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);

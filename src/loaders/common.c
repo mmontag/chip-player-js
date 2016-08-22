@@ -32,8 +32,10 @@
 #include "period.h"
 #include "loader.h"
 
-int instrument_init(struct xmp_module *mod)
+int instrument_init(struct module_data *m)
 {
+	struct xmp_module *mod = &m->mod;
+
 	if (mod->ins > 0) {
 		mod->xxi = calloc(sizeof (struct xmp_instrument), mod->ins);
 		if (mod->xxi == NULL)
@@ -41,9 +43,18 @@ int instrument_init(struct xmp_module *mod)
 	}
 
 	if (mod->smp > 0) {
+		int i;
+
 		mod->xxs = calloc(sizeof (struct xmp_sample), mod->smp);
 		if (mod->xxs == NULL)
 			return -1;
+		m->xtra = calloc(sizeof (struct extra_sample_data), mod->smp);
+		if (m->xtra == NULL)
+			return -1;
+
+		for (i = 0; i < mod->smp; i++) {
+			m->xtra[i].c5spd = m->c4rate;
+		}
 	}
 
 	return 0;

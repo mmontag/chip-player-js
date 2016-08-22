@@ -120,7 +120,7 @@ static int mfp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->chn = 4;
 	mod->ins = mod->smp = 31;
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	for (i = 0; i < 31; i++) {

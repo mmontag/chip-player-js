@@ -178,7 +178,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, start + ins_ofs, SEEK_SET);
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {

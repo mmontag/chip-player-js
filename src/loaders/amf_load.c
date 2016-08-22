@@ -151,7 +151,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Instruments */
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	/* Probe for 2-byte loop start 1.0 format

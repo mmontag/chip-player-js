@@ -171,7 +171,7 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	mod->ins = mod->smp = 15;
-	if (instrument_init(mod) < 0) {
+	if (instrument_init(m) < 0) {
 		free(buf);
 		return -1;
 	}

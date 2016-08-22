@@ -110,7 +110,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + p_chn, SEEK_SET);
 	hio_read(buf, 1, 16, f);
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	hio_seek(f, start + p_ins, SEEK_SET);

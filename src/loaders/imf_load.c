@@ -386,7 +386,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    if (instrument_init(mod) < 0)
+    if (instrument_init(m) < 0)
 	return -1;
 
     /* Read and convert instruments and samples */
@@ -515,6 +515,13 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     mod->smp = smp_num;
     mod->xxs = realloc(mod->xxs, sizeof (struct xmp_sample) * mod->smp);
+    if (mod->xxs == NULL) {
+        return -1;
+    }
+    m->xtra = realloc(m->xtra, sizeof (struct extra_sample_data) * mod->smp);
+    if (m->xtra == NULL) {
+        return -1;
+    }
 
     m->c4rate = C4_NTSC_RATE;
     m->quirk |= QUIRK_FILTER | QUIRKS_ST3 | QUIRK_ARPMEM;

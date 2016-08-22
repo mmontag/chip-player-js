@@ -207,7 +207,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	set_type(m, "%s (%4.4s)", "His Master's Noise", mh.magic);
 	MODULE_INFO();
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {

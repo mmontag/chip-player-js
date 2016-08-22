@@ -266,7 +266,7 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	MODULE_INFO();
 	D_(D_INFO "Instruments: %d", mod->ins);
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	/* Load instruments */

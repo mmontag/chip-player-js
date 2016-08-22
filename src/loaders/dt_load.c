@@ -138,7 +138,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {

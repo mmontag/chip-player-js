@@ -501,7 +501,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	D_(D_INFO "Stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
 	D_(D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
 
-	if (instrument_init(mod) < 0)
+	if (instrument_init(m) < 0)
 		goto err3;
 
 	/* Read and convert instruments and samples */
