@@ -31,7 +31,7 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 		pattern_tracks_alloc(mod, i, 64);
 	}
 
-	instrument_init(mod);
+	instrument_init(m);
 
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].nsm = 1;

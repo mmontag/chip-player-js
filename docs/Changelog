@@ -4,10 +4,10 @@ Stable versions
 4.4.1 ():
 	- fix MacOS Tiger build issues (reported by Misty De Meo)
 	- fix sample loop corner case (reported by knight-ryu12)
+	- fix MDL c5spd to preserve base periods (reported by Saga Musix)
 	- fix anticlick when rendering only one sample
 	- fix anticlick in His Master's Noise instruments
 	- fix anticlick in MED synth instruments
-	- fix MDL transpose to preserve base periods (reported by Saga Musix)
 
 4.4.0 (20160719):
 	Fix bugs caught in the OpenMPT test cases:
