@@ -60,8 +60,11 @@ struct ADL_MIDIPlayer {
 /* Sets number of emulated sound cards (from 1 to 100). Emulation of multiple sound cards exchanges polyphony limits*/
 extern int adl_setNumCards(struct ADL_MIDIPlayer*device, int numCards);
 
-/* Sets a number of the patches bank from 0 to 64 */
+/* Sets a number of the patches bank from 0 to N banks */
 extern int adl_setBank(struct ADL_MIDIPlayer* device, int bank);
+
+/* Returns total number of available banks */
+extern int adl_getBanksCount();
 
 /*Sets number of 4-chan operators*/
 extern int adl_setNumFourOpsChn(struct ADL_MIDIPlayer*device, int ops4);

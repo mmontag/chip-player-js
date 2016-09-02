@@ -1932,7 +1932,7 @@ ADLMIDI_EXPORT int adl_setNumCards(ADL_MIDIPlayer *device, int numCards)
 
 ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
 {
-    const unsigned NumBanks = 69;//sizeof(banknames)/sizeof(*banknames);
+    const unsigned NumBanks = maxAdlBanks();
     int bankno = bank;
     if(bankno < 0)
         bankno = 0;
@@ -1946,6 +1946,11 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
         return -1;
     }
     return adlRefreshNumCards(device);
+}
+
+ADLMIDI_EXPORT int adl_getBanksCount()
+{
+    return maxAdlBanks();
 }
 
 ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)

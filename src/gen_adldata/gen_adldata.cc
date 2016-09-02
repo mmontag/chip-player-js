@@ -1383,7 +1383,13 @@ int main()
     }
     std::set<unsigned> listed;
 
-    printf("const char* const banknames[%u] =\n", bankcount);
+    printf(        
+        "\n\n//Returns total number of generated banks\n"
+        "int  maxAdlBanks()\n"
+        "{"
+        "   return %u;\n"
+        "}\n\n"
+        "const char* const banknames[%u] =\n", bankcount, bankcount);
     printf("{\n");
     for(unsigned bank=0; bank<bankcount; ++bank)
         printf("    \"%s\",\n", banknames[bank]);

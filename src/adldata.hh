@@ -56,6 +56,7 @@ extern const struct adlinsdata
     unsigned short ms_sound_koff;
     double fine_tune;
 } adlins[];
+int maxAdlBanks();
 extern const unsigned short banks[][256];
 extern const char* const banknames[];
 
