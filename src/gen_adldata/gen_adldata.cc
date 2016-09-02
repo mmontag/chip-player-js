@@ -1140,6 +1140,10 @@ int main()
     
     LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
 
+    LoadTMB("fm_banks/tmb_files/blood.tmb",  69, "apgblood");
+    LoadTMB("fm_banks/tmb_files/lee.tmb",  70, "apglee");
+    LoadTMB("fm_banks/tmb_files/nam.tmb",  71, "apgnam");
+
     //LoadBNK("bnk_files/grassman1.bnk", 63, "b63", false);
     //LoadBNK("bnk_files/grassman2.bnk", 64, "b64", false);
 
@@ -1221,7 +1225,10 @@ int main()
 	 "OP3 (Modded GMOPL by Wohlstand)",
 	 "SB (Jammey O'Connel's bank)",
 	 "TMB (Default bank of Build Engine)",
-     "OP3 (4op bank by James Alan Nguyen)"
+     "OP3 (4op bank by James Alan Nguyen)",
+	 "TMB (Blood)",
+	 "TMB (Lee)",
+	 "TMB (Nam)",
     };
 
 #if 0
