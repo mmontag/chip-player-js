@@ -127,6 +127,7 @@ void fluid_synth_settings(fluid_settings_t* settings)
   fluid_settings_register_num(settings, "synth.sample-rate",
 			     44100.0f, 22050.0f, 96000.0f,
 			     0, NULL, NULL);
+  fluid_settings_register_int(settings, "synth.min-note-length", 10, 0, 65535, 0, NULL, NULL);
 }
 
 /*
@@ -368,6 +369,9 @@ new_fluid_synth(fluid_settings_t *settings)
   fluid_settings_getint(settings, "synth.audio-groups", &synth->audio_groups);
   fluid_settings_getint(settings, "synth.effects-channels", &synth->effects_channels);
   fluid_settings_getnum(settings, "synth.gain", &synth->gain);
+  fluid_settings_getint(settings, "synth.min-note-length", &i);
+  synth->min_note_length_ticks = (unsigned int) (i*synth->sample_rate/1000.0f);
+
 
   /* register the callbacks */
   fluid_settings_register_num(settings, "synth.gain",

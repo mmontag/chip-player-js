@@ -133,7 +133,7 @@ struct _fluid_synth_t
   fluid_tuning_t*** tuning;           /** 128 banks of 128 programs for the tunings */
   fluid_tuning_t* cur_tuning;         /** current tuning in the iteration */
 
-  //midi router and mutex disabled
+  unsigned int min_note_length_ticks; /**< If note-offs are triggered just after a note-on, they will be delayed */
 };
 
 /** returns 1 if the value has been set, 0 otherwise */

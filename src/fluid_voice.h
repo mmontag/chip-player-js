@@ -107,6 +107,7 @@ struct _fluid_voice_t
 
 	unsigned int start_time;
 	unsigned int ticks;
+    unsigned int noteoff_ticks;      /* Delay note-off until this tick */
 
 	fluid_real_t amp;                /* current linear amplitude */
 	fluid_phase_t phase;             /* the phase of the sample wave */
