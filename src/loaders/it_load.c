@@ -228,10 +228,11 @@ static void xlat_volfx(struct xmp_event *event)
 		event->f2p = (b - 115) << 2;
 	} else if (b >= 128 && b <= 192) {	/* pan */
 		if (b == 192) {
-			b = 191;
+			event->f2p = 0xff;
+		} else {
+			event->f2p = (b - 128) << 2;
 		}
 		event->f2t = FX_SETPAN;
-		event->f2p = (b - 128) << 2;
 	} else if (b >= 193 && b <= 202) {	/* G */
 		uint8 val[10] = {
 			0x00, 0x01, 0x04, 0x08, 0x10,
