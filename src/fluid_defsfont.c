@@ -339,6 +339,11 @@ char* fluid_defsfont_get_name(fluid_defsfont_t* sfont)
   return sfont->filename;
 }
 
+void (*preset_callback) (unsigned int bank, unsigned int num, char* name)=NULL;
+void fluid_synth_set_preset_callback(void* callback)
+{
+    preset_callback=callback;
+}
 
 /*
  * fluid_defsfont_load
@@ -402,6 +407,7 @@ int fluid_defsfont_load(fluid_defsfont_t* sfont, const char* file)
       goto err_exit;
 
     fluid_defsfont_add_preset(sfont, preset);
+    if(preset_callback) preset_callback(preset->bank,preset->num,preset->name);
     p = fluid_list_next(p);
   }
   sfont_close (sfdata);

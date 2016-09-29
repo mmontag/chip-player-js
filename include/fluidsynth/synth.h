@@ -186,6 +186,16 @@ FLUIDSYNTH_API int fluid_synth_stop(fluid_synth_t* synth, unsigned int id);
    *
    */
 
+  /** Set an optional function callback each time a preset has finished loading.
+      This can be useful when calling fluid_synth_sfload asynchronously.
+      The function must be formatted like this:
+      void my_callback_function(int bank, int num, char* name)
+
+      \param callback Pointer to the function
+  */
+FLUIDSYNTH_API
+void fluid_synth_set_preset_callback(void* callback);
+
   /** Loads a SoundFont file and creates a new SoundFont. The newly
       loaded SoundFont will be put on top of the SoundFont
       stack. Presets are searched starting from the SoundFont on the
