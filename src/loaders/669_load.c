@@ -51,7 +51,7 @@ static int c669_test(HIO_HANDLE *f, char *t, const int start)
 	return -1;
 
     hio_seek(f, start + 2, SEEK_SET);
-    read_title(f, t, 36);
+    libxmp_read_title(f, t, 36);
 
     return 0;
 }
@@ -135,8 +135,8 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     m->period_type = PERIOD_CSPD;
     m->c4rate = C4_NTSC_RATE;
 
-    copy_adjust(mod->name, sfh.message, 36);
-    set_type(m, strncmp((char *)sfh.marker, "if", 2) ?
+    libxmp_copy_adjust(mod->name, sfh.message, 36);
+    libxmp_set_type(m, strncmp((char *)sfh.marker, "if", 2) ?
 				"UNIS 669" : "Composer 669");
 
     MODULE_INFO();
@@ -147,7 +147,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     
     /* Read and convert instruments and samples */
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     D_(D_INFO "Instruments: %d", mod->pat);
@@ -157,7 +157,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_sample *xxs = &mod->xxs[i];
 	struct xmp_subinstrument *sub;
 
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	sub = &xxi->sub[0];
@@ -183,14 +183,14 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (xxs->len > 0)
 		xxi->nsm = 1;
 
-	instrument_name(mod, i, sih.name, 13);
+	libxmp_instrument_name(mod, i, sih.name, 13);
 
 	D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
 		xxi->name, xxs->len, xxs->lps, xxs->lpe,
 		xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ');
     }
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Read and convert patterns */
@@ -198,7 +198,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	int pbrk;
 
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 	    return -1;
 
 	event = &EVENT(i, 0, 0);
@@ -245,7 +245,7 @@ static int c669_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (mod->xxs[i].len <= 2)
 	    continue;
-	if (load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+	if (libxmp_load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
 	    return -1;
     }
 

@@ -6,6 +6,9 @@
  * readlzw.h
  */
 
+#ifndef LIBXMP_READLZW_H
+#define LIBXMP_READLZW_H
+
 #define ALIGN4(x) (((x) + 3) & ~3L)
 
 /* Digital Symphony LZW quirk */
@@ -22,12 +25,13 @@
 
 struct local_data;
 
-unsigned char *convert_lzw_dynamic(unsigned char *data_in,
-                                          int bits,int use_rle,
+uint8 	*libxmp_convert_lzw_dynamic(unsigned char *data_in,
+                                         int bits,int use_rle,
                                           unsigned long in_len,
                                           unsigned long orig_len,
 					  int q);
 
-uint8 *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
+uint8	*libxmp_read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
                         unsigned long in_len, unsigned long orig_len, int q);
 
+#endif

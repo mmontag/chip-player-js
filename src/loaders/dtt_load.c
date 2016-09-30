@@ -40,7 +40,7 @@ static int dtt_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read32b(f) != MAGIC_DskT)
 		return -1;
 
-	read_title(f, t, 64);
+	libxmp_read_title(f, t, 64);
 
 	return 0;
 }
@@ -61,7 +61,7 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read32b(f);
 
-	set_type(m, "Desktop Tracker");
+	libxmp_set_type(m, "Desktop Tracker");
 
 	hio_read(buf, 1, 64, f);
 	strncpy(mod->name, (char *)buf, XMP_NAME_SIZE);
@@ -97,7 +97,7 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			plen[i] = x;
 	}
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* Read instrument names */
@@ -105,7 +105,7 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		int c2spd, looplen;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		hio_read8(f);			/* note */
@@ -121,7 +121,7 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxs[i].lpe = mod->xxs[i].lps + looplen;
 		mod->xxs[i].len = hio_read32l(f);
 		hio_read(buf, 1, 32, f);
-		instrument_name(mod, i, (uint8 *)buf, 32);
+		libxmp_instrument_name(mod, i, (uint8 *)buf, 32);
 		sdata[i] = hio_read32l(f);
 
 		mod->xxi[i].nsm = !!(mod->xxs[i].len);
@@ -134,14 +134,14 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				mod->xxi[i].sub[0].vol, c2spd);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, plen[i]) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, plen[i]) < 0)
 			return -1;
 
 		hio_seek(f, start + pofs[i], SEEK_SET);
@@ -177,7 +177,7 @@ static int dtt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 	for (i = 0; i < mod->ins; i++) {
 		hio_seek(f, start + sdata[i], SEEK_SET);
-		if (load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

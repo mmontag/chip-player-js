@@ -49,7 +49,7 @@ static int med2_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read32b(f) !=  MAGIC_MED2)
 		return -1;
 
-        read_title(f, t, 0);
+        libxmp_read_title(f, t, 0);
 
         return 0;
 }
@@ -68,19 +68,19 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (hio_read32b(f) != MAGIC_MED2)
 		return -1;
 
-	set_type(m, "MED 1.12 MED2");
+	libxmp_set_type(m, "MED 1.12 MED2");
 
 	mod->ins = mod->smp = 32;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* read instrument names */
 	hio_read(buf, 1, 40, f);	/* skip 0 */
 	for (i = 0; i < 31; i++) {
 		hio_read(buf, 1, 40, f);
-		instrument_name(mod, i, buf, 32);
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		libxmp_instrument_name(mod, i, buf, 32);
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 	}
 
@@ -139,14 +139,14 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (sliding == 6)
 		m->quirk |= QUIRK_VSALL | QUIRK_PBALL;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		hio_read32b(f);
@@ -192,8 +192,8 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		HIO_HANDLE *s = NULL;
 		int found;
 
-		get_instrument_path(m, ins_path, 256);
-		found = check_filename_case(ins_path,
+		libxmp_get_instrument_path(m, ins_path, 256);
+		found = libxmp_check_filename_case(ins_path,
 				(char *)mod->xxi[i].name, name, 256);
 
 		if (found) {
@@ -221,7 +221,7 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxi[i].sub[0].vol);
 
 		if (s != NULL) {
-			int ret = load_sample(m, s, 0, &mod->xxs[i], NULL);
+			int ret = libxmp_load_sample(m, s, 0, &mod->xxs[i], NULL);
 			hio_close(s);
 			if (ret < 0) {
 				return -1;

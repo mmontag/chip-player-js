@@ -48,7 +48,7 @@ static int dmf_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, 9, SEEK_CUR);
-	read_title(f, t, 30);
+	libxmp_read_title(f, t, 30);
 
 	return 0;
 }
@@ -203,7 +203,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->chn = hio_read8(f);
 	mod->trk = mod->chn * mod->pat;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -212,7 +212,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		chn = hio_read8(f);
 		hio_read8(f);		/* beat */
 
-		if (pattern_tracks_alloc(mod, i, hio_read16l(f)) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, hio_read16l(f)) < 0)
 			return -1;
 
 		patsize = hio_read32l(f);
@@ -283,7 +283,7 @@ static int get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->ins = mod->smp = hio_read8(f);
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);
@@ -291,12 +291,12 @@ static int get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	for (i = 0; i < mod->ins; i++) {
 		int x;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 		
 		namelen = hio_read8(f);
 		x = namelen - hio_read(name, 1, namelen > 30 ? 30 : namelen, f);
-		instrument_name(mod, i, name, namelen);
+		libxmp_instrument_name(mod, i, name, namelen);
 		name[namelen] = 0;
 		while (x--)
 			hio_read8(f);
@@ -375,7 +375,7 @@ static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 		switch (data->packtype[i]) {
 		case 0:
-      if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+      if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 				goto error;
 			break;
 		case 1:
@@ -386,7 +386,7 @@ static int get_smpd(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
       if (dynamic_buffer_alloc(&sbuf, samplesize) < 0)
 				goto error;
 			unpack(sbuf.data, ibuf.data, ibuf.data + datasize, samplesize);
-			if (load_sample(m, NULL, SAMPLE_FLAG_NOLOAD,
+			if (libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD,
         &mod->xxs[i], (char *)sbuf.data) < 0)
         goto error;
 			break;

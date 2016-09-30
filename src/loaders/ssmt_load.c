@@ -44,7 +44,7 @@ static int mtp_test(HIO_HANDLE *f, char *t, const int start)
 	if (memcmp(buf, "SONGOK", 6) && memcmp(buf, "IAN92a", 6))
 		return -1;
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -68,9 +68,9 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(buffer, 6, 1, f);
 
 	if (!memcmp(buffer, "SONGOK", 6))
-		set_type(m, "IIgs SoundSmith");
+		libxmp_set_type(m, "IIgs SoundSmith");
 	else if (!memcmp(buffer, "IAN92a", 8))
-		set_type(m, "IIgs MegaTracker");
+		libxmp_set_type(m, "IIgs MegaTracker");
 	else
 		return -1;
 
@@ -79,17 +79,17 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, 10, SEEK_CUR);		/* skip 10 reserved bytes */
 	
 	mod->ins = mod->smp = 15;
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		hio_read(buffer, 1, 22, f);
 		if (buffer[0]) {
 			buffer[buffer[0] + 1] = 0;
-			instrument_name(mod, i, buffer + 1, 22);
+			libxmp_instrument_name(mod, i, buffer + 1, 22);
 		}
 		hio_read16l(f);		/* skip 2 reserved bytes */
 		mod->xxi[i].sub[0].vol = hio_read8(f) >> 2;
@@ -109,7 +109,7 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat = blocksize / (14 * 64);
 	mod->trk = mod->pat * mod->chn;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Read and convert patterns */
@@ -117,7 +117,7 @@ static int mtp_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Load notes */
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {

@@ -32,7 +32,7 @@ static int hvl_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_seek(f, off + 1, SEEK_SET))
 		return -1;
 
-	read_title(f, t, 32);
+	libxmp_read_title(f, t, 32);
 
 	return 0;
 }
@@ -205,7 +205,7 @@ static int hvl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_WARN "pattlen=%d npatts=%d nins=%d seqlen=%d stereo=%02x",
 		pattlen, mod->trk, mod->ins, mod->len, stereo);
 
-	set_type(m, "HVL (Hively Tracker)");
+	libxmp_set_type(m, "HVL (Hively Tracker)");
 	MODULE_INFO();
 
 	mod->pat = mod->len;
@@ -490,7 +490,7 @@ static int hvl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			break;
 		}
 
-		load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)b);
+		libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, &mod->xxs[i], (char *)b);
 	}
 
 
@@ -506,13 +506,13 @@ static int hvl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read (namebuf, 1, len, f);
 		namebuf[len]=0;
 
-		copy_adjust ((uint8 *)mod->name, namebuf, 32);
+		libxmp_copy_adjust ((uint8 *)mod->name, namebuf, 32);
 		mod->name[31]=0;
 //		printf ("len=%d, name=%s\n", len, mod->name);
 		
 		for (i=0; nameptr < namebuf+len && i < mod->ins; i++) {
 			nameptr += strlen((char *)nameptr)+1;
-			instrument_name(mod, i, nameptr, 32);
+			libxmp_instrument_name(mod, i, nameptr, 32);
 
 			printf ("%02x: %s\n", i, nameptr);
 		}

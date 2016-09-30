@@ -54,7 +54,7 @@ static int gal4_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	hio_read32b(f);		/* skip size */
-	read_title(f, t, 64);
+	libxmp_read_title(f, t, 64);
 
 	return 0;
 }
@@ -71,7 +71,7 @@ static int get_main(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	
 	hio_read(buf, 1, 64, f);
 	strncpy(mod->name, buf, 63);	/* ensure string terminator */
-	set_type(m, "Galaxy Music System 4.0");
+	libxmp_set_type(m, "Galaxy Music System 4.0");
 
 	flags = hio_read8(f);
 	if (~flags & 0x01)
@@ -157,7 +157,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	rows = hio_read8(f) + 1;
 
-	if (pattern_tracks_alloc(mod, i, rows) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, rows) < 0)
 		return -1;
 
 	for (r = 0; r < rows; ) {
@@ -292,7 +292,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	if (mod->xxi[i].nsm == 0)
 		return 0;
 
-	if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, mod->xxi[i].nsm) < 0)
 		return -1;
 
 	for (j = 0; j < mod->xxi[i].nsm; j++, data->snum++) {
@@ -351,7 +351,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	
 		if (mod->xxs[data->snum].len > 1) {
 			int snum = data->snum;
-			if (load_sample(m, f, 0, &mod->xxs[snum], NULL) < 0)
+			if (libxmp_load_sample(m, f, 0, &mod->xxs[snum], NULL) < 0)
 				return -1;
 		}
 	}
@@ -406,10 +406,10 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d\n", mod->pat);
@@ -443,7 +443,7 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* Alloc missing patterns */
 	for (i = 0; i < mod->pat; i++) {
 		if (mod->xxp[i] == NULL) {
-			if (pattern_tracks_alloc(mod, i, 64) < 0) {
+			if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0) {
 				return -1;
 			}
 		}

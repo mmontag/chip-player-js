@@ -43,7 +43,7 @@ static int gtk_test(HIO_HANDLE * f, char *t, const int start)
 	if (memcmp(buf, "GTK", 3) || buf[3] > 4)
 		return -1;
 
-	read_title(f, t, 32);
+	libxmp_read_title(f, t, 32);
 
 	return 0;
 }
@@ -149,7 +149,7 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(buffer, 4, 1, f);
 	ver = buffer[3];
 	hio_read(mod->name, 32, 1, f);
-	set_type(m, "Graoumf Tracker GTK v%d", ver);
+	libxmp_set_type(m, "Graoumf Tracker GTK v%d", ver);
 	hio_seek(f, 160, SEEK_CUR);	/* skip comments */
 
 	mod->ins = hio_read16b(f);
@@ -165,15 +165,15 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	D_(D_INFO "Instruments    : %d ", mod->ins);
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		hio_read(buffer, 28, 1, f);
-		instrument_name(mod, i, buffer, 28);
+		libxmp_instrument_name(mod, i, buffer, 28);
 
 		if (ver == 1) {
 			hio_read32b(f);
@@ -238,14 +238,14 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat = patmax + 1;
 	mod->trk = mod->pat * mod->chn;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, rows) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, rows) < 0)
 			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
@@ -277,7 +277,7 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (mod->xxs[i].len == 0)
 			continue;
 
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

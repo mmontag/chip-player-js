@@ -24,8 +24,8 @@
 #include "common.h"
 #include "crc32.h"
 
-uint32 crc32_table_A[256];
-uint32 crc32_table_B[256];
+uint32 libxmp_crc32_table_A[256];
+uint32 libxmp_crc32_table_B[256];
 
 static void crc_table_init_A(uint32 poly, uint32 *table)
 {
@@ -61,45 +61,45 @@ static void crc_table_init_B(uint32 poly, uint32 *table)
 	return;
 }
 
-void crc32_init_A()
+void libxmp_crc32_init_A()
 {
 	static int flag = 0;
 
 	if (flag)
 		return;
 
-	crc_table_init_A(0xedb88320, crc32_table_A);
+	crc_table_init_A(0xedb88320, libxmp_crc32_table_A);
 
 	flag = 1;
 }
 
-void crc32_init_B()
+void libxmp_crc32_init_B()
 {
 	static int flag = 0;
 
 	if (flag)
 		return;
 
-	crc_table_init_B(0x04c11db7, crc32_table_B);
+	crc_table_init_B(0x04c11db7, libxmp_crc32_table_B);
 
 	flag = 1;
 }
 
-uint32 crc32_A1(const uint8 *buf, size_t size, uint32 crc)
+uint32 libxmp_crc32_A1(const uint8 *buf, size_t size, uint32 crc)
 {
 	crc = ~crc;
 
         while (size--) {
-                crc = crc32_table_A[*buf++ ^ (crc & 0xff)] ^ (crc >> 8);
+                crc = libxmp_crc32_table_A[*buf++ ^ (crc & 0xff)] ^ (crc >> 8);
         }
 
         return ~crc;
 }
 
-uint32 crc32_A2(const uint8 *buf, size_t size, uint32 crc)
+uint32 libxmp_crc32_A2(const uint8 *buf, size_t size, uint32 crc)
 {
         while (size--) {
-                crc = crc32_table_A[*buf++ ^ (crc & 0xff)] ^ (crc >> 8);
+                crc = libxmp_crc32_table_A[*buf++ ^ (crc & 0xff)] ^ (crc >> 8);
         }
 
         return crc;

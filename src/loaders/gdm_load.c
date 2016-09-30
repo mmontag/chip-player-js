@@ -51,7 +51,7 @@ static int gdm_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 4, SEEK_SET);
-	read_title(f, t, 32);
+	libxmp_read_title(f, t, 32);
 
 	return 0;
 }
@@ -134,10 +134,10 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	tvmin = hio_read8(f);
 
 	if (tracker == 0) {
-		set_type(m, "GDM %d.%02d (2GDM %d.%02d)",
+		libxmp_set_type(m, "GDM %d.%02d (2GDM %d.%02d)",
 					vermaj, vermin, tvmaj, tvmin);
 	} else {
-		set_type(m, "GDM %d.%02d (unknown tracker %d.%02d)",
+		libxmp_set_type(m, "GDM %d.%02d (unknown tracker %d.%02d)",
 					vermaj, vermin, tvmaj, tvmin);
 	}
 
@@ -178,19 +178,19 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_seek(f, start + ins_ofs, SEEK_SET);
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
 		int flg, c4spd, vol, pan;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		if (hio_read(buffer, 1, 32, f) != 32)
 			return -1;
 
-		instrument_name(mod, i, buffer, 32);
+		libxmp_instrument_name(mod, i, buffer, 32);
 		hio_seek(f, 12, SEEK_CUR);		/* skip filename */
 		hio_read8(f);			/* skip EMS handle */
 		mod->xxs[i].len = hio_read32l(f);
@@ -291,7 +291,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
  
 	mod->trk = mod->pat * mod->chn;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	hio_seek(f, start + pat_ofs, SEEK_SET);
@@ -300,7 +300,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->pat; i++) {
 		int len, c, r, k;
 
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		len = hio_read16l(f);
@@ -362,7 +362,7 @@ static int gdm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		if (load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

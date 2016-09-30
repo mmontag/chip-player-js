@@ -44,7 +44,7 @@ static int amd_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 24);
+	libxmp_read_title(f, t, 24);
 
 	return 0;
 }
@@ -118,11 +118,11 @@ static int load_unpacked_patterns(struct module_data *m, HIO_HANDLE *f)
 	struct xmp_event *event;
 
 	mod->trk = mod->pat * 9;
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < (64 * mod->chn); j++) {
@@ -154,7 +154,7 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 		return -1;
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_alloc(mod, i) < 0)
+		if (libxmp_alloc_pattern(mod, i) < 0)
 			return -1;
 
 		for (j = 0; j < 9; j++) {
@@ -197,7 +197,7 @@ static int load_packed_patterns(struct module_data *m, HIO_HANDLE *f)
 			return -1;
 		}
 
-		if (track_alloc(mod, w, 64) < 0) {
+		if (libxmp_alloc_track(mod, w, 64) < 0) {
 			return -1;
 		}
 
@@ -260,21 +260,21 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->smp = mod->ins;
 	memcpy(mod->xxo, afh.order, mod->len);
 
-	set_type(m, "Amusic Adlib Tracker");
+	libxmp_set_type(m, "Amusic Adlib Tracker");
 	strncpy(mod->name, (char *)afh.name, 24);
 
 	MODULE_INFO();
 	D_(D_INFO "Instruments: %d", mod->ins);
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* Load instruments */
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
-		instrument_name(mod, i, afh.ins[i].name, 23);
+		libxmp_instrument_name(mod, i, afh.ins[i].name, 23);
 
 		mod->xxi[i].sub[0].vol = 0x40;
 		mod->xxi[i].sub[0].pan = 0x80;
@@ -286,7 +286,7 @@ static int amd_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		D_(D_INFO "\n[%2X] %-23.23s", i, mod->xxi[i].name);
 
-		if (load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i],regs) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_ADLIB, &mod->xxs[i],regs) < 0)
 			return -1;
 	}
 

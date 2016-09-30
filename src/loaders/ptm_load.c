@@ -84,7 +84,7 @@ static int ptm_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 28);
+	libxmp_read_title(f, t, 28);
 
 	return 0;
 }
@@ -150,12 +150,12 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	m->c4rate = C4_NTSC_RATE;
 
-	copy_adjust(mod->name, pfh.name, 28);
-	set_type(m, "Poly Tracker PTM %d.%02x", pfh.vermaj, pfh.vermin);
+	libxmp_copy_adjust(mod->name, pfh.name, 28);
+	libxmp_set_type(m, "Poly Tracker PTM %d.%02x", pfh.vermaj, pfh.vermin);
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0) {
+	if (libxmp_init_instrument(m) < 0) {
 		return -1;
 	}
 
@@ -190,7 +190,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if ((pih.type & 3) != 1)
 			continue;
 
-		if (subinstrument_alloc(mod, i, 1) < 0) {
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0) {
 			return -1;
 		}
 
@@ -224,7 +224,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		sub->sid = i;
 		pih.magic = 0;
 
-		instrument_name(mod, i, pih.name, 28);
+		libxmp_instrument_name(mod, i, pih.name, 28);
 
 		D_(D_INFO "[%2X] %-28.28s %05x%c%05x %05x %c V%02x %5d",
 		   i, mod->xxi[i].name, mod->xxs[i].len,
@@ -236,7 +236,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		c2spd_to_note(pih.c4spd, &sub->xpo, &sub->fin);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Read patterns */
@@ -246,7 +246,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (!pfh.patseg[i])
 			continue;
 
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		hio_seek(f, start + 16L * pfh.patseg[i], SEEK_SET);
@@ -335,7 +335,7 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 
 		hio_seek(f, start + smp_ofs[i], SEEK_SET);
-		if (load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_8BDIFF, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

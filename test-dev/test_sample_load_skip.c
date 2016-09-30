@@ -30,7 +30,7 @@ TEST(test_sample_load_skip)
 	/* load sample from file */
 	SET(101, 0, 102, XMP_SAMPLE_16BIT);
 	hio_seek(f, 0, SEEK_SET);
-	load_sample(&m, f, 0, &s, NULL);
+	libxmp_load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data != NULL, "didn't allocate sample data");
 	fail_unless(s.lpe == 101, "didn't fix invalid loop end");
 	fail_unless(memcmp(s.data, buffer, 202) == 0, "sample data error");
@@ -39,7 +39,7 @@ TEST(test_sample_load_skip)
 	SET(101, 0, 102, XMP_SAMPLE_16BIT);
 	hio_seek(f, 0, SEEK_SET);
 	m.smpctl |= XMP_SMPCTL_SKIP;
-	load_sample(&m, f, 0, &s, NULL);
+	libxmp_load_sample(&m, f, 0, &s, NULL);
 	fail_unless(s.data == NULL, "didn't skip sample load");
 }
 END_TEST

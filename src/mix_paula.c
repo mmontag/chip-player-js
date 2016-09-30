@@ -10,7 +10,7 @@
 #include "paula.h"
 #include "precomp_blep.h"
 
-void paula_init(struct context_data *ctx, struct paula_state *paula)
+void libxmp_paula_init(struct context_data *ctx, struct paula_state *paula)
 {
 	struct mixer_data *s = &ctx->s;
 

@@ -17,12 +17,12 @@ TEST(test_sample_load_delta)
 	memset(&m, 0, sizeof(struct module_data));
 
 	xxs.len = 10;
-	load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF, &xxs, buffer0);
+	libxmp_load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF, &xxs, buffer0);
 	fail_unless(memcmp(xxs.data, conv_r0, 10) == 0,
 				"Invalid 8-bit conversion");
 
 	xxs.flg = XMP_SAMPLE_16BIT;
-	load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF, &xxs, buffer1);
+	libxmp_load_sample(&m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF, &xxs, buffer1);
 	fail_unless(memcmp(xxs.data, conv_r1, 20) == 0,
 				"Invalid 16-bit conversion");
 }

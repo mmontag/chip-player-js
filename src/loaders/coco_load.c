@@ -99,7 +99,7 @@ static int coco_test(HIO_HANDLE *f, char *t, const int start)
 	}
 
 	hio_seek(f, start + 1, SEEK_SET);
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 #if 0
 	for (i = 0; i < 20; i++) {
@@ -184,14 +184,14 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	LOAD_INIT();
 
 	mod->chn = hio_read8(f) & 0x3f;
-	read_title(f, mod->name, 20);
+	libxmp_read_title(f, mod->name, 20);
 
 	for (i = 0; i < 20; i++) {
 		if (mod->name[i] == 0x0d)
 			mod->name[i] = 0;
 	}
 
-	set_type(m, "Coconizer");
+	libxmp_set_type(m, "Coconizer");
 
 	mod->ins = mod->smp = hio_read8(f);
 	mod->len = hio_read8(f);
@@ -203,14 +203,14 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	m->vol_table = (int *)arch_vol_table;
 	m->volbase = 0xff;
 
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		smp_ptr[i] = hio_read32l(f);
@@ -255,13 +255,13 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Patterns */
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < (64 * mod->chn); j++) {
@@ -286,7 +286,7 @@ static int coco_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 
 		hio_seek(f, start + smp_ptr[i], SEEK_SET);
-		if (load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

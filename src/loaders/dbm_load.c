@@ -46,7 +46,7 @@ static int dbm_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, 12, SEEK_CUR);
-	read_title(f, t, 44);
+	libxmp_read_title(f, t, 44);
 
 	return 0;
 }
@@ -99,7 +99,7 @@ static int get_info(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	mod->trk = mod->pat * mod->chn;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	return 0;
@@ -154,11 +154,11 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	for (i = 0; i < mod->ins; i++) {
 		mod->xxi[i].nsm = 1;
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		hio_read(buffer, 30, 1, f);
-		instrument_name(mod, i, buffer, 30);
+		libxmp_instrument_name(mod, i, buffer, 30);
 		snum = hio_read16b(f);
 		if (snum == 0 || snum > mod->smp)
 			continue;
@@ -192,7 +192,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_event *event, dummy;
 	uint8 x;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d ", mod->pat);
@@ -203,7 +203,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	 */
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, hio_read16b(f)) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, hio_read16b(f)) < 0)
 			return -1;
 
 		sz = hio_read32b(f);
@@ -300,7 +300,7 @@ static int get_smpl(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 			continue;
 		}
 		
-		if (load_sample(m, f, SAMPLE_FLAG_BIGEND, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_BIGEND, &mod->xxs[i], NULL) < 0)
 			return -1;
 
 		if (mod->xxs[i].len == 0)

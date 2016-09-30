@@ -46,7 +46,7 @@ static int chip_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -109,10 +109,10 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->trk = tnum + 1;
 
 	strncpy(mod->name, (char *)mh.name, 20);
-	set_type(m, "Chiptracker");
+	libxmp_set_type(m, "Chiptracker");
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		goto err2;
 
 	for (i = 0; i < mod->ins; i++) {
@@ -120,7 +120,7 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		struct xmp_sample *xxs = &mod->xxs[i];
 		struct xmp_subinstrument *sub;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			goto err2;
 
 		sub = &xxi->sub[0];
@@ -137,14 +137,14 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (xxs->len > 0)
 			xxi->nsm = 1;
 
-		instrument_name(mod, i, mh.ins[i].name, 22);
+		libxmp_instrument_name(mod, i, mh.ins[i].name, 22);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		goto err2;
 
 	for (i = 0; i < mod->len; i++) {
-		if (pattern_alloc(mod, i) < 0)
+		if (libxmp_alloc_pattern(mod, i) < 0)
 			goto err2;
 		mod->xxp[i]->rows = 64;
 
@@ -158,7 +158,7 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored tracks: %d", mod->trk);
 
 	for (i = 0; i < mod->trk; i++) {
-		if (track_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_track(mod, i, 64) < 0)
 			goto err2;
 
 		for (j = 0; j < 64; j++) {
@@ -184,7 +184,7 @@ static int chip_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (mod->xxs[i].len == 0)
 			continue;
 
-		if (load_sample(m, f, SAMPLE_FLAG_FULLREP, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_FULLREP, &mod->xxs[i], NULL) < 0)
 			goto err2;
 	}
 

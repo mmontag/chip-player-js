@@ -47,7 +47,7 @@ static int okt_test(HIO_HANDLE *f, char *t, const int start)
 	if (strncmp(magic, "OKTASONG", 8))
 		return -1;
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -139,7 +139,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->ins = size / 32;	/* sizeof(struct okt_instrument_header); */
 	mod->smp = mod->ins;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (j = i = 0; i < mod->ins; i++) {
@@ -147,7 +147,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		struct xmp_sample *xxs = &mod->xxs[j];
 		struct xmp_subinstrument *sub;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		sub = &xxi->sub[0];
@@ -236,14 +236,14 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		return 0;
 
 	if (!data->pattern) {
-		if (pattern_init(mod) < 0)
+		if (libxmp_init_pattern(mod) < 0)
 			return -1;
 		D_(D_INFO "Stored patterns: %d", mod->pat);
 	}
 
 	rows = hio_read16b(f);
 
-	if (pattern_tracks_alloc(mod, data->pattern, rows) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, data->pattern, rows) < 0)
 		return -1;
 
 	for (j = 0; j < rows * mod->chn; j++) {
@@ -309,7 +309,7 @@ static int get_sbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		flags = SAMPLE_FLAG_7BIT;
 
 	sid = mod->xxi[i].sub[0].sid;
-	if (load_sample(m, f, flags, &mod->xxs[sid], NULL) < 0)
+	if (libxmp_load_sample(m, f, flags, &mod->xxs[sid], NULL) < 0)
 		return -1;
 
 	data->sample++;
@@ -346,7 +346,7 @@ static int okt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	if (ret != 0)
 		return -1;
 
-	set_type(m, "Oktalyzer");
+	libxmp_set_type(m, "Oktalyzer");
 
 	MODULE_INFO();
 

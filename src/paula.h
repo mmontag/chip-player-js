@@ -32,6 +32,6 @@ struct paula_state {
 };
 
 
-void	paula_init	(struct context_data *, struct paula_state *);
+void	libxmp_paula_init	(struct context_data *, struct paula_state *);
 
 #endif /* !LIBXMP_PAULA_H */

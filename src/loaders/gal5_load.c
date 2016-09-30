@@ -62,7 +62,7 @@ static int gal5_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	hio_read32b(f);		/* skip size */
-	read_title(f, t, 64);
+	libxmp_read_title(f, t, 64);
 
 	return 0;
 }
@@ -76,7 +76,7 @@ static int get_init(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	
 	hio_read(buf, 1, 64, f);
 	strncpy(mod->name, buf, 63);	/* ensure string terminator */
-	set_type(m, "Galaxy Music System 5.0");
+	libxmp_set_type(m, "Galaxy Music System 5.0");
 	flags = hio_read8(f);	/* bit 0: Amiga period */
 	if (~flags & 0x01)
 		m->period_type = PERIOD_LINEAR;
@@ -146,7 +146,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	
 	rows = hio_read8(f) + 1;
 
-	if (pattern_tracks_alloc(mod, i, rows) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, rows) < 0)
 		return -1;
 
 	for (r = 0; r < rows; ) {
@@ -216,7 +216,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	if (mod->xxi[i].nsm == 0)
 		return 0;
 
-	if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, mod->xxi[i].nsm) < 0)
 		return -1;
 
 	/* FIXME: Currently reading only the first sample */
@@ -273,7 +273,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxi[i].sub[0].vol, flags, srate);
 
 	if (mod->xxs[i].len > 1) {
-		if (load_sample(m, f, has_unsigned_sample ?
+		if (libxmp_load_sample(m, f, has_unsigned_sample ?
 				SAMPLE_FLAG_UNS : 0, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
@@ -330,10 +330,10 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -367,7 +367,7 @@ static int gal5_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* Alloc missing patterns */
 	for (i = 0; i < mod->pat; i++) {
 		if (mod->xxp[i] == NULL) {
-			if (pattern_tracks_alloc(mod, i, 64) < 0) {
+			if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0) {
 				return -1;
 			}
 		}

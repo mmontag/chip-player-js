@@ -158,17 +158,17 @@ static int arcfs_extract(FILE *in, FILE *out)
 
 	case 8:		/* "Crunched" [sic]
 			 * (RLE+9-to-12-bit dynamic LZW, a *bit* like GIF) */
-		orig_data = convert_lzw_dynamic(data, hdr.bits, 1,
+		orig_data = libxmp_convert_lzw_dynamic(data, hdr.bits, 1,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 9:		/* "Squashed" (9-to-13-bit, no RLE) */
-		orig_data = convert_lzw_dynamic(data, hdr.bits, 0,
+		orig_data = libxmp_convert_lzw_dynamic(data, hdr.bits, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 127:	/* "Compress" (9-to-16-bit, no RLE) ("Spark" only) */
-		orig_data = convert_lzw_dynamic(data, hdr.bits, 0,
+		orig_data = libxmp_convert_lzw_dynamic(data, hdr.bits, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 

@@ -118,7 +118,7 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	memcpy(mod->name, buf + ORD_OFS + 160, 16);
 	/* memcpy(m->author, buf + ORD_OFS + 176, 16); */
-	set_type(m, "Polly Tracker");
+	libxmp_set_type(m, "Polly Tracker");
 	MODULE_INFO();
 
 	mod->spd = 0x03;
@@ -140,7 +140,7 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->chn = 4;
 	mod->trk = mod->pat * mod->chn;
 
-	if (pattern_init(mod) < 0) {
+	if (libxmp_init_pattern(mod) < 0) {
 		free(buf);
 		return -1;
 	}
@@ -148,7 +148,7 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0) {
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0) {
 			free(buf);
 			return -1;
 		}
@@ -171,13 +171,13 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	mod->ins = mod->smp = 15;
-	if (instrument_init(m) < 0) {
+	if (libxmp_init_instrument(m) < 0) {
 		free(buf);
 		return -1;
 	}
 
 	for (i = 0; i < 15; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0) {
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0) {
 			free(buf);
 			return -1;
 		}
@@ -210,7 +210,7 @@ static int polly_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (mod->xxs[i].len == 0)
 			continue;
-		ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS,
+		ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_UNS,
 				&mod->xxs[i], (char*)buf + ORD_OFS + 256 +
 					256 * (buf[ORD_OFS + 129 + i] - 0x10));
 

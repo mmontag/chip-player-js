@@ -97,7 +97,7 @@ static int ims_test(HIO_HANDLE *f, char *t, const int start)
 
 	smp_size += ih.ins[i].size * 2;
 
-	if (test_name(ih.ins[i].name, 20) < 0)
+	if (libxmp_test_name(ih.ins[i].name, 20) < 0)
 	    return -1;
 
 	if (ih.ins[i].volume > 0x40)
@@ -139,7 +139,7 @@ static int ims_test(HIO_HANDLE *f, char *t, const int start)
 	return -1;
    
     hio_seek(f, start + 0, SEEK_SET);
-    read_title(f, t, 20);
+    libxmp_read_title(f, t, 20);
 
     return 0;
 }
@@ -195,11 +195,11 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->trk = mod->chn * mod->pat;
 
     strncpy(mod->name, (char *)ih.title, 20);
-    set_type(m, "Images Music System");
+    libxmp_set_type(m, "Images Music System");
 
     MODULE_INFO();
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
@@ -207,7 +207,7 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
 
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	xxi = &mod->xxi[i];
@@ -228,14 +228,14 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		xxi->nsm = 1;
 	}
 
-	instrument_name(mod, i, ih.ins[i].name, 20);
+	libxmp_instrument_name(mod, i, ih.ins[i].name, 20);
 
 	D_(D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x %+d",
 		i, xxi->name, xxs->len, xxs->lps, xxs->lpe,
 		ih.ins[i].loop_size > 1 ? 'L' : ' ', sub->vol, sub->fin >> 4);
     }
 
-    if (pattern_init(mod) < 0) {
+    if (libxmp_init_pattern(mod) < 0) {
 	return -1;
     }
 
@@ -243,7 +243,7 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 	    return -1;
 
 	for (j = 0; j < 0x100; j++) {
@@ -268,7 +268,7 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    event->fxt = LSN(ims_event[1]);
 	    event->fxp = ims_event[2];
 
-	    disable_continue_fx (event);
+	    libxmp_disable_continue_fx (event);
 
 	    /* According to Asle:
 	     * ``Just note that pattern break effect command (D**) uses
@@ -291,7 +291,7 @@ static int ims_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+	if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 	    return -1;
     }
 

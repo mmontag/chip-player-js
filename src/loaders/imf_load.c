@@ -118,7 +118,7 @@ static int imf_test(HIO_HANDLE *f, char *t, const int start)
 	return -1;
 
     hio_seek(f, start, SEEK_SET);
-    read_title(f, t, 32);
+    libxmp_read_title(f, t, 32);
 
     return 0;
 }
@@ -274,7 +274,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
     }
 
-    copy_adjust(mod->name, (uint8 *)ih.name, 32);
+    libxmp_copy_adjust(mod->name, (uint8 *)ih.name, 32);
 
     mod->len = ih.len;
     mod->ins = ih.ins;
@@ -287,7 +287,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->spd = ih.tpo;
     mod->bpm = ih.bpm;
 
-    set_type(m, "Imago Orpheus 1.0 IMF");
+    libxmp_set_type(m, "Imago Orpheus 1.0 IMF");
 
     MODULE_INFO();
 
@@ -316,7 +316,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->c4rate = C4_NTSC_RATE;
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Read patterns */
@@ -335,7 +335,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    return -1;
 	}
 
-	if (pattern_tracks_alloc(mod, i, rows) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, rows) < 0)
 	    return -1;
 
 	r = 0;
@@ -386,7 +386,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     /* Read and convert instruments and samples */
@@ -428,7 +428,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	xxi->nsm = ii.nsm;
 
         if (xxi->nsm > 0) {
-	    if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
+	    if (libxmp_alloc_subinstrument(mod, i, xxi->nsm) < 0)
 		return -1;
 	}
 
@@ -508,7 +508,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		continue;
 
 	    sid = sub->sid;
-	    if (load_sample(m, f, 0, &mod->xxs[sid], NULL) < 0)
+	    if (libxmp_load_sample(m, f, 0, &mod->xxs[sid], NULL) < 0)
 		return -1;
 	}
     }

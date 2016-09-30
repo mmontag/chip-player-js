@@ -83,7 +83,7 @@ static int stm_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -166,7 +166,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	mod->smp = mod->ins;
 	m->c4rate = C4_NTSC_RATE;
 
-	copy_adjust(mod->name, sfh.name, 20);
+	libxmp_copy_adjust(mod->name, sfh.name, 20);
 
 	if (bmod2stm) {
 		snprintf(mod->type, XMP_NAME_SIZE, "BMOD2STM STM");
@@ -177,12 +177,12 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* Read and convert instruments and samples */
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		mod->xxs[i].len = sfh.ins[i].length;
@@ -198,7 +198,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		if (mod->xxs[i].len > 0)
 			mod->xxi[i].nsm = 1;
 
-		instrument_name(mod, i, sfh.ins[i].name, 12);
+		libxmp_instrument_name(mod, i, sfh.ins[i].name, 12);
 
 		D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d", i,
 		   mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
@@ -221,14 +221,14 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	D_(D_INFO "Module length: %d", mod->len);
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < 64 * mod->chn; j++) {
@@ -272,7 +272,7 @@ static int stm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len > 1) {
-			if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+			if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 				return -1;
 		} else {
 			mod->xxi[i].nsm = 0;

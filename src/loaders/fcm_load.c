@@ -54,7 +54,7 @@ int fcm_load(struct module_data *m, HIO_HANDLE *f)
 	return -1;
 
     strncpy (mod->name, fh.name, 20);
-    set_type(m, "FC-M %d.%d", fh.vmaj, fh.vmin);
+    libxmp_set_type(m, "FC-M %d.%d", fh.vmaj, fh.vmin);
 
     MODULE_INFO();
 
@@ -135,7 +135,7 @@ int fcm_load(struct module_data *m, HIO_HANDLE *f)
     for (i = 0; i < mod->smp; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
+	libxmp_load_sample(m, f, 0, &mod->xxs[mod->xxi[i].sub[0].sid], NULL);
 	if (V(0))
 	    report (".");
     }

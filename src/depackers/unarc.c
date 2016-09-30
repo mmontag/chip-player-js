@@ -246,12 +246,12 @@ static int arc_extract(FILE *in, FILE *out)
 		break;
 
 	case 5:		/* "crunched" (12-bit static LZW) */
-		orig_data = convert_lzw_dynamic(data, 0, 0,
+		orig_data = libxmp_convert_lzw_dynamic(data, 0, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 6:		/* "crunched" (RLE+12-bit static LZW) */
-		orig_data = convert_lzw_dynamic(data, 0, 1,
+		orig_data = libxmp_convert_lzw_dynamic(data, 0, 1,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
@@ -266,18 +266,18 @@ static int arc_extract(FILE *in, FILE *out)
 
 	case 8:		/* "Crunched" [sic]
 			 * (RLE+9-to-12-bit dynamic LZW, a *bit* like GIF) */
-		orig_data = convert_lzw_dynamic(data, 12, 1,
+		orig_data = libxmp_convert_lzw_dynamic(data, 12, 1,
 					hdr.compressed_size, hdr.orig_size,
 					NOMARCH_QUIRK_SKIPMAX);
 		break;
 
 	case 9:		/* "Squashed" (9-to-13-bit, no RLE) */
-		orig_data = convert_lzw_dynamic(data, 13, 0,
+		orig_data = libxmp_convert_lzw_dynamic(data, 13, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 
 	case 127:	/* "Compress" (9-to-16-bit, no RLE) ("Spark" only) */
-		orig_data = convert_lzw_dynamic(data, 16, 0,
+		orig_data = libxmp_convert_lzw_dynamic(data, 16, 0,
 					hdr.compressed_size, hdr.orig_size, 0);
 		break;
 

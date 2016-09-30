@@ -607,7 +607,7 @@ static void setup_temp_free(vorb *f, void *p, size_t sz)
 #define CRC32_POLY    0x04c11db7   // from spec
 
 static uint32 crc_table[256];
-static void crc32_init_A(void)
+static void libxmp_crc32_init_A(void)
 {
    int i,j;
    uint32 s;
@@ -619,7 +619,7 @@ static void crc32_init_A(void)
 }
 
 #if 0
-static __forceinline uint32 crc32_update(uint32 crc, uint8 byte)
+static __forceinline uint32 libxmp_crc32_update(uint32 crc, uint8 byte)
 {
    return (crc << 8) ^ crc_table[byte ^ (crc >> 24)];
 }
@@ -3462,7 +3462,7 @@ static int start_decoder(vorb *f)
    }
    #endif
 
-   crc32_init_A(); // always init it, to avoid multithread race conditions
+   libxmp_crc32_init_A(); // always init it, to avoid multithread race conditions
 
    if (get8_packet(f) != VORBIS_packet_setup)       return error(f, VORBIS_invalid_setup);
    for (i=0; i < 6; ++i) header[i] = get8_packet(f);
@@ -4121,10 +4121,10 @@ static int vorbis_search_for_page_pushdata(vorb *f, uint8 *data, int data_len)
                // scan everything up to the embedded crc (which we must 0)
                crc = 0;
                for (j=0; j < 22; ++j)
-                  crc = crc32_update(crc, data[i+j]);
+                  crc = libxmp_crc32_update(crc, data[i+j]);
                // now process 4 0-bytes
                for (   ; j < 26; ++j)
-                  crc = crc32_update(crc, 0);
+                  crc = libxmp_crc32_update(crc, 0);
                // len is the total number of bytes we need to scan
                n = f->page_crc_tests++;
                f->scan[n].bytes_left = len-j;
@@ -4154,7 +4154,7 @@ static int vorbis_search_for_page_pushdata(vorb *f, uint8 *data, int data_len)
       // m is the bytes to scan in the current chunk
       crc = f->scan[i].crc_so_far;
       for (j=0; j < m; ++j)
-         crc = crc32_update(crc, data[n+j]);
+         crc = libxmp_crc32_update(crc, data[n+j]);
       f->scan[i].bytes_left -= m;
       f->scan[i].crc_so_far = crc;
       if (f->scan[i].bytes_left == 0) {
@@ -4335,16 +4335,16 @@ static uint32 vorbis_find_page(stb_vorbis *f, uint32 *end, uint32 *last)
                header[i] = 0;
             crc = 0;
             for (i=0; i < 27; ++i)
-               crc = crc32_update(crc, header[i]);
+               crc = libxmp_crc32_update(crc, header[i]);
             len = 0;
             for (i=0; i < header[26]; ++i) {
                int s = get8(f);
-               crc = crc32_update(crc, s);
+               crc = libxmp_crc32_update(crc, s);
                len += s;
             }
             if (len && f->eof) return 0;
             for (i=0; i < len; ++i)
-               crc = crc32_update(crc, get8(f));
+               crc = libxmp_crc32_update(crc, get8(f));
             // finished parsing probable page
             if (crc == goal) {
                // we could now check that it's either got the last

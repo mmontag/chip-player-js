@@ -48,7 +48,7 @@ static int med4_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read32b(f) != MAGIC_MED4)
 		return -1;
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -274,7 +274,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		temp_inst[i].loop_end = temp_inst[i].loop_start + loop_len;
 
-		copy_adjust(temp_inst[i].name, buf, 32);
+		libxmp_copy_adjust(temp_inst[i].name, buf, 32);
 	}
 
 	mod->pat = hio_read16b(f);
@@ -358,7 +358,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->trk = mod->chn * mod->pat;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	hio_seek(f, pos, SEEK_SET);
@@ -407,7 +407,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 #endif
 		}
 
-		if (pattern_tracks_alloc(mod, i, rows) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, rows) < 0)
 			return -1;
 
 		/* initialize masks */
@@ -510,7 +510,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (mask == MAGIC4('M','E','D','V')) {
 		mod->smp = 0;
 
-		if (instrument_init(m) < 0)
+		if (libxmp_init_instrument(m) < 0)
 			return -1;
 		hio_seek(f, -4, SEEK_CUR);
 		goto parse_iff;
@@ -554,7 +554,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->smp = num_smp;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);
@@ -620,7 +620,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				return -1;
 
 			xxi->nsm = 1;
-			if (subinstrument_alloc(mod, i, 1) < 0)
+			if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 				return -1;
 
 			sub = &xxi->sub[0];
@@ -645,7 +645,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					xxs->len, xxs->lps, xxs->lpe,
 					sub->vol, sub->xpo /*, sub->fin >> 4*/);
 
-			if (load_sample(m, f, 0, xxs, NULL) < 0)
+			if (libxmp_load_sample(m, f, 0, xxs, NULL) < 0)
 				return -1;
 
 			smp_idx++;
@@ -701,7 +701,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				return -1;
 
 			mod->xxi[i].nsm = synth.wforms;
-			if (subinstrument_alloc(mod, i, synth.wforms) < 0)
+			if (libxmp_alloc_subinstrument(mod, i, synth.wforms) < 0)
 				return -1;
 
 			MED_INSTRUMENT_EXTRAS(*xxi)->vts = synth.volspeed;
@@ -725,7 +725,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				xxs->lpe = xxs->len;
 				xxs->flg = XMP_SAMPLE_LOOP;
 
-				if (load_sample(m, f, 0, xxs, NULL) < 0) {
+				if (libxmp_load_sample(m, f, 0, xxs, NULL) < 0) {
 					return -1;
 				}
 
@@ -746,7 +746,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		/* instr type is sample */
 		xxi->nsm = 1;
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 		
 		sub = &xxi->sub[0];
@@ -772,7 +772,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				sub->vol, sub->xpo);
 
-		if (load_sample(m, f, 0, xxs, NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, xxs, NULL) < 0)
 			return -1;
 
 		/* Limit range to 3 octave (see MED.El toro) */

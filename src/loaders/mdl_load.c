@@ -52,9 +52,9 @@ static int mdl_test(HIO_HANDLE *f, char *t, const int start)
 
     if (id == 0x494e) {		/* IN */
 	hio_read32b(f);
-	read_title(f, t, 32);
+	libxmp_read_title(f, t, 32);
     } else {
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
     }
 
     return 0;
@@ -410,7 +410,7 @@ static int get_chunk_pa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_alloc(mod, i) < 0)
+	if (libxmp_alloc_pattern(mod, i) < 0)
 	    return -1;
 
 	chn = hio_read8(f);
@@ -446,7 +446,7 @@ static int get_chunk_p0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_alloc(mod, i) < 0)
+	if (libxmp_alloc_pattern(mod, i) < 0)
 	    return -1;
 	mod->xxp[i]->rows = 64;
 
@@ -492,7 +492,7 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	goto err;
 
     /* Empty track 0 is not stored in the file */
-    if (track_alloc(mod, 0, 256) < 0)
+    if (libxmp_alloc_track(mod, 0, 256) < 0)
 	goto err2;
 
     for (i = 1; i < mod->trk; i++) {
@@ -566,7 +566,7 @@ static int get_chunk_tr(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	    row = 128;
 	else row = 256;
 
-	if (track_alloc(mod, i, row) < 0)
+	if (libxmp_alloc_track(mod, i, row) < 0)
 	    goto err2;
 
 	memcpy(mod->xxt[i], track, sizeof (struct xmp_track) +
@@ -603,7 +603,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
     mod->ins = hio_read8(f);
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
@@ -618,7 +618,7 @@ static int get_chunk_ii(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
 	D_(D_INFO "[%2X] %-32.32s %2d", data->i_index[i], xxi->name, xxi->nsm);
 
-	if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, xxi->nsm) < 0)
 	    return -1;
 
 	for (j = 0; j < XMP_MAX_KEYS; j++)
@@ -751,7 +751,7 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     if ((data->packinfo = calloc(sizeof (int), mod->smp)) == NULL)
@@ -763,7 +763,7 @@ static int get_chunk_i0(struct module_data *m, int size, HIO_HANDLE *f, void *pa
 	int c5spd;
 
 	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	sub = &mod->xxi[i].sub[0];
@@ -865,7 +865,7 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
             goto err2;
 	}
 	
-	if (load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, xxs, (char *)smpbuf) < 0)
+	if (libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, xxs, (char *)smpbuf) < 0)
 	    goto err2;
 
 	free(smpbuf);
@@ -992,7 +992,7 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     iff_id_size(handle, 2);
     iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
-    set_type(m, "Digitrakker MDL %d.%d", MSN(*buf), LSN(*buf));
+    libxmp_set_type(m, "Digitrakker MDL %d.%d", MSN(*buf), LSN(*buf));
 
     m->volbase = 0xff;
     m->c4rate = C4_NTSC_RATE;

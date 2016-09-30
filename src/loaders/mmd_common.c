@@ -412,7 +412,7 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		return -1;
 
 	xxi->nsm = 1;
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 		return -1;
 
 	MED_INSTRUMENT_EXTRAS((*xxi))->vts = synth->volspeed;
@@ -433,7 +433,7 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	xxs->lpe = xxs->lps + 2 * sample->replen;
 	xxs->flg = sample->replen > 1 ?  XMP_SAMPLE_LOOP : 0;
 
-	if (load_sample(m, f, 0, xxs, NULL) < 0)
+	if (libxmp_load_sample(m, f, 0, xxs, NULL) < 0)
 		return -1;
 
 	return 0;
@@ -486,7 +486,7 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		return -1;
 
 	mod->xxi[i].nsm = synth->wforms;
-	if (subinstrument_alloc(mod, i, synth->wforms) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, synth->wforms) < 0)
 		return -1;
 
 	MED_INSTRUMENT_EXTRAS((*xxi))->vts = synth->volspeed;
@@ -513,7 +513,7 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		xxs->lpe = mod->xxs[smp_idx].len;
 		xxs->flg = XMP_SAMPLE_LOOP;
 
-		if (load_sample(m, f, 0, xxs, NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, xxs, NULL) < 0)
 			return -1;
 
 		smp_idx++;
@@ -544,7 +544,7 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	xxi->rls = 0xfff - (exp_smp->decay << 4);
 
 	xxi->nsm = 1;
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 		return -1;
 
 	sub = &xxi->sub[0];
@@ -606,7 +606,7 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	}
 
 
-	if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
+	if (libxmp_load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
 		return -1;
 	}
 
@@ -656,7 +656,7 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	xxi->rls = 0xfff - (exp_smp->decay << 4);
 
 	xxi->nsm = num_oct;
-	if (subinstrument_alloc(mod, i, num_oct) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, num_oct) < 0)
 		return -1;
 
 	/* base octave size */
@@ -684,7 +684,7 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 			xxs->flg |= XMP_SAMPLE_LOOP;
 		}
 	
-		if (load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_BIGEND, xxs, NULL) < 0) {
 			return -1;
 		}
 

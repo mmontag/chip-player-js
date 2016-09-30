@@ -55,7 +55,7 @@ static int it_test(HIO_HANDLE * f, char *t, const int start)
 	if (hio_read32b(f) != MAGIC_IMPM)
 		return -1;
 
-	read_title(f, t, 26);
+	libxmp_read_title(f, t, 26);
 
 	return 0;
 }
@@ -400,10 +400,10 @@ static void identify_tracker(struct module_data *m, struct it_file_header *ifh)
 		}
 	}
 
-	set_type(m, "%s IT %d.%02x", tracker_name, ifh->cmwt >> 8,
+	libxmp_set_type(m, "%s IT %d.%02x", tracker_name, ifh->cmwt >> 8,
 						ifh->cmwt & 0xff);
 #else
-	set_type(m, "Impulse Tracker");
+	libxmp_set_type(m, "Impulse Tracker");
 #endif
 }
 
@@ -450,7 +450,7 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	if (hio_read(&i1h.enode, 1, 50, f) != 50)
 		return -1;
 
-	copy_adjust(xxi->name, i1h.name, 25);
+	libxmp_copy_adjust(xxi->name, i1h.name, 25);
 
 	xxi->rls = i1h.fadeout << 7;
 
@@ -600,7 +600,7 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 		return -1;
 	}
 
-	copy_adjust(xxi->name, i2h.name, 25);
+	libxmp_copy_adjust(xxi->name, i2h.name, 25);
 	xxi->rls = i2h.fadeout << 6;
 
 	/* Envelopes */
@@ -785,9 +785,9 @@ static int load_it_sample(struct module_data *m, int i, int start,
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].nsm = !!(xxs->len);
-		instrument_name(mod, i, ish.name, 25);
+		libxmp_instrument_name(mod, i, ish.name, 25);
 	} else {
-		copy_adjust(xxs->name, ish.name, 25);
+		libxmp_copy_adjust(xxs->name, ish.name, 25);
 	}
 
 	D_(D_INFO "\n[%2X] %-26.26s %05x%c%05x %05x %05x %05x "
@@ -873,7 +873,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 					free(buf);
 					return -1;
 				}
-				ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD |
+				ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD |
 							cvt, &m->xsmp[i], buf);
 				if (ret < 0) {
 					free(buf);
@@ -882,7 +882,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				hio_seek(f, pos, SEEK_SET);
 			}
 
-			ret = load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
+			ret = libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD | cvt,
 					  &mod->xxs[i], buf);
 			if (ret < 0) {
 				free(buf);
@@ -896,12 +896,12 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				if (pos < 0) {
 					return -1;
 				}
-				if (load_sample(m, f, cvt, &m->xsmp[i], NULL) < 0)
+				if (libxmp_load_sample(m, f, cvt, &m->xsmp[i], NULL) < 0)
 					return -1;
 				hio_seek(f, pos, SEEK_SET);
 			}
 
-			if (load_sample(m, f, cvt, &mod->xxs[i], NULL) < 0)
+			if (libxmp_load_sample(m, f, cvt, &mod->xxs[i], NULL) < 0)
 				return -1;
 		}
 	}
@@ -929,7 +929,7 @@ static int load_it_pattern(struct module_data *m, int i, int new_fx,
 	pat_len = hio_read16l(f) /* - 4 */ ;
 	mod->xxp[i]->rows = hio_read16l(f);
 
-	if (tracks_in_pattern_alloc(mod, i) < 0)
+	if (libxmp_alloc_tracks_in_pattern(mod, i) < 0)
 		return -1;
 
 	memset(mask, 0, L_CHANNELS);
@@ -1172,7 +1172,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (sample_mode)
 		mod->ins = mod->smp;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		goto err4;
 
 	/* Alloc extra samples for sustain loop */
@@ -1290,13 +1290,13 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->chn = max_ch + 1;
 	mod->trk = mod->pat * mod->chn;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		goto err4;
 
 	/* Read patterns */
 	for (i = 0; i < mod->pat; i++) {
 
-		if (pattern_alloc(mod, i) < 0)
+		if (libxmp_alloc_pattern(mod, i) < 0)
 			goto err4;
 
 		/* If the offset to a pattern is 0, the pattern is empty */
@@ -1304,7 +1304,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxp[i]->rows = 64;
 			for (j = 0; j < mod->chn; j++) {
 				int tnum = i * mod->chn + j;
-				if (track_alloc(mod, tnum, 64) < 0)
+				if (libxmp_alloc_track(mod, tnum, 64) < 0)
 					goto err4;
 				mod->xxp[i]->index[j] = tnum;
 			}

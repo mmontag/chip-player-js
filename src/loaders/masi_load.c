@@ -106,9 +106,9 @@ static int masi_test(HIO_HANDLE *f, char *t, const int start)
 
 	if (hio_read32b(f) == MAGIC_TITL) {
 		val = hio_read32l(f);
-		read_title(f, t, val);
+		libxmp_read_title(f, t, val);
 	} else {
-		read_title(f, t, 0);
+		libxmp_read_title(f, t, 0);
 	}
 
 	return 0;
@@ -178,7 +178,7 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_seek(f, data->sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
 	i = data->cur_ins;
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 		return -1;
 
 	xxi = &mod->xxi[i];
@@ -227,7 +227,7 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	sub->fin += finetune;
 
 	hio_seek(f, 16, SEEK_CUR);
-	if (load_sample(m, f, SAMPLE_FLAG_8BDIFF, xxs, NULL) < 0)
+	if (libxmp_load_sample(m, f, SAMPLE_FLAG_8BDIFF, xxs, NULL) < 0)
 		return -1;
 
 	data->cur_ins++;
@@ -256,7 +256,7 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		return -1;
 	}
 
-	if (pattern_tracks_alloc(mod, i, rows) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, rows) < 0)
 		return -1;
 
 	r = 0;
@@ -512,17 +512,17 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (data.pord == NULL)
 		goto err2;
 
-	set_type(m, data.sinaria ?
+	libxmp_set_type(m, data.sinaria ?
 		"Sinaria PSM" : "Epic MegaGames MASI PSM");
 
 	m->c4rate = C4_NTSC_RATE;
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		goto err3;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		goto err3;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);

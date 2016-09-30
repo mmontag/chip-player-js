@@ -108,7 +108,7 @@ static int stx_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -194,7 +194,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	strncpy(mod->name, (char *)sfh.name, 20);
 	if (bmod2stm)
-		set_type(m, "BMOD2STM STX");
+		libxmp_set_type(m, "BMOD2STM STX");
 	else
 		snprintf(mod->type, XMP_NAME_SIZE, "STM2STX 1.%d",
 			 broken ? 0 : 1);
@@ -228,13 +228,13 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_seek(f, 4, SEEK_CUR);
 	}
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		goto err3;
 
 	/* Read and convert instruments and samples */
 
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			goto err3;
 
 		hio_seek(f, start + (pp_ins[i] << 4), SEEK_SET);
@@ -269,7 +269,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].nsm = 1;
 
-		instrument_name(mod, i, sih.name, 12);
+		libxmp_instrument_name(mod, i, sih.name, 12);
 
 		D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c V%02x %5d\n", i,
 		   mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
@@ -281,14 +281,14 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			      &mod->xxi[i].sub[0].fin);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		goto err3;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			goto err3;
 
 		if (pp_pat[i] == 0)
@@ -357,7 +357,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			goto err;
 	}
 

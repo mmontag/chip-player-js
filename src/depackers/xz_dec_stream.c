@@ -243,7 +243,7 @@ static enum xz_ret dec_block(struct xz_dec *s, struct xz_buf *b)
 		return XZ_DATA_ERROR;
 
 	if (s->check_type == XZ_CHECK_CRC32)
-		s->crc32 = crc32_A1(b->out + s->out_start,
+		s->crc32 = libxmp_crc32_A1(b->out + s->out_start,
 				b->out_pos - s->out_start, s->crc32);
 
 	if (ret == XZ_STREAM_END) {
@@ -268,7 +268,7 @@ static enum xz_ret dec_block(struct xz_dec *s, struct xz_buf *b)
 #endif
 
 		s->block.hash.uncompressed += s->block.uncompressed;
-		s->block.hash.crc32 = crc32_A1(
+		s->block.hash.crc32 = libxmp_crc32_A1(
 				(const uint8 *)&s->block.hash,
 				sizeof(s->block.hash), s->block.hash.crc32);
 
@@ -283,7 +283,7 @@ static void index_update(struct xz_dec *s, const struct xz_buf *b)
 {
 	size_t in_used = b->in_pos - s->in_start;
 	s->index.size += in_used;
-	s->crc32 = crc32_A1(b->in + s->in_start, in_used, s->crc32);
+	s->crc32 = libxmp_crc32_A1(b->in + s->in_start, in_used, s->crc32);
 }
 
 /*
@@ -327,7 +327,7 @@ static enum xz_ret dec_index(struct xz_dec *s, struct xz_buf *b)
 
 		case SEQ_INDEX_UNCOMPRESSED:
 			s->index.hash.uncompressed += s->vli;
-			s->index.hash.crc32 = crc32_A1(
+			s->index.hash.crc32 = libxmp_crc32_A1(
 					(const uint8 *)&s->index.hash,
 					sizeof(s->index.hash),
 					s->index.hash.crc32);
@@ -344,7 +344,7 @@ static enum xz_ret dec_index(struct xz_dec *s, struct xz_buf *b)
  * Validate that the next four input bytes match the value of s->crc32.
  * s->pos must be zero when starting to validate the first byte.
  */
-static enum xz_ret crc32_validate(struct xz_dec *s, struct xz_buf *b)
+static enum xz_ret libxmp_crc32_validate(struct xz_dec *s, struct xz_buf *b)
 {
 	do {
 		if (b->in_pos == b->in_size)
@@ -390,7 +390,7 @@ static enum xz_ret dec_stream_header(struct xz_dec *s)
 	if (!memeq(s->temp.buf, HEADER_MAGIC, HEADER_MAGIC_SIZE))
 		return XZ_FORMAT_ERROR;
 
-	if (crc32_A1(s->temp.buf + HEADER_MAGIC_SIZE, 2, 0)
+	if (libxmp_crc32_A1(s->temp.buf + HEADER_MAGIC_SIZE, 2, 0)
 			!= get_le32(s->temp.buf + HEADER_MAGIC_SIZE + 2))
 		return XZ_DATA_ERROR;
 
@@ -425,7 +425,7 @@ static enum xz_ret dec_stream_footer(struct xz_dec *s)
 	if (!memeq(s->temp.buf + 10, FOOTER_MAGIC, FOOTER_MAGIC_SIZE))
 		return XZ_DATA_ERROR;
 
-	if (crc32_A1(s->temp.buf + 4, 6, 0) != get_le32(s->temp.buf))
+	if (libxmp_crc32_A1(s->temp.buf + 4, 6, 0) != get_le32(s->temp.buf))
 		return XZ_DATA_ERROR;
 
 	/*
@@ -456,7 +456,7 @@ static enum xz_ret dec_block_header(struct xz_dec *s)
 	 * eight bytes so this is safe.
 	 */
 	s->temp.size -= 4;
-	if (crc32_A1(s->temp.buf, s->temp.size, 0)
+	if (libxmp_crc32_A1(s->temp.buf, s->temp.size, 0)
 			!= get_le32(s->temp.buf + s->temp.size))
 		return XZ_DATA_ERROR;
 
@@ -646,7 +646,7 @@ static enum xz_ret dec_main(struct xz_dec *s, struct xz_buf *b)
 
 		case SEQ_BLOCK_CHECK:
 			if (s->check_type == XZ_CHECK_CRC32) {
-				ret = crc32_validate(s, b);
+				ret = libxmp_crc32_validate(s, b);
 				if (ret != XZ_STREAM_END)
 					return ret;
 			}
@@ -689,7 +689,7 @@ static enum xz_ret dec_main(struct xz_dec *s, struct xz_buf *b)
 			s->sequence = SEQ_INDEX_CRC32;
 
 		case SEQ_INDEX_CRC32:
-			ret = crc32_validate(s, b);
+			ret = libxmp_crc32_validate(s, b);
 			if (ret != XZ_STREAM_END)
 				return ret;
 

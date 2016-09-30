@@ -155,12 +155,12 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	snprintf(mod->type, XMP_NAME_SIZE, "%s", name);
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0) {
+	if (libxmp_init_instrument(m) < 0) {
 		goto err3;
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			goto err3;
 
 		mod->xxs[i].len = 2 * mh.ins[i].size;
@@ -176,7 +176,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 		if (mod->xxs[i].len > 0)
 			mod->xxi[i].nsm = 1;
 
-		instrument_name(mod, i, mh.ins[i].name, 22);
+		libxmp_instrument_name(mod, i, mh.ins[i].name, 22);
 
 		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 			     i, mod->xxi[i].name, mod->xxs[i].len,
@@ -186,7 +186,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 			     mod->xxi[i].sub[0].fin >> 4);
 	}
 
-	if (pattern_init(mod) < 0) {
+	if (libxmp_init_pattern(mod) < 0) {
 		goto err3;
 	}
 
@@ -194,13 +194,13 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			goto err3;
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
 			hio_read(mod_event, 1, 4, f);
-			decode_protracker_event(event, mod_event);
+			libxmp_decode_protracker_event(event, mod_event);
 		}
 	}
 
@@ -210,7 +210,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 
 	D_(D_INFO "Stored samples: %d", mod->smp);
 	for (i = 0; i < mod->smp; i++) {
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			goto err3;
 	}
 

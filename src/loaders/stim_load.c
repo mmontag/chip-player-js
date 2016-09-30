@@ -48,7 +48,7 @@ static int stim_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read16b(f) > 16)
 		return -1;
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -113,18 +113,18 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = sh.order[i];
 
-	set_type(m, "Slamtilt");
+	libxmp_set_type(m, "Slamtilt");
 
 	MODULE_INFO();
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		hio_seek(f, start + sh.pataddr[i] + 8, SEEK_SET);
@@ -161,12 +161,12 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				event->fxt = ((b2 >> 4) & 0x0c) | (b1 >> 5);
 				event->fxp = b3;
 
-				disable_continue_fx(event);
+				libxmp_disable_continue_fx(event);
 			}
 		}
 	}
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	D_(D_INFO "Stored samples: %d", mod->smp);
@@ -180,7 +180,7 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		si.loop_start = hio_read16b(f);
 		si.loop_size = hio_read16b(f);
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		mod->xxs[i].len = 2 * si.size;
@@ -204,7 +204,7 @@ static int stim_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (!mod->xxs[i].len)
 			continue;
 
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

@@ -329,7 +329,7 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 
 		if (check_delay(ctx, &ev, chn) == 0) {
 			if (!f->rowdelay_set || f->rowdelay > 0) {
-				read_event(ctx, &ev, chn);
+				libxmp_read_event(ctx, &ev, chn);
 #ifndef LIBXMP_CORE_PLAYER
 				med_hold_hack(ctx, pat, chn, row);
 #endif
@@ -773,7 +773,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		cutoff = 0xff;
 	} else if (cutoff < 0xff) {
 		int a0, b0, b1;
-		filter_setup(s->freq, cutoff, resonance, &a0, &b0, &b1);
+		libxmp_filter_setup(s->freq, cutoff, resonance, &a0, &b0, &b1);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_A0, a0);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, b0);
 		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, b1);
@@ -1055,7 +1055,7 @@ static void play_channel(struct context_data *ctx, int chn)
 	/* Do delay */
 	if (xc->delay > 0) {
 		if (--xc->delay == 0) {
-			read_event(ctx, &xc->delayed_event, chn);
+			libxmp_read_event(ctx, &xc->delayed_event, chn);
 		}
 	}
 
@@ -1144,7 +1144,7 @@ static void inject_event(struct context_data *ctx)
 	for (chn = 0; chn < mod->chn + smix->chn; chn++) {
 		struct xmp_event *e = &p->inject_event[chn];
 		if (e->_flag > 0) {
-			read_event(ctx, e, chn);
+			libxmp_read_event(ctx, e, chn);
 			e->_flag = 0;
 		}
 	}

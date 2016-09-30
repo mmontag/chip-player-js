@@ -63,7 +63,7 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 
 	hio_seek(f, start, SEEK_SET);
 	hio_read(mh.name, 1, 20, f);
-	if (test_name(mh.name, 20) < 0) {
+	if (libxmp_test_name(mh.name, 20) < 0) {
 		return -1;
 	}
 
@@ -91,7 +91,7 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	for (i = 0; i < 15; i++) {
-		if (test_name(mh.ins[i].name, 22) < 0)
+		if (libxmp_test_name(mh.ins[i].name, 22) < 0)
 			return -1;
 
 		if (mh.ins[i].volume > 0x40)
@@ -178,7 +178,7 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 	}
 
 	hio_seek(f, start, SEEK_SET);
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -260,7 +260,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		smp_size += 2 * mh.ins[i].size;
 	}
 
-	if (instrument_init(m) < 0) {
+	if (libxmp_init_instrument(m) < 0) {
 		return -1;
 	}
 
@@ -269,7 +269,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		struct xmp_sample *xxs = &mod->xxs[i];
 		struct xmp_subinstrument *sub;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		sub = &xxi->sub[0];
@@ -301,7 +301,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		for (j = 0; j < (64 * mod->chn); j++) {
 			hio_read(mod_event, 1, 4, f);
 
-			decode_protracker_event(&ev, mod_event);
+			libxmp_decode_protracker_event(&ev, mod_event);
 
 			if (ev.fxt)
 				fxused |= 1 << ev.fxt;
@@ -351,7 +351,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 	}
 
-	if (pattern_init(mod) < 0) {
+	if (libxmp_init_pattern(mod) < 0) {
 		return -1;
 	}
 
@@ -361,14 +361,14 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	used_ins = 0;
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < (64 * mod->chn); j++) {
 			event = &EVENT(i, j % mod->chn, j / mod->chn);
 			hio_read(mod_event, 1, 4, f);
 
-			decode_protracker_event(event, mod_event);
+			libxmp_decode_protracker_event(event, mod_event);
 
 			if (ev.ins > used_ins)
 				used_ins = ev.ins;
@@ -436,7 +436,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		 */
 		hio_seek(f, mh.ins[i].loop_start, SEEK_CUR);
 
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0) {
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0) {
 			return -1;
 		}
 	}

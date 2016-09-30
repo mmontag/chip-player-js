@@ -4,6 +4,11 @@
  * readhuff.h
  */
 
-extern unsigned char *convert_huff(unsigned char *data_in,
-                                   unsigned long in_len,
-                                   unsigned long orig_len);
+#ifndef LIBXMP_READHUFF_H
+#define LIBXMP_READHUFF_H
+
+unsigned char	*libxmp_convert_huff(unsigned char *data_in,
+                             unsigned long in_len,
+                             unsigned long orig_len);
+
+#endif

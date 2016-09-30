@@ -215,7 +215,7 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 
 found:
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -461,7 +461,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /*pat_size = 256 * mod->chn * mod->pat;*/
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
@@ -469,7 +469,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
 
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	if (mh.ins[i].size >= 0x8000) {
@@ -493,7 +493,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sub->vol = mh.ins[i].volume;
 	sub->pan = 0x80;
 	sub->sid = i;
-	instrument_name(mod, i, mh.ins[i].name, 22);
+	libxmp_instrument_name(mod, i, mh.ins[i].name, 22);
 
 	if (xxs->len > 0) {
 		xxi->nsm = 1;
@@ -576,7 +576,7 @@ skip_test:
 			mod->xxs[i].len > mod->xxs[i].lpe ? '!' : ' ');
     }
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Load and convert patterns */
@@ -585,7 +585,7 @@ skip_test:
     for (i = 0; i < mod->pat; i++) {
 	long pos;
 
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 	    return -1;
 
 	pos = hio_tell(f);
@@ -638,10 +638,10 @@ skip_test:
 	    switch (tracker_id) {
 	    case TRACKER_PROBABLY_NOISETRACKER:
 	    case TRACKER_NOISETRACKER:
-	    	decode_noisetracker_event(event, mod_event);
+	    	libxmp_decode_noisetracker_event(event, mod_event);
 		break;
 	    default:	
-	        decode_protracker_event(event, mod_event);
+	        libxmp_decode_protracker_event(event, mod_event);
 	    }
 	}
     }
@@ -739,7 +739,7 @@ skip_test:
 	    snprintf(sn, XMP_NAME_SIZE, "%s%s", pathname, mod->xxi[i].name);
 	
 	    if ((s = hio_open(sn, "rb"))) {
-	        if (load_sample(m, s, flags, &mod->xxs[i], NULL) < 0) {
+	        if (libxmp_load_sample(m, s, flags, &mod->xxs[i], NULL) < 0) {
 		    hio_close(s);
 		    return -1;
 		}
@@ -761,7 +761,7 @@ skip_test:
 		hio_seek(f, pos, SEEK_SET);
 	    }
 
-	    if (load_sample(m, f, flags, &mod->xxs[i], NULL) < 0)
+	    if (libxmp_load_sample(m, f, flags, &mod->xxs[i], NULL) < 0)
 		return -1;
 	}
     }

@@ -59,9 +59,9 @@ static int pt3_test(HIO_HANDLE *f, char *t, const int start)
 	
 	if (hio_read32b(f) == MAGIC_INFO) {
 		hio_read32b(f);	/* skip size */
-		read_title(f, t, 32);
+		libxmp_read_title(f, t, 32);
 	} else {
-		read_title(f, t, 0);
+		libxmp_read_title(f, t, 0);
 	}
 
 	return 0;
@@ -144,7 +144,7 @@ static int pt3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read32b(f);		/* VERS size */
 
 	hio_read(buf, 1, 10, f);
-	set_type(m, "%-6.6s IFFMODL", buf + 4);
+	libxmp_set_type(m, "%-6.6s IFFMODL", buf + 4);
 
 	handle = iff_new();
 	if (handle == NULL)
@@ -213,11 +213,11 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->pat++;
 	mod->trk = mod->chn * mod->pat;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		mod->xxs[i].len = 2 * mh.ins[i].size;
@@ -234,7 +234,7 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].sid = i;
 		mod->xxi[i].rls = 0xfff;
 
-		instrument_name(mod, i, mh.ins[i].name, 22);
+		libxmp_instrument_name(mod, i, mh.ins[i].name, 22);
 
 		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c V%02x %+d",
 				i, mod->xxi[i].name,
@@ -245,20 +245,20 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				mod->xxi[i].sub[0].fin >> 4);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
 			hio_read(mod_event, 1, 4, f);
-			decode_protracker_event(event, mod_event);
+			libxmp_decode_protracker_event(event, mod_event);
 		}
 	}
 
@@ -271,7 +271,7 @@ static int ptdt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (!mod->xxs[i].len)
 			continue;
 
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

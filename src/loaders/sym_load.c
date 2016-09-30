@@ -67,7 +67,7 @@ static int sym_test(HIO_HANDLE *f, char *t, const int start)
 			hio_read24l(f);
 	}
 
-	read_title(f, t, hio_read8(f));
+	libxmp_read_title(f, t, hio_read8(f));
 
 	return 0;
 }
@@ -260,7 +260,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, 8, SEEK_CUR);	/* BASSTRAK */
 
 	/*ver =*/ hio_read8(f);
-	set_type(m, "Digital Symphony");
+	libxmp_set_type(m, "Digital Symphony");
 
 	mod->chn = hio_read8(f);
 	mod->len = mod->pat = hio_read16l(f);
@@ -274,11 +274,11 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->ins = mod->smp = 63;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		sn[i] = hio_read8(f);	/* sample name length */
@@ -306,7 +306,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	MODULE_INFO();
 
 	mod->trk++;			/* alloc extra empty track */
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Sequence */
@@ -322,7 +322,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	if (a) {
-		unsigned char *x = read_lzw_dynamic(f->handle.file, buf,
+		unsigned char *x = libxmp_read_lzw_dynamic(f->handle.file, buf,
 					13, 0, size, size, XMP_LZW_QUIRK_DSYM);
 		if (x == NULL) {
 			free(buf);
@@ -336,7 +336,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < mod->len; i++) {	/* len == pat */
-		if (pattern_alloc(mod, i) < 0) {
+		if (libxmp_alloc_pattern(mod, i) < 0) {
 			free(buf);
 			return -1;
 		}
@@ -376,7 +376,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	if (a) {
-		unsigned char *x = read_lzw_dynamic(f->handle.file, buf,
+		unsigned char *x = libxmp_read_lzw_dynamic(f->handle.file, buf,
 					13, 0, size, size, XMP_LZW_QUIRK_DSYM);
 		if (x == NULL) {
 			free(buf);
@@ -390,7 +390,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	for (i = 0; i < mod->trk - 1; i++) {
-		if (track_alloc(mod, i, 64) < 0) {
+		if (libxmp_alloc_track(mod, i, 64) < 0) {
 			free(buf);
 			return -1;
 		}
@@ -419,7 +419,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	free(buf);
 
 	/* Extra track */
-	if (track_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_track(mod, i, 64) < 0)
 		return -1;
 
 	/* Load and convert instruments */
@@ -431,7 +431,7 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		memset(buf, 0, 128);
 		hio_read(buf, 1, sn[i] & 0x7f, f);
-		instrument_name(mod, i, buf, 32);
+		libxmp_instrument_name(mod, i, buf, 32);
 
 		if (~sn[i] & 0x80) {
 			int looplen;
@@ -467,18 +467,18 @@ static int sym_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		if (a == 1) {
 			uint8 *b = malloc(mod->xxs[i].len);
-			read_lzw_dynamic(f->handle.file, b, 13, 0,
+			libxmp_read_lzw_dynamic(f->handle.file, b, 13, 0,
 					mod->xxs[i].len, mod->xxs[i].len,
 					XMP_LZW_QUIRK_DSYM);
-			ret = load_sample(m, NULL,
+			ret = libxmp_load_sample(m, NULL,
 					SAMPLE_FLAG_NOLOAD | SAMPLE_FLAG_DIFF,
 					&mod->xxs[i], (char*)b);
 			free(b);
 		/*} else if (a == 4) {
-			ret = load_sample(m, f, SAMPLE_FLAG_VIDC,
+			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_VIDC,
 					&mod->xxs[i], NULL);*/
 		} else {
-			ret = load_sample(m, f, SAMPLE_FLAG_VIDC,
+			ret = libxmp_load_sample(m, f, SAMPLE_FLAG_VIDC,
 					&mod->xxs[i], NULL);
 		}
 

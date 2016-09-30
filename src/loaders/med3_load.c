@@ -45,7 +45,7 @@ static int med3_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read32b(f) !=  MAGIC_MED3)
 		return -1;
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -242,11 +242,11 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read32b(f);
 
-	set_type(m, "MED 2.00 MED3");
+	libxmp_set_type(m, "MED 2.00 MED3");
 
 	mod->ins = mod->smp = 32;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* read instrument names */
@@ -258,8 +258,8 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (c == 0)
 				break;
 		}
-		instrument_name(mod, i, buf, 32);
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		libxmp_instrument_name(mod, i, buf, 32);
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 	}
 
@@ -334,7 +334,7 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < 32; i++)
 		mod->xxi[i].sub[0].xpo = transp;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Load and convert patterns */
@@ -345,7 +345,7 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint8 b, tracks;
 		uint16 convsz;
 
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		tracks = hio_read8(f);
@@ -421,7 +421,7 @@ static int med3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 			mod->xxi[i].sub[0].vol);
 
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

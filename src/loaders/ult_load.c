@@ -55,7 +55,7 @@ static int ult_test(HIO_HANDLE *f, char *t, const int start)
     if (buf[14] < '0' || buf[14] > '4')
 	return -1;
 
-    read_title(f, t, 32);
+    libxmp_read_title(f, t, 32);
 
     return 0;
 }
@@ -121,7 +121,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     strncpy(mod->name, (char *)ufh.name, 32);
     ufh.name[0] = 0;
-    set_type(m, "Ultra Tracker %s ULT V%04d", verstr[ver - 1], ver);
+    libxmp_set_type(m, "Ultra Tracker %s ULT V%04d", verstr[ver - 1], ver);
 
     m->c4rate = C4_NTSC_RATE;
 
@@ -134,13 +134,13 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Read and convert instruments */
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     D_(D_INFO "Instruments: %d", mod->ins);
 
     for (i = 0; i < mod->ins; i++) {
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	hio_read(&uih.name, 32, 1, f);
@@ -208,7 +208,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].pan = 0x80;
 	mod->xxi[i].sub[0].sid = i;
 
-	instrument_name(mod, i, uih.name, 24);
+	libxmp_instrument_name(mod, i, uih.name, 24);
 
 	D_(D_INFO "[%2X] %-32.32s %05x%c%05x %05x %c V%02x F%04x %5d",
 		i, uih.name, mod->xxs[i].len,
@@ -246,7 +246,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Read and convert patterns */
@@ -255,7 +255,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Events are stored by channel */
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 	    return -1;
     }
 
@@ -344,7 +344,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	if (!mod->xxs[i].len)
 	    continue;
-	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+	if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 	    return -1;
     }
 

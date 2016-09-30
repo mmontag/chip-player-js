@@ -71,7 +71,7 @@ static const float resonance_table[128] = {
  * Simple 2-poles resonant filter
  */
 #define FREQ_PARAM_MULT (128.0f / (24.0f * 256.0f))
-void filter_setup(int srate, int cutoff, int res, int *a0, int *b0, int *b1)
+void libxmp_filter_setup(int srate, int cutoff, int res, int *a0, int *b0, int *b1)
 {
 	float fc, fs = (float)srate;
 	float fg, fb0, fb1;

@@ -73,7 +73,7 @@ static int no_test(HIO_HANDLE *f, char *t, const int start)
 
 	hio_seek(f, start + 5, SEEK_SET);
 
-	read_title(f, t, nsize);
+	libxmp_read_title(f, t, nsize);
 
 	return 0;
 }
@@ -109,7 +109,7 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read32b(f);			/* NO 0x00 0x00 */
 
-	set_type(m, "Liquid Tracker");
+	libxmp_set_type(m, "Liquid Tracker");
 
 	nsize = hio_read8(f);
 	for (i = 0; i < nsize; i++) {
@@ -146,14 +146,14 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* Read instrument names */
 	for (i = 0; i < mod->ins; i++) {
 		int hasname, c2spd;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		nsize = hio_read8(f);
@@ -203,14 +203,14 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
@@ -246,7 +246,7 @@ static int no_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len == 0)
 			continue;
-		if (load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

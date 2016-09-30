@@ -332,8 +332,9 @@ int prepare_scan(struct context_data *ctx)
 
 		/* Add pattern if referenced in orders */
 		if (pat_idx < mod->pat && !mod->xxp[pat_idx]) {
-			if (pattern_alloc(mod, pat_idx) < 0)
+			if (libxmp_alloc_pattern(mod, pat_idx) < 0) {
 				return -XMP_ERROR_SYSTEM;
+			}
 		}
 
 		pat = pat_idx >= mod->pat ? NULL : mod->xxp[pat_idx];

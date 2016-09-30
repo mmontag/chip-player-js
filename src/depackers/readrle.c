@@ -25,7 +25,7 @@ if(io->data_out_point<io->data_out_max)
 
 
 /* call with -1 before starting, to make sure state is initialised */
-void outputrle(int chr,void (*outputfunc)(int, struct data_in_out *), struct rledata *rd, struct data_in_out *io)
+void libxmp_outputrle(int chr,void (*outputfunc)(int, struct data_in_out *), struct rledata *rd, struct data_in_out *io)
 {
 int f;
 

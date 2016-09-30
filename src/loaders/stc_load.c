@@ -80,7 +80,7 @@ static int stc_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 7, SEEK_SET);
-	read_title(f, t, 18);
+	libxmp_read_title(f, t, 18);
 
 	return 0;
 }
@@ -106,8 +106,8 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	pat_ptr = hio_read16l(f);		/* Patterns pointer */
 
 	hio_read(buf, 18, 1, f);		/* Title */
-	copy_adjust(mod->name, (uint8 *)buf, 18);
-	set_type(m, "ZX Spectrum Sound Tracker");
+	libxmp_copy_adjust(mod->name, (uint8 *)buf, 18);
+	libxmp_set_type(m, "ZX Spectrum Sound Tracker");
 
 	hio_read16l(f);			/* Size */
 
@@ -147,7 +147,7 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Read patterns */
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	hio_seek(f, pat_ptr, SEEK_SET);
@@ -172,7 +172,7 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		//printf("%d/%d) Read pattern %d -> %d\n", i, mod->len, src, dest);
 
-		if (pattern_tracks_alloc(mod, dest, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, dest, 64) < 0)
 			return -1;
 
 		for (j = 0; j < 3; j++) {		/* row */
@@ -238,7 +238,7 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* Read instruments */
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	hio_seek(f, 27, SEEK_SET);
@@ -248,7 +248,7 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		struct spectrum_sample ss;
 
 		memset(&ss, 0, sizeof (struct spectrum_sample));
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 		mod->xxi[i].nsm = 1;
 		mod->xxi[i].sub[0].vol = 0x40;
@@ -322,7 +322,7 @@ static int stc_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			
 		}
 
-		if (load_sample(m, f, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i],
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_SPECTRUM, &mod->xxs[i],
 							(char *)&ss) < 0) {
 			return -1;
 		}

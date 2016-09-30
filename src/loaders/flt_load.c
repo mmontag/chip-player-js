@@ -49,7 +49,7 @@ static int flt_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -281,7 +281,7 @@ static int read_am_instrument(struct module_data *m, HIO_HANDLE *nt, int i)
 		freq_env->data[3] = 10 * (am.p_fall < 0 ? -256 : 256);
 	}
 
-	if (load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, xxs, wave))
+	if (libxmp_load_sample(m, NULL, SAMPLE_FLAG_NOLOAD, xxs, wave))
 		return -1;
 
 	return 0;
@@ -374,10 +374,10 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	mod->trk = mod->chn * mod->pat;
 
 	strncpy(mod->name, (char *)mh.name, 20);
-	set_type(m, "%s %4.4s", tracker, mh.magic);
+	libxmp_set_type(m, "%s %4.4s", tracker, mh.magic);
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		goto err;
 
 	for (i = 0; i < mod->ins; i++) {
@@ -385,7 +385,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		struct xmp_sample *xxs = &mod->xxs[i];
 		struct xmp_subinstrument *sub;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			goto err;
 
 		sub = &xxi->sub[0];
@@ -403,10 +403,10 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		if (xxs->len > 0)
 			xxi->nsm = 1;
 
-		instrument_name(mod, i, mh.ins[i].name, 22);
+		libxmp_instrument_name(mod, i, mh.ins[i].name, 22);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		goto err;
 
 	/* Load and convert patterns */
@@ -425,19 +425,19 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	 *  the normal portamento command, that would be hard to patch).
 	 */
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			goto err;
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
 			hio_read(mod_event, 1, 4, f);
-			decode_noisetracker_event(event, mod_event);
+			libxmp_decode_noisetracker_event(event, mod_event);
 		}
 		if (mod->chn > 4) {
 			for (j = 0; j < (64 * 4); j++) {
 				event = &EVENT(i, (j % 4) + 4, j / 4);
 				hio_read(mod_event, 1, 4, f);
-				decode_noisetracker_event(event, mod_event);
+				libxmp_decode_noisetracker_event(event, mod_event);
 
 				/* no macros */
 				if (event->fxt == 0x0e)
@@ -464,7 +464,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			}
 			continue;
 		}
-		if (load_sample(m, f, SAMPLE_FLAG_FULLREP, &mod->xxs[i], NULL) <
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_FULLREP, &mod->xxs[i], NULL) <
 		    0) {
 			goto err;
 		}

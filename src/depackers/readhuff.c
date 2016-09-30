@@ -112,7 +112,7 @@ for(f=0;f<nodes;f++)
  * a bitstream, with EOF marked by the code HUFF_EOF.
  */
 bit_init(&bits);
-outputrle(-1,NULL,&rd,&io);
+libxmp_outputrle(-1,NULL,&rd,&io);
 
 do
   {
@@ -142,7 +142,7 @@ do
   
   f=VALUE_CONV(f);
   if(f!=HUFF_EOF)
-    outputrle(f,rawoutput,&rd,&io);
+    libxmp_outputrle(f,rawoutput,&rd,&io);
   }
 while(f!=HUFF_EOF);
 

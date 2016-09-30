@@ -67,7 +67,7 @@ static int mtm_test(HIO_HANDLE *f, char *t, const int start)
 	if (buf[3] != 0x10)
 		return -1;
 
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -127,12 +127,12 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->bpm = 125;
 
 	strncpy(mod->name, (char *)mfh.name, 20);
-	set_type(m, "MultiTracker %d.%02d MTM", MSN(mfh.version),
+	libxmp_set_type(m, "MultiTracker %d.%02d MTM", MSN(mfh.version),
 		 LSN(mfh.version));
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* Read and convert instruments */
@@ -141,7 +141,7 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		struct xmp_sample *xxs = &mod->xxs[i];
 		struct xmp_subinstrument *sub;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		sub = &xxi->sub[0];
@@ -174,7 +174,7 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		sub->pan = 0x80;
 		sub->sid = i;
 
-		instrument_name(mod, i, mih.name, 22);
+		libxmp_instrument_name(mod, i, mih.name, 22);
 
 		if (xxs->len > 0)
 			mod->xxi[i].nsm = 1;
@@ -187,14 +187,14 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read(mod->xxo, 1, 128, f);
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored tracks: %d", mod->trk - 1);
 
 	for (i = 0; i < mod->trk; i++) {
 
-		if (track_alloc(mod, i, mfh.rows) < 0)
+		if (libxmp_alloc_track(mod, i, mfh.rows) < 0)
 			return -1;
 
 		if (i == 0)
@@ -229,7 +229,7 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat - 1);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_alloc(mod, i) < 0)
+		if (libxmp_alloc_pattern(mod, i) < 0)
 			return -1;
 
 		mod->xxp[i]->rows = 64;
@@ -253,7 +253,7 @@ static int mtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		if (load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

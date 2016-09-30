@@ -50,7 +50,7 @@ static int mgt_test(HIO_HANDLE *f, char *t, const int start)
 	sng_ptr = hio_read32b(f);
 	hio_seek(f, start + sng_ptr, SEEK_SET);
 
-	read_title(f, t, 32);
+	libxmp_read_title(f, t, 32);
 	
 	return 0;
 }
@@ -70,7 +70,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	ver = hio_read8(f);
 	hio_read32b(f);		/* MCS */
 
-	set_type(m, "Megatracker MGT v%d.%d", MSN(ver), LSN(ver));
+	libxmp_set_type(m, "Megatracker MGT v%d.%d", MSN(ver), LSN(ver));
 
 	mod->chn = hio_read16b(f);
 	hio_read16b(f);			/* number of songs */
@@ -134,7 +134,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Instruments */
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	hio_seek(f, start + ins_ptr, SEEK_SET);
@@ -142,7 +142,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		int c2spd, flags;
 
-		if (subinstrument_alloc(mod, i , 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i , 1) < 0)
 			return -1;
 
 		hio_read(mod->xxi[i].name, 1, 32, f);
@@ -188,7 +188,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	/* PATTERN_INIT - alloc extra track*/
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored tracks: %d", mod->trk);
@@ -209,7 +209,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (rows > 255)
 			return -1;
 
-		if (track_alloc(mod, i, rows) < 0)
+		if (libxmp_alloc_track(mod, i, rows) < 0)
 			return -1;
 
 		//printf("\n=== Track %d ===\n\n", i);
@@ -336,7 +336,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->pat; i++) {
 		int rows;
 
-		if (pattern_alloc(mod, i) < 0)
+		if (libxmp_alloc_pattern(mod, i) < 0)
 			return -1;
 
 		rows = hio_read16b(f);
@@ -369,7 +369,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			continue;
 
 		hio_seek(f, start + sdata[i], SEEK_SET);
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

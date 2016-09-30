@@ -472,14 +472,14 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     LOAD_INIT();
 
-    set_type(m, "AMOS Music Bank");
+    libxmp_set_type(m, "AMOS Music Bank");
 
     if (read_abk_song(f, &song, AMOS_MAIN_HEADER + main_header.songs_offset) < 0)
     {
         return -1;
     }
 
-    copy_adjust(mod->name, (uint8*) song.song_name, AMOS_STRING_LEN);
+    libxmp_copy_adjust(mod->name, (uint8*) song.song_name, AMOS_STRING_LEN);
 
     MODULE_INFO();
 
@@ -508,7 +508,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     /* Read and convert instruments and samples */
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
     {
         return -1;
     }
@@ -526,7 +526,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     for (i = 0; i < mod->ins; i++)
     {
-        if (subinstrument_alloc(mod, i, 1) < 0)
+        if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
         {
             free(ci);
             return -1;
@@ -559,7 +559,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         mod->xxi[i].sub[0].pan = 0x80;
         mod->xxi[i].sub[0].sid = i;
 
-        instrument_name(mod, i, (uint8*)ci[i].sample_name, 16);
+        libxmp_instrument_name(mod, i, (uint8*)ci[i].sample_name, 16);
 
         D_(D_INFO "[%2X] %-14.14s %04x %04x %04x %c", i,
            mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
@@ -568,7 +568,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     free(ci);
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
     {
         return -1;
     }
@@ -588,7 +588,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     i = 0;
     for (j = 0; j < mod->pat; j++)
     {
-        if (pattern_tracks_alloc(mod, i, 64) < 0)
+        if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
         {
             free(playlist.pattern);
             return -1;
@@ -636,7 +636,7 @@ static int abk_load(struct module_data *m, HIO_HANDLE *f, const int start)
         if (mod->xxs[i].len <= 2)
             continue;
 
-        if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+        if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
         {
             return -1;
         }

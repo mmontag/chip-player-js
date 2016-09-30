@@ -57,7 +57,7 @@ static int alm_test(HIO_HANDLE *f, char *t, const int start)
     if (memcmp(buf, "ALEYMOD", 7) && memcmp(buf, "ALEY MO", 7))
 	return -1;
 
-    read_title(f, t, 0);
+    libxmp_read_title(f, t, 0);
 
     return 0;
 }
@@ -115,18 +115,18 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->smp = mod->ins;
     m->c4rate = C4_NTSC_RATE;
 
-    set_type(m, "Aley's Module");
+    libxmp_set_type(m, "Aley's Module");
 
     MODULE_INFO();
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 		return -1;
 
 	for (j = 0; j < 64 * mod->chn; j++) {
@@ -138,7 +138,7 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
     }
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     /* Read and convert instruments and samples */
@@ -148,7 +148,7 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->ins; i++) {
 	HIO_HANDLE *s;
 
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	mod->xxi[i].sub = calloc(sizeof (struct xmp_subinstrument), 1);
@@ -180,7 +180,7 @@ static int alm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		filename, mod->xxs[i].len, mod->xxs[i].lps, mod->xxs[i].lpe,
 		mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 
-	if (load_sample(m, s, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+	if (libxmp_load_sample(m, s, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
 	    return -1;
 
 	hio_close(s);

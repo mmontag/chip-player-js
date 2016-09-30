@@ -56,9 +56,9 @@ static int mmd1_test(HIO_HANDLE *f, char *t, const int start)
 		offset = hio_read32b(f);
 		len = hio_read32b(f);
 		hio_seek(f, start + offset, SEEK_SET);
-		read_title(f, t, len);
+		libxmp_read_title(f, t, len);
 	} else {
-		read_title(f, t, 0);
+		libxmp_read_title(f, t, 0);
 	}
 
 	return 0;
@@ -312,7 +312,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->trk = mod->pat * mod->chn;
 
-	set_type(m, ver == 0 ? mod->chn > 4 ? "OctaMED 2.00 MMD0" :
+	libxmp_set_type(m, ver == 0 ? mod->chn > 4 ? "OctaMED 2.00 MMD0" :
 				"MED 2.10 MMD0" : "OctaMED 4.00 MMD1");
 	
 	MODULE_INFO();
@@ -325,7 +325,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 * Read and convert patterns
 	 */
 	D_(D_WARN "read patterns");
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	for (i = 0; i < mod->pat; i++) {
@@ -348,7 +348,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			block.lines = hio_read8(f);
 		}
 
-		if (pattern_tracks_alloc(mod, i, block.lines + 1) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, block.lines + 1) < 0)
 			return -1;
 
 		if (ver > 0) {		/* MMD1 */
@@ -421,7 +421,7 @@ static int mmd1_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	 * Read and convert instruments and samples
 	 */
 	D_(D_WARN "read instruments");
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	D_(D_INFO "Instruments: %d", mod->ins);

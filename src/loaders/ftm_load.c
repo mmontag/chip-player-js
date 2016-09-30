@@ -60,7 +60,7 @@ int ftm_load(HIO_HANDLE * f)
 	for (i = 0; i < mod->len; i++)
 		mod->xxo[i] = fh.order[i];
 
-	set_type(m, "Face The Music");
+	libxmp_set_type(m, "Face The Music");
 	MODULE_INFO();
 	PATTERN_INIT();
 

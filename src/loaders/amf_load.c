@@ -57,7 +57,7 @@ static int amf_test(HIO_HANDLE * f, char *t, const int start)
 	if (ver < 0x0a || ver > 0x0e)
 		return -1;
 
-	read_title(f, t, 32);
+	libxmp_read_title(f, t, 32);
 
 	return 0;
 }
@@ -79,7 +79,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read(buf, 1, 32, f);
 	strncpy(mod->name, (char *)buf, 32);
-	set_type(m, "DSMI %d.%d AMF", ver / 10, ver % 10);
+	libxmp_set_type(m, "DSMI %d.%d AMF", ver / 10, ver % 10);
 
 	mod->ins = hio_read8(f);
 	mod->len = hio_read8(f);
@@ -135,7 +135,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_alloc(mod, i) < 0)
+		if (libxmp_alloc_pattern(mod, i) < 0)
 			return -1;
 
 		mod->xxp[i]->rows = ver >= 0x0e ? hio_read16l(f) : 64;
@@ -151,7 +151,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	/* Instruments */
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* Probe for 2-byte loop start 1.0 format
@@ -207,13 +207,13 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		/*uint8 b;*/
 		int c2spd;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		/*b =*/ hio_read8(f);
 
 		hio_read(buf, 1, 32, f);
-		instrument_name(mod, i, buf, 32);
+		libxmp_instrument_name(mod, i, buf, 32);
 
 		hio_read(buf, 1, 13, f);	/* sample name */
 		hio_read32l(f);			/* sample index */
@@ -297,7 +297,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		return -1;
 
 	/* Alloc track 0 as empty track */
-	if (track_alloc(mod, 0, 64) < 0)
+	if (libxmp_alloc_track(mod, 0, 64) < 0)
 		return -1;
 
 	/* Alloc rest of the tracks */
@@ -305,7 +305,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint8 t1, t2, t3;
 		int size;
 
-		if (track_alloc(mod, i, 64) < 0)	/* FIXME! */
+		if (libxmp_alloc_track(mod, i, 64) < 0)	/* FIXME! */
 			return -1;
 
 		size = hio_read24l(f);
@@ -501,7 +501,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < mod->ins; i++) {
-		if (load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

@@ -53,7 +53,7 @@ static int decrunch_gzip(FILE *in, FILE *out)
 	int val, c;
 	uint32 crc;
 
-	crc32_init_A();
+	libxmp_crc32_init_A();
 
 	member.id1 = read8(in, NULL);
 	member.id2 = read8(in, NULL);
@@ -90,7 +90,7 @@ static int decrunch_gzip(FILE *in, FILE *out)
 		read16l(in, NULL);
 	}
 	
-	val = inflate(in, out, &crc, 1);
+	val = libxmp_inflate(in, out, &crc, 1);
 	if (val != 0) {
 		return -1;
 	}

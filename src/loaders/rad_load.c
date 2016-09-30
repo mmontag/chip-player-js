@@ -42,7 +42,7 @@ static int rad_test(HIO_HANDLE *f, char *t, const int start)
 	if (memcmp(buf, "RAD by REALiTY!!", 16))
 		return -1;
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -80,7 +80,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->spd = 6;
 	mod->smp = 0;
 
-	set_type(m, "RAD %d.%d", MSN(version), LSN(version));
+	libxmp_set_type(m, "RAD %d.%d", MSN(version), LSN(version));
 
 	MODULE_INFO();
 
@@ -109,7 +109,7 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, pos, SEEK_SET);
 	mod->smp = mod->ins;
 
-	if (instrument_init(m) < 0) {
+	if (libxmp_init_instrument(m) < 0) {
 		goto err;
 	}
 
@@ -128,14 +128,14 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			goto err2;
 		}
 
-		if (load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
 					&mod->xxs[b - 1], &buf[(b - 1) * 11]) < 0) {
 			goto err2;
 		}
 	}
 
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0) {
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0) {
 			goto err2;
 		}
 		mod->xxi[i].sub[0].vol = 63 - (buf[i * 11 + 3] & 63);
@@ -170,13 +170,13 @@ static int rad_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Instruments: %d", mod->ins);
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
-	if (pattern_init(mod) < 0) {
+	if (libxmp_init_pattern(mod) < 0) {
 		goto err;
 	}
 
 	/* Read and convert patterns */
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0) {
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0) {
 			goto err;
 		}
 

@@ -74,7 +74,7 @@ static int hsc_test(HIO_HANDLE *f, char *t, const int start)
 	}
     }
 
-    read_title(f, t, 0);
+    libxmp_read_title(f, t, 0);
 
     return 0;
 }
@@ -109,18 +109,18 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     m->quirk |= QUIRK_LINEAR;
 
-    set_type(m, "HSC-Tracker");
+    libxmp_set_type(m, "HSC-Tracker");
 
     MODULE_INFO();
 
     /* Read instruments */
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     hio_read(buf, 1, 128 * 12, f);
     sid = buf;
     for (i = 0; i < mod->ins; i++, sid += 12) {
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	mod->xxi[i].nsm = 1;
@@ -131,7 +131,7 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].rls = LSN(sid[7]) * 32;	/* carrier release */
 
-	if (load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
+	if (libxmp_load_sample(m, f, SAMPLE_FLAG_ADLIB | SAMPLE_FLAG_HSC,
 					&mod->xxs[i], (char *)sid) < 0)
 		return -1;
     }
@@ -153,14 +153,14 @@ static int hsc_load(struct module_data *m, HIO_HANDLE *f, const int start)
     D_(D_INFO "Instruments: %d", mod->ins);
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Read and convert patterns */
     for (i = 0; i < mod->pat; i++) {
 	int ins[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 	    return -1;
 
         for (r = 0; r < mod->xxp[i]->rows; r++) {

@@ -86,7 +86,7 @@ static int far_test(HIO_HANDLE *f, char *t, const int start)
     if (hio_read32b(f) != MAGIC_FAR)
 	return -1;
 
-    read_title(f, t, 40);
+    libxmp_read_title(f, t, 40);
 
     return 0;
 }
@@ -179,11 +179,11 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
     mod->trk = mod->chn * mod->pat;
 
     strncpy(mod->name, (char *)ffh.name, 40);
-    set_type(m, "Farandole Composer %d.%d", MSN(ffh.version), LSN(ffh.version));
+    libxmp_set_type(m, "Farandole Composer %d.%d", MSN(ffh.version), LSN(ffh.version));
 
     MODULE_INFO();
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Read and convert patterns */
@@ -194,7 +194,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	uint8 brk, note, ins, vol, fxb;
 	int rows;
 
-	if (pattern_alloc(mod, i) < 0)
+	if (libxmp_alloc_pattern(mod, i) < 0)
 	    return -1;
 
 	if (!ffh2.patsize[i])
@@ -209,7 +209,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->xxp[i]->rows = rows;
 
-	if (tracks_in_pattern_alloc(mod, i) < 0)
+	if (libxmp_alloc_tracks_in_pattern(mod, i) < 0)
 	    return -1;
 
 	brk = hio_read8(f) + 1;
@@ -298,7 +298,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     mod->smp = mod->ins;
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     /* Read and convert instruments and samples */
@@ -307,7 +307,7 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (!(sample_map[i / 8] & (1 << (i % 8))))
 		continue;
 
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	hio_read(&fih.name, 32, 1, f);	/* Instrument name */
@@ -344,13 +344,13 @@ static int far_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	mod->xxi[i].sub[0].vol = 0xff; /* fih.volume; */
 	mod->xxi[i].sub[0].sid = i;
 
-	instrument_name(mod, i, fih.name, 32);
+	libxmp_instrument_name(mod, i, fih.name, 32);
 
 	D_(D_INFO "[%2X] %-32.32s %04x %04x %04x %c V%02x",
 		i, mod->xxi[i].name, mod->xxs[i].len, mod->xxs[i].lps,
 		mod->xxs[i].lpe, fih.loopmode ? 'L' : ' ', mod->xxi[i].sub[0].vol);
 
-	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+	if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 		return -1;
     }
 

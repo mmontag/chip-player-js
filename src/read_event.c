@@ -335,8 +335,8 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Secondary effect handled first */
-	process_fx(ctx, xc, chn, e, 1);
-	process_fx(ctx, xc, chn, e, 0);
+	libxmp_process_fx(ctx, xc, chn, e, 1);
+	libxmp_process_fx(ctx, xc, chn, e, 0);
 
 #ifndef LIBXMP_CORE_PLAYER
 	if (IS_SFX_PITCH(e->fxt)) {
@@ -681,8 +681,8 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 	xc->offset.val = 0;
 
 	/* Secondary effect handled first */
-	process_fx(ctx, xc, chn, &ev, 1);
-	process_fx(ctx, xc, chn, &ev, 0);
+	libxmp_process_fx(ctx, xc, chn, &ev, 1);
+	libxmp_process_fx(ctx, xc, chn, &ev, 0);
 	set_period_ft2(ctx, note, sub, xc, is_toneporta);
 
 	if (sub == NULL) {
@@ -839,8 +839,8 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Secondary effect handled first */
-	process_fx(ctx, xc, chn, e, 1);
-	process_fx(ctx, xc, chn, e, 0);
+	libxmp_process_fx(ctx, xc, chn, e, 1);
+	libxmp_process_fx(ctx, xc, chn, e, 0);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (sub == NULL) {
@@ -1304,8 +1304,8 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* According to Storlek test 25, Impulse Tracker handles the volume
 	 * column effects after the standard effects.
 	 */
-	process_fx(ctx, xc, chn, &ev, 0);
-	process_fx(ctx, xc, chn, &ev, 1);
+	libxmp_process_fx(ctx, xc, chn, &ev, 0);
+	libxmp_process_fx(ctx, xc, chn, &ev, 1);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (sub == NULL) {
@@ -1458,8 +1458,8 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 	}
 
 	/* Secondary effect handled first */
-	process_fx(ctx, xc, chn, e, 1);
-	process_fx(ctx, xc, chn, e, 0);
+	libxmp_process_fx(ctx, xc, chn, e, 1);
+	libxmp_process_fx(ctx, xc, chn, e, 0);
 	set_period(ctx, note, sub, xc, is_toneporta);
 
 	if (sub == NULL) {
@@ -1567,7 +1567,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	return 0;
 }
 
-int read_event(struct context_data *ctx, struct xmp_event *e, int chn)
+int libxmp_read_event(struct context_data *ctx, struct xmp_event *e, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;

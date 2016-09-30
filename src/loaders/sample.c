@@ -195,7 +195,7 @@ static void unroll_loop(struct xmp_sample *xxs)
 }
 
 
-int load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_sample *xxs, void *buffer)
+int libxmp_load_sample(struct module_data *m, HIO_HANDLE *f, int flags, struct xmp_sample *xxs, void *buffer)
 {
 	int bytelen, extralen, unroll_extralen, i;
 

@@ -69,7 +69,7 @@ int asif_load(struct module_data *m, HIO_HANDLE *f, int i)
 				hio_read16l(f);		/* SampRate */
 			}
 		
-			if (load_sample(m, f, SAMPLE_FLAG_UNS,
+			if (libxmp_load_sample(m, f, SAMPLE_FLAG_UNS,
 						&mod->xxs[i], NULL) < 0) {
 				return -1;
 			}

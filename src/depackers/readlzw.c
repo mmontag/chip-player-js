@@ -68,7 +68,7 @@ static void outputchr(int chr, struct local_data *);
 static int findfirstchr(int code, struct local_data *);
 
 
-static unsigned char *_convert_lzw_dynamic(unsigned char *data_in,
+static unsigned char *convert_lzw_dynamic(unsigned char *data_in,
                                    int max_bits,int use_rle,
                                    unsigned long in_len,
                                    unsigned long orig_len, int q,
@@ -96,7 +96,7 @@ data->io.data_in_point=data_in; data->io.data_in_max=data_in+in_len;
 data->io.data_out_point=data_out; data->io.data_out_max=data_out+orig_len;
 data->dc_bitbox=data->dc_bitsleft=0;
 data->codeofs=0;
-outputrle(-1,NULL, &data->rd, &data->io);	/* init RLE */
+libxmp_outputrle(-1,NULL, &data->rd, &data->io);	/* init RLE */
 
 data->oldver=0;
 csize=9;		/* initial code size */
@@ -214,7 +214,7 @@ if (~data->quirk & NOMARCH_QUIRK_NOCHK) {
 return(data_out);
 }
 
-unsigned char *convert_lzw_dynamic(unsigned char *data_in,
+unsigned char *libxmp_convert_lzw_dynamic(unsigned char *data_in,
                                    int max_bits,int use_rle,
                                    unsigned long in_len,
                                    unsigned long orig_len, int q)
@@ -226,7 +226,7 @@ unsigned char *convert_lzw_dynamic(unsigned char *data_in,
 		goto err;
 	}
 
-	d = _convert_lzw_dynamic(data_in, max_bits, use_rle, in_len,
+	d = convert_lzw_dynamic(data_in, max_bits, use_rle, in_len,
 						orig_len, q, data);
 
 	/* Sanity check */
@@ -248,7 +248,7 @@ unsigned char *convert_lzw_dynamic(unsigned char *data_in,
 	return NULL;
 }
 
-unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
+unsigned char *libxmp_read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
 			unsigned long in_len, unsigned long orig_len, int q)
 {
 	uint8 *buf2, *b;
@@ -271,7 +271,7 @@ unsigned char *read_lzw_dynamic(FILE *f, uint8 *buf, int max_bits,int use_rle,
 			goto err3;
 		}
 	}
-	b = _convert_lzw_dynamic(buf2, max_bits, use_rle, in_len, orig_len, q, data);
+	b = convert_lzw_dynamic(buf2, max_bits, use_rle, in_len, orig_len, q, data);
 	memcpy(buf, b, orig_len);
 	size = q & NOMARCH_QUIRK_ALIGN4 ? ALIGN4(data->nomarch_input_size) :
 						data->nomarch_input_size;
@@ -529,7 +529,7 @@ if(io->data_out_point<io->data_out_max)
 static void outputchr(int chr, struct local_data *data)
 {
 if(data->global_use_rle)
-  outputrle(chr,rawoutput,&data->rd,&data->io);
+  libxmp_outputrle(chr,rawoutput,&data->rd,&data->io);
 else
   rawoutput(chr,&data->io);
 }

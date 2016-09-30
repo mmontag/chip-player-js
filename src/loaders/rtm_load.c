@@ -147,7 +147,7 @@ static int rtm_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read8(f) != 0x20)
 		return -1;
 
-	read_title(f, t, 32);
+	libxmp_read_title(f, t, 32);
 
 	return 0;
 }
@@ -248,7 +248,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = rh.panning[i] & 0xff;
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -277,7 +277,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		offset += 42 + oh.headerSize + rp.datasize;
 
-		if (pattern_tracks_alloc(mod, i, rp.nrows) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, rp.nrows) < 0)
 			return -1;
 
 		for (r = 0; r < rp.nrows; r++) {
@@ -337,7 +337,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* ESTIMATED value! We don't know the actual value at this point */
 	mod->smp = MAX_SAMP;
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	smpnum = 0;
@@ -349,7 +349,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 		}
 
-		instrument_name(mod, i, (uint8 *)&oh.name, 32);
+		libxmp_instrument_name(mod, i, (uint8 *)&oh.name, 32);
 
 		if (oh.headerSize == 0) {
 			D_(D_INFO "[%2X] %-26.26s %2d ", i,
@@ -419,7 +419,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		if (xxi->nsm > 16)
 			xxi->nsm = 16;
 
-		if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, xxi->nsm) < 0)
 			return -1;
 
 		for (j = 0; j < 120; j++)
@@ -479,14 +479,14 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			sub->sid = smpnum;
 
 			if (smpnum >= mod->smp) {
-				 mod->xxs = realloc_samples(mod->xxs,
+				 mod->xxs = libxmp_realloc_samples(mod->xxs,
 						&mod->smp, mod->smp * 3 / 2);
 				if (mod->xxs == NULL)
 					return -1;
 			}
  			xxs = &mod->xxs[smpnum];
 
-			copy_adjust(xxs->name, (uint8 *)oh.name, 31);
+			libxmp_copy_adjust(xxs->name, (uint8 *)oh.name, 31);
 
 			xxs->len = rs.length;
 			xxs->lps = rs.loopbegin;
@@ -512,13 +512,13 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 				sub->vol, sub->fin, sub->pan, sub->xpo);
 
-			if (load_sample(m, f, SAMPLE_FLAG_DIFF, xxs, NULL) < 0)
+			if (libxmp_load_sample(m, f, SAMPLE_FLAG_DIFF, xxs, NULL) < 0)
 				return -1;
 		}
 	}
 
 	/* Final sample number adjustment */
-	mod->xxs = realloc_samples(mod->xxs, &mod->smp, smpnum);
+	mod->xxs = libxmp_realloc_samples(mod->xxs, &mod->smp, smpnum);
 	if (mod->xxs == NULL)
 		return -1;
 

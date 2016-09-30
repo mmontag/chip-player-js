@@ -120,7 +120,7 @@ int virt_on(struct context_data *ctx, int num)
 			if (p->virt.voice_array[i].paula == NULL) {
 				goto err2;
 			}
-			paula_init(ctx, p->virt.voice_array[i].paula);
+			libxmp_paula_init(ctx, p->virt.voice_array[i].paula);
 		}
 	}
 #endif

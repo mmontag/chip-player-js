@@ -104,7 +104,7 @@ static int liq_test(HIO_HANDLE *f, char *t, const int start)
     if (memcmp(buf, "Liquid Module:", 14))
 	return -1;
 
-    read_title(f, t, 30);
+    libxmp_read_title(f, t, 30);
 
     return 0;
 }
@@ -341,7 +341,7 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     MODULE_INFO();
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Read and convert patterns */
@@ -352,7 +352,7 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
     for (i = 0; i < mod->pat; i++) {
 	int row, channel, count;
 
-	if (pattern_alloc(mod, i) < 0)
+	if (libxmp_alloc_pattern(mod, i) < 0)
 	    return -1;
 
 	pmag = hio_read32b(f);
@@ -374,7 +374,7 @@ static int liq_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "rows: %d  size: %d\n", lp.rows, lp.size);
 
 	mod->xxp[i]->rows = lp.rows;
-	tracks_in_pattern_alloc(mod, i);
+	libxmp_alloc_tracks_in_pattern(mod, i);
 
 	row = 0;
 	channel = 0;
@@ -544,7 +544,7 @@ next_pattern:
 
     /* Read and convert instruments */
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     D_(D_INFO "Instruments: %d", mod->ins);
@@ -555,7 +555,7 @@ next_pattern:
 	struct xmp_sample *xxs = &mod->xxs[i];
 	unsigned char b[4];
 
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	sub = &xxi->sub[0];
@@ -619,7 +619,7 @@ next_pattern:
 	sub->pan = li.pan;
 	sub->sid = i;
 
-	instrument_name(mod, i, li.name, 31);
+	libxmp_instrument_name(mod, i, li.name, 31);
 
 	D_(D_INFO "[%2X] %-30.30s %05x%c%05x %05x %c %02x %02x %2d.%02d %5d",
 		i, mod->xxi[i].name, mod->xxs[i].len,
@@ -633,7 +633,7 @@ next_pattern:
 	if (xxs->len == 0)
 	    continue;
 
-	if (load_sample(m, f, 0, xxs, NULL) < 0)
+	if (libxmp_load_sample(m, f, 0, xxs, NULL) < 0)
 	    return -1;
     }
 

@@ -90,7 +90,7 @@ static void do_toneporta(struct context_data *ctx,
 	xc->porta.dir = xc->period < xc->porta.target ? 1 : -1;
 }
 
-void process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
+void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int chn,
 		struct xmp_event *e, int fnum)
 {
 	struct player_data *p = &ctx->p;

@@ -116,7 +116,7 @@ int t,r;
 
     read_buffer(in,buffer,r);
     write_buffer(out,buffer,r);
-    checksum=crc32_A2(buffer,r,checksum);
+    checksum=libxmp_crc32_A2(buffer,r,checksum);
     t=t+r;
   }
 
@@ -175,7 +175,7 @@ struct inflate_data data;
 
   marker=ftell(in);
 
-  crc32_init_A();
+  libxmp_crc32_init_A();
 
   if (header.uncompressed_size!=0)
   {
@@ -185,7 +185,7 @@ struct inflate_data data;
     }
     else
     {
-      if (inflate(in, out, &checksum, 1) < 0)
+      if (libxmp_inflate(in, out, &checksum, 1) < 0)
 	goto err3;
     }
 

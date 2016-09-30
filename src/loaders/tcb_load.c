@@ -49,7 +49,7 @@ static int tcb_test(HIO_HANDLE *f, char *t, const int start)
 	if (memcmp(buffer, "AN COOL.", 8) && memcmp(buffer, "AN COOL!", 8))
 		return -1;
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -67,7 +67,7 @@ static int tcb_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	hio_read(buffer, 8, 1, f);
 
-	set_type(m, "TCB Tracker", buffer);
+	libxmp_set_type(m, "TCB Tracker", buffer);
 
 	hio_read16b(f);	/* ? */
 	mod->pat = hio_read16b(f);
@@ -89,15 +89,15 @@ static int tcb_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	/* Read instrument names */
 	for (i = 0; i < mod->ins; i++) {
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 		hio_read(buffer, 8, 1, f);
-		instrument_name(mod, i, buffer, 8);
+		libxmp_instrument_name(mod, i, buffer, 8);
 	}
 
 	hio_read16b(f);	/* ? */
@@ -108,14 +108,14 @@ static int tcb_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	for (i = 0; i < 5; i++)
 		hio_read16b(f);
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Read and convert patterns */
 	D_(D_INFO "Stored patterns: %d ", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < mod->xxp[i]->rows; j++) {
@@ -193,7 +193,7 @@ static int tcb_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		hio_seek(f, start + base_offs + soffs[i], SEEK_SET);
-		if (load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_UNS, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

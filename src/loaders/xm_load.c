@@ -55,7 +55,7 @@ static int xm_test(HIO_HANDLE *f, char *t, const int start)
 	if (memcmp(buf, "Extended Module: ", 17))
 		return -1;
 
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -90,7 +90,7 @@ static int load_xm_pattern(struct module_data *m, int num, int version, HIO_HAND
 		r = 0x100;
 	}
 
-	if (pattern_tracks_alloc(mod, num, r) < 0) {
+	if (libxmp_alloc_pattern_tracks(mod, num, r) < 0) {
 		goto err;
 	}
 
@@ -302,7 +302,7 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 	int i, j;
 
 	mod->pat++;
-	if (pattern_init(mod) < 0) {
+	if (libxmp_init_pattern(mod) < 0) {
 		return -1;
 	}
 
@@ -318,13 +318,13 @@ static int load_patterns(struct module_data *m, int version, HIO_HANDLE *f)
 	{
 		int t = i * mod->chn;
 
-		if (pattern_alloc(mod, i) < 0) {
+		if (libxmp_alloc_pattern(mod, i) < 0) {
 			goto err;
 		}
 
 		mod->xxp[i]->rows = 64;
 
-		if (track_alloc(mod, t, 64) < 0) {
+		if (libxmp_alloc_track(mod, t, 64) < 0) {
 			goto err;
 		}
 
@@ -357,7 +357,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
     /* ESTIMATED value! We don't know the actual value at this point */
     mod->smp = MAX_SAMPLES;
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
@@ -384,7 +384,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		return -1;
 	}
 
-	instrument_name(mod, i, xih.name, 22);
+	libxmp_instrument_name(mod, i, xih.name, 22);
 
 	xxi->nsm = xih.samples;
 	if (xxi->nsm > 16)
@@ -393,7 +393,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	D_(D_INFO "[%2X] %-22.22s %2d", i, xxi->name, xxi->nsm);
 
 	if (xxi->nsm) {
-	    if (subinstrument_alloc(mod, i, xxi->nsm) < 0)
+	    if (libxmp_alloc_subinstrument(mod, i, xxi->nsm) < 0)
 		return -1;
 	    if (xih.size < XM_INST_HEADER_SIZE)
 		return -1;
@@ -465,7 +465,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		struct xmp_sample *xxs;
 
 		if (sample_num >= mod->smp) {
-		    mod->xxs = realloc_samples(mod->xxs, &mod->smp, mod->smp * 3 / 2);
+		    mod->xxs = libxmp_realloc_samples(mod->xxs, &mod->smp, mod->smp * 3 / 2);
 		    if (mod->xxs == NULL)
 			return -1;
 		}
@@ -497,7 +497,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 		sub->vsw = xi.y_sweep;
 		sub->sid = sample_num;
 
-		copy_adjust(xxs->name, xsh[j].name, 22);
+		libxmp_copy_adjust(xxs->name, xsh[j].name, 22);
 
 		xxs->len = xsh[j].length;
 		xxs->lps = xsh[j].loop_start;
@@ -538,7 +538,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 #endif
 		
 		if (version > 0x0103) {
-		    if (load_sample(m, f, flags,
+		    if (libxmp_load_sample(m, f, flags,
 					&mod->xxs[sub->sid], NULL) < 0) {
 			return -1;
 		    }
@@ -565,7 +565,7 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
     }
 
     /* Final sample number adjustment */
-    mod->xxs = realloc_samples(mod->xxs, &mod->smp, sample_num);
+    mod->xxs = libxmp_realloc_samples(mod->xxs, &mod->smp, sample_num);
     if (mod->xxs == NULL)
 	return -1;
 
@@ -676,10 +676,10 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		m->quirk &= ~QUIRK_FT2BUGS;
 	}
 
-	set_type(m, "%s XM %d.%02d", tracker_name,
+	libxmp_set_type(m, "%s XM %d.%02d", tracker_name,
 		 xfh.version >> 8, xfh.version & 0xff);
 #else
-	set_type(m, tracker_name);
+	libxmp_set_type(m, tracker_name);
 #endif
 
 	MODULE_INFO();
@@ -710,7 +710,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		for (i = 0; i < mod->ins; i++) {
 			for (j = 0; j < mod->xxi[i].nsm; j++) {
 				int sid = mod->xxi[i].sub[j].sid;
-				if (load_sample(m, f, SAMPLE_FLAG_DIFF,
+				if (libxmp_load_sample(m, f, SAMPLE_FLAG_DIFF,
 						&mod->xxs[sid], NULL) < 0) {
 					return -1;
 				}

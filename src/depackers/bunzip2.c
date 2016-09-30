@@ -454,7 +454,7 @@ static int read_bunzip(bunzip_data *bd, char *outbuf, int len)
 			/* Write next byte into output buffer, updating CRC */
 			outbuf[gotcount++] = current;
 			bd->writeCRC=(((bd->writeCRC)<<8)
-						  ^crc32_table_B[((bd->writeCRC)>>24)^current]);
+						  ^libxmp_crc32_table_B[((bd->writeCRC)>>24)^current]);
 			/* Loop now if we're outputting multiple copies of this byte */
 			if (bd->writeCopies) {
 				--bd->writeCopies;
@@ -568,7 +568,7 @@ static int decrunch_bzip2(FILE *src, FILE *dst)
 	bunzip_data *bd;
 	int i;
 
-	crc32_init_B();
+	libxmp_crc32_init_B();
 
 	if(!(outbuf=malloc(IOBUF_SIZE))) return RETVAL_OUT_OF_MEMORY;
 	if(!(i=start_bunzip(&bd,src,0,0))) {

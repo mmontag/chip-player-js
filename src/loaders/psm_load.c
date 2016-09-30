@@ -40,7 +40,7 @@ static int psm_test(HIO_HANDLE *f, char *t, const int start)
 	if (hio_read32b(f) != MAGIC_PSM_)
 		return -1;
 
-	read_title(f, t, 60);
+	libxmp_read_title(f, t, 60);
 
 	return 0;
 }
@@ -72,7 +72,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (type & 0x01)		/* song mode not supported */
 		return -1;
 
-	set_type(m, "Protracker Studio PSM %d.%02d", MSN(ver), LSN(ver));
+	libxmp_set_type(m, "Protracker Studio PSM %d.%02d", MSN(ver), LSN(ver));
 
 	mod->spd = hio_read8(f);
 	mod->bpm = hio_read8(f);
@@ -110,7 +110,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + p_chn, SEEK_SET);
 	hio_read(buf, 1, 16, f);
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	hio_seek(f, start + p_ins, SEEK_SET);
@@ -118,7 +118,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		uint16 flags, c2spd;
 		int finetune;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		hio_read(buf, 1, 13, f);	/* sample filename */
@@ -154,7 +154,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			'L' : ' ', mod->xxi[i].sub[0].vol, c2spd);
 	}
 	
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
@@ -174,7 +174,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			return -1;
 		}
 
-		if (pattern_tracks_alloc(mod, i, rows) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, rows) < 0)
 			return -1;
 
 		for (r = 0; r < rows; r++) {
@@ -219,7 +219,7 @@ static int psm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	for (i = 0; i < mod->ins; i++) {
 		hio_seek(f, start + p_smp[i], SEEK_SET);
-		if (load_sample(m, f, SAMPLE_FLAG_DIFF,
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_DIFF,
 				&mod->xxs[mod->xxi[i].sub[0].sid], NULL) < 0)
 			return -1;
 	}

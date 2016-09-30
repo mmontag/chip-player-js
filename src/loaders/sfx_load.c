@@ -56,7 +56,7 @@ static int sfx_test(HIO_HANDLE * f, char *t, const int start)
 	if (a != MAGIC_SONG && b != MAGIC_SONG)
 		return -1;
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -141,14 +141,14 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins,
 	mod->trk = mod->chn * mod->pat;
 
 	if (mod->ins == 15) {
-		set_type(m, "SoundFX 1.3");
+		libxmp_set_type(m, "SoundFX 1.3");
 	} else {
-		set_type(m, "SoundFX 2.0");
+		libxmp_set_type(m, "SoundFX 2.0");
 	}
 
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
@@ -156,7 +156,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins,
 		struct xmp_subinstrument *sub;
 		struct xmp_sample *xxs;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		xxi = &mod->xxi[i];
@@ -173,7 +173,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins,
 		sub->pan = 0x80;
 		sub->sid = i;
 
-		instrument_name(mod, i, ins[i].name, 22);
+		libxmp_instrument_name(mod, i, ins[i].name, 22);
 
 		D_(D_INFO "[%2X] %-22.22s %04x %04x %04x %c  %02x %+d",
 		   i, xxi->name, xxs->len, xxs->lps, xxs->lpe,
@@ -181,13 +181,13 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins,
 		   sub->fin >> 4);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < 64 * mod->chn; j++) {
@@ -242,7 +242,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins,
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len <= 2)
 			continue;
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

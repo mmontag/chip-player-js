@@ -101,7 +101,7 @@ static int hmn_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 20);
+	libxmp_read_title(f, t, 20);
 
 	return 0;
 }
@@ -204,10 +204,10 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		return -1;
 
 	strncpy(mod->name, (char *)mh.name, 20);
-	set_type(m, "%s (%4.4s)", "His Master's Noise", mh.magic);
+	libxmp_set_type(m, "%s (%4.4s)", "His Master's Noise", mh.magic);
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
@@ -220,7 +220,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 				return -1;
 		} else {
 			mod->xxi[i].nsm = 1;
-			instrument_name(mod, i, mh.ins[i].name, 22);
+			libxmp_instrument_name(mod, i, mh.ins[i].name, 22);
 
 			mod->xxs[i].len = 2 * mh.ins[i].size;
 			mod->xxs[i].lps = 2 * mh.ins[i].loop_start;
@@ -230,7 +230,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 						XMP_SAMPLE_LOOP : 0;
 		}
 
-		if (subinstrument_alloc(mod, i, mod->xxi[i].nsm) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, mod->xxi[i].nsm) < 0)
 			return -1;
 
 		for (j = 0; j < mod->xxi[i].nsm; j++) {
@@ -242,20 +242,20 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	/* Load and convert patterns */
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < (64 * 4); j++) {
 			event = &EVENT(i, j % 4, j / 4);
 			hio_read(mod_event, 1, 4, f);
-			decode_protracker_event(event, mod_event);
+			libxmp_decode_protracker_event(event, mod_event);
 
 			switch (event->fxt) {
 			case 0x07:
@@ -277,7 +277,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	for (i = 0; i < 31; i++) {
-		if (load_sample(m, f, SAMPLE_FLAG_FULLREP,
+		if (libxmp_load_sample(m, f, SAMPLE_FLAG_FULLREP,
 						&mod->xxs[i], NULL) < 0) {
 			return -1;
 		}
@@ -302,7 +302,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			mod->xxs[k].lps = 0;
 			mod->xxs[k].lpe = 32;
 			mod->xxs[k].flg = XMP_SAMPLE_LOOP;
-			if (load_sample(m, f, 0, &mod->xxs[k], NULL) < 0)
+			if (libxmp_load_sample(m, f, 0, &mod->xxs[k], NULL) < 0)
 				return -1;
 		}
 

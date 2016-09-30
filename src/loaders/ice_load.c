@@ -46,7 +46,7 @@ static int ice_test(HIO_HANDLE * f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 28);
+	libxmp_read_title(f, t, 28);
 
 	return 0;
 }
@@ -105,9 +105,9 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 
 	if (ih.magic == MAGIC_IT10)
-		set_type(m, "Ice Tracker");
+		libxmp_set_type(m, "Ice Tracker");
 	else if (ih.magic == MAGIC_MTN_)
-		set_type(m, "Soundtracker 2.6");
+		libxmp_set_type(m, "Soundtracker 2.6");
 	else
 		return -1;
 
@@ -120,14 +120,14 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	strncpy(mod->name, (char *)ih.title, 20);
 	MODULE_INFO();
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		return -1;
 
 	for (i = 0; i < mod->ins; i++) {
 		struct xmp_instrument *xxi;
 		struct xmp_sample *xxs;
 
-		if (subinstrument_alloc(mod, i, 1) < 0)
+		if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 			return -1;
 
 		xxi = &mod->xxi[i];
@@ -151,13 +151,13 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		   xxi->sub[0].vol, xxi->sub[0].fin >> 4);
 	}
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		return -1;
 
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_alloc(mod, i) < 0)
+		if (libxmp_alloc_pattern(mod, i) < 0)
 			return -1;
 		mod->xxp[i]->rows = 64;
 
@@ -170,13 +170,13 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	D_(D_INFO "Stored tracks: %d", mod->trk);
 
 	for (i = 0; i < mod->trk; i++) {
-		if (track_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_track(mod, i, 64) < 0)
 			return -1;
 
 		for (j = 0; j < mod->xxt[i]->rows; j++) {
 			event = &mod->xxt[i]->event[j];
 			hio_read(ev, 1, 4, f);
-			decode_protracker_event(event, ev);
+			libxmp_decode_protracker_event(event, ev);
 
 			if (event->fxt == FX_SPEED) {
 				if (MSN(event->fxp) && LSN(event->fxp)) {
@@ -195,7 +195,7 @@ static int ice_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	for (i = 0; i < mod->ins; i++) {
 		if (mod->xxs[i].len <= 4)
 			continue;
-		if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+		if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 			return -1;
 	}
 

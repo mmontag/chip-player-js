@@ -99,7 +99,7 @@ static int s3m_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	hio_seek(f, start + 0, SEEK_SET);
-	read_title(f, t, 28);
+	libxmp_read_title(f, t, 28);
 
 	return 0;
 }
@@ -296,7 +296,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	}
 #endif
 
-	copy_adjust(mod->name, sfh.name, 28);
+	libxmp_copy_adjust(mod->name, sfh.name, 28);
 
 	pp_ins = calloc(2, sfh.insnum);
 	if (pp_ins == NULL)
@@ -426,15 +426,15 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		snprintf(tracker_name, 40, "unknown (%04x)", sfh.version);
 	}
 
-	set_type(m, "%s S3M", tracker_name);
+	libxmp_set_type(m, "%s S3M", tracker_name);
 #else
-	set_type(m, "Scream Tracker 3");
+	libxmp_set_type(m, "Scream Tracker 3");
 	m->quirk |= QUIRK_ST3BUGS;
 #endif
 
 	MODULE_INFO();
 
-	if (pattern_init(mod) < 0)
+	if (libxmp_init_pattern(mod) < 0)
 		goto err3;
 
 	/* Read patterns */
@@ -442,7 +442,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
-		if (pattern_tracks_alloc(mod, i, 64) < 0)
+		if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 			goto err3;
 
 		if (pp_pat[i] == 0)
@@ -501,7 +501,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	D_(D_INFO "Stereo enabled: %s", sfh.mv & 0x80 ? "yes" : "no");
 	D_(D_INFO "Pan settings: %s", sfh.dp ? "no" : "yes");
 
-	if (instrument_init(m) < 0)
+	if (libxmp_init_instrument(m) < 0)
 		goto err3;
 
 	/* Read and convert instruments and samples */
@@ -547,14 +547,14 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			}
 			sah.magic = 0;
 
-			instrument_name(mod, i, sah.name, 28);
+			libxmp_instrument_name(mod, i, sah.name, 28);
 
 			xxi->nsm = 1;
 			sub->vol = sah.vol;
 			c2spd_to_note(sah.c2spd, &sub->xpo, &sub->fin);
 			sub->xpo += 12;
 			ret =
-			    load_sample(m, f, SAMPLE_FLAG_ADLIB, xxs,
+			    libxmp_load_sample(m, f, SAMPLE_FLAG_ADLIB, xxs,
 					(char *)&sah.reg);
 			if (ret < 0)
 				goto err3;
@@ -623,7 +623,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		sub->vol = sih.vol;
 		sih.magic = 0;
 
-		instrument_name(mod, i, sih.name, 28);
+		libxmp_instrument_name(mod, i, sih.name, 28);
 
 		D_(D_INFO "[%2X] %-28.28s %04x%c%04x %04x %c V%02x %5d",
 		   i, mod->xxi[i].name, mod->xxs[i].len,
@@ -635,7 +635,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
 
-		ret = load_sample(m, f, sfh.ffi == 1 ? 0 : SAMPLE_FLAG_UNS,
+		ret = libxmp_load_sample(m, f, sfh.ffi == 1 ? 0 : SAMPLE_FLAG_UNS,
 								xxs, NULL);
 		if (ret < 0) {
 			goto err3;

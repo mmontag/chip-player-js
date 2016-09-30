@@ -86,14 +86,14 @@ static int arch_test(HIO_HANDLE *f, char *t, const int start)
 		}
 
 		if (id == MAGIC_MNAM) {
-			read_title(f, t, 32);
+			libxmp_read_title(f, t, 32);
 			return 0;
 		}
 
 		hio_seek(f, len, SEEK_CUR);
 	}
 
-	read_title(f, t, 0);
+	libxmp_read_title(f, t, 0);
 
 	return 0;
 }
@@ -283,7 +283,7 @@ static int get_sequ(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_module *mod = &m->mod;
 
 	hio_read(mod->xxo, 1, 128, f);
-	set_type(m, "Archimedes Tracker");
+	libxmp_set_type(m, "Archimedes Tracker");
 	MODULE_INFO();
 
 	return 0;
@@ -302,7 +302,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		data->max_pat = 0;
 		mod->trk = mod->pat * mod->chn;
 
-		if (pattern_init(mod) < 0)
+		if (libxmp_init_pattern(mod) < 0)
 			return -1;
 	}
 
@@ -312,7 +312,7 @@ static int get_patt(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
         i = data->max_pat;
 
-	if (pattern_tracks_alloc(mod, i, data->rows[i]) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, data->rows[i]) < 0)
 		return -1;
 
 	for (j = 0; j < data->rows[i]; j++) {
@@ -344,7 +344,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	if (!data->sflag) {
 		mod->smp = mod->ins = 36;
-		if (instrument_init(m) < 0)
+		if (libxmp_init_instrument(m) < 0)
 			return -1;
 
 		D_(D_INFO "Instruments: %d", mod->ins);
@@ -363,7 +363,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	i = data->max_ins;
 
 	mod->xxi[i].nsm = 1;
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 		return -1;
 
 	if (hio_read32b(f) != MAGIC_SNAM)	/* SNAM */
@@ -409,7 +409,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	mod->xxi[i].sub[0].sid = i;
 	mod->xxi[i].sub[0].pan = 0x80;
 
-	m->vol_table = (int *)arch_vol_table;
+	m->vol_table = (int *)libxmp_arch_vol_table;
 	m->volbase = 0xff;
 
 	if (mod->xxs[i].lpe > 2) {
@@ -422,7 +422,7 @@ static int get_samp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxs[i].lpe = mod->xxs[i].len;
 	}
 
-	if (load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[i], NULL) < 0)
+	if (libxmp_load_sample(m, f, SAMPLE_FLAG_VIDC, &mod->xxs[i], NULL) < 0)
 		return -1;
 
 	D_(D_INFO "[%2X] %-20.20s %05x %05x %05x %c V%02x",

@@ -60,7 +60,7 @@ static int fnk_test(HIO_HANDLE *f, char *t, const int start)
     if (hio_size(f) != size)
         return -1;
 
-    read_title(f, t, 0);
+    libxmp_read_title(f, t, 0);
 
     return 0;
 }
@@ -154,12 +154,12 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	else
 	    mod->bpm += (ffh.info[3] >> 1) & 0x3f;
 
-	set_type(m, "FunktrackerGOLD");
+	libxmp_set_type(m, "FunktrackerGOLD");
     } else if (ffh.fmt[0] == 'F' && (ffh.fmt[1] == 'v' || ffh.fmt[1] == 'k')) {
-	set_type(m, "Funktracker");
+	libxmp_set_type(m, "Funktracker");
     } else {
 	mod->chn = 8;
-	set_type(m, "Funktracker DOS32");
+	libxmp_set_type(m, "Funktracker DOS32");
     }
 
     if (mod->chn == 0) {
@@ -177,12 +177,12 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
     MODULE_INFO();
     /* D_(D_INFO "Creation date: %02d/%02d/%04d", day, month, year); */
 
-    if (instrument_init(m) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     /* Convert instruments */
     for (i = 0; i < mod->ins; i++) {
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	mod->xxs[i].len = ffh.fih[i].length;
@@ -198,7 +198,7 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (mod->xxs[i].len > 0)
 	     mod->xxi[i].nsm = 1;
 
-	instrument_name(mod, i, ffh.fih[i].name, 19);
+	libxmp_instrument_name(mod, i, ffh.fih[i].name, 19);
 
 	D_(D_INFO "[%2X] %-20.20s %04x %04x %04x %c V%02x P%02x", i,
 		mod->xxi[i].name,
@@ -207,14 +207,14 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].vol, mod->xxi[i].sub[0].pan);
     }
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Read and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 	    return -1;
 
 	EVENT(i, 1, ffh.pbrk[i]).f2t = FX_BREAK;
@@ -306,7 +306,7 @@ static int fnk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	if (mod->xxs[i].len <= 2)
 	    continue;
 
-	if (load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
+	if (libxmp_load_sample(m, f, 0, &mod->xxs[i], NULL) < 0)
 	    return -1;
     }
 
