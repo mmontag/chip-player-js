@@ -73,6 +73,7 @@
 #define MAGIC_FILE	MAGIC4('F','I','L','E')
 #define MAGIC_TITL	MAGIC4('T','I','T','L')
 #define MAGIC_OPLH	MAGIC4('O','P','L','H')
+#define MAGIC_PPAN	MAGIC4('P','P','A','N')
 
 
 static int masi_test (HIO_HANDLE *, char *, const int);
@@ -170,10 +171,10 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
 	struct local_data *data = (struct local_data *)parm;
-	int i, srate;
+	int i, srate, flags;
 	int finetune;
 
-	hio_read8(f);					/* flags */
+	flags = hio_read8(f);				/* flags */
 	hio_seek(f, 8, SEEK_CUR);			/* songname */
 	hio_seek(f, data->sinaria ? 8 : 4, SEEK_CUR);	/* smpid */
 
@@ -193,7 +194,7 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	xxs->len = hio_read32l(f);
 	xxs->lps = hio_read32l(f);
 	xxs->lpe = hio_read32l(f);
-	xxs->flg = xxs->lpe > 2 ? XMP_SAMPLE_LOOP : 0;
+	xxs->flg = flags & 0x80 ? XMP_SAMPLE_LOOP : 0;
 	hio_read16l(f);
 
 	if ((int32)xxs->lpe < 0)
@@ -204,11 +205,6 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	finetune = 0;
 	if (data->sinaria) {
-		if (xxs->len > 2)
-			xxs->len -= 2;
-		if (xxs->lpe > 2)
-			xxs->lpe -= 2;
-
 		finetune = (int8)(hio_read8s(f) << 4);
 	}
 
@@ -216,7 +212,7 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read32l(f);
 	sub->pan = 0x80;
 	sub->sid = i;
-	srate = hio_read32l(f);
+	srate = hio_read16l(f);
 
 	D_(D_INFO "[%2X] %-32.32s %05x %05x %05x %c V%02x %+04d %5d", i,
 		xxi->name, xxs->len, xxs->lps, xxs->lpe,
@@ -401,58 +397,173 @@ static int get_song(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	return 0;
 }
 
-static int get_song_2(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+static int subchunk_oplh(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
-	uint32 magic;
-	char c, buf[20];
-	int i;
 
-	hio_read(buf, 1, 9, f);
+	/* First two bytes = Number of chunks that follow */
 	hio_read16l(f);
 
-	D_(D_INFO "Subsong title: %-9.9s", buf);
+	/* Sub sub chunks */
+	while (size > 0) {
+		int opcode = hio_read8(f);
 
-	magic = hio_read32b(f);
-	while (magic != MAGIC_OPLH) {
-		int skip;
-		skip = hio_read32l(f);;
-		hio_seek(f, skip, SEEK_CUR);
-		magic = hio_read32b(f);
-	}
+		size--;
 
-	hio_read32l(f);	/* chunk size */
+		if (opcode == 0) {	/* last sub sub chunk */
+			break;
+		}
 
-	hio_seek(f, 9, SEEK_CUR);		/* unknown data */
-	
-	c = hio_read8(f);
-	for (i = 0; c != 0x01; c = hio_read8(f)) {
-		switch (c) {
-		case 0x07:
+		/* Saga Musix's note in OpenMPT:
+		 *
+		 * "This is more like a playlist than a collection of global
+		 *  values. In theory, a tempo item inbetween two order items
+		 *  should modify the tempo when switching patterns. No module
+		 *  uses this feature in practice though, so we can keep our
+		 *  loader simple. Unimplemented opcodes do nothing or freeze
+		 *  MASI."
+		 */
+		switch (opcode) {
+		case 0x01:			/* Play order list item */
+			hio_read(data->pord + mod->len * 8, 1, data->sinaria ? 8 : 4, f);
+			size -= data->sinaria ? 8 : 4;
+			mod->len++;
+			break;
+
+		/* 0x02: Play range */
+		/* 0x03: Jump loop */
+
+		case 0x04:			/* Restart position */
+			mod->rst = hio_read8(f);
+			size--;
+			break;
+
+		/* 0x05: Channel flip */
+		/* 0x06: Transpose */
+
+		case 0x07:			/* Default speed */
 			mod->spd = hio_read8(f);
-			hio_read8(f);		/* 08 */
+			size--;
+			break;
+		case 0x08:			/* Default tempo */
 			mod->bpm = hio_read8(f);
+			size--;
 			break;
-		case 0x0d:
-			hio_read8(f);		/* channel number? */
-			mod->xxc[i].pan = hio_read8(f);
-			hio_read8(f);		/* flags? */
-			i++;
+		case 0x0c:			/* Sample map table */
+			hio_read16l(f);
+			hio_read16l(f);
+			hio_read16l(f);
+			size -= 6;
 			break;
-		case 0x0e:
-			hio_read8(f);		/* channel number? */
-			hio_read8(f);		/* ? */
-			break;
+		case 0x0d: {			/* Channel panning table */
+			int chn = hio_read8(f);
+			int pan = hio_read8(f);
+			int type = hio_read8(f);
+			struct xmp_channel *xxc = &mod->xxc[chn];
+
+			size -= 3;
+
+			switch (type) {
+			case 0:		/* use panning */
+				xxc->pan = pan ^ 0x80;
+				break;
+			case 2:		/* surround */
+				xxc->pan = 0x80;
+                        	xxc->flg |= XMP_CHANNEL_SURROUND;
+				break;
+			case 4:		/* center */
+				xxc->pan = 0x80;
+				break;
+			}
+			break; }
+		case 0x0e: {			/* Channel volume table */
+			int chn = hio_read8(f);
+			int vol = hio_read8(f);
+			struct xmp_channel *xxc = &mod->xxc[chn];
+
+			size -= 2;
+
+			xxc->vol = (vol >> 2) + 1;
+			break; }
 		default:
 			/*printf("channel %d: %02x %02x\n", i, c, hio_read8(f));*/
 			return -1;
 		}
 	}
 
-	for (; c == 0x01; c = hio_read8(f)) {
-		hio_read(data->pord + mod->len * 8, 1, data->sinaria ? 8 : 4, f);
-		mod->len++;
+	return 0;
+}
+
+/* Sinaria channel panning table */
+static int subchunk_ppan(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+{
+	struct xmp_module *mod = &m->mod;
+	int i;
+
+	for (i = 0; i < 64 && size > 0; i++) {
+		struct xmp_channel *xxc = &mod->xxc[i];
+		int type = hio_read8(f);
+		int pan = hio_read8(f);
+
+		size -= 2;
+
+		switch (type) {
+		case 0:		/* use panning */
+			xxc->pan = pan ^ 0x80;
+			break;
+		case 2:		/* surround */
+			xxc->pan = 0x80;
+                       	xxc->flg |= XMP_CHANNEL_SURROUND;
+			break;
+		case 4:		/* center */
+			xxc->pan = 0x80;
+			break;
+		}
+	}
+
+	return 0;
+}
+
+/* Subchunk loader based on OpenMPT LoadPSM.cpp */
+static int get_song_2(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
+{
+	uint32 magic;
+	char buf[20];
+
+	hio_read(buf, 1, 9, f);
+	hio_read16l(f);
+	size -= 11;
+
+	D_(D_INFO "Subsong title: %-9.9s", buf);
+
+	/* Iterate over subchunks. We want OPLH and PPAN */
+	while (size > 0) {
+		magic = hio_read32b(f);
+		int subchunk_size = hio_read32l(f);
+
+		if (subchunk_size == 0) {
+			return -1;
+		}
+
+		size -= subchunk_size;
+
+		switch (magic) {
+		case MAGIC_OPLH:
+			if (subchunk_oplh(m, size, f, parm) < 0) {
+				return -1;
+			}
+			break;
+
+		case MAGIC_PPAN:
+			if (subchunk_ppan(m, size, f, parm) < 0) {
+				return -1;
+			}
+			break;
+
+		default:
+			hio_seek(f, subchunk_size, SEEK_CUR);
+		}
 	}
 
 	return 0;

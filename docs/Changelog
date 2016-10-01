@@ -5,6 +5,7 @@ Stable versions
 	- fix MacOS Tiger build issues (reported by Misty De Meo)
 	- fix sample loop corner case (reported by knight-ryu12)
 	- fix MDL c5spd to preserve base periods (reported by Saga Musix)
+	- fix MASI loader subchunks (reported by Saga Musix)
 	- fix anticlick when rendering only one sample
 	- fix anticlick in His Master's Noise instruments
 	- fix anticlick in MED synth instruments
