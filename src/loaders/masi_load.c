@@ -57,10 +57,9 @@
 
 /*
  * Claudio's note: Sinaria seems to have a finetune byte just before
- * volume, slightly different sample size (subtract 2 bytes?) and some
- * kind of (stereo?) interleaved sample, with 16-byte frames (see Sinaria
- * songs 5 and 8). Sinaria song 10 sounds ugly, possibly caused by wrong
- * pitchbendings (see note above).
+ * volume and some kind of (stereo?) interleaved sample, with 16-byte
+ * frames (see Sinaria songs 5 and 8). Sinaria song 10 sounds ugly,
+ * possibly caused by wrong pitch bends (see note above).
  */
 
 /* FIXME: TODO: sinaria effects */
@@ -232,6 +231,19 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 }
 
 
+static uint8 convert_porta(uint8 param, int sinaria)
+{
+	if (sinaria) {
+		return param;
+	}
+
+	if (param < 4) {
+		return param | 0xf0;
+	} else {
+		return param >> 2;
+	}
+}
+
 static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 {
 	struct xmp_module *mod = &m->mod;
@@ -315,6 +327,8 @@ D_(D_CRIT "p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					}
 				} else
 				switch (fxt) {
+
+				/* Volume slide */
 				case 0x01:		/* fine volslide up */
 					fxt = FX_EXTENDED;
 					fxp = (EX_F_VSLIDE_UP << 4) |
@@ -333,43 +347,137 @@ D_(D_CRIT "p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 					fxt = FX_VOLSLIDE;
 					fxp /= 2;
 					break;
-			    	case 0x0C:		/* portamento up */
+
+				/* Portamento */
+				case 0x0b:		/* fine portamento up */
 					fxt = FX_PORTA_UP;
-					fxp = (fxp - 1) / 2;
+					fxp = (EX_F_PORTA_UP << 4) |
+						convert_porta(fxp, data->sinaria);
 					break;
-				case 0x0E:		/* portamento down */
+			    	case 0x0c:		/* portamento up */
+					fxt = FX_PORTA_UP;
+					fxp = convert_porta(fxp, data->sinaria);
+					break;
+				case 0x0d:		/* fine portamento up */
 					fxt = FX_PORTA_DN;
-					fxp = (fxp - 1) / 2;
+					fxp = (EX_F_PORTA_DN << 4) |
+						convert_porta(fxp, data->sinaria);
+					break;
+				case 0x0e:		/* portamento down */
+					fxt = FX_PORTA_DN;
+					fxp = convert_porta(fxp, data->sinaria);
 					break;
 				case 0x0f:		/* tone portamento */
 					fxt = FX_TONEPORTA;
-					fxp /= 4;
+					fxp >>= 2;
 					break;
+				case 0x10:		/* toneporta + vslide up */
+					fxt = FX_TONE_VSLIDE;
+					fxp = fxt & 0xf0;
+					break;
+				case 0x11:		/* glissando */
+					fxt = FX_EXTENDED;
+					fxp = (EX_GLISS << 4) | (fxp & 0x0f);
+					break;
+				case 0x12:		/* toneporta + vslide down */
+					fxt = FX_TONE_VSLIDE;
+					fxp >>= 4;
+					break;
+
+				/* 0x13: S3M S: crashes MASI */
+
+				/* Vibrato */
 				case 0x15:		/* vibrato */
 					fxt = data->sinaria ?
 						FX_VIBRATO : FX_FINE_VIBRATO;
 					/* fxp remains the same */
 					break;
+				case 0x16:		/* vibrato waveform */
+					fxt = FX_EXTENDED;
+					fxp = (EX_VIBRATO_WF << 4) | (fxp & 0x0f); 
+					break;
+				case 0x17:		/* vibrato + vslide up */
+					fxt = FX_VIBRA_VSLIDE;
+					fxp >>= 4;
+					break;	
+				case 0x18:		/* vibrato + vslide down */
+					fxt = FX_VIBRA_VSLIDE;
+					fxp = fxp & 0x0f;
+					break;	
+
+				/* Tremolo */
+				case 0x1f:		/* tremolo */
+					fxt = FX_TREMOLO;
+					/* fxp remains the same */
+					break;
+				case 0x20:		/* tremolo waveform */
+					fxt = FX_EXTENDED;
+					fxp = (EX_TREMOLO_WF << 4) | (fxp & 0x0f); 
+					break;
+
+				/* Sample commands */
+				case 0x29:		/* 3-byte offset */
+					fxt = FX_OFFSET;
+					/* use only the middle byte */
+					fxp = hio_read8(f);
+					hio_read8(f);
+					rowlen -= 2;
+					break;
 				case 0x2a:		/* retrig note */
 					fxt = FX_EXTENDED;
 					fxp = (EX_RETRIG << 4) | (fxp & 0x0f); 
 					break;
-				case 0x29:		/* unknown */
-					hio_read16l(f);
-					rowlen -= 2;
+				case 0x2b:		/* note cut */
+					fxt = FX_EXTENDED;
+					fxp = (EX_CUT << 4) | (fxp & 0x0f); 
 					break;
-				case 0x33:		/* position Jump */
+				case 0x2c:		/* note delay */
+					fxt = FX_EXTENDED;
+					fxp = (EX_DELAY << 4) | (fxp & 0x0f); 
+					break;
+
+				/* Position change */
+				case 0x33:		/* position jump */
+					/* not used in MASI */
 					fxt = FX_JUMP;
+					fxp >>= 1;
+					hio_read8(f);
+					rowlen--;
 					break;
 			    	case 0x34:		/* pattern break */
+					/* not used in MASI */
 					fxt = FX_BREAK;
 					break;
-				case 0x3D:		/* speed */
+				case 0x35:		/* pattern loop */
+					fxt = FX_EXTENDED;
+					fxp = (EX_PATTERN_LOOP << 4) | (fxp & 0x0f); 
+					break;
+				case 0x36:		/* pattern delay */
+					fxt = FX_EXTENDED;
+					fxp = (EX_PATT_DELAY << 4) | (fxp & 0x0f); 
+					break;
+
+				/* Speed change */
+				case 0x3d:		/* speed */
 					fxt = FX_SPEED;
 					break;
-				case 0x3E:		/* tempo */
+				case 0x3e:		/* tempo */
 					fxt = FX_SPEED;
 					break;
+
+				/* Other */
+				case 0x47:		/* arpeggio */
+					fxt = FX_S3M_ARPEGGIO;
+					break;
+				case 0x48:		/* set finetune */
+					fxt = FX_EXTENDED;
+					fxp = (EX_FINETUNE << 4) | (fxp & 0x0f); 
+					break;
+				case 0x49:		/* set pan */
+					fxt = FX_SETPAN;
+					fxp <<= 4; 
+					break;
+
 				default:
 D_(D_CRIT "p%d r%d c%d: unknown effect %02x %02x\n", i, r, chan, fxt, fxp);
 					fxt = fxp = 0;
