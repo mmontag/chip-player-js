@@ -259,6 +259,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		break;
 
 	case FX_SETPAN:		/* Set pan */
+	    fx_setpan:
 		/* From OpenMPT PanOff.xm:
 		 * "Another chapter of weird FT2 bugs: Note-Off + Note Delay
 		 *  + Volume Column Panning = Panning effect is ignored."
@@ -430,6 +431,9 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		case EX_TREMOLO_WF:	/* Set tremolo waveform */
 			set_lfo_waveform(&xc->tremolo.lfo, fxp & 3);
 			break;
+		case EX_SETPAN:
+			fxp <<= 4;
+			goto fx_setpan;
 		case EX_RETRIG:		/* Retrig note */
 			SET(RETRIG);
 			xc->retrig.val = fxp;

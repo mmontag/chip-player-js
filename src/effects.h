@@ -40,6 +40,7 @@
 #define EX_FINETUNE	0x05
 #define EX_PATTERN_LOOP	0x06
 #define EX_TREMOLO_WF	0x07
+#define EX_SETPAN	0x08
 #define EX_RETRIG	0x09
 #define EX_F_VSLIDE_UP	0x0a
 #define EX_F_VSLIDE_DN	0x0b
