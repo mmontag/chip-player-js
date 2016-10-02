@@ -571,7 +571,13 @@ static int subchunk_oplh(struct module_data *m, int size, HIO_HANDLE *f, void *p
 			int chn = hio_read8(f);
 			int pan = hio_read8(f);
 			int type = hio_read8(f);
-			struct xmp_channel *xxc = &mod->xxc[chn];
+			struct xmp_channel *xxc;
+
+			if (chn >= XMP_MAX_CHANNELS) {
+				break;
+			}
+
+			xxc = &mod->xxc[chn];
 
 			size -= 3;
 
@@ -612,7 +618,7 @@ static int subchunk_ppan(struct module_data *m, int size, HIO_HANDLE *f, void *p
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	for (i = 0; i < 64 && size > 0; i++) {
+	for (i = 0; i < XMP_MAX_CHANNELS && size > 0; i++) {
 		struct xmp_channel *xxc = &mod->xxc[i];
 		int type = hio_read8(f);
 		int pan = hio_read8(f);
