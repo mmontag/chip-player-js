@@ -309,7 +309,8 @@ static int get_pbod(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 				uint8 fxt = hio_read8(f);
 				uint8 fxp = hio_read8(f);
 				rowlen -= 2;
-	
+
+#if 0
 				/* compressed events */
 				if (fxt >= 0x40) {
 					switch (fxp >> 4) {
@@ -326,6 +327,8 @@ D_(D_CRIT "p%d r%d c%d: compressed event %02x %02x\n", i, r, chan, fxt, fxp);
 						return -1;
 					}
 				} else
+#endif
+
 				switch (fxt) {
 
 				/* Volume slide */
