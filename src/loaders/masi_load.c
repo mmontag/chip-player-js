@@ -58,8 +58,8 @@
 /*
  * Claudio's note: Sinaria seems to have a finetune byte just before
  * volume and some kind of (stereo?) interleaved sample, with 16-byte
- * frames (see Sinaria songs 5 and 8). Sinaria song 10 sounds ugly,
- * possibly caused by wrong pitch bends (see note above).
+ * frames (see Sinaria songs 5 and 8). Sinaria song 10 still sounds
+ * ugly, maybe caused by finetune issues?
  */
 
 /* FIXME: TODO: sinaria effects */
