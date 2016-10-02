@@ -6,6 +6,7 @@ Stable versions
 	- fix sample loop corner case (reported by knight-ryu12)
 	- fix MDL c5spd to preserve base periods (reported by Saga Musix)
 	- fix MASI loader subchunks (reported by Saga Musix)
+	- fix set pan effect in multichannel MODs (reported by Leilei)
 	- fix MASI effects based on OpenMPT PSM loader
 	- fix anticlick when rendering only one sample
 	- fix anticlick in His Master's Noise instruments

@@ -146,7 +146,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define QUIRK_VOLPDN	(1 << 9)	/* Set priority to volume slide down */
 #define QUIRK_UNISLD	(1 << 10)	/* Unified pitch slide/portamento */
 #define QUIRK_ITVPOR	(1 << 11)	/* Disable fine bends in IT vol fx */
-/*#define QUIRK_LINEAR	(1 << 12)*/	/* Linear periods */
+#define QUIRK_FTMOD	(1 << 12)	/* Flag for multichannel mods */
 /*#define QUIRK_MODRNG	(1 << 13)*/	/* Limit periods to MOD range */
 #define QUIRK_INSVOL	(1 << 14)	/* Use instrument volume */
 #define QUIRK_VIRTUAL	(1 << 15)	/* Enable virtual channels */

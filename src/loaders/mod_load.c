@@ -774,7 +774,7 @@ skip_test:
 	m->read_event_type = READ_EVENT_ST3;
     } else if (tracker_id == TRACKER_FASTTRACKER || tracker_id == TRACKER_FASTTRACKER2 || tracker_id == TRACKER_TAKETRACKER || tracker_id == TRACKER_MODSGRAVE || mod->chn > 4) {
 	m->c4rate = C4_NTSC_RATE;
-	m->quirk |= QUIRKS_FT2;
+	m->quirk |= QUIRKS_FT2 | QUIRK_FTMOD;
 	m->read_event_type = READ_EVENT_FT2;
 	m->period_type = PERIOD_AMIGA;
     }
