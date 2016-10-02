@@ -62,8 +62,7 @@
  * ugly, maybe caused by finetune issues?
  */
 
-/* FIXME: TODO: sinaria effects */
-
+#include <limits.h>
 #include "loader.h"
 #include "iff.h"
 #include "period.h"
@@ -512,12 +511,14 @@ static int subchunk_oplh(struct module_data *m, int size, HIO_HANDLE *f, void *p
 {
 	struct xmp_module *mod = &m->mod;
 	struct local_data *data = (struct local_data *)parm;
+	int first_order_chunk = INT_MAX;
+	int num_chunk, i;
 
 	/* First two bytes = Number of chunks that follow */
-	hio_read16l(f);
+	num_chunk = hio_read16l(f);
 
 	/* Sub sub chunks */
-	while (size > 0) {
+	for (i = 0; i < num_chunk && size > 0; i++) {
 		int opcode = hio_read8(f);
 
 		size--;
@@ -540,15 +541,28 @@ static int subchunk_oplh(struct module_data *m, int size, HIO_HANDLE *f, void *p
 			hio_read(data->pord + mod->len * 8, 1, data->sinaria ? 8 : 4, f);
 			size -= data->sinaria ? 8 : 4;
 			mod->len++;
+			if (first_order_chunk == INT_MAX) {
+				first_order_chunk = i;
+			}
 			break;
 
 		/* 0x02: Play range */
 		/* 0x03: Jump loop */
 
-		case 0x04:			/* Restart position */
-			mod->rst = hio_read8(f);
-			size--;
-			break;
+		case 0x04: {			/* Jump line (restart position) */
+			int restart_chunk = hio_read16l(f);
+			size -= 2;
+
+			/* This jumps to the command line, but since we're converting
+			 * play order list items to our order list, only change the
+			 * restart position if it's after the first order chunk.
+			 */
+
+			if (restart_chunk >= first_order_chunk) {
+				mod->rst = restart_chunk - first_order_chunk;
+			}
+
+			break; }
 
 		/* 0x05: Channel flip */
 		/* 0x06: Transpose */
