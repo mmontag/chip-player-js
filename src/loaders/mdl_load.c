@@ -858,7 +858,7 @@ static int get_chunk_sa(struct module_data *m, int size, HIO_HANDLE *f, void *pa
                 goto err3;
             if (unpack_sample16(smpbuf, buf, len, xxs->len) < 0)
                 goto err3;
-
+	    free(buf);
 	    break;
 	default:
 	    /* Sanity check */
