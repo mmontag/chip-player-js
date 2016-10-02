@@ -597,7 +597,13 @@ static int subchunk_oplh(struct module_data *m, int size, HIO_HANDLE *f, void *p
 		case 0x0e: {			/* Channel volume table */
 			int chn = hio_read8(f);
 			int vol = hio_read8(f);
-			struct xmp_channel *xxc = &mod->xxc[chn];
+			struct xmp_channel *xxc;
+
+			if (chn >= XMP_MAX_CHANNELS) {
+				break;
+			}
+
+			xxc = &mod->xxc[chn];
 
 			size -= 2;
 
