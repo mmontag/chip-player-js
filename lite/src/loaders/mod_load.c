@@ -69,7 +69,7 @@ static int mod_test(HIO_HANDLE *f, char *t, const int start)
 
   found:
     hio_seek(f, start + 0, SEEK_SET);
-    read_title(f, t, 20);
+    libxmp_read_title(f, t, 20);
 
     return 0;
 }
@@ -120,7 +120,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	return -1;
     }
 
-    strncpy(mod->name, (char *) mh.name, 20);
+    strncpy(mod->name, (char *)mh.name, 20);
 
     mod->len = mh.len;
     /* mod->rst = mh.restart; */
@@ -138,7 +138,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
     mod->pat++;
 
-    if (instrument_init(mod) < 0)
+    if (libxmp_init_instrument(m) < 0)
 	return -1;
 
     for (i = 0; i < mod->ins; i++) {
@@ -146,7 +146,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	struct xmp_subinstrument *sub;
 	struct xmp_sample *xxs;
 
-	if (subinstrument_alloc(mod, i, 1) < 0)
+	if (libxmp_alloc_subinstrument(mod, i, 1) < 0)
 	    return -1;
 
 	xxi = &mod->xxi[i];
@@ -165,7 +165,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	sub->vol = mh.ins[i].volume;
 	sub->pan = 0x80;
 	sub->sid = i;
-	instrument_name(mod, i, mh.ins[i].name, 22);
+	libxmp_instrument_name(mod, i, mh.ins[i].name, 22);
 
 	if (xxs->len > 0) {
 		xxi->nsm = 1;
@@ -174,7 +174,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     mod->trk = mod->chn * mod->pat;
 
-    set_type(m, mod->chn == 4 ? "Protracker" : "Fasttracker");
+    libxmp_set_type(m, mod->chn == 4 ? "Protracker" : "Fasttracker");
 
     MODULE_INFO();
 
@@ -189,20 +189,20 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			mod->xxs[i].len > mod->xxs[i].lpe ? '!' : ' ');
     }
 
-    if (pattern_init(mod) < 0)
+    if (libxmp_init_pattern(mod) < 0)
 	return -1;
 
     /* Load and convert patterns */
     D_(D_INFO "Stored patterns: %d", mod->pat);
 
     for (i = 0; i < mod->pat; i++) {
-	if (pattern_tracks_alloc(mod, i, 64) < 0)
+	if (libxmp_alloc_pattern_tracks(mod, i, 64) < 0)
 	    return -1;
 
 	for (j = 0; j < (64 * mod->chn); j++) {
 	    event = &EVENT (i, j % mod->chn, j / mod->chn);
 	    hio_read (mod_event, 1, 4, f);
-	    decode_protracker_event(event, mod_event);
+	    libxmp_decode_protracker_event(event, mod_event);
 	}
     }
 
@@ -218,7 +218,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	flags = ptkloop ? SAMPLE_FLAG_FULLREP : 0;
 
-	if (load_sample(m, f, flags, &mod->xxs[i], NULL) < 0)
+	if (libxmp_load_sample(m, f, flags, &mod->xxs[i], NULL) < 0)
 	    return -1;
     }
 
