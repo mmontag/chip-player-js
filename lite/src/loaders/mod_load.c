@@ -224,7 +224,7 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
     if (mod->chn > 4) {
 	m->quirk &= ~QUIRK_PROTRACK;
-	m->quirk |= QUIRKS_FT2;
+	m->quirk |= QUIRKS_FT2 | QUIRK_FTMOD;
 	m->read_event_type = READ_EVENT_FT2;
 	m->period_type = PERIOD_AMIGA;
     }
