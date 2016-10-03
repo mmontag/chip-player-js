@@ -34,8 +34,8 @@
 #define	FREE	-1
 
 /* For virt_pastnote() */
-void player_set_release(struct context_data *, int);
-void player_set_fadeout(struct context_data *, int);
+void libxmp_player_set_release(struct context_data *, int);
+void libxmp_player_set_fadeout(struct context_data *, int);
 
 
 /* Get parent channel */
@@ -568,10 +568,10 @@ void libxmp_virt_pastnote(struct context_data *ctx, int chn, int act)
 				libxmp_virt_resetvoice(ctx, voc, 1);
 				break;
 			case VIRT_ACTION_OFF:
-				player_set_release(ctx, c);
+				libxmp_player_set_release(ctx, c);
 				break;
 			case VIRT_ACTION_FADE:
-				player_set_fadeout(ctx, c);
+				libxmp_player_set_fadeout(ctx, c);
 				break;
 			}
 		}

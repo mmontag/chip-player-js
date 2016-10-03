@@ -1248,7 +1248,7 @@ static void next_row(struct context_data *ctx)
 /*
  * Set note action for libxmp_virt_pastnote
  */
-void player_set_release(struct context_data *ctx, int chn)
+void libxmp_player_set_release(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
@@ -1256,7 +1256,7 @@ void player_set_release(struct context_data *ctx, int chn)
 	SET_NOTE(NOTE_RELEASE);
 }
 
-void player_set_fadeout(struct context_data *ctx, int chn)
+void libxmp_player_set_fadeout(struct context_data *ctx, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct channel_data *xc = &p->xc_data[chn];
