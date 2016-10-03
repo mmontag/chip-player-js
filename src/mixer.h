@@ -60,19 +60,19 @@ struct mixer_voice {
 #endif
 };
 
-int	mixer_on		(struct context_data *, int, int, int);
-void	mixer_off		(struct context_data *);
-void    mixer_setvol		(struct context_data *, int, int);
-void    mixer_seteffect		(struct context_data *, int, int, int);
-void    mixer_setpan		(struct context_data *, int, int);
-int	mixer_numvoices		(struct context_data *, int);
-void	mixer_softmixer		(struct context_data *);
-void	mixer_reset		(struct context_data *);
-void	mixer_setpatch		(struct context_data *, int, int, int);
-void	mixer_voicepos		(struct context_data *, int, double, int);
-double	mixer_getvoicepos	(struct context_data *, int);
-void	mixer_setnote		(struct context_data *, int, int);
-void	mixer_setperiod		(struct context_data *, int, double);
-void	mixer_release		(struct context_data *, int, int);
+int	libxmp_mixer_on		(struct context_data *, int, int, int);
+void	libxmp_mixer_off	(struct context_data *);
+void    libxmp_mixer_setvol	(struct context_data *, int, int);
+void    libxmp_mixer_seteffect	(struct context_data *, int, int, int);
+void    libxmp_mixer_setpan	(struct context_data *, int, int);
+int	libxmp_mixer_numvoices	(struct context_data *, int);
+void	libxmp_mixer_softmixer	(struct context_data *);
+void	libxmp_mixer_reset	(struct context_data *);
+void	libxmp_mixer_setpatch	(struct context_data *, int, int, int);
+void	libxmp_mixer_voicepos	(struct context_data *, int, double, int);
+double	libxmp_mixer_getvoicepos(struct context_data *, int);
+void	libxmp_mixer_setnote	(struct context_data *, int, int);
+void	libxmp_mixer_setperiod	(struct context_data *, int, double);
+void	libxmp_mixer_release	(struct context_data *, int, int);
 
 #endif /* LIBXMP_MIXER_H */

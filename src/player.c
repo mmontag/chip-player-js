@@ -1304,7 +1304,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 	if (ctx->state > XMP_STATE_LOADED)
 		xmp_end_player(opaque);
 
-	if (mixer_on(ctx, rate, format, m->c4rate) < 0)
+	if (libxmp_mixer_on(ctx, rate, format, m->c4rate) < 0)
 		return -XMP_ERROR_INTERNAL;
 
 	p->master_vol = 100;
@@ -1516,7 +1516,7 @@ int xmp_play_frame(xmp_context opaque)
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
 	p->current_time += p->frame_time;
 
-	mixer_softmixer(ctx);
+	libxmp_mixer_softmixer(ctx);
 
 	return 0;
 }
@@ -1609,7 +1609,7 @@ void xmp_end_player(xmp_context opaque)
 	p->xc_data = NULL;
 	f->loop = NULL;
 
-	mixer_off(ctx);
+	libxmp_mixer_off(ctx);
 }
 
 void xmp_get_module_info(xmp_context opaque, struct xmp_module_info *info)
