@@ -32,7 +32,7 @@ TEST(test_effect_it_bpm)
 	new_event(ctx, 0, 6, 0, 0, 0, 0, FX_IT_BPM, 0xff, 0, 0);
 	new_event(ctx, 0, 7, 0, 0, 0, 0, FX_IT_BPM, 0x11, 0, 0);
 
-	scan_sequences(ctx);
+	libxmp_scan_sequences(ctx);
 
 	xmp_start_player(opaque, 44100, 0);
 

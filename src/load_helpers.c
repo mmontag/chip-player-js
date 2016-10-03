@@ -195,7 +195,7 @@ static void check_envelope(struct xmp_envelope *env)
 	}
 }
 
-void load_prologue(struct context_data *ctx)
+void libxmp_load_prologue(struct context_data *ctx)
 {
 	struct module_data *m = &ctx->m;
 	int i;
@@ -241,7 +241,7 @@ void load_prologue(struct context_data *ctx)
 	}
 }
 
-void load_epilogue(struct context_data *ctx)
+void libxmp_load_epilogue(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -301,10 +301,10 @@ void load_epilogue(struct context_data *ctx)
 #ifndef LIBXMP_CORE_PLAYER
 	module_quirks(ctx);
 #endif
-	set_player_mode(ctx);
+	libxmp_set_player_mode(ctx);
 }
 
-int prepare_scan(struct context_data *ctx)
+int libxmp_prepare_scan(struct context_data *ctx)
 {
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
@@ -347,7 +347,7 @@ int prepare_scan(struct context_data *ctx)
 }
 
 /* Process player personality flags */
-int set_player_mode(struct context_data *ctx)
+int libxmp_set_player_mode(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;

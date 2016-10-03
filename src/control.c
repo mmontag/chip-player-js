@@ -70,7 +70,7 @@ static void set_position(struct context_data *ctx, int pos, int dir)
 
 	/* If dir is 0, we can jump to a different sequence */
 	if (dir == 0) {
-		seq = get_sequence(ctx, pos);
+		seq = libxmp_get_sequence(ctx, pos);
 	} else {
 		seq = p->sequence;
 	}
@@ -212,7 +212,7 @@ int xmp_seek_time(xmp_context opaque, int time)
 		if (pat >= m->mod.pat) {
 			continue;
 		}
-		if (get_sequence(ctx, i) != p->sequence) {
+		if (libxmp_get_sequence(ctx, i) != p->sequence) {
 			continue;
 		}
 		t = m->xxo_info[i].time;
@@ -348,7 +348,7 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 		int vblank = p->flags & XMP_FLAGS_VBLANK;
 		p->flags = val;
 		if (vblank != (p->flags & XMP_FLAGS_VBLANK))
-			scan_sequences(ctx);
+			libxmp_scan_sequences(ctx);
 		ret = 0;
 		break; }
 	case XMP_PLAYER_SMPCTL:
@@ -379,8 +379,8 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 	/* 4.4 */
 	case XMP_PLAYER_MODE:
 		p->mode = val;
-		set_player_mode(ctx);
-		scan_sequences(ctx);
+		libxmp_set_player_mode(ctx);
+		libxmp_scan_sequences(ctx);
 		ret = 0;
 		break;
 	case XMP_PLAYER_VOICES:

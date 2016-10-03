@@ -125,7 +125,7 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
 	    if (mod->rst > mod->len || mod->xxo[mod->rst] >= mod->pat) {
 		ord = ep;
 	    } else {
-		if (get_sequence(ctx, mod->rst) == chain) {
+		if (libxmp_get_sequence(ctx, mod->rst) == chain) {
 	            ord = mod->rst;
 		} else {
 		    ord = ep;
@@ -488,13 +488,13 @@ end_module:
     return (time + m->time_factor * frame_count * base_time / bpm);
 }
 
-int get_sequence(struct context_data *ctx, int ord)
+int libxmp_get_sequence(struct context_data *ctx, int ord)
 {
 	struct player_data *p = &ctx->p;
 	return p->sequence_control[ord];
 }
 
-int scan_sequences(struct context_data *ctx)
+int libxmp_scan_sequences(struct context_data *ctx)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;

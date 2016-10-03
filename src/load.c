@@ -47,9 +47,9 @@
 
 extern struct format_loader *format_loader[];
 
-void load_prologue(struct context_data *);
-void load_epilogue(struct context_data *);
-int prepare_scan(struct context_data *);
+void libxmp_load_prologue(struct context_data *);
+void libxmp_load_epilogue(struct context_data *);
+int  libxmp_prepare_scan(struct context_data *);
 
 #ifndef LIBXMP_CORE_PLAYER
 
@@ -358,7 +358,7 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	int i, j, ret;
 	int test_result, load_result;
 
-	load_prologue(ctx);
+	libxmp_load_prologue(ctx);
 
 	D_(D_WARN "load");
 	test_result = load_result = -1;
@@ -426,15 +426,15 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 	}
 
 	adjust_string(mod->name);
-	load_epilogue(ctx);
+	libxmp_load_epilogue(ctx);
 
-	ret = prepare_scan(ctx);
+	ret = libxmp_prepare_scan(ctx);
 	if (ret < 0) {
 		xmp_release_module(opaque);
 		return ret;
 	}
 
-	scan_sequences(ctx);
+	libxmp_scan_sequences(ctx);
 
 	ctx->state = XMP_STATE_LOADED;
 
@@ -667,5 +667,5 @@ void xmp_scan_module(xmp_context opaque)
 	if (ctx->state < XMP_STATE_LOADED)
 		return;
 
-	scan_sequences(ctx);
+	libxmp_scan_sequences(ctx);
 }

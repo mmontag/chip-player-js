@@ -1358,7 +1358,7 @@ static void next_order(struct context_data *ctx)
 			    p->ord < m->seq_data[p->sequence].entry_point) {
 				p->ord = m->seq_data[p->sequence].entry_point;
 			} else {
-				if (get_sequence(ctx, mod->rst) == p->sequence) {
+				if (libxmp_get_sequence(ctx, mod->rst) == p->sequence) {
 					p->ord = mod->rst;
 				} else {
 					p->ord = m->seq_data[p->sequence].entry_point;

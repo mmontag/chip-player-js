@@ -37,7 +37,7 @@ TEST(test_effect_f_set_speed)
 	new_event(ctx, 0, 3, 0, 0, 0, 0, FX_SPEED, 0x20, 0, 0);
 	new_event(ctx, 0, 4, 0, 0, 0, 0, FX_SPEED, 0x80, 0, 0);
 
-	scan_sequences(ctx);
+	libxmp_scan_sequences(ctx);
 
 	xmp_start_player(opaque, 44100, 0);
 

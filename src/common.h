@@ -384,10 +384,10 @@ struct context_data {
 
 char	*adjust_string		(char *);
 int	exclude_match		(char *);
-int	prepare_scan		(struct context_data *);
-int	scan_sequences		(struct context_data *);
-int	get_sequence		(struct context_data *, int);
-int	set_player_mode		(struct context_data *);
+int	libxmp_prepare_scan	(struct context_data *);
+int	libxmp_scan_sequences	(struct context_data *);
+int	libxmp_get_sequence	(struct context_data *, int);
+int	libxmp_set_player_mode	(struct context_data *);
 
 int8	read8s			(FILE *, int *err);
 uint8	read8			(FILE *, int *err);

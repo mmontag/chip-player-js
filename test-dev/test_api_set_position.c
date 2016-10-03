@@ -21,8 +21,9 @@ TEST(test_api_set_position)
 	set_order(ctx, 0, 0);
 	set_order(ctx, 1, 1);
 	set_order(ctx, 2, 0);
-	prepare_scan(ctx);
-	scan_sequences(ctx);
+
+	libxmp_prepare_scan(ctx);
+	libxmp_scan_sequences(ctx);
 
 	xmp_start_player(opaque, 44100, 0);
 	fail_unless(p->ord == 0, "didn't start at pattern 0");

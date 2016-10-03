@@ -19,8 +19,9 @@ TEST(test_next_order_skip)
 	set_order(ctx, 2, 0);
 	set_order(ctx, 3, 0xff);
 	set_order(ctx, 4, 1);
-	prepare_scan(ctx);
-	scan_sequences(ctx);
+
+	libxmp_prepare_scan(ctx);
+	libxmp_scan_sequences(ctx);
 
 	xmp_start_player(opaque, 44100, 0);
 	xmp_play_frame(opaque);

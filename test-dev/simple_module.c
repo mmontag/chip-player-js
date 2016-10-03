@@ -3,8 +3,8 @@
 #include "../src/common.h"
 #include "../src/loaders/loader.h"
 
-void load_prologue(struct context_data *);
-void load_epilogue(struct context_data *);
+void libxmp_load_prologue(struct context_data *);
+void libxmp_load_epilogue(struct context_data *);
 
 void create_simple_module(struct context_data *ctx, int ins, int pat)
 {
@@ -12,7 +12,7 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 	struct xmp_module *mod = &m->mod;
 	int i;
 
-	load_prologue(ctx);
+	libxmp_load_prologue(ctx);
 
 	/* Create module */
 
@@ -51,9 +51,9 @@ void create_simple_module(struct context_data *ctx, int ins, int pat)
 
 	/* End of module creation */
 
-	load_epilogue(ctx);
-	prepare_scan(ctx);
-	scan_sequences(ctx);
+	libxmp_load_epilogue(ctx);
+	libxmp_prepare_scan(ctx);
+	libxmp_scan_sequences(ctx);
 
 	ctx->state = XMP_STATE_LOADED;
 }
