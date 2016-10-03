@@ -31,7 +31,7 @@
 static int no_test (HIO_HANDLE *, char *, const int);
 static int no_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader no_loader = {
+const struct format_loader libxmp_loader_no = {
 	"Liquid Tracker NO",
 	no_test,
 	no_load

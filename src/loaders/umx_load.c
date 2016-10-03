@@ -29,15 +29,15 @@
 #define MAGIC_SCRM	MAGIC4('S','C','R','M')
 #define MAGIC_M_K_	MAGIC4('M','.','K','.')
 
-extern const struct format_loader xm_loader;
-extern const struct format_loader it_loader;
-extern const struct format_loader s3m_loader;
-extern const struct format_loader mod_loader;
+extern const struct format_loader libxmp_loader_xm;
+extern const struct format_loader libxmp_loader_it;
+extern const struct format_loader libxmp_loader_s3m;
+extern const struct format_loader libxmp_loader_mod;
 
 static int umx_test (HIO_HANDLE *, char *, const int);
 static int umx_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader umx_loader = {
+const struct format_loader libxmp_loader_umx = {
 	"Epic Games UMX",
 	umx_test,
 	umx_load
@@ -103,14 +103,14 @@ static int umx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (hio_seek(f, i, SEEK_SET) < 0) {
 				return -1;
 			}
-			return xm_loader.loader(m, f, i);
+			return libxmp_loader_xm.loader(m, f, i);
 		}
 
 		if (id == MAGIC_IMPM) {
 			if (hio_seek(f, i, SEEK_SET) < 0) {
 				return -1;
 			}
-			return it_loader.loader(m, f, i);
+			return libxmp_loader_it.loader(m, f, i);
 		}
 
 		if (i > 44 && id == MAGIC_SCRM) {
@@ -118,7 +118,7 @@ static int umx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (hio_seek(f, i, SEEK_SET) < 0) {
 				return -1;
 			}
-			return s3m_loader.loader(m, f, i);
+			return libxmp_loader_s3m.loader(m, f, i);
 		}
 
 		if (i > 1080 && id == MAGIC_M_K_) {
@@ -126,7 +126,7 @@ static int umx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			if (hio_seek(f, i, SEEK_SET) < 0) {
 				return -1;
 			}
-			return mod_loader.loader(m, f, i);
+			return libxmp_loader_mod.loader(m, f, i);
 		}
 	}
 	

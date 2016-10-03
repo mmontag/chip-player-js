@@ -17,7 +17,7 @@
 static int polly_test(HIO_HANDLE *, char *, const int);
 static int polly_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader polly_loader = {
+const struct format_loader libxmp_loader_polly = {
 	"Polly Tracker",
 	polly_test,
 	polly_load

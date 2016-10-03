@@ -37,7 +37,7 @@ extern struct list_head *checked_format;
 static int pw_test(HIO_HANDLE *, char *, const int);
 static int pw_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader pw_loader = {
+const struct format_loader libxmp_loader_pw = {
 	"prowizard",
 	pw_test,
 	pw_load

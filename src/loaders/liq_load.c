@@ -88,7 +88,7 @@ struct liq_pattern {
 static int liq_test (HIO_HANDLE *, char *, const int);
 static int liq_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader liq_loader = {
+const struct format_loader libxmp_loader_liq = {
     "Liquid Tracker",
     liq_test,
     liq_load

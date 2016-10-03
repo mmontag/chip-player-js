@@ -71,7 +71,7 @@ struct ptm_instrument_header {
 static int ptm_test(HIO_HANDLE *, char *, const int);
 static int ptm_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader ptm_loader = {
+const struct format_loader libxmp_loader_ptm = {
 	"Poly Tracker",
 	ptm_test,
 	ptm_load

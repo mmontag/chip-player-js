@@ -87,7 +87,7 @@ const struct mod_magic mod_magic[] = {
 static int mod_test(HIO_HANDLE *, char *, const int);
 static int mod_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader mod_loader = {
+const struct format_loader libxmp_loader_mod = {
 	"Amiga Protracker/Compatible",
 	mod_test,
 	mod_load

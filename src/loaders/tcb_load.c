@@ -34,7 +34,7 @@
 static int tcb_test(HIO_HANDLE *, char *, const int);
 static int tcb_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader tcb_loader = {
+const struct format_loader libxmp_loader_tcb = {
 	"TCB Tracker",
 	tcb_test,
 	tcb_load

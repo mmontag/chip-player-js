@@ -27,7 +27,7 @@
 static int mmd3_test (HIO_HANDLE *, char *, const int);
 static int mmd3_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader mmd3_loader = {
+const struct format_loader libxmp_loader_mmd3 = {
 	"OctaMED",
 	mmd3_test,
 	mmd3_load

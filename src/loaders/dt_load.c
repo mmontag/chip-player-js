@@ -32,7 +32,7 @@
 static int dt_test(HIO_HANDLE *, char *, const int);
 static int dt_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader dt_loader = {
+const struct format_loader libxmp_loader_dt = {
 	"Digital Tracker",
 	dt_test,
 	dt_load

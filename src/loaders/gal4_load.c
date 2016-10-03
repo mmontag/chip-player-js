@@ -34,7 +34,7 @@
 static int gal4_test(HIO_HANDLE *, char *, const int);
 static int gal4_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader gal4_loader = {
+const struct format_loader libxmp_loader_gal4 = {
 	"Galaxy Music System 4.0",
 	gal4_test,
 	gal4_load

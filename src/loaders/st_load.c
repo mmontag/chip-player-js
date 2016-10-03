@@ -32,7 +32,7 @@
 static int st_test(HIO_HANDLE *, char *, const int);
 static int st_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader st_loader = {
+const struct format_loader libxmp_loader_st = {
 	"Soundtracker",
 	st_test,
 	st_load

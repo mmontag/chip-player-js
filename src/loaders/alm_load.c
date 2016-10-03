@@ -38,7 +38,7 @@
 static int alm_test (HIO_HANDLE *, char *, const int);
 static int alm_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader alm_loader = {
+const struct format_loader libxmp_loader_alm = {
     "Aley Keptr (ALM)",
     alm_test,
     alm_load

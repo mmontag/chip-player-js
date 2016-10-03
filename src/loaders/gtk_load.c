@@ -27,7 +27,7 @@
 static int gtk_test(HIO_HANDLE *, char *, const int);
 static int gtk_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader gtk_loader = {
+const struct format_loader libxmp_loader_gtk = {
 	"Graoumf Tracker",
 	gtk_test,
 	gtk_load

@@ -29,7 +29,7 @@
 static int dtt_test(HIO_HANDLE *, char *, const int);
 static int dtt_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader dtt_loader = {
+const struct format_loader libxmp_loader_dtt = {
 	"Desktop Tracker",
 	dtt_test,
 	dtt_load

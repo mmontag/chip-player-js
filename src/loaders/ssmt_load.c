@@ -28,7 +28,7 @@
 static int mtp_test (HIO_HANDLE *, char *, const int);
 static int mtp_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader mtp_loader = {
+const struct format_loader libxmp_loader_mtp = {
 	"Soundsmith/MegaTracker (MTP)",
 	mtp_test,
 	mtp_load

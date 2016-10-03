@@ -26,7 +26,7 @@
 static int amd_test(HIO_HANDLE *, char *, const int);
 static int amd_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader amd_loader = {
+const struct format_loader libxmp_loader_amd = {
 	"Amusic Adlib Tracker",
 	amd_test,
 	amd_load

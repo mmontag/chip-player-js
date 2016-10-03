@@ -25,134 +25,134 @@
 #include "loaders/prowizard/prowiz.h"
 #include "format.h"
 
-extern const struct format_loader xm_loader;
-extern const struct format_loader mod_loader;
-extern const struct format_loader flt_loader;
-extern const struct format_loader st_loader;
-extern const struct format_loader it_loader;
-extern const struct format_loader s3m_loader;
-extern const struct format_loader stm_loader;
-extern const struct format_loader stx_loader;
-extern const struct format_loader mtm_loader;
-extern const struct format_loader ice_loader;
-extern const struct format_loader imf_loader;
-extern const struct format_loader ptm_loader;
-extern const struct format_loader mdl_loader;
-extern const struct format_loader ult_loader;
-extern const struct format_loader liq_loader;
-extern const struct format_loader no_loader;
-extern const struct format_loader masi_loader;
-extern const struct format_loader gal5_loader;
-extern const struct format_loader gal4_loader;
-extern const struct format_loader psm_loader;
-extern const struct format_loader amf_loader;
-extern const struct format_loader asylum_loader;
-extern const struct format_loader gdm_loader;
-extern const struct format_loader mmd1_loader;
-extern const struct format_loader mmd3_loader;
-extern const struct format_loader med2_loader;
-extern const struct format_loader med3_loader;
-extern const struct format_loader med4_loader;
-/* extern const struct format_loader dmf_loader; */
-extern const struct format_loader rtm_loader;
-extern const struct format_loader pt3_loader;
-/* extern const struct format_loader tcb_loader; */
-extern const struct format_loader dt_loader;
-/* extern const struct format_loader gtk_loader; */
-/* extern const struct format_loader dtt_loader; */
-extern const struct format_loader mgt_loader;
-extern const struct format_loader arch_loader;
-extern const struct format_loader sym_loader;
-extern const struct format_loader digi_loader;
-extern const struct format_loader dbm_loader;
-extern const struct format_loader emod_loader;
-extern const struct format_loader okt_loader;
-extern const struct format_loader sfx_loader;
-extern const struct format_loader far_loader;
-extern const struct format_loader umx_loader;
-extern const struct format_loader stim_loader;
-/* extern const struct format_loader coco_loader; */
-/* extern const struct format_loader mtp_loader; */
-extern const struct format_loader ims_loader;
-extern const struct format_loader c669_loader;
-extern const struct format_loader fnk_loader;
-/* extern const struct format_loader amd_loader; */
-/* extern const struct format_loader rad_loader; */
-/* extern const struct format_loader hsc_loader; */
-extern const struct format_loader mfp_loader;
-/* extern const struct format_loader alm_loader; */
-/* extern const struct format_loader polly_loader; */
-/* extern const struct format_loader stc_loader; */
-extern const struct format_loader pw_loader;
-extern const struct format_loader hmn_loader;
-extern const struct format_loader chip_loader;
-extern const struct format_loader abk_loader;
+extern const struct format_loader libxmp_loader_xm;
+extern const struct format_loader libxmp_loader_mod;
+extern const struct format_loader libxmp_loader_flt;
+extern const struct format_loader libxmp_loader_st;
+extern const struct format_loader libxmp_loader_it;
+extern const struct format_loader libxmp_loader_s3m;
+extern const struct format_loader libxmp_loader_stm;
+extern const struct format_loader libxmp_loader_stx;
+extern const struct format_loader libxmp_loader_mtm;
+extern const struct format_loader libxmp_loader_ice;
+extern const struct format_loader libxmp_loader_imf;
+extern const struct format_loader libxmp_loader_ptm;
+extern const struct format_loader libxmp_loader_mdl;
+extern const struct format_loader libxmp_loader_ult;
+extern const struct format_loader libxmp_loader_liq;
+extern const struct format_loader libxmp_loader_no;
+extern const struct format_loader libxmp_loader_masi;
+extern const struct format_loader libxmp_loader_gal5;
+extern const struct format_loader libxmp_loader_gal4;
+extern const struct format_loader libxmp_loader_psm;
+extern const struct format_loader libxmp_loader_amf;
+extern const struct format_loader libxmp_loader_asylum;
+extern const struct format_loader libxmp_loader_gdm;
+extern const struct format_loader libxmp_loader_mmd1;
+extern const struct format_loader libxmp_loader_mmd3;
+extern const struct format_loader libxmp_loader_med2;
+extern const struct format_loader libxmp_loader_med3;
+extern const struct format_loader libxmp_loader_med4;
+/* extern const struct format_loader libxmp_loader_dmf; */
+extern const struct format_loader libxmp_loader_rtm;
+extern const struct format_loader libxmp_loader_pt3;
+/* extern const struct format_loader libxmp_loader_tcb; */
+extern const struct format_loader libxmp_loader_dt;
+/* extern const struct format_loader libxmp_loader_gtk; */
+/* extern const struct format_loader libxmp_loader_dtt; */
+extern const struct format_loader libxmp_loader_mgt;
+extern const struct format_loader libxmp_loader_arch;
+extern const struct format_loader libxmp_loader_sym;
+extern const struct format_loader libxmp_loader_digi;
+extern const struct format_loader libxmp_loader_dbm;
+extern const struct format_loader libxmp_loader_emod;
+extern const struct format_loader libxmp_loader_okt;
+extern const struct format_loader libxmp_loader_sfx;
+extern const struct format_loader libxmp_loader_far;
+extern const struct format_loader libxmp_loader_umx;
+extern const struct format_loader libxmp_loader_stim;
+/* extern const struct format_loader libxmp_loader_coco; */
+/* extern const struct format_loader libxmp_loader_mtp; */
+extern const struct format_loader libxmp_loader_ims;
+extern const struct format_loader libxmp_loader_669;
+extern const struct format_loader libxmp_loader_fnk;
+/* extern const struct format_loader libxmp_loader_amd; */
+/* extern const struct format_loader libxmp_loader_rad; */
+/* extern const struct format_loader libxmp_loader_hsc; */
+extern const struct format_loader libxmp_loader_mfp;
+/* extern const struct format_loader libxmp_loader_alm; */
+/* extern const struct format_loader libxmp_loader_polly; */
+/* extern const struct format_loader libxmp_loader_stc; */
+extern const struct format_loader libxmp_loader_pw;
+extern const struct format_loader libxmp_loader_hmn;
+extern const struct format_loader libxmp_loader_chip;
+extern const struct format_loader libxmp_loader_abk;
 
 extern const struct pw_format *const pw_format[];
 
 const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
-	&xm_loader,
-	&mod_loader,
-	&flt_loader,
-	&st_loader,
-	&it_loader,
-	&s3m_loader,
-	&stm_loader,
-	&stx_loader,
-	&mtm_loader,
-	&ice_loader,
-	&imf_loader,
-	&ptm_loader,
-	&mdl_loader,
-	&ult_loader,
-	&liq_loader,
-	&no_loader,
-	&masi_loader,
-	&gal5_loader,
-	&gal4_loader,
-	&psm_loader,
-	&amf_loader,
-	&asylum_loader,
-	&gdm_loader,
-	&mmd1_loader,
-	&mmd3_loader,
-	&med2_loader,
-	&med3_loader,
-	&med4_loader,
-	/* &dmf_loader, */
-	&chip_loader,
-	&rtm_loader,
-	&pt3_loader,
-	/* &tcb_loader, */
-	&dt_loader,
-	/* &gtk_loader, */
-	/* &dtt_loader, */
-	&mgt_loader,
-	&arch_loader,
-	&sym_loader,
-	&digi_loader,
-	&dbm_loader,
-	&emod_loader,
-	&okt_loader,
-	&sfx_loader,
-	&far_loader,
-	&umx_loader,
-	&hmn_loader,
-	&stim_loader,
-	/* &coco_loader, */
-	/* &mtp_loader, */
-	&ims_loader,
-	&c669_loader,
-	&fnk_loader,
-	/* &amd_loader, */
-	/* &rad_loader, */
-	/* &hsc_loader, */
-	&mfp_loader,
-	&abk_loader,
-	/* &alm_loader, */
-	/* &polly_loader, */
-	/* &stc_loader, */
-	&pw_loader,
+	&libxmp_loader_xm,
+	&libxmp_loader_mod,
+	&libxmp_loader_flt,
+	&libxmp_loader_st,
+	&libxmp_loader_it,
+	&libxmp_loader_s3m,
+	&libxmp_loader_stm,
+	&libxmp_loader_stx,
+	&libxmp_loader_mtm,
+	&libxmp_loader_ice,
+	&libxmp_loader_imf,
+	&libxmp_loader_ptm,
+	&libxmp_loader_mdl,
+	&libxmp_loader_ult,
+	&libxmp_loader_liq,
+	&libxmp_loader_no,
+	&libxmp_loader_masi,
+	&libxmp_loader_gal5,
+	&libxmp_loader_gal4,
+	&libxmp_loader_psm,
+	&libxmp_loader_amf,
+	&libxmp_loader_asylum,
+	&libxmp_loader_gdm,
+	&libxmp_loader_mmd1,
+	&libxmp_loader_mmd3,
+	&libxmp_loader_med2,
+	&libxmp_loader_med3,
+	&libxmp_loader_med4,
+	/* &libxmp_loader_dmf, */
+	&libxmp_loader_chip,
+	&libxmp_loader_rtm,
+	&libxmp_loader_pt3,
+	/* &libxmp_loader_tcb, */
+	&libxmp_loader_dt,
+	/* &libxmp_loader_gtk, */
+	/* &libxmp_loader_dtt, */
+	&libxmp_loader_mgt,
+	&libxmp_loader_arch,
+	&libxmp_loader_sym,
+	&libxmp_loader_digi,
+	&libxmp_loader_dbm,
+	&libxmp_loader_emod,
+	&libxmp_loader_okt,
+	&libxmp_loader_sfx,
+	&libxmp_loader_far,
+	&libxmp_loader_umx,
+	&libxmp_loader_hmn,
+	&libxmp_loader_stim,
+	/* &libxmp_loader_coco, */
+	/* &libxmp_loader_mtp, */
+	&libxmp_loader_ims,
+	&libxmp_loader_669,
+	&libxmp_loader_fnk,
+	/* &libxmp_loader_amd, */
+	/* &libxmp_loader_rad, */
+	/* &libxmp_loader_hsc, */
+	&libxmp_loader_mfp,
+	&libxmp_loader_abk,
+	/* &libxmp_loader_alm, */
+	/* &libxmp_loader_polly, */
+	/* &libxmp_loader_stc, */
+	&libxmp_loader_pw,
 	NULL
 };
 

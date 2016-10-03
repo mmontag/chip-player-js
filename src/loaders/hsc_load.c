@@ -35,7 +35,7 @@
 static int hsc_test (HIO_HANDLE *, char *, const int);
 static int hsc_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader hsc_loader = {
+const struct format_loader libxmp_loader_hsc = {
     "HSC-Tracker",
     hsc_test,
     hsc_load

@@ -37,7 +37,7 @@
 static int med4_test(HIO_HANDLE *, char *, const int);
 static int med4_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader med4_loader = {
+const struct format_loader libxmp_loader_med4 = {
 	"MED 2.10 MED4",
 	med4_test,
 	med4_load

@@ -41,7 +41,7 @@
 static int digi_test (HIO_HANDLE *, char *, const int);
 static int digi_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader digi_loader = {
+const struct format_loader libxmp_loader_digi = {
     "DIGI Booster",
     digi_test,
     digi_load

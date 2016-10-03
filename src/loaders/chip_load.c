@@ -27,7 +27,7 @@
 static int chip_test(HIO_HANDLE *, char *, const int);
 static int chip_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader chip_loader = {
+const struct format_loader libxmp_loader_chip = {
 	"Chiptracker",
 	chip_test,
 	chip_load

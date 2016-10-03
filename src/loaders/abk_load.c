@@ -42,7 +42,7 @@
 static int abk_test (HIO_HANDLE *, char *, const int);
 static int abk_load (struct module_data *, HIO_HANDLE *, const int);
 
-struct format_loader abk_loader =
+struct format_loader libxmp_loader_abk =
 {
     "AMOS Music Bank",
     abk_test,

@@ -18,7 +18,7 @@ static int stc_test(HIO_HANDLE *, char *, const int);
 static int stc_load(struct module_data *, HIO_HANDLE *, const int);
 
 
-const struct format_loader stc_loader = {
+const struct format_loader libxmp_loader_stc = {
 	"ZX Spectrum Sound Tracker (STC)",
 	stc_test,
 	stc_load

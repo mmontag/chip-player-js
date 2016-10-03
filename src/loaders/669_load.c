@@ -26,7 +26,7 @@
 static int c669_test (HIO_HANDLE *, char *, const int);
 static int c669_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader c669_loader = {
+const struct format_loader libxmp_loader_669 = {
     "Composer 669",
     c669_test,
     c669_load

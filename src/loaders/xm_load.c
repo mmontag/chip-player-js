@@ -39,7 +39,7 @@
 static int xm_test(HIO_HANDLE *, char *, const int);
 static int xm_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader xm_loader = {
+const struct format_loader libxmp_loader_xm = {
 	"Fast Tracker II",
 	xm_test,
 	xm_load

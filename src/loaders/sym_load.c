@@ -27,7 +27,7 @@
 static int sym_test(HIO_HANDLE *, char *, const int);
 static int sym_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader sym_loader = {
+const struct format_loader libxmp_loader_sym = {
 	"Digital Symphony",
 	sym_test,
 	sym_load

@@ -35,7 +35,7 @@
 static int it_test(HIO_HANDLE *, char *, const int);
 static int it_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader it_loader = {
+const struct format_loader libxmp_loader_it = {
 	"Impulse Tracker",
 	it_test,
 	it_load

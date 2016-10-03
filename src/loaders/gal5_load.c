@@ -37,7 +37,7 @@
 static int gal5_test(HIO_HANDLE *, char *, const int);
 static int gal5_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader gal5_loader = {
+const struct format_loader libxmp_loader_gal5 = {
 	"Galaxy Music System 5.0 (J2B)",
 	gal5_test,
 	gal5_load

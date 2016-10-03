@@ -31,7 +31,7 @@
 static int okt_test(HIO_HANDLE *, char *, const int);
 static int okt_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader okt_loader = {
+const struct format_loader libxmp_loader_okt = {
 	"Oktalyzer",
 	okt_test,
 	okt_load

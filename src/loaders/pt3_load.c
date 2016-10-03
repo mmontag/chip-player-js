@@ -34,7 +34,7 @@ static int pt3_test(HIO_HANDLE *, char *, const int);
 static int pt3_load(struct module_data *, HIO_HANDLE *, const int);
 static int ptdt_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader pt3_loader = {
+const struct format_loader libxmp_loader_pt3 = {
 	"Protracker 3",
 	pt3_test,
 	pt3_load

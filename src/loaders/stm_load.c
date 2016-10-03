@@ -58,7 +58,7 @@ struct stm_file_header {
 static int stm_test(HIO_HANDLE *, char *, const int);
 static int stm_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader stm_loader = {
+const struct format_loader libxmp_loader_stm = {
 	"Scream Tracker 2",
 	stm_test,
 	stm_load

@@ -36,7 +36,7 @@
 static int ult_test (HIO_HANDLE *, char *, const int);
 static int ult_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader ult_loader = {
+const struct format_loader libxmp_loader_ult = {
     "Ultra Tracker",
     ult_test,
     ult_load

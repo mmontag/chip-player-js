@@ -39,7 +39,7 @@
 static int mfp_test(HIO_HANDLE *, char *, const int);
 static int mfp_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader mfp_loader = {
+const struct format_loader libxmp_loader_mfp = {
 	"Magnetic Fields Packer",
 	mfp_test,
 	mfp_load

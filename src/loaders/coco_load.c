@@ -25,7 +25,7 @@
 static int coco_test (HIO_HANDLE *, char *, const int);
 static int coco_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader coco_loader = {
+const struct format_loader libxmp_loader_coco = {
 	"Coconizer",
 	coco_test,
 	coco_load

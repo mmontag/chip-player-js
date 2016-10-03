@@ -34,7 +34,7 @@
 static int stim_test(HIO_HANDLE *, char *, const int);
 static int stim_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader stim_loader = {
+const struct format_loader libxmp_loader_stim = {
 	"Slamtilt",
 	stim_test,
 	stim_load

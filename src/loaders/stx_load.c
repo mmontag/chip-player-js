@@ -85,7 +85,7 @@ struct stx_instrument_header {
 static int stx_test(HIO_HANDLE *, char *, const int);
 static int stx_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader stx_loader = {
+const struct format_loader libxmp_loader_stx = {
 	"STMIK 0.2",
 	stx_test,
 	stx_load

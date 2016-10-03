@@ -77,7 +77,7 @@
 static int masi_test (HIO_HANDLE *, char *, const int);
 static int masi_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader masi_loader = {
+const struct format_loader libxmp_loader_masi = {
 	"Epic MegaGames MASI",
 	masi_test,
 	masi_load

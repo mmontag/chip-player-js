@@ -78,7 +78,7 @@
 static int hmn_test(HIO_HANDLE *, char *, const int);
 static int hmn_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader hmn_loader = {
+const struct format_loader libxmp_loader_hmn = {
 	"His Master's Noise",
 	hmn_test,
 	hmn_load

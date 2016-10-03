@@ -30,7 +30,7 @@
 static int ice_test(HIO_HANDLE *, char *, const int);
 static int ice_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader ice_loader = {
+const struct format_loader libxmp_loader_ice = {
 	"Soundtracker 2.6/Ice Tracker",
 	ice_test,
 	ice_load

@@ -37,7 +37,7 @@ static int arch_test (HIO_HANDLE *, char *, const int);
 static int arch_load (struct module_data *, HIO_HANDLE *, const int);
 
 
-const struct format_loader arch_loader = {
+const struct format_loader libxmp_loader_arch = {
 	"Archimedes Tracker",
 	arch_test,
 	arch_load

@@ -28,7 +28,7 @@
 static int fnk_test (HIO_HANDLE *, char *, const int);
 static int fnk_load (struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader fnk_loader = {
+const struct format_loader libxmp_loader_fnk = {
     "Funktracker",
     fnk_test,
     fnk_load

@@ -30,7 +30,7 @@
 static int asylum_test(HIO_HANDLE *, char *, const int);
 static int asylum_load(struct module_data *, HIO_HANDLE *, const int);
 
-const struct format_loader asylum_loader = {
+const struct format_loader libxmp_loader_asylum = {
 	"Asylum Music Format v1.0",
 	asylum_test,
 	asylum_load
