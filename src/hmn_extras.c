@@ -72,7 +72,7 @@ void hmn_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 
 	if (waveform < xxi->nsm && xxi->sub[waveform].sid != xc->smp) {
 		xc->smp = xxi->sub[waveform].sid;
-		virt_setsmp(ctx, chn, xc->smp);
+		libxmp_virt_setsmp(ctx, chn, xc->smp);
 	}
 
 	pos++;

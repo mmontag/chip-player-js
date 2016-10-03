@@ -221,7 +221,7 @@ static void set_period_ft2(struct context_data *ctx, int note,
 #endif
 
 #define set_patch(ctx,chn,ins,smp,note) \
-	virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0)
+	libxmp_virt_setpatch(ctx, chn, ins, smp, note, 0, 0, 0)
 
 static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn)
 {
@@ -281,7 +281,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		} else {
 			new_invalid_ins = 1;
-			virt_resetchannel(ctx, chn);
+			libxmp_virt_resetchannel(ctx, chn);
 		}
 	}
 
@@ -354,7 +354,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (note >= 0) {
 		xc->note = note;
-		virt_voicepos(ctx, chn, xc->offset.val);
+		libxmp_virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
 	if (TEST(OFFSET)) {
@@ -607,7 +607,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		}
 
 		if (new_invalid_ins) {
-			virt_resetchannel(ctx, chn);
+			libxmp_virt_resetchannel(ctx, chn);
 		}
 	}
 
@@ -711,7 +711,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 		 *  Reported by Vladislav Suschikh.
 		 */
 		if (HAS_QUIRK(QUIRK_FT2BUGS) && xc->offset.val >= mod->xxs[sub->sid].len) {
-			virt_resetchannel(ctx, chn);
+			libxmp_virt_resetchannel(ctx, chn);
 		} else {
 
 			/* (From Decibelter - Cosmic 'Wegian Mamas.xm p04 ch7)
@@ -719,7 +719,7 @@ static int read_event_ft2(struct context_data *ctx, struct xmp_event *e, int chn
 			 * without tone portamento, otherwise we won't play
 			 * sweeps and loops correctly.
 			 */
-			virt_voicepos(ctx, chn, xc->offset.val);
+			libxmp_virt_voicepos(ctx, chn, xc->offset.val);
 		}
 	}
 
@@ -752,7 +752,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 		is_toneporta = 1;
 	}
 
-	if (virt_mapchannel(ctx, chn) < 0 && xc->ins != e->ins - 1) {
+	if (libxmp_virt_mapchannel(ctx, chn) < 0 && xc->ins != e->ins - 1) {
 		is_toneporta = 0;
 	}
 
@@ -859,7 +859,7 @@ static int read_event_st3(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (note >= 0) {
 		xc->note = note;
-		virt_voicepos(ctx, chn, xc->offset.val);
+		libxmp_virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
 	if (use_ins_vol && !TEST(NEW_VOL)) {
@@ -1082,7 +1082,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 			if (!key && !TEST_NOTE(NOTE_KEY_CUT)) {
 				/* Retrig in new ins in sample mode */
 				if (sample_mode && TEST_NOTE(NOTE_END)) {
-					virt_voicepos(ctx, chn, 0);
+					libxmp_virt_voicepos(ctx, chn, 0);
 				}
 
 				/* IT: Reset note for every new != ins */
@@ -1137,7 +1137,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 		} else if (key == XMP_KEY_CUT) {
 			SET_NOTE(NOTE_END | NOTE_CUT | NOTE_KEY_CUT);
 			xc->period = 0;
-			virt_resetchannel(ctx, chn);
+			libxmp_virt_resetchannel(ctx, chn);
 		} else if (key == XMP_KEY_OFF) {
 			struct xmp_envelope *env = NULL;
 			if (IS_VALID_INSTRUMENT(xc->ins)) {
@@ -1196,9 +1196,9 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 			if (not_same_smp) {
 				fix_period(ctx, chn, sub);
-				virt_resetchannel(ctx, chn);
+				libxmp_virt_resetchannel(ctx, chn);
 			}
-			to = virt_setpatch(ctx, chn, candidate_ins, smp,
+			to = libxmp_virt_setpatch(ctx, chn, candidate_ins, smp,
 				note, sub->nna, sub->dct, sub->dca);
 
 			/* Random value for volume swing */
@@ -1275,7 +1275,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 	/* See OpenMPT wnoteoff.it vs noteoff3.it */
 	if (retrig_ins && not_same_ins) {
 		SET(NEW_INS);
-		virt_voicepos(ctx, chn, 0);
+		libxmp_virt_voicepos(ctx, chn, 0);
 		xc->fadeout = 0x10000;
 		RESET_NOTE(NOTE_RELEASE|NOTE_SUSEXIT|NOTE_FADEOUT);
 	}
@@ -1324,7 +1324,7 @@ static int read_event_it(struct context_data *ctx, struct xmp_event *e, int chn)
 
 	if (note >= 0) {
 		xc->note = note;
-		virt_voicepos(ctx, chn, xc->offset.val);
+		libxmp_virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
 	if (use_ins_vol && !TEST(NEW_VOL)) {
@@ -1384,7 +1384,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 			}
 		} else {
 			new_invalid_ins = 1;
-			virt_resetchannel(ctx, chn);
+			libxmp_virt_resetchannel(ctx, chn);
 		}
 
 		MED_CHANNEL_EXTRAS(*xc)->arp = 0;
@@ -1407,7 +1407,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 		} else if (e->note == XMP_KEY_CUT) {
 			SET_NOTE(NOTE_END);
 			xc->period = 0;
-			virt_resetchannel(ctx, chn);
+			libxmp_virt_resetchannel(ctx, chn);
 		} else if (!is_toneporta && IS_VALID_INSTRUMENT(xc->ins)) {
 			struct xmp_instrument *xxi = &mod->xxi[xc->ins];
 
@@ -1478,7 +1478,7 @@ static int read_event_med(struct context_data *ctx, struct xmp_event *e, int chn
 
 	if (note >= 0) {
 		xc->note = note;
-		virt_voicepos(ctx, chn, xc->offset.val);
+		libxmp_virt_voicepos(ctx, chn, xc->offset.val);
 	}
 
 	if (use_ins_vol && !TEST(NEW_VOL)) {
@@ -1572,7 +1572,7 @@ static int read_event_smix(struct context_data *ctx, struct xmp_event *e, int ch
 	xc->volume = e->vol - 1;
 
 	xc->note = note;
-	virt_voicepos(ctx, chn, xc->offset.val);
+	libxmp_virt_voicepos(ctx, chn, xc->offset.val);
 
 	return 0;
 }

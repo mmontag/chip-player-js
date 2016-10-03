@@ -323,7 +323,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 			xxi = &m->mod.xxi[xc->ins];
 			if (b < xxi->nsm && xxi->sub[b].sid != xc->smp) {
 				xc->smp = xxi->sub[b].sid;
-				virt_setsmp(ctx, chn, xc->smp);
+				libxmp_virt_setsmp(ctx, chn, xc->smp);
 			}
 		}
 

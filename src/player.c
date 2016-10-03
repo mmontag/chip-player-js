@@ -357,7 +357,7 @@ static inline int get_channel_vol(struct context_data *ctx, int chn)
 		return 0;
 
 	/* root is invalid */
-	root = virt_getroot(ctx, chn);
+	root = libxmp_virt_getroot(ctx, chn);
 	if (root < 0)
 		return 0;
 
@@ -504,7 +504,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	/* If note ended in background channel, we can safely reset it */
 	if (TEST_NOTE(NOTE_END) && chn >= p->virt.num_tracks) {
-		virt_resetchannel(ctx, chn);
+		libxmp_virt_resetchannel(ctx, chn);
 		return;
 	}
 
@@ -566,11 +566,11 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 
 	xc->info_finalvol = TEST_NOTE(NOTE_SAMPLE_END) ? 0 : finalvol;
 
-	virt_setvol(ctx, chn, finalvol);
+	libxmp_virt_setvol(ctx, chn, finalvol);
 
 	/* Check Amiga split channel */
 	if (xc->split) {
-		virt_setvol(ctx, xc->pair, finalvol);
+		libxmp_virt_setvol(ctx, xc->pair, finalvol);
 	}
 }
 
@@ -611,7 +611,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		}
 		xc->noteslide.count--;
 
-		virt_setnote(ctx, chn, xc->note);
+		libxmp_virt_setnote(ctx, chn, xc->note);
 	}
 #endif
 
@@ -725,7 +725,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 			if (xc->note + arp > MAX_NOTE_MOD + 1) {
 				linear_bend -= 12800 * (3 * 12);
 			} else if (xc->note + arp > MAX_NOTE_MOD) {
-				virt_setvol(ctx, chn, 0);
+				libxmp_virt_setvol(ctx, chn, 0);
 			}
 		}
 	}
@@ -736,7 +736,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 #endif
 
 	period = note_to_period_mix(xc->note, linear_bend);
-	virt_setperiod(ctx, chn, period);
+	libxmp_virt_setperiod(ctx, chn, period);
 
 	/* For xmp_get_frame_info() */
 	xc->info_pitchbend = linear_bend >> 7;
@@ -774,14 +774,14 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	} else if (cutoff < 0xff) {
 		int a0, b0, b1;
 		libxmp_filter_setup(s->freq, cutoff, resonance, &a0, &b0, &b1);
-		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_A0, a0);
-		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, b0);
-		virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, b1);
-		virt_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, resonance);
+		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_A0, a0);
+		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B0, b0);
+		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_FILTER_B1, b1);
+		libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_RESONANCE, resonance);
 	}
 
 	/* Always set cutoff */
-	virt_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
+	libxmp_virt_seteffect(ctx, chn, DSP_EFFECT_CUTOFF, cutoff);
 
 #endif
 }
@@ -845,9 +845,9 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	xc->info_finalpan = finalpan + 0x80;
 
 	if (xc->pan.surround) {
-		virt_setpan(ctx, chn, PAN_SURROUND);
+		libxmp_virt_setpan(ctx, chn, PAN_SURROUND);
 	} else {
-		virt_setpan(ctx, chn, finalpan);
+		libxmp_virt_setpan(ctx, chn, finalpan);
 	}
 }
 
@@ -1009,7 +1009,7 @@ static void update_frequency(struct context_data *ctx, int chn)
 	 * ambio.it uses low (~8) period values
 	 */
 	if (xc->period < 0.25) {
-		virt_setvol(ctx, chn, 0);
+		libxmp_virt_setvol(ctx, chn, 0);
 	}
 }
 
@@ -1059,7 +1059,7 @@ static void play_channel(struct context_data *ctx, int chn)
 		}
 	}
 
-	act = virt_cstat(ctx, chn);
+	act = libxmp_virt_cstat(ctx, chn);
 	if (act == VIRT_INVALID) {
 		/* We need this to keep processing global volume slides */
 		update_volume(ctx, chn);
@@ -1068,7 +1068,7 @@ static void play_channel(struct context_data *ctx, int chn)
 
 	if (p->frame == 0 && act != VIRT_ACTIVE) {
 		if (!IS_VALID_INSTRUMENT_OR_SFX(xc->ins) || act == VIRT_ACTION_CUT) {
-			virt_resetchannel(ctx, chn);
+			libxmp_virt_resetchannel(ctx, chn);
 			return;
 		}
 	}
@@ -1089,7 +1089,7 @@ static void play_channel(struct context_data *ctx, int chn)
 		if (cond) {
 			if (xc->retrig.type < 0x10) {
 				/* don't retrig on cut */
-				virt_voicepos(ctx, chn, 0);
+				libxmp_virt_voicepos(ctx, chn, 0);
 			} else {
 				SET_NOTE(NOTE_END);
 			}
@@ -1106,7 +1106,7 @@ static void play_channel(struct context_data *ctx, int chn)
 			SET_NOTE(NOTE_RELEASE);
 	}
 
-	virt_release(ctx, chn, TEST_NOTE(NOTE_RELEASE));
+	libxmp_virt_release(ctx, chn, TEST_NOTE(NOTE_RELEASE));
 
 	process_volume(ctx, chn, act);
 	process_frequency(ctx, chn, act);
@@ -1126,7 +1126,7 @@ static void play_channel(struct context_data *ctx, int chn)
 		SET_NOTE(NOTE_RELEASE);
 	}
 
-	xc->info_position = virt_getvoicepos(ctx, chn);
+	xc->info_position = libxmp_virt_getvoicepos(ctx, chn);
 }
 
 /*
@@ -1246,7 +1246,7 @@ static void next_row(struct context_data *ctx)
 #ifndef LIBXMP_CORE_DISABLE_IT
 
 /*
- * Set note action for virt_pastnote
+ * Set note action for libxmp_virt_pastnote
  */
 void player_set_release(struct context_data *ctx, int chn)
 {
@@ -1345,7 +1345,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 
 	update_from_ord_info(ctx);
 
-	if (virt_on(ctx, mod->chn + smix->chn) != 0) {
+	if (libxmp_virt_on(ctx, mod->chn + smix->chn) != 0) {
 		ret = -XMP_ERROR_INTERNAL;
 		goto err;
 	}
@@ -1464,7 +1464,7 @@ int xmp_play_frame(xmp_context opaque)
 
 		update_from_ord_info(ctx);
 
-		virt_reset(ctx);
+		libxmp_virt_reset(ctx);
 		reset_channels(ctx);
 	} else {
 		p->frame++;
@@ -1601,7 +1601,7 @@ void xmp_end_player(xmp_context opaque)
 	}
 #endif
 
-	virt_off(ctx);
+	libxmp_virt_off(ctx);
 
 	free(p->xc_data);
 	free(f->loop);

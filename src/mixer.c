@@ -259,7 +259,7 @@ static void set_sample_end(struct context_data *ctx, int voc, int end)
 	if (end) {
 		SET_NOTE(NOTE_SAMPLE_END);
 		if (HAS_QUIRK(QUIRK_RSTCHN)) {
-			virt_resetvoice(ctx, voc, 0);
+			libxmp_virt_resetvoice(ctx, voc, 0);
 		}
 	} else {
 		RESET_NOTE(NOTE_SAMPLE_END);
@@ -389,7 +389,7 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 		}
 
 		if (vi->period < 1) {
-			virt_resetvoice(ctx, voc, 1);
+			libxmp_virt_resetvoice(ctx, voc, 1);
 			continue;
 		}
 
