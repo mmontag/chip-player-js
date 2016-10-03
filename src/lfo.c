@@ -114,7 +114,7 @@ static int get_lfo_it(struct lfo *lfo)
 
 #endif
 
-int get_lfo(struct context_data *ctx, struct lfo *lfo, int is_vibrato)
+int libxmp_lfo_get(struct context_data *ctx, struct lfo *lfo, int is_vibrato)
 {
 	struct module_data *m = &ctx->m;
 
@@ -137,28 +137,28 @@ int get_lfo(struct context_data *ctx, struct lfo *lfo, int is_vibrato)
 }
 
 
-void update_lfo(struct lfo *lfo)
+void libxmp_lfo_update(struct lfo *lfo)
 {
 	lfo->phase += lfo->rate;
 	lfo->phase %= WAVEFORM_SIZE;
 }
 
-void set_lfo_phase(struct lfo *lfo, int phase)
+void libxmp_lfo_set_phase(struct lfo *lfo, int phase)
 {
 	lfo->phase = phase;
 }
 
-void set_lfo_depth(struct lfo *lfo, int depth)
+void libxmp_lfo_set_depth(struct lfo *lfo, int depth)
 {
 	lfo->depth = depth;
 }
 
-void set_lfo_rate(struct lfo *lfo, int rate)
+void libxmp_lfo_set_rate(struct lfo *lfo, int rate)
 {
 	lfo->rate = rate;
 }
 
-void set_lfo_waveform(struct lfo *lfo, int type)
+void libxmp_lfo_set_waveform(struct lfo *lfo, int type)
 {
 	lfo->type = type;
 }

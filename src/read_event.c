@@ -143,13 +143,13 @@ static void set_effect_defaults(struct context_data *ctx, int note,
 		} */
 #endif
 
-		set_lfo_depth(&xc->insvib.lfo, sub->vde);
-		set_lfo_rate(&xc->insvib.lfo, sub->vra >> 2);
-		set_lfo_waveform(&xc->insvib.lfo, sub->vwf);
+		libxmp_lfo_set_depth(&xc->insvib.lfo, sub->vde);
+		libxmp_lfo_set_rate(&xc->insvib.lfo, sub->vra >> 2);
+		libxmp_lfo_set_waveform(&xc->insvib.lfo, sub->vwf);
 		xc->insvib.sweep = sub->vsw;
 
-		set_lfo_phase(&xc->vibrato.lfo, 0);
-		set_lfo_phase(&xc->tremolo.lfo, 0);
+		libxmp_lfo_set_phase(&xc->vibrato.lfo, 0);
+		libxmp_lfo_set_phase(&xc->tremolo.lfo, 0);
 	}
 
 	xc->delay = 0;

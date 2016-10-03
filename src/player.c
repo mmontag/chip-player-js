@@ -706,11 +706,11 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	if (TEST(TREMOLO)) {
 		/* OpenMPT VibratoReset.mod */
 		if (!is_first_frame(ctx) || !HAS_QUIRK(QUIRK_PROTRACK)) {
-			finalvol += get_lfo(ctx, &xc->tremolo.lfo, 0) / (1 << 6);
+			finalvol += libxmp_lfo_get(ctx, &xc->tremolo.lfo, 0) / (1 << 6);
 		}
 
 		if (!is_first_frame(ctx) || HAS_QUIRK(QUIRK_VIBALL)) {
-			update_lfo(&xc->tremolo.lfo);
+			libxmp_lfo_update(&xc->tremolo.lfo);
 		}
 	}
 
@@ -801,9 +801,9 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 #endif
 
 	/* Instrument vibrato */
-	vibrato = 1.0 * get_lfo(ctx, &xc->insvib.lfo, 1) /
+	vibrato = 1.0 * libxmp_lfo_get(ctx, &xc->insvib.lfo, 1) /
 				(4096 * (1 + xc->insvib.sweep));
-	update_lfo(&xc->insvib.lfo);
+	libxmp_lfo_update(&xc->insvib.lfo);
 	if (xc->insvib.sweep > 1) {
 		xc->insvib.sweep -= 2;
 	} else {
@@ -815,7 +815,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		/* OpenMPT VibratoReset.mod */
 		if (!is_first_frame(ctx) || !HAS_QUIRK(QUIRK_PROTRACK)) {
 			int shift = HAS_QUIRK(QUIRK_VIBHALF) ? 10 : 9;
-			int vib = get_lfo(ctx, &xc->vibrato.lfo, 1) / (1 << shift);
+			int vib = libxmp_lfo_get(ctx, &xc->vibrato.lfo, 1) / (1 << shift);
 
 			if (HAS_QUIRK(QUIRK_VIBINV)) {
 				vibrato -= vib;
@@ -825,7 +825,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		}
 
 		if (!is_first_frame(ctx) || HAS_QUIRK(QUIRK_VIBALL)) {
-			update_lfo(&xc->vibrato.lfo);
+			libxmp_lfo_update(&xc->vibrato.lfo);
 		}
 	}
 
@@ -992,9 +992,9 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 	if (TEST(PANBRELLO)) {
-		panbrello = get_lfo(ctx, &xc->panbrello.lfo, 0) / 512;
+		panbrello = libxmp_lfo_get(ctx, &xc->panbrello.lfo, 0) / 512;
 		if (is_first_frame(ctx)) {
-			update_lfo(&xc->panbrello.lfo);
+			libxmp_lfo_update(&xc->panbrello.lfo);
 		}
 	}
 #endif

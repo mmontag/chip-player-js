@@ -10,12 +10,11 @@ struct lfo {
 	int phase;
 };
 
-
-int get_lfo(struct context_data *, struct lfo *, int);
-void update_lfo(struct lfo *);
-void set_lfo_phase(struct lfo *, int);
-void set_lfo_depth(struct lfo *, int);
-void set_lfo_rate(struct lfo *, int);
-void set_lfo_waveform(struct lfo *, int);
+int  libxmp_lfo_get(struct context_data *, struct lfo *, int);
+void libxmp_lfo_update(struct lfo *);
+void libxmp_lfo_set_phase(struct lfo *, int);
+void libxmp_lfo_set_depth(struct lfo *, int);
+void libxmp_lfo_set_rate(struct lfo *, int);
+void libxmp_lfo_set_waveform(struct lfo *, int);
 
 #endif

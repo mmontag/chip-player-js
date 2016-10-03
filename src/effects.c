@@ -34,8 +34,8 @@
 #define HAS_QUIRK(x) (m->quirk & (x))
 
 #define SET_LFO_NOTZERO(lfo, depth, rate) do { \
-	if ((depth) != 0) set_lfo_depth(lfo, depth); \
-	if ((rate) != 0) set_lfo_rate(lfo, rate); \
+	if ((depth) != 0) libxmp_lfo_set_depth(lfo, depth); \
+	if ((rate) != 0)  libxmp_lfo_set_rate(lfo, rate); \
 } while (0)
 
 #define EFFECT_MEMORY__(p, m) do { \
@@ -401,7 +401,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			break;
 		case EX_VIBRATO_WF:	/* Set vibrato waveform */
 			fxp &= 3;
-			set_lfo_waveform(&xc->vibrato.lfo, fxp);
+			libxmp_lfo_set_waveform(&xc->vibrato.lfo, fxp);
 			break;
 		case EX_FINETUNE:	/* Set finetune */
 			if (!HAS_QUIRK(QUIRK_FT2BUGS) || note > 0) {
@@ -432,7 +432,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 			}
 			break;
 		case EX_TREMOLO_WF:	/* Set tremolo waveform */
-			set_lfo_waveform(&xc->tremolo.lfo, fxp & 3);
+			libxmp_lfo_set_waveform(&xc->tremolo.lfo, fxp & 3);
 			break;
 		case EX_SETPAN:
 			fxp <<= 4;
@@ -827,7 +827,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		SET_LFO_NOTZERO(&xc->panbrello.lfo, LSN(fxp) << 4, MSN(fxp));
 		break;
 	case FX_PANBRELLO_WF:	/* Panbrello waveform */
-		set_lfo_waveform(&xc->panbrello.lfo, fxp & 3);
+		libxmp_lfo_set_waveform(&xc->panbrello.lfo, fxp & 3);
 		break;
 	case FX_HIOFFSET:	/* High offset */
 		xc->offset.val &= 0xffff;
@@ -1051,7 +1051,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		break;
 	case FX_669_VIBRATO:	/* 669 vibrato */
 		if (LSN(fxp) != 0) {
-			set_lfo_waveform(&xc->vibrato.lfo, 669);
+			libxmp_lfo_set_waveform(&xc->vibrato.lfo, 669);
 			SET_PER(VIBRATO);
 		} else {
 			RESET_PER(VIBRATO);
