@@ -1843,7 +1843,7 @@ static int decrunch_lha(FILE *in, FILE *out)
 	return -1;
 }
 
-struct depacker lha_depacker = {
+struct depacker libxmp_depacker_lha = {
 	test_lha,
 	decrunch_lha
 };

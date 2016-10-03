@@ -212,7 +212,7 @@ static int decrunch_arcfs(FILE * f, FILE * fo)
 	return 0;
 }
 
-struct depacker arcfs_depacker = {
+struct depacker libxmp_depacker_arcfs = {
 	test_arcfs,
 	decrunch_arcfs
 };

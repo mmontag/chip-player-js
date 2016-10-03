@@ -110,7 +110,7 @@ static int decrunch_gzip(FILE *in, FILE *out)
 	return 0;
 }
 
-struct depacker gzip_depacker = {
+struct depacker libxmp_depacker_gzip = {
 	test_gzip,
 	decrunch_gzip
 };

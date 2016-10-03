@@ -36,7 +36,7 @@ static int decrunch_muse(FILE *f, FILE *fo)
 	return libxmp_inflate(f, fo, &checksum, 0);
 }
 
-struct depacker muse_depacker = {
+struct depacker libxmp_depacker_muse = {
 	test_muse,
 	decrunch_muse
 };

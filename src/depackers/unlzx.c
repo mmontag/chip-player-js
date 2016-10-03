@@ -1124,7 +1124,7 @@ static int decrunch_lzx(FILE *f, FILE *fo)
 	return -1;
 }
 
-struct depacker lzx_depacker = {
+struct depacker libxmp_depacker_lzx = {
 	test_lzx,
 	decrunch_lzx
 };

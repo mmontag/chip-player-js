@@ -76,7 +76,7 @@ static int decrunch_xz(FILE *in, FILE *out)
 	return ret;
 }
 
-struct depacker xz_depacker = {
+struct depacker libxmp_depacker_xz = {
 	test_xz,
 	decrunch_xz
 };

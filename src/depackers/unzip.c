@@ -303,7 +303,7 @@ static int decrunch_zip(FILE *in, FILE *out)
   return 0;
 }
 
-struct depacker zip_depacker = {
+struct depacker libxmp_depacker_zip = {
 	test_zip,
 	decrunch_zip
 };

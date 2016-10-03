@@ -588,7 +588,7 @@ static int decrunch_bzip2(FILE *src, FILE *dst)
 	return i == 0 ? 0 : -1;
 }
 
-struct depacker bzip2_depacker = {
+struct depacker libxmp_depacker_bzip2 = {
 	test_bzip2,
 	decrunch_bzip2
 };

@@ -3,22 +3,22 @@
 
 #include <stdio.h>
 
-extern struct depacker zip_depacker;
-extern struct depacker lha_depacker;
-extern struct depacker gzip_depacker;
-extern struct depacker bzip2_depacker;
-extern struct depacker xz_depacker;
-extern struct depacker compress_depacker;
-extern struct depacker pp_depacker;
-extern struct depacker sqsh_depacker;
-extern struct depacker arc_depacker;
-extern struct depacker arcfs_depacker;
-extern struct depacker mmcmp_depacker;
-extern struct depacker muse_depacker;
-extern struct depacker lzx_depacker;
-extern struct depacker s404_depacker;
-extern struct depacker xfd_depacker;
-extern struct depacker oxm_depacker;
+extern struct depacker libxmp_depacker_zip;
+extern struct depacker libxmp_depacker_lha;
+extern struct depacker libxmp_depacker_gzip;
+extern struct depacker libxmp_depacker_bzip2;
+extern struct depacker libxmp_depacker_xz;
+extern struct depacker libxmp_depacker_compress;
+extern struct depacker libxmp_depacker_pp;
+extern struct depacker libxmp_depacker_sqsh;
+extern struct depacker libxmp_depacker_arc;
+extern struct depacker libxmp_depacker_arcfs;
+extern struct depacker libxmp_depacker_mmcmp;
+extern struct depacker libxmp_depacker_muse;
+extern struct depacker libxmp_depacker_lzx;
+extern struct depacker libxmp_depacker_s404;
+extern struct depacker libxmp_depacker_xfd;
+extern struct depacker libxmp_depacker_oxm;
 
 struct depacker {
 	int (*const test)(unsigned char *);

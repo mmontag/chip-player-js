@@ -139,7 +139,7 @@ static int decrunch_xfd(FILE *f1, FILE *f2)
 	return(ret);
 }
 
-struct depacker xfd_depacker = {
+struct depacker libxmp_depacker_xfd = {
 	test_xfd,
 	decrunch_xfd
 };

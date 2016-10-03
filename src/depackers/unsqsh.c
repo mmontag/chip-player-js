@@ -378,7 +378,7 @@ static int decrunch_sqsh(FILE * f, FILE * fo)
 	return -1;
 }
 
-struct depacker sqsh_depacker = {
+struct depacker libxmp_depacker_sqsh = {
 	test_sqsh,
 	decrunch_sqsh
 };

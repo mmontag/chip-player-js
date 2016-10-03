@@ -349,7 +349,7 @@ static int decrunch_arc(FILE *f, FILE *fo)
 	return arc_extract(f, fo);
 }
 
-struct depacker arc_depacker = {
+struct depacker libxmp_depacker_arc = {
 	test_arc,
 	decrunch_arc
 };

@@ -264,7 +264,7 @@ static int decrunch_compress(FILE * in, FILE * out)
 	return 0;
 }
 
-struct depacker compress_depacker = {
+struct depacker libxmp_depacker_compress = {
 	test_compress,
 	decrunch_compress
 };

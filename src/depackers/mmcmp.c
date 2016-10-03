@@ -406,7 +406,7 @@ static int decrunch_mmcmp(FILE *in, FILE *out)
 	return -1;
 }
 
-struct depacker mmcmp_depacker = {
+struct depacker libxmp_depacker_mmcmp = {
 	test_mmcmp,
 	decrunch_mmcmp
 };

@@ -254,7 +254,7 @@ err:
     return -1;
 }
 
-struct depacker pp_depacker = {
+struct depacker libxmp_depacker_pp = {
 	test_pp,
 	decrunch_pp
 };

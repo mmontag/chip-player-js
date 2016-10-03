@@ -317,7 +317,7 @@ static int decrunch_oxm(FILE *f, FILE *fo)
 	return 0;
 }
 
-struct depacker oxm_depacker = {
+struct depacker libxmp_depacker_oxm = {
 	NULL,
 	decrunch_oxm
 };

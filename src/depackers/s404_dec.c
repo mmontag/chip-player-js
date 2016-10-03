@@ -425,7 +425,7 @@ static int decrunch_s404(FILE *in, /* size_t s, */ FILE *out)
   return -1;
 }
 
-struct depacker s404_depacker = {
+struct depacker libxmp_depacker_s404 = {
 	test_s404,
 	decrunch_s404
 };

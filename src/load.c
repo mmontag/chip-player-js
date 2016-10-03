@@ -57,22 +57,22 @@ int  libxmp_prepare_scan(struct context_data *);
 
 static struct depacker *depacker_list[] = {
 #if defined __AMIGA__ && !defined __AROS__
-	&xfd_depacker,
+	&libxmp_depacker_xfd,
 #endif
-	&zip_depacker,
-	&lha_depacker,
-	&gzip_depacker,
-	&bzip2_depacker,
-	&xz_depacker,
-	&compress_depacker,
-	&pp_depacker,
-	&sqsh_depacker,
-	&arcfs_depacker,
-	&mmcmp_depacker,
-	&muse_depacker,
-	&lzx_depacker,
-	&s404_depacker,
-	&arc_depacker,
+	&libxmp_depacker_zip,
+	&libxmp_depacker_lha,
+	&libxmp_depacker_gzip,
+	&libxmp_depacker_bzip2,
+	&libxmp_depacker_xz,
+	&libxmp_depacker_compress,
+	&libxmp_depacker_pp,
+	&libxmp_depacker_sqsh,
+	&libxmp_depacker_arcfs,
+	&libxmp_depacker_mmcmp,
+	&libxmp_depacker_muse,
+	&libxmp_depacker_lzx,
+	&libxmp_depacker_s404,
+	&libxmp_depacker_arc,
 	NULL
 };
 
@@ -158,7 +158,7 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 		} else if (test_oxm(f) == 0) {
 			/* oggmod */
 			D_(D_INFO "oggmod");
-			depacker = &oxm_depacker;
+			depacker = &libxmp_depacker_oxm;
 		}
 	}
 
