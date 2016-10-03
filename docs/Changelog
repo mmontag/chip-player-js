@@ -2,10 +2,13 @@ Stable versions
 ---------------
 
 4.4.1 ():
+	Fix issues reported by Saga Musix:
+	- fix MDL c5spd to preserve base periods
+	- fix MDL sample decoder loop with corrupted data
+	- fix MASI loader OPLH and PPAN subchunks parsing
+	Other changes:
 	- fix MacOS Tiger build issues (reported by Misty De Meo)
 	- fix sample loop corner case (reported by knight-ryu12)
-	- fix MDL c5spd to preserve base periods (reported by Saga Musix)
-	- fix MASI loader subchunks (reported by Saga Musix)
 	- fix set pan effect in multichannel MODs (reported by Leilei)
 	- fix MASI effects based on OpenMPT PSM loader
 	- fix anticlick when rendering only one sample

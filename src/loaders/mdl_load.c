@@ -280,6 +280,7 @@ static int unpack_sample8(uint8 *t, uint8 *f, int len, int l)
     get_bits(0, &f, &len, &bits);
 
     for (i = b = d = 0; i < l; i++) {
+
 	/* Sanity check */
         if (len < 0)
             return -1;
@@ -289,13 +290,17 @@ static int unpack_sample8(uint8 *t, uint8 *f, int len, int l)
 	    b = get_bits(3, &f, &len, &bits);
 	} else {
             b = 8;
-	    while (len >= 0 && get_bits(1, &f, &len, &bits) == 0)
+	    while (len >= 0 && get_bits(1, &f, &len, &bits) == 0) {
+		/* Sanity check */
+                if (b >= 240) { return -1; }
 		b += 16;
+            }
 	    b += get_bits(4, &f, &len, &bits);
 	}
 
-	if (s)
+	if (s) {
 	    b ^= 0xff;
+	}
 
 	d += b;
 	*t++ = d;
@@ -336,8 +341,11 @@ static int unpack_sample16(uint8 *t, uint8 *f, int len, int l)
 	    b = get_bits(3, &f, &len, &bits);
 	} else {
             b = 8;
-	    while (len >= 0 && get_bits(1, &f, &len, &bits) == 0)
+	    while (len >= 0 && get_bits(1, &f, &len, &bits) == 0) {
+		/* Sanity check */
+                if (b >= 240) { return -1; }
 		b += 16;
+            }
 	    b += get_bits(4, &f, &len, &bits);
 	}
 
