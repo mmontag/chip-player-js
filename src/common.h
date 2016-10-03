@@ -411,7 +411,7 @@ uint32	readmem24b		(uint8 *);
 uint32	readmem32l		(uint8 *);
 uint32	readmem32b		(uint8 *);
 
-struct xmp_instrument *get_instrument(struct context_data *, int);
-struct xmp_sample *get_sample(struct context_data *, int);
+struct xmp_instrument *libxmp_get_instrument(struct context_data *, int);
+struct xmp_sample *libxmp_get_sample(struct context_data *, int);
 
 #endif /* LIBXMP_COMMON_H */

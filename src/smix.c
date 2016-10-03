@@ -27,36 +27,38 @@
 #include "hio.h"
 
 
-struct xmp_instrument *get_instrument(struct context_data *ctx, int ins)
+struct xmp_instrument *libxmp_get_instrument(struct context_data *ctx, int ins)
 {
 	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_instrument *xxi;
 
-	if (ins < mod->ins)
+	if (ins < mod->ins) {
 		xxi = &mod->xxi[ins];
-	else if (ins < mod->ins + smix->ins)
+	} else if (ins < mod->ins + smix->ins) {
 		xxi = &smix->xxi[ins - mod->ins];
-	else
+	} else {
 		xxi = NULL;
+	}
 
 	return xxi;
 }
 
-struct xmp_sample *get_sample(struct context_data *ctx, int smp)
+struct xmp_sample *libxmp_get_sample(struct context_data *ctx, int smp)
 {
 	struct smix_data *smix = &ctx->smix;
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct xmp_sample *xxs;
 
-	if (smp < mod->smp)
+	if (smp < mod->smp) {
 		xxs = &mod->xxs[smp];
-	else if (smp < mod->smp + smix->smp)
+	} else if (smp < mod->smp + smix->smp) {
 		xxs = &smix->xxs[smp - mod->smp];
-	else
+	} else {
 		xxs = NULL;
+	}
 
 	return xxs;
 }
@@ -66,15 +68,18 @@ int xmp_start_smix(xmp_context opaque, int chn, int smp)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;
 
-	if (ctx->state > XMP_STATE_LOADED)
+	if (ctx->state > XMP_STATE_LOADED) {
 		return -XMP_ERROR_STATE;
+	}
 
 	smix->xxi = calloc(sizeof (struct xmp_instrument), smp);
-	if (smix->xxi == NULL)
+	if (smix->xxi == NULL) {
 		goto err;
+	}
 	smix->xxs = calloc(sizeof (struct xmp_sample), smp);
-	if (smix->xxs == NULL)
+	if (smix->xxs == NULL) {
 		goto err1;
+	}
 
 	smix->chn = chn;
 	smix->ins = smix->smp = smp;
@@ -96,14 +101,17 @@ int xmp_smix_play_instrument(xmp_context opaque, int ins, int note, int vol, int
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 
-	if (ctx->state < XMP_STATE_PLAYING)
+	if (ctx->state < XMP_STATE_PLAYING) {
 		return -XMP_ERROR_STATE;
+	}
 
-	if (chn >= smix->chn || ins >= mod->ins)
+	if (chn >= smix->chn || ins >= mod->ins) {
 		return -XMP_ERROR_INVALID;
+	}
 
-	if (note == 0)
+	if (note == 0) {
 		note = 60;		/* middle C note number */
+	}
 
 	event = &p->inject_event[mod->chn + chn];
 	memset(event, 0, sizeof (struct xmp_event));
@@ -124,14 +132,17 @@ int xmp_smix_play_sample(xmp_context opaque, int ins, int note, int vol, int chn
 	struct xmp_module *mod = &m->mod;
 	struct xmp_event *event;
 
-	if (ctx->state < XMP_STATE_PLAYING)
+	if (ctx->state < XMP_STATE_PLAYING) {
 		return -XMP_ERROR_STATE;
+	}
 
-	if (chn >= smix->chn || ins >= smix->ins)
+	if (chn >= smix->chn || ins >= smix->ins) {
 		return -XMP_ERROR_INVALID;
+	}
 
-	if (note == 0)
+	if (note == 0) {
 		note = 60;		/* middle C note number */
+	}
 
 	event = &p->inject_event[mod->chn + chn];
 	memset(event, 0, sizeof (struct xmp_event));
@@ -151,8 +162,9 @@ int xmp_smix_channel_pan(xmp_context opaque, int chn, int pan)
 	struct module_data *m = &ctx->m;
 	struct channel_data *xc;
 
-	if (chn >= smix->chn || pan < 0 || pan > 255)
+	if (chn >= smix->chn || pan < 0 || pan > 255) {
 		return -XMP_ERROR_INVALID;
+	}
 
 	xc = &p->xc_data[m->mod.chn + chn];
 	xc->pan.val = pan;
@@ -282,8 +294,9 @@ int xmp_smix_release_sample(xmp_context opaque, int num)
 	struct context_data *ctx = (struct context_data *)opaque;
 	struct smix_data *smix = &ctx->smix;
 
-	if (num >= smix->ins)
+	if (num >= smix->ins) {
 		return -XMP_ERROR_INVALID;
+	}
 
 	free(smix->xxs[num].data);
 	free(smix->xxi[num].sub);
@@ -300,8 +313,9 @@ void xmp_end_smix(xmp_context opaque)
 	struct smix_data *smix = &ctx->smix;
 	int i;
 
-	for (i = 0; i < smix->smp; i++)
+	for (i = 0; i < smix->smp; i++) {
 		xmp_smix_release_sample(opaque, i);
+	}
 
 	free(smix->xxs);
 	free(smix->xxi);

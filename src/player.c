@@ -616,7 +616,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	uint16 vol_envelope;
 	int fade = 0;
 
-	instrument = get_instrument(ctx, xc->ins);
+	instrument = libxmp_get_instrument(ctx, xc->ins);
 
 	/* Keyoff and fadeout */
 
@@ -776,7 +776,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	int cutoff, resonance;
 #endif
 
-	instrument = get_instrument(ctx, xc->ins);
+	instrument = libxmp_get_instrument(ctx, xc->ins);
 
 	if (!TEST_PER(FENV_PAUSE)) {
 		xc->f_idx = update_envelope(&instrument->fei, xc->f_idx,
@@ -982,7 +982,7 @@ static void process_pan(struct context_data *ctx, int chn, int act)
 	int pan_envelope;
 	int channel_pan;
 
-	instrument = get_instrument(ctx, xc->ins);
+	instrument = libxmp_get_instrument(ctx, xc->ins);
 
 	if (!TEST_PER(PENV_PAUSE)) {
 		xc->p_idx = update_envelope(&instrument->pei, xc->p_idx,

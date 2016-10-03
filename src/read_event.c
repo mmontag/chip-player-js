@@ -90,7 +90,7 @@ static void reset_envelopes_carry(struct context_data *ctx,
 
  	RESET_NOTE(NOTE_ENV_END);
 
-	xxi = get_instrument(ctx, xc->ins);
+	xxi = libxmp_get_instrument(ctx, xc->ins);
 
 	/* Reset envelope positions */
 	if (~xxi->aei.flg & XMP_ENVELOPE_CARRY) {
@@ -889,7 +889,7 @@ static inline int has_note_event(struct xmp_event *e)
 
 static int check_fadeout(struct context_data *ctx, struct channel_data *xc, int ins)
 {
-	struct xmp_instrument *xxi = get_instrument(ctx, ins);
+	struct xmp_instrument *xxi = libxmp_get_instrument(ctx, ins);
 
 	if (xxi == NULL) {
 		return 1;
@@ -921,7 +921,7 @@ static void fix_period(struct context_data *ctx, int chn, struct xmp_subinstrume
 	if (sub->nna == XMP_INST_NNA_CONT) {
 		struct player_data *p = &ctx->p;
 		struct channel_data *xc = &p->xc_data[chn];
-		struct xmp_instrument *xxi = get_instrument(ctx, xc->ins);
+		struct xmp_instrument *xxi = libxmp_get_instrument(ctx, xc->ins);
 
 		xc->period = libxmp_note_to_period(ctx, xc->key + sub->xpo +
 			xxi->map[xc->key_porta].xpo, xc->finetune, xc->per_adj);

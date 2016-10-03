@@ -646,7 +646,7 @@ double libxmp_mixer_getvoicepos(struct context_data *ctx, int voc)
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct xmp_sample *xxs;
 
-	xxs = get_sample(ctx, vi->smp);
+	xxs = libxmp_get_sample(ctx, vi->smp);
 
 	if (xxs->flg & XMP_SAMPLE_SYNTH) {
 		return 0;
@@ -671,7 +671,7 @@ void libxmp_mixer_setpatch(struct context_data *ctx, int voc, int smp, int ac)
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct xmp_sample *xxs;
 
-	xxs = get_sample(ctx, smp);
+	xxs = libxmp_get_sample(ctx, smp);
 
 	vi->smp = smp;
 	vi->vol = 0;

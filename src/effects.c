@@ -639,7 +639,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		 */
 		if (HAS_QUIRK(QUIRK_FT2BUGS)) {
 			struct xmp_instrument *instrument;
-			instrument = get_instrument(ctx, xc->ins);
+			instrument = libxmp_get_instrument(ctx, xc->ins);
 			if (instrument != NULL) {
 				if (instrument->aei.flg & XMP_ENVELOPE_SUS) {
 					xc->p_idx = fxp;
