@@ -27,7 +27,6 @@
 #include "effects.h"
 #include "virtual.h"
 #include "period.h"
-#include "envelope.h"
 
 #ifndef LIBXMP_CORE_PLAYER
 #include "med_extras.h"
