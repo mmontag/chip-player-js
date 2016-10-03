@@ -194,7 +194,7 @@ static int sfx_13_20_load(struct module_data *m, HIO_HANDLE *f, const int nins,
 			event = &EVENT(i, j % mod->chn, j / mod->chn);
 			hio_read(ev, 1, 4, f);
 
-			event->note = period_to_note((LSN(ev[0]) << 8) | ev[1]);
+			event->note = libxmp_period_to_note((LSN(ev[0]) << 8) | ev[1]);
 			event->ins = (MSN(ev[0]) << 4) | MSN(ev[2]);
 			event->fxp = ev[3];
 

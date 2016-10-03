@@ -159,7 +159,7 @@ static int mgt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		hio_read32b(f);
 		hio_read32b(f);
 		c2spd = hio_read32b(f);
-		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+		libxmp_c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 		mod->xxi[i].sub[0].vol = hio_read16b(f) >> 4;
 		hio_read8(f);		/* vol L */
 		hio_read8(f);		/* vol R */

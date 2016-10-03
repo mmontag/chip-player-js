@@ -817,7 +817,7 @@ static int load_it_sample(struct module_data *m, int i, int start,
 				sub->vwf = ish.vit;
 				sub->vsw = (0xff - ish.vir) >> 1;
 
-				c2spd_to_note(ish.c5spd,
+				libxmp_c2spd_to_note(ish.c5spd,
 					      &mod->xxi[j].sub[k].xpo,
 					      &mod->xxi[j].sub[k].fin);
 

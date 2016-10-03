@@ -343,7 +343,7 @@ static int read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 patt
                 if (patdata != 0)
                 {
                     /* convert the note from amiga period format to xmp's internal format.*/
-                    events[position].note = period_to_note(patdata & 0x0fff);
+                    events[position].note = libxmp_period_to_note(patdata & 0x0fff);
                     events[position].ins = inst;
                 }
 
@@ -356,7 +356,7 @@ static int read_abk_pattern(HIO_HANDLE *f, struct xmp_event *events, uint32 patt
             else /* new note format */
             {
                 /* convert the note from amiga period format to xmp's internal format.*/
-                events[position].note = period_to_note(patdata & 0x0fff);
+                events[position].note = libxmp_period_to_note(patdata & 0x0fff);
                 events[position].ins = inst;
             }
         }

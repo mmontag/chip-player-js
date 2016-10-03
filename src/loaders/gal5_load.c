@@ -257,7 +257,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 	srate = hio_read32l(f);
 	finetune = 0;
-	c2spd_to_note(srate, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+	libxmp_c2spd_to_note(srate, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 	mod->xxi[i].sub[0].fin += finetune;
 
 	hio_read32l(f);			/* 0x00000000 */

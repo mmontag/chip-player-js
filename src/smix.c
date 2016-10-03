@@ -244,7 +244,7 @@ int xmp_smix_load_sample(xmp_context opaque, int num, char *path)
 		goto err2;
 	}
 
-	c2spd_to_note(rate, &xxi->sub[0].xpo, &xxi->sub[0].fin);
+	libxmp_c2spd_to_note(rate, &xxi->sub[0].xpo, &xxi->sub[0].fin);
 
 	xxs->len = 8 * size / bits;
 	xxs->lps = 0;

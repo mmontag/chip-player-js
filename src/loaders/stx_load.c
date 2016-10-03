@@ -277,7 +277,7 @@ static int stx_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		   mod->xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ',
 		   mod->xxi[i].sub[0].vol, sih.c2spd);
 
-		c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo,
+		libxmp_c2spd_to_note(sih.c2spd, &mod->xxi[i].sub[0].xpo,
 			      &mod->xxi[i].sub[0].fin);
 	}
 

@@ -306,7 +306,7 @@ static int get_smpi(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		mod->xxs[i].lpe = hio_read32l(f);
 		mod->xxi[i].nsm = !!mod->xxs[i].len;
 		c3spd = hio_read16l(f);
-		c2spd_to_note(c3spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+		libxmp_c2spd_to_note(c3spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 		mod->xxi[i].sub[0].vol = hio_read8(f);
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxi[i].sub[0].sid = i;

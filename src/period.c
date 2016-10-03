@@ -140,7 +140,7 @@ static inline double round(double val)
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 /* Get period from note using Protracker tuning */
-static inline int note_to_period_pt(int n, int f)
+static inline int libxmp_note_to_period_pt(int n, int f)
 {
 	if (n < MIN_NOTE_MOD || n > MAX_NOTE_MOD) {
 		return -1;
@@ -161,7 +161,7 @@ static inline int note_to_period_pt(int n, int f)
 #endif
 
 /* Get period from note */
-double note_to_period(struct context_data *ctx, int n, int f, double adj)
+double libxmp_note_to_period(struct context_data *ctx, int n, int f, double adj)
 {
 	double d, per;
 	struct module_data *m = &ctx->m;
@@ -171,7 +171,7 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 	/* If mod replayer, modrng and Amiga mixing are active */
 	if (p->flags & XMP_FLAGS_A500) {
 		if (IS_AMIGA_MOD()) {
-			return note_to_period_pt(n, f);
+			return libxmp_note_to_period_pt(n, f);
 		}
 	}
 #endif
@@ -199,7 +199,7 @@ double note_to_period(struct context_data *ctx, int n, int f, double adj)
 }
 
 /* For the software mixer */
-double note_to_period_mix(int n, int b)
+double libxmp_note_to_period_mix(int n, int b)
 {
 	double d = (double)n + (double)b / 12800;
 	return PERIOD_BASE / pow(2, d / 12);
@@ -207,7 +207,7 @@ double note_to_period_mix(int n, int b)
 
 /* Get note from period */
 /* This function is used only by the MOD loader */
-int period_to_note(int p)
+int libxmp_period_to_note(int p)
 {
 	if (p <= 0) {
 		return 0;
@@ -217,7 +217,7 @@ int period_to_note(int p)
 }
 
 /* Get pitchbend from base note and amiga period */
-int period_to_bend(struct context_data *ctx, double p, int n, double adj)
+int libxmp_period_to_bend(struct context_data *ctx, double p, int n, double adj)
 {
 	struct module_data *m = &ctx->m;
 	double d;
@@ -230,11 +230,11 @@ int period_to_bend(struct context_data *ctx, double p, int n, double adj)
 	case PERIOD_LINEAR:
 		return 100 * (8 * (((240 - n) << 4) - p));
 	case PERIOD_CSPD:
-		d = note_to_period(ctx, n, 0, adj);
+		d = libxmp_note_to_period(ctx, n, 0, adj);
 		return round(100.0 * (1536.0 / M_LN2) * log(p / d));
 	default:
 		/* Amiga */
-		d = note_to_period(ctx, n, 0, adj);
+		d = libxmp_note_to_period(ctx, n, 0, adj);
 		return round(100.0 * (1536.0 / M_LN2) * log(d / p));
 	}
 }
@@ -245,7 +245,7 @@ int period_to_bend(struct context_data *ctx, double p, int n, double adj)
  *      xpo = c/100;
  *      fin = 128 * (c%100) / 100;
  */
-void c2spd_to_note(int c2spd, int *n, int *f)
+void libxmp_c2spd_to_note(int c2spd, int *n, int *f)
 {
 	int c;
 

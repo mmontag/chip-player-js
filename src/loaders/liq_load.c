@@ -627,7 +627,7 @@ next_pattern:
 		xxs[i].flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol, sub->gvl,
 		li.version >> 8, li.version & 0xff, li.c2spd);
 
-	c2spd_to_note(li.c2spd, &sub->xpo, &sub->fin);
+	libxmp_c2spd_to_note(li.c2spd, &sub->xpo, &sub->fin);
 	hio_seek(f, li.hdrsz - 0x90, SEEK_CUR);
 
 	if (xxs->len == 0)

@@ -83,7 +83,7 @@ static void do_toneporta(struct context_data *ctx,
 
 	if (note >= 1 && note <= 0x80 && (uint32)xc->ins < m->mod.ins) {
 		note--;
-		xc->porta.target = note_to_period(ctx, note + sub->xpo +
+		xc->porta.target = libxmp_note_to_period(ctx, note + sub->xpo +
 			instrument->map[xc->key_porta].xpo, xc->finetune,
 			xc->per_adj);
 	}
@@ -860,14 +860,14 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		break;
 	case FX_PITCH_ADD:
 		SET_PER(TONEPORTA);
-		xc->porta.target = note_to_period(ctx, note - 1, xc->finetune, 0)
+		xc->porta.target = libxmp_note_to_period(ctx, note - 1, xc->finetune, 0)
 			+ fxp;
 		xc->porta.slide = 2;
 		xc->porta.dir = 1;
 		break;
 	case FX_PITCH_SUB:
 		SET_PER(TONEPORTA);
-		xc->porta.target = note_to_period(ctx, note - 1, xc->finetune, 0)
+		xc->porta.target = libxmp_note_to_period(ctx, note - 1, xc->finetune, 0)
 			- fxp;
 		xc->porta.slide = 2;
 		xc->porta.dir = -1;

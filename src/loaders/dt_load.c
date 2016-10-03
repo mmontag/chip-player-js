@@ -171,7 +171,7 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 
 		hio_read32b(f);		/* midi note (0x00300000) */
 		c2spd = hio_read32b(f);	/* frequency */
-		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+		libxmp_c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 
 		/* It's strange that we have both c2spd and finetune */
 		mod->xxi[i].sub[0].fin += fine;

@@ -468,7 +468,7 @@ static int rtm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			rs.basenote = hio_read8(f);
 			rs.panning = hio_read8(f);
 
-			c2spd_to_note(rs.basefreq, &sub->xpo, &sub->fin);
+			libxmp_c2spd_to_note(rs.basefreq, &sub->xpo, &sub->fin);
 			sub->xpo += 48 - rs.basenote;
 			sub->vol = rs.defaultvolume * rs.basevolume / 0x40;
 			sub->pan = 0x80 + rs.panning * 2;

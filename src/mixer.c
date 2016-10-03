@@ -717,7 +717,7 @@ void libxmp_mixer_setnote(struct context_data *ctx, int voc, int note)
 	}
 
 	vi->note = note;
-	vi->period = note_to_period_mix(note, 0);
+	vi->period = libxmp_note_to_period_mix(note, 0);
 
 	anticlick(vi);
 }

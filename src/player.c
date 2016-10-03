@@ -605,8 +605,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	if (TEST(NOTE_SLIDE)) {
 		if (xc->noteslide.count == 0) {
 			xc->note += xc->noteslide.slide;
-			xc->period = note_to_period(ctx, xc->note, xc->finetune,
-					xc->per_adj);
+			xc->period = libxmp_note_to_period(ctx, xc->note,
+					xc->finetune, xc->per_adj);
 			xc->noteslide.count = xc->noteslide.speed;
 		}
 		xc->noteslide.count--;
@@ -680,7 +680,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 		}
 	}
 
-	linear_bend = period_to_bend(ctx, period + vibrato, xc->note,
+	linear_bend = libxmp_period_to_bend(ctx, period + vibrato, xc->note,
 							xc->per_adj);
 
 	if (TEST_NOTE(NOTE_GLISSANDO) && TEST(TONEPORTA)) {
@@ -735,7 +735,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 	linear_bend += extras_get_linear_bend(ctx, xc);
 #endif
 
-	period = note_to_period_mix(xc->note, linear_bend);
+	period = libxmp_note_to_period_mix(xc->note, linear_bend);
 	libxmp_virt_setperiod(ctx, chn, period);
 
 	/* For xmp_get_frame_info() */
@@ -744,8 +744,8 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	if (IS_PERIOD_MODRNG()) {
 		CLAMP(xc->info_period,
-			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0) * 4096,
-			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0) * 4096);
+			libxmp_note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0) * 4096,
+			libxmp_note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0) * 4096);
 	} else if (xc->info_period < (1 << 12)) {
 		xc->info_period = (1 << 12);
 	}
@@ -984,7 +984,7 @@ static void update_frequency(struct context_data *ctx, int chn)
 #ifndef LIBXMP_CORE_PLAYER
 		if (TEST(FINE_NSLIDE)) {
 			xc->note += xc->noteslide.fslide;
-			xc->period = note_to_period(ctx, xc->note,
+			xc->period = libxmp_note_to_period(ctx, xc->note,
 				xc->finetune, xc->per_adj);
 		}
 #endif
@@ -996,8 +996,8 @@ static void update_frequency(struct context_data *ctx, int chn)
 		break;
 	case PERIOD_MODRNG:
 		CLAMP(xc->period,
-			note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0),
-			note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0));
+			libxmp_note_to_period(ctx, MAX_NOTE_MOD, xc->finetune, 0),
+			libxmp_note_to_period(ctx, MIN_NOTE_MOD, xc->finetune, 0));
 		break;
 	}
 

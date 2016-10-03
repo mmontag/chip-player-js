@@ -502,7 +502,7 @@ static int imf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    D_(D_INFO "  %02x: %05x %05x %05x %5d",
 		    j, is.len, is.lps, is.lpe, is.rate);
 
-	    c2spd_to_note(is.rate, &sub->xpo, &sub->fin);
+	    libxmp_c2spd_to_note(is.rate, &sub->xpo, &sub->fin);
 
 	    if (xxs->len <= 0)
 		continue;

@@ -250,7 +250,7 @@ void libxmp_decode_noisetracker_event(struct xmp_event *event, uint8 *mod_event)
 	int fxt;
 
 	memset(event, 0, sizeof (struct xmp_event));
-	event->note = period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
+	event->note = libxmp_period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
 	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
 	fxt = LSN(mod_event[2]);
 
@@ -268,7 +268,7 @@ void libxmp_decode_protracker_event(struct xmp_event *event, uint8 *mod_event)
 	int fxt = LSN(mod_event[2]);
 
 	memset(event, 0, sizeof (struct xmp_event));
-	event->note = period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
+	event->note = libxmp_period_to_note((LSN(mod_event[0]) << 8) + mod_event[1]);
 	event->ins = ((MSN(mod_event[0]) << 4) | MSN(mod_event[2]));
 
 	if (fxt != 0x08) {

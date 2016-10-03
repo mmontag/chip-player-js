@@ -551,7 +551,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 			xxi->nsm = 1;
 			sub->vol = sah.vol;
-			c2spd_to_note(sah.c2spd, &sub->xpo, &sub->fin);
+			libxmp_c2spd_to_note(sah.c2spd, &sub->xpo, &sub->fin);
 			sub->xpo += 12;
 			ret =
 			    libxmp_load_sample(m, f, SAMPLE_FLAG_ADLIB, xxs,
@@ -631,7 +631,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		   xxs->lps, mod->xxs[i].lpe,
 		   xxs->flg & XMP_SAMPLE_LOOP ? 'L' : ' ', sub->vol, sih.c2spd);
 
-		c2spd_to_note(sih.c2spd, &sub->xpo, &sub->fin);
+		libxmp_c2spd_to_note(sih.c2spd, &sub->xpo, &sub->fin);
 
 		hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
 

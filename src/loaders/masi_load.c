@@ -217,7 +217,7 @@ static int get_dsmp(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		xxs->flg & XMP_SAMPLE_LOOP ?  'L' : ' ',
 		sub->vol, finetune, srate);
 
-	c2spd_to_note(srate, &sub->xpo, &sub->fin);
+	libxmp_c2spd_to_note(srate, &sub->xpo, &sub->fin);
 	sub->fin += finetune;
 
 	hio_seek(f, 16, SEEK_CUR);

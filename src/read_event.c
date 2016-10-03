@@ -177,7 +177,7 @@ static void set_period(struct context_data *ctx, int note,
 	struct module_data *m = &ctx->m;
 
 	if (sub != NULL && note >= 0) {
-		double per = note_to_period(ctx, note, xc->finetune,
+		double per = libxmp_note_to_period(ctx, note, xc->finetune,
 							xc->per_adj);
 
 		if (!HAS_QUIRK(QUIRK_PROTRACK) || (note > 0 && is_toneporta)) {
@@ -200,12 +200,12 @@ static void set_period_ft2(struct context_data *ctx, int note,
 				struct channel_data *xc, int is_toneporta)
 {
 	if (note > 0 && is_toneporta) {
-		xc->porta.target = note_to_period(ctx, note, xc->finetune,
+		xc->porta.target = libxmp_note_to_period(ctx, note, xc->finetune,
 								xc->per_adj);
 	}
 	if (sub != NULL && note >= 0) {
 		if (xc->period < 1 || !is_toneporta) {
-			xc->period = note_to_period(ctx, note, xc->finetune,
+			xc->period = libxmp_note_to_period(ctx, note, xc->finetune,
 								xc->per_adj);
 		}
 	}
@@ -340,7 +340,7 @@ static int read_event_mod(struct context_data *ctx, struct xmp_event *e, int chn
 
 #ifndef LIBXMP_CORE_PLAYER
 	if (IS_SFX_PITCH(e->fxt)) {
- 		xc->period = note_to_period(ctx, note, xc->finetune,
+ 		xc->period = libxmp_note_to_period(ctx, note, xc->finetune,
                                 			xc->per_adj);
 	} else
 #endif
@@ -924,7 +924,7 @@ static void fix_period(struct context_data *ctx, int chn, struct xmp_subinstrume
 		struct channel_data *xc = &p->xc_data[chn];
 		struct xmp_instrument *xxi = get_instrument(ctx, xc->ins);
 
-		xc->period = note_to_period(ctx, xc->key + sub->xpo +
+		xc->period = libxmp_note_to_period(ctx, xc->key + sub->xpo +
 			xxi->map[xc->key_porta].xpo, xc->finetune, xc->per_adj);
 	}
 }

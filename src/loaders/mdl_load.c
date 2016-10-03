@@ -1049,7 +1049,7 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	    for (k = 0; k < mod->smp; k++) {
 		if (mod->xxi[i].sub[j].sid == data.s_index[k]) {
 		    mod->xxi[i].sub[j].sid = k;
-		    /*c2spd_to_note(data.c2spd[k],
+		    /*libxmp_c2spd_to_note(data.c2spd[k],
 			&mod->xxi[i].sub[j].xpo, &mod->xxi[i].sub[j].fin);*/
 		    break;
 		}

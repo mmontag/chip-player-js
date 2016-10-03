@@ -192,7 +192,7 @@ static int gtk_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			hio_read16b(f);		/* autobal */
 			bits = hio_read16b(f);	/* 1 = 8 bits, 2 = 16 bits */
 			c2spd = hio_read16b(f);
-			c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+			libxmp_c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 			mod->xxs[i].len = hio_read32b(f);
 			mod->xxs[i].lps = hio_read32b(f);
 			size = hio_read32b(f);

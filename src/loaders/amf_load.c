@@ -223,7 +223,7 @@ static int amf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		mod->xxi[i].sub[0].pan = 0x80;
 		mod->xxs[i].len = hio_read32l(f);
 		c2spd = hio_read16l(f);
-		c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
+		libxmp_c2spd_to_note(c2spd, &mod->xxi[i].sub[0].xpo, &mod->xxi[i].sub[0].fin);
 		mod->xxi[i].sub[0].vol = hio_read8(f);
 
 		/*

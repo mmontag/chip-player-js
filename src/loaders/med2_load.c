@@ -155,7 +155,7 @@ int med2_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			for (k = 0; k < 4; k++) {
 				uint8 x;
 				event = &EVENT(i, k, j);
-				event->note = period_to_note(hio_read16b(f));
+				event->note = libxmp_period_to_note(hio_read16b(f));
 				x = hio_read8(f);
 				event->ins = x >> 4;
 				event->fxt = x & 0x0f;
