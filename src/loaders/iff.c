@@ -35,19 +35,35 @@ struct iff_data {
 	unsigned flags;
 };
 
-iff_handle iff_new()
+static int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
+		HIO_HANDLE *f, void *parm)
 {
-	struct iff_data *data;
+	struct iff_data *data = (struct iff_data *)opaque;
+	struct list_head *tmp;
+	struct iff_info *i;
+	int pos;
 
-	data = malloc(sizeof(struct iff_data));
-	if (data == NULL)
-		return NULL;
+	pos = hio_tell(f);
 
-	INIT_LIST_HEAD(&data->iff_list);
-	data->id_size = 4;
-	data->flags = 0;
+	list_for_each(tmp, &data->iff_list) {
+		i = list_entry(tmp, struct iff_info, list);
+		if (id && !memcmp(id, i->id, data->id_size)) {
+			D_(D_WARN "Load IFF chunk %s (%ld) @%d", id, size, pos);
+			if (size > IFF_MAX_CHUNK_SIZE) {
+				return -1;
+			}
+			if (i->loader(m, size, f, parm) < 0) {
+				return -1;
+			}
+			break;
+		}
+	}
 
-	return (iff_handle) data;
+	if (hio_seek(f, pos + size, SEEK_SET) < 0) {
+		return -1;
+	}
+
+	return 0;
 }
 
 static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
@@ -111,7 +127,23 @@ static int iff_chunk(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, vo
 	return iff_process(opaque, m, id, size, f, parm);
 }
 
-int iff_load(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
+iff_handle libxmp_iff_new()
+{
+	struct iff_data *data;
+
+	data = malloc(sizeof(struct iff_data));
+	if (data == NULL) {
+		return NULL;
+	}
+
+	INIT_LIST_HEAD(&data->iff_list);
+	data->id_size = 4;
+	data->flags = 0;
+
+	return (iff_handle)data;
+}
+
+int libxmp_iff_load(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm)
 {
 	int ret;
 
@@ -128,7 +160,7 @@ int iff_load(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, void *parm
 	return 0;
 }
 
-int iff_register(iff_handle opaque, char *id,
+int libxmp_iff_register(iff_handle opaque, char *id,
 	int (*loader)(struct module_data *, int, HIO_HANDLE *, void *))
 {
 	struct iff_data *data = (struct iff_data *)opaque;
@@ -146,7 +178,7 @@ int iff_register(iff_handle opaque, char *id,
 	return 0;
 }
 
-void iff_release(iff_handle opaque)
+void libxmp_iff_release(iff_handle opaque)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 	struct list_head *tmp;
@@ -163,47 +195,16 @@ void iff_release(iff_handle opaque)
 	free(data);
 }
 
-int iff_process(iff_handle opaque, struct module_data *m, char *id, long size,
-		HIO_HANDLE *f, void *parm)
-{
-	struct iff_data *data = (struct iff_data *)opaque;
-	struct list_head *tmp;
-	struct iff_info *i;
-	int pos;
-
-	pos = hio_tell(f);
-
-	list_for_each(tmp, &data->iff_list) {
-		i = list_entry(tmp, struct iff_info, list);
-		if (id && !memcmp(id, i->id, data->id_size)) {
-			D_(D_WARN "Load IFF chunk %s (%ld) @%d", id, size, pos);
-			if (size > IFF_MAX_CHUNK_SIZE) {
-				return -1;
-			}
-			if (i->loader(m, size, f, parm) < 0) {
-				return -1;
-			}
-			break;
-		}
-	}
-
-	if (hio_seek(f, pos + size, SEEK_SET) < 0) {
-		return -1;
-	}
-
-	return 0;
-}
-
 /* Functions to tune IFF mutations */
 
-void iff_id_size(iff_handle opaque, int n)
+void libxmp_iff_id_size(iff_handle opaque, int n)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 
 	data->id_size = n;
 }
 
-void iff_set_quirk(iff_handle opaque, int i)
+void libxmp_iff_set_quirk(iff_handle opaque, int i)
 {
 	struct iff_data *data = (struct iff_data *)opaque;
 

@@ -972,33 +972,33 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     hio_read32b(f);
     hio_read(buf, 1, 1, f);
 
-    handle = iff_new();
+    handle = libxmp_iff_new();
     if (handle == NULL)
 	return -1;
 
     /* IFFoid chunk IDs */
-    iff_register(handle, "IN", get_chunk_in);	/* Module info */
-    iff_register(handle, "TR", get_chunk_tr);	/* Tracks */
-    iff_register(handle, "SA", get_chunk_sa);	/* Sampled data */
-    iff_register(handle, "VE", get_chunk_ve);	/* Volume envelopes */
-    iff_register(handle, "PE", get_chunk_pe);	/* Pan envelopes */
-    iff_register(handle, "FE", get_chunk_fe);	/* Pitch envelopes */
+    libxmp_iff_register(handle, "IN", get_chunk_in);	/* Module info */
+    libxmp_iff_register(handle, "TR", get_chunk_tr);	/* Tracks */
+    libxmp_iff_register(handle, "SA", get_chunk_sa);	/* Sampled data */
+    libxmp_iff_register(handle, "VE", get_chunk_ve);	/* Volume envelopes */
+    libxmp_iff_register(handle, "PE", get_chunk_pe);	/* Pan envelopes */
+    libxmp_iff_register(handle, "FE", get_chunk_fe);	/* Pitch envelopes */
 
     if (MSN(*buf)) {
-	iff_register(handle, "II", get_chunk_ii);	/* Instruments */
-	iff_register(handle, "PA", get_chunk_pa);	/* Patterns */
-	iff_register(handle, "IS", get_chunk_is);	/* Sample info */
+	libxmp_iff_register(handle, "II", get_chunk_ii);	/* Instruments */
+	libxmp_iff_register(handle, "PA", get_chunk_pa);	/* Patterns */
+	libxmp_iff_register(handle, "IS", get_chunk_is);	/* Sample info */
     } else {
-	iff_register(handle, "PA", get_chunk_p0);	/* Old 0.0 patterns */
-	iff_register(handle, "IS", get_chunk_i0);	/* Old 0.0 Sample info */
+	libxmp_iff_register(handle, "PA", get_chunk_p0);	/* Old 0.0 patterns */
+	libxmp_iff_register(handle, "IS", get_chunk_i0);	/* Old 0.0 Sample info */
     }
 
     /* MDL uses a IFF-style file format with 16 bit IDs and little endian
      * 32 bit chunk size. There's only one chunk per data type (i.e. one
      * big chunk for all samples).
      */
-    iff_id_size(handle, 2);
-    iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+    libxmp_iff_id_size(handle, 2);
+    libxmp_iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
     libxmp_set_type(m, "Digitrakker MDL %d.%d", MSN(*buf), LSN(*buf));
 
@@ -1017,13 +1017,13 @@ static int mdl_load(struct module_data *m, HIO_HANDLE *f, const int start)
     }
 
     /* Load IFFoid chunks */
-    if (iff_load(handle, m, f, &data) < 0) {
-    	iff_release(handle);
+    if (libxmp_iff_load(handle, m, f, &data) < 0) {
+    	libxmp_iff_release(handle);
 	retval = -1;
 	goto err;
     }
 
-    iff_release(handle);
+    libxmp_iff_release(handle);
 
     /* Reindex instruments */
     for (i = 0; i < mod->trk; i++) {

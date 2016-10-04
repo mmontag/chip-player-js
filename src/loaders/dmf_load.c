@@ -432,30 +432,30 @@ static int dmf_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Creation date: %02d/%02d/%04d", date[0],
 						date[1], 1900 + date[2]);
 	
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "SEQU", get_sequ);
-	ret |= iff_register(handle, "PATT", get_patt);
-	ret |= iff_register(handle, "SMPI", get_smpi);
-	ret |= iff_register(handle, "SMPD", get_smpd);
+	ret = libxmp_iff_register(handle, "SEQU", get_sequ);
+	ret |= libxmp_iff_register(handle, "PATT", get_patt);
+	ret |= libxmp_iff_register(handle, "SMPI", get_smpi);
+	ret |= libxmp_iff_register(handle, "SMPD", get_smpd);
 
 	if (ret != 0)
 		return -1;
 
-	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+	libxmp_iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, &data) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, &data) < 0) {
+		libxmp_iff_release(handle);
 		return -1;
 	}
 
 	m->volbase = 0xff;
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	return 0;
 }

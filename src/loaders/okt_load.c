@@ -327,21 +327,21 @@ static int okt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	hio_seek(f, 8, SEEK_CUR);	/* OKTASONG */
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	memset(&data, 0, sizeof(struct local_data));
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "CMOD", get_cmod);
-	ret |= iff_register(handle, "SAMP", get_samp);
-	ret |= iff_register(handle, "SPEE", get_spee);
-	ret |= iff_register(handle, "SLEN", get_slen);
-	ret |= iff_register(handle, "PLEN", get_plen);
-	ret |= iff_register(handle, "PATT", get_patt);
-	ret |= iff_register(handle, "PBOD", get_pbod);
-	ret |= iff_register(handle, "SBOD", get_sbod);
+	ret = libxmp_iff_register(handle, "CMOD", get_cmod);
+	ret |= libxmp_iff_register(handle, "SAMP", get_samp);
+	ret |= libxmp_iff_register(handle, "SPEE", get_spee);
+	ret |= libxmp_iff_register(handle, "SLEN", get_slen);
+	ret |= libxmp_iff_register(handle, "PLEN", get_plen);
+	ret |= libxmp_iff_register(handle, "PATT", get_patt);
+	ret |= libxmp_iff_register(handle, "PBOD", get_pbod);
+	ret |= libxmp_iff_register(handle, "SBOD", get_sbod);
 
 	if (ret != 0)
 		return -1;
@@ -351,12 +351,12 @@ static int okt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	MODULE_INFO();
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, &data) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, &data) < 0) {
+		libxmp_iff_release(handle);
 		return -1;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	m->period_type = PERIOD_MODRNG;
 

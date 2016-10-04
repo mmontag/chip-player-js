@@ -365,19 +365,19 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, 10, SEEK_CUR);
 	hio_read(name, 1, 44, f);
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	m->c4rate = C4_NTSC_RATE;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "INFO", get_info);
-	ret |= iff_register(handle, "SONG", get_song);
-	ret |= iff_register(handle, "INST", get_inst);
-	ret |= iff_register(handle, "PATT", get_patt);
-	ret |= iff_register(handle, "SMPL", get_smpl);
-	ret |= iff_register(handle, "VENV", get_venv);
+	ret = libxmp_iff_register(handle, "INFO", get_info);
+	ret |= libxmp_iff_register(handle, "SONG", get_song);
+	ret |= libxmp_iff_register(handle, "INST", get_inst);
+	ret |= libxmp_iff_register(handle, "PATT", get_patt);
+	ret |= libxmp_iff_register(handle, "SMPL", get_smpl);
+	ret |= libxmp_iff_register(handle, "VENV", get_venv);
 
 	if (ret != 0)
 		return -1;
@@ -389,12 +389,12 @@ static int dbm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	MODULE_INFO();
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, &data) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, &data) < 0) {
+		libxmp_iff_release(handle);
 		return -1;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	for (i = 0; i < mod->chn; i++)
 		mod->xxc[i].pan = 0x80;

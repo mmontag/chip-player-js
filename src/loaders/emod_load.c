@@ -206,25 +206,25 @@ static int emod_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	hio_read32b(f);
 	hio_read32b(f);		/* EMOD */
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "EMIC", get_emic);
-	ret |= iff_register(handle, "PATT", get_patt);
-	ret |= iff_register(handle, "8SMP", get_8smp);
+	ret = libxmp_iff_register(handle, "EMIC", get_emic);
+	ret |= libxmp_iff_register(handle, "PATT", get_patt);
+	ret |= libxmp_iff_register(handle, "8SMP", get_8smp);
 
 	if (ret != 0)
 		return -1;
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, NULL) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, NULL) < 0) {
+		libxmp_iff_release(handle);
 		return -1;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	return 0;
 }

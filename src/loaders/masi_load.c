@@ -727,29 +727,29 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	data.cur_ins = 0;
 	offset = hio_tell(f);
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		goto err;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "TITL", get_titl);
-	ret |= iff_register(handle, "SDFT", get_sdft);
-	ret |= iff_register(handle, "SONG", get_song);
-	ret |= iff_register(handle, "DSMP", get_dsmp_cnt);
-	ret |= iff_register(handle, "PBOD", get_pbod_cnt);
+	ret = libxmp_iff_register(handle, "TITL", get_titl);
+	ret |= libxmp_iff_register(handle, "SDFT", get_sdft);
+	ret |= libxmp_iff_register(handle, "SONG", get_song);
+	ret |= libxmp_iff_register(handle, "DSMP", get_dsmp_cnt);
+	ret |= libxmp_iff_register(handle, "PBOD", get_pbod_cnt);
 
 	if (ret != 0)
 		goto err;
 
-	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+	libxmp_iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, &data) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, &data) < 0) {
+		libxmp_iff_release(handle);
 		goto err;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	mod->trk = mod->pat * mod->chn;
 	data.pnam = malloc(mod->pat * 8);	/* pattern names */
@@ -780,27 +780,27 @@ static int masi_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->len = 0;
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		goto err3;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "SONG", get_song_2);
-	ret |= iff_register(handle, "DSMP", get_dsmp);
-	ret |= iff_register(handle, "PBOD", get_pbod);
+	ret = libxmp_iff_register(handle, "SONG", get_song_2);
+	ret |= libxmp_iff_register(handle, "DSMP", get_dsmp);
+	ret |= libxmp_iff_register(handle, "PBOD", get_pbod);
 
 	if (ret != 0)
 		goto err3;
 
-	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+	libxmp_iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, &data) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, &data) < 0) {
+		libxmp_iff_release(handle);
 		goto err3;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	for (i = 0; i < mod->len; i++) {
 		for (j = 0; j < mod->pat; j++) {

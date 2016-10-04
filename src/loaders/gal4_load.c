@@ -376,31 +376,31 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->smp = mod->ins = 0;
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	m->c4rate = C4_NTSC_RATE;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "MAIN", get_main);
-	ret |= iff_register(handle, "ORDR", get_ordr);
-	ret |= iff_register(handle, "PATT", get_patt_cnt);
-	ret |= iff_register(handle, "INST", get_inst_cnt);
+	ret = libxmp_iff_register(handle, "MAIN", get_main);
+	ret |= libxmp_iff_register(handle, "ORDR", get_ordr);
+	ret |= libxmp_iff_register(handle, "PATT", get_patt_cnt);
+	ret |= libxmp_iff_register(handle, "INST", get_inst_cnt);
 
 	if (ret != 0)
 		return -1;
 
-	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
-	iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
+	libxmp_iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+	libxmp_iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, &data) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, &data) < 0) {
+		libxmp_iff_release(handle);
 		return -1;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	mod->trk = mod->pat * mod->chn;
 
@@ -418,27 +418,27 @@ static int gal4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_seek(f, start + offset, SEEK_SET);
 	data.snum = 0;
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "PATT", get_patt);
-	ret |= iff_register(handle, "INST", get_inst);
+	ret = libxmp_iff_register(handle, "PATT", get_patt);
+	ret |= libxmp_iff_register(handle, "INST", get_inst);
 
 	if (ret != 0)
 		return -1;
 
-	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
-	iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
+	libxmp_iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+	libxmp_iff_set_quirk(handle, IFF_CHUNK_TRUNC4);
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, &data) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, &data) < 0) {
+		libxmp_iff_release(handle);
 		return -1;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	/* Alloc missing patterns */
 	for (i = 0; i < mod->pat; i++) {

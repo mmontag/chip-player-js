@@ -295,26 +295,26 @@ static int dt_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	memset(&data, 0, sizeof (struct local_data));
 	
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	m->c4rate = C4_NTSC_RATE;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "D.T.", get_d_t_);
-	ret |= iff_register(handle, "S.Q.", get_s_q_);
-	ret |= iff_register(handle, "PATT", get_patt);
-	ret |= iff_register(handle, "INST", get_inst);
-	ret |= iff_register(handle, "DAPT", get_dapt);
-	ret |= iff_register(handle, "DAIT", get_dait);
+	ret = libxmp_iff_register(handle, "D.T.", get_d_t_);
+	ret |= libxmp_iff_register(handle, "S.Q.", get_s_q_);
+	ret |= libxmp_iff_register(handle, "PATT", get_patt);
+	ret |= libxmp_iff_register(handle, "INST", get_inst);
+	ret |= libxmp_iff_register(handle, "DAPT", get_dapt);
+	ret |= libxmp_iff_register(handle, "DAIT", get_dait);
 
 	if (ret != 0)
 		return -1;
 
 	/* Load IFF chunks */
-	ret = iff_load(handle, m, f , &data);
-	iff_release(handle);
+	ret = libxmp_iff_load(handle, m, f , &data);
+	libxmp_iff_release(handle);
 	if (ret < 0)
 		return -1;
 

@@ -146,27 +146,27 @@ static int pt3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	hio_read(buf, 1, 10, f);
 	libxmp_set_type(m, "%-6.6s IFFMODL", buf + 4);
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	/* IFF chunk IDs */
-	ret = iff_register(handle, "INFO", get_info);
-	ret |= iff_register(handle, "CMNT", get_cmnt);
-	ret |= iff_register(handle, "PTDT", get_ptdt);
+	ret = libxmp_iff_register(handle, "INFO", get_info);
+	ret |= libxmp_iff_register(handle, "CMNT", get_cmnt);
+	ret |= libxmp_iff_register(handle, "PTDT", get_ptdt);
 
 	if (ret != 0)
 		return -1;
 
-	iff_set_quirk(handle, IFF_FULL_CHUNK_SIZE);
+	libxmp_iff_set_quirk(handle, IFF_FULL_CHUNK_SIZE);
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, NULL) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, NULL) < 0) {
+		libxmp_iff_release(handle);
 		return -1;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	/* Sanity check */
 	if (m->mod.smp <= 0) {

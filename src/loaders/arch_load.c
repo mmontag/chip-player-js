@@ -453,32 +453,32 @@ static int arch_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	data.pflag = data.sflag = 0;
 	data.year = data.month = data.day = 0;
 
-	handle = iff_new();
+	handle = libxmp_iff_new();
 	if (handle == NULL)
 		return -1;
 
 	/* IFF chunk IDs */
-	iff_register(handle, "TINF", get_tinf);
-	iff_register(handle, "MVOX", get_mvox);
-	iff_register(handle, "STER", get_ster);
-	iff_register(handle, "MNAM", get_mnam);
-	iff_register(handle, "ANAM", get_anam);
-	iff_register(handle, "MLEN", get_mlen);
-	iff_register(handle, "PNUM", get_pnum);
-	iff_register(handle, "PLEN", get_plen);
-	iff_register(handle, "SEQU", get_sequ);
-	iff_register(handle, "PATT", get_patt);
-	iff_register(handle, "SAMP", get_samp);
+	libxmp_iff_register(handle, "TINF", get_tinf);
+	libxmp_iff_register(handle, "MVOX", get_mvox);
+	libxmp_iff_register(handle, "STER", get_ster);
+	libxmp_iff_register(handle, "MNAM", get_mnam);
+	libxmp_iff_register(handle, "ANAM", get_anam);
+	libxmp_iff_register(handle, "MLEN", get_mlen);
+	libxmp_iff_register(handle, "PNUM", get_pnum);
+	libxmp_iff_register(handle, "PLEN", get_plen);
+	libxmp_iff_register(handle, "SEQU", get_sequ);
+	libxmp_iff_register(handle, "PATT", get_patt);
+	libxmp_iff_register(handle, "SAMP", get_samp);
 
-	iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
+	libxmp_iff_set_quirk(handle, IFF_LITTLE_ENDIAN);
 
 	/* Load IFF chunks */
-	if (iff_load(handle, m, f, &data) < 0) {
-		iff_release(handle);
+	if (libxmp_iff_load(handle, m, f, &data) < 0) {
+		libxmp_iff_release(handle);
 		return -1;
 	}
 
-	iff_release(handle);
+	libxmp_iff_release(handle);
 
 	for (i = 0; i < mod->chn; i++) {
 		mod->xxc[i].pan = DEFPAN((((i + 3) / 2) % 2) * 0xff);
