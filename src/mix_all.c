@@ -201,7 +201,7 @@
 
 /* Handler for 8 bit samples, nearest neighbor mono output
  */
-SMIX_MIXER(smix_mono_8bit_nearest)
+MIXER(mono_8bit_nearest)
 {
     VAR_NORM(int8);
 
@@ -211,7 +211,7 @@ SMIX_MIXER(smix_mono_8bit_nearest)
 
 /* Handler for 16 bit samples, nearest neighbor mono output
  */
-SMIX_MIXER(smix_mono_16bit_nearest)
+MIXER(mono_16bit_nearest)
 {
     VAR_NORM(int16);
 
@@ -220,7 +220,7 @@ SMIX_MIXER(smix_mono_16bit_nearest)
 
 /* Handler for 8 bit samples, nearest neighbor stereo output
  */
-SMIX_MIXER(smix_stereo_8bit_nearest)
+MIXER(stereo_8bit_nearest)
 {
     VAR_NORM(int8);
 
@@ -229,7 +229,7 @@ SMIX_MIXER(smix_stereo_8bit_nearest)
 
 /* Handler for 16 bit samples, nearest neighbor stereo output
  */
-SMIX_MIXER(smix_stereo_16bit_nearest)
+MIXER(stereo_16bit_nearest)
 {
     VAR_NORM(int16);
 
@@ -243,7 +243,7 @@ SMIX_MIXER(smix_stereo_16bit_nearest)
 
 /* Handler for 8 bit samples, linear interpolated mono output
  */
-SMIX_MIXER(smix_mono_8bit_linear)
+MIXER(mono_8bit_linear)
 {
     VAR_LINEAR_MONO(int8);
 
@@ -253,7 +253,7 @@ SMIX_MIXER(smix_mono_8bit_linear)
 
 /* Handler for 16 bit samples, linear interpolated mono output
  */
-SMIX_MIXER(smix_mono_16bit_linear)
+MIXER(mono_16bit_linear)
 {
     VAR_LINEAR_MONO(int16);
 
@@ -263,7 +263,7 @@ SMIX_MIXER(smix_mono_16bit_linear)
 
 /* Handler for 8 bit samples, linear interpolated stereo output
  */
-SMIX_MIXER(smix_stereo_8bit_linear)
+MIXER(stereo_8bit_linear)
 {
    VAR_LINEAR_STEREO(int8);
 
@@ -273,7 +273,7 @@ SMIX_MIXER(smix_stereo_8bit_linear)
 
 /* Handler for 16 bit samples, linear interpolated stereo output
  */
-SMIX_MIXER(smix_stereo_16bit_linear)
+MIXER(stereo_16bit_linear)
 {
     VAR_LINEAR_STEREO(int16);
 
@@ -286,7 +286,7 @@ SMIX_MIXER(smix_stereo_16bit_linear)
 
 /* Handler for 8 bit samples, filtered linear interpolated mono output
  */
-SMIX_MIXER(smix_mono_8bit_linear_filter)
+MIXER(mono_8bit_linear_filter)
 {
     VAR_LINEAR_MONO(int8);
     VAR_FILTER_MONO;
@@ -299,7 +299,7 @@ SMIX_MIXER(smix_mono_8bit_linear_filter)
 
 /* Handler for 16 bit samples, filtered linear interpolated mono output
  */
-SMIX_MIXER(smix_mono_16bit_linear_filter)
+MIXER(mono_16bit_linear_filter)
 {
     VAR_LINEAR_MONO(int16);
     VAR_FILTER_MONO;
@@ -312,7 +312,7 @@ SMIX_MIXER(smix_mono_16bit_linear_filter)
 
 /* Handler for 8 bit samples, filtered linear interpolated stereo output
  */
-SMIX_MIXER(smix_stereo_8bit_linear_filter)
+MIXER(stereo_8bit_linear_filter)
 {
     VAR_LINEAR_STEREO(int8);
     VAR_FILTER_STEREO;
@@ -325,7 +325,7 @@ SMIX_MIXER(smix_stereo_8bit_linear_filter)
 
 /* Handler for 16 bit samples, filtered linear interpolated stereo output
  */
-SMIX_MIXER(smix_stereo_16bit_linear_filter)
+MIXER(stereo_16bit_linear_filter)
 {
     VAR_LINEAR_STEREO(int16);
     VAR_FILTER_STEREO;
@@ -344,7 +344,7 @@ SMIX_MIXER(smix_stereo_16bit_linear_filter)
 
 /* Handler for 8 bit samples, spline interpolated mono output
  */
-SMIX_MIXER(smix_mono_8bit_spline)
+MIXER(mono_8bit_spline)
 {
     VAR_SPLINE_MONO(int8);
 
@@ -354,7 +354,7 @@ SMIX_MIXER(smix_mono_8bit_spline)
 
 /* Handler for 16 bit samples, spline interpolated mono output
  */
-SMIX_MIXER(smix_mono_16bit_spline)
+MIXER(mono_16bit_spline)
 {
     VAR_SPLINE_MONO(int16);
 
@@ -364,7 +364,7 @@ SMIX_MIXER(smix_mono_16bit_spline)
 
 /* Handler for 8 bit samples, spline interpolated stereo output
  */
-SMIX_MIXER(smix_stereo_8bit_spline)
+MIXER(stereo_8bit_spline)
 {
     VAR_SPLINE_STEREO(int8);
 
@@ -374,7 +374,7 @@ SMIX_MIXER(smix_stereo_8bit_spline)
 
 /* Handler for 16 bit samples, spline interpolated stereo output
  */
-SMIX_MIXER(smix_stereo_16bit_spline)
+MIXER(stereo_16bit_spline)
 {
     VAR_SPLINE_STEREO(int16);
 
@@ -386,7 +386,7 @@ SMIX_MIXER(smix_stereo_16bit_spline)
 
 /* Handler for 8 bit samples, filtered spline interpolated mono output
  */
-SMIX_MIXER(smix_mono_8bit_spline_filter)
+MIXER(mono_8bit_spline_filter)
 {
     VAR_SPLINE_MONO(int8);
     VAR_FILTER_MONO;
@@ -399,7 +399,7 @@ SMIX_MIXER(smix_mono_8bit_spline_filter)
 
 /* Handler for 16 bit samples, filtered spline interpolated mono output
  */
-SMIX_MIXER(smix_mono_16bit_spline_filter)
+MIXER(mono_16bit_spline_filter)
 {
     VAR_SPLINE_MONO(int16);
     VAR_FILTER_MONO;
@@ -412,7 +412,7 @@ SMIX_MIXER(smix_mono_16bit_spline_filter)
 
 /* Handler for 8 bit samples, filtered spline interpolated stereo output
  */
-SMIX_MIXER(smix_stereo_8bit_spline_filter)
+MIXER(stereo_8bit_spline_filter)
 {
     VAR_SPLINE_STEREO(int8);
     VAR_FILTER_STEREO;
@@ -425,7 +425,7 @@ SMIX_MIXER(smix_stereo_8bit_spline_filter)
 
 /* Handler for 16 bit samples, filtered spline interpolated stereo output
  */
-SMIX_MIXER(smix_stereo_16bit_spline_filter)
+MIXER(stereo_16bit_spline_filter)
 {
     VAR_SPLINE_STEREO(int16);
     VAR_FILTER_STEREO;

@@ -47,37 +47,37 @@
 #define LIM16_HI	 32767
 #define LIM16_LO	-32768
 
-#define MIX_FN(x) void x(struct mixer_voice *, int *, int, int, int, int, int, int, int)
+#define MIX_FN(x) void libxmp_mix_##x(struct mixer_voice *, int *, int, int, int, int, int, int, int)
 
-MIX_FN(smix_mono_8bit_nearest);
-MIX_FN(smix_mono_8bit_linear);
-MIX_FN(smix_mono_16bit_nearest);
-MIX_FN(smix_mono_16bit_linear);
-MIX_FN(smix_stereo_8bit_nearest);
-MIX_FN(smix_stereo_8bit_linear);
-MIX_FN(smix_stereo_16bit_nearest);
-MIX_FN(smix_stereo_16bit_linear);
-MIX_FN(smix_mono_8bit_spline);
-MIX_FN(smix_mono_16bit_spline);
-MIX_FN(smix_stereo_8bit_spline);
-MIX_FN(smix_stereo_16bit_spline);
+MIX_FN(mono_8bit_nearest);
+MIX_FN(mono_8bit_linear);
+MIX_FN(mono_16bit_nearest);
+MIX_FN(mono_16bit_linear);
+MIX_FN(stereo_8bit_nearest);
+MIX_FN(stereo_8bit_linear);
+MIX_FN(stereo_16bit_nearest);
+MIX_FN(stereo_16bit_linear);
+MIX_FN(mono_8bit_spline);
+MIX_FN(mono_16bit_spline);
+MIX_FN(stereo_8bit_spline);
+MIX_FN(stereo_16bit_spline);
 
 #ifndef LIBXMP_CORE_DISABLE_IT
-MIX_FN(smix_mono_8bit_linear_filter);
-MIX_FN(smix_mono_16bit_linear_filter);
-MIX_FN(smix_stereo_8bit_linear_filter);
-MIX_FN(smix_stereo_16bit_linear_filter);
-MIX_FN(smix_mono_8bit_spline_filter);
-MIX_FN(smix_mono_16bit_spline_filter);
-MIX_FN(smix_stereo_8bit_spline_filter);
-MIX_FN(smix_stereo_16bit_spline_filter);
+MIX_FN(mono_8bit_linear_filter);
+MIX_FN(mono_16bit_linear_filter);
+MIX_FN(stereo_8bit_linear_filter);
+MIX_FN(stereo_16bit_linear_filter);
+MIX_FN(mono_8bit_spline_filter);
+MIX_FN(mono_16bit_spline_filter);
+MIX_FN(stereo_8bit_spline_filter);
+MIX_FN(stereo_16bit_spline_filter);
 #endif
 
 #ifdef LIBXMP_PAULA_SIMULATOR
-MIX_FN(smix_mono_a500);
-MIX_FN(smix_mono_a500_filter);
-MIX_FN(smix_stereo_a500);
-MIX_FN(smix_stereo_a500_filter);
+MIX_FN(mono_a500);
+MIX_FN(mono_a500_filter);
+MIX_FN(stereo_a500);
+MIX_FN(stereo_a500_filter);
 #endif
 
 /* Mixers array index:
@@ -90,52 +90,52 @@ MIX_FN(smix_stereo_a500_filter);
 typedef void (*mixer_set[])(struct mixer_voice *, int *, int, int, int, int, int, int, int);
 
 static mixer_set nearest_mixers = {
-	smix_mono_8bit_nearest,
-	smix_mono_16bit_nearest,
-	smix_stereo_8bit_nearest,
-	smix_stereo_16bit_nearest,
+	libxmp_mix_mono_8bit_nearest,
+	libxmp_mix_mono_16bit_nearest,
+	libxmp_mix_stereo_8bit_nearest,
+	libxmp_mix_stereo_16bit_nearest,
 
 #ifndef LIBXMP_CORE_DISABLE_IT
-	smix_mono_8bit_nearest,
-	smix_mono_16bit_nearest,
-	smix_stereo_8bit_nearest,
-	smix_stereo_16bit_nearest,
+	libxmp_mix_mono_8bit_nearest,
+	libxmp_mix_mono_16bit_nearest,
+	libxmp_mix_stereo_8bit_nearest,
+	libxmp_mix_stereo_16bit_nearest,
 #endif
 };
 
 static mixer_set linear_mixers = {
-	smix_mono_8bit_linear,
-	smix_mono_16bit_linear,
-	smix_stereo_8bit_linear,
-	smix_stereo_16bit_linear,
+	libxmp_mix_mono_8bit_linear,
+	libxmp_mix_mono_16bit_linear,
+	libxmp_mix_stereo_8bit_linear,
+	libxmp_mix_stereo_16bit_linear,
 
 #ifndef LIBXMP_CORE_DISABLE_IT
-	smix_mono_8bit_linear_filter,
-	smix_mono_16bit_linear_filter,
-	smix_stereo_8bit_linear_filter,
-	smix_stereo_16bit_linear_filter
+	libxmp_mix_mono_8bit_linear_filter,
+	libxmp_mix_mono_16bit_linear_filter,
+	libxmp_mix_stereo_8bit_linear_filter,
+	libxmp_mix_stereo_16bit_linear_filter
 #endif
 };
 
 static mixer_set spline_mixers = {
-	smix_mono_8bit_spline,
-	smix_mono_16bit_spline,
-	smix_stereo_8bit_spline,
-	smix_stereo_16bit_spline,
+	libxmp_mix_mono_8bit_spline,
+	libxmp_mix_mono_16bit_spline,
+	libxmp_mix_stereo_8bit_spline,
+	libxmp_mix_stereo_16bit_spline,
 
 #ifndef LIBXMP_CORE_DISABLE_IT
-	smix_mono_8bit_spline_filter,
-	smix_mono_16bit_spline_filter,
-	smix_stereo_8bit_spline_filter,
-	smix_stereo_16bit_spline_filter
+	libxmp_mix_mono_8bit_spline_filter,
+	libxmp_mix_mono_16bit_spline_filter,
+	libxmp_mix_stereo_8bit_spline_filter,
+	libxmp_mix_stereo_16bit_spline_filter
 #endif
 };
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 static mixer_set a500_mixers = {
-	smix_mono_a500,
+	libxmp_mix_mono_a500,
 	NULL,
-	smix_stereo_a500,
+	libxmp_mix_stereo_a500,
 	NULL,
 	NULL,
 	NULL,
@@ -145,9 +145,9 @@ static mixer_set a500_mixers = {
 
 
 static mixer_set a500led_mixers = {
-	smix_mono_a500_filter,
+	libxmp_mix_mono_a500_filter,
 	NULL,
-	smix_stereo_a500_filter,
+	libxmp_mix_stereo_a500_filter,
 	NULL,
 	NULL,
 	NULL,

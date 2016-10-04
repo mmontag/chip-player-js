@@ -131,28 +131,28 @@ static void do_clock(struct paula_state *paula, unsigned int cycles)
     vr <<= 8
 
 
-SMIX_MIXER(smix_mono_a500)
+MIXER(mono_a500)
 {
 	VAR_PAULA(int8);
 
 	LOOP { PAULA_SIMULATION(0); MIX_MONO(); }
 } 
 
-SMIX_MIXER(smix_mono_a500_filter)
+MIXER(mono_a500_filter)
 {
 	VAR_PAULA(int8);
 
 	LOOP { PAULA_SIMULATION(1); MIX_MONO(); }
 } 
 
-SMIX_MIXER(smix_stereo_a500)
+MIXER(stereo_a500)
 {
 	VAR_PAULA(int8);
 
 	LOOP { PAULA_SIMULATION(0); MIX_STEREO(); }
 } 
 
-SMIX_MIXER(smix_stereo_a500_filter)
+MIXER(stereo_a500_filter)
 {
 	VAR_PAULA(int8);
 
