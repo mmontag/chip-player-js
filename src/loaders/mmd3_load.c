@@ -387,7 +387,7 @@ static int mmd3_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		}
 	}
 
-	if (med_new_module_extras(m) != 0)
+	if (libxmp_med_new_module_extras(m) != 0)
 		return -1;
 
 	/*

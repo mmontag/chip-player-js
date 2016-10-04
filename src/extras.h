@@ -16,6 +16,6 @@ void extras_process_fx(struct context_data *, struct channel_data *, int, uint8,
 
 
 /* FIXME */
-void med_hold_hack(struct context_data *ctx, int, int, int);
+void libxmp_med_hold_hack(struct context_data *ctx, int, int, int);
 
 #endif

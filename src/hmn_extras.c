@@ -48,12 +48,12 @@ static uint8 megaarp[16][16] = {
 };
 
 
-int hmn_linear_bend(struct context_data *ctx, struct channel_data *xc)
+int libxmp_hmn_linear_bend(struct context_data *ctx, struct channel_data *xc)
 {
 	return 0;
 }
 
-void hmn_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
+void libxmp_hmn_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 {
 	struct player_data *p = &ctx->p;
 	struct module_data *m = &ctx->m;
@@ -83,7 +83,7 @@ void hmn_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 	ce->volume = volume;
 }
 
-int hmn_new_instrument_extras(struct xmp_instrument *xxi)
+int libxmp_hmn_new_instrument_extras(struct xmp_instrument *xxi)
 {
 	xxi->extra = calloc(1, sizeof(struct hmn_instrument_extras));
 	if (xxi->extra == NULL)
@@ -93,7 +93,7 @@ int hmn_new_instrument_extras(struct xmp_instrument *xxi)
 	return 0;
 }
 
-int hmn_new_channel_extras(struct channel_data *xc)
+int libxmp_hmn_new_channel_extras(struct channel_data *xc)
 {
 	xc->extra = calloc(1, sizeof(struct hmn_channel_extras));
 	if (xc->extra == NULL)
@@ -103,17 +103,17 @@ int hmn_new_channel_extras(struct channel_data *xc)
 	return 0;
 }
 
-void hmn_reset_channel_extras(struct channel_data *xc)
+void libxmp_hmn_reset_channel_extras(struct channel_data *xc)
 {
 	memset((char *)xc->extra + 4, 0, sizeof(struct hmn_channel_extras) - 4);
 }
 
-void hmn_release_channel_extras(struct channel_data *xc)
+void libxmp_hmn_release_channel_extras(struct channel_data *xc)
 {
 	free(xc->extra);
 }
 
-int hmn_new_module_extras(struct module_data *m)
+int libxmp_hmn_new_module_extras(struct module_data *m)
 {
 	m->extra = calloc(1, sizeof(struct hmn_module_extras));
 	if (m->extra == NULL)
@@ -123,12 +123,12 @@ int hmn_new_module_extras(struct module_data *m)
 	return 0;
 }
 
-void hmn_release_module_extras(struct module_data *m)
+void libxmp_hmn_release_module_extras(struct module_data *m)
 {
 	free(m->extra);
 }
 
-void hmn_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
+void libxmp_hmn_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
 			   int chn, uint8 note, uint8 fxt, uint8 fxp, int fnum)
 {
 	switch (fxt) {

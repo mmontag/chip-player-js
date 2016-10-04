@@ -500,7 +500,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->ins = num_ins;
 
-	if (med_new_module_extras(m) != 0)
+	if (libxmp_med_new_module_extras(m) != 0)
 		return -1;
 
 	/*
@@ -616,7 +616,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			length = hio_read32b(f);
 			type = hio_read16b(f);
 
-			if (med_new_instrument_extras(xxi) != 0)
+			if (libxmp_med_new_instrument_extras(xxi) != 0)
 				return -1;
 
 			xxi->nsm = 1;
@@ -697,7 +697,7 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 					temp_inst[i].transpose /*,
 					exp_smp.finetune*/);
 
-			if (med_new_instrument_extras(&mod->xxi[i]) != 0)
+			if (libxmp_med_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 
 			mod->xxi[i].nsm = synth.wforms;

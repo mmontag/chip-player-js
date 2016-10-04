@@ -408,7 +408,7 @@ int mmd_load_hybrid_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	length = hio_read32b(f);
 	type = hio_read16b(f);
 
-	if (med_new_instrument_extras(xxi) != 0)
+	if (libxmp_med_new_instrument_extras(xxi) != 0)
 		return -1;
 
 	xxi->nsm = 1;
@@ -482,7 +482,7 @@ int mmd_load_synth_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 	if (synth->wforms > 64)
 		return -1;
 
-	if (med_new_instrument_extras(&mod->xxi[i]) != 0)
+	if (libxmp_med_new_instrument_extras(&mod->xxi[i]) != 0)
 		return -1;
 
 	mod->xxi[i].nsm = synth->wforms;
@@ -538,7 +538,7 @@ int mmd_load_sampled_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		return -1;
 
 	/* hold & decay support */
-        if (med_new_instrument_extras(xxi) != 0)
+        if (libxmp_med_new_instrument_extras(xxi) != 0)
                 return -1;
 	MED_INSTRUMENT_EXTRAS(*xxi)->hold = exp_smp->hold;
 	xxi->rls = 0xfff - (exp_smp->decay << 4);
@@ -649,7 +649,7 @@ int mmd_load_iffoct_instrument(HIO_HANDLE *f, struct module_data *m, int i,
 		return -1;
 
 	/* hold & decay support */
-	if (med_new_instrument_extras(xxi) != 0)
+	if (libxmp_med_new_instrument_extras(xxi) != 0)
 		return -1;
 
 	MED_INSTRUMENT_EXTRAS(*xxi)->hold = exp_smp->hold;

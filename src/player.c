@@ -516,7 +516,7 @@ static inline void read_row(struct context_data *ctx, int pat, int row)
 			if (!f->rowdelay_set || f->rowdelay > 0) {
 				libxmp_read_event(ctx, &ev, chn);
 #ifndef LIBXMP_CORE_PLAYER
-				med_hold_hack(ctx, pat, chn, row);
+				libxmp_med_hold_hack(ctx, pat, chn, row);
 #endif
 			}
 		} else {

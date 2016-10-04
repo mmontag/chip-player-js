@@ -200,7 +200,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	mod->pat++;
 	mod->trk = mod->chn * mod->pat;
 
-	if (hmn_new_module_extras(m) != 0)
+	if (libxmp_hmn_new_module_extras(m) != 0)
 		return -1;
 
 	strncpy(mod->name, (char *)mh.name, 20);
@@ -216,7 +216,7 @@ static int hmn_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			snprintf(mod->xxi[i].name, 32,
 				"Mupp %02x %02x %02x", mupp[i].pattno,
 				mupp[i].dataloopstart, mupp[i].dataloopend);
-			if (hmn_new_instrument_extras(&mod->xxi[i]) != 0)
+			if (libxmp_hmn_new_instrument_extras(&mod->xxi[i]) != 0)
 				return -1;
 		} else {
 			mod->xxi[i].nsm = 1;

@@ -36,9 +36,9 @@ void release_module_extras(struct context_data *ctx)
 	struct module_data *m = &ctx->m;
 
 	if (HAS_MED_MODULE_EXTRAS(*m))
-		med_release_module_extras(m);
+		libxmp_med_release_module_extras(m);
 	else if (HAS_HMN_MODULE_EXTRAS(*m))
-		hmn_release_module_extras(m);
+		libxmp_hmn_release_module_extras(m);
 }
 
 /*
@@ -50,10 +50,10 @@ int new_channel_extras(struct context_data *ctx, struct channel_data *xc)
 	struct module_data *m = &ctx->m;
 
 	if (HAS_MED_MODULE_EXTRAS(*m)) {
-		if (med_new_channel_extras(xc) < 0)
+		if (libxmp_med_new_channel_extras(xc) < 0)
 			return -1;
 	} else if (HAS_HMN_MODULE_EXTRAS(*m)) {
-		if (hmn_new_channel_extras(xc) < 0)
+		if (libxmp_hmn_new_channel_extras(xc) < 0)
 			return -1;
 	}
 
@@ -65,9 +65,9 @@ void release_channel_extras(struct context_data *ctx, struct channel_data *xc)
 	struct module_data *m = &ctx->m;
 
 	if (HAS_MED_CHANNEL_EXTRAS(*m))
-		med_release_channel_extras(xc);
+		libxmp_med_release_channel_extras(xc);
 	else if (HAS_HMN_CHANNEL_EXTRAS(*m))
-		hmn_release_channel_extras(xc);
+		libxmp_hmn_release_channel_extras(xc);
 }
 
 void reset_channel_extras(struct context_data *ctx, struct channel_data *xc)
@@ -75,9 +75,9 @@ void reset_channel_extras(struct context_data *ctx, struct channel_data *xc)
 	struct module_data *m = &ctx->m;
 
 	if (HAS_MED_CHANNEL_EXTRAS(*m))
-		med_reset_channel_extras(xc);
+		libxmp_med_reset_channel_extras(xc);
 	else if (HAS_HMN_CHANNEL_EXTRAS(*m))
-		hmn_reset_channel_extras(xc);
+		libxmp_hmn_reset_channel_extras(xc);
 }
 
 /*
@@ -92,9 +92,9 @@ void play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 		return;
 
         if (HAS_MED_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		med_play_extras(ctx, xc, chn);
+		libxmp_med_play_extras(ctx, xc, chn);
         else if (HAS_HMN_INSTRUMENT_EXTRAS(m->mod.xxi[xc->ins]))
-		hmn_play_extras(ctx, xc, chn);
+		libxmp_hmn_play_extras(ctx, xc, chn);
 }
 
 int extras_get_volume(struct context_data *ctx, struct channel_data *xc)
@@ -119,7 +119,7 @@ int extras_get_period(struct context_data *ctx, struct channel_data *xc)
 	int period;
 
 	if (HAS_MED_CHANNEL_EXTRAS(*xc))
-		period = med_change_period(ctx, xc);
+		period = libxmp_med_change_period(ctx, xc);
 	else period = 0;
 
 	return period;
@@ -130,9 +130,9 @@ int extras_get_linear_bend(struct context_data *ctx, struct channel_data *xc)
 	int linear_bend;
 
 	if (HAS_MED_CHANNEL_EXTRAS(*xc))
-		linear_bend = med_linear_bend(ctx, xc);
+		linear_bend = libxmp_med_linear_bend(ctx, xc);
 	else if (HAS_HMN_CHANNEL_EXTRAS(*xc))
-		linear_bend = hmn_linear_bend(ctx, xc);
+		linear_bend = libxmp_hmn_linear_bend(ctx, xc);
 	else
 		linear_bend = 0;
 
@@ -143,7 +143,7 @@ void extras_process_fx(struct context_data *ctx, struct channel_data *xc,
 			int chn, uint8 note, uint8 fxt, uint8 fxp, int fnum)
 {
 	if (HAS_MED_CHANNEL_EXTRAS(*xc))
-		med_extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
+		libxmp_med_extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
 	else if (HAS_HMN_CHANNEL_EXTRAS(*xc))
-		hmn_extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
+		libxmp_hmn_extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
 }

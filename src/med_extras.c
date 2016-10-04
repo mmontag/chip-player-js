@@ -66,7 +66,7 @@ static const int sine[32] = {
 	-255,-250,-235,-212,-180,-141, -97, -49
 };
 
-int med_change_period(struct context_data *ctx, struct channel_data *xc)
+int libxmp_med_change_period(struct context_data *ctx, struct channel_data *xc)
 {
 	struct med_channel_extras *ce = xc->extra;
 	int vib;
@@ -91,7 +91,7 @@ int med_change_period(struct context_data *ctx, struct channel_data *xc)
 }
 
 
-int med_linear_bend(struct context_data *ctx, struct channel_data *xc)
+int libxmp_med_linear_bend(struct context_data *ctx, struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
 	struct med_module_extras *me = m->extra;
@@ -116,7 +116,7 @@ int med_linear_bend(struct context_data *ctx, struct channel_data *xc)
 }
 
 
-void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
+void libxmp_med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 {
 	struct module_data *m = &ctx->m;
 	struct player_data *p = &ctx->p;
@@ -343,7 +343,7 @@ void med_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 	}
 }
 
-int med_new_instrument_extras(struct xmp_instrument *xxi)
+int libxmp_med_new_instrument_extras(struct xmp_instrument *xxi)
 {
 	xxi->extra = calloc(1, sizeof(struct med_instrument_extras));
 	if (xxi->extra == NULL)
@@ -353,7 +353,7 @@ int med_new_instrument_extras(struct xmp_instrument *xxi)
 	return 0;
 }
 
-int med_new_channel_extras(struct channel_data *xc)
+int libxmp_med_new_channel_extras(struct channel_data *xc)
 {
 	xc->extra = calloc(1, sizeof(struct med_channel_extras));
 	if (xc->extra == NULL)
@@ -363,17 +363,17 @@ int med_new_channel_extras(struct channel_data *xc)
 	return 0;
 }
 
-void med_reset_channel_extras(struct channel_data *xc)
+void libxmp_med_reset_channel_extras(struct channel_data *xc)
 {
 	memset((char *)xc->extra + 4, 0, sizeof(struct med_channel_extras) - 4);
 }
 
-void med_release_channel_extras(struct channel_data *xc)
+void libxmp_med_release_channel_extras(struct channel_data *xc)
 {
 	free(xc->extra);
 }
 
-int med_new_module_extras(struct module_data *m)
+int libxmp_med_new_module_extras(struct module_data *m)
 {
 	struct med_module_extras *me;
 	struct xmp_module *mod = &m->mod;
@@ -395,7 +395,7 @@ int med_new_module_extras(struct module_data *m)
 	return 0;
 }
 
-void med_release_module_extras(struct module_data *m)
+void libxmp_med_release_module_extras(struct module_data *m)
 {
 	struct med_module_extras *me;
 	struct xmp_module *mod = &m->mod;
@@ -418,7 +418,7 @@ void med_release_module_extras(struct module_data *m)
 	free(m->extra);
 }
 
-void med_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
+void libxmp_med_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
 			int chn, uint8 note, uint8 fxt, uint8 fxp, int fnum)
 {
 	switch (fxt) {
@@ -429,7 +429,7 @@ void med_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
 	}
 }
 
-void med_hold_hack(struct context_data *ctx, int pat, int chn, int row)
+void libxmp_med_hold_hack(struct context_data *ctx, int pat, int chn, int row)
 {
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
