@@ -219,8 +219,6 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	i = hio_read8(f);		/* instrument number */
 
 	hio_read(&mod->xxi[i].name, 1, 28, f);
-	adjust_string((char *)mod->xxi[i].name);
-
 	mod->xxi[i].nsm = hio_read8(f);
 
 	for (j = 0; j < 108; j++) {
@@ -300,7 +298,6 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 		hio_read32b(f);	/* size */
 	
 		hio_read(&mod->xxs[data->snum].name, 1, 28, f);
-		adjust_string((char *)mod->xxs[data->snum].name);
 	
 		mod->xxi[i].sub[j].pan = hio_read8(f) * 4;
 		if (mod->xxi[i].sub[j].pan == 0)	/* not sure about this */

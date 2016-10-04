@@ -382,8 +382,8 @@ struct context_data {
 
 /* Prototypes */
 
-char	*adjust_string		(char *);
-int	exclude_match		(char *);
+char	*libxmp_adjust_string	(char *);
+int	libxmp_exclude_match	(char *);
 int	libxmp_prepare_scan	(struct context_data *);
 int	libxmp_scan_sequences	(struct context_data *);
 int	libxmp_get_sequence	(struct context_data *, int);

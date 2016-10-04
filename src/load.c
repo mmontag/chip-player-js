@@ -425,7 +425,14 @@ static int load_module(xmp_context opaque, HIO_HANDLE *h)
 		}
 	}
 
-	adjust_string(mod->name);
+	libxmp_adjust_string(mod->name);
+	for (i = 0; i < mod->ins; i++) {
+		libxmp_adjust_string(mod->xxi[i].name);
+	}
+	for (i = 0; i < mod->smp; i++) {
+		libxmp_adjust_string(mod->xxs[i].name);
+	}
+
 	libxmp_load_epilogue(ctx);
 
 	ret = libxmp_prepare_scan(ctx);

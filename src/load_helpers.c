@@ -135,7 +135,7 @@ static void module_quirks(struct context_data *ctx)
  * Check whether the given string matches one of the blacklisted glob
  * patterns. Used to filter file names stored in archive files.
  */
-int exclude_match(char *name)
+int libxmp_exclude_match(char *name)
 {
 	int i;
 
@@ -163,16 +163,18 @@ int exclude_match(char *name)
 
 #endif /* LIBXMP_CORE_PLAYER */
 
-char *adjust_string(char *s)
+char *libxmp_adjust_string(char *s)
 {
 	int i;
 
-	for (i = 0; i < strlen(s); i++)
+	for (i = 0; i < strlen(s); i++) {
 		if (!isprint((int)s[i]) || ((uint8) s[i] > 127))
 			s[i] = ' ';
+	}
 
-	while (*s && (s[strlen(s) - 1] == ' '))
+	while (*s && (s[strlen(s) - 1] == ' ')) {
 		s[strlen(s) - 1] = 0;
+	}
 
 	return s;
 }

@@ -283,10 +283,10 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		sub->pan = 0x80;
 		sub->sid = i;
 		strncpy((char *)xxi->name, (char *)mh.ins[i].name, 22);
-		adjust_string((char *)xxi->name);
 
-		if (xxs->len > 0)
+		if (xxs->len > 0) {
 			xxi->nsm = 1;
+		}
 	}
 
 	mod->trk = mod->chn * mod->pat;

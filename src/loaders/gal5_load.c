@@ -206,8 +206,6 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	i = hio_read8(f);		/* instrument number */
 	
 	hio_read(&mod->xxi[i].name, 1, 28, f);
-	adjust_string((char *)mod->xxi[i].name);
-
 	hio_seek(f, 290, SEEK_CUR);	/* Sample/note map, envelopes */
 	mod->xxi[i].nsm = hio_read16l(f);
 
@@ -229,7 +227,6 @@ static int get_inst(struct module_data *m, int size, HIO_HANDLE *f, void *parm)
 	hio_read32b(f);	/* unknown - usually 0x40000000 */
 
 	hio_read(&mod->xxs[i].name, 1, 28, f);
-	adjust_string((char *)mod->xxs[i].name);
 
 	hio_read32b(f);	/* unknown - 0x0000 */
 	hio_read8(f);	/* unknown - 0x00 */

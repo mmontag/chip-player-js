@@ -835,7 +835,7 @@ static int extract_normal(FILE * in_file, struct LZXDecrData *decr)
 	/*printf("Extracting \"%s\"...", node->filename);
 	   fflush(stdout); */
 
-	if (exclude_match(node->filename)) {
+	if (libxmp_exclude_match(node->filename)) {
 	    out_file = NULL;
 	} else {
 	    out_file = decr->outfile;

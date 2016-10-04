@@ -261,7 +261,7 @@ char name[1024];
         return -1;
       }
 
-      if (!exclude_match(name)) {
+      if (!libxmp_exclude_match(name)) {
         break;
       }
     }

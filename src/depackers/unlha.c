@@ -1831,7 +1831,7 @@ static int decrunch_lha(FILE *in, FILE *out)
 		printf("position = %lx\n", ftell(in));
 #endif
 
-		if (exclude_match(data.name)) {
+		if (libxmp_exclude_match(data.name)) {
 			if (fseek(in, data.packed_size, SEEK_CUR) < 0) {
 				return -1;
 			}
