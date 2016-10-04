@@ -1062,7 +1062,7 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 
 	default:
 #ifndef LIBXMP_CORE_PLAYER
-		extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
+		libxmp_extras_process_fx(ctx, xc, chn, note, fxt, fxp, fnum);
 #endif
 		break;
 	}

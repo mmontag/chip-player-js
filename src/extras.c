@@ -31,7 +31,7 @@
  * Module extras
  */
 
-void release_module_extras(struct context_data *ctx)
+void libxmp_release_module_extras(struct context_data *ctx)
 {
 	struct module_data *m = &ctx->m;
 
@@ -45,7 +45,7 @@ void release_module_extras(struct context_data *ctx)
  * Channel extras
  */
 
-int new_channel_extras(struct context_data *ctx, struct channel_data *xc)
+int libxmp_new_channel_extras(struct context_data *ctx, struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
 
@@ -60,7 +60,7 @@ int new_channel_extras(struct context_data *ctx, struct channel_data *xc)
 	return 0;
 }
 
-void release_channel_extras(struct context_data *ctx, struct channel_data *xc)
+void libxmp_release_channel_extras(struct context_data *ctx, struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
 
@@ -70,7 +70,7 @@ void release_channel_extras(struct context_data *ctx, struct channel_data *xc)
 		libxmp_hmn_release_channel_extras(xc);
 }
 
-void reset_channel_extras(struct context_data *ctx, struct channel_data *xc)
+void libxmp_reset_channel_extras(struct context_data *ctx, struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
 
@@ -84,7 +84,7 @@ void reset_channel_extras(struct context_data *ctx, struct channel_data *xc)
  * Player extras
  */
 
-void play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
+void libxmp_play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 {
 	struct module_data *m = &ctx->m;
 
@@ -97,7 +97,7 @@ void play_extras(struct context_data *ctx, struct channel_data *xc, int chn)
 		libxmp_hmn_play_extras(ctx, xc, chn);
 }
 
-int extras_get_volume(struct context_data *ctx, struct channel_data *xc)
+int libxmp_extras_get_volume(struct context_data *ctx, struct channel_data *xc)
 {
 	struct module_data *m = &ctx->m;
 	int vol;
@@ -114,7 +114,7 @@ int extras_get_volume(struct context_data *ctx, struct channel_data *xc)
 	return vol;
 }
 
-int extras_get_period(struct context_data *ctx, struct channel_data *xc)
+int libxmp_extras_get_period(struct context_data *ctx, struct channel_data *xc)
 {
 	int period;
 
@@ -125,7 +125,7 @@ int extras_get_period(struct context_data *ctx, struct channel_data *xc)
 	return period;
 }
 
-int extras_get_linear_bend(struct context_data *ctx, struct channel_data *xc)
+int libxmp_extras_get_linear_bend(struct context_data *ctx, struct channel_data *xc)
 {
 	int linear_bend;
 
@@ -139,7 +139,7 @@ int extras_get_linear_bend(struct context_data *ctx, struct channel_data *xc)
 	return linear_bend;
 }
 
-void extras_process_fx(struct context_data *ctx, struct channel_data *xc,
+void libxmp_extras_process_fx(struct context_data *ctx, struct channel_data *xc,
 			int chn, uint8 note, uint8 fxt, uint8 fxp, int fnum)
 {
 	if (HAS_MED_CHANNEL_EXTRAS(*xc))

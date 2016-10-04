@@ -370,7 +370,7 @@ static void reset_channels(struct context_data *ctx)
 		extra = xc->extra;
 		memset(xc, 0, sizeof (struct channel_data));
 		xc->extra = extra;
-		reset_channel_extras(ctx, xc);
+		libxmp_reset_channel_extras(ctx, xc);
 		xc->ins = -1;
 		xc->old_ins = 1;	/* raw value */
 		xc->key = -1;
@@ -694,7 +694,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	}
 
 #ifndef LIBXMP_CORE_PLAYER
-	finalvol = extras_get_volume(ctx, xc);
+	finalvol = libxmp_extras_get_volume(ctx, xc);
 #else
 	finalvol = xc->volume;
 #endif
@@ -831,7 +831,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 	period = xc->period;
 #ifndef LIBXMP_CORE_PLAYER
-	period += extras_get_period(ctx, xc);
+	period += libxmp_extras_get_period(ctx, xc);
 #endif
 
 	/* Sanity check */
@@ -917,7 +917,7 @@ static void process_frequency(struct context_data *ctx, int chn, int act)
 
 
 #ifndef LIBXMP_CORE_PLAYER
-	linear_bend += extras_get_linear_bend(ctx, xc);
+	linear_bend += libxmp_extras_get_linear_bend(ctx, xc);
 #endif
 
 	period = libxmp_note_to_period_mix(xc->note, linear_bend);
@@ -1262,7 +1262,7 @@ static void play_channel(struct context_data *ctx, int chn)
 		return;
 
 #ifndef LIBXMP_CORE_PLAYER
-	play_extras(ctx, xc, chn);
+	libxmp_play_extras(ctx, xc, chn);
 #endif
 
 	/* Do cut/retrig */
@@ -1556,7 +1556,7 @@ int xmp_start_player(xmp_context opaque, int rate, int format)
 #ifndef LIBXMP_CORE_PLAYER
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		struct channel_data *xc = &p->xc_data[i];
-		if (new_channel_extras(ctx, xc) < 0)
+		if (libxmp_new_channel_extras(ctx, xc) < 0)
 			goto err2;
 	}
 #endif
@@ -1782,7 +1782,7 @@ void xmp_end_player(xmp_context opaque)
 	/* Free channel extras */
 	for (i = 0; i < p->virt.virt_channels; i++) {
 		xc = &p->xc_data[i];
-		release_channel_extras(ctx, xc);
+		libxmp_release_channel_extras(ctx, xc);
 	}
 #endif
 

@@ -601,7 +601,7 @@ void xmp_release_module(xmp_context opaque)
 	D_(D_INFO "Freeing memory");
 
 #ifndef LIBXMP_CORE_PLAYER
-	release_module_extras(ctx);
+	libxmp_release_module_extras(ctx);
 #endif
 
 	if (mod->xxt != NULL) {
