@@ -10,6 +10,7 @@ Stable versions
 	- fix MacOS Tiger build issues (reported by Misty De Meo)
 	- fix sample loop corner case (reported by knight-ryu12)
 	- fix set pan effect in multichannel MODs (reported by Leilei)
+	- fix global volume on module loop (reported by Travis Evans)
 	- fix MASI effects based on OpenMPT PSM loader
 	- fix anticlick when rendering only one sample
 	- fix anticlick in His Master's Noise instruments
