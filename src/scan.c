@@ -120,14 +120,6 @@ static int scan_module(struct context_data *ctx, int ep, int chain)
     start_time = time = 0.0;
     inside_loop = 0;
 
-
-    /* Initialize order data to prevent overwrite when a position is used
-     * multiple times at different starting points (see janosik.xm).
-     */
-    for (i = 0; i < XMP_MAX_MOD_LENGTH; i++) {
-        m->xxo_info[i].gvl = -1;
-    }
-
     while (42) {
 	if ((uint32)++ord >= mod->len) {
 	    if (mod->rst > mod->len || mod->xxo[mod->rst] >= mod->pat) {
@@ -510,6 +502,13 @@ int libxmp_scan_sequences(struct context_data *ctx)
 	int i, ep;
 	int seq;
 	unsigned char temp_ep[XMP_MAX_MOD_LENGTH];
+
+	/* Initialize order data to prevent overwrite when a position is used
+	 * multiple times at different starting points (see janosik.xm).
+	 */
+	for (i = 0; i < XMP_MAX_MOD_LENGTH; i++) {
+		m->xxo_info[i].gvl = -1;
+	}
 
 	ep = 0;
 	memset(p->sequence_control, 0xff, XMP_MAX_MOD_LENGTH);
