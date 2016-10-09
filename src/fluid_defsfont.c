@@ -558,7 +558,7 @@ fluid_sample_t* fluid_defsfont_get_sample(fluid_defsfont_t* sfont, char *s)
           // point sample data to uncompressed data stream
           sample->data = sampledata_ogg;
           sample->start = 0;
-          sample->end = sampledata_size/sizeof(short) - 1;
+          sample->end = sampledata_size - 1;
 
           /* loop is fowled?? (cluck cluck :) */
           if (sample->loopend > sample->end ||
@@ -3108,20 +3108,20 @@ fixup_sample (SFData * sf)
       else if (sam->sampletype & FLUID_SAMPLETYPE_OGG_VORBIS)
     {}
       else if (sam->loopend > sam->end || sam->loopstart >= sam->loopend
-	|| sam->loopstart <= sam->start)
-	{			/* loop is fowled?? (cluck cluck :) */
-	  /* can pad loop by 8 samples and ensure at least 4 for loop (2*8+4) */
-	  if ((sam->end - sam->start) >= 20)
-	    {
-	      sam->loopstart = sam->start + 8;
-	      sam->loopend = sam->end - 8;
-	    }
-	  else
-	    {			/* loop is fowled, sample is tiny (can't pad 8 samples) */
-	      sam->loopstart = sam->start + 1;
-	      sam->loopend = sam->end - 1;
-	    }
-	}
+    || sam->loopstart <= sam->start)
+    {			/* loop is fowled?? (cluck cluck :) */
+      /* can pad loop by 8 samples and ensure at least 4 for loop (2*8+4) */
+      if ((sam->end - sam->start) >= 20)
+        {
+          sam->loopstart = sam->start + 8;
+          sam->loopend = sam->end - 8;
+        }
+      else
+        {			/* loop is fowled, sample is tiny (can't pad 8 samples) */
+          sam->loopstart = sam->start + 1;
+          sam->loopend = sam->end - 1;
+        }
+    }
 
       /* convert sample end, loopstart, loopend to offsets from sam->start */
       sam->end -= sam->start + 1;	/* marks last sample, contrary to SF spec. */
