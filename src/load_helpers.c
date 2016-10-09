@@ -254,7 +254,7 @@ void libxmp_load_epilogue(struct context_data *ctx)
 
 	/* Sanity check for module parameters */
 	CLAMP(mod->len, 0, XMP_MAX_MOD_LENGTH);
-	CLAMP(mod->pat, 0, 256);
+	CLAMP(mod->pat, 0, 257);   /* some formats have an extra pattern */
 	CLAMP(mod->ins, 0, 255);
 	CLAMP(mod->smp, 0, MAX_SAMPLES);
 	CLAMP(mod->chn, 0, XMP_MAX_CHANNELS);

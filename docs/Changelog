@@ -12,6 +12,7 @@ Stable versions
 	- fix set pan effect in multichannel MODs (reported by Leilei)
 	- fix global volume on module loop (reported by Travis Evans)
 	- fix MASI effects based on OpenMPT PSM loader
+	- fix memory leak in XMs with 256 patterns
 	- fix anticlick when rendering only one sample
 	- fix anticlick in His Master's Noise instruments
 	- fix anticlick in MED synth instruments
