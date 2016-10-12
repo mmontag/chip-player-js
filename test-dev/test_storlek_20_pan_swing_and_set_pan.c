@@ -58,7 +58,7 @@ TEST(test_storlek_20_pan_swing_and_set_pan)
 	}
 	/* Check if right pan values are used */
 	for (i = 0; i < 8; i++) {
-		fail_unless(values[16 + i] == 252, "pan right not set");
+		fail_unless(values[16 + i] == 255, "pan right not set");
 	}
 	/* Check if right-biased pan values are used */
 	for (i = 0; i < 8; i++) {
