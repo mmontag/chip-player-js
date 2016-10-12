@@ -1,7 +1,7 @@
 Stable versions
 ---------------
 
-4.4.1 ():
+4.4.1 (20161012):
 	Fix issues reported by Saga Musix:
 	- fix MDL c5spd to preserve base periods
 	- fix MDL sample decoder loop with corrupted data
@@ -11,6 +11,7 @@ Stable versions
 	- fix sample loop corner case (reported by knight-ryu12)
 	- fix set pan effect in multichannel MODs (reported by Leilei)
 	- fix global volume on module loop (reported by Travis Evans)
+	- fix IT pan right value (by NoSuck)
 	- fix MASI effects based on OpenMPT PSM loader
 	- fix memory leak in XMs with 256 patterns
 	- fix anticlick when rendering only one sample
