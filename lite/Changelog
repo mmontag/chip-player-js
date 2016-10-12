@@ -1,6 +1,46 @@
 Stable versions
 ---------------
 
+4.4.1 (20161012):
+	- fix MacOS Tiger build issues (reported by Misty De Meo)
+	- fix sample loop corner case (reported by knight-ryu12)
+	- fix set pan effect in multichannel MODs (reported by Leilei)
+	- fix global volume on module loop (reported by Travis Evans)
+	- fix IT pan right value (by NoSuck)
+	- fix memory leak in XMs with 256 patterns
+	- fix anticlick when rendering only one sample
+
+4.4.0 (20160719):
+	Fix bugs caught in the OpenMPT test cases:
+	- fix XM arpeggio in FastTracker 2 compatible mode
+	- fix IT bidirectional loop sample length
+	- fix MOD vibrato and tremolo in Protracker compatible mode
+	Fix multichannel MOD issues reported by Leilei:
+	- fix XM replayer note delay and retrig quirk
+	- fix XM replayer channel pan
+	- fix MOD loader period to note conversion
+	Fix issues reported by Lionel Debroux:
+	- fix virtual channel deallocation error handling
+	- fix S3M global volume effect
+	- fix IT envelope reset on tone portamento
+	- fix IT voice leak caused by disabled envelope
+	- fix IT volume column tone portamento
+	- fix XM envelope position setting
+	- fix FT2 arpeggio+portamento quirk with finetunes
+	- fix mixer anticlick routines
+	- accept S3M modules with invalid effects
+	Other changes:
+	- fix S3M channel reset on sample end (reported by Alexander Null)
+	- fix Noisetracker MOD speed setting (reported by Tero Auvinen)
+	- fix IT loader DCA sanity check (reported by Paul Gomez Givera)
+	- fix IT envelope reset after offset with portamento
+	- fix bidirectional sample interpolation
+	- fix mixer resampling and tuning issues
+	- add flags to configure player mode
+	- add option to set the maximum number of virtual channels
+	- add support to IT sample sustain loop
+	- code refactoring and cleanup
+
 4.3.13 (20160417):
 	Fix bugs caught in the OpenMPT test cases:
 	- fix IT volume column fine volume slide with row delay
