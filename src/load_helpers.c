@@ -30,7 +30,7 @@
 
 #ifndef LIBXMP_CORE_PLAYER
 
-#ifdef ANDROID
+#ifdef __ANDROID__
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

@@ -10,7 +10,7 @@
 #include "xmp.h"
 
 #if defined(__GNUC__) || defined(__clang__)
-#if !defined(WIN32) && !defined(ANDROID) && !defined(__APPLE__) && !defined(__AMIGA__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__) 
+#if !defined(WIN32) && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(__AMIGA__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__) 
 #define USE_VERSIONED_SYMBOLS
 #endif
 #endif
@@ -91,7 +91,7 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #endif
 #endif
 
-#elif defined ANDROID
+#elif defined __ANDROID__
 
 #ifdef DEBUG
 #include <android/log.h>

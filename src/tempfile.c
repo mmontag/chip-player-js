@@ -61,7 +61,7 @@ static int get_temp_dir(char *buf, int size)
 	return 0;
 }
 
-#elif defined ANDROID
+#elif defined __ANDROID__
 
 #include <sys/types.h>
 #include <sys/stat.h>

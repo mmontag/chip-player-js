@@ -171,7 +171,7 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 		return 0;
 	}
 
-#if defined ANDROID || defined __native_client__
+#if defined __ANDROID__ || defined __native_client__
 	/* Don't use external helpers in android */
 	if (cmd) {
 		return 0;
