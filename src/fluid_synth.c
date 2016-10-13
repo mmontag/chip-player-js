@@ -3065,7 +3065,7 @@ fluid_synth_activate_octave_tuning(fluid_synth_t* synth, int bank, int prog,
 int fluid_synth_tune_notes(fluid_synth_t* synth, int bank, int prog,
 			  int len, int *key, double* pitch, int apply)
 {
-    fluid_tuning_t* old_tuning, *new_tuning;
+    fluid_tuning_t* tuning;
     int i;
 
     if(!(synth != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
@@ -3075,18 +3075,17 @@ int fluid_synth_tune_notes(fluid_synth_t* synth, int bank, int prog,
     if(!(key != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
     if(!(pitch != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
 
-    old_tuning = fluid_synth_get_tuning (synth, bank, prog);
+    tuning = fluid_synth_get_tuning (synth, bank, prog);
 
-    if (old_tuning)
-      new_tuning = fluid_tuning_duplicate(old_tuning);
-    else new_tuning = new_fluid_tuning ("Unnamed", bank, prog);
+    if(!tuning)
+        tuning = new_fluid_tuning ("Unnamed", bank, prog);
 
-    if (new_tuning == NULL) {
+    if (tuning == NULL) {
         return FLUID_FAILED;
     }
 
     for (i = 0; i < len; i++) {
-        fluid_tuning_set_pitch(new_tuning, key[i], pitch[i]);
+        fluid_tuning_set_pitch(tuning, key[i], pitch[i]);
     }
 
   return FLUID_OK;
@@ -3189,6 +3188,36 @@ int fluid_synth_tuning_iteration_next(fluid_synth_t* synth, int* bank, int* prog
 
   return 0;
 }
+
+//workaround for snprint on MSVC <2015 from http://stackoverflow.com/questions/2915672/snprintf-and-visual-studio-2010
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf c99_snprintf
+#define vsnprintf c99_vsnprintf
+
+__inline int c99_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
+{
+    int count = -1;
+
+    if (size != 0)
+        count = _vsnprintf_s(outBuf, size, _TRUNCATE, format, ap);
+    if (count == -1)
+        count = _vscprintf(format, ap);
+
+    return count;
+}
+
+__inline int c99_snprintf(char *outBuf, size_t size, const char *format, ...)
+{
+    int count;
+    va_list ap;
+
+    va_start(ap, format);
+    count = c99_vsnprintf(outBuf, size, format, ap);
+    va_end(ap);
+
+    return count;
+}
+#endif
 
 int fluid_synth_tuning_dump(fluid_synth_t* synth, int bank, int prog,
 			   char* name, int len, double* pitch)
