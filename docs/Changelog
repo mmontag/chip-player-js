@@ -1,6 +1,9 @@
 Stable versions
 ---------------
 
+4.4.2 ():
+	- fix IT message length (by NoSuck)
+
 4.4.1 (20161012):
 	Fix issues reported by Saga Musix:
 	- fix MDL c5spd to preserve base periods
