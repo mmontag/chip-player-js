@@ -1328,12 +1328,12 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	/* Song message */
 
 	if (ifh.special & IT_HAS_MSG) {
-		if ((m->comment = malloc(ifh.msglen + 1)) != NULL) {
+		if ((m->comment = malloc(ifh.msglen)) != NULL) {
 			hio_seek(f, start + ifh.msgofs, SEEK_SET);
 
 			D_(D_INFO "Message length : %d", ifh.msglen);
 
-			for (j = 0; j < ifh.msglen; j++) {
+			for (j = 0; j < ifh.msglen - 1; j++) {
 				int b = hio_read8(f);
 				if (b == '\r') {
 					b = '\n';
