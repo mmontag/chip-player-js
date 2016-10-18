@@ -11,7 +11,13 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 
 # Differences with original tool
 * Reverb code has been removed.
-* Doesn't contains platform specific code. Library can be used with various purposes include making of a custom music decoders for a media players and usage with a games
+* Doesn't contains platform specific code. Library can be used with various purposes include making of a custom music decoders for a media players and usage with a games.
+
+# Tested on platforms
+* Linux GCC 4.8, 4.9, 5.4 / CLang
+* Mac OS X CLang (Xcode 7.x)
+* Windows MinGW 4.9.x, 5.2
+* Android NDK 12b/13
 
 # Key features
 * OPL3 emulation with four-operator mode support
@@ -26,6 +32,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * loopStart / loopEnd tag support (Final Fantasy VII)
 * Use automatic arpeggio with chords to relieve channel pressure
 * Support for multiple concurrent MIDI synthesizers (per-track device/port select FF 09 message), can be used to overcome 16 channel limit
+* Support for playing Id-software Music File format (IMF)
 
 # How to build
 You can build shared version and additional tools on the Linux when you will run a "make" command and you will have libadlmidi.so and additional tools in the "bin" directory.
@@ -50,6 +57,11 @@ In the src/midiplay you will found alone CPP file which an example of library us
 That example is a simple audio player based on SDL Audio usage.
 
 To build that example you will need to have installed SDL2 library.
+
+# Working demos
+
+* [PGE MusPlay for Win32](http://wohlsoft.ru/docs/_laboratory/_Builds/win32/bin-w32/_packed/pge-musplay-dev-win32.zip) (also available for other platforms as part of [PGE Project](https://github.com/WohlSoft/PGE-Project)) - a little music player which uses SDL Mixer X library (fork of the SDL Mixer 2.0) which has embedded libADLMIDI to play MIDI files independently from operating system's settings and drivers. <br>(source code of player can be find [here](https://github.com/WohlSoft/PGE-Project/tree/master/MusicPlayer) and source code of SDL Mixer X [here](https://github.com/WohlSoft/PGE-Project/tree/master/_Libs/SDL2_mixer_modified))
+* [ADLMIDI Player for Android](https://github.com/Wohlstand/ADLMIDI-Player-Java/releases) - a little MIDI-player for Android which uses libADLMIDI to play MIDI files and provides flexible GUI with ability to change bank, flags, number of emulated chips, etc.
 
 # Todo
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
