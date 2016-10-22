@@ -1140,7 +1140,7 @@ int main()
     
     LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
 
-    LoadTMB("fm_banks/tmb_files/blood.tmb",  69, "apgblood");
+    LoadTMB("fm_banks/tmb_files/bloodtmb.tmb",  69, "apgblood");
     LoadTMB("fm_banks/tmb_files/lee.tmb",  70, "apglee");
     LoadTMB("fm_banks/tmb_files/nam.tmb",  71, "apgnam");
 

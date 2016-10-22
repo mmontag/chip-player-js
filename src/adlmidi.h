@@ -35,6 +35,7 @@ struct ADL_MIDIPlayer {
     unsigned int HighTremoloMode;
     unsigned int HighVibratoMode;
     unsigned int AdlPercussionMode;
+    unsigned int LogarithmicVolumes;
     unsigned int QuitFlag;
     unsigned int SkipForward;
     unsigned int QuitWithoutLooping;
@@ -66,6 +67,9 @@ extern int adl_setBank(struct ADL_MIDIPlayer* device, int bank);
 /* Returns total number of available banks */
 extern int adl_getBanksCount();
 
+/* Returns pointer to array of names of every bank */
+extern const char * const* adl_getBankNames();
+
 /*Sets number of 4-chan operators*/
 extern int adl_setNumFourOpsChn(struct ADL_MIDIPlayer*device, int ops4);
 
@@ -83,6 +87,9 @@ extern void adl_setScaleModulators(struct ADL_MIDIPlayer* device, int smod);
 
 /*Enable or disable built-in loop (built-in loop supports 'loopStart' and 'loopEnd' tags to loop specific part)*/
 extern void adl_setLoopEnabled(struct ADL_MIDIPlayer* device, int loopEn);
+
+/*Enable or disable Logariphmic volume changer */
+extern void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer* device, int logvol);
 
 /*Returns string which contains last error message*/
 extern const char* adl_errorString();

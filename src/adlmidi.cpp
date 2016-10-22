@@ -69,22 +69,31 @@ static const unsigned MaxCards = 100;
 static std::string ADLMIDI_ErrorString;
 
 static const unsigned short Operators[23*2] =
-    {0x000,0x003,0x001,0x004,0x002,0x005, // operators  0, 3,  1, 4,  2, 5
+    {// Channels 0-2
+     0x000,0x003,0x001,0x004,0x002,0x005, // operators  0, 3,  1, 4,  2, 5
+     // Channels 3-5
      0x008,0x00B,0x009,0x00C,0x00A,0x00D, // operators  6, 9,  7,10,  8,11
+     // Channels 6-8
      0x010,0x013,0x011,0x014,0x012,0x015, // operators 12,15, 13,16, 14,17
+     // Same for second card
      0x100,0x103,0x101,0x104,0x102,0x105, // operators 18,21, 19,22, 20,23
      0x108,0x10B,0x109,0x10C,0x10A,0x10D, // operators 24,27, 25,28, 26,29
      0x110,0x113,0x111,0x114,0x112,0x115, // operators 30,33, 31,34, 32,35
+     // Channel 18
      0x010,0x013,   // operators 12,15
+     // Channel 19
      0x014,0xFFF,   // operator 16
+     // Channel 19
      0x012,0xFFF,   // operator 14
+     // Channel 19
      0x015,0xFFF,   // operator 17
+     // Channel 19
      0x011,0xFFF }; // operator 13
 
 static const unsigned short Channels[23] =
     {0x000,0x001,0x002, 0x003,0x004,0x005, 0x006,0x007,0x008, // 0..8
      0x100,0x101,0x102, 0x103,0x104,0x105, 0x106,0x107,0x108, // 9..17 (secondary set)
-     0x006,0x007,0x008,0xFFF,0xFFF }; // <- hw percussions, 0xFFF = no support for pitch/pan
+     0x006,0x007,0x008, 0xFFF,0xFFF }; // <- hw percussions, 0xFFF = no support for pitch/pan
 
 /*
     In OPL3 mode:
@@ -119,6 +128,7 @@ static const unsigned short Channels[23] =
 
 struct OPL3
 {
+    friend class MIDIplay;
     unsigned NumChannels;
     ADL_MIDIPlayer* _parent;
 
@@ -127,6 +137,29 @@ private:
     std::vector<unsigned short> ins; // index to adl[], cached, needed by Touch()
     std::vector<unsigned char> pit;  // value poked to B0, cached, needed by NoteOff)(
     std::vector<unsigned char> regBD;
+
+    std::vector<adlinsdata> dynamic_metainstruments; // Replaces adlins[] when CMF file
+    std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
+    const unsigned DynamicInstrumentTag = 0x8000u, DynamicMetaInstrumentTag = 0x4000000u;
+    const adlinsdata& GetAdlMetaIns(unsigned n)
+    {
+        return (n & DynamicMetaInstrumentTag) ?
+                    dynamic_metainstruments[n & ~DynamicMetaInstrumentTag]
+                : adlins[n];
+    }
+    unsigned GetAdlMetaNumber(unsigned midiins)
+    {
+        return (AdlBank == ~0u) ?
+                (midiins | DynamicMetaInstrumentTag)
+                : banks[AdlBank][midiins];
+    }
+    const adldata& GetAdlIns(unsigned short insno)
+    {
+        return (insno & DynamicInstrumentTag)
+            ? dynamic_instruments[insno & ~DynamicInstrumentTag]
+            : adl[insno];
+    }
+
 public:
     unsigned int NumCards;
     unsigned int AdlBank;
@@ -135,6 +168,16 @@ public:
     bool HighVibratoMode;
     bool AdlPercussionMode;
     bool ScaleModulators;
+    bool LogarithmicVolumes;
+    OPL3() :
+        NumCards(1),
+        AdlBank(0),
+        NumFourOps(0),
+        HighTremoloMode(false),
+        HighVibratoMode(false),
+        AdlPercussionMode(false),
+        LogarithmicVolumes(false)
+    {}
     std::vector<char> four_op_category; // 1 = quad-master, 2 = quad-slave, 0 = regular
                                         // 3 = percussion BassDrum
                                         // 4 = percussion Snare
@@ -184,15 +227,17 @@ public:
     {
         if(volume > 63) volume = 63;
         unsigned card = c/23, cc = c%23;
-        unsigned i = ins[c], o1 = Operators[cc*2], o2 = Operators[cc*2+1];
-        unsigned x = adl[i].modulator_40, y = adl[i].carrier_40;
-        bool do_modulator;
-        bool do_carrier;
+        unsigned i = ins[c];
+        unsigned o1 = Operators[cc*2+0];
+        unsigned o2 = Operators[cc*2+1];
+
+        const adldata& adli = GetAdlIns(i);
+        unsigned x = adli.modulator_40, y = adli.carrier_40;
 
         unsigned mode = 1; // 2-op AM
         if(four_op_category[c] == 0 || four_op_category[c] == 3)
         {
-            mode = adl[i].feedconn & 1; // 2-op FM or 2-op AM
+            mode = adli.feedconn & 1; // 2-op FM or 2-op AM
         }
         else if(four_op_category[c] == 1 || four_op_category[c] == 2)
         {
@@ -209,7 +254,7 @@ public:
                 i1 = i;
                 mode = 6; // 4-op xx-xx ops 3&4
             }
-            mode += (adl[i0].feedconn & 1) + (adl[i1].feedconn & 1) * 2;
+            mode += (GetAdlIns(i0).feedconn & 1) + (GetAdlIns(i1).feedconn & 1) * 2;
         }
         static const bool do_ops[10][2] =
           { { false, true },  /* 2 op FM */
@@ -224,8 +269,8 @@ public:
             { true,  true  }  /* 4 op AM-AM ops 3&4 */
           };
 
-        do_modulator = (ScaleModulators==1) ? true : do_ops[ mode ][ 0 ];
-        do_carrier   = (ScaleModulators==1) ? true : do_ops[ mode ][ 1 ];
+        bool do_modulator = do_ops[ mode ][ 0 ] || ScaleModulators;
+        bool do_carrier   = do_ops[ mode ][ 1 ] || ScaleModulators;
 
         Poke(card, 0x40+o1, do_modulator ? (x|63) - volume + volume*(x&63)/63 : x);
         if(o2 != 0xFFF)
@@ -239,39 +284,86 @@ public:
     }
     void Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
     {
-        // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-        Touch_Real(c, volume>8725  ? std::log(volume)*11.541561 + (0.5 - 104.22845) : 0);
-        // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
-        //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
+        if(LogarithmicVolumes)
+        {
+            Touch_Real(c, volume*127/(127*127*127));
+        }
+        else
+        {
+            // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
+            Touch_Real(c, volume>8725  ? std::log(volume)*11.541561 + (0.5 - 104.22845) : 0);
+
+            // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
+            //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
+        }
     }
     void Patch(unsigned c, unsigned i)
     {
         unsigned card = c/23, cc = c%23;
         static const unsigned char data[4] = {0x20,0x60,0x80,0xE0};
         ins[c] = i;
-        unsigned o1 = Operators[cc*2+0], o2 = Operators[cc*2+1];
-        unsigned x = adl[i].modulator_E862, y = adl[i].carrier_E862;
-        for(unsigned a=0; a<4; ++a)
+        unsigned o1 = Operators[cc*2+0];
+        unsigned o2 = Operators[cc*2+1];
+
+        const adldata& adli = GetAdlIns(i);
+        unsigned x = adli.modulator_E862, y = adli.carrier_E862;
+        for(unsigned a=0; a<4; ++a, x>>=8, y>>=8)
         {
-            Poke(card, data[a]+o1, x&0xFF); x>>=8;
+            Poke(card, data[a]+o1, x&0xFF);
             if(o2 != 0xFFF)
-            Poke(card, data[a]+o2, y&0xFF); y>>=8;
+            Poke(card, data[a]+o2, y&0xFF);
         }
     }
     void Pan(unsigned c, unsigned value)
     {
         unsigned card = c/23, cc = c%23;
         if(Channels[cc] != 0xFFF)
-            Poke(card, 0xC0 + Channels[cc], adl[ins[c]].feedconn | value);
+            Poke(card, 0xC0 + Channels[cc], GetAdlIns(ins[c]).feedconn | value);
     }
     void Silence() // Silence all OPL channels.
     {
         for(unsigned c=0; c<NumChannels; ++c) { NoteOff(c); Touch_Real(c,0); }
     }
+
+    void updateFlags()
+    {
+        unsigned fours = NumFourOps;
+        for(unsigned card=0; card<NumCards; ++card)
+        {
+            Poke(card, 0x0BD, regBD[card] = (HighTremoloMode*0x80
+                                           + HighVibratoMode*0x40
+                                           + AdlPercussionMode*0x20) );
+            unsigned fours_this_card = std::min(fours, 6u);
+            Poke(card, 0x104, (1 << fours_this_card) - 1);
+            fours -= fours_this_card;
+        }
+
+        // Mark all channels that are reserved for four-operator function
+        if(AdlPercussionMode == 1)
+            for(unsigned a=0; a<NumCards; ++a)
+            {
+                for(unsigned b=0; b<5; ++b) four_op_category[a*23 + 18 + b] = b+3;
+                for(unsigned b=0; b<3; ++b) four_op_category[a*23 + 6  + b] = 8;
+            }
+
+        unsigned nextfour = 0;
+        for(unsigned a=0; a<NumFourOps; ++a)
+        {
+            four_op_category[nextfour  ] = 1;
+            four_op_category[nextfour+3] = 2;
+            switch(a % 6)
+            {
+                case 0: case 1: nextfour += 1; break;
+                case 2:         nextfour += 9-2; break;
+                case 3: case 4: nextfour += 1; break;
+                case 5:         nextfour += 23-9-2; break;
+            }
+        }
+    }
     void Reset()
     {
+        LogarithmicVolumes = false;
         cards.resize(NumCards);
-
         NumChannels = NumCards * 23;
         ins.resize(NumChannels,     189);
         pit.resize(NumChannels,       0);
@@ -292,7 +384,6 @@ public:
         for(unsigned card=0; card<NumCards; ++card)
         {
             cards[card].Init(_parent->PCM_RATE);
-
             for(unsigned a=0; a< 18; ++a) Poke(card, 0xB0+Channels[a], 0x00);
             for(unsigned a=0; a< sizeof(data)/sizeof(*data); a+=2)
                 Poke(card, data[a], data[a+1]);
@@ -306,7 +397,7 @@ public:
         }
 
         // Mark all channels that are reserved for four-operator function
-        if(AdlPercussionMode==1)
+        if(AdlPercussionMode == 1)
             for(unsigned a=0; a<NumCards; ++a)
             {
                 for(unsigned b=0; b<5; ++b) four_op_category[a*23 + 18 + b] = b+3;
@@ -415,9 +506,7 @@ class MIDIplay
         std::vector<TrackInfo> track;
 
         Position(): began(false), wait(0.0), track() { }
-    };
-    Position CurrentPosition, LoopBeginPosition, trackBeginPosition;
-
+    } CurrentPosition, LoopBeginPosition, trackBeginPosition;
 
     std::map<std::string, unsigned> devices;
     std::map<unsigned/*track*/, unsigned/*channel begin index*/> current_device;
@@ -465,6 +554,7 @@ class MIDIplay
               activenotes() { }
     };
     std::vector<MIDIchannel> Ch;
+    bool cmf_percussion_mode = false;
 
     // Additional information about AdLib channels
     struct AdlChannel
@@ -515,6 +605,22 @@ class MIDIplay
 
     std::vector< std::vector<unsigned char> > TrackData;
 public:
+    MIDIplay():
+        cmf_percussion_mode(false),
+        config(nullptr),
+        trackStart(false),
+        loopStart(false),
+        loopEnd(false),
+        loopStart_passed(false),
+        invalidLoop(false),
+        loopStart_hit(false)
+    {
+        devices.clear();
+    }
+    ~MIDIplay()
+    {}
+
+    ADL_MIDIPlayer* config;
     std::string musTitle;
     fraction<long> InvDeltaTicks, Tempo;
     bool    trackStart,
@@ -525,12 +631,20 @@ public:
             loopStart_hit /*loopStart entry was hited in previous tick*/;
     OPL3 opl;
 public:
-    static unsigned long ReadBEInt(const void* buffer, unsigned nbytes)
+    static unsigned long ReadBEint(const void* buffer, unsigned nbytes)
     {
         unsigned long result=0;
         const unsigned char* data = (const unsigned char*) buffer;
         for(unsigned n=0; n<nbytes; ++n)
             result = (result << 8) + data[n];
+        return result;
+    }
+    static unsigned long ReadLEint(const void* buffer, unsigned nbytes)
+    {
+        unsigned long result=0;
+        const unsigned char* data = (const unsigned char*) buffer;
+        for(unsigned n=0; n<nbytes; ++n)
+            result = result + (data[n] << (n*8));
         return result;
     }
     unsigned long ReadVarLen(unsigned tk)
@@ -596,8 +710,8 @@ public:
                 switch(rel_to)
                 {
                     case SET: mp_tell = pos; break;
-                    case END: mp_tell = mp_size-pos; break;
-                    case CUR: mp_tell+= pos; break;
+                    case END: mp_tell = mp_size - pos; break;
+                    case CUR: mp_tell = mp_tell + pos; break;
                 }
                 if(mp_tell > mp_size)
                     mp_tell = mp_size;
@@ -695,30 +809,117 @@ public:
         int fsize;
         qqq(fsize);
         //std::FILE* fr = std::fopen(filename.c_str(), "rb");
-        if(!fr.isValid()) { return false; }
-        char HeaderBuf[4+4+2+2+2]="";
+        if(!fr.isValid()) { ADLMIDI_ErrorString = "Invalid data stream!"; return false; }
+    const unsigned HeaderSize = 4+4+2+2+2; // 14
+        char HeaderBuf[HeaderSize]="";
     riffskip:;
-        fsize=fr.read(HeaderBuf, 1, 4+4+2+2+2);
+        fsize=fr.read(HeaderBuf, 1, HeaderSize);
         if(std::memcmp(HeaderBuf, "RIFF", 4) == 0)
             { fr.seek(6, SEEK_CUR); goto riffskip; }
         size_t DeltaTicks=192, TrackCount=1;
 
-        bool is_GMF = false, is_MUS = false, is_IMF = false;
+        config->stored_samples = 0;
+        config->backup_samples_size = 0;
+        opl.AdlPercussionMode = config->AdlPercussionMode;
+        opl.HighTremoloMode = config->HighTremoloMode;
+        opl.HighVibratoMode = config->HighVibratoMode;
+        opl.ScaleModulators = config->ScaleModulators;
+        opl.LogarithmicVolumes = config->LogarithmicVolumes;
+        opl.NumCards    = config->NumCards;
+        opl.NumFourOps  = config->NumFourOps;
+        cmf_percussion_mode = false;
+
+        opl.Reset();
+
+        trackStart = true;
+        loopStart  = true;
+        loopStart_passed = false;
+        invalidLoop = false;
+        loopStart_hit = false;
+
+        bool is_GMF = false; // GMD/MUS files (ScummVM)
+        bool is_MUS = false; // MUS/DMX files (Doom)
+        bool is_IMF = false; // IMF
+        bool is_CMF = false; // Creative Music format (CMF/CTMF)
         //std::vector<unsigned char> MUS_instrumentList;
 
-        if(std::memcmp(HeaderBuf, "GMF\1", 4) == 0)
+        if(std::memcmp(HeaderBuf, "GMF\x1", 4) == 0)
         {
             // GMD/MUS files (ScummVM)
-            fr.seek(7-(4+4+2+2+2), SEEK_CUR);
+            fr.seek(7-(HeaderSize), SEEK_CUR);
             is_GMF = true;
         }
         else if(std::memcmp(HeaderBuf, "MUS\x1A", 4) == 0)
         {
             // MUS/DMX files (Doom)
-            fr.seek(8-(4+4+2+2+2), SEEK_CUR);
+            unsigned start = ReadLEint(HeaderBuf+6, 2);
             is_MUS = true;
-            unsigned start = fr.getc(); start += (fr.getc() << 8);
-            fr.seek(-8+start, SEEK_CUR);
+            fr.seek(start, SEEK_SET);
+        }
+        else if(std::memcmp(HeaderBuf, "CTMF", 4) == 0)
+        {
+            opl.dynamic_instruments.clear();
+            opl.dynamic_metainstruments.clear();
+            // Creative Music Format (CMF).
+            // When playing CTMF files, use the following commandline:
+            // adlmidi song8.ctmf -p -v 1 1 0
+            // i.e. enable percussion mode, deeper vibrato, and use only 1 card.
+
+            is_CMF = true;
+            //unsigned version   = ReadLEint(HeaderBuf+4, 2);
+            unsigned ins_start = ReadLEint(HeaderBuf+6, 2);
+            unsigned mus_start = ReadLEint(HeaderBuf+8, 2);
+            //unsigned deltas    = ReadLEint(HeaderBuf+10, 2);
+            unsigned ticks     = ReadLEint(HeaderBuf+12, 2);
+            // Read title, author, remarks start offsets in file
+            fr.read(HeaderBuf, 1, 6);
+            //unsigned long notes_starts[3] = {ReadLEint(HeaderBuf+0,2),ReadLEint(HeaderBuf+0,4),ReadLEint(HeaderBuf+0,6)};
+            fr.seek(16, SEEK_CUR); // Skip the channels-in-use table
+            fr.read(HeaderBuf, 1, 4);
+            unsigned ins_count =  ReadLEint(HeaderBuf+0, 2);//, basictempo = ReadLEint(HeaderBuf+2, 2);
+            fr.seek(ins_start, SEEK_SET);
+            //std::printf("%u instruments\n", ins_count);
+            for(unsigned i=0; i<ins_count; ++i)
+            {
+                unsigned char InsData[16];
+                fr.read(InsData, 1, 16);
+                /*std::printf("Ins %3u: %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X\n",
+                    i, InsData[0],InsData[1],InsData[2],InsData[3], InsData[4],InsData[5],InsData[6],InsData[7],
+                       InsData[8],InsData[9],InsData[10],InsData[11], InsData[12],InsData[13],InsData[14],InsData[15]);*/
+                struct adldata    adl;
+                struct adlinsdata adlins;
+                adl.modulator_E862 =
+                    ((uint(InsData[8]&0x07) << 24)&0xFF000000)//WaveForm
+                  | ((uint(InsData[6]) << 16)&0x00FF0000)//Sustain/Release
+                  | ((uint(InsData[4]) << 8)&0x0000FF00)//Attack/Decay
+                  | ((uint(InsData[0]) << 0)&0x000000FF);//MultKEVA
+                adl.carrier_E862 =
+                    ((uint(InsData[9]&0x07) << 24)&0xFF000000)//WaveForm
+                  | ((uint(InsData[7]) << 16)&0x00FF0000)//Sustain/Release
+                  | ((uint(InsData[5]) << 8)&0x0000FF00)//Attack/Decay
+                  | ((uint(InsData[1]) << 0)&0x000000FF);//MultKEVA
+                adl.modulator_40 = InsData[2];
+                adl.carrier_40   = InsData[3];
+                adl.feedconn     = InsData[10]&0x0F;
+                adl.finetune = 0;
+
+                adlins.adlno1 = opl.dynamic_instruments.size() | opl.DynamicInstrumentTag;
+                adlins.adlno2 = adlins.adlno1;
+                adlins.ms_sound_kon  = 1000;
+                adlins.ms_sound_koff = 500;
+                adlins.tone  = 0;
+                adlins.flags = 0;
+                adlins.fine_tune = 0.0;
+                opl.dynamic_metainstruments.push_back(adlins);
+                opl.dynamic_instruments.push_back(adl);
+            }
+            fr.seek(mus_start, SEEK_SET);
+            TrackCount = 1;
+            DeltaTicks = ticks;
+            opl.AdlBank    = ~0u; // Ignore AdlBank number, use dynamic banks instead
+            //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
+            opl.LogarithmicVolumes = true;
+            opl.AdlPercussionMode = true;
         }
         else
         {
@@ -752,9 +953,9 @@ public:
                     ADLMIDI_ErrorString=fr._fileName+": Invalid format\n";
                     return false;
                 }
-                /*size_t  Fmt =*/ ReadBEInt(HeaderBuf+8,  2);
-                TrackCount = ReadBEInt(HeaderBuf+10, 2);
-                DeltaTicks = ReadBEInt(HeaderBuf+12, 2);
+                /*size_t  Fmt =*/ ReadBEint(HeaderBuf+8,  2);
+                TrackCount = ReadBEint(HeaderBuf+10, 2);
+                DeltaTicks = ReadBEint(HeaderBuf+12, 2);
             }
         }
         TrackData.resize(TrackCount);
@@ -814,14 +1015,14 @@ public:
             }
             else
             {
-                if(is_GMF)
+                if(is_GMF || is_CMF) // Take the rest of the file
                 {
                     long pos = fr.tell();
                     fr.seek(0, SEEK_END);
                     TrackLength = fr.tell() - pos;
                     fr.seek(pos, SEEK_SET);
                 }
-                else if(is_MUS)
+                else if(is_MUS) // Read TrackLength from file position 4
                 {
                     long pos = fr.tell();
                     fr.seek(4, SEEK_SET);
@@ -832,13 +1033,13 @@ public:
                 {
                     fsize=fr.read(HeaderBuf, 1, 8);
                     if(std::memcmp(HeaderBuf, "MTrk", 4) != 0) goto InvFmt;
-                    TrackLength = ReadBEInt(HeaderBuf+4, 4);
+                    TrackLength = ReadBEint(HeaderBuf+4, 4);
                 }
                 // Read track data
                 TrackData[tk].resize(TrackLength);
                 fsize=fr.read(&TrackData[tk][0], 1, TrackLength);
-                totalGotten+=fsize;
-                if(is_GMF || is_MUS)
+                totalGotten += fsize;
+                if(is_GMF || is_MUS) // Note: CMF does include the track end tag.
                 {
                     TrackData[tk].insert(TrackData[tk].end(), EndTag+0, EndTag+4);
                 }
@@ -846,17 +1047,13 @@ public:
                 CurrentPosition.track[tk].delay = ReadVarLen(tk);
             }
         }
+        for(size_t tk = 0; tk < TrackCount; ++tk)
+            totalGotten+= TrackData[tk].size();
         if(totalGotten==0)
         {
-            ADLMIDI_ErrorString=fr._fileName+": Empty track data\n";
+            ADLMIDI_ErrorString=fr._fileName+": Empty track data";
             return false;
         }
-
-        trackStart = true;
-        loopStart  = true;
-        loopStart_passed = false;
-        invalidLoop = false;
-        loopStart_hit = false;
 
         opl.Reset(); // Reset AdLib
         //opl.Reset(); // ...twice (just in case someone misprogrammed OPL3 previously)
@@ -913,6 +1110,7 @@ private:
         const int vol     = info.vol;
         //const int midiins = info.midiins;
         const int insmeta = info.insmeta;
+        const adlinsdata& ains = opl.GetAdlMetaIns(insmeta);
 
         AdlChannel::Location my_loc;
         my_loc.MidCh = MidCh;
@@ -934,7 +1132,7 @@ private:
                 AdlChannel::LocationData& d = ch[c].users[my_loc];
                 d.sustained = false; // inserts if necessary
                 d.vibdelay  = 0;
-                d.kon_time_until_neglible = adlins[insmeta].ms_sound_kon;
+                d.kon_time_until_neglible = ains.ms_sound_kon;
                 d.ins       = ins;
             }
         }
@@ -961,7 +1159,7 @@ private:
                     {
                         opl.NoteOff(c);
                         ch[c].koff_time_until_neglible =
-                            adlins[insmeta].ms_sound_koff;
+                            ains.ms_sound_koff;
                     }
                 }
                 else
@@ -998,12 +1196,12 @@ private:
                 // Don't bend a sustained note
                 if(!d.sustained)
                 {
-                    double bend = Ch[MidCh].bend + adl[ins].finetune;
+                    double bend = Ch[MidCh].bend + opl.GetAdlIns(ins).finetune;
                     double phase = 0.0;
 
-                    if((adlins[insmeta].flags & adlinsdata::Flag_Pseudo4op) && ins == adlins[insmeta].adlno2)
+                    if((ains.flags & adlinsdata::Flag_Pseudo4op) && ins == ains.adlno2)
                     {
-                        phase = adlins[insmeta].fine_tune;//0.125; // Detune the note slightly (this is what Doom does)
+                        phase = ains.fine_tune;//0.125; // Detune the note slightly (this is what Doom does)
                     }
 
                     if(Ch[MidCh].vibrato && d.vibdelay >= Ch[MidCh].vibdelay)
@@ -1115,7 +1313,7 @@ private:
             std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
             CurrentPosition.track[tk].ptr += length;
             if(evtype == 0x2F) { CurrentPosition.track[tk].status = -1; return; }
-            if(evtype == 0x51) { Tempo = InvDeltaTicks * fraction<long>( (long) ReadBEInt(data.data(), data.size())); return; }
+            if(evtype == 0x51) { Tempo = InvDeltaTicks * fraction<long>( (long) ReadBEint(data.data(), data.size())); return; }
             if(evtype == 6)
             {
                 for(size_t i=0;i<data.size();i++)
@@ -1223,24 +1421,27 @@ private:
                     }
                 }
 
-                int meta = banks[opl.AdlBank][midiins];
+                //int meta = banks[opl.AdlBank][midiins];
+                const unsigned meta    = opl.GetAdlMetaNumber(midiins);
+                const adlinsdata& ains = opl.GetAdlMetaIns(meta);
+
                 int tone = note;
-                if(adlins[meta].tone)
+                if(ains.tone)
                 {
-                    if(adlins[meta].tone < 20)
-                        tone += adlins[meta].tone;
-                    else if(adlins[meta].tone < 128)
-                        tone = adlins[meta].tone;
+                    if(ains.tone < 20)
+                        tone += ains.tone;
+                    else if(ains.tone < 128)
+                        tone = ains.tone;
                     else
-                        tone -= adlins[meta].tone-128;
+                        tone -= ains.tone-128;
                 }
-                int i[2] = { adlins[meta].adlno1, adlins[meta].adlno2 };
-                bool pseudo_4op = adlins[meta].flags & adlinsdata::Flag_Pseudo4op;
+                int i[2] = { ains.adlno1, ains.adlno2 };
+                bool pseudo_4op = ains.flags & adlinsdata::Flag_Pseudo4op;
 
                 if((opl.AdlPercussionMode==1) && PercussionMap[midiins & 0xFF]) i[1] = i[0];
 
                 static std::set<unsigned char> missing_warnings;
-                if(!missing_warnings.count(midiins) && (adlins[meta].flags & adlinsdata::Flag_NoSound))
+                if(!missing_warnings.count(midiins) && (ains.flags & adlinsdata::Flag_NoSound))
                 {
                     //UI.PrintLn("[%i]Playing missing instrument %i", MidCh, midiins);
                     missing_warnings.insert(midiins);
@@ -1268,7 +1469,12 @@ private:
                             // Only use regular channels
                             int expected_mode = 0;
                             if(opl.AdlPercussionMode==1)
-                                expected_mode = PercussionMap[midiins & 0xFF];
+                            {
+                                if(cmf_percussion_mode)
+                                    expected_mode = MidCh < 11 ? 0 : (3+MidCh-11); // CMF
+                                else
+                                    expected_mode = PercussionMap[midiins & 0xFF];
+                            }
                             if(opl.four_op_category[a] != expected_mode)
                                 continue;
                         }
@@ -1416,12 +1622,13 @@ private:
                     case 113: break; // Related to pitch-bender, used by missimp.mid in Duke3D
                     case  6: SetRPN(MidCh, value, true); break;
                     case 38: SetRPN(MidCh, value, false); break;
+                    case 103: cmf_percussion_mode = value; break; // CMF (ctrl 0x67) rhythm mode
                     case 111://LoopStart unofficial controller
                         if(!invalidLoop)
                         {
                             loopStart = true;
                             loopStart_passed=true;
-                        } break;
+                        } break;                    
                     default: break;
                         //UI.PrintLn("Ctrl %d <- %d (ch %u)", ctrlno, value, MidCh);
                 }
@@ -1889,6 +2096,7 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer* adl_init(long sample_rate)
     _device->HighTremoloMode   = 0;
     _device->HighVibratoMode   = 0;
     _device->AdlPercussionMode = 0;
+    _device->LogarithmicVolumes = 0;
     _device->QuitFlag = 0;
     _device->SkipForward = 0;
     _device->QuitWithoutLooping = 0;
@@ -1900,17 +2108,19 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer* adl_init(long sample_rate)
 
     _device->stored_samples=0;
     _device->backup_samples_size=0;
-
-    _device->adl_midiPlayer = (void*)new MIDIplay;
-    ((MIDIplay*)_device->adl_midiPlayer)->opl._parent=_device;
-    ((MIDIplay*)_device->adl_midiPlayer)->opl.NumCards=_device->NumCards;
-    ((MIDIplay*)_device->adl_midiPlayer)->opl.AdlBank=_device->AdlBank;
-    ((MIDIplay*)_device->adl_midiPlayer)->opl.NumFourOps=_device->NumFourOps;
-    ((MIDIplay*)_device->adl_midiPlayer)->opl.HighTremoloMode=(bool)_device->HighTremoloMode;
-    ((MIDIplay*)_device->adl_midiPlayer)->opl.HighVibratoMode=(bool)_device->HighVibratoMode;
-    ((MIDIplay*)_device->adl_midiPlayer)->opl.AdlPercussionMode=(bool)_device->AdlPercussionMode;
-    ((MIDIplay*)_device->adl_midiPlayer)->opl.ScaleModulators=(bool)_device->ScaleModulators;
-    ((MIDIplay*)(_device->adl_midiPlayer))->ChooseDevice("");    
+    MIDIplay* player = new MIDIplay;
+    _device->adl_midiPlayer = player;
+    player->config = _device;
+    player->opl._parent = _device;
+    player->opl.NumCards = _device->NumCards;
+    player->opl.AdlBank = _device->AdlBank;
+    player->opl.NumFourOps = _device->NumFourOps;
+    player->opl.LogarithmicVolumes = (bool)_device->LogarithmicVolumes;
+    player->opl.HighTremoloMode = (bool)_device->HighTremoloMode;
+    player->opl.HighVibratoMode = (bool)_device->HighVibratoMode;
+    player->opl.AdlPercussionMode = (bool)_device->AdlPercussionMode;
+    player->opl.ScaleModulators = (bool)_device->ScaleModulators;
+    player->ChooseDevice("none");
     adlRefreshNumCards(_device);
     return _device;
 }
@@ -1951,6 +2161,11 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
 ADLMIDI_EXPORT int adl_getBanksCount()
 {
     return maxAdlBanks();
+}
+
+ADLMIDI_EXPORT const char * const* adl_getBankNames()
+{
+    return banknames;
 }
 
 ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
@@ -2002,15 +2217,24 @@ ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
     device->QuitWithoutLooping=(int)(!(bool)loopEn);
 }
 
+ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer* device, int logvol)
+{
+    if(!device) return;
+    device->LogarithmicVolumes = logvol;
+    ((MIDIplay*)device->adl_midiPlayer)->opl.LogarithmicVolumes = (bool)device->LogarithmicVolumes;
+}
+
 ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)
 {
+    ADLMIDI_ErrorString.clear();
     if(device && device->adl_midiPlayer)
     {
         device->stored_samples=0;
         device->backup_samples_size=0;
         if(!((MIDIplay *)device->adl_midiPlayer)->LoadMIDI(filePath))
         {
-            ADLMIDI_ErrorString="ADL MIDI: Can't load file";
+            if(ADLMIDI_ErrorString.empty())
+                ADLMIDI_ErrorString="ADL MIDI: Can't load file";
             return -1;
         } else return 0;
     }
@@ -2020,13 +2244,15 @@ ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)
 
 ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer* device, void *mem, long size)
 {
+    ADLMIDI_ErrorString.clear();
     if(device && device->adl_midiPlayer)
     {
         device->stored_samples=0;
         device->backup_samples_size=0;
         if(!((MIDIplay *)device->adl_midiPlayer)->LoadMIDI(mem, size))
         {
-            ADLMIDI_ErrorString="ADL MIDI: Can't load data from memory";
+            if(ADLMIDI_ErrorString.empty())
+                ADLMIDI_ErrorString="ADL MIDI: Can't load data from memory";
             return -1;
         } else return 0;
     }
