@@ -889,15 +889,15 @@ public:
                 struct adldata    adl;
                 struct adlinsdata adlins;
                 adl.modulator_E862 =
-                    ((uint(InsData[8]&0x07) << 24)&0xFF000000)//WaveForm
-                  | ((uint(InsData[6]) << 16)&0x00FF0000)//Sustain/Release
-                  | ((uint(InsData[4]) << 8)&0x0000FF00)//Attack/Decay
-                  | ((uint(InsData[0]) << 0)&0x000000FF);//MultKEVA
+                    (((unsigned int)(InsData[8]&0x07) << 24)&0xFF000000)//WaveForm
+                  | (((unsigned int)(InsData[6]) << 16)&0x00FF0000)//Sustain/Release
+                  | (((unsigned int)(InsData[4]) << 8)&0x0000FF00)//Attack/Decay
+                  | (((unsigned int)(InsData[0]) << 0)&0x000000FF);//MultKEVA
                 adl.carrier_E862 =
-                    ((uint(InsData[9]&0x07) << 24)&0xFF000000)//WaveForm
-                  | ((uint(InsData[7]) << 16)&0x00FF0000)//Sustain/Release
-                  | ((uint(InsData[5]) << 8)&0x0000FF00)//Attack/Decay
-                  | ((uint(InsData[1]) << 0)&0x000000FF);//MultKEVA
+                    (((unsigned int)(InsData[9]&0x07) << 24)&0xFF000000)//WaveForm
+                  | (((unsigned int)(InsData[7]) << 16)&0x00FF0000)//Sustain/Release
+                  | (((unsigned int)(InsData[5]) << 8)&0x0000FF00)//Attack/Decay
+                  | (((unsigned int)(InsData[1]) << 0)&0x000000FF);//MultKEVA
                 adl.modulator_40 = InsData[2];
                 adl.carrier_40   = InsData[3];
                 adl.feedconn     = InsData[10]&0x0F;
