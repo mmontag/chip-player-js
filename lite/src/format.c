@@ -27,20 +27,20 @@
 #endif
 #include "format.h"
 
-extern const struct format_loader xm_loader;
-extern const struct format_loader mod_loader;
-extern const struct format_loader it_loader;
-extern const struct format_loader s3m_loader;
+extern const struct format_loader libxmp_loader_xm;
+extern const struct format_loader libxmp_loader_mod;
+extern const struct format_loader libxmp_loader_it;
+extern const struct format_loader libxmp_loader_s3m;
 
 extern const struct pw_format *const pw_format[];
 
 const struct format_loader *const format_loader[5] = {
-	&xm_loader,
-	&mod_loader,
+	&libxmp_loader_xm,
+	&libxmp_loader_mod,
 #ifndef LIBXMP_CORE_DISABLE_IT
-	&it_loader,
+	&libxmp_loader_it,
 #endif
-	&s3m_loader,
+	&libxmp_loader_s3m,
 	NULL
 };
 
