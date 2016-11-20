@@ -675,9 +675,10 @@ static int get_song_2(struct module_data *m, int size, HIO_HANDLE *f, void *parm
 
 	/* Iterate over subchunks. We want OPLH and PPAN */
 	while (size > 0) {
-		magic = hio_read32b(f);
-		int subchunk_size = hio_read32l(f);
+		int subchunk_size;
 
+		magic = hio_read32b(f);
+		subchunk_size = hio_read32l(f);
 		if (subchunk_size == 0) {
 			return -1;
 		}

@@ -373,7 +373,7 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 	libxmp_mixer_prepare(ctx);
 
 	for (voc = 0; voc < p->virt.maxvoc; voc++) {
-		int c5spd;
+		int c5spd, rampsize, delta_l, delta_r;
 
 		vi = &p->virt.voice_array[voc];
 
@@ -447,9 +447,9 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 #endif
 		}
 
-		int rampsize = s->ticksize >> ANTICLICK_SHIFT;
-		int delta_l = (vol_l - vi->old_vl) / rampsize;
-		int delta_r = (vol_r - vi->old_vr) / rampsize;
+		rampsize = s->ticksize >> ANTICLICK_SHIFT;
+		delta_l = (vol_l - vi->old_vl) / rampsize;
+		delta_r = (vol_r - vi->old_vr) / rampsize;
 
 		usmp = 0;
 		for (size = s->ticksize; size > 0; ) {
