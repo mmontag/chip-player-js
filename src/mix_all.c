@@ -165,9 +165,9 @@
     int old_vl = vi->old_vl; \
     VAR_NORM(x)
 
-#define VAR_SPLINE_STEREO(x); \
+#define VAR_SPLINE_STEREO(x) \
     VAR_SPLINE_MONO(x); \
-    int old_vr = vi->old_vr; \
+    int old_vr = vi->old_vr
 
 #ifndef LIBXMP_CORE_DISABLE_IT
 
