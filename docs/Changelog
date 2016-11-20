@@ -5,6 +5,7 @@ Stable versions
 	- fix IT message length (by NoSuck)
 	- fix lite build mod loader symbols (by Carsten Teibes)
 	- fix win64 compatibility in ptpopen (by Ozkan Sezer)
+	- fix build with C89 compilers (by Ozkan Sezer)
 	- fix double free in case of ADPCM sample load error
 
 4.4.1 (20161012):
