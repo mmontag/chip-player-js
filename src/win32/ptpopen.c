@@ -40,11 +40,15 @@ Web:    www.parity-soft.de
 /*----------------------------------------------------------------------------
   Globals for the Routines pt_popen() / pt_pclose()
 ----------------------------------------------------------------------------*/
+
 #include <windows.h>
 #include <io.h>
 #include <fcntl.h>
 #include <errno.h>
 
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+typedef LONG LONG_PTR;
+#endif
 
 static HANDLE my_pipein[2], my_pipeout[2], my_pipeerr[2];
 static char my_popenmode = ' ';
@@ -138,9 +142,9 @@ FILE * pt_popen(const char *cmd, const char *mode)
   CloseHandle(my_pipeerr[1]); my_pipeerr[1] = INVALID_HANDLE_VALUE;
 
   if (my_popenmode == 'r')
-    fptr = _fdopen(_open_osfhandle((long)my_pipeout[0],_O_BINARY),"r");
+    fptr = _fdopen(_open_osfhandle((LONG_PTR)my_pipeout[0],_O_BINARY),"r");
   else
-    fptr = _fdopen(_open_osfhandle((long)my_pipein[1],_O_BINARY),"w");
+    fptr = _fdopen(_open_osfhandle((LONG_PTR)my_pipein[1],_O_BINARY),"w");
 
 finito:
   if (!fptr)

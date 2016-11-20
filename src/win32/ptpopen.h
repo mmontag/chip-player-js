@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 
+#undef  popen
 #define popen pt_popen
+#undef  pclose
 #define pclose pt_pclose
 
 #ifdef __cplusplus
