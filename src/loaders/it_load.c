@@ -1343,7 +1343,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 				}
 				m->comment[j] = b;
 			}
-			m->comment[j] = 0;
+
+			if (ifh.msglen > 0) {
+				m->comment[j-1] = 0;
+			}
 		}
 	}
 
