@@ -9,8 +9,8 @@
 #include <string.h>
 #include "xmp.h"
 
-#if defined(__GNUC__) || defined(__clang__)
-#if !defined(WIN32) && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(__AMIGA__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__) 
+#if (defined(__GNUC__) || defined(__clang__)) && defined(XMP_SYM_VISIBILITY)
+#if !defined(WIN32) && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(__AMIGA__) && !defined(__MSDOS__) && !defined(B_BEOS_VERSION) && !defined(__ATHEOS__) && !defined(EMSCRIPTEN) && !defined(__MINT__)
 #define USE_VERSIONED_SYMBOLS
 #endif
 #endif

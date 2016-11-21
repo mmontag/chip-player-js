@@ -19,9 +19,9 @@ extern "C" {
 # else
 #  define EXPORT __declspec(dllimport)
 # endif
-#elif __GNUC__ >= 4 || defined(__HP_cc)
+#elif (defined(__GNUC__) || defined(__clang__) || defined(__HP_cc)) && defined(XMP_SYM_VISIBILITY)
 # define EXPORT __attribute__((visibility ("default")))
-#elif defined(__SUNPRO_C)
+#elif defined(__SUNPRO_C) && defined(XMP_LDSCOPE_GLOBAL)
 # define EXPORT __global
 #elif defined(EMSCRIPTEN)
 # define EXPORT EMSCRIPTEN_KEEPALIVE
