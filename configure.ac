@@ -75,12 +75,12 @@ XMP_TRY_COMPILE(whether compiler understands -Wall,
 XMP_TRY_COMPILE(whether compiler understands -xldscope=hidden,
   ac_cv_c_flag_xldscope_hidden,
   -xldscope=hidden,[
-  int main(void){return 0;}],
+  __global int foo(void) {}],
   [LDFLAGS="${LDFLAGS} -xldscope=hidden"],
   [XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
     ac_cv_c_flag_f_visibility_hidden,
     -fvisibility=hidden,[
-    int main(void){return 0;}],
+    __attribute__((visibility("default"))) void foo(void) {}],
     [LDFLAGS="${LDFLAGS} -fvisibility=hidden"
     LD_VERSCRIPT="-Wl,--version-script,libxmp.map"])]
   )
