@@ -275,11 +275,12 @@ int xmp_channel_vol(xmp_context opaque, int chn, int vol)
 }
 
 #ifdef USE_VERSIONED_SYMBOLS
-extern int xmp_set_player_v41__(xmp_context, int, int)
+EXPORT extern int xmp_set_player_v40__(xmp_context, int, int);
+EXPORT extern int xmp_set_player_v41__(xmp_context, int, int)
 	__attribute__((alias("xmp_set_player_v40__")));
-extern int xmp_set_player_v43__(xmp_context, int, int)
+EXPORT extern int xmp_set_player_v43__(xmp_context, int, int)
 	__attribute__((alias("xmp_set_player_v40__")));
-extern int xmp_set_player_v44__(xmp_context, int, int)
+EXPORT extern int xmp_set_player_v44__(xmp_context, int, int)
 	__attribute__((alias("xmp_set_player_v40__")));
 
 asm(".symver xmp_set_player_v40__, xmp_set_player@XMP_4.0");
@@ -392,13 +393,14 @@ int xmp_set_player__(xmp_context opaque, int parm, int val)
 }
 
 #ifdef USE_VERSIONED_SYMBOLS
-extern int xmp_get_player_v41__(xmp_context, int)
+EXPORT extern int xmp_get_player_v40__(xmp_context, int);
+EXPORT extern int xmp_get_player_v41__(xmp_context, int)
 	__attribute__((alias("xmp_get_player_v40__")));
-extern int xmp_get_player_v42__(xmp_context, int)
+EXPORT extern int xmp_get_player_v42__(xmp_context, int)
 	__attribute__((alias("xmp_get_player_v40__")));
-extern int xmp_get_player_v43__(xmp_context, int)
+EXPORT extern int xmp_get_player_v43__(xmp_context, int)
 	__attribute__((alias("xmp_get_player_v40__")));
-extern int xmp_get_player_v44__(xmp_context, int)
+EXPORT extern int xmp_get_player_v44__(xmp_context, int)
 	__attribute__((alias("xmp_get_player_v40__")));
 
 asm(".symver xmp_get_player_v40__, xmp_get_player@XMP_4.0");
