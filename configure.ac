@@ -44,7 +44,7 @@ case "${host_os}" in
 darwin*)
   DARWIN_VERSION="`echo ${host_os#darwin}|cut -f1 -d'.'`"
   ;;
-cygwin* | mint*)
+cygwin* | *djgpp | mint*)
   enable_static=yes
   enable_shared=no
   ;;
