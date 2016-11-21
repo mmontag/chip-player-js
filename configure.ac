@@ -69,18 +69,18 @@ fi
 XMP_TRY_COMPILE(whether compiler understands -Wall,
   ac_cv_c_flag_w_all,
   -Wall,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wall")  
 
 XMP_TRY_COMPILE(whether compiler understands -xldscope=hidden,
   ac_cv_c_flag_xldscope_hidden,
   -xldscope=hidden,[
-  int main(){}],
+  int main(void){return 0;}],
   [LDFLAGS="${LDFLAGS} -xldscope=hidden"],
   [XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
     ac_cv_c_flag_f_visibility_hidden,
     -fvisibility=hidden,[
-    int main(){}],
+    int main(void){return 0;}],
     [LDFLAGS="${LDFLAGS} -fvisibility=hidden"
     LD_VERSCRIPT="-Wl,--version-script,libxmp.map"])]
   )
@@ -89,31 +89,31 @@ dnl for clang
 XMP_TRY_COMPILE(whether compiler understands -Wunknown-warning-option,
   ac_cv_c_flag_w_unknown_warning_option,
   -Wunknown-warning-option,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wno-unknown-warning-option")  
 
 XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
   ac_cv_c_flag_w_unused_but_set_variable,
   -Wunused-but-set-variable,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
 
 XMP_TRY_COMPILE(whether compiler understands -Wunused-result,
   ac_cv_c_flag_w_unused_result,
   -Wunused-result,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wno-unused-result")  
 
 XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
   ac_cv_c_flag_w_array_bounds,
   -Warray-bounds,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wno-array-bounds")  
 
 XMP_TRY_COMPILE(whether alloca() needs alloca.h,
   ac_cv_c_flag_w_have_alloca_h,,[
   #include <alloca.h>
-  int main(){}],
+  int main(void){return 0;}],
   AC_DEFINE(HAVE_ALLOCA_H))  
 
 AC_CHECK_LIB(m,pow)
