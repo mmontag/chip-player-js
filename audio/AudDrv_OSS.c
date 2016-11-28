@@ -9,6 +9,7 @@
 #include <fcntl.h>	// for open() constants
 #include <unistd.h>	// for I/O calls
 #include <sys/soundcard.h>	// OSS sound stuff
+#include <sys/ioctl.h>
 
 #ifdef ENABLE_OSS_THREAD
 #include <pthread.h>	// for pthread functions

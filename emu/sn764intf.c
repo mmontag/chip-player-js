@@ -14,8 +14,10 @@
 
 
 
-//UINT8 device_start_sn76496(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
-static void device_stop_sn76496(DEV_DATA* chipptr);
+static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
+static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
+static void device_stop_sn76496_mame(DEV_DATA* chipptr);
+static void device_stop_sn76496_maxim(DEV_DATA* chipptr);
 static void sn76496_w_mame(DEV_DATA* chipptr, UINT8 reg, UINT8 data);
 static void sn76496_w_maxim(DEV_DATA* chipptr, UINT8 reg, UINT8 data);
 static void sn76489_mute_maxim(void* chipptr, UINT32 MuteMask);
@@ -31,124 +33,140 @@ typedef struct _sn76496_info
 		SN76489_Context* maxim;
 	} chip;
 	SN76496_CFG cfg;
-	DEVFUNC_CTRL reset;
 } SN76496_INF;
 
 #ifdef EC_MAME
+DEVINF_RWFUNC devFunc_MAME[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_mame},
+};
 DEV_INFO devInf_MAME =
 {
 	NULL, 0,
 	
-	(DEVFUNC_CTRL)device_stop_sn76496,
+	(DEVFUNC_START)device_start_sn76496_mame,
+	(DEVFUNC_CTRL)device_stop_sn76496_mame,
 	sn76496_reset,
 	SN76496Update,
 	
 	NULL,	// SetOptionBits
 	sn76496_set_mutemask,
 	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangCallback
 	
-	{
-		DEVRW_A8D8, DEVRW_A8D8, 0x00,
-		NULL, sn76496_w_mame, NULL
-	}
+	1, devFunc_MAME,	// rwFuncs
 };
 #endif
 #ifdef EC_MAXIM
+DEVINF_RWFUNC devFunc_Maxim[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_maxim},
+};
 DEV_INFO devInf_Maxim =
 {
 	NULL, 0,
 	
-	(DEVFUNC_CTRL)device_stop_sn76496,
+	(DEVFUNC_START)device_start_sn76496_maxim,
+	(DEVFUNC_CTRL)device_stop_sn76496_maxim,
 	(DEVFUNC_CTRL)SN76489_Reset,
 	(DEVFUNC_UPDATE)SN76489_Update,
 	
 	NULL,	// SetOptionBits
 	sn76489_mute_maxim,
 	sn76489_pan_maxim,
+	NULL,	// SetSampleRateChangCallback
 	
-	{
-		DEVRW_A8D8, DEVRW_A8D8, 0x00,
-		NULL, sn76496_w_maxim, NULL
-	}
+	1, devFunc_Maxim,	// rwFuncs
 };
 #endif
 
-
-UINT8 device_start_sn76496(const SN76496_CFG* cfg, DEV_INFO* retDevInf)
+DEVINF_LIST devInfList_SN76496[] =
 {
+#ifdef EC_MAME
+	{&devInf_MAME, 0x00},
+#endif
+#ifdef EC_MAXIM
+	{&devInf_Maxim, 0x01},
+#endif
+	{NULL, 0x00}
+};
+
+
+#ifdef EC_MAME
+static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
 	SN76496_INF* info;
-	DEV_INFO* devIRef;
 	DEV_DATA* devData;
 	UINT32 rate;
 	
-	devIRef = NULL;
-	rate = 0;
-	info = (SN76496_INF*)malloc(sizeof(SN76496_INF));
-	info->cfg = *cfg;
-	switch(cfg->_genCfg.emuCore)
-	{
-#ifdef EC_MAME
-	case EC_MAME:
-		rate = sn76496_start(&info->chip.mame, cfg->_genCfg.clock, cfg->shiftRegWidth, cfg->noiseTaps,
-							cfg->negate, cfg->stereo, cfg->clkDiv, ! cfg->segaPSG);
-		if (! rate)
-		{
-			info->chip.mame = NULL;
-			break;
-		}
-		info->reset = sn76496_reset;
-		sn76496_freq_limiter(info->chip.mame, cfg->_genCfg.smplRate);
-		
-		devIRef = &devInf_MAME;
-		break;
-#endif
-#ifdef EC_MAXIM
-	case EC_MAXIM:
-		rate = cfg->_genCfg.smplRate;
-		info->chip.maxim = SN76489_Init(cfg->_genCfg.clock, rate);
-		if (info->chip.maxim == NULL)
-			break;
-		info->reset = (DEVFUNC_CTRL)SN76489_Reset;
-		SN76489_Config(info->chip.maxim, cfg->noiseTaps, cfg->shiftRegWidth, 0);
-		
-		devIRef = &devInf_Maxim;
-		break;
-#endif
-	}
-	
-	if (info->chip.any == NULL)
-	{
-		free(info);
+	rate = sn76496_start(&chip, cfg->_genCfg.clock, cfg->shiftRegWidth, cfg->noiseTaps,
+						cfg->negate, cfg->stereo, cfg->clkDiv, ! cfg->segaPSG);
+	if (! rate)
 		return 0xFF;
-	}
-	devData = (DEV_DATA*)info->chip.any;
+	
+	info = (SN76496_INF*)malloc(sizeof(SN76496_INF));
+	info->chip.mame = chip;
+	info->cfg = *cfg;
+	sn76496_freq_limiter(info->chip.mame, cfg->_genCfg.smplRate);
+	
+	devData = (DEV_DATA*)info->chip.mame;
 	devData->chipInf = info;	// store pointer to SN76496_INF into sound chip structure
 	
-	*retDevInf = *devIRef;
+	*retDevInf = devInf_MAME;
 	retDevInf->dataPtr = devData;
 	retDevInf->sampleRate = rate;
 	return 0x00;
 }
+#endif
 
-static void device_stop_sn76496(DEV_DATA* chipptr)
+#ifdef EC_MAXIM
+static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDevInf)
+{
+	SN76489_Context* chip;
+	SN76496_INF* info;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->_genCfg.smplRate;
+	chip = SN76489_Init(cfg->_genCfg.clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	
+	info = (SN76496_INF*)malloc(sizeof(SN76496_INF));
+	info->chip.maxim = chip;
+	info->cfg = *cfg;
+	SN76489_Config(info->chip.maxim, cfg->noiseTaps, cfg->shiftRegWidth, 0);
+	
+	devData = (DEV_DATA*)info->chip.any;
+	devData->chipInf = info;	// store pointer to SN76496_INF into sound chip structure
+	
+	*retDevInf = devInf_Maxim;
+	retDevInf->dataPtr = devData;
+	retDevInf->sampleRate = rate;
+	return 0x00;
+}
+#endif
+
+#ifdef EC_MAME
+static void device_stop_sn76496_mame(DEV_DATA* chipptr)
 {
 	SN76496_INF* info = (SN76496_INF*)chipptr->chipInf;
-	switch(info->cfg._genCfg.emuCore)
-	{
-#ifdef EC_MAME
-	case EC_MAME:
-		sn76496_shutdown(info->chip.mame);
-		break;
-#endif
-#ifdef EC_MAXIM
-	case EC_MAXIM:
-		SN76489_Shutdown(info->chip.maxim);
-		break;
-#endif
-	}
+	sn76496_shutdown(info->chip.mame);
 	free(info);
 	return;
 }
+#endif
+
+#ifdef EC_MAXIM
+static void device_stop_sn76496_maxim(DEV_DATA* chipptr)
+{
+	SN76496_INF* info = (SN76496_INF*)chipptr->chipInf;
+	SN76489_Shutdown(info->chip.maxim);
+	free(info);
+	return;
+}
+#endif
 
 
 #ifdef EC_MAME

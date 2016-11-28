@@ -20,6 +20,6 @@ typedef struct sn76496_config
 	UINT8 segaPSG;
 } SN76496_CFG;
 
-UINT8 device_start_sn76496(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
+extern DEVINF_LIST devInfList_SN76496[];
 
 #endif	// __SN764INTF_H__

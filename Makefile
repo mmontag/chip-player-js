@@ -44,8 +44,8 @@ ifeq ($(WINDOWS), 1)
 # for Windows, add kernel32 and winmm (Multimedia APIs)
 LDFLAGS += -lkernel32 -lwinmm -ldsound -luuid -lole32
 else
-# for Linux add libpthread (threads)
-LDFLAGS += -lrt -lpthread -pthread
+# for Linux add pthread support (-pthread should include -lpthread)
+LDFLAGS += -lrt -pthread
 CFLAGS += -pthread -DSHARE_PREFIX=\"$(PREFIX)\"
 
 # add librt (clock stuff)
@@ -143,7 +143,6 @@ audiotest:	dirs libaudio $(AUD_MAINOBJS)
 
 libaudio:	$(LIBAUDOBJS)
 	@echo Archiving libaudio.a ...
-	@$(RM) $@
 	@$(AR) $(ARFLAGS) $(LIBAUD_A) $(LIBAUDOBJS)
 
 emutest:	dirs libemu $(EMU_MAINOBJS)
@@ -153,7 +152,6 @@ emutest:	dirs libemu $(EMU_MAINOBJS)
 
 libemu:	$(LIBEMUOBJS)
 	@echo Archiving libemu.a ...
-	@$(RM) $@
 	@$(AR) $(ARFLAGS) $(LIBEMU_A) $(LIBEMUOBJS)
 
 audemutest:	dirs libaudio libemu $(AUDEMU_MAINOBJS)

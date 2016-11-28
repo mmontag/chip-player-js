@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 		return 1;
 	
 	snDefInf.Reset(snDefInf.dataPtr);
-	snWrite = (DEVFUNC_WRITE_A8D8)snDefInf.rwFuncs.Write;
+	SndEmu_GetDeviceFunc(&snDefInf, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
 	snWrite(snDefInf.dataPtr, 1, 0xDE);
 	for (curReg = 0x8; curReg < 0xE; curReg += 0x02)
 	{

@@ -9,10 +9,26 @@
 
 UINT8 SndEmu_Start(UINT8 deviceID, const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
+	DEVINF_LIST* diList;
+	DEVINF_LIST* curDIL;
+	
 	switch(deviceID)
 	{
 	case DEVID_SN76496:
-		return device_start_sn76496((SN76496_CFG*)cfg, retDevInf);
+		diList = devInfList_SN76496;
+		break;
+	default:
+		diList = NULL;
+		break;
+	}
+	if (diList == NULL)
+		return EERR_UNK_DEVICE;
+	
+	// TODO: make using emuCore optional (-> use default device)
+	for (curDIL = diList; curDIL->devInf != NULL; curDIL ++)
+	{
+		if (curDIL->coreID == cfg->emuCore)
+			return curDIL->devInf->Start(cfg, retDevInf);
 	}
 	return EERR_UNK_DEVICE;
 }
@@ -23,6 +39,34 @@ UINT8 SndEmu_Stop(DEV_INFO* devInf)
 	devInf->dataPtr = NULL;
 	
 	return 0x00;
+}
+
+UINT8 SndEmu_GetDeviceFunc(const DEV_INFO* devInf, UINT8 funcType, UINT8 rwType, UINT16 reserved, void** retFuncPtr)
+{
+	UINT32 curFunc;
+	const DEVINF_RWFUNC* tempFnc;
+	UINT32 firstFunc;
+	UINT32 foundFunc;
+	
+	foundFunc = 0;
+	firstFunc = 0;
+	for (curFunc = 0; curFunc < devInf->rwFuncCount; curFunc ++)
+	{
+		tempFnc = &devInf->rwFuncs[curFunc];
+		if (tempFnc->funcType == funcType && tempFnc->rwType == rwType)
+		{
+			if (foundFunc == 0)
+				firstFunc = curFunc;
+			foundFunc ++;
+		}
+	}
+	if (foundFunc == 0)
+		return 0xFF;	// not found
+	*retFuncPtr = tempFnc->funcPtr;
+	if (foundFunc == 1)
+		return 0x00;
+	else
+		return 0x01;	// found multiple matching functions
 }
 
 void SndEmu_ResamplerInit(RESMPL_STATE* CAA)

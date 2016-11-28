@@ -40,6 +40,7 @@ typedef struct resampling_state
 
 UINT8 SndEmu_Start(UINT8 deviceID, const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 UINT8 SndEmu_Stop(DEV_INFO* devInf);
+UINT8 SndEmu_GetDeviceFunc(const DEV_INFO* devInf, UINT8 funcType, UINT8 rwType, UINT16 reserved, void** retFuncPtr);
 
 void SndEmu_ResamplerInit(RESMPL_STATE* CAA);
 void SndEmu_ResamplerDeinit(RESMPL_STATE* CAA);
