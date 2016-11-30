@@ -143,16 +143,16 @@ static const int volume_table[16] =
 /* tables computed? */
 static int tables_computed = 0;
 
-static DEVINF_RWFUNC devFunc[] =
+static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, okim6295_w},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, okim6295_r},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, okim6295_write_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, okim6295_alloc_rom},
 };
-static DEV_INFO devInf =
+static DEV_DEF devDef =
 {
-	NULL, 0,
+	"OKI6295", "MAME", FCC_MAME,
 	
 	device_start_okim6295,
 	device_stop_okim6295,
@@ -166,10 +166,10 @@ static DEV_INFO devInf =
 	
 	4, devFunc,	// rwFuncs
 };
-DEVINF_LIST devInfList_OKIM6295[] =
+const DEV_DEF* devDefList_OKIM6295[] =
 {
-	{&devInf, 0x00},
-	{NULL, 0x00}
+	&devDef,
+	NULL
 };
 
 
@@ -503,9 +503,9 @@ static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	//okim6295_state_save_register(info, device);
 	
 	info->chipInf = info;
-	*retDevInf = devInf;
 	retDevInf->dataPtr = (DEV_DATA*)info;
 	retDevInf->sampleRate = info->master_clock / divisor;
+	retDevInf->devDef = &devDef;
 	return 0x00;
 }
 

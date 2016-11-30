@@ -2,10 +2,11 @@
 #define __SN764INTF_H__
 
 #include "EmuStructs.h"
+#include "snddef.h"
 
 // undefine one of the variables to disable the cores
-#define EC_SN76496_MAME		0x00	// SN76496 core from MAME
-#define EC_SN76496_MAXIM	0x01	// SN76489 core by Maxim (from in_vgm)
+#define EC_SN76496_MAME		FCC_MAME	// SN76496 core from MAME
+#define EC_SN76496_MAXIM	FCC_MAXM	// SN76489 core by Maxim (from in_vgm)
 
 
 typedef struct sn76496_config
@@ -20,6 +21,6 @@ typedef struct sn76496_config
 	UINT8 segaPSG;
 } SN76496_CFG;
 
-extern DEVINF_LIST devInfList_SN76496[];
+extern const DEV_DEF* devDefList_SN76496[];
 
 #endif	// __SN764INTF_H__

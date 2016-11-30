@@ -36,13 +36,13 @@ typedef struct _sn76496_info
 } SN76496_INF;
 
 #ifdef EC_SN76496_MAME
-static DEVINF_RWFUNC devFunc_MAME[] =
+static DEVDEF_RWFUNC devFunc_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_mame},
 };
-static DEV_INFO devInf_MAME =
+static DEV_DEF devDef_MAME =
 {
-	NULL, 0,
+	"SN76496", "MAME", FCC_MAME,
 	
 	(DEVFUNC_START)device_start_sn76496_mame,
 	(DEVFUNC_CTRL)device_stop_sn76496_mame,
@@ -58,13 +58,13 @@ static DEV_INFO devInf_MAME =
 };
 #endif
 #ifdef EC_SN76496_MAXIM
-static DEVINF_RWFUNC devFunc_Maxim[] =
+static DEVDEF_RWFUNC devFunc_Maxim[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_maxim},
 };
-static DEV_INFO devInf_Maxim =
+static DEV_DEF devDef_Maxim =
 {
-	NULL, 0,
+	"SN76489", "Maxim", FCC_MAXM,
 	
 	(DEVFUNC_START)device_start_sn76496_maxim,
 	(DEVFUNC_CTRL)device_stop_sn76496_maxim,
@@ -80,15 +80,15 @@ static DEV_INFO devInf_Maxim =
 };
 #endif
 
-DEVINF_LIST devInfList_SN76496[] =
+const DEV_DEF* devDefList_SN76496[] =
 {
 #ifdef EC_SN76496_MAME
-	{&devInf_MAME, 0x00},
+	&devDef_MAME,
 #endif
 #ifdef EC_SN76496_MAXIM
-	{&devInf_Maxim, 0x01},
+	&devDef_Maxim,
 #endif
-	{NULL, 0x00}
+	NULL
 };
 
 
@@ -113,9 +113,9 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 	devData = (DEV_DATA*)info->chip.mame;
 	devData->chipInf = info;	// store pointer to SN76496_INF into sound chip structure
 	
-	*retDevInf = devInf_MAME;
 	retDevInf->dataPtr = devData;
 	retDevInf->sampleRate = rate;
+	retDevInf->devDef = &devDef_MAME;
 	return 0x00;
 }
 #endif
@@ -141,9 +141,9 @@ static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDev
 	devData = (DEV_DATA*)info->chip.any;
 	devData->chipInf = info;	// store pointer to SN76496_INF into sound chip structure
 	
-	*retDevInf = devInf_Maxim;
 	retDevInf->dataPtr = devData;
 	retDevInf->sampleRate = rate;
+	retDevInf->devDef = &devDef_Maxim;
 	return 0x00;
 }
 #endif

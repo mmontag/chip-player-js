@@ -38,11 +38,15 @@ typedef struct resampling_state
 	DEV_SMPL* SmplBufs[2];
 } RESMPL_STATE;
 
-const DEVINF_LIST* SndEmu_GetDevInfList(UINT8 deviceID);
+const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID);	// returns &LIST_OF_(DEV_DEF)
 UINT8 SndEmu_Start(UINT8 deviceID, const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 UINT8 SndEmu_Stop(DEV_INFO* devInf);
-UINT8 SndEmu_GetDeviceFunc(const DEV_INFO* devInf, UINT8 funcType, UINT8 rwType, UINT16 reserved, void** retFuncPtr);
+UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devInf, UINT8 funcType, UINT8 rwType, UINT16 reserved, void** retFuncPtr);
 
+// resampler helper functions (for quick/comfortable initialization)
+void SndEmu_ResmplerDevConnect(RESMPL_STATE* CAA, const DEV_INFO* devInf);
+void SndEmu_ResmplerSetVals(RESMPL_STATE* CAA, UINT8 resampleMode, UINT16 volume, UINT32 destSampleRate);
+// resampler main functions
 void SndEmu_ResamplerInit(RESMPL_STATE* CAA);
 void SndEmu_ResamplerDeinit(RESMPL_STATE* CAA);
 void SndEmu_ResamplerReset(void* DataPtr, UINT32 NewSmplRate);

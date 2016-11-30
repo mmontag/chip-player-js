@@ -123,8 +123,8 @@ int main(int argc, char* argv[])
 			fread(fileData, 0x01, fileLen, hFile);
 			fclose(hFile);
 			
-			SndEmu_GetDeviceFunc(&okiDefInf, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&okiRomSize);
-			SndEmu_GetDeviceFunc(&okiDefInf, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&okiRomWrite);
+			SndEmu_GetDeviceFunc(okiDefInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&okiRomSize);
+			SndEmu_GetDeviceFunc(okiDefInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&okiRomWrite);
 			okiRomSize(okiDefInf.dataPtr, fileLen);
 			okiRomWrite(okiDefInf.dataPtr, 0x00, fileLen, fileData);
 			free(fileData);
@@ -152,28 +152,20 @@ int main(int argc, char* argv[])
 	smplData[0] = (DEV_SMPL*)malloc(smplAlloc * sizeof(DEV_SMPL) * 2);
 	smplData[1] = &smplData[0][smplAlloc];
 	
-	snDefInf.Reset(snDefInf.dataPtr);
-	okiDefInf.Reset(okiDefInf.dataPtr);
+	snDefInf.devDef->Reset(snDefInf.dataPtr);
+	okiDefInf.devDef->Reset(okiDefInf.dataPtr);
 	
-	snResmpl.ResampleMode = 0xFF;
-	snResmpl.SmpRateSrc = snDefInf.sampleRate;
-	snResmpl.SmpRateDst = opts->sampleRate;
-	snResmpl.VolumeL = 0x100;	snResmpl.VolumeR = 0x100;
-	snResmpl.StreamUpdate = snDefInf.Update;
-	snResmpl.SU_DataPtr = snDefInf.dataPtr;
+	SndEmu_ResmplerSetVals(&snResmpl, 0xFF, 0x100, opts->sampleRate);
+	SndEmu_ResmplerDevConnect(&snResmpl, &snDefInf);
 	SndEmu_ResamplerInit(&snResmpl);
 	
-	okiResmpl.ResampleMode = 0xFF;
-	okiResmpl.SmpRateSrc = okiDefInf.sampleRate;
-	okiResmpl.SmpRateDst = opts->sampleRate;
-	okiResmpl.VolumeL = 0x100;	okiResmpl.VolumeR = 0x100;
-	okiResmpl.StreamUpdate = okiDefInf.Update;
-	okiResmpl.SU_DataPtr = okiDefInf.dataPtr;
+	SndEmu_ResmplerSetVals(&okiResmpl, 0xFF, 0x100, opts->sampleRate);
+	SndEmu_ResmplerDevConnect(&okiResmpl, &okiDefInf);
 	SndEmu_ResamplerInit(&okiResmpl);
 	canRender = true;
 	
-	SndEmu_GetDeviceFunc(&snDefInf, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
-	SndEmu_GetDeviceFunc(&okiDefInf, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&okiWrite);
+	SndEmu_GetDeviceFunc(snDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
+	SndEmu_GetDeviceFunc(okiDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&okiWrite);
 	/*snWrite(snDefInf.dataPtr, 1, 0xDE);
 	for (curReg = 0x8; curReg < 0xE; curReg += 0x2)
 	{

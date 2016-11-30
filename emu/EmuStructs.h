@@ -9,6 +9,7 @@ extern "C"
 #include <stdtype.h>
 #include "snddef.h"
 
+typedef struct _device_definition DEV_DEF;
 typedef struct _device_info DEV_INFO;
 typedef struct _device_generic_config DEV_GEN_CFG;
 
@@ -46,13 +47,13 @@ typedef void (*DEVFUNC_WRITE_BLOCK)(void* info, UINT32 offset, UINT32 length, co
 #define DEVRW_BLOCK		0x80	// write sample ROM/RAM
 #define DEVRW_MEMSIZE	0x81	// set ROM/RAM size
 
-typedef struct _devinf_readwrite_function
+typedef struct _devdef_readwrite_function
 {
 	UINT8 funcType;	// function type, see RWF_ constants
 	UINT8 rwType;	// read/write function type, see DEVRW_ constants
 	UINT16 user;	// user-defined value
 	void* funcPtr;
-} DEVINF_RWFUNC;
+} DEVDEF_RWFUNC;
 
 // generic device data structure
 // MUST be the first variable included in all device-specifc structures
@@ -60,14 +61,12 @@ typedef struct _device_data
 {
 	void* chipInf;	// pointer to CHIP_INF (depends on specific chip)
 } DEV_DATA;
-// TODO: split dataPtr/sampleRate into new struct DEV_DATA {dataPtr, sampleRate, DEV_INFO*}
-struct _device_info
+struct _device_definition
 {
-	DEV_DATA* dataPtr;	// points to chip data structure
-	UINT32 sampleRate;
-	
-	//const char* name;
-	//UINT32 coreID;
+	const char* name;	// name of the device
+	const char* author;	// author/origin of emulation
+	UINT32 coreID;		// 4-character identifier ID to distinguish between
+						// multiple emulators of a device
 	
 	DEVFUNC_START Start;
 	DEVFUNC_CTRL Stop;
@@ -80,13 +79,14 @@ struct _device_info
 	DEVFUNC_SRCCB SetSRateChgCB;	// used to set callback function for realtime sample rate changes
 	
 	UINT32 rwFuncCount;
-	const DEVINF_RWFUNC* rwFuncs;
-};	// DEV_INFO
-typedef struct _device_info_list
+	const DEVDEF_RWFUNC* rwFuncs;
+};	// DEV_DEF
+struct _device_info
 {
-	DEV_INFO* devInf;
-	UINT8 coreID;	// ID of emulation core (-> turn into 4-character identifier?)
-} DEVINF_LIST;
+	DEV_DATA* dataPtr;	// points to chip data structure
+	UINT32 sampleRate;
+	const DEV_DEF* devDef;
+};	// DEV_INFO
 
 
 #define DEVRI_SRMODE_NATIVE		0x00
@@ -94,7 +94,7 @@ typedef struct _device_info_list
 #define DEVRI_SRMODE_HIGHEST	0x02
 struct _device_generic_config
 {
-	UINT8 emuCore;		// emulation core (if multiple ones are available)
+	UINT32 emuCore;		// emulation core (4-character code, 0 = default)
 	UINT8 srMode;		// sample rate mode
 	
 	// TODO: add UINT8 flags (to replace bit 31 of clock)

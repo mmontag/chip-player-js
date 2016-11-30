@@ -3,6 +3,6 @@
 
 #include "EmuStructs.h"
 
-extern DEVINF_LIST devInfList_OKIM6295[];
+extern const DEV_DEF* devDefList_OKIM6295[];
 
 #endif	// __OKIM6295_H__
