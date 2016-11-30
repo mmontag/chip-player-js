@@ -151,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="emu\additional\panning.c" />
+    <ClCompile Include="emu\okim6295.c" />
     <ClCompile Include="emu\sn76489.c" />
     <ClCompile Include="emu\sn76496.c" />
     <ClCompile Include="emu\sn764intf.c" />
@@ -159,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="emu\additional\panning.h" />
     <ClInclude Include="emu\EmuStructs.h" />
+    <ClInclude Include="emu\okim6295.h" />
     <ClInclude Include="emu\sn76489.h" />
     <ClInclude Include="emu\sn76496.h" />
     <ClInclude Include="emu\sn764intf.h" />

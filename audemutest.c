@@ -31,7 +31,9 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
 static UINT32 smplSize;
 static void* audDrv;
 static DEV_INFO snDefInf;
+static DEV_INFO okiDefInf;
 static RESMPL_STATE snResmpl;
+static RESMPL_STATE okiResmpl;
 static UINT32 smplAlloc;
 static DEV_SMPL* smplData[2];
 static volatile bool canRender;
@@ -49,6 +51,7 @@ int main(int argc, char* argv[])
 	SN76496_CFG snCfg;
 	//DEV_INFO snDefInf;
 	DEVFUNC_WRITE_A8D8 snWrite;
+	DEVFUNC_WRITE_A8D8 okiWrite;
 	//UINT8 curReg;
 	
 	Audio_Init();
@@ -93,11 +96,39 @@ int main(int argc, char* argv[])
 	snCfg.negate = 1;	snCfg.stereo = 1;	snCfg.clkDiv = 8;
 	snCfg.segaPSG = 0;
 	
-	retVal = SndEmu_Start(0x00, (DEV_GEN_CFG*)&snCfg, &snDefInf);
+	retVal = SndEmu_Start(DEVID_SN76496, (DEV_GEN_CFG*)&snCfg, &snDefInf);
 	if (retVal)
 	{
 		printf("SndEmu Start Error: %02X\n", retVal);
 		goto Exit_AudDrvDeinit;
+	}
+	
+	devCfg.emuCore = 0;
+	devCfg.srMode = DEVRI_SRMODE_NATIVE;
+	devCfg.clock = 0x80000000 | 0x101D00;
+	retVal = SndEmu_Start(DEVID_OKIM6295, &devCfg, &okiDefInf);
+	{
+		FILE* hFile = fopen("122a05.bin", "rb");	// load Hexion sample ROM
+		if (hFile != NULL)
+		{
+			UINT32 fileLen;
+			UINT8* fileData;
+			DEVFUNC_WRITE_MEMSIZE okiRomSize;
+			DEVFUNC_WRITE_BLOCK okiRomWrite;
+			
+			fseek(hFile, 0, SEEK_END);
+			fileLen = ftell(hFile);
+			rewind(hFile);
+			fileData = (UINT8*)malloc(fileLen);
+			fread(fileData, 0x01, fileLen, hFile);
+			fclose(hFile);
+			
+			SndEmu_GetDeviceFunc(&okiDefInf, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&okiRomSize);
+			SndEmu_GetDeviceFunc(&okiDefInf, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&okiRomWrite);
+			okiRomSize(okiDefInf.dataPtr, fileLen);
+			okiRomWrite(okiDefInf.dataPtr, 0x00, fileLen, fileData);
+			free(fileData);
+		}
 	}
 	
 	opts = AudioDrv_GetOptions(audDrv);
@@ -122,6 +153,7 @@ int main(int argc, char* argv[])
 	smplData[1] = &smplData[0][smplAlloc];
 	
 	snDefInf.Reset(snDefInf.dataPtr);
+	okiDefInf.Reset(okiDefInf.dataPtr);
 	
 	snResmpl.ResampleMode = 0xFF;
 	snResmpl.SmpRateSrc = snDefInf.sampleRate;
@@ -130,9 +162,18 @@ int main(int argc, char* argv[])
 	snResmpl.StreamUpdate = snDefInf.Update;
 	snResmpl.SU_DataPtr = snDefInf.dataPtr;
 	SndEmu_ResamplerInit(&snResmpl);
+	
+	okiResmpl.ResampleMode = 0xFF;
+	okiResmpl.SmpRateSrc = okiDefInf.sampleRate;
+	okiResmpl.SmpRateDst = opts->sampleRate;
+	okiResmpl.VolumeL = 0x100;	okiResmpl.VolumeR = 0x100;
+	okiResmpl.StreamUpdate = okiDefInf.Update;
+	okiResmpl.SU_DataPtr = okiDefInf.dataPtr;
+	SndEmu_ResamplerInit(&okiResmpl);
 	canRender = true;
 	
 	SndEmu_GetDeviceFunc(&snDefInf, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
+	SndEmu_GetDeviceFunc(&okiDefInf, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&okiWrite);
 	/*snWrite(snDefInf.dataPtr, 1, 0xDE);
 	for (curReg = 0x8; curReg < 0xE; curReg += 0x2)
 	{
@@ -144,17 +185,21 @@ int main(int argc, char* argv[])
 	snWrite(snDefInf.dataPtr, 0, 0xE0 | 0x10);*/
 	snWrite(snDefInf.dataPtr, 0, 0x8B);
 	snWrite(snDefInf.dataPtr, 0, 0x06);
-	snWrite(snDefInf.dataPtr, 0, 0x90);
+	snWrite(snDefInf.dataPtr, 0, 0x93);
+	okiWrite(okiDefInf.dataPtr, 0, 0x80 | 0x0D);	// sample 0D
+	okiWrite(okiDefInf.dataPtr, 0, 0x10);	// channel 0 (mask 0x1), volume 0x0
 	
 	getchar();
 	
 	retVal = AudioDrv_Stop(audDrv);
 	SndEmu_ResamplerDeinit(&snResmpl);
+	SndEmu_ResamplerDeinit(&okiResmpl);
 	free(smplData[0]);
 	smplData[0] = NULL;	smplData[1] = NULL;
 	
 Exit_SndDrvDeinit:
 	SndEmu_Stop(&snDefInf);
+	SndEmu_Stop(&okiDefInf);
 Exit_AudDrvDeinit:
 	AudioDrv_Deinit(&audDrv);
 Exit_AudDeinit:
@@ -187,6 +232,7 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	memset(smplData[1], 0, bufSize);
 	//snDefInf.Update(snDefInf.dataPtr, smplCount, smplData);
 	SndEmu_ResamplerExecute(&snResmpl, smplCount, smplDataW);
+	SndEmu_ResamplerExecute(&okiResmpl, smplCount, smplDataW);
 	switch(smplSize)
 	{
 	case 4:

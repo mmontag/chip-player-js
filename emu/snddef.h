@@ -22,4 +22,9 @@ typedef INT32 DEV_SMPL;
 
 //typedef void (*SRATE_CALLBACK)(void*, UINT32);
 
+// macros to extract the actual clock value and the "special flag"
+// from the VGM clock value
+#define CHPCLK_CLOCK(clock)	 (clock & 0x7FFFFFFF)
+#define CHPCLK_FLAG(clock)	((clock & 0x80000000) >> 31)
+
 #endif	// __SNDDEF_H__

@@ -5,10 +5,10 @@
 #include "EmuStructs.h"
 
 #include "sn764intf.h"
-#ifdef EC_MAME
+#ifdef EC_SN76496_MAME
 #include "sn76496.h"
 #endif
-#ifdef EC_MAXIM
+#ifdef EC_SN76496_MAXIM
 #include "sn76489.h"
 #endif
 
@@ -35,12 +35,12 @@ typedef struct _sn76496_info
 	SN76496_CFG cfg;
 } SN76496_INF;
 
-#ifdef EC_MAME
-DEVINF_RWFUNC devFunc_MAME[] =
+#ifdef EC_SN76496_MAME
+static DEVINF_RWFUNC devFunc_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_mame},
 };
-DEV_INFO devInf_MAME =
+static DEV_INFO devInf_MAME =
 {
 	NULL, 0,
 	
@@ -57,12 +57,12 @@ DEV_INFO devInf_MAME =
 	1, devFunc_MAME,	// rwFuncs
 };
 #endif
-#ifdef EC_MAXIM
-DEVINF_RWFUNC devFunc_Maxim[] =
+#ifdef EC_SN76496_MAXIM
+static DEVINF_RWFUNC devFunc_Maxim[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_maxim},
 };
-DEV_INFO devInf_Maxim =
+static DEV_INFO devInf_Maxim =
 {
 	NULL, 0,
 	
@@ -82,17 +82,17 @@ DEV_INFO devInf_Maxim =
 
 DEVINF_LIST devInfList_SN76496[] =
 {
-#ifdef EC_MAME
+#ifdef EC_SN76496_MAME
 	{&devInf_MAME, 0x00},
 #endif
-#ifdef EC_MAXIM
+#ifdef EC_SN76496_MAXIM
 	{&devInf_Maxim, 0x01},
 #endif
 	{NULL, 0x00}
 };
 
 
-#ifdef EC_MAME
+#ifdef EC_SN76496_MAME
 static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
@@ -120,7 +120,7 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 }
 #endif
 
-#ifdef EC_MAXIM
+#ifdef EC_SN76496_MAXIM
 static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDevInf)
 {
 	SN76489_Context* chip;
@@ -148,7 +148,7 @@ static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDev
 }
 #endif
 
-#ifdef EC_MAME
+#ifdef EC_SN76496_MAME
 static void device_stop_sn76496_mame(DEV_DATA* chipptr)
 {
 	SN76496_INF* info = (SN76496_INF*)chipptr->chipInf;
@@ -158,7 +158,7 @@ static void device_stop_sn76496_mame(DEV_DATA* chipptr)
 }
 #endif
 
-#ifdef EC_MAXIM
+#ifdef EC_SN76496_MAXIM
 static void device_stop_sn76496_maxim(DEV_DATA* chipptr)
 {
 	SN76496_INF* info = (SN76496_INF*)chipptr->chipInf;
@@ -169,7 +169,7 @@ static void device_stop_sn76496_maxim(DEV_DATA* chipptr)
 #endif
 
 
-#ifdef EC_MAME
+#ifdef EC_SN76496_MAME
 static void sn76496_w_mame(DEV_DATA* chipptr, UINT8 reg, UINT8 data)
 {
 	SN76496_INF* info = (SN76496_INF*)chipptr->chipInf;
@@ -186,7 +186,7 @@ static void sn76496_w_mame(DEV_DATA* chipptr, UINT8 reg, UINT8 data)
 }
 #endif
 
-#ifdef EC_MAXIM
+#ifdef EC_SN76496_MAXIM
 static void sn76496_w_maxim(DEV_DATA* chipptr, UINT8 reg, UINT8 data)
 {
 	SN76496_INF* info = (SN76496_INF*)chipptr->chipInf;

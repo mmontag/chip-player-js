@@ -6,21 +6,26 @@
 #include "SoundEmu.h"
 
 #include "sn764intf.h"
+#include "okim6295.h"
 
-UINT8 SndEmu_Start(UINT8 deviceID, const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+const DEVINF_LIST* SndEmu_GetDevInfList(UINT8 deviceID)
 {
-	DEVINF_LIST* diList;
-	DEVINF_LIST* curDIL;
-	
 	switch(deviceID)
 	{
 	case DEVID_SN76496:
-		diList = devInfList_SN76496;
-		break;
-	default:
-		diList = NULL;
-		break;
+		return devInfList_SN76496;
+	case DEVID_OKIM6295:
+		return devInfList_OKIM6295;
 	}
+	return NULL;
+}
+
+UINT8 SndEmu_Start(UINT8 deviceID, const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	const DEVINF_LIST* diList;
+	const DEVINF_LIST* curDIL;
+	
+	diList = SndEmu_GetDevInfList(deviceID);
 	if (diList == NULL)
 		return EERR_UNK_DEVICE;
 	
@@ -62,7 +67,7 @@ UINT8 SndEmu_GetDeviceFunc(const DEV_INFO* devInf, UINT8 funcType, UINT8 rwType,
 	}
 	if (foundFunc == 0)
 		return 0xFF;	// not found
-	*retFuncPtr = tempFnc->funcPtr;
+	*retFuncPtr = devInf->rwFuncs[firstFunc].funcPtr;
 	if (foundFunc == 1)
 		return 0x00;
 	else

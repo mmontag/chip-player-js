@@ -20,7 +20,7 @@ typedef void (*DEVFUNC_CTRL)(void* info);
 typedef void (*DEVFUNC_UPDATE)(void* info, UINT32 samples, DEV_SMPL** outputs);
 typedef void (*DEVFUNC_OPTMASK)(void* info, UINT32 optionBits);
 typedef void (*DEVFUNC_PANALL)(void* info, INT16* channelPanVal);
-typedef void (*DEVFUNC_SRCCB)(void* info, DEVCB_SRATE_CHG smpRateChgCallback);
+typedef void (*DEVFUNC_SRCCB)(void* info, DEVCB_SRATE_CHG smpRateChgCallback, void* paramPtr);
 
 typedef UINT8 (*DEVFUNC_READ_A8D8)(void* info, UINT8 addr);
 typedef UINT16 (*DEVFUNC_READ_A8D16)(void* info, UINT8 addr);
@@ -60,10 +60,14 @@ typedef struct _device_data
 {
 	void* chipInf;	// pointer to CHIP_INF (depends on specific chip)
 } DEV_DATA;
+// TODO: split dataPtr/sampleRate into new struct DEV_DATA {dataPtr, sampleRate, DEV_INFO*}
 struct _device_info
 {
 	DEV_DATA* dataPtr;	// points to chip data structure
 	UINT32 sampleRate;
+	
+	//const char* name;
+	//UINT32 coreID;
 	
 	DEVFUNC_START Start;
 	DEVFUNC_CTRL Stop;
@@ -93,6 +97,7 @@ struct _device_generic_config
 	UINT8 emuCore;		// emulation core (if multiple ones are available)
 	UINT8 srMode;		// sample rate mode
 	
+	// TODO: add UINT8 flags (to replace bit 31 of clock)
 	UINT32 clock;		// chip clock
 	UINT32 smplRate;	// sample rate for SRMODE_CUSTOM/DEVRI_SRMODE_HIGHEST
 						// Note: Some cores ignore the srMode setting and always use smplRate.

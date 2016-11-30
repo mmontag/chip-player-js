@@ -38,6 +38,7 @@ typedef struct resampling_state
 	DEV_SMPL* SmplBufs[2];
 } RESMPL_STATE;
 
+const DEVINF_LIST* SndEmu_GetDevInfList(UINT8 deviceID);
 UINT8 SndEmu_Start(UINT8 deviceID, const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 UINT8 SndEmu_Stop(DEV_INFO* devInf);
 UINT8 SndEmu_GetDeviceFunc(const DEV_INFO* devInf, UINT8 funcType, UINT8 rwType, UINT16 reserved, void** retFuncPtr);
@@ -49,6 +50,7 @@ void SndEmu_ResamplerExecute(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSam
 
 
 #define DEVID_SN76496	0x00
+#define DEVID_OKIM6295	0x18
 
 #define EERR_UNK_DEVICE	0xFF
 
