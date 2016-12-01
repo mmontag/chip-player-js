@@ -2,11 +2,10 @@
 #define __SN764INTF_H__
 
 #include "EmuStructs.h"
-#include "snddef.h"
 
 // undefine one of the variables to disable the cores
-#define EC_SN76496_MAME		FCC_MAME	// SN76496 core from MAME
-#define EC_SN76496_MAXIM	FCC_MAXM	// SN76489 core by Maxim (from in_vgm)
+#define EC_SN76496_MAME		// enable SN76496 core from MAME
+#define EC_SN76496_MAXIM	// enable SN76489 core by Maxim (from in_vgm)
 
 
 typedef struct sn76496_config

@@ -32,6 +32,7 @@
 #include <string.h>	// for memset
 #include <math.h>
 #include "snddef.h"
+#include "EmuCores.h"
 #include "okim6295.h"
 
 #define FALSE	0

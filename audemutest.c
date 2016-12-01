@@ -22,6 +22,9 @@ int __cdecl _getch(void);	// from conio.h
 #include "audio/AudioStream_SpcDrvFuns.h"
 #include "emu/EmuStructs.h"
 #include "emu/SoundEmu.h"
+#include "emu/Resampler.h"
+#include "emu/SoundDevs.h"
+#include "emu/EmuCores.h"
 #include "emu/sn764intf.h"
 
 
@@ -89,7 +92,7 @@ int main(int argc, char* argv[])
 	if (drvInfo->drvSig == ADRVSIG_DSOUND)
 		SetupDirectSound(audDrv);
 	
-	devCfg.emuCore = EC_SN76496_MAXIM;
+	devCfg.emuCore = FCC_MAXM;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
 	devCfg.clock = 3579545;
 	devCfg.smplRate = 48000;
@@ -157,13 +160,13 @@ int main(int argc, char* argv[])
 	snDefInf.devDef->Reset(snDefInf.dataPtr);
 	okiDefInf.devDef->Reset(okiDefInf.dataPtr);
 	
-	SndEmu_ResmplerSetVals(&snResmpl, 0xFF, 0x100, opts->sampleRate);
-	SndEmu_ResmplerDevConnect(&snResmpl, &snDefInf);
-	SndEmu_ResamplerInit(&snResmpl);
+	Resmpl_SetVals(&snResmpl, 0xFF, 0x100, opts->sampleRate);
+	Resmpl_DevConnect(&snResmpl, &snDefInf);
+	Resmpl_Init(&snResmpl);
 	
-	SndEmu_ResmplerSetVals(&okiResmpl, 0xFF, 0x100, opts->sampleRate);
-	SndEmu_ResmplerDevConnect(&okiResmpl, &okiDefInf);
-	SndEmu_ResamplerInit(&okiResmpl);
+	Resmpl_SetVals(&okiResmpl, 0xFF, 0x100, opts->sampleRate);
+	Resmpl_DevConnect(&okiResmpl, &okiDefInf);
+	Resmpl_Init(&okiResmpl);
 	canRender = true;
 	
 	SndEmu_GetDeviceFunc(snDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
@@ -190,8 +193,8 @@ int main(int argc, char* argv[])
 	getchar();
 	
 	retVal = AudioDrv_Stop(audDrv);
-	SndEmu_ResamplerDeinit(&snResmpl);
-	SndEmu_ResamplerDeinit(&okiResmpl);
+	Resmpl_Deinit(&snResmpl);
+	Resmpl_Deinit(&okiResmpl);
 	free(smplData[0]);
 	smplData[0] = NULL;	smplData[1] = NULL;
 	
@@ -229,8 +232,8 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	memset(smplData[0], 0, bufSize);
 	memset(smplData[1], 0, bufSize);
 	//snDefInf.Update(snDefInf.dataPtr, smplCount, smplData);
-	SndEmu_ResamplerExecute(&snResmpl, smplCount, smplDataW);
-	SndEmu_ResamplerExecute(&okiResmpl, smplCount, smplDataW);
+	Resmpl_Execute(&snResmpl, smplCount, smplDataW);
+	Resmpl_Execute(&okiResmpl, smplCount, smplDataW);
 	switch(smplSize)
 	{
 	case 4:

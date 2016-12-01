@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="emu\additional\panning.c" />
     <ClCompile Include="emu\okim6295.c" />
+    <ClCompile Include="emu\Resampler.c" />
     <ClCompile Include="emu\sn76489.c" />
     <ClCompile Include="emu\sn76496.c" />
     <ClCompile Include="emu\sn764intf.c" />
@@ -159,12 +160,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\additional\panning.h" />
+    <ClInclude Include="emu\EmuCores.h" />
     <ClInclude Include="emu\EmuStructs.h" />
     <ClInclude Include="emu\okim6295.h" />
+    <ClInclude Include="emu\Resampler.h" />
     <ClInclude Include="emu\sn76489.h" />
     <ClInclude Include="emu\sn76496.h" />
     <ClInclude Include="emu\sn764intf.h" />
     <ClInclude Include="emu\snddef.h" />
+    <ClInclude Include="emu\SoundDevs.h" />
     <ClInclude Include="emu\SoundEmu.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

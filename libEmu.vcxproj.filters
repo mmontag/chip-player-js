@@ -36,6 +36,9 @@
     <ClCompile Include="emu\okim6295.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\Resampler.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -60,6 +63,15 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\okim6295.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\SoundDevs.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\EmuCores.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\Resampler.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
