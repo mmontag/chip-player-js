@@ -6,8 +6,9 @@
 #include "SoundEmu.h"
 #include "SoundDevs.h"
 
-#include "sn764intf.h"
-#include "okim6295.h"
+#include "cores/sn764intf.h"
+#include "cores/2413intf.h"
+#include "cores/okim6295.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 {
@@ -15,6 +16,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 	{
 	case DEVID_SN76496:
 		return devDefList_SN76496;
+	case DEVID_YM2413:
+		return devDefList_YM2413;
 	case DEVID_OKIM6295:
 		return devDefList_OKIM6295;
 	}

@@ -1,7 +1,7 @@
 #ifndef __SN76489_H__
 #define __SN76489_H__
 
-#include "snddef.h"
+#include "../snddef.h"
 
 /*#ifndef uint8
 #define uint8 signed char

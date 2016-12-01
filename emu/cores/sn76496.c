@@ -118,13 +118,14 @@
 	My Pentium2 233MHz was too slow for two SN76496 chips in release mode!
 	Now a 2xSN76496 vgm takes about 45 % CPU. */
 
-#include <stddef.h>
 #ifdef _DEBUG
 #include <stdio.h>
 #endif
+#include <stdlib.h>
 #include <memory.h>
-#include <malloc.h>
-#include "snddef.h"
+
+#include <stdtype.h>
+#include "../snddef.h"
 #include "sn76496.h"
 
 

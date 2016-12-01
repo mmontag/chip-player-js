@@ -5,7 +5,7 @@
 #include <stdtype.h>
 #include "emu/EmuStructs.h"
 #include "emu/SoundEmu.h"
-#include "emu/sn764intf.h"
+#include "emu/cores/sn764intf.h"
 
 int main(int argc, char* argv[])
 {

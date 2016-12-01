@@ -1,9 +1,8 @@
-#include <stddef.h>
 #include <stdlib.h>
 
 #include <stdtype.h>
-#include "EmuStructs.h"
-#include "EmuCores.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
 
 #include "sn764intf.h"
 #ifdef EC_SN76496_MAME

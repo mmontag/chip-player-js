@@ -63,7 +63,7 @@ OBJDIRS = \
 	$(OBJ) \
 	$(LIBAUDOBJ) \
 	$(LIBEMUOBJ) \
-	$(LIBEMUOBJ)/additional
+	$(LIBEMUOBJ)/cores
 
 ALL_LIBS = \
 	$(LIBAUD_A) \
@@ -123,11 +123,14 @@ EMU_MAINOBJS = \
 LIBEMU_A = $(OBJ)/libemu.a
 LIBEMUOBJS = \
 	$(LIBEMUOBJ)/SoundEmu.o \
-	$(LIBEMUOBJ)/sn764intf.o \
-	$(LIBEMUOBJ)/sn76496.o \
-	$(LIBEMUOBJ)/sn76489.o \
-	$(LIBEMUOBJ)/okim6295.o \
-	$(LIBEMUOBJ)/additional/panning.o
+	$(LIBEMUOBJ)/cores/sn764intf.o \
+	$(LIBEMUOBJ)/cores/sn76496.o \
+	$(LIBEMUOBJ)/cores/sn76489.o \
+	$(LIBEMUOBJ)/cores/2413intf.o \
+	$(LIBEMUOBJ)/cores/emu2413.o \
+	$(LIBEMUOBJ)/cores/ym2413.o \
+	$(LIBEMUOBJ)/cores/okim6295.o \
+	$(LIBEMUOBJ)/panning.o
 
 
 AUDEMU_MAINOBJS = \

@@ -24,9 +24,10 @@
 #include <float.h>	// for FLT_MIN
 #include <string.h>	// for memcpy
 
-#include "snddef.h"
+#include <stdtype.h>
+#include "../snddef.h"
 #include "sn76489.h"
-#include "additional/panning.h"
+#include "../panning.h"
 
 #define NoiseInitialState 0x8000  /* Initial state of shift register */
 #define PSG_CUTOFF        0x6     /* Value below which PSG does not output */

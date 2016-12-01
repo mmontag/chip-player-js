@@ -24,4 +24,10 @@ typedef INT32 DEV_SMPL;
 #define CHPCLK_CLOCK(clock)	 (clock & 0x7FFFFFFF)
 #define CHPCLK_FLAG(clock)	((clock & 0x80000000) >> 31)
 
+
+#define SRATE_CUSTOM_HIGHEST(srmode, rate, customrate)	\
+	if (srmode == DEVRI_SRMODE_CUSTOM ||	\
+		(srmode == DEVRI_SRMODE_HIGHEST && rate < customrate))	\
+		rate = customrate;
+
 #endif	// __SNDDEF_H__

@@ -1,7 +1,7 @@
 #ifndef __SN764INTF_H__
 #define __SN764INTF_H__
 
-#include "EmuStructs.h"
+#include "../EmuStructs.h"
 
 // undefine one of the variables to disable the cores
 #define EC_SN76496_MAME		// enable SN76496 core from MAME

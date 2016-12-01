@@ -25,7 +25,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/Resampler.h"
 #include "emu/SoundDevs.h"
 #include "emu/EmuCores.h"
-#include "emu/sn764intf.h"
+#include "emu/cores/sn764intf.h"	// for SN76496_CFG
 
 
 int main(int argc, char* argv[]);
@@ -37,11 +37,19 @@ static UINT32 smplSize;
 static void* audDrv;
 static DEV_INFO snDefInf;
 static DEV_INFO okiDefInf;
+static DEV_INFO opllDefInf;
 static RESMPL_STATE snResmpl;
 static RESMPL_STATE okiResmpl;
 static UINT32 smplAlloc;
 static DEV_SMPL* smplData[2];
 static volatile bool canRender;
+
+static void OPLL_Write(DEVFUNC_WRITE_A8D8 write, void* info, UINT8 addr, UINT8 data)
+{
+	write(info, 0, addr);
+	write(info, 1, data);
+	return;
+}
 
 int main(int argc, char* argv[])
 {
@@ -57,6 +65,7 @@ int main(int argc, char* argv[])
 	//DEV_INFO snDefInf;
 	DEVFUNC_WRITE_A8D8 snWrite;
 	DEVFUNC_WRITE_A8D8 okiWrite;
+	DEVFUNC_WRITE_A8D8 opllWrite;
 	//UINT8 curReg;
 	
 	Audio_Init();
@@ -135,6 +144,10 @@ int main(int argc, char* argv[])
 			free(fileData);
 		}
 	}
+	devCfg.emuCore = FCC_EMU_;
+	devCfg.srMode = DEVRI_SRMODE_NATIVE;
+	devCfg.clock = (0 << 31) | 3579545;
+	retVal = SndEmu_Start(DEVID_YM2413, &devCfg, &opllDefInf);
 	
 	opts = AudioDrv_GetOptions(audDrv);
 	//opts->sampleRate = snDefInf.sampleRate;
@@ -159,9 +172,11 @@ int main(int argc, char* argv[])
 	
 	snDefInf.devDef->Reset(snDefInf.dataPtr);
 	okiDefInf.devDef->Reset(okiDefInf.dataPtr);
+	opllDefInf.devDef->Reset(opllDefInf.dataPtr);
 	
 	Resmpl_SetVals(&snResmpl, 0xFF, 0x100, opts->sampleRate);
-	Resmpl_DevConnect(&snResmpl, &snDefInf);
+	//Resmpl_DevConnect(&snResmpl, &snDefInf);
+	Resmpl_DevConnect(&snResmpl, &opllDefInf);
 	Resmpl_Init(&snResmpl);
 	
 	Resmpl_SetVals(&okiResmpl, 0xFF, 0x100, opts->sampleRate);
@@ -171,21 +186,17 @@ int main(int argc, char* argv[])
 	
 	SndEmu_GetDeviceFunc(snDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
 	SndEmu_GetDeviceFunc(okiDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&okiWrite);
-	/*snWrite(snDefInf.dataPtr, 1, 0xDE);
-	for (curReg = 0x8; curReg < 0xE; curReg += 0x2)
-	{
-		snWrite(snDefInf.dataPtr, 0, (curReg << 4) | 0x0F);
-		snWrite(snDefInf.dataPtr, 0, 0x3F);
-		snWrite(snDefInf.dataPtr, 0, (curReg << 4) | 0x10);
-	}
-	snWrite(snDefInf.dataPtr, 0, 0xE0 | 0x00);
-	snWrite(snDefInf.dataPtr, 0, 0xE0 | 0x10);*/
+	SndEmu_GetDeviceFunc(opllDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&opllWrite);
 	snWrite(snDefInf.dataPtr, 0, 0x8B);
 	snWrite(snDefInf.dataPtr, 0, 0x06);
 	snWrite(snDefInf.dataPtr, 0, 0x93);
+	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x30, 0x70);
+	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x10, 0x80);
+	OPLL_Write(opllWrite, opllDefInf.dataPtr, 0x20, 0x17);
+	Sleep(250);
 	okiWrite(okiDefInf.dataPtr, 0, 0x80 | 0x0D);	// sample 0D
 	okiWrite(okiDefInf.dataPtr, 0, 0x10);	// channel 0 (mask 0x1), volume 0x0
-	Sleep(250);
+	Sleep(400);
 	okiWrite(okiDefInf.dataPtr, 0x0C, 1);	// set pin 7 = high
 	okiWrite(okiDefInf.dataPtr, 0, 0x80 | 0x0D);	// sample 0D
 	okiWrite(okiDefInf.dataPtr, 0, 0x20);	// channel 2 (mask 0x2), volume 0x0
@@ -201,6 +212,7 @@ int main(int argc, char* argv[])
 Exit_SndDrvDeinit:
 	SndEmu_Stop(&snDefInf);
 	SndEmu_Stop(&okiDefInf);
+	SndEmu_Stop(&opllDefInf);
 Exit_AudDrvDeinit:
 	AudioDrv_Deinit(&audDrv);
 Exit_AudDeinit:

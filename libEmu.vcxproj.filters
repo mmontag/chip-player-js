@@ -18,25 +18,34 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="emu\sn76489.c">
+    <ClCompile Include="emu\cores\sn76489.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\sn76496.c">
+    <ClCompile Include="emu\cores\sn76496.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\sn764intf.c">
+    <ClCompile Include="emu\cores\sn764intf.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="emu\SoundEmu.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\additional\panning.c">
+    <ClCompile Include="emu\panning.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\okim6295.c">
+    <ClCompile Include="emu\cores\okim6295.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="emu\Resampler.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\2413intf.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\emu2413.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\ym2413.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,25 +53,25 @@
     <ClInclude Include="emu\EmuStructs.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\sn76489.h">
+    <ClInclude Include="emu\cores\sn76489.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\sn76496.h">
+    <ClInclude Include="emu\cores\sn76496.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\sn764intf.h">
+    <ClInclude Include="emu\cores\sn764intf.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\SoundEmu.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\additional\panning.h">
+    <ClInclude Include="emu\panning.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\snddef.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\okim6295.h">
+    <ClInclude Include="emu\cores\okim6295.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\SoundDevs.h">
@@ -72,6 +81,27 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\Resampler.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\2413intf.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\emu2413.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\emutypes.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\opll_2413tone.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\opll_281btone.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\opll_vrc7tone.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\ym2413.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

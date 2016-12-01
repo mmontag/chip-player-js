@@ -1,7 +1,7 @@
 #ifndef __SN76496_H__
 #define __SN76496_H__
 
-#include "snddef.h"
+#include "../snddef.h"
 
 UINT8 sn76496_ready_r(void *chip, UINT8 offset);
 void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data);
