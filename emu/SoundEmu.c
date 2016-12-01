@@ -79,6 +79,8 @@ void SndEmu_ResmplerDevConnect(RESMPL_STATE* CAA, const DEV_INFO* devInf)
 	CAA->SmpRateSrc = devInf->sampleRate;
 	CAA->StreamUpdate = devInf->devDef->Update;
 	CAA->SU_DataPtr = devInf->dataPtr;
+	if (devInf->devDef->SetSRateChgCB != NULL)
+		devInf->devDef->SetSRateChgCB(CAA->SU_DataPtr, SndEmu_ResamplerReset, CAA);
 	
 	return;
 }

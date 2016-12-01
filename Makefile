@@ -126,6 +126,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/sn764intf.o \
 	$(LIBEMUOBJ)/sn76496.o \
 	$(LIBEMUOBJ)/sn76489.o \
+	$(LIBEMUOBJ)/okim6295.o \
 	$(LIBEMUOBJ)/additional/panning.o
 
 

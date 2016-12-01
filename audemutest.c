@@ -13,6 +13,8 @@
 int __cdecl _getch(void);	// from conio.h
 #else
 #define _getch	getchar
+#include <unistd.h>		// for usleep()
+#define	Sleep(msec)	usleep(msec * 1000)
 #endif
 
 #include <common_def.h>
@@ -87,7 +89,7 @@ int main(int argc, char* argv[])
 	if (drvInfo->drvSig == ADRVSIG_DSOUND)
 		SetupDirectSound(audDrv);
 	
-	devCfg.emuCore = 0;
+	devCfg.emuCore = EC_SN76496_MAXIM;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
 	devCfg.clock = 3579545;
 	devCfg.smplRate = 48000;
@@ -105,7 +107,7 @@ int main(int argc, char* argv[])
 	
 	devCfg.emuCore = 0;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
-	devCfg.clock = 0x80000000 | 0x101D00;
+	devCfg.clock = (0 << 31) | 0x101D00;
 	retVal = SndEmu_Start(DEVID_OKIM6295, &devCfg, &okiDefInf);
 	{
 		FILE* hFile = fopen("122a05.bin", "rb");	// load Hexion sample ROM
@@ -180,6 +182,10 @@ int main(int argc, char* argv[])
 	snWrite(snDefInf.dataPtr, 0, 0x93);
 	okiWrite(okiDefInf.dataPtr, 0, 0x80 | 0x0D);	// sample 0D
 	okiWrite(okiDefInf.dataPtr, 0, 0x10);	// channel 0 (mask 0x1), volume 0x0
+	Sleep(250);
+	okiWrite(okiDefInf.dataPtr, 0x0C, 1);	// set pin 7 = high
+	okiWrite(okiDefInf.dataPtr, 0, 0x80 | 0x0D);	// sample 0D
+	okiWrite(okiDefInf.dataPtr, 0, 0x20);	// channel 2 (mask 0x2), volume 0x0
 	
 	getchar();
 	

@@ -152,7 +152,7 @@ static DEVDEF_RWFUNC devFunc[] =
 };
 static DEV_DEF devDef =
 {
-	"OKI6295", "MAME", FCC_MAME,
+	"MSM6295", "MAME", FCC_MAME,
 	
 	device_start_okim6295,
 	device_stop_okim6295,
