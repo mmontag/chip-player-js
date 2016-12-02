@@ -397,7 +397,9 @@ uint32	read24l			(FILE *, int *err);
 uint32	read24b			(FILE *, int *err);
 uint32	read32l			(FILE *, int *err);
 uint32	read32b			(FILE *, int *err);
-void	write8			(FILE *, uint8);
+static inline void write8	(FILE *f, uint8 b) {
+	fputc(b, f);
+}
 void	write16l		(FILE *, uint16);
 void	write16b		(FILE *, uint16);
 void	write32l		(FILE *, uint32);
