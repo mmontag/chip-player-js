@@ -2,10 +2,17 @@ Stable versions
 ---------------
 
 4.4.2 ():
-	- fix IT message length (by NoSuck)
-	- fix lite build mod loader symbols (by Carsten Teibes)
-	- fix win64 compatibility in ptpopen (by Ozkan Sezer)
-	- fix build with C89 compilers (by Ozkan Sezer)
+	Changes by Ozkan Sezer:
+	- fix win64 compatibility in ptpopen
+	- fix build with C89 compilers
+	- fix issues related to visibility attributes
+	- fix compatibility with old gcc, mingw, djgpp
+	- fix warnings in configure script
+	Changes by Carsten Teibes:
+	- fix lite build mod loader symbols
+	Changes by NoSuck:
+	- fix IT message length
+	Other changes:
 	- fix double free in case of ADPCM sample load error
 
 4.4.1 (20161012):
