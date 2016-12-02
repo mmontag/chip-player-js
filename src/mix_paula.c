@@ -63,7 +63,7 @@ static void input_sample(struct paula_state *paula, int16 sample)
 	}
 }
 
-static void do_clock(struct paula_state *paula, unsigned int cycles)
+static void do_clock(struct paula_state *paula, int cycles)
 {
 	int i;
 
