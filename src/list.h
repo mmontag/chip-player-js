@@ -4,6 +4,9 @@
 #ifdef _MSC_VER
 #define __inline__ __inline
 #endif
+#ifdef __WATCOMC__
+#define __inline__   inline
+#endif
 
 /*
  * Simple doubly linked list implementation.
