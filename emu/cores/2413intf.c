@@ -140,7 +140,7 @@ static void ym2413_set_panning_emu(void* chipptr, INT16* PanVals)
 	UINT8 curChn;
 	
 	for (curChn = 0x00; curChn < 0x0E; curChn ++)
-		OPLL_set_pan(chipptr, curChn, PanVals[curChn]);
+		OPLL_set_pan((OPLL*)chipptr, curChn, PanVals[curChn]);
 	
 	return;
 }

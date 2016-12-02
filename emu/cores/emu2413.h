@@ -70,14 +70,7 @@ typedef struct __OPLL {
   e_uint8 adr ;
   e_int32 out ;
 
-#ifndef EMU2413_COMPACTION
-  e_uint32 realstep ;
-  e_uint32 oplltime ;
-  e_uint32 opllstep ;
-  e_int32 prev, next ;
-  e_int32 sprev[2],snext[2];
   float pan[14][2];
-#endif
 
   /* Register */
   e_uint8 reg[0x40] ; 
@@ -90,8 +83,6 @@ typedef struct __OPLL {
   /* Amp Modulator */
   e_int32 am_phase ;
   e_int32 lfo_am ;
-
-  e_uint32 quality;
 
   /* Noise Generator */
   e_uint32 noise_seed ;
@@ -119,7 +110,6 @@ EMU2413_API void OPLL_delete(OPLL *) ;
 EMU2413_API void OPLL_reset(OPLL *) ;
 EMU2413_API void OPLL_reset_patch(OPLL *, e_int32) ;
 EMU2413_API void OPLL_set_rate(OPLL *opll, e_uint32 r) ;
-EMU2413_API void OPLL_set_quality(OPLL *opll, e_uint32 q) ;
 EMU2413_API void OPLL_set_pan(OPLL *, e_uint32 ch, e_int32 pan);
 
 // Port/Register access
@@ -127,7 +117,6 @@ EMU2413_API void OPLL_writeIO(OPLL *, UINT8 reg, UINT8 val) ;
 EMU2413_API void OPLL_writeReg(OPLL *, UINT8 reg, UINT8 val) ;
 
 // Synthsize
-EMU2413_API e_int16 OPLL_calc(OPLL *) ;
 EMU2413_API void OPLL_calc_stereo (OPLL * opll, UINT32 samples, DEV_SMPL **out) ;
 
 // Misc

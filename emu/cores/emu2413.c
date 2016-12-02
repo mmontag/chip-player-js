@@ -85,7 +85,7 @@ static unsigned char default_inst[OPLL_TONE_NUM][(16 + 3) * 16] = {
 
 // Note: Dump size changed to 8 per instrument, since 9-15 were unused. -VB
 #define OPLL_TONE_NUM 2
-static UINT8 default_inst[OPLL_TONE_NUM][(16 + 3) * 8] = {
+static e_uint8 default_inst[OPLL_TONE_NUM][(16 + 3) * 8] = {
   {
 #include "opll_2413tone.h"
   },
@@ -1009,7 +1009,6 @@ OPLL_new (e_uint32 clk, e_uint32 rate)
     return NULL;
 
   opll->vrc7_mode = 0x00;
-  opll->quality = 0;
 
   for (i = 0; i < 19 * 2; i++)
     memcpy(&opll->patch[i],&null_patch,sizeof(OPLL_PATCH));
@@ -1048,7 +1047,7 @@ OPLL_reset (OPLL * opll)
 {
   e_int32 i;
 
-  if (!opll)
+  if (opll == NULL)
     return;
 
   opll->adr = 0;
@@ -1071,20 +1070,6 @@ OPLL_reset (OPLL * opll)
 
   for (i = 0; i < 0x40; i++)
     OPLL_writeReg (opll, i, 0);
-
-#ifndef EMU2413_COMPACTION
-  opll->realstep = (e_uint32) ((1 << 31) / rate);
-  opll->opllstep = (e_uint32) ((1 << 31) / (clk / 72));
-  opll->oplltime = 0;
-  /*for (i = 0; i < 14; i++)
-  {
-		//centre_panning( opll->pan[i] );
-		opll->pan[i][0] = 1.0f;
-		opll->pan[i][1] = 1.0f;
-	}*/
-  opll->sprev[0] = opll->sprev[1] = 0;
-  opll->snext[0] = opll->snext[1] = 0;
-#endif
 }
 
 /* Force Refresh (When external program changes some parameters). */
@@ -1112,19 +1097,8 @@ OPLL_forceRefresh (OPLL * opll)
 void
 OPLL_set_rate (OPLL * opll, e_uint32 r)
 {
-  if (opll->quality)
-    rate = 49716;
-  else
-    rate = r;
-  internal_refresh ();
   rate = r;
-}
-
-void
-OPLL_set_quality (OPLL * opll, e_uint32 q)
-{
-  opll->quality = q;
-  OPLL_set_rate (opll, rate);
+  internal_refresh ();
 }
 
 /*********************************************************
@@ -1412,6 +1386,7 @@ calc_slot_hat (OPLL_SLOT *slot, e_int32 pgout_cym, e_uint32 noise)
   return DB2LIN_TABLE[dbout + slot->egout];
 }
 
+#if 0
 static e_int16
 calc (OPLL * opll)
 {
@@ -1476,33 +1451,6 @@ calc (OPLL * opll)
 
   out = inst + (perc << 1);
   return (e_int16) out;
-}
-
-#ifdef EMU2413_COMPACTION
-e_int16
-OPLL_calc (OPLL * opll)
-{
-  return calc (opll);
-}
-#else
-e_int16
-OPLL_calc (OPLL * opll)
-{
-  if (!opll->quality)
-    return calc (opll);
-
-  while (opll->realstep > opll->oplltime)
-  {
-    opll->oplltime += opll->opllstep;
-    opll->prev = opll->next;
-    opll->next = calc (opll);
-  }
-
-  opll->oplltime -= opll->realstep;
-  opll->out = (e_int16) (((double) opll->next * (opll->opllstep - opll->oplltime)
-                          + (double) opll->prev * opll->oplltime) / opll->opllstep);
-
-  return (e_int16) opll->out;
 }
 #endif
 
@@ -1827,21 +1775,28 @@ OPLL_writeIO (OPLL * opll, UINT8 adr, UINT8 val)
     opll->adr = val;
 }
 
-#ifndef EMU2413_COMPACTION
-/* STEREO MODE (OPT) */
+/* STEREO MODE */
 void
 OPLL_set_pan (OPLL * opll, e_uint32 ch, e_int32 pan)
 {
-	e_uint32 fnl_ch;
-	
 	if (ch >= 14)
 		return;
 	
-	if (ch < 9)
-		fnl_ch = ch;
+	calc_panning( opll->pan[ch], pan ); // Maxim
+}
+
+INLINE void add_channel_lr(e_int32 value, float panl, float panr, e_int32* chnl, e_int32* chnr)
+{
+	if (panl == 1.0f)
+	{
+		*chnl += value;
+		*chnr += value;
+	}
 	else
-		fnl_ch = 13 - (ch - 9);
-	calc_panning( opll->pan[fnl_ch], pan ); // Maxim
+	{
+		*chnl += (e_int32)(value * panl);
+		*chnr += (e_int32)(value * panr);
+	}
 }
 
 static void
@@ -1849,8 +1804,6 @@ calc_stereo (OPLL * opll, e_int32 out[2])
 {
 	/* Maxim: added stereo control (multiply each side by a float in opll->pan[ch][side]) */
   e_int32 l=0,r=0;
-//  e_int32 b[4] = { 0, 0, 0, 0 };        /* Ignore, Right, Left, Center */
-//  e_int32 r[4] = { 0, 0, 0, 0 };        /* Ignore, Right, Left, Center */
   e_int32 i;
   e_int32 channel;
 
@@ -1867,16 +1820,7 @@ calc_stereo (OPLL * opll, e_int32 out[2])
     if (!(opll->mask & OPLL_MASK_CH (i)) && (CAR(opll,i)->eg_mode != FINISH))
     {
       channel = calc_slot_car (CAR(opll,i), calc_slot_mod (MOD(opll,i)));
-      if ( opll->pan[i][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[i][0] );
-        r += (e_int32)( channel * opll->pan[i][1] );
-      }
+      add_channel_lr(channel, opll->pan[i][0], opll->pan[i][1], &l, &r);
     }
 
 
@@ -1887,17 +1831,7 @@ calc_stereo (OPLL * opll, e_int32 out[2])
     if (!(opll->mask & OPLL_MASK_CH (6)) && (CAR(opll,6)->eg_mode != FINISH))
     {
       channel = calc_slot_car (CAR(opll,6), calc_slot_mod (MOD(opll,6)));
-      if ( opll->pan[6][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[6][0] );
-        r += (e_int32)( channel * opll->pan[6][1] );
-      }
-
+      add_channel_lr(channel, opll->pan[6][0], opll->pan[6][1], &l, &r);
     }
   }
   else
@@ -1905,16 +1839,7 @@ calc_stereo (OPLL * opll, e_int32 out[2])
     if (!(opll->mask & OPLL_MASK_BD) && (CAR(opll,6)->eg_mode != FINISH))
     {
       channel = calc_slot_car (CAR(opll,6), calc_slot_mod (MOD(opll,6))) << 1;
-      if ( opll->pan[9][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[9][0] );
-        r += (e_int32)( channel * opll->pan[9][1] );
-      }
+      add_channel_lr(channel, opll->pan[9][0], opll->pan[9][1], &l, &r);
     }
   }
 
@@ -1923,16 +1848,7 @@ calc_stereo (OPLL * opll, e_int32 out[2])
     if (!(opll->mask & OPLL_MASK_CH (7)) && (CAR (opll,7)->eg_mode != FINISH))
     {
       channel = calc_slot_car (CAR (opll,7), calc_slot_mod (MOD (opll,7)));
-      if ( opll->pan[7][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[7][0] );
-        r += (e_int32)( channel * opll->pan[7][1] );
-      }
+      add_channel_lr(channel, opll->pan[7][0], opll->pan[7][1], &l, &r);
     }
   }
   else
@@ -1940,30 +1856,12 @@ calc_stereo (OPLL * opll, e_int32 out[2])
     if (!(opll->mask & OPLL_MASK_HH) && (MOD (opll,7)->eg_mode != FINISH))
     {
       channel = calc_slot_hat (MOD (opll,7), CAR(opll,8)->pgout, opll->noise_seed&1) << 1;
-      if ( opll->pan[10][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[10][0] );
-        r += (e_int32)( channel * opll->pan[10][1] );
-      }
+      add_channel_lr(channel, opll->pan[10][0], opll->pan[10][1], &l, &r);
     }
     if (!(opll->mask & OPLL_MASK_SD) && (CAR (opll,7)->eg_mode != FINISH))
     {
       channel = -(calc_slot_snare (CAR (opll,7), opll->noise_seed&1) << 1); // this one is negated
-      if ( opll->pan[11][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[11][0] );
-        r += (e_int32)( channel * opll->pan[11][1] );
-      }
+      add_channel_lr(channel, opll->pan[11][0], opll->pan[11][1], &l, &r);
     }
   }
 
@@ -1972,16 +1870,7 @@ calc_stereo (OPLL * opll, e_int32 out[2])
     if (!(opll->mask & OPLL_MASK_CH (8)) && (CAR (opll,8)->eg_mode != FINISH))
     {
       channel = calc_slot_car (CAR (opll,8), calc_slot_mod (MOD (opll,8)));
-      if ( opll->pan[8][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[8][0] );
-        r += (e_int32)( channel * opll->pan[8][1] );
-      }
+      add_channel_lr(channel, opll->pan[8][0], opll->pan[8][1], &l, &r);
     }
   }
   else
@@ -1989,30 +1878,12 @@ calc_stereo (OPLL * opll, e_int32 out[2])
     if (!(opll->mask & OPLL_MASK_TOM) && (MOD (opll,8)->eg_mode != FINISH))
     {
       channel = calc_slot_tom (MOD (opll,8)) << 1;
-      if ( opll->pan[12][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[12][0] );
-        r += (e_int32)( channel * opll->pan[12][1] );
-      }
+      add_channel_lr(channel, opll->pan[12][0], opll->pan[12][1], &l, &r);
     }
     if (!(opll->mask & OPLL_MASK_CYM) && (CAR (opll,8)->eg_mode != FINISH))
     {
       channel = -(calc_slot_cym (CAR (opll,8), MOD(opll,7)->pgout) << 1); // negated
-      if ( opll->pan[13][0] == 1.0f )
-      {
-        l += channel;
-        r += channel;
-      }
-      else
-      {
-        l += (e_int32)( channel * opll->pan[13][0] );
-        r += (e_int32)( channel * opll->pan[13][1] );
-      }
+      add_channel_lr(channel, opll->pan[13][0], opll->pan[13][1], &l, &r);
     }
   }
  } // end if (! opll->vrc7_mode)
@@ -2024,65 +1895,18 @@ calc_stereo (OPLL * opll, e_int32 out[2])
   out[1] = r << 3;
 }
 
-/*void
-OPLL_calc_stereo (OPLL * opll, e_int32 out[2], samples)
-{
-  if (!opll->quality)
-  {
-    calc_stereo (opll, out);
-    return;
-  }
-
-  while (opll->realstep > opll->oplltime)
-  {
-    opll->oplltime += opll->opllstep;
-    opll->sprev[0] = opll->snext[0];
-    opll->sprev[1] = opll->snext[1];
-    calc_stereo (opll, opll->snext);
-  }
-
-  opll->oplltime -= opll->realstep;
-  out[0] = (e_int16) (((double) opll->snext[0] * (opll->opllstep - opll->oplltime)
-                       + (double) opll->sprev[0] * opll->oplltime) / opll->opllstep);
-  out[1] = (e_int16) (((double) opll->snext[1] * (opll->opllstep - opll->oplltime)
-                       + (double) opll->sprev[1] * opll->oplltime) / opll->opllstep);
-}*/
 void
 OPLL_calc_stereo (OPLL * opll, UINT32 samples, DEV_SMPL **out)
 {
   DEV_SMPL *bufMO = out[0];
   DEV_SMPL *bufRO = out[1];
   DEV_SMPL buffers[2];
-
   UINT32 i;
 
-  if (!opll->quality)
+  for( i=0; i < samples ; i++ )
   {
-    for( i=0; i < samples ; i++ )
-    {
-      calc_stereo (opll, buffers);
-      bufMO[i] = buffers[0];
-      bufRO[i] = buffers[1];
-    }
-  }
-  else
-  {
-    for( i=0; i < samples ; i++ )
-    {
-      while (opll->realstep > opll->oplltime)
-      { 
-        opll->oplltime += opll->opllstep;
-        opll->sprev[0] = opll->snext[0];
-        opll->sprev[1] = opll->snext[1];
-        calc_stereo (opll, opll->snext);
-      }
-
-      opll->oplltime -= opll->realstep;
-      bufMO[i] = (e_int32) (((double) opll->snext[0] * (opll->opllstep - opll->oplltime)
-                           + (double) opll->sprev[0] * opll->oplltime) / opll->opllstep);
-      bufRO[i] = (e_int32) (((double) opll->snext[1] * (opll->opllstep - opll->oplltime)
-                           + (double) opll->sprev[1] * opll->oplltime) / opll->opllstep);
-    }
+    calc_stereo (opll, buffers);
+    bufMO[i] = buffers[0];
+    bufRO[i] = buffers[1];
   }
 }
-#endif /* EMU2413_COMPACTION */
