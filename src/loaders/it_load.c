@@ -49,6 +49,9 @@ struct tm *localtime_r(const time_t * timep, struct tm *result)
 	return result;
 }
 #endif
+#ifdef __WATCOMC__
+#define localtime_r _localtime
+#endif
 
 static int it_test(HIO_HANDLE * f, char *t, const int start)
 {
