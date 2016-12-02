@@ -19,6 +19,8 @@ extern "C" {
 # else
 #  define EXPORT __declspec(dllimport)
 # endif
+#elif defined(__OS2__) && defined(__WATCOMC__) && defined(__SW_BD)
+#  define EXPORT __declspec(dllexport)
 #elif (defined(__GNUC__) || defined(__clang__) || defined(__HP_cc)) && defined(XMP_SYM_VISIBILITY)
 # define EXPORT __attribute__((visibility ("default")))
 #elif defined(__SUNPRO_C) && defined(XMP_LDSCOPE_GLOBAL)
