@@ -23,7 +23,9 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <stdarg.h>
-#ifndef WIN32
+#ifdef __WATCOMC__
+#include <direct.h>
+#elif !defined(_WIN32)
 #include <dirent.h>
 #endif
 
