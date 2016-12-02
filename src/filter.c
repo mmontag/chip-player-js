@@ -67,6 +67,11 @@ static const float resonance_table[128] = {
 };
 
 
+#if defined(__DJGPP__) || defined(__WATCOMC__)
+#define powf pow /* Watcom doesn't have powf. DJGPP have a C-only implementation in libm. */
+#endif
+
+
 /*
  * Simple 2-poles resonant filter
  */
