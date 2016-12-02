@@ -40,6 +40,10 @@
 #if !defined(HAVE_POPEN) && defined(WIN32)
 #include "win32/ptpopen.h"
 #endif
+#if defined(__WATCOMC__)
+#define popen  _popen
+#define pclose _pclose
+#endif
 #include "md5.h"
 #include "extras.h"
 #endif
