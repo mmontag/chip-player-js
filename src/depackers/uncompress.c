@@ -19,7 +19,7 @@
 #define IBUFSIZ		BUFSIZ	/* Default input buffer size */
 #define OBUFSIZ		BUFSIZ	/* Default output buffer size */
 
-#define	input(b,o,c,n,m) { \
+#define	input(b,o,c,n,m) do { \
 	char_type *p = &(b)[(o)>>3]; \
 	(c) = ((((long)(p[0]))|((long)(p[1])<<8)| \
 	      ((long)(p[2])<<16))>>((o)&0x7))&(m); \
