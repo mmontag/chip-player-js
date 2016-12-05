@@ -92,7 +92,7 @@ static int execute_command(char *cmd, char *filename, FILE *t)
 
 	snprintf(line, 1024, cmd, filename);
 
-#ifdef WIN32
+#if defined(_WIN32) || defined(__OS2__) || defined(__EMX__)
 	/* Note: The _popen function returns an invalid file opaque, if
 	 * used in a Windows program, that will cause the program to hang
 	 * indefinitely. _popen works properly in a Console application.
