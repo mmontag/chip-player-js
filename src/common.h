@@ -5,6 +5,7 @@
 #define __AMIGA__
 #endif
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include "xmp.h"
@@ -137,14 +138,18 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #ifdef _MSC_VER
 #define dup _dup
 #define fileno _fileno
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
 #define strnicmp _strnicmp
 #define strdup _strdup
 #define fdopen _fdopen
 #define open _open
 #define close _close
 #define unlink _unlink
+#endif
+#ifdef _WIN32  /* in win32.c */
+int libxmp_vsnprintf(char *, size_t, const char *, va_list);
+int libxmp_snprintf (char *, size_t, const char *, ...);
+#define snprintf  libxmp_snprintf
+#define vsnprintf libxmp_vsnprintf
 #endif
 
 /* Quirks */
