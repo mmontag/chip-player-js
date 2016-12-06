@@ -100,14 +100,17 @@ directories:
 	${MKDIR} obj
 	${MKDIR} bin
 
-libadlmidi.so: obj/adlmidi.o obj/dbopl.o obj/adldata.o
+libadlmidi.so: obj/adlmidi.o obj/nukedopl3.o obj/adldata.o
 	$(CXXLINK)  $^  $(DEBUG) -shared -o bin/$@  $(LDLIBS)
 
 obj/adlmidi.o: src/adlmidi.cpp src/adlmidi.h src/dbopl.h src/adldata.hh
 	$(CXX) $(CPPFLAGS) $<  $(DEBUG) -c -fPIC -o $@
 
 obj/dbopl.o: src/dbopl.cpp src/dbopl.h
-	$(CXX) $(CPPFLAGS) $<  $(DEBUG)  -c -fPIC -o $@ 
+	$(CXX) $(CPPFLAGS) $<  $(DEBUG) -DADLMIDI_USE_DOSBOX_OPL -c -fPIC -o $@
+
+obj/nukedopl3.o: src/nukedopl3.c src/nukedopl3.h
+	$(CC) $(CFLAGS) $<  $(DEBUG)  -c -fPIC -o $@
 
 obj/adldata.o: src/adldata.cpp src/adldata.hh
 	$(CXX) $(CPPFLAGS) $<  $(DEBUG)  -c -fPIC -o $@ 

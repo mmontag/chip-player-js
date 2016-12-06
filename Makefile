@@ -1,4 +1,5 @@
 #CXX=i686-w64-mingw32-g++ -static
+CC=gcc
 CXX=g++
 CXXLINK=$(CXX)
 MKDIR=mkdir -p
@@ -12,6 +13,8 @@ DEBUG=-Ofast -g
 #DEBUG += -fno-tree-vectorize
 
 # -march=pentium -mno-sse -mno-sse2 -mno-sse3 -mmmx
+
+CFLAGS += -DLIBADLMIDI_VISIBILITY
 
 CPPFLAGS += -DLIBADLMIDI_VISIBILITY
 

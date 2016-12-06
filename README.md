@@ -72,6 +72,11 @@ To build that example you will need to have installed SDL2 library.
   to play any MIDI via this library.
 
 # Changelog
+## 1.1.0	2016-12-06
+ * Added Nuked OPL3 emulator which is more accurate (but requires more CPU power, therefore kept ability to use DosBox OPL3 via macro)
+ * Fixed warnings of CLang code model plugin
+ * Fixed bend coefficient which makes hi-hats in DOOM banks be incorrectly
+
 ## 1.0.3	2016-08-06
  * Added handling of 111'th controller as "loopStart" (which used by RPG-Maker)
  * Fixed infinite loop caused by blank MIDI-files (add extra second of waiting if over 10000 0-waiting loops are been detected)

@@ -1,3 +1,4 @@
+CC=i686-pc-mingw32-gcc -static
 CXX=i686-pc-mingw32-g++ -static
 CXXLINK=$(CXX)
 
@@ -13,6 +14,7 @@ CPPFLAGS += $(SDL)
 
 CPPFLAGS += -ansi -Wall -W 
 
+CC += -mwin32 -mconsole -mno-cygwin
 CXX += -mwin32 -mconsole -mno-cygwin
 CPPFLAGS += -I/usr/include/mingw -mno-cygwin -I/usr/include/w32api
 LDLIBS += -L/usr/local/lib -L/usr/lib/w32api -lwinmm
