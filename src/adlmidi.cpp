@@ -57,6 +57,7 @@
 #include "dbopl.h"
 #else
 #include "nukedopl3.h"
+#include <limits>
 #endif
 
 #include "adldata.hh"
@@ -152,7 +153,7 @@ struct OPL3
 
         std::vector<adlinsdata> dynamic_metainstruments; // Replaces adlins[] when CMF file
         std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
-        const unsigned DynamicInstrumentTag = 0x8000u, DynamicMetaInstrumentTag = 0x4000000u;
+        const unsigned DynamicInstrumentTag /* = 0x8000u*/, DynamicMetaInstrumentTag /* = 0x4000000u*/;
         const adlinsdata &GetAdlMetaIns(unsigned n)
         {
             return (n & DynamicMetaInstrumentTag) ?
@@ -182,6 +183,8 @@ struct OPL3
         bool ScaleModulators;
         bool LogarithmicVolumes;
         OPL3() :
+            DynamicInstrumentTag(0x8000u),
+            DynamicMetaInstrumentTag(0x4000000u),
             NumCards(1),
             AdlBank(0),
             NumFourOps(0),
@@ -709,7 +712,7 @@ class MIDIplay
     private:
         std::vector<AdlChannel> ch;
 
-        std::vector<std::vector<uint8_t>> TrackData;
+        std::vector<std::vector<uint8_t> > TrackData;
     public:
         MIDIplay():
             cmf_percussion_mode(false),
