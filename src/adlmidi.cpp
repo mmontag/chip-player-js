@@ -784,6 +784,31 @@ class MIDIplay
 
             return result;
         }
+        uint64_t ReadVarLenEx(size_t tk)
+        {
+            uint64_t result = 0;
+
+            for(;;)
+            {
+                if(tk >= TrackData.size())
+                    throw(1);
+
+                if(tk >= CurrentPosition.track.size())
+                    throw(2);
+
+                size_t ptr = CurrentPosition.track[tk].ptr;
+
+                if(ptr >= TrackData[tk].size())
+                    throw(3);
+
+                unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
+                result = (result << 7) + (byte & 0x7F);
+
+                if(!(byte & 0x80)) break;
+            }
+
+            return result;
+        }
 
         /*
          * A little class gives able to read filedata from disk and also from a memory segment
@@ -1218,8 +1243,17 @@ InvFmt:
                     if(is_GMF || is_MUS) // Note: CMF does include the track end tag.
                         TrackData[tk].insert(TrackData[tk].end(), EndTag + 0, EndTag + 4);
 
-                    // Read next event time
-                    CurrentPosition.track[tk].delay = static_cast<long>(ReadVarLen(tk));
+                    try
+                    {
+                        // Read next event time
+                        CurrentPosition.track[tk].delay = static_cast<long>(ReadVarLenEx(tk));
+                    }
+                    catch(int e)
+                    {
+                        ADLMIDI_ErrorString = fr._fileName + ": invalid variable length in the track " + std::to_string(tk)
+                                              + "! (error code " + std::to_string(e) + ")";
+                        return false;
+                    }
                 }
             }
 
@@ -2345,14 +2379,6 @@ retry_arpeggio:
 
                 size_t n_users = ch[c].users.size();
 
-                /*if(true)
-                {
-                    UI.GotoXY(64,c+1); UI.Color(2);
-                    std::fprintf(stderr, "%7ld/%7ld,%3u\r",
-                        ch[c].keyoff,
-                        (unsigned) n_users);
-                    UI.x = 0;
-                }*/
                 if(n_users > 1)
                 {
                     AdlChannel::users_t::const_iterator i = ch[c].users.begin();
@@ -2818,6 +2844,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
             device->delay -= eat_delay;
             device->carry += device->PCM_RATE * eat_delay;
             n_samples = static_cast<ssize_t>(device->carry);
+            n_samples_2 = n_samples * 2;
             device->carry -= n_samples;
 
             if(device->SkipForward > 0)
@@ -2876,7 +2903,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                     SendStereoAudio(device, sampleCount, in_count, buf.data(), gotten_len, out);
                 }
 
-                gotten_len += (n_samples * 2) - device->stored_samples;
+                gotten_len += (n_samples_2) - device->stored_samples;
             }
 
             device->delay = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->Tick(eat_delay, device->mindelay);
