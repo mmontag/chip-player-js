@@ -147,9 +147,9 @@ struct OPL3
         std::vector<_opl3_chip> cards;
 #endif
     private:
-        std::vector<unsigned short> ins; // index to adl[], cached, needed by Touch()
-        std::vector<unsigned char> pit;  // value poked to B0, cached, needed by NoteOff)(
-        std::vector<unsigned char> regBD;
+        std::vector<uint16_t>   ins; // index to adl[], cached, needed by Touch()
+        std::vector<uint8_t>    pit;  // value poked to B0, cached, needed by NoteOff)(
+        std::vector<uint8_t>    regBD;
 
         std::vector<adlinsdata> dynamic_metainstruments; // Replaces adlins[] when CMF file
         std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
@@ -430,25 +430,29 @@ struct OPL3
             LogarithmicVolumes = false;
 #ifdef ADLMIDI_USE_DOSBOX_OPL
             DBOPL::Handler emptyChip;
+            memset(&emptyChip, 0, sizeof(DBOPL::Handler));
 #else
             _opl3_chip emptyChip;
+            memset(&emptyChip, 0, sizeof(_opl3_chip));
 #endif
-            cards.resize(NumCards);
-
-            for(unsigned int i = 0; i < NumCards; i++)
-                cards[i] = emptyChip;
-
+            cards.clear();
+            ins.clear();
+            pit.clear();
+            regBD.clear();
+            cards.resize(NumCards, emptyChip);
             NumChannels = NumCards * 23;
-            ins.resize(NumChannels,     189);
-            pit.resize(NumChannels,       0);
-            regBD.resize(NumCards);
-            four_op_category.resize(NumChannels);
+            ins.resize(NumChannels, 189);
+            pit.resize(NumChannels,   0);
+            regBD.resize(NumCards,    0);
+            four_op_category.resize(NumChannels, 0);
 
             for(unsigned p = 0, a = 0; a < NumCards; ++a)
             {
-                for(unsigned b = 0; b < 18; ++b) four_op_category[p++] = 0;
+                for(unsigned b = 0; b < 18; ++b)
+                    four_op_category[p++] = 0;
 
-                for(unsigned b = 0; b < 5; ++b) four_op_category[p++] = 8;
+                for(unsigned b = 0; b < 5; ++b)
+                    four_op_category[p++] = 8;
             }
 
             static const uint16_t data[] =
@@ -784,22 +788,23 @@ class MIDIplay
 
             return result;
         }
-        uint64_t ReadVarLenEx(size_t tk)
+        uint64_t ReadVarLenEx(size_t tk, bool &ok)
         {
             uint64_t result = 0;
+            ok = false;
 
             for(;;)
             {
                 if(tk >= TrackData.size())
-                    throw(1);
+                    return 1;
 
                 if(tk >= CurrentPosition.track.size())
-                    throw(2);
+                    return 2;
 
                 size_t ptr = CurrentPosition.track[tk].ptr;
 
                 if(ptr >= TrackData[tk].size())
-                    throw(3);
+                    return 3;
 
                 unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
                 result = (result << 7) + (byte & 0x7F);
@@ -807,6 +812,7 @@ class MIDIplay
                 if(!(byte & 0x80)) break;
             }
 
+            ok = true;
             return result;
         }
 
@@ -1149,7 +1155,9 @@ InvFmt:
                 }
             }
 
-            TrackData.resize(TrackCount);
+            TrackData.clear();
+            TrackData.resize(TrackCount, std::vector<uint8_t>());
+            CurrentPosition.track.clear();
             CurrentPosition.track.resize(TrackCount);
             InvDeltaTicks = fraction<long>(1, 1000000l * static_cast<long>(DeltaTicks));
             //Tempo       = 1000000l * InvDeltaTicks;
@@ -1243,15 +1251,17 @@ InvFmt:
                     if(is_GMF || is_MUS) // Note: CMF does include the track end tag.
                         TrackData[tk].insert(TrackData[tk].end(), EndTag + 0, EndTag + 4);
 
-                    try
+                    bool ok = false;
+                    // Read next event time
+                    uint64_t tkDelay = ReadVarLenEx(tk, ok);
+
+                    if(ok)
+                        CurrentPosition.track[tk].delay = static_cast<long>(tkDelay);
+                    else
                     {
-                        // Read next event time
-                        CurrentPosition.track[tk].delay = static_cast<long>(ReadVarLenEx(tk));
-                    }
-                    catch(int e)
-                    {
-                        ADLMIDI_ErrorString = fr._fileName + ": invalid variable length in the track " + std::to_string(tk)
-                                              + "! (error code " + std::to_string(e) + ")";
+                        std::stringstream msg;
+                        msg << fr._fileName << ": invalid variable length in the track " << tk << "! (error code " << tkDelay << ")";
+                        ADLMIDI_ErrorString = msg.str();
                         return false;
                     }
                 }

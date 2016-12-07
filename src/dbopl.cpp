@@ -1345,7 +1345,7 @@ namespace DBOPL
 
     void Chip::WriteReg(Bit32u reg, Bit8u val)
     {
-        Bitu index;
+        Bitu index = 0;
 
         switch((reg & 0xf0) >> 4)
         {
