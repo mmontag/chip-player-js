@@ -51,13 +51,13 @@ typedef struct _opl3_slot opl3_slot;
 typedef struct _opl3_channel opl3_channel;
 typedef struct _opl3_chip opl3_chip;
 
-#pragma pack(1)
 struct _opl3_slot
 {
     opl3_channel *channel;
     opl3_chip *chip;
     Bit16s out;
     Bit16s fbmod;
+    Bit8u ___padding[4];
     Bit16s *mod;
     Bit16s prout;
     Bit16s eg_rout;
@@ -66,6 +66,7 @@ struct _opl3_slot
     Bit8u eg_gen;
     Bit8u eg_rate;
     Bit8u eg_ksl;
+    Bit8u ___padding2[6];
     Bit8u *trem;
     Bit8u reg_vib;
     Bit8u reg_type;
@@ -81,6 +82,7 @@ struct _opl3_slot
     Bit8u key;
     Bit32u pg_phase;
     Bit32u timer;
+    Bit8u ___padding3[4];
 };
 
 struct _opl3_channel
@@ -90,13 +92,16 @@ struct _opl3_channel
     opl3_chip *chip;
     Bit16s *out[4];
     Bit8u chtype;
+    Bit8u ___padding[1];
     Bit16u f_num;
     Bit8u block;
     Bit8u fb;
     Bit8u con;
     Bit8u alg;
     Bit8u ksv;
+    Bit8u ___padding2[1];
     Bit16u cha, chb;
+    Bit8u ___padding3[2];
 };
 
 typedef struct _opl3_writebuf
@@ -104,8 +109,8 @@ typedef struct _opl3_writebuf
     Bit64u time;
     Bit16u reg;
     Bit8u data;
+    Bit8u ___padding[5];
 } opl3_writebuf;
-#pragma pack(0)
 
 struct _opl3_chip
 {

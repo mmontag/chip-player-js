@@ -48,6 +48,7 @@
 #include <deque>  // deque
 #include <cmath>  // exp, log, ceil
 #include <stdio.h>
+#include <limits> // numeric_limit
 
 #include <deque>
 #include <algorithm>
@@ -57,7 +58,6 @@
 #include "dbopl.h"
 #else
 #include "nukedopl3.h"
-#include <limits>
 #endif
 
 #include "adldata.hh"
@@ -202,10 +202,10 @@ struct OPL3
         // 7 = percussion Hihat
         // 8 = percussion slave
 
-        void Poke(size_t card, unsigned index, unsigned value)
+        void Poke(size_t card, uint32_t index, uint32_t value)
         {
 #ifdef ADLMIDI_USE_DOSBOX_OPL
-            cards[card].WriteReg(index, value);
+            cards[card].WriteReg(index, static_cast<uint8_t>(value));
 #else
             OPL3_WriteReg(&cards[card], static_cast<Bit16u>(index), static_cast<Bit8u>(value));
 #endif
@@ -213,7 +213,7 @@ struct OPL3
         void PokeN(size_t card, uint16_t index, uint8_t value)
         {
 #ifdef ADLMIDI_USE_DOSBOX_OPL
-            cards[card].WriteReg(static_cast<Bit32u>(index), static_cast<Bit32u>(value));
+            cards[card].WriteReg(static_cast<Bit32u>(index), value);
 #else
             OPL3_WriteReg(&cards[card], index, value);
 #endif
@@ -428,7 +428,16 @@ struct OPL3
         void Reset()
         {
             LogarithmicVolumes = false;
+#ifdef ADLMIDI_USE_DOSBOX_OPL
+            DBOPL::Handler emptyChip;
+#else
+            _opl3_chip emptyChip;
+#endif
             cards.resize(NumCards);
+
+            for(unsigned int i = 0; i < NumCards; i++)
+                cards[i] = emptyChip;
+
             NumChannels = NumCards * 23;
             ins.resize(NumChannels,     189);
             pit.resize(NumChannels,       0);
@@ -2841,7 +2850,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                 else if(n_samples > 0)
                 {
 #ifdef ADLMIDI_USE_DOSBOX_OPL
-                    std::vector<int> in;
+                    std::vector<int32_t> in;
                     in.resize(1024); /*n_samples * 2 */
                     ssize_t in_count = n_samples;
 #endif
