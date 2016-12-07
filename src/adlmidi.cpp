@@ -665,7 +665,7 @@ class MIDIplay
                   activenotes() { }
         };
         std::vector<MIDIchannel> Ch;
-        bool cmf_percussion_mode = false;
+        bool cmf_percussion_mode;
 
         // Additional information about AdLib channels
         struct AdlChannel
