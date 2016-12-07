@@ -173,6 +173,7 @@ namespace DBOPL
             Bits GetWave(Bitu index, Bitu vol);
         public:
             Operator();
+            char ____padding[5];
     };
 
     struct Channel
@@ -211,6 +212,7 @@ namespace DBOPL
         template<SynthMode mode>
         Channel *BlockTemplate(Chip *chip, Bit32u samples, Bit32s *output);
         Channel();
+        char ____padding[6];
     };
 
     struct Chip

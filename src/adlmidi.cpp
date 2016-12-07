@@ -429,8 +429,7 @@ struct OPL3
         {
             LogarithmicVolumes = false;
 #ifdef ADLMIDI_USE_DOSBOX_OPL
-            DBOPL::Handler emptyChip;
-            memset(&emptyChip, 0, sizeof(DBOPL::Handler));
+            DBOPL::Handler emptyChip; //Constructors inside are will initialize necessary fields
 #else
             _opl3_chip emptyChip;
             memset(&emptyChip, 0, sizeof(_opl3_chip));

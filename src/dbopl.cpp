@@ -1203,6 +1203,23 @@ namespace DBOPL
         regBD = 0;
         reg104 = 0;
         opl3Active = 0;
+        //Extra zeros!
+        vibratoIndex = 0;
+        tremoloIndex = 0;
+        vibratoSign = 0;
+        vibratoShift = 0;
+        tremoloValue = 0;
+        vibratoStrength = 0;
+        tremoloStrength = 0;
+        waveFormMask = 0;
+        lfoCounter = 0;
+        lfoAdd = 0;
+        noiseCounter = 0;
+        noiseAdd = 0;
+        noiseValue = 0;
+        memset(freqMul, 0, sizeof(Bit32u) * 16);
+        memset(linearRates, 0, sizeof(Bit32u) * 76);
+        memset(attackRates, 0, sizeof(Bit32u) * 76);
     }
 
     INLINE Bit32u Chip::ForwardNoise()
