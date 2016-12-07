@@ -43,12 +43,14 @@ You need to make in the any IDE a library project and put into it next files
 
 * adlmidi.h    - Library API, use it to communicate with library
 
-* dbopl.h		 - DOSBOX OPL Emulation header
-* fraction.h	 - Fraction number handling
-* adldata.hh   - bank structures definition
+* dbopl.h       - DOSBOX OPL Emulation header
+* nukedopl3.h   - Nuked OPL3 Emulation header
+* fraction.h    - Fraction number handling
+* adldata.hh    - bank structures definition
 
-* dbopl.cpp    - DOSBOX OPL Emulation code
-* adlmidi.cpp  - code of library
+* dbopl.cpp     - DOSBOX OPL Emulation code
+* nukedopl3.c   - Nuked OPL3 Emulation code
+* adlmidi.cpp   - code of library
 * adldata.cpp	 - Automatically generated dump of FM banks from "fm_banks" directory
                via "gen_adldata" tool
 

@@ -2610,7 +2610,7 @@ ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
 {
     if(!device) return;
 
-    device->QuitWithoutLooping = (loopEn != 0);
+    device->QuitWithoutLooping = (loopEn == 0);
 }
 
 ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol)
