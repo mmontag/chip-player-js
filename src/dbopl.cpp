@@ -1927,6 +1927,17 @@ namespace DBOPL
             chip.GenerateBlock3(*samples, out);
     }
 
+    void Handler::GenerateArr(Bit32s *out, ssize_t *samples)
+    {
+        if(GCC_UNLIKELY(*samples > 512))
+            *samples = 512;
+
+        if(!chip.opl3Active)
+            chip.GenerateBlock2(static_cast<Bitu>(*samples), out);
+        else
+            chip.GenerateBlock3(static_cast<Bitu>(*samples), out);
+    }
+
     void Handler::Init(Bitu rate)
     {
         InitTables();
