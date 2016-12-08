@@ -135,6 +135,54 @@ static const unsigned short Channels[23] =
     Ports: ???
 */
 
+
+// Mapping from MIDI volume level to OPL level value.
+
+static const uint32_t DMX_volume_mapping_table[] =
+{
+    0,  1,  3,  5,  6,  8,  10, 11,
+    13, 14, 16, 17, 19, 20, 22, 23,
+    25, 26, 27, 29, 30, 32, 33, 34,
+    36, 37, 39, 41, 43, 45, 47, 49,
+    50, 52, 54, 55, 57, 59, 60, 61,
+    63, 64, 66, 67, 68, 69, 71, 72,
+    73, 74, 75, 76, 77, 79, 80, 81,
+    82, 83, 84, 84, 85, 86, 87, 88,
+    89, 90, 91, 92, 92, 93, 94, 95,
+    96, 96, 97, 98, 99, 99, 100, 101,
+    101, 102, 103, 103, 104, 105, 105, 106,
+    107, 107, 108, 109, 109, 110, 110, 111,
+    112, 112, 113, 113, 114, 114, 115, 115,
+    116, 117, 117, 118, 118, 119, 119, 120,
+    120, 121, 121, 122, 122, 123, 123, 123,
+    124, 124, 125, 125, 126, 126, 127, 127,
+    //Protection entries to avoid crash if value more than 127
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+    127, 127, 127, 127, 127, 127, 127, 127,
+};
+
+static const uint8_t W9X_volume_mapping_table[32] =
+{
+    63, 63, 40, 36, 32, 28, 23, 21,
+    19, 17, 15, 14, 13, 12, 11, 10,
+    9,  8,  7,  6,  5,  5,  4,  4,
+    3,  3,  2,  2,  1,  1,  0,  0
+};
+
 struct OPL3
 {
         friend class MIDIplay;
@@ -181,7 +229,18 @@ struct OPL3
         bool HighVibratoMode;
         bool AdlPercussionMode;
         bool ScaleModulators;
+
         bool LogarithmicVolumes;
+        char ___padding2[3];
+        enum VolumesScale
+        {
+            VOLUME_Generic,
+            VOLUME_CMF,
+            VOLUME_DMX,
+            VOLUME_APOGEE,
+            VOLUME_9X,
+        } m_volumeScale;
+
         OPL3() :
             DynamicInstrumentTag(0x8000u),
             DynamicMetaInstrumentTag(0x4000000u),
@@ -191,9 +250,10 @@ struct OPL3
             HighTremoloMode(false),
             HighVibratoMode(false),
             AdlPercussionMode(false),
-            LogarithmicVolumes(false)
+            LogarithmicVolumes(false),
+            m_volumeScale(VOLUME_Generic)
         {}
-        char padding2[7];
+        char ____padding3[8];
         std::vector<char> four_op_category; // 1 = quad-master, 2 = quad-slave, 0 = regular
         // 3 = percussion BassDrum
         // 4 = percussion Snare
@@ -325,10 +385,11 @@ struct OPL3
             // Also (slower, floats):
             //   63 + chanvol * (instrvol / 63.0 - 1)
         }
+        /*
         void Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
         {
             if(LogarithmicVolumes)
-                Touch_Real(c, volume * 127 / (127 * 127 * 127));
+                Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);
             else
             {
                 // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
@@ -336,7 +397,7 @@ struct OPL3
                 // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
                 //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
             }
-        }
+        }*/
         void Patch(uint16_t c, uint16_t i)
         {
             uint16_t card = c / 23, cc = c % 23;
@@ -655,7 +716,7 @@ class MIDIplay
             MIDIchannel()
                 : portamento(0),
                   bank_lsb(0), bank_msb(0), patch(0),
-                  volume(100), expression(100),
+                  volume(100), expression(127),
                   panning(0x30), vibrato(0), sustain(0),
                   bend(0.0), bendsense(2 / 8192.0),
                   vibpos(0), vibspeed(2 * 3.141592653 * 5.0),
@@ -1011,6 +1072,12 @@ riffskip:
             opl.HighVibratoMode = config->HighVibratoMode;
             opl.ScaleModulators = config->ScaleModulators;
             opl.LogarithmicVolumes = config->LogarithmicVolumes;
+            /* ====== EXPERIMENTALLY - Add function to switch this!!! ========*/
+            opl.m_volumeScale = config->AdlBank == 14 ? OPL3::VOLUME_DMX :
+                                config->AdlBank == 62 ? OPL3::VOLUME_APOGEE :
+                                config->AdlBank == 58 ? OPL3::VOLUME_9X :
+                                OPL3::VOLUME_Generic;
+            /* ===============================================================*/
             opl.NumCards    = config->NumCards;
             opl.NumFourOps  = config->NumFourOps;
             cmf_percussion_mode = false;
@@ -1103,6 +1170,7 @@ riffskip:
                 //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
                 opl.LogarithmicVolumes = true;
                 opl.AdlPercussionMode = true;
+                opl.m_volumeScale = OPL3::VOLUME_CMF;
             }
             else
             {
@@ -1409,16 +1477,79 @@ InvFmt:
 
                 if(props_mask & Upd_Volume)
                 {
-                    uint32_t volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
-                    /* If the channel has arpeggio, the effective volume of
-                     * *this* instrument is actually lower due to timesharing.
-                     * To compensate, add extra volume that corresponds to the
-                     * time this note is *not* heard.
-                     * Empirical tests however show that a full equal-proportion
-                     * increment sounds wrong. Therefore, using the square root.
-                     */
-                    //volume = (int)(volume * std::sqrt( (double) ch[c].users.size() ));
-                    opl.Touch(c, volume);
+                    uint32_t volume;
+
+                    switch(opl.m_volumeScale)
+                    {
+                    case OPL3::VOLUME_Generic:
+                    case OPL3::VOLUME_CMF:
+                    {
+                        volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
+
+                        /* If the channel has arpeggio, the effective volume of
+                         * *this* instrument is actually lower due to timesharing.
+                         * To compensate, add extra volume that corresponds to the
+                         * time this note is *not* heard.
+                         * Empirical tests however show that a full equal-proportion
+                         * increment sounds wrong. Therefore, using the square root.
+                         */
+                        //volume = (int)(volume * std::sqrt( (double) ch[c].users.size() ));
+
+                        if(opl.LogarithmicVolumes)
+                            volume = volume * 127 / (127 * 127 * 127) / 2;
+                        else
+                        {
+                            // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
+                            volume = volume > 8725 ? static_cast<unsigned int>(std::log(volume) * 11.541561 + (0.5 - 104.22845)) : 0;
+                            // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
+                            //opl.Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
+                        }
+
+                        opl.Touch_Real(c, volume);
+                        //opl.Touch(c, volume);
+                    }
+                    break;
+
+                    case OPL3::VOLUME_DMX:
+                    {
+                        volume = 2 * ((Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 16129) + 1;
+                        //volume = 2 * (Ch[MidCh].volume) + 1;
+                        volume = (DMX_volume_mapping_table[vol] * volume) >> 9;
+                        opl.Touch_Real(c, volume);
+                    }
+                    break;
+
+                    case OPL3::VOLUME_APOGEE:
+                    {
+                        volume = ((Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 16129);
+                        volume = ((64 * (vol + 0x80)) * volume) >> 15;
+                        //volume = ((63 * (vol + 0x80)) * Ch[MidCh].volume) >> 15;
+                        opl.Touch_Real(c, volume);
+                    }
+                    break;
+
+                    case OPL3::VOLUME_9X:
+                    {
+                        //volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume /** Ch[MidCh].expression*/) * 127 / 16129 /*2048383*/) >> 2)];
+                        volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 2048383) >> 2)];
+                        //volume = W9X_volume_mapping_table[vol >> 2] + volume;
+                        opl.Touch_Real(c, volume);
+                    }
+                    break;
+                    }
+
+                    /* DEBUG ONLY!!!
+                    static uint32_t max = 0;
+
+                    if(volume == 0)
+                        max = 0;
+
+                    if(volume > max)
+                        max = volume;
+
+                    printf("%d\n", max);
+                    fflush(stdout);
+                    */
                 }
 
                 if(props_mask & Upd_Pitch)
