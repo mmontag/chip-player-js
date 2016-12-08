@@ -87,7 +87,7 @@ struct _opl3_slot
 
 struct _opl3_channel
 {
-    opl3_slot *slots[2];
+    opl3_slot *chipslots[2];
     opl3_channel *pair;
     opl3_chip *chip;
     Bit16s *out[4];
