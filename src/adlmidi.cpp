@@ -486,6 +486,37 @@ struct OPL3
                 }
             }
         }
+
+        void ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel)
+        {
+            switch(volumeModel)
+            {
+            case ADLMIDI_VolumeModel_AUTO://Do nothing until restart playing
+                break;
+
+            case ADLMIDI_VolumeModel_Generic:
+                m_volumeScale = OPL3::VOLUME_Generic;
+                break;
+
+            case ADLMIDI_VolumeModel_CMF:
+                LogarithmicVolumes = true;
+                m_volumeScale = OPL3::VOLUME_CMF;
+                break;
+
+            case ADLMIDI_VolumeModel_DMX:
+                m_volumeScale = OPL3::VOLUME_DMX;
+                break;
+
+            case ADLMIDI_VolumeModel_APOGEE:
+                m_volumeScale = OPL3::VOLUME_APOGEE;
+                break;
+
+            case ADLMIDI_VolumeModel_9X:
+                m_volumeScale = OPL3::VOLUME_9X;
+                break;
+            }
+        }
+
         void Reset()
         {
             LogarithmicVolumes = false;
@@ -1072,12 +1103,39 @@ riffskip:
             opl.HighVibratoMode = config->HighVibratoMode;
             opl.ScaleModulators = config->ScaleModulators;
             opl.LogarithmicVolumes = config->LogarithmicVolumes;
-            /* ====== EXPERIMENTALLY - Add function to switch this!!! ========*/
-            opl.m_volumeScale = config->AdlBank == 14 ? OPL3::VOLUME_DMX :
-                                config->AdlBank == 62 ? OPL3::VOLUME_APOGEE :
-                                config->AdlBank == 58 ? OPL3::VOLUME_9X :
-                                OPL3::VOLUME_Generic;
-            /* ===============================================================*/
+            opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(config->VolumeModel));
+
+            if(config->VolumeModel == ADLMIDI_VolumeModel_AUTO)
+            {
+                switch(config->AdlBank)
+                {
+                default:
+                    opl.m_volumeScale = OPL3::VOLUME_Generic;
+                    break;
+
+                case 14://Doom 2
+                case 15://Heretic
+                case 16://Doom 1
+                case 64://Raptor
+                    opl.m_volumeScale = OPL3::VOLUME_DMX;
+                    break;
+
+                case 58://FatMan bank hardcoded in the Windows 9x drivers
+                case 65://Modded Wohlstand's Fatman bank
+                case 66://O'Connel's bank
+                    opl.m_volumeScale = OPL3::VOLUME_9X;
+                    break;
+
+                case 62://Duke Nukem 3D
+                case 63://Shadow Warrior
+                case 69://Blood
+                case 70://Lee
+                case 71://Nam
+                    opl.m_volumeScale = OPL3::VOLUME_APOGEE;
+                    break;
+                }
+            }
+
             opl.NumCards    = config->NumCards;
             opl.NumFourOps  = config->NumFourOps;
             cmf_percussion_mode = false;
@@ -2524,9 +2582,11 @@ retry_arpeggio:
                     AdlChannel::users_t::const_iterator i = ch[c].users.begin();
                     size_t rate_reduction = 3;
 
-                    if(n_users >= 3) rate_reduction = 2;
+                    if(n_users >= 3)
+                        rate_reduction = 2;
 
-                    if(n_users >= 4) rate_reduction = 1;
+                    if(n_users >= 4)
+                        rate_reduction = 1;
 
                     std::advance(i, (arpeggio_counter / rate_reduction) % n_users);
 
@@ -2794,6 +2854,14 @@ ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int
 
     device->LogarithmicVolumes = static_cast<unsigned int>(logvol);
     reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.LogarithmicVolumes = (bool)device->LogarithmicVolumes;
+}
+
+ADLMIDI_EXPORT void adl_setVolumeRangeModel(ADL_MIDIPlayer *device, int volumeModel)
+{
+    if(!device) return;
+
+    device->VolumeModel = volumeModel;
+    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
 }
 
 ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)

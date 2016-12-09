@@ -28,6 +28,16 @@
 extern "C" {
 #endif
 
+enum ADLMIDI_VolumeModels
+{
+    ADLMIDI_VolumeModel_AUTO = 0,
+    ADLMIDI_VolumeModel_Generic,
+    ADLMIDI_VolumeModel_CMF,
+    ADLMIDI_VolumeModel_DMX,
+    ADLMIDI_VolumeModel_APOGEE,
+    ADLMIDI_VolumeModel_9X
+};
+
 struct ADL_MIDIPlayer
 {
     unsigned int AdlBank;
@@ -37,6 +47,7 @@ struct ADL_MIDIPlayer
     unsigned int HighVibratoMode;
     unsigned int AdlPercussionMode;
     unsigned int LogarithmicVolumes;
+    int VolumeModel;
     unsigned int QuitFlag;
     unsigned int SkipForward;
     unsigned int QuitWithoutLooping;
@@ -91,6 +102,10 @@ extern void adl_setLoopEnabled(struct ADL_MIDIPlayer *device, int loopEn);
 
 /*Enable or disable Logariphmic volume changer */
 extern void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol);
+
+/*Set different volume range model */
+extern void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel);
+
 
 /*Returns string which contains last error message*/
 extern const char *adl_errorString();

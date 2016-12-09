@@ -74,6 +74,9 @@ To build that example you will need to have installed SDL2 library.
   to play any MIDI via this library.
 
 # Changelog
+## 1.1.1	2016-12-09
+ * Added a changable volume ranges models (Automatic for some banks, Generic, CMF, DMX, Apogee and 9X)
+
 ## 1.1.0	2016-12-06
  * Added Nuked OPL3 emulator which is more accurate (but requires more CPU power, therefore kept ability to use DosBox OPL3 via macro)
  * Fixed warnings of CLang code model plugin
