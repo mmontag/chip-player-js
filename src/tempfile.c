@@ -38,26 +38,41 @@
 
 #include "tempfile.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 
 int mkstemp(char *);
 
-static int get_temp_dir(char *buf, int size)
+static int get_temp_dir(char *buf, size_t size)
 {
-	const char def[] = "C:\\WINDOWS\\TEMP";
-	char *tmp = getenv("TEMP");
+	static const char def[] = "C:\\WINDOWS\\TEMP";
+	const char *tmp = getenv("TEMP");
+	snprintf(buf, size, "%s\\", (tmp != NULL)? tmp : def);
+	return 0;
+}
 
-	strncpy(buf, tmp ? tmp : def, size);
-	strncat(buf, "\\", size);
+#elif defined(__OS2__)
 
+static int get_temp_dir(char *buf, size_t size)
+{
+	static const char def[] = "C:";
+	const char *tmp = getenv("TMP");
+	snprintf(buf, size, "%s\\", (tmp != NULL)? tmp : def);
+	return 0;
+}
+
+#elif defined(__MSDOS__)
+
+static int get_temp_dir(char *buf, size_t size)
+{
+	strcpy(buf, "C:\\"); /* size-safe against PATH_MAX */
 	return 0;
 }
 
 #elif defined __AMIGA__
 
-static int get_temp_dir(char *buf, int size)
+static int get_temp_dir(char *buf, size_t size)
 {
-	strncpy(buf, "T:", size);
+	strcpy(buf, "T:"); /* size-safe against PATH_MAX */
 	return 0;
 }
 
@@ -66,7 +81,7 @@ static int get_temp_dir(char *buf, int size)
 #include <sys/types.h>
 #include <sys/stat.h>
 
-static int get_temp_dir(char *buf, int size)
+static int get_temp_dir(char *buf, size_t size)
 {
 #define APPDIR "/sdcard/Xmp for Android"
 	struct stat st;
@@ -83,11 +98,11 @@ static int get_temp_dir(char *buf, int size)
 	return 0;
 }
 
-#else
+#else /* unix */
 
-static int get_temp_dir(char *buf, int size)
+static int get_temp_dir(char *buf, size_t size)
 {
-	char *tmp = getenv("TMPDIR");
+	const char *tmp = getenv("TMPDIR");
 
 	if (tmp) {
 		snprintf(buf, size, "%s/", tmp);

@@ -5,6 +5,7 @@
 #define __AMIGA__
 #endif
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include "xmp.h"
@@ -105,6 +106,19 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #define D_(args...) do {} while (0)
 #endif
 
+#elif defined(__WATCOMC__)
+#ifdef DEBUG
+#define D_INFO "\x1b[33m"
+#define D_CRIT "\x1b[31m"
+#define D_WARN "\x1b[36m"
+#define D_(...) do { \
+	printf("\x1b[33m%s \x1b[37m[%s:%d] " D_INFO, __FUNCTION__, \
+		__FILE__, __LINE__); printf (__VA_ARGS__); printf ("\x1b[0m\n"); \
+	} while (0)
+#else
+#define D_(...) do {} while (0)
+#endif
+
 #else
 
 #ifdef DEBUG
@@ -124,14 +138,18 @@ void __inline CLIB_DECL D_(const char *text, ...) { do {} while (0); }
 #ifdef _MSC_VER
 #define dup _dup
 #define fileno _fileno
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
 #define strnicmp _strnicmp
 #define strdup _strdup
 #define fdopen _fdopen
 #define open _open
 #define close _close
 #define unlink _unlink
+#endif
+#ifdef _WIN32  /* in win32.c */
+int libxmp_vsnprintf(char *, size_t, const char *, va_list);
+int libxmp_snprintf (char *, size_t, const char *, ...);
+#define snprintf  libxmp_snprintf
+#define vsnprintf libxmp_vsnprintf
 #endif
 
 /* Quirks */
@@ -397,7 +415,9 @@ uint32	read24l			(FILE *, int *err);
 uint32	read24b			(FILE *, int *err);
 uint32	read32l			(FILE *, int *err);
 uint32	read32b			(FILE *, int *err);
-void	write8			(FILE *, uint8);
+static inline void write8	(FILE *f, uint8 b) {
+	fputc(b, f);
+}
 void	write16l		(FILE *, uint16);
 void	write16b		(FILE *, uint16);
 void	write32l		(FILE *, uint32);

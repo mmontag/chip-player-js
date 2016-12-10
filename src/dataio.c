@@ -224,11 +224,6 @@ uint32 readmem32b(uint8 *m)
 
 #ifndef LIBXMP_CORE_PLAYER
 
-inline void write8(FILE *f, uint8 b)
-{
-	fputc(b, f);
-}
-
 void write16l(FILE *f, uint16 w)
 {
 	write8(f, w & 0x00ff);

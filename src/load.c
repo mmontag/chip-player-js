@@ -40,6 +40,10 @@
 #if !defined(HAVE_POPEN) && defined(WIN32)
 #include "win32/ptpopen.h"
 #endif
+#if defined(__WATCOMC__)
+#define popen  _popen
+#define pclose _pclose
+#endif
 #include "md5.h"
 #include "extras.h"
 #endif
@@ -88,7 +92,7 @@ static int execute_command(char *cmd, char *filename, FILE *t)
 
 	snprintf(line, 1024, cmd, filename);
 
-#ifdef WIN32
+#if defined(_WIN32) || defined(__OS2__) || defined(__EMX__)
 	/* Note: The _popen function returns an invalid file opaque, if
 	 * used in a Windows program, that will cause the program to hang
 	 * indefinitely. _popen works properly in a Console application.

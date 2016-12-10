@@ -134,7 +134,10 @@ static uint16 pt_period_table[16][36] = {
 };
 #endif
 
-#ifdef _MSC_VER
+#ifndef M_LN2
+#define M_LN2	0.69314718055994530942
+#endif
+#if defined(_MSC_VER) || defined(__WATCOMC__)
 static inline double round(double val)
 {
 	return floor(val + 0.5);
