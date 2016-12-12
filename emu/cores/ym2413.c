@@ -39,7 +39,6 @@ to do:
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>	// for memset
 #include <stddef.h>	// for NULL
 #include <math.h>
 
@@ -1921,25 +1920,15 @@ static void OPLLResetChip(YM2413 *chip)
 /* 'rate'  is sampling rate  */
 static YM2413 *OPLLCreate(int clock, int rate)
 {
-	char *ptr;
 	YM2413 *chip;
-	int state_size;
 
 	if (OPLL_LockTable() == -1) return NULL;
 
-	/* calculate chip state size */
-	state_size  = sizeof(YM2413);
-
 	/* allocate memory block */
-	ptr = (char *)malloc(state_size);
+	chip = (YM2413 *)calloc(1, sizeof(YM2413));
 
-	if (ptr==NULL)
+	if (chip==NULL)
 		return NULL;
-
-	/* clear */
-	memset(ptr,0,state_size);
-
-	chip  = (YM2413 *)ptr;
 
 	chip->clock = clock;
 	chip->rate  = rate;

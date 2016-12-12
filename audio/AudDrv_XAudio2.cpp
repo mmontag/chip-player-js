@@ -295,8 +295,7 @@ UINT8 XAudio2_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* au
 	}
 #endif
 	
-	drv->xaBufs = (XAUDIO2_BUFFER*)malloc(drv->bufCount * sizeof(XAUDIO2_BUFFER));
-	memset(drv->xaBufs, 0x00, drv->bufCount * sizeof(XAUDIO2_BUFFER));
+	drv->xaBufs = (XAUDIO2_BUFFER*)calloc(drv->bufCount, sizeof(XAUDIO2_BUFFER));
 	drv->bufSpace = (UINT8*)malloc(drv->bufCount * drv->bufSize);
 	for (curBuf = 0; curBuf < drv->bufCount; curBuf ++)
 	{

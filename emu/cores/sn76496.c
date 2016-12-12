@@ -651,10 +651,9 @@ unsigned long int sn76496_start(void **chip, int clock, int shiftregwidth, int n
 	int curbit;
 	int curtap;
 	
-	sn_chip = (sn76496_state*)malloc(sizeof(sn76496_state));
+	sn_chip = (sn76496_state*)calloc(1, sizeof(sn76496_state));
 	if (sn_chip == NULL)
 		return 0;
-	memset(sn_chip, 0x00, sizeof(sn76496_state));
 	*chip = sn_chip;
 	
 	// extract single noise tap bits

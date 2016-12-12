@@ -468,10 +468,9 @@ static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	int divisor;
 	//int voice;
 
-	info = (okim6295_state *)malloc(sizeof(okim6295_state));
+	info = (okim6295_state *)calloc(1, sizeof(okim6295_state));
 	if (info == NULL)
 		return 0xFF;
-	memset(info, 0x00, sizeof(okim6295_state));
 	
 	compute_tables();
 
