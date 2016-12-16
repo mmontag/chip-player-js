@@ -41,9 +41,7 @@ static const int PSGVolumeValues[16] = {
 	4096, 3254, 2584, 2053, 1631, 1295, 1029, 817, 649, 516, 410, 325, 258, 205, 163, 0
 };
 
-/*static SN76489_Context SN76489[MAX_SN76489];*/
 static SN76489_Context* LastChipInit = NULL;
-//static unsigned short int FNumLimit;
 
 
 SN76489_Context* SN76489_Init( int PSGClockValue, int SamplingRate)
@@ -55,7 +53,7 @@ SN76489_Context* SN76489_Init( int PSGClockValue, int SamplingRate)
 		chip->dClock=(float)(PSGClockValue & 0x7FFFFFF)/16/SamplingRate;
 		
 		SN76489_SetMute(chip, MUTE_ALLON);
-		SN76489_Config(chip, /*MUTE_ALLON,*/ FB_SEGAVDP, SRW_SEGAVDP, 1);
+		SN76489_Config(chip, FB_SEGAVDP, SRW_SEGAVDP, 1);
 		
 		for( i = 0; i <= 3; i++ )
 			centre_panning(chip->panning[i]);
@@ -120,35 +118,13 @@ void SN76489_Shutdown(SN76489_Context* chip)
 	free(chip);
 }
 
-void SN76489_Config(SN76489_Context* chip, /*int mute,*/ int feedback, int sr_width, int boost_noise)
+void SN76489_Config(SN76489_Context* chip, int feedback, int sr_width, int boost_noise)
 {
-	//chip->Mute = mute;
 	chip->WhiteNoiseFeedback = feedback;
 	chip->SRWidth = sr_width;
 }
 
-/*
-void SN76489_SetContext(int which, uint8 *data)
-{
-	memcpy( &SN76489[which], data, sizeof(SN76489_Context) );
-}
-
-void SN76489_GetContext(int which, uint8 *data)
-{
-	memcpy( data, &SN76489[which], sizeof(SN76489_Context) );
-}
-
-uint8 *SN76489_GetContextPtr(int which)
-{
-	return (uint8 *)&SN76489[which];
-}
-
-int SN76489_GetContextSize(void)
-{
-	return sizeof(SN76489_Context);
-}
-*/
-void SN76489_Write(SN76489_Context* chip, int data)
+void SN76489_Write(SN76489_Context* chip, UINT8 data)
 {
 	if ( data & 0x80 )
 	{
@@ -182,24 +158,19 @@ void SN76489_Write(SN76489_Context* chip, int data)
 	}
 }
 
-void SN76489_GGStereoWrite(SN76489_Context* chip, int data)
+void SN76489_GGStereoWrite(SN76489_Context* chip, UINT8 data)
 {
 	chip->PSGStereo=data;
 }
 
-//void SN76489_Update(SN76489_Context* chip, INT16 **buffer, int length)
-void SN76489_Update(SN76489_Context* chip, UINT32 length, INT32 **buffer)
+void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 {
 	UINT32 i, j;
 	UINT8 NGPMode;
-	SN76489_Context* chip2;
 	SN76489_Context* chip_t;
 	SN76489_Context* chip_n;
-
-	NGPMode = (chip->NgpFlags >> 7) & 0x01;
-	if (NGPMode)
-		chip2 = (SN76489_Context*)chip->NgpChip2;
 	
+	NGPMode = (chip->NgpFlags >> 7) & 0x01;
 	if (! NGPMode)
 	{
 		chip_t = chip_n = chip;
@@ -209,11 +180,11 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, INT32 **buffer)
 		if (! (chip->NgpFlags & 0x01))
 		{
 			chip_t = chip;
-			chip_n = chip2;
+			chip_n = (SN76489_Context*)chip->NgpChip2;
 		}
 		else
 		{
-			chip_t = chip2;
+			chip_t = (SN76489_Context*)chip->NgpChip2;
 			chip_n = chip;
 		}
 	}
@@ -285,16 +256,16 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, INT32 **buffer)
 				// For all 3 tone channels
 				for (i = 0; i < 3; i ++)
 				{
-					buffer[0][j] += (chip->PSGStereo >> (i+4) & 0x1 ) * chip ->Channels[i]; // left
-					buffer[1][j] += (chip->PSGStereo >>  i    & 0x1 ) * chip2->Channels[i]; // right
+					buffer[0][j] += (chip->PSGStereo >> (i+4) & 0x1 ) * chip_t->Channels[i]; // left
+					buffer[1][j] += (chip->PSGStereo >>  i    & 0x1 ) * chip_n->Channels[i]; // right
 				}
 			}
 			else
 			{
 				// noise channel
 				i = 3;
-				buffer[0][j] += (chip->PSGStereo >> (i+4) & 0x1 ) * chip2->Channels[i]; // left
-				buffer[1][j] += (chip->PSGStereo >>  i    & 0x1 ) * chip ->Channels[i]; // right
+				buffer[0][j] += (chip->PSGStereo >> (i+4) & 0x1 ) * chip_t->Channels[i]; // left
+				buffer[1][j] += (chip->PSGStereo >>  i    & 0x1 ) * chip_n->Channels[i]; // right
 			}
 		}
 
@@ -377,22 +348,13 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, INT32 **buffer)
 	}
 }
 
-/*void SN76489_UpdateOne(SN76489_Context* chip, int *l, int *r)
-{
-  INT16 tl,tr;
-  INT16 *buff[2] = { &tl, &tr };
-  SN76489_Update( chip, buff, 1 );
-  *l = tl;
-  *r = tr;
-}*/
 
-
-/*int  SN76489_GetMute(SN76489_Context* chip)
+UINT32 SN76489_GetMute(SN76489_Context* chip)
 {
   return chip->Mute;
-}*/
+}
 
-void SN76489_SetMute(SN76489_Context* chip, int val)
+void SN76489_SetMute(SN76489_Context* chip, UINT32 val)
 {
   chip->Mute=val;
 }

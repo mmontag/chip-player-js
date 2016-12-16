@@ -13,7 +13,6 @@
 #endif
 
 
-
 static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_sn76496_mame(DEV_DATA* chipptr);
@@ -112,7 +111,6 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 	
 	devData = (DEV_DATA*)info->chip.mame;
 	devData->chipInf = info;	// store pointer to SN76496_INF into sound chip structure
-	
 	retDevInf->dataPtr = devData;
 	retDevInf->sampleRate = rate;
 	retDevInf->devDef = &devDef_MAME;
@@ -140,7 +138,6 @@ static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDev
 	
 	devData = (DEV_DATA*)info->chip.any;
 	devData->chipInf = info;	// store pointer to SN76496_INF into sound chip structure
-	
 	retDevInf->dataPtr = devData;
 	retDevInf->sampleRate = rate;
 	retDevInf->devDef = &devDef_Maxim;

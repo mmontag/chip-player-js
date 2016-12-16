@@ -3,12 +3,6 @@
 
 #include "../snddef.h"
 
-/*#ifndef uint8
-#define uint8 signed char
-#endif*/
-
-
-/*#define MAX_SN76489     4*/
 
 /*
     More testing is needed to find and confirm feedback patterns for
@@ -41,8 +35,8 @@ enum mute_values {
 
 typedef struct
 {
-	void* chipInf;
-	
+    void* chipInf;
+    
     int Mute; // per-channel muting
     int BoostNoise; // double noise volume when non-zero
     
@@ -68,32 +62,23 @@ typedef struct
 
     float panning[4][2];            /* fake stereo */
 
-	int NgpFlags;		/* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
-	void* NgpChip2;
+    int NgpFlags;       /* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
+    void* NgpChip2;
 } SN76489_Context;
 
 /* Function prototypes */
 SN76489_Context* SN76489_Init(int PSGClockValue, int SamplingRate);
 void SN76489_Reset(SN76489_Context* chip);
 void SN76489_Shutdown(SN76489_Context* chip);
-void SN76489_Config(SN76489_Context* chip, /*int mute,*/ int feedback, int sw_width, int boost_noise);
-/*
-void SN76489_SetContext(SN76489_Context* chip, uint8 *data);
-void SN76489_GetContext(SN76489_Context* chip, uint8 *data);
-uint8 *SN76489_GetContextPtr(int chip);
-int SN76489_GetContextSize(void);*/
-void SN76489_Write(SN76489_Context* chip, int data);
-void SN76489_GGStereoWrite(SN76489_Context* chip, int data);
-//void SN76489_Update(SN76489_Context* chip, INT16 **buffer, int length);
+void SN76489_Config(SN76489_Context* chip, int feedback, int sw_width, int boost_noise);
+void SN76489_Write(SN76489_Context* chip, UINT8 data);
+void SN76489_GGStereoWrite(SN76489_Context* chip, UINT8 data);
 void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer);
 
 /* Non-standard getters and setters */
-//int  SN76489_GetMute(SN76489_Context* chip);
-void SN76489_SetMute(SN76489_Context* chip, int val);
+UINT32 SN76489_GetMute(SN76489_Context* chip);
+void SN76489_SetMute(SN76489_Context* chip, UINT32 val);
 
 void SN76489_SetPanning(SN76489_Context* chip, int ch0, int ch1, int ch2, int ch3);
-
-/* and a non-standard data getter */
-//void SN76489_UpdateOne(SN76489_Context* chip, int *l, int *r);
 
 #endif	// __SN76489_H__
