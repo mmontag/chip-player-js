@@ -129,16 +129,22 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/2413intf.o \
 	$(LIBEMUOBJ)/cores/emu2413.o \
 	$(LIBEMUOBJ)/cores/ym2413.o \
+	$(LIBEMUOBJ)/cores/2612intf.o \
+	$(LIBEMUOBJ)/cores/fmopn2612.o \
+	$(LIBEMUOBJ)/cores/ym2612.o \
 	$(LIBEMUOBJ)/cores/okim6295.o \
+	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o
 
 
 AUDEMU_MAINOBJS = \
 	$(OBJ)/audemutest.o
 
+VGMTEST_MAINOBJS = \
+	$(OBJ)/vgmtest.o
 
 
-all:	audiotest emutest audemutest
+all:	audiotest emutest audemutest vgmtest
 
 audiotest:	dirs libaudio $(AUD_MAINOBJS)
 	@echo Linking audiotest ...
@@ -161,6 +167,11 @@ libemu:	$(LIBEMUOBJS)
 audemutest:	dirs libaudio libemu $(AUDEMU_MAINOBJS)
 	@echo Linking audemutest ...
 	@$(CC) $(AUDEMU_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -o audemutest
+	@echo Done.
+
+vgmtest:	dirs libaudio libemu $(VGMTEST_MAINOBJS)
+	@echo Linking vgmtest ...
+	@$(CC) $(VGMTEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -o vgmtest
 	@echo Done.
 
 

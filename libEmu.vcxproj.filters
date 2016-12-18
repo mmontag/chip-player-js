@@ -48,6 +48,15 @@
     <ClCompile Include="emu\cores\ym2413.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\2612intf.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\fmopn2612.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\ym2612.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -102,6 +111,18 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\ym2413.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\2612intf.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\fmopn.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\ym2612_int.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\ym2612.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

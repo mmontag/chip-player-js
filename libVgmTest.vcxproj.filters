@@ -35,5 +35,8 @@
     <ClCompile Include="audemutest.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="vgmtest.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

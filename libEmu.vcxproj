@@ -151,8 +151,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="emu\cores\2413intf.c" />
+    <ClCompile Include="emu\cores\2612intf.c" />
     <ClCompile Include="emu\cores\emu2413.c" />
+    <ClCompile Include="emu\cores\fmopn2612.c" />
     <ClCompile Include="emu\cores\ym2413.c" />
+    <ClCompile Include="emu\cores\ym2612.c" />
     <ClCompile Include="emu\panning.c" />
     <ClCompile Include="emu\cores\okim6295.c" />
     <ClCompile Include="emu\Resampler.c" />
@@ -163,12 +166,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\cores\2413intf.h" />
+    <ClInclude Include="emu\cores\2612intf.h" />
     <ClInclude Include="emu\cores\emu2413.h" />
     <ClInclude Include="emu\cores\emutypes.h" />
+    <ClInclude Include="emu\cores\fmopn.h" />
     <ClInclude Include="emu\cores\opll_2413tone.h" />
     <ClInclude Include="emu\cores\opll_281btone.h" />
     <ClInclude Include="emu\cores\opll_vrc7tone.h" />
     <ClInclude Include="emu\cores\ym2413.h" />
+    <ClInclude Include="emu\cores\ym2612.h" />
+    <ClInclude Include="emu\cores\ym2612_int.h" />
     <ClInclude Include="emu\panning.h" />
     <ClInclude Include="emu\EmuCores.h" />
     <ClInclude Include="emu\EmuStructs.h" />
