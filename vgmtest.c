@@ -108,6 +108,8 @@ typedef struct
 	DEV_INFO defInf;
 	RESMPL_STATE resmpl;
 	DEVFUNC_WRITE_A8D8 write8;
+	DEVFUNC_WRITE_MEMSIZE romSize;
+	DEVFUNC_WRITE_BLOCK romWrite;
 } VGM_CHIPDEV;
 
 
@@ -272,6 +274,7 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	INT16* SmplPtr16;
 	UINT32 curSmpl;
 	WAVE_32BS* smplDataW = (WAVE_32BS*)smplData[0];
+	WAVE_32BS fnlSmpl;
 	UINT8 curChip;
 	
 	if (! canRender)
@@ -283,7 +286,9 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	smplCount = bufSize / smplSize;
 	memset(smplData[0], 0, bufSize);
 	memset(smplData[1], 0, bufSize);
+	
 	ReadVGMFile(smplCount);
+	// I know that using a for-loop has a bad performance, but it's just for testing anyway.
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	{
 		if (VGMChips[curChip].defInf.dataPtr != NULL)
@@ -293,8 +298,18 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	SmplPtr16 = (INT16*)data;
 	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
 	{
-		SmplPtr16[0] = smplDataW[curSmpl].L >> 8;
-		SmplPtr16[1] = smplDataW[curSmpl].R >> 8;
+		fnlSmpl.L = smplDataW[curSmpl].L >> 8;
+		fnlSmpl.R = smplDataW[curSmpl].R >> 8;
+		if (fnlSmpl.L < -0x8000)
+			fnlSmpl.L = -0x8000;
+		else if (fnlSmpl.L > +0x7FFF)
+			fnlSmpl.L = +0x7FFF;
+		if (fnlSmpl.R < -0x8000)
+			fnlSmpl.R = -0x8000;
+		else if (fnlSmpl.R > +0x7FFF)
+			fnlSmpl.R = +0x7FFF;
+		SmplPtr16[0] = (INT16)fnlSmpl.L;
+		SmplPtr16[1] = (INT16)fnlSmpl.R;
 	}
 	
 	return curSmpl * smplSize;
@@ -341,7 +356,6 @@ static void InitVGMChips(void)
 			continue;
 		cDev = &VGMChips[curChip];
 		
-		cDev->write8 = NULL;
 		devCfg.emuCore = 0x00;
 		devCfg.srMode = DEVRI_SRMODE_NATIVE;
 		devCfg.clock = chpClk & ~0x40000000;
@@ -374,11 +388,14 @@ static void InitVGMChips(void)
 			}
 			break;
 		default:
-			devCfg.emuCore = FCC_GPGX;
+			if (curChip == DEVID_YM2612)
+				devCfg.emuCore = FCC_GPGX;
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			break;
 		}
 		if (retVal)
@@ -440,9 +457,49 @@ static void SendChipCommand_RegData8(UINT8 chipID, UINT8 chipNum, UINT8 port, UI
 	return;
 }
 
+static void WriteChipMem(UINT8 chipID, UINT8 chipNum, UINT8 memID,
+						 UINT32 memSize, UINT32 dataOfs, UINT32 dataSize, const UINT8* data)
+{
+	VGM_CHIPDEV* cDev;
+	
+	cDev = &VGMChips[chipID];
+	if (cDev->romSize != NULL)
+		cDev->romSize(cDev->defInf.dataPtr, memSize);
+	if (cDev->romWrite != NULL)
+		cDev->romWrite(cDev->defInf.dataPtr, dataOfs, dataSize, data);
+	return;
+}
+
 static const UINT8 VGM_CMDLEN[0x10] =
 {	0x01, 0x01, 0x01, 0x02, 0x03, 0x03, 0x00, 0x01,
 	0x01, 0x00, 0x03, 0x03, 0x04, 0x04, 0x05, 0x05};
+typedef struct
+{
+	UINT8 chipID;
+	UINT8 memIdx;
+} VGM_ROMDUMP_IDS;
+static const VGM_ROMDUMP_IDS VGMROM_CHIPS[0x14] =
+{	0x04, 0x00,	// SegaPCM
+	0x07, 0x02,	// YM2608 DeltaT
+	0x08, 0x01,	// YM2610 ADPCM
+	0x08, 0x02,	// YM2610 DeltaT
+	0x0D, 0x00,	// YMF278B ROM
+	0x0E, 0x00,	// YMF271
+	0x0F, 0x00,	// YMZ280B
+	0x0D, 0x01,	// YMF278B RAM
+	0x0B, 0x00,	// Y8950 DeltaT
+	0x15, 0x00,	// MultiPCM
+	0x16, 0x00,	// uPD7759
+	0x18, 0x00,	// OKIM6295
+	0x1A, 0x00,	// K054539
+	0x1C, 0x00,	// C140
+	0x1D, 0x00,	// K053260
+	0x1F, 0x00,	// QSound
+	0x25, 0x00,	// ES5506
+	0x26, 0x00,	// X1-010
+	0x27, 0x00,	// C352
+	0x28, 0x00,	// GA20
+};
 
 static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 {
@@ -491,9 +548,29 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 	case 0x67:
 		{
 			UINT32 dblkLen;
+			UINT8 dblkType;
+			UINT32 memSize;
+			UINT32 dataOfs;
+			UINT32 dataSize;
+			
+			dblkType = data[0x02];
 			memcpy(&dblkLen, &data[0x03], 0x04);
 			chipID = (dblkLen & 0x80000000) >> 31;
 			dblkLen &= 0x7FFFFFFF;
+			
+			switch(dblkType & 0xC0)
+			{
+			case 0x80:	// ROM/RAM write
+				dblkType &= 0x3F;
+				if (dblkType >= 0x14)
+					break;
+				memcpy(&memSize, &data[0x07], 0x04);
+				memcpy(&dataOfs, &data[0x0B], 0x04);
+				dataSize = dblkLen - 0x08;
+				WriteChipMem(VGMROM_CHIPS[dblkType].chipID, chipID, VGMROM_CHIPS[dblkType].memIdx,
+							memSize, dataOfs, dataSize, &data[0x0F]);
+				break;
+			}
 			return 0x07 + dblkLen;
 		}
 	case 0x68:
@@ -537,6 +614,9 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 	case 0x5E:	// YMF262
 	case 0x5F:
 		SendChipCommand_RegData8(0x0C, chipID, cmd & 0x01, data[0x01], data[0x02]);
+		return 0x03;
+	case 0xB8:	// OKIM6295
+		SendChipCommand_Data8(0x18, chipID, data[0x01] & 0x7F, data[0x02]);
 		return 0x03;
 	default:
 		return VGM_CMDLEN[cmd >> 4];

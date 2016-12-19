@@ -9,6 +9,7 @@
 #include "cores/sn764intf.h"
 #include "cores/2413intf.h"
 #include "cores/2612intf.h"
+#include "cores/ym2151.h"
 #include "cores/okim6295.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -21,6 +22,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_YM2413;
 	case DEVID_YM2612:
 		return devDefList_YM2612;
+	case DEVID_YM2151:
+		return devDefList_YM2151;
 	case DEVID_OKIM6295:
 		return devDefList_OKIM6295;
 	}

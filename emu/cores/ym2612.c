@@ -142,6 +142,7 @@ static int LFO_FREQ_TAB[LFO_LENGHT];        // LFO FMS TABLE
 
 // static int INTER_TAB[MAX_UPDATE_LENGHT];      // Interpolation table
 
+// TODO: check for sample rate dependent LUTs and move them into ym2612_ struct
 static int LFO_INC_TAB[8];              // LFO step table
 
 static void (* const UPDATE_CHAN[8 * 8])(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf, UINT32 lenght) =    // Update Channel functions pointer table
@@ -246,7 +247,7 @@ static FILE *debug_file = NULL;
 /* Gens */
 
 static int YM2612_Enable_SSGEG = 0; // enable SSG-EG envelope (causes inacurate sound sometimes - rodrigo)
-static int DAC_Highpass_Enable = 1; // sometimes it creates a terrible noise
+static int DAC_Highpass_Enable = 0; // sometimes it creates a terrible noise
 
 /* end */
 

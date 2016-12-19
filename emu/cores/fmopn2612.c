@@ -663,7 +663,6 @@ typedef struct
 	UINT8		addr_A1;			/* address line A1      */
 
 	/* dac output (YM2612) */
-	//int			dacen;
 	UINT8		dacen;
 	UINT8		dac_test;
 	INT32		dacout;
@@ -683,12 +682,6 @@ typedef struct
 #ifndef __RAINE__
 #define LOG(n,x) do { if( (n)>=LOG_LEVEL ) logerror x; } while (0)
 #endif
-
-/* limitter */
-#define Limit(val, max,min) { \
-	if ( val > max )      val = max; \
-	else if ( val < min ) val = min; \
-}
 
 static UINT8 IsVGMInit = 0;
 static UINT8 tablesInit = 0;
