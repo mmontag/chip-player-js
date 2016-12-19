@@ -2382,6 +2382,8 @@ void * ym2612_init(void *param, UINT32 clock, UINT32 rate,
 	F2612->OPN.ST.IRQ_Handler   = IRQHandler;
 	F2612->WaveOutMode = 0x00;
 
+	ym2612_set_mutemask(F2612, 0x00);
+
 	return F2612;
 }
 

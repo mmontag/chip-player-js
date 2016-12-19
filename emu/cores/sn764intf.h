@@ -12,8 +12,8 @@ typedef struct sn76496_config
 {
 	DEV_GEN_CFG _genCfg;
 	
+	UINT16 noiseTaps;
 	UINT8 shiftRegWidth;
-	UINT8 noiseTaps;
 	UINT8 negate;
 	UINT8 stereo;
 	UINT8 clkDiv;

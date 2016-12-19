@@ -51,6 +51,37 @@ static UINT8 ym2151_r(void *chip, UINT8 offset);
 static void ym2151_w(void *chip, UINT8 offset, UINT8 data);
 
 
+static DEVDEF_RWFUNC devFunc_MAME[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2151_w},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2151_r},
+	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, ym2151_write_reg},
+};
+static DEV_DEF devDef_MAME =
+{
+	"YM2151", "MAME", FCC_MAME,
+	
+	device_start_ym2151,
+	ym2151_shutdown,
+	ym2151_reset_chip,
+	ym2151_update_one,
+	
+	NULL,	// SetOptionBits
+	ym2151_set_mutemask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangCallback
+	
+	3, devFunc_MAME,	// rwFuncs
+};
+
+const DEV_DEF* devDefList_YM2151[] =
+{
+	&devDef_MAME,
+	NULL
+};
+
+
+
 /* struct describing a single operator */
 typedef struct{
 	UINT32		phase;					/* accumulated operator phase */
@@ -1233,7 +1264,6 @@ static int ym2151_read_status( void *_chip )
 static void * ym2151_init(UINT32 clock, UINT32 rate)
 {
 	YM2151 *PSG;
-	int chn;
 
 	PSG = (YM2151 *)calloc(1, sizeof(YM2151));
 	if (PSG == NULL)
@@ -1255,10 +1285,8 @@ static void * ym2151_init(UINT32 clock, UINT32 rate)
 	PSG->tim_A      = 0;
 	PSG->tim_B      = 0;
 
-	for (chn = 0; chn < 8; chn ++)
-		PSG->Muted[chn] = 0x00;
-	//ym2151_reset_chip(PSG);
-	/*logerror("YM2151[init] clock=%i sampfreq=%i\n", PSG->clock, PSG->sampfreq);*/
+	ym2151_set_mutemask(PSG, 0x00);
+	//logerror("YM2151[init] clock=%i sampfreq=%i\n", PSG->clock, PSG->sampfreq);
 
 	return PSG;
 }
@@ -1286,9 +1314,9 @@ static void ym2151_reset_chip(void *_chip)
 	/* initialize hardware registers */
 	for (i=0; i<32; i++)
 	{
-		memset(&chip->oper[i],'\0',sizeof(YM2151Operator));
+		memset(&chip->oper[i],0,sizeof(YM2151Operator));
 		chip->oper[i].volume = MAX_ATT_INDEX;
-	        chip->oper[i].kc_i = 768; /* min kc_i value */
+		chip->oper[i].kc_i = 768; /* min kc_i value */
 	}
 
 	chip->eg_timer = 0;
@@ -2113,36 +2141,6 @@ static void ym2151_set_mutemask(void *chip, UINT32 MuteMask)
 }
 
 
-
-static DEVDEF_RWFUNC devFunc_MAME[] =
-{
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2151_w},
-	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2151_r},
-	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, ym2151_write_reg},
-};
-static DEV_DEF devDef_MAME =
-{
-	"YM2151", "MAME", FCC_MAME,
-	
-	device_start_ym2151,
-	ym2151_shutdown,
-	ym2151_reset_chip,
-	ym2151_update_one,
-	
-	NULL,	// SetOptionBits
-	ym2151_set_mutemask,
-	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
-	
-	3, devFunc_MAME,	// rwFuncs
-};
-
-const DEV_DEF* devDefList_YM2151[] =
-{
-	&devDef_MAME,
-	NULL
-};
-
 static UINT8 device_start_ym2151(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
@@ -2164,7 +2162,6 @@ static UINT8 device_start_ym2151(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	retDevInf->devDef = &devDef_MAME;
 	return 0x00;
 }
-
 
 static UINT8 ym2151_r(void *chip, UINT8 offset)
 {

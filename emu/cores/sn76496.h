@@ -8,8 +8,8 @@ void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data);
 void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data);
 
 void SN76496Update(void *chip, UINT32 samples, DEV_SMPL** outputs);
-unsigned long int sn76496_start(void **chip, int clock, int shiftregwidth, int noisetaps,
-								int negate, int stereo, int clockdivider, int freq0);
+unsigned int sn76496_start(void **chip, int clock, int shiftregwidth, int noisetaps,
+							int negate, int stereo, int clockdivider, int freq0);
 void sn76496_shutdown(void *chip);
 void sn76496_reset(void *chip);
 void sn76496_freq_limiter(void* chip, int sample_rate);

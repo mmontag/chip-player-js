@@ -108,8 +108,8 @@ typedef struct
 {
 	DEV_INFO defInf;
 	RESMPL_STATE resmpl;
-	DEVFUNC_WRITE_A8D8 write8;
-	DEVFUNC_WRITE_A16D8 writeM8;
+	DEVFUNC_WRITE_A8D8 write8;		// write 8-bit data to 8-bit register/offset
+	DEVFUNC_WRITE_A16D8 writeM8;	// write 8-bit data to 16-bit memory offset
 	DEVFUNC_WRITE_MEMSIZE romSize;
 	DEVFUNC_WRITE_BLOCK romWrite;
 } VGM_CHIPDEV;

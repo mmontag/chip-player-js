@@ -145,7 +145,6 @@ struct _sn76496_state
 	INT32 Volume[4];	/* db volume of voice 0-2 and noise */
 	UINT32 RNG;			/* noise generator LFSR*/
 	INT32 ClockDivider;	/* clock divider */
-	INT32 CurrentClock;
 	INT32 FeedbackMask;	/* mask for feedback */
 	INT32 WhitenoiseTap1;	/* mask for white noise tap 1 (higher one, usually bit 14) */
 	INT32 WhitenoiseTap2;	/* mask for white noise tap 2 (lower one, usually bit 13)*/
@@ -295,49 +294,39 @@ void SN76496Update(void* chip, UINT32 samples, DEV_SMPL** outputs)
 	ggst[1] = 0x01;
 	while (samples > 0)
 	{
-		/* Speed Patch */
-		/*// clock chip once
-		if (R->CurrentClock > 0) // not ready for new divided clock
+		/* decrement Cycles to READY by one */
+		if (R->CyclestoREADY >0) R->CyclestoREADY--;
+
+		// handle channels 0,1,2
+		for (i = 0;i < 3;i++)
 		{
-			R->CurrentClock--;
+			R->Count[i]--;
+			if (R->Count[i] <= 0)
+			{
+				R->Output[i] ^= 1;
+				R->Count[i] = R->Period[i];
+			}
 		}
-		else // ready for new divided clock, make a new sample
+
+		// handle channel 3
+		R->Count[3]--;
+		if (R->Count[3] <= 0)
 		{
-			R->CurrentClock = R->ClockDivider-1;*/
-			/* decrement Cycles to READY by one */
-			if (R->CyclestoREADY >0) R->CyclestoREADY--;
-
-			// handle channels 0,1,2
-			for (i = 0;i < 3;i++)
+		// if noisemode is 1, both taps are enabled
+		// if noisemode is 0, the lower tap, whitenoisetap2, is held at 0
+			if (((R->RNG & R->WhitenoiseTap1)?1:0) ^ ((((R->RNG & R->WhitenoiseTap2)?1:0))*(NOISEMODE)))
 			{
-				R->Count[i]--;
-				if (R->Count[i] <= 0)
-				{
-					R->Output[i] ^= 1;
-					R->Count[i] = R->Period[i];
-				}
+				R->RNG >>= 1;
+				R->RNG |= R->FeedbackMask;
 			}
-
-			// handle channel 3
-			R->Count[3]--;
-			if (R->Count[3] <= 0)
+			else
 			{
-			// if noisemode is 1, both taps are enabled
-			// if noisemode is 0, the lower tap, whitenoisetap2, is held at 0
-				if (((R->RNG & R->WhitenoiseTap1)?1:0) ^ ((((R->RNG & R->WhitenoiseTap2)?1:0))*(NOISEMODE)))
-				{
-					R->RNG >>= 1;
-					R->RNG |= R->FeedbackMask;
-				}
-				else
-				{
-					R->RNG >>= 1;
-				}
-				R->Output[3] = R->RNG & 1;
-
-				R->Count[3] = R->Period[3];
+				R->RNG >>= 1;
 			}
-		//}
+			R->Output[3] = R->RNG & 1;
+
+			R->Count[3] = R->Period[3];
+		}
 
 
 		/*if (R->Stereo)
@@ -358,6 +347,7 @@ void SN76496Update(void* chip, UINT32 samples, DEV_SMPL** outputs)
 				+(R->Output[1]?R->Volume[1]:0)
 				+(R->Output[2]?R->Volume[2]:0)
 				+(R->Output[3]?R->Volume[3]:0);
+			out2 = out;
 		}*/
 
 		// --- CUSTOM CODE START --
@@ -496,67 +486,15 @@ static void SN76496_set_gain(sn76496_state *R,int gain)
 }
 
 
-
-//static int SN76496_init(running_device *device, sn76496_state *R, int stereo)
-static int SN76496_init(int clock, sn76496_state *R, int stereo)
-{
-	int sample_rate = clock/2;
-	int i;
-
-	for (i = 0;i < 4;i++) R->Volume[i] = 0;
-
-	R->LastRegister = 0;
-	for (i = 0;i < 8;i+=2)
-	{
-		R->Register[i] = 0;
-		R->Register[i + 1] = 0x0f;	/* volume = 0 */
-	}
-
-	for (i = 0;i < 4;i++)
-	{
-		R->Output[i] = R->Period[i] = R->Count[i] = 0;
-		R->MuteMsk[i] = ~0x00;
-	}
-
-	/* Default is SN76489A */
-	R->clock = clock;
-	R->ClockDivider = 8;
-	R->FeedbackMask = 0x10000;     /* mask for feedback */
-	R->WhitenoiseTap1 = 0x04;   /* mask for white noise tap 1*/
-	R->WhitenoiseTap2 = 0x08;   /* mask for white noise tap 2*/
-	R->Negate = 0; /* channels are not negated */
-	R->Stereo = stereo; /* depends on init */
-	R->CyclestoREADY = 1; /* assume ready is not active immediately on init. is this correct?*/
-	R->StereoMask = 0xFF; /* all channels enabled */
-	R->Freq0IsMax = 1; /* frequency set to 0 results in freq = 0x400 rather than 0 */
-
-	R->RNG = R->FeedbackMask;
-	R->Output[3] = R->RNG & 1;
-
-	R->NgpFlags = 0x00;
-	R->NgpChip2 = NULL;
-
-	//return 0;
-	return sample_rate;
-}
-
-
-//static void generic_start(running_device *device, int feedbackmask, int noisetap1, int noisetap2, int negate, int stereo, int clockdivider, int freq0)
 static int generic_start(sn76496_state *chip, int clock, int feedbackmask, int noisetap1, int noisetap2, int negate, int stereo, int clockdivider, int freq0)
 {
 	int sample_rate;
 	
-	//sn76496_state *chip = get_safe_token(device);
-	//sn76496_state *chip;
-	sn76496_state *chip2;
-	
-	//if (SN76496_init(device,chip,stereo) != 0)
-	//	fatalerror("Error creating SN76496 chip");
-	sample_rate = SN76496_init(clock & 0x7FFFFFFF, chip, stereo);
+	sample_rate = clock/2;
 	if ((clock & 0x80000000) && LastChipInit != NULL)
 	{
 		// Activate special NeoGeoPocket Mode
-		chip2 = LastChipInit;
+		sn76496_state *chip2 = LastChipInit;
 		chip2->NgpFlags = 0x80 | 0x00;
 		chip->NgpFlags = 0x80 | 0x01;
 		chip->NgpChip2 = chip2;
@@ -565,46 +503,36 @@ static int generic_start(sn76496_state *chip, int clock, int feedbackmask, int n
 	}
 	else
 	{
+		chip->NgpFlags = 0x00;
+		chip->NgpChip2 = NULL;
 		LastChipInit = chip;
 	}
 	SN76496_set_gain(chip, 0);
 	
-	chip->FeedbackMask = feedbackmask;
-	chip->WhitenoiseTap1 = noisetap1;
-	chip->WhitenoiseTap2 = noisetap2;
-	chip->Negate = negate;
-	chip->Stereo = stereo;
-	if (clockdivider)
-		chip->ClockDivider = clockdivider;
-	chip->CurrentClock = clockdivider-1;
-	chip->Freq0IsMax = freq0;
+	chip->clock = clock;
+	chip->ClockDivider = clockdivider ? clockdivider : 8;
+	chip->FeedbackMask = feedbackmask;	/* mask for feedback */
+	chip->WhitenoiseTap1 = noisetap1;	/* mask for white noise tap 1*/
+	chip->WhitenoiseTap2 = noisetap2;	/* mask for white noise tap 2*/
+	chip->Negate = negate;	/* channel negation */
+	chip->Stereo = stereo;	/* GameGear stereo */
+	chip->Freq0IsMax = freq0;	/* frequency set to 0 results in freq = 0x400 rather than 0 */
 	
-	/* Speed Patch*/
-	sample_rate /= chip->ClockDivider;
+	chip->CyclestoREADY = 1;	/* assume ready is not active immediately on init. is this correct?*/
+	chip->StereoMask = 0xFF;	/* all channels enabled */
 	
-	/*state_save_register_device_item_array(device, 0, chip->VolTable);
-	state_save_register_device_item_array(device, 0, chip->Register);
-	state_save_register_device_item(device, 0, chip->LastRegister);
-	state_save_register_device_item_array(device, 0, chip->Volume);
-	state_save_register_device_item(device, 0, chip->RNG);
-	state_save_register_device_item(device, 0, chip->ClockDivider);
-	state_save_register_device_item(device, 0, chip->CurrentClock);
-	state_save_register_device_item(device, 0, chip->FeedbackMask);
-	state_save_register_device_item(device, 0, chip->WhitenoiseTap1);
-	state_save_register_device_item(device, 0, chip->WhitenoiseTap2);
-	state_save_register_device_item(device, 0, chip->Negate);
-	state_save_register_device_item(device, 0, chip->Stereo);
-	state_save_register_device_item(device, 0, chip->StereoMask);
-	state_save_register_device_item_array(device, 0, chip->Period);
-	state_save_register_device_item_array(device, 0, chip->Count);
-	state_save_register_device_item_array(device, 0, chip->Output);
-	state_save_register_device_item(device, 0, chip->CyclestoREADY);*/
+	chip->RNG = chip->FeedbackMask;
+	chip->Output[3] = chip->RNG & 1;
+	
+	sn76496_set_mutemask(chip, 0x00);
+	
+	sample_rate = clock / 2 / chip->ClockDivider;
 	
 	return sample_rate;
 }
 
-unsigned long int sn76496_start(void **chip, int clock, int shiftregwidth, int noisetaps,
-								int negate, int stereo, int clockdivider, int freq0)
+unsigned int sn76496_start(void **chip, int clock, int shiftregwidth, int noisetaps,
+							int negate, int stereo, int clockdivider, int freq0)
 {
 	sn76496_state* sn_chip;
 	int ntap[2];
@@ -618,7 +546,7 @@ unsigned long int sn76496_start(void **chip, int clock, int shiftregwidth, int n
 	
 	// extract single noise tap bits
 	curtap = 0;
-	for (curbit = 0; curbit < 16; curbit ++)
+	for (curbit = 0; curbit < shiftregwidth; curbit ++)
 	{
 		if (noisetaps & (1 << curbit))
 		{
@@ -648,10 +576,8 @@ void sn76496_shutdown(void *chip)
 
 void sn76496_reset(void *chip)
 {
-	sn76496_state *R;
+	sn76496_state *R = (sn76496_state*)chip;
 	UINT8 i;
-	
-	R = (sn76496_state*)chip;
 	
 	for (i = 0;i < 4;i++) R->Volume[i] = 0;
 

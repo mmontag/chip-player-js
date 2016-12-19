@@ -2120,7 +2120,7 @@ ym2612_ *YM2612_Init(UINT32 Clock, UINT32 Rate, UINT8 Interpolation)
   LFO_INC_TAB[6] = (unsigned int) (48.1 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
   LFO_INC_TAB[7] = (unsigned int) (72.2 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
 
-  YM2612_Reset(YM2612);
+  YM2612_SetMute(YM2612, 0x00);
 
   return YM2612;
 }
@@ -2156,7 +2156,7 @@ void YM2612_Reset(ym2612_ *YM2612)
   YM2612->TimerBcnt = 0;
   YM2612->DAC = 0;
   YM2612->DACdata = 0;
-	YM2612->dac_highpass = 0;
+  YM2612->dac_highpass = 0;
 
   YM2612->Status = 0;
 

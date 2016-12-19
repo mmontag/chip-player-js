@@ -1057,7 +1057,6 @@ OPLL_reset (OPLL * opll)
   opll->am_phase = 0;
 
   opll->noise_seed = 0xffff;
-  //opll->mask = 0;
 
   for (i = 0; i <18; i++)
     OPLL_SLOT_reset(&opll->slot[i], i%2);

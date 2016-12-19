@@ -1306,10 +1306,7 @@ static void OPLL_initalize(YM2413 *chip)
 	}
 #endif*/
 
-	for(i = 0; i < 9; i ++)
-		chip->P_CH[i].Muted = 0x00;
-	for(i = 0; i < 5; i ++)
-		chip->MuteSpc[i] = 0x00;
+	ym2413_set_mutemask(chip, 0x0000);
 
 
 	/* Amplitude modulation: 27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples */
