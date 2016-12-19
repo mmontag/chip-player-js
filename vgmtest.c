@@ -27,6 +27,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/SoundDevs.h"
 #include "emu/EmuCores.h"
 #include "emu/cores/sn764intf.h"	// for SN76496_CFG
+#include "emu/cores/segapcm.h"		// for SEGAPCM_CFG
 
 
 typedef struct _vgm_file_header
@@ -108,6 +109,7 @@ typedef struct
 	DEV_INFO defInf;
 	RESMPL_STATE resmpl;
 	DEVFUNC_WRITE_A8D8 write8;
+	DEVFUNC_WRITE_A16D8 writeM8;
 	DEVFUNC_WRITE_MEMSIZE romSize;
 	DEVFUNC_WRITE_BLOCK romWrite;
 } VGM_CHIPDEV;
@@ -120,6 +122,7 @@ static void InitVGMChips(void);
 static void DeinitVGMChips(void);
 static void SendChipCommand_Data8(UINT8 chipID, UINT8 chipNum, UINT8 ofs, UINT8 data);
 static void SendChipCommand_RegData8(UINT8 chipID, UINT8 chipNum, UINT8 port, UINT8 reg, UINT8 data);
+static void SendChipCommand_MemData8(UINT8 chipID, UINT8 chipNum, UINT16 ofs, UINT8 data);
 static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data);
 static void ReadVGMFile(UINT32 samples);
 
@@ -362,7 +365,7 @@ static void InitVGMChips(void)
 		devCfg.smplRate = sampleRate;
 		switch(curChip)
 		{
-		case 0x00:	// SN76496
+		case DEVID_SN76496:
 			{
 				SN76496_CFG snCfg;
 				
@@ -370,13 +373,13 @@ static void InitVGMChips(void)
 					VGMHdr.bytPSG_SRWidth = 0x10;
 				if (! VGMHdr.shtPSG_Feedback)
 					VGMHdr.shtPSG_Feedback = 0x09;
-				if (! VGMHdr.bytPSG_Flags)
-					VGMHdr.bytPSG_Flags = 0x05;
+				//if (! VGMHdr.bytPSG_Flags)
+				//	VGMHdr.bytPSG_Flags = 0x00;
 				devCfg.emuCore = FCC_MAXM;
 				snCfg._genCfg = devCfg;
 				snCfg.shiftRegWidth = VGMHdr.bytPSG_SRWidth;
 				snCfg.noiseTaps = (UINT8)VGMHdr.shtPSG_Feedback;
-				snCfg.segaPSG = (VGMHdr.bytPSG_Flags & 0x01) ? 1 : 0;
+				snCfg.segaPSG = (VGMHdr.bytPSG_Flags & 0x01) ? 0 : 1;
 				snCfg.negate = (VGMHdr.bytPSG_Flags & 0x02) ? 1 : 0;
 				snCfg.stereo = (VGMHdr.bytPSG_Flags & 0x04) ? 0 : 1;
 				snCfg.clkDiv = (VGMHdr.bytPSG_Flags & 0x08) ? 1 : 8;
@@ -385,6 +388,21 @@ static void InitVGMChips(void)
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			}
+			break;
+		case DEVID_SEGAPCM:
+			{
+				SEGAPCM_CFG spCfg;
+				
+				spCfg._genCfg = devCfg;
+				spCfg.bnkshift = (VGMHdr.lngSPCMIntf >> 0) & 0xFF;
+				spCfg.bnkmask = (VGMHdr.lngSPCMIntf >> 16) & 0xFF;
+				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&spCfg, &cDev->defInf);
+				if (retVal)
+					break;
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			}
 			break;
 		default:
@@ -454,6 +472,18 @@ static void SendChipCommand_RegData8(UINT8 chipID, UINT8 chipNum, UINT8 port, UI
 	
 	cDev->write8(cDev->defInf.dataPtr, (port << 1) | 0, reg);
 	cDev->write8(cDev->defInf.dataPtr, (port << 1) | 1, data);
+	return;
+}
+
+static void SendChipCommand_MemData8(UINT8 chipID, UINT8 chipNum, UINT16 ofs, UINT8 data)
+{
+	VGM_CHIPDEV* cDev;
+	
+	cDev = &VGMChips[chipID];
+	if (cDev->writeM8 == NULL)
+		return;
+	
+	cDev->writeM8(cDev->defInf.dataPtr, ofs, data);
 	return;
 }
 
@@ -616,8 +646,19 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		SendChipCommand_RegData8(0x0C, chipID, cmd & 0x01, data[0x01], data[0x02]);
 		return 0x03;
 	case 0xB8:	// OKIM6295
+		chipID = (data[0x01] & 0x80) >> 7;
 		SendChipCommand_Data8(0x18, chipID, data[0x01] & 0x7F, data[0x02]);
 		return 0x03;
+	case 0xC0:	// Sega PCM memory write
+		{
+			UINT16 memOfs;
+			
+			memcpy(&memOfs, &data[0x01], 0x02);
+			chipID = (data[0x01] & 0x8000) >> 15;
+			memOfs &= 0x7FFF;
+			SendChipCommand_MemData8(0x04, chipID, memOfs, data[0x03]);
+		}
+		return 0x04;
 	default:
 		return VGM_CMDLEN[cmd >> 4];
 	}

@@ -92,7 +92,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -120,7 +120,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,6 +154,7 @@
     <ClCompile Include="emu\cores\2612intf.c" />
     <ClCompile Include="emu\cores\emu2413.c" />
     <ClCompile Include="emu\cores\fmopn2612.c" />
+    <ClCompile Include="emu\cores\segapcm.c" />
     <ClCompile Include="emu\cores\ym2151.c" />
     <ClCompile Include="emu\cores\ym2413.c" />
     <ClCompile Include="emu\cores\ym2612.c" />
@@ -174,6 +175,7 @@
     <ClInclude Include="emu\cores\opll_2413tone.h" />
     <ClInclude Include="emu\cores\opll_281btone.h" />
     <ClInclude Include="emu\cores\opll_vrc7tone.h" />
+    <ClInclude Include="emu\cores\segapcm.h" />
     <ClInclude Include="emu\cores\ym2151.h" />
     <ClInclude Include="emu\cores\ym2413.h" />
     <ClInclude Include="emu\cores\ym2612.h" />
