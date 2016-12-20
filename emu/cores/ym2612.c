@@ -5,8 +5,8 @@
 /* Almost constantes are taken from the MAME core          */
 /*                                                         */
 /* This source is a part of Gens project                   */
-/* Written by Stéphane Dallongeville (gens@consolemul.com) */
-/* Copyright (c) 2002 by Stéphane Dallongeville            */
+/* Written by StÃ©phane Dallongeville (gens@consolemul.com) */
+/* Copyright (c) 2002 by StÃ©phane Dallongeville            */
 /*                                                         */
 /***********************************************************/
 
@@ -38,7 +38,7 @@
 #endif
 
 /********************************************
- *            Partie définition             *
+ *            Partie dÃ©finition             *
  ********************************************/
 
 #define YM_DEBUG_LEVEL 0
@@ -266,14 +266,14 @@ INLINE void CALC_FINC_SL(slot_ *SL, int finc, int kc)
 
   SL->Finc = (finc + SL->DT[kc]) * SL->MUL;
 
-  ksr = kc >> SL->KSR_S;  // keycode atténuation
+  ksr = kc >> SL->KSR_S;  // keycode attÃ©nuation
 
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "FINC = %d  SL->Finc = %d\n", finc, SL->Finc);
 #endif
 
-	if (SL->KSR != ksr)		// si le KSR a changé alors
-	{						// les différents taux pour l'enveloppe sont mis à jour
+	if (SL->KSR != ksr)		// si le KSR a changÃ© alors
+	{						// les diffÃ©rents taux pour l'enveloppe sont mis Ã  jour
     SL->KSR = ksr;
 
     SL->EincA = SL->AR[ksr];
@@ -318,9 +318,9 @@ INLINE void CALC_FINC_CH(channel_ *CH)
 
 INLINE void KEY_ON(channel_ *CH, int nsl)
 {
-  slot_ *SL = &(CH->SLOT[nsl]);  // on recupère le bon pointeur de slot
+  slot_ *SL = &(CH->SLOT[nsl]);  // on recupÃ¨re le bon pointeur de slot
 
-  if(SL->Ecurp == RELEASE)    // la touche est-elle relâchée ?
+  if(SL->Ecurp == RELEASE)    // la touche est-elle relÃ¢chÃ©e ?
   {
     SL->Fcnt = 0;
 
@@ -341,9 +341,9 @@ INLINE void KEY_ON(channel_ *CH, int nsl)
 
 INLINE void KEY_OFF(channel_ *CH, int nsl)
 {
-  slot_ *SL = &(CH->SLOT[nsl]);  // on recupère le bon pointeur de slot
+  slot_ *SL = &(CH->SLOT[nsl]);  // on recupÃ¨re le bon pointeur de slot
 
-  if(SL->Ecurp != RELEASE)    // la touche est-elle appuyée ?
+  if(SL->Ecurp != RELEASE)    // la touche est-elle appuyÃ©e ?
   {
     if(SL->Ecnt < ENV_DECAY)  // attack phase ?
     {
@@ -719,7 +719,7 @@ int YM_SET(ym2612_ *YM2612, int Adr, unsigned char data)
       break;
 
     case 0x27:
-      // Paramètre divers
+      // ParamÃ¨tre divers
       // b7 = CSM MODE
       // b6 = 3 slot mode
       // b5 = reset b
@@ -761,13 +761,13 @@ int YM_SET(ym2612_ *YM2612, int Adr, unsigned char data)
       YM2612_Special_Update(YM2612);
 
       if(data & 0x10) KEY_ON(CH, S0);  // On appuie sur la touche pour le slot 1
-      else KEY_OFF(CH, S0);        // On relâche la touche pour le slot 1
+      else KEY_OFF(CH, S0);        // On relÃ¢che la touche pour le slot 1
       if(data & 0x20) KEY_ON(CH, S1);  // On appuie sur la touche pour le slot 3
-      else KEY_OFF(CH, S1);        // On relâche la touche pour le slot 3
+      else KEY_OFF(CH, S1);        // On relÃ¢che la touche pour le slot 3
       if(data & 0x40) KEY_ON(CH, S2);  // On appuie sur la touche pour le slot 2
-      else KEY_OFF(CH, S2);        // On relâche la touche pour le slot 2
+      else KEY_OFF(CH, S2);        // On relÃ¢che la touche pour le slot 2
       if(data & 0x80) KEY_ON(CH, S3);  // On appuie sur la touche pour le slot 4
-      else KEY_OFF(CH, S3);        // On relâche la touche pour le slot 4
+      else KEY_OFF(CH, S3);        // On relÃ¢che la touche pour le slot 4
 
 #if YM_DEBUG_LEVEL > 0
       fprintf(debug_file, "CHANNEL[%d]  KEY %.1X\n", nch, ((data & 0xf0) >> 4));
@@ -775,13 +775,13 @@ int YM_SET(ym2612_ *YM2612, int Adr, unsigned char data)
       break;
 
     case 0x2A:
-      YM2612->DACdata = ((int) data - 0x80) << DAC_SHIFT;  // donnée du DAC
+      YM2612->DACdata = ((int) data - 0x80) << DAC_SHIFT;  // donnÃ©e du DAC
       break;
 
     case 0x2B:
       if(YM2612->DAC ^ (data & 0x80)) YM2612_Special_Update(YM2612);
 
-      YM2612->DAC = data & 0x80;  // activation/désactivation du DAC
+      YM2612->DAC = data & 0x80;  // activation/dÃ©sactivation du DAC
       break;
   }
 
@@ -791,7 +791,7 @@ int YM_SET(ym2612_ *YM2612, int Adr, unsigned char data)
 
 
 /***********************************************
- *          fonctions de génération            *
+ *          fonctions de gÃ©nÃ©ration            *
  ***********************************************/
 
 
@@ -1866,7 +1866,7 @@ static void Update_Chan_Algo7_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
  ***********************************************/
 
 
-// Initialisation de l'émulateur YM2612
+// Initialisation de l'Ã©mulateur YM2612
 ym2612_ *YM2612_Init(UINT32 Clock, UINT32 Rate, UINT8 Interpolation)
 {
   ym2612_ *YM2612;
@@ -2369,7 +2369,7 @@ void YM2612_Update(ym2612_ *YM2612, DEV_SMPL **buf, UINT32 length)
   fprintf(debug_file, "\n\nStarting generating sound...\n\n");
 #endif
 
-  // Mise ?jour des pas des compteurs-fréquences s'ils ont ét?modifiés
+  // Mise ?jour des pas des compteurs-frÃ©quences s'ils ont Ã©t?modifiÃ©s
 
   if(YM2612->CHANNEL[0].SLOT[0].Finc == -1) CALC_FINC_CH(&YM2612->CHANNEL[0]);
   if(YM2612->CHANNEL[1].SLOT[0].Finc == -1) CALC_FINC_CH(&YM2612->CHANNEL[1]);
