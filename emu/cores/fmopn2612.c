@@ -683,7 +683,7 @@ typedef struct
 #define LOG(n,x) do { if( (n)>=LOG_LEVEL ) logerror x; } while (0)
 #endif
 
-static UINT8 IsVGMInit = 0;
+static UINT8 IsVGMInit = 0;	// TODO: turn into an actual option
 static UINT8 tablesInit = 0;
 
 /* status set and IRQ handling */

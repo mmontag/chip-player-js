@@ -1,6 +1,7 @@
 #ifndef __SN76489_H__
 #define __SN76489_H__
 
+#include <stdtype.h>
 #include "../snddef.h"
 
 

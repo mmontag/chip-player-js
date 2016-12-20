@@ -1,6 +1,7 @@
 #ifndef __SEGAPCM_H__
 #define __SEGAPCM_H__
 
+#include <stdtype.h>
 #include "../EmuStructs.h"
 
 #define	SEGAPCM_BANK_256	11

@@ -6,6 +6,8 @@
 
 */
 
+#include <stdtype.h>
+
 /* --- select emulation chips --- */
 #define BUILD_YM2203  1		// build YM2203(OPN)   emulator
 #define BUILD_YM2608  1		// build YM2608(OPNA)  emulator

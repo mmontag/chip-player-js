@@ -134,6 +134,9 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/ym2612.o \
 	$(LIBEMUOBJ)/cores/ym2151.o \
 	$(LIBEMUOBJ)/cores/segapcm.o \
+	$(LIBEMUOBJ)/cores/rf5cintf.o \
+	$(LIBEMUOBJ)/cores/rf5c68.o \
+	$(LIBEMUOBJ)/cores/scd_pcm.o \
 	$(LIBEMUOBJ)/cores/okim6295.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o

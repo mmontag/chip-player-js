@@ -1,6 +1,8 @@
 #ifndef _YM2612_H_
 #define _YM2612_H_
 
+#include <stdtype.h>
+
 typedef struct ym2612__ ym2612_;
 
 ym2612_ *YM2612_Init(UINT32 clock, UINT32 rate, UINT8 interpolation);

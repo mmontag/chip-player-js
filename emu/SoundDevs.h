@@ -6,6 +6,7 @@
 #define DEVID_YM2612	0x02
 #define DEVID_YM2151	0x03
 #define DEVID_SEGAPCM	0x04
+#define DEVID_RF5C68	0x05
 #define DEVID_OKIM6295	0x18
 
 #endif	// __SOUNDDEVS_H__

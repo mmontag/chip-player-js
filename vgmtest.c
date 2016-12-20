@@ -405,6 +405,19 @@ static void InitVGMChips(void)
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			}
 			break;
+		case DEVID_RF5C68:
+		case 0x10:	// DEVID_RF5C164
+			if (curChip == DEVID_RF5C68)
+				devCfg.emuCore = FCC_MAME;
+			else
+				devCfg.emuCore = FCC_GENS;
+			retVal = SndEmu_Start(DEVID_RF5C68, &devCfg, &cDev->defInf);
+			if (retVal)
+				break;
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
@@ -487,7 +500,7 @@ static void SendChipCommand_MemData8(UINT8 chipID, UINT8 chipNum, UINT16 ofs, UI
 	return;
 }
 
-static void WriteChipMem(UINT8 chipID, UINT8 chipNum, UINT8 memID,
+static void WriteChipROM(UINT8 chipID, UINT8 chipNum, UINT8 memID,
 						 UINT32 memSize, UINT32 dataOfs, UINT32 dataSize, const UINT8* data)
 {
 	VGM_CHIPDEV* cDev;
@@ -495,6 +508,17 @@ static void WriteChipMem(UINT8 chipID, UINT8 chipNum, UINT8 memID,
 	cDev = &VGMChips[chipID];
 	if (cDev->romSize != NULL)
 		cDev->romSize(cDev->defInf.dataPtr, memSize);
+	if (cDev->romWrite != NULL)
+		cDev->romWrite(cDev->defInf.dataPtr, dataOfs, dataSize, data);
+	return;
+}
+
+static void WriteChipRAM(UINT8 chipID, UINT8 chipNum,
+						 UINT32 dataOfs, UINT32 dataSize, const UINT8* data)
+{
+	VGM_CHIPDEV* cDev;
+	
+	cDev = &VGMChips[chipID];
 	if (cDev->romWrite != NULL)
 		cDev->romWrite(cDev->defInf.dataPtr, dataOfs, dataSize, data);
 	return;
@@ -529,6 +553,15 @@ static const VGM_ROMDUMP_IDS VGMROM_CHIPS[0x14] =
 	0x26, 0x00,	// X1-010
 	0x27, 0x00,	// C352
 	0x28, 0x00,	// GA20
+};
+static const VGM_ROMDUMP_IDS VGMRAM_CHIPS1[0x03] =
+{	0x05, 0x00,	// RF5C68
+	0x10, 0x00,	// RF5C164
+	0x14, 0x00,	// NES APU
+};
+static const VGM_ROMDUMP_IDS VGMRAM_CHIPS2[0x02] =
+{	0x20, 0x00,	// SCSP
+	0x24, 0x00,	// ES5503
 };
 
 static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
@@ -597,8 +630,26 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 				memcpy(&memSize, &data[0x07], 0x04);
 				memcpy(&dataOfs, &data[0x0B], 0x04);
 				dataSize = dblkLen - 0x08;
-				WriteChipMem(VGMROM_CHIPS[dblkType].chipID, chipID, VGMROM_CHIPS[dblkType].memIdx,
+				WriteChipROM(VGMROM_CHIPS[dblkType].chipID, chipID, VGMROM_CHIPS[dblkType].memIdx,
 							memSize, dataOfs, dataSize, &data[0x0F]);
+				break;
+			case 0xC0:	// RAM Write
+				dblkType &= 0x3F;
+				if (! (dblkType & 0x20))
+				{
+					dataOfs = 0x00;
+					memcpy(&dataOfs, &data[0x07], 0x02);
+					dataSize = dblkLen - 0x02;
+					WriteChipRAM(VGMRAM_CHIPS1[dblkType].chipID, chipID,
+								dataOfs, dataSize, &data[0x09]);
+				}
+				else
+				{
+					memcpy(&dataOfs, &data[0x07], 0x04);
+					dataSize = dblkLen - 0x04;
+					WriteChipRAM(VGMRAM_CHIPS2[dblkType].chipID, chipID,
+								dataOfs, dataSize, &data[0x0B]);
+				}
 				break;
 			}
 			return 0x07 + dblkLen;
@@ -645,6 +696,12 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 	case 0x5F:
 		SendChipCommand_RegData8(0x0C, chipID, cmd & 0x01, data[0x01], data[0x02]);
 		return 0x03;
+	case 0xB0:	// RF5C68
+		SendChipCommand_Data8(0x05, chipID, data[0x01], data[0x02]);
+		return 0x03;
+	case 0xB1:	// RF5C164
+		SendChipCommand_Data8(0x10, chipID, data[0x01], data[0x02]);
+		return 0x03;
 	case 0xB8:	// OKIM6295
 		chipID = (data[0x01] & 0x80) >> 7;
 		SendChipCommand_Data8(0x18, chipID, data[0x01] & 0x7F, data[0x02]);
@@ -657,6 +714,17 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			chipID = (data[0x01] & 0x8000) >> 15;
 			memOfs &= 0x7FFF;
 			SendChipCommand_MemData8(0x04, chipID, memOfs, data[0x03]);
+		}
+		return 0x04;
+	case 0xC1:	// RF5C68 memory write
+	case 0xC2:	// RF5C164 memory write
+		{
+			UINT16 memOfs;
+			memcpy(&memOfs, &data[0x01], 0x02);
+			if (cmd == 0xC1)
+				SendChipCommand_MemData8(0x05, chipID, memOfs, data[0x03]);
+			else
+				SendChipCommand_MemData8(0x10, chipID, memOfs, data[0x03]);
 		}
 		return 0x04;
 	default:

@@ -63,6 +63,15 @@
     <ClCompile Include="emu\cores\segapcm.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\rf5c68.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\rf5cintf.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\scd_pcm.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -135,6 +144,15 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\segapcm.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\rf5c68.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\rf5cintf.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\scd_pcm.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

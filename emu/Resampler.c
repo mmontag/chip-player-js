@@ -54,7 +54,7 @@ void Resmpl_Init(RESMPL_STATE* CAA)
 	}
 	/*if (CAA->Resampler == RESALGO_LINEAR_UP || CAA->Resampler == RESALGO_LINEAR_DOWN)
 	{
-		if (ResampleMode == 0x02 || (ResampleMode == 0x01 && CAA->Resampler == RESALGO_LINEAR_DOWN))
+		if (CAA->ResampleMode == 0x02 || (CAA->ResampleMode == 0x01 && CAA->Resampler == RESALGO_LINEAR_DOWN))
 			CAA->Resampler = RESALGO_OLD;
 	}*/
 	
@@ -309,7 +309,7 @@ static void Resmpl_Exec_Copy(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSam
 
 static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample)
 {
-	// RESALGO_LINEAR_DOWN: Downsampling
+	// RESALGO_LINEAR_DOWN: Linear Downsampling
 	DEV_SMPL* CurBufL;
 	DEV_SMPL* CurBufR;
 	DEV_SMPL* StreamPnt[0x02];
