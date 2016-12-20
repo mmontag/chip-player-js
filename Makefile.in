@@ -27,8 +27,7 @@ SHELL		= /bin/sh
 
 DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL install-sh configure configure.ac config.sub \
-		  config.guess Makefile.in libxmp.pc.in libxmp.map Makefile.os2 \
-		  Makefile.vc
+		  config.guess Makefile.in libxmp.pc.in libxmp.map Makefile.vc
 DDIRS		= docs include src loaders prowiz depackers win32 os2 test
 V		= 0
 LIB		= libxmp.a
@@ -170,11 +169,15 @@ depend:
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 	    
-dist: version-prepare all-docs dist-prepare vc-prepare dist-jni dist-subdirs
+dist: version-prepare all-docs dist-prepare vc-prepare dist-jni dist-subdirs dist-os2
 
 dist-jni:
 	mkdir $(DIST)/jni
 	cp jni/Android.mk jni/Application.mk $(DIST)/jni
+
+dist-os2:
+	mkdir $(DIST)/os2
+	cp os2/Makefile.os2 $(DIST)/os2
 
 dist-prepare:
 	./config.status
