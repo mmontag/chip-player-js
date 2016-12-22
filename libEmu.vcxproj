@@ -153,7 +153,9 @@
     <ClCompile Include="emu\cores\2413intf.c" />
     <ClCompile Include="emu\cores\2612intf.c" />
     <ClCompile Include="emu\cores\emu2413.c" />
+    <ClCompile Include="emu\cores\fmopn.c" />
     <ClCompile Include="emu\cores\fmopn2612.c" />
+    <ClCompile Include="emu\cores\opnintf.c" />
     <ClCompile Include="emu\cores\rf5c68.c" />
     <ClCompile Include="emu\cores\rf5cintf.c" />
     <ClCompile Include="emu\cores\scd_pcm.c" />
@@ -161,6 +163,7 @@
     <ClCompile Include="emu\cores\ym2151.c" />
     <ClCompile Include="emu\cores\ym2413.c" />
     <ClCompile Include="emu\cores\ym2612.c" />
+    <ClCompile Include="emu\cores\ymdeltat.c" />
     <ClCompile Include="emu\panning.c" />
     <ClCompile Include="emu\cores\okim6295.c" />
     <ClCompile Include="emu\Resampler.c" />
@@ -178,6 +181,7 @@
     <ClInclude Include="emu\cores\opll_2413tone.h" />
     <ClInclude Include="emu\cores\opll_281btone.h" />
     <ClInclude Include="emu\cores\opll_vrc7tone.h" />
+    <ClInclude Include="emu\cores\opnintf.h" />
     <ClInclude Include="emu\cores\rf5c68.h" />
     <ClInclude Include="emu\cores\rf5cintf.h" />
     <ClInclude Include="emu\cores\scd_pcm.h" />
@@ -186,6 +190,7 @@
     <ClInclude Include="emu\cores\ym2413.h" />
     <ClInclude Include="emu\cores\ym2612.h" />
     <ClInclude Include="emu\cores\ym2612_int.h" />
+    <ClInclude Include="emu\cores\ymdeltat.h" />
     <ClInclude Include="emu\panning.h" />
     <ClInclude Include="emu\EmuCores.h" />
     <ClInclude Include="emu\EmuStructs.h" />

@@ -71,8 +71,8 @@ struct _ssg_callbacks
 
 
 
-typedef void (*FM_TIMERHANDLER)(void *param,int c,int cnt,int clock);
-typedef void (*FM_IRQHANDLER)(void *param,int irq);
+typedef void (*FM_TIMERHANDLER)(void *param,UINT8 c,INT32 cnt,UINT32 clock);
+typedef void (*FM_IRQHANDLER)(void *param,UINT8 irq);
 /* FM_TIMERHANDLER : Stop or Start timer         */
 /* int n          = chip number                  */
 /* int c          = Channel 0=TimerA,1=TimerB    */
@@ -96,7 +96,7 @@ typedef void (*FM_IRQHANDLER)(void *param,int irq);
 ** 'IRQHandler'    IRQ callback handler when changed IRQ level
 ** return      0 = success
 */
-void * ym2203_init(void *param, int baseclock, int rate,
+void * ym2203_init(void *param, UINT32 baseclock, UINT32 rate,
                FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg);
 
 /*
@@ -129,7 +129,7 @@ UINT8 ym2203_read(void *chip, UINT8 a);
 /*
 **  Timer OverFlow
 */
-int ym2203_timer_over(void *chip, int c);
+UINT8 ym2203_timer_over(void *chip, UINT8 c);
 
 /*
 **  Channel Muting
@@ -139,7 +139,7 @@ void ym2203_set_mutemask(void *chip, UINT32 MuteMask);
 
 #if BUILD_YM2608
 /* -------------------- YM2608(OPNA) Interface -------------------- */
-void * ym2608_init(void *param, int baseclock, int rate,
+void * ym2608_init(void *param, UINT32 baseclock, UINT32 rate,
                FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg);
 void ym2608_shutdown(void *chip);
 void ym2608_reset_chip(void *chip);
@@ -147,16 +147,16 @@ void ym2608_update_one(void *chip, UINT32 length, DEV_SMPL **buffer);
 
 void ym2608_write(void *chip, UINT8 a, UINT8 v);
 UINT8 ym2608_read(void *chip, UINT8 a);
-int ym2608_timer_over(void *chip, int c );
-void ym2608_write_pcmrom(void *chip, UINT8 rom_id, offs_t ROMSize, offs_t DataStart,
-						 offs_t DataLength, const UINT8* ROMData);
+UINT8 ym2608_timer_over(void *chip, UINT8 c );
+void ym2608_alloc_pcmromb(void* chip, UINT32 memsize);
+void ym2608_write_pcmromb(void* chip, UINT32 offset, UINT32 length, const UINT8* data);
 
 void ym2608_set_mutemask(void *chip, UINT32 MuteMask);
 #endif /* BUILD_YM2608 */
 
 #if (BUILD_YM2610||BUILD_YM2610B)
 /* -------------------- YM2610(OPNB) Interface -------------------- */
-void * ym2610_init(void *param, int baseclock, int rate,
+void * ym2610_init(void *param, UINT32 baseclock, UINT32 rate,
                FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg);
 void ym2610_shutdown(void *chip);
 void ym2610_reset_chip(void *chip);
@@ -168,9 +168,11 @@ void ym2610b_update_one(void *chip, UINT32 length, DEV_SMPL **buffer);
 
 void ym2610_write(void *chip, UINT8 a, UINT8 v);
 UINT8 ym2610_read(void *chip, UINT8 a);
-int ym2610_timer_over(void *chip, int c );
-void ym2610_write_pcmrom(void *chip, UINT8 rom_id, offs_t ROMSize, offs_t DataStart,
-						 offs_t DataLength, const UINT8* ROMData);
+UINT8 ym2610_timer_over(void *chip, UINT8 c );
+void ym2610_alloc_pcmroma(void* chip, UINT32 memsize);
+void ym2610_write_pcmroma(void* chip, UINT32 offset, UINT32 length, const UINT8* data);
+void ym2610_alloc_pcmromb(void* chip, UINT32 memsize);
+void ym2610_write_pcmromb(void* chip, UINT32 offset, UINT32 length, const UINT8* data);
 
 void ym2610_set_mutemask(void *chip, UINT32 MuteMask);
 #endif /* (BUILD_YM2610||BUILD_YM2610B) */
@@ -184,7 +186,7 @@ void ym2612_update_one(void *chip, UINT32 length, DEV_SMPL **buffer);
 
 void ym2612_write(void *chip, UINT8 a, UINT8 v);
 UINT8 ym2612_read(void *chip, UINT8 a);
-int ym2612_timer_over(void *chip, int c );
+UINT8 ym2612_timer_over(void *chip, UINT8 c );
 
 void ym2612_set_mutemask(void *chip, UINT32 MuteMask);
 void ym2612_setoptions(void *chip, UINT32 Flags);

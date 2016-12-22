@@ -77,7 +77,7 @@ const DEV_DEF* devDefList_RF5C68[] =
 	&devDef_MAME,
 #endif
 #ifdef EC_RF5C68_GENS
-	&devDef_Gens,	// default, because it's better than MAME
+	&devDef_Gens,
 #endif
 	NULL
 };
@@ -88,12 +88,10 @@ static UINT8 device_start_rf5c68_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT8 mode;
 	UINT32 clock;
 	UINT32 rate;
 	
 	clock = CHPCLK_CLOCK(cfg->clock);
-	mode = CHPCLK_FLAG(cfg->clock);
 	
 	rate = clock / 384;
 	chip = device_start_rf5c68(clock);

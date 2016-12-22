@@ -12,6 +12,7 @@
 #include "cores/ym2151.h"
 #include "cores/segapcm.h"
 #include "cores/rf5cintf.h"
+#include "cores/opnintf.h"
 #include "cores/okim6295.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -30,6 +31,12 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_SegaPCM;
 	case DEVID_RF5C68:
 		return devDefList_RF5C68;
+	case DEVID_YM2203:
+		return devDefList_YM2203;
+	case DEVID_YM2608:
+		return devDefList_YM2608;
+	case DEVID_YM2610:
+		return devDefList_YM2610;
 	case DEVID_OKIM6295:
 		return devDefList_OKIM6295;
 	}
@@ -76,9 +83,12 @@ UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devDef, UINT8 funcType, UINT8 rwType, 
 		tempFnc = &devDef->rwFuncs[curFunc];
 		if (tempFnc->funcType == funcType && tempFnc->rwType == rwType)
 		{
-			if (foundFunc == 0)
-				firstFunc = curFunc;
-			foundFunc ++;
+			if (! reserved || reserved == tempFnc->user)
+			{
+				if (foundFunc == 0)
+					firstFunc = curFunc;
+				foundFunc ++;
+			}
 		}
 	}
 	if (foundFunc == 0)

@@ -611,11 +611,11 @@ typedef struct
 /* OPN 3slot struct */
 typedef struct
 {
-	UINT32  fc[3];			/* fnum3,blk3: calculated */
+	UINT32	fc[3];			/* fnum3,blk3: calculated */
 	UINT8	fn_h;			/* freq3 latch */
 	UINT8	kcode[3];		/* key code */
 	UINT32	block_fnum[3];	/* current fnum value for this slot (can be different betweeen slots of one channel in 3slot mode) */
-	UINT8   key_csm;        /* CSM mode Key-ON flag */
+	UINT8	key_csm;        /* CSM mode Key-ON flag */
 } FM_3SLOT;
 
 /* OPN/A/B common state */
@@ -625,7 +625,7 @@ typedef struct
 	FM_ST	ST;				/* general state */
 	FM_3SLOT SL3;			/* 3 slot mode state */
 	FM_CH	*P_CH;			/* pointer of CH */
-	unsigned int pan[6*2];	/* fm channels output masks (0xffffffff = enable) */
+	UINT32	pan[6*2];	/* fm channels output masks (0xffffffff = enable) */
 
 	UINT32	eg_cnt;			/* global envelope generator counter */
 	UINT32	eg_timer;		/* global envelope generator counter works at frequency = chipclock/144/3 */
@@ -634,17 +634,17 @@ typedef struct
 
 
 	/* there are 2048 FNUMs that can be generated using FNUM/BLK registers
-       but LFO works with one more bit of a precision so we really need 4096 elements */
-	UINT32  fn_table[4096]; /* fnumber->increment counter */
-	UINT32 fn_max;    /* maximal phase increment (used for phase overflow) */
+	   but LFO works with one more bit of a precision so we really need 4096 elements */
+	UINT32	fn_table[4096]; /* fnumber->increment counter */
+	UINT32	fn_max;    /* maximal phase increment (used for phase overflow) */
 
 	/* LFO */
-	UINT8   lfo_cnt;            /* current LFO phase (out of 128) */
-	UINT32  lfo_timer;          /* current LFO phase runs at LFO frequency */
-	UINT32  lfo_timer_add;      /* step of lfo_timer */
-	UINT32  lfo_timer_overflow; /* LFO timer overflows every N samples (depends on LFO frequency) */
-	UINT32  LFO_AM;             /* current LFO AM step */
-	UINT32  LFO_PM;             /* current LFO PM step */
+	UINT8	lfo_cnt;            /* current LFO phase (out of 128) */
+	UINT32	lfo_timer;          /* current LFO phase runs at LFO frequency */
+	UINT32	lfo_timer_add;      /* step of lfo_timer */
+	UINT32	lfo_timer_overflow; /* LFO timer overflows every N samples (depends on LFO frequency) */
+	UINT32	LFO_AM;             /* current LFO AM step */
+	UINT32	LFO_PM;             /* current LFO PM step */
 
 	INT32	m2,c1,c2;		/* Phase Modulation input for operators 2,3,4 */
 	INT32	mem;			/* one sample delay memory */
@@ -908,6 +908,7 @@ INLINE void set_timers( FM_OPN *OPN, FM_ST *ST, void *n, int v )
 		ST->TBC = ( 256-ST->TB)<<4;
 		/* External timer handler */
 		if (ST->timer_handler) (ST->timer_handler)(n,1,ST->TBC * ST->timer_prescaler,ST->clock);
+		ST->TBC *= 4096;
 	}
 	// load a
 	if ((v&1) && !(ST->mode&1))
@@ -1338,8 +1339,9 @@ INLINE void advance_eg_channel(FM_OPN *OPN, FM_SLOT *SLOT)
 		// Valley Bell: These few lines are missing in Genesis Plus GX' ym2612 core file.
 		//              Disabling them fixes the SSG-EG.
 		// Additional Note: Asterix and the Great Rescue: Level 1 sounds "better" with these lines,
-		//					but less accurate.
-		/*out = ((UINT32)SLOT->volume);
+		//                  but less accurate.
+#if 0
+		out = ((UINT32)SLOT->volume);
 
 		// negate output (changes come from alternate bit, init comes from attack bit)
 		if ((SLOT->ssg&0x08) && (SLOT->ssgn&2) && (SLOT->state > EG_REL))
@@ -1347,7 +1349,8 @@ INLINE void advance_eg_channel(FM_OPN *OPN, FM_SLOT *SLOT)
 
 		// we need to store the result here because we are going to change ssgn
 		//  in next instruction
-		SLOT->vol_out = out + SLOT->tl;*/
+		SLOT->vol_out = out + SLOT->tl;
+#endif
 
 		SLOT++;
 		i--;
@@ -2375,8 +2378,8 @@ void * ym2612_init(void *param, UINT32 clock, UINT32 rate,
 	F2612->OPN.P_CH = F2612->CH;
 	F2612->OPN.ST.clock = clock;
 	F2612->OPN.ST.rate = rate;
-	/* F2612->OPN.ST.irq = 0; */
-	/* F2612->OPN.ST.status = 0; */
+	// F2612->OPN.ST.irq = 0;
+	// F2612->OPN.ST.status = 0;
 	/* Extend handler */
 	F2612->OPN.ST.timer_handler = timer_handler;
 	F2612->OPN.ST.IRQ_Handler   = IRQHandler;
@@ -2546,7 +2549,7 @@ UINT8 ym2612_read(void *chip, UINT8 a)
 	return 0;
 }
 
-int ym2612_timer_over(void *chip,int c)
+UINT8 ym2612_timer_over(void *chip,UINT8 c)
 {
 	YM2612 *F2612 = (YM2612 *)chip;
 

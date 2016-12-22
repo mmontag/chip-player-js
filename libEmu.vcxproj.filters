@@ -72,6 +72,15 @@
     <ClCompile Include="emu\cores\scd_pcm.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\fmopn.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\opnintf.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\ymdeltat.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -153,6 +162,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\scd_pcm.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\opnintf.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\ymdeltat.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

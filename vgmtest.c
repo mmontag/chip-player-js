@@ -112,6 +112,8 @@ typedef struct
 	DEVFUNC_WRITE_A16D8 writeM8;	// write 8-bit data to 16-bit memory offset
 	DEVFUNC_WRITE_MEMSIZE romSize;
 	DEVFUNC_WRITE_BLOCK romWrite;
+	DEVFUNC_WRITE_MEMSIZE romSizeB;
+	DEVFUNC_WRITE_BLOCK romWriteB;
 } VGM_CHIPDEV;
 
 
@@ -179,7 +181,7 @@ int main(int argc, char* argv[])
 		gzread(hFile, &VGMData[0x08], VGMLen - 0x08);
 		
 		memcpy(&tempData[0], &VGMData[0x34], 0x04);
-		tempData[0] += (tempData[0] == 0) ? 0x34 : 0x40;
+		tempData[0] += (tempData[0] == 0) ? 0x40 : 0x34;
 		tempData[1] = sizeof(VGM_HEADER);
 		if (tempData[0] > tempData[1])
 			tempData[0] = tempData[1];
@@ -418,6 +420,18 @@ static void InitVGMChips(void)
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			break;
+		case DEVID_YM2610:
+			if (curChip == DEVID_YM2612)
+				devCfg.emuCore = FCC_GPGX;
+			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
+			if (retVal)
+				break;
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'A', (void**)&cDev->romSize);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 'A', (void**)&cDev->romWrite);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'B', (void**)&cDev->romSizeB);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 'B', (void**)&cDev->romWriteB);
+			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
@@ -506,10 +520,20 @@ static void WriteChipROM(UINT8 chipID, UINT8 chipNum, UINT8 memID,
 	VGM_CHIPDEV* cDev;
 	
 	cDev = &VGMChips[chipID];
-	if (cDev->romSize != NULL)
-		cDev->romSize(cDev->defInf.dataPtr, memSize);
-	if (cDev->romWrite != NULL)
-		cDev->romWrite(cDev->defInf.dataPtr, dataOfs, dataSize, data);
+	if (memID == 0)
+	{
+		if (cDev->romSize != NULL)
+			cDev->romSize(cDev->defInf.dataPtr, memSize);
+		if (cDev->romWrite != NULL)
+			cDev->romWrite(cDev->defInf.dataPtr, dataOfs, dataSize, data);
+	}
+	else
+	{
+		if (cDev->romSizeB != NULL)
+			cDev->romSizeB(cDev->defInf.dataPtr, memSize);
+		if (cDev->romWriteB != NULL)
+			cDev->romWriteB(cDev->defInf.dataPtr, dataOfs, dataSize, data);
+	}
 	return;
 }
 
@@ -534,9 +558,9 @@ typedef struct
 } VGM_ROMDUMP_IDS;
 static const VGM_ROMDUMP_IDS VGMROM_CHIPS[0x14] =
 {	0x04, 0x00,	// SegaPCM
-	0x07, 0x02,	// YM2608 DeltaT
-	0x08, 0x01,	// YM2610 ADPCM
-	0x08, 0x02,	// YM2610 DeltaT
+	0x07, 0x00,	// YM2608 DeltaT
+	0x08, 0x00,	// YM2610 ADPCM
+	0x08, 0x01,	// YM2610 DeltaT
 	0x0D, 0x00,	// YMF278B ROM
 	0x0E, 0x00,	// YMF271
 	0x0F, 0x00,	// YMZ280B
