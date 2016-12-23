@@ -39,7 +39,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetOptionBits
 	rf5c68_set_mute_mask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	5, devFunc_MAME,	// rwFuncs
 };
@@ -65,7 +65,7 @@ static DEV_DEF devDef_Gens =
 	NULL,	// SetOptionBits
 	SCD_PCM_SetMuteMask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	5, devFunc_Gens,	// rwFuncs
 };

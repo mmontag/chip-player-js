@@ -45,7 +45,7 @@ static DEV_DEF devDef_MAME_2203 =
 	NULL,	// SetOptionBits
 	ym2203_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	2, devFunc_MAME_2203,	// rwFuncs
 };
@@ -75,7 +75,7 @@ static DEV_DEF devDef_MAME_2608 =
 	NULL,	// SetOptionBits
 	ym2608_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	4, devFunc_MAME_2608,	// rwFuncs
 };
@@ -107,7 +107,7 @@ static DEV_DEF devDef_MAME_2610 =
 	NULL,	// SetOptionBits
 	ym2610_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	6, devFunc_MAME_2610,	// rwFuncs
 };
@@ -123,7 +123,7 @@ static DEV_DEF devDef_MAME_2610B =
 	NULL,	// SetOptionBits
 	ym2610_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	2, devFunc_MAME_2610,	// rwFuncs
 };

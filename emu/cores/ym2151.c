@@ -69,7 +69,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetOptionBits
 	ym2151_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	3, devFunc_MAME,	// rwFuncs
 };

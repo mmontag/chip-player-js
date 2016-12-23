@@ -152,9 +152,17 @@
   <ItemGroup>
     <ClCompile Include="emu\cores\2413intf.c" />
     <ClCompile Include="emu\cores\2612intf.c" />
+    <ClCompile Include="emu\cores\adlibemu_opl2.c" />
+    <ClCompile Include="emu\cores\adlibemu_opl3.c" />
+    <ClCompile Include="emu\cores\adlibemu_opl_inc.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="emu\cores\emu2413.c" />
+    <ClCompile Include="emu\cores\fmopl.c" />
     <ClCompile Include="emu\cores\fmopn.c" />
     <ClCompile Include="emu\cores\fmopn2612.c" />
+    <ClCompile Include="emu\cores\oplintf.c" />
     <ClCompile Include="emu\cores\opnintf.c" />
     <ClCompile Include="emu\cores\rf5c68.c" />
     <ClCompile Include="emu\cores\rf5cintf.c" />
@@ -175,9 +183,13 @@
   <ItemGroup>
     <ClInclude Include="emu\cores\2413intf.h" />
     <ClInclude Include="emu\cores\2612intf.h" />
+    <ClInclude Include="emu\cores\adlibemu.h" />
+    <ClInclude Include="emu\cores\adlibemu_opl_inc.h" />
     <ClInclude Include="emu\cores\emu2413.h" />
     <ClInclude Include="emu\cores\emutypes.h" />
+    <ClInclude Include="emu\cores\fmopl.h" />
     <ClInclude Include="emu\cores\fmopn.h" />
+    <ClInclude Include="emu\cores\oplintf.h" />
     <ClInclude Include="emu\cores\opll_2413tone.h" />
     <ClInclude Include="emu\cores\opll_281btone.h" />
     <ClInclude Include="emu\cores\opll_vrc7tone.h" />

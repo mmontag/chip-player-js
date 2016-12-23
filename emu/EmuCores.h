@@ -6,5 +6,6 @@
 #define FCC_EMU_	0x454D555F	// EMU2413/EMU2149
 #define FCC_GPGX	0x47504758	// Genesis Plus GX
 #define FCC_GENS	0x47454E53	// Gens
+#define FCC_ADLE	0x41444C45	// AdLibEmu
 
 #endif	// __EMUCORES_H__

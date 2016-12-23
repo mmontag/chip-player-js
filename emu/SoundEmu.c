@@ -13,6 +13,7 @@
 #include "cores/segapcm.h"
 #include "cores/rf5cintf.h"
 #include "cores/opnintf.h"
+#include "cores/oplintf.h"
 #include "cores/okim6295.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -37,6 +38,12 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_YM2608;
 	case DEVID_YM2610:
 		return devDefList_YM2610;
+	case DEVID_YM3812:
+		return devDefList_YM3812;
+	case DEVID_YM3526:
+		return devDefList_YM3526;
+	case DEVID_Y8950:
+		return devDefList_Y8950;
 	case DEVID_OKIM6295:
 		return devDefList_OKIM6295;
 	}
@@ -56,7 +63,14 @@ UINT8 SndEmu_Start(UINT8 deviceID, const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	{
 		// emuCore == 0 -> use default
 		if (! cfg->emuCore || (*curDIL)->coreID == cfg->emuCore)
-			return (*curDIL)->Start(cfg, retDevInf);
+		{
+			UINT8 retVal;
+			
+			retVal = (*curDIL)->Start(cfg, retDevInf);
+			if (! retVal)	// if initialization is successful, reset the chip to ensure a clean state
+				(*curDIL)->Reset(retDevInf->dataPtr);
+			return retVal;
+		}
 	}
 	return EERR_UNK_DEVICE;
 }

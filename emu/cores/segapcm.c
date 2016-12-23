@@ -49,7 +49,7 @@ static DEV_DEF devDef =
 	NULL,	// SetOptionBits
 	segapcm_set_mute_mask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	4, devFunc,	// rwFuncs
 };

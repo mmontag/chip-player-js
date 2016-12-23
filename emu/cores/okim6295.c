@@ -162,7 +162,7 @@ static DEV_DEF devDef =
 	NULL,	// SetOptionBits
 	okim6295_set_mute_mask,
 	NULL,	// SetPanning
-	okim6295_set_srchg_cb,	// SetSampleRateChangCallback
+	okim6295_set_srchg_cb,	// SetSampleRateChangeCallback
 	
 	4, devFunc,	// rwFuncs
 };

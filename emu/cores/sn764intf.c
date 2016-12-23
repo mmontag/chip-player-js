@@ -51,7 +51,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetOptionBits
 	sn76496_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	1, devFunc_MAME,	// rwFuncs
 };
@@ -73,7 +73,7 @@ static DEV_DEF devDef_Maxim =
 	NULL,	// SetOptionBits
 	sn76489_mute_maxim,
 	sn76489_pan_maxim,
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	1, devFunc_Maxim,	// rwFuncs
 };

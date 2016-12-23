@@ -140,6 +140,10 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/opnintf.o \
 	$(LIBEMUOBJ)/cores/fmopn.o \
 	$(LIBEMUOBJ)/cores/ymdeltat.o \
+	$(LIBEMUOBJ)/cores/oplintf.o \
+	$(LIBEMUOBJ)/cores/fmopl.o \
+	$(LIBEMUOBJ)/cores/adlibemu_opl2.o \
+	$(LIBEMUOBJ)/cores/adlibemu_opl3.o \
 	$(LIBEMUOBJ)/cores/okim6295.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o

@@ -37,7 +37,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetOptionBits
 	ym2413_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	2, devFunc_MAME,	// rwFuncs
 };
@@ -60,7 +60,7 @@ static DEV_DEF devDef_Emu =
 	NULL,	// SetOptionBits
 	(DEVFUNC_OPTMASK)OPLL_SetMuteMask,
 	ym2413_set_panning_emu,
-	NULL,	// SetSampleRateChangCallback
+	NULL,	// SetSampleRateChangeCallback
 	
 	2, devFunc_Emu,	// rwFuncs
 };

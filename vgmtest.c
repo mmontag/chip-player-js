@@ -421,8 +421,6 @@ static void InitVGMChips(void)
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			break;
 		case DEVID_YM2610:
-			if (curChip == DEVID_YM2612)
-				devCfg.emuCore = FCC_GPGX;
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;
@@ -435,6 +433,8 @@ static void InitVGMChips(void)
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
+			else if (curChip == DEVID_YM3812)
+				devCfg.emuCore = FCC_MAME;
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;
@@ -445,11 +445,12 @@ static void InitVGMChips(void)
 		}
 		if (retVal)
 			continue;
+		// already done by SndEmu_Start()
+		//cDev->defInf.devDef->Reset(cDev->defInf.dataPtr);
+		
 		Resmpl_SetVals(&cDev->resmpl, 0xFF, 0x100, sampleRate);
 		Resmpl_DevConnect(&cDev->resmpl, &cDev->defInf);
 		Resmpl_Init(&cDev->resmpl);
-		
-		cDev->defInf.devDef->Reset(cDev->defInf.dataPtr);
 	}
 	VGMSmplPos = 0;
 	renderSmplPos = 0;
