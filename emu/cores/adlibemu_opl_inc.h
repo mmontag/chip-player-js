@@ -166,7 +166,6 @@ typedef struct opl_chip
 	Bits int_samplerate;
 	
 	Bit8u status;
-	Bit16u opl_index;
 	Bit16u opl_addr;
 #if defined(OPLTYPE_IS_OPL3)
 	Bit8u adlibreg[512];	// adlib register set (including second set)

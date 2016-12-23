@@ -735,7 +735,6 @@ void ADLIBEMU(reset)(void *chip)
 	}
 	
 	OPL->status = 0;
-	OPL->opl_index = 0;
 	OPL->opl_addr = 0;
 	
 	return;
@@ -761,7 +760,7 @@ static void adlib_write(void *chip, Bit16u idx, Bit8u val)
 {
 	OPL_DATA* OPL = (OPL_DATA*)chip;
 	
-	Bit32u second_set = idx&0x100;
+	Bit16u second_set = idx&0x100;
 	OPL->adlibreg[idx] = val;
 
 	switch (idx&0xf0)
@@ -1135,20 +1134,6 @@ UINT8 ADLIBEMU(reg_read)(void *chip, UINT8 port)
 		return OPL->status|6;
 	}
 	return 0xff;
-#endif
-}
-
-void ADLIBEMU(write_index)(void *chip, UINT8 port, UINT8 val)
-{
-	OPL_DATA* OPL = (OPL_DATA*)chip;
-	
-	OPL->opl_index = val;
-#if defined(OPLTYPE_IS_OPL3)
-	if ((port&3)!=0)
-	{
-		// possibly second set
-		if (((OPL->adlibreg[0x105]&1)!=0) || (OPL->opl_index==5)) OPL->opl_index |= ARC_SECONDSET;
-	}
 #endif
 }
 

@@ -20,7 +20,6 @@ void ADLIBEMU(writeIO)(void *chip, UINT8 addr, UINT8 val);
 void ADLIBEMU(getsample)(void *chip, UINT32 numsamples, DEV_SMPL ** sndptr);
 
 UINT8 ADLIBEMU(reg_read)(void *chip, UINT8 port);
-void ADLIBEMU(write_index)(void *chip, UINT8 port, UINT8 val);
 
 void ADLIBEMU(set_update_handler)(void *chip, ADL_UPDATEHANDLER UpdateHandler, void* param);
 void ADLIBEMU(set_mute_mask)(void *chip, UINT32 MuteMask);

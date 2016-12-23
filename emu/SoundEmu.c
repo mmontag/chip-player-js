@@ -14,6 +14,7 @@
 #include "cores/rf5cintf.h"
 #include "cores/opnintf.h"
 #include "cores/oplintf.h"
+#include "cores/262intf.h"
 #include "cores/okim6295.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -44,6 +45,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_YM3526;
 	case DEVID_Y8950:
 		return devDefList_Y8950;
+	case DEVID_YMF262:
+		return devDefList_YMF262;
 	case DEVID_OKIM6295:
 		return devDefList_OKIM6295;
 	}

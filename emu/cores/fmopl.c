@@ -592,6 +592,7 @@ static int num_lock = 0;
 
 
 
+static UINT8 tablesInit = 0;
 
 /* status set and IRQ handling */
 INLINE void OPL_STATUS_SET(FM_OPL *OPL,int flag)
@@ -1156,6 +1157,9 @@ static int init_tables(void)
 	signed int n;
 	double o,m;
 
+	if (tablesInit)
+		return 1;
+	tablesInit = 1;
 
 	for (x=0; x<TL_RES_LEN; x++)
 	{

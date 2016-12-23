@@ -434,7 +434,9 @@ static void InitVGMChips(void)
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
 			else if (curChip == DEVID_YM3812)
-				devCfg.emuCore = FCC_MAME;
+				devCfg.emuCore = FCC_ADLE;
+			else if (curChip == DEVID_YMF262)
+				devCfg.emuCore = FCC_ADLE;
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;
