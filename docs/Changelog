@@ -15,6 +15,7 @@ Stable versions
 	- fix IT message length
 	Other changes:
 	- fix double free in case of ADPCM sample load error
+	- fix infinite loop in PTM loader (reported by Lionel Debroux)
 
 4.4.1 (20161012):
 	Fix issues reported by Saga Musix:

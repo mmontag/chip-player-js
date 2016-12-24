@@ -243,6 +243,11 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	D_(D_INFO "Stored patterns: %d", mod->pat);
 
 	for (i = 0; i < mod->pat; i++) {
+
+		/* channel control to prevent infinite loop in pattern reading */
+		/* addresses fuzz bug reported by Lionel Debroux in 20161223 */
+		char chn_ctrl[32];
+
 		if (!pfh.patseg[i])
 			continue;
 
@@ -251,16 +256,29 @@ static int ptm_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 		hio_seek(f, start + 16L * pfh.patseg[i], SEEK_SET);
 		r = 0;
+
+		memset(chn_ctrl, 0, 32);
+
 		while (r < 64) {
+
 			b = hio_read8(f);
 			if (!b) {
 				r++;
+				memset(chn_ctrl, 0, 32);
 				continue;
 			}
 
 			c = b & PTM_CH_MASK;
-			if (c >= mod->chn)
+			if (chn_ctrl[c]) {
+				/* uh-oh, something wrong happened */
+				return -1;
+			}
+			/* mark this channel as read */
+			chn_ctrl[c] = 1;
+
+			if (c >= mod->chn) {
 				continue;
+			}
 
 			event = &EVENT(i, c, r);
 			if (b & PTM_NI_FOLLOW) {
