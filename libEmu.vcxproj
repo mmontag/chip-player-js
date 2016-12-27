@@ -174,6 +174,7 @@
     <ClCompile Include="emu\cores\ym2612.c" />
     <ClCompile Include="emu\cores\ymdeltat.c" />
     <ClCompile Include="emu\cores\ymf262.c" />
+    <ClCompile Include="emu\cores\ymz280b.c" />
     <ClCompile Include="emu\panning.c" />
     <ClCompile Include="emu\cores\okim6295.c" />
     <ClCompile Include="emu\Resampler.c" />
@@ -207,6 +208,7 @@
     <ClInclude Include="emu\cores\ym2612_int.h" />
     <ClInclude Include="emu\cores\ymdeltat.h" />
     <ClInclude Include="emu\cores\ymf262.h" />
+    <ClInclude Include="emu\cores\ymz280b.h" />
     <ClInclude Include="emu\panning.h" />
     <ClInclude Include="emu\EmuCores.h" />
     <ClInclude Include="emu\EmuStructs.h" />
