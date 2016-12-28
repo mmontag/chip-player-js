@@ -10,12 +10,6 @@
 target = dll
 !endif
 
-!ifndef __UNIX__
-INCLUDES=-I..\src\os2 -I..\include -I..\src
-!else
-INCLUDES=-I../src/os2 -I../include -I../src
-!endif
-
 CPPFLAGS=-DHAVE_ALLOCA_H -DHAVE_FNMATCH -DHAVE_MKSTEMP -DHAVE_UMASK
 #CPPFLAGS+= -DDEBUG
 
@@ -46,10 +40,11 @@ OBJ=virtual.obj format.obj period.obj player.obj read_event.obj dataio.obj md5.o
 
 all: $(BLD_TARGET)
 
+# rely on symbol name, not ordinal: -irn switch of wlib is default, but -inn is not.
 $(DLLNAME): $(OBJ)
 	wlink NAM $@ SYSTEM os2v2_dll INITINSTANCE TERMINSTANCE FIL {$(OBJ)} OPTION IMPF=$(EXPNAME)
-	wlib -q -b -iro -inn $(LIBNAME) +$(DLLNAME)
-#	wlib -q -b -n @$(EXPNAME)
+	wlib -q -b -n -inn $(LIBNAME) +$(DLLNAME)
+#	wlib -q -b -n -inn $(LIBNAME) @$(EXPNAME)
 
 $(LIBSTATIC): $(OBJ)
 	wlib -q -b -n $@ $(OBJ)
@@ -66,10 +61,12 @@ distclean: clean .symbolic
 clean: .symbolic
 	@if exist *.obj del *.obj
 .c: ..\src;..\src\depackers;..\src\loaders;..\src\loaders\prowizard
+INCLUDES=-I..\src\os2 -I..\include -I..\src
 !else
 distclean: clean .symbolic
 	rm -f $(DLLNAME) $(EXPNAME) $(LIBNAME) $(LIBSTATIC)
 clean: .symbolic
 	rm -f *.obj
 .c: ../src;../src/depackers;../src/loaders;../src/loaders/prowizard
+INCLUDES=-I../src/os2 -I../include -I../src
 !endif
