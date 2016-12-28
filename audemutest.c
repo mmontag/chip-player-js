@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>	// for memset()
 
 #ifdef _WIN32
 int __cdecl _getch(void);	// from conio.h

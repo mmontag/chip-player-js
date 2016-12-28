@@ -174,7 +174,7 @@ libaudio:	$(LIBAUDOBJS)
 
 emutest:	dirs libemu $(EMU_MAINOBJS)
 	@echo Linking emutest ...
-	@$(CC) $(EMU_MAINOBJS) $(LIBEMU_A) $(LDFLAGS) -o emutest
+	@$(CC) $(EMU_MAINOBJS) $(LIBEMU_A) $(LDFLAGS) -lm -o emutest
 	@echo Done.
 
 libemu:	$(LIBEMUOBJS)

@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <zlib.h>
 
 #ifdef _WIN32
@@ -133,7 +134,7 @@ static UINT32 smplSize;
 static void* audDrv;
 static DEV_INFO snDefInf;
 static UINT32 smplAlloc;
-static DEV_SMPL* smplData[2];
+static WAVE_32BS* smplData;
 static volatile bool canRender;
 
 static UINT32 VGMLen;
@@ -201,14 +202,6 @@ int main(int argc, char* argv[])
 	if (! drvCount)
 		goto Exit_AudDeinit;
 	
-	if (argc <= 1)
-	{
-		Audio_Deinit();
-		printf("Usage:\n");
-		printf("audemutest DriverID [DeviceID]\n");
-		return 0;
-	}
-	
 	idWavOut = 1;
 	idWavOutDev = 0;
 	
@@ -245,16 +238,14 @@ int main(int argc, char* argv[])
 	}
 	
 	smplAlloc = AudioDrv_GetBufferSize(audDrv) / smplSize;
-	smplData[0] = (DEV_SMPL*)malloc(smplAlloc * sizeof(DEV_SMPL) * 2);
-	smplData[1] = &smplData[0][smplAlloc];
+	smplData = (WAVE_32BS*)malloc(smplAlloc * sizeof(WAVE_32BS));
 	
 	canRender = true;
 	getchar();
 	canRender = false;
 	
 	retVal = AudioDrv_Stop(audDrv);
-	free(smplData[0]);
-	smplData[0] = NULL;	smplData[1] = NULL;
+	free(smplData);	smplData = NULL;
 	
 Exit_SndDrvDeinit:
 	DeinitVGMChips();
@@ -278,7 +269,6 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	UINT32 smplCount;
 	INT16* SmplPtr16;
 	UINT32 curSmpl;
-	WAVE_32BS* smplDataW = (WAVE_32BS*)smplData[0];
 	WAVE_32BS fnlSmpl;
 	UINT8 curChip;
 	
@@ -289,22 +279,23 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	}
 	
 	smplCount = bufSize / smplSize;
-	memset(smplData[0], 0, bufSize);
-	memset(smplData[1], 0, bufSize);
+	if (smplCount > smplAlloc)
+		smplCount = smplAlloc;
+	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));
 	
 	ReadVGMFile(smplCount);
 	// I know that using a for-loop has a bad performance, but it's just for testing anyway.
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	{
 		if (VGMChips[curChip].defInf.dataPtr != NULL)
-			Resmpl_Execute(&VGMChips[curChip].resmpl, smplCount, smplDataW);
+			Resmpl_Execute(&VGMChips[curChip].resmpl, smplCount, smplData);
 	}
 	
 	SmplPtr16 = (INT16*)data;
 	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
 	{
-		fnlSmpl.L = smplDataW[curSmpl].L >> 8;
-		fnlSmpl.R = smplDataW[curSmpl].R >> 8;
+		fnlSmpl.L = smplData[curSmpl].L >> 8;
+		fnlSmpl.R = smplData[curSmpl].R >> 8;
 		if (fnlSmpl.L < -0x8000)
 			fnlSmpl.L = -0x8000;
 		else if (fnlSmpl.L > +0x7FFF)

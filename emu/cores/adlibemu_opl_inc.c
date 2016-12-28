@@ -1903,6 +1903,8 @@ void ADLIBEMU(getsample)(void *chip, UINT32 numsamples, DEV_SMPL** sndptr)
 			}
 		}
 
+		outbufl += endsamples;
+		outbufr += endsamples;
 	}
 }
 
