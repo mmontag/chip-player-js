@@ -272,7 +272,8 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	drv->canPause = (UINT8)snd_pcm_hw_params_can_pause(sndParams);
 	
 	retVal = snd_pcm_hw_params(drv->hPCM, sndParams);
-	snd_pcm_hw_params_free(sndParams);
+	// disabled for now, as it sometimes causes a double-free crash
+	//snd_pcm_hw_params_free(sndParams);
 	if (retVal < 0)
 	{
 		snd_pcm_close(drv->hPCM);	drv->hPCM = NULL;

@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
 	if (retVal)
 		return 1;
 	
-	snDefInf.Reset(snDefInf.dataPtr);
-	SndEmu_GetDeviceFunc(&snDefInf, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
+	snDefInf.devDef->Reset(snDefInf.dataPtr);
+	SndEmu_GetDeviceFunc(snDefInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&snWrite);
 	snWrite(snDefInf.dataPtr, 1, 0xDE);
 	for (curReg = 0x8; curReg < 0xE; curReg += 0x02)
 	{
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 		smplData[0] = (DEV_SMPL*)malloc(smplCount * sizeof(DEV_SMPL));
 		smplData[1] = (DEV_SMPL*)malloc(smplCount * sizeof(DEV_SMPL));
 		
-		snDefInf.Update(snDefInf.dataPtr, smplCount, smplData);
+		snDefInf.devDef->Update(snDefInf.dataPtr, smplCount, smplData);
 		hFile = fopen("out.raw", "wb");
 		for (curSmpl = 0; curSmpl < smplCount; curSmpl ++)
 		{

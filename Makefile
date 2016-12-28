@@ -77,6 +77,7 @@ LIBAUD_A = $(OBJ)/libaudio.a
 LIBAUDOBJS = \
 	$(LIBAUDOBJ)/AudioStream.o \
 	$(LIBAUDOBJ)/AudDrv_WaveWriter.o
+CFLAGS += -D AUDDRV_WAVEWRITE
 
 ifeq ($(WINDOWS), 1)
 LIBAUDOBJS += \
@@ -186,7 +187,7 @@ audemutest:	dirs libaudio libemu $(AUDEMU_MAINOBJS)
 
 vgmtest:	dirs libaudio libemu $(VGMTEST_MAINOBJS)
 	@echo Linking vgmtest ...
-	@$(CC) $(VGMTEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -o vgmtest
+	@$(CC) $(VGMTEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -lm -o vgmtest
 	@echo Done.
 
 

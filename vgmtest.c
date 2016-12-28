@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
 	
 	if (argc < 2)
 	{
-		printf("Usage: vgmtest.exe vgmfile.vgz\n");
+		printf("Usage: vgmtest vgmfile.vgz\n");
 		return 0;
 	}
 	
