@@ -66,8 +66,8 @@ typedef struct channel__ {
 	int FOCT[4];			// octave de la voie (+ 3 pour le mode spécial)
 	int KC[4];				// Key Code = valeur fonction de la fréquence (voir KSR pour les slots, KSR = KC >> KSR_S)
 	struct slot__ SLOT[4];	// four slot.operators = les 4 slots de la voie
-	int FFlag;				// Frequency step recalculation flag
-	int Mute;				// Maxim: channel mute flag
+	//int FFlag;				// Frequency step recalculation flag
+	UINT8 Mute;				// Maxim: channel mute flag
 } channel_;
 
 typedef struct ym2612__ {
@@ -88,16 +88,16 @@ typedef struct ym2612__ {
 	int TimerB;			// timerB limit = valeur jusqu'à laquelle le timer B doit compter
 	int TimerBL;
 	int TimerBcnt;		// timerB counter = valeur courante du Timer B
-	int Mode;			// Mode actuel des voie 3 et 6 (normal / spécial)
-	int DAC;			// DAC enabled flag
+	UINT8 Mode;			// Mode actuel des voie 3 et 6 (normal / spécial)
+	UINT8 DAC;			// DAC enabled flag
 	int DACdata;		// DAC data
-	long dac_highpass;
+	int dac_highpass;
 	double Frequence;	// Fréquence de base, se calcul par rapport à l'horlage et au sample rate
 	unsigned int Inter_Cnt;			// Interpolation Counter
 	unsigned int Inter_Step;		// Interpolation Step
 	struct channel__ CHANNEL[6];	// Les 6 voies du YM2612
-	int REG[2][0x100];	// Sauvegardes des valeurs de tout les registres, c'est facultatif
-						// cela nous rend le débuggage plus facile
+	UINT8 REG[2][0x100];	// Sauvegardes des valeurs de tout les registres, c'est facultatif
+							// cela nous rend le débuggage plus facile
 
 	int LFO_ENV_UP[MAX_UPDATE_LENGHT];      // Temporary calculated LFO AMS (adjusted for 11.8 dB) *
 	int LFO_FREQ_UP[MAX_UPDATE_LENGHT];      // Temporary calculated LFO FMS *
@@ -105,7 +105,21 @@ typedef struct ym2612__ {
 	int in0, in1, in2, in3;            // current phase calculation *
 	int en0, en1, en2, en3;            // current enveloppe calculation *
 
-	int DAC_Mute;
+	// --- tables ---
+	unsigned int FINC_TAB[2048];        // Frequency step table
+
+	unsigned int AR_TAB[128];          // Attack rate table
+	unsigned int DR_TAB[96];          // Decay rate table
+	signed int DT_TAB[8][32];          // Detune table
+
+	int LFO_INC_TAB[8];              // LFO step table
+
+	UINT8 DAC_Mute;
+
+	/* Gens */
+	UINT8 Enable_SSGEG; // enable SSG-EG envelope (causes inacurate sound sometimes - rodrigo)
+	UINT8 DAC_Highpass_Enable; // sometimes it creates a terrible noise
+	/* end */
 } ym2612_;
 
 // used for forward...
@@ -145,11 +159,10 @@ static void Update_Chan_Algo5_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
 static void Update_Chan_Algo6_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf, UINT32 lenght);
 static void Update_Chan_Algo7_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf, UINT32 lenght);
 
-// used for forward...
-static void Env_Attack_Next(slot_ *SL);
-static void Env_Decay_Next(slot_ *SL);
-static void Env_Substain_Next(slot_ *SL);
-static void Env_Release_Next(slot_ *SL);
-static void Env_NULL_Next(slot_ *SL);
+static void Env_Attack_Next(ym2612_ *YM2612, slot_ *SL);
+static void Env_Decay_Next(ym2612_ *YM2612, slot_ *SL);
+static void Env_Substain_Next(ym2612_ *YM2612, slot_ *SL);
+static void Env_Release_Next(ym2612_ *YM2612, slot_ *SL);
+static void Env_NULL_Next(ym2612_ *YM2612, slot_ *SL);
 
 #endif

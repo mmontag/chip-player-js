@@ -129,11 +129,11 @@ static unsigned int ENV_TAB[2 * ENV_LENGHT + 8];  // ENV CURVE TABLE (attack & d
 //static unsigned int ATTACK_TO_DECAY[ENV_LENGHT];  // Conversion from attack to decay phase
 static unsigned int DECAY_TO_ATTACK[ENV_LENGHT];  // Conversion from decay to attack phase
 
-static unsigned int FINC_TAB[2048];        // Frequency step table
+//static unsigned int FINC_TAB[2048];        // Frequency step table
 
-static unsigned int AR_TAB[128];          // Attack rate table
-static unsigned int DR_TAB[96];          // Decay rate table
-static unsigned int DT_TAB[8][32];          // Detune table
+//static unsigned int AR_TAB[128];          // Attack rate table
+//static unsigned int DR_TAB[96];          // Decay rate table
+//static   signed int DT_TAB[8][32];          // Detune table
 static unsigned int SL_TAB[16];          // Substain level table
 static unsigned int NULL_RATE[32];          // Table for NULL rate
 
@@ -142,8 +142,7 @@ static int LFO_FREQ_TAB[LFO_LENGHT];        // LFO FMS TABLE
 
 // static int INTER_TAB[MAX_UPDATE_LENGHT];      // Interpolation table
 
-// TODO: check for sample rate dependent LUTs and move them into ym2612_ struct
-static int LFO_INC_TAB[8];              // LFO step table
+//static int LFO_INC_TAB[8];              // LFO step table
 
 static void (* const UPDATE_CHAN[8 * 8])(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf, UINT32 lenght) =    // Update Channel functions pointer table
 {
@@ -184,7 +183,7 @@ static void (* const UPDATE_CHAN[8 * 8])(ym2612_ *YM2612, channel_ *CH, DEV_SMPL
   Update_Chan_Algo7_LFO_Int
 };
 
-static void (* const ENV_NEXT_EVENT[8])(slot_ *SL) =    // Next Enveloppe phase functions pointer table
+static void (* const ENV_NEXT_EVENT[8])(ym2612_ *YM2612, slot_ *SL) =    // Next Enveloppe phase functions pointer table
 {
   Env_Attack_Next,
   Env_Decay_Next,
@@ -236,20 +235,10 @@ static const unsigned int LFO_FMS_TAB[8] =
   LFO_FMS_BASE * 12, LFO_FMS_BASE * 24
 };
 
-static int int_cnt;                // Interpolation calculation	// TODO: replace with YM2612->Inter_Cnt
-
 
 #if YM_DEBUG_LEVEL > 0            // Debug
 static FILE *debug_file = NULL;
 #endif
-
-
-/* Gens */
-
-static int YM2612_Enable_SSGEG = 0; // enable SSG-EG envelope (causes inacurate sound sometimes - rodrigo)
-static int DAC_Highpass_Enable = 0; // sometimes it creates a terrible noise
-
-/* end */
 
 
 /***********************************************
@@ -293,11 +282,11 @@ INLINE void CALC_FINC_SL(slot_ *SL, int finc, int kc)
 }
 
 
-INLINE void CALC_FINC_CH(channel_ *CH)
+INLINE void CALC_FINC_CH(ym2612_ *YM2612, channel_ *CH)
 {
   int finc, kc;
 
-  finc = FINC_TAB[CH->FNUM[0]] >> (7 - CH->FOCT[0]);
+  finc = YM2612->FINC_TAB[CH->FNUM[0]] >> (7 - CH->FOCT[0]);
   kc = CH->KC[0];
 
   CALC_FINC_SL(&CH->SLOT[0], finc, kc);
@@ -383,7 +372,7 @@ int SLOT_SET(ym2612_ *YM2612, int Adr, unsigned char data)
       if(SL->MUL = (data & 0x0F)) SL->MUL <<= 1;
       else SL->MUL = 1;
 
-      SL->DT = DT_TAB[(data >> 4) & 7];
+      SL->DT = YM2612->DT_TAB[(data >> 4) & 7];
 
       CH->SLOT[0].Finc = -1;
 
@@ -414,7 +403,7 @@ int SLOT_SET(ym2612_ *YM2612, int Adr, unsigned char data)
 
       CH->SLOT[0].Finc = -1;
 
-      if(data &= 0x1F) SL->AR = &AR_TAB[data << 1];
+      if(data &= 0x1F) SL->AR = &YM2612->AR_TAB[data << 1];
       else SL->AR = &NULL_RATE[0];
 
       SL->EincA = SL->AR[SL->KSR];
@@ -429,7 +418,7 @@ int SLOT_SET(ym2612_ *YM2612, int Adr, unsigned char data)
       if(SL->AMSon = (data & 0x80)) SL->AMS = CH->AMS;
       else SL->AMS = 31;
 
-      if(data &= 0x1F) SL->DR = &DR_TAB[data << 1];
+      if(data &= 0x1F) SL->DR = &YM2612->DR_TAB[data << 1];
       else SL->DR = &NULL_RATE[0];
 
       SL->EincD = SL->DR[SL->KSR];
@@ -441,7 +430,7 @@ int SLOT_SET(ym2612_ *YM2612, int Adr, unsigned char data)
       break;
 
     case 0x70:
-      if(data &= 0x1F) SL->SR = &DR_TAB[data << 1];
+      if(data &= 0x1F) SL->SR = &YM2612->DR_TAB[data << 1];
       else SL->SR = &NULL_RATE[0];
 
       SL->EincS = SL->SR[SL->KSR];
@@ -455,7 +444,7 @@ int SLOT_SET(ym2612_ *YM2612, int Adr, unsigned char data)
     case 0x80:
       SL->SLL = SL_TAB[data >> 4];
 
-      SL->RR = &DR_TAB[((data & 0xF) << 2) + 2];
+      SL->RR = &YM2612->DR_TAB[((data & 0xF) << 2) + 2];
 
       SL->EincR = SL->RR[SL->KSR];
       if((SL->Ecurp == RELEASE) && (SL->Ecnt < ENV_END)) SL->Einc = SL->EincR;
@@ -491,7 +480,7 @@ int SLOT_SET(ym2612_ *YM2612, int Adr, unsigned char data)
       // At = Start negate
       // Al = Altern
       // H  = Hold */
-      if(YM2612_Enable_SSGEG)
+      if(YM2612->Enable_SSGEG)
       {
         if(data & 0x08) SL->SEG = data & 0x0F;
         else SL->SEG = 0;
@@ -660,7 +649,7 @@ int YM_SET(ym2612_ *YM2612, int Adr, unsigned char data)
         // Cool Spot music 1, LFO modified severals time which
         // distord the sound, have to check that on a real genesis...
 
-        YM2612->LFOinc = LFO_INC_TAB[data & 7];
+        YM2612->LFOinc = YM2612->LFO_INC_TAB[data & 7];
 
 #if YM_DEBUG_LEVEL > 0
         fprintf(debug_file, "\nLFO Enable, LFOinc = %.8X   %d\n", YM2612->LFOinc, data & 7);
@@ -792,12 +781,12 @@ int YM_SET(ym2612_ *YM2612, int Adr, unsigned char data)
  ***********************************************/
 
 
-static void Env_NULL_Next(slot_ *SL)
+static void Env_NULL_Next(ym2612_ *YM2612, slot_ *SL)
 {
 }
 
 
-static void Env_Attack_Next(slot_ *SL)
+static void Env_Attack_Next(ym2612_ *YM2612, slot_ *SL)
 {
   // Verified with Gynoug even in HQ (explode SFX)
   SL->Ecnt = ENV_DECAY;
@@ -808,7 +797,7 @@ static void Env_Attack_Next(slot_ *SL)
 }
 
 
-static void Env_Decay_Next(slot_ *SL)
+static void Env_Decay_Next(ym2612_ *YM2612, slot_ *SL)
 {
   // Verified with Gynoug even in HQ (explode SFX)
   SL->Ecnt = SL->SLL;
@@ -819,9 +808,9 @@ static void Env_Decay_Next(slot_ *SL)
 }
 
 
-static void Env_Substain_Next(slot_ *SL)
+static void Env_Substain_Next(ym2612_ *YM2612, slot_ *SL)
 {
-  if(YM2612_Enable_SSGEG)
+  if(YM2612->Enable_SSGEG)
   {
     if(SL->SEG & 8)  // SSG envelope type
     {
@@ -862,7 +851,7 @@ static void Env_Substain_Next(slot_ *SL)
 }
 
 
-static void Env_Release_Next(slot_ *SL)
+static void Env_Release_Next(ym2612_ *YM2612, slot_ *SL)
 {
   SL->Ecnt = ENV_END;
   SL->Einc = 0;
@@ -959,13 +948,13 @@ else YM2612->en3 = ENV_TAB[(CH->SLOT[S3].Ecnt >> ENV_LBITS)] + CH->SLOT[S3].TLL 
 
 #define UPDATE_ENV                            \
 if((CH->SLOT[S0].Ecnt += CH->SLOT[S0].Einc) >= CH->SLOT[S0].Ecmp)    \
-  ENV_NEXT_EVENT[CH->SLOT[S0].Ecurp](&(CH->SLOT[S0]));        \
+  ENV_NEXT_EVENT[CH->SLOT[S0].Ecurp](YM2612, &(CH->SLOT[S0]));        \
 if((CH->SLOT[S1].Ecnt += CH->SLOT[S1].Einc) >= CH->SLOT[S1].Ecmp)    \
-  ENV_NEXT_EVENT[CH->SLOT[S1].Ecurp](&(CH->SLOT[S1]));        \
+  ENV_NEXT_EVENT[CH->SLOT[S1].Ecurp](YM2612, &(CH->SLOT[S1]));        \
 if((CH->SLOT[S2].Ecnt += CH->SLOT[S2].Einc) >= CH->SLOT[S2].Ecmp)    \
-  ENV_NEXT_EVENT[CH->SLOT[S2].Ecurp](&(CH->SLOT[S2]));        \
+  ENV_NEXT_EVENT[CH->SLOT[S2].Ecurp](YM2612, &(CH->SLOT[S2]));        \
 if((CH->SLOT[S3].Ecnt += CH->SLOT[S3].Einc) >= CH->SLOT[S3].Ecmp)    \
-  ENV_NEXT_EVENT[CH->SLOT[S3].Ecurp](&(CH->SLOT[S3]));
+  ENV_NEXT_EVENT[CH->SLOT[S3].Ecurp](YM2612, &(CH->SLOT[S3]));
 
 
 #define DO_LIMIT                        \
@@ -1056,9 +1045,9 @@ buf[1][i] += CH->OUTd & CH->RIGHT;
 
 
 #define DO_OUTPUT_INT0              \
-if((int_cnt += YM2612->Inter_Step) & 0x04000)  \
+if((YM2612->Inter_Cnt += YM2612->Inter_Step) & 0x04000)  \
 {                        \
-  int_cnt &= 0x3FFF;              \
+  YM2612->Inter_Cnt &= 0x3FFF;              \
   buf[0][i] += CH->OUTd & CH->LEFT;      \
   buf[1][i] += CH->OUTd & CH->RIGHT;      \
 }                        \
@@ -1067,9 +1056,9 @@ else i--;
 
 #define DO_OUTPUT_INT1              \
 CH->Old_OUTd = (CH->OUTd + CH->Old_OUTd) >> 1;  \
-if((int_cnt += YM2612->Inter_Step) & 0x04000)  \
+if((YM2612->Inter_Cnt += YM2612->Inter_Step) & 0x04000)  \
 {                        \
-  int_cnt &= 0x3FFF;              \
+  YM2612->Inter_Cnt &= 0x3FFF;              \
   buf[0][i] += CH->Old_OUTd & CH->LEFT;    \
   buf[1][i] += CH->Old_OUTd & CH->RIGHT;    \
 }                        \
@@ -1077,9 +1066,9 @@ else i--;
 
 
 #define DO_OUTPUT_INT2                \
-if((int_cnt += YM2612->Inter_Step) & 0x04000)    \
+if((YM2612->Inter_Cnt += YM2612->Inter_Step) & 0x04000)    \
 {                          \
-  int_cnt &= 0x3FFF;                \
+  YM2612->Inter_Cnt &= 0x3FFF;                \
   CH->Old_OUTd = (CH->OUTd + CH->Old_OUTd) >> 1;  \
   buf[0][i] += CH->Old_OUTd & CH->LEFT;      \
   buf[1][i] += CH->Old_OUTd & CH->RIGHT;      \
@@ -1089,10 +1078,10 @@ CH->Old_OUTd = CH->OUTd;
 
 
 #define DO_OUTPUT_INT              \
-if((int_cnt += YM2612->Inter_Step) & 0x04000)  \
+if((YM2612->Inter_Cnt += YM2612->Inter_Step) & 0x04000)  \
 {                        \
-  int_cnt &= 0x3FFF;              \
-  CH->Old_OUTd = (((int_cnt ^ 0x3FFF) * CH->OUTd) + (int_cnt * CH->Old_OUTd)) >> 14;  \
+  YM2612->Inter_Cnt &= 0x3FFF;              \
+  CH->Old_OUTd = (((YM2612->Inter_Cnt ^ 0x3FFF) * CH->OUTd) + (YM2612->Inter_Cnt * CH->Old_OUTd)) >> 14;  \
   buf[0][i] += CH->Old_OUTd & CH->LEFT;    \
   buf[1][i] += CH->Old_OUTd & CH->RIGHT;    \
 }                        \
@@ -1475,8 +1464,6 @@ static void Update_Chan_Algo0_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf,
   fprintf(debug_file, "\n\nAlgo 0 len = %d\n\n", lenght);
 #endif
 
-  int_cnt = YM2612->Inter_Cnt;
-
   for(i = 0; i < lenght; i++)
   {
     GET_CURRENT_PHASE
@@ -1498,8 +1485,6 @@ static void Update_Chan_Algo1_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf,
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "\n\nAlgo 1 len = %d\n\n", lenght);
 #endif
-
-  int_cnt = YM2612->Inter_Cnt;
 
   for(i = 0; i < lenght; i++)
   {
@@ -1523,8 +1508,6 @@ static void Update_Chan_Algo2_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf,
   fprintf(debug_file, "\n\nAlgo 2 len = %d\n\n", lenght);
 #endif
 
-  int_cnt = YM2612->Inter_Cnt;
-
   for(i = 0; i < lenght; i++)
   {
     GET_CURRENT_PHASE
@@ -1546,8 +1529,6 @@ static void Update_Chan_Algo3_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf,
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "\n\nAlgo 3 len = %d\n\n", lenght);
 #endif
-
-  int_cnt = YM2612->Inter_Cnt;
 
   for(i = 0; i < lenght; i++)
   {
@@ -1571,8 +1552,6 @@ static void Update_Chan_Algo4_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf,
   fprintf(debug_file, "\n\nAlgo 4 len = %d\n\n", lenght);
 #endif
 
-  int_cnt = YM2612->Inter_Cnt;
-
   for(i = 0; i < lenght; i++)
   {
     GET_CURRENT_PHASE
@@ -1594,8 +1573,6 @@ static void Update_Chan_Algo5_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf,
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "\n\nAlgo 5 len = %d\n\n", lenght);
 #endif
-
-  int_cnt = YM2612->Inter_Cnt;
 
   for(i = 0; i < lenght; i++)
   {
@@ -1619,8 +1596,6 @@ static void Update_Chan_Algo6_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf,
   fprintf(debug_file, "\n\nAlgo 6 len = %d\n\n", lenght);
 #endif
 
-  int_cnt = YM2612->Inter_Cnt;
-
   for(i = 0; i < lenght; i++)
   {
     GET_CURRENT_PHASE
@@ -1642,8 +1617,6 @@ static void Update_Chan_Algo7_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf,
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "\n\nAlgo 7 len = %d\n\n", lenght);
 #endif
-
-  int_cnt = YM2612->Inter_Cnt;
 
   for(i = 0; i < lenght; i++)
   {
@@ -1668,8 +1641,6 @@ static void Update_Chan_Algo0_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
   fprintf(debug_file, "\n\nAlgo 0 LFO len = %d\n\n", lenght);
 #endif
 
-  int_cnt = YM2612->Inter_Cnt;
-
   for(i = 0; i < lenght; i++)
   {
     GET_CURRENT_PHASE
@@ -1692,8 +1663,6 @@ static void Update_Chan_Algo1_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "\n\nAlgo 1 LFO len = %d\n\n", lenght);
 #endif
-
-  int_cnt = YM2612->Inter_Cnt;
 
   for(i = 0; i < lenght; i++)
   {
@@ -1718,8 +1687,6 @@ static void Update_Chan_Algo2_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
   fprintf(debug_file, "\n\nAlgo 2 LFO len = %d\n\n", lenght);
 #endif
 
-  int_cnt = YM2612->Inter_Cnt;
-
   for(i = 0; i < lenght; i++)
   {
     GET_CURRENT_PHASE
@@ -1742,8 +1709,6 @@ static void Update_Chan_Algo3_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "\n\nAlgo 3 LFO len = %d\n\n", lenght);
 #endif
-
-  int_cnt = YM2612->Inter_Cnt;
 
   for(i = 0; i < lenght; i++)
   {
@@ -1768,8 +1733,6 @@ static void Update_Chan_Algo4_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
   fprintf(debug_file, "\n\nAlgo 4 LFO len = %d\n\n", lenght);
 #endif
 
-  int_cnt = YM2612->Inter_Cnt;
-
   for(i = 0; i < lenght; i++)
   {
     GET_CURRENT_PHASE
@@ -1792,8 +1755,6 @@ static void Update_Chan_Algo5_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "\n\nAlgo 5 LFO len = %d\n\n", lenght);
 #endif
-
-  int_cnt = YM2612->Inter_Cnt;
 
   for(i = 0; i < lenght; i++)
   {
@@ -1818,8 +1779,6 @@ static void Update_Chan_Algo6_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
   fprintf(debug_file, "\n\nAlgo 6 LFO len = %d\n\n", lenght);
 #endif
 
-  int_cnt = YM2612->Inter_Cnt;
-
   for(i = 0; i < lenght; i++)
   {
     GET_CURRENT_PHASE
@@ -1842,8 +1801,6 @@ static void Update_Chan_Algo7_LFO_Int(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **
 #if YM_DEBUG_LEVEL > 1
   fprintf(debug_file, "\n\nAlgo 7 LFO len = %d\n\n", lenght);
 #endif
-
-  int_cnt = YM2612->Inter_Cnt;
 
   for(i = 0; i < lenght; i++)
   {
@@ -1886,6 +1843,9 @@ ym2612_ *YM2612_Init(UINT32 Clock, UINT32 Rate, UINT8 Interpolation)
 
   YM2612->Clock = Clock;
   YM2612->Rate = Rate;
+
+  YM2612->DAC_Highpass_Enable = 0;
+  YM2612->Enable_SSGEG = 0;
 
   // 144 = 12 * (prescale * 2) = 12 * 6 * 2
   // prescale set to 6 by default
@@ -2058,15 +2018,15 @@ ym2612_ *YM2612_Init(UINT32 Clock, UINT32 Rate, UINT8 Interpolation)
 
     x /= 2.0;  // because MUL = value * 2
 
-    FINC_TAB[i] = (unsigned int) x;
+    YM2612->FINC_TAB[i] = (unsigned int) x;
   }
 
   // Tableaux Attack & Decay Rate
 
   for(i = 0; i < 4; i++)
   {
-    AR_TAB[i] = 0;
-    DR_TAB[i] = 0;
+    YM2612->AR_TAB[i] = 0;
+    YM2612->DR_TAB[i] = 0;
   }
 
   for(i = 0; i < 60; i++)
@@ -2077,14 +2037,14 @@ ym2612_ *YM2612_Init(UINT32 Clock, UINT32 Rate, UINT8 Interpolation)
     x *= (double) (1 << ((i >> 2)));        // bits 2-5 : shift bits (x2^0 - x2^15)
     x *= (double) (ENV_LENGHT << ENV_LBITS);    // on ajuste pour le tableau ENV_TAB
 
-    AR_TAB[i + 4] = (unsigned int) (x / AR_RATE);
-    DR_TAB[i + 4] = (unsigned int) (x / DR_RATE);
+    YM2612->AR_TAB[i + 4] = (unsigned int) (x / AR_RATE);
+    YM2612->DR_TAB[i + 4] = (unsigned int) (x / DR_RATE);
   }
 
   for(i = 64; i < 96; i++)
   {
-    AR_TAB[i] = AR_TAB[63];
-    DR_TAB[i] = DR_TAB[63];
+    YM2612->AR_TAB[i] = YM2612->AR_TAB[63];
+    YM2612->DR_TAB[i] = YM2612->DR_TAB[63];
 
     NULL_RATE[i - 64] = 0;
   }
@@ -2101,8 +2061,8 @@ ym2612_ *YM2612_Init(UINT32 Clock, UINT32 Rate, UINT8 Interpolation)
       x = (double) DT_DEF_TAB[(i << 5) + j] * YM2612->Frequence * (double) (1 << (SIN_LBITS + SIN_HBITS - 21));
 #endif
 
-      DT_TAB[i + 0][j] = (int) x;
-      DT_TAB[i + 4][j] = (int) -x;
+      YM2612->DT_TAB[i + 0][j] = (int) x;
+      YM2612->DT_TAB[i + 4][j] = (int) -x;
     }
   }
 
@@ -2110,14 +2070,14 @@ ym2612_ *YM2612_Init(UINT32 Clock, UINT32 Rate, UINT8 Interpolation)
 
   j = (YM2612->Rate * YM2612->Inter_Step) / 0x4000;
 
-  LFO_INC_TAB[0] = (unsigned int) (3.98 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
-  LFO_INC_TAB[1] = (unsigned int) (5.56 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
-  LFO_INC_TAB[2] = (unsigned int) (6.02 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
-  LFO_INC_TAB[3] = (unsigned int) (6.37 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
-  LFO_INC_TAB[4] = (unsigned int) (6.88 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
-  LFO_INC_TAB[5] = (unsigned int) (9.63 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
-  LFO_INC_TAB[6] = (unsigned int) (48.1 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
-  LFO_INC_TAB[7] = (unsigned int) (72.2 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
+  YM2612->LFO_INC_TAB[0] = (unsigned int) (3.98 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
+  YM2612->LFO_INC_TAB[1] = (unsigned int) (5.56 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
+  YM2612->LFO_INC_TAB[2] = (unsigned int) (6.02 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
+  YM2612->LFO_INC_TAB[3] = (unsigned int) (6.37 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
+  YM2612->LFO_INC_TAB[4] = (unsigned int) (6.88 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
+  YM2612->LFO_INC_TAB[5] = (unsigned int) (9.63 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
+  YM2612->LFO_INC_TAB[6] = (unsigned int) (48.1 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
+  YM2612->LFO_INC_TAB[7] = (unsigned int) (72.2 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
 
   YM2612_SetMute(YM2612, 0x00);
 
@@ -2181,7 +2141,7 @@ void YM2612_Reset(ym2612_ *YM2612)
       YM2612->CHANNEL[i].FOCT[j] = 0;
       YM2612->CHANNEL[i].KC[j] = 0;
 
-      YM2612->CHANNEL[i].SLOT[j].DT = DT_TAB[0];
+      YM2612->CHANNEL[i].SLOT[j].DT = YM2612->DT_TAB[0];
       YM2612->CHANNEL[i].SLOT[j].Fcnt = 0;
       YM2612->CHANNEL[i].SLOT[j].Finc = 0;
       YM2612->CHANNEL[i].SLOT[j].Ecnt = ENV_END;    // Put it at the end of Decay phase...
@@ -2195,23 +2155,23 @@ void YM2612_Reset(ym2612_ *YM2612)
 
   for(i = 0; i < 0x100; i++)
   {
-    YM2612->REG[0][i] = -1;
-    YM2612->REG[1][i] = -1;
+    YM2612->REG[0][i] = 0xFF;
+    YM2612->REG[1][i] = 0xFF;
   }
 
   for(i = 0xB6; i >= 0xB4; i--)
   {
-    YM2612_Write(YM2612, 0, (unsigned char) i);
-    YM2612_Write(YM2612, 2, (unsigned char) i);
+    YM2612_Write(YM2612, 0, (UINT8) i);
     YM2612_Write(YM2612, 1, 0xC0);
+    YM2612_Write(YM2612, 2, (UINT8) i);
     YM2612_Write(YM2612, 3, 0xC0);
   }
 
   for(i = 0xB2; i >= 0x22; i--)
   {
-    YM2612_Write(YM2612, 0, (unsigned char) i);
-    YM2612_Write(YM2612, 2, (unsigned char) i);
+    YM2612_Write(YM2612, 0, (UINT8) i);
     YM2612_Write(YM2612, 1, 0);
+    YM2612_Write(YM2612, 2, (UINT8) i);
     YM2612_Write(YM2612, 3, 0);
   }
 
@@ -2323,7 +2283,7 @@ UINT32 YM2612_GetMute(ym2612_ *YM2612)
     result |= YM2612->CHANNEL[i].Mute << i;
   }
   result |= YM2612->DAC_Mute << 6;
-  return result;  
+  return result;
 }
 
 void YM2612_SetMute(ym2612_ *YM2612, UINT32 val)
@@ -2338,8 +2298,8 @@ void YM2612_SetMute(ym2612_ *YM2612, UINT32 val)
 
 void YM2612_SetOptions(ym2612_ *YM2612, UINT32 Flags)
 {
-	DAC_Highpass_Enable = (Flags >> 0) & 0x01;
-	YM2612_Enable_SSGEG = (Flags >> 1) & 0x01;
+	YM2612->DAC_Highpass_Enable = (Flags >> 0) & 0x01;
+	YM2612->Enable_SSGEG = (Flags >> 1) & 0x01;
 }
 
 void YM2612_ClearBuffer(DEV_SMPL **buffer, UINT32 length)
@@ -2371,25 +2331,25 @@ void YM2612_Update(ym2612_ *YM2612, DEV_SMPL **buf, UINT32 length)
 
   // Mise ?jour des pas des compteurs-fréquences s'ils ont ét?modifiés
 
-  if(YM2612->CHANNEL[0].SLOT[0].Finc == -1) CALC_FINC_CH(&YM2612->CHANNEL[0]);
-  if(YM2612->CHANNEL[1].SLOT[0].Finc == -1) CALC_FINC_CH(&YM2612->CHANNEL[1]);
+  if(YM2612->CHANNEL[0].SLOT[0].Finc == -1) CALC_FINC_CH(YM2612, &YM2612->CHANNEL[0]);
+  if(YM2612->CHANNEL[1].SLOT[0].Finc == -1) CALC_FINC_CH(YM2612, &YM2612->CHANNEL[1]);
   if(YM2612->CHANNEL[2].SLOT[0].Finc == -1)
   {
     if(YM2612->Mode & 0x40)
     {
-      CALC_FINC_SL(&(YM2612->CHANNEL[2].SLOT[S0]), FINC_TAB[YM2612->CHANNEL[2].FNUM[2]] >> (7 - YM2612->CHANNEL[2].FOCT[2]), YM2612->CHANNEL[2].KC[2]);
-      CALC_FINC_SL(&(YM2612->CHANNEL[2].SLOT[S1]), FINC_TAB[YM2612->CHANNEL[2].FNUM[3]] >> (7 - YM2612->CHANNEL[2].FOCT[3]), YM2612->CHANNEL[2].KC[3]);
-      CALC_FINC_SL(&(YM2612->CHANNEL[2].SLOT[S2]), FINC_TAB[YM2612->CHANNEL[2].FNUM[1]] >> (7 - YM2612->CHANNEL[2].FOCT[1]), YM2612->CHANNEL[2].KC[1]);
-      CALC_FINC_SL(&(YM2612->CHANNEL[2].SLOT[S3]), FINC_TAB[YM2612->CHANNEL[2].FNUM[0]] >> (7 - YM2612->CHANNEL[2].FOCT[0]), YM2612->CHANNEL[2].KC[0]);
+      CALC_FINC_SL(&(YM2612->CHANNEL[2].SLOT[S0]), YM2612->FINC_TAB[YM2612->CHANNEL[2].FNUM[2]] >> (7 - YM2612->CHANNEL[2].FOCT[2]), YM2612->CHANNEL[2].KC[2]);
+      CALC_FINC_SL(&(YM2612->CHANNEL[2].SLOT[S1]), YM2612->FINC_TAB[YM2612->CHANNEL[2].FNUM[3]] >> (7 - YM2612->CHANNEL[2].FOCT[3]), YM2612->CHANNEL[2].KC[3]);
+      CALC_FINC_SL(&(YM2612->CHANNEL[2].SLOT[S2]), YM2612->FINC_TAB[YM2612->CHANNEL[2].FNUM[1]] >> (7 - YM2612->CHANNEL[2].FOCT[1]), YM2612->CHANNEL[2].KC[1]);
+      CALC_FINC_SL(&(YM2612->CHANNEL[2].SLOT[S3]), YM2612->FINC_TAB[YM2612->CHANNEL[2].FNUM[0]] >> (7 - YM2612->CHANNEL[2].FOCT[0]), YM2612->CHANNEL[2].KC[0]);
     }
     else
     {
-      CALC_FINC_CH(&YM2612->CHANNEL[2]);
+      CALC_FINC_CH(YM2612, &YM2612->CHANNEL[2]);
     }
   }
-  if(YM2612->CHANNEL[3].SLOT[0].Finc == -1) CALC_FINC_CH(&YM2612->CHANNEL[3]);
-  if(YM2612->CHANNEL[4].SLOT[0].Finc == -1) CALC_FINC_CH(&YM2612->CHANNEL[4]);
-  if(YM2612->CHANNEL[5].SLOT[0].Finc == -1) CALC_FINC_CH(&YM2612->CHANNEL[5]);
+  if(YM2612->CHANNEL[3].SLOT[0].Finc == -1) CALC_FINC_CH(YM2612, &YM2612->CHANNEL[3]);
+  if(YM2612->CHANNEL[4].SLOT[0].Finc == -1) CALC_FINC_CH(YM2612, &YM2612->CHANNEL[4]);
+  if(YM2612->CHANNEL[5].SLOT[0].Finc == -1) CALC_FINC_CH(YM2612, &YM2612->CHANNEL[5]);
 
   if(YM2612->Inter_Step & 0x04000) algo_type = 0;
   else algo_type = 16;
@@ -2430,8 +2390,6 @@ void YM2612_Update(ym2612_ *YM2612, DEV_SMPL **buf, UINT32 length)
     if (!YM2612->CHANNEL[5].Mute 
       && !(YM2612->DAC))          UPDATE_CHAN[YM2612->CHANNEL[5].ALGO + algo_type](YM2612, &(YM2612->CHANNEL[5]), procbuf, proclen);
 
-    YM2612->Inter_Cnt = int_cnt;
-
     procbuf[0] += proclen;
     procbuf[1] += proclen;
     length -= proclen;
@@ -2455,16 +2413,18 @@ void YM2612_DacAndTimers_Update(ym2612_ *YM2612, DEV_SMPL **buffer, UINT32 lengt
 
   if(YM2612->DAC && YM2612->DACdata && ! YM2612->DAC_Mute)
   {
-
     bufL = buffer[0];
     bufR = buffer[1];
 
     for(i = 0; i < length; i++)
     {
-      int dac = (YM2612->DACdata << highpass_fract) - YM2612->dac_highpass;
-      if (DAC_Highpass_Enable)  // else it's left at 0 and doesn't affect the sound
+      int dac = YM2612->DACdata;
+      if (YM2612->DAC_Highpass_Enable)
+      {
+        dac = (dac << highpass_fract) - YM2612->dac_highpass;
         YM2612->dac_highpass += dac >> highpass_shift;
-      dac >>= highpass_fract;
+        dac >>= highpass_fract;
+      }
       bufL[i] += (dac & YM2612->CHANNEL[5].LEFT);
       bufR[i] += (dac & YM2612->CHANNEL[5].RIGHT);
     }
