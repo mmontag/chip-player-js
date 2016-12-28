@@ -22,6 +22,7 @@ PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
 CFLAGS := -O3 -g0 $(CFLAGS) -I. -Ilibs/include_mingw
+#CFLAGS := -O0 -g $(CFLAGS) -I. -Ilibs/include_mingw
 CCFLAGS = -std=gnu99
 CPPFLAGS = -std=gnu++98
 #CFLAGS += -Wall -Wextra -Wpedantic
@@ -182,7 +183,7 @@ libemu:	$(LIBEMUOBJS)
 
 audemutest:	dirs libaudio libemu $(AUDEMU_MAINOBJS)
 	@echo Linking audemutest ...
-	@$(CC) $(AUDEMU_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -o audemutest
+	@$(CC) $(AUDEMU_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lm -o audemutest
 	@echo Done.
 
 vgmtest:	dirs libaudio libemu $(VGMTEST_MAINOBJS)
@@ -204,9 +205,9 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 
 clean:
 	@echo Deleting object files ...
-	@rm -f $(AUD_MAINOBJS) $(ALL_LIBS) $(LIBAUDOBJS)
+	@rm -f $(AUD_MAINOBJS) $(EMU_MAINOBJS) $(AUDEMU_MAINOBJS) $(VGMTEST_MAINOBJS) $(ALL_LIBS) $(LIBAUDOBJS) $(LIBEMUOBJS)
 	@echo Deleting executable files ...
-	@rm -f audiotest
+	@rm -f audiotest emutest audemutest vgmtest
 	@echo Done.
 
 #.PHONY: all clean install uninstall

@@ -2031,6 +2031,7 @@ static void reset_channels( FM_ST *ST , FM_CH *CH , int num )
 		for(s = 0 ; s < 4 ; s++ )
 		{
 			//memset(&CH[c].SLOT[s], 0x00, sizeof(FM_SLOT));
+			CH[c].SLOT[s].DT = ST->dt_tab[0];
 			CH[c].SLOT[s].Incr = -1;
 			CH[c].SLOT[s].key = 0;
 			CH[c].SLOT[s].phase = 0;

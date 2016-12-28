@@ -21,7 +21,7 @@
 /*                                                         */
 /***********************************************************/
 
-#include <stdlib.h>	// for malloc()
+#include <stdlib.h>	// for calloc()
 #include <stdio.h>
 #include <stddef.h>	// for NULL
 #include <math.h>
@@ -260,9 +260,6 @@ static int DAC_Highpass_Enable = 0; // sometimes it creates a terrible noise
 INLINE void CALC_FINC_SL(slot_ *SL, int finc, int kc)
 {
   int ksr;
-
-  if (SL->DT == NULL)
-    return;
 
   SL->Finc = (finc + SL->DT[kc]) * SL->MUL;
 
@@ -1876,6 +1873,8 @@ ym2612_ *YM2612_Init(UINT32 Clock, UINT32 Rate, UINT8 Interpolation)
   if((Rate == 0) || (Clock == 0)) return NULL;
 
   YM2612 = (ym2612_ *)calloc(1, sizeof(ym2612_));
+  if (YM2612 == NULL)
+    return YM2612;
 
 #if YM_DEBUG_LEVEL > 0
   if(debug_file == NULL)
@@ -2182,6 +2181,7 @@ void YM2612_Reset(ym2612_ *YM2612)
       YM2612->CHANNEL[i].FOCT[j] = 0;
       YM2612->CHANNEL[i].KC[j] = 0;
 
+      YM2612->CHANNEL[i].SLOT[j].DT = DT_TAB[0];
       YM2612->CHANNEL[i].SLOT[j].Fcnt = 0;
       YM2612->CHANNEL[i].SLOT[j].Finc = 0;
       YM2612->CHANNEL[i].SLOT[j].Ecnt = ENV_END;    // Put it at the end of Decay phase...
