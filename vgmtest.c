@@ -589,35 +589,125 @@ typedef struct
 	UINT8 memIdx;
 } VGM_ROMDUMP_IDS;
 static const VGM_ROMDUMP_IDS VGMROM_CHIPS[0x14] =
-{	0x04, 0x00,	// SegaPCM
-	0x07, 0x00,	// YM2608 DeltaT
-	0x08, 0x00,	// YM2610 ADPCM
-	0x08, 0x01,	// YM2610 DeltaT
-	0x0D, 0x00,	// YMF278B ROM
-	0x0E, 0x00,	// YMF271
-	0x0F, 0x00,	// YMZ280B
-	0x0D, 0x01,	// YMF278B RAM
-	0x0B, 0x00,	// Y8950 DeltaT
-	0x15, 0x00,	// MultiPCM
-	0x16, 0x00,	// uPD7759
-	0x18, 0x00,	// OKIM6295
-	0x1A, 0x00,	// K054539
-	0x1C, 0x00,	// C140
-	0x1D, 0x00,	// K053260
-	0x1F, 0x00,	// QSound
-	0x25, 0x00,	// ES5506
-	0x26, 0x00,	// X1-010
-	0x27, 0x00,	// C352
-	0x28, 0x00,	// GA20
+{	{0x04, 0x00},	// SegaPCM
+	{0x07, 0x00},	// YM2608 DeltaT
+	{0x08, 0x00},	// YM2610 ADPCM
+	{0x08, 0x01},	// YM2610 DeltaT
+	{0x0D, 0x00},	// YMF278B ROM
+	{0x0E, 0x00},	// YMF271
+	{0x0F, 0x00},	// YMZ280B
+	{0x0D, 0x01},	// YMF278B RAM
+	{0x0B, 0x00},	// Y8950 DeltaT
+	{0x15, 0x00},	// MultiPCM
+	{0x16, 0x00},	// uPD7759
+	{0x18, 0x00},	// OKIM6295
+	{0x1A, 0x00},	// K054539
+	{0x1C, 0x00},	// C140
+	{0x1D, 0x00},	// K053260
+	{0x1F, 0x00},	// QSound
+	{0x25, 0x00},	// ES5506
+	{0x26, 0x00},	// X1-010
+	{0x27, 0x00},	// C352
+	{0x28, 0x00},	// GA20
 };
 static const VGM_ROMDUMP_IDS VGMRAM_CHIPS1[0x03] =
-{	0x05, 0x00,	// RF5C68
-	0x10, 0x00,	// RF5C164
-	0x14, 0x00,	// NES APU
+{	{0x05, 0x00},	// RF5C68
+	{0x10, 0x00},	// RF5C164
+	{0x14, 0x00},	// NES APU
 };
 static const VGM_ROMDUMP_IDS VGMRAM_CHIPS2[0x02] =
-{	0x20, 0x00,	// SCSP
-	0x24, 0x00,	// ES5503
+{	{0x20, 0x00},	// SCSP
+	{0x24, 0x00},	// ES5503
+};
+
+typedef struct
+{
+	UINT8 chipID;
+	UINT8 cmdType;
+} VGM_CMDTYPES;
+#define CMDTYPE_DUMMY		0x00
+#define CMDTYPE_R_D8		0x01	// Register + Data (8-bit)
+#define CMDTYPE_CP_R_D8		0x02	// Port (in command byte) + Register + Data (8-bit)
+#define CMDTYPE_P_R_D8		0x03	// Port + Register + Data (8-bit)
+#define CMDTYPE_O8_D8		0x04	// Offset (8-bit) + Data (8-bit)
+#define CMDTYPE_O16_D8		0x05	// Offset (16-bit) + Data (8-bit)
+#define CMDTYPE_SPCM_MEM	0x80	// SegaPCM Memory Write
+#define CMDTYPE_RF5C_MEM	0x81	// RF5Cxx Memory Write
+static const VGM_CMDTYPES VGM_CMDS_50[0x10] =
+{
+	{0x00,	CMDTYPE_DUMMY},		// 50 SN76496 (handled separately)
+	{0x01,	CMDTYPE_R_D8},		// 51 YM2413
+	{0x02,	CMDTYPE_CP_R_D8},	// 52 YM2612
+	{0x02,	CMDTYPE_CP_R_D8},	// 53 YM2612
+	{0x03,	CMDTYPE_R_D8},		// 54 YM2151
+	{0x06,	CMDTYPE_R_D8},		// 55 YM2203
+	{0x07,	CMDTYPE_CP_R_D8},	// 56 YM2608
+	{0x07,	CMDTYPE_CP_R_D8},	// 57 YM2608
+	{0x08,	CMDTYPE_CP_R_D8},	// 58 YM2610
+	{0x08,	CMDTYPE_CP_R_D8},	// 59 YM2610
+	{0x09,	CMDTYPE_R_D8},		// 5A YM3812
+	{0x0A,	CMDTYPE_R_D8},		// 5B YM3526
+	{0x0B,	CMDTYPE_R_D8},		// 5C Y8950
+	{0x0F,	CMDTYPE_R_D8},		// 5D YMZ280B
+	{0x0C,	CMDTYPE_CP_R_D8},	// 5E YMF262
+	{0x0C,	CMDTYPE_CP_R_D8},	// 5F YMF262
+};
+static const VGM_CMDTYPES VGM_CMDS_B0[0x10] =
+{
+	{0x05,	CMDTYPE_O8_D8},		// B0 RF5C68
+	{0x10,	CMDTYPE_O8_D8},		// B1 RF5C164
+	{0x11,	CMDTYPE_O8_D8},		// B2 PWM
+	{0x13,	CMDTYPE_O8_D8},		// B3 GameBoy DMG
+	{0x14,	CMDTYPE_O8_D8},		// B4 NES APU
+	{0x15,	CMDTYPE_O8_D8},		// B5 MultiPCM
+	{0x16,	CMDTYPE_O8_D8},		// B6 uPD7759
+	{0x17,	CMDTYPE_O8_D8},		// B7 OKIM6258
+	{0x18,	CMDTYPE_O8_D8},		// B8 OKIM6295
+	{0x1B,	CMDTYPE_O8_D8},		// B9 HuC6280
+	{0x1D,	CMDTYPE_O8_D8},		// BA K053260
+	{0x1E,	CMDTYPE_O8_D8},		// BB Pokey
+	{0x21,	CMDTYPE_O8_D8},		// BC WonderSwan
+	{0x23,	CMDTYPE_R_D8},		// BD SAA1099
+	{0x25,	CMDTYPE_O8_D8},		// BE ES5506
+	{0x28,	CMDTYPE_O8_D8},		// BF GA20
+};
+static const VGM_CMDTYPES VGM_CMDS_C0[0x10] =
+{
+	{0x04,	CMDTYPE_SPCM_MEM},	// C0 Sega PCM
+	{0x05,	CMDTYPE_RF5C_MEM},	// C1 RF5C68
+	{0x10,	CMDTYPE_RF5C_MEM},	// C2 RF5C164
+	{0x15,	CMDTYPE_DUMMY},		// C3 MultiPCM (write 3 bytes to offset 0, 1, 2)
+	{0x1F,	CMDTYPE_DUMMY},		// C4 QSound (8-bit offset, 16-bit data)
+	{0x20,	CMDTYPE_O16_D8},	// C5 SCSP
+	{0x21,	CMDTYPE_DUMMY},		// C6 WonderSwan (memory write)
+	{0x22,	CMDTYPE_O16_D8},	// C7 VSU
+	{0x26,	CMDTYPE_O16_D8},	// C8 X1-010
+	{0xFF,	CMDTYPE_DUMMY},		// C9 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// CA [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// CB [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// CC [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// CD [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// CE [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// CF [unused]
+};
+static const VGM_CMDTYPES VGM_CMDS_D0[0x10] =
+{
+	{0x0D,	CMDTYPE_P_R_D8},	// D0 YMF278B
+	{0x0E,	CMDTYPE_P_R_D8},	// D1 YMF271
+	{0x19,	CMDTYPE_P_R_D8},	// D2 K051649/SCC1
+	{0x1A,	CMDTYPE_O16_D8},	// D3 K054539
+	{0x1C,	CMDTYPE_O16_D8},	// D4 C140
+	{0x24,	CMDTYPE_O8_D8},		// D5 ES5503
+	{0x25,	CMDTYPE_O16_D8},	// D6 ES5506
+	{0xFF,	CMDTYPE_DUMMY},		// D7 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// D8 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// D9 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// DA [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// DB [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// DC [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// DD [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// DE [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// DF [unused]
 };
 
 static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
@@ -712,88 +802,80 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		}
 	case 0x68:
 		return 0x0C;
-	case 0x50:	// SN76489
-		SendChipCommand_Data8(0x00, chipID, 0, data[0x01]);
+	case 0x4F:	// SN76489 GG Stereo
+		SendChipCommand_Data8(0x00, chipID, 0x01, data[0x01]);
 		return 0x02;
-	case 0x51:	// YM2413
-		SendChipCommand_RegData8(0x01, chipID, 0, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x52:	// YM2612
-	case 0x53:
-		SendChipCommand_RegData8(0x02, chipID, cmd & 0x01, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x54:	// YM2151
-		SendChipCommand_RegData8(0x03, chipID, 0, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x55:	// YM2203
-		SendChipCommand_RegData8(0x06, chipID, 0, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x56:	// YM2608
-	case 0x57:
-		SendChipCommand_RegData8(0x07, chipID, cmd & 0x01, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x58:	// YM2610
-	case 0x59:
-		SendChipCommand_RegData8(0x08, chipID, cmd & 0x01, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x5A:	// YM3812
-		SendChipCommand_RegData8(0x09, chipID, 0, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x5B:	// YM3526
-		SendChipCommand_RegData8(0x0A, chipID, 0, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x5C:	// Y8950
-		SendChipCommand_RegData8(0x0B, chipID, 0, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x5D:	// YMZ280B
-		SendChipCommand_RegData8(0x0F, chipID, 0, data[0x01], data[0x02]);
-		return 0x03;
-	case 0x5E:	// YMF262
-	case 0x5F:
-		SendChipCommand_RegData8(0x0C, chipID, cmd & 0x01, data[0x01], data[0x02]);
-		return 0x03;
-	case 0xB0:	// RF5C68
-		SendChipCommand_Data8(0x05, chipID, data[0x01], data[0x02]);
-		return 0x03;
-	case 0xB1:	// RF5C164
-		SendChipCommand_Data8(0x10, chipID, data[0x01], data[0x02]);
-		return 0x03;
-	case 0xB8:	// OKIM6295
-		chipID = (data[0x01] & 0x80) >> 7;
-		SendChipCommand_Data8(0x18, chipID, data[0x01] & 0x7F, data[0x02]);
-		return 0x03;
-	case 0xC0:	// Sega PCM memory write
-		{
-			UINT16 memOfs;
-			
-			memcpy(&memOfs, &data[0x01], 0x02);
-			chipID = (data[0x01] & 0x8000) >> 15;
-			memOfs &= 0x7FFF;
-			SendChipCommand_MemData8(0x04, chipID, memOfs, data[0x03]);
-		}
-		return 0x04;
-	case 0xC1:	// RF5C68 memory write
-	case 0xC2:	// RF5C164 memory write
-		{
-			UINT16 memOfs;
-			memcpy(&memOfs, &data[0x01], 0x02);
-			if (cmd == 0xC1)
-				SendChipCommand_MemData8(0x05, chipID, memOfs, data[0x03]);
-			else
-				SendChipCommand_MemData8(0x10, chipID, memOfs, data[0x03]);
-		}
-		return 0x04;
-	case 0xD0:	// YMF278B
-		chipID = (data[0x01] & 0x80) >> 7;
-		SendChipCommand_RegData8(0x0D, chipID, data[0x01] & 0x7F, data[0x02], data[0x03]);
-		return 0x04;
-	case 0xD1:	// YMF271
-		chipID = (data[0x01] & 0x80) >> 7;
-		SendChipCommand_RegData8(0x0E, chipID, data[0x01] & 0x7F, data[0x02], data[0x03]);
-		return 0x04;
-	default:
-		return VGM_CMDLEN[cmd >> 4];
+	case 0x50:	// SN76489
+		SendChipCommand_Data8(0x00, chipID, 0x00, data[0x01]);
+		return 0x02;
 	}
+	{
+		VGM_CMDTYPES cmdType = {0xFF, CMDTYPE_DUMMY};
+		
+		switch(cmd & 0xF0)
+		{
+		case 0x50:
+			cmdType = VGM_CMDS_50[cmd & 0x0F];
+			break;
+		case 0xA0:
+			if (cmd == 0xA0)	// AY8910
+			{
+				cmdType.chipID = 0x12;
+				cmdType.cmdType = CMDTYPE_R_D8;
+				break;
+			}
+			break;
+		case 0xB0:
+			cmdType = VGM_CMDS_B0[cmd & 0x0F];
+			break;
+		case 0xC0:
+			cmdType = VGM_CMDS_C0[cmd & 0x0F];
+			break;
+		case 0xD0:
+			cmdType = VGM_CMDS_D0[cmd & 0x0F];
+			break;
+		}
+		switch(cmdType.cmdType)
+		{
+		case CMDTYPE_R_D8:	// Register + Data (8-bit)
+			SendChipCommand_RegData8(cmdType.chipID, chipID, 0, data[0x01], data[0x02]);
+			break;
+		case CMDTYPE_CP_R_D8:	// Port (in command byte) + Register + Data (8-bit)
+			SendChipCommand_RegData8(cmdType.chipID, chipID, cmd & 0x01, data[0x01], data[0x02]);
+			break;
+		case CMDTYPE_P_R_D8:	// Port + Register + Data (8-bit)
+			chipID = (data[0x01] & 0x80) >> 7;
+			SendChipCommand_RegData8(cmdType.chipID, chipID, data[0x01] & 0x7F, data[0x02], data[0x03]);
+			break;
+		case CMDTYPE_O8_D8:		// Offset (8-bit) + Data (8-bit)
+			chipID = (data[0x01] & 0x80) >> 7;
+			SendChipCommand_Data8(cmdType.chipID, chipID, data[0x01] & 0x7F, data[0x02]);
+			break;
+		case CMDTYPE_O16_D8:	// Offset (16-bit) + Data (8-bit)
+			{
+				UINT16 ofs;
+				
+				chipID = (data[0x01] & 0x80) >> 7;
+				ofs = ((data[0x01] & 0x7F) << 8) | ((data[0x02]) << 0);
+				//SendChipCommand_Ofs16Data8(cmdType.chipID, chipID, ofs, data[0x03]);
+			}
+			break;
+		case CMDTYPE_SPCM_MEM:	// SegaPCM Memory Write
+		case CMDTYPE_RF5C_MEM:	// RF5Cxx Memory Write
+			{
+				UINT16 memOfs;
+				memcpy(&memOfs, &data[0x01], 0x02);
+				if (cmdType.cmdType == CMDTYPE_SPCM_MEM)
+				{
+					chipID = (data[0x01] & 0x8000) >> 15;
+					memOfs &= 0x7FFF;
+				}
+				SendChipCommand_MemData8(cmdType.chipID, chipID, memOfs, data[0x03]);
+			}
+			break;
+		}
+	}
+	return VGM_CMDLEN[cmd >> 4];
 }
 
 static void ReadVGMFile(UINT32 samples)
