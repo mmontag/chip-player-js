@@ -95,7 +95,7 @@ static int depack_pru2(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_pru2(uint8 *data, char *t, int s)
+static int test_pru2(const uint8 *data, char *t, int s)
 {
 	int k;
 

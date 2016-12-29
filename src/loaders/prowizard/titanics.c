@@ -133,7 +133,7 @@ static int depack_titanics(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_titanics(uint8 *data, char *t, int s)
+static int test_titanics(const uint8 *data, char *t, int s)
 {
 	int i;
 	int ssize;
@@ -145,7 +145,7 @@ static int test_titanics(uint8 *data, char *t, int s)
 	for (i = 0; i < 15; i++) {
 		int len, start, lsize;
 		int addr;
-		uint8 *d = data + i * 12;
+		const uint8 *d = data + i * 12;
 
 		if (d[7] > 0x40)
 			return -1;

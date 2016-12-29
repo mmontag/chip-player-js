@@ -84,7 +84,7 @@ static int depack_pru1 (HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_pru1(uint8 *data, char *t, int s)
+static int test_pru1(const uint8 *data, char *t, int s)
 {
 	PW_REQUEST_DATA(s, 1084);
 

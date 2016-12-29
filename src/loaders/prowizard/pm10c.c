@@ -222,7 +222,7 @@ restart:
 	return 0;
 }
 
-static int test_p10c(uint8 *data, char *t, int s)
+static int test_p10c(const uint8 *data, char *t, int s)
 {
 	uint8 magic[] = {
 		0x60, 0x38, 0x60, 0x00, 0x00, 0xa0, 0x60, 0x00,

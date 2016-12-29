@@ -177,7 +177,7 @@ static int depack_ksm(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_ksm (uint8 *data, char *t, int s)
+static int test_ksm (const uint8 *data, char *t, int s)
 {
 	int i, j;
 	int max_trk;
@@ -219,7 +219,7 @@ static int test_ksm (uint8 *data, char *t, int s)
 
 	/* real test on tracks data starts now */
 	for (i = 0; i <= max_trk; i++) {
-		uint8 *d = data + 1536 + i * 192;
+		const uint8 *d = data + 1536 + i * 192;
 		for (j = 0; j < 64; j++) {
 			if (d[j * 3] > 0x24)
 				return -1;

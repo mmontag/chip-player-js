@@ -68,7 +68,7 @@ static int depack_fcm(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_fcm(uint8 *data, char *t, int s)
+static int test_fcm(const uint8 *data, char *t, int s)
 {
 	int j;
 

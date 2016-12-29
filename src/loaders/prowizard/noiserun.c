@@ -11,7 +11,7 @@
 #include "prowiz.h"
 
 
-static int fine_table[] = {
+static const int fine_table[] = {
 	0x0000, 0xffb8, 0xff70, 0xff28, 0xfee0, 0xfe98, 0xfe50, 0xfe08,
 	0xfdc0, 0xfd78, 0xfd30, 0xfce8, 0xfca0, 0xfc58, 0xfc10, 0xfbc8
 };
@@ -111,7 +111,7 @@ static int depack_nru(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_nru(uint8 *data, char *t, int s)
+static int test_nru(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, psize, ssize;
@@ -170,7 +170,7 @@ static int test_nru(uint8 *data, char *t, int s)
 
 	/* test #5 pattern data ... */
 	for (i = 0; i < psize; i++) {
-		uint8 *d = data + 1084 + i * 4;
+		const uint8 *d = data + 1084 + i * 4;
 		/* note > 48h ? */
 		if (d[2] > 0x48)
 			return -1;

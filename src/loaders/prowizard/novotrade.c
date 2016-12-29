@@ -100,7 +100,7 @@ static int depack_ntp(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_ntp(uint8 *data, char *t, int s)
+static int test_ntp(const uint8 *data, char *t, int s)
 {
 	int j, k;
 

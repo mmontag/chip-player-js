@@ -251,7 +251,7 @@ restart:
 	return 0;
 }
 
-static int test_pha(uint8 *data, char *t, int s)
+static int test_pha(const uint8 *data, char *t, int s)
 {
 	int i;
 	int ptr, ssize;
@@ -264,7 +264,7 @@ static int test_pha(uint8 *data, char *t, int s)
 	/* test #2 (volumes,sample addresses and whole sample size) */
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 14;
+		const uint8 *d = data + i * 14;
 
 		/* sample size */
 		ssize += readmem16b(d) << 1;

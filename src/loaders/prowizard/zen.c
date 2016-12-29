@@ -140,7 +140,7 @@ static int depack_zen(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_zen(uint8 *data, char *t, int s)
+static int test_zen(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, pat_ofs;
@@ -153,7 +153,7 @@ static int test_zen(uint8 *data, char *t, int s)
 		return -1;
 
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + 16 * i;
+		const uint8 *d = data + 16 * i;
 		if (d[9] > 0x40)
 			return -1;
 

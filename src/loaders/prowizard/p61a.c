@@ -523,7 +523,7 @@ static int depack_p61a(HIO_HANDLE *in, FILE *out)
     return 0;
 }
 
-static int test_p61a(uint8 *data, char *t, int s)
+static int test_p61a(const uint8 *data, char *t, int s)
 {
     int j, k, l, m, n, o;
     int start = 0, ssize;

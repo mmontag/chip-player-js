@@ -126,14 +126,14 @@ static int depack_pp30(HIO_HANDLE *in, FILE *out)
 	return depack_pp21_pp30(in, out, 1);
 }
 
-static int test_pp21(uint8 *data, char *t, int s)
+static int test_pp21(const uint8 *data, char *t, int s)
 {
 	int i;
 	int ssize, tsize, npat, max_ref;
 
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 		int len = readmem16b(d) << 1;
 		int start = readmem16b(d + 4) << 1;
 
@@ -194,14 +194,14 @@ static int test_pp21(uint8 *data, char *t, int s)
 }
 
 
-static int test_pp30(uint8 *data, char *t, int s)
+static int test_pp30(const uint8 *data, char *t, int s)
 {
 	int i;
 	int ssize, tsize, npat, max_ref, ref_size;
 
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 		int len = readmem16b(d) << 1;
 		int start = readmem16b(d + 4) << 1;
 
@@ -268,7 +268,7 @@ static int test_pp30(uint8 *data, char *t, int s)
 
 	/* test #6  data in reference table ... */
 	for (i = 0; i < ref_size; i++) {
-		uint8 *d = data + tsize + 766 + i * 4;
+		const uint8 *d = data + tsize + 766 + i * 4;
 		uint8 fxt = d[2] & 0x0f;
 		uint8 fxp = d[3];
 

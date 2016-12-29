@@ -223,7 +223,7 @@ static int depack_tp2(HIO_HANDLE *in, FILE *out)
 	return depack_tp23(in, out, 2);
 }
 
-static int test_tp23(uint8 *data, char *t, int s, const char *magic)
+static int test_tp23(const uint8 *data, char *t, int s, const char *magic)
 {
 	int i;
 	int npat, nins, ssize;
@@ -242,7 +242,7 @@ static int test_tp23(uint8 *data, char *t, int s, const char *magic)
 	nins >>= 3;
 
 	for (i = 0; i < nins; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 
 		/* test finetunes */
 		if (d[30] > 0x0f)
@@ -256,7 +256,7 @@ static int test_tp23(uint8 *data, char *t, int s, const char *magic)
 	/* test sample sizes */
 	ssize = 0;
 	for (i = 0; i < nins; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 		int len = readmem16b(d + 32) << 1;	/* size */
 		int start = readmem16b(d + 34) << 1;	/* loop start */
 		int lsize = readmem16b(d + 36) << 1;	/* loop size */
@@ -286,12 +286,12 @@ static int test_tp23(uint8 *data, char *t, int s, const char *magic)
 	return 0;
 }
 
-static int test_tp3(uint8 *data, char *t, int s)
+static int test_tp3(const uint8 *data, char *t, int s)
 {
 	return test_tp23(data, t, s, "CPLX_TP3");
 }
 
-static int test_tp2(uint8 *data, char *t, int s)
+static int test_tp2(const uint8 *data, char *t, int s)
 {
 	return test_tp23(data, t, s, "MEXX_TP2");
 }

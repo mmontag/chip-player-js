@@ -120,7 +120,7 @@ static int depack_unic2(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_unic2(uint8 *data, char *t, int s)
+static int test_unic2(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, psize, ssize, max_ins;
@@ -136,7 +136,7 @@ static int test_unic2(uint8 *data, char *t, int s)
 	ssize = 0;
 	max_ins = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 30;
+		const uint8 *d = data + i * 30;
 
 		int size = readmem16b(d + 22) << 1;
 		int start = readmem16b(d + 26) << 1;
@@ -192,7 +192,7 @@ static int test_unic2(uint8 *data, char *t, int s)
 	PW_REQUEST_DATA (s, 1060 + psize * 3 + 2);
 
 	for (i = 0; i < psize; i++) {
-		uint8 *d = data + 1060 + i * 3;
+		const uint8 *d = data + 1060 + i * 3;
 		int ins;
 
 		/* relative note number + last bit of sample > $34 ? */

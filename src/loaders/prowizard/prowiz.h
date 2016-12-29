@@ -27,7 +27,7 @@
 
 struct pw_format {
 	const char *name;
-	int (*test)(uint8 *, char *, int);
+	int (*test)(const uint8 *, char *, int);
 	int (*depack)(HIO_HANDLE *, FILE *);
 	struct list_head list;
 };
