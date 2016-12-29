@@ -15,6 +15,7 @@
 #define DEVID_Y8950		0x0B
 #define DEVID_YMF262	0x0C
 #define DEVID_YMF278B	0x0D
+#define DEVID_YMF271	0x0E
 #define DEVID_YMZ280B	0x0F
 #define DEVID_OKIM6295	0x18	// also known as MSM6295
 

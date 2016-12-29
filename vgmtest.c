@@ -787,6 +787,10 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		chipID = (data[0x01] & 0x80) >> 7;
 		SendChipCommand_RegData8(0x0D, chipID, data[0x01] & 0x7F, data[0x02], data[0x03]);
 		return 0x04;
+	case 0xD1:	// YMF271
+		chipID = (data[0x01] & 0x80) >> 7;
+		SendChipCommand_RegData8(0x0E, chipID, data[0x01] & 0x7F, data[0x02], data[0x03]);
+		return 0x04;
 	default:
 		return VGM_CMDLEN[cmd >> 4];
 	}
