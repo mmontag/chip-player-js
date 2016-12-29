@@ -15,6 +15,7 @@
 #include "cores/opnintf.h"
 #include "cores/oplintf.h"
 #include "cores/262intf.h"
+#include "cores/ymf278b.h"
 #include "cores/ymz280b.h"
 #include "cores/okim6295.h"
 
@@ -48,6 +49,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_Y8950;
 	case DEVID_YMF262:
 		return devDefList_YMF262;
+	case DEVID_YMF278B:
+		return devDefList_YMF278B;
 	case DEVID_YMZ280B:
 		return devDefList_YMZ280B;
 	case DEVID_OKIM6295:

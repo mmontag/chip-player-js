@@ -421,6 +421,33 @@ static void InitVGMChips(void)
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'B', (void**)&cDev->romSizeB);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 'B', (void**)&cDev->romWriteB);
 			break;
+		case DEVID_YMF278B:
+			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
+			if (retVal)
+				break;
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0x524F, (void**)&cDev->romSize);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x524F, (void**)&cDev->romWrite);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x5241, (void**)&cDev->romWriteB);
+			if (cDev->romWrite != NULL)
+			{
+				FILE* hFile;
+				UINT32 yrwSize;
+				UINT8* yrwData;
+				
+				hFile = fopen("yrw801.rom", "rb");
+				fseek(hFile, 0, SEEK_END);
+				yrwSize = ftell(hFile);
+				rewind(hFile);
+				yrwData = (UINT8*)malloc(yrwSize);
+				fread(yrwData, 1, yrwSize, hFile);
+				fclose(hFile);
+				
+				cDev->romSize(cDev->defInf.dataPtr, yrwSize);
+				cDev->romWrite(cDev->defInf.dataPtr, 0x00, yrwSize, yrwData);
+				free(yrwData);
+			}
+			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
@@ -437,7 +464,11 @@ static void InitVGMChips(void)
 			break;
 		}
 		if (retVal)
+		{
+			cDev->defInf.dataPtr = NULL;
+			cDev->defInf.devDef = NULL;
 			continue;
+		}
 		// already done by SndEmu_Start()
 		//cDev->defInf.devDef->Reset(cDev->defInf.dataPtr);
 		
@@ -744,6 +775,10 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			else
 				SendChipCommand_MemData8(0x10, chipID, memOfs, data[0x03]);
 		}
+		return 0x04;
+	case 0xD0:	// YMF278B
+		chipID = (data[0x01] & 0x80) >> 7;
+		SendChipCommand_RegData8(0x0D, chipID, data[0x01] & 0x7F, data[0x02], data[0x03]);
 		return 0x04;
 	default:
 		return VGM_CMDLEN[cmd >> 4];

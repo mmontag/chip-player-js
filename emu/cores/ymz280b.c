@@ -154,7 +154,7 @@ struct _ymz280b_state
 	
 	double master_clock;			/* master clock frequency */
 	double rate;
-	void (*irq_callback)(void *param, int);		/* IRQ callback */
+	void (*irq_callback)(void *, int);		/* IRQ callback */
 	void* irq_cb_param;
 	struct YMZ280BVoice	voice[8];	/* the 8 voices */
 	
