@@ -143,7 +143,8 @@ const DEV_DEF* devDefList_Y8950[] =
 #ifdef EC_YM3812_MAME
 static void stream_update3812_mame(void* param)
 {
-	devDef3812_MAME.Update(param, 0, NULL);
+	void** info = (void**)param;
+	devDef3812_MAME.Update(*info, 0, NULL);
 }
 
 static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -179,7 +180,8 @@ static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 #ifdef EC_YM3812_ADLIBEMU
 static void stream_update3812_adlibemu(void* param)
 {
-	devDef3812_AdLibEmu.Update(param, 0, NULL);
+	void** info = (void**)param;
+	devDef3812_AdLibEmu.Update(*info, 0, NULL);
 }
 
 static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -211,7 +213,8 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 
 static void stream_update3526(void* param)
 {
-	devDef3526_MAME.Update(param, 0, NULL);
+	void** info = (void**)param;
+	devDef3526_MAME.Update(*info, 0, NULL);
 }
 
 static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -246,7 +249,8 @@ static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 static void stream_update8950(void* param)
 {
-	devDef8950_MAME.Update(param, 0, NULL);
+	void** info = (void**)param;
+	devDef8950_MAME.Update(*info, 0, NULL);
 }
 
 static UINT8 device_start_y8950(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
