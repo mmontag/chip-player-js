@@ -431,11 +431,18 @@ static void InitVGMChips(void)
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x5241, (void**)&cDev->romWriteB);
 			if (cDev->romWrite != NULL)
 			{
+				const char* romFile = "yrw801.rom";
 				FILE* hFile;
 				UINT32 yrwSize;
 				UINT8* yrwData;
 				
-				hFile = fopen("yrw801.rom", "rb");
+				hFile = fopen(romFile, "rb");
+				if (hFile == NULL)
+				{
+					printf("Warning: Couldn't load %s!\n", romFile);
+					break;
+				}
+				
 				fseek(hFile, 0, SEEK_END);
 				yrwSize = ftell(hFile);
 				rewind(hFile);

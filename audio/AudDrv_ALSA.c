@@ -294,7 +294,6 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	
 	drv->devState = 1;
 	drv->pauseThread = 0;
-printf("Done.\n");
 	
 	return AERR_OK;
 }
@@ -426,6 +425,8 @@ static void* AlsaThread(void* Arg)
 	UINT32 bufBytes;
 	int retVal;
 	
+	while(drv->pauseThread)
+		Sleep(1);
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;

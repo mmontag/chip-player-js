@@ -450,6 +450,8 @@ static void* OssThread(void* Arg)
 	UINT32 bufBytes;
 	ssize_t wrtBytes;
 	
+	while(drv->pauseThread)
+		Sleep(1);
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
