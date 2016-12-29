@@ -137,7 +137,14 @@ XMP_TRY_COMPILE(whether alloca() needs alloca.h,
   int main(void){return 0;}],
   AC_DEFINE(HAVE_ALLOCA_H))  
 
+old_LIBS="${LIBS}"
 AC_CHECK_LIB(m,pow)
+dnl -lm not needed with darwin.
+case "${host_os}" in
+darwin*)
+  LIBS="${old_LIBS}"
+  ;;
+esac
 AC_CHECK_FUNCS(popen mkstemp fnmatch umask)
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libxmp.pc])
