@@ -84,7 +84,7 @@ int test_oxm		(FILE *);
 
 #define BUFLEN 16384
 
-static int execute_command(char *cmd, char *filename, FILE *t)
+static int execute_command(const char *cmd, const char *filename, FILE *t)
 {
 	char line[1024], buf[BUFLEN];
 	FILE *p;
@@ -119,10 +119,10 @@ static int execute_command(char *cmd, char *filename, FILE *t)
 	return 0;
 }
 
-static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
+static int decrunch(HIO_HANDLE **h, const char *filename, char **temp)
 {
 	unsigned char b[1024];
-	char *cmd;
+	const char *cmd;
 	FILE *f, *t;
 	int res;
 	int headersize;

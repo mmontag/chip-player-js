@@ -223,7 +223,7 @@ static int depack_tp2(HIO_HANDLE *in, FILE *out)
 	return depack_tp23(in, out, 2);
 }
 
-static int test_tp23(uint8 *data, char *t, int s, char *magic)
+static int test_tp23(uint8 *data, char *t, int s, const char *magic)
 {
 	int i;
 	int npat, nins, ssize;

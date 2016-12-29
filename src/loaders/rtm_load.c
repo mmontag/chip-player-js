@@ -155,7 +155,7 @@ static int rtm_test(HIO_HANDLE *f, char *t, const int start)
 
 #define MAX_SAMP 1024
 
-static int read_object_header(HIO_HANDLE *f, struct ObjectHeader *h, char *id)
+static int read_object_header(HIO_HANDLE *f, struct ObjectHeader *h, const char *id)
 {
 	hio_read(&h->id, 4, 1, f);
 	D_(D_WARN "object id: %02x %02x %02x %02x", h->id[0],

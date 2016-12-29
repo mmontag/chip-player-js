@@ -102,7 +102,7 @@ int meof(MFILE *m)
 		return CAN_READ(m) <= 0;
 }
 
-MFILE *mopen(void *ptr, long size)
+MFILE *mopen(const void *ptr, long size)
 {
 	MFILE *m;
 

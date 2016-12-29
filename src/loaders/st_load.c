@@ -193,7 +193,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	uint8 mod_event[4];
 	int ust = 1;
 	/* int lps_mult = m->fetch & XMP_CTL_FIXLOOP ? 1 : 2; */
-	char *modtype;
+	const char *modtype;
 	int fxused;
 	int pos;
 	int used_ins;		/* Number of samples actually used */

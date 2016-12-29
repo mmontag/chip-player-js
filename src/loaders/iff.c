@@ -160,7 +160,7 @@ int libxmp_iff_load(iff_handle opaque, struct module_data *m, HIO_HANDLE *f, voi
 	return 0;
 }
 
-int libxmp_iff_register(iff_handle opaque, char *id,
+int libxmp_iff_register(iff_handle opaque, const char *id,
 	int (*loader)(struct module_data *, int, HIO_HANDLE *, void *))
 {
 	struct iff_data *data = (struct iff_data *)opaque;
