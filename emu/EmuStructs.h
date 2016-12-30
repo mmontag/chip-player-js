@@ -25,6 +25,8 @@ typedef void (*DEVFUNC_SRCCB)(void* info, DEVCB_SRATE_CHG smpRateChgCallback, vo
 
 typedef UINT8 (*DEVFUNC_READ_A8D8)(void* info, UINT8 addr);
 typedef UINT16 (*DEVFUNC_READ_A8D16)(void* info, UINT8 addr);
+typedef UINT32 (*DEVFUNC_READ_CLOCK)(void* info);
+typedef UINT32 (*DEVFUNC_READ_SRATE)(void* info);
 
 typedef void (*DEVFUNC_WRITE_A8D8)(void* info, UINT8 addr, UINT8 data);
 typedef void (*DEVFUNC_WRITE_A8D16)(void* info, UINT8 addr, UINT16 data);
@@ -32,6 +34,7 @@ typedef void (*DEVFUNC_WRITE_A16D8)(void* info, UINT16 addr, UINT8 data);
 typedef void (*DEVFUNC_WRITE_A16D16)(void* info, UINT16 addr, UINT16 data);
 typedef void (*DEVFUNC_WRITE_MEMSIZE)(void* info, UINT32 memsize);
 typedef void (*DEVFUNC_WRITE_BLOCK)(void* info, UINT32 offset, UINT32 length, const UINT8* data);
+typedef void (*DEVFUNC_WRITE_CLOCK)(void* info, UINT32 clock);
 
 #define RWF_WRITE		0x00
 #define RWF_READ		0x01
@@ -39,7 +42,10 @@ typedef void (*DEVFUNC_WRITE_BLOCK)(void* info, UINT32 offset, UINT32 length, co
 #define RWF_QUICKREAD	(0x02 | RWF_READ)
 #define RWF_REGISTER	0x00	// register r/w
 #define RWF_MEMORY		0x10	// memory (RAM) r/w
+#define RWF_CLOCK		0x80	// chip clock
+#define RWF_SRATE		0x81	// sample rate
 
+#define DEVRW_VALUE		0x00
 #define DEVRW_A8D8		0x11	//  8-bit address,  8-bit data
 #define DEVRW_A8D16		0x12	//  8-bit address, 16-bit data
 #define DEVRW_A16D8		0x21	// 16-bit address,  8-bit data

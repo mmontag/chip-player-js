@@ -159,6 +159,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="emu\cores\ay8910.c" />
+    <ClCompile Include="emu\cores\ayintf.c" />
+    <ClCompile Include="emu\cores\emu2149.c" />
     <ClCompile Include="emu\cores\emu2413.c" />
     <ClCompile Include="emu\cores\fmopl.c" />
     <ClCompile Include="emu\cores\fmopn.c" />
@@ -191,6 +194,9 @@
     <ClInclude Include="emu\cores\262intf.h" />
     <ClInclude Include="emu\cores\adlibemu.h" />
     <ClInclude Include="emu\cores\adlibemu_opl_inc.h" />
+    <ClInclude Include="emu\cores\ay8910.h" />
+    <ClInclude Include="emu\cores\ayintf.h" />
+    <ClInclude Include="emu\cores\emu2149.h" />
     <ClInclude Include="emu\cores\emu2413.h" />
     <ClInclude Include="emu\cores\emutypes.h" />
     <ClInclude Include="emu\cores\fmopl.h" />

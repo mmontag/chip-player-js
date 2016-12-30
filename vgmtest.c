@@ -29,6 +29,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/EmuCores.h"
 #include "emu/cores/sn764intf.h"	// for SN76496_CFG
 #include "emu/cores/segapcm.h"		// for SEGAPCM_CFG
+#include "emu/cores/ayintf.h"		// for AY8910_CFG
 
 
 typedef struct _vgm_file_header
@@ -453,6 +454,21 @@ static void InitVGMChips(void)
 				cDev->romSize(cDev->defInf.dataPtr, yrwSize);
 				cDev->romWrite(cDev->defInf.dataPtr, 0x00, yrwSize, yrwData);
 				free(yrwData);
+			}
+			break;
+		case DEVID_AY8910:
+			{
+				AY8910_CFG ayCfg;
+				
+				devCfg.emuCore = FCC_EMU_;
+				ayCfg._genCfg = devCfg;
+				ayCfg.chipType = VGMHdr.bytAYType;
+				ayCfg.chipFlags = VGMHdr.bytAYFlag;
+				
+				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&ayCfg, &cDev->defInf);
+				if (retVal)
+					break;
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 			}
 			break;
 		default:

@@ -61,6 +61,10 @@
 #include "emu2413.h"
 #include "../panning.h" // Maxim
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 /*#ifdef EMU2413_COMPACTION
 #define OPLL_TONE_NUM 1
 static unsigned char default_inst[OPLL_TONE_NUM][(16 + 3) * 16] = {
@@ -286,7 +290,7 @@ makeSinTable (void)
 
   for (i = 0; i < PG_WIDTH / 4; i++)
   {
-    fullsintable[i] = (e_uint32) lin2db (sin (2.0 * PI * i / PG_WIDTH) );
+    fullsintable[i] = (e_uint32) lin2db (sin (2.0 * M_PI * i / PG_WIDTH) );
   }
 
   for (i = 0; i < PG_WIDTH / 4; i++)
@@ -307,12 +311,12 @@ makeSinTable (void)
 
 static double saw(double phase)
 {
-  if(phase <= PI/2)
-    return phase * 2 / PI ;
-  else if(phase <= PI*3/2)
-    return 2.0 - ( phase * 2 / PI );
+  if(phase <= M_PI/2)
+    return phase * 2 / M_PI ;
+  else if(phase <= M_PI*3/2)
+    return 2.0 - ( phase * 2 / M_PI );
   else
-    return -4.0 + phase * 2 / PI;
+    return -4.0 + phase * 2 / M_PI;
 }
 
 /* Table for Pitch Modulator */
@@ -322,8 +326,8 @@ makePmTable (void)
   e_int32 i;
 
   for (i = 0; i < PM_PG_WIDTH; i++)
-    /* pmtable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * sin (2.0 * PI * i / PM_PG_WIDTH) / 1200)); */
-    pmtable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * saw (2.0 * PI * i / PM_PG_WIDTH) / 1200));
+    /* pmtable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * sin (2.0 * M_PI * i / PM_PG_WIDTH) / 1200)); */
+    pmtable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * saw (2.0 * M_PI * i / PM_PG_WIDTH) / 1200));
 }
 
 /* Table for Amp Modulator */
@@ -333,8 +337,8 @@ makeAmTable (void)
   e_int32 i;
 
   for (i = 0; i < AM_PG_WIDTH; i++)
-    /* amtable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + sin (2.0 * PI * i / PM_PG_WIDTH))); */
-    amtable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + saw (2.0 * PI * i / PM_PG_WIDTH)));
+    /* amtable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + sin (2.0 * M_PI * i / PM_PG_WIDTH))); */
+    amtable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + saw (2.0 * M_PI * i / PM_PG_WIDTH)));
 }
 
 /* Phase increment counter table */

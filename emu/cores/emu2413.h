@@ -1,18 +1,11 @@
 #ifndef __EMU2413_H__
 #define __EMU2413_H__
 
+#include <stdtype.h>
 #include "../snddef.h"
 #include "emutypes.h"
 
-#ifdef EMU2413_DLL_EXPORTS
-  #define EMU2413_API __declspec(dllexport)
-#elif defined(EMU2413_DLL_IMPORTS)
-  #define EMU2413_API __declspec(dllimport)
-#else
-  #define EMU2413_API
-#endif
-
-#define PI 3.14159265358979323846
+#define EMU2413_API
 
 enum OPLL_TONE_ENUM {OPLL_2413_TONE=0, OPLL_VRC7_TONE=1, OPLL_281B_TONE=2} ;
 
