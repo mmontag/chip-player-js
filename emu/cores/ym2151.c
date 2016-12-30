@@ -38,6 +38,10 @@
 #include "../snddef.h"
 #include "ym2151.h"
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4244)	// disable warning for converting double -> UINT32
+#endif
+
 
 static void ym2151_write_reg(void *_chip, UINT8 r, UINT8 v);
 static int ym2151_read_status( void *_chip );

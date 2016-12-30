@@ -1,12 +1,8 @@
 #ifndef __FMOPN_H__
 #define __FMOPN_H__
 
-/*
-  File: fm.h -- header file for software emulation for FM sound generator
-
-*/
-
 #include <stdtype.h>
+#include "../snddef.h"
 
 /* --- select emulation chips --- */
 #define BUILD_YM2203  1		// build YM2203(OPN)   emulator

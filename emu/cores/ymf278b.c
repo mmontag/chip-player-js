@@ -98,7 +98,7 @@ static DEVDEF_RWFUNC devFunc[] =
 };
 static DEV_DEF devDef =
 {
-	"YMF278B", "openMSX", FCC_MAME,
+	"YMF278B", "openMSX", FCC_OMSX,
 	
 	device_start_ymf278b,
 	device_stop_ymf278b,

@@ -41,6 +41,10 @@
 #include "../snddef.h"
 #include "ymf271.h"
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4244)	// disable warning for converting INT64 -> INT32
+#endif
+
 
 static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs);
 static UINT8 device_start_ymf271(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);

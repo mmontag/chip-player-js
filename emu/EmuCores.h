@@ -7,5 +7,6 @@
 #define FCC_GPGX	0x47504758	// Genesis Plus GX
 #define FCC_GENS	0x47454E53	// Gens
 #define FCC_ADLE	0x41444C45	// AdLibEmu
+#define FCC_OMSX	0x4F4D5358	// openMSX
 
 #endif	// __EMUCORES_H__

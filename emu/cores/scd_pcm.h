@@ -2,6 +2,7 @@
 #define __SCD_PCM_H__
 
 #include <stdtype.h>
+#include "../snddef.h"
 
 void*SCD_PCM_Init(UINT32 Clock, UINT32 Rate, UINT8 smpl0patch);
 void SCD_PCM_Deinit(void* info);

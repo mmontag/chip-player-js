@@ -1,6 +1,9 @@
 #ifndef __FMOPL_H__
 #define __FMOPL_H__
 
+#include <stdtype.h>
+#include "../snddef.h"
+
 /* --- select emulation chips --- */
 #define BUILD_YM3812 1
 #define BUILD_YM3526 1

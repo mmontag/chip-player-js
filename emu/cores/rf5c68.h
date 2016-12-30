@@ -2,6 +2,7 @@
 #define __RF5C68_H__
 
 #include <stdtype.h>
+#include "../snddef.h"
 
 typedef void (*SAMPLE_END_CB)(void* param,int channel);
 
