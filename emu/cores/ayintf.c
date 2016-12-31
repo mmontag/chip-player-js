@@ -21,10 +21,10 @@ static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 #ifdef EC_AY8910_MAME
 static DEVDEF_RWFUNC devFunc_MAME[] =
 {
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ay8910_write_ym},
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ay8910_write},
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, ay8910_write_reg},
-	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ay8910_read_ym},
-	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, ay8910_set_clock_ym},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ay8910_read},
+	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, ay8910_set_clock},
 	{RWF_SRATE | RWF_WRITE, DEVRW_VALUE, 0, ay8910_get_sample_rate},
 };
 static DEV_DEF devDef_MAME =
@@ -32,14 +32,14 @@ static DEV_DEF devDef_MAME =
 	"AY8910", "MAME", FCC_MAME,
 	
 	(DEVFUNC_START)device_start_ay8910_mame,
-	ay8910_stop_ym,
-	ay8910_reset_ym,
+	ay8910_stop,
+	ay8910_reset,
 	ay8910_update_one,
 	
 	NULL,	// SetOptionBits
-	ay8910_set_mute_mask_ym,
+	ay8910_set_mute_mask,
 	NULL,	// SetPanning
-	ay8910_set_srchg_cb_ym,	// SetSampleRateChangeCallback
+	ay8910_set_srchg_cb,	// SetSampleRateChangeCallback
 	
 	5, devFunc_MAME,	// rwFuncs
 };
@@ -94,7 +94,7 @@ static UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf
 	
 	clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
 	
-	rate = ay8910_start_ym(&chip, clock, cfg->chipType, cfg->chipFlags);
+	rate = ay8910_start(&chip, clock, cfg->chipType, cfg->chipFlags);
 	if (chip == NULL)
 		return 0xFF;
 	

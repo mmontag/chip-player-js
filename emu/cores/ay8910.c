@@ -226,9 +226,6 @@ struct _ay8910_context
 	void* SmpRateData;
 };
 
-#define MAX_UPDATE_LEN	0x1000	// in samples
-static DEV_SMPL AYBuf[NUM_CHANNELS][MAX_UPDATE_LEN];
-
 
 /*************************************
  *
@@ -502,12 +499,11 @@ void ay8910_write_reg(ay8910_context *psg, UINT8 r, UINT8 v)
 void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
 	ay8910_context *psg = (ay8910_context *)param;
-	DEV_SMPL *buf[NUM_CHANNELS];
 	int chan;
-	UINT32 cursmpl;
-	UINT32 buf_smpls;
+	UINT32 cur_smpl;
 	DEV_SMPL *bufL = outputs[0];
 	DEV_SMPL *bufR = outputs[1];
+	DEV_SMPL chnout;
 	
 	memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
 	memset(outputs[1], 0x00, samples * sizeof(DEV_SMPL));
@@ -516,17 +512,6 @@ void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs)
 	if (psg->IsDisabled)
 		return;
 	
-	buf_smpls = samples;
-	//buf[0] = outputs[0];
-	buf[0] = AYBuf[0];
-	buf[1] = AYBuf[1];
-	buf[2] = AYBuf[2];
-
-	/* hack to prevent us from hanging when starting filtered outputs */
-	for (chan = 0; chan < NUM_CHANNELS; chan++)
-		if (buf[chan] != NULL)
-			memset(buf[chan], 0, samples * sizeof(*buf[chan]));
-
 	/* The 8910 has three outputs, each output is the mix of one of the three */
 	/* tone generators and of the (single) noise generator. The two are mixed */
 	/* BEFORE going into the DAC. The formula to mix each channel is: */
@@ -534,10 +519,8 @@ void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs)
 	/* Note that this means that if both tone and noise are disabled, the output */
 	/* is 1, not 0, and can be modulated changing the volume. */
 
-	if (buf_smpls > MAX_UPDATE_LEN)
-		buf_smpls = MAX_UPDATE_LEN;
 	/* buffering loop */
-	while (buf_smpls)
+	for (cur_smpl = 0; cur_smpl < samples; cur_smpl++)
 	{
 		for (chan = 0; chan < NUM_CHANNELS; chan++)
 		{
@@ -610,38 +593,28 @@ void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 		for (chan = 0; chan < NUM_CHANNELS; chan++)
 		{
+			if (! psg->MuteMsk[chan])
+				continue;
 			if (TONE_ENVELOPE(psg, chan) != 0)
 			{
 				/* Envolope has no "off" state */
 				if (psg->chip_type == CHTYPE_AY8914) // AY8914 Has a two bit tone_envelope field
 				{
-					*(buf[chan]++) = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume >> (3-TONE_ENVELOPE(psg,chan)) : 0];
+					chnout = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume >> (3-TONE_ENVELOPE(psg,chan)) : 0];
 				}
 				else
 				{
-					*(buf[chan]++) = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume : 0];
+					chnout = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume : 0];
 				}
 			}
 			else
 			{
-				*(buf[chan]++) = psg->vol_table[chan][psg->vol_enabled[chan] ? TONE_VOLUME(psg, chan) : 0];
+				chnout = psg->vol_table[chan][psg->vol_enabled[chan] ? TONE_VOLUME(psg, chan) : 0];
 			}
-		}
-		buf_smpls--;
-		
-	}//end while()
-	
-	buf_smpls = samples;
-	if (buf_smpls > MAX_UPDATE_LEN)
-		buf_smpls = MAX_UPDATE_LEN;
-	for (cursmpl = 0; cursmpl < buf_smpls; cursmpl ++)
-	{
-		for (chan = 0; chan < NUM_CHANNELS; chan ++)
-		{
 			if (psg->StereoMask[chan] & 0x01)
-				bufL[cursmpl] += AYBuf[chan][cursmpl] & psg->MuteMsk[chan];
+				bufL[cur_smpl] += chnout;
 			if (psg->StereoMask[chan] & 0x02)
-				bufR[cursmpl] += AYBuf[chan][cursmpl] & psg->MuteMsk[chan];
+				bufR[cur_smpl] += chnout;
 		}
 	}
 }
@@ -675,7 +648,7 @@ static void build_mixer_table(ay8910_context *psg)
  *
  *************************************/
 
-UINT32 ay8910_start_ym(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags)
+UINT32 ay8910_start(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags)
 {
 	static const ay8910_interface generic_ay8910 =
 	{
@@ -728,18 +701,18 @@ UINT32 ay8910_start_ym(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags)
 
 	build_mixer_table(info);
 
-	//ay8910_set_clock_ym(info, clock);
-	ay8910_set_mute_mask_ym(info, 0x00);
+	//ay8910_set_clock(info, clock);
+	ay8910_set_mute_mask(info, 0x00);
 
 	return ay8910_get_sample_rate(info);
 }
 
-void ay8910_stop_ym(void *chip)
+void ay8910_stop(void *chip)
 {
 	free(chip);
 }
 
-void ay8910_reset_ym(void *chip)
+void ay8910_reset(void *chip)
 {
 	ay8910_context *psg = (ay8910_context *)chip;
 	UINT8 i;
@@ -763,7 +736,7 @@ void ay8910_reset_ym(void *chip)
 		psg->IsDisabled = 0x01;	// YM2203/2608/2610 SSG optimization
 }
 
-void ay8910_set_clock_ym(void *chip, UINT32 clock)
+void ay8910_set_clock(void *chip, UINT32 clock)
 {
 	ay8910_context *psg = (ay8910_context *)chip;
 	
@@ -790,7 +763,7 @@ UINT32 ay8910_get_sample_rate(void *chip)
 	return master_clock / 8;
 }
 
-void ay8910_write_ym(void *chip, UINT8 addr, UINT8 data)
+void ay8910_write(void *chip, UINT8 addr, UINT8 data)
 {
 	ay8910_context *psg = (ay8910_context *)chip;
 
@@ -805,7 +778,7 @@ void ay8910_write_ym(void *chip, UINT8 addr, UINT8 data)
 	}
 }
 
-UINT8 ay8910_read_ym(void *chip, UINT8 addr)
+UINT8 ay8910_read(void *chip, UINT8 addr)
 {
 	ay8910_context *psg = (ay8910_context *)chip;
 	UINT8 r = psg->register_latch;
@@ -846,7 +819,7 @@ UINT8 ay8910_read_ym(void *chip, UINT8 addr)
 	else return psg->regs[r];
 }
 
-void ay8910_set_mute_mask_ym(void *chip, UINT32 MuteMask)
+void ay8910_set_mute_mask(void *chip, UINT32 MuteMask)
 {
 	ay8910_context *psg = (ay8910_context *)chip;
 	UINT8 CurChn;
@@ -857,7 +830,7 @@ void ay8910_set_mute_mask_ym(void *chip, UINT32 MuteMask)
 	return;
 }
 
-void ay8910_set_srchg_cb_ym(void *chip, DEVCB_SRATE_CHG CallbackFunc, void* DataPtr)
+void ay8910_set_srchg_cb(void *chip, DEVCB_SRATE_CHG CallbackFunc, void* DataPtr)
 {
 	ay8910_context *info = (ay8910_context *)chip;
 	

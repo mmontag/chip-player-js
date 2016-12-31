@@ -89,19 +89,19 @@ struct _ay8910_interface
 
 typedef struct _ay8910_context ay8910_context;
 
-UINT32 ay8910_start_ym(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags);
+UINT32 ay8910_start(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags);
 
-void ay8910_stop_ym(void *chip);
-void ay8910_reset_ym(void *chip);
-void ay8910_set_clock_ym(void *chip, UINT32 clock);
+void ay8910_stop(void *chip);
+void ay8910_reset(void *chip);
+void ay8910_set_clock(void *chip, UINT32 clock);
 UINT32 ay8910_get_sample_rate(void *chip);
-void ay8910_write_ym(void *chip, UINT8 addr, UINT8 data);
-UINT8 ay8910_read_ym(void *chip, UINT8 addr);
+void ay8910_write(void *chip, UINT8 addr, UINT8 data);
+UINT8 ay8910_read(void *chip, UINT8 addr);
 void ay8910_write_reg(ay8910_context *psg, UINT8 r, UINT8 v);
 
 void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs);
 
-void ay8910_set_mute_mask_ym(void *chip, UINT32 MuteMask);
-void ay8910_set_srchg_cb_ym(void *chip, DEVCB_SRATE_CHG CallbackFunc, void* DataPtr);
+void ay8910_set_mute_mask(void *chip, UINT32 MuteMask);
+void ay8910_set_srchg_cb(void *chip, DEVCB_SRATE_CHG CallbackFunc, void* DataPtr);
 
 #endif	// __AY8910_H__
