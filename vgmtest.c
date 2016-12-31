@@ -726,6 +726,23 @@ static const VGM_CMDTYPES VGM_CMDS_D0[0x10] =
 	{0xFF,	CMDTYPE_DUMMY},		// DF [unused]
 };
 
+static UINT8 RF5C_Bank[2] = {0x00, 0x00};
+
+static void DoRAMOfsPatches(UINT8 chipID, UINT8 chipNum, UINT32* dataOfs, UINT32* dataSize)
+{
+	switch(chipID)
+	{
+	case 0x05:
+		// RF5C68 bank patch
+		(*dataOfs) |= (RF5C_Bank[0] << 12);
+		break;
+	case 0x10:
+		(*dataOfs) |= (RF5C_Bank[1] << 12);
+		break;
+	}
+	return;
+}
+
 static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 {
 	UINT8 chipID;
@@ -777,6 +794,7 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			UINT32 memSize;
 			UINT32 dataOfs;
 			UINT32 dataSize;
+			const VGM_ROMDUMP_IDS* romChip;
 			
 			dblkType = data[0x02];
 			memcpy(&dblkLen, &data[0x03], 0x04);
@@ -789,28 +807,33 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 				dblkType &= 0x3F;
 				if (dblkType >= 0x14)
 					break;
+				romChip = &VGMROM_CHIPS[dblkType];
 				memcpy(&memSize, &data[0x07], 0x04);
 				memcpy(&dataOfs, &data[0x0B], 0x04);
 				dataSize = dblkLen - 0x08;
-				WriteChipROM(VGMROM_CHIPS[dblkType].chipID, chipID, VGMROM_CHIPS[dblkType].memIdx,
+				WriteChipROM(romChip->chipID, chipID, romChip->memIdx,
 							memSize, dataOfs, dataSize, &data[0x0F]);
 				break;
 			case 0xC0:	// RAM Write
+				if (dblkType == 0xFF)
+					break;	// reserved
 				dblkType &= 0x3F;
 				if (! (dblkType & 0x20))
 				{
+					romChip = &VGMRAM_CHIPS1[dblkType & 0x1F];
 					dataOfs = 0x00;
 					memcpy(&dataOfs, &data[0x07], 0x02);
 					dataSize = dblkLen - 0x02;
-					WriteChipRAM(VGMRAM_CHIPS1[dblkType].chipID, chipID,
-								dataOfs, dataSize, &data[0x09]);
+					DoRAMOfsPatches(romChip->chipID, chipID, &dataOfs, &dataSize);
+					WriteChipRAM(romChip->chipID, chipID, dataOfs, dataSize, &data[0x09]);
 				}
 				else
 				{
+					romChip = &VGMRAM_CHIPS2[dblkType & 0x1F];
 					memcpy(&dataOfs, &data[0x07], 0x04);
 					dataSize = dblkLen - 0x04;
-					WriteChipRAM(VGMRAM_CHIPS2[dblkType].chipID, chipID,
-								dataOfs, dataSize, &data[0x0B]);
+					DoRAMOfsPatches(romChip->chipID, chipID, &dataOfs, &dataSize);
+					WriteChipRAM(romChip->chipID, chipID, dataOfs, dataSize, &data[0x0B]);
 				}
 				break;
 			}
@@ -843,6 +866,13 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			break;
 		case 0xB0:
 			cmdType = VGM_CMDS_B0[cmd & 0x0F];
+			if (cmdType.chipID == 0x05 || cmdType.chipID == 0x10)
+			{
+				// RF5C68 bank patch
+				UINT8 cID = (cmdType.chipID == 0x10) ? 1 : 0;
+				if (data[0x01] == 0x07 && ! (data[0x02] & 0x40))
+					RF5C_Bank[cID] = data[0x02] & 0x0F;
+			}
 			break;
 		case 0xC0:
 			cmdType = VGM_CMDS_C0[cmd & 0x0F];
