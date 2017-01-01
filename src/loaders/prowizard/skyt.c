@@ -94,7 +94,7 @@ static int depack_skyt(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_skyt(uint8 *data, char *t, int s)
+static int test_skyt(const uint8 *data, char *t, int s)
 {
 	int i;
 

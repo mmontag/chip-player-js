@@ -136,7 +136,7 @@ static int depack_unic(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int check_instruments(uint8 *data)
+static int check_instruments(const uint8 *data)
 {
 	int ssize, max_ins;
 	int i;
@@ -144,7 +144,7 @@ static int check_instruments(uint8 *data)
 	ssize = 0;
 	max_ins = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 30;
+		const uint8 *d = data + i * 30;
 		int len = readmem16b(d + 42) << 1;
 		int start = readmem16b(d + 46) << 1;
 		int lsize = readmem16b(d + 48) << 1;
@@ -185,7 +185,7 @@ static int check_instruments(uint8 *data)
 	return max_ins;
 }
 
-static int check_pattern_list_size(uint8 *data)
+static int check_pattern_list_size(const uint8 *data)
 {
 	int len, psize;
 	int i;
@@ -216,14 +216,14 @@ static int check_pattern_list_size(uint8 *data)
 	return psize;
 }
 
-static int check_pattern(uint8 *data, int s, int psize, int max_ins, int offset)
+static int check_pattern(const uint8 *data, int s, int psize, int max_ins, int offset)
 {
 	int i;
 
 	PW_REQUEST_DATA(s, offset + psize * 3 + 2);
 
 	for (i = 0; i < psize; i++) {
-		uint8 *d = data + offset + i * 3;
+		const uint8 *d = data + offset + i * 3;
 		int ins;
 
 		/* relative note number + last bit of sample > $34 ? */
@@ -249,7 +249,7 @@ static int check_pattern(uint8 *data, int s, int psize, int max_ins, int offset)
 	return 0;
 }
 
-static int test_unic_id(uint8 *data, char *t, int s)
+static int test_unic_id(const uint8 *data, char *t, int s)
 {
 	int i;
 	int psize, ssize;
@@ -263,7 +263,7 @@ static int test_unic_id(uint8 *data, char *t, int s)
 	/* test 2 */
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 30;
+		const uint8 *d = data + i * 30;
 		int size, end;
 
 		size = readmem16b(d + 42) << 1;
@@ -279,7 +279,7 @@ static int test_unic_id(uint8 *data, char *t, int s)
 
 	/* test #3  finetunes & volumes */
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 30;
+		const uint8 *d = data + i * 30;
 		if ((int8)d[40] < -8 || (int8)d[40] > 7)
 			return -1;
 		if (d[44] != 0 || d[45] > 0x40)
@@ -303,7 +303,7 @@ static int test_unic_id(uint8 *data, char *t, int s)
 	return 0;
 }
 
-static int test_unic_emptyid(uint8 *data, char *t, int s)
+static int test_unic_emptyid(const uint8 *data, char *t, int s)
 {
 	int psize, max_ins;
 
@@ -333,7 +333,7 @@ static int test_unic_emptyid(uint8 *data, char *t, int s)
 	return 0;
 }
 
-static int test_unic_noid(uint8 *data, char *t, int s)
+static int test_unic_noid(const uint8 *data, char *t, int s)
 {
 	int i;
 	int psize, max_ins;

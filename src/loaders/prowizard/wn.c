@@ -71,7 +71,7 @@ static int depack_wn(HIO_HANDLE *in, FILE * out)
 	return 0;
 }
 
-static int test_wn(uint8 *data, char *t, int s)
+static int test_wn(const uint8 *data, char *t, int s)
 {
 	PW_REQUEST_DATA(s, 1082);
 

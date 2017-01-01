@@ -118,7 +118,7 @@ static int depack_tdd(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_tdd(uint8 *data, char *t, int s)
+static int test_tdd(const uint8 *data, char *t, int s)
 {
 	int i;
 	int ssize, psize, pdata_ofs;
@@ -128,7 +128,7 @@ static int test_tdd(uint8 *data, char *t, int s)
 	/* test #2 (volumes,sample addresses and whole sample size) */
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 14;
+		const uint8 *d = data + i * 14;
 		int addr = readmem32b(d + 130);	/* sample address */
 		int size = readmem16b(d + 134);	/* sample size */
 		int sadr = readmem32b(d + 138);	/* loop start address */
@@ -204,7 +204,7 @@ static int test_tdd(uint8 *data, char *t, int s)
 	PW_REQUEST_DATA(s, 564 + ssize + psize);
 
 	for (i = 0; i < psize; i += 4) {
-		uint8 *d = data + pdata_ofs + i;
+		const uint8 *d = data + pdata_ofs + i;
 
 		/* sample number > 31 ? */
 		if (d[0] > 0x1f)

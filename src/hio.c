@@ -295,7 +295,7 @@ int hio_error(HIO_HANDLE *h)
 	return error;
 }
 
-HIO_HANDLE *hio_open(void *path, char *mode)
+HIO_HANDLE *hio_open(const void *path, const char *mode)
 {
 	HIO_HANDLE *h;
 
@@ -323,7 +323,7 @@ HIO_HANDLE *hio_open(void *path, char *mode)
 	return NULL;
 }
 
-HIO_HANDLE *hio_open_mem(void *ptr, long size)
+HIO_HANDLE *hio_open_mem(const void *ptr, long size)
 {
 	HIO_HANDLE *h;
 

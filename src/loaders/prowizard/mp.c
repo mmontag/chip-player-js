@@ -59,7 +59,7 @@ static int depack_mp(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_mp_noid(uint8 *data, char *t, int s)
+static int test_mp_noid(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, psize, hdr_ssize;
@@ -73,7 +73,7 @@ static int test_mp_noid(uint8 *data, char *t, int s)
 	/* test #2 */
 	hdr_ssize = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 		int size = readmem16b(d) << 1;		/* size */
 		int start = readmem16b(d + 4) << 1;	/* loop start */
 		int lsize = readmem16b(d + 6) << 1;	/* loop size */
@@ -129,7 +129,7 @@ static int test_mp_noid(uint8 *data, char *t, int s)
 
 	/* test #5  ptk notes .. gosh ! (testing all patterns !) */
 	for (i = 0; i < psize; i++) {
-		uint8 *d = data + 378 + i * 4;
+		const uint8 *d = data + 378 + i * 4;
 		uint16 data;
 
 		/* MadeInCroatia has l == 74 */
@@ -144,7 +144,7 @@ static int test_mp_noid(uint8 *data, char *t, int s)
 
 	/* test #6  (loopStart+LoopSize > Sample ? ) */
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 
 		int size = readmem16b(d) << 1;
 		int lend = (readmem16b(d + 4) + readmem16b(d + 6)) << 1;
@@ -158,7 +158,7 @@ static int test_mp_noid(uint8 *data, char *t, int s)
 	return 0;
 }
 
-static int test_mp_id(uint8 *data, char *t, int s)
+static int test_mp_id(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, psize;

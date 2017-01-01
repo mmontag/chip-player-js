@@ -104,7 +104,7 @@ static int depack_GMC(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_GMC(uint8 *data, char *t, int s)
+static int test_GMC(const uint8 *data, char *t, int s)
 {
 	int i, j, k;
 	int ssize, numpat;
@@ -123,7 +123,7 @@ static int test_GMC(uint8 *data, char *t, int s)
 	ssize = 0;
 	for (i = 0; i < 15; i++) {
 		int len, lsize;
-		uint8 *d = data + 16 * i;
+		const uint8 *d = data + 16 * i;
 
 		/* volumes */
 		if (d[7] > 0x40)
@@ -168,7 +168,7 @@ static int test_GMC(uint8 *data, char *t, int s)
 	for (i = 0; i < numpat; i++) {
 		for (j = 0; j < 256; j++) {
 			int offset = 444 + i * 1024 + j * 4;
-			uint8 *d;
+			const uint8 *d;
 
 			PW_REQUEST_DATA(s, offset + 4);
 

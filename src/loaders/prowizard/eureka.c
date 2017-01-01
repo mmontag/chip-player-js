@@ -87,7 +87,7 @@ static int depack_eu(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_eu(uint8 *data, char *t, int s)
+static int test_eu(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, max_pat, smp_offs;
@@ -102,7 +102,7 @@ static int test_eu(uint8 *data, char *t, int s)
 
 	/* test #3  finetunes & volumes */
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 30;
+		const uint8 *d = data + i * 30;
 		int size = readmem16b(d + 42) << 1;
 		int start = readmem16b(d + 46) << 1;
 		int lsize = readmem16b(d + 48) << 1;

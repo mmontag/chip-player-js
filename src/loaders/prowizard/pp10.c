@@ -91,7 +91,7 @@ static int depack_pp10(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_pp10(uint8 *data, char *t, int s)
+static int test_pp10(const uint8 *data, char *t, int s)
 {
 	int i;
 	int ntrk, ssize;
@@ -115,7 +115,7 @@ static int test_pp10(uint8 *data, char *t, int s)
 	/* test #2 */
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 		int size = readmem16b(d) << 1;
 		int start = readmem16b(d + 4) << 1;
 		int lsize = readmem16b(d + 6) << 1;

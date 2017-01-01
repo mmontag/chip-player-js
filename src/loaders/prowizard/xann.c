@@ -203,7 +203,7 @@ static int depack_xann(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_xann(uint8 *data, char *t, int s)
+static int test_xann(const uint8 *data, char *t, int s)
 {
 	int i;
 

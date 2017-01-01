@@ -978,6 +978,7 @@ static uint8 get8(vorb *z)
    return c;
    }
    #endif
+   return 0;/* silence pesky compiler warnings */
 }
 
 static uint32 get32(vorb *f)
@@ -1007,6 +1008,7 @@ static int getn(vorb *z, uint8 *data, int n)
       return 0;
    }
    #endif
+   return 0;/* silence pesky compiler warnings */
 }
 
 static void skip(vorb *z, int n)
@@ -3603,10 +3605,10 @@ static int start_decoder(vorb *f)
          c->value_bits = get_bits(f, 4)+1;
          c->sequence_p = get_bits(f,1);
          if (c->lookup_type == 1) {
-            c->lookup_values = lookup1_values(c->entries, c->dimensions);
-
+            val = lookup1_values(c->entries, c->dimensions);
+            c->lookup_values = val;
 	    /* Sanity check */
-            if (c->lookup_values <= 0) {
+            if (val <= 0) {
               return FALSE;
             }
          } else {
@@ -4296,6 +4298,7 @@ unsigned int stb_vorbis_get_file_offset(stb_vorbis *f)
    #ifndef STB_VORBIS_NO_STDIO
    return ftell(f->f) - f->f_start;
    #endif
+   return 0;/* silence pesky compiler warnings */
 }
 
 #ifndef STB_VORBIS_NO_PULLDATA_API

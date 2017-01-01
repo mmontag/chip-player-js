@@ -133,7 +133,7 @@ static int depack_ac1d(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_ac1d(uint8 *data, char *t, int s)
+static int test_ac1d(const uint8 *data, char *t, int s)
 {
 	int i;
 

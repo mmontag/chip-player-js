@@ -136,7 +136,7 @@ static int depack_pm01(HIO_HANDLE *in, FILE *out)
 }
 
 
-static int test_pm01(uint8 *data, char *t, int s)
+static int test_pm01(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, psize, ssize = 0;
@@ -153,7 +153,7 @@ static int test_pm01(uint8 *data, char *t, int s)
 
 	/* test #2 */
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 		int size = readmem16b(data) << 1;
 		int start = readmem16b(data + 4) << 1;
 		int lsize = readmem16b(data + 6) << 1;

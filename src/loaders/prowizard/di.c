@@ -137,7 +137,7 @@ static int depack_di(HIO_HANDLE *in, FILE *out)
 }
 
 
-static int test_di(uint8 *data, char *t, int s)
+static int test_di(const uint8 *data, char *t, int s)
 {
 	int i;
 	int numsmp, ssize, psize;
@@ -164,7 +164,7 @@ static int test_di(uint8 *data, char *t, int s)
 		int len = readmem16b(data + 14) << 1;
 		int start = readmem16b(data + 18) << 1;
 		int lsize = readmem16b(data + 20) << 1;
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 
 		if (len > 0xffff || start > 0xffff || lsize > 0xffff)
 			return -1;

@@ -147,7 +147,7 @@ static int depack_np1(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_np1(uint8 *data, char *t, int s)
+static int test_np1(const uint8 *data, char *t, int s)
 {
 	int num_ins, ssize, hdr_size, ptab_size, trk_size, max_pptr;
 	int i;
@@ -179,7 +179,7 @@ static int test_np1(uint8 *data, char *t, int s)
 	/* test sample sizes */
 	ssize = 0;
 	for (i = 0; i < num_ins; i++) {
-		uint8 *d = data + i * 16;
+		const uint8 *d = data + i * 16;
 
 		int len = readmem16b(d + 12) << 1;
 		int start = readmem16b(d + 20) << 1;

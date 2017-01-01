@@ -401,7 +401,7 @@ struct context_data {
 /* Prototypes */
 
 char	*libxmp_adjust_string	(char *);
-int	libxmp_exclude_match	(char *);
+int	libxmp_exclude_match	(const char *);
 int	libxmp_prepare_scan	(struct context_data *);
 int	libxmp_scan_sequences	(struct context_data *);
 int	libxmp_get_sequence	(struct context_data *, int);
@@ -424,12 +424,12 @@ void	write32l		(FILE *, uint32);
 void	write32b		(FILE *, uint32);
 int	move_data		(FILE *, FILE *, int);
 
-uint16	readmem16l		(uint8 *);
-uint16	readmem16b		(uint8 *);
-uint32	readmem24l		(uint8 *);
-uint32	readmem24b		(uint8 *);
-uint32	readmem32l		(uint8 *);
-uint32	readmem32b		(uint8 *);
+uint16	readmem16l		(const uint8 *);
+uint16	readmem16b		(const uint8 *);
+uint32	readmem24l		(const uint8 *);
+uint32	readmem24b		(const uint8 *);
+uint32	readmem32l		(const uint8 *);
+uint32	readmem32b		(const uint8 *);
 
 struct xmp_instrument *libxmp_get_instrument(struct context_data *, int);
 struct xmp_sample *libxmp_get_sample(struct context_data *, int);

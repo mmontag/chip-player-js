@@ -41,7 +41,7 @@
 #include "mod.h"
 
 struct mod_magic {
-	char *magic;
+	const char *magic;
 	int flag;
 	int id;
 	int ch;
@@ -382,7 +382,8 @@ static int mod_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct xmp_event *event;
     struct mod_header mh;
     uint8 mod_event[4];
-    char *x, pathname[PATH_MAX] = "", *tracker = "";
+    char pathname[PATH_MAX] = "";
+    const char *x, *tracker = "";
     int detected = 0;
     char magic[8], idbuffer[32];
     int ptkloop = 0;			/* Protracker loop */

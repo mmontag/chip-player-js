@@ -52,7 +52,7 @@ size_t mread(void *buf, size_t size, size_t num, MFILE *m)
  	size_t should_read = size * num;
  	ptrdiff_t can_read = CAN_READ(m);
 
- 	if (size <= 0 || num <= 0 || can_read <= 0) {
+ 	if (!size || !num || can_read <= 0) {
  		return 0;
 	}
 
@@ -102,7 +102,7 @@ int meof(MFILE *m)
 		return CAN_READ(m) <= 0;
 }
 
-MFILE *mopen(void *ptr, long size)
+MFILE *mopen(const void *ptr, long size)
 {
 	MFILE *m;
 

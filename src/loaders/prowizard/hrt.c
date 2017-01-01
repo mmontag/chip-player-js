@@ -76,7 +76,7 @@ static int depack_hrt(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_hrt(uint8 *data, char *t, int s)
+static int test_hrt(const uint8 *data, char *t, int s)
 {
 	int i;
 
@@ -86,7 +86,7 @@ static int test_hrt(uint8 *data, char *t, int s)
 		return -1;
 
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + 20 + i * 30;
+		const uint8 *d = data + 20 + i * 30;
 
 		/* test finetune */
 		if (d[24] > 0x0f)

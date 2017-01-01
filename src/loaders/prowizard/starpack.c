@@ -185,7 +185,7 @@ static int depack_starpack(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_starpack(uint8 *data, char *t, int s)
+static int test_starpack(const uint8 *data, char *t, int s)
 {
 	int i;
 	int plist_size, len, sdata_ofs, pdata_ofs;
@@ -212,7 +212,7 @@ static int test_starpack(uint8 *data, char *t, int s)
 
 	/* test #3  smp size < loop start + loop size ? */
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 		int size = readmem16b(d + 20) << 1;
 		int lend = (readmem16b(d + 24) + readmem16b(d + 26)) << 1;
 
@@ -222,7 +222,7 @@ static int test_starpack(uint8 *data, char *t, int s)
 
 	/* test #4  finetunes & volumes */
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 		if (d[22] > 0x0f || d[23] > 0x40)
 			return -1;
 	}
@@ -263,7 +263,7 @@ static int test_starpack(uint8 *data, char *t, int s)
 	/* test pattern data */
 	pdata_ofs = 788;
 	while (pdata_ofs < sdata_ofs + 4) {
-		uint8 *d = data + pdata_ofs;
+		const uint8 *d = data + pdata_ofs;
 
 		if (d[0] == 0x80) {
 			pdata_ofs++;

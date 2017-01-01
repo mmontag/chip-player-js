@@ -27,8 +27,7 @@ SHELL		= /bin/sh
 
 DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL install-sh configure configure.ac config.sub \
-		  config.guess Makefile.in libxmp.pc.in libxmp.map Makefile.os2 \
-		  Makefile.vc
+		  config.guess Makefile.in libxmp.pc.in libxmp.map Makefile.vc
 DDIRS		= docs include src loaders prowiz depackers win32 os2 test
 V		= 0
 LIB		= libxmp.a
@@ -36,6 +35,7 @@ SOLIB		= libxmp.so
 SHLIB		= $(SOLIB).$(VERSION)
 SONAME		= $(SOLIB).$(VERSION_MAJOR)
 DLL		= libxmp.dll
+IMPLIB		= libxmp.dll.a
 DYLIB		= libxmp.$(VERSION_MAJOR).dylib
 GCLIB		= libxmp-gc.a
 DYLIB_COMPAT	= -compatibility_version,$(COMPAT_VERSION),
@@ -111,7 +111,7 @@ lib/$(SHLIB): $(LOBJS)
 
 lib/$(DLL): $(OBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/libxmp_dll.a -o $@ $(OBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/$(IMPLIB) -o $@ $(OBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -139,7 +139,7 @@ clean:
 	@rm -f $(GCOBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
 
 install: all
-	@mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
+	@mkdir -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
 	@if [ -f lib/$(LIB) ]; then \
 		echo "Installing $(LIB)..."; \
 		$(INSTALL) -m644 lib/$(LIB) $(DESTDIR)$(LIBDIR); \
@@ -148,6 +148,11 @@ install: all
 		echo "Installing $(DYLIB)..."; \
 		$(INSTALL) -m755 lib/$(DYLIB) $(DESTDIR)$(LIBDIR); \
 		ln -sf $(DYLIB) $(DESTDIR)$(LIBDIR)/libxmp.dylib; \
+	fi
+	@if [ -f lib/$(DLL) ]; then \
+		echo "Installing $(DLL)..."; \
+		$(INSTALL) -m644 lib/$(DLL) $(DESTDIR)$(BINDIR); \
+		$(INSTALL) -m644 lib/$(IMPLIB) $(DESTDIR)$(LIBDIR); \
 	fi
 	@if [ -f lib/$(SHLIB) ]; then \
 		echo "Installing $(SHLIB)..."; \
@@ -169,12 +174,16 @@ depend:
 	    $(CC) $(CFLAGS) -MM $$c | \
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
-	    
-dist: version-prepare all-docs dist-prepare vc-prepare dist-jni dist-subdirs
+
+dist: version-prepare all-docs dist-prepare vc-prepare dist-jni dist-os2x dist-subdirs
 
 dist-jni:
 	mkdir $(DIST)/jni
 	cp jni/Android.mk jni/Application.mk $(DIST)/jni
+
+dist-os2x:
+	mkdir $(DIST)/os2
+	cp os2/Makefile.os2 $(DIST)/os2
 
 dist-prepare:
 	./config.status

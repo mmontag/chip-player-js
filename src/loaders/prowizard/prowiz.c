@@ -96,7 +96,7 @@ int pw_write_zero(FILE *out, int len)
 	return 0;
 }
 
-int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, char **name)
+int pw_wizardry(HIO_HANDLE *file_in, FILE *file_out, const char **name)
 {
 	int in_size;
 	uint8 *data;
@@ -184,7 +184,7 @@ int pw_check(unsigned char *b, int s, struct xmp_test_info *info)
 	return -1;
 }
 
-void pw_read_title(unsigned char *b, char *t, int s)
+void pw_read_title(const unsigned char *b, char *t, int s)
 {
 	if (t == NULL) {
 		return;

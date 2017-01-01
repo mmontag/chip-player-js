@@ -173,7 +173,7 @@ static int depack_fuzz(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_fuzz(uint8 *data, char *t, int s)
+static int test_fuzz(const uint8 *data, char *t, int s)
 {
 	int i;
 

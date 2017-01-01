@@ -294,7 +294,7 @@ static int flt_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	struct xmp_event *event;
 	struct mod_header mh;
 	uint8 mod_event[4];
-	char *tracker;
+	const char *tracker;
 	char filename[1024];
 	char buf[16];
 	HIO_HANDLE *nt;
