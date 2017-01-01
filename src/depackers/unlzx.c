@@ -129,7 +129,7 @@ struct LZXDecrData {
     uint8 *dest_end;
 
     uint32 method;
-    uint32 decrunch_length;
+    int decrunch_length;
     uint32 pack_size;
     uint32 unpack_size;
     uint32 last_offset;
