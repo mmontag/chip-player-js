@@ -358,7 +358,7 @@ static int theplayer_depack(HIO_HANDLE *in, FILE *out, int version)
 }
 
 
-static int theplayer_test(uint8 *data, char *t, int s, int version)
+static int theplayer_test(const uint8 *data, char *t, int s, int version)
 {
 	int i;
 	int len, num_pat, num_ins, sdata;
@@ -456,7 +456,7 @@ static int theplayer_test(uint8 *data, char *t, int s, int version)
 
 	len++;
 	for (i = num_ins * 6 + 4 + num_pat * 8 + len; i < sdata; i++) {
-		uint8 *d = data + i;
+		const uint8 *d = data + i;
 		int ins;
 
 		if (~d[0] & 0x80) {
@@ -483,7 +483,7 @@ static int depack_p50a(HIO_HANDLE *in, FILE *out)
 	return theplayer_depack(in, out, 0x50);
 }
 
-static int test_p50a(uint8 *data, char *t, int s)
+static int test_p50a(const uint8 *data, char *t, int s)
 {
 	return theplayer_test(data, t, s, 0x50);
 }
@@ -501,7 +501,7 @@ static int depack_p60a(HIO_HANDLE *in, FILE *out)
 	return theplayer_depack(in, out, 0x60);
 }
 
-static int test_p60a(uint8 *data, char *t, int s)
+static int test_p60a(const uint8 *data, char *t, int s)
 {
 	return theplayer_test(data, t, s, 0x60);
 }

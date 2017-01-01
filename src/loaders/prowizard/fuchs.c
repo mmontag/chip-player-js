@@ -129,7 +129,7 @@ static int depack_fuchs(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_fuchs (uint8 *data, char *t, int s)
+static int test_fuchs (const uint8 *data, char *t, int s)
 {
 	int i;
 	int ssize, hdr_ssize;
@@ -155,7 +155,7 @@ static int test_fuchs (uint8 *data, char *t, int s)
 	/* samples descriptions */
 	ssize = 0;
 	for (i = 0; i < 16; i++) {
-		uint8 *d = data + i * 2;
+		const uint8 *d = data + i * 2;
 		int len = readmem16b(d + 14);
 		int start = readmem16b(d + 78);
 

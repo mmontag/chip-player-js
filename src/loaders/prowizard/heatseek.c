@@ -112,7 +112,7 @@ static int depack_crb(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_crb(uint8 *data, char *t, int s)
+static int test_crb(const uint8 *data, char *t, int s)
 {
 	int i, j, k;
 	int ssize, max, idx;
@@ -131,7 +131,7 @@ static int test_crb(uint8 *data, char *t, int s)
 	ssize = 0;
 	for (i = 0; i < 31; i++) {
 		int len, start, lsize;
-		uint8 *d = data + i * 8;
+		const uint8 *d = data + i * 8;
 
 		if (d[2] > 0x0f)
 			return -1;
@@ -162,7 +162,7 @@ static int test_crb(uint8 *data, char *t, int s)
 
 	/* test pattern table */
 	{
-		uint8 *d = data + 250;
+		const uint8 *d = data + 250;
 		max = 0;
 		for (i = 0; i < 128; i++) {
 			if (d[i] > 0x7f)
@@ -180,7 +180,7 @@ static int test_crb(uint8 *data, char *t, int s)
 	for (i = 0; i <= max; i++) {
 		for (j = 0; j < 4; j++) {
 			for (k = 0; k < 64; k++) {
-				uint8 *d = data + 378 + idx;
+				const uint8 *d = data + 378 + idx;
 				switch (d[0] & 0xC0) {
 				case 0x00:
 					if ((d[0] & 0x0F) > 0x03)

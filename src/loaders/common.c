@@ -356,7 +356,7 @@ void libxmp_get_instrument_path(struct module_data *m, char *path, int size)
 }
 #endif /* LIBXMP_CORE_PLAYER */
 
-void libxmp_set_type(struct module_data *m, char *fmt, ...)
+void libxmp_set_type(struct module_data *m, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);

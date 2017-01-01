@@ -92,7 +92,7 @@ static int pw_load(struct module_data *m, HIO_HANDLE *h, const int start)
 	uint8 mod_event[4];
 	HIO_HANDLE *f;
 	FILE *temp;
-	char *name;
+	const char *name;
 	char *temp_name;
 	int i, j;
 

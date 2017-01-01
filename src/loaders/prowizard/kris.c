@@ -120,7 +120,7 @@ static int depack_kris(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_kris (uint8 *data, char *t, int s)
+static int test_kris (const uint8 *data, char *t, int s)
 {
 	int j;
 	int start = 0;

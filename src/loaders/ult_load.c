@@ -106,7 +106,7 @@ static int ult_load(struct module_data *m, HIO_HANDLE *f, const int start)
     struct ult_header2 ufh2;
     struct ult_instrument uih;
     struct ult_event ue;
-    char *verstr[4] = { "< 1.4", "1.4", "1.5", "1.6" };
+    const char *verstr[4] = { "< 1.4", "1.4", "1.5", "1.6" };
 
     int keep_porta1 = 0, keep_porta2 = 0;
     uint8 x8;

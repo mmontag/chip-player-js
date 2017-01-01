@@ -140,7 +140,7 @@ static int depack_tp1(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_tp1(uint8 *data, char *t, int s)
+static int test_tp1(const uint8 *data, char *t, int s)
 {
 	int i;
 	int len, size, smp_ofs;
@@ -158,7 +158,7 @@ static int test_tp1(uint8 *data, char *t, int s)
 	}
 
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8 + 32;
+		const uint8 *d = data + i * 8 + 32;
 
 		/* test finetunes */
 		if (d[0] > 0x0f)
@@ -177,7 +177,7 @@ static int test_tp1(uint8 *data, char *t, int s)
 
 	/* test sample sizes */
 	for (i = 0; i < 31; i++) {
-		uint8 *d = data + i * 8 + 32;
+		const uint8 *d = data + i * 8 + 32;
 		int len = readmem16b(d + 2) << 1;	/* size */
 		int start = readmem16b(d + 4) << 1;	/* loop start */
 		int lsize = readmem16b(d + 6) << 1;	/* loop size */

@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include "prowiz.h"
 
-static int test_emod (uint8 *, int);
+static int test_emod (const uint8 *, int);
 static int depack_emod (FILE *, FILE *);
 
 const struct pw_format pw_emod = {
@@ -273,7 +273,7 @@ static int depack_emod (HIO_HANDLE *in, FILE *out)
 }
 
 
-static int test_emod (uint8 *data, int s)
+static int test_emod (const uint8 *data, int s)
 {
 	int start = 0;
 	int l;

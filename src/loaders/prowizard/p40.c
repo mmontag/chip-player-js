@@ -284,7 +284,7 @@ static int depack_p4x(HIO_HANDLE *in, FILE *out)
 	return 0;
 }
 
-static int test_p4x(uint8 *data, char *t, int s)
+static int test_p4x(const uint8 *data, char *t, int s)
 {
 	//int j, k, l, o, n;
 	//int start = 0, ssize;

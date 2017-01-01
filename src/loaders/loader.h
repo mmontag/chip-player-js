@@ -44,9 +44,9 @@ void	libxmp_decode_noisetracker_event(struct xmp_event *, uint8 *);
 void	libxmp_disable_continue_fx	(struct xmp_event *);
 int	libxmp_check_filename_case	(char *, char *, char *, int);
 void	libxmp_get_instrument_path	(struct module_data *, char *, int);
-void	libxmp_set_type			(struct module_data *, char *, ...);
+void	libxmp_set_type			(struct module_data *, const char *, ...);
 int	libxmp_load_sample		(struct module_data *, HIO_HANDLE *, int,
-					 struct xmp_sample *, void *);
+					 struct xmp_sample *, const void *);
 
 extern uint8		libxmp_ord_xlat[];
 extern const int	libxmp_arch_vol_table[];

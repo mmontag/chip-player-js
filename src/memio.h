@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 typedef struct {
-	unsigned char *start;
+	const unsigned char *start;
 	ptrdiff_t pos;
 	ptrdiff_t size;
 } MFILE;
@@ -13,7 +13,7 @@ typedef struct {
 extern "C" {
 #endif
 
-MFILE  *mopen(void *, long);
+MFILE  *mopen(const void *, long);
 int     mgetc(MFILE *stream);
 size_t  mread(void *, size_t, size_t, MFILE *);
 int     mseek(MFILE *, long, int);
