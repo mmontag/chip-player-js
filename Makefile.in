@@ -35,6 +35,7 @@ SOLIB		= libxmp.so
 SHLIB		= $(SOLIB).$(VERSION)
 SONAME		= $(SOLIB).$(VERSION_MAJOR)
 DLL		= libxmp.dll
+IMPLIB		= libxmp.dll.a
 DYLIB		= libxmp.$(VERSION_MAJOR).dylib
 GCLIB		= libxmp-gc.a
 DYLIB_COMPAT	= -compatibility_version,$(COMPAT_VERSION),
@@ -110,7 +111,7 @@ lib/$(SHLIB): $(LOBJS)
 
 lib/$(DLL): $(OBJS)
 	@mkdir -p lib
-	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/libxmp_dll.a -o $@ $(OBJS) $(LIBS)'; \
+	@CMD='$(LD) $(LDFLAGS) -shared -Wl,--output-def,lib/libxmp.def,--out-implib,lib/$(IMPLIB) -o $@ $(OBJS) $(LIBS)'; \
 	if [ "$(V)" -gt 0 ]; then echo $$CMD; else echo LD $@ ; fi; \
 	eval $$CMD
 
@@ -138,7 +139,7 @@ clean:
 	@rm -f $(GCOBJS) $(OBJS:.o=.gcno) $(OBJS:.o=.gcda)
 
 install: all
-	@mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
+	@mkdir -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCLUDEDIR)
 	@if [ -f lib/$(LIB) ]; then \
 		echo "Installing $(LIB)..."; \
 		$(INSTALL) -m644 lib/$(LIB) $(DESTDIR)$(LIBDIR); \
@@ -147,6 +148,11 @@ install: all
 		echo "Installing $(DYLIB)..."; \
 		$(INSTALL) -m755 lib/$(DYLIB) $(DESTDIR)$(LIBDIR); \
 		ln -sf $(DYLIB) $(DESTDIR)$(LIBDIR)/libxmp.dylib; \
+	fi
+	@if [ -f lib/$(DLL) ]; then \
+		echo "Installing $(DLL)..."; \
+		$(INSTALL) -m644 lib/$(DLL) $(DESTDIR)$(BINDIR); \
+		$(INSTALL) -m644 lib/$(IMPLIB) $(DESTDIR)$(LIBDIR); \
 	fi
 	@if [ -f lib/$(SHLIB) ]; then \
 		echo "Installing $(SHLIB)..."; \
