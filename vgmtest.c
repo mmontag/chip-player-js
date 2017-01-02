@@ -350,8 +350,6 @@ static void SetupDirectSound(void* audDrv)
 }
 
 
-void device_ym2203_link_ssg(void* param, const DEV_INFO* defInfSSG);
-void device_ym2608_link_ssg(void* param, const DEV_INFO* defInfSSG);
 static void InitVGMChips(void)
 {
 	static UINT32 chipOfs[CHIP_COUNT] =
@@ -495,45 +493,6 @@ static void InitVGMChips(void)
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 			}
 			break;
-		case DEVID_YM2203:
-		case DEVID_YM2608:
-			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
-			if (retVal)
-				break;
-			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
-			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
-			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
-			{
-				AY8910_CFG ayCfg;
-				UINT8 retValSSG;
-				
-				ayCfg._genCfg = devCfg;
-				if (curChip == DEVID_YM2203)
-					ayCfg._genCfg.clock = devCfg.clock / 2;
-				else
-					ayCfg._genCfg.clock = devCfg.clock / 4;
-				ayCfg._genCfg.emuCore = FCC_EMU_;
-				ayCfg.chipType = 0x20 + (curChip - DEVID_YM2203);
-				ayCfg.chipFlags = 0x01;
-				
-				cDev->linkDev = (VGM_LINKCDEV*)calloc(1, sizeof(VGM_LINKCDEV));
-				if (cDev->linkDev == NULL)
-					break;
-				clDev = cDev->linkDev;
-				clDev->linkDev = NULL;
-				retValSSG = SndEmu_Start(DEVID_AY8910, (DEV_GEN_CFG*)&ayCfg, &clDev->defInf);
-				if (retValSSG)
-				{
-					free(cDev->linkDev);
-					cDev->linkDev = NULL;
-					break;
-				}
-				if (curChip == DEVID_YM2203)
-					device_ym2203_link_ssg(cDev->defInf.dataPtr, &clDev->defInf);
-				else
-					device_ym2608_link_ssg(cDev->defInf.dataPtr, &clDev->defInf);
-			}
-			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
@@ -554,6 +513,30 @@ static void InitVGMChips(void)
 			cDev->defInf.dataPtr = NULL;
 			cDev->defInf.devDef = NULL;
 			continue;
+		}
+		
+		if (cDev->defInf.linkDevCount > 0 && cDev->defInf.devDef->LinkDevice != NULL)
+		{
+			UINT32 curLDev;
+			DEVLINK_INFO* dLink;
+			
+			for (curLDev = 0; curLDev < cDev->defInf.linkDevCount; curLDev ++)
+			{
+				dLink = &cDev->defInf.linkDevs[curLDev];
+				cDev->linkDev = (VGM_LINKCDEV*)calloc(1, sizeof(VGM_LINKCDEV));
+				if (cDev->linkDev == NULL)
+					break;
+				clDev = cDev->linkDev;
+				clDev->linkDev = NULL;
+				retVal = SndEmu_Start(dLink->devID, dLink->cfg, &clDev->defInf);
+				if (retVal)
+				{
+					free(cDev->linkDev);
+					cDev->linkDev = NULL;
+					break;
+				}
+				cDev->defInf.devDef->LinkDevice(cDev->defInf.dataPtr, dLink->linkID, &clDev->defInf);
+			}
 		}
 		// already done by SndEmu_Start()
 		//cDev->defInf.devDef->Reset(cDev->defInf.dataPtr);
@@ -588,11 +571,12 @@ static void DeinitVGMChips(void)
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	{
 		cDev = &VGMChips[curChip];
-		if (cDev->defInf.dataPtr != NULL)
-		{
-			Resmpl_Deinit(&cDev->resmpl);
-			SndEmu_Stop(&cDev->defInf);
-		}
+		if (cDev->defInf.dataPtr == NULL)
+			continue;
+		
+		Resmpl_Deinit(&cDev->resmpl);
+		SndEmu_Stop(&cDev->defInf);
+		SndEmu_FreeDevLinkData(&cDev->defInf);
 		if (cDev->linkDev != NULL)
 		{
 			// free linked devices
@@ -605,6 +589,7 @@ static void DeinitVGMChips(void)
 					Resmpl_Deinit(&clDev->resmpl);
 					SndEmu_Stop(&clDev->defInf);
 				}
+				SndEmu_FreeDevLinkData(&clDev->defInf);
 				clDevOld = clDev;
 				clDev = clDev->linkDev;
 				free(clDevOld);

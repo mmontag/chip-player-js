@@ -12,6 +12,7 @@ extern "C"
 typedef struct _device_definition DEV_DEF;
 typedef struct _device_info DEV_INFO;
 typedef struct _device_generic_config DEV_GEN_CFG;
+typedef struct _device_link_info DEVLINK_INFO;
 
 
 typedef void (*DEVCB_SRATE_CHG)(void* info, UINT32 newSRate);
@@ -22,6 +23,7 @@ typedef void (*DEVFUNC_UPDATE)(void* info, UINT32 samples, DEV_SMPL** outputs);
 typedef void (*DEVFUNC_OPTMASK)(void* info, UINT32 optionBits);
 typedef void (*DEVFUNC_PANALL)(void* info, INT16* channelPanVal);
 typedef void (*DEVFUNC_SRCCB)(void* info, DEVCB_SRATE_CHG smpRateChgCallback, void* paramPtr);
+typedef UINT8 (*DEVFUNC_LINKDEV)(void* info, UINT8 devID, const DEV_INFO* devInfLink);
 
 typedef UINT8 (*DEVFUNC_READ_A8D8)(void* info, UINT8 addr);
 typedef UINT16 (*DEVFUNC_READ_A8D16)(void* info, UINT8 addr);
@@ -83,6 +85,7 @@ struct _device_definition
 	DEVFUNC_OPTMASK SetMuteMask;
 	DEVFUNC_PANALL SetPanning;
 	DEVFUNC_SRCCB SetSRateChgCB;	// used to set callback function for realtime sample rate changes
+	DEVFUNC_LINKDEV LinkDevice;		// used to link multiple devices together
 	
 	const DEVDEF_RWFUNC* rwFuncs;	// terminated by (funcPtr == NULL)
 };	// DEV_DEF
@@ -91,7 +94,16 @@ struct _device_info
 	DEV_DATA* dataPtr;	// points to chip data structure
 	UINT32 sampleRate;
 	const DEV_DEF* devDef;
+	
+	UINT32 linkDevCount;	// number of link-able devices
+	DEVLINK_INFO* linkDevs;	// [freed by caller]
 };	// DEV_INFO
+struct _device_link_info
+{
+	UINT8 devID;		// device ID (DEVID_ constant)
+	UINT8 linkID;		// device link ID
+	DEV_GEN_CFG* cfg;	// pointer to DEV_GEN_CFG structures and derivates [freed by caller]
+};	// DEVLINK_INFO
 
 
 #define DEVRI_SRMODE_NATIVE		0x00
@@ -114,6 +126,9 @@ INLINE void INIT_DEVINF(DEV_INFO* devInf, DEV_DATA* devData, UINT32 sampleRate, 
 	devInf->dataPtr = devData;
 	devInf->sampleRate = sampleRate;
 	devInf->devDef = devDef;
+	
+	devInf->linkDevCount = 0;
+	devInf->linkDevs = NULL;
 	return;
 }
 

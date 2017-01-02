@@ -40,6 +40,7 @@ static DEV_DEF devDef_MAME =
 	ym2413_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_MAME,	// rwFuncs
 };
@@ -64,6 +65,7 @@ static DEV_DEF devDef_Emu =
 	(DEVFUNC_OPTMASK)OPLL_SetMuteMask,
 	ym2413_set_panning_emu,
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_Emu,	// rwFuncs
 };

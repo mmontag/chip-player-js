@@ -77,6 +77,7 @@ static DEV_DEF devDef_MAME =
 	ym2151_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_MAME,	// rwFuncs
 };

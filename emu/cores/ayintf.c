@@ -42,6 +42,7 @@ static DEV_DEF devDef_MAME =
 	ay8910_set_mute_mask,
 	NULL,	// SetPanning
 	ay8910_set_srchg_cb,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_MAME,	// rwFuncs
 };
@@ -70,6 +71,7 @@ static DEV_DEF devDef_Emu =
 	(DEVFUNC_OPTMASK)PSG_setMask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_Emu,	// rwFuncs
 };

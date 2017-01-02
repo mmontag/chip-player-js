@@ -40,6 +40,7 @@ static DEV_DEF devDef262_MAME =
 	ymf262_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc262_MAME,	// rwFuncs
 };
@@ -64,6 +65,7 @@ static DEV_DEF devDef262_AdLibEmu =
 	adlib_OPL3_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc262_Emu,	// rwFuncs
 };

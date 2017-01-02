@@ -12,13 +12,23 @@
 #include "ayintf.h"
 
 
+#define LINKDEV_SSG	0x00
+
 static UINT8 get_ssg_funcs(const DEV_DEF* devDef, ssg_callbacks* retFuncs);
+static AY8910_CFG* get_ssg_config(const DEV_GEN_CFG* cfg, UINT32 clockDiv, UINT8 ssgType);
+static void init_ssg_devinfo(DEV_INFO* devInf, const DEV_GEN_CFG* baseCfg, UINT8 clockDiv, UINT8 ssgType);
+
 static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_ym2203(void* param);
+static UINT8 device_ym2203_link_ssg(void* param, UINT8 devID, const DEV_INFO* defInfSSG);
+
 static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_ym2608(void* param);
+static UINT8 device_ym2608_link_ssg(void* param, UINT8 devID, const DEV_INFO* defInfSSG);
+
 static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_ym2610(void* param);
+static UINT8 device_ym2610_link_ssg(void* param, UINT8 devID, const DEV_INFO* defInfSSG);
 
 
 typedef struct _opn_info
@@ -47,6 +57,7 @@ static DEV_DEF devDef_MAME_2203 =
 	ym2203_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	device_ym2203_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2203,	// rwFuncs
 };
@@ -78,6 +89,7 @@ static DEV_DEF devDef_MAME_2608 =
 	ym2608_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	device_ym2608_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2608,	// rwFuncs
 };
@@ -111,6 +123,7 @@ static DEV_DEF devDef_MAME_2610 =
 	ym2610_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	device_ym2610_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2610,	// rwFuncs
 };
@@ -127,6 +140,7 @@ static DEV_DEF devDef_MAME_2610B =
 	ym2610_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	device_ym2610_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2610,	// rwFuncs
 };
@@ -158,6 +172,34 @@ static UINT8 get_ssg_funcs(const DEV_DEF* devDef, ssg_callbacks* retFuncs)
 	return 0x00;
 }
 
+static AY8910_CFG* get_ssg_config(const DEV_GEN_CFG* cfg, UINT32 clockDiv, UINT8 ssgType)
+{
+	AY8910_CFG* ssgCfg;
+	
+	ssgCfg = (AY8910_CFG*)calloc(1, sizeof(AY8910_CFG));
+	ssgCfg->_genCfg = *cfg;
+	ssgCfg->_genCfg.clock = cfg->clock / clockDiv / 2;
+	ssgCfg->_genCfg.emuCore = 0;
+	ssgCfg->chipType = ssgType;
+	ssgCfg->chipFlags = 0x01;
+	
+	return ssgCfg;
+}
+
+static void init_ssg_devinfo(DEV_INFO* devInf, const DEV_GEN_CFG* baseCfg, UINT8 clockDiv, UINT8 ssgType)
+{
+	DEVLINK_INFO* devLink;
+	
+	devInf->linkDevCount = 1;
+	devInf->linkDevs = (DEVLINK_INFO*)calloc(devInf->linkDevCount, sizeof(DEVLINK_INFO));
+	
+	devLink = &devInf->linkDevs[0];
+	devLink->devID = DEVID_AY8910;
+	devLink->linkID = LINKDEV_SSG;
+	devLink->cfg = (DEV_GEN_CFG*)get_ssg_config(baseCfg, clockDiv, ssgType);
+	return;
+}
+
 static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
@@ -176,20 +218,8 @@ static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
 	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME_2203);
+	init_ssg_devinfo(retDevInf, cfg, 1, 0x20);
 	return 0x00;
-}
-
-void device_ym2203_link_ssg(void* param, const DEV_INFO* defInfSSG)
-{
-	ssg_callbacks ssgfunc;
-	UINT8 retVal;
-	
-	retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
-	if (retVal)
-		ym2203_link_ssg(param, NULL, NULL);
-	else
-		ym2203_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
-	return;
 }
 
 static void device_stop_ym2203(void* param)
@@ -201,6 +231,28 @@ static void device_stop_ym2203(void* param)
 	free(info);
 	
 	return;
+}
+
+static UINT8 device_ym2203_link_ssg(void* param, UINT8 devID, const DEV_INFO* defInfSSG)
+{
+	ssg_callbacks ssgfunc;
+	UINT8 retVal;
+	
+	if (devID != LINKDEV_SSG)
+		return EERR_UNK_DEVICE;
+	
+	if (defInfSSG == NULL)
+	{
+		ym2203_link_ssg(param, NULL, NULL);
+		retVal = 0x00;
+	}
+	else
+	{
+		retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
+		if (! retVal)
+			ym2203_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
+	}
+	return retVal;
 }
 
 static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -221,6 +273,7 @@ static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
 	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME_2608);
+	init_ssg_devinfo(retDevInf, cfg, 2, 0x21);
 	return 0x00;
 }
 
@@ -235,17 +288,26 @@ static void device_stop_ym2608(void* param)
 	return;
 }
 
-void device_ym2608_link_ssg(void* param, const DEV_INFO* defInfSSG)
+static UINT8 device_ym2608_link_ssg(void* param, UINT8 devID, const DEV_INFO* defInfSSG)
 {
 	ssg_callbacks ssgfunc;
 	UINT8 retVal;
 	
-	retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
-	if (retVal)
+	if (devID != LINKDEV_SSG)
+		return EERR_UNK_DEVICE;
+	
+	if (defInfSSG == NULL)
+	{
 		ym2608_link_ssg(param, NULL, NULL);
+		retVal = 0x00;
+	}
 	else
-		ym2608_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
-	return;
+	{
+		retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
+		if (! retVal)
+			ym2608_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
+	}
+	return retVal;
 }
 
 static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -270,6 +332,7 @@ static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
 	devDefPtr = mode ? &devDef_MAME_2610B : &devDef_MAME_2610;
 	INIT_DEVINF(retDevInf, devData, rate, devDefPtr);
+	init_ssg_devinfo(retDevInf, cfg, 2, 0x22);
 	return 0x00;
 }
 
@@ -284,15 +347,24 @@ static void device_stop_ym2610(void* param)
 	return;
 }
 
-void device_ym2610_link_ssg(void* param, const DEV_INFO* defInfSSG)
+static UINT8 device_ym2610_link_ssg(void* param, UINT8 devID, const DEV_INFO* defInfSSG)
 {
 	ssg_callbacks ssgfunc;
 	UINT8 retVal;
 	
-	retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
-	if (retVal)
+	if (devID != LINKDEV_SSG)
+		return EERR_UNK_DEVICE;
+	
+	if (defInfSSG == NULL)
+	{
 		ym2610_link_ssg(param, NULL, NULL);
+		retVal = 0x00;
+	}
 	else
-		ym2610_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
-	return;
+	{
+		retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
+		if (! retVal)
+			ym2610_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
+	}
+	return retVal;
 }

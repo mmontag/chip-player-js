@@ -54,6 +54,7 @@ static DEV_DEF devDef_MAME =
 	sn76496_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_MAME,	// rwFuncs
 };
@@ -77,6 +78,7 @@ static DEV_DEF devDef_Maxim =
 	sn76489_mute_maxim,
 	sn76489_pan_maxim,
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_Maxim,	// rwFuncs
 };

@@ -111,6 +111,7 @@ static DEV_DEF devDef =
 	ymf278b_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
 };

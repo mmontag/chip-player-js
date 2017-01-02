@@ -98,6 +98,21 @@ UINT8 SndEmu_Stop(DEV_INFO* devInf)
 	return 0x00;
 }
 
+void SndEmu_FreeDevLinkData(DEV_INFO* devInf)
+{
+	UINT32 curLDev;
+	
+	if (! devInf->linkDevCount)
+		return;
+	
+	for (curLDev = 0; curLDev < devInf->linkDevCount; curLDev ++)
+		free(devInf->linkDevs[curLDev].cfg);
+	free(devInf->linkDevs);	devInf->linkDevs = NULL;
+	devInf->linkDevCount = 0;
+	
+	return;
+}
+
 UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devDef, UINT8 funcType, UINT8 rwType, UINT16 reserved, void** retFuncPtr)
 {
 	UINT32 curFunc;

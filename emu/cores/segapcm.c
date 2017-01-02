@@ -53,6 +53,7 @@ static DEV_DEF devDef =
 	segapcm_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
 };

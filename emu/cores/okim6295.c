@@ -165,6 +165,7 @@ static DEV_DEF devDef =
 	okim6295_set_mute_mask,
 	NULL,	// SetPanning
 	okim6295_set_srchg_cb,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
 };

@@ -39,6 +39,7 @@ static DEV_DEF devDef_MAME =
 	ym2612_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_MAME,	// rwFuncs
 };
@@ -63,6 +64,7 @@ static DEV_DEF devDef_Gens =
 	(DEVFUNC_OPTMASK)YM2612_SetMute,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
 	
 	devFunc_Gens,	// rwFuncs
 };
