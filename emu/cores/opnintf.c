@@ -18,11 +18,6 @@ static void device_stop_ym2608(void* param);
 static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_ym2610(void* param);
 
-static void ssg_set_clock(void* param, UINT32 clock);
-static void ssg_write(void* param, UINT8 address, UINT8 data);
-static UINT8 ssg_read(void* param);
-static void ssg_reset(void* param);
-
 
 typedef struct _opn_info
 {
@@ -301,49 +296,5 @@ void device_ym2610_link_ssg(void* param, const DEV_INFO* defInfSSG)
 		ym2610_link_ssg(param, NULL, NULL);
 	else
 		ym2610_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
-	return;
-}
-
-static void ssg_set_clock(void* param, UINT32 clock)
-{
-	DEV_DATA* devData = (DEV_DATA*)param;
-	OPN_INF* info = (OPN_INF*)devData->chipInf;
-	if (info->ssg == NULL)
-		return;
-	
-	//ay8910_set_clock_ym(info->ssg, clock);
-	return;
-}
-
-static void ssg_write(void* param, UINT8 address, UINT8 data)
-{
-	DEV_DATA* devData = (DEV_DATA*)param;
-	OPN_INF* info = (OPN_INF*)devData->chipInf;
-	if (info->ssg == NULL)
-		return;
-	
-	//ay8910_write_ym(info->ssg, address, data);
-	return;
-}
-
-static UINT8 ssg_read(void* param)
-{
-	DEV_DATA* devData = (DEV_DATA*)param;
-	OPN_INF* info = (OPN_INF*)devData->chipInf;
-	if (info->ssg == NULL)
-		return 0x00;
-	
-	//return ay8910_read_ym(info->ssg);
-	return 0x00;
-}
-
-static void ssg_reset(void* param)
-{
-	DEV_DATA* devData = (DEV_DATA*)param;
-	OPN_INF* info = (OPN_INF*)devData->chipInf;
-	if (info->ssg == NULL)
-		return;
-	
-	//ay8910_reset_ym(info->ssg);
 	return;
 }

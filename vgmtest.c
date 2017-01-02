@@ -106,12 +106,19 @@ typedef struct _vgm_file_header
 	UINT32 lngHzC352;
 	UINT32 lngHzGA20;
 } VGM_HEADER;
+typedef struct _vgm_linked_chip_device VGM_LINKCDEV;
+struct _vgm_linked_chip_device
+{
+	DEV_INFO defInf;
+	RESMPL_STATE resmpl;
+	VGM_LINKCDEV* linkDev;
+};
 typedef struct _vgm_chip_device VGM_CHIPDEV;
 struct _vgm_chip_device
 {
 	DEV_INFO defInf;
 	RESMPL_STATE resmpl;
-	VGM_CHIPDEV* linkDev;
+	VGM_LINKCDEV* linkDev;
 	DEVFUNC_WRITE_A8D8 write8;		// write 8-bit data to 8-bit register/offset
 	DEVFUNC_WRITE_A16D8 writeM8;	// write 8-bit data to 16-bit memory offset
 	DEVFUNC_WRITE_MEMSIZE romSize;
@@ -275,6 +282,7 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	WAVE_32BS fnlSmpl;
 	UINT8 curChip;
 	VGM_CHIPDEV* cDev;
+	VGM_LINKCDEV* clDev;
 	
 	if (! canRender)
 	{
@@ -292,11 +300,14 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	{
 		cDev = &VGMChips[curChip];
-		while(cDev != NULL)
+		if (cDev->defInf.dataPtr != NULL)
+			Resmpl_Execute(&cDev->resmpl, smplCount, smplData);
+		clDev = cDev->linkDev;
+		while(clDev != NULL)
 		{
-			if (cDev->defInf.dataPtr != NULL)
-				Resmpl_Execute(&cDev->resmpl, smplCount, smplData);
-			cDev = cDev->linkDev;
+			if (clDev->defInf.dataPtr != NULL)
+				Resmpl_Execute(&clDev->resmpl, smplCount, smplData);
+			clDev = clDev->linkDev;
 		};
 	}
 	
@@ -352,7 +363,7 @@ static void InitVGMChips(void)
 	UINT32 chpClk;
 	DEV_GEN_CFG devCfg;
 	VGM_CHIPDEV* cDev;
-	VGM_CHIPDEV* clDev;
+	VGM_LINKCDEV* clDev;
 	UINT8 retVal;
 	
 	memset(&VGMChips, 0x00, sizeof(VGMChips));
@@ -505,7 +516,7 @@ static void InitVGMChips(void)
 				ayCfg.chipType = 0x20 + (curChip - DEVID_YM2203);
 				ayCfg.chipFlags = 0x01;
 				
-				cDev->linkDev = (VGM_CHIPDEV*)calloc(1, sizeof(VGM_CHIPDEV));
+				cDev->linkDev = (VGM_LINKCDEV*)calloc(1, sizeof(VGM_LINKCDEV));
 				if (cDev->linkDev == NULL)
 					break;
 				clDev = cDev->linkDev;
@@ -547,12 +558,16 @@ static void InitVGMChips(void)
 		// already done by SndEmu_Start()
 		//cDev->defInf.devDef->Reset(cDev->defInf.dataPtr);
 		
-		while(cDev != NULL)
+		Resmpl_SetVals(&cDev->resmpl, 0xFF, 0x100, sampleRate);
+		Resmpl_DevConnect(&cDev->resmpl, &cDev->defInf);
+		Resmpl_Init(&cDev->resmpl);
+		clDev = cDev->linkDev;
+		while(clDev != NULL)
 		{
-			Resmpl_SetVals(&cDev->resmpl, 0xFF, 0x100, sampleRate);
-			Resmpl_DevConnect(&cDev->resmpl, &cDev->defInf);
-			Resmpl_Init(&cDev->resmpl);
-			cDev = cDev->linkDev;
+			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, sampleRate);
+			Resmpl_DevConnect(&clDev->resmpl, &clDev->defInf);
+			Resmpl_Init(&clDev->resmpl);
+			clDev = clDev->linkDev;
 		}
 	}
 	VGMSmplPos = 0;
@@ -567,7 +582,8 @@ static void DeinitVGMChips(void)
 {
 	UINT8 curChip;
 	VGM_CHIPDEV* cDev;
-	VGM_CHIPDEV* cOldDev;
+	VGM_LINKCDEV* clDev;
+	VGM_LINKCDEV* clDevOld;
 	
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	{
@@ -577,19 +593,22 @@ static void DeinitVGMChips(void)
 			Resmpl_Deinit(&cDev->resmpl);
 			SndEmu_Stop(&cDev->defInf);
 		}
-		cOldDev = cDev;
-		cDev = cDev->linkDev;
-		cOldDev->linkDev = NULL;
-		while(cDev != NULL)
+		if (cDev->linkDev != NULL)
 		{
-			if (cDev->defInf.dataPtr != NULL)
+			// free linked devices
+			clDev = cDev->linkDev;
+			cDev->linkDev = NULL;
+			while(clDev != NULL)
 			{
-				Resmpl_Deinit(&cDev->resmpl);
-				SndEmu_Stop(&cDev->defInf);
+				if (clDev->defInf.dataPtr != NULL)
+				{
+					Resmpl_Deinit(&clDev->resmpl);
+					SndEmu_Stop(&clDev->defInf);
+				}
+				clDevOld = clDev;
+				clDev = clDev->linkDev;
+				free(clDevOld);
 			}
-			cOldDev = cDev;
-			cDev = cDev->linkDev;
-			free(cOldDev);
 		}
 	}
 	
