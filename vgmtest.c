@@ -519,15 +519,20 @@ static void InitVGMChips(void)
 		{
 			UINT32 curLDev;
 			DEVLINK_INFO* dLink;
+			VGM_LINKCDEV* clParent;
 			
+			clParent = NULL;
 			for (curLDev = 0; curLDev < cDev->defInf.linkDevCount; curLDev ++)
 			{
 				dLink = &cDev->defInf.linkDevs[curLDev];
-				cDev->linkDev = (VGM_LINKCDEV*)calloc(1, sizeof(VGM_LINKCDEV));
-				if (cDev->linkDev == NULL)
+				clDev = (VGM_LINKCDEV*)calloc(1, sizeof(VGM_LINKCDEV));
+				if (clDev == NULL)
 					break;
-				clDev = cDev->linkDev;
 				clDev->linkDev = NULL;
+				if (clParent == NULL)
+					cDev->linkDev = clDev;
+				else
+					clParent->linkDev = clDev;
 				retVal = SndEmu_Start(dLink->devID, dLink->cfg, &clDev->defInf);
 				if (retVal)
 				{
@@ -536,6 +541,7 @@ static void InitVGMChips(void)
 					break;
 				}
 				cDev->defInf.devDef->LinkDevice(cDev->defInf.dataPtr, dLink->linkID, &clDev->defInf);
+				clParent = clDev;
 			}
 		}
 		// already done by SndEmu_Start()
