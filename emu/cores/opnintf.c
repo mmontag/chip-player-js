@@ -175,9 +175,7 @@ static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef_MAME_2203;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME_2203);
 	return 0x00;
 }
 
@@ -222,9 +220,7 @@ static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef_MAME_2608;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME_2608);
 	return 0x00;
 }
 
@@ -259,6 +255,7 @@ static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	UINT32 clock;
 	UINT8 mode;
 	UINT32 rate;
+	const DEV_DEF* devDefPtr;
 	
 	clock = CHPCLK_CLOCK(cfg->clock);
 	mode = CHPCLK_FLAG(cfg->clock);
@@ -271,9 +268,8 @@ static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = mode ? &devDef_MAME_2610B : &devDef_MAME_2610;
+	devDefPtr = mode ? &devDef_MAME_2610B : &devDef_MAME_2610;
+	INIT_DEVINF(retDevInf, devData, rate, devDefPtr);
 	return 0x00;
 }
 

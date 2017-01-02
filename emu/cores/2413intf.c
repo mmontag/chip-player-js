@@ -104,9 +104,7 @@ static UINT8 device_start_ym2413_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef_MAME;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME);
 	return 0x00;
 }
 #endif
@@ -132,9 +130,7 @@ static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf
 	OPLL_SetChipMode(chip, mode);
 	
 	chip->chipInf = chip;
-	retDevInf->dataPtr = (DEV_DATA*)chip;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef_Emu;
+	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, rate, &devDef_Emu);
 	return 0x00;
 }
 

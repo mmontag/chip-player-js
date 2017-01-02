@@ -199,9 +199,7 @@ static UINT8 device_start_segapcm(const SEGAPCM_CFG* cfg, DEV_INFO* retDevInf)
 	segapcm_set_mute_mask(spcm, 0x0000);
 	
 	spcm->chipInf = spcm;
-	retDevInf->dataPtr = (DEV_DATA*)spcm;
-	retDevInf->sampleRate = clock / 128;
-	retDevInf->devDef = &devDef;
+	INIT_DEVINF(retDevInf, (DEV_DATA*)spcm, clock / 128, &devDef);
 	return 0x00;
 }
 

@@ -105,9 +105,7 @@ static UINT8 device_start_ymf262_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef262_MAME;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef262_MAME);
 	return 0x00;
 }
 #endif
@@ -131,9 +129,7 @@ static UINT8 device_start_ymf262_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef262_AdLibEmu;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef262_AdLibEmu);
 	return 0x00;
 }
 #endif

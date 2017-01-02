@@ -1201,9 +1201,7 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	ymf278b_set_mute_mask(chip, 0x000000);
 
 	chip->chipInf = chip;
-	retDevInf->dataPtr = (DEV_DATA*)chip;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef;
+	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, rate, &devDef);
 
 	return 0x00;
 }

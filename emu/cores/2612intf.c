@@ -109,14 +109,11 @@ static UINT8 device_start_ym2612_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	//	rate *= 2;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	// TODO: Maybe do something like in sn764intf with a separate "info" structure and pass that
 	chip = ym2612_init(NULL, clock, rate, NULL, NULL);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef_MAME;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME);
 	return 0x00;
 }
 #endif
@@ -138,9 +135,7 @@ static UINT8 device_start_ym2612_gens(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef_Gens;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_Gens);
 	return 0x00;
 }
 #endif

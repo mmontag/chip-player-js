@@ -768,9 +768,7 @@ static UINT8 device_start_ymz280b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	ymz280b_set_mute_mask(chip, 0x00);
 
 	chip->chipInf = chip;
-	retDevInf->dataPtr = (DEV_DATA*)chip;
-	retDevInf->sampleRate = (UINT32)INTERNAL_SAMPLE_RATE;
-	retDevInf->devDef = &devDef;
+	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, (UINT32)INTERNAL_SAMPLE_RATE, &devDef);
 
 	return 0x00;
 }

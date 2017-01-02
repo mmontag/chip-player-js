@@ -109,6 +109,14 @@ struct _device_generic_config
 };	// DEV_GEN_CFG
 
 
+INLINE void INIT_DEVINF(DEV_INFO* devInf, DEV_DATA* devData, UINT32 sampleRate, const DEV_DEF* devDef)
+{
+	devInf->dataPtr = devData;
+	devInf->sampleRate = sampleRate;
+	devInf->devDef = devDef;
+	return;
+}
+
 #ifdef __cplusplus
 }
 #endif

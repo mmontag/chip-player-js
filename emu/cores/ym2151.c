@@ -2164,9 +2164,7 @@ static UINT8 device_start_ym2151(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef_MAME;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME);
 	return 0x00;
 }
 

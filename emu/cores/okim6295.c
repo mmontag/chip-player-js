@@ -446,9 +446,7 @@ static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	okim6295_set_mute_mask(info, 0x00);
 	
 	info->chipInf = info;
-	retDevInf->dataPtr = (DEV_DATA*)info;
-	retDevInf->sampleRate = info->master_clock / divisor;
-	retDevInf->devDef = &devDef;
+	INIT_DEVINF(retDevInf, (DEV_DATA*)info, info->master_clock / divisor, &devDef);
 	return 0x00;
 }
 

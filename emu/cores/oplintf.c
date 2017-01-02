@@ -169,9 +169,7 @@ static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef3812_MAME;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef3812_MAME);
 	return 0x00;
 }
 #endif
@@ -195,9 +193,7 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef3812_AdLibEmu;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef3812_AdLibEmu);
 	return 0x00;
 }
 #endif
@@ -226,9 +222,7 @@ static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef3526_MAME;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef3526_MAME);
 	return 0x00;
 }
 
@@ -260,8 +254,6 @@ static UINT8 device_start_y8950(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
-	retDevInf->dataPtr = devData;
-	retDevInf->sampleRate = rate;
-	retDevInf->devDef = &devDef8950_MAME;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef8950_MAME);
 	return 0x00;
 }
