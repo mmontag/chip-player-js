@@ -9,6 +9,8 @@
 #include <stdtype.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
+#include "../snddef.h"
+#include "../EmuHelper.h"
 
 #include "segapcm.h"
 

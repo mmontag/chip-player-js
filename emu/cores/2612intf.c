@@ -3,6 +3,7 @@
 #include <stdtype.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
+#include "../EmuHelper.h"
 
 #include "2612intf.h"
 #ifdef EC_YM2612_GPGX

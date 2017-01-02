@@ -40,6 +40,7 @@
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "ymz280b.h"
 
 static void update_irq_state_timer_common(void *param, int voicenum);

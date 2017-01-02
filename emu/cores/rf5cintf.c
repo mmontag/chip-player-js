@@ -3,6 +3,7 @@
 #include <stdtype.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
+#include "../EmuHelper.h"
 
 #include "rf5cintf.h"
 #ifdef EC_RF5C68_MAME

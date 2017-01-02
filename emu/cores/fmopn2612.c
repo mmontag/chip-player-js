@@ -135,6 +135,7 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "fmopn.h"
 
 

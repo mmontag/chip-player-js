@@ -5,9 +5,11 @@
 #include "../EmuCores.h"
 #include "../SoundDevs.h"
 #include "../SoundEmu.h"
+#include "../EmuHelper.h"
 
 #include "opnintf.h"
 #include "fmopn.h"
+#include "ayintf.h"
 
 
 static UINT8 get_ssg_funcs(const DEV_DEF* devDef, ssg_callbacks* retFuncs);

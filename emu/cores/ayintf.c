@@ -1,8 +1,9 @@
-#include <stdlib.h>	// for free
+#include <stdlib.h>
 
 #include <stdtype.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
+#include "../EmuHelper.h"
 
 #include "ayintf.h"
 #ifdef EC_AY8910_MAME

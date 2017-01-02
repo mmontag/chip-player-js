@@ -53,13 +53,18 @@ differences between OPL2 and OPL3 shown in datasheets:
 
 */
 
+#ifdef _DEBUG
+#include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "ymf262.h"
 
 #ifdef _MSC_VER

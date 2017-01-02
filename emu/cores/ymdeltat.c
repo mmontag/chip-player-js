@@ -66,6 +66,7 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "ymdeltat.h"
 
 #define YM_DELTAT_DELTA_MAX (24576)

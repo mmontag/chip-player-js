@@ -117,6 +117,7 @@ has twice the steps, happening twice as fast.
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "../EmuStructs.h"
 #include "ay8910.h"
 

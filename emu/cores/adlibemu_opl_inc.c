@@ -30,6 +30,9 @@
 #include <math.h>
 #include <stdlib.h> // rand
 #include <string.h> // for memset
+
+#include <stdtype.h>
+#include "../snddef.h"
 #include "adlibemu_opl_inc.h"
 
 

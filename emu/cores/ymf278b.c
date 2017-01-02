@@ -67,6 +67,7 @@
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "ymf278b.h"
 
 #ifdef _MSC_VER

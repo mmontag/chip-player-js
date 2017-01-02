@@ -24,6 +24,7 @@
 #include <stdlib.h>	// for calloc()
 #include <stdio.h>
 #include <stddef.h>	// for NULL
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include <stdtype.h>

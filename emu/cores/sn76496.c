@@ -126,6 +126,7 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "sn76496.h"
 
 

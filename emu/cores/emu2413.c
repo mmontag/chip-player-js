@@ -54,16 +54,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "emu2413.h"
 #include "../panning.h" // Maxim
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 /*#ifdef EMU2413_COMPACTION
 #define OPLL_TONE_NUM 1

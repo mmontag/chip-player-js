@@ -3,6 +3,7 @@
 #include <stdtype.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
+#include "../EmuHelper.h"
 
 #include "oplintf.h"
 #ifdef EC_YM3812_MAME

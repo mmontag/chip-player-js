@@ -30,12 +30,14 @@
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include <stdtype.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "ym2151.h"
 
 #ifdef _MSC_VER

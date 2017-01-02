@@ -34,6 +34,7 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "../EmuCores.h"
 #include "okim6295.h"
 

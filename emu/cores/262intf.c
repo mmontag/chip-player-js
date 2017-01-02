@@ -3,6 +3,7 @@
 #include <stdtype.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
+#include "../EmuHelper.h"
 
 #include "262intf.h"
 #ifdef EC_YMF262_MAME

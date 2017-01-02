@@ -114,11 +114,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "fmopn.h"
 
 

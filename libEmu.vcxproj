@@ -219,6 +219,7 @@
     <ClInclude Include="emu\cores\ymf271.h" />
     <ClInclude Include="emu\cores\ymf278b.h" />
     <ClInclude Include="emu\cores\ymz280b.h" />
+    <ClInclude Include="emu\EmuHelper.h" />
     <ClInclude Include="emu\panning.h" />
     <ClInclude Include="emu\EmuCores.h" />
     <ClInclude Include="emu\EmuStructs.h" />
