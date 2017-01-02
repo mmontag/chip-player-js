@@ -106,17 +106,19 @@ typedef struct _vgm_file_header
 	UINT32 lngHzC352;
 	UINT32 lngHzGA20;
 } VGM_HEADER;
-typedef struct
+typedef struct _vgm_chip_device VGM_CHIPDEV;
+struct _vgm_chip_device
 {
 	DEV_INFO defInf;
 	RESMPL_STATE resmpl;
+	VGM_CHIPDEV* linkDev;
 	DEVFUNC_WRITE_A8D8 write8;		// write 8-bit data to 8-bit register/offset
 	DEVFUNC_WRITE_A16D8 writeM8;	// write 8-bit data to 16-bit memory offset
 	DEVFUNC_WRITE_MEMSIZE romSize;
 	DEVFUNC_WRITE_BLOCK romWrite;
 	DEVFUNC_WRITE_MEMSIZE romSizeB;
 	DEVFUNC_WRITE_BLOCK romWriteB;
-} VGM_CHIPDEV;
+};
 
 
 int main(int argc, char* argv[]);
@@ -272,6 +274,7 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	UINT32 curSmpl;
 	WAVE_32BS fnlSmpl;
 	UINT8 curChip;
+	VGM_CHIPDEV* cDev;
 	
 	if (! canRender)
 	{
@@ -288,8 +291,13 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	// I know that using a for-loop has a bad performance, but it's just for testing anyway.
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	{
-		if (VGMChips[curChip].defInf.dataPtr != NULL)
-			Resmpl_Execute(&VGMChips[curChip].resmpl, smplCount, smplData);
+		cDev = &VGMChips[curChip];
+		while(cDev != NULL)
+		{
+			if (cDev->defInf.dataPtr != NULL)
+				Resmpl_Execute(&cDev->resmpl, smplCount, smplData);
+			cDev = cDev->linkDev;
+		};
 	}
 	
 	SmplPtr16 = (INT16*)data;
@@ -331,6 +339,8 @@ static void SetupDirectSound(void* audDrv)
 }
 
 
+void device_ym2203_link_ssg(void* param, const DEV_INFO* defInfSSG);
+void device_ym2608_link_ssg(void* param, const DEV_INFO* defInfSSG);
 static void InitVGMChips(void)
 {
 	static UINT32 chipOfs[CHIP_COUNT] =
@@ -342,6 +352,7 @@ static void InitVGMChips(void)
 	UINT32 chpClk;
 	DEV_GEN_CFG devCfg;
 	VGM_CHIPDEV* cDev;
+	VGM_CHIPDEV* clDev;
 	UINT8 retVal;
 	
 	memset(&VGMChips, 0x00, sizeof(VGMChips));
@@ -353,6 +364,8 @@ static void InitVGMChips(void)
 			continue;
 		cDev = &VGMChips[curChip];
 		
+		cDev->defInf.dataPtr = NULL;
+		cDev->linkDev = NULL;
 		devCfg.emuCore = 0x00;
 		devCfg.srMode = DEVRI_SRMODE_NATIVE;
 		devCfg.clock = chpClk & ~0x40000000;
@@ -471,6 +484,45 @@ static void InitVGMChips(void)
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 			}
 			break;
+		case DEVID_YM2203:
+		case DEVID_YM2608:
+			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
+			if (retVal)
+				break;
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			{
+				AY8910_CFG ayCfg;
+				UINT8 retValSSG;
+				
+				ayCfg._genCfg = devCfg;
+				if (curChip == DEVID_YM2203)
+					ayCfg._genCfg.clock = devCfg.clock / 2;
+				else
+					ayCfg._genCfg.clock = devCfg.clock / 4;
+				ayCfg._genCfg.emuCore = FCC_EMU_;
+				ayCfg.chipType = 0x20 + (curChip - DEVID_YM2203);
+				ayCfg.chipFlags = 0x01;
+				
+				cDev->linkDev = (VGM_CHIPDEV*)calloc(1, sizeof(VGM_CHIPDEV));
+				if (cDev->linkDev == NULL)
+					break;
+				clDev = cDev->linkDev;
+				clDev->linkDev = NULL;
+				retValSSG = SndEmu_Start(DEVID_AY8910, (DEV_GEN_CFG*)&ayCfg, &clDev->defInf);
+				if (retValSSG)
+				{
+					free(cDev->linkDev);
+					cDev->linkDev = NULL;
+					break;
+				}
+				if (curChip == DEVID_YM2203)
+					device_ym2203_link_ssg(cDev->defInf.dataPtr, &clDev->defInf);
+				else
+					device_ym2608_link_ssg(cDev->defInf.dataPtr, &clDev->defInf);
+			}
+			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
@@ -495,9 +547,13 @@ static void InitVGMChips(void)
 		// already done by SndEmu_Start()
 		//cDev->defInf.devDef->Reset(cDev->defInf.dataPtr);
 		
-		Resmpl_SetVals(&cDev->resmpl, 0xFF, 0x100, sampleRate);
-		Resmpl_DevConnect(&cDev->resmpl, &cDev->defInf);
-		Resmpl_Init(&cDev->resmpl);
+		while(cDev != NULL)
+		{
+			Resmpl_SetVals(&cDev->resmpl, 0xFF, 0x100, sampleRate);
+			Resmpl_DevConnect(&cDev->resmpl, &cDev->defInf);
+			Resmpl_Init(&cDev->resmpl);
+			cDev = cDev->linkDev;
+		}
 	}
 	VGMSmplPos = 0;
 	renderSmplPos = 0;
@@ -511,15 +567,30 @@ static void DeinitVGMChips(void)
 {
 	UINT8 curChip;
 	VGM_CHIPDEV* cDev;
+	VGM_CHIPDEV* cOldDev;
 	
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	{
 		cDev = &VGMChips[curChip];
-		if (cDev->defInf.dataPtr == NULL)
-			continue;
-		
-		Resmpl_Deinit(&cDev->resmpl);
-		SndEmu_Stop(&cDev->defInf);
+		if (cDev->defInf.dataPtr != NULL)
+		{
+			Resmpl_Deinit(&cDev->resmpl);
+			SndEmu_Stop(&cDev->defInf);
+		}
+		cOldDev = cDev;
+		cDev = cDev->linkDev;
+		cOldDev->linkDev = NULL;
+		while(cDev != NULL)
+		{
+			if (cDev->defInf.dataPtr != NULL)
+			{
+				Resmpl_Deinit(&cDev->resmpl);
+				SndEmu_Stop(&cDev->defInf);
+			}
+			cOldDev = cDev;
+			cDev = cDev->linkDev;
+			free(cOldDev);
+		}
 	}
 	
 	return;

@@ -584,7 +584,8 @@ typedef struct
 	/* Extention Timer and IRQ handler */
 	FM_TIMERHANDLER	timer_handler;
 	FM_IRQHANDLER	IRQ_Handler;
-	const ssg_callbacks *SSG;
+	ssg_callbacks SSG_funcs;
+	void *		SSG_param;
 } FM_ST;
 
 
@@ -1687,13 +1688,13 @@ static void OPNSetPres(FM_OPN *OPN, int pres, int timer_prescaler, int SSGpres)
 	OPN->ST.timer_prescaler = timer_prescaler;
 
 	/* SSG part  prescaler set */
-	if( SSGpres ) (*OPN->ST.SSG->set_clock)( OPN->ST.param, OPN->ST.clock * 2 / SSGpres );
+	if( SSGpres ) OPN->ST.SSG_funcs.set_clock( OPN->ST.SSG_param, OPN->ST.clock * 2 / SSGpres );
 
 	/* make time tables */
 	init_timetables( &OPN->ST, dt_tab );
 
 	/* there are 2048 FNUMs that can be generated using FNUM/BLK registers
-        but LFO works with one more bit of a precision so we really need 4096 elements */
+	    but LFO works with one more bit of a precision so we really need 4096 elements */
 	/* calculate fnumber -> increment counter table */
 	for(i = 0; i < 4096; i++)
 	{
@@ -2025,6 +2026,49 @@ static void OPNPrescaler_w(FM_OPN *OPN , int addr, int pre_divider)
 }
 #endif /* BUILD_OPN_PRESCALER */
 
+static void ssgdummy_set_clock(void* param, UINT32 clock)
+{
+	return;
+}
+
+static void ssgdummy_write(void* param, UINT8 address, UINT8 data)
+{
+	return;
+}
+
+static UINT8 ssgdummy_read(void* param)
+{
+	return 0x00;
+}
+
+static void ssgdummy_reset(void* param)
+{
+	return;
+}
+
+static const ssg_callbacks ssg_dummy_funcs =
+{
+	ssgdummy_set_clock,
+	ssgdummy_write,
+	ssgdummy_read,
+	ssgdummy_reset
+};
+
+static void OPNLinkSSG(FM_OPN *OPN, const ssg_callbacks *ssg_cb, void *ssg_param)
+{
+	if (ssg_cb == NULL)
+	{
+		OPN->ST.SSG_funcs = ssg_dummy_funcs;
+		OPN->ST.SSG_param = NULL;
+	}
+	else
+	{
+		OPN->ST.SSG_funcs = *ssg_cb;
+		OPN->ST.SSG_param = ssg_param;
+	}
+	return;
+}
+
 #if BUILD_YM2203
 /*****************************************************************************/
 /*      YM2203 local section                                                 */
@@ -2142,7 +2186,7 @@ void ym2203_reset_chip(void *chip)
 	/* Reset Prescaler */
 	OPNPrescaler_w(OPN, 0 , 1 );
 	/* reset SSG section */
-	(*OPN->ST.SSG->reset)(OPN->ST.param);
+	OPN->ST.SSG_funcs.reset(OPN->ST.SSG_param);
 	/* status clear */
 	FM_IRQMASK_SET(&OPN->ST,0x03);
 	FM_BUSY_CLEAR(&OPN->ST);
@@ -2165,7 +2209,7 @@ void ym2203_reset_chip(void *chip)
    'rate' is sampling rate
 */
 void * ym2203_init(void *param, UINT32 clock, UINT32 rate,
-               FM_TIMERHANDLER timer_handler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg)
+               FM_TIMERHANDLER timer_handler,FM_IRQHANDLER IRQHandler)
 {
 	YM2203 *F2203;
 
@@ -2185,20 +2229,30 @@ void * ym2203_init(void *param, UINT32 clock, UINT32 rate,
 
 	F2203->OPN.ST.timer_handler = timer_handler;
 	F2203->OPN.ST.IRQ_Handler   = IRQHandler;
-	F2203->OPN.ST.SSG           = ssg;
+	OPNLinkSSG(&F2203->OPN, NULL, NULL);
 
 	ym2203_set_mutemask(F2203, 0x00);
 
 	return F2203;
 }
 
+/* link SSG emulator */
+void ym2203_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param)
+{
+	YM2203 *F2203 = (YM2203 *)chip;
+
+	OPNLinkSSG(&F2203->OPN, ssg, ssg_param);
+	OPNPrescaler_w(&F2203->OPN, 1, 1);
+	return;
+}
+
 /* shut down emulator */
 void ym2203_shutdown(void *chip)
 {
-	YM2203 *FM2203 = (YM2203 *)chip;
+	YM2203 *F2203 = (YM2203 *)chip;
 
 	FMCloseTable();
-	free(FM2203);
+	free(F2203);
 }
 
 /* YM2203 I/O interface */
@@ -2212,7 +2266,7 @@ void ym2203_write(void *chip,UINT8 a,UINT8 v)
 		OPN->ST.address = v;
 
 		/* Write register to SSG emulator */
-		if( v < 16 ) (*OPN->ST.SSG->write)(OPN->ST.param,a,v);
+		if( v < 16 ) OPN->ST.SSG_funcs.write(OPN->ST.SSG_param,a,v);
 
 		/* prescaler select : 2d,2e,2f  */
 		if( v >= 0x2d && v <= 0x2f )
@@ -2226,7 +2280,7 @@ void ym2203_write(void *chip,UINT8 a,UINT8 v)
 		{
 		case 0x00:	/* 0x00-0x0f : SSG section */
 			/* Write data to SSG emulator */
-			(*OPN->ST.SSG->write)(OPN->ST.param,a,v);
+			OPN->ST.SSG_funcs.write(OPN->ST.SSG_param,a,v);
 			break;
 		case 0x20:	/* 0x20-0x2f : Mode section */
 			ym2203_update_req(F2203);
@@ -2256,7 +2310,7 @@ UINT8 ym2203_read(void *chip,UINT8 a)
 	}
 	else
 	{	/* data port (only SSG) */
-		if( addr < 16 ) ret = (*F2203->OPN.ST.SSG->read)(F2203->OPN.ST.param);
+		if( addr < 16 ) ret = F2203->OPN.ST.SSG_funcs.read(F2203->OPN.ST.SSG_param);
 	}
 	return ret;
 }
@@ -3339,7 +3393,7 @@ static void YM2608_deltat_status_reset(void *chip, UINT8 changebits)
 }
 /* YM2608(OPNA) */
 void * ym2608_init(void *param, UINT32 clock, UINT32 rate,
-               FM_TIMERHANDLER timer_handler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg)
+               FM_TIMERHANDLER timer_handler,FM_IRQHANDLER IRQHandler)
 {
 	YM2608 *F2608;
 
@@ -3361,7 +3415,7 @@ void * ym2608_init(void *param, UINT32 clock, UINT32 rate,
 	/* External handlers */
 	F2608->OPN.ST.timer_handler = timer_handler;
 	F2608->OPN.ST.IRQ_Handler   = IRQHandler;
-	F2608->OPN.ST.SSG           = ssg;
+	OPNLinkSSG(&F2608->OPN, NULL, NULL);
 
 	/* DELTA-T */
 	F2608->deltaT.memory = NULL;
@@ -3389,6 +3443,16 @@ void * ym2608_init(void *param, UINT32 clock, UINT32 rate,
 	return F2608;
 }
 
+/* link SSG emulator */
+void ym2608_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param)
+{
+	YM2608 *F2608 = (YM2608 *)chip;
+
+	OPNLinkSSG(&F2608->OPN, ssg, ssg_param);
+	OPNPrescaler_w(&F2608->OPN, 1, 2);
+	return;
+}
+
 /* shut down emulator */
 void ym2608_shutdown(void *chip)
 {
@@ -3412,7 +3476,7 @@ void ym2608_reset_chip(void *chip)
 	OPNPrescaler_w(OPN , 0 , 2);
 	F2608->deltaT.freqbase = OPN->ST.freqbase;
 	/* reset SSG section */
-	(*OPN->ST.SSG->reset)(OPN->ST.param);
+	OPN->ST.SSG_funcs.reset(OPN->ST.SSG_param);
 
 	/* status clear */
 	FM_BUSY_CLEAR(&OPN->ST);
@@ -3496,7 +3560,7 @@ void ym2608_write(void *chip, UINT8 a,UINT8 v)
 		F2608->addr_A1 = 0;
 
 		/* Write register to SSG emulator */
-		if( v < 16 ) (*OPN->ST.SSG->write)(OPN->ST.param,a,v);
+		if( v < 16 ) OPN->ST.SSG_funcs.write(OPN->ST.SSG_param,a,v);
 		/* prescaler selecter : 2d,2e,2f  */
 		if( v >= 0x2d && v <= 0x2f )
 		{
@@ -3516,7 +3580,7 @@ void ym2608_write(void *chip, UINT8 a,UINT8 v)
 		{
 		case 0x00:	/* SSG section */
 			/* Write data to SSG emulator */
-			(*OPN->ST.SSG->write)(OPN->ST.param,a,v);
+			OPN->ST.SSG_funcs.write(OPN->ST.SSG_param,a,v);
 			break;
 		case 0x10:	/* 0x10-0x1f : Rhythm section */
 			ym2608_update_req(F2608);
@@ -3594,7 +3658,7 @@ UINT8 ym2608_read(void *chip,UINT8 a)
 		break;
 
 	case 1:	/* status 0, ID  */
-		if( addr < 16 ) ret = (*F2608->OPN.ST.SSG->read)(F2608->OPN.ST.param);
+		if( addr < 16 ) ret = F2608->OPN.ST.SSG_funcs.read(F2608->OPN.ST.SSG_param);
 		else if(addr == 0xff) ret = 0x01; /* ID code */
 		break;
 
@@ -4007,7 +4071,7 @@ static void YM2610_deltat_status_reset(void *chip, UINT8 changebits)
 }
 
 void *ym2610_init(void *param, UINT32 clock, UINT32 rate,
-               FM_TIMERHANDLER timer_handler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg)
+               FM_TIMERHANDLER timer_handler,FM_IRQHANDLER IRQHandler)
 {
 	YM2610 *F2610;
 
@@ -4029,7 +4093,7 @@ void *ym2610_init(void *param, UINT32 clock, UINT32 rate,
 	/* Extend handler */
 	F2610->OPN.ST.timer_handler = timer_handler;
 	F2610->OPN.ST.IRQ_Handler   = IRQHandler;
-	F2610->OPN.ST.SSG           = ssg;
+	OPNLinkSSG(&F2610->OPN, NULL, NULL);
 	/* ADPCM */
 	F2610->pcmbuf   = NULL;
 	F2610->pcm_size = 0x00;
@@ -4048,6 +4112,16 @@ void *ym2610_init(void *param, UINT32 clock, UINT32 rate,
 	ym2610_set_mutemask(F2610, 0x00);
 
 	return F2610;
+}
+
+/* link SSG emulator */
+void ym2610_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param)
+{
+	YM2610 *F2610 = (YM2610 *)chip;
+
+	OPNLinkSSG(&F2610->OPN, ssg, ssg_param);
+	OPNPrescaler_w(&F2610->OPN, 1, 2);
+	return;
 }
 
 /* shut down emulator */
@@ -4071,9 +4145,9 @@ void ym2610_reset_chip(void *chip)
 	YM_DELTAT *DELTAT = &F2610->deltaT;
 
 	/* Reset Prescaler */
-	OPNSetPres( OPN, 6*24, 6*24, 4*2); /* OPN 1/6 , SSG 1/4 */
+	OPNPrescaler_w( OPN, 0, 2); /* OPN 1/6 , SSG 1/4 */
 	/* reset SSG section */
-	(*OPN->ST.SSG->reset)(OPN->ST.param);
+	OPN->ST.SSG_funcs.reset(OPN->ST.SSG_param);
 	/* status clear */
 	FM_IRQMASK_SET(&OPN->ST,0x03);
 	FM_BUSY_CLEAR(&OPN->ST);
@@ -4144,7 +4218,7 @@ void ym2610_write(void *chip, UINT8 a, UINT8 v)
 		F2610->addr_A1 = 0;
 
 		/* Write register to SSG emulator */
-		if( v < 16 ) (*OPN->ST.SSG->write)(OPN->ST.param,a,v);
+		if( v < 16 ) OPN->ST.SSG_funcs.write(OPN->ST.SSG_param,a,v);
 		break;
 
 	case 1:	/* data port 0    */
@@ -4157,7 +4231,7 @@ void ym2610_write(void *chip, UINT8 a, UINT8 v)
 		{
 		case 0x00:	/* SSG section */
 			/* Write data to SSG emulator */
-			(*OPN->ST.SSG->write)(OPN->ST.param,a,v);
+			OPN->ST.SSG_funcs.write(OPN->ST.SSG_param,a,v);
 			break;
 		case 0x10: /* DeltaT ADPCM */
 			ym2610_update_req(F2610);
@@ -4246,7 +4320,7 @@ UINT8 ym2610_read(void *chip,UINT8 a)
 		ret = FM_STATUS_FLAG(&F2610->OPN.ST) & 0x83;
 		break;
 	case 1:	/* data 0 */
-		if( addr < 16 ) ret = (*F2610->OPN.ST.SSG->read)(F2610->OPN.ST.param);
+		if( addr < 16 ) ret = F2610->OPN.ST.SSG_funcs.read(F2610->OPN.ST.SSG_param);
 		else if( addr == 0xff ) ret = 0x01;
 		break;
 	case 2:	/* status 1 : ADPCM status */

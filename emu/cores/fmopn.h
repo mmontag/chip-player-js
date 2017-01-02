@@ -69,7 +69,12 @@ typedef void (*FM_IRQHANDLER)(void *param,UINT8 irq);
 ** return      0 = success
 */
 void * ym2203_init(void *param, UINT32 baseclock, UINT32 rate,
-               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg);
+               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
+
+/*
+** link SSG callbacks into the YM2203
+*/
+void ym2203_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param);
 
 /*
 ** shutdown the YM2203 emulators
@@ -112,7 +117,8 @@ void ym2203_set_mutemask(void *chip, UINT32 MuteMask);
 #if BUILD_YM2608
 /* -------------------- YM2608(OPNA) Interface -------------------- */
 void * ym2608_init(void *param, UINT32 baseclock, UINT32 rate,
-               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg);
+               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
+void ym2608_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param);
 void ym2608_shutdown(void *chip);
 void ym2608_reset_chip(void *chip);
 void ym2608_update_one(void *chip, UINT32 length, DEV_SMPL **buffer);
@@ -129,7 +135,8 @@ void ym2608_set_mutemask(void *chip, UINT32 MuteMask);
 #if (BUILD_YM2610||BUILD_YM2610B)
 /* -------------------- YM2610(OPNB) Interface -------------------- */
 void * ym2610_init(void *param, UINT32 baseclock, UINT32 rate,
-               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler, const ssg_callbacks *ssg);
+               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
+void ym2610_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param);
 void ym2610_shutdown(void *chip);
 void ym2610_reset_chip(void *chip);
 void ym2610_update_one(void *chip, UINT32 length, DEV_SMPL **buffer);

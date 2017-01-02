@@ -3,11 +3,14 @@
 #include <stdtype.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
+#include "../SoundDevs.h"
+#include "../SoundEmu.h"
 
 #include "opnintf.h"
 #include "fmopn.h"
 
 
+static UINT8 get_ssg_funcs(const DEV_DEF* devDef, ssg_callbacks* retFuncs);
 static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_ym2203(void* param);
 static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
@@ -138,13 +141,25 @@ const DEV_DEF* devDefList_YM2610[] =
 };
 
 
-static const ssg_callbacks ssgintf =
+static UINT8 get_ssg_funcs(const DEV_DEF* devDef, ssg_callbacks* retFuncs)
 {
-	ssg_set_clock,
-	ssg_write,
-	ssg_read,
-	ssg_reset
-};
+	UINT8 retVal;
+	
+	retVal = SndEmu_GetDeviceFunc(devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&retFuncs->write);
+	if (retVal)
+		return retVal;
+	retVal = SndEmu_GetDeviceFunc(devDef, RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, (void**)&retFuncs->read);
+	if (retVal)
+		return retVal;
+	retVal = SndEmu_GetDeviceFunc(devDef, RWF_REGISTER | RWF_CLOCK, DEVRW_VALUE, 0, (void**)&retFuncs->set_clock);
+	if (retVal)
+		return retVal;
+	
+	if (devDef->Reset == NULL)
+		return 0xFF;
+	retFuncs->reset = devDef->Reset;
+	return 0x00;
+}
 
 static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
@@ -159,7 +174,7 @@ static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	info = (OPN_INF*)malloc(sizeof(OPN_INF));
 	info->ssg = NULL;
-	info->opn = ym2203_init(info, clock, rate, NULL, NULL, &ssgintf);
+	info->opn = ym2203_init(info, clock, rate, NULL, NULL);
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
@@ -167,6 +182,19 @@ static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	retDevInf->sampleRate = rate;
 	retDevInf->devDef = &devDef_MAME_2203;
 	return 0x00;
+}
+
+void device_ym2203_link_ssg(void* param, const DEV_INFO* defInfSSG)
+{
+	ssg_callbacks ssgfunc;
+	UINT8 retVal;
+	
+	retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
+	if (retVal)
+		ym2203_link_ssg(param, NULL, NULL);
+	else
+		ym2203_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
+	return;
 }
 
 static void device_stop_ym2203(void* param)
@@ -193,7 +221,7 @@ static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	info = (OPN_INF*)malloc(sizeof(OPN_INF));
 	info->ssg = NULL;
-	info->opn = ym2608_init(info, clock, rate, NULL, NULL, &ssgintf);
+	info->opn = ym2608_init(info, clock, rate, NULL, NULL);
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
@@ -214,6 +242,19 @@ static void device_stop_ym2608(void* param)
 	return;
 }
 
+void device_ym2608_link_ssg(void* param, const DEV_INFO* defInfSSG)
+{
+	ssg_callbacks ssgfunc;
+	UINT8 retVal;
+	
+	retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
+	if (retVal)
+		ym2608_link_ssg(param, NULL, NULL);
+	else
+		ym2608_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
+	return;
+}
+
 static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
@@ -229,7 +270,7 @@ static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	info = (OPN_INF*)malloc(sizeof(OPN_INF));
 	info->ssg = NULL;
-	info->opn = ym2610_init(info, clock, rate, NULL, NULL, &ssgintf);
+	info->opn = ym2610_init(info, clock, rate, NULL, NULL);
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
@@ -247,6 +288,19 @@ static void device_stop_ym2610(void* param)
 	ym2610_shutdown(info->opn);
 	free(info);
 	
+	return;
+}
+
+void device_ym2610_link_ssg(void* param, const DEV_INFO* defInfSSG)
+{
+	ssg_callbacks ssgfunc;
+	UINT8 retVal;
+	
+	retVal = get_ssg_funcs(defInfSSG->devDef, &ssgfunc);
+	if (retVal)
+		ym2610_link_ssg(param, NULL, NULL);
+	else
+		ym2610_link_ssg(param, &ssgfunc, defInfSSG->dataPtr);
 	return;
 }
 
