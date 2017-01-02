@@ -95,6 +95,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x524F, ymf278b_write_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0x524F, ymf278b_alloc_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x5241, ymf278b_write_ram},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =
 {
@@ -110,7 +111,7 @@ static DEV_DEF devDef =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	5, devFunc,	// rwFuncs
+	devFunc,	// rwFuncs
 };
 
 const DEV_DEF* devDefList_YMF278B[] =

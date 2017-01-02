@@ -36,6 +36,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A16D8, 0, sega_pcm_r},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, sega_pcm_write_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, sega_pcm_alloc_rom},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =
 {
@@ -51,7 +52,7 @@ static DEV_DEF devDef =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	4, devFunc,	// rwFuncs
+	devFunc,	// rwFuncs
 };
 
 const DEV_DEF* devDefList_SegaPCM[] =

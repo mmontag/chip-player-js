@@ -24,6 +24,7 @@ static DEVDEF_RWFUNC devFunc262_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ymf262_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ymf262_read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_MAME =
 {
@@ -39,7 +40,7 @@ static DEV_DEF devDef262_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc262_MAME,	// rwFuncs
+	devFunc262_MAME,	// rwFuncs
 };
 #endif
 #ifdef EC_YMF262_ADLIBEMU
@@ -47,6 +48,7 @@ static DEVDEF_RWFUNC devFunc262_Emu[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, adlib_OPL3_writeIO},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, adlib_OPL3_reg_read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_AdLibEmu =
 {
@@ -62,7 +64,7 @@ static DEV_DEF devDef262_AdLibEmu =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc262_Emu,	// rwFuncs
+	devFunc262_Emu,	// rwFuncs
 };
 #endif
 

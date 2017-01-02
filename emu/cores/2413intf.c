@@ -24,6 +24,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2413_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2413_read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =
 {
@@ -39,7 +40,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc_MAME,	// rwFuncs
+	devFunc_MAME,	// rwFuncs
 };
 #endif
 #ifdef EC_YM2413_EMU2413
@@ -47,6 +48,7 @@ static DEVDEF_RWFUNC devFunc_Emu[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, OPLL_writeIO},
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, OPLL_writeReg},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Emu =
 {
@@ -62,7 +64,7 @@ static DEV_DEF devDef_Emu =
 	ym2413_set_panning_emu,
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc_Emu,	// rwFuncs
+	devFunc_Emu,	// rwFuncs
 };
 #endif
 

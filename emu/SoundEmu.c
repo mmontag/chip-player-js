@@ -107,7 +107,7 @@ UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devDef, UINT8 funcType, UINT8 rwType, 
 	
 	foundFunc = 0;
 	firstFunc = 0;
-	for (curFunc = 0; curFunc < devDef->rwFuncCount; curFunc ++)
+	for (curFunc = 0; devDef->rwFuncs[curFunc].funcPtr != NULL; curFunc ++)
 	{
 		tempFnc = &devDef->rwFuncs[curFunc];
 		if (tempFnc->funcType == funcType && tempFnc->rwType == rwType)

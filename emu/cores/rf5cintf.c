@@ -26,6 +26,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, rf5c68_mem_w},
 	{RWF_MEMORY | RWF_READ, DEVRW_A16D8, 0, rf5c68_mem_r},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, rf5c68_write_ram},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =
 {
@@ -41,7 +42,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	5, devFunc_MAME,	// rwFuncs
+	devFunc_MAME,	// rwFuncs
 };
 #endif
 #ifdef EC_RF5C68_GENS
@@ -52,6 +53,7 @@ static DEVDEF_RWFUNC devFunc_Gens[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, SCD_PCM_MemWrite},
 	{RWF_MEMORY | RWF_READ, DEVRW_A16D8, 0, SCD_PCM_MemRead},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, SCD_PCM_MemBlockWrite},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Gens =
 {
@@ -67,7 +69,7 @@ static DEV_DEF devDef_Gens =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	5, devFunc_Gens,	// rwFuncs
+	devFunc_Gens,	// rwFuncs
 };
 #endif
 

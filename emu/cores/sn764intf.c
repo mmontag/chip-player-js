@@ -38,6 +38,7 @@ typedef struct _sn76496_info
 static DEVDEF_RWFUNC devFunc_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_mame},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =
 {
@@ -53,13 +54,14 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	1, devFunc_MAME,	// rwFuncs
+	devFunc_MAME,	// rwFuncs
 };
 #endif
 #ifdef EC_SN76496_MAXIM
 static DEVDEF_RWFUNC devFunc_Maxim[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_maxim},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Maxim =
 {
@@ -75,7 +77,7 @@ static DEV_DEF devDef_Maxim =
 	sn76489_pan_maxim,
 	NULL,	// SetSampleRateChangeCallback
 	
-	1, devFunc_Maxim,	// rwFuncs
+	devFunc_Maxim,	// rwFuncs
 };
 #endif
 

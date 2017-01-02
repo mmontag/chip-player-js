@@ -26,6 +26,7 @@ static DEVDEF_RWFUNC devFunc3812_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym3812_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym3812_read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3812_MAME =
 {
@@ -41,7 +42,7 @@ static DEV_DEF devDef3812_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc3812_MAME,	// rwFuncs
+	devFunc3812_MAME,	// rwFuncs
 };
 #endif
 #ifdef EC_YM3812_ADLIBEMU
@@ -49,6 +50,7 @@ static DEVDEF_RWFUNC devFunc3812_Emu[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, adlib_OPL2_writeIO},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, adlib_OPL2_reg_read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3812_AdLibEmu =
 {
@@ -64,7 +66,7 @@ static DEV_DEF devDef3812_AdLibEmu =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc3812_Emu,	// rwFuncs
+	devFunc3812_Emu,	// rwFuncs
 };
 #endif
 
@@ -84,6 +86,7 @@ static DEVDEF_RWFUNC devFunc3526_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym3526_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym3526_read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3526_MAME =
 {
@@ -99,7 +102,7 @@ static DEV_DEF devDef3526_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc3526_MAME,	// rwFuncs
+	devFunc3526_MAME,	// rwFuncs
 };
 
 const DEV_DEF* devDefList_YM3526[] =
@@ -115,6 +118,7 @@ static DEVDEF_RWFUNC devFunc8950_MAME[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, y8950_read},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, y8950_write_pcmrom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, y8950_alloc_pcmrom},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef8950_MAME =
 {
@@ -130,7 +134,7 @@ static DEV_DEF devDef8950_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	4, devFunc8950_MAME,	// rwFuncs
+	devFunc8950_MAME,	// rwFuncs
 };
 
 const DEV_DEF* devDefList_Y8950[] =

@@ -23,6 +23,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2612_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2612_read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =
 {
@@ -38,7 +39,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc_MAME,	// rwFuncs
+	devFunc_MAME,	// rwFuncs
 };
 #endif
 #ifdef EC_YM2612_GENS
@@ -46,6 +47,7 @@ static DEVDEF_RWFUNC devFunc_Gens[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, YM2612_Write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, YM2612_Read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Gens =
 {
@@ -61,7 +63,7 @@ static DEV_DEF devDef_Gens =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc_Gens,	// rwFuncs
+	devFunc_Gens,	// rwFuncs
 };
 #endif
 

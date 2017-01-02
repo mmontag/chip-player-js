@@ -84,8 +84,7 @@ struct _device_definition
 	DEVFUNC_PANALL SetPanning;
 	DEVFUNC_SRCCB SetSRateChgCB;	// used to set callback function for realtime sample rate changes
 	
-	UINT32 rwFuncCount;
-	const DEVDEF_RWFUNC* rwFuncs;
+	const DEVDEF_RWFUNC* rwFuncs;	// terminated by (funcPtr == NULL)
 };	// DEV_DEF
 struct _device_info
 {

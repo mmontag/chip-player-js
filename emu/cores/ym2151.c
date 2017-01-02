@@ -60,6 +60,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2151_w},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2151_r},
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, ym2151_write_reg},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =
 {
@@ -75,7 +76,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	3, devFunc_MAME,	// rwFuncs
+	devFunc_MAME,	// rwFuncs
 };
 
 const DEV_DEF* devDefList_YM2151[] =

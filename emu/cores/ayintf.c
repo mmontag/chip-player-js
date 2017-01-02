@@ -26,6 +26,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ay8910_read},
 	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, ay8910_set_clock},
 	{RWF_SRATE | RWF_WRITE, DEVRW_VALUE, 0, ay8910_get_sample_rate},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =
 {
@@ -41,7 +42,7 @@ static DEV_DEF devDef_MAME =
 	NULL,	// SetPanning
 	ay8910_set_srchg_cb,	// SetSampleRateChangeCallback
 	
-	5, devFunc_MAME,	// rwFuncs
+	devFunc_MAME,	// rwFuncs
 };
 #endif
 #ifdef EC_AY8910_EMU2149
@@ -53,6 +54,7 @@ static DEVDEF_RWFUNC devFunc_Emu[] =
 	{RWF_REGISTER | RWF_QUICKREAD, DEVRW_A8D8, 0, PSG_readReg},
 	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, PSG_set_clock},
 	{RWF_SRATE | RWF_WRITE, DEVRW_VALUE, 0, PSG_set_rate},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Emu =
 {
@@ -68,7 +70,7 @@ static DEV_DEF devDef_Emu =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	6, devFunc_Emu,	// rwFuncs
+	devFunc_Emu,	// rwFuncs
 };
 #endif
 

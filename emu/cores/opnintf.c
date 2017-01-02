@@ -32,6 +32,7 @@ static DEVDEF_RWFUNC devFunc_MAME_2203[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2203_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2203_read},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME_2203 =
 {
@@ -47,7 +48,7 @@ static DEV_DEF devDef_MAME_2203 =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc_MAME_2203,	// rwFuncs
+	devFunc_MAME_2203,	// rwFuncs
 };
 
 const DEV_DEF* devDefList_YM2203[] =
@@ -62,6 +63,7 @@ static DEVDEF_RWFUNC devFunc_MAME_2608[] =
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2608_read},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 'B', ym2608_write_pcmromb},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'B', ym2608_alloc_pcmromb},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME_2608 =
 {
@@ -77,7 +79,7 @@ static DEV_DEF devDef_MAME_2608 =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	4, devFunc_MAME_2608,	// rwFuncs
+	devFunc_MAME_2608,	// rwFuncs
 };
 
 const DEV_DEF* devDefList_YM2608[] =
@@ -94,6 +96,7 @@ static DEVDEF_RWFUNC devFunc_MAME_2610[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'A', ym2610_alloc_pcmroma},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 'B', ym2610_write_pcmromb},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 'B', ym2610_alloc_pcmromb},
+	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME_2610 =
 {
@@ -109,7 +112,7 @@ static DEV_DEF devDef_MAME_2610 =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	6, devFunc_MAME_2610,	// rwFuncs
+	devFunc_MAME_2610,	// rwFuncs
 };
 static DEV_DEF devDef_MAME_2610B =
 {
@@ -125,7 +128,7 @@ static DEV_DEF devDef_MAME_2610B =
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	
-	2, devFunc_MAME_2610,	// rwFuncs
+	devFunc_MAME_2610,	// rwFuncs
 };
 
 const DEV_DEF* devDefList_YM2610[] =
