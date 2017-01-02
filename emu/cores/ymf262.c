@@ -2281,8 +2281,6 @@ static OPL3 *OPL3Create(UINT32 clock, UINT32 rate, int type)
 
 	ymf262_set_mutemask(chip, 0x000000);
 
-	// reset chip
-	//OPL3ResetChip(chip);
 	return chip;
 }
 
@@ -2389,9 +2387,25 @@ static UINT8 OPL3TimerOver(OPL3 *chip,UINT8 c)
 
 
 
+static void ymf262_update_req(void* param)
+{
+	ymf262_update_one(param, 0, NULL);
+}
+
 void * ymf262_init(UINT32 clock, UINT32 rate)
 {
-	return OPL3Create(clock,rate,OPL3_TYPE_YMF262);
+	OPL3* YMF262;
+
+	YMF262 = OPL3Create(clock,rate,OPL3_TYPE_YMF262);
+	if (YMF262 == NULL)
+		return NULL;
+
+	OPL3SetUpdateHandler(YMF262, ymf262_update_req, YMF262);
+
+	// reset chip
+	//OPL3ResetChip(chip);
+
+	return YMF262;
 }
 
 void ymf262_shutdown(void *chip)
@@ -2549,86 +2563,15 @@ void ymf262_update_one(void *_chip, UINT32 length, DEV_SMPL **buffers)
 		chan_calc(chip, &chip->P_CH[16]);
 		chan_calc(chip, &chip->P_CH[17]);
 
-		/* accumulator register set #1 */
-		// TODO: make for-loop
-		a =  chip->chanout[0] & chip->pan[0];
-		b =  chip->chanout[0] & chip->pan[1];
-		c =  chip->chanout[0] & chip->pan[2];
-		d =  chip->chanout[0] & chip->pan[3];
-		a += chip->chanout[1] & chip->pan[4];
-		b += chip->chanout[1] & chip->pan[5];
-		c += chip->chanout[1] & chip->pan[6];
-		d += chip->chanout[1] & chip->pan[7];
-		a += chip->chanout[2] & chip->pan[8];
-		b += chip->chanout[2] & chip->pan[9];
-		c += chip->chanout[2] & chip->pan[10];
-		d += chip->chanout[2] & chip->pan[11];
-
-		a += chip->chanout[3] & chip->pan[12];
-		b += chip->chanout[3] & chip->pan[13];
-		c += chip->chanout[3] & chip->pan[14];
-		d += chip->chanout[3] & chip->pan[15];
-		a += chip->chanout[4] & chip->pan[16];
-		b += chip->chanout[4] & chip->pan[17];
-		c += chip->chanout[4] & chip->pan[18];
-		d += chip->chanout[4] & chip->pan[19];
-		a += chip->chanout[5] & chip->pan[20];
-		b += chip->chanout[5] & chip->pan[21];
-		c += chip->chanout[5] & chip->pan[22];
-		d += chip->chanout[5] & chip->pan[23];
-
-		a += chip->chanout[6] & chip->pan[24];
-		b += chip->chanout[6] & chip->pan[25];
-		c += chip->chanout[6] & chip->pan[26];
-		d += chip->chanout[6] & chip->pan[27];
-		a += chip->chanout[7] & chip->pan[28];
-		b += chip->chanout[7] & chip->pan[29];
-		c += chip->chanout[7] & chip->pan[30];
-		d += chip->chanout[7] & chip->pan[31];
-		a += chip->chanout[8] & chip->pan[32];
-		b += chip->chanout[8] & chip->pan[33];
-		c += chip->chanout[8] & chip->pan[34];
-		d += chip->chanout[8] & chip->pan[35];
-
-		/* accumulator register set #2 */
-		a += chip->chanout[9] & chip->pan[36];
-		b += chip->chanout[9] & chip->pan[37];
-		c += chip->chanout[9] & chip->pan[38];
-		d += chip->chanout[9] & chip->pan[39];
-		a += chip->chanout[10] & chip->pan[40];
-		b += chip->chanout[10] & chip->pan[41];
-		c += chip->chanout[10] & chip->pan[42];
-		d += chip->chanout[10] & chip->pan[43];
-		a += chip->chanout[11] & chip->pan[44];
-		b += chip->chanout[11] & chip->pan[45];
-		c += chip->chanout[11] & chip->pan[46];
-		d += chip->chanout[11] & chip->pan[47];
-
-		a += chip->chanout[12] & chip->pan[48];
-		b += chip->chanout[12] & chip->pan[49];
-		c += chip->chanout[12] & chip->pan[50];
-		d += chip->chanout[12] & chip->pan[51];
-		a += chip->chanout[13] & chip->pan[52];
-		b += chip->chanout[13] & chip->pan[53];
-		c += chip->chanout[13] & chip->pan[54];
-		d += chip->chanout[13] & chip->pan[55];
-		a += chip->chanout[14] & chip->pan[56];
-		b += chip->chanout[14] & chip->pan[57];
-		c += chip->chanout[14] & chip->pan[58];
-		d += chip->chanout[14] & chip->pan[59];
-
-		a += chip->chanout[15] & chip->pan[60];
-		b += chip->chanout[15] & chip->pan[61];
-		c += chip->chanout[15] & chip->pan[62];
-		d += chip->chanout[15] & chip->pan[63];
-		a += chip->chanout[16] & chip->pan[64];
-		b += chip->chanout[16] & chip->pan[65];
-		c += chip->chanout[16] & chip->pan[66];
-		d += chip->chanout[16] & chip->pan[67];
-		a += chip->chanout[17] & chip->pan[68];
-		b += chip->chanout[17] & chip->pan[69];
-		c += chip->chanout[17] & chip->pan[70];
-		d += chip->chanout[17] & chip->pan[71];
+		/* accumulator register set #1/#2 */
+		a = b = c = d = 0;
+		for (chn = 0; chn < 18; chn ++)
+		{
+			a += chip->chanout[chn] & chip->pan[chn * 4 + 0];
+			b += chip->chanout[chn] & chip->pan[chn * 4 + 1];
+			c += chip->chanout[chn] & chip->pan[chn * 4 + 2];
+			d += chip->chanout[chn] & chip->pan[chn * 4 + 3];
+		}
 
 		/* store to sound buffer */
 		ch_a[i] = a+c;

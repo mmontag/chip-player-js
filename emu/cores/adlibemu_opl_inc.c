@@ -648,6 +648,11 @@ static void init_tables(void)
 	return;
 }
 
+static void adlibemu_update_req(void* param)
+{
+	ADLIBEMU(getsample)(param, 0, NULL);
+}
+
 void* ADLIBEMU(init)(UINT32 clock, UINT32 samplerate)
 {
 	OPL_DATA* OPL;
@@ -680,6 +685,7 @@ void* ADLIBEMU(init)(UINT32 clock, UINT32 samplerate)
 	OPL->tremtab_add = (Bit32u)((fltype)TREMTAB_SIZE * TREM_FREQ * FIXEDPT_LFO / (fltype)OPL->int_samplerate);
 	OPL->tremtab_pos = 0;
 
+	ADLIBEMU(set_update_handler)(OPL, adlibemu_update_req, OPL);
 	//ADLIBEMU(reset)(OPL);
 
 	return OPL;

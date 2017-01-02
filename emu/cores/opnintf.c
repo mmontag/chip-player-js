@@ -177,12 +177,6 @@ static void device_stop_ym2203(void* param)
 	return;
 }
 
-void ym2203_update_request(void* param)
-{
-	OPN_INF* info = (OPN_INF*)param;
-	devDef_MAME_2203.Update(info->opn, 0, NULL);
-}
-
 static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
@@ -215,12 +209,6 @@ static void device_stop_ym2608(void* param)
 	free(info);
 	
 	return;
-}
-
-void ym2608_update_request(void* param)
-{
-	OPN_INF* info = (OPN_INF*)param;
-	devDef_MAME_2608.Update(info->opn, 0, NULL);
 }
 
 static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -257,12 +245,6 @@ static void device_stop_ym2610(void* param)
 	free(info);
 	
 	return;
-}
-
-void ym2610_update_request(void* param)
-{
-	OPN_INF* info = (OPN_INF*)param;
-	devDef_MAME_2610B.Update(info->opn, 0, NULL);
 }
 
 static void ssg_set_clock(void* param, UINT32 clock)

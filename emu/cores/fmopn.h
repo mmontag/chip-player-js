@@ -41,30 +41,6 @@ struct _ssg_callbacks
 #define MULTIPLY_TIME_BY_INT(t,i)	attotime_mul(t, i)
 #endif
 
-#if BUILD_YM2203
-  /* in 2203intf.c */
-  void ym2203_update_request(void *param);
-  #define ym2203_update_req(chip) ym2203_update_request(chip)
-#endif /* BUILD_YM2203 */
-
-#if BUILD_YM2608
-  /* in 2608intf.c */
-  void ym2608_update_request(void *param);
-  #define ym2608_update_req(chip) ym2608_update_request(chip);
-#endif /* BUILD_YM2608 */
-
-#if (BUILD_YM2610||BUILD_YM2610B)
-  /* in 2610intf.c */
-  void ym2610_update_request(void *param);
-  #define ym2610_update_req(chip) ym2610_update_request(chip);
-#endif /* (BUILD_YM2610||BUILD_YM2610B) */
-
-#if (BUILD_YM2612||BUILD_YM3438)
-  /* in 2612intf.c */
-  void ym2612_update_request(void *param);
-  #define ym2612_update_req(chip) ym2612_update_request(chip);
-#endif /* (BUILD_YM2612||BUILD_YM3438) */
-
 
 
 typedef void (*FM_TIMERHANDLER)(void *param,UINT8 c,INT32 cnt,UINT32 clock);

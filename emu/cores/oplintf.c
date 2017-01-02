@@ -141,12 +141,6 @@ const DEV_DEF* devDefList_Y8950[] =
 
 
 #ifdef EC_YM3812_MAME
-static void stream_update3812_mame(void* param)
-{
-	void** info = (void**)param;
-	devDef3812_MAME.Update(*info, 0, NULL);
-}
-
 static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
@@ -166,7 +160,7 @@ static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	// YM3812 setup
 	//ym3812_set_timer_handler (chip, TimerHandler, chip);
 	//ym3812_set_irq_handler   (chip, IRQHandler, chip);
-	ym3812_set_update_handler(chip, stream_update3812_mame, chip);
+	//ym3812_set_update_handler(chip, stream_update3812_mame, chip);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
@@ -178,12 +172,6 @@ static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 #endif
 
 #ifdef EC_YM3812_ADLIBEMU
-static void stream_update3812_adlibemu(void* param)
-{
-	void** info = (void**)param;
-	devDef3812_AdLibEmu.Update(*info, 0, NULL);
-}
-
 static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
@@ -199,7 +187,6 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 	chip = adlib_OPL2_init(clock, rate);
 	if (chip == NULL)
 		return 0xFF;
-	adlib_OPL2_set_update_handler(chip, stream_update3812_adlibemu, chip);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
@@ -210,12 +197,6 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 }
 #endif
 
-
-static void stream_update3526(void* param)
-{
-	void** info = (void**)param;
-	devDef3526_MAME.Update(*info, 0, NULL);
-}
 
 static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
@@ -236,7 +217,7 @@ static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	// YM3526 setup
 	//ym3526_set_timer_handler (chip, TimerHandler, chip);
 	//ym3526_set_irq_handler   (chip, IRQHandler, chip);
-	ym3526_set_update_handler(chip, stream_update3526, chip);
+	//ym3526_set_update_handler(chip, stream_update3526, chip);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
@@ -246,12 +227,6 @@ static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	return 0x00;
 }
 
-
-static void stream_update8950(void* param)
-{
-	void** info = (void**)param;
-	devDef8950_MAME.Update(*info, 0, NULL);
-}
 
 static UINT8 device_start_y8950(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
@@ -276,7 +251,7 @@ static UINT8 device_start_y8950(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	// YM8950 setup
 	//y8950_set_timer_handler (chip, TimerHandler, chip);
 	//y8950_set_irq_handler   (chip, IRQHandler, chip);
-	y8950_set_update_handler(chip, stream_update8950, chip);
+	//y8950_set_update_handler(chip, stream_update8950, chip);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;

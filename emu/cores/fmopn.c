@@ -2127,6 +2127,11 @@ void ym2203_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 	INTERNAL_TIMER_B(&F2203->OPN.ST,length)
 }
 
+static void ym2203_update_req(void *param)
+{
+	ym2203_update_one(param, 0, NULL);
+}
+
 /* ---------- reset one of chip ---------- */
 void ym2203_reset_chip(void *chip)
 {
@@ -2224,12 +2229,12 @@ void ym2203_write(void *chip,UINT8 a,UINT8 v)
 			(*OPN->ST.SSG->write)(OPN->ST.param,a,v);
 			break;
 		case 0x20:	/* 0x20-0x2f : Mode section */
-			ym2203_update_req(OPN->ST.param);
+			ym2203_update_req(F2203);
 			/* write register */
 			OPNWriteMode(OPN,addr,v);
 			break;
 		default:	/* 0x30-0xff : OPN section */
-			ym2203_update_req(OPN->ST.param);
+			ym2203_update_req(F2203);
 			/* write register */
 			OPNWriteReg(OPN,addr,v);
 		}
@@ -2266,7 +2271,7 @@ UINT8 ym2203_timer_over(void *chip,UINT8 c)
 	}
 	else
 	{	/* Timer A */
-		ym2203_update_req(F2203->OPN.ST.param);
+		ym2203_update_req(F2203);
 		/* timer update */
 		TimerAOver( &(F2203->OPN.ST) );
 		/* CSM mode key,TL control */
@@ -3317,6 +3322,11 @@ void ym2608_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 
 }
 
+static void ym2608_update_req(void *param)
+{
+	ym2608_update_one(param, 0, NULL);
+}
+
 static void YM2608_deltat_status_set(void *chip, UINT8 changebits)
 {
 	YM2608 *F2608 = (YM2608 *)chip;
@@ -3509,7 +3519,7 @@ void ym2608_write(void *chip, UINT8 a,UINT8 v)
 			(*OPN->ST.SSG->write)(OPN->ST.param,a,v);
 			break;
 		case 0x10:	/* 0x10-0x1f : Rhythm section */
-			ym2608_update_req(OPN->ST.param);
+			ym2608_update_req(F2608);
 			FM_ADPCMAWrite(F2608,addr-0x10,v);
 			break;
 		case 0x20:	/* Mode Register */
@@ -3519,12 +3529,12 @@ void ym2608_write(void *chip, UINT8 a,UINT8 v)
 				YM2608IRQMaskWrite(OPN, F2608, v);
 				break;
 			default:
-				ym2608_update_req(OPN->ST.param);
+				ym2608_update_req(F2608);
 				OPNWriteMode(OPN,addr,v);
 			}
 			break;
 		default:	/* OPN section */
-			ym2608_update_req(OPN->ST.param);
+			ym2608_update_req(F2608);
 			OPNWriteReg(OPN,addr,v);
 		}
 		break;
@@ -3540,7 +3550,7 @@ void ym2608_write(void *chip, UINT8 a,UINT8 v)
 
 		addr = OPN->ST.address;
 		F2608->REGS[addr | 0x100] = v;
-		ym2608_update_req(OPN->ST.param);
+		ym2608_update_req(F2608);
 		switch( addr & 0xf0 )
 		{
 		case 0x00:	/* DELTAT PORT */
@@ -3630,7 +3640,7 @@ UINT8 ym2608_timer_over(void *chip,UINT8 c)
 		break;
 	case 0:
 		{	/* Timer A */
-			ym2608_update_req(F2608->OPN.ST.param);
+			ym2608_update_req(F2608);
 			/* timer update */
 			TimerAOver( &(F2608->OPN.ST) );
 			/* CSM mode key,TL controll */
@@ -3836,6 +3846,11 @@ void ym2610_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 	}
 	INTERNAL_TIMER_B(&OPN->ST,length)
 
+}
+
+static void ym2610_update_req(void *param)
+{
+	ym2610b_update_one(param, 0, NULL);
 }
 
 #if BUILD_YM2610B
@@ -4145,7 +4160,7 @@ void ym2610_write(void *chip, UINT8 a, UINT8 v)
 			(*OPN->ST.SSG->write)(OPN->ST.param,a,v);
 			break;
 		case 0x10: /* DeltaT ADPCM */
-			ym2610_update_req(OPN->ST.param);
+			ym2610_update_req(F2610);
 
 			switch(addr)
 			{
@@ -4187,11 +4202,11 @@ void ym2610_write(void *chip, UINT8 a, UINT8 v)
 
 			break;
 		case 0x20:	/* Mode Register */
-			ym2610_update_req(OPN->ST.param);
+			ym2610_update_req(F2610);
 			OPNWriteMode(OPN,addr,v);
 			break;
 		default:	/* OPN section */
-			ym2610_update_req(OPN->ST.param);
+			ym2610_update_req(F2610);
 			/* write register */
 			OPNWriteReg(OPN,addr,v);
 		}
@@ -4206,7 +4221,7 @@ void ym2610_write(void *chip, UINT8 a, UINT8 v)
 		if (F2610->addr_A1 != 1)
 			break;	/* verified on real YM2608 */
 
-		ym2610_update_req(OPN->ST.param);
+		ym2610_update_req(F2610);
 		addr = OPN->ST.address;
 		F2610->REGS[addr | 0x100] = v;
 		if( addr < 0x30 )
@@ -4258,7 +4273,7 @@ UINT8 ym2610_timer_over(void *chip,UINT8 c)
 	}
 	else
 	{	/* Timer A */
-		ym2610_update_req(F2610->OPN.ST.param);
+		ym2610_update_req(F2610);
 		/* timer update */
 		TimerAOver( &(F2610->OPN.ST) );
 		/* CSM mode key,TL controll */

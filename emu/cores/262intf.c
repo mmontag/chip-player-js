@@ -79,12 +79,6 @@ const DEV_DEF* devDefList_YMF262[] =
 
 
 #ifdef EC_YMF262_MAME
-static void stream_update262_mame(void* param)
-{
-	void** info = (void**)param;
-	devDef262_MAME.Update(*info, 0, NULL);
-}
-
 static UINT8 device_start_ymf262_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
@@ -104,7 +98,7 @@ static UINT8 device_start_ymf262_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	// YMF262 setup
 	//ymf262_set_timer_handler (chip, TimerHandler, chip);
 	//ymf262_set_irq_handler   (chip, IRQHandler, chip);
-	ymf262_set_update_handler(chip, stream_update262_mame, chip);
+	//ymf262_set_update_handler(chip, stream_update262_mame, chip);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
@@ -116,12 +110,6 @@ static UINT8 device_start_ymf262_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 #endif
 
 #ifdef EC_YMF262_ADLIBEMU
-static void stream_update262_adlibemu(void* param)
-{
-	void** info = (void**)param;
-	devDef262_AdLibEmu.Update(*info, 0, NULL);
-}
-
 static UINT8 device_start_ymf262_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
@@ -137,7 +125,6 @@ static UINT8 device_start_ymf262_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 	chip = adlib_OPL3_init(clock, rate);
 	if (chip == NULL)
 		return 0xFF;
-	adlib_OPL3_set_update_handler(chip, stream_update262_adlibemu, chip);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;

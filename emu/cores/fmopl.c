@@ -1985,10 +1985,12 @@ static UINT8 OPLTimerOver(FM_OPL *OPL,UINT8 c)
 }
 
 
-#define MAX_OPL_CHIPS 2
-
-
 #if (BUILD_YM3812)
+
+static void ym3812_update_req(void *chip)
+{
+	ym3812_update_one(chip, 0, NULL);
+}
 
 void * ym3812_init(UINT32 clock, UINT32 rate)
 {
@@ -1997,6 +1999,7 @@ void * ym3812_init(UINT32 clock, UINT32 rate)
 	if (YM3812 == NULL)
 		return NULL;
 	
+	OPLSetUpdateHandler(YM3812, ym3812_update_req, YM3812);
 	//ym3812_reset_chip(YM3812);
 	return YM3812;
 }
@@ -2114,6 +2117,11 @@ void ym3812_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 
 #if (BUILD_YM3526)
 
+static void ym3526_update_req(void* param)
+{
+	ym3526_update_one(param, 0, NULL);
+}
+
 void *ym3526_init(UINT32 clock, UINT32 rate)
 {
 	/* emulator create */
@@ -2121,6 +2129,7 @@ void *ym3526_init(UINT32 clock, UINT32 rate)
 	if (YM3526 == NULL)
 		return NULL;
 	
+	OPLSetUpdateHandler(YM3526, ym3526_update_req, YM3526);
 	//ym3526_reset_chip(YM3526);
 	return YM3526;
 }
@@ -2239,6 +2248,11 @@ void ym3526_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 
 #if BUILD_Y8950
 
+static void y8950_update_req(void* param)
+{
+	y8950_update_one(param, 0, NULL);
+}
+
 static void Y8950_deltat_status_set(void *chip, UINT8 changebits)
 {
 	FM_OPL *Y8950 = (FM_OPL *)chip;
@@ -2269,6 +2283,8 @@ void *y8950_init(UINT32 clock, UINT32 rate)
 
 	//Y8950->deltat->write_time = 10.0 / clock;		/* a single byte write takes 10 cycles of main clock */
 	//Y8950->deltat->read_time  = 8.0 / clock;		/* a single byte read takes 8 cycles of main clock */
+
+	OPLSetUpdateHandler(Y8950, y8950_update_req, Y8950);
 	// reset
 	//y8950_reset_chip(Y8950);
 

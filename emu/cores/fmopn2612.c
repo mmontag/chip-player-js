@@ -2359,6 +2359,11 @@ void ym2612_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 	INTERNAL_TIMER_B(&OPN->ST,length)
 }
 
+static void ym2612_update_req(void *param)
+{
+	ym2612_update_one(param, 0, NULL);
+}
+
 /* initialize YM2612 emulator(s) */
 void * ym2612_init(void *param, UINT32 clock, UINT32 rate,
                FM_TIMERHANDLER timer_handler,FM_IRQHANDLER IRQHandler)
@@ -2490,7 +2495,7 @@ void ym2612_write(void *chip, UINT8 a, UINT8 v)
 			switch( addr )
 			{
 			case 0x2a:	/* DAC data (YM2612) */
-				//ym2612_update_req(F2612->OPN.ST.param);
+				//ym2612_update_req(F2612);
 				F2612->dacout = ((int)v - 0x80) << 6;	/* level unknown */
 				break;
 			case 0x2b:	/* DAC Sel  (YM2612) */
@@ -2502,13 +2507,13 @@ void ym2612_write(void *chip, UINT8 a, UINT8 v)
 				F2612->dac_test = v & 0x20;
 				break;
 			default:	/* OPN section */
-				ym2612_update_req(F2612->OPN.ST.param);
+				ym2612_update_req(F2612);
 				/* write register */
 				OPNWriteMode(&(F2612->OPN),addr,v);
 			}
 			break;
 		default:	/* 0x30-0xff OPN section */
-			ym2612_update_req(F2612->OPN.ST.param);
+			ym2612_update_req(F2612);
 			/* write register */
 			OPNWriteReg(&(F2612->OPN),addr,v);
 		}
@@ -2525,7 +2530,7 @@ void ym2612_write(void *chip, UINT8 a, UINT8 v)
 
 		addr = F2612->OPN.ST.address;
 		F2612->REGS[addr | 0x100] = v;
-		ym2612_update_req(F2612->OPN.ST.param);
+		ym2612_update_req(F2612);
 		OPNWriteReg(&(F2612->OPN),addr | 0x100,v);
 		break;
 	}
@@ -2560,7 +2565,7 @@ UINT8 ym2612_timer_over(void *chip,UINT8 c)
 	}
 	else
 	{	/* Timer A */
-		ym2612_update_req(F2612->OPN.ST.param);
+		ym2612_update_req(F2612);
 		/* timer update */
 		TimerAOver( &(F2612->OPN.ST) );
 		/* CSM mode key,TL controll */

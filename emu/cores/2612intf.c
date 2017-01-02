@@ -116,12 +116,6 @@ static UINT8 device_start_ym2612_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	retDevInf->devDef = &devDef_MAME;
 	return 0x00;
 }
-
-void ym2612_update_request(void *param)
-{
-	void** info = (void**)param;
-	devDef_MAME.Update(*info, 0, NULL);
-}
 #endif
 
 #ifdef EC_YM2612_GENS
