@@ -79,7 +79,10 @@
 
 #define LINKDEV_OPL3	0x00
 
+typedef struct _YMF278BChip YMF278BChip;
+
 static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs);
+static void refresh_opl3_volume(YMF278BChip* chip);
 static void init_opl3_devinfo(DEV_INFO* devInf, const DEV_GEN_CFG* baseCfg);
 static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_ymf278b(void *info);
@@ -177,9 +180,9 @@ typedef struct
 	void* chip;
 	void (*write)(void *param, UINT8 address, UINT8 data);
 	void (*reset)(void *param);
-	void (*setVol)(void *param, UINT16 volume);
+	void (*setVol)(void *param, UINT16 volLeft, UINT16 volRight);
 } OPL3FM;
-typedef struct
+struct _YMF278BChip
 {
 	void* chipInf;
 	
@@ -215,7 +218,7 @@ typedef struct
 	UINT8 last_fm_data;
 	OPL3FM fm;
 	UINT8 FMEnabled;	// that saves a whole lot of CPU
-} YMF278BChip;
+};
 
 
 #define EG_SH	16	// 16.16 fixed point (EG timing)
@@ -248,7 +251,7 @@ const INT32 pan_right[16] = {
 
 // Mixing levels, units are -3dB, and add some marging to avoid clipping
 const INT32 mix_level[8] = {
-	8, 16, 24, 32, 40, 48, 56, 256
+	8, 16, 24, 32, 40, 48, 56, 256+8
 };
 
 // decay level table (3dB per step)
@@ -846,7 +849,7 @@ static void ymf278b_B_w(YMF278BChip *chip, UINT8 reg, UINT8 data)
 	switch(reg)
 	{
 		case 0x05:	// OPL3/OPL4 Enable
-			// actually Bit 1 enables OPL4 WaveTable Synth
+			// Bit 1 enables OPL4 WaveTable Synth
 			chip->exp = data;
 			break;
 		default:
@@ -1037,9 +1040,9 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 			break;
 
 		case 0xF8:
-			// TODO use these
 			chip->fm_l = data & 0x7;
 			chip->fm_r = (data >> 3) & 0x7;
+			refresh_opl3_volume(chip);
 			break;
 
 		case 0xF9:
@@ -1189,6 +1192,24 @@ static void opl3dummy_reset(void* param)
 	return;
 }
 
+#define OPL4FM_VOL_BALANCE	0xB5	// 0x100 = 100%
+static void refresh_opl3_volume(YMF278BChip* chip)
+{
+	INT32 volL, volR;
+	
+	if (chip->fm.setVol == NULL)
+		return;
+	
+	volL = mix_level[chip->fm_l] - 8;
+	volR = mix_level[chip->fm_r] - 8;
+	// chip->volume[] uses 0x8000 = 100%
+	volL = (chip->volume[volL] * OPL4FM_VOL_BALANCE) >> 15;
+	volR = (chip->volume[volR] * OPL4FM_VOL_BALANCE) >> 15;
+	chip->fm.setVol(chip->fm.chip, (UINT16)volL, (UINT16)volR);
+	
+	return;
+}
+
 static void init_opl3_devinfo(DEV_INFO* devInf, const DEV_GEN_CFG* baseCfg)
 {
 	DEVLINK_INFO* devLink;
@@ -1281,6 +1302,7 @@ static void device_reset_ymf278b(void *info)
 	chip->wavetblhdr = chip->memmode = chip->memadr = 0;
 	chip->fm_l = chip->fm_r = 3;
 	chip->pcm_l = chip->pcm_r = 0;
+	refresh_opl3_volume(chip);
 	//busyTime = time;
 	//loadTime = time;
 }
