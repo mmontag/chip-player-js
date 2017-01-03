@@ -67,6 +67,8 @@
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"
+#include "../SoundDevs.h"
+#include "../SoundEmu.h"
 #include "../EmuHelper.h"
 #include "ymf278b.h"
 
@@ -75,10 +77,14 @@
 #endif
 
 
+#define LINKDEV_OPL3	0x00
+
 static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs);
+static void init_opl3_devinfo(DEV_INFO* devInf, const DEV_GEN_CFG* baseCfg);
 static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_ymf278b(void *info);
 static void device_reset_ymf278b(void *info);
+static UINT8 device_ymf278b_link_opl3(void* param, UINT8 devID, const DEV_INFO* defInfOPL3);
 
 static UINT8 ymf278b_r(void *info, UINT8 offset);
 static void ymf278b_w(void *info, UINT8 offset, UINT8 data);
@@ -111,7 +117,7 @@ static DEV_DEF devDef =
 	ymf278b_set_mute_mask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
-	NULL,	// LinkDevice
+	device_ymf278b_link_opl3,	// LinkDevice
 	
 	devFunc,	// rwFuncs
 };
@@ -168,6 +174,13 @@ typedef struct
 
 typedef struct
 {
+	void* chip;
+	void (*write)(void *param, UINT8 address, UINT8 data);
+	void (*reset)(void *param);
+	void (*setVol)(void *param, UINT16 volume);
+} OPL3FM;
+typedef struct
+{
 	void* chipInf;
 	
 	YMF278BSlot slots[24];
@@ -200,7 +213,7 @@ typedef struct
 	UINT8 regs[256];
 	
 	UINT8 last_fm_data;
-	//void *fmchip;
+	OPL3FM fm;
 	UINT8 FMEnabled;	// that saves a whole lot of CPU
 } YMF278BChip;
 
@@ -588,26 +601,29 @@ INLINE void ymf278b_advance(YMF278BChip* chip)
 
 INLINE UINT8 ymf278b_readMem(YMF278BChip* chip, offs_t address)
 {
+	address &= 0x3fffff;
 	if (address < chip->ROMSize)
-		return chip->rom[address&0x3fffff];
+		return chip->rom[address];
 	else if (address < chip->ROMSize + chip->RAMSize)
-		return chip->ram[address - (chip->ROMSize&0x3fffff)];
+		return chip->ram[address - chip->ROMSize];
 	else
 		return 0xFF; // TODO check
 }
 
 INLINE UINT8* ymf278b_readMemAddr(YMF278BChip* chip, offs_t address)
 {
+	address &= 0x3fffff;
 	if (address < chip->ROMSize)
-		return &chip->rom[address&0x3fffff];
+		return &chip->rom[address];
 	else if (address < chip->ROMSize + chip->RAMSize)
-		return &chip->ram[address - (chip->ROMSize&0x3fffff)];
+		return &chip->ram[address - chip->ROMSize];
 	else
 		return NULL; // TODO check
 }
 
 INLINE void ymf278b_writeMem(YMF278BChip* chip, offs_t address, UINT8 value)
 {
+	address &= 0x3fffff;
 	if (address < chip->ROMSize)
 		return; // can't write to ROM
 	else if (address < chip->ROMSize + chip->RAMSize)
@@ -817,7 +833,6 @@ static void ymf278b_A_w(YMF278BChip *chip, UINT8 reg, UINT8 data)
 //#ifdef _DEBUG
 //			logerror("YMF278B:  Port A write %02x, %02x\n", reg, data);
 //#endif
-			//ymf262_write(chip->fmchip, 1, data);
 			if ((reg & 0xF0) == 0xB0 && (data & 0x20))	// Key On set
 				chip->FMEnabled = 0x01;
 			else if (reg == 0xBD && (data & 0x1F))	// one of the Rhythm bits set
@@ -832,11 +847,9 @@ static void ymf278b_B_w(YMF278BChip *chip, UINT8 reg, UINT8 data)
 	{
 		case 0x05:	// OPL3/OPL4 Enable
 			// actually Bit 1 enables OPL4 WaveTable Synth
-			//ymf262_write(chip->fmchip, 3, data & ~0x02);
 			chip->exp = data;
 			break;
 		default:
-			//ymf262_write(chip->fmchip, 3, data);
 			if ((reg & 0xF0) == 0xB0 && (data & 0x20))
 				chip->FMEnabled = 0x01;
 			break;
@@ -1128,12 +1141,13 @@ static void ymf278b_w(void *info, UINT8 offset, UINT8 data)
 		case 2:
 			chip->port_AB = data;
 			chip->lastport = (offset>>1) & 1;
-			//ymf262_write(chip->fmchip, offset, data);
+			chip->fm.write(chip->fm.chip, offset, data);
 			break;
 
 		case 1:
 		case 3:
 			chip->last_fm_data = data;
+			chip->fm.write(chip->fm.chip, offset, data);
 			if (! chip->lastport)
 				ymf278b_A_w(chip, chip->port_AB, data);
 			else
@@ -1165,6 +1179,35 @@ static void ymf278b_clearRam(YMF278BChip* chip)
 	memset(chip->ram, 0, chip->RAMSize);
 }
 
+static void opl3dummy_write(void* param, UINT8 address, UINT8 data)
+{
+	return;
+}
+
+static void opl3dummy_reset(void* param)
+{
+	return;
+}
+
+static void init_opl3_devinfo(DEV_INFO* devInf, const DEV_GEN_CFG* baseCfg)
+{
+	DEVLINK_INFO* devLink;
+	
+	devInf->linkDevCount = 1;
+	devInf->linkDevs = (DEVLINK_INFO*)calloc(devInf->linkDevCount, sizeof(DEVLINK_INFO));
+	
+	devLink = &devInf->linkDevs[0];
+	devLink->devID = DEVID_YMF262;
+	devLink->linkID = LINKDEV_OPL3;
+	
+	devLink->cfg = (DEV_GEN_CFG*)calloc(1, sizeof(DEV_GEN_CFG));
+	*devLink->cfg = *baseCfg;
+	devLink->cfg->clock = baseCfg->clock * 8 / 19;	// * 288 / 684
+	devLink->cfg->emuCore = 0;
+	
+	return;
+}
+
 static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	YMF278BChip *chip;
@@ -1178,7 +1221,7 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	rate = cfg->clock / 768;
 	//SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	//chip->fmchip = ymf262_init(clock * 8 / 19, rate);
+	device_ymf278b_link_opl3(chip, LINKDEV_OPL3, NULL);
 	chip->FMEnabled = 0x00;
 	
 	chip->clock = cfg->clock;
@@ -1203,6 +1246,7 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	chip->chipInf = chip;
 	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, rate, &devDef);
+	init_opl3_devinfo(retDevInf, cfg);
 
 	return 0x00;
 }
@@ -1211,7 +1255,6 @@ static void device_stop_ymf278b(void *info)
 {
 	YMF278BChip* chip = (YMF278BChip *)info;
 	
-	//ymf262_shutdown(chip->fmchip);
 	free(chip->ram);	chip->ram = NULL;
 	free(chip->rom);	chip->rom = NULL;
 	free(chip);
@@ -1224,7 +1267,7 @@ static void device_reset_ymf278b(void *info)
 	YMF278BChip* chip = (YMF278BChip *)info;
 	int i;
 	
-	//ymf262_reset_chip(chip->fmchip);
+	chip->fm.reset(chip->fm.chip);
 	chip->FMEnabled = 0x00;
 	chip->exp = 0x00;
 	
@@ -1236,9 +1279,50 @@ static void device_reset_ymf278b(void *info)
 		ymf278b_C_w(chip, i, 0);
 	
 	chip->wavetblhdr = chip->memmode = chip->memadr = 0;
-	chip->fm_l = chip->fm_r = chip->pcm_l = chip->pcm_r = 0;
+	chip->fm_l = chip->fm_r = 3;
+	chip->pcm_l = chip->pcm_r = 0;
 	//busyTime = time;
 	//loadTime = time;
+}
+
+static UINT8 get_opl3_funcs(const DEV_DEF* devDef, OPL3FM* retFuncs)
+{
+	UINT8 retVal;
+	
+	retVal = SndEmu_GetDeviceFunc(devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&retFuncs->write);
+	if (retVal)
+		return retVal;
+	retFuncs->setVol = NULL;
+	
+	if (devDef->Reset == NULL)
+		return 0xFF;
+	retFuncs->reset = devDef->Reset;
+	return 0x00;
+}
+
+static UINT8 device_ymf278b_link_opl3(void* param, UINT8 devID, const DEV_INFO* defInfOPL3)
+{
+	YMF278BChip* chip = (YMF278BChip *)param;
+	UINT8 retVal;
+	
+	if (devID != LINKDEV_OPL3)
+		return EERR_UNK_DEVICE;
+	
+	if (defInfOPL3 == NULL)
+	{
+		chip->fm.chip = NULL;
+		chip->fm.write = opl3dummy_write;
+		chip->fm.reset = opl3dummy_reset;
+		chip->fm.setVol = NULL;
+		retVal = 0x00;
+	}
+	else
+	{
+		retVal = get_opl3_funcs(defInfOPL3->devDef, &chip->fm);
+		if (! retVal)
+			chip->fm.chip = defInfOPL3->dataPtr;
+	}
+	return retVal;
 }
 
 static void ymf278b_alloc_rom(void* info, UINT32 memsize)
