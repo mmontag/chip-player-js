@@ -493,6 +493,12 @@ static void InitVGMChips(void)
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 			}
 			break;
+		case DEVID_32X_PWM:
+			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
+			if (retVal)
+				break;
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, (void**)&cDev->writeD16);
+			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
@@ -737,6 +743,7 @@ typedef struct
 #define CMDTYPE_O16_D8		0x05	// Offset (16-bit) + Data (8-bit)
 #define CMDTYPE_SPCM_MEM	0x80	// SegaPCM Memory Write
 #define CMDTYPE_RF5C_MEM	0x81	// RF5Cxx Memory Write
+#define CMDTYPE_PWM_REG		0x82	// PWM register write (4-bit offset, 12-bit data)
 static const VGM_CMDTYPES VGM_CMDS_50[0x10] =
 {
 	{0x00,	CMDTYPE_DUMMY},		// 50 SN76496 (handled separately)
@@ -760,7 +767,7 @@ static const VGM_CMDTYPES VGM_CMDS_B0[0x10] =
 {
 	{0x05,	CMDTYPE_O8_D8},		// B0 RF5C68
 	{0x10,	CMDTYPE_O8_D8},		// B1 RF5C164
-	{0x11,	CMDTYPE_O8_D8},		// B2 PWM
+	{0x11,	CMDTYPE_PWM_REG},	// B2 PWM
 	{0x13,	CMDTYPE_O8_D8},		// B3 GameBoy DMG
 	{0x14,	CMDTYPE_O8_D8},		// B4 NES APU
 	{0x15,	CMDTYPE_O8_D8},		// B5 MultiPCM
@@ -1005,6 +1012,20 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 					memOfs &= 0x7FFF;
 				}
 				SendChipCommand_MemData8(cmdType.chipID, chipID, memOfs, data[0x03]);
+			}
+			break;
+		case CMDTYPE_PWM_REG:	// PWM register write (4-bit offset, 12-bit data)
+			{
+				UINT8 ofs;
+				UINT16 value;
+				VGM_CHIPDEV* cDev;
+				
+				ofs = (data[0x01] & 0xF0) >> 4;
+				value = ((data[0x01] & 0x0F) << 8) | ((data[0x02]) << 0);
+				
+				cDev = &VGMChips[cmdType.chipID];
+				if (cDev->writeD16 != NULL)
+					cDev->writeD16(cDev->defInf.dataPtr, ofs, value);
 			}
 			break;
 		}

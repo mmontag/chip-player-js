@@ -168,6 +168,7 @@
     <ClCompile Include="emu\cores\fmopn2612.c" />
     <ClCompile Include="emu\cores\oplintf.c" />
     <ClCompile Include="emu\cores\opnintf.c" />
+    <ClCompile Include="emu\cores\pwm.c" />
     <ClCompile Include="emu\cores\rf5c68.c" />
     <ClCompile Include="emu\cores\rf5cintf.c" />
     <ClCompile Include="emu\cores\scd_pcm.c" />
@@ -206,6 +207,7 @@
     <ClInclude Include="emu\cores\opll_281btone.h" />
     <ClInclude Include="emu\cores\opll_vrc7tone.h" />
     <ClInclude Include="emu\cores\opnintf.h" />
+    <ClInclude Include="emu\cores\pwm.h" />
     <ClInclude Include="emu\cores\rf5c68.h" />
     <ClInclude Include="emu\cores\rf5cintf.h" />
     <ClInclude Include="emu\cores\scd_pcm.h" />
