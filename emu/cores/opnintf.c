@@ -178,7 +178,7 @@ static AY8910_CFG* get_ssg_config(const DEV_GEN_CFG* cfg, UINT32 clockDiv, UINT8
 	
 	ssgCfg = (AY8910_CFG*)calloc(1, sizeof(AY8910_CFG));
 	ssgCfg->_genCfg = *cfg;
-	ssgCfg->_genCfg.clock = cfg->clock / clockDiv / 2;
+	ssgCfg->_genCfg.clock = CHPCLK_CLOCK(cfg->clock) / clockDiv / 2;
 	ssgCfg->_genCfg.emuCore = 0;
 	ssgCfg->chipType = ssgType;
 	ssgCfg->chipFlags = 0x01;
