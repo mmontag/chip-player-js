@@ -19,6 +19,8 @@ int __cdecl _getch(void);	// from conio.h
 #define	Sleep(msec)	usleep(msec * 1000)
 #endif
 
+#define VGM_LONG_UPDATE	1
+
 #include <common_def.h>
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
@@ -121,6 +123,7 @@ struct _vgm_chip_device
 	VGM_LINKCDEV* linkDev;
 	DEVFUNC_WRITE_A8D8 write8;		// write 8-bit data to 8-bit register/offset
 	DEVFUNC_WRITE_A16D8 writeM8;	// write 8-bit data to 16-bit memory offset
+	DEVFUNC_WRITE_A8D16 writeD16;	// write 16-bit data to 8-bit register/offset
 	DEVFUNC_WRITE_MEMSIZE romSize;
 	DEVFUNC_WRITE_BLOCK romWrite;
 	DEVFUNC_WRITE_MEMSIZE romSizeB;
@@ -129,6 +132,7 @@ struct _vgm_chip_device
 
 
 int main(int argc, char* argv[]);
+static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs);
 static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
 static void SetupDirectSound(void* audDrv);
 static void InitVGMChips(void);
@@ -274,15 +278,37 @@ Exit_AudDeinit:
 	return 0;
 }
 
+static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs)
+{
+	UINT8 curChip;
+	VGM_CHIPDEV* cDev;
+	VGM_LINKCDEV* clDev;
+	
+	ReadVGMFile(smplCount);
+	// I know that using a for-loop has a bad performance, but it's just for testing anyway.
+	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
+	{
+		cDev = &VGMChips[curChip];
+		if (cDev->defInf.dataPtr != NULL)
+			Resmpl_Execute(&cDev->resmpl, smplCount, &smplData[smplOfs]);
+		clDev = cDev->linkDev;
+		while(clDev != NULL)
+		{
+			if (clDev->defInf.dataPtr != NULL)
+				Resmpl_Execute(&clDev->resmpl, smplCount, &smplData[smplOfs]);
+			clDev = clDev->linkDev;
+		};
+	}
+	
+	return;
+}
+
 static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 {
 	UINT32 smplCount;
 	INT16* SmplPtr16;
 	UINT32 curSmpl;
 	WAVE_32BS fnlSmpl;
-	UINT8 curChip;
-	VGM_CHIPDEV* cDev;
-	VGM_LINKCDEV* clDev;
 	
 	if (! canRender)
 	{
@@ -295,25 +321,15 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 		smplCount = smplAlloc;
 	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));
 	
-	ReadVGMFile(smplCount);
-	// I know that using a for-loop has a bad performance, but it's just for testing anyway.
-	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
-	{
-		cDev = &VGMChips[curChip];
-		if (cDev->defInf.dataPtr != NULL)
-			Resmpl_Execute(&cDev->resmpl, smplCount, smplData);
-		clDev = cDev->linkDev;
-		while(clDev != NULL)
-		{
-			if (clDev->defInf.dataPtr != NULL)
-				Resmpl_Execute(&clDev->resmpl, smplCount, smplData);
-			clDev = clDev->linkDev;
-		};
-	}
-	
+#if VGM_LONG_UPDATE
+	ProcessVGM(smplCount, 0);
+#endif
 	SmplPtr16 = (INT16*)data;
 	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
 	{
+#if ! VGM_LONG_UPDATE
+		ProcessVGM(1, curSmpl);
+#endif
 		fnlSmpl.L = smplData[curSmpl].L >> 8;
 		fnlSmpl.R = smplData[curSmpl].R >> 8;
 		if (fnlSmpl.L < -0x8000)
