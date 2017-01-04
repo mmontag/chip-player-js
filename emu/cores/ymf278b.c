@@ -135,8 +135,8 @@ const DEV_DEF* devDefList_YMF278B[] =
 typedef struct
 {
 	UINT32 startaddr;
-	UINT32 loopaddr;
-	UINT32 endaddr;
+	UINT16 loopaddr;
+	UINT16 endaddr;
 	UINT32 step;	/* fixed-point frequency step */
 	UINT32 stepptr;	/* fixed-point pointer into the sample */
 	UINT16 pos;
@@ -770,7 +770,7 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 				sl->sample1 = sl->sample2;
 				
 				sl->sample2 = ymf278b_getSample(chip, sl);
-				if (sl->pos == sl->endaddr)
+				if (sl->pos >= sl->endaddr)
 					sl->pos = sl->pos - sl->endaddr + sl->loopaddr;
 				else
 					sl->pos ++;

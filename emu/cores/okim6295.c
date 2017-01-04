@@ -38,12 +38,6 @@
 #include "../EmuCores.h"
 #include "okim6295.h"
 
-#define FALSE	0
-#define TRUE	1
-
-//#define MAX_SAMPLE_CHUNK	10000
-#define MAX_SAMPLE_CHUNK	0x100	// enough for 10 ms (4 MHz clock)
-
 typedef struct _okim6295_state okim6295_state;
 
 
@@ -70,8 +64,8 @@ static void okim6295_set_srchg_cb(void* chip, DEVCB_SRATE_CHG CallbackFunc, void
 */
 struct adpcm_state
 {
-	INT32	signal;
-	INT32	step;
+	INT16	signal;
+	INT16	step;
 };
 static void reset_adpcm(struct adpcm_state *state);
 static INT16 clock_adpcm(struct adpcm_state *state, UINT8 nibble);
@@ -87,7 +81,7 @@ struct ADPCMVoice
 	UINT32 count;			/* total samples to play */
 
 	struct adpcm_state adpcm;/* current ADPCM state */
-	UINT32 volume;			/* output volume */
+	INT32 volume;			/* output volume */
 	UINT8 Muted;
 };
 
@@ -281,9 +275,9 @@ static INT16 clock_adpcm(struct adpcm_state *state, UINT8 nibble)
 #define NMK_BANKMASK	(NMK_BANKSIZE - 1)		// 0xFFFF
 #define NMK_ROMBASE		(4 * NMK_BANKSIZE)		// 0x40000
 
-static UINT8 memory_raw_read_byte(okim6295_state *chip, offs_t offset)
+static UINT8 memory_raw_read_byte(okim6295_state *chip, UINT32 offset)
 {
-	offs_t CurOfs;
+	UINT32 CurOfs;
 	
 	if (! chip->nmk_mode)
 	{
@@ -312,14 +306,14 @@ static UINT8 memory_raw_read_byte(okim6295_state *chip, offs_t offset)
 		return 0x00;
 }
 
-static void generate_adpcm(okim6295_state *chip, struct ADPCMVoice *voice, INT16 *buffer, int samples)
+static void generate_adpcm(okim6295_state *chip, struct ADPCMVoice *voice, DEV_SMPL *buffer, int samples)
 {
 	/* if this voice is active */
 	if (voice->playing)
 	{
-		offs_t base = voice->base_offset;
-		int sample = voice->sample;
-		int count = voice->count;
+		UINT32 base = voice->base_offset;
+		UINT32 sample = voice->sample;
+		UINT32 count = voice->count;
 
 		/* loop while we still have samples to generate */
 		while (samples)
@@ -329,7 +323,7 @@ static void generate_adpcm(okim6295_state *chip, struct ADPCMVoice *voice, INT16
 
 			/* output to the buffer, scaling by the volume */
 			/* signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767 */
-			*buffer++ = clock_adpcm(&voice->adpcm, nibble) * voice->volume / 2;
+			*buffer++ += clock_adpcm(&voice->adpcm, nibble) * voice->volume / 2;
 			samples--;
 
 			/* next! */
@@ -343,10 +337,6 @@ static void generate_adpcm(okim6295_state *chip, struct ADPCMVoice *voice, INT16
 		/* update the parameters */
 		voice->sample = sample;
 	}
-
-	/* fill the rest with silence */
-	while (samples--)
-		*buffer++ = 0;
 }
 
 
@@ -387,24 +377,7 @@ static void okim6295_update(void* info, UINT32 samples, DEV_SMPL** outputs)
 	{
 		struct ADPCMVoice *voice = &chip->voice[i];
 		if (! voice->Muted)
-		{
-			DEV_SMPL *buffer = outputs[0];
-			INT16 sample_data[MAX_SAMPLE_CHUNK];	// TODO: move into chip struct
-			int remaining = samples;
-
-			/* loop while we have samples remaining */
-			while (remaining)
-			{
-				int samples = (remaining > MAX_SAMPLE_CHUNK) ? MAX_SAMPLE_CHUNK : remaining;
-				int samp;
-
-				generate_adpcm(chip, voice, sample_data, samples);
-				for (samp = 0; samp < samples; samp++)
-					*buffer++ += sample_data[samp];
-
-				remaining -= samples;
-			}
-		}
+			generate_adpcm(chip, voice, outputs[0], samples);
 	}
 	
 	memcpy(outputs[1], outputs[0], samples * sizeof(*outputs[0]));
