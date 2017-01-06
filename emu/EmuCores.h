@@ -8,5 +8,6 @@
 #define FCC_GENS	0x47454E53	// Gens
 #define FCC_ADLE	0x41444C45	// AdLibEmu
 #define FCC_OMSX	0x4F4D5358	// openMSX
+#define FCC_NSFP	0x4E534650	// NSFPlay
 
 #endif	// __EMUCORES_H__

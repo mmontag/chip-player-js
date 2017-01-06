@@ -155,6 +155,11 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/emu2149.o \
 	$(LIBEMUOBJ)/cores/pwm.o \
 	$(LIBEMUOBJ)/cores/ay8910.o \
+	$(LIBEMUOBJ)/cores/nesintf.o \
+	$(LIBEMUOBJ)/cores/nes_apu.o \
+	$(LIBEMUOBJ)/cores/np_nes_apu.o \
+	$(LIBEMUOBJ)/cores/np_nes_dmc.o \
+	$(LIBEMUOBJ)/cores/np_nes_fds.o \
 	$(LIBEMUOBJ)/cores/okim6295.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o

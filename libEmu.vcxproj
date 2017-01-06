@@ -166,6 +166,11 @@
     <ClCompile Include="emu\cores\fmopl.c" />
     <ClCompile Include="emu\cores\fmopn.c" />
     <ClCompile Include="emu\cores\fmopn2612.c" />
+    <ClCompile Include="emu\cores\nesintf.c" />
+    <ClCompile Include="emu\cores\nes_apu.c" />
+    <ClCompile Include="emu\cores\np_nes_apu.c" />
+    <ClCompile Include="emu\cores\np_nes_dmc.c" />
+    <ClCompile Include="emu\cores\np_nes_fds.c" />
     <ClCompile Include="emu\cores\oplintf.c" />
     <ClCompile Include="emu\cores\opnintf.c" />
     <ClCompile Include="emu\cores\pwm.c" />
@@ -202,6 +207,12 @@
     <ClInclude Include="emu\cores\emutypes.h" />
     <ClInclude Include="emu\cores\fmopl.h" />
     <ClInclude Include="emu\cores\fmopn.h" />
+    <ClInclude Include="emu\cores\nesintf.h" />
+    <ClInclude Include="emu\cores\nes_apu.h" />
+    <ClInclude Include="emu\cores\nes_defs.h" />
+    <ClInclude Include="emu\cores\np_nes_apu.h" />
+    <ClInclude Include="emu\cores\np_nes_dmc.h" />
+    <ClInclude Include="emu\cores\np_nes_fds.h" />
     <ClInclude Include="emu\cores\oplintf.h" />
     <ClInclude Include="emu\cores\opll_2413tone.h" />
     <ClInclude Include="emu\cores\opll_281btone.h" />
