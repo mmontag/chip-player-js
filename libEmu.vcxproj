@@ -166,6 +166,7 @@
     <ClCompile Include="emu\cores\fmopl.c" />
     <ClCompile Include="emu\cores\fmopn.c" />
     <ClCompile Include="emu\cores\fmopn2612.c" />
+    <ClCompile Include="emu\cores\gb.c" />
     <ClCompile Include="emu\cores\nesintf.c" />
     <ClCompile Include="emu\cores\nes_apu.c" />
     <ClCompile Include="emu\cores\np_nes_apu.c" />
@@ -207,6 +208,7 @@
     <ClInclude Include="emu\cores\emutypes.h" />
     <ClInclude Include="emu\cores\fmopl.h" />
     <ClInclude Include="emu\cores\fmopn.h" />
+    <ClInclude Include="emu\cores\gb.h" />
     <ClInclude Include="emu\cores\nesintf.h" />
     <ClInclude Include="emu\cores\nes_apu.h" />
     <ClInclude Include="emu\cores\nes_defs.h" />

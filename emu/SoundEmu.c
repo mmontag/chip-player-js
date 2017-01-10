@@ -21,6 +21,7 @@
 #include "cores/pwm.h"
 #include "cores/ayintf.h"
 #include "cores/nesintf.h"
+#include "cores/gb.h"
 #include "cores/okim6295.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -63,6 +64,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_32X_PWM;
 	case DEVID_AY8910:
 		return devDefList_AY8910;
+	case DEVID_GB_DMG:
+		return devDefList_GB_DMG;
 	case DEVID_NES_APU:
 		return devDefList_NES_APU;
 	case DEVID_OKIM6295:

@@ -138,6 +138,9 @@
     <ClCompile Include="emu\cores\np_nes_fds.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\gb.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -285,6 +288,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\np_nes_fds.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\gb.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

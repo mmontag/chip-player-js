@@ -19,6 +19,7 @@
 #define DEVID_YMZ280B	0x0F
 #define DEVID_32X_PWM	0x11
 #define DEVID_AY8910	0x12
+#define DEVID_GB_DMG	0x13
 #define DEVID_NES_APU	0x14
 #define DEVID_OKIM6295	0x18	// also known as MSM6295
 
