@@ -39,10 +39,12 @@
 #ifndef LIBXMP_CORE_PLAYER
 #if !defined(HAVE_POPEN) && defined(WIN32)
 #include "win32/ptpopen.h"
+#define HAVE_POPEN 1
 #endif
 #if defined(__WATCOMC__)
 #define popen  _popen
 #define pclose _pclose
+#define HAVE_POPEN 1
 #endif
 #include "md5.h"
 #include "extras.h"
@@ -84,6 +86,11 @@ int test_oxm		(FILE *);
 
 #define BUFLEN 16384
 
+#ifndef HAVE_POPEN
+static int execute_command(const char *cmd, const char *filename, FILE *t) {
+	return -1;
+}
+#else
 static int execute_command(const char *cmd, const char *filename, FILE *t)
 {
 	char line[1024], buf[BUFLEN];
@@ -118,6 +125,7 @@ static int execute_command(const char *cmd, const char *filename, FILE *t)
 
 	return 0;
 }
+#endif
 
 static int decrunch(HIO_HANDLE **h, const char *filename, char **temp)
 {

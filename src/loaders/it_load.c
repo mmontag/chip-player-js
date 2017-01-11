@@ -41,16 +41,18 @@ const struct format_loader libxmp_loader_it = {
 	it_load
 };
 
-#ifdef WIN32
+#if defined(__WATCOMC__)
+#undef localtime_r
+#define localtime_r _localtime
+
+#elif !defined(HAVE_LOCALTIME_R) || defined(_WIN32)
+#undef localtime_r
 struct tm *localtime_r(const time_t * timep, struct tm *result)
 {
 	/* Note: Win32 localtime() is thread-safe */
 	memcpy(result, localtime(timep), sizeof(struct tm));
 	return result;
 }
-#endif
-#ifdef __WATCOMC__
-#define localtime_r _localtime
 #endif
 
 static int it_test(HIO_HANDLE * f, char *t, const int start)

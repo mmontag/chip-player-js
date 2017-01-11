@@ -137,9 +137,10 @@ static uint16 pt_period_table[16][36] = {
 #ifndef M_LN2
 #define M_LN2	0.69314718055994530942
 #endif
-#if defined(_MSC_VER) || defined(__WATCOMC__)
+#if !defined(HAVE_ROUND) || defined(_MSC_VER) || defined(__WATCOMC__)
 static inline double round(double val)
 {
+/* FIXME: doesn't handle negative numbers */
 	return floor(val + 0.5);
 }
 #endif
