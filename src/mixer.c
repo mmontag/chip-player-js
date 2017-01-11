@@ -47,7 +47,7 @@
 #define LIM16_HI	 32767
 #define LIM16_LO	-32768
 
-#define MIX_FN(x) void libxmp_mix_##x(struct mixer_voice *, int *, int, int, int, int, int, int, int)
+#define MIX_FN(x) void libxmp_mix_##x(struct mixer_voice *, int32 *, int, int, int, int, int, int, int)
 
 MIX_FN(mono_8bit_nearest);
 MIX_FN(mono_8bit_linear);
@@ -87,7 +87,7 @@ MIX_FN(stereo_a500_filter);
  * bit 2: 0=unfiltered, 1=filtered
  */
 
-typedef void (*mixer_set[])(struct mixer_voice *, int *, int, int, int, int, int, int, int);
+typedef void (*mixer_set[])(struct mixer_voice *, int32 *, int, int, int, int, int, int, int);
 
 static mixer_set nearest_mixers = {
 	libxmp_mix_mono_8bit_nearest,
@@ -341,7 +341,7 @@ void libxmp_mixer_softmixer(struct context_data *ctx)
 	int prev_l, prev_r = 0;
 	int lps, lpe;
 	int32 *buf_pos;
-	void (*mix_fn)(struct mixer_voice *, int *, int, int, int, int, int, int, int);
+	void (*mix_fn)(struct mixer_voice *, int32 *, int, int, int, int, int, int, int);
 	mixer_set *mixers;
 
 	switch (s->interp) {
