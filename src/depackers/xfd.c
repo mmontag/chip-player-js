@@ -25,7 +25,7 @@ struct local_data {
 #ifdef __amigaos4__
 	struct xfdMasterIFace *IxfdMaster;
 	struct ExecIFace *IExec;
-	// = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
+	/* = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;*/
 #endif
 };
 
@@ -72,9 +72,9 @@ static void close_xfd(struct xfdBufferInfo *xfdobj, struct local_data *data)
 	}
 }
 
-static const char *_test_xfd(unsigned char *buffer, int length)
+static int _test_xfd(unsigned char *buffer, int length)
 {
-	const char *ret = NULL;
+	int ret = 0;
 	struct xfdBufferInfo *xfdobj;
 	struct local_data data;
 
@@ -86,7 +86,7 @@ static const char *_test_xfd(unsigned char *buffer, int length)
 
 		if(xfdRecogBuffer(xfdobj))
 		{
-			ret = xfdobj->xfdbi_PackerName;
+			ret = (xfdobj->xfdbi_PackerName != NULL);
 		}
 		close_xfd(xfdobj, &data);
 	}
@@ -95,7 +95,7 @@ static const char *_test_xfd(unsigned char *buffer, int length)
 
 static int test_xfd(unsigned char *b)
 {
-	return _test_xfd(b, 1024) != NULL;
+	return _test_xfd(b, 1024);
 }
 
 static int decrunch_xfd(FILE *f1, FILE *f2)
