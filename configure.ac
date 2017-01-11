@@ -44,7 +44,7 @@ case "${host_os}" in
 darwin*)
   DARWIN_VERSION="`echo ${host_os#darwin}|cut -f1 -d'.'`"
   ;;
-cygwin* | *djgpp | mint*)
+cygwin* | *djgpp | mint* | amigaos* |aros* | morphos*)
   enable_static=yes
   enable_shared=no
   ;;
@@ -146,6 +146,7 @@ darwin*)
   ;;
 esac
 AC_CHECK_FUNCS(popen mkstemp fnmatch umask)
+
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libxmp.pc])
 AC_OUTPUT
