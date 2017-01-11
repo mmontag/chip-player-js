@@ -140,8 +140,7 @@ static uint16 pt_period_table[16][36] = {
 #if !defined(HAVE_ROUND) || defined(_MSC_VER) || defined(__WATCOMC__)
 static inline double round(double val)
 {
-/* FIXME: doesn't handle negative numbers */
-	return floor(val + 0.5);
+	return (val >= 0.0)? floor(val + 0.5) : ceil(val - 0.5);
 }
 #endif
 
