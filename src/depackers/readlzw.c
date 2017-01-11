@@ -30,11 +30,11 @@ struct local_data {
    * the data->st_ptr array stores which pos to back reference to,
    *  each string is [...]+ end char, [...] is traced back through
    *  the 'pointer' (index really), then back through the next, etc.
-   *  a 'null pointer' is = to UNUSED.
+   *  a 'null pointer' is = to LZW_UNUSED.
    * the data->st_chr array gives the end char for each.
-   *  an unoccupied slot is = to UNUSED.
+   *  an unoccupied slot is = to LZW_UNUSED.
    */
-  #define UNUSED (-1)
+  #define LZW_UNUSED (-1)
   #define REALMAXSTR 65536
   int st_ptr[REALMAXSTR],st_chr[REALMAXSTR],st_last;
   int st_ptr1st[REALMAXSTR];
@@ -162,7 +162,7 @@ while(1)
     }
 
   if((!data->oldver && newcode<=data->st_last) ||
-     (data->oldver && data->st_chr[newcode]!=UNUSED))
+     (data->oldver && data->st_chr[newcode]!=LZW_UNUSED))
     {
     outputstring(newcode, data);
     k=findfirstchr(newcode, data);
@@ -320,13 +320,13 @@ int numcols=(1<<(orgcsize-1));
 
 for(f=0;f<REALMAXSTR;f++)
   {
-  data->st_chr[f]=UNUSED;
-  data->st_ptr[f]=UNUSED;
-  data->st_ptr1st[f]=UNUSED;
+  data->st_chr[f]=LZW_UNUSED;
+  data->st_ptr[f]=LZW_UNUSED;
+  data->st_ptr1st[f]=LZW_UNUSED;
   }
 
 for(f=0;f<4096;f++)
-  data->st_oldverhashlinks[f]=UNUSED;
+  data->st_oldverhashlinks[f]=LZW_UNUSED;
 
 
 if(data->oldver)
@@ -365,11 +365,11 @@ a=(((oldcode+chr)|0x800)&0xffff);
 hashval=(((a*a)>>6)&0xfff);
 
 /* first, check link chain from there */
-while(data->st_chr[hashval]!=UNUSED && data->st_oldverhashlinks[hashval]!=UNUSED)
+while(data->st_chr[hashval]!=LZW_UNUSED && data->st_oldverhashlinks[hashval]!=LZW_UNUSED)
   hashval=data->st_oldverhashlinks[hashval];
 
 /* make sure we return early if possible to avoid adding link */
-if(data->st_chr[hashval]==UNUSED)
+if(data->st_chr[hashval]==LZW_UNUSED)
   return(hashval);
 
 lasthash=hashval;
@@ -382,10 +382,10 @@ lasthash=hashval;
 hashval+=101;
 hashval&=0xfff;
 
-if(data->st_chr[hashval]!=UNUSED)
+if(data->st_chr[hashval]!=LZW_UNUSED)
   {
   for(f=0;f<data->maxstr;f++,hashval++,hashval&=0xfff)
-    if(data->st_chr[hashval]==UNUSED)
+    if(data->st_chr[hashval]==LZW_UNUSED)
       break;
   if(hashval==data->maxstr)
     return(-1);		/* table full, can't happen */
@@ -431,7 +431,7 @@ if(data->st_last==oldcode)
 if(oldcode>=data->maxstr) return(1);
 data->st_ptr[idx]=oldcode;
 
-if(data->st_ptr[oldcode]==UNUSED)          /* if we're pointing to a root... */
+if(data->st_ptr[oldcode]==LZW_UNUSED)          /* if we're pointing to a root... */
   data->st_ptr1st[idx]=oldcode;            /* then that holds the first char */
 else                                 /* otherwise... */
   data->st_ptr1st[idx]=data->st_ptr1st[oldcode]; /* use their pointer to first */
@@ -505,7 +505,7 @@ static void outputstring(int code, struct local_data *data)
 {
 int *ptr=data->outputstring_buf;
 
-while(data->st_ptr[code]!=UNUSED && ptr<data->outputstring_buf+data->maxstr)
+while(data->st_ptr[code]!=LZW_UNUSED && ptr<data->outputstring_buf+data->maxstr)
   {
   *ptr++=data->st_chr[code];
   code=data->st_ptr[code];
@@ -537,7 +537,7 @@ else
 
 static int findfirstchr(int code, struct local_data *data)
 {
-if(data->st_ptr[code]!=UNUSED)   /* not first? then use brand new st_ptr1st! */
+if(data->st_ptr[code]!=LZW_UNUSED)   /* not first? then use brand new st_ptr1st! */
   code=data->st_ptr1st[code];    /* now with no artificial colouring */
 return(data->st_chr[code]);
 }
