@@ -140,6 +140,7 @@ static void DeinitVGMChips(void);
 static void SendChipCommand_Data8(UINT8 chipID, UINT8 chipNum, UINT8 ofs, UINT8 data);
 static void SendChipCommand_RegData8(UINT8 chipID, UINT8 chipNum, UINT8 port, UINT8 reg, UINT8 data);
 static void SendChipCommand_MemData8(UINT8 chipID, UINT8 chipNum, UINT16 ofs, UINT8 data);
+static void SendChipCommand_Data16(UINT8 chipID, UINT8 chipNum, UINT8 ofs, UINT16 data);
 static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data);
 static void ReadVGMFile(UINT32 samples);
 
@@ -515,6 +516,15 @@ static void InitVGMChips(void)
 				break;
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, (void**)&cDev->writeD16);
 			break;
+		case DEVID_MULTIPCM:
+			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
+			if (retVal)
+				break;
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, (void**)&cDev->writeD16);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
@@ -674,6 +684,18 @@ static void SendChipCommand_MemData8(UINT8 chipID, UINT8 chipNum, UINT16 ofs, UI
 	return;
 }
 
+static void SendChipCommand_Data16(UINT8 chipID, UINT8 chipNum, UINT8 ofs, UINT16 data)
+{
+	VGM_CHIPDEV* cDev;
+	
+	cDev = &VGMChips[chipID];
+	if (cDev->writeD16 == NULL)
+		return;
+	
+	cDev->writeD16(cDev->defInf.dataPtr, ofs, data);
+	return;
+}
+
 static void WriteChipROM(UINT8 chipID, UINT8 chipNum, UINT8 memID,
 						 UINT32 memSize, UINT32 dataOfs, UINT32 dataSize, const UINT8* data)
 {
@@ -759,6 +781,7 @@ typedef struct
 #define CMDTYPE_P_R_D8		0x03	// Port + Register + Data (8-bit)
 #define CMDTYPE_O8_D8		0x04	// Offset (8-bit) + Data (8-bit)
 #define CMDTYPE_O16_D8		0x05	// Offset (16-bit) + Data (8-bit)
+#define CMDTYPE_O8_D16		0x06	// Offset (8-bit) + Data (16-bit)
 #define CMDTYPE_SPCM_MEM	0x80	// SegaPCM Memory Write
 #define CMDTYPE_RF5C_MEM	0x81	// RF5Cxx Memory Write
 #define CMDTYPE_PWM_REG		0x82	// PWM register write (4-bit offset, 12-bit data)
@@ -805,7 +828,7 @@ static const VGM_CMDTYPES VGM_CMDS_C0[0x10] =
 	{0x04,	CMDTYPE_SPCM_MEM},	// C0 Sega PCM
 	{0x05,	CMDTYPE_RF5C_MEM},	// C1 RF5C68
 	{0x10,	CMDTYPE_RF5C_MEM},	// C2 RF5C164
-	{0x15,	CMDTYPE_DUMMY},		// C3 MultiPCM (write 3 bytes to offset 0, 1, 2)
+	{0x15,	CMDTYPE_O8_D16},	// C3 MultiPCM bank offset
 	{0x1F,	CMDTYPE_DUMMY},		// C4 QSound (8-bit offset, 16-bit data)
 	{0x20,	CMDTYPE_O16_D8},	// C5 SCSP
 	{0x21,	CMDTYPE_DUMMY},		// C6 WonderSwan (memory write)
@@ -1019,14 +1042,23 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 				//SendChipCommand_Ofs16Data8(cmdType.chipID, chipID, ofs, data[0x03]);
 			}
 			break;
+		case CMDTYPE_O8_D16:
+			{
+				UINT16 value;
+				
+				chipID = (data[0x01] & 0x80) >> 7;
+				value = (data[0x02] << 0) | (data[0x03] << 8);
+				SendChipCommand_Data16(cmdType.chipID, chipID, data[0x01] & 0x7F, value);
+			}
+			break;
 		case CMDTYPE_SPCM_MEM:	// SegaPCM Memory Write
 		case CMDTYPE_RF5C_MEM:	// RF5Cxx Memory Write
 			{
 				UINT16 memOfs;
-				memcpy(&memOfs, &data[0x01], 0x02);
+				memOfs = (data[0x01] << 0) | (data[0x02] << 8);
 				if (cmdType.cmdType == CMDTYPE_SPCM_MEM)
 				{
-					chipID = (data[0x01] & 0x8000) >> 15;
+					chipID = (memOfs & 0x8000) >> 15;
 					memOfs &= 0x7FFF;
 				}
 				SendChipCommand_MemData8(cmdType.chipID, chipID, memOfs, data[0x03]);
@@ -1036,14 +1068,10 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			{
 				UINT8 ofs;
 				UINT16 value;
-				VGM_CHIPDEV* cDev;
 				
 				ofs = (data[0x01] & 0xF0) >> 4;
 				value = ((data[0x01] & 0x0F) << 8) | ((data[0x02]) << 0);
-				
-				cDev = &VGMChips[cmdType.chipID];
-				if (cDev->writeD16 != NULL)
-					cDev->writeD16(cDev->defInf.dataPtr, ofs, value);
+				SendChipCommand_Data16(cmdType.chipID, chipID, ofs, value);
 			}
 			break;
 		}
