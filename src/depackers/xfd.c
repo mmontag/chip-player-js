@@ -17,6 +17,8 @@
 #include <exec/types.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include "common.h"
+#include "depacker.h"
 
 struct local_data {
 	struct Library *xfdMasterBase;
@@ -27,16 +29,17 @@ struct local_data {
 #endif
 };
 
-struct xfdBufferInfo *open_xfd(struct local_data *data)
+static void close_xfd(struct xfdBufferInfo *, struct local_data *);
+static struct xfdBufferInfo *open_xfd(struct local_data *data)
 {
 #ifdef __amigaos4__
 	data->IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
 #endif
 
-	if(data->xfdMasterBase = OpenLibrary("xfdmaster.library",38))
+	if((data->xfdMasterBase = OpenLibrary("xfdmaster.library",38)) != NULL)
 	{
 #ifdef __amigaos4__
-		if(data->IxfdMaster = (struct xfdMasterIFace *)GetInterface(data->xfdMasterBase,"main",1,NULL))
+		if((data->IxfdMaster = (struct xfdMasterIFace *)GetInterface(data->xfdMasterBase,"main",1,NULL)) != NULL)
 		{
 #endif
 			return(struct xfdBufferInfo *)xfdAllocObject(XFDOBJ_BUFFERINFO);
@@ -44,11 +47,11 @@ struct xfdBufferInfo *open_xfd(struct local_data *data)
 		}
 #endif
 	}
-	close_xfd(NULL);
+	close_xfd(NULL, data);
 	return NULL;
 }
 
-void close_xfd(struct xfdBufferInfo *xfdobj, struct local_data *data)
+static void close_xfd(struct xfdBufferInfo *xfdobj, struct local_data *data)
 {
 	if(xfdobj)
 	{
@@ -69,13 +72,13 @@ void close_xfd(struct xfdBufferInfo *xfdobj, struct local_data *data)
 	}
 }
 
-static char *_test_xfd(unsigned char *buffer, int length)
+static const char *_test_xfd(unsigned char *buffer, int length)
 {
-	char *ret = NULL;
+	const char *ret = NULL;
 	struct xfdBufferInfo *xfdobj;
 	struct local_data data;
 
-	if(xfdobj=open_xfd(&data))
+	if((xfdobj=open_xfd(&data)) != NULL)
 	{
 		xfdobj->xfdbi_SourceBuffer = buffer;
 		xfdobj->xfdbi_SourceBufLen = length;
@@ -114,7 +117,7 @@ static int decrunch_xfd(FILE *f1, FILE *f2)
 
     fread(packed,plen,1,f1);
 
-	if(xfdobj=open_xfd(&data))
+	if((xfdobj=open_xfd(&data)) != NULL)
 	{
 		xfdobj->xfdbi_SourceBufLen = plen;
 		xfdobj->xfdbi_SourceBuffer = packed;
