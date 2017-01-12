@@ -23,6 +23,7 @@
 #include "cores/gb.h"
 #include "cores/nesintf.h"
 #include "cores/multipcm.h"
+#include "cores/upd7759.h"
 #include "cores/okim6258.h"
 #include "cores/okim6295.h"
 
@@ -72,6 +73,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_NES_APU;
 	case DEVID_MULTIPCM:
 		return devDefList_MultiPCM;
+	case DEVID_uPD7759:
+		return devDefList_uPD7759;
 	case DEVID_OKIM6258:
 		return devDefList_OKIM6258;
 	case DEVID_OKIM6295:
