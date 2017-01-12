@@ -58,6 +58,38 @@ static void okim6295_set_mute_mask(void *info, UINT32 MuteMask);
 static void okim6295_set_srchg_cb(void* chip, DEVCB_SRATE_CHG CallbackFunc, void* DataPtr);
 
 
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, okim6295_w},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, okim6295_r},
+	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, okim6295_write_rom},
+	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, okim6295_alloc_rom},
+	{0x00, 0x00, 0, NULL}
+};
+static DEV_DEF devDef =
+{
+	"MSM6295", "MAME", FCC_MAME,
+	
+	device_start_okim6295,
+	device_stop_okim6295,
+	device_reset_okim6295,
+	okim6295_update,
+	
+	NULL,	// SetOptionBits
+	okim6295_set_mute_mask,
+	NULL,	// SetPanning
+	okim6295_set_srchg_cb,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
+const DEV_DEF* devDefList_OKIM6295[] =
+{
+	&devDef,
+	NULL
+};
+
+
 /*
     To help the various custom ADPCM generators out there,
     the following routines may be used.
@@ -137,38 +169,6 @@ static const int volume_table[16] =
 
 /* tables computed? */
 static int tables_computed = 0;
-
-static DEVDEF_RWFUNC devFunc[] =
-{
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, okim6295_w},
-	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, okim6295_r},
-	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, okim6295_write_rom},
-	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, okim6295_alloc_rom},
-	{0x00, 0x00, 0, NULL}
-};
-static DEV_DEF devDef =
-{
-	"MSM6295", "MAME", FCC_MAME,
-	
-	device_start_okim6295,
-	device_stop_okim6295,
-	device_reset_okim6295,
-	okim6295_update,
-	
-	NULL,	// SetOptionBits
-	okim6295_set_mute_mask,
-	NULL,	// SetPanning
-	okim6295_set_srchg_cb,	// SetSampleRateChangeCallback
-	NULL,	// LinkDevice
-	
-	devFunc,	// rwFuncs
-};
-const DEV_DEF* devDefList_OKIM6295[] =
-{
-	&devDef,
-	NULL
-};
-
 
 /**********************************************************************************************
 

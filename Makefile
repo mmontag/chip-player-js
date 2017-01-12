@@ -162,6 +162,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/np_nes_dmc.o \
 	$(LIBEMUOBJ)/cores/np_nes_fds.o \
 	$(LIBEMUOBJ)/cores/multipcm.o \
+	$(LIBEMUOBJ)/cores/okim6258.o \
 	$(LIBEMUOBJ)/cores/okim6295.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o

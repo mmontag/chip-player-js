@@ -173,6 +173,7 @@
     <ClCompile Include="emu\cores\np_nes_apu.c" />
     <ClCompile Include="emu\cores\np_nes_dmc.c" />
     <ClCompile Include="emu\cores\np_nes_fds.c" />
+    <ClCompile Include="emu\cores\okim6258.c" />
     <ClCompile Include="emu\cores\oplintf.c" />
     <ClCompile Include="emu\cores\opnintf.c" />
     <ClCompile Include="emu\cores\pwm.c" />
@@ -217,6 +218,7 @@
     <ClInclude Include="emu\cores\np_nes_apu.h" />
     <ClInclude Include="emu\cores\np_nes_dmc.h" />
     <ClInclude Include="emu\cores\np_nes_fds.h" />
+    <ClInclude Include="emu\cores\okim6258.h" />
     <ClInclude Include="emu\cores\oplintf.h" />
     <ClInclude Include="emu\cores\opll_2413tone.h" />
     <ClInclude Include="emu\cores\opll_281btone.h" />
