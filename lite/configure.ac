@@ -41,7 +41,7 @@ powerpc64)
 esac
 
 case "${host_os}" in
-cygwin*)
+cygwin* | *djgpp | mint* | amigaos* |aros* | morphos*)
   enable_static=yes
   enable_shared=no
   ;;
@@ -70,49 +70,78 @@ fi
 XMP_TRY_COMPILE(whether compiler understands -Wall,
   ac_cv_c_flag_w_all,
   -Wall,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wall")  
+
+old_CFLAGS="${CFLAGS}"
+XMP_TRY_COMPILE(whether compiler understands -Werror,
+  ac_cv_c_flag_w_all,
+  -Werror,[
+  int main(void){return 0;}],
+  CFLAGS="${CFLAGS} -Werror")
 
 XMP_TRY_COMPILE(whether compiler understands -xldscope=hidden,
   ac_cv_c_flag_xldscope_hidden,
   -xldscope=hidden,[
-  int main(){}],
-  [LDFLAGS="${LDFLAGS} -xldscope=hidden"],
+  __global int foo(void) {}],
+  [CFLAGS="${old_CFLAGS} -xldscope=hidden -DXMP_LDSCOPE_GLOBAL"],
   [XMP_TRY_COMPILE(whether compiler understands -fvisibility=hidden,
     ac_cv_c_flag_f_visibility_hidden,
     -fvisibility=hidden,[
-    int main(){}],
-    [LDFLAGS="${LDFLAGS} -fvisibility=hidden"
-    LD_VERSCRIPT="-Wl,--version-script,libxmp.map"])]
+    __attribute__((visibility("default"))) void foo(void) {}],
+    [CFLAGS="${old_CFLAGS} -fvisibility=hidden -DXMP_SYM_VISIBILITY"
+    LD_VERSCRIPT="-Wl,--version-script,libxmp.map"],
+    [CFLAGS="${old_CFLAGS}"])]
   )
+dnl we want symbol -fvisibility for elf targets, however it works
+dnl with darwin/macho too.  other than that, windows, dos, os/2,
+dnl amiga do not want it:  for any such targets, the -Werror switch
+dnl is should fail the above check, but it does not.  adding the
+dnl manual test below for that, instead.
+case $host_os in
+    mingw*|cygwin*|emx*|*djgpp|amigaos*|aros*|morphos*)
+	CFLAGS="${old_CFLAGS}"
+	if test $ac_cv_c_flag_f_visibility_hidden = yes; then
+	  AC_MSG_NOTICE([ignoring -fvisibility flags for $host_os])
+	fi
+	;;
+esac
 
 dnl for clang
 XMP_TRY_COMPILE(whether compiler understands -Wunknown-warning-option,
   ac_cv_c_flag_w_unknown_warning_option,
   -Wunknown-warning-option,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wno-unknown-warning-option")  
 
 XMP_TRY_COMPILE(whether compiler understands -Wunused-but-set-variable,
   ac_cv_c_flag_w_unused_but_set_variable,
   -Wunused-but-set-variable,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wno-unused-but-set-variable")  
 
 XMP_TRY_COMPILE(whether compiler understands -Wunused-result,
   ac_cv_c_flag_w_unused_result,
   -Wunused-result,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wno-unused-result")  
 
 XMP_TRY_COMPILE(whether compiler understands -Warray-bounds,
   ac_cv_c_flag_w_array_bounds,
   -Warray-bounds,[
-  int main(){}],
+  int main(void){return 0;}],
   CFLAGS="${CFLAGS} -Wno-array-bounds")  
 
+old_LIBS="${LIBS}"
 AC_CHECK_LIB(m,pow)
-AC_CHECK_FUNCS(strlcpy strlcat)
+dnl -lm not needed with darwin.
+case "${host_os}" in
+darwin*)
+  LIBS="${old_LIBS}"
+  ;;
+esac
+AC_CHECK_FUNCS(strlcpy strlcat round powf)
+
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libxmp-lite.pc])
 AC_OUTPUT

@@ -1,0 +1,73 @@
+# Makefile for OS/2 using Watcom compiler.
+#
+# wmake -f Makefile.os2
+# - builds libxmp.dll and its import lib (libxmp.lib)
+#
+# wmake -f Makefile.os2 target=static
+# - builds the static library xmp_static.lib
+
+!ifndef target
+target = dll
+!endif
+
+CPPFLAGS=-DHAVE_ALLOCA_H -DHAVE_FNMATCH -DHAVE_MKSTEMP -DHAVE_UMASK -DLIBXMP_CORE_PLAYER
+#CPPFLAGS+= -DLIBXMP_CORE_DISABLE_IT
+#CPPFLAGS+= -DDEBUG
+
+CFLAGS = -zq -bt=os2 -bm -fp5 -fpi87 -mf -oeatxh -w4 -ei -zp8
+# -5s  :  Pentium stack calling conventions.
+# -5r  :  Pentium register calling conventions.
+CFLAGS+= -5s
+DLLFLAGS=-bd
+
+.SUFFIXES:
+.SUFFIXES: .obj .c
+
+DLLNAME=libxmp.dll
+EXPNAME=libxmp.exp
+LIBNAME=libxmp.lib
+LIBSTATIC=xmp_static.lib
+
+!ifeq target static
+BLD_TARGET=$(LIBSTATIC)
+!else
+CFLAGS+= $(DLLFLAGS)
+BLD_TARGET=$(DLLNAME)
+!endif
+
+COMPILE=wcc386 $(CFLAGS) $(CPPFLAGS) $(INCLUDES)
+
+OBJ=virtual.obj format.obj period.obj player.obj read_event.obj dataio.obj lfo.obj scan.obj control.obj filter.obj effects.obj mixer.obj mix_all.obj load_helpers.obj load.obj hio.obj smix.obj memio.obj common.obj itsex.obj sample.obj xm_load.obj mod_load.obj s3m_load.obj it_load.obj
+
+all: $(BLD_TARGET)
+
+# rely on symbol name, not ordinal: -irn switch of wlib is default, but -inn is not.
+$(DLLNAME): $(OBJ)
+	wlink NAM $@ SYSTEM os2v2_dll INITINSTANCE TERMINSTANCE FIL {$(OBJ)} OPTION IMPF=$(EXPNAME)
+	wlib -q -b -n -inn $(LIBNAME) +$(DLLNAME)
+#	wlib -q -b -n -inn $(LIBNAME) @$(EXPNAME)
+
+$(LIBSTATIC): $(OBJ)
+	wlib -q -b -n $@ $(OBJ)
+
+.c.obj:
+	$(COMPILE) -fo=$^@ $<
+
+!ifndef __UNIX__
+distclean: clean .symbolic
+	@if exist $(LIBSTATIC) del $(LIBSTATIC)
+	@if exist $(DLLNAME) del $(DLLNAME)
+	@if exist $(EXPNAME) del $(EXPNAME)
+	@if exist $(LIBNAME) del $(LIBNAME)
+clean: .symbolic
+	@if exist *.obj del *.obj
+.c: ..\src;..\src\loaders
+INCLUDES=-I..\src\os2 -I..\include\libxmp-lite -I..\src
+!else
+distclean: clean .symbolic
+	rm -f $(DLLNAME) $(EXPNAME) $(LIBNAME) $(LIBSTATIC)
+clean: .symbolic
+	rm -f *.obj
+.c: ../src;../src/loaders
+INCLUDES=-I../src/os2 -I../include/libxmp-lite -I../src
+!endif
