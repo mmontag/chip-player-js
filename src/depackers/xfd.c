@@ -20,65 +20,13 @@
 #include "common.h"
 #include "depacker.h"
 
-struct local_data {
-	struct Library *xfdMasterBase;
-#ifdef __amigaos4__
-	struct xfdMasterIFace *IxfdMaster;
-	struct ExecIFace *IExec;
-	/* = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;*/
-#endif
-};
-
-static void close_xfd(struct xfdBufferInfo *, struct local_data *);
-static struct xfdBufferInfo *open_xfd(struct local_data *data)
-{
-#ifdef __amigaos4__
-	data->IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;
-#endif
-
-	if((data->xfdMasterBase = OpenLibrary("xfdmaster.library",38)) != NULL)
-	{
-#ifdef __amigaos4__
-		if((data->IxfdMaster = (struct xfdMasterIFace *)GetInterface(data->xfdMasterBase,"main",1,NULL)) != NULL)
-		{
-#endif
-			return(struct xfdBufferInfo *)xfdAllocObject(XFDOBJ_BUFFERINFO);
-#ifdef __amigaos4__
-		}
-#endif
-	}
-	close_xfd(NULL, data);
-	return NULL;
-}
-
-static void close_xfd(struct xfdBufferInfo *xfdobj, struct local_data *data)
-{
-	if(xfdobj)
-	{
-		xfdFreeObject((APTR)xfdobj);
-		xfdobj=NULL;
-	}
-#ifdef __amigaos4__
-	if(data->IxfdMaster)
-	{
-		DropInterface((struct Interface *)data->IxfdMaster);
-		data->IxfdMaster=NULL;
-	}
-#endif
-	if(data->xfdMasterBase)
-	{
-		CloseLibrary(data->xfdMasterBase);
-		data->xfdMasterBase=NULL;
-	}
-}
-
 static int _test_xfd(unsigned char *buffer, int length)
 {
 	int ret = 0;
 	struct xfdBufferInfo *xfdobj;
-	struct local_data data;
 
-	if((xfdobj=open_xfd(&data)) != NULL)
+	xfdobj = (struct xfdBufferInfo *) xfdAllocObject(XFDOBJ_BUFFERINFO);
+	if(xfdobj)
 	{
 		xfdobj->xfdbi_SourceBuffer = buffer;
 		xfdobj->xfdbi_SourceBufLen = length;
@@ -88,13 +36,14 @@ static int _test_xfd(unsigned char *buffer, int length)
 		{
 			ret = (xfdobj->xfdbi_PackerName != NULL);
 		}
-		close_xfd(xfdobj, &data);
+		xfdFreeObject((APTR)xfdobj);
 	}
 	return(ret);
 }
 
 static int test_xfd(unsigned char *b)
 {
+	if (!xfdMasterBase) return 0;
 	return _test_xfd(b, 1024);
 }
 
@@ -104,7 +53,9 @@ static int decrunch_xfd(FILE *f1, FILE *f2)
     uint8 *packed;
     int plen,ret=-1;
     struct stat st;
-    struct local_data data;
+
+    if (xfdMasterBase == NULL)
+	return -1;
 
     if (f2 == NULL)
 	return -1;
@@ -117,7 +68,8 @@ static int decrunch_xfd(FILE *f1, FILE *f2)
 
     fread(packed,plen,1,f1);
 
-	if((xfdobj=open_xfd(&data)) != NULL)
+	xfdobj = (struct xfdBufferInfo *) xfdAllocObject(XFDOBJ_BUFFERINFO);
+	if(xfdobj)
 	{
 		xfdobj->xfdbi_SourceBufLen = plen;
 		xfdobj->xfdbi_SourceBuffer = packed;
@@ -136,7 +88,7 @@ static int decrunch_xfd(FILE *f1, FILE *f2)
 				ret=-1;
 			}
 		}
-		close_xfd(xfdobj, &data);
+		xfdFreeObject((APTR)xfdobj);
 	}
 	FreeVec(packed);
 	return(ret);
