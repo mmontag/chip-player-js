@@ -26,7 +26,7 @@ static DEVDEF_RWFUNC devFunc_MAME[] =
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, ay8910_write_reg},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ay8910_read},
 	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, ay8910_set_clock},
-	{RWF_SRATE | RWF_WRITE, DEVRW_VALUE, 0, ay8910_get_sample_rate},
+	{RWF_SRATE | RWF_READ, DEVRW_VALUE, 0, ay8910_get_sample_rate},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_MAME =

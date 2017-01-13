@@ -32,6 +32,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/sn764intf.h"	// for SN76496_CFG
 #include "emu/cores/segapcm.h"		// for SEGAPCM_CFG
 #include "emu/cores/ayintf.h"		// for AY8910_CFG
+#include "emu/cores/okim6258.h"		// for OKIM6258_CFG
 
 
 typedef struct _vgm_file_header
@@ -524,6 +525,21 @@ static void InitVGMChips(void)
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, (void**)&cDev->writeD16);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			break;
+		case DEVID_OKIM6258:
+			{
+				OKIM6258_CFG okiCfg;
+				
+				okiCfg._genCfg = devCfg;
+				okiCfg.divider = (VGMHdr.bytOKI6258Flags & 0x03) >> 0;
+				okiCfg.adpcmBits = (VGMHdr.bytOKI6258Flags & 0x04) ? OKIM6258_ADPCM_4B : OKIM6258_ADPCM_3B;
+				okiCfg.outputBits = (VGMHdr.bytOKI6258Flags & 0x08) ? OKIM6258_OUT_12B : OKIM6258_OUT_10B;
+				
+				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&okiCfg, &cDev->defInf);
+				if (retVal)
+					break;
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			}
 			break;
 		default:
 			if (curChip == DEVID_YM2612)

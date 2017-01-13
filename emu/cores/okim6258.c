@@ -46,6 +46,8 @@ static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, okim6258_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, okim6258_status_r},
+	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, okim6258_set_clock},
+	{RWF_SRATE | RWF_READ, DEVRW_VALUE, 0, okim6258_get_vclk},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =
@@ -94,9 +96,9 @@ struct _okim6258_state
 	UINT8 data_in;			/* ADPCM data-in register */
 	UINT8 nibble_shift;		/* nibble select */
 
-	UINT8 output_10allow;	// allow 10 bit output
+	UINT8 output_12force;	// enforce 12 bit output (for high quality)
 	UINT8 output_bits;
-	INT32 output_mask;	// TODO: handle this properly
+	INT16 output_mask;
 
 	// Valley Bell: Added a small queue to prevent race conditions.
 	UINT8 data_buf[8];
@@ -109,10 +111,10 @@ struct _okim6258_state
 	UINT8 data_empty;
 	// Valley Bell: Added panning (for Sharp X68000)
 	UINT8 pan;
-	INT32 last_smpl;
+	INT16 last_smpl;
 
-	INT32 signal;
-	INT32 step;
+	INT16 signal;
+	INT16 step;
 	
 	UINT8 clock_buffer[0x04];
 	UINT32 initial_clock;
@@ -178,9 +180,6 @@ static void compute_tables(void)
 
 static INT16 clock_adpcm(okim6258_state *chip, UINT8 nibble)
 {
-	INT32 max = chip->output_mask - 1;
-	INT32 min = -chip->output_mask;
-
 	// original MAME algorithm (causes a DC offset over time)
 	//chip->signal += diff_lookup[chip->step * 16 + (nibble & 15)];
 
@@ -189,10 +188,10 @@ static INT16 clock_adpcm(okim6258_state *chip, UINT8 nibble)
 	chip->signal = ((sample << 8) + (chip->signal * 245)) >> 8;
 
 	/* clamp to the maximum */
-	if (chip->signal > max)
-		chip->signal = max;
-	else if (chip->signal < min)
-		chip->signal = min;
+	if (chip->signal > 2047)
+		chip->signal = 2047;
+	else if (chip->signal < -2048)
+		chip->signal = -2048;
 
 	/* adjust the step size and clamp */
 	chip->step += index_shift[nibble & 7];
@@ -201,8 +200,8 @@ static INT16 clock_adpcm(okim6258_state *chip, UINT8 nibble)
 	else if (chip->step < 0)
 		chip->step = 0;
 
-	/* return the signal scaled up to 32767 */
-	return chip->signal << 4;
+	/* return the signal */
+	return chip->signal;
 }
 
 /**********************************************************************************************
@@ -262,13 +261,15 @@ static void okim6258_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				{
 					chip->data_empty -= 0x01;
 					chip->signal = chip->signal * 15 / 16;
-					chip->last_smpl = chip->signal << 4;
+					chip->last_smpl = chip->signal;
 				}
 				sample = chip->last_smpl;
 			}
 
 			nibble_shift ^= 4;
 
+			sample &= chip->output_mask;	// emulate DAC precision
+			sample <<= 4;	// scale up to 16 bit
 			*bufL++ = (chip->pan & 0x02) ? 0x00 : sample;
 			*bufR++ = (chip->pan & 0x01) ? 0x00 : sample;
 			samples--;
@@ -316,23 +317,20 @@ static UINT8 device_start_okim6258(const OKIM6258_CFG* cfg, DEV_INFO* retDevInf)
 	compute_tables();
 
 	info->initial_clock = cfg->_genCfg.clock;
-	info->initial_div = cfg->divider;
+	info->initial_div = cfg->divider & 0x03;
 	info->adpcm_type = cfg->adpcmBits;
+	if (! info->adpcm_type)
+		info->adpcm_type = 4;
 	
 	info->master_clock = info->initial_clock;
-	info->clock_buffer[0x00] = (info->master_clock & 0x000000FF) >>  0;
-	info->clock_buffer[0x01] = (info->master_clock & 0x0000FF00) >>  8;
-	info->clock_buffer[0x02] = (info->master_clock & 0x00FF0000) >> 16;
-	info->clock_buffer[0x03] = (info->master_clock & 0xFF000000) >> 24;
+	info->divider = dividers[info->initial_div];
 	info->SmpRateFunc = NULL;
 
-	/* D/A precision is 10-bits but 12-bit data can be output serially to an external DAC */
-	info->output_bits = cfg->outputBits ? 12 : 10;
-	if (info->output_10allow)
-		info->output_mask = (1 << (info->output_bits - 1));
-	else
-		info->output_mask = (1 << (12 - 1));
-	info->divider = dividers[info->initial_div & 0x03];
+	info->output_bits = cfg->outputBits;
+	if (! info->output_bits)
+		info->output_bits = 10;
+	// D/A precision is 10-bits but 12-bit data can be output serially to an external DAC
+	info->output_mask = ~((1 << (12 - info->output_bits)) - 1);
 
 	info->signal = -2;
 	info->step = 0;
@@ -368,7 +366,7 @@ static void device_reset_okim6258(void *chip)
 	info->clock_buffer[0x01] = (info->initial_clock & 0x0000FF00) >>  8;
 	info->clock_buffer[0x02] = (info->initial_clock & 0x00FF0000) >> 16;
 	info->clock_buffer[0x03] = (info->initial_clock & 0xFF000000) >> 24;
-	info->divider = dividers[info->initial_div & 0x03];
+	info->divider = dividers[info->initial_div];
 	if (info->SmpRateFunc != NULL)
 		info->SmpRateFunc(info->SmpRateData, get_vclk(info));
 	
@@ -588,11 +586,11 @@ static void okim6258_set_options(void *chip, UINT32 Options)
 {
 	okim6258_state *info = (okim6258_state *)chip;
 	
-	info->output_10allow = (Options >> 0) & 0x01;
-	if (info->output_10allow)
-		info->output_mask = (1 << (info->output_bits - 1));
+	info->output_12force = (Options >> 0) & 0x01;
+	if (info->output_12force)
+		info->output_mask = ~0;
 	else
-		info->output_mask = (1 << (12 - 1));
+		info->output_mask = ~((1 << (12 - info->output_bits)) - 1);
 	
 	return;
 }
