@@ -316,7 +316,7 @@ static UINT8 device_start_okim6258(const OKIM6258_CFG* cfg, DEV_INFO* retDevInf)
 
 	compute_tables();
 
-	info->initial_clock = cfg->_genCfg.clock;
+	info->initial_clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
 	info->initial_div = cfg->divider & 0x03;
 	info->adpcm_type = cfg->adpcmBits;
 	if (! info->adpcm_type)

@@ -26,6 +26,7 @@
 #include "cores/upd7759.h"
 #include "cores/okim6258.h"
 #include "cores/okim6295.h"
+#include "cores/k051649.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 {
@@ -79,6 +80,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_OKIM6258;
 	case DEVID_OKIM6295:
 		return devDefList_OKIM6295;
+	case DEVID_K051649:
+		return devDefList_K051649;
 	}
 	return NULL;
 }
