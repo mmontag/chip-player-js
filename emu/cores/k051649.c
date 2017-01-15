@@ -112,9 +112,8 @@ struct _k051649_state
 	UINT32 mclock,rate;
 
 	/* mixer tables and internal buffers */
-	INT16 *mixer_table;
-	INT16 *mixer_lookup;
-	short *mixer_buffer;
+	DEV_SMPL *mixer_table;
+	DEV_SMPL *mixer_lookup;
 
 	UINT8 cur_reg;
 	UINT8 test;
@@ -128,7 +127,7 @@ static void make_mixer_table(k051649_state *info, int voices)
 	int i;
 
 	/* allocate memory */
-	info->mixer_table = (INT16*)malloc(sizeof(INT16) * 2 * count);
+	info->mixer_table = (DEV_SMPL*)malloc(sizeof(DEV_SMPL) * 2 * count);
 
 	/* find the middle of the table */
 	info->mixer_lookup = info->mixer_table + count;
@@ -137,7 +136,6 @@ static void make_mixer_table(k051649_state *info, int voices)
 	for (i = 0; i < count; i++)
 	{
 		int val = i * DEF_GAIN * 16 / voices;
-		if (val > 32767) val = 32767;
 		info->mixer_lookup[ i] = val;
 		info->mixer_lookup[-i] = -val;
 	}
@@ -151,11 +149,10 @@ static void k051649_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	k051649_sound_channel *voice=info->channel_list;
 	DEV_SMPL *buffer = outputs[0];
 	DEV_SMPL *buffer2 = outputs[1];
-	short *mix;
 	UINT32 i,j;
 
 	// zap the contents of the mixer buffer
-	memset(info->mixer_buffer, 0, samples * sizeof(short));
+	memset(buffer, 0, samples * sizeof(DEV_SMPL));
 
 	for (j=0; j<5; j++) {
 		// channel is halted for freq < 9
@@ -167,9 +164,7 @@ static void k051649_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			/* Amuse source:  Cab suggests this method gives greater resolution */
 			/* Sean Young 20010417: the formula is really: f = clock/(16*(f+1))*/
 			//UINT32 step = (UINT32)(((INT64)info->mclock * (1 << FREQ_BITS)) / (float)((voice[j].frequency + 1) * 16 * (info->rate / 32)) + 0.5);
-			UINT32 step = (UINT32)(((INT64)info->mclock * (1 << FREQ_BITS)) / (float)((voice[j].frequency + 1) * (info->rate / 2)) + 0.5);
-
-			mix = info->mixer_buffer;
+			UINT32 step = (UINT32)(((INT64)info->mclock * (1 << FREQ_BITS)) / (float)((voice[j].frequency + 1) * info->rate / 2.0f) + 0.5f);
 
 			// add our contribution
 			for (i = 0; i < samples; i++)
@@ -178,7 +173,7 @@ static void k051649_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 				c += step;
 				offs = (c >> FREQ_BITS) & 0x1f;
-				*mix++ += (w[offs] * v)>>3;
+				buffer[i] += (w[offs] * v)>>3;
 			}
 
 			// update the counter for this voice
@@ -187,9 +182,10 @@ static void k051649_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	}
 
 	// mix it down
-	mix = info->mixer_buffer;
 	for (i = 0; i < samples; i++)
-		*buffer++ = *buffer2++ = info->mixer_lookup[*mix++];
+	{
+		buffer[i] = buffer2[i] = info->mixer_lookup[buffer[i]];
+	}
 }
 
 static UINT8 device_start_k051649(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -205,9 +201,6 @@ static UINT8 device_start_k051649(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	info->mclock = CHPCLK_CLOCK(cfg->clock);
 	info->rate = info->mclock / 16;
 
-	/* allocate a buffer to mix into - 1 second's worth should be more than enough */
-	info->mixer_buffer = (short*)malloc(sizeof(short) * info->rate);
-
 	/* build the mixer table */
 	make_mixer_table(info, 5);
 	
@@ -222,7 +215,6 @@ static void device_stop_k051649(void *chip)
 {
 	k051649_state *info = (k051649_state *)chip;
 	
-	free(info->mixer_buffer);
 	free(info->mixer_table);
 	free(info);
 	
