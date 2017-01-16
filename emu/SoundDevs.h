@@ -26,5 +26,6 @@
 #define DEVID_OKIM6258	0x17	// also known as MSM6258
 #define DEVID_OKIM6295	0x18	// also known as MSM6295
 #define DEVID_K051649	0x19
+#define DEVID_K054539	0x1A
 
 #endif	// __SOUNDDEVS_H__

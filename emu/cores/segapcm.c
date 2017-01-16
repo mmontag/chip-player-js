@@ -244,7 +244,6 @@ static UINT8 sega_pcm_r(void *chip, UINT16 offset)
 static void sega_pcm_alloc_rom(void *chip, UINT32 memsize)
 {
 	segapcm_state *spcm = (segapcm_state *)chip;
-	UINT32 rom_mask;
 	
 	if (spcm->ROMSize == memsize)
 		return;
@@ -265,12 +264,13 @@ static void sega_pcm_alloc_rom(void *chip, UINT32 memsize)
 	spcm->ROMSize = memsize;
 	
 	// recalculate bankmask
-	for (rom_mask = 1; rom_mask < memsize; rom_mask *= 2)
+	// calculate using a loop to fix ROMs whose size is not a power of 2
+	// (stupid M1 uses ROMs with 0x60000 bytes)
+	for (spcm->rgnmask = 1; spcm->rgnmask < memsize && spcm->rgnmask; spcm->rgnmask <<= 1)
 		;
-	rom_mask --;
-	spcm->rgnmask = rom_mask;	// fix for ROMs with e.g 0x60000 bytes (stupid M1)
+	spcm->rgnmask --;
 	
-	spcm->bankmask = spcm->intf_mask & (rom_mask >> spcm->bankshift);
+	spcm->bankmask = spcm->intf_mask & (spcm->rgnmask >> spcm->bankshift);
 	
 	return;
 }

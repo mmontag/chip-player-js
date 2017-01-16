@@ -33,6 +33,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/segapcm.h"		// for SEGAPCM_CFG
 #include "emu/cores/ayintf.h"		// for AY8910_CFG
 #include "emu/cores/okim6258.h"		// for OKIM6258_CFG
+#include "emu/cores/k054539.h"		// for K054539_CFG
 
 
 typedef struct _vgm_file_header
@@ -539,6 +540,23 @@ static void InitVGMChips(void)
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			}
+			break;
+		case DEVID_K054539:
+			{
+				K054539_CFG kCfg;
+				
+				if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the sample rate, not the clock
+					devCfg.clock *= 384;	// (for backwards compatibility with old VGM logs from 2012/13)
+				kCfg._genCfg = devCfg;
+				kCfg.flags = VGMHdr.bytK054539Flags;
+				
+				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&kCfg, &cDev->defInf);
+				if (retVal)
+					break;
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			}
 			break;
 		default:
@@ -1055,7 +1073,7 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 				
 				chipID = (data[0x01] & 0x80) >> 7;
 				ofs = ((data[0x01] & 0x7F) << 8) | ((data[0x02]) << 0);
-				//SendChipCommand_Ofs16Data8(cmdType.chipID, chipID, ofs, data[0x03]);
+				SendChipCommand_MemData8(cmdType.chipID, chipID, ofs, data[0x03]);
 			}
 			break;
 		case CMDTYPE_O8_D16:
