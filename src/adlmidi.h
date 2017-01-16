@@ -2,7 +2,7 @@
  * libADLMIDI is a free MIDI to WAV conversion library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
- * ADLMIDI Library API:   Copyright (c) 2016 Vitaly Novichkov <admin@wohlnet.ru>
+ * ADLMIDI Library API:   Copyright (c) 2017 Vitaly Novichkov <admin@wohlnet.ru>
  *
  * Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
  * http://iki.fi/bisqwit/source/adlmidi.html
@@ -55,16 +55,16 @@ struct ADL_MIDIPlayer
     double delay;
     double carry;
 
-    // The lag between visual content and audio content equals
-    // the sum of these two buffers.
+    /* The lag between visual content and audio content equals */
+    /* the sum of these two buffers. */
     double mindelay;
     double maxdelay;
 
-    /*For internal usage*/
-    int     stored_samples; //num of collected samples
-    short   backup_samples[1024]; //Backup sample storage.
-    int     backup_samples_size; //Backup sample storage.
-    /*For internal usage*/
+    /* For internal usage */
+    int     stored_samples; /* num of collected samples */
+    short   backup_samples[1024]; /* Backup sample storage. */
+    int     backup_samples_size; /* Backup sample storage. */
+    /* For internal usage */
 
     void *adl_midiPlayer;
     unsigned long PCM_RATE;
@@ -132,4 +132,4 @@ extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]
 }
 #endif
 
-#endif // ADLMIDI_H
+#endif /* ADLMIDI_H */

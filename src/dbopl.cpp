@@ -59,16 +59,16 @@ namespace DBOPL
     //Try to use most precision for frequencies
     //Else try to keep different waves in synch
     //#define WAVE_PRECISION    1
-#ifndef WAVE_PRECISION
+    #ifndef WAVE_PRECISION
     //Wave bits available in the top of the 32bit range
     //Original adlib uses 10.10, we use 10.22
 #define WAVE_BITS   10
-#else
+    #else
     //Need some extra bits at the top to have room for octaves and frequency multiplier
     //We support to 8 times lower rate
     //128 * 15 * 8 = 15350, 2^13.9, so need 14 bits
 #define WAVE_BITS   14
-#endif
+    #endif
 #define WAVE_SH     ( 32 - WAVE_BITS )
 #define WAVE_MASK   ( ( 1 << WAVE_SH ) - 1 )
 
@@ -80,13 +80,13 @@ namespace DBOPL
 
     //Maximum amount of attenuation bits
     //Envelope goes to 511, 9 bits
-#if (DBOPL_WAVE == WAVE_TABLEMUL )
+    #if (DBOPL_WAVE == WAVE_TABLEMUL )
     //Uses the value directly
 #define ENV_BITS    ( 9 )
-#else
+    #else
     //Add 3 bits here for more accuracy and would have to be shifted up either way
 #define ENV_BITS    ( 9 )
-#endif
+    #endif
     //Limits of the envelope with those bits and when the envelope goes silent
 #define ENV_MIN     0
 #define ENV_EXTRA   ( ENV_BITS - 9 )
@@ -101,9 +101,9 @@ namespace DBOPL
 #define MUL_SH      16
 
     //Check some ranges
-#if ENV_EXTRA > 3
+    #if ENV_EXTRA > 3
 #error Too many envelope bits
-#endif
+    #endif
 
 
     //How much to substract from the base value for the final attenuation
@@ -141,16 +141,16 @@ namespace DBOPL
         32,
     };
 
-#if ( DBOPL_WAVE == WAVE_HANDLER ) || ( DBOPL_WAVE == WAVE_TABLELOG )
+    #if ( DBOPL_WAVE == WAVE_HANDLER ) || ( DBOPL_WAVE == WAVE_TABLELOG )
     static Bit16u ExpTable[ 256 ];
-#endif
+    #endif
 
-#if ( DBOPL_WAVE == WAVE_HANDLER )
+    #if ( DBOPL_WAVE == WAVE_HANDLER )
     //PI table used by WAVEHANDLER
     static Bit16u SinTable[ 512 ];
-#endif
+    #endif
 
-#if ( DBOPL_WAVE > WAVE_HANDLER )
+    #if ( DBOPL_WAVE > WAVE_HANDLER )
     //Layout of the waveform table in 512 entry intervals
     //With overlapping waves we reduce the table to half it's size
 
@@ -181,11 +181,11 @@ namespace DBOPL
         512, 0, 0, 0,
         0, 512, 512, 256,
     };
-#endif
+    #endif
 
-#if ( DBOPL_WAVE == WAVE_TABLEMUL )
+    #if ( DBOPL_WAVE == WAVE_TABLEMUL )
     static Bit16u MulTable[ 384 ];
-#endif
+    #endif
 
     static Bit8u KslTable[ 8 * 16 ];
     static Bit8u TremoloTable[ TREMOLO_TABLE ];
@@ -229,7 +229,7 @@ namespace DBOPL
         }
     }
 
-#if ( DBOPL_WAVE == WAVE_HANDLER )
+    #if ( DBOPL_WAVE == WAVE_HANDLER )
     /*
         Generate the different waveforms out of the sine/exponetial table using handlers
     */
@@ -239,13 +239,13 @@ namespace DBOPL
         Bitu index = total & 0xff;
         Bitu sig = ExpTable[ index ];
         Bitu exp = total >> 8;
-#if 0
+        #if 0
 
         //Check if we overflow the 31 shift limit
         if(exp >= 32)
             LOG_MSG("WTF %d %d", total, exp);
 
-#endif
+        #endif
         return (sig >> exp);
     };
 
@@ -310,7 +310,7 @@ namespace DBOPL
         WaveForm4, WaveForm5, WaveForm6, WaveForm7
     };
 
-#endif
+    #endif
 
     /*
         Operator
@@ -386,21 +386,21 @@ namespace DBOPL
     {
         Bit32u freq = chanData & ((1 << 10) - 1);
         Bit32u block = (chanData >> 10) & 0xff;
-#ifdef WAVE_PRECISION
+        #ifdef WAVE_PRECISION
         block = 7 - block;
         waveAdd = (freq * freqMul) >> block;
-#else
+        #else
         waveAdd = (freq << block) * freqMul;
-#endif
+        #endif
 
         if(reg20 & MASK_VIBRATO)
         {
             vibStrength = (Bit8u)(freq >> 7);
-#ifdef WAVE_PRECISION
+            #ifdef WAVE_PRECISION
             vibrato = (vibStrength * freqMul) >> block;
-#else
+            #else
             vibrato = (vibStrength << block) * freqMul;
-#endif
+            #endif
         }
         else
         {
@@ -603,13 +603,13 @@ namespace DBOPL
         //in opl3 mode you can always selet 7 waveforms regardless of waveformselect
         Bit8u waveForm = val & ((0x3 & chip->waveFormMask) | (0x7 & chip->opl3Active));
         regE0 = val;
-#if ( DBOPL_WAVE == WAVE_HANDLER )
+        #if ( DBOPL_WAVE == WAVE_HANDLER )
         waveHandler = WaveHandlerTable[ waveForm ];
-#else
+        #else
         waveBase = WaveTable + WaveBaseTable[ waveForm ];
         waveStart = WaveStartTable[ waveForm ] << WAVE_SH;
         waveMask = WaveMaskTable[ waveForm ];
-#endif
+        #endif
     }
 
     INLINE void Operator::SetState(Bit8u s)
@@ -650,11 +650,11 @@ namespace DBOPL
         if(!keyOn)
         {
             //Restart the frequency generator
-#if ( DBOPL_WAVE > WAVE_HANDLER )
+            #if ( DBOPL_WAVE > WAVE_HANDLER )
             waveIndex = waveStart;
-#else
+            #else
             waveIndex = 0;
-#endif
+            #endif
             rateIndex = 0;
             SetState(ATTACK);
         }
@@ -675,20 +675,20 @@ namespace DBOPL
 
     INLINE Bits Operator::GetWave(Bitu index, Bitu vol)
     {
-#if ( DBOPL_WAVE == WAVE_HANDLER )
+        #if ( DBOPL_WAVE == WAVE_HANDLER )
         return waveHandler(index, vol << (3 - ENV_EXTRA));
-#elif ( DBOPL_WAVE == WAVE_TABLEMUL )
+        #elif ( DBOPL_WAVE == WAVE_TABLEMUL )
         return (waveBase[ index & waveMask ] * MulTable[ vol >> ENV_EXTRA ]) >> MUL_SH;
-#elif ( DBOPL_WAVE == WAVE_TABLELOG )
+        #elif ( DBOPL_WAVE == WAVE_TABLELOG )
         Bit32s wave = waveBase[ index & waveMask ];
         Bit32u total = (wave & 0x7fff) + vol << (3 - ENV_EXTRA);
         Bit32s sig = ExpTable[ total & 0xff ];
         Bit32u exp = total >> 8;
         Bit32s neg = wave >> 16;
         return ((sig ^ neg) - neg) >> exp;
-#else
+        #else
 #error "No valid wave routine"
-#endif
+        #endif
     }
 
     Bits INLINE Operator::GetSample(Bits modulation)
@@ -747,7 +747,7 @@ namespace DBOPL
         feedback = 31;
         fourMask = 0;
         synthHandler = &Channel::BlockTemplate< sm2FM >;
-    };
+    }
 
     void Channel::SetChanData(const Chip *chip, Bit32u data)
     {
@@ -952,7 +952,7 @@ namespace DBOPL
         Bit8u val = regC0;
         regC0 ^= 0xff;
         WriteC0(chip, val);
-    };
+    }
 
     template< bool opl3Mode>
     INLINE void Channel::GeneratePercussion(Chip *chip, Bit32s *output)
@@ -1514,19 +1514,19 @@ namespace DBOPL
         tremoloIndex = 0;
         //With higher octave this gets shifted up
         //-1 since the freqCreateTable = *2
-#ifdef WAVE_PRECISION
+        #ifdef WAVE_PRECISION
         double freqScale = (1 << 7) * scale * (1 << (WAVE_SH - 1 - 10));
 
         for(int i = 0; i < 16; i++)
             freqMul[i] = (Bit32u)(0.5 + freqScale * FreqCreateTable[ i ]);
 
-#else
+        #else
         Bit32u freqScale = (Bit32u)(0.5 + scale * (1 << (WAVE_SH - 1 - 10)));
 
         for(int i = 0; i < 16; i++)
             freqMul[i] = freqScale * FreqCreateTable[ i ];
 
-#endif
+        #endif
 
         //-3 since the real envelope takes 8 steps to reach the single value we supply
         for(Bit8u i = 0; i < 76; i++)
@@ -1704,7 +1704,7 @@ namespace DBOPL
             return;
 
         doneTables = true;
-#if ( DBOPL_WAVE == WAVE_HANDLER ) || ( DBOPL_WAVE == WAVE_TABLELOG )
+        #if ( DBOPL_WAVE == WAVE_HANDLER ) || ( DBOPL_WAVE == WAVE_TABLELOG )
 
         //Exponential volume table, same as the real adlib
         for(int i = 0; i < 256; i++)
@@ -1716,16 +1716,16 @@ namespace DBOPL
             ExpTable[i] *= 2;
         }
 
-#endif
-#if ( DBOPL_WAVE == WAVE_HANDLER )
+        #endif
+        #if ( DBOPL_WAVE == WAVE_HANDLER )
 
         //Add 0.5 for the trunc rounding of the integer cast
         //Do a PI sinetable instead of the original 0.5 PI
         for(int i = 0; i < 512; i++)
             SinTable[i] = (Bit16s)(0.5 - log10(sin((i + 0.5) * (PI / 512.0))) / log10(2.0) * 256);
 
-#endif
-#if ( DBOPL_WAVE == WAVE_TABLEMUL )
+        #endif
+        #if ( DBOPL_WAVE == WAVE_TABLEMUL )
 
         //Multiplication based tables
         for(int i = 0; i < 384; i++)
@@ -1750,8 +1750,8 @@ namespace DBOPL
             WaveTable[ 0x6ff - i ] = -WaveTable[ 0x700 + i ];
         }
 
-#endif
-#if ( DBOPL_WAVE == WAVE_TABLELOG )
+        #endif
+        #if ( DBOPL_WAVE == WAVE_TABLELOG )
 
         //Sine Wave Base
         for(int i = 0; i < 512; i++)
@@ -1767,11 +1767,11 @@ namespace DBOPL
             WaveTable[ 0x6ff - i ] = ((Bit16s)0x8000) | i * 8;
         }
 
-#endif
+        #endif
         //  |    |//\\|____|WAV7|//__|/\  |____|/\/\|
         //  |\\//|    |    |WAV7|    |  \/|    |    |
         //  |06  |0126|27  |7   |3   |4   |4 5 |5   |
-#if (( DBOPL_WAVE == WAVE_TABLELOG ) || ( DBOPL_WAVE == WAVE_TABLEMUL ))
+        #if (( DBOPL_WAVE == WAVE_TABLELOG ) || ( DBOPL_WAVE == WAVE_TABLEMUL ))
 
         for(int i = 0; i < 256; i++)
         {
@@ -1790,7 +1790,7 @@ namespace DBOPL
             WaveTable[ 0xf00 + i ] = WaveTable[ 0x200 + i * 2 ];
         }
 
-#endif
+        #endif
 
         //Create the ksl table
         for(int oct = 0; oct < 8; oct++)
@@ -1863,7 +1863,7 @@ namespace DBOPL
             OpOffsetTable[i] = ChanOffsetTable[ chNum ] + blah;
         }
 
-#if 0
+        #if 0
 
         //Stupid checks if table's are correct
         for(Bitu i = 0; i < 18; i++)
@@ -1900,7 +1900,7 @@ namespace DBOPL
                 find = find;
         }
 
-#endif
+        #endif
     }
 
     Bit32u Handler::WriteAddr(Bit32u port, Bit8u val)

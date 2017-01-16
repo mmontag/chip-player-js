@@ -1,28 +1,28 @@
-//
-// Copyright (C) 2013-2016 Alexey Khokholov (Nuke.YKT)
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-//
-//  Nuked OPL3 emulator.
-//  Thanks:
-//      MAME Development Team(Jarek Burczynski, Tatsuyuki Satoh):
-//          Feedback and Rhythm part calculation information.
-//      forums.submarine.org.uk(carbon14, opl3):
-//          Tremolo and phase generator calculation information.
-//      OPLx decapsulated(Matthew Gambrell, Olli Niemitalo):
-//          OPL2 ROMs.
-//
-// version: 1.7.4
-//
+/*
+ * Copyright (C) 2013-2016 Alexey Khokholov (Nuke.YKT)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ *
+ *  Nuked OPL3 emulator.
+ *  Thanks:
+ *      MAME Development Team(Jarek Burczynski, Tatsuyuki Satoh):
+ *          Feedback and Rhythm part calculation information.
+ *      forums.submarine.org.uk(carbon14, opl3):
+ *          Tremolo and phase generator calculation information.
+ *      OPLx decapsulated(Matthew Gambrell, Olli Niemitalo):
+ *          OPL2 ROMs.
+ *
+ * version: 1.7.4
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,13 +31,13 @@
 
 #define RSM_FRAC    10
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && __USE_ISOC99
 #define INLINE __attribute__((always_inline)) inline
 #else
 #define INLINE
 #endif
 
-// Channel types
+/*  Channel types */
 enum {
     ch_2op = 0,
     ch_4op = 1,
@@ -45,16 +45,16 @@ enum {
     ch_drum = 3
 };
 
-// Envelope key types
+/*  Envelope key types */
 enum {
     egk_norm = 0x01,
     egk_drum = 0x02
 };
 
 
-//
-// logsin table
-//
+/*  */
+/*  logsin table */
+/*  */
 
 static const Bit16u logsinrom[256] = {
     0x859, 0x6c3, 0x607, 0x58b, 0x52e, 0x4e4, 0x4a6, 0x471,
@@ -91,9 +91,9 @@ static const Bit16u logsinrom[256] = {
     0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000
 };
 
-//
-// exp table
-//
+/*  */
+/*  exp table */
+/*  */
 
 static const Bit16u exprom[256] = {
     0x000, 0x003, 0x006, 0x008, 0x00b, 0x00e, 0x011, 0x014,
@@ -130,19 +130,19 @@ static const Bit16u exprom[256] = {
     0x3d4, 0x3da, 0x3df, 0x3e4, 0x3ea, 0x3ef, 0x3f5, 0x3fa
 };
 
-//
-// freq mult table multiplied by 2
-//
-// 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15
-//
+/*  */
+/*  freq mult table multiplied by 2 */
+/*  */
+/*  1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15 */
+/*  */
 
 static const Bit8u mt[16] = {
     1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30
 };
 
-//
-// ksl table
-//
+/*  */
+/*  ksl table */
+/*  */
 
 static const Bit8u kslrom[16] = {
     0, 32, 40, 45, 48, 51, 53, 55, 56, 58, 59, 60, 61, 62, 63, 64
@@ -152,9 +152,9 @@ static const Bit8u kslshift[4] = {
     8, 1, 2, 0
 };
 
-//
-// envelope generator constants
-//
+/*  */
+/*  envelope generator constants */
+/*  */
 
 static const Bit8u eg_incstep[3][4][8] = {
     {
@@ -185,9 +185,9 @@ static const Bit8s eg_incsh[16] = {
     0, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, -1, -2
 };
 
-//
-// address decoding
-//
+/*  */
+/*  address decoding */
+/*  */
 
 static const Bit8s ad_slot[0x20] = {
     0, 1, 2, 3, 4, 5, -1, -1, 6, 7, 8, 9, 10, 11, -1, -1,
@@ -198,9 +198,9 @@ static const Bit8u ch_slot[18] = {
     0, 1, 2, 6, 7, 8, 12, 13, 14, 18, 19, 20, 24, 25, 26, 30, 31, 32
 };
 
-//
-// Envelope generator
-//
+/*  */
+/*  Envelope generator */
+/*  */
 
 typedef Bit16s(*envelope_sinfunc)(Bit16u phase, Bit16u envelope);
 typedef void(*envelope_genfunc)(opl3_slot *slott);
@@ -545,9 +545,9 @@ static INLINE void OPL3_EnvelopeKeyOff(opl3_slot *slot, Bit8u type)
     }
 }
 
-//
-// Phase Generator
-//
+/*  */
+/*  Phase Generator */
+/*  */
 
 static INLINE void OPL3_PhaseGenerate(opl3_slot *slot)
 {
@@ -583,9 +583,9 @@ static INLINE void OPL3_PhaseGenerate(opl3_slot *slot)
     slot->pg_phase += (basefreq * mt[slot->reg_mult]) >> 1;
 }
 
-//
-// Noise Generator
-//
+/*  */
+/*  Noise Generator */
+/*  */
 
 static INLINE void OPL3_NoiseGenerate(opl3_chip *chip)
 {
@@ -596,9 +596,9 @@ static INLINE void OPL3_NoiseGenerate(opl3_chip *chip)
     chip->noise >>= 1;
 }
 
-//
-// Slot
-//
+/*  */
+/*  Slot */
+/*  */
 
 static INLINE void OPL3_SlotWrite20(opl3_slot *slot, Bit8u data)
 {
@@ -694,11 +694,11 @@ static INLINE void OPL3_SlotCalcFB(opl3_slot *slot)
     slot->prout = slot->out;
 }
 
-//
-// Channel
-//
+/*  */
+/*  Channel */
+/*  */
 
-//static void OPL3_ChannelSetupAlg(opl3_channel *channel);
+/* static void OPL3_ChannelSetupAlg(opl3_channel *channel); */
 static INLINE void OPL3_ChannelSetupAlg(opl3_channel *channel)
 {
     if (channel->chtype == ch_drum)
@@ -824,7 +824,7 @@ static INLINE void OPL3_ChannelUpdateRhythm(opl3_chip *chip, Bit8u data)
             chip->channel[chnum].chtype = ch_drum;
         }
         OPL3_ChannelSetupAlg(channel6);
-        //hh
+        /* hh */
         if (chip->rhy & 0x01)
         {
             OPL3_EnvelopeKeyOn(channel7->chipslots[0], egk_drum);
@@ -833,7 +833,7 @@ static INLINE void OPL3_ChannelUpdateRhythm(opl3_chip *chip, Bit8u data)
         {
             OPL3_EnvelopeKeyOff(channel7->chipslots[0], egk_drum);
         }
-        //tc
+        /* tc */
         if (chip->rhy & 0x02)
         {
             OPL3_EnvelopeKeyOn(channel8->chipslots[1], egk_drum);
@@ -842,7 +842,7 @@ static INLINE void OPL3_ChannelUpdateRhythm(opl3_chip *chip, Bit8u data)
         {
             OPL3_EnvelopeKeyOff(channel8->chipslots[1], egk_drum);
         }
-        //tom
+        /* tom */
         if (chip->rhy & 0x04)
         {
             OPL3_EnvelopeKeyOn(channel8->chipslots[0], egk_drum);
@@ -851,7 +851,7 @@ static INLINE void OPL3_ChannelUpdateRhythm(opl3_chip *chip, Bit8u data)
         {
             OPL3_EnvelopeKeyOff(channel8->chipslots[0], egk_drum);
         }
-        //sd
+        /* sd */
         if (chip->rhy & 0x08)
         {
             OPL3_EnvelopeKeyOn(channel7->chipslots[1], egk_drum);
@@ -860,7 +860,7 @@ static INLINE void OPL3_ChannelUpdateRhythm(opl3_chip *chip, Bit8u data)
         {
             OPL3_EnvelopeKeyOff(channel7->chipslots[1], egk_drum);
         }
-        //bd
+        /* bd */
         if (chip->rhy & 0x10)
         {
             OPL3_EnvelopeKeyOn(channel6->chipslots[0], egk_drum);
@@ -1079,14 +1079,14 @@ static INLINE void OPL3_GenerateRhythm1(opl3_chip *chip)
     phase14 = (channel7->chipslots[0]->pg_phase >> 9) & 0x3ff;
     phase17 = (channel8->chipslots[1]->pg_phase >> 9) & 0x3ff;
     phase = 0x00;
-    //hh tc phase bit
+    /* hh tc phase bit */
     phasebit = ((phase14 & 0x08) | (((phase14 >> 5) ^ phase14) & 0x04)
              | (((phase17 >> 2) ^ phase17) & 0x08)) ? 0x01 : 0x00;
-    //hh
+    /* hh */
     phase = (phasebit << 9)
           | (0x34 << ((phasebit ^ (chip->noise & 0x01)) << 1));
     OPL3_SlotGeneratePhase(channel7->chipslots[0], phase);
-    //tt
+    /* tt */
     OPL3_SlotGenerateZM(channel8->chipslots[0]);
 }
 
@@ -1107,13 +1107,13 @@ static INLINE void OPL3_GenerateRhythm2(opl3_chip *chip)
     phase14 = (channel7->chipslots[0]->pg_phase >> 9) & 0x3ff;
     phase17 = (channel8->chipslots[1]->pg_phase >> 9) & 0x3ff;
     phase = 0x00;
-    //hh tc phase bit
+    /* hh tc phase bit */
     phasebit = ((phase14 & 0x08) | (((phase14 >> 5) ^ phase14) & 0x04)
              | (((phase17 >> 2) ^ phase17) & 0x08)) ? 0x01 : 0x00;
-    //sd
+    /* sd */
     phase = (0x100 << ((phase14 >> 8) & 0x01)) ^ ((chip->noise & 0x01) << 8);
     OPL3_SlotGeneratePhase(channel7->chipslots[1], phase);
-    //tc
+    /* tc */
     phase = 0x100 | (phasebit << 9);
     OPL3_SlotGeneratePhase(channel8->chipslots[1], phase);
 }
