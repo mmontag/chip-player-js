@@ -18,9 +18,9 @@ matrix:
       compiler: i586-mingw32msvc-gcc
       script: autoconf && ./configure --host=i586-mingw32msvc && make
     - os: linux
-      compiler: '"clang -fsanitize=address"'
+      compiler: clang -fsanitize=address
       script: autoconf && ./configure && make && make check && (cd test-dev; autoconf && ./configure && make)
     - os: linux
-      compiler: '"clang -fsanitize=memory"'
+      compiler: clang -fsanitize=memory
       script: autoconf && ./configure && make && make check && (cd test-dev; autoconf && ./configure && make)
 
