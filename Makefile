@@ -167,6 +167,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/okim6295.o \
 	$(LIBEMUOBJ)/cores/k051649.o \
 	$(LIBEMUOBJ)/cores/k054539.o \
+	$(LIBEMUOBJ)/cores/k053260.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o
 
