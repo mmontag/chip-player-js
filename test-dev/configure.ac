@@ -18,7 +18,7 @@ XMP_TRY_COMPILE(whether compiler understands -Wunused-result,
   int main(){}],
   CFLAGS="${CFLAGS} -Wno-unused-result")  
 
-AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy strlcat)
 AC_CHECK_LIB(m,pow)
+AC_CHECK_FUNCS(popen mkstemp fnmatch strlcpy strlcat round)
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
