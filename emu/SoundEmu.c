@@ -29,6 +29,7 @@
 #include "cores/k051649.h"
 #include "cores/k054539.h"
 #include "cores/k053260.h"
+#include "cores/c140.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 {
@@ -88,6 +89,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_K054539;
 	case DEVID_K053260:
 		return devDefList_K053260;
+	case DEVID_C140:
+		return devDefList_C140;
 	}
 	return NULL;
 }

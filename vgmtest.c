@@ -34,6 +34,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/ayintf.h"		// for AY8910_CFG
 #include "emu/cores/okim6258.h"		// for OKIM6258_CFG
 #include "emu/cores/k054539.h"		// for K054539_CFG
+#include "emu/cores/c140.h"			// for C140_CFG
 
 
 typedef struct _vgm_file_header
@@ -552,6 +553,23 @@ static void InitVGMChips(void)
 				kCfg.flags = VGMHdr.bytK054539Flags;
 				
 				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&kCfg, &cDev->defInf);
+				if (retVal)
+					break;
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			}
+			break;
+		case DEVID_C140:
+			{
+				C140_CFG cCfg;
+				
+				if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the sample rate, not the clock
+					devCfg.clock *= 384;	// (for backwards compatibility with old VGM logs from 2013/14)
+				cCfg._genCfg = devCfg;
+				cCfg.banking_type = VGMHdr.bytC140Type;
+				
+				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&cCfg, &cDev->defInf);
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
