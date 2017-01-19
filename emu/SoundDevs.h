@@ -29,5 +29,6 @@
 #define DEVID_K054539	0x1A
 #define DEVID_C140	0x1C
 #define DEVID_K053260	0x1D
+#define DEVID_C352	0x27
 
 #endif	// __SOUNDDEVS_H__

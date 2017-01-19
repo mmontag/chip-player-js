@@ -27,6 +27,8 @@ typedef UINT8 (*DEVFUNC_LINKDEV)(void* info, UINT8 devID, const DEV_INFO* devInf
 
 typedef UINT8 (*DEVFUNC_READ_A8D8)(void* info, UINT8 addr);
 typedef UINT16 (*DEVFUNC_READ_A8D16)(void* info, UINT8 addr);
+typedef UINT8 (*DEVFUNC_READ_A16D8)(void* info, UINT16 addr);
+typedef UINT16 (*DEVFUNC_READ_A16D16)(void* info, UINT16 addr);
 typedef UINT32 (*DEVFUNC_READ_CLOCK)(void* info);
 typedef UINT32 (*DEVFUNC_READ_SRATE)(void* info);
 

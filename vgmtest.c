@@ -35,6 +35,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/okim6258.h"		// for OKIM6258_CFG
 #include "emu/cores/k054539.h"		// for K054539_CFG
 #include "emu/cores/c140.h"			// for C140_CFG
+#include "emu/cores/c352.h"			// for C352_CFG
 
 
 typedef struct _vgm_file_header
@@ -127,6 +128,7 @@ struct _vgm_chip_device
 	DEVFUNC_WRITE_A8D8 write8;		// write 8-bit data to 8-bit register/offset
 	DEVFUNC_WRITE_A16D8 writeM8;	// write 8-bit data to 16-bit memory offset
 	DEVFUNC_WRITE_A8D16 writeD16;	// write 16-bit data to 8-bit register/offset
+	DEVFUNC_WRITE_A16D16 writeM16;	// write 16-bit data to 16-bit register/offset
 	DEVFUNC_WRITE_MEMSIZE romSize;
 	DEVFUNC_WRITE_BLOCK romWrite;
 	DEVFUNC_WRITE_MEMSIZE romSizeB;
@@ -577,6 +579,21 @@ static void InitVGMChips(void)
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			}
 			break;
+		case DEVID_C352:
+			{
+				C352_CFG cCfg;
+				
+				cCfg._genCfg = devCfg;
+				cCfg.clk_divider = VGMHdr.bytC352ClkDiv * 4;
+				
+				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&cCfg, &cDev->defInf);
+				if (retVal)
+					break;
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D16, 0, (void**)&cDev->writeM16);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			}
+			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;
@@ -748,6 +765,18 @@ static void SendChipCommand_Data16(UINT8 chipID, UINT8 chipNum, UINT8 ofs, UINT1
 	return;
 }
 
+static void SendChipCommand_MemData16(UINT8 chipID, UINT8 chipNum, UINT16 ofs, UINT16 data)
+{
+	VGM_CHIPDEV* cDev;
+	
+	cDev = &VGMChips[chipID];
+	if (cDev->writeM16 == NULL)
+		return;
+	
+	cDev->writeM16(cDev->defInf.dataPtr, ofs, data);
+	return;
+}
+
 static void WriteChipROM(UINT8 chipID, UINT8 chipNum, UINT8 memID,
 						 UINT32 memSize, UINT32 dataOfs, UINT32 dataSize, const UINT8* data)
 {
@@ -834,6 +863,7 @@ typedef struct
 #define CMDTYPE_O8_D8		0x04	// Offset (8-bit) + Data (8-bit)
 #define CMDTYPE_O16_D8		0x05	// Offset (16-bit) + Data (8-bit)
 #define CMDTYPE_O8_D16		0x06	// Offset (8-bit) + Data (16-bit)
+#define CMDTYPE_O16_D16		0x07	// Offset (16-bit) + Data (16-bit)
 #define CMDTYPE_SPCM_MEM	0x80	// SegaPCM Memory Write
 #define CMDTYPE_RF5C_MEM	0x81	// RF5Cxx Memory Write
 #define CMDTYPE_PWM_REG		0x82	// PWM register write (4-bit offset, 12-bit data)
@@ -912,6 +942,25 @@ static const VGM_CMDTYPES VGM_CMDS_D0[0x10] =
 	{0xFF,	CMDTYPE_DUMMY},		// DD [unused]
 	{0xFF,	CMDTYPE_DUMMY},		// DE [unused]
 	{0xFF,	CMDTYPE_DUMMY},		// DF [unused]
+};
+static const VGM_CMDTYPES VGM_CMDS_E0[0x10] =
+{
+	{0xFF,	CMDTYPE_DUMMY},		// E0 [unused]
+	{0x27,	CMDTYPE_O16_D16},	// E1 C352
+	{0xFF,	CMDTYPE_DUMMY},		// E2 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// E3 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// E4 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// E5 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// E6 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// E7 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// E8 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// E9 [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// EA [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// EB [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// EC [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// ED [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// EE [unused]
+	{0xFF,	CMDTYPE_DUMMY},		// EF [unused]
 };
 
 static UINT8 RF5C_Bank[2] = {0x00, 0x00};
@@ -1029,6 +1078,8 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		}
 	case 0x68:
 		return 0x0C;
+	case 0xE0:	// Seek to PCM Data Bank Pos
+		return 0x05;
 	case 0x4F:	// SN76489 GG Stereo
 		SendChipCommand_Data8(0x00, chipID, 0x01, data[0x01]);
 		return 0x02;
@@ -1068,6 +1119,9 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		case 0xD0:
 			cmdType = VGM_CMDS_D0[cmd & 0x0F];
 			break;
+		case 0xE0:
+			cmdType = VGM_CMDS_E0[cmd & 0x0F];
+			break;
 		}
 		switch(cmdType.cmdType)
 		{
@@ -1101,6 +1155,17 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 				chipID = (data[0x01] & 0x80) >> 7;
 				value = (data[0x02] << 0) | (data[0x03] << 8);
 				SendChipCommand_Data16(cmdType.chipID, chipID, data[0x01] & 0x7F, value);
+			}
+			break;
+		case CMDTYPE_O16_D16:
+			{
+				UINT16 ofs;
+				UINT16 value;
+				
+				chipID = (data[0x01] & 0x80) >> 7;
+				ofs = ((data[0x01] & 0x7F) << 8) | ((data[0x02]) << 0);
+				value = (data[0x03] << 8) | (data[0x04] << 0);
+				SendChipCommand_MemData16(cmdType.chipID, chipID, ofs, value);
 			}
 			break;
 		case CMDTYPE_SPCM_MEM:	// SegaPCM Memory Write
