@@ -147,13 +147,10 @@ struct _c140_state
 {
 	void* chipInf;
 
+	UINT32 baserate;
 	UINT32 sample_rate;
 	UINT8 banking_type;
-	/* internal buffers */
-	INT16 *mixer_buffer_left;
-	INT16 *mixer_buffer_right;
 
-	int baserate;
 	UINT32 pRomSize;
 	INT8 *pRom;
 	UINT8 REG[0x200];
@@ -299,13 +296,15 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	INT32	lastdt,prevdt,dltdt;
 	float	pbase=(float)info->baserate*2.0f / (float)info->sample_rate;
 
-	INT16	*lmix, *rmix;
+	DEV_SMPL *lmix, *rmix;
 
-	if(samples>info->sample_rate) samples=info->sample_rate;
+	/* Set mixer outputs base pointers */
+	lmix = outputs[0];
+	rmix = outputs[1];
 
 	/* zap the contents of the mixer buffer */
-	memset(info->mixer_buffer_left, 0, samples * sizeof(INT16));
-	memset(info->mixer_buffer_right, 0, samples * sizeof(INT16));
+	memset(lmix, 0, samples * sizeof(DEV_SMPL));
+	memset(rmix, 0, samples * sizeof(DEV_SMPL));
 	if (info->pRom == NULL)
 		return;
 
@@ -331,10 +330,6 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			/* Calculate left/right channel volumes */
 			lvol=(vreg->volume_left*32)/MAX_VOICE; //32ch -> 24ch
 			rvol=(vreg->volume_right*32)/MAX_VOICE;
-
-			/* Set mixer outputs base pointers */
-			lmix = info->mixer_buffer_left;
-			rmix = info->mixer_buffer_right;
 
 			/* Retrieve sample start/end and calculate size */
 			st=v->sample_start;
@@ -396,8 +391,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					dt=((dltdt*offset)>>16)+prevdt;
 
 					/* Write the data to the sample buffers */
-					*lmix++ +=(dt*lvol)>>(5+5);
-					*rmix++ +=(dt*rvol)>>(5+5);
+					lmix[j]+=(dt*lvol)>>(5+2);
+					rmix[j]+=(dt*rvol)>>(5+2);
 				}
 			}
 			else
@@ -452,8 +447,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					dt=((dltdt*offset)>>16)+prevdt;
 
 					/* Write the data to the sample buffers */
-					*lmix++ +=(dt*lvol)>>5;
-					*rmix++ +=(dt*rvol)>>5;
+					lmix[j]+=(dt*lvol)>>2;
+					rmix[j]+=(dt*rvol)>>2;
 				}
 			}
 
@@ -463,19 +458,6 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			v->lastdt=lastdt;
 			v->prevdt=prevdt;
 			v->dltdt=dltdt;
-		}
-	}
-
-	/* render to MAME's stream buffer */
-	lmix = info->mixer_buffer_left;
-	rmix = info->mixer_buffer_right;
-	{
-		DEV_SMPL *dest1 = outputs[0];
-		DEV_SMPL *dest2 = outputs[1];
-		for (i = 0; i < samples; i++)
-		{
-			*dest1++ = 8 * (*lmix ++);
-			*dest2++ = 8 * (*rmix ++);
 		}
 	}
 }
@@ -508,10 +490,6 @@ static UINT8 device_start_c140(const C140_CFG* cfg, DEV_INFO* retDevInf)
 		}
 	}
 
-	/* allocate a pair of buffers to mix into - 1 second's worth should be more than enough */
-	info->mixer_buffer_left = (INT16*)malloc(sizeof(INT16) * 2 * info->sample_rate);
-	info->mixer_buffer_right = info->mixer_buffer_left + info->sample_rate;
-	
 	c140_set_mute_mask(info, 0x000000);
 	
 	info->chipInf = info;
@@ -524,7 +502,6 @@ static void device_stop_c140(void *chip)
 	c140_state *info = (c140_state *)chip;
 	
 	free(info->pRom);
-	free(info->mixer_buffer_left);
 	free(info);
 	
 	return;
