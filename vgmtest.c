@@ -603,6 +603,8 @@ static void InitVGMChips(void)
 				devCfg.emuCore = FCC_ADLE;
 			else if (curChip == DEVID_NES_APU)
 				devCfg.emuCore = FCC_NSFP;
+			else if (curChip == DEVID_C6280)
+				devCfg.emuCore = FCC_OOTK;
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;

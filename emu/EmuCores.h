@@ -9,5 +9,6 @@
 #define FCC_ADLE	0x41444C45	// AdLibEmu
 #define FCC_OMSX	0x4F4D5358	// openMSX
 #define FCC_NSFP	0x4E534650	// NSFPlay
+#define FCC_OOTK	0x4F4F544B	// Ootake
 
 #endif	// __EMUCORES_H__

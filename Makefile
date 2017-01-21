@@ -167,8 +167,11 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/okim6295.o \
 	$(LIBEMUOBJ)/cores/k051649.o \
 	$(LIBEMUOBJ)/cores/k054539.o \
-	$(LIBEMUOBJ)/cores/k053260.o \
+	$(LIBEMUOBJ)/cores/c6280intf.o \
+	$(LIBEMUOBJ)/cores/c6280_mame.o \
+	$(LIBEMUOBJ)/cores/Ootake_PSG.o \
 	$(LIBEMUOBJ)/cores/c140.o \
+	$(LIBEMUOBJ)/cores/k053260.o \
 	$(LIBEMUOBJ)/cores/c352.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o
