@@ -31,6 +31,7 @@
 #include "cores/c6280intf.h"
 #include "cores/c140.h"
 #include "cores/k053260.h"
+#include "cores/pokey.h"
 #include "cores/c352.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -95,6 +96,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_C140;
 	case DEVID_K053260:
 		return devDefList_K053260;
+	case DEVID_POKEY:
+		return devDefList_Pokey;
 	case DEVID_C352:
 		return devDefList_C352;
 	}

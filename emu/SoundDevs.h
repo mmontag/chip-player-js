@@ -30,6 +30,7 @@
 #define DEVID_C6280		0x1B
 #define DEVID_C140		0x1C
 #define DEVID_K053260	0x1D
+#define DEVID_POKEY		0x1E
 #define DEVID_C352		0x27
 
 #endif	// __SOUNDDEVS_H__
