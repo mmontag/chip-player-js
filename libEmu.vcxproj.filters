@@ -177,6 +177,9 @@
     <ClCompile Include="emu\cores\pokey.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\qsound.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -363,6 +366,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\pokey.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\qsound.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
