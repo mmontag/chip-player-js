@@ -233,7 +233,7 @@ static void LoadBNK(const char* fn, unsigned bank, const char* prefix, bool is_f
                     + (op1[ 5] << 5) // SUSTAIN FLAG
                     + (op1[11] << 4) // SCALING FLAG
                      + op1[ 1];      // FREQMUL
-                     
+
         tmp.data[1] = (op2[ 9] << 7)
                     + (op2[10] << 6)
                     + (op2[ 5] << 5)
@@ -1057,8 +1057,9 @@ int main()
     LoadBNK("fm_banks/bnk_files/ssmelo.bnk",  8, "b8M", false, false);
     LoadBNK("fm_banks/bnk_files/ssdrum.bnk",  8, "b8P", false, true);
 
-    LoadBNK("fm_banks/bnk_files/file131.bnk", 9, "b9M", false, false);
-    LoadBNK("fm_banks/bnk_files/file132.bnk", 9, "b9P", false, true);
+    LoadTMB("fm_banks/bnk_files/themepark.tmb", 9, "b9MP");
+    //LoadBNK("fm_banks/bnk_files/file131.bnk", 9, "b9M", false, false);
+    //LoadBNK("fm_banks/bnk_files/file132.bnk", 9, "b9P", false, true);
     LoadBNK("fm_banks/bnk_files/file133.bnk", 10,"b10P", false, true);
     LoadBNK("fm_banks/bnk_files/file134.bnk", 10,"b10M", false, false);
     LoadBNK("fm_banks/bnk_files/file142.bnk", 11, "b11P", false, true);
@@ -1125,7 +1126,7 @@ int main()
 
     LoadTMB("fm_banks/tmb_files/d3dtimbr.tmb", 62, "duke");
     LoadTMB("fm_banks/tmb_files/swtimbr.tmb",  63, "sw");
-    
+
     LoadDoom("fm_banks/raptor/genmidi.op2", 64, "rapt");
 
 	//LoadJunglevision("fm_banks/op3_files/fat2_modded.op3", 65, "b65M");
@@ -1137,7 +1138,7 @@ int main()
 
     LoadTMB("fm_banks/tmb_files/default.tmb",  67, "3drm67");
     //LoadDoom("fm_banks/doom2/wolfinstein.op2", 67, "wolf"); //Small experiment!
-    
+
     LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
 
     LoadTMB("fm_banks/tmb_files/bloodtmb.tmb",  69, "apgblood");
@@ -1390,7 +1391,7 @@ int main()
     }
     std::set<unsigned> listed;
 
-    printf(        
+    printf(
         "\n\n//Returns total number of generated banks\n"
         "int  maxAdlBanks()\n"
         "{"
