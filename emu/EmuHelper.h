@@ -25,4 +25,19 @@
 		(srmode == DEVRI_SRMODE_HIGHEST && rate < customrate))	\
 		rate = customrate;
 
+
+// round up to the nearest power of 2
+// from http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+INLINE UINT32 ceil_pow2(UINT32 v)
+{
+	v --;
+	v |= (v >>  1);
+	v |= (v >>  2);
+	v |= (v >>  4);
+	v |= (v >>  8);
+	v |= (v >> 16);
+	v ++;
+	return v;
+}
+
 #endif	// __EMUHELPER_H__

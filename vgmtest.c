@@ -625,6 +625,7 @@ static void InitVGMChips(void)
 			if (retVal)
 				break;
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			break;
@@ -934,7 +935,7 @@ static const VGM_CMDTYPES VGM_CMDS_C0[0x10] =
 	{0x1F,	CMDTYPE_QSOUND},	// C4 QSound
 	{0x20,	CMDTYPE_O16_D8},	// C5 SCSP
 	{0x21,	CMDTYPE_O16_D8},	// C6 WonderSwan (memory write)
-	{0x22,	CMDTYPE_O16_D8},	// C7 VSU
+	{0x22,	CMDTYPE_O16_D8},	// C7 VSU-VUE
 	{0x26,	CMDTYPE_O16_D8},	// C8 X1-010
 	{0xFF,	CMDTYPE_DUMMY},		// C9 [unused]
 	{0xFF,	CMDTYPE_DUMMY},		// CA [unused]
