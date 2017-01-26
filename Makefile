@@ -177,6 +177,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/qsound.o \
 	$(LIBEMUOBJ)/cores/ws_audio.o \
 	$(LIBEMUOBJ)/cores/vsu.o \
+	$(LIBEMUOBJ)/cores/saa1099.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o
 

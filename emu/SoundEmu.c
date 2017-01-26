@@ -35,6 +35,7 @@
 #include "cores/qsound.h"
 #include "cores/ws_audio.h"
 #include "cores/vsu.h"
+#include "cores/saa1099.h"
 #include "cores/c352.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -107,6 +108,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_WSwan;
 	case DEVID_VBOY_VSU:
 		return devDefList_VBoyVSU;
+	case DEVID_SAA1099:
+		return devDefList_SAA1099;
 	case DEVID_C352:
 		return devDefList_C352;
 	}
