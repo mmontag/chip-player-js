@@ -172,12 +172,13 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/Ootake_PSG.o \
 	$(LIBEMUOBJ)/cores/c140.o \
 	$(LIBEMUOBJ)/cores/k053260.o \
-	$(LIBEMUOBJ)/cores/c352.o \
 	$(LIBEMUOBJ)/cores/pokey.o \
 	$(LIBEMUOBJ)/cores/qsound.o \
 	$(LIBEMUOBJ)/cores/ws_audio.o \
 	$(LIBEMUOBJ)/cores/vsu.o \
 	$(LIBEMUOBJ)/cores/saa1099.o \
+	$(LIBEMUOBJ)/cores/es5503.o \
+	$(LIBEMUOBJ)/cores/c352.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o
 

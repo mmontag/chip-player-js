@@ -35,6 +35,7 @@
 #define DEVID_WSWAN		0x21
 #define DEVID_VBOY_VSU	0x22
 #define DEVID_SAA1099	0x23
+#define DEVID_ES5503	0x24
 #define DEVID_C352		0x27
 
 #endif	// __SOUNDDEVS_H__
