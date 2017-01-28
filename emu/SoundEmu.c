@@ -37,6 +37,7 @@
 #include "cores/vsu.h"
 #include "cores/saa1099.h"
 #include "cores/es5503.h"
+#include "cores/x1_010.h"
 #include "cores/c352.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
@@ -113,6 +114,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_SAA1099;
 	case DEVID_ES5503:
 		return devDefList_ES5503;
+	case DEVID_X1_010:
+		return devDefList_X1_010;
 	case DEVID_C352:
 		return devDefList_C352;
 	}

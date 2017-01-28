@@ -196,6 +196,7 @@
     <ClCompile Include="emu\cores\upd7759.c" />
     <ClCompile Include="emu\cores\vsu.c" />
     <ClCompile Include="emu\cores\ws_audio.c" />
+    <ClCompile Include="emu\cores\x1_010.c" />
     <ClCompile Include="emu\cores\ym2151.c" />
     <ClCompile Include="emu\cores\ym2413.c" />
     <ClCompile Include="emu\cores\ym2612.c" />
@@ -260,6 +261,7 @@
     <ClInclude Include="emu\cores\vsu.h" />
     <ClInclude Include="emu\cores\ws_audio.h" />
     <ClInclude Include="emu\cores\ws_initialIo.h" />
+    <ClInclude Include="emu\cores\x1_010.h" />
     <ClInclude Include="emu\cores\ym2151.h" />
     <ClInclude Include="emu\cores\ym2413.h" />
     <ClInclude Include="emu\cores\ym2612.h" />
