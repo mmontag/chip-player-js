@@ -663,9 +663,7 @@ static void k054539_alloc_rom(void* chip, UINT32 memsize)
 	info->rom_size = memsize;
 	memset(info->rom, 0xFF, memsize);
 	
-	for (info->rom_mask = 1; info->rom_mask < memsize && info->rom_mask; info->rom_mask <<= 1)
-		;
-	info->rom_mask --;
+	info->rom_mask = pow2_mask(memsize);
 	
 	return;
 }

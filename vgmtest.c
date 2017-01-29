@@ -317,13 +317,16 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	UINT32 curSmpl;
 	WAVE_32BS fnlSmpl;
 	
+	smplCount = bufSize / smplSize;
+	if (! smplCount)
+		return 0;
+	
 	if (! canRender)
 	{
-		memset(data, 0x00, bufSize);
-		return bufSize;
+		memset(data, 0x00, smplCount * smplSize);
+		return smplCount * smplSize;
 	}
 	
-	smplCount = bufSize / smplSize;
 	if (smplCount > smplAlloc)
 		smplCount = smplAlloc;
 	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));

@@ -636,13 +636,7 @@ value:   START, REC, MEMDAT, REPEAT, SPOFF, x,x,RESET   meaning:
 
 void YM_DELTAT_calc_mem_mask(YM_DELTAT* DELTAT)
 {
-	UINT32 MaskSize;
-	
-	MaskSize = 0x01;
-	while(MaskSize < DELTAT->memory_size)
-		MaskSize <<= 1;
-	
-	DELTAT->memory_mask = (MaskSize << 1) - 1;	// it's Mask<<1 because of the nibbles
+	DELTAT->memory_mask = pow2_mask(DELTAT->memory_size << 1);	// it's <<1 because of the nibbles
 	
 	return;
 }

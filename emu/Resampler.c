@@ -406,6 +406,9 @@ static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* 
 
 void Resmpl_Execute(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample)
 {
+	if (! Length)
+		return;
+	
 	switch(CAA->Resampler)
 	{
 	case RESALGO_OLD:	// old, but very fast resampler

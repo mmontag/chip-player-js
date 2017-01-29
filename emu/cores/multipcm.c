@@ -750,9 +750,7 @@ static void multipcm_alloc_rom(void* info, UINT32 memsize)
 	ptChip->ROMSize = memsize;
 	memset(ptChip->ROM, 0xFF, memsize);
 	
-	for (ptChip->ROMMask = 1; ptChip->ROMMask < memsize; ptChip->ROMMask <<= 1)
-		;
-	ptChip->ROMMask --;
+	ptChip->ROMMask = pow2_mask(memsize);
 	
 	return;
 }

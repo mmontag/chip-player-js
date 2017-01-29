@@ -264,11 +264,9 @@ static void sega_pcm_alloc_rom(void *chip, UINT32 memsize)
 	spcm->ROMSize = memsize;
 	
 	// recalculate bankmask
-	// calculate using a loop to fix ROMs whose size is not a power of 2
+	// calculate using pow2_mask to fix ROMs whose size is not a power of 2
 	// (stupid M1 uses ROMs with 0x60000 bytes)
-	for (spcm->rgnmask = 1; spcm->rgnmask < memsize && spcm->rgnmask; spcm->rgnmask <<= 1)
-		;
-	spcm->rgnmask --;
+	spcm->rgnmask = pow2_mask(memsize);
 	
 	spcm->bankmask = spcm->intf_mask & (spcm->rgnmask >> spcm->bankshift);
 	

@@ -40,4 +40,18 @@ INLINE UINT32 ceil_pow2(UINT32 v)
 	return v;
 }
 
+// create a mask that covers the range 0...v-1
+INLINE UINT32 pow2_mask(UINT32 v)
+{
+	if (v == 0)
+		return 0;
+	v --;
+	v |= (v >>  1);
+	v |= (v >>  2);
+	v |= (v >>  4);
+	v |= (v >>  8);
+	v |= (v >> 16);
+	return v;
+}
+
 #endif	// __EMUHELPER_H__

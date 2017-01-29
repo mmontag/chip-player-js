@@ -309,10 +309,9 @@ static UINT8 device_start_es5503(const ES5503_CFG* cfg, DEV_INFO* retDevInf)
 	chip->clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
 
 	chip->output_channels = cfg->channels;
-	chip->outchn_mask = 1;
-	while(chip->outchn_mask < chip->output_channels)
-		chip->outchn_mask <<= 1;
-	chip->outchn_mask --;
+	if (! chip->output_channels)
+		chip->output_channels = 1;
+	chip->outchn_mask = (UINT8)pow2_mask(chip->output_channels);
 	chip->rege0 = 0xff;
 
 	chip->oscsenabled = 1;
