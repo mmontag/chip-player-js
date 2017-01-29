@@ -202,12 +202,18 @@ int main(int argc, char* argv[])
 		memcpy(&VGMData[0x00], tempData, 0x08);
 		gzread(hFile, &VGMData[0x08], VGMLen - 0x08);
 		
-		memcpy(&tempData[0], &VGMData[0x34], 0x04);
-		tempData[0] += (tempData[0] == 0) ? 0x40 : 0x34;
-		tempData[1] = sizeof(VGM_HEADER);
-		if (tempData[0] > tempData[1])
-			tempData[0] = tempData[1];
-		memset(&VGMHdr, 0x00, tempData[1]);
+		memcpy(&tempData[0], &VGMData[0x34], 0x04);	// get data offset
+		tempData[0] += (tempData[0] == 0x00) ? 0x40 : 0x34;
+		if (tempData[0] >= 0xC0)
+			memcpy(&tempData[1], &VGMData[0xBC], 0x04);	// get extra header offset
+		else
+			tempData[1] = 0x00;
+		tempData[1] += (tempData[1] == 0x00) ? 0x00 : 0xBC;
+		if (tempData[1] && tempData[0] > tempData[1])
+			tempData[0] = tempData[1];	// the main header ends where the extra header begins
+		if (tempData[0] > sizeof(VGM_HEADER))
+			tempData[0] = sizeof(VGM_HEADER);	// don't copy too many bytes into VGM_HEADER struct
+		memset(&VGMHdr, 0x00, sizeof(VGM_HEADER));
 		memcpy(&VGMHdr, &VGMData[0x00], tempData[0]);
 	}
 	gzclose(hFile);
@@ -1063,6 +1069,7 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		VGMSmplPos += 882;
 		return 0x01;
 	case 0x66:
+		printf("VGM end.\n");
 		return 0x00;	// terminate
 	case 0x67:
 		{
@@ -1126,6 +1133,18 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 	case 0x50:	// SN76489
 		SendChipCommand_Data8(0x00, chipID, 0x00, data[0x01]);
 		return 0x02;
+	case 0x90:	// DAC Ctrl: Setup Chip
+		return 0x05;
+	case 0x91:	// DAC Ctrl: Set Data
+		return 0x05;
+	case 0x92:	// DAC Ctrl: Set Freq
+		return 0x06;
+	case 0x93:	// DAC Ctrl: Play from Start Pos
+		return 0x0B;
+	case 0x94:	// DAC Ctrl: Stop immediately
+		return 0x02;
+	case 0x95:	// DAC Ctrl: Play Block (small)
+		return 0x05;
 	}
 	{
 		VGM_CMDTYPES cmdType = {0xFF, CMDTYPE_DUMMY};
@@ -1161,6 +1180,9 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			break;
 		case 0xE0:
 			cmdType = VGM_CMDS_E0[cmd & 0x0F];
+			break;
+		default:
+			printf("Stopping at unknown command %02X.\n", cmd);
 			break;
 		}
 		switch(cmdType.cmdType)
@@ -1263,12 +1285,18 @@ static void ReadVGMFile(UINT32 samples)
 {
 	UINT32 cmdLen;
 	
+	if (! VGMPos)
+		return;
+	
 	renderSmplPos += samples;
 	while(VGMSmplPos <= renderSmplPos)
 	{
 		cmdLen = DoVgmCommand(VGMData[VGMPos], &VGMData[VGMPos]);
 		if (! cmdLen)
+		{
+			VGMPos = 0x00;
 			break;
+		}
 		
 		VGMPos += cmdLen;
 	}

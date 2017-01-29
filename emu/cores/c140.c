@@ -253,9 +253,9 @@ static void c140_w(void *chip, UINT16 offset, UINT8 data)
 				// on the 219 asic, addresses are in words
 				if (info->banking_type == C140_TYPE_ASIC219)
 				{
-					v->sample_loop = (vreg->loop_msb*256 + vreg->loop_lsb)*2;
-					v->sample_start = (vreg->start_msb*256 + vreg->start_lsb)*2;
-					v->sample_end = (vreg->end_msb*256 + vreg->end_lsb)*2;
+					v->sample_loop = ((vreg->loop_msb<<8) | vreg->loop_lsb)*2;
+					v->sample_start = ((vreg->start_msb<<8) | vreg->start_lsb)*2;
+					v->sample_end = ((vreg->end_msb<<8) | vreg->end_lsb)*2;
 
 					#if 0
 					logerror("219: play v %d mode %02x start %x loop %x end %x\n",
@@ -267,9 +267,9 @@ static void c140_w(void *chip, UINT16 offset, UINT8 data)
 				}
 				else
 				{
-					v->sample_loop = vreg->loop_msb*256 + vreg->loop_lsb;
-					v->sample_start = vreg->start_msb*256 + vreg->start_lsb;
-					v->sample_end = vreg->end_msb*256 + vreg->end_lsb;
+					v->sample_loop = (vreg->loop_msb<<8) | vreg->loop_lsb;
+					v->sample_start = (vreg->start_msb<<8) | vreg->start_lsb;
+					v->sample_end = (vreg->end_msb<<8) | vreg->end_lsb;
 				}
 			}
 			else
@@ -319,7 +319,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 		if( v->key && ! v->Muted)
 		{
-			frequency= vreg->frequency_msb*256 + vreg->frequency_lsb;
+			frequency = (vreg->frequency_msb<<8) | vreg->frequency_lsb;
 
 			/* Abort voice if no frequency value set */
 			if(frequency==0) continue;
