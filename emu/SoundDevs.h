@@ -38,5 +38,6 @@
 #define DEVID_ES5503	0x24
 #define DEVID_X1_010	0x26
 #define DEVID_C352		0x27
+#define DEVID_GA20		0x28
 
 #endif	// __SOUNDDEVS_H__

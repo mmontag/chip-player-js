@@ -39,6 +39,7 @@
 #include "cores/es5503.h"
 #include "cores/x1_010.h"
 #include "cores/c352.h"
+#include "cores/iremga20.h"
 
 const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 {
@@ -118,6 +119,8 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 		return devDefList_X1_010;
 	case DEVID_C352:
 		return devDefList_C352;
+	case DEVID_GA20:
+		return devDefList_GA20;
 	}
 	return NULL;
 }

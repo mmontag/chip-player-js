@@ -180,6 +180,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/es5503.o \
 	$(LIBEMUOBJ)/cores/x1_010.o \
 	$(LIBEMUOBJ)/cores/c352.o \
+	$(LIBEMUOBJ)/cores/iremga20.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o
 
