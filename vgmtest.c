@@ -634,6 +634,16 @@ static void InitVGMChips(void)
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			}
 			break;
+		case DEVID_SCSP:
+			if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the sample rate, not the clock
+				devCfg.clock *= 512;	// (for backwards compatibility with old VGM logs from 2012-14)
+			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
+			if (retVal)
+				break;
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D16, 0, (void**)&cDev->writeM16);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			break;
 		default:
 			if (curChip == DEVID_YM2612)
 				devCfg.emuCore = FCC_GPGX;

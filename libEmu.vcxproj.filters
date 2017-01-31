@@ -198,6 +198,15 @@
     <ClCompile Include="emu\cores\iremga20.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\scsp.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\scspdsp.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\scsplfo.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -408,6 +417,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\iremga20.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\scsp.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\scspdsp.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

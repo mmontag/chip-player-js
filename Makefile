@@ -174,6 +174,8 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/k053260.o \
 	$(LIBEMUOBJ)/cores/pokey.o \
 	$(LIBEMUOBJ)/cores/qsound.o \
+	$(LIBEMUOBJ)/cores/scsp.o \
+	$(LIBEMUOBJ)/cores/scspdsp.o \
 	$(LIBEMUOBJ)/cores/ws_audio.o \
 	$(LIBEMUOBJ)/cores/vsu.o \
 	$(LIBEMUOBJ)/cores/saa1099.o \

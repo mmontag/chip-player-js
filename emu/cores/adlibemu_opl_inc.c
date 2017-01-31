@@ -27,6 +27,10 @@
  */
 
 
+#ifndef INCLUDE_FROM_ADLIBEMU_OPL_C
+#error "Not to be compiled as stand-alone file!"
+#endif
+
 #include <math.h>
 #include <stdlib.h> // rand
 #include <string.h> // for memset

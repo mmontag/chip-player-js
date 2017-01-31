@@ -193,6 +193,12 @@
     <ClCompile Include="emu\cores\rf5cintf.c" />
     <ClCompile Include="emu\cores\saa1099.c" />
     <ClCompile Include="emu\cores\scd_pcm.c" />
+    <ClCompile Include="emu\cores\scsp.c" />
+    <ClCompile Include="emu\cores\scspdsp.c" />
+    <ClCompile Include="emu\cores\scsplfo.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="emu\cores\segapcm.c" />
     <ClCompile Include="emu\cores\upd7759.c" />
     <ClCompile Include="emu\cores\vsu.c" />
@@ -258,6 +264,8 @@
     <ClInclude Include="emu\cores\rf5cintf.h" />
     <ClInclude Include="emu\cores\saa1099.h" />
     <ClInclude Include="emu\cores\scd_pcm.h" />
+    <ClInclude Include="emu\cores\scsp.h" />
+    <ClInclude Include="emu\cores\scspdsp.h" />
     <ClInclude Include="emu\cores\segapcm.h" />
     <ClInclude Include="emu\cores\upd7759.h" />
     <ClInclude Include="emu\cores\vsu.h" />

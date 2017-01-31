@@ -32,6 +32,7 @@
 #define DEVID_K053260	0x1D
 #define DEVID_POKEY		0x1E
 #define DEVID_QSOUND	0x1F
+#define DEVID_SCSP		0x20	// also known as YMF292
 #define DEVID_WSWAN		0x21
 #define DEVID_VBOY_VSU	0x22
 #define DEVID_SAA1099	0x23
