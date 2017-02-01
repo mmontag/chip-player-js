@@ -922,7 +922,8 @@ typedef struct
 #define CMDTYPE_RF5C_MEM	0x81	// RF5Cxx Memory Write
 #define CMDTYPE_PWM_REG		0x82	// PWM register write (4-bit offset, 12-bit data)
 #define CMDTYPE_QSOUND		0x83	// QSound register write (16-bit data, 8-bit offset)
-#define CMDTYPE_WSWAN_REG	0x84	// WonderSwan register write
+#define CMDTYPE_WSWAN_REG	0x84	// WonderSwan register write (O8_D8 with remapping)
+#define CMDTYPE_NES_REG		0x85	// NES APU register write (O8_D8 with remapping)
 static const VGM_CMDTYPES VGM_CMDS_50[0x10] =
 {
 	{0x00,	CMDTYPE_DUMMY},		// 50 SN76496 (handled separately)
@@ -948,7 +949,7 @@ static const VGM_CMDTYPES VGM_CMDS_B0[0x10] =
 	{0x10,	CMDTYPE_O8_D8},		// B1 RF5C164
 	{0x11,	CMDTYPE_PWM_REG},	// B2 PWM
 	{0x13,	CMDTYPE_O8_D8},		// B3 GameBoy DMG
-	{0x14,	CMDTYPE_O8_D8},		// B4 NES APU
+	{0x14,	CMDTYPE_NES_REG},	// B4 NES APU
 	{0x15,	CMDTYPE_O8_D8},		// B5 MultiPCM
 	{0x16,	CMDTYPE_O8_D8},		// B6 uPD7759
 	{0x17,	CMDTYPE_O8_D8},		// B7 OKIM6258
@@ -1285,6 +1286,20 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		case CMDTYPE_WSWAN_REG:	// Offset (8-bit) + Data (8-bit)
 			chipID = (data[0x01] & 0x80) >> 7;
 			SendChipCommand_Data8(cmdType.chipID, chipID, 0x80 + (data[0x01] & 0x7F), data[0x02]);
+			break;
+		case CMDTYPE_NES_REG:	// Offset (8-bit) + Data (8-bit)
+			{
+				UINT8 ofs;
+				
+				chipID = (data[0x01] & 0x80) >> 7;
+				ofs = data[0x01] & 0x7F;
+				// remap FDS registers
+				if (ofs == 0x3F)
+					ofs = 0x23;	// FDS I/O enable
+				else if ((ofs & 0xE0) == 0x20)
+					ofs = 0x80 | (ofs & 0x1F);	// FDS register
+				SendChipCommand_Data8(cmdType.chipID, chipID, ofs, data[0x02]);
+			}
 			break;
 		}
 	}

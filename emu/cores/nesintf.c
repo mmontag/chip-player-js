@@ -38,7 +38,6 @@ static void nes_w_mame(void* chip, UINT8 offset, UINT8 data);
 static UINT8 nes_r_mame(void* chip, UINT8 offset);
 static void nes_w_nsfplay(void* chip, UINT8 offset, UINT8 data);
 static UINT8 nes_r_nsfplay(void* chip, UINT8 offset);
-static void nes_write_fds(void* chip_fds, UINT8 offset, UINT8 data);
 static UINT8 nes_read_fds(void* chip_fds, UINT8 offset);
 static void nes_write_ram(void* chip, UINT32 offset, UINT32 length, const UINT8* data);
 
@@ -349,15 +348,14 @@ static void nes_w_mame(void* chip, UINT8 offset, UINT8 data)
 {
 	NESAPU_INF* info = (NESAPU_INF*)chip;
 	
-	switch(offset & 0xE0)
+	if (offset < 0x20)	// NES APU
 	{
-	case 0x00:	// NES APU
 		nes_apu_write(info->chip_apu, offset, data);
-		break;
-	default:
+	}
+	else	// FDS
+	{
 		if (info->chip_fds != NULL)
-			nes_write_fds(info->chip_fds, offset, data);
-		break;
+			NES_FDS_Write(info->chip_fds, 0x4000 | offset, data);
 	}
 	return;
 }
@@ -366,11 +364,12 @@ static UINT8 nes_r_mame(void* chip, UINT8 offset)
 {
 	NESAPU_INF* info = (NESAPU_INF*)chip;
 	
-	switch(offset & 0xE0)
+	if (offset < 0x20)	// NES APU
 	{
-	case 0x00:	// NES APU
 		return nes_apu_read(info->chip_apu, offset);
-	default:
+	}
+	else	// FDS
+	{
 		if (info->chip_fds != NULL)
 			return nes_read_fds(info->chip_fds, offset);
 		return 0x00;
@@ -383,17 +382,16 @@ static void nes_w_nsfplay(void* chip, UINT8 offset, UINT8 data)
 {
 	NESAPU_INF* info = (NESAPU_INF*)chip;
 	
-	switch(offset & 0xE0)
+	if (offset < 0x20)	// NES APU
 	{
-	case 0x00:	// NES APU
 		// NES_APU handles the sqaure waves, NES_DMC the rest
 		NES_APU_np_Write(info->chip_apu, 0x4000 | offset, data);
 		NES_DMC_np_Write(info->chip_dmc, 0x4000 | offset, data);
-		break;
-	default:
+	}
+	else	// FDS
+	{
 		if (info->chip_fds != NULL)
-			nes_write_fds(info->chip_fds, offset, data);
-		break;
+			NES_FDS_Write(info->chip_fds, 0x4000 | offset, data);
 	}
 	return;
 }
@@ -401,34 +399,24 @@ static void nes_w_nsfplay(void* chip, UINT8 offset, UINT8 data)
 static UINT8 nes_r_nsfplay(void* chip, UINT8 offset)
 {
 	NESAPU_INF* info = (NESAPU_INF*)chip;
-	UINT8 readVal;
-	
-	readVal = 0x00;
-	// the functions OR the result to the value
-	NES_APU_np_Read(info, 0x4000 | offset, &readVal);
-	NES_DMC_np_Read(info, 0x4000 | offset, &readVal);
-	
-	return readVal;
+	if (offset < 0x20)	// NES APU
+	{
+		UINT8 readVal = 0x00;
+		
+		// the functions OR the result to the value
+		NES_APU_np_Read(info, 0x4000 | offset, &readVal);
+		NES_DMC_np_Read(info, 0x4000 | offset, &readVal);
+		
+		return readVal;
+	}
+	else	// FDS
+	{
+		if (info->chip_fds != NULL)
+			return nes_read_fds(info->chip_fds, offset);
+		return 0x00;
+	}
 }
 #endif
-
-static void nes_write_fds(void* chip_fds, UINT8 offset, UINT8 data)
-{
-	switch(offset & 0xE0)
-	{
-	case 0x20:	// FDS register
-		if (offset == 0x3F)
-			NES_FDS_Write(chip_fds, 0x4023, data);
-		else
-			NES_FDS_Write(chip_fds, 0x4080 | (offset & 0x1F), data);
-		break;
-	case 0x40:	// FDS wave RAM
-	case 0x60:
-		NES_FDS_Write(chip_fds, 0x4000 | offset, data);
-		break;
-	}
-	return;
-}
 
 static UINT8 nes_read_fds(void* chip_fds, UINT8 offset)
 {
