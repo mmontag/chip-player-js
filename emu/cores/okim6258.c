@@ -215,15 +215,15 @@ static void okim6258_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	okim6258_state *chip = (okim6258_state *)param;
 	DEV_SMPL *bufL = outputs[0];
 	DEV_SMPL *bufR = outputs[1];
+	UINT32 i;
 
 	if ((chip->status & STATUS_PLAYING) && ! chip->Muted)
 	{
 		UINT8 nibble_shift = chip->nibble_shift;
 
-		while (samples)
+		for (i = 0; i < samples; i++)
 		{
 			/* Compute the new amplitude and update the current step */
-			//int nibble = (chip->data_in >> nibble_shift) & 0xf;
 			int nibble;
 			INT16 sample;
 			
@@ -270,9 +270,8 @@ static void okim6258_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 			sample &= chip->output_mask;	// emulate DAC precision
 			sample <<= 4;	// scale up to 16 bit
-			*bufL++ = (chip->pan & 0x02) ? 0x00 : sample;
-			*bufR++ = (chip->pan & 0x01) ? 0x00 : sample;
-			samples--;
+			bufL[i] = (chip->pan & 0x02) ? 0 : sample;
+			bufR[i] = (chip->pan & 0x01) ? 0 : sample;
 		}
 
 		/* Update the parameters */
@@ -281,10 +280,10 @@ static void okim6258_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	else
 	{
 		/* Fill with 0 */
-		while (samples--)
+		for (i = 0; i < samples; i++)
 		{
-			*bufL++ = 0;
-			*bufR++ = 0;
+			bufL[i] = 0;
+			bufR[i] = 0;
 		}
 	}
 }

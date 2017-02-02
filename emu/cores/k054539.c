@@ -202,7 +202,7 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	};
 
 	INT16 *rbase = (INT16 *)info->ram;
-	UINT8 *rom;
+	const UINT8 *rom;
 	UINT32 rom_mask;
 	UINT32 i, ch;
 	double lval, rval;
@@ -215,11 +215,12 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	int fdelta, pdelta;
 	int cur_pfrac, cur_val, cur_pval;
 
-	memset(outputs[0], 0, samples*sizeof(*outputs[0]));
-	memset(outputs[1], 0, samples*sizeof(*outputs[1]));
-
 	if(!(info->regs[0x22f] & 1))
+	{
+		memset(outputs[0], 0, samples*sizeof(*outputs[0]));
+		memset(outputs[1], 0, samples*sizeof(*outputs[1]));
 		return;
+	}
 
 	rom = info->rom;
 	rom_mask = info->rom_mask;
@@ -399,8 +400,8 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				}
 			}
 		info->reverb_pos = (info->reverb_pos + 1) & 0x1fff;
-		outputs[0][i] = (INT32)lval;
-		outputs[1][i] = (INT32)rval;
+		outputs[0][i] = (DEV_SMPL)lval;
+		outputs[1][i] = (DEV_SMPL)rval;
 	}
 }
 

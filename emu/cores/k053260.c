@@ -233,6 +233,7 @@ static void k053260_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 			}
 		}
 
+		// lvol/rvol is swapped, so this assignment is correct
 		outputs[1][j] = dataL;
 		outputs[0][j] = dataR;
 	}

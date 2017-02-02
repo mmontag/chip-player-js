@@ -364,7 +364,7 @@ typedef struct
 
 	//emu_timer *timA, *timB;
 	UINT32 mixbuf_smpls;
-	INT32 *mix_buffer;
+	INT32 *mix_buffer;		// TODO: try removing this sometime
 } YMF271Chip;
 
 
@@ -601,7 +601,7 @@ static void update_pcm(YMF271Chip *chip, int slotnum, INT32 *mixp, UINT32 length
 	UINT32 i;
 	INT64 final_volume;
 	INT16 sample;
-	INT64 ch0_vol, ch1_vol; //, ch2_vol, ch3_vol;
+	INT64 ch0_vol, ch1_vol, ch2_vol, ch3_vol;
 
 	YMF271Slot *slot = &chip->slots[slotnum];
 
@@ -658,14 +658,16 @@ static void update_pcm(YMF271Chip *chip, int slotnum, INT32 *mixp, UINT32 length
 
 		ch0_vol = (final_volume * chip->lut_attenuation[slot->ch0_level]) >> 16;
 		ch1_vol = (final_volume * chip->lut_attenuation[slot->ch1_level]) >> 16;
-//		ch2_vol = (final_volume * chip->lut_attenuation[slot->ch2_level]) >> 16;
-//		ch3_vol = (final_volume * chip->lut_attenuation[slot->ch3_level]) >> 16;
+		ch2_vol = (final_volume * chip->lut_attenuation[slot->ch2_level]) >> 16;
+		ch3_vol = (final_volume * chip->lut_attenuation[slot->ch3_level]) >> 16;
 
 		if (ch0_vol > 65536) ch0_vol = 65536;
 		if (ch1_vol > 65536) ch1_vol = 65536;
+		if (ch2_vol > 65536) ch2_vol = 65536;
+		if (ch3_vol > 65536) ch3_vol = 65536;
 
-		*mixp++ += (sample * ch0_vol) >> 16;
-		*mixp++ += (sample * ch1_vol) >> 16;
+		mixp[i*2+0] += (sample * ch0_vol) >> 16;
+		mixp[i*2+1] += (sample * ch1_vol) >> 16;
 
 		// go to next step
 		slot->stepptr += slot->step;
@@ -728,7 +730,7 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 	for (j = 0; j < 12; j++)
 	{
 		YMF271Group *slot_group = &chip->groups[j];
-		mixp = NULL;
+		mixp = chip->mix_buffer;
 
 		if (slot_group->Muted)
 			continue;
@@ -750,7 +752,6 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 				int slot2 = j + (1*12);
 				int slot3 = j + (2*12);
 				int slot4 = j + (3*12);
-				mixp = chip->mix_buffer;
 
 				if (chip->slots[slot1].active)
 				{
@@ -956,14 +957,14 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 								break;
 						}
 
-						*mixp++ += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch0_level]) +
-									(output2 * chip->lut_attenuation[chip->slots[slot2].ch0_level]) +
-									(output3 * chip->lut_attenuation[chip->slots[slot3].ch0_level]) +
-									(output4 * chip->lut_attenuation[chip->slots[slot4].ch0_level])) >> 16;
-						*mixp++ += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch1_level]) +
-									(output2 * chip->lut_attenuation[chip->slots[slot2].ch1_level]) +
-									(output3 * chip->lut_attenuation[chip->slots[slot3].ch1_level]) +
-									(output4 * chip->lut_attenuation[chip->slots[slot4].ch1_level])) >> 16;
+						mixp[i*2+0] += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch0_level]) +
+										(output2 * chip->lut_attenuation[chip->slots[slot2].ch0_level]) +
+										(output3 * chip->lut_attenuation[chip->slots[slot3].ch0_level]) +
+										(output4 * chip->lut_attenuation[chip->slots[slot4].ch0_level])) >> 16;
+						mixp[i*2+1] += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch1_level]) +
+										(output2 * chip->lut_attenuation[chip->slots[slot2].ch1_level]) +
+										(output3 * chip->lut_attenuation[chip->slots[slot3].ch1_level]) +
+										(output4 * chip->lut_attenuation[chip->slots[slot4].ch1_level])) >> 16;
 					}
 				}
 				break;
@@ -977,7 +978,6 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 					int slot1 = j + ((op + 0) * 12);
 					int slot3 = j + ((op + 2) * 12);
 
-					mixp = chip->mix_buffer;
 					if (chip->slots[slot1].active)
 					{
 						for (i = 0; i < proc_smpls; i++)
@@ -1023,10 +1023,10 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 									break;
 							}
 
-							*mixp++ += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch0_level]) +
-										(output3 * chip->lut_attenuation[chip->slots[slot3].ch0_level])) >> 16;
-							*mixp++ += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch1_level]) +
-										(output3 * chip->lut_attenuation[chip->slots[slot3].ch1_level])) >> 16;
+							mixp[i*2+0] += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch0_level]) +
+											(output3 * chip->lut_attenuation[chip->slots[slot3].ch0_level])) >> 16;
+							mixp[i*2+1] += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch1_level]) +
+											(output3 * chip->lut_attenuation[chip->slots[slot3].ch1_level])) >> 16;
 						}
 					}
 				}
@@ -1039,7 +1039,6 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 				int slot1 = j + (0*12);
 				int slot2 = j + (1*12);
 				int slot3 = j + (2*12);
-				mixp = chip->mix_buffer;
 
 				if (chip->slots[slot1].active)
 				{
@@ -1133,12 +1132,12 @@ static void ymf271_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 								break;
 						}
 
-						*mixp++ += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch0_level]) +
-									(output2 * chip->lut_attenuation[chip->slots[slot2].ch0_level]) +
-									(output3 * chip->lut_attenuation[chip->slots[slot3].ch0_level])) >> 16;
-						*mixp++ += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch1_level]) +
-									(output2 * chip->lut_attenuation[chip->slots[slot2].ch1_level]) +
-									(output3 * chip->lut_attenuation[chip->slots[slot3].ch1_level])) >> 16;
+						mixp[i*2+0] += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch0_level]) +
+										(output2 * chip->lut_attenuation[chip->slots[slot2].ch0_level]) +
+										(output3 * chip->lut_attenuation[chip->slots[slot3].ch0_level])) >> 16;
+						mixp[i*2+0] += ((output1 * chip->lut_attenuation[chip->slots[slot1].ch1_level]) +
+										(output2 * chip->lut_attenuation[chip->slots[slot2].ch1_level]) +
+										(output3 * chip->lut_attenuation[chip->slots[slot3].ch1_level])) >> 16;
 					}
 				}
 

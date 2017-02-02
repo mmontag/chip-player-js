@@ -306,7 +306,7 @@ static UINT8 memory_raw_read_byte(okim6295_state *chip, UINT32 offset)
 		return 0x00;
 }
 
-static void generate_adpcm(okim6295_state *chip, struct ADPCMVoice *voice, DEV_SMPL *buffer, int samples)
+static void generate_adpcm(okim6295_state *chip, struct ADPCMVoice *voice, DEV_SMPL *buffer, UINT32 samples)
 {
 	/* if this voice is active */
 	if (voice->playing)
@@ -314,17 +314,17 @@ static void generate_adpcm(okim6295_state *chip, struct ADPCMVoice *voice, DEV_S
 		UINT32 base = voice->base_offset;
 		UINT32 sample = voice->sample;
 		UINT32 count = voice->count;
+		UINT32 i;
 
 		/* loop while we still have samples to generate */
-		while (samples)
+		for (i = 0; i < samples; i++)
 		{
 			/* compute the new amplitude and update the current step */
 			UINT8 nibble = memory_raw_read_byte(chip, base + sample / 2) >> (((sample & 1) << 2) ^ 4);
 
 			/* output to the buffer, scaling by the volume */
 			/* signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767 */
-			*buffer++ += clock_adpcm(&voice->adpcm, nibble) * voice->volume / 2;
-			samples--;
+			buffer[i] += clock_adpcm(&voice->adpcm, nibble) * voice->volume / 2;
 
 			/* next! */
 			if (++sample >= count)

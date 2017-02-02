@@ -485,9 +485,6 @@ static void MultiPCM_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 	MultiPCM *ptChip = (MultiPCM *)info;
 	UINT32 i,sl;
 
-	//memset(outputs[0], 0, sizeof(*outputs[0])*samples);
-	//memset(outputs[1], 0, sizeof(*outputs[1])*samples);
-
 	for(i=0;i<samples;++i)
 	{
 		DEV_SMPL smpl=0;

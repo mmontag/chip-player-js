@@ -16,7 +16,7 @@
 
 // Master Clock: 21477272 (NTSC)
 // APU Clock = Master Clock / 12
-#define DEFAULT_CLOCK	1789772.0	// not sure if this shouldn't be 1789772,667 instead
+#define DEFAULT_CLOCK	1789772.0	// not sure if this shouldn't be 1789772.667 instead
 #define DEFAULT_RATE	44100
 
 

@@ -640,11 +640,12 @@ logerror("invalid apu write: $%02X at $%04X\n", value, address);
 void nes_apu_update(void* chip, UINT32 samples, DEV_SMPL **outputs)
 {
 	nesapu_state *info = (nesapu_state*)chip;
-	int accum;
+	DEV_SMPL accum;
 	DEV_SMPL* bufL = outputs[0];
 	DEV_SMPL* bufR = outputs[1];
+	UINT32 i;
 
-	while (samples--)
+	for (i = 0; i < samples; i++)
 	{
 		/*accum = apu_square(info, &info->APU.squ[0]);
 		accum += apu_square(info, &info->APU.squ[1]);
@@ -659,8 +660,8 @@ void nes_apu_update(void* chip, UINT32 samples, DEV_SMPL **outputs)
 		accum += apu_noise(info, &info->APU.noi) * 0xC0;	// << 8 * 0.75
 		accum += apu_dpcm(info, &info->APU.dpcm) * 0xC0;	// << 8 * 0.75
 
-		*(bufL++)=accum;
-		*(bufR++)=accum;
+		bufL[i]=accum;
+		bufR[i]=accum;
 	}
 }
 

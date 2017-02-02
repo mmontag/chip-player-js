@@ -692,16 +692,8 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 	INT32 vl;
 	INT32 vr;
 	
-	/*if (chip->FMEnabled)
-	{
-		// memset is done by ymf262_update
-		ymf262_update_one(chip->fmchip, outputs, samples);
-	}
-	else*/
-	{
-		memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
-		memset(outputs[1], 0x00, samples * sizeof(DEV_SMPL));
-	}
+	memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
+	memset(outputs[1], 0x00, samples * sizeof(DEV_SMPL));
 	
 	if (! ymf278b_anyActive(chip))
 	{

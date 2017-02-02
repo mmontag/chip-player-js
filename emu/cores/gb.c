@@ -504,9 +504,10 @@ static void gameboy_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 	DEV_SMPL *outl = outputs[0];
 	DEV_SMPL *outr = outputs[1];
 	DEV_SMPL sample, left, right;
-	INT32 mode4_mask;
+	INT16 mode4_mask;
+	UINT32 i;
 
-	while( samples-- > 0 )
+	for (i = 0; i < samples; i++)
 	{
 		left = right = 0;
 
@@ -802,8 +803,8 @@ static void gameboy_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 		right <<= 6;
 
 		/* Update the buffers */
-		*(outl++) = left;
-		*(outr++) = right;
+		outl[i] = left;
+		outr[i] = right;
 	}
 
 	gb->snd_regs[NR52] = (gb->snd_regs[NR52]&0xf0) | gb->snd_1.on | (gb->snd_2.on << 1) | (gb->snd_3.on << 2) | (gb->snd_4.on << 3);

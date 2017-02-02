@@ -251,16 +251,16 @@ void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 	}
 }
 
-void SN76496Update(void* chip, UINT32 samples, DEV_SMPL** outputs)
+void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 {
-	int i;
-	//sn76496_state *R = (sn76496_state *)param;
-	sn76496_state *R = (sn76496_state*)chip;
+	UINT32 i;
+	UINT32 j;
+	sn76496_state *R = (sn76496_state *)param;
 	sn76496_state *R2;
 	DEV_SMPL* lbuffer = outputs[0];
 	DEV_SMPL* rbuffer = outputs[1];
-	INT32 out = 0;
-	INT32 out2 = 0;
+	DEV_SMPL out = 0;
+	DEV_SMPL out2 = 0;
 	INT32 vol[4];
 	UINT8 NGPMode;
 	INT32 ggst[2];
@@ -293,7 +293,7 @@ void SN76496Update(void* chip, UINT32 samples, DEV_SMPL** outputs)
 	
 	ggst[0] = 0x01;
 	ggst[1] = 0x01;
-	while (samples > 0)
+	for (j = 0; j < samples; j++)
 	{
 		/* decrement Cycles to READY by one */
 		if (R->CyclestoREADY >0) R->CyclestoREADY--;
@@ -453,9 +453,8 @@ void SN76496Update(void* chip, UINT32 samples, DEV_SMPL** outputs)
 		
 		if(R->Negate) { out = -out; out2 = -out2; }
 
-		*(lbuffer++) = out >> 1;	// >>1 to make up for bipolar output
-		*(rbuffer++) = out2 >> 1;
-		samples--;
+		lbuffer[j] = out >> 1;	// >>1 to make up for bipolar output
+		rbuffer[j] = out2 >> 1;
 	}
 }
 

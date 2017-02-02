@@ -161,7 +161,7 @@ struct _ymz280b_state
 	void* irq_cb_param;
 	struct YMZ280BVoice	voice[8];	/* the 8 voices */
 	
-	INT16 *scratch;
+	INT16 *scratch;	// not having to use scratch memory would be nice, but it's required for resampling
 };
 
 static void write_to_register(ymz280b_state *chip, UINT8 data);
@@ -173,28 +173,6 @@ static const int index_scale[8] = { 0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x
 /* lookup table for the precomputed difference */
 static int diff_lookup[16];
 static unsigned char lookup_init = 0x00;	/* lookup-table is initialized */
-
-/* timer callback */
-/*static TIMER_CALLBACK( update_irq_state_timer_0 );
-static TIMER_CALLBACK( update_irq_state_timer_1 );
-static TIMER_CALLBACK( update_irq_state_timer_2 );
-static TIMER_CALLBACK( update_irq_state_timer_3 );
-static TIMER_CALLBACK( update_irq_state_timer_4 );
-static TIMER_CALLBACK( update_irq_state_timer_5 );
-static TIMER_CALLBACK( update_irq_state_timer_6 );
-static TIMER_CALLBACK( update_irq_state_timer_7 );
-
-static const timer_fired_func update_irq_state_cb[] =
-{
-	update_irq_state_timer_0,
-	update_irq_state_timer_1,
-	update_irq_state_timer_2,
-	update_irq_state_timer_3,
-	update_irq_state_timer_4,
-	update_irq_state_timer_5,
-	update_irq_state_timer_6,
-	update_irq_state_timer_7
-};*/
 
 
 INLINE void update_irq_state(ymz280b_state *chip)
@@ -281,15 +259,6 @@ static void update_irq_state_timer_common(void *param, int voicenum)
 	voice->irq_schedule = 0;
 }
 
-/*static TIMER_CALLBACK( update_irq_state_timer_0 ) { update_irq_state_timer_common(ptr, 0); }
-static TIMER_CALLBACK( update_irq_state_timer_1 ) { update_irq_state_timer_common(ptr, 1); }
-static TIMER_CALLBACK( update_irq_state_timer_2 ) { update_irq_state_timer_common(ptr, 2); }
-static TIMER_CALLBACK( update_irq_state_timer_3 ) { update_irq_state_timer_common(ptr, 3); }
-static TIMER_CALLBACK( update_irq_state_timer_4 ) { update_irq_state_timer_common(ptr, 4); }
-static TIMER_CALLBACK( update_irq_state_timer_5 ) { update_irq_state_timer_common(ptr, 5); }
-static TIMER_CALLBACK( update_irq_state_timer_6 ) { update_irq_state_timer_common(ptr, 6); }
-static TIMER_CALLBACK( update_irq_state_timer_7 ) { update_irq_state_timer_common(ptr, 7); }*/
-
 
 /**********************************************************************************************
 
@@ -322,7 +291,7 @@ static void compute_tables(void)
 
 ***********************************************************************************************/
 
-static int generate_adpcm(struct YMZ280BVoice *voice, UINT8 *base, UINT32 size, INT16 *buffer, int samples)
+static int generate_adpcm(struct YMZ280BVoice *voice, UINT8 *base, UINT32 size, INT16 *buffer, UINT32 samples)
 {
 	UINT32 position = voice->position;
 	INT32 signal = voice->signal;
@@ -438,7 +407,7 @@ static int generate_adpcm(struct YMZ280BVoice *voice, UINT8 *base, UINT32 size, 
 
 ***********************************************************************************************/
 
-static int generate_pcm8(struct YMZ280BVoice *voice, UINT8 *base, UINT32 size, INT16 *buffer, int samples)
+static int generate_pcm8(struct YMZ280BVoice *voice, UINT8 *base, UINT32 size, INT16 *buffer, UINT32 samples)
 {
 	UINT32 position = voice->position;
 	INT8 val;
@@ -512,7 +481,7 @@ static int generate_pcm8(struct YMZ280BVoice *voice, UINT8 *base, UINT32 size, I
 
 ***********************************************************************************************/
 
-static int generate_pcm16(struct YMZ280BVoice *voice, UINT8 *base, UINT32 size, INT16 *buffer, int samples)
+static int generate_pcm16(struct YMZ280BVoice *voice, UINT8 *base, UINT32 size, INT16 *buffer, UINT32 samples)
 {
 	UINT32 position = voice->position;
 	INT16 val;
@@ -613,7 +582,6 @@ static void ymz280b_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		INT32 *rdest = racc;
 		UINT32 new_samples, samples_left;
 		UINT32 final_pos;
-		UINT32 remaining = samples;
 		INT32 lvol = voice->output_left;
 		INT32 rvol = voice->output_right;
 		
@@ -632,13 +600,12 @@ static void ymz280b_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 		/* finish off the current sample */
 		/* interpolate */
-		while (remaining > 0 && voice->output_pos < FRAC_ONE)
+		for (i = 0; i < samples && voice->output_pos < FRAC_ONE; i++)
 		{
 			int interp_sample = (((INT32)prev * (FRAC_ONE - voice->output_pos)) + ((INT32)curr * voice->output_pos)) >> FRAC_BITS;
-			*ldest++ += interp_sample * lvol;
-			*rdest++ += interp_sample * rvol;
+			ldest[i] += interp_sample * lvol;
+			rdest[i] += interp_sample * rvol;
 			voice->output_pos += voice->output_step;
-			remaining--;
 		}
 
 		/* if we're over, continue; otherwise, we're done */
@@ -648,11 +615,10 @@ static void ymz280b_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			continue;
 
 		/* compute how many new samples we need */
-		final_pos = voice->output_pos + remaining * voice->output_step;
+		final_pos = voice->output_pos + (samples - i) * voice->output_step;
 		new_samples = (final_pos + FRAC_ONE) >> FRAC_BITS;
 		if (new_samples > MAX_SAMPLE_CHUNK)
 			new_samples = MAX_SAMPLE_CHUNK;
-		samples_left = new_samples;
 
 		/* generate them into our buffer */
 		switch (voice->playing << 7 | voice->mode)
@@ -668,17 +634,17 @@ static void ymz280b_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		{
 			/* note: samples_left bit 16 is set if the voice was finished at the same time the function ended */
 			UINT32 base;
+			UINT32 j;
 			INT16 t;
 			
 			samples_left &= 0xffff;
 			base = new_samples - samples_left;
 			t = (base == 0) ? curr : chip->scratch[base - 1];
 			
-			for (i = 0; i < samples_left; i++)
+			for (j = 0; j < samples_left; j++)
 			{
-				if (t < 0) t = -((-t * 15) >> 4);
-				else if (t > 0) t = (t * 15) >> 4;
-				chip->scratch[base + i] = t;
+				t = (t * 15) / 16;
+				chip->scratch[base + j] = t;
 			}
 
 			/* if we hit the end and IRQs are enabled, signal it */
@@ -687,7 +653,6 @@ static void ymz280b_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				voice->playing = 0;
 
 				/* set update_irq_state_timer. IRQ is signaled on next CPU execution. */
-				//timer_set(chip->device->machine, attotime_zero, chip, 0, update_irq_state_cb[v]);
 				voice->irq_schedule = 1;
 			}
 		}
@@ -697,16 +662,15 @@ static void ymz280b_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		curr = *curr_data++;
 
 		/* then sample-rate convert with linear interpolation */
-		while (remaining > 0)
+		while (i < samples)
 		{
 			/* interpolate */
-			while (remaining > 0 && voice->output_pos < FRAC_ONE)
+			for (; i < samples && voice->output_pos < FRAC_ONE; i++)
 			{
 				int interp_sample = (((INT32)prev * (FRAC_ONE - voice->output_pos)) + ((INT32)curr * voice->output_pos)) >> FRAC_BITS;
-				*ldest++ += interp_sample * lvol;
-				*rdest++ += interp_sample * rvol;
+				ldest[i] += interp_sample * lvol;
+				rdest[i] += interp_sample * rvol;
 				voice->output_pos += voice->output_step;
-				remaining--;
 			}
 
 			/* if we're over, grab the next samples */

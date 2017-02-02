@@ -316,8 +316,8 @@ struct _pokey_state
 #if SUPPRESS_INAUDIBLE
 
 #define PROCESS_CHANNEL(chip,ch)										\
-	int toggle = 0; 													\
-	ADJUST_EVENT(chip); 												\
+	int toggle = 0;														\
+	ADJUST_EVENT(chip);													\
 	/* reset the channel counter */ 									\
 	if( chip->audible[ch] )												\
 		chip->counter[ch] = chip->divisor[ch];							\
@@ -331,7 +331,7 @@ struct _pokey_state
 	if( (chip->AUDC[ch] & NOTPOLY5) || P5(chip) )						\
 	{																	\
 		if( chip->AUDC[ch] & PURE )										\
-			toggle = 1; 												\
+			toggle = 1;													\
 		else															\
 		if( chip->AUDC[ch] & POLY4 )									\
 			toggle = chip->output[ch] == !P4(chip);						\
@@ -366,8 +366,8 @@ struct _pokey_state
 #else
 
 #define PROCESS_CHANNEL(chip,ch)										\
-	int toggle = 0; 													\
-	ADJUST_EVENT(chip); 												\
+	int toggle = 0;														\
+	ADJUST_EVENT(chip);													\
 	/* reset the channel counter */ 									\
 	chip->counter[ch] = p[chip].divisor[ch];							\
 	chip->p4 = (chip->p4+chip->polyadjust)%0x0000f;						\
@@ -378,7 +378,7 @@ struct _pokey_state
 	if( (chip->AUDC[ch] & NOTPOLY5) || P5(chip) )						\
 	{																	\
 		if( chip->AUDC[ch] & PURE )										\
-			toggle = 1; 												\
+			toggle = 1;													\
 		else															\
 		if( chip->AUDC[ch] & POLY4 )									\
 			toggle = chip->output[ch] == !P4(chip);						\
@@ -413,8 +413,7 @@ struct _pokey_state
 	/* adjust the sample position */									\
 	chip->samplepos_whole++;											\
 	/* store sum of output signals into the buffer */					\
-	*bufL++ = *bufR++ = sum;											\
-	samples--
+	bufL[i] = bufR[i] = sum;
 
 #if HEAVY_MACRO_USAGE
 
@@ -426,7 +425,8 @@ struct _pokey_state
  */
 
 #define PROCESS_POKEY(chip) 											\
-	UINT32 sum = 0; 													\
+	UINT32 i = 0;														\
+	UINT32 sum = 0;														\
 	if( chip->output[CHAN1] && ! chip->Muted[CHAN1] )					\
 		sum += chip->volume[CHAN1];										\
 	if( chip->output[CHAN2] && ! chip->Muted[CHAN2] )					\
@@ -435,7 +435,7 @@ struct _pokey_state
 		sum += chip->volume[CHAN3];										\
 	if( chip->output[CHAN4] && ! chip->Muted[CHAN4] )					\
 		sum += chip->volume[CHAN4];										\
-	while( samples > 0 )												\
+	for( i = 0; i < samples; i++ )										\
 	{																	\
 		if( chip->counter[CHAN1] < chip->samplepos_whole )				\
 		{																\
@@ -555,7 +555,8 @@ struct _pokey_state
  */
 
 #define PROCESS_POKEY(chip)												\
-	UINT32 sum = 0; 													\
+	UINT32 i = 0;														\
+	UINT32 sum = 0;														\
 	if( chip->output[CHAN1] && ! chip->Muted[CHAN1] )					\
 		sum += chip->volume[CHAN1];										\
 	if( chip->output[CHAN2] && ! chip->Muted[CHAN2] )					\

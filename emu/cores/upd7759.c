@@ -557,6 +557,7 @@ static void advance_state(upd7759_state *chip)
 static void upd7759_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
 	upd7759_state *chip = (upd7759_state *)param;
+	UINT32 i;
 	INT32 clocks_left = chip->clocks_left;
 	INT16 sample = chip->Muted ? 0 : chip->sample;
 	UINT32 step = chip->step;
@@ -565,13 +566,13 @@ static void upd7759_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	DEV_SMPL *buffer2 = outputs[1];
 
 	/* loop until done */
+	i = 0;
 	if (chip->state != STATE_IDLE)
-		while (samples != 0)
+		for (; i < samples; i++)
 		{
 			/* store the current sample */
-			*buffer++ = sample << 7;
-			*buffer2++ = sample << 7;
-			samples--;
+			buffer[i] = sample << 7;
+			buffer2[i] = sample << 7;
 
 			/* advance by the number of clocks/output sample */
 			pos += step;
@@ -627,10 +628,11 @@ static void upd7759_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		}
 
 	/* if we got out early, just zap the rest of the buffer */
-	if (samples > 0)
+	if (i < samples)
 	{
-		memset(buffer, 0, samples * sizeof(*buffer));
-		memset(buffer2, 0, samples * sizeof(*buffer2));
+		samples -= i;
+		memset(&buffer[i], 0, samples * sizeof(DEV_SMPL));
+		memset(&buffer2[i], 0, samples * sizeof(DEV_SMPL));
 	}
 
 	/* flush the state back */
