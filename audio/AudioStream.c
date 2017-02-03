@@ -119,8 +119,8 @@ static ADRV_INSTANCE* GetFreeRunSlot(void);
 //AUDIO_OPTS* AudioDrv_GetOptions(void* drvStruct);
 //UINT8 AudioDrv_Start(void* drvStruct, UINT32 devID);
 //UINT8 AudioDrv_Stop(void* drvStruct);
-//UINT32 AudioDrv_Pause(void* drvStruct);
-//UINT32 AudioDrv_Resume(void* drvStruct);
+//UINT8 AudioDrv_Pause(void* drvStruct);
+//UINT8 AudioDrv_Resume(void* drvStruct);
 static UINT32 DoDataForwarding(void* Params, UINT32 bufSize, void* data);
 //UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback);
 //UINT8 AudioDrv_DataForward_Add(void* drvStruct, const void* destDrvStruct);
@@ -377,7 +377,7 @@ UINT8 AudioDrv_Stop(void* drvStruct)
 	return AERR_OK;
 }
 
-UINT32 AudioDrv_Pause(void* drvStruct)
+UINT8 AudioDrv_Pause(void* drvStruct)
 {
 	ADRV_INSTANCE* audInst = (ADRV_INSTANCE*)drvStruct;
 	AUDIO_DRV* aDrv = audInst->drvStruct;
@@ -385,7 +385,7 @@ UINT32 AudioDrv_Pause(void* drvStruct)
 	return aDrv->Pause(audInst->drvData);
 }
 
-UINT32 AudioDrv_Resume(void* drvStruct)
+UINT8 AudioDrv_Resume(void* drvStruct)
 {
 	ADRV_INSTANCE* audInst = (ADRV_INSTANCE*)drvStruct;
 	AUDIO_DRV* aDrv = audInst->drvStruct;

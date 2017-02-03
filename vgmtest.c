@@ -268,7 +268,17 @@ int main(int argc, char* argv[])
 	smplData = (WAVE_32BS*)malloc(smplAlloc * sizeof(WAVE_32BS));
 	
 	canRender = true;
-	getchar();
+	while(1)
+	{
+		int inkey = getchar();
+		if (toupper(inkey) == 'P')
+			AudioDrv_Pause(audDrv);
+		else if (toupper(inkey) == 'R')
+			AudioDrv_Resume(audDrv);
+		else
+			break;
+		fflush(stdin);
+	}
 	canRender = false;
 	
 	retVal = AudioDrv_Stop(audDrv);

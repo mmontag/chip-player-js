@@ -44,8 +44,8 @@ void* AudioDrv_GetDrvData(void* drvStruct);
 
 UINT8 AudioDrv_Start(void* drvStruct, UINT32 devID);
 UINT8 AudioDrv_Stop(void* drvStruct);
-UINT32 AudioDrv_Pause(void* drvStruct);
-UINT32 AudioDrv_Resume(void* drvStruct);
+UINT8 AudioDrv_Pause(void* drvStruct);
+UINT8 AudioDrv_Resume(void* drvStruct);
 
 // sets a callback function that will be called whenever a buffer is free
 UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback);

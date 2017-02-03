@@ -179,7 +179,17 @@ int main(int argc, char* argv[])
 	}
 	printf("Buffer Size: %u bytes\n", AudioDrv_GetBufferSize(audDrv));
 	
-	getchar();
+	while(1)
+	{
+		int inkey = getchar();
+		if (toupper(inkey) == 'P')
+			AudioDrv_Pause(audDrv);
+		else if (toupper(inkey) == 'R')
+			AudioDrv_Resume(audDrv);
+		else
+			break;
+		fflush(stdin);
+	}
 	printf("Current Latency: %u ms\n", AudioDrv_GetLatency(audDrv));
 	
 	retVal = AudioDrv_Stop(audDrv);
