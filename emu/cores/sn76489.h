@@ -60,15 +60,15 @@ typedef struct
     int ToneFreqPos[4];        /* Frequency channel flip-flops */
     int Channels[4];          /* Value of each channel, before stereo is applied */
     float IntermediatePos[4];   /* intermediate values used at boundaries between + and - (does not need double accuracy)*/
-
+    
     float panning[4][2];            /* fake stereo */
-
-    int NgpFlags;       /* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
+    
+    unsigned char NgpFlags; /* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
     void* NgpChip2;
 } SN76489_Context;
 
 /* Function prototypes */
-SN76489_Context* SN76489_Init(int PSGClockValue, int SamplingRate);
+SN76489_Context* SN76489_Init(UINT32 PSGClockValue, UINT32 SamplingRate);
 void SN76489_Reset(SN76489_Context* chip);
 void SN76489_Shutdown(SN76489_Context* chip);
 void SN76489_Config(SN76489_Context* chip, int feedback, int sw_width, int boost_noise);

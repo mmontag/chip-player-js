@@ -106,7 +106,7 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 	UINT32 rate;
 	
 	clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
-	rate = sn76496_start(&chip, clock, cfg->shiftRegWidth, cfg->noiseTaps,
+	rate = sn76496_start(&chip, cfg->_genCfg.clock, cfg->shiftRegWidth, cfg->noiseTaps,
 						cfg->negate, cfg->stereo, cfg->clkDiv, ! cfg->segaPSG);
 	if (! rate)
 		return 0xFF;
@@ -134,7 +134,7 @@ static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDev
 	
 	clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
 	rate = cfg->_genCfg.smplRate;
-	chip = SN76489_Init(clock, rate);
+	chip = SN76489_Init(cfg->_genCfg.clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	

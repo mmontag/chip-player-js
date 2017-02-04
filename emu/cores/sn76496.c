@@ -490,8 +490,7 @@ static int generic_start(sn76496_state *chip, int clock, int feedbackmask, int n
 {
 	int sample_rate;
 	
-	sample_rate = clock/2;
-	if ((clock & 0x80000000) && LastChipInit != NULL)
+	if (CHPCLK_FLAG(clock) && LastChipInit != NULL)
 	{
 		// Activate special NeoGeoPocket Mode
 		sn76496_state *chip2 = LastChipInit;
@@ -509,7 +508,7 @@ static int generic_start(sn76496_state *chip, int clock, int feedbackmask, int n
 	}
 	SN76496_set_gain(chip, 0);
 	
-	chip->clock = clock;
+	chip->clock = CHPCLK_CLOCK(clock);
 	chip->ClockDivider = clockdivider ? clockdivider : 8;
 	chip->FeedbackMask = feedbackmask;	/* mask for feedback */
 	chip->WhitenoiseTap1 = noisetap1;	/* mask for white noise tap 1*/
@@ -526,7 +525,7 @@ static int generic_start(sn76496_state *chip, int clock, int feedbackmask, int n
 	
 	sn76496_set_mutemask(chip, 0x00);
 	
-	sample_rate = clock / 2 / chip->ClockDivider;
+	sample_rate = chip->clock / 2 / chip->ClockDivider;
 	
 	return sample_rate;
 }
@@ -556,11 +555,8 @@ unsigned int sn76496_start(void **chip, int clock, int shiftregwidth, int noiset
 				break;
 		}
 	}
-	while(curtap < 2)
-	{
+	for (; curtap < 2; curtap ++)
 		ntap[curtap] = ntap[0];
-		curtap ++;
-	}
 	
 	return generic_start(sn_chip, clock, 1 << (shiftregwidth - 1), ntap[0], ntap[1],
 						negate, stereo, clockdivider, freq0);

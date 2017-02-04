@@ -26,6 +26,7 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "sn76489.h"
 #include "../panning.h"
 
@@ -44,13 +45,13 @@ static const int PSGVolumeValues[16] = {
 static SN76489_Context* LastChipInit = NULL;
 
 
-SN76489_Context* SN76489_Init( int PSGClockValue, int SamplingRate)
+SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
 {
 	int i;
-	SN76489_Context* chip = (SN76489_Context*)malloc(sizeof(SN76489_Context));
+	SN76489_Context* chip = (SN76489_Context*)calloc(1, sizeof(SN76489_Context));
 	if(chip)
 	{
-		chip->dClock=(float)(PSGClockValue & 0x7FFFFFF)/16/SamplingRate;
+		chip->dClock=(float)CHPCLK_CLOCK(PSGClockValue)/16.0f/SamplingRate;
 		
 		SN76489_SetMute(chip, MUTE_ALLON);
 		SN76489_Config(chip, FB_SEGAVDP, SRW_SEGAVDP, 1);
@@ -59,7 +60,7 @@ SN76489_Context* SN76489_Init( int PSGClockValue, int SamplingRate)
 			centre_panning(chip->panning[i]);
 		//SN76489_Reset(chip);
 		
-		if ((PSGClockValue & 0x80000000) && LastChipInit != NULL)
+		if (CHPCLK_CLOCK(PSGClockValue) && LastChipInit != NULL)
 		{
 			// Activate special NeoGeoPocket Mode
 			LastChipInit->NgpFlags = 0x80 | 0x00;
@@ -200,7 +201,7 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 					chip->Channels[i] = (short)( PSGVolumeValues[chip->Registers[2 * i + 1]] * chip_t->IntermediatePos[i] );
 				else
 					/* Flat (no antialiasing needed) */
-					chip->Channels[i]= PSGVolumeValues[chip->Registers[2 * i + 1]] * chip_t->ToneFreqPos[i];
+					chip->Channels[i] = PSGVolumeValues[chip->Registers[2 * i + 1]] * chip_t->ToneFreqPos[i];
 			}
 			else
 				/* Muted channel */
@@ -213,7 +214,7 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 			// Now the noise is bipolar, too. -Valley Bell
 			chip->Channels[3] = PSGVolumeValues[chip->Registers[7]] * (( chip_n->NoiseShiftRegister & 0x1 ) * 2 - 1);
 			// due to the way the white noise works here, it seems twice as loud as it should be
-			if (chip->Registers[6] & 0x4 )
+			if (chip_n->Registers[6] & 0x4 )
 				chip->Channels[3] >>= 1;
 		}
 		else
