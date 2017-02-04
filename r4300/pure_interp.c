@@ -168,7 +168,7 @@ static void InterpretOpcode(usf_state_t * state);
 
 #include "interpreter.def"
 #include <stdio.h>
-#include <inttypes.h>
+#include <stdint.h>
 
 #ifdef DEBUG_INFO
 #include "debugger/dbg_decoder.h"
