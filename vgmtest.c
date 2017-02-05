@@ -36,6 +36,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/k054539.h"		// for K054539_CFG
 #include "emu/cores/c140.h"			// for C140_CFG
 #include "emu/cores/es5503.h"		// for ES5503_CFG
+#include "emu/cores/es5506.h"		// for ES5506_CFG
 #include "emu/cores/c352.h"			// for C352_CFG
 
 
@@ -641,6 +642,21 @@ static void InitVGMChips(void)
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			}
+			break;
+		case DEVID_ES5506:
+			{
+				ES5506_CFG esCfg;
+				
+				esCfg._genCfg = devCfg;
+				esCfg.channels = VGMHdr.bytES5506Chns;
+				
+				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&esCfg, &cDev->defInf);
+				if (retVal)
+					break;
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, (void**)&cDev->writeD16);
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
 			}
 			break;

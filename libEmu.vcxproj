@@ -168,6 +168,7 @@
     <ClCompile Include="emu\cores\emu2149.c" />
     <ClCompile Include="emu\cores\emu2413.c" />
     <ClCompile Include="emu\cores\es5503.c" />
+    <ClCompile Include="emu\cores\es5506.c" />
     <ClCompile Include="emu\cores\fmopl.c" />
     <ClCompile Include="emu\cores\fmopn.c" />
     <ClCompile Include="emu\cores\fmopn2612.c" />
@@ -236,6 +237,7 @@
     <ClInclude Include="emu\cores\emu2413.h" />
     <ClInclude Include="emu\cores\emutypes.h" />
     <ClInclude Include="emu\cores\es5503.h" />
+    <ClInclude Include="emu\cores\es5506.h" />
     <ClInclude Include="emu\cores\fmopl.h" />
     <ClInclude Include="emu\cores\fmopn.h" />
     <ClInclude Include="emu\cores\gb.h" />

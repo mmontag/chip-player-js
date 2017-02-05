@@ -37,6 +37,7 @@
 #define DEVID_VBOY_VSU	0x22
 #define DEVID_SAA1099	0x23
 #define DEVID_ES5503	0x24
+#define DEVID_ES5506	0x25	// variants: ES5505
 #define DEVID_X1_010	0x26
 #define DEVID_C352		0x27
 #define DEVID_GA20		0x28
