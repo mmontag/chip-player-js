@@ -166,7 +166,7 @@ static VGM_HEADER VGMHdr;
 static UINT32 VGMSmplPos;
 static UINT32 renderSmplPos;
 #define CHIP_COUNT	0x29
-static VGM_CHIPDEV VGMChips[CHIP_COUNT];
+static VGM_CHIPDEV VGMChips[CHIP_COUNT][2];
 static UINT32 sampleRate;
 
 int main(int argc, char* argv[])
@@ -305,14 +305,16 @@ Exit_AudDeinit:
 static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs)
 {
 	UINT8 curChip;
+	UINT8 chipNum;
 	VGM_CHIPDEV* cDev;
 	VGM_LINKCDEV* clDev;
 	
 	ReadVGMFile(smplCount);
 	// I know that using a for-loop has a bad performance, but it's just for testing anyway.
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
+	for (chipNum = 0; chipNum < 2; chipNum ++)
 	{
-		cDev = &VGMChips[curChip];
+		cDev = &VGMChips[curChip][chipNum];
 		if (cDev->defInf.dataPtr != NULL)
 			Resmpl_Execute(&cDev->resmpl, smplCount, &smplData[smplOfs]);
 		clDev = cDev->linkDev;
@@ -401,6 +403,7 @@ static void InitVGMChips(void)
 		0xC0, 0xC4, 0xC8, 0xCC, 0xD0, 0xD8, 0xDC, 0xE0};
 	UINT8* vgmHdrArr;
 	UINT8 curChip;
+	UINT8 chipNum;
 	UINT32 chpClk;
 	DEV_GEN_CFG devCfg;
 	VGM_CHIPDEV* cDev;
@@ -410,11 +413,14 @@ static void InitVGMChips(void)
 	memset(&VGMChips, 0x00, sizeof(VGMChips));
 	vgmHdrArr = (UINT8*)&VGMHdr;	// can't use VGMData due to the data offset
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
+	for (chipNum = 0; chipNum < 2; chipNum ++)
 	{
 		memcpy(&chpClk, &vgmHdrArr[chipOfs[curChip]], 0x04);
 		if (! chpClk)
 			continue;
-		cDev = &VGMChips[curChip];
+		if (chipNum && ! (chpClk & 0x40000000))
+			continue;
+		cDev = &VGMChips[curChip][chipNum];
 		
 		cDev->defInf.dataPtr = NULL;
 		cDev->linkDev = NULL;
@@ -759,13 +765,15 @@ static void InitVGMChips(void)
 static void DeinitVGMChips(void)
 {
 	UINT8 curChip;
+	UINT8 chipNum;
 	VGM_CHIPDEV* cDev;
 	VGM_LINKCDEV* clDev;
 	VGM_LINKCDEV* clDevOld;
 	
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
+	for (chipNum = 0; chipNum < 2; chipNum ++)
 	{
-		cDev = &VGMChips[curChip];
+		cDev = &VGMChips[curChip][chipNum];
 		if (cDev->defInf.dataPtr == NULL)
 			continue;
 		
@@ -799,7 +807,7 @@ static void SendChipCommand_Data8(UINT8 chipID, UINT8 chipNum, UINT8 ofs, UINT8 
 {
 	VGM_CHIPDEV* cDev;
 	
-	cDev = &VGMChips[chipID];
+	cDev = &VGMChips[chipID][chipNum];
 	if (cDev->write8 == NULL)
 		return;
 	
@@ -811,7 +819,7 @@ static void SendChipCommand_RegData8(UINT8 chipID, UINT8 chipNum, UINT8 port, UI
 {
 	VGM_CHIPDEV* cDev;
 	
-	cDev = &VGMChips[chipID];
+	cDev = &VGMChips[chipID][chipNum];
 	if (cDev->write8 == NULL)
 		return;
 	
@@ -824,7 +832,7 @@ static void SendChipCommand_MemData8(UINT8 chipID, UINT8 chipNum, UINT16 ofs, UI
 {
 	VGM_CHIPDEV* cDev;
 	
-	cDev = &VGMChips[chipID];
+	cDev = &VGMChips[chipID][chipNum];
 	if (cDev->writeM8 == NULL)
 		return;
 	
@@ -836,7 +844,7 @@ static void SendChipCommand_Data16(UINT8 chipID, UINT8 chipNum, UINT8 ofs, UINT1
 {
 	VGM_CHIPDEV* cDev;
 	
-	cDev = &VGMChips[chipID];
+	cDev = &VGMChips[chipID][chipNum];
 	if (cDev->writeD16 == NULL)
 		return;
 	
@@ -848,7 +856,7 @@ static void SendChipCommand_MemData16(UINT8 chipID, UINT8 chipNum, UINT16 ofs, U
 {
 	VGM_CHIPDEV* cDev;
 	
-	cDev = &VGMChips[chipID];
+	cDev = &VGMChips[chipID][chipNum];
 	if (cDev->writeM16 == NULL)
 		return;
 	
@@ -861,7 +869,7 @@ static void WriteChipROM(UINT8 chipID, UINT8 chipNum, UINT8 memID,
 {
 	VGM_CHIPDEV* cDev;
 	
-	cDev = &VGMChips[chipID];
+	cDev = &VGMChips[chipID][chipNum];
 	if (memID == 0)
 	{
 		if (cDev->romSize != NULL)
@@ -884,7 +892,7 @@ static void WriteChipRAM(UINT8 chipID, UINT8 chipNum,
 {
 	VGM_CHIPDEV* cDev;
 	
-	cDev = &VGMChips[chipID];
+	cDev = &VGMChips[chipID][chipNum];
 	if (cDev->romWrite != NULL)
 		cDev->romWrite(cDev->defInf.dataPtr, dataOfs, dataSize, data);
 	return;
@@ -1295,7 +1303,7 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			}
 			break;
 		case CMDTYPE_QSOUND:
-			if (VGMChips[cmdType.chipID].writeD16 != NULL)
+			if (VGMChips[cmdType.chipID][chipID].writeD16 != NULL)
 			{
 				UINT16 value;
 				
