@@ -18,6 +18,8 @@ typedef struct sn76496_config
 	UINT8 stereo;
 	UINT8 clkDiv;
 	UINT8 segaPSG;
+	
+	void* t6w28_tone;	// SN-chip that emulates the "tone" part of a T6W28
 } SN76496_CFG;
 
 extern const DEV_DEF* devDefList_SN76496[];

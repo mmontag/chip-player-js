@@ -441,6 +441,7 @@ static void InitVGMChips(void)
 				//if (! VGMHdr.bytPSG_Flags)
 				//	VGMHdr.bytPSG_Flags = 0x00;
 				devCfg.emuCore = FCC_MAXM;
+				devCfg.clock &= ~0x80000000;
 				snCfg._genCfg = devCfg;
 				snCfg.shiftRegWidth = VGMHdr.bytPSG_SRWidth;
 				snCfg.noiseTaps = (UINT8)VGMHdr.shtPSG_Feedback;
@@ -448,6 +449,10 @@ static void InitVGMChips(void)
 				snCfg.negate = (VGMHdr.bytPSG_Flags & 0x02) ? 1 : 0;
 				snCfg.stereo = (VGMHdr.bytPSG_Flags & 0x04) ? 0 : 1;
 				snCfg.clkDiv = (VGMHdr.bytPSG_Flags & 0x08) ? 1 : 8;
+				if ((chipNum & 0x01) && (chpClk & 0x80000000))	// must be 2nd chip + T6W28 mode
+					snCfg.t6w28_tone = VGMChips[curChip][chipNum ^ 0x01].defInf.dataPtr;
+				else
+					snCfg.t6w28_tone = NULL;
 				
 				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&snCfg, &cDev->defInf);
 				if (retVal)

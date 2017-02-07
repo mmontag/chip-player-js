@@ -26,7 +26,6 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
-#include "../EmuHelper.h"
 #include "sn76489.h"
 #include "../panning.h"
 
@@ -42,8 +41,6 @@ static const int PSGVolumeValues[16] = {
 	4096, 3254, 2584, 2053, 1631, 1295, 1029, 817, 649, 516, 410, 325, 258, 205, 163, 0
 };
 
-static SN76489_Context* LastChipInit = NULL;
-
 
 SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
 {
@@ -51,7 +48,7 @@ SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
 	SN76489_Context* chip = (SN76489_Context*)calloc(1, sizeof(SN76489_Context));
 	if(chip)
 	{
-		chip->dClock=(float)CHPCLK_CLOCK(PSGClockValue)/16.0f/SamplingRate;
+		chip->dClock=(float)PSGClockValue/16.0f/SamplingRate;
 		
 		SN76489_SetMute(chip, MUTE_ALLON);
 		SN76489_Config(chip, FB_SEGAVDP, SRW_SEGAVDP, 1);
@@ -60,23 +57,21 @@ SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
 			centre_panning(chip->panning[i]);
 		//SN76489_Reset(chip);
 		
-		if (CHPCLK_CLOCK(PSGClockValue) && LastChipInit != NULL)
-		{
-			// Activate special NeoGeoPocket Mode
-			LastChipInit->NgpFlags = 0x80 | 0x00;
-			chip->NgpFlags = 0x80 | 0x01;
-			chip->NgpChip2 = LastChipInit;
-			LastChipInit->NgpChip2 = chip;
-			LastChipInit = NULL;
-		}
-		else
-		{
-			chip->NgpFlags = 0x00;
-			chip->NgpChip2 = NULL;
-			LastChipInit = chip;
-		}
+		chip->NgpFlags = 0x00;
+		chip->NgpChip2 = NULL;
 	}
 	return chip;
+}
+
+void SN76489_ConnectT6W28(SN76489_Context* noisechip, SN76489_Context* tonechip)
+{
+	// Activate special NeoGeoPocket Mode
+	tonechip->NgpFlags = 0x80 | 0x00;
+	tonechip->NgpChip2 = noisechip;
+	noisechip->NgpFlags = 0x80 | 0x01;
+	noisechip->NgpChip2 = tonechip;
+	
+	return;
 }
 
 void SN76489_Reset(SN76489_Context* chip)
@@ -167,12 +162,10 @@ void SN76489_GGStereoWrite(SN76489_Context* chip, UINT8 data)
 void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 {
 	UINT32 i, j;
-	UINT8 NGPMode;
 	SN76489_Context* chip_t;
 	SN76489_Context* chip_n;
 	
-	NGPMode = (chip->NgpFlags >> 7) & 0x01;
-	if (! NGPMode)
+	if (! chip->NgpFlags)
 	{
 		chip_t = chip_n = chip;
 	}
@@ -181,11 +174,11 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 		if (! (chip->NgpFlags & 0x01))
 		{
 			chip_t = chip;
-			chip_n = (SN76489_Context*)chip->NgpChip2;
+			chip_n = chip->NgpChip2;
 		}
 		else
 		{
-			chip_t = (SN76489_Context*)chip->NgpChip2;
+			chip_t = chip->NgpChip2;
 			chip_n = chip;
 		}
 	}
@@ -352,12 +345,12 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 
 UINT32 SN76489_GetMute(SN76489_Context* chip)
 {
-  return chip->Mute;
+	return chip->Mute;
 }
 
 void SN76489_SetMute(SN76489_Context* chip, UINT32 val)
 {
-  chip->Mute=val;
+	chip->Mute=val;
 }
 
 void SN76489_SetPanning(SN76489_Context* chip, int ch0, int ch1, int ch2, int ch3)

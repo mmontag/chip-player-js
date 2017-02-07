@@ -34,7 +34,8 @@ enum mute_values {
     MUTE_ALLON  =   15,     /* All channels enabled */
 };
 
-typedef struct
+typedef struct _SN76489_Context SN76489_Context;
+struct _SN76489_Context
 {
     void* chipInf;
     
@@ -64,11 +65,12 @@ typedef struct
     float panning[4][2];            /* fake stereo */
     
     unsigned char NgpFlags; /* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
-    void* NgpChip2;
-} SN76489_Context;
+    SN76489_Context* NgpChip2;
+};
 
 /* Function prototypes */
 SN76489_Context* SN76489_Init(UINT32 PSGClockValue, UINT32 SamplingRate);
+void SN76489_ConnectT6W28(SN76489_Context* noisechip, SN76489_Context* tonechip);
 void SN76489_Reset(SN76489_Context* chip);
 void SN76489_Shutdown(SN76489_Context* chip);
 void SN76489_Config(SN76489_Context* chip, int feedback, int sw_width, int boost_noise);

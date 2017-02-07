@@ -164,8 +164,6 @@ struct _sn76496_state
 };
 
 
-static sn76496_state* LastChipInit = NULL;
-
 UINT8 sn76496_ready_r(void *chip, UINT8 offset)
 {
 	sn76496_state *R = (sn76496_state*)chip;
@@ -486,29 +484,13 @@ static void SN76496_set_gain(sn76496_state *R,int gain)
 }
 
 
-static int generic_start(sn76496_state *chip, int clock, int feedbackmask, int noisetap1, int noisetap2, int negate, int stereo, int clockdivider, int freq0)
+static UINT32 generic_start(sn76496_state *chip, UINT32 clock, int feedbackmask, int noisetap1, int noisetap2, int negate, int stereo, int clockdivider, int freq0)
 {
-	int sample_rate;
+	UINT32 sample_rate;
 	
-	if (CHPCLK_FLAG(clock) && LastChipInit != NULL)
-	{
-		// Activate special NeoGeoPocket Mode
-		sn76496_state *chip2 = LastChipInit;
-		chip2->NgpFlags = 0x80 | 0x00;
-		chip->NgpFlags = 0x80 | 0x01;
-		chip->NgpChip2 = chip2;
-		chip2->NgpChip2 = chip;
-		LastChipInit = NULL;
-	}
-	else
-	{
-		chip->NgpFlags = 0x00;
-		chip->NgpChip2 = NULL;
-		LastChipInit = chip;
-	}
 	SN76496_set_gain(chip, 0);
 	
-	chip->clock = CHPCLK_CLOCK(clock);
+	chip->clock = clock;
 	chip->ClockDivider = clockdivider ? clockdivider : 8;
 	chip->FeedbackMask = feedbackmask;	/* mask for feedback */
 	chip->WhitenoiseTap1 = noisetap1;	/* mask for white noise tap 1*/
@@ -516,6 +498,8 @@ static int generic_start(sn76496_state *chip, int clock, int feedbackmask, int n
 	chip->Negate = negate;	/* channel negation */
 	chip->Stereo = stereo;	/* GameGear stereo */
 	chip->Freq0IsMax = freq0;	/* frequency set to 0 results in freq = 0x400 rather than 0 */
+	chip->NgpFlags = 0x00;
+	chip->NgpChip2 = NULL;
 	
 	chip->CyclestoREADY = 1;	/* assume ready is not active immediately on init. is this correct?*/
 	chip->StereoMask = 0xFF;	/* all channels enabled */
@@ -530,8 +514,8 @@ static int generic_start(sn76496_state *chip, int clock, int feedbackmask, int n
 	return sample_rate;
 }
 
-unsigned int sn76496_start(void **chip, int clock, int shiftregwidth, int noisetaps,
-							int negate, int stereo, int clockdivider, int freq0)
+UINT32 sn76496_start(void **chip, UINT32 clock, int shiftregwidth, int noisetaps,
+					int negate, int stereo, int clockdivider, int freq0)
 {
 	sn76496_state* sn_chip;
 	int ntap[2];
@@ -560,6 +544,20 @@ unsigned int sn76496_start(void **chip, int clock, int shiftregwidth, int noiset
 	
 	return generic_start(sn_chip, clock, 1 << (shiftregwidth - 1), ntap[0], ntap[1],
 						negate, stereo, clockdivider, freq0);
+}
+
+void sn76496_connect_t6w28(void *noisechip, void *tonechip)
+{
+	sn76496_state *Rnoise = (sn76496_state *)noisechip;
+	sn76496_state *Rtone = (sn76496_state *)tonechip;
+	
+	// Activate special NeoGeoPocket Mode
+	Rtone->NgpFlags = 0x80 | 0x00;
+	Rtone->NgpChip2 = Rnoise;
+	Rnoise->NgpFlags = 0x80 | 0x01;
+	Rnoise->NgpChip2 = Rtone;
+	
+	return;
 }
 
 void sn76496_shutdown(void *chip)

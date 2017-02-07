@@ -106,7 +106,7 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 	UINT32 rate;
 	
 	clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
-	rate = sn76496_start(&chip, cfg->_genCfg.clock, cfg->shiftRegWidth, cfg->noiseTaps,
+	rate = sn76496_start(&chip, clock, cfg->shiftRegWidth, cfg->noiseTaps,
 						cfg->negate, cfg->stereo, cfg->clkDiv, ! cfg->segaPSG);
 	if (! rate)
 		return 0xFF;
@@ -114,6 +114,9 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 	info = (SN76496_INF*)malloc(sizeof(SN76496_INF));
 	info->chip.mame = chip;
 	info->cfg = *cfg;
+	
+	if (cfg->t6w28_tone != NULL)
+		sn76496_connect_t6w28(info->chip.mame, cfg->t6w28_tone);
 	sn76496_freq_limiter(info->chip.mame, cfg->_genCfg.smplRate);
 	
 	devData = (DEV_DATA*)info->chip.mame;
@@ -134,13 +137,16 @@ static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDev
 	
 	clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
 	rate = cfg->_genCfg.smplRate;
-	chip = SN76489_Init(cfg->_genCfg.clock, rate);
+	chip = SN76489_Init(clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
 	info = (SN76496_INF*)malloc(sizeof(SN76496_INF));
 	info->chip.maxim = chip;
 	info->cfg = *cfg;
+	
+	if (cfg->t6w28_tone != NULL)
+		SN76489_ConnectT6W28(info->chip.maxim, (SN76489_Context*)cfg->t6w28_tone);
 	SN76489_Config(info->chip.maxim, cfg->noiseTaps, cfg->shiftRegWidth, 0);
 	
 	devData = (DEV_DATA*)info->chip.any;
