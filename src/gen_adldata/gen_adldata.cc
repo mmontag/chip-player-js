@@ -1064,8 +1064,8 @@ int main()
     LoadBNK("fm_banks/bnk_files/file134.bnk", 10,"b10M", false, false);
     LoadBNK("fm_banks/bnk_files/file142.bnk", 11, "b11P", false, true);
     LoadBNK("fm_banks/bnk_files/file143.bnk", 11, "b11M", false, false);
-    LoadBNK("fm_banks/bnk_files/file144.bnk", 12, "b12M", false, false);
-    LoadBNK("fm_banks/bnk_files/file145.bnk", 12, "b12P", false, true);
+    LoadBNK("fm_banks/bnk_files/file145.bnk", 12, "b12M", false, false);//file145 is MELODIC
+    LoadBNK("fm_banks/bnk_files/file144.bnk", 12, "b12P", false, true);//file144  is DRUMS
     LoadBNK("fm_banks/bnk_files/file167.bnk", 13, "b13P", false, true);
     LoadBNK("fm_banks/bnk_files/file168.bnk", 13, "b13M", false, false);
 
