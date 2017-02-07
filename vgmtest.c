@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <zlib.h>
 
 #ifdef _WIN32
@@ -278,7 +279,8 @@ int main(int argc, char* argv[])
 			AudioDrv_Resume(audDrv);
 		else
 			break;
-		fflush(stdin);
+		while(getchar() != '\n')
+			;
 	}
 	canRender = false;
 	

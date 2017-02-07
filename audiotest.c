@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #ifdef _WIN32
 int __cdecl _getch(void);	// from conio.h
@@ -188,7 +189,8 @@ int main(int argc, char* argv[])
 			AudioDrv_Resume(audDrv);
 		else
 			break;
-		fflush(stdin);
+		while(getchar() != '\n')
+			;
 	}
 	printf("Current Latency: %u ms\n", AudioDrv_GetLatency(audDrv));
 	
