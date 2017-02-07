@@ -370,9 +370,9 @@ const adldata adl[4528] =
     { 0x0F0F009,0x0F7B700, 0x0E,0x00, 0xE, +0, false }, // 354: BisqP18; BisqP20; b6P96; b8P38; rickP18; rickP20; Rsnare2; snare2; snare2.i; snare5.i
     { 0x0FEF812,0x07ED511, 0x47,0x00, 0xE, +0, false }, // 355: BisqP21; BisqP22; BisqP23; BisqP24; BisqP25; BisqP26; b8P41; b8P43; b8P45; b8P47; b8P48; b8P50; rickP21; rickP22; rickP23; rickP24; rickP25; rickP26; rocktom; rocktom.
     { 0x005F010,0x004D011, 0x25,0x80, 0xE, +0, false }, // 356: BisqP27; b56M47; b66M47; b6M55; b6P27; b8P90; b8P91; hamP27; intP27; rickP27; TIMPANI; TIMPANI
-    { 0x00F9F30,0x0FAE83A, 0x00,0x00, 0xE, +0, false }, // 357: BisqP28; HMIGP39; b11P28; b11P39; b12P39; Clap; Clap.ins; clap
+    { 0x00F9F30,0x0FAE83A, 0x00,0x00, 0xE, +0, false }, // 357: BisqP28; HMIGP39; b11P28; b11P39; b12P39; f53GD39; Clap; Clap.ins; clap
     { 0x0976800,0x3987802, 0x00,0x00, 0x0, +0, false }, // 358: BisqP29; BisqP30; b11P29; b11P30; scratch
-    { 0x0FBF116,0x069F911, 0x08,0x02, 0x0, +0, false }, // 359: BisqP31; HMIGP37; HMIGP85; HMIGP86; b11P31; b11P37; b11P85; b11P86; b12P37; b12P85; b12P86; RimShot; RimShot.; rimShot; rimShot.; rimshot; rimshot.
+    { 0x0FBF116,0x069F911, 0x08,0x02, 0x0, +0, false }, // 359: BisqP31; HMIGP37; HMIGP85; HMIGP86; b11P31; b11P37; b11P85; b11P86; b12P37; b12P85; b12P86; f53GD37; f53GD85; f53GD86; RimShot; RimShot.; rimShot; rimShot.; rimshot; rimshot.
     { 0x06CF800,0x04AE80E, 0x00,0x40, 0x0, +0, false }, // 360: BisqP32; f42GP32
     { 0x0F2FA25,0x09AF612, 0x1B,0x00, 0x0, +0, false }, // 361: BisqP33; apgbloodM115; apgbloodP33; apgbloodP4; apgbloodP76; apgbloodP77; b10M115; b10P33; b10P76; b10P77; f42GM115; f42GP33; f42GP76; f42GP77; nhlM115; nhlP33; nhlP76; nhlP77; High Wood Block; Low Wood Block; WOODBLOK; Woodblock; woodblok
     { 0x2F5F5C5,0x005C301, 0x08,0x06, 0x1, +0, false }, // 362: BisqP34; b11M9; b11P34; b12M9; GLOCKEN; GLOCKEN.; glocken
@@ -395,15 +395,15 @@ const adldata adl[4528] =
     { 0x152FE09,0x008F002, 0xC0,0x00, 0xE, +0, false }, // 379: BisqP56; f13GP56; f50GP56; nemP56; Cow Bell
     { 0x055F201,0x000F441, 0x00,0x00, 0xE, +0, false }, // 380: BisqP57; b50P49; b51P57; b51P59; f20GP49; f31GP49; f36GP57; qGP49; Crash Cymbal 1; Crash Cymbal 2; gpo057; gpo059; gps049
     { 0x000F301,0x0A4F48F, 0x00,0x00, 0xE, +0, false }, // 381: BisqP57; b50P49; b51P57; b51P59; f20GP49; f31GP49; f36GP57; qGP49; Crash Cymbal 1; Crash Cymbal 2; gpo057; gpo059; gps049
-    { 0x100FF80,0x1F7F500, 0x00,0x00, 0xC, +0, false }, // 382: BisqP58; HMIGP58; apgbloodP17; apgbloodP58; b10P58; b11P58; b12P58; nhlP58; Vibraslap; vibrasla
+    { 0x100FF80,0x1F7F500, 0x00,0x00, 0xC, +0, false }, // 382: BisqP58; HMIGP58; apgbloodP17; apgbloodP58; b10P58; b11P58; b12P58; f53GD58; nhlP58; Vibraslap; vibrasla
     { 0x05EFD2E,0x3EFF527, 0x07,0x0C, 0xE, +0, false }, // 383: BisqP59; f48GP59; Ride Cymbal 2
     { 0x256FB00,0x026FA00, 0x00,0x00, 0x4, +12, false }, // 384: BisqP60; BisqP61; dMP60; dMP61; hxMP60; hxMP61; musP60; musP61; raptP60; raptP61; High Bongo; High Bongo
     { 0x256FB00,0x017F700, 0x80,0x00, 0x0, +12, false }, // 385: BisqP62; BisqP63; BisqP64; dMP62; dMP63; dMP64; hxMP62; hxMP63; hxMP64; musP62; musP63; musP64; raptP62; raptP63; raptP64; Low Conga; Low Conga
     { 0x1779A01,0x084F700, 0x00,0x00, 0x8, +0, false }, // 386: BisqP65; BisqP66; f13GP65; f13GP66; f50GP65; f50GP66; nemP65; nemP66; High Timbale; Low Timbale
     { 0x367FD01,0x098F601, 0x00,0x00, 0x8, +12, false }, // 387: BisqP67; BisqP68; dMP67; dMP68; hxMP67; hxMP68; musP67; musP68; raptP67; raptP68; High Agogo; High Agogo
     { 0x001FF0E,0x377790E, 0x00,0x02, 0xE, +0, false }, // 388: BisqP70; apgbloodP23; apgbloodP69; apgbloodP70; apgbloodP82; b10P69; b10P70; b10P82; nhlP69; nhlP70; nhlP82; Cabasa; Maracas; Shaker; shaker
-    { 0x2079F20,0x22B950E, 0x1C,0x00, 0x0, +0, false }, // 389: BisqP71; HMIGP71; b11P71; b12P71; Short Whistle; hiwhist; hiwhist.
-    { 0x2079F20,0x23B940E, 0x1E,0x00, 0x0, +0, false }, // 390: BisqP72; HMIGP72; b11P72; b12P72; Long Whistle; lowhist; lowhist.
+    { 0x2079F20,0x22B950E, 0x1C,0x00, 0x0, +0, false }, // 389: BisqP71; HMIGP71; b11P71; b12P71; f53GD71; Short Whistle; hiwhist; hiwhist.
+    { 0x2079F20,0x23B940E, 0x1E,0x00, 0x0, +0, false }, // 390: BisqP72; HMIGP72; b11P72; b12P72; f53GD72; Long Whistle; lowhist; lowhist.
     { 0x506F680,0x016F610, 0x00,0x00, 0xC, +0, false }, // 391: BisqP73; BisqP74; b50P73; b50P74; f20GP73; f20GP74; f31GP73; f31GP74; qGP73; qGP74; Long Guiro; Short Guiro; gps073; gps074
     { 0x50F6F00,0x50F6F00, 0x00,0x00, 0xD, +0, false }, // 392: BisqP73; b50P73; b51P73; f20GP73; f31GP73; f36GP73; qGP73; Short Guiro; gpo073; gps073
     { 0x50F4F00,0x50F4F00, 0x00,0x00, 0xD, +0, false }, // 393: BisqP74; b50P74; b51P74; f20GP74; f31GP74; f36GP74; qGP74; Long Guiro; gpo074; gps074
@@ -413,7 +413,7 @@ const adldata adl[4528] =
     { 0x04F760F,0x2187700, 0x40,0x08, 0xE, +0, false }, // 397: BisqP82; b50P69; b51P69; b51P82; f20GP69; f31GP69; f36GP69; f36GP82; qGP69; Cabasa; Shaker; gpo069; gpo082; gps069
     { 0x332F905,0x0A6D604, 0x05,0x40, 0xE, +0, false }, // 398: BisqP83; b50P83; f20GP83; f31GP83; qGP83; Jingle Bell; gps083
     { 0x332F805,0x0A67404, 0x05,0x40, 0xF, +0, false }, // 399: BisqP83; b50P83; f20GP83; f31GP83; qGP83; Jingle Bell; gps083
-    { 0x0F0F126,0x0F5F527, 0x44,0x40, 0x6, +0, false }, // 400: BisqP84; HMIGP81; HMIGP83; HMIGP84; apgbloodP81; apgbloodP83; apgbloodP84; b10P81; b10P83; b10P84; b11P81; b11P83; b11P84; b12P81; b12P83; b12P84; nhlP81; nhlP83; nhlP84; Bell Tree; Jingle Bell; Open Triangle; triangle
+    { 0x0F0F126,0x0F5F527, 0x44,0x40, 0x6, +0, false }, // 400: BisqP84; HMIGP81; HMIGP83; HMIGP84; apgbloodP81; apgbloodP83; apgbloodP84; b10P81; b10P83; b10P84; b11P81; b11P83; b11P84; b12P81; b12P83; b12P84; f53GD81; f53GD83; f53GD84; nhlP81; nhlP83; nhlP84; Bell Tree; Jingle Bell; Open Triangle; triangle
     { 0x3948F03,0x06FFA15, 0x00,0x00, 0x0, +0, false }, // 401: BisqP85; f13GP85; f50GP85; nemP85; Castanets
     { 0x0F0F007,0x0DC5C00, 0x00,0x00, 0xE, +0, false }, // 402: BisqP88; b6P88; f12GM29; f12GM30; f12GM31; f12GM44; f12GM50; f12GM51; f12GM52; f12GM53; f12GM54; f12GM55; f12GM65; f12GM66; f12GM67; f12GM75; f12GP51; f16GM29; f16GM30; f16GM31; f16GM44; f16GM50; f16GM51; f16GM52; f16GM53; f16GM54; f16GM55; f16GM65; f16GM66; f16GM67; f16GM75; f16GP51; f54GM29; f54GM30; f54GM31; f54GM44; f54GM50; f54GM51; f54GM52; f54GM53; f54GM54; f54GM55; f54GM65; f54GM66; f54GM67; f54GP51; intP88; rickP88; Alto Sax; Baritone Sax; Choir Aahs; Distorton Guitar; Guitar Harmonics; Orchestra Hit; Overdrive Guitar; Pan Flute; Ride Cymbal 1; Synth Strings 1; Synth Voice; SynthStrings 2; Tenor Sax; Tremulo Strings; Voice Oohs; scratch; scratch.
     { 0x00FFF7E,0x00F3F6E, 0x00,0x00, 0xE, +0, false }, // 403: BisqP89; b56M126; b66M126; b6P23; hamP89; intP89; rickP89; Applause/Noise; CROWD
@@ -426,7 +426,7 @@ const adldata adl[4528] =
     { 0x0DFDCC2,0x026C9C0, 0x17,0x00, 0x0, +0, false }, // 410: BisqP97; b8P74; f35GP74; rickP97; Long Guiro; afrika; guirol.i
     { 0x0D0ACC0,0x028EAC1, 0x18,0x00, 0x0, +0, false }, // 411: BisqP101; BisqP102; b6P118; b8P63; b8P64; f35GP63; f35GP64; rickP101; rickP102; Low Conga; Open High Conga; Rcongas2; congas2; congas2.
     { 0x0A7CDC2,0x028EAC1, 0x2B,0x02, 0x0, +0, false }, // 412: BisqP103; BisqP104; b8P60; b8P61; f35GP60; f35GP61; rickP103; rickP104; High Bongo; Low Bongo; bongos.i; newconga
-    { 0x0FE6227,0x3D9950A, 0x00,0x07, 0x8, +0, false }, // 413: BisqP106; BisqP107; BisqP108; BisqP109; BisqP110; BisqP111; BisqP112; BisqP113; BisqP114; BisqP115; BisqP116; BisqP117; BisqP118; BisqP119; BisqP120; BisqP121; BisqP122; BisqP123; BisqP124; BisqP125; BisqP126; BisqP127; HMIGP35; b12P35; Wierd3.i
+    { 0x0FE6227,0x3D9950A, 0x00,0x07, 0x8, +0, false }, // 413: BisqP106; BisqP107; BisqP108; BisqP109; BisqP110; BisqP111; BisqP112; BisqP113; BisqP114; BisqP115; BisqP116; BisqP117; BisqP118; BisqP119; BisqP120; BisqP121; BisqP122; BisqP123; BisqP124; BisqP125; BisqP126; BisqP127; HMIGP35; b12P35; f53GD35; Wierd3.i
     { 0x1199523,0x0198421, 0x48,0x00, 0x8, +0, false }, // 414: 3drm67M29; HMIGM0; HMIGM29; apgleeM25; b7M29; f17GM29; f35GM29; mGM29; Acoustic Guitar2; Overdrive Guitar; am029.in
     { 0x055F231,0x076F221, 0x49,0x00, 0x8, +0, false }, // 415: 3drm67M2; HMIGM2; b7M2; b8M2; f17GM2; f35GM2; mGM2; ElecGrandPiano; am002.in; piano3
     { 0x038F101,0x028F121, 0x57,0x00, 0x0, +0, false }, // 416: 3drm67M4; HMIGM4; b7M4; b8M4; f17GM4; f35GM4; mGM4; Rhodes Piano; am004.in; epiano1a
@@ -441,32 +441,32 @@ const adldata adl[4528] =
     { 0x122F603,0x0F3F321, 0x87,0x80, 0x6, +0, false }, // 425: 3drm67M27; HMIGM27; b7M27; f17GM27; mGM27; Electric Guitar2; am027.in
     { 0x09AA101,0x0DFF221, 0x89,0x40, 0x8, +0, false }, // 426: 3drm67M37; HMIGM37; b7M37; f17GM37; mGM37; Slap Bass 2; am037.in
     { 0x15572A1,0x0187121, 0x86,0x0D, 0x0, +0, false }, // 427: 3drm67M62; HMIGM62; b7M62; Synth Brass 1; am062.in
-    { 0x0F00010,0x0F00010, 0x3F,0x3F, 0x0, +0, false }, // 428: HMIGP0; HMIGP1; HMIGP10; HMIGP100; HMIGP101; HMIGP102; HMIGP103; HMIGP104; HMIGP105; HMIGP106; HMIGP107; HMIGP108; HMIGP109; HMIGP11; HMIGP110; HMIGP111; HMIGP112; HMIGP113; HMIGP114; HMIGP115; HMIGP116; HMIGP117; HMIGP118; HMIGP119; HMIGP12; HMIGP120; HMIGP121; HMIGP122; HMIGP123; HMIGP124; HMIGP125; HMIGP126; HMIGP127; HMIGP13; HMIGP14; HMIGP15; HMIGP16; HMIGP17; HMIGP18; HMIGP19; HMIGP2; HMIGP20; HMIGP21; HMIGP22; HMIGP23; HMIGP24; HMIGP25; HMIGP26; HMIGP3; HMIGP4; HMIGP5; HMIGP6; HMIGP7; HMIGP8; HMIGP88; HMIGP89; HMIGP9; HMIGP90; HMIGP91; HMIGP92; HMIGP93; HMIGP94; HMIGP95; HMIGP96; HMIGP97; HMIGP98; HMIGP99; b10P0; b10P1; b10P10; b10P100; b10P101; b10P102; b10P103; b10P104; b10P105; b10P106; b10P107; b10P108; b10P109; b10P11; b10P110; b10P111; b10P112; b10P113; b10P114; b10P115; b10P116; b10P117; b10P118; b10P119; b10P12; b10P120; b10P121; b10P122; b10P123; b10P124; b10P125; b10P126; b10P13; b10P14; b10P15; b10P16; b10P17; b10P18; b10P19; b10P2; b10P20; b10P21; b10P22; b10P23; b10P24; b10P25; b10P26; b10P27; b10P3; b10P4; b10P5; b10P6; b10P7; b10P8; b10P88; b10P89; b10P9; b10P90; b10P91; b10P92; b10P93; b10P94; b10P95; b10P96; b10P97; b10P98; b10P99; b11P0; b11P1; b11P10; b11P100; b11P101; b11P102; b11P103; b11P104; b11P105; b11P106; b11P107; b11P108; b11P109; b11P11; b11P110; b11P111; b11P112; b11P113; b11P114; b11P115; b11P116; b11P117; b11P118; b11P119; b11P12; b11P120; b11P121; b11P122; b11P123; b11P124; b11P125; b11P126; b11P127; b11P13; b11P14; b11P15; b11P16; b11P17; b11P18; b11P19; b11P2; b11P20; b11P21; b11P22; b11P23; b11P24; b11P25; b11P26; b11P27; b11P3; b11P4; b11P5; b11P6; b11P7; b11P8; b11P88; b11P89; b11P9; b11P90; b11P91; b11P92; b11P93; b11P94; b11P95; b11P96; b11P97; b11P98; b11P99; b12P0; b12P1; b12P10; b12P100; b12P101; b12P102; b12P103; b12P104; b12P105; b12P106; b12P107; b12P108; b12P109; b12P11; b12P110; b12P111; b12P112; b12P113; b12P114; b12P115; b12P116; b12P117; b12P118; b12P119; b12P12; b12P120; b12P121; b12P122; b12P123; b12P124; b12P125; b12P126; b12P127; b12P13; b12P14; b12P15; b12P16; b12P17; b12P18; b12P19; b12P2; b12P20; b12P21; b12P22; b12P23; b12P24; b12P25; b12P26; b12P3; b12P4; b12P5; b12P6; b12P7; b12P8; b12P88; b12P89; b12P9; b12P90; b12P91; b12P92; b12P93; b12P94; b12P95; b12P96; b12P97; b12P98; b12P99; Blank; Blank.in
-    { 0x0F1F02E,0x3487407, 0x00,0x07, 0x8, +0, false }, // 429: HMIGP27; HMIGP28; HMIGP29; HMIGP30; HMIGP31; b12P27; b12P28; b12P29; b12P30; b12P31; Wierd1.i
-    { 0x0FE5229,0x3D9850E, 0x00,0x07, 0x6, +0, false }, // 430: HMIGP32; HMIGP33; HMIGP34; b12M127; b12P32; b12P33; b12P34; WIERD2.I; Wierd2.i
+    { 0x0F00010,0x0F00010, 0x3F,0x3F, 0x0, +0, false }, // 428: HMIGP0; HMIGP1; HMIGP10; HMIGP100; HMIGP101; HMIGP102; HMIGP103; HMIGP104; HMIGP105; HMIGP106; HMIGP107; HMIGP108; HMIGP109; HMIGP11; HMIGP110; HMIGP111; HMIGP112; HMIGP113; HMIGP114; HMIGP115; HMIGP116; HMIGP117; HMIGP118; HMIGP119; HMIGP12; HMIGP120; HMIGP121; HMIGP122; HMIGP123; HMIGP124; HMIGP125; HMIGP126; HMIGP127; HMIGP13; HMIGP14; HMIGP15; HMIGP16; HMIGP17; HMIGP18; HMIGP19; HMIGP2; HMIGP20; HMIGP21; HMIGP22; HMIGP23; HMIGP24; HMIGP25; HMIGP26; HMIGP3; HMIGP4; HMIGP5; HMIGP6; HMIGP7; HMIGP8; HMIGP88; HMIGP89; HMIGP9; HMIGP90; HMIGP91; HMIGP92; HMIGP93; HMIGP94; HMIGP95; HMIGP96; HMIGP97; HMIGP98; HMIGP99; b10P0; b10P1; b10P10; b10P100; b10P101; b10P102; b10P103; b10P104; b10P105; b10P106; b10P107; b10P108; b10P109; b10P11; b10P110; b10P111; b10P112; b10P113; b10P114; b10P115; b10P116; b10P117; b10P118; b10P119; b10P12; b10P120; b10P121; b10P122; b10P123; b10P124; b10P125; b10P126; b10P13; b10P14; b10P15; b10P16; b10P17; b10P18; b10P19; b10P2; b10P20; b10P21; b10P22; b10P23; b10P24; b10P25; b10P26; b10P27; b10P3; b10P4; b10P5; b10P6; b10P7; b10P8; b10P88; b10P89; b10P9; b10P90; b10P91; b10P92; b10P93; b10P94; b10P95; b10P96; b10P97; b10P98; b10P99; b11P0; b11P1; b11P10; b11P100; b11P101; b11P102; b11P103; b11P104; b11P105; b11P106; b11P107; b11P108; b11P109; b11P11; b11P110; b11P111; b11P112; b11P113; b11P114; b11P115; b11P116; b11P117; b11P118; b11P119; b11P12; b11P120; b11P121; b11P122; b11P123; b11P124; b11P125; b11P126; b11P127; b11P13; b11P14; b11P15; b11P16; b11P17; b11P18; b11P19; b11P2; b11P20; b11P21; b11P22; b11P23; b11P24; b11P25; b11P26; b11P27; b11P3; b11P4; b11P5; b11P6; b11P7; b11P8; b11P88; b11P89; b11P9; b11P90; b11P91; b11P92; b11P93; b11P94; b11P95; b11P96; b11P97; b11P98; b11P99; b12P0; b12P1; b12P10; b12P100; b12P101; b12P102; b12P103; b12P104; b12P105; b12P106; b12P107; b12P108; b12P109; b12P11; b12P110; b12P111; b12P112; b12P113; b12P114; b12P115; b12P116; b12P117; b12P118; b12P119; b12P12; b12P120; b12P121; b12P122; b12P123; b12P124; b12P125; b12P126; b12P127; b12P13; b12P14; b12P15; b12P16; b12P17; b12P18; b12P19; b12P2; b12P20; b12P21; b12P22; b12P23; b12P24; b12P25; b12P26; b12P3; b12P4; b12P5; b12P6; b12P7; b12P8; b12P88; b12P89; b12P9; b12P90; b12P91; b12P92; b12P93; b12P94; b12P95; b12P96; b12P97; b12P98; b12P99; f53GD0; f53GD1; f53GD10; f53GD100; f53GD101; f53GD102; f53GD103; f53GD104; f53GD105; f53GD106; f53GD107; f53GD108; f53GD109; f53GD11; f53GD110; f53GD111; f53GD112; f53GD113; f53GD114; f53GD115; f53GD116; f53GD117; f53GD118; f53GD119; f53GD12; f53GD120; f53GD121; f53GD122; f53GD123; f53GD124; f53GD125; f53GD126; f53GD127; f53GD13; f53GD14; f53GD15; f53GD16; f53GD17; f53GD18; f53GD19; f53GD2; f53GD20; f53GD21; f53GD22; f53GD23; f53GD24; f53GD25; f53GD26; f53GD3; f53GD4; f53GD5; f53GD6; f53GD7; f53GD8; f53GD88; f53GD89; f53GD9; f53GD90; f53GD91; f53GD92; f53GD93; f53GD94; f53GD95; f53GD96; f53GD97; f53GD98; f53GD99; Blank; Blank.in
+    { 0x0F1F02E,0x3487407, 0x00,0x07, 0x8, +0, false }, // 429: HMIGP27; HMIGP28; HMIGP29; HMIGP30; HMIGP31; b12P27; b12P28; b12P29; b12P30; b12P31; f53GD27; f53GD28; f53GD29; f53GD30; f53GD31; Wierd1.i
+    { 0x0FE5229,0x3D9850E, 0x00,0x07, 0x6, +0, false }, // 430: HMIGP32; HMIGP33; HMIGP34; b12M127; b12P32; b12P33; b12P34; f53GD32; f53GD33; f53GD34; WIERD2.I; Wierd2.i
     { 0x0FDF800,0x0C7F601, 0x0B,0x00, 0x8, +0, false }, // 431: HMIGP36; b11P36; Kick; Kick.ins
-    { 0x000FF26,0x0A7F802, 0x00,0x02, 0xE, +0, false }, // 432: HMIGP38; HMIGP40; b11P38; b11P40; b12P38; b12P40; Snare; Snare.in
-    { 0x01FFA06,0x0F5F511, 0x0A,0x00, 0xF, +0, false }, // 433: HMIGP41; HMIGP43; HMIGP45; HMIGP47; HMIGP48; HMIGP50; b11P41; b11P43; b11P45; b11P47; b11P48; b11P50; b12P41; b12P43; b12P45; b12P47; b12P48; b12P50; Toms; Toms.ins
-    { 0x0F1F52E,0x3F99906, 0x05,0x02, 0x0, +0, false }, // 434: HMIGP42; HMIGP44; b12P42; b12P44; clshat97
-    { 0x0F89227,0x3D8750A, 0x00,0x03, 0x8, +0, false }, // 435: HMIGP46; b12P46; Opnhat96
-    { 0x2009F2C,0x3A4C50E, 0x00,0x09, 0xE, +0, false }, // 436: HMIGP49; HMIGP52; HMIGP55; HMIGP57; b11P49; b11P52; b11P55; b11P57; b12P49; b12P52; b12P55; b12P57; Crashcym
-    { 0x0009429,0x344F904, 0x10,0x0C, 0xE, +0, false }, // 437: HMIGP51; HMIGP53; HMIGP59; b11P51; b11P53; b11P59; b12P51; b12P53; b12P59; Ridecym; Ridecym.; ridecym; ridecym.
-    { 0x0F1F52E,0x3F78706, 0x09,0x02, 0x0, +0, false }, // 438: HMIGP54; b11P54; b12P54; Tamb; Tamb.ins
-    { 0x2F1F535,0x028F703, 0x19,0x02, 0x0, +0, false }, // 439: HMIGP56; b11P56; b12P56; Cowbell; Cowbell.
-    { 0x0FAFA25,0x0F99803, 0xCD,0x00, 0x0, +0, false }, // 440: HMIGP60; HMIGP62; b11P60; b11P62; b12P60; b12P62; mutecong
-    { 0x1FAF825,0x0F7A803, 0x1B,0x00, 0x0, +0, false }, // 441: HMIGP61; b11P61; b12P61; conga; conga.in
-    { 0x1FAF825,0x0F69603, 0x21,0x00, 0xE, +0, false }, // 442: HMIGP63; HMIGP64; b11P63; b11P64; b12P63; b12P64; loconga; loconga.
-    { 0x2F5F504,0x236F603, 0x16,0x03, 0xA, +0, false }, // 443: HMIGP65; HMIGP66; b11P65; b11P66; b12P65; b12P66; timbale; timbale.
+    { 0x000FF26,0x0A7F802, 0x00,0x02, 0xE, +0, false }, // 432: HMIGP38; HMIGP40; b11P38; b11P40; b12P38; b12P40; f53GD38; f53GD40; Snare; Snare.in
+    { 0x01FFA06,0x0F5F511, 0x0A,0x00, 0xF, +0, false }, // 433: HMIGP41; HMIGP43; HMIGP45; HMIGP47; HMIGP48; HMIGP50; b11P41; b11P43; b11P45; b11P47; b11P48; b11P50; b12P41; b12P43; b12P45; b12P47; b12P48; b12P50; f53GD41; f53GD43; f53GD45; f53GD47; f53GD48; f53GD50; Toms; Toms.ins
+    { 0x0F1F52E,0x3F99906, 0x05,0x02, 0x0, +0, false }, // 434: HMIGP42; HMIGP44; b12P42; b12P44; f53GD42; f53GD44; clshat97
+    { 0x0F89227,0x3D8750A, 0x00,0x03, 0x8, +0, false }, // 435: HMIGP46; b12P46; f53GD46; Opnhat96
+    { 0x2009F2C,0x3A4C50E, 0x00,0x09, 0xE, +0, false }, // 436: HMIGP49; HMIGP52; HMIGP55; HMIGP57; b11P49; b11P52; b11P55; b11P57; b12P49; b12P52; b12P55; b12P57; f53GD49; f53GD52; f53GD55; f53GD57; Crashcym
+    { 0x0009429,0x344F904, 0x10,0x0C, 0xE, +0, false }, // 437: HMIGP51; HMIGP53; HMIGP59; b11P51; b11P53; b11P59; b12P51; b12P53; b12P59; f53GD51; f53GD53; f53GD59; Ridecym; Ridecym.; ridecym; ridecym.
+    { 0x0F1F52E,0x3F78706, 0x09,0x02, 0x0, +0, false }, // 438: HMIGP54; b11P54; b12P54; f53GD54; Tamb; Tamb.ins
+    { 0x2F1F535,0x028F703, 0x19,0x02, 0x0, +0, false }, // 439: HMIGP56; b11P56; b12P56; f53GD56; Cowbell; Cowbell.
+    { 0x0FAFA25,0x0F99803, 0xCD,0x00, 0x0, +0, false }, // 440: HMIGP60; HMIGP62; b11P60; b11P62; b12P60; b12P62; f53GD60; f53GD62; mutecong
+    { 0x1FAF825,0x0F7A803, 0x1B,0x00, 0x0, +0, false }, // 441: HMIGP61; b11P61; b12P61; f53GD61; conga; conga.in
+    { 0x1FAF825,0x0F69603, 0x21,0x00, 0xE, +0, false }, // 442: HMIGP63; HMIGP64; b11P63; b11P64; b12P63; b12P64; f53GD63; f53GD64; loconga; loconga.
+    { 0x2F5F504,0x236F603, 0x16,0x03, 0xA, +0, false }, // 443: HMIGP65; HMIGP66; b11P65; b11P66; b12P65; b12P66; f53GD65; f53GD66; timbale; timbale.
     { 0x091F015,0x0E8A617, 0x1E,0x04, 0xE, +0, false }, // 444: HMIGP67; HMIGP68; b11M113; b11P67; b11P68; AGOGO; agogo; agogo.in
-    { 0x001FF0E,0x077780E, 0x06,0x04, 0xE, +0, false }, // 445: HMIGP69; HMIGP70; HMIGP82; b11P69; b11P70; b11P82; b12P69; b12P70; b12P82; shaker; shaker.i
-    { 0x0F7F020,0x33B8809, 0x00,0x00, 0xC, +0, false }, // 446: HMIGP73; b11P73; b12P73; higuiro; higuiro.
-    { 0x0F7F420,0x33B560A, 0x03,0x00, 0x0, +0, false }, // 447: HMIGP74; b11P74; b12P74; loguiro; loguiro.
-    { 0x05BF714,0x089F712, 0x4B,0x00, 0x0, +0, false }, // 448: HMIGP75; b11P75; b12P75; clavecb; clavecb.
-    { 0x0F2FA27,0x09AF612, 0x22,0x00, 0x0, +0, false }, // 449: HMIGP76; HMIGP77; b11M115; b11P33; b11P76; b11P77; b12M115; b12P76; b12P77; WOODBLOK; woodblok
-    { 0x1F75020,0x03B7708, 0x09,0x05, 0x0, +0, false }, // 450: HMIGP78; b11P78; b12P78; hicuica; hicuica.
-    { 0x1077F26,0x06B7703, 0x29,0x05, 0x0, +0, false }, // 451: HMIGP79; b11P79; b12P79; locuica; locuica.
-    { 0x0F0F126,0x0FCF727, 0x44,0x40, 0x6, +0, false }, // 452: HMIGP80; b11P80; b12P80; mutringl
-    { 0x0F3F821,0x0ADC620, 0x1C,0x00, 0xC, +0, false }, // 453: HMIGP87; b11M116; b11P87; b12M116; b12P87; TAIKO; TAIKO.IN; taiko; taiko.in
+    { 0x001FF0E,0x077780E, 0x06,0x04, 0xE, +0, false }, // 445: HMIGP69; HMIGP70; HMIGP82; b11P69; b11P70; b11P82; b12P69; b12P70; b12P82; f53GD69; f53GD70; f53GD82; shaker; shaker.i
+    { 0x0F7F020,0x33B8809, 0x00,0x00, 0xC, +0, false }, // 446: HMIGP73; b11P73; b12P73; f53GD73; higuiro; higuiro.
+    { 0x0F7F420,0x33B560A, 0x03,0x00, 0x0, +0, false }, // 447: HMIGP74; b11P74; b12P74; f53GD74; loguiro; loguiro.
+    { 0x05BF714,0x089F712, 0x4B,0x00, 0x0, +0, false }, // 448: HMIGP75; b11P75; b12P75; f53GD75; clavecb; clavecb.
+    { 0x0F2FA27,0x09AF612, 0x22,0x00, 0x0, +0, false }, // 449: HMIGP76; HMIGP77; b11M115; b11P33; b11P76; b11P77; b12M115; b12P76; b12P77; f53GD76; f53GD77; WOODBLOK; woodblok
+    { 0x1F75020,0x03B7708, 0x09,0x05, 0x0, +0, false }, // 450: HMIGP78; b11P78; b12P78; f53GD78; hicuica; hicuica.
+    { 0x1077F26,0x06B7703, 0x29,0x05, 0x0, +0, false }, // 451: HMIGP79; b11P79; b12P79; f53GD79; locuica; locuica.
+    { 0x0F0F126,0x0FCF727, 0x44,0x40, 0x6, +0, false }, // 452: HMIGP80; b11P80; b12P80; f53GD80; mutringl
+    { 0x0F3F821,0x0ADC620, 0x1C,0x00, 0xC, +0, false }, // 453: HMIGP87; b11M116; b11P87; b12M116; b12P87; f53GD87; TAIKO; TAIKO.IN; taiko; taiko.in
     { 0x0FFFF01,0x0FFFF01, 0x3F,0x3F, 0x0, +0, false }, // 454: b6M0; b6M126; b6M127; b6M49; b6M53; b6M54; b6M56; b6M57; b6M58; b6M59; b6M69; b6M72; b6M73; b6M74; b6M75; b6M76; b6M77; b6M78; b6M79; b6M80; b6M81; b6M82; b6M83; b6M84; b6M85; b6M86; b6M87; b6M88; b6M89; b6M90; b6M91; b6M92; b6M93; b6P0; b6P1; b6P10; b6P11; b6P12; b6P126; b6P127; b6P13; b6P14; b6P15; b6P16; b6P17; b6P18; b6P19; b6P2; b6P20; b6P21; b6P22; b6P3; b6P4; b6P5; b6P6; b6P7; b6P8; b6P9; b8M126; b8M127; b8P0; b8P1; b8P10; b8P108; b8P109; b8P11; b8P110; b8P111; b8P112; b8P113; b8P114; b8P115; b8P116; b8P117; b8P118; b8P119; b8P12; b8P120; b8P121; b8P122; b8P123; b8P124; b8P125; b8P126; b8P127; b8P13; b8P14; b8P15; b8P16; b8P17; b8P18; b8P2; b8P3; b8P4; b8P5; b8P6; b8P7; b8P8; b8P9; hamM0; hamM100; hamM101; hamM102; hamM103; hamM104; hamM105; hamM106; hamM107; hamM108; hamM109; hamM110; hamM111; hamM112; hamM113; hamM114; hamM115; hamM116; hamM117; hamM118; hamM119; hamM126; hamM49; hamM74; hamM75; hamM76; hamM77; hamM78; hamM79; hamM80; hamM81; hamM82; hamM83; hamM84; hamM85; hamM86; hamM87; hamM88; hamM89; hamM90; hamM91; hamM92; hamM93; hamM94; hamM95; hamM96; hamM97; hamM98; hamM99; hamP100; hamP101; hamP102; hamP103; hamP104; hamP105; hamP106; hamP107; hamP108; hamP109; hamP110; hamP111; hamP112; hamP113; hamP114; hamP115; hamP116; hamP117; hamP118; hamP119; hamP120; hamP121; hamP122; hamP123; hamP124; hamP125; hamP126; hamP20; hamP21; hamP22; hamP23; hamP24; hamP25; hamP26; hamP93; hamP94; hamP95; hamP96; hamP97; hamP98; hamP99; intM0; intM100; intM101; intM102; intM103; intM104; intM105; intM106; intM107; intM108; intM109; intM110; intM111; intM112; intM113; intM114; intM115; intM116; intM117; intM118; intM119; intM120; intM121; intM122; intM123; intM124; intM125; intM126; intM127; intM50; intM51; intM52; intM53; intM54; intM55; intM56; intM57; intM58; intM59; intM60; intM61; intM62; intM63; intM64; intM65; intM66; intM67; intM68; intM69; intM70; intM71; intM72; intM73; intM74; intM75; intM76; intM77; intM78; intM79; intM80; intM81; intM82; intM83; intM84; intM85; intM86; intM87; intM88; intM89; intM90; intM91; intM92; intM93; intM94; intM95; intM96; intM97; intM98; intM99; intP0; intP1; intP10; intP100; intP101; intP102; intP103; intP104; intP105; intP106; intP107; intP108; intP109; intP11; intP110; intP111; intP112; intP113; intP114; intP115; intP116; intP117; intP118; intP119; intP12; intP120; intP121; intP122; intP123; intP124; intP125; intP126; intP127; intP13; intP14; intP15; intP16; intP17; intP18; intP19; intP2; intP20; intP21; intP22; intP23; intP24; intP25; intP26; intP3; intP4; intP5; intP6; intP7; intP8; intP9; intP94; intP95; intP96; intP97; intP98; intP99; rickM0; rickM102; rickM103; rickM104; rickM105; rickM106; rickM107; rickM108; rickM109; rickM110; rickM111; rickM112; rickM113; rickM114; rickM115; rickM116; rickM117; rickM118; rickM119; rickM120; rickM121; rickM122; rickM123; rickM124; rickM125; rickM126; rickM127; rickM49; rickM50; rickM51; rickM52; rickM53; rickM54; rickM55; rickM56; rickM57; rickM58; rickM59; rickM60; rickM61; rickM62; rickM63; rickM64; rickM65; rickM66; rickM67; rickM68; rickM69; rickM70; rickM71; rickM72; rickM73; rickM74; rickM75; rickP0; rickP1; rickP10; rickP106; rickP107; rickP108; rickP109; rickP11; rickP110; rickP111; rickP112; rickP113; rickP114; rickP115; rickP116; rickP117; rickP118; rickP119; rickP12; rickP120; rickP121; rickP122; rickP123; rickP124; rickP125; rickP126; rickP127; rickP2; rickP3; rickP4; rickP5; rickP6; rickP7; rickP8; rickP9; nosound; nosound.
     { 0x4FFEE03,0x0FFE804, 0x80,0x00, 0xC, +0, false }, // 455: b6M1; hamM1; intM1; rickM1; DBlock; DBlock.i
     { 0x122F603,0x0F8F3A1, 0x87,0x80, 0x6, +0, false }, // 456: b6M117; b6M2; hamM2; intM2; rickM2; GClean; GClean.i; RGClean
@@ -1103,7 +1103,7 @@ const adldata adl[4528] =
     { 0x074F161,0x07441A1, 0x22,0x06, 0xE, +0, false }, // 1087: b12M94; HALOPAD.
     { 0x00553A1,0x0F43221, 0x25,0x00, 0xE, +0, false }, // 1088: b12M95; SWEEPPAD
     { 0x1554163,0x10541A2, 0x0A,0x03, 0xB, +0, false }, // 1089: b12M97; SOUNDTRK
-    { 0x091F010,0x0E7A51E, 0x0C,0x00, 0x0, +0, false }, // 1090: b12M98; b12P67; b12P68; CRYSTAL.; agogo.in
+    { 0x091F010,0x0E7A51E, 0x0C,0x00, 0x0, +0, false }, // 1090: b12M98; b12P67; b12P68; f53GD67; f53GD68; CRYSTAL.; agogo.in
     { 0x2B29130,0x204A121, 0x10,0x00, 0xC, +0, false }, // 1091: b12M99; TCSYNTH1
     { 0x0D6F662,0x2E5B241, 0x22,0x00, 0xE, +0, false }, // 1092: b12M100; BRIGHT.I
     { 0x104F021,0x0043221, 0x2B,0x06, 0xE, +0, false }, // 1093: b12M102; ECHODROP
@@ -1120,7 +1120,7 @@ const adldata adl[4528] =
     { 0x0211131,0x0937122, 0x0A,0x02, 0xA, +0, false }, // 1104: b12M122; TCPAD2.I
     { 0x1728281,0x0743182, 0x0E,0x05, 0xC, +0, false }, // 1105: b12M125; TCPAD5.I
     { 0x0331221,0x1243122, 0x00,0x00, 0x8, +0, false }, // 1106: b12M126; TCPAD6.I
-    { 0x0F9F700,0x0CA8601, 0x08,0x00, 0x0, +0, false }, // 1107: b12P36; Kick.ins
+    { 0x0F9F700,0x0CA8601, 0x08,0x00, 0x0, +0, false }, // 1107: b12P36; f53GD36; Kick.ins
     { 0x1F3F030,0x1F4F130, 0x54,0x00, 0xA, +12, false }, // 1108: dMM0; hxMM0; musM0; raptM0; Acoustic Grand Piano
     { 0x0F3F030,0x1F4F130, 0x52,0x00, 0xA, +12, false }, // 1109: dMM1; hxMM1; musM1; raptM1; Bright Acoustic Piano
     { 0x1F3E130,0x0F4F130, 0x4E,0x00, 0x8, +12, false }, // 1110: dMM2; hxMM2; musM2; raptM2; Electric Grand Piano
@@ -5750,7 +5750,7 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at 1726.4,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 359, 359, 36, 0,     20,    20,0.000000 }, // 301: BisqP31; HMIGP37; HMIGP86; b11P31; b11P37; b11P86; b12P37; b12P86; RimShot; RimShot.; rimshot; rimshot.
+    { 359, 359, 36, 0,     20,    20,0.000000 }, // 301: BisqP31; HMIGP37; HMIGP86; b11P31; b11P37; b11P86; b12P37; b12P86; f53GD37; f53GD86; RimShot; RimShot.; rimshot; rimshot.
 
     // Amplitude begins at 1790.6,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
@@ -5826,7 +5826,7 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at 1433.9,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 382, 382, 28, 0,     26,    26,0.000000 }, // 320: BisqP58; HMIGP58; apgbloodP58; b10P58; b11P58; b12P58; Vibraslap; vibrasla
+    { 382, 382, 28, 0,     26,    26,0.000000 }, // 320: BisqP58; HMIGP58; apgbloodP58; b10P58; b11P58; b12P58; f53GD58; Vibraslap; vibrasla
 
     // Amplitude begins at  512.1, peaks  536.8 at 0.0s,
     // fades to 20% at 0.3s, keyoff fades to 20% in 0.3s.
@@ -5870,11 +5870,11 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at  503.1, peaks 1248.5 at 0.0s,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 389, 389, 39, 0,    180,   180,0.000000 }, // 331: BisqP71; HMIGP71; b11P71; b12P71; Short Whistle; hiwhist; hiwhist.
+    { 389, 389, 39, 0,    180,   180,0.000000 }, // 331: BisqP71; HMIGP71; b11P71; b12P71; f53GD71; Short Whistle; hiwhist; hiwhist.
 
     // Amplitude begins at  484.5, peaks 1256.1 at 0.0s,
     // fades to 20% at 0.5s, keyoff fades to 20% in 0.5s.
-    { 390, 390, 36, 0,    513,   513,0.000000 }, // 332: BisqP72; HMIGP72; b11P72; b12P72; Long Whistle; lowhist; lowhist.
+    { 390, 390, 36, 0,    513,   513,0.000000 }, // 332: BisqP72; HMIGP72; b11P72; b12P72; f53GD72; Long Whistle; lowhist; lowhist.
 
     // Amplitude begins at    0.0, peaks 1343.2 at 0.1s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
@@ -5918,7 +5918,7 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at  358.5,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 400, 400,103, 0,    226,   226,0.000000 }, // 343: BisqP84; HMIGP84; b11P84; b12P84; Bell Tree; triangle
+    { 400, 400,103, 0,    226,   226,0.000000 }, // 343: BisqP84; HMIGP84; b11P84; b12P84; f53GD84; Bell Tree; triangle
 
     // Amplitude begins at 1367.2,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
@@ -5994,7 +5994,7 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at  463.8, peaks  831.8 at 0.0s,
     // fades to 20% at 0.3s, keyoff fades to 20% in 0.3s.
-    { 413, 413, 83, 0,    266,   266,0.000000 }, // 362: BisqP106; BisqP107; BisqP108; BisqP109; BisqP110; BisqP111; BisqP112; BisqP113; BisqP114; BisqP115; BisqP116; BisqP117; BisqP118; BisqP119; BisqP120; BisqP121; BisqP122; BisqP123; BisqP124; BisqP125; BisqP126; BisqP127; HMIGP35; b12P35; Wierd3.i
+    { 413, 413, 83, 0,    266,   266,0.000000 }, // 362: BisqP106; BisqP107; BisqP108; BisqP109; BisqP110; BisqP111; BisqP112; BisqP113; BisqP114; BisqP115; BisqP116; BisqP117; BisqP118; BisqP119; BisqP120; BisqP121; BisqP122; BisqP123; BisqP124; BisqP125; BisqP126; BisqP127; HMIGP35; b12P35; f53GD35; Wierd3.i
 
     // Amplitude begins at  112.5, peaks 2991.7 at 0.0s,
     // fades to 20% at 40.0s, keyoff fades to 20% in 0.0s.
@@ -6054,39 +6054,39 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at    0.0,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 428, 428, 60, 2,      0,     0,0.000000 }, // 377: HMIGP0; HMIGP1; HMIGP10; HMIGP100; HMIGP101; HMIGP102; HMIGP103; HMIGP104; HMIGP105; HMIGP106; HMIGP107; HMIGP108; HMIGP109; HMIGP11; HMIGP110; HMIGP111; HMIGP112; HMIGP113; HMIGP114; HMIGP115; HMIGP116; HMIGP117; HMIGP118; HMIGP119; HMIGP12; HMIGP120; HMIGP121; HMIGP122; HMIGP123; HMIGP124; HMIGP125; HMIGP126; HMIGP127; HMIGP13; HMIGP14; HMIGP15; HMIGP16; HMIGP17; HMIGP18; HMIGP19; HMIGP2; HMIGP20; HMIGP21; HMIGP22; HMIGP23; HMIGP24; HMIGP25; HMIGP26; HMIGP3; HMIGP4; HMIGP5; HMIGP6; HMIGP7; HMIGP8; HMIGP88; HMIGP89; HMIGP9; HMIGP90; HMIGP91; HMIGP92; HMIGP93; HMIGP94; HMIGP95; HMIGP96; HMIGP97; HMIGP98; HMIGP99; b10P0; b10P1; b10P10; b10P100; b10P101; b10P102; b10P103; b10P104; b10P105; b10P106; b10P107; b10P108; b10P109; b10P11; b10P110; b10P111; b10P112; b10P113; b10P114; b10P115; b10P116; b10P117; b10P118; b10P119; b10P12; b10P120; b10P121; b10P122; b10P123; b10P124; b10P125; b10P126; b10P13; b10P14; b10P15; b10P16; b10P17; b10P18; b10P19; b10P2; b10P20; b10P21; b10P22; b10P23; b10P24; b10P25; b10P26; b10P27; b10P3; b10P4; b10P5; b10P6; b10P7; b10P8; b10P88; b10P89; b10P9; b10P90; b10P91; b10P92; b10P93; b10P94; b10P95; b10P96; b10P97; b10P98; b10P99; b11P0; b11P1; b11P10; b11P100; b11P101; b11P102; b11P103; b11P104; b11P105; b11P106; b11P107; b11P108; b11P109; b11P11; b11P110; b11P111; b11P112; b11P113; b11P114; b11P115; b11P116; b11P117; b11P118; b11P119; b11P12; b11P120; b11P121; b11P122; b11P123; b11P124; b11P125; b11P126; b11P127; b11P13; b11P14; b11P15; b11P16; b11P17; b11P18; b11P19; b11P2; b11P20; b11P21; b11P22; b11P23; b11P24; b11P25; b11P26; b11P27; b11P3; b11P4; b11P5; b11P6; b11P7; b11P8; b11P88; b11P89; b11P9; b11P90; b11P91; b11P92; b11P93; b11P94; b11P95; b11P96; b11P97; b11P98; b11P99; b12P0; b12P1; b12P10; b12P100; b12P101; b12P102; b12P103; b12P104; b12P105; b12P106; b12P107; b12P108; b12P109; b12P11; b12P110; b12P111; b12P112; b12P113; b12P114; b12P115; b12P116; b12P117; b12P118; b12P119; b12P12; b12P120; b12P121; b12P122; b12P123; b12P124; b12P125; b12P126; b12P127; b12P13; b12P14; b12P15; b12P16; b12P17; b12P18; b12P19; b12P2; b12P20; b12P21; b12P22; b12P23; b12P24; b12P25; b12P26; b12P3; b12P4; b12P5; b12P6; b12P7; b12P8; b12P88; b12P89; b12P9; b12P90; b12P91; b12P92; b12P93; b12P94; b12P95; b12P96; b12P97; b12P98; b12P99; Blank; Blank.in
+    { 428, 428, 60, 2,      0,     0,0.000000 }, // 377: HMIGP0; HMIGP1; HMIGP10; HMIGP100; HMIGP101; HMIGP102; HMIGP103; HMIGP104; HMIGP105; HMIGP106; HMIGP107; HMIGP108; HMIGP109; HMIGP11; HMIGP110; HMIGP111; HMIGP112; HMIGP113; HMIGP114; HMIGP115; HMIGP116; HMIGP117; HMIGP118; HMIGP119; HMIGP12; HMIGP120; HMIGP121; HMIGP122; HMIGP123; HMIGP124; HMIGP125; HMIGP126; HMIGP127; HMIGP13; HMIGP14; HMIGP15; HMIGP16; HMIGP17; HMIGP18; HMIGP19; HMIGP2; HMIGP20; HMIGP21; HMIGP22; HMIGP23; HMIGP24; HMIGP25; HMIGP26; HMIGP3; HMIGP4; HMIGP5; HMIGP6; HMIGP7; HMIGP8; HMIGP88; HMIGP89; HMIGP9; HMIGP90; HMIGP91; HMIGP92; HMIGP93; HMIGP94; HMIGP95; HMIGP96; HMIGP97; HMIGP98; HMIGP99; b10P0; b10P1; b10P10; b10P100; b10P101; b10P102; b10P103; b10P104; b10P105; b10P106; b10P107; b10P108; b10P109; b10P11; b10P110; b10P111; b10P112; b10P113; b10P114; b10P115; b10P116; b10P117; b10P118; b10P119; b10P12; b10P120; b10P121; b10P122; b10P123; b10P124; b10P125; b10P126; b10P13; b10P14; b10P15; b10P16; b10P17; b10P18; b10P19; b10P2; b10P20; b10P21; b10P22; b10P23; b10P24; b10P25; b10P26; b10P27; b10P3; b10P4; b10P5; b10P6; b10P7; b10P8; b10P88; b10P89; b10P9; b10P90; b10P91; b10P92; b10P93; b10P94; b10P95; b10P96; b10P97; b10P98; b10P99; b11P0; b11P1; b11P10; b11P100; b11P101; b11P102; b11P103; b11P104; b11P105; b11P106; b11P107; b11P108; b11P109; b11P11; b11P110; b11P111; b11P112; b11P113; b11P114; b11P115; b11P116; b11P117; b11P118; b11P119; b11P12; b11P120; b11P121; b11P122; b11P123; b11P124; b11P125; b11P126; b11P127; b11P13; b11P14; b11P15; b11P16; b11P17; b11P18; b11P19; b11P2; b11P20; b11P21; b11P22; b11P23; b11P24; b11P25; b11P26; b11P27; b11P3; b11P4; b11P5; b11P6; b11P7; b11P8; b11P88; b11P89; b11P9; b11P90; b11P91; b11P92; b11P93; b11P94; b11P95; b11P96; b11P97; b11P98; b11P99; b12P0; b12P1; b12P10; b12P100; b12P101; b12P102; b12P103; b12P104; b12P105; b12P106; b12P107; b12P108; b12P109; b12P11; b12P110; b12P111; b12P112; b12P113; b12P114; b12P115; b12P116; b12P117; b12P118; b12P119; b12P12; b12P120; b12P121; b12P122; b12P123; b12P124; b12P125; b12P126; b12P127; b12P13; b12P14; b12P15; b12P16; b12P17; b12P18; b12P19; b12P2; b12P20; b12P21; b12P22; b12P23; b12P24; b12P25; b12P26; b12P3; b12P4; b12P5; b12P6; b12P7; b12P8; b12P88; b12P89; b12P9; b12P90; b12P91; b12P92; b12P93; b12P94; b12P95; b12P96; b12P97; b12P98; b12P99; f53GD0; f53GD1; f53GD10; f53GD100; f53GD101; f53GD102; f53GD103; f53GD104; f53GD105; f53GD106; f53GD107; f53GD108; f53GD109; f53GD11; f53GD110; f53GD111; f53GD112; f53GD113; f53GD114; f53GD115; f53GD116; f53GD117; f53GD118; f53GD119; f53GD12; f53GD120; f53GD121; f53GD122; f53GD123; f53GD124; f53GD125; f53GD126; f53GD127; f53GD13; f53GD14; f53GD15; f53GD16; f53GD17; f53GD18; f53GD19; f53GD2; f53GD20; f53GD21; f53GD22; f53GD23; f53GD24; f53GD25; f53GD26; f53GD3; f53GD4; f53GD5; f53GD6; f53GD7; f53GD8; f53GD88; f53GD89; f53GD9; f53GD90; f53GD91; f53GD92; f53GD93; f53GD94; f53GD95; f53GD96; f53GD97; f53GD98; f53GD99; Blank; Blank.in
 
     // Amplitude begins at    5.1, peaks  865.3 at 0.0s,
     // fades to 20% at 0.5s, keyoff fades to 20% in 0.5s.
-    { 429, 429, 73, 0,    473,   473,0.000000 }, // 378: HMIGP27; b12P27; Wierd1.i
+    { 429, 429, 73, 0,    473,   473,0.000000 }, // 378: HMIGP27; b12P27; f53GD27; Wierd1.i
 
     // Amplitude begins at    5.2, peaks  882.4 at 0.0s,
     // fades to 20% at 0.5s, keyoff fades to 20% in 0.5s.
-    { 429, 429, 74, 0,    473,   473,0.000000 }, // 379: HMIGP28; b12P28; Wierd1.i
+    { 429, 429, 74, 0,    473,   473,0.000000 }, // 379: HMIGP28; b12P28; f53GD28; Wierd1.i
 
     // Amplitude begins at    6.0, peaks  892.0 at 0.0s,
     // fades to 20% at 0.5s, keyoff fades to 20% in 0.5s.
-    { 429, 429, 80, 0,    473,   473,0.000000 }, // 380: HMIGP29; b12P29; Wierd1.i
+    { 429, 429, 80, 0,    473,   473,0.000000 }, // 380: HMIGP29; b12P29; f53GD29; Wierd1.i
 
     // Amplitude begins at    4.9, peaks  855.9 at 0.0s,
     // fades to 20% at 0.5s, keyoff fades to 20% in 0.5s.
-    { 429, 429, 84, 0,    473,   473,0.000000 }, // 381: HMIGP30; b12P30; Wierd1.i
+    { 429, 429, 84, 0,    473,   473,0.000000 }, // 381: HMIGP30; b12P30; f53GD30; Wierd1.i
 
     // Amplitude begins at   10.0, peaks  874.8 at 0.0s,
     // fades to 20% at 0.4s, keyoff fades to 20% in 0.4s.
-    { 429, 429, 92, 0,    406,   406,0.000000 }, // 382: HMIGP31; b12P31; Wierd1.i
+    { 429, 429, 92, 0,    406,   406,0.000000 }, // 382: HMIGP31; b12P31; f53GD31; Wierd1.i
 
     // Amplitude begins at   83.7, peaks  836.0 at 0.0s,
     // fades to 20% at 0.3s, keyoff fades to 20% in 0.3s.
-    { 430, 430, 81, 0,    280,   280,0.000000 }, // 383: HMIGP32; b12P32; Wierd2.i
+    { 430, 430, 81, 0,    280,   280,0.000000 }, // 383: HMIGP32; b12P32; f53GD32; Wierd2.i
 
     // Amplitude begins at   82.1, peaks  842.9 at 0.0s,
     // fades to 20% at 0.3s, keyoff fades to 20% in 0.3s.
-    { 430, 430, 83, 0,    266,   266,0.000000 }, // 384: HMIGP33; b12P33; Wierd2.i
+    { 430, 430, 83, 0,    266,   266,0.000000 }, // 384: HMIGP33; b12P33; f53GD33; Wierd2.i
 
     // Amplitude begins at  142.6, peaks  845.3 at 0.0s,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 430, 430, 95, 0,    240,   240,0.000000 }, // 385: HMIGP34; b12P34; Wierd2.i
+    { 430, 430, 95, 0,    240,   240,0.000000 }, // 385: HMIGP34; b12P34; f53GD34; Wierd2.i
 
     // Amplitude begins at 2587.7,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
@@ -6094,95 +6094,95 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at 2157.1,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 432, 432, 60, 0,     40,    40,0.000000 }, // 387: HMIGP38; b11P38; b12P38; Snare; Snare.in
+    { 432, 432, 60, 0,     40,    40,0.000000 }, // 387: HMIGP38; b11P38; b12P38; f53GD38; Snare; Snare.in
 
     // Amplitude begins at 2042.4,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 357, 357, 59, 0,     20,    20,0.000000 }, // 388: HMIGP39; b11P39; b12P39; Clap; Clap.ins
+    { 357, 357, 59, 0,     20,    20,0.000000 }, // 388: HMIGP39; b11P39; b12P39; f53GD39; Clap; Clap.ins
 
     // Amplitude begins at 2132.6,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 432, 432, 44, 0,     46,    46,0.000000 }, // 389: HMIGP40; b11P40; b12P40; Snare; Snare.in
+    { 432, 432, 44, 0,     46,    46,0.000000 }, // 389: HMIGP40; b11P40; b12P40; f53GD40; Snare; Snare.in
 
     // Amplitude begins at 1803.2, peaks 2655.5 at 0.0s,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 433, 433, 41, 0,    160,   160,0.000000 }, // 390: HMIGP41; b11P41; b12P41; Toms; Toms.ins
+    { 433, 433, 41, 0,    160,   160,0.000000 }, // 390: HMIGP41; b11P41; b12P41; f53GD41; Toms; Toms.ins
 
     // Amplitude begins at  809.3, peaks  925.5 at 0.0s,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 434, 434, 97, 0,     26,    26,0.000000 }, // 391: HMIGP42; HMIGP44; b12P42; b12P44; clshat97
+    { 434, 434, 97, 0,     26,    26,0.000000 }, // 391: HMIGP42; HMIGP44; b12P42; b12P44; f53GD42; f53GD44; clshat97
 
     // Amplitude begins at 2479.6, peaks 2846.7 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 433, 433, 44, 0,    120,   120,0.000000 }, // 392: HMIGP43; b11P43; b12P43; Toms; Toms.ins
+    { 433, 433, 44, 0,    120,   120,0.000000 }, // 392: HMIGP43; b11P43; b12P43; f53GD43; Toms; Toms.ins
 
     // Amplitude begins at 3040.2,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 433, 433, 48, 0,    140,   140,0.000000 }, // 393: HMIGP45; b11P45; b12P45; Toms; Toms.ins
+    { 433, 433, 48, 0,    140,   140,0.000000 }, // 393: HMIGP45; b11P45; b12P45; f53GD45; Toms; Toms.ins
 
     // Amplitude begins at   16.1, peaks 1223.9 at 0.0s,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 435, 435, 96, 0,    240,   240,0.000000 }, // 394: HMIGP46; b12P46; Opnhat96
+    { 435, 435, 96, 0,    240,   240,0.000000 }, // 394: HMIGP46; b12P46; f53GD46; Opnhat96
 
     // Amplitude begins at 2787.9,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 433, 433, 51, 0,    160,   160,0.000000 }, // 395: HMIGP47; b11P47; b12P47; Toms; Toms.ins
+    { 433, 433, 51, 0,    160,   160,0.000000 }, // 395: HMIGP47; b11P47; b12P47; f53GD47; Toms; Toms.ins
 
     // Amplitude begins at 2924.7,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 433, 433, 54, 0,    153,   153,0.000000 }, // 396: HMIGP48; b11P48; b12P48; Toms; Toms.ins
+    { 433, 433, 54, 0,    153,   153,0.000000 }, // 396: HMIGP48; b11P48; b12P48; f53GD48; Toms; Toms.ins
 
     // Amplitude begins at  636.1, peaks  730.1 at 0.0s,
     // fades to 20% at 0.4s, keyoff fades to 20% in 0.4s.
-    { 436, 436, 40, 0,    380,   380,0.000000 }, // 397: HMIGP49; HMIGP52; HMIGP55; HMIGP57; b11P49; b11P52; b11P55; b11P57; b12P49; b12P52; b12P55; b12P57; Crashcym
+    { 436, 436, 40, 0,    380,   380,0.000000 }, // 397: HMIGP49; HMIGP52; HMIGP55; HMIGP57; b11P49; b11P52; b11P55; b11P57; b12P49; b12P52; b12P55; b12P57; f53GD49; f53GD52; f53GD55; f53GD57; Crashcym
 
     // Amplitude begins at 2780.4,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 433, 433, 57, 0,    113,   113,0.000000 }, // 398: HMIGP50; b11P50; b12P50; Toms; Toms.ins
+    { 433, 433, 57, 0,    113,   113,0.000000 }, // 398: HMIGP50; b11P50; b12P50; f53GD50; Toms; Toms.ins
 
     // Amplitude begins at  427.8,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 437, 437, 58, 0,    186,   186,0.000000 }, // 399: HMIGP51; HMIGP53; b11P51; b11P53; b12P51; b12P53; Ridecym; Ridecym.
+    { 437, 437, 58, 0,    186,   186,0.000000 }, // 399: HMIGP51; HMIGP53; b11P51; b11P53; b12P51; b12P53; f53GD51; f53GD53; Ridecym; Ridecym.
 
     // Amplitude begins at  230.0, peaks 1230.9 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 438, 438, 97, 0,     73,    73,0.000000 }, // 400: HMIGP54; b11P54; b12P54; Tamb; Tamb.ins
+    { 438, 438, 97, 0,     73,    73,0.000000 }, // 400: HMIGP54; b11P54; b12P54; f53GD54; Tamb; Tamb.ins
 
     // Amplitude begins at 2275.1,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 439, 439, 50, 0,     60,    60,0.000000 }, // 401: HMIGP56; b11P56; b12P56; Cowbell; Cowbell.
+    { 439, 439, 50, 0,     60,    60,0.000000 }, // 401: HMIGP56; b11P56; b12P56; f53GD56; Cowbell; Cowbell.
 
     // Amplitude begins at  424.5,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 437, 437, 60, 0,    206,   206,0.000000 }, // 402: HMIGP59; b11P59; b12P59; ridecym; ridecym.
+    { 437, 437, 60, 0,    206,   206,0.000000 }, // 402: HMIGP59; b11P59; b12P59; f53GD59; ridecym; ridecym.
 
     // Amplitude begins at 1189.2, peaks 2567.9 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 440, 440, 53, 0,     53,    53,0.000000 }, // 403: HMIGP60; b11P60; b12P60; mutecong
+    { 440, 440, 53, 0,     53,    53,0.000000 }, // 403: HMIGP60; b11P60; b12P60; f53GD60; mutecong
 
     // Amplitude begins at 2296.6,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 441, 441, 46, 0,     46,    46,0.000000 }, // 404: HMIGP61; b11P61; b12P61; conga; conga.in
+    { 441, 441, 46, 0,     46,    46,0.000000 }, // 404: HMIGP61; b11P61; b12P61; f53GD61; conga; conga.in
 
     // Amplitude begins at  963.0, peaks 2660.1 at 0.0s,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 440, 440, 57, 0,     46,    46,0.000000 }, // 405: HMIGP62; b11P62; b12P62; mutecong
+    { 440, 440, 57, 0,     46,    46,0.000000 }, // 405: HMIGP62; b11P62; b12P62; f53GD62; mutecong
 
     // Amplitude begins at  598.0, peaks 2745.7 at 0.0s,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 442, 442, 42, 0,    206,   206,0.000000 }, // 406: HMIGP63; b11P63; b12P63; loconga; loconga.
+    { 442, 442, 42, 0,    206,   206,0.000000 }, // 406: HMIGP63; b11P63; b12P63; f53GD63; loconga; loconga.
 
     // Amplitude begins at  451.9, peaks 2785.9 at 0.0s,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 442, 442, 37, 0,    206,   206,0.000000 }, // 407: HMIGP64; b11P64; b12P64; loconga; loconga.
+    { 442, 442, 37, 0,    206,   206,0.000000 }, // 407: HMIGP64; b11P64; b12P64; f53GD64; loconga; loconga.
 
     // Amplitude begins at  960.3,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 443, 443, 41, 0,    186,   186,0.000000 }, // 408: HMIGP65; b11P65; b12P65; timbale; timbale.
+    { 443, 443, 41, 0,    186,   186,0.000000 }, // 408: HMIGP65; b11P65; b12P65; f53GD65; timbale; timbale.
 
     // Amplitude begins at  966.6,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 443, 443, 37, 0,    186,   186,0.000000 }, // 409: HMIGP66; b11P66; b12P66; timbale; timbale.
+    { 443, 443, 37, 0,    186,   186,0.000000 }, // 409: HMIGP66; b11P66; b12P66; f53GD66; timbale; timbale.
 
     // Amplitude begins at 1744.4,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
@@ -6194,59 +6194,59 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at   10.6, peaks 1946.8 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 445, 445, 70, 0,     66,    66,0.000000 }, // 412: HMIGP69; HMIGP82; b11P69; b11P82; b12P69; b12P82; shaker; shaker.i
+    { 445, 445, 70, 0,     66,    66,0.000000 }, // 412: HMIGP69; HMIGP82; b11P69; b11P82; b12P69; b12P82; f53GD69; f53GD82; shaker; shaker.i
 
     // Amplitude begins at   12.6, peaks 1915.4 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 445, 445, 90, 0,     66,    66,0.000000 }, // 413: HMIGP70; b11P70; b12P70; shaker; shaker.i
+    { 445, 445, 90, 0,     66,    66,0.000000 }, // 413: HMIGP70; b11P70; b12P70; f53GD70; shaker; shaker.i
 
     // Amplitude begins at   75.8, peaks 1465.7 at 0.0s,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 446, 446, 46, 0,     46,    46,0.000000 }, // 414: HMIGP73; b11P73; b12P73; higuiro; higuiro.
+    { 446, 446, 46, 0,     46,    46,0.000000 }, // 414: HMIGP73; b11P73; b12P73; f53GD73; higuiro; higuiro.
 
     // Amplitude begins at    0.0, peaks 1554.8 at 0.1s,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
-    { 447, 447, 48, 0,    246,   246,0.000000 }, // 415: HMIGP74; b11P74; b12P74; loguiro; loguiro.
+    { 447, 447, 48, 0,    246,   246,0.000000 }, // 415: HMIGP74; b11P74; b12P74; f53GD74; loguiro; loguiro.
 
     // Amplitude begins at 2176.2,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 448, 448, 85, 0,     20,    20,0.000000 }, // 416: HMIGP75; b11P75; b12P75; clavecb; clavecb.
+    { 448, 448, 85, 0,     20,    20,0.000000 }, // 416: HMIGP75; b11P75; b12P75; f53GD75; clavecb; clavecb.
 
     // Amplitude begins at 2668.7,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 449, 449, 66, 0,     60,    60,0.000000 }, // 417: HMIGP76; b11P76; b12P76; woodblok
+    { 449, 449, 66, 0,     60,    60,0.000000 }, // 417: HMIGP76; b11P76; b12P76; f53GD76; woodblok
 
     // Amplitude begins at 2628.6,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 449, 449, 61, 0,     60,    60,0.000000 }, // 418: HMIGP77; b11P33; b11P77; b12P77; woodblok
+    { 449, 449, 61, 0,     60,    60,0.000000 }, // 418: HMIGP77; b11P33; b11P77; b12P77; f53GD77; woodblok
 
     // Amplitude begins at    1.7, peaks 1785.6 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 450, 450, 41, 0,    113,   113,0.000000 }, // 419: HMIGP78; b11P78; b12P78; hicuica; hicuica.
+    { 450, 450, 41, 0,    113,   113,0.000000 }, // 419: HMIGP78; b11P78; b12P78; f53GD78; hicuica; hicuica.
 
     // Amplitude begins at    2.2, peaks 1987.8 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 451, 451, 41, 0,    146,   146,0.000000 }, // 420: HMIGP79; b11P79; b12P79; locuica; locuica.
+    { 451, 451, 41, 0,    146,   146,0.000000 }, // 420: HMIGP79; b11P79; b12P79; f53GD79; locuica; locuica.
 
     // Amplitude begins at  625.5,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 452, 452, 81, 0,     60,    60,0.000000 }, // 421: HMIGP80; b11P80; b12P80; mutringl
+    { 452, 452, 81, 0,     60,    60,0.000000 }, // 421: HMIGP80; b11P80; b12P80; f53GD80; mutringl
 
     // Amplitude begins at  664.7,
     // fades to 20% at 0.3s, keyoff fades to 20% in 0.3s.
-    { 400, 400, 81, 0,    260,   260,0.000000 }, // 422: HMIGP81; apgbloodP81; b10P81; b11P81; b12P81; Open Triangle; triangle
+    { 400, 400, 81, 0,    260,   260,0.000000 }, // 422: HMIGP81; apgbloodP81; b10P81; b11P81; b12P81; f53GD81; Open Triangle; triangle
 
     // Amplitude begins at  781.8,
     // fades to 20% at 0.3s, keyoff fades to 20% in 0.3s.
-    { 400, 400, 76, 0,    260,   260,0.000000 }, // 423: HMIGP83; apgbloodP83; b10P83; b11P83; b12P83; Jingle Bell; triangle
+    { 400, 400, 76, 0,    260,   260,0.000000 }, // 423: HMIGP83; apgbloodP83; b10P83; b11P83; b12P83; f53GD83; Jingle Bell; triangle
 
     // Amplitude begins at 1348.8,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 359, 359, 60, 0,     13,    13,0.000000 }, // 424: HMIGP85; b11P85; b12P85; rimShot; rimShot.
+    { 359, 359, 60, 0,     13,    13,0.000000 }, // 424: HMIGP85; b11P85; b12P85; f53GD85; rimShot; rimShot.
 
     // Amplitude begins at 2206.3, peaks 3145.8 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    { 453, 453, 53, 0,    120,   120,0.000000 }, // 425: HMIGP87; b11P87; b12P87; taiko; taiko.in
+    { 453, 453, 53, 0,    120,   120,0.000000 }, // 425: HMIGP87; b11P87; b12P87; f53GD87; taiko; taiko.in
 
     // Amplitude begins at    0.2,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
@@ -9566,15 +9566,15 @@ const struct adlinsdata adlins[4425] =
 
     // Amplitude begins at   42.1, peaks 2668.4 at 0.0s,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    {1107,1107, 35, 0,     73,    73,0.000000 }, // 1255: b12P36; Kick.ins
+    {1107,1107, 35, 0,     73,    73,0.000000 }, // 1255: b12P36; f53GD36; Kick.ins
 
     // Amplitude begins at 2677.4,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    {1090,1090, 77, 0,     80,    80,0.000000 }, // 1256: b12P67; agogo.in
+    {1090,1090, 77, 0,     80,    80,0.000000 }, // 1256: b12P67; f53GD67; agogo.in
 
     // Amplitude begins at 2601.0,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    {1090,1090, 72, 0,     80,    80,0.000000 }, // 1257: b12P68; agogo.in
+    {1090,1090, 72, 0,     80,    80,0.000000 }, // 1257: b12P68; f53GD68; agogo.in
 
     // Amplitude begins at 1210.6,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
@@ -23190,11 +23190,11 @@ const unsigned short banks[72][256] =
 2863,2864,2865,2866,2867,2868,2869,2870,2871,2872,2505,2873,2874,2875,2876,2877,
 2878,2879, 715, 832,2880, 833,2587,2881,2882,2883,2466,2884,2885,1908,2886,2887,
    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 378, 379, 380, 381, 382,
+ 383, 384, 385, 362,1255, 301, 387, 388, 389, 390, 391, 392, 391, 393, 394, 395,
+ 396, 397, 398, 399, 397, 399, 400, 397, 401, 397, 320, 402, 403, 404, 405, 406,
+ 407, 408, 409,1256,1257, 412, 413, 331, 332, 414, 415, 416, 417, 418, 419, 420,
+ 421, 422, 412, 423, 343, 424, 301, 425,   0,   0,   0,   0,   0,   0,   0,   0,
    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     },

@@ -1104,6 +1104,7 @@ int main()
     LoadMiles("fm_banks/opl_files/file49.opl", 45, "f49G");
     LoadMiles("fm_banks/opl_files/file50.opl", 46, "f50G");
     LoadMiles("fm_banks/opl_files/file53.opl", 47, "f53G");
+        LoadBNK("fm_banks/bnk_files/file144.bnk", 47, "f53GD", false, true);//Attempt to append missing drums
     LoadMiles("fm_banks/opl_files/file54.opl", 48, "f54G");
 
     LoadMiles("fm_banks/opl_files/sample.ad",  49, "MG"); // same as file51.opl
