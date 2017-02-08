@@ -51,9 +51,9 @@ SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
 		chip->dClock=(float)PSGClockValue/16.0f/SamplingRate;
 		
 		SN76489_SetMute(chip, MUTE_ALLON);
-		SN76489_Config(chip, FB_SEGAVDP, SRW_SEGAVDP, 1);
+		SN76489_Config(chip, FB_SEGAVDP, SRW_SEGAVDP);
 		
-		for( i = 0; i <= 3; i++ )
+		for( i = 0; i < 4; i++ )
 			centre_panning(chip->panning[i]);
 		//SN76489_Reset(chip);
 		
@@ -114,7 +114,7 @@ void SN76489_Shutdown(SN76489_Context* chip)
 	free(chip);
 }
 
-void SN76489_Config(SN76489_Context* chip, int feedback, int sr_width, int boost_noise)
+void SN76489_Config(SN76489_Context* chip, UINT32 feedback, UINT8 sr_width)
 {
 	chip->WhiteNoiseFeedback = feedback;
 	chip->SRWidth = sr_width;
@@ -265,7 +265,7 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 
 		/* Increment clock by 1 sample length */
 		chip->Clock += chip->dClock;
-		chip->NumClocksForSample = (int)chip->Clock;  /* truncate */
+		chip->NumClocksForSample = (UINT32)chip->Clock;   /* truncate */
 		chip->Clock -= chip->NumClocksForSample;      /* remove integer part */
 	
 		/* Decrement tone channel counters */
@@ -309,7 +309,7 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 				chip->ToneFreqVals[3] += chip->NoiseFreq * ( chip->NumClocksForSample / chip->NoiseFreq + 1 );
 			if (chip->ToneFreqPos[3] == 1) {
 				/* On the positive edge of the square wave (only once per cycle) */
-				int Feedback;
+				UINT32 Feedback;
 				if ( chip->Registers[6] & 0x4 ) {
 					/* White noise */
 					/* Calculate parity of fed-back bits for feedback */
@@ -350,7 +350,7 @@ UINT32 SN76489_GetMute(SN76489_Context* chip)
 
 void SN76489_SetMute(SN76489_Context* chip, UINT32 val)
 {
-	chip->Mute=val;
+	chip->Mute=(UINT8)val;
 }
 
 void SN76489_SetPanning(SN76489_Context* chip, int ch0, int ch1, int ch2, int ch3)

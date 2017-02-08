@@ -147,7 +147,7 @@ static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDev
 	
 	if (cfg->t6w28_tone != NULL)
 		SN76489_ConnectT6W28(info->chip.maxim, (SN76489_Context*)cfg->t6w28_tone);
-	SN76489_Config(info->chip.maxim, cfg->noiseTaps, cfg->shiftRegWidth, 0);
+	SN76489_Config(info->chip.maxim, cfg->noiseTaps, cfg->shiftRegWidth);
 	
 	devData = (DEV_DATA*)info->chip.any;
 	devData->chipInf = info;	// store pointer to SN76496_INF into sound chip structure

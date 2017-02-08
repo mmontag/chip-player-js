@@ -141,22 +141,22 @@ struct _sn76496_state
 	
 	UINT32 clock;
 	INT32 VolTable[16];	/* volume table (for 4-bit to db conversion)*/
-	INT32 Register[8];	/* registers */
-	INT32 LastRegister;	/* last register written */
+	UINT16 Register[8];	/* registers */
+	UINT8 LastRegister;	/* last register written */
 	INT32 Volume[4];	/* db volume of voice 0-2 and noise */
 	UINT32 RNG;			/* noise generator LFSR*/
-	INT32 ClockDivider;	/* clock divider */
-	INT32 FeedbackMask;	/* mask for feedback */
-	INT32 WhitenoiseTap1;	/* mask for white noise tap 1 (higher one, usually bit 14) */
-	INT32 WhitenoiseTap2;	/* mask for white noise tap 2 (lower one, usually bit 13)*/
-	INT32 Negate;		/* output negate flag */
-	INT32 Stereo;		/* whether we're dealing with stereo or not */
-	INT32 StereoMask;	/* the stereo output mask */
+	UINT32 ClockDivider;	/* clock divider */
+	UINT32 FeedbackMask;	/* mask for feedback */
+	UINT32 WhitenoiseTap1;	/* mask for white noise tap 1 (higher one, usually bit 14) */
+	UINT32 WhitenoiseTap2;	/* mask for white noise tap 2 (lower one, usually bit 13)*/
+	UINT8 Negate;		/* output negate flag */
+	UINT8 Stereo;		/* whether we're dealing with stereo or not */
+	UINT8 StereoMask;	/* the stereo output mask */
 	INT32 Period[4];	/* Length of 1/2 of waveform */
 	INT32 Count[4];		/* Position within the waveform */
-	INT32 Output[4];	/* 1-bit output of each channel, pre-volume */
+	UINT8 Output[4];	/* 1-bit output of each channel, pre-volume */
 	INT32 CyclestoREADY;/* number of cycles until the READY line goes active */
-	INT32 Freq0IsMax;	/* flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0 */
+	UINT8 Freq0IsMax;	/* flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0 */
 	INT32 FNumLimit;
 	UINT32 MuteMsk[4];
 	UINT8 NgpFlags;		/* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
@@ -182,7 +182,7 @@ void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data)
 void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 {
 	sn76496_state *R = (sn76496_state*)chip;
-	int n, r, c;
+	UINT8 n, r, c;
 
 
 	/* set number of cycles until READY is active; this is always one
@@ -212,7 +212,7 @@ void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 		case 0:	/* tone 0 : frequency */
 		case 2:	/* tone 1 : frequency */
 		case 4:	/* tone 2 : frequency */
-		    if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((data & 0x3f) << 4);
+			if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((data & 0x3f) << 4);
 			if ((R->Register[r] != 0) || (R->Freq0IsMax == 0)) R->Period[c] = R->Register[r];
 			else R->Period[c] = 0x400;
 			if (r == 4)
@@ -240,9 +240,9 @@ void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 				//if ((data & 0x80) == 0) logerror("sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", R->Register[6], data);
 #endif
 				if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (data & 0x0f);
-				n = R->Register[6];
+				n = R->Register[6]&3;
 				/* N/512,N/1024,N/2048,Tone #3 output */
-				R->Period[3] = ((n&3) == 3) ? 2 * R->Period[2] : (1 << (5+(n&3)));
+				R->Period[3] = (n == 3) ? (2 * R->Period[2]) : (2 << (4+n));
 				R->RNG = R->FeedbackMask;
 			}
 			break;
@@ -484,7 +484,7 @@ static void SN76496_set_gain(sn76496_state *R,int gain)
 }
 
 
-static UINT32 generic_start(sn76496_state *chip, UINT32 clock, int feedbackmask, int noisetap1, int noisetap2, int negate, int stereo, int clockdivider, int freq0)
+static UINT32 generic_start(sn76496_state *chip, UINT32 clock, UINT32 feedbackmask, UINT32 noisetap1, UINT32 noisetap2, UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 freq0)
 {
 	UINT32 sample_rate;
 	
@@ -514,13 +514,13 @@ static UINT32 generic_start(sn76496_state *chip, UINT32 clock, int feedbackmask,
 	return sample_rate;
 }
 
-UINT32 sn76496_start(void **chip, UINT32 clock, int shiftregwidth, int noisetaps,
-					int negate, int stereo, int clockdivider, int freq0)
+UINT32 sn76496_start(void **chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
+					UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 freq0)
 {
 	sn76496_state* sn_chip;
-	int ntap[2];
-	int curbit;
-	int curtap;
+	UINT32 ntap[2];
+	UINT8 curbit;
+	UINT8 curtap;
 	
 	sn_chip = (sn76496_state*)calloc(1, sizeof(sn76496_state));
 	if (sn_chip == NULL)
@@ -528,6 +528,7 @@ UINT32 sn76496_start(void **chip, UINT32 clock, int shiftregwidth, int noisetaps
 	*chip = sn_chip;
 	
 	// extract single noise tap bits
+	ntap[0] = ntap[1] = 0x00;
 	curtap = 0;
 	for (curbit = 0; curbit < shiftregwidth; curbit ++)
 	{
@@ -539,8 +540,6 @@ UINT32 sn76496_start(void **chip, UINT32 clock, int shiftregwidth, int noisetaps
 				break;
 		}
 	}
-	for (; curtap < 2; curtap ++)
-		ntap[curtap] = ntap[0];
 	
 	return generic_start(sn_chip, clock, 1 << (shiftregwidth - 1), ntap[0], ntap[1],
 						negate, stereo, clockdivider, freq0);
@@ -596,7 +595,7 @@ void sn76496_reset(void *chip)
 	return;
 }
 
-void sn76496_freq_limiter(void* chip, int sample_rate)
+void sn76496_freq_limiter(void* chip, UINT32 sample_rate)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	
