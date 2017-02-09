@@ -24,4 +24,7 @@ UINT8 ADLIBEMU(reg_read)(void *chip, UINT8 port);
 void ADLIBEMU(set_update_handler)(void *chip, ADL_UPDATEHANDLER UpdateHandler, void* param);
 void ADLIBEMU(set_mute_mask)(void *chip, UINT32 MuteMask);
 
+void ADLIBEMU(set_volume)(void *chip, INT32 volume);
+void ADLIBEMU(set_volume_lr)(void *chip, INT32 volL, INT32 volR);
+
 #endif	// __ADLIBEMU_H__

@@ -21,5 +21,7 @@ void ymf262_set_irq_handler(void *chip, OPL3_IRQHANDLER IRQHandler, void *param)
 void ymf262_set_update_handler(void *chip, OPL3_UPDATEHANDLER UpdateHandler, void *param);
 
 void ymf262_set_mutemask(void *chip, UINT32 MuteMask);
+void ymf262_set_volume(void *chip, INT32 volume);
+void ymf262_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight);
 
 #endif	// __YMF262_H__

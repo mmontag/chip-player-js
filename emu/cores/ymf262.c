@@ -229,9 +229,9 @@ typedef struct {
 	UINT8	nts;					/* NTS (note select)            */
 
 	/* external event callback handlers */
-	OPL3_TIMERHANDLER  timer_handler;/* TIMER handler                */
-	void *TimerParam;					/* TIMER parameter              */
-	OPL3_IRQHANDLER    IRQHandler;	/* IRQ handler                  */
+	OPL3_TIMERHANDLER timer_handler;/* TIMER handler                */
+	void *TimerParam;				/* TIMER parameter              */
+	OPL3_IRQHANDLER IRQHandler;		/* IRQ handler                  */
 	void *IRQParam;					/* IRQ parameter                */
 	OPL3_UPDATEHANDLER UpdateHandler;/* stream update handler       */
 	void *UpdateParam;				/* stream update parameter      */
@@ -241,6 +241,9 @@ typedef struct {
 	UINT32 rate;					/* sampling rate (Hz)           */
 	double freqbase;				/* frequency base               */
 	//attotime TimerBase;			/* Timer base time (==sampling time)*/
+
+	INT32 masterVolL;				/* master volume left (.12 fixed point) */
+	INT32 masterVolR;				/* master volume right          */
 } OPL3;
 
 
@@ -2284,6 +2287,7 @@ static OPL3 *OPL3Create(UINT32 clock, UINT32 rate, int type)
 	// init global tables
 	OPL3_initalize(chip);
 
+	ymf262_set_volume(chip, 0x10000);
 	ymf262_set_mutemask(chip, 0x000000);
 
 	return chip;
@@ -2471,6 +2475,21 @@ void ymf262_set_mutemask(void *chip, UINT32 MuteMask)
 	return;
 }
 
+void ymf262_set_volume(void *chip, INT32 volume)
+{
+	ymf262_set_vol_lr(chip, volume, volume);
+}
+
+void ymf262_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight)
+{
+	OPL3 *opl3 = (OPL3 *)chip;
+
+	opl3->masterVolL = volLeft >> 4;
+	opl3->masterVolR = volRight >> 4;
+
+	return;
+}
+
 
 /*
 ** Generate samples for one of the YMF262's
@@ -2579,11 +2598,10 @@ void ymf262_update_one(void *_chip, UINT32 length, DEV_SMPL **buffers)
 		}
 
 		/* store to sound buffer */
-		ch_a[i] = a+c;
-		ch_b[i] = b+d;
+		ch_a[i] = ((a+c) * chip->masterVolL) >> 12;
+		ch_b[i] = ((b+d) * chip->masterVolR) >> 12;
 
 		advance(chip);
 	}
 
 }
-

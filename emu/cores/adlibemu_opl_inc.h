@@ -189,6 +189,9 @@ typedef struct opl_chip
 	
 	ADL_UPDATEHANDLER UpdateHandler;	// stream update handler
 	void* UpdateParam;					// stream update parameter
+	
+	Bit32s master_vol_l;	// .12 fixed point
+	Bit32s master_vol_r;
 } OPL_DATA;
 
 

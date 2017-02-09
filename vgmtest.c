@@ -732,8 +732,8 @@ static void InitVGMChips(void)
 				// Note: Configuration changes for child-devices go here.
 				if (dLink->devID == DEVID_AY8910)
 					dLink->cfg->emuCore = FCC_EMU_;
-				else if (curChip == DEVID_YMF262)
-					devCfg.emuCore = FCC_ADLE;
+				else if (dLink->devID == DEVID_YMF262)
+					dLink->cfg->emuCore = FCC_ADLE;
 				
 				retVal = SndEmu_Start(dLink->devID, dLink->cfg, &clDev->defInf);
 				if (retVal)

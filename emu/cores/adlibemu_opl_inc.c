@@ -695,6 +695,9 @@ void* ADLIBEMU(init)(UINT32 clock, UINT32 samplerate)
 	ADLIBEMU(set_update_handler)(OPL, adlibemu_update_req, OPL);
 	//ADLIBEMU(reset)(OPL);
 
+	ADLIBEMU(set_volume)(OPL, 0x10000);
+	ADLIBEMU(set_mute_mask)(OPL, 0x000000);
+
 	return OPL;
 }
 
@@ -1179,7 +1182,7 @@ void ADLIBEMU(getsample)(void *chip, UINT32 numsamples, DEV_SMPL** sndptr)
 {
 	OPL_DATA* OPL = (OPL_DATA*)chip;
 	
-	Bits i, endsamples;
+	Bit32u i, endsamples;
 	op_type* cptr;
 
 	DEV_SMPL* outbufl;
@@ -1189,9 +1192,7 @@ void ADLIBEMU(getsample)(void *chip, UINT32 numsamples, DEV_SMPL** sndptr)
 	Bit32s vib_lut[BLOCKBUF_SIZE];
 	Bit32s trem_lut[BLOCKBUF_SIZE];
 
-	Bits samples_to_process = numsamples;
-
-	Bits cursmp;
+	Bit32u cursmp;
 	Bit32s vib_tshift;
 	Bits max_channel = NUM_CHANNELS;
 	Bits cur_ch;
@@ -1203,7 +1204,7 @@ void ADLIBEMU(getsample)(void *chip, UINT32 numsamples, DEV_SMPL** sndptr)
 	if ((OPL->adlibreg[0x105]&1)==0) max_channel = NUM_CHANNELS/2;
 #endif
 	
-	if (! samples_to_process)
+	if (! numsamples)
 	{
 		for (cur_ch = 0; cur_ch < max_channel; cur_ch ++)
 		{
@@ -1230,15 +1231,15 @@ void ADLIBEMU(getsample)(void *chip, UINT32 numsamples, DEV_SMPL** sndptr)
 		return;
 	}
 	
+	memset(sndptr[0],0,numsamples*sizeof(DEV_SMPL));
+	memset(sndptr[1],0,numsamples*sizeof(DEV_SMPL));
+
 	outbufl = sndptr[0];
 	outbufr = sndptr[1];
-	for (cursmp=0; cursmp<samples_to_process; cursmp+=endsamples)
+	for (cursmp=0; cursmp<numsamples; cursmp+=endsamples)
 	{
-		endsamples = samples_to_process-cursmp;
+		endsamples = numsamples-cursmp;
 		if (endsamples>BLOCKBUF_SIZE) endsamples = BLOCKBUF_SIZE;
-
-		memset(outbufl,0,endsamples*sizeof(DEV_SMPL));
-		memset(outbufr,0,endsamples*sizeof(DEV_SMPL));
 
 		// calculate vibrato/tremolo lookup tables
 		vib_tshift = ((OPL->adlibreg[ARC_PERC_MODE]&0x40)==0) ? 1 : 0;	// 14cents/7cents switching
@@ -1919,6 +1920,12 @@ void ADLIBEMU(getsample)(void *chip, UINT32 numsamples, DEV_SMPL** sndptr)
 		outbufl += endsamples;
 		outbufr += endsamples;
 	}
+
+	for (i=0;i<numsamples;i++)
+	{
+		sndptr[0][i] = (sndptr[0][i] * OPL->master_vol_l) >> 12;
+		sndptr[1][i] = (sndptr[1][i] * OPL->master_vol_r) >> 12;
+	}
 }
 
 void ADLIBEMU(set_update_handler)(void *chip, ADL_UPDATEHANDLER UpdateHandler, void* param)
@@ -1939,5 +1946,20 @@ void ADLIBEMU(set_mute_mask)(void *chip, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < NUM_CHANNELS + 5; CurChn ++)
 		OPL->MuteChn[CurChn] = (MuteMask >> CurChn) & 0x01;
 	
+	return;
+}
+
+void ADLIBEMU(set_volume)(void *chip, INT32 volume)
+{
+	ADLIBEMU(set_volume_lr)(chip, volume, volume);
+}
+
+void ADLIBEMU(set_volume_lr)(void *chip, INT32 volLeft, INT32 volRight)
+{
+	OPL_DATA* OPL = (OPL_DATA*)chip;
+
+	OPL->master_vol_l = volLeft >> 4;
+	OPL->master_vol_r = volRight >> 4;
+
 	return;
 }

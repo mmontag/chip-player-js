@@ -25,6 +25,8 @@ static DEVDEF_RWFUNC devFunc262_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ymf262_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ymf262_read},
+	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, ymf262_set_volume},
+	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, ymf262_set_vol_lr},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_MAME =
@@ -50,6 +52,8 @@ static DEVDEF_RWFUNC devFunc262_Emu[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, adlib_OPL3_writeIO},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, adlib_OPL3_reg_read},
+	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, adlib_OPL3_set_volume},
+	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, adlib_OPL3_set_volume_lr},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_AdLibEmu =

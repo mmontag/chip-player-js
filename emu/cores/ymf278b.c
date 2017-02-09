@@ -180,7 +180,7 @@ typedef struct
 	void* chip;
 	void (*write)(void *param, UINT8 address, UINT8 data);
 	void (*reset)(void *param);
-	void (*setVol)(void *param, UINT16 volLeft, UINT16 volRight);
+	void (*setVol)(void *param, INT32 volLeft, INT32 volRight);
 } OPL3FM;
 struct _YMF278BChip
 {
@@ -1195,9 +1195,9 @@ static void refresh_opl3_volume(YMF278BChip* chip)
 	volL = mix_level[chip->fm_l] - 8;
 	volR = mix_level[chip->fm_r] - 8;
 	// chip->volume[] uses 0x8000 = 100%
-	volL = (chip->volume[volL] * OPL4FM_VOL_BALANCE) >> 15;
-	volR = (chip->volume[volR] * OPL4FM_VOL_BALANCE) >> 15;
-	chip->fm.setVol(chip->fm.chip, (UINT16)volL, (UINT16)volR);
+	volL = (chip->volume[volL] * OPL4FM_VOL_BALANCE) >> 7;
+	volR = (chip->volume[volR] * OPL4FM_VOL_BALANCE) >> 7;
+	chip->fm.setVol(chip->fm.chip, volL, volR);
 	
 	return;
 }
@@ -1306,7 +1306,13 @@ static UINT8 get_opl3_funcs(const DEV_DEF* devDef, OPL3FM* retFuncs)
 	retVal = SndEmu_GetDeviceFunc(devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&retFuncs->write);
 	if (retVal)
 		return retVal;
-	retFuncs->setVol = NULL;
+	
+	retVal = SndEmu_GetDeviceFunc(devDef, RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, (void**)&retFuncs->setVol);
+	if (retVal)
+	{
+		retFuncs->setVol = NULL;
+		logerror("YMF278B Warning: Unable to control OPL3 volume.\n");
+	}
 	
 	if (devDef->Reset == NULL)
 		return 0xFF;
@@ -1335,6 +1341,7 @@ static UINT8 device_ymf278b_link_opl3(void* param, UINT8 devID, const DEV_INFO* 
 		retVal = get_opl3_funcs(defInfOPL3->devDef, &chip->fm);
 		if (! retVal)
 			chip->fm.chip = defInfOPL3->dataPtr;
+		refresh_opl3_volume(chip);
 	}
 	return retVal;
 }
