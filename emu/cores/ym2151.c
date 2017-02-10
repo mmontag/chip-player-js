@@ -2153,15 +2153,12 @@ static UINT8 device_start_ym2151(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 64;
+	rate = cfg->clock / 64;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = ym2151_init(clock, rate);
+	chip = ym2151_init(cfg->clock, rate);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;

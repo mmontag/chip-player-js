@@ -306,7 +306,7 @@ static UINT8 device_start_es5503(const ES5503_CFG* cfg, DEV_INFO* retDevInf)
 	
 	chip->dramsize = 0x20000;	// 128 KB
 	chip->docram = (UINT8*)malloc(chip->dramsize);
-	chip->clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
+	chip->clock = cfg->_genCfg.clock;
 
 	chip->output_channels = cfg->channels;
 	if (! chip->output_channels)

@@ -86,15 +86,12 @@ static UINT8 device_start_c6280_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 16;
+	rate = cfg->clock / 16;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = device_start_c6280mame(clock, rate);
+	chip = device_start_c6280mame(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
@@ -110,21 +107,16 @@ static UINT8 device_start_c6280_ootake(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT8 mode;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	mode = CHPCLK_FLAG(cfg->clock);
-	
-	rate = clock / 16;
+	rate = cfg->clock / 16;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = OotakePSG_Init(clock, rate);
+	chip = OotakePSG_Init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
-	OotakePSG_SetHoneyInTheSky(chip, mode);
+	OotakePSG_SetHoneyInTheSky(chip, cfg->flags);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;

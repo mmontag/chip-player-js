@@ -104,6 +104,7 @@ int main(int argc, char* argv[])
 	
 	devCfg.emuCore = FCC_MAXM;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
+	devCfg.flags = 0x00;
 	devCfg.clock = 3579545;
 	devCfg.smplRate = 48000;
 	snCfg._genCfg = devCfg;
@@ -120,7 +121,8 @@ int main(int argc, char* argv[])
 	
 	devCfg.emuCore = 0;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
-	devCfg.clock = (0 << 31) | 0x101D00;
+	devCfg.flags = 0x00;
+	devCfg.clock = 0x101D00;
 	retVal = SndEmu_Start(DEVID_OKIM6295, &devCfg, &okiDefInf);
 	{
 		FILE* hFile = fopen("122a05.bin", "rb");	// load Hexion sample ROM
@@ -147,7 +149,8 @@ int main(int argc, char* argv[])
 	}
 	devCfg.emuCore = FCC_EMU_;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
-	devCfg.clock = (0 << 31) | 3579545;
+	devCfg.flags = 0x00;
+	devCfg.clock = 3579545;
 	retVal = SndEmu_Start(DEVID_YM2413, &devCfg, &opllDefInf);
 	
 	opts = AudioDrv_GetOptions(audDrv);

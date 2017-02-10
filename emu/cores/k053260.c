@@ -251,7 +251,6 @@ static void k053260_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 static UINT8 device_start_k053260(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	k053260_state *ic;
-	UINT32 clock;
 	UINT32 rate;
 	int i;
 
@@ -266,12 +265,11 @@ static UINT8 device_start_k053260(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	for ( i = 0; i < 0x30; i++ )
 		ic->regs[i] = 0;
 
-	clock = CHPCLK_CLOCK(cfg->clock);
-	rate = clock / 32;
+	rate = cfg->clock / 32;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 
 	ic->delta_table = (UINT32*)malloc(0x1000 * sizeof(UINT32));
-	InitDeltaTable( ic, rate, clock );
+	InitDeltaTable( ic, rate, cfg->clock );
 
 	k053260_set_mute_mask(ic, 0x00);
 

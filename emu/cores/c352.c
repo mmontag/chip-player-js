@@ -296,8 +296,8 @@ static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf)
 	c->wavesize = 0x00;
 
 	clkdiv = cfg->clk_divider ? cfg->clk_divider : 288;
-	c->rate = CHPCLK_CLOCK(cfg->_genCfg.clock)/clkdiv;
-	c->muteRear = CHPCLK_FLAG(cfg->_genCfg.clock);
+	c->rate = cfg->_genCfg.clock/clkdiv;
+	c->muteRear = cfg->_genCfg.flags;
 
 	//memset(c->v,0,sizeof(C352_Voice)*C352_VOICES);
 

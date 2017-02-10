@@ -254,7 +254,7 @@ static UINT8 device_start_x1_010(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (info == NULL)
 		return 0xFF;
 
-	info->base_clock	= CHPCLK_CLOCK(cfg->clock);
+	info->base_clock	= cfg->clock;
 	info->rate			= info->base_clock / 512;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, info->rate, cfg->smplRate);
 

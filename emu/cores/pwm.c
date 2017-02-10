@@ -197,7 +197,7 @@ static UINT8 device_start_pwm(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (chip == NULL)
 		return 0xFF;
 	
-	chip->clock = CHPCLK_CLOCK(cfg->clock);
+	chip->clock = cfg->clock;
 	
 	rate = 22020;	// that's the rate the PWM uses in most games
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);

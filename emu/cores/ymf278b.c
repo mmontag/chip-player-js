@@ -1215,7 +1215,7 @@ static void init_opl3_devinfo(DEV_INFO* devInf, const DEV_GEN_CFG* baseCfg)
 	
 	devLink->cfg = (DEV_GEN_CFG*)calloc(1, sizeof(DEV_GEN_CFG));
 	*devLink->cfg = *baseCfg;
-	devLink->cfg->clock = CHPCLK_CLOCK(baseCfg->clock) * 8 / 19;	// * 288 / 684
+	devLink->cfg->clock = baseCfg->clock * 8 / 19;	// * 288 / 684
 	devLink->cfg->emuCore = 0;
 	
 	return;
@@ -1231,7 +1231,7 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (chip == NULL)
 		return 0xFF;
 	
-	chip->clock = CHPCLK_CLOCK(cfg->clock);
+	chip->clock = cfg->clock;
 	rate = chip->clock / 768;
 	//SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	

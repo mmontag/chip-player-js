@@ -11,11 +11,6 @@
 #define logerror
 #endif
 
-// macros to extract the actual clock value and the "special flag"
-// from the VGM clock value
-#define CHPCLK_CLOCK(clock)	 (clock & 0x7FFFFFFF)
-#define CHPCLK_FLAG(clock)	((clock & 0x80000000) >> 31)
-
 // get parent struct from chip data pointer
 #define CHP_GET_INF_PTR(chip)	(((DEV_DATA*)info)->chipInf)
 

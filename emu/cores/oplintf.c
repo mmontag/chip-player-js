@@ -154,15 +154,12 @@ static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 72;
+	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = ym3812_init(clock, rate);
+	chip = ym3812_init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
@@ -183,15 +180,12 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 72;
+	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = adlib_OPL2_init(clock, rate);
+	chip = adlib_OPL2_init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
@@ -207,15 +201,12 @@ static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 72;
+	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = ym3526_init(clock, rate);
+	chip = ym3526_init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
@@ -235,15 +226,12 @@ static UINT8 device_start_y8950(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 72;
+	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = y8950_init(clock, rate);
+	chip = y8950_init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	

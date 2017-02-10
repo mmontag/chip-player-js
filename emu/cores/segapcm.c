@@ -176,9 +176,6 @@ static UINT8 device_start_segapcm(const SEGAPCM_CFG* cfg, DEV_INFO* retDevInf)
 {
 	static const UINT32 STD_ROM_SIZE = 0x80000;
 	segapcm_state *spcm;
-	UINT32 clock;
-	
-	clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
 	
 	spcm = (segapcm_state *)calloc(1, sizeof(segapcm_state));
 	spcm->intf_mask = cfg->bnkmask;
@@ -200,7 +197,7 @@ static UINT8 device_start_segapcm(const SEGAPCM_CFG* cfg, DEV_INFO* retDevInf)
 	segapcm_set_mute_mask(spcm, 0x0000);
 	
 	spcm->chipInf = spcm;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)spcm, clock / 128, &devDef);
+	INIT_DEVINF(retDevInf, (DEV_DATA*)spcm, cfg->_genCfg.clock / 128, &devDef);
 	return 0x00;
 }
 

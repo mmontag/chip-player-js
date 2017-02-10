@@ -1141,7 +1141,7 @@ static UINT8 device_start_scsp(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 		return 0xFF;
 
 	// init the emulation
-	SCSP_Init(scsp, CHPCLK_CLOCK(cfg->clock));
+	SCSP_Init(scsp, cfg->clock);
 
 	scsp_set_mute_mask(scsp, 0x00000000);
 

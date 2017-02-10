@@ -93,13 +93,10 @@ static UINT8 device_start_rf5c68_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 384;
-	chip = device_start_rf5c68(clock);
+	rate = cfg->clock / 384;
+	chip = device_start_rf5c68(cfg->clock);
 	if (chip == NULL)
 		return 0xFF;
 	
@@ -115,17 +112,12 @@ static UINT8 device_start_rf5c68_gens(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT8 mode;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	mode = CHPCLK_FLAG(cfg->clock);
-	
-	rate = clock / 384;
+	rate = cfg->clock / 384;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = SCD_PCM_Init(clock, rate, mode);
+	chip = SCD_PCM_Init(cfg->clock, rate, cfg->flags);
 	if (chip == NULL)
 		return 0xFF;
 	

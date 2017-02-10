@@ -428,7 +428,8 @@ static void InitVGMChips(void)
 		cDev->linkDev = NULL;
 		devCfg.emuCore = 0x00;
 		devCfg.srMode = DEVRI_SRMODE_NATIVE;
-		devCfg.clock = chpClk & ~0x40000000;
+		devCfg.flags = (chpClk & 0x80000000) >> 31;
+		devCfg.clock = chpClk & ~0xC0000000;
 		devCfg.smplRate = sampleRate;
 		switch(curChip)
 		{
@@ -443,7 +444,7 @@ static void InitVGMChips(void)
 				//if (! VGMHdr.bytPSG_Flags)
 				//	VGMHdr.bytPSG_Flags = 0x00;
 				devCfg.emuCore = FCC_MAXM;
-				devCfg.clock &= ~0x80000000;
+				devCfg.flags = 0x00;
 				snCfg._genCfg = devCfg;
 				snCfg.shiftRegWidth = VGMHdr.bytPSG_SRWidth;
 				snCfg.noiseTaps = (UINT8)VGMHdr.shtPSG_Feedback;

@@ -286,21 +286,19 @@ static void device_reset_iremga20(void *info)
 static UINT8 device_start_iremga20(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	ga20_state *chip;
-	UINT32 clock;
 
 	chip = (ga20_state *)calloc(1, sizeof(ga20_state));
 	if (chip == NULL)
 		return 0xFF;
 
 	/* Initialize our chip structure */
-	clock = CHPCLK_CLOCK(cfg->clock);
 	chip->rom = NULL;
 	chip->rom_size = 0x00;
 
 	iremga20_set_mute_mask(chip, 0x0);
 
 	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, clock / 4, &devDef);
+	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, cfg->clock / 4, &devDef);
 
 	return 0x00;
 }

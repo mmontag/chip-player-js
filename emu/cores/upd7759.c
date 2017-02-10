@@ -713,14 +713,12 @@ static void upd7759_reset(void *info)
 static UINT8 device_start_upd7759(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	upd7759_state *chip;
-	UINT32 clock;
 
 	chip = (upd7759_state *)calloc(1, sizeof(upd7759_state));
 	if (chip == NULL)
 		return 0xFF;
 
-	clock = CHPCLK_CLOCK(cfg->clock);
-	chip->ChipMode = CHPCLK_FLAG(cfg->clock);
+	chip->ChipMode = cfg->flags;
 
 	/* compute the stepping rate based on the chip's clock speed */
 	chip->step = 4 * FRAC_ONE;
@@ -749,7 +747,7 @@ static UINT8 device_start_upd7759(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	upd7759_set_mute_mask(chip, 0x00);
 
 	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, clock / 4, &devDef);
+	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, cfg->clock / 4, &devDef);
 	return 0x00;
 }
 

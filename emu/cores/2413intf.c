@@ -88,21 +88,16 @@ static UINT8 device_start_ym2413_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT8 mode;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	mode = CHPCLK_FLAG(cfg->clock);
-	
-	rate = clock / 72;
+	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = ym2413_init(clock, rate);
+	chip = ym2413_init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
-	ym2413_set_chip_mode(chip, mode);
+	ym2413_set_chip_mode(chip, cfg->flags);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
@@ -115,21 +110,16 @@ static UINT8 device_start_ym2413_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPLL* chip;
-	UINT8 mode;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	mode = CHPCLK_FLAG(cfg->clock);
-	
-	rate = clock / 72;
+	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = OPLL_new(clock, rate);
+	chip = OPLL_new(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
-	OPLL_SetChipMode(chip, mode);
+	OPLL_SetChipMode(chip, cfg->flags);
 	
 	chip->chipInf = chip;
 	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, rate, &devDef_Emu);

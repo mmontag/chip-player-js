@@ -141,14 +141,12 @@ struct _qsound_state
 static UINT8 device_start_qsound(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	qsound_state *chip;
-	UINT32 clock;
 	int i;
 
 	chip = (qsound_state *)calloc(1, sizeof(qsound_state));
 	if (chip == NULL)
 		return 0xFF;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
 	chip->sample_rom = NULL;
 	chip->sample_rom_length = 0x00;
 
@@ -162,7 +160,7 @@ static UINT8 device_start_qsound(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	qsound_set_mute_mask(chip, 0x0000);
 
 	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, clock / QSOUND_CLOCKDIV, &devDef);
+	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, cfg->clock / QSOUND_CLOCKDIV, &devDef);
 
 	return 0x00;
 }

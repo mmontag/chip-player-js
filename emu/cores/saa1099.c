@@ -415,7 +415,7 @@ static UINT8 device_start_saa1099(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 		return 0xFF;
 
 	/* copy global parameters */
-	saa->master_clock = CHPCLK_CLOCK(cfg->clock);
+	saa->master_clock = cfg->clock;
 	saa->sample_rate = saa->master_clock / 256.0;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, saa->sample_rate, cfg->smplRate);
 

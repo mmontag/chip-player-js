@@ -178,7 +178,8 @@ static AY8910_CFG* get_ssg_config(const DEV_GEN_CFG* cfg, UINT32 clockDiv, UINT8
 	
 	ssgCfg = (AY8910_CFG*)calloc(1, sizeof(AY8910_CFG));
 	ssgCfg->_genCfg = *cfg;
-	ssgCfg->_genCfg.clock = CHPCLK_CLOCK(cfg->clock) / clockDiv / 2;
+	ssgCfg->_genCfg.clock = cfg->clock / clockDiv / 2;
+	ssgCfg->_genCfg.flags = 0x00;
 	ssgCfg->_genCfg.emuCore = 0;
 	ssgCfg->chipType = ssgType;
 	ssgCfg->chipFlags = 0x01;
@@ -204,16 +205,14 @@ static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	rate = clock / 72;
+	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	info = (OPN_INF*)malloc(sizeof(OPN_INF));
 	info->ssg = NULL;
-	info->opn = ym2203_init(info, clock, rate, NULL, NULL);
+	info->opn = ym2203_init(info, cfg->clock, rate, NULL, NULL);
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
@@ -259,16 +258,14 @@ static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	rate = clock / 72 / 2;
+	rate = cfg->clock / 72 / 2;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	info = (OPN_INF*)malloc(sizeof(OPN_INF));
 	info->ssg = NULL;
-	info->opn = ym2608_init(info, clock, rate, NULL, NULL);
+	info->opn = ym2608_init(info, cfg->clock, rate, NULL, NULL);
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
@@ -314,23 +311,19 @@ static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
 	DEV_DATA* devData;
-	UINT32 clock;
-	UINT8 mode;
 	UINT32 rate;
 	const DEV_DEF* devDefPtr;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	mode = CHPCLK_FLAG(cfg->clock);
-	rate = clock / 72 / 2;
+	rate = cfg->clock / 72 / 2;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	info = (OPN_INF*)malloc(sizeof(OPN_INF));
 	info->ssg = NULL;
-	info->opn = ym2610_init(info, clock, rate, NULL, NULL);
+	info->opn = ym2610_init(info, cfg->clock, rate, NULL, NULL);
+	devDefPtr = cfg->flags ? &devDef_MAME_2610B : &devDef_MAME_2610;
 	
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
-	devDefPtr = mode ? &devDef_MAME_2610B : &devDef_MAME_2610;
 	INIT_DEVINF(retDevInf, devData, rate, devDefPtr);
 	init_ssg_devinfo(retDevInf, cfg, 2, 0x22);
 	return 0x00;

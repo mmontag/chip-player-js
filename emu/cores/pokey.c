@@ -650,17 +650,15 @@ static void rand_init(UINT8 *rng, int size, int left, int right, int add)
 static UINT8 device_start_pokey(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	pokey_state *chip;
-	UINT32 clock;
 	UINT32 sample_rate;
 
-	clock = CHPCLK_CLOCK(cfg->clock);
-	sample_rate = clock;
+	sample_rate = cfg->clock;
 
 	chip = (pokey_state *)calloc(1, sizeof(pokey_state));
 	if (chip == NULL)
 		return 0xFF;
 
-	chip->clock_period = 1.0 / clock;
+	chip->clock_period = 1.0 / cfg->clock;
 
 	/* initialize the poly counters */
 	poly_init(chip->poly4,   4, 3, 1, 0x00004);
@@ -672,7 +670,7 @@ static UINT8 device_start_pokey(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	rand_init(chip->rand9,   9, 8, 1, 0x00180);
 	rand_init(chip->rand17, 17,16, 1, 0x1c000);
 
-	chip->samplerate_24_8 = (clock << 8) / sample_rate;
+	chip->samplerate_24_8 = (cfg->clock << 8) / sample_rate;
 	chip->divisor[CHAN1] = 4;
 	chip->divisor[CHAN2] = 4;
 	chip->divisor[CHAN3] = 4;

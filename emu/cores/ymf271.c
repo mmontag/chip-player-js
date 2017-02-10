@@ -1759,7 +1759,7 @@ static UINT8 device_start_ymf271(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (chip == NULL)
 		return 0xFF;
 	
-	chip->clock = CHPCLK_CLOCK(cfg->clock);
+	chip->clock = cfg->clock;
 	rate = chip->clock / 384;
 
 	chip->mem_size = 0x00;

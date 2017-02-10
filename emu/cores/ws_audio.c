@@ -147,7 +147,7 @@ static UINT8 ws_audio_init(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	// actual size is 64 KB, but the audio chip can only access 16 KB
 	chip->ws_internalRam = (UINT8*)malloc(0x4000);
 	
-	chip->clock = CHPCLK_CLOCK(cfg->clock);
+	chip->clock = cfg->clock;
 	chip->smplrate = cfg->smplRate;
 	//SRATE_CUSTOM_HIGHEST(cfg->srMode, chip->smplrate, cfg->smplRate);
 	

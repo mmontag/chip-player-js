@@ -94,12 +94,9 @@ static UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
-	
-	rate = ay8910_start(&chip, clock, cfg->chipType, cfg->chipFlags);
+	rate = ay8910_start(&chip, cfg->_genCfg.clock, cfg->chipType, cfg->chipFlags);
 	if (chip == NULL)
 		return 0xFF;
 	
@@ -120,7 +117,7 @@ static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
+	clock = cfg->_genCfg.clock;
 	isYM = ((cfg->chipType & 0xF0) > 0x00);
 	flags = cfg->chipFlags;
 	if (! isYM)

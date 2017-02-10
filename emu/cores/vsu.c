@@ -553,7 +553,7 @@ static UINT8 device_start_vsu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (chip == NULL)
 		return 0xFF;
 	
-	chip->clock = CHPCLK_CLOCK(cfg->clock);
+	chip->clock = cfg->clock;
 	chip->smplrate = chip->clock / 120;	// most effects run with a /120 divider
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, chip->smplrate, cfg->smplRate);
 	

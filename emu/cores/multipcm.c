@@ -556,7 +556,7 @@ static UINT8 device_start_multipcm(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	ptChip->ROM = NULL;
 	ptChip->ROMSize = 0x00;
 	ptChip->ROMMask = 0x00;
-	ptChip->Rate=(float) CHPCLK_CLOCK(cfg->clock) / MULTIPCM_CLOCKDIV;
+	ptChip->Rate = (float)cfg->clock / MULTIPCM_CLOCKDIV;
 
 	if (! IsInit)
 	{

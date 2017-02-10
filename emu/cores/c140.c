@@ -471,7 +471,7 @@ static UINT8 device_start_c140(const C140_CFG* cfg, DEV_INFO* retDevInf)
 	if (info == NULL)
 		return 0xFF;
 	
-	info->baserate = CHPCLK_CLOCK(cfg->_genCfg.clock) / 384;	// based on MAME's notes on Namco System II
+	info->baserate = cfg->_genCfg.clock / 384;	// based on MAME's notes on Namco System II
 	info->sample_rate = info->baserate;
 	SRATE_CUSTOM_HIGHEST(cfg->_genCfg.srMode, info->sample_rate, cfg->_genCfg.smplRate);
 

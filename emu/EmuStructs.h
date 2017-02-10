@@ -113,6 +113,7 @@ struct _device_link_info
 };	// DEVLINK_INFO
 
 
+// device resampling info constants
 #define DEVRI_SRMODE_NATIVE		0x00
 #define DEVRI_SRMODE_CUSTOM		0x01
 #define DEVRI_SRMODE_HIGHEST	0x02
@@ -121,7 +122,7 @@ struct _device_generic_config
 	UINT32 emuCore;		// emulation core (4-character code, 0 = default)
 	UINT8 srMode;		// sample rate mode
 	
-	// TODO: add UINT8 flags (to replace bit 31 of clock)
+	UINT8 flags;		// chip flags
 	UINT32 clock;		// chip clock
 	UINT32 smplRate;	// sample rate for SRMODE_CUSTOM/DEVRI_SRMODE_HIGHEST
 						// Note: Some cores ignore the srMode setting and always use smplRate.

@@ -92,15 +92,12 @@ static UINT8 device_start_ymf262_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 288;
+	rate = cfg->clock / 288;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = ymf262_init(clock, rate);
+	chip = ymf262_init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
@@ -121,15 +118,12 @@ static UINT8 device_start_ymf262_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 {
 	void* chip;
 	DEV_DATA* devData;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	
-	rate = clock / 288;
+	rate = cfg->clock / 288;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = adlib_OPL3_init(clock, rate);
+	chip = adlib_OPL3_init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	

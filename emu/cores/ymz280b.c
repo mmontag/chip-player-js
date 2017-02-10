@@ -717,7 +717,7 @@ static UINT8 device_start_ymz280b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	compute_tables();
 
 	/* initialize the rest of the structure */
-	chip->master_clock = (double)CHPCLK_CLOCK(cfg->clock) / 384.0;
+	chip->master_clock = (double)cfg->clock / 384.0;
 	chip->rate = chip->master_clock * 2.0;
 	// disabled until the frequency calculation gets fixed
 	//SRATE_CUSTOM_HIGHEST(cfg->srMode, chip->rate, cfg->smplRate);

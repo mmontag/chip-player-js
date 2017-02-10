@@ -197,8 +197,8 @@ static UINT8 device_start_k051649(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 		return 0xFF;
 
 	/* get stream channels */
-	info->mode_plus = CHPCLK_FLAG(cfg->clock);
-	info->mclock = CHPCLK_CLOCK(cfg->clock);
+	info->mode_plus = cfg->flags;
+	info->mclock = cfg->clock;
 	info->rate = info->mclock / 16;
 
 	/* build the mixer table */

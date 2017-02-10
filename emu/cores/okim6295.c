@@ -126,6 +126,7 @@ struct _okim6295_state
 	INT16 command;
 	INT32 bank_offs;
 	UINT8 pin7_state;
+	UINT8 pin7_initial;
 	UINT8 nmk_mode;
 	UINT8 nmk_bank[4];
 	UINT32 master_clock;	// master clock frequency
@@ -410,11 +411,11 @@ static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	info->ROMSize = 0x00;
 
 	info->initial_clock = cfg->clock;
-	info->master_clock = CHPCLK_CLOCK(info->initial_clock);
-	info->pin7_state = CHPCLK_FLAG(info->initial_clock);
+	info->pin7_initial = cfg->flags;
 	info->SmpRateFunc = NULL;
 
-	// generate the name and create the stream
+	info->master_clock = info->initial_clock;
+	info->pin7_state = info->pin7_initial;
 	divisor = info->pin7_state ? 132 : 165;
 
 	okim6295_set_mute_mask(info, 0x00);
@@ -445,12 +446,12 @@ static void device_reset_okim6295(void *chip)
 	okim6295_state *info = (okim6295_state *)chip;
 	UINT8 voice;
 	
+	info->master_clock = info->initial_clock;
+	info->pin7_state = info->pin7_initial;
 	info->command = -1;
 	info->bank_offs = 0;
 	info->nmk_mode = 0x00;
 	memset(info->nmk_bank, 0x00, 4 * sizeof(UINT8));
-	info->master_clock = CHPCLK_CLOCK(info->initial_clock);
-	info->pin7_state = CHPCLK_FLAG(info->initial_clock);
 	
 	for (voice = 0; voice < OKIM6295_VOICES; voice++)
 	{

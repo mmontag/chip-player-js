@@ -611,7 +611,7 @@ static UINT8 device_start_k054539(const K054539_CFG* cfg, DEV_INFO* retDevInf)
 	for(i=0; i<0xf; i++)
 		info->pantab[i] = sqrt((double)i) / sqrt((double)0xe);
 
-	info->clock = CHPCLK_CLOCK(cfg->_genCfg.clock);
+	info->clock = cfg->_genCfg.clock;
 
 	info->ram = (UINT8*)malloc(0x4000);
 	info->rom = NULL;

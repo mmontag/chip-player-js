@@ -180,28 +180,23 @@ static UINT8 device_start_nes_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	NESAPU_INF* info;
 	DEV_DATA* devData;
-	UINT8 enableFDS;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	enableFDS = CHPCLK_FLAG(cfg->clock);
-	
-	rate = clock / 4;
+	rate = cfg->clock / 4;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	info = (NESAPU_INF*)calloc(1, sizeof(NESAPU_INF));
 	if (info == NULL)
 		return 0xFF;
-	info->chip_apu = device_start_nesapu(clock, rate);
+	info->chip_apu = device_start_nesapu(cfg->clock, rate);
 	if (info->chip_apu == NULL)
 	{
 		free(info);
 		return 0xFF;
 	}
 	info->chip_dmc = NULL;
-	if (enableFDS)
-		info->chip_fds = NES_FDS_Create(clock, rate);
+	if (cfg->flags)	// enable FDS sound
+		info->chip_fds = NES_FDS_Create(cfg->clock, rate);
 	else
 		info->chip_fds = NULL;
 	
@@ -228,26 +223,21 @@ static UINT8 device_start_nes_nsfplay(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 {
 	NESAPU_INF* info;
 	DEV_DATA* devData;
-	UINT8 enableFDS;
-	UINT32 clock;
 	UINT32 rate;
 	
-	clock = CHPCLK_CLOCK(cfg->clock);
-	enableFDS = CHPCLK_FLAG(cfg->clock);
-	
-	rate = clock / 4;
+	rate = cfg->clock / 4;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	info = (NESAPU_INF*)calloc(1, sizeof(NESAPU_INF));
 	if (info == NULL)
 		return 0xFF;
-	info->chip_apu = NES_APU_np_Create(clock, rate);
+	info->chip_apu = NES_APU_np_Create(cfg->clock, rate);
 	if (info->chip_apu == NULL)
 	{
 		free(info);
 		return 0xFF;
 	}
-	info->chip_dmc = NES_DMC_np_Create(clock, rate);
+	info->chip_dmc = NES_DMC_np_Create(cfg->clock, rate);
 	if (info->chip_dmc == NULL)
 	{
 		NES_APU_np_Destroy(info->chip_apu);
@@ -256,8 +246,8 @@ static UINT8 device_start_nes_nsfplay(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	}
 	NES_DMC_np_SetAPU(info->chip_dmc, info->chip_apu);
 	
-	if (enableFDS)
-		info->chip_fds = NES_FDS_Create(clock, rate);
+	if (cfg->flags)	// enable FDS sound
+		info->chip_fds = NES_FDS_Create(cfg->clock, rate);
 	else
 		info->chip_fds = NULL;
 	

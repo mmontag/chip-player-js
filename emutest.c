@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 	
 	devCfg.emuCore = 1;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
+	devCfg.flags = 0x00;
 	devCfg.clock = 3579545;
 	devCfg.smplRate = 44100;
 	snCfg._genCfg = devCfg;
