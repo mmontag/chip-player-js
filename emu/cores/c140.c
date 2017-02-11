@@ -55,7 +55,7 @@ Unmapped registers:
 #include "c140.h"
 
 static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs);
-static UINT8 device_start_c140(const C140_CFG* cfg, DEV_INFO* retDevInf);
+static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_c140(void *chip);
 static void device_reset_c140(void *chip);
 
@@ -80,7 +80,7 @@ static DEV_DEF devDef =
 {
 	"C140", "MAME", FCC_MAME,
 	
-	(DEVFUNC_START)device_start_c140,
+	device_start_c140,
 	device_stop_c140,
 	device_reset_c140,
 	c140_update,
@@ -462,7 +462,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	}
 }
 
-static UINT8 device_start_c140(const C140_CFG* cfg, DEV_INFO* retDevInf)
+static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	c140_state *info;
 	int i;
@@ -471,11 +471,11 @@ static UINT8 device_start_c140(const C140_CFG* cfg, DEV_INFO* retDevInf)
 	if (info == NULL)
 		return 0xFF;
 	
-	info->baserate = cfg->_genCfg.clock / 384;	// based on MAME's notes on Namco System II
+	info->baserate = cfg->clock / 384;	// based on MAME's notes on Namco System II
 	info->sample_rate = info->baserate;
-	SRATE_CUSTOM_HIGHEST(cfg->_genCfg.srMode, info->sample_rate, cfg->_genCfg.smplRate);
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, info->sample_rate, cfg->smplRate);
 
-	info->banking_type = cfg->banking_type;
+	info->banking_type = cfg->flags;
 
 	info->pRomSize = 0x00;
 	info->pRom = NULL;

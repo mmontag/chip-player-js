@@ -34,10 +34,10 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/segapcm.h"		// for SEGAPCM_CFG
 #include "emu/cores/ayintf.h"		// for AY8910_CFG
 #include "emu/cores/okim6258.h"		// for OKIM6258_CFG
-#include "emu/cores/k054539.h"		// for K054539_CFG
-#include "emu/cores/c140.h"			// for C140_CFG
-#include "emu/cores/es5503.h"		// for ES5503_CFG
-#include "emu/cores/es5506.h"		// for ES5506_CFG
+#include "emu/cores/k054539.h"
+#include "emu/cores/c140.h"
+#include "emu/cores/es5503.h"
+#include "emu/cores/es5506.h"
 #include "emu/cores/c352.h"			// for C352_CFG
 
 
@@ -582,14 +582,11 @@ static void InitVGMChips(void)
 			break;
 		case DEVID_K054539:
 			{
-				K054539_CFG kCfg;
-				
 				if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the sample rate, not the clock
 					devCfg.clock *= 384;	// (for backwards compatibility with old VGM logs from 2012/13)
-				kCfg._genCfg = devCfg;
-				kCfg.flags = VGMHdr.bytK054539Flags;
+				devCfg.flags = VGMHdr.bytK054539Flags;
 				
-				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&kCfg, &cDev->defInf);
+				retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
@@ -599,14 +596,11 @@ static void InitVGMChips(void)
 			break;
 		case DEVID_C140:
 			{
-				C140_CFG cCfg;
-				
 				if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the sample rate, not the clock
 					devCfg.clock *= 384;	// (for backwards compatibility with old VGM logs from 2013/14)
-				cCfg._genCfg = devCfg;
-				cCfg.banking_type = VGMHdr.bytC140Type;
+				devCfg.flags = VGMHdr.bytC140Type;	// banking type
 				
-				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&cCfg, &cDev->defInf);
+				retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
@@ -647,12 +641,9 @@ static void InitVGMChips(void)
 			break;
 		case DEVID_ES5503:
 			{
-				ES5503_CFG esCfg;
+				devCfg.flags = VGMHdr.bytES5503Chns;	// output channels
 				
-				esCfg._genCfg = devCfg;
-				esCfg.channels = VGMHdr.bytES5503Chns;
-				
-				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&esCfg, &cDev->defInf);
+				retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
@@ -661,12 +652,9 @@ static void InitVGMChips(void)
 			break;
 		case DEVID_ES5506:
 			{
-				ES5506_CFG esCfg;
+				devCfg.flags = VGMHdr.bytES5506Chns;	// output channels
 				
-				esCfg._genCfg = devCfg;
-				esCfg.channels = VGMHdr.bytES5506Chns;
-				
-				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&esCfg, &cDev->defInf);
+				retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);

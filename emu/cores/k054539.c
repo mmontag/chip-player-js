@@ -23,7 +23,7 @@
 #include "k054539.h"
 
 static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs);
-static UINT8 device_start_k054539(const K054539_CFG* cfg, DEV_INFO* retDevInf);
+static UINT8 device_start_k054539(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_k054539(void *chip);
 static void device_reset_k054539(void *chip);
 
@@ -51,7 +51,7 @@ static DEV_DEF devDef =
 {
 	"K054539", "MAME", FCC_MAME,
 	
-	(DEVFUNC_START)device_start_k054539,
+	device_start_k054539,
 	device_stop_k054539,
 	device_reset_k054539,
 	k054539_update,
@@ -575,7 +575,7 @@ static UINT8 k054539_r(void *chip, UINT16 offset)
 	return info->regs[offset];
 }
 
-static UINT8 device_start_k054539(const K054539_CFG* cfg, DEV_INFO* retDevInf)
+static UINT8 device_start_k054539(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	int i;
 	k054539_state *info;
@@ -611,7 +611,7 @@ static UINT8 device_start_k054539(const K054539_CFG* cfg, DEV_INFO* retDevInf)
 	for(i=0; i<0xf; i++)
 		info->pantab[i] = sqrt((double)i) / sqrt((double)0xe);
 
-	info->clock = cfg->_genCfg.clock;
+	info->clock = cfg->clock;
 
 	info->ram = (UINT8*)malloc(0x4000);
 	info->rom = NULL;

@@ -51,7 +51,7 @@ static void es5503_w(void *info, UINT8 offset, UINT8 data);
 static UINT8 es5503_r(void *info, UINT8 offset);
 
 static void es5503_pcm_update(void *param, UINT32 samples, DEV_SMPL **outputs);
-static UINT8 device_start_es5503(const ES5503_CFG* cfg, DEV_INFO* retDevInf);
+static UINT8 device_start_es5503(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_es5503(void *info);
 static void device_reset_es5503(void *info);
 
@@ -72,7 +72,7 @@ static DEV_DEF devDef =
 {
 	"ES5503", "MAME", FCC_MAME,
 	
-	(DEVFUNC_START)device_start_es5503,
+	device_start_es5503,
 	device_stop_es5503,
 	device_reset_es5503,
 	es5503_pcm_update,
@@ -291,7 +291,7 @@ static void es5503_pcm_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 }
 
 
-static UINT8 device_start_es5503(const ES5503_CFG* cfg, DEV_INFO* retDevInf)
+static UINT8 device_start_es5503(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	ES5503Chip *chip;
 
@@ -306,9 +306,9 @@ static UINT8 device_start_es5503(const ES5503_CFG* cfg, DEV_INFO* retDevInf)
 	
 	chip->dramsize = 0x20000;	// 128 KB
 	chip->docram = (UINT8*)malloc(chip->dramsize);
-	chip->clock = cfg->_genCfg.clock;
+	chip->clock = cfg->clock;
 
-	chip->output_channels = cfg->channels;
+	chip->output_channels = cfg->flags;
 	if (! chip->output_channels)
 		chip->output_channels = 1;
 	chip->outchn_mask = (UINT8)pow2_mask(chip->output_channels);

@@ -3,19 +3,9 @@
 
 #include "../EmuStructs.h"
 
-enum
-{
-	C140_TYPE_SYSTEM2,
-	C140_TYPE_SYSTEM21,
-	C140_TYPE_ASIC219
-};
-
-typedef struct c140_config
-{
-	DEV_GEN_CFG _genCfg;
-	
-	UINT8 banking_type;
-} C140_CFG;
+#define C140_TYPE_SYSTEM2	0x00
+#define C140_TYPE_SYSTEM21	0x01
+#define C140_TYPE_ASIC219	0x02
 
 extern const DEV_DEF* devDefList_C140[];
 

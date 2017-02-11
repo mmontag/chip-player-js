@@ -3,12 +3,7 @@
 
 #include "../EmuStructs.h"
 
-typedef struct es5506_config
-{
-	DEV_GEN_CFG _genCfg;
-	
-	UINT8 channels;	// output channels (ES5505: 1..4, ES5506: 1..6, downmixed to stereo)
-} ES5506_CFG;
+// cfg.flags: output channels (ES5505: 1..4, ES5506: 1..6, downmixed to stereo)
 
 extern const DEV_DEF* devDefList_ES5506[];
 
