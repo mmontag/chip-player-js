@@ -155,7 +155,6 @@ static void ReadVGMFile(UINT32 samples);
 
 static UINT32 smplSize;
 static void* audDrv;
-static DEV_INFO snDefInf;
 static UINT32 smplAlloc;
 static WAVE_32BS* smplData;
 static volatile bool canRender;
@@ -248,7 +247,6 @@ int main(int argc, char* argv[])
 	sampleRate = 44100;
 	
 	opts = AudioDrv_GetOptions(audDrv);
-	//opts->sampleRate = snDefInf.sampleRate;
 	//opts->sampleRate = 96000;
 	opts->numChannels = 2;
 	opts->numBitsPerSmpl = 16;

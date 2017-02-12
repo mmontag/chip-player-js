@@ -8,6 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __GNUC__
+// suppress warnings about 'uuid' attribute directive and MSVC pragmas
+#pragma GCC diagnostic ignored "-Wattributes"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#endif
+
 #include <xaudio2.h>
 #include <mmsystem.h>	// for WAVEFORMATEX
 

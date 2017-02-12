@@ -161,7 +161,7 @@ static void compute_tables(void)
 	for (step = 0; step <= 48; step++)
 	{
 		/* compute the step value */
-		int stepval = floor(16.0 * pow(11.0 / 10.0, (double)step));
+		int stepval = (int)floor(16.0 * pow(11.0 / 10.0, step));
 
 		/* loop over all nibbles and compute the difference */
 		for (nib = 0; nib < 16; nib++)

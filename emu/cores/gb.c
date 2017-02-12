@@ -492,7 +492,7 @@ void gb_sound_w(void *chip, UINT8 offset, UINT8 data)
 	}
 	else if (offset <= AUD3WF)
 	{
-		gb->snd_regs[offset] = data;
+		gb_wave_w(gb, offset - AUD3W0, data);
 	}
 }
 

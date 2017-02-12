@@ -260,7 +260,7 @@ static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	DEV_DATA* devData;
 	UINT32 rate;
 	
-	rate = cfg->clock / 72 / 2;
+	rate = cfg->clock / 2 / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	info = (OPN_INF*)malloc(sizeof(OPN_INF));
@@ -314,7 +314,7 @@ static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	UINT32 rate;
 	const DEV_DEF* devDefPtr;
 	
-	rate = cfg->clock / 72 / 2;
+	rate = cfg->clock / 2 / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	info = (OPN_INF*)malloc(sizeof(OPN_INF));

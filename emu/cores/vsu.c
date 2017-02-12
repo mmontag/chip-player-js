@@ -554,7 +554,9 @@ static UINT8 device_start_vsu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 		return 0xFF;
 	
 	chip->clock = cfg->clock;
-	chip->smplrate = chip->clock / 120;	// most effects run with a /120 divider
+	// sample rate according to https://github.com/emu-rs/rustual-boy/blob/master/rustual-boy-core/src/vsu/mod.rs
+	// 20 MHz / 480 = 41.667 Hz, VGMs use 5 MHz / 120
+	chip->smplrate = chip->clock / 120;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, chip->smplrate, cfg->smplRate);
 	
 	vsu_set_mute_mask(chip, 0x00);

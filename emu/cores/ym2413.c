@@ -2037,7 +2037,7 @@ void ym2413_update_one(void *_chip, UINT32 length, DEV_SMPL **buffers)
 	DEV_SMPL	*bufMO = buffers[0];
 	DEV_SMPL	*bufRO = buffers[1];
 
-	int i;
+	UINT32 i;
 
 	for( i=0; i < length ; i++ )
 	{

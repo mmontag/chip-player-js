@@ -103,7 +103,7 @@ static UINT8 device_start_ym2612_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	DEV_DATA* devData;
 	UINT32 rate;
 	
-	rate = cfg->clock / 72 / 2;
+	rate = cfg->clock / 2 / 72;
 	//if (PseudoSt & 0x02))
 	//	rate *= 2;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
@@ -124,7 +124,7 @@ static UINT8 device_start_ym2612_gens(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	DEV_DATA* devData;
 	UINT32 rate;
 	
-	rate = cfg->clock / 72 / 2;
+	rate = cfg->clock / 2 / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	chip = YM2612_Init(cfg->clock, rate, 0);

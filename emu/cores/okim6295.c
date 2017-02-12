@@ -41,8 +41,8 @@
 typedef struct _okim6295_state okim6295_state;
 
 
-static void okim6295_set_bank_base(okim6295_state *info, int base);
-INLINE void okim6295_set_pin7(okim6295_state *info, int pin7);
+static void okim6295_set_bank_base(okim6295_state *info, UINT32 base);
+INLINE void okim6295_set_pin7(okim6295_state *info, UINT8 pin7);
 
 static void okim6295_update(void* info, UINT32 samples, DEV_SMPL** outputs);
 static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
@@ -124,7 +124,7 @@ struct _okim6295_state
 	#define OKIM6295_VOICES		4
 	struct ADPCMVoice voice[OKIM6295_VOICES];
 	INT16 command;
-	INT32 bank_offs;
+	UINT32 bank_offs;
 	UINT8 pin7_state;
 	UINT8 pin7_initial;
 	UINT8 nmk_mode;
@@ -395,7 +395,7 @@ static void okim6295_update(void* info, UINT32 samples, DEV_SMPL** outputs)
 static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	okim6295_state *info;
-	int divisor;
+	UINT32 divisor;
 
 	info = (okim6295_state *)calloc(1, sizeof(okim6295_state));
 	if (info == NULL)
@@ -470,7 +470,7 @@ static void device_reset_okim6295(void *chip)
 
 ***********************************************************************************************/
 
-static void okim6295_set_bank_base(okim6295_state *info, int base)
+static void okim6295_set_bank_base(okim6295_state *info, UINT32 base)
 {
 	info->bank_offs = base;
 }
@@ -485,13 +485,13 @@ static void okim6295_set_bank_base(okim6295_state *info, int base)
 
 static void okim6295_clock_changed(okim6295_state *info)
 {
-	int divisor;
+	UINT32 divisor;
 	divisor = info->pin7_state ? 132 : 165;
 	if (info->SmpRateFunc != NULL)
 		info->SmpRateFunc(info->SmpRateData, info->master_clock / divisor);
 }
 
-INLINE void okim6295_set_pin7(okim6295_state *info, int pin7)
+INLINE void okim6295_set_pin7(okim6295_state *info, UINT8 pin7)
 {
 	info->pin7_state = pin7;
 	okim6295_clock_changed(info);

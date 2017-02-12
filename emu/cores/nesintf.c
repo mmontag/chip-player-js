@@ -195,6 +195,7 @@ static UINT8 device_start_nes_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 		return 0xFF;
 	}
 	info->chip_dmc = NULL;
+	
 	if (cfg->flags)	// enable FDS sound
 		info->chip_fds = NES_FDS_Create(cfg->clock, rate);
 	else

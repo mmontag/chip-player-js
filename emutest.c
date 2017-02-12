@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
 	snCfg.stereo = 1;
 	snCfg.clkDiv = 8;
 	snCfg.segaPSG = 0;
+	snCfg.t6w28_tone = NULL;
 	
 	retVal = SndEmu_Start(0x00, (DEV_GEN_CFG*)&snCfg, &snDefInf);
 	if (retVal)

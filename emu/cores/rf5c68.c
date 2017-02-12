@@ -11,7 +11,7 @@
 #include "rf5c68.h"
 
 
-#define  NUM_CHANNELS    (8)
+#define  NUM_CHANNELS	(8)
 #define STEAM_STEP		0x800
 
 

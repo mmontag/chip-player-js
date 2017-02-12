@@ -4,6 +4,8 @@
 #
 ########################
 
+DEBUG = 0
+
 ifeq ($(OS),Windows_NT)
 WINDOWS = 1
 else
@@ -21,11 +23,30 @@ CPP = g++
 PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
-CFLAGS := -O3 -g0 $(CFLAGS) -I. -Ilibs/include_mingw
-#CFLAGS := -O0 -g $(CFLAGS) -I. -Ilibs/include_mingw
-CCFLAGS = -std=gnu99
+ifeq ($(DEBUG), 1)
+CFLAGS := -O0 -g $(CFLAGS) -D_DEBUG -I.
+else
+CFLAGS := -O3 -g0 $(CFLAGS) -I.
+endif
+CCFLAGS = -std=gnu90
 CPPFLAGS = -std=gnu++98
-#CFLAGS += -Wall -Wextra -Wpedantic
+
+CFLAGS += -Wall
+#CFLAGS += -Wextra
+#CFLAGS += -Wpedantic
+CFLAGS += -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-long-long
+
+# silence typical sound core warnings
+ifneq ($(DEBUG), 1)
+CFLAGS += -Wno-unknown-pragmas
+CFLAGS += -Wno-unused-value -Wno-sign-compare
+CFLAGS += -Wno-unused-variable -Wno-unused-const-variable -Wno-unused-function
+endif
+
+# additional warnings from http://blog.httrack.com/blog/2014/03/09/what-are-your-gcc-flags/
+CFLAGS += -fstack-protector -Wpointer-arith -Winit-self
+LDFLAGS += -fstack-protector
+CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
 ARFLAGS = -cr
 
 # add Library Path, if defined
@@ -37,6 +58,7 @@ endif
 
 
 ifeq ($(WINDOWS), 1)
+CFLAGS += -Ilibs/include_mingw
 # assume Windows 2000 and later for GetConsoleWindow API call
 CFLAGS += -D _WIN32_WINNT=0x500
 endif

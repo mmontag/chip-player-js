@@ -776,7 +776,7 @@ OotakePSG_Write(
 	_QueueWriteIndex++; //Kitao更新
 	_QueueWriteIndex &= APUQUEUE_SIZE-1; //Kitao更新
 #else
-	write_reg(chip, regNum, data);
+	write_reg(info, regNum, data);
 #endif
 }
 

@@ -111,6 +111,7 @@ int main(int argc, char* argv[])
 	snCfg.shiftRegWidth = 0x10;	snCfg.noiseTaps = 0x09;
 	snCfg.negate = 1;	snCfg.stereo = 1;	snCfg.clkDiv = 8;
 	snCfg.segaPSG = 0;
+	snCfg.t6w28_tone = NULL;
 	
 	retVal = SndEmu_Start(DEVID_SN76496, (DEV_GEN_CFG*)&snCfg, &snDefInf);
 	if (retVal)

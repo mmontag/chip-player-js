@@ -260,14 +260,10 @@ void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 	DEV_SMPL out = 0;
 	DEV_SMPL out2 = 0;
 	INT32 vol[4];
-	UINT8 NGPMode;
 	INT32 ggst[2];
 
-	NGPMode = (R->NgpFlags >> 7) & 0x01;
-	if (NGPMode)
-		R2 = R->NgpChip2;
-
-	if (! NGPMode)
+	R2 = R->NgpFlags ? R->NgpChip2 : NULL;
+	if (R->NgpFlags)
 	{
 		// Speed Hack
 		out = 0;

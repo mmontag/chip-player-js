@@ -2066,7 +2066,7 @@ void ym3812_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 	UINT8		rhythm = OPL->rhythm&0x20;
 	DEV_SMPL	*bufL;
 	DEV_SMPL	*bufR;
-	int i;
+	UINT32 i;
 
 	if (! length)
 	{
@@ -2196,7 +2196,7 @@ void ym3526_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 	UINT8		rhythm = OPL->rhythm&0x20;
 	DEV_SMPL	*bufL;
 	DEV_SMPL	*bufR;
-	int i;
+	UINT32 i;
 
 	if (! length)
 	{
@@ -2379,7 +2379,7 @@ void y8950_write_pcmrom(void* chip, UINT32 offset, UINT32 length, const UINT8* d
 */
 void y8950_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 {
-	int i;
+	UINT32 i;
 	FM_OPL		*OPL = (FM_OPL *)chip;
 	UINT8		rhythm  = OPL->rhythm&0x20;
 	YM_DELTAT	*DELTAT = OPL->deltat;
