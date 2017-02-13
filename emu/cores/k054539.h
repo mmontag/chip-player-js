@@ -3,7 +3,7 @@
 
 #include "../EmuStructs.h"
 
-// control flags
+// cfg.flags: control flags
 #define K054539_RESET_FLAGS     0
 #define K054539_REVERSE_STEREO  1
 #define K054539_DISABLE_REVERB  2

@@ -63,7 +63,6 @@ YMZ294: 0 I/O port
 /* TODO: implement mixing module */
 #define AY8910_RAW_OUTPUT			(8)
 
-#define AY8910_ZX_STEREO			0x80
 /*
 * This define specifies the initial state of YM2149
 * pin 26 (SEL pin). By default it is set to high,

@@ -722,6 +722,11 @@ static void InitVGMChips(void)
 				else if (dLink->devID == DEVID_YMF262)
 					dLink->cfg->emuCore = FCC_ADLE;
 				
+				if (curChip == DEVID_YM2203)
+					((AY8910_CFG*)dLink->cfg)->chipFlags = VGMHdr.bytAYFlagYM2203;
+				else if (curChip == DEVID_YM2608)
+					((AY8910_CFG*)dLink->cfg)->chipFlags = VGMHdr.bytAYFlagYM2608;
+				
 				retVal = SndEmu_Start(dLink->devID, dLink->cfg, &clDev->defInf);
 				if (retVal)
 				{

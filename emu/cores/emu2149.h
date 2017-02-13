@@ -11,9 +11,6 @@
 #define EMU2149_VOL_YM2149 0
 #define EMU2149_VOL_AY_3_8910 1
 
-#define EMU2149_CLK_DIV_2			0x10
-#define EMU2149_ZX_STEREO			0x80
-
 #define PSG_MASK_CH(x) (1<<(x))
 
 typedef struct __PSG

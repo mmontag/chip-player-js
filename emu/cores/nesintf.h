@@ -8,6 +8,7 @@
 #define EC_NES_NSFPLAY		// enable NES core from NSFPlay
 // Note: FDS core from NSFPlay is always used
 
+// cfg.flags: set to 1 to enable FDS sound
 
 extern const DEV_DEF* devDefList_NES_APU[];
 

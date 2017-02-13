@@ -119,6 +119,7 @@ has twice the steps, happening twice as fast.
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "../EmuStructs.h"
+#include "ayintf.h"
 #include "ay8910.h"
 
 /*************************************
@@ -154,23 +155,9 @@ has twice the steps, happening twice as fast.
 #define TONE_PERIOD(_psg, _chan)	( (_psg)->regs[(_chan) << 1] | (((_psg)->regs[((_chan) << 1) | 1] & 0x0f) << 8) )
 #define NOISE_PERIOD(_psg)			( (_psg)->regs[AY_NOISEPER] & 0x1f)
 #define TONE_VOLUME(_psg, _chan)	( (_psg)->regs[AY_AVOL + (_chan)] & 0x0f)
-#define TONE_ENVELOPE(_psg, _chan)	(((_psg)->regs[AY_AVOL + (_chan)] >> 4) & (((_psg)->chip_type == CHTYPE_AY8914) ? 3 : 1))
+#define TONE_ENVELOPE(_psg, _chan)	(((_psg)->regs[AY_AVOL + (_chan)] >> 4) & (((_psg)->chip_type == AYTYPE_AY8914) ? 3 : 1))
 #define ENVELOPE_PERIOD(_psg)		(((_psg)->regs[AY_EFINE] | ((_psg)->regs[AY_ECOARSE]<<8)))
 #define NOISE_OUTPUT(_psg)			((_psg)->rng & 1)
-
-#define CHTYPE_AY8910	0x00
-#define CHTYPE_AY8912	0x01
-#define CHTYPE_AY8913	0x02
-#define CHTYPE_AY8930	0x03
-#define CHTYPE_AY8914	0x04
-#define CHTYPE_YM2149	0x10
-#define CHTYPE_YM3439	0x11
-#define CHTYPE_YMZ284	0x12
-#define CHTYPE_YMZ294	0x13
-#define CHTYPE_YM2203	0x20
-#define CHTYPE_YM2608	0x21
-#define CHTYPE_YM2610	0x22
-#define CHTYPE_YM2610B	0x23
 
 /*************************************
  *
@@ -403,7 +390,7 @@ INLINE UINT16 mix_3D(ay8910_context *psg)
 	for (chan = 0; chan < NUM_CHANNELS; chan++)
 		if (TONE_ENVELOPE(psg, chan) != 0)
 		{
-			if (psg->chip_type == CHTYPE_AY8914) // AY8914 Has a two bit tone_envelope field
+			if (psg->chip_type == AYTYPE_AY8914) // AY8914 Has a two bit tone_envelope field
 			{
 				indx |= (1 << (chan+15)) | ( psg->vol_enabled[chan] ? ((psg->env_volume >> (3-TONE_ENVELOPE(psg, chan))) << (chan*5)) : 0);
 			}
@@ -599,7 +586,7 @@ void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs)
 			if (TONE_ENVELOPE(psg, chan) != 0)
 			{
 				/* Envolope has no "off" state */
-				if (psg->chip_type == CHTYPE_AY8914) // AY8914 Has a two bit tone_envelope field
+				if (psg->chip_type == AYTYPE_AY8914) // AY8914 Has a two bit tone_envelope field
 				{
 					chnout = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume >> (3-TONE_ENVELOPE(psg,chan)) : 0];
 				}
@@ -670,7 +657,7 @@ UINT32 ay8910_start(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags)
 	info->clock = clock;
 	info->chip_type = ay_type;
 	info->chip_flags = ay_flags;
-	if ((info->chip_type & 0xF0) == 0x00)	// CHTYPE_AY89xx variants
+	if ((info->chip_type & 0xF0) == 0x00)	// AYTYPE_AY89xx variants
 	{
 		info->step = 2;
 		info->par = &ay8910_param;
@@ -678,7 +665,7 @@ UINT32 ay8910_start(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags)
 		info->zero_is_off = 0;		/* FIXME: Remove after verification that off=vol(0) */
 		info->env_step_mask = 0x0F;
 	}
-	else //if ((info->chip_type & 0xF0) >= 0x10)	// CHTYPE_YMxxxx variants (also YM2203/2608/2610)
+	else //if ((info->chip_type & 0xF0) >= 0x10)	// AYTYPE_YMxxxx variants (also YM2203/2608/2610)
 	{
 		info->step = 1;
 		info->par = &ym2149_param;

@@ -182,7 +182,7 @@ static AY8910_CFG* get_ssg_config(const DEV_GEN_CFG* cfg, UINT32 clockDiv, UINT8
 	ssgCfg->_genCfg.flags = 0x00;
 	ssgCfg->_genCfg.emuCore = 0;
 	ssgCfg->chipType = ssgType;
-	ssgCfg->chipFlags = 0x01;
+	ssgCfg->chipFlags = YM2149_PIN26_HIGH;
 	
 	return ssgCfg;
 }

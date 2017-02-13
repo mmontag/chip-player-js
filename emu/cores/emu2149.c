@@ -25,6 +25,7 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "ayintf.h"
 #include "emu2149.h"
 
 static const e_uint32 voltbl[2][32] = {
@@ -45,7 +46,7 @@ internal_refresh (PSG * psg)
 {
   e_uint32 clk = psg->clk;
   
-  if (psg->chp_flags & EMU2149_CLK_DIV_2)
+  if (psg->chp_flags & YM2149_PIN26_LOW)
     clk /= 2;
   
   if (psg->quality)
@@ -112,7 +113,7 @@ PSG_setFlags (PSG * psg, UINT8 flags)
 
 	internal_refresh(psg);	// in case of changed clock divider pin
 
-	if (psg->chp_flags & EMU2149_ZX_STEREO)
+	if (psg->chp_flags & AY8910_ZX_STEREO)
 	{
 		// ABC Stereo
 		psg->stereo_mask[0] = 0x01;

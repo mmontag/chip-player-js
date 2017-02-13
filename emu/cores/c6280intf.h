@@ -7,6 +7,7 @@
 #define EC_C6280_MAME		// enable HuC6280 core from MAME
 #define EC_C6280_OOTAKE		// enable Ootake PSG core
 
+// cfg.flags: [Ootake core] set to 1 enable a patch for "Hany in the Sky"
 
 extern const DEV_DEF* devDefList_C6280[];
 
