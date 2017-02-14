@@ -125,7 +125,7 @@ const DEV_DEF* devDefList_SAA1099[] =
 /* this structure defines a channel */
 struct saa1099_channel
 {
-	UINT8 frequency;			/* frequency (0x00..0xff) */
+	UINT8 frequency;		/* frequency (0x00..0xff) */
 	UINT8 freq_enable;		/* frequency enable */
 	UINT8 noise_enable;		/* noise enable */
 	UINT8 octave; 			/* octave (0x00..0x07) */
@@ -145,7 +145,7 @@ struct saa1099_noise
 	/* vars to simulate the noise generator output */
 	double counter;
 	double freq;
-	UINT16 level;						/* noise polynomal shifter */
+	UINT16 level;					/* noise polynomal shifter */
 };
 
 /* this structure defines a SAA1099 chip */
@@ -302,84 +302,84 @@ static void saa1099_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		/* for each channel */
 		for (ch = 0; ch < 6; ch++)
 		{
-			struct saa1099_channel* saach = &saa->channels[ch];	// TODO: use
+			struct saa1099_channel* saach = &saa->channels[ch];
 
-			if (saa->channels[ch].freq == 0.0)
-				saa->channels[ch].freq = (double)(clk2div512 << saa->channels[ch].octave) /
-					(511.0 - (double)saa->channels[ch].frequency);
+			if (saach->freq == 0.0)
+				saach->freq = (double)(clk2div512 << saach->octave) /
+					(double)(511 - saach->frequency);
 
 			/* check the actual position in the square wave */
-			saa->channels[ch].counter -= saa->channels[ch].freq;
-			while (saa->channels[ch].counter < 0)
+			saach->counter -= saach->freq;
+			while (saach->counter < 0)
 			{
 				/* calculate new frequency now after the half wave is updated */
-				saa->channels[ch].freq = (double)(clk2div512 << saa->channels[ch].octave) /
-					(511.0 - (double)saa->channels[ch].frequency);
+				saach->freq = (double)(clk2div512 << saach->octave) /
+					(double)(511.0 - saach->frequency);
 
-				saa->channels[ch].counter += saa->sample_rate;
-				saa->channels[ch].level ^= 1;
+				saach->counter += saa->sample_rate;
+				saach->level ^= 1;
 
 				/* eventually clock the envelope counters */
 				if (ch == 1 && saa->env_clock[0] == 0)
 					saa1099_envelope(saa, 0);
-				if (ch == 4 && saa->env_clock[1] == 0)
+				else if (ch == 4 && saa->env_clock[1] == 0)
 					saa1099_envelope(saa, 1);
 			}
 
-			if (saa->channels[ch].Muted)
+			if (saach->Muted)
 				continue;	// placed here to ensure that envelopes are updated
 			
 #if 0
 			// if the noise is enabled
-			if (saa->channels[ch].noise_enable)
+			if (saach->noise_enable)
 			{
 				// if the noise level is high (noise 0: chan 0-2, noise 1: chan 3-5)
 				if (saa->noise[ch/3].level & 1)
 				{
 					// subtract to avoid overflows, also use only half amplitude
-					output_l -= saa->channels[ch].amplitude[ LEFT] * saa->channels[ch].envelope[ LEFT] / 16 / 2;
-					output_r -= saa->channels[ch].amplitude[RIGHT] * saa->channels[ch].envelope[RIGHT] / 16 / 2;
+					output_l -= saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 16 / 2;
+					output_r -= saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 16 / 2;
 				}
 			}
 
 			// if the square wave is enabled
-			if (saa->channels[ch].freq_enable)
+			if (saach->freq_enable)
 			{
 				// if the channel level is high
-				if (saa->channels[ch].level & 1)
+				if (saach->level & 1)
 				{
-					output_l += saa->channels[ch].amplitude[ LEFT] * saa->channels[ch].envelope[ LEFT] / 16;
-					output_r += saa->channels[ch].amplitude[RIGHT] * saa->channels[ch].envelope[RIGHT] / 16;
+					output_l += saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 16;
+					output_r += saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 16;
 				}
 			}
 #else
 			// Now with bipolar output. -Valley Bell
-			if (saa->channels[ch].noise_enable)
+			if (saach->noise_enable)
 			{
 				// TODO: optimize (use variable for +1/-1)
 				if (saa->noise[ch/3].level & 1)
 				{
-					output_l += saa->channels[ch].amplitude[ LEFT] * saa->channels[ch].envelope[ LEFT] / 32 / 2;
-					output_r += saa->channels[ch].amplitude[RIGHT] * saa->channels[ch].envelope[RIGHT] / 32 / 2;
+					output_l += saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32 / 2;
+					output_r += saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32 / 2;
 				}
 				else
 				{
-					output_l -= saa->channels[ch].amplitude[ LEFT] * saa->channels[ch].envelope[ LEFT] / 32 / 2;
-					output_r -= saa->channels[ch].amplitude[RIGHT] * saa->channels[ch].envelope[RIGHT] / 32 / 2;
+					output_l -= saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32 / 2;
+					output_r -= saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32 / 2;
 				}
 			}
 
-			if (saa->channels[ch].freq_enable)
+			if (saach->freq_enable)
 			{
-				if (saa->channels[ch].level & 1)
+				if (saach->level & 1)
 				{
-					output_l += saa->channels[ch].amplitude[ LEFT] * saa->channels[ch].envelope[ LEFT] / 32;
-					output_r += saa->channels[ch].amplitude[RIGHT] * saa->channels[ch].envelope[RIGHT] / 32;
+					output_l += saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32;
+					output_r += saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32;
 				}
 				else
 				{
-					output_l -= saa->channels[ch].amplitude[ LEFT] * saa->channels[ch].envelope[ LEFT] / 32;
-					output_r -= saa->channels[ch].amplitude[RIGHT] * saa->channels[ch].envelope[RIGHT] / 32;
+					output_l -= saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32;
+					output_r -= saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32;
 				}
 			}
 #endif
