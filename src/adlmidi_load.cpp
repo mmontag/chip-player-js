@@ -23,6 +23,10 @@
 
 #include "adlmidi_private.hpp"
 
+#include "adlmidi_mus2mid.h"
+#include "adlmidi_xmi2mid.h"
+
+#include <memory>
 
 uint64_t MIDIplay::ReadBEint(const void *buffer, size_t nbytes)
 {
@@ -97,9 +101,11 @@ bool MIDIplay::LoadMIDI(void *data, unsigned long size)
 
 bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
 {
-#define qqq(x) (void)x
+    #define qqq(x) (void)x
     size_t  fsize;
     qqq(fsize);
+    //! Temp buffer for conversion
+    std::shared_ptr<uint8_t> cvt_buf;
 
     //std::FILE* fr = std::fopen(filename.c_str(), "rb");
     if(!fr.isValid())
@@ -108,19 +114,8 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
         return false;
     }
 
-    const size_t HeaderSize = 4 + 4 + 2 + 2 + 2; // 14
-    char HeaderBuf[HeaderSize] = "";
-riffskip:
-    ;
-    fsize = fr.read(HeaderBuf, 1, HeaderSize);
+    /**** Set all properties BEFORE starting of actial file reading! ****/
 
-    if(std::memcmp(HeaderBuf, "RIFF", 4) == 0)
-    {
-        fr.seek(6l, SEEK_CUR);
-        goto riffskip;
-    }
-
-    size_t DeltaTicks = 192, TrackCount = 1;
     config->stored_samples = 0;
     config->backup_samples_size = 0;
     opl.AdlPercussionMode = config->AdlPercussionMode;
@@ -165,16 +160,30 @@ riffskip:
     opl.NumFourOps  = config->NumFourOps;
     cmf_percussion_mode = false;
     opl.Reset();
-    trackStart = true;
-    loopStart  = true;
+
+    trackStart       = true;
+    loopStart        = true;
     loopStart_passed = false;
-    invalidLoop = false;
-    loopStart_hit = false;
+    invalidLoop      = false;
+    loopStart_hit    = false;
+
     bool is_GMF = false; // GMD/MUS files (ScummVM)
-    bool is_MUS = false; // MUS/DMX files (Doom)
+    //bool is_MUS = false; // MUS/DMX files (Doom)
     bool is_IMF = false; // IMF
     bool is_CMF = false; // Creative Music format (CMF/CTMF)
-    //std::vector<unsigned char> MUS_instrumentList;
+
+    const size_t HeaderSize = 4 + 4 + 2 + 2 + 2; // 14
+    char HeaderBuf[HeaderSize] = "";
+    size_t DeltaTicks = 192, TrackCount = 1;
+
+riffskip:
+    fsize = fr.read(HeaderBuf, 1, HeaderSize);
+
+    if(std::memcmp(HeaderBuf, "RIFF", 4) == 0)
+    {
+        fr.seek(6l, SEEK_CUR);
+        goto riffskip;
+    }
 
     if(std::memcmp(HeaderBuf, "GMF\x1", 4) == 0)
     {
@@ -185,9 +194,74 @@ riffskip:
     else if(std::memcmp(HeaderBuf, "MUS\x1A", 4) == 0)
     {
         // MUS/DMX files (Doom)
-        uint64_t start = ReadLEint(HeaderBuf + 6, 2);
-        is_MUS = true;
-        fr.seek(static_cast<long>(start), SEEK_SET);
+        //uint64_t start = ReadLEint(HeaderBuf + 6, 2);
+        //is_MUS = true;
+        fr.seek(0, SEEK_END);
+        size_t mus_len = fr.tell();
+        fr.seek(0, SEEK_SET);
+        uint8_t *mus = (uint8_t*)malloc(mus_len);
+        if(!mus)
+        {
+            ADLMIDI_ErrorString = "Out of memory!";
+            return false;
+        }
+        fr.read(mus, 1, mus_len);
+        //Close source stream
+        fr.close();
+
+        uint8_t *mid = NULL;
+        uint32_t mid_len = 0;
+        int m2mret = AdlMidi_mus2midi(mus, static_cast<uint32_t>(mus_len),
+                                      &mid, &mid_len, 0);
+        if(mus) free(mus);
+        if(m2mret < 0)
+        {
+            ADLMIDI_ErrorString = "Invalid MUS/DMX data format!";
+            return false;
+        }
+        cvt_buf.reset(mid, ::free);
+        //Open converted MIDI file
+        fr.openData(mid, static_cast<size_t>(mid_len));
+        //Re-Read header again!
+        goto riffskip;
+    }
+    else if(std::memcmp(HeaderBuf, "FORM", 4) == 0)
+    {
+        if(std::memcmp(HeaderBuf + 8, "XDIR", 4) != 0)
+        {
+            fr.close();
+            ADLMIDI_ErrorString = fr._fileName + ": Invalid format\n";
+            return false;
+        }
+
+        fr.seek(0, SEEK_END);
+        size_t mus_len = fr.tell();
+        fr.seek(0, SEEK_SET);
+        uint8_t *mus = (uint8_t*)malloc(mus_len);
+        if(!mus)
+        {
+            ADLMIDI_ErrorString = "Out of memory!";
+            return false;
+        }
+        fr.read(mus, 1, mus_len);
+        //Close source stream
+        fr.close();
+
+        uint8_t *mid = NULL;
+        uint32_t mid_len = 0;
+        int m2mret = AdlMidi_xmi2midi(mus, static_cast<uint32_t>(mus_len),
+                                      &mid, &mid_len, XMIDI_CONVERT_NOCONVERSION);
+        if(mus) free(mus);
+        if(m2mret < 0)
+        {
+            ADLMIDI_ErrorString = "Invalid XMI data format!";
+            return false;
+        }
+        cvt_buf.reset(mid, ::free);
+        //Open converted MIDI file
+        fr.openData(mid, static_cast<size_t>(mid_len));
+        //Re-Read header again!
+        goto riffskip;
     }
     else if(std::memcmp(HeaderBuf, "CTMF", 4) == 0)
     {
@@ -375,14 +449,14 @@ InvFmt:
                 TrackLength = fr.tell() - pos;
                 fr.seek(static_cast<long>(pos), SEEK_SET);
             }
-            else if(is_MUS) // Read TrackLength from file position 4
-            {
-                size_t pos = fr.tell();
-                fr.seek(4, SEEK_SET);
-                TrackLength = static_cast<size_t>(fr.getc());
-                TrackLength += static_cast<size_t>(fr.getc() << 8);
-                fr.seek(static_cast<long>(pos), SEEK_SET);
-            }
+            //else if(is_MUS) // Read TrackLength from file position 4
+            //{
+            //    size_t pos = fr.tell();
+            //    fr.seek(4, SEEK_SET);
+            //    TrackLength = static_cast<size_t>(fr.getc());
+            //    TrackLength += static_cast<size_t>(fr.getc() << 8);
+            //    fr.seek(static_cast<long>(pos), SEEK_SET);
+            //}
             else
             {
                 fsize = fr.read(HeaderBuf, 1, 8);
@@ -398,7 +472,7 @@ InvFmt:
             fsize = fr.read(&TrackData[tk][0], 1, TrackLength);
             totalGotten += fsize;
 
-            if(is_GMF || is_MUS) // Note: CMF does include the track end tag.
+            if(is_GMF /*|| is_MUS*/) // Note: CMF does include the track end tag.
                 TrackData[tk].insert(TrackData[tk].end(), EndTag + 0, EndTag + 4);
 
             bool ok = false;

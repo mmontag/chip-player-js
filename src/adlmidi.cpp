@@ -265,7 +265,8 @@ ADLMIDI_EXPORT void adl_close(ADL_MIDIPlayer *device)
 
 ADLMIDI_EXPORT void adl_reset(ADL_MIDIPlayer *device)
 {
-    if(!device) return;
+    if(!device)
+        return;
 
     device->stored_samples = 0;
     device->backup_samples_size = 0;

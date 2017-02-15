@@ -101,7 +101,7 @@ directories:
 	${MKDIR} obj
 	${MKDIR} bin
 
-libadlmidi.so: obj/adlmidi.o obj/adlmidi_load.o obj/adlmidi_midiplay.o obj/adlmidi_opl3.o obj/adlmidi_private.o obj/nukedopl3.o obj/adldata.o
+libadlmidi.so: obj/adlmidi.o obj/adlmidi_load.o obj/adlmidi_midiplay.o obj/adlmidi_opl3.o obj/adlmidi_private.o obj/adlmidi_xmi2mid.o obj/adlmidi_mus2mid.o obj/nukedopl3.o obj/adldata.o
 	$(CXXLINK)  $^  $(DEBUG) -shared -o bin/$@  $(LDLIBS)
 
 obj/adlmidi.o: src/adlmidi.cpp src/adlmidi.h src/dbopl.h src/nukedopl3.h src/adldata.hh
@@ -123,6 +123,12 @@ obj/dbopl.o: src/dbopl.cpp src/dbopl.h
 	$(CXX) $(CPPFLAGS) $<  $(DEBUG) -DADLMIDI_USE_DOSBOX_OPL -c -fPIC -o $@
 
 obj/nukedopl3.o: src/nukedopl3.c src/nukedopl3.h
+	$(CC) $(CFLAGS) $<  $(DEBUG)  -c -fPIC -o $@
+
+obj/adlmidi_xmi2mid.o: src/adlmidi_xmi2mid.c src/adlmidi_xmi2mid.h
+	$(CC) $(CFLAGS) $<  $(DEBUG)  -c -fPIC -o $@
+
+obj/adlmidi_mus2mid.o: src/adlmidi_mus2mid.c src/adlmidi_mus2mid.h
 	$(CC) $(CFLAGS) $<  $(DEBUG)  -c -fPIC -o $@
 
 obj/adldata.o: src/adldata.cpp src/adldata.hh

@@ -74,6 +74,11 @@ To build that example you will need to have installed SDL2 library.
   to play any MIDI via this library.
 
 # Changelog
+## 1.2.0    2017-02-15
+ * Fixed 12'th bank where are drums and melodic sets are was swapped
+ * Fxied logariphmic volumes flag which autoreseted to false on playing begin moment
+ * Added TRUE support for MUS and XMI formats (added the conversion functions to make right MIDI data to play it)
+
 ## 1.1.1	2016-12-09
  * Added a changable volume ranges models (Automatic for some banks, Generic, CMF, DMX, Apogee and 9X)
 
