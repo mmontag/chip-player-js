@@ -641,9 +641,10 @@ void MIDIplay::HandleEvent(size_t tk)
 
         if(ains.tone)
         {
-            if(ains.tone < 20)
+            /*if(ains.tone < 20)
                 tone += ains.tone;
-            else if(ains.tone < 128)
+            else*/
+            if(ains.tone < 128)
                 tone = ains.tone;
             else
                 tone -= ains.tone - 128;
