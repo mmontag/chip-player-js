@@ -68,7 +68,7 @@ static DEV_DEF devDef_Emu =
 	(DEVFUNC_UPDATE)PSG_calc_stereo,
 	
 	NULL,	// SetOptionBits
-	(DEVFUNC_OPTMASK)PSG_setMask,
+	(DEVFUNC_OPTMASK)PSG_setMuteMask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -132,6 +132,7 @@ static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 	chip = PSG_new(clock, rate);
 	if (chip == NULL)
 		return 0xFF;
+	PSG_set_quality(chip, 0);	// disable internal sample rate converter
 	PSG_setVolumeMode(chip, isYM ? 1 : 2);
 	PSG_setFlags(chip, flags);
 	

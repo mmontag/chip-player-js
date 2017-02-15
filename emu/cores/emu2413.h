@@ -11,7 +11,7 @@ enum OPLL_TONE_ENUM {OPLL_2413_TONE=0, OPLL_VRC7_TONE=1, OPLL_281B_TONE=2} ;
 
 /* voice data */
 typedef struct __OPLL_PATCH {
-  e_uint32 TL,FB,EG,ML,AR,DR,SL,RR,KR,KL,AM,PM,WF ;
+  uint32_t TL,FB,EG,ML,AR,DR,SL,RR,KR,KL,AM,PM,WF ;
 } OPLL_PATCH ;
 
 /* slot */
@@ -19,29 +19,29 @@ typedef struct __OPLL_SLOT {
 
   OPLL_PATCH *patch;  
 
-  e_int32 type ;          /* 0 : modulator 1 : carrier */
+  int32_t type ;          /* 0 : modulator 1 : carrier */
 
   /* OUTPUT */
-  e_int32 feedback ;
-  e_int32 output[2] ;   /* Output value of slot */
+  int32_t feedback ;
+  int32_t output[2] ;   /* Output value of slot */
 
   /* for Phase Generator (PG) */
-  e_uint16 *sintbl ;    /* Wavetable */
-  e_uint32 phase ;      /* Phase */
-  e_uint32 dphase ;     /* Phase increment amount */
-  e_uint32 pgout ;      /* output */
+  uint16_t *sintbl ;    /* Wavetable */
+  uint32_t phase ;      /* Phase */
+  uint32_t dphase ;     /* Phase increment amount */
+  uint32_t pgout ;      /* output */
 
   /* for Envelope Generator (EG) */
-  e_int32 fnum ;          /* F-Number */
-  e_int32 block ;         /* Block */
-  e_int32 volume ;        /* Current volume */
-  e_int32 sustine ;       /* Sustine 1 = ON, 0 = OFF */
-  e_uint32 tll ;	      /* Total Level + Key scale level*/
-  e_uint32 rks ;        /* Key scale offset (Rks) */
-  e_int32 eg_mode ;       /* Current state */
-  e_uint32 eg_phase ;   /* Phase */
-  e_uint32 eg_dphase ;  /* Phase increment amount */
-  e_uint32 egout ;      /* output */
+  int32_t fnum ;          /* F-Number */
+  int32_t block ;         /* Block */
+  int32_t volume ;        /* Current volume */
+  int32_t sustine ;       /* Sustine 1 = ON, 0 = OFF */
+  uint32_t tll ;	      /* Total Level + Key scale level*/
+  uint32_t rks ;        /* Key scale offset (Rks) */
+  int32_t eg_mode ;       /* Current state */
+  uint32_t eg_phase ;   /* Phase */
+  uint32_t eg_dphase ;  /* Phase increment amount */
+  uint32_t egout ;      /* output */
 
 } OPLL_SLOT ;
 
@@ -59,51 +59,51 @@ typedef struct __OPLL {
 
   void* chipInf;
 
-  e_uint8 vrc7_mode;
-  e_uint8 adr ;
-  e_int32 out ;
+  uint8_t vrc7_mode;
+  uint8_t adr ;
+  int32_t out ;
 
   float pan[14][2];
 
   /* Register */
-  e_uint8 reg[0x40] ; 
-  e_int32 slot_on_flag[18] ;
+  uint8_t reg[0x40] ;
+  int32_t slot_on_flag[18] ;
 
   /* Pitch Modulator */
-  e_uint32 pm_phase ;
-  e_int32 lfo_pm ;
+  uint32_t pm_phase ;
+  int32_t lfo_pm ;
 
   /* Amp Modulator */
-  e_int32 am_phase ;
-  e_int32 lfo_am ;
+  int32_t am_phase ;
+  int32_t lfo_am ;
 
   /* Noise Generator */
-  e_uint32 noise_seed ;
+  uint32_t noise_seed ;
 
   /* Channel Data */
-  e_int32 patch_number[9];
-  e_int32 key_status[9] ;
+  int32_t patch_number[9];
+  int32_t key_status[9] ;
 
   /* Slot */
   OPLL_SLOT slot[18] ;
 
   /* Voice Data */
   OPLL_PATCH patch[19*2] ;
-  e_int32 patch_update[2] ; /* flag for check patch update */
+  int32_t patch_update[2] ; /* flag for check patch update */
 
-  e_uint32 mask ;
+  uint32_t mask ;
 
 } OPLL ;
 
 // Create Object
-EMU2413_API OPLL *OPLL_new(e_uint32 clk, e_uint32 rate) ;
+EMU2413_API OPLL *OPLL_new(uint32_t clk, uint32_t rate) ;
 EMU2413_API void OPLL_delete(OPLL *) ;
 
 // Setup
 EMU2413_API void OPLL_reset(OPLL *) ;
-EMU2413_API void OPLL_reset_patch(OPLL *, e_int32) ;
-EMU2413_API void OPLL_set_rate(OPLL *opll, e_uint32 r) ;
-EMU2413_API void OPLL_set_pan(OPLL *, e_uint32 ch, e_int32 pan);
+EMU2413_API void OPLL_reset_patch(OPLL *, int32_t) ;
+EMU2413_API void OPLL_set_rate(OPLL *opll, uint32_t r) ;
+EMU2413_API void OPLL_set_pan(OPLL *, uint32_t ch, int32_t pan);
 
 // Port/Register access
 EMU2413_API void OPLL_writeIO(OPLL *, UINT8 reg, UINT8 val) ;
@@ -113,13 +113,13 @@ EMU2413_API void OPLL_writeReg(OPLL *, UINT8 reg, UINT8 val) ;
 EMU2413_API void OPLL_calc_stereo (OPLL * opll, UINT32 samples, DEV_SMPL **out) ;
 
 // Misc
-EMU2413_API void OPLL_setPatch(OPLL *, const e_uint8 *dump) ;
-EMU2413_API void OPLL_copyPatch(OPLL *, e_int32, OPLL_PATCH *) ;
+EMU2413_API void OPLL_setPatch(OPLL *, const uint8_t *dump) ;
+EMU2413_API void OPLL_copyPatch(OPLL *, int32_t, OPLL_PATCH *) ;
 EMU2413_API void OPLL_forceRefresh(OPLL *) ;
 // Utility
-EMU2413_API void OPLL_dump2patch(const e_uint8 *dump, OPLL_PATCH *patch) ;
-EMU2413_API void OPLL_patch2dump(const OPLL_PATCH *patch, e_uint8 *dump) ;
-EMU2413_API void OPLL_getDefaultPatch(e_int32 type, e_int32 num, OPLL_PATCH *) ;
+EMU2413_API void OPLL_dump2patch(const uint8_t *dump, OPLL_PATCH *patch) ;
+EMU2413_API void OPLL_patch2dump(const OPLL_PATCH *patch, uint8_t *dump) ;
+EMU2413_API void OPLL_getDefaultPatch(int32_t type, int32_t num, OPLL_PATCH *) ;
 
 // Channel Mask
 EMU2413_API void OPLL_SetMuteMask(OPLL* opll, UINT32 MuteMask);

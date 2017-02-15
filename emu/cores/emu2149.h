@@ -1,3 +1,4 @@
+/* emu2149.h */
 #ifndef __EMU2149_H__
 #define __EMU2149_H__
 
@@ -5,82 +6,95 @@
 #include "../snddef.h"
 #include "emutypes.h"
 
-#define EMU2149_API
-
 #define EMU2149_VOL_DEFAULT 1
 #define EMU2149_VOL_YM2149 0
 #define EMU2149_VOL_AY_3_8910 1
 
 #define PSG_MASK_CH(x) (1<<(x))
 
-typedef struct __PSG
+#ifdef __cplusplus
+extern "C"
 {
-  void* chipInf;
+#endif
 
-  /* Volume Table */
-  const e_uint32 *voltbl;
+  typedef struct __PSG
+  {
+    void* chipInf;
 
-  e_uint8 reg[0x20];
-  e_int32 out;
-  e_int32 cout[3];
+    /* Volume Table */
+    const uint32_t *voltbl;
 
-  e_uint32 clk, rate, base_incr, quality;
+    uint8_t reg[0x20];
+    //int32_t out;
 
-  e_uint16 count[3];
-  e_uint16 freq[3];
-  e_uint8 volume[3];
-  e_uint8 edge[3];
-  e_uint8 tmask[3];
-  e_uint8 nmask[3];
-  e_uint32 mask;
-  e_uint8 stereo_mask[3];
+    uint32_t clk, rate, base_incr, quality;
 
-  e_uint32 base_count;
+    uint16_t count[3];
+    uint8_t volume[3];
+    uint16_t freq[3];
+    uint8_t edge[3];
+    uint8_t tmask[3];
+    uint8_t nmask[3];
+    uint32_t mask;
+    uint8_t stereo_mask[3];
 
-  e_uint8 env_ptr;
-  e_uint8 env_face;
+    uint32_t base_count;
 
-  e_uint8 env_continue;
-  e_uint8 env_attack;
-  e_uint8 env_alternate;
-  e_uint8 env_hold;
-  e_uint8 env_pause;
+    //uint8_t env_volume;
+    uint8_t env_ptr;
+    uint8_t env_face;
 
-  e_uint32 env_freq;
-  e_uint32 env_count;
+    uint8_t env_continue;
+    uint8_t env_attack;
+    uint8_t env_alternate;
+    uint8_t env_hold;
+    uint8_t env_pause;
+    //uint8_t env_reset;
 
-  e_uint32 noise_seed;
-  e_uint8 noise_count;
-  e_uint8 noise_freq;
+    uint32_t env_freq;
+    uint32_t env_count;
 
-  /* rate converter */
-  e_uint32 realstep;
-  e_uint32 psgtime;
-  e_uint32 psgstep;
-  e_int32 prev, next;
-  e_int32 sprev[2], snext[2];
+    uint32_t noise_seed;
+    uint8_t noise_count;
+    uint8_t noise_freq;
 
-  /* I/O Ctrl */
-  e_uint8 adr;
+    /* rate converter */
+    uint32_t realstep;
+    uint32_t psgtime;
+    uint32_t psgstep;
+    //int32_t prev, next;
+    int32_t sprev[2], snext[2];
 
-  e_uint8 chp_type;
-  e_uint8 chp_flags;
+    /* I/O Ctrl */
+    uint8_t adr;
+
+    /* output of channels */
+    int16_t ch_out[3];
+
+    uint8_t chp_type;
+    uint8_t chp_flags;
+  } PSG;
+
+  void PSG_set_quality (PSG * psg, uint32_t q);
+  void PSG_set_clock(PSG * psg, UINT32 c);
+  void PSG_set_rate (PSG * psg, UINT32 r);
+  PSG *PSG_new (UINT32 clk, UINT32 rate);
+  void PSG_reset (PSG *);
+  void PSG_delete (PSG *);
+  void PSG_writeReg (PSG *, UINT8 reg, UINT8 val);
+  void PSG_writeIO (PSG * psg, UINT8 adr, UINT8 val);
+  UINT8 PSG_readReg (PSG * psg, UINT8 reg);
+  UINT8 PSG_readIO (PSG * psg, UINT8 adr);
+  int16_t PSG_calc (PSG *);
+  void PSG_calc_stereo (PSG * psg, UINT32 samples, DEV_SMPL **out);
+  void PSG_setFlags (PSG * psg, UINT8 flags);
+  void PSG_setVolumeMode (PSG * psg, int type);
+  uint32_t PSG_setMask (PSG *, uint32_t mask);
+  uint32_t PSG_toggleMask (PSG *, uint32_t mask);
+  void PSG_setMuteMask (PSG *, UINT32 mask);
+    
+#ifdef __cplusplus
 }
-PSG;
-
-EMU2149_API void PSG_set_quality (PSG * psg, e_uint32 q);
-EMU2149_API void PSG_set_clock(PSG * psg, UINT32 c);
-EMU2149_API void PSG_set_rate (PSG * psg, UINT32 r);
-EMU2149_API PSG *PSG_new (UINT32 clk, UINT32 rate);
-EMU2149_API void PSG_reset (PSG *);
-EMU2149_API void PSG_delete (PSG *);
-EMU2149_API void PSG_writeReg (PSG *, UINT8 reg, UINT8 val);
-EMU2149_API void PSG_writeIO (PSG * psg, UINT8 adr, UINT8 val);
-EMU2149_API UINT8 PSG_readReg (PSG * psg, UINT8 reg);
-EMU2149_API UINT8 PSG_readIO (PSG * psg, UINT8 adr);
-EMU2149_API void PSG_calc_stereo (PSG * psg, UINT32 samples, DEV_SMPL **out);
-EMU2149_API void PSG_setFlags (PSG * psg, UINT8 flags);
-EMU2149_API void PSG_setVolumeMode (PSG * psg, UINT8 type);
-EMU2149_API void PSG_setMask (PSG *, UINT32 mask);
+#endif
 
 #endif	// __EMU2149_H__
