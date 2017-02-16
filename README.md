@@ -3,7 +3,7 @@ libADLMIDI is a free MIDI to WAV conversion library with OPL3 emulation
 
 Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
 
-ADLMIDI Library API:   Copyright (c) 2015-2016 Vitaly Novichkov <admin@wohlnet.ru>
+ADLMIDI Library API:   Copyright (c) 2015-2017 Vitaly Novichkov <admin@wohlnet.ru>
 
 Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
 
@@ -41,18 +41,29 @@ You also can build library manually:
 You need to make in the any IDE a library project and put into it next files
 (or include those files into subfolder of your exist project instead if you want to use it statically):
 
-* adlmidi.h    - Library API, use it to communicate with library
+* adlmidi.h    - Library API, use it to control library
 
 * dbopl.h       - DOSBOX OPL Emulation header
 * nukedopl3.h   - Nuked OPL3 Emulation header
 * fraction.h    - Fraction number handling
 * adldata.hh    - bank structures definition
+* adlmidi_private.hpp - header of internal private APIs
+* adlmidi_mus2mid.h - MUS2MID converter header
+* adlmidi_xmi2mid.h - XMI2MID converter header
 
-* dbopl.cpp     - DOSBOX OPL Emulation code
-* nukedopl3.c   - Nuked OPL3 Emulation code
+* dbopl.cpp     - DOSBOX OPL Emulation code (used when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
+* nukedopl3.c   - Nuked OPL3 Emulation code (used by default)
 * adlmidi.cpp   - code of library
 * adldata.cpp	 - Automatically generated dump of FM banks from "fm_banks" directory
                via "gen_adldata" tool
+* adlmidi_load.cpp	- Source of file loading and parsing processing
+* adlmidi_midiplay.cpp	- MIDI event sequencer
+* adlmidi_opl3.cpp	- OPL3 chips manager
+* adlmidi_private.cpp	- some internal functions sources
+* adlmidi_mus2mid.c	- MUS2MID converter source
+* adlmidi_xmi2mid.c	- XMI2MID converter source
+
+**Important**: Please use DosBox emulator on mobile devices because it requires small CPU power. Nuked OPL synthesizer is very accurate (compared to real OPL3 chip), but it requires much more power device and is high probability your device will lag and playback will be choppy.
 
 # Example
 In the src/midiplay you will found alone CPP file which an example of library usage.
