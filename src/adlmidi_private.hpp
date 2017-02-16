@@ -68,6 +68,33 @@
 
 extern std::string ADLMIDI_ErrorString;
 
+/*
+    Smart pointer for C heaps, created with malloc() call.
+    FAQ: Why not std::shared_ptr? Because of Android NDK now doesn't supports it
+*/
+template<class PTR>
+class AdlMIDI_CPtr
+{
+    PTR* m_p;
+public:
+    AdlMIDI_CPtr() : m_p(NULL) {}
+    ~AdlMIDI_CPtr()
+    {
+        reset(NULL);
+    }
+
+    void reset(PTR *p = NULL)
+    {
+        if(m_p)
+            free(m_p);
+        m_p = p;
+    }
+
+    PTR* get() { return m_p;}
+    PTR& operator*() { return *m_p; }
+    PTR* operator->() { return m_p; }
+};
+
 class MIDIplay;
 struct OPL3
 {

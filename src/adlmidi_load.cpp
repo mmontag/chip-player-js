@@ -26,8 +26,6 @@
 #include "adlmidi_mus2mid.h"
 #include "adlmidi_xmi2mid.h"
 
-#include <memory>
-
 uint64_t MIDIplay::ReadBEint(const void *buffer, size_t nbytes)
 {
     uint64_t result = 0;
@@ -105,7 +103,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     size_t  fsize;
     qqq(fsize);
     //! Temp buffer for conversion
-    std::shared_ptr<uint8_t> cvt_buf;
+    AdlMIDI_CPtr<uint8_t> cvt_buf;
 
     //std::FILE* fr = std::fopen(filename.c_str(), "rb");
     if(!fr.isValid())
@@ -219,7 +217,7 @@ riffskip:
             ADLMIDI_ErrorString = "Invalid MUS/DMX data format!";
             return false;
         }
-        cvt_buf.reset(mid, ::free);
+        cvt_buf.reset(mid);
         //Open converted MIDI file
         fr.openData(mid, static_cast<size_t>(mid_len));
         //Re-Read header again!
@@ -257,7 +255,7 @@ riffskip:
             ADLMIDI_ErrorString = "Invalid XMI data format!";
             return false;
         }
-        cvt_buf.reset(mid, ::free);
+        cvt_buf.reset(mid);
         //Open converted MIDI file
         fr.openData(mid, static_cast<size_t>(mid_len));
         //Re-Read header again!
