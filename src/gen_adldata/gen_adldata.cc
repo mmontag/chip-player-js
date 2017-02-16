@@ -233,7 +233,7 @@ static void LoadBNK(const char* fn, unsigned bank, const char* prefix, bool is_f
                     + (op1[ 5] << 5) // SUSTAIN FLAG
                     + (op1[11] << 4) // SCALING FLAG
                      + op1[ 1];      // FREQMUL
-                     
+
         tmp.data[1] = (op2[ 9] << 7)
                     + (op2[10] << 6)
                     + (op2[ 5] << 5)
@@ -517,18 +517,20 @@ static void LoadMiles(const char* fn, unsigned bank, const char* prefix)
 
     for(unsigned a=0; a<2000; ++a)
     {
-        unsigned gmnumber  = data[a*6+0];
-        unsigned gmnumber2 = data[a*6+1];
+        unsigned gm_patch  = data[a*6+0];
+        unsigned gm_bank = data[a*6+1];
         unsigned offset    = *(unsigned*)&data[a*6+2];
 
-        if(gmnumber == 0xFF) break;
-        int gmno = gmnumber2==0x7F ? gmnumber+0x80 : gmnumber;
+        if(gm_patch == 0xFF)
+            break;
+
+        int gmno = gm_bank==0x7F ? gm_patch + 0x80 : gm_patch;
         int midi_index = gmno < 128 ? gmno
                        : gmno < 128+35 ? -1
                        : gmno < 128+88 ? gmno-35
                        : -1;
         unsigned length = data[offset] + data[offset+1]*256;
-        signed char notenum = data[offset+2];
+        signed char notenum = ((signed char)data[offset+2]);
 
         /*printf("%02X %02X %08X ", gmnumber,gmnumber2, offset);
         for(unsigned b=0; b<length; ++b)
@@ -538,10 +540,11 @@ static void LoadMiles(const char* fn, unsigned bank, const char* prefix)
         }
         printf("\n");*/
 
-        if(gmnumber2 != 0 && gmnumber2 != 0x7F) continue;
+        if(gm_bank != 0 && gm_bank != 0x7F)
+            continue;
 
         char name2[512]; sprintf(name2, "%s%c%u", prefix,
-            (gmno<128?'M':'P'), gmno&127);
+            (gmno < 128 ? 'M':'P'), gmno & 127);
 
         insdata tmp[200];
 
@@ -550,7 +553,7 @@ static void LoadMiles(const char* fn, unsigned bank, const char* prefix)
         {
             unsigned o = offset + 3 + i*11;
             tmp[i].finetune = (gmno < 128 && i == 0) ? notenum : 0;
-            tmp[i].diff=false;
+            tmp[i].diff = false;
             tmp[i].data[0] = data[o+0];  // 20
             tmp[i].data[8] = data[o+1];  // 40 (vol)
             tmp[i].data[2] = data[o+2];  // 60
@@ -570,11 +573,13 @@ static void LoadMiles(const char* fn, unsigned bank, const char* prefix)
                 tmp[1].data[10] = (fb_c & 0x0E) | (fb_c >> 7);
             }
         }
-        if(inscount == 1) tmp[1] = tmp[0];
+        if(inscount == 1)
+            tmp[1] = tmp[0];
+
         if(inscount <= 2)
         {
             struct ins tmp2;
-            tmp2.notenum  = gmno < 128 ? 0 : data[offset+3];
+            tmp2.notenum  = gmno < 128 ? 0 : notenum;
             tmp2.pseudo4op = false;
             tmp2.fine_tune = 0.0;
             std::string name;
@@ -1057,14 +1062,15 @@ int main()
     LoadBNK("fm_banks/bnk_files/ssmelo.bnk",  8, "b8M", false, false);
     LoadBNK("fm_banks/bnk_files/ssdrum.bnk",  8, "b8P", false, true);
 
-    LoadBNK("fm_banks/bnk_files/file131.bnk", 9, "b9M", false, false);
-    LoadBNK("fm_banks/bnk_files/file132.bnk", 9, "b9P", false, true);
+    LoadTMB("fm_banks/bnk_files/themepark.tmb", 9, "b9MP");
+    //LoadBNK("fm_banks/bnk_files/file131.bnk", 9, "b9M", false, false);
+    //LoadBNK("fm_banks/bnk_files/file132.bnk", 9, "b9P", false, true);
     LoadBNK("fm_banks/bnk_files/file133.bnk", 10,"b10P", false, true);
     LoadBNK("fm_banks/bnk_files/file134.bnk", 10,"b10M", false, false);
     LoadBNK("fm_banks/bnk_files/file142.bnk", 11, "b11P", false, true);
     LoadBNK("fm_banks/bnk_files/file143.bnk", 11, "b11M", false, false);
-    LoadBNK("fm_banks/bnk_files/file144.bnk", 12, "b12M", false, false);
-    LoadBNK("fm_banks/bnk_files/file145.bnk", 12, "b12P", false, true);
+    LoadBNK("fm_banks/bnk_files/file145.bnk", 12, "b12M", false, false);//file145 is MELODIC
+    LoadBNK("fm_banks/bnk_files/file144.bnk", 12, "b12P", false, true);//file144  is DRUMS
     LoadBNK("fm_banks/bnk_files/file167.bnk", 13, "b13P", false, true);
     LoadBNK("fm_banks/bnk_files/file168.bnk", 13, "b13M", false, false);
 
@@ -1103,6 +1109,7 @@ int main()
     LoadMiles("fm_banks/opl_files/file49.opl", 45, "f49G");
     LoadMiles("fm_banks/opl_files/file50.opl", 46, "f50G");
     LoadMiles("fm_banks/opl_files/file53.opl", 47, "f53G");
+        LoadBNK("fm_banks/bnk_files/file144.bnk", 47, "f53GD", false, true);//Attempt to append missing drums
     LoadMiles("fm_banks/opl_files/file54.opl", 48, "f54G");
 
     LoadMiles("fm_banks/opl_files/sample.ad",  49, "MG"); // same as file51.opl
@@ -1125,7 +1132,7 @@ int main()
 
     LoadTMB("fm_banks/tmb_files/d3dtimbr.tmb", 62, "duke");
     LoadTMB("fm_banks/tmb_files/swtimbr.tmb",  63, "sw");
-    
+
     LoadDoom("fm_banks/raptor/genmidi.op2", 64, "rapt");
 
 	//LoadJunglevision("fm_banks/op3_files/fat2_modded.op3", 65, "b65M");
@@ -1137,7 +1144,7 @@ int main()
 
     LoadTMB("fm_banks/tmb_files/default.tmb",  67, "3drm67");
     //LoadDoom("fm_banks/doom2/wolfinstein.op2", 67, "wolf"); //Small experiment!
-    
+
     LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
 
     LoadTMB("fm_banks/tmb_files/bloodtmb.tmb",  69, "apgblood");
@@ -1390,7 +1397,7 @@ int main()
     }
     std::set<unsigned> listed;
 
-    printf(        
+    printf(
         "\n\n//Returns total number of generated banks\n"
         "int  maxAdlBanks()\n"
         "{"
