@@ -5,7 +5,9 @@
 #include "../snddef.h"
 #include "emutypes.h"
 
-#define EMU2413_API
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum OPLL_TONE_ENUM {OPLL_2413_TONE=0, OPLL_VRC7_TONE=1, OPLL_281B_TONE=2} ;
 
@@ -17,7 +19,7 @@ typedef struct __OPLL_PATCH {
 /* slot */
 typedef struct __OPLL_SLOT {
 
-  OPLL_PATCH *patch;  
+  const OPLL_PATCH *patch;
 
   int32_t type ;          /* 0 : modulator 1 : carrier */
 
@@ -63,7 +65,12 @@ typedef struct __OPLL {
   uint8_t adr ;
   int32_t out ;
 
-  float pan[14][2];
+  uint32_t realstep ;
+  uint32_t oplltime ;
+  uint32_t opllstep ;
+  //int32_t prev, next ;
+  int32_t sprev[2],snext[2];
+  float pan[15][2];
 
   /* Register */
   uint8_t reg[0x40] ;
@@ -76,6 +83,8 @@ typedef struct __OPLL {
   /* Amp Modulator */
   int32_t am_phase ;
   int32_t lfo_am ;
+
+  uint32_t quality;
 
   /* Noise Generator */
   uint32_t noise_seed ;
@@ -93,36 +102,47 @@ typedef struct __OPLL {
 
   uint32_t mask ;
 
+  /* Output of each channels / 0-8:TONE, 9:BD 10:HH 11:SD, 12:TOM, 13:CYM, 14:Reserved for DAC */
+  int16_t ch_out[15];
+
 } OPLL ;
 
-// Create Object
-EMU2413_API OPLL *OPLL_new(uint32_t clk, uint32_t rate) ;
-EMU2413_API void OPLL_delete(OPLL *) ;
+/* Create Object */
+OPLL *OPLL_new(uint32_t clk, uint32_t rate) ;
+void OPLL_delete(OPLL *) ;
 
-// Setup
-EMU2413_API void OPLL_reset(OPLL *) ;
-EMU2413_API void OPLL_reset_patch(OPLL *, int32_t) ;
-EMU2413_API void OPLL_set_rate(OPLL *opll, uint32_t r) ;
-EMU2413_API void OPLL_set_pan(OPLL *, uint32_t ch, int32_t pan);
+/* Setup */
+void OPLL_reset(OPLL *) ;
+void OPLL_reset_patch(OPLL *, int32_t) ;
+void OPLL_set_rate(OPLL *opll, uint32_t r) ;
+void OPLL_set_quality(OPLL *opll, uint32_t q) ;
+void OPLL_set_pan(OPLL *, uint32_t ch, int32_t pan);
 
-// Port/Register access
-EMU2413_API void OPLL_writeIO(OPLL *, UINT8 reg, UINT8 val) ;
-EMU2413_API void OPLL_writeReg(OPLL *, UINT8 reg, UINT8 val) ;
+/* Port/Register access */
+void OPLL_writeIO(OPLL *, UINT8 reg, UINT8 val) ;
+void OPLL_writeReg(OPLL *, UINT8 reg, UINT8 val) ;
 
-// Synthsize
-EMU2413_API void OPLL_calc_stereo (OPLL * opll, UINT32 samples, DEV_SMPL **out) ;
+/* Synthsize */
+int16_t OPLL_calc(OPLL *) ;
+void OPLL_calc_stereo (OPLL * opll, UINT32 samples, DEV_SMPL **out) ;
 
-// Misc
-EMU2413_API void OPLL_setPatch(OPLL *, const uint8_t *dump) ;
-EMU2413_API void OPLL_copyPatch(OPLL *, int32_t, OPLL_PATCH *) ;
-EMU2413_API void OPLL_forceRefresh(OPLL *) ;
-// Utility
-EMU2413_API void OPLL_dump2patch(const uint8_t *dump, OPLL_PATCH *patch) ;
-EMU2413_API void OPLL_patch2dump(const OPLL_PATCH *patch, uint8_t *dump) ;
-EMU2413_API void OPLL_getDefaultPatch(int32_t type, int32_t num, OPLL_PATCH *) ;
+/* Misc */
+void OPLL_setPatch(OPLL *, const uint8_t *dump) ;
+void OPLL_copyPatch(OPLL *, int32_t, OPLL_PATCH *) ;
+void OPLL_forceRefresh(OPLL *) ;
+/* Utility */
+void OPLL_dump2patch(const uint8_t *dump, OPLL_PATCH *patch) ;
+void OPLL_patch2dump(const OPLL_PATCH *patch, uint8_t *dump) ;
+void OPLL_getDefaultPatch(int32_t type, int32_t num, OPLL_PATCH *) ;
 
-// Channel Mask
-EMU2413_API void OPLL_SetMuteMask(OPLL* opll, UINT32 MuteMask);
-EMU2413_API void OPLL_SetChipMode(OPLL* opll, UINT8 Mode);
+/* Channel Mask */
+uint32_t OPLL_setMask(OPLL *, uint32_t mask) ;
+uint32_t OPLL_toggleMask(OPLL *, uint32_t mask) ;
+void OPLL_SetMuteMask(OPLL* opll, UINT32 MuteMask);
+void OPLL_SetChipMode(OPLL* opll, UINT8 Mode);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	// __EMU2413_H__
