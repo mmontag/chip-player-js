@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:Hiromitsu Shioya, Olivier Galibert
 /*********************************************************/
 /*    SEGA 16ch 8bit PCM                                 */
 /*********************************************************/
@@ -79,7 +81,6 @@ struct _segapcm_state
 #endif
 	UINT8 bankshift;
 	UINT8 bankmask;
-	UINT32 rgnmask;
 	UINT8 intf_mask;
 	UINT8 Muted[16];
 };
@@ -87,7 +88,6 @@ struct _segapcm_state
 static void SEGAPCM_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 {
 	segapcm_state *spcm = (segapcm_state *)chip;
-	UINT32 rgnmask = spcm->rgnmask;
 	int ch;
 
 	/* clear the buffers */
@@ -123,10 +123,7 @@ static void SEGAPCM_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 		/* only process active channels */
 		if (!(regs[0x86] & 1) && ! spcm->Muted[ch])
 		{
-			const UINT8 *rom = spcm->rom + ((regs[0x86] & spcm->bankmask) << spcm->bankshift);
-#ifdef _DEBUG
-			UINT8 *romusage = spcm->romusage + ((regs[0x86] & spcm->bankmask) << spcm->bankshift);
-#endif
+			UINT32 offset = (regs[0x86] & spcm->bankmask) << spcm->bankshift;
 			UINT32 addr = (regs[0x85] << 16) | (regs[0x84] << 8) | spcm->low[ch];
 			UINT32 loop = (regs[0x05] << 16) | (regs[0x04] << 8);
 			UINT8 end = regs[6] + 1;
@@ -149,12 +146,11 @@ static void SEGAPCM_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 				}
 
 				/* fetch the sample */
-				v = rom[(addr >> 8) & rgnmask] - 0x80;
+				v = spcm->rom[offset | (addr >> 8)] - 0x80;
 #ifdef _DEBUG
-				if ((romusage[(addr >> 8) & rgnmask] & 0x03) == 0x02 && (regs[2] || regs[3]))
-					printf("Access to empty ROM section! (0x%06X)\n",
-							((regs[0x86] & spcm->bankmask) << spcm->bankshift) | ((addr >> 8) & rgnmask));
-				romusage[(addr >> 8) & rgnmask] |= 0x01;
+				if ((spcm->romusage[(offset | addr >> 8)] & 0x03) == 0x02 && (regs[2] || regs[3]))
+					printf("Access to empty ROM section! (0x%06X)\n", offset | ((addr >> 8)));
+				spcm->romusage[offset | (addr >> 8)] |= 0x01;
 #endif
 
 				/* apply panning and advance */
@@ -178,11 +174,11 @@ static UINT8 device_start_segapcm(const SEGAPCM_CFG* cfg, DEV_INFO* retDevInf)
 	segapcm_state *spcm;
 	
 	spcm = (segapcm_state *)calloc(1, sizeof(segapcm_state));
+	spcm->bankshift = cfg->bnkshift;
 	spcm->intf_mask = cfg->bnkmask;
 	if (! spcm->intf_mask)
 		spcm->intf_mask = SEGAPCM_BANK_MASK7;
-	spcm->bankmask = spcm->intf_mask;
-	spcm->bankshift = cfg->bnkshift;
+	spcm->bankmask = spcm->intf_mask & (0x1fffff >> spcm->bankshift);
 	
 	spcm->ROMSize = 0;
 	spcm->rom = NULL;
@@ -260,12 +256,7 @@ static void sega_pcm_alloc_rom(void *chip, UINT32 memsize)
 #endif
 	spcm->ROMSize = memsize;
 	
-	// recalculate bankmask
-	// calculate using pow2_mask to fix ROMs whose size is not a power of 2
-	// (stupid M1 uses ROMs with 0x60000 bytes)
-	spcm->rgnmask = pow2_mask(memsize);
-	
-	spcm->bankmask = spcm->intf_mask & (spcm->rgnmask >> spcm->bankshift);
+	spcm->bankmask = spcm->intf_mask & (0x1fffff >> spcm->bankshift);
 	
 	return;
 }
