@@ -1455,16 +1455,24 @@ void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples)
     }
 }
 
+#define OPL3_MIN(A, B)          (((A) > (B)) ? (B) : (A))
+#define OPL3_MAX(A, B)          (((A) < (B)) ? (B) : (A))
+#define OPL3_CLAMP(V, MIN, MAX) OPL3_MAX(OPL3_MIN(V, MAX), MIN)
+
 void OPL3_GenerateStreamMix(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples)
 {
     Bit32u i;
     Bit16s sample[2];
+    Bit32s mix[2];
 
     for(i = 0; i < numsamples; i++)
     {
         OPL3_GenerateResampledREAL(chip, sample);
-        sndptr[0] += sample[0];
-        sndptr[1] += sample[1];
+        mix[0] = sndptr[0] + sample[0];
+        mix[1] = sndptr[1] + sample[1];
+        sndptr[0] = OPL3_CLAMP(mix[0], INT16_MIN, INT16_MAX);
+        sndptr[1] = OPL3_CLAMP(mix[1], INT16_MIN, INT16_MAX);
         sndptr += 2;
     }
 }
+

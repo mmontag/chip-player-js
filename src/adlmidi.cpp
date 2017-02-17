@@ -274,6 +274,9 @@ ADLMIDI_EXPORT void adl_reset(ADL_MIDIPlayer *device)
 }
 
 #ifdef ADLMIDI_USE_DOSBOX_OPL
+
+#define ADLMIDI_CLAMP(V, MIN, MAX) std::max(std::min(V, (MAX)), (MIN))
+
 inline static void SendStereoAudio(ADL_MIDIPlayer *device,
                                    int      &samples_requested,
                                    ssize_t  &in_size,
@@ -296,7 +299,7 @@ inline static void SendStereoAudio(ADL_MIDIPlayer *device,
             offset = pos + p * 2 + w;
 
             if(offset < samples_requested)
-                _out[offset] = static_cast<short>(out);
+                _out[offset] = static_cast<short>(ADLMIDI_CLAMP(out, INT16_MIN, INT16_MAX));
             else
             {
                 device->backup_samples[device->backup_samples_size] = static_cast<short>(out);
