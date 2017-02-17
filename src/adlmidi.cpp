@@ -299,7 +299,7 @@ inline static void SendStereoAudio(ADL_MIDIPlayer *device,
             offset = pos + p * 2 + w;
 
             if(offset < samples_requested)
-                _out[offset] = static_cast<short>(ADLMIDI_CLAMP(out, INT16_MIN, INT16_MAX));
+                _out[offset] = static_cast<short>(ADLMIDI_CLAMP(out, static_cast<ssize_t>(INT16_MIN), static_cast<ssize_t>(INT16_MAX)));
             else
             {
                 device->backup_samples[device->backup_samples_size] = static_cast<short>(out);

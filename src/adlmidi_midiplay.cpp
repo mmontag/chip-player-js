@@ -148,10 +148,10 @@ uint64_t MIDIplay::ReadVarLen(size_t tk)
 
     for(;;)
     {
-        unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
+        uint8_t byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
         result = (result << 7) + (byte & 0x7F);
-
-        if(!(byte & 0x80)) break;
+        if(!(byte & 0x80))
+            break;
     }
 
     return result;
@@ -160,7 +160,8 @@ uint64_t MIDIplay::ReadVarLen(size_t tk)
 
 double MIDIplay::Tick(double s, double granularity)
 {
-    if(CurrentPosition.began) CurrentPosition.wait -= s;
+    if(CurrentPosition.began)
+        CurrentPosition.wait -= s;
 
     int AntiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
 
@@ -383,8 +384,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 void MIDIplay::ProcessEvents()
 {
     loopEnd = false;
-    const size_t TrackCount = TrackData.size();
-    const Position RowBeginPosition(CurrentPosition);
+    const size_t    TrackCount = TrackData.size();
+    const Position  RowBeginPosition(CurrentPosition);
 
     for(size_t tk = 0; tk < TrackCount; ++tk)
     {
@@ -420,14 +421,15 @@ void MIDIplay::ProcessEvents()
 
     fraction<long> t = shortest * Tempo;
 
-    if(CurrentPosition.began) CurrentPosition.wait += t.valuel();
+    if(CurrentPosition.began)
+        CurrentPosition.wait += t.valuel();
 
     //if(shortest > 0) UI.PrintLn("Delay %ld (%g)", shortest, (double)t.valuel());
-
     /*
-            if(CurrentPosition.track[0].ptr > 8119) loopEnd = true;
-            // ^HACK: CHRONO TRIGGER LOOP
-            */
+    if(CurrentPosition.track[0].ptr > 8119)
+        loopEnd = true;
+        // ^HACK: CHRONO TRIGGER LOOP
+    */
 
     if(loopStart_hit && (loopStart || loopEnd)) //Avoid invalid loops
     {
@@ -446,7 +448,6 @@ void MIDIplay::ProcessEvents()
             trackBeginPosition = RowBeginPosition;
             trackStart = false;
         }
-
         LoopBeginPosition = RowBeginPosition;
         loopStart = false;
         loopStart_hit = true;
@@ -458,7 +459,6 @@ void MIDIplay::ProcessEvents()
         loopEnd         = false;
         CurrentPosition = LoopBeginPosition;
         shortest = 0;
-
         if(opl._parent->QuitWithoutLooping == 1)
         {
             opl._parent->QuitFlag = 1;
@@ -483,8 +483,8 @@ void MIDIplay::HandleEvent(size_t tk)
     if(byte == 0xFF)
     {
         // Special event FF
-        unsigned char evtype = TrackData[tk][CurrentPosition.track[tk].ptr++];
-        unsigned long length = ReadVarLen(tk);
+        uint8_t  evtype = TrackData[tk][CurrentPosition.track[tk].ptr++];
+        uint64_t length = ReadVarLen(tk);
         std::string data(length ? (const char *) &TrackData[tk][CurrentPosition.track[tk].ptr] : 0, length);
         CurrentPosition.track[tk].ptr += length;
 
