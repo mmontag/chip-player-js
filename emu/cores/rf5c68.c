@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:Olivier Galibert,Aaron Giles
 /*********************************************************/
 /*    ricoh RF5C68(or clone) PCM controller              */
 /*********************************************************/
@@ -11,7 +13,7 @@
 #include "rf5c68.h"
 
 
-#define  NUM_CHANNELS	(8)
+#define NUM_CHANNELS	(8)
 #define STEAM_STEP		0x800
 
 
@@ -51,8 +53,10 @@ struct _rf5c68_state
 	UINT8				enable;
 	UINT32				datasize;
 	UINT8*				data;
-	SAMPLE_END_CB		sample_callback;
+	
+	SAMPLE_END_CB		sample_end_cb;
 	void*				sample_cb_param;
+	
 	mem_stream			memstrm;
 };
 
@@ -61,9 +65,9 @@ static void memstream_sample_check(rf5c68_state *chip, UINT32 addr, UINT16 Speed
 static void rf5c68_mem_stream_flush(rf5c68_state *chip);
 
 
-/************************************************/
-/*    RF5C68 stream update                      */
-/************************************************/
+//-------------------------------------------------
+//    RF5C68 stream update
+//-------------------------------------------------
 
 static void memstream_sample_check(rf5c68_state *chip, UINT32 addr, UINT16 Speed)
 {
@@ -136,10 +140,10 @@ void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 				int sample;
 
 				/* trigger sample callback */
-				if(chip->sample_callback)
+				if(chip->sample_end_cb)
 				{
 					if(((chan->addr >> 11) & 0xfff) == 0xfff)
-						chip->sample_callback(chip->sample_cb_param,((chan->addr >> 11)/0x2000));
+						chip->sample_end_cb(chip->sample_cb_param,(chan->addr >> 11)/0x2000);
 				}
 
 				memstream_sample_check(chip, (chan->addr >> 11) & 0xFFFF, chan->step);
@@ -189,7 +193,7 @@ void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 	}
 	
 #if 0	// IMO this is completely useless.
-	// now clamp and shift the result (output is only 10 bits)
+	/* now clamp and shift the result (output is only 10 bits) */
 	for (j = 0; j < samples; j++)
 	{
 		DEV_SMPL temp;
@@ -208,15 +212,15 @@ void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 }
 
 
-/************************************************/
-/*    RF5C68 start                              */
-/************************************************/
+//-------------------------------------------------
+//    RF5C68 start
+//-------------------------------------------------
 
 void* device_start_rf5c68(UINT32 clock)
 {
 	rf5c68_state *chip;
 	
-	// allocate memory for the chip
+	/* allocate memory for the chip */
 	chip = (rf5c68_state *)calloc(1, sizeof(rf5c68_state));
 	if (chip == NULL)
 		return NULL;
@@ -224,7 +228,7 @@ void* device_start_rf5c68(UINT32 clock)
 	chip->datasize = 0x10000;
 	chip->data = (UINT8*)malloc(chip->datasize);
 	
-	chip->sample_callback = NULL;
+	chip->sample_end_cb = NULL;
 	chip->sample_cb_param = NULL;
 	rf5c68_set_mute_mask(chip, 0x00);
 	
@@ -234,7 +238,7 @@ void* device_start_rf5c68(UINT32 clock)
 void device_stop_rf5c68(void *info)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
-	free(chip->data);	chip->data = NULL;
+	free(chip->data);
 	free(chip);
 	
 	return;
@@ -278,15 +282,15 @@ void rf5c68_set_sample_end_callback(void *info, SAMPLE_END_CB callback, void* pa
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	
-	chip->sample_callback = callback;
+	chip->sample_end_cb = callback;
 	chip->sample_cb_param = param;
 	
 	return;
 }
 
-/************************************************/
-/*    RF5C68 write register                     */
-/************************************************/
+//-------------------------------------------------
+//    RF5C68 write register
+//-------------------------------------------------
 
 UINT8 rf5c68_r(void *info, UINT8 offset)
 {
@@ -359,9 +363,9 @@ void rf5c68_w(void *info, UINT8 offset, UINT8 data)
 }
 
 
-/************************************************/
-/*    RF5C68 read memory                        */
-/************************************************/
+//-------------------------------------------------
+//    RF5C68 read memory
+//-------------------------------------------------
 
 UINT8 rf5c68_mem_r(void *info, UINT16 offset)
 {
@@ -370,9 +374,9 @@ UINT8 rf5c68_mem_r(void *info, UINT16 offset)
 }
 
 
-/************************************************/
-/*    RF5C68 write memory                       */
-/************************************************/
+//-------------------------------------------------
+//    RF5C68 write memory
+//-------------------------------------------------
 
 void rf5c68_mem_w(void *info, UINT16 offset, UINT8 data)
 {
