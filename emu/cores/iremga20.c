@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:Acho A. Tang,R. Belmont
 /*********************************************************
 
 Irem GA20 PCM Sound Chip
@@ -251,7 +253,7 @@ static UINT8 irem_ga20_r(void *info, UINT8 offset)
 
 	switch (offset & 0x7)
 	{
-		case 7:	// voice status.  bit 0 is 1 if active. (routine around 0xccc in rtypeleo)
+		case 7: // voice status.  bit 0 is 1 if active. (routine around 0xccc in rtypeleo)
 			return chip->channel[channel].play ? 1 : 0;
 
 		default:
