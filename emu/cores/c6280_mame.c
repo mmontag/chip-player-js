@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:Charles MacDonald
 /*
     HuC6280 sound chip emulator
     by Charles MacDonald
@@ -34,23 +36,6 @@
     - http://www.hudsonsoft.net/ww/about/about.html
     - http://www.hudson.co.jp/corp/eng/coinfo/history.html
 
-    Legal information:
-
-    Copyright Charles MacDonald
-
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <stdlib.h>	// for rand()
@@ -89,44 +74,39 @@ typedef struct {
 } c6280_t;
 
 
-static void c6280_init(c6280_t *p, double clk, double rate)
+//-------------------------------------------------
+//  calculate_clocks - (re)calculate clock-derived
+//  members
+//-------------------------------------------------
+
+static void c6280_calculate_clocks(c6280_t *p, double clk, double rate)
 {
 	int i;
 	double step;
-
-	/* Loudest volume level for table */
-	double level = 65536.0 / 6.0 / 32.0;
+	//double rate = clock / 16;
 
 	/* Make waveform frequency table */
-	for(i = 0; i < 4096; i += 1)
+	for (i = 0; i < 4096; i += 1)
 	{
 		step = ((clk / rate) * 4096) / (i+1);
 		p->wave_freq_tab[(1 + i) & 0xFFF] = (UINT32)step;
 	}
 
 	/* Make noise frequency table */
-	for(i = 0; i < 32; i += 1)
+	for (i = 0; i < 32; i += 1)
 	{
 		step = ((clk / rate) * 32) / (i+1);
 		p->noise_freq_tab[i] = (UINT32)step;
 	}
-
-	/* Make volume table */
-	/* PSG has 48dB volume range spread over 32 steps */
-	step = 48.0 / 32.0;
-	for(i = 0; i < 31; i++)
-	{
-		p->volume_table[i] = (UINT16)level;
-		level /= pow(10.0, step / 20.0);
-	}
-	p->volume_table[31] = 0;
 }
 
 
 void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
 {
 	c6280_t *p = (c6280_t *)chip;
-	t_channel *q = &p->channel[p->select];
+	t_channel *chan = &p->channel[p->select];
+
+	//m_cpudevice->io_set_buffer(data);
 
 	switch(offset & 0x0F)
 	{
@@ -139,51 +119,51 @@ void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
 			break;
 
 		case 0x02: /* Channel frequency (LSB) */
-			q->frequency = (q->frequency & 0x0F00) | data;
-			q->frequency &= 0x0FFF;
+			chan->frequency = (chan->frequency & 0x0F00) | data;
+			chan->frequency &= 0x0FFF;
 			break;
 
 		case 0x03: /* Channel frequency (MSB) */
-			q->frequency = (q->frequency & 0x00FF) | (data << 8);
-			q->frequency &= 0x0FFF;
+			chan->frequency = (chan->frequency & 0x00FF) | (data << 8);
+			chan->frequency &= 0x0FFF;
 			break;
 
 		case 0x04: /* Channel control (key-on, DDA mode, volume) */
 
 			/* 1-to-0 transition of DDA bit resets waveform index */
-			if((q->control & 0x40) && ((data & 0x40) == 0))
+			if((chan->control & 0x40) && ((data & 0x40) == 0))
 			{
-				q->index = 0;
+				chan->index = 0;
 			}
-			q->control = data;
+			chan->control = data;
 			break;
 
 		case 0x05: /* Channel balance */
-			q->balance = data;
+			chan->balance = data;
 			break;
 
 		case 0x06: /* Channel waveform data */
 
-			switch(q->control & 0xC0)
+			switch(chan->control & 0xC0)
 			{
 				case 0x00:
 				case 0x80:
-					q->waveform[q->index & 0x1F] = data & 0x1F;
-					q->index = (q->index + 1) & 0x1F;
+					chan->waveform[chan->index & 0x1F] = data & 0x1F;
+					chan->index = (chan->index + 1) & 0x1F;
 					break;
 
 				case 0x40:
 					break;
 
 				case 0xC0:
-					q->dda = data & 0x1F;
+					chan->dda = data & 0x1F;
 					break;
 			}
 
 			break;
 
 		case 0x07: /* Noise control (enable, frequency) */
-			q->noise_control = data;
+			chan->noise_control = data;
 			break;
 
 		case 0x08: /* LFO frequency */
@@ -212,7 +192,6 @@ void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 
 	UINT8 lmal = (p->balance >> 4) & 0x0F;
 	UINT8 rmal = (p->balance >> 0) & 0x0F;
-	INT16 vll, vlr;
 
 	lmal = scale_tab[lmal];
 	rmal = scale_tab[rmal];
@@ -221,7 +200,7 @@ void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 	memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
 	memset(outputs[1], 0x00, samples * sizeof(DEV_SMPL));
 
-	for(ch = 0; ch < 6; ch++)
+	for (ch = 0; ch < 6; ch++)
 	{
 		/* Only look at enabled channels */
 		if((p->channel[ch].control & 0x80) && ! p->channel[ch].Muted)
@@ -229,6 +208,7 @@ void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 			UINT8 lal = (p->channel[ch].balance >> 4) & 0x0F;
 			UINT8 ral = (p->channel[ch].balance >> 0) & 0x0F;
 			UINT8 al  = p->channel[ch].control & 0x1F;
+			INT16 vll, vlr;
 
 			lal = scale_tab[lal];
 			ral = scale_tab[ral];
@@ -299,13 +279,26 @@ void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 void* device_start_c6280mame(UINT32 clock, UINT32 rate)
 {
 	c6280_t *info;
+	int i;
+	double step;
+	/* Loudest volume level for table */
+	double level = 65536.0 / 6.0 / 32.0;
 
 	info = (c6280_t*)calloc(1, sizeof(c6280_t));
 	if (info == NULL)
 		return NULL;
 
-	/* Initialize PSG emulator */
-	c6280_init(info, clock, rate);
+	c6280_calculate_clocks(info, clk, rate)
+
+	/* Make volume table */
+	/* PSG has 48dB volume range spread over 32 steps */
+	step = 48.0 / 32.0;
+	for (i = 0; i < 31; i++)
+	{
+		p->volume_table[i] = (UINT16)level;
+		level /= pow(10.0, step / 20.0);
+	}
+	p->volume_table[31] = 0;
 
 	c6280mame_set_mute_mask(info, 0x00);
 
@@ -353,7 +346,7 @@ void device_reset_c6280mame(void* chip)
 UINT8 c6280mame_r(void* chip, UINT8 offset)
 {
 	c6280_t *info = (c6280_t *)chip;
-	//return h6280io_get_buffer(info->cpudevice);
+	//return m_cpudevice->io_get_buffer();
 	if (offset == 0)
 		return info->select;
 	return 0;
