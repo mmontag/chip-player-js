@@ -288,17 +288,17 @@ void* device_start_c6280mame(UINT32 clock, UINT32 rate)
 	if (info == NULL)
 		return NULL;
 
-	c6280_calculate_clocks(info, clk, rate)
+	c6280_calculate_clocks(info, clock, rate);
 
 	/* Make volume table */
 	/* PSG has 48dB volume range spread over 32 steps */
 	step = 48.0 / 32.0;
 	for (i = 0; i < 31; i++)
 	{
-		p->volume_table[i] = (UINT16)level;
+		info->volume_table[i] = (UINT16)level;
 		level /= pow(10.0, step / 20.0);
 	}
-	p->volume_table[31] = 0;
+	info->volume_table[31] = 0;
 
 	c6280mame_set_mute_mask(info, 0x00);
 
