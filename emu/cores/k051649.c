@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:Bryan McPhail
 /***************************************************************************
 
     Konami 051649 - SCC1 sound as used in Haunted Castle, City Bomber
@@ -88,17 +90,17 @@ const DEV_DEF* devDefList_K051649[] =
 };
 
 
-#define FREQ_BITS	16
-#define DEF_GAIN	8
+#define FREQ_BITS   16
+#define DEF_GAIN    8
 
-/* this structure defines the parameters for a channel */
+// Parameters for a channel
 typedef struct
 {
 	UINT32 counter;
 	INT32 frequency;
 	UINT8 volume;
 	UINT8 key;
-	INT8 waveram[32];		/* 19991207.CAB */
+	INT8 waveram[32];
 	UINT8 Muted;
 } k051649_sound_channel;
 
@@ -109,33 +111,39 @@ struct _k051649_state
 	k051649_sound_channel channel_list[5];
 
 	/* global sound parameters */
-	UINT32 mclock,rate;
+	UINT32 mclock;
+	UINT32 rate;
 
 	/* mixer tables and internal buffers */
 	DEV_SMPL *mixer_table;
 	DEV_SMPL *mixer_lookup;
 
-	UINT8 cur_reg;
+	/* chip registers */
 	UINT8 test;
+	UINT8 cur_reg;
 	UINT8 mode_plus;
 };
 
-/* build a table to divide by the number of voices */
+
+//-------------------------------------------------
+// build a table to divide by the number of voices
+//-------------------------------------------------
+
 static void make_mixer_table(k051649_state *info, int voices)
 {
-	int count = voices * 256;
 	int i;
 
-	/* allocate memory */
-	info->mixer_table = (DEV_SMPL*)malloc(sizeof(DEV_SMPL) * 2 * count);
+	// allocate memory
+	info->mixer_table = (DEV_SMPL*)malloc(sizeof(DEV_SMPL) * 512 * voices);
 
-	/* find the middle of the table */
-	info->mixer_lookup = info->mixer_table + count;
+	// find the middle of the table
+	info->mixer_lookup = info->mixer_table + (256 * voices);
 
-	/* fill in the table - 16 bit case */
-	for (i = 0; i < count; i++)
+	// fill in the table - 16 bit case
+	for (i = 0; i < (voices * 256); i++)
 	{
 		int val = i * DEF_GAIN * 16 / voices;
+		//if (val > 32767) val = 32767;
 		info->mixer_lookup[ i] = val;
 		info->mixer_lookup[-i] = -val;
 	}
@@ -154,15 +162,14 @@ static void k051649_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	// zap the contents of the mixer buffer
 	memset(buffer, 0, samples * sizeof(DEV_SMPL));
 
-	for (j=0; j<5; j++) {
+	for (j = 0; j < 5; j++)
+	{
 		// channel is halted for freq < 9
 		if (voice[j].frequency > 8 && ! voice[j].Muted)
 		{
-			const INT8 *w = voice[j].waveram;			/* 19991207.CAB */
+			const INT8 *w = voice[j].waveram;
 			INT16 v=voice[j].volume * voice[j].key;
 			UINT32 c=voice[j].counter;
-			/* Amuse source:  Cab suggests this method gives greater resolution */
-			/* Sean Young 20010417: the formula is really: f = clock/(16*(f+1))*/
 			//UINT32 step = (UINT32)(((INT64)info->mclock * (1 << FREQ_BITS)) / (float)((voice[j].frequency + 1) * 16 * (info->rate / 32)) + 0.5);
 			UINT32 step = (UINT32)(((INT64)info->mclock * (1 << FREQ_BITS)) / (float)((voice[j].frequency + 1) * info->rate / 2.0f) + 0.5f);
 
@@ -196,12 +203,12 @@ static UINT8 device_start_k051649(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (info == NULL)
 		return 0xFF;
 
-	/* get stream channels */
+	// get stream channels
 	info->mode_plus = cfg->flags;
 	info->mclock = cfg->clock;
 	info->rate = info->mclock / 16;
 
-	/* build the mixer table */
+	// build the mixer table
 	make_mixer_table(info, 5);
 	
 	k051649_set_mute_mask(info, 0x00);
@@ -263,6 +270,7 @@ static void k051649_waveform_w(void *chip, UINT8 offset, UINT8 data)
 		info->channel_list[offset>>5].waveram[offset&0x1f]=data;
 }
 
+
 static UINT8 k051649_waveform_r(void *chip, UINT8 offset)
 {
 	k051649_state *info = (k051649_state *)chip;
@@ -278,7 +286,7 @@ static UINT8 k051649_waveform_r(void *chip, UINT8 offset)
 	return info->channel_list[offset>>5].waveram[offset&0x1f];
 }
 
-/* SY 20001114: Channel 5 doesn't share the waveform with channel 4 on this chip */
+
 static void k052539_waveform_w(void *chip, UINT8 offset, UINT8 data)
 {
 	k051649_state *info = (k051649_state *)chip;
@@ -289,6 +297,7 @@ static void k052539_waveform_w(void *chip, UINT8 offset, UINT8 data)
 
 	info->channel_list[offset>>5].waveram[offset&0x1f]=data;
 }
+
 
 static UINT8 k052539_waveform_r(void *chip, UINT8 offset)
 {
@@ -302,15 +311,18 @@ static UINT8 k052539_waveform_r(void *chip, UINT8 offset)
 	return info->channel_list[offset>>5].waveram[offset&0x1f];
 }
 
+
 static void k051649_volume_w(void *chip, UINT8 offset, UINT8 data)
 {
 	k051649_state *info = (k051649_state *)chip;
 	info->channel_list[offset&0x7].volume=data&0xf;
 }
 
+
 static void k051649_frequency_w(void *chip, UINT8 offset, UINT8 data)
 {
 	k051649_state *info = (k051649_state *)chip;
+	UINT8 freq_hi = offset & 1;
 	k051649_sound_channel* chn = &info->channel_list[offset >> 1];
 	
 	// test-register bit 5 resets the internal counter
@@ -320,12 +332,13 @@ static void k051649_frequency_w(void *chip, UINT8 offset, UINT8 data)
 		chn->counter |= ((1 << FREQ_BITS) - 1);
 
 	// update frequency
-	if (offset & 1)
-		chn->frequency = (chn->frequency & 0x0FF) | ((data << 8) & 0xF00);
+	if (freq_hi)
+		chn->frequency = (chn->frequency & 0x0ff) | ((data << 8) & 0xf00);
 	else
-		chn->frequency = (chn->frequency & 0xF00) |  (data << 0);
+		chn->frequency = (chn->frequency & 0xf00) | data;
 	chn->counter &= 0xFFFF0000;	// Valley Bell: Behaviour according to openMSX
 }
+
 
 static void k051649_keyonoff_w(void *chip, UINT8 offset, UINT8 data)
 {
@@ -338,6 +351,7 @@ static void k051649_keyonoff_w(void *chip, UINT8 offset, UINT8 data)
 		data >>= 1;
 	}
 }
+
 
 static void k051649_test_w(void *chip, UINT8 offset, UINT8 data)
 {
