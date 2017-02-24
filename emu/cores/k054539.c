@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:Aaron Giles
 /*********************************************************
 
     Konami 054539 (TOP) PCM Sound Chip
@@ -30,8 +32,8 @@ static void device_reset_k054539(void *chip);
 static void k054539_w(void *chip, UINT16 offset, UINT8 data);
 static UINT8 k054539_r(void *chip, UINT16 offset);
 
-static void k054539_init_flags(void *chip, UINT8 flags);
-static void k054539_set_gain(void *chip, UINT8 channel, double gain);
+static void k054539_init_flags(void *chip, UINT8 _flags);
+static void k054539_set_gain(void *chip, UINT8 channel, double _gain);
 
 static void k054539_alloc_rom(void* chip, UINT32 memsize);
 static void k054539_write_rom(void *chip, UINT32 offset, UINT32 length, const UINT8* data);
@@ -128,9 +130,9 @@ struct _k054539_state {
 	double voltab[256];
 	double pantab[0xf];
 
-	double k054539_gain[8];
-	UINT8 k054539_posreg_latch[8][3];
-	UINT8 k054539_flags;
+	double gain[8];
+	UINT8 posreg_latch[8][3];
+	UINT8 flags;
 
 	UINT8 regs[0x230];
 	UINT8 *ram;
@@ -145,32 +147,26 @@ struct _k054539_state {
 
 	k054539_channel channels[8];
 	UINT8 Muted[8];
-	
+
+	//emu_timer          *timer;
+	UINT8              timer_state;
+	//devcb_write_line   timer_handler;
+	//k054539_cb_delegate apan_cb;
+
 	UINT32 clock;
 };
 
-static void k054539_init_flags(void *chip, UINT8 flags)
+static void k054539_init_flags(void *chip, UINT8 _flags)
 {
 	k054539_state *info = (k054539_state *)chip;
-	info->k054539_flags = flags;
+	info->flags = _flags;
 }
 
-/*
-    Note that the eight PCM channels of a K054539 do not have separate
-    volume controls. Considering the global attenuation equation may not
-    be entirely accurate, k054539_set_gain() provides means to control
-    channel gain. It can be called anywhere but preferrably from
-    DRIVER_INIT().
-
-    Parameters:
-        chip    : 0 / 1
-        channel : 0 - 7
-        gain    : 0.0=silent, 1.0=no gain, 2.0=twice as loud, etc.
-*/
-static void k054539_set_gain(void *chip, UINT8 channel, double gain)
+static void k054539_set_gain(void *chip, UINT8 channel, double _gain)
 {
 	k054539_state *info = (k054539_state *)chip;
-	if (gain >= 0) info->k054539_gain[channel] = gain;
+	if (_gain >= 0)
+		info->gain[channel] = _gain;
 }
 //*
 
@@ -197,23 +193,12 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 #define VOL_CAP 1.80
 
 	static const INT16 dpcm[16] = {
-		0<<8, 1<<8, 4<<8, 9<<8, 16<<8, 25<<8, 36<<8, 49<<8,
-		-64<<8, -49<<8, -36<<8, -25<<8, -16<<8, -9<<8, -4<<8, -1<<8
+		0 * 0x100,     1 * 0x100,   4 * 0x100,   9 * 0x100,  16 * 0x100, 25 * 0x100, 36 * 0x100, 49 * 0x100,
+		-64 * 0x100, -49 * 0x100, -36 * 0x100, -25 * 0x100, -16 * 0x100, -9 * 0x100, -4 * 0x100, -1 * 0x100
 	};
 
 	INT16 *rbase = (INT16 *)info->ram;
-	const UINT8 *rom;
-	UINT32 rom_mask;
-	UINT32 i, ch;
-	double lval, rval;
-	UINT8 *base1, *base2;
-	k054539_channel *chan;
-	int delta, vol, bval, pan;
-	double cur_gain, lvol, rvol, rbvol;
-	int rdelta;
-	UINT32 cur_pos;
-	int fdelta, pdelta;
-	int cur_pfrac, cur_val, cur_pval;
+	UINT32 sample, ch;
 
 	if(!(info->regs[0x22f] & 1))
 	{
@@ -222,11 +207,9 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		return;
 	}
 
-	rom = info->rom;
-	rom_mask = info->rom_mask;
-
-	for(i = 0; i < samples; i++) {
-		if(!(info->k054539_flags & K054539_DISABLE_REVERB))
+	for(sample = 0; sample != samples; sample++) {
+		double lval, rval;
+		if(!(info->flags & K054539_DISABLE_REVERB))
 			lval = rval = rbase[info->reverb_pos];
 		else
 			lval = rval = 0;
@@ -234,9 +217,14 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 		for(ch=0; ch<8; ch++)
 			if(info->regs[0x22c] & (1<<ch) && ! info->Muted[ch]) {
-				base1 = info->regs + 0x20*ch;
-				base2 = info->regs + 0x200 + 0x2*ch;
-				chan = info->channels + ch;
+				UINT8 *base1 = info->regs + 0x20*ch;
+				UINT8 *base2 = info->regs + 0x200 + 0x2*ch;
+				k054539_channel *chan = info->channels + ch;
+				int delta, vol, bval, pan;
+				double cur_gain, lvol, rvol, rbvol;
+				UINT32 cur_pos;
+				int rdelta, fdelta, pdelta;
+				int cur_pfrac, cur_val, cur_pval;
 
 				delta = base1[0x00] | (base1[0x01] << 8) | (base1[0x02] << 16);
 
@@ -255,7 +243,7 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				else
 					pan = 0x18 - 0x11;
 
-				cur_gain = info->k054539_gain[ch];
+				cur_gain = info->gain[ch];
 
 				lvol = info->voltab[vol] * info->pantab[pan] * cur_gain;
 				if (lvol > VOL_CAP)
@@ -272,7 +260,7 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				rdelta = (base1[6] | (base1[7] << 8)) >> 3;
 				rdelta = (rdelta + info->reverb_pos) & 0x3fff;
 
-				cur_pos = (base1[0x0c] | (base1[0x0d] << 8) | (base1[0x0e] << 16)) & rom_mask;
+				cur_pos = (base1[0x0c] | (base1[0x0d] << 8) | (base1[0x0e] << 16)) & info->rom_mask;
 
 				if(base2[0] & 0x20) {
 					delta = -delta;
@@ -302,10 +290,10 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						cur_pos += pdelta;
 
 						cur_pval = cur_val;
-						cur_val = (INT16)(rom[cur_pos] << 8);
+						cur_val = (INT16)(info->rom[cur_pos] << 8);
 						if(cur_val == (INT16)0x8000 && (base2[1] & 1)) {
-							cur_pos = (base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & rom_mask;
-							cur_val = (INT16)(rom[cur_pos] << 8);
+							cur_pos = (base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & info->rom_mask;
+							cur_val = (INT16)(info->rom[cur_pos] << 8);
 						}
 						if(cur_val == (INT16)0x8000) {
 							k054539_keyoff(info, ch);
@@ -325,10 +313,10 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						cur_pos += pdelta;
 
 						cur_pval = cur_val;
-						cur_val = (INT16)(rom[cur_pos] | rom[cur_pos+1]<<8);
+						cur_val = (INT16)(info->rom[cur_pos] | info->rom[cur_pos+1]<<8);
 						if(cur_val == (INT16)0x8000 && (base2[1] & 1)) {
-							cur_pos = (base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & rom_mask;
-							cur_val = (INT16)(rom[cur_pos] | rom[cur_pos+1]<<8);
+							cur_pos = (base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & info->rom_mask;
+							cur_val = (INT16)(info->rom[cur_pos] | info->rom[cur_pos+1]<<8);
 						}
 						if(cur_val == (INT16)0x8000) {
 							k054539_keyoff(info, ch);
@@ -353,10 +341,10 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						cur_pos += pdelta;
 
 						cur_pval = cur_val;
-						cur_val = rom[cur_pos>>1];
+						cur_val = info->rom[cur_pos>>1];
 						if(cur_val == 0x88 && (base2[1] & 1)) {
-							cur_pos = ((base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & rom_mask) << 1;
-							cur_val = rom[cur_pos>>1];
+							cur_pos = ((base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & info->rom_mask) << 1;
+							cur_val = info->rom[cur_pos>>1];
 						}
 						if(cur_val == 0x88) {
 							k054539_keyoff(info, ch);
@@ -400,62 +388,68 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				}
 			}
 		info->reverb_pos = (info->reverb_pos + 1) & 0x1fff;
-		outputs[0][i] = (DEV_SMPL)lval;
-		outputs[1][i] = (DEV_SMPL)rval;
+		outputs[0][sample] = (DEV_SMPL)lval;
+		outputs[1][sample] = (DEV_SMPL)rval;
 	}
 }
 
 
+//static void k054539_device_timer(void *chip)
+//{
+//	k054539_state *info = (k054539_state *)chip;
+//	if (info->regs[0x22f] & 0x20)
+//		info->timer_handler(info, info->timer_state ^= 1);
+//}
+
 static void k054539_w(void *chip, UINT16 offset, UINT8 data)
 {
 	k054539_state *info = (k054539_state *)chip;
+	UINT8 latch;
+	int ch;
 
-#if 0
-	int voice, reg;
+	if(0) {
+		int voice, reg;
 
-	/* The K054539 has behavior like many other wavetable chips including
-	   the Ensoniq 550x and Gravis GF-1: if a voice is active, writing
-	   to it's current position is silently ignored.
+		/* The K054539 has behavior like many other wavetable chips including
+		   the Ensoniq 550x and Gravis GF-1: if a voice is active, writing
+		   to it's current position is silently ignored.
 
-	   Dadandaan depends on this or the vocals go wrong.
-	   */
-	if (offset < 8*0x20)
-	{
-		voice = offset / 0x20;
-		reg = offset & ~0x20;
-
-		if(info->regs[0x22c] & (1<<voice))
+		   Dadandaan depends on this or the vocals go wrong.
+		*/
+		if (offset < 8*0x20)
 		{
-			if (reg >= 0xc && reg <= 0xe)
-				return;
+			voice = offset / 0x20;
+			reg = offset & ~0x20;
+
+			if(info->regs[0x22c] & (1<<voice))
+				if (reg >= 0xc && reg <= 0xe)
+					return;
 		}
 	}
-#endif
 
-	int latch, offs, ch, pan;
-	UINT8 *regbase, *regptr, *posptr;
-
-	regbase = info->regs;
-	latch = (info->k054539_flags & K054539_UPDATE_AT_KEYON) && (regbase[0x22f] & 1);
+	latch = (info->flags & K054539_UPDATE_AT_KEYON) && (info->regs[0x22f] & 1);
 
 	if (latch && offset < 0x100)
 	{
-		offs = (offset & 0x1f) - 0xc;
+		int offs = (offset & 0x1f) - 0xc;
 		ch = offset >> 5;
 
 		if (offs >= 0 && offs <= 2)
 		{
 			// latch writes to the position index registers
-			info->k054539_posreg_latch[ch][offs] = data;
+			info->posreg_latch[ch][offs] = data;
 			return;
 		}
 	}
 
-	else switch(offset)
-	{
-		case 0x13f:
-			pan = data >= 0x11 && data <= 0x1f ? data - 0x11 : 0x18 - 0x11;
-		break;
+	else
+		switch(offset) {
+		case 0x13f: {
+			int pan = data >= 0x11 && data <= 0x1f ? data - 0x11 : 0x18 - 0x11;
+			//if (info->apan_cb != NULL)
+			//	info->apan_cb(pantab[pan], pantab[0xe - pan]);
+			break;
+		}
 
 		case 0x214:
 			if (latch)
@@ -464,8 +458,8 @@ static void k054539_w(void *chip, UINT16 offset, UINT8 data)
 				{
 					if(data & (1<<ch))
 					{
-						posptr = &info->k054539_posreg_latch[ch][0];
-						regptr = regbase + (ch<<5) + 0xc;
+						UINT8 *posptr = &info->posreg_latch[ch][0];
+						UINT8 *regptr = info->regs + (ch<<5) + 0xc;
 
 						// update the chip at key-on
 						regptr[0] = posptr[0];
@@ -491,18 +485,18 @@ static void k054539_w(void *chip, UINT16 offset, UINT8 data)
 		break;
 
 		case 0x227:
-		/*{
-			attotime period = attotime::from_hz((float)(38 + data) * (info->clock/384.0f/14400.0f)) / 2.0f;
+		{
+			//attotime period = attotime::from_hz((float)(38 + data) * (info->clock/384.0f/14400.0f)) / 2.0f;
 
-			m_timer->adjust(period, 0, period);
+			//info->timer->adjust(period, 0, period);
 
-			m_timer_state = 0;
-			m_timer_handler(m_timer_state);
-		}*/
+			info->timer_state = 0;
+			//info->timer_handler(info->timer_state);
+		}
 		break;
 
 		case 0x22d:
-			if(regbase[0x22e] == 0x80)
+			if(info->regs[0x22e] == 0x80)
 				info->cur_zone[info->cur_ptr] = data;
 			info->cur_ptr++;
 			if(info->cur_ptr == info->cur_limit)
@@ -512,7 +506,7 @@ static void k054539_w(void *chip, UINT16 offset, UINT8 data)
 		case 0x22e:
 			info->cur_zone =
 				data == 0x80 ? info->ram :
-				info->rom + 0x20000*data;
+				&info->rom[0x20000*data];
 			info->cur_limit = data == 0x80 ? 0x4000 : 0x20000;
 			info->cur_ptr = 0;
 		break;
@@ -520,19 +514,19 @@ static void k054539_w(void *chip, UINT16 offset, UINT8 data)
 		case 0x22f:
 			if (!(data & 0x20)) // Disable timer output?
 			{
-				//m_timer_state = 0;
-				//m_timer_handler(m_timer_state);
+				info->timer_state = 0;
+				//info->timer_handler(info->timer_state);
 			}
 		break;
 
 		default:
 #if 0
-			if(regbase[offset] != data) {
+			if(info->regs[offset] != data) {
 				if((offset & 0xff00) == 0) {
 					chanoff = offset & 0x1f;
 					if(chanoff < 4 || chanoff == 5 ||
-					   (chanoff >=8 && chanoff <= 0xa) ||
-					   (chanoff >= 0xc && chanoff <= 0xe))
+						(chanoff >=8 && chanoff <= 0xa) ||
+						(chanoff >= 0xc && chanoff <= 0xe))
 						break;
 				}
 				if(1 || ((offset >= 0x200) && (offset <= 0x210)))
@@ -543,13 +537,13 @@ static void k054539_w(void *chip, UINT16 offset, UINT8 data)
 		break;
 	}
 
-	regbase[offset] = data;
+	info->regs[offset] = data;
 }
 
 static void reset_zones(k054539_state *info)
 {
 	int data = info->regs[0x22e];
-	info->cur_zone = data == 0x80 ? info->ram : info->rom + 0x20000*data;
+	info->cur_zone = data == 0x80 ? info->ram : &info->rom[0x20000*data];
 	info->cur_limit = data == 0x80 ? 0x4000 : 0x20000;
 }
 
@@ -584,10 +578,16 @@ static UINT8 device_start_k054539(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (info == NULL)
 		return 0xFF;
 
+	//info->timer = timer_alloc(0);
+
+	// resolve / bind callbacks
+	//info->timer_handler.resolve_safe();
+	//info->apan_cb.bind_relative_to(*owner());
+
 	for (i = 0; i < 8; i++)
-		info->k054539_gain[i] = 1.0;
-	info->k054539_flags = K054539_RESET_FLAGS;
-	info->k054539_flags |= K054539_UPDATE_AT_KEYON; //* make it default until proven otherwise
+		info->gain[i] = 1.0;
+
+	info->flags = K054539_RESET_FLAGS;
 
 	/*
 	    I've tried various equations on volume control but none worked consistently.
@@ -612,6 +612,8 @@ static UINT8 device_start_k054539(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 		info->pantab[i] = sqrt((double)i) / sqrt((double)0xe);
 
 	info->clock = cfg->clock;
+
+	info->flags |= K054539_UPDATE_AT_KEYON; //* make it default until proven otherwise
 
 	info->ram = (UINT8*)malloc(0x4000);
 	info->rom = NULL;
@@ -644,7 +646,7 @@ static void device_reset_k054539(void *chip)
 	k054539_state *info = (k054539_state *)chip;
 	
 	memset(info->regs, 0, sizeof(info->regs));
-	memset(info->k054539_posreg_latch, 0, sizeof(info->k054539_posreg_latch));
+	memset(info->posreg_latch, 0, sizeof(info->posreg_latch));
 	
 	info->reverb_pos = 0;
 	info->cur_ptr = 0;
