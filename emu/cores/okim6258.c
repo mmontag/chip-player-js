@@ -90,15 +90,20 @@ struct _okim6258_state
 
 	UINT8  status;
 
-	UINT32 master_clock;	/* master clock frequency */
-	UINT32 divider;			/* master clock divider */
-	UINT8 adpcm_type;		/* 3/4 bit ADPCM select */
-	UINT8 data_in;			/* ADPCM data-in register */
-	UINT8 nibble_shift;		/* nibble select */
+	UINT32 master_clock;    /* master clock frequency */
+	UINT32 divider;          /* master clock divider */
+	UINT8 start_divider;
+	UINT8 adpcm_type;       /* 3/4 bit ADPCM select */
+	UINT8 data_in;          /* ADPCM data-in register */
+	UINT8 nibble_shift;     /* nibble select */
 
-	UINT8 output_12force;	// enforce 12 bit output (for high quality)
-	UINT8 output_bits;
+	UINT8 output_12force;   // enforce 12 bit output (for high quality)
+	UINT8 output_bits;      /* D/A precision is 10-bits but 12-bit data can be
+	                           output serially to an external DAC */
 	INT16 output_mask;
+
+	INT16 signal;
+	INT16 step;
 
 	// Valley Bell: Added a small queue to prevent race conditions.
 	UINT8 data_buf[8];
@@ -113,12 +118,8 @@ struct _okim6258_state
 	UINT8 pan;
 	INT16 last_smpl;
 
-	INT16 signal;
-	INT16 step;
-	
 	UINT8 clock_buffer[0x04];
 	UINT32 initial_clock;
-	UINT8 initial_div;
 	
 	UINT8 Muted;
 	
@@ -161,7 +162,7 @@ static void compute_tables(void)
 	for (step = 0; step <= 48; step++)
 	{
 		/* compute the step value */
-		int stepval = (int)floor(16.0 * pow(11.0 / 10.0, step));
+		int stepval = (int)floor(16.0 * pow(11.0 / 10.0, (double)step));
 
 		/* loop over all nibbles and compute the difference */
 		for (nib = 0; nib < 16; nib++)
@@ -313,16 +314,16 @@ static UINT8 device_start_okim6258(const OKIM6258_CFG* cfg, DEV_INFO* retDevInf)
 	if (info == NULL)
 		return 0xFF;
 
-	compute_tables();
-
 	info->initial_clock = cfg->_genCfg.clock;
-	info->initial_div = cfg->divider & 0x03;
+	info->start_divider = cfg->divider & 0x03;
 	info->adpcm_type = cfg->adpcmBits;
 	if (! info->adpcm_type)
 		info->adpcm_type = 4;
-	
+
+	compute_tables();
+
 	info->master_clock = info->initial_clock;
-	info->divider = dividers[info->initial_div];
+	info->divider = dividers[info->start_divider];
 	info->SmpRateFunc = NULL;
 
 	info->output_bits = cfg->outputBits;
@@ -365,7 +366,7 @@ static void device_reset_okim6258(void *chip)
 	info->clock_buffer[0x01] = (info->initial_clock & 0x0000FF00) >>  8;
 	info->clock_buffer[0x02] = (info->initial_clock & 0x00FF0000) >> 16;
 	info->clock_buffer[0x03] = (info->initial_clock & 0xFF000000) >> 24;
-	info->divider = dividers[info->initial_div];
+	info->divider = dividers[info->start_divider];
 	if (info->SmpRateFunc != NULL)
 		info->SmpRateFunc(info->SmpRateData, get_vclk(info));
 	
