@@ -1,15 +1,11 @@
+// license:BSD-3-Clause
+// copyright-holders:R. Belmont
 /*
 
   ES5503 - Ensoniq ES5503 "DOC" emulator v2.1.1
   By R. Belmont.
 
   Copyright R. Belmont.
-
-  This software is dual-licensed: it may be used in MAME and properly licensed
-  MAME derivatives under the terms of the MAME license.  For use outside of
-  MAME and properly licensed derivatives, it is available under the
-  terms of the GNU Lesser General Public License (LGPL), version 2.1.
-  You may read the LGPL at http://www.gnu.org/licenses/lgpl.html
 
   History: the ES5503 was the next design after the famous C64 "SID" by Bob Yannes.
   It powered the legendary Mirage sampler (the first affordable pro sampler) as well
@@ -93,6 +89,14 @@ const DEV_DEF* devDefList_ES5503[] =
 };
 
 
+enum
+{
+	MODE_FREE = 0,
+	MODE_ONESHOT = 1,
+	MODE_SYNCAM = 2,
+	MODE_SWAP = 3
+};
+
 typedef struct
 {
 	UINT16 freq;
@@ -114,19 +118,19 @@ typedef struct
 {
 	void* chipInf;
 	
-	ES5503Osc oscillators[32];
-
 	UINT32 dramsize;
 	UINT8 *docram;
 
-	void (*irq_callback)(void *, UINT8);	// IRQ callback
-	void *irqparam;
+	void (*irq_func)(void *, UINT8);	// IRQ callback
+	void *irq_param;
 
-	UINT8 (*adc_read)(void *, UINT8);		// callback for the 5503's built-in analog to digital converter
+	UINT8 (*adc_func)(void *, UINT8);	// callback for the 5503's built-in analog to digital converter
 	void *adc_param;
 
-	UINT8 oscsenabled;		// # of oscillators enabled
-	UINT8 rege0;			// contents of register 0xe0
+	ES5503Osc oscillators[32];
+
+	UINT8 oscsenabled;      // # of oscillators enabled
+	UINT8 rege0;            // contents of register 0xe0
 
 	UINT8 channel_strobe;
 
@@ -139,18 +143,11 @@ typedef struct
 	void* SmpRateData;
 } ES5503Chip;
 
+// useful constants
 static const UINT16 wavesizes[8] = { 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
 static const UINT32 wavemasks[8] = { 0x1ff00, 0x1fe00, 0x1fc00, 0x1f800, 0x1f000, 0x1e000, 0x1c000, 0x18000 };
 static const UINT32 accmasks[8]  = { 0xff, 0x1ff, 0x3ff, 0x7ff, 0xfff, 0x1fff, 0x3fff, 0x7fff };
 static const int    resshifts[8] = { 9, 10, 11, 12, 13, 14, 15, 16 };
-
-enum
-{
-	MODE_FREE = 0,
-	MODE_ONESHOT = 1,
-	MODE_SYNCAM = 2,
-	MODE_SWAP = 3
-};
 
 // halt_osc: handle halting an oscillator
 // chip = chip ptr
@@ -198,10 +195,8 @@ static void es5503_halt_osc(ES5503Chip *chip, int onum, int type, UINT32 *accumu
 	{
 		pOsc->irqpend = 1;
 
-		if (chip->irq_callback)
-		{
-			chip->irq_callback(chip->irqparam, 1);
-		}
+		if (chip->irq_func != NULL)
+			chip->irq_func(chip->irq_param, 1);
 	}
 }
 
@@ -213,8 +208,8 @@ static void es5503_pcm_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	ES5503Chip *chip = (ES5503Chip *)param;
 	UINT8 chnsStereo, chan;
 
-	memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
-	memset(outputs[1], 0x00, samples * sizeof(DEV_SMPL));
+	memset(outputs[0], 0, samples * sizeof(DEV_SMPL));
+	memset(outputs[1], 0, samples * sizeof(DEV_SMPL));
 
 	chnsStereo = chip->output_channels & ~1;
 	for (osc = 0; osc < chip->oscsenabled; osc++)
@@ -280,7 +275,7 @@ static void es5503_pcm_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				// if oscillator halted, we've got no more samples to generate
 				if (pOsc->control & 1)
 				{
-					//pOsc->control |= 1;
+					pOsc->control |= 1;
 					break;
 				}
 			}
@@ -299,9 +294,9 @@ static UINT8 device_start_es5503(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (chip == NULL)
 		return 0xFF;
 	
-	chip->irq_callback = NULL;
-	chip->irqparam = NULL;
-	chip->adc_read = NULL;
+	chip->irq_func = NULL;
+	chip->irq_param = NULL;
+	chip->adc_func = NULL;
 	chip->adc_param = NULL;
 	
 	chip->dramsize = 0x20000;	// 128 KB
@@ -312,10 +307,9 @@ static UINT8 device_start_es5503(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (! chip->output_channels)
 		chip->output_channels = 1;
 	chip->outchn_mask = (UINT8)pow2_mask(chip->output_channels);
-	chip->rege0 = 0xff;
 
 	chip->oscsenabled = 1;
-	chip->output_rate = (chip->clock/8)/(2+chip->oscsenabled);	// (input clock / 8) / # of oscs. enabled + 2
+	chip->output_rate = (chip->clock/8)/(2+chip->oscsenabled);  // (input clock / 8) / # of oscs. enabled + 2
 	
 	es5503_set_mute_mask(chip, 0x00000000);
 	
@@ -340,7 +334,9 @@ static void device_reset_es5503(void *info)
 	ES5503Chip *chip = (ES5503Chip *)info;
 	int osc;
 	ES5503Osc* tempOsc;
-	
+
+	chip->rege0 = 0xff;
+
 	for (osc = 0; osc < 32; osc++)
 	{
 		tempOsc = &chip->oscillators[osc];
@@ -355,13 +351,13 @@ static void device_reset_es5503(void *info)
 		tempOsc->accumulator = 0;
 		tempOsc->irqpend = 0;
 	}
-	
+
 	chip->oscsenabled = 1;
-	
+
 	chip->channel_strobe = 0;
 	memset(chip->docram, 0x00, chip->dramsize);
-	
-	chip->output_rate = (chip->clock/8)/(2+chip->oscsenabled);	// (input clock / 8) / # of oscs. enabled + 2
+
+	chip->output_rate = (chip->clock/8)/(2+chip->oscsenabled);  // (input clock / 8) / # of oscs. enabled + 2
 	if (chip->SmpRateFunc != NULL)
 		chip->SmpRateFunc(chip->SmpRateData, chip->output_rate);
 	
@@ -381,25 +377,25 @@ static UINT8 es5503_r(void *info, UINT8 offset)
 
 		switch(offset & 0xe0)
 		{
-			case 0:		// freq lo
+			case 0:     // freq lo
 				return (chip->oscillators[osc].freq & 0xff);
 
-			case 0x20:  	// freq hi
+			case 0x20:      // freq hi
 				return (chip->oscillators[osc].freq >> 8);
 
-			case 0x40:	// volume
+			case 0x40:  // volume
 				return chip->oscillators[osc].vol;
 
-			case 0x60:	// data
+			case 0x60:  // data
 				return chip->oscillators[osc].data;
 
-			case 0x80:	// wavetable pointer
+			case 0x80:  // wavetable pointer
 				return (chip->oscillators[osc].wavetblpointer>>8) & 0xff;
 
-			case 0xa0:	// oscillator control
+			case 0xa0:  // oscillator control
 				return chip->oscillators[osc].control;
 
-			case 0xc0:	// bank select / wavetable size / resolution
+			case 0xc0:  // bank select / wavetable size / resolution
 				retval = 0;
 				if (chip->oscillators[osc].wavetblpointer & 0x10000)
 				{
@@ -411,14 +407,15 @@ static UINT8 es5503_r(void *info, UINT8 offset)
 				return retval;
 		}
 	}
-	else	 // global registers
+	else     // global registers
 	{
 		switch (offset)
 		{
-			case 0xe0:	// interrupt status
+			case 0xe0:  // interrupt status
 				retval = chip->rege0;
 
-				//irq_func(chip, 0);
+				if (chip->irq_func != NULL)
+					chip->irq_func(chip->irq_param, 0);
 
 				// scan all oscillators
 				for (i = 0; i < chip->oscsenabled; i++)
@@ -432,11 +429,6 @@ static UINT8 es5503_r(void *info, UINT8 offset)
 
 						// and clear its flag
 						chip->oscillators[i].irqpend = 0;
-
-						if (chip->irq_callback)
-						{
-							chip->irq_callback(chip->irqparam, 0);
-						}
 						break;
 					}
 				}
@@ -446,24 +438,20 @@ static UINT8 es5503_r(void *info, UINT8 offset)
 				{
 					if (chip->oscillators[i].irqpend)
 					{
-						if (chip->irq_callback)
-						{
-							chip->irq_callback(chip->irqparam, 1);
-						}
+						if (chip->irq_func != NULL)
+							chip->irq_func(chip->irq_param, 1);
 						break;
 					}
 				}
 
 				return retval;
 
-			case 0xe1:	// oscillator enable
+			case 0xe1:  // oscillator enable
 				return (chip->oscsenabled-1)<<1;
 
-			case 0xe2:	// A/D converter
-				if (chip->adc_read)
-				{
-					return chip->adc_read(chip->adc_param, 0);
-				}
+			case 0xe2:  // A/D converter
+				if (chip->adc_func != NULL)
+					return chip->adc_func(chip->adc_param, 0);
 				break;
 		}
 	}
@@ -481,28 +469,28 @@ static void es5503_w(void *info, UINT8 offset, UINT8 data)
 
 		switch(offset & 0xe0)
 		{
-			case 0:		// freq lo
+			case 0:     // freq lo
 				chip->oscillators[osc].freq &= 0xff00;
 				chip->oscillators[osc].freq |= data;
 				break;
 
-			case 0x20:  	// freq hi
+			case 0x20:      // freq hi
 				chip->oscillators[osc].freq &= 0x00ff;
 				chip->oscillators[osc].freq |= (data<<8);
 				break;
 
-			case 0x40:	// volume
+			case 0x40:  // volume
 				chip->oscillators[osc].vol = data;
 				break;
 
-			case 0x60:	// data - ignore writes
+			case 0x60:  // data - ignore writes
 				break;
 
-			case 0x80:	// wavetable pointer
+			case 0x80:  // wavetable pointer
 				chip->oscillators[osc].wavetblpointer = (data<<8);
 				break;
 
-			case 0xa0:	// oscillator control
+			case 0xa0:  // oscillator control
 				// if a fresh key-on, reset the ccumulator
 				if ((chip->oscillators[osc].control & 1) && (!(data&1)))
 				{
@@ -512,8 +500,8 @@ static void es5503_w(void *info, UINT8 offset, UINT8 data)
 				chip->oscillators[osc].control = data;
 				break;
 
-			case 0xc0:	// bank select / wavetable size / resolution
-				if (data & 0x40)	// bank select - not used on the Apple IIgs
+			case 0xc0:  // bank select / wavetable size / resolution
+				if (data & 0x40)    // bank select - not used on the Apple IIgs
 				{
 					chip->oscillators[osc].wavetblpointer |= 0x10000;
 				}
@@ -528,14 +516,14 @@ static void es5503_w(void *info, UINT8 offset, UINT8 data)
 				break;
 		}
 	}
-	else	 // global registers
+	else     // global registers
 	{
 		switch (offset)
 		{
-			case 0xe0:	// interrupt status
+			case 0xe0:  // interrupt status
 				break;
 
-			case 0xe1:	// oscillator enable
+			case 0xe1:  // oscillator enable
 				chip->oscsenabled = 1 + ((data>>1) & 0x1f);
 
 				chip->output_rate = (chip->clock/8)/(2+chip->oscsenabled);
@@ -543,7 +531,7 @@ static void es5503_w(void *info, UINT8 offset, UINT8 data)
 					chip->SmpRateFunc(chip->SmpRateData, chip->output_rate);
 				break;
 
-			case 0xe2:	// A/D converter
+			case 0xe2:  // A/D converter
 				break;
 		}
 	}
