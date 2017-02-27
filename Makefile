@@ -115,7 +115,15 @@ CFLAGS += -D AUDDRV_XAUD2
 endif
 
 ifneq ($(WINDOWS), 1)
-
+ifneq ($(USE_BSD_AUDIO), 1)
+LIBAUDOBJS += \
+	$(LIBAUDOBJ)/AudDrv_OSS.o
+CFLAGS += -D AUDDRV_OSS
+else
+LIBAUDOBJS += \
+	$(LIBAUDOBJ)/AudDrv_SADA.o
+CFLAGS += -D AUDDRV_SADA
+endif
 
 ifeq ($(USE_ALSA), 1)
 LIBAUDOBJS += \
