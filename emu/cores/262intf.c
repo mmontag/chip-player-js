@@ -225,7 +225,6 @@ static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	if (opl3 == NULL)
 		return 0xFF;
 
-	OPL3_Reset(opl3, rate);
 	opl3->smplRate = rate; // save for reset
 	
 	devData = (DEV_DATA*) opl3;
