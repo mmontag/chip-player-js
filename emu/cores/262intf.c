@@ -115,7 +115,7 @@ static void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
 	opl3_chip* opl3 = (opl3_chip*) chip;
 	DEV_SMPL *bufMO = out[0];
 	DEV_SMPL *bufRO = out[1];
-	DEV_SMPL buffers[2];
+	Bit16s buffers[2];
 	UINT32 i;
 
 	for( i=0; i < samples ; i++ )
@@ -221,7 +221,7 @@ static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	rate = cfg->clock / 288;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	opl3 = (opl3_chip3*) malloc(sizeof(opl3_chip));
+	opl3 = (opl3_chip*) malloc(sizeof(opl3_chip));
 	if (opl3 == NULL)
 		return 0xFF;
 

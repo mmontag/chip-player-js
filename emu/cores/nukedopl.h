@@ -103,7 +103,7 @@ typedef struct _opl3_writebuf {
 
 struct _opl3_chip {
     void* chipInf;   // to alias DEV_DATA struct
-    UINT32 smplRate;
+    Bit32u smplRate;
 
     opl3_channel channel[18];
     opl3_slot slot[36];
