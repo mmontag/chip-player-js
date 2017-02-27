@@ -1416,3 +1416,54 @@ void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples)
         sndptr += 2;
     }
 }
+
+void nuked_write(void *chip, Bit8u a, Bit8u v)
+{
+	static Bit16u address = 0;
+	opl3_chip* opl3 = (opl3_chip*) chip;
+
+	switch(a&3)
+	{
+	case 0:
+		address = v;
+		break;
+	case 1:
+	case 3:
+		OPL3_WriteRegBuffered(opl3, address, v);
+		break;
+	case 2:
+		address = v | 0x100;
+		break;
+	}
+}
+
+void nuked_shutdown(void *chip)
+{
+	free(chip);
+}
+
+void nuked_reset_chip(void *chip)
+{
+	opl3_chip* opl3 = (opl3_chip*) chip;
+	Bit32u rate;
+
+	rate = opl3->smplRate;
+	OPL3_Reset(opl3, rate);
+	opl3->smplRate = rate; // save for reset
+}
+
+void nuked_update(void *chip, Bit32u samples, Bit32s **out)
+{
+	opl3_chip* opl3 = (opl3_chip*) chip;
+	Bit32s *bufMO = out[0];
+	Bit32s *bufRO = out[1];
+	Bit16s buffers[2];
+	Bit32u i;
+
+	for( i=0; i < samples ; i++ )
+	{
+		OPL3_GenerateResampled(opl3, buffers);
+		bufMO[i] = buffers[0];
+		bufRO[i] = buffers[1];
+	}
+}

@@ -78,53 +78,6 @@ static DEV_DEF devDef262_AdLibEmu =
 };
 #endif
 #ifdef EC_YMF262_NUKED
-static void nuked_write(void *chip, UINT8 a, UINT8 v)
-{
-	static UINT16 address = 0;
-	opl3_chip* opl3 = (opl3_chip*) chip;
-
-	switch(a&3)
-	{
-	case 0:
-		address = v;
-		break;
-	case 1:
-	case 3:
-		OPL3_WriteRegBuffered(opl3, address, v);
-		break;
-	case 2:
-		address = v | 0x100;
-		break;
-	}
-}
-static void nuked_shutdown(void *chip)
-{
-	free(chip);
-}
-static void nuked_reset_chip(void *chip)
-{
-	opl3_chip* opl3 = (opl3_chip*) chip;
-	UINT32 rate;
-
-	rate = opl3->smplRate;
-	OPL3_Reset(opl3, rate);
-	opl3->smplRate = rate; // save for reset
-}
-static void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
-{
-	opl3_chip* opl3 = (opl3_chip*) chip;
-	DEV_SMPL *bufMO = out[0];
-	DEV_SMPL *bufRO = out[1];
-	Bit16s buffers[2];
-	UINT32 i;
-
-	for( i=0; i < samples ; i++ )
-	{
-		OPL3_GenerateResampled(opl3, buffers);
-		bufMO[i] = buffers[0];
-		bufRO[i] = buffers[1];
-	}
-}
 static DEVDEF_RWFUNC devFunc262_Nuked[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nuked_write},

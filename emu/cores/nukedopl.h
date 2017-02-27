@@ -138,4 +138,9 @@ void OPL3_Reset(opl3_chip *chip, Bit32u samplerate);
 void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v);
 void OPL3_WriteRegBuffered(opl3_chip *chip, Bit16u reg, Bit8u v);
 void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples);
+
+void nuked_write(void *chip, Bit8u a, Bit8u v);
+void nuked_shutdown(void *chip);
+void nuked_reset_chip(void *chip);
+void nuked_update(void *chip, Bit32u samples, Bit32s **out);
 #endif
