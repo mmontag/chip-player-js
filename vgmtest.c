@@ -676,7 +676,7 @@ static void InitVGMChips(void)
 			else if (curChip == DEVID_YM3812)
 				devCfg.emuCore = FCC_ADLE;
 			else if (curChip == DEVID_YMF262)
-				devCfg.emuCore = FCC_ADLE;
+				devCfg.emuCore = FCC_NUKE;
 			else if (curChip == DEVID_NES_APU)
 				devCfg.emuCore = FCC_NSFP;
 			else if (curChip == DEVID_C6280)

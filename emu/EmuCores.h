@@ -11,6 +11,6 @@
 #define FCC_NSFP	0x4E534650	// NSFPlay
 #define FCC_OOTK	0x4F4F544B	// Ootake
 #define FCC_MEDN	0x4D45444E	// Mednafen
-#define FCC_NUKE    0x4E554B45  // Nuked OPL3
+#define FCC_NUKE	0x4E554B45	// Nuked OPL3
 
 #endif	// __EMUCORES_H__

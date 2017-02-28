@@ -27,24 +27,23 @@
 // version: 1.7.4
 //
 
-#ifndef NUKEDOPL_H
-#define NUKEDOPL_H
+#ifndef __NUKEDOPL_H__
+#define __NUKEDOPL_H__
 
-#include <inttypes.h>
+#include <stdtype.h>
+#include "../snddef.h"
 
 #define OPL_WRITEBUF_SIZE   1024
 #define OPL_WRITEBUF_DELAY  2
 
-typedef uintptr_t       Bitu;
-typedef intptr_t        Bits;
-typedef uint64_t        Bit64u;
-typedef int64_t         Bit64s;
-typedef uint32_t        Bit32u;
-typedef int32_t         Bit32s;
-typedef uint16_t        Bit16u;
-typedef int16_t         Bit16s;
-typedef uint8_t         Bit8u;
-typedef int8_t          Bit8s;
+typedef UINT64          Bit64u;
+typedef INT64           Bit64s;
+typedef UINT32          Bit32u;
+typedef INT32           Bit32s;
+typedef UINT16          Bit16u;
+typedef INT16           Bit16s;
+typedef UINT8           Bit8u;
+typedef INT8            Bit8s;
 
 typedef struct _opl3_slot opl3_slot;
 typedef struct _opl3_channel opl3_channel;
@@ -103,7 +102,9 @@ typedef struct _opl3_writebuf {
 
 struct _opl3_chip {
     void* chipInf;   // to alias DEV_DATA struct
+    Bit32u clock;
     Bit32u smplRate;
+    Bit16u address;
 
     opl3_channel channel[18];
     opl3_slot slot[36];
@@ -134,13 +135,14 @@ struct _opl3_chip {
 
 void OPL3_Generate(opl3_chip *chip, Bit16s *buf);
 void OPL3_GenerateResampled(opl3_chip *chip, Bit16s *buf);
-void OPL3_Reset(opl3_chip *chip, Bit32u samplerate);
+void OPL3_Reset(opl3_chip *chip, Bit32u clock, Bit32u samplerate);
 void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v);
 void OPL3_WriteRegBuffered(opl3_chip *chip, Bit16u reg, Bit8u v);
 void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples);
 
-void nuked_write(void *chip, Bit8u a, Bit8u v);
+void nuked_write(void *chip, UINT8 a, UINT8 v);
 void nuked_shutdown(void *chip);
 void nuked_reset_chip(void *chip);
-void nuked_update(void *chip, Bit32u samples, Bit32s **out);
-#endif
+void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out);
+
+#endif	// __NUKEDOPL_H__

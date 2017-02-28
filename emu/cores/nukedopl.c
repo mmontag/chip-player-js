@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <stdtype.h>
+#include "../snddef.h"
 #include "nukedopl.h"
 
 #define RSM_FRAC    10
@@ -1234,7 +1237,7 @@ void OPL3_GenerateResampled(opl3_chip *chip, Bit16s *buf)
     chip->samplecnt += 1 << RSM_FRAC;
 }
 
-void OPL3_Reset(opl3_chip *chip, Bit32u samplerate)
+void OPL3_Reset(opl3_chip *chip, Bit32u clock, Bit32u samplerate)
 {
     Bit8u slotnum;
     Bit8u channum;
@@ -1274,7 +1277,8 @@ void OPL3_Reset(opl3_chip *chip, Bit32u samplerate)
         OPL3_ChannelSetupAlg(&chip->channel[channum]);
     }
     chip->noise = 0x306600;
-    chip->rateratio = (samplerate << RSM_FRAC) / 49716;
+    //chip->rateratio = (samplerate << RSM_FRAC) / 49716;
+    chip->rateratio = (samplerate << RSM_FRAC) / (clock / 288);
     chip->tremoloshift = 4;
     chip->vibshift = 1;
 }
@@ -1283,6 +1287,8 @@ void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v)
 {
     Bit8u high = (reg >> 8) & 0x01;
     Bit8u regm = reg & 0xff;
+    if (! chip->newm && reg != 0x105)
+        high = 0;
     switch (regm & 0xf0)
     {
     case 0x00:
@@ -1417,22 +1423,21 @@ void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples)
     }
 }
 
-void nuked_write(void *chip, Bit8u a, Bit8u v)
+void nuked_write(void *chip, UINT8 a, UINT8 v)
 {
-	static Bit16u address = 0;
 	opl3_chip* opl3 = (opl3_chip*) chip;
 
 	switch(a&3)
 	{
 	case 0:
-		address = v;
+		opl3->address = v;
 		break;
 	case 1:
 	case 3:
-		OPL3_WriteRegBuffered(opl3, address, v);
+		OPL3_WriteRegBuffered(opl3, opl3->address, v);
 		break;
 	case 2:
-		address = v | 0x100;
+		opl3->address = v | 0x100;
 		break;
 	}
 }
@@ -1445,20 +1450,29 @@ void nuked_shutdown(void *chip)
 void nuked_reset_chip(void *chip)
 {
 	opl3_chip* opl3 = (opl3_chip*) chip;
+	void* chipInf;
+	Bit32u clock;
 	Bit32u rate;
 
+	// save for reset
+	chipInf = opl3->chipInf;
+	clock = opl3->clock;
 	rate = opl3->smplRate;
-	OPL3_Reset(opl3, rate);
-	opl3->smplRate = rate; // save for reset
+	
+	OPL3_Reset(opl3, clock, rate);
+	
+	opl3->chipInf = chipInf;
+	opl3->clock = clock;
+	opl3->smplRate = rate;
 }
 
-void nuked_update(void *chip, Bit32u samples, Bit32s **out)
+void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
 {
 	opl3_chip* opl3 = (opl3_chip*) chip;
-	Bit32s *bufMO = out[0];
-	Bit32s *bufRO = out[1];
+	DEV_SMPL *bufMO = out[0];
+	DEV_SMPL *bufRO = out[1];
 	Bit16s buffers[2];
-	Bit32u i;
+	UINT32 i;
 
 	for( i=0; i < samples ; i++ )
 	{

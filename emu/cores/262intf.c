@@ -17,6 +17,7 @@
 #include "nukedopl.h"
 #endif
 
+
 static UINT8 device_start_ymf262_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_ymf262_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
@@ -81,6 +82,9 @@ static DEV_DEF devDef262_AdLibEmu =
 static DEVDEF_RWFUNC devFunc262_Nuked[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nuked_write},
+//	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
+//	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_volume},
+//	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_vol_lr},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_Nuked =
@@ -93,7 +97,7 @@ static DEV_DEF devDef262_Nuked =
 	nuked_update,
 	
 	NULL,	// SetOptionBits
-	NULL,   // SetMuteMask
+	NULL/*nuked_set_mutemask*/,	// SetMuteMask
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -167,22 +171,21 @@ static UINT8 device_start_ymf262_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 #ifdef EC_YMF262_NUKED
 static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
-	opl3_chip*	opl3;
-	DEV_DATA* devData;
+	opl3_chip* opl3;
 	UINT32 rate;
 	
 	rate = cfg->clock / 288;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	opl3 = (opl3_chip*) malloc(sizeof(opl3_chip));
+	opl3 = (opl3_chip*)calloc(1, sizeof(opl3_chip));
 	if (opl3 == NULL)
 		return 0xFF;
-
+	
+	opl3->clock = cfg->clock;
 	opl3->smplRate = rate; // save for reset
 	
-	devData = (DEV_DATA*) opl3;
-	devData->chipInf = (void*) opl3;
-	INIT_DEVINF(retDevInf, devData, rate, &devDef262_Nuked);
+	opl3->chipInf = opl3;
+	INIT_DEVINF(retDevInf, (DEV_DATA*)opl3, rate, &devDef262_Nuked);
 	return 0x00;
 }
 #endif
