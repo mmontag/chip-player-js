@@ -383,7 +383,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
         }
         else
         {
-            const long double eat_delay = device->delay < device->maxdelay ? device->delay : device->maxdelay;
+            const double eat_delay = device->delay < device->maxdelay ? device->delay : device->maxdelay;
             device->delay -= eat_delay;
             device->carry += device->PCM_RATE * eat_delay;
             n_periodCountStereo = static_cast<ssize_t>(device->carry);

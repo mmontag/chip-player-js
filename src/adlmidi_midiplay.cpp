@@ -158,7 +158,7 @@ uint64_t MIDIplay::ReadVarLen(size_t tk)
 }
 
 
-long double MIDIplay::Tick(long double s, long double granularity)
+double MIDIplay::Tick(double s, double granularity)
 {
     if(CurrentPosition.began)
         CurrentPosition.wait -= s;
@@ -1264,7 +1264,7 @@ void MIDIplay::NoteOff(uint16_t MidCh, uint8_t note)
 }
 
 
-void MIDIplay::UpdateVibrato(long double amount)
+void MIDIplay::UpdateVibrato(double amount)
 {
     for(size_t a = 0, b = Ch.size(); a < b; ++a)
         if(Ch[a].vibrato && !Ch[a].activenotes.empty())
@@ -1292,7 +1292,7 @@ uint64_t MIDIplay::ChooseDevice(const std::string &name)
     return n;
 }
 
-void MIDIplay::UpdateArpeggio(long double) // amount = amount of time passed
+void MIDIplay::UpdateArpeggio(double) // amount = amount of time passed
 {
     // If there is an adlib channel that has multiple notes
     // simulated on the same channel, arpeggio them.

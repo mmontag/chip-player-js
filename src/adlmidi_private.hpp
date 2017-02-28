@@ -173,7 +173,7 @@ class MIDIplay
     {
         bool began;
         char padding[7];
-        long double wait;
+        double wait;
         struct TrackInfo
         {
             size_t ptr;
@@ -200,7 +200,7 @@ class MIDIplay
         uint8_t panning, vibrato, sustain;
         char ____padding[6];
         double  bend, bendsense;
-        long double  vibpos, vibspeed, vibdepth;
+        double  vibpos, vibspeed, vibdepth;
         int64_t vibdelay;
         uint8_t lastlrpn, lastmrpn;
         bool nrpn;
@@ -454,7 +454,7 @@ public:
      *   Input: granularity = don't expect intervals smaller than this, in seconds
      *   Output: desired number of seconds until next call
      */
-    long double Tick(long double s, long double granularity);
+    double Tick(double s, double granularity);
 
 private:
     enum
@@ -491,8 +491,8 @@ private:
     //void UpdatePortamento(unsigned MidCh)
     void NoteUpdate_All(uint16_t MidCh, unsigned props_mask);
     void NoteOff(uint16_t MidCh, uint8_t note);
-    void UpdateVibrato(long double amount);
-    void UpdateArpeggio(long double /*amount*/);
+    void UpdateVibrato(double amount);
+    void UpdateArpeggio(double /*amount*/);
 
 public:
     uint64_t ChooseDevice(const std::string &name);

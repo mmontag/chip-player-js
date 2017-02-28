@@ -52,13 +52,13 @@ struct ADL_MIDIPlayer
     unsigned int SkipForward;
     unsigned int QuitWithoutLooping;
     unsigned int ScaleModulators;
-    long double delay;
-    long double carry;
+    double delay;
+    double carry;
 
     /* The lag between visual content and audio content equals */
     /* the sum of these two buffers. */
-    long double mindelay;
-    long double maxdelay;
+    double mindelay;
+    double maxdelay;
 
     /* For internal usage */
     int     stored_samples; /* num of collected samples */
