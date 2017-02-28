@@ -181,7 +181,7 @@ static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	if (opl3 == NULL)
 		return 0xFF;
 	
-	opl3->clock = cfg->clock;
+	opl3->clock = cfg->clock / 288;
 	opl3->smplRate = rate; // save for reset
 	
 	opl3->chipInf = opl3;
