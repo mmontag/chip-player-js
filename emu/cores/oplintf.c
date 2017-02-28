@@ -13,12 +13,16 @@
 #define OPLTYPE_IS_OPL2
 #include "adlibemu.h"
 #endif
+#ifdef EC_YM3812_NUKED
+#include "nukedopl.h"
+#endif
 
 
 static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_y8950(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
+static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 
 
 
@@ -72,6 +76,33 @@ static DEV_DEF devDef3812_AdLibEmu =
 	devFunc3812_Emu,	// rwFuncs
 };
 #endif
+#ifdef EC_YM3812_NUKED
+static DEVDEF_RWFUNC devFunc3812_Nuked[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nuked_write},
+//	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
+//	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_volume},
+//	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_vol_lr},
+	{0x00, 0x00, 0, NULL}
+};
+static DEV_DEF devDef3812_Nuked =
+{
+	"YM3812", "Nuked OPL3", FCC_NUKE,
+	
+	device_start_ym3812_nuked,
+	nuked_shutdown,
+	nuked_reset_chip,
+	nuked_update,
+	
+	NULL,	// SetOptionBits
+	NULL/*nuked_set_mutemask*/,	// SetMuteMask
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc3812_Nuked,	// rwFuncs
+};
+#endif
 
 const DEV_DEF* devDefList_YM3812[] =
 {
@@ -80,6 +111,9 @@ const DEV_DEF* devDefList_YM3812[] =
 #endif
 #ifdef EC_YM3812_MAME
 	&devDef3812_MAME,
+#endif
+#ifdef EC_YM3812_NUKED
+	&devDef3812_Nuked,
 #endif
 	NULL
 };
@@ -196,6 +230,27 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 }
 #endif
 
+#ifdef EC_YM3812_NUKED
+static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	opl3_chip* opl3;
+	UINT32 rate;
+	
+	rate = cfg->clock / 288;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	opl3 = (opl3_chip*)calloc(1, sizeof(opl3_chip));
+	if (opl3 == NULL)
+		return 0xFF;
+	
+	opl3->clock = cfg->clock;
+	opl3->smplRate = rate; // save for reset
+	
+	opl3->chipInf = opl3;
+	INIT_DEVINF(retDevInf, (DEV_DATA*)opl3, rate, &devDef262_Nuked);
+	return 0x00;
+}
+#endif
 
 static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
