@@ -101,6 +101,7 @@ static int validate_pattern(uint8 *buf)
 		for (j = 0; j < 4; j++) {
 			uint8 *d = buf + (i * 4 + j) * 4;
 			if ((d[0] >> 4) > 1) {
+				D_(D_CRIT "invalid pattern data: row %d ch %d: %02x", i, j, d[0]);
 				return -1;
 			}
 		}
@@ -116,6 +117,7 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 	uint8 pat_buf[1024];
 	int smp_size, num_pat;
 	long size;
+	int count;
 
 	hio_seek(f, start + 1080, SEEK_SET);
 	if (hio_read(buf, 1, 4, f) < 4) {
@@ -202,15 +204,22 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 	num_pat++;
 
 	/* see if module size matches UNIC */
-	if (start + 1084 + num_pat * 0x300 + smp_size == size)
+	if (start + 1084 + num_pat * 0x300 + smp_size == size) {
+		D_(D_CRIT "module size matches UNIC");
 		return -1;
+	}
 
 	/* validate pattern data in an attempt to catch UNICs with MOD size */
-	for (i = 0; i < num_pat; i++) {
+	for (count = i = 0; i < num_pat; i++) {
 		hio_seek(f, start + 1084 + 1024 * i, SEEK_SET);
 		hio_read(pat_buf, 1024, 1, f);
-		if (validate_pattern(pat_buf) < 0)
-			return -1;
+		if (validate_pattern(pat_buf) < 0) {
+			D_(D_WARN "pattern %d: error in pattern data", i);
+			count++;
+		}
+	}
+	if (count > 2) {
+		return -1;
 	}
 
 found:
