@@ -381,9 +381,9 @@ InvFmt:
     TrackData.resize(TrackCount, std::vector<uint8_t>());
     CurrentPosition.track.clear();
     CurrentPosition.track.resize(TrackCount);
-    InvDeltaTicks = fraction<long>(1, 1000000l * static_cast<long>(DeltaTicks));
+    InvDeltaTicks = fraction<uint64_t>(1, 1000000l * static_cast<uint64_t>(DeltaTicks));
     //Tempo       = 1000000l * InvDeltaTicks;
-    Tempo         = fraction<long>(1,            static_cast<long>(DeltaTicks));
+    Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks));
     static const unsigned char EndTag[4] = {0xFF, 0x2F, 0x00, 0x00};
     int totalGotten = 0;
 
@@ -478,7 +478,7 @@ InvFmt:
             uint64_t tkDelay = ReadVarLenEx(tk, ok);
 
             if(ok)
-                CurrentPosition.track[tk].delay = static_cast<long>(tkDelay);
+                CurrentPosition.track[tk].delay = tkDelay;
             else
             {
                 std::stringstream msg;

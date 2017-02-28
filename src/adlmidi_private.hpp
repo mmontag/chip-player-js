@@ -173,18 +173,18 @@ class MIDIplay
     {
         bool began;
         char padding[7];
-        double wait;
+        long double wait;
         struct TrackInfo
         {
             size_t ptr;
-            long   delay;
+            uint64_t delay;
             int    status;
             char padding2[4];
             TrackInfo(): ptr(0), delay(0), status(0) {}
         };
         std::vector<TrackInfo> track;
 
-        Position(): began(false), wait(0.0), track() { }
+        Position(): began(false), wait(0.0l), track() { }
     } CurrentPosition, LoopBeginPosition, trackBeginPosition;
 
     std::map<std::string, uint64_t> devices;
@@ -200,7 +200,7 @@ class MIDIplay
         uint8_t panning, vibrato, sustain;
         char ____padding[6];
         double  bend, bendsense;
-        double  vibpos, vibspeed, vibdepth;
+        long double  vibpos, vibspeed, vibdepth;
         int64_t vibdelay;
         uint8_t lastlrpn, lastmrpn;
         bool nrpn;
@@ -287,7 +287,7 @@ public:
 
     ADL_MIDIPlayer *config;
     std::string musTitle;
-    fraction<long> InvDeltaTicks, Tempo;
+    fraction<uint64_t> InvDeltaTicks, Tempo;
     bool    trackStart,
             loopStart,
             loopEnd,
@@ -454,7 +454,7 @@ public:
      *   Input: granularity = don't expect intervals smaller than this, in seconds
      *   Output: desired number of seconds until next call
      */
-    double Tick(double s, double granularity);
+    long double Tick(long double s, long double granularity);
 
 private:
     enum
@@ -491,8 +491,8 @@ private:
     //void UpdatePortamento(unsigned MidCh)
     void NoteUpdate_All(uint16_t MidCh, unsigned props_mask);
     void NoteOff(uint16_t MidCh, uint8_t note);
-    void UpdateVibrato(double amount);
-    void UpdateArpeggio(double /*amount*/);
+    void UpdateVibrato(long double amount);
+    void UpdateArpeggio(long double /*amount*/);
 
 public:
     uint64_t ChooseDevice(const std::string &name);
