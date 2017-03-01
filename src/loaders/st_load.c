@@ -131,8 +131,9 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 		smp_size += 2 * mh.ins[i].size;
 	}
 
-	if (smp_size < 8)
+	if (smp_size < 8) {
 		return -1;
+	}
 
 	for (ins = i = 0; i < pat; i++) {
 		for (j = 0; j < (64 * 4); j++) {
@@ -142,26 +143,33 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 
 			s = (mod_event[0] & 0xf0) | MSN(mod_event[2]);
 
-			if (s > 15)	/* sample number > 15 */
+			if (s > 15) {	/* sample number > 15 */
+				D_(D_CRIT "%d/%d/%d: invalid sample number: %d", i, j / 4, j % 4, s);
 				return -1;
+			}
 
-			if (s > ins)	/* find highest used sample */
+			if (s > ins) {	/* find highest used sample */
 				ins = s;
+			}
 
 			p = 256 * LSN(mod_event[0]) + mod_event[1];
 
-			if (p == 0)
+			if (p == 0) {
 				continue;
+			}
 
-			if (p == 162)	/* used in Karsten Obarski's blueberry.mod */
+			if (p == 162) {	/* used in Karsten Obarski's blueberry.mod */
 				continue;
+			}
 
 			for (k = 0; period[k] >= 0; k++) {
 				if (p == period[k])
 					break;
 			}
-			if (period[k] < 0)
+			if (period[k] < 0) {
+				D_(D_CRIT "%d/%d/%d: invalid period", i, j / 4, j % 4);
 				return -1;
+			}
 		}
 	}
 

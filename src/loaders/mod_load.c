@@ -215,6 +215,7 @@ static int mod_test(HIO_HANDLE * f, char *t, const int start)
 		hio_read(pat_buf, 1024, 1, f);
 		if (validate_pattern(pat_buf) < 0) {
 			D_(D_WARN "pattern %d: error in pattern data", i);
+			/* Allow a few errors, "lexstacy" has 0x52 */
 			count++;
 		}
 	}
