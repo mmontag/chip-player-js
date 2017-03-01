@@ -147,8 +147,11 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 			s = (mod_event[0] & 0xf0) | MSN(mod_event[2]);
 
 			if (s > 15) {	/* sample number > 15 */
-				D_(D_CRIT "%d/%d/%d: invalid sample number: %d", i, j / 4, j % 4, s);
-				return -1;
+				/* cant.mod has this invalid sample number */
+				if (!(s == 64 && i == 3 && j == 183)) {
+					D_(D_CRIT "%d/%d/%d: invalid sample number: %d", i, j / 4, j % 4, s);
+					return -1;
+				}
 			}
 
 			if (s > ins) {	/* find highest used sample */
@@ -161,7 +164,13 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 				continue;
 			}
 
-			if (p == 162) {	/* used in Karsten Obarski's blueberry.mod */
+			/* another special check for cant.mod */
+			if (p == 3792 && i == 3 && j == 183) {
+				continue;
+			}
+
+			/* used in Karsten Obarski's blueberry.mod */
+			if (p == 162) {
 				continue;
 			}
 
