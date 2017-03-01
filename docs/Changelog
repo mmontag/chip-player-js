@@ -16,6 +16,8 @@ Stable versions
 	Fix problems reported by Ralf Hoffmann:
 	- fix MMD3 instrument type sanity check
 	- fix strictness of MOD pattern data tester
+	- fix loading of XMLiTE and MadTracker XM modules
+	- fix loading of ST modules with invalid names
 	Other changes:
 	- fix double free in case of ADPCM sample load error
 	- fix PTM loader issues (reported by Lionel Debroux)
