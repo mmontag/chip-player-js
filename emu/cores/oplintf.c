@@ -80,9 +80,7 @@ static DEV_DEF devDef3812_AdLibEmu =
 static DEVDEF_RWFUNC devFunc3812_Nuked[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nuked_write},
-//	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
-//	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_volume},
-//	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_vol_lr},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3812_Nuked =
@@ -113,7 +111,7 @@ const DEV_DEF* devDefList_YM3812[] =
 	&devDef3812_MAME,
 #endif
 #ifdef EC_YM3812_NUKED
-	&devDef3812_Nuked,
+	&devDef3812_Nuked,	// note: OPL3 emulator, so some things aren't working (OPL1 mode, OPL2 detection)
 #endif
 	NULL
 };
@@ -243,7 +241,7 @@ static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	if (opl3 == NULL)
 		return 0xFF;
 	
-	opl3->clock = cfg->clock / 72;
+	opl3->clock = cfg->clock * 4;
 	opl3->smplRate = rate; // save for reset
 	
 	opl3->chipInf = opl3;

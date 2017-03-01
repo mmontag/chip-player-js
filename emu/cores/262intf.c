@@ -82,7 +82,7 @@ static DEV_DEF devDef262_AdLibEmu =
 static DEVDEF_RWFUNC devFunc262_Nuked[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nuked_write},
-//	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
 //	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_volume},
 //	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_vol_lr},
 	{0x00, 0x00, 0, NULL}
@@ -181,7 +181,7 @@ static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	if (opl3 == NULL)
 		return 0xFF;
 	
-	opl3->clock = cfg->clock / 288;
+	opl3->clock = cfg->clock;
 	opl3->smplRate = rate; // save for reset
 	
 	opl3->chipInf = opl3;

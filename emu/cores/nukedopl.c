@@ -1024,6 +1024,7 @@ static void OPL3_ChannelSet4Op(opl3_chip *chip, Bit8u data)
     }
 }
 
+#if 0
 static Bit16s OPL3_ClipSample(Bit32s sample)
 {
     if (sample > 32767)
@@ -1036,6 +1037,7 @@ static Bit16s OPL3_ClipSample(Bit32s sample)
     }
     return (Bit16s)sample;
 }
+#endif
 
 static void OPL3_GenerateRhythm1(opl3_chip *chip)
 {
@@ -1093,13 +1095,14 @@ static void OPL3_GenerateRhythm2(opl3_chip *chip)
     OPL3_SlotGeneratePhase(channel8->slots[1], phase);
 }
 
-void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
+void OPL3_Generate(opl3_chip *chip, Bit32s *buf)
 {
     Bit8u ii;
     Bit8u jj;
     Bit16s accm;
 
-    buf[1] = OPL3_ClipSample(chip->mixbuff[1]);
+    //buf[1] = OPL3_ClipSample(chip->mixbuff[1]);
+    buf[1] = chip->mixbuff[1];
 
     for (ii = 0; ii < 12; ii++)
     {
@@ -1156,7 +1159,8 @@ void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
         OPL3_SlotGenerate(&chip->slot[17]);
     }
 
-    buf[0] = OPL3_ClipSample(chip->mixbuff[0]);
+    //buf[0] = OPL3_ClipSample(chip->mixbuff[0]);
+    buf[0] = chip->mixbuff[0];
 
     for (ii = 18; ii < 33; ii++)
     {
@@ -1221,7 +1225,7 @@ void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
     chip->writebuf_samplecnt++;
 }
 
-void OPL3_GenerateResampled(opl3_chip *chip, Bit16s *buf)
+void OPL3_GenerateResampled(opl3_chip *chip, Bit32s *buf)
 {
     while (chip->samplecnt >= chip->rateratio)
     {
@@ -1230,9 +1234,9 @@ void OPL3_GenerateResampled(opl3_chip *chip, Bit16s *buf)
         OPL3_Generate(chip, chip->samples);
         chip->samplecnt -= chip->rateratio;
     }
-    buf[0] = (Bit16s)((chip->oldsamples[0] * (chip->rateratio - chip->samplecnt)
+    buf[0] = (Bit32s)((chip->oldsamples[0] * (chip->rateratio - chip->samplecnt)
                      + chip->samples[0] * chip->samplecnt) / chip->rateratio);
-    buf[1] = (Bit16s)((chip->oldsamples[1] * (chip->rateratio - chip->samplecnt)
+    buf[1] = (Bit32s)((chip->oldsamples[1] * (chip->rateratio - chip->samplecnt)
                      + chip->samples[1] * chip->samplecnt) / chip->rateratio);
     chip->samplecnt += 1 << RSM_FRAC;
 }
@@ -1278,7 +1282,7 @@ void OPL3_Reset(opl3_chip *chip, Bit32u clock, Bit32u samplerate)
     }
     chip->noise = 0x306600;
     //chip->rateratio = (samplerate << RSM_FRAC) / 49716;
-    chip->rateratio = (samplerate << RSM_FRAC) / (clock);
+    chip->rateratio = (samplerate << RSM_FRAC) / (clock / 288);
     chip->tremoloshift = 4;
     chip->vibshift = 1;
 }
@@ -1412,7 +1416,7 @@ void OPL3_WriteRegBuffered(opl3_chip *chip, Bit16u reg, Bit8u v)
     chip->writebuf_last = (chip->writebuf_last + 1) % OPL_WRITEBUF_SIZE;
 }
 
-void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples)
+void OPL3_GenerateStream(opl3_chip *chip, Bit32s *sndptr, Bit32u numsamples)
 {
     Bit32u i;
 
@@ -1439,6 +1443,18 @@ void nuked_write(void *chip, UINT8 a, UINT8 v)
 	case 2:
 		opl3->address = v | 0x100;
 		break;
+	}
+}
+
+UINT8 nuked_read(void *chip, UINT8 a)
+{
+	switch(a & 3)
+	{
+	case 0:
+		// no timer emulation
+		return 0x00;	// (IRQ<<7) | (timerA<<6) | (timerB<<5)
+	default:
+		return 0;
 	}
 }
 
@@ -1471,7 +1487,7 @@ void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
 	opl3_chip* opl3 = (opl3_chip*) chip;
 	DEV_SMPL *bufMO = out[0];
 	DEV_SMPL *bufRO = out[1];
-	Bit16s buffers[2];
+	Bit32s buffers[2];
 	UINT32 i;
 
 	for( i=0; i < samples ; i++ )

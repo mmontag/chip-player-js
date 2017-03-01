@@ -123,8 +123,8 @@ struct _opl3_chip {
     //OPL3L
     Bit32s rateratio;
     Bit32s samplecnt;
-    Bit16s oldsamples[2];
-    Bit16s samples[2];
+    Bit32s oldsamples[2];
+    Bit32s samples[2];
 
     Bit64u writebuf_samplecnt;
     Bit32u writebuf_cur;
@@ -133,14 +133,15 @@ struct _opl3_chip {
     opl3_writebuf writebuf[OPL_WRITEBUF_SIZE];
 };
 
-void OPL3_Generate(opl3_chip *chip, Bit16s *buf);
-void OPL3_GenerateResampled(opl3_chip *chip, Bit16s *buf);
+void OPL3_Generate(opl3_chip *chip, Bit32s *buf);
+void OPL3_GenerateResampled(opl3_chip *chip, Bit32s *buf);
 void OPL3_Reset(opl3_chip *chip, Bit32u clock, Bit32u samplerate);
 void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v);
 void OPL3_WriteRegBuffered(opl3_chip *chip, Bit16u reg, Bit8u v);
-void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples);
+void OPL3_GenerateStream(opl3_chip *chip, Bit32s *sndptr, Bit32u numsamples);
 
 void nuked_write(void *chip, UINT8 a, UINT8 v);
+UINT8 nuked_read(void *chip, UINT8 a);
 void nuked_shutdown(void *chip);
 void nuked_reset_chip(void *chip);
 void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out);

@@ -1138,7 +1138,7 @@ UINT8 ADLIBEMU(reg_read)(void *chip, UINT8 port)
 	
 #if defined(OPLTYPE_IS_OPL3)
 	// opl3-detection routines require ret&6 to be zero
-	if ((port&1)==0)
+	if ((port&3)==0)
 	{
 		return OPL->status;
 	}
