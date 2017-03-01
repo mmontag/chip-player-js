@@ -91,6 +91,9 @@ static int st_test(HIO_HANDLE *f, char *t, const int start)
 		return -1;
 
 	for (i = 0; i < 15; i++) {
+		/* Crepequs.mod has random values in first byte */
+		mh.ins[i].name[0] = 'X';
+
 		if (libxmp_test_name(mh.ins[i].name, 22) < 0)
 			return -1;
 
@@ -348,7 +351,7 @@ static int st_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	} else if ((fxused & ~0xf807) == 0) {
 		modtype = "D.O.C Soundtracker 2.0";
 	} else {
-		modtype = "unknown tracker";
+		modtype = "unknown tracker 15 instrument";
 	}
 
 	snprintf(mod->type, XMP_NAME_SIZE, "%s", modtype);
