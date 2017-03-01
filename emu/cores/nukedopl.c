@@ -1278,7 +1278,7 @@ void OPL3_Reset(opl3_chip *chip, Bit32u clock, Bit32u samplerate)
     }
     chip->noise = 0x306600;
     //chip->rateratio = (samplerate << RSM_FRAC) / 49716;
-    chip->rateratio = (samplerate << RSM_FRAC) / (clock / 288);
+    chip->rateratio = (samplerate << RSM_FRAC) / (clock);
     chip->tremoloshift = 4;
     chip->vibshift = 1;
 }
