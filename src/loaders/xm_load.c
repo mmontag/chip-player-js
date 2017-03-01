@@ -378,6 +378,15 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE *f)
 	xih.samples = hio_read16l(f);		/* Number of samples */
 	xih.sh_size = hio_read32l(f);		/* Sample header size */
 
+	/* Ralf Hoffmann found a XMLiTE module (ZALZA - Tekilla groove.xm) and
+	 * a MadTracker 2.0 module (JUHO - Ihana paiva.xm) with samples and size
+	 * set to -1.
+	 */
+	if (xih.samples == 0xffff && xih.sh_size == -1) {
+		xih.samples = 0;
+		xih.sh_size = 0;
+	}
+
 	/* Sanity check */
 	if (xih.samples > 0x10 || (xih.samples > 0 && xih.sh_size > 0x100)) {
 		D_(D_CRIT "Sanity check: %d %d", xih.samples, xih.sh_size);
