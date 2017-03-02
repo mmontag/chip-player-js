@@ -254,7 +254,7 @@ LOADER		= ust ac1d unic unic2 nst flt flt8 wow mtm it it_oldins \
 		  dsmi stim pt36 psm rtm ice dbm mdl0 mdl mgt liq liq_no \
 		  emod chiptracker gdm dtm abk mfp np1 np2 np3 nru p60 crb \
 		  6chn mod_adpcm4 mod_noterange mod_noterange2 mod_scrm \
-		  mod_invalid xm_adpcm xm_xmlite med3 med4 mmd0 mmd3 \
+		  mod_invalid xm_adpcm xm_xmlite xm_short med3 med4 mmd0 mmd3 \
 		  mmd_iff3oct m15 m15_invalid m15_invalid2 m15_short_rip fnk \
 		  ult pru1 pru2 ksm di pm10 pm18 xann tp3 titanics fuchs ims
 
