@@ -616,28 +616,33 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	struct xm_file_header xfh;
 	char tracker_name[21];
 	int len;
+	uint8 buf[80];
 
 	LOAD_INIT();
 
-	hio_read(&xfh.id, 17, 1, f);		/* ID text */
-	hio_read(&xfh.name, 20, 1, f);		/* Module name */
-	hio_read8(f);				/* 0x1a */
-	hio_read(&xfh.tracker, 20, 1, f);	/* Tracker name */
-	xfh.version = hio_read16l(f);		/* Version number, minor-major */
-	xfh.headersz = hio_read32l(f);		/* Header size */
-	xfh.songlen = hio_read16l(f);		/* Song length */
-	xfh.restart = hio_read16l(f);		/* Restart position */
-	xfh.channels = hio_read16l(f);		/* Number of channels */
-	xfh.patterns = hio_read16l(f);		/* Number of patterns */
-	xfh.instruments = hio_read16l(f);	/* Number of instruments */
-	xfh.flags = hio_read16l(f);		/* 0=Amiga freq table, 1=Linear */
-	xfh.tempo = hio_read16l(f);		/* Default tempo */
-	xfh.bpm = hio_read16l(f);		/* Default BPM */
+	if (hio_read(buf, 80, 1, f) != 1) {
+		D_(D_CRIT "error reading header");
+		return -1;
+	}
+
+	memcpy(xfh.id, buf, 17);		/* ID text */
+	memcpy(xfh.name, buf + 17, 20);		/* Module name */
+	/* */					/* skip 0x1a */
+	memcpy(xfh.tracker, buf + 38, 20);	/* Tracker name */
+	xfh.version = readmem16l(buf + 58);	/* Version number, minor-major */
+	xfh.headersz = readmem32l(buf + 60);	/* Header size */
+	xfh.songlen = readmem16l(buf + 64);	/* Song length */
+	xfh.restart = readmem16l(buf + 66);	/* Restart position */
+	xfh.channels = readmem16l(buf + 68);	/* Number of channels */
+	xfh.patterns = readmem16l(buf + 70);	/* Number of patterns */
+	xfh.instruments = readmem16l(buf + 72);	/* Number of instruments */
+	xfh.flags = readmem16l(buf + 74);	/* 0=Amiga freq table, 1=Linear */
+	xfh.tempo = readmem16l(buf + 76);	/* Default tempo */
+	xfh.bpm = readmem16l(buf + 78);		/* Default BPM */
 
 	/* Sanity checks */
 	if (xfh.songlen > 256 || xfh.patterns > 256 || xfh.instruments > 255) {
-		D_(D_CRIT "Sanity check: %d %d %d", xfh.songlen, xfh.patterns,
-		   xfh.instruments);
+		D_(D_CRIT "Sanity check: %d %d %d", xfh.songlen, xfh.patterns, xfh.instruments);
 		return -1;
 	}
 
@@ -653,14 +658,17 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 
+	/* Honor header size -- needed by BoobieSqueezer XMs */
 	len = xfh.headersz - 0x14;
 	if (len < 0 || len > 256) {
 		D_(D_CRIT "Sanity check: %d", len);
 		return -1;
 	}
 
-	/* Honor header size -- needed by BoobieSqueezer XMs */
-	hio_read(&xfh.order, len, 1, f);	/* Pattern order table */
+	if (hio_read(&xfh.order, len, 1, f) != 1) {	/* Pattern order table */
+		D_(D_CRIT "error reading orders");
+		return -1;
+	}
 
 	strncpy(mod->name, (char *)xfh.name, 20);
 
@@ -674,8 +682,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	mod->trk = mod->chn * mod->pat + 1;
 
 	m->c4rate = C4_NTSC_RATE;
-	m->period_type = xfh.flags & XM_LINEAR_PERIOD_MODE ?
-				PERIOD_LINEAR : PERIOD_AMIGA;
+	m->period_type = xfh.flags & XM_LINEAR_PERIOD_MODE ?  PERIOD_LINEAR : PERIOD_AMIGA;
 
 	memcpy(mod->xxo, xfh.order, mod->len);
 	/*tracker_name[20] = 0;*/
@@ -703,8 +710,9 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	/* See MMD1 loader for explanation */
 	if (!strncmp(tracker_name, "MED2XM by J.Pynnone", 19)) {
-		if (mod->bpm <= 10)
+		if (mod->bpm <= 10) {
 			mod->bpm = 125 * (0x35 - mod->bpm * 2) / 33;
+		}
 		m->quirk &= ~QUIRK_FT2BUGS;
 	}
 
@@ -713,8 +721,7 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		m->quirk &= ~QUIRK_FT2BUGS;
 	}
 
-	libxmp_set_type(m, "%s XM %d.%02d", tracker_name,
-		 xfh.version >> 8, xfh.version & 0xff);
+	libxmp_set_type(m, "%s XM %d.%02d", tracker_name, xfh.version >> 8, xfh.version & 0xff);
 #else
 	libxmp_set_type(m, tracker_name);
 #endif
@@ -722,33 +729,35 @@ static int xm_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	MODULE_INFO();
 
 	/* Honor header size */
-
-	hio_seek(f, start + xfh.headersz + 60, SEEK_SET);
+	if (hio_seek(f, start + xfh.headersz + 60, SEEK_SET) < 0) {
+		return -1;
+	}
 
 	/* XM 1.02/1.03 has a different patterns and instruments order */
-
 	if (xfh.version <= 0x0103) {
-		if (load_instruments(m, xfh.version, f) < 0)
+		if (load_instruments(m, xfh.version, f) < 0) {
 			return -1;
-		if (load_patterns(m, xfh.version, f) < 0)
+		}
+		if (load_patterns(m, xfh.version, f) < 0) {
 			return -1;
+		}
 	} else {
-		if (load_patterns(m, xfh.version, f) < 0)
+		if (load_patterns(m, xfh.version, f) < 0) {
 			return -1;
-		if (load_instruments(m, xfh.version, f) < 0)
+		}
+		if (load_instruments(m, xfh.version, f) < 0) {
 			return -1;
+		}
 	}
 
 	D_(D_INFO "Stored samples: %d", mod->smp);
 
 	/* XM 1.02 stores all samples after the patterns */
-
 	if (xfh.version <= 0x0103) {
 		for (i = 0; i < mod->ins; i++) {
 			for (j = 0; j < mod->xxi[i].nsm; j++) {
 				int sid = mod->xxi[i].sub[j].sid;
-				if (libxmp_load_sample(m, f, SAMPLE_FLAG_DIFF,
-						&mod->xxs[sid], NULL) < 0) {
+				if (libxmp_load_sample(m, f, SAMPLE_FLAG_DIFF, &mod->xxs[sid], NULL) < 0) {
 					return -1;
 				}
 			}
