@@ -9,6 +9,7 @@ Stable versions
 	- fix compatibility with old gcc, mingw, djgpp
 	- fix warnings in configure script
 	- fix Watcom C build on OS/2
+	- fix Amiga build
 	Changes by Carsten Teibes:
 	- fix lite build mod loader symbols
 	Changes by NoSuck:
@@ -16,7 +17,7 @@ Stable versions
 	Fix problems reported by Ralf Hoffmann:
 	- fix MMD3 instrument type sanity check
 	- fix strictness of MOD pattern data tester
-	- fix loading of XMLiTE and MadTracker XM modules
+	- fix loading of XMLiTE XM modules
 	- fix loading of ST modules with invalid names
 	Other changes:
 	- fix double free in case of ADPCM sample load error
