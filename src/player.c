@@ -675,11 +675,8 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	}
 
 	if (!TEST_PER(VENV_PAUSE)) {
-		/* Also check for fade action and escape from sustain loop (see
-		 * azo_cotb.it pos 13/chn 13)
-		 */
 		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
-			act == VIRT_ACTION_FADE || DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
+			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
 	}
 
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);

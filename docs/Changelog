@@ -19,9 +19,11 @@ Stable versions
 	- fix strictness of MOD pattern data tester
 	- fix loading of XMLiTE XM modules
 	- fix loading of ST modules with invalid names
+	Fix problems reported by Lionel Debroux:
+	- fix PTM loader issues
+	- fix NNA and DCT/DCA issues
 	Other changes:
 	- fix double free in case of ADPCM sample load error
-	- fix PTM loader issues (reported by Lionel Debroux)
 
 4.4.1 (20161012):
 	Fix issues reported by Saga Musix:

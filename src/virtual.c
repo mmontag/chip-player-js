@@ -428,7 +428,7 @@ void libxmp_virt_setnna(struct context_data *ctx, int chn, int nna)
 }
 
 static void check_dct(struct context_data *ctx, int i, int chn, int ins,
-			int smp, int note, int dct, int dca)
+			int smp, int note, int nna, int dct, int dca)
 {
 	struct player_data *p = &ctx->p;
 	struct mixer_voice *vi = &p->virt.voice_array[i];
@@ -437,13 +437,24 @@ static void check_dct(struct context_data *ctx, int i, int chn, int ins,
 	voc = p->virt.virt_channel[chn].map;
 
 	if (vi->root == chn && vi->ins == ins) {
-		if (dct == XMP_INST_DCT_INST ||
-			(dct == XMP_INST_DCT_SMP && vi->smp == smp) ||
-			(dct == XMP_INST_DCT_NOTE && vi->note == note)) {
 
-			if (dca) {
-				if (i != voc || vi->act)
+		if (nna == XMP_INST_NNA_CUT) {
+		    libxmp_virt_resetvoice(ctx, i, 1);
+		    return;
+		}
+
+		vi->act = nna;
+
+		if ((dct == XMP_INST_DCT_INST) ||
+		    (dct == XMP_INST_DCT_SMP && vi->smp == smp) ||
+		    (dct == XMP_INST_DCT_NOTE && vi->note == note)) {
+
+			if (nna == XMP_INST_NNA_OFF && dca == XMP_INST_DCA_FADE) {
+				vi->act = VIRT_ACTION_OFF;
+			} else if (dca) {
+				if (i != voc || vi->act) {
 					vi->act = dca;
+				}
 			} else {
 				libxmp_virt_resetvoice(ctx, i, 1);
 			}
@@ -485,7 +496,7 @@ int libxmp_virt_setpatch(struct context_data *ctx, int chn, int ins, int smp,
 		int i;
 
 		for (i = 0; i < p->virt.maxvoc; i++) {
-			check_dct(ctx, i, chn, ins, smp, note, dct, dca);
+			check_dct(ctx, i, chn, ins, smp, note, nna, dct, dca);
 		}
 	}
 #endif
