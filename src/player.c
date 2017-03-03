@@ -651,12 +651,7 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	}
 
 	if (fade) {
-		if (xc->ins_fade == 0) {
-			/* Handle note fade when instrument has no fade value
-			 * (see azo_cotb.it pos 13/chn 13)
-			 */
-			SET_NOTE(NOTE_RELEASE);
-		} else if (xc->fadeout > xc->ins_fade) {
+		if (xc->fadeout > xc->ins_fade) {
 			xc->fadeout -= xc->ins_fade;
 		} else {
 			xc->fadeout = 0;
@@ -680,8 +675,11 @@ static void process_volume(struct context_data *ctx, int chn, int act)
 	}
 
 	if (!TEST_PER(VENV_PAUSE)) {
+		/* Also check for fade action and escape from sustain loop (see
+		 * azo_cotb.it pos 13/chn 13)
+		 */
 		xc->v_idx = update_envelope(&instrument->aei, xc->v_idx,
-			DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
+			act == VIRT_ACTION_FADE || DOENV_RELEASE, TEST(KEY_OFF), IS_PLAYER_MODE_IT());
 	}
 
 	vol_envelope = get_envelope(&instrument->aei, xc->v_idx, 64);
