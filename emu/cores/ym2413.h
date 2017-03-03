@@ -3,7 +3,7 @@
 
 #include <stdtype.h>
 
-void *ym2413_init(int clock, int rate);
+void *ym2413_init(UINT32 clock, UINT32 rate);
 void ym2413_shutdown(void *chip);
 void ym2413_reset_chip(void *chip);
 void ym2413_write(void *chip, UINT8 a, UINT8 v);
