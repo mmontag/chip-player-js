@@ -43,6 +43,9 @@ esac
 case "${host_os}" in
 darwin*)
   DARWIN_VERSION="`echo ${host_os#darwin}|cut -f1 -d'.'`"
+  if test "${enable_shared}" != no; then
+    CFLAGS="${CFLAGS} -fno-common"
+  fi
   ;;
 cygwin* | *djgpp | mint* | amigaos* |aros* | morphos*)
   enable_static=yes
