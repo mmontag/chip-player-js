@@ -374,9 +374,9 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE * f)
 			break;
 		}
 
-		xih.size = readmem32l(buf);	/* Instrument size */
-		memcpy(xih.name, buf + 4, 22);	/* Instrument name */
-		xih.type = buf[26];	/* Instrument type (always 0) */
+		xih.size = readmem32l(buf);		/* Instrument size */
+		memcpy(xih.name, buf + 4, 22);		/* Instrument name */
+		xih.type = buf[26];			/* Instrument type (always 0) */
 		xih.samples = readmem16l(buf + 27);	/* Number of samples */
 		xih.sh_size = readmem32l(buf + 29);	/* Sample header size */
 
@@ -389,8 +389,6 @@ static int load_instruments(struct module_data *m, int version, HIO_HANDLE * f)
 		libxmp_instrument_name(mod, i, xih.name, 22);
 
 		xxi->nsm = xih.samples;
-		if (xxi->nsm > 16)
-			xxi->nsm = 16;
 
 		D_(D_INFO "[%2X] %-22.22s %2d", i, xxi->name, xxi->nsm);
 
