@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:R. Belmont
 /*
 C140.c
 
@@ -38,8 +40,8 @@ Unmapped registers:
 */
 /*
     2000.06.26  CAB     fixed compressed pcm playback
-    2002.07.20  R.Belmont   added support for multiple banking types
-    2006.01.08  R.Belmont   added support for NA-1/2 "219" derivative
+    2002.07.20  R. Belmont   added support for multiple banking types
+    2006.01.08  R. Belmont   added support for NA-1/2 "219" derivative
 */
 
 
@@ -122,25 +124,25 @@ struct voice_registers
 
 typedef struct
 {
-	INT32	ptoffset;
-	INT32	pos;
-	INT32	key;
+	INT32   ptoffset;
+	INT32   pos;
+	INT32   key;
 	//--work
-	INT32	lastdt;
-	INT32	prevdt;
-	INT32	dltdt;
+	INT32   lastdt;
+	INT32   prevdt;
+	INT32   dltdt;
 	//--reg
-	INT32	rvol;
-	INT32	lvol;
-	INT32	frequency;
-	INT32	bank;
-	INT32	mode;
+	INT32   rvol;
+	INT32   lvol;
+	INT32   frequency;
+	INT32   bank;
+	INT32   mode;
 
-	INT32	sample_start;
-	INT32	sample_end;
-	INT32	sample_loop;
-	UINT8	Muted;
-} VOICE;
+	INT32   sample_start;
+	INT32   sample_end;
+	INT32   sample_loop;
+	UINT8   Muted;
+} C140_VOICE;
 
 typedef struct _c140_state c140_state;
 struct _c140_state
@@ -155,12 +157,12 @@ struct _c140_state
 	INT8 *pRom;
 	UINT8 REG[0x200];
 
-	INT16 pcmtbl[8];		//2000.06.26 CAB
+	INT16 pcmtbl[8];        //2000.06.26 CAB
 
-	VOICE voi[MAX_VOICE];
+	C140_VOICE voi[MAX_VOICE];
 };
 
-static void init_voice( VOICE *v )
+static void init_voice( C140_VOICE *v )
 {
 	v->key=0;
 	v->ptoffset=0;
@@ -174,12 +176,6 @@ static void init_voice( VOICE *v )
 	v->sample_loop=0;
 }
 
-static UINT8 c140_r(void *chip, UINT16 offset)
-{
-	c140_state *info = (c140_state *)chip;
-	offset&=0x1ff;
-	return info->REG[offset];
-}
 
 /*
    find_sample: compute the actual address of a sample given it's
@@ -219,6 +215,13 @@ static INT32 find_sample(c140_state *info, INT32 adrs, INT32 bank, int voice)
 	return (newadr);
 }
 
+static UINT8 c140_r(void *chip, UINT16 offset)
+{
+	c140_state *info = (c140_state *)chip;
+	offset&=0x1ff;
+	return info->REG[offset];
+}
+
 static void c140_w(void *chip, UINT16 offset, UINT8 data)
 {
 	c140_state *info = (c140_state *)chip;
@@ -234,7 +237,7 @@ static void c140_w(void *chip, UINT16 offset, UINT8 data)
 	info->REG[offset]=data;
 	if( offset<0x180 )
 	{
-		VOICE *v = &info->voi[offset>>4];
+		C140_VOICE *v = &info->voi[offset>>4];
 
 		if( (offset&0xf)==0x5 )
 		{
@@ -283,18 +286,18 @@ static void c140_w(void *chip, UINT16 offset, UINT8 data)
 static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
 	c140_state *info = (c140_state *)param;
-	UINT32	i,j;
+	UINT32  i,j;
 
-	INT32	rvol,lvol;
-	INT32	dt;
-	INT32	sdt;
-	INT32	st,ed,sz;
+	INT32   rvol,lvol;
+	INT32   dt;
+	INT32   sdt;
+	INT32   st,ed,sz;
 
-	INT8	*pSampleData;
-	INT32	frequency,delta,offset,pos;
-	UINT32	cnt, voicecnt;
-	INT32	lastdt,prevdt,dltdt;
-	float	pbase=(float)info->baserate*2.0f / (float)info->sample_rate;
+	INT8    *pSampleData;
+	INT32   frequency,delta,offset,pos;
+	UINT32  cnt, voicecnt;
+	INT32   lastdt,prevdt,dltdt;
+	float   pbase=(float)info->baserate*2.0f / (float)info->sample_rate;
 
 	DEV_SMPL *lmix, *rmix;
 
@@ -314,7 +317,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	//--- audio update
 	for( i=0;i<voicecnt;i++ )
 	{
-		VOICE *v = &info->voi[i];
+		C140_VOICE *v = &info->voi[i];
 		const struct voice_registers *vreg = (struct voice_registers *)&info->REG[i*16];
 
 		if( v->key && ! v->Muted)
@@ -377,10 +380,10 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						/* Read the chosen sample byte */
 						dt=pSampleData[pos];
 
-						/* decompress to 13bit range */		//2000.06.26 CAB
-						sdt=dt>>3;				//signed
-						if(sdt<0)	sdt = (sdt<<(dt&7)) - info->pcmtbl[dt&7];
-						else		sdt = (sdt<<(dt&7)) + info->pcmtbl[dt&7];
+						/* decompress to 13bit range */     //2000.06.26 CAB
+						sdt=dt>>3;              //signed
+						if(sdt<0)   sdt = (sdt<<(dt&7)) - info->pcmtbl[dt&7];
+						else        sdt = (sdt<<(dt&7)) + info->pcmtbl[dt&7];
 
 						prevdt=lastdt;
 						lastdt=sdt;
@@ -466,6 +469,7 @@ static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	c140_state *info;
 	int i;
+	INT32 segbase;
 
 	info = (c140_state *)calloc(1, sizeof(c140_state));
 	if (info == NULL)
@@ -480,14 +484,12 @@ static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	info->pRomSize = 0x00;
 	info->pRom = NULL;
 
-	/* make decompress pcm table */		//2000.06.26 CAB
+	/* make decompress pcm table */     //2000.06.26 CAB
+	segbase = 0;
+	for(i = 0; i < 8; i++)
 	{
-		INT32 segbase=0;
-		for(i=0;i<8;i++)
-		{
-			info->pcmtbl[i]=segbase;	//segment base value
-			segbase += 16<<i;
-		}
+		info->pcmtbl[i]=segbase;    //segment base value
+		segbase += 16<<i;
 	}
 
 	c140_set_mute_mask(info, 0x000000);
@@ -515,7 +517,9 @@ static void device_reset_c140(void *chip)
 	memset(info->REG, 0, sizeof(info->REG));
 	
 	for(i = 0; i < MAX_VOICE; i ++)
-		init_voice( &info->voi[i] );
+	{
+		init_voice(&info->voi[i]);
+	}
 	
 	return;
 }
