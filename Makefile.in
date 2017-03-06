@@ -29,7 +29,7 @@ DIST		= libxmp-$(VERSION)
 DFILES		= README INSTALL install-sh configure configure.ac config.sub \
 		  config.guess Makefile.in libxmp.pc.in libxmp.map Makefile.vc \
 		  Makefile.os2
-DDIRS		= docs include src loaders prowiz depackers win32 test
+DDIRS		= docs include src loaders prowiz depackers win32 os2 test
 V		= 0
 LIB		= libxmp.a
 SOLIB		= libxmp.so
