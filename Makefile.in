@@ -176,15 +176,11 @@ depend:
 		sed "s!^.*\.o:!$$i $$l:!" >> $@ ; \
 	done
 
-dist: version-prepare all-docs dist-prepare vc-prepare dist-jni dist-os2x dist-subdirs
+dist: version-prepare all-docs dist-prepare vc-prepare dist-jni dist-subdirs
 
 dist-jni:
 	mkdir $(DIST)/jni
 	cp jni/Android.mk jni/Application.mk $(DIST)/jni
-
-dist-os2x:
-	mkdir $(DIST)/os2
-	cp os2/Makefile.os2 $(DIST)/os2
 
 dist-prepare:
 	./config.status
