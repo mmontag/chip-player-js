@@ -1,0 +1,59 @@
+# Makefile for OS/2 using Watcom compiler.
+#
+# wmake -f Makefile.os2
+# - builds libxmp.dll and its import lib (libxmp.lib)
+#
+# wmake -f Makefile.os2 target=static
+# - builds the static library xmp_static.lib
+
+!ifndef target
+target = dll
+!endif
+
+CC = wcc386
+
+CFLAGS = -zq -bt=os2 -bm -fp5 -fpi87 -mf -oeatxh -w4 -ei -zp8
+# -5s  :  Pentium stack calling conventions.
+# -5r  :  Pentium register calling conventions.
+CFLAGS += -5s
+CFLAGS += -DHAVE_ALLOCA_H -DHAVE_FNMATCH -DHAVE_MKSTEMP -DHAVE_UMASK -DLIBXMP_CORE_PLAYER
+#CFLAGS += -DDEBUG
+CFLAGS += -I"src/os2" -Iinclude -Isrc
+
+DLLFLAGS=-bd
+
+DLLNAME=libxmp.dll
+EXPNAME=libxmp.exp
+LIBNAME=libxmp.lib
+LIBSTATIC=xmp_static.lib
+
+!ifeq target static
+BLD_TARGET=$(LIBSTATIC)
+!else
+CFLAGS+= $(DLLFLAGS)
+BLD_TARGET=$(DLLNAME)
+!endif
+
+OBJ=@OBJS@
+
+#.SUFFIXES: .obj .c
+
+.c: src;src/depackers;src/loaders;src/loaders/prowizard
+.c.obj:
+	$(CC) $(CFLAGS) -fo=$^@ $<
+
+all: $(BLD_TARGET)
+
+# rely on symbol name, not ordinal: -irn switch of wlib is default, but -inn is not.
+$(DLLNAME): $(OBJ)
+	wlink NAM $@ SYSTEM os2v2_dll INITINSTANCE TERMINSTANCE FIL {$(OBJ)} OPTION IMPF=$(EXPNAME)
+	wlib -q -b -n -inn -pa -s -t -zld -ii -io $(LIBNAME) +$(DLLNAME)
+
+$(LIBSTATIC): $(OBJ)
+	wlib -q -b -n $@ $(OBJ)
+
+clean: .symbolic
+	rm -f $(OBJ)
+
+distclean: clean .symbolic
+	rm -f $(DLLNAME) $(EXPNAME) $(LIBNAME) $(LIBSTATIC)
