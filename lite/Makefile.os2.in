@@ -18,7 +18,7 @@ CFLAGS = -zq -bt=os2 -bm -fp5 -fpi87 -mf -oeatxh -w4 -ei -zp8
 CFLAGS += -5s
 CFLAGS += -DHAVE_ALLOCA_H -DHAVE_FNMATCH -DHAVE_MKSTEMP -DHAVE_UMASK -DLIBXMP_CORE_PLAYER
 #CFLAGS += -DDEBUG
-CFLAGS += -I"src/os2" -Iinclude -Isrc
+CFLAGS += -I"src/os2" -I"include/libxmp-lite" -Isrc
 
 DLLFLAGS=-bd
 
@@ -38,7 +38,7 @@ OBJ=@OBJS@
 
 #.SUFFIXES: .obj .c
 
-.c: src;src/depackers;src/loaders;src/loaders/prowizard
+.c: src;src/loaders
 .c.obj:
 	$(CC) $(CFLAGS) -fo=$^@ $<
 
