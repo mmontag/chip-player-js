@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:Nicola Salmoria
 /***************************************************************************
 
   sn76496.c
@@ -24,7 +26,7 @@
   It uses a 15-bit ring buffer for periodic noise/arbitrary duty cycle.
   Its output is not inverted.
   ** SN76494 is the same as SN76489A but lacks the /8 divider on its clock input.
-  ** SN76496 is identical in operation to the SN76489A, but the audio input is
+  ** SN76496 is identical in operation to the SN76489A, but the audio input on pin 9 is
   documented.
   All the TI-made PSG chips have an audio input line which is mixed with the 4 channels
   of output. (It is undocumented and may not function properly on the sn76489, 76489a
@@ -105,18 +107,22 @@
   or two on sega games, particularly Vigilante on Sega Master System. Verified
   on SMS hardware.
 
+  27/06/2012: Michael Zapf
+  Converted to modern device, legacy devices were gradually removed afterwards.
+
+  16/09/2015: Lord Nightmare
+  Fix PSG chips to have volume reg inited on reset to 0x0 based on tests by
+  ValleyBell. Made Sega PSG chips start up with register 0x3 selected (volume
+  for channel 2) based on hardware tests by Nemesis.
+
   TODO: * Implement the TMS9919 - any difference to sn94624?
         * Implement the T6W28; has registers in a weird order, needs writes
           to be 'sanitized' first. Also is stereo, similar to game gear.
         * Test the NCR7496; Smspower says the whitenoise taps are A and E,
           but this needs verification on real hardware.
         * Factor out common code so that the SAA1099 can share some code.
-        * Convert to modern device
-***************************************************************************/
 
-/* Note: I patched the core to speed the emulation up (factor 8!!)
-	My Pentium2 233MHz was too slow for two SN76496 chips in release mode!
-	Now a 2xSN76496 vgm takes about 45 % CPU. */
+***************************************************************************/
 
 #ifdef _DEBUG
 #include <stdio.h>
@@ -131,7 +137,6 @@
 
 
 #define MAX_OUTPUT 0x8000
-#define NOISEMODE (R->Register[6]&4)?1:0
 
 
 typedef struct _sn76496_state sn76496_state;
@@ -140,43 +145,46 @@ struct _sn76496_state
 	void* chipInf;
 	
 	UINT32 clock;
-	INT32 VolTable[16];	/* volume table (for 4-bit to db conversion)*/
-	UINT16 Register[8];	/* registers */
-	UINT8 LastRegister;	/* last register written */
-	INT32 Volume[4];	/* db volume of voice 0-2 and noise */
-	UINT32 RNG;			/* noise generator LFSR*/
-	UINT32 ClockDivider;	/* clock divider */
-	UINT32 FeedbackMask;	/* mask for feedback */
-	UINT32 WhitenoiseTap1;	/* mask for white noise tap 1 (higher one, usually bit 14) */
-	UINT32 WhitenoiseTap2;	/* mask for white noise tap 2 (lower one, usually bit 13)*/
-	UINT8 Negate;		/* output negate flag */
-	UINT8 Stereo;		/* whether we're dealing with stereo or not */
-	UINT8 StereoMask;	/* the stereo output mask */
-	INT32 Period[4];	/* Length of 1/2 of waveform */
-	INT32 Count[4];		/* Position within the waveform */
-	UINT8 Output[4];	/* 1-bit output of each channel, pre-volume */
-	INT32 CyclestoREADY;/* number of cycles until the READY line goes active */
-	UINT8 Freq0IsMax;	/* flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0 */
+	UINT32 feedback_mask;   // mask for feedback
+	UINT32 whitenoise_tap1; // mask for white noise tap 1 (higher one, usually bit 14)
+	UINT32 whitenoise_tap2; // mask for white noise tap 2 (lower one, usually bit 13)
+	UINT8 negate;           // output negate flag
+	UINT8 stereo;           // whether we're dealing with stereo or not
+	UINT32 clock_divider;   // clock divider
+	UINT8 freq_0_is_max;    // flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0; AND if the initial register is pointing to 0x3 instead of 0x0 AND if the volume reg is preloaded with 0xF instead of 0x0
+	
+	INT32 vol_table[16];    // volume table (for 4-bit to db conversion)
+	UINT16 Register[8];     // registers
+	UINT8 last_register;    // last register written
+	INT32 volume[4];        // db volume of voice 0-2 and noise
+	UINT32 RNG;             // noise generator LFSR
+	//INT32 current_clock;
+	UINT8 stereo_mask;      // the stereo output mask
+	INT32 period[4];        // Length of 1/2 of waveform
+	INT32 count[4];         // Position within the waveform
+	UINT8 output[4];        // 1-bit output of each channel, pre-volume
+	INT32 cycles_to_ready;  // number of cycles until the READY line goes active
+	
+	UINT8 ready_state;
+	
 	INT32 FNumLimit;
 	UINT32 MuteMsk[4];
-	UINT8 NgpFlags;		/* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
-	sn76496_state* NgpChip2;	/* Pointer to other Chip */
+	UINT8 NgpFlags;         // bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip
+	sn76496_state* NgpChip2;    // pointer to other chip instance of T6W28
 };
 
 
 UINT8 sn76496_ready_r(void *chip, UINT8 offset)
 {
 	sn76496_state *R = (sn76496_state*)chip;
-	return (R->CyclestoREADY? 0 : 1);
+	return R->ready_state ? 1 : 0;
 }
 
 void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data)
 {
 	sn76496_state *R = (sn76496_state*)chip;
-	if (R->Stereo) R->StereoMask = data;
-#ifdef _DEBUG
-	else logerror("Call to stereo write with mono chip!\n");
-#endif
+	if (R->stereo) R->stereo_mask = data;
+	else logerror("sn76496_base_device: Call to stereo write with mono chip!\n");
 }
 
 void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
@@ -184,68 +192,79 @@ void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 	sn76496_state *R = (sn76496_state*)chip;
 	UINT8 n, r, c;
 
-
-	/* set number of cycles until READY is active; this is always one
-	   'sample', i.e. it equals the clock divider exactly; until the
-	   clock divider is fully supported, we delay until one sample has
-	   played. The fact that this below is '2' and not '1' is because
-	   of a ?race condition? in the mess crvision driver, where after
-	   any sample is played at all, no matter what, the cycles_to_ready
-	   ends up never being not ready, unless this value is greater than
-	   1. Once the full clock divider stuff is written, this should no
-	   longer be an issue. */
-	R->CyclestoREADY = 2;
+	// set number of cycles until READY is active; this is always one
+	// 'sample', i.e. it equals the clock divider exactly
+	R->cycles_to_ready = 1;
 
 	if (data & 0x80)
 	{
 		r = (data & 0x70) >> 4;
-		R->LastRegister = r;
+		R->last_register = r;
 		R->Register[r] = (R->Register[r] & 0x3f0) | (data & 0x0f);
 	}
 	else
 	{
-		r = R->LastRegister;
+		r = R->last_register;
 	}
-	c = r/2;
+
+	c = r >> 1;
 	switch (r)
 	{
-		case 0:	/* tone 0 : frequency */
-		case 2:	/* tone 1 : frequency */
-		case 4:	/* tone 2 : frequency */
+		case 0: // tone 0: frequency
+		case 2: // tone 1: frequency
+		case 4: // tone 2: frequency
 			if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((data & 0x3f) << 4);
-			if ((R->Register[r] != 0) || (R->Freq0IsMax == 0)) R->Period[c] = R->Register[r];
-			else R->Period[c] = 0x400;
+			if ((R->Register[r] != 0) || (R->freq_0_is_max == 0)) R->period[c] = R->Register[r];
+			else R->period[c] = 0x400;
+
 			if (r == 4)
 			{
-				/* update noise shift frequency */
-				if ((R->Register[6] & 0x03) == 0x03)
-					R->Period[3] = 2 * R->Period[2];
+				// update noise shift frequency
+				if ((R->Register[6] & 0x03) == 0x03) R->period[3] = R->period[2]<<1;
 			}
 			break;
-		case 1:	/* tone 0 : volume */
-		case 3:	/* tone 1 : volume */
-		case 5:	/* tone 2 : volume */
-		case 7:	/* noise  : volume */
-			R->Volume[c] = R->VolTable[data & 0x0f];
+		case 1: // tone 0: volume
+		case 3: // tone 1: volume
+		case 5: // tone 2: volume
+		case 7: // noise: volume
+			R->volume[c] = R->vol_table[data & 0x0f];
 			if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (data & 0x0f);
 			
 		//	// "Every volume write resets the waveform to High level.", TmEE, 2012-11-24 on SMSPower
-		//	R->Output[c] = 1;
-		//	R->Count[c] = R->Period[c];
+		//	R->output[c] = 1;
+		//	R->count[c] = R->period[c];
 		//	disabled for now - sounds awful
 			break;
-		case 6:	/* noise  : frequency, mode */
+		case 6: // noise: frequency, mode
 			{
-#ifdef _DEBUG
-				//if ((data & 0x80) == 0) logerror("sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", R->Register[6], data);
-#endif
+				//if ((data & 0x80) == 0) logerror("sn76496_base_device: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", R->Register[6], data);
 				if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (data & 0x0f);
 				n = R->Register[6]&3;
-				/* N/512,N/1024,N/2048,Tone #3 output */
-				R->Period[3] = (n == 3) ? (2 * R->Period[2]) : (2 << (4+n));
-				R->RNG = R->FeedbackMask;
+				// N/512,N/1024,N/2048,Tone #3 output
+				R->period[3] = (n == 3) ? (R->period[2]<<1) : (2 << (4+n));
+				R->RNG = R->feedback_mask;
 			}
 			break;
+	}
+}
+
+INLINE UINT8 in_noise_mode(const sn76496_state *R)
+{
+	return ((R->Register[6] & 4)!=0);
+}
+
+INLINE void countdown_cycles(sn76496_state *R)
+{
+	if (R->cycles_to_ready > 0)
+	{
+		R->cycles_to_ready--;
+		//if (R->ready_state == 1) R->ready_handler(CLEAR_LINE);
+		R->ready_state = 0;
+	}
+	else
+	{
+		//if (!R->ready_state == 0) R->ready_handler(ASSERT_LINE);
+		R->ready_state = 1;
 	}
 }
 
@@ -269,13 +288,13 @@ void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 		out = 0;
 		for (i = 0; i < 3; i ++)
 		{
-			if (R->Period[i] || R->Volume[i])
+			if (R->period[i] || R->volume[i])
 			{
 				out = 1;
 				break;
 			}
 		}
-		if (R->Volume[3])
+		if (R->volume[3])
 			out = 1;
 		if (! out)
 		{
@@ -289,61 +308,73 @@ void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 	ggst[1] = 0x01;
 	for (j = 0; j < samples; j++)
 	{
-		/* decrement Cycles to READY by one */
-		if (R->CyclestoREADY >0) R->CyclestoREADY--;
+		// disabled, because dividing the output sample rate is easier and faster
+	//	// clock chip once
+	//	if (R->current_clock > 0) // not ready for new divided clock
+	//	{
+	//		R->current_clock--;
+	//	}
+	//	else // ready for new divided clock, make a new sample
+	//	{
+	//		R->current_clock = R->clock_divider-1;
+			// decrement Cycles to READY by one
+			countdown_cycles(R);
 
-		// handle channels 0,1,2
-		for (i = 0;i < 3;i++)
-		{
-			R->Count[i]--;
-			if (R->Count[i] <= 0)
+			// handle channels 0,1,2
+			for (i = 0; i < 3; i++)
 			{
-				R->Output[i] ^= 1;
-				R->Count[i] = R->Period[i];
+				R->count[i]--;
+				if (R->count[i] <= 0)
+				{
+					R->output[i] ^= 1;
+					R->count[i] = R->period[i];
+				}
 			}
-		}
 
-		// handle channel 3
-		R->Count[3]--;
-		if (R->Count[3] <= 0)
-		{
-		// if noisemode is 1, both taps are enabled
-		// if noisemode is 0, the lower tap, whitenoisetap2, is held at 0
-			if (((R->RNG & R->WhitenoiseTap1)?1:0) ^ ((((R->RNG & R->WhitenoiseTap2)?1:0))*(NOISEMODE)))
+			// handle channel 3
+			R->count[3]--;
+			if (R->count[3] <= 0)
 			{
-				R->RNG >>= 1;
-				R->RNG |= R->FeedbackMask;
+				// if noisemode is 1, both taps are enabled
+				// if noisemode is 0, the lower tap, whitenoisetap2, is held at 0
+				// The != was a bit-XOR (^) before
+				if (((R->RNG & R->whitenoise_tap1)!=0) != (((R->RNG & R->whitenoise_tap2)!=0) && in_noise_mode(R)))
+				{
+					R->RNG >>= 1;
+					R->RNG |= R->feedback_mask;
+				}
+				else
+				{
+					R->RNG >>= 1;
+				}
+				R->output[3] = R->RNG & 1;
+
+				R->count[3] = R->period[3];
 			}
-			else
-			{
-				R->RNG >>= 1;
-			}
-			R->Output[3] = R->RNG & 1;
+		//}
 
-			R->Count[3] = R->Period[3];
-		}
-
-
-		/*if (R->Stereo)
+#if 0
+		if (R->stereo)
 		{
-			out = (((R->StereoMask&0x10)&&R->Output[0])?R->Volume[0]:0)
-				+ (((R->StereoMask&0x20)&&R->Output[1])?R->Volume[1]:0)
-				+ (((R->StereoMask&0x40)&&R->Output[2])?R->Volume[2]:0)
-				+ (((R->StereoMask&0x80)&&R->Output[3])?R->Volume[3]:0);
+			out = ((((R->stereo_mask & 0x10)!=0) && (R->output[0]!=0))? R->volume[0] : 0)
+				+ ((((R->stereo_mask & 0x20)!=0) && (R->output[1]!=0))? R->volume[1] : 0)
+				+ ((((R->stereo_mask & 0x40)!=0) && (R->output[2]!=0))? R->volume[2] : 0)
+				+ ((((R->stereo_mask & 0x80)!=0) && (R->output[3]!=0))? R->volume[3] : 0);
 
-			out2 = (((R->StereoMask&0x1)&&R->Output[0])?R->Volume[0]:0)
-				+ (((R->StereoMask&0x2)&&R->Output[1])?R->Volume[1]:0)
-				+ (((R->StereoMask&0x4)&&R->Output[2])?R->Volume[2]:0)
-				+ (((R->StereoMask&0x8)&&R->Output[3])?R->Volume[3]:0);
+			out2= ((((R->stereo_mask & 0x1)!=0) && (R->output[0]!=0))? R->volume[0] : 0)
+				+ ((((R->stereo_mask & 0x2)!=0) && (R->output[1]!=0))? R->volume[1] : 0)
+				+ ((((R->stereo_mask & 0x4)!=0) && (R->output[2]!=0))? R->volume[2] : 0)
+				+ ((((R->stereo_mask & 0x8)!=0) && (R->output[3]!=0))? R->volume[3] : 0);
 		}
 		else
 		{
-			out = (R->Output[0]?R->Volume[0]:0)
-				+(R->Output[1]?R->Volume[1]:0)
-				+(R->Output[2]?R->Volume[2]:0)
-				+(R->Output[3]?R->Volume[3]:0);
+			out= ((R->output[0]!=0)? R->volume[0]:0)
+				+((R->output[1]!=0)? R->volume[1]:0)
+				+((R->output[2]!=0)? R->volume[2]:0)
+				+((R->output[3]!=0)? R->volume[3]:0);
 			out2 = out;
-		}*/
+		}
+#endif
 
 		// --- CUSTOM CODE START --
 		out = out2 = 0;
@@ -353,33 +384,33 @@ void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 			{
 				// --- Preparation Start ---
 				// Bipolar output
-				vol[i] = R->Output[i] ? +1 : -1;
+				vol[i] = R->output[i] ? +1 : -1;
 				
 				// Disable high frequencies (> SampleRate / 2) for tone channels
 				// Freq. 0/1 isn't disabled becaus it would also disable PCM
 				if (i != 3)
 				{
-					if (R->Period[i] <= R->FNumLimit && R->Period[i] > 1)
+					if (R->period[i] <= R->FNumLimit && R->period[i] > 1)
 						vol[i] = 0;
 				}
 				vol[i] &= R->MuteMsk[i];
 				// --- Preparation End ---
 				
-				if (R->Stereo)
+				if (R->stereo)
 				{
-					ggst[0] = (R->StereoMask & (0x10 << i)) ? 1 : 0;
-					ggst[1] = (R->StereoMask & (0x01 << i)) ? 1 : 0;
+					ggst[0] = (R->stereo_mask & (0x10 << i)) ? 1 : 0;
+					ggst[1] = (R->stereo_mask & (0x01 << i)) ? 1 : 0;
 				}
-				if (R->Period[i] > 1 || i == 3)
+				if (R->period[i] > 1 || i == 3)
 				{
-					out += vol[i] * R->Volume[i] * ggst[0];
-					out2 += vol[i] * R->Volume[i] * ggst[1];
+					out += vol[i] * R->volume[i] * ggst[0];
+					out2 += vol[i] * R->volume[i] * ggst[1];
 				}
 				else if (R->MuteMsk[i])
 				{
 					// Make Bipolar Output with PCM possible
-					out += R->Volume[i] * ggst[0];
-					out2 += R->Volume[i] * ggst[1];
+					out += R->volume[i] * ggst[0];
+					out2 += R->volume[i] * ggst[1];
 				}
 			}
 		}
@@ -388,34 +419,34 @@ void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 			if (! (R->NgpFlags & 0x01))
 			{
 				// Tone Channel 1-3
-				if (R->Stereo)
+				if (R->stereo)
 				{
-					ggst[0] = (R->StereoMask & (0x10 << i)) ? 1 : 0;
-					ggst[1] = (R->StereoMask & (0x01 << i)) ? 1 : 0;
+					ggst[0] = (R->stereo_mask & (0x10 << i)) ? 1 : 0;
+					ggst[1] = (R->stereo_mask & (0x01 << i)) ? 1 : 0;
 				}
 				for (i = 0; i < 3; i ++)
 				{
 					// --- Preparation Start ---
 					// Bipolar output
-					vol[i] = R->Output[i] ? +1 : -1;
+					vol[i] = R->output[i] ? +1 : -1;
 					
 					// Disable high frequencies (> SampleRate / 2) for tone channels
 					// Freq. 0 isn't disabled becaus it would also disable PCM
-					if (R->Period[i] <= R->FNumLimit && R->Period[i] > 1)
+					if (R->period[i] <= R->FNumLimit && R->period[i] > 1)
 						vol[i] = 0;
 					vol[i] &= R->MuteMsk[i];
 					// --- Preparation End ---
 					
-					if (R->Period[i])
+					if (R->period[i])
 					{
-						out += vol[i] * R->Volume[i] * ggst[0];
-						out2 += vol[i] * R2->Volume[i] * ggst[1];
+						out += vol[i] * R->volume[i] * ggst[0];
+						out2 += vol[i] * R2->volume[i] * ggst[1];
 					}
 					else if (R->MuteMsk[i])
 					{
 						// Make Bipolar Output with PCM possible
-						out += R->Volume[i] * ggst[0];
-						out2 += R2->Volume[i] * ggst[1];
+						out += R->volume[i] * ggst[0];
+						out2 += R2->volume[i] * ggst[1];
 					}
 				}
 			}
@@ -423,29 +454,29 @@ void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 			{
 				// --- Preparation Start ---
 				// Bipolar output
-				vol[i] = R->Output[i] ? +1 : -1;
+				vol[i] = R->output[i] ? +1 : -1;
 				
 				vol[i] &= R2->MuteMsk[i];	// use MuteMask from chip 0
 				// --- Preparation End ---
 				
 				// Noise Channel
-				if (R->Stereo)
+				if (R->stereo)
 				{
-					ggst[0] = (R->StereoMask & 0x80) ? 1 : 0;
-					ggst[1] = (R->StereoMask & 0x08) ? 1 : 0;
+					ggst[0] = (R->stereo_mask & 0x80) ? 1 : 0;
+					ggst[1] = (R->stereo_mask & 0x08) ? 1 : 0;
 				}
 				else
 				{
 					ggst[0] = 1;
 					ggst[1] = 1;
 				}
-				out += vol[3] * R2->Volume[3] * ggst[0];
-				out2 += vol[3] * R->Volume[3] * ggst[1];
+				out += vol[3] * R2->volume[3] * ggst[0];
+				out2 += vol[3] * R->volume[3] * ggst[1];
 			}
 		}
 		// --- CUSTOM CODE END --
 		
-		if(R->Negate) { out = -out; out2 = -out2; }
+		if(R->negate) { out = -out; out2 = -out2; }
 
 		lbuffer[j] = out >> 1;	// >>1 to make up for bipolar output
 		rbuffer[j] = out2 >> 1;
@@ -462,21 +493,21 @@ static void SN76496_set_gain(sn76496_state *R,int gain)
 
 	gain &= 0xff;
 
-	/* increase max output basing on gain (0.2 dB per step) */
+	// increase max output basing on gain (0.2 dB per step)
 	out = MAX_OUTPUT / 4; // four channels, each gets 1/4 of the total range
 	while (gain-- > 0)
-		out *= 1.023292992;	/* = (10 ^ (0.2/20)) */
+		out *= 1.023292992; // = (10 ^ (0.2/20))
 
-	/* build volume table (2dB per step) */
-	for (i = 0;i < 15;i++)
+	// build volume table (2dB per step)
+	for (i = 0; i < 15; i++)
 	{
-		/* limit volume to avoid clipping */
-		if (out > MAX_OUTPUT / 4) R->VolTable[i] = MAX_OUTPUT / 4;
-		else R->VolTable[i] = (INT32)(out + 0.5);	// I like rounding
+		// limit volume to avoid clipping
+		if (out > MAX_OUTPUT / 4) R->vol_table[i] = MAX_OUTPUT / 4;
+		else R->vol_table[i] = (INT32)(out + 0.5);  // I like rounding
 
-		out /= 1.258925412;	/* = 10 ^ (2/20) = 2dB */
+		out /= 1.258925412; /* = 10 ^ (2/20) = 2dB */
 	}
-	R->VolTable[15] = 0;
+	R->vol_table[15] = 0;
 }
 
 
@@ -484,28 +515,23 @@ static UINT32 generic_start(sn76496_state *chip, UINT32 clock, UINT32 feedbackma
 {
 	UINT32 sample_rate;
 	
-	SN76496_set_gain(chip, 0);
-	
 	chip->clock = clock;
-	chip->ClockDivider = clockdivider ? clockdivider : 8;
-	chip->FeedbackMask = feedbackmask;	/* mask for feedback */
-	chip->WhitenoiseTap1 = noisetap1;	/* mask for white noise tap 1*/
-	chip->WhitenoiseTap2 = noisetap2;	/* mask for white noise tap 2*/
-	chip->Negate = negate;	/* channel negation */
-	chip->Stereo = stereo;	/* GameGear stereo */
-	chip->Freq0IsMax = freq0;	/* frequency set to 0 results in freq = 0x400 rather than 0 */
+	chip->clock_divider = clockdivider ? clockdivider : 8;
+	chip->feedback_mask = feedbackmask; // mask for feedback
+	chip->whitenoise_tap1 = noisetap1;  // mask for white noise tap 1
+	chip->whitenoise_tap2 = noisetap2;  // mask for white noise tap 2
+	chip->negate = negate;              // channel negation
+	chip->stereo = stereo;              // GameGear stereo
+	chip->freq_0_is_max = freq0;        // frequency set to 0 results in freq = 0x400 rather than 0
 	chip->NgpFlags = 0x00;
 	chip->NgpChip2 = NULL;
 	
-	chip->CyclestoREADY = 1;	/* assume ready is not active immediately on init. is this correct?*/
-	chip->StereoMask = 0xFF;	/* all channels enabled */
-	
-	chip->RNG = chip->FeedbackMask;
-	chip->Output[3] = chip->RNG & 1;
+	// set gain
+	SN76496_set_gain(chip, 0);
 	
 	sn76496_set_mutemask(chip, 0x00);
 	
-	sample_rate = chip->clock / 2 / chip->ClockDivider;
+	sample_rate = chip->clock / 2 / chip->clock_divider;
 	
 	return sample_rate;
 }
@@ -568,26 +594,31 @@ void sn76496_reset(void *chip)
 	sn76496_state *R = (sn76496_state*)chip;
 	UINT8 i;
 	
-	for (i = 0;i < 4;i++) R->Volume[i] = 0;
+	for (i = 0; i < 4; i++) R->volume[i] = 0;
 
-	R->LastRegister = 0;
-	for (i = 0;i < 8;i+=2)
+	R->last_register = R->freq_0_is_max?0:3; // Sega VDP PSG defaults to selected period reg for 2nd channel
+	for (i = 0; i < 8; i+=2)
 	{
 		R->Register[i] = 0;
-		R->Register[i + 1] = 0x0f;	/* volume = 0 */
+		R->Register[i + 1] = 0x0;   // volume = 0x0 (max volume) on reset; this needs testing on chips other than SN76489A and Sega VDP PSG
 	}
 
-	for (i = 0;i < 4;i++)
+	for (i = 0; i < 4; i++)
 	{
-		R->Output[i] = R->Period[i] = R->Count[i] = 0;
+		R->output[i] = 0;
+		R->period[i] = 0;
+		R->count[i] = 0;
 	}
 
-	R->CyclestoREADY = 1;
-	R->StereoMask = 0xFF; /* all channels enabled */
+	R->RNG = R->feedback_mask;
+	R->output[3] = R->RNG & 1;
 
-	R->RNG = R->FeedbackMask;
-	R->Output[3] = R->RNG & 1;
-	
+	R->cycles_to_ready = 1;          // assume ready is not active immediately on init. is this correct?
+	R->stereo_mask = 0xFF;           // all channels enabled
+	//R->current_clock = R->clock_divider-1;
+
+	R->ready_state = 1;
+
 	return;
 }
 
@@ -595,7 +626,7 @@ void sn76496_freq_limiter(void* chip, UINT32 sample_rate)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	
-	R->FNumLimit = (R->clock / (2 * R->ClockDivider)) / sample_rate;
+	R->FNumLimit = (R->clock / (2 * R->clock_divider)) / sample_rate;
 	
 	return;
 }
@@ -611,45 +642,55 @@ void sn76496_set_mutemask(void *chip, UINT32 MuteMask)
 	return;
 }
 
-// function parameters: device, feedback destination tap, feedback source taps,
-// normal(false)/invert(true), mono(false)/stereo(true), clock divider factor
+// ---- MAME SN-settings ----
+/*
+// SN76496: Whitenoise verified, phase verified, periodic verified (by Michael Zapf)
+sn76496_device::sn76496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, SN76496, "SN76496", tag, 0x10000, 0x04, 0x08, false, false, 8, true, owner, clock, "sn76496", __FILE__)
+	{ }
 
-/*static DEVICE_START( sn76489 )
-{
-	generic_start(device, 0x4000, 0x01, 0x02, TRUE, FALSE, 8, TRUE); // SN76489 not verified yet. todo: verify;
-}
+// U8106 not verified yet. todo: verify; (a custom marked sn76489? only used on mr. do and maybe other universal games)
+u8106_device::u8106_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, U8106, "U8106", tag, 0x4000, 0x01, 0x02, true, false, 8, true, owner, clock, "u8106", __FILE__)
+	{ }
 
-static DEVICE_START( sn76489a )
-{
-	generic_start(device, 0x10000, 0x04, 0x08, FALSE, FALSE, 8, TRUE); // SN76489A: whitenoise verified, phase verified, periodic verified (by plgdavid)
-}
+// Y2404 not verified yet. todo: verify; (don't be fooled by the Y, it's a TI chip, not Yamaha)
+y2404_device::y2404_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, Y2404, "Y2404", tag, 0x10000, 0x04, 0x08, false, false, 8, true, owner, clock, "y2404", __FILE__)
+	{ }
 
-static DEVICE_START( sn76494 )
-{
-	generic_start(device, 0x10000, 0x04, 0x08, FALSE, FALSE, 1, TRUE); // SN76494 not verified, (according to datasheet: same as sn76489a but without the /8 divider)
-}
+// SN76489 not verified yet. todo: verify;
+sn76489_device::sn76489_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, SN76489, "SN76489", tag, 0x4000, 0x01, 0x02, true, false, 8, true, owner, clock, "sn76489", __FILE__)
+	{ }
 
-static DEVICE_START( sn76496 )
-{
-	generic_start(device, 0x10000, 0x04, 0x08, FALSE, FALSE, 8, TRUE); // SN76496: Whitenoise verified, phase verified, periodic verified (by Michael Zapf)
-}
+// SN76489A: whitenoise verified, phase verified, periodic verified (by plgdavid)
+sn76489a_device::sn76489a_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, SN76489A, "SN76489A", tag, 0x10000, 0x04, 0x08, false, false, 8, true, owner, clock, "sn76489a", __FILE__)
+	{ }
 
-static DEVICE_START( sn94624 )
-{
-	generic_start(device, 0x4000, 0x01, 0x02, TRUE, FALSE, 1, TRUE); // SN94624 whitenoise verified, phase verified, period verified; verified by PlgDavid
-}
+// SN76494 not verified, (according to datasheet: same as sn76489a but without the /8 divider)
+sn76494_device::sn76494_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, SN76494, "SN76494", tag, 0x10000, 0x04, 0x08, false, false, 1, true, owner, clock, "sn76494", __FILE__)
+	{ }
 
-static DEVICE_START( ncr7496 )
-{
-	generic_start(device, 0x8000, 0x02, 0x20, FALSE, FALSE, 8, TRUE); // NCR7496 not verified; info from smspower wiki
-}
+// SN94624 whitenoise verified, phase verified, period verified; verified by PlgDavid
+sn94624_device::sn94624_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, SN94624, "SN94624", tag, 0x4000, 0x01, 0x02, true, false, 1, true, owner, clock, "sn94624", __FILE__)
+	{ }
 
-static DEVICE_START( gamegear )
-{
-	generic_start(device, 0x8000, 0x01, 0x08, TRUE, TRUE, 8, FALSE); // Verified by Justin Kerk
-}
+// NCR7496 not verified; info from smspower wiki
+ncr7496_device::ncr7496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, NCR7496, "NCR7496", tag, 0x8000, 0x02, 0x20, false, false, 8, true, owner, clock, "ncr7496", __FILE__)
+	{ }
 
-static DEVICE_START( smsiii )
-{
-	generic_start(device, 0x8000, 0x01, 0x08, TRUE, FALSE, 8, FALSE); // todo: verify; from smspower wiki, assumed to have same invert as gamegear
-}*/
+// Verified by Justin Kerk
+gamegear_device::gamegear_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, GAMEGEAR, "Game Gear PSG", tag, 0x8000, 0x01, 0x08, true, true, 8, false, owner, clock, "gamegear_psg", __FILE__)
+	{ }
+
+// todo: verify; from smspower wiki, assumed to have same invert as gamegear
+segapsg_device::segapsg_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, SEGAPSG, "SEGA VDP PSG", tag, 0x8000, 0x01, 0x08, true, false, 8, false, owner, clock, "segapsg", __FILE__)
+	{ }
+*/
