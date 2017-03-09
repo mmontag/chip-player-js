@@ -151,7 +151,7 @@ struct _sn76496_state
 	UINT8 negate;           // output negate flag
 	UINT8 stereo;           // whether we're dealing with stereo or not
 	UINT32 clock_divider;   // clock divider
-	UINT8 freq_0_is_max;    // flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0; AND if the initial register is pointing to 0x3 instead of 0x0 AND if the volume reg is preloaded with 0xF instead of 0x0
+	UINT8 sega_style_psg;   // flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0; AND if the initial register is pointing to 0x3 instead of 0x0 AND if the volume reg is preloaded with 0xF instead of 0x0
 	
 	INT32 vol_table[16];    // volume table (for 4-bit to db conversion)
 	UINT16 Register[8];     // registers
@@ -214,7 +214,7 @@ void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 		case 2: // tone 1: frequency
 		case 4: // tone 2: frequency
 			if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x0f) | ((data & 0x3f) << 4);
-			if ((R->Register[r] != 0) || (R->freq_0_is_max == 0)) R->period[c] = R->Register[r];
+			if ((R->Register[r] != 0) || (R->sega_style_psg != 0)) R->period[c] = R->Register[r];
 			else R->period[c] = 0x400;
 
 			if (r == 4)
@@ -511,7 +511,7 @@ static void SN76496_set_gain(sn76496_state *R,int gain)
 }
 
 
-static UINT32 generic_start(sn76496_state *chip, UINT32 clock, UINT32 feedbackmask, UINT32 noisetap1, UINT32 noisetap2, UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 freq0)
+static UINT32 generic_start(sn76496_state *chip, UINT32 clock, UINT32 feedbackmask, UINT32 noisetap1, UINT32 noisetap2, UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega)
 {
 	UINT32 sample_rate;
 	
@@ -522,7 +522,7 @@ static UINT32 generic_start(sn76496_state *chip, UINT32 clock, UINT32 feedbackma
 	chip->whitenoise_tap2 = noisetap2;  // mask for white noise tap 2
 	chip->negate = negate;              // channel negation
 	chip->stereo = stereo;              // GameGear stereo
-	chip->freq_0_is_max = freq0;        // frequency set to 0 results in freq = 0x400 rather than 0
+	chip->sega_style_psg = sega;        // frequency set to 0 results in freq = 0x400 rather than 0
 	chip->NgpFlags = 0x00;
 	chip->NgpChip2 = NULL;
 	
@@ -537,7 +537,7 @@ static UINT32 generic_start(sn76496_state *chip, UINT32 clock, UINT32 feedbackma
 }
 
 UINT32 sn76496_start(void **chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
-					UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 freq0)
+					UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega)
 {
 	sn76496_state* sn_chip;
 	UINT32 ntap[2];
@@ -564,7 +564,7 @@ UINT32 sn76496_start(void **chip, UINT32 clock, UINT8 shiftregwidth, UINT16 nois
 	}
 	
 	return generic_start(sn_chip, clock, 1 << (shiftregwidth - 1), ntap[0], ntap[1],
-						negate, stereo, clockdivider, freq0);
+						negate, stereo, clockdivider, sega);
 }
 
 void sn76496_connect_t6w28(void *noisechip, void *tonechip)
@@ -596,7 +596,7 @@ void sn76496_reset(void *chip)
 	
 	for (i = 0; i < 4; i++) R->volume[i] = 0;
 
-	R->last_register = R->freq_0_is_max?0:3; // Sega VDP PSG defaults to selected period reg for 2nd channel
+	R->last_register = R->sega_style_psg?3:0; // Sega VDP PSG defaults to selected period reg for 2nd channel
 	for (i = 0; i < 8; i+=2)
 	{
 		R->Register[i] = 0;

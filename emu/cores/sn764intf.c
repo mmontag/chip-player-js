@@ -105,7 +105,7 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 	UINT32 rate;
 	
 	rate = sn76496_start(&chip, cfg->_genCfg.clock, cfg->shiftRegWidth, cfg->noiseTaps,
-						cfg->negate, cfg->stereo, cfg->clkDiv, ! cfg->segaPSG);
+						cfg->negate, cfg->stereo, cfg->clkDiv, cfg->segaPSG);
 	if (! rate)
 		return 0xFF;
 	

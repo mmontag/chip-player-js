@@ -10,7 +10,7 @@ void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data);
 
 void SN76496Update(void *param, UINT32 samples, DEV_SMPL** outputs);
 UINT32 sn76496_start(void **chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
-					UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 freq0);
+					UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega);
 void sn76496_connect_t6w28(void *noisechip, void *tonechip);
 void sn76496_shutdown(void *chip);
 void sn76496_reset(void *chip);
