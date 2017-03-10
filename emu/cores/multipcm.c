@@ -242,7 +242,7 @@ static INT32 linear_to_exp_volume[0x400];
 #define TL_SHIFT    12
 #define EG_SHIFT    16
 
-static void init_sample(MultiPCM *ptChip, sample_t *sample, UINT32 index)
+static void init_sample(MultiPCM *ptChip, sample_t *sample, UINT16 index)
 {
 	UINT32 address = (index * 12) & ptChip->ROMMask;
 
@@ -300,7 +300,7 @@ static INT32 envelope_generator_update(slot_t *slot)
 	return linear_to_exp_volume[slot->envelope_gen.volume >> EG_SHIFT];
 }
 
-static UINT32 get_rate(const UINT32 *steps, UINT32 rate, UINT32 val)
+INLINE UINT32 get_rate(const UINT32 *steps, UINT32 rate, UINT32 val)
 {
 	INT32 r = 4 * val + rate;
 	if (val == 0)
@@ -446,7 +446,7 @@ INLINE INT32 amplitude_lfo_step(lfo_t *lfo)
 	return p << (TL_SHIFT - LFO_SHIFT);
 }
 
-static void lfo_compute_step(MultiPCM *ptChip, lfo_t *lfo, UINT32 lfo_frequency, UINT32 lfo_scale, INT32 amplitude_lfo)
+INLINE void lfo_compute_step(MultiPCM *ptChip, lfo_t *lfo, UINT8 lfo_frequency, UINT8 lfo_scale, UINT8 amplitude_lfo)
 {
 	float step = (float)LFO_FREQ[lfo_frequency] * 256.0f / (float)ptChip->rate;
 	lfo->phase_step = (UINT32)((float)(1 << LFO_SHIFT) * step);
@@ -472,19 +472,18 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 			slot->pan = (data >> 4) & 0xf;
 			break;
 		case 1: // Sample
-		{
 			//according to YMF278 sample write causes some base params written to the regs (envelope+lfos)
 			//the game should never change the sample while playing.
-			sample_t sample;
-			init_sample(ptChip, &sample, slot->regs[1]);
-			write_slot(ptChip, slot, 6, sample.lfo_vibrato_reg);
-			write_slot(ptChip, slot, 7, sample.lfo_amplitude_reg);
+			// patched to load all sample data here, so registers 6 and 7 aren't overridden by KeyOn -Valley Bell
+			init_sample(ptChip, &slot->sample, slot->regs[1]);
+			//init_sample(ptChip, &slot->sample, slot->regs[1] | ((slot->regs[2] & 3) << 8));
+			write_slot(ptChip, slot, 6, slot->sample.lfo_vibrato_reg);
+			write_slot(ptChip, slot, 7, slot->sample.lfo_amplitude_reg);
 			break;
-		}
 		case 2: //Pitch
 		case 3:
 			{
-				UINT32 oct = ((slot->regs[3] >> 4) - 1) & 0xf;
+				UINT8 oct = ((slot->regs[3] >> 4) - 1) & 0xf;
 				UINT32 pitch = ((slot->regs[3] & 0xf) << 6) | (slot->regs[2] >> 2);
 				pitch = ptChip->freq_step_table[pitch];
 				if (oct & 0x8)
@@ -497,9 +496,6 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 		case 4:     //KeyOn/Off (and more?)
 			if (data & 0x80)       //KeyOn
 			{
-				// TODO: I assume that we should only reload the sample offsets here and not *all* registers.
-				//       The main work is probably done when writing to register 1. -Valley Bell
-				init_sample(ptChip, &slot->sample, slot->regs[1]);
 				slot->playing = 1;
 				slot->base = slot->sample.start;
 				slot->offset = 0;
@@ -584,7 +580,7 @@ static void MultiPCM_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 
 				if (slot->regs[6] & 7) // Vibrato enabled
 				{
-					step = step * pitch_lfo_step(&(slot->pitch_lfo));
+					step = step * pitch_lfo_step(&slot->pitch_lfo);
 					step >>= TL_SHIFT;
 				}
 
@@ -606,7 +602,7 @@ static void MultiPCM_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 
 				if (slot->regs[7] & 7) // Tremolo enabled
 				{
-					sample = sample * amplitude_lfo_step(&(slot->amplitude_lfo));
+					sample = sample * amplitude_lfo_step(&slot->amplitude_lfo);
 					sample >>= TL_SHIFT;
 				}
 
