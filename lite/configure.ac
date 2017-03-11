@@ -147,7 +147,7 @@ darwin*)
   LIBS="${old_LIBS}"
   ;;
 esac
-AC_CHECK_FUNCS(round powf)
+AC_CHECK_FUNCS(localtime_r round powf)
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libxmp-lite.pc])
