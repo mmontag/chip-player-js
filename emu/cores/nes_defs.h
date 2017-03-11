@@ -1,3 +1,5 @@
+// license:GPL-2.0+
+// copyright-holders:Matthew Conte
 /*****************************************************************************
 
   MAME/MESS NES APU CORE
@@ -7,7 +9,7 @@
   Who Wants to Know? (wwtk@mail.com)
 
   This core is written with the advise and consent of Matthew Conte and is
-  released under the GNU Public License.  This core is freely avaiable for
+  released under the GNU Public License.  This core is freely available for
   use in any freeware project, subject to the following terms:
 
   Any modifications to this code must be duly noted in the source and
@@ -24,11 +26,8 @@
 #ifndef __NES_DEFS_H__
 #define __NES_DEFS_H__
 
-/* BOOLEAN CONSTANTS */
-#ifndef TRUE
-#define TRUE   1
-#define FALSE  0
-#endif
+#include <stdtype.h>
+#include <stdbool.h>
 
 /* REGULAR TYPE DEFINITIONS */
 typedef INT8          int8;
@@ -37,7 +36,6 @@ typedef INT32         int32;
 typedef UINT8         uint8;
 typedef UINT16        uint16;
 typedef UINT32        uint32;
-typedef UINT8         boolean;
 
 
 /* QUEUE TYPES */
@@ -49,7 +47,7 @@ typedef UINT8         boolean;
 typedef struct queue_s
 {
 	int pos;
-	unsigned char reg,val;
+	unsigned char reg, val;
 } queue_t;
 
 #endif
@@ -94,8 +92,8 @@ typedef struct square_s
 	float sweep_phase;
 	uint8 adder;
 	uint8 env_vol;
-	boolean enabled;
-	boolean Muted;
+	bool enabled;
+	bool Muted;
 } square_t;
 
 /* Triangle Wave */
@@ -108,9 +106,9 @@ typedef struct triangle_s
 	float phaseacc;
 	float output_vol;
 	uint8 adder;
-	boolean counter_started;
-	boolean enabled;
-	boolean Muted;
+	bool counter_started;
+	bool enabled;
+	bool Muted;
 } triangle_t;
 
 /* Noise Wave */
@@ -123,8 +121,8 @@ typedef struct noise_s
 	float output_vol;
 	float env_phase;
 	uint8 env_vol;
-	boolean enabled;
-	boolean Muted;
+	bool enabled;
+	bool Muted;
 } noise_t;
 
 /* DPCM Wave */
@@ -137,13 +135,13 @@ typedef struct dpcm_s
 	float phaseacc;
 	float output_vol;
 	uint8 cur_byte;
-	boolean enabled;
-	boolean irq_occurred;
+	bool enabled;
+	bool irq_occurred;
 	//address_space *memory;
 	const uint8 *memory;
 	//signed char vol;
 	signed short vol;
-	boolean Muted;
+	bool Muted;
 } dpcm_t;
 
 /* APU type */

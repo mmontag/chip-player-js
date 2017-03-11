@@ -1,3 +1,5 @@
+// license:GPL-2.0+
+// copyright-holders:Matthew Conte
 /*****************************************************************************
 
   MAME/MESS NES APU CORE
@@ -7,7 +9,7 @@
   Who Wants to Know? (wwtk@mail.com)
 
   This core is written with the advise and consent of Matthew Conte and is
-  released under the GNU Public License.  This core is freely avaiable for
+  released under the GNU Public License.  This core is freely available for
   use in any freeware project, subject to the following terms:
 
   Any modifications to this code must be duly noted in the source and
@@ -49,8 +51,17 @@
 #include <stddef.h>	// for NULL
 
 #include <stdtype.h>
+#include <stdbool.h>
 #include "../snddef.h"
 #include "nes_apu.h"
+
+/* AN EXPLANATION
+ *
+ * The NES APU is actually integrated into the Nintendo processor.
+ * You must supply the same number of APUs as you do processors.
+ * Also make sure to correspond the memory regions to those used in the
+ * processor, as each is shared.
+ */
 
 #include "nes_defs.h"
 
@@ -63,7 +74,7 @@ struct _nesapu_state
 {
 	void* chipInf;
 
-	apu_t   APU;			       /* Actual APUs */
+	apu_t   APU;                   /* Actual APUs */
 	float   apu_incsize;           /* Adjustment increment */
 	uint32  samps_per_sync;        /* Number of samples per vsync */
 	uint32  buffer_size;           /* Actual buffer size in bytes */
@@ -141,7 +152,7 @@ static int8 apu_square(nesapu_state *info, square_t *chan)
 	** reg3: 0-2=high freq, 7-4=vbl length counter
 	*/
 
-	if (FALSE == chan->enabled || chan->Muted)
+	if (false == chan->enabled || chan->Muted)
 		return 0;
 
 	/* enveloping */
@@ -223,15 +234,15 @@ static int8 apu_triangle(nesapu_state *info, triangle_t *chan)
 	** reg3: 7-3=length counter, 2-0=high 3 bits of frequency
 	*/
 
-	if (FALSE == chan->enabled || chan->Muted)
+	if (false == chan->enabled || chan->Muted)
 		return 0;
 
-	if (FALSE == chan->counter_started && 0 == (chan->regs[0] & 0x80))
+	if (false == chan->counter_started && 0 == (chan->regs[0] & 0x80))
 	{
 		if (chan->write_latency)
 			chan->write_latency--;
 		if (0 == chan->write_latency)
-			chan->counter_started = TRUE;
+			chan->counter_started = true;
 	}
 
 	if (chan->counter_started)
@@ -283,7 +294,7 @@ static int8 apu_noise(nesapu_state *info, noise_t *chan)
 	** reg3: 7-4=vbl length counter
 	*/
 
-	if (FALSE == chan->enabled || chan->Muted)
+	if (false == chan->enabled || chan->Muted)
 		return 0;
 
 	/* enveloping */
@@ -344,8 +355,8 @@ INLINE void apu_dpcmreset(dpcm_t *chan)
 	chan->address = 0xC000 + (uint16) (chan->regs[2] << 6);
 	chan->length = (uint16) (chan->regs[3] << 4) + 1;
 	chan->bits_left = chan->length << 3;
-	chan->irq_occurred = FALSE;
-	chan->enabled = TRUE; /* Fixed * Proper DPCM channel ENABLE/DISABLE flag behaviour*/
+	chan->irq_occurred = false;
+	chan->enabled = true; /* Fixed * Proper DPCM channel ENABLE/DISABLE flag behaviour*/
 	// Note: according to NSFPlay, it does NOT do that
 	chan->vol = 0; /* Fixed * DPCM DAC resets itself when restarted */
 }
@@ -375,7 +386,7 @@ static int8 apu_dpcm(nesapu_state *info, dpcm_t *chan)
 
 			if (0 == chan->length)
 			{
-				chan->enabled = FALSE; /* Fixed * Proper DPCM channel ENABLE/DISABLE flag behaviour*/
+				chan->enabled = false; /* Fixed * Proper DPCM channel ENABLE/DISABLE flag behaviour*/
 				chan->vol=0; /* Fixed * DPCM DAC resets itself when restarted */
 				if (chan->regs[0] & 0x40)
 					apu_dpcmreset(chan);
@@ -383,7 +394,7 @@ static int8 apu_dpcm(nesapu_state *info, dpcm_t *chan)
 				{
 					if (chan->regs[0] & 0x80) /* IRQ Generator */
 					{
-						chan->irq_occurred = TRUE;
+						chan->irq_occurred = true;
 						//n2a03_irq(info->APU.dpcm.memory->cpu);
 					}
 					break;
@@ -405,8 +416,10 @@ static int8 apu_dpcm(nesapu_state *info, dpcm_t *chan)
 			}
 
 			if (chan->cur_byte & (1 << bit_pos))
+//				chan->regs[1]++;
 				chan->vol+=2; /* FIXED * DPCM channel only uses the upper 6 bits of the DAC */
 			else
+//				chan->regs[1]--;
 				chan->vol-=2;
 		}
 	}
@@ -430,7 +443,7 @@ static int8 apu_dpcm(nesapu_state *info, dpcm_t *chan)
 }
 
 /* WRITE REGISTER VALUE */
-INLINE void apu_regwrite(nesapu_state *info,int address, uint8 value)
+INLINE void apu_regwrite(nesapu_state *info, int address, uint8 value)
 {
 	int chan = (address & 4) ? 1 : 0;
 
@@ -475,7 +488,7 @@ INLINE void apu_regwrite(nesapu_state *info,int address, uint8 value)
 
 		if (info->APU.tri.enabled)
 		{                                          /* ??? */
-			if (FALSE == info->APU.tri.counter_started)
+			if (false == info->APU.tri.counter_started)
 				info->APU.tri.linear_length = info->sync_times2[value & 0x7F];
 		}
 
@@ -514,7 +527,7 @@ INLINE void apu_regwrite(nesapu_state *info,int address, uint8 value)
 
 		if (info->APU.tri.enabled)
 		{
-			info->APU.tri.counter_started = FALSE;
+			info->APU.tri.counter_started = false;
 			info->APU.tri.vbl_length = info->vbl_times[value >> 3];
 			info->APU.tri.linear_length = info->sync_times2[info->APU.tri.regs[0] & 0x7F];
 		}
@@ -549,11 +562,14 @@ INLINE void apu_regwrite(nesapu_state *info,int address, uint8 value)
 	/* DMC */
 	case APU_WRE0:
 		info->APU.dpcm.regs[0] = value;
-		if (0 == (value & 0x80))
-			info->APU.dpcm.irq_occurred = FALSE;
+		if (0 == (value & 0x80)) {
+			//downcast<n2a03_device &>(m_APU.dpcm.memory->device()).set_input_line(N2A03_APU_IRQ_LINE, CLEAR_LINE);
+			info->APU.dpcm.irq_occurred = false;
+		}
 		break;
 
 	case APU_WRE1: /* 7-bit DAC */
+		//m_APU.dpcm.regs[1] = value - 0x40;
 		info->APU.dpcm.regs[1] = value & 0x7F;
 		if (! DPCMBase0)
 			info->APU.dpcm.vol = (info->APU.dpcm.regs[1]-64);
@@ -579,53 +595,53 @@ INLINE void apu_regwrite(nesapu_state *info,int address, uint8 value)
 
 	case APU_SMASK:
 		if (value & 0x01)
-			info->APU.squ[0].enabled = TRUE;
+			info->APU.squ[0].enabled = true;
 		else
 		{
-			info->APU.squ[0].enabled = FALSE;
+			info->APU.squ[0].enabled = false;
 			info->APU.squ[0].vbl_length = 0;
 		}
 
 		if (value & 0x02)
-			info->APU.squ[1].enabled = TRUE;
+			info->APU.squ[1].enabled = true;
 		else
 		{
-			info->APU.squ[1].enabled = FALSE;
+			info->APU.squ[1].enabled = false;
 			info->APU.squ[1].vbl_length = 0;
 		}
 
 		if (value & 0x04)
-			info->APU.tri.enabled = TRUE;
+			info->APU.tri.enabled = true;
 		else
 		{
-			info->APU.tri.enabled = FALSE;
+			info->APU.tri.enabled = false;
 			info->APU.tri.vbl_length = 0;
 			info->APU.tri.linear_length = 0;
-			info->APU.tri.counter_started = FALSE;
+			info->APU.tri.counter_started = false;
 			info->APU.tri.write_latency = 0;
 		}
 
 		if (value & 0x08)
-			info->APU.noi.enabled = TRUE;
+			info->APU.noi.enabled = true;
 		else
 		{
-			info->APU.noi.enabled = FALSE;
+			info->APU.noi.enabled = false;
 			info->APU.noi.vbl_length = 0;
 		}
 
 		if (value & 0x10)
 		{
 			/* only reset dpcm values if DMA is finished */
-			if (FALSE == info->APU.dpcm.enabled)
+			if (false == info->APU.dpcm.enabled)
 			{
-				info->APU.dpcm.enabled = TRUE;
+				info->APU.dpcm.enabled = true;
 				apu_dpcmreset(&info->APU.dpcm);
 			}
 		}
 		else
-			info->APU.dpcm.enabled = FALSE;
+			info->APU.dpcm.enabled = false;
 
-		info->APU.dpcm.irq_occurred = FALSE;
+		info->APU.dpcm.irq_occurred = false;
 
 		break;
 	default:
@@ -685,10 +701,10 @@ uint8 nes_apu_read(void* chip, uint8 address)
 		if (info->APU.noi.vbl_length > 0)
 			readval |= 0x08;
 
-		if (info->APU.dpcm.enabled == TRUE)
+		if (info->APU.dpcm.enabled == true)
 			readval |= 0x10;
 
-		if (info->APU.dpcm.irq_occurred == TRUE)
+		if (info->APU.dpcm.irq_occurred == true)
 			readval |= 0x80;
 
 		return readval;
