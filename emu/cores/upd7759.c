@@ -643,24 +643,16 @@ static void upd7759_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			}
 			else
 			{
-				UINT8 CntFour;
+				// advance the state (4x because of Clock Divider /4)
+				INT32 rem_clocks = 4;
 				
-				if (! clocks_left)
+				while(rem_clocks && clocks_left <= rem_clocks)
 				{
+					rem_clocks -= clocks_left;
 					upd7759_slave_update(chip);
 					clocks_left = chip->clocks_left;
 				}
-				
-				// advance the state (4x because of Clock Divider /4)
-				for (CntFour = 0; CntFour < 4; CntFour ++)
-				{
-					clocks_left --;
-					if (! clocks_left)
-					{
-						upd7759_slave_update(chip);
-						clocks_left = chip->clocks_left;
-					}
-				}
+				clocks_left -= rem_clocks;
 			}
 		}
 
