@@ -1,3 +1,6 @@
+// license:BSD-3-Clause
+// copyright-holders:ElSemi, R. Belmont
+// thanks-to: kingshriek
 /*
     SCSP LFO handling
 
@@ -14,24 +17,24 @@
 
 #define LFO_SHIFT	8
 
-struct _LFO
+typedef struct _LFO
 {
-	unsigned short phase;
+	UINT16 phase;
 	UINT32 phase_step;
 	int *table;
 	int *scale;
-};
+} SCSP_LFO_t;
 
-#define LFIX(v)	((unsigned int) ((float) (1<<LFO_SHIFT)*(v)))
+#define LFIX(v) ((unsigned int) ((float) (1<<LFO_SHIFT)*(v)))
 
 //Convert DB to multiply amplitude
-#define DB(v)	LFIX(pow(10.0,v/20.0))
+#define DB(v)   LFIX(pow(10.0,v/20.0))
 
 //Convert cents to step increment
 #define CENTS(v) LFIX(pow(2.0,v/1200.0))
 
-static int PLFO_TRI[256],PLFO_SQR[256],PLFO_SAW[256],PLFO_NOI[256];
-static int ALFO_TRI[256],ALFO_SQR[256],ALFO_SAW[256],ALFO_NOI[256];
+static int PLFO_TRI[256], PLFO_SQR[256], PLFO_SAW[256], PLFO_NOI[256];
+static int ALFO_TRI[256], ALFO_SQR[256], ALFO_SAW[256], ALFO_NOI[256];
 static const float LFOFreq[32]=
 {
 	0.17f,0.19f,0.23f,0.27f,0.34f,0.39f,0.45f,0.55f,0.68f,0.78f,0.92f,1.10f,1.39f,1.60f,1.87f,2.27f,
@@ -115,7 +118,7 @@ static void LFO_Init(void)
 	IsInit = 0x01;
 }
 
-INLINE signed int PLFO_Step(struct _LFO *LFO)
+INLINE signed int PLFO_Step(SCSP_LFO_t *LFO)
 {
 	int p;
 	LFO->phase+=LFO->phase_step;
@@ -127,7 +130,7 @@ INLINE signed int PLFO_Step(struct _LFO *LFO)
 	return p<<(SHIFT-LFO_SHIFT);
 }
 
-INLINE signed int ALFO_Step(struct _LFO *LFO)
+INLINE signed int ALFO_Step(SCSP_LFO_t *LFO)
 {
 	int p;
 	LFO->phase+=LFO->phase_step;
@@ -139,7 +142,7 @@ INLINE signed int ALFO_Step(struct _LFO *LFO)
 	return p<<(SHIFT-LFO_SHIFT);
 }
 
-static void LFO_ComputeStep(struct _LFO *LFO,UINT32 LFOF,UINT32 LFOWS,UINT32 LFOS,int ALFO)
+static void LFO_ComputeStep(SCSP_LFO_t *LFO,UINT32 LFOF,UINT32 LFOWS,UINT32 LFOS,int ALFO)
 {
 	float step=(float) LFOFreq[LFOF]*256.0/(float)44100;
 	LFO->phase_step=(unsigned int) ((float) (1<<LFO_SHIFT)*step);
