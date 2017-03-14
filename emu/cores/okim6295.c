@@ -1,24 +1,41 @@
-/**********************************************************************************************
- *
- *   streaming ADPCM driver
- *   by Aaron Giles
- *
- *   Library to transcode from an ADPCM source to raw PCM.
- *   Written by Buffoni Mirko in 08/06/97
- *   References: various sources and documents.
- *
- *   HJB 08/31/98
- *   modified to use an automatically selected oversampling factor
- *   for the current sample rate
- *
- *   Mish 21/7/99
- *   Updated to allow multiple OKI chips with different sample rates
- *
- *   R. Belmont 31/10/2003
- *   Updated to allow a driver to use both MSM6295s and "raw" ADPCM voices (gcpinbal)
- *   Also added some error trapping for MAME_DEBUG builds
- *
- **********************************************************************************************/
+// license:BSD-3-Clause
+// copyright-holders:Mirko Buffoni,Aaron Giles
+/***************************************************************************
+
+    okim6295.h
+
+    OKIM 6295 ADCPM sound chip.
+
+****************************************************************************
+
+    Library to transcode from an ADPCM source to raw PCM.
+    Written by Buffoni Mirko in 08/06/97
+    References: various sources and documents.
+
+    R. Belmont 31/10/2003
+    Updated to allow a driver to use both MSM6295s and "raw" ADPCM voices
+    (gcpinbal). Also added some error trapping for MAME_DEBUG builds
+
+****************************************************************************
+
+    OKIM 6295 ADPCM chip:
+
+    Command bytes are sent:
+
+        1xxx xxxx = start of 2-byte command sequence, xxxxxxx is the sample
+                    number to trigger
+        abcd vvvv = second half of command; one of the abcd bits is set to
+                    indicate which voice the v bits seem to be volumed
+
+        0abc d000 = stop playing; one or more of the abcd bits is set to
+                    indicate which voice(s)
+
+    Status is read:
+
+        ???? abcd = one bit per voice, set to 0 if nothing is playing, or
+                    1 if it is active
+
+***************************************************************************/
 
 
 /*
@@ -37,6 +54,7 @@
 #include "../EmuHelper.h"
 #include "../EmuCores.h"
 #include "okim6295.h"
+#include "okiadpcm.h"
 
 typedef struct _okim6295_state okim6295_state;
 
@@ -90,75 +108,61 @@ const DEV_DEF* devDefList_OKIM6295[] =
 };
 
 
-/*
-    To help the various custom ADPCM generators out there,
-    the following routines may be used.
-*/
-struct adpcm_state
+// a single voice
+typedef struct _okim_voice
 {
-	INT16	signal;
-	INT16	step;
-};
-static void reset_adpcm(struct adpcm_state *state);
-static INT16 clock_adpcm(struct adpcm_state *state, UINT8 nibble);
+	oki_adpcm_state adpcm;          // current ADPCM state
+	UINT8           playing;        // 1 if we are actively playing
 
+	UINT32          base_offset;    // pointer to the base memory location
+	UINT32          sample;         // current sample number
+	UINT32          count;          // total samples to play
 
-/* struct describing a single playing ADPCM voice */
-struct ADPCMVoice
-{
-	UINT8 playing;			/* 1 if we are actively playing */
-
-	UINT32 base_offset;		/* pointer to the base memory location */
-	UINT32 sample;			/* current sample number */
-	UINT32 count;			/* total samples to play */
-
-	struct adpcm_state adpcm;/* current ADPCM state */
-	INT32 volume;			/* output volume */
-	UINT8 Muted;
-};
+	INT32           volume;         // output volume
+	UINT8           Muted;
+} okim_voice;
 
 struct _okim6295_state
 {
 	void* chipInf;
 	
-	#define OKIM6295_VOICES		4
-	struct ADPCMVoice voice[OKIM6295_VOICES];
+	// internal state
+	#define OKIM6295_VOICES 4
+	
+	okim_voice voice[OKIM6295_VOICES];
 	INT16 command;
 	UINT32 bank_offs;
 	UINT8 pin7_state;
+	
+	//const UINT8 s_volume_table[16];
+	
 	UINT8 pin7_initial;
 	UINT8 nmk_mode;
 	UINT8 nmk_bank[4];
-	UINT32 master_clock;	// master clock frequency
+	UINT32 master_clock;    // master clock frequency
 	UINT32 initial_clock;
 	
-	UINT32	ROMSize;
-	UINT8*	ROM;
+	UINT32  ROMSize;
+	UINT8*  ROM;
 	
 	DEVCB_SRATE_CHG SmpRateFunc;
 	void* SmpRateData;
 };
-
-/* step size index shift table */
-static const int index_shift[8] = { -1, -1, -1, -1, 2, 4, 6, 8 };
-
-/* lookup table for the precomputed difference */
-static int diff_lookup[49*16];
 
 /* volume lookup table. The manual lists only 9 steps, ~3dB per step. Given the dB values,
    that seems to map to a 5-bit volume control. Any volume parameter beyond the 9th index
    results in silent playback. */
 static const int volume_table[16] =
 {
-	0x20,	//   0 dB
-	0x16,	//  -3.2 dB
-	0x10,	//  -6.0 dB
-	0x0b,	//  -9.2 dB
-	0x08,	// -12.0 dB
-	0x06,	// -14.5 dB
-	0x04,	// -18.0 dB
-	0x03,	// -20.5 dB
-	0x02,	// -24.0 dB
+	0x20,   //   0 dB
+	0x16,   //  -3.2 dB
+	0x10,   //  -6.0 dB
+	0x0b,   //  -9.2 dB
+	0x08,   // -12.0 dB
+	0x06,   // -14.5 dB
+	0x04,   // -18.0 dB
+	0x03,   // -20.5 dB
+	0x02,   // -24.0 dB
 	0x00,
 	0x00,
 	0x00,
@@ -167,98 +171,6 @@ static const int volume_table[16] =
 	0x00,
 	0x00,
 };
-
-/* tables computed? */
-static int tables_computed = 0;
-
-/**********************************************************************************************
-
-     compute_tables -- compute the difference tables
-
-***********************************************************************************************/
-
-static void compute_tables(void)
-{
-	/* nibble to bit map */
-	static const int nbl2bit[16][4] =
-	{
-		{ 1, 0, 0, 0}, { 1, 0, 0, 1}, { 1, 0, 1, 0}, { 1, 0, 1, 1},
-		{ 1, 1, 0, 0}, { 1, 1, 0, 1}, { 1, 1, 1, 0}, { 1, 1, 1, 1},
-		{-1, 0, 0, 0}, {-1, 0, 0, 1}, {-1, 0, 1, 0}, {-1, 0, 1, 1},
-		{-1, 1, 0, 0}, {-1, 1, 0, 1}, {-1, 1, 1, 0}, {-1, 1, 1, 1}
-	};
-
-	int step, nib;
-
-	/* loop over all possible steps */
-	for (step = 0; step <= 48; step++)
-	{
-		/* compute the step value */
-		int stepval = (int)floor(16.0 * pow(11.0 / 10.0, (double)step));
-
-		/* loop over all nibbles and compute the difference */
-		for (nib = 0; nib < 16; nib++)
-		{
-			diff_lookup[step*16 + nib] = nbl2bit[nib][0] *
-				(stepval   * nbl2bit[nib][1] +
-				 stepval/2 * nbl2bit[nib][2] +
-				 stepval/4 * nbl2bit[nib][3] +
-				 stepval/8);
-		}
-	}
-
-	tables_computed = 1;
-}
-
-
-
-/**********************************************************************************************
-
-     reset_adpcm -- reset the ADPCM stream
-
-***********************************************************************************************/
-
-static void reset_adpcm(struct adpcm_state *state)
-{
-	/* make sure we have our tables */
-	if (!tables_computed)
-		compute_tables();
-
-	/* reset the signal/step */
-	state->signal = -2;
-	state->step = 0;
-}
-
-
-
-/**********************************************************************************************
-
-     clock_adpcm -- clock the next ADPCM byte
-
-***********************************************************************************************/
-
-static INT16 clock_adpcm(struct adpcm_state *state, UINT8 nibble)
-{
-	state->signal += diff_lookup[state->step * 16 + (nibble & 15)];
-
-	/* clamp to the maximum */
-	if (state->signal > 2047)
-		state->signal = 2047;
-	else if (state->signal < -2048)
-		state->signal = -2048;
-
-	/* adjust the step size and clamp */
-	state->step += index_shift[nibble & 7];
-	if (state->step > 48)
-		state->step = 48;
-	else if (state->step < 0)
-		state->step = 0;
-
-	/* return the signal */
-	return state->signal;
-}
-
-
 
 /**********************************************************************************************
 
@@ -307,58 +219,33 @@ static UINT8 memory_raw_read_byte(okim6295_state *chip, UINT32 offset)
 		return 0x00;
 }
 
-static void generate_adpcm(okim6295_state *chip, struct ADPCMVoice *voice, DEV_SMPL *buffer, UINT32 samples)
+static void generate_adpcm(okim6295_state *chip, okim_voice *voice, DEV_SMPL *buffer, UINT32 samples)
 {
-	/* if this voice is active */
-	if (voice->playing)
+	UINT32 i;
+
+	// skip if not active
+	if (!voice->playing || voice->Muted)
+		return;
+
+	// loop while we still have samples to generate
+	for (i = 0; i < samples; i++)
 	{
-		UINT32 base = voice->base_offset;
-		UINT32 sample = voice->sample;
-		UINT32 count = voice->count;
-		UINT32 i;
+		// fetch the next sample byte
+		UINT8 nibble = memory_raw_read_byte(chip, voice->base_offset + voice->sample / 2) >> (((voice->sample & 1) << 2) ^ 4);
 
-		/* loop while we still have samples to generate */
-		for (i = 0; i < samples; i++)
+		// output to the buffer, scaling by the volume
+		// signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767
+		buffer[i] += oki_adpcm_clock(&voice->adpcm, nibble) * voice->volume / 2;
+
+		// next!
+		if (++voice->sample >= voice->count)
 		{
-			/* compute the new amplitude and update the current step */
-			UINT8 nibble = memory_raw_read_byte(chip, base + sample / 2) >> (((sample & 1) << 2) ^ 4);
-
-			/* output to the buffer, scaling by the volume */
-			/* signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767 */
-			buffer[i] += clock_adpcm(&voice->adpcm, nibble) * voice->volume / 2;
-
-			/* next! */
-			if (++sample >= count)
-			{
-				voice->playing = 0;
-				break;
-			}
+			voice->playing = 0;
+			break;
 		}
-
-		/* update the parameters */
-		voice->sample = sample;
 	}
 }
 
-
-
-/**********************************************************************************************
- *
- *  OKIM 6295 ADPCM chip:
- *
- *  Command bytes are sent:
- *
- *      1xxx xxxx = start of 2-byte command sequence, xxxxxxx is the sample number to trigger
- *      abcd vvvv = second half of command; one of the abcd bits is set to indicate which voice
- *                  the v bits seem to be volumed
- *
- *      0abc d000 = stop playing; one or more of the abcd bits is set to indicate which voice(s)
- *
- *  Status is read:
- *
- *      ???? abcd = one bit per voice, set to 0 if nothing is playing, or 1 if it is active
- *
-***********************************************************************************************/
 
 
 /**********************************************************************************************
@@ -372,15 +259,13 @@ static void okim6295_update(void* info, UINT32 samples, DEV_SMPL** outputs)
 	okim6295_state *chip = (okim6295_state *)info;
 	int i;
 
+	// reset the output stream
 	memset(outputs[0], 0, samples * sizeof(*outputs[0]));
 
+	// iterate over voices and accumulate sample data
 	for (i = 0; i < OKIM6295_VOICES; i++)
-	{
-		struct ADPCMVoice *voice = &chip->voice[i];
-		if (! voice->Muted)
-			generate_adpcm(chip, voice, outputs[0], samples);
-	}
-	
+		generate_adpcm(chip, &chip->voice[i], outputs[0], samples);
+
 	memcpy(outputs[1], outputs[0], samples * sizeof(*outputs[0]));
 }
 
@@ -396,12 +281,14 @@ static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	okim6295_state *info;
 	UINT32 divisor;
+	int voicenum;
 
 	info = (okim6295_state *)calloc(1, sizeof(okim6295_state));
 	if (info == NULL)
 		return 0xFF;
-	
-	compute_tables();
+
+	for (voicenum = 0; voicenum < OKIM6295_VOICES; voicenum++)
+		oki_adpcm_init(&info->voice[voicenum].adpcm, NULL, NULL);
 
 	info->command = -1;
 	info->bank_offs = 0;
@@ -456,7 +343,7 @@ static void device_reset_okim6295(void *chip)
 	for (voice = 0; voice < OKIM6295_VOICES; voice++)
 	{
 		info->voice[voice].volume = 0;
-		reset_adpcm(&info->voice[voice].adpcm);
+		oki_adpcm_reset(&info->voice[voice].adpcm);
 		
 		info->voice[voice].playing = 0;
 	}
@@ -507,19 +394,15 @@ INLINE void okim6295_set_pin7(okim6295_state *info, UINT8 pin7)
 static UINT8 okim6295_r(void* chip, UINT8 offset)
 {
 	okim6295_state *info = (okim6295_state *)chip;
-	int i, result;
+	int voicenum;
+	UINT8 result;
 
-	result = 0xf0;	/* naname expects bits 4-7 to be 1 */
+	result = 0xf0;  // naname expects bits 4-7 to be 1
 
-	/* set the bit to 1 if something is playing on a given channel */
-	for (i = 0; i < OKIM6295_VOICES; i++)
-	{
-		struct ADPCMVoice *voice = &info->voice[i];
-
-		/* set the bit if it's playing */
-		if (voice->playing)
-			result |= 1 << i;
-	}
+	// set the bit to 1 if something is playing on a given channel
+	for (voicenum = 0; voicenum < OKIM6295_VOICES; voicenum++)
+		if (info->voice[voicenum].playing)
+			result |= 1 << voicenum;
 
 	return result;
 }
@@ -534,90 +417,83 @@ static UINT8 okim6295_r(void* chip, UINT8 offset)
 
 static void okim6295_write_command(okim6295_state *info, UINT8 data)
 {
-	/* if a command is pending, process the second half */
+	// if a command is pending, process the second half
 	if (info->command != -1)
 	{
-		UINT8 temp = data >> 4, i;
-		UINT32 start, stop, base;
+		// the manual explicitly says that it's not possible to start multiple voices at the same time
+		UINT8 voicemask = data >> 4;
+		int voicenum;
+		//if (voicemask != 0 && voicemask != 1 && voicemask != 2 && voicemask != 4 && voicemask != 8)
+		//	printf("OKI6295 start %x contact MAMEDEV\n", voicemask);
 
-		/* the manual explicitly says that it's not possible to start multiple voices at the same time */
-		if (temp != 0 && temp != 1 && temp != 2 && temp != 4 && temp != 8)
-			printf("OKI6295 start %x contact MAMEDEV\n", temp);
-
-		/* determine which voice(s) (voice is set by a 1 bit in the upper 4 bits of the second byte) */
-		for (i = 0; i < OKIM6295_VOICES; i++, temp >>= 1)
-		{
-			if (temp & 1)
+		// determine which voice(s) (voice is set by a 1 bit in the upper 4 bits of the second byte)
+		for (voicenum = 0; voicenum < OKIM6295_VOICES; voicenum++, voicemask >>= 1)
+			if (voicemask & 1)
 			{
-				struct ADPCMVoice *voice = &info->voice[i];
+				okim_voice *voice = &info->voice[voicenum];
 
-				/* determine the start/stop positions */
-				base = info->command * 8;
-
-				start  = memory_raw_read_byte(info, base + 0) << 16;
-				start |= memory_raw_read_byte(info, base + 1) << 8;
-				start |= memory_raw_read_byte(info, base + 2) << 0;
-				start &= 0x3ffff;
-
-				stop  = memory_raw_read_byte(info, base + 3) << 16;
-				stop |= memory_raw_read_byte(info, base + 4) << 8;
-				stop |= memory_raw_read_byte(info, base + 5) << 0;
-				stop &= 0x3ffff;
-
-				/* set up the voice to play this sample */
-				if (start < stop)
+				if (!voice->playing) // fixes Got-cha and Steel Force
 				{
-					if (!voice->playing) /* fixes Got-cha and Steel Force */
+					UINT32 start, stop, base;
+					// determine the start/stop positions
+					base = info->command * 8;
+
+					start  = memory_raw_read_byte(info, base + 0) << 16;
+					start |= memory_raw_read_byte(info, base + 1) << 8;
+					start |= memory_raw_read_byte(info, base + 2) << 0;
+					start &= 0x3ffff;
+
+					stop  = memory_raw_read_byte(info, base + 3) << 16;
+					stop |= memory_raw_read_byte(info, base + 4) << 8;
+					stop |= memory_raw_read_byte(info, base + 5) << 0;
+					stop &= 0x3ffff;
+
+					if (start < stop)
 					{
+						// set up the voice to play this sample
 						voice->playing = 1;
 						voice->base_offset = start;
 						voice->sample = 0;
 						voice->count = 2 * (stop - start + 1);
 
-						/* also reset the ADPCM parameters */
-						reset_adpcm(&voice->adpcm);
+						// also reset the ADPCM parameters
+						oki_adpcm_reset(&voice->adpcm);
 						voice->volume = volume_table[data & 0x0f];
 					}
+
+					// invalid samples go here
 					else
 					{
-						// just displays warnings when seeking
-						//logerror("OKIM6295: Voice %u requested to play sample %02x on non-stopped voice\n",i,info->command);
+						logerror("OKIM6295: Voice %u requested to play invalid sample %02x\n",voicenum,info->command);
+						voice->playing = 0;
 					}
 				}
-				/* invalid samples go here */
 				else
 				{
-					logerror("OKIM6295: Voice %u requested to play invalid sample %02x\n",i,info->command);
-					voice->playing = 0;
+					// just displays warnings when seeking
+					//logerror("OKIM6295: Voice %u requested to play sample %02x on non-stopped voice\n",voicenum,info->command);
 				}
 			}
-		}
 
-		/* reset the command */
+		// reset the command
 		info->command = -1;
 	}
 
-	/* if this is the start of a command, remember the sample number for next time */
+	// if this is the start of a command, remember the sample number for next time
 	else if (data & 0x80)
 	{
 		info->command = data & 0x7f;
 	}
 
-	/* otherwise, see if this is a silence command */
+	// otherwise, see if this is a silence command
 	else
 	{
-		UINT8 temp = data >> 3, i;
-
-		/* determine which voice(s) (voice is set by a 1 bit in bits 3-6 of the command */
-		for (i = 0; i < OKIM6295_VOICES; i++, temp >>= 1)
-		{
-			if (temp & 1)
-			{
-				struct ADPCMVoice *voice = &info->voice[i];
-
-				voice->playing = 0;
-			}
-		}
+		// determine which voice(s) (voice is set by a 1 bit in bits 3-6 of the command
+		UINT8 voicemask = data >> 3;
+		int voicenum;
+		for (voicenum = 0; voicenum < OKIM6295_VOICES; voicenum++, voicemask >>= 1)
+			if (voicemask & 1)
+				info->voice[voicenum].playing = 0;
 	}
 }
 

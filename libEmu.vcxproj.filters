@@ -213,6 +213,9 @@
     <ClCompile Include="emu\cores\nukedopl.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\okiadpcm.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -436,6 +439,9 @@
     </ClInclude>
     <ClInclude Include="emu\cores\nukedopl.h">
       <Filter>Quelldateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\okiadpcm.h">
+      <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
