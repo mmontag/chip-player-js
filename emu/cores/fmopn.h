@@ -5,18 +5,18 @@
 #include "../snddef.h"
 
 /* --- select emulation chips --- */
-#define BUILD_YM2203  1		// build YM2203(OPN)   emulator
-#define BUILD_YM2608  1		// build YM2608(OPNA)  emulator
-#define BUILD_YM2610  1		// build YM2610(OPNB)  emulator
-#define BUILD_YM2610B 1		// build YM2610B(OPNB?)emulator
-#define BUILD_YM2612  1		// build YM2612(OPN2)  emulator
-#define BUILD_YM3438  1		// build YM3438(OPN2C) emulator
+#define BUILD_YM2203  1     // build YM2203(OPN)   emulator
+#define BUILD_YM2608  1     // build YM2608(OPNA)  emulator
+#define BUILD_YM2610  1     // build YM2610(OPNB)  emulator
+#define BUILD_YM2610B 1     // build YM2610B(OPNB?)emulator
+#define BUILD_YM2612  1     // build YM2612(OPN2)  emulator
+#define BUILD_YM3438  1     // build YM3438(OPN2C) emulator
 
 /* select timer system internal or external */
 #define FM_INTERNAL_TIMER 1
 
 /* --- speedup optimize --- */
-/* busy flag enulation , The definition of FM_GET_TIME_NOW() is necessary. */
+/* busy flag emulation , The definition of FM_GET_TIME_NOW() is necessary. */
 //#define FM_BUSY_FLAG_SUPPORT 1
 
 /* --- external SSG(YM2149/AY-3-8910)emulator interface port */
@@ -30,15 +30,15 @@ struct _ssg_callbacks
 	void (*reset)(void *param);
 };
 
-/* --- external callback funstions for realtime update --- */
+/* --- external callback functions for realtime update --- */
 
 #if FM_BUSY_FLAG_SUPPORT
-#define TIME_TYPE					attotime
-#define UNDEFINED_TIME				attotime_zero
-#define FM_GET_TIME_NOW(machine)			timer_get_time(machine)
-#define ADD_TIMES(t1, t2)   		attotime_add((t1), (t2))
-#define COMPARE_TIMES(t1, t2)		attotime_compare((t1), (t2))
-#define MULTIPLY_TIME_BY_INT(t,i)	attotime_mul(t, i)
+#define TIME_TYPE                   attotime
+#define UNDEFINED_TIME              attotime::zero
+#define FM_GET_TIME_NOW(machine)    (machine)->time()
+#define ADD_TIMES(t1, t2)           ((t1) + (t2))
+#define COMPARE_TIMES(t1, t2)       (((t1) == (t2)) ? 0 : ((t1) < (t2)) ? -1 : 1)
+#define MULTIPLY_TIME_BY_INT(t,i)   ((t) * (i))
 #endif
 
 
@@ -69,7 +69,7 @@ typedef void (*FM_IRQHANDLER)(void *param,UINT8 irq);
 ** return      0 = success
 */
 void * ym2203_init(void *param, UINT32 baseclock, UINT32 rate,
-               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
+				FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
 
 /*
 ** link SSG callbacks into the YM2203
@@ -117,7 +117,7 @@ void ym2203_set_mutemask(void *chip, UINT32 MuteMask);
 #if BUILD_YM2608
 /* -------------------- YM2608(OPNA) Interface -------------------- */
 void * ym2608_init(void *param, UINT32 baseclock, UINT32 rate,
-               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
+				FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
 void ym2608_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param);
 void ym2608_shutdown(void *chip);
 void ym2608_reset_chip(void *chip);
@@ -135,7 +135,7 @@ void ym2608_set_mutemask(void *chip, UINT32 MuteMask);
 #if (BUILD_YM2610||BUILD_YM2610B)
 /* -------------------- YM2610(OPNB) Interface -------------------- */
 void * ym2610_init(void *param, UINT32 baseclock, UINT32 rate,
-               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
+				FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
 void ym2610_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param);
 void ym2610_shutdown(void *chip);
 void ym2610_reset_chip(void *chip);
@@ -158,7 +158,7 @@ void ym2610_set_mutemask(void *chip, UINT32 MuteMask);
 
 #if (BUILD_YM2612||BUILD_YM3438)
 void * ym2612_init(void *param, UINT32 baseclock, UINT32 rate,
-               FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
+				FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
 void ym2612_shutdown(void *chip);
 void ym2612_reset_chip(void *chip);
 void ym2612_update_one(void *chip, UINT32 length, DEV_SMPL **buffer);
