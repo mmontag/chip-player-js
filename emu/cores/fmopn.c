@@ -2030,7 +2030,7 @@ static void ssgdummy_write(void* param, UINT8 address, UINT8 data)
 	return;
 }
 
-static UINT8 ssgdummy_read(void* param)
+static UINT8 ssgdummy_read(void* param, UINT8 address)
 {
 	return 0x00;
 }
@@ -2303,7 +2303,7 @@ UINT8 ym2203_read(void *chip,UINT8 a)
 	}
 	else
 	{   /* data port (only SSG) */
-		if( addr < 16 ) ret = F2203->OPN.ST.SSG_funcs.read(F2203->OPN.ST.SSG_param);
+		if( addr < 16 ) ret = F2203->OPN.ST.SSG_funcs.read(F2203->OPN.ST.SSG_param, 0);
 	}
 	return ret;
 }
@@ -3099,7 +3099,7 @@ UINT8 ym2608_read(void *chip,UINT8 a)
 		break;
 
 	case 1: /* status 0, ID  */
-		if( addr < 16 ) ret = F2608->OPN.ST.SSG_funcs.read(F2608->OPN.ST.SSG_param);
+		if( addr < 16 ) ret = F2608->OPN.ST.SSG_funcs.read(F2608->OPN.ST.SSG_param, 0);
 		else if(addr == 0xff) ret = 0x01; /* ID code */
 		break;
 
@@ -3756,7 +3756,7 @@ UINT8 ym2610_read(void *chip,UINT8 a)
 		ret = FM_STATUS_FLAG(&F2610->OPN.ST) & 0x83;
 		break;
 	case 1: /* data 0 */
-		if( addr < 16 ) ret = F2610->OPN.ST.SSG_funcs.read(F2610->OPN.ST.SSG_param);
+		if( addr < 16 ) ret = F2610->OPN.ST.SSG_funcs.read(F2610->OPN.ST.SSG_param, 0);
 		else if( addr == 0xff ) ret = 0x01;
 		break;
 	case 2: /* status 1 : ADPCM status */

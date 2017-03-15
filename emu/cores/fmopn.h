@@ -3,6 +3,7 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
 
 /* --- select emulation chips --- */
 #define BUILD_YM2203  1     // build YM2203(OPN)   emulator
@@ -24,10 +25,10 @@
 typedef struct _ssg_callbacks ssg_callbacks;
 struct _ssg_callbacks
 {
-	void (*set_clock)(void *param, UINT32 clock);
-	void (*write)(void *param, UINT8 address, UINT8 data);
-	UINT8 (*read)(void *param);
-	void (*reset)(void *param);
+	DEVFUNC_WRITE_CLOCK set_clock;
+	DEVFUNC_WRITE_A8D8 write;
+	DEVFUNC_READ_A8D8 read;
+	DEVFUNC_CTRL reset;
 };
 
 /* --- external callback functions for realtime update --- */

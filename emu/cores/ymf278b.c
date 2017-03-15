@@ -178,9 +178,9 @@ typedef struct
 typedef struct
 {
 	void* chip;
-	void (*write)(void *param, UINT8 address, UINT8 data);
-	void (*reset)(void *param);
-	void (*setVol)(void *param, INT32 volLeft, INT32 volRight);
+	DEVFUNC_WRITE_A8D8 write;
+	DEVFUNC_CTRL reset;
+	DEVFUNC_WRITE_VOL_LR setVol;
 } OPL3FM;
 struct _YMF278BChip
 {
