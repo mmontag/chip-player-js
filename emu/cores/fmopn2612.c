@@ -250,7 +250,7 @@ static const UINT8 eg_inc[19*RATE_STEPS]={
 #define O(a) (a*RATE_STEPS)
 
 /*note that there is no O(17) in this table - it's directly in the code */
-static const UINT8 eg_rate_select2612[32+64+32]={  /* Envelope Generator rates (32 + 64 rates + 32 RKS) */
+static const UINT8 eg_rate_select[32+64+32]={  /* Envelope Generator rates (32 + 64 rates + 32 RKS) */
 /* 32 infinite time rates (same as Rate 0) */
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
 O(18),O(18),O(18),O(18),O(18),O(18),O(18),O(18),
@@ -419,7 +419,8 @@ static const UINT8 lfo_ams_depth_shift[4] = {8, 3, 1, 0};
    samples (32*432=13824; 32 because we store only a quarter of whole
             waveform in the table below)
 */
-static const UINT8 lfo_pm_output[7*8][8]={ /* 7 bits meaningful (of F-NUMBER), 8 LFO output levels per one depth (out of 32), 8 LFO depths */
+static const UINT8 lfo_pm_output[7*8][8]={
+/* 7 bits meaningful (of F-NUMBER), 8 LFO output levels per one depth (out of 32), 8 LFO depths */
 /* FNUM BIT 4: 000 0001xxxx */
 /* DEPTH 0 */ {0,   0,   0,   0,   0,   0,   0,   0},
 /* DEPTH 1 */ {0,   0,   0,   0,   0,   0,   0,   0},
@@ -808,7 +809,7 @@ INLINE void FM_KEYON_CSM(FM_OPN *OPN, FM_CH *CH , int s )
 {
 	FM_SLOT *SLOT = &CH->SLOT[s];
 
-	if( !SLOT->key && !OPN->SL3.key_csm)
+	if (!SLOT->key && !OPN->SL3.key_csm)
 	{
 		/* restart Phase Generator */
 		SLOT->phase = 0;
@@ -902,21 +903,7 @@ INLINE void set_timers( FM_OPN *OPN, FM_ST *ST, void *n, int v )
 		}
 	}
 
-	// reset Timer b flag
-	if( v & 0x20 )
-		FM_STATUS_RESET(ST,0x02);
-	// reset Timer a flag
-	if( v & 0x10 )
-		FM_STATUS_RESET(ST,0x01);
-	// load b
-	if ((v&2) && !(ST->mode&2))
-	{
-		ST->TBC = ( 256-ST->TB)<<4;
-		/* External timer handler */
-		if (ST->timer_handler) (ST->timer_handler)(n,1,ST->TBC * ST->timer_prescaler,ST->clock);
-		ST->TBC *= 4096;
-	}
-	// load a
+	/* reload Timers */
 	if ((v&1) && !(ST->mode&1))
 	{
 		ST->TAC = (1024-ST->TA);
@@ -924,7 +911,41 @@ INLINE void set_timers( FM_OPN *OPN, FM_ST *ST, void *n, int v )
 		if (ST->timer_handler) (ST->timer_handler)(n,0,ST->TAC * ST->timer_prescaler,ST->clock);
 		ST->TAC *= 4096;
 	}
+	else if (!(v & 1))
+	{
+		if( ST->TAC != 0 )
+		{
+			ST->TAC = 0;
+			if (ST->timer_handler) (ST->timer_handler)(n,0,0,ST->clock);
+		}
+	}
 
+	if ((v&2) && !(ST->mode&2))
+	{
+		ST->TBC = ( 256-ST->TB)<<4;
+		/* External timer handler */
+		if (ST->timer_handler) (ST->timer_handler)(n,1,ST->TBC * ST->timer_prescaler,ST->clock);
+		ST->TBC *= 4096;
+	}
+	else if (!(v & 2))
+	{
+		if( ST->TBC != 0 )
+		{
+			ST->TBC = 0;
+			if (ST->timer_handler) (ST->timer_handler)(n,1,0,ST->clock);
+		}
+	}
+
+	/* reset Timers flags */
+	ST->status &= (~v >> 4);
+
+	/* if IRQ should be lowered now, do so */
+	if ( (ST->irq) && !(ST->status & ST->irqmask) )
+	{
+		ST->irq = 0;
+		/* callback user interrupt handler (IRQ is ON to OFF) */
+		if(ST->IRQ_Handler) (ST->IRQ_Handler)(ST->param, 0);
+	}
 	ST->mode = v;
 }
 
@@ -1132,15 +1153,16 @@ INLINE void set_ar_ksr(UINT8 type, FM_CH *CH,FM_SLOT *SLOT,int v)
 	/* are modified but the resulted SLOT->ksr value (kc >> SLOT->KSR) remains unchanged. */
 	/* In such case, Attack Rate would not be recalculated by "refresh_fc_eg_slot". */
 	/* This actually fixes the intro of "The Adventures of Batman & Robin" (Eke-Eke)         */
-	if ((SLOT->ar + SLOT->ksr) < 94 /*32+62*/)
+	if ((SLOT->ar + SLOT->ksr) < (32+62))
 	{
 		SLOT->eg_sh_ar  = eg_rate_shift [SLOT->ar  + SLOT->ksr ];
-		SLOT->eg_sel_ar = eg_rate_select2612[SLOT->ar  + SLOT->ksr ];
+		SLOT->eg_sel_ar = eg_rate_select[SLOT->ar  + SLOT->ksr ];
 	}
 	else
 	{
+		/* verified by Nemesis on real hardware (Attack phase is blocked) */
 		SLOT->eg_sh_ar  = 0;
-		SLOT->eg_sel_ar = 18*RATE_STEPS;    /* verified by Nemesis on real hardware */
+		SLOT->eg_sel_ar = 18*RATE_STEPS;
 	}
 }
 
@@ -1150,7 +1172,7 @@ INLINE void set_dr(UINT8 type, FM_SLOT *SLOT,int v)
 	SLOT->d1r = (v&0x1f) ? 32 + ((v&0x1f)<<1) : 0;
 
 	SLOT->eg_sh_d1r = eg_rate_shift [SLOT->d1r + SLOT->ksr];
-	SLOT->eg_sel_d1r= eg_rate_select2612[SLOT->d1r + SLOT->ksr];
+	SLOT->eg_sel_d1r= eg_rate_select[SLOT->d1r + SLOT->ksr];
 }
 
 /* set sustain rate */
@@ -1159,7 +1181,7 @@ INLINE void set_sr(UINT8 type, FM_SLOT *SLOT,int v)
 	SLOT->d2r = (v&0x1f) ? 32 + ((v&0x1f)<<1) : 0;
 
 	SLOT->eg_sh_d2r = eg_rate_shift [SLOT->d2r + SLOT->ksr];
-	SLOT->eg_sel_d2r= eg_rate_select2612[SLOT->d2r + SLOT->ksr];
+	SLOT->eg_sel_d2r= eg_rate_select[SLOT->d2r + SLOT->ksr];
 }
 
 /* set release rate */
@@ -1174,7 +1196,7 @@ INLINE void set_sl_rr(UINT8 type, FM_SLOT *SLOT,int v)
 	SLOT->rr  = 34 + ((v&0x0f)<<2);
 
 	SLOT->eg_sh_rr  = eg_rate_shift [SLOT->rr  + SLOT->ksr];
-	SLOT->eg_sel_rr = eg_rate_select2612[SLOT->rr  + SLOT->ksr];
+	SLOT->eg_sel_rr = eg_rate_select[SLOT->rr  + SLOT->ksr];
 }
 
 /* advance LFO to next sample */
@@ -1531,7 +1553,7 @@ INLINE void refresh_fc_eg_slot(FM_OPN *OPN, FM_SLOT *SLOT , int fc , int kc )
 		if ((SLOT->ar + SLOT->ksr) < 32+62)
 		{
 			SLOT->eg_sh_ar  = eg_rate_shift [SLOT->ar  + SLOT->ksr ];
-			SLOT->eg_sel_ar = eg_rate_select2612[SLOT->ar  + SLOT->ksr ];
+			SLOT->eg_sel_ar = eg_rate_select[SLOT->ar  + SLOT->ksr ];
 		}
 		else
 		{
@@ -1543,9 +1565,9 @@ INLINE void refresh_fc_eg_slot(FM_OPN *OPN, FM_SLOT *SLOT , int fc , int kc )
 		SLOT->eg_sh_d2r = eg_rate_shift [SLOT->d2r + SLOT->ksr];
 		SLOT->eg_sh_rr  = eg_rate_shift [SLOT->rr  + SLOT->ksr];
 
-		SLOT->eg_sel_d1r= eg_rate_select2612[SLOT->d1r + SLOT->ksr];
-		SLOT->eg_sel_d2r= eg_rate_select2612[SLOT->d2r + SLOT->ksr];
-		SLOT->eg_sel_rr = eg_rate_select2612[SLOT->rr  + SLOT->ksr];
+		SLOT->eg_sel_d1r= eg_rate_select[SLOT->d1r + SLOT->ksr];
+		SLOT->eg_sel_d2r= eg_rate_select[SLOT->d2r + SLOT->ksr];
+		SLOT->eg_sel_rr = eg_rate_select[SLOT->rr  + SLOT->ksr];
 	}
 }
 
@@ -1963,7 +1985,7 @@ static void init_timetables(FM_OPN *OPN, double freqbase)
 	}
 
 	/* there are 2048 FNUMs that can be generated using FNUM/BLK registers
-    but LFO works with one more bit of a precision so we really need 4096 elements */
+	but LFO works with one more bit of a precision so we really need 4096 elements */
 	/* calculate fnumber -> increment counter table */
 	for(i = 0; i < 4096; i++)
 	{
