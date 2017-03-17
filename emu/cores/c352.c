@@ -1,10 +1,10 @@
+// license:BSD-3-Clause
+// copyright-holders:R. Belmont, superctr
 /*
     c352.c - Namco C352 custom PCM chip emulation
     v2.0
-    
-    Rewritten by superctr
-    
-    Original code by R. Belmont
+    By R. Belmont
+    Rewritten and improved by superctr
     Additional code by cync and the hoot development team
 
     Thanks to Cap of VivaNonno for info and The_Author for preliminary reverse-engineering
@@ -101,7 +101,7 @@ typedef struct {
 
 	UINT32 pos;
 	UINT32 counter;
-	
+
 	INT16 sample;
 	INT16 last_sample;
 
@@ -109,12 +109,12 @@ typedef struct {
 	UINT16 vol_r;
 	UINT16 freq;
 	UINT16 flags;
-	
+
 	UINT16 wave_bank;
 	UINT16 wave_start;
 	UINT16 wave_end;
 	UINT16 wave_loop;
-	
+
 	UINT8 mute;
 
 } C352_Voice;
@@ -123,22 +123,21 @@ typedef struct {
 
 	void* chipInf;
 
-	UINT32 rate;
-	UINT8 muteRear;     // flag from VGM header
-	UINT8 optMuteRear;  // option
+	UINT32 sample_rate_base;
+	UINT16 divider;
 
 	C352_Voice v[C352_VOICES];
+	INT16 mulaw_table[256];
 
-	UINT16 control1; // unknown purpose for both
-	UINT16 control2;
+	UINT16 random;
+	UINT16 control; // control flags, purpose unknown.
 
 	UINT8* wave;
 	UINT32 wavesize;
 	UINT32 wave_mask;
 
-	UINT16 random;
-	
-	INT16 mulaw[256];
+	UINT8 muteRear;     // flag from VGM header
+	UINT8 optMuteRear;  // option
 
 } C352;
 
@@ -158,31 +157,28 @@ static void C352_generate_mulaw(C352 *c)
 
 		if (i & 0x80)
 			x = -x;
-		c->mulaw[i] = (short)x;
+		c->mulaw_table[i] = (INT16)x;
 	}
 }
 
-static void C352_fetch_sample(C352 *c, int i)
+static void C352_fetch_sample(C352 *c, C352_Voice *v)
 {
-	C352_Voice *v = &c->v[i];
 	v->last_sample = v->sample;
 	
 	if(v->flags & C352_FLG_NOISE)
 	{
 		c->random = (c->random>>1) ^ (-(c->random&1) & 0xfff6);
-		v->sample = (c->random&4) ? 0xc000 : 0x3fff;
-		
-		v->last_sample = v->sample; // No interpolation for noise samples
+		v->sample = c->random;
 	}
 	else
 	{
 		INT8 s;
 		UINT16 pos;
 
-		s = (INT8)c->wave[v->pos&0xffffff];
+		s = (INT8)c->wave[v->pos & c->wave_mask];
 
 		if(v->flags & C352_FLG_MULAW)
-			v->sample = c->mulaw[(UINT8)s];
+			v->sample = c->mulaw_table[(UINT8)s];
 		else
 			v->sample = s<<8;
 		
@@ -216,7 +212,6 @@ static void C352_fetch_sample(C352 *c, int i)
 				v->flags |= C352_FLG_KEYOFF;
 				v->flags &= ~C352_FLG_BUSY;
 				v->sample=0;
-				v->last_sample=0;
 			}
 		}
 		else
@@ -226,67 +221,70 @@ static void C352_fetch_sample(C352 *c, int i)
 	}
 }
 
-static UINT16 C352_update_voice(C352 *c, int i)
-{
-	C352_Voice *v = &c->v[i];
-	INT32 temp;
-
-	if((v->flags & C352_FLG_BUSY) == 0)
-		return 0;
-
-	v->counter += v->freq;
-	
-	if(v->counter > 0x10000)
-	{
-		v->counter &= 0xffff;
-		C352_fetch_sample(c,i);
-	}
-	
-	temp = v->sample;
-	
-	if((v->flags & C352_FLG_FILTER) == 0)
-		temp = v->last_sample + (v->counter*(v->sample-v->last_sample)>>16);
-
-	return temp;
-}
-
 static void c352_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 {
 	C352 *c = (C352 *)chip;
 	UINT32 i, j;
 	INT16 s;
-	memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
-	memset(outputs[1], 0x00, samples * sizeof(DEV_SMPL));
-	
+	C352_Voice* v;
+
+	DEV_SMPL out[4];
+
+	memset(outputs[0], 0, samples * sizeof(DEV_SMPL));
+	memset(outputs[1], 0, samples * sizeof(DEV_SMPL));
+
 	for(i=0;i<samples;i++)
 	{
+		out[0]=out[1]=out[2]=out[3]=0;
+
 		for(j=0;j<C352_VOICES;j++)
 		{
-			s = C352_update_voice(c,j);
+
+			v = &c->v[j];
+			s = 0;
+
+			if(v->flags & C352_FLG_BUSY)
+			{
+				v->counter += v->freq;
+
+				if(v->counter > 0x10000)
+				{
+					v->counter &= 0xffff;
+					C352_fetch_sample(c,v);
+				}
+
+				s = v->sample;
+
+				// Interpolate samples
+				if((v->flags & C352_FLG_FILTER) == 0)
+					s = v->last_sample + (v->counter*(v->sample-v->last_sample)>>16);
+			}
+
 			if(!c->v[j].mute)
 			{
 				// Left
-				outputs[0][i] += (c->v[j].flags & C352_FLG_PHASEFL) ? (-s * (c->v[j].vol_f>>8)  )>>8
-				                                                  : ( s * (c->v[j].vol_f>>8)  )>>8;
-				if (!c->muteRear && !c->optMuteRear)
-					outputs[0][i] += (c->v[j].flags & C352_FLG_PHASERL) ? (-s * (c->v[j].vol_r>>8)  )>>8
-				                                                      : ( s * (c->v[j].vol_r>>8)  )>>8;
-				
+				out[0] += ((v->flags & C352_FLG_PHASEFL) ? -s * (v->vol_f>>8) : s * (v->vol_f>>8))>>8;
+				out[2] += ((v->flags & C352_FLG_PHASERL) ? -s * (v->vol_r>>8) : s * (v->vol_r>>8))>>8;
+
 				// Right
-				outputs[1][i] += (c->v[j].flags & C352_FLG_PHASEFR) ? (-s * (c->v[j].vol_f&0xff))>>8
-				                                                  : ( s * (c->v[j].vol_f&0xff))>>8;
-				if (!c->muteRear && !c->optMuteRear)
-					outputs[1][i] += ( s * (c->v[j].vol_r&0xff))>>8;
+				out[1] += ((v->flags & C352_FLG_PHASEFR) ? -s * (v->vol_f&0xff) : s * (v->vol_f&0xff))>>8;
+				out[3] += ((v->flags & C352_FLG_PHASEFR) ? -s * (v->vol_r&0xff) : s * (v->vol_r&0xff))>>8;
 			}
 		}
-		
+
+		outputs[0][i] += out[0];
+		outputs[1][i] += out[1];
+		if (!c->muteRear && !c->optMuteRear)
+		{
+			outputs[2][i] += out[2];
+			outputs[3][i] += out[3];
+		}
 	}
 }
 
 static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf)
 {
 	C352 *c;
-	UINT16 clkdiv;
 
 	c = (C352 *)calloc(1, sizeof(C352));
 	if (c == NULL)
@@ -295,22 +293,18 @@ static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf)
 	c->wave = NULL;
 	c->wavesize = 0x00;
 
-	clkdiv = cfg->clk_divider ? cfg->clk_divider : 288;
-	c->rate = cfg->_genCfg.clock/clkdiv;
+	c->divider = cfg->clk_divider ? cfg->clk_divider : 288;
+	c->sample_rate_base = cfg->_genCfg.clock / c->divider;
 	c->muteRear = cfg->_genCfg.flags;
 
-	//memset(c->v,0,sizeof(C352_Voice)*C352_VOICES);
-
-	c->control1 = 0;
-	c->control2 = 0;
-	c->random = 0x1234;
+	//device_reset_c352(c);
 
 	C352_generate_mulaw(c);
 
 	c352_set_mute_mask(c, 0x00000000);
 
 	c->chipInf = c;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)c, c->rate, &devDef);
+	INIT_DEVINF(retDevInf, (DEV_DATA*)c, c->sample_rate_base, &devDef);
 	return 0x00;
 }
 
@@ -329,7 +323,13 @@ static void device_reset_c352(void *chip)
 	C352 *c = (C352 *)chip;
 	
 	// TODO: save/restore muting flags
+	
+	// clear all channels states
 	memset(c->v,0,sizeof(C352_Voice)*C352_VOICES);
+	
+	// init noise generator
+	c->random = 0x1234;
+	c->control = 0;
 	
 	return;
 }
@@ -345,29 +345,27 @@ static UINT16 C352RegMap[8] = {
 	offsetof(C352_Voice,wave_loop) / sizeof(UINT16),
 };
 
-static UINT16 c352_r(void *chip, UINT16 offset)
+static UINT16 c352_r(void *chip, UINT16 address)
 {
 	C352 *c = (C352 *)chip;
 
-	if(offset < 0x100)
-		return *((UINT16*)&c->v[offset/8]+C352RegMap[offset%8]);
+	if(address < 0x100)
+		return *((UINT16*)&c->v[address/8]+C352RegMap[address%8]);
 	else
 		return 0;
 }
 
-static void c352_w(void *chip, UINT16 offset, UINT16 data)
+static void c352_w(void *chip, UINT16 address, UINT16 val)
 {
 	C352 *c = (C352 *)chip;
 	
 	int i;
 	
-	if(offset < 0x100) // Channel registers, see map above.
-		*((UINT16*)&c->v[offset/8]+C352RegMap[offset%8]) = data;
-	else if(offset == 0x200) // Unknown purpose.
-		c->control1 = data;
-	else if(offset == 0x201)
-		c->control2 = data;
-	else if(offset == 0x202) // execute keyons/keyoffs
+	if(address < 0x100) // Channel registers, see map above.
+		*((UINT16*)&c->v[address/8]+C352RegMap[address%8]) = val;
+	else if(address == 0x200)
+		c->control = val;
+	else if(address == 0x202) // execute keyons/keyoffs
 	{
 		for(i=0;i<C352_VOICES;i++)
 		{
@@ -384,8 +382,6 @@ static void c352_w(void *chip, UINT16 offset, UINT16 data)
 			}
 			else if(c->v[i].flags & C352_FLG_KEYOFF)
 			{
-				c->v[i].sample=0;
-				c->v[i].last_sample=0;
 				c->v[i].flags &= ~(C352_FLG_BUSY|C352_FLG_KEYOFF);
 			}
 		}
@@ -403,6 +399,7 @@ static void c352_alloc_rom(void* chip, UINT32 memsize)
 	c->wave = (UINT8*)realloc(c->wave, memsize);
 	c->wavesize = memsize;
 	memset(c->wave, 0xFF, memsize);
+	c->wave_mask = pow2_mask(memsize);
 	
 	return;
 }
