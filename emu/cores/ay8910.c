@@ -1,3 +1,123 @@
+// license:BSD-3-Clause
+// copyright-holders:Couriersud
+/*
+ * Couriersud, July 2014:
+ *
+ * This documents recent work on the AY8910. A YM2149 is now on it's way from
+ * Hong Kong as well.
+ *
+ * TODO:
+ *
+ * - Create a true sound device nAY8910 driver.
+ * - implement approach outlined below in this driver.
+ *
+ * For years I had a AY8910 in my drawer. Arduinos were around as well.
+ * Using the approach documented in this blog post
+ *    http://www.986-studio.com/2014/05/18/another-ay-entry/#more-476
+ * I measured the output voltages using a Extech 520.
+ *
+ * Measurement Setup
+ *
+ * Laptop <--> Arduino <---> AY8910
+ *
+ * AY8910 Registers:
+ * 0x07: 3f
+ * 0x08: RV
+ * 0x09: RV
+ * 0x0A: RV
+ *
+ * Output was measured on Analog Output B with a resistor RD to
+ * ground.
+ *
+ * Measurement results:
+ *
+ * RD      983  9.830k   99.5k  1.001M    open
+ *
+ * RV        B       B       B       B       B
+ *  0   0.0000  0.0000  0.0001  0.0011  0.0616
+ *  1   0.0106  0.0998  0.6680  1.8150  2.7260
+ *  2   0.0150  0.1377  0.8320  1.9890  2.8120
+ *  3   0.0222  0.1960  1.0260  2.1740  2.9000
+ *  4   0.0320  0.2708  1.2320  2.3360  2.9760
+ *  5   0.0466  0.3719  1.4530  2.4880  3.0440
+ *  6   0.0665  0.4938  1.6680  2.6280  3.1130
+ *  7   0.1039  0.6910  1.9500  2.7900  3.1860
+ *  8   0.1237  0.7790  2.0500  2.8590  3.2340
+ *  9   0.1986  1.0660  2.3320  3.0090  3.3090
+ * 10   0.2803  1.3010  2.5050  3.0850  3.3380
+ * 11   0.3548  1.4740  2.6170  3.1340  3.3590
+ * 12   0.4702  1.6870  2.7340  3.1800  3.3730
+ * 13   0.6030  1.8870  2.8410  3.2300  3.4050
+ * 14   0.7530  2.0740  2.9280  3.2580  3.4170
+ * 15   0.9250  2.2510  3.0040  3.2940  3.4380
+ *
+ * Using an equivalent model approach with two resistors
+ *
+ *      5V
+ *       |
+ *       Z
+ *       Z Resistor Value for RV
+ *       Z
+ *       |
+ *       +---> Output signal
+ *       |
+ *       Z
+ *       Z External RD
+ *       Z
+ *       |
+ *      GND
+ *
+ * will NOT work out of the box since RV = RV(RD).
+ *
+ * The following approach will be used going forward based on die pictures
+ * of the AY8910 done by Dr. Stack van Hay:
+ *
+ *
+ *              5V
+ *             _| D
+ *          G |      NMOS
+ *     Vg ---||               Kn depends on volume selected
+ *            |_  S Vs
+ *               |
+ *               |
+ *               +---> VO Output signal
+ *               |
+ *               Z
+ *               Z External RD
+ *               Z
+ *               |
+ *              GND
+ *
+ *  Whilst conducting, the FET operates in saturation mode:
+ *
+ *  Id = Kn * (Vgs - Vth)^2
+ *
+ *  Using Id = Vs / RD
+ *
+ *  Vs = Kn * RD  * (Vg - Vs - Vth)^2
+ *
+ *  finally using Vg' = Vg - Vth
+ *
+ *  Vs = Vg' + 1 / (2 * Kn * RD) - sqrt((Vg' + 1 / (2 * Kn * RD))^2 - Vg'^2)
+ *
+ *  and finally
+ *
+ *  VO = Vs
+ *
+ *  and this can be used to re-Thenevin to 5V
+ *
+ *  RVequiv = RD * ( 5V / VO - 1)
+ *
+ *  The RV and Kn parameter are derived using least squares to match
+ *  calculation results with measurements.
+ *
+ *  FIXME:
+ *  There is voltage of 60 mV measured with the EX520 (Ri ~ 10M). This may
+ *  be induced by cutoff currents from the 15 FETs.
+ *
+ */
+
+
 /***************************************************************************
 
   ay8910.c
@@ -24,8 +144,6 @@
   TODO:
   * The AY8930 has an extended mode which is currently
     not emulated.
-  * The YMZ284 only has one 1 output channel (mixed chan A,B,C).
-    This should be forced.
   * YM2610 & YM2608 will need a separate flag in their config structures
     to distinguish between legacy and discrete mode.
 
@@ -109,11 +227,34 @@ Envelope shapes:
 The envelope counter on the AY-3-8910 has 16 steps. On the YM2149 it
 has twice the steps, happening twice as fast.
 
+****************************************************************************
+
+    The bus control and chip selection signals of the AY PSGs and their
+    pin-compatible clones such as YM2149 are somewhat unconventional and
+    redundant, having been designed for compatibility with GI's CP1610
+    series of microprocessors. Much of the redundancy can be finessed by
+    tying BC2 to Vcc; AY-3-8913 and AY8930 do this internally.
+
+                            /A9   A8    /CS   BDIR  BC2   BC1
+                AY-3-8910   24    25    n/a   27    28    29
+                AY-3-8912   n/a   17    n/a   18    19    20
+                AY-3-8913   22    23    24    2     n/a   3
+                            ------------------------------------
+                Inactive            NACT      0     0     0
+                Latch address       ADAR      0     0     1
+                Inactive            IAB       0     1     0
+                Read from PSG       DTB       0     1     1
+                Latch address       BAR       1     0     0
+                Inactive            DW        1     0     1
+                Write to PSG        DWS       1     1     0
+                Latch address       INTAK     1     1     1
+
 ***************************************************************************/
 
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <stdio.h>
+#include <math.h>
 
 #include <stdtype.h>
 #include "../snddef.h"
@@ -128,36 +269,40 @@ has twice the steps, happening twice as fast.
  *
  *************************************/
 
+#define ENABLE_REGISTER_TEST        (0)     /* Enable preprogrammed registers */
+#define LOG_IGNORED_WRITES          (0)
+#define ENABLE_CUSTOM_OUTPUTS       (0)
+
 #define MAX_OUTPUT 0x4000
 #define NUM_CHANNELS 3
 
 /* register id's */
-#define AY_AFINE	(0)
-#define AY_ACOARSE	(1)
-#define AY_BFINE	(2)
-#define AY_BCOARSE	(3)
-#define AY_CFINE	(4)
-#define AY_CCOARSE	(5)
-#define AY_NOISEPER	(6)
-#define AY_ENABLE	(7)
-#define AY_AVOL		(8)
-#define AY_BVOL		(9)
-#define AY_CVOL		(10)
-#define AY_EFINE	(11)
-#define AY_ECOARSE	(12)
-#define AY_ESHAPE	(13)
+#define AY_AFINE    (0)
+#define AY_ACOARSE  (1)
+#define AY_BFINE    (2)
+#define AY_BCOARSE  (3)
+#define AY_CFINE    (4)
+#define AY_CCOARSE  (5)
+#define AY_NOISEPER (6)
+#define AY_ENABLE   (7)
+#define AY_AVOL     (8)
+#define AY_BVOL     (9)
+#define AY_CVOL     (10)
+#define AY_EFINE    (11)
+#define AY_ECOARSE  (12)
+#define AY_ESHAPE   (13)
 
-#define AY_PORTA	(14)
-#define AY_PORTB	(15)
+#define AY_PORTA    (14)
+#define AY_PORTB    (15)
 
-#define NOISE_ENABLEQ(_psg, _chan)	(((_psg)->regs[AY_ENABLE] >> (3 + _chan)) & 1)
-#define TONE_ENABLEQ(_psg, _chan)	(((_psg)->regs[AY_ENABLE] >> (_chan)) & 1)
-#define TONE_PERIOD(_psg, _chan)	( (_psg)->regs[(_chan) << 1] | (((_psg)->regs[((_chan) << 1) | 1] & 0x0f) << 8) )
-#define NOISE_PERIOD(_psg)			( (_psg)->regs[AY_NOISEPER] & 0x1f)
-#define TONE_VOLUME(_psg, _chan)	( (_psg)->regs[AY_AVOL + (_chan)] & 0x0f)
-#define TONE_ENVELOPE(_psg, _chan)	(((_psg)->regs[AY_AVOL + (_chan)] >> 4) & (((_psg)->chip_type == AYTYPE_AY8914) ? 3 : 1))
-#define ENVELOPE_PERIOD(_psg)		(((_psg)->regs[AY_EFINE] | ((_psg)->regs[AY_ECOARSE]<<8)))
-#define NOISE_OUTPUT(_psg)			((_psg)->rng & 1)
+#define NOISE_ENABLEQ(_psg, _chan)  (((_psg)->regs[AY_ENABLE] >> (3 + _chan)) & 1)
+#define TONE_ENABLEQ(_psg, _chan)   (((_psg)->regs[AY_ENABLE] >> (_chan)) & 1)
+#define TONE_PERIOD(_psg, _chan)    ( (_psg)->regs[(_chan) << 1] | (((_psg)->regs[((_chan) << 1) | 1] & 0x0f) << 8) )
+#define NOISE_PERIOD(_psg)          ( (_psg)->regs[AY_NOISEPER] & 0x1f)
+#define TONE_VOLUME(_psg, _chan)    ( (_psg)->regs[AY_AVOL + (_chan)] & 0x0f)
+#define TONE_ENVELOPE(_psg, _chan)  (((_psg)->regs[AY_AVOL + (_chan)] >> 4) & (((_psg)->chip_type == AYTYPE_AY8914) ? 3 : 1))
+#define ENVELOPE_PERIOD(_psg)       (((_psg)->regs[AY_EFINE] | ((_psg)->regs[AY_ECOARSE]<<8)))
+#define NOISE_OUTPUT(_psg)          ((_psg)->rng & 1)
 
 /*************************************
  *
@@ -165,24 +310,42 @@ has twice the steps, happening twice as fast.
  *
  *************************************/
 
-typedef struct _ay_ym_param ay_ym_param;
-struct _ay_ym_param
+typedef enum _psg_type_t
+{
+	PSG_TYPE_AY,
+	PSG_TYPE_YM
+} psg_type_t;
+
+typedef struct _ay_ym_param
 {
 	double r_up;
 	double r_down;
 	int    res_count;
 	double res[32];
-};
+} ay_ym_param;
+
+typedef struct _mosfet_param
+{
+	double Vth;
+	double Vg;
+	int    count;
+	double Kn[32];
+} mosfet_param;
 
 //typedef struct _ay8910_context ay8910_context;
 struct _ay8910_context
 {
 	void* chipInf;
 	
-	ay8910_interface intf;
+	// internal state
+	psg_type_t type;
+	UINT8 streams;
+	UINT8 ioports;
+	//UINT8 ready;
+	UINT8 active;
 	UINT8 register_latch;
-	UINT8 last_enable;
 	UINT8 regs[16];
+	UINT8 last_enable;
 	INT32 count[NUM_CHANNELS];
 	UINT8 output[NUM_CHANNELS];
 	UINT8 prescale_noise;
@@ -201,7 +364,16 @@ struct _ay8910_context
 	const ay_ym_param *par_env;
 	INT32 vol_table[NUM_CHANNELS][16];
 	INT32 env_table[NUM_CHANNELS][32];
+#if ENABLE_CUSTOM_OUTPUTS
 	INT32 vol3d_table[8*32*32*32];
+#endif
+	int flags;          /* Flags */
+	int res_load[3];    /* Load on channel in ohms */
+	//devcb_read8 port_a_read_cb;
+	//devcb_read8 port_b_read_cb;
+	//devcb_write8 port_a_write_cb;
+	//devcb_write8 port_b_write_cb;
+	
 	UINT8 StereoMask[NUM_CHANNELS];
 	UINT32 MuteMsk[NUM_CHANNELS];
 	
@@ -326,6 +498,7 @@ static const ay_ym_param ay8910_param =
  * RD was measured on a real chip to be 8m Ohm, RU was 0.8m Ohm.
  */
 
+
 static const ay_ym_param ay8910_param =
 {
 	800000, 8000000,
@@ -334,16 +507,110 @@ static const ay_ym_param ay8910_param =
       10600,  8590,  7190,  5985,  4820,  3945,  3017,  2345 }
 };
 
+static const mosfet_param ay8910_mosfet_param =
+{
+	1.465385778,
+	4.9,
+	16,
+	{
+			0.00076,
+			0.80536,
+			1.13106,
+			1.65952,
+			2.42261,
+			3.60536,
+			5.34893,
+			8.96871,
+			10.97202,
+			19.32370,
+			29.01935,
+			38.82026,
+			55.50539,
+			78.44395,
+		109.49257,
+		153.72985,
+	}
+};
+
+
+
+
 /*************************************
  *
  *  Inline
  *
  *************************************/
 
+#if ENABLE_CUSTOM_OUTPUTS
+INLINE void build_3D_table(double rl, const ay_ym_param *par, const ay_ym_param *par_env, int normalize, double factor, int zero_is_off, INT32 *tab)
+{
+	int j, j1, j2, j3, e, indx;
+	double rt, rw, n;
+	double min = 10.0,  max = 0.0;
+	double *temp;
+
+	temp = (double *)malloc(8*32*32*32*sizeof(*temp));
+
+	for (e=0; e < 8; e++)
+	{
+		const ay_ym_param *par_ch1 = (e & 0x01) ? par_env : par;
+		const ay_ym_param *par_ch2 = (e & 0x02) ? par_env : par;
+		const ay_ym_param *par_ch3 = (e & 0x04) ? par_env : par;
+
+		for (j1=0; j1 < par_ch1->res_count; j1++)
+			for (j2=0; j2 < par_ch2->res_count; j2++)
+				for (j3=0; j3 < par_ch3->res_count; j3++)
+				{
+					if (zero_is_off)
+					{
+						n  = (j1 != 0 || (e & 0x01)) ? 1 : 0;
+						n += (j2 != 0 || (e & 0x02)) ? 1 : 0;
+						n += (j3 != 0 || (e & 0x04)) ? 1 : 0;
+					}
+					else
+						n = 3.0;
+
+					rt = n / par->r_up + 3.0 / par->r_down + 1.0 / rl;
+					rw = n / par->r_up;
+
+					rw += 1.0 / par_ch1->res[j1];
+					rt += 1.0 / par_ch1->res[j1];
+					rw += 1.0 / par_ch2->res[j2];
+					rt += 1.0 / par_ch2->res[j2];
+					rw += 1.0 / par_ch3->res[j3];
+					rt += 1.0 / par_ch3->res[j3];
+
+					indx = (e << 15) | (j3<<10) | (j2<<5) | j1;
+					temp[indx] = rw / rt;
+					if (temp[indx] < min)
+						min = temp[indx];
+					if (temp[indx] > max)
+						max = temp[indx];
+				}
+	}
+
+	if (normalize)
+	{
+		for (j=0; j < 32*32*32*8; j++)
+			tab[j] = MAX_OUTPUT * (((temp[j] - min)/(max-min))) * factor / NUM_CHANNELS;
+	}
+	else
+	{
+		for (j=0; j < 32*32*32*8; j++)
+			tab[j] = MAX_OUTPUT * temp[j] / NUM_CHANNELS;
+	}
+
+	/* for (e=0;e<16;e++) printf("%d %d\n",e<<10, tab[e<<10]); */
+
+	free(temp);
+}
+#endif
+
 INLINE void build_single_table(double rl, const ay_ym_param *par, int normalize, INT32 *tab, int zero_is_off)
 {
 	int j;
-	double rt, rw = 0;
+	double rt;
+	double rw;
 	double temp[32], min=10.0, max=0.0;
 
 	for (j=0; j < par->res_count; j++)
@@ -383,6 +650,31 @@ INLINE void build_single_table(double rl, const ay_ym_param *par, int normalize,
 
 }
 
+#if ENABLE_CUSTOM_OUTPUTS
+INLINE void build_mosfet_resistor_table(const mosfet_param *par, const double rd, INT32 *tab)
+{
+	int j;
+
+	for (j=0; j < par->count; j++)
+	{
+		const double Vd = 5.0;
+		const double Vg = par->Vg - par->Vth;
+		const double kn = par->Kn[j] / 1.0e6;
+		const double p2 = 1.0 / (2.0 * kn * rd) + Vg;
+		const double Vs = p2 - sqrt(p2 * p2 - Vg * Vg);
+
+		const double res = rd * ( Vd / Vs - 1.0);
+		/* That's the biggest value we can stream on to netlist. */
+
+		if (res > (1 << 28))
+			tab[j] = (1 << 28);
+		else
+			tab[j] = res;
+		//printf("%d %f %10d\n", j, rd / (res + rd) * 5.0, tab[j]);
+	}
+}
+
+
 INLINE UINT16 mix_3D(ay8910_context *psg)
 {
 	int indx = 0, chan;
@@ -405,6 +697,7 @@ INLINE UINT16 mix_3D(ay8910_context *psg)
 		}
 	return psg->vol3d_table[indx];
 }
+#endif
 
 /*************************************
  *
@@ -414,8 +707,7 @@ INLINE UINT16 mix_3D(ay8910_context *psg)
 
 void ay8910_write_reg(ay8910_context *psg, UINT8 r, UINT8 v)
 {
-	if (r > 15) return;
-
+	//if (r >= 11 && r <= 13 ) printf("%d %x %02x\n", PSG->index, r, v);
 	psg->regs[r] = v;
 
 	switch( r )
@@ -440,16 +732,16 @@ void ay8910_write_reg(ay8910_context *psg, UINT8 r, UINT8 v)
 
 			if ((psg->last_enable & 0x40) != (psg->regs[AY_ENABLE] & 0x40))
 			{
-				// write out 0xFF if port set to input
-				//UINT8 data = (psg->regs[AY_ENABLE] & 0x40) ? psg->regs[AY_PORTA] : 0xFF;
-				//psg->portAwrite(0x00, data);
+				/* write out 0xff if port set to input */
+				//if (psg->port_a_write_cb != NULL)
+				//	psg->port_a_write_cb(psg, 0, (psg->regs[AY_ENABLE] & 0x40) ? psg->regs[AY_PORTA] : 0xff);
 			}
 
 			if ((psg->last_enable & 0x80) != (psg->regs[AY_ENABLE] & 0x80))
 			{
-				// write out 0xFF if port set to input
-				//UINT8 data = (psg->regs[AY_ENABLE] & 0x80) ? psg->regs[AY_PORTB] : 0xFF;
-				//psg->portBwrite(0x00, data);
+				/* write out 0xff if port set to input */
+				//if (psg->port_b_write_cb != NULL)
+				//	psg->port_b_write_cb(psg, 0, (psg->regs[AY_ENABLE] & 0x80) ? psg->regs[AY_PORTB] : 0xff);
 			}
 			if (~v & 0x3F)	// one of the channels gets enabled -> enable emulation
 				psg->IsDisabled = 0x00;
@@ -457,6 +749,8 @@ void ay8910_write_reg(ay8910_context *psg, UINT8 r, UINT8 v)
 			psg->last_enable = psg->regs[AY_ENABLE] & 0xC0;
 			break;
 		case AY_ESHAPE:
+			//if ( (v & 0x0f) > 0)
+			//	osd_printf_verbose("EShape\n");
 			psg->attack = (psg->regs[AY_ESHAPE] & 0x04) ? psg->env_step_mask : 0x00;
 			if ((psg->regs[AY_ESHAPE] & 0x08) == 0)
 			{
@@ -474,12 +768,34 @@ void ay8910_write_reg(ay8910_context *psg, UINT8 r, UINT8 v)
 			psg->env_volume = (psg->env_step ^ psg->attack);
 			break;
 		case AY_PORTA:
-			//if (psg->regs[AY_ENABLE] & 0x40)
-			//	psg->portAwrite(0x00, psg->regs[AY_PORTA]);
+			if (psg->regs[AY_ENABLE] & 0x40)
+			{
+				//if (psg->port_a_write_cb != NULL)
+				//	psg->port_a_write_cb(psg, 0, psg->regs[AY_PORTA]);
+				//else
+				//	logerror("warning: unmapped write %02x to %s Port A\n", v, "AY8910");
+			}
+			else
+			{
+#if LOG_IGNORED_WRITES
+				logerror("warning: write %02x to %s Port A set as input - ignored\n", v, "AY8910");
+#endif
+			}
 			break;
 		case AY_PORTB:
-			//if (psg->regs[AY_ENABLE] & 0x80)
-			//	psg->portBwrite(0x00, psg->regs[AY_PORTB]);
+			if (psg->regs[AY_ENABLE] & 0x80)
+			{
+				//if (psg->port_b_write_cb != NULL)
+				//	psg->port_b_write_cb(psg, 0, psg->regs[AY_PORTB]);
+				//else
+				//	logerror("warning: unmapped write %02x to %s Port B\n", v, "AY8910");
+			}
+			else
+			{
+#if LOG_IGNORED_WRITES
+				logerror("warning: write %02x to %s Port B set as input - ignored\n", v, "AY8910");
+#endif
+			}
 			break;
 	}
 }
@@ -579,53 +895,96 @@ void ay8910_update_one(void *param, UINT32 samples, DEV_SMPL **outputs)
 		}
 		psg->env_volume = (psg->env_step ^ psg->attack);
 
-		for (chan = 0; chan < NUM_CHANNELS; chan++)
+#if ENABLE_CUSTOM_OUTPUTS
+		if (psg->streams == 3)
+#endif
 		{
-			if (! psg->MuteMsk[chan])
-				continue;
-			if (TONE_ENVELOPE(psg, chan) != 0)
+			for (chan = 0; chan < NUM_CHANNELS; chan++)
 			{
-				/* Envolope has no "off" state */
-				if (psg->chip_type == AYTYPE_AY8914) // AY8914 Has a two bit tone_envelope field
+				if (! psg->MuteMsk[chan])
+					continue;
+				if (TONE_ENVELOPE(psg, chan) != 0)
 				{
-					chnout = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume >> (3-TONE_ENVELOPE(psg,chan)) : 0];
+					if (psg->chip_type == AYTYPE_AY8914) // AY8914 Has a two bit tone_envelope field
+					{
+						chnout = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume >> (3-TONE_ENVELOPE(psg,chan)) : 0];
+					}
+					else
+					{
+						chnout = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume : 0];
+					}
 				}
 				else
 				{
-					chnout = psg->env_table[chan][psg->vol_enabled[chan] ? psg->env_volume : 0];
+					chnout = psg->vol_table[chan][psg->vol_enabled[chan] ? TONE_VOLUME(psg, chan) : 0];
 				}
+				if (psg->StereoMask[chan] & 0x01)
+					bufL[cur_smpl] += chnout;
+				if (psg->StereoMask[chan] & 0x02)
+					bufR[cur_smpl] += chnout;
 			}
-			else
-			{
-				chnout = psg->vol_table[chan][psg->vol_enabled[chan] ? TONE_VOLUME(psg, chan) : 0];
-			}
-			if (psg->StereoMask[chan] & 0x01)
-				bufL[cur_smpl] += chnout;
-			if (psg->StereoMask[chan] & 0x02)
-				bufR[cur_smpl] += chnout;
 		}
+#if ENABLE_CUSTOM_OUTPUTS
+		else
+		{
+			chnout = mix_3D(psg);
+			bufL[cur_smpl] += chnout;
+			bufR[cur_smpl] += chnout;
+		}
+#endif
 	}
 }
 
 static void build_mixer_table(ay8910_context *psg)
 {
-	int	normalize = 0;
-	int	chan;
+#if ENABLE_CUSTOM_OUTPUTS
+	int normalize = 0;
+	int chan;
 
-	if ((psg->intf.flags & AY8910_LEGACY_OUTPUT) != 0)
+	if ((psg->flags & AY8910_LEGACY_OUTPUT) != 0 || ! psg->flags)
 	{
-#ifdef _DEBUG
 		//logerror("AY-3-8910/YM2149 using legacy output levels!\n");
-#endif
 		normalize = 1;
 	}
-	normalize = 1;
 
+	if ((psg->flags & AY8910_RESISTOR_OUTPUT) != 0)
+	{
+		if (psg->type != PSG_TYPE_AY)
+			logerror("AY8910_RESISTOR_OUTPUT currently only supported for AY8910 devices.");
+
+		for (chan=0; chan < NUM_CHANNELS; chan++)
+		{
+			build_mosfet_resistor_table(&ay8910_mosfet_param, psg->res_load[chan], psg->vol_table[chan]);
+			build_mosfet_resistor_table(&ay8910_mosfet_param, psg->res_load[chan], psg->env_table[chan]);
+		}
+	}
+	else if (psg->streams == NUM_CHANNELS)
+	{
+		for (chan=0; chan < NUM_CHANNELS; chan++)
+		{
+			build_single_table(psg->res_load[chan], psg->par, normalize, psg->vol_table[chan], psg->zero_is_off);
+			build_single_table(psg->res_load[chan], psg->par_env, normalize, psg->env_table[chan], 0);
+		}
+	}
+	/*
+	 * The previous implementation added all three channels up instead of averaging them.
+	 * The factor of 3 will force the same levels if normalizing is used.
+	 */
+	else
+	{
+		build_3D_table(psg->res_load[0], psg->par, psg->par_env, normalize, 3, psg->zero_is_off, psg->vol3d_table);
+	}
+#else
+	int chan;
+
+	// resistor output just doesn't work here
+	// and the 3D table takes an eternity to initialize (and I don't have muting implemented - and panning is harder)
 	for (chan=0; chan < NUM_CHANNELS; chan++)
 	{
-		build_single_table(psg->intf.res_load[chan], psg->par, normalize, psg->vol_table[chan], psg->zero_is_off);
-		build_single_table(psg->intf.res_load[chan], psg->par_env, normalize, psg->env_table[chan], 0);
+		build_single_table(psg->res_load[chan], psg->par, 1, psg->vol_table[chan], psg->zero_is_off);
+		build_single_table(psg->res_load[chan], psg->par_env, 1, psg->env_table[chan], 0);
 	}
+#endif
 }
 
 /*************************************
@@ -636,13 +995,72 @@ static void build_mixer_table(ay8910_context *psg)
  *
  *************************************/
 
+static void ay8910_set_type(ay8910_context *info, UINT8 chip_type)
+{
+	info->chip_type = chip_type;
+	if ((chip_type & 0xF0) == 0x20)
+		chip_type = AYTYPE_YM2149;
+	
+	switch(chip_type)
+	{
+	case AYTYPE_AY8910:
+	case AYTYPE_AY8914:
+	case AYTYPE_AY8930:
+		info->type = PSG_TYPE_AY;
+		info->streams = 3;
+		info->ioports = 2;
+		break;
+	case AYTYPE_AY8912:
+		info->type = PSG_TYPE_AY;
+		info->streams = 3;
+		info->ioports = 1;
+		break;
+	case AYTYPE_AY8913:
+		info->type = PSG_TYPE_AY;
+		info->streams = 3;
+		info->ioports = 0;
+		break;
+	case AYTYPE_YM2149:
+	case AYTYPE_YM3439:
+		info->type = PSG_TYPE_YM;
+		info->streams = 3;
+		info->ioports = 2;
+		break;
+	case AYTYPE_YMZ284:
+	case AYTYPE_YMZ294:
+		info->type = PSG_TYPE_YM;
+		info->streams = 1;
+		info->ioports = 0;
+		break;
+	default:
+		info->type = ((chip_type & 0xF0) == 0x00) ? PSG_TYPE_AY : PSG_TYPE_YM;
+		info->streams = 3;
+		info->ioports = 2;
+		break;
+	}
+	
+	if (info->type == PSG_TYPE_AY)	// AYTYPE_AY89xx variants
+	{
+		info->step = 2;
+		info->par = &ay8910_param;
+		info->par_env = &ay8910_param;
+		info->zero_is_off = 1;
+		info->env_step_mask = 0x0f;
+	}
+	else //if (info->type = PSG_TYPE_YM)	// AYTYPE_YMxxxx variants (also YM2203/2608/2610 SSG)
+	{
+		info->step = 1;
+		info->par = &ym2149_param;
+		info->par_env = &ym2149_param_env;
+		info->zero_is_off = 0;
+		info->env_step_mask = 0x1f;
+	}
+	
+	return;
+}
+
 UINT32 ay8910_start(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags)
 {
-	static const ay8910_interface generic_ay8910 =
-	{
-		AY8910_LEGACY_OUTPUT,
-		AY8910_DEFAULT_LOADS
-	};
 	ay8910_context *info;
 
 	info = (ay8910_context*)calloc(1, sizeof(ay8910_context));
@@ -650,29 +1068,13 @@ UINT32 ay8910_start(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags)
 		return 0;
 	*chip = info;
 
-	info->intf = generic_ay8910;
-	info->intf.flags = ay_flags & 0x0F;
 	info->SmpRateFunc = NULL;
 
 	info->clock = clock;
-	info->chip_type = ay_type;
 	info->chip_flags = ay_flags;
-	if ((info->chip_type & 0xF0) == 0x00)	// AYTYPE_AY89xx variants
-	{
-		info->step = 2;
-		info->par = &ay8910_param;
-		info->par_env = &ay8910_param;
-		info->zero_is_off = 0;		/* FIXME: Remove after verification that off=vol(0) */
-		info->env_step_mask = 0x0F;
-	}
-	else //if ((info->chip_type & 0xF0) >= 0x10)	// AYTYPE_YMxxxx variants (also YM2203/2608/2610)
-	{
-		info->step = 1;
-		info->par = &ym2149_param;
-		info->par_env = &ym2149_param_env;
-		info->zero_is_off = 0;
-		info->env_step_mask = 0x1F;
-	}
+	ay8910_set_type(info, ay_type);
+	info->res_load[0] = info->res_load[1] = info->res_load[2] = 1000; //Default values for resistor loads
+	
 	if (info->chip_flags & AY8910_ZX_STEREO)
 	{
 		// ABC Stereo
@@ -705,6 +1107,7 @@ void ay8910_reset(void *chip)
 	ay8910_context *psg = (ay8910_context *)chip;
 	UINT8 i;
 
+	psg->active = 0;
 	psg->register_latch = 0;
 	psg->rng = 1;
 	psg->output[0] = 0;
@@ -716,9 +1119,26 @@ void ay8910_reset(void *chip)
 	psg->count_noise = 0;
 	psg->count_env = 0;
 	psg->prescale_noise = 0;
-	psg->last_enable = 0xFF;	/* force a write */
+	psg->last_enable = 0xFF;    /* force a write */
 	for (i = 0;i < AY_PORTA;i++)
 		ay8910_write_reg(psg,i,0);
+	//psg->ready = 1;
+#if ENABLE_REGISTER_TEST
+	ay8910_write_reg(psg, AY_AFINE, 0);
+	ay8910_write_reg(psg, AY_ACOARSE, 1);
+	ay8910_write_reg(psg, AY_BFINE, 0);
+	ay8910_write_reg(psg, AY_BCOARSE, 2);
+	ay8910_write_reg(psg, AY_CFINE, 0);
+	ay8910_write_reg(psg, AY_CCOARSE, 4);
+	//#define AY_NOISEPER   (6)
+	ay8910_write_reg(psg, AY_ENABLE, ~7);
+	ay8910_write_reg(psg, AY_AVOL, 10);
+	ay8910_write_reg(psg, AY_BVOL, 10);
+	ay8910_write_reg(psg, AY_CVOL, 10);
+	//#define AY_EFINE  (11)
+	//#define AY_ECOARSE    (12)
+	//#define AY_ESHAPE (13)
+#endif
 
 	if (psg->chip_type & 0x20)
 		psg->IsDisabled = 0x01;	// YM2203/2608/2610 SSG optimization
@@ -740,7 +1160,7 @@ UINT32 ay8910_get_sample_rate(void *chip)
 	ay8910_context *psg = (ay8910_context *)chip;
 	UINT32 master_clock = psg->clock;
 	
-	if ((psg->chip_type & 0xF0) > 0x00)
+	if (psg->type == PSG_TYPE_YM)
 	{
 		// YM2149 master clock divider
 		if (psg->chip_flags & YM2149_PIN26_LOW)
@@ -756,13 +1176,25 @@ void ay8910_write(void *chip, UINT8 addr, UINT8 data)
 	ay8910_context *psg = (ay8910_context *)chip;
 
 	if (addr & 1)
-	{	/* Data port */
-		UINT8 r = psg->register_latch;
-		ay8910_write_reg(psg,r,data);
+	{
+		if (psg->active)
+		{
+			/* Data port */
+			ay8910_write_reg(psg, psg->register_latch, data);
+		}
 	}
 	else
-	{	/* Register port */
-		psg->register_latch = data & 0x0f;
+	{
+		psg->active = (data >> 4) == 0; // mask programmed 4-bit code
+		if (psg->active)
+		{
+			/* Register port */
+			psg->register_latch = data & 0x0f;
+		}
+		else
+		{
+			logerror("warning - %s upper address mismatch\n", "AY8910");
+		}
 	}
 }
 
@@ -771,23 +1203,35 @@ UINT8 ay8910_read(void *chip, UINT8 addr)
 	ay8910_context *psg = (ay8910_context *)chip;
 	UINT8 r = psg->register_latch;
 
-	if (r > 15) return 0;
+	if (!psg->active) return 0xff; // high impedance
 
 	switch (r)
 	{
 	case AY_PORTA:
-		//if ((psg->regs[AY_ENABLE] & 0x40) != 0)
-		//	logerror("warning: read from 8910 '%s' Port A set as output\n",psg->device->tag);
+		if ((psg->regs[AY_ENABLE] & 0x40) != 0)
+			logerror("warning: read from %s Port A set as output\n", "AY8910");
 		/*
 		   even if the port is set as output, we still need to return the external
 		   data. Some games, like kidniki, need this to work.
+
+		   FIXME: The io ports are designed as open collector outputs. Bits 7 and 8 of AY_ENABLE
+		   only enable (low) or disable (high) the pull up resistors. The YM2149 datasheet
+		   specifies those pull up resistors as 60k to 600k (min / max).
+		   We do need a callback for those two flags. Kid Niki (Irem m62) is one such
+		   case were it makes a difference in comparison to a standard TTL output.
 		 */
-		//psg->regs[AY_PORTA] = devcb_call_read8(&psg->portAread, 0);
+		//if (psg->port_a_read_cb != NULL)
+		//	psg->regs[AY_PORTA] = psg->port_a_read_cb(psg, 0);
+		//else
+		//	logerror("Warning - read 8910 Port A\n");
 		break;
 	case AY_PORTB:
-		//if ((psg->regs[AY_ENABLE] & 0x80) != 0)
-		//	logerror("warning: read from 8910 '%s' Port B set as output\n",psg->device->tag);
-		//psg->regs[AY_PORTB] = devcb_call_read8(&psg->portBread, 0);
+		if ((psg->regs[AY_ENABLE] & 0x80) != 0)
+			logerror("warning: read from %s Port B set as output\n", "AY8910");
+		//if (psg->port_b_read_cb != NULL)
+		//	psg->regs[AY_PORTB] = psg->port_b_read_cb(psg, 0);
+		//else
+		//	logerror("Warning - read 8910 Port B\n");
 		break;
 	}
 
@@ -795,13 +1239,21 @@ UINT8 ay8910_read(void *chip, UINT8 addr)
 	Untested chips are assumed to regard them as 'ram'
 	Tested and confirmed on hardware:
 	- AY-3-8910: inaccessible bits (see masks below) read back as 0
+	- AY-3-8914: same as 8910 except regs B,C,D (8,9,A below due to 8910->8914 remapping) are 0x3f
+	- AY-3-8916/8917 (used on ECS INTV expansion): inaccessible bits mirror one of the i/o ports, needs further testing
 	- YM2149: no anomaly
 	*/
-	if ((psg->chip_type & 0xF0) > 0x00) {
+	if (psg->chip_type == AYTYPE_AY8914) {
+		const UINT8 mask[0x10]={
+			0xff,0x0f,0xff,0x0f,0xff,0x0f,0x1f,0xff,0x3f,0x3f,0x3f,0xff,0xff,0x0f,0xff,0xff
+		};
+		return psg->regs[r] & mask[r];
+	}
+	//else if (psg->chip_type == AYTYPE_AY8910) {
+	else if (psg->type == PSG_TYPE_AY) {
 		const UINT8 mask[0x10]={
 			0xff,0x0f,0xff,0x0f,0xff,0x0f,0x1f,0xff,0x1f,0x1f,0x1f,0xff,0xff,0x0f,0xff,0xff
 		};
-
 		return psg->regs[r] & mask[r];
 	}
 	else return psg->regs[r];
