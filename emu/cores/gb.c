@@ -63,6 +63,9 @@ TODO:
 #include "gb.h"
 
 
+#define LEFT_CYCLE_FIX	1
+
+
 static UINT8 gb_wave_r(void *chip, UINT8 offset);
 static void gb_wave_w(void *chip, UINT8 offset, UINT8 data);
 static UINT8 gb_sound_r(void *chip, UINT8 offset);
@@ -926,6 +929,10 @@ static void gb_update_square_channel(struct SOUND *snd, UINT32 cycles)
 		// compensate for leftover cycles
 		if (snd->cycles_left > 0)
 		{
+#if LEFT_CYCLE_FIX
+			cycles += snd->cycles_left;
+			snd->cycles_left = 0;
+#else
 			// Emit sample(s)
 			if (cycles <= snd->cycles_left)
 			{
@@ -937,6 +944,7 @@ static void gb_update_square_channel(struct SOUND *snd, UINT32 cycles)
 				cycles -= snd->cycles_left;
 				snd->cycles_left = 0;
 			}
+#endif
 		}
 
 		while (cycles > 0)
@@ -944,7 +952,11 @@ static void gb_update_square_channel(struct SOUND *snd, UINT32 cycles)
 			// Emit sample(s)
 			if (cycles < 4)
 			{
+#if LEFT_CYCLE_FIX
+				snd->cycles_left = cycles;
+#else
 				snd->cycles_left = 4 - cycles;
+#endif
 				cycles = 0;
 			}
 			else
@@ -972,6 +984,10 @@ static void gb_update_wave_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cyc
 		// compensate for leftover cycles
 		if (snd->cycles_left > 0)
 		{
+#if LEFT_CYCLE_FIX
+			cycles += snd->cycles_left;
+			snd->cycles_left = 0;
+#else
 			if (cycles <= snd->cycles_left)
 			{
 				// Emit samples
@@ -985,6 +1001,7 @@ static void gb_update_wave_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cyc
 				cycles -= snd->cycles_left;
 				snd->cycles_left = 0;
 			}
+#endif
 		}
 
 		while (cycles > 0)
@@ -994,7 +1011,11 @@ static void gb_update_wave_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cyc
 			// cycles -= 2
 			if (cycles < 2)
 			{
+#if LEFT_CYCLE_FIX
+				snd->cycles_left = cycles;
+#else
 				snd->cycles_left = 2 - cycles;
+#endif
 				cycles = 0;
 			}
 			else
