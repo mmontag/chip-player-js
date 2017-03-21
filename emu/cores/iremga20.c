@@ -110,7 +110,7 @@ struct IremGA20_channel_def
 typedef struct _ga20_state ga20_state;
 struct _ga20_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	UINT8 *rom;
 	UINT32 rom_size;
@@ -299,8 +299,8 @@ static UINT8 device_start_iremga20(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	iremga20_set_mute_mask(chip, 0x0);
 
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, cfg->clock / 4, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, cfg->clock / 4, &devDef);
 
 	return 0x00;
 }

@@ -125,7 +125,7 @@ struct _k054539_channel {
 
 typedef struct _k054539_state k054539_state;
 struct _k054539_state {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	double voltab[256];
 	double pantab[0xf];
@@ -624,8 +624,8 @@ static UINT8 device_start_k054539(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	k054539_set_mute_mask(info, 0x00);
 
-	info->chipInf = info;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, info->clock / 384, &devDef);
+	info->_devData.chipInf = info;
+	INIT_DEVINF(retDevInf, &info->_devData, info->clock / 384, &devDef);
 
 	return 0x00;
 }

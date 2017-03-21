@@ -80,7 +80,7 @@ const DEV_DEF* devDefList_32X_PWM[] =
 
 struct _pwm_chip
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	UINT16 PWM_Cycle;
 	UINT8 PWM_Int;
@@ -205,8 +205,8 @@ static UINT8 device_start_pwm(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	//PWM_Init(chip);
 	pwm_set_mute_mask(chip, 0x00);
 	
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, rate, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef);
 	return 0x00;
 }
 

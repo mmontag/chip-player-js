@@ -116,7 +116,7 @@ typedef struct
 
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	UINT32 dramsize;
 	UINT8 *docram;
@@ -313,8 +313,8 @@ static UINT8 device_start_es5503(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	es5503_set_mute_mask(chip, 0x00000000);
 	
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, chip->output_rate, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, chip->output_rate, &devDef);
 	
 	return 0x00;
 }

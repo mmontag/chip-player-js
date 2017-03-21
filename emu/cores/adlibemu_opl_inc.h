@@ -155,7 +155,7 @@ typedef struct operator_struct {
 
 typedef struct opl_chip
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	// per-chip variables
 	//Bitu chip_num;

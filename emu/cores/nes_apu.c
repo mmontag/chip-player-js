@@ -72,7 +72,7 @@
 /* GLOBAL VARIABLES */
 struct _nesapu_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	apu_t   APU;                   /* Actual APUs */
 	float   apu_incsize;           /* Adjustment increment */

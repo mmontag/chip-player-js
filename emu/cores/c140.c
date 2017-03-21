@@ -147,7 +147,7 @@ typedef struct
 typedef struct _c140_state c140_state;
 struct _c140_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	UINT32 baserate;
 	UINT32 sample_rate;
@@ -494,8 +494,8 @@ static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	c140_set_mute_mask(info, 0x000000);
 	
-	info->chipInf = info;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, info->sample_rate, &devDef);
+	info->_devData.chipInf = info;
+	INIT_DEVINF(retDevInf, &info->_devData, info->sample_rate, &devDef);
 	return 0x00;
 }
 

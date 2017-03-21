@@ -59,7 +59,7 @@ typedef struct __OPLL_SLOT {
 /* opll */
 typedef struct __OPLL {
 
-  void* chipInf;
+  DEV_DATA _devData;
 
   uint8_t vrc7_mode;
   uint8_t adr ;

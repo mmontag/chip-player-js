@@ -155,7 +155,7 @@ typedef struct
 
 /* chip state */
 typedef struct {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	OPLL_CH P_CH[9];                /* OPLL chips have 9 channels*/
 	UINT8   instvol_r[9];           /* instrument/volume (or volume/volume in percussive mode)*/

@@ -101,7 +101,7 @@ typedef struct _opl3_writebuf {
 } opl3_writebuf;
 
 struct _opl3_chip {
-    void* chipInf;   // to alias DEV_DATA struct
+    DEV_DATA _devData;  // to alias DEV_DATA struct
     Bit32u clock;
     Bit32u smplRate;
     Bit16u address;

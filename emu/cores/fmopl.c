@@ -195,7 +195,7 @@ typedef struct
 /* OPL state */
 typedef struct fm_opl_f
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	/* FM channel slots */
 	OPL_CH  P_CH[9];                /* OPL/OPL2 chips have 9 channels*/

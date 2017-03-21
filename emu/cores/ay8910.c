@@ -335,7 +335,7 @@ typedef struct _mosfet_param
 //typedef struct _ay8910_context ay8910_context;
 struct _ay8910_context
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	// internal state
 	psg_type_t type;

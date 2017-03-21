@@ -148,7 +148,7 @@ typedef struct
 
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	INT32       chanout[8];
 	INT32       m2,c1,c2;               /* Phase Modulation input for operators 2,3,4 */
@@ -979,14 +979,14 @@ static void ym2151_write_reg(void *_chip, UINT8 r, UINT8 v)
 			{
 				int oldstate = chip->status & 3;
 				chip->status &= ~1;
-				if ((oldstate==1) && (chip->irqhandler != NULL)) chip->irqhandler(chip->chipInf, 0);
+				if ((oldstate==1) && (chip->irqhandler != NULL)) chip->irqhandler(chip, 0);
 			}
 
 			if (v&0x20) /* reset timer B irq flag */
 			{
 				int oldstate = chip->status & 3;
 				chip->status &= ~2;
-				if ((oldstate==2) && (chip->irqhandler != NULL)) chip->irqhandler(chip->chipInf, 0);
+				if ((oldstate==2) && (chip->irqhandler != NULL)) chip->irqhandler(chip, 0);
 			}
 
 			if (v&0x02)
@@ -1039,7 +1039,7 @@ static void ym2151_write_reg(void *_chip, UINT8 r, UINT8 v)
 			chip->ct = v >> 6;
 			chip->lfo_wsel = v & 3;
 			if (chip->portwritehandler != NULL)
-				chip->portwritehandler(chip->chipInf, chip->ct, 0xff);
+				chip->portwritehandler(chip, chip->ct, 0xff);
 			break;
 
 		default:
@@ -2005,7 +2005,7 @@ static void ym2151_update_one(void *chip, UINT32 length, DEV_SMPL **buffers)
 				{
 					int oldstate = PSG->status & 3;
 					PSG->status |= 1;
-					if ((!oldstate) && (PSG->irqhandler)) PSG->irqhandler(PSG->chipInf, 1);
+					if ((!oldstate) && (PSG->irqhandler)) PSG->irqhandler(PSG, 1);
 				}
 				if (PSG->irq_enable & 0x80)
 					PSG->csm_req = 2;   /* request KEY ON / KEY OFF sequence */
@@ -2023,7 +2023,7 @@ static void ym2151_update_one(void *chip, UINT32 length, DEV_SMPL **buffers)
 			{
 				int oldstate = PSG->status & 3;
 				PSG->status |= 2;
-				if ((!oldstate) && (PSG->irqhandler)) PSG->irqhandler(PSG->chipInf, 1);
+				if ((!oldstate) && (PSG->irqhandler)) PSG->irqhandler(PSG, 1);
 			}
 		}
 	}

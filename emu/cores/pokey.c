@@ -248,7 +248,7 @@ const DEV_DEF* devDefList_Pokey[] =
 typedef struct _pokey_state pokey_state;
 struct _pokey_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	INT32 counter[4];		/* channel counter */
 	INT32 divisor[4];		/* channel divisor (modulo value) */
@@ -684,8 +684,8 @@ static UINT8 device_start_pokey(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	//chip->timer[2] = device->machine().scheduler().timer_alloc(FUNC(pokey_timer_expire), chip);
 	//chip->interrupt_cb = NULL;
 
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, sample_rate, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, sample_rate, &devDef);
 	return 0x00;
 }
 

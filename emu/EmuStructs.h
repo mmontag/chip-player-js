@@ -70,12 +70,6 @@ typedef struct _devdef_readwrite_function
 	void* funcPtr;
 } DEVDEF_RWFUNC;
 
-// generic device data structure
-// MUST be the first variable included in all device-specifc structures
-typedef struct _device_data
-{
-	void* chipInf;	// pointer to CHIP_INF (depends on specific chip)
-} DEV_DATA;
 struct _device_definition
 {
 	const char* name;	// name of the device

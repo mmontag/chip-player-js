@@ -237,7 +237,7 @@ struct SOUNDC
 typedef struct _gb_sound_t gb_sound_t;
 struct _gb_sound_t
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	UINT32 rate;
 
@@ -1265,8 +1265,8 @@ static UINT8 device_start_gameboy_sound(const DEV_GEN_CFG* cfg, DEV_INFO* retDev
 	gameboy_sound_set_mute_mask(gb, 0x00);
 	gb->BoostWaveChn = 0x00;
 
-	gb->chipInf = gb;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)gb, gb->rate, &devDef);
+	gb->_devData.chipInf = gb;
+	INIT_DEVINF(retDevInf, &gb->_devData, gb->rate, &devDef);
 
 	return 0x00;
 }

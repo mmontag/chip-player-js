@@ -11,6 +11,7 @@
 
 #include <stdtype.h>
 #include <stdbool.h>
+#include "../snddef.h"
 #include "np_nes_apu.h"
 
 
@@ -59,7 +60,7 @@ struct _Counter
 typedef struct _NES_APU NES_APU;
 struct _NES_APU
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	int option[OPT_END];		// 各種オプション
 	int mask;

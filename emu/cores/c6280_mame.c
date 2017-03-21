@@ -61,7 +61,7 @@ typedef struct {
 } t_channel;
 
 typedef struct {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	UINT8 select;
 	UINT8 balance;

@@ -37,7 +37,7 @@ enum mute_values {
 typedef struct _SN76489_Context SN76489_Context;
 struct _SN76489_Context
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	UINT8 Mute;				/* per-channel muting */
 	

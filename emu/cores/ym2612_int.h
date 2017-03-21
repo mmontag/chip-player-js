@@ -71,7 +71,7 @@ typedef struct channel__ {
 } channel_;
 
 typedef struct ym2612__ {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	int Clock;			// Horloge YM2612
 	int Rate;			// Sample Rate (11025/22050/44100)

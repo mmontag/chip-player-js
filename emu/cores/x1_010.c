@@ -140,7 +140,7 @@ typedef struct {
 typedef struct _x1_010_state x1_010_state;
 struct _x1_010_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	/* Variables only used here */
 	UINT32 ROMSize;
@@ -274,8 +274,8 @@ static UINT8 device_start_x1_010(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	x1_010_set_mute_mask(info, 0x0000);
 
-	info->chipInf = info;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, info->rate, &devDef);
+	info->_devData.chipInf = info;
+	INIT_DEVINF(retDevInf, &info->_devData, info->rate, &devDef);
 
 	return 0x00;
 }

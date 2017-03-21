@@ -160,7 +160,7 @@ INLINE UINT8 k053260_rom_data(k053260_state* info, UINT32 offs);
 
 struct _k053260_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	// live state
 	UINT8           portdata[4];
@@ -200,8 +200,8 @@ static UINT8 device_start_k053260(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	k053260_set_mute_mask(info, 0x00);
 
-	info->chipInf = info;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, rate, &devDef);
+	info->_devData.chipInf = info;
+	INIT_DEVINF(retDevInf, &info->_devData, rate, &devDef);
 
 	return 0x00;
 }

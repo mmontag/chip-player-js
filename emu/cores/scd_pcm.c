@@ -33,7 +33,7 @@ struct pcm_chan_
 };
 struct pcm_chip_
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	float Rate;
 	UINT8 Smpl0Patch;

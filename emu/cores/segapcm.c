@@ -70,7 +70,7 @@ const DEV_DEF* devDefList_SegaPCM[] =
 typedef struct _segapcm_state segapcm_state;
 struct _segapcm_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	UINT8  *ram;
 	UINT8 low[16];
@@ -192,8 +192,8 @@ static UINT8 device_start_segapcm(const SEGAPCM_CFG* cfg, DEV_INFO* retDevInf)
 	
 	segapcm_set_mute_mask(spcm, 0x0000);
 	
-	spcm->chipInf = spcm;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)spcm, cfg->_genCfg.clock / 128, &devDef);
+	spcm->_devData.chipInf = spcm;
+	INIT_DEVINF(retDevInf, &spcm->_devData, cfg->_genCfg.clock / 128, &devDef);
 	return 0x00;
 }
 

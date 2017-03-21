@@ -142,7 +142,7 @@
 typedef struct _sn76496_state sn76496_state;
 struct _sn76496_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	UINT32 clock;
 	UINT32 feedback_mask;   // mask for feedback

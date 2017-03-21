@@ -168,7 +168,7 @@ typedef struct
 } OPL3FM;
 struct _YMF278BChip
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	YMF278BSlot slots[24];
 
@@ -1244,8 +1244,8 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	ymf278b_set_mute_mask(chip, 0x000000);
 
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, rate, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef);
 	init_opl3_devinfo(retDevInf, cfg);
 
 	return 0x00;

@@ -327,7 +327,7 @@ typedef struct
 
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	// lookup tables
 	INT16 *lut_waves[8];
@@ -1826,8 +1826,8 @@ static UINT8 device_start_ymf271(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	ymf271_set_mute_mask(chip, 0x000);
 
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, rate, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef);
 
 	return 0x00;
 }

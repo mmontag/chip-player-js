@@ -8,6 +8,7 @@
 
 #include <stdtype.h>
 #include <stdbool.h>
+#include "../snddef.h"
 #include "np_nes_fds.h"
 
 
@@ -73,7 +74,7 @@ struct _Counter
 typedef struct _NES_FDS NES_FDS;
 struct _NES_FDS
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	double rate, clock;
 	int mask;

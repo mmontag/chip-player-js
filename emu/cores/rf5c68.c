@@ -45,7 +45,7 @@ struct _mem_stream
 typedef struct _rf5c68_state rf5c68_state;
 struct _rf5c68_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	pcm_channel			chan[NUM_CHANNELS];
 	UINT8				cbank;

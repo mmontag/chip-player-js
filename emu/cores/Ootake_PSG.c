@@ -228,7 +228,7 @@ typedef struct
 
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	double SAMPLE_RATE;
 	double PSG_FRQ;

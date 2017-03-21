@@ -88,7 +88,7 @@ static const UINT32 dividers[4] = { 1024, 768, 512, 512 };
 typedef struct _okim6258_state okim6258_state;
 struct _okim6258_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	UINT8  status;
 
@@ -339,8 +339,8 @@ static UINT8 device_start_okim6258(const OKIM6258_CFG* cfg, DEV_INFO* retDevInf)
 
 	okim6258_set_mute_mask(info, 0x00);
 
-	info->chipInf = info;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, get_vclk(info), &devDef);
+	info->_devData.chipInf = info;
+	INIT_DEVINF(retDevInf, &info->_devData, get_vclk(info), &devDef);
 	return 0x00;
 }
 

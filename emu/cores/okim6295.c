@@ -124,7 +124,7 @@ typedef struct _okim_voice
 
 struct _okim6295_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	// internal state
 	#define OKIM6295_VOICES 4
@@ -307,8 +307,8 @@ static UINT8 device_start_okim6295(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	okim6295_set_mute_mask(info, 0x00);
 	
-	info->chipInf = info;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, info->master_clock / divisor, &devDef);
+	info->_devData.chipInf = info;
+	INIT_DEVINF(retDevInf, &info->_devData, info->master_clock / divisor, &devDef);
 	return 0x00;
 }
 

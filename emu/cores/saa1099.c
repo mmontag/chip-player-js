@@ -151,7 +151,7 @@ struct saa1099_noise
 typedef struct _saa1099_state saa1099_state;
 struct _saa1099_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	UINT8 noise_params[2];          /* noise generators parameters */
 	UINT8 env_enable[2];            /* envelope generators enable */
@@ -420,8 +420,8 @@ static UINT8 device_start_saa1099(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	saa1099_set_mute_mask(saa, 0x00);
 	
-	saa->chipInf = saa;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)saa, (UINT32)(saa->sample_rate + 0.5), &devDef);
+	saa->_devData.chipInf = saa;
+	INIT_DEVINF(retDevInf, &saa->_devData, (UINT32)(saa->sample_rate + 0.5), &devDef);
 	
 	return 0x00;
 }

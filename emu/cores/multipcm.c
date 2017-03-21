@@ -167,7 +167,7 @@ typedef struct
 typedef struct _MultiPCM MultiPCM;
 struct _MultiPCM
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	// internal state
 	slot_t slots[28];
@@ -728,8 +728,8 @@ static UINT8 device_start_multipcm(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	multipcm_set_mute_mask(ptChip, 0x00);
 
-	ptChip->chipInf = ptChip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)ptChip, (UINT32)ptChip->rate, &devDef);
+	ptChip->_devData.chipInf = ptChip;
+	INIT_DEVINF(retDevInf, &ptChip->_devData, (UINT32)ptChip->rate, &devDef);
 
 	return 0x00;
 }

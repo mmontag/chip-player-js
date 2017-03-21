@@ -69,7 +69,7 @@ const DEV_DEF* devDefList_VBoyVSU[] =
 
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	UINT8 IntlControl[6];
 	UINT8 LeftLevel[6];
@@ -561,8 +561,8 @@ static UINT8 device_start_vsu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	vsu_set_mute_mask(chip, 0x00);
 	
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, chip->smplrate, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, chip->smplrate, &devDef);
 	
 	return 0x00;
 }

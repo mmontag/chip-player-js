@@ -106,7 +106,7 @@ typedef struct
 
 struct _k051649_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	k051649_sound_channel channel_list[5];
 
@@ -213,8 +213,8 @@ static UINT8 device_start_k051649(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	k051649_set_mute_mask(info, 0x00);
 	
-	info->chipInf = info;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, info->rate, &devDef);
+	info->_devData.chipInf = info;
+	INIT_DEVINF(retDevInf, &info->_devData, info->rate, &devDef);
 	return 0x00;
 }
 

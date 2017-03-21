@@ -19,7 +19,7 @@ extern "C"
 
   typedef struct __PSG
   {
-    void* chipInf;
+    DEV_DATA _devData;
 
     /* Volume Table */
     const uint32_t *voltbl;

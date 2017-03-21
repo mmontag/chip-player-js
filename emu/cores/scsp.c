@@ -247,7 +247,7 @@ typedef struct _SLOT
 typedef struct _scsp_state scsp_state;
 struct _scsp_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	//int m_roffset;                /* offset in the region */
 	//devcb_write8       m_irq_cb;  /* irq callback */
@@ -1176,8 +1176,8 @@ static UINT8 device_start_scsp(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	scsp_set_mute_mask(scsp, 0x00000000);
 
-	scsp->chipInf = scsp;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)scsp, scsp->rate, &devDef);
+	scsp->_devData.chipInf = scsp;
+	INIT_DEVINF(retDevInf, &scsp->_devData, scsp->rate, &devDef);
 
 	return 0x00;
 }

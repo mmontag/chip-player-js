@@ -248,7 +248,7 @@ enum
 typedef struct _upd7759_state upd7759_state;
 struct _upd7759_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	/* chip configuration */
 	UINT8     sample_offset_shift;        /* header sample address shift (access data > 0xffff) */
@@ -782,8 +782,8 @@ static UINT8 device_start_upd7759(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	upd7759_set_mute_mask(chip, 0x00);
 
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, cfg->clock / 4, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, cfg->clock / 4, &devDef);
 	return 0x00;
 }
 

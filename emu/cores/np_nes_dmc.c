@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <stddef.h>	// for NULL
 
-#include <common_def.h>
+#include <stdtype.h>
+#include <stdbool.h>
+#include "../snddef.h"
 #include "np_nes_apu.h"	// for NES_APU_np_FrameSequence
 #include "np_nes_dmc.h"
 
@@ -57,7 +59,7 @@ struct _Counter
 typedef struct _NES_DMC NES_DMC;
 struct _NES_DMC
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	//const int GETA_BITS;
 	//static const UINT32 freq_table[2][16];

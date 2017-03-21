@@ -111,7 +111,6 @@ static UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf
 static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 {
 	PSG* chip;
-	DEV_DATA* devData;
 	UINT8 isYM;
 	UINT8 flags;
 	UINT32 clock;
@@ -136,9 +135,8 @@ static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 	PSG_setVolumeMode(chip, isYM ? 1 : 2);
 	PSG_setFlags(chip, flags);
 	
-	devData = (DEV_DATA*)chip;
-	devData->chipInf = chip;
-	INIT_DEVINF(retDevInf, devData, rate, &devDef_Emu);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_Emu);
 	return 0x00;
 }
 #endif

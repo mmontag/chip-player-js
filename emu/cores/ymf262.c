@@ -193,7 +193,7 @@ typedef struct
 /* OPL3 state */
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	OPL3_CH P_CH[18];               /* OPL3 chips have 18 channels  */
 

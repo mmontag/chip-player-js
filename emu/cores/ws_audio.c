@@ -111,7 +111,7 @@ typedef struct
 
 struct _wsa_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	WS_AUDIO ws_audio[4];
 	int sweepDelta;
@@ -153,8 +153,8 @@ static UINT8 ws_audio_init(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	
 	ws_set_mute_mask(chip, 0x00);
 	
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, chip->smplrate, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, chip->smplrate, &devDef);
 	
 	return 0x00;
 }

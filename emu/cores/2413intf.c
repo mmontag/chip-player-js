@@ -122,8 +122,8 @@ static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf
 	OPLL_set_quality(chip, 0);	// disable internal sample rate converter
 	OPLL_SetChipMode(chip, cfg->flags);
 	
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, rate, &devDef_Emu);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_Emu);
 	return 0x00;
 }
 

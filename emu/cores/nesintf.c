@@ -115,7 +115,7 @@ const DEV_DEF* devDefList_NES_APU[] =
 
 struct nesapu_info
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	void* chip_apu;
 	void* chip_dmc;
@@ -206,7 +206,7 @@ static UINT8 device_start_nes_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	nesapu_set_rom(info->chip_apu, info->memory - 0x8000);
 	
 	// store pointer to NESAPU_INF into sound chip structures
-	info->chipInf = info;
+	info->_devData.chipInf = info;
 	devData = (DEV_DATA*)info->chip_apu;
 	devData->chipInf = info;
 	if (info->chip_fds != NULL)
@@ -214,7 +214,7 @@ static UINT8 device_start_nes_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 		devData = (DEV_DATA*)info->chip_fds;
 		devData->chipInf = info;
 	}
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, rate, &devDef_MAME);
+	INIT_DEVINF(retDevInf, &info->_devData, rate, &devDef_MAME);
 	return 0x00;
 }
 #endif
@@ -257,7 +257,7 @@ static UINT8 device_start_nes_nsfplay(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	NES_DMC_np_SetMemory(info->chip_dmc, info->memory - 0x8000);
 	
 	// store pointer to NESAPU_INF into sound chip structures
-	info->chipInf = info;
+	info->_devData.chipInf = info;
 	devData = (DEV_DATA*)info->chip_apu;
 	devData->chipInf = info;
 	devData = (DEV_DATA*)info->chip_dmc;
@@ -267,7 +267,7 @@ static UINT8 device_start_nes_nsfplay(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 		devData = (DEV_DATA*)info->chip_fds;
 		devData->chipInf = info;
 	}
-	INIT_DEVINF(retDevInf, (DEV_DATA*)info, rate, &devDef_NSFPlay);
+	INIT_DEVINF(retDevInf, &info->_devData, rate, &devDef_NSFPlay);
 	return 0x00;
 }
 #endif

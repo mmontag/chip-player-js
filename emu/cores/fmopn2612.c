@@ -662,7 +662,7 @@ typedef struct
 /* here's the virtual YM2612 */
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	UINT8       REGS[512];          /* registers            */
 	FM_OPN      OPN;                /* OPN state            */

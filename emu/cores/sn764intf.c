@@ -145,7 +145,7 @@ static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDev
 		SN76489_ConnectT6W28(info->chip.maxim, (SN76489_Context*)cfg->t6w28_tone);
 	SN76489_Config(info->chip.maxim, cfg->noiseTaps, cfg->shiftRegWidth);
 	
-	devData = (DEV_DATA*)info->chip.any;
+	devData = &info->chip.maxim->_devData;
 	devData->chipInf = info;	// store pointer to SN76496_INF into sound chip structure
 	INIT_DEVINF(retDevInf, devData, rate, &devDef_Maxim);
 	return 0x00;

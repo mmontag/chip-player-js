@@ -119,7 +119,7 @@ typedef struct QSOUND_CHANNEL
 typedef struct _qsound_state qsound_state;
 struct _qsound_state
 {
-	void* chipInf;
+	DEV_DATA _devData;
 	
 	qsound_channel channel[QSOUND_CHANNELS];
 	
@@ -153,8 +153,8 @@ static UINT8 device_start_qsound(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	qsound_set_mute_mask(chip, 0x0000);
 
-	chip->chipInf = chip;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)chip, cfg->clock / QSOUND_CLOCKDIV, &devDef);
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, cfg->clock / QSOUND_CLOCKDIV, &devDef);
 
 	return 0x00;
 }

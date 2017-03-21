@@ -2071,7 +2071,7 @@ static void OPNLinkSSG(FM_OPN *OPN, const ssg_callbacks *ssg_cb, void *ssg_param
 /* here's the virtual YM2203(OPN) */
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	UINT8 REGS[256];        /* registers         */
 	FM_OPN OPN;             /* OPN state         */
@@ -2370,7 +2370,7 @@ typedef struct
 /* here's the virtual YM2610 */
 typedef struct
 {
-	void* chipInf;
+	DEV_DATA _devData;
 
 	UINT8       REGS[512];          /* registers            */
 	FM_OPN      OPN;                /* OPN state            */

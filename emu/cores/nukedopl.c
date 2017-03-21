@@ -1466,18 +1466,18 @@ void nuked_shutdown(void *chip)
 void nuked_reset_chip(void *chip)
 {
 	opl3_chip* opl3 = (opl3_chip*) chip;
-	void* chipInf;
+	DEV_DATA _devData;
 	Bit32u clock;
 	Bit32u rate;
 
 	// save for reset
-	chipInf = opl3->chipInf;
+	_devData = opl3->_devData;
 	clock = opl3->clock;
 	rate = opl3->smplRate;
 	
 	OPL3_Reset(opl3, clock, rate);
 	
-	opl3->chipInf = chipInf;
+	opl3->_devData = _devData;
 	opl3->clock = clock;
 	opl3->smplRate = rate;
 }

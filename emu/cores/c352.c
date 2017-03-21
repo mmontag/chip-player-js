@@ -122,7 +122,7 @@ typedef struct {
 
 typedef struct {
 
-	void* chipInf;
+	DEV_DATA _devData;
 
 	UINT32 sample_rate_base;
 	UINT16 divider;
@@ -303,8 +303,8 @@ static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf)
 
 	c352_set_mute_mask(c, 0x00000000);
 
-	c->chipInf = c;
-	INIT_DEVINF(retDevInf, (DEV_DATA*)c, c->sample_rate_base, &devDef);
+	c->_devData.chipInf = c;
+	INIT_DEVINF(retDevInf, &c->_devData, c->sample_rate_base, &devDef);
 	return 0x00;
 }
 
