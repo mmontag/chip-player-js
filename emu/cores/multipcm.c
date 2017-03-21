@@ -52,7 +52,7 @@ static void device_reset_multipcm(void *info);
 
 static void multipcm_write(void *info, UINT8 offset, UINT8 data);
 static void multipcm_w_quick(void *info, UINT8 offset, UINT8 data);
-static UINT8 multipcm_r(void *info, offs_t offset);
+static UINT8 multipcm_r(void *info, UINT8 offset);
 
 static void multipcm_alloc_rom(void* info, UINT32 memsize);
 static void multipcm_write_rom(void *info, UINT32 offset, UINT32 length, const UINT8* data);
@@ -618,7 +618,7 @@ static void MultiPCM_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 	}
 }
 
-static UINT8 multipcm_r(void *info, offs_t offset)
+static UINT8 multipcm_r(void *info, UINT8 offset)
 {
 	MultiPCM *ptChip = (MultiPCM *)info;
 	return 0;
