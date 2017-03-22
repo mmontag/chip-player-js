@@ -10,6 +10,7 @@
 #include <stdtype.h>
 #include <stdbool.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "np_nes_apu.h"	// for NES_APU_np_FrameSequence
 #include "np_nes_dmc.h"
 
@@ -34,26 +35,6 @@ enum
 	OPT_TRI_NULL,
 	OPT_END
 };
-
-
-// Note: For increased speed, I'll inline all of NSFPlay's Counter member functions.
-#define COUNTER_SHIFT	24
-
-typedef struct _Counter Counter;
-struct _Counter
-{
-	double ratio;
-	UINT32 val, step;
-};
-#define COUNTER_setcycle(cntr, s)	(cntr).step = (UINT32)((cntr).ratio / (s + 1))
-#define COUNTER_iup(cntr)			(cntr).val += (cntr).step
-#define COUNTER_value(cntr)			((cntr).val >> COUNTER_SHIFT)
-#define COUNTER_init(cntr, clk, rate)							\
-{																\
-	(cntr).ratio = (1 << COUNTER_SHIFT) * (1.0 * clk / rate);	\
-	(cntr).step = (UINT32)((cntr).ratio + 0.5);					\
-	(cntr).val = 0;												\
-}
 
 
 typedef struct _NES_DMC NES_DMC;
@@ -124,8 +105,7 @@ struct _NES_DMC
 	bool frame_irq;
 	bool frame_irq_enable;
 
-	Counter tick_count;
-	UINT32 tick_last;
+	RATIO_CNTR tick_count;
 };
 
 INLINE UINT32 calc_tri(NES_DMC* dmc, UINT32 clocks);
@@ -456,11 +436,11 @@ UINT32 NES_DMC_np_Render(void* chip, INT32 b[2])
 	UINT32 clocks;
 	INT32 m[3];
 
-	COUNTER_iup(dmc->tick_count);	// increase counter (overflows after 255)
-	clocks = (COUNTER_value(dmc->tick_count) - dmc->tick_last) & 0xFF;
+	RC_STEP(&dmc->tick_count);
+	clocks = RC_GET_VAL(&dmc->tick_count);
+	RC_MASK(&dmc->tick_count);
 	TickFrameSequence(dmc, clocks);
 	Tick(dmc, clocks);
-	dmc->tick_last = COUNTER_value(dmc->tick_count);
 
 	dmc->out[0] = (dmc->mask & 1) ? 0 : dmc->out[0];
 	dmc->out[1] = (dmc->mask & 2) ? 0 : dmc->out[1];
@@ -544,8 +524,7 @@ void NES_DMC_np_SetRate(void* chip, double r)
 
 	dmc->rate = (UINT32)(r?r:DEFAULT_RATE);
 
-	COUNTER_init(dmc->tick_count, dmc->clock, dmc->rate);
-	dmc->tick_last = 0;
+	RC_SET_RATIO(&dmc->tick_count, dmc->clock, dmc->rate);
 }
 
 void NES_DMC_np_SetPal(void* chip, bool is_pal)
@@ -654,6 +633,7 @@ void NES_DMC_np_Reset(void* chip)
 	}
 
 	NES_DMC_np_SetRate(dmc, dmc->rate);
+	RC_RESET(&dmc->tick_count);
 }
 
 void NES_DMC_np_SetMemory(void* chip, const UINT8* r)

@@ -12,6 +12,7 @@
 #include <stdtype.h>
 #include <stdbool.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "np_nes_apu.h"
 
 
@@ -36,25 +37,6 @@ enum
 	SQR0_MASK = 1,
 	SQR1_MASK = 2,
 };
-
-// Note: For increased speed, I'll inline all of NSFPlay's Counter member functions.
-#define COUNTER_SHIFT	24
-
-typedef struct _Counter Counter;
-struct _Counter
-{
-	double ratio;
-	UINT32 val, step;
-};
-#define COUNTER_setcycle(cntr, s)	(cntr).step = (UINT32)((cntr).ratio / (s + 1))
-#define COUNTER_iup(cntr)			(cntr).val += (cntr).step
-#define COUNTER_value(cntr)			((cntr).val >> COUNTER_SHIFT)
-#define COUNTER_init(cntr, clk, rate)							\
-{																\
-	(cntr).ratio = (1 << COUNTER_SHIFT) * (1.0 * clk / rate);	\
-	(cntr).step = (UINT32)((cntr).ratio + 0.5);					\
-	(cntr).val = 0;												\
-}
 
 
 typedef struct _NES_APU NES_APU;
@@ -99,8 +81,7 @@ struct _NES_APU
 
 	bool enable[2];
 
-	Counter tick_count;
-	UINT32 tick_last;
+	RATIO_CNTR tick_count;
 };
 
 static void sweep_sqr(NES_APU* apu, int ch);	// calculates target sweep frequency
@@ -250,11 +231,13 @@ static void Tick(NES_APU* apu, UINT32 clocks)
 UINT32 NES_APU_np_Render(void* chip, INT32 b[2])
 {
 	NES_APU* apu = (NES_APU*)chip;
+	UINT32 clocks;
 	INT32 m[2];
 
-	COUNTER_iup(apu->tick_count);
-	Tick(apu, (COUNTER_value(apu->tick_count) - apu->tick_last) & 0xFF);
-	apu->tick_last = COUNTER_value(apu->tick_count);
+	RC_STEP(&apu->tick_count);
+	clocks = RC_GET_VAL(&apu->tick_count);
+	RC_MASK(&apu->tick_count);
+	Tick(apu, clocks);
 
 	apu->out[0] = (apu->mask & 1) ? 0 : apu->out[0];
 	apu->out[1] = (apu->mask & 2) ? 0 : apu->out[1];
@@ -361,6 +344,7 @@ void NES_APU_np_Reset(void* chip)
 		apu->out[i] = 0;
 
 	NES_APU_np_SetRate(apu, apu->rate);
+	RC_RESET(&apu->tick_count);
 }
 
 void NES_APU_np_SetOption(void* chip, int id, int val)
@@ -383,8 +367,7 @@ void NES_APU_np_SetRate(void* chip, double r)
 
 	apu->rate = r ? r : DEFAULT_RATE;
 
-	COUNTER_init(apu->tick_count, apu->clock, apu->rate);
-	apu->tick_last = 0;
+	RC_SET_RATIO(&apu->tick_count, apu->clock, apu->rate);
 }
 
 void NES_APU_np_SetMask(void* chip, int m)

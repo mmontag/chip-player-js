@@ -249,8 +249,7 @@ struct _gb_sound_t
 
 	UINT8 snd_regs[0x30];
 
-	UINT64 cycleInc;
-	UINT64 cycleCounter;
+	RATIO_CNTR cycleCntr;
 
 	UINT8 gbMode;
 	UINT8 BoostWaveChn;
@@ -1179,16 +1178,14 @@ static void gameboy_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 	gb_sound_t *gb = (gb_sound_t *)chip;
 	DEV_SMPL sample, left, right;
 	UINT32 i;
-	UINT32 cycles;
 
 	for (i = 0; i < samples; i++)
 	{
 		left = right = 0;
 
-		gb->cycleCounter += gb->cycleInc;
-		cycles = (UINT32)(gb->cycleCounter >> 32);
-		gb->cycleCounter &= (UINT64)0xFFFFFFFF;
-		gb_update_state(gb, cycles);
+		RC_STEP(&gb->cycleCntr);
+		gb_update_state(gb, RC_GET_VAL(&gb->cycleCntr));
+		RC_MASK(&gb->cycleCntr);
 
 		/* Mode 1 - Wave with Envelope and Sweep */
 		if (gb->snd_1.on && !gb->snd_1.Muted)
@@ -1260,7 +1257,7 @@ static UINT8 device_start_gameboy_sound(const DEV_GEN_CFG* cfg, DEV_INFO* retDev
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, gb->rate, cfg->smplRate);
 
 	gb->gbMode = (cfg->flags & 0x01) ? GBMODE_CGB04 : GBMODE_DMG;
-	gb->cycleInc = ((UINT64)cfg->clock << 32) / gb->rate;
+	RC_SET_RATIO(&gb->cycleCntr, cfg->clock, gb->rate);
 
 	gameboy_sound_set_mute_mask(gb, 0x00);
 	gb->BoostWaveChn = 0x00;
@@ -1284,7 +1281,7 @@ static void device_reset_gameboy_sound(void *chip)
 {
 	gb_sound_t *gb = (gb_sound_t *)chip;
 
-	gb->cycleCounter = 0;
+	RC_RESET(&gb->cycleCntr);
 
 	// TODO: save/restore musing
 	memset(&gb->snd_1, 0, sizeof(gb->snd_1));

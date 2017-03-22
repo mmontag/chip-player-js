@@ -108,20 +108,17 @@ typedef struct
 
 	UINT32 lfsr;
 
-	UINT32 last_ts;
-
 	UINT32 clock;
 	UINT32 smplrate;
+	RATIO_CNTR cycleCntr;
+
 	UINT8 Muted[6];
-	// values for Timing Calculation
-	UINT32 tm_smpl;
-	UINT32 tm_clk;
 } vsu_state;
 
 static void VSU_Power(vsu_state* chip);
 
 INLINE void VSU_CalcCurrentOutput(vsu_state* chip, int ch, DEV_SMPL* left, DEV_SMPL* right);
-static void VSU_Update(vsu_state* chip, UINT32 timestamp, DEV_SMPL* outleft, DEV_SMPL* outright);
+static void VSU_Update(vsu_state* chip, UINT32 clocks, DEV_SMPL* outleft, DEV_SMPL* outright);
 
 
 static const int Tap_LUT[8] = { 15 - 1, 11 - 1, 14 - 1, 5 - 1, 9 - 1, 7 - 1, 10 - 1, 12 - 1 };
@@ -164,7 +161,7 @@ static void VSU_Power(vsu_state* chip)
 	memset(chip->WaveData, 0, sizeof(chip->WaveData));
 	memset(chip->ModData, 0, sizeof(chip->ModData));
 
-	chip->last_ts = 0;
+	RC_RESET(&chip->cycleCntr);
 }
 
 static void VSU_Write(void* info, UINT16 A, UINT8 V)
@@ -325,7 +322,7 @@ INLINE void VSU_CalcCurrentOutput(vsu_state* chip, int ch, DEV_SMPL* left, DEV_S
 	return;
 }
 
-static void VSU_Update(vsu_state* chip, UINT32 timestamp, DEV_SMPL* outleft, DEV_SMPL* outright)
+static void VSU_Update(vsu_state* chip, UINT32 clocks, DEV_SMPL* outleft, DEV_SMPL* outright)
 {
 	int ch;
 
@@ -335,14 +332,14 @@ static void VSU_Update(vsu_state* chip, UINT32 timestamp, DEV_SMPL* outleft, DEV
 	//puts("VSU Start");
 	for(ch = 0; ch < 6; ch++)
 	{
-		INT32 clocks = timestamp - chip->last_ts;
+		INT32 rem_clocks = (INT32)clocks;
 
 		if(!(chip->IntlControl[ch] & 0x80) || chip->Muted[ch])
 			continue;	// channel disabled - don't add anything to output
 
-		while(clocks > 0)
+		while(rem_clocks > 0)
 		{
-			INT32 chunk_clocks = clocks;
+			INT32 chunk_clocks = rem_clocks;
 
 			if(chunk_clocks > chip->EffectsClockDivider[ch])
 				chunk_clocks = chip->EffectsClockDivider[ch];
@@ -506,12 +503,11 @@ static void VSU_Update(vsu_state* chip, UINT32 timestamp, DEV_SMPL* outleft, DEV
 					} // end while(chip->SweepModClockDivider <= 0)
 				} // end if(ch == 4)
 			} // end while(chip->EffectsClockDivider[ch] <= 0)
-			clocks -= chunk_clocks;
+			rem_clocks -= chunk_clocks;
 		}
 
 		VSU_CalcCurrentOutput(chip, ch, outleft, outright);
 	}
-	chip->last_ts = timestamp;
 	//puts("VSU End");
 }
 
@@ -523,16 +519,9 @@ static void vsu_stream_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	
 	for (curSmpl = 0; curSmpl < samples; curSmpl ++)
 	{
-		chip->tm_smpl ++;
-		chip->tm_clk = (UINT32)((UINT64)chip->tm_smpl * chip->clock / chip->smplrate);
-		
-		VSU_Update(chip, chip->tm_clk, &outputs[0][curSmpl], &outputs[1][curSmpl]);
-		if (chip->last_ts >= chip->clock)
-		{
-			chip->last_ts -= chip->clock;
-			chip->tm_clk -= chip->clock;
-			chip->tm_smpl -= chip->smplrate;
-		}
+		RC_STEP(&chip->cycleCntr);
+		VSU_Update(chip, RC_GET_VAL(&chip->cycleCntr), &outputs[0][curSmpl], &outputs[1][curSmpl]);
+		RC_MASK(&chip->cycleCntr);
 		
 		// Volume per channel: 0x1F (envelope/volume) * 0x3F (unsigned sample) = 0x7A1 (~0x800)
 		// I turned the samples into signed format (-0x20..0x1F), so the used range is +-0x400.
@@ -559,6 +548,8 @@ static UINT8 device_start_vsu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	chip->smplrate = chip->clock / 120;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, chip->smplrate, cfg->smplRate);
 	
+	RC_SET_RATIO(&chip->cycleCntr, cfg->clock, chip->smplrate);
+	
 	vsu_set_mute_mask(chip, 0x00);
 	
 	chip->_devData.chipInf = chip;
@@ -581,8 +572,6 @@ static void device_reset_vsu(void* info)
 	vsu_state* chip = (vsu_state*)info;
 	
 	VSU_Power(chip);
-	chip->tm_smpl = 0;
-	chip->tm_clk = 0;
 	
 	return;
 }

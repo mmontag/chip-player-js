@@ -9,6 +9,7 @@
 #include <stdtype.h>
 #include <stdbool.h>
 #include "../snddef.h"
+#include "../EmuHelper.h"
 #include "np_nes_fds.h"
 
 
@@ -42,33 +43,12 @@ enum
 
 // 8 bit approximation of master volume
 #define MASTER_VOL	(2.4 * 1223.0)	// max FDS vol vs max APU square (arbitrarily 1223)
-#define	MAX_OUT		(32.0 * 63.0)	// value that should map to master vol
+#define MAX_OUT		(32.0 * 63.0)	// value that should map to master vol
 static const INT32 MASTER[4] = {
 	(INT32)((MASTER_VOL / MAX_OUT) * 256.0 * 2.0f / 2.0f),
 	(INT32)((MASTER_VOL / MAX_OUT) * 256.0 * 2.0f / 3.0f),
 	(INT32)((MASTER_VOL / MAX_OUT) * 256.0 * 2.0f / 4.0f),
 	(INT32)((MASTER_VOL / MAX_OUT) * 256.0 * 2.0f / 5.0f) };
-
-
-// Although they were pretty much removed from any sound core in NSFPlay 2.3,
-// I find this counter structure very useful.
-#define COUNTER_SHIFT	24
-
-typedef struct _Counter Counter;
-struct _Counter
-{
-	double ratio;
-	UINT32 val, step;
-};
-#define COUNTER_setcycle(cntr, s)	(cntr).step = (UINT32)((cntr).ratio / (s + 1))
-#define COUNTER_iup(cntr)			(cntr).val += (cntr).step
-#define COUNTER_value(cntr)			((cntr).val >> COUNTER_SHIFT)
-#define COUNTER_init(cntr, clk, rate)							\
-{																\
-	(cntr).ratio = (1 << COUNTER_SHIFT) * (1.0 * clk / rate);	\
-	(cntr).step = (UINT32)((cntr).ratio + 0.5);					\
-	(cntr).val = 0;												\
-}
 
 
 typedef struct _NES_FDS NES_FDS;
@@ -113,8 +93,7 @@ struct _NES_FDS
 	INT32 rc_k;
 	INT32 rc_l;
 
-	Counter tick_count;
-	UINT32 tick_last;
+	RATIO_CNTR tick_count;
 };
 
 void* NES_FDS_Create(int clock, int rate)
@@ -179,8 +158,7 @@ void NES_FDS_SetRate(void* chip, double r)
 
 	fds->rate = r;
 
-	COUNTER_init(fds->tick_count, fds->clock, fds->rate);
-	fds->tick_last = 0;
+	RC_SET_RATIO(&fds->tick_count, fds->clock, fds->rate);
 	
 	// configure lowpass filter
 	cutoff = (double)fds->option[OPT_CUTOFF];
@@ -254,6 +232,8 @@ void NES_FDS_Reset(void* chip)
 	NES_FDS_Write(fds, 0x4086, 0x00);	// mod freq 0
 	NES_FDS_Write(fds, 0x4087, 0x80);	// mod disable
 	NES_FDS_Write(fds, 0x4089, 0x00);	// wav write disable, max global volume}
+
+	RC_RESET(&fds->tick_count);
 }
 
 static void Tick(NES_FDS* fds, UINT32 clocks)
@@ -398,10 +378,10 @@ UINT32 NES_FDS_Render(void* chip, INT32 b[2])
 	UINT32 clocks;
 	INT32 v, rc_out, m;
 
-	COUNTER_iup(fds->tick_count);
-	clocks = (COUNTER_value(fds->tick_count) - fds->tick_last) & 0xFF;
+	RC_STEP(&fds->tick_count);
+	clocks = RC_GET_VAL(&fds->tick_count);
+	RC_MASK(&fds->tick_count);
 	Tick(fds, clocks);
-	fds->tick_last = COUNTER_value(fds->tick_count);
 
 	v = fds->fout * MASTER[fds->master_vol] >> 8;
 
