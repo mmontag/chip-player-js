@@ -132,7 +132,7 @@ static const UINT32 freq_table[2][16] = {
 	398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118,  98,  78,  66,  50
 }};
 
-void* NES_DMC_np_Create(int clock, int rate)
+void* NES_DMC_np_Create(UINT32 clock, UINT32 rate)
 {
 	NES_DMC* dmc;
 	int c, t;
@@ -506,11 +506,11 @@ UINT32 NES_DMC_np_Render(void* chip, INT32 b[2])
 }
 
 
-void NES_DMC_np_SetClock(void* chip, double c)
+void NES_DMC_np_SetClock(void* chip, UINT32 c)
 {
 	NES_DMC* dmc = (NES_DMC*)chip;
 
-	dmc->clock = (UINT32)(c);
+	dmc->clock = c;
 	
 	if (abs(dmc->clock - DEFAULT_CLK_PAL) <= 1000)	// check for approximately DEFAULT_CLK_PAL
 		NES_DMC_np_SetPal(dmc, true);
@@ -518,11 +518,11 @@ void NES_DMC_np_SetClock(void* chip, double c)
 		NES_DMC_np_SetPal(dmc, false);
 }
 
-void NES_DMC_np_SetRate(void* chip, double r)
+void NES_DMC_np_SetRate(void* chip, UINT32 r)
 {
 	NES_DMC* dmc = (NES_DMC*)chip;
 
-	dmc->rate = (UINT32)(r?r:DEFAULT_RATE);
+	dmc->rate = r ? r : DEFAULT_RATE;
 
 	RC_SET_RATIO(&dmc->tick_count, dmc->clock, dmc->rate);
 }

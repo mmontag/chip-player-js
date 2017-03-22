@@ -51,7 +51,7 @@ struct _NES_APU
 	UINT32 gclock;
 	UINT8 reg[0x20];
 	INT32 out[2];
-	double rate, clock;
+	UINT32 rate, clock;
 
 	INT32 square_table[32];		// nonlinear mixer
 
@@ -280,7 +280,7 @@ UINT32 NES_APU_np_Render(void* chip, INT32 b[2])
 	return 2;
 }
 
-void* NES_APU_np_Create(int clock, int rate)
+void* NES_APU_np_Create(UINT32 clock, UINT32 rate)
 {
 	NES_APU* apu;
 	int i, c, t;
@@ -354,14 +354,14 @@ void NES_APU_np_SetOption(void* chip, int id, int val)
 	if(id<OPT_END) apu->option[id] = val;
 }
 
-void NES_APU_np_SetClock(void* chip, double c)
+void NES_APU_np_SetClock(void* chip, UINT32 c)
 {
 	NES_APU* apu = (NES_APU*)chip;
 
 	apu->clock = c;
 }
 
-void NES_APU_np_SetRate(void* chip, double r)
+void NES_APU_np_SetRate(void* chip, UINT32 r)
 {
 	NES_APU* apu = (NES_APU*)chip;
 

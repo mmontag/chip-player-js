@@ -56,7 +56,7 @@ struct _NES_FDS
 {
 	DEV_DATA _devData;
 
-	double rate, clock;
+	UINT32 rate, clock;
 	int mask;
 	INT32 sm[2];	// stereo mix
 	INT32 fout;		// current output
@@ -96,7 +96,7 @@ struct _NES_FDS
 	RATIO_CNTR tick_count;
 };
 
-void* NES_FDS_Create(int clock, int rate)
+void* NES_FDS_Create(UINT32 clock, UINT32 rate)
 {
 	NES_FDS* fds;
 
@@ -144,14 +144,14 @@ void NES_FDS_SetStereoMix(void* chip, int trk, INT16 mixl, INT16 mixr)
 	fds->sm[1] = mixr;
 }
 
-void NES_FDS_SetClock(void* chip, double c)
+void NES_FDS_SetClock(void* chip, UINT32 c)
 {
 	NES_FDS* fds = (NES_FDS*)chip;
 
 	fds->clock = c;
 }
 
-void NES_FDS_SetRate(void* chip, double r)
+void NES_FDS_SetRate(void* chip, UINT32 r)
 {
 	NES_FDS* fds = (NES_FDS*)chip;
 	double cutoff, leak;
