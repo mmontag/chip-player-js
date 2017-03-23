@@ -154,7 +154,7 @@ INLINE void KDSC_set_pan(KDSC_Voice* voice, UINT8 data);
 INLINE void KDSC_update_pan_volume(KDSC_Voice* voice);
 INLINE void KDSC_key_on(KDSC_Voice* voice);
 INLINE void KDSC_key_off(KDSC_Voice* voice);
-INLINE void KDSC_play(KDSC_Voice* voice, DEV_SMPL *outputs);
+INLINE void KDSC_play(KDSC_Voice* voice, DEV_SMPL *outputs, UINT16 cycles);
 INLINE UINT8 KDSC_read_rom(KDSC_Voice* voice);
 INLINE UINT8 k053260_rom_data(k053260_state* info, UINT32 offs);
 
@@ -172,6 +172,8 @@ struct _k053260_state
 	UINT8           *rom;
 	UINT32          rom_size;
 	UINT32          rom_mask;
+
+	RATIO_CNTR      cycleCntr;
 };
 
 //-------------------------------------------------
@@ -196,7 +198,9 @@ static UINT8 device_start_k053260(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 		KDSC_voice_start(&info->voice[i], info);
 
 	rate = cfg->clock / CLOCKS_PER_SAMPLE;
-	//SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+
+	RC_SET_RATIO(&info->cycleCntr, cfg->clock, rate);
 
 	k053260_set_mute_mask(info, 0x00);
 
@@ -233,6 +237,8 @@ static void device_reset_k053260(void* chip)
 
 	for (i = 0; i < 4; i++)
 		KDSC_voice_reset(&info->voice[i]);
+
+	RC_RESET(&info->cycleCntr);
 
 	return;
 }
@@ -388,11 +394,16 @@ static void k053260_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 		for ( j = 0; j < samples; j++ )
 		{
 			DEV_SMPL buffer[2] = {0, 0};
+			UINT16 cycles;
+
+			RC_STEP(&info->cycleCntr);
+			cycles = (UINT16)RC_GET_VAL(&info->cycleCntr);
+			RC_MASK(&info->cycleCntr);
 
 			for ( i = 0; i < 4; i++ )
 			{
 				if (info->voice[i].playing && !info->voice[i].Muted)
-					KDSC_play(&info->voice[i], buffer);
+					KDSC_play(&info->voice[i], buffer, cycles);
 			}
 
 			outputs[0][j] = buffer[0] >> 1;
@@ -487,7 +498,7 @@ INLINE void KDSC_update_pan_volume(KDSC_Voice* voice)
 INLINE void KDSC_key_on(KDSC_Voice* voice)
 {
 	voice->position = voice->kadpcm ? 1 : 0; // for kadpcm low bit is nybble offset, so must start at 1 due to preincrement
-	voice->counter = 0x1000 - CLOCKS_PER_SAMPLE; // force update on next sound_stream_update
+	voice->counter = 0xFFFF; // force update on next sound_stream_update
 	voice->output = 0;
 	voice->playing = 1;
 	if (LOG) logerror("K053260: start = %06x, length = %06x, pitch = %04x, vol = %02x, loop = %s, %s\n",
@@ -501,9 +512,12 @@ INLINE void KDSC_key_off(KDSC_Voice* voice)
 	voice->playing = 0;
 }
 
-INLINE void KDSC_play(KDSC_Voice* voice, DEV_SMPL *outputs)
+INLINE void KDSC_play(KDSC_Voice* voice, DEV_SMPL *outputs, UINT16 cycles)
 {
-	voice->counter += CLOCKS_PER_SAMPLE;
+	if (voice->counter == 0xFFFF)	// "force update"?
+		voice->counter = 0x1000;
+	else
+		voice->counter += cycles;
 
 	while (voice->counter >= 0x1000)
 	{
