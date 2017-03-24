@@ -61,6 +61,11 @@ typedef struct __OPLL {
 
   DEV_DATA _devData;
 
+  /* Input clock */
+  uint32_t clk;
+  /* Sampling rate */
+  uint32_t rate;
+
   uint8_t vrc7_mode;
   uint8_t adr ;
   int32_t out ;
@@ -84,7 +89,8 @@ typedef struct __OPLL {
   int32_t am_phase ;
   int32_t lfo_am ;
 
-  uint32_t quality;
+  uint8_t quality;
+  uint8_t native;   /* running at native sample rate */
 
   /* Noise Generator */
   uint32_t noise_seed ;
@@ -99,6 +105,18 @@ typedef struct __OPLL {
   /* Voice Data */
   OPLL_PATCH patch[19*2] ;
   int32_t patch_update[2] ; /* flag for check patch update */
+
+  /* Phase delta for LFO */
+  uint32_t pm_dphase;
+  uint32_t am_dphase;
+
+  /* Phase incr table for Attack */
+  uint32_t dphaseARTable[16][16];
+  /* Phase incr table for Decay and Release */
+  uint32_t dphaseDRTable[16][16];
+
+  /* Phase incr table for PG */
+  uint32_t dphaseTable[512][8][16];
 
   uint32_t mask ;
 
