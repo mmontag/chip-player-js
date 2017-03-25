@@ -13,7 +13,7 @@ enum OPLL_TONE_ENUM {OPLL_2413_TONE=0, OPLL_VRC7_TONE=1, OPLL_281B_TONE=2} ;
 
 /* voice data */
 typedef struct __OPLL_PATCH {
-  uint32_t TL,FB,EG,ML,AR,DR,SL,RR,KR,KL,AM,PM,WF ;
+  uint8_t TL,FB,EG,ML,AR,DR,SL,RR,KR,KL,AM,PM,WF ;
 } OPLL_PATCH ;
 
 /* slot */
@@ -21,11 +21,11 @@ typedef struct __OPLL_SLOT {
 
   const OPLL_PATCH *patch;
 
-  int32_t type ;          /* 0 : modulator 1 : carrier */
+  uint8_t type ;          /* 0 : modulator 1 : carrier */
 
   /* OUTPUT */
-  int32_t feedback ;
-  int32_t output[2] ;   /* Output value of slot */
+  int16_t feedback ;
+  int16_t output[2] ;   /* Output value of slot */
 
   /* for Phase Generator (PG) */
   uint16_t *sintbl ;    /* Wavetable */
@@ -34,11 +34,11 @@ typedef struct __OPLL_SLOT {
   uint32_t pgout ;      /* output */
 
   /* for Envelope Generator (EG) */
-  int32_t fnum ;          /* F-Number */
-  int32_t block ;         /* Block */
-  int32_t volume ;        /* Current volume */
-  int32_t sustine ;       /* Sustine 1 = ON, 0 = OFF */
-  uint32_t tll ;	      /* Total Level + Key scale level*/
+  uint16_t fnum ;         /* F-Number */
+  uint8_t block ;         /* Block */
+  uint8_t volume ;        /* Current volume */
+  uint8_t sustine ;       /* Sustine 1 = ON, 0 = OFF */
+  uint32_t tll ;          /* Total Level + Key scale level*/
   uint32_t rks ;        /* Key scale offset (Rks) */
   int32_t eg_mode ;       /* Current state */
   uint32_t eg_phase ;   /* Phase */
@@ -68,7 +68,7 @@ typedef struct __OPLL {
 
   uint8_t vrc7_mode;
   uint8_t adr ;
-  int32_t out ;
+  //int32_t out ;
 
   uint32_t realstep ;
   uint32_t oplltime ;
@@ -79,7 +79,7 @@ typedef struct __OPLL {
 
   /* Register */
   uint8_t reg[0x40] ;
-  int32_t slot_on_flag[18] ;
+  uint8_t slot_on_flag[18] ;
 
   /* Pitch Modulator */
   uint32_t pm_phase ;
@@ -96,15 +96,15 @@ typedef struct __OPLL {
   uint32_t noise_seed ;
 
   /* Channel Data */
-  int32_t patch_number[9];
-  int32_t key_status[9] ;
+  uint8_t patch_number[9];
+  uint8_t key_status[9] ;
 
   /* Slot */
   OPLL_SLOT slot[18] ;
 
   /* Voice Data */
   OPLL_PATCH patch[19*2] ;
-  int32_t patch_update[2] ; /* flag for check patch update */
+  //uint8_t patch_update[2] ; /* flag for check patch update */
 
   /* Phase delta for LFO */
   uint32_t pm_dphase;
@@ -133,7 +133,7 @@ void OPLL_delete(OPLL *) ;
 void OPLL_reset(OPLL *) ;
 void OPLL_reset_patch(OPLL *, int32_t) ;
 void OPLL_set_rate(OPLL *opll, uint32_t r) ;
-void OPLL_set_quality(OPLL *opll, uint32_t q) ;
+void OPLL_set_quality(OPLL *opll, uint8_t q) ;
 void OPLL_set_pan(OPLL *, uint32_t ch, int32_t pan);
 
 /* Port/Register access */

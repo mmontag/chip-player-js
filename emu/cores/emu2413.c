@@ -169,9 +169,9 @@ static const uint8_t default_inst[OPLL_TONE_NUM][(16 + 3) * 8] = {
 #define BIT(s,b) (((s)>>(b))&1)
 
 /* Input clock */
-//static uint32_t clk = 844451141;
+//static uint32_t clk = 844451141;	// == 45 4D 55 32 == 'EMU2'
 /* Sampling rate */
-//static uint32_t rate = 3354932;
+//static uint32_t rate = 3354932;	// == 34 31 33 00 == '413'
 
 /* WaveTable for each envelope amp */
 static uint16_t fullsintable[PG_WIDTH];
@@ -706,7 +706,7 @@ keyOff_CYM (OPLL * opll)
 
 /* Change a voice */
 INLINE void
-setPatch (OPLL * opll, int32_t i, int32_t num)
+setPatch (OPLL * opll, int32_t i, uint8_t num)
 {
   opll->patch_number[i] = num;
   MOD(opll,i)->patch = &opll->patch[num * 2 + 0];
@@ -722,7 +722,7 @@ setSlotPatch (OPLL_SLOT * slot, OPLL_PATCH * patch)
 
 /* Set sustine parameter */
 INLINE void
-setSustine (OPLL * opll, int32_t c, int32_t sustine)
+setSustine (OPLL * opll, uint8_t c, uint8_t sustine)
 {
   CAR(opll,c)->sustine = sustine;
   if (MOD(opll,c)->type)
@@ -731,20 +731,20 @@ setSustine (OPLL * opll, int32_t c, int32_t sustine)
 
 /* Volume : 6bit ( Volume register << 2 ) */
 INLINE void
-setVolume (OPLL * opll, int32_t c, int32_t volume)
+setVolume (OPLL * opll, uint8_t c, uint8_t volume)
 {
   CAR(opll,c)->volume = volume;
 }
 
 INLINE void
-setSlotVolume (OPLL_SLOT * slot, int32_t volume)
+setSlotVolume (OPLL_SLOT * slot, uint8_t volume)
 {
   slot->volume = volume;
 }
 
 /* Set F-Number ( fnum : 9bit ) */
 INLINE void
-setFnumber (OPLL * opll, int32_t c, int32_t fnum)
+setFnumber (OPLL * opll, uint8_t c, uint16_t fnum)
 {
   CAR(opll,c)->fnum = fnum;
   MOD(opll,c)->fnum = fnum;
@@ -752,7 +752,7 @@ setFnumber (OPLL * opll, int32_t c, int32_t fnum)
 
 /* Set Block data (block : 3bit ) */
 INLINE void
-setBlock (OPLL * opll, int32_t c, int32_t block)
+setBlock (OPLL * opll, uint8_t c, uint8_t block)
 {
   CAR(opll,c)->block = block;
   MOD(opll,c)->block = block;
@@ -853,7 +853,7 @@ OPLL_copyPatch (OPLL * opll, int32_t num, OPLL_PATCH * patch)
 ***********************************************************/
 
 static void
-OPLL_SLOT_reset (OPLL_SLOT * slot, int type)
+OPLL_SLOT_reset (OPLL_SLOT * slot, uint8_t type)
 {
   slot->type = type;
   slot->sintbl = waveform[0];
@@ -967,7 +967,7 @@ OPLL_reset (OPLL * opll)
     return;
 
   opll->adr = 0;
-  opll->out = 0;
+  //opll->out = 0;
 
   opll->pm_phase = 0;
   opll->am_phase = 0;
@@ -1031,10 +1031,10 @@ OPLL_set_rate (OPLL * opll, uint32_t r)
 }
 
 void
-OPLL_set_quality (OPLL * opll, uint32_t q)
+OPLL_set_quality (OPLL * opll, uint8_t q)
 {
   opll->quality = q;
-  OPLL_set_rate (opll, rate);
+  OPLL_set_rate (opll, opll->rate);
 }
 
 /*********************************************************
@@ -1198,7 +1198,7 @@ calc_envelope (OPLL * opll, OPLL_SLOT * slot, int32_t lfo)
 }
 
 /* CARRIOR */
-INLINE int32_t
+INLINE int16_t
 calc_slot_car (OPLL_SLOT * slot, int32_t fm)
 {
   if (slot->egout >= (DB_MUTE - 1))
@@ -1215,7 +1215,7 @@ calc_slot_car (OPLL_SLOT * slot, int32_t fm)
 }
 
 /* MODULATOR */
-INLINE int32_t
+INLINE int16_t
 calc_slot_mod (OPLL_SLOT * slot)
 {
   int32_t fm;
@@ -1243,7 +1243,7 @@ calc_slot_mod (OPLL_SLOT * slot)
 }
 
 /* TOM */
-INLINE int32_t
+INLINE int16_t
 calc_slot_tom (OPLL_SLOT * slot)
 {
   if (slot->egout >= (DB_MUTE - 1))
@@ -1254,7 +1254,7 @@ calc_slot_tom (OPLL_SLOT * slot)
 }
 
 /* SNARE */
-INLINE int32_t
+INLINE int16_t
 calc_slot_snare (OPLL_SLOT * slot, uint32_t noise)
 {
   if(slot->egout>=(DB_MUTE-1))
@@ -1269,7 +1269,7 @@ calc_slot_snare (OPLL_SLOT * slot, uint32_t noise)
 /* 
   TOP-CYM 
  */
-INLINE int32_t
+INLINE int16_t
 calc_slot_cym (OPLL_SLOT * slot, uint32_t pgout_hh)
 {
   uint32_t dbout;
@@ -1292,7 +1292,7 @@ calc_slot_cym (OPLL_SLOT * slot, uint32_t pgout_hh)
 /* 
   HI-HAT 
 */
-INLINE int32_t
+INLINE int16_t
 calc_slot_hat (OPLL_SLOT *slot, int32_t pgout_cym, uint32_t noise)
 {
   uint32_t dbout;
