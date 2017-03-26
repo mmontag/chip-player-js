@@ -459,6 +459,12 @@ static void InitVGMChips(void)
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
+				
+				if (cDev->defInf.devDef->SetPanning != NULL)
+				{
+					INT16 panPos[4] = {0x00, -0x80, +0x80, 0x00};
+					cDev->defInf.devDef->SetPanning(cDev->defInf.dataPtr, panPos);
+				}
 			}
 			break;
 		case DEVID_SEGAPCM:

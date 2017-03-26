@@ -61,7 +61,7 @@ struct _SN76489_Context
 	int Channels[4];		/* Value of each channel, before stereo is applied */
 	float IntermediatePos[4];	/* intermediate values used at boundaries between + and - (does not need double accuracy)*/
 	
-	float panning[4][2];	/* fake stereo */
+	INT32 panning[4][2];	/* fake stereo */
 	
 	UINT8 NgpFlags;			/* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
 	SN76489_Context* NgpChip2;
@@ -81,6 +81,6 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer);
 UINT32 SN76489_GetMute(SN76489_Context* chip);
 void SN76489_SetMute(SN76489_Context* chip, UINT32 val);
 
-void SN76489_SetPanning(SN76489_Context* chip, int ch0, int ch1, int ch2, int ch3);
+void SN76489_SetPanning(SN76489_Context* chip, INT16 ch0, INT16 ch1, INT16 ch2, INT16 ch3);
 
 #endif	// __SN76489_H__

@@ -224,16 +224,8 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 				if ( ( ( chip->PSGStereo >> i ) & 0x11 ) == 0x11 )
 				{
 					// no GG stereo for this channel
-					if ( chip->panning[i][0] == 1.0f )
-					{
-						buffer[0][j] += chip->Channels[i]; // left
-						buffer[1][j] += chip->Channels[i]; // right
-					}
-					else
-					{
-						buffer[0][j] += (INT32)( chip->panning[i][0] * chip->Channels[i] ); // left
-						buffer[1][j] += (INT32)( chip->panning[i][1] * chip->Channels[i] ); // right
-					}
+					buffer[0][j] += APPLY_PANNING( chip->Channels[i], chip->panning[i][0] ); // left
+					buffer[1][j] += APPLY_PANNING( chip->Channels[i], chip->panning[i][1] ); // right
 				}
 				else
 				{
@@ -353,7 +345,7 @@ void SN76489_SetMute(SN76489_Context* chip, UINT32 val)
 	chip->Mute=(UINT8)val;
 }
 
-void SN76489_SetPanning(SN76489_Context* chip, int ch0, int ch1, int ch2, int ch3)
+void SN76489_SetPanning(SN76489_Context* chip, INT16 ch0, INT16 ch1, INT16 ch2, INT16 ch3)
 {
 	calc_panning( chip->panning[0], ch0 );
 	calc_panning( chip->panning[1], ch1 );

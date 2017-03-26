@@ -1426,18 +1426,10 @@ OPLL_calc (OPLL * opll)
 }
 #endif
 
-INLINE void add_channel_lr(int16_t value, float panl, float panr, int32_t out[2])
+INLINE void add_channel_lr(int16_t value, int32_t panl, int32_t panr, int32_t out[2])
 {
-  if (panl == 1.0f)
-  {
-    out[0] += value;
-    out[1] += value;
-  }
-  else
-  {
-    out[0] += (int32_t)(value * panl);
-    out[1] += (int32_t)(value * panr);
-  }
+  out[0] += APPLY_PANNING(value, panl);
+  out[1] += APPLY_PANNING(value, panr);
 }
 
 INLINE void

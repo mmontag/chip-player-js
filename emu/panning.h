@@ -7,7 +7,17 @@
 #ifndef PANNING_H
 #define PANNING_H
 
-void calc_panning(float channels[2], int position);
-void centre_panning(float channels[2]);
+#include <stdtype.h>
+
+#define PANNING_BITS	16	// 16.16 fixed point
+#define PANNING_NORMAL	(1 << PANNING_BITS)
+
+// apply panning value to x, x should be within +-16384
+#define APPLY_PANNING(x, panval)	((x * panval) >> PANNING_BITS)
+// apply panning value to x, version for larger values
+#define APPLY_PANNING_L(x, panval)	(INT32)(((INT64)x * panval) >> PANNING_BITS)
+
+void calc_panning(INT32 channels[2], INT16 position);
+void centre_panning(INT32 channels[2]);
 
 #endif

@@ -1,20 +1,25 @@
 #include <stdlib.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
+
+#include <stdtype.h>
 #include "panning.h"
 
-#ifndef PI
-#define PI 3.14159265359
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
 #endif
-#ifndef SQRT2
-#define SQRT2 1.414213562
+#ifndef M_SQRT2
+#define M_SQRT2 1.41421356237309504880
 #endif
-#define RANGE 512
+
+#define RANGE		(0x100 * 2)
+#define POS_MULT	(M_PI / 2.0 / RANGE)
 
 //-----------------------------------------------------------------
 // Set the panning values for the two stereo channels (L,R)
 // for a position -256..0..256 L..C..R
 //-----------------------------------------------------------------
-void calc_panning(float channels[2], int position)
+void calc_panning(INT32 channels[2], INT16 position)
 {
 	if ( position > RANGE / 2 )
 		position = RANGE / 2;
@@ -27,17 +32,17 @@ void calc_panning(float channels[2], int position)
 	// left is equivalent to right with position = range - position
 	// position is in the range 0 .. RANGE
 	// RANGE / 2 = centre, result = 1.0f
-	channels[1] = (float)( sin( (double)position / RANGE * PI / 2 ) * SQRT2 );
+	channels[1] = (INT32)( sin((double)position * POS_MULT) * M_SQRT2 * PANNING_NORMAL );
 	position = RANGE - position;
-	channels[0] = (float)( sin( (double)position / RANGE * PI / 2 ) * SQRT2 );
+	channels[0] = (INT32)( sin((double)position * POS_MULT) * M_SQRT2 * PANNING_NORMAL );
 }
 
 //-----------------------------------------------------------------
 // Reset the panning values to the centre position
 //-----------------------------------------------------------------
-void centre_panning(float channels[2])
+void centre_panning(INT32 channels[2])
 {
-	channels[0] = channels[1] = 1.0f;
+	channels[0] = channels[1] = PANNING_NORMAL;
 }
 
 /*//-----------------------------------------------------------------
