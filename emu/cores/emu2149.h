@@ -64,6 +64,7 @@ extern "C"
     uint32_t psgstep;
     //int32_t prev, next;
     int32_t sprev[2], snext[2];
+    int32_t pan[3][2];
 
     /* I/O Ctrl */
     uint8_t adr;
@@ -92,6 +93,7 @@ extern "C"
   uint32_t PSG_setMask (PSG *, uint32_t mask);
   uint32_t PSG_toggleMask (PSG *, uint32_t mask);
   void PSG_setMuteMask (PSG *, UINT32 mask);
+  void PSG_set_pan (PSG * psg, uint8_t ch, int16_t pan);
     
 #ifdef __cplusplus
 }

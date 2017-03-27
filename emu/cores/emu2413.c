@@ -1825,7 +1825,7 @@ OPLL_writeIO (OPLL * opll, UINT8 adr, UINT8 val)
 
 /* STEREO MODE (OPT) */
 void
-OPLL_set_pan (OPLL * opll, uint32_t ch, int32_t pan)
+OPLL_set_pan (OPLL * opll, uint32_t ch, int16_t pan)
 {
   if (ch >= 15)
     return;

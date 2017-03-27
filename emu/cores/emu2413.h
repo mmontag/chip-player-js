@@ -134,7 +134,7 @@ void OPLL_reset(OPLL *) ;
 void OPLL_reset_patch(OPLL *, int32_t) ;
 void OPLL_set_rate(OPLL *opll, uint32_t r) ;
 void OPLL_set_quality(OPLL *opll, uint8_t q) ;
-void OPLL_set_pan(OPLL *, uint32_t ch, int32_t pan);
+void OPLL_set_pan(OPLL *, uint32_t ch, int16_t pan);
 
 /* Port/Register access */
 void OPLL_writeIO(OPLL *, UINT8 reg, UINT8 val) ;

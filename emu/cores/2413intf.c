@@ -16,7 +16,7 @@
 
 static UINT8 device_start_ym2413_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
-static void ym2413_set_panning_emu(void* chipptr, INT16* PanVals);
+static void ym2413_pan_emu(void* chipptr, INT16* PanVals);
 
 
 
@@ -63,7 +63,7 @@ static DEV_DEF devDef_Emu =
 	
 	NULL,	// SetOptionBits
 	(DEVFUNC_OPTMASK)OPLL_SetMuteMask,
-	ym2413_set_panning_emu,
+	ym2413_pan_emu,
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
 	
@@ -127,7 +127,7 @@ static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf
 	return 0x00;
 }
 
-static void ym2413_set_panning_emu(void* chipptr, INT16* PanVals)
+static void ym2413_pan_emu(void* chipptr, INT16* PanVals)
 {
 	UINT8 curChn;
 	

@@ -16,6 +16,7 @@
 
 static UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf);
+static void ay8910_pan_emu(void* chipptr, INT16* PanVals);
 
 
 
@@ -69,7 +70,7 @@ static DEV_DEF devDef_Emu =
 	
 	NULL,	// SetOptionBits
 	(DEVFUNC_OPTMASK)PSG_setMuteMask,
-	NULL,	// SetPanning
+	ay8910_pan_emu,
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
 	
@@ -138,5 +139,15 @@ static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 	chip->_devData.chipInf = chip;
 	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_Emu);
 	return 0x00;
+}
+
+static void ay8910_pan_emu(void* chipptr, INT16* PanVals)
+{
+	UINT8 curChn;
+	
+	for (curChn = 0; curChn < 3; curChn ++)
+		PSG_set_pan((PSG*)chipptr, curChn, PanVals[curChn]);
+	
+	return;
 }
 #endif

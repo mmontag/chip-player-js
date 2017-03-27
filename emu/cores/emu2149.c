@@ -35,6 +35,7 @@
 #include "../snddef.h"
 #include "ayintf.h"
 #include "emu2149.h"
+#include "../panning.h"
 
 static const uint32_t voltbl[2][32] = {
   {0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09,
@@ -101,6 +102,7 @@ PSG *
 PSG_new (UINT32 c, UINT32 r)
 {
   PSG *psg;
+  uint8_t i;
 
   psg = (PSG *) calloc (1, sizeof (PSG));
   if (psg == NULL)
@@ -111,9 +113,13 @@ PSG_new (UINT32 c, UINT32 r)
   psg->rate = r ? r : 44100;
   psg->chp_flags = 0x00;
   PSG_set_quality (psg, 0);
-  psg->stereo_mask[0] = 0x03;
-  psg->stereo_mask[1] = 0x03;
-  psg->stereo_mask[2] = 0x03;
+
+  for (i = 0; i < 3; i++)
+  {
+    psg->stereo_mask[i] = 0x03;
+    centre_panning(psg->pan[i]);
+  }
+
   PSG_setMask(psg, 0x00);
 
   return psg;
@@ -378,10 +384,20 @@ mix_output_stereo(PSG *psg, int32_t out[2])
   out[0] = out[1] = 0;
   for (i = 0; i < 3; i++)
   {
-    if (psg->stereo_mask[i] & 0x01)
-      out[0] += psg->ch_out[i];
-    if (psg->stereo_mask[i] & 0x02)
-      out[1] += psg->ch_out[i];
+    if (! (~psg->stereo_mask[i] & 0x03))
+    {
+      // mono channel
+      out[0] += APPLY_PANNING(psg->ch_out[i], psg->pan[i][0]);
+      out[1] += APPLY_PANNING(psg->ch_out[i], psg->pan[i][1]);
+    }
+    else
+    {
+      // hard-panned to L or R
+      if (psg->stereo_mask[i] & 0x01)
+        out[0] += psg->ch_out[i];
+      if (psg->stereo_mask[i] & 0x02)
+        out[1] += psg->ch_out[i];
+    }
   }
 
   return;
@@ -491,4 +507,12 @@ PSG_writeReg (PSG * psg, UINT8 reg, UINT8 val)
   }
 
   return;
+}
+
+void PSG_set_pan (PSG * psg, uint8_t ch, int16_t pan)
+{
+  if (ch >= 3)
+    return;
+  
+  calc_panning( psg->pan[ch], pan );
 }
