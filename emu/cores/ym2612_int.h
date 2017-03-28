@@ -4,7 +4,7 @@
 // --- Gens YM2612 - header for internal stuff---
 
 // Change it if you need to do long update
-#define	MAX_UPDATE_LENGHT   0x200
+#define	MAX_UPDATE_LENGTH   0x200
 
 // Gens always uses 16 bits sound (in 32 bits buffer) and do the convertion later if needed.
 #define OUTPUT_BITS         15
@@ -99,20 +99,20 @@ typedef struct ym2612__ {
 	UINT8 REG[2][0x100];	// Sauvegardes des valeurs de tout les registres, c'est facultatif
 							// cela nous rend le débuggage plus facile
 
-	int LFO_ENV_UP[MAX_UPDATE_LENGHT];      // Temporary calculated LFO AMS (adjusted for 11.8 dB) *
-	int LFO_FREQ_UP[MAX_UPDATE_LENGHT];      // Temporary calculated LFO FMS *
-
-	int in0, in1, in2, in3;            // current phase calculation *
-	int en0, en1, en2, en3;            // current enveloppe calculation *
-
 	// --- tables ---
-	unsigned int FINC_TAB[2048];        // Frequency step table
+	unsigned int FINC_TAB[2048];    // Frequency step table
 
-	unsigned int AR_TAB[128];          // Attack rate table
-	unsigned int DR_TAB[96];          // Decay rate table
-	signed int DT_TAB[8][32];          // Detune table
+	unsigned int AR_TAB[128];       // Attack rate table
+	unsigned int DR_TAB[96];        // Decay rate table
+	signed int DT_TAB[8][32];       // Detune table
 
-	int LFO_INC_TAB[8];              // LFO step table
+	int LFO_ENV_UP[MAX_UPDATE_LENGTH];      // Temporary calculated LFO AMS (adjusted for 11.8 dB)
+	int LFO_FREQ_UP[MAX_UPDATE_LENGTH];     // Temporary calculated LFO FMS
+
+	int in0, in1, in2, in3;         // current phase calculation
+	int en0, en1, en2, en3;         // current enveloppe calculation
+
+	int LFO_INC_TAB[8];             // LFO step table
 
 	UINT8 DAC_Mute;
 
