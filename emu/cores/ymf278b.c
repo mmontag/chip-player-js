@@ -199,7 +199,6 @@ struct _YMF278BChip
 
 	UINT8 last_fm_data;
 	OPL3FM fm;
-	UINT8 FMEnabled;	// that saves a whole lot of CPU
 };
 
 
@@ -804,10 +803,6 @@ static void ymf278b_A_w(YMF278BChip *chip, UINT8 reg, UINT8 data)
 			break;
 		default:
 //			logerror("YMF278B:  Port A write %02x, %02x\n", reg, data);
-			if ((reg & 0xF0) == 0xB0 && (data & 0x20))	// Key On set
-				chip->FMEnabled = 0x01;
-			else if (reg == 0xBD && (data & 0x1F))	// one of the Rhythm bits set
-				chip->FMEnabled = 0x01;
 			break;
 	}
 }
@@ -821,8 +816,6 @@ static void ymf278b_B_w(YMF278BChip *chip, UINT8 reg, UINT8 data)
 			chip->exp = data;
 			break;
 		default:
-			if ((reg & 0xF0) == 0xB0 && (data & 0x20))
-				chip->FMEnabled = 0x01;
 			break;
 	}
 //#ifdef _DEBUG
@@ -1223,7 +1216,6 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	//SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
 	device_ymf278b_link_opl3(chip, LINKDEV_OPL3, NULL);
-	chip->FMEnabled = 0x00;
 	
 	//chip->timer_a = timer_alloc(device->machine, ymf278b_timer_a_tick, chip);
 	//chip->timer_b = timer_alloc(device->machine, ymf278b_timer_b_tick, chip);
@@ -1268,7 +1260,6 @@ static void device_reset_ymf278b(void *info)
 	int i;
 	
 	chip->fm.reset(chip->fm.chip);
-	chip->FMEnabled = 0x00;
 	chip->exp = 0x00;
 	
 	chip->eg_cnt = 0;

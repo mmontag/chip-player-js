@@ -165,6 +165,7 @@ typedef struct opl_chip
 	
 	Bits int_samplerate;
 	
+	Bit8u isDisabled;
 	Bit8u status;
 	Bit16u opl_addr;
 #if defined(OPLTYPE_IS_OPL3)

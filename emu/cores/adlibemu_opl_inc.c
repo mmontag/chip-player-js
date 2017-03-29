@@ -752,6 +752,7 @@ void ADLIBEMU(reset)(void *chip)
 	
 	OPL->status = 0;
 	OPL->opl_addr = 0;
+	OPL->isDisabled = 0x01;	// OPL4 speed hack
 	
 	return;
 }
@@ -966,6 +967,8 @@ static void adlib_write(void *chip, Bit16u idx, Bit8u val)
 			if (second_set) return;
 #endif
 
+			if ((val & 0x20) && (val & 0x1F))
+				OPL->isDisabled = 0x00;
 			if ((val&0x30) == 0x30)
 			{		// BassDrum active
 				enable_operator(OPL, 16,&OPL->op[6],OP_ACT_PERC);
@@ -1031,6 +1034,7 @@ static void adlib_write(void *chip, Bit16u idx, Bit8u val)
 #endif
 			if (val&32)
 			{
+				OPL->isDisabled = 0x00;
 				// operator switched on
 				enable_operator(OPL, modbase,&OPL->op[opbase],OP_ACT_NORMAL);		// modulator (if 2op)
 				enable_operator(OPL, modbase+3,&OPL->op[opbase+9],OP_ACT_NORMAL);	// carrier (if 2op)
@@ -1233,6 +1237,8 @@ void ADLIBEMU(getsample)(void *chip, UINT32 numsamples, DEV_SMPL** sndptr)
 	
 	memset(sndptr[0],0,numsamples*sizeof(DEV_SMPL));
 	memset(sndptr[1],0,numsamples*sizeof(DEV_SMPL));
+	if (OPL->isDisabled)
+		return;	// Speed hack for possibly unused FM-part of OPL4 chip
 
 	outbufl = sndptr[0];
 	outbufr = sndptr[1];

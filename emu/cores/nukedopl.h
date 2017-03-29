@@ -109,6 +109,7 @@ struct _opl3_chip {
     opl3_channel channel[18];
     opl3_slot slot[36];
     Bit16u timer;
+    Bit8u isDisabled;
     Bit8u newm;
     Bit8u nts;
     Bit8u rhy;

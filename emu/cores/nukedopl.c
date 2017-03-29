@@ -1364,6 +1364,8 @@ void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v)
         {
             chip->tremoloshift = (((v >> 7) ^ 1) << 1) + 2;
             chip->vibshift = ((v >> 6) & 0x01) ^ 1;
+            if ((v & 0x20) && (v & 0x1F))
+                chip->isDisabled = 0x00;
             OPL3_ChannelUpdateRhythm(chip, v);
         }
         else if ((regm & 0x0f) < 9)
@@ -1371,6 +1373,7 @@ void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v)
             OPL3_ChannelWriteB0(&chip->channel[9 * high + (regm & 0x0f)], v);
             if (v & 0x20)
             {
+                chip->isDisabled = 0x00;
                 OPL3_ChannelKeyOn(&chip->channel[9 * high + (regm & 0x0f)]);
             }
             else
@@ -1480,20 +1483,27 @@ void nuked_reset_chip(void *chip)
 	opl3->_devData = _devData;
 	opl3->clock = clock;
 	opl3->smplRate = rate;
+	opl3->isDisabled = 0x01;	// OPL4 speed hack
 }
 
 void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
 {
 	opl3_chip* opl3 = (opl3_chip*) chip;
-	DEV_SMPL *bufMO = out[0];
-	DEV_SMPL *bufRO = out[1];
 	Bit32s buffers[2];
 	UINT32 i;
+
+	if (opl3->isDisabled)
+	{
+		// Speed hack for possibly unused FM-part of OPL4 chip
+		memset(out[0], 0, samples * sizeof(DEV_SMPL));
+		memset(out[1], 0, samples * sizeof(DEV_SMPL));
+		return;
+	}
 
 	for( i=0; i < samples ; i++ )
 	{
 		OPL3_GenerateResampled(opl3, buffers);
-		bufMO[i] = buffers[0];
-		bufRO[i] = buffers[1];
+		out[0][i] = buffers[0];
+		out[1][i] = buffers[1];
 	}
 }

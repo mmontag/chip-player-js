@@ -248,6 +248,7 @@ typedef struct
 	OPL3_UPDATEHANDLER UpdateHandler;/* stream update handler       */
 	void *UpdateParam;              /* stream update parameter      */
 
+	UINT8 isDisabled;
 	UINT8 type;                     /* chip type                    */
 	UINT32 clock;                   /* master clock  (Hz)           */
 	UINT32 rate;                    /* sampling rate (Hz)           */
@@ -1755,6 +1756,8 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 
 			if(chip->rhythm&0x20)
 			{
+				if (v & 0x1F)
+					chip->isDisabled = 0x00;
 				/* BD key on/off */
 				if(v&0x10)
 				{
@@ -1807,6 +1810,8 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 		else
 		{   /* b0-b8 */
 			block_fnum = ((v&0x1f)<<8) | (CH->block_fnum&0xff);
+			if (v & 0x20)
+				chip->isDisabled = 0x00;
 
 			if (chip->OPL3_mode & 1)
 			{
@@ -2266,6 +2271,8 @@ static void OPL3ResetChip(OPL3 *chip)
 			CH->SLOT[s].volume    = MAX_ATT_INDEX;
 		}
 	}
+
+	chip->isDisabled = 0x01;	// OPL4 speed hack
 }
 
 /* Create one of virtual YMF262 */
@@ -2522,6 +2529,14 @@ void ymf262_update_one(void *_chip, UINT32 length, DEV_SMPL **buffers)
 	
 	ch_a = buffers[0];
 	ch_b = buffers[1];
+	if (chip->isDisabled)
+	{
+		// Speed hack for possibly unused FM-part of OPL4 chip
+		memset(ch_a, 0, length * sizeof(DEV_SMPL));
+		memset(ch_b, 0, length * sizeof(DEV_SMPL));
+		return;
+	}
+	
 	for( i=0; i < length ; i++ )
 	{
 		int a,b,c,d;
