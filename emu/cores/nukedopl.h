@@ -127,6 +127,9 @@ struct _opl3_chip {
     Bit32s oldsamples[2];
     Bit32s samples[2];
 
+    Bit32s masterVolL;   // master volume left (.12 fixed point)
+    Bit32s masterVolR;   // master volume right
+
     Bit64u writebuf_samplecnt;
     Bit32u writebuf_cur;
     Bit32u writebuf_last;
@@ -146,5 +149,7 @@ UINT8 nuked_read(void *chip, UINT8 a);
 void nuked_shutdown(void *chip);
 void nuked_reset_chip(void *chip);
 void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out);
+void nuked_set_volume(void *chip, INT32 volume);
+void nuked_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight);
 
 #endif	// __NUKEDOPL_H__

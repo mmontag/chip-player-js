@@ -244,6 +244,8 @@ static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	opl3->clock = cfg->clock * 4;
 	opl3->smplRate = rate; // save for reset
 	
+	nuked_set_volume(opl3, 0x10000);
+	
 	opl3->_devData.chipInf = opl3;
 	INIT_DEVINF(retDevInf, &opl3->_devData, rate, &devDef3812_Nuked);
 	return 0x00;

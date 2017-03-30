@@ -83,8 +83,8 @@ static DEVDEF_RWFUNC devFunc262_Nuked[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nuked_write},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
-//	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_volume},
-//	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_vol_lr},
+	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_volume},
+	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_vol_lr},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_Nuked =
@@ -183,6 +183,8 @@ static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	
 	opl3->clock = cfg->clock;
 	opl3->smplRate = rate; // save for reset
+	
+	nuked_set_volume(opl3, 0x10000);
 	
 	opl3->_devData.chipInf = opl3;
 	INIT_DEVINF(retDevInf, &opl3->_devData, rate, &devDef262_Nuked);

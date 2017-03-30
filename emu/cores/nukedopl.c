@@ -1472,17 +1472,22 @@ void nuked_reset_chip(void *chip)
 	DEV_DATA _devData;
 	Bit32u clock;
 	Bit32u rate;
+	Bit32s mstVolL, mstVolR;
 
 	// save for reset
 	_devData = opl3->_devData;
 	clock = opl3->clock;
 	rate = opl3->smplRate;
+	mstVolL = opl3->masterVolL;
+	mstVolR = opl3->masterVolR;
 	
 	OPL3_Reset(opl3, clock, rate);
 	
 	opl3->_devData = _devData;
 	opl3->clock = clock;
 	opl3->smplRate = rate;
+	opl3->masterVolL = mstVolL;
+	opl3->masterVolR = mstVolR;
 	opl3->isDisabled = 0x01;	// OPL4 speed hack
 }
 
@@ -1503,7 +1508,22 @@ void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
 	for( i=0; i < samples ; i++ )
 	{
 		OPL3_GenerateResampled(opl3, buffers);
-		out[0][i] = buffers[0];
-		out[1][i] = buffers[1];
+		out[0][i] = (buffers[0] * opl3->masterVolL) >> 12;
+		out[1][i] = (buffers[1] * opl3->masterVolR) >> 12;
 	}
+}
+
+void nuked_set_volume(void *chip, INT32 volume)
+{
+	nuked_set_vol_lr(chip, volume, volume);
+}
+
+void nuked_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight)
+{
+	opl3_chip* opl3 = (opl3_chip*) chip;
+	
+	opl3->masterVolL = volLeft >> 4;
+	opl3->masterVolR = volRight >> 4;
+	
+	return;
 }
