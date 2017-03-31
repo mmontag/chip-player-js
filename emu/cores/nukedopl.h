@@ -85,6 +85,7 @@ struct _opl3_channel {
     opl3_chip *chip;
     Bit16s *out[4];
     Bit8u chtype;
+    Bit8u muted;
     Bit16u f_num;
     Bit8u block;
     Bit8u fb;
@@ -127,6 +128,7 @@ struct _opl3_chip {
     Bit32s oldsamples[2];
     Bit32s samples[2];
 
+    Bit32u muteMask;
     Bit32s masterVolL;   // master volume left (.12 fixed point)
     Bit32s masterVolR;   // master volume right
 
@@ -149,6 +151,7 @@ UINT8 nuked_read(void *chip, UINT8 a);
 void nuked_shutdown(void *chip);
 void nuked_reset_chip(void *chip);
 void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out);
+void nuked_set_mutemask(void *chip, UINT32 MuteMask);
 void nuked_set_volume(void *chip, INT32 volume);
 void nuked_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight);
 

@@ -35,6 +35,15 @@
 #include "../snddef.h"
 #include "nukedopl.h"
 
+// mute channel IDs
+enum {
+    mch_bd = 18+0,
+    mch_sd = 18+1,
+    mch_tt = 18+2,
+    mch_tc = 18+3,
+    mch_hh = 18+4,
+};
+
 #define RSM_FRAC    10
 
 // Channel types
@@ -678,6 +687,29 @@ INLINE void OPL3_SlotCalcFB(opl3_slot *slot)
 
 static void OPL3_ChannelSetupAlg(opl3_channel *channel);
 
+static void OPL3_RhythmSetupAlg(opl3_chip *chip)
+{
+    opl3_channel *channel6;
+    opl3_channel *channel7;
+    opl3_channel *channel8;
+
+    channel6 = &chip->channel[6];
+    channel7 = &chip->channel[7];
+    channel8 = &chip->channel[8];
+    channel6->out[0] = (chip->muteMask & (1 << mch_bd)) ? &chip->zeromod : &channel6->slots[1]->out;
+    channel6->out[1] = (chip->muteMask & (1 << mch_bd)) ? &chip->zeromod : &channel6->slots[1]->out;
+    channel6->out[2] = &chip->zeromod;
+    channel6->out[3] = &chip->zeromod;
+    channel7->out[0] = (chip->muteMask & (1 << mch_hh)) ? &chip->zeromod : &channel7->slots[0]->out;
+    channel7->out[1] = (chip->muteMask & (1 << mch_hh)) ? &chip->zeromod : &channel7->slots[0]->out;
+    channel7->out[2] = (chip->muteMask & (1 << mch_sd)) ? &chip->zeromod : &channel7->slots[1]->out;
+    channel7->out[3] = (chip->muteMask & (1 << mch_sd)) ? &chip->zeromod : &channel7->slots[1]->out;
+    channel8->out[0] = (chip->muteMask & (1 << mch_tt)) ? &chip->zeromod : &channel8->slots[0]->out;
+    channel8->out[1] = (chip->muteMask & (1 << mch_tt)) ? &chip->zeromod : &channel8->slots[0]->out;
+    channel8->out[2] = (chip->muteMask & (1 << mch_tc)) ? &chip->zeromod : &channel8->slots[1]->out;
+    channel8->out[3] = (chip->muteMask & (1 << mch_tc)) ? &chip->zeromod : &channel8->slots[1]->out;
+}
+
 static void OPL3_ChannelUpdateRhythm(opl3_chip *chip, Bit8u data)
 {
     opl3_channel *channel6;
@@ -688,24 +720,14 @@ static void OPL3_ChannelUpdateRhythm(opl3_chip *chip, Bit8u data)
     chip->rhy = data & 0x3f;
     if (chip->rhy & 0x20)
     {
+        OPL3_RhythmSetupAlg(chip);
         channel6 = &chip->channel[6];
         channel7 = &chip->channel[7];
         channel8 = &chip->channel[8];
-        channel6->out[0] = &channel6->slots[1]->out;
-        channel6->out[1] = &channel6->slots[1]->out;
-        channel6->out[2] = &chip->zeromod;
-        channel6->out[3] = &chip->zeromod;
-        channel7->out[0] = &channel7->slots[0]->out;
-        channel7->out[1] = &channel7->slots[0]->out;
-        channel7->out[2] = &channel7->slots[1]->out;
-        channel7->out[3] = &channel7->slots[1]->out;
-        channel8->out[0] = &channel8->slots[0]->out;
-        channel8->out[1] = &channel8->slots[0]->out;
-        channel8->out[2] = &channel8->slots[1]->out;
-        channel8->out[3] = &channel8->slots[1]->out;
         for (chnum = 6; chnum < 9; chnum++)
         {
             chip->channel[chnum].chtype = ch_drum;
+            chip->channel[chnum].muted = 0x00;
         }
         OPL3_ChannelSetupAlg(channel6);
         //hh
@@ -761,6 +783,7 @@ static void OPL3_ChannelUpdateRhythm(opl3_chip *chip, Bit8u data)
         for (chnum = 6; chnum < 9; chnum++)
         {
             chip->channel[chnum].chtype = ch_2op;
+            chip->channel[chnum].muted = (chip->muteMask >> chnum) & 0x01;
             OPL3_ChannelSetupAlg(&chip->channel[chnum]);
             OPL3_EnvelopeKeyOff(chip->channel[chnum].slots[0], egk_drum);
             OPL3_EnvelopeKeyOff(chip->channel[chnum].slots[1], egk_drum);
@@ -1133,6 +1156,8 @@ void OPL3_Generate(opl3_chip *chip, Bit32s *buf)
     chip->mixbuff[0] = 0;
     for (ii = 0; ii < 18; ii++)
     {
+        if (chip->channel[ii].muted)
+            continue;
         accm = 0;
         for (jj = 0; jj < 4; jj++)
         {
@@ -1173,6 +1198,8 @@ void OPL3_Generate(opl3_chip *chip, Bit32s *buf)
     chip->mixbuff[1] = 0;
     for (ii = 0; ii < 18; ii++)
     {
+        if (chip->channel[ii].muted)
+            continue;
         accm = 0;
         for (jj = 0; jj < 4; jj++)
         {
@@ -1430,6 +1457,23 @@ void OPL3_GenerateStream(opl3_chip *chip, Bit32s *sndptr, Bit32u numsamples)
     }
 }
 
+static void OPL3_RefreshMuteMasks(opl3_chip* chip)
+{
+	Bit8u curChn;
+	
+	for (curChn = 0; curChn < 18; curChn ++)
+		chip->channel[curChn].muted = (chip->muteMask >> curChn) & 0x01;
+	
+	if (chip->rhy & 0x20)
+	{
+		// rhythm channel muting is done differently
+		chip->channel[6].muted = chip->channel[7].muted = chip->channel[8].muted = 0x00;
+		OPL3_RhythmSetupAlg(chip);
+	}
+	
+	return;
+}
+
 void nuked_write(void *chip, UINT8 a, UINT8 v)
 {
 	opl3_chip* opl3 = (opl3_chip*) chip;
@@ -1473,6 +1517,7 @@ void nuked_reset_chip(void *chip)
 	Bit32u clock;
 	Bit32u rate;
 	Bit32s mstVolL, mstVolR;
+	Bit32u muteMask;
 
 	// save for reset
 	_devData = opl3->_devData;
@@ -1480,6 +1525,7 @@ void nuked_reset_chip(void *chip)
 	rate = opl3->smplRate;
 	mstVolL = opl3->masterVolL;
 	mstVolR = opl3->masterVolR;
+	muteMask = opl3->muteMask;
 	
 	OPL3_Reset(opl3, clock, rate);
 	
@@ -1488,6 +1534,9 @@ void nuked_reset_chip(void *chip)
 	opl3->smplRate = rate;
 	opl3->masterVolL = mstVolL;
 	opl3->masterVolR = mstVolR;
+	opl3->muteMask = muteMask;
+	OPL3_RefreshMuteMasks(opl3);
+	
 	opl3->isDisabled = 0x01;	// OPL4 speed hack
 }
 
@@ -1511,6 +1560,16 @@ void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
 		out[0][i] = (buffers[0] * opl3->masterVolL) >> 12;
 		out[1][i] = (buffers[1] * opl3->masterVolR) >> 12;
 	}
+}
+
+void nuked_set_mutemask(void *chip, UINT32 MuteMask)
+{
+	opl3_chip* opl3 = (opl3_chip*) chip;
+	
+	opl3->muteMask = MuteMask;
+	OPL3_RefreshMuteMasks(opl3);
+	
+	return;
 }
 
 void nuked_set_volume(void *chip, INT32 volume)

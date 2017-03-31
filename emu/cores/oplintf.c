@@ -93,7 +93,7 @@ static DEV_DEF devDef3812_Nuked =
 	nuked_update,
 	
 	NULL,	// SetOptionBits
-	NULL/*nuked_set_mutemask*/,	// SetMuteMask
+	nuked_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -245,6 +245,7 @@ static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	opl3->smplRate = rate; // save for reset
 	
 	nuked_set_volume(opl3, 0x10000);
+	nuked_set_mutemask(opl3, 0x000000);
 	
 	opl3->_devData.chipInf = opl3;
 	INIT_DEVINF(retDevInf, &opl3->_devData, rate, &devDef3812_Nuked);
