@@ -155,6 +155,7 @@ static void ReadVGMFile(UINT32 samples);
 
 static UINT32 smplSize;
 static void* audDrv;
+static void* audDrvLog;
 static UINT32 smplAlloc;
 static WAVE_32BS* smplData;
 static volatile bool canRender;
@@ -176,6 +177,7 @@ int main(int argc, char* argv[])
 	UINT32 drvCount;
 	UINT32 idWavOut;
 	UINT32 idWavOutDev;
+	UINT32 idWavWrt;
 	AUDDRV_INFO* drvInfo;
 	AUDIO_OPTS* opts;
 	UINT32 tempData[2];
@@ -232,6 +234,8 @@ int main(int argc, char* argv[])
 	
 	idWavOut = 1;
 	idWavOutDev = 0;
+	idWavWrt = (UINT32)-1;
+	//idWavWrt = 0;
 	
 	Audio_GetDriverInfo(idWavOut, &drvInfo);
 	printf("Using driver %s.\n", drvInfo->drvName);
@@ -267,6 +271,24 @@ int main(int argc, char* argv[])
 	smplAlloc = AudioDrv_GetBufferSize(audDrv) / smplSize;
 	smplData = (WAVE_32BS*)malloc(smplAlloc * sizeof(WAVE_32BS));
 	
+	audDrvLog = NULL;
+	if (idWavWrt != (UINT32)-1)
+	{
+		retVal = AudioDrv_Init(idWavWrt, &audDrvLog);
+		if (retVal)
+			audDrvLog = NULL;
+	}
+	if (audDrvLog != NULL)
+	{
+		void* aDrv = AudioDrv_GetDrvData(audDrvLog);
+		WavWrt_SetFileName(aDrv, "waveOut.wav");
+		retVal = AudioDrv_Start(audDrvLog, 0);
+		if (retVal)
+			AudioDrv_Deinit(&audDrvLog);
+	}
+	if (audDrvLog != NULL)
+		AudioDrv_DataForward_Add(audDrv, audDrvLog);
+	
 	canRender = true;
 	while(1)
 	{
@@ -283,6 +305,8 @@ int main(int argc, char* argv[])
 	canRender = false;
 	
 	retVal = AudioDrv_Stop(audDrv);
+	if (audDrvLog != NULL)
+		retVal = AudioDrv_Stop(audDrvLog);
 	free(smplData);	smplData = NULL;
 	
 Exit_SndDrvDeinit:
@@ -290,6 +314,8 @@ Exit_SndDrvDeinit:
 	free(VGMData);	VGMData = NULL;
 //Exit_AudDrvDeinit:
 	AudioDrv_Deinit(&audDrv);
+	if (audDrvLog != NULL)
+		AudioDrv_Deinit(&audDrvLog);
 Exit_AudDeinit:
 	Audio_Deinit();
 	printf("Done.\n");
