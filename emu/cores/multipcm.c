@@ -819,7 +819,7 @@ static void multipcm_alloc_rom(void* info, UINT32 memsize)
 	if (ptChip->ROMSize == memsize)
 		return;
 	
-	ptChip->ROM = (INT8*)realloc(ptChip->ROM, memsize);
+	ptChip->ROM = (UINT8*)realloc(ptChip->ROM, memsize);
 	ptChip->ROMSize = memsize;
 	memset(ptChip->ROM, 0xFF, memsize);
 	

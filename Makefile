@@ -47,6 +47,7 @@ endif
 CFLAGS += -fstack-protector -Wpointer-arith -Winit-self
 LDFLAGS += -fstack-protector
 CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
+CFLAGS += -Wstrict-aliasing
 ARFLAGS = -cr
 
 # add Library Path, if defined

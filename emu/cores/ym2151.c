@@ -686,7 +686,7 @@ static void init_chip_tables(YM2151 *chip)
 	}
 }
 
-INLINE KEY_ON(YM2151Operator * op, UINT32 key_set, UINT32 eg_cnt)
+INLINE void KEY_ON(YM2151Operator * op, UINT32 key_set, UINT32 eg_cnt)
 {
 	if (!op->key)
 	{
@@ -704,7 +704,7 @@ INLINE KEY_ON(YM2151Operator * op, UINT32 key_set, UINT32 eg_cnt)
 	op->key |= key_set;
 }
 
-INLINE KEY_OFF(YM2151Operator * op, UINT32 key_clr)
+INLINE void KEY_OFF(YM2151Operator * op, UINT32 key_clr)
 {
 	if (op->key)
 	{

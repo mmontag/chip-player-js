@@ -1,7 +1,8 @@
-#ifndef _YM2612_INT_H_
-#define _YM2612_INT_H_
+#ifndef __YM2612_INT_H__
+#define __YM2612_INT_H__
 
 // --- Gens YM2612 - header for internal stuff---
+#include "ym2612.h"
 
 // Change it if you need to do long update
 #define	MAX_UPDATE_LENGTH   0x200
@@ -70,7 +71,7 @@ typedef struct channel__ {
 	UINT8 Mute;				// Maxim: channel mute flag
 } channel_;
 
-typedef struct ym2612__ {
+struct ym2612__ {
 	DEV_DATA _devData;
 
 	int Clock;			// Horloge YM2612
@@ -120,7 +121,7 @@ typedef struct ym2612__ {
 	UINT8 Enable_SSGEG; // enable SSG-EG envelope (causes inacurate sound sometimes - rodrigo)
 	UINT8 DAC_Highpass_Enable; // sometimes it creates a terrible noise
 	/* end */
-} ym2612_;
+};
 
 // used for forward...
 static void Update_Chan_Algo0(ym2612_ *YM2612, channel_ *CH, DEV_SMPL **buf, UINT32 lenght);
@@ -165,4 +166,4 @@ static void Env_Substain_Next(ym2612_ *YM2612, slot_ *SL);
 static void Env_Release_Next(ym2612_ *YM2612, slot_ *SL);
 static void Env_NULL_Next(ym2612_ *YM2612, slot_ *SL);
 
-#endif
+#endif	// _YM2612_INT_H_

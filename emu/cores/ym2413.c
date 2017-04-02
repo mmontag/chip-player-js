@@ -1817,7 +1817,6 @@ void ym2413_write(void *chip, UINT8 a, UINT8 v)
 
 UINT8 ym2413_read(void *chip, UINT8 a)
 {
-	YM2413 *OPLL = (YM2413 *)chip;
 	return 0xFF;
 }
 

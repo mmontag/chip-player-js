@@ -1,5 +1,5 @@
-#ifndef _YM2612_H_
-#define _YM2612_H_
+#ifndef __YM2612_H__
+#define __YM2612_H__
 
 #include <stdtype.h>
 
@@ -20,4 +20,4 @@ void YM2612_SetOptions(ym2612_ *YM2612, UINT32 Flags);
 void YM2612_DacAndTimers_Update(ym2612_ *YM2612, DEV_SMPL **buffer, UINT32 length);
 void YM2612_Special_Update(ym2612_ *YM2612);
 
-#endif
+#endif	// __YM2612_H__
