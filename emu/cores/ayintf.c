@@ -51,12 +51,12 @@ static DEV_DEF devDef_MAME =
 #ifdef EC_AY8910_EMU2149
 static DEVDEF_RWFUNC devFunc_Emu[] =
 {
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, PSG_writeIO},
-	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, PSG_readIO},
-	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, PSG_writeReg},
-	{RWF_REGISTER | RWF_QUICKREAD, DEVRW_A8D8, 0, PSG_readReg},
-	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, PSG_set_clock},
-	{RWF_SRATE | RWF_WRITE, DEVRW_VALUE, 0, PSG_set_rate},
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, EPSG_writeIO},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, EPSG_readIO},
+	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, EPSG_writeReg},
+	{RWF_REGISTER | RWF_QUICKREAD, DEVRW_A8D8, 0, EPSG_readReg},
+	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, EPSG_set_clock},
+	{RWF_SRATE | RWF_WRITE, DEVRW_VALUE, 0, EPSG_set_rate},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Emu =
@@ -64,12 +64,12 @@ static DEV_DEF devDef_Emu =
 	"YM2149", "EMU2149", FCC_EMU_,
 	
 	(DEVFUNC_START)device_start_ay8910_emu,
-	(DEVFUNC_CTRL)PSG_delete,
-	(DEVFUNC_CTRL)PSG_reset,
-	(DEVFUNC_UPDATE)PSG_calc_stereo,
+	(DEVFUNC_CTRL)EPSG_delete,
+	(DEVFUNC_CTRL)EPSG_reset,
+	(DEVFUNC_UPDATE)EPSG_calc_stereo,
 	
 	NULL,	// SetOptionBits
-	(DEVFUNC_OPTMASK)PSG_setMuteMask,
+	(DEVFUNC_OPTMASK)EPSG_setMuteMask,
 	ay8910_pan_emu,
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -111,7 +111,7 @@ static UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf
 #ifdef EC_AY8910_EMU2149
 static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 {
-	PSG* chip;
+	EPSG* chip;
 	UINT8 isYM;
 	UINT8 flags;
 	UINT32 clock;
@@ -129,12 +129,12 @@ static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 		rate = clock / 8;
 	SRATE_CUSTOM_HIGHEST(cfg->_genCfg.srMode, rate, cfg->_genCfg.smplRate);
 	
-	chip = PSG_new(clock, rate);
+	chip = EPSG_new(clock, rate);
 	if (chip == NULL)
 		return 0xFF;
-	PSG_set_quality(chip, 0);	// disable internal sample rate converter
-	PSG_setVolumeMode(chip, isYM ? 1 : 2);
-	PSG_setFlags(chip, flags);
+	EPSG_set_quality(chip, 0);	// disable internal sample rate converter
+	EPSG_setVolumeMode(chip, isYM ? 1 : 2);
+	EPSG_setFlags(chip, flags);
 	
 	chip->_devData.chipInf = chip;
 	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_Emu);
@@ -146,7 +146,7 @@ static void ay8910_pan_emu(void* chipptr, INT16* PanVals)
 	UINT8 curChn;
 	
 	for (curChn = 0; curChn < 3; curChn ++)
-		PSG_set_pan((PSG*)chipptr, curChn, PanVals[curChn]);
+		EPSG_set_pan((EPSG*)chipptr, curChn, PanVals[curChn]);
 	
 	return;
 }

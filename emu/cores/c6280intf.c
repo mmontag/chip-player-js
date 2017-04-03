@@ -46,8 +46,8 @@ static DEV_DEF devDef_MAME =
 #ifdef EC_C6280_OOTAKE
 static DEVDEF_RWFUNC devFunc_Ootake[] =
 {
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, OotakePSG_Write},
-	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, OotakePSG_Read},
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, OPSG_Write},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, OPSG_Read},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Ootake =
@@ -55,12 +55,12 @@ static DEV_DEF devDef_Ootake =
 	"HuC6280", "Ootake", FCC_OOTK,
 	
 	device_start_c6280_ootake,
-	OotakePSG_Deinit,
-	OotakePSG_ResetVolumeReg,	// TODO: not a "real" reset
-	OotakePSG_Mix,
+	OPSG_Deinit,
+	OPSG_ResetVolumeReg,	// TODO: not a "real" reset
+	OPSG_Mix,
 	
 	NULL,	// SetOptionBits
-	OotakePSG_SetMuteMask,
+	OPSG_SetMuteMask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -112,11 +112,11 @@ static UINT8 device_start_c6280_ootake(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	rate = cfg->clock / 16;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = OotakePSG_Init(cfg->clock, rate);
+	chip = OPSG_Init(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
-	OotakePSG_SetHoneyInTheSky(chip, cfg->flags);
+	OPSG_SetHoneyInTheSky(chip, cfg->flags);
 	
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;

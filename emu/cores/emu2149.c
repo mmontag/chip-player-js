@@ -56,7 +56,7 @@ static const uint8_t regmsk[16] = {
 #define GETA_BITS 24
 
 static void
-internal_refresh (PSG * psg)
+internal_refresh (EPSG * psg)
 {
   uint32_t clk = psg->clk;
   
@@ -78,41 +78,41 @@ internal_refresh (PSG * psg)
 }
 
 void
-PSG_set_clock(PSG * psg, UINT32 c)
+EPSG_set_clock(EPSG * psg, UINT32 c)
 {
   psg->clk = c;
   internal_refresh(psg);
 }
 
 void
-PSG_set_rate (PSG * psg, UINT32 r)
+EPSG_set_rate (EPSG * psg, UINT32 r)
 {
   psg->rate = r ? r : 44100;
   internal_refresh (psg);
 }
 
 void
-PSG_set_quality (PSG * psg, uint32_t q)
+EPSG_set_quality (EPSG * psg, uint32_t q)
 {
   psg->quality = q;
   internal_refresh (psg);
 }
 
-PSG *
-PSG_new (UINT32 c, UINT32 r)
+EPSG *
+EPSG_new (UINT32 c, UINT32 r)
 {
-  PSG *psg;
+  EPSG *psg;
   uint8_t i;
 
-  psg = (PSG *) calloc (1, sizeof (PSG));
+  psg = (EPSG *) calloc (1, sizeof (EPSG));
   if (psg == NULL)
     return NULL;
 
-  PSG_setVolumeMode (psg, EMU2149_VOL_DEFAULT);
+  EPSG_setVolumeMode (psg, EMU2149_VOL_DEFAULT);
   psg->clk = c;
   psg->rate = r ? r : 44100;
   psg->chp_flags = 0x00;
-  PSG_set_quality (psg, 0);
+  EPSG_set_quality (psg, 0);
 
   for (i = 0; i < 3; i++)
   {
@@ -120,13 +120,13 @@ PSG_new (UINT32 c, UINT32 r)
     centre_panning(psg->pan[i]);
   }
 
-  PSG_setMask(psg, 0x00);
+  EPSG_setMask(psg, 0x00);
 
   return psg;
 }
 
 void
-PSG_setFlags (PSG * psg, UINT8 flags)
+EPSG_setFlags (EPSG * psg, UINT8 flags)
 {
   psg->chp_flags = flags;
 
@@ -150,7 +150,7 @@ PSG_setFlags (PSG * psg, UINT8 flags)
 }
 
 void
-PSG_setVolumeMode (PSG * psg, int type)
+EPSG_setVolumeMode (EPSG * psg, int type)
 {
   switch (type)
   {
@@ -167,7 +167,7 @@ PSG_setVolumeMode (PSG * psg, int type)
 }
 
 uint32_t
-PSG_setMask (PSG *psg, uint32_t mask)
+EPSG_setMask (EPSG *psg, uint32_t mask)
 {
   uint32_t ret = 0;
   if(psg)
@@ -179,7 +179,7 @@ PSG_setMask (PSG *psg, uint32_t mask)
 }
 
 uint32_t
-PSG_toggleMask (PSG *psg, uint32_t mask)
+EPSG_toggleMask (EPSG *psg, uint32_t mask)
 {
   uint32_t ret = 0;
   if(psg)
@@ -191,14 +191,14 @@ PSG_toggleMask (PSG *psg, uint32_t mask)
 }
 
 void
-PSG_setMuteMask (PSG *psg, UINT32 mask)
+EPSG_setMuteMask (EPSG *psg, UINT32 mask)
 {
   psg->mask = mask;
   return;
 }
 
 void
-PSG_reset (PSG * psg)
+EPSG_reset (EPSG * psg)
 {
   int i;
 
@@ -234,36 +234,36 @@ PSG_reset (PSG * psg)
 }
 
 void
-PSG_delete (PSG * psg)
+EPSG_delete (EPSG * psg)
 {
   free (psg);
 }
 
 UINT8
-PSG_readIO (PSG * psg, UINT8 adr)
+EPSG_readIO (EPSG * psg, UINT8 adr)
 {
   // note: "adr" parameter is not used
   return (UINT8) (psg->reg[psg->adr]);
 }
 
 UINT8
-PSG_readReg (PSG * psg, UINT8 reg)
+EPSG_readReg (EPSG * psg, UINT8 reg)
 {
   return (UINT8) (psg->reg[reg & 0x1f]);
 
 }
 
 void
-PSG_writeIO (PSG * psg, UINT8 adr, UINT8 val)
+EPSG_writeIO (EPSG * psg, UINT8 adr, UINT8 val)
 {
   if (adr & 1)
-    PSG_writeReg (psg, psg->adr, val);
+    EPSG_writeReg (psg, psg->adr, val);
   else
     psg->adr = val & 0x1f;
 }
 
 INLINE void
-update_output (PSG * psg)
+update_output (EPSG * psg)
 {
 
   int i, noise;
@@ -333,7 +333,7 @@ update_output (PSG * psg)
 
     psg->ch_out[i] = 0;
 
-    if (psg->mask&PSG_MASK_CH(i))
+    if (psg->mask&EPSG_MASK_CH(i))
       continue;
 
     if ((psg->tmask[i]||psg->edge[i]) && (psg->nmask[i]||noise))
@@ -352,12 +352,12 @@ update_output (PSG * psg)
 
 #if 0
 INLINE int16_t
-mix_output(PSG *psg) {
+mix_output(EPSG *psg) {
   return (int16_t)(psg->out = psg->ch_out[0] + psg->ch_out[1] + psg->ch_out[2]);
 }
 
 int16_t
-PSG_calc (PSG * psg)
+EPSG_calc (EPSG * psg)
 {
   if (!psg->quality) {
     update_output(psg);
@@ -377,7 +377,7 @@ PSG_calc (PSG * psg)
 #endif
 
 INLINE void
-mix_output_stereo(PSG *psg, int32_t out[2])
+mix_output_stereo(EPSG *psg, int32_t out[2])
 {
   int i;
 
@@ -404,7 +404,7 @@ mix_output_stereo(PSG *psg, int32_t out[2])
 }
 
 void
-PSG_calc_stereo (PSG * psg, UINT32 samples, DEV_SMPL **out)
+EPSG_calc_stereo (EPSG * psg, UINT32 samples, DEV_SMPL **out)
 {
   DEV_SMPL *bufMO = out[0];
   DEV_SMPL *bufRO = out[1];
@@ -444,7 +444,7 @@ PSG_calc_stereo (PSG * psg, UINT32 samples, DEV_SMPL **out)
 }
 
 void
-PSG_writeReg (PSG * psg, UINT8 reg, UINT8 val)
+EPSG_writeReg (EPSG * psg, UINT8 reg, UINT8 val)
 {
   int c;
 
@@ -509,7 +509,7 @@ PSG_writeReg (PSG * psg, UINT8 reg, UINT8 val)
   return;
 }
 
-void PSG_set_pan (PSG * psg, uint8_t ch, int16_t pan)
+void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan)
 {
   if (ch >= 3)
     return;

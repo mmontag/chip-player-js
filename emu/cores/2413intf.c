@@ -48,8 +48,8 @@ static DEV_DEF devDef_MAME =
 #ifdef EC_YM2413_EMU2413
 static DEVDEF_RWFUNC devFunc_Emu[] =
 {
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, OPLL_writeIO},
-	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, OPLL_writeReg},
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, EOPLL_writeIO},
+	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, EOPLL_writeReg},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef_Emu =
@@ -57,12 +57,12 @@ static DEV_DEF devDef_Emu =
 	"YM2413", "EMU2413", FCC_EMU_,
 	
 	device_start_ym2413_emu,
-	(DEVFUNC_CTRL)OPLL_delete,
-	(DEVFUNC_CTRL)OPLL_reset,
-	(DEVFUNC_UPDATE)OPLL_calc_stereo,
+	(DEVFUNC_CTRL)EOPLL_delete,
+	(DEVFUNC_CTRL)EOPLL_reset,
+	(DEVFUNC_UPDATE)EOPLL_calc_stereo,
 	
 	NULL,	// SetOptionBits
-	(DEVFUNC_OPTMASK)OPLL_SetMuteMask,
+	(DEVFUNC_OPTMASK)EOPLL_SetMuteMask,
 	ym2413_pan_emu,
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -109,18 +109,18 @@ static UINT8 device_start_ym2413_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 #ifdef EC_YM2413_EMU2413
 static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
-	OPLL* chip;
+	EOPLL* chip;
 	UINT32 rate;
 	
 	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	chip = OPLL_new(cfg->clock, rate);
+	chip = EOPLL_new(cfg->clock, rate);
 	if (chip == NULL)
 		return 0xFF;
 	
-	OPLL_set_quality(chip, 0);	// disable internal sample rate converter
-	OPLL_SetChipMode(chip, cfg->flags);
+	EOPLL_set_quality(chip, 0);	// disable internal sample rate converter
+	EOPLL_SetChipMode(chip, cfg->flags);
 	
 	chip->_devData.chipInf = chip;
 	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_Emu);
@@ -132,7 +132,7 @@ static void ym2413_pan_emu(void* chipptr, INT16* PanVals)
 	UINT8 curChn;
 	
 	for (curChn = 0; curChn < 14; curChn ++)
-		OPLL_set_pan((OPLL*)chipptr, curChn, PanVals[curChn]);
+		EOPLL_set_pan((EOPLL*)chipptr, curChn, PanVals[curChn]);
 	
 	return;
 }

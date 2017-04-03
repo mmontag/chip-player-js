@@ -10,14 +10,14 @@
 #define EMU2149_VOL_YM2149 0
 #define EMU2149_VOL_AY_3_8910 1
 
-#define PSG_MASK_CH(x) (1<<(x))
+#define EPSG_MASK_CH(x) (1<<(x))
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-  typedef struct __PSG
+  typedef struct __EPSG
   {
     DEV_DATA _devData;
 
@@ -74,26 +74,26 @@ extern "C"
 
     uint8_t chp_type;
     uint8_t chp_flags;
-  } PSG;
+  } EPSG;
 
-  void PSG_set_quality (PSG * psg, uint32_t q);
-  void PSG_set_clock(PSG * psg, UINT32 c);
-  void PSG_set_rate (PSG * psg, UINT32 r);
-  PSG *PSG_new (UINT32 clk, UINT32 rate);
-  void PSG_reset (PSG *);
-  void PSG_delete (PSG *);
-  void PSG_writeReg (PSG *, UINT8 reg, UINT8 val);
-  void PSG_writeIO (PSG * psg, UINT8 adr, UINT8 val);
-  UINT8 PSG_readReg (PSG * psg, UINT8 reg);
-  UINT8 PSG_readIO (PSG * psg, UINT8 adr);
-  int16_t PSG_calc (PSG *);
-  void PSG_calc_stereo (PSG * psg, UINT32 samples, DEV_SMPL **out);
-  void PSG_setFlags (PSG * psg, UINT8 flags);
-  void PSG_setVolumeMode (PSG * psg, int type);
-  uint32_t PSG_setMask (PSG *, uint32_t mask);
-  uint32_t PSG_toggleMask (PSG *, uint32_t mask);
-  void PSG_setMuteMask (PSG *, UINT32 mask);
-  void PSG_set_pan (PSG * psg, uint8_t ch, int16_t pan);
+  void EPSG_set_quality (EPSG * psg, uint32_t q);
+  void EPSG_set_clock(EPSG * psg, UINT32 c);
+  void EPSG_set_rate (EPSG * psg, UINT32 r);
+  EPSG *EPSG_new (UINT32 clk, UINT32 rate);
+  void EPSG_reset (EPSG *);
+  void EPSG_delete (EPSG *);
+  void EPSG_writeReg (EPSG *, UINT8 reg, UINT8 val);
+  void EPSG_writeIO (EPSG * psg, UINT8 adr, UINT8 val);
+  UINT8 EPSG_readReg (EPSG * psg, UINT8 reg);
+  UINT8 EPSG_readIO (EPSG * psg, UINT8 adr);
+  int16_t EPSG_calc (EPSG *);
+  void EPSG_calc_stereo (EPSG * psg, UINT32 samples, DEV_SMPL **out);
+  void EPSG_setFlags (EPSG * psg, UINT8 flags);
+  void EPSG_setVolumeMode (EPSG * psg, int type);
+  uint32_t EPSG_setMask (EPSG *, uint32_t mask);
+  uint32_t EPSG_toggleMask (EPSG *, uint32_t mask);
+  void EPSG_setMuteMask (EPSG *, UINT32 mask);
+  void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan);
     
 #ifdef __cplusplus
 }

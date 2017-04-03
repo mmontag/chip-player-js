@@ -539,7 +539,7 @@ set_VOL(huc6280_state* info)
 		ＰＳＧの出力をミックスします。
 -----------------------------------------------------------------------------*/
 void
-OotakePSG_Mix(
+OPSG_Mix(
 	void*		chip,
 	UINT32		nSample,	// 書き出すサンプル数
 	DEV_SMPL**	pDst)		// 出力先バッファ //Kitao更新。PSG専用バッファにしたためSint16に。
@@ -683,7 +683,7 @@ psg_reset(huc6280_state* info)
 		ＰＳＧを初期化します。
 -----------------------------------------------------------------------------*/
 void*
-OotakePSG_Init(
+OPSG_Init(
 	UINT32		clock,
 	UINT32		sampleRate)
 {
@@ -711,7 +711,7 @@ OotakePSG_Init(
 
 	psg_reset(info);
 
-	OotakePSG_SetMuteMask(info, 0x00);
+	OPSG_SetMuteMask(info, 0x00);
 
 	info->SAMPLE_RATE = sampleRate;
 	info->RESMPL_RATE = info->PSG_FRQ / OVERSAMPLE_RATE / info->SAMPLE_RATE;
@@ -725,7 +725,7 @@ OotakePSG_Init(
 		ＰＳＧを破棄します。
 -----------------------------------------------------------------------------*/
 void
-OotakePSG_Deinit(void* chip)
+OPSG_Deinit(void* chip)
 {
 	huc6280_state* info = (huc6280_state*)chip;
 	
@@ -738,7 +738,7 @@ OotakePSG_Deinit(void* chip)
 		ＰＳＧポートの読み出しに対する動作を記述します。
 -----------------------------------------------------------------------------*/
 UINT8
-OotakePSG_Read(
+OPSG_Read(
 	void*	chip,
 	UINT8	regNum)
 {
@@ -756,7 +756,7 @@ OotakePSG_Read(
 		ＰＳＧポートの書き込みに対する動作を記述します。
 -----------------------------------------------------------------------------*/
 void
-OotakePSG_Write(
+OPSG_Write(
 	void*		chip,
 	UINT8		regNum,
 	UINT8		data)
@@ -783,7 +783,7 @@ OotakePSG_Write(
 
 //Kitao追加
 void
-OotakePSG_ResetVolumeReg(void* chip)
+OPSG_ResetVolumeReg(void* chip)
 {
 	huc6280_state* info = (huc6280_state*)chip;
 	int	i;
@@ -803,7 +803,7 @@ OotakePSG_ResetVolumeReg(void* chip)
 
 //Kitao追加
 void
-OotakePSG_SetMutePsgChannel(
+OPSG_SetMutePsgChannel(
 	void*	chip,
 	UINT8	num,
 	UINT8	bMute)
@@ -818,19 +818,19 @@ OotakePSG_SetMutePsgChannel(
 	}
 }
 
-void OotakePSG_SetMuteMask(void* chip, UINT32 MuteMask)
+void OPSG_SetMuteMask(void* chip, UINT32 MuteMask)
 {
 	Uint8 CurChn;
 	
 	for (CurChn = 0; CurChn < N_CHANNEL; CurChn ++)
-		OotakePSG_SetMutePsgChannel(chip, CurChn, (MuteMask >> CurChn) & 0x01);
+		OPSG_SetMutePsgChannel(chip, CurChn, (MuteMask >> CurChn) & 0x01);
 	
 	return;
 }
 
 //Kitao追加
 UINT8
-OotakePSG_GetMutePsgChannel(
+OPSG_GetMutePsgChannel(
 	void*	chip,
 	UINT8	num)
 {
@@ -841,7 +841,7 @@ OotakePSG_GetMutePsgChannel(
 
 //Kitao追加。v2.60
 void
-OotakePSG_SetHoneyInTheSky(
+OPSG_SetHoneyInTheSky(
 	void*	chip,
 	UINT8	bHoneyInTheSky)
 {

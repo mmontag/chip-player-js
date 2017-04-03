@@ -231,13 +231,13 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 #ifdef EC_YM3812_NUKED
 static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
-	opl3_chip* opl3;
+	nopl3_chip* opl3;
 	UINT32 rate;
 	
 	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	opl3 = (opl3_chip*)calloc(1, sizeof(opl3_chip));
+	opl3 = (nopl3_chip*)calloc(1, sizeof(nopl3_chip));
 	if (opl3 == NULL)
 		return 0xFF;
 	

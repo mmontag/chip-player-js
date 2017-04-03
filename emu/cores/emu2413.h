@@ -9,17 +9,17 @@
 extern "C" {
 #endif
 
-enum OPLL_TONE_ENUM {OPLL_2413_TONE=0, OPLL_VRC7_TONE=1, OPLL_281B_TONE=2} ;
+enum EOPLL_TONE_ENUM {EOPLL_2413_TONE=0, EOPLL_VRC7_TONE=1, EOPLL_281B_TONE=2} ;
 
 /* voice data */
-typedef struct __OPLL_PATCH {
+typedef struct __EOPLL_PATCH {
   uint8_t TL,FB,EG,ML,AR,DR,SL,RR,KR,KL,AM,PM,WF ;
-} OPLL_PATCH ;
+} EOPLL_PATCH ;
 
 /* slot */
-typedef struct __OPLL_SLOT {
+typedef struct __EOPLL_SLOT {
 
-  const OPLL_PATCH *patch;
+  const EOPLL_PATCH *patch;
 
   uint8_t type ;          /* 0 : modulator 1 : carrier */
 
@@ -45,19 +45,19 @@ typedef struct __OPLL_SLOT {
   uint32_t eg_dphase ;  /* Phase increment amount */
   uint32_t egout ;      /* output */
 
-} OPLL_SLOT ;
+} EOPLL_SLOT ;
 
 /* Mask */
-#define OPLL_MASK_CH(x) (1<<(x))
-#define OPLL_MASK_HH (1<<(9))
-#define OPLL_MASK_CYM (1<<(10))
-#define OPLL_MASK_TOM (1<<(11))
-#define OPLL_MASK_SD (1<<(12))
-#define OPLL_MASK_BD (1<<(13))
-#define OPLL_MASK_RHYTHM ( OPLL_MASK_HH | OPLL_MASK_CYM | OPLL_MASK_TOM | OPLL_MASK_SD | OPLL_MASK_BD )
+#define EOPLL_MASK_CH(x) (1<<(x))
+#define EOPLL_MASK_HH (1<<(9))
+#define EOPLL_MASK_CYM (1<<(10))
+#define EOPLL_MASK_TOM (1<<(11))
+#define EOPLL_MASK_SD (1<<(12))
+#define EOPLL_MASK_BD (1<<(13))
+#define EOPLL_MASK_RHYTHM ( EOPLL_MASK_HH | EOPLL_MASK_CYM | EOPLL_MASK_TOM | EOPLL_MASK_SD | EOPLL_MASK_BD )
 
 /* opll */
-typedef struct __OPLL {
+typedef struct __EOPLL {
 
   DEV_DATA _devData;
 
@@ -100,10 +100,10 @@ typedef struct __OPLL {
   uint8_t key_status[9] ;
 
   /* Slot */
-  OPLL_SLOT slot[18] ;
+  EOPLL_SLOT slot[18] ;
 
   /* Voice Data */
-  OPLL_PATCH patch[19*2] ;
+  EOPLL_PATCH patch[19*2] ;
   //uint8_t patch_update[2] ; /* flag for check patch update */
 
   /* Phase delta for LFO */
@@ -123,41 +123,41 @@ typedef struct __OPLL {
   /* Output of each channels / 0-8:TONE, 9:BD 10:HH 11:SD, 12:TOM, 13:CYM, 14:Reserved for DAC */
   int16_t ch_out[15];
 
-} OPLL ;
+} EOPLL ;
 
 /* Create Object */
-OPLL *OPLL_new(uint32_t clk, uint32_t rate) ;
-void OPLL_delete(OPLL *) ;
+EOPLL *EOPLL_new(uint32_t clk, uint32_t rate) ;
+void EOPLL_delete(EOPLL *) ;
 
 /* Setup */
-void OPLL_reset(OPLL *) ;
-void OPLL_reset_patch(OPLL *, int32_t) ;
-void OPLL_set_rate(OPLL *opll, uint32_t r) ;
-void OPLL_set_quality(OPLL *opll, uint8_t q) ;
-void OPLL_set_pan(OPLL *, uint32_t ch, int16_t pan);
+void EOPLL_reset(EOPLL *) ;
+void EOPLL_reset_patch(EOPLL *, int32_t) ;
+void EOPLL_set_rate(EOPLL *opll, uint32_t r) ;
+void EOPLL_set_quality(EOPLL *opll, uint8_t q) ;
+void EOPLL_set_pan(EOPLL *, uint32_t ch, int16_t pan);
 
 /* Port/Register access */
-void OPLL_writeIO(OPLL *, UINT8 reg, UINT8 val) ;
-void OPLL_writeReg(OPLL *, UINT8 reg, UINT8 val) ;
+void EOPLL_writeIO(EOPLL *, UINT8 reg, UINT8 val) ;
+void EOPLL_writeReg(EOPLL *, UINT8 reg, UINT8 val) ;
 
 /* Synthsize */
-int16_t OPLL_calc(OPLL *) ;
-void OPLL_calc_stereo (OPLL * opll, UINT32 samples, DEV_SMPL **out) ;
+int16_t EOPLL_calc(EOPLL *) ;
+void EOPLL_calc_stereo (EOPLL * opll, UINT32 samples, DEV_SMPL **out) ;
 
 /* Misc */
-void OPLL_setPatch(OPLL *, const uint8_t *dump) ;
-void OPLL_copyPatch(OPLL *, int32_t, OPLL_PATCH *) ;
-void OPLL_forceRefresh(OPLL *) ;
+void EOPLL_setPatch(EOPLL *, const uint8_t *dump) ;
+void EOPLL_copyPatch(EOPLL *, int32_t, EOPLL_PATCH *) ;
+void EOPLL_forceRefresh(EOPLL *) ;
 /* Utility */
-void OPLL_dump2patch(const uint8_t *dump, OPLL_PATCH *patch) ;
-void OPLL_patch2dump(const OPLL_PATCH *patch, uint8_t *dump) ;
-void OPLL_getDefaultPatch(int32_t type, int32_t num, OPLL_PATCH *) ;
+void EOPLL_dump2patch(const uint8_t *dump, EOPLL_PATCH *patch) ;
+void EOPLL_patch2dump(const EOPLL_PATCH *patch, uint8_t *dump) ;
+void EOPLL_getDefaultPatch(int32_t type, int32_t num, EOPLL_PATCH *) ;
 
 /* Channel Mask */
-uint32_t OPLL_setMask(OPLL *, uint32_t mask) ;
-uint32_t OPLL_toggleMask(OPLL *, uint32_t mask) ;
-void OPLL_SetMuteMask(OPLL* opll, UINT32 MuteMask);
-void OPLL_SetChipMode(OPLL* opll, UINT8 Mode);
+uint32_t EOPLL_setMask(EOPLL *, uint32_t mask) ;
+uint32_t EOPLL_toggleMask(EOPLL *, uint32_t mask) ;
+void EOPLL_SetMuteMask(EOPLL* opll, UINT32 MuteMask);
+void EOPLL_SetChipMode(EOPLL* opll, UINT8 Mode);
 
 #ifdef __cplusplus
 }

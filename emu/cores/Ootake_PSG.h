@@ -28,50 +28,50 @@
 ** 関数のプロトタイプ宣言を行ないます．
 **---------------------------------------------------------------------------*/
 void*
-OotakePSG_Init(
+OPSG_Init(
 	UINT32		clock,
 	UINT32		sampleRate);
 
 void
-OotakePSG_Deinit(void* chip);
+OPSG_Deinit(void* chip);
 
 void
-OotakePSG_Mix(
+OPSG_Mix(
 	void*		chip,
 	UINT32		nSample,			// 書き出すサンプル数
 	DEV_SMPL**	pDst);				// 出力先バッファ
 
 UINT8
-OotakePSG_Read(void* chip, UINT8 regNum);
+OPSG_Read(void* chip, UINT8 regNum);
 
 void
-OotakePSG_Write(
+OPSG_Write(
 	void*		chip,
 	UINT8		regNum,
 	UINT8		data);
 
 //Kitao追加
 void
-OotakePSG_ResetVolumeReg(void* chip);
+OPSG_ResetVolumeReg(void* chip);
 
 //Kitao追加
 void
-OotakePSG_SetMutePsgChannel(
+OPSG_SetMutePsgChannel(
 	void*	chip,
 	UINT8	num,
 	UINT8	bMute);
 
-void OotakePSG_SetMuteMask(void* chip, UINT32 MuteMask);
+void OPSG_SetMuteMask(void* chip, UINT32 MuteMask);
 
 //Kitao追加
 UINT8
-OotakePSG_GetMutePsgChannel(
+OPSG_GetMutePsgChannel(
 	void*	chip,
 	UINT8	num);
 
 //Kitao追加。v2.60
 void
-OotakePSG_SetHoneyInTheSky(
+OPSG_SetHoneyInTheSky(
 	void*	chip,
 	UINT8	bHoneyInTheSky);
 

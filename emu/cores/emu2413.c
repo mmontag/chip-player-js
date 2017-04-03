@@ -194,10 +194,10 @@ static int16_t DB2LIN_TABLE[(DB_MUTE + DB_MUTE) * 2];
 static uint16_t AR_ADJUST_TABLE[1 << EG_BITS];
 
 /* Empty voice data */
-static const OPLL_PATCH null_patch = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+static const EOPLL_PATCH null_patch = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /* Basic voice Data */
-static OPLL_PATCH default_patch[OPLL_TONE_NUM][(16 + 3) * 2];
+static EOPLL_PATCH default_patch[OPLL_TONE_NUM][(16 + 3) * 2];
 
 /* Definition of envelope mode */
 enum OPLL_EG_STATE 
@@ -327,7 +327,7 @@ makeAmTable (void)
 
 /* Phase increment counter table */
 static void
-makeDphaseTable (OPLL * opll)
+makeDphaseTable (EOPLL * opll)
 {
   uint32_t fnum, block, ML;
   uint32_t mltable[16] =
@@ -374,7 +374,7 @@ makeTllTable (void)
 
 /* Rate Table for Attack */
 static void
-makeDphaseARTable (OPLL * opll)
+makeDphaseARTable (EOPLL * opll)
 {
   int32_t AR, Rks, RM, RL;
 
@@ -402,7 +402,7 @@ makeDphaseARTable (OPLL * opll)
 
 /* Rate Table for Decay and Release */
 static void
-makeDphaseDRTable (OPLL * opll)
+makeDphaseDRTable (EOPLL * opll)
 {
   int32_t DR, Rks, RM, RL;
 
@@ -443,7 +443,7 @@ makeRksTable (void)
 }
 
 void
-OPLL_dump2patch (const uint8_t * dump, OPLL_PATCH * patch)
+EOPLL_dump2patch (const uint8_t * dump, EOPLL_PATCH * patch)
 {
   patch[0].AM = (dump[0] >> 7) & 1;
   patch[1].AM = (dump[1] >> 7) & 1;
@@ -472,9 +472,9 @@ OPLL_dump2patch (const uint8_t * dump, OPLL_PATCH * patch)
 }
 
 void
-OPLL_getDefaultPatch (int32_t type, int32_t num, OPLL_PATCH * patch)
+EOPLL_getDefaultPatch (int32_t type, int32_t num, EOPLL_PATCH * patch)
 {
-  OPLL_dump2patch (default_inst[type] + num * 8, patch);
+  EOPLL_dump2patch (default_inst[type] + num * 8, patch);
 }
 
 static void
@@ -484,26 +484,26 @@ makeDefaultPatch ()
 
   for (i = 0; i < OPLL_TONE_NUM; i++)
     for (j = 0; j < 19; j++)
-      OPLL_getDefaultPatch (i, j, &default_patch[i][j * 2]);
+      EOPLL_getDefaultPatch (i, j, &default_patch[i][j * 2]);
 
 }
 
 void
-OPLL_setPatch (OPLL * opll, const uint8_t * dump)
+EOPLL_setPatch (EOPLL * opll, const uint8_t * dump)
 {
-  OPLL_PATCH patch[2];
+  EOPLL_PATCH patch[2];
   int i;
 
   for (i = 0; i < 19; i++)
   {
-    OPLL_dump2patch (dump + i * 8, patch);
-    memcpy (&opll->patch[i*2+0], &patch[0], sizeof (OPLL_PATCH));
-    memcpy (&opll->patch[i*2+1], &patch[1], sizeof (OPLL_PATCH));
+    EOPLL_dump2patch (dump + i * 8, patch);
+    memcpy (&opll->patch[i*2+0], &patch[0], sizeof (EOPLL_PATCH));
+    memcpy (&opll->patch[i*2+1], &patch[1], sizeof (EOPLL_PATCH));
   }
 }
 
 void
-OPLL_patch2dump (const OPLL_PATCH * patch, uint8_t * dump)
+EOPLL_patch2dump (const EOPLL_PATCH * patch, uint8_t * dump)
 {
   dump[0] = (uint8_t) ((patch[0].AM << 7) + (patch[0].PM << 6) + (patch[0].EG << 5) + (patch[0].KR << 4) + patch[0].ML);
   dump[1] = (uint8_t) ((patch[1].AM << 7) + (patch[1].PM << 6) + (patch[1].EG << 5) + (patch[1].KR << 4) + patch[1].ML);
@@ -522,7 +522,7 @@ OPLL_patch2dump (const OPLL_PATCH * patch, uint8_t * dump)
 ************************************************************/
 
 INLINE uint32_t
-calc_eg_dphase (OPLL * opll, OPLL_SLOT * slot)
+calc_eg_dphase (EOPLL * opll, EOPLL_SLOT * slot)
 {
 
   switch (slot->eg_mode)
@@ -588,7 +588,7 @@ calc_eg_dphase (OPLL * opll, OPLL_SLOT * slot)
 
 /* Slot key on  */
 INLINE void
-slotOn (OPLL * opll, OPLL_SLOT * slot)
+slotOn (EOPLL * opll, EOPLL_SLOT * slot)
 {
   slot->eg_mode = ATTACK;
   slot->eg_phase = 0;
@@ -598,7 +598,7 @@ slotOn (OPLL * opll, OPLL_SLOT * slot)
 
 /* Slot key on without reseting the phase */
 INLINE void
-slotOn2 (OPLL * opll, OPLL_SLOT * slot)
+slotOn2 (EOPLL * opll, EOPLL_SLOT * slot)
 {
   slot->eg_mode = ATTACK;
   slot->eg_phase = 0;
@@ -607,7 +607,7 @@ slotOn2 (OPLL * opll, OPLL_SLOT * slot)
 
 /* Slot key off */
 INLINE void
-slotOff (OPLL * opll, OPLL_SLOT * slot)
+slotOff (EOPLL * opll, EOPLL_SLOT * slot)
 {
   if (slot->eg_mode == ATTACK)
     slot->eg_phase = EXPAND_BITS (AR_ADJUST_TABLE[HIGHBITS (slot->eg_phase, EG_DP_BITS - EG_BITS)], EG_BITS, EG_DP_BITS);
@@ -617,7 +617,7 @@ slotOff (OPLL * opll, OPLL_SLOT * slot)
 
 /* Channel key on */
 INLINE void
-keyOn (OPLL * opll, int32_t i)
+keyOn (EOPLL * opll, int32_t i)
 {
   if (!opll->slot_on_flag[i * 2])
     slotOn (opll, MOD(opll,i));
@@ -628,7 +628,7 @@ keyOn (OPLL * opll, int32_t i)
 
 /* Channel key off */
 INLINE void
-keyOff (OPLL * opll, int32_t i)
+keyOff (EOPLL * opll, int32_t i)
 {
   if (opll->slot_on_flag[i * 2 + 1])
     slotOff (opll, CAR(opll,i));
@@ -636,34 +636,34 @@ keyOff (OPLL * opll, int32_t i)
 }
 
 INLINE void
-keyOn_BD (OPLL * opll)
+keyOn_BD (EOPLL * opll)
 {
   keyOn (opll, 6);
 }
 
 INLINE void
-keyOn_SD (OPLL * opll)
+keyOn_SD (EOPLL * opll)
 {
   if (!opll->slot_on_flag[SLOT_SD])
     slotOn (opll, CAR(opll,7));
 }
 
 INLINE void
-keyOn_TOM (OPLL * opll)
+keyOn_TOM (EOPLL * opll)
 {
   if (!opll->slot_on_flag[SLOT_TOM])
     slotOn (opll, MOD(opll,8));
 }
 
 INLINE void
-keyOn_HH (OPLL * opll)
+keyOn_HH (EOPLL * opll)
 {
   if (!opll->slot_on_flag[SLOT_HH])
     slotOn2 (opll, MOD(opll,7));
 }
 
 INLINE void
-keyOn_CYM (OPLL * opll)
+keyOn_CYM (EOPLL * opll)
 {
   if (!opll->slot_on_flag[SLOT_CYM])
     slotOn2 (opll, CAR(opll,8));
@@ -671,34 +671,34 @@ keyOn_CYM (OPLL * opll)
 
 /* Drum key off */
 INLINE void
-keyOff_BD (OPLL * opll)
+keyOff_BD (EOPLL * opll)
 {
   keyOff (opll, 6);
 }
 
 INLINE void
-keyOff_SD (OPLL * opll)
+keyOff_SD (EOPLL * opll)
 {
   if (opll->slot_on_flag[SLOT_SD])
     slotOff (opll, CAR(opll,7));
 }
 
 INLINE void
-keyOff_TOM (OPLL * opll)
+keyOff_TOM (EOPLL * opll)
 {
   if (opll->slot_on_flag[SLOT_TOM])
     slotOff (opll, MOD(opll,8));
 }
 
 INLINE void
-keyOff_HH (OPLL * opll)
+keyOff_HH (EOPLL * opll)
 {
   if (opll->slot_on_flag[SLOT_HH])
     slotOff (opll, MOD(opll,7));
 }
 
 INLINE void
-keyOff_CYM (OPLL * opll)
+keyOff_CYM (EOPLL * opll)
 {
   if (opll->slot_on_flag[SLOT_CYM])
     slotOff (opll, CAR(opll,8));
@@ -706,7 +706,7 @@ keyOff_CYM (OPLL * opll)
 
 /* Change a voice */
 INLINE void
-setPatch (OPLL * opll, int32_t i, uint8_t num)
+setPatch (EOPLL * opll, int32_t i, uint8_t num)
 {
   opll->patch_number[i] = num;
   MOD(opll,i)->patch = &opll->patch[num * 2 + 0];
@@ -715,14 +715,14 @@ setPatch (OPLL * opll, int32_t i, uint8_t num)
 
 /* Change a rhythm voice */
 INLINE void
-setSlotPatch (OPLL_SLOT * slot, OPLL_PATCH * patch)
+setSlotPatch (EOPLL_SLOT * slot, EOPLL_PATCH * patch)
 {
   slot->patch = patch;
 }
 
 /* Set sustine parameter */
 INLINE void
-setSustine (OPLL * opll, uint8_t c, uint8_t sustine)
+setSustine (EOPLL * opll, uint8_t c, uint8_t sustine)
 {
   CAR(opll,c)->sustine = sustine;
   if (MOD(opll,c)->type)
@@ -731,20 +731,20 @@ setSustine (OPLL * opll, uint8_t c, uint8_t sustine)
 
 /* Volume : 6bit ( Volume register << 2 ) */
 INLINE void
-setVolume (OPLL * opll, uint8_t c, uint8_t volume)
+setVolume (EOPLL * opll, uint8_t c, uint8_t volume)
 {
   CAR(opll,c)->volume = volume;
 }
 
 INLINE void
-setSlotVolume (OPLL_SLOT * slot, uint8_t volume)
+setSlotVolume (EOPLL_SLOT * slot, uint8_t volume)
 {
   slot->volume = volume;
 }
 
 /* Set F-Number ( fnum : 9bit ) */
 INLINE void
-setFnumber (OPLL * opll, uint8_t c, uint16_t fnum)
+setFnumber (EOPLL * opll, uint8_t c, uint16_t fnum)
 {
   CAR(opll,c)->fnum = fnum;
   MOD(opll,c)->fnum = fnum;
@@ -752,7 +752,7 @@ setFnumber (OPLL * opll, uint8_t c, uint16_t fnum)
 
 /* Set Block data (block : 3bit ) */
 INLINE void
-setBlock (OPLL * opll, uint8_t c, uint8_t block)
+setBlock (EOPLL * opll, uint8_t c, uint8_t block)
 {
   CAR(opll,c)->block = block;
   MOD(opll,c)->block = block;
@@ -760,7 +760,7 @@ setBlock (OPLL * opll, uint8_t c, uint8_t block)
 
 /* Change Rhythm Mode */
 INLINE void
-update_rhythm_mode (OPLL * opll)
+update_rhythm_mode (EOPLL * opll)
 {
   if (opll->patch_number[6] & 0x10)
   {
@@ -822,7 +822,7 @@ update_rhythm_mode (OPLL * opll)
 }
 
 INLINE void
-update_key_status (OPLL * opll)
+update_key_status (EOPLL * opll)
 {
   int ch;
 
@@ -841,9 +841,9 @@ update_key_status (OPLL * opll)
 }
 
 void
-OPLL_copyPatch (OPLL * opll, int32_t num, OPLL_PATCH * patch)
+EOPLL_copyPatch (EOPLL * opll, int32_t num, EOPLL_PATCH * patch)
 {
-  memcpy (&opll->patch[num], patch, sizeof (OPLL_PATCH));
+  memcpy (&opll->patch[num], patch, sizeof (EOPLL_PATCH));
 }
 
 /***********************************************************
@@ -853,7 +853,7 @@ OPLL_copyPatch (OPLL * opll, int32_t num, OPLL_PATCH * patch)
 ***********************************************************/
 
 static void
-OPLL_SLOT_reset (OPLL_SLOT * slot, uint8_t type)
+EOPLL_SLOT_reset (EOPLL_SLOT * slot, uint8_t type)
 {
   slot->type = type;
   slot->sintbl = waveform[0];
@@ -877,7 +877,7 @@ OPLL_SLOT_reset (OPLL_SLOT * slot, uint8_t type)
 }
 
 static void
-internal_refresh (OPLL * opll)
+internal_refresh (EOPLL * opll)
 {
   opll->native = (fabs((opll->clk / 72.0f) - opll->rate) < 2.0f);
   makeDphaseTable (opll);
@@ -888,7 +888,7 @@ internal_refresh (OPLL * opll)
 }
 
 static void
-maketables (OPLL * opll, uint32_t c, uint32_t r)
+maketables (EOPLL * opll, uint32_t c, uint32_t r)
 {
   if (tablesInit == 0)
   {
@@ -911,13 +911,13 @@ maketables (OPLL * opll, uint32_t c, uint32_t r)
   }
 }
 
-OPLL *
-OPLL_new (uint32_t clk, uint32_t rate)
+EOPLL *
+EOPLL_new (uint32_t clk, uint32_t rate)
 {
-  OPLL *opll;
+  EOPLL *opll;
   int32_t i;
 
-  opll = (OPLL *) calloc (1, sizeof(OPLL));
+  opll = (EOPLL *) calloc (1, sizeof(EOPLL));
   if (opll == NULL)
     return NULL;
 
@@ -926,22 +926,22 @@ OPLL_new (uint32_t clk, uint32_t rate)
   opll->vrc7_mode = 0x00;
 
   for (i = 0; i < 19 * 2; i++)
-    memcpy(&opll->patch[i],&null_patch,sizeof(OPLL_PATCH));
+    memcpy(&opll->patch[i],&null_patch,sizeof(EOPLL_PATCH));
   for (i = 0; i < 15; i++)
     centre_panning( opll->pan[i] );
 
   //opll->mask = 0;
-  OPLL_SetMuteMask(opll, 0x0000);
+  EOPLL_SetMuteMask(opll, 0x0000);
 
-  //OPLL_reset (opll);
-  OPLL_reset_patch (opll, 0);
+  //EOPLL_reset (opll);
+  EOPLL_reset_patch (opll, 0);
 
   return opll;
 }
 
 
 void
-OPLL_delete (OPLL * opll)
+EOPLL_delete (EOPLL * opll)
 {
   free (opll);
 }
@@ -949,17 +949,17 @@ OPLL_delete (OPLL * opll)
 
 /* Reset patch datas by system default. */
 void
-OPLL_reset_patch (OPLL * opll, int32_t type)
+EOPLL_reset_patch (EOPLL * opll, int32_t type)
 {
   int32_t i;
 
   for (i = 0; i < 19 * 2; i++)
-    OPLL_copyPatch (opll, i, &default_patch[type % OPLL_TONE_NUM][i]);
+    EOPLL_copyPatch (opll, i, &default_patch[type % OPLL_TONE_NUM][i]);
 }
 
 /* Reset whole of OPLL except patch datas. */
 void
-OPLL_reset (OPLL * opll)
+EOPLL_reset (EOPLL * opll)
 {
   int32_t i;
 
@@ -976,7 +976,7 @@ OPLL_reset (OPLL * opll)
   //opll->mask = 0;
 
   for (i = 0; i <18; i++)
-    OPLL_SLOT_reset(&opll->slot[i], i%2);
+    EOPLL_SLOT_reset(&opll->slot[i], i%2);
 
   for (i = 0; i < 9; i++)
   {
@@ -985,7 +985,7 @@ OPLL_reset (OPLL * opll)
   }
 
   for (i = 0; i < 0x40; i++)
-    OPLL_writeReg (opll, i, 0);
+    EOPLL_writeReg (opll, i, 0);
 
   opll->realstep = (uint32_t) ((1U << 31) / opll->rate);
   opll->opllstep = (uint32_t) ((1U << 31) / (opll->clk / 72.0));
@@ -999,7 +999,7 @@ OPLL_reset (OPLL * opll)
 
 /* Force Refresh (When external program changes some parameters). */
 void
-OPLL_forceRefresh (OPLL * opll)
+EOPLL_forceRefresh (EOPLL * opll)
 {
   int32_t i;
 
@@ -1020,7 +1020,7 @@ OPLL_forceRefresh (OPLL * opll)
 }
 
 void
-OPLL_set_rate (OPLL * opll, uint32_t r)
+EOPLL_set_rate (EOPLL * opll, uint32_t r)
 {
   if (opll->quality)
     opll->rate = (opll->clk + 36) / 72; //49716
@@ -1031,10 +1031,10 @@ OPLL_set_rate (OPLL * opll, uint32_t r)
 }
 
 void
-OPLL_set_quality (OPLL * opll, uint8_t q)
+EOPLL_set_quality (EOPLL * opll, uint8_t q)
 {
   opll->quality = q;
-  OPLL_set_rate (opll, opll->rate);
+  EOPLL_set_rate (opll, opll->rate);
 }
 
 /*********************************************************
@@ -1069,7 +1069,7 @@ OPLL_set_quality (OPLL * opll, uint8_t q)
 
 /* Update AM, PM unit */
 static void
-update_ampm (OPLL * opll)
+update_ampm (EOPLL * opll)
 {
   opll->pm_phase = (opll->pm_phase + opll->pm_dphase) & (PM_DP_WIDTH - 1);
   opll->am_phase = (opll->am_phase + opll->am_dphase) & (AM_DP_WIDTH - 1);
@@ -1079,7 +1079,7 @@ update_ampm (OPLL * opll)
 
 /* PG */
 INLINE void
-calc_phase (OPLL_SLOT * slot, int32_t lfo)
+calc_phase (EOPLL_SLOT * slot, int32_t lfo)
 {
   if (slot->patch->PM)
     slot->phase += (slot->dphase * lfo) >> PM_AMP_BITS;
@@ -1093,7 +1093,7 @@ calc_phase (OPLL_SLOT * slot, int32_t lfo)
 
 /* Update Noise unit */
 static void
-update_noise (OPLL * opll)
+update_noise (EOPLL * opll)
 {
    if(opll->noise_seed&1) opll->noise_seed ^= 0x8003020;
    opll->noise_seed >>= 1;
@@ -1101,7 +1101,7 @@ update_noise (OPLL * opll)
 
 /* EG */
 static void
-calc_envelope (OPLL * opll, OPLL_SLOT * slot, int32_t lfo)
+calc_envelope (EOPLL * opll, EOPLL_SLOT * slot, int32_t lfo)
 {
 #define S2E(x) (SL2EG((int32_t)(x/SL_STEP))<<(EG_DP_BITS-EG_BITS))
 
@@ -1199,7 +1199,7 @@ calc_envelope (OPLL * opll, OPLL_SLOT * slot, int32_t lfo)
 
 /* CARRIOR */
 INLINE int16_t
-calc_slot_car (OPLL_SLOT * slot, int32_t fm)
+calc_slot_car (EOPLL_SLOT * slot, int32_t fm)
 {
   if (slot->egout >= (DB_MUTE - 1))
   {
@@ -1216,7 +1216,7 @@ calc_slot_car (OPLL_SLOT * slot, int32_t fm)
 
 /* MODULATOR */
 INLINE int16_t
-calc_slot_mod (OPLL_SLOT * slot)
+calc_slot_mod (EOPLL_SLOT * slot)
 {
   int32_t fm;
 
@@ -1244,7 +1244,7 @@ calc_slot_mod (OPLL_SLOT * slot)
 
 /* TOM */
 INLINE int16_t
-calc_slot_tom (OPLL_SLOT * slot)
+calc_slot_tom (EOPLL_SLOT * slot)
 {
   if (slot->egout >= (DB_MUTE - 1))
     return 0;
@@ -1255,7 +1255,7 @@ calc_slot_tom (OPLL_SLOT * slot)
 
 /* SNARE */
 INLINE int16_t
-calc_slot_snare (OPLL_SLOT * slot, uint32_t noise)
+calc_slot_snare (EOPLL_SLOT * slot, uint32_t noise)
 {
   if(slot->egout>=(DB_MUTE-1))
     return 0;
@@ -1270,7 +1270,7 @@ calc_slot_snare (OPLL_SLOT * slot, uint32_t noise)
   TOP-CYM 
  */
 INLINE int16_t
-calc_slot_cym (OPLL_SLOT * slot, uint32_t pgout_hh)
+calc_slot_cym (EOPLL_SLOT * slot, uint32_t pgout_hh)
 {
   uint32_t dbout;
 
@@ -1293,7 +1293,7 @@ calc_slot_cym (OPLL_SLOT * slot, uint32_t pgout_hh)
   HI-HAT 
 */
 INLINE int16_t
-calc_slot_hat (OPLL_SLOT *slot, int32_t pgout_cym, uint32_t noise)
+calc_slot_hat (EOPLL_SLOT *slot, int32_t pgout_cym, uint32_t noise)
 {
   uint32_t dbout;
 
@@ -1323,7 +1323,7 @@ calc_slot_hat (OPLL_SLOT *slot, int32_t pgout_cym, uint32_t noise)
 }
 
 static void
-update_output (OPLL * opll)
+update_output (EOPLL * opll)
 {
 #define INST_VOL_MULT 8
 #define RHYTHM_VOL_MULT 16
@@ -1342,7 +1342,7 @@ update_output (OPLL * opll)
   memset(opll->ch_out, 0, 15 * sizeof(int16_t));
   /* CH1-6 */
   for (i = 0; i < 6; i++)
-    if (!(opll->mask & OPLL_MASK_CH (i)) && (CAR(opll,i)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_CH (i)) && (CAR(opll,i)->eg_mode != FINISH))
       opll->ch_out[i] = calc_slot_car (CAR(opll,i), calc_slot_mod(MOD(opll,i))) * INST_VOL_MULT;
 
  if (! opll->vrc7_mode)
@@ -1350,40 +1350,40 @@ update_output (OPLL * opll)
   /* CH7 */
   if (opll->patch_number[6] <= 15)
   {
-    if (!(opll->mask & OPLL_MASK_CH (6)) && (CAR(opll,6)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_CH (6)) && (CAR(opll,6)->eg_mode != FINISH))
       opll->ch_out[6] = calc_slot_car (CAR(opll,6), calc_slot_mod(MOD(opll,6))) * INST_VOL_MULT;
   }
   else
   {
-    if (!(opll->mask & OPLL_MASK_BD) && (CAR(opll,6)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_BD) && (CAR(opll,6)->eg_mode != FINISH))
       opll->ch_out[9] = calc_slot_car (CAR(opll,6), calc_slot_mod(MOD(opll,6))) * RHYTHM_VOL_MULT;
   }
 
   /* CH8 */
   if (opll->patch_number[7] <= 15)
   {
-    if (!(opll->mask & OPLL_MASK_CH (7)) && (CAR(opll,7)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_CH (7)) && (CAR(opll,7)->eg_mode != FINISH))
       opll->ch_out[7] = calc_slot_car (CAR(opll,7), calc_slot_mod(MOD(opll,7))) * INST_VOL_MULT;
   }
   else
   {
-    if (!(opll->mask & OPLL_MASK_HH) && (MOD(opll,7)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_HH) && (MOD(opll,7)->eg_mode != FINISH))
       opll->ch_out[10] = calc_slot_hat (MOD(opll,7), CAR(opll,8)->pgout, opll->noise_seed&1) * RHYTHM_VOL_MULT;
-    if (!(opll->mask & OPLL_MASK_SD) && (CAR(opll,7)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_SD) && (CAR(opll,7)->eg_mode != FINISH))
       opll->ch_out[11] = -calc_slot_snare (CAR(opll,7), opll->noise_seed&1) * RHYTHM_VOL_MULT;
   }
 
   /* CH9 */
   if (opll->patch_number[8] <= 15)
   {
-    if (!(opll->mask & OPLL_MASK_CH(8)) && (CAR(opll,8)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_CH(8)) && (CAR(opll,8)->eg_mode != FINISH))
       opll->ch_out[8] = calc_slot_car (CAR(opll,8), calc_slot_mod (MOD(opll,8))) * INST_VOL_MULT;
   }
   else
   {
-    if (!(opll->mask & OPLL_MASK_TOM) && (MOD(opll,8)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_TOM) && (MOD(opll,8)->eg_mode != FINISH))
       opll->ch_out[12] = calc_slot_tom (MOD(opll,8)) * RHYTHM_VOL_MULT;
-    if (!(opll->mask & OPLL_MASK_CYM) && (CAR(opll,8)->eg_mode != FINISH))
+    if (!(opll->mask & EOPLL_MASK_CYM) && (CAR(opll,8)->eg_mode != FINISH))
       opll->ch_out[13] = -calc_slot_cym (CAR(opll,8), MOD(opll,7)->pgout) * RHYTHM_VOL_MULT;
   }
  } // end if (! opll->vrc7_mode)
@@ -1397,7 +1397,7 @@ update_output (OPLL * opll)
 
 #if 0
 INLINE int16_t
-mix_output(OPLL *opll) {
+mix_output(EOPLL *opll) {
   int i;
   opll->out = opll->ch_out[0];
   for (i=1;i<15;i++) {
@@ -1407,7 +1407,7 @@ mix_output(OPLL *opll) {
 }
 
 int16_t
-OPLL_calc (OPLL * opll)
+EOPLL_calc (EOPLL * opll)
 {
   if (!opll->quality)
   {
@@ -1433,7 +1433,7 @@ INLINE void add_channel_lr(int16_t value, int32_t panl, int32_t panr, int32_t ou
 }
 
 INLINE void
-mix_output_stereo(OPLL *opll, int32_t out[2]) {
+mix_output_stereo(EOPLL *opll, int32_t out[2]) {
   int ch;
   out[0] = out[1] = 0;
   for(ch=0;ch<15;ch++) {
@@ -1442,7 +1442,7 @@ mix_output_stereo(OPLL *opll, int32_t out[2]) {
 }
 
 void
-OPLL_calc_stereo (OPLL * opll, UINT32 samples, DEV_SMPL **out)
+EOPLL_calc_stereo (EOPLL * opll, UINT32 samples, DEV_SMPL **out)
 {
   DEV_SMPL *bufMO = out[0];
   DEV_SMPL *bufRO = out[1];
@@ -1482,7 +1482,7 @@ OPLL_calc_stereo (OPLL * opll, UINT32 samples, DEV_SMPL **out)
 
 
 uint32_t
-OPLL_setMask (OPLL * opll, uint32_t mask)
+EOPLL_setMask (EOPLL * opll, uint32_t mask)
 {
   uint32_t ret;
 
@@ -1497,7 +1497,7 @@ OPLL_setMask (OPLL * opll, uint32_t mask)
 }
 
 uint32_t
-OPLL_toggleMask (OPLL * opll, uint32_t mask)
+EOPLL_toggleMask (EOPLL * opll, uint32_t mask)
 {
   uint32_t ret;
 
@@ -1511,7 +1511,7 @@ OPLL_toggleMask (OPLL * opll, uint32_t mask)
     return 0;
 }
 
-void OPLL_SetMuteMask(OPLL* opll, UINT32 MuteMask)
+void EOPLL_SetMuteMask(EOPLL* opll, UINT32 MuteMask)
 {
   uint8_t CurChn;
   uint32_t ChnMsk;
@@ -1522,22 +1522,22 @@ void OPLL_SetMuteMask(OPLL* opll, UINT32 MuteMask)
     switch(CurChn)
     {
     case 9:
-      ChnMsk = OPLL_MASK_BD;
+      ChnMsk = EOPLL_MASK_BD;
       break;
     case 10:
-      ChnMsk = OPLL_MASK_SD;
+      ChnMsk = EOPLL_MASK_SD;
       break;
     case 11:
-      ChnMsk = OPLL_MASK_TOM;
+      ChnMsk = EOPLL_MASK_TOM;
       break;
     case 12:
-      ChnMsk = OPLL_MASK_CYM;
+      ChnMsk = EOPLL_MASK_CYM;
       break;
     case 13:
-      ChnMsk = OPLL_MASK_HH;
+      ChnMsk = EOPLL_MASK_HH;
       break;
     default:
-      ChnMsk = OPLL_MASK_CH(CurChn);
+      ChnMsk = EOPLL_MASK_CH(CurChn);
       break;
     }
     if ((MuteMask >> CurChn) & 0x01)
@@ -1547,14 +1547,14 @@ void OPLL_SetMuteMask(OPLL* opll, UINT32 MuteMask)
   return;
 }
 
-void OPLL_SetChipMode(OPLL* opll, UINT8 Mode)
+void EOPLL_SetChipMode(EOPLL* opll, UINT8 Mode)
 {
   // Enable/Disable VRC7 Mode (with only 6 instead of 9 channels and no rhythm part)
   opll->vrc7_mode = Mode;
   if (opll->vrc7_mode)
-    OPLL_setPatch(opll, default_inst[OPLL_VRC7_TONE]);
+    EOPLL_setPatch(opll, default_inst[EOPLL_VRC7_TONE]);
   else
-    OPLL_setPatch(opll, default_inst[OPLL_2413_TONE]);
+    EOPLL_setPatch(opll, default_inst[EOPLL_2413_TONE]);
   
   return;
 }
@@ -1566,7 +1566,7 @@ void OPLL_SetChipMode(OPLL* opll, UINT8 Mode)
 *****************************************************/
 
 void
-OPLL_writeReg (OPLL * opll, UINT8 reg, UINT8 data)
+EOPLL_writeReg (EOPLL * opll, UINT8 reg, UINT8 data)
 {
   uint8_t i, v, ch;
 
@@ -1815,17 +1815,17 @@ OPLL_writeReg (OPLL * opll, UINT8 reg, UINT8 data)
 }
 
 void
-OPLL_writeIO (OPLL * opll, UINT8 adr, UINT8 val)
+EOPLL_writeIO (EOPLL * opll, UINT8 adr, UINT8 val)
 {
   if (adr & 1)
-    OPLL_writeReg (opll, opll->adr, val);
+    EOPLL_writeReg (opll, opll->adr, val);
   else
     opll->adr = val;
 }
 
 /* STEREO MODE (OPT) */
 void
-OPLL_set_pan (OPLL * opll, uint32_t ch, int16_t pan)
+EOPLL_set_pan (EOPLL * opll, uint32_t ch, int16_t pan)
 {
   if (ch >= 15)
     return;
