@@ -1238,6 +1238,7 @@ void NOPL3_Generate(nopl3_chip *chip, Bit32s *buf)
 
     chip->timer++;
 
+#ifdef NOPL_ENABLE_WRITEBUF
     while (chip->writebuf[chip->writebuf_cur].time <= chip->writebuf_samplecnt)
     {
         if (!(chip->writebuf[chip->writebuf_cur].reg & 0x200))
@@ -1250,6 +1251,7 @@ void NOPL3_Generate(nopl3_chip *chip, Bit32s *buf)
         chip->writebuf_cur = (chip->writebuf_cur + 1) % NOPL_WRITEBUF_SIZE;
     }
     chip->writebuf_samplecnt++;
+#endif
 }
 
 void NOPL3_GenerateResampled(nopl3_chip *chip, Bit32s *buf)
@@ -1420,6 +1422,7 @@ void NOPL3_WriteReg(nopl3_chip *chip, Bit16u reg, Bit8u v)
 
 void NOPL3_WriteRegBuffered(nopl3_chip *chip, Bit16u reg, Bit8u v)
 {
+#ifdef NOPL_ENABLE_WRITEBUF
     Bit64u time1, time2;
 
     if (chip->writebuf[chip->writebuf_last].reg & 0x200)
@@ -1444,6 +1447,9 @@ void NOPL3_WriteRegBuffered(nopl3_chip *chip, Bit16u reg, Bit8u v)
     chip->writebuf[chip->writebuf_last].time = time1;
     chip->writebuf_lasttime = time1;
     chip->writebuf_last = (chip->writebuf_last + 1) % NOPL_WRITEBUF_SIZE;
+#else
+    NOPL3_WriteReg(chip, reg, v);
+#endif
 }
 
 void NOPL3_GenerateStream(nopl3_chip *chip, Bit32s *sndptr, Bit32u numsamples)

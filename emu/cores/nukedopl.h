@@ -33,6 +33,8 @@
 #include <stdtype.h>
 #include "../snddef.h"
 
+//#define NOPL_ENABLE_WRITEBUF
+
 #define NOPL_WRITEBUF_SIZE   1024
 #define NOPL_WRITEBUF_DELAY  2
 
@@ -95,11 +97,13 @@ struct _nopl3_channel {
     Bit16u cha, chb;
 };
 
+#ifdef NOPL_ENABLE_WRITEBUF
 typedef struct _nopl3_writebuf {
     Bit64u time;
     Bit16u reg;
     Bit8u data;
 } nopl3_writebuf;
+#endif
 
 struct _nopl3_chip {
     DEV_DATA _devData;  // to alias DEV_DATA struct
@@ -132,11 +136,13 @@ struct _nopl3_chip {
     Bit32s masterVolL;   // master volume left (.12 fixed point)
     Bit32s masterVolR;   // master volume right
 
+#ifdef NOPL_ENABLE_WRITEBUF
     Bit64u writebuf_samplecnt;
     Bit32u writebuf_cur;
     Bit32u writebuf_last;
     Bit64u writebuf_lasttime;
     nopl3_writebuf writebuf[NOPL_WRITEBUF_SIZE];
+#endif
 };
 
 void NOPL3_Generate(nopl3_chip *chip, Bit32s *buf);
