@@ -191,27 +191,27 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 			{
 				if ( chip_t->IntermediatePos[i] != FLT_MIN )
 					/* Intermediate position (antialiasing) */
-					chip->Channels[i] = (short)( PSGVolumeValues[chip->Registers[2 * i + 1]] * chip_t->IntermediatePos[i] );
+					chip->ChannelState[i] = chip_t->IntermediatePos[i];
 				else
 					/* Flat (no antialiasing needed) */
-					chip->Channels[i] = PSGVolumeValues[chip->Registers[2 * i + 1]] * chip_t->ToneFreqPos[i];
+					chip->ChannelState[i] = (float)chip_t->ToneFreqPos[i];
 			}
 			else
 				/* Muted channel */
-				chip->Channels[i] = 0;
+				chip->ChannelState[i] = 0.0f;
 
 		/* Noise channel */
 		if ( (chip_t->Mute >> 3) & 1 )
 		{
 			//chip->Channels[3] = PSGVolumeValues[chip->Registers[7]] * ( chip_n->NoiseShiftRegister & 0x1 ) * 2; /* double noise volume */
 			// Now the noise is bipolar, too. -Valley Bell
-			chip->Channels[3] = PSGVolumeValues[chip->Registers[7]] * (( chip_n->NoiseShiftRegister & 0x1 ) * 2 - 1);
+			chip->ChannelState[3] = (float)( (int)( chip_n->NoiseShiftRegister & 0x1 ) * 2 - 1 );
 			// due to the way the white noise works here, it seems twice as loud as it should be
 			if (chip_n->Registers[6] & 0x4 )
-				chip->Channels[3] >>= 1;
+				chip->ChannelState[3] /= 2.0f;
 		}
 		else
-			chip->Channels[i] = 0;
+			chip->ChannelState[3] = 0.0f;
 
 		// Build stereo result into buffer
 		buffer[0][j] = 0;
@@ -221,37 +221,43 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 			// For all 4 channels
 			for ( i = 0; i <= 3; ++i )
 			{
+				int chnOut = (int)(PSGVolumeValues[chip->Registers[2 * i + 1]] * chip->ChannelState[i]);
 				if ( ( ( chip->PSGStereo >> i ) & 0x11 ) == 0x11 )
 				{
 					// no GG stereo for this channel
-					buffer[0][j] += APPLY_PANNING( chip->Channels[i], chip->panning[i][0] ); // left
-					buffer[1][j] += APPLY_PANNING( chip->Channels[i], chip->panning[i][1] ); // right
+					buffer[0][j] += APPLY_PANNING( chnOut, chip->panning[i][0] ); // left
+					buffer[1][j] += APPLY_PANNING( chnOut, chip->panning[i][1] ); // right
 				}
 				else
 				{
 					// GG stereo overrides panning
-					buffer[0][j] += ( chip->PSGStereo >> (i+4) & 0x1 ) * chip->Channels[i]; // left
-					buffer[1][j] += ( chip->PSGStereo >>  i    & 0x1 ) * chip->Channels[i]; // right
+					buffer[0][j] += ( chip->PSGStereo >> (i+4) & 0x1 ) * chnOut; // left
+					buffer[1][j] += ( chip->PSGStereo >>  i    & 0x1 ) * chnOut; // right
 				}
 			}
 		}
 		else
 		{
+			int chnOut;
 			if (! (chip->NgpFlags & 0x01))
 			{
 				// For all 3 tone channels
 				for (i = 0; i < 3; i ++)
 				{
-					buffer[0][j] += (chip->PSGStereo >> (i+4) & 0x1 ) * chip_t->Channels[i]; // left
-					buffer[1][j] += (chip->PSGStereo >>  i    & 0x1 ) * chip_n->Channels[i]; // right
+					chnOut = (int)(PSGVolumeValues[chip_t->Registers[2 * i + 1]] * chip->ChannelState[i]);
+					buffer[0][j] += (chip->PSGStereo >> (i+4) & 0x1 ) * chnOut; // left
+					chnOut = (int)(PSGVolumeValues[chip_n->Registers[2 * i + 1]] * chip->ChannelState[i]);
+					buffer[1][j] += (chip->PSGStereo >>  i    & 0x1 ) * chnOut; // right
 				}
 			}
 			else
 			{
 				// noise channel
 				i = 3;
-				buffer[0][j] += (chip->PSGStereo >> (i+4) & 0x1 ) * chip_t->Channels[i]; // left
-				buffer[1][j] += (chip->PSGStereo >>  i    & 0x1 ) * chip_n->Channels[i]; // right
+				chnOut = (int)(PSGVolumeValues[chip_t->Registers[2 * i + 1]] * chip->ChannelState[i]);
+				buffer[0][j] += (chip->PSGStereo >> (i+4) & 0x1 ) * chnOut; // left
+				chnOut = (int)(PSGVolumeValues[chip_n->Registers[2 * i + 1]] * chip->ChannelState[i]);
+				buffer[1][j] += (chip->PSGStereo >>  i    & 0x1 ) * chnOut; // right
 			}
 		}
 
