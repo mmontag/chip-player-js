@@ -117,7 +117,7 @@ EPSG_new (UINT32 c, UINT32 r)
   for (i = 0; i < 3; i++)
   {
     psg->stereo_mask[i] = 0x03;
-    centre_panning(psg->pan[i]);
+    Panning_Centre(psg->pan[i]);
   }
 
   EPSG_setMask(psg, 0x00);
@@ -514,5 +514,5 @@ void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan)
   if (ch >= 3)
     return;
   
-  calc_panning( psg->pan[ch], pan );
+  Panning_Calculate( psg->pan[ch], pan );
 }

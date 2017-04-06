@@ -928,7 +928,7 @@ EOPLL_new (uint32_t clk, uint32_t rate)
   for (i = 0; i < 19 * 2; i++)
     memcpy(&opll->patch[i],&null_patch,sizeof(EOPLL_PATCH));
   for (i = 0; i < 15; i++)
-    centre_panning( opll->pan[i] );
+    Panning_Centre( opll->pan[i] );
 
   //opll->mask = 0;
   EOPLL_SetMuteMask(opll, 0x0000);
@@ -1830,5 +1830,5 @@ EOPLL_set_pan (EOPLL * opll, uint32_t ch, int16_t pan)
   if (ch >= 15)
     return;
   
-  calc_panning( opll->pan[ch], pan ); // Maxim
+  Panning_Calculate( opll->pan[ch], pan ); // Maxim
 }

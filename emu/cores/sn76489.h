@@ -59,7 +59,7 @@ struct _SN76489_Context
 	INT32 ToneFreqVals[4];	/* Frequency register values (counters) */
 	INT32 ToneFreqPos[4];	/* Frequency channel flip-flops */
 	float IntermediatePos[4];	/* intermediate values used at boundaries between + and - (does not need double accuracy)*/
-	float ChannelState[4];	/* output state of each channel, before volume + stereo is applied */
+	float ChannelState[4];	/* output state of each channel, before volume/stereo is applied */
 	
 	INT32 panning[4][2];	/* fake stereo */
 	

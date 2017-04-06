@@ -10,74 +10,74 @@
 #define RESALGO_COPY		0x02
 #define RESALGO_LINEAR_DOWN	0x03
 
-static void Resmpl_Exec_Old(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample);
-static void Resmpl_Exec_LinearUp(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample);
-static void Resmpl_Exec_Copy(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample);
-static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample);
+static void Resmpl_Exec_Old(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample);
+static void Resmpl_Exec_LinearUp(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample);
+static void Resmpl_Exec_Copy(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample);
+static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample);
 
 void Resmpl_DevConnect(RESMPL_STATE* CAA, const DEV_INFO* devInf)
 {
-	CAA->SmpRateSrc = devInf->sampleRate;
+	CAA->smpRateSrc = devInf->sampleRate;
 	CAA->StreamUpdate = devInf->devDef->Update;
-	CAA->SU_DataPtr = devInf->dataPtr;
+	CAA->su_DataPtr = devInf->dataPtr;
 	if (devInf->devDef->SetSRateChgCB != NULL)
-		devInf->devDef->SetSRateChgCB(CAA->SU_DataPtr, Resmpl_ChangeRate, CAA);
+		devInf->devDef->SetSRateChgCB(CAA->su_DataPtr, Resmpl_ChangeRate, CAA);
 	
 	return;
 }
 
 void Resmpl_SetVals(RESMPL_STATE* CAA, UINT8 resampleMode, UINT16 volume, UINT32 destSampleRate)
 {
-	CAA->ResampleMode = resampleMode;
-	CAA->SmpRateDst = destSampleRate;
-	CAA->VolumeL = volume;	CAA->VolumeR = volume;
+	CAA->resampleMode = resampleMode;
+	CAA->smpRateDst = destSampleRate;
+	CAA->volumeL = volume;	CAA->volumeR = volume;
 	
 	return;
 }
 
 void Resmpl_Init(RESMPL_STATE* CAA)
 {
-	if (! CAA->SmpRateSrc)
+	if (! CAA->smpRateSrc)
 	{
-		CAA->Resampler = 0xFF;
+		CAA->resampler = 0xFF;
 		return;
 	}
 	
-	if (CAA->ResampleMode == 0xFF)
+	if (CAA->resampleMode == 0xFF)
 	{
-		if (CAA->SmpRateSrc < CAA->SmpRateDst)
-			CAA->Resampler = RESALGO_LINEAR_UP;
-		else if (CAA->SmpRateSrc == CAA->SmpRateDst)
-			CAA->Resampler = RESALGO_COPY;
-		else if (CAA->SmpRateSrc > CAA->SmpRateDst)
-			CAA->Resampler = RESALGO_LINEAR_DOWN;
+		if (CAA->smpRateSrc < CAA->smpRateDst)
+			CAA->resampler = RESALGO_LINEAR_UP;
+		else if (CAA->smpRateSrc == CAA->smpRateDst)
+			CAA->resampler = RESALGO_COPY;
+		else if (CAA->smpRateSrc > CAA->smpRateDst)
+			CAA->resampler = RESALGO_LINEAR_DOWN;
 	}
-	/*if (CAA->Resampler == RESALGO_LINEAR_UP || CAA->Resampler == RESALGO_LINEAR_DOWN)
+	/*if (CAA->resampler == RESALGO_LINEAR_UP || CAA->resampler == RESALGO_LINEAR_DOWN)
 	{
-		if (CAA->ResampleMode == 0x02 || (CAA->ResampleMode == 0x01 && CAA->Resampler == RESALGO_LINEAR_DOWN))
-			CAA->Resampler = RESALGO_OLD;
+		if (CAA->resampleMode == 0x02 || (CAA->resampleMode == 0x01 && CAA->resampler == RESALGO_LINEAR_DOWN))
+			CAA->resampler = RESALGO_OLD;
 	}*/
 	
-	CAA->SmplBufSize = CAA->SmpRateSrc / 10;
-	CAA->SmplBufs[0] = (DEV_SMPL*)malloc(CAA->SmplBufSize * 2 * sizeof(DEV_SMPL));
-	CAA->SmplBufs[1] = &CAA->SmplBufs[0][CAA->SmplBufSize];
+	CAA->smplBufSize = CAA->smpRateSrc / 10;
+	CAA->smplBufs[0] = (DEV_SMPL*)malloc(CAA->smplBufSize * 2 * sizeof(DEV_SMPL));
+	CAA->smplBufs[1] = &CAA->smplBufs[0][CAA->smplBufSize];
 	
-	CAA->SmpP = 0x00;
-	CAA->SmpLast = 0x00;
-	CAA->SmpNext = 0x00;
-	CAA->LSmpl.L = 0x00;
-	CAA->LSmpl.R = 0x00;
-	if (CAA->Resampler == RESALGO_LINEAR_UP)
+	CAA->smpP = 0x00;
+	CAA->smpLast = 0x00;
+	CAA->smpNext = 0x00;
+	CAA->lSmpl.L = 0x00;
+	CAA->lSmpl.R = 0x00;
+	if (CAA->resampler == RESALGO_LINEAR_UP)
 	{
 		// Pregenerate first Sample (the upsampler is always one too late)
-		CAA->StreamUpdate(CAA->SU_DataPtr, 1, CAA->SmplBufs);
-		CAA->NSmpl.L = CAA->SmplBufs[0][0];
-		CAA->NSmpl.R = CAA->SmplBufs[1][0];
+		CAA->StreamUpdate(CAA->su_DataPtr, 1, CAA->smplBufs);
+		CAA->nSmpl.L = CAA->smplBufs[0][0];
+		CAA->nSmpl.R = CAA->smplBufs[1][0];
 	}
 	else
 	{
-		CAA->NSmpl.L = 0x00;
-		CAA->NSmpl.R = 0x00;
+		CAA->nSmpl.L = 0x00;
+		CAA->nSmpl.R = 0x00;
 	}
 	
 	return;
@@ -85,34 +85,34 @@ void Resmpl_Init(RESMPL_STATE* CAA)
 
 void Resmpl_Deinit(RESMPL_STATE* CAA)
 {
-	free(CAA->SmplBufs[0]);
-	CAA->SmplBufs[0] = NULL;
-	CAA->SmplBufs[1] = NULL;
+	free(CAA->smplBufs[0]);
+	CAA->smplBufs[0] = NULL;
+	CAA->smplBufs[1] = NULL;
 	
 	return;
 }
 
-void Resmpl_ChangeRate(void* DataPtr, UINT32 NewSmplRate)
+void Resmpl_ChangeRate(void* DataPtr, UINT32 newSmplRate)
 {
 	RESMPL_STATE* CAA = (RESMPL_STATE*)DataPtr;
 	
-	if (CAA->SmpRateSrc == NewSmplRate)
+	if (CAA->smpRateSrc == newSmplRate)
 		return;
 	
 	// quick and dirty hack to make sample rate changes work
-	CAA->SmpRateSrc = NewSmplRate;
-	if (CAA->ResampleMode == 0xFF)
+	CAA->smpRateSrc = newSmplRate;
+	if (CAA->resampleMode == 0xFF)
 	{
-		if (CAA->SmpRateSrc < CAA->SmpRateDst)
-			CAA->Resampler = RESALGO_LINEAR_UP;
-		else if (CAA->SmpRateSrc == CAA->SmpRateDst)
-			CAA->Resampler = RESALGO_COPY;
-		else if (CAA->SmpRateSrc > CAA->SmpRateDst)
-			CAA->Resampler = RESALGO_LINEAR_DOWN;
+		if (CAA->smpRateSrc < CAA->smpRateDst)
+			CAA->resampler = RESALGO_LINEAR_UP;
+		else if (CAA->smpRateSrc == CAA->smpRateDst)
+			CAA->resampler = RESALGO_COPY;
+		else if (CAA->smpRateSrc > CAA->smpRateDst)
+			CAA->resampler = RESALGO_LINEAR_DOWN;
 	}
-	CAA->SmpP = 1;
-	CAA->SmpNext -= CAA->SmpLast;
-	CAA->SmpLast = 0x00;
+	CAA->smpP = 1;
+	CAA->smpNext -= CAA->smpLast;
+	CAA->smpLast = 0x00;
 	
 	return;
 }
@@ -134,7 +134,7 @@ void Resmpl_ChangeRate(void* DataPtr, UINT32 NewSmplRate)
 #define fp2i_floor(x)	((x) / FIXPNT_FACT)
 #define fp2i_ceil(x)	((x + FIXPNT_MASK) / FIXPNT_FACT)
 
-static void Resmpl_Exec_Old(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample)
+static void Resmpl_Exec_Old(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample)
 {
 	// RESALGO_OLD: old, but very fast resampler
 	DEV_SMPL* CurBufL;
@@ -145,38 +145,38 @@ static void Resmpl_Exec_Old(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSamp
 	INT32 SmpCnt;	// must be signed, else I'm getting calculation errors
 	INT32 CurSmpl;
 	
-	CurBufL = CAA->SmplBufs[0];
-	CurBufR = CAA->SmplBufs[1];
+	CurBufL = CAA->smplBufs[0];
+	CurBufR = CAA->smplBufs[1];
 	
-	for (OutPos = 0; OutPos < Length; OutPos ++)
+	for (OutPos = 0; OutPos < length; OutPos ++)
 	{
-		CAA->SmpLast = CAA->SmpNext;
-		CAA->SmpP ++;
-		CAA->SmpNext = (UINT32)((UINT64)CAA->SmpP * CAA->SmpRateSrc / CAA->SmpRateDst);
-		if (CAA->SmpLast >= CAA->SmpNext)
+		CAA->smpLast = CAA->smpNext;
+		CAA->smpP ++;
+		CAA->smpNext = (UINT32)((UINT64)CAA->smpP * CAA->smpRateSrc / CAA->smpRateDst);
+		if (CAA->smpLast >= CAA->smpNext)
 		{
-			RetSample[OutPos].L += CAA->LSmpl.L * CAA->VolumeL;
-			RetSample[OutPos].R += CAA->LSmpl.R * CAA->VolumeR;
+			retSample[OutPos].L += CAA->lSmpl.L * CAA->volumeL;
+			retSample[OutPos].R += CAA->lSmpl.R * CAA->volumeR;
 		}
-		else //if (CAA->SmpLast < CAA->SmpNext)
+		else //if (CAA->smpLast < CAA->smpNext)
 		{
-			SmpCnt = CAA->SmpNext - CAA->SmpLast;
+			SmpCnt = CAA->smpNext - CAA->smpLast;
 			
-			CAA->StreamUpdate(CAA->SU_DataPtr, SmpCnt, CAA->SmplBufs);
+			CAA->StreamUpdate(CAA->su_DataPtr, SmpCnt, CAA->smplBufs);
 			
 			if (SmpCnt == 1)
 			{
-				RetSample[OutPos].L += CurBufL[0] * CAA->VolumeL;
-				RetSample[OutPos].R += CurBufR[0] * CAA->VolumeR;
-				CAA->LSmpl.L = CurBufL[0];
-				CAA->LSmpl.R = CurBufR[0];
+				retSample[OutPos].L += CurBufL[0] * CAA->volumeL;
+				retSample[OutPos].R += CurBufR[0] * CAA->volumeR;
+				CAA->lSmpl.L = CurBufL[0];
+				CAA->lSmpl.R = CurBufR[0];
 			}
 			else if (SmpCnt == 2)
 			{
-				RetSample[OutPos].L += (CurBufL[0] + CurBufL[1]) * CAA->VolumeL >> 1;
-				RetSample[OutPos].R += (CurBufR[0] + CurBufR[1]) * CAA->VolumeR >> 1;
-				CAA->LSmpl.L = CurBufL[1];
-				CAA->LSmpl.R = CurBufR[1];
+				retSample[OutPos].L += (CurBufL[0] + CurBufL[1]) * CAA->volumeL >> 1;
+				retSample[OutPos].R += (CurBufR[0] + CurBufR[1]) * CAA->volumeR >> 1;
+				CAA->lSmpl.L = CurBufL[1];
+				CAA->lSmpl.R = CurBufR[1];
 			}
 			else
 			{
@@ -187,25 +187,25 @@ static void Resmpl_Exec_Old(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSamp
 					TempS32L += CurBufL[CurSmpl];
 					TempS32R += CurBufR[CurSmpl];
 				}
-				RetSample[OutPos].L += TempS32L * CAA->VolumeL / SmpCnt;
-				RetSample[OutPos].R += TempS32R * CAA->VolumeR / SmpCnt;
-				CAA->LSmpl.L = CurBufL[SmpCnt - 1];
-				CAA->LSmpl.R = CurBufR[SmpCnt - 1];
+				retSample[OutPos].L += TempS32L * CAA->volumeL / SmpCnt;
+				retSample[OutPos].R += TempS32R * CAA->volumeR / SmpCnt;
+				CAA->lSmpl.L = CurBufL[SmpCnt - 1];
+				CAA->lSmpl.R = CurBufR[SmpCnt - 1];
 			}
 		}
 	}
 	
-	if (CAA->SmpLast >= CAA->SmpRateSrc)
+	if (CAA->smpLast >= CAA->smpRateSrc)
 	{
-		CAA->SmpLast -= CAA->SmpRateSrc;
-		CAA->SmpNext -= CAA->SmpRateSrc;
-		CAA->SmpP -= CAA->SmpRateDst;
+		CAA->smpLast -= CAA->smpRateSrc;
+		CAA->smpNext -= CAA->smpRateSrc;
+		CAA->smpP -= CAA->smpRateDst;
 	}
 	
 	return;
 }
 
-static void Resmpl_Exec_LinearUp(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample)
+static void Resmpl_Exec_LinearUp(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample)
 {
 	// RESALGO_LINEAR_UP: Linear Upsampling
 	DEV_SMPL* CurBufL;
@@ -223,33 +223,33 @@ static void Resmpl_Exec_LinearUp(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* Re
 	INT32 SmpCnt;	// must be signed, else I'm getting calculation errors
 	UINT64 ChipSmpRateFP;
 	
-	CurBufL = CAA->SmplBufs[0];
-	CurBufR = CAA->SmplBufs[1];
+	CurBufL = CAA->smplBufs[0];
+	CurBufR = CAA->smplBufs[1];
 	
-	ChipSmpRateFP = FIXPNT_FACT * CAA->SmpRateSrc;
+	ChipSmpRateFP = FIXPNT_FACT * CAA->smpRateSrc;
 	StreamPnt[0] = &CurBufL[2];
 	StreamPnt[1] = &CurBufR[2];
 	// TODO: Make it work *properly* with large blocks. (this is very hackish)
-	for (OutPos = 0; OutPos < Length; OutPos ++)
+	for (OutPos = 0; OutPos < length; OutPos ++)
 	{
-		InPosL = (SLINT)(CAA->SmpP * ChipSmpRateFP / CAA->SmpRateDst);
+		InPosL = (SLINT)(CAA->smpP * ChipSmpRateFP / CAA->smpRateDst);
 		InPre = (UINT32)fp2i_floor(InPosL);
 		InNow = (UINT32)fp2i_ceil(InPosL);
 		
-		CurBufL[0] = CAA->LSmpl.L;
-		CurBufR[0] = CAA->LSmpl.R;
-		CurBufL[1] = CAA->NSmpl.L;
-		CurBufR[1] = CAA->NSmpl.R;
-		if (InNow != CAA->SmpNext)
-			CAA->StreamUpdate(CAA->SU_DataPtr, InNow - CAA->SmpNext, StreamPnt);
+		CurBufL[0] = CAA->lSmpl.L;
+		CurBufR[0] = CAA->lSmpl.R;
+		CurBufL[1] = CAA->nSmpl.L;
+		CurBufR[1] = CAA->nSmpl.R;
+		if (InNow != CAA->smpNext)
+			CAA->StreamUpdate(CAA->su_DataPtr, InNow - CAA->smpNext, StreamPnt);
 		
-		InBase = FIXPNT_FACT + (UINT32)(InPosL - (SLINT)CAA->SmpNext * FIXPNT_FACT);
+		InBase = FIXPNT_FACT + (UINT32)(InPosL - (SLINT)CAA->smpNext * FIXPNT_FACT);
 		SmpCnt = FIXPNT_FACT;
-		CAA->SmpLast = InPre;
-		CAA->SmpNext = InNow;
-		//for (OutPos = 0; OutPos < Length; OutPos ++)
+		CAA->smpLast = InPre;
+		CAA->smpNext = InNow;
+		//for (OutPos = 0; OutPos < length; OutPos ++)
 		//{
-		//InPos = InBase + (UINT32)(OutPos * ChipSmpRateFP / CAA->SmpRateDst);
+		//InPos = InBase + (UINT32)(OutPos * ChipSmpRateFP / CAA->smpRateDst);
 		InPos = InBase;
 		
 		InPre = fp2i_floor(InPos);
@@ -261,53 +261,53 @@ static void Resmpl_Exec_LinearUp(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* Re
 					((INT64)CurBufL[InNow] * SmpFrc);
 		TempSmpR = ((INT64)CurBufR[InPre] * (FIXPNT_FACT - SmpFrc)) +
 					((INT64)CurBufR[InNow] * SmpFrc);
-		RetSample[OutPos].L += (INT32)(TempSmpL * CAA->VolumeL / SmpCnt);
-		RetSample[OutPos].R += (INT32)(TempSmpR * CAA->VolumeR / SmpCnt);
+		retSample[OutPos].L += (INT32)(TempSmpL * CAA->volumeL / SmpCnt);
+		retSample[OutPos].R += (INT32)(TempSmpR * CAA->volumeR / SmpCnt);
 		//}
-		CAA->LSmpl.L = CurBufL[InPre];
-		CAA->LSmpl.R = CurBufR[InPre];
-		CAA->NSmpl.L = CurBufL[InNow];
-		CAA->NSmpl.R = CurBufR[InNow];
-		CAA->SmpP ++;
+		CAA->lSmpl.L = CurBufL[InPre];
+		CAA->lSmpl.R = CurBufR[InPre];
+		CAA->nSmpl.L = CurBufL[InNow];
+		CAA->nSmpl.R = CurBufR[InNow];
+		CAA->smpP ++;
 	}
 	
-	if (CAA->SmpLast >= CAA->SmpRateSrc)
+	if (CAA->smpLast >= CAA->smpRateSrc)
 	{
-		CAA->SmpLast -= CAA->SmpRateSrc;
-		CAA->SmpNext -= CAA->SmpRateSrc;
-		CAA->SmpP -= CAA->SmpRateDst;
+		CAA->smpLast -= CAA->smpRateSrc;
+		CAA->smpNext -= CAA->smpRateSrc;
+		CAA->smpP -= CAA->smpRateDst;
 	}
 	
 	return;
 }
 
-static void Resmpl_Exec_Copy(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample)
+static void Resmpl_Exec_Copy(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample)
 {
 	// RESALGO_COPY: Copying
 	UINT32 OutPos;
 	
-	CAA->SmpNext = CAA->SmpP * CAA->SmpRateSrc / CAA->SmpRateDst;
-	CAA->StreamUpdate(CAA->SU_DataPtr, Length, CAA->SmplBufs);
+	CAA->smpNext = CAA->smpP * CAA->smpRateSrc / CAA->smpRateDst;
+	CAA->StreamUpdate(CAA->su_DataPtr, length, CAA->smplBufs);
 	
-	for (OutPos = 0; OutPos < Length; OutPos ++)
+	for (OutPos = 0; OutPos < length; OutPos ++)
 	{
-		RetSample[OutPos].L += CAA->SmplBufs[0][OutPos] * CAA->VolumeL;
-		RetSample[OutPos].R += CAA->SmplBufs[1][OutPos] * CAA->VolumeR;
+		retSample[OutPos].L += CAA->smplBufs[0][OutPos] * CAA->volumeL;
+		retSample[OutPos].R += CAA->smplBufs[1][OutPos] * CAA->volumeR;
 	}
-	CAA->SmpP += Length;
-	CAA->SmpLast = CAA->SmpNext;
+	CAA->smpP += length;
+	CAA->smpLast = CAA->smpNext;
 	
-	if (CAA->SmpLast >= CAA->SmpRateSrc)
+	if (CAA->smpLast >= CAA->smpRateSrc)
 	{
-		CAA->SmpLast -= CAA->SmpRateSrc;
-		CAA->SmpNext -= CAA->SmpRateSrc;
-		CAA->SmpP -= CAA->SmpRateDst;
+		CAA->smpLast -= CAA->smpRateSrc;
+		CAA->smpNext -= CAA->smpRateSrc;
+		CAA->smpP -= CAA->smpRateDst;
 	}
 	
 	return;
 }
 
-static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample)
+static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample)
 {
 	// RESALGO_LINEAR_DOWN: Linear Downsampling
 	DEV_SMPL* CurBufL;
@@ -326,28 +326,28 @@ static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* 
 	INT32 SmpCnt;	// must be signed, else I'm getting calculation errors
 	UINT64 ChipSmpRateFP;
 	
-	CurBufL = CAA->SmplBufs[0];
-	CurBufR = CAA->SmplBufs[1];
+	CurBufL = CAA->smplBufs[0];
+	CurBufR = CAA->smplBufs[1];
 	
-	ChipSmpRateFP = FIXPNT_FACT * CAA->SmpRateSrc;
-	InPosL = (SLINT)((CAA->SmpP + Length) * ChipSmpRateFP / CAA->SmpRateDst);
-	CAA->SmpNext = (UINT32)fp2i_ceil(InPosL);
+	ChipSmpRateFP = FIXPNT_FACT * CAA->smpRateSrc;
+	InPosL = (SLINT)((CAA->smpP + length) * ChipSmpRateFP / CAA->smpRateDst);
+	CAA->smpNext = (UINT32)fp2i_ceil(InPosL);
 	
-	CurBufL[0] = CAA->LSmpl.L;
-	CurBufR[0] = CAA->LSmpl.R;
+	CurBufL[0] = CAA->lSmpl.L;
+	CurBufR[0] = CAA->lSmpl.R;
 	StreamPnt[0] = &CurBufL[1];
 	StreamPnt[1] = &CurBufR[1];
-	CAA->StreamUpdate(CAA->SU_DataPtr, CAA->SmpNext - CAA->SmpLast, StreamPnt);
+	CAA->StreamUpdate(CAA->su_DataPtr, CAA->smpNext - CAA->smpLast, StreamPnt);
 	
-	InPosL = (SLINT)(CAA->SmpP * ChipSmpRateFP / CAA->SmpRateDst);
+	InPosL = (SLINT)(CAA->smpP * ChipSmpRateFP / CAA->smpRateDst);
 	// I'm adding 1.0 to avoid negative indexes
-	InBase = FIXPNT_FACT + (UINT32)(InPosL - (SLINT)CAA->SmpLast * FIXPNT_FACT);
+	InBase = FIXPNT_FACT + (UINT32)(InPosL - (SLINT)CAA->smpLast * FIXPNT_FACT);
 	InPosNext = InBase;
-	for (OutPos = 0; OutPos < Length; OutPos ++)
+	for (OutPos = 0; OutPos < length; OutPos ++)
 	{
-		//InPos = InBase + (UINT32)(OutPos * ChipSmpRateFP / CAA->SmpRateDst);
+		//InPos = InBase + (UINT32)(OutPos * ChipSmpRateFP / CAA->smpRateDst);
 		InPos = InPosNext;
-		InPosNext = InBase + (UINT32)((OutPos+1) * ChipSmpRateFP / CAA->SmpRateDst);
+		InPosNext = InBase + (UINT32)((OutPos+1) * ChipSmpRateFP / CAA->smpRateDst);
 		
 		// first fractional Sample
 		SmpFrc = getnfraction(InPos);
@@ -385,46 +385,46 @@ static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* 
 			InNow ++;
 		}
 		
-		RetSample[OutPos].L += (INT32)(TempSmpL * CAA->VolumeL / SmpCnt);
-		RetSample[OutPos].R += (INT32)(TempSmpR * CAA->VolumeR / SmpCnt);
+		retSample[OutPos].L += (INT32)(TempSmpL * CAA->volumeL / SmpCnt);
+		retSample[OutPos].R += (INT32)(TempSmpR * CAA->volumeR / SmpCnt);
 	}
 	
-	CAA->LSmpl.L = CurBufL[InPre];
-	CAA->LSmpl.R = CurBufR[InPre];
-	CAA->SmpP += Length;
-	CAA->SmpLast = CAA->SmpNext;
+	CAA->lSmpl.L = CurBufL[InPre];
+	CAA->lSmpl.R = CurBufR[InPre];
+	CAA->smpP += length;
+	CAA->smpLast = CAA->smpNext;
 	
-	if (CAA->SmpLast >= CAA->SmpRateSrc)
+	if (CAA->smpLast >= CAA->smpRateSrc)
 	{
-		CAA->SmpLast -= CAA->SmpRateSrc;
-		CAA->SmpNext -= CAA->SmpRateSrc;
-		CAA->SmpP -= CAA->SmpRateDst;
+		CAA->smpLast -= CAA->smpRateSrc;
+		CAA->smpNext -= CAA->smpRateSrc;
+		CAA->smpP -= CAA->smpRateDst;
 	}
 	
 	return;
 }
 
-void Resmpl_Execute(RESMPL_STATE* CAA, UINT32 Length, WAVE_32BS* RetSample)
+void Resmpl_Execute(RESMPL_STATE* CAA, UINT32 smplCount, WAVE_32BS* smplBuffer)
 {
-	if (! Length)
+	if (! smplCount)
 		return;
 	
-	switch(CAA->Resampler)
+	switch(CAA->resampler)
 	{
 	case RESALGO_OLD:	// old, but very fast resampler
-		Resmpl_Exec_Old(CAA, Length, RetSample);
+		Resmpl_Exec_Old(CAA, smplCount, smplBuffer);
 		break;
 	case RESALGO_LINEAR_UP:	// Upsampling
-		Resmpl_Exec_LinearUp(CAA, Length, RetSample);
+		Resmpl_Exec_LinearUp(CAA, smplCount, smplBuffer);
 		break;
 	case RESALGO_COPY:	// Copying
-		Resmpl_Exec_Copy(CAA, Length, RetSample);
+		Resmpl_Exec_Copy(CAA, smplCount, smplBuffer);
 		break;
 	case RESALGO_LINEAR_DOWN:	// Downsampling
-		Resmpl_Exec_LinearDown(CAA, Length, RetSample);
+		Resmpl_Exec_LinearDown(CAA, smplCount, smplBuffer);
 		break;
 	default:
-		CAA->SmpP += CAA->SmpRateDst;
+		CAA->smpP += CAA->smpRateDst;
 		break;	// do absolutely nothing
 	}
 	

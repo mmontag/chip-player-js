@@ -1,3 +1,9 @@
+/*
+	panning.c by Maxim in 2006
+	Implements "simple equal power" panning using sine distribution
+	I am not an expert on this stuff, but this is the best sounding of the methods I've tried
+*/
+
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -19,7 +25,7 @@
 // Set the panning values for the two stereo channels (L,R)
 // for a position -256..0..256 L..C..R
 //-----------------------------------------------------------------
-void calc_panning(INT32 channels[2], INT16 position)
+void Panning_Calculate(INT32 channels[2], INT16 position)
 {
 	if ( position > RANGE / 2 )
 		position = RANGE / 2;
@@ -40,7 +46,7 @@ void calc_panning(INT32 channels[2], INT16 position)
 //-----------------------------------------------------------------
 // Reset the panning values to the centre position
 //-----------------------------------------------------------------
-void centre_panning(INT32 channels[2])
+void Panning_Centre(INT32 channels[2])
 {
 	channels[0] = channels[1] = PANNING_NORMAL;
 }

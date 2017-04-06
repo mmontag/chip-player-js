@@ -54,7 +54,7 @@ SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
 		SN76489_Config(chip, FB_SEGAVDP, SRW_SEGAVDP);
 		
 		for( i = 0; i < 4; i++ )
-			centre_panning(chip->panning[i]);
+			Panning_Centre(chip->panning[i]);
 		//SN76489_Reset(chip);
 		
 		chip->NgpFlags = 0x00;
@@ -97,7 +97,7 @@ void SN76489_Reset(SN76489_Context* chip)
 		chip->IntermediatePos[i] = FLT_MIN;
 
 		/* Set panning to centre */
-		//centre_panning( chip->panning[i] );
+		//Panning_Centre( chip->panning[i] );
 	}
 
 	chip->LatchedRegister = 0;
@@ -353,8 +353,8 @@ void SN76489_SetMute(SN76489_Context* chip, UINT32 val)
 
 void SN76489_SetPanning(SN76489_Context* chip, INT16 ch0, INT16 ch1, INT16 ch2, INT16 ch3)
 {
-	calc_panning( chip->panning[0], ch0 );
-	calc_panning( chip->panning[1], ch1 );
-	calc_panning( chip->panning[2], ch2 );
-	calc_panning( chip->panning[3], ch3 );
+	Panning_Calculate( chip->panning[0], ch0 );
+	Panning_Calculate( chip->panning[1], ch1 );
+	Panning_Calculate( chip->panning[2], ch2 );
+	Panning_Calculate( chip->panning[3], ch3 );
 }
