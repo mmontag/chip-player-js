@@ -1145,7 +1145,8 @@ int main()
     LoadTMB("fm_banks/tmb_files/default.tmb",  67, "3drm67");
     //LoadDoom("fm_banks/doom2/wolfinstein.op2", 67, "wolf"); //Small experiment!
 
-    LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
+    //LoadJunglevision("fm_banks/op3_files/2x2.op3", 68, "2x2byJAN");
+    LoadMiles("fm_banks/op3_files/2x2.opl", 68, "2x2byJAN");
 
     LoadTMB("fm_banks/tmb_files/bloodtmb.tmb",  69, "apgblood");
     LoadTMB("fm_banks/tmb_files/lee.tmb",  70, "apglee");
