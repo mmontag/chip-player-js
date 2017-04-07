@@ -153,7 +153,7 @@ UINT8 SndEmu_Start(UINT8 deviceID, const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 			return retVal;
 		}
 	}
-	return EERR_UNK_DEVICE;
+	return EERR_NOT_FOUND;
 }
 
 UINT8 SndEmu_Stop(DEV_INFO* devInf)
@@ -161,7 +161,7 @@ UINT8 SndEmu_Stop(DEV_INFO* devInf)
 	devInf->devDef->Stop(devInf->dataPtr);
 	devInf->dataPtr = NULL;
 	
-	return 0x00;
+	return EERR_OK;
 }
 
 void SndEmu_FreeDevLinkData(DEV_INFO* devInf)
@@ -179,7 +179,7 @@ void SndEmu_FreeDevLinkData(DEV_INFO* devInf)
 	return;
 }
 
-UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devDef, UINT8 funcType, UINT8 rwType, UINT16 reserved, void** retFuncPtr)
+UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devDef, UINT8 funcType, UINT8 rwType, UINT16 user, void** retFuncPtr)
 {
 	UINT32 curFunc;
 	const DEVDEF_RWFUNC* tempFnc;
@@ -193,7 +193,7 @@ UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devDef, UINT8 funcType, UINT8 rwType, 
 		tempFnc = &devDef->rwFuncs[curFunc];
 		if (tempFnc->funcType == funcType && tempFnc->rwType == rwType)
 		{
-			if (! reserved || reserved == tempFnc->user)
+			if (! user || user == tempFnc->user)
 			{
 				if (foundFunc == 0)
 					firstFunc = curFunc;
@@ -202,10 +202,10 @@ UINT8 SndEmu_GetDeviceFunc(const DEV_DEF* devDef, UINT8 funcType, UINT8 rwType, 
 		}
 	}
 	if (foundFunc == 0)
-		return 0xFF;	// not found
+		return EERR_NOT_FOUND;
 	*retFuncPtr = devDef->rwFuncs[firstFunc].funcPtr;
 	if (foundFunc == 1)
-		return 0x00;
+		return EERR_OK;
 	else
-		return 0x01;	// found multiple matching functions
+		return EERR_MORE_FOUND;	// found multiple matching functions
 }

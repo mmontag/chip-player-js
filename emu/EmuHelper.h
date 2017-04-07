@@ -12,7 +12,7 @@
 #endif
 
 // get parent struct from chip data pointer
-#define CHP_GET_INF_PTR(chip)	(((DEV_DATA*)info)->chipInf)
+#define CHP_GET_INF_PTR(info)	(((DEV_DATA*)info)->chipInf)
 
 
 #define SRATE_CUSTOM_HIGHEST(srmode, rate, customrate)	\
