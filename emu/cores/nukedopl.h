@@ -56,7 +56,7 @@ struct _nopl3_slot {
     nopl3_chip *chip;
     Bit16s out;
     Bit16s fbmod;
-    Bit16s *mod;
+    const Bit16s *mod;
     Bit16s prout;
     Bit16s eg_rout;
     Bit16s eg_out;
@@ -64,7 +64,7 @@ struct _nopl3_slot {
     Bit8u eg_gen;
     Bit8u eg_rate;
     Bit8u eg_ksl;
-    Bit8u *trem;
+    const Bit8u *trem;
     Bit8u reg_vib;
     Bit8u reg_type;
     Bit8u reg_ksr;
@@ -85,7 +85,7 @@ struct _nopl3_channel {
     nopl3_slot *slots[2];
     nopl3_channel *pair;
     nopl3_chip *chip;
-    Bit16s *out[4];
+    const Bit16s *out[4];
     Bit8u chtype;
     Bit8u muted;
     Bit16u f_num;
@@ -124,7 +124,7 @@ struct _nopl3_chip {
     Bit8u tremolopos;
     Bit8u tremoloshift;
     Bit32u noise;
-    Bit16s zeromod;
+    //Bit16s zeromod;
     Bit32s mixbuff[2];
     //OPL3L
     Bit32s rateratio;

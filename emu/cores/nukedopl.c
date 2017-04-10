@@ -35,6 +35,8 @@
 #include "../snddef.h"
 #include "nukedopl.h"
 
+static const Bit16s zeromod = 0;
+
 // mute channel IDs
 enum {
     mch_bd = 18+0,
@@ -610,7 +612,7 @@ INLINE void OPL3_SlotWrite20(nopl3_slot *slot, Bit8u data)
     }
     else
     {
-        slot->trem = (Bit8u*)&slot->chip->zeromod;
+        slot->trem = (Bit8u*)&zeromod;
     }
     slot->reg_vib = (data >> 6) & 0x01;
     slot->reg_type = (data >> 5) & 0x01;
@@ -696,18 +698,18 @@ static void OPL3_RhythmSetupAlg(nopl3_chip *chip)
     channel6 = &chip->channel[6];
     channel7 = &chip->channel[7];
     channel8 = &chip->channel[8];
-    channel6->out[0] = (chip->muteMask & (1 << mch_bd)) ? &chip->zeromod : &channel6->slots[1]->out;
-    channel6->out[1] = (chip->muteMask & (1 << mch_bd)) ? &chip->zeromod : &channel6->slots[1]->out;
-    channel6->out[2] = &chip->zeromod;
-    channel6->out[3] = &chip->zeromod;
-    channel7->out[0] = (chip->muteMask & (1 << mch_hh)) ? &chip->zeromod : &channel7->slots[0]->out;
-    channel7->out[1] = (chip->muteMask & (1 << mch_hh)) ? &chip->zeromod : &channel7->slots[0]->out;
-    channel7->out[2] = (chip->muteMask & (1 << mch_sd)) ? &chip->zeromod : &channel7->slots[1]->out;
-    channel7->out[3] = (chip->muteMask & (1 << mch_sd)) ? &chip->zeromod : &channel7->slots[1]->out;
-    channel8->out[0] = (chip->muteMask & (1 << mch_tt)) ? &chip->zeromod : &channel8->slots[0]->out;
-    channel8->out[1] = (chip->muteMask & (1 << mch_tt)) ? &chip->zeromod : &channel8->slots[0]->out;
-    channel8->out[2] = (chip->muteMask & (1 << mch_tc)) ? &chip->zeromod : &channel8->slots[1]->out;
-    channel8->out[3] = (chip->muteMask & (1 << mch_tc)) ? &chip->zeromod : &channel8->slots[1]->out;
+    channel6->out[0] = (chip->muteMask & (1 << mch_bd)) ? &zeromod : &channel6->slots[1]->out;
+    channel6->out[1] = (chip->muteMask & (1 << mch_bd)) ? &zeromod : &channel6->slots[1]->out;
+    channel6->out[2] = &zeromod;
+    channel6->out[3] = &zeromod;
+    channel7->out[0] = (chip->muteMask & (1 << mch_hh)) ? &zeromod : &channel7->slots[0]->out;
+    channel7->out[1] = (chip->muteMask & (1 << mch_hh)) ? &zeromod : &channel7->slots[0]->out;
+    channel7->out[2] = (chip->muteMask & (1 << mch_sd)) ? &zeromod : &channel7->slots[1]->out;
+    channel7->out[3] = (chip->muteMask & (1 << mch_sd)) ? &zeromod : &channel7->slots[1]->out;
+    channel8->out[0] = (chip->muteMask & (1 << mch_tt)) ? &zeromod : &channel8->slots[0]->out;
+    channel8->out[1] = (chip->muteMask & (1 << mch_tt)) ? &zeromod : &channel8->slots[0]->out;
+    channel8->out[2] = (chip->muteMask & (1 << mch_tc)) ? &zeromod : &channel8->slots[1]->out;
+    channel8->out[3] = (chip->muteMask & (1 << mch_tc)) ? &zeromod : &channel8->slots[1]->out;
 }
 
 static void OPL3_ChannelUpdateRhythm(nopl3_chip *chip, Bit8u data)
@@ -853,7 +855,7 @@ static void OPL3_ChannelSetupAlg(nopl3_channel *channel)
             break;
         case 0x01:
             channel->slots[0]->mod = &channel->slots[0]->fbmod;
-            channel->slots[1]->mod = &channel->chip->zeromod;
+            channel->slots[1]->mod = &zeromod;
             break;
         }
         return;
@@ -864,10 +866,10 @@ static void OPL3_ChannelSetupAlg(nopl3_channel *channel)
     }
     if (channel->alg & 0x04)
     {
-        channel->pair->out[0] = &channel->chip->zeromod;
-        channel->pair->out[1] = &channel->chip->zeromod;
-        channel->pair->out[2] = &channel->chip->zeromod;
-        channel->pair->out[3] = &channel->chip->zeromod;
+        channel->pair->out[0] = &zeromod;
+        channel->pair->out[1] = &zeromod;
+        channel->pair->out[2] = &zeromod;
+        channel->pair->out[3] = &zeromod;
         switch (channel->alg & 0x03)
         {
         case 0x00:
@@ -876,39 +878,39 @@ static void OPL3_ChannelSetupAlg(nopl3_channel *channel)
             channel->slots[0]->mod = &channel->pair->slots[1]->out;
             channel->slots[1]->mod = &channel->slots[0]->out;
             channel->out[0] = &channel->slots[1]->out;
-            channel->out[1] = &channel->chip->zeromod;
-            channel->out[2] = &channel->chip->zeromod;
-            channel->out[3] = &channel->chip->zeromod;
+            channel->out[1] = &zeromod;
+            channel->out[2] = &zeromod;
+            channel->out[3] = &zeromod;
             break;
         case 0x01:
             channel->pair->slots[0]->mod = &channel->pair->slots[0]->fbmod;
             channel->pair->slots[1]->mod = &channel->pair->slots[0]->out;
-            channel->slots[0]->mod = &channel->chip->zeromod;
+            channel->slots[0]->mod = &zeromod;
             channel->slots[1]->mod = &channel->slots[0]->out;
             channel->out[0] = &channel->pair->slots[1]->out;
             channel->out[1] = &channel->slots[1]->out;
-            channel->out[2] = &channel->chip->zeromod;
-            channel->out[3] = &channel->chip->zeromod;
+            channel->out[2] = &zeromod;
+            channel->out[3] = &zeromod;
             break;
         case 0x02:
             channel->pair->slots[0]->mod = &channel->pair->slots[0]->fbmod;
-            channel->pair->slots[1]->mod = &channel->chip->zeromod;
+            channel->pair->slots[1]->mod = &zeromod;
             channel->slots[0]->mod = &channel->pair->slots[1]->out;
             channel->slots[1]->mod = &channel->slots[0]->out;
             channel->out[0] = &channel->pair->slots[0]->out;
             channel->out[1] = &channel->slots[1]->out;
-            channel->out[2] = &channel->chip->zeromod;
-            channel->out[3] = &channel->chip->zeromod;
+            channel->out[2] = &zeromod;
+            channel->out[3] = &zeromod;
             break;
         case 0x03:
             channel->pair->slots[0]->mod = &channel->pair->slots[0]->fbmod;
-            channel->pair->slots[1]->mod = &channel->chip->zeromod;
+            channel->pair->slots[1]->mod = &zeromod;
             channel->slots[0]->mod = &channel->pair->slots[1]->out;
-            channel->slots[1]->mod = &channel->chip->zeromod;
+            channel->slots[1]->mod = &zeromod;
             channel->out[0] = &channel->pair->slots[0]->out;
             channel->out[1] = &channel->slots[0]->out;
             channel->out[2] = &channel->slots[1]->out;
-            channel->out[3] = &channel->chip->zeromod;
+            channel->out[3] = &zeromod;
             break;
         }
     }
@@ -920,17 +922,17 @@ static void OPL3_ChannelSetupAlg(nopl3_channel *channel)
             channel->slots[0]->mod = &channel->slots[0]->fbmod;
             channel->slots[1]->mod = &channel->slots[0]->out;
             channel->out[0] = &channel->slots[1]->out;
-            channel->out[1] = &channel->chip->zeromod;
-            channel->out[2] = &channel->chip->zeromod;
-            channel->out[3] = &channel->chip->zeromod;
+            channel->out[1] = &zeromod;
+            channel->out[2] = &zeromod;
+            channel->out[3] = &zeromod;
             break;
         case 0x01:
             channel->slots[0]->mod = &channel->slots[0]->fbmod;
-            channel->slots[1]->mod = &channel->chip->zeromod;
+            channel->slots[1]->mod = &zeromod;
             channel->out[0] = &channel->slots[0]->out;
             channel->out[1] = &channel->slots[1]->out;
-            channel->out[2] = &channel->chip->zeromod;
-            channel->out[3] = &channel->chip->zeromod;
+            channel->out[2] = &zeromod;
+            channel->out[3] = &zeromod;
             break;
         }
     }
@@ -1289,11 +1291,11 @@ void NOPL3_Reset(nopl3_chip *chip, Bit32u clock, Bit32u samplerate)
     for (slotnum = 0; slotnum < 36; slotnum++)
     {
         chip->slot[slotnum].chip = chip;
-        chip->slot[slotnum].mod = &chip->zeromod;
+        chip->slot[slotnum].mod = &zeromod;
         chip->slot[slotnum].eg_rout = 0x1ff;
         chip->slot[slotnum].eg_out = 0x1ff;
         chip->slot[slotnum].eg_gen = envelope_gen_num_off;
-        chip->slot[slotnum].trem = (Bit8u*)&chip->zeromod;
+        chip->slot[slotnum].trem = (Bit8u*)&zeromod;
     }
     for (channum = 0; channum < 18; channum++)
     {
@@ -1310,10 +1312,10 @@ void NOPL3_Reset(nopl3_chip *chip, Bit32u clock, Bit32u samplerate)
             chip->channel[channum].pair = &chip->channel[channum - 3];
         }
         chip->channel[channum].chip = chip;
-        chip->channel[channum].out[0] = &chip->zeromod;
-        chip->channel[channum].out[1] = &chip->zeromod;
-        chip->channel[channum].out[2] = &chip->zeromod;
-        chip->channel[channum].out[3] = &chip->zeromod;
+        chip->channel[channum].out[0] = &zeromod;
+        chip->channel[channum].out[1] = &zeromod;
+        chip->channel[channum].out[2] = &zeromod;
+        chip->channel[channum].out[3] = &zeromod;
         chip->channel[channum].chtype = ch_2op;
         chip->channel[channum].cha = ~0;
         chip->channel[channum].chb = ~0;
