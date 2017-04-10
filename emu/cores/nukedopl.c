@@ -1256,18 +1256,27 @@ void NOPL3_Generate(nopl3_chip *chip, Bit32s *buf)
 
 void NOPL3_GenerateResampled(nopl3_chip *chip, Bit32s *buf)
 {
-    while (chip->samplecnt >= chip->rateratio)
+    if (chip->rateratio == (1 << RSM_FRAC))
     {
-        chip->oldsamples[0] = chip->samples[0];
-        chip->oldsamples[1] = chip->samples[1];
         NOPL3_Generate(chip, chip->samples);
-        chip->samplecnt -= chip->rateratio;
+        buf[0] = (Bit32s)chip->samples[0];
+        buf[1] = (Bit32s)chip->samples[1];
     }
-    buf[0] = (Bit32s)((chip->oldsamples[0] * (chip->rateratio - chip->samplecnt)
-                     + chip->samples[0] * chip->samplecnt) / chip->rateratio);
-    buf[1] = (Bit32s)((chip->oldsamples[1] * (chip->rateratio - chip->samplecnt)
-                     + chip->samples[1] * chip->samplecnt) / chip->rateratio);
-    chip->samplecnt += 1 << RSM_FRAC;
+    else
+    {
+        chip->samplecnt += 1 << RSM_FRAC;
+        while (chip->samplecnt >= chip->rateratio)
+        {
+            chip->oldsamples[0] = chip->samples[0];
+            chip->oldsamples[1] = chip->samples[1];
+            NOPL3_Generate(chip, chip->samples);
+            chip->samplecnt -= chip->rateratio;
+        }
+        buf[0] = (Bit32s)((chip->oldsamples[0] * (chip->rateratio - chip->samplecnt)
+                         + chip->samples[0] * chip->samplecnt) / chip->rateratio);
+        buf[1] = (Bit32s)((chip->oldsamples[1] * (chip->rateratio - chip->samplecnt)
+                         + chip->samples[1] * chip->samplecnt) / chip->rateratio);
+    }
 }
 
 void NOPL3_Reset(nopl3_chip *chip, Bit32u clock, Bit32u samplerate)
@@ -1275,7 +1284,8 @@ void NOPL3_Reset(nopl3_chip *chip, Bit32u clock, Bit32u samplerate)
     Bit8u slotnum;
     Bit8u channum;
 
-    memset(chip, 0, sizeof(nopl3_chip));
+    memset(chip->channel, 0x00, sizeof(nopl3_channel) * 18);
+    memset(chip->slot, 0x00, sizeof(nopl3_slot) * 36);
     for (slotnum = 0; slotnum < 36; slotnum++)
     {
         chip->slot[slotnum].chip = chip;
@@ -1314,6 +1324,22 @@ void NOPL3_Reset(nopl3_chip *chip, Bit32u clock, Bit32u samplerate)
     chip->rateratio = (samplerate << RSM_FRAC) / (clock / 288);
     chip->tremoloshift = 4;
     chip->vibshift = 1;
+
+    chip->address = 0;
+    chip->timer = 0;
+    chip->newm = chip->nts = chip->rhy = chip->tremolo = 0;
+    chip->vibpos = chip->tremolopos = 0;
+    chip->mixbuff[0] = chip->mixbuff[1] = 0;
+
+    chip->samplecnt = 0;
+    chip->oldsamples[0] = chip->oldsamples[1] = 0;
+    chip->samples[0] = chip->samples[1] = 0;
+#ifdef NOPL_ENABLE_WRITEBUF
+    chip->writebuf_samplecnt = 0;
+    chip->writebuf_cur = chip->writebuf_last = 0;
+    chip->writebuf_lasttime = 0;
+    memset(chip->writebuf, 0x00, sizeof(nopl3_writebuf) * NOPL_WRITEBUF_SIZE);
+#endif
 }
 
 void NOPL3_WriteReg(nopl3_chip *chip, Bit16u reg, Bit8u v)
@@ -1519,28 +1545,8 @@ void nuked_shutdown(void *chip)
 void nuked_reset_chip(void *chip)
 {
 	nopl3_chip* opl3 = (nopl3_chip*) chip;
-	DEV_DATA _devData;
-	Bit32u clock;
-	Bit32u rate;
-	Bit32s mstVolL, mstVolR;
-	Bit32u muteMask;
 
-	// save for reset
-	_devData = opl3->_devData;
-	clock = opl3->clock;
-	rate = opl3->smplRate;
-	mstVolL = opl3->masterVolL;
-	mstVolR = opl3->masterVolR;
-	muteMask = opl3->muteMask;
-	
-	NOPL3_Reset(opl3, clock, rate);
-	
-	opl3->_devData = _devData;
-	opl3->clock = clock;
-	opl3->smplRate = rate;
-	opl3->masterVolL = mstVolL;
-	opl3->masterVolR = mstVolR;
-	opl3->muteMask = muteMask;
+	NOPL3_Reset(opl3, opl3->clock, opl3->smplRate);
 	NOPL3_RefreshMuteMasks(opl3);
 	
 	opl3->isDisabled = 0x01;	// OPL4 speed hack
