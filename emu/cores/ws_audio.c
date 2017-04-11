@@ -24,6 +24,7 @@ static void ws_audio_sounddma(wsa_state* chip);
 static void ws_write_ram_byte(void* info, UINT16 offset, UINT8 value);
 static UINT8 ws_read_ram_byte(void* info, UINT16 offset);
 static void ws_set_mute_mask(void* info, UINT32 MuteMask);
+static UINT32 ws_get_mute_mask(void* info);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -162,10 +163,13 @@ static UINT8 ws_audio_init(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 static void ws_audio_reset(void* info)
 {
 	wsa_state* chip = (wsa_state*)info;
+	UINT32 muteMask;
 	int i;
 	
-	// TODO: save/restore muting flags
+	muteMask = ws_get_mute_mask(chip);
 	memset(&chip->ws_audio, 0, sizeof(WS_AUDIO));
+	ws_set_mute_mask(chip, muteMask);
+	
 	chip->SweepTime = 0;
 	chip->SweepStep = 0;
 	chip->NoiseType = 0;
@@ -508,4 +512,17 @@ static void ws_set_mute_mask(void* info, UINT32 MuteMask)
 		chip->ws_audio[CurChn].Muted = (MuteMask >> CurChn) & 0x01;
 	
 	return;
+}
+
+static UINT32 ws_get_mute_mask(void* info)
+{
+	wsa_state* chip = (wsa_state*)info;
+	UINT32 muteMask;
+	UINT8 CurChn;
+	
+	muteMask = 0x00;
+	for (CurChn = 0; CurChn < 4; CurChn ++)
+		muteMask |= (chip->ws_audio[CurChn].Muted << CurChn);
+	
+	return muteMask;
 }

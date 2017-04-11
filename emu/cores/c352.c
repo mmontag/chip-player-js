@@ -40,6 +40,7 @@ static void c352_alloc_rom(void* chip, UINT32 memsize);
 static void c352_write_rom(void *chip, UINT32 offset, UINT32 length, const UINT8* data);
 
 static void c352_set_mute_mask(void *chip, UINT32 MuteMask);
+static UINT32 c352_get_mute_mask(void *chip);
 static void c352_set_options(void *chip, UINT32 Flags);
 
 
@@ -321,8 +322,9 @@ static void device_stop_c352(void *chip)
 static void device_reset_c352(void *chip)
 {
 	C352 *c = (C352 *)chip;
+	UINT32 muteMask;
 	
-	// TODO: save/restore muting flags
+	muteMask = c352_get_mute_mask(c);
 	
 	// clear all channels states
 	memset(c->v,0,sizeof(C352_Voice)*C352_VOICES);
@@ -330,6 +332,8 @@ static void device_reset_c352(void *chip)
 	// init noise generator
 	c->random = 0x1234;
 	c->control = 0;
+	
+	c352_set_mute_mask(c, muteMask);
 	
 	return;
 }
@@ -438,6 +442,19 @@ static void c352_set_mute_mask(void *chip, UINT32 MuteMask)
 		c->v[CurChn].mute = (MuteMask >> CurChn) & 0x01;
 	
 	return;
+}
+
+static UINT32 c352_get_mute_mask(void *chip)
+{
+	C352 *c = (C352 *)chip;
+	UINT32 muteMask;
+	UINT8 CurChn;
+	
+	muteMask = 0x00000000;
+	for (CurChn = 0; CurChn < C352_VOICES; CurChn ++)
+		muteMask |= (c->v[CurChn].mute << CurChn);
+	
+	return muteMask;
 }
 
 static void c352_set_options(void *chip, UINT32 Flags)

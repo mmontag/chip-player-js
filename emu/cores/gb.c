@@ -77,6 +77,7 @@ static void device_stop_gameboy_sound(void *chip);
 static void device_reset_gameboy_sound(void *chip);
 
 static void gameboy_sound_set_mute_mask(void *chip, UINT32 MuteMask);
+static UINT32 gameboy_sound_get_mute_mask(void *chip);
 static void gameboy_sound_set_options(void *chip, UINT32 Flags);
 
 
@@ -1280,14 +1281,18 @@ static void device_stop_gameboy_sound(void *chip)
 static void device_reset_gameboy_sound(void *chip)
 {
 	gb_sound_t *gb = (gb_sound_t *)chip;
+	UINT32 muteMask;
+
+	muteMask = gameboy_sound_get_mute_mask(gb);
 
 	RC_RESET(&gb->cycleCntr);
 
-	// TODO: save/restore musing
 	memset(&gb->snd_1, 0, sizeof(gb->snd_1));
 	memset(&gb->snd_2, 0, sizeof(gb->snd_2));
 	memset(&gb->snd_3, 0, sizeof(gb->snd_3));
 	memset(&gb->snd_4, 0, sizeof(gb->snd_4));
+
+	gameboy_sound_set_mute_mask(gb, muteMask);
 
 	gb->snd_1.channel = 1;
 	gb->snd_1.length_mask = 0x3F;
@@ -1352,6 +1357,19 @@ static void gameboy_sound_set_mute_mask(void *chip, UINT32 MuteMask)
 	gb->snd_4.Muted = (MuteMask >> 3) & 0x01;
 	
 	return;
+}
+
+static UINT32 gameboy_sound_get_mute_mask(void *chip)
+{
+	gb_sound_t *gb = (gb_sound_t *)chip;
+	UINT32 muteMask;
+	
+	muteMask =	(gb->snd_1.Muted << 0) |
+				(gb->snd_2.Muted << 1) |
+				(gb->snd_3.Muted << 2) |
+				(gb->snd_4.Muted << 3);
+	
+	return muteMask;
 }
 
 static void gameboy_sound_set_options(void *chip, UINT32 Flags)
