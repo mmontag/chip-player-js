@@ -302,6 +302,7 @@ static void saa1099_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 		for (ch = 0; ch < 6; ch++)
 		{
 			struct saa1099_channel* saach = &saa->channels[ch];
+			int outlvl;
 
 			if (saach->freq == 0.0)
 				saach->freq = (double)(clk2div512 << saach->octave) /
@@ -352,33 +353,13 @@ static void saa1099_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			}
 #else
 			// Now with bipolar output. -Valley Bell
+			outlvl = 0;
 			if (saach->noise_enable)
-			{
-				// TODO: optimize (use variable for +1/-1)
-				if (saa->noise[ch/3].level & 1)
-				{
-					output_l += saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32 / 2;
-					output_r += saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32 / 2;
-				}
-				else
-				{
-					output_l -= saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32 / 2;
-					output_r -= saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32 / 2;
-				}
-			}
+				outlvl += (saa->noise[ch/3].level & 1) ? +1 : -1;
 			if (saach->freq_enable)
-			{
-				if (saach->level & 1)
-				{
-					output_l += saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32;
-					output_r += saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32;
-				}
-				else
-				{
-					output_l -= saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32;
-					output_r -= saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32;
-				}
-			}
+				outlvl += (saach->level & 1) ? +2 : -2;
+			output_l += outlvl * saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32 / 2;
+			output_r += outlvl * saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32 / 2;
 #endif
 		}
 
