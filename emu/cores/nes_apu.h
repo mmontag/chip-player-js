@@ -14,5 +14,6 @@ void device_reset_nesapu(void* chip);
 void nesapu_set_rom(void* chip, const UINT8* ROMData);
 
 void nesapu_set_mute_mask(void* chip, UINT32 MuteMask);
+UINT32 nesapu_get_mute_mask(void* chip);
 
 #endif	// __NES_APU_H__

@@ -51,6 +51,7 @@ static void qsound_write_data(void *info, UINT8 address, UINT16 data);
 static void qsound_alloc_rom(void* info, UINT32 memsize);
 static void qsound_write_rom(void *info, UINT32 offset, UINT32 length, const UINT8* data);
 static void qsound_set_mute_mask(void *info, UINT32 MuteMask);
+static UINT32 qsound_get_mute_mask(void *info);
 
 
 static DEVDEF_RWFUNC devFunc[] =
@@ -169,11 +170,13 @@ static void device_stop_qsound(void *info)
 static void device_reset_qsound(void *info)
 {
 	qsound_state *chip = (qsound_state *)info;
+	UINT32 muteMask;
 	int adr;
-	
-	// TODO: save/restore muting
+
+	muteMask = qsound_get_mute_mask(chip);
 	// init sound regs
 	memset(chip->channel, 0, sizeof(chip->channel));
+	qsound_set_mute_mask(chip, muteMask);
 
 	for (adr = 0x7f; adr >= 0; adr--)
 		qsound_write_data(chip, adr, 0);
@@ -416,4 +419,17 @@ static void qsound_set_mute_mask(void *info, UINT32 MuteMask)
 		chip->channel[CurChn].Muted = (MuteMask >> CurChn) & 0x01;
 	
 	return;
+}
+
+static UINT32 qsound_get_mute_mask(void *info)
+{
+	qsound_state* chip = (qsound_state *)info;
+	UINT32 muteMask;
+	UINT8 CurChn;
+	
+	muteMask = 0x0000;
+	for (CurChn = 0; CurChn < QSOUND_CHANNELS; CurChn ++)
+		muteMask |= (chip->channel[CurChn].Muted << CurChn);
+	
+	return muteMask;
 }

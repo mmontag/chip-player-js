@@ -772,11 +772,7 @@ void device_reset_nesapu(void* chip)
 	UINT8 CurReg;
 	
 	MemPtr = info->APU.dpcm.memory;
-	MuteMask =	(info->APU.squ[0].Muted << 0) |
-				(info->APU.squ[1].Muted << 1) |
-				(info->APU.tri.Muted << 2) |
-				(info->APU.noi.Muted << 3) |
-				(info->APU.dpcm.Muted << 4);
+	MuteMask = nesapu_get_mute_mask(info);
 	memset(&info->APU, 0x00, sizeof(apu_t));
 	info->APU.dpcm.memory = MemPtr;
 	apu_dpcmreset(&info->APU.dpcm);
@@ -810,4 +806,18 @@ void nesapu_set_mute_mask(void* chip, UINT32 MuteMask)
 	info->APU.dpcm.Muted = (MuteMask >> 4) & 0x01;
 	
 	return;
+}
+
+UINT32 nesapu_get_mute_mask(void* chip)
+{
+	nesapu_state *info = (nesapu_state*)chip;
+	UINT32 muteMask;
+	
+	muteMask =	(info->APU.squ[0].Muted << 0) |
+				(info->APU.squ[1].Muted << 1) |
+				(info->APU.tri.Muted << 2) |
+				(info->APU.noi.Muted << 3) |
+				(info->APU.dpcm.Muted << 4);
+	
+	return muteMask;
 }
