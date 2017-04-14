@@ -511,44 +511,21 @@ static void SN76496_set_gain(sn76496_state *R,int gain)
 }
 
 
-static UINT32 generic_start(sn76496_state *chip, UINT32 clock, UINT32 feedbackmask, UINT32 noisetap1, UINT32 noisetap2, UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega)
-{
-	UINT32 sample_rate;
-	
-	chip->clock = clock;
-	chip->clock_divider = clockdivider ? clockdivider : 8;
-	chip->feedback_mask = feedbackmask; // mask for feedback
-	chip->whitenoise_tap1 = noisetap1;  // mask for white noise tap 1
-	chip->whitenoise_tap2 = noisetap2;  // mask for white noise tap 2
-	chip->negate = negate;              // channel negation
-	chip->stereo = stereo;              // GameGear stereo
-	chip->sega_style_psg = sega;        // frequency set to 0 results in freq = 0x400 rather than 0
-	chip->NgpFlags = 0x00;
-	chip->NgpChip2 = NULL;
-	
-	// set gain
-	SN76496_set_gain(chip, 0);
-	
-	sn76496_set_mutemask(chip, 0x00);
-	
-	sample_rate = chip->clock / 2 / chip->clock_divider;
-	
-	return sample_rate;
-}
-
-UINT32 sn76496_start(void **chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
+UINT32 sn76496_start(void **_chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
 					UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega)
 {
-	sn76496_state* sn_chip;
+	sn76496_state* chip;
+	UINT32 feedbackmask;
 	UINT32 ntap[2];
 	UINT8 curbit;
 	UINT8 curtap;
 	
-	sn_chip = (sn76496_state*)calloc(1, sizeof(sn76496_state));
-	if (sn_chip == NULL)
+	chip = (sn76496_state*)calloc(1, sizeof(sn76496_state));
+	if (chip == NULL)
 		return 0;
-	*chip = sn_chip;
+	*_chip = chip;
 	
+	feedbackmask = 1 << (shiftregwidth - 1);
 	// extract single noise tap bits
 	ntap[0] = ntap[1] = 0x00;
 	curtap = 0;
@@ -563,8 +540,23 @@ UINT32 sn76496_start(void **chip, UINT32 clock, UINT8 shiftregwidth, UINT16 nois
 		}
 	}
 	
-	return generic_start(sn_chip, clock, 1 << (shiftregwidth - 1), ntap[0], ntap[1],
-						negate, stereo, clockdivider, sega);
+	chip->clock = clock;
+	chip->clock_divider = clockdivider ? clockdivider : 8;
+	chip->feedback_mask = feedbackmask; // mask for feedback
+	chip->whitenoise_tap1 = ntap[0];    // mask for white noise tap 1
+	chip->whitenoise_tap2 = ntap[1];    // mask for white noise tap 2
+	chip->negate = negate;              // channel negation
+	chip->stereo = stereo;              // GameGear stereo
+	chip->sega_style_psg = sega;        // frequency set to 0 results in freq = 0x400 rather than 0
+	chip->NgpFlags = 0x00;
+	chip->NgpChip2 = NULL;
+	
+	// set gain
+	SN76496_set_gain(chip, 0);
+	
+	sn76496_set_mutemask(chip, 0x00);
+	
+	return chip->clock / 2 / chip->clock_divider;
 }
 
 void sn76496_connect_t6w28(void *noisechip, void *tonechip)
