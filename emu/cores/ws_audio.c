@@ -1,4 +1,3 @@
-// TODO: int/long -> INT32/INT16
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL
@@ -97,16 +96,16 @@ typedef UINT8	byte;
 // 16KHz = 0.75HBlank = 192cycles間隔
 // 20KHz = 0.60HBlank = 154cycles間隔
 // 24KHz = 0.50HBlank = 128cycles間隔
-static const int DMACycles[4] = { 256, 192, 154, 128 };
+static const UINT16 DMACycles[4] = { 256, 192, 154, 128 };
 
 typedef struct
 {
-	int wave;
-	int lvol;
-	int rvol;
-	long offset;
-	long delta;
-	long pos;
+	UINT16 wave;
+	UINT8 lvol;
+	UINT8 rvol;
+	UINT32 offset;
+	UINT32 delta;
+	UINT8 pos;
 	UINT8 Muted;
 } WS_AUDIO;
 
@@ -115,17 +114,17 @@ struct _wsa_state
 	DEV_DATA _devData;
 	
 	WS_AUDIO ws_audio[4];
-	int sweepDelta;
-	int sweepOffset;
-	int SweepTime;
-	int SweepStep;
-	int SweepCount;
-	int SweepFreq;
-	int NoiseType;
-	int NoiseRng;
-	int MainVolume;
-	int PCMVolumeLeft;
-	int PCMVolumeRight;
+	UINT32	sweepDelta;
+	UINT32	sweepOffset;
+	INT16	SweepTime;
+	INT8	SweepStep;
+	INT16	SweepCount;
+	UINT16	SweepFreq;
+	UINT8	NoiseType;
+	UINT32	NoiseRng;
+	UINT16	MainVolume;
+	UINT8	PCMVolumeLeft;
+	UINT8	PCMVolumeRight;
 
 	UINT8	 ws_ioRam[0x100];
 	UINT8	*ws_internalRam;
@@ -201,7 +200,7 @@ static void ws_audio_update(void* info, UINT32 length, DEV_SMPL** buffer)
 	DEV_SMPL* bufL;
 	DEV_SMPL* bufR;
 	UINT32 i;
-	int ch, cnt;
+	UINT8 ch, cnt;
 	INT16 w;	// could fit into INT8
 	DEV_SMPL l, r;
 
@@ -238,7 +237,7 @@ static void ws_audio_update(void* info, UINT32 length, DEV_SMPL** buffer)
 
 					//OSWANの擬似乱数の処理と同等のつもり
 #define BIT(n) (1<<n)
-					const unsigned long noise_mask[8] =
+					static const UINT32 noise_mask[8] =
 					{
 						BIT(0)|BIT(1),
 						BIT(0)|BIT(1)|BIT(4)|BIT(5),
@@ -250,7 +249,7 @@ static void ws_audio_update(void* info, UINT32 length, DEV_SMPL** buffer)
 						BIT(0)|BIT(2)|BIT(3)|BIT(4)
 					};
 
-					const unsigned long noise_bit[8] =
+					static const UINT32 noise_bit[8] =
 					{
 						BIT(15),
 						BIT(14),
@@ -262,7 +261,7 @@ static void ws_audio_update(void* info, UINT32 length, DEV_SMPL** buffer)
 						BIT(8)
 					};
 
-					int Masked, XorReg;
+					UINT32 Masked, XorReg;
 
 					chip->ws_audio[ch].offset += chip->ws_audio[ch].delta;
 					cnt = chip->ws_audio[ch].offset>>16;
@@ -320,8 +319,8 @@ static void ws_audio_update(void* info, UINT32 length, DEV_SMPL** buffer)
 static void ws_audio_port_write(void* info, UINT8 port, UINT8 value)
 {
 	wsa_state* chip = (wsa_state*)info;
-	int i;
-	long freq;
+	UINT16 i;
+	UINT32 freq;
 
 	chip->ws_ioRam[port]=value;
 
@@ -333,37 +332,37 @@ static void ws_audio_port_write(void* info, UINT8 port, UINT8 value)
 	// →つまり、0xFFFF の時だけ音を出さないってことだろうか。
 	//   でも、0x07FF の時も音を出さないけど、ノイズだけ音を出すのかも。
 	case 0x80:
-	case 0x81:	i=(((unsigned int)chip->ws_ioRam[0x81])<<8)+((unsigned int)chip->ws_ioRam[0x80]);
+	case 0x81:	i=(((UINT16)chip->ws_ioRam[0x81])<<8)+((UINT16)chip->ws_ioRam[0x80]);
 				if (i == 0xffff)
 					freq = 0;
 				else
 					freq = chip->clock/(2048-(i&0x7ff));
-				chip->ws_audio[0].delta = (long)((float)freq*(float)65536/(float)chip->smplrate);
+				chip->ws_audio[0].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
 				break;
 	case 0x82:
-	case 0x83:	i=(((unsigned int)chip->ws_ioRam[0x83])<<8)+((unsigned int)chip->ws_ioRam[0x82]);
+	case 0x83:	i=(((UINT16)chip->ws_ioRam[0x83])<<8)+((UINT16)chip->ws_ioRam[0x82]);
 				if (i == 0xffff)
 					freq = 0;
 				else
 					freq = chip->clock/(2048-(i&0x7ff));
-				chip->ws_audio[1].delta = (long)((float)freq*(float)65536/(float)chip->smplrate);
+				chip->ws_audio[1].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
 				break;
 	case 0x84:
-	case 0x85:	i=(((unsigned int)chip->ws_ioRam[0x85])<<8)+((unsigned int)chip->ws_ioRam[0x84]);
+	case 0x85:	i=(((UINT16)chip->ws_ioRam[0x85])<<8)+((UINT16)chip->ws_ioRam[0x84]);
 				chip->SweepFreq = i;
 				if (i == 0xffff)
 					freq = 0;
 				else
 					freq = chip->clock/(2048-(i&0x7ff));
-				chip->ws_audio[2].delta = (long)((float)freq*(float)65536/(float)chip->smplrate);
+				chip->ws_audio[2].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
 				break;
 	case 0x86:
-	case 0x87:	i=(((unsigned int)chip->ws_ioRam[0x87])<<8)+((unsigned int)chip->ws_ioRam[0x86]);
+	case 0x87:	i=(((UINT16)chip->ws_ioRam[0x87])<<8)+((UINT16)chip->ws_ioRam[0x86]);
 				if (i == 0xffff)
 					freq = 0;
 				else
 					freq = chip->clock/(2048-(i&0x7ff));
-				chip->ws_audio[3].delta = (long)((float)freq*(float)65536/(float)chip->smplrate);
+				chip->ws_audio[3].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
 				break;
 	case 0x88:
 				chip->ws_audio[0].lvol = (value>>4)&0xf;
@@ -382,7 +381,7 @@ static void ws_audio_port_write(void* info, UINT8 port, UINT8 value)
 				chip->ws_audio[3].rvol = value&0xf;
 				break;
 	case 0x8C:
-				chip->SweepStep = (signed char)value;
+				chip->SweepStep = (INT8)value;
 				break;
 	case 0x8D:
 				//Sweepの間隔は 1/375[s] = 2.666..[ms]
@@ -392,7 +391,7 @@ static void ws_audio_port_write(void* info, UINT8 port, UINT8 value)
 				//これを HBlank (256cycles) の間隔で言うと、
 				//　8192/256 = 32
 				//なので、32[HBlank]*(n+1) 間隔となる
-				chip->SweepTime = (((unsigned int)value)+1)<<5;
+				chip->SweepTime = (((INT16)value)+1)<<5;
 				chip->SweepCount = chip->SweepTime;
 				break;
 	case 0x8E:
@@ -400,7 +399,7 @@ static void ws_audio_port_write(void* info, UINT8 port, UINT8 value)
 				if (value&8) chip->NoiseRng = 1;	//ノイズカウンターリセット
 				break;
 	case 0x8F:
-				chip->ws_audio[0].wave = (unsigned int)value<<6;
+				chip->ws_audio[0].wave = (UINT16)value<<6;
 				chip->ws_audio[1].wave = chip->ws_audio[0].wave + 0x10;
 				chip->ws_audio[2].wave = chip->ws_audio[1].wave + 0x10;
 				chip->ws_audio[3].wave = chip->ws_audio[2].wave + 0x10;
@@ -436,7 +435,7 @@ static UINT8 ws_audio_port_read(void* info, UINT8 port)
 // Note: Must be called every 256 cycles (3072000 Hz clock), i.e. at 12000 Hz
 static void ws_audio_process(wsa_state* chip)
 {
-	long freq;
+	UINT32 freq;
 
 	if (chip->SweepStep && (SNDMOD&0x40))
 	{
@@ -447,7 +446,7 @@ static void ws_audio_process(wsa_state* chip)
 			chip->SweepFreq &= 0x7FF;
 
 			freq = chip->clock/(2048-chip->SweepFreq);
-			chip->ws_audio[2].delta = (long)((float)freq*(float)65536/(float)chip->smplrate);
+			chip->ws_audio[2].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
 		}
 		chip->SweepCount--;
 	}
