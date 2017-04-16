@@ -114,8 +114,7 @@ struct _wsa_state
 	DEV_DATA _devData;
 	
 	WS_AUDIO ws_audio[4];
-	UINT32	sweepDelta;
-	UINT32	sweepOffset;
+	RATIO_CNTR HBlankTmr;
 	INT16	SweepTime;
 	INT8	SweepStep;
 	INT16	SweepCount;
@@ -151,6 +150,9 @@ static UINT8 ws_audio_init(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	chip->smplrate = cfg->smplRate;
 	//SRATE_CUSTOM_HIGHEST(cfg->srMode, chip->smplrate, cfg->smplRate);
 	
+	// one step every 256 cycles
+	RC_SET_RATIO(&chip->HBlankTmr, chip->clock, chip->smplrate * 256);
+	
 	ws_set_mute_mask(chip, 0x00);
 	
 	chip->_devData.chipInf = chip;
@@ -177,8 +179,7 @@ static void ws_audio_reset(void* info)
 	chip->PCMVolumeLeft = 0;
 	chip->PCMVolumeRight = 0;
 	
-	chip->sweepDelta = chip->clock * 256 / chip->smplrate;
-	chip->sweepOffset = 0;
+	RC_RESET(&chip->HBlankTmr);
 	
 	for (i=0x80;i<0xc9;i++)
 		ws_audio_port_write(chip, i, initialIoValue[i]);
@@ -208,12 +209,13 @@ static void ws_audio_update(void* info, UINT32 length, DEV_SMPL** buffer)
 	bufR = buffer[1];
 	for (i=0; i<length; i++)
 	{
-		chip->sweepOffset += chip->sweepDelta;
-		while(chip->sweepOffset >= 0x10000)
-		{
-			chip->sweepOffset -= 0x10000;
+		UINT32 swpCount;
+		
+		RC_STEP(&chip->HBlankTmr);
+		for (swpCount = RC_GET_VAL(&chip->HBlankTmr); swpCount > 0; swpCount --)
 			ws_audio_process(chip);
-		}
+		RC_MASK(&chip->HBlankTmr);
+
 		l = r = 0;
 
 		for (ch=0; ch<4; ch++)
