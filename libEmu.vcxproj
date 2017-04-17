@@ -292,6 +292,7 @@
     <ClInclude Include="emu\EmuCores.h" />
     <ClInclude Include="emu\EmuStructs.h" />
     <ClInclude Include="emu\cores\okim6295.h" />
+    <ClInclude Include="emu\RatioCntr.h" />
     <ClInclude Include="emu\Resampler.h" />
     <ClInclude Include="emu\cores\sn76489.h" />
     <ClInclude Include="emu\cores\sn76496.h" />

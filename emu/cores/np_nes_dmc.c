@@ -10,7 +10,7 @@
 #include <stdtype.h>
 #include <stdbool.h>
 #include "../snddef.h"
-#include "../EmuHelper.h"
+#include "../RatioCntr.h"
 #include "np_nes_apu.h"	// for NES_APU_np_FrameSequence
 #include "np_nes_dmc.h"
 

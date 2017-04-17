@@ -443,5 +443,8 @@
     <ClInclude Include="emu\cores\okiadpcm.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="emu\RatioCntr.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -9,7 +9,7 @@
 #include <stdtype.h>
 #include <stdbool.h>
 #include "../snddef.h"
-#include "../EmuHelper.h"
+#include "../RatioCntr.h"
 #include "np_nes_fds.h"
 
 

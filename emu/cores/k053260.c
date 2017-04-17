@@ -64,6 +64,7 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../RatioCntr.h"
 #include "k053260.h"
 
 static void k053260_update(void* param, UINT32 samples, DEV_SMPL **outputs);

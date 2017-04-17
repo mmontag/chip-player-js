@@ -7,6 +7,7 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
+#include "../RatioCntr.h"
 #include "ws_audio.h"
 
 
