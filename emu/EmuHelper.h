@@ -1,9 +1,10 @@
 #ifndef __EMUHELPER_H__
 #define __EMUHELPER_H__
 
-#ifndef M_PI
-#define M_PI	3.14159265358979323846
-#endif
+// define _USE_MATH_DEFINES and include <math.h> instead
+//#ifndef M_PI
+//#define M_PI	3.14159265358979323846
+//#endif
 
 #ifdef _DEBUG
 #define logerror	printf

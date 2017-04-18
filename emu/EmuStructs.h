@@ -22,7 +22,7 @@ typedef void (*DEVFUNC_CTRL)(void* info);
 typedef void (*DEVFUNC_UPDATE)(void* info, UINT32 samples, DEV_SMPL** outputs);
 typedef void (*DEVFUNC_OPTMASK)(void* info, UINT32 optionBits);
 typedef void (*DEVFUNC_PANALL)(void* info, INT16* channelPanVal);
-typedef void (*DEVFUNC_SRCCB)(void* info, DEVCB_SRATE_CHG smpRateChgCallback, void* paramPtr);
+typedef void (*DEVFUNC_SRCCB)(void* info, DEVCB_SRATE_CHG SmpRateChgCallback, void* paramPtr);
 typedef UINT8 (*DEVFUNC_LINKDEV)(void* info, UINT8 devID, const DEV_INFO* devInfLink);
 
 typedef UINT8 (*DEVFUNC_READ_A8D8)(void* info, UINT8 addr);

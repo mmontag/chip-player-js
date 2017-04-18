@@ -5,10 +5,12 @@
 // by default we use a high-precision 32.32 fixed point counter
 #define RC_SHIFT	32
 typedef UINT64		RC_TYPE;
+typedef INT64		RC_STYPE;
 #else
 // alternatively we can use lower-precision 12.20 fixed point
 #define RC_SHIFT	20
 typedef UINT32		RC_TYPE;
+typedef INT32		RC_STYPE;
 #endif
 
 typedef struct
@@ -50,6 +52,26 @@ INLINE void RC_RESET(RATIO_CNTR* rc)
 INLINE void RC_MASK(RATIO_CNTR* rc)
 {
 	rc->val &= (((RC_TYPE)1 << RC_SHIFT) - 1);
+}
+
+INLINE void RC_VAL_INC(RATIO_CNTR* rc)
+{
+	rc->val += (RC_TYPE)1 << RC_SHIFT;
+}
+
+INLINE void RC_VAL_DEC(RATIO_CNTR* rc)
+{
+	rc->val -= (RC_TYPE)1 << RC_SHIFT;
+}
+
+INLINE void RC_VAL_ADD(RATIO_CNTR* rc, INT32 val)
+{
+	rc->val += (RC_STYPE)val << RC_SHIFT;
+}
+
+INLINE void RC_VAL_SUB(RATIO_CNTR* rc, INT32 val)
+{
+	rc->val -= (RC_STYPE)val << RC_SHIFT;
 }
 
 #endif	// __RATIOCNTR_H__

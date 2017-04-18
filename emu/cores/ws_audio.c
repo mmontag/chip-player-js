@@ -125,12 +125,13 @@ struct _wsa_state
 	UINT16	MainVolume;
 	UINT8	PCMVolumeLeft;
 	UINT8	PCMVolumeRight;
-
+	
 	UINT8	 ws_ioRam[0x100];
 	UINT8	*ws_internalRam;
 	
-	UINT32 clock;
-	UINT32 smplrate;
+	UINT32	clock;
+	UINT32	smplrate;
+	float	ratemul;
 };
 
 #define DEFAULT_CLOCK	3072000
@@ -148,9 +149,12 @@ static UINT8 ws_audio_init(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	chip->ws_internalRam = (UINT8*)malloc(0x4000);
 	
 	chip->clock = cfg->clock;
-	chip->smplrate = cfg->smplRate;
-	//SRATE_CUSTOM_HIGHEST(cfg->srMode, chip->smplrate, cfg->smplRate);
+	// According to http://daifukkat.su/docs/wsman/, the headphone DAC update is (clock / 128)
+	// and sound channels update during every master clock cycle. (clock / 1)
+	chip->smplrate = cfg->clock / 128;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, chip->smplrate, cfg->smplRate);
 	
+	chip->ratemul = (float)chip->clock * 65536.0f / (float)chip->smplrate;
 	// one step every 256 cycles
 	RC_SET_RATIO(&chip->HBlankTmr, chip->clock, chip->smplrate * 256);
 	
@@ -323,7 +327,7 @@ static void ws_audio_port_write(void* info, UINT8 port, UINT8 value)
 {
 	wsa_state* chip = (wsa_state*)info;
 	UINT16 i;
-	UINT32 freq;
+	float freq;
 
 	chip->ws_ioRam[port]=value;
 
@@ -339,16 +343,16 @@ static void ws_audio_port_write(void* info, UINT8 port, UINT8 value)
 				if (i == 0xffff)
 					freq = 0;
 				else
-					freq = chip->clock/(2048-(i&0x7ff));
-				chip->ws_audio[0].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
+					freq = 1.0f/(2048-(i&0x7ff));
+				chip->ws_audio[0].delta = (UINT32)(freq * chip->ratemul);
 				break;
 	case 0x82:
 	case 0x83:	i=(((UINT16)chip->ws_ioRam[0x83])<<8)+((UINT16)chip->ws_ioRam[0x82]);
 				if (i == 0xffff)
 					freq = 0;
 				else
-					freq = chip->clock/(2048-(i&0x7ff));
-				chip->ws_audio[1].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
+					freq = 1.0f/(2048-(i&0x7ff));
+				chip->ws_audio[1].delta = (UINT32)(freq * chip->ratemul);
 				break;
 	case 0x84:
 	case 0x85:	i=(((UINT16)chip->ws_ioRam[0x85])<<8)+((UINT16)chip->ws_ioRam[0x84]);
@@ -356,16 +360,16 @@ static void ws_audio_port_write(void* info, UINT8 port, UINT8 value)
 				if (i == 0xffff)
 					freq = 0;
 				else
-					freq = chip->clock/(2048-(i&0x7ff));
-				chip->ws_audio[2].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
+					freq = 1.0f/(2048-(i&0x7ff));
+				chip->ws_audio[2].delta = (UINT32)(freq * chip->ratemul);
 				break;
 	case 0x86:
 	case 0x87:	i=(((UINT16)chip->ws_ioRam[0x87])<<8)+((UINT16)chip->ws_ioRam[0x86]);
 				if (i == 0xffff)
 					freq = 0;
 				else
-					freq = chip->clock/(2048-(i&0x7ff));
-				chip->ws_audio[3].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
+					freq = 1.0f/(2048-(i&0x7ff));
+				chip->ws_audio[3].delta = (UINT32)(freq * chip->ratemul);
 				break;
 	case 0x88:
 				chip->ws_audio[0].lvol = (value>>4)&0xf;
@@ -438,7 +442,7 @@ static UINT8 ws_audio_port_read(void* info, UINT8 port)
 // Note: Must be called every 256 cycles (3072000 Hz clock), i.e. at 12000 Hz
 static void ws_audio_process(wsa_state* chip)
 {
-	UINT32 freq;
+	float freq;
 
 	if (chip->SweepStep && (SNDMOD&0x40))
 	{
@@ -448,8 +452,8 @@ static void ws_audio_process(wsa_state* chip)
 			chip->SweepFreq += chip->SweepStep;
 			chip->SweepFreq &= 0x7FF;
 
-			freq = chip->clock/(2048-chip->SweepFreq);
-			chip->ws_audio[2].delta = (UINT32)((float)freq*(float)65536/(float)chip->smplrate);
+			freq = 1.0f/(2048-chip->SweepFreq);
+			chip->ws_audio[2].delta = (UINT32)(freq * chip->ratemul);
 		}
 		chip->SweepCount--;
 	}

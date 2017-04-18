@@ -3,8 +3,6 @@
 
 #include <common_def.h>
 
-//typedef UINT32	offs_t;
-
 // DEV_SMPL is used to represent a single sample in a sound stream
 typedef INT32 DEV_SMPL;
 

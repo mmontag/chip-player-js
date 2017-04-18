@@ -137,6 +137,7 @@
 #include <stdlib.h>
 #include <string.h>	// for memset
 #include <stddef.h>	// for NULL
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include <stdtype.h>

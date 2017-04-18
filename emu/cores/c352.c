@@ -207,7 +207,7 @@ static void C352_fetch_sample(C352 *c, C352_Voice *v)
 	}
 }
 
-void c352_ramp_volume(C352_Voice* v,int ch,UINT8 val)
+static void c352_ramp_volume(C352_Voice* v,int ch,UINT8 val)
 {
 	INT16 vol_delta = v->curr_vol[ch] - val;
 	if(vol_delta != 0)
