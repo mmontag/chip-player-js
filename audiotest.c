@@ -133,8 +133,10 @@ int main(int argc, char* argv[])
 		{
 			if (drvInfo->drvSig == ADRVSIG_WAVEWRT)
 			{
+#ifdef AUDDRV_WAVEWRITE
 				aDrv = AudioDrv_GetDrvData(audDrvLog);
 				WavWrt_SetFileName(aDrv, "waveOut.wav");
+#endif
 			}
 			else if (drvInfo->drvSig == ADRVSIG_DSOUND)
 			{
@@ -287,7 +289,9 @@ static void SetupDirectSound(void* audDrv)
 #else
 	hWndConsole = GetDesktopWindow();	// not as nice, but works
 #endif
+#ifdef AUDDRV_DSOUND
 	DSound_SetHWnd(aDrv, hWndConsole);
+#endif
 #endif	// _WIN32
 	
 	return;
