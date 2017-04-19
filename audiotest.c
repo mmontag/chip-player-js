@@ -22,7 +22,9 @@ int __cdecl _getch(void);	// from conio.h
 
 
 int main(int argc, char* argv[]);
+#ifdef AUDDRV_DSOUND
 static void SetupDirectSound(void* audDrv);
+#endif
 static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
 
 
@@ -111,8 +113,10 @@ int main(int argc, char* argv[])
 		printf("WaveOut: Drv Init Error: %02X\n", retVal);
 		goto Exit_Deinit;
 	}
+#ifdef AUDDRV_DSOUND
 	if (drvInfo->drvSig == ADRVSIG_DSOUND)
 		SetupDirectSound(audDrv);
+#endif
 	
 	if (idWavWrt == (UINT32)-1)
 	{
@@ -140,7 +144,9 @@ int main(int argc, char* argv[])
 			}
 			else if (drvInfo->drvSig == ADRVSIG_DSOUND)
 			{
+#ifdef AUDDRV_DSOUND
 				SetupDirectSound(audDrvLog);
+#endif
 			}
 		}
 	}
@@ -277,6 +283,7 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	return curSmpl * smplSize;
 }
 
+#ifdef AUDDRV_DSOUND
 static void SetupDirectSound(void* audDrv)
 {
 #ifdef _WIN32
@@ -289,10 +296,9 @@ static void SetupDirectSound(void* audDrv)
 #else
 	hWndConsole = GetDesktopWindow();	// not as nice, but works
 #endif
-#ifdef AUDDRV_DSOUND
 	DSound_SetHWnd(aDrv, hWndConsole);
-#endif
 #endif	// _WIN32
 	
 	return;
 }
+#endif

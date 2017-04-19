@@ -142,7 +142,9 @@ struct _vgm_chip_device
 int main(int argc, char* argv[]);
 static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs);
 static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
+#ifdef AUDDRV_DSOUND
 static void SetupDirectSound(void* audDrv);
+#endif
 static void InitVGMChips(void);
 static void DeinitVGMChips(void);
 static void SendChipCommand_Data8(UINT8 chipID, UINT8 chipNum, UINT8 ofs, UINT8 data);
@@ -245,8 +247,10 @@ int main(int argc, char* argv[])
 		printf("WaveOut: Drv Init Error: %02X\n", retVal);
 		goto Exit_AudDeinit;
 	}
+#ifdef AUDDRV_DSOUND
 	if (drvInfo->drvSig == ADRVSIG_DSOUND)
 		SetupDirectSound(audDrv);
+#endif
 	
 	sampleRate = 44100;
 	
@@ -280,8 +284,10 @@ int main(int argc, char* argv[])
 	}
 	if (audDrvLog != NULL)
 	{
+#ifdef AUDDRV_WAVEWRITE
 		void* aDrv = AudioDrv_GetDrvData(audDrvLog);
 		WavWrt_SetFileName(aDrv, "waveOut.wav");
+#endif
 		retVal = AudioDrv_Start(audDrvLog, 0);
 		if (retVal)
 			AudioDrv_Deinit(&audDrvLog);
@@ -402,6 +408,7 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	return curSmpl * smplSize;
 }
 
+#ifdef AUDDRV_DSOUND
 static void SetupDirectSound(void* audDrv)
 {
 #ifdef _WIN32
@@ -419,6 +426,7 @@ static void SetupDirectSound(void* audDrv)
 	
 	return;
 }
+#endif
 
 
 static void InitVGMChips(void)

@@ -30,7 +30,9 @@ int __cdecl _getch(void);	// from conio.h
 
 
 int main(int argc, char* argv[]);
+#ifdef AUDDRV_DSOUND
 static void SetupDirectSound(void* audDrv);
+#endif
 static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
 
 
@@ -99,8 +101,10 @@ int main(int argc, char* argv[])
 		printf("WaveOut: Drv Init Error: %02X\n", retVal);
 		goto Exit_AudDeinit;
 	}
+#ifdef AUDDRV_DSOUND
 	if (drvInfo->drvSig == ADRVSIG_DSOUND)
 		SetupDirectSound(audDrv);
+#endif
 	
 	devCfg.emuCore = FCC_MAXM;
 	devCfg.srMode = DEVRI_SRMODE_NATIVE;
@@ -274,6 +278,7 @@ static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
 	return curSmpl * smplSize;
 }
 
+#ifdef AUDDRV_DSOUND
 static void SetupDirectSound(void* audDrv)
 {
 #ifdef _WIN32
@@ -291,3 +296,4 @@ static void SetupDirectSound(void* audDrv)
 	
 	return;
 }
+#endif
