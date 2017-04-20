@@ -36,17 +36,17 @@ add_subdirectory(emu)
 
 
 add_executable(audiotest audiotest.c)
-target_include_directories(audiotest PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(audiotest PUBLIC libaudio)
+target_include_directories(audiotest PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(audiotest PRIVATE libaudio)
 
 add_executable(emutest emutest.c)
-target_include_directories(emutest PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(emutest PUBLIC m libemu)
+target_include_directories(emutest PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(emutest PRIVATE libemu)
 
 add_executable(audemutest audemutest.c)
-target_include_directories(audemutest PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(audemutest PUBLIC m libaudio libemu)
+target_include_directories(audemutest PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(audemutest PRIVATE libaudio libemu)
 
 add_executable(vgmtest vgmtest.c)
-target_include_directories(vgmtest PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(vgmtest PUBLIC m z libaudio libemu)
+target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(vgmtest PRIVATE z libaudio libemu)

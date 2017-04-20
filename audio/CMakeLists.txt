@@ -109,4 +109,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${AUDIO_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${AUDIO_LIBS})

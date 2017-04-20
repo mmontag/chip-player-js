@@ -25,7 +25,7 @@
 #define DEVID_uPD7759	0x16
 #define DEVID_OKIM6258	0x17	// also known as MSM6258
 #define DEVID_OKIM6295	0x18	// also known as MSM6295
-#define DEVID_K051649	0x19
+#define DEVID_K051649	0x19	// also known as SCC1, variants: K052539, also known as SCC+
 #define DEVID_K054539	0x1A
 #define DEVID_C6280		0x1B
 #define DEVID_C140		0x1C

@@ -16,8 +16,8 @@ option(SNDEMU_YM2612_ALL "Sound Device YM2612: all cores" OFF)
 option(SNDEMU_YM2151_ALL "Sound Device YM2151: all cores" OFF)
 option(SNDEMU_SEGAPCM_ALL "Sound Device SegaPCM: all cores" OFF)
 option(SNDEMU_RF5C68_ALL "Sound Device RF5C68: all cores" OFF)
-#option(SNDEMU_RF5C68_MAME "Sound Device YM2413: MAME core" OFF)
-#option(SNDEMU_RF5C68_GENS "Sound Device YM2413: Gens core" OFF)
+#option(SNDEMU_RF5C68_MAME "Sound Device RF5C68: MAME core" OFF)
+#option(SNDEMU_RF5C68_GENS "Sound Device RF5C68: Gens core" OFF)
 option(SNDEMU_YM2203_ALL "Sound Device YM2203: all cores (Note: requires AY8910)" OFF)
 option(SNDEMU_YM2608_ALL "Sound Device YM2608: all cores (Note: requires AY8910)" OFF)
 option(SNDEMU_YM2610_ALL "Sound Device YM2610: all cores (Note: requires AY8910)" OFF)
@@ -59,7 +59,11 @@ option(SNDEMU_X1_010_ALL "Sound Device X1-010: all cores" OFF)
 option(SNDEMU_C352_ALL "Sound Device C352: all cores" OFF)
 option(SNDEMU_GA20_ALL "Sound Device Irem GA20: all cores" OFF)
 
+# enable sound device selection
+set(EMU_DEFS "SNDDEV_SELECT")
+
 if(SNDEMU_ALL)
+	# turn all devices on
 	set(SNDEMU_SN76496_ALL ON)
 	set(SNDEMU_YM2413_ALL ON)
 	set(SNDEMU_YM2612_ALL ON)
@@ -100,10 +104,9 @@ if(SNDEMU_ALL)
 	set(SNDEMU_X1_010_ALL ON)
 	set(SNDEMU_C352_ALL ON)
 	set(SNDEMU_GA20_ALL ON)
-endif(SNDEMU_ALL)
+endif()
 
 
-set(EMU_DEFS)
 set(EMU_FILES
 	SoundEmu.c
 	Resampler.c
@@ -305,3 +308,5 @@ add_library(${PROJECT_NAME} STATIC ${EMU_FILES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${EMU_DEFS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
+
+target_link_libraries(${PROJECT_NAME} PRIVATE m)

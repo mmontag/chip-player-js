@@ -5,6 +5,13 @@
 #include "../EmuCores.h"
 #include "../EmuHelper.h"
 
+#ifndef SNDDEV_SELECT
+// if not asked to select certain sound devices, just include everything (comfort option)
+#define SNDDEV_YM3812
+#define SNDDEV_YM3526
+#define SNDDEV_Y8950
+#endif
+
 #include "oplintf.h"
 #ifdef EC_YM3812_MAME
 #include "fmopl.h"
@@ -50,7 +57,7 @@ static DEV_DEF devDef3812_MAME =
 	
 	devFunc3812_MAME,	// rwFuncs
 };
-#endif
+#endif	// EC_YM3812_MAME
 #ifdef EC_YM3812_ADLIBEMU
 static DEVDEF_RWFUNC devFunc3812_Emu[] =
 {
@@ -75,7 +82,7 @@ static DEV_DEF devDef3812_AdLibEmu =
 	
 	devFunc3812_Emu,	// rwFuncs
 };
-#endif
+#endif	// EC_YM3812_ADLIBEMU
 #ifdef EC_YM3812_NUKED
 static DEVDEF_RWFUNC devFunc3812_Nuked[] =
 {
@@ -100,8 +107,9 @@ static DEV_DEF devDef3812_Nuked =
 	
 	devFunc3812_Nuked,	// rwFuncs
 };
-#endif
+#endif	// EC_YM3812_NUKED
 
+#ifdef SNDDEV_YM3812
 const DEV_DEF* devDefList_YM3812[] =
 {
 #ifdef EC_YM3812_ADLIBEMU
@@ -115,8 +123,10 @@ const DEV_DEF* devDefList_YM3812[] =
 #endif
 	NULL
 };
+#endif
 
 
+#ifdef SNDDEV_YM3526
 static DEVDEF_RWFUNC devFunc3526_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym3526_write},
@@ -146,8 +156,10 @@ const DEV_DEF* devDefList_YM3526[] =
 	&devDef3526_MAME,
 	NULL
 };
+#endif	// SNDDEV_YM3526
 
 
+#ifdef SNDDEV_Y8950
 static DEVDEF_RWFUNC devFunc8950_MAME[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, y8950_write},
@@ -179,6 +191,7 @@ const DEV_DEF* devDefList_Y8950[] =
 	&devDef8950_MAME,
 	NULL
 };
+#endif	// SNDDEV_Y8950
 
 
 #ifdef EC_YM3812_MAME
@@ -205,7 +218,7 @@ static UINT8 device_start_ym3812_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	INIT_DEVINF(retDevInf, devData, rate, &devDef3812_MAME);
 	return 0x00;
 }
-#endif
+#endif	// EC_YM3812_MAME
 
 #ifdef EC_YM3812_ADLIBEMU
 static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -226,7 +239,7 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 	INIT_DEVINF(retDevInf, devData, rate, &devDef3812_AdLibEmu);
 	return 0x00;
 }
-#endif
+#endif	// EC_YM3812_ADLIBEMU
 
 #ifdef EC_YM3812_NUKED
 static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -251,8 +264,10 @@ static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	INIT_DEVINF(retDevInf, &opl3->_devData, rate, &devDef3812_Nuked);
 	return 0x00;
 }
-#endif
+#endif	// EC_YM3812_NUKED
 
+
+#ifdef SNDDEV_YM3526
 static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
@@ -276,8 +291,10 @@ static UINT8 device_start_ym3526(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	INIT_DEVINF(retDevInf, devData, rate, &devDef3526_MAME);
 	return 0x00;
 }
+#endif	// SNDDEV_YM3526
 
 
+#ifdef SNDDEV_Y8950
 static UINT8 device_start_y8950(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
@@ -305,3 +322,4 @@ static UINT8 device_start_y8950(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	INIT_DEVINF(retDevInf, devData, rate, &devDef8950_MAME);
 	return 0x00;
 }
+#endif	// SNDDEV_Y8950

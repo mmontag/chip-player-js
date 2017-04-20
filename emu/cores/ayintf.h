@@ -24,7 +24,6 @@
 #define AYTYPE_YM2203	0x20
 #define AYTYPE_YM2608	0x21
 #define AYTYPE_YM2610	0x22
-#define AYTYPE_YM2610B	0x23
 
 // cfg.chipFlags: pin26 state
 #define YM2149_PIN26_HIGH	0x00

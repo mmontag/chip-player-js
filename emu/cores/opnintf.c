@@ -7,9 +7,16 @@
 #include "../SoundEmu.h"
 #include "../EmuHelper.h"
 
+#ifndef SNDDEV_SELECT
+// if not asked to select certain sound devices, just include everything (comfort option)
+#define SNDDEV_YM2203
+#define SNDDEV_YM2608
+#define SNDDEV_YM2610
+#endif
+
 #include "opnintf.h"
 #include "fmopn.h"
-#include "ayintf.h"
+#include "ayintf.h"	// for constants and AY8910_CFG struct
 
 
 #define LINKDEV_SSG	0x00
@@ -38,6 +45,7 @@ typedef struct _opn_info
 } OPN_INF;
 
 
+#ifdef SNDDEV_YM2203
 static DEVDEF_RWFUNC devFunc_MAME_2203[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2203_write},
@@ -67,7 +75,9 @@ const DEV_DEF* devDefList_YM2203[] =
 	&devDef_MAME_2203,
 	NULL
 };
+#endif	// SNDDEV_YM2203
 
+#ifdef SNDDEV_YM2608
 static DEVDEF_RWFUNC devFunc_MAME_2608[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2608_write},
@@ -99,7 +109,9 @@ const DEV_DEF* devDefList_YM2608[] =
 	&devDef_MAME_2608,
 	NULL
 };
+#endif	// SNDDEV_YM2608
 
+#ifdef SNDDEV_YM2610
 static DEVDEF_RWFUNC devFunc_MAME_2610[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2610_write},
@@ -150,6 +162,7 @@ const DEV_DEF* devDefList_YM2610[] =
 	&devDef_MAME_2610,
 	NULL
 };
+#endif	// SNDDEV_YM2610
 
 
 static UINT8 get_ssg_funcs(const DEV_DEF* devDef, ssg_callbacks* retFuncs)
@@ -201,6 +214,7 @@ static void init_ssg_devinfo(DEV_INFO* devInf, const DEV_GEN_CFG* baseCfg, UINT8
 	return;
 }
 
+#ifdef SNDDEV_YM2203
 static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
@@ -217,7 +231,7 @@ static UINT8 device_start_ym2203(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
 	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME_2203);
-	init_ssg_devinfo(retDevInf, cfg, 1, 0x20);
+	init_ssg_devinfo(retDevInf, cfg, 1, AYTYPE_YM2203);
 	return 0x00;
 }
 
@@ -253,7 +267,9 @@ static UINT8 device_ym2203_link_ssg(void* param, UINT8 devID, const DEV_INFO* de
 	}
 	return retVal;
 }
+#endif	// SNDDEV_YM2203
 
+#ifdef SNDDEV_YM2608
 static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
@@ -270,7 +286,7 @@ static UINT8 device_start_ym2608(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
 	INIT_DEVINF(retDevInf, devData, rate, &devDef_MAME_2608);
-	init_ssg_devinfo(retDevInf, cfg, 2, 0x21);
+	init_ssg_devinfo(retDevInf, cfg, 2, AYTYPE_YM2608);
 	return 0x00;
 }
 
@@ -306,7 +322,9 @@ static UINT8 device_ym2608_link_ssg(void* param, UINT8 devID, const DEV_INFO* de
 	}
 	return retVal;
 }
+#endif	// SNDDEV_YM2608
 
+#ifdef SNDDEV_YM2610
 static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	OPN_INF* info;
@@ -325,7 +343,7 @@ static UINT8 device_start_ym2610(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	devData = (DEV_DATA*)info->opn;
 	devData->chipInf = info;	// store pointer to OPN_INF into sound chip structure
 	INIT_DEVINF(retDevInf, devData, rate, devDefPtr);
-	init_ssg_devinfo(retDevInf, cfg, 2, 0x22);
+	init_ssg_devinfo(retDevInf, cfg, 2, AYTYPE_YM2610);
 	return 0x00;
 }
 
@@ -361,3 +379,4 @@ static UINT8 device_ym2610_link_ssg(void* param, UINT8 devID, const DEV_INFO* de
 	}
 	return retVal;
 }
+#endif	// SNDDEV_YM2610
