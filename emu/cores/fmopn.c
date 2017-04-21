@@ -122,6 +122,13 @@
 #include <stdtype.h>
 #include "../snddef.h"
 #include "../EmuHelper.h"
+
+#ifndef SNDDEV_SELECT
+#define SNDDEV_YM2203
+#define SNDDEV_YM2608
+#define SNDDEV_YM2610
+#endif
+
 #include "fmopn.h"
 
 

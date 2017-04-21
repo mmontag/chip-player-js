@@ -143,6 +143,10 @@
 #include <stdtype.h>
 #include "../snddef.h"
 #include "../EmuHelper.h"
+
+#ifndef SNDDEV_YM2612
+#define SNDDEV_YM2612
+#endif
 #include "fmopn.h"
 
 

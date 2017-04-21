@@ -29,8 +29,12 @@ typedef struct _sn76496_info
 	union
 	{
 		void* any;
+#ifdef EC_SN76496_MAME
 		void* mame;
+#endif
+#ifdef EC_SN76496_MAXIM
 		SN76489_Context* maxim;
+#endif
 	} chip;
 	SN76496_CFG cfg;
 } SN76496_INF;

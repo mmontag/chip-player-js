@@ -3,9 +3,11 @@
 
 #include "../EmuStructs.h"
 
+#ifndef SNDDEV_SELECT
 // undefine one of the variables to disable the cores
 #define EC_YM2612_GPGX		// enable YM2612 core from MAME/Genesis Plus GX
 #define EC_YM2612_GENS		// enable Gens YM2612 core (from in_vgm)
+#endif
 
 
 extern const DEV_DEF* devDefList_YM2612[];

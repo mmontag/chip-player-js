@@ -3,9 +3,11 @@
 
 #include "../EmuStructs.h"
 
+#ifndef SNDDEV_SELECT
 // undefine one of the variables to disable the cores
 #define EC_C6280_MAME		// enable HuC6280 core from MAME
 #define EC_C6280_OOTAKE		// enable Ootake PSG core
+#endif
 
 // cfg.flags: [Ootake core] set to 1 enable a patch for "Hany in the Sky"
 

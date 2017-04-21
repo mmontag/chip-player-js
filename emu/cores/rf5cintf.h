@@ -3,9 +3,11 @@
 
 #include "../EmuStructs.h"
 
+#ifndef SNDDEV_SELECT
 // undefine one of the variables to disable the cores
 #define EC_RF5C68_MAME		// enable RF5C68 core from MAME
 #define EC_RF5C68_GENS		// enable RF5C164 core from Gens/GS
+#endif
 
 // cfg.flags: [Gens core] set to 1 to enable a patch for Cosmic Fantasy Stories MCD
 

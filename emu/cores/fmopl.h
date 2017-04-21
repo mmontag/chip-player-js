@@ -5,9 +5,23 @@
 #include "../snddef.h"
 
 /* --- select emulation chips --- */
+#ifdef SNDDEV_YM3812
 #define BUILD_YM3812 1
+#else
+#define BUILD_YM3812 0
+#endif
+
+#ifdef SNDDEV_YM3526
 #define BUILD_YM3526 1
+#else
+#define BUILD_YM3526 0
+#endif
+
+#ifdef SNDDEV_Y8950
 #define BUILD_Y8950  1
+#else
+#define BUILD_Y8950  0
+#endif
 
 typedef void (*OPL_TIMERHANDLER)(void *param,UINT8 timer,UINT32 period);
 typedef void (*OPL_IRQHANDLER)(void *param,UINT8 irq);

@@ -25,7 +25,7 @@
 #define SNDDEV_YMZ280B
 #define SNDDEV_YMF271
 #define SNDDEV_AY8910
-#define SNDDEV_PWM
+#define SNDDEV_32X_PWM
 #define SNDDEV_GAMEBOY
 #define SNDDEV_NES_APU
 #define SNDDEV_MULTIPCM
@@ -80,16 +80,16 @@
 #ifdef SNDDEV_YMF278B
 #include "cores/ymf278b.h"
 #endif
-#ifdef SNDDEV_YMZ280B
+#ifdef SNDDEV_YMF271
 #include "cores/ymf271.h"
 #endif
-#ifdef SNDDEV_YMF271
+#ifdef SNDDEV_YMZ280B
 #include "cores/ymz280b.h"
 #endif
-#ifdef SNDDEV_AY8910
+#ifdef SNDDEV_32X_PWM
 #include "cores/pwm.h"
 #endif
-#ifdef SNDDEV_PWM
+#ifdef SNDDEV_AY8910
 #include "cores/ayintf.h"
 #endif
 #ifdef SNDDEV_GAMEBOY
@@ -219,19 +219,19 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 	case DEVID_YMF278B:
 		return devDefList_YMF278B;
 #endif
-#ifdef SNDDEV_YMZ280B
+#ifdef SNDDEV_YMF271
 	case DEVID_YMF271:
 		return devDefList_YMF271;
 #endif
-#ifdef SNDDEV_YMF271
+#ifdef SNDDEV_YMZ280B
 	case DEVID_YMZ280B:
 		return devDefList_YMZ280B;
 #endif
-#ifdef SNDDEV_AY8910
+#ifdef SNDDEV_32X_PWM
 	case DEVID_32X_PWM:
 		return devDefList_32X_PWM;
 #endif
-#ifdef SNDDEV_PWM
+#ifdef SNDDEV_AY8910
 	case DEVID_AY8910:
 		return devDefList_AY8910;
 #endif

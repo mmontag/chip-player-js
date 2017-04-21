@@ -17,7 +17,9 @@
 #include "np_nes_apu.h"
 #include "np_nes_dmc.h"
 #endif
+#ifdef EC_NES_NSFP_FDS
 #include "np_nes_fds.h"
+#endif
 
 
 typedef struct nesapu_info NESAPU_INF;
@@ -131,8 +133,10 @@ static void nes_stream_update_mame(void* chip, UINT32 samples, DEV_SMPL** output
 	
 	nes_apu_update(info->chip_apu, samples, outputs);
 	
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		nes_render_fds(info->chip_fds, samples, outputs);
+#endif
 	
 	return;
 }
@@ -153,13 +157,16 @@ static void nes_stream_update_nsfplay(void* chip, UINT32 samples, DEV_SMPL** out
 		outputs[1][CurSmpl] = Buffer[1] + Buffer[3];
 	}
 	
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		nes_render_fds(info->chip_fds, samples, outputs);
+#endif
 	
 	return;
 }
 #endif
 
+#ifdef EC_NES_NSFP_FDS
 static void nes_render_fds(void* chip_fds, UINT32 samples, DEV_SMPL** outputs)
 {
 	UINT32 CurSmpl;
@@ -174,6 +181,7 @@ static void nes_render_fds(void* chip_fds, UINT32 samples, DEV_SMPL** outputs)
 	
 	return;
 }
+#endif
 
 #ifdef EC_NES_MAME
 static UINT8 device_start_nes_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
@@ -196,9 +204,11 @@ static UINT8 device_start_nes_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	}
 	info->chip_dmc = NULL;
 	
+#ifdef EC_NES_NSFP_FDS
 	if (cfg->flags)	// enable FDS sound
 		info->chip_fds = NES_FDS_Create(cfg->clock, rate);
 	else
+#endif
 		info->chip_fds = NULL;
 	
 	info->memory = (UINT8*)malloc(0x8000);
@@ -247,9 +257,11 @@ static UINT8 device_start_nes_nsfplay(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	}
 	NES_DMC_np_SetAPU(info->chip_dmc, info->chip_apu);
 	
+#ifdef EC_NES_NSFP_FDS
 	if (cfg->flags)	// enable FDS sound
 		info->chip_fds = NES_FDS_Create(cfg->clock, rate);
 	else
+#endif
 		info->chip_fds = NULL;
 	
 	info->memory = (UINT8*)malloc(0x8000);
@@ -299,8 +311,10 @@ static void device_stop_nes_nsfplay(void* chip)
 
 static void device_stop_nes_common(NESAPU_INF* info)
 {
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		NES_FDS_Destroy(info->chip_fds);
+#endif
 	if (info->memory != NULL)
 		free(info->memory);
 	
@@ -314,8 +328,10 @@ static void device_reset_nes_mame(void* chip)
 	NESAPU_INF* info = (NESAPU_INF*)chip;
 	
 	device_reset_nesapu(info->chip_apu);
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		NES_FDS_Reset(info->chip_fds);
+#endif
 }
 #endif
 
@@ -326,8 +342,10 @@ static void device_reset_nes_nsfplay(void* chip)
 	
 	NES_APU_np_Reset(info->chip_apu);
 	NES_DMC_np_Reset(info->chip_dmc);
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		NES_FDS_Reset(info->chip_fds);
+#endif
 	
 	return;
 }
@@ -345,8 +363,10 @@ static void nes_w_mame(void* chip, UINT8 offset, UINT8 data)
 	}
 	else	// FDS
 	{
+#ifdef EC_NES_NSFP_FDS
 		if (info->chip_fds != NULL)
 			NES_FDS_Write(info->chip_fds, 0x4000 | offset, data);
+#endif
 	}
 	return;
 }
@@ -361,8 +381,10 @@ static UINT8 nes_r_mame(void* chip, UINT8 offset)
 	}
 	else	// FDS
 	{
+#ifdef EC_NES_NSFP_FDS
 		if (info->chip_fds != NULL)
 			return nes_read_fds(info->chip_fds, offset);
+#endif
 		return 0x00;
 	}
 }
@@ -381,8 +403,10 @@ static void nes_w_nsfplay(void* chip, UINT8 offset, UINT8 data)
 	}
 	else	// FDS
 	{
+#ifdef EC_NES_NSFP_FDS
 		if (info->chip_fds != NULL)
 			NES_FDS_Write(info->chip_fds, 0x4000 | offset, data);
+#endif
 	}
 	return;
 }
@@ -402,13 +426,16 @@ static UINT8 nes_r_nsfplay(void* chip, UINT8 offset)
 	}
 	else	// FDS
 	{
+#ifdef EC_NES_NSFP_FDS
 		if (info->chip_fds != NULL)
 			return nes_read_fds(info->chip_fds, offset);
+#endif
 		return 0x00;
 	}
 }
 #endif
 
+#ifdef EC_NES_NSFP_FDS
 static UINT8 nes_read_fds(void* chip_fds, UINT8 offset)
 {
 	bool success;
@@ -420,6 +447,7 @@ static UINT8 nes_read_fds(void* chip_fds, UINT8 offset)
 	
 	return 0x00;
 }
+#endif
 
 static void nes_write_ram(void* chip, UINT32 offset, UINT32 length, const UINT8* data)
 {
@@ -469,8 +497,10 @@ static void nes_set_chip_option_mame(void* chip, UINT32 NesOptions)
 	
 	// no options for MAME's NES core
 	
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		nes_set_chip_option_fds(info->chip_fds, NesOptions);
+#endif
 	
 	return;
 }
@@ -495,13 +525,16 @@ static void nes_set_chip_option_nsfplay(void* chip, UINT32 NesOptions)
 	for (; CurOpt < 10; CurOpt ++)
 		NES_DMC_np_SetOption(info->chip_dmc, CurOpt-4+2, (NesOptions >> CurOpt) & 0x01);
 	
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		nes_set_chip_option_fds(info->chip_fds, NesOptions);
+#endif
 	
 	return;
 }
 #endif
 
+#ifdef EC_NES_NSFP_FDS
 static void nes_set_chip_option_fds(void* chip_fds, UINT32 NesOptions)
 {
 	UINT8 CurOpt;
@@ -513,6 +546,7 @@ static void nes_set_chip_option_fds(void* chip_fds, UINT32 NesOptions)
 	
 	return;
 }
+#endif
 
 #ifdef EC_NES_MAME
 static void nes_set_mute_mask_mame(void* chip, UINT32 MuteMask)
@@ -520,8 +554,10 @@ static void nes_set_mute_mask_mame(void* chip, UINT32 MuteMask)
 	NESAPU_INF* info = (NESAPU_INF*)chip;
 	
 	nesapu_set_mute_mask(info->chip_apu, MuteMask);
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		NES_FDS_SetMask(info->chip_fds, (MuteMask & 0x20) >> 5);
+#endif
 	
 	return;
 }
@@ -534,8 +570,10 @@ static void nes_set_mute_mask_nsfplay(void* chip, UINT32 MuteMask)
 	
 	NES_APU_np_SetMask(info->chip_apu, (MuteMask & 0x03) >> 0);
 	NES_DMC_np_SetMask(info->chip_dmc, (MuteMask & 0x1C) >> 2);
+#ifdef EC_NES_NSFP_FDS
 	if (info->chip_fds != NULL)
 		NES_FDS_SetMask(info->chip_fds, (MuteMask & 0x20) >> 5);
+#endif
 	
 	return;
 }

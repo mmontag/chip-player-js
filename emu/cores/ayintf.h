@@ -3,9 +3,11 @@
 
 #include "../EmuStructs.h"
 
+#ifndef SNDDEV_SELECT
 // undefine one of the variables to disable the cores
 #define EC_AY8910_MAME		// enable AY8910 core from MAME
 #define EC_AY8910_EMU2149	// enable EMU2149 core (from NSFPlay)
+#endif
 
 
 // cfg.chipType: chip type

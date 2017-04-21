@@ -7,6 +7,9 @@
 
 #include "2612intf.h"
 #ifdef EC_YM2612_GPGX
+#ifndef SNDDEV_YM2612
+#define SNDDEV_YM2612
+#endif
 #include "fmopn.h"
 #endif
 #ifdef EC_YM2612_GENS

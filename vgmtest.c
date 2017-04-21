@@ -256,6 +256,7 @@ int main(int argc, char* argv[])
 	
 	opts = AudioDrv_GetOptions(audDrv);
 	//opts->sampleRate = 96000;
+	opts->sampleRate = sampleRate;
 	opts->numChannels = 2;
 	opts->numBitsPerSmpl = 16;
 	smplSize = opts->numChannels * opts->numBitsPerSmpl / 8;

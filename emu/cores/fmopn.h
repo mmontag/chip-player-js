@@ -6,12 +6,33 @@
 #include "../EmuStructs.h"
 
 /* --- select emulation chips --- */
+#ifdef SNDDEV_YM2203
 #define BUILD_YM2203  1     // build YM2203(OPN)   emulator
+#else
+#define BUILD_YM2203  0
+#endif
+
+#ifdef SNDDEV_YM2608
 #define BUILD_YM2608  1     // build YM2608(OPNA)  emulator
+#else
+#define BUILD_YM2608  0
+#endif
+
+#ifdef SNDDEV_YM2610
 #define BUILD_YM2610  1     // build YM2610(OPNB)  emulator
 #define BUILD_YM2610B 1     // build YM2610B(OPNB?)emulator
+#else
+#define BUILD_YM2610  0
+#define BUILD_YM2610B 0
+#endif
+
+#ifdef SNDDEV_YM2612
 #define BUILD_YM2612  1     // build YM2612(OPN2)  emulator
 #define BUILD_YM3438  1     // build YM3438(OPN2C) emulator
+#else
+#define BUILD_YM2612  0
+#define BUILD_YM3438  0
+#endif
 
 /* select timer system internal or external */
 #define FM_INTERNAL_TIMER 1

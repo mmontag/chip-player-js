@@ -81,6 +81,13 @@ Revision History:
 #include <stdtype.h>
 #include "../snddef.h"
 #include "../EmuHelper.h"
+
+#ifndef SNDDEV_SELECT
+#define SNDDEV_YM3812
+#define SNDDEV_YM3526
+#define SNDDEV_Y8950
+#endif
+
 #include "fmopl.h"
 #if BUILD_Y8950
 #include "ymdeltat.h"

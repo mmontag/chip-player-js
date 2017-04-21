@@ -3,9 +3,11 @@
 
 #include "../EmuStructs.h"
 
+#ifndef SNDDEV_SELECT
 // undefine one of the variables to disable the cores
 #define EC_SN76496_MAME		// enable SN76496 core from MAME
 #define EC_SN76496_MAXIM	// enable SN76489 core by Maxim (from in_vgm)
+#endif
 
 
 typedef struct sn76496_config

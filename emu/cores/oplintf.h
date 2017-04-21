@@ -3,10 +3,12 @@
 
 #include "../EmuStructs.h"
 
+#if ! defined(SNDDEV_SELECT) && defined(SNDDEV_YM3812)
 // undefine one of the variables to disable the cores
 #define EC_YM3812_MAME		// enable YM3812 core from MAME
 #define EC_YM3812_ADLIBEMU	// enable AdLibEmu core (from DOSBox)
 #define EC_YM3812_NUKED		// enable Nuked OPL3 core
+#endif
 
 
 #ifdef SNDDEV_YM3812
