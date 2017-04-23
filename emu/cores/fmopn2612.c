@@ -634,6 +634,7 @@ typedef struct
 typedef struct
 {
 	UINT8   type;           /* chip type */
+	UINT8   LegacyMode;     /* behave like old emulation regarding FNum writes and Key Off */
 	FM_ST   ST;             /* general state */
 	FM_3SLOT SL3;           /* 3 slot mode state */
 	FM_CH   *P_CH;          /* pointer of CH */
@@ -695,7 +696,6 @@ typedef struct
 #define LOG(n,x) do { if( (n)>=LOG_LEVEL ) logerror x; } while (0)
 #endif
 
-static UINT8 IsVGMInit = 0;	// TODO: turn into an actual option
 static UINT8 tablesInit = 0;
 
 /* status set and IRQ handling */
@@ -771,19 +771,14 @@ INLINE void FM_KEYON(FM_OPN *OPN, FM_CH *CH , int s )
 	SLOT->key = 1;
 }
 
+INLINE void refresh_fc_eg_slot(FM_OPN *OPN, FM_SLOT *SLOT , int fc , int kc );
 INLINE void FM_KEYOFF(FM_OPN *OPN, FM_CH *CH , int s )
 {
 	FM_SLOT *SLOT = &CH->SLOT[s];
 
 	if (SLOT->key && (!OPN->SL3.key_csm || CH == &OPN->P_CH[3]))
 	{
-		if (IsVGMInit)	// workaround for VGMs trimmed with VGMTool
-		{
-			SLOT->state = EG_OFF;
-			SLOT->volume = MAX_ATT_INDEX;
-			SLOT->vol_out= MAX_ATT_INDEX;
-		}
-		else if (SLOT->state>EG_REL)
+		if (SLOT->state>EG_REL)
 		{
 			SLOT->state = EG_REL; /* phase -> Release */
 
@@ -792,7 +787,7 @@ INLINE void FM_KEYOFF(FM_OPN *OPN, FM_CH *CH , int s )
 			{
 				/* convert EG attenuation level */
 				if (SLOT->ssgn ^ (SLOT->ssg&0x04))
-			        	SLOT->volume = (0x200 - SLOT->volume);
+					SLOT->volume = (0x200 - SLOT->volume);
 
 				/* force EG attenuation level */
 				if (SLOT->volume >= 0x200)
@@ -805,6 +800,8 @@ INLINE void FM_KEYOFF(FM_OPN *OPN, FM_CH *CH , int s )
 				SLOT->vol_out = (UINT32)SLOT->volume + SLOT->tl;
 			}
 		}
+		if (OPN->LegacyMode)	// workaround for VGMs trimmed with VGMTool
+			refresh_fc_eg_slot(OPN, SLOT, CH->fc, CH->kcode);
 	}
 
 	SLOT->key = 0;
@@ -848,13 +845,7 @@ INLINE void FM_KEYOFF_CSM(FM_CH *CH , int s )
 	FM_SLOT *SLOT = &CH->SLOT[s];
 	if (!SLOT->key)
 	{
-		if (IsVGMInit)
-		{
-			SLOT->state = EG_OFF;
-			SLOT->volume = MAX_ATT_INDEX;
-			SLOT->vol_out= MAX_ATT_INDEX;
-		}
-		else if (SLOT->state>EG_REL)
+		if (SLOT->state>EG_REL)
 		{
 			SLOT->state = EG_REL; /* phase -> Release */
 
@@ -1894,7 +1885,7 @@ static void OPNWriteReg(FM_OPN *OPN, int r, int v)
 		switch( OPN_SLOT(r) )
 		{
 		case 0:     /* 0xa0-0xa2 : FNUM1 */
-			if (IsVGMInit)
+			if (OPN->LegacyMode)
 				OPN->ST.fn_h = CH->block_fnum >> 8;
 			{
 				UINT32 fn = (((UINT32)( (OPN->ST.fn_h)&7))<<8) + v;
@@ -1912,11 +1903,11 @@ static void OPNWriteReg(FM_OPN *OPN, int r, int v)
 			break;
 		case 1:     /* 0xa4-0xa6 : FNUM2,BLK */
 			OPN->ST.fn_h = v&0x3f;
-			if (IsVGMInit)  // workaround for stupid Kega Fusion init block
+			if (OPN->LegacyMode)	// behave like Gens (workaround for stupid Kega Fusion init block)
 				CH->block_fnum = (OPN->ST.fn_h << 8) | (CH->block_fnum & 0xFF);
 			break;
 		case 2:     /* 0xa8-0xaa : 3CH FNUM1 */
-			if (IsVGMInit)
+			if (OPN->LegacyMode)
 				OPN->SL3.fn_h = OPN->SL3.block_fnum[c] >> 8;
 			if(r < 0x100)
 			{
@@ -1934,7 +1925,7 @@ static void OPNWriteReg(FM_OPN *OPN, int r, int v)
 			if(r < 0x100)
 			{
 				OPN->SL3.fn_h = v&0x3f;
-				if (IsVGMInit)
+				if (OPN->LegacyMode)
 					OPN->SL3.block_fnum[c] = (OPN->SL3.fn_h << 8) | (OPN->SL3.block_fnum[c] & 0xFF);
 			}
 			break;
@@ -2402,6 +2393,7 @@ void * ym2612_init(void *param, UINT32 clock, UINT32 rate,
 	/* Extend handler */
 	F2612->OPN.ST.timer_handler = timer_handler;
 	F2612->OPN.ST.IRQ_Handler   = IRQHandler;
+	F2612->OPN.LegacyMode = 0x00;
 	F2612->WaveOutMode = 0x00;
 
 	ym2612_set_mutemask(F2612, 0x00);
@@ -2609,6 +2601,7 @@ void ym2612_setoptions(void *chip, UINT32 Flags)
 	
 	PseudoStereo = (Flags >> 2) & 0x01;
 	F2612->WaveOutMode = (PseudoStereo) ? 0x01 : 0x00;
+	F2612->OPN.LegacyMode = (Flags >> 7) & 0x01;
 	
 	return;
 }

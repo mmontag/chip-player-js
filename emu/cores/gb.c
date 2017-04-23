@@ -255,6 +255,7 @@ struct _gb_sound_t
 
 	UINT8 gbMode;
 	UINT8 BoostWaveChn;
+	UINT8 LegacyMode;
 };
 
 
@@ -423,7 +424,8 @@ static void gb_sound_w_internal(gb_sound_t *gb, UINT8 offset, UINT8 data)
 				gb->snd_1.sweep_count = gb->snd_1.sweep_time;
 				gb->snd_1.sweep_neg_mode_used = false;
 				gb->snd_1.signal = 0;
-				gb->snd_1.length = gb->snd_1.reg[1] & 0x3f;	// VGM log fix -Valley Bell
+				if (gb->LegacyMode)
+					gb->snd_1.length = gb->snd_1.reg[1] & 0x3f;	// VGM log fix -Valley Bell
 				gb->snd_1.length_counting = true;
 				gb->snd_1.frequency = ((gb->snd_1.reg[4] & 0x7) << 8) | gb->snd_1.reg[3];
 				gb->snd_1.frequency_counter = gb->snd_1.frequency;
@@ -505,7 +507,8 @@ static void gb_sound_w_internal(gb_sound_t *gb, UINT8 offset, UINT8 data)
 				gb->snd_2.cycles_left = 0;
 				gb->snd_2.duty_count = 0;
 				gb->snd_2.signal = 0;
-				gb->snd_2.length = gb->snd_2.reg[1] & 0x3f;	// VGM log fix -Valley Bell
+				if (gb->LegacyMode)
+					gb->snd_2.length = gb->snd_2.reg[1] & 0x3f;	// VGM log fix -Valley Bell
 				gb->snd_2.length_counting = true;
 
 				if (!gb_dac_enabled(&gb->snd_2))
@@ -532,6 +535,8 @@ static void gb_sound_w_internal(gb_sound_t *gb, UINT8 offset, UINT8 data)
 		{
 			gb->snd_3.on = false;
 		}
+		else if (gb->LegacyMode)
+			gb->snd_3.on = true;	// even more VGM log fix -Valley Bell
 		break;
 	case NR31: /* Sound Length (R/W) */
 		gb->snd_3.reg[1] = data;
@@ -571,7 +576,8 @@ static void gb_sound_w_internal(gb_sound_t *gb, UINT8 offset, UINT8 data)
 				gb->snd_3.offset = 0;
 				gb->snd_3.duty = 1;
 				gb->snd_3.duty_count = 0;
-				gb->snd_3.length = gb->snd_3.reg[1];	// VGM log fix -Valley Bell
+				if (gb->LegacyMode)
+					gb->snd_3.length = gb->snd_3.reg[1];	// VGM log fix -Valley Bell
 				gb->snd_3.length_counting = true;
 				gb->snd_3.frequency = ((gb->snd_3.reg[4] & 0x7) << 8) | gb->snd_3.reg[3];
 				gb->snd_3.frequency_counter = gb->snd_3.frequency;
@@ -645,7 +651,8 @@ static void gb_sound_w_internal(gb_sound_t *gb, UINT8 offset, UINT8 data)
 				gb->snd_4.cycles_left = gb_noise_period_cycles(gb);
 				gb->snd_4.signal = -1;
 				gb->snd_4.noise_lfsr = 0x7fff;
-				gb->snd_4.length = gb->snd_4.reg[1] & 0x3f;	// VGM log fix -Valley Bell
+				if (gb->LegacyMode)
+					gb->snd_4.length = gb->snd_4.reg[1] & 0x3f;	// VGM log fix -Valley Bell
 				gb->snd_4.length_counting = true;
 
 				if (!gb_dac_enabled(&gb->snd_4))
@@ -1263,6 +1270,7 @@ static UINT8 device_start_gameboy_sound(const DEV_GEN_CFG* cfg, DEV_INFO* retDev
 
 	gameboy_sound_set_mute_mask(gb, 0x00);
 	gb->BoostWaveChn = 0x00;
+	gb->LegacyMode = 0x00;
 
 	gb->_devData.chipInf = gb;
 	INIT_DEVINF(retDevInf, &gb->_devData, gb->rate, &devDef);
@@ -1378,6 +1386,7 @@ static void gameboy_sound_set_options(void *chip, UINT32 Flags)
 	gb_sound_t *gb = (gb_sound_t *)chip;
 	
 	gb->BoostWaveChn = (Flags & 0x01) >> 0;
+	gb->LegacyMode = (Flags & 0x80) >> 7;
 	
 	return;
 }

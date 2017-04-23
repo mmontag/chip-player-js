@@ -735,6 +735,10 @@ static void InitVGMChips(void)
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, (void**)&cDev->romSize);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, (void**)&cDev->romWrite);
+			if (curChip == DEVID_YM2612)
+				cDev->defInf.devDef->SetOptionBits(cDev->defInf.dataPtr, 0x80);	// enable legacy mode
+			else if (curChip == DEVID_GB_DMG)
+				cDev->defInf.devDef->SetOptionBits(cDev->defInf.dataPtr, 0x80);	// enable legacy mode
 			break;
 		}
 		if (retVal)
