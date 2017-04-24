@@ -12,6 +12,13 @@ typedef struct C352_config
 	UINT16 clk_divider;	// master clock divider
 } C352_CFG;
 
+
+#define OPT_C352_MUTE_REAR	0x01	// mute rear speakers regardless of configuration
+									// (default: disabled)
+
+// default option bitmask: 0x00
+
+
 extern const DEV_DEF* devDefList_C352[];
 
 #endif	// __C352_H__

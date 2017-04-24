@@ -150,6 +150,7 @@ void* NES_DMC_np_Create(UINT32 clock, UINT32 rate)
 	dmc->option[OPT_NONLINEAR_MIXER] = 1;
 	dmc->option[OPT_RANDOMIZE_NOISE] = 1;
 	dmc->option[OPT_TRI_MUTE] = 1;
+	dmc->option[OPT_TRI_NULL] = 0;
 	dmc->tnd_table[0][0][0][0] = 0;
 	dmc->tnd_table[1][0][0][0] = 0;
 
@@ -290,7 +291,7 @@ UINT32 calc_tri(NES_DMC* dmc, UINT32 clocks)
 			dmc->counter[0] -= (dmc->tri_freq + 1);
 		}
 	}
-	// Note: else-block added by VB
+	// additional option to prevent even more clicks -Valley Bell
 	else if (dmc->option[OPT_TRI_NULL])
 	{
 		if (dmc->tphase && dmc->tphase < 31)

@@ -100,10 +100,9 @@ void* NES_FDS_Create(UINT32 clock, UINT32 rate)
 {
 	NES_FDS* fds;
 
-	fds = (NES_FDS*)malloc(sizeof(NES_FDS));
+	fds = (NES_FDS*)calloc(1, sizeof(NES_FDS));
 	if (fds == NULL)
 		return NULL;
-	memset(fds, 0x00, sizeof(NES_FDS));
 
 	fds->option[OPT_CUTOFF] = 2000;
 	fds->option[OPT_4085_RESET] = 0;
@@ -457,7 +456,7 @@ bool NES_FDS_Write(void* chip, UINT16 adr, UINT8 val)
 		return true;
 	case 0x85:	// $4085 mod position
 		fds->mod_pos = val & 0x7F;
-		// not hardware accurate., but prevents detune due to cycle inaccuracies
+		// not hardware accurate, but prevents detune due to cycle inaccuracies
 		// (notably in Bio Miracle Bokutte Upa)
 		if (fds->option[OPT_4085_RESET])
 			fds->phase[TMOD] = fds->mod_write_pos << 16;
