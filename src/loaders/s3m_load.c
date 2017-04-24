@@ -239,24 +239,24 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	uint16 *pp_ins;			/* Parapointers to instruments */
 	uint16 *pp_pat;			/* Parapointers to patterns */
 	int ret;
+	uint8 buf[96]
 
 	LOAD_INIT();
 
-	hio_read(&sfh.name, 28, 1, f);	/* Song name */
-	hio_read8(f);			/* 0x1a */
-	sfh.type = hio_read8(f);	/* File type */
-	hio_read16l(f);			/* Reserved */
-	sfh.ordnum = hio_read16l(f);	/* Number of orders (must be even) */
-	sfh.insnum = hio_read16l(f);	/* Number of instruments */
-	sfh.patnum = hio_read16l(f);	/* Number of patterns */
-	sfh.flags = hio_read16l(f);	/* Flags */
-	sfh.version = hio_read16l(f);	/* Tracker ID and version */
-	sfh.ffi = hio_read16l(f);	/* File format information */
-
-	/* Sanity check */
-	if (hio_error(f)) {
+	if (hio_read(buf, 1, 96, f) != 96) {
 		goto err;
 	}
+
+	memcpy(&sfh.name, buf, 28);		/* Song name */
+	sfh.type = buf[30];			/* File type */
+	sfh.ordnum = readmem16l(buf + 32);	/* Number of orders (must be even) */
+	sfh.insnum = readmem16l(buf + 34);	/* Number of instruments */
+	sfh.patnum = readmem16l(buf + 36);	/* Number of patterns */
+	sfh.flags = readmem16l(buf + 38);	/* Flags */
+	sfh.version = readmem16l(buf + 40);	/* Tracker ID and version */
+	sfh.ffi = readmem16l(buf + 42);		/* File format information */
+
+	/* Sanity check */
 	if (sfh.ffi != 1 && sfh.ffi != 2) {
 		goto err;
 	}
@@ -264,25 +264,20 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		goto err;
 	}
 
-	sfh.magic = hio_read32b(f);	/* 'SCRM' */
-	sfh.gv = hio_read8(f);		/* Global volume */
-	sfh.is = hio_read8(f);		/* Initial speed */
-	sfh.it = hio_read8(f);		/* Initial tempo */
-	sfh.mv = hio_read8(f);		/* Master volume */
-	sfh.uc = hio_read8(f);		/* Ultra click removal */
-	sfh.dp = hio_read8(f);		/* Default pan positions if 0xfc */
-	hio_read32l(f);			/* Reserved */
-	hio_read32l(f);			/* Reserved */
-	sfh.special = hio_read16l(f);	/* Ptr to special custom data */
-	hio_read(sfh.chset, 32, 1, f);	/* Channel settings */
+	sfh.magic = readmem32b(buf + 44);	/* 'SCRM' */
+	sfh.gv = buf[48];			/* Global volume */
+	sfh.is = buf[49];			/* Initial speed */
+	sfh.it = buf[50];			/* Initial tempo */
+	sfh.mv = buf[51];			/* Master volume */
+	sfh.uc = buf[52];			/* Ultra click removal */
+	sfh.dp = buf[53];			/* Default pan positions if 0xfc */
+	/* 54-61 reserved */
+	sfh.special = readmem16l(buf + 62);	/* Ptr to special custom data */
+	memcpy(sfh.chset, buf + 64, 32);	/* Channel settings */
 
-	if (hio_error(f)) {
+	if (sfh.magic != MAGIC_SCRM) {
 		goto err;
 	}
-#if 0
-	if (sfh.magic != MAGIC_SCRM)
-		return -1;
-#endif
 
 #ifndef LIBXMP_CORE_PLAYER
 	/* S3M anomaly in return_of_litmus.s3m */
@@ -299,17 +294,21 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	libxmp_copy_adjust(mod->name, sfh.name, 28);
 
 	pp_ins = calloc(2, sfh.insnum);
-	if (pp_ins == NULL)
+	if (pp_ins == NULL) {
 		goto err;
+	}
 
 	pp_pat = calloc(2, sfh.patnum);
-	if (pp_pat == NULL)
+	if (pp_pat == NULL) {
 		goto err2;
+	}
 
-	if (sfh.flags & S3M_AMIGA_RANGE)
+	if (sfh.flags & S3M_AMIGA_RANGE) {
 		m->period_type = PERIOD_MODRNG;
-	if (sfh.flags & S3M_ST300_VOLS)
+	}
+	if (sfh.flags & S3M_ST300_VOLS) {
 		m->quirk |= QUIRK_VSALL;
+	}
 	/* m->volbase = 4096 / sfh.gv; */
 	mod->spd = sfh.is;
 	mod->bpm = sfh.it;
@@ -331,10 +330,14 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 	if (sfh.ordnum <= XMP_MAX_MOD_LENGTH) {
 		mod->len = sfh.ordnum;
-		hio_read(mod->xxo, 1, mod->len, f);
+		if (hio_read(mod->xxo, 1, mod->len, f) != mod->len) {
+			goto err3;
+		}
 	} else {
 		mod->len = XMP_MAX_MOD_LENGTH;
-		hio_read(mod->xxo, 1, mod->len, f);
+		if (hio_read(mod->xxo, 1, mod->len, f) != mod->len) {
+			goto err3;
+		}
 		hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR);
 	}
 	if (hio_error(f)) {
@@ -349,21 +352,25 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		}
 	}
 	mod->pat++;
-	if (mod->pat > sfh.patnum)
+	if (mod->pat > sfh.patnum) {
 		mod->pat = sfh.patnum;
-	if (mod->pat == 0)
+	}
+	if (mod->pat == 0) {
 		goto err3;
+	}
 
 	mod->trk = mod->pat * mod->chn;
 	/* Load and convert header */
 	mod->ins = sfh.insnum;
 	mod->smp = mod->ins;
 
-	for (i = 0; i < sfh.insnum; i++)
+	for (i = 0; i < sfh.insnum; i++) {
 		pp_ins[i] = hio_read16l(f);
+	}
 
-	for (i = 0; i < sfh.patnum; i++)
+	for (i = 0; i < sfh.patnum; i++) {
 		pp_pat[i] = hio_read16l(f);
+	}
 
 	/* Default pan positions */
 
