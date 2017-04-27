@@ -260,7 +260,7 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				rdelta = (base1[6] | (base1[7] << 8)) >> 3;
 				rdelta = (rdelta + info->reverb_pos) & 0x3fff;
 
-				cur_pos = (base1[0x0c] | (base1[0x0d] << 8) | (base1[0x0e] << 16)) & info->rom_mask;
+				cur_pos = base1[0x0c] | (base1[0x0d] << 8) | (base1[0x0e] << 16);
 
 				if(base2[0] & 0x20) {
 					delta = -delta;
@@ -290,10 +290,10 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						cur_pos += pdelta;
 
 						cur_pval = cur_val;
-						cur_val = (INT16)(info->rom[cur_pos] << 8);
+						cur_val = (INT16)(info->rom[cur_pos & info->rom_mask] << 8);
 						if(cur_val == (INT16)0x8000 && (base2[1] & 1)) {
-							cur_pos = (base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & info->rom_mask;
-							cur_val = (INT16)(info->rom[cur_pos] << 8);
+							cur_pos = base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16);
+							cur_val = (INT16)(info->rom[cur_pos & info->rom_mask] << 8);
 						}
 						if(cur_val == (INT16)0x8000) {
 							k054539_keyoff(info, ch);
@@ -313,10 +313,10 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						cur_pos += pdelta;
 
 						cur_pval = cur_val;
-						cur_val = (INT16)(info->rom[cur_pos] | info->rom[cur_pos+1]<<8);
+						cur_val = (INT16)(info->rom[cur_pos & info->rom_mask] | info->rom[(cur_pos+1) & info->rom_mask]<<8);
 						if(cur_val == (INT16)0x8000 && (base2[1] & 1)) {
-							cur_pos = (base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & info->rom_mask;
-							cur_val = (INT16)(info->rom[cur_pos] | info->rom[cur_pos+1]<<8);
+							cur_pos = base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16);
+							cur_val = (INT16)(info->rom[cur_pos & info->rom_mask] | info->rom[(cur_pos+1) & info->rom_mask]<<8);
 						}
 						if(cur_val == (INT16)0x8000) {
 							k054539_keyoff(info, ch);
@@ -341,10 +341,10 @@ static void k054539_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						cur_pos += pdelta;
 
 						cur_pval = cur_val;
-						cur_val = info->rom[cur_pos>>1];
+						cur_val = info->rom[(cur_pos>>1) & info->rom_mask];
 						if(cur_val == 0x88 && (base2[1] & 1)) {
-							cur_pos = ((base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) & info->rom_mask) << 1;
-							cur_val = info->rom[cur_pos>>1];
+							cur_pos = (base1[0x08] | (base1[0x09] << 8) | (base1[0x0a] << 16)) << 1;
+							cur_val = info->rom[(cur_pos>>1) & info->rom_mask];
 						}
 						if(cur_val == 0x88) {
 							k054539_keyoff(info, ch);

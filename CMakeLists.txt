@@ -31,8 +31,15 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
 
 
-add_subdirectory(audio)
-add_subdirectory(emu)
+option(BUILD_LIBAUDIO "build audio output library" ON)
+option(BUILD_LIBEMU "build sound emulation library" ON)
+
+if(BUILD_LIBAUDIO)
+	add_subdirectory(audio)
+endif()
+if(BUILD_LIBEMU)
+	add_subdirectory(emu)
+endif()
 
 
 add_executable(audiotest audiotest.c)
