@@ -24,9 +24,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "common.h"
-
 #include "alist.h"
+#include "common.h"
 #include "hle_external.h"
 #include "hle_internal.h"
 #include "memory.h"
@@ -153,7 +152,7 @@ static void ENVMIXER(struct hle_t* hle, uint32_t w1, uint32_t w2)
 static void CLEARBUFF(struct hle_t* hle, uint32_t w1, uint32_t w2)
 {
     uint16_t dmem  = w1 + NAUDIO_MAIN;
-    uint16_t count = w2;
+    uint16_t count = w2 & 0xfff;
 
     alist_clear(hle, dmem, count);
 }
