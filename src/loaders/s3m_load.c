@@ -235,7 +235,7 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 	int quirk87 = 0;
 #endif
 	int pat_len;
-	uint8 n, b, x8;
+	uint8 n, b;
 	uint16 *pp_ins;			/* Parapointers to instruments */
 	uint16 *pp_pat;			/* Parapointers to patterns */
 	int ret;
@@ -338,10 +338,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		if (hio_read(mod->xxo, 1, mod->len, f) != mod->len) {
 			goto err3;
 		}
-		hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR);
-	}
-	if (hio_error(f)) {
-		goto err3;
+		if (hio_seek(f, sfh.ordnum - XMP_MAX_MOD_LENGTH, SEEK_CUR) < 0) {
+			goto err3;
+		}
 	}
 
 	/* Don't trust sfh.patnum */
@@ -528,25 +527,24 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 		sub = &xxi->sub[0];
 
 		hio_seek(f, start + pp_ins[i] * 16, SEEK_SET);
-		x8 = hio_read8(f);
 		sub->pan = 0x80;
 		sub->sid = i;
 
-		if (x8 >= 2) {
+		if (hio_read(buf, 1, 80, f) != 80) {
+			goto err3;
+		}
+
+		if (buf[0] >= 2) {
 #ifndef LIBXMP_CORE_PLAYER
 			/* OPL2 FM instrument */
 
-			hio_read(&sah.dosname, 12, 1, f); /* DOS file name */
-			hio_read(&sah.rsvd1, 3, 1, f);	/* 0x00 0x00 0x00 */
-			hio_read(&sah.reg, 12, 1, f);	/* Adlib registers */
-			sah.vol = hio_read8(f);
-			sah.dsk = hio_read8(f);
-			hio_read16l(f);
-			sah.c2spd = hio_read16l(f);	/* C 4 speed */
-			hio_read16l(f);
-			hio_read(&sah.rsvd4, 12, 1, f);	/* Reserved */
-			hio_read(&sah.name, 28, 1, f);	/* Instrument name */
-			sah.magic = hio_read32b(f);	/* 'SCRI' */
+			memcpy(sah.dosname, buf + 1, 12);	/* DOS file name */
+			memcpy(sah.reg, buf + 16, 12);		/* Adlib registers */
+			sah.vol = buf[28];
+			sah.dsk = buf[29];
+			sah.c2spd = readmem16l(buf + 32);	/* C4 speed */
+			memcpy(sah.name, buf + 48, 28);		/* Instrument name */
+			sah.magic = readmem32b(buf + 76);		/* 'SCRI' */
 
 			if (sah.magic != MAGIC_SCRI) {
 				D_(D_CRIT "error: FM instrument magic");
@@ -574,9 +572,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 #endif
 		}
 
-		hio_read(&sih.dosname, 13, 1, f); /* DOS file name */
-		sih.memseg = hio_read16l(f);	/* Pointer to sample data */
-		sih.length = hio_read32l(f);	/* Length */
+		memcpy(sih.dosname, buf + 1, 13);	/* DOS file name */
+		sih.memseg = readmem16l(buf + 14);	/* Pointer to sample data */
+		sih.length = readmem32l(buf + 16);	/* Length */
 
 #if 0
 		/* ST3 limit */
@@ -588,22 +586,16 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 			goto err3;
 		}
 
-		sih.loopbeg = hio_read32l(f);	/* Loop begin */
-		sih.loopend = hio_read32l(f);	/* Loop end */
-		sih.vol = hio_read8(f);		/* Volume */
-		sih.rsvd1 = hio_read8(f);	/* Reserved */
-		sih.pack = hio_read8(f);	/* Packing type (not used) */
-		sih.flags = hio_read8(f);	/* Loop/stereo/16bit flags */
-		sih.c2spd = hio_read16l(f);	/* C 4 speed */
-		sih.rsvd2 = hio_read16l(f);	/* Reserved */
-		hio_read(&sih.rsvd3, 4, 1, f);	/* Reserved */
-		sih.int_gp = hio_read16l(f);	/* Internal - GUS pointer */
-		sih.int_512 = hio_read16l(f);	/* Internal - SB pointer */
-		sih.int_last = hio_read32l(f);	/* Internal - SB index */
-		hio_read(&sih.name, 28, 1, f);	/* Instrument name */
-		sih.magic = hio_read32b(f);	/* 'SCRS' */
+		sih.loopbeg = readmem32l(buf + 20);	/* Loop begin */
+		sih.loopend = readmem32l(buf + 24);	/* Loop end */
+		sih.vol = buf[28];			/* Volume */
+		sih.pack = buf[30];			/* Packing type (not used) */
+		sih.flags = buf[31];			/* Loop/stereo/16bit flags */
+		sih.c2spd = readmem16l(buf + 32);	/* C4 speed */
+		memcpy(sih.name, buf + 48, 28);		/* Instrument name */
+		sih.magic = readmem32b(buf + 76);	/* 'SCRS' */
 
-		if (x8 == 1 && sih.magic != MAGIC_SCRS) {
+		if (buf[0] == 1 && sih.magic != MAGIC_SCRS) {
 			D_(D_CRIT "error: instrument magic");
 			goto err3;
 		}
@@ -640,7 +632,9 @@ static int s3m_load(struct module_data *m, HIO_HANDLE * f, const int start)
 
 		libxmp_c2spd_to_note(sih.c2spd, &sub->xpo, &sub->fin);
 
-		hio_seek(f, start + 16L * sih.memseg, SEEK_SET);
+		if (hio_seek(f, start + 16L * sih.memseg, SEEK_SET) < 0) {
+			goto err3;
+		}
 
 		ret = libxmp_load_sample(m, f, sfh.ffi == 1 ? 0 : SAMPLE_FLAG_UNS,
 								xxs, NULL);
