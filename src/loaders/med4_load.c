@@ -554,8 +554,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 	mod->smp = num_smp;
 
-	if (libxmp_init_instrument(m) < 0)
+	if (libxmp_init_instrument(m) < 0) {
 		return -1;
+	}
 
 	D_(D_INFO "Instruments: %d", mod->ins);
 
@@ -567,8 +568,9 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 		struct xmp_subinstrument *sub;
 		struct xmp_sample *xxs;
 
-		if ((int64)mask > 0)
+		if ((int64)mask > 0) {
 			continue;
+		}
 
 		xxi = &mod->xxi[i];
 
@@ -708,6 +710,11 @@ static int med4_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			MED_INSTRUMENT_EXTRAS(*xxi)->wts = synth.wfspeed;
 
 			for (j = 0; j < synth.wforms; j++) {
+				/* Sanity check */
+				if (smp_idx >= num_smp) {
+					return -1;
+				}
+
 				sub = &xxi->sub[j];
 
 				sub->pan = 0x80;

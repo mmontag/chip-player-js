@@ -21,6 +21,7 @@ Stable versions
 	- fix loading of ST modules with invalid names
 	Fix problems reported by Lionel Debroux:
 	- fix PTM loader issues
+	- fix MED4 invalid sample load error
 	- fix NNA and DCT/DCA issues
 	Other changes:
 	- fix double free in case of ADPCM sample load error
