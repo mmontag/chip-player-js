@@ -268,32 +268,35 @@ static void fix_name(uint8 *s, int l)
 }
 
 
-static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
+static int read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 			  HIO_HANDLE *f)
 {
-	int j;
+	int i;
+	uint8 buf[82];
 
-	env->flg = hio_read8(f);
-	env->num = hio_read8(f);
+	if (hio_read(buf, 1, 82, f) != 82) {
+		return -1;
+	}
+
+	env->flg = buf[0];
+	env->num = buf[1];
 
 	/* Sanity check */
 	if (env->num >= XMP_MAX_ENV_POINTS) {
 		env->flg = 0;
 		env->num = 0;
-		return;
+		return -1;
 	}
 
-	env->lpb = hio_read8(f);
-	env->lpe = hio_read8(f);
-	env->slb = hio_read8(f);
-	env->sle = hio_read8(f);
+	env->lpb = buf[2];
+	env->lpe = buf[3];
+	env->slb = buf[4];
+	env->sle = buf[5];
 
-	for (j = 0; j < 25; j++) {
-		env->node[j].y = hio_read8(f);
-		env->node[j].x = hio_read16l(f);
+	for (i = 0; i < 25; i++) {
+		env->node[i].y = buf[6 + i * 3];
+		env->node[i].x = readmem16l(buf + 7 + i * 3);
 	}
-
-	env->unused = hio_read8(f);
 
 	ei->flg = env->flg & IT_ENV_ON ? XMP_ENVELOPE_ON : 0;
 
@@ -316,13 +319,15 @@ static void read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 	ei->lpe = env->lpe;
 
 	if (ei->npt > 0 && ei->npt <= 25 /* XMP_MAX_ENV_POINTS */ ) {
-		for (j = 0; j < ei->npt; j++) {
-			ei->data[j * 2] = env->node[j].x;
-			ei->data[j * 2 + 1] = env->node[j].y;
+		for (i = 0; i < ei->npt; i++) {
+			ei->data[i * 2] = env->node[i].x;
+			ei->data[i * 2 + 1] = env->node[i].y;
 		}
 	} else {
 		ei->flg &= ~XMP_ENVELOPE_ON;
 	}
+
+	return 0;
 }
 
 static void identify_tracker(struct module_data *m, struct it_file_header *ifh)
@@ -611,9 +616,15 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 
 	/* Envelopes */
 
-	read_envelope(&xxi->aei, &env, f);
-	read_envelope(&xxi->pei, &env, f);
-	read_envelope(&xxi->fei, &env, f);
+	if (read_envelope(&xxi->aei, &env, f) < 0) {
+		return -1;
+	}
+	if (read_envelope(&xxi->pei, &env, f) < 0) {
+		return -1;
+	}
+	if (read_envelope(&xxi->fei, &env, f) < 0) {
+		return -1;
+	}
 
 	if (xxi->pei.flg & XMP_ENVELOPE_ON) {
 		for (j = 0; j < xxi->pei.npt; j++)
