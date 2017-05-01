@@ -24,6 +24,7 @@ Stable versions
 	- fix NNA and DCT/DCA issues
 	Other changes:
 	- fix double free in case of ADPCM sample load error
+	- code refactoring and cleanup
 
 4.4.1 (20161012):
 	Fix issues reported by Saga Musix:
