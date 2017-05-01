@@ -4,7 +4,7 @@ sudo: false
 
 compiler:
   - gcc
-  - clang-3.8
+  - clang
 
 os:
   - linux
@@ -20,7 +20,7 @@ matrix:
     - os: linux
       compiler: '"clang -fsanitize=address"'
       script: autoconf && ./configure && make && make check && (cd test-dev; autoconf && ./configure && make)
-    - os: linux
-      compiler: '"clang -fsanitize=memory"'
-      script: autoconf && ./configure && make && make check && (cd test-dev; autoconf && ./configure && make)
+#    - os: linux
+#      compiler: '"clang -fsanitize=memory"'
+#      script: autoconf && ./configure && make && make check && (cd test-dev; autoconf && ./configure && make)
 
