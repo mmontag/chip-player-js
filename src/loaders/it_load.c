@@ -423,43 +423,38 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	int inst_map[120], inst_rmap[XMP_MAX_KEYS];
 	struct it_instrument1_header i1h;
 	int c, k, j;
+	uint8 buf[64];
 
-	i1h.magic = hio_read32b(f);
-	hio_read(&i1h.dosname, 12, 1, f);
-
-	i1h.zero = hio_read8(f);
-	i1h.flags = hio_read8(f);
-	i1h.vls = hio_read8(f);
-	i1h.vle = hio_read8(f);
-	i1h.sls = hio_read8(f);
-	i1h.sle = hio_read8(f);
-	i1h.rsvd1 = hio_read16l(f);
-	i1h.fadeout = hio_read16l(f);
-
-	i1h.nna = hio_read8(f);
-	i1h.dnc = hio_read8(f);
-	i1h.trkvers = hio_read16l(f);
-	i1h.nos = hio_read8(f);
-	i1h.rsvd2 = hio_read8(f);
-
-	if (hio_error(f)) {
+	if (hio_read(buf, 1, 64, f) != 64) {
 		return -1;
 	}
 
-	if (hio_read(&i1h.name, 1, 26, f) != 26) {
-		return -1;
-	}
+	i1h.magic = readmem32b(buf);
+	memcpy(i1h.dosname, buf + 4, 12);
+	i1h.zero = buf[16];
+	i1h.flags = buf[17];
+	i1h.vls = buf[18];
+	i1h.vle = buf[19];
+	i1h.sls = buf[20];
+	i1h.sle = buf[21];
+	i1h.fadeout = readmem16l(buf + 24);
+	i1h.nna = buf[26];
+	i1h.dnc = buf[27];
+	i1h.trkvers = readmem16l(buf + 28);
+	i1h.nos = buf[30];
 
+	memcpy(i1h.name, buf + 32, 26);
 	fix_name(i1h.name, 26);
 
-	if (hio_read(&i1h.rsvd3, 1, 6, f) != 6)
+	if (hio_read(&i1h.keys, 1, 240, f) != 240) {
 		return -1;
-	if (hio_read(&i1h.keys, 1, 240, f) != 240)
+	}
+	if (hio_read(&i1h.epoint, 1, 200, f) != 200) {
 		return -1;
-	if (hio_read(&i1h.epoint, 1, 200, f) != 200)
+	}
+	if (hio_read(&i1h.enode, 1, 50, f) != 50) {
 		return -1;
-	if (hio_read(&i1h.enode, 1, 50, f) != 50)
-		return -1;
+	}
 
 	libxmp_copy_adjust(xxi->name, i1h.name, 25);
 
