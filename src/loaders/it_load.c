@@ -430,6 +430,10 @@ static int load_old_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	}
 
 	i1h.magic = readmem32b(buf);
+	if (i1h.magic != MAGIC_IMPI) {
+		D_(D_CRIT "bad instrument magic");
+		return -1;
+	}
 	memcpy(i1h.dosname, buf + 4, 12);
 	i1h.zero = buf[16];
 	i1h.flags = buf[17];
@@ -551,17 +555,22 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 	struct it_envelope env;
 	int dca2nna[] = { 0, 2, 3 };
 	int c, k, j;
+	uint8 buf[64];
 
-	i2h.magic = hio_read32b(f);
+	if (hio_read(buf, 1, 64, f) != 64) {
+		return -1;
+	}
+
+	i2h.magic = readmem32b(buf);
 	if (i2h.magic != MAGIC_IMPI) {
 		D_(D_CRIT "bad instrument magic");
 		return -1;
 	}
-	hio_read(&i2h.dosname, 12, 1, f);
-	i2h.zero = hio_read8(f);
-	i2h.nna = hio_read8(f);
-	i2h.dct = hio_read8(f);
-	i2h.dca = hio_read8(f);
+	memcpy(i2h.dosname, buf + 4, 12);
+	i2h.zero = buf[16];
+	i2h.nna = buf[17];
+	i2h.dct = buf[18];
+	i2h.dca = buf[19];
 
 	/* Sanity check */
 	if (i2h.dca > 3) {
@@ -570,36 +579,24 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 		i2h.dca = 0;
 	}
 
-	i2h.fadeout = hio_read16l(f);
+	i2h.fadeout = readmem16l(buf + 20);
+	i2h.pps = buf[22];
+	i2h.ppc = buf[23];
+	i2h.gbv = buf[24];
+	i2h.dfp = buf[25];
+	i2h.rv = buf[26];
+	i2h.rp = buf[27];
+	i2h.trkvers = readmem16l(buf + 28);
+	i2h.nos = buf[30];
 
-	i2h.pps = hio_read8(f);
-	i2h.ppc = hio_read8(f);
-	i2h.gbv = hio_read8(f);
-	i2h.dfp = hio_read8(f);
-	i2h.rv = hio_read8(f);
-	i2h.rp = hio_read8(f);
-	i2h.trkvers = hio_read16l(f);
-
-	i2h.nos = hio_read8(f);
-	i2h.rsvd1 = hio_read8(f);
-
-	if (hio_error(f)) {
-		D_(D_CRIT "read error");
-		return -1;
-	}
-
-	if (hio_read(&i2h.name, 1, 26, f) != 26) {
-		D_(D_CRIT "name read error");
-		return -1;
-	}
-
+	memcpy(i2h.name, buf + 32, 26);
 	fix_name(i2h.name, 26);
 
-	i2h.ifc = hio_read8(f);
-	i2h.ifr = hio_read8(f);
-	i2h.mch = hio_read8(f);
-	i2h.mpr = hio_read8(f);
-	i2h.mbnk = hio_read16l(f);
+	i2h.ifc = buf[58];
+	i2h.ifr = buf[59];
+	i2h.mch = buf[60];
+	i2h.mpr = buf[61];
+	i2h.mbnk = readmem16l(buf + 62);
 
 	if (hio_read(&i2h.keys, 1, 240, f) != 240) {
 		D_(D_CRIT "key map read error");
@@ -626,12 +623,15 @@ static int load_new_it_instrument(struct xmp_instrument *xxi, HIO_HANDLE *f)
 			xxi->pei.data[j * 2 + 1] += 32;
 	}
 
-	if (xxi->aei.flg & XMP_ENVELOPE_ON && xxi->aei.npt == 0)
+	if (xxi->aei.flg & XMP_ENVELOPE_ON && xxi->aei.npt == 0) {
 		xxi->aei.npt = 1;
-	if (xxi->pei.flg & XMP_ENVELOPE_ON && xxi->pei.npt == 0)
+	}
+	if (xxi->pei.flg & XMP_ENVELOPE_ON && xxi->pei.npt == 0) {
 		xxi->pei.npt = 1;
-	if (xxi->fei.flg & XMP_ENVELOPE_ON && xxi->fei.npt == 0)
+	}
+	if (xxi->fei.flg & XMP_ENVELOPE_ON && xxi->fei.npt == 0) {
 		xxi->fei.npt = 1;
+	}
 
 	if (env.flg & IT_ENV_FILTER) {
 		xxi->fei.flg |= XMP_ENVELOPE_FLT;
