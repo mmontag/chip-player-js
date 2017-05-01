@@ -1,3 +1,16 @@
+General guidelines for libxmp 5:
+
+We want to make the API usable in more languages/platforms, so don't
+expose pointers, and don't assume we have stdio. Just load from a buffer
+in memory and render frames. Don't be C-centric or POSIX-centric.
+
+Focus on the main player business. Remove decompression from the library
+so that front-ends can handle archives.
+
+
+
+
+Specific things to do:
 
 - envelope pool like digitrakker
   * allows envelope setting effect in digitrakker
@@ -28,6 +41,8 @@
 - fix CFLAGS mess
 
 - alloc buffer externally?
+
+- handle stereo samples?
 
 - flags and mixer info in frame_info
   * to inform mixer type in use
