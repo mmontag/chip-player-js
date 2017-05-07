@@ -327,7 +327,7 @@ Exit_AudDeinit:
 	Audio_Deinit();
 	printf("Done.\n");
 	
-#if defined(_DEBUG) && defined(_WIN32)
+#if defined(_DEBUG) && (_MSC_VER >= 1400)
 	if (_CrtDumpMemoryLeaks())
 		_getch();
 #endif
