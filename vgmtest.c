@@ -20,7 +20,7 @@ int __cdecl _getch(void);	// from conio.h
 #define	Sleep(msec)	usleep(msec * 1000)
 #endif
 
-#define VGM_LONG_UPDATE	1
+#define VGM_LONG_UPDATE	0
 
 #include <common_def.h>
 #include "audio/AudioStream.h"
@@ -30,6 +30,7 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/Resampler.h"
 #include "emu/SoundDevs.h"
 #include "emu/EmuCores.h"
+#include "emu/dac_control.h"
 #include "emu/cores/sn764intf.h"	// for SN76496_CFG
 #include "emu/cores/segapcm.h"		// for SEGAPCM_CFG
 #include "emu/cores/ayintf.h"		// for AY8910_CFG
@@ -138,6 +139,23 @@ struct _vgm_chip_device
 	DEVFUNC_WRITE_BLOCK romWriteB;
 };
 
+typedef struct _vgm_dac_stream VGM_DACSTRM;
+struct _vgm_dac_stream
+{
+	DEV_INFO defInf;
+	UINT8 bankID;
+};
+typedef struct _vgm_pcm_bank
+{
+	UINT32 dataSize;
+	UINT8* data;
+	
+	UINT32 bankAlloc;
+	UINT32 bankCount;
+	UINT32* bankOfs;
+	UINT32* bankSize;
+} VGM_PCM_BANK;
+
 
 int main(int argc, char* argv[]);
 static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs);
@@ -170,7 +188,13 @@ static UINT32 VGMSmplPos;
 static UINT32 renderSmplPos;
 #define CHIP_COUNT	0x29
 static VGM_CHIPDEV VGMChips[CHIP_COUNT][2];
+#define DACSTRM_COUNT	0x10	// only 0x10 for now
+static VGM_DACSTRM DACStreams[DACSTRM_COUNT];
 static UINT32 sampleRate;
+
+#define PCM_BANK_COUNT	0x40
+VGM_PCM_BANK PCMBank[PCM_BANK_COUNT];
+UINT32 ym2612_pcmBnkPos;
 
 int main(int argc, char* argv[])
 {
@@ -341,6 +365,7 @@ static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs)
 	UINT8 chipNum;
 	VGM_CHIPDEV* cDev;
 	VGM_LINKCDEV* clDev;
+	DEV_INFO* dacDInf;
 	
 	ReadVGMFile(smplCount);
 	// I know that using a for-loop has a bad performance, but it's just for testing anyway.
@@ -357,6 +382,12 @@ static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs)
 				Resmpl_Execute(&clDev->resmpl, smplCount, &smplData[smplOfs]);
 			clDev = clDev->linkDev;
 		};
+	}
+	
+	for (curChip = 0x00; curChip < DACSTRM_COUNT; curChip ++)
+	{
+		dacDInf = &DACStreams[curChip].defInf;
+		dacDInf->devDef->Update(dacDInf->dataPtr, smplCount, NULL);
 	}
 	
 	return;
@@ -443,6 +474,7 @@ static void InitVGMChips(void)
 	DEV_GEN_CFG devCfg;
 	VGM_CHIPDEV* cDev;
 	VGM_LINKCDEV* clDev;
+	DEV_INFO* devInf;
 	UINT8 retVal;
 	
 	memset(&VGMChips, 0x00, sizeof(VGMChips));
@@ -804,6 +836,21 @@ static void InitVGMChips(void)
 			clDev = clDev->linkDev;
 		}
 	}
+	
+	devCfg.emuCore = 0x00;
+	devCfg.srMode = DEVRI_SRMODE_NATIVE;
+	devCfg.flags = 0x00;
+	devCfg.clock = 0x00;
+	devCfg.smplRate = sampleRate;
+	for (curChip = 0x00; curChip < DACSTRM_COUNT; curChip ++)
+	{
+		devInf = &DACStreams[curChip].defInf;
+		retVal = device_start_daccontrol(&devCfg, devInf);
+		devInf->devDef->Reset(devInf->dataPtr);
+		DACStreams[curChip].bankID = 0xFF;
+	}
+	memset(&PCMBank, 0x00, sizeof(VGM_PCM_BANK) * PCM_BANK_COUNT);
+	
 	VGMSmplPos = 0;
 	renderSmplPos = 0;
 	VGMPos = VGMHdr.lngDataOffset;
@@ -819,6 +866,22 @@ static void DeinitVGMChips(void)
 	VGM_CHIPDEV* cDev;
 	VGM_LINKCDEV* clDev;
 	VGM_LINKCDEV* clDevOld;
+	DEV_INFO* devInf;
+	VGM_PCM_BANK* pcmBnk;
+	
+	for (curChip = 0x00; curChip < DACSTRM_COUNT; curChip ++)
+	{
+		devInf = &DACStreams[curChip].defInf;
+		devInf->devDef->Stop(devInf->dataPtr);
+		devInf->dataPtr = NULL;
+	}
+	for (curChip = 0x00; curChip < PCM_BANK_COUNT; curChip ++)
+	{
+		pcmBnk = &PCMBank[curChip];
+		free(pcmBnk->bankOfs);	pcmBnk->bankOfs = NULL;
+		free(pcmBnk->bankSize);	pcmBnk->bankSize = NULL;
+		free(pcmBnk->data);		pcmBnk->data = NULL;
+	}
 	
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	for (chipNum = 0; chipNum < 2; chipNum ++)
@@ -1132,6 +1195,9 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 	}
 	else if (cmd >= 0x80 && cmd <= 0x8F)
 	{
+		UINT8 data = PCMBank[0x00].data[ym2612_pcmBnkPos];
+		SendChipCommand_RegData8(DEVID_YM2612, 0x00, 0x00, 0x2A, data);
+		ym2612_pcmBnkPos ++;
 		VGMSmplPos += (cmd & 0x0F);
 		return 0x01;
 	}
@@ -1182,6 +1248,37 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			
 			switch(dblkType & 0xC0)
 			{
+			case 0x00:	// uncompressed data block
+			case 0x40:	// compressed data block
+				{
+					VGM_PCM_BANK* pcmBnk = &PCMBank[dblkType & 0x3F];
+					UINT32 dataLen = dblkLen;
+					const UINT8* dataPtr = &data[0x07];
+					
+					if (dblkType & 0x40)
+					{
+						// ignore compressed data blocks for now
+						dataLen = 0x00;
+						dataPtr = NULL;
+					}
+					
+					if (pcmBnk->bankCount >= pcmBnk->bankAlloc)
+					{
+						pcmBnk->bankAlloc += 0x10;
+						pcmBnk->bankOfs = (UINT32*)realloc(pcmBnk->bankOfs, pcmBnk->bankAlloc * sizeof(UINT32));
+						pcmBnk->bankSize = (UINT32*)realloc(pcmBnk->bankSize, pcmBnk->bankAlloc * sizeof(UINT32));
+					}
+					pcmBnk->bankOfs[pcmBnk->bankCount] = pcmBnk->dataSize;
+					pcmBnk->bankSize[pcmBnk->bankCount] = dataLen;
+					pcmBnk->bankCount ++;
+					
+					pcmBnk->data = (UINT8*)realloc(pcmBnk->data, pcmBnk->dataSize + dataLen);
+					memcpy(&pcmBnk->data[pcmBnk->dataSize], dataPtr, dataLen);
+					pcmBnk->dataSize += dataLen;
+					
+					// TODO: refresh DAC Stream pointers
+				}
+				break;
 			case 0x80:	// ROM/RAM write
 				dblkType &= 0x3F;
 				if (dblkType >= 0x14)
@@ -1221,6 +1318,7 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 	case 0x68:
 		return 0x0C;
 	case 0xE0:	// Seek to PCM Data Bank Pos
+		ym2612_pcmBnkPos = (data[0x01] << 0) | (data[0x02] << 8) | (data[0x03] << 16) | (data[0x04] << 24);
 		return 0x05;
 	case 0x4F:	// SN76489 GG Stereo
 		SendChipCommand_Data8(0x00, chipID, 0x01, data[0x01]);
@@ -1229,16 +1327,68 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		SendChipCommand_Data8(0x00, chipID, 0x00, data[0x01]);
 		return 0x02;
 	case 0x90:	// DAC Ctrl: Setup Chip
+		if (data[0x01] < DACSTRM_COUNT)
+		{
+			VGM_DACSTRM* dacStrm = &DACStreams[data[0x01]];
+			UINT8 chipType = data[0x02] & 0x7F;
+			UINT8 chipID = (data[0x02] & 0x80) >> 7;
+			VGM_CHIPDEV* destChip = &VGMChips[chipType][chipID];
+			UINT16 chipCmd = (data[0x03] << 8) | (data[0x04] << 0);
+			daccontrol_setup_chip(dacStrm->defInf.dataPtr, &destChip->defInf, chipType, chipCmd);
+		}
 		return 0x05;
 	case 0x91:	// DAC Ctrl: Set Data
+		if (data[0x01] < DACSTRM_COUNT)
+		{
+			VGM_DACSTRM* dacStrm = &DACStreams[data[0x01]];
+			VGM_PCM_BANK* pcmBnk;
+			dacStrm->bankID = data[0x02];
+			pcmBnk = &PCMBank[dacStrm->bankID];
+			daccontrol_set_data(dacStrm->defInf.dataPtr, pcmBnk->data, pcmBnk->dataSize, data[0x03], data[0x04]);
+		}
 		return 0x05;
 	case 0x92:	// DAC Ctrl: Set Freq
+		if (data[0x01] < DACSTRM_COUNT)
+		{
+			VGM_DACSTRM* dacStrm = &DACStreams[data[0x01]];
+			UINT32 freq = (data[0x02] << 0) | (data[0x03] << 8) | (data[0x04] << 16) | (data[0x05] << 24);
+			daccontrol_set_frequency(dacStrm->defInf.dataPtr, freq);
+		}
 		return 0x06;
-	case 0x93:	// DAC Ctrl: Play from Start Pos
+	case 0x93:	// DAC Ctrl: Play Data (verbose)
+		if (data[0x01] < DACSTRM_COUNT)
+		{
+			VGM_DACSTRM* dacStrm = &DACStreams[data[0x01]];
+			UINT32 startOfs = (data[0x02] << 0) | (data[0x03] << 8) | (data[0x04] << 16) | (data[0x05] << 24);
+			UINT32 soundLen = (data[0x07] << 0) | (data[0x08] << 8) | (data[0x09] << 16) | (data[0x0A] << 24);
+			daccontrol_start(dacStrm->defInf.dataPtr, startOfs, data[0x06], soundLen);
+		}
 		return 0x0B;
 	case 0x94:	// DAC Ctrl: Stop immediately
+		if (data[0x01] < DACSTRM_COUNT)
+		{
+			VGM_DACSTRM* dacStrm = &DACStreams[data[0x01]];
+			daccontrol_stop(dacStrm->defInf.dataPtr);
+		}
+		else if (data[0x01] == 0xFF)
+		{
+			for (chipID = 0x00; chipID < DACSTRM_COUNT; chipID ++)
+				daccontrol_stop(DACStreams[chipID].defInf.dataPtr);
+		}
 		return 0x02;
-	case 0x95:	// DAC Ctrl: Play Block (small)
+	case 0x95:	// DAC Ctrl: Play Data (using sound ID)
+		if (data[0x01] < DACSTRM_COUNT)
+		{
+			VGM_DACSTRM* dacStrm = &DACStreams[data[0x01]];
+			VGM_PCM_BANK* pcmBnk = &PCMBank[dacStrm->bankID];
+			UINT16 sndID = (data[0x02] << 0) | (data[0x03] << 8);
+			UINT32 startOfs = pcmBnk->bankOfs[sndID];
+			UINT32 soundLen = pcmBnk->bankSize[sndID];
+			UINT8 flags = DCTRL_LMODE_BYTES |
+						((data[0x04] & 0x10) << 0) |	// Reverse Mode
+						((data[0x04] & 0x01) << 7);		// Looping
+			daccontrol_start(dacStrm->defInf.dataPtr, startOfs, flags, soundLen);
+		}
 		return 0x05;
 	}
 	{

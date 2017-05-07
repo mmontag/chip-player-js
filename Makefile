@@ -211,6 +211,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/iremga20.o \
 	$(LIBEMUOBJ)/Resampler.o \
 	$(LIBEMUOBJ)/panning.o
+	$(LIBEMUOBJ)/dac_control.o
 
 
 AUDEMU_MAINOBJS = \

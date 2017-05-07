@@ -218,6 +218,7 @@ set(EMU_FILES
 	SoundEmu.c
 	Resampler.c
 	panning.c
+	dac_control.c
 )
 
 if(SNDEMU_SN76496_MAME OR SNDEMU_SN76496_MAXIM)

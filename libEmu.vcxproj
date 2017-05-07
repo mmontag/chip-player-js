@@ -215,6 +215,7 @@
     <ClCompile Include="emu\cores\ymf271.c" />
     <ClCompile Include="emu\cores\ymf278b.c" />
     <ClCompile Include="emu\cores\ymz280b.c" />
+    <ClCompile Include="emu\dac_control.c" />
     <ClCompile Include="emu\panning.c" />
     <ClCompile Include="emu\cores\okim6295.c" />
     <ClCompile Include="emu\Resampler.c" />
