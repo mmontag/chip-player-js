@@ -214,7 +214,7 @@ Exit_Deinit:
 	Audio_Deinit();
 	printf("Done.\n");
 	
-#if _DEBUG && defined ( _WIN32)
+#if defined(_DEBUG) && defined(_WIN32)
 	if (_CrtDumpMemoryLeaks())
 		_getch();
 #endif
