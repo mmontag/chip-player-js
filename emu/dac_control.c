@@ -1,5 +1,5 @@
 // TODO: SCSP and (especially) WonderSwan
-// TODO: replace muldiv64round with RatioCntr fixed-point addition (allows for sample rate changes)
+// TODO: reorder stuff in update loop (RC_STEP last) so that daccontrol_SendCommand called only when going to a new sample
  /************************
   *  DAC Stream Control  *
   ***********************/
@@ -23,6 +23,7 @@
 #include "snddef.h"
 #include "SoundDevs.h"
 #include "SoundEmu.h"
+#include "RatioCntr.h"
 #include "dac_control.h"
 
 static DEV_DEF devDef_DAC =
@@ -85,8 +86,7 @@ typedef struct _dac_control
 	//					7 (80) - disabled (needs setup)
 	UINT8 Running;
 	UINT8 Reverse;
-	UINT32 Step;		// Position in Player SampleRate
-	UINT32 Pos;			// Position in Data SampleRate
+	RATIO_CNTR stepCntr;
 	UINT32 RemainCmds;
 	UINT32 RealPos;		// true Position in Data (== Pos, if Reverse is off)
 	UINT8 DataStep;		// always StepSize * CmdSize
@@ -253,17 +253,11 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 	return;
 }
 
-INLINE UINT32 muldiv64round(UINT32 Multiplicand, UINT32 Multiplier, UINT32 Divisor)
-{
-	// Yes, I'm correctly rounding the values.
-	return (UINT32)(((UINT64)Multiplicand * Multiplier + Divisor / 2) / Divisor);
-}
-
 void daccontrol_update(void* info, UINT32 samples, DEV_SMPL** dummy)
 {
 	dac_control* chip = (dac_control*)info;
-	UINT32 NewPos;
-	INT16 RealDataStp;
+	INT32 RealDataStp;
+	UINT32 cmdsToProc;
 	
 	if (chip->Running & 0x80)	// disabled
 		return;
@@ -271,32 +265,32 @@ void daccontrol_update(void* info, UINT32 samples, DEV_SMPL** dummy)
 		return;
 	
 	if (! chip->Reverse)
-		RealDataStp = chip->DataStep;
+		RealDataStp = +chip->DataStep;
 	else
 		RealDataStp = -chip->DataStep;
 	
-	if (samples > 0x20)
+	RC_STEPS(&chip->stepCntr, samples);
+	cmdsToProc = RC_GET_VAL(&chip->stepCntr);
+	RC_MASK(&chip->stepCntr);
+	
+	if (cmdsToProc > chip->RemainCmds)
+		cmdsToProc = chip->RemainCmds;
+	
+	if (cmdsToProc > 0x20)
 	{
 		// very effective Speed Hack for fast seeking
-		NewPos = chip->Step + (samples - 0x10);
-		NewPos = muldiv64round(NewPos * chip->DataStep, chip->Frequency, chip->sampleRate);
-		while(chip->RemainCmds && chip->Pos < NewPos)
+		for (; cmdsToProc > 0x10; cmdsToProc --)
 		{
-			chip->Pos += chip->DataStep;
 			chip->RealPos += RealDataStp;
 			chip->RemainCmds --;
 		}
 	}
 	
-	chip->Step += samples;
-	// Formula: Step * Freq / SampleRate
-	NewPos = muldiv64round(chip->Step * chip->DataStep, chip->Frequency, chip->sampleRate);
 	daccontrol_SendCommand(chip);
 	
-	while(chip->RemainCmds && chip->Pos < NewPos)
+	for (; cmdsToProc > 0; cmdsToProc --)
 	{
 		daccontrol_SendCommand(chip);
-		chip->Pos += chip->DataStep;
 		chip->RealPos += RealDataStp;
 		chip->Running &= ~0x10;
 		chip->RemainCmds --;
@@ -306,12 +300,10 @@ void daccontrol_update(void* info, UINT32 samples, DEV_SMPL** dummy)
 	{
 		// loop back to start
 		chip->RemainCmds = chip->CmdsToSend;
-		chip->Step = 0x00;
-		chip->Pos = 0x00;
 		if (! chip->Reverse)
 			chip->RealPos = 0x00;
 		else
-			chip->RealPos = (chip->CmdsToSend - 0x01) * chip->DataStep;
+			chip->RealPos = (chip->CmdsToSend - 1) * chip->DataStep;
 	}
 	
 	if (! chip->RemainCmds)
@@ -371,8 +363,7 @@ void device_reset_daccontrol(void* info)
 	
 	chip->Running = 0xFF;
 	chip->Reverse = 0x00;
-	chip->Step = 0x00;
-	chip->Pos = 0x00;
+	RC_RESET(&chip->stepCntr);
 	chip->RealPos = 0x00;
 	chip->RemainCmds = 0x00;
 	chip->DataStep = 0x00;
@@ -480,6 +471,7 @@ void daccontrol_set_frequency(void* info, UINT32 Frequency)
 		return;
 	
 	chip->Frequency = Frequency;
+	RC_SET_RATIO(&chip->stepCntr, chip->Frequency, chip->sampleRate);
 	
 	return;
 }
@@ -523,12 +515,11 @@ void daccontrol_start(void* info, UINT32 DataPos, UINT8 LenMode, UINT32 Length)
 	chip->Reverse = (LenMode & 0x10) >> 4;
 	
 	chip->RemainCmds = chip->CmdsToSend;
-	chip->Step = 0x00;
-	chip->Pos = 0x00;
+	RC_RESET(&chip->stepCntr);
 	if (! chip->Reverse)
 		chip->RealPos = 0x00;
 	else
-		chip->RealPos = (chip->CmdsToSend - 0x01) * chip->DataStep;
+		chip->RealPos = (chip->CmdsToSend - 1) * chip->DataStep;
 	
 	chip->Running &= ~0x04;
 	chip->Running |= (LenMode & 0x80) ? 0x04 : 0x00;	// set loop mode

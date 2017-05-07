@@ -34,6 +34,11 @@ INLINE void RC_STEP(RATIO_CNTR* rc)
 	rc->val += rc->inc;
 }
 
+INLINE void RC_STEPS(RATIO_CNTR* rc, UINT32 step)
+{
+	rc->val += rc->inc * step;
+}
+
 INLINE UINT32 RC_GET_VAL(const RATIO_CNTR* rc)
 {
 	return (UINT32)(rc->val >> RC_SHIFT);
