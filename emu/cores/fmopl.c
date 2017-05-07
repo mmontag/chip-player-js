@@ -1240,6 +1240,8 @@ static void OPL_initalize(FM_OPL *OPL)
 
 	/* frequency base */
 	OPL->freqbase  = (OPL->rate) ? ((double)OPL->clock / 72.0) / OPL->rate  : 0;
+	if (fabs(OPL->freqbase - 1.0) < 0.00005)
+		OPL->freqbase = 1.0;
 #if 0
 	OPL->rate = (double)OPL->clock / 72.0;
 	OPL->freqbase  = 1.0;

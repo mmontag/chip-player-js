@@ -1675,6 +1675,8 @@ static void OPNSetPres(FM_OPN *OPN, int pres, int timer_prescaler, int SSGpres)
 
 	/* frequency base */
 	OPN->ST.freqbase = (OPN->ST.rate) ? ((double)OPN->ST.clock / OPN->ST.rate) / pres : 0;
+	if (fabs(OPN->ST.freqbase - 1.0) < 0.00005)
+		OPN->ST.freqbase = 1.0;
 
 #if 0
 	OPN->ST.rate = (double)OPN->ST.clock / pres;

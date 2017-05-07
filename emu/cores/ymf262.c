@@ -1281,6 +1281,8 @@ static void OPL3_initalize(OPL3 *chip)
 
 	/* frequency base */
 	chip->freqbase  = (chip->rate) ? ((double)chip->clock / (8.0*36)) / chip->rate  : 0;
+	if (fabs(chip->freqbase - 1.0) < 0.00005)
+		chip->freqbase = 1.0;
 #if 0
 	chip->rate = (double)chip->clock / (8.0*36);
 	chip->freqbase  = 1.0;

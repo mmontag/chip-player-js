@@ -2003,6 +2003,8 @@ static void OPNSetPres(FM_OPN *OPN, int pres, int timer_prescaler, int SSGpres)
 {
 	/* frequency base */
 	OPN->ST.freqbase = (OPN->ST.rate) ? ((double)OPN->ST.clock / OPN->ST.rate) / pres : 0;
+	if (fabs(OPN->ST.freqbase - 1.0) < 0.00005)
+		OPN->ST.freqbase = 1.0;
 
 	/* EG is updated every 3 samples */
 	OPN->eg_timer_add  = (UINT32)((1<<EG_SH) * OPN->ST.freqbase);

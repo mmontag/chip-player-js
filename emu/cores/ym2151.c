@@ -605,6 +605,8 @@ static void init_chip_tables(YM2151 *chip)
 	double scaler;
 
 	scaler = ( (double)chip->clock / 64.0 ) / ( (double)chip->sampfreq );
+	if (fabs(scaler - 1.0) < 0.00005)
+		scaler = 1.0;
 
 	/* this loop calculates Hertz values for notes from c-0 to b-7 */
 	/* including 64 'cents' (100/64 that is 1.5625 of real cent) per note */

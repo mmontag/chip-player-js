@@ -1148,6 +1148,8 @@ static void OPLL_initalize(YM2413 *chip)
 
 	/* frequency base */
 	chip->freqbase  = (chip->rate) ? ((double)chip->clock / 72.0) / chip->rate : 0;
+	if (fabs(chip->freqbase - 1.0) < 0.00005)
+		chip->freqbase = 1.0;
 
 	/* make fnumber -> increment counter table */
 	for( i = 0 ; i < 1024; i++ )
