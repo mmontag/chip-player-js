@@ -1,5 +1,4 @@
 // TODO: SCSP and (especially) WonderSwan
-// TODO: reorder stuff in update loop (RC_STEP last) so that daccontrol_SendCommand called only when going to a new sample
  /************************
   *  DAC Stream Control  *
   ***********************/
@@ -82,7 +81,6 @@ typedef struct _dac_control
 	
 	// Running Bits:	0 (01) - is playing
 	//					2 (04) - loop sample (simple loop from start to end)
-	//					4 (10) - already sent this command
 	//					7 (80) - disabled (needs setup)
 	UINT8 Running;
 	UINT8 Reverse;
@@ -100,8 +98,6 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 	UINT16 Data16;
 	const UINT8* ChipData;
 	
-	if (chip->Running & 0x10)	// command already sent
-		return;
 	if (chip->DataStart + chip->RealPos >= chip->DataLen)
 		return;
 	
@@ -248,7 +244,6 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 		chip->Write.A8D8(chip->chipData, 0x02, Command);		// Register
 		break;
 	}
-	chip->Running |= 0x10;
 	
 	return;
 }
@@ -264,10 +259,7 @@ void daccontrol_update(void* info, UINT32 samples, DEV_SMPL** dummy)
 	if (! (chip->Running & 0x01))	// stopped
 		return;
 	
-	if (! chip->Reverse)
-		RealDataStp = +chip->DataStep;
-	else
-		RealDataStp = -chip->DataStep;
+	RealDataStp = (chip->Reverse) ? -chip->DataStep : +chip->DataStep;
 	
 	RC_STEPS(&chip->stepCntr, samples);
 	cmdsToProc = RC_GET_VAL(&chip->stepCntr);
@@ -275,25 +267,19 @@ void daccontrol_update(void* info, UINT32 samples, DEV_SMPL** dummy)
 	
 	if (cmdsToProc > chip->RemainCmds)
 		cmdsToProc = chip->RemainCmds;
+	chip->RemainCmds -= cmdsToProc;
 	
 	if (cmdsToProc > 0x20)
 	{
 		// very effective Speed Hack for fast seeking
-		for (; cmdsToProc > 0x10; cmdsToProc --)
-		{
-			chip->RealPos += RealDataStp;
-			chip->RemainCmds --;
-		}
+		chip->RealPos += RealDataStp * (cmdsToProc - 0x10);
+		cmdsToProc = 0x10;
 	}
-	
-	daccontrol_SendCommand(chip);
 	
 	for (; cmdsToProc > 0; cmdsToProc --)
 	{
 		daccontrol_SendCommand(chip);
 		chip->RealPos += RealDataStp;
-		chip->Running &= ~0x10;
-		chip->RemainCmds --;
 	}
 	
 	if (! chip->RemainCmds && (chip->Running & 0x04))
@@ -515,7 +501,7 @@ void daccontrol_start(void* info, UINT32 DataPos, UINT8 LenMode, UINT32 Length)
 	chip->Reverse = (LenMode & 0x10) >> 4;
 	
 	chip->RemainCmds = chip->CmdsToSend;
-	RC_RESET(&chip->stepCntr);
+	RC_RESET_PRESTEP(&chip->stepCntr);	// first sample is sent with next update
 	if (! chip->Reverse)
 		chip->RealPos = 0x00;
 	else
@@ -525,7 +511,6 @@ void daccontrol_start(void* info, UINT32 DataPos, UINT8 LenMode, UINT32 Length)
 	chip->Running |= (LenMode & 0x80) ? 0x04 : 0x00;	// set loop mode
 	
 	chip->Running |= 0x01;	// start
-	chip->Running &= ~0x10;	// command isn't yet sent
 	
 	return;
 }

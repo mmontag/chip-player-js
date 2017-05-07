@@ -54,6 +54,11 @@ INLINE void RC_RESET(RATIO_CNTR* rc)
 	rc->val = 0;
 }
 
+INLINE void RC_RESET_PRESTEP(RATIO_CNTR* rc)
+{
+	rc->val = ((RC_TYPE)1 << RC_SHIFT) - rc->inc;
+}
+
 INLINE void RC_MASK(RATIO_CNTR* rc)
 {
 	rc->val &= (((RC_TYPE)1 << RC_SHIFT) - 1);
