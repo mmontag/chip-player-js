@@ -95,10 +95,6 @@ UINT8 Pulse_IsAvailable(void)
 
 UINT8 Pulse_Init(void)
 {
-	UINT32 numDevs;
-	UINT32 curDev;
-	UINT32 devLstID;
-	
 	if (isInit)
 		return AERR_WASDONE;
 	
@@ -122,8 +118,6 @@ UINT8 Pulse_Init(void)
 
 UINT8 Pulse_Deinit(void)
 {
-	UINT32 curDev;
-	
 	if (! isInit)
 		return AERR_WASDONE;
 	
@@ -261,7 +255,6 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 UINT8 Pulse_Stop(void* drvObj)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
-	int retVal;
 	
 	if (drv->devState != 1)
 		return 0xD8;	// is already stopped (or stopping)
@@ -352,7 +345,6 @@ UINT32 Pulse_GetLatency(void* drvObj)
 static void* PulseThread(void* Arg)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)Arg;
-	UINT32 curBuf;
 	UINT32 didBuffers;	// number of processed buffers
 	UINT32 bufBytes;
 	int retVal;
