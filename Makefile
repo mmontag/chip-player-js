@@ -4,7 +4,7 @@
 #
 ########################
 
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(OS),Windows_NT)
 WINDOWS = 1

@@ -188,7 +188,7 @@ UINT8 Pulse_SetStreamDesc(void* drvObj, const char* streamDesc)
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
 		
 	//The Simple API does not accept updates to the stream description
-	if (strcmp(drv->streamDesc, "libvgm") || drv->hPulse)
+	if (drv->hPulse)
 		return AERR_WASDONE;
 
 	free(drv->streamDesc);
