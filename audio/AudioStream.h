@@ -25,6 +25,7 @@ extern "C"
 //#define AUDDRV_SADA
 #define AUDDRV_ALSA
 #define AUDDRV_LIBAO
+#define AUDDRV_PULSE
 
 #endif
 */

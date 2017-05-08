@@ -4,7 +4,7 @@
 #
 ########################
 
-DEBUG = 0
+DEBUG = 1
 
 ifeq ($(OS),Windows_NT)
 WINDOWS = 1
@@ -16,6 +16,7 @@ ifeq ($(WINDOWS), 0)
 USE_BSD_AUDIO = 0
 USE_ALSA = 1
 USE_LIBAO = 1
+USE_PULSE = 1
 endif
 
 CC = gcc
@@ -132,6 +133,14 @@ LIBAUDOBJS += \
 LDFLAGS += -lasound
 CFLAGS += -D AUDDRV_ALSA
 endif
+
+ifeq ($(USE_PULSE), 1)
+LIBAUDOBJS += \
+	$(LIBAUDOBJ)/AudDrv_Pulse.o
+LDFLAGS += -lpulse-simple -lpulse
+CFLAGS += -D AUDDRV_PULSE
+endif
+
 endif
 
 ifeq ($(USE_LIBAO), 1)
