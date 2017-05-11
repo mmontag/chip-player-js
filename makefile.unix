@@ -52,6 +52,7 @@ COMPILE=$(CXX) $(CXXFLAGS) $(DEFINES)
 LINK=$(CXX)
 
 UNRAR_OBJ=filestr.o recvol.o rs.o scantree.o
+LIB_OBJ=dll.o
 
 OBJECTS=rar.o strlist.o strfn.o pathfn.o int64.o savepos.o global.o file.o filefn.o filcreat.o \
 	archive.o arcread.o unicode.o system.o isnt.o crypt.o crc.o rawread.o encname.o \
@@ -68,13 +69,17 @@ clean:
 
 unrar:	WHAT=UNRAR
 unrar:	$(OBJECTS) $(UNRAR_OBJ)
-	@rm -f makeunrar
+	@rm -f unrar
 	$(LINK) -o unrar $(LDFLAGS) $(OBJECTS) $(UNRAR_OBJ) $(LIBS)	
 	@strip unrar
 
 sfx:	WHAT=SFX_MODULE
 sfx:	$(OBJECTS)
 	@rm -f default.sfx
-	$(LINK) -o default.sfx $(LDFLAGS) $(OBJECTS) -DSFX_MODULE 
+	$(LINK) -o default.sfx $(LDFLAGS) $(OBJECTS)
 	strip default.sfx
 
+lib:	WHAT=RARDLL
+lib:	$(OBJECTS) $(LIB_OBJ)
+	@rm -f libunrar.so
+	$(LINK) -shared -o libunrar.so $(LDFLAGS) $(OBJECTS) $(LIB_OBJ)

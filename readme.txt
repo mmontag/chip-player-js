@@ -48,6 +48,7 @@
    Brian Gladman      AES encryption
    Steve Reid         SHA-1 hash function
    Marcus Herbert     makefile.unix file
+   Tomasz Klim        fixes for libunrar.so
 
 
    4. Legal stuff

@@ -167,7 +167,11 @@ int ScanTree::FindProc(FindData *FindData)
     while (Depth>=0 && FindStack[Depth]==NULL)
       Depth--;
     if (Depth < 0)
+    {
+      if (Error)
+        Errors++;
       return(SCAN_DONE);
+    }
     char *Slash=strrchrd(CurMask,CPATHDIVIDER);
     if (Slash!=NULL)
     {

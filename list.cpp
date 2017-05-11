@@ -29,6 +29,8 @@ void ListArchive(CommandData *Cmd)
       uint FileCount=0;
       if (Arc.IsArchive(true))
       {
+        if (!Arc.IsOpened())
+          break;
         bool TitleShown=false;
         if (!Bare)
         {

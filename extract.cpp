@@ -93,6 +93,9 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
     return(EXTRACT_ARC_NEXT);
   }
 
+  if (!Arc.IsOpened())
+    return(EXTRACT_ARC_NEXT);
+
 #ifndef SFX_MODULE
   if (Arc.Volume && Arc.NotFirstVolume)
   {
