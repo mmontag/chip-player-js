@@ -797,16 +797,29 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
           CurPos++;
           if (CurByte==0xe8 || CurByte==CmpByte2)
           {
-            long Offset=CurPos+FileOffset;
-            long Addr=GET_VALUE(false,Data);
+#ifdef PRESENT_INT32
+            sint32 Offset=CurPos+FileOffset;
+            sint32 Addr=GET_VALUE(false,Data);
             if (Addr<0)
             {
               if (Addr+Offset>=0)
                 SET_VALUE(false,Data,Addr+FileSize);
             }
-            else 
+            else
               if (Addr<FileSize)
                 SET_VALUE(false,Data,Addr-Offset);
+#else
+            long Offset=CurPos+FileOffset;
+            long Addr=GET_VALUE(false,Data);
+            if ((Addr & 0x80000000)!=0)
+            {
+              if (((Addr+Offset) & 0x80000000)==0)
+                SET_VALUE(false,Data,Addr+FileSize);
+            }
+            else 
+              if (((Addr-FileSize) & 0x80000000)!=0)
+                SET_VALUE(false,Data,Addr-Offset);
+#endif
             Data+=4;
             CurPos+=4;
           }

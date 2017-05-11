@@ -49,6 +49,7 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
 
     Data->Cmd.AddArcName(r->ArcName,r->ArcNameW);
     Data->Cmd.Overwrite=OVERWRITE_ALL;
+    Data->Cmd.VersionControl=1;
     if (!Data->Arc.Open(r->ArcName,r->ArcNameW))
     {
       delete Data;
