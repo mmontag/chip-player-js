@@ -211,20 +211,20 @@ void ComprDataIO::GetUnpackedData(byte **Data,uint *Size)
 }
 
 
-void ComprDataIO::SetEncryption(int Method,char *Password,byte *Salt,bool Encrypt)
+void ComprDataIO::SetEncryption(int Method,char *Password,byte *Salt,bool Encrypt,bool HandsOffHash)
 {
   if (Encrypt)
   {
     Encryption=*Password ? Method:0;
 #ifndef NOCRYPT
-    Crypt.SetCryptKeys(Password,Salt,Encrypt);
+    Crypt.SetCryptKeys(Password,Salt,Encrypt,false,HandsOffHash);
 #endif
   }
   else
   {
     Decryption=*Password ? Method:0;
 #ifndef NOCRYPT
-    Decrypt.SetCryptKeys(Password,Salt,Encrypt,Method<29);
+    Decrypt.SetCryptKeys(Password,Salt,Encrypt,Method<29,HandsOffHash);
 #endif
   }
 }

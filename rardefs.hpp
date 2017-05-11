@@ -4,7 +4,10 @@
 #define  Min(x,y) (((x)<(y)) ? (x):(y))
 #define  Max(x,y) (((x)>(y)) ? (x):(y))
 
+#define  ASIZE(x) (sizeof(x)/sizeof(x[0]))
+
 #define  MAXPASSWORD       128
+#define  MAXSFXSIZE        0x80000
 
 #define  DefSFXName        "default.sfx"
 #define  DefSortListName   "rarfiles.lst"

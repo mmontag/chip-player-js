@@ -129,6 +129,15 @@ void ErrorHandler::SeekError(const char *FileName)
 }
 
 
+void ErrorHandler::GeneralErrMsg(const char *Msg)
+{
+#ifndef SILENT
+  Log(NULL,"%s",Msg);
+  SysErrMsg();
+#endif
+}
+
+
 void ErrorHandler::MemoryErrorMsg()
 {
 #ifndef SILENT
@@ -319,7 +328,8 @@ void ErrorHandler::Throw(int Code)
 
 void ErrorHandler::SysErrMsg()
 {
-#if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(SILENT)
+#if !defined(SFX_MODULE) && !defined(SILENT)
+#ifdef _WIN_32
     #define STRCHR strchr
     #define ERRCHAR char
   ERRCHAR  *lpMsgBuf=NULL;
@@ -349,4 +359,16 @@ void ErrorHandler::SysErrMsg()
   }
   LocalFree( lpMsgBuf );
 #endif
+
+#if defined(_UNIX) || defined(_EMX)
+  char *err=strerror(errno);
+  if (err!=NULL)
+    Log(NULL,"\n%s",err);
+#endif
+
+#endif
 }
+
+
+
+

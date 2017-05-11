@@ -44,7 +44,7 @@ void CommandData::Close()
 }
 
 
-#if !defined(SFX_MODULE) && !defined(_WIN_CE)
+#if !defined(SFX_MODULE)
 void CommandData::ParseArg(char *Arg,wchar *ArgW)
 {
   if (IsSwitch(*Arg) && !NoMoreSwitches)
@@ -97,8 +97,8 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
             bool Found=FindFile::FastFind(Arg,NULL,&FileData);
             if (!Found && *Arg=='@' && !IsWildcard(Arg))
             {
-              ReadTextFile(Arg+1,FileArgs,false,true,true,true,true);
               FileLists=true;
+              ReadTextFile(Arg+1,FileArgs,false,true,true,true,true);
             }
             else
               if (Found && FileData.IsDir && Extract && *ExtrPath==0)
@@ -164,8 +164,12 @@ void CommandData::ReadConfig(int argc,char *argv[])
   {
     char *Str;
     while ((Str=List.GetString())!=NULL)
+    {
+      while (isspace(*Str))
+        Str++;
       if (strnicomp(Str,"switches=",9)==0)
         ProcessSwitchesString(Str+9);
+    }
   }
 }
 #endif
@@ -193,7 +197,7 @@ void CommandData::ProcessSwitchesString(char *Str)
 #endif
 
 
-#if !defined(SFX_MODULE) && !defined(_WIN_CE)
+#if !defined(SFX_MODULE)
 void CommandData::ProcessSwitch(char *Switch)
 {
 
@@ -373,6 +377,9 @@ void CommandData::ProcessSwitch(char *Switch)
         case '-':
           Overwrite=OVERWRITE_NONE;
           break;
+        case 'R':
+          Overwrite=OVERWRITE_AUTORENAME;
+          break;
         case 'W':
           ProcessOwners=true;
           break;
@@ -406,6 +413,7 @@ void CommandData::ProcessSwitch(char *Switch)
         case '0':
           Recurse=RECURSE_WILDCARDS;
           break;
+#ifndef _WIN_CE
         case 'I':
           {
             Priority=atoi(Switch+2);
@@ -418,6 +426,7 @@ void CommandData::ProcessSwitch(char *Switch)
             SetPriority(Priority);
           }
           break;
+#endif
       }
       break;
     case 'Y':
@@ -498,7 +507,8 @@ void CommandData::ProcessSwitch(char *Switch)
       }
       break;
     case 'Z':
-      strncpy(CommentFile,Switch[1]!=0 ? Switch+1:"stdin",sizeof(CommentFile));
+      strncpy(CommentFile,Switch[1]!=0 ? Switch+1:"stdin",sizeof(CommentFile)-1);
+      CommentFile[sizeof(CommentFile)-1]=0;
       break;
     case 'M':
       switch(toupper(Switch[1]))
@@ -584,6 +594,13 @@ void CommandData::ProcessSwitch(char *Switch)
             }
           }
           break;
+#ifdef PACK_SMP
+        case 'T':
+          Threads=atoi(Switch+2);
+          if (Threads>MaxSearchThreads)
+            BadSwitch(Switch);
+          break;
+#endif
         default:
           Method=Switch[1]-'0';
           if (Method>5 || Method<0)
@@ -675,8 +692,23 @@ void CommandData::ProcessSwitch(char *Switch)
       }
       break;
     case 'F':
-      if (Switch[1]==0)
-        FreshFiles=true;
+      switch(toupper(Switch[1]))
+      {
+        case 0:
+          FreshFiles=true;
+          break;
+        case 'C':
+          if (toupper(Switch[2])=='U')
+          {
+            UnicodeComment=true;
+            if (*CommentFile==0 || Switch[3]!=0)
+            {
+              strncpy(CommentFile,Switch[3]!=0 ? Switch+3:"stdin",sizeof(CommentFile)-1);
+              CommentFile[sizeof(CommentFile)-1]=0;
+            }
+          }
+          break;
+      }
       break;
     case 'U':
       if (Switch[1]==0)
@@ -717,6 +749,14 @@ void CommandData::ProcessSwitch(char *Switch)
             break;
           case 'D':
             Solid|=SOLID_VOLUME_DEPENDENT;
+            break;
+          case 'L':
+            if (isdigit(Switch[2]))
+              FileSizeLess=atoil(Switch+2);
+            break;
+          case 'M':
+            if (isdigit(Switch[2]))
+              FileSizeMore=atoil(Switch+2);
             break;
         }
       break;
@@ -759,7 +799,7 @@ void CommandData::ProcessSwitch(char *Switch)
 #endif
 
 
-#if !defined(SFX_MODULE) && !defined(_WIN_CE)
+#ifndef SFX_MODULE
 void CommandData::BadSwitch(char *Switch)
 {
   mprintf(St(MUnknownOption),Switch);
@@ -810,29 +850,30 @@ void CommandData::OutHelp()
     MCHelpSwAP,MCHelpSwAVm,MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
     MCHelpSwDH,MCHelpSwEP,MCHelpSwEP3,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,
     MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwKB,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,
-    MCHelpSwOp,MCHelpSwOm,MCHelpSwOC,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,
-    MCHelpSwR,MCHelpSwRI,MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,
-    MCHelpSwTS,MCHelpSwU,MCHelpSwVUnr,MCHelpSwVER,MCHelpSwVP,MCHelpSwX,
-    MCHelpSwXa,MCHelpSwXal,MCHelpSwY
+    MCHelpSwOp,MCHelpSwOm,MCHelpSwOC,MCHelpSwOR,MCHelpSwOW,MCHelpSwP,
+    MCHelpSwPm,MCHelpSwR,MCHelpSwRI,MCHelpSwSL,MCHelpSwSM,MCHelpSwTA,
+    MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwVUnr,
+    MCHelpSwVER,MCHelpSwVP,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY
 #else
     MRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdA,MCHelpCmdC,MCHelpCmdCF,
-    MCHelpCmdCW,MCHelpCmdD,MCHelpCmdE,MCHelpCmdF,MCHelpCmdI,MCHelpCmdK,
-    MCHelpCmdL,MCHelpCmdM,MCHelpCmdP,MCHelpCmdR,MCHelpCmdRC,MCHelpCmdRN,
-    MCHelpCmdRR,MCHelpCmdRV,MCHelpCmdS,MCHelpCmdT,MCHelpCmdU,MCHelpCmdV,
-    MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAG,
+    MCHelpCmdCH,MCHelpCmdCW,MCHelpCmdD,MCHelpCmdE,MCHelpCmdF,MCHelpCmdI,
+    MCHelpCmdK,MCHelpCmdL,MCHelpCmdM,MCHelpCmdP,MCHelpCmdR,MCHelpCmdRC,
+    MCHelpCmdRN,MCHelpCmdRR,MCHelpCmdRV,MCHelpCmdS,MCHelpCmdT,MCHelpCmdU,
+    MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAG,
     MCHelpSwAO,MCHelpSwAP,MCHelpSwAS,MCHelpSwAV,MCHelpSwAVm,MCHelpSwCm,
     MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,MCHelpSwDS,
     MCHelpSwEa,MCHelpSwED,MCHelpSwEE,MCHelpSwEN,MCHelpSwEP,MCHelpSwEP1,
-    MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,
-    MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwISND,
-    MCHelpSwK,MCHelpSwKB,MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,
-    MCHelpSwN,MCHelpSwNa,MCHelpSwNal,MCHelpSwOp,MCHelpSwOm,MCHelpSwOC,
-    MCHelpSwOL,MCHelpSwOS,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,
-    MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,
-    MCHelpSwSFX,MCHelpSwSI,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,
-    MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,
-    MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,
-    MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
+    MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,MCHelpSwFCU,MCHelpSwHP,MCHelpSwIDP,
+    MCHelpSwIEML,MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,MCHelpSwIOFF,
+    MCHelpSwISND,MCHelpSwK,MCHelpSwKB,MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,
+    MCHelpSwMS,MCHelpSwMT,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,MCHelpSwOp,
+    MCHelpSwOm,MCHelpSwOC,MCHelpSwOL,MCHelpSwOR,MCHelpSwOS,MCHelpSwOW,
+    MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,
+    MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSFX,MCHelpSwSI,MCHelpSwSL,
+    MCHelpSwSM,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,MCHelpSwTL,
+    MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,MCHelpSwVn,
+    MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,MCHelpSwX,
+    MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
 #endif
   };
 
@@ -866,11 +907,15 @@ void CommandData::OutHelp()
     if (Help[I]==MCHelpSwOL)
       continue;
 #endif
-#if !defined(_WIN_32)
+#ifndef _WIN_32
     if (Help[I]==MCHelpSwRI)
       continue;
 #endif
-#if !defined(_BEOS)
+#ifndef PACK_SMP
+    if (Help[I]==MCHelpSwMT)
+      continue;
+#endif
+#ifndef _BEOS
     if (Help[I]==MCHelpSwEE)
     {
 #if defined(_EMX) && !defined(_DJGPP)
@@ -885,7 +930,7 @@ void CommandData::OutHelp()
     mprintf(St(Help[I]));
   }
   mprintf("\n");
-  ErrHandler.Exit(0);
+  ErrHandler.Exit(USER_ERROR);
 #endif
 }
 
@@ -919,7 +964,7 @@ bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath)
     return(true);
   if (InclArgs->ItemsCount()==0)
     return(false);
-  if (ExclCheckArgs(InclArgs,CheckName,CheckFullPath,MATCH_NAMES))
+  if (ExclCheckArgs(InclArgs,CheckName,CheckFullPath,MATCH_WILDSUBPATH))
     return(false);
   return(true);
 }
@@ -957,6 +1002,18 @@ bool CommandData::TimeCheck(RarTime &ft)
 #endif
 
 
+#ifndef SFX_MODULE
+bool CommandData::SizeCheck(Int64 Size)
+{
+  if (FileSizeLess!=INT64ERR && Size>=FileSizeLess)
+    return(true);
+  if (FileSizeMore!=INT64ERR && Size<=FileSizeMore)
+    return(true);
+  return(false);
+}
+#endif
+
+
 int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType)
 {
   if (strlen(NewLhd.FileName)>=NM || strlenw(NewLhd.FileNameW)>=NM)
@@ -965,6 +1022,10 @@ int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType
     return(0);
 #ifndef SFX_MODULE
   if (TimeCheck(NewLhd.mtime))
+    return(0);
+  if ((NewLhd.FileAttr & ExclFileAttr)!=0 || InclAttrSet && (NewLhd.FileAttr & InclFileAttr)==0)
+    return(0);
+  if ((NewLhd.Flags & LHD_WINDOWMASK)!=LHD_DIRECTORY && SizeCheck(NewLhd.FullUnpSize))
     return(0);
 #endif
   char *ArgName;
@@ -1011,7 +1072,7 @@ int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType
 }
 
 
-#ifndef _WIN_CE
+#ifndef GUI
 void CommandData::ProcessCommand()
 {
 #ifndef SFX_MODULE
@@ -1051,7 +1112,7 @@ void CommandData::ProcessCommand()
         Extract.DoExtract(this);
       }
       break;
-#if !defined(GUI) && !defined(SILENT)
+#ifndef SILENT
     case 'V':
     case 'L':
       ListArchive(this);
@@ -1060,10 +1121,8 @@ void CommandData::ProcessCommand()
       OutHelp();
 #endif
   }
-#ifndef GUI
   if (!BareOutput)
     mprintf("\n");
-#endif
 }
 #endif
 

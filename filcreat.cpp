@@ -62,7 +62,7 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
 #ifdef  _WIN_32
         File SrcFile;
         SrcFile.SetHandleType(FILE_HANDLESTD);
-        int Size=SrcFile.Read(NewName,NM);
+        int Size=SrcFile.Read(NewName,sizeof(NewName)-1);
         NewName[Size]=0;
         OemToChar(NewName,NewName);
 #else
@@ -80,12 +80,47 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
       if (Choice==6)
         ErrHandler.Exit(USER_BREAK);
     }
+    if (Mode==OVERWRITE_AUTORENAME)
+    {
+      if (GetAutoRenamedName(Name))
+      {
+        if (NameW!=NULL)
+          *NameW=0;
+      }
+      else
+        Mode=OVERWRITE_ASK;
+      continue;
+    }
   }
   if (NewFile!=NULL && NewFile->Create(Name,NameW))
     return(true);
   PrepareToDelete(Name,NameW);
   CreatePath(Name,NameW,true);
   return(NewFile!=NULL ? NewFile->Create(Name,NameW):DelFile(Name,NameW));
+}
+
+
+bool GetAutoRenamedName(char *Name)
+{
+  char NewName[NM];
+
+  if (strlen(Name)>sizeof(NewName)-10)
+    return(false);
+  char *Ext=GetExt(Name);
+  if (Ext==NULL)
+    Ext=Name+strlen(Name);
+  for (int FileVer=1;;FileVer++)
+  {
+    sprintf(NewName,"%.*s(%d)%s",Ext-Name,Name,FileVer,Ext);
+    if (!FileExist(NewName))
+    {
+      strcpy(Name,NewName);
+      break;
+    }
+    if (FileVer>=1000000)
+      return(false);
+  }
+  return(true);
 }
 
 

@@ -20,11 +20,12 @@
 
 #ifdef _WIN_32
 
-#define STRICT
-#undef WINVER
-#undef _WIN32_WINNT
-#define WINVER 0x0400
-#define _WIN32_WINNT 0x0300
+  #define STRICT
+  #undef WINVER
+  #undef _WIN32_WINNT
+  #define WINVER 0x0400
+  #define _WIN32_WINNT 0x0300
+
 
 #define WIN32_LEAN_AND_MEAN
 
@@ -32,19 +33,18 @@
 #include <prsht.h>
 
 #ifndef _WIN_CE
-#include <winioctl.h>
+  #include <winioctl.h>
 #endif
 
 #endif
 
 #ifndef _WIN_CE
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dos.h>
+  #include <sys/types.h>
+  #include <sys/stat.h>
+  #include <dos.h>
 #endif
 
 #if !defined(_EMX) && !defined(_MSC_VER) && !defined(_WIN_CE)
-  #define ENABLE_MKTEMP
   #include <dir.h>
 #endif
 #ifdef _MSC_VER
@@ -57,7 +57,7 @@
 #endif
 
 #ifndef _WIN_CE
-#include <share.h>
+  #include <share.h>
 #endif
 
 #if defined(ENABLE_BAD_ALLOC) && !defined(_WIN_CE)

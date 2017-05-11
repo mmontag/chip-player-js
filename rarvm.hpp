@@ -79,7 +79,6 @@ class RarVM:private BitInput
     inline uint GetValue(bool ByteMode,uint *Addr);
     inline void SetValue(bool ByteMode,uint *Addr,uint Value);
     inline uint* GetOperand(VM_PreparedOperand *CmdOp);
-    void PrintState(uint IP);
     void DecodeArg(VM_PreparedOperand &Op,bool ByteMode);
 #ifdef VM_OPTIMIZE
     void Optimize(VM_PreparedProgram *Prg);

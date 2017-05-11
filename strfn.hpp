@@ -21,4 +21,9 @@ bool LowAscii(const char *Str);
 bool LowAscii(const wchar *Str);
 
 
+int stricompc(const char *Str1,const char *Str2);
+#ifndef SFX_MODULE
+int stricompcw(const wchar *Str1,const wchar *Str2);
+#endif
+
 #endif

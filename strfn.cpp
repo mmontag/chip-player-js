@@ -141,3 +141,25 @@ bool LowAscii(const wchar *Str)
 }
 
 
+
+
+int stricompc(const char *Str1,const char *Str2)
+{
+#if defined(_UNIX)
+  return(strcmp(Str1,Str2));
+#else
+  return(stricomp(Str1,Str2));
+#endif
+}
+
+
+#ifndef SFX_MODULE
+int stricompcw(const wchar *Str1,const wchar *Str2)
+{
+#if defined(_UNIX)
+  return(strcmpw(Str1,Str2));
+#else
+  return(stricmpw(Str1,Str2));
+#endif
+}
+#endif

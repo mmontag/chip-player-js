@@ -456,9 +456,6 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         break;
 #endif
       case VM_PRINT:
-#ifdef DEBUG
-        PrintState(Cmd-PreparedCode);
-#endif
         break;
     }
     Cmd++;
@@ -467,16 +464,6 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
 }
 
 
-void RarVM::PrintState(uint IP)
-{
-#if defined(DEBUG) && !defined(GUI) && !defined(SILENT)
-  mprintf("\n");
-  for (int I=0;I<sizeof(R)/sizeof(R[0]);I++)
-    mprintf("R%d=%08X\t%s",I,R[I],I==3 ? "\n":"");
-  mprintf("\nIP=%08X\tFlags: C=%d S=%d",IP,(Flags & VM_FC)!=0,(Flags & VM_FS)!=0);
-  mprintf("\n");
-#endif
-}
 
 
 void RarVM::Prepare(byte *Code,int CodeSize,VM_PreparedProgram *Prg)

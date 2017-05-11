@@ -37,6 +37,7 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
   {
     r->OpenResult=0;
     DataSet *Data=new DataSet;
+    Data->Cmd.DllError=0;
     Data->OpenMode=r->OpenMode;
     Data->Cmd.FileArgs->AddString("*");
 
@@ -59,12 +60,12 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     if (!Data->Arc.IsArchive(false))
     {
       delete Data;
-      r->OpenResult=ERAR_BAD_ARCHIVE;
+      r->OpenResult=Data->Cmd.DllError!=0 ? Data->Cmd.DllError:ERAR_BAD_ARCHIVE;
       return(NULL);
     }
     r->Flags=Data->Arc.NewMhd.Flags;
     Array<byte> CmtData;
-    if (r->CmtBufSize!=0 && Data->Arc.GetComment(CmtData))
+    if (r->CmtBufSize!=0 && Data->Arc.GetComment(&CmtData,NULL))
     {
       r->Flags|=2;
       int Size=CmtData.Size()+1;

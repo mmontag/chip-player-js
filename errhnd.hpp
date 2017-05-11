@@ -40,6 +40,7 @@ class ErrorHandler
     void WriteErrorFAT(const char *FileName);
     bool AskRepeatWrite(const char *FileName);
     void SeekError(const char *FileName);
+    void GeneralErrMsg(const char *Msg);
     void MemoryErrorMsg();
     void OpenErrorMsg(const char *FileName);
     void OpenErrorMsg(const char *ArcName,const char *FileName);

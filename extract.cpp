@@ -519,7 +519,8 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #endif
 
 #ifdef SFX_MODULE
-    if (Arc.NewLhd.UnpVer!=UNP_VER && Arc.NewLhd.Method!=0x30)
+    if ((Arc.NewLhd.UnpVer!=UNP_VER && Arc.NewLhd.UnpVer!=29) &&
+        Arc.NewLhd.Method!=0x30)
 #else
     if (Arc.NewLhd.UnpVer<13 || Arc.NewLhd.UnpVer>UNP_VER)
 #endif
@@ -635,10 +636,19 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
               if (!IsNameUsable(DestFileName))
               {
                 Log(Arc.FileName,St(MCorrectingName));
+                char OrigName[sizeof(DestFileName)];
+                strncpy(OrigName,DestFileName,sizeof(OrigName)-1);
+                OrigName[sizeof(OrigName)-1]=0;
+
                 MakeNameUsable(DestFileName,true);
                 CreatePath(DestFileName,NULL,true);
                 if (FileCreate(Cmd,&CurFile,DestFileName,NULL,Cmd->Overwrite,&UserReject,Arc.NewLhd.FullUnpSize,Arc.NewLhd.FileTime))
+                {
+#ifndef SFX_MODULE
+                  Log(Arc.FileName,St(MRenaming),OrigName,DestFileName);
+#endif
                   ExtrFile=true;
+                }
                 else
                   ErrHandler.CreateErrorMsg(Arc.FileName,DestFileName);
               }
@@ -694,7 +704,8 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
       DataIO.PackedCRC=0xffffffff;
       DataIO.SetEncryption(
         (Arc.NewLhd.Flags & LHD_PASSWORD) ? Arc.NewLhd.UnpVer:0,Password,
-        (Arc.NewLhd.Flags & LHD_SALT) ? Arc.NewLhd.Salt:NULL,false);
+        (Arc.NewLhd.Flags & LHD_SALT) ? Arc.NewLhd.Salt:NULL,false,
+        Arc.NewLhd.UnpVer>=36);
       DataIO.SetPackedSizeToRead(Arc.NewLhd.FullPackSize);
       DataIO.SetFiles(&Arc,&CurFile);
       DataIO.SetTestMode(TestMode);
@@ -742,7 +753,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
         }
         else
         {
-          char *BadArcName=(Arc.NewLhd.Flags & LHD_SPLIT_BEFORE) ? NULL:Arc.FileName;
+          char *BadArcName=/*(Arc.NewLhd.Flags & LHD_SPLIT_BEFORE) ? NULL:*/Arc.FileName;
           if (Arc.NewLhd.Flags & LHD_PASSWORD)
           {
             Log(BadArcName,St(MEncrBadCRC),ArcFileName);

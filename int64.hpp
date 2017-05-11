@@ -6,7 +6,7 @@
 typedef __int64 Int64;
 #endif
 
-#if defined(__GNUC__) || defined(__HP_aCC)
+#if defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC)
 #define NATIVE_INT64
 typedef long long Int64;
 #endif

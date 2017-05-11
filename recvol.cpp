@@ -191,16 +191,8 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
       ValidVolume=NewFile->IsArchive(false);
       if (ValidVolume)
       {
-        bool EndFound=false,EndBlockRequired=false;
-        while (!EndFound && NewFile->ReadHeader()!=0)
+        while (NewFile->ReadHeader()!=0)
         {
-          if (NewFile->GetHeaderType()==FILE_HEAD)
-          {
-            if (NewFile->NewLhd.UnpVer>=29)
-              EndBlockRequired=true;
-            if (!EndBlockRequired && (NewFile->NewLhd.Flags & LHD_SPLIT_AFTER))
-              EndFound=true;
-          }
           if (NewFile->GetHeaderType()==ENDARC_HEAD)
           {
             if ((NewFile->EndArcHead.Flags&EARC_DATACRC)!=0 && 
@@ -211,12 +203,10 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
               mprintf(St(MCRCFailed),ArcName);
 #endif
             }
-            EndFound=true;
+            break;
           }
           NewFile->SeekToNext();
         }
-        if (!EndFound)
-          ValidVolume=false;
       }
       if (!ValidVolume)
       {

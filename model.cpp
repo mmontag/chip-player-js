@@ -564,6 +564,8 @@ int ModelPPM::DecodeChar()
     return(-1);
   if (MinContext->NumStats != 1)      
   {
+    if ((byte*)MinContext->U.Stats <= SubAlloc.pText || (byte*)MinContext->U.Stats>SubAlloc.HeapEnd)
+      return(-1);
     if (!MinContext->decodeSymbol1(this))
       return(-1);
   }

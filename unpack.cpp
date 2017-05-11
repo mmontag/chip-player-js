@@ -51,15 +51,16 @@ void Unpack::DoUnpack(int Method,bool Solid)
   switch(Method)
   {
 #ifndef SFX_MODULE
-    case 15:
+    case 15: // rar 1.5 compression
       Unpack15(Solid);
       break;
-    case 20:
-    case 26:
+    case 20: // rar 2.x compression
+    case 26: // files larger than 2GB
       Unpack20(Solid);
       break;
 #endif
-    case 29:
+    case 29: // rar 3.x compression
+    case 36: // alternative hash
       Unpack29(Solid);
       break;
   }

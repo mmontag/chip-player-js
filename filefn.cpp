@@ -99,7 +99,7 @@ void CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
     if (!IgnoreAscii)
       s=charnext(s);
   }
-  if (!SkipLastName)
+  if (!SkipLastName && !IsPathDiv(*PointToLastChar(Path)))
     MakeDir(Path,PathW,DirAttr);
 }
 
@@ -107,12 +107,13 @@ void CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
 void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta)
 {
 #ifdef _WIN_32
+  if (!WinNT())
+    return;
+
   bool sm=ftm!=NULL && ftm->IsSet();
   bool sc=ftc!=NULL && ftc->IsSet();
   bool sa=fta!=NULL && fta->IsSet();
 
-  if (!WinNT())
-    return;
   unsigned int DirAttr=GetFileAttr(Name);
   bool ResetAttr=(DirAttr!=0xffffffff && (DirAttr & FA_RDONLY)!=0);
   if (ResetAttr)

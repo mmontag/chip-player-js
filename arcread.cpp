@@ -65,7 +65,7 @@ int Archive::ReadHeader()
         ErrHandler.Exit(USER_BREAK);
       }
 #endif
-    HeadersCrypt.SetCryptKeys(Cmd->Password,HeadersSalt,false);
+    HeadersCrypt.SetCryptKeys(Cmd->Password,HeadersSalt,false,false,NewMhd.EncryptVer>=36);
     Raw.SetCrypt(&HeadersCrypt);
 #endif
   }
@@ -116,6 +116,8 @@ int Archive::ReadHeader()
       *(BaseBlock *)&NewMhd=ShortBlock;
       Raw.Get(NewMhd.HighPosAV);
       Raw.Get(NewMhd.PosAV);
+      if (NewMhd.Flags & MHD_ENCRYPTVER)
+        Raw.Get(NewMhd.EncryptVer);
       break;
     case ENDARC_HEAD:
       *(BaseBlock *)&EndArcHead=ShortBlock;
@@ -185,10 +187,20 @@ int Archive::ReadHeader()
             if (hd->Flags & LHD_UNICODE)
             {
               EncodeFileName NameCoder;
-              int Length=strlen(FileName)+1;
-              NameCoder.Decode(FileName,(byte *)FileName+Length,
-                               hd->NameSize-Length,hd->FileNameW,
-                               sizeof(hd->FileNameW)/sizeof(hd->FileNameW[0]));
+              int Length=strlen(FileName);
+              if (Length==hd->NameSize)
+              {
+                UtfToWide(FileName,hd->FileNameW,sizeof(hd->FileNameW)/sizeof(hd->FileNameW[0])-1);
+                WideToChar(hd->FileNameW,hd->FileName,sizeof(hd->FileName)/sizeof(hd->FileName[0])-1);
+                ExtToInt(hd->FileName,hd->FileName);
+              }
+              else
+              {
+                Length++;
+                NameCoder.Decode(FileName,(byte *)FileName+Length,
+                                 hd->NameSize-Length,hd->FileNameW,
+                                 sizeof(hd->FileNameW)/sizeof(hd->FileNameW[0]));
+              }
               if (*hd->FileNameW==0)
                 hd->Flags &= ~LHD_UNICODE;
             }
@@ -589,7 +601,7 @@ bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
     ErrHandler.SetErrorCode(CRC_ERROR);
     return(false);
   }
-  if (SubHead.Method<0x30 || SubHead.Method>0x35 || SubHead.UnpVer>PACK_VER)
+  if (SubHead.Method<0x30 || SubHead.Method>0x35 || SubHead.UnpVer>/*PACK_VER*/36)
   {
 #ifndef SHELL_EXT
     Log(FileName,St(MSubHeadUnknown));
@@ -612,7 +624,8 @@ bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
   if (SubHead.Flags & LHD_PASSWORD)
     if (*Cmd->Password)
       SubDataIO.SetEncryption(SubHead.UnpVer,Cmd->Password,
-             (SubHead.Flags & LHD_SALT) ? SubHead.Salt:NULL,false);
+             (SubHead.Flags & LHD_SALT) ? SubHead.Salt:NULL,false,
+             SubHead.UnpVer>=36);
     else
       return(false);
   SubDataIO.SetPackedSizeToRead(SubHead.PackSize);

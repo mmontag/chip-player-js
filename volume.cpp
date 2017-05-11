@@ -85,7 +85,6 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
 #ifndef GUI
     if (!Cmd->VolumePause && !IsRemovable(NextName))
     {
-      Log(Arc.FileName,St(MAbsNextVol),NextName);
       FailedOpen=true;
       break;
     }
@@ -101,6 +100,9 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
   }
   if (FailedOpen)
   {
+#if !defined(SILENT) && !defined(_WIN_CE)
+      Log(Arc.FileName,St(MAbsNextVol),NextName);
+#endif
     Arc.Open(Arc.FileName,Arc.FileNameW);
     Arc.Seek(PosBeforeClose,SEEK_SET);
     return(false);
@@ -138,7 +140,20 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
 #ifndef GUI
   if (ShowFileName)
   {
-    mprintf(St(MExtrPoints),IntNameToExt(Arc.NewLhd.FileName));
+    char OutName[NM];
+    IntToExt(Arc.NewLhd.FileName,OutName);
+#ifdef UNICODE_SUPPORTED
+    bool WideName=(Arc.NewLhd.Flags & LHD_UNICODE) && UnicodeEnabled();
+    if (WideName)
+    {
+      wchar NameW[NM];
+      ConvertPath(Arc.NewLhd.FileNameW,NameW);
+      char Name[NM];
+      if (WideToChar(NameW,Name) && IsNameUsable(Name))
+        strcpy(OutName,Name);
+    }
+#endif
+    mprintf(St(MExtrPoints),OutName);
     if (!Cmd->DisablePercentage)
       mprintf("     ");
   }

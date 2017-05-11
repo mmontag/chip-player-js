@@ -3,6 +3,7 @@
 
 enum { OLD_DECODE=0,OLD_ENCODE=1,NEW_CRYPT=2 };
 
+
 struct CryptKeyCacheItem
 {
 #ifndef _SFX_RTL_
@@ -22,6 +23,7 @@ struct CryptKeyCacheItem
   char Password[MAXPASSWORD];
   bool SaltPresent;
   byte Salt[SALT_SIZE];
+  bool HandsOffHash;
 };
 
 class CryptData
@@ -46,7 +48,7 @@ class CryptData
     static CryptKeyCacheItem Cache[4];
     static int CachePos;
   public:
-    void SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly=false);
+    void SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash);
     void SetAV15Encryption();
     void SetCmt13Encryption();
     void EncryptBlock20(byte *Buf);

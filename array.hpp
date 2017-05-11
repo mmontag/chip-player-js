@@ -21,6 +21,7 @@ template <class T> class Array
     void Reset();
     void operator = (Array<T> &Src);
     void Push(T Item);
+    T* Addr() {return(Buffer);}
 };
 
 template <class T> void Array<T>::CleanData()

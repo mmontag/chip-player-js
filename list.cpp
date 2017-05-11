@@ -356,7 +356,7 @@ void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical)
       (Arc.SubHead.Flags & LHD_SPLIT_BEFORE)==0 && !Cmd->DisableComment)
   {
     Array<byte> CmtData;
-    int ReadSize=Arc.ReadCommentData(CmtData);
+    int ReadSize=Arc.ReadCommentData(&CmtData,NULL);
     if (ReadSize!=0)
     {
       mprintf(St(MFileComment));

@@ -23,4 +23,6 @@ void RAROptions::Init()
   ProcessEA=true;
   xmtime=EXTTIME_HIGH3;
   CurVolNum=0;
+  FileSizeLess=INT64ERR;
+  FileSizeMore=INT64ERR;
 }

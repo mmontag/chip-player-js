@@ -47,6 +47,7 @@ Archive::Archive(RAROptions *InitCmd)
   NewArchive=false;
 
   SilentOpen=false;
+
 }
 
 
@@ -130,7 +131,7 @@ bool Archive::IsArchive(bool EnableBroken)
   }
   else
   {
-    Array<char> Buffer(0x80000);
+    Array<char> Buffer(MAXSFXSIZE);
     long CurPos=int64to32(Tell());
     int ReadSize=Read(&Buffer[0],Buffer.Size()-16);
     for (int I=0;I<ReadSize;I++)
@@ -180,6 +181,19 @@ bool Archive::IsArchive(bool EnableBroken)
   Protected=(NewMhd.Flags & MHD_PROTECT)!=0;
   Encrypted=(NewMhd.Flags & MHD_PASSWORD)!=0;
 
+  if (NewMhd.EncryptVer>UNP_VER)
+  {
+#ifdef RARDLL
+    Cmd->DllError=ERAR_UNKNOWN_FORMAT;
+#else
+    ErrHandler.SetErrorCode(WARNING);
+  #if !defined(SILENT) && !defined(SFX_MODULE)
+      Log(FileName,St(MUnknownMeth),FileName);
+      Log(FileName,St(MVerRequired),NewMhd.EncryptVer/10,NewMhd.EncryptVer%10);
+  #endif
+#endif
+    return(false);
+  }
 #ifdef RARDLL
   SilentOpen=true;
 #endif
@@ -237,5 +251,7 @@ int Archive::GetRecoverySize(bool Required)
   return(RecoverySectors);
 }
 #endif
+
+
 
 

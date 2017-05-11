@@ -185,7 +185,7 @@ void CryptData::Swap(byte *Ch1,byte *Ch2)
 #endif
 
 
-void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly)
+void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash)
 {
   if (*Password==0)
     return;
@@ -226,7 +226,8 @@ void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly
   for (int I=0;I<sizeof(Cache)/sizeof(Cache[0]);I++)
     if (strcmp(Cache[I].Password,Password)==0 &&
         (Salt==NULL && !Cache[I].SaltPresent || Salt!=NULL &&
-        Cache[I].SaltPresent && memcmp(Cache[I].Salt,Salt,SALT_SIZE)==0))
+        Cache[I].SaltPresent && memcmp(Cache[I].Salt,Salt,SALT_SIZE)==0) &&
+        Cache[I].HandsOffHash==HandsOffHash)
     {
       memcpy(AESKey,Cache[I].AESKey,sizeof(AESKey));
       memcpy(AESInit,Cache[I].AESInit,sizeof(AESInit));
@@ -253,22 +254,22 @@ void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly
     const int HashRounds=0x40000;
     for (int I=0;I<HashRounds;I++)
     {
-      hash_process( &c, RawPsw, RawLength);
+      hash_process( &c, RawPsw, RawLength, HandsOffHash);
       byte PswNum[3];
       PswNum[0]=(byte)I;
       PswNum[1]=(byte)(I>>8);
       PswNum[2]=(byte)(I>>16);
-      hash_process( &c, PswNum, 3);
+      hash_process( &c, PswNum, 3, HandsOffHash);
       if (I%(HashRounds/16)==0)
       {
         hash_context tempc=c;
         uint32 digest[5];
-        hash_final( &tempc, digest);
+        hash_final( &tempc, digest, HandsOffHash);
         AESInit[I/(HashRounds/16)]=(byte)digest[4];
       }
     }
     uint32 digest[5];
-    hash_final( &c, digest);
+    hash_final( &c, digest, HandsOffHash);
     for (int I=0;I<4;I++)
       for (int J=0;J<4;J++)
         AESKey[I*4+J]=(byte)(digest[I]>>(J*8));
@@ -276,6 +277,7 @@ void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly
     strcpy(Cache[CachePos].Password,Password);
     if ((Cache[CachePos].SaltPresent=(Salt!=NULL))==true)
       memcpy(Cache[CachePos].Salt,Salt,SALT_SIZE);
+    Cache[CachePos].HandsOffHash=HandsOffHash;
     memcpy(Cache[CachePos].AESKey,AESKey,sizeof(AESKey));
     memcpy(Cache[CachePos].AESInit,AESInit,sizeof(AESInit));
     CachePos=(CachePos+1)%(sizeof(Cache)/sizeof(Cache[0]));

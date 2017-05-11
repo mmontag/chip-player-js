@@ -32,9 +32,13 @@ char* PointToLastChar(const char *Path)
 char* ConvertPath(const char *SrcPath,char *DestPath)
 {
   const char *DestPtr=SrcPath;
+
+  /* prevents \..\ in any part of path string */
   for (const char *s=DestPtr;*s!=0;s++)
     if (IsPathDiv(s[0]) && s[1]=='.' && s[2]=='.' && IsPathDiv(s[3]))
       DestPtr=s+4;
+
+  /* removes any sequence of . and \ in the beginning of path string */
   while (*DestPtr)
   {
     const char *s=DestPtr;
@@ -56,6 +60,11 @@ char* ConvertPath(const char *SrcPath,char *DestPath)
       break;
     DestPtr=s;
   }
+
+  /* code above does not remove last "..", doing here */
+  if (DestPtr[0]=='.' && DestPtr[1]=='.' && DestPtr[2]==0)
+    DestPtr+=2;
+
   if (DestPath!=NULL)
   {
     char TmpStr[NM];
@@ -316,7 +325,7 @@ bool EnumConfigPaths(char *Path,int Number)
     return(true);
   }
   static const char *AltPath[]={
-    "/etc","/usr/lib","/usr/local/lib","/usr/local/etc"
+    "/etc","/etc/rar","/usr/lib","/usr/local/lib","/usr/local/etc"
   };
   Number--;
   if (Number<0 || Number>=sizeof(AltPath)/sizeof(AltPath[0]))
@@ -427,6 +436,9 @@ bool IsNameUsable(const char *Name)
 #ifndef _UNIX
   if (Name[0] && Name[1] && strchr(Name+2,':')!=NULL)
     return(false);
+  for (const char *s=Name;*s!=0;s=charnext(s))
+    if (*s<32)
+      return(false);
 #endif
   return(*Name!=0 && strpbrk(Name,"?*<>|\"")==NULL);
 }

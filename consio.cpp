@@ -119,7 +119,7 @@ void GetPasswordText(char *Str,int MaxLength)
   OemToChar(Str,Str);
   SetConsoleMode(hConIn,ConInMode);
   SetConsoleMode(hConOut,ConOutMode);
-#elif defined(_EMX) || defined(_BEOS)
+#elif defined(_EMX) || defined(_BEOS) || defined(__sparc) || defined(sparc)
   fgets(Str,MaxLength-1,stdin);
 #else
   strncpy(Str,getpass(""),MaxLength-1);

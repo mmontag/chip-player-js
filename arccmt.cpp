@@ -1,4 +1,4 @@
-bool Archive::GetComment(Array<byte> &CmtData)
+bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
 {
   if (!MainComment)
     return(false);
@@ -22,7 +22,7 @@ bool Archive::GetComment(Array<byte> &CmtData)
     else
     {
       Seek(SFXSize+SIZEOF_MARKHEAD+NewMhd.HeadSize,SEEK_SET);
-      return(SearchSubBlock(SUBHEAD_TYPE_CMT)!=0 && ReadCommentData(CmtData)!=0);
+      return(SearchSubBlock(SUBHEAD_TYPE_CMT)!=0 && ReadCommentData(CmtData,CmtDataW)!=0);
     }
 #ifndef SFX_MODULE
     if (CommHead.HeadCRC!=HeaderCRC)
@@ -69,49 +69,77 @@ bool Archive::GetComment(Array<byte> &CmtData)
       unsigned char *UnpData;
       uint UnpDataSize;
       DataIO.GetUnpackedData(&UnpData,&UnpDataSize);
-      CmtData.Alloc(UnpDataSize);
-      memcpy(&CmtData[0],UnpData,UnpDataSize);
+      CmtData->Alloc(UnpDataSize);
+      memcpy(&((*CmtData)[0]),UnpData,UnpDataSize);
     }
   }
   else
   {
-    CmtData.Alloc(CmtLength);
+    CmtData->Alloc(CmtLength);
     
-    Read(&CmtData[0],CmtLength);
-    if (!OldFormat && CommHead.CommCRC!=(~CRC(0xffffffff,&CmtData[0],CmtLength)&0xffff))
+    Read(&((*CmtData)[0]),CmtLength);
+    if (!OldFormat && CommHead.CommCRC!=(~CRC(0xffffffff,&((*CmtData)[0]),CmtLength)&0xffff))
     {
       Log(FileName,St(MLogCommBrk));
       Alarm();
-      CmtData.Reset();
+      CmtData->Reset();
       return(false);
     }
   }
 #endif
 #if defined(_WIN_32) && !defined(_WIN_CE)
-  if (CmtData.Size()>0)
-    OemToCharBuff((char*)&CmtData[0],(char*)&CmtData[0],CmtData.Size());
+  if (CmtData->Size()>0)
+  {
+    int CmtSize=CmtData->Size();
+    OemToCharBuff((char *)CmtData->Addr(),(char *)CmtData->Addr(),CmtSize);
+
+    if (CmtDataW!=NULL)
+    {
+      CmtDataW->Alloc(CmtSize+1);
+      CmtData->Push(0);
+      CharToWide((char *)CmtData->Addr(),CmtDataW->Addr(),CmtSize+1);
+      CmtData->Alloc(CmtSize);
+      CmtDataW->Alloc(strlenw(CmtDataW->Addr()));
+    }
+  }
 #endif
-  return(CmtData.Size()>0);
+  return(CmtData->Size()>0);
 }
 
 
-int Archive::ReadCommentData(Array<byte> &CmtData)
+int Archive::ReadCommentData(Array<byte> *CmtData,Array<wchar> *CmtDataW)
 {
   bool Unicode=SubHead.SubFlags & SUBHEAD_FLAGS_CMT_UNICODE;
-  if (!ReadSubData(&CmtData,NULL))
+  if (!ReadSubData(CmtData,NULL))
     return(0);
-  int CmtSize=CmtData.Size();
+  int CmtSize=CmtData->Size();
   if (Unicode)
   {
     CmtSize/=2;
-    Array<wchar> CmtDataW(CmtSize+1);
-    RawToWide(&CmtData[0],&CmtDataW[0],CmtSize);
-    CmtDataW[CmtSize]=0;
-    CmtData.Alloc(CmtSize*2);
-    WideToChar(&CmtDataW[0],(char *)&CmtData[0]);
-    CmtSize=strlen((char *)&CmtData[0]);
-    CmtData.Alloc(CmtSize);
+    Array<wchar> DataW(CmtSize+1);
+    RawToWide(CmtData->Addr(),DataW.Addr(),CmtSize);
+    DataW[CmtSize]=0;
+    int DestSize=CmtSize*4;
+    CmtData->Alloc(DestSize+1);
+    WideToChar(DataW.Addr(),(char *)CmtData->Addr(),DestSize);
+    (*CmtData)[DestSize]=0;
+    CmtSize=strlen((char *)CmtData->Addr());
+    CmtData->Alloc(CmtSize);
+    if (CmtDataW!=NULL)
+    {
+      *CmtDataW=DataW;
+      CmtDataW->Alloc(CmtSize);
+    }
   }
+  else
+    if (CmtDataW!=NULL)
+    {
+      CmtData->Push(0);
+      CmtDataW->Alloc(CmtSize+1);
+      CharToWide((char *)CmtData->Addr(),CmtDataW->Addr(),CmtSize+1);
+      CmtData->Alloc(CmtSize);
+      CmtDataW->Alloc(strlenw(CmtDataW->Addr()));
+    }
   return(CmtSize);
 }
 
@@ -122,7 +150,7 @@ void Archive::ViewComment()
   if (Cmd->DisableComment)
     return;
   Array<byte> CmtBuf;
-  if (GetComment(CmtBuf))
+  if (GetComment(&CmtBuf,NULL))
   {
     int CmtSize=CmtBuf.Size();
     char *ChPtr=(char *)memchr(&CmtBuf[0],0x1A,CmtSize);

@@ -80,6 +80,11 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
 #else
   int handle=open(Name,flags);
 #ifdef LOCK_EX
+
+#ifdef _OSF_SOURCE
+  extern "C" int flock(int, int);
+#endif
+
   if (!OpenShared && Update && handle>=0 && flock(handle,LOCK_EX|LOCK_NB)==-1)
   {
     close(handle);
@@ -427,10 +432,10 @@ bool File::RawSeek(Int64 Offset,int Method)
     return(false);
 #else
   LastWrite=false;
-#ifdef _LARGEFILE_SOURCE
+#if defined(_LARGEFILE_SOURCE) && !defined(_OSF_SOURCE)
   if (fseeko(hFile,Offset,Method)!=0)
 #else
-  if (fseek(hFile,int64to32(Offset),Method)!=0)
+  if (fseek(hFile,(long)int64to32(Offset),Method)!=0)
 #endif
     return(false);
 #endif
@@ -450,7 +455,7 @@ Int64 File::Tell()
       return(-1);
   return(int32to64(HighDist,LowDist));
 #else
-#ifdef _LARGEFILE_SOURCE
+#if defined(_LARGEFILE_SOURCE) && !defined(_OSF_SOURCE)
   return(ftello(hFile));
 #else
   return(ftell(hFile));

@@ -1,11 +1,17 @@
 #include "rar.hpp"
 
-static bool match(char *pattern,char *string);
-static bool match(wchar *pattern,wchar *string);
+static bool match(char *pattern,char *string,bool ForceCase);
+static bool match(wchar *pattern,wchar *string,bool ForceCase);
 
+static int mstricompc(const char *Str1,const char *Str2,bool ForceCase);
+static int mstricompcw(const wchar *Str1,const wchar *Str2,bool ForceCase);
+static int mstrnicompc(const char *Str1,const char *Str2,int N,bool ForceCase);
+static int mstrnicompcw(const wchar *Str1,const wchar *Str2,int N,bool ForceCase);
 
-inline uint toupperc(byte ch)
+inline uint toupperc(byte ch,bool ForceCase)
 {
+  if (ForceCase)
+    return(ch);
 #ifdef _WIN_32
   return((uint)CharUpper((LPTSTR)(ch)));
 #elif defined(_UNIX)
@@ -16,8 +22,10 @@ inline uint toupperc(byte ch)
 }
 
 
-inline uint touppercw(uint ch)
+inline uint touppercw(uint ch,bool ForceCase)
 {
+  if (ForceCase)
+    return(ch);
 #if defined(_UNIX)
   return(ch);
 #else
@@ -28,12 +36,14 @@ inline uint touppercw(uint ch)
 
 bool CmpName(char *Wildcard,char *Name,int CmpPath)
 {
+  bool ForceCase=(CmpPath&MATCH_FORCECASESENSITIVE)!=0;
+
   CmpPath&=MATCH_MODEMASK;
   
   if (CmpPath!=MATCH_NAMES)
   {
     int WildLength=strlen(Wildcard);
-    if (CmpPath!=MATCH_EXACTPATH && strnicompc(Wildcard,Name,WildLength)==0)
+    if (CmpPath!=MATCH_EXACTPATH && mstrnicompc(Wildcard,Name,WildLength,ForceCase)==0)
     {
       char NextCh=Name[WildLength];
       if (NextCh=='\\' || NextCh=='/' || NextCh==0)
@@ -42,40 +52,42 @@ bool CmpName(char *Wildcard,char *Name,int CmpPath)
     char Path1[NM],Path2[NM];
     GetFilePath(Wildcard,Path1);
     GetFilePath(Name,Path2);
-    if (stricompc(Wildcard,Path2)==0)
+    if (mstricompc(Wildcard,Path2,ForceCase)==0)
       return(true);
-    if ((CmpPath==MATCH_PATH || CmpPath==MATCH_EXACTPATH) && stricompc(Path1,Path2)!=0)
+    if ((CmpPath==MATCH_PATH || CmpPath==MATCH_EXACTPATH) && mstricompc(Path1,Path2,ForceCase)!=0)
       return(false);
     if (CmpPath==MATCH_SUBPATH || CmpPath==MATCH_WILDSUBPATH)
       if (IsWildcard(Path1))
-        return(match(Wildcard,Name));
+        return(match(Wildcard,Name,ForceCase));
       else
         if (CmpPath==MATCH_SUBPATH || IsWildcard(Wildcard))
         {
-          if (*Path1 && strnicompc(Path1,Path2,strlen(Path1))!=0)
+          if (*Path1 && mstrnicompc(Path1,Path2,strlen(Path1),ForceCase)!=0)
             return(false);
         }
         else
-          if (stricompc(Path1,Path2)!=0)
+          if (mstricompc(Path1,Path2,ForceCase)!=0)
             return(false);
   }
   char *Name1=PointToName(Wildcard);
   char *Name2=PointToName(Name);
-  if (strnicompc("__rar_",Name2,6)==0)
+  if (mstrnicompc("__rar_",Name2,6,false)==0)
     return(false);
-  return(match(Name1,Name2));
+  return(match(Name1,Name2,ForceCase));
 }
 
 
 #ifndef SFX_MODULE
 bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
 {
+  bool ForceCase=(CmpPath&MATCH_FORCECASESENSITIVE)!=0;
+
   CmpPath&=MATCH_MODEMASK;
 
   if (CmpPath!=MATCH_NAMES)
   {
     int WildLength=strlenw(Wildcard);
-    if (CmpPath!=MATCH_EXACTPATH && strnicompcw(Wildcard,Name,WildLength)==0)
+    if (CmpPath!=MATCH_EXACTPATH && mstrnicompcw(Wildcard,Name,WildLength,ForceCase)==0)
     {
       wchar NextCh=Name[WildLength];
       if (NextCh==L'\\' || NextCh==L'/' || NextCh==0)
@@ -84,36 +96,36 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
     wchar Path1[NM],Path2[NM];
     GetFilePath(Wildcard,Path1);
     GetFilePath(Name,Path2);
-    if ((CmpPath==MATCH_PATH || CmpPath==MATCH_EXACTPATH) && stricompcw(Path1,Path2)!=0)
+    if ((CmpPath==MATCH_PATH || CmpPath==MATCH_EXACTPATH) && mstricompcw(Path1,Path2,ForceCase)!=0)
       return(false);
     if (CmpPath==MATCH_SUBPATH || CmpPath==MATCH_WILDSUBPATH)
       if (IsWildcard(NULL,Path1))
-        return(match(Wildcard,Name));
+        return(match(Wildcard,Name,ForceCase));
       else
         if (CmpPath==MATCH_SUBPATH || IsWildcard(NULL,Wildcard))
         {
-          if (*Path1 && strnicompcw(Path1,Path2,strlenw(Path1))!=0)
+          if (*Path1 && mstrnicompcw(Path1,Path2,strlenw(Path1),ForceCase)!=0)
             return(false);
         }
         else
-          if (stricompcw(Path1,Path2)!=0)
+          if (mstricompcw(Path1,Path2,ForceCase)!=0)
             return(false);
   }
   wchar *Name1=PointToName(Wildcard);
   wchar *Name2=PointToName(Name);
-  if (strnicompcw(L"__rar_",Name2,6)==0)
+  if (mstrnicompcw(L"__rar_",Name2,6,false)==0)
     return(false);
-  return(match(Name1,Name2));
+  return(match(Name1,Name2,ForceCase));
 }
 #endif
 
 
-bool match(char *pattern,char *string)
+bool match(char *pattern,char *string,bool ForceCase)
 {
   for (;; ++string)
   {
-    char stringc=toupperc(*string);
-    char patternc=toupperc(*pattern++);
+    char stringc=toupperc(*string,ForceCase);
+    char patternc=toupperc(*pattern++,ForceCase);
     switch (patternc)
     {
       case 0:
@@ -136,18 +148,18 @@ bool match(char *pattern,char *string)
           {
             string=dot;
             if (strpbrk(pattern,"*?")==NULL && strchr(string+1,'.')==NULL)
-              return(stricompc(pattern+1,string+1)==0);
+              return(mstricompc(pattern+1,string+1,ForceCase)==0);
           }
         }
 
         while (*string)
-          if (match(pattern,string++))
+          if (match(pattern,string++,ForceCase))
             return(true);
         return(false);
       default:
         if (patternc != stringc)
           if (patternc=='.' && stringc==0)
-            return(match(pattern,string));
+            return(match(pattern,string,ForceCase));
           else
             return(false);
         break;
@@ -157,12 +169,12 @@ bool match(char *pattern,char *string)
 
 
 #ifndef SFX_MODULE
-bool match(wchar *pattern,wchar *string)
+bool match(wchar *pattern,wchar *string,bool ForceCase)
 {
   for (;; ++string)
   {
-    wchar stringc=touppercw(*string);
-    wchar patternc=touppercw(*pattern++);
+    wchar stringc=touppercw(*string,ForceCase);
+    wchar patternc=touppercw(*pattern++,ForceCase);
     switch (patternc)
     {
       case 0:
@@ -185,18 +197,18 @@ bool match(wchar *pattern,wchar *string)
           {
             string=dot;
             if (strpbrkw(pattern,L"*?")==NULL && strchrw(string+1,'.')==NULL)
-              return(stricompcw(pattern+1,string+1)==0);
+              return(mstricompcw(pattern+1,string+1,ForceCase)==0);
           }
         }
 
         while (*string)
-          if (match(pattern,string++))
+          if (match(pattern,string++,ForceCase))
             return(true);
         return(false);
       default:
         if (patternc != stringc)
           if (patternc=='.' && stringc==0)
-            return(match(pattern,string));
+            return(match(pattern,string,ForceCase));
           else
             return(false);
         break;
@@ -206,30 +218,28 @@ bool match(wchar *pattern,wchar *string)
 #endif
 
 
-int stricompc(const char *Str1,const char *Str2)
+int mstricompc(const char *Str1,const char *Str2,bool ForceCase)
 {
-#if defined(_UNIX)
-  return(strcmp(Str1,Str2));
-#else
-  return(stricomp(Str1,Str2));
-#endif
+  if (ForceCase)
+    return(strcmp(Str1,Str2));
+  return(stricompc(Str1,Str2));
 }
 
 
 #ifndef SFX_MODULE
-int stricompcw(const wchar *Str1,const wchar *Str2)
+int mstricompcw(const wchar *Str1,const wchar *Str2,bool ForceCase)
 {
-#if defined(_UNIX)
-  return(strcmpw(Str1,Str2));
-#else
-  return(stricmpw(Str1,Str2));
-#endif
+  if (ForceCase)
+    return(strcmpw(Str1,Str2));
+  return(stricompcw(Str1,Str2));
 }
 #endif
 
 
-int strnicompc(const char *Str1,const char *Str2,int N)
+int mstrnicompc(const char *Str1,const char *Str2,int N,bool ForceCase)
 {
+  if (ForceCase)
+    return(strncmp(Str1,Str2,N));
 #if defined(_UNIX)
   return(strncmp(Str1,Str2,N));
 #else
@@ -239,8 +249,10 @@ int strnicompc(const char *Str1,const char *Str2,int N)
 
 
 #ifndef SFX_MODULE
-int strnicompcw(const wchar *Str1,const wchar *Str2,int N)
+int mstrnicompcw(const wchar *Str1,const wchar *Str2,int N,bool ForceCase)
 {
+  if (ForceCase)
+    return(strncmpw(Str1,Str2,N));
 #if defined(_UNIX)
   return(strncmpw(Str1,Str2,N));
 #else

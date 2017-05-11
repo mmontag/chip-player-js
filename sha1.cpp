@@ -47,7 +47,7 @@ A million repetitions of "a"
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
-void SHA1Transform(uint32 state[5], unsigned char buffer[64])
+void SHA1Transform(uint32 state[5], unsigned char buffer[64], bool handsoff)
 {
   uint32 a, b, c, d, e;
   typedef union {
@@ -55,13 +55,14 @@ void SHA1Transform(uint32 state[5], unsigned char buffer[64])
     uint32 l[16];
 } CHAR64LONG16;
 CHAR64LONG16* block;
-#ifdef SHA1HANDSOFF
 static unsigned char workspace[64];
-    block = (CHAR64LONG16*)workspace;
-    memcpy(block, buffer, 64);
-#else
-    block = (CHAR64LONG16*)buffer;
-#endif
+    if (handsoff)
+    {
+      block = (CHAR64LONG16*)workspace;
+      memcpy(block, buffer, 64);
+    }
+    else
+      block = (CHAR64LONG16*)buffer;
 #ifdef SFX_MODULE
     static int pos[80][5];
     static bool pinit=false;
@@ -151,7 +152,8 @@ void hash_initial(hash_context* context)
 
 
 /* Run your data through this. */
-void hash_process( hash_context * context, unsigned char * data, unsigned len )
+void hash_process( hash_context * context, unsigned char * data, unsigned len,
+                   bool handsoff )
 {
 unsigned int i, j;
 uint blen = ((uint)len)<<3;
@@ -161,25 +163,28 @@ uint blen = ((uint)len)<<3;
     context->count[1] += (len >> 29);
     if ((j + len) > 63) {
         memcpy(&context->buffer[j], data, (i = 64-j));
-        SHA1Transform(context->state, context->buffer);
+        SHA1Transform(context->state, context->buffer, handsoff);
         for ( ; i + 63 < len; i += 64) {
 #ifdef ALLOW_NOT_ALIGNED_INT
-            SHA1Transform(context->state, &data[i]);
+            SHA1Transform(context->state, &data[i], handsoff);
 #else
             unsigned char buffer[64];
             memcpy(buffer,data+i,sizeof(buffer));
-            SHA1Transform(context->state, buffer);
+            SHA1Transform(context->state, buffer, handsoff);
             memcpy(data+i,buffer,sizeof(buffer));
 #endif
 #ifdef BIG_ENDIAN
-            unsigned char *d=data+i;
-            for (int k=0;k<64;k+=4)
+            if (!handsoff)
             {
-              byte b0=d[k],b1=d[k+1];
-              d[k]=d[k+3];
-              d[k+1]=d[k+2];
-              d[k+2]=b1;
-              d[k+3]=b0;
+              unsigned char *d=data+i;
+              for (int k=0;k<64;k+=4)
+              {
+                byte b0=d[k],b1=d[k+1];
+                d[k]=d[k+3];
+                d[k+1]=d[k+2];
+                d[k+2]=b1;
+                d[k+3]=b0;
+              }
             }
 #endif
         }
@@ -193,7 +198,7 @@ uint blen = ((uint)len)<<3;
 
 /* Add padding and return the message digest. */
 
-void hash_final( hash_context* context, uint32 digest[5] )
+void hash_final( hash_context* context, uint32 digest[5], bool handsoff)
 {
 uint i, j;
 unsigned char finalcount[8];
@@ -203,12 +208,12 @@ unsigned char finalcount[8];
          >> ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
     }
     unsigned char ch='\200';
-    hash_process(context, &ch, 1);
+    hash_process(context, &ch, 1, handsoff);
     while ((context->count[0] & 504) != 448) {
         ch=0;
-        hash_process(context, &ch, 1);
+        hash_process(context, &ch, 1, handsoff);
     }
-    hash_process(context, finalcount, 8);  /* Should cause a SHA1Transform() */
+    hash_process(context, finalcount, 8, handsoff);  /* Should cause a SHA1Transform() */
     for (i = 0; i < 5; i++) {
         digest[i] = context->state[i] & 0xffffffff;
     }
@@ -219,9 +224,8 @@ unsigned char finalcount[8];
     memset(context->state, 0, 20);
     memset(context->count, 0, 8);
     memset(&finalcount, 0, 8);
-#ifdef SHA1HANDSOFF  /* make SHA1Transform overwrite it's own static vars */
-    SHA1Transform(context->state, context->buffer);
-#endif
+    if (handsoff)
+      SHA1Transform(context->state, context->buffer, true);
 }
 
 

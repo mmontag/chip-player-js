@@ -64,7 +64,7 @@ bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
       if (*CurStr)
       {
         int Length=strlenw(CurStr);
-        int AddSize=Length-AnsiName.Size()+1;
+        int AddSize=4*(Length-AnsiName.Size()+1);
         if (AddSize>0)
           AnsiName.Add(AddSize);
         if (Unquote && *CurStr=='\"' && CurStr[Length-1]=='\"')
@@ -72,7 +72,7 @@ bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
           CurStr[Length-1]=0;
           CurStr++;
         }
-        WideToChar(CurStr,&AnsiName[0]);
+        WideToChar(CurStr,&AnsiName[0],AnsiName.Size());
         List->AddString(&AnsiName[0],CurStr);
       }
       CurStr=NextStr+1;
