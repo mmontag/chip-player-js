@@ -412,9 +412,13 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
 
 #ifdef RARDLL
     if (*Cmd->DllDestName!=0)
+    {
       wcsncpyz(DestFileName,Cmd->DllDestName,ASIZE(DestFileName));
-    if (Cmd->DllOpMode!=RAR_EXTRACT)
-      ExtrFile=false;
+
+//      Do we need this code?
+//      if (Cmd->DllOpMode!=RAR_EXTRACT)
+//        ExtrFile=false;
+    }
 #endif
 
     if (!CheckUnpVer(Arc,ArcFileName))
