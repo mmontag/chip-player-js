@@ -62,7 +62,6 @@
   #else
     #include <os2.h>
     #include <sys/utime.h>
-    #include <sys/statfs.h>
     #include <emx/syscalls.h>
   #endif
 #else
@@ -139,11 +138,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-#if defined(__FreeBSD__) || defined (__NetBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined (__NetBSD__) || defined (__OpenBSD__) || defined(__APPLE__)
   #include <sys/param.h>
   #include <sys/mount.h>
 #else
-  #include <sys/statfs.h>
 #endif
 #include <pwd.h>
 #include <grp.h>
@@ -212,7 +210,7 @@ typedef const char* MSGID;
     #undef LITTLE_ENDIAN
   #elif defined(BYTE_ORDER) && BYTE_ORDER == LITTLE_ENDIAN
     #undef BIG_ENDIAN
-  #elif
+  #else
     #error "Both LITTLE_ENDIAN and BIG_ENDIAN are defined. Undef something one"
   #endif
 #endif

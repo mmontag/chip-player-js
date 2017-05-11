@@ -12,8 +12,8 @@ int stricomp(const char *Str1,const char *Str2);
 int strnicomp(const char *Str1,const char *Str2,int N);
 char* RemoveEOL(char *Str);
 char* RemoveLF(char *Str);
-unsigned int loctolower(unsigned int ch);
-unsigned int loctoupper(unsigned int ch);
+unsigned int loctolower(byte ch);
+unsigned int loctoupper(byte ch);
 
 
 

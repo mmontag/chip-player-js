@@ -3,7 +3,7 @@
 static bool match(char *pattern,char *string);
 static bool match(wchar *pattern,wchar *string);
 
-inline uint toupperc(uint ch)
+inline uint toupperc(byte ch)
 {
 /*
 */

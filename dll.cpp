@@ -39,6 +39,14 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     DataSet *Data=new DataSet;
     Data->OpenMode=r->OpenMode;
     Data->Cmd.FileArgs->AddString("*");
+
+    char an[NM];
+    if (r->ArcName==NULL && r->ArcNameW!=NULL)
+    {
+      WideToChar(r->ArcNameW,an,NM);
+      r->ArcName=an;
+    }
+
     Data->Cmd.AddArcName(r->ArcName,r->ArcNameW);
     Data->Cmd.Overwrite=OVERWRITE_ALL;
     if (!Data->Arc.Open(r->ArcName,r->ArcNameW))

@@ -809,7 +809,7 @@ bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath)
     }
     else
 #endif
-      if (CmpName(ConvertPath(ExclName,NULL),Name,MATCH_SUBPATH))
+      if (CmpName(ConvertPath(ExclName,NULL),Name,MATCH_WILDSUBPATH))
         return(true);
   return(false);
 }

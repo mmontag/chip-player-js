@@ -422,11 +422,15 @@ uint CalcFileCRC(File *SrcFile,Int64 Size)
   Array<byte> Data(BufSize);
   int ReadSize,BlockCount=0;
   uint DataCRC=0xffffffff;
+
+
   SrcFile->Seek(0,SEEK_SET);
   while ((ReadSize=SrcFile->Read(&Data[0],int64to32(Size==INT64ERR ? BufSize:Min(BufSize,Size))))!=0)
   {
     if ((++BlockCount & 15)==0)
+    {
       Wait();
+    }
     DataCRC=CRC(DataCRC,&Data[0],ReadSize);
     if (Size!=INT64ERR)
       Size-=ReadSize;

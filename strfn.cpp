@@ -108,7 +108,7 @@ char* RemoveLF(char *Str)
 }
 
 
-unsigned int loctolower(unsigned int ch)
+unsigned int loctolower(byte ch)
 {
 #ifdef _WIN_32
   return((int)CharLower((LPTSTR)ch));
@@ -118,7 +118,7 @@ unsigned int loctolower(unsigned int ch)
 }
 
 
-unsigned int loctoupper(unsigned int ch)
+unsigned int loctoupper(byte ch)
 {
 #ifdef _WIN_32
   return((int)CharUpper((LPTSTR)ch));
