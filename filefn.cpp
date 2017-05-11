@@ -468,7 +468,7 @@ char *MkTemp(char *Name)
   int Random=clock();
   for (int Attempt=0;;Attempt++)
   {
-    sprintf(Name+Length-6,"%06u",Random+Attempt);
+    sprintf(Name+Length-6,"%06u",(Random+Attempt)%1000000);
     Name[Length-4]='.';
     if (!FileExist(Name))
       break;

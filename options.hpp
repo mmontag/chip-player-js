@@ -146,6 +146,8 @@ class RAROptions
 
 
 
+
+
 #ifdef RARDLL
     char DllDestName[NM];
     wchar DllDestNameW[NM];

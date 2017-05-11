@@ -953,26 +953,6 @@ void CommandData::OutHelp()
     MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwVUnr,
     MCHelpSwVER,MCHelpSwVP,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY
 #else
-    // RAR switches definition.
-    MRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdA,MCHelpCmdC,MCHelpCmdCF,
-    MCHelpCmdCH,MCHelpCmdCW,MCHelpCmdD,MCHelpCmdE,MCHelpCmdF,MCHelpCmdI,
-    MCHelpCmdK,MCHelpCmdL,MCHelpCmdM,MCHelpCmdP,MCHelpCmdR,MCHelpCmdRC,
-    MCHelpCmdRN,MCHelpCmdRR,MCHelpCmdRV,MCHelpCmdS,MCHelpCmdT,MCHelpCmdU,
-    MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAG,
-    MCHelpSwAI,MCHelpSwAO,MCHelpSwAP,MCHelpSwAS,MCHelpSwAV,MCHelpSwAVm,
-    MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,
-    MCHelpSwDR,MCHelpSwDS,MCHelpSwDW,MCHelpSwEa,MCHelpSwED,MCHelpSwEE,
-    MCHelpSwEN,MCHelpSwEP,MCHelpSwEP1,MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,
-    MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,
-    MCHelpSwIOFF,MCHelpSwISND,MCHelpSwK,MCHelpSwKB,MCHelpSwMn,MCHelpSwMC,
-    MCHelpSwMD,MCHelpSwMS,MCHelpSwMT,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,
-    MCHelpSwO,MCHelpSwOC,MCHelpSwOL,MCHelpSwOR,MCHelpSwOS,MCHelpSwOW,
-    MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwRm,MCHelpSwR0,MCHelpSwRI,
-    MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSC,MCHelpSwSFX,
-    MCHelpSwSI,MCHelpSwSL,MCHelpSwSM,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,
-    MCHelpSwTK,MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,
-    MCHelpSwV,MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,
-    MCHelpSwW,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
 #endif
   };
 
@@ -1075,6 +1055,7 @@ bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath,bool CheckInclLis
 
 
 #ifndef SFX_MODULE
+// Return 'true' if we need to exclude the file from processing.
 bool CommandData::TimeCheck(RarTime &ft)
 {
   if (FileTimeBefore.IsSet() && ft>=FileTimeBefore)
@@ -1087,6 +1068,7 @@ bool CommandData::TimeCheck(RarTime &ft)
 
 
 #ifndef SFX_MODULE
+// Return 'true' if we need to exclude the file from processing.
 bool CommandData::SizeCheck(int64 Size)
 {
   if (FileSizeLess!=INT64NDF && Size>=FileSizeLess)

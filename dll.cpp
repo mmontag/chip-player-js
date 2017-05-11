@@ -188,9 +188,11 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
 #ifdef _WIN_32
       char AnsiName[NM];
       OemToChar(Data->Arc.NewLhd.FileName,AnsiName);
-      CharToWide(AnsiName,D->FileNameW);
+      if (!CharToWide(AnsiName,D->FileNameW,ASIZE(D->FileNameW)))
+        *D->FileNameW=0;
 #else
-      CharToWide(Data->Arc.NewLhd.FileName,D->FileNameW);
+      if (!CharToWide(Data->Arc.NewLhd.FileName,D->FileNameW,ASIZE(D->FileNameW)))
+        *D->FileNameW=0;
 #endif
     }
     D->Flags=Data->Arc.NewLhd.Flags;

@@ -8,6 +8,10 @@
   #define INCL_BASE
 #endif
 
+#if defined(RARDLL) && !defined(SILENT)
+#define SILENT
+#endif
+
 #if defined(_WIN_32) || defined(_EMX)
 #define ENABLE_BAD_ALLOC
 #endif

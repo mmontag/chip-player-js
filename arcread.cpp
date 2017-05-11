@@ -178,11 +178,15 @@ size_t Archive::ReadHeader()
 
         if (hd->HeadType==NEWSUB_HEAD)
         {
+          // Let's calculate the size of optional data.
           int DataSize=hd->HeadSize-hd->NameSize-SIZEOF_NEWLHD;
           if (hd->Flags & LHD_SALT)
             DataSize-=SALT_SIZE;
+
           if (DataSize>0)
           {
+            // Here we read optional additional fields for subheaders.
+            // They are stored after the file name and before salt.
             hd->SubData.Alloc(DataSize);
             Raw.Get(&hd->SubData[0],DataSize);
             if (hd->CmpName(SUBHEAD_TYPE_RR))
