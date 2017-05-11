@@ -1,5 +1,6 @@
 #include "rar.hpp"
 
+
 static bool UserBreak;
 
 ErrorHandler::ErrorHandler()
@@ -42,6 +43,8 @@ void ErrorHandler::CloseError(const char *FileName)
     ErrMsg(NULL,St(MErrFClose),FileName);
     SysErrMsg();
   }
+#endif
+#if !defined(SILENT) || defined(RARDLL)
   Throw(FATAL_ERROR);
 #endif
 }
@@ -50,7 +53,9 @@ void ErrorHandler::CloseError(const char *FileName)
 void ErrorHandler::ReadError(const char *FileName)
 {
 #ifndef SILENT
-  ReadErrorMsg(FileName);
+  ReadErrorMsg(NULL,FileName);
+#endif
+#if !defined(SILENT) || defined(RARDLL)
   Throw(FATAL_ERROR);
 #endif
 }
@@ -58,7 +63,7 @@ void ErrorHandler::ReadError(const char *FileName)
 
 bool ErrorHandler::AskRepeatRead(const char *FileName)
 {
-#if !defined(SILENT) && !defined(SFX_MODULE)
+#if !defined(SILENT) && !defined(SFX_MODULE) && !defined(_WIN_CE)
   if (!Silent)
   {
     mprintf("\n");
@@ -70,11 +75,12 @@ bool ErrorHandler::AskRepeatRead(const char *FileName)
 }
 
 
-void ErrorHandler::WriteError(const char *FileName)
+void ErrorHandler::WriteError(const char *ArcName,const char *FileName)
 {
 #ifndef SILENT
-  ErrMsg(NULL,St(MErrWrite),FileName);
-  SysErrMsg();
+  WriteErrorMsg(ArcName,FileName);
+#endif
+#if !defined(SILENT) || defined(RARDLL)
   Throw(WRITE_ERROR);
 #endif
 }
@@ -86,6 +92,8 @@ void ErrorHandler::WriteErrorFAT(const char *FileName)
 #if !defined(SILENT) && !defined(SFX_MODULE)
   SysErrMsg();
   ErrMsg(NULL,St(MNTFSRequired),FileName);
+#endif
+#if !defined(SILENT) && !defined(SFX_MODULE) || defined(RARDLL)
   Throw(WRITE_ERROR);
 #endif
 }
@@ -94,7 +102,7 @@ void ErrorHandler::WriteErrorFAT(const char *FileName)
 
 bool ErrorHandler::AskRepeatWrite(const char *FileName)
 {
-#ifndef SILENT
+#if !defined(SILENT) && !defined(_WIN_CE)
   if (!Silent)
   {
     mprintf("\n");
@@ -114,6 +122,8 @@ void ErrorHandler::SeekError(const char *FileName)
     ErrMsg(NULL,St(MErrSeek),FileName);
     SysErrMsg();
   }
+#endif
+#if !defined(SILENT) || defined(RARDLL)
   Throw(FATAL_ERROR);
 #endif
 }
@@ -129,8 +139,14 @@ void ErrorHandler::MemoryErrorMsg()
 
 void ErrorHandler::OpenErrorMsg(const char *FileName)
 {
+  OpenErrorMsg(NULL,FileName);
+}
+
+
+void ErrorHandler::OpenErrorMsg(const char *ArcName,const char *FileName)
+{
 #ifndef SILENT
-  Log(NULL,St(MCannotOpen),FileName);
+  Log(ArcName && *ArcName ? ArcName:NULL,St(MCannotOpen),FileName);
   Alarm();
   SysErrMsg();
 #endif
@@ -139,18 +155,33 @@ void ErrorHandler::OpenErrorMsg(const char *FileName)
 
 void ErrorHandler::CreateErrorMsg(const char *FileName)
 {
+  CreateErrorMsg(NULL,FileName);
+}
+
+
+void ErrorHandler::CreateErrorMsg(const char *ArcName,const char *FileName)
+{
 #ifndef SILENT
-  Log(NULL,St(MCannotCreate),FileName);
+  Log(ArcName && *ArcName ? ArcName:NULL,St(MCannotCreate),FileName);
   Alarm();
   SysErrMsg();
 #endif
 }
 
 
-void ErrorHandler::ReadErrorMsg(const char *FileName)
+void ErrorHandler::ReadErrorMsg(const char *ArcName,const char *FileName)
 {
 #ifndef SILENT
-  ErrMsg(NULL,St(MErrRead),FileName);
+  ErrMsg(ArcName,St(MErrRead),FileName);
+  SysErrMsg();
+#endif
+}
+
+
+void ErrorHandler::WriteErrorMsg(const char *ArcName,const char *FileName)
+{
+#ifndef SILENT
+  ErrMsg(ArcName,St(MErrWrite),FileName);
   SysErrMsg();
 #endif
 }
@@ -166,7 +197,7 @@ void ErrorHandler::Exit(int ExitCode)
 
 
 #ifndef GUI
-void ErrorHandler::ErrMsg(char *ArcName,const char *fmt,...)
+void ErrorHandler::ErrMsg(const char *ArcName,const char *fmt,...)
 {
   safebuf char Msg[NM+1024];
   va_list argptr;
@@ -225,7 +256,7 @@ void _stdfunction ProcessSignal(int SigType)
   UserBreak=true;
   mprintf(St(MBreak));
   File::RemoveCreated();
-#if defined(USE_RC) && !defined(SFX_MODULE)
+#if defined(USE_RC) && !defined(SFX_MODULE) && !defined(_WIN_CE)
   ExtRes.UnloadDLL();
 #endif
   exit(USER_BREAK);
@@ -268,22 +299,24 @@ void ErrorHandler::Throw(int Code)
 void ErrorHandler::SysErrMsg()
 {
 #if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(SILENT)
-  char *lpMsgBuf=NULL;
+    #define STRCHR strchr
+    #define ERRCHAR char
+  ERRCHAR  *lpMsgBuf=NULL;
   int ErrType=GetLastError();
   if (ErrType!=0 && FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
-              NULL,GetLastError(),MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-              (LPTSTR) &lpMsgBuf,0,NULL))
+              NULL,ErrType,MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+              (LPTSTR)&lpMsgBuf,0,NULL))
   {
-    char *CurMsg=lpMsgBuf;
+    ERRCHAR  *CurMsg=lpMsgBuf;
     while (CurMsg!=NULL)
     {
       while (*CurMsg=='\r' || *CurMsg=='\n')
         CurMsg++;
       if (*CurMsg==0)
         break;
-      char *EndMsg=strchr(CurMsg,'\r');
+      ERRCHAR *EndMsg=STRCHR(CurMsg,'\r');
       if (EndMsg==NULL)
-        EndMsg=strchr(CurMsg,'\n');
+        EndMsg=STRCHR(CurMsg,'\n');
       if (EndMsg!=NULL)
       {
         *EndMsg=0;

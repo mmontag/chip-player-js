@@ -14,6 +14,16 @@
   #define _WIN_32
 #endif
 
+#ifdef _WIN32_WCE
+  #define _WIN_32
+  #define _WIN_CE
+  #ifdef WM_FILECHANGEINFO
+    #define PC2002
+  #else
+    #undef PC2002
+  #endif
+#endif
+
 #ifdef __BEOS__
   #define _UNIX
   #define _BEOS

@@ -10,3 +10,8 @@ int ToPercent(Int64 N1,Int64 N2)
 }
 
 
+void RARInitData()
+{
+  InitCRC();
+  ErrHandler.Clean();
+}

@@ -1,7 +1,7 @@
 #ifndef _RAR_INT64_
 #define _RAR_INT64_
 
-#ifdef __BORLANDC__
+#if defined(__BORLANDC__) || defined(_MSC_VER)
 #define NATIVE_INT64
 typedef __int64 Int64;
 #endif

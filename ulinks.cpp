@@ -8,8 +8,9 @@ int ExtractLink(ComprDataIO &DataIO,Archive &Arc,char *DestName,uint &LinkCRC,bo
   char FileName[NM];
   if (IsLink(Arc.NewLhd.FileAttr))
   {
-    DataIO.UnpRead((byte *)FileName,Arc.NewLhd.PackSize);
-    FileName[Arc.NewLhd.UnpSize]=0;
+    int DataSize=Min(Arc.NewLhd.PackSize,sizeof(FileName)-1);
+    DataIO.UnpRead((byte *)FileName,DataSize);
+    FileName[DataSize]=0;
     if (Create)
     {
       CreatePath(DestName,NULL,true);
@@ -22,7 +23,7 @@ int ExtractLink(ComprDataIO &DataIO,Archive &Arc,char *DestName,uint &LinkCRC,bo
           ErrHandler.SetErrorCode(WARNING);
         }
     }
-    LinkCRC=CRC(0xffffffff,FileName,Arc.NewLhd.UnpSize);
+    LinkCRC=CRC(0xffffffff,FileName,DataSize);
     return(1);
   }
 #endif

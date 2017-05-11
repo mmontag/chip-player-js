@@ -1,6 +1,7 @@
 #include "rar.hpp"
 
 static void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,bool Bare);
+static void ListSymLink(Archive &Arc);
 static void ListFileAttr(uint A,int HostOS);
 static void ListOldSubHeader(Archive &Arc);
 static void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical);
@@ -71,6 +72,8 @@ void ListArchive(CommandData *Cmd)
                   FileCount++;
                 }
                 TotalPackSize+=Arc.NewLhd.FullPackSize;
+                if (Technical)
+                  ListSymLink(Arc);
               }
               break;
 #ifndef SFX_MODULE
@@ -225,7 +228,7 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
   mprintf(" %d.%d",hd.UnpVer/10,hd.UnpVer%10);
 
   static char *RarOS[]={
-    "DOS","OS/2","Win95/NT","Unix","MacOS","BeOS","","","",""
+    "DOS","OS/2","Win95/NT","Unix","MacOS","BeOS","WinCE","","",""
   };
 
   if (Technical)
@@ -235,14 +238,27 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
 }
 
 
+void ListSymLink(Archive &Arc)
+{
+  if (Arc.NewLhd.HostOS==HOST_UNIX && (Arc.NewLhd.FileAttr & 0xF000)==0xA000)
+  {
+    char FileName[NM];
+    int DataSize=Min(Arc.NewLhd.PackSize,sizeof(FileName)-1);
+    Arc.Read(FileName,DataSize);
+    FileName[DataSize]=0;
+    mprintf("\n%22s %s","-->",FileName);
+  }
+}
+
+
 void ListFileAttr(uint A,int HostOS)
 {
   switch(HostOS)
   {
-    case MS_DOS:
-    case OS2:
-    case WIN_32:
-    case MAC_OS:
+    case HOST_MSDOS:
+    case HOST_OS2:
+    case HOST_WIN32:
+    case HOST_MACOS:
       mprintf("  %c%c%c%c%c%c  ",
               (A & 0x08) ? 'V' : '.',
               (A & 0x10) ? 'D' : '.',
@@ -251,8 +267,8 @@ void ListFileAttr(uint A,int HostOS)
               (A & 0x04) ? 'S' : '.',
               (A & 0x20) ? 'A' : '.');
       break;
-    case UNIX:
-    case BEOS:
+    case HOST_UNIX:
+    case HOST_BEOS:
       switch (A & 0xF000)
       {
         case 0x4000:
@@ -314,7 +330,7 @@ void ListOldSubHeader(Archive &Arc)
 
 void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical)
 {
-  if (strcmp(Arc.SubHead.FileName,SUBHEAD_TYPE_CMT)==0 &&
+  if (Arc.SubHead.CmpName(SUBHEAD_TYPE_CMT) &&
       (Arc.SubHead.Flags & LHD_SPLIT_BEFORE)==0 && !Cmd->DisableComment)
   {
     Array<byte> CmtData;
@@ -323,6 +339,20 @@ void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical)
     {
       mprintf(St(MFileComment));
       OutComment((char *)&CmtData[0],ReadSize);
+    }
+  }
+  if (Arc.SubHead.CmpName(SUBHEAD_TYPE_STREAM) &&
+      (Arc.SubHead.Flags & LHD_SPLIT_BEFORE)==0)
+  {
+    int DestSize=Arc.SubHead.SubData.Size()/2;
+    wchar DestNameW[NM];
+    char DestName[NM];
+    if (DestSize<sizeof(DestName))
+    {
+      RawToWide(&Arc.SubHead.SubData[0],DestNameW,DestSize);
+      DestNameW[DestSize]=0;
+      WideToChar(DestNameW,DestName);
+      mprintf("\n %s",DestName);
     }
   }
 }

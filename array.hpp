@@ -23,7 +23,6 @@ template <class T> class Array
     void Push(T Item);
 };
 
-
 template <class T> void Array<T>::CleanData()
 {
   Buffer=NULL;
@@ -40,7 +39,7 @@ template <class T> Array<T>::Array()
 
 template <class T> Array<T>::Array(int Size)
 {
-  Buffer=(T *)malloc(sizeof(T)*Size);
+  Buffer=(T *)rarmalloc(sizeof(T)*Size);
   if (Buffer==NULL && Size!=0)
     ErrHandler.MemoryError();
 
@@ -51,7 +50,7 @@ template <class T> Array<T>::Array(int Size)
 template <class T> Array<T>::~Array()
 {
   if (Buffer!=NULL)
-    free(Buffer);
+    rarfree(Buffer);
 }
 
 
@@ -75,10 +74,9 @@ template <class T> void Array<T>::Add(int Items)
     int Suggested=AllocSize+AllocSize/4+32;
     int NewSize=Max(BufSize,Suggested);
 
-    Buffer=(T *)realloc(Buffer,NewSize*sizeof(T));
+    Buffer=(T *)rarrealloc(Buffer,NewSize*sizeof(T));
     if (Buffer==NULL)
       ErrHandler.MemoryError();
-
     AllocSize=NewSize;
   }
 }
@@ -97,7 +95,7 @@ template <class T> void Array<T>::Reset()
 {
   if (Buffer!=NULL)
   {
-    free(Buffer);
+    rarfree(Buffer);
     Buffer=NULL;
   }
   BufSize=0;
@@ -109,8 +107,6 @@ template <class T> void Array<T>::operator =(Array<T> &Src)
 {
   Reset();
   Alloc(Src.BufSize);
-//  AllocSize=Src.AllocSize;
-//  BufSize=Src.BufSize;
   if (Src.BufSize!=0)
     memcpy((void *)Buffer,(void *)Src.Buffer,Src.BufSize*sizeof(T));
 }

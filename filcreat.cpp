@@ -74,5 +74,5 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
     return(true);
   PrepareToDelete(Name,NameW);
   CreatePath(Name,NameW,true);
-  return(NewFile!=NULL ? NewFile->Create(Name,NameW):remove(Name)==0);
+  return(NewFile!=NULL ? NewFile->Create(Name,NameW):DelFile(Name,NameW));
 }

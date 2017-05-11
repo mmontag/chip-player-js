@@ -18,6 +18,16 @@ RarTime& RarTime::operator =(FILETIME &ft)
   rlt.Hour=st.wHour;
   rlt.Minute=st.wMinute;
   rlt.Second=st.wSecond;
+  rlt.wDay=st.wDayOfWeek;
+  rlt.yDay=rlt.Day-1;
+  for (int I=1;I<rlt.Month;I++)
+  {
+    static int mdays[12]={31,28,31,30,31,30,31,31,30,31,30,31};
+    rlt.yDay+=mdays[I];
+  }
+  if (rlt.Month>2 && IsLeapYear(rlt.Year))
+    rlt.yDay++;
+
   st.wMilliseconds=0;
   SystemTimeToFileTime(&st,&zft);
   rlt.Reminder=lft.dwLowDateTime-zft.dwLowDateTime;
@@ -58,6 +68,8 @@ RarTime& RarTime::operator =(time_t ut)
   rlt.Minute=t->tm_min;
   rlt.Second=t->tm_sec;
   rlt.Reminder=0;
+  rlt.wDay=t->tm_wday;
+  rlt.yDay=t->tm_yday;
   return(*this);
 }
 
@@ -238,7 +250,9 @@ void RarTime::SetCurrentTime()
 {
 #ifdef _WIN_32
   FILETIME ft;
-  GetSystemTimeAsFileTime(&ft);
+  SYSTEMTIME st;
+  GetSystemTime(&st);
+  SystemTimeToFileTime(&st,&ft);
   *this=ft;
 #else
   time_t st;
@@ -249,7 +263,7 @@ void RarTime::SetCurrentTime()
 #endif
 
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
 const char *GetMonthName(int Month)
 {
 #ifdef SILENT
@@ -265,3 +279,7 @@ const char *GetMonthName(int Month)
 #endif
 
 
+bool IsLeapYear(int Year)
+{
+  return((Year&3)==0 && (Year%100!=0 || Year%400==0));
+}

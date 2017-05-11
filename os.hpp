@@ -23,7 +23,7 @@
 #define STRICT
 #define WINVER 0x0400
 #define _WIN32_WINNT 0x0300
-//#define _WIN32_IE 0x0300
+
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
@@ -31,24 +31,30 @@
 
 #endif
 
+#ifndef _WIN_CE
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dos.h>
+#endif
 
-#if !defined(_EMX) && !defined(_MSC_VER)
+#if !defined(_EMX) && !defined(_MSC_VER) && !defined(_WIN_CE)
   #define ENABLE_MKTEMP
   #include <dir.h>
 #endif
 #ifdef _MSC_VER
   #define for if (0) ; else for
+#ifndef _WIN_CE
   #include <direct.h>
+#endif
 #else
   #include <dirent.h>
 #endif
 
+#ifndef _WIN_CE
 #include <share.h>
+#endif
 
-#ifdef ENABLE_BAD_ALLOC
+#if defined(ENABLE_BAD_ALLOC) && !defined(_WIN_CE)
   #include <new.h>
 #endif
 
@@ -66,7 +72,7 @@
   #endif
 #else
   #ifdef _MSC_VER
-    #include <exception>
+      #include <exception>
   #else
     #include <except.h>
   #endif
@@ -77,11 +83,13 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
-#include <fcntl.h>
-#include <dos.h>
-#include <io.h>
-#include <time.h>
-#include <signal.h>
+#ifndef _WIN_CE
+  #include <fcntl.h>
+  #include <dos.h>
+  #include <io.h>
+  #include <time.h>
+  #include <signal.h>
+#endif
 
 /*
 #ifdef _WIN_32
@@ -94,12 +102,6 @@
 #define DefConfigName  "rar.ini"
 #define DefLogName     "rar.log"
 
-#ifdef _EMX
-  #define HOST_OS     MS_DOS
-#else
-  #define HOST_OS     WIN_32
-  #define ENABLE_CHANGE_PRIORITY
-#endif
 
 #define PATHDIVIDER  "\\"
 #define PATHDIVIDERW L"\\"
@@ -138,6 +140,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#if defined(__QNXNTO__)
+  #include <sys/param.h>
+#endif
 #if defined(__FreeBSD__) || defined (__NetBSD__) || defined (__OpenBSD__) || defined(__APPLE__)
   #include <sys/param.h>
   #include <sys/mount.h>
@@ -167,11 +172,6 @@
 #define DefConfigName  ".rarrc"
 #define DefLogName     ".rarlog"
 
-#ifdef _BEOS
-#define HOST_OS     BEOS
-#else
-#define HOST_OS     UNIX
-#endif
 
 #define PATHDIVIDER  "/"
 #define PATHDIVIDERW L"/"
@@ -218,5 +218,8 @@ typedef const char* MSGID;
   #endif
 #endif
 
+#if !defined(BIG_ENDIAN) && !defined(_WIN_CE) && defined(_WIN_32)
+#define ALLOW_NOT_ALIGNED_INT
+#endif
 
 #endif // _RAR_OS_

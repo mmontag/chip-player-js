@@ -10,7 +10,10 @@ struct RarLocalTime
   uint Minute;
   uint Second;
   uint Reminder;
+  uint wDay;
+  uint yDay;
 };
+
 
 class RarTime
 {
@@ -49,6 +52,6 @@ class RarTime
 };
 
 const char *GetMonthName(int Month);
-
+bool IsLeapYear(int Year);
 
 #endif

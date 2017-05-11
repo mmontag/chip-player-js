@@ -1,14 +1,16 @@
 #include "rar.hpp"
 
+#ifndef _WIN_CE
 static int SleepTime=0;
 
 void InitSystemOptions(int SleepTime)
 {
   ::SleepTime=SleepTime;
 }
+#endif
 
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
 void SetPriority(int Priority)
 {
 #ifdef _WIN_32

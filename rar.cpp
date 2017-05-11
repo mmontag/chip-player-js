@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
   setbuf(stdout,NULL);
 
   #ifdef _EMX
-    GetConfigName(NULL,argv[0]);
+    EnumConfigPaths(argv[0],-1);
   #endif
 #endif
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
       Cmd.ParseEnvVar();
     }
     for (int I=1;I<argc;I++)
-      Cmd.ParseArg(argv[I]);
+      Cmd.ParseArg(argv[I],NULL);
 #endif
     Cmd.ParseDone();
 
@@ -123,12 +123,5 @@ int main(int argc, char *argv[])
   return(ErrHandler.GetErrorCode());
 }
 #endif
-
-
-void RARInitData()
-{
-  InitCRC();
-  ErrHandler.Clean();
-}
 
 

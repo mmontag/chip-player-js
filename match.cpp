@@ -53,7 +53,7 @@ bool CmpName(char *Wildcard,char *Name,int CmpPath)
       else
         if (CmpPath==MATCH_SUBPATH || IsWildcard(Wildcard))
         {
-          if (strnicompc(Path1,Path2,strlen(Path1))!=0)
+          if (*Path1 && strnicompc(Path1,Path2,strlen(Path1))!=0)
             return(false);
         }
         else
@@ -91,7 +91,7 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
       else
         if (CmpPath==MATCH_SUBPATH || IsWildcard(NULL,Wildcard))
         {
-          if (strnicompcw(Path1,Path2,strlenw(Path1))!=0)
+          if (*Path1 && strnicompcw(Path1,Path2,strlenw(Path1))!=0)
             return(false);
         }
         else

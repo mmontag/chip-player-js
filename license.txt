@@ -18,8 +18,7 @@
       stated in the documentation and source comments that the code may
       not be used to develop a RAR (WinRAR) compatible archiver.
 
-   3. The unRAR utility may be freely distributed, provided the 
-      distribution package is not modified.  No person or company 
+   3. The unRAR utility may be freely distributed. No person or company 
       may charge a fee for the distribution of unRAR without written
       permission from the copyright holder.
 

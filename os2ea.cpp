@@ -31,7 +31,7 @@ void ExtractOS2EA(Archive &Arc,char *FileName)
     unsigned long Error;
   } EAOP2;
 
-  ComprDataIO DataIO(NULL);
+  ComprDataIO DataIO;
   Unpack Unpack(&DataIO);
   Unpack.Init();
 

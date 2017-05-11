@@ -1,6 +1,6 @@
 #include "rar.hpp"
 
-static File *CreatedFiles[16];
+static File *CreatedFiles[32];
 static int RemoveCreatedActive=0;
 
 File::File()
@@ -17,6 +17,7 @@ File::File()
   OpenShared=false;
   AllowDelete=true;
   CloseCount=0;
+  AllowExceptions=true;
 }
 
 
@@ -99,7 +100,11 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
       strcpyw(FileNameW,NameW);
     else
       *FileNameW=0;
-    strcpy(FileName,Name);
+    if (Name!=NULL)
+      strcpy(FileName,Name);
+    else
+      WideToChar(NameW,FileName);
+    AddFileToList(hFile);
   }
   return(Success);
 }
@@ -142,7 +147,17 @@ bool File::Create(const char *Name,const wchar *NameW)
     strcpyw(FileNameW,NameW);
   else
     *FileNameW=0;
-  strcpy(FileName,Name);
+  if (Name!=NULL)
+    strcpy(FileName,Name);
+  else
+    WideToChar(NameW,FileName);
+  AddFileToList(hFile);
+  return(hFile!=BAD_HANDLE);
+}
+
+
+void File::AddFileToList(FileHandle hFile)
+{
   if (hFile!=BAD_HANDLE)
     for (int I=0;I<sizeof(CreatedFiles)/sizeof(CreatedFiles[0]);I++)
       if (CreatedFiles[I]==NULL)
@@ -150,7 +165,6 @@ bool File::Create(const char *Name,const wchar *NameW)
         CreatedFiles[I]=this;
         break;
       }
-  return(hFile!=BAD_HANDLE);
 }
 
 
@@ -197,7 +211,7 @@ bool File::Close()
             }
       }
       hFile=BAD_HANDLE;
-      if (!Success)
+      if (!Success && AllowExceptions)
         ErrHandler.CloseError(FileName);
     }
   CloseCount++;
@@ -221,22 +235,15 @@ bool File::Delete()
     return(false);
   if (hFile!=BAD_HANDLE)
     Close();
-  bool RetCode;
-#ifdef _WIN_32
-  if (WinNT() && *FileNameW)
-    RetCode=DeleteFileW(FileNameW);
-  else
-    RetCode=DeleteFile(FileName);
-#else
-  RetCode=(remove(FileName)==0);
-#endif
-  return(RetCode);
+  return(DelFile(FileName,FileNameW));
 }
 
 
 bool File::Rename(const char *NewName)
 {
-  bool Success=strcmp(FileName,NewName)==0 || rename(FileName,NewName)==0;
+  bool Success=strcmp(FileName,NewName)==0;
+  if (!Success)
+    Success=rename(FileName,NewName)==0;
   if (Success)
   {
     strcpy(FileName,NewName);
@@ -250,6 +257,7 @@ void File::Write(const void *Data,int Size)
 {
   if (Size==0)
     return;
+#ifndef _WIN_CE
   if (HandleType!=FILE_HANDLENORMAL)
     switch(HandleType)
     {
@@ -268,6 +276,7 @@ void File::Write(const void *Data,int Size)
 #endif
         break;
     }
+#endif
   while (1)
   {
     bool Success;
@@ -285,7 +294,7 @@ void File::Write(const void *Data,int Size)
 #else
     Success=fwrite(Data,1,Size,hFile)==Size && !ferror(hFile);
 #endif
-    if (!Success && HandleType==FILE_HANDLENORMAL)
+    if (!Success && AllowExceptions && HandleType==FILE_HANDLENORMAL)
     {
 #if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(RARDLL)
       Int64 FilePos=Tell();
@@ -295,7 +304,7 @@ void File::Write(const void *Data,int Size)
 #endif
       if (ErrHandler.AskRepeatWrite(FileName))
         continue;
-      ErrHandler.WriteError(FileName);
+      ErrHandler.WriteError(NULL,FileName);
     }
     break;
   }
@@ -313,23 +322,27 @@ int File::Read(void *Data,int Size)
   {
     ReadSize=DirectRead(Data,Size);
     if (ReadSize==-1)
-      if (IgnoreReadErrors)
-      {
-        ReadSize=0;
-        for (int I=0;I<Size;I+=512)
+    {
+      ErrorType=FILE_READERROR;
+      if (AllowExceptions)
+        if (IgnoreReadErrors)
         {
-          Seek(FilePos+I,SEEK_SET);
-          int SizeToRead=Min(Size-I,512);
-          int ReadCode=DirectRead(Data,SizeToRead);
-          ReadSize+=(ReadCode==-1) ? 512:ReadCode;
+          ReadSize=0;
+          for (int I=0;I<Size;I+=512)
+          {
+            Seek(FilePos+I,SEEK_SET);
+            int SizeToRead=Min(Size-I,512);
+            int ReadCode=DirectRead(Data,SizeToRead);
+            ReadSize+=(ReadCode==-1) ? 512:ReadCode;
+          }
         }
-      }
-      else
-      {
-        if (HandleType==FILE_HANDLENORMAL && ErrHandler.AskRepeatRead(FileName))
-          continue;
-        ErrHandler.ReadError(FileName);
-      }
+        else
+        {
+          if (HandleType==FILE_HANDLENORMAL && ErrHandler.AskRepeatRead(FileName))
+            continue;
+          ErrHandler.ReadError(FileName);
+        }
+    }
     break;
   }
   return(ReadSize);
@@ -341,6 +354,7 @@ int File::DirectRead(void *Data,int Size)
 #ifdef _WIN_32
   const int MaxDeviceRead=20000;
 #endif
+#ifndef _WIN_CE
   if (HandleType==FILE_HANDLESTD)
   {
 #ifdef _WIN_32
@@ -351,6 +365,7 @@ int File::DirectRead(void *Data,int Size)
     hFile=stdin;
 #endif
   }
+#endif
 #ifdef _WIN_32
   DWORD Read;
   if (!ReadFile(hFile,Data,Size,&Read,NULL))
@@ -379,7 +394,7 @@ int File::DirectRead(void *Data,int Size)
 
 void File::Seek(Int64 Offset,int Method)
 {
-  if (!RawSeek(Offset,Method))
+  if (!RawSeek(Offset,Method) && AllowExceptions)
     ErrHandler.SeekError(FileName);
 }
 
@@ -388,6 +403,11 @@ bool File::RawSeek(Int64 Offset,int Method)
 {
   if (hFile==BAD_HANDLE)
     return(true);
+  if (!is64plus(Offset) && Method!=SEEK_SET)
+  {
+    Offset=(Method==SEEK_CUR ? Tell():FileLength())+Offset;
+    Method=SEEK_SET;
+  }
 #ifdef _WIN_32
   LONG HighDist=int64to32(Offset>>32);
   if (SetFilePointer(hFile,int64to32(Offset),&HighDist,Method)==0xffffffff &&
@@ -412,7 +432,10 @@ Int64 File::Tell()
   LONG HighDist=0;
   uint LowDist=SetFilePointer(hFile,0,&HighDist,FILE_CURRENT);
   if (LowDist==0xffffffff && GetLastError()!=NO_ERROR)
-    ErrHandler.SeekError(FileName);
+    if (AllowExceptions)
+      ErrHandler.SeekError(FileName);
+    else
+      return(-1);
   return(int32to64(HighDist,LowDist));
 #else
 #ifdef _LARGEFILE_SOURCE
@@ -605,7 +628,13 @@ void File::RemoveCreated()
   RemoveCreatedActive++;
   for (int I=0;I<sizeof(CreatedFiles)/sizeof(CreatedFiles[0]);I++)
     if (CreatedFiles[I]!=NULL)
-      CreatedFiles[I]->Delete();
+    {
+      if (CreatedFiles[I]->NewFile)
+        CreatedFiles[I]->Delete();
+      else
+        CreatedFiles[I]->Close();
+      CreatedFiles[I]=NULL;
+    }
   RemoveCreatedActive--;
 }
 

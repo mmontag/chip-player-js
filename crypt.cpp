@@ -56,7 +56,7 @@ void CryptData::DecryptBlock(byte *Buf,int Size)
 void CryptData::EncryptBlock20(byte *Buf)
 {
   uint A,B,C,D,T,TA,TB;
-#if defined(BIG_ENDIAN) || !defined(PRESENT_INT32)
+#if defined(BIG_ENDIAN) || !defined(PRESENT_INT32) || !defined(ALLOW_NOT_ALIGNED_INT)
   A=((uint)Buf[0]|((uint)Buf[1]<<8)|((uint)Buf[2]<<16)|((uint)Buf[3]<<24))^Key[0];
   B=((uint)Buf[4]|((uint)Buf[5]<<8)|((uint)Buf[6]<<16)|((uint)Buf[7]<<24))^Key[1];
   C=((uint)Buf[8]|((uint)Buf[9]<<8)|((uint)Buf[10]<<16)|((uint)Buf[11]<<24))^Key[2];
@@ -79,7 +79,7 @@ void CryptData::EncryptBlock20(byte *Buf)
     C=TA;
     D=TB;
   }
-#if defined(BIG_ENDIAN) || !defined(PRESENT_INT32)
+#if defined(BIG_ENDIAN) || !defined(PRESENT_INT32) || !defined(ALLOW_NOT_ALIGNED_INT)
   C^=Key[0];
   Buf[0]=(byte)C;
   Buf[1]=(byte)(C>>8);
@@ -114,7 +114,7 @@ void CryptData::DecryptBlock20(byte *Buf)
 {
   byte InBuf[16];
   uint A,B,C,D,T,TA,TB;
-#if defined(BIG_ENDIAN) || !defined(PRESENT_INT32)
+#if defined(BIG_ENDIAN) || !defined(PRESENT_INT32) || !defined(ALLOW_NOT_ALIGNED_INT)
   A=((uint)Buf[0]|((uint)Buf[1]<<8)|((uint)Buf[2]<<16)|((uint)Buf[3]<<24))^Key[0];
   B=((uint)Buf[4]|((uint)Buf[5]<<8)|((uint)Buf[6]<<16)|((uint)Buf[7]<<24))^Key[1];
   C=((uint)Buf[8]|((uint)Buf[9]<<8)|((uint)Buf[10]<<16)|((uint)Buf[11]<<24))^Key[2];
@@ -138,7 +138,7 @@ void CryptData::DecryptBlock20(byte *Buf)
     C=TA;
     D=TB;
   }
-#if defined(BIG_ENDIAN) || !defined(PRESENT_INT32)
+#if defined(BIG_ENDIAN) || !defined(PRESENT_INT32) || !defined(ALLOW_NOT_ALIGNED_INT)
   C^=Key[0];
   Buf[0]=(byte)C;
   Buf[1]=(byte)(C>>8);

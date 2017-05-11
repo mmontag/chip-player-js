@@ -55,7 +55,7 @@ class CryptData
     void EncryptBlock(byte *Buf,int Size);
     void DecryptBlock(byte *Buf,int Size);
     void Crypt(byte *Data,uint Count,int Method);
-    static void SetSalt(byte *Salt);
+    static void SetSalt(byte *Salt,int SaltSize);
 };
 
 #endif

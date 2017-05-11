@@ -9,19 +9,23 @@ void ExtractStreams(Archive &Arc,char *FileName,wchar *FileNameW)
 
   if (Arc.HeaderCRC!=Arc.StreamHead.HeadCRC)
   {
+#ifndef SILENT
     Log(Arc.FileName,St(MStreamBroken),FileName);
+#endif
     ErrHandler.SetErrorCode(CRC_ERROR);
     return;
   }
 
   if (Arc.StreamHead.Method<0x31 || Arc.StreamHead.Method>0x35 || Arc.StreamHead.UnpVer>PACK_VER)
   {
+#ifndef SILENT
     Log(Arc.FileName,St(MStreamUnknown),FileName);
+#endif
     ErrHandler.SetErrorCode(WARNING);
     return;
   }
 
-  char StreamName[NM];
+  char StreamName[NM+2];
   if (FileName[0]!=0 && FileName[1]==0)
   {
     strcpy(StreamName,".\\");
@@ -29,6 +33,15 @@ void ExtractStreams(Archive &Arc,char *FileName,wchar *FileNameW)
   }
   else
     strcpy(StreamName,FileName);
+  if (strlen(StreamName)+strlen((char *)Arc.StreamHead.StreamName)>=sizeof(StreamName))
+  {
+#ifndef SILENT
+    Log(Arc.FileName,St(MStreamBroken),FileName);
+#endif
+    ErrHandler.SetErrorCode(CRC_ERROR);
+    return;
+  }
+
   strcat(StreamName,(char *)Arc.StreamHead.StreamName);
 
   FindData fd;
@@ -40,7 +53,7 @@ void ExtractStreams(Archive &Arc,char *FileName,wchar *FileNameW)
   File CurFile;
   if (CurFile.WCreate(StreamName))
   {
-    ComprDataIO DataIO(NULL);
+    ComprDataIO DataIO;
     Unpack Unpack(&DataIO);
     Unpack.Init();
 
@@ -53,7 +66,9 @@ void ExtractStreams(Archive &Arc,char *FileName,wchar *FileNameW)
 
     if (Arc.StreamHead.StreamCRC!=~DataIO.UnpFileCRC)
     {
+#ifndef SILENT
       Log(Arc.FileName,St(MStreamBroken),StreamName);
+#endif
       ErrHandler.SetErrorCode(CRC_ERROR);
     }
     else
@@ -79,7 +94,7 @@ void ExtractStreamsNew(Archive &Arc,char *FileName,wchar *FileNameW)
     strcpyw(NameW,FileNameW);
   else
     CharToWide(FileName,NameW);
-  wchar StreamNameW[NM];
+  wchar StreamNameW[NM+2];
   if (NameW[0]!=0 && NameW[1]==0)
   {
     strcpyw(StreamNameW,L".\\");
@@ -91,6 +106,16 @@ void ExtractStreamsNew(Archive &Arc,char *FileName,wchar *FileNameW)
   wchar *DestName=StreamNameW+strlenw(StreamNameW);
   byte *SrcName=&Arc.SubHead.SubData[0];
   int DestSize=Arc.SubHead.SubData.Size()/2;
+
+  if (strlenw(StreamNameW)+DestSize>=sizeof(StreamNameW)/sizeof(StreamNameW[0]))
+  {
+#if !defined(SILENT) && !defined(SFX_MODULE)
+    Log(Arc.FileName,St(MStreamBroken),FileName);
+#endif
+    ErrHandler.SetErrorCode(CRC_ERROR);
+    return;
+  }
+
   RawToWide(SrcName,DestName,DestSize);
   DestName[DestSize]=0;
 

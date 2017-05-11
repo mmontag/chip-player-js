@@ -30,10 +30,22 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
 #if !defined(SFX_MODULE) && !defined(RARDLL)
   bool RecoveryDone=false;
 #endif
-  bool FailedOpen=false;
+  bool FailedOpen=false,OldSchemeTested=false;
 
   while (!Arc.Open(NextName))
   {
+    if (!OldSchemeTested)
+    {
+      char AltNextName[NM];
+      strcpy(AltNextName,Arc.FileName);
+      NextVolumeName(AltNextName,true);
+      OldSchemeTested=true;
+      if (Arc.Open(AltNextName))
+      {
+        strcpy(NextName,AltNextName);
+        break;
+      }
+    }
 #ifdef RARDLL
     if (Cmd->Callback==NULL && Cmd->ChangeVolProc==NULL ||
         Cmd->Callback!=NULL && Cmd->Callback(UCM_CHANGEVOLUME,Cmd->UserData,(LONG)NextName,RAR_VOL_ASK)==-1)
@@ -56,7 +68,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     }
 #else
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
     if (!RecoveryDone)
     {
       RecVolumes RecVol;

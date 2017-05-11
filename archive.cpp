@@ -6,9 +6,6 @@
 
 
 Archive::Archive(RAROptions *InitCmd)
-#ifndef SHELL_EXT
-:SubDataIO(NULL)
-#endif
 {
   Cmd=InitCmd==NULL ? &DummyCmd:InitCmd;
   OpenShared=Cmd->OpenShared;

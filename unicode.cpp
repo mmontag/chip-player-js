@@ -217,27 +217,15 @@ int strncmpw(const wchar *s1,const wchar *s2,int n)
 #ifndef SFX_MODULE
 int stricmpw(const wchar *s1,const wchar *s2)
 {
-#ifdef _WIN_32
-  if (WinNT())
-    return(CompareStringW(LOCALE_USER_DEFAULT,NORM_IGNORECASE|SORT_STRINGSORT,s1,-1,s2,-1)-2);
-  else
-  {
-    char Ansi1[NM*sizeof(wchar)],Ansi2[NM*sizeof(wchar)];
-    WideToChar(s1,Ansi1,sizeof(Ansi1));
-    WideToChar(s2,Ansi2,sizeof(Ansi2));
-    return(stricomp(Ansi1,Ansi2));
-  }
-#else
   char Ansi1[NM*sizeof(wchar)],Ansi2[NM*sizeof(wchar)];
   WideToChar(s1,Ansi1,sizeof(Ansi1));
   WideToChar(s2,Ansi2,sizeof(Ansi2));
   return(stricomp(Ansi1,Ansi2));
-#endif
 }
 #endif
 
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
 inline int strnicmpw_w2c(const wchar *s1,const wchar *s2,int n)
 {
   wchar Wide1[NM*2],Wide2[NM*2];
@@ -250,22 +238,13 @@ inline int strnicmpw_w2c(const wchar *s1,const wchar *s2,int n)
   WideToChar(Wide2,Ansi2,sizeof(Ansi2));
   return(stricomp(Ansi1,Ansi2));
 }
+#endif
 
 
+#ifndef SFX_MODULE
 int strnicmpw(const wchar *s1,const wchar *s2,int n)
 {
-#ifdef _WIN_32
-  if (WinNT())
-  {
-    int Length1=Min(strlenw(s1),n);
-    int Length2=Min(strlenw(s2),n);
-    return(CompareStringW(LOCALE_USER_DEFAULT,NORM_IGNORECASE|SORT_STRINGSORT,s1,Length1,s2,Length2)-2);
-  }
-  else
-    return(strnicmpw_w2c(s1,s2,n));
-#else
   return(strnicmpw_w2c(s1,s2,n));
-#endif
 }
 #endif
 
@@ -306,21 +285,9 @@ wchar* strpbrkw(const wchar *s1,const wchar *s2)
 #ifndef SFX_MODULE
 wchar* strlowerw(wchar *Str)
 {
-#ifdef _WIN_32
-  if (WinNT())
-    CharLowerW(Str);
-  else
-  {
-    char AnsiStr[NM*sizeof(wchar)];
-    WideToChar(Str,AnsiStr,sizeof(AnsiStr));
-    strlower(AnsiStr);
-    CharToWide(AnsiStr,Str);
-  }
-#else
   for (wchar *ChPtr=Str;*ChPtr;ChPtr++)
     if (*ChPtr<128)
       *ChPtr=loctolower(*ChPtr);
-#endif
   return(Str);
 }
 #endif
@@ -329,21 +296,9 @@ wchar* strlowerw(wchar *Str)
 #ifndef SFX_MODULE
 wchar* strupperw(wchar *Str)
 {
-#ifdef _WIN_32
-  if (WinNT())
-    CharUpperW(Str);
-  else
-  {
-    char AnsiStr[NM*sizeof(wchar)];
-    WideToChar(Str,AnsiStr,sizeof(AnsiStr));
-    strupper(AnsiStr);
-    CharToWide(AnsiStr,Str);
-  }
-#else
   for (wchar *ChPtr=Str;*ChPtr;ChPtr++)
     if (*ChPtr<128)
       *ChPtr=loctoupper(*ChPtr);
-#endif
   return(Str);
 }
 #endif
@@ -352,25 +307,7 @@ wchar* strupperw(wchar *Str)
 #ifndef SFX_MODULE
 int toupperw(int ch)
 {
-#ifdef _WIN_32
-  if (WinNT())
-    return((int)CharUpperW((wchar *)ch));
-  else
-  {
-    char AnsiStr[10];
-    wchar WideStr[10];
-    WideStr[0]=ch;
-    WideStr[1]=0;
-    WideToChar(WideStr,AnsiStr,sizeof(AnsiStr));
-    if (*AnsiStr=='?')
-      return(ch);
-    *AnsiStr=loctoupper(*AnsiStr);
-    CharToWide(AnsiStr,WideStr);
-    return(*WideStr);
-  }
-#else
   return((ch<128) ? loctoupper(ch):ch);
-#endif
 }
 #endif
 

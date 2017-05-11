@@ -19,6 +19,7 @@ byte* WideToRaw(const wchar *Src,byte *Dest,int DestSize=0x10000000);
 wchar* RawToWide(const byte *Src,wchar *Dest,int DestSize=0x10000000);
 void WideToUtf(const wchar *Src,char *Dest,int DestSize);
 void UtfToWide(const char *Src,wchar *Dest,int DestSize);
+
 int strlenw(const wchar *str);
 wchar* strcpyw(wchar *dest,const wchar *src);
 wchar* strncpyw(wchar *dest,const wchar *src,int n);

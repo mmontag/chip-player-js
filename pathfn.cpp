@@ -68,30 +68,35 @@ char* ConvertPath(const char *SrcPath,char *DestPath)
 
 wchar* ConvertPath(const wchar *SrcPath,wchar *DestPath)
 {
-  const wchar *DestPtr=*SrcPath && IsDriveDiv(SrcPath[1]) ? SrcPath+2:SrcPath;
-  if (SrcPath[0]=='\\' && SrcPath[1]=='\\')
+  const wchar *DestPtr=SrcPath;
+  for (const wchar *s=DestPtr;*s!=0;s++)
+    if (IsPathDiv(s[0]) && s[1]=='.' && s[2]=='.' && IsPathDiv(s[3]))
+      DestPtr=s+4;
+  while (*DestPtr)
   {
-    const wchar *ChPtr=strchrw(SrcPath+2,'\\');
-    if (ChPtr!=NULL && (ChPtr=strchrw(ChPtr+1,'\\'))!=NULL)
-      DestPtr=ChPtr+1;
+    const wchar *s=DestPtr;
+    if (s[0] && IsDriveDiv(s[1]))
+      s+=2;
+    if (s[0]=='\\' && s[1]=='\\')
+    {
+      const wchar *Slash=strchrw(s+2,'\\');
+      if (Slash!=NULL && (Slash=strchrw(Slash+1,'\\'))!=NULL)
+        s=Slash+1;
+    }
+    for (const wchar *t=s;*t!=0;t++)
+      if (IsPathDiv(*t))
+        s=t+1;
+      else
+        if (*t!='.')
+          break;
+    if (s==DestPtr)
+      break;
+    DestPtr=s;
   }
-  for (const wchar *ChPtr=DestPtr;*ChPtr!=0;ChPtr++)
-    if (IsPathDiv(ChPtr[0]) && ChPtr[1]=='.' && ChPtr[2]=='.' && IsPathDiv(ChPtr[3]))
-      DestPtr=ChPtr+4;
-  for (const wchar *ChPtr=DestPtr;*ChPtr!=0;ChPtr++)
-#ifdef _WIN_32
-    if (*ChPtr=='/' || *ChPtr=='\\')
-#else
-    if (*ChPtr==CPATHDIVIDER)
-#endif
-      DestPtr=ChPtr+1;
-    else
-      if (*ChPtr!='.')
-        break;
   if (DestPath!=NULL)
   {
     wchar TmpStr[NM];
-    strncpyw(TmpStr,DestPtr,sizeof(TmpStr)-1);
+    strncpyw(TmpStr,DestPtr,sizeof(TmpStr)/sizeof(TmpStr[0])-1);
     strcpyw(DestPath,TmpStr);
   }
   return((wchar *)DestPtr);
@@ -281,53 +286,65 @@ void RemoveNameFromPath(wchar *Path)
 
 
 #ifndef SFX_MODULE
-void GetConfigName(const char *Name,char *FullName)
+bool EnumConfigPaths(char *Path,int Number)
 {
 #ifdef _EMX
   static char RARFileName[NM];
-  if (Name==NULL)
-  {
-    strcpy(RARFileName,FullName);
-    return;
-  }
+  if (Number==-1)
+    strcpy(RARFileName,Path);
+  if (Number!=0)
+    return(false);
   if (_osmode==OS2_MODE)
   {
     PTIB ptib;
     PPIB ppib;
     DosGetInfoBlocks(&ptib, &ppib);
-    DosQueryModuleName(ppib->pib_hmte,NM,FullName);
+    DosQueryModuleName(ppib->pib_hmte,NM,Path);
   }
   else
-    strcpy(FullName,RARFileName);
-  strcpy(PointToName(FullName),Name);
+    strcpy(Path,RARFileName);
+  RemoveNameFromPath(Path);
+  return(true);
 #elif defined(_UNIX)
-  char *EnvStr=getenv("HOME");
-  if (EnvStr!=NULL)
+  if (Number==0)
   {
-    strcpy(FullName,EnvStr);
-    AddEndSlash(FullName);
+    char *EnvStr=getenv("HOME");
+    if (EnvStr==NULL)
+      return(false);
+    strcpy(Path,EnvStr);
+    return(true);
   }
-  strcat(FullName,Name);
-  if (!WildFileExist(FullName))
-  {
-    char HomeName[NM];
-    strcpy(HomeName,FullName);
-    static char *AltPath[]={
-      "/etc/","/usr/lib/","/usr/local/lib/","/usr/local/etc/"
-    };
-    for (int I=0;I<sizeof(AltPath)/sizeof(AltPath[0]);I++)
-    {
-      strcpy(FullName,AltPath[I]);
-      strcat(FullName,Name);
-      if (WildFileExist(FullName))
-        break;
-      strcpy(FullName,HomeName);
-    }
-  }
+  static char *AltPath[]={
+    "/etc","/usr/lib","/usr/local/lib","/usr/local/etc"
+  };
+  Number--;
+  if (Number<0 || Number>=sizeof(AltPath)/sizeof(AltPath[0]))
+    return(false);
+  strcpy(Path,AltPath[Number]);
+  return(true);
 #elif defined(_WIN_32)
-  GetModuleFileName(NULL,FullName,NM);
-  strcpy(PointToName(FullName),Name);
+  if (Number!=0)
+    return(false);
+  GetModuleFileName(NULL,Path,NM);
+  RemoveNameFromPath(Path);
+  return(true);
+#else
+  return(false);
 #endif
+}
+#endif
+
+
+#ifndef SFX_MODULE
+void GetConfigName(const char *Name,char *FullName)
+{
+  for (int I=0;EnumConfigPaths(FullName,I);I++)
+  {
+    AddEndSlash(FullName);
+    strcat(FullName,Name);
+    if (WildFileExist(FullName))
+      break;
+  }
 }
 #endif
 
@@ -416,18 +433,17 @@ bool IsNameUsable(const char *Name)
 
 void MakeNameUsable(char *Name,bool Extended)
 {
-  for (int I=0;Name[I]!=0;I++)
+  for (char *s=Name;*s!=0;s=charnext(s))
   {
-    if (strchr(Extended ? "?*<>|\"":"?*",Name[I])!=NULL ||
-        Extended && Name[I]<32)
-      Name[I]='_';
+    if (strchr(Extended ? "?*<>|\"":"?*",*s)!=NULL || Extended && *s<32)
+      *s='_';
 #ifdef _EMX
-    if (Name[I]=='=')
-      Name[I]='_';
+    if (*s=='=')
+      *s='_';
 #endif
 #ifndef _UNIX
-    if (I>1 && Name[I]==':')
-      Name[I]='_';
+    if (s-Name>1 && *s==':')
+      *s='_';
 #endif
   }
 }
@@ -583,6 +599,10 @@ char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering)
   return(VolNumStart);
 }
 #endif
+
+
+
+
 
 
 

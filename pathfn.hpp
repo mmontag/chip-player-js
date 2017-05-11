@@ -23,6 +23,7 @@ void GetFilePath(const char *FullName,char *Path);
 void GetFilePath(const wchar *FullName,wchar *Path);
 void RemoveNameFromPath(char *Path);
 void RemoveNameFromPath(wchar *Path);
+bool EnumConfigPaths(char *Path,int Number);
 void GetConfigName(const char *Name,char *FullName);
 char* GetVolNumPart(char *ArcName);
 void NextVolumeName(char *ArcName,bool OldNumbering);
@@ -36,5 +37,8 @@ void GetPathRoot(const char *Path,char *Root);
 int ParseVersionFileName(char *Name,wchar *NameW,bool Truncate);
 char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering);
 
+
+
+inline char* GetOutputName(const char *Name) {return((char *)Name);};
 
 #endif

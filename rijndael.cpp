@@ -17,7 +17,7 @@ static byte U1[256][4],U2[256][4],U3[256][4],U4[256][4];
 
 inline void Xor128(byte *dest,const byte *arg1,const byte *arg2)
 {
-#ifdef PRESENT_INT32
+#if defined(PRESENT_INT32) && defined(ALLOW_NOT_ALIGNED_INT)
   ((uint32*)dest)[0]=((uint32*)arg1)[0]^((uint32*)arg2)[0];
   ((uint32*)dest)[1]=((uint32*)arg1)[1]^((uint32*)arg2)[1];
   ((uint32*)dest)[2]=((uint32*)arg1)[2]^((uint32*)arg2)[2];
@@ -32,7 +32,7 @@ inline void Xor128(byte *dest,const byte *arg1,const byte *arg2)
 inline void Xor128(byte *dest,const byte *arg1,const byte *arg2,
                    const byte *arg3,const byte *arg4)
 {
-#ifdef PRESENT_INT32
+#if defined(PRESENT_INT32) && defined(ALLOW_NOT_ALIGNED_INT)
   (*(uint32*)dest)=(*(uint32*)arg1)^(*(uint32*)arg2)^(*(uint32*)arg3)^(*(uint32*)arg4);
 #else
   for (int I=0;I<4;I++)
@@ -43,7 +43,7 @@ inline void Xor128(byte *dest,const byte *arg1,const byte *arg2,
 
 inline void Copy128(byte *dest,const byte *src)
 {
-#ifdef PRESENT_INT32
+#if defined(PRESENT_INT32) && defined(ALLOW_NOT_ALIGNED_INT)
   ((uint32*)dest)[0]=((uint32*)src)[0];
   ((uint32*)dest)[1]=((uint32*)src)[1];
   ((uint32*)dest)[2]=((uint32*)src)[2];

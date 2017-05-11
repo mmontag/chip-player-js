@@ -4,6 +4,7 @@
 class CmdAdd;
 class Unpack;
 
+
 class ComprDataIO
 {
   private:
@@ -47,7 +48,7 @@ class ComprDataIO
     char CurrentCommand;
 
   public:
-    ComprDataIO(CmdAdd *Command);
+    ComprDataIO();
     void Init();
     int UnpRead(byte *Addr,uint Count);
     void UnpWrite(byte *Addr,uint Count);

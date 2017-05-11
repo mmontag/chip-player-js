@@ -197,7 +197,7 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
 }
 
 
-int PASCAL RARProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestName)
+int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestName,wchar *DestPathW,wchar *DestNameW)
 {
   DataSet *Data=(DataSet *)hArcData;
   try
@@ -220,9 +220,31 @@ int PASCAL RARProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *Des
     else
     {
       Data->Cmd.DllOpMode=Operation;
-      OemToChar(NullToEmpty(DestPath),Data->Cmd.ExtrPath);
-      AddEndSlash(Data->Cmd.ExtrPath);
-      OemToChar(NullToEmpty(DestName),Data->Cmd.DllDestName);
+
+      if (DestPath!=NULL || DestName!=NULL)
+      {
+        OemToChar(NullToEmpty(DestPath),Data->Cmd.ExtrPath);
+        AddEndSlash(Data->Cmd.ExtrPath);
+        OemToChar(NullToEmpty(DestName),Data->Cmd.DllDestName);
+      }
+      else
+      {
+        *Data->Cmd.ExtrPath=0;
+        *Data->Cmd.DllDestName=0;
+      }
+
+      if (DestPathW!=NULL || DestNameW!=NULL)
+      {
+        strncpyw(Data->Cmd.ExtrPathW,NullToEmpty(DestPathW),NM-2);
+        AddEndSlash(Data->Cmd.ExtrPathW);
+        strncpyw(Data->Cmd.DllDestNameW,NullToEmpty(DestNameW),NM-1);
+      }
+      else
+      {
+        *Data->Cmd.ExtrPathW=0;
+        *Data->Cmd.DllDestNameW=0;
+      }
+
       strcpy(Data->Cmd.Command,Operation==RAR_EXTRACT ? "X":"T");
       Data->Cmd.Test=Operation!=RAR_EXTRACT;
       bool Repeat=false;
@@ -241,6 +263,18 @@ int PASCAL RARProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *Des
     return(RarErrorToDll(ErrCode));
   }
   return(Data->Cmd.DllError);
+}
+
+
+int PASCAL RARProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestName)
+{
+  return(ProcessFile(hArcData,Operation,DestPath,DestName,NULL,NULL));
+}
+
+
+int PASCAL RARProcessFileW(HANDLE hArcData,int Operation,wchar *DestPath,wchar *DestName)
+{
+  return(ProcessFile(hArcData,Operation,NULL,NULL,DestPath,DestName));
 }
 
 

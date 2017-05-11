@@ -59,7 +59,7 @@ void SubAllocator::StopSubAllocator()
   if ( SubAllocatorSize ) 
   {
     SubAllocatorSize=0;
-    free(HeapStart);
+    rarfree(HeapStart);
   }
 }
 
@@ -71,7 +71,7 @@ bool SubAllocator::StartSubAllocator(int SASize)
     return TRUE;
   StopSubAllocator();
   uint AllocSize=t/FIXED_UNIT_SIZE*UNIT_SIZE+UNIT_SIZE;
-  if ((HeapStart=(byte *)malloc(AllocSize)) == NULL)
+  if ((HeapStart=(byte *)rarmalloc(AllocSize)) == NULL)
   {
     ErrHandler.MemoryError();
     return FALSE;

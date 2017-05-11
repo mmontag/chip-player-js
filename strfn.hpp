@@ -20,4 +20,5 @@ unsigned int loctoupper(byte ch);
 bool LowAscii(const char *Str);
 bool LowAscii(const wchar *Str);
 
+
 #endif

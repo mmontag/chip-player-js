@@ -13,7 +13,7 @@ class RAROptions;
 
 enum FILE_HANDLETYPE {FILE_HANDLENORMAL,FILE_HANDLESTD,FILE_HANDLEERR};
 
-enum FILE_ERRORTYPE {FILE_SUCCESS,FILE_NOTFOUND};
+enum FILE_ERRORTYPE {FILE_SUCCESS,FILE_NOTFOUND,FILE_READERROR};
 
 struct FileStat
 {
@@ -27,6 +27,8 @@ struct FileStat
 class File
 {
   private:
+    void AddFileToList(FileHandle hFile);
+
     FileHandle hFile;
     bool LastWrite;
     FILE_HANDLETYPE HandleType;
@@ -34,6 +36,7 @@ class File
     bool IgnoreReadErrors;
     bool NewFile;
     bool AllowDelete;
+    bool AllowExceptions;
   protected:
     bool OpenShared;
   public:
@@ -85,6 +88,7 @@ class File
     char *GetName() {return(FileName);}
     long Copy(File &Dest,Int64 Length=INT64ERR);
     void SetAllowDelete(bool Allow) {AllowDelete=Allow;}
+    void SetExceptions(bool Allow) {AllowExceptions=Allow;}
 };
 
 #endif

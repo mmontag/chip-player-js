@@ -189,11 +189,14 @@ void Unpack::Unpack29(bool Solid)
       return;
   }
 
+  if (PPMError)
+    return;
+
   while (true)
   {
     UnpPtr&=MAXWINMASK;
 
-    if (InAddr>ReadTop-30)
+    if (InAddr>ReadBorder)
     {
       if (!UnpReadBuf())
         break;
@@ -213,7 +216,10 @@ void Unpack::Unpack29(bool Solid)
     {
       int Ch=PPM.DecodeChar();
       if (Ch==-1)
+      {
+        PPMError=true;
         break;
+      }
       if (Ch==PPMEscChar)
       {
         int NextCh=PPM.DecodeChar();
@@ -604,10 +610,11 @@ bool Unpack::UnpReadBuf()
     ReadTop=DataSize;
   }
   else
-    DataSize=InAddr;
+    DataSize=ReadTop;
   int ReadCode=UnpIO->UnpRead(InBuf+DataSize,(BitInput::MAX_SIZE-DataSize)&~0xf);
   if (ReadCode>0)
     ReadTop+=ReadCode;
+  ReadBorder=ReadTop-30;
   return(ReadCode!=-1);
 }
 
@@ -858,9 +865,10 @@ void Unpack::UnpInitData(int Solid)
     InitFilters();
   }
   InitBitInput();
+  PPMError=false;
   WrittenFileSize=0;
   ReadTop=0;
-
+  ReadBorder=0;
 #ifndef SFX_MODULE
   UnpInitData20(Solid);
 #endif

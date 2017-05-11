@@ -41,6 +41,7 @@ class RAROptions
     char TempPath[NM];
     char SFXModule[NM];
     char ExtrPath[NM];
+    wchar ExtrPathW[NM];
     char CommentFile[NM];
     char ArcPath[NM];
     char Password[MAXPASSWORD];
@@ -64,6 +65,8 @@ class RAROptions
     PathExclMode ExclPath;
     int Recurse;
     Int64 VolSize;
+    Array<Int64> NextVolSizes;
+    int NextVolNum;
     bool AllYes;
     bool DisableViewAV;
     bool DisableSortSolid;
@@ -101,10 +104,13 @@ class RAROptions
     EXTTIME_MODE xctime;
     EXTTIME_MODE xatime;
     EXTTIME_MODE xarctime;
+    char CompressStdin[NM];
+
 
 
 #ifdef RARDLL
     char DllDestName[NM];
+    wchar DllDestNameW[NM];
     int DllOpMode;
     int DllError;
     LONG UserData;

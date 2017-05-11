@@ -15,5 +15,6 @@ typedef ushort wchar;
 #endif
 
 #define SHORT16(x) (sizeof(ushort)==2 ? (ushort)(x):((x)&0xffff))
+#define UINT32(x)  (sizeof(uint32)==4 ? (uint32)(x):((x)&0xffffffff))
 
 #endif

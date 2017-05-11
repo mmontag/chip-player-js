@@ -27,19 +27,19 @@ inline uint RarVM::GetValue(bool ByteMode,uint *Addr)
     return(*(byte *)Addr);
   else
   {
-#ifdef BIG_ENDIAN
+#if defined(BIG_ENDIAN) || !defined(ALLOW_NOT_ALIGNED_INT)
     byte *B=(byte *)Addr;
-    return((uint)B[0]|((uint)B[1]<<8)|((uint)B[2]<<16)|((uint)B[3]<<24));
+    return UINT32((uint)B[0]|((uint)B[1]<<8)|((uint)B[2]<<16)|((uint)B[3]<<24));
 #else
-    return(*Addr);
+    return UINT32(*Addr);
 #endif
   }
 }
 
-#ifdef BIG_ENDIAN
+#if defined(BIG_ENDIAN) || !defined(ALLOW_NOT_ALIGNED_INT)
   #define GET_VALUE(ByteMode,Addr) GetValue(ByteMode,(uint *)Addr)
 #else
-  #define GET_VALUE(ByteMode,Addr) ((ByteMode) ? (*(byte *)(Addr)):(*(uint *)(Addr)))
+  #define GET_VALUE(ByteMode,Addr) ((ByteMode) ? (*(byte *)(Addr)):UINT32(*(uint *)(Addr)))
 #endif
 
 
@@ -49,21 +49,21 @@ inline void RarVM::SetValue(bool ByteMode,uint *Addr,uint Value)
     *(byte *)Addr=Value;
   else
   {
-#ifdef BIG_ENDIAN
+#if defined(BIG_ENDIAN) || !defined(ALLOW_NOT_ALIGNED_INT) || !defined(PRESENT_INT32)
     ((byte *)Addr)[0]=(byte)Value;
     ((byte *)Addr)[1]=(byte)(Value>>8);
     ((byte *)Addr)[2]=(byte)(Value>>16);
     ((byte *)Addr)[3]=(byte)(Value>>24);
 #else
-    *Addr=Value;
+    *(uint32 *)Addr=Value;
 #endif
   }
 }
 
-#ifdef BIG_ENDIAN
+#if defined(BIG_ENDIAN) || !defined(ALLOW_NOT_ALIGNED_INT) || !defined(PRESENT_INT32)
   #define SET_VALUE(ByteMode,Addr,Value) SetValue(ByteMode,(uint *)Addr,Value)
 #else
-  #define SET_VALUE(ByteMode,Addr,Value) ((ByteMode) ? (*(byte *)(Addr)=(Value)):(*(uint *)(Addr)=(Value)))
+  #define SET_VALUE(ByteMode,Addr,Value) ((ByteMode) ? (*(byte *)(Addr)=(Value)):(*(uint32 *)(Addr)=((uint32)(Value))))
 #endif
 
 
@@ -147,7 +147,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
       case VM_CMP:
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
-          uint Result=Value1-GET_VALUE(Cmd->ByteMode,Op2);
+          uint Result=UINT32(Value1-GET_VALUE(Cmd->ByteMode,Op2));
           Flags=Result==0 ? VM_FZ:(Result>Value1)|(Result&VM_FS);
         }
         break;
@@ -155,14 +155,14 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
       case VM_CMPB:
         {
           uint Value1=GET_VALUE(true,Op1);
-          uint Result=Value1-GET_VALUE(true,Op2);
+          uint Result=UINT32(Value1-GET_VALUE(true,Op2));
           Flags=Result==0 ? VM_FZ:(Result>Value1)|(Result&VM_FS);
         }
         break;
       case VM_CMPD:
         {
           uint Value1=GET_VALUE(false,Op1);
-          uint Result=Value1-GET_VALUE(false,Op2);
+          uint Result=UINT32(Value1-GET_VALUE(false,Op2));
           Flags=Result==0 ? VM_FZ:(Result>Value1)|(Result&VM_FS);
         }
         break;
@@ -170,7 +170,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
       case VM_ADD:
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
-          uint Result=Value1+GET_VALUE(Cmd->ByteMode,Op2);
+          uint Result=UINT32(Value1+GET_VALUE(Cmd->ByteMode,Op2));
           Flags=Result==0 ? VM_FZ:(Result<Value1)|(Result&VM_FS);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
@@ -186,7 +186,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
       case VM_SUB:
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
-          uint Result=Value1-GET_VALUE(Cmd->ByteMode,Op2);
+          uint Result=UINT32(Value1-GET_VALUE(Cmd->ByteMode,Op2));
           Flags=Result==0 ? VM_FZ:(Result>Value1)|(Result&VM_FS);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
@@ -215,7 +215,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         break;
       case VM_INC:
         {
-          uint Result=GET_VALUE(Cmd->ByteMode,Op1)+1;
+          uint Result=UINT32(GET_VALUE(Cmd->ByteMode,Op1)+1);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
           Flags=Result==0 ? VM_FZ:Result&VM_FS;
         }
@@ -230,7 +230,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
 #endif
       case VM_DEC:
         {
-          uint Result=GET_VALUE(Cmd->ByteMode,Op1)-1;
+          uint Result=UINT32(GET_VALUE(Cmd->ByteMode,Op1)-1);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
           Flags=Result==0 ? VM_FZ:Result&VM_FS;
         }
@@ -248,28 +248,28 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         continue;
       case VM_XOR:
         {
-          uint Result=GET_VALUE(Cmd->ByteMode,Op1)^GET_VALUE(Cmd->ByteMode,Op2);
+          uint Result=UINT32(GET_VALUE(Cmd->ByteMode,Op1)^GET_VALUE(Cmd->ByteMode,Op2));
           Flags=Result==0 ? VM_FZ:Result&VM_FS;
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
         break;
       case VM_AND:
         {
-          uint Result=GET_VALUE(Cmd->ByteMode,Op1)&GET_VALUE(Cmd->ByteMode,Op2);
+          uint Result=UINT32(GET_VALUE(Cmd->ByteMode,Op1)&GET_VALUE(Cmd->ByteMode,Op2));
           Flags=Result==0 ? VM_FZ:Result&VM_FS;
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
         break;
       case VM_OR:
         {
-          uint Result=GET_VALUE(Cmd->ByteMode,Op1)|GET_VALUE(Cmd->ByteMode,Op2);
+          uint Result=UINT32(GET_VALUE(Cmd->ByteMode,Op1)|GET_VALUE(Cmd->ByteMode,Op2));
           Flags=Result==0 ? VM_FZ:Result&VM_FS;
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
         break;
       case VM_TEST:
         {
-          uint Result=GET_VALUE(Cmd->ByteMode,Op1)&GET_VALUE(Cmd->ByteMode,Op2);
+          uint Result=UINT32(GET_VALUE(Cmd->ByteMode,Op1)&GET_VALUE(Cmd->ByteMode,Op2));
           Flags=Result==0 ? VM_FZ:Result&VM_FS;
         }
         break;
@@ -335,7 +335,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
           uint Value2=GET_VALUE(Cmd->ByteMode,Op2);
-          uint Result=Value1<<Value2;
+          uint Result=UINT32(Value1<<Value2);
           Flags=(Result==0 ? VM_FZ:(Result&VM_FS))|((Value1<<(Value2-1))&0x80000000 ? VM_FC:0);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
@@ -344,7 +344,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
           uint Value2=GET_VALUE(Cmd->ByteMode,Op2);
-          uint Result=Value1>>Value2;
+          uint Result=UINT32(Value1>>Value2);
           Flags=(Result==0 ? VM_FZ:(Result&VM_FS))|((Value1>>(Value2-1))&VM_FC);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
@@ -353,14 +353,14 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
           uint Value2=GET_VALUE(Cmd->ByteMode,Op2);
-          uint Result=((int)Value1)>>Value2;
+          uint Result=UINT32(((int)Value1)>>Value2);
           Flags=(Result==0 ? VM_FZ:(Result&VM_FS))|((Value1>>(Value2-1))&VM_FC);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
         break;
       case VM_NEG:
         {
-          uint Result=-GET_VALUE(Cmd->ByteMode,Op1);
+          uint Result=UINT32(-GET_VALUE(Cmd->ByteMode,Op1));
           Flags=Result==0 ? VM_FZ:VM_FC|(Result&VM_FS);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
@@ -429,7 +429,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
           uint FC=(Flags&VM_FC);
-          uint Result=Value1+GET_VALUE(Cmd->ByteMode,Op2)+FC;
+          uint Result=UINT32(Value1+GET_VALUE(Cmd->ByteMode,Op2)+FC);
           Flags=Result==0 ? VM_FZ:(Result<Value1 || Result==Value1 && FC)|(Result&VM_FS);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
@@ -438,7 +438,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
           uint FC=(Flags&VM_FC);
-          uint Result=Value1-GET_VALUE(Cmd->ByteMode,Op2)-FC;
+          uint Result=UINT32(Value1-GET_VALUE(Cmd->ByteMode,Op2)-FC);
           Flags=Result==0 ? VM_FZ:(Result>Value1 || Result==Value1 && FC)|(Result&VM_FS);
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
@@ -542,8 +542,7 @@ void RarVM::Prepare(byte *Code,int CodeSize,VM_PreparedProgram *Prg)
         CurCmd->ByteMode=0;
       CurCmd->Op1.Type=CurCmd->Op2.Type=VM_OPNONE;
       int OpNum=(VM_CmdFlags[CurCmd->OpCode] & VMCF_OPMASK);
-      CurCmd->Op1.Addr=&CurCmd->Op1.Data;
-      CurCmd->Op2.Addr=&CurCmd->Op2.Data;
+      CurCmd->Op1.Addr=CurCmd->Op2.Addr=NULL;
       if (OpNum>0)
       {
         DecodeArg(CurCmd->Op1,CurCmd->ByteMode);
@@ -581,6 +580,15 @@ void RarVM::Prepare(byte *Code,int CodeSize,VM_PreparedProgram *Prg)
   CurCmd->Op1.Addr=&CurCmd->Op1.Data;
   CurCmd->Op2.Addr=&CurCmd->Op2.Data;
 
+  for (int I=0;I<Prg->CmdCount;I++)
+  {
+    VM_PreparedCommand *Cmd=&Prg->Cmd[I];
+    if (Cmd->Op1.Addr==NULL)
+      Cmd->Op1.Addr=&Cmd->Op1.Data;
+    if (Cmd->Op2.Addr==NULL)
+      Cmd->Op2.Addr=&Cmd->Op2.Data;
+  }
+
 #ifdef VM_OPTIMIZE
   if (CodeSize!=0)
     Optimize(Prg);
@@ -612,7 +620,6 @@ void RarVM::DecodeArg(VM_PreparedOperand &Op,bool ByteMode)
         faddbits(2);
         Op.Data=ReadData(*this);
       }
-      Op.Addr=&Op.Data;
     }
     else
     {
@@ -635,7 +642,6 @@ void RarVM::DecodeArg(VM_PreparedOperand &Op,bool ByteMode)
         else
         {
           Op.Data=0;
-          Op.Addr=&Op.Data;
           faddbits(4);
         }
         Op.Base=ReadData(*this);

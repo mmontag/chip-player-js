@@ -192,7 +192,7 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
       if (ValidVolume)
       {
         bool EndFound=false,EndBlockRequired=false;
-        while (NewFile->ReadHeader()!=0)
+        while (!EndFound && NewFile->ReadHeader()!=0)
         {
           if (NewFile->GetHeaderType()==FILE_HEAD)
           {

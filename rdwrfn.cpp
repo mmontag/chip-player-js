@@ -1,8 +1,7 @@
 #include "rar.hpp"
 
-ComprDataIO::ComprDataIO(CmdAdd *Command)
+ComprDataIO::ComprDataIO()
 {
-  ComprDataIO::Command=Command;
   Init();
 }
 
@@ -21,7 +20,7 @@ void ComprDataIO::Init()
   SrcFile=NULL;
   DestFile=NULL;
   UnpWrSize=0;
-  ComprDataIO::Command=Command;
+  Command=NULL;
   Encryption=0;
   Decryption=0;
   TotalPackRead=0;
@@ -253,4 +252,5 @@ void ComprDataIO::SetUnpackToMemory(byte *Addr,uint Size)
   UnpackToMemoryAddr=Addr;
   UnpackToMemorySize=Size;
 }
+
 

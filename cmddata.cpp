@@ -38,11 +38,12 @@ void CommandData::Close()
   delete StoreArgs;
   delete ArcNames;
   FileArgs=ExclArgs=StoreArgs=ArcNames=NULL;
+  NextVolSizes.Reset();
 }
 
 
-#ifndef SFX_MODULE
-void CommandData::ParseArg(char *Arg)
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
+void CommandData::ParseArg(char *Arg,wchar *ArgW)
 {
   if (IsSwitch(*Arg) && !NoMoreSwitches)
     if (Arg[1]=='-')
@@ -53,6 +54,8 @@ void CommandData::ParseArg(char *Arg)
     if (*Command==0)
     {
       strncpy(Command,Arg,sizeof(Command));
+      if (ArgW!=NULL)
+        strncpyw(CommandW,ArgW,sizeof(CommandW)/sizeof(CommandW[0]));
       if (toupper(*Command)=='S')
       {
         const char *SFXName=Command[1] ? Command+1:DefSFXName;
@@ -69,7 +72,11 @@ void CommandData::ParseArg(char *Arg)
     }
     else
       if (*ArcName==0)
+      {
         strncpy(ArcName,Arg,sizeof(ArcName));
+        if (ArgW!=NULL)
+          strncpyw(ArcNameW,ArgW,sizeof(ArcNameW)/sizeof(ArcNameW[0]));
+      }
       else
       {
         int Length=strlen(Arg);
@@ -117,7 +124,7 @@ void CommandData::ParseDone()
 }
 
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
 void CommandData::ParseEnvVar()
 {
   char *EnvStr=getenv("RAR");
@@ -153,7 +160,7 @@ void CommandData::ReadConfig(int argc,char *argv[])
 #endif
 
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
 void CommandData::ProcessSwitchesString(char *Str)
 {
   while (*Str)
@@ -175,7 +182,7 @@ void CommandData::ProcessSwitchesString(char *Str)
 #endif
 
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
 void CommandData::ProcessSwitch(char *Switch)
 {
 
@@ -370,12 +377,6 @@ void CommandData::ProcessSwitch(char *Switch)
         case '0':
           Recurse=RECURSE_WILDCARDS;
           break;
-        case 'R':
-          Recovery=GetRecoverySize(Switch+2,DEFAULT_RECOVERY);
-          break;
-        case 'V':
-          RecVolNumber=GetRecoverySize(Switch+2,DEFAULT_RECVOLUMES);
-          break;
         case 'I':
           {
             Priority=atoi(Switch+2);
@@ -431,10 +432,8 @@ void CommandData::ProcessSwitch(char *Switch)
     case 'P':
       if (Switch[1]==0)
       {
-#ifndef GUI
         GetPassword(PASSWORD_GLOBAL,NULL,Password,sizeof(Password));
         eprintf("\n");
-#endif
       }
       else
         strncpy(Password,Switch+1,sizeof(Password));
@@ -448,10 +447,8 @@ void CommandData::ProcessSwitch(char *Switch)
         else
           if (*Password==0)
           {
-#ifndef GUI
             GetPassword(PASSWORD_GLOBAL,NULL,Password,sizeof(Password));
             eprintf("\n");
-#endif
           }
       }
       break;
@@ -571,58 +568,64 @@ void CommandData::ProcessSwitch(char *Switch)
           VolSize=0;
           break;
         default:
-          VolSize=atoil(&Switch[1]);
+          {
+            Int64 NewVolSize=atoil(&Switch[1]);
 
-          if (VolSize==0)
-            VolSize=INT64ERR;
-          else
-            switch (Switch[strlen(Switch)-1])
-            {
-              case 'f':
-              case 'F':
-                switch(int64to32(VolSize))
-                {
-                  case 360:
-                    VolSize=362496;
-                    break;
-                  case 720:
-                    VolSize=730112;
-                    break;
-                  case 1200:
-                    VolSize=1213952;
-                    break;
-                  case 1440:
-                    VolSize=1457664;
-                    break;
-                  case 2880:
-                    VolSize=2915328;
-                    break;
-                }
-                break;
-              case 'k':
-                VolSize*=1024;
-                break;
-              case 'm':
-                VolSize*=1024*1024;
-                break;
-              case 'M':
-                VolSize*=1000*1000;
-                break;
-              case 'g':
-                VolSize*=1024*1024;
-                VolSize*=1024;
-                break;
-              case 'G':
-                VolSize*=1000*1000;
-                VolSize*=1000;
-                break;
-              case 'b':
-              case 'B':
-                break;
-              default:
-                VolSize*=1000;
-                break;
-            }
+            if (NewVolSize==0)
+              NewVolSize=INT64ERR;
+            else
+              switch (Switch[strlen(Switch)-1])
+              {
+                case 'f':
+                case 'F':
+                  switch(int64to32(NewVolSize))
+                  {
+                    case 360:
+                      NewVolSize=362496;
+                      break;
+                    case 720:
+                      NewVolSize=730112;
+                      break;
+                    case 1200:
+                      NewVolSize=1213952;
+                      break;
+                    case 1440:
+                      NewVolSize=1457664;
+                      break;
+                    case 2880:
+                      NewVolSize=2915328;
+                      break;
+                  }
+                  break;
+                case 'k':
+                  NewVolSize*=1024;
+                  break;
+                case 'm':
+                  NewVolSize*=1024*1024;
+                  break;
+                case 'M':
+                  NewVolSize*=1000*1000;
+                  break;
+                case 'g':
+                  NewVolSize*=1024*1024;
+                  NewVolSize*=1024;
+                  break;
+                case 'G':
+                  NewVolSize*=1000*1000;
+                  NewVolSize*=1000;
+                  break;
+                case 'b':
+                case 'B':
+                  break;
+                default:
+                  NewVolSize*=1000;
+                  break;
+              }
+            if (VolSize==0)
+              VolSize=NewVolSize;
+            else
+              NextVolSizes.Push(NewVolSize);
+          }
           break;
       }
       break;
@@ -711,7 +714,7 @@ void CommandData::ProcessSwitch(char *Switch)
 #endif
 
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(_WIN_CE)
 void CommandData::BadSwitch(char *Switch)
 {
   mprintf(St(MUnknownOption),Switch);
@@ -742,12 +745,6 @@ void CommandData::OutTitle()
 #ifdef UNRAR
   mprintf(St(MUCopyright),Version,RARVER_YEAR);
 #else
-  mprintf(St(MCopyright),Version,RARVER_YEAR,RARVER_DAY,GetMonthName(RARVER_MONTH-1),RARVER_YEAR);
-  char RegName[512];
-  strcpy(RegName,Reg.RegName);
-#ifdef _WIN_32
-  OemToChar(RegName,RegName);
-#endif
 #endif
 #endif
 #endif
@@ -769,7 +766,7 @@ void CommandData::OutHelp()
     MCHelpSwDH,MCHelpSwEP,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,MCHelpSwINUL,
     MCHelpSwIOFF,MCHelpSwKB,MCHelpSwOp,MCHelpSwOm,MCHelpSwOW,MCHelpSwP,
     MCHelpSwPm,MCHelpSwR,MCHelpSwRI,MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,
-    MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,MCHelpSwVER,MCHelpSwVP,
+    MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwVUnr,MCHelpSwVER,MCHelpSwVP,
     MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY
 #else
     MRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdA,MCHelpCmdC,MCHelpCmdCF,
@@ -785,10 +782,10 @@ void CommandData::OutHelp()
     MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,MCHelpSwOp,MCHelpSwOm,
     MCHelpSwOL,MCHelpSwOS,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,
     MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,
-    MCHelpSwSFX,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,MCHelpSwTL,
-    MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,MCHelpSwVn,
-    MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,MCHelpSwX,
-    MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
+    MCHelpSwSFX,MCHelpSwST,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,
+    MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,
+    MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,
+    MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
 #endif
   };
 
@@ -812,7 +809,7 @@ void CommandData::OutHelp()
     if (Help[I]==MCHelpSwOL)
       continue;
 #endif
-#ifndef ENABLE_CHANGE_PRIORITY
+#if defined(_WIN_32) && !defined(_WIN_CE)
     if (Help[I]==MCHelpSwRI)
       continue;
 #endif
@@ -940,6 +937,7 @@ int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType
 }
 
 
+#ifndef _WIN_CE
 void CommandData::ProcessCommand()
 {
 #ifndef SFX_MODULE
@@ -993,6 +991,7 @@ void CommandData::ProcessCommand()
     mprintf("\n");
 #endif
 }
+#endif
 
 
 void CommandData::AddArcName(char *Name,wchar *NameW)
@@ -1057,19 +1056,6 @@ uint CommandData::GetExclAttr(char *Str)
 #endif
 
 
-#ifndef SFX_MODULE
-int CommandData::GetRecoverySize(char *Str,int DefSize)
-{
-  if (*Str=='-')
-    return(0);
-  if (*Str==0)
-    return(DefSize);
-  int Size=atoi(Str);
-  if (Size<=100 && strpbrk(Str,"%p")!=NULL)
-    Size=-Size;
-  return(Size);
-}
-#endif
 
 
 #ifndef SFX_MODULE

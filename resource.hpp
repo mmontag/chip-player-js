@@ -8,4 +8,7 @@ const char *St(MSGID StringId);
 #endif
 
 
+inline const char *StT(MSGID StringId) {return(St(StringId));}
+
+
 #endif

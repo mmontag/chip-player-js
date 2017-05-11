@@ -294,6 +294,10 @@ int Archive::ReadHeader()
           Raw.Get(UOHead.GroupNameSize);
           Raw.Get((byte *)UOHead.OwnerName,UOHead.OwnerNameSize);
           Raw.Get((byte *)UOHead.GroupName,UOHead.GroupNameSize);
+          if (UOHead.OwnerNameSize>NM-1)
+            UOHead.OwnerNameSize=NM-1;
+          if (UOHead.GroupNameSize>NM-1)
+            UOHead.GroupNameSize=NM-1;
           UOHead.OwnerName[UOHead.OwnerNameSize]=0;
           UOHead.GroupName[UOHead.GroupNameSize]=0;
           break;
@@ -318,6 +322,8 @@ int Archive::ReadHeader()
           Raw.Get(StreamHead.Method);
           Raw.Get(StreamHead.StreamCRC);
           Raw.Get(StreamHead.StreamNameSize);
+          if (StreamHead.StreamNameSize>NM-1)
+            StreamHead.StreamNameSize=NM-1;
           Raw.Get((byte *)StreamHead.StreamName,StreamHead.StreamNameSize);
           StreamHead.StreamName[StreamHead.StreamNameSize]=0;
           break;
@@ -358,7 +364,11 @@ int Archive::ReadHeader()
         Log(FileName,St(MEncrBadCRC),FileName);
 #endif
         Close();
-        ErrHandler.Exit(CRC_ERROR);
+
+        BrokenFileHeader=true;
+        ErrHandler.SetErrorCode(CRC_ERROR);
+        return(0);
+//        ErrHandler.Exit(CRC_ERROR);
       }
     }
   }
@@ -465,7 +475,7 @@ bool Archive::IsArcDir()
 
 bool Archive::IsArcLabel()
 {
-  return(NewLhd.HostOS<=WIN_32 && (NewLhd.FileAttr & 8));
+  return(NewLhd.HostOS<=HOST_WIN32 && (NewLhd.FileAttr & 8));
 }
 
 
@@ -474,12 +484,12 @@ void Archive::ConvertAttributes()
 #if defined(_WIN_32) || defined(_EMX)
   switch(NewLhd.HostOS)
   {
-    case MS_DOS:
-    case OS2:
-    case WIN_32:
+    case HOST_MSDOS:
+    case HOST_OS2:
+    case HOST_WIN32:
       break;
-    case UNIX:
-    case BEOS:
+    case HOST_UNIX:
+    case HOST_BEOS:
       if ((NewLhd.Flags & LHD_WINDOWMASK)==LHD_DIRECTORY)
         NewLhd.FileAttr=0x10;
       else
@@ -503,9 +513,9 @@ void Archive::ConvertAttributes()
   }
   switch(NewLhd.HostOS)
   {
-    case MS_DOS:
-    case OS2:
-    case WIN_32:
+    case HOST_MSDOS:
+    case HOST_OS2:
+    case HOST_WIN32:
       if (NewLhd.FileAttr & 0x10)
         NewLhd.FileAttr=0x41ff & ~mask;
       else
@@ -514,8 +524,8 @@ void Archive::ConvertAttributes()
         else
           NewLhd.FileAttr=0x81b6 & ~mask;
       break;
-    case UNIX:
-    case BEOS:
+    case HOST_UNIX:
+    case HOST_BEOS:
       break;
     default:
       if ((NewLhd.Flags & LHD_WINDOWMASK)==LHD_DIRECTORY)
@@ -532,7 +542,7 @@ void Archive::ConvertUnknownHeader()
 {
   if (NewLhd.UnpVer<20 && (NewLhd.FileAttr & 0x10))
     NewLhd.Flags|=LHD_DIRECTORY;
-  if (NewLhd.HostOS>BEOS)
+  if (NewLhd.HostOS>=HOST_MAX)
   {
     if ((NewLhd.Flags & LHD_WINDOWMASK)==LHD_DIRECTORY)
       NewLhd.FileAttr=0x10;
@@ -588,7 +598,6 @@ bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
   if (SubHead.PackSize==0 && (SubHead.Flags & LHD_SPLIT_AFTER)==0)
     return(true);
 
-//  ComprDataIO DataIO(NULL);
   SubDataIO.Init();
   Unpack Unpack(&SubDataIO);
   Unpack.Init();

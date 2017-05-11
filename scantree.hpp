@@ -28,6 +28,8 @@ class ScanTree
     bool FastFindFile;
     int SpecPathLength;
     int SpecPathLengthW;
+
+    char ErrArcName[NM];
   public:
     ScanTree(StringList *FileMasks,int Recurse,bool GetLinks,int GetDirs);
     ~ScanTree();
@@ -35,6 +37,7 @@ class ScanTree
     int GetSpecPathLength() {return(SpecPathLength);};
     int GetSpecPathLengthW() {return(SpecPathLengthW);};
     int GetErrors() {return(Errors);};
+    void SetErrArcName(const char *Name) {strcpy(ErrArcName,Name);}
 };
 
 #endif

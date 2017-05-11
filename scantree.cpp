@@ -13,6 +13,7 @@ ScanTree::ScanTree(StringList *FileMasks,int Recurse,bool GetLinks,int GetDirs)
   Depth=0;
   Errors=0;
   FastFindFile=false;
+  *ErrArcName=0;
 }
 
 
@@ -134,7 +135,7 @@ int ScanTree::FindProc(FindData *FindData)
       FastFindFile=true;
       if (!FindCode)
       {
-        ErrHandler.OpenErrorMsg(CurMask);
+        ErrHandler.OpenErrorMsg(ErrArcName,CurMask);
         return(FindData->Error ? SCAN_ERROR:SCAN_NEXT);
       }
     }
@@ -196,8 +197,10 @@ int ScanTree::FindProc(FindData *FindData)
         else
           strcpyw(PrevSlash,Mask);
       }
+#ifndef _WIN_CE
       if (LowAscii(CurMaskW))
         *CurMaskW=0;
+#endif
     }
     if (GetDirs==SCAN_GETDIRSTWICE &&
         FindFile::FastFind(DirName,DirNameW,FindData,GetLinks) && FindData->IsDir)

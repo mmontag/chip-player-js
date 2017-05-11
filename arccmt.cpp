@@ -39,7 +39,7 @@ bool Archive::GetComment(Array<byte> &CmtData)
   {
     if (!OldFormat && (CommHead.UnpVer < 15 || CommHead.UnpVer > UNP_VER || CommHead.Method > 0x35))
       return(false);
-    ComprDataIO DataIO(NULL);
+    ComprDataIO DataIO;
     Unpack Unpack(&DataIO);
     Unpack.Init();
     DataIO.SetTestMode(true);
@@ -67,7 +67,7 @@ bool Archive::GetComment(Array<byte> &CmtData)
     else
     {
       unsigned char *UnpData;
-      unsigned int UnpDataSize;
+      uint UnpDataSize;
       DataIO.GetUnpackedData(&UnpData,&UnpDataSize);
       CmtData.Alloc(UnpDataSize);
       memcpy(&CmtData[0],UnpData,UnpDataSize);
@@ -87,7 +87,7 @@ bool Archive::GetComment(Array<byte> &CmtData)
     }
   }
 #endif
-#ifdef _WIN_32
+#if defined(_WIN_32) && !defined(_WIN_CE)
   if (CmtData.Size()>0)
     OemToCharBuff((char*)&CmtData[0],(char*)&CmtData[0],CmtData.Size());
 #endif

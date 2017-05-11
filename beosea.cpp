@@ -14,7 +14,7 @@ void ExtractBeEA(Archive &Arc,char *FileName)
     return;
   }
 
-  ComprDataIO DataIO(NULL);
+  ComprDataIO DataIO;
   Unpack Unpack(&DataIO);
   Unpack.Init();
 

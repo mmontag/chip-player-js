@@ -8,7 +8,7 @@ struct FindData
   Int64 Size;
   uint FileAttr;
   uint FileTime;
-  int IsDir;
+  bool IsDir;
   RarTime mtime;
   RarTime ctime;
   RarTime atime;

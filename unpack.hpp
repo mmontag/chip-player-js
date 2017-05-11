@@ -129,6 +129,7 @@ class Unpack:BitInput
     unsigned int UnpPtr,WrPtr;
     
     int ReadTop;
+    int ReadBorder;
 
     unsigned char UnpOldTable[HUFF_TABLE_SIZE];
 
@@ -137,6 +138,7 @@ class Unpack:BitInput
     byte *Window;
     bool ExternalWindow;
 
+
     Int64 DestUnpSize;
 
     bool Suspended;
@@ -144,6 +146,7 @@ class Unpack:BitInput
     bool UnpSomeRead;
     Int64 WrittenFileSize;
     bool FileExtracted;
+    bool PPMError;
 
     int PrevLowDist,LowDistRepCount;
 

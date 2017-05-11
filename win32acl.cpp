@@ -26,7 +26,7 @@ void ExtractACL(Archive &Arc,char *FileName,wchar *FileNameW)
     return;
   }
 
-  ComprDataIO DataIO(NULL);
+  ComprDataIO DataIO;
   Unpack Unpack(&DataIO);
   Unpack.Init();
 

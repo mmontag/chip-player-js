@@ -22,7 +22,7 @@ char *IntNameToExt(const char *Name)
 
 void ExtToInt(const char *Src,char *Dest)
 {
-#ifdef _WIN_32
+#if defined(_WIN_32)
   CharToOem(Src,Dest);
 #else
   if (Dest!=Src)
@@ -33,7 +33,7 @@ void ExtToInt(const char *Src,char *Dest)
 
 void IntToExt(const char *Src,char *Dest)
 {
-#ifdef _WIN_32
+#if defined(_WIN_32)
   OemToChar(Src,Dest);
 #else
   if (Dest!=Src)
@@ -68,27 +68,19 @@ char* strupper(char *Str)
 
 int stricomp(const char *Str1,const char *Str2)
 {
-#ifdef _WIN_32
-  return(CompareString(LOCALE_USER_DEFAULT,NORM_IGNORECASE|SORT_STRINGSORT,Str1,-1,Str2,-1)-2);
-#else
   char S1[NM*2],S2[NM*2];
   strncpy(S1,Str1,sizeof(S1));
   strncpy(S2,Str2,sizeof(S2));
   return(strcmp(strupper(S1),strupper(S2)));
-#endif
 }
 
 
 int strnicomp(const char *Str1,const char *Str2,int N)
 {
-#ifdef _WIN_32
-  return(CompareString(LOCALE_USER_DEFAULT,NORM_IGNORECASE|SORT_STRINGSORT,Str1,N,Str2,N)-2);
-#else
   char S1[512],S2[512];
   strncpy(S1,Str1,sizeof(S1));
   strncpy(S2,Str2,sizeof(S2));
   return(strncmp(strupper(S1),strupper(S2),N));
-#endif
 }
 
 
@@ -147,3 +139,5 @@ bool LowAscii(const wchar *Str)
       return(false);
   return(true);
 }
+
+
