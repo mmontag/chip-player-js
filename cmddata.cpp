@@ -1035,7 +1035,7 @@ bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath)
     return(true);
   if (InclArgs->ItemsCount()==0)
     return(false);
-  if (ExclCheckArgs(InclArgs,CheckName,CheckFullPath,MATCH_WILDSUBPATH))
+  if (ExclCheckArgs(InclArgs,CheckName,false,MATCH_WILDSUBPATH))
     return(false);
   return(true);
 }

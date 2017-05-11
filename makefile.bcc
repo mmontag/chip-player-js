@@ -24,7 +24,8 @@ guiopt=$(guiopt) -x-
 !ifdef DEBUG
 optdeb=-Od -k -vi- -DDEBUG
 !else
-optdeb=-O1 -k-
+# -O is not safe to use with -pr and int64 return values, so let's turn it off
+optdeb=-O1 -O- -k-
 #optdeb=-Ob -Oe -Og -Oi -Ol -Om -Op -OS -Ov -Z -Oc
 !endif
 

@@ -476,8 +476,12 @@ bool IsNameUsable(const char *Name)
   if (Name[0] && Name[1] && strchr(Name+2,':')!=NULL)
     return(false);
   for (const char *s=Name;*s!=0;s=charnext(s))
+  {
     if (*s<32)
       return(false);
+    if (*s==' ' && IsPathDiv(s[1]))
+      return(false);
+  }
 #endif
   return(*Name!=0 && strpbrk(Name,"?*<>|\"")==NULL);
 }
@@ -495,6 +499,8 @@ void MakeNameUsable(char *Name,bool Extended)
 #endif
 #ifndef _UNIX
     if (s-Name>1 && *s==':')
+      *s='_';
+    if (*s==' ' && IsPathDiv(s[1]))
       *s='_';
 #endif
   }
