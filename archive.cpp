@@ -11,7 +11,7 @@ Archive::Archive(RAROptions *InitCmd)
 #endif
 {
   Cmd=InitCmd==NULL ? &DummyCmd:InitCmd;
-  SetOpenShared(Cmd->OpenShared);
+  OpenShared=Cmd->OpenShared;
   OldFormat=false;
   Solid=false;
   Volume=false;
@@ -20,7 +20,7 @@ Archive::Archive(RAROptions *InitCmd)
   Signed=false;
   NotFirstVolume=false;
   SFXSize=0;
-  LatestTime=0;
+  LatestTime.Reset();
   Protected=false;
   Encrypted=false;
   BrokenFileHeader=false;

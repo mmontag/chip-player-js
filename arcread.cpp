@@ -194,6 +194,46 @@ int Archive::ReadHeader()
           }
         if (hd->Flags & LHD_SALT)
           Raw.Get(hd->Salt,SALT_SIZE);
+        hd->mtime.SetDos(hd->FileTime);
+        hd->ctime.Reset();
+        hd->atime.Reset();
+        hd->arctime.Reset();
+        if (hd->Flags & LHD_EXTTIME)
+        {
+          ushort Flags;
+          Raw.Get(Flags);
+          RarTime *tbl[4];
+          tbl[0]=&NewLhd.mtime;
+          tbl[1]=&NewLhd.ctime;
+          tbl[2]=&NewLhd.atime;
+          tbl[3]=&NewLhd.arctime;
+          for (int I=0;I<4;I++)
+          {
+            RarTime *CurTime=tbl[I];
+            uint rmode=Flags>>(3-I)*4;
+            if ((rmode & 8)==0)
+              continue;
+            if (I!=0)
+            {
+              uint DosTime;
+              Raw.Get(DosTime);
+              CurTime->SetDos(DosTime);
+            }
+            RarLocalTime rlt;
+            CurTime->GetLocal(&rlt);
+            if (rmode & 4)
+              rlt.Second++;
+            rlt.Reminder=0;
+            int count=rmode&3;
+            for (int J=0;J<count;J++)
+            {
+              byte CurByte;
+              Raw.Get(CurByte);
+              rlt.Reminder|=(((uint)CurByte)<<((J+3-count)*8));
+            }
+            CurTime->SetLocal(&rlt);
+          }
+        }
         NextBlockPos+=hd->FullPackSize;
         bool CRCProcessedOnly=(hd->Flags & LHD_COMMENT)!=0;
         HeaderCRC=~Raw.GetCRC(CRCProcessedOnly)&0xffff;
@@ -204,7 +244,7 @@ int Archive::ReadHeader()
           BrokenFileHeader=true;
           ErrHandler.SetErrorCode(WARNING);
 #ifndef SHELL_EXT
-          Log(FileName,St(MLogFileHead),IntNameToExt(hd->FileName));
+          Log(Archive::FileName,St(MLogFileHead),IntNameToExt(hd->FileName));
           Alarm();
 #endif
         }
@@ -299,13 +339,28 @@ int Archive::ReadHeader()
   if (Decrypt)
   {
     NextBlockPos+=Raw.PaddedSize()+SALT_SIZE;
+
     if (ShortBlock.HeadCRC!=HeaderCRC)
     {
+      bool Recovered=false;
+      if (ShortBlock.HeadType==ENDARC_HEAD && (EndArcHead.Flags & EARC_REVSPACE)!=0)
+      {
+        SaveFilePos SavePos(*this);
+        Int64 Length=Tell();
+        Seek(Length-7,SEEK_SET);
+        Recovered=true;
+        for (int J=0;J<7;J++)
+          if (GetByte()!=0)
+            Recovered=false;
+      }
+      if (!Recovered)
+      {
 #ifndef SILENT
-      Log(FileName,St(MEncrBadCRC),FileName);
+        Log(FileName,St(MEncrBadCRC),FileName);
 #endif
-      Close();
-      ErrHandler.Exit(CRC_ERROR);
+        Close();
+        ErrHandler.Exit(CRC_ERROR);
+      }
     }
   }
 

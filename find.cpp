@@ -158,7 +158,10 @@ bool FindFile::FastFind(const char *FindMask,const wchar *FindMaskW,struct FindD
 #endif
   fd->IsDir=IsDir(st.st_mode);
   fd->Size=st.st_size;
-  fd->FileTime=UnixTimeToDos(st.st_mtime);
+  fd->mtime=st.st_mtime;
+  fd->atime=st.st_atime;
+  fd->ctime=st.st_ctime;
+  fd->FileTime=fd->mtime.GetDos();
   strcpy(fd->Name,FindMask);
   *fd->NameW=0;
 #ifdef _APPLE
@@ -206,10 +209,13 @@ HANDLE FindFile::Win32Find(HANDLE hFind,const char *Mask,const wchar *MaskW,stru
       WideToChar(fd->NameW,fd->Name);
       fd->Size=int32to64(FindData.nFileSizeHigh,FindData.nFileSizeLow);
       fd->FileAttr=FindData.dwFileAttributes;
-      fd->FileTime=NTTimeToDos(&FindData.ftLastWriteTime);
       fd->ftCreationTime=FindData.ftCreationTime;
       fd->ftLastAccessTime=FindData.ftLastAccessTime;
       fd->ftLastWriteTime=FindData.ftLastWriteTime;
+      fd->mtime=FindData.ftLastWriteTime;
+      fd->ctime=FindData.ftCreationTime;
+      fd->atime=FindData.ftLastAccessTime;
+      fd->FileTime=fd->mtime.GetDos();
 
       if (LowAscii(fd->NameW))
         *fd->NameW=0;
@@ -247,10 +253,13 @@ HANDLE FindFile::Win32Find(HANDLE hFind,const char *Mask,const wchar *MaskW,stru
       CharToWide(fd->Name,fd->NameW);
       fd->Size=int32to64(FindData.nFileSizeHigh,FindData.nFileSizeLow);
       fd->FileAttr=FindData.dwFileAttributes;
-      fd->FileTime=NTTimeToDos(&FindData.ftLastWriteTime);
       fd->ftCreationTime=FindData.ftCreationTime;
       fd->ftLastAccessTime=FindData.ftLastAccessTime;
       fd->ftLastWriteTime=FindData.ftLastWriteTime;
+      fd->mtime=FindData.ftLastWriteTime;
+      fd->ctime=FindData.ftCreationTime;
+      fd->atime=FindData.ftLastAccessTime;
+      fd->FileTime=fd->mtime.GetDos();
 
       if (LowAscii(fd->Name))
         *fd->NameW=0;

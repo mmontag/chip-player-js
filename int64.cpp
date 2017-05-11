@@ -165,6 +165,14 @@ Int64 operator | (Int64 n1,Int64 n2)
 }
 
 
+Int64 operator & (Int64 n1,Int64 n2)
+{
+  n1.LowPart&=n2.LowPart;
+  n1.HighPart&=n2.HighPart;
+  return(n1);
+}
+
+
 /*
 inline void operator -= (Int64 &n1,unsigned int n2)
 {

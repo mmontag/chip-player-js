@@ -4,10 +4,12 @@ SaveFilePos::SaveFilePos(File &SaveFile)
 {
   SaveFilePos::SaveFile=&SaveFile;
   SavePos=SaveFile.Tell();
+  CloseCount=SaveFile.CloseCount;
 }
 
 
 SaveFilePos::~SaveFilePos()
 {
-  SaveFile->Seek(SavePos,SEEK_SET);
+  if (CloseCount==SaveFile->CloseCount)
+    SaveFile->Seek(SavePos,SEEK_SET);
 }

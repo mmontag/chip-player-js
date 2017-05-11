@@ -164,6 +164,17 @@ uint blen = ((uint)len)<<3;
         SHA1Transform(context->state, context->buffer);
         for ( ; i + 63 < len; i += 64) {
             SHA1Transform(context->state, &data[i]);
+#ifdef BIG_ENDIAN
+            unsigned char *d=data+i;
+            for (int k=0;k<64;k+=4)
+            {
+              byte b0=d[k],b1=d[k+1];
+              d[k]=d[k+3];
+              d[k+1]=d[k+2];
+              d[k+2]=b1;
+              d[k+3]=b0;
+            }
+#endif
         }
         j = 0;
     }

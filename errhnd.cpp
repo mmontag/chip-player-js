@@ -37,8 +37,11 @@ void ErrorHandler::OpenError(const char *FileName)
 void ErrorHandler::CloseError(const char *FileName)
 {
 #ifndef SILENT
-  ErrMsg(NULL,St(MErrFClose),FileName);
-  SysErrMsg();
+  if (!UserBreak)
+  {
+    ErrMsg(NULL,St(MErrFClose),FileName);
+    SysErrMsg();
+  }
   Throw(FATAL_ERROR);
 #endif
 }
@@ -106,8 +109,11 @@ bool ErrorHandler::AskRepeatWrite(const char *FileName)
 void ErrorHandler::SeekError(const char *FileName)
 {
 #ifndef SILENT
-  ErrMsg(NULL,St(MErrSeek),FileName);
-  SysErrMsg();
+  if (!UserBreak)
+  {
+    ErrMsg(NULL,St(MErrSeek),FileName);
+    SysErrMsg();
+  }
   Throw(FATAL_ERROR);
 #endif
 }
@@ -162,7 +168,7 @@ void ErrorHandler::Exit(int ExitCode)
 #ifndef GUI
 void ErrorHandler::ErrMsg(char *ArcName,const char *fmt,...)
 {
-  char Msg[NM+256];
+  safebuf char Msg[NM+1024];
   va_list argptr;
   va_start(argptr,fmt);
   vsprintf(Msg,fmt,argptr);
@@ -206,6 +212,9 @@ void ErrorHandler::SetErrorCode(int Code)
 #ifdef _WIN_32
 BOOL __stdcall ProcessSignal(DWORD SigType)
 #else
+#if defined(__sun)
+extern "C"
+#endif
 void _stdfunction ProcessSignal(int SigType)
 #endif
 {

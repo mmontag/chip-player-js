@@ -67,6 +67,7 @@ class ComprDataIO
 
     bool PackVolume;
     bool UnpVolume;
+    bool NextVolumeMissing;
     Int64 TotalPackRead;
     Int64 UnpArcSize;
     Int64 CurPackRead,CurPackWrite,CurUnpRead,CurUnpWrite;

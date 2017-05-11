@@ -17,10 +17,8 @@ void WideToChar(const wchar *Src,char *Dest,int DestSize=0x10000000);
 void CharToWide(const char *Src,wchar *Dest,int DestSize=0x10000000);
 byte* WideToRaw(const wchar *Src,byte *Dest,int DestSize=0x10000000);
 wchar* RawToWide(const byte *Src,wchar *Dest,int DestSize=0x10000000);
-#ifdef _APPLE
 void WideToUtf(const wchar *Src,char *Dest,int DestSize);
 void UtfToWide(const char *Src,wchar *Dest,int DestSize);
-#endif
 int strlenw(const wchar *str);
 wchar* strcpyw(wchar *dest,const wchar *src);
 wchar* strncpyw(wchar *dest,const wchar *src,int n);
@@ -48,6 +46,7 @@ class SupportDBCS
     char* charnext(const char *s);
     char *strchrd(const char *s, int c);
     char *strrchrd(const char *s, int c);
+    void copychrd(char *dest,const char *src);
 
     bool IsLeadByte[256];
     bool DBCSMode;
@@ -58,6 +57,7 @@ extern SupportDBCS gdbcs;
 inline char* charnext(const char *s) {return (char *)(gdbcs.DBCSMode ? gdbcs.charnext(s):s+1);}
 inline char* strchrd(const char *s, int c) {return (char *)(gdbcs.DBCSMode ? gdbcs.strchrd(s,c):strchr(s,c));}
 inline char* strrchrd(const char *s, int c) {return (char *)(gdbcs.DBCSMode ? gdbcs.strrchrd(s,c):strrchr(s,c));}
+inline void copychrd(char *dest,const char *src) {if (gdbcs.DBCSMode) gdbcs.copychrd(dest,src); else *dest=*src;}
 inline bool IsDBCSMode() {return(gdbcs.DBCSMode);}
 inline void InitDBCS() {gdbcs.Init();}
 
@@ -66,6 +66,7 @@ inline void InitDBCS() {gdbcs.Init();}
 #define strchrd strchr
 #define strrchrd strrchr
 #define IsDBCSMode() (true)
+inline void copychrd(char *dest,const char *src) {*dest=*src;}
 #endif
 
 #endif

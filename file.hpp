@@ -32,14 +32,17 @@ class File
     FILE_HANDLETYPE HandleType;
     bool SkipClose;
     bool IgnoreReadErrors;
-    bool OpenShared;
     bool NewFile;
     bool AllowDelete;
+  protected:
+    bool OpenShared;
   public:
     char FileName[NM];
     wchar FileNameW[NM];
 
     FILE_ERRORTYPE ErrorType;
+
+    uint CloseCount;
   public:
     File();
     virtual ~File();
@@ -64,11 +67,12 @@ class File
     byte GetByte();
     void PutByte(byte Byte);
     bool Truncate();
-    void SetOpenFileTime(uint ft);
-    void SetCloseFileTime(uint ft);
-    void SetOpenFileStat(uint FileTime);
-    void SetCloseFileStat(uint FileTime,uint FileAttr);
-    uint GetOpenFileTime();
+    void SetOpenFileTime(RarTime *ftm,RarTime *ftc=NULL,RarTime *fta=NULL);
+    void SetCloseFileTime(RarTime *ftm,RarTime *fta=NULL);
+    static void SetCloseFileTimeByName(const char *Name,RarTime *ftm,RarTime *fta);
+    void SetOpenFileStat(RarTime *ftm,RarTime *ftc,RarTime *fta);
+    void SetCloseFileStat(RarTime *ftm,RarTime *fta,uint FileAttr);
+    void GetOpenFileTime(RarTime *ft);
     bool IsOpened() {return(hFile!=BAD_HANDLE);};
     Int64 FileLength();
     void SetHandleType(FILE_HANDLETYPE Type);
@@ -78,7 +82,6 @@ class File
     static void RemoveCreated();
     FileHandle GetHandle() {return(hFile);};
     void SetIgnoreReadErrors(bool Mode) {IgnoreReadErrors=Mode;};
-    void SetOpenShared(bool Mode) {OpenShared=Mode;};
     char *GetName() {return(FileName);}
     long Copy(File &Dest,Int64 Length=INT64ERR);
     void SetAllowDelete(bool Allow) {AllowDelete=Allow;}

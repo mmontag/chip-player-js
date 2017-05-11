@@ -3,7 +3,7 @@
 
 class Pack;
 
-enum { EN_LOCK=1,EN_VOL=2,EN_FIRSTVOL=4 };
+enum {EN_LOCK=1,EN_VOL=2,EN_FIRSTVOL=4};
 
 class Archive:public File
 {
@@ -16,6 +16,7 @@ class Archive:public File
     void ConvertUnknownHeader();
     bool AddArcComment(char *NameToShow);
     int ReadOldHeader();
+    void PrepareExtraTime(FileHeader *hd,EXTTIME_MODE etm,EXTTIME_MODE etc,EXTTIME_MODE eta,EXTTIME_MODE etarc,Array<byte> &TimeData);
 
 #if !defined(SHELL_EXT) && !defined(NOCRYPT)
     CryptData HeadersCrypt;
@@ -33,7 +34,7 @@ class Archive:public File
     int RecoverySectors;
     Int64 RecoveryPos;
 
-    uint LatestTime;
+    RarTime LatestTime;
     int LastReadBlock;
     int CurHeaderType;
 
@@ -64,7 +65,7 @@ class Archive:public File
     bool GetComment(Array<byte> &CmtData);
     void ViewComment();
     void ViewFileComment();
-    void SetLatestTime(uint NewTime) {LatestTime=NewTime;};
+    void SetLatestTime(RarTime *NewTime);
     void SeekToNext();
     bool CheckAccess();
     bool IsArcDir();

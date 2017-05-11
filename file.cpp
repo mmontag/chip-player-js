@@ -1,6 +1,7 @@
 #include "rar.hpp"
 
 static File *CreatedFiles[16];
+static int RemoveCreatedActive=0;
 
 File::File()
 {
@@ -15,6 +16,7 @@ File::File()
   ErrorType=FILE_SUCCESS;
   OpenShared=false;
   AllowDelete=true;
+  CloseCount=0;
 }
 
 
@@ -43,12 +45,14 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
 {
   ErrorType=FILE_SUCCESS;
   FileHandle hNewFile;
+  if (File::OpenShared)
+    OpenShared=true;
 #ifdef _WIN_32
   uint Access=GENERIC_READ;
   if (Update)
     Access|=GENERIC_WRITE;
   uint ShareMode=FILE_SHARE_READ;
-  if (File::OpenShared || OpenShared)
+  if (OpenShared)
     ShareMode|=FILE_SHARE_WRITE;
   if (WinNT() && NameW!=NULL && *NameW!=0)
     hNewFile=CreateFileW(NameW,Access,ShareMode,NULL,OPEN_EXISTING,
@@ -63,6 +67,9 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
   int flags=Update ? O_RDWR:O_RDONLY;
 #ifdef O_BINARY
   flags|=O_BINARY;
+#if defined(_AIX) && defined(_LARGE_FILE_API)
+  flags|=O_LARGEFILE;
+#endif
 #endif
 #if defined(_EMX) && !defined(_DJGPP)
   int sflags=OpenShared ? SH_DENYNO:SH_DENYWR;
@@ -70,7 +77,7 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
 #else
   int handle=open(Name,flags);
 #ifdef LOCK_EX
-  if (!OpenShared && handle>=0 && flock(handle,LOCK_EX|LOCK_NB)==-1)
+  if (!OpenShared && Update && handle>=0 && flock(handle,LOCK_EX|LOCK_NB)==-1)
   {
     close(handle);
     return(false);
@@ -90,6 +97,8 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
     hFile=hNewFile;
     if (NameW!=NULL)
       strcpyw(FileNameW,NameW);
+    else
+      *FileNameW=0;
     strcpy(FileName,Name);
   }
   return(Success);
@@ -131,6 +140,8 @@ bool File::Create(const char *Name,const wchar *NameW)
   SkipClose=false;
   if (NameW!=NULL)
     strcpyw(FileNameW,NameW);
+  else
+    *FileNameW=0;
   strcpy(FileName,Name);
   if (hFile!=BAD_HANDLE)
     for (int I=0;I<sizeof(CreatedFiles)/sizeof(CreatedFiles[0]);I++)
@@ -156,6 +167,7 @@ bool File::WCreate(const char *Name,const wchar *NameW)
 {
   if (Create(Name,NameW))
     return(true);
+  ErrHandler.SetErrorCode(CREATE_ERROR);
   ErrHandler.CreateErrorMsg(Name);
   return(false);
 }
@@ -176,17 +188,19 @@ bool File::Close()
 #else
         Success=fclose(hFile)!=EOF;
 #endif
-        for (int I=0;I<sizeof(CreatedFiles)/sizeof(CreatedFiles[0]);I++)
-          if (CreatedFiles[I]==this)
-          {
-            CreatedFiles[I]=NULL;
-            break;
-          }
+        if (Success || !RemoveCreatedActive)
+          for (int I=0;I<sizeof(CreatedFiles)/sizeof(CreatedFiles[0]);I++)
+            if (CreatedFiles[I]==this)
+            {
+              CreatedFiles[I]=NULL;
+              break;
+            }
       }
       hFile=BAD_HANDLE;
       if (!Success)
         ErrHandler.CloseError(FileName);
     }
+  CloseCount++;
   return(Success);
 }
 
@@ -438,64 +452,88 @@ bool File::Truncate()
 }
 
 
-void File::SetOpenFileTime(uint ft)
+void File::SetOpenFileTime(RarTime *ftm,RarTime *ftc,RarTime *fta)
 {
 #ifdef _WIN_32
-  FILETIME LocalTime,FileTime;
-  DosDateTimeToFileTime(HIWORD(ft),LOWORD(ft),&LocalTime);
-  LocalFileTimeToFileTime(&LocalTime,&FileTime);
-  SetFileTime(hFile,NULL,NULL,&FileTime);
+  bool sm=ftm!=NULL && ftm->IsSet();
+  bool sc=ftc!=NULL && ftc->IsSet();
+  bool sa=fta!=NULL && fta->IsSet();
+  FILETIME fm,fc,fa;
+  if (sm)
+    ftm->GetWin32(&fm);
+  if (sc)
+    ftc->GetWin32(&fc);
+  if (sa)
+    fta->GetWin32(&fa);
+  SetFileTime(hFile,sc ? &fc:NULL,sa ? &fa:NULL,sm ? &fm:NULL);
 #endif
 }
 
 
-void File::SetCloseFileTime(uint ft)
+void File::SetCloseFileTime(RarTime *ftm,RarTime *fta)
 {
 #if defined(_UNIX) || defined(_EMX)
-  struct utimbuf ut;
-  ut.actime=ut.modtime=DosTimeToUnix(ft);
-  utime(FileName,&ut);
+  SetCloseFileTimeByName(FileName,ftm,fta);
 #endif
 }
 
 
-uint File::GetOpenFileTime()
+void File::SetCloseFileTimeByName(const char *Name,RarTime *ftm,RarTime *fta)
+{
+#if defined(_UNIX) || defined(_EMX)
+  bool setm=ftm!=NULL && ftm->IsSet();
+  bool seta=fta!=NULL && fta->IsSet();
+  if (setm || seta)
+  {
+    struct utimbuf ut;
+    if (setm)
+      ut.modtime=ftm->GetUnix();
+    else
+      ut.modtime=fta->GetUnix();
+    if (seta)
+      ut.actime=fta->GetUnix();
+    else
+      ut.actime=ut.modtime;
+    utime(Name,&ut);
+  }
+#endif
+}
+
+
+void File::GetOpenFileTime(RarTime *ft)
 {
 #ifdef _WIN_32
-  FILETIME LocalTime,FileTime;
+  FILETIME FileTime;
   GetFileTime(hFile,NULL,NULL,&FileTime);
-  FileTimeToLocalFileTime(&FileTime,&LocalTime);
-  WORD FatDate,FatTime;
-  FileTimeToDosDateTime(&LocalTime,&FatDate,&FatTime);
-  return((FatDate<<16)|FatTime);
+  *ft=FileTime;
 #endif
 #if defined(_UNIX) || defined(_EMX)
   struct stat st;
   fstat(fileno(hFile),&st);
-  return(UnixTimeToDos(st.st_mtime));
+  *ft=st.st_mtime;
 #endif
 }
 
 
-void File::SetOpenFileStat(uint FileTime)
+void File::SetOpenFileStat(RarTime *ftm,RarTime *ftc,RarTime *fta)
 {
 #ifdef _WIN_32
-  SetOpenFileTime(FileTime);
+  SetOpenFileTime(ftm,ftc,fta);
 #endif
 }
 
 
-void File::SetCloseFileStat(uint FileTime,uint FileAttr)
+void File::SetCloseFileStat(RarTime *ftm,RarTime *fta,uint FileAttr)
 {
 #ifdef _WIN_32
   SetFileAttr(FileName,FileNameW,FileAttr);
 #endif
 #ifdef _EMX
-  SetCloseFileTime(FileTime);
+  SetCloseFileTime(ftm,fta);
   SetFileAttr(FileName,FileNameW,FileAttr);
 #endif
 #ifdef _UNIX
-  SetCloseFileTime(FileTime);
+  SetCloseFileTime(ftm,fta);
   chmod(FileName,(mode_t)FileAttr);
 #endif
 }
@@ -533,7 +571,7 @@ void File::fprintf(const char *fmt,...)
 {
   va_list argptr;
   va_start(argptr,fmt);
-  char Msg[8192],OutMsg[8192];
+  safebuf char Msg[2*NM+1024],OutMsg[2*NM+1024];
   vsprintf(Msg,fmt,argptr);
 #ifdef _WIN_32
   for (int Src=0,Dest=0;;Src++)
@@ -556,9 +594,11 @@ void File::fprintf(const char *fmt,...)
 
 void File::RemoveCreated()
 {
+  RemoveCreatedActive++;
   for (int I=0;I<sizeof(CreatedFiles)/sizeof(CreatedFiles[0]);I++)
     if (CreatedFiles[I]!=NULL)
       CreatedFiles[I]->Delete();
+  RemoveCreatedActive--;
 }
 
 

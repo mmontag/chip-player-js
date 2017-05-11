@@ -1,20 +1,54 @@
 #ifndef _RAR_TIMEFN_
 #define _RAR_TIMEFN_
 
-void InitTime();
-uint SecondsToDosTime(uint Seconds);
-void ConvertDate(uint ft,char *DateStr,bool FullYear);
-const char *GetMonthName(int Month);
-uint TextAgeToSeconds(char *TimeText);
-uint IsoTextToDosTime(char *TimeText);
-uint UnixTimeToDos(time_t UnixTime);
-time_t DosTimeToUnix(uint DosTime);
+struct RarLocalTime
+{
+  uint Year;
+  uint Month;
+  uint Day;
+  uint Hour;
+  uint Minute;
+  uint Second;
+  uint Reminder;
+};
 
+class RarTime
+{
+  private:
+    Int64 GetRaw();
+    void SetRaw(Int64 RawTime);
+
+    RarLocalTime rlt;
+
+    Int64 Time;
+  public:
+    RarTime();
 #ifdef _WIN_32
-uint NTTimeToDos(FILETIME *ft);
+    RarTime& operator =(FILETIME &ft);
+    void GetWin32(FILETIME *ft);
 #endif
+#if defined(_UNIX) || defined(_EMX)
+    RarTime& operator =(time_t ut);
+    time_t RarTime::GetUnix();
+#endif
+    bool operator == (RarTime &rt);
+    bool operator < (RarTime &rt);
+    bool operator <= (RarTime &rt);
+    bool operator > (RarTime &rt);
+    bool operator >= (RarTime &rt);
+    void GetLocal(RarLocalTime *lt) {*lt=rlt;}
+    void SetLocal(RarLocalTime *lt) {rlt=*lt;}
+    uint GetDos();
+    void SetDos(uint DosTime);
+    void GetText(char *DateStr,bool FullYear);
+    void SetIsoText(char *TimeText);
+    void SetAgeText(char *TimeText);
+    void SetCurrentTime();
+    void Reset() {rlt.Year=0;}
+    bool IsSet() {return(rlt.Year!=0);}
+};
 
-void GetCurSysTime(struct tm *T);
-bool IsLeapYear(int Year);
+const char *GetMonthName(int Month);
+
 
 #endif

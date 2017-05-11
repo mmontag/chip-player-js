@@ -1,7 +1,7 @@
 #ifndef _RAR_MATCH_
 #define _RAR_MATCH_
 
-enum {MATCH_NAMES,MATCH_PATH,MATCH_SUBPATH,MATCH_WILDSUBPATH};
+enum {MATCH_NAMES,MATCH_PATH,MATCH_EXACTPATH,MATCH_SUBPATH,MATCH_WILDSUBPATH};
 
 bool CmpName(char *Wildcard,char *Name,int CmpPath);
 bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath);

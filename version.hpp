@@ -1,6 +1,6 @@
 #define RARVER_MAJOR     3
-#define RARVER_MINOR    10
-#define RARVER_BETA      0
-#define RARVER_DAY      18
-#define RARVER_MONTH    12
-#define RARVER_YEAR   2002
+#define RARVER_MINOR    20
+#define RARVER_BETA      2
+#define RARVER_DAY      17
+#define RARVER_MONTH     3
+#define RARVER_YEAR   2003

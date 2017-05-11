@@ -8,7 +8,7 @@ typedef unsigned int     uint;   //32 bits or more
 typedef unsigned int     uint32; //32 bits exactly
 #define PRESENT_INT32
 
-#if defined(_WIN_32) || defined(__GNUC__) || defined(__sgi)
+#if defined(_WIN_32) || defined(__GNUC__) || defined(__sgi) || defined(_AIX) || defined(__sun)
 typedef wchar_t wchar;
 #else
 typedef ushort wchar;

@@ -177,6 +177,11 @@ struct FileHeader:BlockHeader
 /* optional */
   Array<byte> SubData;
   byte Salt[SALT_SIZE];
+
+  RarTime mtime;
+  RarTime ctime;
+  RarTime atime;
+  RarTime arctime;
 /* dummy */
   Int64 FullPackSize;
   Int64 FullUnpSize;

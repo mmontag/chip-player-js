@@ -17,11 +17,11 @@ const int N_INDEXES=N1+N2+N3+N4;
 #endif /* defined(__GNUC__) */
 
 #pragma pack(1)
-struct MEM_BLK 
+struct RAR_MEM_BLK 
 {
   ushort Stamp, NU;
-  MEM_BLK* next, * prev;
-  void insertAt(MEM_BLK* p) 
+  RAR_MEM_BLK* next, * prev;
+  void insertAt(RAR_MEM_BLK* p) 
   {
     next=(prev=p)->next;
     p->next=next->prev=this;
@@ -34,9 +34,9 @@ struct MEM_BLK
 } _PACK_ATTR;
 #pragma pack()
 
-struct NODE
+struct RAR_NODE
 {
-  NODE* next;
+  RAR_NODE* next;
 };
 
 class SubAllocator
@@ -53,7 +53,7 @@ class SubAllocator
     long SubAllocatorSize;
     byte Indx2Units[N_INDEXES], Units2Indx[128], GlueCount;
     byte *HeapStart,*LoUnit, *HiUnit;
-    struct NODE FreeList[N_INDEXES];
+    struct RAR_NODE FreeList[N_INDEXES];
   public:
     SubAllocator();
     ~SubAllocator() {StopSubAllocator();}

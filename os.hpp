@@ -23,7 +23,7 @@
 #define STRICT
 #define WINVER 0x0400
 #define _WIN32_WINNT 0x0300
-#define _WIN32_IE 0x0300
+//#define _WIN32_IE 0x0300
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
@@ -156,6 +156,7 @@
 #include <time.h>
 #include <signal.h>
 #include <utime.h>
+#include <locale.h>
 
 #ifdef  S_IFLNK
 #define SAVE_LINKS
@@ -204,6 +205,8 @@
 #endif
 
 typedef const char* MSGID;
+
+#define safebuf static
 
 #if defined(LITTLE_ENDIAN) && defined(BIG_ENDIAN)
   #if defined(BYTE_ORDER) && BYTE_ORDER == BIG_ENDIAN

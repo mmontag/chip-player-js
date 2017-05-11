@@ -21,4 +21,5 @@ void RAROptions::Init()
   MsgStream=MSG_STDOUT;
   ConvertNames=NAMES_ORIGINALCASE;
   ProcessEA=true;
+  xmtime=EXTTIME_HIGH3;
 }

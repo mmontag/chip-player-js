@@ -17,6 +17,7 @@
 #include "unicode.hpp"
 #include "errhnd.hpp"
 #include "array.hpp"
+#include "timefn.hpp"
 #include "headers.hpp"
 #include "rarfn.hpp"
 #include "pathfn.hpp"
@@ -36,6 +37,7 @@
 #include "rdwrfn.hpp"
 #include "options.hpp"
 #include "archive.hpp"
+#include "match.hpp"
 #include "cmddata.hpp"
 #include "filcreat.hpp"
 #include "consio.hpp"
@@ -45,8 +47,6 @@
 #include "rawread.hpp"
 #include "encname.hpp"
 #include "resource.hpp"
-#include "match.hpp"
-#include "timefn.hpp"
 #include "compress.hpp"
 
 

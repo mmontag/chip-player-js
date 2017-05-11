@@ -285,6 +285,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
   }
 #endif
   DataIO.UnpVolume=(Arc.NewLhd.Flags & LHD_SPLIT_AFTER);
+  DataIO.NextVolumeMissing=false;
 
   Arc.Seek(Arc.NextBlockPos-Arc.NewLhd.FullPackSize,SEEK_SET);
 
@@ -418,7 +419,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
       struct FindData FD;
       if (FindFile::FastFind(DestFileName,DestNameW,&FD))
       {
-        if (FD.FileTime >= Arc.NewLhd.FileTime)
+        if (Arc.NewLhd.mtime < FD.mtime)
           ExtrFile=false;
       }
       else
@@ -479,8 +480,16 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
           return(true);
         }
         MKDIR_CODE MDCode=MakeDir(DestFileName,DestNameW,Arc.NewLhd.FileAttr);
-        if (MDCode!=MKDIR_SUCCESS && !FileExist(DestFileName,DestNameW))
+        bool DirExist=false;
+        if (MDCode!=MKDIR_SUCCESS)
         {
+          DirExist=FileExist(DestFileName,DestNameW);
+          if (DirExist && !IsDir(GetFileAttr(DestFileName,DestNameW)))
+          {
+            bool UserReject;
+            FileCreate(Cmd,NULL,DestFileName,DestNameW,Cmd->Overwrite,&UserReject,Arc.NewLhd.UnpSize,Arc.NewLhd.FileTime);
+            DirExist=false;
+          }
           CreatePath(DestFileName,DestNameW,true);
           MDCode=MakeDir(DestFileName,DestNameW,Arc.NewLhd.FileAttr);
         }
@@ -493,7 +502,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
           PrevExtracted=true;
         }
         else
-          if (FileExist(DestFileName,DestNameW))
+          if (DirExist)
           {
             SetFileAttr(DestFileName,DestNameW,Arc.NewLhd.FileAttr);
             PrevExtracted=true;
@@ -505,10 +514,10 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #ifdef RARDLL
             Cmd->DllError=ERAR_ECREATE;
 #endif
-            ErrHandler.SetErrorCode(WARNING);
+            ErrHandler.SetErrorCode(CREATE_ERROR);
           }
         if (PrevExtracted)
-          SetDirTime(DestFileName,Arc.NewLhd.FileTime);
+          SetDirTime(DestFileName,&Arc.NewLhd.mtime,&Arc.NewLhd.ctime,&Arc.NewLhd.atime);
         return(true);
       }
       else
@@ -528,7 +537,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
             if (!UserReject)
             {
               ErrHandler.CreateErrorMsg(DestFileName);
-              ErrHandler.SetErrorCode(WARNING);
+              ErrHandler.SetErrorCode(CREATE_ERROR);
               if (!IsNameUsable(DestFileName))
               {
                 Log(Arc.FileName,St(MCorrectingName));
@@ -670,9 +679,15 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
         {
           if (BrokenFile)
             CurFile.Truncate();
-          CurFile.SetOpenFileStat(Arc.NewLhd.FileTime);
+          CurFile.SetOpenFileStat(
+            Cmd->xmtime==EXTTIME_NONE ? NULL:&Arc.NewLhd.mtime,
+            Cmd->xctime==EXTTIME_NONE ? NULL:&Arc.NewLhd.ctime,
+            Cmd->xatime==EXTTIME_NONE ? NULL:&Arc.NewLhd.atime);
           CurFile.Close();
-          CurFile.SetCloseFileStat(Arc.NewLhd.FileTime,Arc.NewLhd.FileAttr);
+          CurFile.SetCloseFileStat(
+            Cmd->xmtime==EXTTIME_NONE ? NULL:&Arc.NewLhd.mtime,
+            Cmd->xatime==EXTTIME_NONE ? NULL:&Arc.NewLhd.atime,
+            Arc.NewLhd.FileAttr);
           PrevExtracted=true;
         }
       }
@@ -680,7 +695,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
   }
   if (ExactMatch)
     MatchedArgs++;
-  if (!Arc.IsOpened())
+  if (DataIO.NextVolumeMissing || !Arc.IsOpened())
     return(false);
   if (!ExtrFile)
     if (!Arc.Solid)

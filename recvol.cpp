@@ -76,6 +76,9 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
   int BaseNamePartLength=VolNumStart-ArcName;
   strcpy(RecVolMask+BaseNamePartLength,"*.rev");
 
+#ifndef SILENT
+  Int64 RecFileSize=0;
+#endif
   FindFile Find;
   Find.SetMask(RecVolMask);
   struct FindData RecData;
@@ -158,6 +161,10 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
     NewFile->TOpen(Name);
     SrcFile[FileNumber+P[0]-1]=NewFile;
     FoundRecVolumes++;
+#ifndef SILENT
+    if (RecFileSize==0)
+      RecFileSize=NewFile->FileLength();
+#endif
   }
 #ifndef SILENT
   if (!Silent || FoundRecVolumes!=0)
@@ -274,6 +281,13 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
     if (WriteFlags[I] || SrcFile[I]==NULL)
       Erasures[EraSize++]=I;
 
+#ifndef SILENT
+  Int64 ProcessedSize=0;
+#ifndef GUI
+  int LastPercent=-1;
+  mprintf("     ");
+#endif
+#endif
   int RecCount=0;
 
   while (true)
@@ -294,6 +308,15 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
       }
     if (MaxRead==0)
       break;
+#ifndef SILENT
+    int CurPercent=ToPercent(ProcessedSize,RecFileSize);
+    if (!Cmd->DisablePercentage && CurPercent!=LastPercent)
+    {
+      mprintf("\b\b\b\b%3d%%",CurPercent);
+      LastPercent=CurPercent;
+    }
+    ProcessedSize+=MaxRead;
+#endif
     for (int BufPos=0;BufPos<MaxRead;BufPos++)
     {
       byte Data[256];
@@ -345,6 +368,8 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
     }
   }
 #if !defined(GUI) && !defined(SILENT)
+  if (!Cmd->DisablePercentage)
+    mprintf("\b\b\b\b100%%");
   if (!Silent)
     mprintf(St(MDone));
 #endif

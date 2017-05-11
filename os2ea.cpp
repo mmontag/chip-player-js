@@ -57,9 +57,7 @@ void ExtractOS2EA(Archive &Arc,char *FileName)
     Log(Arc.FileName,St(MCannotSetEA),FileName);
     ErrHandler.SetErrorCode(WARNING);
   }
-  struct utimbuf ut;
-  ut.actime=ut.modtime=DosTimeToUnix(Arc.NewLhd.FileTime);
-  utime(FileName,&ut);
+  File::SetCloseFileTimeByName(FileName,&Arc.NewLhd.mtime,&Arc.NewLhd.atime);
   mprintf(St(MShowEA));
 }
 
@@ -90,9 +88,7 @@ void ExtractOS2EANew(Archive &Arc,char *FileName)
     Log(Arc.FileName,St(MCannotSetEA),FileName);
     ErrHandler.SetErrorCode(WARNING);
   }
-  struct utimbuf ut;
-  ut.actime=ut.modtime=DosTimeToUnix(Arc.NewLhd.FileTime);
-  utime(FileName,&ut);
+  File::SetCloseFileTimeByName(FileName,&Arc.NewLhd.mtime,&Arc.NewLhd.atime);
   mprintf(St(MShowEA));
 }
 

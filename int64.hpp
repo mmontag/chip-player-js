@@ -40,6 +40,7 @@ class Int64
     friend Int64 operator *= (Int64 &n1,Int64 n2);
     friend Int64 operator /= (Int64 &n1,Int64 n2);
     friend Int64 operator | (Int64 n1,Int64 n2);
+    friend Int64 operator & (Int64 n1,Int64 n2);
     inline friend void operator -= (Int64 &n1,unsigned int n2)
     {
       if (n1.LowPart<n2)
@@ -70,7 +71,7 @@ class Int64
     uint HighPart;
 };
 
-#define int64to32(x) ((x).GetLowPart())
+inline uint int64to32(Int64 n) {return(n.GetLowPart());}
 #define int32to64(high,low) (Int64((high),(low)))
 #define is64plus(x) ((int)(x).HighPart>=0)
 

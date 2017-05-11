@@ -65,6 +65,7 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     Array<byte> CmtData;
     if (r->CmtBufSize!=0 && Data->Arc.GetComment(CmtData))
     {
+      r->Flags|=2;
       int Size=CmtData.Size()+1;
       r->CmtState=Size>r->CmtBufSize ? ERAR_SMALL_BUF:1;
       r->CmtSize=Min(Size,r->CmtBufSize);
@@ -74,6 +75,8 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     }
     else
       r->CmtState=r->CmtSize=0;
+    if (Data->Arc.Signed)
+      r->Flags|=0x20;
     Data->Extract.ExtractArchiveInit(&Data->Cmd,Data->Arc);
     return((HANDLE)Data);
   }
@@ -117,7 +120,6 @@ int PASCAL RARReadHeader(HANDLE hArcData,struct RARHeaderData *D)
       if (RARProcessFile(hArcData,RAR_SKIP,NULL,NULL)==0)
         return(RARReadHeader(hArcData,D));
     }
-
     strncpy(D->ArcName,Data->Arc.FileName,sizeof(D->ArcName));
     strncpy(D->FileName,Data->Arc.NewLhd.FileName,sizeof(D->FileName));
     D->Flags=Data->Arc.NewLhd.Flags;
@@ -163,7 +165,6 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
       if (RARProcessFile(hArcData,RAR_SKIP,NULL,NULL)==0)
         return(RARReadHeaderEx(hArcData,D));
     }
-
     strncpy(D->ArcName,Data->Arc.FileName,sizeof(D->ArcName));
     if (*Data->Arc.FileNameW)
       strncpyw(D->ArcNameW,Data->Arc.FileNameW,sizeof(D->ArcNameW));
@@ -226,6 +227,13 @@ int PASCAL RARProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *Des
       Data->Cmd.Test=Operation!=RAR_EXTRACT;
       bool Repeat=false;
       Data->Extract.ExtractCurrentFile(&Data->Cmd,Data->Arc,Data->HeaderSize,Repeat);
+
+      while (Data->Arc.ReadHeader()!=0 && Data->Arc.GetHeaderType()==NEWSUB_HEAD)
+      {
+        Data->Extract.ExtractCurrentFile(&Data->Cmd,Data->Arc,Data->HeaderSize,Repeat);
+        Data->Arc.SeekToNext();
+      }
+      Data->Arc.Seek(Data->Arc.CurBlockPos,SEEK_SET);
     }
   }
   catch (int ErrCode)
@@ -283,6 +291,8 @@ static int RarErrorToDll(int ErrCode)
       return(ERAR_EWRITE);
     case OPEN_ERROR:
       return(ERAR_EOPEN);
+    case CREATE_ERROR:
+      return(ERAR_ECREATE);
     case MEMORY_ERROR:
       return(ERAR_NO_MEMORY);
     case SUCCESS:

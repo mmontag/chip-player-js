@@ -19,14 +19,14 @@ void SubAllocator::Clean()
 
 inline void SubAllocator::InsertNode(void* p,int indx) 
 {
-  ((NODE*) p)->next=FreeList[indx].next;
-  FreeList[indx].next=(NODE*) p;
+  ((RAR_NODE*) p)->next=FreeList[indx].next;
+  FreeList[indx].next=(RAR_NODE*) p;
 }
 
 
 inline void* SubAllocator::RemoveNode(int indx) 
 {
-  NODE* RetVal=FreeList[indx].next;
+  RAR_NODE* RetVal=FreeList[indx].next;
   FreeList[indx].next=RetVal->next;
   return RetVal;
 }
@@ -113,14 +113,14 @@ void SubAllocator::InitSubAllocator()
 
 inline void SubAllocator::GlueFreeBlocks()
 {
-  MEM_BLK s0, * p, * p1;
+  RAR_MEM_BLK s0, * p, * p1;
   int i, k, sz;
   if (LoUnit != HiUnit)
     *LoUnit=0;
   for (i=0, s0.next=s0.prev=&s0;i < N_INDEXES;i++)
     while ( FreeList[i].next )
     {
-      p=(MEM_BLK*)RemoveNode(i);
+      p=(RAR_MEM_BLK*)RemoveNode(i);
       p->insertAt(&s0);
       p->Stamp=0xFFFF;
       p->NU=Indx2Units[i];

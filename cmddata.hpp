@@ -14,6 +14,7 @@ class CommandData:public RAROptions
     bool FileLists;
     bool NoMoreSwitches;
     bool TimeConverted;
+    bool BareOutput;
   public:
     CommandData();
     ~CommandData();
@@ -29,8 +30,8 @@ class CommandData:public RAROptions
     bool IsSwitch(int Ch);
     bool ExclCheck(char *CheckName,bool CheckFullPath);
     bool StoreCheck(char *CheckName);
-    bool TimeCheck(uint FileDosTime);
-    bool IsProcessFile(FileHeader &NewLhd,bool *ExactMatch=NULL);
+    bool TimeCheck(RarTime &ft);
+    int IsProcessFile(FileHeader &NewLhd,bool *ExactMatch=NULL,int MatchType=MATCH_WILDSUBPATH);
     void ProcessCommand();
     void AddArcName(char *Name,wchar *NameW);
     bool GetArcName(char *Name,wchar *NameW,int MaxSize);

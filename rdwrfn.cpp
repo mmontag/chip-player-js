@@ -17,6 +17,7 @@ void ComprDataIO::Init()
   SkipUnpCRC=false;
   PackVolume=false;
   UnpVolume=false;
+  NextVolumeMissing=false;
   SrcFile=NULL;
   DestFile=NULL;
   UnpWrSize=0;
@@ -71,7 +72,10 @@ int ComprDataIO::UnpRead(byte *Addr,uint Count)
 #ifndef NOVOLUME
       if (!MergeArchive(*SrcArc,this,true,CurrentCommand))
 #endif
+      {
+        NextVolumeMissing=true;
         return(-1);
+      }
     }
     else
       break;
@@ -108,16 +112,19 @@ void ComprDataIO::UnpWrite(byte *Addr,uint Count)
 {
 #ifdef RARDLL
   RAROptions *Cmd=((Archive *)SrcFile)->GetRAROptions();
-  if (Cmd->Callback!=NULL &&
-      Cmd->Callback(UCM_PROCESSDATA,Cmd->UserData,(LONG)Addr,Count)==-1)
-    ErrHandler.Exit(USER_BREAK);
-  if (Cmd->ProcessDataProc!=NULL)
+  if (Cmd->DllOpMode!=RAR_SKIP)
   {
-    _EBX=_ESP;
-    int RetCode=Cmd->ProcessDataProc(Addr,Count);
-    _ESP=_EBX;
-    if (RetCode==0)
+    if (Cmd->Callback!=NULL &&
+        Cmd->Callback(UCM_PROCESSDATA,Cmd->UserData,(LONG)Addr,Count)==-1)
       ErrHandler.Exit(USER_BREAK);
+    if (Cmd->ProcessDataProc!=NULL)
+    {
+      _EBX=_ESP;
+      int RetCode=Cmd->ProcessDataProc(Addr,Count);
+      _ESP=_EBX;
+      if (RetCode==0)
+        ErrHandler.Exit(USER_BREAK);
+    }
   }
 #endif
   UnpWrAddr=Addr;
@@ -246,5 +253,4 @@ void ComprDataIO::SetUnpackToMemory(byte *Addr,uint Size)
   UnpackToMemoryAddr=Addr;
   UnpackToMemorySize=Size;
 }
-
 

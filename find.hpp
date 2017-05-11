@@ -9,6 +9,9 @@ struct FindData
   uint FileAttr;
   uint FileTime;
   int IsDir;
+  RarTime mtime;
+  RarTime ctime;
+  RarTime atime;
 #ifdef _WIN_32
   FILETIME ftCreationTime; 
   FILETIME ftLastAccessTime; 

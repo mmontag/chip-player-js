@@ -20,6 +20,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     Log(Arc.FileName,St(MDataBadCRC),hd->FileName,Arc.FileName);
   }
 
+  Int64 PosBeforeClose=Arc.Tell();
   Arc.Close();
 
   char NextName[NM];
@@ -29,6 +30,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
 #if !defined(SFX_MODULE) && !defined(RARDLL)
   bool RecoveryDone=false;
 #endif
+  bool FailedOpen=false;
 
   while (!Arc.Open(NextName))
   {
@@ -37,7 +39,8 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
         Cmd->Callback!=NULL && Cmd->Callback(UCM_CHANGEVOLUME,Cmd->UserData,(LONG)NextName,RAR_VOL_ASK)==-1)
     {
       Cmd->DllError=ERAR_EOPEN;
-      return(false);
+      FailedOpen=true;
+      break;
     }
     if (Cmd->ChangeVolProc!=NULL)
     {
@@ -47,7 +50,8 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
       if (RetCode==0)
       {
         Cmd->DllError=ERAR_EOPEN;
-        return(false);
+        FailedOpen=true;
+        break;
       }
     }
 #else
@@ -66,14 +70,24 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     if (!Cmd->VolumePause && !IsRemovable(NextName))
     {
       Log(Arc.FileName,St(MAbsNextVol),NextName);
-      return(false);
+      FailedOpen=true;
+      break;
     }
 #endif
 #ifndef SILENT
     if (Cmd->AllYes || !AskNextVol(NextName))
 #endif
-      return(false);
+    {
+      FailedOpen=true;
+      break;
+    }
 #endif
+  }
+  if (FailedOpen)
+  {
+    Arc.Open(Arc.FileName,Arc.FileNameW);
+    Arc.Seek(PosBeforeClose,SEEK_SET);
+    return(false);
   }
   Arc.CheckArc(true);
 #ifdef RARDLL

@@ -113,6 +113,7 @@ void CommandData::ParseDone()
   bool Extract=CmdChar=='X' || CmdChar=='E';
   if (Test && Extract)
     Test=false;
+  BareOutput=(CmdChar=='L' || CmdChar=='V') && Command[1]=='B';
 }
 
 
@@ -228,16 +229,50 @@ void CommandData::ProcessSwitch(char *Switch)
           ArcTime=ARCTIME_LATEST;
           break;
         case 'O':
-          FileTimeOlder=TextAgeToSeconds(Switch+2);
+          FileTimeBefore.SetAgeText(Switch+2);
           break;
         case 'N':
-          FileTimeNewer=TextAgeToSeconds(Switch+2);
+          FileTimeAfter.SetAgeText(Switch+2);
           break;
         case 'B':
-          FileTimeBefore=IsoTextToDosTime(Switch+2);
+          FileTimeBefore.SetIsoText(Switch+2);
           break;
         case 'A':
-          FileTimeAfter=IsoTextToDosTime(Switch+2);
+          FileTimeAfter.SetIsoText(Switch+2);
+          break;
+        case 'S':
+          {
+            EXTTIME_MODE Mode=EXTTIME_HIGH3;
+            bool CommonMode=Switch[2]>='0' && Switch[2]<='4';
+            if (CommonMode)
+              Mode=(EXTTIME_MODE)(Switch[2]-'0');
+            if (Switch[2]=='-')
+              Mode=EXTTIME_NONE;
+            if (CommonMode || Switch[2]=='-' || Switch[2]=='+' || Switch[2]==0)
+              xmtime=xctime=xatime=Mode;
+            else
+            {
+              if (Switch[3]>='0' && Switch[3]<='4')
+                Mode=(EXTTIME_MODE)(Switch[3]-'0');
+              if (Switch[3]=='-')
+                Mode=EXTTIME_NONE;
+              switch(toupper(Switch[2]))
+              {
+                case 'M':
+                  xmtime=Mode;
+                  break;
+                case 'C':
+                  xctime=Mode;
+                  break;
+                case 'A':
+                  xatime=Mode;
+                  break;
+                case 'R':
+                  xarctime=Mode;
+                  break;
+              }
+            }
+          }
           break;
         case '-':
           Test=false;
@@ -573,6 +608,14 @@ void CommandData::ProcessSwitch(char *Switch)
               case 'M':
                 VolSize*=1000*1000;
                 break;
+              case 'g':
+                VolSize*=1024*1024;
+                VolSize*=1024;
+                break;
+              case 'G':
+                VolSize*=1000*1000;
+                VolSize*=1000;
+                break;
               case 'b':
               case 'B':
                 break;
@@ -680,6 +723,8 @@ void CommandData::BadSwitch(char *Switch)
 #ifndef GUI
 void CommandData::OutTitle()
 {
+  if (BareOutput)
+    return;
 #if defined(__GNUC__) && defined(SFX_MODULE)
   mprintf(St(MCopyrightS));
 #else
@@ -722,29 +767,28 @@ void CommandData::OutHelp()
     MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,
     MCHelpSwAP,MCHelpSwAVm,MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
     MCHelpSwDH,MCHelpSwEP,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,MCHelpSwINUL,
-    MCHelpSwIOFF,
-    MCHelpSwKB,MCHelpSwOp,MCHelpSwOm,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,
-    MCHelpSwR,MCHelpSwRI,MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,
-    MCHelpSwU,MCHelpSwV,MCHelpSwVER,MCHelpSwVP,MCHelpSwX,MCHelpSwXa,
-    MCHelpSwXal,MCHelpSwY
+    MCHelpSwIOFF,MCHelpSwKB,MCHelpSwOp,MCHelpSwOm,MCHelpSwOW,MCHelpSwP,
+    MCHelpSwPm,MCHelpSwR,MCHelpSwRI,MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,
+    MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,MCHelpSwVER,MCHelpSwVP,
+    MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY
 #else
     MRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdA,MCHelpCmdC,MCHelpCmdCF,
     MCHelpCmdCW,MCHelpCmdD,MCHelpCmdE,MCHelpCmdF,MCHelpCmdI,MCHelpCmdK,
-    MCHelpCmdL,MCHelpCmdM,MCHelpCmdP,MCHelpCmdR,MCHelpCmdRC,MCHelpCmdRR,
-    MCHelpCmdRV,MCHelpCmdS,MCHelpCmdT,MCHelpCmdU,MCHelpCmdV,MCHelpCmdX,
-    MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAG,MCHelpSwAO,MCHelpSwAP,
-    MCHelpSwAS,MCHelpSwAV,MCHelpSwAVm,MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,
-    MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,MCHelpSwDS,MCHelpSwEa,MCHelpSwED,
-    MCHelpSwEE,MCHelpSwEN,MCHelpSwEP,MCHelpSwEP1,MCHelpSwEP2,
-    MCHelpSwF,MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,MCHelpSwIERR,MCHelpSwILOG,
-    MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwISND,MCHelpSwK,MCHelpSwKB,MCHelpSwMn,
-    MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,MCHelpSwOp,MCHelpSwOm,MCHelpSwOL,
-    MCHelpSwOS,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwR0,
-    MCHelpSwRI,MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSFX,
-    MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,MCHelpSwTL,MCHelpSwTN,
-    MCHelpSwTO,MCHelpSwU,MCHelpSwV,MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,
-    MCHelpSwVN,MCHelpSwVP,MCHelpSwW,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,
-    MCHelpSwY,MCHelpSwZ
+    MCHelpCmdL,MCHelpCmdM,MCHelpCmdP,MCHelpCmdR,MCHelpCmdRC,MCHelpCmdRN,
+    MCHelpCmdRR,MCHelpCmdRV,MCHelpCmdS,MCHelpCmdT,MCHelpCmdU,MCHelpCmdV,
+    MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAG,
+    MCHelpSwAO,MCHelpSwAP,MCHelpSwAS,MCHelpSwAV,MCHelpSwAVm,MCHelpSwCm,
+    MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,MCHelpSwDS,
+    MCHelpSwEa,MCHelpSwED,MCHelpSwEE,MCHelpSwEN,MCHelpSwEP,MCHelpSwEP1,
+    MCHelpSwEP2,MCHelpSwF,MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,MCHelpSwIERR,
+    MCHelpSwILOG,MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwISND,MCHelpSwK,MCHelpSwKB,
+    MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,MCHelpSwOp,MCHelpSwOm,
+    MCHelpSwOL,MCHelpSwOS,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,
+    MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,
+    MCHelpSwSFX,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,MCHelpSwTL,
+    MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,MCHelpSwVn,
+    MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,MCHelpSwX,
+    MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
 #endif
   };
 
@@ -787,7 +831,7 @@ void CommandData::OutHelp()
     mprintf(St(Help[I]));
   }
   mprintf("\n");
-  ErrHandler.Exit(USER_ERROR);
+  ErrHandler.Exit(0);
 #endif
 }
 
@@ -818,12 +862,13 @@ bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath)
 
 
 #ifndef SFX_MODULE
-bool CommandData::TimeCheck(uint FileDosTime)
+bool CommandData::TimeCheck(RarTime &ft)
 {
-  if (FileTimeBefore!=0 && FileDosTime>=FileTimeBefore)
+  if (FileTimeBefore.IsSet() && ft>=FileTimeBefore)
     return(true);
-  if (FileTimeAfter!=0 && FileDosTime<=FileTimeAfter)
+  if (FileTimeAfter.IsSet() && ft<=FileTimeAfter)
     return(true);
+/*
   if (FileTimeOlder!=0 || FileTimeNewer!=0)
   {
     if (!TimeConverted)
@@ -834,28 +879,32 @@ bool CommandData::TimeCheck(uint FileDosTime)
         FileTimeNewer=SecondsToDosTime(FileTimeNewer);
       TimeConverted=true;
     }
-    if (FileTimeOlder!=0 && FileDosTime>=FileTimeOlder)
+    if (FileTimeOlder!=0 && ft>=FileTimeOlder)
       return(true);
-    if (FileTimeNewer!=0 && FileDosTime<=FileTimeNewer)
+    if (FileTimeNewer!=0 && ft<=FileTimeNewer)
       return(true);
+
   }
+*/
   return(false);
 }
 #endif
 
 
-bool CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch)
+int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType)
 {
+  if (strlen(NewLhd.FileName)>=NM || strlenw(NewLhd.FileNameW)>=NM)
+    return(0);
   if (ExclCheck(NewLhd.FileName,false))
-    return(false);
+    return(0);
 #ifndef SFX_MODULE
-  if (TimeCheck(NewLhd.FileTime))
-    return(false);
+  if (TimeCheck(NewLhd.mtime))
+    return(0);
 #endif
   char *ArgName;
   wchar *ArgNameW;
   FileArgs->Rewind();
-  while (FileArgs->GetString(&ArgName,&ArgNameW))
+  for (int StringCount=1;FileArgs->GetString(&ArgName,&ArgNameW);StringCount++)
   {
 #ifndef SFX_MODULE
     bool Unicode=(NewLhd.Flags & LHD_UNICODE) || ArgNameW!=NULL;
@@ -872,22 +921,22 @@ bool CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch)
         CharToWide(NewLhd.FileName,NameW);
         NamePtr=NameW;
       }
-      if (CmpName(ArgNameW,NamePtr,MATCH_WILDSUBPATH))
+      if (CmpName(ArgNameW,NamePtr,MatchType))
       {
         if (ExactMatch!=NULL)
           *ExactMatch=stricompcw(ArgNameW,NamePtr)==0;
-        return(true);
+        return(StringCount);
       }
     }
 #endif
-    if (CmpName(ArgName,NewLhd.FileName,MATCH_WILDSUBPATH))
+    if (CmpName(ArgName,NewLhd.FileName,MatchType))
     {
       if (ExactMatch!=NULL)
         *ExactMatch=stricompc(ArgName,NewLhd.FileName)==0;
-      return(true);
+      return(StringCount);
     }
   }
-  return(false);
+  return(0);
 }
 
 
@@ -940,7 +989,8 @@ void CommandData::ProcessCommand()
 #endif
   }
 #ifndef GUI
-  mprintf("\n");
+  if (!BareOutput)
+    mprintf("\n");
 #endif
 }
 

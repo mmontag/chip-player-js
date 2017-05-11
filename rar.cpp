@@ -11,6 +11,9 @@ extern "C" void   __crt0_load_environment_file (char *progname) { }
 #if !defined(GUI) && !defined(RARDLL)
 int main(int argc, char *argv[])
 {
+#ifdef _UNIX
+  setlocale(LC_ALL,"");
+#endif
 #ifndef SFX_MODULE
   setbuf(stdout,NULL);
 
@@ -125,9 +128,6 @@ int main(int argc, char *argv[])
 void RARInitData()
 {
   InitCRC();
-#ifndef SFX_MODULE
-  InitTime();
-#endif
   ErrHandler.Clean();
 }
 

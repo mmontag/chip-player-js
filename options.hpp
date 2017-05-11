@@ -11,6 +11,9 @@ enum PathExclMode {
 enum {SOLID_NONE=0,SOLID_NORMAL=1,SOLID_COUNT=2,SOLID_FILEEXT=4,
       SOLID_VOLUME_DEPENDENT=8,SOLID_VOLUME_INDEPENDENT=16};
 enum {ARCTIME_NONE,ARCTIME_KEEP,ARCTIME_LATEST};
+enum EXTTIME_MODE {
+  EXTTIME_NONE,EXTTIME_1S,EXTTIME_HIGH1,EXTTIME_HIGH2,EXTTIME_HIGH3
+};
 enum {NAMES_ORIGINALCASE,NAMES_UPPERCASE,NAMES_LOWERCASE};
 enum MESSAGE_TYPE {MSG_STDOUT,MSG_STDERR,MSG_NULL};
 enum OVERWRITE_MODE { OVERWRITE_ASK,OVERWRITE_ALL,OVERWRITE_NONE};
@@ -82,8 +85,8 @@ class RAROptions
     bool SaveStreams;
     uint FileTimeOlder;
     uint FileTimeNewer;
-    uint FileTimeBefore;
-    uint FileTimeAfter;
+    RarTime FileTimeBefore;
+    RarTime FileTimeAfter;
     bool OldNumbering;
     bool Lock;
     bool Test;
@@ -94,6 +97,10 @@ class RAROptions
     bool NoEndBlock;
     bool AppendArcNameToPath;
     bool Shutdown;
+    EXTTIME_MODE xmtime;
+    EXTTIME_MODE xctime;
+    EXTTIME_MODE xatime;
+    EXTTIME_MODE xarctime;
 
 
 #ifdef RARDLL

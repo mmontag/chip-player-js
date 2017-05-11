@@ -426,6 +426,14 @@ char* SupportDBCS::strchrd(const char *s, int c)
 }
 
 
+void SupportDBCS::copychrd(char *dest,const char *src)
+{
+  dest[0]=src[0];
+  if (IsLeadByte[src[0]])
+    dest[1]=src[1];
+}
+
+
 char* SupportDBCS::strrchrd(const char *s, int c)
 {
   const char *found=NULL;

@@ -70,9 +70,9 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
         ErrHandler.Exit(USER_BREAK);
     }
   }
-  if (NewFile->Create(Name,NameW))
+  if (NewFile!=NULL && NewFile->Create(Name,NameW))
     return(true);
   PrepareToDelete(Name,NameW);
   CreatePath(Name,NameW,true);
-  return(NewFile->Create(Name,NameW));
+  return(NewFile!=NULL ? NewFile->Create(Name,NameW):remove(Name)==0);
 }

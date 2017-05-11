@@ -34,7 +34,7 @@ bool CmpName(char *Wildcard,char *Name,int CmpPath)
   if (CmpPath!=MATCH_NAMES)
   {
     int WildLength=strlen(Wildcard);
-    if (strnicompc(Wildcard,Name,WildLength)==0)
+    if (CmpPath!=MATCH_EXACTPATH && strnicompc(Wildcard,Name,WildLength)==0)
     {
       char NextCh=Name[WildLength];
       if (NextCh=='\\' || NextCh=='/' || NextCh==0)
@@ -45,7 +45,7 @@ bool CmpName(char *Wildcard,char *Name,int CmpPath)
     GetFilePath(Name,Path2);
     if (stricompc(Wildcard,Path2)==0)
       return(true);
-    if (CmpPath==MATCH_PATH && stricompc(Path1,Path2)!=0)
+    if ((CmpPath==MATCH_PATH || CmpPath==MATCH_EXACTPATH) && stricompc(Path1,Path2)!=0)
       return(false);
     if (CmpPath==MATCH_SUBPATH || CmpPath==MATCH_WILDSUBPATH)
       if (IsWildcard(Path1))
@@ -74,7 +74,7 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
   if (CmpPath!=MATCH_NAMES)
   {
     int WildLength=strlenw(Wildcard);
-    if (strnicompcw(Wildcard,Name,WildLength)==0)
+    if (CmpPath!=MATCH_EXACTPATH && strnicompcw(Wildcard,Name,WildLength)==0)
     {
       wchar NextCh=Name[WildLength];
       if (NextCh==L'\\' || NextCh==L'/' || NextCh==0)
@@ -83,7 +83,7 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
     wchar Path1[NM],Path2[NM];
     GetFilePath(Wildcard,Path1);
     GetFilePath(Name,Path2);
-    if (CmpPath==MATCH_PATH && stricompcw(Path1,Path2)!=0)
+    if ((CmpPath==MATCH_PATH || CmpPath==MATCH_EXACTPATH) && stricompcw(Path1,Path2)!=0)
       return(false);
     if (CmpPath==MATCH_SUBPATH || CmpPath==MATCH_WILDSUBPATH)
       if (IsWildcard(NULL,Path1))

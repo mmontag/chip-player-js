@@ -8,7 +8,7 @@ static void RawPrint(char *Msg,MESSAGE_TYPE MessageType);
 
 static MESSAGE_TYPE MsgStream=MSG_STDOUT;
 static bool Sound=false;
-const int MaxMsgSize=4096;
+const int MaxMsgSize=2*NM+2048;
 
 void InitConsoleOptions(MESSAGE_TYPE MsgStream,bool Sound)
 {
@@ -21,7 +21,7 @@ void mprintf(const char *fmt,...)
 {
   if (MsgStream==MSG_NULL)
     return;
-  char Msg[MaxMsgSize];
+  safebuf char Msg[MaxMsgSize];
   va_list argptr;
   va_start(argptr,fmt);
   vsprintf(Msg,fmt,argptr);
@@ -36,7 +36,7 @@ void eprintf(const char *fmt,...)
 {
   if (MsgStream==MSG_NULL)
     return;
-  char Msg[MaxMsgSize];
+  safebuf char Msg[MaxMsgSize];
   va_list argptr;
   va_start(argptr,fmt);
   vsprintf(Msg,fmt,argptr);
@@ -280,8 +280,9 @@ void OutComment(char *Comment,int Size)
   for (int I=0;I<Size;I+=MaxOutSize)
   {
     char Msg[MaxOutSize+1];
-    strncpy(Msg,Comment+I,MaxOutSize);
-    Msg[Min(MaxOutSize,Size-I)]=0;
+    int CopySize=Min(MaxOutSize,Size-I);
+    strncpy(Msg,Comment+I,CopySize);
+    Msg[CopySize]=0;
     mprintf("%s",Msg);
   }
   mprintf("\n");

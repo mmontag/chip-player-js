@@ -79,8 +79,11 @@ void CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
 }
 
 
-void SetDirTime(const char *Name,uint ft)
+void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta)
 {
+  bool sm=ftm!=NULL && ftm->IsSet();
+  bool sc=ftc!=NULL && ftc->IsSet();
+  bool sa=ftc!=NULL && fta->IsSet();
 #ifdef _WIN_32
   if (!WinNT())
     return;
@@ -88,16 +91,18 @@ void SetDirTime(const char *Name,uint ft)
                           NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS,NULL);
   if (hFile==INVALID_HANDLE_VALUE)
     return;
-  FILETIME LocalTime,FileTime;
-  DosDateTimeToFileTime(HIWORD(ft),LOWORD(ft),&LocalTime);
-  LocalFileTimeToFileTime(&LocalTime,&FileTime);
-  SetFileTime(hFile,NULL,NULL,&FileTime);
+  FILETIME fm,fc,fa;
+  if (sm)
+    ftm->GetWin32(&fm);
+  if (sc)
+    ftc->GetWin32(&fc);
+  if (sa)
+    fta->GetWin32(&fa);
+  SetFileTime(hFile,sc ? &fc:NULL,sa ? &fa:NULL,sm ? &fm:NULL);
   CloseHandle(hFile);
 #endif
 #if defined(_UNIX) || defined(_EMX)
-  struct utimbuf ut;
-  ut.actime=ut.modtime=DosTimeToUnix(ft);
-  utime(Name,&ut);
+  File::SetCloseFileTimeByName(Name,ftm,fta);
 #endif
 }
 
@@ -346,7 +351,7 @@ void ConvertNameToFull(const char *Src,char *Dest)
       strcpy(Dest,Src);
 #else
   char FullName[NM];
-  if (IsPathDiv(*Src) || *Src!=0 && IsDriveDiv(Src[1]))
+  if (IsPathDiv(*Src) || IsDiskLetter(Src))
     strcpy(FullName,Src);
   else
   {
@@ -425,7 +430,7 @@ uint CalcFileCRC(File *SrcFile,Int64 Size)
 
 
   SrcFile->Seek(0,SEEK_SET);
-  while ((ReadSize=SrcFile->Read(&Data[0],int64to32(Size==INT64ERR ? BufSize:Min(BufSize,Size))))!=0)
+  while ((ReadSize=SrcFile->Read(&Data[0],int64to32(Size==INT64ERR ? Int64(BufSize):Min(Int64(BufSize),Size))))!=0)
   {
     if ((++BlockCount & 15)==0)
     {
