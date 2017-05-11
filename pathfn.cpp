@@ -334,6 +334,7 @@ bool EnumConfigPaths(char *Path,int Number)
     strcpy(RARFileName,Path);
   if (Number!=0)
     return(false);
+#ifndef _DJGPP
   if (_osmode==OS2_MODE)
   {
     PTIB ptib;
@@ -342,6 +343,7 @@ bool EnumConfigPaths(char *Path,int Number)
     DosQueryModuleName(ppib->pib_hmte,NM,Path);
   }
   else
+#endif
     strcpy(Path,RARFileName);
   RemoveNameFromPath(Path);
   return(true);
