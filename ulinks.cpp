@@ -2,31 +2,34 @@
 
 
 
-int ExtractLink(ComprDataIO &DataIO,Archive &Arc,char *DestName,uint &LinkCRC,bool Create)
+bool ExtractLink(ComprDataIO &DataIO,Archive &Arc,const char *LinkName,uint &LinkCRC,bool Create)
 {
 #if defined(SAVE_LINKS) && defined(_UNIX)
-  char FileName[NM];
+  char LinkTarget[NM];
   if (IsLink(Arc.NewLhd.FileAttr))
   {
-    int DataSize=Min(Arc.NewLhd.PackSize,sizeof(FileName)-1);
-    DataIO.UnpRead((byte *)FileName,DataSize);
-    FileName[DataSize]=0;
+    int DataSize=Min(Arc.NewLhd.PackSize,sizeof(LinkTarget)-1);
+    DataIO.UnpRead((byte *)LinkTarget,DataSize);
+    LinkTarget[DataSize]=0;
     if (Create)
     {
-      CreatePath(DestName,NULL,true);
-      if (symlink(FileName,DestName)==-1)
+      CreatePath(LinkName,NULL,true);
+      if (symlink(LinkTarget,LinkName)==-1) // Error.
         if (errno==EEXIST)
-          Log(Arc.FileName,St(MSymLinkExists),DestName);
+          Log(Arc.FileName,St(MSymLinkExists),LinkName);
         else
         {
-          Log(Arc.FileName,St(MErrCreateLnk),DestName);
+          Log(Arc.FileName,St(MErrCreateLnk),LinkName);
           ErrHandler.SetErrorCode(WARNING);
         }
+      // We do not set time of created symlink, because utime changes
+      // time of link target and lutimes is not available on all Linux
+      // systems at the moment of writing this code.
     }
-    int NameSize=Min(DataSize,strlen(FileName));
-    LinkCRC=CRC(0xffffffff,FileName,NameSize);
-    return(1);
+    int NameSize=Min(DataSize,strlen(LinkTarget));
+    LinkCRC=CRC(0xffffffff,LinkTarget,NameSize);
+    return(true);
   }
 #endif
-  return(0);
+  return(false);
 }

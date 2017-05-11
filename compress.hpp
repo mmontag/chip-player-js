@@ -4,6 +4,8 @@
 class ComprDataIO;
 class PackingFileTable;
 
+#define MAX_LZ_MATCH    0x101
+
 #define CODEBUFSIZE     0x4000
 #define MAXWINSIZE      0x400000
 #define MAXWINMASK      (MAXWINSIZE-1)
@@ -22,6 +24,9 @@ class PackingFileTable;
 #define RC20 28
 #define BC20 19
 #define MC20 257
+
+// Largest alphabet size among all values listed above.
+#define LARGEST_TABLE_SIZE 299
 
 enum {CODE_HUFFMAN,CODE_LZ,CODE_LZ2,CODE_REPEATLZ,CODE_CACHELZ,
       CODE_STARTFILE,CODE_ENDFILE,CODE_VM,CODE_VMDATA};

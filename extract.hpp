@@ -19,10 +19,16 @@ class CmdExtract
     bool AllMatchesExact;
     bool ReconstructDone;
 
+    // If any non-zero solid file was successfully unpacked before current.
+    // If true and if current encrypted file is broken, obviously
+    // the password is correct and we can report broken CRC without
+    // any wrong password hints.
+    bool AnySolidDataUnpackedWell;
+
     char ArcName[NM];
     wchar ArcNameW[NM];
 
-    char Password[MAXPASSWORD];
+    wchar Password[MAXPASSWORD];
     bool PasswordAll;
     bool PrevExtracted;
     char DestFileName[NM];

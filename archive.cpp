@@ -64,7 +64,7 @@ void Archive::CheckArc(bool EnableBroken)
 
 
 #if !defined(SHELL_EXT) && !defined(SFX_MODULE)
-void Archive::CheckOpen(char *Name,wchar *NameW)
+void Archive::CheckOpen(const char *Name,const wchar *NameW)
 {
   TOpen(Name,NameW);
   CheckArc(false);
@@ -72,7 +72,7 @@ void Archive::CheckOpen(char *Name,wchar *NameW)
 #endif
 
 
-bool Archive::WCheckOpen(char *Name,wchar *NameW)
+bool Archive::WCheckOpen(const char *Name,const wchar *NameW)
 {
   if (!WOpen(Name,NameW))
     return(false);
@@ -233,7 +233,7 @@ bool Archive::IsArchive(bool EnableBroken)
   if (!Volume || !NotFirstVolume)
   {
     strcpy(FirstVolumeName,FileName);
-    strcpyw(FirstVolumeNameW,FileNameW);
+    wcscpy(FirstVolumeNameW,FileNameW);
   }
 
   return(true);

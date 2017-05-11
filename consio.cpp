@@ -67,8 +67,8 @@ void RawPrint(char *Msg,MESSAGE_TYPE MessageType)
     default:
       return;
   }
-#ifdef _WIN_32
-  CharToOem(Msg,Msg);
+#ifdef _WIN_ALL
+  CharToOemA(Msg,Msg);
 
   char OutMsg[MaxMsgSize],*OutPos=OutMsg;
   for (int I=0;Msg[I]!=0;I++)
@@ -90,7 +90,6 @@ void RawPrint(char *Msg,MESSAGE_TYPE MessageType)
 #endif
 
   OutFile.Write(Msg,strlen(Msg));
-//  OutFile.Flush();
 }
 #endif
 
@@ -108,9 +107,11 @@ void Alarm()
 
 #ifndef SILENT
 #ifndef GUI
-void GetPasswordText(char *Str,int MaxLength)
+void GetPasswordText(wchar *Str,uint MaxLength)
 {
-#ifdef _WIN_32
+  if (MaxLength==0)
+    return;
+#ifdef _WIN_ALL
   HANDLE hConIn=GetStdHandle(STD_INPUT_HANDLE);
   HANDLE hConOut=GetStdHandle(STD_OUTPUT_HANDLE);
   DWORD ConInMode,ConOutMode;
@@ -119,15 +120,19 @@ void GetPasswordText(char *Str,int MaxLength)
   GetConsoleMode(hConOut,&ConOutMode);
   SetConsoleMode(hConIn,ENABLE_LINE_INPUT);
   SetConsoleMode(hConOut,ENABLE_PROCESSED_OUTPUT|ENABLE_WRAP_AT_EOL_OUTPUT);
-  ReadConsole(hConIn,Str,MaxLength-1,&Read,NULL);
+
+  ReadConsoleW(hConIn,Str,MaxLength-1,&Read,NULL);
   Str[Read]=0;
-  OemToChar(Str,Str);
   SetConsoleMode(hConIn,ConInMode);
   SetConsoleMode(hConOut,ConOutMode);
-#elif defined(_EMX) || defined(_BEOS) || defined(__sparc) || defined(sparc) || defined (__VMS)
-  fgets(Str,MaxLength-1,stdin);
 #else
-  strncpyz(Str,getpass(""),MaxLength);
+  char StrA[MAXPASSWORD];
+#if defined(_EMX) || defined(_BEOS) || defined(__sparc) || defined(sparc) || defined (__VMS)
+  fgets(StrA,ASIZE(StrA)-1,stdin);
+#else
+  strncpyz(StrA,getpass(""),ASIZE(StrA));
+#endif
+  CharToWide(StrA,Str,MaxLength);
 #endif
   Str[MaxLength-1]=0;
   RemoveLF(Str);
@@ -137,7 +142,7 @@ void GetPasswordText(char *Str,int MaxLength)
 
 
 #ifndef SILENT
-bool GetPassword(PASSWORD_TYPE Type,const char *FileName,char *Password,int MaxLength)
+bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,wchar *Password,uint MaxLength)
 {
   Alarm();
   while (true)
@@ -162,12 +167,12 @@ bool GetPassword(PASSWORD_TYPE Type,const char *FileName,char *Password,int MaxL
     if (Type==PASSWORD_GLOBAL)
     {
       eprintf(St(MReAskPsw));
-      char CmpStr[MAXPASSWORD];
+      wchar CmpStr[MAXPASSWORD];
       GetPasswordText(CmpStr,ASIZE(CmpStr));
-      if (*CmpStr==0 || strcmp(Password,CmpStr)!=0)
+      if (*CmpStr==0 || wcscmp(Password,CmpStr)!=0)
       {
         eprintf(St(MNotMatchPsw));
-        memset(Password,0,MaxLength);
+        memset(Password,0,MaxLength*sizeof(*Password));
         memset(CmpStr,0,sizeof(CmpStr));
         continue;
       }
@@ -242,7 +247,7 @@ int Ask(const char *AskStr)
   }
   eprintf(" ");
   int Ch=GetKey();
-#if defined(_WIN_32)
+#if defined(_WIN_ALL)
   OemToCharBuff((LPCSTR)&Ch,(LPTSTR)&Ch,1);
 #endif
   Ch=loctoupper(Ch);

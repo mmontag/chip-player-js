@@ -5,11 +5,18 @@
 #define MBFUNCTIONS
 #endif
 
-#if defined(MBFUNCTIONS) || defined(_WIN_32) || defined(_EMX) && !defined(_DJGPP)
+#if defined(MBFUNCTIONS) || defined(_WIN_ALL) || defined(_EMX) && !defined(_DJGPP)
 #define UNICODE_SUPPORTED
 #endif
 
-#ifdef _WIN_32
+#if !defined(SFX_MODULE) && (defined(_MSC_VER) || defined(__BORLANDC__))
+// If C_UNICODE_RTL is defined, we can use library Unicode functions like
+// wcscpy. Otherwise, for compatibility with old compilers or for removing
+// RTL to reduce SFX module size, we need need to use our own implementations.
+#define C_UNICODE_RTL
+#endif
+
+#ifdef _WIN_ALL
 #define DBCS_SUPPORTED
 #endif
 
@@ -18,29 +25,26 @@ int uni_init(int codepage);
 int uni_done();
 #endif
 
+#ifdef __BORLANDC__
+// Borland C++ Builder 5 uses the old style swprintf without the buffer size,
+// so we replace it with snwprintf in our custom sprintfw definition.
+#define sprintfw snwprintf
+#else
+#define sprintfw swprintf
+#endif
+
 bool WideToChar(const wchar *Src,char *Dest,size_t DestSize=0x1000000);
 bool CharToWide(const char *Src,wchar *Dest,size_t DestSize=0x1000000);
-byte* WideToRaw(const wchar *Src,byte *Dest,size_t DestSize=0x1000000);
+byte* WideToRaw(const wchar *Src,byte *Dest,size_t SrcSize=0x1000000);
 wchar* RawToWide(const byte *Src,wchar *Dest,size_t DestSize=0x1000000);
 void WideToUtf(const wchar *Src,char *Dest,size_t DestSize);
 void UtfToWide(const char *Src,wchar *Dest,size_t DestSize);
 bool UnicodeEnabled();
 
-size_t strlenw(const wchar *str);
-wchar* strcpyw(wchar *dest,const wchar *src);
-wchar* strncpyw(wchar *dest,const wchar *src,size_t n);
-wchar* strcatw(wchar *dest,const wchar *src);
-wchar* strncatw(wchar *dest,const wchar *src,size_t n);
-int strcmpw(const wchar *s1,const wchar *s2);
-int strncmpw(const wchar *s1,const wchar *s2,size_t n);
-int stricmpw(const wchar *s1,const wchar *s2);
-int strnicmpw(const wchar *s1,const wchar *s2,size_t n);
-wchar *strchrw(const wchar *s,int c);
-wchar* strrchrw(const wchar *s,int c);
-wchar* strpbrkw(const wchar *s1,const wchar *s2);
-wchar* strlowerw(wchar *Str);
-wchar* strupperw(wchar *Str);
-wchar* strdupw(const wchar *Str);
+int wcsicomp(const wchar *s1,const wchar *s2);
+int wcsnicomp(const wchar *s1,const wchar *s2,size_t n);
+wchar* wcslower(wchar *Str);
+wchar* wcsupper(wchar *Str);
 int toupperw(int ch);
 int atoiw(const wchar *s);
 

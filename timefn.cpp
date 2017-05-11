@@ -5,10 +5,10 @@ RarTime::RarTime()
   Reset();
 }
 
-#ifdef _WIN_32
+#ifdef _WIN_ALL
 RarTime& RarTime::operator =(FILETIME &ft)
 {
-  FILETIME lft,zft;
+  FILETIME lft;
   FileTimeToLocalFileTime(&ft,&lft);
   SYSTEMTIME st;
   FileTimeToSystemTime(&lft,&st);
@@ -29,8 +29,13 @@ RarTime& RarTime::operator =(FILETIME &ft)
     rlt.yDay++;
 
   st.wMilliseconds=0;
+  FILETIME zft;
   SystemTimeToFileTime(&st,&zft);
-  rlt.Reminder=lft.dwLowDateTime-zft.dwLowDateTime;
+
+  // Calculate the time reminder, which is the part of time smaller
+  // than 1 second, represented in 100-nanosecond intervals.
+  rlt.Reminder=INT32TO64(lft.dwHighDateTime,lft.dwLowDateTime)-
+               INT32TO64(zft.dwHighDateTime,zft.dwLowDateTime);
   return(*this);
 }
 
@@ -99,7 +104,7 @@ int64 RarTime::GetRaw()
 {
   if (!IsSet())
     return(0);
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   FILETIME ft;
   GetWin32(&ft);
   return(INT32TO64(ft.dwHighDateTime,ft.dwLowDateTime));
@@ -130,7 +135,7 @@ int64 RarTime::GetRaw()
 #ifndef SFX_MODULE
 void RarTime::SetRaw(int64 RawTime)
 {
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   FILETIME ft;
   ft.dwHighDateTime=(DWORD)(RawTime>>32);
   ft.dwLowDateTime=(DWORD)RawTime;
@@ -295,7 +300,7 @@ void RarTime::SetAgeText(char *TimeText)
 
 void RarTime::SetCurrentTime()
 {
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   FILETIME ft;
   SYSTEMTIME st;
   GetSystemTime(&st);

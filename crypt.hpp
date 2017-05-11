@@ -20,7 +20,7 @@ struct CryptKeyCacheItem
   }
 #endif
   byte AESKey[16],AESInit[16];
-  char Password[MAXPASSWORD];
+  wchar Password[MAXPASSWORD];
   bool SaltPresent;
   byte Salt[SALT_SIZE];
   bool HandsOffHash;
@@ -48,7 +48,7 @@ class CryptData
     static CryptKeyCacheItem Cache[4];
     static int CachePos;
   public:
-    void SetCryptKeys(const char *Password,const byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash);
+    void SetCryptKeys(const wchar *Password,const byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash);
     void SetAV15Encryption();
     void SetCmt13Encryption();
     void EncryptBlock20(byte *Buf);

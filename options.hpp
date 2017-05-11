@@ -6,7 +6,7 @@
 #define DEFAULT_RECVOLUMES  -10
 
 enum PATH_EXCL_MODE {
-  EXCL_NONE,EXCL_BASEPATH,EXCL_SKIPWHOLEPATH,EXCL_SAVEFULLPATH,
+  EXCL_UNCHANGED,EXCL_BASEPATH,EXCL_SKIPWHOLEPATH,EXCL_SAVEFULLPATH,
   EXCL_SKIPABSPATH,EXCL_ABSPATH
 };
 
@@ -66,15 +66,15 @@ class RAROptions
     bool InclAttrSet;
     uint WinSize;
     char TempPath[NM];
-    char SFXModule[NM];
     char ExtrPath[NM];
     wchar ExtrPathW[NM];
     char CommentFile[NM];
+    wchar CommentFileW[NM];
     RAR_CHARSET CommentCharset;
     RAR_CHARSET FilelistCharset;
     char ArcPath[NM];
     wchar ArcPathW[NM];
-    char Password[MAXPASSWORD];
+    wchar Password[MAXPASSWORD];
     bool EncryptHeaders;
     char LogName[NM];
     MESSAGE_TYPE MsgStream;
@@ -109,12 +109,9 @@ class RAROptions
     int Priority;
     int SleepTime;
     bool KeepBroken;
-    bool EraseDisk;
     bool OpenShared;
     bool DeleteFiles;
     bool SyncFiles;
-    bool GenerateArcName;
-    char GenerateMask[80];
     bool ProcessEA;
     bool SaveStreams;
     bool SetCompressedAttr;

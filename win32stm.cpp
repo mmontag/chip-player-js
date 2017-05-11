@@ -94,23 +94,23 @@ void ExtractStreamsNew(Archive &Arc,char *FileName,wchar *FileNameW)
 
   wchar NameW[NM];
   if (FileNameW!=NULL && *FileNameW!=0)
-    strcpyw(NameW,FileNameW);
+    wcscpy(NameW,FileNameW);
   else
     CharToWide(FileName,NameW);
   wchar StreamNameW[NM+2];
   if (NameW[0]!=0 && NameW[1]==0)
   {
-    strcpyw(StreamNameW,L".\\");
-    strcpyw(StreamNameW+2,NameW);
+    wcscpy(StreamNameW,L".\\");
+    wcscpy(StreamNameW+2,NameW);
   }
   else
-    strcpyw(StreamNameW,NameW);
+    wcscpy(StreamNameW,NameW);
 
-  wchar *DestName=StreamNameW+strlenw(StreamNameW);
+  wchar *DestName=StreamNameW+wcslen(StreamNameW);
   byte *SrcName=&Arc.SubHead.SubData[0];
   size_t DestSize=Arc.SubHead.SubData.Size()/2;
 
-  if (strlenw(StreamNameW)+DestSize>=ASIZE(StreamNameW))
+  if (wcslen(StreamNameW)+DestSize>=ASIZE(StreamNameW))
   {
 #if !defined(SILENT) && !defined(SFX_MODULE)
     Log(Arc.FileName,St(MStreamBroken),FileName);

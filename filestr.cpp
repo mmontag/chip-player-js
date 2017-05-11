@@ -2,20 +2,40 @@
 
 static bool IsUnicode(byte *Data,int Size);
 
-bool ReadTextFile(const char *Name,StringList *List,bool Config,
-                  bool AbortOnError,RAR_CHARSET SrcCharset,bool Unquote,
-                  bool SkipComments,bool ExpandEnvStr)
+bool ReadTextFile(
+  const char *Name,
+  const wchar *NameW,
+  StringList *List,
+  bool Config,
+  bool AbortOnError,
+  RAR_CHARSET SrcCharset,
+  bool Unquote,
+  bool SkipComments,
+  bool ExpandEnvStr)
 {
   char FileName[NM];
-  if (Config)
-    GetConfigName(Name,FileName,true);
-  else
-    strcpy(FileName,Name);
+  *FileName=0;
+  if (Name!=NULL)
+    if (Config)
+      GetConfigName(Name,FileName,true);
+    else
+      strcpy(FileName,Name);
+
+  wchar FileNameW[NM];
+  *FileNameW=0;
+
+#ifdef _WIN_ALL
+  if (NameW!=NULL)
+    if (Config)
+      GetConfigName(NameW,FileNameW,true);
+    else
+      wcscpy(FileNameW,NameW);
+#endif
 
   File SrcFile;
-  if (*FileName)
+  if (FileName!=NULL && *FileName!=0 || FileNameW!=NULL && *FileNameW!=0)
   {
-    bool OpenCode=AbortOnError ? SrcFile.WOpen(FileName):SrcFile.Open(FileName);
+    bool OpenCode=AbortOnError ? SrcFile.WOpen(FileName,FileNameW):SrcFile.Open(FileName,FileNameW);
 
     if (!OpenCode)
     {
@@ -76,7 +96,7 @@ bool ReadTextFile(const char *Name,StringList *List,bool Config,
       {
         // Length and AddSize must be defined as signed, because AddSize
         // can be negative.
-        int Length=(int)strlenw(CurStr);
+        int Length=(int)wcslen(CurStr);
         int AddSize=4*(Length-(int)AnsiName.Size()+1);
 
         if (AddSize>0)
@@ -89,16 +109,16 @@ bool ReadTextFile(const char *Name,StringList *List,bool Config,
         WideToChar(CurStr,&AnsiName[0],AnsiName.Size());
 
         bool Expanded=false;
-#if defined(_WIN_32) && !defined(_WIN_CE)
+#if defined(_WIN_ALL) && !defined(_WIN_CE)
         if (ExpandEnvStr && *CurStr=='%')
         {
-          // expanding environment variables in Windows version
+          // Expanding environment variables in Windows version.
 
           char ExpName[NM];
           wchar ExpNameW[NM];
           *ExpNameW=0;
           int ret,retw=1;
-          ret=ExpandEnvironmentStrings(&AnsiName[0],ExpName,ASIZE(ExpName));
+          ret=ExpandEnvironmentStringsA(&AnsiName[0],ExpName,ASIZE(ExpName));
           if (ret!=0 && WinNT())
             retw=ExpandEnvironmentStringsW(CurStr,ExpNameW,ASIZE(ExpNameW));
           Expanded=ret!=0 && ret<ASIZE(ExpName) &&
@@ -148,19 +168,18 @@ bool ReadTextFile(const char *Name,StringList *List,bool Config,
             CurStr++;
           }
         }
-#if defined(_WIN_32)
+#if defined(_WIN_ALL)
         if (SrcCharset==RCH_OEM)
-          OemToChar(CurStr,CurStr);
+          OemToCharA(CurStr,CurStr);
 #endif
 
         bool Expanded=false;
-#if defined(_WIN_32) && !defined(_WIN_CE)
+#if defined(_WIN_ALL) && !defined(_WIN_CE)
         if (ExpandEnvStr && *CurStr=='%')
         {
-          // expanding environment variables in Windows version
-
+          // Expanding environment variables in Windows version.
           char ExpName[NM];
-          int ret=ExpandEnvironmentStrings(CurStr,ExpName,ASIZE(ExpName));
+          int ret=ExpandEnvironmentStringsA(CurStr,ExpName,ASIZE(ExpName));
           Expanded=ret!=0 && ret<ASIZE(ExpName);
           if (Expanded)
             List->AddString(ExpName);

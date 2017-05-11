@@ -20,7 +20,7 @@ void ListArchive(CommandData *Cmd)
   while (Cmd->GetArcName(ArcName,ArcNameW,sizeof(ArcName)))
   {
     Archive Arc(Cmd);
-#ifdef _WIN_32
+#ifdef _WIN_ALL
     Arc.RemoveSequentialFlag();
 #endif
     if (!Arc.WOpen(ArcName,ArcNameW))

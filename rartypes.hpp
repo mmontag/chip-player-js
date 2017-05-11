@@ -22,7 +22,7 @@ typedef   signed long long  int64; // signed 64 bits
 #endif
 
 
-#if defined(_WIN_32) || defined(__GNUC__) || defined(__sgi) || defined(_AIX) || defined(__sun) || defined(__hpux) || defined(_OSF_SOURCE)
+#if defined(_WIN_ALL) || defined(__GNUC__) || defined(__sgi) || defined(_AIX) || defined(__sun) || defined(__hpux) || defined(_OSF_SOURCE)
 typedef wchar_t wchar;
 #else
 typedef ushort wchar;
@@ -37,7 +37,7 @@ typedef ushort wchar;
 // Make 64 bit integer from two 32 bit.
 #define INT32TO64(high,low) ((((uint64)(high))<<32)+((uint64)low))
 
-// Special int64 value, large enough to be never found in real life.
+// Special int64 value, large enough to never be found in real life.
 // We use it in situations, when we need to indicate that parameter 
 // is not defined and probably should be calculated inside of function.
 // Lower part is intentionally 0x7fffffff, not 0xffffffff, to make it 

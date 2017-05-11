@@ -1,6 +1,6 @@
 #include "rar.hpp"
 
-#ifdef _WIN_32
+#ifdef _WIN_ALL
 #include "win32acl.cpp"
 #include "win32stm.cpp"
 #endif
@@ -39,7 +39,7 @@ void SetExtraInfo(CommandData *Cmd,Archive &Arc,char *Name,wchar *NameW)
         ExtractBeEA(Arc,Name);
       break;
 #endif
-#ifdef _WIN_32
+#ifdef _WIN_ALL
     case NTACL_HEAD:
       if (Cmd->ProcessOwners)
         ExtractACL(Arc,Name,NameW);
@@ -67,7 +67,7 @@ void SetExtraInfoNew(CommandData *Cmd,Archive &Arc,char *Name,wchar *NameW)
   if (Cmd->ProcessEA && Arc.SubHead.CmpName(SUBHEAD_TYPE_UOWNER))
     ExtractUnixOwnerNew(Arc,Name);
 #endif
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   if (Cmd->ProcessOwners && Arc.SubHead.CmpName(SUBHEAD_TYPE_ACL))
     ExtractACLNew(Arc,Name,NameW);
   if (Arc.SubHead.CmpName(SUBHEAD_TYPE_STREAM))

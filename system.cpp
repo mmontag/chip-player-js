@@ -10,10 +10,10 @@ void InitSystemOptions(int SleepTime)
 #endif
 
 
-#if !defined(SFX_MODULE) && !defined(_WIN_CE)
+#if !defined(SFX_MODULE) && !defined(_WIN_CE) && !defined(SETUP)
 void SetPriority(int Priority)
 {
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   uint PriorityClass;
   int PriorityLevel;
   if (Priority<1 || Priority>15)
@@ -57,7 +57,7 @@ void SetPriority(int Priority)
   SetThreadPriority(GetCurrentThread(),PriorityLevel);
 
 //  Background mode for Vista, too slow for real life use.
-//  if (WinNT()>=6 && Priority==1)
+//  if (WinNT()>=WNT_VISTA && Priority==1)
 //    SetPriorityClass(GetCurrentProcess(),PROCESS_MODE_BACKGROUND_BEGIN);
 
 #endif
@@ -65,19 +65,20 @@ void SetPriority(int Priority)
 #endif
 
 
+#ifndef SETUP
 void Wait()
 {
-#if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE)
+#if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE)
   if (SleepTime!=0)
     Sleep(SleepTime);
 #endif
 }
+#endif
 
 
 
 
-#if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE) && !defined(SHELL_EXT)
-
+#if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE) && !defined(SHELL_EXT) && !defined(SETUP)
 void Shutdown()
 {
   HANDLE hToken;
@@ -93,3 +94,5 @@ void Shutdown()
   ExitWindowsEx(EWX_SHUTDOWN|EWX_FORCE|EWX_POWEROFF,SHTDN_REASON_FLAG_PLANNED);
 }
 #endif
+
+

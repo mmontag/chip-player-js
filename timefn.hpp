@@ -9,7 +9,7 @@ struct RarLocalTime
   uint Hour;
   uint Minute;
   uint Second;
-  uint Reminder;
+  uint Reminder; // Part of time smaller than 1 second, represented in 100-nanosecond intervals.
   uint wDay;
   uint yDay;
 };
@@ -21,7 +21,7 @@ class RarTime
     RarLocalTime rlt;
   public:
     RarTime();
-#ifdef _WIN_32
+#ifdef _WIN_ALL
     RarTime& operator =(FILETIME &ft);
     void GetWin32(FILETIME *ft);
 #endif

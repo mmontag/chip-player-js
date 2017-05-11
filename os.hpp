@@ -12,23 +12,24 @@
 #define SILENT
 #endif
 
-#if defined(_WIN_32) || defined(_EMX)
+#if defined(_WIN_ALL) || defined(_EMX)
 #define ENABLE_BAD_ALLOC
 #endif
 
 
-#if defined(_WIN_32) || defined(_EMX)
+#if defined(_WIN_ALL) || defined(_EMX)
 
 #define LITTLE_ENDIAN
 #define NM  1024
 
-#ifdef _WIN_32
+#ifdef _WIN_ALL
 
   #define STRICT
+  #define UNICODE
   #undef WINVER
   #undef _WIN32_WINNT
-  #define WINVER 0x0400
-  #define _WIN32_WINNT 0x0300
+  #define WINVER 0x0500
+  #define _WIN32_WINNT 0x0500
 
 
 #define WIN32_LEAN_AND_MEAN
@@ -45,7 +46,7 @@
 #endif // _WIN_CE
 
 
-#endif // _WIN_32
+#endif // _WIN_ALL
 
 #ifndef _WIN_CE
   #include <sys/types.h>
@@ -109,9 +110,9 @@
 #endif
 
 /*
-#ifdef _WIN_32
+#ifdef _WIN_ALL
 #pragma hdrstop
-#endif // _WIN_32
+#endif // _WIN_ALL
 */
 
 #define ENABLE_ACCESS
@@ -132,14 +133,24 @@
 #define CREATEBINARY "w+b"
 #define APPENDTEXT   "at"
 
-#if defined(_WIN_32)
+#if defined(_WIN_ALL)
   #ifdef _MSC_VER
     #define _stdfunction __cdecl
+
+    #ifdef SFX_MODULE
+      // We want to keep SFX module small, so let compiler to decide.
+      #define _forceinline inline
+    #else
+      #define _forceinline __forceinline
+    #endif
+
   #else
     #define _stdfunction _USERENTRY
+    #define _forceinline inline
   #endif
 #else
   #define _stdfunction
+  #define _forceinline inline
 #endif
 
 #endif
@@ -167,6 +178,7 @@
 #endif
 #include <pwd.h>
 #include <grp.h>
+#include <wchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -203,6 +215,7 @@
 #define APPENDTEXT   "a"
 
 #define _stdfunction 
+#define _forceinline inline
 
 #ifdef _APPLE
   #if defined(__BIG_ENDIAN__) && !defined(BIG_ENDIAN)
@@ -249,7 +262,7 @@
   #endif
 #endif
 
-#if !defined(BIG_ENDIAN) && !defined(_WIN_CE) && defined(_WIN_32)
+#if !defined(BIG_ENDIAN) && !defined(_WIN_CE) && defined(_WIN_ALL)
 /* allow not aligned integer access, increases speed in some operations */
 #define ALLOW_NOT_ALIGNED_INT
 #endif

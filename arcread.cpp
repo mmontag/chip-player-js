@@ -66,21 +66,24 @@ size_t Archive::ReadHeader()
       return(0);
     }
     if (*Cmd->Password==0)
+    {
 #ifdef RARDLL
+      char PasswordA[MAXPASSWORD];
       if (Cmd->Callback==NULL ||
-          Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LPARAM)Cmd->Password,sizeof(Cmd->Password))==-1)
+          Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LPARAM)PasswordA,ASIZE(PasswordA))==-1)
       {
         Close();
         ErrHandler.Exit(USER_BREAK);
       }
-
+      GetWideName(PasswordA,NULL,Cmd->Password,ASIZE(Cmd->Password));
 #else
-      if (!GetPassword(PASSWORD_ARCHIVE,FileName,Cmd->Password,sizeof(Cmd->Password)))
+      if (!GetPassword(PASSWORD_ARCHIVE,FileName,FileNameW,Cmd->Password,ASIZE(Cmd->Password)))
       {
         Close();
         ErrHandler.Exit(USER_BREAK);
       }
 #endif
+    }
     HeadersCrypt.SetCryptKeys(Cmd->Password,HeadersSalt,false,false,NewMhd.EncryptVer>=36);
     Raw.SetCrypt(&HeadersCrypt);
 #endif
@@ -110,10 +113,22 @@ size_t Archive::ReadHeader()
   }
 
   if (ShortBlock.HeadType==COMM_HEAD)
+  {
+    // Old style (up to RAR 2.9) comment header embedded into main
+    // or file header. We must not read the entire ShortBlock.HeadSize here
+    // to not break the comment processing logic later.
     Raw.Read(SIZEOF_COMMHEAD-SIZEOF_SHORTBLOCKHEAD);
+  }
   else
     if (ShortBlock.HeadType==MAIN_HEAD && (ShortBlock.Flags & MHD_COMMENT)!=0)
+    {
+      // Old style (up to RAR 2.9) main archive comment embedded into
+      // the main archive header found. While we can read the entire 
+      // ShortBlock.HeadSize here and remove this part of "if", it would be
+      // waste of memory, because we'll read and process this comment data
+      // in other function anyway and we do not need them here now.
       Raw.Read(SIZEOF_NEWMHD-SIZEOF_SHORTBLOCKHEAD);
+    }
     else
       Raw.Read(ShortBlock.HeadSize-SIZEOF_SHORTBLOCKHEAD);
 
@@ -274,14 +289,24 @@ size_t Archive::ReadHeader()
         HeaderCRC=~Raw.GetCRC(CRCProcessedOnly)&0xffff;
         if (hd->HeadCRC!=HeaderCRC)
         {
-          if (hd->HeadType==NEWSUB_HEAD)
+          if (hd->HeadType==NEWSUB_HEAD && strlen(hd->FileName)<ASIZE(hd->FileName)-5)
             strcat(hd->FileName,"- ???");
           BrokenFileHeader=true;
           ErrHandler.SetErrorCode(WARNING);
+
+          // If we have a broken encrypted header, we do not need to display
+          // the error message here, because it will be displayed for such
+          // headers later in this function. Also such headers are unlikely
+          // to have anything sensible in file name field, so it is useless
+          // to display the file name.
+          bool EncBroken=Decrypt && ShortBlock.HeadCRC!=(~Raw.GetCRC(false)&0xffff);
+          if (!EncBroken)
+          {
 #ifndef SHELL_EXT
-          Log(Archive::FileName,St(MLogFileHead),IntNameToExt(hd->FileName));
-          Alarm();
+            Log(Archive::FileName,St(MLogFileHead),IntNameToExt(hd->FileName));
+            Alarm();
 #endif
+          }
         }
       }
       break;
@@ -503,9 +528,9 @@ void Archive::ConvertNameCase(char *Name)
 void Archive::ConvertNameCase(wchar *Name)
 {
   if (Cmd->ConvertNames==NAMES_UPPERCASE)
-    strupperw(Name);
+    wcsupper(Name);
   if (Cmd->ConvertNames==NAMES_LOWERCASE)
-    strlowerw(Name);
+    wcslower(Name);
 }
 #endif
 
@@ -524,7 +549,7 @@ bool Archive::IsArcLabel()
 
 void Archive::ConvertAttributes()
 {
-#if defined(_WIN_32) || defined(_EMX)
+#if defined(_WIN_ALL) || defined(_EMX)
   switch(NewLhd.HostOS)
   {
     case HOST_MSDOS:
@@ -622,7 +647,7 @@ void Archive::ConvertUnknownHeader()
       *s='_';
 #endif
 
-#if defined(_WIN_32) || defined(_EMX)
+#if defined(_WIN_ALL) || defined(_EMX)
     // ':' in file names is allowed in Unix, but not in Windows.
     // Even worse, file data will be written to NTFS stream on NTFS,
     // so automatic name correction on file create error in extraction 
@@ -639,7 +664,7 @@ void Archive::ConvertUnknownHeader()
     if (*s=='/' || *s=='\\')
       *s=CPATHDIVIDER;
 
-#if defined(_WIN_32) || defined(_EMX)
+#if defined(_WIN_ALL) || defined(_EMX)
     // ':' in file names is allowed in Unix, but not in Windows.
     // Even worse, file data will be written to NTFS stream on NTFS,
     // so automatic name correction on file create error in extraction 
@@ -684,7 +709,7 @@ bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
     SubDataIO.SetUnpackToMemory(&(*UnpData)[0],SubHead.UnpSize);
   }
   if (SubHead.Flags & LHD_PASSWORD)
-    if (*Cmd->Password)
+    if (*Cmd->Password!=0)
       SubDataIO.SetEncryption(SubHead.UnpVer,Cmd->Password,
              (SubHead.Flags & LHD_SALT) ? SubHead.Salt:NULL,false,
              SubHead.UnpVer>=36);

@@ -111,7 +111,7 @@ int ComprDataIO::UnpRead(byte *Addr,size_t Count)
 }
 
 
-#if defined(RARDLL) && defined(_MSC_VER) && !defined(_M_X64)
+#if defined(RARDLL) && defined(_MSC_VER) && !defined(_WIN_64)
 // Disable the run time stack check for unrar.dll, so we can manipulate
 // with ProcessDataProc call type below. Run time check would intercept
 // a wrong ESP before we restore it.
@@ -135,10 +135,10 @@ void ComprDataIO::UnpWrite(byte *Addr,size_t Count)
       // even though in year 2001 we announced in unrar.dll whatsnew.txt
       // that it will be PASCAL type (for compatibility with Visual Basic).
 #if defined(_MSC_VER)
-#ifndef _M_X64
+#ifndef _WIN_64
       __asm mov ebx,esp
 #endif
-#elif defined(_WIN_32) && defined(__BORLANDC__)
+#elif defined(_WIN_ALL) && defined(__BORLANDC__)
       _EBX=_ESP;
 #endif
       int RetCode=Cmd->ProcessDataProc(Addr,(int)Count);
@@ -146,10 +146,10 @@ void ComprDataIO::UnpWrite(byte *Addr,size_t Count)
       // Restore ESP after ProcessDataProc with wrongly defined calling
       // convention broken it.
 #if defined(_MSC_VER)
-#ifndef _M_X64
+#ifndef _WIN_64
       __asm mov esp,ebx
 #endif
-#elif defined(_WIN_32) && defined(__BORLANDC__)
+#elif defined(_WIN_ALL) && defined(__BORLANDC__)
       _ESP=_EBX;
 #endif
       if (RetCode==0)
@@ -184,7 +184,7 @@ void ComprDataIO::UnpWrite(byte *Addr,size_t Count)
   Wait();
 }
 
-#if defined(RARDLL) && defined(_MSC_VER) && !defined(_M_X64)
+#if defined(RARDLL) && defined(_MSC_VER) && !defined(_WIN_64)
 // Restore the run time stack check for unrar.dll.
 #pragma runtime_checks( "s", restore )
 #endif
@@ -246,7 +246,7 @@ void ComprDataIO::GetUnpackedData(byte **Data,size_t *Size)
 }
 
 
-void ComprDataIO::SetEncryption(int Method,const char *Password,const byte *Salt,bool Encrypt,bool HandsOffHash)
+void ComprDataIO::SetEncryption(int Method,const wchar *Password,const byte *Salt,bool Encrypt,bool HandsOffHash)
 {
   if (Encrypt)
   {

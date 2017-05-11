@@ -64,7 +64,7 @@ void Unpack::Unpack20(bool Solid)
     }
     if (UnpAudioBlock)
     {
-      int AudioNumber=DecodeNumber((struct Decode *)&MD[UnpCurChannel]);
+      int AudioNumber=DecodeNumber(&MD[UnpCurChannel]);
 
       if (AudioNumber==256)
       {
@@ -79,7 +79,7 @@ void Unpack::Unpack20(bool Solid)
       continue;
     }
 
-    int Number=DecodeNumber((struct Decode *)&LD);
+    int Number=DecodeNumber(&LD);
     if (Number<256)
     {
       Window[UnpPtr++]=(byte)Number;
@@ -95,7 +95,7 @@ void Unpack::Unpack20(bool Solid)
         addbits(Bits);
       }
 
-      int DistNumber=DecodeNumber((struct Decode *)&DD);
+      int DistNumber=DecodeNumber(&DD);
       unsigned int Distance=DDecode[DistNumber]+1;
       if ((Bits=DBits[DistNumber])>0)
       {
@@ -127,7 +127,7 @@ void Unpack::Unpack20(bool Solid)
     if (Number<261)
     {
       unsigned int Distance=OldDist[(OldDistPtr-(Number-256)) & 3];
-      int LengthNumber=DecodeNumber((struct Decode *)&RD);
+      int LengthNumber=DecodeNumber(&RD);
       int Length=LDecode[LengthNumber]+2;
       if ((Bits=LBits[LengthNumber])>0)
       {
@@ -195,14 +195,14 @@ bool Unpack::ReadTables20()
     BitLength[I]=(byte)(getbits() >> 12);
     addbits(4);
   }
-  MakeDecodeTables(BitLength,(struct Decode *)&BD,BC20);
+  MakeDecodeTables(BitLength,&BD,BC20);
   I=0;
   while (I<TableSize)
   {
     if (InAddr>ReadTop-5)
       if (!UnpReadBuf())
         return(false);
-    int Number=DecodeNumber((struct Decode *)&BD);
+    int Number=DecodeNumber(&BD);
     if (Number<16)
     {
       Table[I]=(Number+UnpOldTable20[I]) & 0xf;
@@ -239,12 +239,12 @@ bool Unpack::ReadTables20()
     return(true);
   if (UnpAudioBlock)
     for (I=0;I<UnpChannels;I++)
-      MakeDecodeTables(&Table[I*MC20],(struct Decode *)&MD[I],MC20);
+      MakeDecodeTables(&Table[I*MC20],&MD[I],MC20);
   else
   {
-    MakeDecodeTables(&Table[0],(struct Decode *)&LD,NC20);
-    MakeDecodeTables(&Table[NC20],(struct Decode *)&DD,DC20);
-    MakeDecodeTables(&Table[NC20+DC20],(struct Decode *)&RD,RC20);
+    MakeDecodeTables(&Table[0],&LD,NC20);
+    MakeDecodeTables(&Table[NC20],&DD,DC20);
+    MakeDecodeTables(&Table[NC20+DC20],&RD,RC20);
   }
   memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
   return(true);
@@ -256,11 +256,11 @@ void Unpack::ReadLastTables()
   if (ReadTop>=InAddr+5)
     if (UnpAudioBlock)
     {
-      if (DecodeNumber((struct Decode *)&MD[UnpCurChannel])==256)
+      if (DecodeNumber(&MD[UnpCurChannel])==256)
         ReadTables20();
     }
     else
-      if (DecodeNumber((struct Decode *)&LD)==269)
+      if (DecodeNumber(&LD)==269)
         ReadTables20();
 }
 

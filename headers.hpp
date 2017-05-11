@@ -26,8 +26,15 @@
 #define  AV_VER                 20
 #define  PROTECT_VER            20
 
+
 #define  MHD_VOLUME         0x0001U
+
+// Old style main archive comment embed into main archive header. Must not
+// be used in new archives anymore. Must never be used with MHD_ENCRYPTVER
+// or other flags chaning the size of main header. RAR expects the fixed
+// size of main header preceding the comment if MHD_COMMENT is found.
 #define  MHD_COMMENT        0x0002U
+
 #define  MHD_LOCK           0x0004U
 #define  MHD_SOLID          0x0008U
 #define  MHD_PACK_COMMENT   0x0010U
@@ -41,8 +48,13 @@
 #define  LHD_SPLIT_BEFORE   0x0001U
 #define  LHD_SPLIT_AFTER    0x0002U
 #define  LHD_PASSWORD       0x0004U
+
+// Old style file comment embed into file header. Must not be used
+// in new archives anymore.
 #define  LHD_COMMENT        0x0008U
+
 #define  LHD_SOLID          0x0010U
+
 
 #define  LHD_WINDOWMASK     0x00e0U
 #define  LHD_WINDOW64       0x0000U

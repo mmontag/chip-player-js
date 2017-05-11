@@ -6,45 +6,46 @@ StringList::StringList()
 }
 
 
-StringList::~StringList()
-{
-}
-
-
 void StringList::Reset()
 {
   Rewind();
   StringData.Reset();
   StringDataW.Reset();
-  PosDataW.Reset();
   StringsCount=0;
   SavePosNumber=0;
 }
 
 
-size_t StringList::AddString(const char *Str)
+void StringList::AddString(const char *Str)
 {
-  return(AddString(Str,NULL));
+  AddString(Str,NULL);
 }
 
 
-size_t StringList::AddString(const char *Str,const wchar *StrW)
+void StringList::AddString(const wchar *Str)
 {
+  AddString(NULL,Str);
+}
+
+
+
+
+void StringList::AddString(const char *Str,const wchar *StrW)
+{
+  if (Str==NULL)
+    Str="";
+  if (StrW==NULL)
+    StrW=L"";
+
   size_t PrevSize=StringData.Size();
   StringData.Add(strlen(Str)+1);
   strcpy(&StringData[PrevSize],Str);
-  if (StrW!=NULL && *StrW!=0)
-  {
-    size_t PrevPos=PosDataW.Size();
-    PosDataW.Add(1);
-    PosDataW[PrevPos]=PrevSize;
 
-    size_t PrevSizeW=StringDataW.Size();
-    StringDataW.Add(strlenw(StrW)+1);
-    strcpyw(&StringDataW[PrevSizeW],StrW);
-  }
+  size_t PrevSizeW=StringDataW.Size();
+  StringDataW.Add(wcslen(StrW)+1);
+  wcscpy(&StringDataW[PrevSizeW],StrW);
+
   StringsCount++;
-  return(PrevSize);
 }
 
 
@@ -54,15 +55,22 @@ bool StringList::GetString(char *Str,size_t MaxLength)
 }
 
 
+bool StringList::GetString(wchar *Str,size_t MaxLength)
+{
+  return(GetString(NULL,Str,MaxLength));
+}
+
+
 bool StringList::GetString(char *Str,wchar *StrW,size_t MaxLength)
 {
   char *StrPtr;
   wchar *StrPtrW;
-  if (Str==NULL || !GetString(&StrPtr,&StrPtrW))
+  if (!GetString(&StrPtr,&StrPtrW))
     return(false);
-  strncpy(Str,StrPtr,MaxLength);
+  if (Str!=NULL)
+    strncpy(Str,StrPtr,MaxLength);
   if (StrW!=NULL)
-    strncpyw(StrW,NullToEmpty(StrPtrW),MaxLength);
+    wcsncpy(StrW,StrPtrW,MaxLength);
   return(true);
 }
 
@@ -93,35 +101,41 @@ char* StringList::GetString()
 }
 
 
-
-bool StringList::GetString(char **Str,wchar **StrW)
+wchar* StringList::GetStringW()
 {
-  if (CurPos>=StringData.Size())
-  {
-    *Str=NULL;
-    return(false);
-  }
-  *Str=&StringData[CurPos];
-  if (PosDataItem<PosDataW.Size() && PosDataW[PosDataItem]==CurPos)
-  {
-    PosDataItem++;
-    if (StrW!=NULL)
-      *StrW=&StringDataW[CurPosW];
-    CurPosW+=strlenw(&StringDataW[CurPosW])+1;
-  }
-  else
-    if (StrW!=NULL)
-      *StrW=NULL;
-  CurPos+=strlen(*Str)+1;
-  return(true);
+  wchar *StrW;
+  GetString(NULL,&StrW);
+  return(StrW);
 }
 
 
-char* StringList::GetString(uint StringPos)
+bool StringList::GetString(char **Str,wchar **StrW)
 {
-  if (StringPos>=StringData.Size())
-    return(NULL);
-  return(&StringData[StringPos]);
+  // First check would be enough, because both buffers grow synchronously,
+  // but we check both for extra fail proof.
+  if (CurPos>=StringData.Size() || CurPosW>=StringDataW.Size())
+  {
+    // No more strings left unprocessed.
+    if (Str!=NULL)
+      *Str=NULL;
+    if (StrW!=NULL)
+      *StrW=NULL;
+    return(false);
+  }
+
+  // We move ASCII and Unicode buffer pointers synchronously.
+  
+  char *CurStr=&StringData[CurPos];
+  CurPos+=strlen(CurStr)+1;
+  if (Str!=NULL)
+    *Str=CurStr;
+
+  wchar *CurStrW=&StringDataW[CurPosW];
+  CurPosW+=wcslen(CurStrW)+1;
+  if (StrW!=NULL)
+    *StrW=CurStrW;
+
+  return(true);
 }
 
 
@@ -129,11 +143,11 @@ void StringList::Rewind()
 {
   CurPos=0;
   CurPosW=0;
-  PosDataItem=0;
 }
 
 
-size_t StringList::GetBufferSize()
+// Return the total size of usual and Unicode characters stored in the list.
+size_t StringList::GetCharCount()
 {
   return(StringData.Size()+StringDataW.Size());
 }
@@ -149,10 +163,11 @@ bool StringList::Search(char *Str,wchar *StrW,bool CaseSensitive)
   wchar *CurStrW;
   while (GetString(&CurStr,&CurStrW))
   {
-    if ((CaseSensitive ? strcmp(Str,CurStr):stricomp(Str,CurStr))!=0)
-      continue;
+    if (Str!=NULL && CurStr!=NULL)
+      if ((CaseSensitive ? strcmp(Str,CurStr):stricomp(Str,CurStr))!=0)
+        continue;
     if (StrW!=NULL && CurStrW!=NULL)
-      if ((CaseSensitive ? strcmpw(StrW,CurStrW):stricmpw(StrW,CurStrW))!=0)
+      if ((CaseSensitive ? wcscmp(StrW,CurStrW):wcsicomp(StrW,CurStrW))!=0)
         continue;
     Found=true;
     break;
@@ -170,7 +185,6 @@ void StringList::SavePosition()
   {
     SaveCurPos[SavePosNumber]=CurPos;
     SaveCurPosW[SavePosNumber]=CurPosW;
-    SavePosDataItem[SavePosNumber]=PosDataItem;
     SavePosNumber++;
   }
 }
@@ -185,7 +199,6 @@ void StringList::RestorePosition()
     SavePosNumber--;
     CurPos=SaveCurPos[SavePosNumber];
     CurPosW=SaveCurPosW[SavePosNumber];
-    PosDataItem=SavePosDataItem[SavePosNumber];
   }
 }
 #endif

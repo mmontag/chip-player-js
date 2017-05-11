@@ -1,8 +1,8 @@
 #ifndef _RAR_RS_
 #define _RAR_RS_
 
-#define MAXPAR 255
-#define MAXPOL 512
+#define MAXPAR 255 // Maximum parity data size.
+#define MAXPOL 512 // Maximum polynomial degree.
 
 class RSCoder
 {
@@ -12,16 +12,16 @@ class RSCoder
     void pnInit();
     void pnMult(int *p1,int *p2,int *r);
 
-    int gfExp[MAXPOL];
-    int gfLog[MAXPAR+1];
+    int gfExp[MAXPOL];   // Galois field exponents.
+    int gfLog[MAXPAR+1]; // Galois field logarithms.
 
-    int GXPol[MAXPOL*2];
+    int GXPol[MAXPOL*2]; // Generator polynomial g(x).
 
     int ErrorLocs[MAXPAR+1],ErrCount;
-    int Dn[MAXPAR+1];
+    int Dnm[MAXPAR+1];
 
-    int ParSize;
-    int PolB[MAXPOL];
+    int ParSize; // Parity bytes size and so the number of recovery volumes.
+    int ELPol[MAXPOL]; // Error locator polynomial.
     bool FirstBlockDone;
   public:
     RSCoder(int ParSize);

@@ -1,14 +1,13 @@
 #ifndef _RAR_RESOURCE_
 #define _RAR_RESOURCE_
 
-#if defined(SILENT) && defined(RARDLL)
-#define St(x) ("")
+#ifdef RARDLL
+#define St(x)  ( "")
+#define StW(x) (L"")
 #else
-const char *St(MSGID StringId);
+const char  *St  (MSGID StringId);
+const wchar *StW (MSGID StringId);
 #endif
-
-
-inline const char *StT(MSGID StringId) {return(St(StringId));}
 
 
 #endif

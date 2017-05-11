@@ -7,7 +7,7 @@
 #define  ASIZE(x) (sizeof(x)/sizeof(x[0]))
 
 #define  MAXPASSWORD       128
-#define  MAXSFXSIZE        0x80000
+#define  MAXSFXSIZE        0x100000
 
 #define  DefSFXName        "default.sfx"
 #define  DefSortListName   "rarfiles.lst"

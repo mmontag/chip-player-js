@@ -113,10 +113,10 @@ void RawRead::Get(wchar *Field,size_t Size)
   if (ReadPos+2*Size-1<DataSize)
   {
     RawToWide(&Data[ReadPos],Field,Size);
-    ReadPos+=2*Size;
+    ReadPos+=sizeof(wchar)*Size;
   }
   else
-    memset(Field,0,2*Size);
+    memset(Field,0,sizeof(wchar)*Size);
 }
 
 

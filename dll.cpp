@@ -177,17 +177,17 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
     }
     strncpyz(D->ArcName,Data->Arc.FileName,ASIZE(D->ArcName));
     if (*Data->Arc.FileNameW)
-      strncpyw(D->ArcNameW,Data->Arc.FileNameW,sizeof(D->ArcNameW));
+      wcsncpy(D->ArcNameW,Data->Arc.FileNameW,sizeof(D->ArcNameW));
     else
       CharToWide(Data->Arc.FileName,D->ArcNameW);
     strncpyz(D->FileName,Data->Arc.NewLhd.FileName,ASIZE(D->FileName));
     if (*Data->Arc.NewLhd.FileNameW)
-      strncpyw(D->FileNameW,Data->Arc.NewLhd.FileNameW,sizeof(D->FileNameW));
+      wcsncpy(D->FileNameW,Data->Arc.NewLhd.FileNameW,sizeof(D->FileNameW));
     else
     {
-#ifdef _WIN_32
+#ifdef _WIN_ALL
       char AnsiName[NM];
-      OemToChar(Data->Arc.NewLhd.FileName,AnsiName);
+      OemToCharA(Data->Arc.NewLhd.FileName,AnsiName);
       if (!CharToWide(AnsiName,D->FileNameW,ASIZE(D->FileNameW)))
         *D->FileNameW=0;
 #else
@@ -245,14 +245,14 @@ int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestNa
 
       if (DestPath!=NULL || DestName!=NULL)
       {
-#ifdef _WIN_32
-        OemToChar(NullToEmpty(DestPath),Data->Cmd.ExtrPath);
+#ifdef _WIN_ALL
+        OemToCharA(NullToEmpty(DestPath),Data->Cmd.ExtrPath);
 #else
         strcpy(Data->Cmd.ExtrPath,NullToEmpty(DestPath));
 #endif
         AddEndSlash(Data->Cmd.ExtrPath);
-#ifdef _WIN_32
-        OemToChar(NullToEmpty(DestName),Data->Cmd.DllDestName);
+#ifdef _WIN_ALL
+        OemToCharA(NullToEmpty(DestName),Data->Cmd.DllDestName);
 #else
         strcpy(Data->Cmd.DllDestName,NullToEmpty(DestName));
 #endif
@@ -265,9 +265,9 @@ int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestNa
 
       if (DestPathW!=NULL || DestNameW!=NULL)
       {
-        strncpyw(Data->Cmd.ExtrPathW,NullToEmpty(DestPathW),NM-2);
+        wcsncpy(Data->Cmd.ExtrPathW,NullToEmpty(DestPathW),NM-2);
         AddEndSlash(Data->Cmd.ExtrPathW);
-        strncpyw(Data->Cmd.DllDestNameW,NullToEmpty(DestNameW),NM-1);
+        wcsncpy(Data->Cmd.DllDestNameW,NullToEmpty(DestNameW),NM-1);
 
         if (*Data->Cmd.DllDestNameW!=0 && *Data->Cmd.DllDestName==0)
           WideToChar(Data->Cmd.DllDestNameW,Data->Cmd.DllDestName);
@@ -332,11 +332,12 @@ void PASCAL RARSetProcessDataProc(HANDLE hArcData,PROCESSDATAPROC ProcessDataPro
   Data->Cmd.ProcessDataProc=ProcessDataProc;
 }
 
+
 #ifndef NOCRYPT
 void PASCAL RARSetPassword(HANDLE hArcData,char *Password)
 {
   DataSet *Data=(DataSet *)hArcData;
-  strncpyz(Data->Cmd.Password,Password,ASIZE(Data->Cmd.Password));
+  GetWideName(Password,NULL,Data->Cmd.Password,ASIZE(Data->Cmd.Password));
 }
 #endif
 

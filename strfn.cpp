@@ -22,8 +22,8 @@ char *IntNameToExt(const char *Name)
 
 void ExtToInt(const char *Src,char *Dest)
 {
-#if defined(_WIN_32)
-  CharToOem(Src,Dest);
+#if defined(_WIN_ALL)
+  CharToOemA(Src,Dest);
 #else
   if (Dest!=Src)
     strcpy(Dest,Src);
@@ -33,8 +33,8 @@ void ExtToInt(const char *Src,char *Dest)
 
 void IntToExt(const char *Src,char *Dest)
 {
-#if defined(_WIN_32)
-  OemToChar(Src,Dest);
+#if defined(_WIN_ALL)
+  OemToCharA(Src,Dest);
 #else
   if (Dest!=Src)
     strcpy(Dest,Src);
@@ -44,7 +44,7 @@ void IntToExt(const char *Src,char *Dest)
 
 char* strlower(char *Str)
 {
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   CharLower((LPTSTR)Str);
 #else
   for (char *ChPtr=Str;*ChPtr;ChPtr++)
@@ -56,7 +56,7 @@ char* strlower(char *Str)
 
 char* strupper(char *Str)
 {
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   CharUpper((LPTSTR)Str);
 #else
   for (char *ChPtr=Str;*ChPtr;ChPtr++)
@@ -100,9 +100,17 @@ char* RemoveLF(char *Str)
 }
 
 
+wchar* RemoveLF(wchar *Str)
+{
+  for (int I=(int)wcslen(Str)-1;I>=0 && (Str[I]=='\r' || Str[I]=='\n');I--)
+    Str[I]=0;
+  return(Str);
+}
+
+
 unsigned char loctolower(unsigned char ch)
 {
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   // Convert to LPARAM first to avoid a warning in 64 bit mode.
   return((int)(LPARAM)CharLower((LPTSTR)ch));
 #else
@@ -113,7 +121,7 @@ unsigned char loctolower(unsigned char ch)
 
 unsigned char loctoupper(unsigned char ch)
 {
-#ifdef _WIN_32
+#ifdef _WIN_ALL
   // Convert to LPARAM first to avoid a warning in 64 bit mode.
   return((int)(LPARAM)CharUpper((LPTSTR)ch));
 #else
@@ -145,6 +153,8 @@ wchar etoupperw(wchar ch)
 
 // We do not want to cast every signed char to unsigned when passing to
 // isdigit, so we implement the replacement. Shall work for Unicode too.
+// If chars are signed, conversion from char to int could generate negative
+// values, resulting in undefined behavior in standard isdigit.
 bool IsDigit(int ch)
 {
   return(ch>='0' && ch<='9');
@@ -153,9 +163,21 @@ bool IsDigit(int ch)
 
 // We do not want to cast every signed char to unsigned when passing to
 // isspace, so we implement the replacement. Shall work for Unicode too.
+// If chars are signed, conversion from char to int could generate negative
+// values, resulting in undefined behavior in standard isspace.
 bool IsSpace(int ch)
 {
   return(ch==' ' || ch=='\t');
+}
+
+
+// We do not want to cast every signed char to unsigned when passing to
+// isspace, so we implement the replacement. Shall work for Unicode too.
+// If chars are signed, conversion from char to int could generate negative
+// values, resulting in undefined behavior in standard function.
+bool IsAlpha(int ch)
+{
+  return(ch>='A' && ch<='Z' || ch>='a' && ch<='z');
 }
 
 
@@ -176,7 +198,7 @@ bool LowAscii(const wchar *Str)
   for (int I=0;Str[I]!=0;I++)
   {
     // We convert wchar_t to uint just in case if some compiler
-    // uses signed wchar_t.
+    // uses the signed wchar_t.
     if ((uint)Str[I]<32 || (uint)Str[I]>127)
       return(false);
   }
@@ -197,12 +219,12 @@ int stricompc(const char *Str1,const char *Str2)
 
 
 #ifndef SFX_MODULE
-int stricompcw(const wchar *Str1,const wchar *Str2)
+int wcsicompc(const wchar *Str1,const wchar *Str2)
 {
 #if defined(_UNIX)
-  return(strcmpw(Str1,Str2));
+  return(wcscmp(Str1,Str2));
 #else
-  return(stricmpw(Str1,Str2));
+  return(wcsicomp(Str1,Str2));
 #endif
 }
 #endif
@@ -219,12 +241,13 @@ char* strncpyz(char *dest, const char *src, size_t maxlen)
   return(dest);
 }
 
-// safe strncpyw: copies maxlen-1 max and always returns zero terminated dest
-wchar* strncpyzw(wchar *dest, const wchar *src, size_t maxlen)
+
+// Safe wcsncpy: copies maxlen-1 max and always returns zero terminated dest.
+wchar* wcsncpyz(wchar *dest, const wchar *src, size_t maxlen)
 {
   if (maxlen>0)
   {
-    strncpyw(dest,src,maxlen-1);
+    wcsncpy(dest,src,maxlen-1);
     dest[maxlen-1]=0;
   }
   return(dest);
@@ -248,6 +271,7 @@ void itoa(int64 n,char *Str)
 }
 
 
+
 int64 atoil(char *Str)
 {
   int64 n=0;
@@ -257,4 +281,47 @@ int64 atoil(char *Str)
     Str++;
   }
   return(n);
+}
+
+
+void itoa(int64 n,wchar *Str)
+{
+  wchar NumStr[50];
+  size_t Pos=0;
+
+  do
+  {
+    NumStr[Pos++]=wchar(n%10)+'0';
+    n=n/10;
+  } while (n!=0);
+
+  for (size_t I=0;I<Pos;I++)
+    Str[I]=NumStr[Pos-I-1];
+  Str[Pos]=0;
+}
+
+
+int64 atoil(wchar *Str)
+{
+  int64 n=0;
+  while (*Str>='0' && *Str<='9')
+  {
+    n=n*10+*Str-'0';
+    Str++;
+  }
+  return(n);
+}
+
+
+const wchar* GetWide(const char *Src)
+{
+  const size_t MaxLength=NM;
+  static wchar StrTable[4][MaxLength];
+  static uint StrNum=0;
+  if (++StrNum >= ASIZE(StrTable))
+    StrNum=0;
+  wchar *Str=StrTable[StrNum];
+  CharToWide(Src,Str,MaxLength);
+  Str[MaxLength-1]=0;
+  return(Str);
 }

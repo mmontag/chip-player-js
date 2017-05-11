@@ -9,7 +9,7 @@ class CommandData:public RAROptions
     void ProcessSwitchesString(char *Str);
     void ProcessSwitch(char *Switch,wchar *SwitchW=NULL);
     void BadSwitch(char *Switch);
-    bool ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullPath,int MatchMode);
+    bool ExclCheckArgs(StringList *Args,bool Dir,char *CheckName,bool CheckFullPath,int MatchMode);
     uint GetExclAttr(char *Str);
 
     bool FileLists;
@@ -28,14 +28,13 @@ class CommandData:public RAROptions
     void OutTitle();
     void OutHelp();
     bool IsSwitch(int Ch);
-    bool ExclCheck(char *CheckName,bool CheckFullPath,bool CheckInclList);
-    bool ExclCheckDir(char *CheckName);
+    bool ExclCheck(char *CheckName,bool Dir,bool CheckFullPath,bool CheckInclList);
     bool TimeCheck(RarTime &ft);
     bool SizeCheck(int64 Size);
     bool AnyFiltersActive();
     int IsProcessFile(FileHeader &NewLhd,bool *ExactMatch=NULL,int MatchType=MATCH_WILDSUBPATH);
     void ProcessCommand();
-    void AddArcName(char *Name,wchar *NameW);
+    void AddArcName(const char *Name,const wchar *NameW);
     bool GetArcName(char *Name,wchar *NameW,int MaxSize);
     bool CheckWinSize();
 

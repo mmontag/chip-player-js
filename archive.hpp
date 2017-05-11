@@ -48,8 +48,8 @@ class Archive:public File
     void SetLhdSize();
     size_t ReadHeader();
     void CheckArc(bool EnableBroken);
-    void CheckOpen(char *Name,wchar *NameW=NULL);
-    bool WCheckOpen(char *Name,wchar *NameW=NULL);
+    void CheckOpen(const char *Name,const wchar *NameW=NULL);
+    bool WCheckOpen(const char *Name,const wchar *NameW=NULL);
     bool TestLock(int Mode);
     void MakeTemp();
     void CopyMainHeader(Archive &Src,bool CopySFX=true,char *NameToDisplay=NULL);
@@ -122,5 +122,6 @@ class Archive:public File
     char FirstVolumeName[NM];
     wchar FirstVolumeNameW[NM];
 };
+
 
 #endif

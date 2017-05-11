@@ -219,7 +219,7 @@
 #define   MExtrPoints        "\n...         %-56s"
 #define   MExtrErrMkDir      "\nCannot create directory %s"
 #define   MExtrPrinting      "\n------ Printing %s\n\n"
-#define   MEncrBadCRC        "\nEncrypted file:  CRC failed in %s (password incorrect ?)"
+#define   MEncrBadCRC        "\nCRC failed in the encrypted file %s. Corrupt file or wrong password."
 #define   MExtrNoFiles       "\nNo files to extract"
 #define   MExtrAllOk         "\nAll OK"
 #define   MExtrTotalErr      "\nTotal errors: %ld"

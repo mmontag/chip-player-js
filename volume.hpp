@@ -6,6 +6,6 @@ void SplitArchive(Archive &Arc,FileHeader *fh,int64 *HeaderPos,
 bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,
                   char Command);
 void SetVolWrite(Archive &Dest,int64 VolSize);
-bool AskNextVol(char *ArcName);
+bool AskNextVol(char *ArcName,wchar *ArcNameW);
 
 #endif

@@ -15,7 +15,7 @@ template <class T> class Array
     ~Array();
     inline void CleanData();
     inline T& operator [](size_t Item);
-    inline size_t Size();
+    inline size_t Size(); // Returns the size in items, not in bytes.
     void Add(size_t Items);
     void Alloc(size_t Items);
     void Reset();
@@ -40,7 +40,7 @@ template <class T> Array<T>::Array()
 
 template <class T> Array<T>::Array(size_t Size)
 {
-  Buffer=(T *)rarmalloc(sizeof(T)*Size);
+  Buffer=(T *)malloc(sizeof(T)*Size);
   if (Buffer==NULL && Size!=0)
     ErrHandler.MemoryError();
 
@@ -51,7 +51,7 @@ template <class T> Array<T>::Array(size_t Size)
 template <class T> Array<T>::~Array()
 {
   if (Buffer!=NULL)
-    rarfree(Buffer);
+    free(Buffer);
 }
 
 
@@ -75,7 +75,7 @@ template <class T> void Array<T>::Add(size_t Items)
     size_t Suggested=AllocSize+AllocSize/4+32;
     size_t NewSize=Max(BufSize,Suggested);
 
-    Buffer=(T *)rarrealloc(Buffer,NewSize*sizeof(T));
+    Buffer=(T *)realloc(Buffer,NewSize*sizeof(T));
     if (Buffer==NULL)
       ErrHandler.MemoryError();
     AllocSize=NewSize;
@@ -96,7 +96,7 @@ template <class T> void Array<T>::Reset()
 {
   if (Buffer!=NULL)
   {
-    rarfree(Buffer);
+    free(Buffer);
     Buffer=NULL;
   }
   BufSize=0;

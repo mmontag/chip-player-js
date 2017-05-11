@@ -1,7 +1,7 @@
 #ifndef _RAR_SYSTEM_
 #define _RAR_SYSTEM_
 
-#ifdef _WIN_32
+#ifdef _WIN_ALL
 #ifndef BELOW_NORMAL_PRIORITY_CLASS
 #define BELOW_NORMAL_PRIORITY_CLASS     0x00004000
 #define ABOVE_NORMAL_PRIORITY_CLASS     0x00008000
@@ -22,5 +22,7 @@ void SetPriority(int Priority);
 void Wait();
 bool EmailFile(char *FileName,char *MailTo);
 void Shutdown();
+
+
 
 #endif

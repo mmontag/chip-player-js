@@ -3,7 +3,7 @@
 
 
 
-#if defined(RARDLL) && defined(_MSC_VER) && !defined(_M_X64)
+#if defined(RARDLL) && defined(_MSC_VER) && !defined(_WIN_64)
 // Disable the run time stack check for unrar.dll, so we can manipulate
 // with ChangeVolProc call type below. Run time check would intercept
 // a wrong ESP before we restore it.
@@ -35,7 +35,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
   char NextName[NM];
   wchar NextNameW[NM];
   strcpy(NextName,Arc.FileName);
-  strcpyw(NextNameW,Arc.FileNameW);
+  wcscpy(NextNameW,Arc.FileNameW);
   NextVolumeName(NextName,NextNameW,ASIZE(NextName),(Arc.NewMhd.Flags & MHD_NEWNUMBERING)==0 || Arc.OldFormat);
 
 #if !defined(SFX_MODULE) && !defined(RARDLL)
@@ -59,13 +59,13 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
       char AltNextName[NM];
       wchar AltNextNameW[NM];
       strcpy(AltNextName,Arc.FileName);
-      strcpyw(AltNextNameW,Arc.FileNameW);
+      wcscpy(AltNextNameW,Arc.FileNameW);
       NextVolumeName(AltNextName,AltNextNameW,ASIZE(AltNextName),true);
       OldSchemeTested=true;
       if (Arc.Open(AltNextName,AltNextNameW))
       {
         strcpy(NextName,AltNextName);
-        strcpyw(NextNameW,AltNextNameW);
+        wcscpy(NextNameW,AltNextNameW);
         break;
       }
     }
@@ -84,10 +84,10 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
       // even though in year 2001 we announced in unrar.dll whatsnew.txt
       // that it will be PASCAL type (for compatibility with Visual Basic).
 #if defined(_MSC_VER)
-#ifndef _M_X64
+#ifndef _WIN_64
       __asm mov ebx,esp
 #endif
-#elif defined(_WIN_32) && defined(__BORLANDC__)
+#elif defined(_WIN_ALL) && defined(__BORLANDC__)
       _EBX=_ESP;
 #endif
       int RetCode=Cmd->ChangeVolProc(NextName,RAR_VOL_ASK);
@@ -95,10 +95,10 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
       // Restore ESP after ChangeVolProc with wrongly defined calling
       // convention broken it.
 #if defined(_MSC_VER)
-#ifndef _M_X64
+#ifndef _WIN_64
       __asm mov esp,ebx
 #endif
-#elif defined(_WIN_32) && defined(__BORLANDC__)
+#elif defined(_WIN_ALL) && defined(__BORLANDC__)
       _ESP=_EBX;
 #endif
       if (RetCode==0)
@@ -128,7 +128,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     }
 #endif
 #ifndef SILENT
-    if (Cmd->AllYes || !AskNextVol(NextName))
+    if (Cmd->AllYes || !AskNextVol(NextName,NextNameW))
 #endif
     {
       FailedOpen=true;
@@ -136,7 +136,6 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     }
 
 #endif // RARDLL
-    *NextNameW=0;
   }
   if (FailedOpen)
   {
@@ -154,11 +153,11 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     return(false);
   if (Cmd->ChangeVolProc!=NULL)
   {
-#if defined(_WIN_32) && !defined(_MSC_VER) && !defined(__MINGW32__)
+#if defined(_WIN_ALL) && !defined(_MSC_VER) && !defined(__MINGW32__)
     _EBX=_ESP;
 #endif
     int RetCode=Cmd->ChangeVolProc(NextName,RAR_VOL_NOTIFY);
-#if defined(_WIN_32) && !defined(_MSC_VER) && !defined(__MINGW32__)
+#if defined(_WIN_ALL) && !defined(_MSC_VER) && !defined(__MINGW32__)
     _ESP=_EBX;
 #endif
     if (RetCode==0)
@@ -222,7 +221,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
   return(true);
 }
 
-#if defined(RARDLL) && defined(_MSC_VER) && !defined(_M_X64)
+#if defined(RARDLL) && defined(_MSC_VER) && !defined(_WIN_64)
 // Restore the run time stack check for unrar.dll.
 #pragma runtime_checks( "s", restore )
 #endif
@@ -233,7 +232,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
 
 
 #ifndef SILENT
-bool AskNextVol(char *ArcName)
+bool AskNextVol(char *ArcName,wchar *ArcNameW)
 {
   eprintf(St(MAskNextVol),ArcName);
   if (Ask(St(MContinueQuit))==2)
