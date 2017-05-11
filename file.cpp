@@ -305,7 +305,12 @@ void File::Write(const void *Data,int Size)
         ErrHandler.WriteErrorFAT(FileName);
 #endif
       if (ErrHandler.AskRepeatWrite(FileName))
+      {
+#ifndef _WIN_32
+        clearerr(hFile);
+#endif
         continue;
+      }
       ErrHandler.WriteError(NULL,FileName);
     }
     break;

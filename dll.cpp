@@ -175,7 +175,11 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
     if (*Data->Arc.NewLhd.FileNameW)
       strncpyw(D->FileNameW,Data->Arc.NewLhd.FileNameW,sizeof(D->FileNameW));
     else
-      CharToWide(Data->Arc.NewLhd.FileName,D->FileNameW);
+    {
+      char AnsiName[NM];
+      OemToChar(Data->Arc.NewLhd.FileName,AnsiName);
+      CharToWide(AnsiName,D->FileNameW);
+    }
     D->Flags=Data->Arc.NewLhd.Flags;
     D->PackSize=Data->Arc.NewLhd.PackSize;
     D->PackSizeHigh=Data->Arc.NewLhd.HighPackSize;

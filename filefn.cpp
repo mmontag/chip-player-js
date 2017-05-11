@@ -297,7 +297,7 @@ bool IsDeleteAllowed(uint FileAttr)
 #if defined(_WIN_32) || defined(_EMX)
   return((FileAttr & (FA_RDONLY|FA_SYSTEM|FA_HIDDEN))==0);
 #else
-  return(false);
+  return((FileAttr & (S_IRUSR|S_IWUSR))==(S_IRUSR|S_IWUSR));
 #endif
 }
 
@@ -308,7 +308,7 @@ void PrepareToDelete(const char *Name,const wchar *NameW)
   SetFileAttr(Name,NameW,0);
 #endif
 #ifdef _UNIX
-  chmod(Name,S_IRUSR|S_IWUSR);
+  chmod(Name,S_IRUSR|S_IWUSR|S_IXUSR);
 #endif
 }
 
