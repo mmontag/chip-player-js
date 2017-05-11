@@ -91,12 +91,11 @@ int uni_init(int codepage) {
 }
 
 int uni_toucs(char* src, size_t srclen, UniChar* dst, size_t* dstlen) {
-    size_t srcbytes, srcsize, dstsize, subsc;
+    size_t srcbytes, srcsize, dstsize, subsc=0;
 
     if(!uni_ready) return -1;
 
-    srcbytes = srclen * sizeof(UniChar);
-    dstsize = srcbytes;
+    dstsize = srcbytes = srclen * sizeof(UniChar);
 
     if( uniUconvToUcs(uni_obj,(void**)&src,&srclen,&dst,&dstsize,&subsc) ) {
         return -1;
@@ -106,14 +105,13 @@ int uni_toucs(char* src, size_t srclen, UniChar* dst, size_t* dstlen) {
 }
 
 int uni_fromucs(UniChar* src, size_t srclen, char* dst, size_t* dstlen) {
-    size_t srcbytes, srcsize, dstsize, subsc;
+    size_t srcbytes, srcsize, dstsize, subsc=0;
 
     if(!uni_ready) return -1;
 
-    srcbytes = srclen;
-    srcsize = dstsize = srcbytes;
+    dstsize = srcbytes = *dstlen;
 
-    if( uniUconvFromUcs(uni_obj,&src,&srcsize,(void**)&dst,&dstsize,&subsc) ) {
+    if( uniUconvFromUcs(uni_obj,&src,&srclen,(void**)&dst,&dstsize,&subsc) ) {
         return -1;
     }
     *dstlen = srcbytes - dstsize;

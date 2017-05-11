@@ -75,7 +75,7 @@
     #include <emx/syscalls.h>
   #endif
 #else
-  #ifdef _MSC_VER
+  #if defined(_MSC_VER) || defined(__MINGW32__)
       #include <exception>
   #else
     #include <except.h>

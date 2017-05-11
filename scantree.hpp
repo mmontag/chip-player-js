@@ -7,6 +7,8 @@ enum { SCAN_SUCCESS,SCAN_DONE,SCAN_ERROR,SCAN_NEXT };
 
 #define MAXSCANDEPTH    (NM/2)
 
+class CommandData;
+
 class ScanTree
 {
   private:
@@ -34,6 +36,8 @@ class ScanTree
     int SpecPathLengthW;
 
     char ErrArcName[NM];
+
+    CommandData *Cmd;
   public:
     ScanTree(StringList *FileMasks,int Recurse,bool GetLinks,int GetDirs);
     ~ScanTree();
@@ -42,6 +46,7 @@ class ScanTree
     int GetSpecPathLengthW() {return(SpecPathLengthW);};
     int GetErrors() {return(Errors);};
     void SetErrArcName(const char *Name) {strcpy(ErrArcName,Name);}
+    void SetCommandData(CommandData *Cmd) {ScanTree::Cmd=Cmd;}
 };
 
 #endif

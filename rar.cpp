@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
 
 #endif
-  bool ShutdownOnClose;
+
 
 #ifdef ALLOW_EXCEPTIONS
   try 

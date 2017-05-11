@@ -136,6 +136,12 @@ bool Archive::IsArchive(bool EnableBroken)
     for (int I=0;I<ReadSize;I++)
       if (Buffer[I]==0x52 && IsSignature((byte *)&Buffer[I]))
       {
+        if (OldFormat && I>0 && CurPos<28 && ReadSize>31)
+        {
+          char *D=&Buffer[28-CurPos];
+          if (D[0]!=0x52 || D[1]!=0x53 || D[2]!=0x46 || D[3]!=0x58)
+            continue;
+        }
         SFXSize=CurPos+I;
         Seek(SFXSize,SEEK_SET);
         if (!OldFormat)

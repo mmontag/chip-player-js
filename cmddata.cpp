@@ -2,7 +2,7 @@
 
 CommandData::CommandData()
 {
-  FileArgs=ExclArgs=StoreArgs=ArcNames=NULL;
+  FileArgs=ExclArgs=InclArgs=StoreArgs=ArcNames=NULL;
   Init();
 }
 
@@ -26,6 +26,7 @@ void CommandData::Init()
 
   FileArgs=new StringList;
   ExclArgs=new StringList;
+  InclArgs=new StringList;
   StoreArgs=new StringList;
   ArcNames=new StringList;
 }
@@ -35,9 +36,10 @@ void CommandData::Close()
 {
   delete FileArgs;
   delete ExclArgs;
+  delete InclArgs;
   delete StoreArgs;
   delete ArcNames;
-  FileArgs=ExclArgs=StoreArgs=ArcNames=NULL;
+  FileArgs=ExclArgs=InclArgs=StoreArgs=ArcNames=NULL;
   NextVolSizes.Reset();
 }
 
@@ -215,9 +217,24 @@ void CommandData::ProcessSwitch(char *Switch)
         MsgStream=MSG_NULL;
         break;
       }
-      if (stricomp(&Switch[1],"DP")==0)
+      if (toupper(Switch[1])=='D')
       {
-        DisablePercentage=true;
+        for (int I=2;Switch[I]!=0;I++)
+          switch(toupper(Switch[I]))
+          {
+            case 'Q':
+              MsgStream=MSG_ERRONLY;
+              break;
+            case 'C':
+              DisableCopyright=true;
+              break;
+            case 'D':
+              DisableDone=true;
+              break;
+            case 'P':
+              DisablePercentage=true;
+              break;
+          }
         break;
       }
       if (stricomp(&Switch[1],"OFF")==0)
@@ -397,12 +414,16 @@ void CommandData::ProcessSwitch(char *Switch)
     case 'Y':
       AllYes=true;
       break;
+    case 'N':
     case 'X':
       if (Switch[1]!=0)
+      {
+        StringList *Args=toupper(Switch[0])=='N' ? InclArgs:ExclArgs;
         if (Switch[1]=='@' && !IsWildcard(Switch))
-          ReadTextFile(Switch+2,ExclArgs,false,true,true,true,true);
+          ReadTextFile(Switch+2,Args,false,true,true,true,true);
         else
-          ExclArgs->AddString(Switch+1);
+          Args->AddString(Switch+1);
+      }
       break;
     case 'E':
       switch(toupper(Switch[1]))
@@ -434,7 +455,13 @@ void CommandData::ProcessSwitch(char *Switch)
           NoEndBlock=true;
           break;
         default:
-          ExclFileAttr=GetExclAttr(&Switch[1]);
+          if (Switch[1]=='+')
+          {
+            InclFileAttr=GetExclAttr(&Switch[2]);
+            InclAttrSet=true;
+          }
+          else
+            ExclFileAttr=GetExclAttr(&Switch[1]);
           break;
       }
       break;
@@ -735,7 +762,7 @@ void CommandData::BadSwitch(char *Switch)
 #ifndef GUI
 void CommandData::OutTitle()
 {
-  if (BareOutput)
+  if (BareOutput || DisableCopyright)
     return;
 #if defined(__GNUC__) && defined(SFX_MODULE)
   mprintf(St(MCopyrightS));
@@ -773,11 +800,11 @@ void CommandData::OutHelp()
     MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,
     MCHelpSwAP,MCHelpSwAVm,MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
     MCHelpSwDH,MCHelpSwEP,MCHelpSwEP3,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,
-    MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwKB,MCHelpSwOp,MCHelpSwOm,
-    MCHelpSwOC,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwRI,
-    MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,
-    MCHelpSwVUnr,MCHelpSwVER,MCHelpSwVP,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,
-    MCHelpSwY
+    MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwKB,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,
+    MCHelpSwOp,MCHelpSwOm,MCHelpSwOC,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,
+    MCHelpSwR,MCHelpSwRI,MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,
+    MCHelpSwTS,MCHelpSwU,MCHelpSwVUnr,MCHelpSwVER,MCHelpSwVP,MCHelpSwX,
+    MCHelpSwXa,MCHelpSwXal,MCHelpSwY
 #else
     MRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdA,MCHelpCmdC,MCHelpCmdCF,
     MCHelpCmdCW,MCHelpCmdD,MCHelpCmdE,MCHelpCmdF,MCHelpCmdI,MCHelpCmdK,
@@ -790,13 +817,13 @@ void CommandData::OutHelp()
     MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,
     MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwISND,
     MCHelpSwK,MCHelpSwKB,MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,
-    MCHelpSwOp,MCHelpSwOm,MCHelpSwOC,MCHelpSwOL,MCHelpSwOS,MCHelpSwOW,
-    MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,
-    MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSFX,MCHelpSwSI,MCHelpSwT,
-    MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,
-    MCHelpSwTS,MCHelpSwU,MCHelpSwV,MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,
-    MCHelpSwVN,MCHelpSwVP,MCHelpSwW,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,
-    MCHelpSwY,MCHelpSwZ
+    MCHelpSwN,MCHelpSwNa,MCHelpSwNal,MCHelpSwOp,MCHelpSwOm,MCHelpSwOC,
+    MCHelpSwOL,MCHelpSwOS,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,
+    MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,
+    MCHelpSwSFX,MCHelpSwSI,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,
+    MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,
+    MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,
+    MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
 #endif
   };
 
@@ -830,7 +857,7 @@ void CommandData::OutHelp()
     if (Help[I]==MCHelpSwOL)
       continue;
 #endif
-#if defined(_WIN_32) && !defined(_WIN_CE)
+#if !defined(_WIN_32)
     if (Help[I]==MCHelpSwRI)
       continue;
 #endif
@@ -854,26 +881,38 @@ void CommandData::OutHelp()
 }
 
 
-bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath)
+bool CommandData::ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullPath)
 {
   char *Name=ConvertPath(CheckName,NULL);
-  char FullName[NM],*ExclName;
+  char FullName[NM],*CurName;
   *FullName=0;
-  ExclArgs->Rewind();
-  while ((ExclName=ExclArgs->GetString())!=NULL)
+  Args->Rewind();
+  while ((CurName=Args->GetString())!=NULL)
 #ifndef SFX_MODULE
-    if (CheckFullPath && IsFullPath(ExclName))
+    if (CheckFullPath && IsFullPath(CurName))
     {
       if (*FullName==0)
         ConvertNameToFull(CheckName,FullName);
-      if (CmpName(ExclName,FullName,MATCH_WILDSUBPATH))
+      if (CmpName(CurName,FullName,MATCH_WILDSUBPATH))
         return(true);
     }
     else
 #endif
-      if (CmpName(ConvertPath(ExclName,NULL),Name,MATCH_WILDSUBPATH))
+      if (CmpName(ConvertPath(CurName,NULL),Name,MATCH_WILDSUBPATH))
         return(true);
   return(false);
+}
+
+
+bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath)
+{
+  if (ExclCheckArgs(ExclArgs,CheckName,CheckFullPath))
+    return(true);
+  if (InclArgs->ItemsCount()==0)
+    return(false);
+  if (ExclCheckArgs(InclArgs,CheckName,CheckFullPath))
+    return(false);
+  return(true);
 }
 
 
@@ -945,6 +984,7 @@ int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType
           *ExactMatch=stricompcw(ArgNameW,NamePtr)==0;
         return(StringCount);
       }
+      continue;
     }
 #endif
     if (CmpName(ArgName,NewLhd.FileName,MatchType))
@@ -1042,18 +1082,22 @@ bool CommandData::IsSwitch(int Ch)
 #ifndef SFX_MODULE
 uint CommandData::GetExclAttr(char *Str)
 {
-#ifdef _UNIX
-  return(strtol(Str,NULL,0));
-#endif
-#if defined(_WIN_32) || defined(_EMX)
-  uint Attr;
   if (isdigit(*Str))
     return(strtol(Str,NULL,0));
   else
   {
+    uint Attr;
     for (Attr=0;*Str;Str++)
       switch(toupper(*Str))
       {
+#ifdef _UNIX
+        case 'D':
+          Attr|=S_IFDIR;
+          break;
+        case 'V':
+          Attr|=S_IFCHR;
+          break;
+#elif defined(_WIN_32) || defined(_EMX)
         case 'R':
           Attr|=0x1;
           break;
@@ -1069,10 +1113,10 @@ uint CommandData::GetExclAttr(char *Str)
         case 'A':
           Attr|=0x20;
           break;
+#endif
       }
     return(Attr);
   }
-#endif
 }
 #endif
 

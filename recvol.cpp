@@ -370,7 +370,7 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
 #if !defined(GUI) && !defined(SILENT)
   if (!Cmd->DisablePercentage)
     mprintf("\b\b\b\b100%%");
-  if (!Silent)
+  if (!Silent && !Cmd->DisableDone)
     mprintf(St(MDone));
 #endif
   return(true);

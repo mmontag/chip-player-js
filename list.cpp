@@ -20,6 +20,9 @@ void ListArchive(CommandData *Cmd)
   while (Cmd->GetArcName(ArcName,ArcNameW,sizeof(ArcName)))
   {
     Archive Arc(Cmd);
+#ifdef _WIN_32
+    Arc.RemoveSequentialFlag();
+#endif
     if (!Arc.WOpen(ArcName,ArcNameW))
       continue;
     bool FileMatched=true;
@@ -191,8 +194,8 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
   char ConvertedName[NM];
   if ((hd.Flags & LHD_UNICODE)!=0 && *hd.FileNameW!=0 && UnicodeEnabled())
   {
-    WideToChar(hd.FileNameW,ConvertedName);
-    Name=ConvertedName;
+    if (WideToChar(hd.FileNameW,ConvertedName))
+      Name=ConvertedName;
   }
 #endif
 
@@ -236,7 +239,7 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
   else
     ListFileAttr(hd.FileAttr,hd.HostOS);
 
-  mprintf(" %8.8lX",hd.FileCRC);
+  mprintf(" %8.8X",hd.FileCRC);
   mprintf(" m%d",hd.Method-0x30);
   if ((hd.Flags & LHD_WINDOWMASK)<=6*32)
     mprintf("%c",((hd.Flags&LHD_WINDOWMASK)>>5)+'a');
@@ -244,12 +247,13 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
     mprintf(" ");
   mprintf(" %d.%d",hd.UnpVer/10,hd.UnpVer%10);
 
-  static char *RarOS[]={
+  static const char *RarOS[]={
     "DOS","OS/2","Win95/NT","Unix","MacOS","BeOS","WinCE","","",""
   };
 
   if (Technical)
-    mprintf("\n%22s %8s %4s",RarOS[hd.HostOS],
+    mprintf("\n%22s %8s %4s",
+            (hd.HostOS<sizeof(RarOS)/sizeof(RarOS[0]) ? RarOS[hd.HostOS]:""),
             (hd.Flags & LHD_SOLID) ? St(MYes):St(MNo),
             (hd.Flags & LHD_VERSION) ? St(MYes):St(MNo));
 }
@@ -348,7 +352,7 @@ void ListOldSubHeader(Archive &Arc)
 
 void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical)
 {
-  if (Arc.SubHead.CmpName(SUBHEAD_TYPE_CMT) &&
+  if (Technical && Arc.SubHead.CmpName(SUBHEAD_TYPE_CMT) &&
       (Arc.SubHead.Flags & LHD_SPLIT_BEFORE)==0 && !Cmd->DisableComment)
   {
     Array<byte> CmtData;

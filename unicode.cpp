@@ -4,24 +4,28 @@
 #include "unios2.cpp"
 #endif
 
-void WideToChar(const wchar *Src,char *Dest,int DestSize)
+bool WideToChar(const wchar *Src,char *Dest,int DestSize)
 {
+  bool RetCode=true;
 #ifdef _WIN_32
-  WideCharToMultiByte(CP_ACP,0,Src,-1,Dest,DestSize,NULL,NULL);
+  if (WideCharToMultiByte(CP_ACP,0,Src,-1,Dest,DestSize,NULL,NULL)==0)
+    RetCode=false;
 #else
 #ifdef _APPLE
   WideToUtf(Src,Dest,DestSize);
 #else
 #ifdef MBFUNCTIONS
   if (wcstombs(Dest,Src,DestSize)==-1)
-    *Dest=0;
+    RetCode=false;
 #else
   if (UnicodeEnabled())
   {
 #if defined(_EMX) && !defined(_DJGPP)
-    int len=Min(strlenw(Src),DestSize-1);
-    uni_fromucs((UniChar*)Src,len,Dest,(size_t*)&DestSize);
-    Dest[len]=0;
+    int len=Min(strlenw(Src)+1,DestSize-1);
+    if (uni_fromucs((UniChar*)Src,len,Dest,(size_t*)&DestSize)==-1 ||
+        DestSize>len*2)
+      RetCode=false;
+    Dest[DestSize]=0;
 #endif
   }
   else
@@ -34,26 +38,32 @@ void WideToChar(const wchar *Src,char *Dest,int DestSize)
 #endif
 #endif
 #endif
+  return(RetCode);
 }
 
 
-void CharToWide(const char *Src,wchar *Dest,int DestSize)
+bool CharToWide(const char *Src,wchar *Dest,int DestSize)
 {
+  bool RetCode=true;
 #ifdef _WIN_32
-  MultiByteToWideChar(CP_ACP,0,Src,-1,Dest,DestSize);
+  if (MultiByteToWideChar(CP_ACP,0,Src,-1,Dest,DestSize)==0)
+    RetCode=false;
 #else
 #ifdef _APPLE
   UtfToWide(Src,Dest,DestSize);
 #else
 #ifdef MBFUNCTIONS
-  mbstowcs(Dest,Src,DestSize);
+  if (mbstowcs(Dest,Src,DestSize)==-1)
+    RetCode=false;
 #else
   if (UnicodeEnabled())
   {
 #if defined(_EMX) && !defined(_DJGPP)
-    int len=Min(strlen(Src),DestSize-1);
-    uni_toucs((char*)Src,len,(UniChar*)Dest,(size_t*)&DestSize);
-    Dest[len]=0;
+    int len=Min(strlen(Src)+1,DestSize-1);
+    if (uni_toucs((char*)Src,len,(UniChar*)Dest,(size_t*)&DestSize)==-1 ||
+        DestSize>len)
+      DestSize=0;
+    RetCode=false;
 #endif
   }
   else
@@ -66,6 +76,7 @@ void CharToWide(const char *Src,wchar *Dest,int DestSize)
 #endif
 #endif
 #endif
+  return(RetCode);
 }
 
 

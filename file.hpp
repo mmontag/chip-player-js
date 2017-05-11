@@ -37,6 +37,9 @@ class File
     bool NewFile;
     bool AllowDelete;
     bool AllowExceptions;
+#ifdef _WIN_32
+    bool NoSequentialRead;
+#endif
   protected:
     bool OpenShared;
   public:
@@ -89,6 +92,9 @@ class File
     long Copy(File &Dest,Int64 Length=INT64ERR);
     void SetAllowDelete(bool Allow) {AllowDelete=Allow;}
     void SetExceptions(bool Allow) {AllowExceptions=Allow;}
+#ifdef _WIN_32
+    void RemoveSequentialFlag() {NoSequentialRead=true;}
+#endif
 };
 
 #endif

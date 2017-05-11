@@ -152,6 +152,10 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
       DataIO->UnpVolume=(hd->Flags & LHD_SPLIT_AFTER);
       DataIO->SetPackedSizeToRead(hd->FullPackSize);
     }
+#ifdef SFX_MODULE
+    DataIO->UnpArcSize=Arc.FileLength();
+    DataIO->CurUnpRead=0;
+#endif
     DataIO->PackedCRC=0xffffffff;
 //    DataIO->SetFiles(&Arc,NULL);
   }

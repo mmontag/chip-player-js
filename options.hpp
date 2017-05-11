@@ -16,11 +16,12 @@ enum EXTTIME_MODE {
   EXTTIME_NONE,EXTTIME_1S,EXTTIME_HIGH1,EXTTIME_HIGH2,EXTTIME_HIGH3
 };
 enum {NAMES_ORIGINALCASE,NAMES_UPPERCASE,NAMES_LOWERCASE};
-enum MESSAGE_TYPE {MSG_STDOUT,MSG_STDERR,MSG_NULL};
+enum MESSAGE_TYPE {MSG_STDOUT,MSG_STDERR,MSG_ERRONLY,MSG_NULL};
 enum OVERWRITE_MODE { OVERWRITE_ASK,OVERWRITE_ALL,OVERWRITE_NONE};
 
 #define     MAX_FILTERS           16
 enum FilterState {FILTER_DEFAULT=0,FILTER_AUTO,FILTER_FORCE,FILTER_DISABLE};
+
 
 struct FilterMode
 {
@@ -38,6 +39,8 @@ class RAROptions
     void Init();
 
     uint ExclFileAttr;
+    uint InclFileAttr;
+    bool InclAttrSet;
     uint WinSize;
     char TempPath[NM];
     char SFXModule[NM];
@@ -55,6 +58,8 @@ class RAROptions
     int Recovery;
     int RecVolNumber;
     bool DisablePercentage;
+    bool DisableCopyright;
+    bool DisableDone;
     int Solid;
     int SolidCount;
     bool ClearArc;

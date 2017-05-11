@@ -15,6 +15,7 @@ ScanTree::ScanTree(StringList *FileMasks,int Recurse,bool GetLinks,int GetDirs)
   Errors=0;
   FastFindFile=false;
   *ErrArcName=0;
+  Cmd=NULL;
 }
 
 
@@ -138,6 +139,8 @@ int ScanTree::FindProc(FindData *FindData)
       FastFindFile=true;
       if (!FindCode)
       {
+        if (Cmd!=NULL && Cmd->ExclCheck(CurMask,true))
+          return(SCAN_NEXT);
         ErrHandler.OpenErrorMsg(ErrArcName,CurMask);
         return(FindData->Error ? SCAN_ERROR:SCAN_NEXT);
       }
@@ -152,6 +155,9 @@ int ScanTree::FindProc(FindData *FindData)
     if (Error && strstr(CurMask,"System Volume Information\\")!=NULL)
       Error=false;
 #endif
+
+    if (Cmd!=NULL && Cmd->ExclCheck(CurMask,true))
+      Error=false;
 
 #ifndef SILENT
     if (Error)

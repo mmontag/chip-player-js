@@ -681,7 +681,7 @@ void Unpack::UnpWriteBuf()
         {
           UnpackFilter *NextFilter=PrgStack[I+1];
           if (NextFilter==NULL || NextFilter->BlockStart!=BlockStart ||
-              NextFilter->BlockLength!=FilteredDataSize)
+              NextFilter->BlockLength!=FilteredDataSize || NextFilter->NextWindow)
             break;
           VM.SetMemory(0,FilteredData,FilteredDataSize);
           VM_PreparedProgram *NextPrg=&PrgStack[I+1]->Prg;

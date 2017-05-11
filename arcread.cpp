@@ -149,7 +149,7 @@ int Archive::ReadHeader()
           if (hd->UnpSize==0xffffffff)
           {
             hd->UnpSize=int64to32(INT64MAX);
-            hd->HighUnpSize=(INT64MAX>>32);
+            hd->HighUnpSize=int64to32(INT64MAX>>32);
           }
         }
         hd->FullPackSize=int32to64(hd->HighPackSize,hd->PackSize);
@@ -432,6 +432,11 @@ int Archive::ReadOldHeader()
     NewLhd.FileCRC=OldLhd.FileCRC;
     NewLhd.FullPackSize=NewLhd.PackSize;
     NewLhd.FullUnpSize=NewLhd.UnpSize;
+
+    NewLhd.mtime.SetDos(NewLhd.FileTime);
+    NewLhd.ctime.Reset();
+    NewLhd.atime.Reset();
+    NewLhd.arctime.Reset();
 
     Raw.Read(OldLhd.NameSize);
     Raw.Get((byte *)NewLhd.FileName,OldLhd.NameSize);

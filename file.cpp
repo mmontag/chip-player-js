@@ -18,6 +18,9 @@ File::File()
   AllowDelete=true;
   CloseCount=0;
   AllowExceptions=true;
+#ifdef _WIN_32
+  NoSequentialRead=false;
+#endif
 }
 
 
@@ -55,12 +58,11 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
   uint ShareMode=FILE_SHARE_READ;
   if (OpenShared)
     ShareMode|=FILE_SHARE_WRITE;
+  uint Flags=NoSequentialRead ? 0:FILE_FLAG_SEQUENTIAL_SCAN;
   if (WinNT() && NameW!=NULL && *NameW!=0)
-    hNewFile=CreateFileW(NameW,Access,ShareMode,NULL,OPEN_EXISTING,
-                         FILE_FLAG_SEQUENTIAL_SCAN,NULL);
+    hNewFile=CreateFileW(NameW,Access,ShareMode,NULL,OPEN_EXISTING,Flags,NULL);
   else
-    hNewFile=CreateFile(Name,Access,ShareMode,NULL,OPEN_EXISTING,
-                        FILE_FLAG_SEQUENTIAL_SCAN,NULL);
+    hNewFile=CreateFile(Name,Access,ShareMode,NULL,OPEN_EXISTING,Flags,NULL);
 
   if (hNewFile==BAD_HANDLE && GetLastError()==ERROR_FILE_NOT_FOUND)
     ErrorType=FILE_NOTFOUND;
@@ -292,7 +294,8 @@ void File::Write(const void *Data,int Size)
     else
       Success=WriteFile(hFile,Data,Size,&Written,NULL);
 #else
-    Success=fwrite(Data,1,Size,hFile)==Size && !ferror(hFile);
+    int Written=fwrite(Data,1,Size,hFile);
+    Success=Written==Size && !ferror(hFile);
 #endif
     if (!Success && AllowExceptions && HandleType==FILE_HANDLENORMAL)
     {
@@ -309,6 +312,8 @@ void File::Write(const void *Data,int Size)
 #ifndef _WIN_32
         clearerr(hFile);
 #endif
+        if (Written<Size && Written>0)
+          Seek(Tell()-Written,SEEK_SET);
         continue;
       }
       ErrHandler.WriteError(NULL,FileName);

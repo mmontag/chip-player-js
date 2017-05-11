@@ -110,7 +110,7 @@ class Archive:public File
     bool NotFirstVolume;
     bool Protected;
     bool Encrypted;
-    unsigned int SFXSize;
+    uint SFXSize;
     bool BrokenFileHeader;
 
     bool Splitting;

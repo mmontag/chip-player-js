@@ -3,9 +3,10 @@
 static bool match(char *pattern,char *string);
 static bool match(wchar *pattern,wchar *string);
 
+
 inline uint toupperc(byte ch)
 {
-#if defined(_WIN_32)
+#ifdef _WIN_32
   return((uint)CharUpper((LPTSTR)(ch)));
 #elif defined(_UNIX)
   return(ch);
@@ -27,6 +28,8 @@ inline uint touppercw(uint ch)
 
 bool CmpName(char *Wildcard,char *Name,int CmpPath)
 {
+  CmpPath&=MATCH_MODEMASK;
+  
   if (CmpPath!=MATCH_NAMES)
   {
     int WildLength=strlen(Wildcard);
@@ -67,6 +70,8 @@ bool CmpName(char *Wildcard,char *Name,int CmpPath)
 #ifndef SFX_MODULE
 bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
 {
+  CmpPath&=MATCH_MODEMASK;
+
   if (CmpPath!=MATCH_NAMES)
   {
     int WildLength=strlenw(Wildcard);

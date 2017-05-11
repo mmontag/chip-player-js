@@ -18,6 +18,7 @@ CmdExtract::~CmdExtract()
 
 void CmdExtract::DoExtract(CommandData *Cmd)
 {
+  PasswordCancelled=false;
   DataIO.SetCurrentCommand(*Cmd->Command);
 
   struct FindData FD;
@@ -35,18 +36,22 @@ void CmdExtract::DoExtract(CommandData *Cmd)
 
   if (TotalFileCount==0 && *Cmd->Command!='I')
   {
-    mprintf(St(MExtrNoFiles));
+    if (!PasswordCancelled)
+    {
+      mprintf(St(MExtrNoFiles));
+    }
     ErrHandler.SetErrorCode(WARNING);
   }
 #ifndef GUI
   else
-    if (*Cmd->Command=='I')
-      mprintf(St(MDone));
-    else
-      if (ErrHandler.GetErrorCount()==0)
-        mprintf(St(MExtrAllOk));
+    if (!Cmd->DisableDone)
+      if (*Cmd->Command=='I')
+        mprintf(St(MDone));
       else
-        mprintf(St(MExtrTotalErr),ErrHandler.GetErrorCount());
+        if (ErrHandler.GetErrorCount()==0)
+          mprintf(St(MExtrAllOk));
+        else
+          mprintf(St(MExtrTotalErr),ErrHandler.GetErrorCount());
 #endif
 }
 
@@ -210,8 +215,10 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
   wchar ArcFileNameW[NM];
   *ArcFileNameW=0;
 
+  int MatchType=MATCH_WILDSUBPATH;
+
   bool EqualNames=false;
-  int MatchNumber=Cmd->IsProcessFile(Arc.NewLhd,&EqualNames);
+  int MatchNumber=Cmd->IsProcessFile(Arc.NewLhd,&EqualNames,MatchType);
   bool ExactMatch=MatchNumber!=0;
 #if !defined(SFX_MODULE) && !defined(_WIN_CE)
   if (Cmd->ExclPath==EXCL_BASEPATH)
@@ -249,8 +256,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
   {
     ConvertPath(Arc.NewLhd.FileNameW,ArcFileNameW);
     char Name[NM];
-    WideToChar(ArcFileNameW,Name);
-    if (IsNameUsable(Name))
+    if (WideToChar(ArcFileNameW,Name) && IsNameUsable(Name))
       strcpy(ArcFileName,Name);
   }
 #endif
@@ -350,6 +356,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #else
         if (!GetPassword(PASSWORD_FILE,ArcFileName,Password,sizeof(Password)))
         {
+          PasswordCancelled=true;
           return(false);
         }
 #endif
@@ -395,13 +402,19 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 
     char *ExtrName=ArcFileName;
 
+    bool EmptyName=false;
 #ifndef SFX_MODULE
     int Length=strlen(Cmd->ArcPath);
+    if (Length>1 && IsPathDiv(Cmd->ArcPath[Length-1]) &&
+        strlen(ArcFileName)==Length-1)
+      Length--;
     if (Length>0 && strnicomp(Cmd->ArcPath,ArcFileName,Length)==0)
     {
       ExtrName+=Length;
       while (*ExtrName==CPATHDIVIDER)
         ExtrName++;
+      if (*ExtrName==0)
+        EmptyName=true;
     }
 #endif
 
@@ -473,7 +486,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
     else
       *DestFileNameW=0;
 
-    ExtrFile=!SkipSolid/* && *ExtrName*/;
+    ExtrFile=!SkipSolid && !EmptyName/* && *ExtrName*/;
     if ((Cmd->FreshFiles || Cmd->UpdateFiles) && (Command=='E' || Command=='X'))
     {
       struct FindData FD;
@@ -554,7 +567,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
           if (DirExist && !IsDir(GetFileAttr(DestFileName,DestNameW)))
           {
             bool UserReject;
-            FileCreate(Cmd,NULL,DestFileName,DestNameW,Cmd->Overwrite,&UserReject,Arc.NewLhd.UnpSize,Arc.NewLhd.FileTime);
+            FileCreate(Cmd,NULL,DestFileName,DestNameW,Cmd->Overwrite,&UserReject,Arc.NewLhd.FullUnpSize,Arc.NewLhd.FileTime);
             DirExist=false;
           }
           CreatePath(DestFileName,DestNameW,true);
@@ -608,7 +621,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
         if ((Command=='E' || Command=='X') && ExtrFile && !Cmd->Test)
         {
           bool UserReject;
-          if (!FileCreate(Cmd,&CurFile,DestFileName,DestNameW,Cmd->Overwrite,&UserReject,Arc.NewLhd.UnpSize,Arc.NewLhd.FileTime))
+          if (!FileCreate(Cmd,&CurFile,DestFileName,DestNameW,Cmd->Overwrite,&UserReject,Arc.NewLhd.FullUnpSize,Arc.NewLhd.FileTime))
           {
             ExtrFile=false;
             if (!UserReject)
@@ -694,7 +707,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 
       CurFile.SetAllowDelete(!Cmd->KeepBroken);
 
-      if (!ExtractLink(DataIO,Arc,DestFileName,DataIO.UnpFileCRC,Command=='X' || Command=='E') &&
+      if (!ExtractLink(DataIO,Arc,DestFileName,DataIO.UnpFileCRC,!TestMode && !SkipSolid) &&
           (Arc.NewLhd.Flags & LHD_SPLIT_BEFORE)==0)
         if (Arc.NewLhd.Method==0x30)
           UnstoreFile(DataIO,Arc.NewLhd.FullUnpSize);
@@ -805,3 +818,4 @@ void CmdExtract::UnstoreFile(ComprDataIO &DataIO,Int64 DestUnpSize)
       DestUnpSize-=Code;
   }
 }
+

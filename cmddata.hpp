@@ -9,6 +9,7 @@ class CommandData:public RAROptions
     void ProcessSwitchesString(char *Str);
     void ProcessSwitch(char *Switch);
     void BadSwitch(char *Switch);
+    bool ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullPath);
     uint GetExclAttr(char *Str);
 
     bool FileLists;
@@ -47,6 +48,7 @@ class CommandData:public RAROptions
 
     StringList *FileArgs;
     StringList *ExclArgs;
+    StringList *InclArgs;
     StringList *ArcNames;
     StringList *StoreArgs;
 };

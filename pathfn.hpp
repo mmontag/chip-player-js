@@ -29,16 +29,15 @@ char* GetVolNumPart(char *ArcName);
 void NextVolumeName(char *ArcName,bool OldNumbering);
 bool IsNameUsable(const char *Name);
 void MakeNameUsable(char *Name,bool Extended);
-char* UnixSlashToDos(char *SrcName,char *DestName=NULL);
-char* DosSlashToUnix(char *SrcName,char *DestName=NULL);
+char* UnixSlashToDos(char *SrcName,char *DestName=NULL,uint MaxLength=NM);
+char* DosSlashToUnix(char *SrcName,char *DestName=NULL,uint MaxLength=NM);
 bool IsFullPath(const char *Path);
 bool IsDiskLetter(const char *Path);
 void GetPathRoot(const char *Path,char *Root);
 int ParseVersionFileName(char *Name,wchar *NameW,bool Truncate);
 char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering);
-
-
 wchar* GetWideName(const char *Name,const wchar *NameW,wchar *DestW);
+
 
 inline char* GetOutputName(const char *Name) {return((char *)Name);};
 
