@@ -12,6 +12,7 @@
 #define rarrealloc realloc
 #define rarfree free
 #define rarstrdup strdup
+#define rarstrdupw strdupw
 
 
 

@@ -15,8 +15,9 @@
 #define ERAR_UNKNOWN            21
 #define ERAR_MISSING_PASSWORD   22
 
-#define RAR_OM_LIST           0
-#define RAR_OM_EXTRACT        1
+#define RAR_OM_LIST              0
+#define RAR_OM_EXTRACT           1
+#define RAR_OM_LIST_INCSPLIT     2
 
 #define RAR_SKIP              0
 #define RAR_TEST              1
@@ -109,7 +110,7 @@ enum UNRARCALLBACK_MESSAGES {
   UCM_CHANGEVOLUME,UCM_PROCESSDATA,UCM_NEEDPASSWORD
 };
 
-typedef int (CALLBACK *UNRARCALLBACK)(UINT msg,LONG UserData,LONG P1,LONG P2);
+typedef int (CALLBACK *UNRARCALLBACK)(UINT msg,LPARAM UserData,LPARAM P1,LPARAM P2);
 
 typedef int (PASCAL *CHANGEVOLPROC)(char *ArcName,int Mode);
 typedef int (PASCAL *PROCESSDATAPROC)(unsigned char *Addr,int Size);
@@ -125,7 +126,7 @@ int    PASCAL RARReadHeader(HANDLE hArcData,struct RARHeaderData *HeaderData);
 int    PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *HeaderData);
 int    PASCAL RARProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestName);
 int    PASCAL RARProcessFileW(HANDLE hArcData,int Operation,wchar_t *DestPath,wchar_t *DestName);
-void   PASCAL RARSetCallback(HANDLE hArcData,UNRARCALLBACK Callback,LONG UserData);
+void   PASCAL RARSetCallback(HANDLE hArcData,UNRARCALLBACK Callback,LPARAM UserData);
 void   PASCAL RARSetChangeVolProc(HANDLE hArcData,CHANGEVOLPROC ChangeVolProc);
 void   PASCAL RARSetProcessDataProc(HANDLE hArcData,PROCESSDATAPROC ProcessDataProc);
 void   PASCAL RARSetPassword(HANDLE hArcData,char *Password);

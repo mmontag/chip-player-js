@@ -3,7 +3,8 @@
 static bool IsUnicode(byte *Data,int Size);
 
 bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
-                  RAR_CHARSET SrcCharset,bool Unquote,bool SkipComments)
+                  RAR_CHARSET SrcCharset,bool Unquote,bool SkipComments,
+                  bool ExpandEnvStr)
 {
   char FileName[NM];
   if (Config)
@@ -79,7 +80,28 @@ bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
           CurStr++;
         }
         WideToChar(CurStr,&AnsiName[0],AnsiName.Size());
-        List->AddString(&AnsiName[0],CurStr);
+
+        bool Expanded=false;
+#if defined(_WIN_32) && !defined(_WIN_CE)
+        if (ExpandEnvStr && *CurStr=='%')
+        {
+          // expanding environment variables in Windows version
+
+          char ExpName[NM];
+          wchar ExpNameW[NM];
+          *ExpNameW=0;
+          int ret,retw=1;
+          ret=ExpandEnvironmentStrings(&AnsiName[0],ExpName,ASIZE(ExpName));
+          if (ret!=0 && WinNT())
+            retw=ExpandEnvironmentStringsW(CurStr,ExpNameW,ASIZE(ExpNameW));
+          Expanded=ret!=0 && ret<ASIZE(ExpName) &&
+                   retw!=0 && retw<ASIZE(ExpNameW);
+          if (Expanded)
+            List->AddString(ExpName,ExpNameW);
+        }
+#endif
+        if (!Expanded)
+          List->AddString(&AnsiName[0],CurStr);
       }
       CurStr=NextStr+1;
       while (*CurStr=='\r' || *CurStr=='\n')
@@ -112,7 +134,7 @@ bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
       {
         if (Unquote && *CurStr=='\"')
         {
-          int Length=strlen(CurStr);
+          size_t Length=strlen(CurStr);
           if (CurStr[Length-1]=='\"')
           {
             CurStr[Length-1]=0;
@@ -123,7 +145,22 @@ bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
         if (SrcCharset==RCH_OEM)
           OemToChar(CurStr,CurStr);
 #endif
-        List->AddString(CurStr);
+
+        bool Expanded=false;
+#if defined(_WIN_32) && !defined(_WIN_CE)
+        if (ExpandEnvStr && *CurStr=='%')
+        {
+          // expanding environment variables in Windows version
+
+          char ExpName[NM];
+          int ret=ExpandEnvironmentStrings(CurStr,ExpName,ASIZE(ExpName));
+          Expanded=ret!=0 && ret<ASIZE(ExpName);
+          if (Expanded)
+            List->AddString(ExpName);
+        }
+#endif
+        if (!Expanded)
+          List->AddString(CurStr);
       }
       CurStr=NextStr+1;
       while (*CurStr=='\r' || *CurStr=='\n')

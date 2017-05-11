@@ -7,6 +7,8 @@ ScanTree::ScanTree(StringList *FileMasks,int Recurse,bool GetLinks,int GetDirs)
   ScanTree::GetLinks=GetLinks;
   ScanTree::GetDirs=GetDirs;
 
+  ScanEntireDisk=false;
+
   SetAllMaskDepth=0;
   *CurMask=0;
   *CurMaskW=0;
@@ -57,6 +59,7 @@ int ScanTree::GetNext(FindData *FindData)
 
 bool ScanTree::PrepareMasks()
 {
+  ScanEntireDisk=false;
   if (!FileMasks->GetString(CurMask,CurMaskW,sizeof(CurMask)))
     return(false);
   CurMask[ASIZE(CurMask)-1]=0;
@@ -64,6 +67,12 @@ bool ScanTree::PrepareMasks()
 #ifdef _WIN_32
   UnixSlashToDos(CurMask);
 #endif
+
+  // We wish to scan entire disk if mask like c:\ is specified
+  // regardless of recursion mode. Use c:\*.* mask when need to scan only 
+  // the root directory.
+  ScanEntireDisk=IsDiskLetter(CurMask) && IsPathDiv(CurMask[2]) && CurMask[3]==0;
+
   char *Name=PointToName(CurMask);
   if (*Name==0)
     strcat(CurMask,MASKALL);
@@ -116,7 +125,7 @@ int ScanTree::FindProc(FindData *FindData)
     bool FindCode=!Wildcards && FindFile::FastFind(CurMask,CurMaskW,FindData,GetLinks);
     bool IsDir=FindCode && FindData->IsDir;
     bool SearchAll=!IsDir && (Depth>0 || Recurse==RECURSE_ALWAYS ||
-                   Wildcards && Recurse==RECURSE_WILDCARDS);
+                   Wildcards && Recurse==RECURSE_WILDCARDS || ScanEntireDisk);
     if (Depth==0)
       SearchAllInRoot=SearchAll;
     if (SearchAll || Wildcards)
@@ -234,7 +243,10 @@ int ScanTree::FindProc(FindData *FindData)
     }
     if (GetDirs==SCAN_GETDIRSTWICE &&
         FindFile::FastFind(DirName,DirNameW,FindData,GetLinks) && FindData->IsDir)
+    {
+      FindData->Flags|=FDDF_SECONDDIR;
       return(Error ? SCAN_ERROR:SCAN_SUCCESS);
+    }
     return(Error ? SCAN_ERROR:SCAN_NEXT);
   }
 

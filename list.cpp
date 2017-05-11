@@ -270,13 +270,20 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
 void ListSymLink(Archive &Arc)
 {
   if (Arc.NewLhd.HostOS==HOST_UNIX && (Arc.NewLhd.FileAttr & 0xF000)==0xA000)
-  {
-    char FileName[NM];
-    int DataSize=Min(Arc.NewLhd.PackSize,sizeof(FileName)-1);
-    Arc.Read(FileName,DataSize);
-    FileName[DataSize]=0;
-    mprintf("\n%22s %s","-->",FileName);
-  }
+    if ((Arc.NewLhd.Flags & LHD_PASSWORD)==0)
+    {
+      char FileName[NM];
+      int DataSize=Min(Arc.NewLhd.PackSize,sizeof(FileName)-1);
+      Arc.Read(FileName,DataSize);
+      FileName[DataSize]=0;
+      mprintf("\n%22s %s","-->",FileName);
+    }
+    else
+    {
+      // Link data are encrypted. We would need to ask for password
+      // and initialize decryption routine to display the link target.
+      mprintf("\n%22s %s","-->","*<-?->");
+    }
 }
 
 

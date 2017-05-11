@@ -290,7 +290,8 @@ void _stdfunction ProcessSignal(int SigType)
   ExtRes.UnloadDLL();
 #endif
   exit(USER_BREAK);
-#ifdef _WIN_32
+#if defined(_WIN_32) && !defined(_MSC_VER)
+  // never reached, just to avoid a compiler warning
   return(TRUE);
 #endif
 }

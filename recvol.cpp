@@ -79,6 +79,11 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
 #ifndef SILENT
   Int64 RecFileSize=0;
 #endif
+
+#ifndef SILENT
+  mprintf(St(MCalcCRCAllVol));
+#endif
+
   FindFile Find;
   Find.SetMask(RecVolMask);
   struct FindData RecData;
@@ -236,7 +241,7 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
 #endif
     }
     SrcFile[CurArcNum]=(File*)NewFile;
-    NextVolumeName(ArcName,!NewNumbering);
+    NextVolumeName(ArcName,ArcNameW,ASIZE(ArcName),!NewNumbering);
   }
 
 #ifndef SILENT

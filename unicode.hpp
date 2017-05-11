@@ -28,18 +28,19 @@ bool UnicodeEnabled();
 
 int strlenw(const wchar *str);
 wchar* strcpyw(wchar *dest,const wchar *src);
-wchar* strncpyw(wchar *dest,const wchar *src,int n);
+wchar* strncpyw(wchar *dest,const wchar *src,size_t n);
 wchar* strcatw(wchar *dest,const wchar *src);
-wchar* strncatw(wchar *dest,const wchar *src,int n);
+wchar* strncatw(wchar *dest,const wchar *src,size_t n);
 int strcmpw(const wchar *s1,const wchar *s2);
-int strncmpw(const wchar *s1,const wchar *s2,int n);
+int strncmpw(const wchar *s1,const wchar *s2,size_t n);
 int stricmpw(const wchar *s1,const wchar *s2);
-int strnicmpw(const wchar *s1,const wchar *s2,int n);
+int strnicmpw(const wchar *s1,const wchar *s2,size_t n);
 wchar *strchrw(const wchar *s,int c);
 wchar* strrchrw(const wchar *s,int c);
 wchar* strpbrkw(const wchar *s1,const wchar *s2);
 wchar* strlowerw(wchar *Str);
 wchar* strupperw(wchar *Str);
+wchar* strdupw(const wchar *Str);
 int toupperw(int ch);
 int atoiw(const wchar *s);
 

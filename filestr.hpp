@@ -3,6 +3,7 @@
 
 bool ReadTextFile(char *Name,StringList *List,bool Config,
                   bool AbortOnError=false,RAR_CHARSET SrcCharset=RCH_DEFAULT,
-                  bool Unquote=false,bool SkipComments=false);
+                  bool Unquote=false,bool SkipComments=false,
+                  bool ExpandEnvStr=false);
 
 #endif

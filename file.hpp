@@ -56,9 +56,9 @@ class File
     bool Open(const char *Name,const wchar *NameW=NULL,bool OpenShared=false,bool Update=false);
     void TOpen(const char *Name,const wchar *NameW=NULL);
     bool WOpen(const char *Name,const wchar *NameW=NULL);
-    bool Create(const char *Name,const wchar *NameW=NULL);
-    void TCreate(const char *Name,const wchar *NameW=NULL);
-    bool WCreate(const char *Name,const wchar *NameW=NULL);
+    bool Create(const char *Name,const wchar *NameW=NULL,bool ShareRead=true);
+    void TCreate(const char *Name,const wchar *NameW=NULL,bool ShareRead=true);
+    bool WCreate(const char *Name,const wchar *NameW=NULL,bool ShareRead=true);
     bool Close();
     void Flush();
     bool Delete();

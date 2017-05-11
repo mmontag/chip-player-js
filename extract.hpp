@@ -7,6 +7,7 @@ class CmdExtract
 {
   private:
     EXTRACT_ARC_CODE ExtractArchive(CommandData *Cmd);
+    RarTime StartTime; // time when extraction started
 
     ComprDataIO DataIO;
     Unpack *Unp;

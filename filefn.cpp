@@ -109,7 +109,7 @@ bool CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
 }
 
 
-void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta)
+void SetDirTime(const char *Name,const wchar *NameW,RarTime *ftm,RarTime *ftc,RarTime *fta)
 {
 #ifdef _WIN_32
   if (!WinNT())
@@ -119,11 +119,14 @@ void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta)
   bool sc=ftc!=NULL && ftc->IsSet();
   bool sa=fta!=NULL && fta->IsSet();
 
-  unsigned int DirAttr=GetFileAttr(Name);
+  unsigned int DirAttr=GetFileAttr(Name,NameW);
   bool ResetAttr=(DirAttr!=0xffffffff && (DirAttr & FA_RDONLY)!=0);
   if (ResetAttr)
-    SetFileAttr(Name,NULL,0);
-  HANDLE hFile=CreateFile(Name,GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,
+    SetFileAttr(Name,NameW,0);
+
+  wchar DirNameW[NM];
+  GetWideName(Name,NameW,DirNameW);
+  HANDLE hFile=CreateFileW(DirNameW,GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,
                           NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS,NULL);
   if (hFile==INVALID_HANDLE_VALUE)
     return;
@@ -137,7 +140,7 @@ void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta)
   SetFileTime(hFile,sc ? &fc:NULL,sa ? &fa:NULL,sm ? &fm:NULL);
   CloseHandle(hFile);
   if (ResetAttr)
-    SetFileAttr(Name,NULL,DirAttr);
+    SetFileAttr(Name,NameW,DirAttr);
 #endif
 #if defined(_UNIX) || defined(_EMX)
   File::SetCloseFileTimeByName(Name,ftm,fta);
@@ -455,7 +458,7 @@ void ConvertNameToFull(const wchar *Src,wchar *Dest)
 #ifndef SFX_MODULE
 char *MkTemp(char *Name)
 {
-  int Length=strlen(Name);
+  size_t Length=strlen(Name);
   if (Length<=6)
     return(NULL);
   int Random=clock();
@@ -568,3 +571,9 @@ bool SetFileCompression(char *Name,wchar *NameW,bool State)
   return(RetCode!=0);
 }
 #endif
+
+
+
+
+
+

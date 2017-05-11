@@ -35,10 +35,8 @@ void CmdExtract::DoExtract(CommandData *Cmd)
 
       EXTRACT_ARC_CODE Code=ExtractArchive(Cmd);
 
-/*
-      restore Cmd->Password which could be changed in IsArchive() call
-      for next header encrypted archive
-*/
+      // restore Cmd->Password which could be changed in IsArchive() call
+      // for next header encrypted archive
       strcpy(Cmd->Password,PrevCmdPassword);
 
       if (Code!=EXTRACT_ARC_REPEAT)
@@ -90,6 +88,8 @@ void CmdExtract::ExtractArchiveInit(CommandData *Cmd,Archive &Arc)
   SignatureFound=false;
   AllMatchesExact=true;
   ReconstructDone=false;
+
+  StartTime.SetCurrentTime();
 }
 
 
@@ -112,6 +112,7 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
     return(EXTRACT_ARC_NEXT);
   }
 
+  // archive with corrupt encrypted header can be closed in IsArchive() call
   if (!Arc.IsOpened())
     return(EXTRACT_ARC_NEXT);
 
@@ -126,6 +127,27 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
       return(EXTRACT_ARC_NEXT);
   }
 #endif
+
+  if (Arc.Volume)
+  {
+    // Calculate the total size of all accessible volumes.
+    // This size is necessary to display the correct total progress indicator.
+
+    char NextName[NM];
+    wchar NextNameW[NM];
+    strcpy(NextName,Arc.FileName);
+    strcpyw(NextNameW,Arc.FileNameW);
+    while (true)
+    {
+      NextVolumeName(NextName,NextNameW,ASIZE(NextName),(Arc.NewMhd.Flags & MHD_NEWNUMBERING)==0 || Arc.OldFormat);
+      struct FindData FD;
+      if (FindFile::FastFind(NextName,NextNameW,&FD))
+        DataIO.TotalArcSize+=FD.Size;
+      else
+        break;
+    }
+  }
+
   ExtractArchiveInit(Cmd,Arc);
 
   if (*Cmd->Command=='T' || *Cmd->Command=='I')
@@ -174,7 +196,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #ifdef NOVOLUME
       return(false);
 #else
-      if (!MergeArchive(Arc,NULL,false,Command))
+      if (!MergeArchive(Arc,&DataIO,false,Command))
       {
         ErrHandler.SetErrorCode(WARNING);
         return(false);
@@ -206,7 +228,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
       if (Arc.EndArcHead.Flags & EARC_NEXT_VOLUME)
       {
 #ifndef NOVOLUME
-        if (!MergeArchive(Arc,NULL,false,Command))
+        if (!MergeArchive(Arc,&DataIO,false,Command))
         {
           ErrHandler.SetErrorCode(WARNING);
           return(false);
@@ -352,7 +374,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #ifdef RARDLL
       Cmd->DllError=ERAR_BAD_DATA;
 #endif
-      ErrHandler.SetErrorCode(WARNING);
+      ErrHandler.SetErrorCode(OPEN_ERROR);
     }
     ExactMatch=false;
   }
@@ -370,7 +392,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #ifdef RARDLL
         if (*Cmd->Password==0)
           if (Cmd->Callback==NULL ||
-              Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LONG)Cmd->Password,sizeof(Cmd->Password))==-1)
+              Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LPARAM)Cmd->Password,sizeof(Cmd->Password))==-1)
             return(false);
         strcpy(Password,Cmd->Password);
 
@@ -488,7 +510,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
       if (Length>0)
       {
         wchar ArcPathW[NM];
-        CharToWide(Cmd->ArcPath,ArcPathW);
+        GetWideName(Cmd->ArcPath,Cmd->ArcPathW,ArcPathW);
         Length=strlenw(ArcPathW);
       }
       ExtrNameW+=Length;
@@ -518,7 +540,16 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
       if (FindFile::FastFind(DestFileName,DestNameW,&FD))
       {
         if (FD.mtime >= Arc.NewLhd.mtime)
-          ExtrFile=false;
+        {
+          // If directory already exists and its modification time is newer 
+          // than start of extraction, it is likely it was created 
+          // when creating a path to one of already extracted items. 
+          // In such case we'll better update its time even if archived 
+          // directory is older.
+
+          if (!FD.IsDir || FD.mtime<StartTime)
+            ExtrFile=false;
+        }
       }
       else
         if (Cmd->FreshFiles)
@@ -637,9 +668,9 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE)
           if (Cmd->SetCompressedAttr &&
               (Arc.NewLhd.FileAttr & FILE_ATTRIBUTE_COMPRESSED)!=0 && WinNT())
-            SetFileCompression(DestFileName,DestFileNameW,true);
+            SetFileCompression(DestFileName,DestNameW,true);
 #endif
-          SetDirTime(DestFileName,
+          SetDirTime(DestFileName,DestNameW,
             Cmd->xmtime==EXTTIME_NONE ? NULL:&Arc.NewLhd.mtime,
             Cmd->xctime==EXTTIME_NONE ? NULL:&Arc.NewLhd.ctime,
             Cmd->xatime==EXTTIME_NONE ? NULL:&Arc.NewLhd.atime);

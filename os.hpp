@@ -33,6 +33,7 @@
 #include <prsht.h>
 
 #ifndef _WIN_CE
+  #include <shellapi.h>
   #include <shlobj.h>
   #include <winioctl.h>
 #endif
@@ -213,7 +214,7 @@
 
 #endif
 
-typedef const char* MSGID;
+  typedef const char* MSGID;
 
 #define safebuf static
 

@@ -29,6 +29,8 @@ char* PointToLastChar(const char *Path)
 }
 
 
+
+
 char* ConvertPath(const char *SrcPath,char *DestPath)
 {
   const char *DestPtr=SrcPath;
@@ -325,6 +327,26 @@ void GetAppDataPath(char *Path)
 #endif
 
 
+#if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE)
+void GetRarDataPath(char *Path)
+{
+  *Path=0;
+
+  HKEY hKey;
+  if (RegOpenKeyEx(HKEY_CURRENT_USER,"Software\\WinRAR\\Paths",0,
+                   KEY_QUERY_VALUE,&hKey)==ERROR_SUCCESS)
+  {
+    DWORD DataSize=NM,Type;
+    RegQueryValueEx(hKey,"AppData",0,&Type,(BYTE *)Path,&DataSize);
+    RegCloseKey(hKey);
+  }
+
+  if (*Path==0 || !FileExist(Path))
+    GetAppDataPath(Path);
+}
+#endif
+
+
 #ifndef SFX_MODULE
 bool EnumConfigPaths(char *Path,int Number)
 {
@@ -348,18 +370,16 @@ bool EnumConfigPaths(char *Path,int Number)
   RemoveNameFromPath(Path);
   return(true);
 #elif defined(_UNIX)
-  if (Number==0)
-  {
-    char *EnvStr=getenv("HOME");
-    if (EnvStr==NULL)
-      return(false);
-    strncpy(Path,EnvStr,NM-1);
-    Path[NM-1]=0;
-    return(true);
-  }
   static const char *AltPath[]={
     "/etc","/etc/rar","/usr/lib","/usr/local/lib","/usr/local/etc"
   };
+  if (Number==0)
+  {
+    char *EnvStr=getenv("HOME");
+    strncpy(Path, (EnvStr==NULL) ? AltPath[0] : EnvStr, NM-1);
+    Path[NM-1]=0;
+    return(true);
+  }
   Number--;
   if (Number<0 || Number>=sizeof(AltPath)/sizeof(AltPath[0]))
     return(false);
@@ -370,7 +390,7 @@ bool EnumConfigPaths(char *Path,int Number)
   if (Number<0 || Number>1)
     return(false);
   if (Number==0)
-    GetAppDataPath(Path);
+    GetRarDataPath(Path);
   else
   {
     GetModuleFileName(NULL,Path,NM);
@@ -388,6 +408,7 @@ bool EnumConfigPaths(char *Path,int Number)
 #ifndef SFX_MODULE
 void GetConfigName(const char *Name,char *FullName,bool CheckExist)
 {
+  *FullName=0;
   for (int I=0;EnumConfigPaths(FullName,I);I++)
   {
     AddEndSlash(FullName);
@@ -423,7 +444,7 @@ char* GetVolNumPart(char *ArcName)
 }
 
 
-void NextVolumeName(char *ArcName,bool OldNumbering)
+void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumbering)
 {
   char *ChPtr;
   if ((ChPtr=GetExt(ArcName))==NULL)
@@ -469,6 +490,29 @@ void NextVolumeName(char *ArcName,bool OldNumbering)
           ChPtr--;
         }
     }
+  if (ArcNameW!=NULL && *ArcNameW!=0)
+  {
+    // Copy incremented trailing low ASCII volume name part to Unicode name.
+    // It is simpler than implementing Unicode version of entire function.
+    char *NumPtr=GetVolNumPart(ArcName);
+
+    // moving to first digit in volume number
+    while (NumPtr>ArcName && isdigit(*NumPtr) && isdigit(*(NumPtr-1)))
+      NumPtr--;
+
+    // also copy the first character before volume number,
+    // because it can be changed when going from .r99 to .s00
+    if (NumPtr>ArcName)
+      NumPtr--;
+
+    int CharsToCopy=strlen(ArcName)-(NumPtr-ArcName);
+    int DestPos=strlenw(ArcNameW)-CharsToCopy;
+    if (DestPos>0)
+    {
+      CharToWide(NumPtr,ArcNameW+DestPos,MaxLength-DestPos-1);
+      ArcNameW[MaxLength-1]=0;
+    }
+  }
 }
 
 
@@ -579,7 +623,22 @@ bool IsFullPath(const char *Path)
 {
   char PathOnly[NM];
   GetFilePath(Path,PathOnly,ASIZE(PathOnly));
-  if (IsWildcard(PathOnly))
+  if (IsWildcard(PathOnly,NULL))
+    return(true);
+#if defined(_WIN_32) || defined(_EMX)
+  return(Path[0]=='\\' && Path[1]=='\\' ||
+         IsDiskLetter(Path) && IsPathDiv(Path[2]));
+#else
+  return(IsPathDiv(Path[0]));
+#endif
+}
+
+
+bool IsFullPath(const wchar *Path)
+{
+  wchar PathOnly[NM];
+  GetFilePath(Path,PathOnly,ASIZE(PathOnly));
+  if (IsWildcard(NULL,PathOnly))
     return(true);
 #if defined(_WIN_32) || defined(_EMX)
   return(Path[0]=='\\' && Path[1]=='\\' ||
@@ -597,6 +656,13 @@ bool IsDiskLetter(const char *Path)
 }
 
 
+bool IsDiskLetter(const wchar *Path)
+{
+  int Letter=etoupper(Path[0]);
+  return(Letter>='A' && Letter<='Z' && IsDriveDiv(Path[1]));
+}
+
+
 void GetPathRoot(const char *Path,char *Root)
 {
   *Root=0;
@@ -608,7 +674,7 @@ void GetPathRoot(const char *Path,char *Root)
       const char *Slash=strchr(Path+2,'\\');
       if (Slash!=NULL)
       {
-        int Length;
+        size_t Length;
         if ((Slash=strchr(Slash+1,'\\'))!=NULL)
           Length=Slash-Path+1;
         else

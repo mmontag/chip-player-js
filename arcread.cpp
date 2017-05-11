@@ -52,7 +52,7 @@ int Archive::ReadHeader()
     if (*Cmd->Password==0)
 #ifdef RARDLL
       if (Cmd->Callback==NULL ||
-          Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LONG)Cmd->Password,sizeof(Cmd->Password))==-1)
+          Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LPARAM)Cmd->Password,sizeof(Cmd->Password))==-1)
       {
         Close();
         ErrHandler.Exit(USER_BREAK);
@@ -370,6 +370,8 @@ int Archive::ReadHeader()
       bool Recovered=false;
       if (ShortBlock.HeadType==ENDARC_HEAD && (EndArcHead.Flags & EARC_REVSPACE)!=0)
       {
+        // Last 7 bytes of recovered volume can contain zeroes, because
+        // REV files store its own information (volume number, etc.) here.
         SaveFilePos SavePos(*this);
         Int64 Length=Tell();
         Seek(Length-7,SEEK_SET);
@@ -582,10 +584,32 @@ void Archive::ConvertUnknownHeader()
     if ((byte)*s<32 || (byte)*s>127)
       *s='_';
 #endif
+
+#if defined(_WIN_32) || defined(_EMX)
+    // ':' in file names is allowed in Unix, but not in Windows.
+    // Even worse, file data will be written to NTFS stream on NTFS,
+    // so automatic name correction on file create error in extraction 
+    // routine does not work. Let's better replace ':' now.
+    if (NewLhd.HostOS==HOST_UNIX && *s==':')
+      *s='_';
+#endif
+
   }
+
   for (wchar *s=NewLhd.FileNameW;*s!=0;s++)
+  {
     if (*s=='/' || *s=='\\')
       *s=CPATHDIVIDER;
+
+#if defined(_WIN_32) || defined(_EMX)
+    // ':' in file names is allowed in Unix, but not in Windows.
+    // Even worse, file data will be written to NTFS stream on NTFS,
+    // so automatic name correction on file create error in extraction 
+    // routine does not work. Let's better replace ':' now.
+    if (NewLhd.HostOS==HOST_UNIX && *s==':')
+      *s='_';
+#endif
+  }
 }
 
 

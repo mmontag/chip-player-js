@@ -30,7 +30,7 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
 #endif
     if (Cmd->AllYes || Mode==OVERWRITE_ALL)
       break;
-    if (Mode==OVERWRITE_ASK)
+    if (Mode==OVERWRITE_DEFAULT || Mode==OVERWRITE_FORCE_ASK)
     {
       eprintf(St(MFileExists),Name);
       int Choice=Ask(St(MYesNoAllRenQ));
@@ -88,7 +88,7 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
           *NameW=0;
       }
       else
-        Mode=OVERWRITE_ASK;
+        Mode=OVERWRITE_DEFAULT;
       continue;
     }
   }

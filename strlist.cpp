@@ -31,7 +31,7 @@ unsigned int StringList::AddString(const char *Str)
 unsigned int StringList::AddString(const char *Str,const wchar *StrW)
 {
   int PrevSize=StringData.Size();
-  StringData.Add(strlen(Str)+1);
+  StringData.Add((int)(strlen(Str)+1));
   strcpy(&StringData[PrevSize],Str);
   if (StrW!=NULL && *StrW!=0)
   {

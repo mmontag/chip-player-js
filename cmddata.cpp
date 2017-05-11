@@ -51,7 +51,7 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
     if (Arg[1]=='-')
       NoMoreSwitches=true;
     else
-      ProcessSwitch(&Arg[1]);
+      ProcessSwitch(&Arg[1],(ArgW!=NULL && *ArgW!=0 ? &ArgW[1]:NULL));
   else
     if (*Command==0)
     {
@@ -81,8 +81,8 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
       }
       else
       {
-        int Length=strlen(Arg);
-        char EndChar=Arg[Length-1];
+        size_t Length=strlen(Arg);
+        char EndChar=Length==0 ? 0:Arg[Length-1];
         char CmdChar=etoupper(*Command);
         bool Add=strchr("AFUM",CmdChar)!=NULL;
         bool Extract=CmdChar=='X' || CmdChar=='E';
@@ -113,7 +113,7 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
                 Charset=RCH_OEM;
 #endif
 
-              ReadTextFile(Arg+1,FileArgs,false,true,Charset,true,true);
+              ReadTextFile(Arg+1,FileArgs,false,true,Charset,true,true,true);
             }
             else
               if (Found && FileData.IsDir && Extract && *ExtrPath==0)
@@ -226,7 +226,7 @@ void CommandData::ProcessSwitchesString(char *Str)
 
 
 #if !defined(SFX_MODULE)
-void CommandData::ProcessSwitch(char *Switch)
+void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
 {
 
   switch(etoupper(Switch[0]))
@@ -375,6 +375,8 @@ void CommandData::ProcessSwitch(char *Switch)
           break;
         case 'P':
           strcpy(ArcPath,Switch+2);
+          if (SwitchW!=NULL && *SwitchW!=0)
+            strcpyw(ArcPathW,SwitchW+2);
           break;
         case 'S':
           SyncFiles=true;
@@ -407,6 +409,9 @@ void CommandData::ProcessSwitch(char *Switch)
           break;
         case '-':
           Overwrite=OVERWRITE_NONE;
+          break;
+        case 0:
+          Overwrite=OVERWRITE_FORCE_ASK;
           break;
         case 'R':
           Overwrite=OVERWRITE_AUTORENAME;
@@ -480,7 +485,7 @@ void CommandData::ProcessSwitch(char *Switch)
             Charset=RCH_OEM;
 #endif
 
-          ReadTextFile(Switch+2,Args,false,true,Charset,true,true);
+          ReadTextFile(Switch+2,Args,false,true,Charset,true,true,true);
         }
         else
           Args->AddString(Switch+1);
@@ -794,7 +799,7 @@ void CommandData::ProcessSwitch(char *Switch)
             break;
           case 'C':
             {
-              RAR_CHARSET rch;
+              RAR_CHARSET rch=RCH_DEFAULT;
               switch(etoupper(Switch[2]))
               {
                 case 'A':
@@ -908,6 +913,18 @@ void CommandData::OutTitle()
 #endif
 
 
+inline bool CmpMSGID(MSGID i1,MSGID i2)
+{
+#ifdef MSGID_INT
+  return(i1==i2);
+#else
+  // If MSGID is const char*, we cannot compare pointers only.
+  // Pointers to different instances of same strings can differ,
+  // so we need to compare complete strings.
+  return(strcmp(i1,i2)==0);
+#endif
+}
+
 void CommandData::OutHelp()
 {
 #if !defined(GUI) && !defined(SILENT)
@@ -916,12 +933,13 @@ void CommandData::OutHelp()
 #ifdef SFX_MODULE
     MCHelpCmd,MSHelpCmdE,MSHelpCmdT,MSHelpCmdV
 #elif defined(UNRAR)
-    MUNRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdE,MCHelpCmdL,MCHelpCmdP,
-    MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,
-    MCHelpSwAP,MCHelpSwAVm,MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
+    MUNRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdE,MCHelpCmdL,
+    MCHelpCmdP,MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,
+    MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAP,
+    MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
     MCHelpSwDH,MCHelpSwEP,MCHelpSwEP3,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,
     MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwKB,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,
-    MCHelpSwOp,MCHelpSwOm,MCHelpSwOC,MCHelpSwOR,MCHelpSwOW,MCHelpSwP,
+    MCHelpSwO,MCHelpSwOC,MCHelpSwOR,MCHelpSwOW,MCHelpSwP,
     MCHelpSwPm,MCHelpSwR,MCHelpSwRI,MCHelpSwSL,MCHelpSwSM,MCHelpSwTA,
     MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwVUnr,
     MCHelpSwVER,MCHelpSwVP,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY
@@ -932,13 +950,13 @@ void CommandData::OutHelp()
     MCHelpCmdRN,MCHelpCmdRR,MCHelpCmdRV,MCHelpCmdS,MCHelpCmdT,MCHelpCmdU,
     MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAG,
     MCHelpSwAO,MCHelpSwAP,MCHelpSwAS,MCHelpSwAV,MCHelpSwAVm,MCHelpSwCm,
-    MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,MCHelpSwDS,
-    MCHelpSwEa,MCHelpSwED,MCHelpSwEE,MCHelpSwEN,MCHelpSwEP,MCHelpSwEP1,
-    MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,MCHelpSwHP,MCHelpSwIDP,
-    MCHelpSwIEML,MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,MCHelpSwIOFF,
-    MCHelpSwISND,MCHelpSwK,MCHelpSwKB,MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,
-    MCHelpSwMS,MCHelpSwMT,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,MCHelpSwOp,
-    MCHelpSwOm,MCHelpSwOC,MCHelpSwOL,MCHelpSwOR,MCHelpSwOS,MCHelpSwOW,
+    MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,MCHelpSwDR,
+    MCHelpSwDS,MCHelpSwDW,MCHelpSwEa,MCHelpSwED,MCHelpSwEE,MCHelpSwEN,
+    MCHelpSwEP,MCHelpSwEP1,MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,MCHelpSwHP,
+    MCHelpSwIDP,MCHelpSwIEML,MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,
+    MCHelpSwIOFF,MCHelpSwISND,MCHelpSwK,MCHelpSwKB,MCHelpSwMn,MCHelpSwMC,
+    MCHelpSwMD,MCHelpSwMS,MCHelpSwMT,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,
+    MCHelpSwO,MCHelpSwOC,MCHelpSwOL,MCHelpSwOR,MCHelpSwOS,MCHelpSwOW,
     MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,
     MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSC,MCHelpSwSFX,MCHelpSwSI,
     MCHelpSwSL,MCHelpSwSM,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,
@@ -958,11 +976,11 @@ void CommandData::OutHelp()
 #ifndef _WIN_32
     static MSGID Win32Only[]={
       MCHelpSwIEML,MCHelpSwVD,MCHelpSwAO,MCHelpSwOS,MCHelpSwIOFF,
-      MCHelpSwEP2,MCHelpSwOC
+      MCHelpSwEP2,MCHelpSwOC,MCHelpSwDR,MCHelpSwRI
     };
     bool Found=false;
     for (int J=0;J<sizeof(Win32Only)/sizeof(Win32Only[0]);J++)
-      if (Help[I]==Win32Only[J])
+      if (CmpMSGID(Help[I],Win32Only[J]))
       {
         Found=true;
         break;
@@ -971,27 +989,23 @@ void CommandData::OutHelp()
       continue;
 #endif
 #if !defined(_UNIX) && !defined(_WIN_32)
-    if (Help[I]==MCHelpSwOW)
+    if (CmpMSGID(Help[I],MCHelpSwOW))
       continue;
 #endif
 #if !defined(_WIN_32) && !defined(_EMX)
-    if (Help[I]==MCHelpSwAC)
+    if (CmpMSGID(Help[I],MCHelpSwAC))
       continue;
 #endif
 #ifndef SAVE_LINKS
-    if (Help[I]==MCHelpSwOL)
-      continue;
-#endif
-#ifndef _WIN_32
-    if (Help[I]==MCHelpSwRI)
+    if (CmpMSGID(Help[I],MCHelpSwOL))
       continue;
 #endif
 #ifndef PACK_SMP
-    if (Help[I]==MCHelpSwMT)
+    if (CmpMSGID(Help[I],MCHelpSwMT))
       continue;
 #endif
 #ifndef _BEOS
-    if (Help[I]==MCHelpSwEE)
+    if (CmpMSGID(Help[I],MCHelpSwEE))
     {
 #if defined(_EMX) && !defined(_DJGPP)
       if (_osmode != OS2_MODE)

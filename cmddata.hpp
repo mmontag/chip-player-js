@@ -7,7 +7,7 @@ class CommandData:public RAROptions
 {
   private:
     void ProcessSwitchesString(char *Str);
-    void ProcessSwitch(char *Switch);
+    void ProcessSwitch(char *Switch,wchar *SwitchW=NULL);
     void BadSwitch(char *Switch);
     bool ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullPath,int MatchMode);
     uint GetExclAttr(char *Str);

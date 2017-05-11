@@ -135,14 +135,15 @@ bool File::WOpen(const char *Name,const wchar *NameW)
 }
 
 
-bool File::Create(const char *Name,const wchar *NameW)
+bool File::Create(const char *Name,const wchar *NameW,bool ShareRead)
 {
 #ifdef _WIN_32
+  DWORD ShareMode=(ShareRead || File::OpenShared) ? FILE_SHARE_READ:0;
   if (WinNT() && NameW!=NULL && *NameW!=0)
-    hFile=CreateFileW(NameW,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,
+    hFile=CreateFileW(NameW,GENERIC_READ|GENERIC_WRITE,ShareMode,NULL,
                       CREATE_ALWAYS,0,NULL);
   else
-    hFile=CreateFile(Name,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ,NULL,
+    hFile=CreateFile(Name,GENERIC_READ|GENERIC_WRITE,ShareMode,NULL,
                      CREATE_ALWAYS,0,NULL);
 #else
   hFile=fopen(Name,CREATEBINARY);
@@ -176,17 +177,17 @@ void File::AddFileToList(FileHandle hFile)
 
 
 #if !defined(SHELL_EXT) && !defined(SFX_MODULE)
-void File::TCreate(const char *Name,const wchar *NameW)
+void File::TCreate(const char *Name,const wchar *NameW,bool ShareRead)
 {
-  if (!WCreate(Name,NameW))
+  if (!WCreate(Name,NameW,ShareRead))
     ErrHandler.Exit(FATAL_ERROR);
 }
 #endif
 
 
-bool File::WCreate(const char *Name,const wchar *NameW)
+bool File::WCreate(const char *Name,const wchar *NameW,bool ShareRead)
 {
-  if (Create(Name,NameW))
+  if (Create(Name,NameW,ShareRead))
     return(true);
   ErrHandler.SetErrorCode(CREATE_ERROR);
   ErrHandler.CreateErrorMsg(Name);
@@ -288,11 +289,12 @@ void File::Write(const void *Data,int Size)
 #endif
   while (1)
   {
-    bool Success;
+    bool Success=false;
 #ifdef _WIN_32
-    DWORD Written;
+    DWORD Written=0;
     if (HandleType!=FILE_HANDLENORMAL)
     {
+      // writing to stdout can fail in old Windows if data block is too large
       const int MaxSize=0x4000;
       for (int I=0;I<Size;I+=MaxSize)
         if (!(Success=WriteFile(hFile,(byte *)Data+I,Min(Size-I,MaxSize),&Written,NULL)))
@@ -333,7 +335,8 @@ void File::Write(const void *Data,int Size)
 
 int File::Read(void *Data,int Size)
 {
-  Int64 FilePos;
+  Int64 FilePos=0; //initialized only to suppress some compilers warning
+
   if (IgnoreReadErrors)
     FilePos=Tell();
   int ReadSize;

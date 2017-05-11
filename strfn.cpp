@@ -86,7 +86,7 @@ int strnicomp(const char *Str1,const char *Str2,int N)
 
 char* RemoveEOL(char *Str)
 {
-  for (int I=strlen(Str)-1;I>=0 && (Str[I]=='\r' || Str[I]=='\n' || Str[I]==' ' || Str[I]=='\t');I--)
+  for (int I=(int)strlen(Str)-1;I>=0 && (Str[I]=='\r' || Str[I]=='\n' || Str[I]==' ' || Str[I]=='\t');I--)
     Str[I]=0;
   return(Str);
 }
@@ -94,7 +94,7 @@ char* RemoveEOL(char *Str)
 
 char* RemoveLF(char *Str)
 {
-  for (int I=strlen(Str)-1;I>=0 && (Str[I]=='\r' || Str[I]=='\n');I--)
+  for (int I=(int)strlen(Str)-1;I>=0 && (Str[I]=='\r' || Str[I]=='\n');I--)
     Str[I]=0;
   return(Str);
 }
@@ -103,7 +103,8 @@ char* RemoveLF(char *Str)
 unsigned int loctolower(byte ch)
 {
 #ifdef _WIN_32
-  return((int)CharLower((LPTSTR)ch));
+  // convert to LPARAM first to avoid a warning in 64 bit mode
+  return((int)(LPARAM)CharLower((LPTSTR)ch));
 #else
   return(tolower(ch));
 #endif
@@ -113,7 +114,8 @@ unsigned int loctolower(byte ch)
 unsigned int loctoupper(byte ch)
 {
 #ifdef _WIN_32
-  return((int)CharUpper((LPTSTR)ch));
+  // convert to LPARAM first to avoid a warning in 64 bit mode
+  return((int)(LPARAM)CharUpper((LPTSTR)ch));
 #else
   return(toupper(ch));
 #endif

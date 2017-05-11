@@ -248,7 +248,6 @@ void RarTime::SetAgeText(char *TimeText)
 #endif
 
 
-#ifndef SFX_MODULE
 void RarTime::SetCurrentTime()
 {
 #ifdef _WIN_32
@@ -263,7 +262,6 @@ void RarTime::SetCurrentTime()
   *this=st;
 #endif
 }
-#endif
 
 
 #if !defined(SFX_MODULE) && !defined(_WIN_CE)

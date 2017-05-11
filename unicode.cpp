@@ -241,11 +241,11 @@ wchar* strcpyw(wchar *dest,const wchar *src)
 }
 
 
-wchar* strncpyw(wchar *dest,const wchar *src,int n)
+wchar* strncpyw(wchar *dest,const wchar *src,size_t n)
 {
   do {
     *(dest++)=*src;
-  } while (*(src++)!=0 && --n > 0);
+  } while (*(src++)!=0 && (int)(--n) > 0);
   return(dest);
 }
 
@@ -257,11 +257,11 @@ wchar* strcatw(wchar *dest,const wchar *src)
 
 
 #ifndef SFX_MODULE
-wchar* strncatw(wchar *dest,const wchar *src,int n)
+wchar* strncatw(wchar *dest,const wchar *src,size_t n)
 {
   dest+=strlenw(dest);
   while (true)
-    if (--n<0)
+    if ((int)(--n)<0)
     {
       *dest=0;
       break;
@@ -287,9 +287,9 @@ int strcmpw(const wchar *s1,const wchar *s2)
 }
 
 
-int strncmpw(const wchar *s1,const wchar *s2,int n)
+int strncmpw(const wchar *s1,const wchar *s2,size_t n)
 {
-  while (n-->0)
+  while ((int)(n--)>0)
   {
     if (*s1<*s2)
       return(-1);
@@ -316,7 +316,7 @@ int stricmpw(const wchar *s1,const wchar *s2)
 
 
 #if !defined(SFX_MODULE) && !defined(_WIN_CE)
-inline int strnicmpw_w2c(const wchar *s1,const wchar *s2,int n)
+inline int strnicmpw_w2c(const wchar *s1,const wchar *s2,size_t n)
 {
   wchar Wide1[NM*2],Wide2[NM*2];
   strncpyw(Wide1,s1,sizeof(Wide1)/sizeof(Wide1[0])-1);
@@ -332,7 +332,7 @@ inline int strnicmpw_w2c(const wchar *s1,const wchar *s2,int n)
 
 
 #ifndef SFX_MODULE
-int strnicmpw(const wchar *s1,const wchar *s2,int n)
+int strnicmpw(const wchar *s1,const wchar *s2,size_t n)
 {
   return(strnicmpw_w2c(s1,s2,n));
 }
@@ -390,6 +390,20 @@ wchar* strupperw(wchar *Str)
     if (*ChPtr<128)
       *ChPtr=loctoupper(*ChPtr);
   return(Str);
+}
+#endif
+
+
+#ifndef SFX_MODULE
+wchar* strdupw(const wchar *Str)
+{
+  if (Str==NULL)
+    return(NULL);
+  wchar *n=(wchar *)malloc((strlenw(Str)+1)*sizeof(wchar));
+  if (n==NULL)
+    return(NULL);
+  strcpyw(n,Str);
+  return(n);
 }
 #endif
 

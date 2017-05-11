@@ -118,7 +118,7 @@ void ComprDataIO::UnpWrite(byte *Addr,uint Count)
   if (Cmd->DllOpMode!=RAR_SKIP)
   {
     if (Cmd->Callback!=NULL &&
-        Cmd->Callback(UCM_PROCESSDATA,Cmd->UserData,(LONG)Addr,Count)==-1)
+        Cmd->Callback(UCM_PROCESSDATA,Cmd->UserData,(LPARAM)Addr,Count)==-1)
       ErrHandler.Exit(USER_BREAK);
     if (Cmd->ProcessDataProc!=NULL)
     {
@@ -169,19 +169,21 @@ void ComprDataIO::ShowUnpRead(Int64 ArcPos,Int64 ArcSize)
 {
   if (ShowProgress && SrcFile!=NULL)
   {
+    if (TotalArcSize!=0)
+    {
+      // important when processing several archives or multivolume archive
+      ArcSize=TotalArcSize;
+      ArcPos+=ProcessedArcSize;
+    }
+
     Archive *SrcArc=(Archive *)SrcFile;
     RAROptions *Cmd=SrcArc->GetRAROptions();
-    if (TotalArcSize!=0)
-      ArcSize=TotalArcSize;
-    ArcPos+=ProcessedArcSize;
-    if (!SrcArc->Volume)
+
+    int CurPercent=ToPercent(ArcPos,ArcSize);
+    if (!Cmd->DisablePercentage && CurPercent!=LastPercent)
     {
-      int CurPercent=ToPercent(ArcPos,ArcSize);
-      if (!Cmd->DisablePercentage && CurPercent!=LastPercent)
-      {
-        mprintf("\b\b\b\b%3d%%",CurPercent);
-        LastPercent=CurPercent;
-      }
+      mprintf("\b\b\b\b%3d%%",CurPercent);
+      LastPercent=CurPercent;
     }
   }
 }

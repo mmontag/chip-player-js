@@ -26,6 +26,9 @@ class ScanTree
     int GetDirs;
     int Errors;
 
+    // set when processing paths like c:\ (root directory without wildcards)
+    bool ScanEntireDisk;
+
     char CurMask[NM];
     wchar CurMaskW[NM];
     char OrigCurMask[NM];

@@ -65,9 +65,9 @@
 #define  LONG_BLOCK         0x8000
 
 #define  EARC_NEXT_VOLUME   0x0001 // not last volume
-#define  EARC_DATACRC       0x0002
-#define  EARC_REVSPACE      0x0004
-#define  EARC_VOLNUMBER     0x0008
+#define  EARC_DATACRC       0x0002 // store CRC32 of RAR archive (now used only in volumes)
+#define  EARC_REVSPACE      0x0004 // reserve space for end of REV file 7 byte record
+#define  EARC_VOLNUMBER     0x0008 // store a number of current volume
 
 enum HEADER_TYPE {
   MARK_HEAD=0x72,MAIN_HEAD=0x73,FILE_HEAD=0x74,COMM_HEAD=0x75,AV_HEAD=0x76,
@@ -218,11 +218,13 @@ struct FileHeader:BlockHeader
 
 struct EndArcHeader:BaseBlock
 {
-  uint ArcDataCRC;
-  ushort VolNumber;
+  uint ArcDataCRC;  // optional archive CRC32
+  ushort VolNumber; // optional current volume number
 };
 
 
+// SubBlockHeader and its successors were used in RAR 2.x format.
+// RAR 3.x uses FileHeader with NEWSUB_HEAD HeadType for subblocks.
 struct SubBlockHeader:BlockHeader
 {
   ushort SubType;

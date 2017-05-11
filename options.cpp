@@ -16,7 +16,7 @@ void RAROptions::Init()
 {
   memset(this,0,sizeof(RAROptions));
   WinSize=0x400000;
-  Overwrite=OVERWRITE_ASK;
+  Overwrite=OVERWRITE_DEFAULT;
   Method=3;
   MsgStream=MSG_STDOUT;
   ConvertNames=NAMES_ORIGINALCASE;

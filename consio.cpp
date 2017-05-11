@@ -4,8 +4,11 @@
 #include "log.cpp"
 #endif
 
+static int KbdAnsi(char *Addr,int Size);
+
 #if !defined(GUI) && !defined(SILENT)
 static void RawPrint(char *Msg,MESSAGE_TYPE MessageType);
+static uint GetKey();
 #endif
 
 static MESSAGE_TYPE MsgStream=MSG_STDOUT;
@@ -133,27 +136,6 @@ void GetPasswordText(char *Str,int MaxLength)
 #endif
 
 
-#if !defined(GUI) && !defined(SILENT)
-unsigned int GetKey()
-{
-#ifdef SILENT
-  return(0);
-#else
-  char Str[80];
-#ifdef __GNUC__
-  fgets(Str,sizeof(Str),stdin);
-  return(Str[0]);
-#else
-  File SrcFile;
-  SrcFile.SetHandleType(FILE_HANDLESTD);
-  SrcFile.Read(Str,sizeof(Str));
-  return(Str[0]);
-#endif
-#endif
-}
-#endif
-
-
 #ifndef SILENT
 bool GetPassword(PASSWORD_TYPE Type,const char *FileName,char *Password,int MaxLength)
 {
@@ -194,6 +176,29 @@ bool GetPassword(PASSWORD_TYPE Type,const char *FileName,char *Password,int MaxL
     break;
   }
   return(true);
+}
+#endif
+
+
+#if !defined(GUI) && !defined(SILENT)
+uint GetKey()
+{
+  char Str[80];
+  bool EndOfFile;
+#if defined(__GNUC__) || defined(sun)
+  EndOfFile=(fgets(Str,sizeof(Str),stdin)==NULL);
+#else
+  File SrcFile;
+  SrcFile.SetHandleType(FILE_HANDLESTD);
+  EndOfFile=(SrcFile.Read(Str,sizeof(Str))==0);
+#endif
+  if (EndOfFile)
+  {
+    // Looks like stdin is a null device. We can enter to infinite loop
+    // calling Ask(), so let's better exit.
+    ErrHandler.Exit(USER_BREAK);
+  }
+  return(Str[0]);
 }
 #endif
 

@@ -5,7 +5,7 @@ enum MKDIR_CODE {MKDIR_SUCCESS,MKDIR_ERROR,MKDIR_BADPATH};
 
 MKDIR_CODE MakeDir(const char *Name,const wchar *NameW,uint Attr);
 bool CreatePath(const char *Path,const wchar *PathW,bool SkipLastName);
-void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta);
+void SetDirTime(const char *Name,const wchar *NameW,RarTime *ftm,RarTime *ftc,RarTime *fta);
 bool IsRemovable(const char *Name);
 Int64 GetFreeDisk(const char *Name);
 bool FileExist(const char *Name,const wchar *NameW=NULL);
@@ -37,5 +37,8 @@ bool DelDir(const char *Name,const wchar *NameW);
 #if defined(_WIN_32) && !defined(_WIN_CE)
 bool SetFileCompression(char *Name,wchar *NameW,bool State);
 #endif
+
+
+
 
 #endif

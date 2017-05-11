@@ -5,15 +5,15 @@ static bool match(wchar *pattern,wchar *string,bool ForceCase);
 
 static int mstricompc(const char *Str1,const char *Str2,bool ForceCase);
 static int mstricompcw(const wchar *Str1,const wchar *Str2,bool ForceCase);
-static int mstrnicompc(const char *Str1,const char *Str2,int N,bool ForceCase);
-static int mstrnicompcw(const wchar *Str1,const wchar *Str2,int N,bool ForceCase);
+static int mstrnicompc(const char *Str1,const char *Str2,size_t N,bool ForceCase);
+static int mstrnicompcw(const wchar *Str1,const wchar *Str2,size_t N,bool ForceCase);
 
 inline uint toupperc(byte ch,bool ForceCase)
 {
   if (ForceCase)
     return(ch);
 #ifdef _WIN_32
-  return((uint)CharUpper((LPTSTR)(ch)));
+  return((uint)(LPARAM)CharUpper((LPTSTR)(ch)));
 #elif defined(_UNIX)
   return(ch);
 #else
@@ -42,7 +42,7 @@ bool CmpName(char *Wildcard,char *Name,int CmpPath)
   
   if (CmpPath!=MATCH_NAMES)
   {
-    int WildLength=strlen(Wildcard);
+    size_t WildLength=strlen(Wildcard);
     if (CmpPath!=MATCH_EXACTPATH && mstrnicompc(Wildcard,Name,WildLength,ForceCase)==0)
     {
       char NextCh=Name[WildLength];
@@ -71,8 +71,12 @@ bool CmpName(char *Wildcard,char *Name,int CmpPath)
   }
   char *Name1=PointToName(Wildcard);
   char *Name2=PointToName(Name);
+
+  // always return false for RAR temporary files to exclude them
+  // from archiving operations
   if (mstrnicompc("__rar_",Name2,6,false)==0)
     return(false);
+
   return(match(Name1,Name2,ForceCase));
 }
 
@@ -86,7 +90,7 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
 
   if (CmpPath!=MATCH_NAMES)
   {
-    int WildLength=strlenw(Wildcard);
+    size_t WildLength=strlenw(Wildcard);
     if (CmpPath!=MATCH_EXACTPATH && mstrnicompcw(Wildcard,Name,WildLength,ForceCase)==0)
     {
       wchar NextCh=Name[WildLength];
@@ -113,8 +117,12 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
   }
   wchar *Name1=PointToName(Wildcard);
   wchar *Name2=PointToName(Name);
+
+  // always return false for RAR temporary files to exclude them
+  // from archiving operations
   if (mstrnicompcw(L"__rar_",Name2,6,false)==0)
     return(false);
+
   return(match(Name1,Name2,ForceCase));
 }
 #endif
@@ -236,7 +244,7 @@ int mstricompcw(const wchar *Str1,const wchar *Str2,bool ForceCase)
 #endif
 
 
-int mstrnicompc(const char *Str1,const char *Str2,int N,bool ForceCase)
+int mstrnicompc(const char *Str1,const char *Str2,size_t N,bool ForceCase)
 {
   if (ForceCase)
     return(strncmp(Str1,Str2,N));
@@ -249,7 +257,7 @@ int mstrnicompc(const char *Str1,const char *Str2,int N,bool ForceCase)
 
 
 #ifndef SFX_MODULE
-int mstrnicompcw(const wchar *Str1,const wchar *Str2,int N,bool ForceCase)
+int mstrnicompcw(const wchar *Str1,const wchar *Str2,size_t N,bool ForceCase)
 {
   if (ForceCase)
     return(strncmpw(Str1,Str2,N));

@@ -262,6 +262,11 @@ void Unpack::Unpack29(bool Solid)
           }
           if (Failed)
             break;
+
+#ifdef _MSC_VER
+  // avoid a warning about uninitialized 'Length' variable
+  #pragma warning( disable : 4701 )
+#endif
           CopyString(Length+32,Distance+2);
           continue;
         }

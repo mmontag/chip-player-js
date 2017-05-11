@@ -14,7 +14,6 @@ class Archive:public File
     void ConvertNameCase(wchar *Name);
     void ConvertUnknownHeader();
     int ReadOldHeader();
-    void PrepareExtraTime(FileHeader *hd,EXTTIME_MODE etm,EXTTIME_MODE etc,EXTTIME_MODE eta,EXTTIME_MODE etarc,Array<byte> &TimeData);
 
 #if !defined(SHELL_EXT) && !defined(NOCRYPT)
     CryptData HeadersCrypt;

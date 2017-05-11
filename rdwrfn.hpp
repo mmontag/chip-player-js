@@ -72,7 +72,12 @@ class ComprDataIO
     Int64 TotalPackRead;
     Int64 UnpArcSize;
     Int64 CurPackRead,CurPackWrite,CurUnpRead,CurUnpWrite;
-    Int64 ProcessedArcSize,TotalArcSize;
+
+    // Size of already processed archives.
+    // Used to calculate the total operation progress.
+    Int64 ProcessedArcSize;
+
+    Int64 TotalArcSize;
 
     uint PackFileCRC,UnpFileCRC,PackedCRC;
 

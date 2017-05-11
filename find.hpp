@@ -1,6 +1,10 @@
 #ifndef _RAR_FINDDATA_
 #define _RAR_FINDDATA_
 
+enum FINDDATA_FLAGS {
+  FDDF_SECONDDIR=1  // second entry of directory in SCAN_GETDIRSTWICE ScanTree mode
+};
+
 struct FindData
 {
   char Name[NM];
@@ -18,6 +22,7 @@ struct FindData
   FILETIME ftLastAccessTime; 
   FILETIME ftLastWriteTime; 
 #endif
+  uint Flags;
   bool Error;
 };
 
@@ -30,7 +35,7 @@ class FindFile
 
     char FindMask[NM];
     wchar FindMaskW[NM];
-    int FirstCall;
+    bool FirstCall;
 #ifdef _WIN_32
     HANDLE hFind;
 #else

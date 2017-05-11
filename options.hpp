@@ -17,8 +17,13 @@ enum EXTTIME_MODE {
 };
 enum {NAMES_ORIGINALCASE,NAMES_UPPERCASE,NAMES_LOWERCASE};
 enum MESSAGE_TYPE {MSG_STDOUT,MSG_STDERR,MSG_ERRONLY,MSG_NULL};
+
 enum OVERWRITE_MODE {
-  OVERWRITE_ASK,OVERWRITE_ALL,OVERWRITE_NONE,OVERWRITE_AUTORENAME
+  OVERWRITE_DEFAULT, // ask for extraction, silently overwrite for archiving
+  OVERWRITE_ALL,
+  OVERWRITE_NONE,
+  OVERWRITE_AUTORENAME,
+  OVERWRITE_FORCE_ASK
 };
 
 enum RAR_CHARSET { RCH_DEFAULT=0,RCH_ANSI,RCH_OEM,RCH_UNICODE };
@@ -54,6 +59,7 @@ class RAROptions
     RAR_CHARSET CommentCharset;
     RAR_CHARSET FilelistCharset;
     char ArcPath[NM];
+    wchar ArcPathW[NM];
     char Password[MAXPASSWORD];
     bool EncryptHeaders;
     char LogName[NM];
@@ -133,7 +139,7 @@ class RAROptions
     wchar DllDestNameW[NM];
     int DllOpMode;
     int DllError;
-    LONG UserData;
+    LPARAM UserData;
     UNRARCALLBACK Callback;
     CHANGEVOLPROC ChangeVolProc;
     PROCESSDATAPROC ProcessDataProc;

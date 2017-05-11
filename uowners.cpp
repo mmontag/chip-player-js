@@ -34,7 +34,7 @@ void ExtractUnixOwner(Archive &Arc,char *FileName)
 #endif
   {
     Log(Arc.FileName,St(MSetOwnersError),FileName);
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(CREATE_ERROR);
   }
   SetFileAttr(FileName,NULL,Attr);
 }
@@ -74,7 +74,7 @@ void ExtractUnixOwnerNew(Archive &Arc,char *FileName)
 #endif
   {
     Log(Arc.FileName,St(MSetOwnersError),FileName);
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(CREATE_ERROR);
   }
   SetFileAttr(FileName,NULL,Attr);
 }
