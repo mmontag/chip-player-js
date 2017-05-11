@@ -78,7 +78,10 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
 {
   Archive Arc(Cmd);
   if (!Arc.WOpen(ArcName,ArcNameW))
+  {
+    ErrHandler.SetErrorCode(OPEN_ERROR);
     return(EXTRACT_ARC_NEXT);
+  }
 
   if (!Arc.IsArchive(true))
   {
@@ -419,7 +422,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
       struct FindData FD;
       if (FindFile::FastFind(DestFileName,DestNameW,&FD))
       {
-        if (Arc.NewLhd.mtime < FD.mtime)
+        if (FD.mtime >= Arc.NewLhd.mtime)
           ExtrFile=false;
       }
       else

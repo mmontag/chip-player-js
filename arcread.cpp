@@ -189,7 +189,6 @@ int Archive::ReadHeader()
             ConvertNameCase(hd->FileName);
             ConvertNameCase(hd->FileNameW);
 #endif
-
             ConvertUnknownHeader();
           }
         if (hd->Flags & LHD_SALT)
@@ -549,6 +548,9 @@ void Archive::ConvertUnknownHeader()
       *s='_';
 #endif
   }
+  for (wchar *s=NewLhd.FileNameW;*s!=0;s++)
+    if (*s=='/' || *s=='\\')
+      *s=CPATHDIVIDER;
 }
 
 

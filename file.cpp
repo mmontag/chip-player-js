@@ -395,7 +395,11 @@ bool File::RawSeek(Int64 Offset,int Method)
     return(false);
 #else
   LastWrite=false;
+#ifdef _LARGEFILE_SOURCE
+  if (fseeko(hFile,Offset,Method)!=0)
+#else
   if (fseek(hFile,int64to32(Offset),Method)!=0)
+#endif
     return(false);
 #endif
   return(true);
@@ -411,7 +415,11 @@ Int64 File::Tell()
     ErrHandler.SeekError(FileName);
   return(int32to64(HighDist,LowDist));
 #else
+#ifdef _LARGEFILE_SOURCE
+  return(ftello(hFile));
+#else
   return(ftell(hFile));
+#endif
 #endif
 }
 
