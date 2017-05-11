@@ -80,6 +80,8 @@ time_t RarTime::GetUnix()
 
 Int64 RarTime::GetRaw()
 {
+  if (!IsSet())
+    return(0);
 #ifdef _WIN_32
   FILETIME ft;
   GetWin32(&ft);

@@ -390,7 +390,12 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #ifndef SFX_MODULE
       if (Cmd->AppendArcNameToPath)
       {
-        strcatw(DestFileNameW,PointToName(Arc.FileNameW));
+        wchar FileNameW[NM];
+        if (*Arc.FileNameW!=0)
+          strcpyw(FileNameW,Arc.FileNameW);
+        else
+          CharToWide(Arc.FileName,FileNameW);
+        strcatw(DestFileNameW,PointToName(FileNameW));
         SetExt(DestFileNameW,NULL);
         AddEndSlash(DestFileNameW);
       }
@@ -541,6 +546,9 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
             {
               ErrHandler.CreateErrorMsg(DestFileName);
               ErrHandler.SetErrorCode(CREATE_ERROR);
+#ifdef RARDLL
+              Cmd->DllError=ERAR_ECREATE;
+#endif
               if (!IsNameUsable(DestFileName))
               {
                 Log(Arc.FileName,St(MCorrectingName));
@@ -549,12 +557,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
                 if (FileCreate(Cmd,&CurFile,DestFileName,NULL,Cmd->Overwrite,&UserReject,Arc.NewLhd.FullUnpSize,Arc.NewLhd.FileTime))
                   ExtrFile=true;
                 else
-                {
                   ErrHandler.CreateErrorMsg(DestFileName);
-#ifdef RARDLL
-                  Cmd->DllError=ERAR_ECREATE;
-#endif
-                }
               }
             }
           }

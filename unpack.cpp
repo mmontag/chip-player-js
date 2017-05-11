@@ -343,7 +343,8 @@ void Unpack::Unpack29(bool Solid)
     }
     if (Number==258)
     {
-      CopyString(LastLength,LastDist);
+      if (LastLength!=0)
+        CopyString(LastLength,LastDist);
       continue;
     }
     if (Number<263)
