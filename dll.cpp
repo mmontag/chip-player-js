@@ -6,8 +6,8 @@ static int RarErrorToDll(RAR_EXIT ErrCode);
 struct DataSet
 {
   CommandData Cmd;
-  CmdExtract Extract;
   Archive Arc;
+  CmdExtract Extract;
   int OpenMode;
   int HeaderSize;
 
@@ -43,14 +43,18 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     Data->Cmd.FileArgs.AddString(L"*");
 
     char AnsiArcName[NM];
-    strncpyz(AnsiArcName,r->ArcName,ASIZE(AnsiArcName));
-#ifdef _WIN_ALL
-    if (!AreFileApisANSI())
+    *AnsiArcName=0;
+    if (r->ArcName!=NULL)
     {
-      OemToCharBuffA(r->ArcName,AnsiArcName,ASIZE(AnsiArcName));
-      AnsiArcName[ASIZE(AnsiArcName)-1]=0;
-    }
+      strncpyz(AnsiArcName,r->ArcName,ASIZE(AnsiArcName));
+#ifdef _WIN_ALL
+      if (!AreFileApisANSI())
+      {
+        OemToCharBuffA(r->ArcName,AnsiArcName,ASIZE(AnsiArcName));
+        AnsiArcName[ASIZE(AnsiArcName)-1]=0;
+      }
 #endif
+    }
 
     wchar ArcName[NM];
     GetWideName(AnsiArcName,r->ArcNameW,ArcName,ASIZE(ArcName));
