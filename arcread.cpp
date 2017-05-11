@@ -53,9 +53,11 @@ size_t Archive::SearchBlock(HEADER_TYPE HeaderType)
 
 size_t Archive::SearchSubBlock(const wchar *Type)
 {
-  size_t Size;
+  size_t Size,Count=0;
   while ((Size=ReadHeader())!=0 && GetHeaderType()!=HEAD_ENDARC)
   {
+    if ((++Count & 127)==0)
+      Wait();
     if (GetHeaderType()==HEAD_SERVICE && SubHead.CmpName(Type))
       return Size;
     SeekToNext();

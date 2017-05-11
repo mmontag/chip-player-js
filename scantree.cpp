@@ -18,6 +18,7 @@ ScanTree::ScanTree(StringList *FileMasks,RECURSE_MODE Recurse,bool GetLinks,SCAN
   *ErrArcName=0;
   Cmd=NULL;
   ErrDirList=NULL;
+  ErrDirSpecPathLength=NULL;
 }
 
 
