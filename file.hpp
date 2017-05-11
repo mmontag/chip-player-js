@@ -82,7 +82,7 @@ class File
     FILE_HANDLETYPE GetHandleType() {return(HandleType);};
     bool IsDevice();
     void fprintf(const char *fmt,...);
-    static void RemoveCreated();
+    static bool RemoveCreated();
     FileHandle GetHandle() {return(hFile);};
     void SetIgnoreReadErrors(bool Mode) {IgnoreReadErrors=Mode;};
     char *GetName() {return(FileName);}

@@ -623,19 +623,26 @@ void File::fprintf(const char *fmt,...)
 #endif
 
 
-void File::RemoveCreated()
+bool File::RemoveCreated()
 {
   RemoveCreatedActive++;
+  bool RetCode=true;
   for (int I=0;I<sizeof(CreatedFiles)/sizeof(CreatedFiles[0]);I++)
     if (CreatedFiles[I]!=NULL)
     {
+      CreatedFiles[I]->SetExceptions(false);
+      bool Success;
       if (CreatedFiles[I]->NewFile)
-        CreatedFiles[I]->Delete();
+        Success=CreatedFiles[I]->Delete();
       else
-        CreatedFiles[I]->Close();
-      CreatedFiles[I]=NULL;
+        Success=CreatedFiles[I]->Close();
+      if (Success)
+        CreatedFiles[I]=NULL;
+      else
+        RetCode=false;
     }
   RemoveCreatedActive--;
+  return(RetCode);
 }
 
 

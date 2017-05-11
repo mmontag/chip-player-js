@@ -126,7 +126,10 @@ void RarTime::SetRaw(Int64 RawTime)
 
 bool RarTime::operator == (RarTime &rt)
 {
-  return(memcmp(&rlt,&rt.rlt,sizeof(rlt))==0);
+  return(rlt.Year==rt.rlt.Year && rlt.Month==rt.rlt.Month &&
+         rlt.Day==rt.rlt.Day && rlt.Hour==rt.rlt.Hour &&
+         rlt.Minute==rt.rlt.Minute && rlt.Second==rt.rlt.Second &&
+         rlt.Reminder==rt.rlt.Reminder);
 }
 
 

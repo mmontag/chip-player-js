@@ -271,7 +271,12 @@ void _stdfunction ProcessSignal(int SigType)
 #endif
   UserBreak=true;
   mprintf(St(MBreak));
-  File::RemoveCreated();
+  for (int I=0;!File::RemoveCreated() && I<3;I++)
+  {
+#ifdef _WIN_32
+    Sleep(100);
+#endif
+  }
 #if defined(USE_RC) && !defined(SFX_MODULE) && !defined(_WIN_CE)
   ExtRes.UnloadDLL();
 #endif
