@@ -290,13 +290,20 @@ void itoa(int64 n,char *Str,size_t MaxSize)
   char NumStr[50];
   size_t Pos=0;
 
+  int Neg=n < 0 ? 1 : 0;
+  if (Neg)
+    n=-n;
+
   do
   {
-    if (Pos+1>=MaxSize)
+    if (Pos+1>=MaxSize-Neg)
       break;
     NumStr[Pos++]=char(n%10)+'0';
     n=n/10;
   } while (n!=0);
+
+  if (Neg)
+    NumStr[Pos++]='-';
 
   for (size_t I=0;I<Pos;I++)
     Str[I]=NumStr[Pos-I-1];
@@ -309,13 +316,20 @@ void itoa(int64 n,wchar *Str,size_t MaxSize)
   wchar NumStr[50];
   size_t Pos=0;
 
+  int Neg=n < 0 ? 1 : 0;
+  if (Neg)
+    n=-n;
+
   do
   {
-    if (Pos+1>=MaxSize)
+    if (Pos+1>=MaxSize-Neg)
       break;
     NumStr[Pos++]=wchar(n%10)+'0';
     n=n/10;
   } while (n!=0);
+
+  if (Neg)
+    NumStr[Pos++]='-';
 
   for (size_t I=0;I<Pos;I++)
     Str[I]=NumStr[Pos-I-1];

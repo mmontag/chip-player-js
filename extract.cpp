@@ -206,6 +206,18 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive()
 
 bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
 {
+  // We can get negative sizes in corrupt archive and it is unacceptable
+  // for size comparisons in CmdExtract::UnstoreFile and ComprDataIO::UnpRead,
+  // where we cast sizes to size_t and can exceed another read or available
+  // size. We could fix it when reading an archive. But we prefer to do it
+  // here, because this function is called directly in unrar.dll, so we fix
+  // bad parameters passed to dll. Also we want to see real negative sizes
+  // in the listing of corrupt archive.
+  if (Arc.FileHead.PackSize<0)
+    Arc.FileHead.PackSize=0;
+  if (Arc.FileHead.UnpSize<0)
+    Arc.FileHead.UnpSize=0;
+
   wchar Command=Cmd->Command[0];
   if (HeaderSize==0)
     if (DataIO.UnpVolume)

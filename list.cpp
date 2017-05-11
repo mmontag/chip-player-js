@@ -215,7 +215,7 @@ void ListFileHeader(Archive &Arc,FileHeader &hd,bool &TitleShown,bool Verbose,bo
     TitleShown=true;
   }
 
-  wchar UnpSizeText[20],PackSizeText[20];
+  wchar UnpSizeText[30],PackSizeText[30];
   if (hd.UnpSize==INT64NDF)
     wcscpy(UnpSizeText,L"?");
   else
