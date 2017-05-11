@@ -25,12 +25,18 @@ void ExtractUnixOwner(Archive &Arc,char *FileName)
     ErrHandler.SetErrorCode(CRC_ERROR);
     return;
   }
+  uint Attr=GetFileAttr(FileName,NULL);
   gid_t GroupID=gr->gr_gid;
+#if defined(SAVE_LINKS) && !defined(_APPLE)
+  if (lchown(FileName,OwnerID,GroupID)!=0)
+#else
   if (chown(FileName,OwnerID,GroupID)!=0)
+#endif
   {
     Log(Arc.FileName,St(MSetOwnersError),FileName);
     ErrHandler.SetErrorCode(CRC_ERROR);
   }
+  SetFileAttr(FileName,NULL,Attr);
 }
 
 
@@ -59,10 +65,16 @@ void ExtractUnixOwnerNew(Archive &Arc,char *FileName)
     ErrHandler.SetErrorCode(CRC_ERROR);
     return;
   }
+  uint Attr=GetFileAttr(FileName,NULL);
   gid_t GroupID=gr->gr_gid;
+#if defined(SAVE_LINKS) && !defined(_APPLE)
+  if (lchown(FileName,OwnerID,GroupID)!=0)
+#else
   if (chown(FileName,OwnerID,GroupID)!=0)
+#endif
   {
     Log(Arc.FileName,St(MSetOwnersError),FileName);
     ErrHandler.SetErrorCode(CRC_ERROR);
   }
+  SetFileAttr(FileName,NULL,Attr);
 }

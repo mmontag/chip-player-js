@@ -708,20 +708,23 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 
       CurFile.SetAllowDelete(!Cmd->KeepBroken);
 
-      if (!ExtractLink(DataIO,Arc,DestFileName,DataIO.UnpFileCRC,!TestMode && !SkipSolid) &&
-          (Arc.NewLhd.Flags & LHD_SPLIT_BEFORE)==0)
-        if (Arc.NewLhd.Method==0x30)
-          UnstoreFile(DataIO,Arc.NewLhd.FullUnpSize);
-        else
-        {
-          Unp->SetDestSize(Arc.NewLhd.FullUnpSize);
-#ifndef SFX_MODULE
-          if (Arc.NewLhd.UnpVer<=15)
-            Unp->DoUnpack(15,FileCount>1 && Arc.Solid);
+      bool LinkCreateMode=!Cmd->Test && !SkipSolid;
+      if (ExtractLink(DataIO,Arc,DestFileName,DataIO.UnpFileCRC,LinkCreateMode))
+        PrevExtracted=LinkCreateMode;
+      else
+        if ((Arc.NewLhd.Flags & LHD_SPLIT_BEFORE)==0)
+          if (Arc.NewLhd.Method==0x30)
+            UnstoreFile(DataIO,Arc.NewLhd.FullUnpSize);
           else
+          {
+            Unp->SetDestSize(Arc.NewLhd.FullUnpSize);
+#ifndef SFX_MODULE
+            if (Arc.NewLhd.UnpVer<=15)
+              Unp->DoUnpack(15,FileCount>1 && Arc.Solid);
+            else
 #endif
-            Unp->DoUnpack(Arc.NewLhd.UnpVer,Arc.NewLhd.Flags & LHD_SOLID);
-        }
+              Unp->DoUnpack(Arc.NewLhd.UnpVer,Arc.NewLhd.Flags & LHD_SOLID);
+          }
 
       if (Arc.IsOpened())
         Arc.SeekToNext();
