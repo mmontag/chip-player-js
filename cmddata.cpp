@@ -124,6 +124,7 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
 
               wchar *WideArgName=(ArgW!=NULL && *ArgW!=0 ? ArgW+1:NULL);
               ReadTextFile(Arg+1,WideArgName,FileArgs,false,true,Charset,true,true,true);
+
             }
             else
               if (Found && FileData.IsDir && Extract && *ExtrPath==0 && *ExtrPathW==0)

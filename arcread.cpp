@@ -579,13 +579,15 @@ void Archive::ConvertAttributes()
 #endif
 #ifdef _UNIX
   // umask defines which permission bits must not be set by default
-  // when creating a file or directory.
+  // when creating a file or directory. The typical default value
+  // for the process umask is S_IWGRP | S_IWOTH (octal 022),
+  // resulting in 0644 mode for new files.
   static mode_t mask = (mode_t) -1;
 
   if (mask == (mode_t) -1)
   {
     // umask call returns the current umask value. Argument (022) is not 
-    // important here.
+    // really important here.
     mask = umask(022);
 
     // Restore the original umask value, which was changed to 022 above.
