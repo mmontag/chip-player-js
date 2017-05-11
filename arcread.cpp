@@ -144,7 +144,14 @@ int Archive::ReadHeader()
           Raw.Get(hd->HighUnpSize);
         }
         else 
+        {
           hd->HighPackSize=hd->HighUnpSize=0;
+          if (hd->UnpSize==0xffffffff)
+          {
+            hd->UnpSize=int64to32(INT64MAX);
+            hd->HighUnpSize=(INT64MAX>>32);
+          }
+        }
         hd->FullPackSize=int32to64(hd->HighPackSize,hd->PackSize);
         hd->FullUnpSize=int32to64(hd->HighUnpSize,hd->UnpSize);
 

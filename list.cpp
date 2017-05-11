@@ -208,7 +208,10 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
     mprintf("%-12s",PointToName(Name));
 
   char UnpSizeText[20],PackSizeText[20];
-  itoa(hd.FullUnpSize,UnpSizeText);
+  if (hd.FullUnpSize==INT64MAX)
+    strcpy(UnpSizeText,"?");
+  else
+    itoa(hd.FullUnpSize,UnpSizeText);
   itoa(hd.FullPackSize,PackSizeText);
 
   mprintf(" %8s %8s ",UnpSizeText,PackSizeText);
