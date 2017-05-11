@@ -12,9 +12,9 @@ void ErrorHandler::Clean()
   ErrCount=0;
   EnableBreak=true;
   Silent=false;
-  DoShutdown=false;
   UserBreak=false;
   MainExit=false;
+  DisableShutdown=false;
 }
 
 
@@ -64,7 +64,10 @@ bool ErrorHandler::AskRepeatRead(const wchar *FileName)
   if (!Silent)
   {
     SysErrMsg();
-    return uiAskRepeatRead(FileName);
+    bool Repeat=uiAskRepeatRead(FileName);
+    if (!Repeat) // Disable shutdown if user pressed Cancel in error dialog.
+      DisableShutdown=true;
+    return Repeat;
   }
 #endif
   return false;
@@ -100,7 +103,10 @@ bool ErrorHandler::AskRepeatWrite(const wchar *FileName,bool DiskFull)
   if (!Silent)
   {
     SysErrMsg();
-    return uiAskRepeatWrite(FileName,DiskFull);
+    bool Repeat=uiAskRepeatWrite(FileName,DiskFull);
+    if (!Repeat) // Disable shutdown if user pressed Cancel in error dialog.
+      DisableShutdown=true;
+    return Repeat;
   }
 #endif
   return false;

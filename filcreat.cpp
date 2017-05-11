@@ -63,7 +63,7 @@ bool GetAutoRenamedName(wchar *Name,size_t MaxNameSize)
     Ext=Name+NameLength;
   for (uint FileVer=1;;FileVer++)
   {
-#ifdef _ANDROID // No swprintf in Android NDK r9.
+#ifdef _ANDROID // No swprintf in Android prior to Android 5.0.
     uint NamePrefixLength=Ext-Name;
     wcsncpy(NewName,Name,NamePrefixLength);
     wcscpy(NewName+NamePrefixLength,L"(");
