@@ -40,7 +40,8 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
   {
     // We need to open a new volume which size was not calculated
     // in total size before, so we cannot calculate the total progress
-    // anymore. Let's reset the total size to zero and stop total progress.
+    // anymore. Let's reset the total size to zero and stop 
+    // the total progress.
     if (DataIO!=NULL)
       DataIO->TotalArcSize=0;
 
@@ -186,8 +187,13 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     }
 #ifdef SFX_MODULE
     DataIO->UnpArcSize=Arc.FileLength();
-    DataIO->CurUnpRead=0;
 #endif
+    
+    // Reset the size of packed data read from current volume. It is used
+    // to display the total progress and preceding volumes are already
+    // compensated with ProcessedArcSize, so we need to reset this variable.
+    DataIO->CurUnpRead=0;
+
     DataIO->PackedCRC=0xffffffff;
 //    DataIO->SetFiles(&Arc,NULL);
   }

@@ -62,7 +62,7 @@ class File
     bool Close();
     void Flush();
     bool Delete();
-    bool Rename(const char *NewName);
+    bool Rename(const char *NewName,const wchar *NewNameW=NULL);
     void Write(const void *Data,int Size);
     int Read(void *Data,int Size);
     int DirectRead(void *Data,int Size);

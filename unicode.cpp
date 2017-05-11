@@ -16,7 +16,10 @@ bool WideToChar(const wchar *Src,char *Dest,int DestSize)
 #else
 #ifdef MBFUNCTIONS
 
-  if (wcstombs(Dest,Src,DestSize)==(size_t)-1)
+  size_t ResultingSize=wcstombs(Dest,Src,DestSize);
+  if (ResultingSize==(size_t)-1)
+    RetCode=false;
+  if (ResultingSize==0 && *Src!=0)
     RetCode=false;
 
   if ((!RetCode || *Dest==0 && *Src!=0) && DestSize>NM && strlenw(Src)<NM)
@@ -66,7 +69,10 @@ bool CharToWide(const char *Src,wchar *Dest,int DestSize)
 #else
 #ifdef MBFUNCTIONS
 
-  if (mbstowcs(Dest,Src,DestSize)==(size_t)-1)
+  size_t ResultingSize=mbstowcs(Dest,Src,DestSize);
+  if (ResultingSize==(size_t)-1)
+    RetCode=false;
+  if (ResultingSize==0 && *Src!=0)
     RetCode=false;
 
   if ((!RetCode || *Dest==0 && *Src!=0) && DestSize>NM && strlen(Src)<NM)

@@ -25,6 +25,7 @@ void CmdExtract::DoExtract(CommandData *Cmd)
   while (Cmd->GetArcName(ArcName,ArcNameW,sizeof(ArcName)))
     if (FindFile::FastFind(ArcName,ArcNameW,&FD))
       DataIO.TotalArcSize+=FD.Size;
+
   Cmd->ArcNames->Rewind();
   while (Cmd->GetArcName(ArcName,ArcNameW,sizeof(ArcName)))
   {
@@ -120,8 +121,11 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
   if (Arc.Volume && Arc.NotFirstVolume)
   {
     char FirstVolName[NM];
-
     VolNameToFirstName(ArcName,FirstVolName,(Arc.NewMhd.Flags & MHD_NEWNUMBERING));
+
+    // If several volume names from same volume set are specified
+    // and current volume is not first in set and first volume is present
+    // and specified too, let's skip the current volume.
     if (stricomp(ArcName,FirstVolName)!=0 && FileExist(FirstVolName) &&
         Cmd->ArcNames->Search(FirstVolName,NULL,false))
       return(EXTRACT_ARC_NEXT);
@@ -135,10 +139,15 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
 
     char NextName[NM];
     wchar NextNameW[NM];
+
     strcpy(NextName,Arc.FileName);
     strcpyw(NextNameW,Arc.FileNameW);
+
     while (true)
     {
+      // First volume is already added to DataIO.TotalArcSize 
+      // in initial TotalArcSize calculation in DoExtract.
+      // So we skip it and start from second volume.
       NextVolumeName(NextName,NextNameW,ASIZE(NextName),(Arc.NewMhd.Flags & MHD_NEWNUMBERING)==0 || Arc.OldFormat);
       struct FindData FD;
       if (FindFile::FastFind(NextName,NextNameW,&FD))
