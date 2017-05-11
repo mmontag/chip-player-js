@@ -332,6 +332,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #ifdef RARDLL
       Cmd->DllError=ERAR_BAD_DATA;
 #endif
+      ErrHandler.SetErrorCode(WARNING);
     }
     ExactMatch=false;
   }
@@ -486,7 +487,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
     else
       *DestFileNameW=0;
 
-    ExtrFile=!SkipSolid && !EmptyName/* && *ExtrName*/;
+    ExtrFile=!SkipSolid && !EmptyName && (Arc.NewLhd.Flags & LHD_SPLIT_BEFORE)==0/* && *ExtrName*/;
     if ((Cmd->FreshFiles || Cmd->UpdateFiles) && (Command=='E' || Command=='X'))
     {
       struct FindData FD;

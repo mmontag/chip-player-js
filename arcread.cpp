@@ -578,18 +578,6 @@ void Archive::ConvertUnknownHeader()
 }
 
 
-int Archive::LhdSize()
-{
-  return((NewLhd.Flags & LHD_LARGE) ? SIZEOF_NEWLHD+8:SIZEOF_NEWLHD);
-}
-
-
-int Archive::LhdExtraSize()
-{
-  return(NewLhd.HeadSize-NewLhd.NameSize-LhdSize());
-}
-
-
 #ifndef SHELL_EXT
 bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
 {

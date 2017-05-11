@@ -194,7 +194,7 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
   char ConvertedName[NM];
   if ((hd.Flags & LHD_UNICODE)!=0 && *hd.FileNameW!=0 && UnicodeEnabled())
   {
-    if (WideToChar(hd.FileNameW,ConvertedName))
+    if (WideToChar(hd.FileNameW,ConvertedName) && *ConvertedName!=0)
       Name=ConvertedName;
   }
 #endif

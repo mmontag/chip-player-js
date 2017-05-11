@@ -890,7 +890,7 @@ void CommandData::OutHelp()
 }
 
 
-bool CommandData::ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullPath)
+bool CommandData::ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullPath,int MatchMode)
 {
   char *Name=ConvertPath(CheckName,NULL);
   char FullName[NM],*CurName;
@@ -902,12 +902,12 @@ bool CommandData::ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullP
     {
       if (*FullName==0)
         ConvertNameToFull(CheckName,FullName);
-      if (CmpName(CurName,FullName,MATCH_WILDSUBPATH))
+      if (CmpName(CurName,FullName,MatchMode))
         return(true);
     }
     else
 #endif
-      if (CmpName(ConvertPath(CurName,NULL),Name,MATCH_WILDSUBPATH))
+      if (CmpName(ConvertPath(CurName,NULL),Name,MatchMode))
         return(true);
   return(false);
 }
@@ -915,11 +915,11 @@ bool CommandData::ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullP
 
 bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath)
 {
-  if (ExclCheckArgs(ExclArgs,CheckName,CheckFullPath))
+  if (ExclCheckArgs(ExclArgs,CheckName,CheckFullPath,MATCH_WILDSUBPATH))
     return(true);
   if (InclArgs->ItemsCount()==0)
     return(false);
-  if (ExclCheckArgs(InclArgs,CheckName,CheckFullPath))
+  if (ExclCheckArgs(InclArgs,CheckName,CheckFullPath,MATCH_NAMES))
     return(false);
   return(true);
 }
@@ -977,14 +977,17 @@ int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType
     if (Unicode)
     {
       wchar NameW[NM],ArgW[NM],*NamePtr=NewLhd.FileNameW;
+      bool CorrectUnicode=true;
       if (ArgNameW==NULL)
       {
-        CharToWide(ArgName,ArgW);
+        if (!CharToWide(ArgName,ArgW) || *ArgW==0)
+          CorrectUnicode=false;
         ArgNameW=ArgW;
       }
       if ((NewLhd.Flags & LHD_UNICODE)==0)
       {
-        CharToWide(NewLhd.FileName,NameW);
+        if (!CharToWide(NewLhd.FileName,NameW) || *NameW==0)
+          CorrectUnicode=false;
         NamePtr=NameW;
       }
       if (CmpName(ArgNameW,NamePtr,MatchType))
@@ -993,7 +996,8 @@ int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType
           *ExactMatch=stricompcw(ArgNameW,NamePtr)==0;
         return(StringCount);
       }
-      continue;
+      if (CorrectUnicode)
+        continue;
     }
 #endif
     if (CmpName(ArgName,NewLhd.FileName,MatchType))
