@@ -49,6 +49,10 @@ void SetPriority(int Priority)
 
 void Wait()
 {
+#if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE)
+  if (SleepTime!=0)
+    Sleep(SleepTime);
+#endif
 }
 
 

@@ -103,6 +103,10 @@ void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta)
 #ifdef _WIN_32
   if (!WinNT())
     return;
+  unsigned int DirAttr=GetFileAttr(Name);
+  bool ResetAttr=(DirAttr!=0xffffffff && (DirAttr & FA_RDONLY)!=0);
+  if (ResetAttr)
+    SetFileAttr(Name,NULL,0);
   HANDLE hFile=CreateFile(Name,GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,
                           NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS,NULL);
   if (hFile==INVALID_HANDLE_VALUE)
@@ -116,6 +120,8 @@ void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta)
     fta->GetWin32(&fa);
   SetFileTime(hFile,sc ? &fc:NULL,sa ? &fa:NULL,sm ? &fm:NULL);
   CloseHandle(hFile);
+  if (ResetAttr)
+    SetFileAttr(Name,NULL,DirAttr);
 #endif
 #if defined(_UNIX) || defined(_EMX)
   File::SetCloseFileTimeByName(Name,ftm,fta);

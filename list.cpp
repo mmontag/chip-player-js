@@ -76,6 +76,10 @@ void ListArchive(CommandData *Cmd)
                 TotalPackSize+=Arc.NewLhd.FullPackSize;
                 if (Technical)
                   ListSymLink(Arc);
+#ifndef SFX_MODULE
+                if (Verbose)
+                  Arc.ViewFileComment();
+#endif
               }
               break;
 #ifndef SFX_MODULE

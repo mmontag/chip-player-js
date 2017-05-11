@@ -385,6 +385,21 @@ char* SupportDBCS::charnext(const char *s)
 }
 
 
+uint SupportDBCS::strlend(const char *s)
+{
+  uint Length=0;
+  while (*s!=0)
+  {
+    if (IsLeadByte[*s])
+      s+=2;
+    else
+      s++;
+    Length++;
+  }
+  return(Length);
+}
+
+
 char* SupportDBCS::strchrd(const char *s, int c)
 {
   while (*s!=0)

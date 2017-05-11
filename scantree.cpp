@@ -7,6 +7,7 @@ ScanTree::ScanTree(StringList *FileMasks,int Recurse,bool GetLinks,int GetDirs)
   ScanTree::GetLinks=GetLinks;
   ScanTree::GetDirs=GetDirs;
 
+  SetAllMaskDepth=0;
   *CurMask=0;
   *CurMaskW=0;
   memset(FindStack,0,sizeof(FindStack));
@@ -85,8 +86,6 @@ bool ScanTree::PrepareMasks()
       strcatw(CurMaskW,MASKALLW);
     }
     SpecPathLengthW=NameW-CurMaskW;
-//    if (SpecPathLengthW>1)
-//      SpecPathLengthW--;
   }
   else
   {
@@ -95,6 +94,10 @@ bool ScanTree::PrepareMasks()
     SpecPathLengthW=PointToName(WideMask)-WideMask;
   }
   Depth=0;
+
+  strcpy(OrigCurMask,CurMask);
+  strcpyw(OrigCurMaskW,CurMaskW);
+
   return(true);
 }
 
@@ -177,6 +180,8 @@ int ScanTree::FindProc(FindData *FindData)
     {
       char Mask[NM];
       strcpy(Mask,Slash);
+      if (Depth<SetAllMaskDepth)
+        strcpy(Mask+1,PointToName(OrigCurMask));
       *Slash=0;
       strcpy(DirName,CurMask);
       char *PrevSlash=strrchrd(CurMask,CPATHDIVIDER);
@@ -193,6 +198,8 @@ int ScanTree::FindProc(FindData *FindData)
       {
         wchar Mask[NM];
         strcpyw(Mask,Slash);
+        if (Depth<SetAllMaskDepth)
+          strcpyw(Mask+1,PointToName(OrigCurMaskW));
         *Slash=0;
         strcpyw(DirNameW,CurMaskW);
         wchar *PrevSlash=strrchrw(CurMaskW,CPATHDIVIDER);
@@ -217,8 +224,15 @@ int ScanTree::FindProc(FindData *FindData)
     if (!FastFindFile && Depth==0 && !SearchAllInRoot)
       return(GetDirs==SCAN_GETCURDIRS ? SCAN_SUCCESS:SCAN_NEXT);
 
+//    if (GetDirs==SCAN_GETCURDIRS && Depth==0 && !SearchAllInRoot)
+//      return(SCAN_SUCCESS);
+
     char Mask[NM];
-    strcpy(Mask,FastFindFile ? MASKALL:PointToName(CurMask));
+    bool MaskAll=FastFindFile;
+
+//    bool MaskAll=CmpName(CurMask,FindData->Name,MATCH_NAMES);
+
+    strcpy(Mask,MaskAll ? MASKALL:PointToName(CurMask));
     strcpy(CurMask,FindData->Name);
 
     if (strlen(CurMask)+strlen(Mask)+1>=NM || Depth>=MAXSCANDEPTH-1)
@@ -250,6 +264,8 @@ int ScanTree::FindProc(FindData *FindData)
       strcatw(CurMaskW,Mask);
     }
     Depth++;
+    if (MaskAll)
+      SetAllMaskDepth=Depth;
   }
   if (!FastFindFile && !CmpName(CurMask,FindData->Name,MATCH_NAMES))
     return(SCAN_NEXT);

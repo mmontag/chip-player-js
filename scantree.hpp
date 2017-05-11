@@ -16,6 +16,8 @@ class ScanTree
     FindFile *FindStack[MAXSCANDEPTH];
     int Depth;
 
+    int SetAllMaskDepth;
+
     StringList *FileMasks;
     int Recurse;
     bool GetLinks;
@@ -24,6 +26,8 @@ class ScanTree
 
     char CurMask[NM];
     wchar CurMaskW[NM];
+    char OrigCurMask[NM];
+    wchar OrigCurMaskW[NM];
     bool SearchAllInRoot;
     bool FastFindFile;
     int SpecPathLength;

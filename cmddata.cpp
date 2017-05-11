@@ -385,7 +385,10 @@ void CommandData::ProcessSwitch(char *Switch)
             Priority=atoi(Switch+2);
             char *ChPtr=strchr(Switch+2,':');
             if (ChPtr!=NULL)
+            {
               SleepTime=atoi(ChPtr+1);
+              InitSystemOptions(SleepTime);
+            }
             SetPriority(Priority);
           }
           break;

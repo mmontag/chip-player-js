@@ -14,7 +14,7 @@ void InitCRC()
 }
 
 
-uint CRC(uint StartCRC,void *Addr,uint Size)
+uint CRC(uint StartCRC,const void *Addr,uint Size)
 {
   if (CRCTab[1]==0)
     InitCRC();
@@ -48,7 +48,7 @@ uint CRC(uint StartCRC,void *Addr,uint Size)
 }
 
 #ifndef SFX_MODULE
-ushort OldCRC(ushort StartCRC,void *Addr,uint Size)
+ushort OldCRC(ushort StartCRC,const void *Addr,uint Size)
 {
   byte *Data=(byte *)Addr;
   for (int I=0;I<Size;I++)

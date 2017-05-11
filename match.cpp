@@ -5,8 +5,6 @@ static bool match(wchar *pattern,wchar *string);
 
 inline uint toupperc(byte ch)
 {
-/*
-*/
 #if defined(_WIN_32)
   return((uint)CharUpper((LPTSTR)(ch)));
 #elif defined(_UNIX)
@@ -19,8 +17,6 @@ inline uint toupperc(byte ch)
 
 inline uint touppercw(uint ch)
 {
-/*
-*/
 #if defined(_UNIX)
   return(ch);
 #else

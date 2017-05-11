@@ -95,7 +95,6 @@ int main(int argc, char *argv[])
 
 
     InitConsoleOptions(Cmd.MsgStream,Cmd.Sound);
-    InitSystemOptions(Cmd.SleepTime);
     InitLogOptions(Cmd.LogName);
     ErrHandler.SetSilent(Cmd.AllYes || Cmd.MsgStream==MSG_NULL);
     ErrHandler.SetShutdown(Cmd.Shutdown);

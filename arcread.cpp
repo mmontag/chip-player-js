@@ -19,7 +19,7 @@ int Archive::SearchBlock(int BlockType)
 int Archive::SearchSubBlock(const char *Type)
 {
   int Size;
-  while ((Size=ReadHeader())!=0)
+  while ((Size=ReadHeader())!=0 && GetHeaderType()!=ENDARC_HEAD)
   {
     if (GetHeaderType()==NEWSUB_HEAD && SubHead.CmpName(Type))
       return(Size);
