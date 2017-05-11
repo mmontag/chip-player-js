@@ -62,14 +62,18 @@ int ComprDataIO::UnpRead(byte *Addr,size_t Count)
     else
     {
       size_t SizeToRead=((int64)Count>UnpPackedSize) ? (size_t)UnpPackedSize:Count;
-      if (SizeToRead==0)
-        return 0;
-      if (!SrcFile->IsOpened())
-        return(-1);
-      ReadSize=SrcFile->Read(ReadAddr,SizeToRead);
-      FileHeader *hd=SubHead!=NULL ? SubHead:&SrcArc->FileHead;
-      if (hd->SplitAfter)
-        PackedDataHash.Update(ReadAddr,ReadSize);
+      if (SizeToRead>0)
+      {
+        if (!SrcFile->IsOpened())
+          return -1;
+        ReadSize=SrcFile->Read(ReadAddr,SizeToRead);
+        FileHeader *hd=SubHead!=NULL ? SubHead:&SrcArc->FileHead;
+        if (hd->SplitAfter)
+          PackedDataHash.Update(ReadAddr,ReadSize);
+      }
+      else
+        if (!UnpVolume) // For volume we'll ask for next volume below.
+          return 0;
     }
     CurUnpRead+=ReadSize;
     TotalRead+=ReadSize;
@@ -80,14 +84,19 @@ int ComprDataIO::UnpRead(byte *Addr,size_t Count)
     Count-=ReadSize;
 #endif
     UnpPackedSize-=ReadSize;
-    if (UnpPackedSize == 0 && UnpVolume)
+
+    // Do not ask for next volume if we read something from current volume.
+    // If next volume is missing, we need to process all data from current
+    // volume before aborting. It helps to recover all possible data
+    // in "Keep broken files" mode.
+    if (UnpPackedSize == 0 && UnpVolume && ReadSize==0)
     {
 #ifndef NOVOLUME
       if (!MergeArchive(*SrcArc,this,true,CurrentCommand))
 #endif
       {
         NextVolumeMissing=true;
-        return(-1);
+        return -1;
       }
     }
     else
