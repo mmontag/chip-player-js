@@ -816,7 +816,7 @@ void CommandData::ProcessSwitch(const char *Switch,const wchar *SwitchW)
           VolSize=0;
           break;
         default:
-          VolSize=INT64NDF; // UnRAR -v switch for list command.
+          VolSize=VOLSIZE_AUTO; // UnRAR -v switch for list command.
           break;
       }
       break;

@@ -779,15 +779,21 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
 #ifdef RARDLL
               Cmd->DllError=ERAR_ECREATE;
 #endif
-              if (!IsNameUsable(DestFileName))
+              if (!IsNameUsable(DestFileName) && (!WideName || !IsNameUsable(DestNameW)))
               {
                 Log(Arc.FileName,St(MCorrectingName));
-                char OrigName[sizeof(DestFileName)];
+                char OrigName[ASIZE(DestFileName)];
+                wchar OrigNameW[ASIZE(DestFileNameW)];
                 strncpyz(OrigName,DestFileName,ASIZE(OrigName));
+                wcsncpyz(OrigNameW,NullToEmpty(DestNameW),ASIZE(OrigNameW));
 
                 MakeNameUsable(DestFileName,true);
-                CreatePath(DestFileName,NULL,true);
-                if (FileCreate(Cmd,&CurFile,DestFileName,NULL,Cmd->Overwrite,&UserReject,Arc.NewLhd.FullUnpSize,Arc.NewLhd.FileTime,true))
+
+                if (WideName)
+                  MakeNameUsable(DestNameW,true);
+
+                CreatePath(DestFileName,DestNameW,true);
+                if (FileCreate(Cmd,&CurFile,DestFileName,DestNameW,Cmd->Overwrite,&UserReject,Arc.NewLhd.FullUnpSize,Arc.NewLhd.FileTime,true))
                 {
 #ifndef SFX_MODULE
                   Log(Arc.FileName,St(MRenaming),OrigName,DestFileName);

@@ -173,6 +173,7 @@
 #define   MCannotOpen        "\nCannot open %s"
 #define   MUnknownMeth       "\nUnknown method in %s"
 #define   MVerRequired       "\nYou need RAR %d.%d to unpack it"
+#define   MNewRarFormat      "\nUnsupported archive format. Please update RAR to a newer version."
 #define   MOk                " OK"
 #define   MDone              "\nDone"
 #define   MLockingArc        "\nLocking archive"

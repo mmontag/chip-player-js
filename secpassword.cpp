@@ -76,7 +76,7 @@ void SecPassword::Clean()
 // So we use our own function for this purpose.
 void cleandata(void *data,size_t size)
 {
-#ifdef _WIN_ALL
+#if defined(_WIN_ALL) && defined(_MSC_VER)
   SecureZeroMemory(data,size);
 #else
   // 'volatile' is required. Otherwise optimizers can remove this function

@@ -147,6 +147,7 @@ void GetPasswordText(wchar *Str,uint MaxLength)
   strncpyz(StrA,getpass(""),ASIZE(StrA));
 #endif
   CharToWide(StrA,Str,MaxLength);
+  cleandata(StrA,sizeof(StrA));
 #endif
   Str[MaxLength-1]=0;
   RemoveLF(Str);
