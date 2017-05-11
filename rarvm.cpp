@@ -20,16 +20,37 @@ void RarVM::Init()
     Mem=new byte[VM_MEMSIZE+4];
 }
 
+/*********************************************************************
+ IS_VM_MEM macro checks if address belongs to VM memory pool (Mem).
+ Only Mem data are always low endian regardless of machine architecture,
+ so we need to convert them to native format when reading or writing.
+ VM registers have endianness of host machine.
+**********************************************************************/
+#define IS_VM_MEM(a) (((byte*)a)>=Mem && ((byte*)a)<Mem+VM_MEMSIZE)
 
 inline uint RarVM::GetValue(bool ByteMode,uint *Addr)
 {
   if (ByteMode)
+  {
+#ifdef BIG_ENDIAN
+    if (IS_VM_MEM(Addr))
+      return(*(byte *)Addr);
+    else
+      return(*Addr & 0xff);
+#else
     return(*(byte *)Addr);
+#endif
+  }
   else
   {
 #if defined(BIG_ENDIAN) || !defined(ALLOW_NOT_ALIGNED_INT)
-    byte *B=(byte *)Addr;
-    return UINT32((uint)B[0]|((uint)B[1]<<8)|((uint)B[2]<<16)|((uint)B[3]<<24));
+    if (IS_VM_MEM(Addr))
+    {
+      byte *B=(byte *)Addr;
+      return UINT32((uint)B[0]|((uint)B[1]<<8)|((uint)B[2]<<16)|((uint)B[3]<<24));
+    }
+    else
+      return UINT32(*Addr);
 #else
     return UINT32(*Addr);
 #endif
@@ -46,14 +67,28 @@ inline uint RarVM::GetValue(bool ByteMode,uint *Addr)
 inline void RarVM::SetValue(bool ByteMode,uint *Addr,uint Value)
 {
   if (ByteMode)
+  {
+#ifdef BIG_ENDIAN
+    if (IS_VM_MEM(Addr))
+      *(byte *)Addr=Value;
+    else
+      *Addr=(*Addr & ~0xff)|(Value & 0xff);
+#else
     *(byte *)Addr=Value;
+#endif
+  }
   else
   {
 #if defined(BIG_ENDIAN) || !defined(ALLOW_NOT_ALIGNED_INT) || !defined(PRESENT_INT32)
-    ((byte *)Addr)[0]=(byte)Value;
-    ((byte *)Addr)[1]=(byte)(Value>>8);
-    ((byte *)Addr)[2]=(byte)(Value>>16);
-    ((byte *)Addr)[3]=(byte)(Value>>24);
+    if (IS_VM_MEM(Addr))
+    {
+      ((byte *)Addr)[0]=(byte)Value;
+      ((byte *)Addr)[1]=(byte)(Value>>8);
+      ((byte *)Addr)[2]=(byte)(Value>>16);
+      ((byte *)Addr)[3]=(byte)(Value>>24);
+    }
+    else
+      *(uint *)Addr=Value;
 #else
     *(uint32 *)Addr=Value;
 #endif
@@ -67,9 +102,16 @@ inline void RarVM::SetValue(bool ByteMode,uint *Addr,uint Value)
 #endif
 
 
-void RarVM::SetValue(uint *Addr,uint Value)
+void RarVM::SetLowEndianValue(uint *Addr,uint Value)
 {
-  SetValue(false,Addr,Value);
+#if defined(BIG_ENDIAN) || !defined(ALLOW_NOT_ALIGNED_INT) || !defined(PRESENT_INT32)
+  ((byte *)Addr)[0]=(byte)Value;
+  ((byte *)Addr)[1]=(byte)(Value>>8);
+  ((byte *)Addr)[2]=(byte)(Value>>16);
+  ((byte *)Addr)[3]=(byte)(Value>>24);
+#else
+  *(uint32 *)Addr=Value;
+#endif
 }
 
 
@@ -886,6 +928,10 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         SET_VALUE(false,&Mem[VM_GLOBALMEMADDR+0x20],DataSize);
         if (DataSize>=VM_GLOBALMEMADDR/2)
           break;
+
+// bytes from same channels are grouped to continual data blocks,
+// so we need to place them back to their interleaving positions
+
         for (int CurChannel=0;CurChannel<Channels;CurChannel++)
         {
           byte PrevByte=0;

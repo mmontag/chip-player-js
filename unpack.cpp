@@ -600,10 +600,10 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
   }
   byte *GlobalData=&StackFilter->Prg.GlobalData[0];
   for (int I=0;I<7;I++)
-    VM.SetValue((uint *)&GlobalData[I*4],StackFilter->Prg.InitR[I]);
-  VM.SetValue((uint *)&GlobalData[0x1c],StackFilter->BlockLength);
-  VM.SetValue((uint *)&GlobalData[0x20],0);
-  VM.SetValue((uint *)&GlobalData[0x2c],StackFilter->ExecCount);
+    VM.SetLowEndianValue((uint *)&GlobalData[I*4],StackFilter->Prg.InitR[I]);
+  VM.SetLowEndianValue((uint *)&GlobalData[0x1c],StackFilter->BlockLength);
+  VM.SetLowEndianValue((uint *)&GlobalData[0x20],0);
+  VM.SetLowEndianValue((uint *)&GlobalData[0x2c],StackFilter->ExecCount);
   memset(&GlobalData[0x30],0,16);
 
   if (FirstByte & 8) // put data block passed as parameter if any
@@ -783,8 +783,8 @@ void Unpack::ExecuteCode(VM_PreparedProgram *Prg)
   if (Prg->GlobalData.Size()>0)
   {
     Prg->InitR[6]=int64to32(WrittenFileSize);
-    VM.SetValue((uint *)&Prg->GlobalData[0x24],int64to32(WrittenFileSize));
-    VM.SetValue((uint *)&Prg->GlobalData[0x28],int64to32(WrittenFileSize>>32));
+    VM.SetLowEndianValue((uint *)&Prg->GlobalData[0x24],int64to32(WrittenFileSize));
+    VM.SetLowEndianValue((uint *)&Prg->GlobalData[0x28],int64to32(WrittenFileSize>>32));
     VM.Execute(Prg);
   }
 }

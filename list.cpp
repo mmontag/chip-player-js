@@ -355,7 +355,7 @@ void ListOldSubHeader(Archive &Arc)
 
 void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical)
 {
-  if (Technical && Arc.SubHead.CmpName(SUBHEAD_TYPE_CMT) &&
+  if (Arc.SubHead.CmpName(SUBHEAD_TYPE_CMT) &&
       (Arc.SubHead.Flags & LHD_SPLIT_BEFORE)==0 && !Cmd->DisableComment)
   {
     Array<byte> CmtData;

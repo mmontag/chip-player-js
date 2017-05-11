@@ -101,7 +101,7 @@ class RarVM:private BitInput
     void Init();
     void Prepare(byte *Code,int CodeSize,VM_PreparedProgram *Prg);
     void Execute(VM_PreparedProgram *Prg);
-    void SetValue(uint *Addr,uint Value);
+    void SetLowEndianValue(uint *Addr,uint Value);
     void SetMemory(unsigned int Pos,byte *Data,unsigned int DataSize);
     static uint ReadData(BitInput &Inp);
 };
