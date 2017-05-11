@@ -330,3 +330,4 @@
 #define   MSHelpCmdE         "\n  -x      Extract from archive (default)" 
 #define   MSHelpCmdT         "\n  -t      Test archive files" 
 #define   MSHelpCmdV         "\n  -v      Verbosely list contents of archive" 
+#define   MMaxPathLimit      "\nTotal path and file name length must not exceed %d characters"

@@ -164,6 +164,22 @@ void ErrorHandler::CreateErrorMsg(const char *ArcName,const char *FileName)
 #ifndef SILENT
   Log(ArcName && *ArcName ? ArcName:NULL,St(MCannotCreate),FileName);
   Alarm();
+#if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE) && defined(MAXPATH)
+  if (GetLastError()==ERROR_PATH_NOT_FOUND)
+  {
+    int NameLength=strlen(FileName);
+    if (!IsFullPath(FileName))
+    {
+      char CurDir[NM];
+      GetCurrentDirectory(sizeof(CurDir),CurDir);
+      NameLength+=strlen(CurDir)+1;
+    }
+    if (NameLength>MAXPATH)
+    {
+      Log(ArcName && *ArcName ? ArcName:NULL,St(MMaxPathLimit),MAXPATH);
+    }
+  }
+#endif
   SysErrMsg();
 #endif
 }

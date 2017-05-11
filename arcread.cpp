@@ -292,12 +292,12 @@ int Archive::ReadHeader()
           *(SubBlockHeader *)&UOHead=SubBlockHead;
           Raw.Get(UOHead.OwnerNameSize);
           Raw.Get(UOHead.GroupNameSize);
-          Raw.Get((byte *)UOHead.OwnerName,UOHead.OwnerNameSize);
-          Raw.Get((byte *)UOHead.GroupName,UOHead.GroupNameSize);
           if (UOHead.OwnerNameSize>NM-1)
             UOHead.OwnerNameSize=NM-1;
           if (UOHead.GroupNameSize>NM-1)
             UOHead.GroupNameSize=NM-1;
+          Raw.Get((byte *)UOHead.OwnerName,UOHead.OwnerNameSize);
+          Raw.Get((byte *)UOHead.GroupName,UOHead.GroupNameSize);
           UOHead.OwnerName[UOHead.OwnerNameSize]=0;
           UOHead.GroupName[UOHead.GroupNameSize]=0;
           break;
