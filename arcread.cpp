@@ -318,9 +318,8 @@ size_t Archive::ReadHeader15()
           else
             *hd->FileName=0;
 
-          char AnsiName[NM];
-          IntToExt(FileName,AnsiName,ASIZE(AnsiName));
-          GetWideName(AnsiName,hd->FileName,hd->FileName,ASIZE(hd->FileName));
+          if (*hd->FileName==0)
+            ArcCharToWide(FileName,hd->FileName,ASIZE(hd->FileName),ACTW_OEM);
 
 #ifndef SFX_MODULE
           ConvertNameCase(hd->FileName);
