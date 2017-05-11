@@ -195,10 +195,15 @@ bool Archive::IsArchive(bool EnableBroken)
     return(false);
   }
 #ifdef RARDLL
-  SilentOpen=true;
+  // If callback function is not set, we cannot get the password,
+  // so we skip the initial header processing for encrypted header archive.
+  // It leads to skipped archive comment, but the rest of archive data
+  // is processed correctly.
+  if (Cmd->Callback==NULL)
+    SilentOpen=true;
 #endif
 
-  //if not encrypted, we'll check it below
+  // If not encrypted, we'll check it below.
   NotFirstVolume=Encrypted && (NewMhd.Flags & MHD_FIRSTVOLUME)==0;
 
   if (!SilentOpen || !Encrypted)

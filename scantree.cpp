@@ -320,7 +320,8 @@ SCAN_CODE ScanTree::FindProc(FindData *FD)
 
     // Let's check if directory name is excluded, so we do not waste
     // time searching in directory, which will be excluded anyway.
-    if (Cmd!=NULL && Cmd->ExclCheck(FD->Name,true,false,false))
+    if (Cmd!=NULL && (Cmd->ExclCheck(FD->Name,true,false,false) ||
+        Cmd->ExclDirByAttr(FD->FileAttr)))
     {
       // If we are here in "fast find" mode, it means that entire directory
       // specified in command line is excluded. Then we need to return

@@ -67,7 +67,7 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
 #endif
     }
     else
-      if (*ArcName==0)
+      if (*ArcName==0 && *ArcNameW==0)
       {
         strncpyz(ArcName,Arg,ASIZE(ArcName));
         if (ArgW!=NULL)
@@ -79,7 +79,7 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
         if (ArgW!=NULL)
         {
           size_t Length=wcslen(ArgW);
-          wchar EndChar=Length==0 ? 0:Arg[Length-1];
+          wchar EndChar=Length==0 ? 0:ArgW[Length-1];
           EndSeparator=IsDriveDiv(EndChar) || IsPathDiv(EndChar);
         }
         else
@@ -1114,6 +1114,25 @@ bool CommandData::ExclCheckArgs(StringList *Args,bool Dir,char *CheckName,bool C
   }
   return(false);
 }
+
+
+#ifndef SFX_MODULE
+// Now this function performs only one task and only in Windows version:
+// it skips symlinks to directories if -e1024 switch is specified.
+// Symlinks are skipped in ScanTree class, so their entire contents
+// is skipped too. Without this function we would check the attribute
+// only directly before archiving, so we would skip the symlink record,
+// but not the contents of symlinked directory.
+bool CommandData::ExclDirByAttr(uint FileAttr)
+{
+#ifdef _WIN_ALL
+  if ((FileAttr & FILE_ATTRIBUTE_REPARSE_POINT)!=0 &&
+      (ExclFileAttr & FILE_ATTRIBUTE_REPARSE_POINT)!=0)
+    return true;
+#endif
+  return false;
+}
+#endif
 
 
 

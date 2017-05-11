@@ -29,6 +29,7 @@ class CommandData:public RAROptions
     void OutHelp();
     bool IsSwitch(int Ch);
     bool ExclCheck(char *CheckName,bool Dir,bool CheckFullPath,bool CheckInclList);
+    bool ExclDirByAttr(uint FileAttr);
     bool TimeCheck(RarTime &ft);
     bool SizeCheck(int64 Size);
     bool AnyFiltersActive();

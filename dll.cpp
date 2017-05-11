@@ -51,6 +51,10 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     Data->Cmd.AddArcName(r->ArcName,r->ArcNameW);
     Data->Cmd.Overwrite=OVERWRITE_ALL;
     Data->Cmd.VersionControl=1;
+
+    Data->Cmd.Callback=r->Callback;
+    Data->Cmd.UserData=r->UserData;
+
     if (!Data->Arc.Open(r->ArcName,r->ArcNameW))
     {
       r->OpenResult=ERAR_EOPEN;
@@ -177,12 +181,12 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
     }
     strncpyz(D->ArcName,Data->Arc.FileName,ASIZE(D->ArcName));
     if (*Data->Arc.FileNameW)
-      wcsncpy(D->ArcNameW,Data->Arc.FileNameW,sizeof(D->ArcNameW));
+      wcsncpy(D->ArcNameW,Data->Arc.FileNameW,ASIZE(D->ArcNameW));
     else
       CharToWide(Data->Arc.FileName,D->ArcNameW);
     strncpyz(D->FileName,Data->Arc.NewLhd.FileName,ASIZE(D->FileName));
     if (*Data->Arc.NewLhd.FileNameW)
-      wcsncpy(D->FileNameW,Data->Arc.NewLhd.FileNameW,sizeof(D->FileNameW));
+      wcsncpy(D->FileNameW,Data->Arc.NewLhd.FileNameW,ASIZE(D->FileNameW));
     else
     {
 #ifdef _WIN_ALL
@@ -283,7 +287,13 @@ int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestNa
       bool Repeat=false;
       Data->Extract.ExtractCurrentFile(&Data->Cmd,Data->Arc,Data->HeaderSize,Repeat);
 
-      while (Data->Arc.ReadHeader()!=0 && Data->Arc.GetHeaderType()==NEWSUB_HEAD)
+      // Archive can be closed if we process volumes, next volume is missing
+      // and current one is already removed or deleted. So we need to check
+      // if archive is still open to avoid calling file operations on
+      // the invalid file handle. Some of our file operations like Seek()
+      // process such invalid handle correctly, some not.
+      while (Data->Arc.IsOpened() && Data->Arc.ReadHeader()!=0 && 
+             Data->Arc.GetHeaderType()==NEWSUB_HEAD)
       {
         Data->Extract.ExtractCurrentFile(&Data->Cmd,Data->Arc,Data->HeaderSize,Repeat);
         Data->Arc.SeekToNext();

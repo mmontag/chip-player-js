@@ -460,6 +460,11 @@ bool File::RawSeek(int64 Offset,int Method)
 
 int64 File::Tell()
 {
+  if (hFile==BAD_HANDLE)
+    if (AllowExceptions)
+      ErrHandler.SeekError(FileName,FileNameW);
+    else
+      return(-1);
 #ifdef _WIN_ALL
   LONG HighDist=0;
   uint LowDist=SetFilePointer(hFile,0,&HighDist,FILE_CURRENT);

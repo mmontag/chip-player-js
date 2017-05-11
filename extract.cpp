@@ -308,7 +308,9 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
 #ifdef _APPLE
   if (WideName)
   {
-    WideToUtf(Arc.NewLhd.FileNameW,ArcFileName,sizeof(ArcFileName));
+    // Prepare UTF-8 name for OS X. Since we are sure that destination
+    // is UTF-8, we can avoid calling the less reliable WideToChar function.
+    WideToUtf(Arc.NewLhd.FileNameW,ArcFileName,ASIZE(ArcFileName));
     WideName=false;
   }
 #endif
@@ -318,6 +320,9 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
 #ifdef UNICODE_SUPPORTED
   if (WideName)
   {
+    // Prepare the name in single byte native encoding (typically UTF-8
+    // for Unix-based systems). Windows does not really need it,
+    // but Unix system will use this name instead of Unicode.
     ConvertPath(Arc.NewLhd.FileNameW,ArcFileNameW);
     char Name[NM];
     if (WideToChar(ArcFileNameW,Name) && IsNameUsable(Name))

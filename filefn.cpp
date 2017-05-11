@@ -143,8 +143,12 @@ bool CreatePath(const wchar *Path,bool SkipLastName)
 
 bool CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
 {
+#ifdef _WIN_ALL
+  // If we are in Windows, let's try Unicode path first. In Unix we do not
+  // need it (Unix MakeDir will fails with Unicode only name).
   if (PathW!=NULL && *PathW!=0)
     return(CreatePath(PathW,SkipLastName));
+#endif
   if (Path!=NULL && *Path!=0)
     return(CreatePath(Path,SkipLastName));
   return(false);

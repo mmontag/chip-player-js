@@ -17,6 +17,8 @@ DWORD WinNT()
   DWORD Result=0;
   if (dwPlatformId==VER_PLATFORM_WIN32_NT)
     Result=dwMajorVersion*0x100+dwMinorVersion;
+
+
   return(Result);
 }
 #endif
