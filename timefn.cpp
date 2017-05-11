@@ -140,7 +140,7 @@ void RarTime::SetLocal(RarLocalTime *lt)
     {
       // Reverse procedure which we do in GetLocal.
       SYSTEMTIME st1,st2;
-      FileTimeToSystemTime(&lft,&st2);
+      FileTimeToSystemTime(&lft,&st2); // st2 might be unequal to st, because we added lt->Reminder to lft.
       TzSpecificLocalTimeToSystemTime(NULL,&st2,&st1);
       SystemTimeToFileTime(&st1,&ft);
 

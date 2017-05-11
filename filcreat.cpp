@@ -42,9 +42,13 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,wchar *Name,size_t MaxNameSize,
     if (Choice==UIASKREP_R_CANCEL)
       ErrHandler.Exit(RARX_USERBREAK);
   }
+
+  // Try to truncate the existing file first instead of delete,
+  // so we preserve existing file permissions such as NTFS permissions.
   uint FileMode=WriteOnly ? FMF_WRITE|FMF_SHAREREAD:FMF_UPDATE|FMF_SHAREREAD;
   if (NewFile!=NULL && NewFile->Create(Name,FileMode))
     return true;
+
   CreatePath(Name,true);
   return NewFile!=NULL ? NewFile->Create(Name,FileMode):DelFile(Name);
 }

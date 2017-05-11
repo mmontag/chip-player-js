@@ -405,7 +405,7 @@ void ListFileHeader(Archive &Arc,FileHeader &hd,bool &TitleShown,bool Verbose,bo
       else
         mprintf(L"????????  ");
   }
-  mprintf(L"%-12ls",Name);
+  mprintf(L"%ls",Name);
 }
 
 /*
