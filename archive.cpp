@@ -20,6 +20,7 @@ Archive::Archive(RAROptions *InitCmd)
   LatestTime.Reset();
   Protected=false;
   Encrypted=false;
+  FailedHeaderDecryption=false;
   BrokenFileHeader=false;
   LastReadBlock=0;
 

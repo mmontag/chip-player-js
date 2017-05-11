@@ -456,7 +456,12 @@ char *MkTemp(char *Name)
   size_t Length=strlen(Name);
   if (Length<=6)
     return(NULL);
-  int Random=clock();
+
+  // We need some kind of random start point for first temporary name.
+  RarTime CurTime;
+  CurTime.SetCurrentTime();
+  int Random=(int)CurTime.GetRaw();
+
   for (int Attempt=0;;Attempt++)
   {
     sprintf(Name+Length-6,"%06u",(Random+Attempt)%1000000);
@@ -477,7 +482,12 @@ wchar *MkTemp(wchar *Name)
   size_t Length=wcslen(Name);
   if (Length<=6)
     return(NULL);
-  uint Random=clock();
+
+  // We need some kind of random start point for first temporary name.
+  RarTime CurTime;
+  CurTime.SetCurrentTime();
+  int Random=(int)CurTime.GetRaw();
+
   for (uint Attempt=0;;Attempt++)
   {
     sprintfw(Name+Length-6,7,L"%06u",(Random+Attempt)%1000000);

@@ -32,6 +32,8 @@ class Archive:public File
     int RecoverySectors;
     int64 RecoveryPos;
 
+    bool FailedHeaderDecryption;
+
     RarTime LatestTime;
     int LastReadBlock;
     int CurHeaderType;
@@ -50,16 +52,6 @@ class Archive:public File
     void CheckArc(bool EnableBroken);
     void CheckOpen(const char *Name,const wchar *NameW=NULL);
     bool WCheckOpen(const char *Name,const wchar *NameW=NULL);
-    bool TestLock(int Mode);
-    void MakeTemp();
-    void CopyMainHeader(Archive &Src,bool CopySFX=true,char *NameToDisplay=NULL);
-    bool ProcessToFileHead(Archive &Src,bool LastBlockAdded,
-      Pack *Pack=NULL,const char *SkipName=NULL);
-    void TmpToArc(Archive &Src);
-    void CloseNew(int AdjustRecovery,bool CloseVolume);
-    void WriteEndBlock(bool CloseVolume);
-    void CopyFileRecord(Archive &Src);
-    void CopyArchiveData(Archive &Src);
     bool GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW);
     void ViewComment();
     void ViewFileComment();

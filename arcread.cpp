@@ -44,6 +44,12 @@ void Archive::UnexpEndArcMsg()
 
 size_t Archive::ReadHeader()
 {
+  // Once we failed to decrypt an encrypted block, there is no reason to
+  // attempt to do it further. We'll never be successful and only generate
+  // endless errors.
+  if (FailedHeaderDecryption)
+    return 0;
+
   CurBlockPos=Tell();
 
 #ifndef SFX_MODULE
@@ -185,7 +191,7 @@ size_t Archive::ReadHeader()
         hd->FullUnpSize=INT32TO64(hd->HighUnpSize,hd->UnpSize);
 
         char FileName[NM*4];
-        int NameSize=Min(hd->NameSize,sizeof(FileName)-1);
+        size_t NameSize=Min(hd->NameSize,sizeof(FileName)-1);
         Raw.Get((byte *)FileName,NameSize);
         FileName[NameSize]=0;
 
@@ -426,12 +432,12 @@ size_t Archive::ReadHeader()
 #ifndef SILENT
         Log(FileName,St(MEncrBadCRC),FileName);
 #endif
-        Close();
-
+//        Close();
+        FailedHeaderDecryption=true;
         BrokenFileHeader=true;
+
         ErrHandler.SetErrorCode(CRC_ERROR);
         return(0);
-//        ErrHandler.Exit(CRC_ERROR);
       }
     }
   }

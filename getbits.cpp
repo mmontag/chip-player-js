@@ -6,7 +6,12 @@ BitInput::BitInput()
   // So let's allocate two additional bytes for situation, when we need to
   // read only 1 byte from the last position of buffer and avoid a crash
   // from access to next 2 bytes, which contents we do not need.
-  InBuf=new byte[MAX_SIZE+2];
+  size_t BufSize=MAX_SIZE+2;
+  InBuf=new byte[BufSize];
+
+  // Ensure that we get predictable results when accessing bytes in area
+  // not filled with read data.
+  memset(InBuf,0,BufSize);
 }
 
 

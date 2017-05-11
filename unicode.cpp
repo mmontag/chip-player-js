@@ -328,7 +328,10 @@ void SupportDBCS::Init()
 
 char* SupportDBCS::charnext(const char *s)
 {
-  return (char *)(IsLeadByte[(byte)*s] ? s+2:s+1);
+  // Zero cannot be the trail byte. So if next byte after the lead byte
+  // is 0, the string is corrupt and we'll better return the pointer to 0,
+  // to break string processing loops.
+  return (char *)(IsLeadByte[(byte)*s] && s[1]!=0 ? s+2:s+1);
 }
 
 

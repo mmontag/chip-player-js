@@ -32,16 +32,16 @@ void ListArchive(CommandData *Cmd)
       uint FileCount=0;
       if (Arc.IsArchive(true))
       {
-        if (!Arc.IsOpened())
-          break;
+//        if (!Arc.IsOpened())
+//          break;
         bool TitleShown=false;
         if (!Bare)
         {
           Arc.ViewComment();
 
-          // RAR can close a corrupt encrypted archive
-          if (!Arc.IsOpened())
-            break;
+          // RAR can close a corrupt encrypted archive.
+//          if (!Arc.IsOpened())
+//            break;
 
           mprintf("\n");
           if (Arc.Solid)

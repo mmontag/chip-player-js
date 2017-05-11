@@ -103,12 +103,17 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
   if (Success)
   {
     hFile=hNewFile;
+
+    // We use memove instead of strcpy and wcscpy to avoid problems
+    // with overlapped buffers. While we do not call this function with
+    // really overlapped buffers yet, we do call it with Name equal to
+    // FileName like Arc.Open(Arc.FileName,Arc.FileNameW).
     if (NameW!=NULL)
-      wcscpy(FileNameW,NameW);
+      memmove(FileNameW,NameW,(wcslen(NameW)+1)*sizeof(*NameW));
     else
       *FileNameW=0;
     if (Name!=NULL)
-      strcpy(FileName,Name);
+      memmove(FileName,Name,strlen(Name)+1);
     else
       WideToChar(NameW,FileName);
     AddFileToList(hFile);

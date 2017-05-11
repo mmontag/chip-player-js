@@ -1232,7 +1232,7 @@ void CommandData::ProcessCommand()
 #ifndef SFX_MODULE
 
   const char *SingleCharCommands="FUADPXETK";
-  if (Command[1] && strchr(SingleCharCommands,*Command)!=NULL || *ArcName==0)
+  if (Command[0]!=0 && Command[1]!=0 && strchr(SingleCharCommands,*Command)!=NULL || *ArcName==0)
     OutHelp();
 
 #ifdef _UNIX

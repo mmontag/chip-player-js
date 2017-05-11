@@ -27,7 +27,7 @@ FindFile::~FindFile()
 
 void FindFile::SetMask(const char *FindMask)
 {
-  strcpy(FindFile::FindMask,FindMask);
+  strcpy(FindFile::FindMask,NullToEmpty(FindMask));
   if (*FindMaskW==0)
     CharToWide(FindMask,FindMaskW);
   FirstCall=true;

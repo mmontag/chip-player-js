@@ -100,16 +100,22 @@ class Unpack:private BitInput
     ModelPPM PPM;
     int PPMEscChar;
 
+    // Virtual machine to execute filters code.
     RarVM VM;
+  
+    // Buffer to read VM filters code. We moved it here from AddVMCode
+    // function to reduce time spent in BitInput constructor.
+    BitInput VMCodeInp;
 
-    /* Filters code, one entry per filter */
+    // Filters code, one entry per filter.
     Array<UnpackFilter*> Filters;
 
-    /* Filters stack, several entrances of same filter are possible */
+    // Filters stack, several entrances of same filter are possible.
     Array<UnpackFilter*> PrgStack;
 
-    /* lengths of preceding blocks, one length per filter. Used to reduce
-       size required to write block length if lengths are repeating */
+    // Lengths of preceding data blocks, one length of one last block
+    // for every filter. Used to reduce the size required to write
+    // the data block length if lengths are repeating.
     Array<int> OldFilterLengths;
 
     int LastFilter;

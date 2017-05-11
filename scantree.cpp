@@ -33,11 +33,13 @@ SCAN_CODE ScanTree::GetNext(FindData *FindData)
   if (Depth<0)
     return(SCAN_DONE);
 
+
   SCAN_CODE FindCode;
   while (1)
   {
     if (*CurMask==0 && !GetNextMask())
       return(SCAN_DONE);
+
 
     FindCode=FindProc(FindData);
     if (FindCode==SCAN_ERROR)
