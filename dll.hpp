@@ -1,4 +1,4 @@
-#ifndef _1_DLL_
+#ifndef _UNRAR_DLL_
 #define _UNRAR_DLL_
 
 #pragma pack(1)

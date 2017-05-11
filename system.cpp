@@ -79,13 +79,6 @@ clock_t MonoClock()
 
 void Wait()
 {
-#ifdef GUI
-  uiGiveTick();
-#ifndef SHELL_EXT
-  if (uiIsAborted())
-    ErrHandler.Exit(RARX_USERBREAK);
-#endif
-#endif
   if (ErrHandler.UserBreak)
     ErrHandler.Exit(RARX_USERBREAK);
 #if defined(_WIN_ALL) && !defined(SFX_MODULE)
@@ -99,7 +92,7 @@ void Wait()
     }
   }
 #endif
-#if defined(_WIN_ALL) && !defined(_WIN_UWP)
+#if defined(_WIN_ALL)
   // Reset system sleep timer to prevent system going sleep.
   SetThreadExecutionState(ES_SYSTEM_REQUIRED);
 #endif
