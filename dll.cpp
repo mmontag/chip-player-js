@@ -68,9 +68,9 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     if (r->CmtBufSize!=0 && Data->Arc.GetComment(&CmtData,NULL))
     {
       r->Flags|=2;
-      int Size=CmtData.Size()+1;
+      size_t Size=CmtData.Size()+1;
       r->CmtState=Size>r->CmtBufSize ? ERAR_SMALL_BUF:1;
-      r->CmtSize=Min(Size,r->CmtBufSize);
+      r->CmtSize=(uint)Min(Size,r->CmtBufSize);
       memcpy(r->CmtBuf,&CmtData[0],r->CmtSize-1);
       if (Size<=r->CmtBufSize)
         r->CmtBuf[r->CmtSize-1]=0;
@@ -104,7 +104,7 @@ int PASCAL RARReadHeader(HANDLE hArcData,struct RARHeaderData *D)
   DataSet *Data=(DataSet *)hArcData;
   try
   {
-    if ((Data->HeaderSize=Data->Arc.SearchBlock(FILE_HEAD))<=0)
+    if ((Data->HeaderSize=(int)Data->Arc.SearchBlock(FILE_HEAD))<=0)
     {
       if (Data->Arc.Volume && Data->Arc.GetHeaderType()==ENDARC_HEAD &&
           (Data->Arc.EndArcHead.Flags & EARC_NEXT_VOLUME))
@@ -153,7 +153,7 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
   DataSet *Data=(DataSet *)hArcData;
   try
   {
-    if ((Data->HeaderSize=Data->Arc.SearchBlock(FILE_HEAD))<=0)
+    if ((Data->HeaderSize=(int)Data->Arc.SearchBlock(FILE_HEAD))<=0)
     {
       if (Data->Arc.Volume && Data->Arc.GetHeaderType()==ENDARC_HEAD &&
           (Data->Arc.EndArcHead.Flags & EARC_NEXT_VOLUME))

@@ -20,7 +20,7 @@ RarTime& RarTime::operator =(FILETIME &ft)
   rlt.Second=st.wSecond;
   rlt.wDay=st.wDayOfWeek;
   rlt.yDay=rlt.Day-1;
-  for (int I=1;I<rlt.Month;I++)
+  for (uint I=1;I<rlt.Month;I++)
   {
     static int mdays[12]={31,28,31,30,31,30,31,31,30,31,30,31};
     rlt.yDay+=mdays[I-1];
@@ -90,17 +90,17 @@ time_t RarTime::GetUnix()
 #endif
 
 
-Int64 RarTime::GetRaw()
+int64 RarTime::GetRaw()
 {
   if (!IsSet())
     return(0);
 #ifdef _WIN_32
   FILETIME ft;
   GetWin32(&ft);
-  return(int32to64(ft.dwHighDateTime,ft.dwLowDateTime));
+  return(INT32TO64(ft.dwHighDateTime,ft.dwLowDateTime));
 #elif defined(_UNIX) || defined(_EMX)
   time_t ut=GetUnix();
-  return(int32to64(0,ut)*10000000+rlt.Reminder);
+  return(INT32TO64(0,ut)*10000000+rlt.Reminder);
 #else
   return(0);
 #endif
@@ -108,17 +108,17 @@ Int64 RarTime::GetRaw()
 
 
 #ifndef SFX_MODULE
-void RarTime::SetRaw(Int64 RawTime)
+void RarTime::SetRaw(int64 RawTime)
 {
 #ifdef _WIN_32
   FILETIME ft;
-  ft.dwHighDateTime=int64to32(RawTime>>32);
-  ft.dwLowDateTime=int64to32(RawTime);
+  ft.dwHighDateTime=(DWORD)(RawTime>>32);
+  ft.dwLowDateTime=(DWORD)RawTime;
   *this=ft;
 #elif defined(_UNIX) || defined(_EMX)
-  time_t ut=int64to32(RawTime/10000000);
+  time_t ut=(time_t)(RawTime/10000000);
   *this=ut;
-  rlt.Reminder=int64to32(RawTime%10000000);
+  rlt.Reminder=(uint)(RawTime%10000000);
 #endif
 }
 #endif
@@ -242,8 +242,8 @@ void RarTime::SetAgeText(char *TimeText)
     }
   }
   SetCurrentTime();
-  Int64 RawTime=GetRaw();
-  SetRaw(RawTime-int32to64(0,Seconds)*10000000);
+  int64 RawTime=GetRaw();
+  SetRaw(RawTime-INT32TO64(0,Seconds)*10000000);
 }
 #endif
 

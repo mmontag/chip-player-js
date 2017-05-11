@@ -10,7 +10,7 @@ typedef struct {
 } hash_context;
 
 void hash_initial( hash_context * c );
-void hash_process( hash_context * c, unsigned char * data, unsigned len,
+void hash_process( hash_context * c, unsigned char * data, size_t len,
                    bool handsoff);
 void hash_final( hash_context * c, uint32[HW], bool handsoff);
 

@@ -12,13 +12,13 @@ BitInput::~BitInput()
 }
 
 
-void BitInput::faddbits(int Bits)
+void BitInput::faddbits(uint Bits)
 {
   addbits(Bits);
 }
 
 
-unsigned int BitInput::fgetbits()
+uint BitInput::fgetbits()
 {
   return(getbits());
 }

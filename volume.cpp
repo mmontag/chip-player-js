@@ -18,7 +18,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     Log(Arc.FileName,St(MDataBadCRC),hd->FileName,Arc.FileName);
   }
 
-  Int64 PosBeforeClose=Arc.Tell();
+  int64 PosBeforeClose=Arc.Tell();
 
   if (DataIO!=NULL)
     DataIO->ProcessedArcSize+=Arc.FileLength();
@@ -182,7 +182,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
       DataIO->UnpVolume=false;
     else
     {
-      DataIO->UnpVolume=(hd->Flags & LHD_SPLIT_AFTER);
+      DataIO->UnpVolume=(hd->Flags & LHD_SPLIT_AFTER)!=0;
       DataIO->SetPackedSizeToRead(hd->FullPackSize);
     }
 #ifdef SFX_MODULE

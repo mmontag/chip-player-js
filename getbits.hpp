@@ -17,22 +17,29 @@ class BitInput
     {
       InAddr=InBit=0;
     }
-    void addbits(int Bits)
+    
+    void addbits(uint Bits)
     {
       Bits+=InBit;
       InAddr+=Bits>>3;
       InBit=Bits&7;
     }
-    unsigned int getbits()
+    
+    uint getbits()
     {
-      unsigned int BitField=(uint)InBuf[InAddr] << 16;
+      uint BitField=(uint)InBuf[InAddr] << 16;
       BitField|=(uint)InBuf[InAddr+1] << 8;
       BitField|=(uint)InBuf[InAddr+2];
       BitField >>= (8-InBit);
       return(BitField & 0xffff);
     }
-    void faddbits(int Bits);
-    unsigned int fgetbits();
-    bool Overflow(int IncPtr) {return(InAddr+IncPtr>=MAX_SIZE);}
+    
+    void faddbits(uint Bits);
+    uint fgetbits();
+    
+    bool Overflow(uint IncPtr) 
+    {
+      return(InAddr+IncPtr>=MAX_SIZE);
+    }
 };
 #endif

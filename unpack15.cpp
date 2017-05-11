@@ -126,7 +126,7 @@ void Unpack::OldUnpWriteBuf()
     UnpSomeRead=true;
   if (UnpPtr<WrPtr)
   {
-    UnpIO->UnpWrite(&Window[WrPtr],-WrPtr & MAXWINMASK);
+    UnpIO->UnpWrite(&Window[WrPtr],-(int)WrPtr & MAXWINMASK);
     UnpIO->UnpWrite(Window,UnpPtr);
     UnpAllBuf=true;
   }
@@ -500,8 +500,7 @@ void Unpack::OldCopyString(unsigned int Distance,unsigned int Length)
 }
 
 
-unsigned int Unpack::DecodeNum(int Num,unsigned int StartPos,
-                               unsigned int *DecTab,unsigned int *PosTab)
+uint Unpack::DecodeNum(uint Num,uint StartPos,uint *DecTab,uint *PosTab)
 {
   int I;
   for (Num&=0xfff0,I=0;DecTab[I]<=Num;I++)

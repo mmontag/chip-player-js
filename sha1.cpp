@@ -49,7 +49,9 @@ A million repetitions of "a"
 
 void SHA1Transform(uint32 state[5], unsigned char buffer[64], bool handsoff)
 {
+#ifndef SFX_MODULE
   uint32 a, b, c, d, e;
+#endif
   typedef union {
     unsigned char c[64];
     uint32 l[16];
@@ -152,7 +154,7 @@ void hash_initial(hash_context* context)
 
 
 /* Run your data through this. */
-void hash_process( hash_context * context, unsigned char * data, unsigned len,
+void hash_process( hash_context * context, unsigned char * data, size_t len,
                    bool handsoff )
 {
 unsigned int i, j;
@@ -160,7 +162,7 @@ uint blen = ((uint)len)<<3;
 
     j = (context->count[0] >> 3) & 63;
     if ((context->count[0] += blen) < blen ) context->count[1]++;
-    context->count[1] += (len >> 29);
+    context->count[1] += (uint32)(len >> 29);
     if ((j + len) > 63) {
         memcpy(&context->buffer[j], data, (i = 64-j));
         SHA1Transform(context->state, context->buffer, handsoff);

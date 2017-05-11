@@ -108,9 +108,9 @@ void ExtractStreamsNew(Archive &Arc,char *FileName,wchar *FileNameW)
 
   wchar *DestName=StreamNameW+strlenw(StreamNameW);
   byte *SrcName=&Arc.SubHead.SubData[0];
-  int DestSize=Arc.SubHead.SubData.Size()/2;
+  size_t DestSize=Arc.SubHead.SubData.Size()/2;
 
-  if (strlenw(StreamNameW)+DestSize>=sizeof(StreamNameW)/sizeof(StreamNameW[0]))
+  if (strlenw(StreamNameW)+DestSize>=ASIZE(StreamNameW))
   {
 #if !defined(SILENT) && !defined(SFX_MODULE)
     Log(Arc.FileName,St(MStreamBroken),FileName);

@@ -13,7 +13,7 @@ class Archive:public File
     void ConvertNameCase(char *Name);
     void ConvertNameCase(wchar *Name);
     void ConvertUnknownHeader();
-    int ReadOldHeader();
+    size_t ReadOldHeader();
 
 #if !defined(SHELL_EXT) && !defined(NOCRYPT)
     CryptData HeadersCrypt;
@@ -29,7 +29,7 @@ class Archive:public File
     OldMainHeader OldMhd;
 
     int RecoverySectors;
-    Int64 RecoveryPos;
+    int64 RecoveryPos;
 
     RarTime LatestTime;
     int LastReadBlock;
@@ -39,13 +39,13 @@ class Archive:public File
   public:
     Archive(RAROptions *InitCmd=NULL);
     bool IsArchive(bool EnableBroken);
-    int SearchBlock(int BlockType);
-    int SearchSubBlock(const char *Type);
+    size_t SearchBlock(int BlockType);
+    size_t SearchSubBlock(const char *Type);
     int ReadBlock(int BlockType);
     void WriteBlock(int BlockType,BaseBlock *wb=NULL);
     int PrepareNamesToWrite(char *Name,wchar *NameW,char *DestName,byte *DestNameW);
     void SetLhdSize();
-    int ReadHeader();
+    size_t ReadHeader();
     void CheckArc(bool EnableBroken);
     void CheckOpen(char *Name,wchar *NameW=NULL);
     bool WCheckOpen(char *Name,wchar *NameW=NULL);
@@ -69,12 +69,12 @@ class Archive:public File
     bool IsArcLabel();
     void ConvertAttributes();
     int GetRecoverySize(bool Required);
-    void VolSubtractHeaderSize(int SubSize);
-    void AddSubData(byte *SrcData,int DataSize,File *SrcFile,char *Name,bool AllowSplit);
+    void VolSubtractHeaderSize(size_t SubSize);
+    void AddSubData(byte *SrcData,size_t DataSize,File *SrcFile,char *Name,bool AllowSplit);
     bool ReadSubData(Array<byte> *UnpData,File *DestFile);
     int GetHeaderType() {return(CurHeaderType);};
-    int ReadCommentData(Array<byte> *CmtData,Array<wchar> *CmtDataW);
-    void WriteCommentData(byte *Data,int DataSize,bool FileComment);
+    size_t ReadCommentData(Array<byte> *CmtData,Array<wchar> *CmtDataW);
+    void WriteCommentData(byte *Data,size_t DataSize,bool FileComment);
     RAROptions* GetRAROptions() {return(Cmd);}
     void SetSilentOpen(bool Mode) {SilentOpen=Mode;}
 
@@ -93,8 +93,8 @@ class Archive:public File
     EAHeader EAHead;
     StreamHeader StreamHead;
 
-    Int64 CurBlockPos;
-    Int64 NextBlockPos;
+    int64 CurBlockPos;
+    int64 NextBlockPos;
 
     bool OldFormat;
     bool Solid;
@@ -105,16 +105,16 @@ class Archive:public File
     bool NotFirstVolume;
     bool Protected;
     bool Encrypted;
-    uint SFXSize;
+    size_t SFXSize;
     bool BrokenFileHeader;
 
     bool Splitting;
 
     ushort HeaderCRC;
 
-    Int64 VolWrite;
-    Int64 AddingFilesSize;
-    uint AddingHeadersSize;
+    int64 VolWrite;
+    int64 AddingFilesSize;
+    size_t AddingHeadersSize;
 
     bool NewArchive;
 

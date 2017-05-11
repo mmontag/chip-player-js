@@ -18,15 +18,15 @@ int uni_init(int codepage);
 int uni_done();
 #endif
 
-bool WideToChar(const wchar *Src,char *Dest,int DestSize=0x1000000);
-bool CharToWide(const char *Src,wchar *Dest,int DestSize=0x1000000);
-byte* WideToRaw(const wchar *Src,byte *Dest,int DestSize=0x1000000);
-wchar* RawToWide(const byte *Src,wchar *Dest,int DestSize=0x1000000);
-void WideToUtf(const wchar *Src,char *Dest,int DestSize);
-void UtfToWide(const char *Src,wchar *Dest,int DestSize);
+bool WideToChar(const wchar *Src,char *Dest,size_t DestSize=0x1000000);
+bool CharToWide(const char *Src,wchar *Dest,size_t DestSize=0x1000000);
+byte* WideToRaw(const wchar *Src,byte *Dest,size_t DestSize=0x1000000);
+wchar* RawToWide(const byte *Src,wchar *Dest,size_t DestSize=0x1000000);
+void WideToUtf(const wchar *Src,char *Dest,size_t DestSize);
+void UtfToWide(const char *Src,wchar *Dest,size_t DestSize);
 bool UnicodeEnabled();
 
-int strlenw(const wchar *str);
+size_t strlenw(const wchar *str);
 wchar* strcpyw(wchar *dest,const wchar *src);
 wchar* strncpyw(wchar *dest,const wchar *src,size_t n);
 wchar* strcatw(wchar *dest,const wchar *src);
@@ -52,7 +52,7 @@ class SupportDBCS
     void Init();
 
     char* charnext(const char *s);
-    uint strlend(const char *s);
+    size_t strlend(const char *s);
     char *strchrd(const char *s, int c);
     char *strrchrd(const char *s, int c);
     void copychrd(char *dest,const char *src);
@@ -64,7 +64,7 @@ class SupportDBCS
 extern SupportDBCS gdbcs;
 
 inline char* charnext(const char *s) {return (char *)(gdbcs.DBCSMode ? gdbcs.charnext(s):s+1);}
-inline uint strlend(const char *s) {return (uint)(gdbcs.DBCSMode ? gdbcs.strlend(s):strlen(s));}
+inline size_t strlend(const char *s) {return (uint)(gdbcs.DBCSMode ? gdbcs.strlend(s):strlen(s));}
 inline char* strchrd(const char *s, int c) {return (char *)(gdbcs.DBCSMode ? gdbcs.strchrd(s,c):strchr(s,c));}
 inline char* strrchrd(const char *s, int c) {return (char *)(gdbcs.DBCSMode ? gdbcs.strrchrd(s,c):strrchr(s,c));}
 inline void copychrd(char *dest,const char *src) {if (gdbcs.DBCSMode) gdbcs.copychrd(dest,src); else *dest=*src;}

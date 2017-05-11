@@ -2,14 +2,14 @@
 #define _RAR_FINDDATA_
 
 enum FINDDATA_FLAGS {
-  FDDF_SECONDDIR=1  // second entry of directory in SCAN_GETDIRSTWICE ScanTree mode
+  FDDF_SECONDDIR=1  // Second encounter of same directory in SCAN_GETDIRSTWICE ScanTree mode
 };
 
 struct FindData
 {
   char Name[NM];
   wchar NameW[NM];
-  Int64 Size;
+  int64 Size;
   uint FileAttr;
   uint FileTime;
   bool IsDir;

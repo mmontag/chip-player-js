@@ -22,24 +22,24 @@ void StringList::Reset()
 }
 
 
-unsigned int StringList::AddString(const char *Str)
+size_t StringList::AddString(const char *Str)
 {
   return(AddString(Str,NULL));
 }
 
 
-unsigned int StringList::AddString(const char *Str,const wchar *StrW)
+size_t StringList::AddString(const char *Str,const wchar *StrW)
 {
-  int PrevSize=StringData.Size();
-  StringData.Add((int)(strlen(Str)+1));
+  size_t PrevSize=StringData.Size();
+  StringData.Add(strlen(Str)+1);
   strcpy(&StringData[PrevSize],Str);
   if (StrW!=NULL && *StrW!=0)
   {
-    int PrevPos=PosDataW.Size();
+    size_t PrevPos=PosDataW.Size();
     PosDataW.Add(1);
     PosDataW[PrevPos]=PrevSize;
 
-    int PrevSizeW=StringDataW.Size();
+    size_t PrevSizeW=StringDataW.Size();
     StringDataW.Add(strlenw(StrW)+1);
     strcpyw(&StringDataW[PrevSizeW],StrW);
   }
@@ -48,13 +48,13 @@ unsigned int StringList::AddString(const char *Str,const wchar *StrW)
 }
 
 
-bool StringList::GetString(char *Str,int MaxLength)
+bool StringList::GetString(char *Str,size_t MaxLength)
 {
   return(GetString(Str,NULL,MaxLength));
 }
 
 
-bool StringList::GetString(char *Str,wchar *StrW,int MaxLength)
+bool StringList::GetString(char *Str,wchar *StrW,size_t MaxLength)
 {
   char *StrPtr;
   wchar *StrPtrW;
@@ -68,7 +68,7 @@ bool StringList::GetString(char *Str,wchar *StrW,int MaxLength)
 
 
 #ifndef SFX_MODULE
-bool StringList::GetString(char *Str,wchar *StrW,int MaxLength,int StringNum)
+bool StringList::GetString(char *Str,wchar *StrW,size_t MaxLength,int StringNum)
 {
   SavePosition();
   Rewind();
@@ -117,7 +117,7 @@ bool StringList::GetString(char **Str,wchar **StrW)
 }
 
 
-char* StringList::GetString(unsigned int StringPos)
+char* StringList::GetString(uint StringPos)
 {
   if (StringPos>=StringData.Size())
     return(NULL);
@@ -133,7 +133,7 @@ void StringList::Rewind()
 }
 
 
-int StringList::GetBufferSize()
+size_t StringList::GetBufferSize()
 {
   return(StringData.Size()+StringDataW.Size());
 }
@@ -166,7 +166,7 @@ bool StringList::Search(char *Str,wchar *StrW,bool CaseSensitive)
 #ifndef SFX_MODULE
 void StringList::SavePosition()
 {
-  if (SavePosNumber<sizeof(SaveCurPos)/sizeof(SaveCurPos[0]))
+  if (SavePosNumber<ASIZE(SaveCurPos))
   {
     SaveCurPos[SavePosNumber]=CurPos;
     SaveCurPosW[SavePosNumber]=CurPosW;

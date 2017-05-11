@@ -53,8 +53,8 @@ class CryptData
     void SetCmt13Encryption();
     void EncryptBlock20(byte *Buf);
     void DecryptBlock20(byte *Buf);
-    void EncryptBlock(byte *Buf,int Size);
-    void DecryptBlock(byte *Buf,int Size);
+    void EncryptBlock(byte *Buf,size_t Size);
+    void DecryptBlock(byte *Buf,size_t Size);
     void Crypt(byte *Data,uint Count,int Method);
     static void SetSalt(byte *Salt,int SaltSize);
 };

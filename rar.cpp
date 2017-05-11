@@ -1,13 +1,5 @@
 #include "rar.hpp"
 
-
-#include "smallfn.cpp"
-
-#ifdef _DJGPP
-extern "C" char **__crt0_glob_function (char *arg) { return 0; }
-extern "C" void   __crt0_load_environment_file (char *progname) { }
-#endif
-
 #if !defined(GUI) && !defined(RARDLL)
 int main(int argc, char *argv[])
 {

@@ -22,7 +22,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -34,7 +33,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -82,7 +80,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -94,7 +91,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -142,7 +138,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -154,7 +149,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -202,7 +196,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -215,7 +208,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -263,7 +255,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -275,7 +266,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -323,7 +313,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -335,7 +324,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -383,7 +371,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -395,7 +382,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -443,7 +429,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -455,7 +440,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -503,7 +487,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -515,7 +498,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -565,7 +547,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -577,7 +558,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -625,7 +605,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -637,7 +616,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -685,7 +663,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -697,7 +674,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -745,7 +721,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -757,7 +732,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -805,7 +779,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -817,7 +790,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -865,7 +837,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -877,7 +848,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -925,7 +895,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -937,7 +906,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -985,7 +953,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -997,7 +964,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1022,67 +988,7 @@
 	".\unpack.hpp"\
 	".\version.hpp"\
 	".\volume.hpp"\
-	
 
-.\int64.cpp : \
-	".\archive.hpp"\
-	".\array.hpp"\
-	".\cmddata.hpp"\
-	".\coder.hpp"\
-	".\compress.hpp"\
-	".\consio.hpp"\
-	".\crc.hpp"\
-	".\crypt.hpp"\
-	".\encname.hpp"\
-	".\errhnd.hpp"\
-	".\extinfo.hpp"\
-	".\extract.hpp"\
-	".\filcreat.hpp"\
-	".\file.hpp"\
-	".\filefn.hpp"\
-	".\filestr.hpp"\
-	".\find.hpp"\
-	".\getbits.hpp"\
-	".\global.hpp"\
-	".\headers.hpp"\
-	".\int64.hpp"\
-	".\isnt.hpp"\
-	".\list.hpp"\
-	".\loclang.hpp"\
-	".\log.hpp"\
-	".\match.hpp"\
-	".\model.hpp"\
-	".\options.hpp"\
-	".\os.hpp"\
-	".\pathfn.hpp"\
-	".\rar.hpp"\
-	".\rardefs.hpp"\
-	".\rarfn.hpp"\
-	".\rarlang.hpp"\
-	".\raros.hpp"\
-	".\rartypes.hpp"\
-	".\rarvm.hpp"\
-	".\rawread.hpp"\
-	".\rdwrfn.hpp"\
-	".\recvol.hpp"\
-	".\resource.hpp"\
-	".\rijndael.hpp"\
-	".\rs.hpp"\
-	".\savepos.hpp"\
-	".\scantree.hpp"\
-	".\sha1.hpp"\
-	".\smallfn.hpp"\
-	".\strfn.hpp"\
-	".\strlist.hpp"\
-	".\suballoc.hpp"\
-	".\system.hpp"\
-	".\timefn.hpp"\
-	".\ulinks.hpp"\
-	".\unicode.hpp"\
-	".\unpack.hpp"\
-	".\version.hpp"\
-	".\volume.hpp"\
-	
 
 .\isnt.cpp : \
 	".\archive.hpp"\
@@ -1105,7 +1011,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1117,7 +1022,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1165,7 +1069,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1177,7 +1080,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1225,7 +1127,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1237,7 +1138,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1285,7 +1185,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1297,7 +1196,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1345,7 +1243,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1357,7 +1254,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1405,7 +1301,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1417,7 +1312,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1466,7 +1360,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1478,7 +1371,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1527,7 +1419,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1539,7 +1430,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1587,7 +1477,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1599,7 +1488,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1647,7 +1535,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1659,7 +1546,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1707,7 +1593,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1719,7 +1604,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1767,7 +1651,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1779,7 +1662,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1827,7 +1709,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1839,7 +1720,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1887,7 +1767,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1899,7 +1778,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -1947,7 +1825,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -1959,7 +1836,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2007,7 +1883,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2019,7 +1894,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2067,7 +1941,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2079,7 +1952,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2127,7 +1999,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2139,7 +2010,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2187,7 +2057,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2199,7 +2068,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2247,7 +2115,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2259,7 +2126,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2307,7 +2173,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2319,7 +2184,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2367,7 +2231,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2379,7 +2242,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2428,7 +2290,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2441,7 +2302,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\
@@ -2492,7 +2352,6 @@
 	".\getbits.hpp"\
 	".\global.hpp"\
 	".\headers.hpp"\
-	".\int64.hpp"\
 	".\isnt.hpp"\
 	".\list.hpp"\
 	".\loclang.hpp"\
@@ -2504,7 +2363,6 @@
 	".\pathfn.hpp"\
 	".\rar.hpp"\
 	".\rardefs.hpp"\
-	".\rarfn.hpp"\
 	".\rarlang.hpp"\
 	".\raros.hpp"\
 	".\rartypes.hpp"\

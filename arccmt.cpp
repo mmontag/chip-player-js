@@ -4,8 +4,8 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
     return(false);
   SaveFilePos SavePos(*this);
 
-  ushort CmtLength;
 #ifndef SFX_MODULE
+  ushort CmtLength;
   if (OldFormat)
   {
     Seek(SFXSize+SIZEOF_OLDMHD,SEEK_SET);
@@ -70,8 +70,8 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
     }
     else
     {
-      unsigned char *UnpData;
-      uint UnpDataSize;
+      byte *UnpData;
+      size_t UnpDataSize;
       DataIO.GetUnpackedData(&UnpData,&UnpDataSize);
       CmtData->Alloc(UnpDataSize);
       memcpy(&((*CmtData)[0]),UnpData,UnpDataSize);
@@ -94,8 +94,8 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
 #if defined(_WIN_32) && !defined(_WIN_CE)
   if (CmtData->Size()>0)
   {
-    int CmtSize=CmtData->Size();
-    OemToCharBuff((char *)CmtData->Addr(),(char *)CmtData->Addr(),CmtSize);
+    size_t CmtSize=CmtData->Size();
+    OemToCharBuff((char *)CmtData->Addr(),(char *)CmtData->Addr(),(DWORD)CmtSize);
 
     if (CmtDataW!=NULL)
     {
@@ -111,19 +111,19 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
 }
 
 
-int Archive::ReadCommentData(Array<byte> *CmtData,Array<wchar> *CmtDataW)
+size_t Archive::ReadCommentData(Array<byte> *CmtData,Array<wchar> *CmtDataW)
 {
   bool Unicode=SubHead.SubFlags & SUBHEAD_FLAGS_CMT_UNICODE;
   if (!ReadSubData(CmtData,NULL))
     return(0);
-  int CmtSize=CmtData->Size();
+  size_t CmtSize=CmtData->Size();
   if (Unicode)
   {
     CmtSize/=2;
     Array<wchar> DataW(CmtSize+1);
     RawToWide(CmtData->Addr(),DataW.Addr(),CmtSize);
     DataW[CmtSize]=0;
-    int DestSize=CmtSize*4;
+    size_t DestSize=CmtSize*4;
     CmtData->Alloc(DestSize+1);
     WideToChar(DataW.Addr(),(char *)CmtData->Addr(),DestSize);
     (*CmtData)[DestSize]=0;
@@ -156,7 +156,7 @@ void Archive::ViewComment()
   Array<byte> CmtBuf;
   if (GetComment(&CmtBuf,NULL))
   {
-    int CmtSize=CmtBuf.Size();
+    size_t CmtSize=CmtBuf.Size();
     char *ChPtr=(char *)memchr(&CmtBuf[0],0x1A,CmtSize);
     if (ChPtr!=NULL)
       CmtSize=ChPtr-(char *)&CmtBuf[0];
@@ -179,10 +179,10 @@ void Archive::ViewFileComment()
   Array<char> CmtBuf(MaxSize);
   SaveFilePos SavePos(*this);
   Seek(CurBlockPos+SIZEOF_NEWLHD+NewLhd.NameSize,SEEK_SET);
-  Int64 SaveCurBlockPos=CurBlockPos;
-  Int64 SaveNextBlockPos=NextBlockPos;
+  int64 SaveCurBlockPos=CurBlockPos;
+  int64 SaveNextBlockPos=NextBlockPos;
 
-  int Size=ReadHeader();
+  size_t Size=ReadHeader();
 
   CurBlockPos=SaveCurBlockPos;
   NextBlockPos=SaveNextBlockPos;

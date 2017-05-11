@@ -132,7 +132,7 @@ bool Archive::IsArchive(bool EnableBroken)
   else
   {
     Array<char> Buffer(MAXSFXSIZE);
-    long CurPos=int64to32(Tell());
+    long CurPos=(long)Tell();
     int ReadSize=Read(&Buffer[0],Buffer.Size()-16);
     for (int I=0;I<ReadSize;I++)
       if (Buffer[I]==0x52 && IsSignature((byte *)&Buffer[I]))
@@ -204,10 +204,10 @@ bool Archive::IsArchive(bool EnableBroken)
   if (!SilentOpen || !Encrypted)
   {
     SaveFilePos SavePos(*this);
-    Int64 SaveCurBlockPos=CurBlockPos,SaveNextBlockPos=NextBlockPos;
+    int64 SaveCurBlockPos=CurBlockPos,SaveNextBlockPos=NextBlockPos;
 
     NotFirstVolume=false;
-    while (ReadHeader())
+    while (ReadHeader()!=0)
     {
       int HeaderType=GetHeaderType();
       if (HeaderType==NEWSUB_HEAD)

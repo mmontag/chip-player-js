@@ -5,7 +5,7 @@ class SaveFilePos
 {
   private:
     File *SaveFile;
-    Int64 SavePos;
+    int64 SavePos;
     uint CloseCount;
   public:
     SaveFilePos(File &SaveFile);

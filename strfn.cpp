@@ -75,7 +75,7 @@ int stricomp(const char *Str1,const char *Str2)
 }
 
 
-int strnicomp(const char *Str1,const char *Str2,int N)
+int strnicomp(const char *Str1,const char *Str2,size_t N)
 {
   char S1[NM*2],S2[NM*2];
   strncpyz(S1,Str1,ASIZE(S1));
@@ -148,8 +148,12 @@ bool LowAscii(const char *Str)
 bool LowAscii(const wchar *Str)
 {
   for (int I=0;Str[I]!=0;I++)
-    if (Str[I]<32 || Str[I]>127)
+  {
+    // We convert wchar_t to uint just in case if some compiler
+    // uses signed wchar_t.
+    if ((uint)Str[I]<32 || (uint)Str[I]>127)
       return(false);
+  }
   return(true);
 }
 
@@ -198,4 +202,33 @@ wchar* strncpyzw(wchar *dest, const wchar *src, size_t maxlen)
     dest[maxlen-1]=0;
   }
   return(dest);
+}
+
+
+void itoa(int64 n,char *Str)
+{
+  char NumStr[50];
+  size_t Pos=0;
+
+  do
+  {
+    NumStr[Pos++]=char(n%10)+'0';
+    n=n/10;
+  } while (n!=0);
+
+  for (size_t I=0;I<Pos;I++)
+    Str[I]=NumStr[Pos-I-1];
+  Str[Pos]=0;
+}
+
+
+int64 atoil(char *Str)
+{
+  int64 n=0;
+  while (*Str>='0' && *Str<='9')
+  {
+    n=n*10+*Str-'0';
+    Str++;
+  }
+  return(n);
 }

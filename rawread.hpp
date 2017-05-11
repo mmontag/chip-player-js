@@ -6,24 +6,24 @@ class RawRead
   private:
     Array<byte> Data;
     File *SrcFile;
-    int DataSize;
-    int ReadPos;
+    size_t DataSize;
+    size_t ReadPos;
 #ifndef SHELL_EXT
     CryptData *Crypt;
 #endif
   public:
     RawRead(File *SrcFile);
-    void Read(int Size);
-    void Read(byte *SrcData,int Size);
+    void Read(size_t Size);
+    void Read(byte *SrcData,size_t Size);
     void Get(byte &Field);
     void Get(ushort &Field);
     void Get(uint &Field);
-    void Get8(Int64 &Field);
-    void Get(byte *Field,int Size);
-    void Get(wchar *Field,int Size);
+    void Get8(int64 &Field);
+    void Get(byte *Field,size_t Size);
+    void Get(wchar *Field,size_t Size);
     uint GetCRC(bool ProcessedOnly);
-    int Size() {return DataSize;}
-    int PaddedSize() {return Data.Size()-DataSize;}
+    size_t Size() {return DataSize;}
+    size_t PaddedSize() {return Data.Size()-DataSize;}
 #ifndef SHELL_EXT
     void SetCrypt(CryptData *Crypt) {RawRead::Crypt=Crypt;}
 #endif

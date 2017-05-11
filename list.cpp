@@ -8,7 +8,7 @@ static void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical);
 
 void ListArchive(CommandData *Cmd)
 {
-  Int64 SumPackSize=0,SumUnpSize=0;
+  int64 SumPackSize=0,SumUnpSize=0;
   uint ArcCount=0,SumFileCount=0;
   bool Technical=(Cmd->Command[1]=='T');
   bool Bare=(Cmd->Command[1]=='B');
@@ -28,7 +28,7 @@ void ListArchive(CommandData *Cmd)
     bool FileMatched=true;
     while (1)
     {
-      Int64 TotalPackSize=0,TotalUnpSize=0;
+      int64 TotalPackSize=0,TotalUnpSize=0;
       uint FileCount=0;
       if (Arc.IsArchive(true))
       {
@@ -76,7 +76,8 @@ void ListArchive(CommandData *Cmd)
           {
             case FILE_HEAD:
               IntToExt(Arc.NewLhd.FileName,Arc.NewLhd.FileName);
-              if ((FileMatched=Cmd->IsProcessFile(Arc.NewLhd))==true)
+              FileMatched=Cmd->IsProcessFile(Arc.NewLhd)!=0;
+			  if (FileMatched)
               {
                 ListFileHeader(Arc.NewLhd,Verbose,Technical,TitleShown,Bare);
                 if (!(Arc.NewLhd.Flags & LHD_SPLIT_BEFORE))
@@ -219,7 +220,7 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
     mprintf("%-12s",PointToName(Name));
 
   char UnpSizeText[20],PackSizeText[20];
-  if (hd.FullUnpSize==INT64MAX)
+  if (hd.FullUnpSize==INT64NDF)
     strcpy(UnpSizeText,"?");
   else
     itoa(hd.FullUnpSize,UnpSizeText);
@@ -371,7 +372,7 @@ void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical)
       (Arc.SubHead.Flags & LHD_SPLIT_BEFORE)==0 && !Cmd->DisableComment)
   {
     Array<byte> CmtData;
-    int ReadSize=Arc.ReadCommentData(&CmtData,NULL);
+    size_t ReadSize=Arc.ReadCommentData(&CmtData,NULL);
     if (ReadSize!=0)
     {
       mprintf(St(MFileComment));
@@ -381,7 +382,7 @@ void ListNewSubHeader(CommandData *Cmd,Archive &Arc,bool Technical)
   if (Arc.SubHead.CmpName(SUBHEAD_TYPE_STREAM) &&
       (Arc.SubHead.Flags & LHD_SPLIT_BEFORE)==0)
   {
-    int DestSize=Arc.SubHead.SubData.Size()/2;
+    size_t DestSize=Arc.SubHead.SubData.Size()/2;
     wchar DestNameW[NM];
     char DestName[NM];
     if (DestSize<sizeof(DestName))

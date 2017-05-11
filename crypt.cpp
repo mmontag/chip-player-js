@@ -41,7 +41,7 @@ static byte InitSubstTable[256]={
 
 
 
-void CryptData::DecryptBlock(byte *Buf,int Size)
+void CryptData::DecryptBlock(byte *Buf,size_t Size)
 {
   rin.blockDecrypt(Buf,Size,Buf);
 }
@@ -202,28 +202,28 @@ void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly
     Key[3]=0xA4E7F123L;
     memset(Psw,0,sizeof(Psw));
 #if defined(_WIN_32) && !defined(GUI)
-    CharToOemBuff(Password,(char*)Psw,strlen(Password));
+    CharToOemBuff(Password,(char*)Psw,(DWORD)strlen(Password));
 #else
     strncpyz((char *)Psw,Password,ASIZE(Psw));
 #endif
-    int PswLength=strlen(Password);
+    size_t PswLength=strlen(Password);
     memcpy(SubstTable,InitSubstTable,sizeof(SubstTable));
     for (int J=0;J<256;J++)
-      for (int I=0;I<PswLength;I+=2)
+      for (size_t I=0;I<PswLength;I+=2)
       {
         uint N1=(byte)CRCTab[(Psw[I]-J)&0xff];
         uint N2=(byte)CRCTab[(Psw[I+1]+J)&0xff];
         for (int K=1;N1!=N2;N1=(N1+1)&0xff,K++)
           Swap(&SubstTable[N1],&SubstTable[(N1+I+K)&0xff]);
       }
-    for (int I=0;I<PswLength;I+=16)
+    for (size_t I=0;I<PswLength;I+=16)
       EncryptBlock20(&Psw[I]);
 #endif
     return;
   }
 
   bool Cached=false;
-  for (int I=0;I<sizeof(Cache)/sizeof(Cache[0]);I++)
+  for (int I=0;I<ASIZE(Cache);I++)
     if (strcmp(Cache[I].Password,Password)==0 &&
         (Salt==NULL && !Cache[I].SaltPresent || Salt!=NULL &&
         Cache[I].SaltPresent && memcmp(Cache[I].Salt,Salt,SALT_SIZE)==0) &&
@@ -242,7 +242,7 @@ void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly
     PswW[MAXPASSWORD-1]=0;
     byte RawPsw[2*MAXPASSWORD+SALT_SIZE];
     WideToRaw(PswW,RawPsw);
-    int RawLength=2*strlenw(PswW);
+    size_t RawLength=2*strlenw(PswW);
     if (Salt!=NULL)
     {
       memcpy(RawPsw+RawLength,Salt,SALT_SIZE);

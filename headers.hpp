@@ -26,48 +26,48 @@
 #define  AV_VER                 20
 #define  PROTECT_VER            20
 
-#define  MHD_VOLUME         0x0001
-#define  MHD_COMMENT        0x0002
-#define  MHD_LOCK           0x0004
-#define  MHD_SOLID          0x0008
-#define  MHD_PACK_COMMENT   0x0010
-#define  MHD_NEWNUMBERING   0x0010
-#define  MHD_AV             0x0020
-#define  MHD_PROTECT        0x0040
-#define  MHD_PASSWORD       0x0080
-#define  MHD_FIRSTVOLUME    0x0100
-#define  MHD_ENCRYPTVER     0x0200
+#define  MHD_VOLUME         0x0001U
+#define  MHD_COMMENT        0x0002U
+#define  MHD_LOCK           0x0004U
+#define  MHD_SOLID          0x0008U
+#define  MHD_PACK_COMMENT   0x0010U
+#define  MHD_NEWNUMBERING   0x0010U
+#define  MHD_AV             0x0020U
+#define  MHD_PROTECT        0x0040U
+#define  MHD_PASSWORD       0x0080U
+#define  MHD_FIRSTVOLUME    0x0100U
+#define  MHD_ENCRYPTVER     0x0200U
 
-#define  LHD_SPLIT_BEFORE   0x0001
-#define  LHD_SPLIT_AFTER    0x0002
-#define  LHD_PASSWORD       0x0004
-#define  LHD_COMMENT        0x0008
-#define  LHD_SOLID          0x0010
+#define  LHD_SPLIT_BEFORE   0x0001U
+#define  LHD_SPLIT_AFTER    0x0002U
+#define  LHD_PASSWORD       0x0004U
+#define  LHD_COMMENT        0x0008U
+#define  LHD_SOLID          0x0010U
 
-#define  LHD_WINDOWMASK     0x00e0
-#define  LHD_WINDOW64       0x0000
-#define  LHD_WINDOW128      0x0020
-#define  LHD_WINDOW256      0x0040
-#define  LHD_WINDOW512      0x0060
-#define  LHD_WINDOW1024     0x0080
-#define  LHD_WINDOW2048     0x00a0
-#define  LHD_WINDOW4096     0x00c0
-#define  LHD_DIRECTORY      0x00e0
+#define  LHD_WINDOWMASK     0x00e0U
+#define  LHD_WINDOW64       0x0000U
+#define  LHD_WINDOW128      0x0020U
+#define  LHD_WINDOW256      0x0040U
+#define  LHD_WINDOW512      0x0060U
+#define  LHD_WINDOW1024     0x0080U
+#define  LHD_WINDOW2048     0x00a0U
+#define  LHD_WINDOW4096     0x00c0U
+#define  LHD_DIRECTORY      0x00e0U
 
-#define  LHD_LARGE          0x0100
-#define  LHD_UNICODE        0x0200
-#define  LHD_SALT           0x0400
-#define  LHD_VERSION        0x0800
-#define  LHD_EXTTIME        0x1000
-#define  LHD_EXTFLAGS       0x2000
+#define  LHD_LARGE          0x0100U
+#define  LHD_UNICODE        0x0200U
+#define  LHD_SALT           0x0400U
+#define  LHD_VERSION        0x0800U
+#define  LHD_EXTTIME        0x1000U
+#define  LHD_EXTFLAGS       0x2000U
 
-#define  SKIP_IF_UNKNOWN    0x4000
-#define  LONG_BLOCK         0x8000
+#define  SKIP_IF_UNKNOWN    0x4000U
+#define  LONG_BLOCK         0x8000U
 
-#define  EARC_NEXT_VOLUME   0x0001 // not last volume
-#define  EARC_DATACRC       0x0002 // store CRC32 of RAR archive (now used only in volumes)
-#define  EARC_REVSPACE      0x0004 // reserve space for end of REV file 7 byte record
-#define  EARC_VOLNUMBER     0x0008 // store a number of current volume
+#define  EARC_NEXT_VOLUME   0x0001U // not last volume
+#define  EARC_DATACRC       0x0002U // store CRC32 of RAR archive (now used only in volumes)
+#define  EARC_REVSPACE      0x0004U // reserve space for end of REV file 7 byte record
+#define  EARC_VOLNUMBER     0x0008U // store a number of current volume
 
 enum HEADER_TYPE {
   MARK_HEAD=0x72,MAIN_HEAD=0x73,FILE_HEAD=0x74,COMM_HEAD=0x75,AV_HEAD=0x76,
@@ -190,10 +190,10 @@ struct FileHeader:BlockHeader
   RarTime atime;
   RarTime arctime;
 /* dummy */
-  Int64 FullPackSize;
-  Int64 FullUnpSize;
+  int64 FullPackSize;
+  int64 FullUnpSize;
 
-  void Clear(int SubDataSize)
+  void Clear(size_t SubDataSize)
   {
     SubData.Alloc(SubDataSize);
     Flags=LONG_BLOCK;

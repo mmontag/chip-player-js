@@ -18,12 +18,12 @@ struct RarLocalTime
 class RarTime
 {
   private:
-    Int64 GetRaw();
-    void SetRaw(Int64 RawTime);
+    int64 GetRaw();
+    void SetRaw(int64 RawTime);
 
     RarLocalTime rlt;
 
-    Int64 Time;
+    int64 Time;
   public:
     RarTime();
 #ifdef _WIN_32

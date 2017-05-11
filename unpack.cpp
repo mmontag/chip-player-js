@@ -263,10 +263,6 @@ void Unpack::Unpack29(bool Solid)
           if (Failed)
             break;
 
-#ifdef _MSC_VER
-  // avoid a warning about uninitialized 'Length' variable
-  #pragma warning( disable : 4701 )
-#endif
           CopyString(Length+32,Distance+2);
           continue;
         }
@@ -415,7 +411,7 @@ bool Unpack::ReadEndOfBlock()
   else
   {
     NewFile=true;
-    NewTable=(BitField & 0x4000);
+    NewTable=(BitField & 0x4000)!=0;
     addbits(2);
   }
   TablesRead=!NewTable;
@@ -522,7 +518,7 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
 
     Filters.Add(1);
     Filters[Filters.Size()-1]=Filter=new UnpackFilter;
-    StackFilter->ParentFilter=Filters.Size()-1;
+    StackFilter->ParentFilter=(uint)(Filters.Size()-1);
     OldFilterLengths.Add(1);
     Filter->ExecCount=0;
   }
@@ -534,7 +530,7 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
   }
 
   int EmptyCount=0;
-  for (int I=0;I<PrgStack.Size();I++)
+  for (uint I=0;I<PrgStack.Size();I++)
   {
     PrgStack[I-EmptyCount]=PrgStack[I];
     if (PrgStack[I]==NULL)
@@ -547,7 +543,7 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
     PrgStack.Add(1);
     EmptyCount=1;
   }
-  int StackPos=PrgStack.Size()-EmptyCount;
+  int StackPos=(int)(PrgStack.Size()-EmptyCount);
   PrgStack[StackPos]=StackFilter;
   StackFilter->ExecCount=Filter->ExecCount;
  
@@ -585,7 +581,7 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
     if (VMCodeSize>=0x10000 || VMCodeSize==0)
       return(false);
     Array<byte> VMCode(VMCodeSize);
-    for (int I=0;I<VMCodeSize;I++)
+    for (uint I=0;I<VMCodeSize;I++)
     {
       if (Inp.Overflow(3))
         return(false);
@@ -597,7 +593,7 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
   StackFilter->Prg.AltCmd=&Filter->Prg.Cmd[0];
   StackFilter->Prg.CmdCount=Filter->Prg.CmdCount;
 
-  int StaticDataSize=Filter->Prg.StaticData.Size();
+  size_t StaticDataSize=Filter->Prg.StaticData.Size();
   if (StaticDataSize>0 && StaticDataSize<VM_GLOBALMEMSIZE)
   {
     // read statically defined data contained in DB commands
@@ -625,11 +621,11 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
     uint DataSize=RarVM::ReadData(Inp);
     if (DataSize>VM_GLOBALMEMSIZE-VM_FIXEDGLOBALSIZE)
       return(false);
-    unsigned int CurSize=StackFilter->Prg.GlobalData.Size();
+    size_t CurSize=StackFilter->Prg.GlobalData.Size();
     if (CurSize<DataSize+VM_FIXEDGLOBALSIZE)
       StackFilter->Prg.GlobalData.Add(DataSize+VM_FIXEDGLOBALSIZE-CurSize);
     byte *GlobalData=&StackFilter->Prg.GlobalData[VM_FIXEDGLOBALSIZE];
-    for (int I=0;I<DataSize;I++)
+    for (uint I=0;I<DataSize;I++)
     {
       if (Inp.Overflow(3))
         return(false);
@@ -667,7 +663,7 @@ void Unpack::UnpWriteBuf()
 {
   unsigned int WrittenBorder=WrPtr;
   unsigned int WriteSize=(UnpPtr-WrittenBorder)&MAXWINMASK;
-  for (int I=0;I<PrgStack.Size();I++)
+  for (size_t I=0;I<PrgStack.Size();I++)
   {
     UnpackFilter *flt=PrgStack[I];
     if (flt==NULL)
@@ -773,7 +769,7 @@ void Unpack::UnpWriteBuf()
       }
       else
       {
-        for (int J=I;J<PrgStack.Size();J++)
+        for (size_t J=I;J<PrgStack.Size();J++)
         {
           UnpackFilter *flt=PrgStack[J];
           if (flt!=NULL && flt->NextWindow)
@@ -794,9 +790,9 @@ void Unpack::ExecuteCode(VM_PreparedProgram *Prg)
 {
   if (Prg->GlobalData.Size()>0)
   {
-    Prg->InitR[6]=int64to32(WrittenFileSize);
-    VM.SetLowEndianValue((uint *)&Prg->GlobalData[0x24],int64to32(WrittenFileSize));
-    VM.SetLowEndianValue((uint *)&Prg->GlobalData[0x28],int64to32(WrittenFileSize>>32));
+    Prg->InitR[6]=(uint)WrittenFileSize;
+    VM.SetLowEndianValue((uint *)&Prg->GlobalData[0x24],(uint)WrittenFileSize);
+    VM.SetLowEndianValue((uint *)&Prg->GlobalData[0x28],(uint)(WrittenFileSize>>32));
     VM.Execute(Prg);
   }
 }
@@ -808,7 +804,7 @@ void Unpack::UnpWriteArea(unsigned int StartPtr,unsigned int EndPtr)
     UnpSomeRead=true;
   if (EndPtr<StartPtr)
   {
-    UnpWriteData(&Window[StartPtr],-StartPtr & MAXWINMASK);
+    UnpWriteData(&Window[StartPtr],-(int)StartPtr & MAXWINMASK);
     UnpWriteData(Window,EndPtr);
     UnpAllBuf=true;
   }
@@ -817,14 +813,14 @@ void Unpack::UnpWriteArea(unsigned int StartPtr,unsigned int EndPtr)
 }
 
 
-void Unpack::UnpWriteData(byte *Data,int Size)
+void Unpack::UnpWriteData(byte *Data,size_t Size)
 {
   if (WrittenFileSize>=DestUnpSize)
     return;
-  int WriteSize=Size;
-  Int64 LeftToWrite=DestUnpSize-WrittenFileSize;
-  if (WriteSize>LeftToWrite)
-    WriteSize=int64to32(LeftToWrite);
+  size_t WriteSize=Size;
+  int64 LeftToWrite=DestUnpSize-WrittenFileSize;
+  if ((int64)WriteSize>LeftToWrite)
+    WriteSize=(size_t)LeftToWrite;
   UnpIO->UnpWrite(Data,WriteSize);
   WrittenFileSize+=Size;
 }
@@ -973,10 +969,10 @@ void Unpack::InitFilters()
   OldFilterLengths.Reset();
   LastFilter=0;
 
-  for (int I=0;I<Filters.Size();I++)
+  for (size_t I=0;I<Filters.Size();I++)
     delete Filters[I];
   Filters.Reset();
-  for (int I=0;I<PrgStack.Size();I++)
+  for (size_t I=0;I<PrgStack.Size();I++)
     delete PrgStack[I];
   PrgStack.Reset();
 }

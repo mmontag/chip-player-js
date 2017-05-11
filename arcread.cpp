@@ -1,8 +1,8 @@
 #include "rar.hpp"
 
-int Archive::SearchBlock(int BlockType)
+size_t Archive::SearchBlock(int BlockType)
 {
-  int Size,Count=0;
+  size_t Size,Count=0;
   while ((Size=ReadHeader())!=0 &&
          (BlockType==ENDARC_HEAD || GetHeaderType()!=ENDARC_HEAD))
   {
@@ -16,9 +16,9 @@ int Archive::SearchBlock(int BlockType)
 }
 
 
-int Archive::SearchSubBlock(const char *Type)
+size_t Archive::SearchSubBlock(const char *Type)
 {
-  int Size;
+  size_t Size;
   while ((Size=ReadHeader())!=0 && GetHeaderType()!=ENDARC_HEAD)
   {
     if (GetHeaderType()==NEWSUB_HEAD && SubHead.CmpName(Type))
@@ -29,7 +29,7 @@ int Archive::SearchSubBlock(const char *Type)
 }
 
 
-int Archive::ReadHeader()
+size_t Archive::ReadHeader()
 {
   CurBlockPos=Tell();
 
@@ -40,7 +40,7 @@ int Archive::ReadHeader()
 
   RawRead Raw(this);
 
-  bool Decrypt=Encrypted && CurBlockPos>=SFXSize+SIZEOF_MARKHEAD+SIZEOF_NEWMHD;
+  bool Decrypt=Encrypted && CurBlockPos>=(int64)SFXSize+SIZEOF_MARKHEAD+SIZEOF_NEWMHD;
 
   if (Decrypt)
   {
@@ -73,7 +73,7 @@ int Archive::ReadHeader()
   Raw.Read(SIZEOF_SHORTBLOCKHEAD);
   if (Raw.Size()==0)
   {
-    Int64 ArcSize=FileLength();
+    int64 ArcSize=FileLength();
     if (CurBlockPos>ArcSize || NextBlockPos>ArcSize)
     {
   #ifndef SHELL_EXT
@@ -150,12 +150,15 @@ int Archive::ReadHeader()
           hd->HighPackSize=hd->HighUnpSize=0;
           if (hd->UnpSize==0xffffffff)
           {
-            hd->UnpSize=int64to32(INT64MAX);
-            hd->HighUnpSize=int64to32(INT64MAX>>32);
+            // UnpSize equal to 0xffffffff without LHD_LARGE flag indicates
+            // that we do not know the unpacked file size and must unpack it
+            // until we find the end of file marker in compressed data.
+            hd->UnpSize=(uint)(INT64NDF);
+            hd->HighUnpSize=(uint)(INT64NDF>>32);
           }
         }
-        hd->FullPackSize=int32to64(hd->HighPackSize,hd->PackSize);
-        hd->FullUnpSize=int32to64(hd->HighUnpSize,hd->UnpSize);
+        hd->FullPackSize=INT32TO64(hd->HighPackSize,hd->PackSize);
+        hd->FullUnpSize=INT32TO64(hd->HighUnpSize,hd->UnpSize);
 
         char FileName[NM*4];
         int NameSize=Min(hd->NameSize,sizeof(FileName)-1);
@@ -186,7 +189,7 @@ int Archive::ReadHeader()
             if (hd->Flags & LHD_UNICODE)
             {
               EncodeFileName NameCoder;
-              int Length=strlen(FileName);
+              size_t Length=strlen(FileName);
               if (Length==hd->NameSize)
               {
                 UtfToWide(FileName,hd->FileNameW,sizeof(hd->FileNameW)/sizeof(hd->FileNameW[0])-1);
@@ -373,7 +376,7 @@ int Archive::ReadHeader()
         // Last 7 bytes of recovered volume can contain zeroes, because
         // REV files store its own information (volume number, etc.) here.
         SaveFilePos SavePos(*this);
-        Int64 Length=Tell();
+        int64 Length=Tell();
         Seek(Length-7,SEEK_SET);
         Recovered=true;
         for (int J=0;J<7;J++)
@@ -409,10 +412,10 @@ int Archive::ReadHeader()
 
 
 #ifndef SFX_MODULE
-int Archive::ReadOldHeader()
+size_t Archive::ReadOldHeader()
 {
   RawRead Raw(this);
-  if (CurBlockPos<=SFXSize)
+  if (CurBlockPos<=(int64)SFXSize)
   {
     Raw.Read(SIZEOF_OLDMHD);
     Raw.Get(OldMhd.Mark,4);
@@ -531,25 +534,46 @@ void Archive::ConvertAttributes()
   }
 #endif
 #ifdef _UNIX
+  // umask defines which permission bits must not be set by default
+  // when creating a file or directory.
   static mode_t mask = (mode_t) -1;
 
   if (mask == (mode_t) -1)
   {
+    // umask call returns the current umask value. Argument (022) is not 
+    // important here.
     mask = umask(022);
+
+    // Restore the original umask value, which was changed to 022 above.
     umask(mask);
   }
+
   switch(NewLhd.HostOS)
   {
     case HOST_MSDOS:
     case HOST_OS2:
     case HOST_WIN32:
-      if (NewLhd.FileAttr & 0x10)
-        NewLhd.FileAttr=0x41ff & ~mask;
-      else
-        if (NewLhd.FileAttr & 1)
-          NewLhd.FileAttr=0x8124 & ~mask;
+      {
+        // Mapping MSDOS, OS/2 and Windows file attributes to Unix.
+
+        if (NewLhd.FileAttr & 0x10) // FILE_ATTRIBUTE_DIRECTORY
+        {
+          // For directories we use 0777 mask.
+          NewLhd.FileAttr=0777 & ~mask;
+        }
         else
-          NewLhd.FileAttr=0x81b6 & ~mask;
+          if (NewLhd.FileAttr & 1)  // FILE_ATTRIBUTE_READONLY
+          {
+            // For read only files we use 0444 mask with 'w' bits turned off.
+            NewLhd.FileAttr=0444 & ~mask;
+          }
+          else
+          {
+            // uname does not set +x for regular files, so we use 0666
+            // instead of 0777 as for directories.
+            NewLhd.FileAttr=0666 & ~mask;
+          }
+      }
       break;
     case HOST_UNIX:
     case HOST_BEOS:
@@ -656,7 +680,7 @@ bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
   SubDataIO.SetPackedSizeToRead(SubHead.PackSize);
   SubDataIO.EnableShowProgress(false);
   SubDataIO.SetFiles(this,DestFile);
-  SubDataIO.UnpVolume=(SubHead.Flags & LHD_SPLIT_AFTER);
+  SubDataIO.UnpVolume=(SubHead.Flags & LHD_SPLIT_AFTER)!=0;
   SubDataIO.SetSubHeader(&SubHead,NULL);
   Unpack.SetDestSize(SubHead.UnpSize);
   if (SubHead.Method==0x30)

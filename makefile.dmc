@@ -25,7 +25,7 @@ LNKFLAGS = /EXETYPE:NT /MACHINE:i386 /SUBSYSTEM:CONSOLE /NOLOGO /NODEBUG /NOCODE
 #CPPFLAGS = -o+none -Nc -S -gf -Ae
 #LNKFLAGS = /EXETYPE:NT /MACHINE:i386 /SUBSYSTEM:CONSOLE /NOLOGO /DEBUG
 
-OBJ = rar.obj strlist.obj strfn.obj pathfn.obj int64.obj savepos.obj global.obj \
+OBJ = rar.obj strlist.obj strfn.obj pathfn.obj savepos.obj smallfn.o global.obj \
        	file.obj filefn.obj filcreat.obj archive.obj arcread.obj unicode.obj \
 	system.obj isnt.obj crypt.obj crc.obj rawread.obj encname.obj \
 	resource.obj match.obj timefn.obj rdwrfn.obj consio.obj options.obj \

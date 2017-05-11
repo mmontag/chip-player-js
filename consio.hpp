@@ -1,7 +1,9 @@
 #ifndef _RAR_CONSIO_
 #define _RAR_CONSIO_
 
-enum {ALARM_SOUND,ERROR_SOUND,QUESTION_SOUND};
+#if !defined(SILENT) && !defined(SFX_MODULE)
+enum {SOUND_OK,SOUND_ALARM,SOUND_ERROR,SOUND_QUESTION};
+#endif
 
 enum PASSWORD_TYPE {PASSWORD_GLOBAL,PASSWORD_FILE,PASSWORD_ARCHIVE};
 
@@ -16,7 +18,7 @@ bool GetPassword(PASSWORD_TYPE Type,const char *FileName,char *Password,int MaxL
 int Ask(const char *AskStr);
 #endif
 
-void OutComment(char *Comment,int Size);
+void OutComment(char *Comment,size_t Size);
 
 #ifdef SILENT
 #ifdef __GNUC__

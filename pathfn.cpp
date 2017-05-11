@@ -14,7 +14,7 @@ char* PointToName(const char *Path)
 
 wchar* PointToName(const wchar *Path)
 {
-  for (int I=strlenw(Path)-1;I>=0;I--)
+  for (int I=(int)strlenw(Path)-1;I>=0;I--)
     if (IsPathDiv(Path[I]))
       return (wchar*)&Path[I+1];
   return (wchar*)((*Path && IsDriveDiv(Path[1])) ? Path+2:Path);
@@ -254,32 +254,32 @@ void AddEndSlash(char *Path)
 
 void AddEndSlash(wchar *Path)
 {
-  int Length=strlenw(Path);
+  size_t Length=strlenw(Path);
   if (Length>0 && Path[Length-1]!=CPATHDIVIDER)
     strcatw(Path,PATHDIVIDERW);
 }
 
 
-// returns file path including the trailing path separator symbol
+// Returns file path including the trailing path separator symbol.
 void GetFilePath(const char *FullName,char *Path,int MaxLength)
 {
-  int PathLength=Min(MaxLength-1,PointToName(FullName)-FullName);
+  size_t PathLength=Min(MaxLength-1,PointToName(FullName)-FullName);
   strncpy(Path,FullName,PathLength);
   Path[PathLength]=0;
 }
 
 
-// returns file path including the trailing path separator symbol
+// Returns file path including the trailing path separator symbol.
 void GetFilePath(const wchar *FullName,wchar *Path,int MaxLength)
 {
-  int PathLength=Min(MaxLength-1,PointToName(FullName)-FullName);
+  size_t PathLength=Min(MaxLength-1,PointToName(FullName)-FullName);
   strncpyw(Path,FullName,PathLength);
   Path[PathLength]=0;
 }
 
 
-// removes name and returns file path without the trailing
-// path separator symbol
+// Removes name and returns file path without the trailing
+// path separator symbol.
 void RemoveNameFromPath(char *Path)
 {
   char *Name=PointToName(Path);
@@ -290,8 +290,8 @@ void RemoveNameFromPath(char *Path)
 
 
 #ifndef SFX_MODULE
-// removes name and returns file path without the trailing
-// path separator symbol
+// Removes name and returns file path without the trailing
+// path separator symbol.
 void RemoveNameFromPath(wchar *Path)
 {
   wchar *Name=PointToName(Path);
@@ -315,7 +315,7 @@ void GetAppDataPath(char *Path)
   {
     AddEndSlash(Path);
     strcat(Path,"WinRAR");
-    Success=FileExist(Path) || MakeDir(Path,NULL,0)==MKDIR_SUCCESS;
+    Success=FileExist(Path) || MakeDir(Path,NULL,false,0)==MKDIR_SUCCESS;
   }
   if (!Success)
   {
@@ -515,8 +515,8 @@ void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumberi
     if (NumPtr>ArcName)
       NumPtr--;
 
-    int CharsToCopy=strlen(ArcName)-(NumPtr-ArcName);
-    int DestPos=strlenw(ArcNameW)-CharsToCopy;
+    int CharsToCopy=(int)(strlen(ArcName)-(NumPtr-ArcName));
+    int DestPos=(int)(strlenw(ArcNameW)-CharsToCopy);
     if (DestPos>=0)
     {
       CharToWide(NumPtr,ArcNameW+DestPos,MaxLength-DestPos-1);
@@ -533,7 +533,7 @@ bool IsNameUsable(const char *Name)
     return(false);
   for (const char *s=Name;*s!=0;s=charnext(s))
   {
-    if (*s<32)
+    if ((byte)*s<32)
       return(false);
     if (*s==' ' && IsPathDiv(s[1]))
       return(false);
@@ -547,7 +547,7 @@ void MakeNameUsable(char *Name,bool Extended)
 {
   for (char *s=Name;*s!=0;s=charnext(s))
   {
-    if (strchr(Extended ? "?*<>|\"":"?*",*s)!=NULL || Extended && *s<32)
+    if (strchr(Extended ? "?*<>|\"":"?*",*s)!=NULL || Extended && (byte)*s<32)
       *s='_';
 #ifdef _EMX
     if (*s=='=')
@@ -721,7 +721,7 @@ int ParseVersionFileName(char *Name,wchar *NameW,bool Truncate)
 }
 
 
-#ifndef SFX_MODULE
+#if !defined(SFX_MODULE) && !defined(SETUP)
 char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering)
 {
   if (FirstName!=VolName)

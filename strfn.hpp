@@ -9,7 +9,7 @@ void IntToExt(const char *Src,char *Dest);
 char* strlower(char *Str);
 char* strupper(char *Str);
 int stricomp(const char *Str1,const char *Str2);
-int strnicomp(const char *Str1,const char *Str2,int N);
+int strnicomp(const char *Str1,const char *Str2,size_t N);
 char* RemoveEOL(char *Str);
 char* RemoveLF(char *Str);
 unsigned int loctolower(byte ch);
@@ -30,5 +30,8 @@ int stricompc(const char *Str1,const char *Str2);
 #ifndef SFX_MODULE
 int stricompcw(const wchar *Str1,const wchar *Str2);
 #endif
+
+void itoa(int64 n,char *Str);
+int64 atoil(char *Str);
 
 #endif

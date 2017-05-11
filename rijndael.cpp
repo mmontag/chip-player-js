@@ -86,7 +86,7 @@ void Rijndael::init(Direction dir,const byte * key,byte * initVector)
 
 
   
-int Rijndael::blockDecrypt(const byte *input, int inputLen, byte *outBuffer)
+size_t Rijndael::blockDecrypt(const byte *input, size_t inputLen, byte *outBuffer)
 {
   if (input == 0 || inputLen <= 0)
     return 0;
@@ -94,8 +94,8 @@ int Rijndael::blockDecrypt(const byte *input, int inputLen, byte *outBuffer)
   byte block[16], iv[4][4];
   memcpy(iv,m_initVector,16); 
 
-  int numBlocks=inputLen/16;
-  for (int i = numBlocks; i > 0; i--)
+  size_t numBlocks=inputLen/16;
+  for (size_t i = numBlocks; i > 0; i--)
   {
     decrypt(input, block);
     Xor128(block,block,(byte*)iv);

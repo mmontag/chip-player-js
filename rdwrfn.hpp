@@ -8,22 +8,22 @@ class Unpack;
 class ComprDataIO
 {
   private:
-    void ShowUnpRead(Int64 ArcPos,Int64 ArcSize);
+    void ShowUnpRead(int64 ArcPos,int64 ArcSize);
     void ShowUnpWrite();
 
 
     bool UnpackFromMemory;
-    uint UnpackFromMemorySize;
+    size_t UnpackFromMemorySize;
     byte *UnpackFromMemoryAddr;
 
     bool UnpackToMemory;
-    uint UnpackToMemorySize;
+    size_t UnpackToMemorySize;
     byte *UnpackToMemoryAddr;
 
-    uint UnpWrSize;
+    size_t UnpWrSize;
     byte *UnpWrAddr;
 
-    Int64 UnpPackedSize;
+    int64 UnpPackedSize;
 
     bool ShowProgress;
     bool TestMode;
@@ -35,7 +35,7 @@ class ComprDataIO
     CmdAdd *Command;
 
     FileHeader *SubHead;
-    Int64 *SubHeadPos;
+    int64 *SubHeadPos;
 
 #ifndef NOCRYPT
     CryptData Crypt;
@@ -50,16 +50,16 @@ class ComprDataIO
   public:
     ComprDataIO();
     void Init();
-    int UnpRead(byte *Addr,uint Count);
-    void UnpWrite(byte *Addr,uint Count);
+    int UnpRead(byte *Addr,size_t Count);
+    void UnpWrite(byte *Addr,size_t Count);
     void EnableShowProgress(bool Show) {ShowProgress=Show;}
-    void GetUnpackedData(byte **Data,uint *Size);
-    void SetPackedSizeToRead(Int64 Size) {UnpPackedSize=Size;}
+    void GetUnpackedData(byte **Data,size_t *Size);
+    void SetPackedSizeToRead(int64 Size) {UnpPackedSize=Size;}
     void SetTestMode(bool Mode) {TestMode=Mode;}
     void SetSkipUnpCRC(bool Skip) {SkipUnpCRC=Skip;}
     void SetFiles(File *SrcFile,File *DestFile);
     void SetCommand(CmdAdd *Cmd) {Command=Cmd;}
-    void SetSubHeader(FileHeader *hd,Int64 *Pos) {SubHead=hd;SubHeadPos=Pos;}
+    void SetSubHeader(FileHeader *hd,int64 *Pos) {SubHead=hd;SubHeadPos=Pos;}
     void SetEncryption(int Method,char *Password,byte *Salt,bool Encrypt,bool HandsOffHash);
     void SetAV15Encryption();
     void SetCmt13Encryption();
@@ -69,15 +69,15 @@ class ComprDataIO
     bool PackVolume;
     bool UnpVolume;
     bool NextVolumeMissing;
-    Int64 TotalPackRead;
-    Int64 UnpArcSize;
-    Int64 CurPackRead,CurPackWrite,CurUnpRead,CurUnpWrite;
+    int64 TotalPackRead;
+    int64 UnpArcSize;
+    int64 CurPackRead,CurPackWrite,CurUnpRead,CurUnpWrite;
 
     // Size of already processed archives.
     // Used to calculate the total operation progress.
-    Int64 ProcessedArcSize;
+    int64 ProcessedArcSize;
 
-    Int64 TotalArcSize;
+    int64 TotalArcSize;
 
     uint PackFileCRC,UnpFileCRC,PackedCRC;
 

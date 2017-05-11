@@ -2,9 +2,9 @@
 
 static bool IsUnicode(byte *Data,int Size);
 
-bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
-                  RAR_CHARSET SrcCharset,bool Unquote,bool SkipComments,
-                  bool ExpandEnvStr)
+bool ReadTextFile(const char *Name,StringList *List,bool Config,
+                  bool AbortOnError,RAR_CHARSET SrcCharset,bool Unquote,
+                  bool SkipComments,bool ExpandEnvStr)
 {
   char FileName[NM];
   if (Config)
@@ -41,10 +41,14 @@ bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
   if (SrcCharset==RCH_UNICODE ||
       SrcCharset==RCH_DEFAULT && IsUnicode((byte *)&Data[0],DataSize))
   {
-    // Unicode in native system format, can be more than 2 bytes per character
+    // Unicode in native system format, can be more than 2 bytes per character.
     Array<wchar> DataW(Data.Size()/2+1);
-    for (int I=2;I<Data.Size()-1;I+=2)
-      DataW[(I-2)/2]=(wchar)Data[I]+(wchar)Data[I+1]*256;
+    for (size_t I=2;I<Data.Size()-1;I+=2)
+    {
+      // Need to convert Data to (byte) first to prevent the sign extension
+      // to higher bytes.
+      DataW[(I-2)/2]=(wchar)((byte)Data[I])+(wchar)((byte)Data[I+1])*256;
+    }
 
     wchar *CurStr=&DataW[0];
     Array<char> AnsiName;
@@ -70,8 +74,11 @@ bool ReadTextFile(char *Name,StringList *List,bool Config,bool AbortOnError,
       }
       if (*CurStr)
       {
-        int Length=strlenw(CurStr);
-        int AddSize=4*(Length-AnsiName.Size()+1);
+        // Length and AddSize must be defined as signed, because AddSize
+        // can be negative.
+        int Length=(int)strlenw(CurStr);
+        int AddSize=4*(Length-(int)AnsiName.Size()+1);
+
         if (AddSize>0)
           AnsiName.Add(AddSize);
         if (Unquote && *CurStr=='\"' && CurStr[Length-1]=='\"')

@@ -1,6 +1,6 @@
 #include "rar.hpp"
 
-MKDIR_CODE MakeDir(const char *Name,const wchar *NameW,uint Attr)
+MKDIR_CODE MakeDir(const char *Name,const wchar *NameW,bool SetAttr,uint Attr)
 {
 #ifdef _WIN_32
   int Success;
@@ -10,7 +10,8 @@ MKDIR_CODE MakeDir(const char *Name,const wchar *NameW,uint Attr)
     Success=CreateDirectory(Name,NULL);
   if (Success)
   {
-    SetFileAttr(Name,NameW,Attr);
+    if (SetAttr)
+      SetFileAttr(Name,NameW,Attr);
     return(MKDIR_SUCCESS);
   }
   int ErrCode=GetLastError();
@@ -25,15 +26,15 @@ MKDIR_CODE MakeDir(const char *Name,const wchar *NameW,uint Attr)
   if (__mkdir(Name)==0)
 #endif
   {
-    SetFileAttr(Name,NameW,Attr);
+    if (SetAttr)
+      SetFileAttr(Name,NameW,Attr);
     return(MKDIR_SUCCESS);
   }
   return(errno==ENOENT ? MKDIR_BADPATH:MKDIR_ERROR);
 #endif
 #ifdef _UNIX
-//  int prevmask=umask(0);
-  int ErrCode=Name==NULL ? -1:mkdir(Name,(mode_t)Attr);
-//  umask(prevmask);
+  mode_t uattr=SetAttr ? (mode_t)Attr:0777;
+  int ErrCode=Name==NULL ? -1:mkdir(Name,uattr);
   if (ErrCode==-1)
     return(errno==ENOENT ? MKDIR_BADPATH:MKDIR_ERROR);
   return(MKDIR_SUCCESS);
@@ -89,7 +90,7 @@ bool CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
         strncpy(DirName,Path,s-Path);
         DirName[s-Path]=0;
       }
-      if (MakeDir(DirName,DirPtrW,DirAttr)==MKDIR_SUCCESS)
+      if (MakeDir(DirName,DirPtrW,true,DirAttr)==MKDIR_SUCCESS)
       {
 #ifndef GUI
         mprintf(St(MCreatDir),DirName);
@@ -103,7 +104,7 @@ bool CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
       s=charnext(s);
   }
   if (!SkipLastName && !IsPathDiv(*PointToLastChar(Path)))
-    if (MakeDir(Path,PathW,DirAttr)!=MKDIR_SUCCESS)
+    if (MakeDir(Path,PathW,true,DirAttr)!=MKDIR_SUCCESS)
       Success=false;
   return(Success);
 }
@@ -165,7 +166,7 @@ bool IsRemovable(const char *Name)
 
 
 #ifndef SFX_MODULE
-Int64 GetFreeDisk(const char *Name)
+int64 GetFreeDisk(const char *Name)
 {
 #ifdef _WIN_32
   char Root[NM];
@@ -189,13 +190,14 @@ Int64 GetFreeDisk(const char *Name)
     uiUserFree.u.LowPart=uiUserFree.u.HighPart=0;
     if (pGetDiskFreeSpaceEx(*Root ? Root:NULL,&uiUserFree,&uiTotalSize,&uiTotalFree) &&
         uiUserFree.u.HighPart<=uiTotalFree.u.HighPart)
-      return(int32to64(uiUserFree.u.HighPart,uiUserFree.u.LowPart));
+      return(INT32TO64(uiUserFree.u.HighPart,uiUserFree.u.LowPart));
   }
 
+  // We are here if we failed to load GetDiskFreeSpaceExA.
   DWORD SectorsPerCluster,BytesPerSector,FreeClusters,TotalClusters;
   if (!GetDiskFreeSpace(*Root ? Root:NULL,&SectorsPerCluster,&BytesPerSector,&FreeClusters,&TotalClusters))
     return(1457664);
-  Int64 FreeSize=SectorsPerCluster*BytesPerSector;
+  int64 FreeSize=SectorsPerCluster*BytesPerSector;
   FreeSize=FreeSize*FreeClusters;
   return(FreeSize);
 #elif defined(_BEOS)
@@ -207,7 +209,7 @@ Int64 GetFreeDisk(const char *Name)
   fs_info Info;
   if (fs_stat_dev(Dev,&Info)!=0)
     return(1457664);
-  Int64 FreeSize=Info.block_size;
+  int64 FreeSize=Info.block_size;
   FreeSize=FreeSize*Info.free_blocks;
   return(FreeSize);
 #elif defined(_UNIX)
@@ -220,7 +222,7 @@ Int64 GetFreeDisk(const char *Name)
     FSALLOCATE fsa;
     if (DosQueryFSInfo(Drive,1,&fsa,sizeof(fsa))!=0)
       return(1457664);
-    Int64 FreeSize=fsa.cSectorUnit*fsa.cbSector;
+    int64 FreeSize=fsa.cSectorUnit*fsa.cbSector;
     FreeSize=FreeSize*fsa.cUnitAvail;
     return(FreeSize);
   }
@@ -238,7 +240,7 @@ Int64 GetFreeDisk(const char *Name)
 #endif
     if (outregs.x.ax==0xffff)
       return(1457664);
-    Int64 FreeSize=outregs.x.ax*outregs.x.cx;
+    int64 FreeSize=outregs.x.ax*outregs.x.cx;
     FreeSize=FreeSize*outregs.x.bx;
     return(FreeSize);
   }
@@ -479,17 +481,16 @@ char *MkTemp(char *Name)
 
 
 #ifndef SFX_MODULE
-uint CalcFileCRC(File *SrcFile,Int64 Size,CALCCRC_SHOWMODE ShowMode)
+uint CalcFileCRC(File *SrcFile,int64 Size,CALCCRC_SHOWMODE ShowMode)
 {
   SaveFilePos SavePos(*SrcFile);
-  const int BufSize=0x10000;
+  const size_t BufSize=0x10000;
   Array<byte> Data(BufSize);
-  Int64 BlockCount=0;
+  int64 BlockCount=0;
   uint DataCRC=0xffffffff;
-  int ReadSize;
 
 #if !defined(SILENT) && !defined(_WIN_CE)
-  Int64 FileLength=SrcFile->FileLength();
+  int64 FileLength=SrcFile->FileLength();
   if (ShowMode!=CALCCRC_SHOWNONE)
   {
     mprintf(St(MCalcCRC));
@@ -499,19 +500,28 @@ uint CalcFileCRC(File *SrcFile,Int64 Size,CALCCRC_SHOWMODE ShowMode)
 #endif
 
   SrcFile->Seek(0,SEEK_SET);
-  while ((ReadSize=SrcFile->Read(&Data[0],int64to32(Size==INT64ERR ? Int64(BufSize):Min(Int64(BufSize),Size))))!=0)
+  while (true)
   {
+    size_t SizeToRead;
+    if (Size==INT64NDF)   // If we process the entire file.
+      SizeToRead=BufSize; // Then always attempt to read the entire buffer.
+    else
+      SizeToRead=(size_t)Min((int64)BufSize,Size);
+    int ReadSize=SrcFile->Read(&Data[0],SizeToRead);
+    if (ReadSize==0)
+      break;
+
     ++BlockCount;
     if ((BlockCount & 15)==0)
     {
 #if !defined(SILENT) && !defined(_WIN_CE)
       if (ShowMode==CALCCRC_SHOWALL)
-        mprintf("\b\b\b\b%3d%%",ToPercent(BlockCount*Int64(BufSize),FileLength));
+        mprintf("\b\b\b\b%3d%%",ToPercent(BlockCount*int64(BufSize),FileLength));
 #endif
       Wait();
     }
     DataCRC=CRC(DataCRC,&Data[0],ReadSize);
-    if (Size!=INT64ERR)
+    if (Size!=INT64NDF)
       Size-=ReadSize;
   }
 #if !defined(SILENT) && !defined(_WIN_CE)
@@ -541,16 +551,8 @@ bool DelFile(const char *Name,const wchar *NameW)
 }
 
 
-bool DelDir(const char *Name)
-{
-  return(DelDir(Name,NULL));
-}
 
 
-bool DelDir(const char *Name,const wchar *NameW)
-{
-  return(rmdir(Name)==0);
-}
 
 
 #if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE)
@@ -571,6 +573,8 @@ bool SetFileCompression(char *Name,wchar *NameW,bool State)
   return(RetCode!=0);
 }
 #endif
+
+
 
 
 

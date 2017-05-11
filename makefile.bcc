@@ -64,8 +64,8 @@ Dep_SFX= \
    $(objpath)\pathfn.obj\
    $(objpath)\cmddata.obj\
    $(objpath)\consio.obj\
-   $(objpath)\int64.obj\
    $(objpath)\savepos.obj\
+   $(objpath)\smallfn.obj\
    $(objpath)\file.obj\
    $(objpath)\filefn.obj\
    $(objpath)\filcreat.obj\
@@ -150,8 +150,8 @@ $(libpath)\c0x32.obj+
 $(objpath)\strlist.obj+
 $(objpath)\strfn.obj+
 $(objpath)\pathfn.obj+
-$(objpath)\int64.obj+
 $(objpath)\savepos.obj+
+$(objpath)\smallfn.obj+
 $(objpath)\global.obj+
 $(objpath)\file.obj+
 $(objpath)\filefn.obj+
@@ -229,14 +229,14 @@ $(objpath)\pathfn.obj :  $(rarpath)\pathfn.cpp
  $(compopt) -o$@ $(rarpath)\pathfn.cpp
 |
 
-$(objpath)\int64.obj :  $(rarpath)\int64.cpp
-  $(cc) -q @&&|
- $(compopt) -o$@ $(rarpath)\int64.cpp
-|
-
 $(objpath)\savepos.obj :  $(rarpath)\savepos.cpp
   $(cc) -q @&&|
  $(compopt) -o$@ $(rarpath)\savepos.cpp
+|
+
+$(objpath)\smallfn.obj :  $(rarpath)\smallfn.cpp
+  $(cc) -q @&&|
+ $(compopt) -o$@ $(rarpath)\smallfn.cpp
 |
 
 $(objpath)\global.obj :  $(rarpath)\global.cpp

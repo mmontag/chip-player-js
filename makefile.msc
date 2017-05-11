@@ -57,7 +57,6 @@ CLEAN :
 	-@erase "$(INTDIR)\find.obj"
 	-@erase "$(INTDIR)\getbits.obj"
 	-@erase "$(INTDIR)\global.obj"
-	-@erase "$(INTDIR)\int64.obj"
 	-@erase "$(INTDIR)\isnt.obj"
 	-@erase "$(INTDIR)\list.obj"
 	-@erase "$(INTDIR)\match.obj"
@@ -72,6 +71,7 @@ CLEAN :
 	-@erase "$(INTDIR)\rijndael.obj"
 	-@erase "$(INTDIR)\rs.obj"
 	-@erase "$(INTDIR)\savepos.obj"
+	-@erase "$(INTDIR)\smallfn.obj"
 	-@erase "$(INTDIR)\scantree.obj"
 	-@erase "$(INTDIR)\sha1.obj"
 	-@erase "$(INTDIR)\strfn.obj"
@@ -89,7 +89,7 @@ CLEAN :
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-CPP_PROJ=/nologo /ML /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "UNRAR" /Fp"$(INTDIR)\unrar.pch" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=/nologo /W3 /EHsc /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "UNRAR" /D _CRT_SECURE_NO_WARNINGS /Fp"$(INTDIR)\unrar.pch" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 BSC32=bscmake.exe
 BSC32_FLAGS=/nologo /o"$(OUTDIR)\unrar.bsc" 
 BSC32_SBRS= \
@@ -101,8 +101,8 @@ LINK32_OBJS= \
 	"$(INTDIR)\strlist.obj" \
 	"$(INTDIR)\strfn.obj" \
 	"$(INTDIR)\pathfn.obj" \
-	"$(INTDIR)\int64.obj" \
 	"$(INTDIR)\savepos.obj" \
+	"$(INTDIR)\smallfn.obj" \
 	"$(INTDIR)\global.obj" \
 	"$(INTDIR)\file.obj" \
 	"$(INTDIR)\filefn.obj" \
@@ -174,7 +174,6 @@ CLEAN :
 	-@erase "$(INTDIR)\find.obj"
 	-@erase "$(INTDIR)\getbits.obj"
 	-@erase "$(INTDIR)\global.obj"
-	-@erase "$(INTDIR)\int64.obj"
 	-@erase "$(INTDIR)\isnt.obj"
 	-@erase "$(INTDIR)\list.obj"
 	-@erase "$(INTDIR)\match.obj"
@@ -189,6 +188,7 @@ CLEAN :
 	-@erase "$(INTDIR)\rijndael.obj"
 	-@erase "$(INTDIR)\rs.obj"
 	-@erase "$(INTDIR)\savepos.obj"
+	-@erase "$(INTDIR)\smallfn.obj"
 	-@erase "$(INTDIR)\scantree.obj"
 	-@erase "$(INTDIR)\sha1.obj"
 	-@erase "$(INTDIR)\strfn.obj"
@@ -208,7 +208,7 @@ CLEAN :
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-CPP_PROJ=/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "UNRAR" /Fp"$(INTDIR)\unrar.pch" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ  /c 
+CPP_PROJ=/nologo /W3 /Gm /EHsc /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "UNRAR" /D _CRT_SECURE_NO_WARNINGS /Fp"$(INTDIR)\unrar.pch" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ  /c 
 BSC32=bscmake.exe
 BSC32_FLAGS=/nologo /o"$(OUTDIR)\unrar.bsc" 
 BSC32_SBRS= \
@@ -220,8 +220,8 @@ LINK32_OBJS= \
 	"$(INTDIR)\strlist.obj" \
 	"$(INTDIR)\strfn.obj" \
 	"$(INTDIR)\pathfn.obj" \
-	"$(INTDIR)\int64.obj" \
 	"$(INTDIR)\savepos.obj" \
+	"$(INTDIR)\smallfn.obj" \
 	"$(INTDIR)\global.obj" \
 	"$(INTDIR)\file.obj" \
 	"$(INTDIR)\filefn.obj" \
@@ -409,12 +409,6 @@ SOURCE=.\global.cpp
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=.\int64.cpp
-
-"$(INTDIR)\int64.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
 SOURCE=.\isnt.cpp
 
 "$(INTDIR)\isnt.obj" : $(SOURCE) "$(INTDIR)"
@@ -496,6 +490,12 @@ SOURCE=.\rs.cpp
 SOURCE=.\savepos.cpp
 
 "$(INTDIR)\savepos.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=.\smallfn.cpp
+
+"$(INTDIR)\smallfn.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 

@@ -7,17 +7,17 @@ template <class T> class Array
 {
   private:
     T *Buffer;
-    int BufSize;
-    int AllocSize;
+    size_t BufSize;
+    size_t AllocSize;
   public:
     Array();
-    Array(int Size);
+    Array(size_t Size);
     ~Array();
     inline void CleanData();
-    inline T& operator [](int Item);
-    inline int Size();
-    void Add(int Items);
-    void Alloc(int Items);
+    inline T& operator [](size_t Item);
+    inline size_t Size();
+    void Add(size_t Items);
+    void Alloc(size_t Items);
     void Reset();
     void operator = (Array<T> &Src);
     void Push(T Item);
@@ -38,7 +38,7 @@ template <class T> Array<T>::Array()
 }
 
 
-template <class T> Array<T>::Array(int Size)
+template <class T> Array<T>::Array(size_t Size)
 {
   Buffer=(T *)rarmalloc(sizeof(T)*Size);
   if (Buffer==NULL && Size!=0)
@@ -55,25 +55,25 @@ template <class T> Array<T>::~Array()
 }
 
 
-template <class T> inline T& Array<T>::operator [](int Item)
+template <class T> inline T& Array<T>::operator [](size_t Item)
 {
   return(Buffer[Item]);
 }
 
 
-template <class T> inline int Array<T>::Size()
+template <class T> inline size_t Array<T>::Size()
 {
   return(BufSize);
 }
 
 
-template <class T> void Array<T>::Add(int Items)
+template <class T> void Array<T>::Add(size_t Items)
 {
   BufSize+=Items;
   if (BufSize>AllocSize)
   {
-    int Suggested=AllocSize+AllocSize/4+32;
-    int NewSize=Max(BufSize,Suggested);
+    size_t Suggested=AllocSize+AllocSize/4+32;
+    size_t NewSize=Max(BufSize,Suggested);
 
     Buffer=(T *)rarrealloc(Buffer,NewSize*sizeof(T));
     if (Buffer==NULL)
@@ -83,7 +83,7 @@ template <class T> void Array<T>::Add(int Items)
 }
 
 
-template <class T> void Array<T>::Alloc(int Items)
+template <class T> void Array<T>::Alloc(size_t Items)
 {
   if (Items>AllocSize)
     Add(Items-BufSize);

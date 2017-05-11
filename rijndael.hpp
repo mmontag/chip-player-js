@@ -30,8 +30,8 @@ class Rijndael
   public:
     Rijndael();
     void init(Direction dir,const byte *key,byte *initVector);
-    int blockEncrypt(const byte *input, int inputLen, byte *outBuffer);
-    int blockDecrypt(const byte *input, int inputLen, byte *outBuffer);
+    size_t blockEncrypt(const byte *input, size_t inputLen, byte *outBuffer);
+    size_t blockDecrypt(const byte *input, size_t inputLen, byte *outBuffer);
 };
 	
 #endif // _RIJNDAEL_H_

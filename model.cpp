@@ -400,7 +400,7 @@ inline bool PPM_CONTEXT::decodeSymbol1(ModelPPM *Model)
   STATE* p=U.Stats;
   int i, HiCnt;
   int count=Model->Coder.GetCurrentCount();
-  if (count>=Model->Coder.SubRange.scale)
+  if (count>=(int)Model->Coder.SubRange.scale)
     return(false);
   if (count < (HiCnt=p->Freq)) 
   {
@@ -489,7 +489,7 @@ inline bool PPM_CONTEXT::decodeSymbol2(ModelPPM *Model)
   } while ( --i );
   Model->Coder.SubRange.scale += HiCnt;
   count=Model->Coder.GetCurrentCount();
-  if (count>=Model->Coder.SubRange.scale)
+  if (count>=(int)Model->Coder.SubRange.scale)
     return(false);
   p=*(pps=ps);
   if (count < HiCnt) 
@@ -540,7 +540,7 @@ void ModelPPM::CleanUp()
 bool ModelPPM::DecodeInit(Unpack *UnpackRead,int &EscChar)
 {
   int MaxOrder=UnpackRead->GetChar();
-  bool Reset=MaxOrder & 0x20;
+  bool Reset=(MaxOrder & 0x20)!=0;
 
   int MaxMB;
   if (Reset)

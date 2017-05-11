@@ -3,11 +3,11 @@
 
 enum MKDIR_CODE {MKDIR_SUCCESS,MKDIR_ERROR,MKDIR_BADPATH};
 
-MKDIR_CODE MakeDir(const char *Name,const wchar *NameW,uint Attr);
+MKDIR_CODE MakeDir(const char *Name,const wchar *NameW,bool SetAttr,uint Attr);
 bool CreatePath(const char *Path,const wchar *PathW,bool SkipLastName);
 void SetDirTime(const char *Name,const wchar *NameW,RarTime *ftm,RarTime *ftc,RarTime *fta);
 bool IsRemovable(const char *Name);
-Int64 GetFreeDisk(const char *Name);
+int64 GetFreeDisk(const char *Name);
 bool FileExist(const char *Name,const wchar *NameW=NULL);
 bool WildFileExist(const char *Name,const wchar *NameW=NULL);
 bool IsDir(uint Attr);
@@ -26,7 +26,7 @@ char* MkTemp(char *Name);
 
 
 enum CALCCRC_SHOWMODE {CALCCRC_SHOWNONE,CALCCRC_SHOWTEXT,CALCCRC_SHOWALL};
-uint CalcFileCRC(File *SrcFile,Int64 Size=INT64ERR,CALCCRC_SHOWMODE ShowMode=CALCCRC_SHOWNONE);
+uint CalcFileCRC(File *SrcFile,int64 Size=INT64NDF,CALCCRC_SHOWMODE ShowMode=CALCCRC_SHOWNONE);
 
 bool RenameFile(const char *SrcName,const wchar *SrcNameW,const char *DestName,const wchar *DestNameW);
 bool DelFile(const char *Name);

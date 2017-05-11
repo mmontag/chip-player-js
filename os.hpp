@@ -36,31 +36,36 @@
   #include <shellapi.h>
   #include <shlobj.h>
   #include <winioctl.h>
-#endif
 
-#endif
+
+#endif // _WIN_CE
+
+
+#endif // _WIN_32
 
 #ifndef _WIN_CE
   #include <sys/types.h>
   #include <sys/stat.h>
   #include <dos.h>
-#endif
+#endif // _WIN_CE
 
 #if !defined(_EMX) && !defined(_MSC_VER) && !defined(_WIN_CE)
   #include <dir.h>
 #endif
 #ifdef _MSC_VER
-  #define for if (0) ; else for
-#ifndef _WIN_CE
-  #include <direct.h>
-#endif
+  #if _MSC_VER<1500
+    #define for if (0) ; else for
+  #endif
+  #ifndef _WIN_CE
+    #include <direct.h>
+  #endif
 #else
   #include <dirent.h>
-#endif
+#endif // _MSC_VER
 
 #ifndef _WIN_CE
   #include <share.h>
-#endif
+#endif // _WIN_CE
 
 #if defined(ENABLE_BAD_ALLOC) && !defined(_WIN_CE)
   #include <new.h>
@@ -102,7 +107,7 @@
 /*
 #ifdef _WIN_32
 #pragma hdrstop
-#endif
+#endif // _WIN_32
 */
 
 #define ENABLE_ACCESS
@@ -218,13 +223,25 @@
 
 #define safebuf static
 
+#if !defined(LITTLE_ENDIAN) && !defined(BIG_ENDIAN)
+  #if defined(__i386) || defined(i386) || defined(__i386__)
+    #define LITTLE_ENDIAN
+  #elif defined(BYTE_ORDER) && BYTE_ORDER == LITTLE_ENDIAN
+    #define LITTLE_ENDIAN
+  #elif defined(BYTE_ORDER) && BYTE_ORDER == BIG_ENDIAN
+    #define BIG_ENDIAN
+  #else
+    #error "Neither LITTLE_ENDIAN nor BIG_ENDIAN are defined. Define one of them."
+  #endif
+#endif
+
 #if defined(LITTLE_ENDIAN) && defined(BIG_ENDIAN)
   #if defined(BYTE_ORDER) && BYTE_ORDER == BIG_ENDIAN
     #undef LITTLE_ENDIAN
   #elif defined(BYTE_ORDER) && BYTE_ORDER == LITTLE_ENDIAN
     #undef BIG_ENDIAN
   #else
-    #error "Both LITTLE_ENDIAN and BIG_ENDIAN are defined. Undef something one"
+    #error "Both LITTLE_ENDIAN and BIG_ENDIAN are defined. Undef one of them."
   #endif
 #endif
 

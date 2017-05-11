@@ -11,7 +11,6 @@ void InitSystemOptions(int SleepTime)
 
 
 #if !defined(SFX_MODULE) && !defined(_WIN_CE)
-
 void SetPriority(int Priority)
 {
 #ifdef _WIN_32
@@ -57,7 +56,7 @@ void SetPriority(int Priority)
   SetPriorityClass(GetCurrentProcess(),PriorityClass);
   SetThreadPriority(GetCurrentThread(),PriorityLevel);
 
-//  background mode for Vista, too slow for real life use
+//  Background mode for Vista, too slow for real life use.
 //  if (WinNT()>=6 && Priority==1)
 //    SetPriorityClass(GetCurrentProcess(),PROCESS_MODE_BACKGROUND_BEGIN);
 

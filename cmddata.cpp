@@ -22,7 +22,6 @@ void CommandData::Init()
   *ArcNameW=0;
   FileLists=false;
   NoMoreSwitches=false;
-  TimeConverted=false;
 
   FileArgs=new StringList;
   ExclArgs=new StringList;
@@ -368,6 +367,9 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
             strncpyz(GenerateMask,Switch+2,ASIZE(GenerateMask));
           }
           break;
+        case 'I':
+          IgnoreGeneralAttr=true;
+          break;
         case 'N': //reserved for archive name
           break;
         case 'O':
@@ -444,7 +446,7 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
           Recurse=RECURSE_ALWAYS;
           break;
         case '-':
-          Recurse=0;
+          Recurse=RECURSE_DISABLE;
           break;
         case '0':
           Recurse=RECURSE_WILDCARDS;
@@ -681,16 +683,16 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
           break;
         default:
           {
-            Int64 NewVolSize=atoil(&Switch[1]);
+            int64 NewVolSize=atoil(&Switch[1]);
 
             if (NewVolSize==0)
-              NewVolSize=INT64ERR;
+              NewVolSize=INT64NDF; // Autodetecting volume size.
             else
               switch (Switch[strlen(Switch)-1])
               {
                 case 'f':
                 case 'F':
-                  switch(int64to32(NewVolSize))
+                  switch(NewVolSize)
                   {
                     case 360:
                       NewVolSize=362496;
@@ -931,11 +933,13 @@ void CommandData::OutHelp()
   OutTitle();
   static MSGID Help[]={
 #ifdef SFX_MODULE
+    // Console SFX switches definition.
     MCHelpCmd,MSHelpCmdE,MSHelpCmdT,MSHelpCmdV
 #elif defined(UNRAR)
+    // UnRAR switches definition.
     MUNRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdE,MCHelpCmdL,
     MCHelpCmdP,MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,
-    MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAP,
+    MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAI,MCHelpSwAP,
     MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
     MCHelpSwDH,MCHelpSwEP,MCHelpSwEP3,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,
     MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwKB,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,
@@ -944,25 +948,26 @@ void CommandData::OutHelp()
     MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwVUnr,
     MCHelpSwVER,MCHelpSwVP,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY
 #else
+    // RAR switches definition.
     MRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdA,MCHelpCmdC,MCHelpCmdCF,
     MCHelpCmdCH,MCHelpCmdCW,MCHelpCmdD,MCHelpCmdE,MCHelpCmdF,MCHelpCmdI,
     MCHelpCmdK,MCHelpCmdL,MCHelpCmdM,MCHelpCmdP,MCHelpCmdR,MCHelpCmdRC,
     MCHelpCmdRN,MCHelpCmdRR,MCHelpCmdRV,MCHelpCmdS,MCHelpCmdT,MCHelpCmdU,
     MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,MCHelpSwAG,
-    MCHelpSwAO,MCHelpSwAP,MCHelpSwAS,MCHelpSwAV,MCHelpSwAVm,MCHelpSwCm,
-    MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,MCHelpSwDR,
-    MCHelpSwDS,MCHelpSwDW,MCHelpSwEa,MCHelpSwED,MCHelpSwEE,MCHelpSwEN,
-    MCHelpSwEP,MCHelpSwEP1,MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,MCHelpSwHP,
-    MCHelpSwIDP,MCHelpSwIEML,MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,
+    MCHelpSwAI,MCHelpSwAO,MCHelpSwAP,MCHelpSwAS,MCHelpSwAV,MCHelpSwAVm,
+    MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,
+    MCHelpSwDR,MCHelpSwDS,MCHelpSwDW,MCHelpSwEa,MCHelpSwED,MCHelpSwEE,
+    MCHelpSwEN,MCHelpSwEP,MCHelpSwEP1,MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,
+    MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,
     MCHelpSwIOFF,MCHelpSwISND,MCHelpSwK,MCHelpSwKB,MCHelpSwMn,MCHelpSwMC,
     MCHelpSwMD,MCHelpSwMS,MCHelpSwMT,MCHelpSwN,MCHelpSwNa,MCHelpSwNal,
     MCHelpSwO,MCHelpSwOC,MCHelpSwOL,MCHelpSwOR,MCHelpSwOS,MCHelpSwOW,
-    MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,
-    MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSC,MCHelpSwSFX,MCHelpSwSI,
-    MCHelpSwSL,MCHelpSwSM,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,
-    MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,
-    MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,
-    MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
+    MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwRm,MCHelpSwR0,MCHelpSwRI,
+    MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSC,MCHelpSwSFX,
+    MCHelpSwSI,MCHelpSwSL,MCHelpSwSM,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,
+    MCHelpSwTK,MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,
+    MCHelpSwV,MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,
+    MCHelpSwW,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
 #endif
   };
 
@@ -1068,39 +1073,23 @@ bool CommandData::TimeCheck(RarTime &ft)
     return(true);
   if (FileTimeAfter.IsSet() && ft<=FileTimeAfter)
     return(true);
-/*
-  if (FileTimeOlder!=0 || FileTimeNewer!=0)
-  {
-    if (!TimeConverted)
-    {
-      if (FileTimeOlder!=0)
-        FileTimeOlder=SecondsToDosTime(FileTimeOlder);
-      if (FileTimeNewer!=0)
-        FileTimeNewer=SecondsToDosTime(FileTimeNewer);
-      TimeConverted=true;
-    }
-    if (FileTimeOlder!=0 && ft>=FileTimeOlder)
-      return(true);
-    if (FileTimeNewer!=0 && ft<=FileTimeNewer)
-      return(true);
-
-  }
-*/
   return(false);
 }
 #endif
 
 
 #ifndef SFX_MODULE
-bool CommandData::SizeCheck(Int64 Size)
+bool CommandData::SizeCheck(int64 Size)
 {
-  if (FileSizeLess!=INT64ERR && Size>=FileSizeLess)
+  if (FileSizeLess!=INT64NDF && Size>=FileSizeLess)
     return(true);
-  if (FileSizeMore!=INT64ERR && Size<=FileSizeMore)
+  if (FileSizeMore!=INT64NDF && Size<=FileSizeMore)
     return(true);
   return(false);
 }
 #endif
+
+
 
 
 int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType)

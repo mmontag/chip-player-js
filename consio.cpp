@@ -254,14 +254,14 @@ int Ask(const char *AskStr)
 #endif
 
 
-int KbdAnsi(char *Addr,int Size)
+int KbdAnsi(char *Addr,size_t Size)
 {
   int RetCode=0;
 #ifndef GUI
-  for (int I=0;I<Size;I++)
+  for (size_t I=0;I<Size;I++)
     if (Addr[I]==27 && Addr[I+1]=='[')
     {
-      for (int J=I+2;J<Size;J++)
+      for (size_t J=I+2;J<Size;J++)
       {
         if (Addr[J]=='\"')
           return(2);
@@ -275,16 +275,16 @@ int KbdAnsi(char *Addr,int Size)
 }
 
 
-void OutComment(char *Comment,int Size)
+void OutComment(char *Comment,size_t Size)
 {
 #ifndef GUI
   if (KbdAnsi(Comment,Size)==2)
     return;
-  const int MaxOutSize=0x400;
-  for (int I=0;I<Size;I+=MaxOutSize)
+  const size_t MaxOutSize=0x400;
+  for (size_t I=0;I<Size;I+=MaxOutSize)
   {
     char Msg[MaxOutSize+1];
-    int CopySize=Min(MaxOutSize,Size-I);
+    size_t CopySize=Min(MaxOutSize,Size-I);
     strncpy(Msg,Comment+I,CopySize);
     Msg[CopySize]=0;
     mprintf("%s",Msg);
