@@ -102,7 +102,11 @@ bool ErrorHandler::AskRepeatWrite(const wchar *FileName,bool DiskFull)
 #ifndef SILENT
   if (!Silent)
   {
+#ifndef _ANDROID
+    // We do not display "repeat write" prompt in Android, so we do not
+    // need the matching system error message.
     SysErrMsg();
+#endif
     bool Repeat=uiAskRepeatWrite(FileName,DiskFull);
     if (!Repeat) // Disable shutdown if user pressed Cancel in error dialog.
       DisableShutdown=true;

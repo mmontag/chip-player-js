@@ -429,6 +429,37 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
 #endif
     }
 
+
+    // Set a password before creating the file, so we can skip creating
+    // in case of wrong password.
+    SecPassword FilePassword=Cmd->Password;
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
+    ConvertDosPassword(Arc,FilePassword);
+#endif
+
+    byte PswCheck[SIZE_PSWCHECK];
+    DataIO.SetEncryption(false,Arc.FileHead.CryptMethod,&FilePassword,
+           Arc.FileHead.SaltSet ? Arc.FileHead.Salt:NULL,
+           Arc.FileHead.InitV,Arc.FileHead.Lg2Count,
+           Arc.FileHead.HashKey,PswCheck);
+
+    // If header is damaged, we cannot rely on password check value,
+    // because it can be damaged too.
+    if (Arc.FileHead.Encrypted && Arc.FileHead.UsePswCheck &&
+        memcmp(Arc.FileHead.PswCheck,PswCheck,SIZE_PSWCHECK)!=0 &&
+        !Arc.BrokenHeader)
+    {
+      uiMsg(UIERROR_BADPSW,Arc.FileName);
+      ErrHandler.SetErrorCode(RARX_BADPWD);
+      ExtrFile=false;
+#ifdef RARDLL
+      // If we already have ERAR_EOPEN as result of missing volume,
+      // we should not replace it with less precise ERAR_BAD_DATA.
+      if (Cmd->DllError!=ERAR_EOPEN)
+        Cmd->DllError=ERAR_BAD_PASSWORD;
+#endif
+    }
+
     File CurFile;
 
     bool LinkEntry=Arc.FileHead.RedirType!=FSREDIR_NONE;
@@ -513,28 +544,6 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
         mprintf(L"     ");
 #endif
 
-      SecPassword FilePassword=Cmd->Password;
-#if defined(_WIN_ALL) && !defined(SFX_MODULE)
-      ConvertDosPassword(Arc,FilePassword);
-#endif
-
-      byte PswCheck[SIZE_PSWCHECK];
-      DataIO.SetEncryption(false,Arc.FileHead.CryptMethod,&FilePassword,
-             Arc.FileHead.SaltSet ? Arc.FileHead.Salt:NULL,
-             Arc.FileHead.InitV,Arc.FileHead.Lg2Count,
-             Arc.FileHead.HashKey,PswCheck);
-      bool WrongPassword=false;
-
-      // If header is damaged, we cannot rely on password check value,
-      // because it can be damaged too.
-      if (Arc.FileHead.Encrypted && Arc.FileHead.UsePswCheck &&
-          memcmp(Arc.FileHead.PswCheck,PswCheck,SIZE_PSWCHECK)!=0 &&
-          !Arc.BrokenHeader)
-      {
-        uiMsg(UIERROR_BADPSW,Arc.FileName);
-        ErrHandler.SetErrorCode(RARX_BADPWD);
-        WrongPassword=true;
-      }
       DataIO.CurUnpRead=0;
       DataIO.CurUnpWrite=0;
       DataIO.UnpHash.Init(Arc.FileHead.FileHash.Type,Cmd->Threads);
@@ -545,7 +554,7 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
       DataIO.SetSkipUnpCRC(SkipSolid);
 
 #if defined(_WIN_ALL) && !defined(SFX_MODULE) && !defined(SILENT)
-      if (!TestMode && !WrongPassword && !Arc.BrokenHeader &&
+      if (!TestMode && !Arc.BrokenHeader &&
           Arc.FileHead.UnpSize>0xffffffff && (Fat32 || !NotFat32))
       {
         if (!Fat32) // Not detected yet.
@@ -555,7 +564,7 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
       }
 #endif
 
-      if (!TestMode && !WrongPassword && !Arc.BrokenHeader &&
+      if (!TestMode && !Arc.BrokenHeader &&
           (Arc.FileHead.PackSize<<11)>Arc.FileHead.UnpSize &&
           (Arc.FileHead.UnpSize<100000000 || Arc.FileLength()>Arc.FileHead.PackSize))
         CurFile.Prealloc(Arc.FileHead.UnpSize);
@@ -604,7 +613,7 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
           PrevProcessed=FileCreateMode && LinkSuccess;
       }
       else
-        if (!Arc.FileHead.SplitBefore && !WrongPassword)
+        if (!Arc.FileHead.SplitBefore)
           if (Arc.FileHead.Method==0)
             UnstoreFile(DataIO,Arc.FileHead.UnpSize);
           else
@@ -651,7 +660,7 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
       // Checksum is not calculated in skip solid mode for performance reason.
       if (!SkipSolid && ShowChecksum)
       {
-        if (!WrongPassword && ValidCRC)
+        if (ValidCRC)
         {
 #ifndef GUI
           if (Command!='P' && Command!='I')
@@ -661,19 +670,19 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
         }
         else
         {
-          if (!WrongPassword)
-            if (Arc.FileHead.Encrypted && (!Arc.FileHead.UsePswCheck || 
-                Arc.BrokenHeader) && !AnySolidDataUnpackedWell)
-              uiMsg(UIERROR_CHECKSUMENC,Arc.FileName,ArcFileName);
-            else
-              uiMsg(UIERROR_CHECKSUM,Arc.FileName,ArcFileName);
+          if (Arc.FileHead.Encrypted && (!Arc.FileHead.UsePswCheck || 
+              Arc.BrokenHeader) && !AnySolidDataUnpackedWell)
+            uiMsg(UIERROR_CHECKSUMENC,Arc.FileName,ArcFileName);
+          else
+            uiMsg(UIERROR_CHECKSUM,Arc.FileName,ArcFileName);
           BrokenFile=true;
           ErrHandler.SetErrorCode(RARX_CRC);
 #ifdef RARDLL
-          // If we already have ERAR_EOPEN as result of missing volume,
+          // If we already have ERAR_EOPEN as result of missing volume
+          // or ERAR_BAD_PASSWORD for RAR5 wrong password,
           // we should not replace it with less precise ERAR_BAD_DATA.
-          if (Cmd->DllError!=ERAR_EOPEN)
-            Cmd->DllError=WrongPassword ? ERAR_BAD_PASSWORD : ERAR_BAD_DATA;
+          if (Cmd->DllError!=ERAR_EOPEN && Cmd->DllError!=ERAR_BAD_PASSWORD)
+            Cmd->DllError=ERAR_BAD_DATA;
 #endif
         }
       }
@@ -682,7 +691,7 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
         mprintf(L"\b\b\b\b\b     ");
 #endif
 
-      if (!TestMode && !WrongPassword && (Command=='X' || Command=='E') &&
+      if (!TestMode && (Command=='X' || Command=='E') &&
           (!LinkEntry || Arc.FileHead.RedirType==FSREDIR_FILECOPY && LinkSuccess) && 
           (!BrokenFile || Cmd->KeepBroken))
       {
