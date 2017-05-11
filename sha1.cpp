@@ -207,7 +207,7 @@ unsigned char finalcount[8];
         finalcount[i] = (unsigned char)((context->count[(i >= 4 ? 0 : 1)]
          >> ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
     }
-    unsigned char ch='\200';
+    unsigned char ch=(unsigned char)'\200';
     hash_process(context, &ch, 1, handsoff);
     while ((context->count[0] & 504) != 448) {
         ch=0;

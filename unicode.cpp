@@ -15,7 +15,7 @@ bool WideToChar(const wchar *Src,char *Dest,int DestSize)
   WideToUtf(Src,Dest,DestSize);
 #else
 #ifdef MBFUNCTIONS
-  if (wcstombs(Dest,Src,DestSize)==-1)
+  if (wcstombs(Dest,Src,DestSize)==(size_t)-1)
     RetCode=false;
 #else
   if (UnicodeEnabled())
@@ -53,7 +53,7 @@ bool CharToWide(const char *Src,wchar *Dest,int DestSize)
   UtfToWide(Src,Dest,DestSize);
 #else
 #ifdef MBFUNCTIONS
-  if (mbstowcs(Dest,Src,DestSize)==-1)
+  if (mbstowcs(Dest,Src,DestSize)==(size_t)-1)
     RetCode=false;
 #else
   if (UnicodeEnabled())

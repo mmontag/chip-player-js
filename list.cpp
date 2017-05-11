@@ -64,7 +64,10 @@ void ListArchive(CommandData *Cmd)
         }
         while(Arc.ReadHeader()>0)
         {
-          switch(Arc.GetHeaderType())
+          int HeaderType=Arc.GetHeaderType();
+          if (HeaderType==ENDARC_HEAD)
+            break;
+          switch(HeaderType)
           {
             case FILE_HEAD:
               IntToExt(Arc.NewLhd.FileName,Arc.NewLhd.FileName);

@@ -300,8 +300,9 @@ bool IsLink(uint Attr)
 {
 #ifdef _UNIX
   return((Attr & 0xF000)==0xA000);
-#endif
+#else
   return(false);
+#endif
 }
 
 
