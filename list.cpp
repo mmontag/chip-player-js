@@ -117,22 +117,22 @@ void ListArchive(CommandData *Cmd)
           if (TitleShown)
           {
             wchar UnpSizeText[20];
-            itoa(TotalUnpSize,UnpSizeText);
+            itoa(TotalUnpSize,UnpSizeText,ASIZE(UnpSizeText));
         
             wchar PackSizeText[20];
-            itoa(TotalPackSize,PackSizeText);
+            itoa(TotalPackSize,PackSizeText,ASIZE(PackSizeText));
         
             if (Verbose)
             {
-              mprintf(L"\n----------- ---------  -------- ----- -------- -----  --------  ----");
-              mprintf(L"\n%21ls %9ls %3d%%  %-25ls %u",UnpSizeText,
+              mprintf(L"\n----------- ---------  -------- ----- ---------- -----  --------  ----");
+              mprintf(L"\n%21ls %9ls %3d%%  %-27ls %u",UnpSizeText,
                       PackSizeText,ToPercentUnlim(TotalPackSize,TotalUnpSize),
                       VolNumText,FileCount);
             }
             else
             {
-              mprintf(L"\n----------- ---------  -------- -----  ----");
-              mprintf(L"\n%21ls  %-14ls  %u",UnpSizeText,VolNumText,FileCount);
+              mprintf(L"\n----------- ---------  ---------- -----  ----");
+              mprintf(L"\n%21ls  %-16ls  %u",UnpSizeText,VolNumText,FileCount);
             }
 
             SumFileCount+=FileCount;
@@ -172,14 +172,14 @@ void ListArchive(CommandData *Cmd)
   if (ArcCount>1 && !Bare && !Technical)
   {
     wchar UnpSizeText[20],PackSizeText[20];
-    itoa(SumUnpSize,UnpSizeText);
-    itoa(SumPackSize,PackSizeText);
+    itoa(SumUnpSize,UnpSizeText,ASIZE(UnpSizeText));
+    itoa(SumPackSize,PackSizeText,ASIZE(PackSizeText));
 
     if (Verbose)
-      mprintf(L"%21ls %9ls %3d%% %26ls %u",UnpSizeText,PackSizeText,
+      mprintf(L"%21ls %9ls %3d%% %28ls %u",UnpSizeText,PackSizeText,
               ToPercentUnlim(SumPackSize,SumUnpSize),L"",SumFileCount);
     else
-      mprintf(L"%21ls %16s %lu",UnpSizeText,L"",SumFileCount);
+      mprintf(L"%21ls %18s %lu",UnpSizeText,L"",SumFileCount);
   }
 }
 
@@ -205,12 +205,12 @@ void ListFileHeader(Archive &Arc,FileHeader &hd,bool &TitleShown,bool Verbose,bo
     if (Verbose)
     {
       mprintf(L"\n%ls",St(MListTitleV));
-      mprintf(L"\n----------- ---------  -------- ----- -------- -----  --------  ----");
+      mprintf(L"\n----------- ---------  -------- ----- ---------- -----  --------  ----");
     }
     else
     {
       mprintf(L"\n%ls",St(MListTitleL));
-      mprintf(L"\n----------- ---------  -------- -----  ----");
+      mprintf(L"\n----------- ---------  ---------- -----  ----");
     }
     TitleShown=true;
   }
@@ -219,8 +219,8 @@ void ListFileHeader(Archive &Arc,FileHeader &hd,bool &TitleShown,bool Verbose,bo
   if (hd.UnpSize==INT64NDF)
     wcscpy(UnpSizeText,L"?");
   else
-    itoa(hd.UnpSize,UnpSizeText);
-  itoa(hd.PackSize,PackSizeText);
+    itoa(hd.UnpSize,UnpSizeText,ASIZE(UnpSizeText));
+  itoa(hd.PackSize,PackSizeText,ASIZE(PackSizeText));
 
   wchar AttrStr[30];
   if (hd.HeaderType==HEAD_SERVICE)
@@ -242,7 +242,7 @@ void ListFileHeader(Archive &Arc,FileHeader &hd,bool &TitleShown,bool Verbose,bo
         swprintf(RatioStr,ASIZE(RatioStr),L"%d%%",ToPercentUnlim(hd.PackSize,hd.UnpSize));
 
   wchar DateStr[50];
-  hd.mtime.GetText(DateStr,ASIZE(DateStr),Technical,Technical);
+  hd.mtime.GetText(DateStr,ASIZE(DateStr),Technical);
 
   if (Technical)
   {
@@ -309,12 +309,12 @@ void ListFileHeader(Archive &Arc,FileHeader &hd,bool &TitleShown,bool Verbose,bo
       mprintf(L"\n%12ls: %ls",St(MListMtime),DateStr);
     if (hd.ctime.IsSet())
     {
-      hd.ctime.GetText(DateStr,ASIZE(DateStr),true,true);
+      hd.ctime.GetText(DateStr,ASIZE(DateStr),true);
       mprintf(L"\n%12ls: %ls",St(MListCtime),DateStr);
     }
     if (hd.atime.IsSet())
     {
-      hd.atime.GetText(DateStr,ASIZE(DateStr),true,true);
+      hd.atime.GetText(DateStr,ASIZE(DateStr),true);
       mprintf(L"\n%12ls: %ls",St(MListAtime),DateStr);
     }
     mprintf(L"\n%12ls: %ls",St(MListAttr),AttrStr);

@@ -216,7 +216,7 @@ void RarTime::SetDos(uint DosTime)
 
 
 #if !defined(GUI) || !defined(SFX_MODULE)
-void RarTime::GetText(wchar *DateStr,size_t MaxSize,bool FullYear,bool FullMS)
+void RarTime::GetText(wchar *DateStr,size_t MaxSize,bool FullMS)
 {
   if (IsSet())
   {
@@ -225,15 +225,12 @@ void RarTime::GetText(wchar *DateStr,size_t MaxSize,bool FullYear,bool FullMS)
     if (FullMS)
       swprintf(DateStr,MaxSize,L"%u-%02u-%02u %02u:%02u:%02u,%03u",lt.Year,lt.Month,lt.Day,lt.Hour,lt.Minute,lt.Second,lt.Reminder/10000);
     else
-      if (FullYear)
-        swprintf(DateStr,MaxSize,L"%02u-%02u-%u %02u:%02u",lt.Day,lt.Month,lt.Year,lt.Hour,lt.Minute);
-      else
-        swprintf(DateStr,MaxSize,L"%02u-%02u-%02u %02u:%02u",lt.Day,lt.Month,lt.Year%100,lt.Hour,lt.Minute);
+      swprintf(DateStr,MaxSize,L"%u-%02u-%02u %02u:%02u",lt.Year,lt.Month,lt.Day,lt.Hour,lt.Minute);
   }
   else
   {
     // We use escape before '?' to avoid weird C trigraph characters.
-    wcscpy(DateStr,FullYear ? L"\?\?-\?\?-\?\?\?\? \?\?:\?\?":L"\?\?-\?\?-\?\? \?\?:\?\?");
+    wcscpy(DateStr,L"\?\?\?\?-\?\?-\?\? \?\?:\?\?");
   }
 }
 #endif
