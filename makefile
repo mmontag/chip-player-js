@@ -7,6 +7,7 @@ CXXFLAGS=-O2
 LIBFLAGS=-fPIC
 DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DRAR_SMP
 STRIP=strip
+AR=ar
 LDFLAGS=-pthread
 DESTDIR=/usr
 
@@ -15,6 +16,7 @@ DESTDIR=/usr
 #CXXFLAGS=-O2
 #DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #STRIP=strip
+#AR=ar
 #DESTDIR=/usr
 
 # HP UX using aCC
@@ -22,6 +24,7 @@ DESTDIR=/usr
 #CXXFLAGS=-AA +O2 +Onolimit
 #DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #STRIP=strip
+#AR=ar
 #DESTDIR=/usr
 
 # IRIX using GCC
@@ -29,6 +32,7 @@ DESTDIR=/usr
 #CXXFLAGS=-O2 
 #DEFINES=-DBIG_ENDIAN -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_BSD_COMPAT -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED=1
 #STRIP=strip
+#AR=ar
 #DESTDIR=/usr
 
 # IRIX using MIPSPro (experimental)
@@ -36,6 +40,7 @@ DESTDIR=/usr
 #CXXFLAGS=-O2 -mips3 -woff 1234,1156,3284 -LANG:std
 #DEFINES=-DBIG_ENDIAN -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_BSD_COMPAT -Dint64=int64_t
 #STRIP=strip
+#AR=ar
 #DESTDIR=/usr
 
 # AIX using xlC (IBM VisualAge C++ 5.0)
@@ -44,6 +49,7 @@ DESTDIR=/usr
 #DEFINES=-D_LARGE_FILES -D_LARGE_FILE_API
 #LIBS=-lbsd
 #STRIP=strip
+#AR=ar
 #DESTDIR=/usr
 
 # Solaris using CC
@@ -51,6 +57,7 @@ DESTDIR=/usr
 #CXXFLAGS=-fast -erroff=wvarhidemem
 #DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #STRIP=strip
+#AR=ar
 #DESTDIR=/usr
 
 # Solaris using GCC (optimized for UltraSPARC 1 CPU)
@@ -58,12 +65,14 @@ DESTDIR=/usr
 #CXXFLAGS=-O3 -mcpu=v9 -mtune=ultrasparc -m32
 #DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #STRIP=/usr/ccs/bin/strip
+#AR=/usr/ccs/bin/ar
 #DESTDIR=/usr
 
 # Tru64 5.1B using GCC3
 #CXX=g++
 #CXXFLAGS=-O2 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_XOPEN_SOURCE=500
 #STRIP=strip
+#AR=ar
 #LDFLAGS=-rpath /usr/local/gcc/lib
 #DESTDIR=/usr
 
@@ -71,6 +80,7 @@ DESTDIR=/usr
 #CXX=cxx
 #CXXFLAGS=-O4 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Dint64=long
 #STRIP=strip
+#AR=ar
 #LDFLAGS=
 #DESTDIR=/usr
 
@@ -78,6 +88,7 @@ DESTDIR=/usr
 #CXX=g++
 #CXXFLAGS=-O2 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -fexceptions
 #STRIP=strip
+#AR=ar
 #LDFLAGS=-fexceptions
 #DESTDIR=/usr
 
@@ -87,6 +98,7 @@ DESTDIR=/usr
 #CXXFLAGS=-O2
 #DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #STRIP=arm-linux-strip
+#AR=arm-linux-ar
 #LDFLAGS=-static
 #DESTDIR=/usr
 
@@ -133,7 +145,9 @@ lib:	WHAT=RARDLL
 lib:	CXXFLAGS+=$(LIBFLAGS)
 lib:	clean $(OBJECTS) $(LIB_OBJ)
 	@rm -f libunrar.so
+	@rm -f libunrar.a
 	$(LINK) -shared -o libunrar.so $(LDFLAGS) $(OBJECTS) $(LIB_OBJ)
+	$(AR) rcs libunrar.a $(OBJECTS) $(LIB_OBJ)
 
 install-unrar:
 			install -D unrar $(DESTDIR)/bin/unrar
@@ -143,6 +157,7 @@ uninstall-unrar:
 
 install-lib:
 		install libunrar.so $(DESTDIR)/lib
+		install libunrar.a $(DESTDIR)/lib
 
 uninstall-lib:
 		rm -f $(DESTDIR)/lib/libunrar.so
