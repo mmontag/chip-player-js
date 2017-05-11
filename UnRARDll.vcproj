@@ -570,7 +570,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\blake2s.cpp"
+				RelativePath="blake2s.cpp"
 				>
 			</File>
 			<File
@@ -590,7 +590,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\dll.cpp"
+				RelativePath="dll.cpp"
 				>
 			</File>
 			<File
@@ -686,11 +686,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\hash.cpp"
+				RelativePath="hash.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\headers.cpp"
+				RelativePath="headers.cpp"
 				>
 			</File>
 			<File
@@ -710,7 +710,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\qopen.cpp"
+				RelativePath="qopen.cpp"
 				>
 			</File>
 			<File
@@ -782,10 +782,6 @@
 				>
 			</File>
 			<File
-				RelativePath="recvol.cpp"
-				>
-			</File>
-			<File
 				RelativePath="rijndael.cpp"
 				>
 			</File>
@@ -794,7 +790,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\rs16.cpp"
+				RelativePath="rs16.cpp"
 				>
 			</File>
 			<File
@@ -802,7 +798,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\secpassword.cpp"
+				RelativePath="secpassword.cpp"
 				>
 			</File>
 			<File
@@ -810,11 +806,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\sha256.cpp"
+				RelativePath="sha256.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\smallfn.cpp"
+				RelativePath="smallfn.cpp"
 				>
 			</File>
 			<File
@@ -830,11 +826,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\threadpool.cpp"
+				RelativePath="threadpool.cpp"
 				>
 			</File>
 			<File
 				RelativePath="timefn.cpp"
+				>
+			</File>
+			<File
+				RelativePath="ui.cpp"
 				>
 			</File>
 			<File
@@ -866,7 +866,7 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\dll.rc"
+				RelativePath="dll.rc"
 				>
 			</File>
 		</Filter>

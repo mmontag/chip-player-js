@@ -369,7 +369,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\blake2s.cpp"
+				RelativePath="blake2s.cpp"
 				>
 			</File>
 			<File
@@ -465,11 +465,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\hash.cpp"
+				RelativePath="hash.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\headers.cpp"
+				RelativePath="headers.cpp"
 				>
 			</File>
 			<File
@@ -493,7 +493,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\qopen.cpp"
+				RelativePath="qopen.cpp"
 				>
 			</File>
 			<File
@@ -565,7 +565,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\rs16.cpp"
+				RelativePath="rs16.cpp"
 				>
 			</File>
 			<File
@@ -581,7 +581,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\sha256.cpp"
+				RelativePath="sha256.cpp"
 				>
 			</File>
 			<File
@@ -601,11 +601,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\threadpool.cpp"
+				RelativePath="threadpool.cpp"
 				>
 			</File>
 			<File
 				RelativePath="timefn.cpp"
+				>
+			</File>
+			<File
+				RelativePath="ui.cpp"
 				>
 			</File>
 			<File
