@@ -204,7 +204,7 @@ void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly
 #if defined(_WIN_32) && !defined(GUI)
     CharToOemBuff(Password,(char*)Psw,strlen(Password));
 #else
-    strncpy((char *)Psw,Password,MAXPASSWORD-1);
+    strncpyz((char *)Psw,Password,ASIZE(Psw));
 #endif
     int PswLength=strlen(Password);
     memcpy(SubstTable,InitSubstTable,sizeof(SubstTable));

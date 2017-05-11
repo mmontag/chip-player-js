@@ -15,8 +15,20 @@ bool WideToChar(const wchar *Src,char *Dest,int DestSize)
   WideToUtf(Src,Dest,DestSize);
 #else
 #ifdef MBFUNCTIONS
+
   if (wcstombs(Dest,Src,DestSize)==(size_t)-1)
     RetCode=false;
+
+  if ((!RetCode || *Dest==0 && *Src!=0) && DestSize>NM && strlenw(Src)<NM)
+  {
+    /* Workaround for strange Linux Unicode functions bug.
+       Some of wcstombs and mbstowcs implementations in some situations
+       (we are yet to find out what it depends on) can return an empty
+       string and success code if buffer size value is too large.
+    */
+    return(WideToChar(Src,Dest,NM));
+  }
+
 #else
   if (UnicodeEnabled())
   {
@@ -53,8 +65,19 @@ bool CharToWide(const char *Src,wchar *Dest,int DestSize)
   UtfToWide(Src,Dest,DestSize);
 #else
 #ifdef MBFUNCTIONS
+
   if (mbstowcs(Dest,Src,DestSize)==(size_t)-1)
     RetCode=false;
+
+  if ((!RetCode || *Dest==0 && *Src!=0) && DestSize>NM && strlen(Src)<NM)
+  {
+    /* Workaround for strange Linux Unicode functions bug.
+       Some of wcstombs and mbstowcs implementations in some situations
+       (we are yet to find out what it depends on) can return an empty
+       string and success code if buffer size value is too large.
+    */
+    return(CharToWide(Src,Dest,NM));
+  }
 #else
   if (UnicodeEnabled())
   {

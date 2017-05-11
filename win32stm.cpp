@@ -133,6 +133,8 @@ void ExtractStreamsNew(Archive &Arc,char *FileName,wchar *FileNameW)
   if (Found && HostFile.Open(FileName,FileNameW,true,true))
     SetFileTime(HostFile.GetHandle(),&fd.ftCreationTime,&fd.ftLastAccessTime,
                 &fd.ftLastWriteTime);
-  if (fd.FileAttr & FILE_ATTRIBUTE_READONLY)
-    SetFileAttr(FileName,FileNameW,fd.FileAttr);
+
+  // Restoring original file attributes. Important if file was read only
+  // or did not have "Archive" attribute
+  SetFileAttr(FileName,FileNameW,fd.FileAttr);
 }

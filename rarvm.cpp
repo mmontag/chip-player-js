@@ -106,7 +106,8 @@ void RarVM::Execute(VM_PreparedProgram *Prg)
   Prg->FilteredDataSize=NewBlockSize;
 
   Prg->GlobalData.Reset();
-  uint DataSize=Min(GET_VALUE(false,(uint*)&Mem[VM_GLOBALMEMADDR+0x30]),VM_GLOBALMEMSIZE);
+
+  uint DataSize=Min(GET_VALUE(false,(uint*)&Mem[VM_GLOBALMEMADDR+0x30]),VM_GLOBALMEMSIZE-VM_FIXEDGLOBALSIZE);
   if (DataSize!=0)
   {
     Prg->GlobalData.Add(DataSize+VM_FIXEDGLOBALSIZE);
@@ -114,6 +115,14 @@ void RarVM::Execute(VM_PreparedProgram *Prg)
   }
 }
 
+
+/*
+Note:
+  Due to performance considerations RAR VM may set VM_FS, VM_FC, VM_FZ
+  incorrectly for byte operands. These flags are always valid only
+  for 32-bit operands. Check implementation of concrete VM command
+  to see if it sets flags right.
+*/
 
 #define SET_IP(IP)                      \
   if ((IP)>=CodeSize)                   \
@@ -171,7 +180,13 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
         {
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
           uint Result=UINT32(Value1+GET_VALUE(Cmd->ByteMode,Op2));
-          Flags=Result==0 ? VM_FZ:(Result<Value1)|(Result&VM_FS);
+          if (Cmd->ByteMode)
+          {
+            Result&=0xff;
+            Flags=(Result<Value1)|(Result==0 ? VM_FZ:((Result&0x80) ? VM_FS:0));
+          }
+          else
+            Flags=(Result<Value1)|(Result==0 ? VM_FZ:(Result&VM_FS));
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
         break;
@@ -216,6 +231,8 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
       case VM_INC:
         {
           uint Result=UINT32(GET_VALUE(Cmd->ByteMode,Op1)+1);
+          if (Cmd->ByteMode)
+            Result&=0xff;
           SET_VALUE(Cmd->ByteMode,Op1,Result);
           Flags=Result==0 ? VM_FZ:Result&VM_FS;
         }
@@ -430,7 +447,9 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
           uint FC=(Flags&VM_FC);
           uint Result=UINT32(Value1+GET_VALUE(Cmd->ByteMode,Op2)+FC);
-          Flags=Result==0 ? VM_FZ:(Result<Value1 || Result==Value1 && FC)|(Result&VM_FS);
+          if (Cmd->ByteMode)
+            Result&=0xff;
+          Flags=(Result<Value1 || Result==Value1 && FC)|(Result==0 ? VM_FZ:(Result&VM_FS));
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
         break;
@@ -439,7 +458,9 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,int CodeSize)
           uint Value1=GET_VALUE(Cmd->ByteMode,Op1);
           uint FC=(Flags&VM_FC);
           uint Result=UINT32(Value1-GET_VALUE(Cmd->ByteMode,Op2)-FC);
-          Flags=Result==0 ? VM_FZ:(Result>Value1 || Result==Value1 && FC)|(Result&VM_FS);
+          if (Cmd->ByteMode)
+            Result&=0xff;
+          Flags=(Result>Value1 || Result==Value1 && FC)|(Result==0 ? VM_FZ:(Result&VM_FS));
           SET_VALUE(Cmd->ByteMode,Op1,Result);
         }
         break;
@@ -496,6 +517,10 @@ void RarVM::Prepare(byte *Code,int CodeSize,VM_PreparedProgram *Prg)
 #endif  
     uint DataFlag=fgetbits();
     faddbits(1);
+
+/* Read static data contained in DB operators. This data cannot be changed,
+   it is a part of VM code, not a filter parameter.
+*/
     if (DataFlag&0x8000)
     {
       int DataSize=ReadData(*this)+1;
@@ -506,6 +531,7 @@ void RarVM::Prepare(byte *Code,int CodeSize,VM_PreparedProgram *Prg)
         faddbits(8);
       }
     }
+
     while (InAddr<CodeSize)
     {
       Prg->Cmd.Add(1);
@@ -874,7 +900,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         byte *SrcData=Mem,*DestData=SrcData+DataSize;
         const int Channels=3;
         SET_VALUE(false,&Mem[VM_GLOBALMEMADDR+0x20],DataSize);
-        if (DataSize>=VM_GLOBALMEMADDR/2)
+        if (DataSize>=VM_GLOBALMEMADDR/2 || PosR<0)
           break;
         for (int CurChannel=0;CurChannel<Channels;CurChannel++)
         {

@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 #endif
     if (Switch!=NULL && Cmd.IsSwitch(Switch[0]))
     {
-      int UpperCmd=toupper(Switch[1]);
+      int UpperCmd=etoupper(Switch[1]);
       switch(UpperCmd)
       {
         case 'T':

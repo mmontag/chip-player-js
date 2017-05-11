@@ -66,7 +66,7 @@ struct VM_PreparedProgram
   int CmdCount;
 
   Array<byte> GlobalData;
-  Array<byte> StaticData;
+  Array<byte> StaticData; // static data contained in DB operators
   uint InitR[7];
 
   byte *FilteredData;
