@@ -434,11 +434,12 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
 
     if (!CheckUnpVer(Arc,ArcFileName))
     {
-      ExtrFile=false;
       ErrHandler.SetErrorCode(RARX_FATAL);
 #ifdef RARDLL
       Cmd->DllError=ERAR_UNKNOWN_FORMAT;
 #endif
+      Arc.SeekToNext();
+      return !Arc.Solid; // Can try extracting next file only in non-solid archive.
     }
 
 

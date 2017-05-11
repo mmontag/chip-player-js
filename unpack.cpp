@@ -151,7 +151,7 @@ void Unpack::DoUnpack(int Method,bool Solid)
     case 29: // rar 3.x compression
       Unpack29(Solid);
       break;
-    case 0: // RAR 5.0 compression algorithm 0.
+    case 50: // RAR 5.0 compression algorithm.
 #ifdef RAR_SMP
       if (MaxUserThreads>1)
       {

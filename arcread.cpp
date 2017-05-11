@@ -784,7 +784,7 @@ size_t Archive::ReadHeader50()
 
         uint CompInfo=(uint)Raw.GetV();
         hd->Method=(CompInfo>>7) & 7;
-        hd->UnpVer=CompInfo & 0x3f;
+        hd->UnpVer=(CompInfo & 0x3f) + 50;
 
         hd->HostOS=(byte)Raw.GetV();
         size_t NameSize=(size_t)Raw.GetV();
