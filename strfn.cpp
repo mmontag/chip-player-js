@@ -15,6 +15,10 @@ const wchar *NullToEmpty(const wchar *Str)
 void IntToExt(const char *Src,char *Dest,size_t DestSize)
 {
 #ifdef _WIN_ALL
+  // OemToCharBuff does not stop at 0, so let's check source length.
+  size_t SrcLength=strlen(Src)+1;
+  if (DestSize>SrcLength)
+    DestSize=SrcLength;
   OemToCharBuffA(Src,Dest,(DWORD)DestSize);
   Dest[DestSize-1]=0;
 #elif defined(_ANDROID)
