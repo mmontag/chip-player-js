@@ -275,6 +275,7 @@ void Unpack::Unpack5MT(bool Solid)
       }
     }
   }
+  UnpPtr&=MaxWinMask; // ProcessDecoded and maybe others can leave UnpPtr > MaxWinMask here.
   UnpWriteBuf();
 
   BlockHeader=UnpThreadData[LastBlockNum].BlockHeader;
