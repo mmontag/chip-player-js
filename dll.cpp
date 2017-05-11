@@ -74,7 +74,7 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
       delete Data;
       return NULL;
     }
-    if (!Data->Arc.IsArchive(false))
+    if (!Data->Arc.IsArchive(true))
     {
       if (Data->Cmd.DllError!=0)
         r->OpenResult=Data->Cmd.DllError;

@@ -790,12 +790,17 @@ void CmdExtract::ExtrPrepareName(Archive &Arc,const wchar *ArcFileName,wchar *De
 {
   wcsncpyz(DestName,Cmd->ExtrPath,DestSize);
 
-  // We need IsPathDiv check here to correctly handle Unix forward slash
-  // in the end of destination path in Windows: rar x arc dest/
-  if (*Cmd->ExtrPath!=0 && !IsPathDiv(*PointToLastChar(Cmd->ExtrPath)))
+  if (*Cmd->ExtrPath!=0)
   {
-    // Destination path can be without trailing slash if it come from GUI shell.
-    AddEndSlash(DestName,DestSize);
+     wchar LastChar=*PointToLastChar(Cmd->ExtrPath);
+    // We need IsPathDiv check here to correctly handle Unix forward slash
+    // in the end of destination path in Windows: rar x arc dest/
+    // IsDriveDiv is needed for current drive dir: rar x arc d:
+    if (!IsPathDiv(LastChar) && !IsDriveDiv(LastChar))
+    {
+      // Destination path can be without trailing slash if it come from GUI shell.
+      AddEndSlash(DestName,DestSize);
+    }
   }
 
 #ifndef SFX_MODULE

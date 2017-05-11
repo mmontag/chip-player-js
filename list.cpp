@@ -435,13 +435,13 @@ void ListFileAttr(uint A,HOST_SYSTEM_TYPE HostType,wchar *AttrStr,size_t AttrSiz
   {
     case HSYS_WINDOWS:
       swprintf(AttrStr,AttrSize,L"%c%c%c%c%c%c%c",
-              (A & 0x2000) ? 'I' : '.',  // Not content indexed.
-              (A & 0x0800) ? 'C' : '.',  // Compressed.
-              (A & 0x0020) ? 'A' : '.',  // Archive.
-              (A & 0x0010) ? 'D' : '.',  // Directory.
-              (A & 0x0004) ? 'S' : '.',  // System.
-              (A & 0x0002) ? 'H' : '.',  // Hidden.
-              (A & 0x0001) ? 'R' : '.'); // Read-only.
+              (A & 0x2000)!=0 ? 'I' : '.',  // Not content indexed.
+              (A & 0x0800)!=0 ? 'C' : '.',  // Compressed.
+              (A & 0x0020)!=0 ? 'A' : '.',  // Archive.
+              (A & 0x0010)!=0 ? 'D' : '.',  // Directory.
+              (A & 0x0004)!=0 ? 'S' : '.',  // System.
+              (A & 0x0002)!=0 ? 'H' : '.',  // Hidden.
+              (A & 0x0001)!=0 ? 'R' : '.'); // Read-only.
       break;
     case HSYS_UNIX:
       switch (A & 0xF000)
@@ -459,13 +459,13 @@ void ListFileAttr(uint A,HOST_SYSTEM_TYPE HostType,wchar *AttrStr,size_t AttrSiz
       swprintf(AttrStr+1,AttrSize-1,L"%c%c%c%c%c%c%c%c%c",
               (A & 0x0100) ? 'r' : '-',
               (A & 0x0080) ? 'w' : '-',
-              (A & 0x0040) ? ((A & 0x0800) ? 's':'x'):((A & 0x0800) ? 'S':'-'),
+              (A & 0x0040) ? ((A & 0x0800)!=0 ? 's':'x'):((A & 0x0800)!=0 ? 'S':'-'),
               (A & 0x0020) ? 'r' : '-',
               (A & 0x0010) ? 'w' : '-',
-              (A & 0x0008) ? ((A & 0x0400) ? 's':'x'):((A & 0x0400) ? 'S':'-'),
+              (A & 0x0008) ? ((A & 0x0400)!=0 ? 's':'x'):((A & 0x0400)!=0 ? 'S':'-'),
               (A & 0x0004) ? 'r' : '-',
               (A & 0x0002) ? 'w' : '-',
-              (A & 0x0001) ? 'x' : '-');
+              (A & 0x0001) ? ((A & 0x200)!=0 ? 't' : 'x') : '-');
       break;
     case HSYS_UNKNOWN:
       wcscpy(AttrStr,L"?");

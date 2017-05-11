@@ -107,6 +107,13 @@ bool ScanTree::GetFilteredMask()
   // SlashPos might point or not point to path separator for masks like 'dir*', '\dir*' or 'd:dir*'
   wchar *WildName=IsPathDiv(CurMask[SlashPos]) || IsDriveDiv(CurMask[SlashPos]) ? CurMask+SlashPos+1 : CurMask+SlashPos;
   wcsncatz(Filter,WildName,ASIZE(Filter));
+
+  // Treat dir*\* or dir*\*.* as dir\, so empty 'dir' is also matched
+  // by such mask. Skipping empty dir with dir*\*.* confused some users.
+  wchar *LastMask=PointToName(Filter);
+  if (wcscmp(LastMask,L"*")==0 || wcscmp(LastMask,L"*.*")==0)
+    *LastMask=0;
+
   FilterList.AddString(Filter);
 
   bool RelativeDrive=IsDriveDiv(CurMask[SlashPos]);
