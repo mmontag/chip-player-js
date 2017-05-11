@@ -53,14 +53,14 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     Data->Cmd.VersionControl=1;
     if (!Data->Arc.Open(r->ArcName,r->ArcNameW))
     {
-      delete Data;
       r->OpenResult=ERAR_EOPEN;
+      delete Data;
       return(NULL);
     }
     if (!Data->Arc.IsArchive(false))
     {
-      delete Data;
       r->OpenResult=Data->Cmd.DllError!=0 ? Data->Cmd.DllError:ERAR_BAD_ARCHIVE;
+      delete Data;
       return(NULL);
     }
     r->Flags=Data->Arc.NewMhd.Flags;
