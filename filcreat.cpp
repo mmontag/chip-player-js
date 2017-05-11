@@ -25,11 +25,29 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
         *UserReject=true;
       return(false);
     }
+
+    // Must be before Cmd->AllYes check or -y switch would override -or.
+    if (Mode==OVERWRITE_AUTORENAME)
+    {
+      if (GetAutoRenamedName(Name))
+      {
+        if (NameW!=NULL)
+          *NameW=0;
+      }
+      else
+        Mode=OVERWRITE_DEFAULT;
+      continue;
+    }
+
 #ifdef SILENT
     Mode=OVERWRITE_ALL;
 #endif
+
+    // This check must be after OVERWRITE_AUTORENAME processing or -y switch
+    // would override -or.
     if (Cmd->AllYes || Mode==OVERWRITE_ALL)
       break;
+
     if (Mode==OVERWRITE_DEFAULT || Mode==OVERWRITE_FORCE_ASK)
     {
       eprintf(St(MFileExists),Name);
@@ -85,17 +103,6 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
       }
       if (Choice==6)
         ErrHandler.Exit(USER_BREAK);
-    }
-    if (Mode==OVERWRITE_AUTORENAME)
-    {
-      if (GetAutoRenamedName(Name))
-      {
-        if (NameW!=NULL)
-          *NameW=0;
-      }
-      else
-        Mode=OVERWRITE_DEFAULT;
-      continue;
     }
   }
   if (NewFile!=NULL && NewFile->Create(Name,NameW))

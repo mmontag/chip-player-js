@@ -43,10 +43,11 @@ bool CmpName(char *Wildcard,char *Name,int CmpMode)
   if (CmpMode!=MATCH_NAMES)
   {
     size_t WildLength=strlen(Wildcard);
-    if (CmpMode!=MATCH_EXACTPATH && mstrnicompc(Wildcard,Name,WildLength,ForceCase)==0)
+    if (CmpMode!=MATCH_EXACT && CmpMode!=MATCH_EXACTPATH && 
+        mstrnicompc(Wildcard,Name,WildLength,ForceCase)==0)
     {
-      // For all modes except MATCH_NAMES and MATCH_EXACTPATH "path1" mask
-      // must match "path1\path2\filename.ext" and "path1" names.
+      // For all modes except MATCH_NAMES, MATCH_EXACT and MATCH_EXACTPATH
+      // "path1" mask must match "path1\path2\filename.ext" and "path1" names.
       char NextCh=Name[WildLength];
       if (NextCh=='\\' || NextCh=='/' || NextCh==0)
         return(true);
@@ -59,7 +60,8 @@ bool CmpName(char *Wildcard,char *Name,int CmpMode)
     GetFilePath(Wildcard,Path1,ASIZE(Path1));
     GetFilePath(Name,Path2,ASIZE(Path1));
 
-    if (CmpMode==MATCH_EXACTPATH && mstricompc(Path1,Path2,ForceCase)!=0)
+    if ((CmpMode==MATCH_EXACT || CmpMode==MATCH_EXACTPATH) &&
+        mstricompc(Path1,Path2,ForceCase)!=0)
       return(false);
     if (CmpMode==MATCH_SUBPATH || CmpMode==MATCH_WILDSUBPATH)
       if (IsWildcard(Path1))
@@ -99,10 +101,11 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpMode)
   if (CmpMode!=MATCH_NAMES)
   {
     size_t WildLength=strlenw(Wildcard);
-    if (CmpMode!=MATCH_EXACTPATH && mstrnicompcw(Wildcard,Name,WildLength,ForceCase)==0)
+    if (CmpMode!=MATCH_EXACT && CmpMode!=MATCH_EXACTPATH &&
+        mstrnicompcw(Wildcard,Name,WildLength,ForceCase)==0)
     {
-      // For all modes except MATCH_NAMES and MATCH_EXACTPATH "path1" mask
-      // must match "path1\path2\filename.ext" and "path1" names.
+      // For all modes except MATCH_NAMES, MATCH_EXACT and MATCH_EXACTPATH
+      // "path1" mask must match "path1\path2\filename.ext" and "path1" names.
       wchar NextCh=Name[WildLength];
       if (NextCh==L'\\' || NextCh==L'/' || NextCh==0)
         return(true);
@@ -115,7 +118,8 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpMode)
     GetFilePath(Wildcard,Path1,ASIZE(Path1));
     GetFilePath(Name,Path2,ASIZE(Path2));
 
-    if (CmpMode==MATCH_EXACTPATH && mstricompcw(Path1,Path2,ForceCase)!=0)
+    if ((CmpMode==MATCH_EXACT || CmpMode==MATCH_EXACTPATH) &&
+        mstricompcw(Path1,Path2,ForceCase)!=0)
       return(false);
     if (CmpMode==MATCH_SUBPATH || CmpMode==MATCH_WILDSUBPATH)
       if (IsWildcard(NULL,Path1))
