@@ -225,7 +225,14 @@ typedef const char* MSGID;
 #endif
 
 #if !defined(BIG_ENDIAN) && !defined(_WIN_CE) && defined(_WIN_32)
+/* allow not aligned integer access, increases speed in some operations */
 #define ALLOW_NOT_ALIGNED_INT
+#endif
+
+#if defined(__sparc) || defined(sparc) || defined(__sparcv9)
+/* prohibit not aligned access to data structures in text comression
+   algorithm, increases memory requirements */
+#define STRICT_ALIGNMENT_REQUIRED
 #endif
 
 #endif // _RAR_OS_

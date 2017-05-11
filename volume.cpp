@@ -1,7 +1,5 @@
 #include "rar.hpp"
 
-static void GetFirstNewVolName(const char *ArcName,char *VolName,
-  Int64 VolSize,Int64 TotalSize);
 
 
 
@@ -56,11 +54,11 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     }
     if (Cmd->ChangeVolProc!=NULL)
     {
-#ifdef _WIN_32
+#if defined(_WIN_32) && !defined(_MSC_VER) && !defined(__MINGW32__)
       _EBX=_ESP;
 #endif
       int RetCode=Cmd->ChangeVolProc(NextName,RAR_VOL_ASK);
-#ifdef _WIN_32
+#if defined(_WIN_32) && !defined(_MSC_VER) && !defined(__MINGW32__)
       _ESP=_EBX;
 #endif
       if (RetCode==0)
@@ -114,11 +112,11 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     return(false);
   if (Cmd->ChangeVolProc!=NULL)
   {
-#ifdef _WIN_32
+#if defined(_WIN_32) && !defined(_MSC_VER) && !defined(__MINGW32__)
     _EBX=_ESP;
 #endif
     int RetCode=Cmd->ChangeVolProc(NextName,RAR_VOL_NOTIFY);
-#ifdef _WIN_32
+#if defined(_WIN_32) && !defined(_MSC_VER) && !defined(__MINGW32__)
     _ESP=_EBX;
 #endif
     if (RetCode==0)

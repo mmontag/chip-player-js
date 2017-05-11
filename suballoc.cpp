@@ -38,6 +38,16 @@ inline uint SubAllocator::U2B(int NU)
 }
 
 
+/*
+   calculate RAR_MEM_BLK + Items address. Real RAR_MEM_BLK size must be
+   equal to UNIT_SIZE, so we cannot just add Items to RAR_MEM_BLK address
+*/
+inline RAR_MEM_BLK* SubAllocator::MBPtr(RAR_MEM_BLK *BasePtr,int Items)
+{
+  return((RAR_MEM_BLK*)( ((byte *)(BasePtr))+U2B(Items) ));
+}
+
+
 inline void SubAllocator::SplitBlock(void* pv,int OldIndx,int NewIndx)
 {
   int i, UDiff=Indx2Units[OldIndx]-Indx2Units[NewIndx];
@@ -71,6 +81,9 @@ bool SubAllocator::StartSubAllocator(int SASize)
     return TRUE;
   StopSubAllocator();
   uint AllocSize=t/FIXED_UNIT_SIZE*UNIT_SIZE+UNIT_SIZE;
+#ifdef STRICT_ALIGNMENT_REQUIRED
+  AllocSize+=UNIT_SIZE;
+#endif
   if ((HeapStart=(byte *)rarmalloc(AllocSize)) == NULL)
   {
     ErrHandler.MemoryError();
@@ -91,6 +104,10 @@ void SubAllocator::InitSubAllocator()
   uint RealSize2=Size2/FIXED_UNIT_SIZE*UNIT_SIZE;
   uint Size1=SubAllocatorSize-Size2;
   uint RealSize1=Size1/FIXED_UNIT_SIZE*UNIT_SIZE+Size1%FIXED_UNIT_SIZE;
+#ifdef STRICT_ALIGNMENT_REQUIRED
+  if (Size1%FIXED_UNIT_SIZE!=0)
+    RealSize1+=UNIT_SIZE-Size1%FIXED_UNIT_SIZE;
+#endif
   HiUnit=HeapStart+SubAllocatorSize;
   LoUnit=UnitsStart=HeapStart+RealSize1;
   FakeUnitsStart=HeapStart+Size1;
@@ -126,19 +143,19 @@ inline void SubAllocator::GlueFreeBlocks()
       p->NU=Indx2Units[i];
     }
   for (p=s0.next;p != &s0;p=p->next)
-    while ((p1=p+p->NU)->Stamp == 0xFFFF && int(p->NU)+p1->NU < 0x10000)
+    while ((p1=MBPtr(p,p->NU))->Stamp == 0xFFFF && int(p->NU)+p1->NU < 0x10000)
     {
       p1->remove();
       p->NU += p1->NU;
     }
   while ((p=s0.next) != &s0)
   {
-    for (p->remove(), sz=p->NU;sz > 128;sz -= 128, p += 128)
+    for (p->remove(), sz=p->NU;sz > 128;sz -= 128, p=MBPtr(p,128))
       InsertNode(p,N_INDEXES-1);
     if (Indx2Units[i=Units2Indx[sz-1]] != sz)
     {
       k=sz-Indx2Units[--i];
-      InsertNode(p+(sz-k),k-1);
+      InsertNode(MBPtr(p,sz-k),k-1);
     }
     InsertNode(p,i);
   }
@@ -160,7 +177,7 @@ void* SubAllocator::AllocUnitsRare(int indx)
     {
       GlueCount--;
       i=U2B(Indx2Units[indx]);
-      int j=12*Indx2Units[indx];
+      int j=FIXED_UNIT_SIZE*Indx2Units[indx];
       if (FakeUnitsStart-pText > j)
       {
         FakeUnitsStart-=j;

@@ -25,7 +25,11 @@ void OutComment(char *Comment,int Size);
   #define mprintf(args...)
   #define eprintf(args...)
 #else
-  inline void mprintf(const char *fmt,const char *a=NULL,const char *b=NULL) {}
+  #ifdef _MSC_VER
+    inline void mprintf(const char *fmt,...) {}
+  #else
+    inline void mprintf(const char *fmt,const char *a=NULL,const char *b=NULL) {}
+  #endif
   inline void eprintf(const char *fmt,const char *a=NULL,const char *b=NULL) {}
   inline void mprintf(const char *fmt,int b) {}
   inline void eprintf(const char *fmt,int b) {}

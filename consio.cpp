@@ -4,7 +4,9 @@
 #include "log.cpp"
 #endif
 
+#if !defined(GUI) && !defined(SILENT)
 static void RawPrint(char *Msg,MESSAGE_TYPE MessageType);
+#endif
 
 static MESSAGE_TYPE MsgStream=MSG_STDOUT;
 static bool Sound=false;

@@ -15,20 +15,18 @@
    '#define LITTLE_ENDIAN' in os.hpp and data type definitions
    in rartypes.hpp.
 
-   It is important to provide 1 byte alignment for structures
-   in model.hpp. Now it contains '#pragma pack(1)' directive,
-   but your compiler may require something else. Though Unrar
-   should work with other model.hpp alignments, its memory 
-   requirements may increase significantly. Alignment in other
-   modules is not important.
+   if computer architecture does not allow not aligned data access,
+   you need to undefine ALLOW_NOT_ALIGNED_INT and define
+   STRICT_ALIGNMENT_REQUIRED in os.h. Note that it will increase memory
+   requirements.
 
    If you use Borland C++ makefile (makefile.bcc), you need to define
    BASEPATHCC environment (or makefile) variable containing
    the path to Borland C++ installation.
 
-   Makefile.unix contains both Linux and IRIX compiler option sets.
-   Linux is selected by default. If you need to compile Unrar for IRIX,
-   just uncomment corresponding lines.
+   Makefile.unix contains numerous compiler option sets.
+   GCC Linux is selected by default. If you need to compile Unrar
+   for other platforms, uncomment corresponding lines.
 
 
    2. Unrar binaries
