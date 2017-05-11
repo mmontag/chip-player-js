@@ -100,7 +100,7 @@
 #define   MCHelpSwS          "\n  s[<N>,v[-],e] Create solid archive"
 #define   MCHelpSwSm         "\n  s-            Disable solid archiving"
 #define   MCHelpSwSFX        "\n  sfx[name]     Create SFX archive"
-#define   MCHelpSwST         "\n  st[name]      Read data from stdin"
+#define   MCHelpSwSI         "\n  si[name]      Read data from standard input (stdin)"
 #define   MCHelpSwT          "\n  t             Test files after archiving"
 #define   MCHelpSwTK         "\n  tk            Keep original archive time"
 #define   MCHelpSwTL         "\n  tl            Set archive time to latest file"

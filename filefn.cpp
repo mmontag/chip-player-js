@@ -48,44 +48,48 @@ void CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
 #else
   uint DirAttr=0777;
 #endif
-  if (PathW==NULL || *PathW==0)
+#ifdef UNICODE_SUPPORTED
+  bool Wide=PathW!=NULL && *PathW!=0;
+#else
+  bool Wide=false;
+#endif
+  bool IgnoreAscii=false;
+
+  const char *s=Path;
+  for (int PosW=0;;PosW++)
   {
-    for (const char *s=Path;*s!=0 && s-Path<NM;s=charnext(s))
+    if (s==NULL || s-Path>=NM || *s==0)
+      IgnoreAscii=true;
+    if (Wide && (PosW>=NM || PathW[PosW]==0) || !Wide && IgnoreAscii)
+      break;
+    if (Wide && PathW[PosW]==CPATHDIVIDER || !Wide && *s==CPATHDIVIDER)
     {
-      if (*s==CPATHDIVIDER)
+      wchar *DirPtrW=NULL,DirNameW[NM];
+      if (Wide)
       {
-        char DirName[NM];
+        strncpyw(DirNameW,PathW,PosW);
+        DirNameW[PosW]=0;
+        DirPtrW=DirNameW;
+      }
+      char DirName[NM];
+      if (IgnoreAscii)
+        WideToChar(DirPtrW,DirName);
+      else
+      {
         strncpy(DirName,Path,s-Path);
         DirName[s-Path]=0;
-        if (MakeDir(DirName,NULL,DirAttr)==MKDIR_SUCCESS)
-        {
-#ifndef GUI
-          mprintf(St(MCreatDir),DirName);
-          mprintf(" %s",St(MOk));
-#endif
-        }
       }
-    }
-  }
-  else
-    for (const wchar *s=PathW;*s!=0 && s-PathW<NM;s++)
-    {
-      if (*s==CPATHDIVIDER)
+      if (MakeDir(DirName,DirPtrW,DirAttr)==MKDIR_SUCCESS)
       {
-        wchar DirName[NM];
-        strncpyw(DirName,PathW,s-PathW);
-        DirName[s-PathW]=0;
-        if (MakeDir(NULL,DirName,DirAttr)==MKDIR_SUCCESS)
-        {
-#if !defined(GUI) && !defined(SILENT)
-          char OutName[NM];
-          WideToChar(DirName,OutName,sizeof(OutName)-1);
-          mprintf(St(MCreatDir),OutName);
-          mprintf(" %s",St(MOk));
+#ifndef GUI
+        mprintf(St(MCreatDir),DirName);
+        mprintf(" %s",St(MOk));
 #endif
-        }
       }
     }
+    if (!IgnoreAscii)
+      s=charnext(s);
+  }
   if (!SkipLastName)
     MakeDir(Path,PathW,DirAttr);
 }

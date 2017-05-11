@@ -225,7 +225,11 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
   if (ExactMatch && !EqualNames)
     AllMatchesExact=false;
 
+#ifdef UNICODE_SUPPORTED
   bool WideName=(Arc.NewLhd.Flags & LHD_UNICODE);
+#else
+  bool WideName=false;
+#endif
 
 #ifdef _APPLE
   if (WideName)

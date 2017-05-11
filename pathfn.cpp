@@ -205,7 +205,7 @@ bool IsWildcard(const char *Str,const wchar *StrW)
 
 bool IsPathDiv(int Ch)
 {
-#ifdef _WIN_32
+#if defined(_WIN_32) || defined(_EMX)
   return(Ch=='\\' || Ch=='/');
 #else
   return(Ch==CPATHDIVIDER);

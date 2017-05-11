@@ -297,9 +297,11 @@ void File::Write(const void *Data,int Size)
     if (!Success && AllowExceptions && HandleType==FILE_HANDLENORMAL)
     {
 #if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(RARDLL)
+      int ErrCode=GetLastError();
       Int64 FilePos=Tell();
-      if (GetFreeDisk(FileName)>Size && FilePos-Size<=0xffffffff &&
-          FilePos+Size>0xffffffff)
+      Int64 FreeSize=GetFreeDisk(FileName);
+      SetLastError(ErrCode);
+      if (FreeSize>Size && FilePos-Size<=0xffffffff && FilePos+Size>0xffffffff)
         ErrHandler.WriteErrorFAT(FileName);
 #endif
       if (ErrHandler.AskRepeatWrite(FileName))

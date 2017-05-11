@@ -782,7 +782,7 @@ void CommandData::OutHelp()
     MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,MCHelpSwOp,MCHelpSwOm,
     MCHelpSwOL,MCHelpSwOS,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,
     MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,
-    MCHelpSwSFX,MCHelpSwST,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,
+    MCHelpSwSFX,MCHelpSwSI,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,
     MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,
     MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,
     MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
