@@ -49,11 +49,11 @@ DESTDIR=/usr
 #DESTDIR=/usr
 
 # Solaris using CC
-CXX=CC
-CXXFLAGS=-fast -erroff=wvarhidemem
-DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
-STRIP=strip
-DESTDIR=/usr
+#CXX=CC
+#CXXFLAGS=-fast -erroff=wvarhidemem
+#DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
+#STRIP=strip
+#DESTDIR=/usr
 
 # Solaris using GCC (optimized for UltraSPARC 1 CPU)
 #CXX=g++

@@ -3,6 +3,13 @@
 
 
 
+#if defined(RARDLL) && defined(_MSC_VER) && !defined(_M_X64)
+// Disable the run time stack check for unrar.dll, so we can manipulate
+// with ChangeVolProc call type below. Run time check would intercept
+// a wrong ESP before we restore it.
+#pragma runtime_checks( "s", off )
+#endif
+
 bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Command)
 {
   RAROptions *Cmd=Arc.GetRAROptions();
@@ -72,11 +79,26 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     }
     if (Cmd->ChangeVolProc!=NULL)
     {
-#if defined(_WIN_32) && !defined(_MSC_VER) && !defined(__MINGW32__)
+      // Here we preserve ESP value. It is necessary for those developers,
+      // who still define ChangeVolProc callback as "C" type function,
+      // even though in year 2001 we announced in unrar.dll whatsnew.txt
+      // that it will be PASCAL type (for compatibility with Visual Basic).
+#if defined(_MSC_VER)
+#ifndef _M_X64
+      __asm mov ebx,esp
+#endif
+#elif defined(_WIN_32) && defined(__BORLANDC__)
       _EBX=_ESP;
 #endif
       int RetCode=Cmd->ChangeVolProc(NextName,RAR_VOL_ASK);
-#if defined(_WIN_32) && !defined(_MSC_VER) && !defined(__MINGW32__)
+
+      // Restore ESP after ChangeVolProc with wrongly defined calling
+      // convention broken it.
+#if defined(_MSC_VER)
+#ifndef _M_X64
+      __asm mov esp,ebx
+#endif
+#elif defined(_WIN_32) && defined(__BORLANDC__)
       _ESP=_EBX;
 #endif
       if (RetCode==0)
@@ -199,6 +221,11 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
   }
   return(true);
 }
+
+#if defined(RARDLL) && defined(_MSC_VER) && !defined(_M_X64)
+// Restore the run time stack check for unrar.dll.
+#pragma runtime_checks( "s", restore )
+#endif
 
 
 

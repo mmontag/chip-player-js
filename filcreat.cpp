@@ -111,7 +111,7 @@ bool GetAutoRenamedName(char *Name)
     Ext=Name+strlen(Name);
   for (int FileVer=1;;FileVer++)
   {
-    sprintf(NewName,"%.*s(%d)%s",Ext-Name,Name,FileVer,Ext);
+    sprintf(NewName,"%.*s(%d)%s",int(Ext-Name),Name,FileVer,Ext);
     if (!FileExist(NewName))
     {
       strcpy(Name,NewName);
