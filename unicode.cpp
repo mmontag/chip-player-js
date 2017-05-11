@@ -1,9 +1,12 @@
 #include "rar.hpp"
 
-void WideToChar(const wchar_t *Src,char *Dest,int DestSize)
+void WideToChar(const wchar *Src,char *Dest,int DestSize)
 {
 #ifdef _WIN_32
   WideCharToMultiByte(CP_ACP,0,Src,-1,Dest,DestSize,NULL,NULL);
+#else
+#ifdef _APPLE
+  WideToUtf(Src,Dest,DestSize);
 #else
 #ifdef MBFUNCTIONS
   if (wcstombs(Dest,Src,DestSize)==-1)
@@ -17,13 +20,17 @@ void WideToChar(const wchar_t *Src,char *Dest,int DestSize)
   }
 #endif
 #endif
+#endif
 }
 
 
-void CharToWide(const char *Src,wchar_t *Dest,int DestSize)
+void CharToWide(const char *Src,wchar *Dest,int DestSize)
 {
 #ifdef _WIN_32
   MultiByteToWideChar(CP_ACP,0,Src,-1,Dest,DestSize);
+#else
+#ifdef _APPLE
+  UtfToWide(Src,Dest,DestSize);
 #else
 #ifdef MBFUNCTIONS
   mbstowcs(Dest,Src,DestSize);
@@ -34,6 +41,7 @@ void CharToWide(const char *Src,wchar_t *Dest,int DestSize)
     if (Src[I]==0)
       break;
   }
+#endif
 #endif
 #endif
 }
@@ -61,13 +69,68 @@ wchar* RawToWide(const byte *Src,wchar *Dest,int DestSize)
 }
 
 
-bool LowAscii(const wchar *Str)
+#ifdef _APPLE
+void WideToUtf(const wchar *Src,char *Dest,int DestSize)
 {
-  for (int I=0;Str[I]!=0;I++)
-    if (Str[I]<32 || Str[I]>127)
-      return(false);
-  return(true);
+  DestSize--;
+  while (*Src!=0 && --DestSize>=0)
+  {
+    uint c=*(Src++);
+    if (c<0x80)
+      *(Dest++)=c;
+    else
+      if (c<0x800 && --DestSize>=0)
+      {
+        *(Dest++)=(0xc0|(c>>6));
+        *(Dest++)=(0x80|(c&0x3f));
+      }
+      else
+        if (c<0x10000 && (DestSize-=2)>=0)
+        {
+          *(Dest++)=(0xe0|(c>>12));
+          *(Dest++)=(0x80|((c>>6)&0x3f));
+          *(Dest++)=(0x80|(c&0x3f));
+        }
+  }
+  *Dest=0;
 }
+#endif
+
+
+#ifdef _APPLE
+void UtfToWide(const char *Src,wchar *Dest,int DestSize)
+{
+  DestSize--;
+  while (*Src!=0)
+  {
+    uint c=(byte)*(Src++),d;
+    if (c<0x80)
+      d=c;
+    else
+      if ((c>>5)==6)
+      {
+        if ((*Src&0xc0)!=0x80)
+          break;
+        d=((c&0x1f)<<6)|(*Src&0x3f);
+        Src++;
+      }
+      else
+        if ((c>>4)==14)
+        {
+          if ((Src[0]&0xc0)!=0x80 || (Src[1]&0xc0)!=0x80)
+            break;
+          d=((c&0xf)<<12)|((Src[0]&0x3f)<<6)|(Src[1]&0x3f);
+          Src+=2;
+        }
+        else
+          break;
+    if (--DestSize<0)
+      break;
+    *(Dest++)=d;
+  }
+  *Dest=0;
+}
+#endif
 
 
 int strlenw(const wchar *str)
@@ -328,6 +391,12 @@ int atoiw(const wchar *s)
 SupportDBCS gdbcs;
 
 SupportDBCS::SupportDBCS()
+{
+  Init();
+}
+
+
+void SupportDBCS::Init()
 {
   CPINFO CPInfo;
   GetCPInfo(CP_ACP,&CPInfo);

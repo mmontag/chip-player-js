@@ -332,6 +332,29 @@ void GetConfigName(const char *Name,char *FullName)
 #endif
 
 
+char* GetVolNumPart(char *ArcName)
+{
+  char *ChPtr=ArcName+strlen(ArcName)-1;
+  while (!isdigit(*ChPtr) && ChPtr>ArcName)
+    ChPtr--;
+  char *NumPtr=ChPtr;
+  while (isdigit(*NumPtr) && NumPtr>ArcName)
+    NumPtr--;
+  while (NumPtr>ArcName && *NumPtr!='.')
+  {
+    if (isdigit(*NumPtr))
+    {
+      char *Dot=strchrd(PointToName(ArcName),'.');
+      if (Dot!=NULL && Dot<NumPtr)
+        ChPtr=NumPtr;
+      break;
+    }
+    NumPtr--;
+  }
+  return(ChPtr);
+}
+
+
 void NextVolumeName(char *ArcName,bool OldNumbering)
 {
   char *ChPtr;
@@ -345,8 +368,8 @@ void NextVolumeName(char *ArcName,bool OldNumbering)
       strcpy(ChPtr+1,"rar");
   if (!OldNumbering)
   {
-    while (!isdigit(*ChPtr) && ChPtr>ArcName)
-      ChPtr--;
+    ChPtr=GetVolNumPart(ArcName);
+
     while ((++(*ChPtr))=='9'+1)
     {
       *ChPtr='0';
@@ -380,38 +403,6 @@ void NextVolumeName(char *ArcName,bool OldNumbering)
     }
 }
 
-/*
-bool PrevVolumeName(char *ArcName,bool OldNumbering)
-{
-  char *ChPtr;
-  if ((ChPtr=GetExt(ArcName))==NULL)
-    return(false);
-  if (OldNumbering && (stricomp(ChPtr,".rar")==0 || stricomp(ChPtr,".exe")==0))
-    return(false);
-  if (!OldNumbering)
-  {
-    while (!isdigit(*ChPtr) && ChPtr>ArcName)
-      ChPtr--;
-    while ((--(*ChPtr))=='0'-1)
-    {
-      *ChPtr='9';
-      ChPtr--;
-    }
-  }
-  else
-    if (strcmp(ChPtr+2,"00")==0)
-      strcpy(ChPtr+2,"rar");
-    else
-    {
-      ChPtr+=3;
-      while ((--(*ChPtr))=='0'-1)
-      {
-        *ChPtr='9';
-        ChPtr--;
-      }
-    }
-}
-*/
 
 bool IsNameUsable(const char *Name)
 {
@@ -544,6 +535,7 @@ int ParseVersionFileName(char *Name,wchar *NameW,bool Truncate)
 }
 
 
+#ifndef SFX_MODULE
 char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering)
 {
   if (FirstName!=VolName)
@@ -552,7 +544,7 @@ char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering)
   if (NewNumbering)
   {
     int N='1';
-    for (char *ChPtr=FirstName+strlen(FirstName)-1;ChPtr>FirstName;ChPtr--)
+    for (char *ChPtr=GetVolNumPart(FirstName);ChPtr>FirstName;ChPtr--)
       if (isdigit(*ChPtr))
       {
         *ChPtr=N;
@@ -590,5 +582,8 @@ char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering)
   }
   return(VolNumStart);
 }
+#endif
+
+
 
 

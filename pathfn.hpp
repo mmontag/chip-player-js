@@ -24,6 +24,7 @@ void GetFilePath(const wchar *FullName,wchar *Path);
 void RemoveNameFromPath(char *Path);
 void RemoveNameFromPath(wchar *Path);
 void GetConfigName(const char *Name,char *FullName);
+char* GetVolNumPart(char *ArcName);
 void NextVolumeName(char *ArcName,bool OldNumbering);
 bool IsNameUsable(const char *Name);
 void MakeNameUsable(char *Name,bool Extended);
@@ -34,6 +35,6 @@ bool IsDiskLetter(const char *Path);
 void GetPathRoot(const char *Path,char *Root);
 int ParseVersionFileName(char *Name,wchar *NameW,bool Truncate);
 char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering);
-void GenerateArcName(char *ArcName,char *GenerateMask);
+
 
 #endif

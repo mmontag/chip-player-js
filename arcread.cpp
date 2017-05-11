@@ -490,7 +490,7 @@ void Archive::ConvertUnknownHeader()
     if (*s=='/' || *s=='\\')
       *s=CPATHDIVIDER;
 #if defined(_APPLE) && !defined(UNICODE_SUPPORTED)
-    if (*s<32 || *s>127)
+    if ((byte)*s<32 || (byte)*s>127)
       *s='_';
 #endif
   }

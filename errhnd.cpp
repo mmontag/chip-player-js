@@ -38,6 +38,7 @@ void ErrorHandler::CloseError(const char *FileName)
 {
 #ifndef SILENT
   ErrMsg(NULL,St(MErrFClose),FileName);
+  SysErrMsg();
   Throw(FATAL_ERROR);
 #endif
 }
@@ -70,6 +71,7 @@ void ErrorHandler::WriteError(const char *FileName)
 {
 #ifndef SILENT
   ErrMsg(NULL,St(MErrWrite),FileName);
+  SysErrMsg();
   Throw(WRITE_ERROR);
 #endif
 }
@@ -79,6 +81,7 @@ void ErrorHandler::WriteError(const char *FileName)
 void ErrorHandler::WriteErrorFAT(const char *FileName)
 {
 #if !defined(SILENT) && !defined(SFX_MODULE)
+  SysErrMsg();
   ErrMsg(NULL,St(MNTFSRequired),FileName);
   Throw(WRITE_ERROR);
 #endif
@@ -104,6 +107,7 @@ void ErrorHandler::SeekError(const char *FileName)
 {
 #ifndef SILENT
   ErrMsg(NULL,St(MErrSeek),FileName);
+  SysErrMsg();
   Throw(FATAL_ERROR);
 #endif
 }
@@ -122,6 +126,7 @@ void ErrorHandler::OpenErrorMsg(const char *FileName)
 #ifndef SILENT
   Log(NULL,St(MCannotOpen),FileName);
   Alarm();
+  SysErrMsg();
 #endif
 }
 
@@ -131,6 +136,7 @@ void ErrorHandler::CreateErrorMsg(const char *FileName)
 #ifndef SILENT
   Log(NULL,St(MCannotCreate),FileName);
   Alarm();
+  SysErrMsg();
 #endif
 }
 
@@ -139,6 +145,7 @@ void ErrorHandler::ReadErrorMsg(const char *FileName)
 {
 #ifndef SILENT
   ErrMsg(NULL,St(MErrRead),FileName);
+  SysErrMsg();
 #endif
 }
 
@@ -248,3 +255,35 @@ void ErrorHandler::Throw(int Code)
 #endif
 }
 
+
+void ErrorHandler::SysErrMsg()
+{
+#if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(SILENT)
+  char *lpMsgBuf=NULL;
+  int ErrType=GetLastError();
+  if (ErrType!=0 && FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
+              NULL,GetLastError(),MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+              (LPTSTR) &lpMsgBuf,0,NULL))
+  {
+    char *CurMsg=lpMsgBuf;
+    while (CurMsg!=NULL)
+    {
+      while (*CurMsg=='\r' || *CurMsg=='\n')
+        CurMsg++;
+      if (*CurMsg==0)
+        break;
+      char *EndMsg=strchr(CurMsg,'\r');
+      if (EndMsg==NULL)
+        EndMsg=strchr(CurMsg,'\n');
+      if (EndMsg!=NULL)
+      {
+        *EndMsg=0;
+        EndMsg++;
+      }
+      Log(NULL,"\n%s",CurMsg);
+      CurMsg=EndMsg;
+    }
+  }
+  LocalFree( lpMsgBuf );
+#endif
+}

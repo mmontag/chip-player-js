@@ -129,3 +129,21 @@ unsigned int loctoupper(unsigned int ch)
 
 
 
+
+
+bool LowAscii(const char *Str)
+{
+  for (int I=0;Str[I]!=0;I++)
+    if ((byte)Str[I]<32 || (byte)Str[I]>127)
+      return(false);
+  return(true);
+}
+
+
+bool LowAscii(const wchar *Str)
+{
+  for (int I=0;Str[I]!=0;I++)
+    if (Str[I]<32 || Str[I]>127)
+      return(false);
+  return(true);
+}

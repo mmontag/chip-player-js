@@ -722,6 +722,7 @@ void CommandData::OutHelp()
     MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,
     MCHelpSwAP,MCHelpSwAVm,MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
     MCHelpSwDH,MCHelpSwEP,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,MCHelpSwINUL,
+    MCHelpSwIOFF,
     MCHelpSwKB,MCHelpSwOp,MCHelpSwOm,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,
     MCHelpSwR,MCHelpSwRI,MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,
     MCHelpSwU,MCHelpSwV,MCHelpSwVER,MCHelpSwVP,MCHelpSwX,MCHelpSwXa,
@@ -736,7 +737,7 @@ void CommandData::OutHelp()
     MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,MCHelpSwDS,MCHelpSwEa,MCHelpSwED,
     MCHelpSwEE,MCHelpSwEN,MCHelpSwEP,MCHelpSwEP1,MCHelpSwEP2,
     MCHelpSwF,MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,MCHelpSwIERR,MCHelpSwILOG,
-    MCHelpSwINUL,MCHelpSwISND,MCHelpSwK,MCHelpSwKB,MCHelpSwMn,
+    MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwISND,MCHelpSwK,MCHelpSwKB,MCHelpSwMn,
     MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,MCHelpSwOp,MCHelpSwOm,MCHelpSwOL,
     MCHelpSwOS,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwR0,
     MCHelpSwRI,MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSFX,
@@ -756,7 +757,7 @@ void CommandData::OutHelp()
 #endif
 #ifndef _WIN_32
     if (Help[I]==MCHelpSwIEML || Help[I]==MCHelpSwVD || Help[I]==MCHelpSwAC ||
-        Help[I]==MCHelpSwAO || Help[I]==MCHelpSwOS)
+        Help[I]==MCHelpSwAO || Help[I]==MCHelpSwOS || Help[I]==MCHelpSwIOFF)
       continue;
 #endif
 #if !defined(_UNIX) && !defined(_WIN_32)

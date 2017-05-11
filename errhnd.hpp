@@ -39,6 +39,7 @@ class ErrorHandler
     void Throw(int Code);
     void SetSilent(bool Mode) {Silent=Mode;};
     void SetShutdown(bool Mode) {DoShutdown=Mode;};
+    void SysErrMsg();
 };
 
 #endif

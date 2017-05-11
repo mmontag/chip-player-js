@@ -17,4 +17,7 @@ unsigned int loctoupper(unsigned int ch);
 
 
 
+bool LowAscii(const char *Str);
+bool LowAscii(const wchar *Str);
+
 #endif

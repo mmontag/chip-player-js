@@ -3,6 +3,7 @@
 CmdExtract::CmdExtract():DataIO(NULL)
 {
   TotalFileCount=0;
+  *Password=0;
   Unp=new Unpack(&DataIO);
   Unp->Init(NULL);
 }
@@ -11,6 +12,7 @@ CmdExtract::CmdExtract():DataIO(NULL)
 CmdExtract::~CmdExtract()
 {
   delete Unp;
+  memset(Password,0,sizeof(Password));
 }
 
 
@@ -31,7 +33,7 @@ void CmdExtract::DoExtract(CommandData *Cmd)
       DataIO.ProcessedArcSize+=FD.Size;
   }
 
-  if (TotalFileCount==0)
+  if (TotalFileCount==0 && *Cmd->Command!='I')
   {
     mprintf(St(MExtrNoFiles));
     ErrHandler.SetErrorCode(WARNING);
@@ -59,8 +61,9 @@ void CmdExtract::ExtractArchiveInit(CommandData *Cmd,Archive &Arc)
   FirstFile=true;
 #endif
 
-  strcpy(Password,Cmd->Password);
-  PasswordAll=(*Password!=0);
+  if (*Cmd->Password!=0)
+    strcpy(Password,Cmd->Password);
+  PasswordAll=(*Cmd->Password!=0);
 
   DataIO.UnpVolume=false;
 
@@ -127,7 +130,6 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
       else
         break;
   }
-  memset(Password,0,sizeof(Password));
   return(EXTRACT_ARC_NEXT);
 }
 
@@ -208,6 +210,15 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
     AllMatchesExact=false;
 
   bool WideName=(Arc.NewLhd.Flags & LHD_UNICODE);
+
+#ifdef _APPLE
+  if (WideName)
+  {
+    WideToUtf(Arc.NewLhd.FileNameW,ArcFileName,sizeof(ArcFileName));
+    WideName=false;
+  }
+#endif
+
   wchar *DestNameW=WideName ? DestFileNameW:NULL;
 
 #ifdef UNICODE_SUPPORTED
@@ -320,7 +331,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
       }
 #if !defined(GUI) && !defined(SILENT)
       else
-        if (!PasswordAll && !Arc.Solid)
+        if (!PasswordAll && (!Arc.Solid || Arc.NewLhd.UnpVer>=20 && (Arc.NewLhd.Flags & LHD_SOLID)==0))
         {
           eprintf(St(MUseCurPsw),ArcFileName);
           switch(Cmd->AllYes ? 1:Ask(St(MYesNoAll)))
@@ -490,6 +501,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
           else
           {
             Log(Arc.FileName,St(MExtrErrMkDir),DestFileName);
+            ErrHandler.SysErrMsg();
 #ifdef RARDLL
             Cmd->DllError=ERAR_ECREATE;
 #endif

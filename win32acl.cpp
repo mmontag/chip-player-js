@@ -60,6 +60,7 @@ void ExtractACL(Archive &Arc,char *FileName,wchar *FileNameW)
   if (!SetCode)
   {
     Log(Arc.FileName,St(MACLSetError),FileName);
+    ErrHandler.SysErrMsg();
     ErrHandler.SetErrorCode(WARNING);
   }
 }
@@ -92,6 +93,7 @@ void ExtractACLNew(Archive &Arc,char *FileName,wchar *FileNameW)
   if (!SetCode)
   {
     Log(Arc.FileName,St(MACLSetError),FileName);
+    ErrHandler.SysErrMsg();
     ErrHandler.SetErrorCode(WARNING);
   }
 }

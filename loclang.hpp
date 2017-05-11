@@ -76,6 +76,7 @@
 #define   MCHelpSwIERR       "\n  ierr          Send all messages to stderr"
 #define   MCHelpSwILOG       "\n  ilog[name]    Log errors to file (registered versions only)"
 #define   MCHelpSwINUL       "\n  inul          Disable all messages"
+#define   MCHelpSwIOFF       "\n  ioff          Turn PC off after completing an operation"
 #define   MCHelpSwISND       "\n  isnd          Enable sound"
 #define   MCHelpSwK          "\n  k             Lock archive"
 #define   MCHelpSwKB         "\n  kb            Keep broken extracted files"

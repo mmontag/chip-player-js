@@ -274,9 +274,12 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
     if (WriteFlags[I] || SrcFile[I]==NULL)
       Erasures[EraSize++]=I;
 
+  int RecCount=0;
 
   while (true)
   {
+    if ((++RecCount & 15)==0)
+      Wait();
     int MaxRead=0;
     for (int I=0;I<TotalFiles;I++)
       if (WriteFlags[I] || SrcFile[I]==NULL)

@@ -65,7 +65,7 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
   flags|=O_BINARY;
 #endif
 #if defined(_EMX) && !defined(_DJGPP)
-  int sflags=OpenShared ? SH_DENYNO:SH_DENYRW;
+  int sflags=OpenShared ? SH_DENYNO:SH_DENYWR;
   int handle=sopen(Name,flags,sflags);
 #else
   int handle=open(Name,flags);
@@ -274,8 +274,9 @@ void File::Write(const void *Data,int Size)
     if (!Success && HandleType==FILE_HANDLENORMAL)
     {
 #if defined(_WIN_32) && !defined(SFX_MODULE) && !defined(RARDLL)
-      Int64 FileSize=Tell()+Size;
-      if (GetFreeDisk(FileName)>Size && FileSize>0xffffffff)
+      Int64 FilePos=Tell();
+      if (GetFreeDisk(FileName)>Size && FilePos-Size<=0xffffffff &&
+          FilePos+Size>0xffffffff)
         ErrHandler.WriteErrorFAT(FileName);
 #endif
       if (ErrHandler.AskRepeatWrite(FileName))

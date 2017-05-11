@@ -17,7 +17,7 @@ bool IsLink(uint Attr);
 void SetSFXMode(const char *FileName);
 void EraseDiskContents(const char *FileName);
 bool IsDeleteAllowed(uint FileAttr);
-void PrepareToDelete(const char *Name,const wchar *NameW);
+void PrepareToDelete(const char *Name,const wchar *NameW=NULL);
 uint GetFileAttr(const char *Name,const wchar *NameW=NULL);
 bool SetFileAttr(const char *Name,const wchar *NameW,uint Attr);
 void ConvertNameToFull(const char *Src,char *Dest);

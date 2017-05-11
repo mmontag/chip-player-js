@@ -26,6 +26,10 @@
    BASEPATHCC environment (or makefile) variable containing
    the path to Borland C++ installation.
 
+   Makefile.unix contains both Linux and IRIX compiler option sets.
+   Linux is selected by default. If you need to compile Unrar for IRIX,
+   just uncomment corresponding lines.
+
 
    2. Unrar binaries
 

@@ -103,6 +103,10 @@ bool FindFile::Next(struct FindData *fd,bool GetSymLink)
     }
   }
   *fd->NameW=0;
+#ifdef _APPLE
+  if (!LowAscii(fd->Name))
+    UtfToWide(fd->Name,fd->NameW,sizeof(fd->NameW));
+#endif
 #endif
   fd->IsDir=IsDir(fd->FileAttr);
   FirstCall=FALSE;
@@ -157,6 +161,10 @@ bool FindFile::FastFind(const char *FindMask,const wchar *FindMaskW,struct FindD
   fd->FileTime=UnixTimeToDos(st.st_mtime);
   strcpy(fd->Name,FindMask);
   *fd->NameW=0;
+#ifdef _APPLE
+  if (!LowAscii(fd->Name))
+    UtfToWide(fd->Name,fd->NameW,sizeof(fd->NameW));
+#endif
 #endif
   fd->IsDir=IsDir(fd->FileAttr);
   return(true);
@@ -244,14 +252,7 @@ HANDLE FindFile::Win32Find(HANDLE hFind,const char *Mask,const wchar *MaskW,stru
       fd->ftLastAccessTime=FindData.ftLastAccessTime;
       fd->ftLastWriteTime=FindData.ftLastWriteTime;
 
-      bool LowerAscii=true;
-      for (int I=0;fd->Name[I]!=0;I++)
-        if ((byte)fd->Name[I]<32 || (byte)fd->Name[I]>127)
-        {
-          LowerAscii=false;
-          break;
-        }
-      if (LowerAscii)
+      if (LowAscii(fd->Name))
         *fd->NameW=0;
     }
   }

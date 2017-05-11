@@ -161,10 +161,21 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown)
 
   mprintf("\n%c",(hd.Flags & LHD_PASSWORD) ? '*' : ' ');
 
+  char *Name=hd.FileName;
+
+#ifdef UNICODE_SUPPORTED
+  char ConvertedName[NM];
+  if ((hd.Flags & LHD_UNICODE)!=0 && *hd.FileNameW!=0)
+  {
+    WideToChar(hd.FileNameW,ConvertedName);
+    Name=ConvertedName;
+  }
+#endif
+
   if (Verbose)
-    mprintf("%s\n%12s ",hd.FileName,"");
+    mprintf("%s\n%12s ",Name,"");
   else
-    mprintf("%-12s",PointToName(hd.FileName));
+    mprintf("%-12s",PointToName(Name));
 
   char UnpSizeText[20],PackSizeText[20];
   itoa(hd.FullUnpSize,UnpSizeText);
