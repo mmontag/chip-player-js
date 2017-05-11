@@ -420,19 +420,29 @@ void GetConfigName(const char *Name,char *FullName,bool CheckExist)
 #endif
 
 
-// returns a pointer to rightmost digit of volume number
+// Returns a pointer to rightmost digit of volume number.
 char* GetVolNumPart(char *ArcName)
 {
+  // Pointing to last name character.
   char *ChPtr=ArcName+strlen(ArcName)-1;
+
+  // Skipping the archive extension.
   while (!isdigit(*ChPtr) && ChPtr>ArcName)
     ChPtr--;
+
+  // Skipping the numeric part of name.
   char *NumPtr=ChPtr;
   while (isdigit(*NumPtr) && NumPtr>ArcName)
     NumPtr--;
+
+  // Searching for first numeric part in names like name.part##of##.rar.
+  // Stop search on the first dot.
   while (NumPtr>ArcName && *NumPtr!='.')
   {
     if (isdigit(*NumPtr))
     {
+      // Validate the first numeric part only if it has a dot somwhere 
+      // before it.
       char *Dot=strchrd(PointToName(ArcName),'.');
       if (Dot!=NULL && Dot<NumPtr)
         ChPtr=NumPtr;
@@ -507,7 +517,7 @@ void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumberi
 
     int CharsToCopy=strlen(ArcName)-(NumPtr-ArcName);
     int DestPos=strlenw(ArcNameW)-CharsToCopy;
-    if (DestPos>0)
+    if (DestPos>=0)
     {
       CharToWide(NumPtr,ArcNameW+DestPos,MaxLength-DestPos-1);
       ArcNameW[MaxLength-1]=0;

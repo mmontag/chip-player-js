@@ -31,9 +31,9 @@ MKDIR_CODE MakeDir(const char *Name,const wchar *NameW,uint Attr)
   return(errno==ENOENT ? MKDIR_BADPATH:MKDIR_ERROR);
 #endif
 #ifdef _UNIX
-  int prevmask=umask(0);
+//  int prevmask=umask(0);
   int ErrCode=Name==NULL ? -1:mkdir(Name,(mode_t)Attr);
-  umask(prevmask);
+//  umask(prevmask);
   if (ErrCode==-1)
     return(errno==ENOENT ? MKDIR_BADPATH:MKDIR_ERROR);
   return(MKDIR_SUCCESS);
@@ -553,7 +553,7 @@ bool DelDir(const char *Name,const wchar *NameW)
 }
 
 
-#if defined(_WIN_32) && !defined(_WIN_CE)
+#if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE)
 bool SetFileCompression(char *Name,wchar *NameW,bool State)
 {
   wchar FileNameW[NM];

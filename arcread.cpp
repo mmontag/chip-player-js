@@ -589,8 +589,9 @@ void Archive::ConvertUnknownHeader()
     // ':' in file names is allowed in Unix, but not in Windows.
     // Even worse, file data will be written to NTFS stream on NTFS,
     // so automatic name correction on file create error in extraction 
-    // routine does not work. Let's better replace ':' now.
-    if (NewLhd.HostOS==HOST_UNIX && *s==':')
+    // routine does not work. In Windows and DOS versions we better 
+    // replace ':' now.
+    if (*s==':')
       *s='_';
 #endif
 
@@ -605,8 +606,9 @@ void Archive::ConvertUnknownHeader()
     // ':' in file names is allowed in Unix, but not in Windows.
     // Even worse, file data will be written to NTFS stream on NTFS,
     // so automatic name correction on file create error in extraction 
-    // routine does not work. Let's better replace ':' now.
-    if (NewLhd.HostOS==HOST_UNIX && *s==':')
+    // routine does not work. In Windows and DOS versions we better 
+    // replace ':' now.
+    if (*s==':')
       *s='_';
 #endif
   }

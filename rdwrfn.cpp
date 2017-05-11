@@ -59,13 +59,13 @@ int ComprDataIO::UnpRead(byte *Addr,uint Count)
       RetCode=SrcFile->Read(ReadAddr,ReadSize);
       FileHeader *hd=SubHead!=NULL ? SubHead:&SrcArc->NewLhd;
       if (hd->Flags & LHD_SPLIT_AFTER)
-        PackedCRC=CRC(PackedCRC,ReadAddr,ReadSize);
+        PackedCRC=CRC(PackedCRC,ReadAddr,RetCode);
     }
     CurUnpRead+=RetCode;
     TotalRead+=RetCode;
 #ifndef NOVOLUME
-    // these variable are not used below in NOVOLUME mode, so it is better
-    // to exclude these commands to avoid compiler warnings
+    // These variable are not used in NOVOLUME mode, so it is better
+    // to exclude commands below to avoid compiler warnings.
     ReadAddr+=RetCode;
     Count-=RetCode;
 #endif

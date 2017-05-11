@@ -6,8 +6,8 @@
 #
 
 # Linux using GCC
-CXX=g++
-CXXFLAGS=-O2
+#CXX=g++
+#CXXFLAGS=-O2
 DEFINES=-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 STRIP=strip
 DESTDIR=/usr
@@ -94,8 +94,10 @@ DESTDIR=/usr
 
 ##########################
 
-COMPILE=$(CXX) $(CXXFLAGS) $(DEFINES)
+COMPILE=$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEFINES)
 LINK=$(CXX)
+
+WHAT=UNRAR
 
 UNRAR_OBJ=filestr.o recvol.o rs.o scantree.o
 LIB_OBJ=filestr.o scantree.o dll.o
@@ -117,7 +119,6 @@ uninstall:	uninstall-unrar
 clean:
 	@rm -f *.o *.bak *~
 
-unrar:	WHAT=UNRAR
 unrar:	$(OBJECTS) $(UNRAR_OBJ)
 	@rm -f unrar
 	$(LINK) -o unrar $(LDFLAGS) $(OBJECTS) $(UNRAR_OBJ) $(LIBS)	
