@@ -37,7 +37,7 @@ void Archive::UnexpEndArcMsg()
 #ifndef SHELL_EXT
     Log(FileName,St(MLogUnexpEOF));
 #endif
-    ErrHandler.SetErrorCode(WARNING);
+    ErrHandler.SetErrorCode(RARX_WARNING);
   }
 }
 
@@ -74,19 +74,29 @@ size_t Archive::ReadHeader()
     if (*Cmd->Password==0)
     {
 #ifdef RARDLL
-      char PasswordA[MAXPASSWORD];
-      if (Cmd->Callback==NULL ||
-          Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LPARAM)PasswordA,ASIZE(PasswordA))==-1)
+      if (Cmd->Callback!=NULL)
+      {
+        if (Cmd->Callback(UCM_NEEDPASSWORDW,Cmd->UserData,(LPARAM)Cmd->Password,ASIZE(Cmd->Password))==-1)
+          *Cmd->Password=0;
+        if (*Cmd->Password==0)
+        {
+          char PasswordA[MAXPASSWORD];
+          if (Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LPARAM)PasswordA,ASIZE(PasswordA))==-1)
+            *PasswordA=0;
+          GetWideName(PasswordA,NULL,Cmd->Password,ASIZE(Cmd->Password));
+        }
+      }
+      if (*Cmd->Password==0)
       {
         Close();
-        ErrHandler.Exit(USER_BREAK);
+        Cmd->DllError=ERAR_MISSING_PASSWORD;
+        ErrHandler.Exit(RARX_USERBREAK);
       }
-      GetWideName(PasswordA,NULL,Cmd->Password,ASIZE(Cmd->Password));
 #else
       if (!GetPassword(PASSWORD_ARCHIVE,FileName,FileNameW,Cmd->Password,ASIZE(Cmd->Password)))
       {
         Close();
-        ErrHandler.Exit(USER_BREAK);
+        ErrHandler.Exit(RARX_USERBREAK);
       }
 #endif
     }
@@ -114,7 +124,7 @@ size_t Archive::ReadHeader()
     Log(FileName,St(MLogFileHead),"???");
 #endif
     BrokenFileHeader=true;
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(RARX_CRC);
     return(0);
   }
 
@@ -298,7 +308,7 @@ size_t Archive::ReadHeader()
           if (hd->HeadType==NEWSUB_HEAD && strlen(hd->FileName)<ASIZE(hd->FileName)-5)
             strcat(hd->FileName,"- ???");
           BrokenFileHeader=true;
-          ErrHandler.SetErrorCode(WARNING);
+          ErrHandler.SetErrorCode(RARX_WARNING);
 
           // If we have a broken encrypted header, we do not need to display
           // the error message here, because it will be displayed for such
@@ -436,7 +446,7 @@ size_t Archive::ReadHeader()
         FailedHeaderDecryption=true;
         BrokenFileHeader=true;
 
-        ErrHandler.SetErrorCode(CRC_ERROR);
+        ErrHandler.SetErrorCode(RARX_CRC);
         return(0);
       }
     }
@@ -448,7 +458,7 @@ size_t Archive::ReadHeader()
     Log(FileName,St(MLogFileHead),"???");
 #endif
     BrokenFileHeader=true;
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(RARX_CRC);
     return(0);
   }
   return(Raw.Size());
@@ -693,7 +703,7 @@ bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
 #ifndef SHELL_EXT
     Log(FileName,St(MSubHeadCorrupt));
 #endif
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(RARX_CRC);
     return(false);
   }
   if (SubHead.Method<0x30 || SubHead.Method>0x35 || SubHead.UnpVer>/*PACK_VER*/36)
@@ -739,7 +749,7 @@ bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
 #ifndef SHELL_EXT
     Log(FileName,St(MSubHeadDataCRC),SubHead.FileName);
 #endif
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(RARX_CRC);
     if (UnpData!=NULL)
       UnpData->Reset();
     return(false);

@@ -127,7 +127,7 @@ void ComprDataIO::UnpWrite(byte *Addr,size_t Count)
   {
     if (Cmd->Callback!=NULL &&
         Cmd->Callback(UCM_PROCESSDATA,Cmd->UserData,(LPARAM)Addr,Count)==-1)
-      ErrHandler.Exit(USER_BREAK);
+      ErrHandler.Exit(RARX_USERBREAK);
     if (Cmd->ProcessDataProc!=NULL)
     {
       // Here we preserve ESP value. It is necessary for those developers,
@@ -153,7 +153,7 @@ void ComprDataIO::UnpWrite(byte *Addr,size_t Count)
       _ESP=_EBX;
 #endif
       if (RetCode==0)
-        ErrHandler.Exit(USER_BREAK);
+        ErrHandler.Exit(RARX_USERBREAK);
     }
   }
 #endif // RARDLL

@@ -6,7 +6,7 @@
 #define   MRetryAbort        "_Retry_Abort"
 #define   MCopyright         "\nRAR %s   Copyright (c) 1993-%d Alexander Roshal   %d %s %d"
 #define   MRegTo             "\nRegistered to %s\n"
-#define   MShare             "\nShareware version         Type RAR -? for help\n"
+#define   MShare             "\nTrial version             Type RAR -? for help\n"
 #define   MUCopyright        "\nUNRAR %s freeware      Copyright (c) 1993-%d Alexander Roshal\n"
 #define   MBeta              "beta"
 #define   MMonthJan          "Jan"

@@ -12,7 +12,6 @@ Unpack::Unpack(ComprDataIO *DataIO)
 {
   UnpIO=DataIO;
   Window=NULL;
-  ExternalWindow=false;
   Suspended=false;
   UnpAllBuf=false;
   UnpSomeRead=false;
@@ -21,31 +20,24 @@ Unpack::Unpack(ComprDataIO *DataIO)
 
 Unpack::~Unpack()
 {
-  if (Window!=NULL && !ExternalWindow)
-    delete[] Window;
+  delete[] Window;
   InitFilters();
 }
 
 
-void Unpack::Init(byte *Window)
+void Unpack::Init()
 {
-  if (Window==NULL)
-  {
-    Unpack::Window=new byte[MAXWINSIZE];
+  Window=new byte[MAXWINSIZE];
 
-    // Clean the window to generate the same output when unpacking corrupt
-    // RAR files, which may access to unused areas of sliding dictionary.
-    memset(Unpack::Window,0,MAXWINSIZE);
 #ifndef ALLOW_EXCEPTIONS
-    if (Unpack::Window==NULL)
-      ErrHandler.MemoryError();
+  if (Window==NULL)
+    ErrHandler.MemoryError();
 #endif
-  }
-  else
-  {
-    Unpack::Window=Window;
-    ExternalWindow=true;
-  }
+
+  // Clean the window to generate the same output when unpacking corrupt
+  // RAR files, which may access to unused areas of sliding dictionary.
+  memset(Window,0,MAXWINSIZE);
+
   UnpInitData(false);
 
 #ifndef SFX_MODULE
@@ -83,13 +75,6 @@ inline void Unpack::InsertOldDist(unsigned int Distance)
   OldDist[2]=OldDist[1];
   OldDist[1]=OldDist[0];
   OldDist[0]=Distance;
-}
-
-
-inline void Unpack::InsertLastMatch(unsigned int Length,unsigned int Distance)
-{
-  LastDist=Distance;
-  LastLength=Length;
 }
 
 
@@ -380,7 +365,7 @@ void Unpack::Unpack29(bool Solid)
       }
 
       InsertOldDist(Distance);
-      InsertLastMatch(Length,Distance);
+      LastLength=Length;
       CopyString(Length,Distance);
       continue;
     }
@@ -399,7 +384,7 @@ void Unpack::Unpack29(bool Solid)
     if (Number==258)
     {
       if (LastLength!=0)
-        CopyString(LastLength,LastDist);
+        CopyString(LastLength,OldDist[0]);
       continue;
     }
     if (Number<263)
@@ -417,7 +402,7 @@ void Unpack::Unpack29(bool Solid)
         Length+=getbits()>>(16-Bits);
         addbits(Bits);
       }
-      InsertLastMatch(Length,Distance);
+      LastLength=Length;
       CopyString(Length,Distance);
       continue;
     }
@@ -430,7 +415,7 @@ void Unpack::Unpack29(bool Solid)
         addbits(Bits);
       }
       InsertOldDist(Distance);
-      InsertLastMatch(2,Distance);
+      LastLength=2;
       CopyString(2,Distance);
       continue;
     }
@@ -554,7 +539,7 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
   if (NewFilter) // New filter code, never used before since VM reset.
   {
     // Too many different filters, corrupt archive.
-    if (FiltPos>1024)
+    if (FiltPos>MAX_FILTERS)
     {
       delete StackFilter;
       return false;
@@ -836,6 +821,8 @@ void Unpack::UnpWriteBuf()
       }
       else
       {
+        // Current filter intersects the window write border, so we adjust
+        // the window border to process this filter next time, not now.
         for (size_t J=I;J<PrgStack.Size();J++)
         {
           UnpackFilter *flt=PrgStack[J];
@@ -1112,7 +1099,7 @@ void Unpack::MakeDecodeTables(byte *LengthTable,DecodeTable *Dec,uint Size)
 
       // Prepare the decode table, so this position in code list will be
       // decoded to current alphabet item number.
-      Dec->DecodeNum[LastPos]=I;
+      Dec->DecodeNum[LastPos]=(ushort)I;
 
       // We'll use next position number for this bit length next time.
       // So we pass through the entire range of positions available

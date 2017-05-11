@@ -53,7 +53,7 @@ bool WideToChar(const wchar *Src,char *Dest,size_t DestSize)
     }
 #endif
 
-  // We tried to return the zero terminated string if conversion is failed,
+  // We tried to return the empty string if conversion is failed,
   // but it does not work well. WideCharToMultiByte returns 'failed' code
   // and partially converted string even if we wanted to convert only a part
   // of string and passed DestSize smaller than required for fully converted
@@ -112,7 +112,7 @@ bool CharToWide(const char *Src,wchar *Dest,size_t DestSize)
     }
 #endif
 
-  // We tried to return the zero terminated string if conversion is failed,
+  // We tried to return the empty string if conversion is failed,
   // but it does not work well. MultiByteToWideChar returns 'failed' code
   // even if we wanted to convert only a part of string and passed DestSize
   // smaller than required for fully converted string. Such call is the valid

@@ -12,13 +12,8 @@ link  = $(binpath)\ilink32
 objpath     = .
 guiopt      = -WC -H=$(objpath)\rar.csm
 
-!ifndef RARDLL
-!ifndef GUI
-guiopt=$(guiopt) -x-
-!endif
 !ifdef SFX_MODULE
 guiopt=$(guiopt) -x-
-!endif
 !endif
 
 !ifdef DEBUG

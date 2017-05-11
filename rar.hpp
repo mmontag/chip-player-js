@@ -51,12 +51,11 @@
 #include "resource.hpp"
 #include "compress.hpp"
 
-
 #include "rarvm.hpp"
 #include "model.hpp"
 
-
 #include "unpack.hpp"
+
 
 
 #include "extinfo.hpp"

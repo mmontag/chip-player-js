@@ -8,7 +8,7 @@ static int KbdAnsi(char *Addr,int Size);
 
 #if !defined(GUI) && !defined(SILENT)
 static void RawPrint(char *Msg,MESSAGE_TYPE MessageType);
-static uint GetKey();
+static byte GetKey();
 #endif
 
 static MESSAGE_TYPE MsgStream=MSG_STDOUT;
@@ -200,7 +200,7 @@ bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,
 
 
 #if !defined(GUI) && !defined(SILENT)
-uint GetKey()
+byte GetKey()
 {
   char Str[80];
   bool EndOfFile;
@@ -215,9 +215,9 @@ uint GetKey()
   {
     // Looks like stdin is a null device. We can enter to infinite loop
     // calling Ask(), so let's better exit.
-    ErrHandler.Exit(USER_BREAK);
+    ErrHandler.Exit(RARX_USERBREAK);
   }
-  return(Str[0]);
+  return (byte)Str[0];
 }
 #endif
 
@@ -260,13 +260,13 @@ int Ask(const char *AskStr)
     eprintf("[%c]%s",Item[I][KeyPos],&Item[I][KeyPos+1]);
   }
   eprintf(" ");
-  int Ch=GetKey();
+  byte Ch=GetKey();
 #if defined(_WIN_ALL)
-  OemToCharBuff((LPCSTR)&Ch,(LPTSTR)&Ch,1);
+  OemToCharBuffA((LPCSTR)&Ch,(LPSTR)&Ch,1);
 #endif
   Ch=loctoupper(Ch);
   for (int I=0;I<NumItems;I++)
-    if (Ch==Item[I][ItemKeyPos[I]])
+    if (Ch==(byte)Item[I][ItemKeyPos[I]])
       return(I+1);
   return(0);
 }

@@ -52,13 +52,14 @@ Archive::Archive(RAROptions *InitCmd)
 }
 
 
+
 #ifndef SHELL_EXT
 void Archive::CheckArc(bool EnableBroken)
 {
   if (!IsArchive(EnableBroken))
   {
     Log(FileName,St(MBadArc),FileName);
-    ErrHandler.Exit(FATAL_ERROR);
+    ErrHandler.Exit(RARX_FATAL);
   }
 }
 #endif
@@ -187,7 +188,7 @@ bool Archive::IsArchive(bool EnableBroken)
 #ifdef RARDLL
     Cmd->DllError=ERAR_UNKNOWN_FORMAT;
 #else
-    ErrHandler.SetErrorCode(WARNING);
+    ErrHandler.SetErrorCode(RARX_WARNING);
   #if !defined(SILENT) && !defined(SFX_MODULE)
       Log(FileName,St(MUnknownMeth),FileName);
       Log(FileName,St(MVerRequired),NewMhd.EncryptVer/10,NewMhd.EncryptVer%10);

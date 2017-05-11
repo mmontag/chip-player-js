@@ -49,7 +49,7 @@ enum OVERWRITE_MODE
 
 enum RAR_CHARSET { RCH_DEFAULT=0,RCH_ANSI,RCH_OEM,RCH_UNICODE };
 
-#define     MAX_FILTERS           16
+#define     MAX_FILTER_TYPES           16
 enum FilterState {FILTER_DEFAULT=0,FILTER_AUTO,FILTER_FORCE,FILTER_DISABLE};
 
 
@@ -138,7 +138,7 @@ class RAROptions
     bool Lock;
     bool Test;
     bool VolumePause;
-    FilterMode FilterModes[MAX_FILTERS];
+    FilterMode FilterModes[MAX_FILTER_TYPES];
     char EmailTo[NM];
     uint VersionControl;
     bool NoEndBlock;
@@ -150,7 +150,7 @@ class RAROptions
     EXTTIME_MODE xarctime;
     char CompressStdin[NM];
 
-#ifdef PACK_SMP
+#ifdef RAR_SMP
     uint Threads;
 #endif
 
