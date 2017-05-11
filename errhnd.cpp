@@ -177,7 +177,20 @@ void ErrorHandler::CreateErrorMsg(const char *ArcName,const wchar *ArcNameW,cons
   if (FileName!=NULL)
     Log(ArcName,St(MCannotCreate),FileName);
   Alarm();
-#if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE) && defined(MAX_PATH)
+
+#if defined(_WIN_ALL) && !defined(_WIN_CE) && defined(MAX_PATH)
+  CheckLongPathErrMsg(FileName,FileNameW);
+#endif
+
+  SysErrMsg();
+#endif
+}
+
+
+// Check the path length and display the error message if it is too long.
+void ErrorHandler::CheckLongPathErrMsg(const char *FileName,const wchar *FileNameW)
+{
+#if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined (SILENT) && defined(MAX_PATH)
   if (GetLastError()==ERROR_PATH_NOT_FOUND)
   {
     wchar WideFileName[NM];
@@ -191,11 +204,9 @@ void ErrorHandler::CreateErrorMsg(const char *ArcName,const wchar *ArcNameW,cons
     }
     if (NameLength>MAX_PATH)
     {
-      Log(ArcName,St(MMaxPathLimit),MAX_PATH);
+      Log(NULL,St(MMaxPathLimit),MAX_PATH);
     }
   }
-#endif
-  SysErrMsg();
 #endif
 }
 
@@ -281,6 +292,8 @@ void _stdfunction ProcessSignal(int SigType)
 #endif
 {
 #ifdef _WIN_ALL
+  // When a console application is run as a service, this allows the service
+  // to continue running after the user logs off. 
   if (SigType==CTRL_LOGOFF_EVENT)
     return(TRUE);
 #endif

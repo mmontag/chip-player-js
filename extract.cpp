@@ -709,6 +709,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
           else
           {
             Log(Arc.FileName,St(MExtrErrMkDir),DestFileName);
+            ErrHandler.CheckLongPathErrMsg(DestFileName,DestNameW);
             ErrHandler.SysErrMsg();
 #ifdef RARDLL
             Cmd->DllError=ERAR_ECREATE;

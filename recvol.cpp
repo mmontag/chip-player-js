@@ -3,8 +3,6 @@
 // Buffer size for all volumes involved.
 static const size_t TotalBufferSize=0x4000000;
 
-#define RECVOL_BUFSIZE  0x10000
-
 RecVolumes::RecVolumes()
 {
   Buf.Alloc(TotalBufferSize);

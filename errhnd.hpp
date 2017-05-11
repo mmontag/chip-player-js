@@ -37,6 +37,7 @@ class ErrorHandler
     void OpenErrorMsg(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
     void CreateErrorMsg(const char *FileName,const wchar *FileNameW=NULL);
     void CreateErrorMsg(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
+    void CheckLongPathErrMsg(const char *FileName,const wchar *FileNameW);
     void ReadErrorMsg(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
     void WriteErrorMsg(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
     void Exit(int ExitCode);

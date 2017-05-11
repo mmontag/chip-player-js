@@ -46,7 +46,7 @@ char* ConvertPath(const char *SrcPath,char *DestPath)
       DestPtr=s+4;
 
   // Remove any sequence of . and \ in the beginning of path string.
-  while (*DestPtr)
+  while (*DestPtr!=0)
   {
     const char *s=DestPtr;
     if (s[0] && IsDriveDiv(s[1]))
@@ -88,10 +88,14 @@ char* ConvertPath(const char *SrcPath,char *DestPath)
 wchar* ConvertPath(const wchar *SrcPath,wchar *DestPath)
 {
   const wchar *DestPtr=SrcPath;
+
+  // Prevent \..\ in any part of path string.
   for (const wchar *s=DestPtr;*s!=0;s++)
     if (IsPathDiv(s[0]) && s[1]=='.' && s[2]=='.' && IsPathDiv(s[3]))
       DestPtr=s+4;
-  while (*DestPtr)
+
+  // Remove any sequence of . and \ in the beginning of path string.
+  while (*DestPtr!=0)
   {
     const wchar *s=DestPtr;
     if (s[0] && IsDriveDiv(s[1]))
@@ -112,10 +116,17 @@ wchar* ConvertPath(const wchar *SrcPath,wchar *DestPath)
       break;
     DestPtr=s;
   }
+
+  // Code above does not remove last "..", doing here.
+  if (DestPtr[0]=='.' && DestPtr[1]=='.' && DestPtr[2]==0)
+    DestPtr+=2;
+  
   if (DestPath!=NULL)
   {
+    // SrcPath and DestPath can point to same memory area,
+    // so we use the temporary buffer for copying.
     wchar TmpStr[NM];
-    wcsncpy(TmpStr,DestPtr,sizeof(TmpStr)/sizeof(TmpStr[0])-1);
+    wcsncpyz(TmpStr,DestPtr,ASIZE(TmpStr));
     wcscpy(DestPath,TmpStr);
   }
   return((wchar *)DestPtr);
