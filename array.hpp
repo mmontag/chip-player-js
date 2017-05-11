@@ -1,6 +1,8 @@
 #ifndef _RAR_ARRAY_
 #define _RAR_ARRAY_
 
+extern ErrorHandler ErrHandler;
+
 template <class T> class Array
 {
   private:
