@@ -71,36 +71,42 @@ size_t Archive::ReadHeader()
       UnexpEndArcMsg();
       return(0);
     }
-    if (*Cmd->Password==0)
+    if (!Cmd->Password.IsSet())
     {
 #ifdef RARDLL
       if (Cmd->Callback!=NULL)
       {
-        if (Cmd->Callback(UCM_NEEDPASSWORDW,Cmd->UserData,(LPARAM)Cmd->Password,ASIZE(Cmd->Password))==-1)
-          *Cmd->Password=0;
-        if (*Cmd->Password==0)
+        wchar PasswordW[MAXPASSWORD];
+        *PasswordW=0;
+        if (Cmd->Callback(UCM_NEEDPASSWORDW,Cmd->UserData,(LPARAM)PasswordW,ASIZE(PasswordW))==-1)
+          *PasswordW=0;
+        if (*PasswordW==0)
         {
           char PasswordA[MAXPASSWORD];
+          *PasswordA=0;
           if (Cmd->Callback(UCM_NEEDPASSWORD,Cmd->UserData,(LPARAM)PasswordA,ASIZE(PasswordA))==-1)
             *PasswordA=0;
-          GetWideName(PasswordA,NULL,Cmd->Password,ASIZE(Cmd->Password));
+          GetWideName(PasswordA,NULL,PasswordW,ASIZE(PasswordW));
+          cleandata(PasswordA,sizeof(PasswordA));
         }
+        Cmd->Password.Set(PasswordW);
+        cleandata(PasswordW,sizeof(PasswordW));
       }
-      if (*Cmd->Password==0)
+      if (!Cmd->Password.IsSet())
       {
         Close();
         Cmd->DllError=ERAR_MISSING_PASSWORD;
         ErrHandler.Exit(RARX_USERBREAK);
       }
 #else
-      if (!GetPassword(PASSWORD_ARCHIVE,FileName,FileNameW,Cmd->Password,ASIZE(Cmd->Password)))
+      if (!GetPassword(PASSWORD_ARCHIVE,FileName,FileNameW,&Cmd->Password))
       {
         Close();
         ErrHandler.Exit(RARX_USERBREAK);
       }
 #endif
     }
-    HeadersCrypt.SetCryptKeys(Cmd->Password,HeadersSalt,false,false,NewMhd.EncryptVer>=36);
+    HeadersCrypt.SetCryptKeys(&Cmd->Password,HeadersSalt,false,false,NewMhd.EncryptVer>=36);
     Raw.SetCrypt(&HeadersCrypt);
 #endif
   }
@@ -727,8 +733,8 @@ bool Archive::ReadSubData(Array<byte> *UnpData,File *DestFile)
     SubDataIO.SetUnpackToMemory(&(*UnpData)[0],SubHead.UnpSize);
   }
   if (SubHead.Flags & LHD_PASSWORD)
-    if (*Cmd->Password!=0)
-      SubDataIO.SetEncryption(SubHead.UnpVer,Cmd->Password,
+    if (Cmd->Password.IsSet())
+      SubDataIO.SetEncryption(SubHead.UnpVer,&Cmd->Password,
              (SubHead.Flags & LHD_SALT) ? SubHead.Salt:NULL,false,
              SubHead.UnpVer>=36);
     else

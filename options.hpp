@@ -84,7 +84,7 @@ class RAROptions
     RAR_CHARSET FilelistCharset;
     char ArcPath[NM];
     wchar ArcPathW[NM];
-    wchar Password[MAXPASSWORD];
+    SecPassword Password;
     bool EncryptHeaders;
     char LogName[NM];
     MESSAGE_TYPE MsgStream;

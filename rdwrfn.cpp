@@ -246,18 +246,18 @@ void ComprDataIO::GetUnpackedData(byte **Data,size_t *Size)
 }
 
 
-void ComprDataIO::SetEncryption(int Method,const wchar *Password,const byte *Salt,bool Encrypt,bool HandsOffHash)
+void ComprDataIO::SetEncryption(int Method,SecPassword *Password,const byte *Salt,bool Encrypt,bool HandsOffHash)
 {
   if (Encrypt)
   {
-    Encryption=*Password ? Method:0;
+    Encryption=Password->IsSet() ? Method:0;
 #ifndef RAR_NOCRYPT
     Crypt.SetCryptKeys(Password,Salt,Encrypt,false,HandsOffHash);
 #endif
   }
   else
   {
-    Decryption=*Password ? Method:0;
+    Decryption=Password->IsSet() ? Method:0;
 #ifndef RAR_NOCRYPT
     Decrypt.SetCryptKeys(Password,Salt,Encrypt,Method<29,HandsOffHash);
 #endif
