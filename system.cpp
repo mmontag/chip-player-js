@@ -130,6 +130,9 @@ void Shutdown()
 
 
 
+
+
+
 #ifdef USE_SSE
 SSE_VERSION _SSE_Version=GetSSEVersion();
 
