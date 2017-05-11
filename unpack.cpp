@@ -669,6 +669,12 @@ void Unpack::UnpWriteBuf()
   unsigned int WriteSize=(UnpPtr-WrittenBorder)&MAXWINMASK;
   for (size_t I=0;I<PrgStack.Size();I++)
   {
+    // Here we apply filters to data which we need to write.
+    // We always copy data to virtual machine memory before processing.
+    // We cannot process them just in place in Window buffer, because
+    // these data can be used for future string matches, so we must
+    // preserve them in original form.
+
     UnpackFilter *flt=PrgStack[I];
     if (flt==NULL)
       continue;
@@ -704,7 +710,7 @@ void Unpack::UnpWriteBuf()
 
         if (ParentPrg->GlobalData.Size()>VM_FIXEDGLOBALSIZE)
         {
-          // copy global data from previous script execution if any
+          // Copy global data from previous script execution if any.
           Prg->GlobalData.Alloc(ParentPrg->GlobalData.Size());
           memcpy(&Prg->GlobalData[VM_FIXEDGLOBALSIZE],&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],ParentPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
         }
@@ -713,7 +719,7 @@ void Unpack::UnpWriteBuf()
 
         if (Prg->GlobalData.Size()>VM_FIXEDGLOBALSIZE)
         {
-          // save global data for next script execution
+          // Save global data for next script execution.
           if (ParentPrg->GlobalData.Size()<Prg->GlobalData.Size())
             ParentPrg->GlobalData.Alloc(Prg->GlobalData.Size());
           memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&Prg->GlobalData[VM_FIXEDGLOBALSIZE],Prg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
@@ -733,7 +739,7 @@ void Unpack::UnpWriteBuf()
               NextFilter->BlockLength!=FilteredDataSize || NextFilter->NextWindow)
             break;
 
-          // apply several filters to same data block
+          // Apply several filters to same data block.
 
           VM.SetMemory(0,FilteredData,FilteredDataSize);
 
@@ -742,7 +748,7 @@ void Unpack::UnpWriteBuf()
 
           if (ParentPrg->GlobalData.Size()>VM_FIXEDGLOBALSIZE)
           {
-            // copy global data from previous script execution if any
+            // Copy global data from previous script execution if any.
             NextPrg->GlobalData.Alloc(ParentPrg->GlobalData.Size());
             memcpy(&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],ParentPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
           }
@@ -751,7 +757,7 @@ void Unpack::UnpWriteBuf()
 
           if (NextPrg->GlobalData.Size()>VM_FIXEDGLOBALSIZE)
           {
-            // save global data for next script execution
+            // Save global data for next script execution.
             if (ParentPrg->GlobalData.Size()<NextPrg->GlobalData.Size())
               ParentPrg->GlobalData.Alloc(NextPrg->GlobalData.Size());
             memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],NextPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);

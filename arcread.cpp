@@ -569,7 +569,7 @@ void Archive::ConvertAttributes()
           }
           else
           {
-            // uname does not set +x for regular files, so we use 0666
+            // umask does not set +x for regular files, so we use 0666
             // instead of 0777 as for directories.
             NewLhd.FileAttr=0666 & ~mask;
           }

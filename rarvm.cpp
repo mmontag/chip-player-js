@@ -877,7 +877,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         int DataSize=R[4];
         uint FileOffset=R[6];
 
-        if (DataSize>=VM_GLOBALMEMADDR || DataSize<4)
+        if ((uint)DataSize>=VM_GLOBALMEMADDR || DataSize<4)
           break;
 
         const int FileSize=0x1000000;
@@ -923,7 +923,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         int DataSize=R[4];
         uint FileOffset=R[6];
 
-        if (DataSize>=VM_GLOBALMEMADDR || DataSize<21)
+        if ((uint)DataSize>=VM_GLOBALMEMADDR || DataSize<21)
           break;
 
         int CurPos=0;
@@ -960,7 +960,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
       {
         int DataSize=R[4],Channels=R[0],SrcPos=0,Border=DataSize*2;
         SET_VALUE(false,&Mem[VM_GLOBALMEMADDR+0x20],DataSize);
-        if (DataSize>=VM_GLOBALMEMADDR/2)
+        if ((uint)DataSize>=VM_GLOBALMEMADDR/2)
           break;
 
         // Bytes from same channels are grouped to continual data blocks,
@@ -979,7 +979,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         byte *SrcData=Mem,*DestData=SrcData+DataSize;
         const int Channels=3;
         SET_VALUE(false,&Mem[VM_GLOBALMEMADDR+0x20],DataSize);
-        if (DataSize>=VM_GLOBALMEMADDR/2 || PosR<0)
+        if ((uint)DataSize>=VM_GLOBALMEMADDR/2 || PosR<0)
           break;
         for (int CurChannel=0;CurChannel<Channels;CurChannel++)
         {
@@ -1024,7 +1024,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         int DataSize=R[4],Channels=R[0];
         byte *SrcData=Mem,*DestData=SrcData+DataSize;
         SET_VALUE(false,&Mem[VM_GLOBALMEMADDR+0x20],DataSize);
-        if (DataSize>=VM_GLOBALMEMADDR/2)
+        if ((uint)DataSize>=VM_GLOBALMEMADDR/2)
           break;
         for (int CurChannel=0;CurChannel<Channels;CurChannel++)
         {
@@ -1089,7 +1089,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
     case VMSF_UPCASE:
       {
         int DataSize=R[4],SrcPos=0,DestPos=DataSize;
-        if (DataSize>=VM_GLOBALMEMADDR/2)
+        if ((uint)DataSize>=VM_GLOBALMEMADDR/2)
           break;
         while (SrcPos<DataSize)
         {

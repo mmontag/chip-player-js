@@ -133,9 +133,9 @@ void CommandData::ParseDone()
   if (FileArgs->ItemsCount()==0 && !FileLists)
     FileArgs->AddString(MASKALL);
   char CmdChar=etoupper(*Command);
-  bool Extract=CmdChar=='X' || CmdChar=='E';
+  bool Extract=CmdChar=='X' || CmdChar=='E' || CmdChar=='P';
   if (Test && Extract)
-    Test=false;
+    Test=false;        // Switch '-t' is senseless for 'X', 'E', 'P' commands.
   BareOutput=(CmdChar=='L' || CmdChar=='V') && Command[1]=='B';
 }
 
@@ -514,9 +514,6 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
               ExclPath=EXCL_ABSPATH;
               break;
           }
-          break;
-        case 'D':
-          ExclEmptyDir=true;
           break;
         case 'E':
           ProcessEA=false;
@@ -1060,11 +1057,14 @@ bool CommandData::ExclCheckArgs(StringList *Args,char *CheckName,bool CheckFullP
 }
 
 
-bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath)
+// Return 'true' if we need to exclude the file from processing as result
+// of -x switch. If CheckInclList is true, we also check the file against
+// the include list created with -n switch.
+bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath,bool CheckInclList)
 {
   if (ExclCheckArgs(ExclArgs,CheckName,CheckFullPath,MATCH_WILDSUBPATH))
     return(true);
-  if (InclArgs->ItemsCount()==0)
+  if (!CheckInclList || InclArgs->ItemsCount()==0)
     return(false);
   if (ExclCheckArgs(InclArgs,CheckName,false,MATCH_WILDSUBPATH))
     return(false);
@@ -1104,7 +1104,7 @@ int CommandData::IsProcessFile(FileHeader &NewLhd,bool *ExactMatch,int MatchType
 {
   if (strlen(NewLhd.FileName)>=NM || strlenw(NewLhd.FileNameW)>=NM)
     return(0);
-  if (ExclCheck(NewLhd.FileName,false))
+  if (ExclCheck(NewLhd.FileName,false,true))
     return(0);
 #ifndef SFX_MODULE
   if (TimeCheck(NewLhd.mtime))

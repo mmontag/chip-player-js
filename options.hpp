@@ -111,7 +111,6 @@ class RAROptions
     bool KeepBroken;
     bool EraseDisk;
     bool OpenShared;
-    bool ExclEmptyDir;
     bool DeleteFiles;
     bool SyncFiles;
     bool GenerateArcName;

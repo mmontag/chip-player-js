@@ -174,7 +174,7 @@ SCAN_CODE ScanTree::FindProc(FindData *FindData)
 
           // If we failed to find an object, but our current mask is excluded,
           // we skip this object and avoid indicating an error.
-          if (Cmd!=NULL && Cmd->ExclCheck(CurMask,true))
+          if (Cmd!=NULL && Cmd->ExclCheck(CurMask,true,true))
             RetCode=SCAN_NEXT;
           else
             ErrHandler.OpenErrorMsg(ErrArcName,CurMask);
@@ -221,7 +221,7 @@ SCAN_CODE ScanTree::FindProc(FindData *FindData)
     }
 #endif
 
-    if (Error && Cmd!=NULL && Cmd->ExclCheck(CurMask,true))
+    if (Error && Cmd!=NULL && Cmd->ExclCheck(CurMask,true,true))
       Error=false;
 
 #ifndef SILENT
@@ -309,7 +309,11 @@ SCAN_CODE ScanTree::FindProc(FindData *FindData)
 
     // Let's check if directory name is excluded, so we do not waste
     // time searching in directory, which will be excluded anyway.
-    if (Cmd!=NULL && Cmd->ExclCheck(FindData->Name,false))
+    // We set CheckInclList parameter of ExclCheck to 'true' to ignore
+    // the inclusion list here. We do it to correctly handle the situation,
+    // when a user added files in the directory to inclusion list,
+    // but did not add their parent directory to this list.
+    if (Cmd!=NULL && Cmd->ExclCheck(FindData->Name,false,false))
     {
       // If we are here in "fast find" mode, it means that entire directory
       // specified in command line is excluded. Then we need to return

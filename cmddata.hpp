@@ -28,7 +28,7 @@ class CommandData:public RAROptions
     void OutTitle();
     void OutHelp();
     bool IsSwitch(int Ch);
-    bool ExclCheck(char *CheckName,bool CheckFullPath);
+    bool ExclCheck(char *CheckName,bool CheckFullPath,bool CheckInclList);
     bool StoreCheck(char *CheckName);
     bool TimeCheck(RarTime &ft);
     bool SizeCheck(int64 Size);
