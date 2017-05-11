@@ -301,7 +301,23 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
     }
     if (!ValidVolume)
     {
-      NewFile->TCreate(ArcName,ArcNameW);
+      // It is important to return 'false' instead of aborting here,
+      // so if we are called from extraction, we will be able to continue
+      // extracting. It may happen if .rar and .rev are on read-only disks
+      // like CDs.
+      if (!NewFile->Create(ArcName,ArcNameW))
+      {
+        // We need to display the title of operation before the error message,
+        // to make clear for user that create error is related to recovery 
+        // volumes. This is why we cannot use WCreate call here. Title must be
+        // before create error, not after that.
+#ifndef SILENT
+        mprintf(St(MReconstructing));
+#endif
+        ErrHandler.CreateErrorMsg(ArcName,ArcNameW);
+        return false;
+      }
+
       WriteFlags[CurArcNum]=true;
       MissingVolumes++;
 

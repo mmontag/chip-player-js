@@ -1126,6 +1126,8 @@ wchar* GetWideName(const char *Name,const wchar *NameW,wchar *DestW,size_t DestS
 }
 
 
+// Unlike WideToChar, always returns the zero terminated string,
+// even if the destination buffer size is not enough.
 char* GetAsciiName(const wchar *NameW,char *Name,size_t DestSize)
 {
   if (DestSize>0)

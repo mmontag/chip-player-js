@@ -45,7 +45,7 @@ void IntToExt(const char *Src,char *Dest)
 char* strlower(char *Str)
 {
 #ifdef _WIN_ALL
-  CharLower((LPTSTR)Str);
+  CharLowerA((LPSTR)Str);
 #else
   for (char *ChPtr=Str;*ChPtr;ChPtr++)
     *ChPtr=(char)loctolower(*ChPtr);
@@ -57,7 +57,7 @@ char* strlower(char *Str)
 char* strupper(char *Str)
 {
 #ifdef _WIN_ALL
-  CharUpper((LPTSTR)Str);
+  CharUpperA((LPSTR)Str);
 #else
   for (char *ChPtr=Str;*ChPtr;ChPtr++)
     *ChPtr=(char)loctoupper(*ChPtr);
@@ -112,7 +112,7 @@ unsigned char loctolower(unsigned char ch)
 {
 #ifdef _WIN_ALL
   // Convert to LPARAM first to avoid a warning in 64 bit mode.
-  return((int)(LPARAM)CharLower((LPTSTR)ch));
+  return((int)(LPARAM)CharLowerA((LPSTR)ch));
 #else
   return(tolower(ch));
 #endif
@@ -123,7 +123,7 @@ unsigned char loctoupper(unsigned char ch)
 {
 #ifdef _WIN_ALL
   // Convert to LPARAM first to avoid a warning in 64 bit mode.
-  return((int)(LPARAM)CharUpper((LPTSTR)ch));
+  return((int)(LPARAM)CharUpperA((LPSTR)ch));
 #else
   return(toupper(ch));
 #endif

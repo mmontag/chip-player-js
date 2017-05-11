@@ -355,7 +355,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
   Arc.ConvertAttributes();
 
 #ifndef SFX_MODULE
-  if ((Arc.NewLhd.Flags & LHD_SPLIT_BEFORE) && FirstFile)
+  if ((Arc.NewLhd.Flags & LHD_SPLIT_BEFORE)!=0 && FirstFile)
   {
     char CurVolName[NM];
     strcpy(CurVolName,ArcName);
@@ -498,7 +498,11 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
     }
 #endif
 
+    // Use -ep3 only in systems, where disk letters are exist, not in Unix.
     bool AbsPaths=Cmd->ExclPath==EXCL_ABSPATH && Command=='X' && IsDriveDiv(':');
+
+    // We do not use any user specified destination paths when extracting
+    // absolute paths in -ep3 mode.
     if (AbsPaths)
       *DestFileName=0;
 
@@ -509,9 +513,19 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
 
     char DiskLetter=etoupper(DestFileName[0]);
 
-    if (AbsPaths && DestFileName[1]=='_' && IsPathDiv(DestFileName[2]) &&
-        DiskLetter>='A' && DiskLetter<='Z')
-      DestFileName[1]=':';
+    if (AbsPaths)
+    {
+      if (DestFileName[1]=='_' && IsPathDiv(DestFileName[2]) &&
+          DiskLetter>='A' && DiskLetter<='Z')
+        DestFileName[1]=':';
+      else
+        if (DestFileName[0]=='_' && DestFileName[1]=='_')
+        {
+          // Convert __server\share to \\server\share.
+          DestFileName[0]=CPATHDIVIDER;
+          DestFileName[1]=CPATHDIVIDER;
+        }
+    }
 
 #ifndef SFX_MODULE
     if (!WideName && *Cmd->ExtrPathW!=0)

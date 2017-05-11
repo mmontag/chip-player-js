@@ -257,12 +257,12 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
   mprintf(" %d.%d",hd.UnpVer/10,hd.UnpVer%10);
 
   static const char *RarOS[]={
-    "DOS","OS/2","Win95/NT","Unix","MacOS","BeOS","WinCE","","",""
+    "DOS","OS/2","Windows","Unix","Mac OS","BeOS","WinCE","","",""
   };
 
   if (Technical)
     mprintf("\n%22s %8s %4s",
-            (hd.HostOS<sizeof(RarOS)/sizeof(RarOS[0]) ? RarOS[hd.HostOS]:""),
+            (hd.HostOS<ASIZE(RarOS) ? RarOS[hd.HostOS]:""),
             (hd.Flags & LHD_SOLID) ? St(MYes):St(MNo),
             (hd.Flags & LHD_VERSION) ? St(MYes):St(MNo));
 }

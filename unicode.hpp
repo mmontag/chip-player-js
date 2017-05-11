@@ -29,6 +29,8 @@ int uni_done();
 // Borland C++ Builder 5 uses the old style swprintf without the buffer size,
 // so we replace it with snwprintf in our custom sprintfw definition.
 #define sprintfw snwprintf
+#elif defined (__OpenBSD__)
+#define sprintfw(s,...) *(s)=0
 #else
 #define sprintfw swprintf
 #endif

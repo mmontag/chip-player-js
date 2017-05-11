@@ -298,7 +298,7 @@
 #define   MErrCreateLnk      "\nWARNING: Cannot create link %s"
 #define   MSymLinkExists     "\nWARNING: Symbolic link %s already exists"
 #define   MAskRetryCreate    "\nCannot create %s. Retry ?"
-#define   MListMACHead1      "\n MacOS file type:  %c%c%c%c  ; "
+#define   MListMACHead1      "\n Mac OS file type:  %c%c%c%c  ; "
 #define   MListMACHead2      "file creator:  %c%c%c%c\n"
 #define   MDataBadCRC        "\n%-20s : packed data CRC failed in volume %s"
 #define   MFileRO            "\n%s is read-only"

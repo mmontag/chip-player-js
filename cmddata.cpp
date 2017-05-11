@@ -62,6 +62,9 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
 
 #ifndef GUI
       *Command=etoupper(*Command);
+      // 'I' and 'S' commands can contain case sensitive strings after
+      // the first character, so we must not modify their case.
+      // 'S' can contain SFX name, which case is important in Unix.
       if (*Command!='I' && *Command!='S')
         strupper(Command);
 #endif
@@ -166,7 +169,6 @@ void CommandData::ParseEnvVar()
 
 // Return 'false' if -cfg- is present and preprocess switches
 // which must be processed before the rest of command line.
-
 #ifndef SFX_MODULE
 bool CommandData::IsConfigEnabled(int argc,char *argv[])
 {
@@ -181,8 +183,8 @@ bool CommandData::IsConfigEnabled(int argc,char *argv[])
 #ifndef GUI
       if (strnicomp(&argv[I][1],"ilog",4)==0)
       {
-        // ensure that correct log file name is already set
-        // if we need to report an error when processing the command line
+        // Ensure that correct log file name is already set
+        // if we need to report an error when processing the command line.
         ProcessSwitch(&argv[I][1]);
         InitLogOptions(LogName);
       }
