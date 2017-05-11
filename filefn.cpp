@@ -106,10 +106,11 @@ void CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
 
 void SetDirTime(const char *Name,RarTime *ftm,RarTime *ftc,RarTime *fta)
 {
+#ifdef _WIN_32
   bool sm=ftm!=NULL && ftm->IsSet();
   bool sc=ftc!=NULL && ftc->IsSet();
-  bool sa=ftc!=NULL && fta->IsSet();
-#ifdef _WIN_32
+  bool sa=fta!=NULL && fta->IsSet();
+
   if (!WinNT())
     return;
   unsigned int DirAttr=GetFileAttr(Name);

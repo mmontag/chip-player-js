@@ -315,7 +315,7 @@ bool EnumConfigPaths(char *Path,int Number)
     Path[NM-1]=0;
     return(true);
   }
-  static char *AltPath[]={
+  static const char *AltPath[]={
     "/etc","/usr/lib","/usr/local/lib","/usr/local/etc"
   };
   Number--;

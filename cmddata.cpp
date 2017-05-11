@@ -139,10 +139,19 @@ void CommandData::ParseEnvVar()
 #if !defined(GUI) && !defined(SFX_MODULE)
 bool CommandData::IsConfigEnabled(int argc,char *argv[])
 {
+  bool ConfigEnabled=true;
   for (int I=1;I<argc;I++)
-    if (IsSwitch(*argv[I]) && stricomp(&argv[I][1],"cfg-")==0)
-      return(false);
-  return(true);
+    if (IsSwitch(*argv[I]))
+    {
+      if (stricomp(&argv[I][1],"cfg-")==0)
+        ConfigEnabled=false;
+      if (strnicomp(&argv[I][1],"ilog",4)==0)
+      {
+        ProcessSwitch(&argv[I][1]);
+        InitLogOptions(LogName);
+      }
+    }
+  return(ConfigEnabled);
 }
 #endif
 

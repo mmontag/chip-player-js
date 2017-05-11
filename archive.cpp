@@ -130,7 +130,7 @@ bool Archive::IsArchive(bool EnableBroken)
   }
   else
   {
-    Array<char> Buffer(0x40000);
+    Array<char> Buffer(0x80000);
     long CurPos=int64to32(Tell());
     int ReadSize=Read(&Buffer[0],Buffer.Size()-16);
     for (int I=0;I<ReadSize;I++)
