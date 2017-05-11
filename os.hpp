@@ -194,12 +194,14 @@
 #define _stdfunction 
 
 #ifdef _APPLE
-	#ifndef BIG_ENDIAN
-		#define BIG_ENDIAN
-	#endif
-	#ifdef LITTLE_ENDIAN
-		#undef LITTLE_ENDIAN
-	#endif
+  #if defined(__BIG_ENDIAN__) && !defined(BIG_ENDIAN)
+    #define BIG_ENDIAN
+    #undef LITTLE_ENDIAN
+  #endif
+  #if defined(__i386__) && !defined(LITTLE_ENDIAN)
+    #define LITTLE_ENDIAN
+    #undef BIG_ENDIAN
+  #endif
 #endif
 
 #if defined(__sparc) || defined(sparc) || defined(__hpux)

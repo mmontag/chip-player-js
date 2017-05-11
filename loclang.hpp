@@ -133,7 +133,7 @@
 #define   MCHelpSwXa         "\n  x@            Read file names to exclude from stdin"
 #define   MCHelpSwXal        "\n  x@<list>      Exclude files in specified list file"
 #define   MCHelpSwY          "\n  y             Assume Yes on all queries"
-#define   MCHelpSwZ          "\n  z<file>       Read archive comment from file"
+#define   MCHelpSwZ          "\n  z[file]       Read archive comment from file"
 #define   MBadArc            "\nERROR: Bad archive %s\n"
 #define   MAskPsw            "Enter password (will not be echoed)"
 #define   MAskPswEcho        "Enter password"
