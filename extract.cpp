@@ -28,8 +28,22 @@ void CmdExtract::DoExtract(CommandData *Cmd)
   Cmd->ArcNames->Rewind();
   while (Cmd->GetArcName(ArcName,ArcNameW,sizeof(ArcName)))
   {
-    while (ExtractArchive(Cmd)==EXTRACT_ARC_REPEAT)
-      ;
+    while (true)
+    {
+      char PrevCmdPassword[MAXPASSWORD];
+      strcpy(PrevCmdPassword,Cmd->Password);
+
+      EXTRACT_ARC_CODE Code=ExtractArchive(Cmd);
+
+/*
+      restore Cmd->Password which could be changed in IsArchive() call
+      for next header encrypted archive
+*/
+      strcpy(Cmd->Password,PrevCmdPassword);
+
+      if (Code!=EXTRACT_ARC_REPEAT)
+        break;
+    }
     if (FindFile::FastFind(ArcName,ArcNameW,&FD))
       DataIO.ProcessedArcSize+=FD.Size;
   }
@@ -141,6 +155,7 @@ EXTRACT_ARC_CODE CmdExtract::ExtractArchive(CommandData *Cmd)
       else
         break;
   }
+
   return(EXTRACT_ARC_NEXT);
 }
 

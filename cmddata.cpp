@@ -599,6 +599,9 @@ void CommandData::ProcessSwitch(char *Switch)
           Threads=atoi(Switch+2);
           if (Threads>MaxSearchThreads)
             BadSwitch(Switch);
+          else
+          {
+          }
           break;
 #endif
         default:
