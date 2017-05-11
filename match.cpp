@@ -34,33 +34,38 @@ inline uint touppercw(uint ch,bool ForceCase)
 }
 
 
-bool CmpName(char *Wildcard,char *Name,int CmpPath)
+bool CmpName(char *Wildcard,char *Name,int CmpMode)
 {
-  bool ForceCase=(CmpPath&MATCH_FORCECASESENSITIVE)!=0;
+  bool ForceCase=(CmpMode&MATCH_FORCECASESENSITIVE)!=0;
 
-  CmpPath&=MATCH_MODEMASK;
+  CmpMode&=MATCH_MODEMASK;
   
-  if (CmpPath!=MATCH_NAMES)
+  if (CmpMode!=MATCH_NAMES)
   {
     size_t WildLength=strlen(Wildcard);
-    if (CmpPath!=MATCH_EXACTPATH && mstrnicompc(Wildcard,Name,WildLength,ForceCase)==0)
+    if (CmpMode!=MATCH_EXACTPATH && mstrnicompc(Wildcard,Name,WildLength,ForceCase)==0)
     {
+      // For all modes except MATCH_NAMES and MATCH_EXACTPATH "path1" mask
+      // must match "path1\path2\filename.ext" and "path1" names.
       char NextCh=Name[WildLength];
       if (NextCh=='\\' || NextCh=='/' || NextCh==0)
         return(true);
+
+      // Nothing more to compare for MATCH_SUBPATHONLY.
+      if (CmpMode==MATCH_SUBPATHONLY)
+        return(false);
     }
     char Path1[NM],Path2[NM];
     GetFilePath(Wildcard,Path1,ASIZE(Path1));
     GetFilePath(Name,Path2,ASIZE(Path1));
-    if (mstricompc(Wildcard,Path2,ForceCase)==0)
-      return(true);
-    if ((CmpPath==MATCH_PATH || CmpPath==MATCH_EXACTPATH) && mstricompc(Path1,Path2,ForceCase)!=0)
+
+    if (CmpMode==MATCH_EXACTPATH && mstricompc(Path1,Path2,ForceCase)!=0)
       return(false);
-    if (CmpPath==MATCH_SUBPATH || CmpPath==MATCH_WILDSUBPATH)
+    if (CmpMode==MATCH_SUBPATH || CmpMode==MATCH_WILDSUBPATH)
       if (IsWildcard(Path1))
         return(match(Wildcard,Name,ForceCase));
       else
-        if (CmpPath==MATCH_SUBPATH || IsWildcard(Wildcard))
+        if (CmpMode==MATCH_SUBPATH || IsWildcard(Wildcard))
         {
           if (*Path1 && mstrnicompc(Path1,Path2,strlen(Path1),ForceCase)!=0)
             return(false);
@@ -72,41 +77,51 @@ bool CmpName(char *Wildcard,char *Name,int CmpPath)
   char *Name1=PointToName(Wildcard);
   char *Name2=PointToName(Name);
 
-  // always return false for RAR temporary files to exclude them
-  // from archiving operations
+  // Always return false for RAR temporary files to exclude them
+  // from archiving operations.
   if (mstrnicompc("__rar_",Name2,6,false)==0)
     return(false);
 
+  if (CmpMode==MATCH_EXACT)
+    return(mstricompc(Name1,Name2,ForceCase)==0);
+  
   return(match(Name1,Name2,ForceCase));
 }
 
 
 #ifndef SFX_MODULE
-bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
+bool CmpName(wchar *Wildcard,wchar *Name,int CmpMode)
 {
-  bool ForceCase=(CmpPath&MATCH_FORCECASESENSITIVE)!=0;
+  bool ForceCase=(CmpMode&MATCH_FORCECASESENSITIVE)!=0;
 
-  CmpPath&=MATCH_MODEMASK;
+  CmpMode&=MATCH_MODEMASK;
 
-  if (CmpPath!=MATCH_NAMES)
+  if (CmpMode!=MATCH_NAMES)
   {
     size_t WildLength=strlenw(Wildcard);
-    if (CmpPath!=MATCH_EXACTPATH && mstrnicompcw(Wildcard,Name,WildLength,ForceCase)==0)
+    if (CmpMode!=MATCH_EXACTPATH && mstrnicompcw(Wildcard,Name,WildLength,ForceCase)==0)
     {
+      // For all modes except MATCH_NAMES and MATCH_EXACTPATH "path1" mask
+      // must match "path1\path2\filename.ext" and "path1" names.
       wchar NextCh=Name[WildLength];
       if (NextCh==L'\\' || NextCh==L'/' || NextCh==0)
         return(true);
+
+      // Nothing more to compare for MATCH_SUBPATHONLY.
+      if (CmpMode==MATCH_SUBPATHONLY)
+        return(false);
     }
     wchar Path1[NM],Path2[NM];
     GetFilePath(Wildcard,Path1,ASIZE(Path1));
     GetFilePath(Name,Path2,ASIZE(Path2));
-    if ((CmpPath==MATCH_PATH || CmpPath==MATCH_EXACTPATH) && mstricompcw(Path1,Path2,ForceCase)!=0)
+
+    if (CmpMode==MATCH_EXACTPATH && mstricompcw(Path1,Path2,ForceCase)!=0)
       return(false);
-    if (CmpPath==MATCH_SUBPATH || CmpPath==MATCH_WILDSUBPATH)
+    if (CmpMode==MATCH_SUBPATH || CmpMode==MATCH_WILDSUBPATH)
       if (IsWildcard(NULL,Path1))
         return(match(Wildcard,Name,ForceCase));
       else
-        if (CmpPath==MATCH_SUBPATH || IsWildcard(NULL,Wildcard))
+        if (CmpMode==MATCH_SUBPATH || IsWildcard(NULL,Wildcard))
         {
           if (*Path1 && mstrnicompcw(Path1,Path2,strlenw(Path1),ForceCase)!=0)
             return(false);
@@ -118,10 +133,13 @@ bool CmpName(wchar *Wildcard,wchar *Name,int CmpPath)
   wchar *Name1=PointToName(Wildcard);
   wchar *Name2=PointToName(Name);
 
-  // always return false for RAR temporary files to exclude them
-  // from archiving operations
+  // Always return false for RAR temporary files to exclude them
+  // from archiving operations.
   if (mstrnicompcw(L"__rar_",Name2,6,false)==0)
     return(false);
+
+  if (CmpMode==MATCH_EXACT)
+    return(mstricompcw(Name1,Name2,ForceCase)==0);
 
   return(match(Name1,Name2,ForceCase));
 }
@@ -166,10 +184,13 @@ bool match(char *pattern,char *string,bool ForceCase)
         return(false);
       default:
         if (patternc != stringc)
-          if (patternc=='.' && stringc==0)
+        {
+          // Allow "name." mask match "name" and "name.\" match "name\".
+          if (patternc=='.' && (stringc==0 || stringc=='\\' || stringc=='.'))
             return(match(pattern,string,ForceCase));
           else
             return(false);
+        }
         break;
     }
   }
@@ -215,10 +236,13 @@ bool match(wchar *pattern,wchar *string,bool ForceCase)
         return(false);
       default:
         if (patternc != stringc)
-          if (patternc=='.' && stringc==0)
+        {
+          // Allow "name." mask match "name" and "name.\" match "name\".
+          if (patternc=='.' && (stringc==0 || stringc=='\\' || stringc=='.'))
             return(match(pattern,string,ForceCase));
           else
             return(false);
+        }
         break;
     }
   }

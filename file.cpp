@@ -303,11 +303,11 @@ void File::Write(const void *Data,size_t Size)
       // writing to stdout can fail in old Windows if data block is too large
       const size_t MaxSize=0x4000;
       for (size_t I=0;I<Size;I+=MaxSize)
-	  {
+      {
         Success=WriteFile(hFile,(byte *)Data+I,(DWORD)Min(Size-I,MaxSize),&Written,NULL)==TRUE;
         if (!Success)
           break;
-	  }
+      }
     }
     else
       Success=WriteFile(hFile,Data,(DWORD)Size,&Written,NULL)==TRUE;

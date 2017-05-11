@@ -288,7 +288,7 @@ void _stdfunction ProcessSignal(int SigType)
     Sleep(100);
 #endif
   }
-#if defined(USE_RC) && !defined(SFX_MODULE) && !defined(_WIN_CE)
+#if defined(USE_RC) && !defined(SFX_MODULE) && !defined(_WIN_CE) && !defined(RARDLL)
   ExtRes.UnloadDLL();
 #endif
   exit(USER_BREAK);

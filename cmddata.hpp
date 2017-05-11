@@ -29,7 +29,7 @@ class CommandData:public RAROptions
     void OutHelp();
     bool IsSwitch(int Ch);
     bool ExclCheck(char *CheckName,bool CheckFullPath,bool CheckInclList);
-    bool StoreCheck(char *CheckName);
+    bool ExclCheckDir(char *CheckName);
     bool TimeCheck(RarTime &ft);
     bool SizeCheck(int64 Size);
     bool AnyFiltersActive();

@@ -269,16 +269,6 @@ $(objpath)\sha1.obj :  $(rarpath)\sha1.cpp
  $(compopt) -o$@ $(rarpath)\sha1.cpp
 |
 
-$(objpath)\ec.obj :  $(rarpath)\ec.cpp
-  $(cc) -q @&&|
- $(compopt) -o$@ $(rarpath)\ec.cpp
-|
-
-$(objpath)\av.obj :  $(rarpath)\av.cpp
-  $(cc) -q @&&|
- $(compopt) -o$@ $(rarpath)\av.cpp
-|
-
 $(objpath)\archive.obj :  $(rarpath)\archive.cpp
   $(cc) -q @&&|
  $(compopt) -o$@ $(rarpath)\archive.cpp

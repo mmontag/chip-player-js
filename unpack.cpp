@@ -163,6 +163,21 @@ int Unpack::DecodeNumber(struct Decode *Dec)
 }
 
 
+// We use it instead of direct PPM.DecodeChar call to be sure that
+// we reset PPM structures in case of corrupt data. It is important,
+// because these structures can be invalid after PPM.DecodeChar returned -1.
+inline int Unpack::SafePPMDecodeChar()
+{
+  int Ch=PPM.DecodeChar();
+  if (Ch==-1)              // Corrupt PPM data found.
+  {
+    PPM.CleanUp();         // Reset possibly corrupt PPM data structures.
+    UnpBlockType=BLOCK_LZ; // Set faster and more fail proof LZ mode.
+  }
+  return(Ch);
+}
+
+
 void Unpack::Unpack29(bool Solid)
 {
   static unsigned char LDecode[]={0,1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64,80,96,112,128,160,192,224};
@@ -218,40 +233,42 @@ void Unpack::Unpack29(bool Solid)
     }
     if (UnpBlockType==BLOCK_PPM)
     {
+      // Here speed is critical, so we do not use SafePPMDecodeChar,
+      // because sometimes even the inline function can introduce
+      // some additional penalty.
       int Ch=PPM.DecodeChar();
-      if (Ch==-1)
+      if (Ch==-1)              // Corrupt PPM data found.
       {
-        PPM.CleanUp();
-
-        // turn off PPM compression mode in case of error, so UnRAR will
-        // call PPM.DecodeInit in case it needs to turn it on back later.
-        UnpBlockType=BLOCK_LZ;
+        PPM.CleanUp();         // Reset possibly corrupt PPM data structures.
+        UnpBlockType=BLOCK_LZ; // Set faster and more fail proof LZ mode.
         break;
       }
       if (Ch==PPMEscChar)
       {
-        int NextCh=PPM.DecodeChar();
-        if (NextCh==0)
+        int NextCh=SafePPMDecodeChar();
+        if (NextCh==0)  // End of PPM encoding.
         {
           if (!ReadTables())
             break;
           continue;
         }
-        if (NextCh==2 || NextCh==-1)
+        if (NextCh==-1) // Corrupt PPM data found.
           break;
-        if (NextCh==3)
+        if (NextCh==2)  // End of file in PPM mode..
+          break;
+        if (NextCh==3)  // Read VM code.
         {
           if (!ReadVMCodePPM())
             break;
           continue;
         }
-        if (NextCh==4)
+        if (NextCh==4) // LZ inside of PPM.
         {
           unsigned int Distance=0,Length;
           bool Failed=false;
           for (int I=0;I<4 && !Failed;I++)
           {
-            int Ch=PPM.DecodeChar();
+            int Ch=SafePPMDecodeChar();
             if (Ch==-1)
               Failed=true;
             else
@@ -266,14 +283,16 @@ void Unpack::Unpack29(bool Solid)
           CopyString(Length+32,Distance+2);
           continue;
         }
-        if (NextCh==5)
+        if (NextCh==5) // One byte distance match (RLE) inside of PPM.
         {
-          int Length=PPM.DecodeChar();
+          int Length=SafePPMDecodeChar();
           if (Length==-1)
             break;
           CopyString(Length+4,1);
           continue;
         }
+        // If we are here, NextCh must be 1, what means that current byte
+        // is equal to our 'escape' byte, so we just store it to Window.
       }
       Window[UnpPtr++]=Ch;
       continue;
@@ -451,13 +470,13 @@ bool Unpack::ReadVMCode()
 
 bool Unpack::ReadVMCodePPM()
 {
-  unsigned int FirstByte=PPM.DecodeChar();
+  unsigned int FirstByte=SafePPMDecodeChar();
   if ((int)FirstByte==-1)
     return(false);
   int Length=(FirstByte & 7)+1;
   if (Length==7)
   {
-    int B1=PPM.DecodeChar();
+    int B1=SafePPMDecodeChar();
     if (B1==-1)
       return(false);
     Length=B1+7;
@@ -465,10 +484,10 @@ bool Unpack::ReadVMCodePPM()
   else
     if (Length==8)
     {
-      int B1=PPM.DecodeChar();
+      int B1=SafePPMDecodeChar();
       if (B1==-1)
         return(false);
-      int B2=PPM.DecodeChar();
+      int B2=SafePPMDecodeChar();
       if (B2==-1)
         return(false);
       Length=B1*256+B2;
@@ -476,7 +495,7 @@ bool Unpack::ReadVMCodePPM()
   Array<byte> VMCode(Length);
   for (int I=0;I<Length;I++)
   {
-    int Ch=PPM.DecodeChar();
+    int Ch=SafePPMDecodeChar();
     if (Ch==-1)
       return(false);
     VMCode[I]=Ch;

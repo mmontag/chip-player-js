@@ -309,11 +309,7 @@ SCAN_CODE ScanTree::FindProc(FindData *FindData)
 
     // Let's check if directory name is excluded, so we do not waste
     // time searching in directory, which will be excluded anyway.
-    // We set CheckInclList parameter of ExclCheck to 'true' to ignore
-    // the inclusion list here. We do it to correctly handle the situation,
-    // when a user added files in the directory to inclusion list,
-    // but did not add their parent directory to this list.
-    if (Cmd!=NULL && Cmd->ExclCheck(FindData->Name,false,false))
+    if (Cmd!=NULL && Cmd->ExclCheckDir(FindData->Name))
     {
       // If we are here in "fast find" mode, it means that entire directory
       // specified in command line is excluded. Then we need to return

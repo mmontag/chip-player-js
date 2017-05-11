@@ -100,6 +100,7 @@ class Unpack:private BitInput
     bool ReadTables();
     void MakeDecodeTables(unsigned char *LenTab,struct Decode *Dec,int Size);
     int DecodeNumber(struct Decode *Dec);
+    inline int SafePPMDecodeChar();
     void CopyString();
     inline void InsertOldDist(unsigned int Distance);
     inline void InsertLastMatch(unsigned int Length,unsigned int Distance);

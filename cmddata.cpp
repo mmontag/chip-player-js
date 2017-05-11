@@ -1052,6 +1052,34 @@ bool CommandData::ExclCheck(char *CheckName,bool CheckFullPath,bool CheckInclLis
 }
 
 
+// Return 'true' if we need to exclude the directory from archiving as result
+// of -x switch. We do not want -x*. switch to exclude all directories,
+// so when archiving we process exclusion arguments for directories specially.
+bool CommandData::ExclCheckDir(char *CheckName)
+{
+  // If exclusion mask and directory name match exactly, return true.
+  if (ExclCheckArgs(ExclArgs,CheckName,true,MATCH_EXACT))
+    return(true);
+
+  // Now we want to allow wildcards in exclusion mask only if it has
+  // '\' at the end. So 'dir*\' will exclude all dir* directories.
+  // We append '\' to directory name, so it will match only masks having
+  // '\' at the end.
+  char DirName[NM+1];
+  ConvertPath(CheckName,DirName);
+  AddEndSlash(DirName);
+
+  char *CurMask;
+  ExclArgs->Rewind();
+  while ((CurMask=ExclArgs->GetString())!=NULL)
+    if (IsPathDiv(*PointToLastChar(CurMask)))
+      if (CmpName(CurMask,DirName,MATCH_SUBPATH))
+        return(true);
+  
+  return(false);
+}
+
+
 
 
 #ifndef SFX_MODULE

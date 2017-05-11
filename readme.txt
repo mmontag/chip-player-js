@@ -28,6 +28,9 @@
    GCC Linux is selected by default. If you need to compile Unrar
    for other platforms, uncomment corresponding lines.
 
+   UnRAR.vcproj and UnRARDll.vcproj are projects for Microsoft Visual C++.
+   UnRARDll.vcproj lets to build unrar.dll library.
+
 
    2. Unrar binaries
 
