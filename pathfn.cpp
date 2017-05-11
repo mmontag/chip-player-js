@@ -336,13 +336,13 @@ bool EnumConfigPaths(char *Path,int Number)
 
 
 #ifndef SFX_MODULE
-void GetConfigName(const char *Name,char *FullName)
+void GetConfigName(const char *Name,char *FullName,bool CheckExist)
 {
   for (int I=0;EnumConfigPaths(FullName,I);I++)
   {
     AddEndSlash(FullName);
     strcat(FullName,Name);
-    if (WildFileExist(FullName))
+    if (!CheckExist || WildFileExist(FullName))
       break;
   }
 }
@@ -427,7 +427,7 @@ bool IsNameUsable(const char *Name)
   if (Name[0] && Name[1] && strchr(Name+2,':')!=NULL)
     return(false);
 #endif
-  return(*Name!=0 && strpbrk(Name,"?*<>|")==NULL);
+  return(*Name!=0 && strpbrk(Name,"?*<>|\"")==NULL);
 }
 
 
@@ -605,5 +605,16 @@ char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering)
 
 
 
+wchar* GetWideName(const char *Name,const wchar *NameW,wchar *DestW)
+{
+  if (NameW!=NULL && *NameW!=0)
+  {
+    if (DestW!=NameW)
+      strcpyw(DestW,NameW);
+  }
+  else
+    CharToWide(Name,DestW);
+  return(DestW);
+}
 
 

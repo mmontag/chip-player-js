@@ -47,16 +47,18 @@ struct STATE
   PPM_CONTEXT* Successor;
 };
 
+struct FreqData
+{
+  ushort SummFreq;
+  STATE _PACK_ATTR * Stats;
+};
+
 struct PPM_CONTEXT 
 {
     ushort NumStats;
     union
     {
-      struct
-      {
-        ushort SummFreq;
-        STATE _PACK_ATTR * Stats;
-      } U;
+      FreqData U;
       STATE OneState;
     };
 

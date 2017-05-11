@@ -5,12 +5,17 @@
 #define MBFUNCTIONS
 #endif
 
-#if defined(MBFUNCTIONS) || defined(_WIN_32)
+#if defined(MBFUNCTIONS) || defined(_WIN_32) || defined(_EMX) && !defined(_DJGPP)
 #define UNICODE_SUPPORTED
 #endif
 
 #ifdef _WIN_32
 #define DBCS_SUPPORTED
+#endif
+
+#ifdef _EMX
+int uni_init(int codepage);
+int uni_done();
 #endif
 
 void WideToChar(const wchar *Src,char *Dest,int DestSize=0x10000000);
@@ -19,6 +24,7 @@ byte* WideToRaw(const wchar *Src,byte *Dest,int DestSize=0x10000000);
 wchar* RawToWide(const byte *Src,wchar *Dest,int DestSize=0x10000000);
 void WideToUtf(const wchar *Src,char *Dest,int DestSize);
 void UtfToWide(const char *Src,wchar *Dest,int DestSize);
+bool UnicodeEnabled();
 
 int strlenw(const wchar *str);
 wchar* strcpyw(wchar *dest,const wchar *src);

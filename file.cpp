@@ -1,6 +1,6 @@
 #include "rar.hpp"
 
-static File *CreatedFiles[32];
+static File *CreatedFiles[256];
 static int RemoveCreatedActive=0;
 
 File::File()

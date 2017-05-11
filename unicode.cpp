@@ -1,5 +1,9 @@
 #include "rar.hpp"
 
+#if defined(_EMX) && !defined(_DJGPP)
+#include "unios2.cpp"
+#endif
+
 void WideToChar(const wchar *Src,char *Dest,int DestSize)
 {
 #ifdef _WIN_32
@@ -12,12 +16,21 @@ void WideToChar(const wchar *Src,char *Dest,int DestSize)
   if (wcstombs(Dest,Src,DestSize)==-1)
     *Dest=0;
 #else
-  for (int I=0;I<DestSize;I++)
+  if (UnicodeEnabled())
   {
-    Dest[I]=(char)Src[I];
-    if (Src[I]==0)
-      break;
+#if defined(_EMX) && !defined(_DJGPP)
+    int len=Min(strlenw(Src),DestSize-1);
+    uni_fromucs((UniChar*)Src,len,Dest,(size_t*)&DestSize);
+    Dest[len]=0;
+#endif
   }
+  else
+    for (int I=0;I<DestSize;I++)
+    {
+      Dest[I]=(char)Src[I];
+      if (Src[I]==0)
+        break;
+    }
 #endif
 #endif
 #endif
@@ -35,12 +48,21 @@ void CharToWide(const char *Src,wchar *Dest,int DestSize)
 #ifdef MBFUNCTIONS
   mbstowcs(Dest,Src,DestSize);
 #else
-  for (int I=0;I<DestSize;I++)
+  if (UnicodeEnabled())
   {
-    Dest[I]=(wchar_t)Src[I];
-    if (Src[I]==0)
-      break;
+#if defined(_EMX) && !defined(_DJGPP)
+    int len=Min(strlen(Src),DestSize-1);
+    uni_toucs((char*)Src,len,(UniChar*)Dest,(size_t*)&DestSize);
+    Dest[len]=0;
+#endif
   }
+  else
+    for (int I=0;I<DestSize;I++)
+    {
+      Dest[I]=(wchar_t)Src[I];
+      if (Src[I]==0)
+        break;
+    }
 #endif
 #endif
 #endif
@@ -131,6 +153,20 @@ void UtfToWide(const char *Src,wchar *Dest,int DestSize)
   *Dest=0;
 }
 #endif
+
+
+bool UnicodeEnabled()
+{
+#ifdef UNICODE_SUPPORTED
+  #ifdef _EMX
+    return(uni_ready);
+  #else
+    return(true);
+  #endif
+#else
+  return(false);
+#endif
+}
 
 
 int strlenw(const wchar *str)

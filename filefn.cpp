@@ -49,7 +49,7 @@ void CreatePath(const char *Path,const wchar *PathW,bool SkipLastName)
   uint DirAttr=0777;
 #endif
 #ifdef UNICODE_SUPPORTED
-  bool Wide=PathW!=NULL && *PathW!=0;
+  bool Wide=PathW!=NULL && *PathW!=0 && UnicodeEnabled();
 #else
   bool Wide=false;
 #endif
@@ -460,7 +460,8 @@ uint CalcFileCRC(File *SrcFile,Int64 Size)
   SrcFile->Seek(0,SEEK_SET);
   while ((ReadSize=SrcFile->Read(&Data[0],int64to32(Size==INT64ERR ? Int64(BufSize):Min(Int64(BufSize),Size))))!=0)
   {
-    if ((++BlockCount & 15)==0)
+    BlockCount++;
+    if ((BlockCount & 15)==0)
     {
       Wait();
     }
@@ -501,3 +502,23 @@ bool DelDir(const char *Name,const wchar *NameW)
 {
   return(rmdir(Name)==0);
 }
+
+
+#if defined(_WIN_32) && !defined(_WIN_CE)
+bool SetFileCompression(char *Name,wchar *NameW,bool State)
+{
+  wchar FileNameW[NM];
+  GetWideName(Name,NameW,FileNameW);
+  HANDLE hFile=CreateFileW(FileNameW,FILE_READ_DATA|FILE_WRITE_DATA,
+                 FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,
+                 FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_SEQUENTIAL_SCAN,NULL);
+  if (hFile==INVALID_HANDLE_VALUE)
+    return(false);
+  SHORT NewState=State ? COMPRESSION_FORMAT_DEFAULT:COMPRESSION_FORMAT_NONE;
+  DWORD Result;
+  int RetCode=DeviceIoControl(hFile,FSCTL_SET_COMPRESSION,&NewState,
+                              sizeof(NewState),NULL,0,&Result,NULL);
+  CloseHandle(hFile);
+  return(RetCode!=0);
+}
+#endif

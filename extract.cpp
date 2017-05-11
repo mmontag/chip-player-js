@@ -229,7 +229,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
     AllMatchesExact=false;
 
 #ifdef UNICODE_SUPPORTED
-  bool WideName=(Arc.NewLhd.Flags & LHD_UNICODE);
+  bool WideName=(Arc.NewLhd.Flags & LHD_UNICODE) && UnicodeEnabled();
 #else
   bool WideName=false;
 #endif
@@ -405,10 +405,17 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
     }
 #endif
 
+    bool AbsPaths=Cmd->ExclPath==EXCL_ABSPATH && Command=='X' && IsDriveDiv(':');
+    if (AbsPaths)
+      *DestFileName=0;
+
     if (Command=='E' || Cmd->ExclPath==EXCL_SKIPWHOLEPATH)
       strcat(DestFileName,PointToName(ExtrName));
     else
       strcat(DestFileName,ExtrName);
+
+    if (AbsPaths && DestFileName[1]=='_' && IsPathDiv(DestFileName[2]))
+      DestFileName[1]=':';
 
 #ifndef SFX_MODULE
     if (!WideName && *Cmd->ExtrPathW!=0)
@@ -452,10 +459,16 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
         ExtrNameW++;
 #endif
 
+      if (AbsPaths)
+        *DestFileNameW=0;
+
       if (Command=='E' || Cmd->ExclPath==EXCL_SKIPWHOLEPATH)
         strcatw(DestFileNameW,PointToName(ExtrNameW));
       else
         strcatw(DestFileNameW,ExtrNameW);
+
+      if (AbsPaths && DestFileNameW[1]=='_' && IsPathDiv(DestFileNameW[2]))
+        DestFileNameW[1]=':';
     }
     else
       *DestFileNameW=0;
@@ -571,10 +584,17 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
             ErrHandler.SetErrorCode(CREATE_ERROR);
           }
         if (PrevExtracted)
+        {
+#if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE)
+          if (Cmd->SetCompressedAttr &&
+              (Arc.NewLhd.FileAttr & FILE_ATTRIBUTE_COMPRESSED)!=0 && WinNT())
+            SetFileCompression(DestFileName,DestFileNameW,true);
+#endif
           SetDirTime(DestFileName,
             Cmd->xmtime==EXTTIME_NONE ? NULL:&Arc.NewLhd.mtime,
             Cmd->xctime==EXTTIME_NONE ? NULL:&Arc.NewLhd.ctime,
             Cmd->xatime==EXTTIME_NONE ? NULL:&Arc.NewLhd.atime);
+        }
         return(true);
       }
       else
@@ -743,6 +763,11 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
             Cmd->xctime==EXTTIME_NONE ? NULL:&Arc.NewLhd.ctime,
             Cmd->xatime==EXTTIME_NONE ? NULL:&Arc.NewLhd.atime);
           CurFile.Close();
+#if defined(_WIN_32) && !defined(_WIN_CE) && !defined(SFX_MODULE)
+          if (Cmd->SetCompressedAttr &&
+              (Arc.NewLhd.FileAttr & FILE_ATTRIBUTE_COMPRESSED)!=0 && WinNT())
+            SetFileCompression(CurFile.FileName,CurFile.FileNameW,true);
+#endif
           CurFile.SetCloseFileStat(
             Cmd->xmtime==EXTTIME_NONE ? NULL:&Arc.NewLhd.mtime,
             Cmd->xatime==EXTTIME_NONE ? NULL:&Arc.NewLhd.atime,

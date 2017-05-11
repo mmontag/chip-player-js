@@ -8,7 +8,7 @@
       The source code of unRAR utility is freeware. This means:
 
    1. All copyrights to RAR and the utility unRAR are exclusively
-      owned by the author - Eugene Roshal.
+      owned by the author - Alexander Roshal.
 
    2. The unRAR sources may be used in any software to handle RAR
       archives without limitations free of charge, but cannot be used
@@ -38,4 +38,4 @@
       Thank you for your interest in RAR and unRAR.
 
 
-                                            Eugene Roshal
+                                            Alexander L. Roshal

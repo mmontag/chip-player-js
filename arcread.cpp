@@ -121,6 +121,8 @@ int Archive::ReadHeader()
       *(BaseBlock *)&EndArcHead=ShortBlock;
       if (EndArcHead.Flags & EARC_DATACRC)
         Raw.Get(EndArcHead.ArcDataCRC);
+      if (EndArcHead.Flags & EARC_VOLNUMBER)
+        Raw.Get(EndArcHead.VolNumber);
       break;
     case FILE_HEAD:
     case NEWSUB_HEAD:
@@ -434,7 +436,7 @@ int Archive::ReadOldHeader()
       NextBlockPos=CurBlockPos+NewLhd.HeadSize+NewLhd.PackSize;
     CurHeaderType=FILE_HEAD;
   }
-  return(Raw.Size());
+  return(NextBlockPos>CurBlockPos ? Raw.Size():0);
 }
 #endif
 

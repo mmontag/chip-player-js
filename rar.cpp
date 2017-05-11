@@ -14,6 +14,9 @@ int main(int argc, char *argv[])
 #ifdef _UNIX
   setlocale(LC_ALL,"");
 #endif
+#if defined(_EMX) && !defined(_DJGPP)
+  uni_init(0);
+#endif
 #ifndef SFX_MODULE
   setbuf(stdout,NULL);
 
@@ -119,6 +122,9 @@ int main(int argc, char *argv[])
   File::RemoveCreated();
 #if defined(SFX_MODULE) && defined(_DJGPP)
   _chmod(ModuleName,1,0x20);
+#endif
+#if defined(_EMX) && !defined(_DJGPP)
+  uni_done();
 #endif
   return(ErrHandler.GetErrorCode());
 }

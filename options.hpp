@@ -6,7 +6,8 @@
 #define DEFAULT_RECVOLUMES  -10
 
 enum PathExclMode {
-  EXCL_NONE,EXCL_BASEPATH,EXCL_SKIPWHOLEPATH,EXCL_SAVEFULLPATH,EXCL_SKIPABSPATH
+  EXCL_NONE,EXCL_BASEPATH,EXCL_SKIPWHOLEPATH,EXCL_SAVEFULLPATH,
+  EXCL_SKIPABSPATH,EXCL_ABSPATH
 };
 enum {SOLID_NONE=0,SOLID_NORMAL=1,SOLID_COUNT=2,SOLID_FILEEXT=4,
       SOLID_VOLUME_DEPENDENT=8,SOLID_VOLUME_INDEPENDENT=16};
@@ -66,7 +67,7 @@ class RAROptions
     int Recurse;
     Int64 VolSize;
     Array<Int64> NextVolSizes;
-    int NextVolNum;
+    int CurVolNum;
     bool AllYes;
     bool DisableViewAV;
     bool DisableSortSolid;
@@ -86,6 +87,7 @@ class RAROptions
     char GenerateMask[80];
     bool ProcessEA;
     bool SaveStreams;
+    bool SetCompressedAttr;
     uint FileTimeOlder;
     uint FileTimeNewer;
     RarTime FileTimeBefore;

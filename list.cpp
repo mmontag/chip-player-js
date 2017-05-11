@@ -107,11 +107,19 @@ void ListArchive(CommandData *Cmd)
             char PackSizeText[20];
             itoa(TotalPackSize,PackSizeText);
         
-            mprintf("\n%5lu %16s %8s %3d%%\n",FileCount,UnpSizeText,
+            mprintf("\n%5lu %16s %8s %3d%%",FileCount,UnpSizeText,
                     PackSizeText,ToPercent(TotalPackSize,TotalUnpSize));
             SumFileCount+=FileCount;
             SumUnpSize+=TotalUnpSize;
             SumPackSize+=TotalPackSize;
+#ifndef SFX_MODULE
+            if (Arc.EndArcHead.Flags & EARC_VOLNUMBER)
+            {
+              mprintf("       ");
+              mprintf(St(MVolumeNumber),Arc.EndArcHead.VolNumber+1);
+            }
+#endif
+            mprintf("\n");
           }
           else
             mprintf(St(MListNoFiles));
@@ -177,7 +185,7 @@ void ListFileHeader(FileHeader &hd,bool Verbose,bool Technical,bool &TitleShown,
 
 #ifdef UNICODE_SUPPORTED
   char ConvertedName[NM];
-  if ((hd.Flags & LHD_UNICODE)!=0 && *hd.FileNameW!=0)
+  if ((hd.Flags & LHD_UNICODE)!=0 && *hd.FileNameW!=0 && UnicodeEnabled())
   {
     WideToChar(hd.FileNameW,ConvertedName);
     Name=ConvertedName;
@@ -261,13 +269,14 @@ void ListFileAttr(uint A,int HostOS)
     case HOST_OS2:
     case HOST_WIN32:
     case HOST_MACOS:
-      mprintf("  %c%c%c%c%c%c  ",
+      mprintf(" %c%c%c%c%c%c%c  ",
               (A & 0x08) ? 'V' : '.',
               (A & 0x10) ? 'D' : '.',
               (A & 0x01) ? 'R' : '.',
               (A & 0x02) ? 'H' : '.',
               (A & 0x04) ? 'S' : '.',
-              (A & 0x20) ? 'A' : '.');
+              (A & 0x20) ? 'A' : '.',
+              (A & 0x800) ? 'C' : '.');
       break;
     case HOST_UNIX:
     case HOST_BEOS:

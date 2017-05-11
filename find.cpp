@@ -106,6 +106,9 @@ bool FindFile::Next(struct FindData *fd,bool GetSymLink)
 #ifdef _APPLE
   if (!LowAscii(fd->Name))
     UtfToWide(fd->Name,fd->NameW,sizeof(fd->NameW));
+#elif defined(UNICODE_SUPPORTED)
+  if (!LowAscii(fd->Name) && UnicodeEnabled())
+    CharToWide(fd->Name,fd->NameW);
 #endif
 #endif
   fd->IsDir=IsDir(fd->FileAttr);
@@ -163,10 +166,14 @@ bool FindFile::FastFind(const char *FindMask,const wchar *FindMaskW,struct FindD
   fd->ctime=st.st_ctime;
   fd->FileTime=fd->mtime.GetDos();
   strcpy(fd->Name,FindMask);
+
   *fd->NameW=0;
 #ifdef _APPLE
   if (!LowAscii(fd->Name))
     UtfToWide(fd->Name,fd->NameW,sizeof(fd->NameW));
+#elif defined(UNICODE_SUPPORTED)
+  if (!LowAscii(fd->Name) && UnicodeEnabled())
+    CharToWide(fd->Name,fd->NameW);
 #endif
 #endif
   fd->IsDir=IsDir(fd->FileAttr);

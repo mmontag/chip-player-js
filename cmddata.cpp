@@ -62,7 +62,7 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
         if (PointToName(SFXName)!=SFXName || FileExist(SFXName))
           strcpy(SFXModule,SFXName);
         else
-          GetConfigName(SFXName,SFXModule);
+          GetConfigName(SFXName,SFXModule,true);
       }
 #ifndef GUI
       *Command=toupper(*Command);
@@ -359,6 +359,9 @@ void CommandData::ProcessSwitch(char *Switch)
         case 'S':
           SaveStreams=true;
           break;
+        case 'C':
+          SetCompressedAttr=true;
+          break;
 #endif
         default :
           BadSwitch(Switch);
@@ -412,6 +415,9 @@ void CommandData::ProcessSwitch(char *Switch)
               break;
             case '2':
               ExclPath=EXCL_SAVEFULLPATH;
+              break;
+            case '3':
+              ExclPath=EXCL_ABSPATH;
               break;
           }
           break;
@@ -648,7 +654,7 @@ void CommandData::ProcessSwitch(char *Switch)
         if (PointToName(SFXName)!=SFXName || FileExist(SFXName))
           strcpy(SFXModule,SFXName);
         else
-          GetConfigName(SFXName,SFXModule);
+          GetConfigName(SFXName,SFXModule,true);
       }
       if (isdigit(Switch[1]))
       {
@@ -763,11 +769,12 @@ void CommandData::OutHelp()
     MUNRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdE,MCHelpCmdL,MCHelpCmdP,
     MCHelpCmdT,MCHelpCmdV,MCHelpCmdX,MCHelpSw,MCHelpSwm,MCHelpSwAC,MCHelpSwAD,
     MCHelpSwAP,MCHelpSwAVm,MCHelpSwCm,MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,
-    MCHelpSwDH,MCHelpSwEP,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,MCHelpSwINUL,
-    MCHelpSwIOFF,MCHelpSwKB,MCHelpSwOp,MCHelpSwOm,MCHelpSwOW,MCHelpSwP,
-    MCHelpSwPm,MCHelpSwR,MCHelpSwRI,MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,
-    MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwVUnr,MCHelpSwVER,MCHelpSwVP,
-    MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY
+    MCHelpSwDH,MCHelpSwEP,MCHelpSwEP3,MCHelpSwF,MCHelpSwIDP,MCHelpSwIERR,
+    MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwKB,MCHelpSwOp,MCHelpSwOm,
+    MCHelpSwOC,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwRI,
+    MCHelpSwTA,MCHelpSwTB,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,
+    MCHelpSwVUnr,MCHelpSwVER,MCHelpSwVP,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,
+    MCHelpSwY
 #else
     MRARTitle1,MRARTitle2,MCHelpCmd,MCHelpCmdA,MCHelpCmdC,MCHelpCmdCF,
     MCHelpCmdCW,MCHelpCmdD,MCHelpCmdE,MCHelpCmdF,MCHelpCmdI,MCHelpCmdK,
@@ -777,15 +784,16 @@ void CommandData::OutHelp()
     MCHelpSwAO,MCHelpSwAP,MCHelpSwAS,MCHelpSwAV,MCHelpSwAVm,MCHelpSwCm,
     MCHelpSwCFGm,MCHelpSwCL,MCHelpSwCU,MCHelpSwDF,MCHelpSwDH,MCHelpSwDS,
     MCHelpSwEa,MCHelpSwED,MCHelpSwEE,MCHelpSwEN,MCHelpSwEP,MCHelpSwEP1,
-    MCHelpSwEP2,MCHelpSwF,MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,MCHelpSwIERR,
-    MCHelpSwILOG,MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwISND,MCHelpSwK,MCHelpSwKB,
-    MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,MCHelpSwOp,MCHelpSwOm,
-    MCHelpSwOL,MCHelpSwOS,MCHelpSwOW,MCHelpSwP,MCHelpSwPm,MCHelpSwR,
-    MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,MCHelpSwRV,MCHelpSwS,MCHelpSwSm,
-    MCHelpSwSFX,MCHelpSwSI,MCHelpSwT,MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,
-    MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,MCHelpSwTS,MCHelpSwU,MCHelpSwV,
-    MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,MCHelpSwVN,MCHelpSwVP,MCHelpSwW,
-    MCHelpSwX,MCHelpSwXa,MCHelpSwXal,MCHelpSwY,MCHelpSwZ
+    MCHelpSwEP2,MCHelpSwEP3,MCHelpSwF,MCHelpSwHP,MCHelpSwIDP,MCHelpSwIEML,
+    MCHelpSwIERR,MCHelpSwILOG,MCHelpSwINUL,MCHelpSwIOFF,MCHelpSwISND,
+    MCHelpSwK,MCHelpSwKB,MCHelpSwMn,MCHelpSwMC,MCHelpSwMD,MCHelpSwMS,
+    MCHelpSwOp,MCHelpSwOm,MCHelpSwOC,MCHelpSwOL,MCHelpSwOS,MCHelpSwOW,
+    MCHelpSwP,MCHelpSwPm,MCHelpSwR,MCHelpSwR0,MCHelpSwRI,MCHelpSwRR,
+    MCHelpSwRV,MCHelpSwS,MCHelpSwSm,MCHelpSwSFX,MCHelpSwSI,MCHelpSwT,
+    MCHelpSwTA,MCHelpSwTB,MCHelpSwTK,MCHelpSwTL,MCHelpSwTN,MCHelpSwTO,
+    MCHelpSwTS,MCHelpSwU,MCHelpSwV,MCHelpSwVn,MCHelpSwVD,MCHelpSwVER,
+    MCHelpSwVN,MCHelpSwVP,MCHelpSwW,MCHelpSwX,MCHelpSwXa,MCHelpSwXal,
+    MCHelpSwY,MCHelpSwZ
 #endif
   };
 
@@ -797,8 +805,18 @@ void CommandData::OutHelp()
       continue;
 #endif
 #ifndef _WIN_32
-    if (Help[I]==MCHelpSwIEML || Help[I]==MCHelpSwVD || Help[I]==MCHelpSwAC ||
-        Help[I]==MCHelpSwAO || Help[I]==MCHelpSwOS || Help[I]==MCHelpSwIOFF)
+    static MSGID Win32Only[]={
+      MCHelpSwIEML,MCHelpSwVD,MCHelpSwAC,MCHelpSwAO,MCHelpSwOS,MCHelpSwIOFF,
+      MCHelpSwEP2,MCHelpSwOC
+    };
+    bool Found=false;
+    for (int J=0;J<sizeof(Win32Only)/sizeof(Win32Only[0]);J++)
+      if (Help[I]==Win32Only[J])
+      {
+        Found=true;
+        break;
+      }
+    if (Found)
       continue;
 #endif
 #if !defined(_UNIX) && !defined(_WIN_32)

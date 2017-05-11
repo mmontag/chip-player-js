@@ -29,6 +29,10 @@
 #include <windows.h>
 #include <prsht.h>
 
+#ifndef _WIN_CE
+#include <winioctl.h>
+#endif
+
 #endif
 
 #ifndef _WIN_CE
@@ -196,7 +200,7 @@
 	#endif
 #endif
 
-#if defined(__sparc) || defined(sparc)
+#if defined(__sparc) || defined(sparc) || defined(__hpux)
   #ifndef BIG_ENDIAN
      #define BIG_ENDIAN
   #endif

@@ -32,4 +32,8 @@ bool DelFile(const char *Name,const wchar *NameW);
 bool DelDir(const char *Name);
 bool DelDir(const char *Name,const wchar *NameW);
 
+#if defined(_WIN_32) && !defined(_WIN_CE)
+bool SetFileCompression(char *Name,wchar *NameW,bool State);
+#endif
+
 #endif
