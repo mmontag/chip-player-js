@@ -265,7 +265,7 @@ int KbdAnsi(char *Addr,size_t Size)
       {
         if (Addr[J]=='\"')
           return(2);
-        if (!isdigit(Addr[J]) && Addr[J]!=';')
+        if (!IsDigit(Addr[J]) && Addr[J]!=';')
           break;
       }
       RetCode=1;

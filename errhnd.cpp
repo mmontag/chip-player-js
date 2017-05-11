@@ -66,6 +66,7 @@ bool ErrorHandler::AskRepeatRead(const char *FileName)
 #if !defined(SILENT) && !defined(SFX_MODULE) && !defined(_WIN_CE)
   if (!Silent)
   {
+    SysErrMsg();
     mprintf("\n");
     Log(NULL,St(MErrRead),FileName);
     return(Ask(St(MRetryAbort))==1);
@@ -105,6 +106,7 @@ bool ErrorHandler::AskRepeatWrite(const char *FileName,bool DiskFull)
 #if !defined(SILENT) && !defined(_WIN_CE)
   if (!Silent)
   {
+    SysErrMsg();
     mprintf("\n");
     Log(NULL,St(DiskFull ? MNotEnoughDisk:MErrWrite),FileName);
     return(Ask(St(MRetryAbort))==1);

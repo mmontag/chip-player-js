@@ -239,7 +239,7 @@ void RarTime::SetIsoText(char *TimeText)
   int Field[6];
   memset(Field,0,sizeof(Field));
   for (int DigitCount=0;*TimeText!=0;TimeText++)
-    if (isdigit(*TimeText))
+    if (IsDigit(*TimeText))
     {
       int FieldPos=DigitCount<4 ? 0:(DigitCount-4)/2+1;
       if (FieldPos<sizeof(Field)/sizeof(Field[0]))
@@ -264,7 +264,7 @@ void RarTime::SetAgeText(char *TimeText)
   for (int I=0;TimeText[I]!=0;I++)
   {
     int Ch=TimeText[I];
-    if (isdigit(Ch))
+    if (IsDigit(Ch))
       Value=Value*10+Ch-'0';
     else
     {

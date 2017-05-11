@@ -35,12 +35,12 @@ char* ConvertPath(const char *SrcPath,char *DestPath)
 {
   const char *DestPtr=SrcPath;
 
-  /* prevents \..\ in any part of path string */
+  // Prevent \..\ in any part of path string.
   for (const char *s=DestPtr;*s!=0;s++)
     if (IsPathDiv(s[0]) && s[1]=='.' && s[2]=='.' && IsPathDiv(s[3]))
       DestPtr=s+4;
 
-  /* removes any sequence of . and \ in the beginning of path string */
+  // Remove any sequence of . and \ in the beginning of path string.
   while (*DestPtr)
   {
     const char *s=DestPtr;
@@ -64,12 +64,14 @@ char* ConvertPath(const char *SrcPath,char *DestPath)
     DestPtr=s;
   }
 
-  /* code above does not remove last "..", doing here */
+  // Code above does not remove last "..", doing here.
   if (DestPtr[0]=='.' && DestPtr[1]=='.' && DestPtr[2]==0)
     DestPtr+=2;
 
   if (DestPath!=NULL)
   {
+    // SrcPath and DestPath can point to same memory area,
+    // so we use the temporary buffer for copying.
     char TmpStr[NM];
     strncpyz(TmpStr,DestPtr,ASIZE(TmpStr));
     strcpy(DestPath,TmpStr);
@@ -427,19 +429,19 @@ char* GetVolNumPart(char *ArcName)
   char *ChPtr=ArcName+strlen(ArcName)-1;
 
   // Skipping the archive extension.
-  while (!isdigit(*ChPtr) && ChPtr>ArcName)
+  while (!IsDigit(*ChPtr) && ChPtr>ArcName)
     ChPtr--;
 
   // Skipping the numeric part of name.
   char *NumPtr=ChPtr;
-  while (isdigit(*NumPtr) && NumPtr>ArcName)
+  while (IsDigit(*NumPtr) && NumPtr>ArcName)
     NumPtr--;
 
   // Searching for first numeric part in names like name.part##of##.rar.
   // Stop search on the first dot.
   while (NumPtr>ArcName && *NumPtr!='.')
   {
-    if (isdigit(*NumPtr))
+    if (IsDigit(*NumPtr))
     {
       // Validate the first numeric part only if it has a dot somwhere 
       // before it.
@@ -473,7 +475,7 @@ void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumberi
     {
       *ChPtr='0';
       ChPtr--;
-      if (ChPtr<ArcName || !isdigit(*ChPtr))
+      if (ChPtr<ArcName || !IsDigit(*ChPtr))
       {
         for (char *EndPtr=ArcName+strlen(ArcName);EndPtr!=ChPtr;EndPtr--)
           *(EndPtr+1)=*EndPtr;
@@ -483,7 +485,7 @@ void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumberi
     }
   }
   else
-    if (!isdigit(*(ChPtr+2)) || !isdigit(*(ChPtr+3)))
+    if (!IsDigit(*(ChPtr+2)) || !IsDigit(*(ChPtr+3)))
       strcpy(ChPtr+2,"00");
     else
     {
@@ -507,7 +509,7 @@ void NextVolumeName(char *ArcName,wchar *ArcNameW,uint MaxLength,bool OldNumberi
     char *NumPtr=GetVolNumPart(ArcName);
 
     // moving to first digit in volume number
-    while (NumPtr>ArcName && isdigit(*NumPtr) && isdigit(*(NumPtr-1)))
+    while (NumPtr>ArcName && IsDigit(*NumPtr) && IsDigit(*(NumPtr-1)))
       NumPtr--;
 
     // also copy the first character before volume number,
@@ -668,7 +670,7 @@ bool IsDiskLetter(const char *Path)
 
 bool IsDiskLetter(const wchar *Path)
 {
-  int Letter=etoupper(Path[0]);
+  wchar Letter=etoupperw(Path[0]);
   return(Letter>='A' && Letter<='Z' && IsDriveDiv(Path[1]));
 }
 
@@ -731,7 +733,7 @@ char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering)
   {
     int N='1';
     for (char *ChPtr=GetVolNumPart(FirstName);ChPtr>FirstName;ChPtr--)
-      if (isdigit(*ChPtr))
+      if (IsDigit(*ChPtr))
       {
         *ChPtr=N;
         N='0';

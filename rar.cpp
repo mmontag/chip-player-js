@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
       CmdLine=strchr(CmdLine+1,'\"');
     if (CmdLine!=NULL && (CmdLine=strpbrk(CmdLine," /"))!=NULL)
     {
-      while (isspace(*CmdLine))
+      while (IsSpace(*CmdLine))
         CmdLine++;
       Switch=CmdLine;
     }

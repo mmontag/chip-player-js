@@ -194,7 +194,7 @@ void CommandData::ReadConfig(int argc,char *argv[])
     char *Str;
     while ((Str=List.GetString())!=NULL)
     {
-      while (isspace(*Str))
+      while (IsSpace(*Str))
         Str++;
       if (strnicomp(Str,"switches=",9)==0)
         ProcessSwitchesString(Str+9);
@@ -573,16 +573,16 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
                 int Param1=0,Param2=0;
                 FilterState State=FILTER_AUTO;
                 FilterType Type=FILTER_NONE;
-                if (isdigit(*Str))
+                if (IsDigit(*Str))
                 {
                   Param1=atoi(Str);
-                  while (isdigit(*Str))
+                  while (IsDigit(*Str))
                     Str++;
                 }
-                if (*Str==':' && isdigit(Str[1]))
+                if (*Str==':' && IsDigit(Str[1]))
                 {
                   Param2=atoi(++Str);
-                  while (isdigit(*Str))
+                  while (IsDigit(*Str))
                     Str++;
                 }
                 switch(etoupper(*(Str++)))
@@ -767,7 +767,7 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
         else
           GetConfigName(SFXName,SFXModule,true);
       }
-      if (isdigit(Switch[1]))
+      if (IsDigit(Switch[1]))
       {
         Solid|=SOLID_COUNT;
         SolidCount=atoi(&Switch[1]);
@@ -791,11 +791,11 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
             Solid|=SOLID_VOLUME_DEPENDENT;
             break;
           case 'L':
-            if (isdigit(Switch[2]))
+            if (IsDigit(Switch[2]))
               FileSizeLess=atoil(Switch+2);
             break;
           case 'M':
-            if (isdigit(Switch[2]))
+            if (IsDigit(Switch[2]))
               FileSizeMore=atoil(Switch+2);
             break;
           case 'C':
@@ -1242,7 +1242,7 @@ bool CommandData::IsSwitch(int Ch)
 #ifndef SFX_MODULE
 uint CommandData::GetExclAttr(char *Str)
 {
-  if (isdigit(*Str))
+  if (IsDigit(*Str))
     return(strtol(Str,NULL,0));
   else
   {

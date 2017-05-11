@@ -100,10 +100,10 @@ char* RemoveLF(char *Str)
 }
 
 
-unsigned int loctolower(byte ch)
+unsigned char loctolower(unsigned char ch)
 {
 #ifdef _WIN_32
-  // convert to LPARAM first to avoid a warning in 64 bit mode
+  // Convert to LPARAM first to avoid a warning in 64 bit mode.
   return((int)(LPARAM)CharLower((LPTSTR)ch));
 #else
   return(tolower(ch));
@@ -111,10 +111,10 @@ unsigned int loctolower(byte ch)
 }
 
 
-unsigned int loctoupper(byte ch)
+unsigned char loctoupper(unsigned char ch)
 {
 #ifdef _WIN_32
-  // convert to LPARAM first to avoid a warning in 64 bit mode
+  // Convert to LPARAM first to avoid a warning in 64 bit mode.
   return((int)(LPARAM)CharUpper((LPTSTR)ch));
 #else
   return(toupper(ch));
@@ -122,15 +122,41 @@ unsigned int loctoupper(byte ch)
 }
 
 
-// toupper with English only results. Avoiding Turkish i -> I conversion
-// problem
-int etoupper(int ch)
+// toupper with English only results if English input is provided.
+// It avoids Turkish (small i) -> (big I with dot) conversion problem.
+// We do not define 'ch' as 'int' to avoid necessity to cast all
+// signed chars passed to this function to unsigned char.
+unsigned char etoupper(unsigned char ch)
 {
   if (ch=='i')
     return('I');
   return(toupper(ch));
 }
 
+
+// Unicode version of etoupper.
+wchar etoupperw(wchar ch)
+{
+  if (ch=='i')
+    return('I');
+  return(toupperw(ch));
+}
+
+
+// We do not want to cast every signed char to unsigned when passing to
+// isdigit, so we implement the replacement. Shall work for Unicode too.
+bool IsDigit(int ch)
+{
+  return(ch>='0' && ch<='9');
+}
+
+
+// We do not want to cast every signed char to unsigned when passing to
+// isspace, so we implement the replacement. Shall work for Unicode too.
+bool IsSpace(int ch)
+{
+  return(ch==' ' || ch=='\t');
+}
 
 
 

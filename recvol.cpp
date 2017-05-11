@@ -31,8 +31,8 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
   if (RevName)
   {
     for (int DigitGroup=0;Ext>ArcName && DigitGroup<3;Ext--)
-      if (!isdigit(*Ext))
-        if (isdigit(*(Ext-1)) && (*Ext=='_' || DigitGroup<2))
+      if (!IsDigit(*Ext))
+        if (IsDigit(*(Ext-1)) && (*Ext=='_' || DigitGroup<2))
           DigitGroup++;
         else
           if (DigitGroup<2)
@@ -40,7 +40,7 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
             NewStyle=true;
             break;
           }
-    while (isdigit(*Ext) && Ext>ArcName+1)
+    while (IsDigit(*Ext) && Ext>ArcName+1)
       Ext--;
     strcpy(Ext,"*.*");
     FindFile Find;
@@ -142,7 +142,7 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
         do
         {
           Dot--;
-        } while (isdigit(*Dot) && Dot>=Name+BaseNamePartLength);
+        } while (IsDigit(*Dot) && Dot>=Name+BaseNamePartLength);
         P[I]=atoi(Dot+1);
         if (P[I]==0 || P[I]>255)
           WrongParam=true;

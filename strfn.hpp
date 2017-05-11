@@ -12,13 +12,17 @@ int stricomp(const char *Str1,const char *Str2);
 int strnicomp(const char *Str1,const char *Str2,size_t N);
 char* RemoveEOL(char *Str);
 char* RemoveLF(char *Str);
-unsigned int loctolower(byte ch);
-unsigned int loctoupper(byte ch);
+unsigned char loctolower(unsigned char ch);
+unsigned char loctoupper(unsigned char ch);
 
 char* strncpyz(char *dest, const char *src, size_t maxlen);
 wchar* strncpyzw(wchar *dest, const wchar *src, size_t maxlen);
 
-int etoupper(int ch);
+unsigned char etoupper(unsigned char ch);
+wchar etoupperw(wchar ch);
+
+bool IsDigit(int ch);
+bool IsSpace(int ch);
 
 
 

@@ -416,12 +416,10 @@ wchar* strdupw(const wchar *Str)
 #endif
 
 
-#ifndef SFX_MODULE
 int toupperw(int ch)
 {
   return((ch<128) ? loctoupper(ch):ch);
 }
-#endif
 
 
 int atoiw(const wchar *s)

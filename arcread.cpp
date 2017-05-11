@@ -29,6 +29,19 @@ size_t Archive::SearchSubBlock(const char *Type)
 }
 
 
+void Archive::UnexpEndArcMsg()
+{
+  int64 ArcSize=FileLength();
+  if (CurBlockPos>ArcSize || NextBlockPos>ArcSize)
+  {
+#ifndef SHELL_EXT
+    Log(FileName,St(MLogUnexpEOF));
+#endif
+    ErrHandler.SetErrorCode(WARNING);
+  }
+}
+
+
 size_t Archive::ReadHeader()
 {
   CurBlockPos=Tell();
@@ -48,7 +61,10 @@ size_t Archive::ReadHeader()
     return(0);
 #else
     if (Read(HeadersSalt,SALT_SIZE)!=SALT_SIZE)
+    {
+      UnexpEndArcMsg();
       return(0);
+    }
     if (*Cmd->Password==0)
 #ifdef RARDLL
       if (Cmd->Callback==NULL ||
@@ -73,14 +89,7 @@ size_t Archive::ReadHeader()
   Raw.Read(SIZEOF_SHORTBLOCKHEAD);
   if (Raw.Size()==0)
   {
-    int64 ArcSize=FileLength();
-    if (CurBlockPos>ArcSize || NextBlockPos>ArcSize)
-    {
-  #ifndef SHELL_EXT
-      Log(FileName,St(MLogUnexpEOF));
-  #endif
-      ErrHandler.SetErrorCode(WARNING);
-    }
+    UnexpEndArcMsg();
     return(0);
   }
 

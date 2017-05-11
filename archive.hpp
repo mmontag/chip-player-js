@@ -14,6 +14,7 @@ class Archive:public File
     void ConvertNameCase(wchar *Name);
     void ConvertUnknownHeader();
     size_t ReadOldHeader();
+    void UnexpEndArcMsg();
 
 #if !defined(SHELL_EXT) && !defined(NOCRYPT)
     CryptData HeadersCrypt;

@@ -215,7 +215,7 @@ int64 GetFreeDisk(const char *Name)
 #elif defined(_UNIX)
   return(1457664);
 #elif defined(_EMX)
-  int Drive=(!isalpha(Name[0]) || Name[1]!=':') ? 0:etoupper(Name[0])-'A'+1;
+  int Drive=IsDiskLetter(Name) ? etoupper(Name[0])-'A'+1:0;
 #ifndef _DJGPP
   if (_osmode == OS2_MODE)
   {
