@@ -9,7 +9,8 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
   if (OldFormat)
   {
     Seek(SFXSize+SIZEOF_OLDMHD,SEEK_SET);
-    CmtLength=GetByte()+(GetByte()<<8);
+    CmtLength=GetByte();
+    CmtLength+=(GetByte()<<8);
   }
   else
 #endif
@@ -49,7 +50,8 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
 #ifdef NOCRYPT
       return(false);
 #else
-      UnpCmtLength=GetByte()+(GetByte()<<8);
+      UnpCmtLength=GetByte();
+      UnpCmtLength+=(GetByte()<<8);
       CmtLength-=2;
       DataIO.SetCmt13Encryption();
 #endif

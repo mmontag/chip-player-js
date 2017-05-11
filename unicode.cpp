@@ -457,7 +457,7 @@ void SupportDBCS::Init()
 
 char* SupportDBCS::charnext(const char *s)
 {
-  return (char *)(IsLeadByte[*s] ? s+2:s+1);
+  return (char *)(IsLeadByte[(byte)*s] ? s+2:s+1);
 }
 
 
@@ -466,7 +466,7 @@ size_t SupportDBCS::strlend(const char *s)
   size_t Length=0;
   while (*s!=0)
   {
-    if (IsLeadByte[*s])
+    if (IsLeadByte[(byte)*s])
       s+=2;
     else
       s++;
@@ -479,7 +479,7 @@ size_t SupportDBCS::strlend(const char *s)
 char* SupportDBCS::strchrd(const char *s, int c)
 {
   while (*s!=0)
-    if (IsLeadByte[*s])
+    if (IsLeadByte[(byte)*s])
       s+=2;
     else
       if (*s==c)
@@ -493,7 +493,7 @@ char* SupportDBCS::strchrd(const char *s, int c)
 void SupportDBCS::copychrd(char *dest,const char *src)
 {
   dest[0]=src[0];
-  if (IsLeadByte[src[0]])
+  if (IsLeadByte[(byte)src[0]])
     dest[1]=src[1];
 }
 
@@ -502,7 +502,7 @@ char* SupportDBCS::strrchrd(const char *s, int c)
 {
   const char *found=NULL;
   while (*s!=0)
-    if (IsLeadByte[*s])
+    if (IsLeadByte[(byte)*s])
       s+=2;
     else
     {
