@@ -853,13 +853,25 @@ void CmdExtract::ExtrPrepareName(Archive &Arc,const wchar *ArcFileName,wchar *De
   if (ArcPathLength>0)
   {
     size_t NameLength=wcslen(ArcFileName);
-    ArcFileName+=Min(ArcPathLength,NameLength);
-    while (*ArcFileName==CPATHDIVIDER)
-      ArcFileName++;
-    if (*ArcFileName==0) // Excessive -ap switch.
+
+    // Earlier we compared lengths only here, but then noticed a cosmetic bug
+    // in WinRAR. When extracting a file reference from subfolder with
+    // "Extract relative paths", so WinRAR sets ArcPath, if reference target
+    // is missing, error message removed ArcPath both from reference and target
+    // names. If target was stored in another folder, its name looked wrong.
+    if (NameLength>=ArcPathLength && 
+        wcsnicompc(Cmd->ArcPath,ArcFileName,ArcPathLength)==0 &&
+        (IsPathDiv(Cmd->ArcPath[ArcPathLength-1]) || 
+         IsPathDiv(ArcFileName[ArcPathLength]) || ArcFileName[ArcPathLength]==0))
     {
-      *DestName=0;
-      return;
+      ArcFileName+=Min(ArcPathLength,NameLength);
+      while (IsPathDiv(*ArcFileName))
+        ArcFileName++;
+      if (*ArcFileName==0) // Excessive -ap switch.
+      {
+        *DestName=0;
+        return;
+      }
     }
   }
 #endif

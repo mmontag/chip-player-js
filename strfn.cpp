@@ -255,12 +255,22 @@ bool LowAscii(const wchar *Str)
 }
 
 
-int wcsicompc(const wchar *Str1,const wchar *Str2) // For path comparison.
+int wcsicompc(const wchar *s1,const wchar *s2) // For path comparison.
 {
 #if defined(_UNIX)
-  return wcscmp(Str1,Str2);
+  return wcscmp(s1,s2);
 #else
-  return wcsicomp(Str1,Str2);
+  return wcsicomp(s1,s2);
+#endif
+}
+
+
+int wcsnicompc(const wchar *s1,const wchar *s2,size_t n)
+{
+#if defined(_UNIX)
+  return wcsncmp(s1,s2,n);
+#else
+  return wcsnicomp(s1,s2,n);
 #endif
 }
 

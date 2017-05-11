@@ -25,7 +25,7 @@ void RarVM::Execute(VM_PreparedProgram *Prg)
   if (Prg->Type!=VMSF_NONE)
   {
     ExecuteStandardFilter(Prg->Type);
-    uint BlockSize=Prg->InitR[4];
+    uint BlockSize=Prg->InitR[4] & VM_MEMMASK;
     Prg->FilteredDataSize=BlockSize;
     if (Prg->Type==VMSF_DELTA || Prg->Type==VMSF_RGB || Prg->Type==VMSF_AUDIO)
       Prg->FilteredData=2*BlockSize>=VM_MEMSIZE ? Mem:Mem+BlockSize;
