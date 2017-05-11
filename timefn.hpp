@@ -18,4 +18,3 @@ void GetCurSysTime(struct tm *T);
 bool IsLeapYear(int Year);
 
 #endif
-

@@ -756,7 +756,7 @@ void CommandData::OutHelp()
 #endif
 #ifndef _WIN_32
     if (Help[I]==MCHelpSwIEML || Help[I]==MCHelpSwVD || Help[I]==MCHelpSwAC ||
-        Help[I]==MCHelpSwAO || Help[I]==MCHelpSwDH || Help[I]==MCHelpSwOS)
+        Help[I]==MCHelpSwAO || Help[I]==MCHelpSwOS)
       continue;
 #endif
 #if !defined(_UNIX) && !defined(_WIN_32)

@@ -8,4 +8,3 @@ uint CRC(uint StartCRC,void *Addr,uint Size);
 ushort OldCRC(ushort StartCRC,void *Addr,uint Size);
 
 #endif
-

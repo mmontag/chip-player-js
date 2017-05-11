@@ -5,7 +5,7 @@
    1. General
 
    This package includes freeware Unrar C++ source and a few makefiles
-   (makefile.bcc, makefile.msc+msc.dep, makefile.gcc). Unrar source
+   (makefile.bcc, makefile.msc+msc.dep, makefile.unix). Unrar source
    is subset of RAR and generated from RAR source automatically,
    by a small program removing blocks like '#ifndef UNRAR ... #endif'.
    Such method is not perfect and you may find some RAR related
@@ -27,7 +27,14 @@
    the path to Borland C++ installation.
 
 
-   2. Acknowledgements
+   2. Unrar binaries
+
+   If you compiled Unrar for OS, which is not present in "Downloads"
+   and "RAR extras" on www.rarlab.com, we will appreciate if you send
+   us the compiled executable to place it to our site.
+
+
+   3. Acknowledgements
 
    This source includes parts of code written by the following authors:
 
@@ -36,9 +43,10 @@
    Szymon Stefanek    AES encryption
    Brian Gladman      AES encryption
    Steve Reid         SHA-1 hash function
+   Marcus Herbert     makefile.unix file
 
 
-   3. Legal stuff
+   4. Legal stuff
 
    Unrar source may be used in any software to handle RAR archives
    without limitations free of charge, but cannot be used to re-create

@@ -9,8 +9,6 @@ ComprDataIO::ComprDataIO(CmdAdd *Command)
 
 void ComprDataIO::Init()
 {
-  SrcUnpack=NULL;
-  PackFromMemory=false;
   UnpackFromMemory=false;
   UnpackToMemory=false;
   UnpPackedSize=0;
@@ -124,15 +122,6 @@ void ComprDataIO::UnpWrite(byte *Addr,uint Count)
 #endif
   UnpWrAddr=Addr;
   UnpWrSize=Count;
-  if (SrcUnpack!=NULL)
-  {
-    int NewSize=RepackUnpDataEnd+Count;
-    RepackUnpData.Alloc(NewSize);
-    memcpy(&RepackUnpData[RepackUnpDataEnd],Addr,Count);
-    RepackUnpDataEnd=NewSize;
-
-    SrcUnpack->SetSuspended(true);
-  }
   if (UnpackToMemory)
   {
     if (Count <= UnpackToMemorySize)
@@ -158,27 +147,13 @@ void ComprDataIO::UnpWrite(byte *Addr,uint Count)
 }
 
 
-void ComprDataIO::ShowPackRead(Int64 CurSize,Int64 UnpSize)
-{
-  if (ShowProgress)
-  {
-    Archive *DestArc=(Archive *)DestFile;
-    RAROptions *Cmd=DestArc->GetRAROptions();
-    int CurPercent=ToPercent(TotalPackRead,DestArc->AddingFilesSize);
-    if (!Cmd->DisablePercentage && CurPercent!=LastPercent)
-    {
-      mprintf("\b\b\b\b%3d%%",CurPercent);
-      LastPercent=CurPercent;
-    }
-  }
-}
 
 
 
 
 void ComprDataIO::ShowUnpRead(Int64 ArcPos,Int64 ArcSize)
 {
-  if (ShowProgress && SrcUnpack==NULL && SrcFile!=NULL)
+  if (ShowProgress && SrcFile!=NULL)
   {
     Archive *SrcArc=(Archive *)SrcFile;
     RAROptions *Cmd=SrcArc->GetRAROptions();

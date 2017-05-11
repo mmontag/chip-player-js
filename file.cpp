@@ -269,7 +269,7 @@ void File::Write(const void *Data,int Size)
     else
       Success=WriteFile(hFile,Data,Size,&Written,NULL);
 #else
-    Success=(fwrite(Data,1,Size,hFile)==Size && !ferror(hFile));
+    Success=fwrite(Data,1,Size,hFile)==Size && !ferror(hFile);
 #endif
     if (!Success && HandleType==FILE_HANDLENORMAL)
     {

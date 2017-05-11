@@ -7,21 +7,9 @@ class Unpack;
 class ComprDataIO
 {
   private:
-    void ShowPackRead(Int64 CurSize,Int64 UnpSize);
-    void ShowPackWrite();
     void ShowUnpRead(Int64 ArcPos,Int64 ArcSize);
     void ShowUnpWrite();
-    uint CopyUnpData(byte *Addr,uint Size);
 
-    Unpack *SrcUnpack;
-
-    Array<byte> RepackUnpData;
-    uint RepackUnpDataStart;
-    uint RepackUnpDataEnd;
-
-    bool PackFromMemory;
-    uint PackFromMemorySize;
-    byte *PackFromMemoryAddr;
 
     bool UnpackFromMemory;
     uint UnpackFromMemorySize;

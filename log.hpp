@@ -12,4 +12,3 @@ inline void Log(const char *a,const char *b,const char *c=NULL,const char *d=NUL
 #endif
 
 #endif
-

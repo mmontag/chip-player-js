@@ -9,7 +9,7 @@
 #define UNICODE_SUPPORTED
 #endif
 
-#if defined(_WIN_32) && !defined(SFX_MODULE)
+#ifdef _WIN_32
 #define DBCS_SUPPORTED
 #endif
 
@@ -54,11 +54,13 @@ extern SupportDBCS gdbcs;
 inline char* charnext(const char *s) {return (char *)(gdbcs.DBCSMode ? gdbcs.charnext(s):s+1);}
 inline char* strchrd(const char *s, int c) {return (char *)(gdbcs.DBCSMode ? gdbcs.strchrd(s,c):strchr(s,c));}
 inline char* strrchrd(const char *s, int c) {return (char *)(gdbcs.DBCSMode ? gdbcs.strrchrd(s,c):strrchr(s,c));}
+inline bool IsDBCSMode() {return(gdbcs.DBCSMode);}
 
 #else
 #define charnext(s) ((s)+1)
 #define strchrd strchr
 #define strrchrd strrchr
+#define IsDBCSMode() (true)
 #endif
 
 #endif

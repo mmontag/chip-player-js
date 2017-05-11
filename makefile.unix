@@ -1,0 +1,57 @@
+#
+# Makefile for UNIX - unrar
+#
+# Note: you have to 'make clean' before you can build
+#	the sfx module
+#
+
+# IRIX using GCC
+CXX=g++
+CXXFLAGS=-O2 
+DEFINES=-DBIG_ENDIAN -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DUNRAR -D_XOPEN_SOURCE -D_BSD_COMPAT
+
+# IRIX using MIPSPro (experimental)
+#CXX=CC
+#CXXFLAGS=-O2 -mips3 -woff 1234,1156,3284 -LANG:std
+#DEFINES=-DBIG_ENDIAN -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DUNRAR -D_XOPEN_SOURCE -D_BSD_COMPAT -DNATIVE_INT64 -DInt64=int64_t
+
+# Linux using GCC
+#CXX=g++
+#CXXFLAGS=-O2
+#DEFINES=-DBIG_ENDIAN -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DUNRAR
+
+# Linux using LCC
+#CXX=lcc
+#CXXFLAGS=-O2
+#DEFINES=-DBIG_ENDIAN -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DUNRAR
+
+##########################
+
+COMPILE=$(CXX) $(CXXFLAGS) $(DEFINES)
+LINK=$(CXX)
+
+UNRAR_OBJ=filestr.o recvol.o rs.o scantree.o
+
+OBJECTS=rar.o strlist.o strfn.o pathfn.o int64.o savepos.o global.o file.o filefn.o filcreat.o \
+	archive.o arcread.o unicode.o system.o isnt.o crypt.o crc.o rawread.o encname.o \
+	resource.o match.o timefn.o rdwrfn.o consio.o options.o ulinks.o errhnd.o rarvm.o \
+	rijndael.o getbits.o sha1.o extinfo.o extract.o volume.o list.o find.o unpack.o cmddata.o
+
+.cpp.o:
+	$(COMPILE) -c $<
+
+all:	unrar
+
+clean:
+	@rm *.o *.bak *~
+
+unrar:	$(OBJECTS) $(UNRAR_OBJ)
+	@rm -f makeunrar
+	$(LINK) -o unrar $(LDFLAGS) $(OBJECTS) $(UNRAR_OBJ) $(LIBS)	
+	@strip unrar
+
+sfx:	$(OBJECTS)
+	@rm -f default.sfx
+	$(LINK) -o default.sfx $(LDFLAGS) $(OBJECTS) -DSFX_MODULE 
+	strip default.sfx
+

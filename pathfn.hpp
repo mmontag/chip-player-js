@@ -37,4 +37,3 @@ char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering);
 void GenerateArcName(char *ArcName,char *GenerateMask);
 
 #endif
-
