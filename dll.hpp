@@ -33,6 +33,7 @@
 #define PASCAL
 #define LONG long
 #define HANDLE void *
+#define LPARAM long
 #define UINT unsigned int
 #endif
 
