@@ -428,7 +428,10 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
     else
       strcat(DestFileName,ExtrName);
 
-    if (AbsPaths && DestFileName[1]=='_' && IsPathDiv(DestFileName[2]))
+    char DiskLetter=toupper(DestFileName[0]);
+
+    if (AbsPaths && DestFileName[1]=='_' && IsPathDiv(DestFileName[2]) &&
+        DiskLetter>='A' && DiskLetter<='Z')
       DestFileName[1]=':';
 
 #ifndef SFX_MODULE
