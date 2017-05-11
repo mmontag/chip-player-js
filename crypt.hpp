@@ -34,7 +34,7 @@ class CryptData
     void Crypt15(byte *Data,uint Count);
     void UpdKeys(byte *Buf);
     void Swap(byte *Ch1,byte *Ch2);
-    void SetOldKeys(char *Password);
+    void SetOldKeys(const char *Password);
 
     Rijndael rin;
     
@@ -48,7 +48,7 @@ class CryptData
     static CryptKeyCacheItem Cache[4];
     static int CachePos;
   public:
-    void SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash);
+    void SetCryptKeys(const char *Password,const byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash);
     void SetAV15Encryption();
     void SetCmt13Encryption();
     void EncryptBlock20(byte *Buf);

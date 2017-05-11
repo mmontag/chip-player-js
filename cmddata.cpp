@@ -161,6 +161,8 @@ bool CommandData::IsConfigEnabled(int argc,char *argv[])
   for (int I=1;I<argc;I++)
     if (IsSwitch(*argv[I]))
     {
+      if (stricomp(&argv[I][1],"-")==0)
+        break;
       if (stricomp(&argv[I][1],"cfg-")==0)
         ConfigEnabled=false;
 #ifndef GUI
@@ -174,7 +176,7 @@ bool CommandData::IsConfigEnabled(int argc,char *argv[])
 #endif
       if (strnicomp(&argv[I][1],"sc",2)==0)
       {
-        // process -cs before reading any file lists
+        // Process -sc before reading any file lists.
         ProcessSwitch(&argv[I][1]);
       }
     }
@@ -646,7 +648,7 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
 #ifdef PACK_SMP
         case 'T':
           Threads=atoi(Switch+2);
-          if (Threads>MaxSearchThreads)
+          if (Threads>16)
             BadSwitch(Switch);
           else
           {
@@ -801,6 +803,9 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
             break;
           case 'C':
             {
+              // Switch is already found bad, avoid reporting it several times.
+              bool AlreadyBad=false;
+
               RAR_CHARSET rch=RCH_DEFAULT;
               switch(etoupper(Switch[2]))
               {
@@ -815,24 +820,27 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
                   break;
                 default :
                   BadSwitch(Switch);
+                  AlreadyBad=true;
                   break;
               };
-              if (Switch[3]==0)
-                CommentCharset=FilelistCharset=rch;
-              else
-                for (int I=3;Switch[I]!=0;I++)
-                  switch(etoupper(Switch[I]))
-                  {
-                    case 'C':
-                      CommentCharset=rch;
-                      break;
-                    case 'L':
-                      FilelistCharset=rch;
-                      break;
-                    default:
-                      BadSwitch(Switch);
-                      break;
-                  }
+              if (!AlreadyBad)
+                if (Switch[3]==0)
+                  CommentCharset=FilelistCharset=rch;
+                else
+                  for (int I=3;Switch[I]!=0 && !AlreadyBad;I++)
+                    switch(etoupper(Switch[I]))
+                    {
+                      case 'C':
+                        CommentCharset=rch;
+                        break;
+                      case 'L':
+                        FilelistCharset=rch;
+                        break;
+                      default:
+                        BadSwitch(Switch);
+                        AlreadyBad=true;
+                        break;
+                    }
             }
             break;
 

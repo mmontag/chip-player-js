@@ -407,8 +407,10 @@ void ConvertNameToFull(const char *Src,char *Dest)
     strcpy(FullName,Src);
   else
   {
-    getcwd(FullName,sizeof(FullName));
-    AddEndSlash(FullName);
+    if (getcwd(FullName,sizeof(FullName))==NULL)
+      *FullName=0;
+    else
+      AddEndSlash(FullName);
     strcat(FullName,Src);
   }
   strcpy(Dest,FullName);

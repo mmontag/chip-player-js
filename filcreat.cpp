@@ -66,7 +66,13 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
         NewName[Size]=0;
         OemToChar(NewName,NewName);
 #else
-        fgets(NewName,sizeof(NewName),stdin);
+        if (fgets(NewName,sizeof(NewName),stdin)==NULL)
+        {
+          // Process fgets failure as if user answered 'No'.
+          if (UserReject!=NULL)
+            *UserReject=true;
+          return(false);
+        }
 #endif
         RemoveLF(NewName);
         if (PointToName(NewName)==NewName)

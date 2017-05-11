@@ -185,7 +185,7 @@ void CryptData::Swap(byte *Ch1,byte *Ch2)
 #endif
 
 
-void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash)
+void CryptData::SetCryptKeys(const char *Password,const byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash)
 {
   if (*Password==0)
     return;
@@ -287,7 +287,7 @@ void CryptData::SetCryptKeys(char *Password,byte *Salt,bool Encrypt,bool OldOnly
 
 
 #ifndef SFX_MODULE
-void CryptData::SetOldKeys(char *Password)
+void CryptData::SetOldKeys(const char *Password)
 {
   uint PswCRC=CRC(0xffffffff,Password,strlen(Password));
   OldKey[0]=PswCRC&0xffff;

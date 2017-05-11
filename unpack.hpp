@@ -141,7 +141,12 @@ class Unpack:private BitInput
 
     unsigned int UnpPtr,WrPtr;
     
-    int ReadTop;
+    // Top border of read packed data.
+    int ReadTop; 
+
+    // Border to call UnpReadBuf. We use it instead of (ReadTop-C)
+    // for optimization reasons. Ensures that we have C bytes in buffer
+    // unless we are at the end of file.
     int ReadBorder;
 
     unsigned char UnpOldTable[HUFF_TABLE_SIZE];

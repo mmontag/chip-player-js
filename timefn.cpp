@@ -89,7 +89,12 @@ time_t RarTime::GetUnix()
 }
 #endif
 
-
+// Return the stored time as 64-bit number of 100-nanosecond intervals
+// since January 1, 1601 for Windows and since January 1, 1970 for Unix.
+// Actually we do not care since which date this time starts from
+// as long as this date is the same for GetRaw and SetRaw. We use the value
+// returned by GetRaw() for time comparisons and for relative operations
+// like SetRaw(GetRaw()-C).
 int64 RarTime::GetRaw()
 {
   if (!IsSet())
@@ -102,7 +107,22 @@ int64 RarTime::GetRaw()
   time_t ut=GetUnix();
   return(INT32TO64(0,ut)*10000000+rlt.Reminder);
 #else
-  return(0);
+  // We should never be here. It is better to use standard time functions.
+
+  // Days since 1970. We do not care about leap years for code simplicity.
+  // It should be acceptable for comprisons.
+  int64 r=(rlt.Year-1970)*365; // Days since 1970.
+
+  // Cumulative day value for beginning of every month.
+  static int MonthToDay[12]={0,31,60,91,121,152,182,213,244,274,305,335};
+
+  r+=MonthToDay[rlt.Month-1]+(rlt.Day-1); // Add days since beginning of year.
+  r=r*24+rlt.Hour;   // Hours.
+  r=r*60+rlt.Minute; // Minutes.
+  r=r*60+rlt.Second; // Seconds.
+  r=r*10000000+rlt.Reminder; // 100-nanosecond intervals.
+
+  return(r);
 #endif
 }
 
@@ -119,6 +139,31 @@ void RarTime::SetRaw(int64 RawTime)
   time_t ut=(time_t)(RawTime/10000000);
   *this=ut;
   rlt.Reminder=(uint)(RawTime%10000000);
+#else
+  // We should never be here. It is better to use standard time functions.
+  rlt.Reminder=RawTime%10000000;
+  RawTime/=10000000; // Seconds.
+  rlt.Second=uint(RawTime%60);
+  RawTime/=60;       // Minutes.
+  rlt.Minute=uint(RawTime%60);
+  RawTime/=60;       // Hours.
+  rlt.Hour=uint(RawTime%24);
+  RawTime/=24;       // Days since 1970.
+  rlt.Year=uint(1970+RawTime/365);
+  RawTime%=365;      // Days since beginning of year.
+
+  // Cumulative day value for beginning of every month.
+  static int MonthToDay[12]={0,31,60,91,121,152,182,213,244,274,305,335};
+
+  for (int I=0;I<12;I++)
+    if (RawTime>=MonthToDay[I])
+    {
+      rlt.Day=uint(RawTime-MonthToDay[I]+1);
+      rlt.Month=I+1;
+    }
+
+  rlt.wDay=0;
+  rlt.yDay=0;
 #endif
 }
 #endif

@@ -70,7 +70,7 @@ class Archive:public File
     void ConvertAttributes();
     int GetRecoverySize(bool Required);
     void VolSubtractHeaderSize(size_t SubSize);
-    void AddSubData(byte *SrcData,size_t DataSize,File *SrcFile,char *Name,bool AllowSplit);
+    void AddSubData(byte *SrcData,size_t DataSize,File *SrcFile,const char *Name,bool AllowSplit);
     bool ReadSubData(Array<byte> *UnpData,File *DestFile);
     int GetHeaderType() {return(CurHeaderType);};
     size_t ReadCommentData(Array<byte> *CmtData,Array<wchar> *CmtDataW);

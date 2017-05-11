@@ -438,6 +438,8 @@ bool Unpack::ReadVMCode()
   Array<byte> VMCode(Length);
   for (int I=0;I<Length;I++)
   {
+    // Try to read the new buffer if only one byte is left.
+    // But if we read all bytes except the last, one byte is enough.
     if (InAddr>=ReadTop-1 && !UnpReadBuf() && I<Length-1)
       return(false);
     VMCode[I]=getbits()>>8;
@@ -639,11 +641,13 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
 
 bool Unpack::UnpReadBuf()
 {
-  int DataSize=ReadTop-InAddr;
+  int DataSize=ReadTop-InAddr; // Data left to process.
   if (DataSize<0)
     return(false);
   if (InAddr>BitInput::MAX_SIZE/2)
   {
+    // If we already processed more than half of buffer, let's move
+    // remaining data into beginning to free more space for new data.
     if (DataSize>0)
       memmove(InBuf,InBuf+InAddr,DataSize);
     InAddr=0;

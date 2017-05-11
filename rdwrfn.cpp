@@ -246,7 +246,7 @@ void ComprDataIO::GetUnpackedData(byte **Data,size_t *Size)
 }
 
 
-void ComprDataIO::SetEncryption(int Method,char *Password,byte *Salt,bool Encrypt,bool HandsOffHash)
+void ComprDataIO::SetEncryption(int Method,const char *Password,const byte *Salt,bool Encrypt,bool HandsOffHash)
 {
   if (Encrypt)
   {

@@ -310,7 +310,15 @@ SCAN_CODE ScanTree::FindProc(FindData *FindData)
     // Let's check if directory name is excluded, so we do not waste
     // time searching in directory, which will be excluded anyway.
     if (Cmd!=NULL && Cmd->ExclCheck(FindData->Name,false))
-      return(SCAN_NEXT);
+    {
+      // If we are here in "fast find" mode, it means that entire directory
+      // specified in command line is excluded. Then we need to return
+      // SCAN_DONE to go to next mask and avoid the infinite loop
+      // in GetNext() function. Such loop would be possible in case of
+      // SCAN_NEXT code and "rar a arc dir -xdir" command.
+
+      return(FastFindFile ? SCAN_DONE:SCAN_NEXT);
+    }
     
     char Mask[NM];
 
