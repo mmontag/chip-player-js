@@ -809,6 +809,10 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,int HeaderSize
 #if defined(_WIN_32) || defined(_EMX)
         if (Cmd->ClearArc)
           Arc.NewLhd.FileAttr&=~FA_ARCH;
+/*
+        else
+          Arc.NewLhd.FileAttr|=FA_ARCH; //set archive bit for unpacked files (file is not backed up)
+*/
 #endif
         if (!BrokenFile || Cmd->KeepBroken)
         {

@@ -44,12 +44,13 @@ char* ConvertPath(const char *SrcPath,char *DestPath)
     const char *s=DestPtr;
     if (s[0] && IsDriveDiv(s[1]))
       s+=2;
-    if (s[0]=='\\' && s[1]=='\\')
-    {
-      const char *Slash=strchr(s+2,'\\');
-      if (Slash!=NULL && (Slash=strchr(Slash+1,'\\'))!=NULL)
-        s=Slash+1;
-    }
+    else
+      if (s[0]=='\\' && s[1]=='\\')
+      {
+        const char *Slash=strchr(s+2,'\\');
+        if (Slash!=NULL && (Slash=strchr(Slash+1,'\\'))!=NULL)
+          s=Slash+1;
+      }
     for (const char *t=s;*t!=0;t++)
       if (IsPathDiv(*t))
         s=t+1;

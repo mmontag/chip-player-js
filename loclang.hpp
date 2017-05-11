@@ -107,7 +107,7 @@
 #define   MCHelpSwRV         "\n  rv[N]         Create recovery volumes"
 #define   MCHelpSwS          "\n  s[<N>,v[-],e] Create solid archive"
 #define   MCHelpSwSm         "\n  s-            Disable solid archiving"
-#define   MCHelpSwSC         "\n  sc<chr><obj>  Specify the character set"
+#define   MCHelpSwSC         "\n  sc<chr>[obj]  Specify the character set"
 #define   MCHelpSwSFX        "\n  sfx[name]     Create SFX archive"
 #define   MCHelpSwSI         "\n  si[name]      Read data from standard input (stdin)"
 #define   MCHelpSwSL         "\n  sl<size>      Process files with size less than specified"
@@ -346,3 +346,4 @@
 #define   MVolumeNumber      "volume %d"
 #define   MCannotDelete      "\nCannot delete %s"
 #define   MCalcCRC           "\nCalculating the control sum"
+#define   MTooLargeSFXArc    "\nWARNING: Too large SFX archive. Windows cannot run the executable file exceeding 4 GB."
