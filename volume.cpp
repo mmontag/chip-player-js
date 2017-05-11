@@ -39,6 +39,11 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
     while (NumPtr>NextName && isdigit(*NumPtr) && isdigit(*(NumPtr-1)))
       NumPtr--;
 
+    // also copy the first character before volume number,
+    // because it can be changed when going from .r99 to .s00
+    if (NumPtr>NextName)
+      NumPtr--;
+
     int CharsToCopy=strlen(NextName)-(NumPtr-NextName);
     int DestPos=strlenw(NextNameW)-CharsToCopy;
     if (DestPos>0)
@@ -64,6 +69,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
       if (Arc.Open(AltNextName))
       {
         strcpy(NextName,AltNextName);
+        *NextNameW=0;
         break;
       }
     }
@@ -117,6 +123,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
       FailedOpen=true;
       break;
     }
+    *NextNameW=0;
 #endif
   }
   if (FailedOpen)

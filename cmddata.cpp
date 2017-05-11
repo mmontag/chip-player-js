@@ -379,6 +379,9 @@ void CommandData::ProcessSwitch(char *Switch)
         case 'S':
           SyncFiles=true;
           break;
+        default:
+          BadSwitch(Switch);
+          break;
       }
       break;
     case 'D':
