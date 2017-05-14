@@ -90,7 +90,7 @@ if(AUDIODRV_ALSA)
 	set(AUDIO_LIBS ${AUDIO_LIBS} pthread asound)
 endif()
 
-if(AUDIODRV_ALSA)
+if(AUDIODRV_PULSE)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_PULSE")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_Pulse.c)
 	set(AUDIO_LIBS ${AUDIO_LIBS} pulse-simple pulse)
