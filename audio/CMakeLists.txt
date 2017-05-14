@@ -93,7 +93,7 @@ endif()
 if(AUDIODRV_PULSE)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_PULSE")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_Pulse.c)
-	set(AUDIO_LIBS ${AUDIO_LIBS} pulse-simple pulse)
+	set(AUDIO_LIBS ${AUDIO_LIBS} pthread pulse-simple pulse)
 endif()
 
 if(AUDIODRV_LIBAO)
