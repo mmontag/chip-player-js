@@ -41,6 +41,8 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/es5506.h"
 #include "emu/cores/c352.h"			// for C352_CFG
 
+#include "vgm/dblk_compr.h"
+
 
 typedef struct _vgm_file_header
 {
@@ -194,6 +196,7 @@ static UINT32 sampleRate;
 
 #define PCM_BANK_COUNT	0x40
 VGM_PCM_BANK PCMBank[PCM_BANK_COUNT];
+PCM_COMPR_TBL PCMComprTbl;
 UINT32 ym2612_pcmBnkPos;
 
 int main(int argc, char* argv[])
@@ -850,6 +853,7 @@ static void InitVGMChips(void)
 		DACStreams[curChip].bankID = 0xFF;
 	}
 	memset(&PCMBank, 0x00, sizeof(VGM_PCM_BANK) * PCM_BANK_COUNT);
+	memset(&PCMComprTbl, 0x00, sizeof(PCM_COMPR_TBL));
 	
 	VGMSmplPos = 0;
 	renderSmplPos = 0;
@@ -882,6 +886,7 @@ static void DeinitVGMChips(void)
 		free(pcmBnk->bankSize);	pcmBnk->bankSize = NULL;
 		free(pcmBnk->data);		pcmBnk->data = NULL;
 	}
+	free(PCMComprTbl.values.d8);	PCMComprTbl.values.d8 = NULL;
 	
 	for (curChip = 0x00; curChip < CHIP_COUNT; curChip ++)
 	for (chipNum = 0; chipNum < 2; chipNum ++)
@@ -1250,16 +1255,22 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			{
 			case 0x00:	// uncompressed data block
 			case 0x40:	// compressed data block
+				if (dblkType == 0x7F)
+				{
+					ReadPCMComprTable(dblkLen, &data[0x07], &PCMComprTbl);
+				}
+				else
 				{
 					VGM_PCM_BANK* pcmBnk = &PCMBank[dblkType & 0x3F];
 					UINT32 dataLen = dblkLen;
 					const UINT8* dataPtr = &data[0x07];
+					UINT8* allocDPtr = NULL;
 					
 					if (dblkType & 0x40)
 					{
 						// ignore compressed data blocks for now
-						dataLen = 0x00;
-						dataPtr = NULL;
+						DecompressDataBlk(&dataLen, &allocDPtr, dblkLen, dataPtr, &PCMComprTbl);
+						dataPtr = allocDPtr;
 					}
 					
 					if (pcmBnk->bankCount >= pcmBnk->bankAlloc)
@@ -1275,6 +1286,8 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 					pcmBnk->data = (UINT8*)realloc(pcmBnk->data, pcmBnk->dataSize + dataLen);
 					memcpy(&pcmBnk->data[pcmBnk->dataSize], dataPtr, dataLen);
 					pcmBnk->dataSize += dataLen;
+					if (allocDPtr != NULL)
+						free(allocDPtr);
 					
 					// TODO: refresh DAC Stream pointers
 				}

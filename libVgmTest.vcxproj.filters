@@ -38,5 +38,11 @@
     <ClCompile Include="vgmtest.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="vgm\dblk_compr.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="vgm_dbcompr_bench.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

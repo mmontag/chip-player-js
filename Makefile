@@ -219,7 +219,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/c352.o \
 	$(LIBEMUOBJ)/cores/iremga20.o \
 	$(LIBEMUOBJ)/Resampler.o \
-	$(LIBEMUOBJ)/panning.o
+	$(LIBEMUOBJ)/panning.o \
 	$(LIBEMUOBJ)/dac_control.o
 
 
@@ -258,6 +258,11 @@ audemutest:	dirs libaudio libemu $(AUDEMU_MAINOBJS)
 vgmtest:	dirs libaudio libemu $(VGMTEST_MAINOBJS)
 	@echo Linking vgmtest ...
 	@$(CC) $(VGMTEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -lm -o vgmtest
+	@echo Done.
+
+vgm_dbcompr_bench:	vgm_dbcompr_bench.c vgm/dblk_compr.c
+	@echo Compiling+Linking vgm_dbcompr_bench
+	@$(CC) $(CFLAGS) $(CCFLAGS) $^ $(LDFLAGS) -o vgm_dbcompr_bench
 	@echo Done.
 
 
