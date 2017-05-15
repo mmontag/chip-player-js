@@ -20,6 +20,10 @@ const char* WavWrt_GetFileName(void* drvObj);
 UINT8 DSound_SetHWnd(void* drvObj, HWND hWnd);
 #endif
 
+#ifdef AUDDRV_PULSE
+UINT8 Pulse_SetStreamDesc(void* drvObj, const char* fileName);
+const char* Pulse_GetStreamDesc(void* drvObj);
+#endif
 
 #ifdef __cplusplus
 }

@@ -39,6 +39,9 @@ extern AUDIO_DRV audDrv_ALSA;
 #ifdef AUDDRV_LIBAO
 extern AUDIO_DRV audDrv_LibAO;
 #endif
+#ifdef AUDDRV_PULSE
+extern AUDIO_DRV audDrv_Pulse;
+#endif
 
 AUDIO_DRV* audDrivers[] =
 {
@@ -68,6 +71,9 @@ AUDIO_DRV* audDrivers[] =
 #endif
 #ifdef AUDDRV_LIBAO
 	&audDrv_LibAO,
+#endif
+#ifdef AUDDRV_PULSE
+	&audDrv_Pulse,
 #endif
 	NULL
 };

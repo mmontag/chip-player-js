@@ -113,6 +113,16 @@ int main(int argc, char* argv[])
 		printf("WaveOut: Drv Init Error: %02X\n", retVal);
 		goto Exit_Deinit;
 	}
+
+#ifdef AUDDRV_PULSE
+	if (drvInfo->drvSig == ADRVSIG_PULSE)
+	{
+		void* pulseDrv;
+		pulseDrv = AudioDrv_GetDrvData(audDrv);
+		Pulse_SetStreamDesc(pulseDrv, "audiotest");
+	}
+#endif
+
 #ifdef AUDDRV_DSOUND
 	if (drvInfo->drvSig == ADRVSIG_DSOUND)
 		SetupDirectSound(audDrv);
