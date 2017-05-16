@@ -49,8 +49,10 @@ int main(int argc, char* argv[])
 	};
 	PCM_COMPR_TBL PCMTbl8 = {0x01, 0, 8, 3, 0x20, {DPCMTbl}};
 	PCM_COMPR_TBL PCMTbl16 = {0x01, 0, 12, 5, 0x20, {DPCMTbl}};
-	PCM_CMP_INF cmpInf8 = {0x00, 0x00, 8, 3, 0x00, &PCMTbl8};		// 3 -> 8 bits
-	PCM_CMP_INF cmpInf16 = {0x00, 0x00, 12, 5, 0x00, &PCMTbl16};	// 5 -> 12 bits
+	PCM_CDB_INF cdbInf8 = {0, 0, {0x00, 0x00, 8, 3, 0x00, &PCMTbl8}};		// 3 -> 8 bits
+	PCM_CDB_INF cdbInf16 = {0, 0, {0x00, 0x00, 12, 5, 0x00, &PCMTbl16}};	// 5 -> 12 bits
+	PCM_CMP_INF* cmpInf8 = &cdbInf8.cmprInfo;
+	PCM_CMP_INF* cmpInf16 = &cdbInf16.cmprInfo;
 	
 	// DecompressDataBlk Benchmark
 	UINT32 dataLen;
@@ -58,16 +60,14 @@ int main(int argc, char* argv[])
 	UINT32 dataLenRaw;
 	UINT8* dataRaw;
 	UINT32 decLen;
-	UINT32 decLen2;
-	UINT8* decData = NULL;
+	UINT8* decData;
 	UINT32 repCntr;
 	UINT32 benchTime[8];
 	
 	dataLenRaw = BENCH_SIZE * 1048576;
-	decLen = (UINT32)((UINT64)dataLenRaw * cmpInf8.bitsDec / cmpInf8.bitsCmp);
-	decLen2 = (UINT32)((UINT64)dataLenRaw * cmpInf16.bitsDec / cmpInf8.bitsCmp);
-	if (decLen < decLen2)
-		decLen = decLen2;
+	cdbInf8.decmpLen = (UINT32)((UINT64)dataLenRaw * cmpInf8->bitsDec / cmpInf8->bitsCmp);
+	cdbInf16.decmpLen = (UINT32)((UINT64)dataLenRaw * cmpInf16->bitsDec / cmpInf8->bitsCmp);
+	decLen = (cdbInf8.decmpLen < cdbInf16.decmpLen) ? cdbInf16.decmpLen : cdbInf8.decmpLen;
 	
 	dataLen = 0x0A + dataLenRaw;	// including VGM data block header
 	data = (UINT8*)calloc(dataLen, 1);
@@ -76,68 +76,61 @@ int main(int argc, char* argv[])
 	
 	for (repCntr = 0; repCntr < 8; repCntr ++)
 		benchTime[repCntr] = 0;
-	memcpy(&data[0x01], &decLen, 0x04);
 	for (repCntr = 0; repCntr < BENCH_WARM_REP + BENCH_REPEAT; repCntr ++)
 	{
 		printf("---- Pass %u ----\n", 1 + repCntr);
 		printf("Bit-Packing (copy/8)\n");
-		cmpInf8.comprType = 0x00;	// compression type: 00 - bit packing
-		cmpInf8.subType = 0x00;		// compression sub-type: 00 - copy
+		cmpInf8->comprType = 0x00;	// compression type: 00 - bit packing
+		cmpInf8->subType = 0x00;	// compression sub-type: 00 - copy
 		
-		data[0x00] = cmpInf8.comprType;
-		data[0x05] = cmpInf8.bitsDec;	// decompressed bits
-		data[0x06] = cmpInf8.bitsCmp;	// compressed bits
-		data[0x07] = cmpInf8.subType;	// compression sub-type
-		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf8.comprTbl);
+		WriteComprDataBlkHdr(dataLen, data, &cdbInf8);
+		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf8->comprTbl);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[0] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		
-		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, &cmpInf8);
+		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, cmpInf8);
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[1] += dblk_benchTime;
 		
 		printf("DPCM (8)\n");
-		cmpInf8.comprType = 0x01;	// compression type: 01 - DPCM (subtype ignored)
-		data[0x00] = cmpInf8.comprType;
-		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf8.comprTbl);
+		cmpInf8->comprType = 0x01;	// compression type: 01 - DPCM (subtype ignored)
+		WriteComprDataBlkHdr(dataLen, data, &cdbInf8);
+		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf8->comprTbl);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[2] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		
-		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, &cmpInf8);
+		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, cmpInf8);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[3] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		
 		printf("Bit-Packing (copy/16)\n");
-		cmpInf16.comprType = 0x00;	// compression type: 00 - bit packing
-		cmpInf16.subType = 0x00;	// compression sub-type: 00 - copy
+		cmpInf16->comprType = 0x00;	// compression type: 00 - bit packing
+		cmpInf16->subType = 0x00;	// compression sub-type: 00 - copy
 		
-		data[0x00] = cmpInf16.comprType;
-		data[0x05] = cmpInf16.bitsDec;	// decompressed bits
-		data[0x06] = cmpInf16.bitsCmp;	// compressed bits
-		data[0x07] = cmpInf16.subType;	// compression sub-type
-		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf16.comprTbl);
+		WriteComprDataBlkHdr(dataLen, data, &cdbInf16);
+		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf16->comprTbl);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[4] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		
-		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, &cmpInf16);
+		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, cmpInf16);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[5] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		
 		printf("DPCM (16)\n");
-		cmpInf16.comprType = 0x01;	// compression type: 01 - DPCM (subtype ignored)
-		data[0x00] = cmpInf16.comprType;
-		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf16.comprTbl);
+		cmpInf16->comprType = 0x01;	// compression type: 01 - DPCM (subtype ignored)
+		WriteComprDataBlkHdr(dataLen, data, &cdbInf16);
+		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf16->comprTbl);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[6] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		
-		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, &cmpInf16);
+		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, cmpInf16);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[7] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);

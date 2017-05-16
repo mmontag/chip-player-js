@@ -47,6 +47,16 @@ INLINE void WriteLE16(UINT8* Buffer, UINT16 Value)
 	return;
 }
 
+INLINE void WriteLE32(UINT8* Buffer, UINT32 Value)
+{
+	Buffer[0x00] = (UINT8)(Value >>  0);
+	Buffer[0x01] = (UINT8)(Value >>  8);
+	Buffer[0x02] = (UINT8)(Value >> 16);
+	Buffer[0x03] = (UINT8)(Value >> 24);
+	
+	return;
+}
+
 // multiply and divide 32-bit integers, use 64-bit result for intermediate multiplication result
 #define MUL_DIV(a, b, c)	(UINT32)((UINT64)a * b / c)
 
@@ -396,6 +406,41 @@ UINT8 ReadComprDataBlkHdr(UINT32 inLen, const UINT8* inData, PCM_CDB_INF* retCdb
 	return 0x00;
 }
 
+UINT8 WriteComprDataBlkHdr(UINT32 outLen, UINT8* outData, PCM_CDB_INF* cdbInf)
+{
+	PCM_CMP_INF* cParam;
+	UINT32 curPos;
+	
+	if (outLen < 0x05)
+		return 0x10;	// not enough data
+	
+	cParam = &cdbInf->cmprInfo;
+	outData[0x00] = cParam->comprType;
+	WriteLE32(&outData[0x01], cdbInf->decmpLen);
+	cdbInf->hdrSize = 0x00;
+	curPos = 0x05;
+	
+	switch(cParam->comprType)
+	{
+	case 0x00:	// Bit Packing compression
+	case 0x01:	// Delta-PCM
+		if (outLen < curPos + 0x05)
+			return 0x10;	// not enough data
+		outData[curPos + 0x00] = cParam->bitsDec;
+		outData[curPos + 0x01] = cParam->bitsCmp;
+		outData[curPos + 0x02] = cParam->subType;
+		WriteLE16(&outData[curPos + 0x03], cParam->baseVal);
+		curPos += 0x05;
+		break;
+	default:
+		printf("Error: Unknown data block compression!\n");
+		return 0x80;
+	}
+	
+	cdbInf->hdrSize = curPos;
+	return 0x00;
+}
+
 UINT8 DecompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmprInfo)
 {
 	UINT8 valSize;
@@ -493,4 +538,44 @@ void ReadPCMComprTable(UINT32 dataSize, const UINT8* data, PCM_COMPR_TBL* comprT
 	}
 	
 	return;
+}
+
+UINT32 WriteCompressionTable(UINT32 dataSize, UINT8* data, PCM_COMPR_TBL* comprTbl)
+{
+	UINT8 valSize;
+	UINT32 tblSize;
+	
+	valSize = (comprTbl->bitsDec + 7) / 8;
+	tblSize = comprTbl->valueCount * valSize;
+	
+	if (dataSize < 0x06 + tblSize)
+	{
+		printf("Warning! Bad PCM Table Length!\n");
+		return (UINT32)-1;
+	}
+	
+	data[0x00] = comprTbl->comprType;
+	data[0x01] = comprTbl->cmpSubType = data[0x01];
+	data[0x02] = comprTbl->bitsDec = data[0x02];
+	data[0x03] = comprTbl->bitsCmp = data[0x03];
+	WriteLE16(&data[0x04], comprTbl->valueCount);
+	
+	comprTbl->values.d8 = (UINT8*)realloc(comprTbl->values.d8, tblSize);
+	if (valSize < 0x02)
+	{
+		memcpy(&data[0x06], comprTbl->values.d8, tblSize);
+	}
+	else
+	{
+#ifndef VGM_LITTLE_ENDIAN
+		UINT16 curVal;
+		
+		for (curVal = 0x00; curVal < comprTbl->valueCount; curVal ++)
+			WriteLE16(&data[0x06 + curVal * 0x02], comprTbl->values.d16[curVal]);
+#else
+		memcpy(&data[0x06], comprTbl->values.d16, tblSize);
+#endif
+	}
+	
+	return 0x06 + tblSize;
 }
