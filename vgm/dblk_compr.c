@@ -51,12 +51,25 @@ INLINE UINT32 ReadLE32(const UINT8* Data)
 			(Data[0x01] <<  8) | (Data[0x00] <<  0);
 }
 
-#define READ_BITS(inPos, inVal, inShift, bitsCmp)	\
+INLINE void WriteLE16(UINT8* Buffer, UINT16 Value)
+{
+	Buffer[0x00] = (UINT8)(Value >> 0);
+	Buffer[0x01] = (UINT8)(Value >> 8);
+	
+	return;
+}
+
+// Parameters:
+//	inPos - input data pointer
+//	inVal - (input data) result value
+//	inShift - current bit position
+//	bitCnt - bits per values
+#define READ_BITS(inPos, inVal, inShift, bitCnt)	\
 {	\
 	outBit = 0x00;	\
 	inVal = 0x0000;	\
-	bitsToRead = bitsCmp;	\
-	while(bitsToRead)	\
+	bitsToRead = bitCnt;	\
+	while(bitsToRead > 0)	\
 	{	\
 		bitReadVal = (bitsToRead >= 8) ? 8 : bitsToRead;	\
 		bitsToRead -= bitReadVal;	\
@@ -228,13 +241,8 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 			break;
 		}
 		
-#ifdef VGM_LITTLE_ENDIAN
-		*((UINT16*)outPos) = (UINT16)outVal;
-#else
 		// save explicitly in Little Endian
-		outPos[0x00] = (UINT8)(outVal >> 0);
-		outPos[0x01] = (UINT8)(outVal >> 8);
-#endif
+		WriteLE16(outPos, (UINT16)outVal);
 	}
 	
 	return 0x00;
@@ -285,7 +293,7 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 	outShift = cmpParams->bitsDec - cmpParams->bitsCmp;
 	outDataEnd = outData + outLen;
 	
-	outVal = cmpParams->baseVal;
+	outVal = (FUINT8)cmpParams->baseVal;
 	for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 1)
 	{
 		READ_BITS(inPos, inVal, inShift, bitsCmp);
@@ -350,13 +358,8 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 		
 		outVal += ent2B[inVal];
 		outVal &= outMask;
-#ifdef VGM_LITTLE_ENDIAN
-		*((UINT16*)outPos) = (UINT16)outVal;
-#else
 		// save explicitly in Little Endian
-		outPos[0x00] = (UINT8)(outVal >> 0);
-		outPos[0x01] = (UINT8)(outVal >> 8);
-#endif
+		WriteLE16(outPos, (UINT16)outVal);
 	}
 	
 	return 0x00;
