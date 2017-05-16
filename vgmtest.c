@@ -1268,8 +1268,7 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 					
 					if (dblkType & 0x40)
 					{
-						// ignore compressed data blocks for now
-						DecompressDataBlk(&dataLen, &allocDPtr, dblkLen, dataPtr, &PCMComprTbl);
+						DecompressDataBlk_VGM(&dataLen, &allocDPtr, dblkLen, dataPtr, &PCMComprTbl);
 						dataPtr = allocDPtr;
 					}
 					

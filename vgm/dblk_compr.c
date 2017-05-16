@@ -15,27 +15,15 @@
 typedef UINT16	FUINT8;
 typedef UINT32	FUINT16;
 
-typedef struct compression_parameters
-{
-	// Compression Types:
-	//	00 bit packing
-	//	01 DPCM
-	UINT8 subType;
-	UINT8 bitsDec;
-	UINT8 bitsCmp;
-	UINT16 baseVal;
-	const PCM_COMPR_TBL* pcmComprTbl;
-} CMP_PARAM;
-
 #if defined(_DEBUG) && defined(WIN32)
 UINT32 dblk_benchTime;
 #endif
 
 
-static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams);
-static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams);
-static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams);
-static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams);
+static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
+static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
+static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
+static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
 
 
 INLINE UINT16 ReadLE16(const UINT8* Data)
@@ -93,7 +81,7 @@ INLINE void WriteLE16(UINT8* Buffer, UINT16 Value)
 	}	\
 }
 
-static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams)
+static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams)
 {
 	FUINT8 bitsCmp;
 	FUINT8 addVal;
@@ -120,14 +108,14 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 	ent1B = NULL;
 	if (cmpParams->subType == 0x02)
 	{
-		ent1B = cmpParams->pcmComprTbl->values.d8;
-		if (! cmpParams->pcmComprTbl->valueCount)
+		ent1B = cmpParams->comprTbl->values.d8;
+		if (! cmpParams->comprTbl->valueCount)
 		{
 			printf("Error loading table-compressed data block! No table loaded!\n");
 			return 0x10;
 		}
-		else if (cmpParams->bitsDec != cmpParams->pcmComprTbl->bitsDec ||
-			cmpParams->bitsCmp != cmpParams->pcmComprTbl->bitsCmp)
+		else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
+			cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 		{
 			printf("Warning! Data block and loaded value table incompatible!\n");
 			return 0x11;
@@ -174,7 +162,7 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 	return 0x00;
 }
 
-static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams)
+static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams)
 {
 	unsigned int cmpSubType;
 	FUINT8 bitsCmp;
@@ -203,14 +191,14 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 	ent2B = NULL;
 	if (cmpParams->subType == 0x02)
 	{
-		ent2B = cmpParams->pcmComprTbl->values.d16;
-		if (! cmpParams->pcmComprTbl->valueCount)
+		ent2B = cmpParams->comprTbl->values.d16;
+		if (! cmpParams->comprTbl->valueCount)
 		{
 			printf("Error loading table-compressed data block! No table loaded!\n");
 			return 0x10;
 		}
-		else if (cmpParams->bitsDec != cmpParams->pcmComprTbl->bitsDec ||
-			cmpParams->bitsCmp != cmpParams->pcmComprTbl->bitsCmp)
+		else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
+			cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 		{
 			printf("Warning! Data block and loaded value table incompatible!\n");
 			return 0x11;
@@ -253,7 +241,7 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 	return 0x00;
 }
 
-static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams)
+static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams)
 {
 	FUINT8 bitsCmp;
 	const UINT8* inPos;
@@ -278,14 +266,14 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 	
 	// --- Delta-PCM --- (8 bit output)
 	bitsCmp = cmpParams->bitsCmp;
-	ent1B = cmpParams->pcmComprTbl->values.d8;
-	if (! cmpParams->pcmComprTbl->valueCount)
+	ent1B = cmpParams->comprTbl->values.d8;
+	if (! cmpParams->comprTbl->valueCount)
 	{
 		printf("Error loading table-compressed data block! No table loaded!\n");
 		return 0x10;
 	}
-	else if (cmpParams->bitsDec != cmpParams->pcmComprTbl->bitsDec ||
-		cmpParams->bitsCmp != cmpParams->pcmComprTbl->bitsCmp)
+	else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
+		cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 	{
 		printf("Warning! Data block and loaded value table incompatible!\n");
 		return 0x11;
@@ -312,7 +300,7 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 	return 0x00;
 }
 
-static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams)
+static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams)
 {
 	FUINT8 bitsCmp;
 	const UINT8* inPos;
@@ -337,14 +325,14 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 	
 	// --- Delta-PCM --- (8 bit output)
 	bitsCmp = cmpParams->bitsCmp;
-	ent2B = cmpParams->pcmComprTbl->values.d16;
-	if (! cmpParams->pcmComprTbl->valueCount)
+	ent2B = cmpParams->comprTbl->values.d16;
+	if (! cmpParams->comprTbl->valueCount)
 	{
 		printf("Error loading table-compressed data block! No table loaded!\n");
 		return 0x10;
 	}
-	else if (cmpParams->bitsDec != cmpParams->pcmComprTbl->bitsDec ||
-		cmpParams->bitsCmp != cmpParams->pcmComprTbl->bitsCmp)
+	else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
+		cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
 	{
 		printf("Warning! Data block and loaded value table incompatible!\n");
 		return 0x11;
@@ -372,67 +360,78 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 	return 0x00;
 }
 
-UINT8 DecompressDataBlk(UINT32* outLen, UINT8** retOutData, UINT32 inLen, const UINT8* inData, const PCM_COMPR_TBL* comprTbl)
+UINT8 ReadComprDataBlkHdr(UINT32 inLen, const UINT8* inData, PCM_CDB_INF* retCdbInf)
 {
-	UINT8* outData;
-	UINT8 comprType;
+	PCM_CMP_INF* cParam;
+	UINT32 curPos;
+	
+	if (inLen < 0x05)
+		return 0x10;	// not enough data
+	
+	cParam = &retCdbInf->cmprInfo;
+	cParam->comprType = inData[0x00];
+	retCdbInf->decmpLen = ReadLE32(&inData[0x01]);
+	retCdbInf->hdrSize = 0x00;
+	curPos = 0x05;
+	
+	switch(cParam->comprType)
+	{
+	case 0x00:	// Bit Packing compression
+	case 0x01:	// Delta-PCM
+		if (inLen < curPos + 0x05)
+			return 0x10;	// not enough data
+		cParam->bitsDec = inData[curPos + 0x00];
+		cParam->bitsCmp = inData[curPos + 0x01];
+		cParam->subType = inData[curPos + 0x02];	// ignored for DPCM
+		cParam->baseVal = ReadLE16(&inData[curPos + 0x03]);
+		cParam->comprTbl = NULL;
+		curPos += 0x05;
+		break;
+	default:
+		printf("Error: Unknown data block compression!\n");
+		return 0x80;
+	}
+	
+	retCdbInf->hdrSize = curPos;
+	return 0x00;
+}
+
+UINT8 DecompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmprInfo)
+{
 	UINT8 valSize;
 #if defined(_DEBUG) && defined(WIN32)
 	UINT32 Time;
 #endif
 	UINT8 retVal;
-	CMP_PARAM cParam;
-	
-	comprType = inData[0x00];
-	*outLen = ReadLE32(&inData[0x01]);
-	*retOutData = (UINT8*)realloc(*retOutData, *outLen);
-	outData = *retOutData;
 	
 #if defined(_DEBUG) && defined(WIN32)
 	Time = GetTickCount();
 #endif
-	switch(comprType)
+	switch(cmprInfo->comprType)
 	{
 	case 0x00:	// Bit Packing compression
-		cParam.bitsDec = inData[0x05];
-		cParam.bitsCmp = inData[0x06];
-		cParam.subType = inData[0x07];
-		cParam.baseVal = ReadLE16(&inData[0x08]);
-		cParam.pcmComprTbl = comprTbl;
-		valSize = (cParam.bitsDec + 7) / 8;
+		valSize = (cmprInfo->bitsDec + 7) / 8;
 		if (valSize == 0x01)
-			retVal = Decompress_BitPacking_8(*outLen, outData, inLen - 0x0A, &inData[0x0A], &cParam);
+			retVal = Decompress_BitPacking_8(outLen, outData, inLen, inData, cmprInfo);
 		else if (valSize == 0x02)
-			retVal = Decompress_BitPacking_16(*outLen, outData, inLen - 0x0A, &inData[0x0A], &cParam);
+			retVal = Decompress_BitPacking_16(outLen, outData, inLen, inData, cmprInfo);
 		else
 			retVal = 0x20;	// invalid number of decompressed bits
 		if (retVal)
-		{
-			*outLen = 0x00;
 			return retVal;
-		}
 		break;
 	case 0x01:	// Delta-PCM
-		cParam.bitsDec = inData[0x05];
-		cParam.bitsCmp = inData[0x06];
-		cParam.subType = inData[0x07];	// ignored for DPCM
-		cParam.baseVal = ReadLE16(&inData[0x08]);
-		cParam.pcmComprTbl = comprTbl;
-		valSize = (cParam.bitsDec + 7) / 8;
+		valSize = (cmprInfo->bitsDec + 7) / 8;
 		if (valSize == 0x01)
-			retVal = Decompress_DPCM_8(*outLen, outData, inLen - 0x0A, &inData[0x0A], &cParam);
+			retVal = Decompress_DPCM_8(outLen, outData, inLen, inData, cmprInfo);
 		else if (valSize == 0x02)
-			retVal = Decompress_DPCM_16(*outLen, outData, inLen - 0x0A, &inData[0x0A], &cParam);
+			retVal = Decompress_DPCM_16(outLen, outData, inLen, inData, cmprInfo);
 		else
 			retVal = 0x20;	// invalid number of decompressed bits
 		if (retVal)
-		{
-			*outLen = 0x00;
 			return retVal;
-		}
 		break;
 	default:
-		printf("Error: Unknown data block compression!\n");
 		return 0x80;
 	}
 	
@@ -441,6 +440,22 @@ UINT8 DecompressDataBlk(UINT32* outLen, UINT8** retOutData, UINT32 inLen, const 
 #endif
 	
 	return 0x00;
+}
+
+UINT8 DecompressDataBlk_VGM(UINT32* outLen, UINT8** retOutData, UINT32 inLen, const UINT8* inData, const PCM_COMPR_TBL* comprTbl)
+{
+	UINT8 retVal;
+	PCM_CDB_INF comprInf;
+	
+	retVal = ReadComprDataBlkHdr(inLen, inData, &comprInf);
+	if (retVal)
+		return retVal;
+	
+	*outLen = comprInf.decmpLen;
+	*retOutData = (UINT8*)realloc(*retOutData, *outLen);
+	comprInf.cmprInfo.comprTbl = comprTbl;
+	
+	return DecompressDataBlk(*outLen, *retOutData, inLen - comprInf.hdrSize, &inData[comprInf.hdrSize], &comprInf.cmprInfo);
 }
 
 void ReadPCMComprTable(UINT32 dataSize, const UINT8* data, PCM_COMPR_TBL* comprTbl)

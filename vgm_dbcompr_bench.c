@@ -11,7 +11,7 @@
 #include "vgm/dblk_compr.h"
 
 
-UINT8 DecompressDataBlk_Old(UINT32* OutDataLen, UINT8** OutData, UINT32 InDataLen, const UINT8* InData, PCM_COMPR_TBL* comprTbl);
+UINT8 DecompressDataBlk_Old(UINT32 OutDataLen, UINT8* OutData, UINT32 InDataLen, const UINT8* InData, const PCM_COMPR_TBL* comprTbl);
 
 // ---- Benchmarks ----
 // 256 MB of input data
@@ -49,79 +49,102 @@ int main(int argc, char* argv[])
 	};
 	PCM_COMPR_TBL PCMTbl8 = {0x01, 0, 8, 3, 0x20, {DPCMTbl}};
 	PCM_COMPR_TBL PCMTbl16 = {0x01, 0, 12, 5, 0x20, {DPCMTbl}};
+	PCM_CMP_INF cmpInf8 = {0x00, 0x00, 8, 3, 0x00, &PCMTbl8};		// 3 -> 8 bits
+	PCM_CMP_INF cmpInf16 = {0x00, 0x00, 12, 5, 0x00, &PCMTbl16};	// 5 -> 12 bits
 	
 	// DecompressDataBlk Benchmark
 	UINT32 dataLen;
 	UINT8* data;
+	UINT32 dataLenRaw;
+	UINT8* dataRaw;
 	UINT32 decLen;
+	UINT32 decLen2;
 	UINT8* decData = NULL;
 	UINT32 repCntr;
 	UINT32 benchTime[8];
 	
-	dataLen = 0x0A + BENCH_SIZE * 1048576;
-	data = (UINT8*)malloc(dataLen);
-	data[0x05] = 8;	// decompressed bits
-	data[0x06] = 3;	// compressed bits
-	data[0x08] = data[0x09] = 0x00;	// add value
-	decLen = (dataLen - 0x0A) * data[0x05] / data[0x06];
-	memcpy(&data[0x01], &decLen, 0x04);
+	dataLenRaw = BENCH_SIZE * 1048576;
+	decLen = (UINT32)((UINT64)dataLenRaw * cmpInf8.bitsDec / cmpInf8.bitsCmp);
+	decLen2 = (UINT32)((UINT64)dataLenRaw * cmpInf16.bitsDec / cmpInf8.bitsCmp);
+	if (decLen < decLen2)
+		decLen = decLen2;
+	
+	dataLen = 0x0A + dataLenRaw;	// including VGM data block header
+	data = (UINT8*)calloc(dataLen, 1);
+	dataRaw = &data[0x0A];
+	decData = (UINT8*)malloc(decLen);
 	
 	for (repCntr = 0; repCntr < 8; repCntr ++)
 		benchTime[repCntr] = 0;
+	memcpy(&data[0x01], &decLen, 0x04);
 	for (repCntr = 0; repCntr < BENCH_WARM_REP + BENCH_REPEAT; repCntr ++)
 	{
 		printf("---- Pass %u ----\n", 1 + repCntr);
-		data[0x05] = 8;	// decompressed bits
-		data[0x06] = 3;	// compressed bits
 		printf("Bit-Packing (copy/8)\n");
-		data[0x00] = 0x00;	// compression type: 00 - bit packing
-		data[0x07] = 0x00;	// compression sub-type: 00 - copy
-		DecompressDataBlk_Old(&decLen, &decData, dataLen, data, NULL);
+		cmpInf8.comprType = 0x00;	// compression type: 00 - bit packing
+		cmpInf8.subType = 0x00;		// compression sub-type: 00 - copy
+		
+		data[0x00] = cmpInf8.comprType;
+		data[0x05] = cmpInf8.bitsDec;	// decompressed bits
+		data[0x06] = cmpInf8.bitsCmp;	// compressed bits
+		data[0x07] = cmpInf8.subType;	// compression sub-type
+		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf8.comprTbl);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[0] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
-		DecompressDataBlk(&decLen, &decData, dataLen, data, NULL);
+		
+		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, &cmpInf8);
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[1] += dblk_benchTime;
 		
 		printf("DPCM (8)\n");
-		data[0x00] = 0x01;	// compression type: 01 - DPCM (subtype ignored)
-		DecompressDataBlk_Old(&decLen, &decData, dataLen, data, &PCMTbl8);
+		cmpInf8.comprType = 0x01;	// compression type: 01 - DPCM (subtype ignored)
+		data[0x00] = cmpInf8.comprType;
+		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf8.comprTbl);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[2] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
-		DecompressDataBlk(&decLen, &decData, dataLen, data, &PCMTbl8);
+		
+		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, &cmpInf8);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[3] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		
-		data[0x05] = 12;	// decompressed bits
-		data[0x06] = 5;	// compressed bits
 		printf("Bit-Packing (copy/16)\n");
-		data[0x00] = 0x00;	// compression type: 00 - bit packing
-		data[0x07] = 0x00;	// compression sub-type: 00 - copy
-		DecompressDataBlk_Old(&decLen, &decData, dataLen, data, NULL);
+		cmpInf16.comprType = 0x00;	// compression type: 00 - bit packing
+		cmpInf16.subType = 0x00;	// compression sub-type: 00 - copy
+		
+		data[0x00] = cmpInf16.comprType;
+		data[0x05] = cmpInf16.bitsDec;	// decompressed bits
+		data[0x06] = cmpInf16.bitsCmp;	// compressed bits
+		data[0x07] = cmpInf16.subType;	// compression sub-type
+		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf16.comprTbl);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[4] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
-		DecompressDataBlk(&decLen, &decData, dataLen, data, NULL);
+		
+		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, &cmpInf16);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[5] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		
 		printf("DPCM (16)\n");
-		data[0x00] = 0x01;	// compression type: 01 - DPCM (subtype ignored)
-		DecompressDataBlk_Old(&decLen, &decData, dataLen, data, &PCMTbl16);
+		cmpInf16.comprType = 0x01;	// compression type: 01 - DPCM (subtype ignored)
+		data[0x00] = cmpInf16.comprType;
+		DecompressDataBlk_Old(decLen, decData, dataLen, data, cmpInf16.comprTbl);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[6] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
-		DecompressDataBlk(&decLen, &decData, dataLen, data, &PCMTbl16);
+		
+		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, &cmpInf16);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[7] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		fflush(stdout);
 	}
+	free(data);
+	free(decData);
 	
 	for (repCntr = 0; repCntr < 8; repCntr ++)
 		benchTime[repCntr] = (benchTime[repCntr] + BENCH_REPEAT / 2) / BENCH_REPEAT;
@@ -155,9 +178,8 @@ INLINE UINT32 ReadLE32(const UINT8* Data)
 			(Data[0x01] <<  8) | (Data[0x00] <<  0);
 }
 
-UINT8 DecompressDataBlk_Old(UINT32* outLen, UINT8** retOutData, UINT32 inLen, const UINT8* inData, PCM_COMPR_TBL* comprTbl)
+UINT8 DecompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_COMPR_TBL* comprTbl)
 {
-	UINT8* outData;
 	UINT8 comprType;
 	UINT8 bitsDec;
 	FUINT8 bitsCmp;
@@ -189,9 +211,9 @@ UINT8 DecompressDataBlk_Old(UINT32* outLen, UINT8** retOutData, UINT32 inLen, co
 	UINT16 OutMask;
 	
 	comprType = inData[0x00];
-	*outLen = ReadLE32(&inData[0x01]);
-	*retOutData = (UINT8*)realloc(*retOutData, *outLen);
-	outData = *retOutData;
+	//*outLen = ReadLE32(&inData[0x01]);
+	//*retOutData = (UINT8*)realloc(*retOutData, *outLen);
+	//outData = *retOutData;
 	
 #if defined(_DEBUG) && defined(WIN32)
 	Time = GetTickCount();
@@ -213,13 +235,11 @@ UINT8 DecompressDataBlk_Old(UINT32* outLen, UINT8** retOutData, UINT32 inLen, co
 			ent2B = PCMTbl.values.d16;
 			if (! PCMTbl.valueCount)
 			{
-				*outLen = 0x00;
 				printf("Error loading table-compressed data block! No table loaded!\n");
 				return 0x10;
 			}
 			else if (bitsDec != PCMTbl.bitsDec || bitsCmp != PCMTbl.bitsCmp)
 			{
-				*outLen = 0x00;
 				printf("Warning! Data block and loaded value table incompatible!\n");
 				return 0x11;
 			}
@@ -230,7 +250,7 @@ UINT8 DecompressDataBlk_Old(UINT32* outLen, UINT8** retOutData, UINT32 inLen, co
 		inDataEnd = inData + inLen;
 		inShift = 0;
 		outShift = bitsDec - bitsCmp;
-		outDataEnd = outData + *outLen;
+		outDataEnd = outData + outLen;
 		outVal = 0x0000;
 		
 		for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += valSize)
@@ -316,13 +336,11 @@ UINT8 DecompressDataBlk_Old(UINT32* outLen, UINT8** retOutData, UINT32 inLen, co
 			ent2B = PCMTbl.values.d16;
 			if (! PCMTbl.valueCount)
 			{
-				*outLen = 0x00;
 				printf("Error loading table-compressed data block! No table loaded!\n");
 				return 0x10;
 			}
 			else if (bitsDec != PCMTbl.bitsDec || bitsCmp != PCMTbl.bitsCmp)
 			{
-				*outLen = 0x00;
 				printf("Warning! Data block and loaded value table incompatible!\n");
 				return 0x11;
 			}
@@ -334,7 +352,7 @@ UINT8 DecompressDataBlk_Old(UINT32* outLen, UINT8** retOutData, UINT32 inLen, co
 		inDataEnd = inData + inLen;
 		inShift = 0;
 		outShift = bitsDec - bitsCmp;
-		outDataEnd = outData + *outLen;
+		outDataEnd = outData + outLen;
 		addVal = 0x0000;
 		
 		for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += valSize)
