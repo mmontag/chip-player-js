@@ -1264,12 +1264,13 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 					VGM_PCM_BANK* pcmBnk = &PCMBank[dblkType & 0x3F];
 					UINT32 dataLen = dblkLen;
 					const UINT8* dataPtr = &data[0x07];
-					UINT8* allocDPtr = NULL;
+					PCM_CDB_INF dbCI;
 					
 					if (dblkType & 0x40)
 					{
-						DecompressDataBlk_VGM(&dataLen, &allocDPtr, dblkLen, dataPtr, &PCMComprTbl);
-						dataPtr = allocDPtr;
+						ReadComprDataBlkHdr(dblkLen, dataPtr, &dbCI);
+						dbCI.cmprInfo.comprTbl = &PCMComprTbl;
+						dataLen = dbCI.decmpLen;
 					}
 					
 					if (pcmBnk->bankCount >= pcmBnk->bankAlloc)
@@ -1283,10 +1284,16 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 					pcmBnk->bankCount ++;
 					
 					pcmBnk->data = (UINT8*)realloc(pcmBnk->data, pcmBnk->dataSize + dataLen);
-					memcpy(&pcmBnk->data[pcmBnk->dataSize], dataPtr, dataLen);
+					if (dblkType & 0x40)
+					{
+						DecompressDataBlk(dataLen, &pcmBnk->data[pcmBnk->dataSize],
+											dblkLen - dbCI.hdrSize, &dataPtr[dbCI.hdrSize], &dbCI.cmprInfo);
+					}
+					else
+					{
+						memcpy(&pcmBnk->data[pcmBnk->dataSize], dataPtr, dataLen);
+					}
 					pcmBnk->dataSize += dataLen;
-					if (allocDPtr != NULL)
-						free(allocDPtr);
 					
 					// TODO: refresh DAC Stream pointers
 				}

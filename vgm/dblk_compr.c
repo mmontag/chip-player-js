@@ -394,7 +394,7 @@ UINT8 ReadComprDataBlkHdr(UINT32 inLen, const UINT8* inData, PCM_CDB_INF* retCdb
 		cParam->bitsCmp = inData[curPos + 0x01];
 		cParam->subType = inData[curPos + 0x02];	// ignored for DPCM
 		cParam->baseVal = ReadLE16(&inData[curPos + 0x03]);
-		cParam->comprTbl = NULL;
+		//cParam->comprTbl = NULL;	// keep the value
 		curPos += 0x05;
 		break;
 	default:
