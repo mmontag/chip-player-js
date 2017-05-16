@@ -59,6 +59,9 @@ INLINE void WriteLE16(UINT8* Buffer, UINT16 Value)
 	return;
 }
 
+// multiply and divide 32-bit integers, use 64-bit result for intermediate multiplication result
+#define MUL_DIV(a, b, c)	(UINT32)((UINT64)a * b / c)
+
 // Parameters:
 //	inPos - input data pointer
 //	inVal - (input data) result value
@@ -95,8 +98,8 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 	FUINT8 bitsCmp;
 	FUINT8 addVal;
 	const UINT8* inPos;
-	const UINT8* inDataEnd;
 	UINT8* outPos;
+	UINT32 outLenMax;
 	const UINT8* outDataEnd;
 	FUINT8 inVal;
 	FUINT8 outVal;
@@ -131,16 +134,17 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 		}
 	}
 	
-	inPos = inData;
-	inDataEnd = inData + inLen;
 	inShift = 0;
 	outShift = cmpParams->bitsDec - bitsCmp;
+	outLenMax = MUL_DIV(inLen, 8, cmpParams->bitsCmp);
+	if (outLen > outLenMax)
+		outLen = outLenMax;
 	outDataEnd = outData + outLen;
 	
 	switch(cmpParams->subType)
 	{
 	case 0x00:	// Copy
-		for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 1)
+		for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x01)
 		{
 			READ_BITS(inPos, inVal, inShift, bitsCmp);
 			
@@ -149,7 +153,7 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 		}
 		break;
 	case 0x01:	// Shift Left
-		for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 1)
+		for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x01)
 		{
 			READ_BITS(inPos, inVal, inShift, bitsCmp);
 			
@@ -158,7 +162,7 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 		}
 		break;
 	case 0x02:	// Table
-		for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 1)
+		for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x01)
 		{
 			READ_BITS(inPos, inVal, inShift, bitsCmp);
 			
@@ -176,8 +180,8 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 	FUINT8 bitsCmp;
 	FUINT16 addVal;
 	const UINT8* inPos;
-	const UINT8* inDataEnd;
 	UINT8* outPos;
+	UINT32 outLenMax;
 	const UINT8* outDataEnd;
 	FUINT16 inVal;
 	FUINT16 outVal;
@@ -213,13 +217,14 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 		}
 	}
 	
-	inPos = inData;
-	inDataEnd = inData + inLen;
 	inShift = 0;
 	outShift = cmpParams->bitsDec - bitsCmp;
+	outLenMax = MUL_DIV(inLen, 16, cmpParams->bitsCmp);
+	if (outLen > outLenMax)
+		outLen = outLenMax;
 	outDataEnd = outData + outLen;
 	
-	for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 2)
+	for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x02)
 	{
 		READ_BITS(inPos, inVal, inShift, bitsCmp);
 		
@@ -252,8 +257,8 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 {
 	FUINT8 bitsCmp;
 	const UINT8* inPos;
-	const UINT8* inDataEnd;
 	UINT8* outPos;
+	UINT32 outLenMax;
 	const UINT8* outDataEnd;
 	FUINT8 inVal;
 	FUINT8 outVal;
@@ -287,14 +292,15 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 	}
 	
 	outMask = (1 << cmpParams->bitsDec) - 1;
-	inPos = inData;
-	inDataEnd = inData + inLen;
 	inShift = 0;
 	outShift = cmpParams->bitsDec - cmpParams->bitsCmp;
+	outLenMax = MUL_DIV(inLen, 8, cmpParams->bitsCmp);
+	if (outLen > outLenMax)
+		outLen = outLenMax;
 	outDataEnd = outData + outLen;
 	
 	outVal = (FUINT8)cmpParams->baseVal;
-	for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 1)
+	for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x01)
 	{
 		READ_BITS(inPos, inVal, inShift, bitsCmp);
 		
@@ -310,8 +316,8 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 {
 	FUINT8 bitsCmp;
 	const UINT8* inPos;
-	const UINT8* inDataEnd;
 	UINT8* outPos;
+	UINT32 outLenMax;
 	const UINT8* outDataEnd;
 	FUINT16 inVal;
 	FUINT16 outVal;
@@ -345,14 +351,15 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 	}
 	
 	outMask = (1 << cmpParams->bitsDec) - 1;
-	inPos = inData;
-	inDataEnd = inData + inLen;
 	inShift = 0;
 	outShift = cmpParams->bitsDec - cmpParams->bitsCmp;
+	outLenMax = MUL_DIV(inLen, 16, cmpParams->bitsCmp);
+	if (outLen > outLenMax)
+		outLen = outLenMax;
 	outDataEnd = outData + outLen;
 	
 	outVal = cmpParams->baseVal;
-	for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 2)
+	for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x02)
 	{
 		READ_BITS(inPos, inVal, inShift, bitsCmp);
 		
