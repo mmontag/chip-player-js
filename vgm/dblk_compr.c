@@ -12,8 +12,8 @@
 
 // integer types for fast integer calculation
 // The bit number defines how many bits are required, but the types can be larger for increased speed.
-#define FUINT8	unsigned int
-#define FUINT16	unsigned int
+typedef UINT16	FUINT8;
+typedef UINT32	FUINT16;
 
 typedef struct compression_parameters
 {
@@ -123,7 +123,6 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 	inShift = 0;
 	outShift = cmpParams->bitsDec - bitsCmp;
 	outDataEnd = outData + outLen;
-	outVal = 0x00;
 	
 	switch(cmpParams->subType)
 	{
@@ -150,8 +149,7 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 		{
 			READ_BITS(inPos, inVal, inShift, bitsCmp);
 			
-			outVal = ent1B[inVal];
-			*outPos = (UINT8)outVal;
+			*outPos = ent1B[inVal];
 		}
 		break;
 	}
@@ -188,7 +186,6 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 	ent2B = NULL;
 	if (cmpParams->subType == 0x02)
 	{
-		// Big Endian note: Those are stored in Little Endian and converted when reading.
 		ent2B = cmpParams->pcmComprTbl->values.d16;
 		if (! cmpParams->pcmComprTbl->valueCount)
 		{
@@ -208,7 +205,6 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 	inShift = 0;
 	outShift = cmpParams->bitsDec - bitsCmp;
 	outDataEnd = outData + outLen;
-	outVal = 0x0000;
 	
 	for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 2)
 	{
@@ -225,11 +221,10 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 			outVal = (inVal << outShift) + addVal;
 			break;
 		case 0x02:	// Table
-#ifdef VGM_LITTLE_ENDIAN
 			outVal = ent2B[inVal];
-#else
-			outVal = ReadLE16((UINT8*)&ent2B[inVal]);
-#endif
+			break;
+		default:
+			outVal = 0x0000;
 			break;
 		}
 		
@@ -237,8 +232,8 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 		*((UINT16*)outPos) = (UINT16)outVal;
 #else
 		// save explicitly in Little Endian
-		outPos[0x00] = (UINT8)((outVal & 0x00FF) >> 0);
-		outPos[0x01] = (UINT8)((outVal & 0xFF00) >> 8);
+		outPos[0x00] = (UINT8)(outVal >> 0);
+		outPos[0x01] = (UINT8)(outVal >> 8);
 #endif
 	}
 	
@@ -248,7 +243,6 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams)
 {
 	FUINT8 bitsCmp;
-	FUINT8 addVal;
 	const UINT8* inPos;
 	const UINT8* inDataEnd;
 	UINT8* outPos;
@@ -267,7 +261,7 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 	FUINT8 outBit;
 	
 	// Variables for DPCM
-	UINT16 OutMask;
+	UINT16 outMask;
 	
 	// --- Delta-PCM --- (8 bit output)
 	bitsCmp = cmpParams->bitsCmp;
@@ -284,7 +278,7 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 		return 0x11;
 	}
 	
-	OutMask = (1 << cmpParams->bitsDec) - 1;
+	outMask = (1 << cmpParams->bitsDec) - 1;
 	inPos = inData;
 	inDataEnd = inData + inLen;
 	inShift = 0;
@@ -296,9 +290,8 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 	{
 		READ_BITS(inPos, inVal, inShift, bitsCmp);
 		
-		addVal = ent1B[inVal];
-		outVal += addVal;
-		outVal &= OutMask;
+		outVal += ent1B[inVal];
+		outVal &= outMask;
 		*outPos = (UINT8)outVal;
 	}
 	
@@ -308,7 +301,6 @@ static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, cons
 static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const CMP_PARAM* cmpParams)
 {
 	FUINT8 bitsCmp;
-	FUINT16 addVal;
 	const UINT8* inPos;
 	const UINT8* inDataEnd;
 	UINT8* outPos;
@@ -327,7 +319,7 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 	FUINT8 outBit;
 	
 	// Variables for DPCM
-	UINT16 OutMask;
+	UINT16 outMask;
 	
 	// --- Delta-PCM --- (8 bit output)
 	bitsCmp = cmpParams->bitsCmp;
@@ -344,31 +336,26 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 		return 0x11;
 	}
 	
-	OutMask = (1 << cmpParams->bitsDec) - 1;
+	outMask = (1 << cmpParams->bitsDec) - 1;
 	inPos = inData;
 	inDataEnd = inData + inLen;
 	inShift = 0;
 	outShift = cmpParams->bitsDec - cmpParams->bitsCmp;
 	outDataEnd = outData + outLen;
-	addVal = 0x0000;
 	
 	outVal = cmpParams->baseVal;
 	for (outPos = outData; outPos < outDataEnd && inPos < inDataEnd; outPos += 2)
 	{
 		READ_BITS(inPos, inVal, inShift, bitsCmp);
 		
+		outVal += ent2B[inVal];
+		outVal &= outMask;
 #ifdef VGM_LITTLE_ENDIAN
-		addVal = ent2B[inVal];
-		outVal += addVal;
-		outVal &= OutMask;
 		*((UINT16*)outPos) = (UINT16)outVal;
 #else
-		addVal = ReadLE16((UINT8*)&ent2B[inVal]);
-		outVal += addVal;
-		outVal &= OutMask;
 		// save explicitly in Little Endian
-		outPos[0x00] = (UINT8)((outVal & 0x00FF) >> 0);
-		outPos[0x01] = (UINT8)((outVal & 0xFF00) >> 8);
+		outPos[0x00] = (UINT8)(outVal >> 0);
+		outPos[0x01] = (UINT8)(outVal >> 8);
 #endif
 	}
 	
@@ -460,6 +447,9 @@ void ReadPCMComprTable(UINT32 dataSize, const UINT8* data, PCM_COMPR_TBL* comprT
 	valSize = (comprTbl->bitsDec + 7) / 8;
 	tblSize = comprTbl->valueCount * valSize;
 	
+	if (dataSize < 0x06 + tblSize)
+		printf("Warning! Bad PCM Table Length!\n");
+	
 	comprTbl->values.d8 = (UINT8*)realloc(comprTbl->values.d8, tblSize);
 	if (valSize < 0x02)
 	{
@@ -476,9 +466,6 @@ void ReadPCMComprTable(UINT32 dataSize, const UINT8* data, PCM_COMPR_TBL* comprT
 		memcpy(comprTbl->values.d16, &data[0x06], tblSize);
 #endif
 	}
-	
-	if (dataSize < 0x06 + tblSize)
-		printf("Warning! Bad PCM Table Length!\n");
 	
 	return;
 }

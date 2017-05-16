@@ -14,26 +14,27 @@
 UINT8 DecompressDataBlk_Old(UINT32* OutDataLen, UINT8** OutData, UINT32 InDataLen, const UINT8* InData, PCM_COMPR_TBL* comprTbl);
 
 // ---- Benchmarks ----
-// 64 MB of input data
+// 256 MB of input data
 //	8-bit version: decompressed from 3 -> 8 bits (fits into UINT8)
 //	16-bit version: decompressed from 5 -> 12 bits (fits into UINT16)
 //
 //										FUINT8/FUINT16 bits
-//	Algorithm	Compiler	old		32/32	16/16	32/16	16/32	8/16
-//	----		----		----	----	----	----	----	----
-// MS VC 2010, compiled with /O2
-//	BitPack 8	MSVC 2010	2534	1688	1294	1673	1311	1341
-//	DPCM 8		MSVC 2010	2035	1423	1462	1447	1474	1443
-//	BitPack 16	MSVC 2010	 983	 744	1396	1388	 756	1314
-//	DPCM 16		MSVC 2010	 924	 854	 893	 881	 998	904
+//	Algorithm	Compiler	old 	32/32	16/16	32/16	16/32	8/16
+//	--------	--------	----	----	----	----	----	----
+// MS VC 2010, 32-bit executable, compiled with /O2
+//	BitPack 8	MSVC 2010	10249	 6935	 5366	 6884	 5296	 5386
+//	DPCM 8		MSVC 2010	 8186	 5924	 6096	 5792	 5963	 5776
+//	BitPack 16	MSVC 2010	 3971	 3105	 4973	 4805	 2979	 5070
+//	DPCM 16		MSVC 2010	 3705	 3210	 3674	 3296	 3506	 3190
 
-// GCC 6.3.0, compiled with -O2
-//	BitPack 8	GCC 6		1673	2016	1817	1384	1801	2075
-//	DPCM 8		GCC 6		1696	1552	2066	1911	2090	1579
-//	BitPack 16	GCC 6		 733	 823	 904	 768	 912	 916
-//	DPCM 16		GCC 6		 799	1002	1021	1029	 940	1212
+// GCC 4.8.3, 32-bit executable, compiled with -O2 (-O3 performs slightly worse)
+//	BitPack 8	GCC 6		 8908	 7313	 6716	 7141	 6701	 7094
+//	DPCM 8		GCC 6		 9957	 9298	 8787	 9141	 8420	 8561
+//	BitPack 16	GCC 6		 5086	 4345	 4298	 4734	 3904	 4119
+//	DPCM 16		GCC 6		 5449	 4318	 3916	 4762	 4372	 4465
 
-#define BENCH_SIZE		64	// compressed data size in MB
+#define BENCH_SIZE		256	// compressed data size in MB
+#define BENCH_WARM_REP	1	// number of times for warm up
 #define BENCH_REPEAT	4	// number of times the benchmark is repeated
 extern UINT32 dblk_benchTime;
 
@@ -67,7 +68,7 @@ int main(int argc, char* argv[])
 	
 	for (repCntr = 0; repCntr < 8; repCntr ++)
 		benchTime[repCntr] = 0;
-	for (repCntr = 0; repCntr < 4 + BENCH_REPEAT; repCntr ++)
+	for (repCntr = 0; repCntr < BENCH_WARM_REP + BENCH_REPEAT; repCntr ++)
 	{
 		printf("---- Pass %u ----\n", 1 + repCntr);
 		data[0x05] = 8;	// decompressed bits
@@ -76,22 +77,22 @@ int main(int argc, char* argv[])
 		data[0x00] = 0x00;	// compression type: 00 - bit packing
 		data[0x07] = 0x00;	// compression sub-type: 00 - copy
 		DecompressDataBlk_Old(&decLen, &decData, dataLen, data, NULL);
-		if (repCntr >= 4)
+		if (repCntr >= BENCH_WARM_REP)
 			benchTime[0] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		DecompressDataBlk(&decLen, &decData, dataLen, data, NULL);
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
-		if (repCntr >= 4)
+		if (repCntr >= BENCH_WARM_REP)
 			benchTime[1] += dblk_benchTime;
 		
 		printf("DPCM (8)\n");
 		data[0x00] = 0x01;	// compression type: 01 - DPCM (subtype ignored)
 		DecompressDataBlk_Old(&decLen, &decData, dataLen, data, &PCMTbl8);
-		if (repCntr >= 4)
+		if (repCntr >= BENCH_WARM_REP)
 			benchTime[2] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		DecompressDataBlk(&decLen, &decData, dataLen, data, &PCMTbl8);
-		if (repCntr >= 4)
+		if (repCntr >= BENCH_WARM_REP)
 			benchTime[3] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		
@@ -101,22 +102,22 @@ int main(int argc, char* argv[])
 		data[0x00] = 0x00;	// compression type: 00 - bit packing
 		data[0x07] = 0x00;	// compression sub-type: 00 - copy
 		DecompressDataBlk_Old(&decLen, &decData, dataLen, data, NULL);
-		if (repCntr >= 4)
+		if (repCntr >= BENCH_WARM_REP)
 			benchTime[4] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		DecompressDataBlk(&decLen, &decData, dataLen, data, NULL);
-		if (repCntr >= 4)
+		if (repCntr >= BENCH_WARM_REP)
 			benchTime[5] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		
 		printf("DPCM (16)\n");
 		data[0x00] = 0x01;	// compression type: 01 - DPCM (subtype ignored)
 		DecompressDataBlk_Old(&decLen, &decData, dataLen, data, &PCMTbl16);
-		if (repCntr >= 4)
+		if (repCntr >= BENCH_WARM_REP)
 			benchTime[6] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		DecompressDataBlk(&decLen, &decData, dataLen, data, &PCMTbl16);
-		if (repCntr >= 4)
+		if (repCntr >= BENCH_WARM_REP)
 			benchTime[7] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		fflush(stdout);
