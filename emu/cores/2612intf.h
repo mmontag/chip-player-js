@@ -11,7 +11,6 @@
 
 
 #define OPT_YM2612_DAC_HIGHPASS		0x01	// [Gens core] enable DAC highpass filter (default: disabled)
-											//             (default: disabled)
 #define OPT_YM2612_SSGEG			0x02	// [Gens core] enable (broken) SSG-EG emulation (default: disabled)
 #define OPT_YM2612_PSEUDO_STEREO	0x04	// [GPGX core] Pseudo Stereo mode (default: disabled)
 											// alternate between updating left and right speaker,

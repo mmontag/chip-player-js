@@ -7,7 +7,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # assume Windows 2000 and later for GetConsoleWindow API call
-add_definitions("-D _WIN32_WINNT=0x500")
+if(WIN32)
+	add_definitions("-D _WIN32_WINNT=0x500")
+endif()
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
@@ -21,10 +23,10 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-unused-value -Wno-sign-
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-unused-variable -Wno-unused-const-variable -Wno-unused-function")
 
 # additional warnings from http://blog.httrack.com/blog/2014/03/09/what-are-your-gcc-flags/
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector -Wpointer-arith -Winit-self")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fstack-protector")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wpointer-arith -Winit-self -Wstrict-aliasing")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wformat -Wformat-security -Wformat-nonliteral")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wstrict-aliasing")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fstack-protector")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")

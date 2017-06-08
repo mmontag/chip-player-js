@@ -148,6 +148,7 @@ static void upd7759_set_bank_base(void *info, UINT32 base);
 static void upd7759_reset_w(void *info, UINT8 data);
 static void upd7759_start_w(void *info, UINT8 data);
 static UINT8 upd7759_busy_r(void *info);
+static UINT8 upd7759_get_fifo_space(void *info);
 static void upd7759_port_w(void *info, UINT8 data);
 
 static void upd7759_write(void *info, UINT8 offset, UINT8 data);
@@ -865,6 +866,12 @@ static UINT8 upd7759_busy_r(void *info)
 	return (chip->state == STATE_IDLE);
 }
 
+static UINT8 upd7759_get_fifo_space(void *info)
+{
+	upd7759_state *chip = (upd7759_state *)info;
+	return (chip->dbuf_pos_read - chip->dbuf_pos_write - 0x01) & 0x3F;
+}
+
 
 static void upd7759_set_bank_base(void *info, UINT32 base)
 {
@@ -896,6 +903,8 @@ static void upd7759_write(void *info, UINT8 offset, UINT8 data)
 
 static UINT8 upd7759_read(void *info, UINT8 offset)
 {
+	if (offset == 'F')
+		return upd7759_get_fifo_space(info);
 	return upd7759_busy_r(info);
 }
 

@@ -27,10 +27,11 @@ MANPREFIX = $(PREFIX)/share/man
 ifeq ($(DEBUG), 1)
 CFLAGS := -O0 -g $(CFLAGS) -D_DEBUG -I.
 else
-CFLAGS := -O3 -g0 $(CFLAGS) -I.
+CFLAGS := -O2 -g0 $(CFLAGS) -I.
 endif
 CCFLAGS = -std=gnu90
 CPPFLAGS = -std=gnu++98
+ARFLAGS = -cr
 
 CFLAGS += -Wall
 #CFLAGS += -Wextra
@@ -45,11 +46,10 @@ CFLAGS += -Wno-unused-variable -Wno-unused-const-variable -Wno-unused-function
 endif
 
 # additional warnings from http://blog.httrack.com/blog/2014/03/09/what-are-your-gcc-flags/
-CFLAGS += -fstack-protector -Wpointer-arith -Winit-self
-LDFLAGS += -fstack-protector
+CFLAGS += -Wpointer-arith -Winit-self -Wstrict-aliasing
 CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
-CFLAGS += -Wstrict-aliasing
-ARFLAGS = -cr
+#CFLAGS += -fstack-protector -Wpointer-arith -Winit-self
+#LDFLAGS += -fstack-protector
 
 # add Library Path, if defined
 ifdef LD_LIBRARY_PATH
