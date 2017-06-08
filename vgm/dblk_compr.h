@@ -43,7 +43,7 @@ typedef struct pcm_compr_datablk_info
 	// *1 written by Read/WriteComprDataBlkHdr
 	// *2 set by ReadComprDataBlkHdr, read by WriteComprDataBlkHdr
 	
-	// actual parameters required for DecompressDataBlk
+	// actual parameters required for (De-)CompressDataBlk
 	PCM_CMP_INF cmprInfo;
 } PCM_CDB_INF;
 
@@ -51,6 +51,7 @@ UINT8 ReadComprDataBlkHdr(UINT32 inLen, const UINT8* inData, PCM_CDB_INF* retCdb
 UINT8 WriteComprDataBlkHdr(UINT32 outLen, UINT8* outData, PCM_CDB_INF* cdbInf);
 UINT8 DecompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmprInfo);
 UINT8 DecompressDataBlk_VGM(UINT32* outLen, UINT8** retOutData, UINT32 inLen, const UINT8* inData, const PCM_COMPR_TBL* comprTbl);
+UINT8 CompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmprInfo);
 void ReadPCMComprTable(UINT32 dataSize, const UINT8* data, PCM_COMPR_TBL* comprTbl);
 UINT32 WriteCompressionTable(UINT32 dataSize, UINT8* data, PCM_COMPR_TBL* comprTbl);
 

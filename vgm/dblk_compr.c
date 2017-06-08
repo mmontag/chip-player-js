@@ -24,6 +24,8 @@ static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen
 static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
 static UINT8 Decompress_DPCM_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
 static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
+static UINT8 Compress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
+static UINT8 Compress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
 
 
 INLINE UINT16 ReadLE16(const UINT8* Data)
@@ -88,6 +90,37 @@ INLINE void WriteLE32(UINT8* Buffer, UINT32 Value)
 		\
 		inVal |= inValB << outBit;	\
 		outBit += bitReadVal;	\
+	}	\
+}
+
+// Parameters:
+//	outPos - output data pointer
+//	inVal - input value
+//	outShift - current bit position
+//	bitCnt - bits per values
+// TODO: don't write outData[outLen] = 0x00 when finishing with 0 bits left
+#define WRITE_BITS(outPos, inVal, outShift, bitCnt)	\
+{	\
+	inBit = 0x00;	\
+	*outPos &= ~(0xFF >> outShift);	\
+	bitsToWrite = bitCnt;	\
+	while(bitsToWrite)	\
+	{	\
+		bitWriteVal = (bitsToWrite >= 8) ? 8 : bitsToWrite;	\
+		bitsToWrite -= bitWriteVal;	\
+		bitMask = (1 << bitWriteVal) - 1;	\
+		\
+		outValB = (inVal >> inBit) & bitMask;	\
+		outShift += bitWriteVal;	\
+		*outPos |= (UINT8)(outValB << 8 >> outShift);	\
+		if (outShift >= 8)	\
+		{	\
+			outShift -= 8;	\
+			outPos ++;	\
+			*outPos = (UINT8)(outValB << 8 >> outShift);	\
+		}	\
+		\
+		inBit += bitWriteVal;	\
 	}	\
 }
 
@@ -370,6 +403,171 @@ static UINT8 Decompress_DPCM_16(UINT32 outLen, UINT8* outData, UINT32 inLen, con
 	return 0x00;
 }
 
+static UINT8 Compress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams)
+{
+	FUINT8 bitsCmp;
+	FUINT8 addVal;
+	const UINT8* inPos;
+	UINT8* outPos;
+	UINT32 inLenMax;
+	const UINT8* inDataEnd;
+	FUINT8 inVal;
+	FUINT8 inShift;
+	FUINT8 outShift;
+	const UINT8* ent1B;
+	UINT16 curVal;
+	
+	// ReadBits Variables
+	FUINT8 bitsToWrite;
+	FUINT8 bitWriteVal;
+	FUINT8 outValB;
+	FUINT8 bitMask;
+	FUINT8 inBit;
+	
+	// --- Bit Packing compression --- (8 bit input)
+	bitsCmp = cmpParams->bitsCmp;
+	addVal = cmpParams->baseVal & 0xFF;
+	ent1B = NULL;
+	if (cmpParams->subType == 0x02)
+	{
+		ent1B = cmpParams->comprTbl->values.d8;
+		if (! cmpParams->comprTbl->valueCount)
+		{
+			printf("Error storing table-compressed data block! No table loaded!\n");
+			return 0x10;
+		}
+		else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
+			cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
+		{
+			printf("Warning! Data block and loaded value table incompatible!\n");
+			return 0x11;
+		}
+	}
+	
+	outShift = 0;
+	inShift = cmpParams->bitsDec - bitsCmp;
+	inLenMax = MUL_DIV(outLen, 8, cmpParams->bitsCmp);
+	if (inLen > inLenMax)
+		inLen = inLenMax;
+	inDataEnd = inData + inLen;
+	
+	switch(cmpParams->subType)
+	{
+	case 0x00:	// Copy
+		for (inPos = inData, outPos = outData; inPos < inDataEnd; inPos += 0x01)
+		{
+			inVal = *inPos - addVal;
+			WRITE_BITS(outPos, inVal, outShift, bitsCmp);
+		}
+		break;
+	case 0x01:	// Shift Left
+		for (inPos = inData, outPos = outData; inPos < inDataEnd; inPos += 0x01)
+		{
+			inVal = (*inPos - addVal) >> inShift;
+			WRITE_BITS(outPos, inVal, outShift, bitsCmp);
+		}
+		break;
+	case 0x02:	// Table
+		for (inPos = inData, outPos = outData; inPos < inDataEnd; inPos += 0x01)
+		{
+			for (curVal = 0x00; curVal < cmpParams->comprTbl->valueCount; curVal ++)
+			{
+				if (*inPos == ent1B[curVal])
+					break;
+			}
+			inVal = ent1B[curVal];
+			WRITE_BITS(outPos, inVal, outShift, bitsCmp);
+		}
+		break;
+	}
+	
+	return 0x00;
+}
+
+static UINT8 Compress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams)
+{
+	FUINT8 bitsCmp;
+	FUINT16 addVal;
+	const UINT8* inPos;
+	UINT8* outPos;
+	UINT32 inLenMax;
+	const UINT8* inDataEnd;
+	FUINT16 inVal;
+	FUINT8 inShift;
+	FUINT8 outShift;
+	const UINT16* ent2B;
+	UINT16 curVal;
+	
+	// ReadBits Variables
+	FUINT8 bitsToWrite;
+	FUINT8 bitWriteVal;
+	FUINT8 outValB;
+	FUINT8 bitMask;
+	FUINT8 inBit;
+	
+	// --- Bit Packing compression --- (8 bit input)
+	bitsCmp = cmpParams->bitsCmp;
+	addVal = cmpParams->baseVal;
+	ent2B = NULL;
+	if (cmpParams->subType == 0x02)
+	{
+		ent2B = cmpParams->comprTbl->values.d16;
+		if (! cmpParams->comprTbl->valueCount)
+		{
+			printf("Error storing table-compressed data block! No table loaded!\n");
+			return 0x10;
+		}
+		else if (cmpParams->bitsDec != cmpParams->comprTbl->bitsDec ||
+			cmpParams->bitsCmp != cmpParams->comprTbl->bitsCmp)
+		{
+			printf("Warning! Data block and loaded value table incompatible!\n");
+			return 0x11;
+		}
+	}
+	
+	outShift = 0;
+	inShift = cmpParams->bitsDec - bitsCmp;
+	inLenMax = MUL_DIV(outLen, 16, cmpParams->bitsCmp);
+	if (inLen > inLenMax)
+		inLen = inLenMax;
+	inDataEnd = inData + inLen;
+	
+	switch(cmpParams->subType)
+	{
+	case 0x00:	// Copy
+		for (inPos = inData, outPos = outData; inPos < inDataEnd; inPos += 0x02)
+		{
+			inVal = ReadLE16(inPos);
+			inVal = inVal - addVal;
+			WRITE_BITS(outPos, inVal, outShift, bitsCmp);
+		}
+		break;
+	case 0x01:	// Shift Left
+		for (inPos = inData, outPos = outData; inPos < inDataEnd; inPos += 0x02)
+		{
+			inVal = ReadLE16(inPos);
+			inVal = (inVal - addVal) >> inShift;
+			WRITE_BITS(outPos, inVal, outShift, bitsCmp);
+		}
+		break;
+	case 0x02:	// Table
+		for (inPos = inData, outPos = outData; inPos < inDataEnd; inPos += 0x02)
+		{
+			inVal = ReadLE16(inPos);
+			for (curVal = 0x00; curVal < cmpParams->comprTbl->valueCount; curVal ++)
+			{
+				if (inVal == ent2B[curVal])
+					break;
+			}
+			inVal = ent2B[curVal];
+			WRITE_BITS(outPos, inVal, outShift, bitsCmp);
+		}
+		break;
+	}
+	
+	return 0x00;
+}
+
 UINT8 ReadComprDataBlkHdr(UINT32 inLen, const UINT8* inData, PCM_CDB_INF* retCdbInf)
 {
 	PCM_CMP_INF* cParam;
@@ -501,6 +699,41 @@ UINT8 DecompressDataBlk_VGM(UINT32* outLen, UINT8** retOutData, UINT32 inLen, co
 	comprInf.cmprInfo.comprTbl = comprTbl;
 	
 	return DecompressDataBlk(*outLen, *retOutData, inLen - comprInf.hdrSize, &inData[comprInf.hdrSize], &comprInf.cmprInfo);
+}
+
+UINT8 CompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmprInfo)
+{
+	UINT8 valSize;
+#if defined(_DEBUG) && defined(WIN32)
+	UINT32 Time;
+#endif
+	UINT8 retVal;
+	
+#if defined(_DEBUG) && defined(WIN32)
+	Time = GetTickCount();
+#endif
+	switch(cmprInfo->comprType)
+	{
+	case 0x00:	// Bit Packing compression
+		valSize = (cmprInfo->bitsDec + 7) / 8;
+		if (valSize == 0x01)
+			retVal = Compress_BitPacking_8(outLen, outData, inLen, inData, cmprInfo);
+		else if (valSize == 0x02)
+			retVal = Compress_BitPacking_16(outLen, outData, inLen, inData, cmprInfo);
+		else
+			retVal = 0x20;	// invalid number of decompressed bits
+		if (retVal)
+			return retVal;
+		break;
+	default:
+		return 0x80;
+	}
+	
+#if defined(_DEBUG) && defined(WIN32)
+	dblk_benchTime = GetTickCount() - Time;
+#endif
+	
+	return 0x00;
 }
 
 void ReadPCMComprTable(UINT32 dataSize, const UINT8* data, PCM_COMPR_TBL* comprTbl)

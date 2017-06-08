@@ -12,6 +12,7 @@
 
 
 UINT8 DecompressDataBlk_Old(UINT32 OutDataLen, UINT8* OutData, UINT32 InDataLen, const UINT8* InData, const PCM_COMPR_TBL* comprTbl);
+void CompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, PCM_CMP_INF* ComprTbl);
 
 // ---- Benchmarks ----
 // 256 MB of input data
@@ -410,4 +411,122 @@ UINT8 DecompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const U
 #endif
 	
 	return 0x00;
+}
+
+// Notes: writes outData[outLen] = 0x00 when finishing with 0 bits left
+static void WriteBits(UINT8* Data, UINT32* Pos, UINT8* BitPos, UINT16 Value, UINT8 BitsToWrite)
+{
+	UINT8 BitWriteVal;
+	UINT32 OutPos;
+	UINT8 InVal;
+	UINT8 BitMask;
+	UINT8 OutShift;
+	UINT8 InBit;
+	
+	OutPos = *Pos;
+	OutShift = *BitPos;
+	InBit = 0x00;
+	
+	Data[OutPos] &= ~(0xFF >> OutShift);
+	while(BitsToWrite)
+	{
+		BitWriteVal = (BitsToWrite >= 8) ? 8 : BitsToWrite;
+		BitsToWrite -= BitWriteVal;
+		BitMask = (1 << BitWriteVal) - 1;
+		
+		InVal = (Value >> InBit) & BitMask;
+		OutShift += BitWriteVal;
+		Data[OutPos] |= InVal << 8 >> OutShift;
+		if (OutShift >= 8)
+		{
+			OutShift -= 8;
+			OutPos ++;
+			Data[OutPos] = InVal << 8 >> OutShift;
+		}
+		
+		InBit += BitWriteVal;
+	}
+	
+	*Pos = OutPos;
+	*BitPos = OutShift;
+	return;
+}
+
+void CompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, PCM_CMP_INF* ComprTbl)
+{
+	UINT8 valSize;
+	
+	UINT32 CurPos;
+	UINT8* DstBuf;
+	UINT32 DstPos;
+	UINT16 SrcVal;
+	UINT16 DstVal;
+	UINT32 CurEnt;
+	UINT16 BitMask;
+	UINT16 AddVal;
+	UINT8 BitShift;
+	const UINT8* Ent1B;
+	const UINT16* Ent2B;
+	UINT8 DstShift;
+	
+	valSize = (ComprTbl->bitsDec + 7) / 8;
+	
+	DstBuf = outData;
+	
+	BitMask = (1 << ComprTbl->bitsCmp) - 1;
+	AddVal = ComprTbl->baseVal;
+	BitShift = ComprTbl->bitsDec - ComprTbl->bitsCmp;
+	if (ComprTbl->comprTbl == NULL)
+	{
+		Ent1B = NULL;
+		Ent2B = NULL;
+	}
+	else
+	{
+		Ent1B = ComprTbl->comprTbl->values.d8;
+		Ent2B = ComprTbl->comprTbl->values.d16;
+	}
+	
+	SrcVal = 0x0000;	// must be initialized (else 8-bit values don't fill it completely)
+	DstPos = 0x00;
+	DstShift = 0;
+	for (CurPos = 0x00; CurPos < inLen; CurPos += valSize)
+	{
+		memcpy(&SrcVal, &inData[CurPos], valSize);
+		switch(ComprTbl->comprType)
+		{
+		case 0x00:	// Copy
+			DstVal = SrcVal - AddVal;
+			break;
+		case 0x01:	// Shift Left
+			DstVal = (SrcVal - AddVal) >> BitShift;
+			break;
+		case 0x02:	// Table
+			switch(valSize)
+			{
+			case 0x01:
+				for (CurEnt = 0x00; CurEnt < ComprTbl->comprTbl->valueCount; CurEnt ++)
+				{
+					if (SrcVal == Ent1B[CurEnt])
+						break;
+				}
+				break;
+			case 0x02:
+				for (CurEnt = 0x00; CurEnt < ComprTbl->comprTbl->valueCount; CurEnt ++)
+				{
+					if (SrcVal == Ent2B[CurEnt])
+						break;
+				}
+				break;
+			}
+			DstVal = (UINT16)CurEnt;
+			break;
+		}
+		
+		WriteBits(DstBuf, &DstPos, &DstShift, DstVal, ComprTbl->bitsCmp);
+	}
+	if (DstShift)
+		DstPos ++;
+	
+	return;
 }
