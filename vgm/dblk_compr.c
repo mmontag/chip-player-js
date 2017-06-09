@@ -418,7 +418,9 @@ static UINT8 Compress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, 
 	FUINT8 inVal;
 	FUINT8 inShift;
 	FUINT8 outShift;
-	const UINT8* ent1B;
+	UINT16 ent1Count;
+	UINT8* ent1B;
+	FUINT8 ent1Mask;
 	UINT16 curVal;
 	
 	// ReadBits Variables
@@ -431,6 +433,8 @@ static UINT8 Compress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, 
 	// --- Bit Packing compression --- (8 bit input)
 	bitsCmp = cmpParams->bitsCmp;
 	addVal = cmpParams->baseVal & 0xFF;
+	ent1Count = 1 << cmpParams->bitsDec;
+	ent1Mask = (FUINT8)(ent1Count - 1);
 	ent1B = NULL;
 	if (cmpParams->subType == 0x02)
 	{
@@ -446,11 +450,13 @@ static UINT8 Compress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, 
 			printf("Warning! Data block and loaded value table incompatible!\n");
 			return 0x11;
 		}
+		ent1B = (UINT8*)malloc(ent1Count * sizeof(UINT8));
+		GenerateReverseLUT_8(ent1Count, ent1B, cmpParams->comprTbl->valueCount, cmpParams->comprTbl->values.d8);
 	}
 	
 	outShift = 0;
 	inShift = cmpParams->bitsDec - bitsCmp;
-	inLenMax = MUL_DIV(outLen, 8, cmpParams->bitsCmp);
+	inLenMax = MUL_DIV(outLen, 8, bitsCmp);
 	if (inLen > inLenMax)
 		inLen = inLenMax;
 	inDataEnd = inData + inLen;
@@ -474,16 +480,22 @@ static UINT8 Compress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, 
 	case 0x02:	// Table
 		for (inPos = inData, outPos = outData; inPos < inDataEnd; inPos += 0x01)
 		{
+#if 1
 			for (curVal = 0x00; curVal < cmpParams->comprTbl->valueCount; curVal ++)
 			{
-				if (*inPos == ent1B[curVal])
+				if (*inPos == cmpParams->comprTbl->values.d8[curVal])
 					break;
 			}
-			inVal = ent1B[curVal];
+			inVal = (FUINT8)curVal;
+#else
+			inVal = ent1B[*inPos & ent1Mask];
+#endif
 			WRITE_BITS(outPos, inVal, outShift, bitsCmp);
 		}
 		break;
 	}
+	if (ent1B != NULL)
+		free(ent1B);
 	
 	return 0x00;
 }
@@ -499,7 +511,9 @@ static UINT8 Compress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen,
 	FUINT16 inVal;
 	FUINT8 inShift;
 	FUINT8 outShift;
-	const UINT16* ent2B;
+	UINT32 ent2Count;
+	FUINT16 ent2Mask;
+	UINT16* ent2B;
 	UINT16 curVal;
 	
 	// ReadBits Variables
@@ -512,6 +526,8 @@ static UINT8 Compress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen,
 	// --- Bit Packing compression --- (8 bit input)
 	bitsCmp = cmpParams->bitsCmp;
 	addVal = cmpParams->baseVal;
+	ent2Count = 1 << cmpParams->bitsDec;
+	ent2Mask = (FUINT16)(ent2Count - 1);
 	ent2B = NULL;
 	if (cmpParams->subType == 0x02)
 	{
@@ -527,6 +543,8 @@ static UINT8 Compress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen,
 			printf("Warning! Data block and loaded value table incompatible!\n");
 			return 0x11;
 		}
+		ent2B = (UINT16*)malloc(ent2Count * sizeof(UINT16));
+		GenerateReverseLUT_16(ent2Count, ent2B, cmpParams->comprTbl->valueCount, cmpParams->comprTbl->values.d16);
 	}
 	
 	outShift = 0;
@@ -557,17 +575,23 @@ static UINT8 Compress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen,
 	case 0x02:	// Table
 		for (inPos = inData, outPos = outData; inPos < inDataEnd; inPos += 0x02)
 		{
+#if 0
 			inVal = ReadLE16(inPos);
 			for (curVal = 0x00; curVal < cmpParams->comprTbl->valueCount; curVal ++)
 			{
-				if (inVal == ent2B[curVal])
+				if (inVal == cmpParams->comprTbl->values.d16[curVal])
 					break;
 			}
-			inVal = ent2B[curVal];
+			inVal = (FUINT16)curVal;
+#else
+			inVal = ent2B[ReadLE16(inPos) & ent2Mask];
+#endif
 			WRITE_BITS(outPos, inVal, outShift, bitsCmp);
 		}
 		break;
 	}
+	if (ent2B != NULL)
+		free(ent2B);
 	
 	return 0x00;
 }
@@ -795,4 +819,80 @@ UINT32 WriteCompressionTable(UINT32 dataSize, UINT8* data, PCM_COMPR_TBL* comprT
 	}
 	
 	return 0x06 + tblSize;
+}
+
+void GenerateReverseLUT_8(UINT16 dstLen, UINT8* dstLUT, UINT16 srcLen, const UINT8* srcLUT)
+{
+	UINT16 curSrc;
+	UINT16 curDst;
+	FUINT8 dist;
+	UINT16 minIdx;
+	FUINT8 minDist;
+	
+	memset(dstLUT, 0x00, dstLen * 0x01);
+	for (curSrc = 0x00; curSrc < srcLen; curSrc ++)
+	{
+		if (srcLUT[curSrc] < dstLen)
+			dstLUT[srcLUT[curSrc]] = (UINT8)curSrc;
+	}
+	
+	for (curDst = 0x00; curDst < dstLen; curDst ++)
+	{
+		if (! dstLUT[curDst] && srcLUT[0] != curDst)
+		{
+			minDist = 0xFF;
+			minIdx = 0x00;
+			for (curSrc = 0x00; curSrc < srcLen; curSrc ++)
+			{
+				dist = (curDst > srcLUT[curSrc]) ? (curDst - srcLUT[curSrc]) : (srcLUT[curSrc] - curDst);
+				// The second condition results in more algorithm-like rounding.
+				if (minDist > dist || (minDist == dist && (curDst < srcLUT[curSrc])))
+				{
+					minDist = dist;
+					minIdx = curSrc;
+				}
+			}
+			dstLUT[curDst] = (UINT8)minIdx;
+		}
+	}
+	
+	return;
+}
+
+void GenerateReverseLUT_16(UINT32 dstLen, UINT16* dstLUT, UINT32 srcLen, const UINT16* srcLUT)
+{
+	UINT32 curSrc;
+	UINT32 curDst;
+	FUINT16 dist;
+	UINT32 minIdx;
+	FUINT16 minDist;
+	
+	memset(dstLUT, 0x00, dstLen * 0x02);
+	for (curSrc = 0x00; curSrc < srcLen; curSrc ++)
+	{
+		if (srcLUT[curSrc] < dstLen)
+			dstLUT[srcLUT[curSrc]] = (UINT16)curSrc;
+	}
+	
+	for (curDst = 0x00; curDst < dstLen; curDst ++)
+	{
+		if (! dstLUT[curDst] && srcLUT[0] != curDst)
+		{
+			minDist = 0xFFFF;
+			minIdx = 0x00;
+			for (curSrc = 0x00; curSrc < srcLen; curSrc ++)
+			{
+				dist = (curDst > srcLUT[curSrc]) ? (curDst - srcLUT[curSrc]) : (srcLUT[curSrc] - curDst);
+				// The second condition results in more algorithm-like rounding.
+				if (minDist > dist || (minDist == dist && (curDst < srcLUT[curSrc])))
+				{
+					minDist = dist;
+					minIdx = curSrc;
+				}
+			}
+			dstLUT[curDst] = (UINT16)minIdx;
+		}
+	}
+	
+	return;
 }
