@@ -47,6 +47,20 @@ typedef struct pcm_compr_datablk_info
 	PCM_CMP_INF cmprInfo;
 } PCM_CDB_INF;
 
+// small functions to help calculating data sizes
+// Bit Packing/DPCM:
+static UINT32 BPACK_SIZE_CMP(UINT32 sizeDec, UINT32 bitsCmp, UINT32 bitsDec)
+{
+	UINT32 byteBits = (bitsDec + 7) & ~7;
+	return (UINT32)(((UINT64)sizeDec * bitsCmp + 7) / byteBits);
+}
+
+static UINT32 BPACK_SIZE_DEC(UINT32 sizeCmp, UINT32 bitsCmp, UINT32 bitsDec)
+{
+	UINT32 byteBits = (bitsDec + 7) & ~7;
+	return (UINT32)((UINT64)sizeCmp * byteBits / bitsCmp);
+}
+
 UINT8 ReadComprDataBlkHdr(UINT32 inLen, const UINT8* inData, PCM_CDB_INF* retCdbInf);
 UINT8 WriteComprDataBlkHdr(UINT32 outLen, UINT8* outData, PCM_CDB_INF* cdbInf);
 UINT8 DecompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmprInfo);

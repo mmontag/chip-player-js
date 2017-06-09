@@ -11,6 +11,7 @@
 #include "vgm/dblk_compr.h"
 
 
+INLINE UINT32 GetSysTimeMS(void);
 UINT8 DecompressDataBlk_Old(UINT32 OutDataLen, UINT8* OutData, UINT32 InDataLen, const UINT8* InData, const PCM_COMPR_TBL* comprTbl);
 void CompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, PCM_CMP_INF* ComprTbl);
 
@@ -37,7 +38,7 @@ void CompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT
 #define BENCH_SIZE		256	// compressed data size in MB
 #define BENCH_WARM_REP	1	// number of times for warm up
 #define BENCH_REPEAT	4	// number of times the benchmark is repeated
-extern UINT32 dblk_benchTime;
+static UINT32 dblk_benchTime;
 
 int main(int argc, char* argv[])
 {
@@ -63,11 +64,12 @@ int main(int argc, char* argv[])
 	UINT32 decLen;
 	UINT8* decData;
 	UINT32 repCntr;
-	UINT32 benchTime[8];
+	UINT32 benchTime[12];
+	UINT32 startTime;
 	
 	dataLenRaw = BENCH_SIZE * 1048576;
-	cdbInf8.decmpLen = (UINT32)((UINT64)dataLenRaw * cmpInf8->bitsDec / cmpInf8->bitsCmp);
-	cdbInf16.decmpLen = (UINT32)((UINT64)dataLenRaw * cmpInf16->bitsDec / cmpInf8->bitsCmp);
+	cdbInf8.decmpLen = BPACK_SIZE_DEC(dataLenRaw, cmpInf8->bitsCmp, cmpInf8->bitsDec);
+	cdbInf16.decmpLen = BPACK_SIZE_DEC(dataLenRaw, cmpInf16->bitsCmp, cmpInf16->bitsDec);
 	decLen = (cdbInf8.decmpLen < cdbInf16.decmpLen) ? cdbInf16.decmpLen : cdbInf8.decmpLen;
 	
 	dataLen = 0x0A + dataLenRaw;	// including VGM data block header
@@ -75,7 +77,7 @@ int main(int argc, char* argv[])
 	dataRaw = &data[0x0A];
 	decData = (UINT8*)malloc(decLen);
 	
-	for (repCntr = 0; repCntr < 8; repCntr ++)
+	for (repCntr = 0; repCntr < 12; repCntr ++)
 		benchTime[repCntr] = 0;
 	for (repCntr = 0; repCntr < BENCH_WARM_REP + BENCH_REPEAT; repCntr ++)
 	{
@@ -90,10 +92,24 @@ int main(int argc, char* argv[])
 			benchTime[0] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		
+		startTime = GetSysTimeMS();
 		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, cmpInf8);
+		dblk_benchTime = GetSysTimeMS() - startTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[1] += dblk_benchTime;
+		
+		CompressDataBlk_Old(dataLen, data, cdbInf8.decmpLen, decData, cmpInf8);
+		printf("Compression Time [old]: %u\n", dblk_benchTime);
+		if (repCntr >= BENCH_WARM_REP)
+			benchTime[8] += dblk_benchTime;
+		
+		startTime = GetSysTimeMS();
+		CompressDataBlk(dataLen, data, cdbInf8.decmpLen, decData, cmpInf8);
+		dblk_benchTime = GetSysTimeMS() - startTime;
+		printf("Compression Time [new]: %u\n", dblk_benchTime);
+		if (repCntr >= BENCH_WARM_REP)
+			benchTime[9] += dblk_benchTime;
 		
 		printf("DPCM (8)\n");
 		cmpInf8->comprType = 0x01;	// compression type: 01 - DPCM (subtype ignored)
@@ -103,7 +119,9 @@ int main(int argc, char* argv[])
 			benchTime[2] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		
+		startTime = GetSysTimeMS();
 		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, cmpInf8);
+		dblk_benchTime = GetSysTimeMS() - startTime;
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[3] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
@@ -118,10 +136,24 @@ int main(int argc, char* argv[])
 			benchTime[4] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		
+		startTime = GetSysTimeMS();
 		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, cmpInf16);
+		dblk_benchTime = GetSysTimeMS() - startTime;
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[5] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
+		
+		CompressDataBlk_Old(dataLen, data, cdbInf16.decmpLen, decData, cmpInf16);
+		printf("Compression Time [old]: %u\n", dblk_benchTime);
+		if (repCntr >= BENCH_WARM_REP)
+			benchTime[10] += dblk_benchTime;
+		
+		startTime = GetSysTimeMS();
+		CompressDataBlk(dataLen, data, cdbInf16.decmpLen, decData, cmpInf16);
+		dblk_benchTime = GetSysTimeMS() - startTime;
+		printf("Compression Time [new]: %u\n", dblk_benchTime);
+		if (repCntr >= BENCH_WARM_REP)
+			benchTime[11] += dblk_benchTime;
 		
 		printf("DPCM (16)\n");
 		cmpInf16->comprType = 0x01;	// compression type: 01 - DPCM (subtype ignored)
@@ -131,7 +163,9 @@ int main(int argc, char* argv[])
 			benchTime[6] += dblk_benchTime;
 		printf("Decompression Time [old]: %u\n", dblk_benchTime);
 		
+		startTime = GetSysTimeMS();
 		DecompressDataBlk(decLen, decData, dataLenRaw, dataRaw, cmpInf16);
+		dblk_benchTime = GetSysTimeMS() - startTime;
 		if (repCntr >= BENCH_WARM_REP)
 			benchTime[7] += dblk_benchTime;
 		printf("Decompression Time [new]: %u\n", dblk_benchTime);
@@ -140,19 +174,71 @@ int main(int argc, char* argv[])
 	free(data);
 	free(decData);
 	
-	for (repCntr = 0; repCntr < 8; repCntr ++)
+	for (repCntr = 0; repCntr < 12; repCntr ++)
 		benchTime[repCntr] = (benchTime[repCntr] + BENCH_REPEAT / 2) / BENCH_REPEAT;
-	printf("\nAverage Times:\n");
+	printf("\nAverage Times (decompression):\n");
 	printf("Bit-Packing (copy/8): old %u, new %u\n", benchTime[0], benchTime[1]);
 	printf("DPCM (8): old %u, new %u\n", benchTime[2], benchTime[3]);
 	printf("Bit-Packing (copy/16): old %u, new %u\n", benchTime[4], benchTime[5]);
 	printf("DPCM (16): old %u, new %u\n", benchTime[6], benchTime[7]);
+	printf("\nAverage Times (compression):\n");
+	printf("Bit-Packing (copy/8): old %u, new %u\n", benchTime[8], benchTime[9]);
+	printf("Bit-Packing (copy/16): old %u, new %u\n", benchTime[10], benchTime[11]);
 	
 	printf("Done.\n");
 #ifdef _MSC_VER
 	getchar();
 #endif
 	return 0;
+}
+
+INLINE UINT32 GetSysTimeMS(void)
+{
+#ifdef WIN32
+	return GetTickCount();
+#else
+	return 0;
+#endif
+}
+
+void compression_test(void)
+{
+	PCM_CDB_INF cdbInf8 = {0, 0, {0x00, 0x01, 8, 4, 0x00, NULL}};		// 8 -> 4 bits
+	PCM_CDB_INF cdbInf16 = {0, 0, {0x00, 0x00, 12, 8, 0x180, NULL}};	// 12 -> 8 bits
+	PCM_CMP_INF* cmpInf8 = &cdbInf8.cmprInfo;
+	PCM_CMP_INF* cmpInf16 = &cdbInf16.cmprInfo;
+	
+	UINT32 uncLen;
+	UINT8* uncData;
+	UINT32 cmpLen;
+	UINT8* cmpData;
+	FILE* hFile;
+	
+	hFile = fopen("demofiles/32XSample_Celtic.raw", "rb");
+	fseek(hFile, 0, SEEK_END);
+	uncLen = ftell(hFile);
+	fseek(hFile, 0, SEEK_SET);
+	uncData = (UINT8*)malloc(uncLen);
+	fread(uncData, 1, uncLen, hFile);
+	fclose(hFile);	hFile = NULL;
+	
+	cmpLen = BPACK_SIZE_CMP(uncLen, cmpInf16->bitsCmp, cmpInf16->bitsDec) * 2;
+	cmpData = (UINT8*)malloc(cmpLen);
+	
+	CompressDataBlk_Old(cmpLen, cmpData, uncLen, uncData, cmpInf16);
+	hFile = fopen("demofiles/32XSample_Celtic_old.cmp", "wb");
+	fwrite(cmpData, 1, cmpLen, hFile);
+	fclose(hFile);	hFile = NULL;
+	free(cmpData);
+	
+	cmpData = (UINT8*)malloc(cmpLen);
+	CompressDataBlk(cmpLen, cmpData, uncLen, uncData, cmpInf16);
+	hFile = fopen("demofiles/32XSample_Celtic_new.cmp", "wb");
+	fwrite(cmpData, 1, cmpLen, hFile);
+	fclose(hFile);	hFile = NULL;
+	free(cmpData);
+	
+	return;
 }
 
 
@@ -190,9 +276,7 @@ UINT8 DecompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const U
 	FUINT8 outShift;
 	UINT8* ent1B;
 	UINT16* ent2B;
-#if defined(_DEBUG) && defined(WIN32)
 	UINT32 Time;
-#endif
 	
 	// ReadBits Variables
 	FUINT8 bitsToRead;
@@ -209,9 +293,7 @@ UINT8 DecompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const U
 	//*retOutData = (UINT8*)realloc(*retOutData, *outLen);
 	//outData = *retOutData;
 	
-#if defined(_DEBUG) && defined(WIN32)
-	Time = GetTickCount();
-#endif
+	Time = GetSysTimeMS();
 	switch(comprType)
 	{
 	case 0x00:	// Bit Packing compression
@@ -405,16 +487,13 @@ UINT8 DecompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const U
 		printf("Error: Unknown data block compression!\n");
 		return 0x80;
 	}
-	
-#if defined(_DEBUG) && defined(WIN32)
-	dblk_benchTime = GetTickCount() - Time;
-#endif
+	dblk_benchTime = GetSysTimeMS() - Time;
 	
 	return 0x00;
 }
 
 // Notes: writes outData[outLen] = 0x00 when finishing with 0 bits left
-static void WriteBits(UINT8* Data, UINT32* Pos, UINT8* BitPos, UINT16 Value, UINT8 BitsToWrite)
+INLINE void WriteBits(UINT8* Data, UINT32* Pos, UINT8* BitPos, UINT16 Value, UINT8 BitsToWrite)
 {
 	UINT8 BitWriteVal;
 	UINT32 OutPos;
@@ -468,6 +547,7 @@ void CompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT
 	const UINT8* Ent1B;
 	const UINT16* Ent2B;
 	UINT8 DstShift;
+	UINT32 Time;
 	
 	valSize = (ComprTbl->bitsDec + 7) / 8;
 	
@@ -487,6 +567,7 @@ void CompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT
 		Ent2B = ComprTbl->comprTbl->values.d16;
 	}
 	
+	Time = GetSysTimeMS();
 	SrcVal = 0x0000;	// must be initialized (else 8-bit values don't fill it completely)
 	DstPos = 0x00;
 	DstShift = 0;
@@ -527,6 +608,7 @@ void CompressDataBlk_Old(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT
 	}
 	if (DstShift)
 		DstPos ++;
+	dblk_benchTime = GetSysTimeMS() - Time;
 	
 	return;
 }

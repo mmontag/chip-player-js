@@ -15,10 +15,6 @@
 typedef UINT16	FUINT8;
 typedef UINT32	FUINT16;
 
-#if defined(_DEBUG) && defined(WIN32)
-UINT32 dblk_benchTime;
-#endif
-
 
 static UINT8 Decompress_BitPacking_8(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
 static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmpParams);
@@ -255,30 +251,38 @@ static UINT8 Decompress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLe
 		outLen = outLenMax;
 	outDataEnd = outData + outLen;
 	
-	for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x02)
+	switch(cmpParams->subType)
 	{
-		READ_BITS(inPos, inVal, inShift, bitsCmp);
-		
-		// For whatever reason, pulling the switch() out of the for()-loop makes it SLOWER,
-		// at least in MSVC 2010.
-		switch(cmpSubType)
+	case 0x00:	// Copy
+		for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x02)
 		{
-		case 0x00:	// Copy
+			READ_BITS(inPos, inVal, inShift, bitsCmp);
+			
 			outVal = inVal + addVal;
-			break;
-		case 0x01:	// Shift Left
-			outVal = (inVal << outShift) + addVal;
-			break;
-		case 0x02:	// Table
-			outVal = ent2B[inVal];
-			break;
-		default:
-			outVal = 0x0000;
-			break;
+			// save explicitly in Little Endian
+			WriteLE16(outPos, (UINT16)outVal);
 		}
-		
-		// save explicitly in Little Endian
-		WriteLE16(outPos, (UINT16)outVal);
+		break;
+	case 0x01:	// Shift Left
+		for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x02)
+		{
+			READ_BITS(inPos, inVal, inShift, bitsCmp);
+			
+			outVal = (inVal << outShift) + addVal;
+			// save explicitly in Little Endian
+			WriteLE16(outPos, (UINT16)outVal);
+		}
+		break;
+	case 0x02:	// Table
+		for (inPos = inData, outPos = outData; outPos < outDataEnd; outPos += 0x02)
+		{
+			READ_BITS(inPos, inVal, inShift, bitsCmp);
+			
+			outVal = ent2B[inVal];
+			// save explicitly in Little Endian
+			WriteLE16(outPos, (UINT16)outVal);
+		}
+		break;
 	}
 	
 	return 0x00;
@@ -642,14 +646,8 @@ UINT8 WriteComprDataBlkHdr(UINT32 outLen, UINT8* outData, PCM_CDB_INF* cdbInf)
 UINT8 DecompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmprInfo)
 {
 	UINT8 valSize;
-#if defined(_DEBUG) && defined(WIN32)
-	UINT32 Time;
-#endif
 	UINT8 retVal;
 	
-#if defined(_DEBUG) && defined(WIN32)
-	Time = GetTickCount();
-#endif
 	switch(cmprInfo->comprType)
 	{
 	case 0x00:	// Bit Packing compression
@@ -678,10 +676,6 @@ UINT8 DecompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8
 		return 0x80;
 	}
 	
-#if defined(_DEBUG) && defined(WIN32)
-	dblk_benchTime = GetTickCount() - Time;
-#endif
-	
 	return 0x00;
 }
 
@@ -704,14 +698,8 @@ UINT8 DecompressDataBlk_VGM(UINT32* outLen, UINT8** retOutData, UINT32 inLen, co
 UINT8 CompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* inData, const PCM_CMP_INF* cmprInfo)
 {
 	UINT8 valSize;
-#if defined(_DEBUG) && defined(WIN32)
-	UINT32 Time;
-#endif
 	UINT8 retVal;
 	
-#if defined(_DEBUG) && defined(WIN32)
-	Time = GetTickCount();
-#endif
 	switch(cmprInfo->comprType)
 	{
 	case 0x00:	// Bit Packing compression
@@ -728,10 +716,6 @@ UINT8 CompressDataBlk(UINT32 outLen, UINT8* outData, UINT32 inLen, const UINT8* 
 	default:
 		return 0x80;
 	}
-	
-#if defined(_DEBUG) && defined(WIN32)
-	dblk_benchTime = GetTickCount() - Time;
-#endif
 	
 	return 0x00;
 }
