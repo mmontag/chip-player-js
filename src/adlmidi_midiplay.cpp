@@ -1321,8 +1321,7 @@ void MIDIplay::UpdateArpeggio(double) // amount = amount of time passed
     for(uint32_t c = 0; c < opl.NumChannels; ++c)
     {
 retry_arpeggio:
-
-        if(c > std::numeric_limits<int32_t>::max())
+        if(c > INT32_MAX)
             break;
 
         size_t n_users = ch[c].users.size();

@@ -467,7 +467,7 @@ int AdlMidi_xmi2midi(uint8_t *in, uint32_t insize,
     int ret = -1;
 
     if (convert_type > XMIDI_CONVERT_MT32_TO_GS) {
-        //_WM_ERROR_NEW("%s:%i:  %d is an invalid conversion type.", __FUNCTION__, __LINE__, convert_type);
+        /*_WM_ERROR_NEW("%s:%i:  %d is an invalid conversion type.", __FUNCTION__, __LINE__, convert_type);*/
         return (ret);
     }
 
@@ -477,12 +477,12 @@ int AdlMidi_xmi2midi(uint8_t *in, uint32_t insize,
     ctx.convert_type = convert_type;
 
     if (ParseXMI(&ctx) < 0) {
-        //_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_NOT_XMI, NULL, 0);
+        /*_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_NOT_XMI, NULL, 0);*/
         goto _end;
     }
 
     if (ExtractTracks(&ctx) < 0) {
-        //_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_NOT_MIDI, NULL, 0);
+        /*_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_NOT_MIDI, NULL, 0);*/
         goto _end;
     }
 
@@ -908,7 +908,7 @@ static uint32_t ConvertListToMTrk(struct xmi_ctx *ctx, midi_event *mlist) {
 
         /* Never occur */
         default:
-            //_WM_DEBUG_MSG("%s: unrecognized event", __FUNCTION__);
+            /*_WM_DEBUG_MSG("%s: unrecognized event", __FUNCTION__);*/
             break;
         }
     }
@@ -951,7 +951,7 @@ static uint32_t ExtractTracksFromXmi(struct xmi_ctx *ctx) {
 
         /* Convert it */
         if (!(ppqn = ConvertFiletoList(ctx))) {
-            //_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_CORUPT, NULL, 0);
+            /*_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_CORUPT, NULL, 0);*/
             break;
         }
         ctx->timing[num] = ppqn;
@@ -978,7 +978,7 @@ static int ParseXMI(struct xmi_ctx *ctx) {
 
     file_size = getsrcsize(ctx);
     if (getsrcpos(ctx) + 8 > file_size) {
-badfile:    //_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_CORUPT, "(too short)", 0);
+badfile:    /*_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_CORUPT, "(too short)", 0);*/
         return (-1);
     }
 
@@ -999,7 +999,7 @@ badfile:    //_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_CORUPT, "(too shor
 
         /* XDIRless XMIDI, we can handle them here. */
         if (!memcmp(buf, "XMID", 4)) {
-            //_WM_DEBUG_MSG("Warning: XMIDI without XDIR");
+            /*_WM_DEBUG_MSG("Warning: XMIDI without XDIR");*/
             ctx->info.tracks = 1;
         }
         /* Not an XMIDI that we recognise */
@@ -1053,8 +1053,8 @@ badfile:    //_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_CORUPT, "(too shor
             copy(ctx, buf, 4);
 
             if (memcmp(buf, "CAT ", 4)) {
-                //_WM_ERROR_NEW("XMI error: expected \"CAT \", found \"%c%c%c%c\".",
-                //        buf[0], buf[1], buf[2], buf[3]);
+                /*_WM_ERROR_NEW("XMI error: expected \"CAT \", found \"%c%c%c%c\".",
+                          buf[0], buf[1], buf[2], buf[3]);*/
                 return (-1);
             }
 
@@ -1065,8 +1065,8 @@ badfile:    //_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_CORUPT, "(too shor
             copy(ctx, buf, 4);
 
             if (memcmp(buf, "XMID", 4)) {
-                //_WM_ERROR_NEW("XMI error: expected \"XMID\", found \"%c%c%c%c\".",
-                //        buf[0], buf[1], buf[2], buf[3]);
+                /*_WM_ERROR_NEW("XMI error: expected \"XMID\", found \"%c%c%c%c\".",
+                          buf[0], buf[1], buf[2], buf[3]);*/
                 return (-1);
             }
 
@@ -1091,8 +1091,8 @@ static int ExtractTracks(struct xmi_ctx *ctx) {
     i = ExtractTracksFromXmi(ctx);
 
     if (i != ctx->info.tracks) {
-        //_WM_ERROR_NEW("XMI error: extracted only %u out of %u tracks from XMIDI",
-        //        ctx->info.tracks, i);
+        /*_WM_ERROR_NEW("XMI error: extracted only %u out of %u tracks from XMIDI",
+                 ctx->info.tracks, i);*/
         return (-1);
     }
 

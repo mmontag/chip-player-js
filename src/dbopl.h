@@ -29,8 +29,13 @@ typedef signed   short Bit16s;
 typedef unsigned char Bit8u;
 typedef signed   char Bit8s;
 #define INLINE inline
+#ifdef _MSC_VER
+#define GCC_UNLIKELY(x) (!!(x) == 0)
+#define GCC_LIKELY(x)   (!!(x) == 1)
+#else
 #define GCC_UNLIKELY(x) __builtin_expect((x),0)
 #define GCC_LIKELY(x)   __builtin_expect((x),1)
+#endif
 /* END MIDIPLAY GLUE */
 
 //Use 8 handlers based on a small logatirmic wavetabe and an exponential table for volume
@@ -42,6 +47,14 @@ typedef signed   char Bit8s;
 
 //Select the type of wave generator routine
 #define DBOPL_WAVE WAVE_TABLEMUL
+
+#ifdef _MSC_VER
+#ifdef _WIN64
+typedef __int64 ssize_t;
+#else
+typedef __int32 ssize_t;
+#endif
+#endif
 
 namespace DBOPL
 {

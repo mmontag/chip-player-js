@@ -375,7 +375,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 
             if(ate < device->backup_samples_size)
             {
-                for(int j = 0; j < ate; j++)
+                for(ssize_t j = 0; j < ate; j++)
                     device->backup_samples[(ate - 1) - j] = device->backup_samples[(device->backup_samples_size - 1) - j];
             }
 
