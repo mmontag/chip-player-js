@@ -1152,6 +1152,8 @@ int main()
     LoadTMB("fm_banks/tmb_files/lee.tmb",  70, "apglee");
     LoadTMB("fm_banks/tmb_files/nam.tmb",  71, "apgnam");
 
+    LoadDoom("fm_banks/doom2/DMXOPL-by-sneakernets.op2", 72, "skeakernets");
+
     //LoadBNK("bnk_files/grassman1.bnk", 63, "b63", false);
     //LoadBNK("bnk_files/grassman2.bnk", 64, "b64", false);
 
@@ -1235,8 +1237,10 @@ int main()
 	 "TMB (Default bank of Build Engine)",
      "OP3 (4op bank by James Alan Nguyen)",
 	 "TMB (Blood)",
+     // 70
 	 "TMB (Lee)",
 	 "TMB (Nam)",
+     "DMX (Bank by Sneakernets)"
     };
 
 #if 0
