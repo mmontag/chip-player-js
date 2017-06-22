@@ -514,7 +514,7 @@ static UINT8 Compress_BitPacking_16(UINT32 outLen, UINT8* outData, UINT32 inLen,
 	UINT32 ent2Count;
 	FUINT16 ent2Mask;
 	UINT16* ent2B;
-	UINT16 curVal;
+	//UINT16 curVal;
 	
 	// ReadBits Variables
 	FUINT8 bitsToWrite;
@@ -895,4 +895,9 @@ void GenerateReverseLUT_16(UINT32 dstLen, UINT16* dstLUT, UINT32 srcLen, const U
 	}
 	
 	return;
+}
+
+UINT16 DataBlkCompr_GetIntSize(void)
+{
+	return (sizeof(FUINT8) << 0) | (sizeof(FUINT16) << 8);
 }
