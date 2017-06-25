@@ -396,11 +396,13 @@ byte* Unpack::ApplyFilter(byte *Data,uint DataSize,UnpackFilter *Flt)
     case FILTER_E8:
     case FILTER_E8E9:
       {
+        if (DataSize<4)
+          return NULL;
         uint FileOffset=(uint)WrittenFileSize;
 
-        const int FileSize=0x1000000;
+        const uint FileSize=0x1000000;
         byte CmpByte2=Flt->Type==FILTER_E8E9 ? 0xe9:0xe8;
-        for (uint CurPos=0;(int)CurPos<(int)DataSize-4;)
+        for (uint CurPos=0;CurPos<DataSize-4;)
         {
           byte CurByte=*(Data++);
           CurPos++;
@@ -445,6 +447,10 @@ byte* Unpack::ApplyFilter(byte *Data,uint DataSize,UnpackFilter *Flt)
       return SrcData;
     case FILTER_DELTA:
       {
+        if (DataSize>MAX_DELTA_BUFFER)
+          return NULL;
+        // Unlike RAR3, we do not need to reject excessive channel
+        // values here, since RAR5 uses only 5 bits to store channel.
         uint Channels=Flt->Channels,SrcPos=0;
 
         FilterDstMemory.Alloc(DataSize);

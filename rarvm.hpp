@@ -26,8 +26,8 @@ class RarVM
 {
   private:
     void ExecuteStandardFilter(VM_StandardFilters FilterType);
-    uint FilterItanium_GetBits(byte *Data,int BitPos,int BitCount);
-    void FilterItanium_SetBits(byte *Data,uint BitField,int BitPos,int BitCount);
+    uint FilterItanium_GetBits(byte *Data,uint BitPos,uint BitCount);
+    void FilterItanium_SetBits(byte *Data,uint BitField,uint BitPos,uint BitCount);
 
     byte *Mem;
     uint R[8];
