@@ -19,8 +19,9 @@
 // No need to provide it for RAR5, which uses only 5 bits to store channels.
 #define MAX3_UNPACK_CHANNELS      1024
 
-// Limit memory allocation. Must be equal or larger than MAX_ANALYZE_SIZE.
-#define MAX_DELTA_BUFFER      0x400000
+// Maximum size of single filter block. We restrict it to limit memory
+// allocation. Must be equal or larger than MAX_ANALYZE_SIZE.
+#define MAX_FILTER_BLOCK_SIZE 0x400000
 
 // Write data in 4 MB or smaller blocks. Must not exceed PACK_MAX_WRITE,
 // so we keep number of buffered filter in unpacker reasonable.

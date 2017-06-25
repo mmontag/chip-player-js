@@ -24,11 +24,11 @@ void RarVM::Execute(VM_PreparedProgram *Prg)
   memcpy(R,Prg->InitR,sizeof(Prg->InitR));
   if (Prg->Type!=VMSF_NONE)
   {
-    ExecuteStandardFilter(Prg->Type);
+    bool Success=ExecuteStandardFilter(Prg->Type);
     uint BlockSize=Prg->InitR[4] & VM_MEMMASK;
     Prg->FilteredDataSize=BlockSize;
     if (Prg->Type==VMSF_DELTA || Prg->Type==VMSF_RGB || Prg->Type==VMSF_AUDIO)
-      Prg->FilteredData=2*BlockSize>=VM_MEMSIZE ? Mem:Mem+BlockSize;
+      Prg->FilteredData=2*BlockSize>VM_MEMSIZE || !Success ? Mem:Mem+BlockSize;
     else
       Prg->FilteredData=Mem;
   }
@@ -111,7 +111,7 @@ void RarVM::SetMemory(size_t Pos,byte *Data,size_t DataSize)
 }
 
 
-void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
+bool RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
 {
   switch(FilterType)
   {
@@ -121,8 +121,8 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         byte *Data=Mem;
         uint DataSize=R[4],FileOffset=R[6];
 
-        if (DataSize>=VM_MEMSIZE || DataSize<4)
-          break;
+        if (DataSize>VM_MEMSIZE || DataSize<4)
+          return false;
 
         const uint FileSize=0x1000000;
         byte CmpByte2=FilterType==VMSF_E8E9 ? 0xe9:0xe8;
@@ -156,8 +156,8 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         byte *Data=Mem;
         uint DataSize=R[4],FileOffset=R[6];
 
-        if (DataSize>=VM_MEMSIZE || DataSize<21)
-          break;
+        if (DataSize>VM_MEMSIZE || DataSize<21)
+          return false;
 
         uint CurPos=0;
 
@@ -192,8 +192,8 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
     case VMSF_DELTA:
       {
         uint DataSize=R[4],Channels=R[0],SrcPos=0,Border=DataSize*2;
-        if (DataSize>=VM_MEMSIZE/2 || Channels>MAX3_UNPACK_CHANNELS)
-          break;
+        if (DataSize>VM_MEMSIZE/2 || Channels>MAX3_UNPACK_CHANNELS || Channels==0)
+          return false;
 
         // Bytes from same channels are grouped to continual data blocks,
         // so we need to place them back to their interleaving positions.
@@ -208,8 +208,8 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
     case VMSF_RGB:
       {
         uint DataSize=R[4],Width=R[0]-3,PosR=R[1];
-        if (DataSize>=VM_MEMSIZE/2 || DataSize<3 || Width>DataSize || PosR>2)
-          break;
+        if (DataSize>VM_MEMSIZE/2 || DataSize<3 || Width>DataSize || PosR>2)
+          return false;
         byte *SrcData=Mem,*DestData=SrcData+DataSize;
         const uint Channels=3;
         for (uint CurChannel=0;CurChannel<Channels;CurChannel++)
@@ -254,8 +254,8 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
         uint DataSize=R[4],Channels=R[0];
         byte *SrcData=Mem,*DestData=SrcData+DataSize;
         // In fact, audio channels never exceed 4.
-        if (DataSize>=VM_MEMSIZE/2 || Channels>128)
-          break;
+        if (DataSize>VM_MEMSIZE/2 || Channels>128 || Channels==0)
+          return false;
         for (uint CurChannel=0;CurChannel<Channels;CurChannel++)
         {
           uint PrevByte=0,PrevDelta=0,Dif[7];
@@ -317,6 +317,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
       }
       break;
   }
+  return true;
 }
 
 

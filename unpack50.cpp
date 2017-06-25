@@ -173,6 +173,8 @@ bool Unpack::ReadFilter(BitInput &Inp,UnpackFilter &Filter)
 
   Filter.BlockStart=ReadFilterData(Inp);
   Filter.BlockLength=ReadFilterData(Inp);
+  if (Filter.BlockLength>MAX_FILTER_BLOCK_SIZE)
+    Filter.BlockLength=0;
 
   Filter.Type=Inp.fgetbits()>>13;
   Inp.faddbits(3);
@@ -292,7 +294,7 @@ void Unpack::UnpWriteBuf()
       }
       if (BlockLength<=WriteSizeLeft)
       {
-        if (BlockLength>0)
+        if (BlockLength>0) // We set it to 0 also for invalid filters.
         {
           uint BlockEnd=(BlockStart+BlockLength)&MaxWinMask;
 
@@ -396,13 +398,13 @@ byte* Unpack::ApplyFilter(byte *Data,uint DataSize,UnpackFilter *Flt)
     case FILTER_E8:
     case FILTER_E8E9:
       {
-        if (DataSize<4)
-          return NULL;
         uint FileOffset=(uint)WrittenFileSize;
 
         const uint FileSize=0x1000000;
         byte CmpByte2=Flt->Type==FILTER_E8E9 ? 0xe9:0xe8;
-        for (uint CurPos=0;CurPos<DataSize-4;)
+        // DataSize is unsigned, so we use "CurPos+4" and not "DataSize-4"
+        // to avoid overflow for DataSize<4.
+        for (uint CurPos=0;CurPos+4<DataSize;)
         {
           byte CurByte=*(Data++);
           CurPos++;
@@ -431,7 +433,9 @@ byte* Unpack::ApplyFilter(byte *Data,uint DataSize,UnpackFilter *Flt)
     case FILTER_ARM:
       {
         uint FileOffset=(uint)WrittenFileSize;
-        for (uint CurPos=0;(int)CurPos<(int)DataSize-3;CurPos+=4)
+        // DataSize is unsigned, so we use "CurPos+3" and not "DataSize-3"
+        // to avoid overflow for DataSize<3.
+        for (uint CurPos=0;CurPos+3<DataSize;CurPos+=4)
         {
           byte *D=Data+CurPos;
           if (D[3]==0xeb) // BL command with '1110' (Always) condition.
@@ -447,8 +451,6 @@ byte* Unpack::ApplyFilter(byte *Data,uint DataSize,UnpackFilter *Flt)
       return SrcData;
     case FILTER_DELTA:
       {
-        if (DataSize>MAX_DELTA_BUFFER)
-          return NULL;
         // Unlike RAR3, we do not need to reject excessive channel
         // values here, since RAR5 uses only 5 bits to store channel.
         uint Channels=Flt->Channels,SrcPos=0;
