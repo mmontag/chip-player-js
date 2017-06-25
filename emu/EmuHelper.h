@@ -1,10 +1,19 @@
 #ifndef __EMUHELPER_H__
 #define __EMUHELPER_H__
 
-// define _USE_MATH_DEFINES and include <math.h> instead
-//#ifndef M_PI
-//#define M_PI	3.14159265358979323846
-//#endif
+#ifdef _USE_MATH_DEFINES
+// MS VC6 doesn't have M_PI yet
+#ifndef M_PI
+#define M_PI	3.14159265358979323846
+#endif
+#endif
+
+#if _MSC_VEV < 1400
+// Math function defines from VC2010's math.h for VC6
+#ifndef powf
+#define powf(x,y)   ((float)pow((double)(x), (double)(y)))
+#endif
+#endif
 
 #ifdef _DEBUG
 #define logerror	printf

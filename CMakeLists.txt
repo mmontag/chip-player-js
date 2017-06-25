@@ -8,8 +8,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(MSVC)
 	set(CMAKE_DEBUG_POSTFIX "d")
-	if (MSVC60)
-		set(MSVC_POSTFIX "VC6")
+	if(MSVC_VERSION LESS 1400)
+		set(MSVC_POSTFIX "VC6")	# there are a few limitations for MSVC versions before 2005
 	elseif(CMAKE_CL_64)
 		set(MSVC_POSTFIX "Win64")
 	else()
@@ -19,7 +19,15 @@ if(MSVC)
 	set(CMAKE_DEBUG_POSTFIX "_${MSVC_POSTFIX}${CMAKE_DEBUG_POSTFIX}")
 	set(CMAKE_MINSIZEREL_POSTFIX "_${MSVC_POSTFIX}${CMAKE_MINSIZEREL_POSTFIX}")
 	set(CMAKE_RELWITHDEBINFO_POSTFIX "_${MSVC_POSTFIX}${CMAKE_RELWITHDEBINFO_POSTFIX}")
+	
+	set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/libs" CACHE PATH "ZLib directory")
+	
+	if(NOT MSVC_VERSION LESS 1400)
+		add_definitions("/D _CRT_SECURE_NO_WARNINGS")
+	endif()
 endif()
+
+if(CMAKE_COMPILER_IS_GNUCC)
 
 # assume Windows 2000 and later for GetConsoleWindow API call
 if(WIN32)
@@ -47,9 +55,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
 
+endif(CMAKE_COMPILER_IS_GNUCC)
+
 
 option(BUILD_LIBAUDIO "build audio output library" ON)
 option(BUILD_LIBEMU "build sound emulation library" ON)
+
+find_package(ZLIB)
 
 if(BUILD_LIBAUDIO)
 	add_subdirectory(audio)
@@ -72,5 +84,5 @@ target_include_directories(audemutest PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(audemutest PRIVATE vgm-audio vgm-emu)
 
 add_executable(vgmtest vgmtest.c vgm/dblk_compr.c)
-target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(vgmtest PRIVATE z vgm-audio vgm-emu)
+target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR} ${ZLIB_INCLUDE_DIRS})
+target_link_libraries(vgmtest PRIVATE ZLIB::ZLIB vgm-audio vgm-emu)

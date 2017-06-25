@@ -115,11 +115,21 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC ${AUDIO_DEFS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_SOURCE_DIR}
+	${CMAKE_SOURCE_DIR}/libs/include
 )
 if(WIN32 AND NOT MSVC)
-target_include_directories(${PROJECT_NAME} PUBLIC
-	${CMAKE_SOURCE_DIR}/libs/include_mingw
+	target_include_directories(${PROJECT_NAME} PRIVATE
+		${CMAKE_SOURCE_DIR}/libs/include_mingw
 )
+elseif(MSVC)
+	target_include_directories(${PROJECT_NAME} PRIVATE
+		${CMAKE_SOURCE_DIR}/libs/include_vc
+	)
+	if(MSVC_VERSION LESS 1400)
+		target_include_directories(${PROJECT_NAME} PRIVATE
+			${CMAKE_SOURCE_DIR}/libs/include_vc6
+		)
+	endif()
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${AUDIO_LIBS})

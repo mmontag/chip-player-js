@@ -1,5 +1,4 @@
 // Audio Stream - Wave Writer
-#define _CRT_SECURE_NO_WARNINGS
 #define _CRTDBG_MAP_ALLOC
 #include <stdio.h>
 #include <stdlib.h>

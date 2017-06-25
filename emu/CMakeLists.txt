@@ -529,9 +529,16 @@ add_library(${PROJECT_NAME} STATIC ${EMU_FILES})
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${EMU_DEFS})
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE
+	${CMAKE_SOURCE_DIR}
+	${CMAKE_SOURCE_DIR}/libs/include
+)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE m)
+if(CMAKE_COMPILER_IS_GNUCC)
+	# link Math library
+	target_link_libraries(${PROJECT_NAME} PRIVATE m)
+endif()
 
 install(TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION "bin"
