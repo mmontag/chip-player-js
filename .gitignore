@@ -13,10 +13,11 @@ demofiles/
 *.sln.docstates
 
 # Build results
-build/
+build*/
 [Bb]in/
 [Oo]bj/
 *.exe
+install/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

@@ -46,16 +46,16 @@ endif()
 
 add_executable(audiotest audiotest.c)
 target_include_directories(audiotest PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(audiotest PRIVATE libaudio)
+target_link_libraries(audiotest PRIVATE vgm-audio)
 
 add_executable(emutest emutest.c)
 target_include_directories(emutest PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(emutest PRIVATE libemu)
+target_link_libraries(emutest PRIVATE vgm-emu)
 
 add_executable(audemutest audemutest.c)
 target_include_directories(audemutest PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(audemutest PRIVATE libaudio libemu)
+target_link_libraries(audemutest PRIVATE vgm-audio vgm-emu)
 
-add_executable(vgmtest vgmtest.c)
+add_executable(vgmtest vgmtest.c vgm/dblk_compr.c)
 target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(vgmtest PRIVATE z libaudio libemu)
+target_link_libraries(vgmtest PRIVATE z vgm-audio vgm-emu)

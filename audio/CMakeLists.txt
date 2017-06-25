@@ -1,10 +1,16 @@
 #### Audio Output Library ####
-project(libaudio)
+project(vgm-audio)
 cmake_minimum_required(VERSION 2.8)
 
 set(AUDIO_DEFS)
 set(AUDIO_FILES
 	AudioStream.c
+)
+# export headers
+set(AUDIO_HEADERS
+	AudioStructs.h
+	AudioStream.h
+	AudioStream_SpcDrvFuns.h
 )
 set(AUDIO_LIBS)
 
@@ -117,3 +123,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${AUDIO_LIBS})
+
+install(TARGETS ${PROJECT_NAME}
+		RUNTIME DESTINATION "bin"
+		LIBRARY DESTINATION "lib"
+		ARCHIVE DESTINATION "lib"
+		)
+install(FILES ${AUDIO_HEADERS} DESTINATION include/audio)
