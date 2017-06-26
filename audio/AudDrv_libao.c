@@ -108,9 +108,10 @@ UINT8 LibAO_IsAvailable(void)
 
 UINT8 LibAO_Init(void)
 {
-	UINT32 numDevs;
-	UINT32 curDev;
-	UINT32 devLstID;
+	// TODO: generate a list of all libao drivers
+	//UINT32 numDevs;
+	//UINT32 curDev;
+	//UINT32 devLstID;
 	
 	if (isInit)
 		return AERR_WASDONE;
@@ -136,7 +137,7 @@ UINT8 LibAO_Init(void)
 
 UINT8 LibAO_Deinit(void)
 {
-	UINT32 curDev;
+	//UINT32 curDev;
 	
 	if (! isInit)
 		return AERR_WASDONE;
@@ -343,7 +344,7 @@ UINT8 LibAO_WriteData(void* drvObj, UINT32 dataSize, void* data)
 
 UINT32 LibAO_GetLatency(void* drvObj)
 {
-	DRV_AO* drv = (DRV_AO*)drvObj;
+	//DRV_AO* drv = (DRV_AO*)drvObj;
 	
 	return 0;	// There's no API call that lets you receive the current latency.
 }
@@ -351,7 +352,6 @@ UINT32 LibAO_GetLatency(void* drvObj)
 static void* AoThread(void* Arg)
 {
 	DRV_AO* drv = (DRV_AO*)Arg;
-	UINT32 curBuf;
 	UINT32 didBuffers;	// number of processed buffers
 	UINT32 bufBytes;
 	int retVal;

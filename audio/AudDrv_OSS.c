@@ -131,10 +131,6 @@ UINT8 OSS_IsAvailable(void)
 
 UINT8 OSS_Init(void)
 {
-	UINT32 numDevs;
-	UINT32 curDev;
-	UINT32 devLstID;
-	
 	if (isInit)
 		return AERR_WASDONE;
 	
@@ -158,8 +154,6 @@ UINT8 OSS_Init(void)
 
 UINT8 OSS_Deinit(void)
 {
-	UINT32 curDev;
-	
 	if (! isInit)
 		return AERR_WASDONE;
 	
@@ -445,7 +439,6 @@ UINT32 OSS_GetLatency(void* drvObj)
 static void* OssThread(void* Arg)
 {
 	DRV_OSS* drv = (DRV_OSS*)Arg;
-	UINT32 curBuf;
 	UINT32 didBuffers;	// number of processed buffers
 	UINT32 bufBytes;
 	ssize_t wrtBytes;

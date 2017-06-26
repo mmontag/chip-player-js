@@ -12,6 +12,7 @@ set(AUDIO_HEADERS
 	AudioStream.h
 	AudioStream_SpcDrvFuns.h
 )
+set(AUDIO_INCLUDES)
 set(AUDIO_LIBS)
 
 if(WIN32)
@@ -33,6 +34,9 @@ else()
 		set(ADRV_LINUX FALSE)
 	endif()
 	set(ADRV_NO_WIN TRUE)
+	
+	find_package(ALSA QUIET)
+	find_package(PulseAudio QUIET)
 endif()
 
 option(AUDIODRV_WAVEWRITE "Audio Driver: Wave Writer" ON)
@@ -44,8 +48,8 @@ option(AUDIODRV_WASAPI "Audio Driver: WASAPI [Windows]" ${ADRV_WIN_VISTA})
 
 option(AUDIODRV_OSS "Audio Driver: OSS (Open Sound System) [Linux]" ${ADRV_LINUX})
 option(AUDIODRV_SADA "Audio Driver: SADA (Solaris Audio Device Architecture) [Solaris/BSD]" OFF)
-option(AUDIODRV_ALSA "Audio Driver: ALSA (Advanced Linux Sound Architecture) [Linux]" ${ADRV_LINUX})
-option(AUDIODRV_PULSE "Audio Driver: PulseAudio [Linux]" ${ADRV_LINUX})
+option(AUDIODRV_ALSA "Audio Driver: ALSA (Advanced Linux Sound Architecture) [Linux]" ${ALSA_FOUND})
+option(AUDIODRV_PULSE "Audio Driver: PulseAudio [Linux]" ${PULSEAUDIO_FOUND})
 option(AUDIODRV_LIBAO "Audio Driver: libao" ${ADRV_NO_WIN})
 
 
@@ -91,15 +95,20 @@ if(AUDIODRV_SADA)
 endif()
 
 if(AUDIODRV_ALSA)
+	find_package(ALSA REQUIRED)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_ALSA")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_ALSA.c)
-	set(AUDIO_LIBS ${AUDIO_LIBS} pthread asound)
+	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${ALSA_INCLUDE_DIR})
+	set(AUDIO_LIBS ${AUDIO_LIBS} pthread ${ALSA_LIBRARY})
 endif()
 
 if(AUDIODRV_PULSE)
+	find_package(PulseAudio REQUIRED)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_PULSE")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_Pulse.c)
-	set(AUDIO_LIBS ${AUDIO_LIBS} pthread pulse-simple pulse)
+	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${PULSEAUDIO_INCLUDE_DIR})
+	# There seems to be no package for pulse-simple.
+	set(AUDIO_LIBS ${AUDIO_LIBS} pthread pulse-simple ${PULSEAUDIO_LIBRARY})
 endif()
 
 if(AUDIODRV_LIBAO)
@@ -120,7 +129,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 if(WIN32 AND NOT MSVC)
 	target_include_directories(${PROJECT_NAME} PRIVATE
 		${CMAKE_SOURCE_DIR}/libs/include_mingw
-)
+	)
 elseif(MSVC)
 	target_include_directories(${PROJECT_NAME} PRIVATE
 		${CMAKE_SOURCE_DIR}/libs/include_vc
@@ -131,6 +140,7 @@ elseif(MSVC)
 		)
 	endif()
 endif()
+target_include_directories(${PROJECT_NAME} PUBLIC ${AUDIO_INCLUDES})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${AUDIO_LIBS})
 
