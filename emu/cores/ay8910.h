@@ -34,7 +34,7 @@ OKI M5255, Winbond WF19054, JFC 95101, File KC89C72, Toshiba T7766A : difference
 #define AY8910_LEGACY_OUTPUT        (0x01)
 
 /*
- * Specifing the next define will simulate the special
+ * Specifying the next define will simulate the special
  * cross channel mixing if outputs are tied together.
  * The driver will only provide one stream in this case.
  */

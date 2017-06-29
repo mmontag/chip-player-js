@@ -21,6 +21,9 @@
   - understand reg 9
   - understand other writes to $90-$ff area
 
+  Links:
+  https://siliconpr0n.org/map/capcom/dl-1425
+
 ***************************************************************************/
 
 #ifdef _DEBUG

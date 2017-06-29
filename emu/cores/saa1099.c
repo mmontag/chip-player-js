@@ -63,6 +63,8 @@
     0x1c | ---- ---x | All channels enable (0 = off, 1 = on)
     0x1c | ---- --x- | Synch & Reset generators
 
+    Unspecified bits should be written as zero.
+
 ***************************************************************************/
 
 #ifdef _DEBUG
@@ -565,7 +567,8 @@ static void saa1099_data_w(void *info, UINT8 data)
 		}
 		break;
 	default:    /* Error! */
-		logerror("SAA1099: Unknown operation (reg:%02x, data:%02x)\n", reg, data);
+		if (data != 0)
+			logerror("SAA1099: Unknown operation (reg:%02x, data:%02x)\n", reg, data);
 	}
 }
 
