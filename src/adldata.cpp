@@ -4486,7 +4486,7 @@ const adldata adl[4606] =
     { 0x101B370,0x0059360, 0x89,0x40, 0x6, +12, true }, // 4470: skeakernetsM44; Tremolo Strings
     { 0x0848521,0x074C411, 0x69,0x00, 0xA, +0, false }, // 4471: skeakernetsM45; 
     { 0x074A201,0x0356411, 0x29,0x00, 0xA, +0, true }, // 4472: skeakernetsM45; 
-    { 0x0B5F331,0x0B3F320, 0x2E,0x00, 0x0, +12, false }, // 4473: skeakernetsM46; Orchestral Harp
+    { 0x0F5F311,0x0F5F300, 0x2E,0x00, 0x0, +12, false }, // 4473: skeakernetsM46; Orchestral Harp
     { 0x1C7A601,0x0B3D210, 0x50,0x00, 0xA, +0, false }, // 4474: skeakernetsM47; * Timpani
     { 0x033F031,0x21554A0, 0xA6,0x00, 0xC, +0, false }, // 4475: skeakernetsM48; 
     { 0x033F031,0x21565A0, 0xA6,0x00, 0xC, +0, true }, // 4476: skeakernetsM48; 
@@ -4524,7 +4524,7 @@ const adldata adl[4606] =
     { 0x0199030,0x01B6132, 0x91,0x80, 0xA, +12, false }, // 4508: skeakernetsM70; Bassoon
     { 0x1177532,0x0174370, 0x99,0x00, 0xA, +12, false }, // 4509: skeakernetsM71; Clarinet
     { 0x08D6EF1,0x02A3571, 0xC0,0x00, 0xE, +0, false }, // 4510: skeakernetsM72; Piccolo
-    { 0x08850A1,0x02A5561, 0x66,0x00, 0x8, +0, false }, // 4511: skeakernetsM73; Flute
+    { 0x08850A1,0x02A5561, 0xA6,0x00, 0x8, +0, false }, // 4511: skeakernetsM73; Flute
     { 0x1176522,0x0277421, 0x5A,0x00, 0x6, +0, false }, // 4512: skeakernetsM74; Recorder
     { 0x1273471,0x01745B0, 0x8D,0x00, 0x4, +12, false }, // 4513: skeakernetsM75; Pan Flute
     { 0x2F36750,0x0F78500, 0x17,0x00, 0x2, +12, true }, // 4514: skeakernetsM75; Pan Flute
@@ -4612,8 +4612,8 @@ const adldata adl[4606] =
     { 0x056FB00,0x017F800, 0x80,0x00, 0xB, +12, false }, // 4596: skeakernetsP62; Mute High Conga
     { 0x056FA00,0x017F500, 0x80,0x00, 0xB, +12, false }, // 4597: skeakernetsP63; skeakernetsP64; Low Conga
     { 0x09A600F,0x0FFA590, 0x08,0xC0, 0xE, +12, false }, // 4598: skeakernetsP70; Maracas
-    { 0x0C7F500,0x3FFB788, 0x07,0x00, 0x8, +12, false }, // 4599: skeakernetsP71; Short Whistle
-    { 0x0FFF000,0x3FFB3A8, 0x07,0x00, 0x8, +12, false }, // 4600: skeakernetsP72; Long Whistle
+    { 0x009F020,0x37DA588, 0x07,0x00, 0xA, +12, false }, // 4599: skeakernetsP71; Short Whistle
+    { 0x00FF020,0x32DF5A8, 0x07,0x00, 0xA, +12, false }, // 4600: skeakernetsP72; Long Whistle
     { 0x0D1F815,0x078F512, 0x44,0x00, 0x8, +12, false }, // 4601: skeakernetsP75; Claves
     { 0x1DC5D01,0x06FF79F, 0x0B,0x00, 0xA, +0, false }, // 4602: skeakernetsP78; Mute Cuica
     { 0x1C7C900,0x05FF49F, 0x07,0x00, 0xA, +0, false }, // 4603: skeakernetsP79; Open Cuica
@@ -22812,7 +22812,7 @@ const struct adlinsdata adlins[4649] =
 
     // Amplitude begins at    0.6, peaks 1782.4 at 0.2s,
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.0s.
-    {4475,4476,  0, 1,    213,    13,0.109375 }, // 4547: skeakernetsM48; 
+    {4475,4476,  0, 1,    213,    13,0.078125 }, // 4547: skeakernetsM48; 
 
     // Amplitude begins at    0.0, peaks 2178.7 at 5.1s,
     // fades to 20% at 40.0s, keyoff fades to 20% in 0.2s.
@@ -22906,7 +22906,7 @@ const struct adlinsdata adlins[4649] =
     // fades to 20% at 40.0s, keyoff fades to 20% in 0.0s.
     {4510,4510,  0, 0,  40000,     0,0.000000 }, // 4570: skeakernetsM72; Piccolo
 
-    // Amplitude begins at    0.0, peaks 2741.6 at 0.2s,
+    // Amplitude begins at    0.0, peaks 2697.1 at 0.2s,
     // fades to 20% at 40.0s, keyoff fades to 20% in 0.0s.
     {4511,4511,  0, 0,  40000,     0,0.000000 }, // 4571: skeakernetsM73; Flute
 
@@ -23190,13 +23190,13 @@ const struct adlinsdata adlins[4649] =
     // fades to 20% at 0.2s, keyoff fades to 20% in 0.2s.
     {4598,4598, 40, 0,    173,   173,0.000000 }, // 4641: skeakernetsP70; Maracas
 
-    // Amplitude begins at 1392.9,
-    // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
-    {4599,4599, 49, 0,     80,    80,0.000000 }, // 4642: skeakernetsP71; Short Whistle
+    // Amplitude begins at 1193.9, peaks 1604.8 at 0.0s,
+    // fades to 20% at 0.3s, keyoff fades to 20% in 0.3s.
+    {4599,4599, 45, 0,    306,   306,0.000000 }, // 4642: skeakernetsP71; Short Whistle
 
-    // Amplitude begins at 1421.8, peaks 1604.1 at 0.0s,
-    // fades to 20% at 1.2s, keyoff fades to 20% in 1.2s.
-    {4600,4600, 49, 0,   1153,  1153,0.000000 }, // 4643: skeakernetsP72; Long Whistle
+    // Amplitude begins at 1572.2,
+    // fades to 20% at 40.0s, keyoff fades to 20% in 0.0s.
+    {4600,4600, 42, 0,  40000,     0,0.000000 }, // 4643: skeakernetsP72; Long Whistle
 
     // Amplitude begins at 2682.1,
     // fades to 20% at 0.1s, keyoff fades to 20% in 0.1s.
