@@ -586,8 +586,11 @@ void libxmp_process_fx(struct context_data *ctx, struct channel_data *xc, int ch
 		xc->vol.fslide2 = -fxp;
 		break;
 	case FX_IT_BREAK:	/* Pattern break with hex parameter */
-		p->flow.pbreak = 1;
-		p->flow.jumpline = fxp;
+		if (!f->loop_chn)
+		{
+			p->flow.pbreak = 1;
+			p->flow.jumpline = fxp;
+		}
 		break;
 
 #endif
