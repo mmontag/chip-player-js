@@ -60,6 +60,7 @@ endif(CMAKE_COMPILER_IS_GNUCC)
 
 option(BUILD_LIBAUDIO "build audio output library" ON)
 option(BUILD_LIBEMU "build sound emulation library" ON)
+option(BUILD_TESTS "build test programs" ON)
 
 find_package(ZLIB)
 
@@ -70,6 +71,8 @@ if(BUILD_LIBEMU)
 	add_subdirectory(emu)
 endif()
 
+
+if(BUILD_TESTS)
 
 add_executable(audiotest audiotest.c)
 target_include_directories(audiotest PRIVATE ${CMAKE_SOURCE_DIR})
@@ -85,4 +88,6 @@ target_link_libraries(audemutest PRIVATE vgm-audio vgm-emu)
 
 add_executable(vgmtest vgmtest.c vgm/dblk_compr.c)
 target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR} ${ZLIB_INCLUDE_DIRS})
-target_link_libraries(vgmtest PRIVATE ZLIB::ZLIB vgm-audio vgm-emu)
+target_link_libraries(vgmtest PRIVATE ${ZLIB_LIBRARIES} vgm-audio vgm-emu)
+
+endif(BUILD_TESTS)
