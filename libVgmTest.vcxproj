@@ -64,30 +64,30 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\VGMPlay\zlib;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>libs\include;$(ProjectDir);$(IncludePath)</IncludePath>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-    <LibraryPath>..\VGMPlay\zlib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>libs\lib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
     <OutDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>libs\include;$(ProjectDir);$(IncludePath)</IncludePath>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-    <LibraryPath>$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>libs\lib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
     <OutDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\VGMPlay\zlib;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>libs\include;$(ProjectDir);$(IncludePath)</IncludePath>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-    <LibraryPath>..\VGMPlay\zlib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>libs\lib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
     <OutDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>libs\include;$(ProjectDir);$(IncludePath)</IncludePath>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-    <LibraryPath>$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>libs\lib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
     <OutDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -115,7 +115,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libAudio_x64d.lib;libEmu_x64d.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zlib64d.lib;libAudio_x64d.lib;libEmu_x64d.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -151,7 +151,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libAudio_x64.lib;libEmu_x64.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zlib64.lib;libAudio_x64.lib;libEmu_x64.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
