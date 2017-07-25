@@ -818,19 +818,9 @@ static void LoadBisqwit(const char* fn, unsigned bank, const char* prefix)
     std::fclose(fp);
 }
 
-#include "../dbopl.h"
+#include "../nukedopl3.h"
 
-std::vector<int> sampleBuf;
-static void AddMonoAudio(unsigned long count, int* samples)
-{
-    sampleBuf.insert(sampleBuf.end(), samples, samples+count);
-}
-
-static void AddStereoAudio(unsigned long count, int* samples)
-{
-    for (unsigned long i = 0; i < count; i++)
-        sampleBuf.insert(sampleBuf.end(), samples + i * 2, samples + i * 2 + 1);
-}
+std::vector<int16_t> stereoSampleBuf; 
 
 struct DurationInfo
 {
@@ -859,30 +849,30 @@ static DurationInfo MeasureDurations(const ins& in)
       : in.notenum >= 128 ? (44 + 128 - in.notenum)
       : in.notenum;
 
-    DBOPL::Handler opl;
+    _opl3_chip opl;
     static const short initdata[(2+3+2+2)*2] =
     { 0x004,96, 0x004,128,        // Pulse timer
       0x105, 0, 0x105,1, 0x105,0, // Pulse OPL3 enable, leave disabled
       0x001,32, 0x0BD,0           // Enable wave & melodic
     };
-    opl.Init(rate);
-    for(unsigned a=0; a<18; a+=2) opl.WriteReg(initdata[a], initdata[a+1]);
+    OPL3_Reset(&opl, rate);
+    for(unsigned a=0; a<18; a+=2) OPL3_WriteReg(&opl, initdata[a], initdata[a+1]);
 
     const unsigned n_notes = in.insno1 == in.insno2 ? 1 : 2;
     unsigned x[2];
 
     if (n_notes == 2 && !in.pseudo4op)
     {
-        opl.WriteReg(0x105, 1);
-        opl.WriteReg(0x104, 1);
+        OPL3_WriteReg(&opl, 0x105, 1);
+        OPL3_WriteReg(&opl, 0x104, 1);
     }
 
     for(unsigned n=0; n<n_notes; ++n)
     {
         static const unsigned char patchdata[11] =
             {0x20,0x23,0x60,0x63,0x80,0x83,0xE0,0xE3,0x40,0x43,0xC0};
-        for(unsigned a=0; a<10; ++a) opl.WriteReg(patchdata[a]+n*8, id[n].data[a]);
-        opl.WriteReg(patchdata[10]+n*8, id[n].data[10] | 0x30);
+        for(unsigned a=0; a<10; ++a) OPL3_WriteReg(&opl, patchdata[a]+n*8, id[n].data[a]);
+        OPL3_WriteReg(&opl, patchdata[10]+n*8, id[n].data[10] | 0x30);
     }
     for(unsigned n=0; n<n_notes; ++n)
     {
@@ -898,8 +888,8 @@ static DurationInfo MeasureDurations(const ins& in)
         x[n] += (int)(hertz + 0.5);
 
         // Keyon the note
-        opl.WriteReg(0xA0+n*3, x[n]&0xFF);
-        opl.WriteReg(0xB0+n*3, x[n]>>8);
+        OPL3_WriteReg(&opl, 0xA0+n*3, x[n]&0xFF);
+        OPL3_WriteReg(&opl, 0xB0+n*3, x[n]>>8);
     }
 
     const unsigned max_on = 40;
@@ -910,24 +900,21 @@ static DurationInfo MeasureDurations(const ins& in)
     double highest_sofar = 0;
     for(unsigned period=0; period<max_on*interval; ++period)
     {
-        sampleBuf.clear();
-        unsigned n = samples_per_interval;
-        while(n > 512)
-            {opl.Generate(AddMonoAudio, AddStereoAudio, 512); n-=512;}
-        if(n)opl.Generate(AddMonoAudio, AddStereoAudio, n);
-        unsigned long count = sampleBuf.size();
+        stereoSampleBuf.clear();
+        stereoSampleBuf.resize(samples_per_interval * 2);
+        OPL3_GenerateStream(&opl, stereoSampleBuf.data(), samples_per_interval);
 
         double mean = 0.0;
-        for(unsigned long c=0; c<count; ++c)
-            mean += sampleBuf[c];
-        mean /= count;
+        for(unsigned long c=0; c<samples_per_interval; ++c)
+            mean += stereoSampleBuf[c*2];
+        mean /= samples_per_interval;
         double std_deviation = 0;
-        for(unsigned long c=0; c<count; ++c)
+        for(unsigned long c=0; c<samples_per_interval; ++c)
         {
-            double diff = (sampleBuf[c]-mean);
+            double diff = (stereoSampleBuf[c*2]-mean);
             std_deviation += diff*diff;
         }
-        std_deviation = std::sqrt(std_deviation / count);
+        std_deviation = std::sqrt(std_deviation / samples_per_interval);
         amplitudecurve_on.push_back(std_deviation);
         if(std_deviation > highest_sofar)
             highest_sofar = std_deviation;
@@ -938,30 +925,27 @@ static DurationInfo MeasureDurations(const ins& in)
 
     // Keyoff the note
     for(unsigned n=0; n<n_notes; ++n)
-        opl.WriteReg(0xB0+n, (x[n]>>8) & 0xDF);
+        OPL3_WriteReg(&opl, 0xB0+n, (x[n]>>8) & 0xDF);
 
     // Now, for up to 60 seconds, measure mean amplitude.
     std::vector<double> amplitudecurve_off;
     for(unsigned period=0; period<max_off*interval; ++period)
     {
-        sampleBuf.clear();
-        unsigned n = samples_per_interval;
-        while(n > 512)
-            {opl.Generate(AddMonoAudio, AddStereoAudio, 512); n-=512;}
-        if(n)opl.Generate(AddMonoAudio, AddStereoAudio, n);
-        unsigned long count = sampleBuf.size();
+        stereoSampleBuf.clear();
+        stereoSampleBuf.resize(samples_per_interval * 2);
+        OPL3_GenerateStream(&opl, stereoSampleBuf.data(), samples_per_interval);
 
         double mean = 0.0;
-        for(unsigned long c=0; c<count; ++c)
-            mean += sampleBuf[c];
-        mean /= count;
+        for(unsigned long c=0; c<samples_per_interval; ++c)
+            mean += stereoSampleBuf[c*2];
+        mean /= samples_per_interval;
         double std_deviation = 0;
-        for(unsigned long c=0; c<count; ++c)
+        for(unsigned long c=0; c<samples_per_interval; ++c)
         {
-            double diff = (sampleBuf[c]-mean);
+            double diff = (stereoSampleBuf[c*2]-mean);
             std_deviation += diff*diff;
         }
-        std_deviation = std::sqrt(std_deviation / count);
+        std_deviation = std::sqrt(std_deviation / samples_per_interval);
         amplitudecurve_off.push_back(std_deviation);
 
         if(std_deviation < highest_sofar*0.2) break;
