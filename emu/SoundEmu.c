@@ -28,7 +28,7 @@
 #define SNDDEV_32X_PWM
 #define SNDDEV_GAMEBOY
 #define SNDDEV_NES_APU
-#define SNDDEV_MULTIPCM
+#define SNDDEV_YMW258
 #define SNDDEV_UPD7759
 #define SNDDEV_OKIM6258
 #define SNDDEV_OKIM6295
@@ -98,7 +98,7 @@
 #ifdef SNDDEV_NES_APU
 #include "cores/nesintf.h"
 #endif
-#ifdef SNDDEV_MULTIPCM
+#ifdef SNDDEV_YMW258
 #include "cores/multipcm.h"
 #endif
 #ifdef SNDDEV_UPD7759
@@ -243,9 +243,9 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 	case DEVID_NES_APU:
 		return devDefList_NES_APU;
 #endif
-#ifdef SNDDEV_MULTIPCM
-	case DEVID_MULTIPCM:
-		return devDefList_MultiPCM;
+#ifdef SNDDEV_YMW258
+	case DEVID_YMW258:
+		return devDefList_YMW258;
 #endif
 #ifdef SNDDEV_UPD7759
 	case DEVID_uPD7759:

@@ -176,7 +176,7 @@ INLINE void daccontrol_SendCommand(dac_control* chip)
 		break;
 	case DEVID_GB_DMG:
 	case DEVID_NES_APU:
-//	case DEVID_MULTIPCM:
+//	case DEVID_YMW258:
 	case DEVID_uPD7759:
 	case DEVID_OKIM6258:
 	case DEVID_K053260:	// TODO: Verify

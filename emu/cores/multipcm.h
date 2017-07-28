@@ -3,6 +3,6 @@
 
 #include "../EmuStructs.h"
 
-extern const DEV_DEF* devDefList_MultiPCM[];
+extern const DEV_DEF* devDefList_YMW258[];
 
 #endif	// __MULTIPCM_H__

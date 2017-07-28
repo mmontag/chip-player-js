@@ -88,7 +88,7 @@ typedef struct _vgm_file_header
 	UINT8 bytLoopModifier;
 	UINT32 lngHzGBDMG;
 	UINT32 lngHzNESAPU;
-	UINT32 lngHzMultiPCM;
+	UINT32 lngHzYMW258;
 	UINT32 lngHzUPD7759;
 	UINT32 lngHzOKIM6258;
 	UINT8 bytOKI6258Flags;
@@ -636,7 +636,7 @@ static void InitVGMChips(void)
 				break;
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, (void**)&cDev->writeD16);
 			break;
-		case DEVID_MULTIPCM:
+		case DEVID_YMW258:
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;
@@ -1034,7 +1034,7 @@ static const VGM_ROMDUMP_IDS VGMROM_CHIPS[0x14] =
 	{0x0F, 0x00},	// YMZ280B
 	{0x0D, 0x01},	// YMF278B RAM
 	{0x0B, 0x00},	// Y8950 DeltaT
-	{0x15, 0x00},	// MultiPCM
+	{0x15, 0x00},	// YMW258/MultiPCM
 	{0x16, 0x00},	// uPD7759
 	{0x18, 0x00},	// OKIM6295
 	{0x1A, 0x00},	// K054539
@@ -1102,7 +1102,7 @@ static const VGM_CMDTYPES VGM_CMDS_B0[0x10] =
 	{0x11,	CMDTYPE_PWM_REG},	// B2 PWM
 	{0x13,	CMDTYPE_O8_D8},		// B3 GameBoy DMG
 	{0x14,	CMDTYPE_NES_REG},	// B4 NES APU
-	{0x15,	CMDTYPE_O8_D8},		// B5 MultiPCM
+	{0x15,	CMDTYPE_O8_D8},		// B5 YMW258/MultiPCM
 	{0x16,	CMDTYPE_O8_D8},		// B6 uPD7759
 	{0x17,	CMDTYPE_O8_D8},		// B7 OKIM6258
 	{0x18,	CMDTYPE_O8_D8},		// B8 OKIM6295
@@ -1119,7 +1119,7 @@ static const VGM_CMDTYPES VGM_CMDS_C0[0x10] =
 	{0x04,	CMDTYPE_SPCM_MEM},	// C0 Sega PCM
 	{0x05,	CMDTYPE_RF5C_MEM},	// C1 RF5C68
 	{0x10,	CMDTYPE_RF5C_MEM},	// C2 RF5C164
-	{0x15,	CMDTYPE_O8_D16},	// C3 MultiPCM bank offset
+	{0x15,	CMDTYPE_O8_D16},	// C3 YMW258/MultiPCM bank offset
 	{0x1F,	CMDTYPE_QSOUND},	// C4 QSound
 	{0x20,	CMDTYPE_O16_D8},	// C5 SCSP
 	{0x21,	CMDTYPE_O16_D8},	// C6 WonderSwan (memory write)
