@@ -134,10 +134,19 @@ obj/adlmidi_mus2mid.o: src/adlmidi_mus2mid.c src/adlmidi_mus2mid.h
 obj/adldata.o: src/adldata.cpp src/adldata.hh
 	$(CXX) $(CPPFLAGS) $<  $(DEBUG)  -c -fPIC -o $@
 
-gen_adldata: obj/gen_adldata.o obj/nukedopl3.o
-	$(CXXLINK)  $^  $(DEBUG)  -o bin/$@  $(LDLIBS)
+gen_adldata: obj/gen_adldata.o obj/measurer.o obj/nukedopl3.o obj/progs_cache.o obj/ini_processing.o
+	$(CXXLINK)  $^  $(DEBUG)  -o bin/$@  $(LDLIBS) -lpthread
 
-obj/gen_adldata.o: src/gen_adldata/gen_adldata.cc src/nukedopl3.h
+obj/gen_adldata.o: src/gen_adldata/gen_adldata.cc
+	$(CXX) $(CPPFLAGS) $<  $(DEBUG)  -c -o $@
+
+obj/measurer.o: src/gen_adldata/measurer.cpp src/nukedopl3.h
+	$(CXX) $(CPPFLAGS) $<  $(DEBUG)  -c -o $@
+
+obj/progs_cache.o: src/gen_adldata/progs_cache.cpp
+	$(CXX) $(CPPFLAGS) $<  $(DEBUG)  -c -o $@
+
+obj/ini_processing.o: src/gen_adldata/ini/ini_processing.cpp
 	$(CXX) $(CPPFLAGS) $<  $(DEBUG)  -c -o $@
 
 dumpmiles: obj/dumpmiles.o

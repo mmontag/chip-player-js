@@ -1,3 +1,6 @@
+#pragma once
+#ifndef MIDI_INS_LIST
+#define MIDI_INS_LIST
 
 static const char *const MidiInsName[] = {
 "AcouGrandPiano",
@@ -178,3 +181,5 @@ static const char *const MidiInsName[] = {
 "Mute Triangle",
 "Open Triangle",
 "Shaker","Jingle Bell","Bell Tree","Castanets","Mute Surdu","Open Surdu",""};
+
+#endif //MIDI_INS_LIST

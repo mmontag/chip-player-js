@@ -41,8 +41,6 @@ extern const struct adldata
     unsigned char feedconn; // Feedback/connection bits for the channel
 
     signed char finetune;
-
-    bool diff;
 } adl[];
 
 extern const struct adlinsdata
