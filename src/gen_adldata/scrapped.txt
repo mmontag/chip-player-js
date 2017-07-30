@@ -141,29 +141,38 @@ LoadBisqwit("fm_banks/op3_files/bisqwit.adlraw", 1, "Bisq");
 
 LoadBNK("fm_banks/bnk_files/melodic.bnk", 2, "HMIGM", false, false); // same as file156.bnk
 LoadBNK("fm_banks/bnk_files/drum.bnk",    2, "HMIGP", false, true);
+
 LoadBNK("fm_banks/bnk_files/intmelo.bnk", 3, "intM", false, false);
 LoadBNK("fm_banks/bnk_files/intdrum.bnk", 3, "intP", false, true);
+
 LoadBNK("fm_banks/bnk_files/hammelo.bnk", 4, "hamM", false, false);
 LoadBNK("fm_banks/bnk_files/hamdrum.bnk", 4, "hamP", false, true);
+
 LoadBNK("fm_banks/bnk_files/rickmelo.bnk", 5, "rickM", false, false);
 LoadBNK("fm_banks/bnk_files/rickdrum.bnk", 5, "rickP", false, true);
 
 LoadBNK("fm_banks/bnk_files/d2melo.bnk",  6, "b6M", false, false);
 LoadBNK("fm_banks/bnk_files/d2drum.bnk",  6, "b6P", false, true);
+
 LoadBNK("fm_banks/bnk_files/normmelo.bnk", 7, "b7M", false, false);
 LoadBNK("fm_banks/bnk_files/normdrum.bnk", 7, "b7P", false, true); // same as file122.bnk
+
 LoadBNK("fm_banks/bnk_files/ssmelo.bnk",  8, "b8M", false, false);
 LoadBNK("fm_banks/bnk_files/ssdrum.bnk",  8, "b8P", false, true);
 
 LoadTMB("fm_banks/bnk_files/themepark.tmb", 9, "b9MP");
 //LoadBNK("fm_banks/bnk_files/file131.bnk", 9, "b9M", false, false);
 //LoadBNK("fm_banks/bnk_files/file132.bnk", 9, "b9P", false, true);
+
 LoadBNK("fm_banks/bnk_files/file133.bnk", 10, "b10P", false, true);
 LoadBNK("fm_banks/bnk_files/file134.bnk", 10, "b10M", false, false);
+
 LoadBNK("fm_banks/bnk_files/file142.bnk", 11, "b11P", false, true);
 LoadBNK("fm_banks/bnk_files/file143.bnk", 11, "b11M", false, false);
+
 LoadBNK("fm_banks/bnk_files/file145.bnk", 12, "b12M", false, false);//file145 is MELODIC
 LoadBNK("fm_banks/bnk_files/file144.bnk", 12, "b12P", false, true);//file144  is DRUMS
+
 LoadBNK("fm_banks/bnk_files/file167.bnk", 13, "b13P", false, true);
 LoadBNK("fm_banks/bnk_files/file168.bnk", 13, "b13M", false, false);
 
