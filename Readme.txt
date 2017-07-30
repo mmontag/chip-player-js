@@ -90,6 +90,11 @@ To build that example you will need to have installed SDL2 library.
 =========================================
 Changelog
 =========================================
+## 1.2.1    2017-07-30
+ * Minor fixes
+ * Added 72'th bank by Sneakernets
+ * Updated "gen_adldata" utility to use ini file
+
 ## 1.2.0    2017-02-15
  * Fixed 12'th bank where are drums and melodic sets are was swapped
  * Fxied logariphmic volumes flag which autoreseted to false on playing begin moment
