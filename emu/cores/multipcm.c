@@ -474,8 +474,7 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 			//according to YMF278 sample write causes some base params written to the regs (envelope+lfos)
 			//the game should never change the sample while playing.
 			// patched to load all sample data here, so registers 6 and 7 aren't overridden by KeyOn -Valley Bell
-			init_sample(ptChip, &slot->sample, slot->regs[1]);
-			//init_sample(ptChip, &slot->sample, slot->regs[1] | ((slot->regs[2] & 3) << 8));
+			init_sample(ptChip, &slot->sample, slot->regs[1] | ((slot->regs[2] & 1) << 8));
 			write_slot(ptChip, slot, 6, slot->sample.lfo_vibrato_reg);
 			write_slot(ptChip, slot, 7, slot->sample.lfo_amplitude_reg);
 			break;
@@ -508,9 +507,9 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 				if (slot->base >= 0x100000)
 				{
 					if (slot->pan & 8)
-						slot->base = (slot->base & 0xfffff) | ptChip->bank_left;
+						slot->base = (slot->base & 0x3fffff) | ptChip->bank_left;
 					else
-						slot->base = (slot->base & 0xfffff) | ptChip->bank_right;
+						slot->base = (slot->base & 0x3fffff) | ptChip->bank_right;
 				}
 
 			}
