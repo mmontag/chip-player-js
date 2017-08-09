@@ -429,7 +429,7 @@ const adldata adl[4622] =
     { 0x0DFDCC2,0x026C9C0, 0x17,0x00, 0x0, +0 }, // 410: BisqP97; b8P74; f35GP74; rickP97; Long Guiro; afrika; guirol.i
     { 0x0D0ACC0,0x028EAC1, 0x18,0x00, 0x0, +0 }, // 411: BisqP101; BisqP102; b6P118; b8P63; b8P64; f35GP63; f35GP64; rickP101; rickP102; Low Conga; Open High Conga; Rcongas2; congas2; congas2.
     { 0x0A7CDC2,0x028EAC1, 0x2B,0x02, 0x0, +0 }, // 412: BisqP103; BisqP104; b8P60; b8P61; f35GP60; f35GP61; rickP103; rickP104; High Bongo; Low Bongo; bongos.i; newconga
-    { 0x0FE6227,0x3D9950A, 0x00,0x07, 0x8, +0 }, // 413: BisqP106; BisqP107; BisqP108; BisqP109; BisqP110; BisqP111; BisqP112; BisqP113; BisqP114; BisqP115; BisqP116; BisqP117; BisqP118; BisqP119; BisqP120; BisqP121; BisqP122; BisqP123; BisqP124; BisqP125; BisqP126; BisqP127; HMIGP35; b12P35; Wierd3.i
+    { 0x0FE6227,0x3D9950A, 0x00,0x07, 0x8, +0 }, // 413: BisqP106; BisqP107; BisqP108; BisqP109; BisqP110; BisqP111; BisqP112; BisqP113; BisqP114; BisqP115; BisqP116; BisqP117; BisqP118; BisqP119; BisqP120; BisqP121; BisqP122; BisqP123; BisqP124; BisqP125; BisqP126; BisqP127; HMIGP35; Wierd3.i
     { 0x1199523,0x0198421, 0x48,0x00, 0x8, +0 }, // 414: 3drm67M29; HMIGM0; HMIGM29; apgleeM25; b7M29; f17GM29; f35GM29; mGM29; Acoustic Guitar2; Overdrive Guitar; am029.in
     { 0x055F231,0x076F221, 0x49,0x00, 0x8, +0 }, // 415: 3drm67M2; HMIGM2; b7M2; b8M2; f17GM2; f35GM2; mGM2; ElecGrandPiano; am002.in; piano3
     { 0x038F101,0x028F121, 0x57,0x00, 0x0, +0 }, // 416: 3drm67M4; HMIGM4; b7M4; b8M4; f17GM4; f35GM4; mGM4; Rhodes Piano; am004.in; epiano1a
@@ -1123,7 +1123,7 @@ const adldata adl[4622] =
     { 0x0211131,0x0937122, 0x0A,0x02, 0xA, +0 }, // 1104: b12M122; TCPAD2.I
     { 0x1728281,0x0743182, 0x0E,0x05, 0xC, +0 }, // 1105: b12M125; TCPAD5.I
     { 0x0331221,0x1243122, 0x00,0x00, 0x8, +0 }, // 1106: b12M126; TCPAD6.I
-    { 0x0F9F700,0x0CA8601, 0x08,0x00, 0x0, +0 }, // 1107: b12P36; f53GP35; f53GP36; Ac Bass Drum; Bass Drum 1; Kick.ins
+    { 0x0F9F700,0x0CA8601, 0x08,0x00, 0x0, +0 }, // 1107: b12P35; b12P36; f53GP35; f53GP36; Ac Bass Drum; Bass Drum 1; Kick.ins
     { 0x1F3F030,0x1F4F130, 0x54,0x00, 0xA, +12 }, // 1108: dMM0; hxMM0; musM0; raptM0; Acoustic Grand Piano
     { 0x0F3F030,0x1F4F130, 0x52,0x00, 0xA, +12 }, // 1109: dMM1; hxMM1; musM1; raptM1; Bright Acoustic Piano
     { 0x1F3E130,0x0F4F130, 0x4E,0x00, 0x8, +12 }, // 1110: dMM2; hxMM2; musM2; raptM2; Electric Grand Piano
@@ -6119,7 +6119,7 @@ const struct adlinsdata adlins[4661] =
 
     // Amplitude begins at  350.5, peaks  655.0 at 0.0s,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    { 413, 413, 83, 0,    273,   273,0.000000 }, // 369: BisqP106; BisqP107; BisqP108; BisqP109; BisqP110; BisqP111; BisqP112; BisqP113; BisqP114; BisqP115; BisqP116; BisqP117; BisqP118; BisqP119; BisqP120; BisqP121; BisqP122; BisqP123; BisqP124; BisqP125; BisqP126; BisqP127; HMIGP35; b12P35; Wierd3.i
+    { 413, 413, 83, 0,    273,   273,0.000000 }, // 369: BisqP106; BisqP107; BisqP108; BisqP109; BisqP110; BisqP111; BisqP112; BisqP113; BisqP114; BisqP115; BisqP116; BisqP117; BisqP118; BisqP119; BisqP120; BisqP121; BisqP122; BisqP123; BisqP124; BisqP125; BisqP126; BisqP127; HMIGP35; Wierd3.i
 
     // Amplitude begins at  114.9, peaks 2922.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
@@ -9519,7 +9519,7 @@ const struct adlinsdata adlins[4661] =
 
     // Amplitude begins at   40.9, peaks 2548.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {1107,1107, 35, 0,     73,    73,0.000000 }, // 1219: b12P36; f53GP35; f53GP36; Ac Bass Drum; Bass Drum 1; Kick.ins
+    {1107,1107, 35, 0,     73,    73,0.000000 }, // 1219: b12P35; b12P36; f53GP35; f53GP36; Ac Bass Drum; Bass Drum 1; Kick.ins
 
     // Amplitude begins at 2285.9,
     // fades to 20% at infs, keyoff fades to 20% in infs.
@@ -23599,7 +23599,7 @@ const unsigned short banks[73][256] =
 1127,1209,1210,1130,1131,1211,1212,1213,1135,1214,1215,1138,1139,1216,1217,1218,
  384, 384, 384, 384, 384, 384, 384, 384, 384, 384, 384, 384, 384, 384, 384, 384,
  384, 384, 384, 384, 384, 384, 384, 384, 384, 384, 384, 385, 386, 387, 388, 389,
- 390, 391, 392, 369,1219, 308, 394, 395, 396, 397, 398, 399, 398, 400, 401, 402,
+ 390, 391, 392,1219,1219, 308, 394, 395, 396, 397, 398, 399, 398, 400, 401, 402,
  403, 404, 405, 406, 404, 406, 407, 404, 408, 404, 330, 409, 410, 411, 412, 413,
  414, 415, 416,1220,1221, 419, 420, 341, 342, 421, 422, 423, 424, 425, 426, 427,
  428, 429, 419, 430, 351, 431, 308, 432, 384, 384, 384, 384, 384, 384, 384, 384,
