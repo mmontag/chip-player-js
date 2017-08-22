@@ -4,7 +4,7 @@
  * FROM A NUMBER OF SOURCES, MOSTLY PC GAMES.
  * PREPROCESSED, CONVERTED, AND POSTPROCESSED OFF-SCREEN.
  */
-const adldata adl[4622] =
+const adldata adl[4629] =
 { //    ,---------+-------- Wave select settings
   //    | ,-------ч-+------ Sustain/release rates
   //    | | ,-----ч-ч-+---- Attack/decay rates
@@ -27,7 +27,7 @@ const adldata adl[4622] =
     { 0x0F4F60C,0x0F5F381, 0x5C,0x00, 0x0, +0 }, // 8: GM8; b12P8; f34GM8; fat2M8; sGM8; Celesta; am008
     { 0x0F2F307,0x0F1F211, 0x97,0x80, 0x2, +0 }, // 9: 2x2byJANM9; BisqM9; GM9; b12P9; b65M9; f29GM101; f30GM101; f34GM9; fat2M9; FX 6 goblins; Glockenspiel; am009
     { 0x0F45417,0x0F4F401, 0x21,0x00, 0x2, +0 }, // 10: GM10; b12P10; b65M10; f29GM100; f30GM100; f34GM10; fat2M10; sGM10; FX 5 brightness; Music box; am010
-    { 0x0F6F398,0x0F6F281, 0x62,0x00, 0x0, +0 }, // 11: BisqM11; GM11; b12P11; f34GM11; fat2M11; sGM11; skeakernetsM11; ; Vibraphone; am011
+    { 0x0F6F398,0x0F6F281, 0x62,0x00, 0x0, +0 }, // 11: BisqM11; GM11; b12P11; f34GM11; fat2M11; sGM11; Vibraphone; am011
     { 0x0F6F618,0x0F7E701, 0x23,0x00, 0x0, +0 }, // 12: 2x2byJANM12; GM12; b12P12; b65M12; f29GM104; f29GM97; f30GM104; f30GM97; f34GM12; fat2M12; sGM12; FX 2 soundtrack; Marimba; Sitar; am012
     { 0x0F6F615,0x0F6F601, 0x91,0x00, 0x4, +0 }, // 13: 2x2byJANM13; GM13; b12P13; b65M13; f29GM103; f30GM103; f34GM13; fat2M13; sGM13; FX 8 sci-fi; Xylophone; am013
     { 0x0F3D345,0x0F3A381, 0x59,0x80, 0xC, +0 }, // 14: GM14; b12P14; b65M14; f34GM14; fat2M14; Tubular Bells; am014
@@ -197,7 +197,7 @@ const adldata adl[4622] =
     { 0x010A831,0x1B9D234, 0x0A,0x03, 0x6, +0 }, // 178: BisqM7; b12M7; Clavinet; TCCLAV.I
     { 0x0E6CE02,0x0E6F401, 0x25,0x00, 0x0, +0 }, // 179: 2x2byJANM8; BisqM8; b50M8; b51M8; f20GM8; f36GM8; qGM8; Celesta; gm008
     { 0x0E6F507,0x0E5F341, 0xA1,0x00, 0x1, +0 }, // 180: 2x2byJANM8; BisqM8; b50M8; b51M8; f20GM8; f36GM8; qGM8; Celesta; gm008
-    { 0x0045617,0x004F601, 0x21,0x00, 0x2, +0 }, // 181: 3drm67M10; BisqM10; HMIGM10; b50M10; b51M10; b7M10; b8M10; f17GM10; f20GM10; f31GM10; f35GM10; f36GM10; f48GM10; f49GM10; mGM10; qGM10; skeakernetsM10; ; Music box; am010.in; gm010; musicbx1
+    { 0x0045617,0x004F601, 0x21,0x00, 0x2, +0 }, // 181: 3drm67M10; BisqM10; HMIGM10; b50M10; b51M10; b7M10; b8M10; f17GM10; f20GM10; f31GM10; f35GM10; f36GM10; f48GM10; f49GM10; mGM10; qGM10; Music box; am010.in; gm010; musicbx1
     { 0x055F718,0x0D8E521, 0x23,0x00, 0x0, +0 }, // 182: 3drm67M12; BisqM12; HMIGM12; b7M12; f17GM12; mGM12; Marimba; am012.in
     { 0x0D6F90A,0x0D6F784, 0x53,0x80, 0xA, +0 }, // 183: BisqM13; b50M13; b51M13; f20GM13; f31GM13; f36GM13; f49GM13; qGM13; Xylophone; gm013
     { 0x0A6F615,0x0E6F601, 0x91,0x00, 0xB, +0 }, // 184: BisqM13; b50M13; b51M13; f20GM13; f31GM13; f36GM13; f49GM13; qGM13; Xylophone; gm013
@@ -213,7 +213,7 @@ const adldata adl[4622] =
     { 0x10BF024,0x20B5030, 0x12,0x00, 0x1, +0 }, // 194: BisqM19; f13GM19; f50GM19; nemM19; Church Organ
     { 0x71A7223,0x02A7221, 0xAC,0x83, 0x0, +0 }, // 195: 2x2byJANM21; BisqM21; b50M21; b51M21; f20GM21; f31GM21; f36GM21; f49GM21; qGM21; Accordion; gm021
     { 0x41A6223,0x02A62A1, 0x22,0x00, 0x1, +0 }, // 196: 2x2byJANM21; BisqM21; b50M21; b51M21; f20GM21; f31GM21; f36GM21; f49GM21; qGM21; Accordion; gm021
-    { 0x006FF25,0x005FF23, 0xA1,0x2F, 0xA, +0 }, // 197: BisqM22; b50M22; b51M22; f20GM22; f31GM22; f36GM22; f48GM22; f49GM22; qGM22; skeakernetsM22; ; Harmonica; gm022
+    { 0x006FF25,0x005FF23, 0xA1,0x2F, 0xA, +0 }, // 197: BisqM22; b50M22; b51M22; f20GM22; f31GM22; f36GM22; f48GM22; f49GM22; qGM22; Harmonica; gm022
     { 0x405FFA1,0x0096F22, 0x1F,0x80, 0xA, +0 }, // 198: BisqM22; b50M22; b51M22; f20GM22; f31GM22; f36GM22; f48GM22; f49GM22; qGM22; Harmonica; gm022
     { 0x11A6223,0x02A7221, 0x19,0x80, 0xC, +0 }, // 199: 2x2byJANM23; BisqM23; b50M23; b51M23; f20GM23; f31GM23; f36GM23; f48GM23; f49GM23; qGM23; Tango Accordion; gm023
     { 0x41A6223,0x02A7222, 0x1E,0x83, 0xD, +0 }, // 200: 2x2byJANM23; BisqM23; b50M23; b51M23; f20GM23; f31GM23; f36GM23; f48GM23; f49GM23; qGM23; Tango Accordion; gm023
@@ -1128,8 +1128,8 @@ const adldata adl[4622] =
     { 0x0F3F030,0x1F4F130, 0x52,0x00, 0xA, +12 }, // 1109: dMM1; hxMM1; musM1; raptM1; Bright Acoustic Piano
     { 0x1F3E130,0x0F4F130, 0x4E,0x00, 0x8, +12 }, // 1110: dMM2; hxMM2; musM2; raptM2; Electric Grand Piano
     { 0x015E811,0x014F712, 0x00,0x00, 0x1, +12 }, // 1111: dMM2; hxMM2; musM2; raptM2; Electric Grand Piano
-    { 0x153F110,0x0F4D110, 0x4F,0x00, 0x6, +12 }, // 1112: dMM3; hxMM3; musM3; raptM3; skeakernetsM3; Honky-tonk Piano
-    { 0x053F111,0x0F4D111, 0x4F,0x00, 0x6, +12 }, // 1113: dMM3; hxMM3; musM3; raptM3; skeakernetsM3; Honky-tonk Piano
+    { 0x153F110,0x0F4D110, 0x4F,0x00, 0x6, +12 }, // 1112: dMM3; hxMM3; musM3; raptM3; Honky-tonk Piano
+    { 0x053F111,0x0F4D111, 0x4F,0x00, 0x6, +12 }, // 1113: dMM3; hxMM3; musM3; raptM3; Honky-tonk Piano
     { 0x051F121,0x0E5D231, 0x66,0x00, 0x6, +0 }, // 1114: dMM4; hxMM4; musM4; raptM4; Rhodes Paino
     { 0x0E6F130,0x0E5F1B0, 0x51,0x40, 0x6, +12 }, // 1115: dMM5; hxMM5; musM5; raptM5; Chorused Piano
     { 0x079F212,0x099F110, 0x43,0x40, 0x9, +12 }, // 1116: dMM5; hxMM5; musM5; raptM5; Chorused Piano
@@ -1469,7 +1469,7 @@ const adldata adl[4622] =
     { 0x035C100,0x0D5C111, 0x9B,0x00, 0xC, +0 }, // 1450: f20GM3; f31GM3; f36GM3; qGM3; Honky-tonkPiano
     { 0x050F210,0x0F0E131, 0x60,0x5D, 0x4, +12 }, // 1451: 2x2byJANM7; b50M7; b51M7; f20GM7; f31GM7; f36GM7; qGM7; Clavinet; gm007
     { 0x040B230,0x5E9F111, 0xA2,0x80, 0x4, +0 }, // 1452: 2x2byJANM7; f20GM7; f31GM7; f36GM7; qGM7; Clavinet
-    { 0x0E3F217,0x0E2C211, 0x54,0x06, 0xA, +0 }, // 1453: b50M9; b51M9; f20GM9; f31GM9; f36GM9; qGM9; skeakernetsM9; ; Glockenspiel; gm009
+    { 0x0E3F217,0x0E2C211, 0x54,0x06, 0xA, +0 }, // 1453: b50M9; b51M9; f20GM9; f31GM9; f36GM9; qGM9; Glockenspiel; gm009
     { 0x0C3F219,0x0D2F291, 0x2B,0x07, 0xB, +0 }, // 1454: b50M9; b51M9; f20GM9; f31GM9; f36GM9; qGM9; Glockenspiel; gm009
     { 0x004A61A,0x004F600, 0x27,0x0A, 0x3, +0 }, // 1455: 2x2byJANM10; b50M10; b51M10; f20GM10; f31GM10; f36GM10; f49GM10; qGM10; Music box; gm010
     { 0x0790824,0x0E6E384, 0x9A,0x5B, 0xA, +12 }, // 1456: b50M11; b51M11; f20GM11; f36GM11; f48GM11; f49GM11; qGM11; Vibraphone; gm011
@@ -4438,208 +4438,215 @@ const adldata adl[4622] =
     { 0x306FF80,0x0164F11, 0x00,0x00, 0xE, +0 }, // 4419: apgleeP74; Long Guiro
     { 0x332F985,0x0A5D684, 0x05,0x40, 0xE, +0 }, // 4420: apgleeP83; Jingle Bell
     { 0x0FFF00B,0x2FF220C, 0x00,0x00, 0xE, +0 }, // 4421: apgnamM122; Seashore
-    { 0x2F3F032,0x1F4F131, 0x24,0x0A, 0xE, +0 }, // 4422: skeakernetsM0; Acoustic Grand Piano
-    { 0x2F3F031,0x0F4F131, 0x24,0x0A, 0xE, +0 }, // 4423: skeakernetsM0; Acoustic Grand Piano
-    { 0x2F3F031,0x1F4F130, 0x52,0x00, 0xC, +12 }, // 4424: skeakernetsM1; Bright Acoustic Piano
-    { 0x3B3E131,0x0F4F130, 0x1A,0x40, 0x8, +12 }, // 4425: skeakernetsM2; Electric Grand Piano
-    { 0x0B3F130,0x214F211, 0x02,0x40, 0xB, +12 }, // 4426: skeakernetsM2; Electric Grand Piano
-    { 0x0E5B111,0x0B8F211, 0x9C,0x80, 0x0, +0 }, // 4427: skeakernetsM4; 
-    { 0x0E7C21C,0x0B8F301, 0x3A,0x80, 0x1, +0 }, // 4428: skeakernetsM5; 
-    { 0x0F5B111,0x0D8F211, 0x1B,0x80, 0x0, +0 }, // 4429: skeakernetsM5; 
-    { 0x30AF231,0x1F5D130, 0x87,0x00, 0xA, +12 }, // 4430: skeakernetsM6; Harpsichord
-    { 0x056F101,0x177F111, 0x46,0x02, 0x6, +0 }, // 4431: skeakernetsM7; 
-    { 0x287F626,0x0E4F231, 0x4E,0x00, 0x9, +0 }, // 4432: skeakernetsM8; Celesta
-    { 0x004A61A,0x004F601, 0x27,0x0A, 0x2, +0 }, // 4433: skeakernetsM10; 
-    { 0x0F6F614,0x0F7E501, 0x23,0x00, 0x0, +0 }, // 4434: skeakernetsM12; 
-    { 0x093F614,0x053F410, 0x1F,0x00, 0x8, +12 }, // 4435: skeakernetsM13; Xylophone
-    { 0x0B3D405,0x0B4C201, 0x94,0x13, 0x4, +0 }, // 4436: skeakernetsM14; 
-    { 0x082D305,0x0E3A301, 0x4F,0x8A, 0x2, +0 }, // 4437: skeakernetsM14; 
-    { 0x1109130,0x3B5F321, 0x52,0x80, 0x8, +12 }, // 4438: skeakernetsM15; * Dulcimer
-    { 0x1109130,0x3B5F321, 0x52,0x80, 0x8, +12 }, // 4439: skeakernetsM15; * Dulcimer
-    { 0x116B1A2,0x117D160, 0x88,0x80, 0x7, +12 }, // 4440: skeakernetsM16; Hammond Organ
-    { 0x005F1B0,0x036F496, 0x00,0x00, 0x5, +0 }, // 4441: skeakernetsM17; Percussive Organ
-    { 0x005F170,0x036F415, 0x40,0x17, 0x9, +0 }, // 4442: skeakernetsM17; Percussive Organ
-    { 0x018AA70,0x0088AB1, 0x44,0x07, 0x4, +0 }, // 4443: skeakernetsM18; 
-    { 0x118AA70,0x0088AB1, 0x4B,0x07, 0x4, +12 }, // 4444: skeakernetsM18; 
-    { 0x1043030,0x1145431, 0x92,0x80, 0xD, +12 }, // 4445: skeakernetsM19; Church Organ
-    { 0x1045033,0x1145430, 0x92,0x80, 0xB, +0 }, // 4446: skeakernetsM19; Church Organ
-    { 0x015A220,0x1264131, 0x48,0x00, 0x6, +12 }, // 4447: skeakernetsM21; Accordion
-    { 0x1158220,0x1264631, 0x4A,0x00, 0x6, +12 }, // 4448: skeakernetsM21; Accordion
-    { 0x405FFA1,0x0096F22, 0x1F,0x80, 0x4, +0 }, // 4449: skeakernetsM22; 
-    { 0x107F020,0x2055231, 0x92,0x00, 0x8, +12 }, // 4450: skeakernetsM23; Tango Accordion
-    { 0x107F020,0x2055231, 0x92,0x00, 0x0, +12 }, // 4451: skeakernetsM23; Tango Accordion
-    { 0x274F302,0x0B8F301, 0x9E,0x80, 0xA, +0 }, // 4452: skeakernetsM24; 
-    { 0x3749401,0x2B8D301, 0x9C,0x80, 0xA, +0 }, // 4453: skeakernetsM24; 
-    { 0x3E5F132,0x1E4F231, 0x92,0x00, 0x6, +0 }, // 4454: skeakernetsM25; Acoustic Guitar (steel)
-    { 0x01FF123,0x188F200, 0xDD,0x00, 0x6, +12 }, // 4455: skeakernetsM26; Electric Guitar (jazz)
-    { 0x132ED10,0x3E7D210, 0x87,0x05, 0x6, +12 }, // 4456: skeakernetsM27; * Electric Guitar (clean)
-    { 0x332ED11,0x1E7D210, 0x80,0x40, 0x2, +12 }, // 4457: skeakernetsM27; * Electric Guitar (clean)
-    { 0x0F4E430,0x0F5F330, 0x92,0x80, 0x8, +12 }, // 4458: skeakernetsM28; Electric Guitar (muted)
-    { 0x1E6F131,0x1C9F052, 0x00,0x00, 0x4, +0 }, // 4459: skeakernetsM29; Overdriven Guitar
-    { 0x0F7F101,0x3F9F044, 0x48,0x45, 0xA, +0 }, // 4460: skeakernetsM30; Distortion Guitar
-    { 0x087B120,0x3A9F021, 0x48,0x05, 0x8, +12 }, // 4461: skeakernetsM30; Distortion Guitar
-    { 0x0D78134,0x0387632, 0x1C,0x00, 0xC, +12 }, // 4462: skeakernetsM31; * Guitar Harmonics
-    { 0x020C320,0x0E6C1B0, 0x0F,0x00, 0x0, +12 }, // 4463: skeakernetsM32; Acoustic Bass
-    { 0x0FFF030,0x0F8F131, 0x9D,0x00, 0xA, +12 }, // 4464: skeakernetsM33; Electric Bass (finger)
-    { 0x026AA20,0x0D7F131, 0xCF,0x80, 0xA, +12 }, // 4465: skeakernetsM34; Electric Bass (pick)
-    { 0x0007010,0x0F6B110, 0x1A,0x00, 0x8, +12 }, // 4466: skeakernetsM35; Fretless Bass
-    { 0x2268730,0x0D8F231, 0x8F,0x40, 0xA, +0 }, // 4467: skeakernetsM36; * Slap Bass 1
-    { 0x0278A30,0x2B8F319, 0x09,0x97, 0xA, +12 }, // 4468: skeakernetsM36; * Slap Bass 1
-    { 0x1169131,0x0D8F231, 0x8B,0x02, 0x2, +0 }, // 4469: skeakernetsM37; Slap Bass 2
-    { 0x217F030,0x2D8F319, 0x93,0x97, 0xA, +0 }, // 4470: skeakernetsM37; Slap Bass 2
-    { 0x2257020,0x2266161, 0x95,0x00, 0xA, +0 }, // 4471: skeakernetsM40; Violin
-    { 0x2446070,0x0154131, 0x8F,0x00, 0xA, +0 }, // 4472: skeakernetsM41; Viola
-    { 0x214D070,0x1175222, 0x0F,0x80, 0x2, +0 }, // 4473: skeakernetsM42; Cello
-    { 0x211C170,0x1156020, 0x8A,0x00, 0x6, +12 }, // 4474: skeakernetsM43; Contrabass
-    { 0x201C3F0,0x1058361, 0x89,0x40, 0x6, +0 }, // 4475: skeakernetsM44; Tremolo Strings
-    { 0x101B370,0x0059360, 0x89,0x40, 0x6, +12 }, // 4476: skeakernetsM44; Tremolo Strings
-    { 0x0848521,0x074C411, 0x69,0x00, 0xA, +0 }, // 4477: skeakernetsM45; 
-    { 0x074A201,0x0356411, 0x29,0x00, 0xA, +0 }, // 4478: skeakernetsM45; 
-    { 0x0F5F314,0x0F5F301, 0x6E,0x00, 0x4, +0 }, // 4479: skeakernetsM46; Orchestral Harp
-    { 0x1C7A601,0x0B3D210, 0x50,0x00, 0xA, +0 }, // 4480: skeakernetsM47; * Timpani
-    { 0x033F031,0x21554A0, 0xA6,0x00, 0xC, +0 }, // 4481: skeakernetsM48; 
-    { 0x033F031,0x21565A0, 0xA6,0x00, 0xC, +0 }, // 4482: skeakernetsM48; 
-    { 0x0059061,0x10555A1, 0x5B,0x80, 0x0, +0 }, // 4483: skeakernetsM49; String Ensemble 2
-    { 0x3059060,0x1055521, 0x67,0x80, 0x0, +0 }, // 4484: skeakernetsM49; String Ensemble 2
-    { 0x20569A1,0x20266F1, 0x9A,0x00, 0xA, -12 }, // 4485: skeakernetsM50; Synth Strings 1
-    { 0x20569A1,0x20266F1, 0x9A,0x00, 0xA, -12 }, // 4486: skeakernetsM50; Synth Strings 1
-    { 0x0031121,0x1046120, 0x58,0x80, 0x0, +12 }, // 4487: skeakernetsM51; Synth Strings 2
-    { 0x2331120,0x1364120, 0x8D,0x80, 0x8, +12 }, // 4488: skeakernetsM51; Synth Strings 2
-    { 0x0057F60,0x0056F21, 0x9C,0x00, 0xA, +12 }, // 4489: skeakernetsM52; 
-    { 0x0057F20,0x0054F61, 0x9C,0x00, 0xA, +12 }, // 4490: skeakernetsM52; 
-    { 0x239B420,0x0076121, 0x50,0x00, 0x6, +0 }, // 4491: skeakernetsM53; 
-    { 0x139B462,0x00D7161, 0x91,0x14, 0x0, +0 }, // 4492: skeakernetsM53; 
-    { 0x05470F0,0x07460B0, 0x5A,0x80, 0x0, +12 }, // 4493: skeakernetsM54; Synth Voice
-    { 0x054A0F0,0x07460B0, 0x5E,0x80, 0x0, +12 }, // 4494: skeakernetsM54; Synth Voice
-    { 0x2436110,0x1147211, 0x90,0x00, 0xC, +0 }, // 4495: skeakernetsM55; Orchestra Hit
-    { 0x1436191,0x1455311, 0x8F,0x00, 0xC, +12 }, // 4496: skeakernetsM55; Orchestra Hit
-    { 0x0177561,0x0097F21, 0x94,0x01, 0xE, +0 }, // 4497: skeakernetsM56; 
-    { 0x0374130,0x02BA260, 0x1C,0x00, 0xC, +12 }, // 4498: skeakernetsM57; Trombone
-    { 0x2385073,0x2177434, 0x98,0x00, 0x2, -12 }, // 4499: skeakernetsM59; Muted Trumpet
-    { 0x026B020,0x0056120, 0x26,0x00, 0x8, +12 }, // 4500: skeakernetsM60; French Horn
-    { 0x026B020,0x0055120, 0x26,0x00, 0x8, +12 }, // 4501: skeakernetsM60; French Horn
-    { 0x1156020,0x1365130, 0x8E,0x05, 0xC, +12 }, // 4502: skeakernetsM61; Brass Section
-    { 0x1177030,0x1368131, 0x92,0x05, 0xC, +12 }, // 4503: skeakernetsM61; Brass Section
-    { 0x2A68120,0x1979120, 0x4D,0x00, 0xC, +12 }, // 4504: skeakernetsM62; Synth Brass 1
-    { 0x2A68120,0x1979120, 0x8C,0x00, 0xA, +12 }, // 4505: skeakernetsM62; Synth Brass 1
-    { 0x2A68130,0x1976130, 0x4D,0x00, 0xC, +12 }, // 4506: skeakernetsM63; Synth Bass 2
-    { 0x0F37010,0x1F65051, 0x51,0x04, 0xA, +12 }, // 4507: skeakernetsM64; 
-    { 0x1067020,0x1165230, 0x89,0x00, 0x6, +12 }, // 4508: skeakernetsM65; Alto Sax
-    { 0x00B9820,0x10B5370, 0x4A,0x00, 0xA, +12 }, // 4509: skeakernetsM66; Tenor Sax
-    { 0x10B9020,0x11B6330, 0x85,0x00, 0xA, +12 }, // 4510: skeakernetsM67; Baritone Sax
-    { 0x0235030,0x0076C62, 0x58,0x00, 0xA, +12 }, // 4511: skeakernetsM68; Oboe
-    { 0x055D530,0x0076C71, 0x17,0x0D, 0x6, +12 }, // 4512: skeakernetsM68; Oboe
-    { 0x0077821,0x1074331, 0x4F,0x00, 0x8, +0 }, // 4513: skeakernetsM69; English Horn
-    { 0x0199030,0x01B6132, 0x91,0x80, 0xA, +12 }, // 4514: skeakernetsM70; Bassoon
-    { 0x1177532,0x0174370, 0x99,0x00, 0xA, +12 }, // 4515: skeakernetsM71; Clarinet
-    { 0x08D6EF1,0x02A3571, 0xC0,0x00, 0xE, +0 }, // 4516: skeakernetsM72; Piccolo
-    { 0x08850A1,0x02A5561, 0xA6,0x00, 0x8, +0 }, // 4517: skeakernetsM73; Flute
-    { 0x1176522,0x0277421, 0x5A,0x00, 0x6, +0 }, // 4518: skeakernetsM74; Recorder
-    { 0x1273471,0x01745B0, 0x8D,0x00, 0x4, +12 }, // 4519: skeakernetsM75; Pan Flute
-    { 0x2F36750,0x0F78500, 0x17,0x00, 0x2, +12 }, // 4520: skeakernetsM75; Pan Flute
-    { 0x00457E1,0x0375760, 0xA8,0x00, 0xE, +12 }, // 4521: skeakernetsM76; Bottle Blow
-    { 0x0545C67,0x0776860, 0x00,0x0D, 0xE, +12 }, // 4522: skeakernetsM76; Bottle Blow
-    { 0x3345731,0x05D67E1, 0x28,0x00, 0xE, +0 }, // 4523: skeakernetsM77; * Shakuhachi
-    { 0x3142531,0x06D6371, 0x1E,0x00, 0xE, +0 }, // 4524: skeakernetsM77; * Shakuhachi
-    { 0x00581A1,0x0295230, 0x37,0x00, 0x6, +12 }, // 4525: skeakernetsM79; Ocarina
-    { 0x203FF22,0x00FFF21, 0x59,0x0B, 0x4, +0 }, // 4526: skeakernetsM80; 
-    { 0x303FF22,0x00FFF21, 0x9E,0x0B, 0x4, +0 }, // 4527: skeakernetsM80; 
-    { 0x39BC120,0x368C030, 0x61,0x06, 0x0, +0 }, // 4528: skeakernetsM81; Lead 2 (sawtooth)
-    { 0x3ABB120,0x308F130, 0x57,0x06, 0x0, +0 }, // 4529: skeakernetsM81; Lead 2 (sawtooth)
-    { 0x33357F0,0x00767E0, 0x28,0x00, 0x0, +12 }, // 4530: skeakernetsM82; Lead 3 (calliope)
-    { 0x02B7320,0x12BF131, 0x40,0x00, 0x8, +12 }, // 4531: skeakernetsM84; Lead 5 (charang)
-    { 0x129F121,0x009F421, 0x8F,0x80, 0xA, +0 }, // 4532: skeakernetsM87; 
-    { 0x209F121,0x109F121, 0x57,0x40, 0x0, +0 }, // 4533: skeakernetsM87; 
-    { 0x2946374,0x005A0A1, 0xA5,0x00, 0x2, +0 }, // 4534: skeakernetsM88; 
-    { 0x2055F02,0x004FFE1, 0xA8,0x00, 0x0, +0 }, // 4535: skeakernetsM88; 
-    { 0x00521A1,0x0053360, 0xC0,0x00, 0x9, +12 }, // 4536: skeakernetsM89; Pad 2 (warm)
-    { 0x0052161,0x00533E0, 0xC0,0x00, 0x7, +12 }, // 4537: skeakernetsM89; Pad 2 (warm)
-    { 0x2A5A120,0x196A120, 0x95,0x05, 0xC, +12 }, // 4538: skeakernetsM90; Pad 3 (polysynth)
-    { 0x2A5A120,0x196A120, 0x95,0x05, 0xC, +12 }, // 4539: skeakernetsM90; Pad 3 (polysynth)
-    { 0x005F0E0,0x0548160, 0x44,0x00, 0xB, +12 }, // 4540: skeakernetsM91; Pad 4 (choir)
-    { 0x105F0E0,0x0547160, 0x44,0x80, 0xB, +12 }, // 4541: skeakernetsM91; Pad 4 (choir)
-    { 0x0336183,0x05452E0, 0xA7,0x00, 0x6, +12 }, // 4542: skeakernetsM92; Pad 5 (bowed glass)
-    { 0x13351A3,0x05452E0, 0xA7,0x00, 0x0, +12 }, // 4543: skeakernetsM92; Pad 5 (bowed glass)
-    { 0x2529082,0x1534340, 0x9D,0x80, 0xC, +12 }, // 4544: skeakernetsM93; Pad 6 (metal)
-    { 0x2529081,0x0534340, 0x9D,0x80, 0xC, +12 }, // 4545: skeakernetsM93; Pad 6 (metal)
-    { 0x123C173,0x0255131, 0x9F,0x03, 0x0, +0 }, // 4546: skeakernetsM94; 
-    { 0x124C172,0x0255131, 0x9A,0x43, 0x6, +0 }, // 4547: skeakernetsM94; 
-    { 0x1521161,0x1632060, 0x90,0x80, 0x8, +12 }, // 4548: skeakernetsM95; Pad 8 (sweep)
-    { 0x1521160,0x1632060, 0x90,0x80, 0x8, +12 }, // 4549: skeakernetsM95; Pad 8 (sweep)
-    { 0x157B260,0x019F803, 0x04,0x40, 0x7, +12 }, // 4550: skeakernetsM96; FX 1 (rain)
-    { 0x157B260,0x0145112, 0x04,0x40, 0x7, +12 }, // 4551: skeakernetsM96; FX 1 (rain)
-    { 0x2322122,0x0133221, 0x8C,0x92, 0x6, +0 }, // 4552: skeakernetsM97; 
-    { 0x0032121,0x0133122, 0x93,0x48, 0x2, +7 }, // 4553: skeakernetsM97; 
-    { 0x074F624,0x0248302, 0xC0,0x00, 0x0, -12 }, // 4554: skeakernetsM98; * FX 3 (crystal)
-    { 0x3D2C091,0x1D2D130, 0x8E,0x05, 0x0, +12 }, // 4555: skeakernetsM99; FX 4 (atmosphere)
-    { 0x0D2D090,0x1D23131, 0x8E,0x05, 0x0, +12 }, // 4556: skeakernetsM99; FX 4 (atmosphere)
-    { 0x2F39054,0x0F3C240, 0xD2,0x00, 0x8, +12 }, // 4557: skeakernetsM100; FX 5 (brightness)
-    { 0x1F39010,0x0F2C240, 0x1A,0x00, 0x6, +12 }, // 4558: skeakernetsM100; FX 5 (brightness)
-    { 0x05213E1,0x2131371, 0x1A,0x88, 0x7, +0 }, // 4559: skeakernetsM101; FX 6 (goblin)
-    { 0x0521363,0x2131331, 0x1A,0x8D, 0x7, +0 }, // 4560: skeakernetsM101; FX 6 (goblin)
-    { 0x0B67060,0x0928031, 0x9C,0x08, 0xA, +12 }, // 4561: skeakernetsM102; FX 7 (echo drops)
-    { 0x0057F20,0x0038F61, 0x9C,0x08, 0xA, +12 }, // 4562: skeakernetsM102; FX 7 (echo drops)
-    { 0x0025510,0x1728202, 0x18,0x00, 0xE, +12 }, // 4563: skeakernetsM103; * FX 8 (star-theme)
-    { 0x0B37120,0x0F38224, 0x07,0x00, 0x2, +12 }, // 4564: skeakernetsM104; Sitar
-    { 0x352F421,0x1E49423, 0x11,0x00, 0x8, +0 }, // 4565: skeakernetsM107; Koto
-    { 0x0328413,0x073B410, 0xA1,0x00, 0xF, +12 }, // 4566: skeakernetsM108; Kalimba
-    { 0x303A130,0x0266221, 0x1E,0x00, 0xE, +0 }, // 4567: skeakernetsM110; Fiddle
-    { 0x0136030,0x1169130, 0x12,0x80, 0x8, +12 }, // 4568: skeakernetsM111; Shanai
-    { 0x032A115,0x172B212, 0x00,0x80, 0x1, +5 }, // 4569: skeakernetsM112; Tinkle Bell
-    { 0x2046702,0x005A901, 0x4A,0x00, 0x6, +0 }, // 4570: skeakernetsM114; Steel Drums
-    { 0x0045B03,0x005A901, 0x4A,0x00, 0x6, +12 }, // 4571: skeakernetsM114; Steel Drums
-    { 0x0D1F814,0x078F611, 0x44,0x00, 0x6, +12 }, // 4572: skeakernetsM115; Woodblock
-    { 0x0C8A820,0x0B7E601, 0x0B,0x00, 0x0, +0 }, // 4573: skeakernetsM117; Melodic Tom
-    { 0x215F590,0x0E5D310, 0x08,0x00, 0x8, -12 }, // 4574: skeakernetsM118; 
-    { 0x031410C,0x31D1110, 0x8F,0x80, 0xE, +0 }, // 4575: skeakernetsM119; Reverse Cymbal
-    { 0x1B37720,0x3F74533, 0x00,0x00, 0xE, +12 }, // 4576: skeakernetsM120; Guitar Fret Noise
-    { 0x00437D2,0x0343751, 0x9C,0x07, 0xC, +0 }, // 4577: skeakernetsM121; Breath Noise
-    { 0x003EBD7,0x06845D8, 0xD4,0x00, 0x7, +12 }, // 4578: skeakernetsM123; Bird Tweet
-    { 0x17ADAE0,0x314B009, 0x48,0x40, 0x4, -24 }, // 4579: skeakernetsM124; Telephone Ring
-    { 0x17ADAE0,0x314B009, 0x48,0x40, 0x4, -20 }, // 4580: skeakernetsM124; Telephone Ring
-    { 0x2117E30,0x3112120, 0x00,0x00, 0xC, -24 }, // 4581: skeakernetsM125; Helicopter
-    { 0x2F0F00C,0x0E6F600, 0x00,0x00, 0xE, +0 }, // 4582: skeakernetsM127; Gun Shot
-    { 0x057FB00,0x046F800, 0x00,0x00, 0x0, +12 }, // 4583: skeakernetsP35; Acoustic Bass Drum
-    { 0x267FD00,0x078F801, 0x80,0x00, 0xF, +12 }, // 4584: skeakernetsP37; Slide Stick
-    { 0x0F0F001,0x0F5F800, 0x00,0x00, 0xC, +12 }, // 4585: skeakernetsP37; Slide Stick
-    { 0x015FA07,0x017F700, 0x02,0x00, 0xE, +9 }, // 4586: skeakernetsP38; Acoustic Snare
-    { 0x017FA03,0x015F705, 0x00,0x0A, 0xF, +0 }, // 4587: skeakernetsP38; Acoustic Snare
-    { 0x2FAF5E1,0x0F895FF, 0x00,0x00, 0xE, +12 }, // 4588: skeakernetsP39; Hand Clap
-    { 0x015F807,0x017F900, 0x02,0x00, 0xE, -3 }, // 4589: skeakernetsP40; Electric Snare
-    { 0x017F602,0x015F505, 0x00,0x0A, 0xF, -12 }, // 4590: skeakernetsP40; Electric Snare
-    { 0x008F600,0x004F600, 0x0C,0x00, 0x8, +0 }, // 4591: skeakernetsP41; skeakernetsP43; skeakernetsP45; skeakernetsP47; skeakernetsP48; skeakernetsP50; 
-    { 0x25ED800,0x206F40A, 0x07,0x00, 0xC, +0 }, // 4592: skeakernetsP42; Closed High-Hat
-    { 0x25E7803,0x32B8A0A, 0x00,0x00, 0xF, +12 }, // 4593: skeakernetsP44; Pedal High Hat
-    { 0x201C700,0x233F90A, 0x45,0x00, 0xE, +12 }, // 4594: skeakernetsP46; Open High Hat
-    { 0x292F108,0x354F201, 0x00,0x00, 0x8, +12 }, // 4595: skeakernetsP49; skeakernetsP57; Crash Cymbal 1
-    { 0x292F108,0x354F201, 0x00,0x00, 0x8, +12 }, // 4596: skeakernetsP49; Crash Cymbal 1
-    { 0x212FA03,0x305FE02, 0x82,0x80, 0xA, +12 }, // 4597: skeakernetsP51; Ride Cymbal 1
-    { 0x280E009,0x334D700, 0x00,0x00, 0x8, +12 }, // 4598: skeakernetsP52; Chinses Cymbal
-    { 0x280E009,0x334D500, 0x00,0x00, 0xA, +11 }, // 4599: skeakernetsP52; Chinses Cymbal
-    { 0x2E1F119,0x3F3F11B, 0x80,0x03, 0x8, +0 }, // 4600: skeakernetsP53; Ride Bell
-    { 0x2777603,0x3679601, 0x87,0x00, 0xE, +12 }, // 4601: skeakernetsP54; Tambourine
-    { 0x270F604,0x3A3C507, 0x80,0x00, 0xE, +12 }, // 4602: skeakernetsP55; Splash Cymbal
-    { 0x366F905,0x099F701, 0x00,0x00, 0xC, +12 }, // 4603: skeakernetsP56; Cowbell
-    { 0x292F108,0x354F201, 0x00,0x00, 0x8, +12 }, // 4604: skeakernetsP57; Crash Cymbal 2
-    { 0x305F220,0x056D50F, 0x80,0x00, 0xE, +0 }, // 4605: skeakernetsP58; Vibraslap
-    { 0x212FD03,0x305FD02, 0x81,0x80, 0xA, +12 }, // 4606: skeakernetsP59; Ride Cymbal 2
-    { 0x256DB00,0x026FA00, 0x07,0x00, 0x8, +12 }, // 4607: skeakernetsP60; skeakernetsP61; High Bongo
-    { 0x056FB00,0x017F800, 0x80,0x00, 0xB, +12 }, // 4608: skeakernetsP62; Mute High Conga
-    { 0x056FA00,0x017F500, 0x80,0x00, 0xB, +12 }, // 4609: skeakernetsP63; skeakernetsP64; Low Conga
-    { 0x09A600F,0x0FFA590, 0x08,0xC0, 0xE, +12 }, // 4610: skeakernetsP70; Maracas
-    { 0x009F020,0x37DA588, 0x07,0x00, 0xA, +12 }, // 4611: skeakernetsP71; Short Whistle
-    { 0x00FC020,0x32DA5A8, 0x07,0x00, 0xA, +12 }, // 4612: skeakernetsP72; Long Whistle
-    { 0x106F680,0x016F610, 0x00,0x00, 0xC, +0 }, // 4613: skeakernetsP73; 
-    { 0x20F6F00,0x20F6F00, 0x00,0x00, 0x0, +0 }, // 4614: skeakernetsP73; 
-    { 0x106F680,0x016F610, 0x00,0x00, 0x6, +0 }, // 4615: skeakernetsP74; 
-    { 0x20F4F00,0x20F4F00, 0x00,0x00, 0x6, +0 }, // 4616: skeakernetsP74; 
-    { 0x0D1F815,0x078F512, 0x44,0x00, 0x8, +12 }, // 4617: skeakernetsP75; Claves
-    { 0x1DC5D01,0x06FF79F, 0x0B,0x00, 0xA, +0 }, // 4618: skeakernetsP78; Mute Cuica
-    { 0x1C7C900,0x05FF49F, 0x07,0x00, 0xA, +0 }, // 4619: skeakernetsP79; Open Cuica
-    { 0x160F2C6,0x07AF4D4, 0x4F,0x80, 0x8, +12 }, // 4620: skeakernetsP80; Mute Triangle
-    { 0x160F286,0x0B7F294, 0x4F,0x80, 0x8, +12 }, // 4621: skeakernetsP81; Open Triangle
+    { 0x253E132,0x1F4F131, 0x9A,0x01, 0xC, +0 }, // 4422: skeakernetsM0; Acoustic Grand Piano
+    { 0x2F3F031,0x1F4F130, 0x52,0x00, 0xC, +12 }, // 4423: skeakernetsM1; Bright Acoustic Piano
+    { 0x3B3E131,0x0F4F130, 0x1A,0x47, 0x8, +12 }, // 4424: skeakernetsM2; Electric Grand Piano
+    { 0x0B3F130,0x214F211, 0x02,0x47, 0xB, +12 }, // 4425: skeakernetsM2; Electric Grand Piano
+    { 0x273FA30,0x1F4D112, 0x80,0x04, 0xC, +0 }, // 4426: skeakernetsM3; Honky-tonk Piano
+    { 0x273FA30,0x1F4D113, 0x80,0x04, 0xC, +0 }, // 4427: skeakernetsM3; Honky-tonk Piano
+    { 0x0E5B111,0x0B8F211, 0x9C,0x80, 0x0, +0 }, // 4428: skeakernetsM4; 
+    { 0x0E7C21C,0x0B8F301, 0x3A,0x80, 0x1, +0 }, // 4429: skeakernetsM5; 
+    { 0x0F5B111,0x0D8F211, 0x1B,0x80, 0x0, +0 }, // 4430: skeakernetsM5; 
+    { 0x30AF231,0x1F5D130, 0x87,0x00, 0xA, +12 }, // 4431: skeakernetsM6; Harpsichord
+    { 0x056F101,0x177F111, 0x46,0x02, 0x6, +0 }, // 4432: skeakernetsM7; 
+    { 0x287F626,0x0E4F231, 0x4E,0x00, 0x9, +0 }, // 4433: skeakernetsM8; Celesta
+    { 0x0E3F219,0x0E2C111, 0x54,0x06, 0xA, +0 }, // 4434: skeakernetsM9; 
+    { 0x0045617,0x004F601, 0x21,0x08, 0x2, +0 }, // 4435: skeakernetsM10; 
+    { 0x004A61A,0x004F601, 0x27,0x08, 0x2, +0 }, // 4436: skeakernetsM10; 
+    { 0x1F6F395,0x0F6F281, 0x5E,0x00, 0x0, +0 }, // 4437: skeakernetsM11; 
+    { 0x0F6F614,0x0F7E501, 0x23,0x00, 0x0, +0 }, // 4438: skeakernetsM12; 
+    { 0x093F614,0x053F410, 0x1F,0x00, 0x8, +12 }, // 4439: skeakernetsM13; Xylophone
+    { 0x2B3D405,0x0B4C202, 0x54,0x0D, 0x6, +0 }, // 4440: skeakernetsM14; 
+    { 0x182D307,0x0E3A302, 0x97,0x8A, 0x6, +0 }, // 4441: skeakernetsM14; 
+    { 0x1109130,0x3B5F321, 0x52,0x85, 0x8, +12 }, // 4442: skeakernetsM15; * Dulcimer
+    { 0x1109130,0x3B5F321, 0x52,0x85, 0x8, +12 }, // 4443: skeakernetsM15; * Dulcimer
+    { 0x116B1A2,0x117D160, 0x88,0x80, 0x7, +12 }, // 4444: skeakernetsM16; Hammond Organ
+    { 0x005F1B0,0x036F496, 0x00,0x00, 0x5, +0 }, // 4445: skeakernetsM17; Percussive Organ
+    { 0x005F170,0x036F415, 0x40,0x17, 0x9, +0 }, // 4446: skeakernetsM17; Percussive Organ
+    { 0x018AA70,0x0088AB1, 0x44,0x07, 0x4, +0 }, // 4447: skeakernetsM18; 
+    { 0x118AA70,0x0088AB1, 0x4B,0x07, 0x4, +12 }, // 4448: skeakernetsM18; 
+    { 0x1043030,0x1145431, 0x92,0x80, 0xD, +12 }, // 4449: skeakernetsM19; Church Organ
+    { 0x1045033,0x1145430, 0x92,0x80, 0xB, +0 }, // 4450: skeakernetsM19; Church Organ
+    { 0x025A721,0x1264132, 0x4D,0x05, 0x6, +0 }, // 4451: skeakernetsM21; Accordion
+    { 0x1258621,0x1264633, 0x4F,0x05, 0x6, +0 }, // 4452: skeakernetsM21; Accordion
+    { 0x3077F21,0x3096F23, 0x84,0x17, 0xB, +0 }, // 4453: skeakernetsM22; 
+    { 0x105FFA4,0x0096F22, 0x16,0x80, 0x8, -12 }, // 4454: skeakernetsM22; 
+    { 0x107F020,0x2055231, 0x92,0x07, 0x8, +12 }, // 4455: skeakernetsM23; Tango Accordion
+    { 0x107F020,0x2055231, 0x92,0x07, 0x0, +12 }, // 4456: skeakernetsM23; Tango Accordion
+    { 0x274F302,0x0B8F301, 0x9E,0x80, 0xA, +0 }, // 4457: skeakernetsM24; 
+    { 0x3749401,0x2B8D301, 0x9C,0x80, 0xA, +0 }, // 4458: skeakernetsM24; 
+    { 0x3E5F132,0x1E4F231, 0x92,0x00, 0x6, +0 }, // 4459: skeakernetsM25; Acoustic Guitar (steel)
+    { 0x01FF123,0x188F200, 0xDD,0x00, 0x6, +12 }, // 4460: skeakernetsM26; Electric Guitar (jazz)
+    { 0x132ED10,0x3E7D210, 0x87,0x05, 0x6, +12 }, // 4461: skeakernetsM27; * Electric Guitar (clean)
+    { 0x332ED11,0x1E7D210, 0x80,0x40, 0x2, +12 }, // 4462: skeakernetsM27; * Electric Guitar (clean)
+    { 0x0F4E430,0x0F5F330, 0x92,0x80, 0x8, +12 }, // 4463: skeakernetsM28; Electric Guitar (muted)
+    { 0x1E6F131,0x1C9F052, 0x00,0x00, 0x4, +0 }, // 4464: skeakernetsM29; Overdriven Guitar
+    { 0x0F7F101,0x3F9F044, 0x48,0x45, 0xA, +0 }, // 4465: skeakernetsM30; Distortion Guitar
+    { 0x087B120,0x3A9F021, 0x48,0x05, 0x8, +12 }, // 4466: skeakernetsM30; Distortion Guitar
+    { 0x0D78134,0x0387632, 0x1C,0x00, 0xC, +12 }, // 4467: skeakernetsM31; * Guitar Harmonics
+    { 0x020C320,0x0E6C1B0, 0x0F,0x00, 0x0, +12 }, // 4468: skeakernetsM32; Acoustic Bass
+    { 0x0FFF030,0x0F8F131, 0x9D,0x00, 0xA, +12 }, // 4469: skeakernetsM33; Electric Bass (finger)
+    { 0x026AA20,0x0D7F131, 0xCF,0x80, 0xA, +12 }, // 4470: skeakernetsM34; Electric Bass (pick)
+    { 0x0007010,0x0F6B110, 0x1A,0x00, 0x8, +12 }, // 4471: skeakernetsM35; Fretless Bass
+    { 0x2268730,0x0D8F231, 0x8F,0x40, 0xA, +0 }, // 4472: skeakernetsM36; * Slap Bass 1
+    { 0x0278A30,0x2B8F319, 0x09,0x97, 0xA, +12 }, // 4473: skeakernetsM36; * Slap Bass 1
+    { 0x1169131,0x0D8F231, 0x8B,0x02, 0x2, +0 }, // 4474: skeakernetsM37; Slap Bass 2
+    { 0x217F030,0x2D8F319, 0x93,0x97, 0xA, +0 }, // 4475: skeakernetsM37; Slap Bass 2
+    { 0x2257020,0x2266161, 0x95,0x00, 0xA, +0 }, // 4476: skeakernetsM40; Violin
+    { 0x2446070,0x0154131, 0x8F,0x00, 0xA, +0 }, // 4477: skeakernetsM41; Viola
+    { 0x214D070,0x1175222, 0x0F,0x80, 0x2, +0 }, // 4478: skeakernetsM42; Cello
+    { 0x211C170,0x1156020, 0x8A,0x00, 0x6, +12 }, // 4479: skeakernetsM43; Contrabass
+    { 0x201C3F0,0x1058361, 0x89,0x45, 0x6, +0 }, // 4480: skeakernetsM44; Tremolo Strings
+    { 0x101B370,0x0059360, 0x89,0x45, 0x6, +12 }, // 4481: skeakernetsM44; Tremolo Strings
+    { 0x0848521,0x074C411, 0x69,0x00, 0xA, +0 }, // 4482: skeakernetsM45; 
+    { 0x074A201,0x0356411, 0x29,0x00, 0xA, +0 }, // 4483: skeakernetsM45; 
+    { 0x0F5F314,0x0F5F301, 0x6E,0x00, 0x4, +0 }, // 4484: skeakernetsM46; Orchestral Harp
+    { 0x1C7A601,0x0B3D210, 0x50,0x00, 0xA, +0 }, // 4485: skeakernetsM47; * Timpani
+    { 0x033F031,0x21554A0, 0xA6,0x00, 0xC, +0 }, // 4486: skeakernetsM48; 
+    { 0x033F031,0x21565A0, 0xA6,0x00, 0xC, +0 }, // 4487: skeakernetsM48; 
+    { 0x0059061,0x10555A1, 0x5B,0x80, 0x0, +0 }, // 4488: skeakernetsM49; String Ensemble 2
+    { 0x3059020,0x1055521, 0x67,0x80, 0x0, +0 }, // 4489: skeakernetsM49; String Ensemble 2
+    { 0x1056922,0x20266B1, 0x9A,0x08, 0xA, -12 }, // 4490: skeakernetsM50; Synth Strings 1
+    { 0x1056922,0x20266B1, 0x9A,0x08, 0xA, -12 }, // 4491: skeakernetsM50; Synth Strings 1
+    { 0x0031121,0x1046120, 0x58,0x80, 0x0, +12 }, // 4492: skeakernetsM51; Synth Strings 2
+    { 0x2331120,0x1364120, 0x8D,0x80, 0x8, +12 }, // 4493: skeakernetsM51; Synth Strings 2
+    { 0x0057F60,0x0056F21, 0x9C,0x0F, 0xA, +12 }, // 4494: skeakernetsM52; 
+    { 0x0057F20,0x0054F61, 0x9C,0x0F, 0xA, +12 }, // 4495: skeakernetsM52; 
+    { 0x239B420,0x0076121, 0x50,0x05, 0x6, +0 }, // 4496: skeakernetsM53; 
+    { 0x139B462,0x00D7161, 0x91,0x14, 0x0, +0 }, // 4497: skeakernetsM53; 
+    { 0x05470F0,0x07460B0, 0x5A,0x80, 0x0, +12 }, // 4498: skeakernetsM54; Synth Voice
+    { 0x054A0F0,0x07460B0, 0x5E,0x80, 0x0, +12 }, // 4499: skeakernetsM54; Synth Voice
+    { 0x2436110,0x1147211, 0x90,0x00, 0xC, +0 }, // 4500: skeakernetsM55; Orchestra Hit
+    { 0x1436191,0x1455311, 0x8F,0x00, 0xC, +12 }, // 4501: skeakernetsM55; Orchestra Hit
+    { 0x017B561,0x0097F21, 0x94,0x04, 0xE, +0 }, // 4502: skeakernetsM56; 
+    { 0x0374130,0x02BA260, 0x1C,0x00, 0xC, +12 }, // 4503: skeakernetsM57; Trombone
+    { 0x2385073,0x2177434, 0x98,0x00, 0x2, -12 }, // 4504: skeakernetsM59; Muted Trumpet
+    { 0x026B020,0x0056120, 0x26,0x00, 0x8, +12 }, // 4505: skeakernetsM60; French Horn
+    { 0x026B020,0x0055120, 0x26,0x00, 0x8, +12 }, // 4506: skeakernetsM60; French Horn
+    { 0x1156020,0x1365130, 0x8E,0x05, 0xC, +12 }, // 4507: skeakernetsM61; Brass Section
+    { 0x1177030,0x1368131, 0x92,0x05, 0xC, +12 }, // 4508: skeakernetsM61; Brass Section
+    { 0x2A68120,0x1979120, 0x4D,0x07, 0xC, +12 }, // 4509: skeakernetsM62; Synth Brass 1
+    { 0x2A68120,0x1979120, 0x8C,0x07, 0xA, +12 }, // 4510: skeakernetsM62; Synth Brass 1
+    { 0x2A68130,0x1976130, 0x4D,0x00, 0xC, +12 }, // 4511: skeakernetsM63; Synth Bass 2
+    { 0x0F37010,0x1F65051, 0x51,0x04, 0xA, +12 }, // 4512: skeakernetsM64; 
+    { 0x1067020,0x1165230, 0x89,0x00, 0x6, +12 }, // 4513: skeakernetsM65; Alto Sax
+    { 0x00B9820,0x10B5370, 0x4A,0x00, 0xA, +12 }, // 4514: skeakernetsM66; Tenor Sax
+    { 0x10B9020,0x11B6330, 0x85,0x00, 0xA, +12 }, // 4515: skeakernetsM67; Baritone Sax
+    { 0x0235030,0x0076C62, 0x58,0x08, 0xA, +12 }, // 4516: skeakernetsM68; Oboe
+    { 0x055D530,0x0076C71, 0x17,0x0D, 0x6, +12 }, // 4517: skeakernetsM68; Oboe
+    { 0x0077821,0x1074331, 0x4F,0x00, 0x8, +0 }, // 4518: skeakernetsM69; English Horn
+    { 0x0199030,0x01B6132, 0x91,0x80, 0xA, +12 }, // 4519: skeakernetsM70; Bassoon
+    { 0x1177532,0x0174370, 0x99,0x00, 0xA, +12 }, // 4520: skeakernetsM71; Clarinet
+    { 0x08D6EF1,0x02A3571, 0xC0,0x00, 0xE, +0 }, // 4521: skeakernetsM72; Piccolo
+    { 0x08860A1,0x02A6561, 0xA6,0x00, 0x8, +0 }, // 4522: skeakernetsM73; Flute
+    { 0x2176522,0x0277421, 0x5A,0x00, 0x6, +0 }, // 4523: skeakernetsM74; Recorder
+    { 0x1273471,0x01745B0, 0x8D,0x00, 0x4, +12 }, // 4524: skeakernetsM75; Pan Flute
+    { 0x2F36750,0x0F78500, 0x17,0x00, 0x2, +12 }, // 4525: skeakernetsM75; Pan Flute
+    { 0x00457E1,0x0375760, 0xA8,0x00, 0xE, +12 }, // 4526: skeakernetsM76; Bottle Blow
+    { 0x0545C67,0x0776860, 0x00,0x0D, 0xE, +12 }, // 4527: skeakernetsM76; Bottle Blow
+    { 0x3345731,0x05D67E1, 0x28,0x00, 0xE, +0 }, // 4528: skeakernetsM77; * Shakuhachi
+    { 0x3142531,0x06D6371, 0x1E,0x00, 0xE, +0 }, // 4529: skeakernetsM77; * Shakuhachi
+    { 0x00581A1,0x0295230, 0x37,0x00, 0x6, +12 }, // 4530: skeakernetsM79; Ocarina
+    { 0x203FF22,0x00FFF21, 0x59,0x0B, 0x4, +0 }, // 4531: skeakernetsM80; 
+    { 0x303FF22,0x00FFF21, 0x9E,0x0B, 0x4, +0 }, // 4532: skeakernetsM80; 
+    { 0x39BC120,0x368C030, 0x61,0x06, 0x0, +0 }, // 4533: skeakernetsM81; Lead 2 (sawtooth)
+    { 0x3ABB120,0x308F130, 0x57,0x06, 0x0, +0 }, // 4534: skeakernetsM81; Lead 2 (sawtooth)
+    { 0x33357F0,0x00767E0, 0x28,0x00, 0x0, +12 }, // 4535: skeakernetsM82; Lead 3 (calliope)
+    { 0x02B7320,0x12BF131, 0x40,0x00, 0x8, +12 }, // 4536: skeakernetsM84; Lead 5 (charang)
+    { 0x129F121,0x009F421, 0x8F,0x88, 0xA, +0 }, // 4537: skeakernetsM87; 
+    { 0x209F121,0x109F121, 0x57,0x48, 0x0, +0 }, // 4538: skeakernetsM87; 
+    { 0x2946374,0x005A0A1, 0xA5,0x00, 0x2, +0 }, // 4539: skeakernetsM88; 
+    { 0x2055F02,0x004FFE1, 0xA8,0x00, 0x0, +0 }, // 4540: skeakernetsM88; 
+    { 0x00521A1,0x0053360, 0xC0,0x00, 0x9, +12 }, // 4541: skeakernetsM89; Pad 2 (warm)
+    { 0x0052161,0x00533E0, 0xC0,0x00, 0x7, +12 }, // 4542: skeakernetsM89; Pad 2 (warm)
+    { 0x2A5A120,0x196A120, 0x95,0x05, 0xC, +12 }, // 4543: skeakernetsM90; Pad 3 (polysynth)
+    { 0x2A5A120,0x196A120, 0x95,0x05, 0xC, +12 }, // 4544: skeakernetsM90; Pad 3 (polysynth)
+    { 0x005F0E0,0x0548160, 0x44,0x00, 0xB, +12 }, // 4545: skeakernetsM91; Pad 4 (choir)
+    { 0x105F0E0,0x0547160, 0x44,0x80, 0xB, +12 }, // 4546: skeakernetsM91; Pad 4 (choir)
+    { 0x0336183,0x05452E0, 0xA7,0x00, 0x6, +12 }, // 4547: skeakernetsM92; Pad 5 (bowed glass)
+    { 0x13351A3,0x05452E0, 0xA7,0x00, 0x0, +12 }, // 4548: skeakernetsM92; Pad 5 (bowed glass)
+    { 0x2529082,0x1534340, 0x9D,0x80, 0xC, +12 }, // 4549: skeakernetsM93; Pad 6 (metal)
+    { 0x2529081,0x0534340, 0x9D,0x80, 0xC, +12 }, // 4550: skeakernetsM93; Pad 6 (metal)
+    { 0x123C173,0x0255131, 0x9F,0x03, 0x0, +0 }, // 4551: skeakernetsM94; 
+    { 0x124C172,0x0255131, 0x9A,0x43, 0x6, +0 }, // 4552: skeakernetsM94; 
+    { 0x1521161,0x1632060, 0x90,0x80, 0x8, +12 }, // 4553: skeakernetsM95; Pad 8 (sweep)
+    { 0x1521160,0x1632060, 0x90,0x80, 0x8, +12 }, // 4554: skeakernetsM95; Pad 8 (sweep)
+    { 0x157B260,0x019F803, 0x04,0x40, 0x7, +12 }, // 4555: skeakernetsM96; FX 1 (rain)
+    { 0x157B260,0x0145112, 0x04,0x40, 0x7, +12 }, // 4556: skeakernetsM96; FX 1 (rain)
+    { 0x2322122,0x0133221, 0x8C,0x92, 0x6, +0 }, // 4557: skeakernetsM97; 
+    { 0x0032121,0x0133122, 0x93,0x48, 0x2, +7 }, // 4558: skeakernetsM97; 
+    { 0x074F624,0x0249303, 0xC0,0x0D, 0x0, +0 }, // 4559: skeakernetsM98; * FX 3 (crystal)
+    { 0x074F624,0x0249303, 0xC0,0x0D, 0x0, +0 }, // 4560: skeakernetsM98; * FX 3 (crystal)
+    { 0x3D2C091,0x1D2D130, 0x8E,0x05, 0x0, +12 }, // 4561: skeakernetsM99; FX 4 (atmosphere)
+    { 0x0D2D090,0x1D23131, 0x8E,0x05, 0x0, +12 }, // 4562: skeakernetsM99; FX 4 (atmosphere)
+    { 0x2F39054,0x0F3C240, 0xD2,0x00, 0x8, +12 }, // 4563: skeakernetsM100; FX 5 (brightness)
+    { 0x1F39010,0x0F2C240, 0x1A,0x00, 0x6, +12 }, // 4564: skeakernetsM100; FX 5 (brightness)
+    { 0x05213E1,0x2131371, 0x1A,0x88, 0x7, +0 }, // 4565: skeakernetsM101; FX 6 (goblin)
+    { 0x0521363,0x2131331, 0x1A,0x8D, 0x7, +0 }, // 4566: skeakernetsM101; FX 6 (goblin)
+    { 0x0B67060,0x0928031, 0x9C,0x11, 0xA, +12 }, // 4567: skeakernetsM102; FX 7 (echo drops)
+    { 0x0057F20,0x0038F61, 0x9C,0x11, 0xA, +12 }, // 4568: skeakernetsM102; FX 7 (echo drops)
+    { 0x0025510,0x1728202, 0x18,0x00, 0xE, +12 }, // 4569: skeakernetsM103; * FX 8 (star-theme)
+    { 0x0B37120,0x0F38224, 0x07,0x00, 0x2, +12 }, // 4570: skeakernetsM104; Sitar
+    { 0x352F421,0x1E49423, 0x11,0x00, 0x8, +0 }, // 4571: skeakernetsM107; Koto
+    { 0x0328413,0x073B410, 0xA1,0x00, 0xF, +12 }, // 4572: skeakernetsM108; Kalimba
+    { 0x303A130,0x0266221, 0x1E,0x00, 0xE, +0 }, // 4573: skeakernetsM110; Fiddle
+    { 0x0136030,0x1169130, 0x12,0x80, 0x8, +12 }, // 4574: skeakernetsM111; Shanai
+    { 0x032A115,0x172B212, 0x00,0x80, 0x1, +5 }, // 4575: skeakernetsM112; Tinkle Bell
+    { 0x2046702,0x005A901, 0x4A,0x08, 0x6, +0 }, // 4576: skeakernetsM114; Steel Drums
+    { 0x0045B03,0x005A901, 0x51,0x08, 0x6, +12 }, // 4577: skeakernetsM114; Steel Drums
+    { 0x0D1F814,0x078F611, 0x44,0x00, 0x6, +12 }, // 4578: skeakernetsM115; Woodblock
+    { 0x0C8A820,0x0B7E601, 0x0B,0x00, 0x0, +0 }, // 4579: skeakernetsM117; Melodic Tom
+    { 0x215F590,0x0E5D310, 0x08,0x00, 0x8, -12 }, // 4580: skeakernetsM118; 
+    { 0x031410C,0x31D1110, 0x8F,0x80, 0xE, +0 }, // 4581: skeakernetsM119; Reverse Cymbal
+    { 0x1B37720,0x3F74533, 0x00,0x00, 0xE, +12 }, // 4582: skeakernetsM120; Guitar Fret Noise
+    { 0x00437D2,0x0343751, 0x9C,0x07, 0xC, +0 }, // 4583: skeakernetsM121; Breath Noise
+    { 0x003EBD7,0x06845D8, 0xD4,0x00, 0x7, +12 }, // 4584: skeakernetsM123; Bird Tweet
+    { 0x17ADAE0,0x314B009, 0x48,0x40, 0x4, -24 }, // 4585: skeakernetsM124; Telephone Ring
+    { 0x17ADAE0,0x314B009, 0x48,0x40, 0x4, -20 }, // 4586: skeakernetsM124; Telephone Ring
+    { 0x2117E30,0x3112120, 0x00,0x00, 0xC, -24 }, // 4587: skeakernetsM125; Helicopter
+    { 0x2F0F00C,0x0E6F600, 0x00,0x00, 0xE, +0 }, // 4588: skeakernetsM127; Gun Shot
+    { 0x057FB00,0x046F800, 0x00,0x00, 0x0, +12 }, // 4589: skeakernetsP35; Acoustic Bass Drum
+    { 0x267FD00,0x078F801, 0x80,0x00, 0xF, +12 }, // 4590: skeakernetsP37; Slide Stick
+    { 0x0F0F001,0x0F5F800, 0x00,0x00, 0xC, +12 }, // 4591: skeakernetsP37; Slide Stick
+    { 0x015FA07,0x017F700, 0x02,0x00, 0xE, +9 }, // 4592: skeakernetsP38; Acoustic Snare
+    { 0x017FA03,0x015F705, 0x00,0x0A, 0xF, +0 }, // 4593: skeakernetsP38; Acoustic Snare
+    { 0x2FAF5E1,0x0F895FF, 0x00,0x00, 0xE, +12 }, // 4594: skeakernetsP39; Hand Clap
+    { 0x015F807,0x017F900, 0x02,0x00, 0xE, -3 }, // 4595: skeakernetsP40; Electric Snare
+    { 0x017F602,0x015F505, 0x00,0x0A, 0xF, -12 }, // 4596: skeakernetsP40; Electric Snare
+    { 0x208F601,0x004F600, 0x08,0x00, 0x8, +0 }, // 4597: skeakernetsP41; skeakernetsP43; 
+    { 0x25ED800,0x206F40A, 0x07,0x00, 0xC, +0 }, // 4598: skeakernetsP42; Closed High-Hat
+    { 0x25E7803,0x32B8A0A, 0x00,0x00, 0xF, +12 }, // 4599: skeakernetsP44; Pedal High Hat
+    { 0x308F601,0x004F600, 0x0C,0x00, 0x8, +0 }, // 4600: skeakernetsP45; skeakernetsP47; skeakernetsP48; skeakernetsP50; 
+    { 0x201C700,0x233F90A, 0x45,0x00, 0xE, +12 }, // 4601: skeakernetsP46; Open High Hat
+    { 0x292F108,0x354F201, 0x00,0x00, 0x8, +12 }, // 4602: skeakernetsP49; skeakernetsP57; Crash Cymbal 1
+    { 0x292F108,0x354F201, 0x00,0x00, 0x8, +12 }, // 4603: skeakernetsP49; Crash Cymbal 1
+    { 0x212FA03,0x305FE02, 0x82,0x80, 0xA, +12 }, // 4604: skeakernetsP51; Ride Cymbal 1
+    { 0x280E009,0x334D700, 0x00,0x00, 0x8, +12 }, // 4605: skeakernetsP52; Chinses Cymbal
+    { 0x280E009,0x334D500, 0x00,0x00, 0xA, +11 }, // 4606: skeakernetsP52; Chinses Cymbal
+    { 0x2E1F119,0x3F3F11B, 0x80,0x03, 0x8, +0 }, // 4607: skeakernetsP53; Ride Bell
+    { 0x2777603,0x3679601, 0x87,0x00, 0xE, +12 }, // 4608: skeakernetsP54; Tambourine
+    { 0x250F302,0x3A3C507, 0x88,0x00, 0xE, +0 }, // 4609: skeakernetsP55; Splash Cymbal
+    { 0x366F905,0x099F701, 0x00,0x00, 0xC, +12 }, // 4610: skeakernetsP56; Cowbell
+    { 0x292F108,0x354F201, 0x00,0x00, 0x8, +12 }, // 4611: skeakernetsP57; Crash Cymbal 2
+    { 0x305F220,0x056D50F, 0x80,0x00, 0xE, +0 }, // 4612: skeakernetsP58; Vibraslap
+    { 0x212FD03,0x305FD02, 0x81,0x80, 0xA, +12 }, // 4613: skeakernetsP59; Ride Cymbal 2
+    { 0x256DB00,0x026FA00, 0x07,0x00, 0x8, +12 }, // 4614: skeakernetsP60; skeakernetsP61; High Bongo
+    { 0x056FB00,0x017F800, 0x80,0x00, 0xB, +12 }, // 4615: skeakernetsP62; Mute High Conga
+    { 0x056FA00,0x017F500, 0x80,0x00, 0xB, +12 }, // 4616: skeakernetsP63; skeakernetsP64; Low Conga
+    { 0x09A600F,0x0FFA590, 0x08,0xC0, 0xE, +12 }, // 4617: skeakernetsP70; Maracas
+    { 0x009F020,0x37DA588, 0x07,0x00, 0xA, +12 }, // 4618: skeakernetsP71; Short Whistle
+    { 0x00FC020,0x32DA5A8, 0x07,0x00, 0xA, +12 }, // 4619: skeakernetsP72; Long Whistle
+    { 0x106F680,0x016F610, 0x00,0x00, 0xC, +0 }, // 4620: skeakernetsP73; 
+    { 0x20F6F00,0x20F6F00, 0x00,0x00, 0x0, +0 }, // 4621: skeakernetsP73; 
+    { 0x106F680,0x016F610, 0x00,0x00, 0x6, +0 }, // 4622: skeakernetsP74; 
+    { 0x20F4F00,0x20F4F00, 0x00,0x00, 0x6, +0 }, // 4623: skeakernetsP74; 
+    { 0x0D1F815,0x078F512, 0x44,0x00, 0x8, +12 }, // 4624: skeakernetsP75; Claves
+    { 0x1DC5D01,0x06FF79F, 0x0B,0x00, 0xA, +0 }, // 4625: skeakernetsP78; Mute Cuica
+    { 0x1C7C900,0x05FF49F, 0x07,0x00, 0xA, +0 }, // 4626: skeakernetsP79; Open Cuica
+    { 0x160F2C6,0x07AF4D4, 0x4F,0x80, 0x8, +12 }, // 4627: skeakernetsP80; Mute Triangle
+    { 0x160F286,0x0B7F294, 0x4F,0x80, 0x8, +12 }, // 4628: skeakernetsP81; Open Triangle
 };
-const struct adlinsdata adlins[4661] =
+const struct adlinsdata adlins[4659] =
 {
     // Amplitude begins at 1546.1, peaks 1623.1 at 0.0s,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
@@ -4687,7 +4694,7 @@ const struct adlinsdata adlins[4661] =
 
     // Amplitude begins at 2643.3, peaks 2981.9 at 0.0s,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    {  11,  11,  0, 0,   1740,  1740,0.000000 }, // 11: BisqM11; GM11; b12P11; f34GM11; fat2M11; sGM11; skeakernetsM11; ; Vibraphone; am011
+    {  11,  11,  0, 0,   1740,  1740,0.000000 }, // 11: BisqM11; GM11; b12P11; f34GM11; fat2M11; sGM11; Vibraphone; am011
 
     // Amplitude begins at 2507.2,
     // fades to 20% at infs, keyoff fades to 20% in infs.
@@ -9871,7 +9878,7 @@ const struct adlinsdata adlins[4661] =
 
     // Amplitude begins at 3109.4, peaks 5378.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {1215,1216,  0, 1,  40000,   560,-0.093750 }, // 1307: dMM85; hxMM85; musM85; raptM85; Lead 6 (voice)
+    {1215,1216,  0, 1,  40000,   560,-0.093750 }, // 1307: dMM85; hxMM85; musM85; raptM85; skeakernetsM85; Lead 6 (voice)
 
     // Amplitude begins at   12.3, peaks 2231.4 at 0.0s,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
@@ -9951,7 +9958,7 @@ const struct adlinsdata adlins[4661] =
 
     // Amplitude begins at 1395.7,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {1243,1244,  0, 1,    360,   360,0.000000 }, // 1327: dMM106; hxMM106; musM106; raptM106; Shamisen
+    {1243,1244,  0, 1,    360,   360,0.000000 }, // 1327: dMM106; hxMM106; musM106; raptM106; skeakernetsM106; Shamisen
 
     // Amplitude begins at  976.9, peaks 2947.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
@@ -10167,7 +10174,7 @@ const struct adlinsdata adlins[4661] =
 
     // Amplitude begins at 5064.8, peaks 5250.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {1154,1293,  0, 1,  40000,     0,-0.156250 }, // 1381: hxMM39; musM39; raptM39; Synth Bass 2
+    {1154,1293,  0, 1,  40000,     0,-0.156250 }, // 1381: hxMM39; musM39; raptM39; skeakernetsM39; Synth Bass 2
 
     // Amplitude begins at  144.1, peaks 1207.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
@@ -22669,621 +22676,613 @@ const struct adlinsdata adlins[4661] =
     // fades to 20% at infs, keyoff fades to 20% in infs.
     {4421,4421,  0, 0,   3413,  3413,0.000000 }, // 4506: apgnamM122; Seashore
 
-    // Amplitude begins at 1765.6, peaks 1780.6 at infs,
+    // Amplitude begins at 1344.3, peaks 1405.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4422,4423,  0, 1,   1166,  1166,0.000000 }, // 4507: skeakernetsM0; Acoustic Grand Piano
+    {4422,4422,  0, 0,    953,   953,0.000000 }, // 4507: skeakernetsM0; Acoustic Grand Piano
 
     // Amplitude begins at 1338.1, peaks 1662.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4424,4424,  0, 0,   1426,  1426,0.000000 }, // 4508: skeakernetsM1; Bright Acoustic Piano
+    {4423,4423,  0, 0,   1426,  1426,0.000000 }, // 4508: skeakernetsM1; Bright Acoustic Piano
 
-    // Amplitude begins at 1547.9, peaks 1566.5 at infs,
+    // Amplitude begins at  844.1, peaks  854.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4425,4426,  0, 1,   1346,  1346,0.031250 }, // 4509: skeakernetsM2; Electric Grand Piano
+    {4424,4425,  0, 1,   1346,  1346,0.031250 }, // 4509: skeakernetsM2; Electric Grand Piano
 
-    // Amplitude begins at 4018.0,
+    // Amplitude begins at 1263.0, peaks 1686.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {1112,1113,  0, 1,   1253,  1253,0.156250 }, // 4510: skeakernetsM3; Honky-tonk Piano
+    {4426,4427,  0, 1,   1913,  1913,0.156250 }, // 4510: skeakernetsM3; Honky-tonk Piano
 
     // Amplitude begins at 1994.6, peaks 3584.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    { 172,4427,  0, 1,   1740,  1740,0.046875 }, // 4511: skeakernetsM4; 
+    { 172,4428,  0, 1,   1740,  1740,0.046875 }, // 4511: skeakernetsM4; 
 
     // Amplitude begins at 1642.7, peaks 2928.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4428,4429,  0, 1,   1260,  1260,-0.078125 }, // 4512: skeakernetsM5; 
+    {4429,4430,  0, 1,   1260,  1260,-0.078125 }, // 4512: skeakernetsM5; 
 
     // Amplitude begins at 1431.0, peaks 1558.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4430,4430,  0, 0,   1420,  1420,0.000000 }, // 4513: skeakernetsM6; Harpsichord
+    {4431,4431,  0, 0,   1420,  1420,0.000000 }, // 4513: skeakernetsM6; Harpsichord
 
     // Amplitude begins at 1204.0, peaks 1399.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4431,4431,  0, 0,   2066,  2066,0.000000 }, // 4514: skeakernetsM7; 
+    {4432,4432,  0, 0,   2066,  2066,0.000000 }, // 4514: skeakernetsM7; 
 
     // Amplitude begins at 2446.5, peaks 3115.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4432,4432,  0, 0,    940,   940,0.000000 }, // 4515: skeakernetsM8; Celesta
+    {4433,4433,  0, 0,    940,   940,0.000000 }, // 4515: skeakernetsM8; Celesta
 
-    // Amplitude begins at 1645.2, peaks 1745.9 at infs,
+    // Amplitude begins at 1644.3, peaks 1744.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {1453,1453,  0, 0,   1100,  1100,0.000000 }, // 4516: skeakernetsM9; 
+    {4434,4434,  0, 0,   1953,  1953,0.000000 }, // 4516: skeakernetsM9; 
 
-    // Amplitude begins at 3274.3, peaks 4224.9 at infs,
+    // Amplitude begins at 2296.5, peaks 2929.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    { 181,4433,  0, 1,    493,   493,0.078125 }, // 4517: skeakernetsM10; 
+    {4435,4436,  0, 1,    493,   493,0.078125 }, // 4517: skeakernetsM10; 
+
+    // Amplitude begins at 2806.3, peaks 2925.6 at infs,
+    // fades to 20% at infs, keyoff fades to 20% in infs.
+    {4437,4437,  0, 0,   1740,  1740,0.000000 }, // 4518: skeakernetsM11; 
 
     // Amplitude begins at 2656.3,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4434,4434,  0, 0,    280,   280,0.000000 }, // 4518: skeakernetsM12; 
+    {4438,4438,  0, 0,    280,   280,0.000000 }, // 4519: skeakernetsM12; 
 
     // Amplitude begins at 2792.1,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4435,4435,  0, 0,    193,   193,0.000000 }, // 4519: skeakernetsM13; Xylophone
+    {4439,4439,  0, 0,    193,   193,0.000000 }, // 4520: skeakernetsM13; Xylophone
 
-    // Amplitude begins at 1149.7, peaks 1448.3 at infs,
+    // Amplitude begins at 1106.7, peaks 1418.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4436,4437,  0, 1,   1366,  1366,0.031250 }, // 4520: skeakernetsM14; 
+    {4440,4441,  0, 1,   2140,  2140,0.046875 }, // 4521: skeakernetsM14; 
 
-    // Amplitude begins at 2013.3, peaks 2039.3 at infs,
+    // Amplitude begins at 1305.5, peaks 1322.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4438,4439,  0, 1,   1213,  1213,0.046875 }, // 4521: skeakernetsM15; * Dulcimer
+    {4442,4443,  0, 1,   1213,  1213,0.046875 }, // 4522: skeakernetsM15; * Dulcimer
 
     // Amplitude begins at 1243.6, peaks 1367.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4440,4440,  0, 0,  40000,    60,0.000000 }, // 4522: skeakernetsM16; Hammond Organ
+    {4444,4444,  0, 0,  40000,    60,0.000000 }, // 4523: skeakernetsM16; Hammond Organ
 
     // Amplitude begins at 2921.4, peaks 3279.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4441,4442,  0, 1,    380,    13,0.156250 }, // 4523: skeakernetsM17; Percussive Organ
+    {4445,4446,  0, 1,    380,    13,0.156250 }, // 4524: skeakernetsM17; Percussive Organ
 
     // Amplitude begins at  342.1, peaks 2786.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4443,4444,  0, 1,   7180,  7180,0.156250 }, // 4524: skeakernetsM18; 
+    {4447,4448,  0, 1,   7180,  7180,0.156250 }, // 4525: skeakernetsM18; 
 
     // Amplitude begins at    2.4, peaks 1898.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4445,4446,  0, 1,  40000,     0,0.031250 }, // 4525: skeakernetsM19; Church Organ
+    {4449,4450,  0, 1,  40000,     0,0.031250 }, // 4526: skeakernetsM19; Church Organ
 
-    // Amplitude begins at    0.0, peaks 2573.5 at infs,
+    // Amplitude begins at    0.0, peaks 1565.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4447,4448,  0, 1,  40000,     0,0.140625 }, // 4526: skeakernetsM21; Accordion
+    {4451,4452,  0, 1,  40000,     0,0.140625 }, // 4527: skeakernetsM21; Accordion
 
-    // Amplitude begins at   45.8, peaks 2649.6 at infs,
+    // Amplitude begins at    4.4, peaks 3381.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    { 197,4449,  0, 1,  40000,     0,0.000000 }, // 4527: skeakernetsM22; 
+    {4453,4454,  0, 1,  40000,     0,0.000000 }, // 4528: skeakernetsM22; 
 
-    // Amplitude begins at    4.8, peaks 2588.7 at infs,
+    // Amplitude begins at    2.5, peaks 1411.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4450,4451,  0, 1,  40000,     0,0.093750 }, // 4528: skeakernetsM23; Tango Accordion
+    {4455,4456,  0, 1,  40000,     0,0.109375 }, // 4529: skeakernetsM23; Tango Accordion
 
     // Amplitude begins at 2768.8, peaks 2820.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4452,4453,  0, 1,    546,   546,0.031250 }, // 4529: skeakernetsM24; 
+    {4457,4458,  0, 1,    546,   546,0.031250 }, // 4530: skeakernetsM24; 
 
     // Amplitude begins at 1586.2, peaks 1599.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4454,4454,  0, 0,   1060,  1060,0.000000 }, // 4530: skeakernetsM25; Acoustic Guitar (steel)
+    {4459,4459,  0, 0,   1060,  1060,0.000000 }, // 4531: skeakernetsM25; Acoustic Guitar (steel)
 
     // Amplitude begins at 1528.5, peaks 1673.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4455,4455,  0, 0,   1506,  1506,0.000000 }, // 4531: skeakernetsM26; Electric Guitar (jazz)
+    {4460,4460,  0, 0,   1506,  1506,0.000000 }, // 4532: skeakernetsM26; Electric Guitar (jazz)
 
     // Amplitude begins at 1342.5, peaks 1669.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4456,4457,  0, 1,    573,   573,0.046875 }, // 4532: skeakernetsM27; * Electric Guitar (clean)
+    {4461,4462,  0, 1,    573,   573,0.046875 }, // 4533: skeakernetsM27; * Electric Guitar (clean)
 
     // Amplitude begins at 2246.2, peaks 2351.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4458,4458,  0, 0,    300,   300,0.000000 }, // 4533: skeakernetsM28; Electric Guitar (muted)
+    {4463,4463,  0, 0,    300,   300,0.000000 }, // 4534: skeakernetsM28; Electric Guitar (muted)
 
     // Amplitude begins at 1614.0, peaks 1838.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4459,4459,  0, 0,  40000,    13,0.000000 }, // 4534: skeakernetsM29; Overdriven Guitar
+    {4464,4464,  0, 0,  40000,    13,0.000000 }, // 4535: skeakernetsM29; Overdriven Guitar
 
     // Amplitude begins at 1092.3, peaks 1498.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4460,4461,  0, 1,  40000,     0,0.031250 }, // 4535: skeakernetsM30; Distortion Guitar
+    {4465,4466,  0, 1,  40000,     0,0.031250 }, // 4536: skeakernetsM30; Distortion Guitar
 
     // Amplitude begins at  450.0, peaks 2515.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4462,4462,  0, 0,  40000,     6,0.000000 }, // 4536: skeakernetsM31; * Guitar Harmonics
+    {4467,4467,  0, 0,  40000,     6,0.000000 }, // 4537: skeakernetsM31; * Guitar Harmonics
 
     // Amplitude begins at 2937.0, peaks 3256.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4463,4463,  0, 0,   1440,  1440,0.000000 }, // 4537: skeakernetsM32; Acoustic Bass
+    {4468,4468,  0, 0,   1440,  1440,0.000000 }, // 4538: skeakernetsM32; Acoustic Bass
 
     // Amplitude begins at 2620.2, peaks 3115.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4464,4464,  0, 0,   1526,  1526,0.000000 }, // 4538: skeakernetsM33; Electric Bass (finger)
+    {4469,4469,  0, 0,   1526,  1526,0.000000 }, // 4539: skeakernetsM33; Electric Bass (finger)
 
     // Amplitude begins at 1824.8, peaks 2159.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4465,4465,  0, 0,   1633,  1633,0.000000 }, // 4539: skeakernetsM34; Electric Bass (pick)
+    {4470,4470,  0, 0,   1633,  1633,0.000000 }, // 4540: skeakernetsM34; Electric Bass (pick)
 
     // Amplitude begins at 1849.3, peaks 2755.5 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4466,4466,  0, 0,   1653,  1653,0.000000 }, // 4540: skeakernetsM35; Fretless Bass
+    {4471,4471,  0, 0,   1653,  1653,0.000000 }, // 4541: skeakernetsM35; Fretless Bass
 
     // Amplitude begins at 1775.5,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4467,4468,  0, 1,    760,   760,0.031250 }, // 4541: skeakernetsM36; * Slap Bass 1
+    {4472,4473,  0, 1,    760,   760,0.031250 }, // 4542: skeakernetsM36; * Slap Bass 1
 
     // Amplitude begins at 2119.7, peaks 2221.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4469,4470,  0, 1,    973,   973,0.000000 }, // 4542: skeakernetsM37; Slap Bass 2
-
-    // Amplitude begins at 5064.8, peaks 5250.7 at infs,
-    // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {1154,1293,  0, 1,  40000,     0,0.156250 }, // 4543: skeakernetsM39; Synth Bass 2
+    {4474,4475,  0, 1,    973,   973,0.000000 }, // 4543: skeakernetsM37; Slap Bass 2
 
     // Amplitude begins at    0.8, peaks 1395.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4471,4471,  0, 0,   1933,    73,0.000000 }, // 4544: skeakernetsM40; Violin
+    {4476,4476,  0, 0,   1933,    73,0.000000 }, // 4544: skeakernetsM40; Violin
 
     // Amplitude begins at    0.4, peaks 2341.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4472,4472,  0, 0,   2000,    53,0.000000 }, // 4545: skeakernetsM41; Viola
+    {4477,4477,  0, 0,   2000,    53,0.000000 }, // 4545: skeakernetsM41; Viola
 
     // Amplitude begins at    0.0, peaks 1480.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4473,4473,  0, 0,  40000,    40,0.000000 }, // 4546: skeakernetsM42; Cello
+    {4478,4478,  0, 0,  40000,    40,0.000000 }, // 4546: skeakernetsM42; Cello
 
     // Amplitude begins at    0.4, peaks 1787.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4474,4474,  0, 0,  40000,   266,0.000000 }, // 4547: skeakernetsM43; Contrabass
+    {4479,4479,  0, 0,  40000,   266,0.000000 }, // 4547: skeakernetsM43; Contrabass
 
-    // Amplitude begins at  422.0, peaks 2077.4 at infs,
+    // Amplitude begins at  273.5, peaks 1347.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4475,4476,  0, 1,  40000,     0,0.171875 }, // 4548: skeakernetsM44; Tremolo Strings
+    {4480,4481,  0, 1,  40000,     0,0.171875 }, // 4548: skeakernetsM44; Tremolo Strings
 
     // Amplitude begins at 2351.2, peaks 5052.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4477,4478,  0, 1,    280,   280,0.156250 }, // 4549: skeakernetsM45; 
+    {4482,4483,  0, 1,    280,   280,0.156250 }, // 4549: skeakernetsM45; 
 
     // Amplitude begins at 2439.4, peaks 3011.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4479,4479,  0, 0,    940,   940,0.000000 }, // 4550: skeakernetsM46; Orchestral Harp
+    {4484,4484,  0, 0,    940,   940,0.000000 }, // 4550: skeakernetsM46; Orchestral Harp
 
     // Amplitude begins at 1646.4, peaks 3003.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4480,4480,  0, 0,    126,   126,0.000000 }, // 4551: skeakernetsM47; * Timpani
+    {4485,4485,  0, 0,    126,   126,0.000000 }, // 4551: skeakernetsM47; * Timpani
 
     // Amplitude begins at    1.1, peaks 1751.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4481,4482,  0, 1,    146,    13,0.078125 }, // 4552: skeakernetsM48; 
+    {4486,4487,  0, 1,    146,    13,0.078125 }, // 4552: skeakernetsM48; 
 
     // Amplitude begins at    0.0, peaks 2170.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4483,4484,  0, 1,  40000,   213,0.109375 }, // 4553: skeakernetsM49; String Ensemble 2
+    {4488,4489,  0, 1,  40000,   213,0.109375 }, // 4553: skeakernetsM49; String Ensemble 2
 
-    // Amplitude begins at    5.2, peaks 2869.1 at infs,
+    // Amplitude begins at    2.5, peaks 1478.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4485,4486,  0, 1,  40000,     0,-0.078125 }, // 4554: skeakernetsM50; Synth Strings 1
+    {4490,4491,  0, 1,  40000,     0,-0.062500 }, // 4554: skeakernetsM50; Synth Strings 1
 
     // Amplitude begins at    0.0, peaks 2392.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4487,4488,  0, 1,  40000,   300,0.109375 }, // 4555: skeakernetsM51; Synth Strings 2
+    {4492,4493,  0, 1,  40000,   300,0.109375 }, // 4555: skeakernetsM51; Synth Strings 2
 
-    // Amplitude begins at    1.6, peaks 6229.1 at infs,
+    // Amplitude begins at    1.0, peaks 1698.5 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4489,4490,  0, 1,  40000,     0,0.140625 }, // 4556: skeakernetsM52; 
+    {4494,4495,  0, 1,  40000,     0,0.140625 }, // 4556: skeakernetsM52; 
 
-    // Amplitude begins at    2.6, peaks 3423.5 at infs,
+    // Amplitude begins at    2.1, peaks 2364.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4491,4492,  0, 1,  40000,   106,0.140625 }, // 4557: skeakernetsM53; 
+    {4496,4497,  0, 1,  40000,   160,0.140625 }, // 4557: skeakernetsM53; 
 
     // Amplitude begins at   19.3, peaks 3771.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4493,4494,  0, 1,  40000,     0,0.156250 }, // 4558: skeakernetsM54; Synth Voice
+    {4498,4499,  0, 1,  40000,     0,0.156250 }, // 4558: skeakernetsM54; Synth Voice
 
     // Amplitude begins at   14.0, peaks 1281.5 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4495,4496,  0, 1,    380,   380,0.125000 }, // 4559: skeakernetsM55; Orchestra Hit
+    {4500,4501,  0, 1,    380,   380,0.125000 }, // 4559: skeakernetsM55; Orchestra Hit
 
-    // Amplitude begins at    7.1, peaks 1404.1 at infs,
+    // Amplitude begins at    1.9, peaks  820.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4497,4497,  0, 0,  40000,     6,0.000000 }, // 4560: skeakernetsM56; 
+    {4502,4502,  0, 0,  40000,     6,0.000000 }, // 4560: skeakernetsM56; 
 
     // Amplitude begins at 1741.9, peaks 3158.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4498,4498,  0, 0,    273,     0,0.000000 }, // 4561: skeakernetsM57; Trombone
+    {4503,4503,  0, 0,    273,     0,0.000000 }, // 4561: skeakernetsM57; Trombone
 
     // Amplitude begins at   30.5, peaks 1308.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4499,4499,  0, 0,  40000,    40,0.000000 }, // 4562: skeakernetsM59; Muted Trumpet
+    {4504,4504,  0, 0,  40000,    40,0.000000 }, // 4562: skeakernetsM59; Muted Trumpet
 
     // Amplitude begins at    0.9, peaks 5732.5 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4500,4501,  0, 1,  40000,     0,0.031250 }, // 4563: skeakernetsM60; French Horn
+    {4505,4506,  0, 1,  40000,     0,0.031250 }, // 4563: skeakernetsM60; French Horn
 
     // Amplitude begins at  877.3, peaks 1264.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4502,4503,  0, 1,  40000,     0,0.062500 }, // 4564: skeakernetsM61; Brass Section
+    {4507,4508,  0, 1,  40000,     0,0.062500 }, // 4564: skeakernetsM61; Brass Section
 
-    // Amplitude begins at  384.1, peaks 2353.4 at infs,
+    // Amplitude begins at  209.2, peaks 1283.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4504,4505,  0, 1,   3106,  3106,0.093750 }, // 4565: skeakernetsM62; Synth Brass 1
+    {4509,4510,  0, 1,   3106,  3106,0.093750 }, // 4565: skeakernetsM62; Synth Brass 1
 
     // Amplitude begins at   57.7, peaks 2525.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4506,1190,  0, 1,   1020,  1020,0.093750 }, // 4566: skeakernetsM63; Synth Bass 2
+    {4511,1190,  0, 1,   1020,  1020,0.093750 }, // 4566: skeakernetsM63; Synth Bass 2
 
     // Amplitude begins at    1.6, peaks 1064.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4507,4507,  0, 0,  40000,    46,0.000000 }, // 4567: skeakernetsM64; 
+    {4512,4512,  0, 0,  40000,    46,0.000000 }, // 4567: skeakernetsM64; 
 
     // Amplitude begins at    0.2, peaks 1440.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4508,4508,  0, 0,  40000,    20,0.000000 }, // 4568: skeakernetsM65; Alto Sax
+    {4513,4513,  0, 0,  40000,    20,0.000000 }, // 4568: skeakernetsM65; Alto Sax
 
     // Amplitude begins at    2.5, peaks 1583.5 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4509,4509,  0, 0,  40000,     0,0.000000 }, // 4569: skeakernetsM66; Tenor Sax
+    {4514,4514,  0, 0,  40000,     0,0.000000 }, // 4569: skeakernetsM66; Tenor Sax
 
     // Amplitude begins at    0.9, peaks 1179.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4510,4510,  0, 0,    120,     6,0.000000 }, // 4570: skeakernetsM67; Baritone Sax
+    {4515,4515,  0, 0,    120,     6,0.000000 }, // 4570: skeakernetsM67; Baritone Sax
 
-    // Amplitude begins at    7.5, peaks 3350.3 at infs,
+    // Amplitude begins at    7.2, peaks 1948.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4511,4512,  0, 1,  40000,     0,0.000000 }, // 4571: skeakernetsM68; Oboe
+    {4516,4517,  0, 1,  40000,     0,0.000000 }, // 4571: skeakernetsM68; Oboe
 
     // Amplitude begins at    0.0, peaks 1565.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4513,4513,  0, 0,  40000,    33,0.000000 }, // 4572: skeakernetsM69; English Horn
+    {4518,4518,  0, 0,  40000,    33,0.000000 }, // 4572: skeakernetsM69; English Horn
 
     // Amplitude begins at   24.4, peaks 1974.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4514,4514,  0, 0,  40000,     6,0.000000 }, // 4573: skeakernetsM70; Bassoon
+    {4519,4519,  0, 0,  40000,     6,0.000000 }, // 4573: skeakernetsM70; Bassoon
 
     // Amplitude begins at    0.4, peaks 2900.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4515,4515,  0, 0,  40000,    20,0.000000 }, // 4574: skeakernetsM71; Clarinet
+    {4520,4520,  0, 0,  40000,    20,0.000000 }, // 4574: skeakernetsM71; Clarinet
 
     // Amplitude begins at    0.4, peaks 2861.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4516,4516,  0, 0,  40000,     0,0.000000 }, // 4575: skeakernetsM72; Piccolo
+    {4521,4521,  0, 0,  40000,     0,0.000000 }, // 4575: skeakernetsM72; Piccolo
 
-    // Amplitude begins at    0.4, peaks 2811.5 at infs,
+    // Amplitude begins at    1.1, peaks 2811.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4517,4517,  0, 0,  40000,     0,0.000000 }, // 4576: skeakernetsM73; Flute
+    {4522,4522,  0, 0,  40000,     0,0.000000 }, // 4576: skeakernetsM73; Flute
 
-    // Amplitude begins at    7.9, peaks 3407.1 at infs,
+    // Amplitude begins at    7.9, peaks 3034.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4518,4518,  0, 0,  40000,    33,0.000000 }, // 4577: skeakernetsM74; Recorder
+    {4523,4523,  0, 0,  40000,    33,0.000000 }, // 4577: skeakernetsM74; Recorder
 
     // Amplitude begins at  132.9, peaks 4865.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4519,4520,  0, 1,  40000,    13,0.031250 }, // 4578: skeakernetsM75; Pan Flute
+    {4524,4525,  0, 1,  40000,    13,0.031250 }, // 4578: skeakernetsM75; Pan Flute
 
     // Amplitude begins at    0.9, peaks 3279.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4521,4522,  0, 1,  40000,    20,0.046875 }, // 4579: skeakernetsM76; Bottle Blow
+    {4526,4527,  0, 1,  40000,    20,0.046875 }, // 4579: skeakernetsM76; Bottle Blow
 
     // Amplitude begins at    8.9, peaks 5652.5 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4523,4524,  0, 1,    440,   440,0.046875 }, // 4580: skeakernetsM77; * Shakuhachi
+    {4528,4529,  0, 1,    440,   440,0.046875 }, // 4580: skeakernetsM77; * Shakuhachi
 
     // Amplitude begins at    2.5, peaks 3274.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4525,4525,  0, 0,  40000,     6,0.000000 }, // 4581: skeakernetsM79; Ocarina
+    {4530,4530,  0, 0,  40000,     6,0.000000 }, // 4581: skeakernetsM79; Ocarina
 
     // Amplitude begins at 2036.2, peaks 2103.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4526,4527,  0, 1,  40000,     0,0.125000 }, // 4582: skeakernetsM80; 
+    {4531,4532,  0, 1,  40000,     0,0.125000 }, // 4582: skeakernetsM80; 
 
     // Amplitude begins at 1307.9, peaks 2096.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4528,4529,  0, 1,  40000,    40,0.109375 }, // 4583: skeakernetsM81; Lead 2 (sawtooth)
+    {4533,4534,  0, 1,  40000,    40,0.109375 }, // 4583: skeakernetsM81; Lead 2 (sawtooth)
 
     // Amplitude begins at    2.3, peaks 6618.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {1211,4530,  0, 1,  40000,     0,0.093750 }, // 4584: skeakernetsM82; Lead 3 (calliope)
+    {1211,4535,  0, 1,  40000,     0,0.093750 }, // 4584: skeakernetsM82; Lead 3 (calliope)
 
     // Amplitude begins at 1656.7, peaks 1679.5 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4531,4531,  0, 0,  40000,     6,0.000000 }, // 4585: skeakernetsM84; Lead 5 (charang)
+    {4536,4536,  0, 0,  40000,     6,0.000000 }, // 4585: skeakernetsM84; Lead 5 (charang)
 
-    // Amplitude begins at 3109.4, peaks 5378.8 at infs,
-    // fades to 20% at infs, keyoff fades to 20% in infs.
-    {1215,1216,  0, 1,  40000,   560,0.093750 }, // 4586: skeakernetsM85; Lead 6 (voice)
-
-    // Amplitude begins at 1951.1, peaks 2585.2 at infs,
+    // Amplitude begins at  975.4, peaks 1292.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4532,4533,  0, 1,  40000,     0,0.078125 }, // 4587: skeakernetsM87; 
+    {4537,4538,  0, 1,  40000,     0,0.078125 }, // 4586: skeakernetsM87; 
 
     // Amplitude begins at 4048.2, peaks 6365.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4534,4535,  0, 1,  40000,     0,0.078125 }, // 4588: skeakernetsM88; 
+    {4539,4540,  0, 1,  40000,     0,0.078125 }, // 4587: skeakernetsM88; 
 
     // Amplitude begins at    0.8, peaks 5867.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4536,4537,  0, 1,  40000,     0,0.156250 }, // 4589: skeakernetsM89; Pad 2 (warm)
+    {4541,4542,  0, 1,  40000,     0,0.156250 }, // 4588: skeakernetsM89; Pad 2 (warm)
 
     // Amplitude begins at  699.2, peaks 1840.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4538,4539,  0, 1,   1446,  1446,0.078125 }, // 4590: skeakernetsM90; Pad 3 (polysynth)
+    {4543,4544,  0, 1,   1446,  1446,0.078125 }, // 4589: skeakernetsM90; Pad 3 (polysynth)
 
     // Amplitude begins at  787.1, peaks 5553.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4540,4541,  0, 1,  40000,    53,0.171875 }, // 4591: skeakernetsM91; Pad 4 (choir)
+    {4545,4546,  0, 1,  40000,    53,0.171875 }, // 4590: skeakernetsM91; Pad 4 (choir)
 
     // Amplitude begins at    0.9, peaks 5687.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4542,4543,  0, 1,   2006,  2006,0.109375 }, // 4592: skeakernetsM92; Pad 5 (bowed glass)
+    {4547,4548,  0, 1,   2006,  2006,0.109375 }, // 4591: skeakernetsM92; Pad 5 (bowed glass)
 
     // Amplitude begins at    0.5, peaks 3124.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4544,4545,  0, 1,   1166,  1166,0.062500 }, // 4593: skeakernetsM93; Pad 6 (metal)
+    {4549,4550,  0, 1,   1166,  1166,0.062500 }, // 4592: skeakernetsM93; Pad 6 (metal)
 
     // Amplitude begins at    1.3, peaks 3964.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4546,4547,  0, 1,  40000,   213,0.093750 }, // 4594: skeakernetsM94; 
+    {4551,4552,  0, 1,  40000,   213,0.093750 }, // 4593: skeakernetsM94; 
 
     // Amplitude begins at    0.0, peaks 2463.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4548,4549,  0, 1,  40000,   853,0.093750 }, // 4595: skeakernetsM95; Pad 8 (sweep)
+    {4553,4554,  0, 1,  40000,   853,0.093750 }, // 4594: skeakernetsM95; Pad 8 (sweep)
 
     // Amplitude begins at 1593.4, peaks 1865.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4550,4551,  0, 1,    653,   653,0.093750 }, // 4596: skeakernetsM96; FX 1 (rain)
+    {4555,4556,  0, 1,    653,   653,0.093750 }, // 4595: skeakernetsM96; FX 1 (rain)
 
     // Amplitude begins at    0.8, peaks 1037.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4552,4553,  0, 1,  40000,     0,0.062500 }, // 4597: skeakernetsM97; 
+    {4557,4558,  0, 1,  40000,     0,0.062500 }, // 4596: skeakernetsM97; 
 
-    // Amplitude begins at   59.4, peaks 2943.1 at infs,
+    // Amplitude begins at  626.9, peaks 1813.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4554,4554,  0, 0,   1006,  1006,0.000000 }, // 4598: skeakernetsM98; * FX 3 (crystal)
+    {4559,4560,  0, 1,    886,   886,0.109375 }, // 4597: skeakernetsM98; * FX 3 (crystal)
 
     // Amplitude begins at 1031.8, peaks 1604.7 at 0.0s,
     // fades to 20% at 0.0s, keyoff fades to 20% in 0.0s.
-    {4555,4556,  0, 1,   1653,  1653,-0.046875 }, // 4599: skeakernetsM99; FX 4 (atmosphere)
+    {4561,4562,  0, 1,   1653,  1653,-0.046875 }, // 4598: skeakernetsM99; FX 4 (atmosphere)
 
     // Amplitude begins at 4574.2, peaks 5030.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4557,4558,  0, 1,   1253,  1253,0.125000 }, // 4600: skeakernetsM100; FX 5 (brightness)
+    {4563,4564,  0, 1,   1253,  1253,0.125000 }, // 4599: skeakernetsM100; FX 5 (brightness)
 
     // Amplitude begins at    0.4, peaks  807.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4559,4560,  0, 1,  40000,     0,-0.078125 }, // 4601: skeakernetsM101; FX 6 (goblin)
+    {4565,4566,  0, 1,  40000,     0,-0.078125 }, // 4600: skeakernetsM101; FX 6 (goblin)
 
-    // Amplitude begins at  944.5, peaks 3114.8 at infs,
+    // Amplitude begins at  433.0, peaks 1428.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4561,4562,  0, 1,  40000,     0,0.140625 }, // 4602: skeakernetsM102; FX 7 (echo drops)
+    {4567,4568,  0, 1,  40000,     0,0.140625 }, // 4601: skeakernetsM102; FX 7 (echo drops)
 
     // Amplitude begins at   76.6, peaks 1577.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4563,4563,  0, 0,   2386,  2386,0.000000 }, // 4603: skeakernetsM103; * FX 8 (star-theme)
+    {4569,4569,  0, 0,   2386,  2386,0.000000 }, // 4602: skeakernetsM103; * FX 8 (star-theme)
 
     // Amplitude begins at  141.6, peaks 2959.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4564,4564,  0, 0,   2400,  2400,0.000000 }, // 4604: skeakernetsM104; Sitar
-
-    // Amplitude begins at 1395.7,
-    // fades to 20% at infs, keyoff fades to 20% in infs.
-    {1243,1244,  0, 1,    360,   360,0.031250 }, // 4605: skeakernetsM106; Shamisen
+    {4570,4570,  0, 0,   2400,  2400,0.000000 }, // 4603: skeakernetsM104; Sitar
 
     // Amplitude begins at  519.8, peaks 1601.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4565,4565,  0, 0,    600,   600,0.000000 }, // 4606: skeakernetsM107; Koto
+    {4571,4571,  0, 0,    600,   600,0.000000 }, // 4604: skeakernetsM107; Koto
 
     // Amplitude begins at 2381.7, peaks 2936.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4566,4566,  0, 0,    173,   173,0.000000 }, // 4607: skeakernetsM108; Kalimba
+    {4572,4572,  0, 0,    173,   173,0.000000 }, // 4605: skeakernetsM108; Kalimba
 
     // Amplitude begins at    1.1, peaks 2642.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4567,4567,  0, 0,  40000,    66,0.000000 }, // 4608: skeakernetsM110; Fiddle
+    {4573,4573,  0, 0,  40000,    66,0.000000 }, // 4606: skeakernetsM110; Fiddle
 
     // Amplitude begins at  957.5, peaks 1239.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4568,4568,  0, 0,  40000,    33,0.000000 }, // 4609: skeakernetsM111; Shanai
+    {4574,4574,  0, 0,  40000,    33,0.000000 }, // 4607: skeakernetsM111; Shanai
 
     // Amplitude begins at 2706.1, peaks 3190.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4569,4569,  0, 0,   1940,  1940,0.000000 }, // 4610: skeakernetsM112; Tinkle Bell
+    {4575,4575,  0, 0,   1940,  1940,0.000000 }, // 4608: skeakernetsM112; Tinkle Bell
 
-    // Amplitude begins at  926.6, peaks 4742.5 at infs,
+    // Amplitude begins at  463.1, peaks 2371.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4570,4571,  0, 1,    273,   273,0.046875 }, // 4611: skeakernetsM114; Steel Drums
+    {4576,4577,  0, 1,    260,   260,0.046875 }, // 4609: skeakernetsM114; Steel Drums
 
     // Amplitude begins at 2528.2,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4572,4572,  0, 0,     60,    60,0.000000 }, // 4612: skeakernetsM115; Woodblock
+    {4578,4578,  0, 0,     60,    60,0.000000 }, // 4610: skeakernetsM115; Woodblock
 
     // Amplitude begins at 2309.8, peaks 2481.2 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4573,4573,  0, 0,    140,   140,0.000000 }, // 4613: skeakernetsM117; Melodic Tom
+    {4579,4579,  0, 0,    140,   140,0.000000 }, // 4611: skeakernetsM117; Melodic Tom
 
     // Amplitude begins at 2211.7, peaks 2963.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4574,4574,  0, 0,    126,   126,0.000000 }, // 4614: skeakernetsM118; 
+    {4580,4580,  0, 0,    126,   126,0.000000 }, // 4612: skeakernetsM118; 
 
     // Amplitude begins at    0.0, peaks 1245.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4575,4575,  0, 0,   1680,  1680,0.000000 }, // 4615: skeakernetsM119; Reverse Cymbal
+    {4581,4581,  0, 0,   1680,  1680,0.000000 }, // 4613: skeakernetsM119; Reverse Cymbal
 
     // Amplitude begins at    0.0, peaks 1441.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4576,4576,  0, 0,    213,   213,0.000000 }, // 4616: skeakernetsM120; Guitar Fret Noise
+    {4582,4582,  0, 0,    213,   213,0.000000 }, // 4614: skeakernetsM120; Guitar Fret Noise
 
     // Amplitude begins at    0.4, peaks 1785.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4577,4577,  0, 0,    406,   406,0.000000 }, // 4617: skeakernetsM121; Breath Noise
+    {4583,4583,  0, 0,    406,   406,0.000000 }, // 4615: skeakernetsM121; Breath Noise
 
     // Amplitude begins at  125.4, peaks 2558.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4578,4578,  0, 0,    220,   220,0.000000 }, // 4618: skeakernetsM123; Bird Tweet
+    {4584,4584,  0, 0,    220,   220,0.000000 }, // 4616: skeakernetsM123; Bird Tweet
 
     // Amplitude begins at 1853.9, peaks 2763.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4579,4580,  0, 1,  40000,     0,0.000000 }, // 4619: skeakernetsM124; Telephone Ring
+    {4585,4586,  0, 1,  40000,     0,0.000000 }, // 4617: skeakernetsM124; Telephone Ring
 
     // Amplitude begins at    0.0, peaks 1611.4 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4581,4581, 29, 0,   1693,   100,0.000000 }, // 4620: skeakernetsM125; Helicopter
+    {4587,4587, 29, 0,   1693,   100,0.000000 }, // 4618: skeakernetsM125; Helicopter
 
     // Amplitude begins at 2261.9,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4582,4582,  0, 0,    153,   153,0.000000 }, // 4621: skeakernetsM127; Gun Shot
+    {4588,4588,  0, 0,    153,   153,0.000000 }, // 4619: skeakernetsM127; Gun Shot
 
     // Amplitude begins at 2239.5,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4583,4583, 25, 0,     33,    33,0.000000 }, // 4622: skeakernetsP35; Acoustic Bass Drum
+    {4589,4589, 25, 0,     33,    33,0.000000 }, // 4620: skeakernetsP35; Acoustic Bass Drum
 
     // Amplitude begins at 3096.9,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4584,4585, 72, 1,     33,    33,0.000000 }, // 4623: skeakernetsP37; Slide Stick
+    {4590,4591, 72, 1,     33,    33,0.000000 }, // 4621: skeakernetsP37; Slide Stick
 
     // Amplitude begins at 2308.6,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4586,4587, 20, 1,    106,   106,0.000000 }, // 4624: skeakernetsP38; Acoustic Snare
+    {4592,4593, 20, 1,    106,   106,0.000000 }, // 4622: skeakernetsP38; Acoustic Snare
 
     // Amplitude begins at 1891.5, peaks 1965.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4588,4588, 60, 0,     86,    86,0.000000 }, // 4625: skeakernetsP39; Hand Clap
+    {4594,4594, 60, 0,     86,    86,0.000000 }, // 4623: skeakernetsP39; Hand Clap
 
     // Amplitude begins at 2213.0,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4589,4590, 26, 1,    120,   120,0.000000 }, // 4626: skeakernetsP40; Electric Snare
+    {4595,4596, 26, 1,    120,   120,0.000000 }, // 4624: skeakernetsP40; Electric Snare
 
-    // Amplitude begins at 2531.0, peaks 2960.0 at infs,
+    // Amplitude begins at 2859.2,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4591,4591, 35, 0,     20,    20,0.000000 }, // 4627: skeakernetsP41; 
+    {4597,4597, 32, 0,     60,    60,0.000000 }, // 4625: skeakernetsP41; 
 
     // Amplitude begins at 1055.0,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4592,4592, 79, 0,    120,   120,0.000000 }, // 4628: skeakernetsP42; Closed High-Hat
+    {4598,4598, 79, 0,    120,   120,0.000000 }, // 4626: skeakernetsP42; Closed High-Hat
 
-    // Amplitude begins at 2363.2, peaks 3151.2 at infs,
+    // Amplitude begins at 2729.7,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4591,4591, 37, 0,     33,    33,0.000000 }, // 4629: skeakernetsP43; 
+    {4597,4597, 34, 0,     73,    73,0.000000 }, // 4627: skeakernetsP43; 
 
     // Amplitude begins at  234.9, peaks 1023.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4593,4593, 79, 0,     53,    53,0.000000 }, // 4630: skeakernetsP44; Pedal High Hat
+    {4599,4599, 79, 0,     53,    53,0.000000 }, // 4628: skeakernetsP44; Pedal High Hat
 
-    // Amplitude begins at 2214.8, peaks 2817.1 at infs,
+    // Amplitude begins at 1749.2, peaks 2978.3 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4591,4591, 39, 0,     60,    60,0.000000 }, // 4631: skeakernetsP45; 
+    {4600,4600, 37, 0,     60,    60,0.000000 }, // 4629: skeakernetsP45; 
 
     // Amplitude begins at  758.7,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4594,4594, 79, 0,    380,   380,0.000000 }, // 4632: skeakernetsP46; Open High Hat
+    {4601,4601, 79, 0,    380,   380,0.000000 }, // 4630: skeakernetsP46; Open High Hat
 
-    // Amplitude begins at 2059.0, peaks 2854.4 at infs,
+    // Amplitude begins at 1969.2, peaks 3158.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4591,4591, 42, 0,     53,    53,0.000000 }, // 4633: skeakernetsP47; 
+    {4600,4600, 40, 0,     86,    86,0.000000 }, // 4631: skeakernetsP47; 
 
-    // Amplitude begins at 1940.1, peaks 2666.2 at infs,
+    // Amplitude begins at 2151.4, peaks 2291.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4591,4591, 45, 0,     40,    40,0.000000 }, // 4634: skeakernetsP48; 
+    {4600,4600, 43, 0,    166,   166,0.000000 }, // 4632: skeakernetsP48; 
 
     // Amplitude begins at 1885.7, peaks 1933.8 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4595,4596, 61, 1,   1713,  1713,0.093750 }, // 4635: skeakernetsP49; Crash Cymbal 1
+    {4602,4603, 61, 1,   1713,  1713,0.093750 }, // 4633: skeakernetsP49; Crash Cymbal 1
 
-    // Amplitude begins at 2453.2, peaks 3041.3 at infs,
+    // Amplitude begins at 1932.5, peaks 2689.1 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4591,4591, 48, 0,    246,   246,0.000000 }, // 4636: skeakernetsP50; 
+    {4600,4600, 46, 0,    200,   200,0.000000 }, // 4634: skeakernetsP50; 
 
     // Amplitude begins at  704.1, peaks  737.0 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4597,4597, 60, 0,    260,   260,0.000000 }, // 4637: skeakernetsP51; Ride Cymbal 1
+    {4604,4604, 60, 0,    260,   260,0.000000 }, // 4635: skeakernetsP51; Ride Cymbal 1
 
     // Amplitude begins at 1693.3,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4598,4599, 79, 1,    273,   273,0.093750 }, // 4638: skeakernetsP52; Chinses Cymbal
+    {4605,4606, 79, 1,    273,   273,0.093750 }, // 4636: skeakernetsP52; Chinses Cymbal
 
     // Amplitude begins at 1057.7,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4600,4600, 62, 0,   1720,  1720,0.000000 }, // 4639: skeakernetsP53; Ride Bell
+    {4607,4607, 62, 0,   1720,  1720,0.000000 }, // 4637: skeakernetsP53; Ride Bell
 
     // Amplitude begins at  947.1, peaks 1399.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4601,4601, 80, 0,    113,   113,0.000000 }, // 4640: skeakernetsP54; Tambourine
+    {4608,4608, 80, 0,    113,   113,0.000000 }, // 4638: skeakernetsP54; Tambourine
 
-    // Amplitude begins at 1182.2,
+    // Amplitude begins at 1215.4, peaks 1221.5 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4602,4602, 69, 0,    266,   266,0.000000 }, // 4641: skeakernetsP55; Splash Cymbal
+    {4609,4609, 69, 0,    246,   246,0.000000 }, // 4639: skeakernetsP55; Splash Cymbal
 
     // Amplitude begins at 2425.9,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4603,4603, 58, 0,     73,    73,0.000000 }, // 4642: skeakernetsP56; Cowbell
+    {4610,4610, 58, 0,     73,    73,0.000000 }, // 4640: skeakernetsP56; Cowbell
 
     // Amplitude begins at 1827.3, peaks 1987.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4595,4604, 62, 1,   1946,  1946,0.093750 }, // 4643: skeakernetsP57; Crash Cymbal 2
+    {4602,4611, 62, 1,   1946,  1946,0.093750 }, // 4641: skeakernetsP57; Crash Cymbal 2
 
     // Amplitude begins at 2340.3, peaks 2634.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4605,4605, 24, 0,    373,   373,0.000000 }, // 4644: skeakernetsP58; Vibraslap
+    {4612,4612, 24, 0,    373,   373,0.000000 }, // 4642: skeakernetsP58; Vibraslap
 
     // Amplitude begins at  758.9,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4606,4606, 61, 0,    233,   233,0.000000 }, // 4645: skeakernetsP59; Ride Cymbal 2
+    {4613,4613, 61, 0,    233,   233,0.000000 }, // 4643: skeakernetsP59; Ride Cymbal 2
 
     // Amplitude begins at 1709.9,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4607,4607, 61, 0,    106,   106,0.000000 }, // 4646: skeakernetsP60; High Bongo
+    {4614,4614, 61, 0,    106,   106,0.000000 }, // 4644: skeakernetsP60; High Bongo
 
     // Amplitude begins at 1721.6,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4607,4607, 54, 0,    126,   126,0.000000 }, // 4647: skeakernetsP61; Low Bango
+    {4614,4614, 54, 0,    126,   126,0.000000 }, // 4645: skeakernetsP61; Low Bango
 
     // Amplitude begins at 2964.0,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4608,4608, 64, 0,     66,    66,0.000000 }, // 4648: skeakernetsP62; Mute High Conga
+    {4615,4615, 64, 0,     66,    66,0.000000 }, // 4646: skeakernetsP62; Mute High Conga
 
     // Amplitude begins at 3521.5,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4609,4609, 60, 0,    100,   100,0.000000 }, // 4649: skeakernetsP63; Open High Conga
+    {4616,4616, 60, 0,    100,   100,0.000000 }, // 4647: skeakernetsP63; Open High Conga
 
     // Amplitude begins at 3490.6,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4609,4609, 57, 0,    100,   100,0.000000 }, // 4650: skeakernetsP64; Low Conga
+    {4616,4616, 57, 0,    100,   100,0.000000 }, // 4648: skeakernetsP64; Low Conga
 
     // Amplitude begins at  478.6, peaks  600.6 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4610,4610, 40, 0,    153,   153,0.000000 }, // 4651: skeakernetsP70; Maracas
+    {4617,4617, 40, 0,    153,   153,0.000000 }, // 4649: skeakernetsP70; Maracas
 
     // Amplitude begins at 1203.0, peaks 1485.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4611,4611, 45, 0,    313,   313,0.000000 }, // 4652: skeakernetsP71; Short Whistle
+    {4618,4618, 45, 0,    313,   313,0.000000 }, // 4650: skeakernetsP71; Short Whistle
 
     // Amplitude begins at 1200.3, peaks 1494.7 at infs,
     // fades to 20% at infs, keyoff fades to 20% in -nans.
-    {4612,4612, 42, 0,  40000,     0,0.000000 }, // 4653: skeakernetsP72; Long Whistle
+    {4619,4619, 42, 0,  40000,     0,0.000000 }, // 4651: skeakernetsP72; Long Whistle
 
     // Amplitude begins at 1813.9,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4613,4614, 48, 1,     80,    80,0.000000 }, // 4654: skeakernetsP73; 
+    {4620,4621, 48, 1,     80,    80,0.000000 }, // 4652: skeakernetsP73; 
 
     // Amplitude begins at 2421.1,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4615,4616, 48, 1,     53,    53,0.000000 }, // 4655: skeakernetsP74; 
+    {4622,4623, 48, 1,     53,    53,0.000000 }, // 4653: skeakernetsP74; 
 
     // Amplitude begins at 2419.2,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4617,4617, 73, 0,     60,    60,0.000000 }, // 4656: skeakernetsP75; Claves
+    {4624,4624, 73, 0,     60,    60,0.000000 }, // 4654: skeakernetsP75; Claves
 
     // Amplitude begins at 2675.7,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4618,4618, 28, 0,     80,    80,0.000000 }, // 4657: skeakernetsP78; Mute Cuica
+    {4625,4625, 28, 0,     80,    80,0.000000 }, // 4655: skeakernetsP78; Mute Cuica
 
     // Amplitude begins at 2814.6, peaks 2827.9 at infs,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4619,4619, 28, 0,    600,   600,0.000000 }, // 4658: skeakernetsP79; Open Cuica
+    {4626,4626, 28, 0,    600,   600,0.000000 }, // 4656: skeakernetsP79; Open Cuica
 
     // Amplitude begins at  780.7,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4620,4620, 90, 0,     80,    80,0.000000 }, // 4659: skeakernetsP80; Mute Triangle
+    {4627,4627, 90, 0,     80,    80,0.000000 }, // 4657: skeakernetsP80; Mute Triangle
 
     // Amplitude begins at  823.4,
     // fades to 20% at infs, keyoff fades to 20% in infs.
-    {4621,4621, 90, 0,    306,   306,0.000000 }, // 4660: skeakernetsP81; Open Triangle
+    {4628,4628, 90, 0,    306,   306,0.000000 }, // 4658: skeakernetsP81; Open Triangle
 
 };
 
@@ -23368,7 +23367,7 @@ const char* const banknames[73] =
     "TMB (Blood)",
     "TMB (Lee)",
     "TMB (Nam)",
-    "DMX (Bank by Sneakernets)",
+    "DMX (DMXOPL bank by Sneakernets)",
 };
 const unsigned short banks[73][256] =
 {
@@ -24672,21 +24671,21 @@ const unsigned short banks[73][256] =
 4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,
 4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,4149,
     },
-    { // bank 72, DMX (Bank by Sneakernets)
-4507,4508,4509,4510,4511,4512,4513,4514,4515,4516,4517,  11,4518,4519,4520,4521,
-4522,4523,4524,4525,1242,4526,4527,4528,4529,4530,4531,4532,4533,4534,4535,4536,
-4537,4538,4539,4540,4541,4542,1260,4543,4544,4545,4546,4547,4548,4549,4550,4551,
+    { // bank 72, DMX (DMXOPL bank by Sneakernets)
+4507,4508,4509,4510,4511,4512,4513,4514,4515,4516,4517,4518,4519,4520,4521,4522,
+4523,4524,4525,4526,1242,4527,4528,4529,4530,4531,4532,4533,4534,4535,4536,4537,
+4538,4539,4540,4541,4542,4543,1260,1381,4544,4545,4546,4547,4548,4549,4550,4551,
 4552,4553,4554,4555,4556,4557,4558,4559,4560,4561,  57,4562,4563,4564,4565,4566,
 4567,4568,4569,4570,4571,4572,4573,4574,4575,4576,4577,4578,4579,4580,1300,4581,
-4582,4583,4584,1305,4585,4586,1308,4587,4588,4589,4590,4591,4592,4593,4594,4595,
-4596,4597,4598,4599,4600,4601,4602,4603,4604,1326,4605,4606,4607,1330,4608,4609,
-4610,1334,4611,4612,1337,4613,4614,4615,4616,4617,1343,4618,4619,4620,1347,4621,
+4582,4583,4584,1305,4585,1307,1308,4586,4587,4588,4589,4590,4591,4592,4593,4594,
+4595,4596,4597,4598,4599,4600,4601,4602,4603,1326,1327,4604,4605,1330,4606,4607,
+4608,1334,4609,4610,1337,4611,4612,4613,4614,4615,1343,4616,4617,4618,1347,4619,
  295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295,
  295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295,
- 295, 295, 295,4622,1349,4623,4624,4625,4626,4627,4628,4629,4630,4631,4632,4633,
-4634,4635,4636,4637,4638,4639,4640,4641,4642,4643,4644,4645,4646,4647,4648,4649,
-4650,1368,1369, 338, 339, 320,4651,4652,4653,4654,4655,4656,1373,1374,4657,4658,
-4659,4660, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295,
+ 295, 295, 295,4620,1349,4621,4622,4623,4624,4625,4626,4627,4628,4629,4630,4631,
+4632,4633,4634,4635,4636,4637,4638,4639,4640,4641,4642,4643,4644,4645,4646,4647,
+4648,1368,1369, 338, 339, 320,4649,4650,4651,4652,4653,4654,1373,1374,4655,4656,
+4657,4658, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295,
  295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295,
  295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295, 295,
     },
