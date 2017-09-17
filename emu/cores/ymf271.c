@@ -11,7 +11,7 @@
     - A/L bit (alternate loop)
     - EN and EXT Out bits
     - Src B and Src NOTE bits
-    - statusreg Busy and End bits
+    - statusreg Busy flag
     - timer register 0x11
     - ch2/ch3 (4 speakers)
     - PFM (FM using external PCM waveform)
@@ -350,6 +350,7 @@ typedef struct
 	UINT32 timerAVal, timerBVal;
 	UINT8 irqstate;
 	UINT8 status;
+	UINT16 end_status;
 	UINT8 enable;
 
 	UINT32 ext_address;
@@ -417,6 +418,31 @@ INLINE bool check_envelope_end(YMF271Slot *slot)
 		return true;
 	}
 	return false;
+}
+
+// calculate status end disable/enable (Desert War shots relies on this)
+INLINE void calculate_status_end(YMF271Chip *chip, int slotnum, UINT8 state)
+{
+	UINT8 subbit;
+	UINT8 bankbit;
+	
+	// guess: don't enable/disable if slot isn't a multiple of 4
+	if(slotnum & 3)
+		return;
+	
+	/*
+	 bit scheme is kinda twisted
+	 status1 Busy  End36 End24 End12 End0  ----  TimB  TimA
+	 status2 End44 End32 End20 End8  End40 End28 End16 End4
+	*/
+	subbit = slotnum / 12;
+	bankbit = ((slotnum % 12) >> 2);
+	
+	if(!state)
+		chip->end_status &= ~(1 << (subbit+bankbit*4));
+	else
+		chip->end_status |= (1 << (subbit+bankbit*4));
+
 }
 
 static void update_envelope(YMF271Slot *slot)
@@ -626,6 +652,7 @@ static void update_pcm(YMF271Chip *chip, int slotnum, INT32 *mixp, UINT32 length
 		if ((slot->stepptr>>16) > slot->endaddr)
 		{
 			slot->stepptr = slot->stepptr - ((UINT64)slot->endaddr<<16) + ((UINT64)slot->loopaddr<<16);
+			calculate_status_end(chip,slotnum,1);
 			if ((slot->stepptr>>16) > slot->endaddr)
 			{
 				// overflow
@@ -1187,6 +1214,7 @@ static void write_register(YMF271Chip *chip, int slotnum, int reg, UINT8 data)
 				slot->active = 1;
 
 				calculate_step(slot);
+				calculate_status_end(chip,slotnum,0);
 				init_envelope(chip, slot);
 				init_lfo(chip, slot);
 				slot->feedback_modulation0 = 0;
@@ -1648,11 +1676,11 @@ static UINT8 ymf271_r(void *info, UINT8 offset)
 	switch (offset & 0xf)
 	{
 		case 0x0:
-			return chip->status;
+			return chip->status | ((chip->end_status & 0xf) << 3);
 
 		case 0x1:
 			// statusreg 2
-			return 0;
+			return chip->end_status >> 4;
 
 		case 0x2:
 		{
