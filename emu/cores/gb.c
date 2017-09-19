@@ -56,15 +56,13 @@ TODO:
 #include <string.h>	// for memset
 
 #include <stdtype.h>
+#include <stdbool.h>
 #include "../EmuStructs.h"
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "../RatioCntr.h"
 #include "gb.h"
-
-
-#define LEFT_CYCLE_FIX	1
 
 
 static UINT8 gb_wave_r(void *chip, UINT8 offset);
@@ -935,50 +933,21 @@ static void gb_update_square_channel(struct SOUND *snd, UINT32 cycles)
 	if (snd->on)
 	{
 		// compensate for leftover cycles
-		if (snd->cycles_left > 0)
-		{
-#if LEFT_CYCLE_FIX
-			cycles += snd->cycles_left;
-			snd->cycles_left = 0;
-#else
-			// Emit sample(s)
-			if (cycles <= snd->cycles_left)
-			{
-				snd->cycles_left -= cycles;
-				cycles = 0;
-			}
-			else
-			{
-				cycles -= snd->cycles_left;
-				snd->cycles_left = 0;
-			}
-#endif
-		}
+		cycles += snd->cycles_left;
 
+		snd->cycles_left = cycles & 3;
+		cycles >>= 2;	// one step every 4 cycles
 		while (cycles > 0)
 		{
-			// Emit sample(s)
-			if (cycles < 4)
+			cycles --;
+			snd->frequency_counter = (snd->frequency_counter + 1) & 0x7FF;
+			if (snd->frequency_counter == 0)
 			{
-#if LEFT_CYCLE_FIX
-				snd->cycles_left = cycles;
-#else
-				snd->cycles_left = 4 - cycles;
-#endif
-				cycles = 0;
-			}
-			else
-			{
-				cycles -= 4;
-				snd->frequency_counter = (snd->frequency_counter + 1) & 0x7FF;
-				if (snd->frequency_counter == 0)
-				{
-					snd->duty_count = (snd->duty_count + 1) & 0x07;
-					snd->signal = wave_duty_table[snd->duty][snd->duty_count];
+				snd->duty_count = (snd->duty_count + 1) & 0x07;
+				snd->signal = wave_duty_table[snd->duty][snd->duty_count];
 
-					// Reload frequency counter
-					snd->frequency_counter = snd->frequency;
-				}
+				// Reload frequency counter
+				snd->frequency_counter = snd->frequency;
 			}
 		}
 	}
@@ -990,71 +959,38 @@ static void gb_update_wave_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cyc
 	if (snd->on)
 	{
 		// compensate for leftover cycles
-		if (snd->cycles_left > 0)
-		{
-#if LEFT_CYCLE_FIX
-			cycles += snd->cycles_left;
-			snd->cycles_left = 0;
-#else
-			if (cycles <= snd->cycles_left)
-			{
-				// Emit samples
-				snd->cycles_left -= cycles;
-				cycles = 0;
-			}
-			else
-			{
-				// Emit samples
+		cycles += snd->cycles_left;
 
-				cycles -= snd->cycles_left;
-				snd->cycles_left = 0;
-			}
-#endif
-		}
-
+		snd->cycles_left = cycles & 1;
+		cycles >>= 1;	// one step every 2 cycles
 		while (cycles > 0)
 		{
-			// Emit current sample
+			cycles --;
 
-			// cycles -= 2
-			if (cycles < 2)
+			// Calculate next state
+			snd->frequency_counter = (snd->frequency_counter + 1) & 0x7FF;
+			snd->sample_reading = false;
+			if (gb->gbMode == GBMODE_DMG && snd->frequency_counter == 0x7ff)
+				snd->offset = (snd->offset + 1) & 0x1F;
+			if (snd->frequency_counter == 0)
 			{
-#if LEFT_CYCLE_FIX
-				snd->cycles_left = cycles;
-#else
-				snd->cycles_left = 2 - cycles;
-#endif
-				cycles = 0;
-			}
-			else
-			{
-				cycles -= 2;
-
-				// Calculate next state
-				snd->frequency_counter = (snd->frequency_counter + 1) & 0x7FF;
-				snd->sample_reading = false;
-				if (gb->gbMode == GBMODE_DMG && snd->frequency_counter == 0x7ff)
+				// Read next sample
+				snd->sample_reading = true;
+				if (gb->gbMode == GBMODE_CGB04)
 					snd->offset = (snd->offset + 1) & 0x1F;
-				if (snd->frequency_counter == 0)
+				snd->current_sample = gb->snd_regs[AUD3W0 + (snd->offset/2)];
+				if (!(snd->offset & 0x01))
 				{
-					// Read next sample
-					snd->sample_reading = true;
-					if (gb->gbMode == GBMODE_CGB04)
-						snd->offset = (snd->offset + 1) & 0x1F;
-					snd->current_sample = gb->snd_regs[AUD3W0 + (snd->offset/2)];
-					if (!(snd->offset & 0x01))
-					{
-						snd->current_sample >>= 4;
-					}
-					snd->current_sample = (snd->current_sample & 0x0F) - 8;
-					if (gb->BoostWaveChn)
-						snd->current_sample <<= 1;
-
-					snd->signal = snd->level ? snd->current_sample / (1 << (snd->level - 1)) : 0;
-
-					// Reload frequency counter
-					snd->frequency_counter = snd->frequency;
+					snd->current_sample >>= 4;
 				}
+				snd->current_sample = (snd->current_sample & 0x0F) - 8;
+				if (gb->BoostWaveChn)
+					snd->current_sample <<= 1;
+
+				snd->signal = snd->level ? snd->current_sample / (1 << (snd->level - 1)) : 0;
+
+				// Reload frequency counter
+				snd->frequency_counter = snd->frequency;
 			}
 		}
 	}
@@ -1063,42 +999,25 @@ static void gb_update_wave_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cyc
 
 static void gb_update_noise_channel(gb_sound_t *gb, struct SOUND *snd, UINT32 cycles)
 {
-	while (cycles > 0)
+	while (cycles >= snd->cycles_left)
 	{
-		if (cycles < snd->cycles_left)
+		UINT16 feedback;
+
+		cycles -= snd->cycles_left;
+		snd->cycles_left = gb_noise_period_cycles(gb);
+
+		/* Using a Polynomial Counter (aka Linear Feedback Shift Register)
+		 Mode 4 has a 15 bit counter so we need to shift the
+		 bits around accordingly */
+		feedback = ((snd->noise_lfsr >> 1) ^ snd->noise_lfsr) & 1;
+		snd->noise_lfsr = (snd->noise_lfsr >> 1) | (feedback << 14);
+		if (snd->noise_short)
 		{
-			if (snd->on)
-			{
-				// generate samples
-			}
-
-			snd->cycles_left -= cycles;
-			cycles = 0;
+			snd->noise_lfsr = (snd->noise_lfsr & ~(1 << 6)) | (feedback << 6);
 		}
-		else
-		{
-			UINT16 feedback;
-
-			if (snd->on)
-			{
-				// generate samples
-			}
-
-			cycles -= snd->cycles_left;
-			snd->cycles_left = gb_noise_period_cycles(gb);
-
-			/* Using a Polynomial Counter (aka Linear Feedback Shift Register)
-			 Mode 4 has a 15 bit counter so we need to shift the
-			 bits around accordingly */
-			feedback = ((snd->noise_lfsr >> 1) ^ snd->noise_lfsr) & 1;
-			snd->noise_lfsr = (snd->noise_lfsr >> 1) | (feedback << 14);
-			if (snd->noise_short)
-			{
-				snd->noise_lfsr = (snd->noise_lfsr & ~(1 << 6)) | (feedback << 6);
-			}
-			snd->signal = (snd->noise_lfsr & 1) ? -1 : 1;
-		}
+		snd->signal = (snd->noise_lfsr & 1) ? -1 : 1;
 	}
+	snd->cycles_left -= cycles;
 }
 
 
