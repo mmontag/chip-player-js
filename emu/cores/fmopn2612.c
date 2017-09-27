@@ -2190,7 +2190,7 @@ void ym2612_update_one(void *chip, UINT32 length, DEV_SMPL **buffer)
 	cch[5]   = &F2612->CH[5];
 	
 	if (! F2612->MuteDAC)
-		dacout = F2612->dacout;
+		dacout = F2612->dacout << 5;    /* level unknown */
 	else
 		dacout = 0;
 
@@ -2502,15 +2502,23 @@ void ym2612_write(void *chip, UINT8 a, UINT8 v)
 			{
 			case 0x2a:  /* DAC data (YM2612) */
 				//ym2612_update_req(F2612);
-				F2612->dacout = ((int)v - 0x80) << 6;   /* level unknown */
+				F2612->dacout &= 0x01;
+				// set high 8 bit of the 9-bit DAC
+				F2612->dacout |= ((int)v - 0x80) << 1;   /* level unknown */
 				break;
 			case 0x2b:  /* DAC Sel  (YM2612) */
 				/* b7 = dac enable */
 				F2612->dacen = v & 0x80;
 				break;
-			case 0x2C:  // undocumented: DAC Test Reg
-				// b5 = volume enable
+			case 0x2C:  // undocumented: DAC Test Register
+				// http://gendev.spritesmind.net/forum/viewtopic.php?p=26996#p26996
+				// b7/b6/b4 = various test bits
+				// b5 = makes DAC go to channels 0..3 and 5.
+				// b3 = 9th DAC bit
 				F2612->dac_test = v & 0x20;
+				F2612->dacout &= ~0x01;
+				// set DAC's 9th bit
+				F2612->dacout |= (v & 0x08) >> 3;
 				break;
 			default:    /* OPN section */
 				ym2612_update_req(F2612);
