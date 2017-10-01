@@ -26,27 +26,27 @@
 
 // Setup compiler defines useful for exporting required public API symbols in gme.cpp
 #ifndef ADLMIDI_EXPORT
-#if defined (_WIN32) && defined(ADLMIDI_BUILD_DLL)
-#define ADLMIDI_EXPORT __declspec(dllexport)
-#elif defined (LIBADLMIDI_VISIBILITY)
-#define ADLMIDI_EXPORT __attribute__((visibility ("default")))
-#else
-#define ADLMIDI_EXPORT
-#endif
+    #if defined (_WIN32) && defined(ADLMIDI_BUILD_DLL)
+        #define ADLMIDI_EXPORT __declspec(dllexport)
+    #elif defined (LIBADLMIDI_VISIBILITY)
+        #define ADLMIDI_EXPORT __attribute__((visibility ("default")))
+    #else
+        #define ADLMIDI_EXPORT
+    #endif
 #endif
 
 #ifdef _WIN32
-#undef NO_OLDNAMES
+    #undef NO_OLDNAMES
 
-#ifdef _MSC_VER
-#ifdef _WIN64
-    typedef __int64 ssize_t;
-#else
-    typedef __int32 ssize_t;
-#endif
+    #ifdef _MSC_VER
+        #ifdef _WIN64
+            typedef __int64 ssize_t;
+        #else
+            typedef __int32 ssize_t;
+        #endif
+    #endif
 #endif
 
-#endif
 #include <vector>
 #include <string>
 #include <sstream>
@@ -67,9 +67,9 @@
 
 #include "fraction.h"
 #ifdef ADLMIDI_USE_DOSBOX_OPL
-#include "dbopl.h"
+    #include "dbopl.h"
 #else
-#include "nukedopl3.h"
+    #include "nukedopl3.h"
 #endif
 
 #include "adldata.hh"
@@ -464,6 +464,26 @@ public:
      *   Output: desired number of seconds until next call
      */
     double Tick(double s, double granularity);
+
+    /* RealTime event triggers */
+    void realTime_ResetState();
+
+    bool realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
+    void realTime_NoteOff(uint8_t channel, uint8_t note);
+
+    void realTime_NoteAfterTouch(uint8_t channel, uint8_t note, uint8_t atVal);
+    void realTime_ChannelAfterTouch(uint8_t channel, uint8_t atVal);
+
+    void realTime_Controller(uint8_t channel, uint8_t type, uint8_t value);
+
+    void realTime_PatchChange(uint8_t channel, uint8_t patch);
+
+    void realTime_PitchBend(uint8_t channel, uint16_t pitch);
+    void realTime_PitchBend(uint8_t channel, uint8_t msb, uint8_t lsb);
+
+    void realTime_BankChangeLSB(uint8_t channel, uint8_t lsb);
+    void realTime_BankChangeMSB(uint8_t channel, uint8_t msb);
+    void realTime_BankChange(uint8_t channel, uint16_t bank);
 
 private:
     enum
