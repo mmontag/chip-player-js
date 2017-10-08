@@ -1007,6 +1007,7 @@ void MIDIplay::HandleEvent(size_t tk)
     case 0x8: // Note off
     {
         uint8_t note = TrackData[tk][CurrentPosition.track[tk].ptr++];
+        /*uint8_t vol=*/TrackData[tk][CurrentPosition.track[tk].ptr++];
         //if(MidCh != 9) note -= 12; // HACK
         realTime_NoteOff(MidCh, note);
         break;
