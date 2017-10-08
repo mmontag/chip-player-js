@@ -124,6 +124,8 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
             tmp2.notenum = 0;
             tmp2.pseudo4op = (flags & 0x02) != 0;
             tmp2.voice2_fine_tune = 0;
+            tmp[0].diff = false;
+            tmp[1].diff = tmp2.pseudo4op;
 
             int8_t fine_tune = (int8_t)data[offset + 37];
             if(fine_tune != 0)
@@ -144,7 +146,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
             char name2[512];
             sprintf(name2, "%sM%u", prefix, i);
 
-            if(!flags)
+            if((flags & 0x03) == 0)
             {
                 size_t resno = InsertIns(tmp[0], tmp[0], tmp2, name, name2);
                 SetBank(bank, i, resno);
@@ -170,17 +172,31 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
             name.resize(32);
             std::memcpy(&name[0], data.data() + offset, 32);
             name.resize(std::strlen(&name[0]));
+/*
+    WOPL's
 
-            tmp[0].data[0]  = data[offset + 42 + 5];
-            tmp[0].data[1]  = data[offset + 42 + 0];
-            tmp[0].data[2]  = data[offset + 42 + 7];
-            tmp[0].data[3]  = data[offset + 42 + 2];
-            tmp[0].data[4]  = data[offset + 42 + 8];
-            tmp[0].data[5]  = data[offset + 42 + 3];
-            tmp[0].data[6]  = data[offset + 42 + 9];
-            tmp[0].data[7]  = data[offset + 42 + 4];
-            tmp[0].data[8]  = data[offset + 42 + 6];
-            tmp[0].data[9]  = data[offset + 42 + 1];
+ 0   AM/Vib/Env/Ksr/FMult characteristics
+ 1   Key Scale Level / Total level register data
+ 2   Attack / Decay
+ 3   Systain and Release register data
+ 4   Wave form
+
+ 5   AM/Vib/Env/Ksr/FMult characteristics
+ 6   Key Scale Level / Total level register data
+ 7   Attack / Decay
+ 8   Systain and Release register data
+ 9   Wave form
+*/
+            tmp[0].data[0]  = data[offset + 42 + 5];//AMVIB op1
+            tmp[0].data[1]  = data[offset + 42 + 0];//AMVIB op2
+            tmp[0].data[2]  = data[offset + 42 + 7];//AtDec op1
+            tmp[0].data[3]  = data[offset + 42 + 2];//AtDec op2
+            tmp[0].data[4]  = data[offset + 42 + 8];//SusRel op1
+            tmp[0].data[5]  = data[offset + 42 + 3];//SusRel op2
+            tmp[0].data[6]  = data[offset + 42 + 9];//Wave op1
+            tmp[0].data[7]  = data[offset + 42 + 4];//Wave op2
+            tmp[0].data[8]  = data[offset + 42 + 6];//KSL op1
+            tmp[0].data[9]  = data[offset + 42 + 1];//KSL op2
             tmp[0].data[10] = data[offset + 40];
 
             tmp[1].data[0]  = data[offset + 52 + 5];
@@ -197,13 +213,14 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
 
             tmp[0].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 32));
             tmp[1].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 34));
-
             uint8_t flags = data[offset + 39];
 
             struct ins tmp2;
             tmp2.notenum = data[offset + 38];
             tmp2.pseudo4op = (flags & 0x02) != 0;
             tmp2.voice2_fine_tune = 0;
+            tmp[0].diff = false;
+            tmp[1].diff = tmp2.pseudo4op;
 
             int8_t fine_tune = (int8_t)data[offset + 37];
             if(fine_tune != 0)
@@ -229,7 +246,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
             char name2[512];
             sprintf(name2, "%sP%u", prefix, gmno & 127);
 
-            if(!flags)
+            if((flags & 0x03) == 0)
             {
                 size_t resno = InsertIns(tmp[0], tmp[0], tmp2, name, name2);
                 SetBank(bank, gmno, resno);

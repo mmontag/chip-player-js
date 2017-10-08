@@ -57,7 +57,7 @@ struct MeasureThreaded
     typedef std::map<ins, DurationInfo> DurationInfoCache;
 
     MeasureThreaded() :
-        m_semaphore(int(std::thread::hardware_concurrency())),
+        m_semaphore(int(std::thread::hardware_concurrency()) * 2),
         m_done(0),
         m_cache_matches(0)
     {}
