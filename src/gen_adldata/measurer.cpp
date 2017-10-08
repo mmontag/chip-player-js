@@ -236,9 +236,9 @@ void MeasureThreaded::LoadCache(const char *fileName)
     FILE *in = std::fopen(fileName, "rb");
     if(!in)
     {
-        printf("Failed to load cache: file is not exists.\n"
+        std::printf("Failed to load cache: file is not exists.\n"
                "Complete data will be generated from scratch.\n");
-        fflush(stdout);
+        std::fflush(stdout);
         return;
     }
 
@@ -246,18 +246,18 @@ void MeasureThreaded::LoadCache(const char *fileName)
     if(std::fread(magic, 1, 32, in) != 32)
     {
         std::fclose(in);
-        printf("Failed to load cache: can't read magic.\n"
+        std::printf("Failed to load cache: can't read magic.\n"
                "Complete data will be generated from scratch.\n");
-        fflush(stdout);
+        std::fflush(stdout);
         return;
     }
 
     if(memcmp(magic, "ADLMIDI-DURATION-CACHE-FILE-V1.0", 32) != 0)
     {
         std::fclose(in);
-        printf("Failed to load cache: magic missmatch.\n"
+        std::printf("Failed to load cache: magic missmatch.\n"
                "Complete data will be generated from scratch.\n");
-        fflush(stdout);
+        std::fflush(stdout);
         return;
     }
 
@@ -291,7 +291,7 @@ void MeasureThreaded::LoadCache(const char *fileName)
             break;
         if(std::fread(&inst.pseudo4op, 1, 1, in) != 1)
             break;
-        if(std::fread(&inst.fine_tune, sizeof(double), 1, in) != 1)
+        if(std::fread(&inst.voice2_fine_tune, sizeof(double), 1, in) != 1)
             break;
 
         //Instrument data
@@ -394,8 +394,8 @@ void MeasureThreaded::LoadCache(const char *fileName)
             m_durationInfo.insert({inst, info});
     }
 
-    printf("Cache loaded!\n");
-    fflush(stdout);
+    std::printf("Cache loaded!\n");
+    std::fflush(stdout);
 
     std::fclose(in);
 }
@@ -418,7 +418,7 @@ void MeasureThreaded::SaveCache(const char *fileName)
         fwrite(&outval, 1, sizeof(uint64_t), out);
         fwrite(&in.notenum, 1, 1, out);
         fwrite(&in.pseudo4op, 1, 1, out);
-        fwrite(&in.fine_tune, sizeof(double), 1, out);
+        fwrite(&in.voice2_fine_tune, sizeof(double), 1, out);
 
         for(InstrumentDataTab::const_iterator j = insdatatab.begin(); j != insdatatab.end(); ++j)
         {
@@ -459,7 +459,7 @@ void MeasureThreaded::SaveCache(const char *fileName)
 
 void MeasureThreaded::printProgress()
 {
-    printf("Calculating measures... [%c %3u%% (%4u/%4u) Threads %3u, Matches %u]       \r",
+    std::printf("Calculating measures... [%c %3u%% (%4u/%4u) Threads %3u, Matches %u]       \r",
             spinner[m_done.load() % 4],
             (unsigned int)(((double)m_done.load() / (double)(m_total)) * 100),
             (unsigned int)m_done.load(),
@@ -467,15 +467,15 @@ void MeasureThreaded::printProgress()
             (unsigned int)m_threads.size(),
             (unsigned int)m_cache_matches
             );
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 void MeasureThreaded::printFinal()
 {
-    printf("Calculating measures completed! [Total entries %4u with %u cache matches]\n",
+    std::printf("Calculating measures completed! [Total entries %4u with %u cache matches]\n",
             (unsigned int)m_total,
             (unsigned int)m_cache_matches);
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 void MeasureThreaded::run(InstrumentsData::const_iterator i)

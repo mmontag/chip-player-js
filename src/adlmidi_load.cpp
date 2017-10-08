@@ -313,7 +313,7 @@ riffskip:
             adlins.ms_sound_koff = 500;
             adlins.tone  = 0;
             adlins.flags = 0;
-            adlins.fine_tune = 0.0;
+            adlins.voice2_fine_tune = 0.0;
             opl.dynamic_metainstruments.push_back(adlins);
             opl.dynamic_instruments.push_back(adl);
         }

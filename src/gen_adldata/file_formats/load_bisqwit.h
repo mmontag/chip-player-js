@@ -25,7 +25,7 @@ static bool LoadBisqwit(const char *fn, unsigned bank, const char *prefix)
         struct ins tmp2;
         tmp2.notenum = (uint8_t)std::fgetc(fp);
         tmp2.pseudo4op = false;
-        tmp2.fine_tune = 0.0;
+        tmp2.voice2_fine_tune = 0.0;
 
         insdata tmp[2];
         for(int side = 0; side < 2; ++side)

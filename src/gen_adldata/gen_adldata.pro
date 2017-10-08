@@ -25,7 +25,9 @@ HEADERS += \
     file_formats/load_jv.h \
     file_formats/load_tmb.h \
     file_formats/load_bisqwit.h \
-    measurer.h
+    file_formats/load_wopl.h \
+    measurer.h \
+    file_formats/common.h
 
 SOURCES += \
     gen_adldata.cc \

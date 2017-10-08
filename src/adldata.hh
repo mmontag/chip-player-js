@@ -52,7 +52,7 @@ extern const struct adlinsdata
     unsigned char flags;
     unsigned short ms_sound_kon;  // Number of milliseconds it produces sound;
     unsigned short ms_sound_koff;
-    double fine_tune;
+    double voice2_fine_tune;
 } adlins[];
 int maxAdlBanks();
 extern const unsigned short banks[][256];

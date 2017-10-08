@@ -20,6 +20,7 @@
 #include "file_formats/load_jv.h"
 #include "file_formats/load_op2.h"
 #include "file_formats/load_tmb.h"
+#include "file_formats/load_wopl.h"
 
 int main(int argc, char**argv)
 {
@@ -115,6 +116,15 @@ int main(int argc, char**argv)
             if(format == "Bisqwit")
             {
                 if(!LoadBisqwit(filepath.c_str(), bank, prefix.c_str()))
+                {
+                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    return 1;
+                }
+            }
+            else
+            if(format == "WOPL")
+            {
+                if(!LoadWopl(filepath.c_str(), bank, prefix.c_str()))
                 {
                     fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
@@ -321,8 +331,8 @@ int main(int argc, char**argv)
 
     MeasureThreaded measureCounter;
     {
-        printf("Beginning to generate measures data...\n");
-        fflush(stdout);
+        std::printf("Beginning to generate measures data... (Hardware concurrency: %d)\n", std::thread::hardware_concurrency());
+        std::fflush(stdout);
         measureCounter.LoadCache("fm_banks/adldata-cache.dat");
         measureCounter.m_total = instab.size();
         for(size_t b = instab.size(), c = 0; c < b; ++c)
@@ -333,13 +343,13 @@ int main(int argc, char**argv)
                 measureCounter.run(i);
             }
         }
-        fflush(stdout);
+        std::fflush(stdout);
         measureCounter.waitAll();
         measureCounter.SaveCache("fm_banks/adldata-cache.dat");
     }
 
-    printf("Writing generated measure data...\n");
-    fflush(stdout);
+    std::printf("Writing generated measure data...\n");
+    std::fflush(stdout);
 
     std::vector<unsigned> adlins_flags;
 
@@ -387,7 +397,7 @@ int main(int argc, char**argv)
                     flags,
                     info.ms_sound_kon,
                     info.ms_sound_koff,
-                    i->first.fine_tune);
+                    i->first.voice2_fine_tune);
             std::string names;
             for(std::set<std::string>::const_iterator
                 j = i->second.second.begin();

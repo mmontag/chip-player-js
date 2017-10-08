@@ -37,7 +37,7 @@ struct ins
     size_t insno1, insno2;
     unsigned char notenum;
     bool pseudo4op;
-    double fine_tune;
+    double voice2_fine_tune;
 
     bool operator==(const ins &b) const
     {
@@ -45,7 +45,7 @@ struct ins
                && insno1 == b.insno1
                && insno2 == b.insno2
                && pseudo4op == b.pseudo4op
-               && fine_tune == b.fine_tune;
+               && voice2_fine_tune == b.voice2_fine_tune;
     }
     bool operator< (const ins &b) const
     {
@@ -53,7 +53,7 @@ struct ins
         if(insno2 != b.insno2) return insno2 < b.insno2;
         if(notenum != b.notenum) return notenum < b.notenum;
         if(pseudo4op != b.pseudo4op) return pseudo4op < b.pseudo4op;
-        if(fine_tune != b.fine_tune) return fine_tune < b.fine_tune;
+        if(voice2_fine_tune != b.voice2_fine_tune) return voice2_fine_tune < b.voice2_fine_tune;
         return 0;
     }
     bool operator!=(const ins &b) const
