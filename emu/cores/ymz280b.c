@@ -496,8 +496,8 @@ static int generate_pcm16(ymz280b_state *chip, struct YMZ280BVoice *voice, INT16
 		while (samples)
 		{
 			/* fetch the current value */
+			// the manual says "16-bit 2's complement MSB-first format"
 			val = (INT16)((ymz280b_read_memory(chip, position / 2 + 0) << 8) | ymz280b_read_memory(chip, position / 2 + 1));
-			// Note: Last MAME updates say it's: ((position / 2 + 1) << 8) + (position / 2 + 0);
 
 			/* output to the buffer, scaling by the volume */
 			*buffer++ = val;

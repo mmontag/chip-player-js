@@ -339,8 +339,8 @@ static void saa1099_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				if (saa->noise[ch/3].level & 1)
 				{
 					// subtract to avoid overflows, also use only half amplitude
-					output_l -= saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 16 / 2;
-					output_r -= saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 16 / 2;
+					output_l -= saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 16;
+					output_r -= saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 16;
 				}
 			}
 			// if the square wave is enabled
@@ -359,9 +359,9 @@ static void saa1099_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			if (saach->noise_enable)
 				outlvl += (saa->noise[ch/3].level & 1) ? +1 : -1;
 			if (saach->freq_enable)
-				outlvl += (saach->level & 1) ? +2 : -2;
-			output_l += outlvl * saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32 / 2;
-			output_r += outlvl * saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32 / 2;
+				outlvl += (saach->level & 1) ? +1 : -1;
+			output_l += outlvl * saach->amplitude[ LEFT] * saach->envelope[ LEFT] / 32;
+			output_r += outlvl * saach->amplitude[RIGHT] * saach->envelope[RIGHT] / 32;
 #endif
 		}
 
@@ -398,7 +398,7 @@ static UINT8 device_start_saa1099(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	/* copy global parameters */
 	saa->master_clock = cfg->clock;
-	saa->sample_rate = saa->master_clock / 256.0;
+	saa->sample_rate = saa->master_clock / 128.0;	// /128 seems right based on the highest noise frequency
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, saa->sample_rate, cfg->smplRate);
 
 	saa1099_set_mute_mask(saa, 0x00);
