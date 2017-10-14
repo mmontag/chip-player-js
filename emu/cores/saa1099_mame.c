@@ -78,49 +78,19 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
-#include "saa1099.h"
+#include "saa1099_mame.h"
 
 
-static void saa1099_write(void *info, UINT8 offset, UINT8 data);
+//void saa1099m_write(void *info, UINT8 offset, UINT8 data);
 static void saa1099_control_w(void *info, UINT8 data);
 static void saa1099_data_w(void *info, UINT8 data);
 
-static void saa1099_update(void *param, UINT32 samples, DEV_SMPL **outputs);
-static UINT8 device_start_saa1099(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
-static void device_stop_saa1099(void *info);
-static void device_reset_saa1099(void *info);
+//void saa1099m_update(void *param, UINT32 samples, DEV_SMPL **outputs);
+//void* saa1099m_create(UINT32 clock, UINT32 sampleRate);
+//void saa1099m_destroy(void *info);
+//void saa1099m_reset(void *info);
 
-static void saa1099_set_mute_mask(void *info, UINT32 MuteMask);
-
-
-static DEVDEF_RWFUNC devFunc[] =
-{
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, saa1099_write},
-	{0x00, 0x00, 0, NULL}
-};
-static DEV_DEF devDef =
-{
-	"SAA1099", "MAME", FCC_MAME,
-	
-	device_start_saa1099,
-	device_stop_saa1099,
-	device_reset_saa1099,
-	saa1099_update,
-	
-	NULL,	// SetOptionBits
-	saa1099_set_mute_mask,
-	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangeCallback
-	NULL,	// LinkDevice
-	
-	devFunc,	// rwFuncs
-};
-
-const DEV_DEF* devDefList_SAA1099[] =
-{
-	&devDef,
-	NULL
-};
+//void saa1099m_set_mute_mask(void *info, UINT32 MuteMask);
 
 
 #define LEFT	0x00
@@ -265,7 +235,7 @@ static void saa1099_envelope_w(saa1099_state *saa, int ch)
 }
 
 
-static void saa1099_update(void *param, UINT32 samples, DEV_SMPL **outputs)
+void saa1099m_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
 	saa1099_state *saa = (saa1099_state *)param;
 	UINT32 j, ch;
@@ -388,28 +358,24 @@ static void saa1099_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 
 
-static UINT8 device_start_saa1099(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+void* saa1099m_create(UINT32 clock, UINT32 sampleRate)
 {
 	saa1099_state *saa;
 
 	saa = (saa1099_state*)calloc(1, sizeof(saa1099_state));
 	if (saa == NULL)
-		return 0xFF;
+		return NULL;
 
 	/* copy global parameters */
-	saa->master_clock = cfg->clock;
-	saa->sample_rate = saa->master_clock / 128.0;	// /128 seems right based on the highest noise frequency
-	SRATE_CUSTOM_HIGHEST(cfg->srMode, saa->sample_rate, cfg->smplRate);
+	saa->master_clock = clock;
+	saa->sample_rate = sampleRate;
 
-	saa1099_set_mute_mask(saa, 0x00);
-	
-	saa->_devData.chipInf = saa;
-	INIT_DEVINF(retDevInf, &saa->_devData, (UINT32)(saa->sample_rate + 0.5), &devDef);
-	
-	return 0x00;
+	saa1099m_set_mute_mask(saa, 0x00);
+
+	return saa;
 }
 
-void device_stop_saa1099(void *info)
+void saa1099m_destroy(void *info)
 {
 	saa1099_state *saa = (saa1099_state *)info;
 	
@@ -418,7 +384,7 @@ void device_stop_saa1099(void *info)
 	return;
 }
 
-void device_reset_saa1099(void *info)
+void saa1099m_reset(void *info)
 {
 	saa1099_state *saa = (saa1099_state *)info;
 	struct saa1099_channel *saach;
@@ -461,7 +427,7 @@ void device_reset_saa1099(void *info)
 	return;
 }
 
-static void saa1099_write(void *info, UINT8 offset, UINT8 data)
+void saa1099m_write(void *info, UINT8 offset, UINT8 data)
 {
 	if (offset & 1)
 		saa1099_data_w(info, data);
@@ -573,7 +539,7 @@ static void saa1099_data_w(void *info, UINT8 data)
 }
 
 
-static void saa1099_set_mute_mask(void *info, UINT32 MuteMask)
+void saa1099m_set_mute_mask(void *info, UINT32 MuteMask)
 {
 	saa1099_state *saa = (saa1099_state *)info;
 	UINT8 CurChn;

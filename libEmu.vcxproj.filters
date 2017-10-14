@@ -186,9 +186,6 @@
     <ClCompile Include="emu\cores\ws_audio.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\cores\saa1099.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="emu\cores\es5503.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
@@ -217,6 +214,12 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="emu\dac_control.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\saa1099_mame.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\saaintf.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -419,9 +422,6 @@
     <ClInclude Include="emu\cores\ws_initialIo.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\cores\saa1099.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="emu\cores\es5503.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -447,6 +447,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\RatioCntr.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\saa1099_mame.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\saaintf.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

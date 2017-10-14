@@ -141,7 +141,7 @@
 #include "cores/vsu.h"
 #endif
 #ifdef SNDDEV_SAA1099
-#include "cores/saa1099.h"
+#include "cores/saaintf.h"
 #endif
 #ifdef SNDDEV_ES5503
 #include "cores/es5503.h"
