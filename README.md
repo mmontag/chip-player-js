@@ -85,6 +85,11 @@ To build that example you will need to have installed SDL2 library.
   to play any MIDI via this library.
 
 # Changelog
+## 1.3.0   2017-10-17 <WIP>
+ * "gen_adldata" tool now supports WOPL banks format which supports a full set of libADLMIDI features
+ * Added support for custom banks are loadable in runtime without rebuilding of "adldata.cpp" banks database
+ * ...
+
 ## 1.2.1    2017-07-30
  * Minor fixes
  * Added 72'th bank by Sneakernets
