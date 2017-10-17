@@ -106,6 +106,12 @@ extern void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol)
 /*Set different volume range model */
 extern void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel);
 
+/*Load WOPL bank file from File System*/
+extern int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePath);
+
+/*Load WOPL bank file from memory data*/
+extern int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, long size);
+
 
 /*Returns string which contains last error message*/
 extern const char *adl_errorString();

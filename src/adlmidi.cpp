@@ -186,12 +186,56 @@ ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int
     reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.LogarithmicVolumes = (bool)device->LogarithmicVolumes;
 }
 
-ADLMIDI_EXPORT void adl_setVolumeRangeModel(ADL_MIDIPlayer *device, int volumeModel)
+ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel)
 {
     if(!device) return;
 
     device->VolumeModel = volumeModel;
     reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
+}
+
+ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePath)
+{
+    ADLMIDI_ErrorString.clear();
+
+    if(device && device->adl_midiPlayer)
+    {
+        device->stored_samples = 0;
+        device->backup_samples_size = 0;
+
+        if(!reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->LoadBank(filePath))
+        {
+            if(ADLMIDI_ErrorString.empty())
+                ADLMIDI_ErrorString = "ADL MIDI: Can't load file";
+            return -1;
+        }
+        else return 0;
+    }
+
+    ADLMIDI_ErrorString = "Can't load file: ADLMIDI is not initialized";
+    return -1;
+}
+
+ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, long size)
+{
+    ADLMIDI_ErrorString.clear();
+
+    if(device && device->adl_midiPlayer)
+    {
+        device->stored_samples = 0;
+        device->backup_samples_size = 0;
+
+        if(!reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->LoadBank(mem, static_cast<size_t>(size)))
+        {
+            if(ADLMIDI_ErrorString.empty())
+                ADLMIDI_ErrorString = "ADL MIDI: Can't load data from memory";
+            return -1;
+        }
+        else return 0;
+    }
+
+    ADLMIDI_ErrorString = "Can't load file: ADL MIDI is not initialized";
+    return -1;
 }
 
 ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)

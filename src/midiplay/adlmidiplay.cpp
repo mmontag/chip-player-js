@@ -11,29 +11,38 @@
 
 class MutexType
 {
-    SDL_mutex* mut;
+    SDL_mutex *mut;
 public:
     MutexType() : mut(SDL_CreateMutex()) { }
-    ~MutexType() { SDL_DestroyMutex(mut); }
-    void Lock() { SDL_mutexP(mut); }
-    void Unlock() { SDL_mutexV(mut); }
+    ~MutexType()
+    {
+        SDL_DestroyMutex(mut);
+    }
+    void Lock()
+    {
+        SDL_mutexP(mut);
+    }
+    void Unlock()
+    {
+        SDL_mutexV(mut);
+    }
 };
 
 
 static std::deque<short> AudioBuffer;
 static MutexType AudioBuffer_lock;
 
-static void SDL_AudioCallbackX(void*, Uint8* stream, int len)
+static void SDL_AudioCallbackX(void *, Uint8 *stream, int len)
 {
     SDL_LockAudio();
-    short* target = (short*) stream;
+    short *target = (short *) stream;
     AudioBuffer_lock.Lock();
     /*if(len != AudioBuffer.size())
         fprintf(stderr, "len=%d stereo samples, AudioBuffer has %u stereo samples",
             len/4, (unsigned) AudioBuffer.size()/2);*/
-    unsigned ate = len/2; // number of shorts
+    unsigned ate = len / 2; // number of shorts
     if(ate > AudioBuffer.size()) ate = AudioBuffer.size();
-    for(unsigned a=0; a<ate; ++a)
+    for(unsigned a = 0; a < ate; ++a)
     {
         target[a] = AudioBuffer[a];
     }
@@ -42,31 +51,45 @@ static void SDL_AudioCallbackX(void*, Uint8* stream, int len)
     SDL_UnlockAudio();
 }
 
-
+static bool is_number(const std::string &s)
+{
+    std::string::const_iterator it = s.begin();
+    while(it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
 
 #undef main
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
         std::printf(
-            "Usage: adlmidi <midifilename> [ <options> ] [ <banknumber> [ <numcards> [ <numfourops>] ] ]\n"
+            "Usage: adlmidi <midifilename> [ <options> ] [ <bank> [ <numcards> [ <numfourops>] ] ]\n"
             " -p Enables adlib percussion instrument mode\n"
             " -t Enables tremolo amplification mode\n"
             " -v Enables vibrato amplification mode\n"
             " -s Enables scaling of modulator volumes\n"
             " -nl Quit without looping\n"
             " -w Write WAV file rather than playing\n"
+            "\n"
+            "Where <bank> - number of embeeded bank or filepath to custom WOPL bank file\n"
+            "\n"
+            "Note: To create WOPL bank files use OPL Bank Editor you can get here: \n"
+            "https://github.com/Wohlstand/OPL3BankEditor\n"
+            "\n"
         );
-/*
-        for(unsigned a=0; a<sizeof(banknames)/sizeof(*banknames); ++a)
-            std::printf("%10s%2u = %s\n",
-                a?"":"Banks:",
-                a,
-                banknames[a]);
-*/
+
+        int banksCount = adl_getBanksCount();
+        const char* const* banknames = adl_getBankNames();
+
+        std::printf("    Available embedded banks by number:\n\n");
+
+        for(int a = 0; a < banksCount; ++a)
+            std::printf("%10s%2u = %s\n", a ? "" : "Banks:", a, banknames[a]);
+
         std::printf(
+            "\n"
             "     Use banks 2-5 to play Descent \"q\" soundtracks.\n"
             "     Look up the relevant bank number from descent.sng.\n"
             "\n"
@@ -76,7 +99,7 @@ int main(int argc, char** argv)
             "     The Doom & Hexen sets require one or two, while\n"
             "     Miles four-op set requires the maximum of numcards*6.\n"
             "\n"
-            );
+        );
         return 0;
     }
 
@@ -107,12 +130,12 @@ int main(int argc, char** argv)
     }
     if(spec.samples != obtained.samples)
         std::fprintf(stderr, "Wanted (samples=%u,rate=%u,channels=%u); obtained (samples=%u,rate=%u,channels=%u)\n",
-            spec.samples,    spec.freq,    spec.channels,
-            obtained.samples,obtained.freq,obtained.channels);
+                     spec.samples,    spec.freq,    spec.channels,
+                     obtained.samples, obtained.freq, obtained.channels);
 
-    ADL_MIDIPlayer* myDevice;
+    ADL_MIDIPlayer *myDevice;
     myDevice = adl_init(44100);
-    if(myDevice==NULL)
+    if(myDevice == NULL)
     {
         std::fprintf(stderr, "Failed to init MIDI device!\n");
         return 1;
@@ -136,17 +159,36 @@ int main(int argc, char** argv)
         else break;
 
         std::copy(argv + (had_option ? 4 : 3), argv + argc,
-                  argv+2);
+                  argv + 2);
         argc -= (had_option ? 2 : 1);
     }
 
     if(argc >= 3)
     {
-        int bankno = std::atoi(argv[2]);
-        if(adl_setBank(myDevice, bankno)!=0)
+        if(is_number(argv[2]))
         {
-            std::fprintf(stderr,"%s", adl_errorString());
-            return 0;
+            int bankno = std::atoi(argv[2]);
+            if(adl_setBank(myDevice, bankno) != 0)
+            {
+                std::fprintf(stderr, "%s\n", adl_errorString());
+                std::fflush(stderr);
+                return 0;
+            }
+        }
+        else
+        {
+            std::fprintf(stdout, "Loading custom bank file %s...", argv[2]);
+            std::fflush(stdout);
+            if(adl_openBankFile(myDevice, argv[2]) != 0)
+            {
+                std::fprintf(stdout, "FAILED!\n");
+                std::fflush(stdout);
+                std::fprintf(stderr, "%s\n", adl_errorString());
+                std::fflush(stderr);
+                return 0;
+            }
+            std::fprintf(stdout, "OK!\n");
+            std::fflush(stdout);
         }
     }
 
@@ -160,14 +202,14 @@ int main(int argc, char** argv)
     }
     if(argc >= 5)
     {
-        if(adl_setNumFourOpsChn(myDevice, std::atoi(argv[4]))!=0)
+        if(adl_setNumFourOpsChn(myDevice, std::atoi(argv[4])) != 0)
         {
             std::fprintf(stderr, "%s\n", adl_errorString());
             return 0;
         }
     }
 
-    if(adl_openFile(myDevice, argv[1])!=0)
+    if(adl_openFile(myDevice, argv[1]) != 0)
     {
         std::fprintf(stderr, "%s\n", adl_errorString());
         return 2;
@@ -179,17 +221,17 @@ int main(int argc, char** argv)
     {
         short buff[4096];
         unsigned long gotten = adl_play(myDevice, 4096, buff);
-        if(gotten<=0) break;
+        if(gotten <= 0) break;
 
         AudioBuffer_lock.Lock();
-            size_t pos = AudioBuffer.size();
-            AudioBuffer.resize(pos + gotten);
-            for(unsigned long p = 0; p < gotten; ++p)
-               AudioBuffer[pos+p] = buff[p];
+        size_t pos = AudioBuffer.size();
+        AudioBuffer.resize(pos + gotten);
+        for(unsigned long p = 0; p < gotten; ++p)
+            AudioBuffer[pos + p] = buff[p];
         AudioBuffer_lock.Unlock();
 
-        const SDL_AudioSpec& spec_ = obtained;
-        while(AudioBuffer.size() > spec_.samples + (spec_.freq*2) * OurHeadRoomLength)
+        const SDL_AudioSpec &spec_ = obtained;
+        while(AudioBuffer.size() > spec_.samples + (spec_.freq * 2) * OurHeadRoomLength)
         {
             SDL_Delay(1);
         }

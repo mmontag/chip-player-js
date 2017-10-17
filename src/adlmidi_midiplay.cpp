@@ -324,7 +324,6 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         for(uint32_t a = 0; a < opl.NumChannels; ++a)
         {
             if(ccount == 1 && static_cast<int32_t>(a) == adlchannel[0]) continue;
-
             // ^ Don't use the same channel for primary&secondary
 
             if(i[0] == i[1] || pseudo_4op)

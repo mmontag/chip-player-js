@@ -454,6 +454,10 @@ public:
         size_t      mp_tell;
     };
 
+    bool LoadBank(const std::string &filename);
+    bool LoadBank(void *data, unsigned long size);
+    bool LoadBank(fileReader &fr);
+
     bool LoadMIDI(const std::string &filename);
     bool LoadMIDI(void *data, unsigned long size);
     bool LoadMIDI(fileReader &fr);
