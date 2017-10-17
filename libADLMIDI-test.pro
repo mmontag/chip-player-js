@@ -5,10 +5,11 @@ CONFIG+=console
 TARGET=adlmidiplay
 DESTDIR=$$PWD/bin/
 
-INCLUDEPATH += /home/vitaly/_git_repos/PGE-Project/_Libs/_builds/linux/include
+#INCLUDEPATH += $$PWD/AudioCodecs/build/install/include
+#LIBS += -L$$PWD/AudioCodecs/build/install/lib
 INCLUDEPATH += $$PWD/src
-LIBS += -L/home/vitaly/_git_repos/PGE-Project/_Libs/_builds/linux/lib
-LIBS += -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lpthread -ldl
+#LIBS += -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lpthread -ldl
+LIBS += -lSDL2 -lpthread -ldl
 
 HEADERS += \
     src/adlbank.h \

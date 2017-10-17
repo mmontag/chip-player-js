@@ -121,6 +121,7 @@ private:
     std::vector<uint8_t>    pit;  // value poked to B0, cached, needed by NoteOff)(
     std::vector<uint8_t>    regBD;
 
+    friend int adlRefreshNumCards(ADL_MIDIPlayer *device);
     std::vector<adlinsdata> dynamic_metainstruments; // Replaces adlins[] when CMF file
     std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
     const unsigned  DynamicInstrumentTag /* = 0x8000u*/,

@@ -199,6 +199,7 @@ int main(int argc, char **argv)
             std::fprintf(stderr, "%s\n", adl_errorString());
             return 0;
         }
+        std::fprintf(stdout, "Number of cards %s\n", argv[3]);
     }
     if(argc >= 5)
     {
@@ -207,6 +208,7 @@ int main(int argc, char **argv)
             std::fprintf(stderr, "%s\n", adl_errorString());
             return 0;
         }
+        std::fprintf(stdout, "Number of four-ops %s\n", argv[4]);
     }
 
     if(adl_openFile(myDevice, argv[1]) != 0)

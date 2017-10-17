@@ -321,7 +321,6 @@ void OPL3::updateFlags()
         {
             for(unsigned b = 0; b < 5; ++b)
                 four_op_category[a * 23 + 18 + b] = static_cast<char>(b + 3);
-
             for(unsigned b = 0; b < 3; ++b)
                 four_op_category[a * 23 + 6  + b] = 8;
         }
@@ -339,16 +338,13 @@ void OPL3::updateFlags()
         case 1:
             nextfour += 1;
             break;
-
         case 2:
             nextfour += 9 - 2;
             break;
-
         case 3:
         case 4:
             nextfour += 1;
             break;
-
         case 5:
             nextfour += 23 - 9 - 2;
             break;
