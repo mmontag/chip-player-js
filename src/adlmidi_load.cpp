@@ -200,9 +200,8 @@ static bool readInstrument(MIDIplay::fileReader &file, WOPL_Inst &ins, bool isPe
 
 bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
 {
-#define qqq(x) (void)x
     size_t  fsize;
-    qqq(fsize);
+    ADL_UNUSED(fsize);
     if(!fr.isValid())
     {
         ADLMIDI_ErrorString = "Custom bank: Invalid data stream!";
@@ -296,6 +295,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
         }
     }
 
+    opl.AdlBank = opl._parent->AdlBank;
     opl.dynamic_metainstruments.clear();
     opl.dynamic_instruments.clear();
 
@@ -351,10 +351,7 @@ bool MIDIplay::LoadMIDI(const std::string &filename)
     file.openFile(filename.c_str());
 
     if(!LoadMIDI(file))
-    {
-        std::perror(filename.c_str());
         return false;
-    }
 
     return true;
 }
@@ -368,16 +365,23 @@ bool MIDIplay::LoadMIDI(void *data, unsigned long size)
 
 bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
 {
-#define qqq(x) (void)x
     size_t  fsize;
-    qqq(fsize);
+    ADL_UNUSED(fsize);
     //! Temp buffer for conversion
     AdlMIDI_CPtr<uint8_t> cvt_buf;
 
-    //std::FILE* fr = std::fopen(filename.c_str(), "rb");
+    #ifdef DISABLE_EMBEDDED_BANKS
+    if((opl.AdlBank != ~0u) || (opl.dynamic_metainstruments.size() < 256))
+    {
+        ADLMIDI_ErrorString = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
+        return false;
+    }
+    #endif
+
     if(!fr.isValid())
     {
-        ADLMIDI_ErrorString = "Invalid data stream!";
+        ADLMIDI_ErrorString = "Invalid data stream!\n";
+        ADLMIDI_ErrorString += std::strerror(errno);
         return false;
     }
 
@@ -429,6 +433,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     opl.Reset();
 
     trackStart       = true;
+    atEnd            = false;
     loopStart        = true;
     loopStart_passed = false;
     invalidLoop      = false;

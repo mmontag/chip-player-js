@@ -48,7 +48,6 @@ struct ADL_MIDIPlayer
     unsigned int AdlPercussionMode;
     unsigned int LogarithmicVolumes;
     int VolumeModel;
-    unsigned int QuitFlag;
     unsigned int SkipForward;
     unsigned int QuitWithoutLooping;
     unsigned int ScaleModulators;
@@ -127,6 +126,9 @@ extern int adl_openData(struct ADL_MIDIPlayer *device, void *mem, long size);
 
 /*Resets MIDI player*/
 extern void adl_reset(struct ADL_MIDIPlayer *device);
+
+/*Reset MIDI track position to begin */
+extern void adl_positionRewind(struct ADL_MIDIPlayer *device);
 
 /*Close and delete ADLMIDI device*/
 extern void adl_close(struct ADL_MIDIPlayer *device);

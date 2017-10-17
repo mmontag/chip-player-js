@@ -23,6 +23,30 @@
 
 #include "adlmidi_private.hpp"
 
+#ifdef DISABLE_EMBEDDED_BANKS
+/*
+    Dummy data which replaces adldata.cpp banks database
+*/
+
+const struct adldata adl[]
+{
+    {0, 0, 0, 0, 0, 0}
+};
+
+const struct adlinsdata adlins[] =
+{
+    {0, 0, 0, 0, 0, 0, 0.0}
+};
+
+int maxAdlBanks()
+{
+    return 0;
+}
+
+const unsigned short banks[][256] = {{0}};
+const char* const banknames[] = {"<Embedded banks are disabled>"};
+#endif
+
 static const unsigned short Operators[23 * 2] =
 {
     // Channels 0-2

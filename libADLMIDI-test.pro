@@ -11,6 +11,8 @@ INCLUDEPATH += $$PWD/src
 #LIBS += -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lpthread -ldl
 LIBS += -lSDL2 -lpthread -ldl
 
+#DEFINES += DISABLE_EMBEDDED_BANKS
+
 HEADERS += \
     src/adlbank.h \
     src/adldata.hh \
@@ -23,6 +25,7 @@ HEADERS += \
 
 SOURCES += \
     src/adldata.cpp \
+    \
     src/adlmidi.cpp \
     src/adlmidi_load.cpp \
     src/adlmidi_midiplay.cpp \

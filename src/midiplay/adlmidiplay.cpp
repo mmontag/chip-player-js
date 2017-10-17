@@ -58,6 +58,12 @@ static bool is_number(const std::string &s)
     return !s.empty() && it == s.end();
 }
 
+static void printError(const char *err)
+{
+    std::fprintf(stderr, "\nERROR: %s\n\n", err);
+    std::fflush(stderr);
+}
+
 #undef main
 int main(int argc, char **argv)
 {
@@ -83,23 +89,29 @@ int main(int argc, char **argv)
         int banksCount = adl_getBanksCount();
         const char* const* banknames = adl_getBankNames();
 
-        std::printf("    Available embedded banks by number:\n\n");
+        if(banksCount > 0)
+        {
+            std::printf("    Available embedded banks by number:\n\n");
 
-        for(int a = 0; a < banksCount; ++a)
-            std::printf("%10s%2u = %s\n", a ? "" : "Banks:", a, banknames[a]);
+            for(int a = 0; a < banksCount; ++a)
+                std::printf("%10s%2u = %s\n", a ? "" : "Banks:", a, banknames[a]);
 
-        std::printf(
-            "\n"
-            "     Use banks 2-5 to play Descent \"q\" soundtracks.\n"
-            "     Look up the relevant bank number from descent.sng.\n"
-            "\n"
-            "     The fourth parameter can be used to specify the number\n"
-            "     of four-op channels to use. Each four-op channel eats\n"
-            "     the room of two regular channels. Use as many as required.\n"
-            "     The Doom & Hexen sets require one or two, while\n"
-            "     Miles four-op set requires the maximum of numcards*6.\n"
-            "\n"
-        );
+            std::printf(
+                "\n"
+                "     Use banks 2-5 to play Descent \"q\" soundtracks.\n"
+                "     Look up the relevant bank number from descent.sng.\n"
+                "\n"
+                "     The fourth parameter can be used to specify the number\n"
+                "     of four-op channels to use. Each four-op channel eats\n"
+                "     the room of two regular channels. Use as many as required.\n"
+                "     The Doom & Hexen sets require one or two, while\n"
+                "     Miles four-op set requires the maximum of numcards*6.\n"
+                "\n"
+            );
+        } else {
+            std::printf("    This build of libADLMIDI has no embedded banks!\n\n");
+        }
+
         return 0;
     }
 
@@ -119,13 +131,13 @@ int main(int argc, char **argv)
     spec.freq     = 44100;
     spec.format   = AUDIO_S16SYS;
     spec.channels = 2;
-    spec.samples  = spec.freq * AudioBufferLength;
+    spec.samples  = Uint16((double)spec.freq * AudioBufferLength);
     spec.callback = SDL_AudioCallbackX;
 
     // Set up SDL
     if(SDL_OpenAudio(&spec, &obtained) < 0)
     {
-        std::fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+        std::fprintf(stderr, "\nERROR: Couldn't open audio: %s\n\n", SDL_GetError());
         //return 1;
     }
     if(spec.samples != obtained.samples)
@@ -137,7 +149,7 @@ int main(int argc, char **argv)
     myDevice = adl_init(44100);
     if(myDevice == NULL)
     {
-        std::fprintf(stderr, "Failed to init MIDI device!\n");
+        printError("Failed to init MIDI device!\n");
         return 1;
     }
 
@@ -170,8 +182,7 @@ int main(int argc, char **argv)
             int bankno = std::atoi(argv[2]);
             if(adl_setBank(myDevice, bankno) != 0)
             {
-                std::fprintf(stderr, "%s\n", adl_errorString());
-                std::fflush(stderr);
+                printError(adl_errorString());
                 return 0;
             }
         }
@@ -183,8 +194,7 @@ int main(int argc, char **argv)
             {
                 std::fprintf(stdout, "FAILED!\n");
                 std::fflush(stdout);
-                std::fprintf(stderr, "%s\n", adl_errorString());
-                std::fflush(stderr);
+                printError(adl_errorString());
                 return 0;
             }
             std::fprintf(stdout, "OK!\n");
@@ -196,16 +206,26 @@ int main(int argc, char **argv)
     {
         if(adl_setNumCards(myDevice, std::atoi(argv[3])) != 0)
         {
-            std::fprintf(stderr, "%s\n", adl_errorString());
+            printError(adl_errorString());
             return 0;
         }
         std::fprintf(stdout, "Number of cards %s\n", argv[3]);
     }
+    else
+    {
+        // 4 chips by default
+        if(adl_setNumCards(myDevice, 4) != 0)
+        {
+            printError(adl_errorString());
+            return 0;
+        }
+    }
+
     if(argc >= 5)
     {
         if(adl_setNumFourOpsChn(myDevice, std::atoi(argv[4])) != 0)
         {
-            std::fprintf(stderr, "%s\n", adl_errorString());
+            printError(adl_errorString());
             return 0;
         }
         std::fprintf(stdout, "Number of four-ops %s\n", argv[4]);
@@ -213,7 +233,7 @@ int main(int argc, char **argv)
 
     if(adl_openFile(myDevice, argv[1]) != 0)
     {
-        std::fprintf(stderr, "%s\n", adl_errorString());
+        printError(adl_errorString());
         return 2;
     }
 
@@ -222,18 +242,19 @@ int main(int argc, char **argv)
     while(1)
     {
         short buff[4096];
-        unsigned long gotten = adl_play(myDevice, 4096, buff);
-        if(gotten <= 0) break;
+        size_t got = (size_t)adl_play(myDevice, 4096, buff);
+        if(got <= 0)
+            break;
 
         AudioBuffer_lock.Lock();
         size_t pos = AudioBuffer.size();
-        AudioBuffer.resize(pos + gotten);
-        for(unsigned long p = 0; p < gotten; ++p)
+        AudioBuffer.resize(pos + got);
+        for(size_t p = 0; p < got; ++p)
             AudioBuffer[pos + p] = buff[p];
         AudioBuffer_lock.Unlock();
 
-        const SDL_AudioSpec &spec_ = obtained;
-        while(AudioBuffer.size() > spec_.samples + (spec_.freq * 2) * OurHeadRoomLength)
+        const SDL_AudioSpec &spec = obtained;
+        while(AudioBuffer.size() > spec.samples + (spec.freq * 2) * OurHeadRoomLength)
         {
             SDL_Delay(1);
         }

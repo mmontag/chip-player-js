@@ -133,6 +133,7 @@ MIDIplay::MIDIplay():
     cmf_percussion_mode(false),
     config(NULL),
     trackStart(false),
+    atEnd(false),
     loopStart(false),
     loopEnd(false),
     loopStart_passed(false),
@@ -163,20 +164,18 @@ double MIDIplay::Tick(double s, double granularity)
     if(CurrentPosition.began)
         CurrentPosition.wait -= s;
 
-    int AntiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
-
-    while((CurrentPosition.wait <= granularity * 0.5) && (AntiFreezeCounter > 0))
+    int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
+    while((CurrentPosition.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
     {
         //std::fprintf(stderr, "wait = %g...\n", CurrentPosition.wait);
-        ProcessEvents();
-
+        if(!ProcessEvents())
+            break;
         if(CurrentPosition.wait <= 0.0)
-            AntiFreezeCounter--;
+            antiFreezeCounter--;
     }
 
-    if(AntiFreezeCounter <= 0)
+    if(antiFreezeCounter <= 0)
         CurrentPosition.wait += 1.0;/* Add extra 1 second when over 10000 events
-
                                            with zero delay are been detected */
 
     for(uint16_t c = 0; c < opl.NumChannels; ++c)
@@ -184,7 +183,19 @@ double MIDIplay::Tick(double s, double granularity)
 
     UpdateVibrato(s);
     UpdateArpeggio(s);
+
     return CurrentPosition.wait;
+}
+
+void MIDIplay::rewind()
+{
+    CurrentPosition  = trackBeginPosition;
+    trackStart       = true;
+    atEnd            = false;
+    loopStart        = true;
+    loopStart_passed = false;
+    invalidLoop      = false;
+    loopStart_hit    = false;
 }
 
 void MIDIplay::realTime_ResetState()
@@ -358,7 +369,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                 }
             }
 
-            long s = CalculateAdlChannelGoodness(a, i[ccount], channel );
+            long s = CalculateAdlChannelGoodness(a, i[ccount], channel);
 
             if(s > bs)
             {
@@ -809,8 +820,13 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 }
 
 
-void MIDIplay::ProcessEvents()
+bool MIDIplay::ProcessEvents()
 {
+    if(TrackData.size() == 0)
+        atEnd = true;//No MIDI track data to play
+    if(atEnd)
+        return false;//No more events in the queue
+
     loopEnd = false;
     const size_t    TrackCount = TrackData.size();
     const Position  RowBeginPosition(CurrentPosition);
@@ -877,6 +893,7 @@ void MIDIplay::ProcessEvents()
         {
             trackBeginPosition = RowBeginPosition;
             trackStart = false;
+            atEnd = false;
         }
         LoopBeginPosition = RowBeginPosition;
         loopStart = false;
@@ -885,16 +902,19 @@ void MIDIplay::ProcessEvents()
 
     if(shortest_no || loopEnd)
     {
-        // Loop if song end reached
+        //Loop if song end or loop end point has reached
         loopEnd         = false;
-        CurrentPosition = LoopBeginPosition;
         shortest = 0;
-        if(opl._parent->QuitWithoutLooping == 1)
+        if(opl._parent->QuitWithoutLooping != 0)
         {
-            opl._parent->QuitFlag = 1;
-            //^ HACK: QUIT WITHOUT LOOPING
+            atEnd = true; //Don't handle events anymore
+            CurrentPosition.wait += 1.0;//One second delay until stop playing
+            return true;//We have caugh end here!
         }
+        CurrentPosition = LoopBeginPosition;
     }
+
+    return true;//Has events in queue
 }
 
 void MIDIplay::HandleEvent(size_t tk)
@@ -932,25 +952,29 @@ void MIDIplay::HandleEvent(size_t tk)
 
         if(evtype == 6)
         {
-            /* Move this away from events handler */
-            for(size_t i = 0; i < data.size(); i++)
+            //Turn on/off Loop handling
+            if(opl._parent->QuitWithoutLooping == 0)
             {
-                if(data[i] <= 'Z' && data[i] >= 'A')
-                    data[i] = data[i] - ('Z' - 'z');
-            }
+                /* Move this away from events handler */
+                for(size_t i = 0; i < data.size(); i++)
+                {
+                    if(data[i] <= 'Z' && data[i] >= 'A')
+                        data[i] = data[i] - ('Z' - 'z');
+                }
 
-            if((data == "loopstart") && (!invalidLoop))
-            {
-                loopStart = true;
-                loopStart_passed = true;
-            }
+                if((data == "loopstart") && (!invalidLoop))
+                {
+                    loopStart = true;
+                    loopStart_passed = true;
+                }
 
-            if((data == "loopend") && (!invalidLoop))
-            {
-                if((loopStart_passed) && (!loopStart))
-                    loopEnd = true;
-                else
-                    invalidLoop = true;
+                if((data == "loopend") && (!invalidLoop))
+                {
+                    if((loopStart_passed) && (!loopStart))
+                        loopEnd = true;
+                    else
+                        invalidLoop = true;
+                }
             }
         }
 
@@ -1034,12 +1058,13 @@ void MIDIplay::HandleEvent(size_t tk)
         uint8_t ctrlno = TrackData[tk][CurrentPosition.track[tk].ptr++];
         uint8_t value = TrackData[tk][CurrentPosition.track[tk].ptr++];
 
-        if((ctrlno == 111) && !invalidLoop)
+        if((opl._parent->QuitWithoutLooping == 0) && (ctrlno == 111) && !invalidLoop)
         {
             loopStart = true;
             loopStart_passed = true;
             break;
         }
+
         realTime_Controller(MidCh, ctrlno, value);
         break;
     }

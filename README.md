@@ -88,6 +88,9 @@ To build that example you will need to have installed SDL2 library.
 ## 1.3.0   2017-10-17 <WIP>
  * "gen_adldata" tool now supports WOPL banks format which supports a full set of libADLMIDI features
  * Added support for custom banks are loadable in runtime without rebuilding of "adldata.cpp" banks database
+ * Smooth finalizing of song when loop is disabled (old ugly hack has been removed :wink:)
+ * Added an ability to reset song position to begin (very helpful when song reaches the end)
+ * Avoided possible crashes on attempt to fetch sample data without opening of MIDI file
  * ...
 
 ## 1.2.1    2017-07-30

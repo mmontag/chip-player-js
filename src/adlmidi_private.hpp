@@ -75,6 +75,8 @@
 #include "adldata.hh"
 #include "adlmidi.h"
 
+#define ADL_UNUSED(x) (void)x
+
 extern std::string ADLMIDI_ErrorString;
 
 /*
@@ -299,6 +301,7 @@ public:
     std::string musTitle;
     fraction<uint64_t> InvDeltaTicks, Tempo;
     bool    trackStart,
+            atEnd,
             loopStart,
             loopEnd,
             loopStart_passed /*Tells that "loopStart" already passed*/,
@@ -470,6 +473,8 @@ public:
      */
     double Tick(double s, double granularity);
 
+    void    rewind();
+
     /* RealTime event triggers */
     void realTime_ResetState();
 
@@ -505,7 +510,7 @@ private:
                     MIDIchannel::activenoteiterator i,
                     unsigned props_mask,
                     int32_t select_adlchn = -1);
-    void ProcessEvents();
+    bool ProcessEvents();
     void HandleEvent(size_t tk);
 
     // Determine how good a candidate this adlchannel
