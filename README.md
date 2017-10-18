@@ -12,6 +12,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 # Differences with original tool
 * Reverb code has been removed.
 * Doesn't contains platform specific code. Library can be used with various purposes include making of a custom music decoders for a media players and usage with a games.
+* Supports custom non-hardcoded WOPL banks and ability to build without of embedded banks
 
 # Tested on platforms
 * Linux GCC 4.8, 4.9, 5.4 / CLang
@@ -33,6 +34,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Use automatic arpeggio with chords to relieve channel pressure
 * Support for multiple concurrent MIDI synthesizers (per-track device/port select FF 09 message), can be used to overcome 16 channel limit
 * Support for playing Id-software Music File format (IMF)
+* Support for custom banks of [WOPL format](https://github.com/Wohlstand/OPL3BankEditor/blob/master/Specifications/WOPL-and-OPLI-Specification.txt)
 
 # How to build
 You can build shared version and additional tools on the Linux when you will run a "make" command and you will have libadlmidi.so and additional tools in the "bin" directory.
@@ -65,6 +67,8 @@ You need to make in the any IDE a library project and put into it next files
 
 **Important**: Please use DosBox emulator on mobile devices because it requires small CPU power. Nuked OPL synthesizer is very accurate (compared to real OPL3 chip), but it requires much more power device and is high probability your device will lag and playback will be choppy.
 
+**Tip**: If you want to work with custom WOPL banks without using of embedded banks, you can create them by using [OPL3 Bank Editor](https://github.com/Wohlstand/OPL3BankEditor) where also included some WOPL examples, or you are able to save any other bank as WOPL.
+
 # Example
 In the src/midiplay you will found alone CPP file which an example of library usage.
 That example is a simple audio player based on SDL Audio usage.
@@ -77,6 +81,10 @@ To build that example you will need to have installed SDL2 library.
 * [ADLMIDI Player for Android](https://github.com/Wohlstand/ADLMIDI-Player-Java/releases) - a little MIDI-player for Android which uses libADLMIDI to play MIDI files and provides flexible GUI with ability to change bank, flags, number of emulated chips, etc.
 
 # Todo
+* Add hooks to places where are originally was old UI calls to be able to reimplement original ADLMIDI tool which will use libADLMIDI as backend and also to be able to implement various other things based on MIDI event hooking.
+* Implement WOPL Version 3 which will contain pre-calculated `ms_sound_kon` and `ms_sound_koff` values per every instrument.
+* Implement multi-bank to support GS or XG standards.
+* Add tempo multiplier to have tempo changing ability
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 * Time based Seek/Tell support
 * Support of title and other meta-tags retrieving
