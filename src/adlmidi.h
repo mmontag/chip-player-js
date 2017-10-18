@@ -49,7 +49,7 @@ struct ADL_MIDIPlayer
     unsigned int LogarithmicVolumes;
     int VolumeModel;
     unsigned int SkipForward;
-    unsigned int QuitWithoutLooping;
+    unsigned int loopingIsEnabled;
     unsigned int ScaleModulators;
     double delay;
     double carry;

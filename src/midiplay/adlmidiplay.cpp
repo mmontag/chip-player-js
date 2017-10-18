@@ -5,9 +5,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
+#include <signal.h>
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 
 #include <adlmidi.h>
+
+#include "wave_writer.h"
 
 class MutexType
 {
@@ -40,8 +44,9 @@ static void SDL_AudioCallbackX(void *, Uint8 *stream, int len)
     /*if(len != AudioBuffer.size())
         fprintf(stderr, "len=%d stereo samples, AudioBuffer has %u stereo samples",
             len/4, (unsigned) AudioBuffer.size()/2);*/
-    unsigned ate = len / 2; // number of shorts
-    if(ate > AudioBuffer.size()) ate = AudioBuffer.size();
+    unsigned ate = (unsigned)len / 2; // number of shorts
+    if(ate > AudioBuffer.size())
+        ate = (unsigned)AudioBuffer.size();
     for(unsigned a = 0; a < ate; ++a)
     {
         target[a] = AudioBuffer[a];
@@ -64,10 +69,15 @@ static void printError(const char *err)
     std::fflush(stderr);
 }
 
-#undef main
+static int stop = 0;
+static void sighandler(int dum)
+{
+    if((dum == SIGINT) || (dum == SIGHUP) || (dum == SIGTERM))
+        stop = 1;
+}
+
 int main(int argc, char **argv)
 {
-
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
         std::printf(
@@ -87,7 +97,7 @@ int main(int argc, char **argv)
         );
 
         int banksCount = adl_getBanksCount();
-        const char* const* banknames = adl_getBankNames();
+        const char *const *banknames = adl_getBankNames();
 
         if(banksCount > 0)
         {
@@ -108,7 +118,9 @@ int main(int argc, char **argv)
                 "     Miles four-op set requires the maximum of numcards*6.\n"
                 "\n"
             );
-        } else {
+        }
+        else
+        {
             std::printf("    This build of libADLMIDI has no embedded banks!\n\n");
         }
 
@@ -134,17 +146,6 @@ int main(int argc, char **argv)
     spec.samples  = Uint16((double)spec.freq * AudioBufferLength);
     spec.callback = SDL_AudioCallbackX;
 
-    // Set up SDL
-    if(SDL_OpenAudio(&spec, &obtained) < 0)
-    {
-        std::fprintf(stderr, "\nERROR: Couldn't open audio: %s\n\n", SDL_GetError());
-        //return 1;
-    }
-    if(spec.samples != obtained.samples)
-        std::fprintf(stderr, "Wanted (samples=%u,rate=%u,channels=%u); obtained (samples=%u,rate=%u,channels=%u)\n",
-                     spec.samples,    spec.freq,    spec.channels,
-                     obtained.samples, obtained.freq, obtained.channels);
-
     ADL_MIDIPlayer *myDevice;
     myDevice = adl_init(44100);
     if(myDevice == NULL)
@@ -153,6 +154,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    bool recordWave = false;
+
+    adl_setLoopEnabled(myDevice, 1);
 
     while(argc > 2)
     {
@@ -162,6 +166,11 @@ int main(int argc, char **argv)
             adl_setPercMode(myDevice, 1);
         else if(!std::strcmp("-v", argv[2]))
             adl_setHVibrato(myDevice, 1);
+        else if(!std::strcmp("-w", argv[2]))
+        {
+            recordWave = true;
+            adl_setLoopEnabled(myDevice, 0);//Disable loop while record WAV
+        }
         else if(!std::strcmp("-t", argv[2]))
             adl_setHTremolo(myDevice, 1);
         else if(!std::strcmp("-nl", argv[2]))
@@ -175,6 +184,24 @@ int main(int argc, char **argv)
         argc -= (had_option ? 2 : 1);
     }
 
+    if(!recordWave)
+    {
+        // Set up SDL
+        if(SDL_OpenAudio(&spec, &obtained) < 0)
+        {
+            std::fprintf(stderr, "\nERROR: Couldn't open audio: %s\n\n", SDL_GetError());
+            std::fflush(stderr);
+            //return 1;
+        }
+        if(spec.samples != obtained.samples)
+        {
+            std::fprintf(stderr, "Wanted (samples=%u,rate=%u,channels=%u); obtained (samples=%u,rate=%u,channels=%u)\n",
+                         spec.samples,    spec.freq,    spec.channels,
+                         obtained.samples, obtained.freq, obtained.channels);
+            std::fflush(stderr);
+        }
+    }
+
     if(argc >= 3)
     {
         if(is_number(argv[2]))
@@ -183,7 +210,7 @@ int main(int argc, char **argv)
             if(adl_setBank(myDevice, bankno) != 0)
             {
                 printError(adl_errorString());
-                return 0;
+                return 1;
             }
         }
         else
@@ -195,7 +222,7 @@ int main(int argc, char **argv)
                 std::fprintf(stdout, "FAILED!\n");
                 std::fflush(stdout);
                 printError(adl_errorString());
-                return 0;
+                return 1;
             }
             std::fprintf(stdout, "OK!\n");
             std::fflush(stdout);
@@ -207,7 +234,7 @@ int main(int argc, char **argv)
         if(adl_setNumCards(myDevice, std::atoi(argv[3])) != 0)
         {
             printError(adl_errorString());
-            return 0;
+            return 1;
         }
         std::fprintf(stdout, "Number of cards %s\n", argv[3]);
     }
@@ -217,7 +244,7 @@ int main(int argc, char **argv)
         if(adl_setNumCards(myDevice, 4) != 0)
         {
             printError(adl_errorString());
-            return 0;
+            return 1;
         }
     }
 
@@ -226,7 +253,7 @@ int main(int argc, char **argv)
         if(adl_setNumFourOpsChn(myDevice, std::atoi(argv[4])) != 0)
         {
             printError(adl_errorString());
-            return 0;
+            return 1;
         }
         std::fprintf(stdout, "Number of four-ops %s\n", argv[4]);
     }
@@ -237,31 +264,68 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    SDL_PauseAudio(0);
+    signal(SIGINT, sighandler);
+    signal(SIGHUP, sighandler);
+    signal(SIGTERM, sighandler);
 
-    while(1)
+    if(!recordWave)
     {
-        short buff[4096];
-        size_t got = (size_t)adl_play(myDevice, 4096, buff);
-        if(got <= 0)
-            break;
+        SDL_PauseAudio(0);
 
-        AudioBuffer_lock.Lock();
-        size_t pos = AudioBuffer.size();
-        AudioBuffer.resize(pos + got);
-        for(size_t p = 0; p < got; ++p)
-            AudioBuffer[pos + p] = buff[p];
-        AudioBuffer_lock.Unlock();
-
-        const SDL_AudioSpec &spec = obtained;
-        while(AudioBuffer.size() > spec.samples + (spec.freq * 2) * OurHeadRoomLength)
+        while(!stop)
         {
-            SDL_Delay(1);
+            short buff[4096];
+            size_t got = (size_t)adl_play(myDevice, 4096, buff);
+            if(got <= 0)
+                break;
+
+            AudioBuffer_lock.Lock();
+            size_t pos = AudioBuffer.size();
+            AudioBuffer.resize(pos + got);
+            for(size_t p = 0; p < got; ++p)
+                AudioBuffer[pos + p] = buff[p];
+            AudioBuffer_lock.Unlock();
+
+            const SDL_AudioSpec &spec = obtained;
+            while(AudioBuffer.size() > spec.samples + (spec.freq * 2) * OurHeadRoomLength)
+            {
+                SDL_Delay(1);
+            }
+        }
+
+        SDL_CloseAudio();
+    }
+    else
+    {
+        std::string wave_out = std::string(argv[1]) + ".wav";
+        std::fprintf(stdout, "Recording WAV file %s...\n", wave_out.c_str());
+        std::fflush(stdout);
+
+        if(wave_open(spec.freq, wave_out.c_str()) == 0)
+        {
+            wave_enable_stereo();
+            while(!stop)
+            {
+                short buff[4096];
+                size_t got = (size_t)adl_play(myDevice, 4096, buff);
+                if(got <= 0)
+                    break;
+                wave_write(buff, (long)got);
+            }
+            wave_close();
+
+            std::fprintf(stdout, "Completed!\n");
+            std::fflush(stdout);
+        }
+        else
+        {
+            adl_close(myDevice);
+            return 1;
         }
     }
 
     adl_close(myDevice);
-    SDL_CloseAudio();
+
     return 0;
 }
 

@@ -905,7 +905,7 @@ bool MIDIplay::ProcessEvents()
         //Loop if song end or loop end point has reached
         loopEnd         = false;
         shortest = 0;
-        if(opl._parent->QuitWithoutLooping != 0)
+        if(opl._parent->loopingIsEnabled == 0)
         {
             atEnd = true; //Don't handle events anymore
             CurrentPosition.wait += 1.0;//One second delay until stop playing
@@ -952,8 +952,8 @@ void MIDIplay::HandleEvent(size_t tk)
 
         if(evtype == 6)
         {
-            //Turn on/off Loop handling
-            if(opl._parent->QuitWithoutLooping == 0)
+            //Turn on/off Loop handling when loop is disabled
+            if(opl._parent->loopingIsEnabled != 0)
             {
                 /* Move this away from events handler */
                 for(size_t i = 0; i < data.size(); i++)
@@ -1058,7 +1058,7 @@ void MIDIplay::HandleEvent(size_t tk)
         uint8_t ctrlno = TrackData[tk][CurrentPosition.track[tk].ptr++];
         uint8_t value = TrackData[tk][CurrentPosition.track[tk].ptr++];
 
-        if((opl._parent->QuitWithoutLooping == 0) && (ctrlno == 111) && !invalidLoop)
+        if((opl._parent->loopingIsEnabled != 0) && (ctrlno == 111) && !invalidLoop)
         {
             loopStart = true;
             loopStart_passed = true;

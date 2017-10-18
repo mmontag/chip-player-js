@@ -1,4 +1,12 @@
 all: midiplay
-midiplay: adlmidiplay.cpp
-	g++ $^ -Wl,-rpath='$$ORIGIN' -I.. -L../../bin -ladlmidi -lSDL2 -o ../../bin/adlmidiplay
+
+midiplay: adlmidiplay.o wave_writer.o
+	g++ $^ -Wl,-rpath='$$ORIGIN' -L../../bin -ladlmidi -lSDL2 -o ../../bin/adlmidiplay
+	rm *.o
+
+adlmidiplay.o: adlmidiplay.cpp
+	g++ -c $^ -I.. -o adlmidiplay.o
+
+wave_writer.o: wave_writer.c
+	gcc -c $^ -I.. -o wave_writer.o
 

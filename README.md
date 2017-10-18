@@ -91,6 +91,9 @@ To build that example you will need to have installed SDL2 library.
  * Smooth finalizing of song when loop is disabled (old ugly hack has been removed :wink:)
  * Added an ability to reset song position to begin (very helpful when song reaches the end)
  * Avoided possible crashes on attempt to fetch sample data without opening of MIDI file
+ * Demo tool now can correctly record WAVs and now can correctly deal with CTRL+C termination
+ * When loop is disabled, loop points will be ignored
+ * Loop now is disabled by default
  * ...
 
 ## 1.2.1    2017-07-30

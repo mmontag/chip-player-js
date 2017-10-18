@@ -40,7 +40,7 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
     midi_device->AdlPercussionMode = 0;
     midi_device->LogarithmicVolumes = 0;
     midi_device->SkipForward = 0;
-    midi_device->QuitWithoutLooping = 0;
+    midi_device->loopingIsEnabled = 0;
     midi_device->ScaleModulators = 0;
     midi_device->delay = 0.0;
     midi_device->carry = 0.0;
@@ -177,8 +177,7 @@ ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
 ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
 {
     if(!device) return;
-
-    device->QuitWithoutLooping = (loopEn == 0);
+    device->loopingIsEnabled = (loopEn != 0);
 }
 
 ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol)
