@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef MUSPLAY_USE_WINAPI
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -53,7 +53,7 @@ int wave_open( long sample_rate, const char* filename )
         return -1;
     }
 
-#ifndef MUSPLAY_USE_WINAPI
+#ifndef _WIN32
     file = fopen( filename, "wb" );
 #else
     wchar_t widePath[MAX_PATH];

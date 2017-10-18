@@ -45,6 +45,7 @@
             typedef __int32 ssize_t;
         #endif
     #endif
+    #include <windows.h>
 #endif
 
 #include <vector>
@@ -343,7 +344,14 @@ public:
 
         void openFile(const char *path)
         {
+            #ifndef _WIN32
             fp = std::fopen(path, "rb");
+            #else
+            wchar_t widePath[MAX_PATH];
+            int size = MultiByteToWideChar(CP_UTF8, 0, path, std::strlen(path), widePath, MAX_PATH);
+            widePath[size] = '\0';
+            fp = _wfopen(widePath, L"wb");
+            #endif
             _fileName = path;
             mp = NULL;
             mp_size = 0;
