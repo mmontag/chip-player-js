@@ -67,7 +67,9 @@ You need to make in the any IDE a library project and put into it next files
 
 **Important**: Please use DosBox emulator on mobile devices because it requires small CPU power. Nuked OPL synthesizer is very accurate (compared to real OPL3 chip), but it requires much more power device and is high probability your device will lag and playback will be choppy.
 
-**Tip**: If you want to work with custom WOPL banks without using of embedded banks, you can create them by using [OPL3 Bank Editor](https://github.com/Wohlstand/OPL3BankEditor) where also included some WOPL examples, or you are able to save any other bank as WOPL.
+**Tip 1**: If you want to work with custom WOPL banks without using of embedded banks, you can create them by using [OPL3 Bank Editor](https://github.com/Wohlstand/OPL3BankEditor) where also included some WOPL examples, or you are able to save any other bank as WOPL.
+
+**Tip 2**: To compile libADLMIDI without embedded banks, define the `DISABLE_EMBEDDED_BANKS` macro and remove building of the `adldata.cpp` file in your project.
 
 # Example
 In the src/midiplay you will found alone CPP file which an example of library usage.
@@ -82,6 +84,7 @@ To build that example you will need to have installed SDL2 library.
 
 # Todo
 * Add hooks to places where are originally was old UI calls to be able to reimplement original ADLMIDI tool which will use libADLMIDI as backend and also to be able to implement various other things based on MIDI event hooking.
+* Move most of variables in the `ADL_MIDIPlayer` structure away into `MIDIplay` class.
 * Implement WOPL Version 3 which will contain pre-calculated `ms_sound_kon` and `ms_sound_koff` values per every instrument.
 * Implement multi-bank to support GS or XG standards.
 * Add tempo multiplier to have tempo changing ability
@@ -93,7 +96,7 @@ To build that example you will need to have installed SDL2 library.
   to play any MIDI via this library.
 
 # Changelog
-## 1.3.0   2017-10-17 <WIP>
+## 1.3.0   2017-10-17 -WIP-
  * "gen_adldata" tool now supports WOPL banks format which supports a full set of libADLMIDI features
  * Added support for custom banks are loadable in runtime without rebuilding of "adldata.cpp" banks database
  * Smooth finalizing of song when loop is disabled (old ugly hack has been removed :wink:)
