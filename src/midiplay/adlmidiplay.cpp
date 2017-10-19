@@ -72,7 +72,12 @@ static void printError(const char *err)
 static int stop = 0;
 static void sighandler(int dum)
 {
-    if((dum == SIGINT) || (dum == SIGHUP) || (dum == SIGTERM))
+    if((dum == SIGINT)
+        || (dum == SIGTERM)
+    #ifndef _WIN32
+        || (dum == SIGHUP)
+    #endif
+    )
         stop = 1;
 }
 
@@ -265,8 +270,10 @@ int main(int argc, char **argv)
     }
 
     signal(SIGINT, sighandler);
-    signal(SIGHUP, sighandler);
     signal(SIGTERM, sighandler);
+    #ifndef _WIN32
+    signal(SIGHUP, sighandler);
+    #endif
 
     if(!recordWave)
     {
