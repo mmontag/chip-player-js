@@ -33,3 +33,6 @@ obj/*
 build-*
 *.user
 
+# Cmake caches
+build/*
+

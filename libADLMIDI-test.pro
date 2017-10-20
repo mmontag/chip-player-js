@@ -7,16 +7,16 @@ DESTDIR=$$PWD/bin/
 
 #INCLUDEPATH += $$PWD/AudioCodecs/build/install/include
 #LIBS += -L$$PWD/AudioCodecs/build/install/lib
-INCLUDEPATH += $$PWD/src
+INCLUDEPATH += $$PWD/src $$PWD/include
 #LIBS += -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lpthread -ldl
 LIBS += -lSDL2 -lpthread -ldl
 
 #DEFINES += DISABLE_EMBEDDED_BANKS
 
 HEADERS += \
+    include/adlmidi.h \
     src/adlbank.h \
     src/adldata.hh \
-    src/adlmidi.h \
     src/adlmidi_mus2mid.h \
     src/adlmidi_private.hpp \
     src/adlmidi_xmi2mid.h \
@@ -35,5 +35,6 @@ SOURCES += \
     src/adlmidi_private.cpp \
     src/adlmidi_xmi2mid.c \
     src/nukedopl3.c \
-    src/midiplay/adlmidiplay.cpp \
-    src/midiplay/wave_writer.c
+    utils/midiplay/adlmidiplay.cpp \
+    utils/midiplay/wave_writer.c
+

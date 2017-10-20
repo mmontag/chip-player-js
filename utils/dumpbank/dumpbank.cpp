@@ -1,7 +1,7 @@
 //#ifdef __MINGW32__
 //typedef struct vswprintf {} swprintf;
 //#endif
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 #include <cstring>
 
@@ -78,19 +78,19 @@ static void LoadBNK1(const std::vector<unsigned char>& data)
     const BNK1_header& bnk1 = *(const BNK1_header*) &data[0];
     const BNK1_record* names = (const BNK1_record*) &data[ bnk1.name_list ];
     const BNK1_instrument* ins = (const BNK1_instrument*) &data[ bnk1.inst_data ];
-    printf("BNK1 version: %d.%d\n", bnk1.maj_vers, bnk1.min_vers);
+    std::printf("BNK1 version: %d.%d\n", bnk1.maj_vers, bnk1.min_vers);
     for(unsigned a=0; a<bnk1.ins_entries; ++a)
     {
-        printf("%04X %02X %-9.9s: ",
+        std::printf("%04X %02X %-9.9s: ",
             names[a].index, names[a].used, names[a].name);
 
         const BNK1_instrument& i = ins[ names[a].index ];
-        printf("%02X %02X %X %X",
+        std::printf("%02X %02X %X %X",
             i.sound_mode, i.voice_num, i.waveforms[0], i.waveforms[1]);
         for(unsigned b=0; b<2; ++b)
         {
-            printf(" | ");
-            printf("%X %X %X %X %X %X %X %X %02X %X %X %X %X",
+            std::printf(" | ");
+            std::printf("%X %X %X %X %X %X %X %X %02X %X %X %X %X",
                 i.ops[b].key_scale_lvl,
                 i.ops[b].freq_mult,
                 b==1 ? 0 : i.ops[b].feedback,
@@ -105,17 +105,17 @@ static void LoadBNK1(const std::vector<unsigned char>& data)
                 i.ops[b].env_scaling,
                 b==1 ? 0 : i.ops[b].connection);
         }
-        printf("\n");
+        std::printf("\n");
     }
 }
 static void LoadBNK2(const std::vector<unsigned char>& data)
 {
     const BNK2_header& bnk2 = *(const BNK2_header*) &data[0];
     const BNK2_record* names = (const BNK2_record*) &data[ sizeof(bnk2) ];
-    printf("BNK2 version: %d, lost space %d\n", bnk2.file_ver, bnk2.lostSpace);
+    std::printf("BNK2 version: %d, lost space %d\n", bnk2.file_ver, bnk2.lostSpace);
     for(unsigned a=0; a<bnk2.ins_entries; ++a)
     {
-        printf("%3.3s %-12.12s %02X %08X %04X %04X: ",
+        std::printf("%3.3s %-12.12s %02X %08X %04X %04X: ",
             names[a].O3_sig,
             names[a].key,
             names[a].used,
@@ -124,12 +124,12 @@ static void LoadBNK2(const std::vector<unsigned char>& data)
             names[a].allocBSize);
 
         const BNK2_instrument& i = *(const BNK2_instrument*) &data[ names[a].dataOffset ];
-        printf("%02X %02X %02X %02X",
+        std::printf("%02X %02X %02X %02X",
             i.C4xxxFFFC, i.xxP24NNN, i.TTTTTTTT, i.xxxxxxxx);
         for(unsigned b=0; b<4; ++b)
         {
-            printf(" | ");
-            printf("%02X %02X %02X %02X %02X %02X",
+            std::printf(" | ");
+            std::printf("%02X %02X %02X %02X %02X %02X",
                 i.ops[b].AVEKMMMM,
                 i.ops[b].KKLLLLLL,
                 i.ops[b].AAAADDDD,
@@ -137,18 +137,30 @@ static void LoadBNK2(const std::vector<unsigned char>& data)
                 i.ops[b].DxxxxWWW,
                 i.ops[b].xxxxxxxx);
         }
-        printf("\n");
+        std::printf("\n");
     }
 }
 
 static void LoadBNK(const char* fn)
 {
     FILE* fp = fopen(fn, "rb");
-    fseek(fp, 0, SEEK_END);
+    if(!fp)
+    {
+        std::fprintf(stderr, "ERROR: Can't open %s file!", fn);
+        return;
+    }
+
+    std::fseek(fp, 0, SEEK_END);
     std::vector<unsigned char> data(ftell(fp));
-    rewind(fp);
-    fread(&data[0], 1, data.size(), fp),
-    fclose(fp);
+    std::rewind(fp);
+    size_t got = std::fread(&data[0], 1, data.size(), fp);
+    std::fclose(fp);
+
+    if(got == 0)
+    {
+        std::fprintf(stderr, "ERROR: Can't read %s file!", fn);
+        return;
+    }
 
     const BNK1_header& bnk1 = *(const BNK1_header*) &data[0];
     const BNK2_header& bnk2 = *(const BNK2_header*) &data[0];
@@ -158,7 +170,7 @@ static void LoadBNK(const char* fn)
     else if(std::memcmp(bnk2.signature, "Accomp. Bank, (C) AdLib Inc", 28) == 0)
         LoadBNK2(data);
     else
-        fprintf(stderr, "%s: Unknown format\n", fn);
+        std::fprintf(stderr, "%s: Unknown format\n", fn);
 }
 
 int main(int argc, const char* const* argv)
