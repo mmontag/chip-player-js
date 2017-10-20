@@ -37,13 +37,33 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Support for custom banks of [WOPL format](https://github.com/Wohlstand/OPL3BankEditor/blob/master/Specifications/WOPL-and-OPLI-Specification.txt)
 
 # How to build
-You can build shared version and additional tools on the Linux when you will run a "make" command and you will have libadlmidi.so and additional tools in the "bin" directory.
+To build libADLMIDI you need to use CMake:
 
-You also can build library manually:
+```bash
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+sudo make install
+```
+## Available CMake options
+* **CMAKE_PREFIX_PATH** - destinition folder where libADLMIDI will be installed. On Linux it is /usr/local/ by default.
+* **CMAKE_BUILD_TYPE** - Build types: **Debug** or **Release**
+* **WITH_MIDIPLAY** - (ON/OFF, default OFF) Build demo MIDI player (Requires SDL2 and also pthread on Windows with MinGW)
+* **WITH_OLD_UTILS** - (ON/OFF, default OFF) Build old utilities to dump some bank formats, made by original creator of ADLMIDI
+* **WITH_EMBEDDED_BANKS** - (ON/OFF, default ON) Enable or disable embedded banks (Original ADLMIDI and older versions of libADLMIDI are had embedded-only banks with no ability to load custom banks in runtime).
+* **WITH_GENADLDATA**  - (ON/OFF, default OFF) Build and execute the utility which will rebuild the embedded banks database (which is an adldata.cpp file).
+* **USE_DOSBOX_EMULATOR** - (ON/OFF, default OFF) Use DosBox emulator instead of current Nuked OPL3. This emulator has less accuracy, but it is well optimized for a work on slow devices such as older computers, embedded devices, or mobile device.
+
+* **libADLMIDI_STATIC** - (ON/OFF, default ON) Build static library
+* **libADLMIDI_SHARED** - (ON/OFF, default OFF) Build shared library
+
+
+## You also can build library manually:
 You need to make in the any IDE a library project and put into it next files
 (or include those files into subfolder of your exist project instead if you want to use it statically):
 
-* adlmidi.h    - Library API, use it to control library
+* adlmidi.h     - Library API, use it to control library
 
 * dbopl.h       - DOSBOX OPL Emulation header
 * nukedopl3.h   - Nuked OPL3 Emulation header
@@ -54,10 +74,10 @@ You need to make in the any IDE a library project and put into it next files
 * adlmidi_xmi2mid.h - XMI2MID converter header
 
 * dbopl.cpp     - DOSBOX OPL Emulation code (used when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
-* nukedopl3.c   - Nuked OPL3 Emulation code (used by default)
+* nukedopl3.c   - Nuked OPL3 Emulation code (used by default, disabled when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
 * adlmidi.cpp   - code of library
-* adldata.cpp	 - Automatically generated dump of FM banks from "fm_banks" directory
-               via "gen_adldata" tool
+* adldata.cpp	 - Automatically generated database of FM banks from "fm_banks" directory
+               via "gen_adldata" tool. **Don't build it if you have defined `DISABLE_EMBEDDED_BANKS` macro!**
 * adlmidi_load.cpp	- Source of file loading and parsing processing
 * adlmidi_midiplay.cpp	- MIDI event sequencer
 * adlmidi_opl3.cpp	- OPL3 chips manager
