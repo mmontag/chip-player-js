@@ -36,6 +36,7 @@ ENDIF()
 option(WITH_MIDIPLAY        "Build also demo MIDI player" OFF)
 option(WITH_OLD_UTILS       "Build also old utilities" OFF)
 option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
+option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
 option(USE_DOSBOX_EMULATOR  "Use DosBox emulator" OFF)
 
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
@@ -64,25 +65,28 @@ if(WITH_OLD_UTILS)
 endif()
 
 if(WITH_EMBEDDED_BANKS)
-    add_executable(gen_adldata
-        ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/gen_adldata.cc
-        ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/progs_cache.cpp
-        ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/measurer.cpp
-        ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/ini/ini_processing.cpp
-        ${libADLMIDI_SOURCE_DIR}/src/nukedopl3.c
-        ${libADLMIDI_SOURCE_DIR}/src/dbopl.cpp
-    )
-    target_link_libraries(gen_adldata pthread)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
-    endif()
+    if(WITH_GENADLDATA)
+        add_executable(gen_adldata
+            ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/gen_adldata.cc
+            ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/progs_cache.cpp
+            ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/measurer.cpp
+            ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/ini/ini_processing.cpp
+            ${libADLMIDI_SOURCE_DIR}/src/nukedopl3.c
+            ${libADLMIDI_SOURCE_DIR}/src/dbopl.cpp
+        )
+        target_link_libraries(gen_adldata pthread)
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            message("Turned on C++11 on GCC")
+            target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+        endif()
 
-    add_custom_target(
-        gen-adldata-run
-        COMMAND ${libADLMIDI_BINARY_DIR}/gen_adldata ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
-        WORKING_DIRECTORY ${libADLMIDI_SOURCE_DIR}
-    )
-    add_dependencies(gen-adldata-run gen_adldata)
+        add_custom_target(
+            gen-adldata-run
+            COMMAND ${libADLMIDI_BINARY_DIR}/gen_adldata ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
+            WORKING_DIRECTORY ${libADLMIDI_SOURCE_DIR}
+        )
+        add_dependencies(gen-adldata-run gen_adldata)
+    endif()
 endif()
 
 
@@ -122,7 +126,7 @@ if(libADLMIDI_STATIC)
     set_target_properties(ADLMIDI_static PROPERTIES OUTPUT_NAME ADLMIDI)
     target_include_directories(ADLMIDI_static PUBLIC ${SDLMixerX_SOURCE_DIR}/include)
     list(APPEND libADLMIDI_INSTALLS ADLMIDI_static)
-    if(WITH_EMBEDDED_BANKS)
+    if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
         add_dependencies(ADLMIDI_static gen-adldata-run)
     endif()
 endif()
@@ -132,7 +136,7 @@ if(libADLMIDI_SHARED)
     set_target_properties(ADLMIDI_shared PROPERTIES OUTPUT_NAME ADLMIDI)
     target_include_directories(ADLMIDI_shared PUBLIC ${SDLMixerX_SOURCE_DIR}/include)
     list(APPEND libADLMIDI_INSTALLS ADLMIDI_shared)
-    if(WITH_EMBEDDED_BANKS)
+    if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
         add_dependencies(ADLMIDI_shared gen-adldata-run)
     endif()
 endif()
@@ -186,6 +190,7 @@ message("==== libADLMIDI options ====")
 message("WITH_MIDIPLAY          = ${WITH_MIDIPLAY}")
 message("WITH_OLD_UTILS         = ${WITH_OLD_UTILS}")
 message("WITH_EMBEDDED_BANKS    = ${WITH_EMBEDDED_BANKS}")
+message("WITH_GENADLDATA        = ${WITH_GENADLDATA}")
 message("USE_DOSBOX_EMULATOR    = ${USE_DOSBOX_EMULATOR}")
 message("libADLMIDI_STATIC      = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED      = ${libADLMIDI_SHARED}")

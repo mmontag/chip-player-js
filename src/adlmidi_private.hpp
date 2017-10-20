@@ -354,7 +354,7 @@ public:
             wchar_t widePath[MAX_PATH];
             int size = MultiByteToWideChar(CP_UTF8, 0, path, std::strlen(path), widePath, MAX_PATH);
             widePath[size] = '\0';
-            fp = _wfopen(widePath, L"wb");
+            fp = _wfopen(widePath, L"rb");
             #endif
             _fileName = path;
             mp = NULL;
