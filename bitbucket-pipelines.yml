@@ -9,6 +9,8 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
+          - sudo apt-get update
+          - sudo apt-get install -y cmake
           - mkdir build
           - cd build
           - cmake -DCMAKE_INSTALL_PREFIX=output -DCMAKE_BUILD_TYPE=Release -DlibADLMIDI_STATIC=YES -DWITH_MIDIPLAY=ON ..
