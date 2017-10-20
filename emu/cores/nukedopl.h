@@ -152,13 +152,13 @@ void NOPL3_WriteReg(nopl3_chip *chip, Bit16u reg, Bit8u v);
 void NOPL3_WriteRegBuffered(nopl3_chip *chip, Bit16u reg, Bit8u v);
 void NOPL3_GenerateStream(nopl3_chip *chip, Bit32s *sndptr, Bit32u numsamples);
 
-void nuked_write(void *chip, UINT8 a, UINT8 v);
-UINT8 nuked_read(void *chip, UINT8 a);
-void nuked_shutdown(void *chip);
-void nuked_reset_chip(void *chip);
-void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out);
-void nuked_set_mutemask(void *chip, UINT32 MuteMask);
-void nuked_set_volume(void *chip, INT32 volume);
-void nuked_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight);
+void nukedopl3_write(void *chip, UINT8 a, UINT8 v);
+UINT8 nukedopl3_read(void *chip, UINT8 a);
+void nukedopl3_shutdown(void *chip);
+void nukedopl3_reset_chip(void *chip);
+void nukedopl3_update(void *chip, UINT32 samples, DEV_SMPL **out);
+void nukedopl3_set_mutemask(void *chip, UINT32 MuteMask);
+void nukedopl3_set_volume(void *chip, INT32 volume);
+void nukedopl3_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight);
 
 #endif	// __NUKEDOPL_H__

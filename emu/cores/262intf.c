@@ -81,10 +81,10 @@ static DEV_DEF devDef262_AdLibEmu =
 #ifdef EC_YMF262_NUKED
 static DEVDEF_RWFUNC devFunc262_Nuked[] =
 {
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nuked_write},
-	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
-	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_volume},
-	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nuked_set_vol_lr},
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nukedopl3_write},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nukedopl3_read},
+	{RWF_VOLUME | RWF_WRITE, DEVRW_VALUE, 0, nukedopl3_set_volume},
+	{RWF_VOLUME_LR | RWF_WRITE, DEVRW_VALUE, 0, nukedopl3_set_vol_lr},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef262_Nuked =
@@ -92,12 +92,12 @@ static DEV_DEF devDef262_Nuked =
 	"YMF262", "Nuked OPL3", FCC_NUKE,
 	
 	device_start_ymf262_nuked,
-	nuked_shutdown,
-	nuked_reset_chip,
-	nuked_update,
+	nukedopl3_shutdown,
+	nukedopl3_reset_chip,
+	nukedopl3_update,
 	
 	NULL,	// SetOptionBits
-	nuked_set_mutemask,
+	nukedopl3_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -184,8 +184,8 @@ static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	opl3->clock = cfg->clock;
 	opl3->smplRate = rate; // save for reset
 	
-	nuked_set_volume(opl3, 0x10000);
-	nuked_set_mutemask(opl3, 0x000000);
+	nukedopl3_set_volume(opl3, 0x10000);
+	nukedopl3_set_mutemask(opl3, 0x000000);
 	
 	opl3->_devData.chipInf = opl3;
 	INIT_DEVINF(retDevInf, &opl3->_devData, rate, &devDef262_Nuked);

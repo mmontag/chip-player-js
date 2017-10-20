@@ -7,6 +7,7 @@
 // undefine one of the variables to disable the cores
 #define EC_YM2612_GPGX		// enable YM2612 core from MAME/Genesis Plus GX
 #define EC_YM2612_GENS		// enable Gens YM2612 core (from in_vgm)
+#define EC_YM2612_NUKED		// enable Nuked YM3438/YM2612 core
 #endif
 
 
@@ -16,6 +17,9 @@
 											// alternate between updating left and right speaker,
 											// adds some stereo effect to sharp and noisy sounds
 											// !! double chip update rate for proper sound
+#define OPT_YM2612_TYPE_OPN2C_DISC	0x00	// [Nuked OPN2] emulate Discrete YM3438
+#define OPT_YM2612_TYPE_OPN2C_ASIC	0x10	// [Nuked OPN2] emulate ASIC YM3438
+#define OPT_YM2612_TYPE_OPN2		0x20	// [Nuked OPN2] emulate YM2612
 #define OPT_YM2612_LEGACY_MODE		0x80	// [GPGX core] simulate behaviour of older emulation cores
 											// not recommended, but required for playing GYM files
 											// (default: disabled)

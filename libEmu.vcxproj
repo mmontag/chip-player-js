@@ -215,6 +215,7 @@
     <ClCompile Include="emu\cores\ym2151.c" />
     <ClCompile Include="emu\cores\ym2413.c" />
     <ClCompile Include="emu\cores\ym2612.c" />
+    <ClCompile Include="emu\cores\ym3438.c" />
     <ClCompile Include="emu\cores\ymdeltat.c" />
     <ClCompile Include="emu\cores\ymf262.c" />
     <ClCompile Include="emu\cores\ymf271.c" />
@@ -289,6 +290,7 @@
     <ClInclude Include="emu\cores\ym2413.h" />
     <ClInclude Include="emu\cores\ym2612.h" />
     <ClInclude Include="emu\cores\ym2612_int.h" />
+    <ClInclude Include="emu\cores\ym3438.h" />
     <ClInclude Include="emu\cores\ymdeltat.h" />
     <ClInclude Include="emu\cores\ymf262.h" />
     <ClInclude Include="emu\cores\ymf271.h" />

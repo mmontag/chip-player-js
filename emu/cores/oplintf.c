@@ -86,8 +86,8 @@ static DEV_DEF devDef3812_AdLibEmu =
 #ifdef EC_YM3812_NUKED
 static DEVDEF_RWFUNC devFunc3812_Nuked[] =
 {
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nuked_write},
-	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nuked_read},
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, nukedopl3_write},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, nukedopl3_read},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef3812_Nuked =
@@ -95,12 +95,12 @@ static DEV_DEF devDef3812_Nuked =
 	"YM3812", "Nuked OPL3", FCC_NUKE,
 	
 	device_start_ym3812_nuked,
-	nuked_shutdown,
-	nuked_reset_chip,
-	nuked_update,
+	nukedopl3_shutdown,
+	nukedopl3_reset_chip,
+	nukedopl3_update,
 	
 	NULL,	// SetOptionBits
-	nuked_set_mutemask,
+	nukedopl3_set_mutemask,
 	NULL,	// SetPanning
 	NULL,	// SetSampleRateChangeCallback
 	NULL,	// LinkDevice
@@ -257,8 +257,8 @@ static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevI
 	opl3->clock = cfg->clock * 4;
 	opl3->smplRate = rate; // save for reset
 	
-	nuked_set_volume(opl3, 0x10000);
-	nuked_set_mutemask(opl3, 0x000000);
+	nukedopl3_set_volume(opl3, 0x10000);
+	nukedopl3_set_mutemask(opl3, 0x000000);
 	
 	opl3->_devData.chipInf = opl3;
 	INIT_DEVINF(retDevInf, &opl3->_devData, rate, &devDef3812_Nuked);

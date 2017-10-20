@@ -222,6 +222,9 @@
     <ClCompile Include="emu\cores\saaintf.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\ym3438.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -440,9 +443,6 @@
     <ClInclude Include="emu\cores\es5506.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\cores\nukedopl.h">
-      <Filter>Quelldateien</Filter>
-    </ClInclude>
     <ClInclude Include="emu\cores\okiadpcm.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -453,6 +453,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\saaintf.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\nukedopl.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\ym3438.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

@@ -15,11 +15,15 @@
 #ifdef EC_YM2612_GENS
 #include "ym2612.h"
 #endif
+#ifdef EC_YM2612_NUKED
+#include "ym3438.h"
+#endif
 
 
 static void ym2612_gens_update(void* chip, UINT32 samples, DEV_SMPL** outputs);
 static UINT8 device_start_ym2612_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static UINT8 device_start_ym2612_gens(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
+static UINT8 device_start_ym2612_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 
 
 #ifdef EC_YM2612_GPGX
@@ -72,6 +76,31 @@ static DEV_DEF devDef_Gens =
 	devFunc_Gens,	// rwFuncs
 };
 #endif
+#ifdef EC_YM2612_NUKED
+static DEVDEF_RWFUNC devFunc_Nuked[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, NOPN2_WriteBuffered},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, NOPN2_Read},
+	{0x00, 0x00, 0, NULL}
+};
+static DEV_DEF devDef_Nuked =
+{
+	"YM3438", "Nuked OPN2", FCC_NUKE,
+	
+	device_start_ym2612_nuked,
+	nukedopn2_shutdown,
+	nukedopn2_reset_chip,
+	(DEVFUNC_UPDATE)NOPN2_GenerateStream,
+	
+	(DEVFUNC_OPTMASK)NOPN2_SetOptions,	// SetOptionBits
+	(DEVFUNC_OPTMASK)NOPN2_SetMute,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc_Nuked,	// rwFuncs
+};
+#endif
 
 const DEV_DEF* devDefList_YM2612[] =
 {
@@ -80,6 +109,9 @@ const DEV_DEF* devDefList_YM2612[] =
 #endif
 #ifdef EC_YM2612_GENS
 	&devDef_Gens,
+#endif
+#ifdef EC_YM2612_NUKED
+	&devDef_Nuked,
 #endif
 	NULL
 };
@@ -135,6 +167,30 @@ static UINT8 device_start_ym2612_gens(const DEV_GEN_CFG* cfg, DEV_INFO* retDevIn
 	devData = (DEV_DATA*)chip;
 	devData->chipInf = chip;
 	INIT_DEVINF(retDevInf, devData, rate, &devDef_Gens);
+	return 0x00;
+}
+#endif
+
+#ifdef EC_YM2612_NUKED
+static UINT8 device_start_ym2612_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	ym3438_t* opn2;
+	UINT32 rate;
+	
+	rate = cfg->clock / 2 / 72;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	opn2 = (ym3438_t*)calloc(1, sizeof(ym3438_t));
+	if (opn2 == NULL)
+		return 0xFF;
+	
+	opn2->clock = cfg->clock;
+	opn2->smplRate = rate; // save for reset
+	
+	NOPN2_SetMute(opn2, 0x00);
+	
+	opn2->_devData.chipInf = opn2;
+	INIT_DEVINF(retDevInf, &opn2->_devData, rate, &devDef_Nuked);
 	return 0x00;
 }
 #endif

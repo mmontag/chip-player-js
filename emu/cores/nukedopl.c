@@ -1508,7 +1508,7 @@ static void NOPL3_RefreshMuteMasks(nopl3_chip* chip)
 	return;
 }
 
-void nuked_write(void *chip, UINT8 a, UINT8 v)
+void nukedopl3_write(void *chip, UINT8 a, UINT8 v)
 {
 	nopl3_chip* opl3 = (nopl3_chip*) chip;
 
@@ -1527,7 +1527,7 @@ void nuked_write(void *chip, UINT8 a, UINT8 v)
 	}
 }
 
-UINT8 nuked_read(void *chip, UINT8 a)
+UINT8 nukedopl3_read(void *chip, UINT8 a)
 {
 	switch(a & 3)
 	{
@@ -1539,12 +1539,12 @@ UINT8 nuked_read(void *chip, UINT8 a)
 	}
 }
 
-void nuked_shutdown(void *chip)
+void nukedopl3_shutdown(void *chip)
 {
 	free(chip);
 }
 
-void nuked_reset_chip(void *chip)
+void nukedopl3_reset_chip(void *chip)
 {
 	nopl3_chip* opl3 = (nopl3_chip*) chip;
 
@@ -1554,7 +1554,7 @@ void nuked_reset_chip(void *chip)
 	opl3->isDisabled = 0x01;	// OPL4 speed hack
 }
 
-void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
+void nukedopl3_update(void *chip, UINT32 samples, DEV_SMPL **out)
 {
 	nopl3_chip* opl3 = (nopl3_chip*) chip;
 	Bit32s buffers[2];
@@ -1576,7 +1576,7 @@ void nuked_update(void *chip, UINT32 samples, DEV_SMPL **out)
 	}
 }
 
-void nuked_set_mutemask(void *chip, UINT32 MuteMask)
+void nukedopl3_set_mutemask(void *chip, UINT32 MuteMask)
 {
 	nopl3_chip* opl3 = (nopl3_chip*) chip;
 	
@@ -1586,12 +1586,12 @@ void nuked_set_mutemask(void *chip, UINT32 MuteMask)
 	return;
 }
 
-void nuked_set_volume(void *chip, INT32 volume)
+void nukedopl3_set_volume(void *chip, INT32 volume)
 {
-	nuked_set_vol_lr(chip, volume, volume);
+	nukedopl3_set_vol_lr(chip, volume, volume);
 }
 
-void nuked_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight)
+void nukedopl3_set_vol_lr(void *chip, INT32 volLeft, INT32 volRight)
 {
 	nopl3_chip* opl3 = (nopl3_chip*) chip;
 	

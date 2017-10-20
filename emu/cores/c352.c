@@ -140,6 +140,8 @@ typedef struct {
 	UINT8 muteRear;     // flag from VGM header
 	UINT8 optMuteRear;  // option
 
+	INT16 mulaw_table[256];
+
 } C352;
 
 
@@ -154,7 +156,7 @@ static void C352_fetch_sample(C352 *c, C352_Voice *v)
 	}
 	else
 	{
-		INT8 s, s2;
+		INT8 s;
 		UINT16 pos;
 
 		s = (INT8)c->wave[v->pos & c->wave_mask];
@@ -162,10 +164,7 @@ static void C352_fetch_sample(C352 *c, C352_Voice *v)
 		v->sample = s<<8;
 		if(v->flags & C352_FLG_MULAW)
 		{
-			s2 = (s&0x7f)>>4;
-
-			v->sample = ((s2*s2)<<4) - (~(s2<<1)) * (s&0x0f);
-			v->sample = (s&0x80) ? (~v->sample)<<5 : v->sample<<5;
+			v->sample = c->mulaw_table[s&0xff];
 		}
 		
 		pos = v->pos&0xffff;
@@ -267,11 +266,11 @@ static void c352_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 			{
 				// Left
 				out[0] += (((v->flags & C352_FLG_PHASEFL) ? -s : s) * v->curr_vol[0])>>8;
-				out[2] += (((v->flags & C352_FLG_PHASEFR) ? -s : s) * v->curr_vol[2])>>8;
+				out[2] += (((v->flags & C352_FLG_PHASERL) ? -s : s) * v->curr_vol[2])>>8;
 
 				// Right
-				out[1] += (((v->flags & C352_FLG_PHASERL) ? -s : s) * v->curr_vol[1])>>8;
-				out[3] += (((v->flags & C352_FLG_PHASERL) ? -s : s) * v->curr_vol[3])>>8;
+				out[1] += (((v->flags & C352_FLG_PHASEFR) ? -s : s) * v->curr_vol[1])>>8;
+				out[3] += (((v->flags & C352_FLG_PHASEFR) ? -s : s) * v->curr_vol[3])>>8;
 			}
 		}
 
@@ -288,6 +287,8 @@ static void c352_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf)
 {
 	C352 *c;
+	int i;
+	INT16 j;
 
 	c = (C352 *)calloc(1, sizeof(C352));
 	if (c == NULL)
@@ -303,6 +304,24 @@ static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf)
 	//device_reset_c352(c);
 
 	c352_set_mute_mask(c, 0x00000000);
+	
+	j=0;
+	for(i=0;i<128;i++)
+	{
+		c->mulaw_table[i] = j<<5;
+		if(i < 16)
+			j += 1;
+		else if(i < 24)
+			j += 2;
+		else if(i < 48)
+			j += 4;
+		else if(i < 100)
+			j += 8;
+		else
+			j += 16;
+	}
+	for(i=128;i<256;i++)
+		c->mulaw_table[i] = (~c->mulaw_table[i-128])&~0x1f;
 
 	c->_devData.chipInf = c;
 	INIT_DEVINF(retDevInf, &c->_devData, c->sample_rate_base, &devDef);
