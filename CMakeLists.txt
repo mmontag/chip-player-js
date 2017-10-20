@@ -73,8 +73,11 @@ if(WITH_EMBEDDED_BANKS)
         ${libADLMIDI_SOURCE_DIR}/src/dbopl.cpp
     )
     target_link_libraries(gen_adldata pthread)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+    endif()
 
-    add_custom_target (
+    add_custom_target(
         gen-adldata-run
         COMMAND ${libADLMIDI_BINARY_DIR}/gen_adldata ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
         WORKING_DIRECTORY ${libADLMIDI_SOURCE_DIR}
@@ -134,6 +137,11 @@ if(libADLMIDI_SHARED)
     endif()
 endif()
 
+if(NOT libADLMIDI_STATIC AND NOT libADLMIDI_SHARED)
+    message(FATAL_ERROR "Both static and shared libADLMIDI builds are disabled!
+You must enable at least one of them!")
+endif()
+
 if(WITH_MIDIPLAY)
     find_library(SDL2_LIBRARY SDL2 REQUIRED)
     include_directories(${SDL2_INCLUDE_DIR})
@@ -176,9 +184,9 @@ install(FILES
 
 message("==== libADLMIDI options ====")
 message("WITH_MIDIPLAY          = ${WITH_MIDIPLAY}")
+message("WITH_OLD_UTILS         = ${WITH_OLD_UTILS}")
 message("WITH_EMBEDDED_BANKS    = ${WITH_EMBEDDED_BANKS}")
 message("USE_DOSBOX_EMULATOR    = ${USE_DOSBOX_EMULATOR}")
 message("libADLMIDI_STATIC      = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED      = ${libADLMIDI_SHARED}")
-
 

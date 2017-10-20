@@ -381,7 +381,9 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     if(!fr.isValid())
     {
         ADLMIDI_ErrorString = "Invalid data stream!\n";
+        #ifndef _WIN32
         ADLMIDI_ErrorString += std::strerror(errno);
+        #endif
         return false;
     }
 

@@ -9,4 +9,9 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - make
+          - mkdir build
+          - cd build
+          - cmake -DCMAKE_INSTALL_PREFIX=output -DCMAKE_BUILD_TYPE=Release -DlibADLMIDI_STATIC=YES -DWITH_MIDIPLAY=ON ..
+          - make -j 4
+          - make install
+

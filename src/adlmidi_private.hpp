@@ -63,6 +63,10 @@
 #include <stdio.h>
 #include <limits> // numeric_limit
 
+#ifndef _WIN32
+#include <errno.h>
+#endif
+
 #include <deque>
 #include <algorithm>
 
