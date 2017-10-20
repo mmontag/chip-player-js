@@ -63,27 +63,28 @@ sudo make install
 You need to make in the any IDE a library project and put into it next files
 (or include those files into subfolder of your exist project instead if you want to use it statically):
 
-* adlmidi.h     - Library API, use it to control library
+### Public header (include)
+* adlmidi.h     - Library Public API header, use it to control library
 
-* dbopl.h       - DOSBOX OPL Emulation header
-* nukedopl3.h   - Nuked OPL3 Emulation header
-* fraction.h    - Fraction number handling
+### Internal code (src)
 * adldata.hh    - bank structures definition
-* adlmidi_private.hpp - header of internal private APIs
 * adlmidi_mus2mid.h - MUS2MID converter header
+* adlmidi_private.hpp - header of internal private APIs
 * adlmidi_xmi2mid.h - XMI2MID converter header
+* dbopl.h       - DOSBOX OPL Emulation header
+* fraction.h    - Fraction number handling
+* nukedopl3.h   - Nuked OPL3 Emulation header
 
-* dbopl.cpp     - DOSBOX OPL Emulation code (used when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
-* nukedopl3.c   - Nuked OPL3 Emulation code (used by default, disabled when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
+* adldata.cpp	 - Automatically generated database of FM banks from "fm_banks" directory via "gen_adldata" tool. **Don't build it if you have defined `DISABLE_EMBEDDED_BANKS` macro!**
 * adlmidi.cpp   - code of library
-* adldata.cpp	 - Automatically generated database of FM banks from "fm_banks" directory
-               via "gen_adldata" tool. **Don't build it if you have defined `DISABLE_EMBEDDED_BANKS` macro!**
 * adlmidi_load.cpp	- Source of file loading and parsing processing
 * adlmidi_midiplay.cpp	- MIDI event sequencer
+* adlmidi_mus2mid.c	- MUS2MID converter source
 * adlmidi_opl3.cpp	- OPL3 chips manager
 * adlmidi_private.cpp	- some internal functions sources
-* adlmidi_mus2mid.c	- MUS2MID converter source
 * adlmidi_xmi2mid.c	- XMI2MID converter source
+* dbopl.cpp     - DOSBOX OPL Emulation code (used when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
+* nukedopl3.c   - Nuked OPL3 Emulation code (used by default, disabled when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
 
 **Important**: Please use DosBox emulator on mobile devices because it requires small CPU power. Nuked OPL synthesizer is very accurate (compared to real OPL3 chip), but it requires much more power device and is high probability your device will lag and playback will be choppy.
 

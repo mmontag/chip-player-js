@@ -4,7 +4,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE     := ADLMIDI
 
 LOCAL_C_INCLUDES := \
-	$(LOCAL_PATH)/src
+	$(LOCAL_PATH)/src \
+	$(LOCAL_PATH)/include
 
 LOCAL_ARM_MODE   := arm
 LOCAL_CPP_FEATURES := exceptions
