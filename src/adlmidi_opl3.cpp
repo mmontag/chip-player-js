@@ -28,9 +28,9 @@
     Dummy data which replaces adldata.cpp banks database
 */
 
-const struct adldata adl[]
+const struct adldata adl[] =
 {
-    {0, 0, 0, 0, 0, 0}
+    {0, 0, (unsigned char)'\0', (unsigned char)'\0', (unsigned char)'\0', 0}
 };
 
 const struct adlinsdata adlins[] =
