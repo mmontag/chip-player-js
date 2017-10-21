@@ -42,7 +42,9 @@ option(USE_DOSBOX_EMULATOR  "Use DosBox emulator" OFF)
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
 option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
 
-
+if(CMAKE_VERSION VERSION_EQUAL "3.1" OR CMAKE_VERSION VERSION_GREATER "3.1")
+    set(CMAKE_CXX_STANDARD 11)
+endif()
 
 set(libADLMIDI_INSTALLS)
 
@@ -77,9 +79,14 @@ if(WITH_EMBEDDED_BANKS)
         if(NOT MSVC)
             target_link_libraries(gen_adldata pthread)
         endif()
-        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-            message("Turned on C++11 on GCC")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
+                CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+            message("Turned on C++11 on GCC/CLang/Intel")
             target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+        else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+            message("Turned on C++11 on MSVC")
+            target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>)
         endif()
 
         add_custom_target(

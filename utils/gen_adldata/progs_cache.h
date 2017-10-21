@@ -7,6 +7,7 @@
 #include <memory>
 #include <cstring>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 struct insdata
@@ -79,7 +80,7 @@ extern std::vector<std::string> banknames;
 void SetBank(unsigned bank, unsigned patch, size_t insno);
 
 size_t InsertIns(const insdata &id, const insdata &id2, ins &in,
-                 const std::string &name, const std::string &name2 = "");
+                 const std::string &name, const std::string &name2);
 size_t InsertNoSoundIns();
 
 #endif // PROGS_H
