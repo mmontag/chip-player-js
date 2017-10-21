@@ -5,19 +5,29 @@
 #include <vector>
 #include <cstring>
 
+#ifndef _MSC_VER
+#define PACKED_STRUCT __attribute__((packed))
+#else
+#define PACKED_STRUCT
+#endif
+
+#ifdef _MSC_VER
+#pragma pack(push,1)
+#endif
+
 struct BNK1_header
 {
    char maj_vers, min_vers;
    char signature[6];        // "ADLIB-"
    unsigned short ins_used, ins_entries;
    unsigned name_list, inst_data;
-} __attribute__((packed));
+} PACKED_STRUCT;
 struct BNK1_record
 {
    unsigned short index;
    unsigned char used;
    char name[9];
-} __attribute__((packed));
+} PACKED_STRUCT;
 struct OPL2_op
 {
    unsigned char key_scale_lvl;
@@ -33,14 +43,14 @@ struct OPL2_op
    unsigned char pitch_vib;
    unsigned char env_scaling;
    unsigned char connection;
-} __attribute__((packed));
+} PACKED_STRUCT;
 struct BNK1_instrument
 {
    unsigned char sound_mode;
    unsigned char voice_num;
    OPL2_op ops[2];
    unsigned char waveforms[2];
-} __attribute__((packed)); // conventional Ad Lib instrument maker bankfile patch
+} PACKED_STRUCT; // conventional Ad Lib instrument maker bankfile patch
 
 struct BNK2_header
 {
@@ -49,7 +59,7 @@ struct BNK2_header
    char filler[10];
    unsigned short ins_entries, ins_used;
    int lostSpace;
-} __attribute__((packed));
+} PACKED_STRUCT;
 struct BNK2_record
 {
    char O3_sig[3];
@@ -57,13 +67,13 @@ struct BNK2_record
    char used;
    int attrib, dataOffset;
    unsigned short blockSize, allocBSize;
-} __attribute__((packed));
+} PACKED_STRUCT;
 struct OPL3_op
 {
    unsigned char AVEKMMMM, KKLLLLLL;
    unsigned char AAAADDDD, SSSSRRRR;
    unsigned char DxxxxWWW, xxxxxxxx;
-} __attribute__((packed));
+} PACKED_STRUCT;
 struct BNK2_instrument
 {
    OPL3_op ops[4];
@@ -71,7 +81,11 @@ struct BNK2_instrument
    unsigned char xxP24NNN;
    unsigned char TTTTTTTT;
    unsigned char xxxxxxxx;
-} __attribute__((packed)); // Ad Lib Gold instrument maker bankfile patch
+} PACKED_STRUCT; // Ad Lib Gold instrument maker bankfile patch
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 static void LoadBNK1(const std::vector<unsigned char>& data)
 {

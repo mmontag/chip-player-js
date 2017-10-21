@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "ini_processing.h"
 #include <cstdio>
+#include <cctype>
 #include <cstring>
 #include <cstdlib>
 #include <clocale>
@@ -37,6 +38,14 @@ DEALINGS IN THE SOFTWARE.
 #include <algorithm>
 #include <assert.h>
 #ifdef _WIN32
+    #ifdef _MSC_VER
+        #ifdef _WIN64
+            typedef __int64 ssize_t;
+        #else
+            typedef __int32 ssize_t;
+        #endif
+        #define NOMINMAX //Don't override std::min and std::max
+    #endif
 #include <windows.h>
 #endif
 

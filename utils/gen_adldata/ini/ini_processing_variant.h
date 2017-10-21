@@ -32,6 +32,8 @@ INI Processor and target value (to be compatible with QSettings)
 
 #include <string>
 #include <cstring>
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #ifdef INI_PROCESSING_ALLOW_QT_TYPES
 #include <QString>

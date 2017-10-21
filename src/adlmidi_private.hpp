@@ -44,6 +44,7 @@
         #else
             typedef __int32 ssize_t;
         #endif
+        #define NOMINMAX //Don't override std::min and std::max
     #endif
     #include <windows.h>
 #endif
@@ -352,7 +353,7 @@ public:
             fp = std::fopen(path, "rb");
             #else
             wchar_t widePath[MAX_PATH];
-            int size = MultiByteToWideChar(CP_UTF8, 0, path, std::strlen(path), widePath, MAX_PATH);
+            int size = MultiByteToWideChar(CP_UTF8, 0, path, (int)std::strlen(path), widePath, MAX_PATH);
             widePath[size] = '\0';
             fp = _wfopen(widePath, L"rb");
             #endif
@@ -396,7 +397,7 @@ public:
             }
         }
 
-        inline void seeku(unsigned long pos, int rel_to)
+        inline void seeku(uint64_t pos, int rel_to)
         {
             seek(static_cast<long>(pos), rel_to);
         }

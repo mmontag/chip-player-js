@@ -3,7 +3,16 @@
 
 #include "../progs_cache.h"
 
-#pragma pack(push, 1)
+#ifndef _MSC_VER
+#define PACKED_STRUCT __attribute__((packed))
+#else
+#define PACKED_STRUCT
+#endif
+
+#ifdef _MSC_VER
+#pragma pack(push,1)
+#endif
+
 struct Doom_OPL2instrument
 {
     unsigned char trem_vibr_1;    /* OP 1: tremolo/vibrato/sustain/KSR/multi */
@@ -21,8 +30,7 @@ struct Doom_OPL2instrument
     unsigned char level_2;        /* OP 2: output level */
     unsigned char unused;
     short         basenote;       /* base note offset */
-} __attribute__((packed));
-#pragma pack(pop)
+} PACKED_STRUCT;
 
 struct Doom_opl_instr
 {
@@ -34,7 +42,11 @@ struct Doom_opl_instr
     unsigned char         finetune;
     unsigned char         note;
     struct Doom_OPL2instrument patchdata[2];
-} __attribute__((packed));
+} PACKED_STRUCT;
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 
 static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)

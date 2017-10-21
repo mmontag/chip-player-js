@@ -391,11 +391,11 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
 
     config->stored_samples = 0;
     config->backup_samples_size = 0;
-    opl.AdlPercussionMode = config->AdlPercussionMode;
-    opl.HighTremoloMode = config->HighTremoloMode;
-    opl.HighVibratoMode = config->HighVibratoMode;
-    opl.ScaleModulators = config->ScaleModulators;
-    opl.LogarithmicVolumes = config->LogarithmicVolumes;
+    opl.AdlPercussionMode = (config->AdlPercussionMode != 0);
+    opl.HighTremoloMode = (config->HighTremoloMode != 0);
+    opl.HighVibratoMode = (config->HighVibratoMode != 0);
+    opl.ScaleModulators = (config->ScaleModulators != 0);
+    opl.LogarithmicVolumes = (config->LogarithmicVolumes != 0);
     opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(config->VolumeModel));
 
     if(config->VolumeModel == ADLMIDI_VolumeModel_AUTO)
@@ -596,7 +596,7 @@ riffskip:
 
         fr.seeku(mus_start, SEEK_SET);
         TrackCount = 1;
-        DeltaTicks = ticks;
+        DeltaTicks = (size_t)ticks;
         opl.AdlBank    = ~0u; // Ignore AdlBank number, use dynamic banks instead
         //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
         opl.LogarithmicVolumes = true;
@@ -648,8 +648,8 @@ InvFmt:
             }
 
             /*size_t  Fmt =*/ ReadBEint(HeaderBuf + 8,  2);
-            TrackCount = ReadBEint(HeaderBuf + 10, 2);
-            DeltaTicks = ReadBEint(HeaderBuf + 12, 2);
+            TrackCount = (size_t)ReadBEint(HeaderBuf + 10, 2);
+            DeltaTicks = (size_t)ReadBEint(HeaderBuf + 12, 2);
         }
     }
 
@@ -661,7 +661,7 @@ InvFmt:
     //Tempo       = 1000000l * InvDeltaTicks;
     Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks));
     static const unsigned char EndTag[4] = {0xFF, 0x2F, 0x00, 0x00};
-    int totalGotten = 0;
+    size_t totalGotten = 0;
 
     for(size_t tk = 0; tk < TrackCount; ++tk)
     {
@@ -738,7 +738,7 @@ InvFmt:
                 if(std::memcmp(HeaderBuf, "MTrk", 4) != 0)
                     goto InvFmt;
 
-                TrackLength = ReadBEint(HeaderBuf + 4, 4);
+                TrackLength = (size_t)ReadBEint(HeaderBuf + 4, 4);
             }
 
             // Read track data

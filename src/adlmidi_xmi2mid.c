@@ -119,7 +119,7 @@ static void copy(struct xmi_ctx *ctx, char *b, uint32_t len)
 
 #define DST_CHUNK 8192
 static void resize_dst(struct xmi_ctx *ctx) {
-    uint32_t pos = ctx->dst_ptr - ctx->dst;
+    uint32_t pos = (uint32_t)(ctx->dst_ptr - ctx->dst);
     ctx->dst = realloc(ctx->dst, ctx->dstsize + DST_CHUNK);
     ctx->dstsize += DST_CHUNK;
     ctx->dstrem += DST_CHUNK;
@@ -175,7 +175,7 @@ static void skipdst(struct xmi_ctx *ctx, int32_t pos) {
     newpos = ctx->dst_ptr - ctx->dst;
     while (ctx->dstsize < newpos)
         resize_dst(ctx);
-    ctx->dstrem = ctx->dstsize - newpos;
+    ctx->dstrem = (uint32_t)(ctx->dstsize - newpos);
 }
 
 static uint32_t getsrcsize(struct xmi_ctx *ctx) {
@@ -183,11 +183,11 @@ static uint32_t getsrcsize(struct xmi_ctx *ctx) {
 }
 
 static uint32_t getsrcpos(struct xmi_ctx *ctx) {
-    return (ctx->src_ptr - ctx->src);
+    return (uint32_t)(ctx->src_ptr - ctx->src);
 }
 
 static uint32_t getdstpos(struct xmi_ctx *ctx) {
-    return (ctx->dst_ptr - ctx->dst);
+    return (uint32_t)(ctx->dst_ptr - ctx->dst);
 }
 
 /* This is a default set of patches to convert from MT32 to GM

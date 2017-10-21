@@ -60,9 +60,9 @@ struct ADL_MIDIPlayer
     double maxdelay;
 
     /* For internal usage */
-    int     stored_samples; /* num of collected samples */
+    ssize_t stored_samples; /* num of collected samples */
     short   backup_samples[1024]; /* Backup sample storage. */
-    int     backup_samples_size; /* Backup sample storage. */
+    ssize_t backup_samples_size; /* Backup sample storage. */
     /* For internal usage */
 
     void *adl_midiPlayer;

@@ -56,11 +56,11 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
     player->opl.NumCards = midi_device->NumCards;
     player->opl.AdlBank = midi_device->AdlBank;
     player->opl.NumFourOps = midi_device->NumFourOps;
-    player->opl.LogarithmicVolumes = (bool)midi_device->LogarithmicVolumes;
-    player->opl.HighTremoloMode = (bool)midi_device->HighTremoloMode;
-    player->opl.HighVibratoMode = (bool)midi_device->HighVibratoMode;
-    player->opl.AdlPercussionMode = (bool)midi_device->AdlPercussionMode;
-    player->opl.ScaleModulators = (bool)midi_device->ScaleModulators;
+    player->opl.LogarithmicVolumes = (midi_device->LogarithmicVolumes != 0);
+    player->opl.HighTremoloMode = (midi_device->HighTremoloMode != 0);
+    player->opl.HighVibratoMode = (midi_device->HighVibratoMode != 0);
+    player->opl.AdlPercussionMode = (midi_device->AdlPercussionMode != 0);
+    player->opl.ScaleModulators = (midi_device->ScaleModulators != 0);
     player->ChooseDevice("none");
     adlRefreshNumCards(midi_device);
     return midi_device;
@@ -147,7 +147,7 @@ ADLMIDI_EXPORT void adl_setPercMode(ADL_MIDIPlayer *device, int percmod)
     if(!device) return;
 
     device->AdlPercussionMode = static_cast<unsigned int>(percmod);
-    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.AdlPercussionMode = (bool)device->AdlPercussionMode;
+    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.AdlPercussionMode = (device->AdlPercussionMode != 0);
 }
 
 ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
@@ -155,7 +155,7 @@ ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
     if(!device) return;
 
     device->HighVibratoMode = static_cast<unsigned int>(hvibro);
-    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.HighVibratoMode = (bool)device->HighVibratoMode;
+    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.HighVibratoMode = (device->HighVibratoMode != 0);
 }
 
 ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
@@ -163,7 +163,7 @@ ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
     if(!device) return;
 
     device->HighTremoloMode = static_cast<unsigned int>(htremo);
-    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.HighTremoloMode = (bool)device->HighTremoloMode;
+    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.HighTremoloMode = (device->HighTremoloMode != 0);
 }
 
 ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
@@ -171,7 +171,7 @@ ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
     if(!device) return;
 
     device->ScaleModulators = static_cast<unsigned int>(smod);
-    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.ScaleModulators = (bool)device->ScaleModulators;
+    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.ScaleModulators = (device->ScaleModulators != 0);
 }
 
 ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
@@ -185,7 +185,7 @@ ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int
     if(!device) return;
 
     device->LogarithmicVolumes = static_cast<unsigned int>(logvol);
-    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.LogarithmicVolumes = (bool)device->LogarithmicVolumes;
+    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.LogarithmicVolumes = (device->LogarithmicVolumes != 0);
 }
 
 ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel)
@@ -386,8 +386,8 @@ inline static void SendStereoAudio(ADL_MIDIPlayer *device,
         size_t appendSize = inSamples - maxSamples;
         memcpy(device->backup_samples + device->backup_samples_size,
                maxSamples + _in, appendSize * sizeof(short));
-        device->backup_samples_size += appendSize;
-        device->stored_samples += appendSize;
+        device->backup_samples_size += (ssize_t)appendSize;
+        device->stored_samples += (ssize_t)appendSize;
     }
 }
 #endif
@@ -421,7 +421,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                 ate++;
             }
 
-            left -= ate;
+            left -= (int)ate;
             gotten_len += ate;
 
             if(ate < device->backup_samples_size)
@@ -500,7 +500,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                     SendStereoAudio(device, sampleCount, in_generatedStereo, out_buf.data(), gotten_len, out);
                 }
 
-                left -= in_generatedPhys;
+                left -= (int)in_generatedPhys;
                 gotten_len += (in_generatedPhys) - device->stored_samples;
             }
 

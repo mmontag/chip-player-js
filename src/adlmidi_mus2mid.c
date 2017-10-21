@@ -130,7 +130,7 @@ struct mus_ctx {
 
 #define DST_CHUNK 8192
 static void resize_dst(struct mus_ctx *ctx) {
-    uint32_t pos = ctx->dst_ptr - ctx->dst;
+    uint32_t pos = (uint32_t)(ctx->dst_ptr - ctx->dst);
     ctx->dst = realloc(ctx->dst, ctx->dstsize + DST_CHUNK);
     ctx->dstsize += DST_CHUNK;
     ctx->dstrem += DST_CHUNK;
@@ -178,11 +178,11 @@ static void skipdst(struct mus_ctx *ctx, int32_t pos) {
     newpos = ctx->dst_ptr - ctx->dst;
     while (ctx->dstsize < newpos)
         resize_dst(ctx);
-    ctx->dstrem = ctx->dstsize - newpos;
+    ctx->dstrem = (uint32_t)(ctx->dstsize - newpos);
 }
 
 static uint32_t getdstpos(struct mus_ctx *ctx) {
-    return (ctx->dst_ptr - ctx->dst);
+    return (uint32_t)(ctx->dst_ptr - ctx->dst);
 }
 
 /* writes a variable length integer to a buffer, and returns bytes written */
@@ -422,7 +422,7 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
         if (event & 128) {
             delta_time = 0;
             do {
-                delta_time = (delta_time * 128 + (*cur & 127)) * (140.0 / frequency);
+                delta_time = (int32_t)((delta_time * 128 + (*cur & 127)) * (140.0 / (double)frequency));
             } while ((*cur++ & 128));
         } else {
             delta_time = 0;

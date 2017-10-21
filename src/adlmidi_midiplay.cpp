@@ -115,7 +115,7 @@ void MIDIplay::AdlChannel::AddAge(int64_t ms)
 {
     if(users.empty())
         koff_time_until_neglible =
-            std::max(koff_time_until_neglible - ms, static_cast<int64_t>(-0x1FFFFFFFl));
+            std::max(int64_t(koff_time_until_neglible - ms), static_cast<int64_t>(-0x1FFFFFFFl));
     else
     {
         koff_time_until_neglible = 0;
@@ -212,7 +212,7 @@ void MIDIplay::realTime_ResetState()
         chan.bendsense = 2 / 8192.0;
         chan.vibpos = 0.0;
         chan.vibdepth = 0.5 / 127.0;
-        chan.vibdelay = 0.0;
+        chan.vibdelay = 0;
         chan.lastlrpn = 0;
         chan.lastmrpn = 0;
         chan.nrpn = false;
@@ -578,7 +578,7 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         break;
 
     case 103:
-        cmf_percussion_mode = value;
+        cmf_percussion_mode = (value != 0);
         break; // CMF (ctrl 0x67) rhythm mode
 
     default:
@@ -622,8 +622,8 @@ void MIDIplay::realTime_BankChangeMSB(uint8_t channel, uint8_t msb)
 void MIDIplay::realTime_BankChange(uint8_t channel, uint16_t bank)
 {
     channel = channel % 16;
-    Ch[channel].bank_lsb = uint8_t(bank & 0xFFFF);
-    Ch[channel].bank_msb = uint8_t((bank >> 16) & 0xFFFF);
+    Ch[channel].bank_lsb = uint8_t(bank & 0xFF);
+    Ch[channel].bank_msb = uint8_t((bank >> 8) & 0xFF);
 }
 
 
@@ -925,7 +925,7 @@ void MIDIplay::HandleEvent(size_t tk)
     {
         uint64_t length = ReadVarLen(tk);
         //std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
-        CurrentPosition.track[tk].ptr += length;
+        CurrentPosition.track[tk].ptr += (size_t)length;
         //UI.PrintLn("SysEx %02X: %u bytes", byte, length/*, data.c_str()*/);
         return;
     }
@@ -935,8 +935,8 @@ void MIDIplay::HandleEvent(size_t tk)
         // Special event FF
         uint8_t  evtype = TrackData[tk][CurrentPosition.track[tk].ptr++];
         uint64_t length = ReadVarLen(tk);
-        std::string data(length ? (const char *) &TrackData[tk][CurrentPosition.track[tk].ptr] : 0, length);
-        CurrentPosition.track[tk].ptr += length;
+        std::string data(length ? (const char *) &TrackData[tk][CurrentPosition.track[tk].ptr] : 0, (size_t)length);
+        CurrentPosition.track[tk].ptr += (size_t)length;
 
         if(evtype == 0x2F)
         {
@@ -1022,7 +1022,7 @@ void MIDIplay::HandleEvent(size_t tk)
                 CurrentPosition.track[tk].ptr-1, (unsigned)tk, byte,
                 TrackData[tk][CurrentPosition.track[tk].ptr]);*/
     uint8_t  MidCh = byte & 0x0F, EvType = byte >> 4;
-    MidCh += current_device[tk];
+    MidCh += (uint8_t)current_device[tk];
     CurrentPosition.track[tk].status = byte;
 
     switch(EvType)
@@ -1105,9 +1105,9 @@ long MIDIplay::CalculateAdlChannelGoodness(unsigned c, uint16_t ins, uint16_t) c
         s -= 4000;
 
         if(!j->second.sustained)
-            s -= j->second.kon_time_until_neglible;
+            s -= (long)j->second.kon_time_until_neglible;
         else
-            s -= j->second.kon_time_until_neglible / 2;
+            s -= (long)(j->second.kon_time_until_neglible / 2);
 
         MIDIchannel::activenotemap_t::const_iterator
         k = Ch[j->first.MidCh].activenotes.find(j->first.note);
@@ -1344,7 +1344,7 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
 
     case 0x010A + 1*0x10000 + 1*0x20000: // Vibrato delay in millisecons
         Ch[MidCh].vibdelay =
-            value ? long(0.2092 * std::exp(0.0795 * value)) : 0.0;
+            value ? int64_t(0.2092 * std::exp(0.0795 * (double)value)) : 0;
         break;
 
     default:/* UI.PrintLn("%s %04X <- %d (%cSB) (ch %u)",
