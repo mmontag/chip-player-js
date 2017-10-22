@@ -86,7 +86,7 @@ if(WITH_EMBEDDED_BANKS)
             target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
         else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             message("Turned on C++11 on MSVC")
-            target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>)
+            target_compile_options(gen_adldata PUBLIC "/std:c++latest")
         endif()
 
         add_custom_target(

@@ -17,9 +17,13 @@ struct insdata
     bool            diff;
     bool operator==(const insdata &b) const
     {
-        return std::memcmp(data, b.data, 11) == 0 && finetune == b.finetune && diff == b.diff;
+        return (std::memcmp(data, b.data, 11) == 0) && (finetune == b.finetune) && (diff == b.diff);
     }
-    bool operator< (const insdata &b) const
+    bool operator!=(const insdata &b) const
+    {
+        return !operator==(b);
+    }
+    bool operator<(const insdata &b) const
     {
         int c = std::memcmp(data, b.data, 11);
         if(c != 0) return c < 0;
@@ -27,9 +31,9 @@ struct insdata
         if(diff != b.diff) return (!diff) == (b.diff);
         return 0;
     }
-    bool operator!=(const insdata &b) const
+    bool operator>(const insdata &b) const
     {
-        return !operator==(b);
+        return !operator<(b) && operator!=(b);
     }
 };
 
