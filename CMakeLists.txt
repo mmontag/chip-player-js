@@ -91,7 +91,7 @@ if(WITH_EMBEDDED_BANKS)
 
         add_custom_target(
             gen-adldata-run
-            COMMAND ${libADLMIDI_BINARY_DIR}/gen_adldata ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
+            COMMAND gen_adldata ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
             WORKING_DIRECTORY ${libADLMIDI_SOURCE_DIR}
         )
         add_dependencies(gen-adldata-run gen_adldata)
