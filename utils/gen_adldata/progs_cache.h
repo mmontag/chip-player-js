@@ -7,6 +7,7 @@
 #include <memory>
 #include <cstring>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 struct insdata
@@ -16,9 +17,13 @@ struct insdata
     bool            diff;
     bool operator==(const insdata &b) const
     {
-        return std::memcmp(data, b.data, 11) == 0 && finetune == b.finetune && diff == b.diff;
+        return (std::memcmp(data, b.data, 11) == 0) && (finetune == b.finetune) && (diff == b.diff);
     }
-    bool operator< (const insdata &b) const
+    bool operator!=(const insdata &b) const
+    {
+        return !operator==(b);
+    }
+    bool operator<(const insdata &b) const
     {
         int c = std::memcmp(data, b.data, 11);
         if(c != 0) return c < 0;
@@ -26,9 +31,9 @@ struct insdata
         if(diff != b.diff) return (!diff) == (b.diff);
         return 0;
     }
-    bool operator!=(const insdata &b) const
+    bool operator>(const insdata &b) const
     {
-        return !operator==(b);
+        return !operator<(b) && operator!=(b);
     }
 };
 
@@ -79,7 +84,7 @@ extern std::vector<std::string> banknames;
 void SetBank(unsigned bank, unsigned patch, size_t insno);
 
 size_t InsertIns(const insdata &id, const insdata &id2, ins &in,
-                 const std::string &name, const std::string &name2 = "");
+                 const std::string &name, const std::string &name2);
 size_t InsertNoSoundIns();
 
 #endif // PROGS_H
