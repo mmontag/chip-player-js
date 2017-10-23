@@ -340,9 +340,10 @@ private:
         uint8_t subtype;
         //! Targeted MIDI channel
         uint8_t channel;
-
         //! Reserved 5 bytes padding
         uint8_t __padding[5];
+        //! Absolute tick position (Used for the tempo calculation only)
+        uint64_t absPosition;
         //! Raw data of this event
         std::vector<uint8_t> data;
     };
@@ -362,6 +363,8 @@ private:
         double time;
         //! Delay to next event in ticks
         uint64_t delay;
+        //! Absolute position in ticks
+        uint64_t absPos;
         //! Delay to next event in seconds
         double timeDelay;
         std::vector<MidiEvent> events;
