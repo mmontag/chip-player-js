@@ -298,6 +298,106 @@ public:
 private:
     std::vector<AdlChannel> ch;
     std::vector<std::vector<uint8_t> > TrackData;
+
+    /**
+     * @brief MIDI Event utility container
+     */
+    class MidiEvent
+    {
+    public:
+        MidiEvent();
+
+        enum Types
+        {
+            T_UNKNOWN       = 0x00,
+            T_NOTEOFF       = 0x08,
+            T_NOTEON        = 0x09,
+            T_NOTETOUCH     = 0x0A,
+            T_CTRLCHANGE    = 0x0B,
+            T_PATCHCHANGE   = 0x0C,
+            T_CHANAFTTOUCH  = 0x0D,
+            T_WHEEL         = 0x0E,
+
+            T_SYSEX         = 0xF7,
+            T_SYSEX2        = 0xF0,
+            T_SPECIAL       = 0xFF,
+        };
+        enum SubTypes
+        {
+            ST_UNKNOWN      = 0x00,
+            ST_ENDTRACK     = 0x2F,
+            ST_TEMPOCHANGE  = 0x51,
+            ST_META         = 0x06,
+
+            /* Non-standard, internal ADLMIDI usage only */
+            ST_LOOPSTART    = 0xE1,
+            ST_LOOPEND      = 0xE2,
+            ST_RAWOPL       = 0xE3,
+        };
+        //! Main type of event
+        uint8_t type;
+        //! Sub-type of the event
+        uint8_t subtype;
+        //! Targeted MIDI channel
+        uint8_t channel;
+
+        //! Reserved 5 bytes padding
+        uint8_t __padding[5];
+        //! Raw data of this event
+        std::vector<uint8_t> data;
+    };
+
+    /**
+     * @brief A track position event contains a chain of MIDI events until next delay value
+     *
+     * Created with purpose to sort events by type in the same position
+     * (for example, to keep controllers always first than note on events or lower than note-off events)
+     */
+    class MidiTrackPos
+    {
+    public:
+        MidiTrackPos();
+        void reset();
+        //! Absolute time position in seconds
+        double time;
+        //! Delay to next event in ticks
+        uint64_t delay;
+        //! Delay to next event in seconds
+        double timeDelay;
+        std::vector<MidiEvent> events;
+        /**
+         * @brief Sort events in this position
+         */
+        void sortEvents();
+        //! Next event that follows current
+        MidiTrackPos *next;
+    };
+
+    // Information about each track
+    struct PositionNew
+    {
+        bool began;
+        char padding[7];
+        double wait;
+        struct TrackInfo
+        {
+            size_t ptr;
+            uint64_t delay;
+            int     status;
+            char    padding2[4];
+            MidiTrackPos *pos;
+            TrackInfo(): ptr(0), delay(0), status(0), pos(NULL) {}
+        };
+        std::vector<TrackInfo> track;
+        PositionNew(): began(false), wait(0.0), track()
+        {}
+    } CurrentPositionNew, LoopBeginPositionNew, trackBeginPositionNew;
+
+    std::vector<std::vector<MidiTrackPos>> trackDataNew;
+    std::vector<int> trackDataNewStatus;
+    void buildTrackData();
+    MidiEvent parseEvent(uint8_t **ptr, int &status);
+
 public:
     MIDIplay();
     ~MIDIplay()
@@ -319,6 +419,7 @@ public:
     static uint64_t ReadBEint(const void *buffer, size_t nbytes);
     static uint64_t ReadLEint(const void *buffer, size_t nbytes);
 
+    uint64_t ReadVarLen(uint8_t **ptr);
     uint64_t ReadVarLen(size_t tk);
     uint64_t ReadVarLenEx(size_t tk, bool &ok);
 
@@ -524,7 +625,9 @@ private:
                     unsigned props_mask,
                     int32_t select_adlchn = -1);
     bool ProcessEvents();
+    bool ProcessEventsNew();
     void HandleEvent(size_t tk);
+    void HandleEvent(size_t tk, MidiEvent &evt, int &status);
 
     // Determine how good a candidate this adlchannel
     // would be for playing a note from this instrument.

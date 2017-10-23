@@ -774,6 +774,9 @@ InvFmt:
         return false;
     }
 
+    //Build new MIDI events table (WIP!!!)
+    buildTrackData();
+
     opl.Reset(); // Reset AdLib
     //opl.Reset(); // ...twice (just in case someone misprogrammed OPL3 previously)
     ch.clear();

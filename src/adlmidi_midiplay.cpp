@@ -129,6 +129,127 @@ void MIDIplay::AdlChannel::AddAge(int64_t ms)
     }
 }
 
+MIDIplay::MidiEvent::MidiEvent() :
+    type(T_UNKNOWN),
+    subtype(T_UNKNOWN),
+    channel(0)
+{}
+
+
+MIDIplay::MidiTrackPos::MidiTrackPos() :
+    time(0.0),
+    delay(0),
+    timeDelay(0.0),
+    next(NULL)
+{}
+
+void MIDIplay::MidiTrackPos::reset()
+{
+    time = 0.0;
+    delay = 0;
+    timeDelay = 0.0;
+    events.clear();
+    next = NULL;
+}
+
+void MIDIplay::MidiTrackPos::sortEvents()
+{
+    std::vector<MidiEvent> metas;
+    std::vector<MidiEvent> noteOffs;
+    std::vector<MidiEvent> controllers;
+    std::vector<MidiEvent> anyOther;
+
+    for(size_t i = 0; i < events.size(); i++)
+    {
+        if(events[i].type == MidiEvent::T_NOTEOFF)
+            noteOffs.push_back(events[i]);
+        else
+        if( (events[i].type == MidiEvent::T_CTRLCHANGE)
+            || (events[i].type == MidiEvent::T_PATCHCHANGE)
+            || (events[i].type == MidiEvent::T_WHEEL)
+            || (events[i].type == MidiEvent::T_CHANAFTTOUCH))
+        {
+            controllers.push_back(events[i]);
+        }
+        else
+        if((events[i].type == MidiEvent::T_SPECIAL) && (events[i].subtype == MidiEvent::ST_META))
+            metas.push_back(events[i]);
+        else
+            anyOther.push_back(events[i]);
+    }
+
+    events.clear();
+    events.insert(events.end(), noteOffs.begin(), noteOffs.end());
+    events.insert(events.end(), metas.begin(), metas.end());
+    events.insert(events.end(), controllers.begin(), controllers.end());
+    events.insert(events.end(), anyOther.begin(), anyOther.end());
+}
+
+void MIDIplay::buildTrackData()
+{
+    trackDataNew.clear();
+    trackDataNewStatus.clear();
+    const size_t    trackCount = TrackData.size();
+    trackDataNew.resize(trackCount, std::vector<MidiTrackPos>());
+    trackDataNewStatus.resize(trackCount, 0);
+
+    CurrentPositionNew.track.clear();
+    CurrentPositionNew.track.resize(trackCount);
+
+    /* TODO: Based on tempo changes, make accurate seconds time marking.
+     * Current way is inaccurate, because of tempo change at different track
+     * will cause time desynchronization between tracks.
+     * Also, seconds calculation is incorrect */
+
+    for(size_t tk = 0; tk < trackCount; ++tk)
+    {
+        fraction<uint64_t> currentTempo = Tempo;
+        double time = 0.0;
+        int status = 0;
+        std::vector<MidiTrackPos> posEvents;
+        MidiEvent event;
+        uint8_t *trackPtr = TrackData[tk].data();
+        //Time delay that follows the first event in the track
+        {
+            MidiTrackPos evtPos;
+            evtPos.delay = ReadVarLen(&trackPtr);
+            fraction<uint64_t> t = evtPos.delay * currentTempo;
+            CurrentPositionNew.wait = evtPos.delay;
+            evtPos.timeDelay = t.value();
+            time += evtPos.timeDelay;
+            trackDataNew[tk].push_back(evtPos);
+        }
+
+        MidiTrackPos evtPos;
+        do
+        {
+            event = parseEvent(&trackPtr, status);
+            evtPos.events.push_back(event);
+            if(event.type == MidiEvent::T_SPECIAL && event.subtype == MidiEvent::ST_TEMPOCHANGE)
+                currentTempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(event.data.data(), event.data.size()));
+            evtPos.delay = ReadVarLen(&trackPtr);
+            if((evtPos.delay > 0) || (event.subtype == MidiEvent::ST_ENDTRACK))
+            {
+                fraction<uint64_t> t = evtPos.delay * currentTempo;
+                evtPos.timeDelay = t.value() ;
+                evtPos.time = time;
+                time += evtPos.timeDelay;
+                evtPos.sortEvents();
+                trackDataNew[tk].push_back(evtPos);
+                evtPos.reset();
+            }
+        } while(event.subtype != MidiEvent::ST_ENDTRACK);
+
+        // Build the chain of events
+        for(size_t i = 0, j = 1; i < trackDataNew[tk].size() && j < trackDataNew[tk].size(); i++, j++)
+            trackDataNew[tk][i].next = &(trackDataNew[tk][j]);
+
+        if(trackDataNew[tk].size() > 0)
+            CurrentPositionNew.track[tk].pos = &trackDataNew[tk][0];
+    }
+
+}
+
 MIDIplay::MIDIplay():
     cmf_percussion_mode(false),
     config(NULL),
@@ -143,10 +264,22 @@ MIDIplay::MIDIplay():
     devices.clear();
 }
 
+uint64_t MIDIplay::ReadVarLen(uint8_t **ptr)
+{
+    uint64_t result = 0;
+    for(;;)
+    {
+        uint8_t byte = *((*ptr)++);
+        result = (result << 7) + (byte & 0x7F);
+        if(!(byte & 0x80))
+            break;
+    }
+    return result;
+}
+
 uint64_t MIDIplay::ReadVarLen(size_t tk)
 {
     uint64_t result = 0;
-
     for(;;)
     {
         uint8_t byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
@@ -154,28 +287,27 @@ uint64_t MIDIplay::ReadVarLen(size_t tk)
         if(!(byte & 0x80))
             break;
     }
-
     return result;
 }
 
 
 double MIDIplay::Tick(double s, double granularity)
 {
-    if(CurrentPosition.began)
-        CurrentPosition.wait -= s;
+    //if(CurrentPositionNew.began)
+        CurrentPositionNew.wait -= s;
 
     int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
-    while((CurrentPosition.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
+    while((CurrentPositionNew.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
     {
         //std::fprintf(stderr, "wait = %g...\n", CurrentPosition.wait);
-        if(!ProcessEvents())
+        if(!ProcessEventsNew())
             break;
-        if(CurrentPosition.wait <= 0.0)
+        if(CurrentPositionNew.wait <= 0.0)
             antiFreezeCounter--;
     }
 
     if(antiFreezeCounter <= 0)
-        CurrentPosition.wait += 1.0;/* Add extra 1 second when over 10000 events
+        CurrentPositionNew.wait += 1.0;/* Add extra 1 second when over 10000 events
                                            with zero delay are been detected */
 
     for(uint16_t c = 0; c < opl.NumChannels; ++c)
@@ -184,7 +316,31 @@ double MIDIplay::Tick(double s, double granularity)
     UpdateVibrato(s);
     UpdateArpeggio(s);
 
-    return CurrentPosition.wait;
+    return CurrentPositionNew.wait;
+//    if(CurrentPosition.began)
+//        CurrentPosition.wait -= s;
+
+//    int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
+//    while((CurrentPosition.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
+//    {
+//        //std::fprintf(stderr, "wait = %g...\n", CurrentPosition.wait);
+//        if(!ProcessEvents())
+//            break;
+//        if(CurrentPosition.wait <= 0.0)
+//            antiFreezeCounter--;
+//    }
+
+//    if(antiFreezeCounter <= 0)
+//        CurrentPosition.wait += 1.0;/* Add extra 1 second when over 10000 events
+//                                           with zero delay are been detected */
+
+//    for(uint16_t c = 0; c < opl.NumChannels; ++c)
+//        ch[c].AddAge(static_cast<int64_t>(s * 1000.0));
+
+//    UpdateVibrato(s);
+//    UpdateArpeggio(s);
+
+//    return CurrentPosition.wait;
 }
 
 void MIDIplay::rewind()
@@ -917,6 +1073,194 @@ bool MIDIplay::ProcessEvents()
     return true;//Has events in queue
 }
 
+bool MIDIplay::ProcessEventsNew()
+{
+    if(TrackData.size() == 0)
+        atEnd = true;//No MIDI track data to play
+    if(atEnd)
+        return false;//No more events in the queue
+
+    loopEnd = false;
+    const size_t        TrackCount = TrackData.size();
+    const PositionNew   RowBeginPosition(CurrentPositionNew);
+
+    for(size_t tk = 0; tk < TrackCount; ++tk)
+    {
+        if(CurrentPositionNew.track[tk].status >= 0
+           && CurrentPositionNew.track[tk].delay <= 0)
+        {
+            // Handle event
+            for(size_t i = 0; i < CurrentPositionNew.track[tk].pos->events.size(); i++)
+            {
+                MidiEvent &evt = CurrentPositionNew.track[tk].pos->events[i];
+                HandleEvent(tk, evt, CurrentPositionNew.track[tk].status);
+                if(loopEnd)
+                    break;//Stop event handling on catching loopEnd event!
+            }
+
+            std::fprintf(stdout, "Time: %f\r", CurrentPositionNew.track[tk].pos->time);
+            std::fflush(stdout);
+
+            // Read next event time (unless the track just ended)
+            if(CurrentPositionNew.track[tk].pos->next == NULL/* >= TrackData[tk].size()*/)
+               CurrentPositionNew.track[tk].status = -1;
+
+            if(CurrentPositionNew.track[tk].status >= 0)
+                CurrentPositionNew.track[tk].delay += CurrentPositionNew.track[tk].pos->delay;
+
+            if(CurrentPositionNew.track[tk].status >= 0)
+                CurrentPositionNew.track[tk].pos = CurrentPositionNew.track[tk].pos->next;
+        }
+    }
+
+    // Find shortest delay from all track
+    uint64_t shortest = 0;
+    bool     shortest_no = true;
+
+    for(size_t tk = 0; tk < TrackCount; ++tk)
+        if((CurrentPositionNew.track[tk].status >= 0) && (shortest_no || CurrentPositionNew.track[tk].delay < shortest))
+        {
+            shortest = CurrentPositionNew.track[tk].delay;
+            shortest_no = false;
+        }
+
+    //if(shortest > 0) UI.PrintLn("shortest: %ld", shortest);
+
+    // Schedule the next playevent to be processed after that delay
+    for(size_t tk = 0; tk < TrackCount; ++tk)
+        CurrentPositionNew.track[tk].delay -= shortest;
+
+    fraction<uint64_t> t = shortest * Tempo;
+
+    //if(CurrentPositionNew.began)
+        CurrentPositionNew.wait += t.valuel();
+
+    //if(shortest > 0) UI.PrintLn("Delay %ld (%g)", shortest, (double)t.valuel());
+    /*
+    if(CurrentPosition.track[0].ptr > 8119)
+        loopEnd = true;
+        // ^HACK: CHRONO TRIGGER LOOP
+    */
+
+    if(loopStart_hit && (loopStart || loopEnd)) //Avoid invalid loops
+    {
+        invalidLoop = true;
+        loopStart = false;
+        loopEnd = false;
+        LoopBeginPositionNew = trackBeginPositionNew;
+    }
+    else
+        loopStart_hit = false;
+
+    if(loopStart)
+    {
+        if(trackStart)
+        {
+            trackBeginPositionNew = RowBeginPosition;
+            trackStart = false;
+            atEnd = false;
+        }
+        LoopBeginPositionNew = RowBeginPosition;
+        loopStart = false;
+        loopStart_hit = true;
+    }
+
+    if(shortest_no || loopEnd)
+    {
+        //Loop if song end or loop end point has reached
+        loopEnd         = false;
+        shortest = 0;
+        if(opl._parent->loopingIsEnabled == 0)
+        {
+            atEnd = true; //Don't handle events anymore
+            CurrentPositionNew.wait += 1.0;//One second delay until stop playing
+            return true;//We have caugh end here!
+        }
+        CurrentPositionNew = LoopBeginPositionNew;
+    }
+
+    return true;//Has events in queue
+}
+
+MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
+{
+    uint8_t *&ptr = *pptr;
+    MIDIplay::MidiEvent evt;
+    unsigned char byte = *(ptr++);
+
+    if(byte == 0xF7 || byte == 0xF0) // Ignore SysEx
+    {
+        uint64_t length = ReadVarLen(pptr);
+        ptr += (size_t)length;
+        return evt;
+    }
+
+    if(byte == 0xFF)
+    {
+        // Special event FF
+        uint8_t  evtype = *(ptr++);
+        uint64_t length = ReadVarLen(pptr);
+        std::string data(length ? (const char *)ptr : 0, (size_t)length);
+        ptr += (size_t)length;
+
+        evt.type = byte;
+        evt.subtype = evtype;
+        evt.data.insert(evt.data.begin(), data.begin(), data.end());
+
+        if(evtype == MidiEvent::ST_ENDTRACK)
+            status = -1;
+
+        return evt;
+    }
+
+    // Any normal event (80..EF)
+    if(byte < 0x80)
+    {
+        byte = static_cast<uint8_t>(status | 0x80);
+        ptr--;
+    }
+
+    if(byte == 0xF3)
+    {
+        ptr += 1;
+        return evt;
+    }
+
+    if(byte == 0xF2)
+    {
+        ptr += 2;
+        return evt;
+    }
+
+    uint8_t  MidCh = byte & 0x0F, EvType = byte >> 4;
+    status = byte;
+    evt.channel = MidCh;
+    evt.type = EvType;
+
+    switch(EvType)
+    {
+    case 0x8: // Note off
+    case 0x9: // Note on
+    case 0xA: // Note touch
+    case 0xB: // Controller change
+    case 0xE: // Wheel/pitch bend
+    {
+        evt.data.push_back(*(ptr++));
+        evt.data.push_back(*(ptr++));
+        return evt;
+    }
+
+    case 0xC: // Patch change
+    case 0xD: // Channel after-touch
+    {
+        evt.data.push_back(*(ptr++));
+        return evt;
+    }
+    }
+
+    return evt;
+}
+
 void MIDIplay::HandleEvent(size_t tk)
 {
     unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
@@ -938,19 +1282,19 @@ void MIDIplay::HandleEvent(size_t tk)
         std::string data(length ? (const char *) &TrackData[tk][CurrentPosition.track[tk].ptr] : 0, (size_t)length);
         CurrentPosition.track[tk].ptr += (size_t)length;
 
-        if(evtype == 0x2F)
+        if(evtype == 0x2F)//End Of Track
         {
             CurrentPosition.track[tk].status = -1;
             return;
         }
 
-        if(evtype == 0x51)
+        if(evtype == 0x51)//Tempo change
         {
             Tempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(data.data(), data.size()));
             return;
         }
 
-        if(evtype == 6)
+        if(evtype == 6)//Meta event
         {
             //Turn on/off Loop handling when loop is disabled
             if(opl._parent->loopingIsEnabled != 0)
@@ -1085,6 +1429,195 @@ void MIDIplay::HandleEvent(size_t tk)
     {
         uint8_t a = TrackData[tk][CurrentPosition.track[tk].ptr++];
         uint8_t b = TrackData[tk][CurrentPosition.track[tk].ptr++];
+        realTime_PitchBend(MidCh, b, a);
+        break;
+    }
+    }
+}
+
+void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
+{
+    if(evt.type == 0xF7 || evt.type == 0xF0) // Ignore SysEx
+    {
+        //std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
+        //UI.PrintLn("SysEx %02X: %u bytes", byte, length/*, data.c_str()*/);
+        return;
+    }
+
+    if(evt.type == 0xFF)
+    {
+        // Special event FF
+        uint8_t  evtype = evt.subtype;
+        uint64_t length = (uint64_t)evt.data.size();
+        std::string data(length ? (const char *)evt.data.data() : 0, (size_t)length);
+
+        if(evtype == 0x2F)//End Of Track
+        {
+            status = -1;
+            return;
+        }
+
+        if(evtype == 0x51)//Tempo change
+        {
+            Tempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(evt.data.data(), evt.data.size()));
+            return;
+        }
+
+        if(evtype == 6)//Meta event
+        {
+            //Turn on/off Loop handling when loop is disabled
+            if(opl._parent->loopingIsEnabled != 0)
+            {
+                /* Move this away from events handler */
+                for(size_t i = 0; i < data.size(); i++)
+                {
+                    if(data[i] <= 'Z' && data[i] >= 'A')
+                        data[i] = data[i] - ('Z' - 'z');
+                }
+
+                if((data == "loopstart") && (!invalidLoop))
+                {
+                    loopStart = true;
+                    loopStart_passed = true;
+                }
+
+                if((data == "loopend") && (!invalidLoop))
+                {
+                    if((loopStart_passed) && (!loopStart))
+                        loopEnd = true;
+                    else
+                        invalidLoop = true;
+                }
+            }
+        }
+
+        if(evtype == 9)
+            current_device[tk] = ChooseDevice(data);
+
+        //if(evtype >= 1 && evtype <= 6)
+        //    UI.PrintLn("Meta %d: %s", evtype, data.c_str());
+
+        if(evtype == 0xE1) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+        {
+            if(!invalidLoop)
+            {
+                loopStart = true;
+                loopStart_passed = true;
+            }
+        }
+
+        if(evtype == 0xE2) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+        {
+            if(!invalidLoop)
+            {
+                if((loopStart_passed) && (!loopStart))
+                    loopEnd = true;
+                else
+                    invalidLoop = true;
+            }
+        }
+
+        if(evtype == 0xE3) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+        {
+            uint8_t i = static_cast<uint8_t>(data[0]), v = static_cast<uint8_t>(data[1]);
+
+            if((i & 0xF0) == 0xC0)
+                v |= 0x30;
+
+            //std::printf("OPL poke %02X, %02X\n", i, v);
+            //std::fflush(stdout);
+            opl.PokeN(0, i, v);
+        }
+
+        return;
+    }
+
+    // Any normal event (80..EF)
+//    if(evt.type < 0x80)
+//    {
+//        byte = static_cast<uint8_t>(CurrentPosition.track[tk].status | 0x80);
+//        CurrentPosition.track[tk].ptr--;
+//    }
+
+    if(evt.type == 0xF3)
+    {
+        //CurrentPosition.track[tk].ptr += 1;
+        return;
+    }
+
+    if(evt.type == 0xF2)
+    {
+        //CurrentPosition.track[tk].ptr += 2;
+        return;
+    }
+
+    /*UI.PrintLn("@%X Track %u: %02X %02X",
+                CurrentPosition.track[tk].ptr-1, (unsigned)tk, byte,
+                TrackData[tk][CurrentPosition.track[tk].ptr]);*/
+    uint8_t  MidCh = evt.channel;//byte & 0x0F, EvType = byte >> 4;
+    MidCh += (uint8_t)current_device[tk];
+    status = evt.type;
+
+    switch(evt.type)
+    {
+    case 0x8: // Note off
+    {
+        uint8_t note = evt.data[0];
+        /*uint8_t vol=*/ //TrackData[tk][CurrentPosition.track[tk].ptr++];
+        //if(MidCh != 9) note -= 12; // HACK
+        realTime_NoteOff(MidCh, note);
+        break;
+    }
+    case 0x9: // Note on
+    {
+        uint8_t note = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+        uint8_t vol  = evt.data[1];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+        //if(MidCh != 9) note -= 12; // HACK
+        if(realTime_NoteOn(MidCh, note, vol))
+            CurrentPosition.began  = true;
+        break;
+    }
+
+    case 0xA: // Note touch
+    {
+        uint8_t note = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+        uint8_t vol =  evt.data[1];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+        realTime_NoteAfterTouch(MidCh, note, vol);
+        break;
+    }
+
+    case 0xB: // Controller change
+    {
+        uint8_t ctrlno = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+        uint8_t value =  evt.data[1];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+
+        if((opl._parent->loopingIsEnabled != 0) && (ctrlno == 111) && !invalidLoop)
+        {
+            loopStart = true;
+            loopStart_passed = true;
+            break;
+        }
+
+        realTime_Controller(MidCh, ctrlno, value);
+        break;
+    }
+
+    case 0xC: // Patch change
+        realTime_PatchChange(MidCh, evt.data[0] /*TrackData[tk][CurrentPosition.track[tk].ptr++]*/);
+        break;
+
+    case 0xD: // Channel after-touch
+    {
+        // TODO: Verify, is this correct action?
+        uint8_t vol = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+        realTime_ChannelAfterTouch(MidCh, vol);
+        break;
+    }
+
+    case 0xE: // Wheel/pitch bend
+    {
+        uint8_t a = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+        uint8_t b = evt.data[1];//TrackData[tk][CurrentPosition.track[tk].ptr++];
         realTime_PitchBend(MidCh, b, a);
         break;
     }

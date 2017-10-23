@@ -73,3 +73,4 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
 
     return 0;
 }
+
