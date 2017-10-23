@@ -393,7 +393,7 @@ private:
         {}
     } CurrentPositionNew, LoopBeginPositionNew, trackBeginPositionNew;
 
-    std::vector<std::vector<MidiTrackPos>> trackDataNew;
+    std::vector<std::vector<MidiTrackPos> > trackDataNew;
     std::vector<int> trackDataNewStatus;
     void buildTrackData();
     MidiEvent parseEvent(uint8_t **ptr, int &status);
