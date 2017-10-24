@@ -1304,14 +1304,14 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
     MIDIplay::MidiEvent evt;
     unsigned char byte = *(ptr++);
 
-    if(byte == 0xF7 || byte == 0xF0) // Ignore SysEx
+    if(byte == MidiEvent::T_SYSEX || byte == MidiEvent::T_SYSEX2)// Ignore SysEx
     {
         uint64_t length = ReadVarLen(pptr);
         ptr += (size_t)length;
         return evt;
     }
 
-    if(byte == 0xFF)
+    if(byte == MidiEvent::T_SPECIAL)
     {
         // Special event FF
         uint8_t  evtype = *(ptr++);
@@ -1347,7 +1347,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
         }
 
         if(evtype == MidiEvent::ST_ENDTRACK)
-            status = -1;
+            status = -1;//Finalize track
 
         return evt;
     }
@@ -1359,42 +1359,40 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
         ptr--;
     }
 
-    if(byte == 0xF3)
+    //Sys Com Song Select(Song #) [0-127]
+    if(byte == MidiEvent::T_SYSCOMSNGSEL)
     {
-        ptr += 1;
+        evt.type = byte;
+        evt.data.push_back(*(ptr++));
         return evt;
     }
 
-    if(byte == 0xF2)
+    //Sys Com Song Position Pntr [LSB, MSB]
+    if(byte == MidiEvent::T_SYSCOMSPOSPTR)
     {
-        ptr += 2;
+        evt.type = byte;
+        evt.data.push_back(*(ptr++));
+        evt.data.push_back(*(ptr++));
         return evt;
     }
 
-    uint8_t  MidCh = byte & 0x0F, EvType = byte >> 4;
+    uint8_t midCh = byte & 0x0F, evType = (byte >> 4) & 0x0F;
     status = byte;
-    evt.channel = MidCh;
-    evt.type = EvType;
+    evt.channel = midCh;
+    evt.type = evType;
 
-    switch(EvType)
+    switch(evType)
     {
-    case 0x8: // Note off
-    case 0x9: // Note on
-    case 0xA: // Note touch
-    case 0xB: // Controller change
-    case 0xE: // Wheel/pitch bend
-    {
-        evt.data.push_back(*(ptr++));
+    case MidiEvent::T_NOTEOFF://2 byte length
+    case MidiEvent::T_NOTEON:
+    case MidiEvent::T_NOTETOUCH:
+    case MidiEvent::T_CTRLCHANGE:
+    case MidiEvent::T_WHEEL:
+        evt.data.push_back(*(ptr++)); /* fallthrough */
+    case MidiEvent::T_PATCHCHANGE://1 byte length
+    case MidiEvent::T_CHANAFTTOUCH:
         evt.data.push_back(*(ptr++));
         return evt;
-    }
-
-    case 0xC: // Patch change
-    case 0xD: // Channel after-touch
-    {
-        evt.data.push_back(*(ptr++));
-        return evt;
-    }
     }
 
     return evt;
@@ -1576,33 +1574,33 @@ void MIDIplay::HandleEvent(size_t tk)
 
 void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
 {
-    if(evt.type == 0xF7 || evt.type == 0xF0) // Ignore SysEx
+    if(evt.type == MidiEvent::T_SYSEX || evt.type == MidiEvent::T_SYSEX2) // Ignore SysEx
     {
         //std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
         //UI.PrintLn("SysEx %02X: %u bytes", byte, length/*, data.c_str()*/);
         return;
     }
 
-    if(evt.type == 0xFF)
+    if(evt.type == MidiEvent::T_SPECIAL)
     {
         // Special event FF
         uint8_t  evtype = evt.subtype;
         uint64_t length = (uint64_t)evt.data.size();
         std::string data(length ? (const char *)evt.data.data() : 0, (size_t)length);
 
-        if(evtype == 0x2F)//End Of Track
+        if(evtype == MidiEvent::ST_ENDTRACK)//End Of Track
         {
             status = -1;
             return;
         }
 
-        if(evtype == 0x51)//Tempo change
+        if(evtype == MidiEvent::ST_TEMPOCHANGE)//Tempo change
         {
             Tempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(evt.data.data(), evt.data.size()));
             return;
         }
 
-        if(evtype == 6)//Meta event
+        if(evtype == MidiEvent::ST_MARKER)//Meta event
         {
             //Turn on/off Loop handling when loop is disabled
             if(opl._parent->loopingIsEnabled != 0)
@@ -1630,13 +1628,13 @@ void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
             }
         }
 
-        if(evtype == 9)
+        if(evtype == MidiEvent::ST_DEVICESWITCH)
             current_device[tk] = ChooseDevice(data);
 
         //if(evtype >= 1 && evtype <= 6)
         //    UI.PrintLn("Meta %d: %s", evtype, data.c_str());
 
-        if(evtype == 0xE1) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+        if(evtype == MidiEvent::ST_LOOPSTART) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
         {
             if(!invalidLoop)
             {
@@ -1645,7 +1643,7 @@ void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
             }
         }
 
-        if(evtype == 0xE2) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+        if(evtype == MidiEvent::ST_LOOPEND) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
         {
             if(!invalidLoop)
             {
@@ -1656,13 +1654,11 @@ void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
             }
         }
 
-        if(evtype == 0xE3) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+        if(evtype == MidiEvent::ST_RAWOPL) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
         {
             uint8_t i = static_cast<uint8_t>(data[0]), v = static_cast<uint8_t>(data[1]);
-
             if((i & 0xF0) == 0xC0)
                 v |= 0x30;
-
             //std::printf("OPL poke %02X, %02X\n", i, v);
             //std::fflush(stdout);
             opl.PokeN(0, i, v);
@@ -1678,57 +1674,47 @@ void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
 //        CurrentPosition.track[tk].ptr--;
 //    }
 
-    if(evt.type == 0xF3)
-    {
-        //CurrentPosition.track[tk].ptr += 1;
+    if(evt.type == MidiEvent::T_SYSCOMSNGSEL ||
+       evt.type == MidiEvent::T_SYSCOMSPOSPTR)
         return;
-    }
-
-    if(evt.type == 0xF2)
-    {
-        //CurrentPosition.track[tk].ptr += 2;
-        return;
-    }
 
     /*UI.PrintLn("@%X Track %u: %02X %02X",
                 CurrentPosition.track[tk].ptr-1, (unsigned)tk, byte,
                 TrackData[tk][CurrentPosition.track[tk].ptr]);*/
-    uint8_t  MidCh = evt.channel;//byte & 0x0F, EvType = byte >> 4;
-    MidCh += (uint8_t)current_device[tk];
+    uint8_t  midCh = evt.channel;//byte & 0x0F, EvType = byte >> 4;
+    midCh += (uint8_t)current_device[tk];
     status = evt.type;
 
     switch(evt.type)
     {
-    case 0x8: // Note off
+    case MidiEvent::T_NOTEOFF: // Note off
     {
         uint8_t note = evt.data[0];
-        /*uint8_t vol=*/ //TrackData[tk][CurrentPosition.track[tk].ptr++];
-        //if(MidCh != 9) note -= 12; // HACK
-        realTime_NoteOff(MidCh, note);
+        realTime_NoteOff(midCh, note);
         break;
     }
-    case 0x9: // Note on
+
+    case MidiEvent::T_NOTEON: // Note on
     {
-        uint8_t note = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
-        uint8_t vol  = evt.data[1];//TrackData[tk][CurrentPosition.track[tk].ptr++];
-        //if(MidCh != 9) note -= 12; // HACK
-        if(realTime_NoteOn(MidCh, note, vol))
+        uint8_t note = evt.data[0];
+        uint8_t vol  = evt.data[1];
+        if(realTime_NoteOn(midCh, note, vol))
             CurrentPosition.began  = true;
         break;
     }
 
-    case 0xA: // Note touch
+    case MidiEvent::T_NOTETOUCH: // Note touch
     {
-        uint8_t note = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
-        uint8_t vol =  evt.data[1];//TrackData[tk][CurrentPosition.track[tk].ptr++];
-        realTime_NoteAfterTouch(MidCh, note, vol);
+        uint8_t note = evt.data[0];
+        uint8_t vol =  evt.data[1];
+        realTime_NoteAfterTouch(midCh, note, vol);
         break;
     }
 
-    case 0xB: // Controller change
+    case MidiEvent::T_CTRLCHANGE: // Controller change
     {
-        uint8_t ctrlno = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
-        uint8_t value =  evt.data[1];//TrackData[tk][CurrentPosition.track[tk].ptr++];
+        uint8_t ctrlno = evt.data[0];
+        uint8_t value =  evt.data[1];
 
         if((opl._parent->loopingIsEnabled != 0) && (ctrlno == 111) && !invalidLoop)
         {
@@ -1737,27 +1723,27 @@ void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
             break;
         }
 
-        realTime_Controller(MidCh, ctrlno, value);
+        realTime_Controller(midCh, ctrlno, value);
         break;
     }
 
-    case 0xC: // Patch change
-        realTime_PatchChange(MidCh, evt.data[0] /*TrackData[tk][CurrentPosition.track[tk].ptr++]*/);
+    case MidiEvent::T_PATCHCHANGE: // Patch change
+        realTime_PatchChange(midCh, evt.data[0]);
         break;
 
-    case 0xD: // Channel after-touch
+    case MidiEvent::T_CHANAFTTOUCH: // Channel after-touch
     {
         // TODO: Verify, is this correct action?
-        uint8_t vol = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
-        realTime_ChannelAfterTouch(MidCh, vol);
+        uint8_t vol = evt.data[0];
+        realTime_ChannelAfterTouch(midCh, vol);
         break;
     }
 
-    case 0xE: // Wheel/pitch bend
+    case MidiEvent::T_WHEEL: // Wheel/pitch bend
     {
-        uint8_t a = evt.data[0];//TrackData[tk][CurrentPosition.track[tk].ptr++];
-        uint8_t b = evt.data[1];//TrackData[tk][CurrentPosition.track[tk].ptr++];
-        realTime_PitchBend(MidCh, b, a);
+        uint8_t a = evt.data[0];
+        uint8_t b = evt.data[1];
+        realTime_PitchBend(midCh, b, a);
         break;
     }
     }

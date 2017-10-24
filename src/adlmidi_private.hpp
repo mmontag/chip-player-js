@@ -310,16 +310,18 @@ private:
         enum Types
         {
             T_UNKNOWN       = 0x00,
-            T_NOTEOFF       = 0x08,
-            T_NOTEON        = 0x09,
-            T_NOTETOUCH     = 0x0A,
-            T_CTRLCHANGE    = 0x0B,
-            T_PATCHCHANGE   = 0x0C,
-            T_CHANAFTTOUCH  = 0x0D,
-            T_WHEEL         = 0x0E,
+            T_NOTEOFF       = 0x08,//size == 2
+            T_NOTEON        = 0x09,//size == 2
+            T_NOTETOUCH     = 0x0A,//size == 2
+            T_CTRLCHANGE    = 0x0B,//size == 2
+            T_PATCHCHANGE   = 0x0C,//size == 1
+            T_CHANAFTTOUCH  = 0x0D,//size == 1
+            T_WHEEL         = 0x0E,//size == 2
 
-            T_SYSEX         = 0xF7,
-            T_SYSEX2        = 0xF0,
+            T_SYSEX         = 0xF0,//size == len
+            T_SYSCOMSPOSPTR = 0xF2,//size == 2
+            T_SYSCOMSNGSEL  = 0xF3,//size == 1
+            T_SYSEX2        = 0xF7,//size == len
             T_SPECIAL       = 0xFF,
         };
         enum SubTypes
@@ -332,6 +334,7 @@ private:
             ST_LYRICS       = 0x05,//size == len
             ST_MARKER       = 0x06,//size == len
             ST_CUEPOINT     = 0x07,//size == len
+            ST_DEVICESWITCH = 0x09,//size == len <CUSTOM>
             ST_MIDICHPREFIX = 0x20,//size == 1
 
             ST_ENDTRACK     = 0x2F,//size == 0
@@ -342,9 +345,9 @@ private:
             ST_SEQUENCERSPEC= 0x7F,//size == len
 
             /* Non-standard, internal ADLMIDI usage only */
-            ST_LOOPSTART    = 0xE1,//size == 0
-            ST_LOOPEND      = 0xE2,//size == 0
-            ST_RAWOPL       = 0xE3,//size == 0
+            ST_LOOPSTART    = 0xE1,//size == 0 <CUSTOM>
+            ST_LOOPEND      = 0xE2,//size == 0 <CUSTOM>
+            ST_RAWOPL       = 0xE3,//size == 0 <CUSTOM>
         };
         //! Main type of event
         uint8_t type;
