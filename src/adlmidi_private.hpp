@@ -397,6 +397,7 @@ private:
         bool began;
         char padding[7];
         double wait;
+        double absTimePosition;
         struct TrackInfo
         {
             size_t ptr;
@@ -407,7 +408,7 @@ private:
             TrackInfo(): ptr(0), delay(0), status(0), pos(NULL) {}
         };
         std::vector<TrackInfo> track;
-        PositionNew(): began(false), wait(0.0), track()
+        PositionNew(): began(false), wait(0.0), absTimePosition(0.0), track()
         {}
     } CurrentPositionNew, LoopBeginPositionNew, trackBeginPositionNew;
 

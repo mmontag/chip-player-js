@@ -401,6 +401,13 @@ double MIDIplay::Tick(double s, double granularity)
 {
     //if(CurrentPositionNew.began)
         CurrentPositionNew.wait -= s;
+        CurrentPositionNew.absTimePosition += s;
+
+    #ifdef DEBUG_SHOW_AUDIO_TIMER
+    std::fprintf(stdout, "                              \r");
+    std::fprintf(stdout, "Time position: %10f\r", CurrentPositionNew.absTimePosition);
+    std::fflush(stdout);
+    #endif
 
     int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
     while((CurrentPositionNew.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
@@ -1227,7 +1234,7 @@ bool MIDIplay::ProcessEventsNew()
 
     #ifdef DEBUG_TIME_CALCULATION
     std::fprintf(stdout, "                              \r");
-    std::fprintf(stdout, "Time: %10f\r", maxTime);
+    std::fprintf(stdout, "Time: %10f; Audio: %10f\r", maxTime, CurrentPositionNew.absTimePosition);
     std::fflush(stdout);
     #endif
 

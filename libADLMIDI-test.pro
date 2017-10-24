@@ -13,7 +13,8 @@ INCLUDEPATH += $$PWD/src $$PWD/include
 #LIBS += -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lpthread -ldl
 LIBS += -lSDL2 -lpthread -ldl
 
-DEFINES += DEBUG_TIME_CALCULATION
+#DEFINES += DEBUG_TIME_CALCULATION
+DEFINES += DEBUG_SHOW_AUDIO_TIMER
 
 QMAKE_CFLAGS += -std=c90 -pedantic
 QMAKE_CXXFLAGS += -std=c++98 -pedantic
