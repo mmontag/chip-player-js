@@ -23,7 +23,6 @@
 
 #include "adlmidi_private.hpp"
 
-
 // Mapping from MIDI volume level to OPL level value.
 
 static const uint32_t DMX_volume_mapping_table[] =
@@ -199,21 +198,13 @@ void MIDIplay::buildTrackData()
     CurrentPositionNew.track.clear();
     CurrentPositionNew.track.resize(trackCount);
 
-    /* TODO: Based on tempo changes, make accurate seconds time marking.
-     * Current way is inaccurate, because of tempo change at different track
-     * will cause time desynchronization between tracks.
-     * Also, seconds calculation is incorrect */
-
     //Tempo change events
     std::vector<MidiEvent> tempos;
 
     for(size_t tk = 0; tk < trackCount; ++tk)
     {
-        //fraction<uint64_t> currentTempo = Tempo;
         uint64_t abs_position = 0;
-        //double time = 0.0;
         int status = 0;
-        std::vector<MidiTrackPos> posEvents;
         MidiEvent event;
         uint8_t *trackPtr = TrackData[tk].data();
         //Time delay that follows the first event in the track
@@ -223,10 +214,6 @@ void MIDIplay::buildTrackData()
             CurrentPositionNew.wait = evtPos.delay;
             evtPos.absPos = abs_position;
             abs_position += evtPos.delay;
-            //fraction<uint64_t> t = evtPos.delay * currentTempo;
-            //evtPos.timeDelay = t.value();
-            //evtPos.time = time;
-            //time += evtPos.timeDelay;
             trackDataNew[tk].push_back(evtPos);
         }
 
@@ -239,7 +226,6 @@ void MIDIplay::buildTrackData()
             {
                 event.absPosition = abs_position;
                 tempos.push_back(event);
-                //currentTempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(event.data.data(), event.data.size()));
             }
 
             evtPos.delay = ReadVarLen(&trackPtr);
@@ -247,10 +233,6 @@ void MIDIplay::buildTrackData()
             {
                 evtPos.absPos = abs_position;
                 abs_position += evtPos.delay;
-                //fraction<uint64_t> t = evtPos.delay * currentTempo;
-                //evtPos.timeDelay = t.value() ;
-                //evtPos.time = time;
-                //time += evtPos.timeDelay;
                 evtPos.sortEvents();
                 trackDataNew[tk].push_back(evtPos);
                 evtPos.reset();
@@ -275,52 +257,90 @@ void MIDIplay::buildTrackData()
         std::vector<MidiTrackPos> &track = trackDataNew[tk];
         if(track.empty())
             continue;//Empty track is useless!
+
+        #ifdef DEBUG_TIME_CALCULATION
+        std::fprintf(stdout, "\n============Track %" PRIuPTR "=============\n", tk);
+        std::fflush(stdout);
+        #endif
+
         MidiTrackPos *posPrev = &track[0];//First element
         for(std::vector<MidiTrackPos>::iterator it = track.begin(); it != track.end(); it++)
         {
+            bool tempoChanged = false;
             MidiTrackPos &pos = *it;
             if( (posPrev != &pos) && //Skip first event
                 (!tempos.empty()) && //Only when in-track tempo events are available
                 (tempo_change_index < tempos.size())
             )
             {
-                MidiEvent &tempo = tempos[tempo_change_index];
-                if(tempo.absPosition <= abs_position)
+                // If tempo event is going between of current and previous event
+                if(tempos[tempo_change_index].absPosition <= pos.absPos)
                 {
-                    /* If tempo event appears between of two events,
-                     * calculate pre-delay and post-delay are going
-                     * between each event and tempo event between of them */
-                    uint64_t preDelay = 0, postDelay = 0;
+                    struct TempoMarker
+                    {
+                        uint64_t absPos;
+                        fraction<uint64_t> tempo;
+                    };
+                    //Stop points: begin point and tempo change points are before end point
+                    std::vector<TempoMarker> points;
+                    fraction<uint64_t> t;
 
-                    //Delay between left event and tempo
-                    preDelay  = (tempo.absPosition - posPrev->absPos);
-                    //Delay between tempo and right event
-                    postDelay = (pos.absPos - tempo.absPosition);
+                    points.push_back({posPrev->absPos, currentTempo});
 
-                    //Time delay between left event and tempo
-                    fraction<uint64_t> t = preDelay * currentTempo;
-                    pos.timeDelay = t.value();
+                    //Collect tempo change points between previous and current events
+                    do
+                    {
+                        TempoMarker tempoMarker;
+                        MidiEvent &tempoPoint = tempos[tempo_change_index];
+                        tempoMarker.absPos = tempoPoint.absPosition;
+                        tempoMarker.tempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(tempoPoint.data.data(), tempoPoint.data.size()));
+                        points.push_back(tempoMarker);
+                        tempo_change_index++;
+                    }
+                    while((tempo_change_index < tempos.size()) &&
+                          (tempos[tempo_change_index].absPosition <= pos.absPos));
 
-                    //Apply new tempo
-                    currentTempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(tempo.data.data(), tempo.data.size()));
+                    // Re-calculate time delay of previous event
+                    time -= posPrev->timeDelay;
+                    posPrev->timeDelay = 0.0;
 
-                    //Time delay between tempo and right event
+                    for(size_t i = 0, j = 1; j < points.size(); i++, j++)
+                    {
+                        /* If one or more tempo events are appears between of two events,
+                         * calculate delays between each tempo point, begin and end */
+                        uint64_t midDelay = 0;
+                        //Delay between points
+                        midDelay  = points[j].absPos - points[i].absPos;
+                        //Time delay between points
+                        t = midDelay * currentTempo;
+                        posPrev->timeDelay += t.value();
+
+                        //Apply next tempo
+                        currentTempo = points[j].tempo;
+                        tempoChanged = true;
+                    }
+                    //Then calculate time between last tempo change point and end point
+                    TempoMarker tailTempo = points.back();
+                    uint64_t postDelay = pos.absPos - tailTempo.absPos;
                     t = postDelay * currentTempo;
-                    pos.timeDelay += t.value();
+                    posPrev->timeDelay += t.value();
 
                     //Store Common time delay
-                    pos.time = time;
-                    time += pos.timeDelay;
-                    tempo_change_index++;
+                    posPrev->time = time;
+                    time += posPrev->timeDelay;
                 }
             }
-            else
-            {
-                fraction<uint64_t> t = pos.delay * currentTempo;
-                pos.timeDelay = t.value();
-                pos.time = time;
-                time += pos.timeDelay;
-            }
+
+            fraction<uint64_t> t = pos.delay * currentTempo;
+            pos.timeDelay = t.value();
+            pos.time = time;
+            time += pos.timeDelay;
+
+            #ifdef DEBUG_TIME_CALCULATION
+            std::fprintf(stdout, "= %10" PRId64 " = %10f%s\n", pos.absPos, pos.time, tempoChanged ? " <----TEMPO CHANGED" : "");
+            std::fflush(stdout);
+            #endif
+
             abs_position += pos.delay;
             posPrev = &pos;
         }
@@ -1161,45 +1181,60 @@ bool MIDIplay::ProcessEventsNew()
     const size_t        TrackCount = TrackData.size();
     const PositionNew   RowBeginPosition(CurrentPositionNew);
 
+    #ifdef DEBUG_TIME_CALCULATION
+    double maxTime = 0.0;
+    #endif
+
     for(size_t tk = 0; tk < TrackCount; ++tk)
     {
-        if(CurrentPositionNew.track[tk].status >= 0
-           && CurrentPositionNew.track[tk].delay <= 0)
+        PositionNew::TrackInfo &track = CurrentPositionNew.track[tk];
+        if((track.status >= 0) && (track.delay <= 0))
         {
             // Handle event
-            for(size_t i = 0; i < CurrentPositionNew.track[tk].pos->events.size(); i++)
+            for(size_t i = 0; i < track.pos->events.size(); i++)
             {
-                MidiEvent &evt = CurrentPositionNew.track[tk].pos->events[i];
-                HandleEvent(tk, evt, CurrentPositionNew.track[tk].status);
+                MidiEvent &evt = track.pos->events[i];
+                HandleEvent(tk, evt, track.status);
                 if(loopEnd)
                     break;//Stop event handling on catching loopEnd event!
             }
 
-            std::fprintf(stdout, "Time: %10f\r", CurrentPositionNew.track[tk].pos->time);
-            std::fflush(stdout);
+            #ifdef DEBUG_TIME_CALCULATION
+            if(maxTime < track.pos->time)
+                maxTime = track.pos->time;
+            #endif
 
             // Read next event time (unless the track just ended)
-            if(CurrentPositionNew.track[tk].pos->next == NULL/* >= TrackData[tk].size()*/)
-               CurrentPositionNew.track[tk].status = -1;
+            if(track.pos->next == NULL/* >= TrackData[tk].size()*/)
+               track.status = -1;
 
-            if(CurrentPositionNew.track[tk].status >= 0)
-                CurrentPositionNew.track[tk].delay += CurrentPositionNew.track[tk].pos->delay;
+            if(track.status >= 0)
+                track.delay += track.pos->delay;
 
-            if(CurrentPositionNew.track[tk].status >= 0)
-                CurrentPositionNew.track[tk].pos = CurrentPositionNew.track[tk].pos->next;
+            if(track.status >= 0)
+                track.pos = track.pos->next;
         }
     }
+
+    #ifdef DEBUG_TIME_CALCULATION
+    std::fprintf(stdout, "                              \r");
+    std::fprintf(stdout, "Time: %10f\r", maxTime);
+    std::fflush(stdout);
+    #endif
 
     // Find shortest delay from all track
     uint64_t shortest = 0;
     bool     shortest_no = true;
 
     for(size_t tk = 0; tk < TrackCount; ++tk)
-        if((CurrentPositionNew.track[tk].status >= 0) && (shortest_no || CurrentPositionNew.track[tk].delay < shortest))
+    {
+        PositionNew::TrackInfo &track = CurrentPositionNew.track[tk];
+        if((track.status >= 0) && (shortest_no || track.delay < shortest))
         {
-            shortest = CurrentPositionNew.track[tk].delay;
+            shortest = track.delay;
             shortest_no = false;
         }
+    }
 
     //if(shortest > 0) UI.PrintLn("shortest: %ld", shortest);
 
