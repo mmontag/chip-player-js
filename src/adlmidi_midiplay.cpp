@@ -174,7 +174,7 @@ void MIDIplay::MidiTrackPos::sortEvents()
             controllers.push_back(events[i]);
         }
         else
-        if((events[i].type == MidiEvent::T_SPECIAL) && (events[i].subtype == MidiEvent::ST_META))
+        if((events[i].type == MidiEvent::T_SPECIAL) && (events[i].subtype == MidiEvent::ST_MARKER))
             metas.push_back(events[i]);
         else
             anyOther.push_back(events[i]);
@@ -266,7 +266,9 @@ void MIDIplay::buildTrackData()
         MidiTrackPos *posPrev = &track[0];//First element
         for(std::vector<MidiTrackPos>::iterator it = track.begin(); it != track.end(); it++)
         {
+            #ifdef DEBUG_TIME_CALCULATION
             bool tempoChanged = false;
+            #endif
             MidiTrackPos &pos = *it;
             if( (posPrev != &pos) && //Skip first event
                 (!tempos.empty()) && //Only when in-track tempo events are available
@@ -317,7 +319,9 @@ void MIDIplay::buildTrackData()
 
                         //Apply next tempo
                         currentTempo = points[j].tempo;
+                        #ifdef DEBUG_TIME_CALCULATION
                         tempoChanged = true;
+                        #endif
                     }
                     //Then calculate time between last tempo change point and end point
                     TempoMarker tailTempo = points.back();
@@ -1318,6 +1322,29 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
         evt.type = byte;
         evt.subtype = evtype;
         evt.data.insert(evt.data.begin(), data.begin(), data.end());
+
+        /* TODO: Store those meta-strings separately and give ability to read them
+         * by external functions (to display song title and copyright in the player) */
+        if(evt.subtype == MidiEvent::ST_COPYRIGHT)
+        {
+            std::string str((const char*)evt.data.data(), evt.data.size());
+            std::fprintf(stdout, "Copyright: %s\n", str.c_str());
+            std::fflush(stdout);
+        }
+        else
+        if(evt.subtype == MidiEvent::ST_SQTRKTITLE)
+        {
+            std::string str((const char*)evt.data.data(), evt.data.size());
+            std::fprintf(stdout, "Sequence/Track title: %s\n", str.c_str());
+            std::fflush(stdout);
+        }
+        else
+        if(evt.subtype == MidiEvent::ST_INSTRTITLE)
+        {
+            std::string str((const char*)evt.data.data(), evt.data.size());
+            std::fprintf(stdout, "Instrument: %s\n", str.c_str());
+            std::fflush(stdout);
+        }
 
         if(evtype == MidiEvent::ST_ENDTRACK)
             status = -1;

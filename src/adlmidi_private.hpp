@@ -324,15 +324,27 @@ private:
         };
         enum SubTypes
         {
-            ST_UNKNOWN      = 0x00,
-            ST_ENDTRACK     = 0x2F,
-            ST_TEMPOCHANGE  = 0x51,
-            ST_META         = 0x06,
+            ST_SEQNUMBER    = 0x00,//size == 2
+            ST_TEXT         = 0x01,//size == len
+            ST_COPYRIGHT    = 0x02,//size == len
+            ST_SQTRKTITLE   = 0x03,//size == len
+            ST_INSTRTITLE   = 0x04,//size == len
+            ST_LYRICS       = 0x05,//size == len
+            ST_MARKER       = 0x06,//size == len
+            ST_CUEPOINT     = 0x07,//size == len
+            ST_MIDICHPREFIX = 0x20,//size == 1
+
+            ST_ENDTRACK     = 0x2F,//size == 0
+            ST_TEMPOCHANGE  = 0x51,//size == 3
+            ST_SMPTEOFFSET  = 0x54,//size == 5
+            ST_TIMESIGNATURE= 0x55,//size == 4
+            ST_KEYSIGNATURE = 0x59,//size == 2
+            ST_SEQUENCERSPEC= 0x7F,//size == len
 
             /* Non-standard, internal ADLMIDI usage only */
-            ST_LOOPSTART    = 0xE1,
-            ST_LOOPEND      = 0xE2,
-            ST_RAWOPL       = 0xE3,
+            ST_LOOPSTART    = 0xE1,//size == 0
+            ST_LOOPEND      = 0xE2,//size == 0
+            ST_RAWOPL       = 0xE3,//size == 0
         };
         //! Main type of event
         uint8_t type;
