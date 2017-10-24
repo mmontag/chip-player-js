@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdio>
 #include <cctype>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <deque>
@@ -276,9 +277,17 @@ int main(int argc, char **argv)
     signal(SIGHUP, sighandler);
     #endif
 
+    double total = adl_totalTimeLength(myDevice);
+
     if(!recordWave)
     {
         SDL_PauseAudio(0);
+
+        #ifdef DEBUG_SEEKING_TEST
+        int delayBeforeSeek = 20;
+        std::fprintf(stdout, "DEBUG: === Random position set test is active! ===\n");
+        std::fflush(stdout);
+        #endif
 
         while(!stop)
         {
@@ -286,6 +295,10 @@ int main(int argc, char **argv)
             size_t got = (size_t)adl_play(myDevice, 4096, buff);
             if(got <= 0)
                 break;
+
+            std::fprintf(stdout, "                                               \r");
+            std::fprintf(stdout, "Time position: %10f / %10f\r", adl_positionTell(myDevice), total);
+            std::fflush(stdout);
 
             AudioBuffer_lock.Lock();
             size_t pos = AudioBuffer.size();
@@ -299,8 +312,17 @@ int main(int argc, char **argv)
             {
                 SDL_Delay(1);
             }
-        }
 
+            #ifdef DEBUG_SEEKING_TEST
+            if(delayBeforeSeek-- <= 0)
+            {
+                delayBeforeSeek = rand() % 20;
+                double seekTo = double((rand() % int(adl_totalTimeLength(myDevice)) - delayBeforeSeek - 1 ));
+                adl_positionSeek(myDevice, seekTo);
+            }
+            #endif
+        }
+        std::fprintf(stdout, "                                               \n\n");
         SDL_CloseAudio();
     }
     else
@@ -319,10 +341,19 @@ int main(int argc, char **argv)
                 if(got <= 0)
                     break;
                 wave_write(buff, (long)got);
+
+                double complete = std::floor(100.0 * adl_positionTell(myDevice) / total);
+                std::fprintf(stdout, "                                               \r");
+                std::fprintf(stdout, "Recording WAV... [%d%% completed]\r", (int)complete);
+                std::fflush(stdout);
             }
             wave_close();
+            std::fprintf(stdout, "                                               \n\n");
 
-            std::fprintf(stdout, "Completed!\n");
+            if(stop)
+                std::fprintf(stdout, "Interrupted! Recorded WAV is incomplete, but playable!\n");
+            else
+                std::fprintf(stdout, "Completed!\n");
             std::fflush(stdout);
         }
         else

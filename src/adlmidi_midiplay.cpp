@@ -140,8 +140,7 @@ MIDIplay::MidiTrackPos::MidiTrackPos() :
     time(0.0),
     delay(0),
     absPos(0),
-    timeDelay(0.0),
-    next(NULL)
+    timeDelay(0.0)
 {}
 
 void MIDIplay::MidiTrackPos::reset()
@@ -151,7 +150,6 @@ void MIDIplay::MidiTrackPos::reset()
     absPos = 0;
     timeDelay = 0.0;
     events.clear();
-    next = NULL;
 }
 
 void MIDIplay::MidiTrackPos::sortEvents()
@@ -189,10 +187,11 @@ void MIDIplay::MidiTrackPos::sortEvents()
 
 void MIDIplay::buildTrackData()
 {
+    fullSongTimeLength = 0.0;
     trackDataNew.clear();
     trackDataNewStatus.clear();
     const size_t    trackCount = TrackData.size();
-    trackDataNew.resize(trackCount, std::vector<MidiTrackPos>());
+    trackDataNew.resize(trackCount, MidiTrackQueue());
     trackDataNewStatus.resize(trackCount, 0);
 
     CurrentPositionNew.track.clear();
@@ -233,7 +232,9 @@ void MIDIplay::buildTrackData()
                 tempos.push_back(event);
             }
 
-            evtPos.delay = ReadVarLen(&trackPtr);
+            if(event.subtype != MidiEvent::ST_ENDTRACK)//Don't try to read delta after EndOfTrack event!
+                evtPos.delay = ReadVarLen(&trackPtr);
+
             if((evtPos.delay > 0) || (event.subtype == MidiEvent::ST_ENDTRACK))
             {
                 evtPos.absPos = abs_position;
@@ -245,11 +246,10 @@ void MIDIplay::buildTrackData()
         } while(event.subtype != MidiEvent::ST_ENDTRACK);
 
         // Build the chain of events
-        for(size_t i = 0, j = 1; i < trackDataNew[tk].size() && j < trackDataNew[tk].size(); i++, j++)
-            trackDataNew[tk][i].next = &(trackDataNew[tk][j]);
-
+        //for(size_t i = 0, j = 1; i < trackDataNew[tk].size() && j < trackDataNew[tk].size(); i++, j++)
+        //    trackDataNew[tk][i].next = &(trackDataNew[tk][j]);
         if(trackDataNew[tk].size() > 0)
-            CurrentPositionNew.track[tk].pos = &trackDataNew[tk][0];
+            CurrentPositionNew.track[tk].pos = trackDataNew[tk].begin();
     }
 
     //! Calculate time basing on collected tempo events
@@ -259,7 +259,7 @@ void MIDIplay::buildTrackData()
         double  time = 0.0;
         uint8_t abs_position = 0;
         size_t tempo_change_index = 0;
-        std::vector<MidiTrackPos> &track = trackDataNew[tk];
+        MidiTrackQueue &track = trackDataNew[tk];
         if(track.empty())
             continue;//Empty track is useless!
 
@@ -268,8 +268,8 @@ void MIDIplay::buildTrackData()
         std::fflush(stdout);
         #endif
 
-        MidiTrackPos *posPrev = &track[0];//First element
-        for(std::vector<MidiTrackPos>::iterator it = track.begin(); it != track.end(); it++)
+        MidiTrackPos *posPrev = &(*(track.begin()));//First element
+        for(MidiTrackQueue::iterator it = track.begin(); it != track.end(); it++)
         {
             #ifdef DEBUG_TIME_CALCULATION
             bool tempoChanged = false;
@@ -353,11 +353,18 @@ void MIDIplay::buildTrackData()
             abs_position += pos.delay;
             posPrev = &pos;
         }
+
+        if(time > fullSongTimeLength)
+            fullSongTimeLength = time;
     }
+
+    fullSongTimeLength += postSongWaitDelay;
 }
 
 MIDIplay::MIDIplay():
     cmf_percussion_mode(false),
+    fullSongTimeLength(0.0),
+    postSongWaitDelay(1.0),
     config(NULL),
     trackStart(false),
     atEnd(false),
@@ -403,12 +410,6 @@ double MIDIplay::Tick(double s, double granularity)
         CurrentPositionNew.wait -= s;
         CurrentPositionNew.absTimePosition += s;
 
-    #ifdef DEBUG_SHOW_AUDIO_TIMER
-    std::fprintf(stdout, "                              \r");
-    std::fprintf(stdout, "Time position: %10f\r", CurrentPositionNew.absTimePosition);
-    std::fflush(stdout);
-    #endif
-
     int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
     while((CurrentPositionNew.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
     {
@@ -429,7 +430,11 @@ double MIDIplay::Tick(double s, double granularity)
     UpdateVibrato(s);
     UpdateArpeggio(s);
 
+    if(CurrentPositionNew.wait < 0.0)//Avoid negative delay value!
+        return 0.0;
+
     return CurrentPositionNew.wait;
+
 //    if(CurrentPosition.began)
 //        CurrentPosition.wait -= s;
 
@@ -453,12 +458,70 @@ double MIDIplay::Tick(double s, double granularity)
 //    UpdateVibrato(s);
 //    UpdateArpeggio(s);
 
-//    return CurrentPosition.wait;
+    //    return CurrentPosition.wait;
+}
+
+void MIDIplay::seek(double seconds)
+{
+    if(seconds < 0.0)
+        return;//Seeking negative position is forbidden! :-P
+    ADL_MIDIPlayer *device = opl._parent;
+    const double granularity = device->mindelay,
+                 s = device->delay < device->maxdelay ? device->delay : device->maxdelay;
+
+    unsigned int loopFlagState = opl._parent->loopingIsEnabled;
+    opl._parent->loopingIsEnabled = 0;
+
+    rewind();
+    while((CurrentPositionNew.absTimePosition < seconds) &&
+          (CurrentPositionNew.absTimePosition < fullSongTimeLength))
+    {
+        CurrentPositionNew.wait -= s;
+        CurrentPositionNew.absTimePosition += s;
+
+        int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
+        while((CurrentPositionNew.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
+        {
+            //std::fprintf(stderr, "wait = %g...\n", CurrentPosition.wait);
+            if(!ProcessEventsNew(true))
+                break;
+            if(CurrentPositionNew.wait <= 0.0)
+                antiFreezeCounter--;
+        }
+
+        if(antiFreezeCounter <= 0)
+            CurrentPositionNew.wait += 1.0;/* Add extra 1 second when over 10000 events
+                                               with zero delay are been detected */
+        for(uint16_t c = 0; c < opl.NumChannels; ++c)
+            ch[c].AddAge(static_cast<int64_t>(s * 1000.0));
+    }
+
+    if(CurrentPositionNew.wait < 0.0)
+        CurrentPositionNew.wait = 0.0;
+
+    device->loopingIsEnabled = loopFlagState;
+    device->delay = CurrentPositionNew.wait;
+    device->carry = 0.0;
+    //UpdateVibrato(s);
+    UpdateArpeggio(s);
+}
+
+double MIDIplay::tell()
+{
+    return CurrentPositionNew.absTimePosition;
+}
+
+double MIDIplay::timeLength()
+{
+    return fullSongTimeLength;
 }
 
 void MIDIplay::rewind()
 {
+    Panic();
+    KillSustainingNotes(-1, -1);
     CurrentPosition  = trackBeginPosition;
+    CurrentPositionNew  = trackBeginPositionNew;
     trackStart       = true;
     atEnd            = false;
     loopStart        = true;
@@ -1186,7 +1249,7 @@ bool MIDIplay::ProcessEvents()
     return true;//Has events in queue
 }
 
-bool MIDIplay::ProcessEventsNew()
+bool MIDIplay::ProcessEventsNew(bool isSeek)
 {
     if(TrackData.size() == 0)
         atEnd = true;//No MIDI track data to play
@@ -1210,6 +1273,8 @@ bool MIDIplay::ProcessEventsNew()
             for(size_t i = 0; i < track.pos->events.size(); i++)
             {
                 MidiEvent &evt = track.pos->events[i];
+                if(isSeek && (evt.type == MidiEvent::T_NOTEON))
+                    continue;
                 HandleEvent(tk, evt, track.status);
                 if(loopEnd)
                     break;//Stop event handling on catching loopEnd event!
@@ -1221,14 +1286,14 @@ bool MIDIplay::ProcessEventsNew()
             #endif
 
             // Read next event time (unless the track just ended)
-            if(track.pos->next == NULL/* >= TrackData[tk].size()*/)
+            if(track.pos == trackDataNew[tk].end())
                track.status = -1;
 
             if(track.status >= 0)
+            {
                 track.delay += track.pos->delay;
-
-            if(track.status >= 0)
-                track.pos = track.pos->next;
+                track.pos++;
+            }
         }
     }
 
@@ -1301,7 +1366,7 @@ bool MIDIplay::ProcessEventsNew()
         if(opl._parent->loopingIsEnabled == 0)
         {
             atEnd = true; //Don't handle events anymore
-            CurrentPositionNew.wait += 1.0;//One second delay until stop playing
+            CurrentPositionNew.wait += postSongWaitDelay;//One second delay until stop playing
             return true;//We have caugh end here!
         }
         CurrentPositionNew = LoopBeginPositionNew;
@@ -1948,6 +2013,15 @@ void MIDIplay::KillOrEvacuate(size_t from_channel, AdlChannel::users_t::iterator
                i,
                Upd_Off,
                static_cast<int32_t>(from_channel));
+}
+
+void MIDIplay::Panic()
+{
+    for(size_t chan = 0; chan < Ch.size(); chan++)
+    {
+        for(uint8_t note = 0; note < 128; note++)
+            realTime_NoteOff(chan, note);
+    }
 }
 
 void MIDIplay::KillSustainingNotes(int32_t MidCh, int32_t this_adlchn)

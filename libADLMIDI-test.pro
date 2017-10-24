@@ -14,12 +14,14 @@ INCLUDEPATH += $$PWD/src $$PWD/include
 LIBS += -lSDL2 -lpthread -ldl
 
 #DEFINES += DEBUG_TIME_CALCULATION
-DEFINES += DEBUG_SHOW_AUDIO_TIMER
+#DEFINES += DEBUG_SEEKING_TEST
 
 QMAKE_CFLAGS += -std=c90 -pedantic
 QMAKE_CXXFLAGS += -std=c++98 -pedantic
 
 #DEFINES += DISABLE_EMBEDDED_BANKS
+
+#DEFINES += ADLMIDI_USE_DOSBOX_OPL
 
 HEADERS += \
     include/adlmidi.h \
@@ -30,6 +32,7 @@ HEADERS += \
     src/adlmidi_xmi2mid.h \
     src/fraction.h \
     src/nukedopl3.h \
+    #src/dbopl.h \
     src/midiplay/wave_writer.h
 
 SOURCES += \
@@ -43,6 +46,7 @@ SOURCES += \
     src/adlmidi_private.cpp \
     src/adlmidi_xmi2mid.c \
     src/nukedopl3.c \
+    #src/dbopl.cpp \
     utils/midiplay/adlmidiplay.cpp \
     utils/midiplay/wave_writer.c
 

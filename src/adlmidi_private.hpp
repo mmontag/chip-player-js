@@ -50,6 +50,7 @@
 #endif
 
 #include <vector>
+#include <list>
 #include <string>
 #include <sstream>
 #include <map>
@@ -387,9 +388,9 @@ private:
          * @brief Sort events in this position
          */
         void sortEvents();
-        //! Next event that follows current
-        MidiTrackPos *next;
     };
+
+    typedef std::list<MidiTrackPos> MidiTrackQueue;
 
     // Information about each track
     struct PositionNew
@@ -404,15 +405,20 @@ private:
             uint64_t delay;
             int     status;
             char    padding2[4];
-            MidiTrackPos *pos;
-            TrackInfo(): ptr(0), delay(0), status(0), pos(NULL) {}
+            MidiTrackQueue::iterator pos;
+            TrackInfo(): ptr(0), delay(0), status(0) {}
         };
         std::vector<TrackInfo> track;
         PositionNew(): began(false), wait(0.0), absTimePosition(0.0), track()
         {}
     } CurrentPositionNew, LoopBeginPositionNew, trackBeginPositionNew;
 
-    std::vector<std::vector<MidiTrackPos> > trackDataNew;
+    //! Full song length in seconds
+    double fullSongTimeLength;
+    //! Delay after song playd before rejecting the output stream requests
+    double postSongWaitDelay;
+
+    std::vector<MidiTrackQueue > trackDataNew;
     std::vector<int> trackDataNewStatus;
     void buildTrackData();
     MidiEvent parseEvent(uint8_t **ptr, int &status);
@@ -609,6 +615,10 @@ public:
      */
     double Tick(double s, double granularity);
 
+    void    seek(double seconds);
+    double  tell();
+    double  timeLength();
+
     void    rewind();
 
     /* RealTime event triggers */
@@ -647,7 +657,7 @@ private:
                     unsigned props_mask,
                     int32_t select_adlchn = -1);
     bool ProcessEvents();
-    bool ProcessEventsNew();
+    bool ProcessEventsNew(bool isSeek = false);
     void HandleEvent(size_t tk);
     void HandleEvent(size_t tk, MidiEvent &evt, int &status);
 
@@ -663,6 +673,7 @@ private:
         size_t  from_channel,
         AdlChannel::users_t::iterator j,
         MIDIchannel::activenoteiterator i);
+    void Panic();
     void KillSustainingNotes(int32_t MidCh = -1, int32_t this_adlchn = -1);
     void SetRPN(unsigned MidCh, unsigned value, bool MSB);
     //void UpdatePortamento(unsigned MidCh)

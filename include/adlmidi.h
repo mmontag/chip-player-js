@@ -127,6 +127,15 @@ extern int adl_openData(struct ADL_MIDIPlayer *device, void *mem, long size);
 /*Resets MIDI player*/
 extern void adl_reset(struct ADL_MIDIPlayer *device);
 
+/*Get total time length of current song*/
+extern double adl_totalTimeLength(struct ADL_MIDIPlayer *device);
+
+/*Get current time position in seconds*/
+extern double adl_positionTell(struct ADL_MIDIPlayer *device);
+
+/*Jump to absolute time position in seconds*/
+extern void adl_positionSeek(struct ADL_MIDIPlayer *device, double seconds);
+
 /*Reset MIDI track position to begin */
 extern void adl_positionRewind(struct ADL_MIDIPlayer *device);
 
@@ -134,7 +143,7 @@ extern void adl_positionRewind(struct ADL_MIDIPlayer *device);
 extern void adl_close(struct ADL_MIDIPlayer *device);
 
 /*Take a sample buffer*/
-extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
+extern int adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
 
 #ifdef __cplusplus
 }

@@ -319,12 +319,34 @@ ADLMIDI_EXPORT void adl_reset(ADL_MIDIPlayer *device)
     reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->opl.Reset();
 }
 
+ADLMIDI_EXPORT double adl_totalTimeLength(ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return -1.0;
+    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->timeLength();
+}
+
+ADLMIDI_EXPORT double adl_positionTell(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return -1.0;
+    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->tell();
+}
+
+ADLMIDI_EXPORT void adl_positionSeek(struct ADL_MIDIPlayer *device, double seconds)
+{
+    if(!device)
+        return;
+    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->seek(seconds);
+}
+
 ADLMIDI_EXPORT void adl_positionRewind(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return;
     reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->rewind();
 }
+
 
 
 #ifdef ADLMIDI_USE_DOSBOX_OPL
@@ -379,13 +401,13 @@ inline static void SendStereoAudio(ADL_MIDIPlayer *device,
     size_t inSamples    = static_cast<size_t>(in_size * 2);
     size_t maxSamples   = static_cast<size_t>(samples_requested) - offset;
     size_t toCopy       = std::min(maxSamples, inSamples);
-    memcpy(_out + out_pos, _in, toCopy * sizeof(short));
+    std::memcpy(_out + out_pos, _in, toCopy * sizeof(short));
 
     if(maxSamples < inSamples)
     {
         size_t appendSize = inSamples - maxSamples;
-        memcpy(device->backup_samples + device->backup_samples_size,
-               maxSamples + _in, appendSize * sizeof(short));
+        std::memcpy(device->backup_samples + device->backup_samples_size,
+                    maxSamples + _in, appendSize * sizeof(short));
         device->backup_samples_size += (ssize_t)appendSize;
         device->stored_samples += (ssize_t)appendSize;
     }
@@ -480,7 +502,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                     in_mixBuffer.resize(1024); //n_samples * 2
                     ssize_t in_generatedStereo = n_periodCountStereo;
                     #endif
-                    memset(out_buf.data(), 0, in_countStereoU * sizeof(short));
+                    std::memset(out_buf.data(), 0, in_countStereoU * sizeof(short));
 
                     /* Generate data from every chip and mix result */
                     for(unsigned card = 0; card < device->NumCards; ++card)
@@ -502,6 +524,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 
                 left -= (int)in_generatedPhys;
                 gotten_len += (in_generatedPhys) - device->stored_samples;
+                out_buf.clear();
             }
 
             device->delay = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->Tick(eat_delay, device->mindelay);
