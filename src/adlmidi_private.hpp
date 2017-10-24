@@ -581,7 +581,10 @@ public:
 
         bool eof()
         {
-            return mp_tell >= mp_size;
+            if(fp)
+                return std::feof(fp);
+            else
+                return mp_tell >= mp_size;
         }
         std::string _fileName;
         std::FILE   *fp;

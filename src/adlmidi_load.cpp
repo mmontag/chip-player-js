@@ -673,7 +673,8 @@ InvFmt:
             //std::fprintf(stderr, "Reading IMF file...\n");
             size_t end = static_cast<uint8_t>(HeaderBuf[0]) + 256 * static_cast<uint8_t>(HeaderBuf[1]);
             unsigned IMF_tempo = 1428;
-            static const unsigned char imf_tempo[] = {0xFF, 0x51, 0x4,
+            static const unsigned char imf_tempo[] = {0x0,//Zero delay!
+                                                      MidiEvent::T_SPECIAL, MidiEvent::ST_TEMPOCHANGE, 0x4,
                                                       static_cast<uint8_t>(IMF_tempo >> 24),
                                                       static_cast<uint8_t>(IMF_tempo >> 16),
                                                       static_cast<uint8_t>(IMF_tempo >> 8),
@@ -686,25 +687,25 @@ InvFmt:
             while(fr.tell() < end && !fr.eof())
             {
                 uint8_t special_event_buf[5];
-                special_event_buf[0] = 0xFF;
-                special_event_buf[1] = 0xE3;
+                uint8_t raw[4];
+                special_event_buf[0] = MidiEvent::T_SPECIAL;
+                special_event_buf[1] = MidiEvent::ST_RAWOPL;
                 special_event_buf[2] = 0x02;
-                special_event_buf[3] = static_cast<uint8_t>(fr.getc()); // port index
-                special_event_buf[4] = static_cast<uint8_t>(fr.getc()); // port value
-                uint32_t delay = static_cast<uint16_t>(fr.getc());
-                delay += 256 * static_cast<uint16_t>(fr.getc());
+                if(fr.read(raw, 1, 4) != 4)
+                    break;
+                special_event_buf[3] = raw[0]; // port index
+                special_event_buf[4] = raw[1]; // port value
+                uint32_t delay = static_cast<uint32_t>(raw[2]);
+                delay += 256 * static_cast<uint32_t>(raw[3]);
                 totalGotten += 4;
                 //if(special_event_buf[3] <= 8) continue;
                 //fprintf(stderr, "Put %02X <- %02X, plus %04X delay\n", special_event_buf[3],special_event_buf[4], delay);
                 TrackData[tk].insert(TrackData[tk].end(), special_event_buf, special_event_buf + 5);
-
                 //if(delay>>21) TrackData[tk].push_back( 0x80 | ((delay>>21) & 0x7F ) );
                 if(delay >> 14)
                     TrackData[tk].push_back(0x80 | ((delay >> 14) & 0x7F));
-
                 if(delay >> 7)
                     TrackData[tk].push_back(0x80 | ((delay >> 7) & 0x7F));
-
                 TrackData[tk].push_back(((delay >> 0) & 0x7F));
             }
 
@@ -734,10 +735,8 @@ InvFmt:
             else
             {
                 fsize = fr.read(HeaderBuf, 1, 8);
-
                 if(std::memcmp(HeaderBuf, "MTrk", 4) != 0)
                     goto InvFmt;
-
                 TrackLength = (size_t)ReadBEint(HeaderBuf + 4, 4);
             }
 

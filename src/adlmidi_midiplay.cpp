@@ -201,6 +201,11 @@ void MIDIplay::buildTrackData()
     //Tempo change events
     std::vector<MidiEvent> tempos;
 
+    /*
+     * TODO: Make this be safer for memory in case of broken input data
+     * which may cause going away of available track data (and then give a crash!)
+     */
+
     for(size_t tk = 0; tk < trackCount; ++tk)
     {
         uint64_t abs_position = 0;
