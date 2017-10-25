@@ -284,7 +284,7 @@ int main(int argc, char **argv)
         SDL_PauseAudio(0);
 
         #ifdef DEBUG_SEEKING_TEST
-        int delayBeforeSeek = 20;
+        int delayBeforeSeek = 50;
         std::fprintf(stdout, "DEBUG: === Random position set test is active! ===\n");
         std::fflush(stdout);
         #endif
@@ -316,7 +316,7 @@ int main(int argc, char **argv)
             #ifdef DEBUG_SEEKING_TEST
             if(delayBeforeSeek-- <= 0)
             {
-                delayBeforeSeek = rand() % 20;
+                delayBeforeSeek = rand() % 50;
                 double seekTo = double((rand() % int(adl_totalTimeLength(myDevice)) - delayBeforeSeek - 1 ));
                 adl_positionSeek(myDevice, seekTo);
             }

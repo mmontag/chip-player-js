@@ -48,33 +48,52 @@ uint64_t MIDIplay::ReadLEint(const void *buffer, size_t nbytes)
     return result;
 }
 
-uint64_t MIDIplay::ReadVarLenEx(size_t tk, bool &ok)
+//uint64_t MIDIplay::ReadVarLenEx(size_t tk, bool &ok)
+//{
+//    uint64_t result = 0;
+//    ok = false;
+
+//    for(;;)
+//    {
+//        if(tk >= TrackData.size())
+//            return 1;
+
+//        if(tk >= CurrentPosition.track.size())
+//            return 2;
+
+//        size_t ptr = CurrentPosition.track[tk].ptr;
+
+//        if(ptr >= TrackData[tk].size())
+//            return 3;
+
+//        unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
+//        result = (result << 7) + (byte & 0x7F);
+
+//        if(!(byte & 0x80)) break;
+//    }
+
+//    ok = true;
+//    return result;
+//}
+
+uint64_t MIDIplay::ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok)
 {
     uint64_t result = 0;
     ok = false;
 
     for(;;)
     {
-        if(tk >= TrackData.size())
-            return 1;
-
-        if(tk >= CurrentPosition.track.size())
+        if(*ptr >= end)
             return 2;
-
-        size_t ptr = CurrentPosition.track[tk].ptr;
-
-        if(ptr >= TrackData[tk].size())
-            return 3;
-
-        unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
+        unsigned char byte = *((*ptr)++);
         result = (result << 7) + (byte & 0x7F);
-
         if(!(byte & 0x80)) break;
     }
 
     ok = true;
     return result;
 }
+
 
 bool MIDIplay::LoadBank(const std::string &filename)
 {
@@ -122,7 +141,7 @@ enum WOPL_InstrumentFlags
 {
     WOPL_Flags_NONE      = 0,
     WOPL_Flag_Enable4OP  = 0x01,
-    WOPL_Flag_Pseudo4OP  = 0x02,
+    WOPL_Flag_Pseudo4OP  = 0x02
 };
 
 struct WOPL_Inst
@@ -295,7 +314,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
         }
     }
 
-    opl.AdlBank = opl._parent->AdlBank;
+    opl.AdlBank = m_setup.AdlBank;
     opl.dynamic_metainstruments.clear();
     opl.dynamic_instruments.clear();
 
@@ -389,18 +408,18 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
 
     /**** Set all properties BEFORE starting of actial file reading! ****/
 
-    config->stored_samples = 0;
-    config->backup_samples_size = 0;
-    opl.AdlPercussionMode = (config->AdlPercussionMode != 0);
-    opl.HighTremoloMode = (config->HighTremoloMode != 0);
-    opl.HighVibratoMode = (config->HighVibratoMode != 0);
-    opl.ScaleModulators = (config->ScaleModulators != 0);
-    opl.LogarithmicVolumes = (config->LogarithmicVolumes != 0);
-    opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(config->VolumeModel));
+    m_setup.stored_samples = 0;
+    m_setup.backup_samples_size = 0;
+    opl.AdlPercussionMode = m_setup.AdlPercussionMode;
+    opl.HighTremoloMode = m_setup.HighTremoloMode;
+    opl.HighVibratoMode = m_setup.HighVibratoMode;
+    opl.ScaleModulators = m_setup.ScaleModulators;
+    opl.LogarithmicVolumes = m_setup.LogarithmicVolumes;
+    opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(m_setup.VolumeModel));
 
-    if(config->VolumeModel == ADLMIDI_VolumeModel_AUTO)
+    if(m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)
     {
-        switch(config->AdlBank)
+        switch(m_setup.AdlBank)
         {
         default:
             opl.m_volumeScale = OPL3::VOLUME_Generic;
@@ -429,10 +448,10 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
         }
     }
 
-    opl.NumCards    = config->NumCards;
-    opl.NumFourOps  = config->NumFourOps;
+    opl.NumCards    = m_setup.NumCards;
+    opl.NumFourOps  = m_setup.NumFourOps;
     cmf_percussion_mode = false;
-    opl.Reset();
+    opl.Reset(m_setup.PCM_RATE);
 
     trackStart       = true;
     atEnd            = false;
@@ -655,8 +674,8 @@ InvFmt:
 
     TrackData.clear();
     TrackData.resize(TrackCount, std::vector<uint8_t>());
-    CurrentPosition.track.clear();
-    CurrentPosition.track.resize(TrackCount);
+    //CurrentPosition.track.clear();
+    //CurrentPosition.track.resize(TrackCount);
     InvDeltaTicks = fraction<uint64_t>(1, 1000000l * static_cast<uint64_t>(DeltaTicks));
     //Tempo       = 1000000l * InvDeltaTicks;
     Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks));
@@ -710,8 +729,8 @@ InvFmt:
             }
 
             TrackData[tk].insert(TrackData[tk].end(), EndTag + 0, EndTag + 4);
-            CurrentPosition.track[tk].delay = 0;
-            CurrentPosition.began = true;
+            //CurrentPosition.track[tk].delay = 0;
+            //CurrentPosition.began = true;
             //std::fprintf(stderr, "Done reading IMF file\n");
             opl.NumFourOps = 0; //Don't use 4-operator channels for IMF playing!
         }
@@ -748,19 +767,18 @@ InvFmt:
             if(is_GMF /*|| is_MUS*/) // Note: CMF does include the track end tag.
                 TrackData[tk].insert(TrackData[tk].end(), EndTag + 0, EndTag + 4);
 
-            bool ok = false;
-            // Read next event time
-            uint64_t tkDelay = ReadVarLenEx(tk, ok);
-
-            if(ok)
-                CurrentPosition.track[tk].delay = tkDelay;
-            else
-            {
-                std::stringstream msg;
-                msg << fr._fileName << ": invalid variable length in the track " << tk << "! (error code " << tkDelay << ")";
-                ADLMIDI_ErrorString = msg.str();
-                return false;
-            }
+            //bool ok = false;
+            //// Read next event time
+            //uint64_t tkDelay = ReadVarLenEx(tk, ok);
+            //if(ok)
+            //    CurrentPosition.track[tk].delay = tkDelay;
+            //else
+            //{
+            //    std::stringstream msg;
+            //    msg << fr._fileName << ": invalid variable length in the track " << tk << "! (error code " << tkDelay << ")";
+            //    ADLMIDI_ErrorString = msg.str();
+            //    return false;
+            //}
         }
     }
 
@@ -773,10 +791,14 @@ InvFmt:
         return false;
     }
 
-    //Build new MIDI events table (WIP!!!)
-    buildTrackData();
+    //Build new MIDI events table (ALPHA!!!)
+    if(!buildTrackData())
+    {
+        ADLMIDI_ErrorString = fr._fileName + ": MIDI data parsing error has occouped!";
+        return false;
+    }
 
-    opl.Reset(); // Reset AdLib
+    opl.Reset(m_setup.PCM_RATE); // Reset AdLib
     //opl.Reset(); // ...twice (just in case someone misprogrammed OPL3 previously)
     ch.clear();
     ch.resize(opl.NumChannels);

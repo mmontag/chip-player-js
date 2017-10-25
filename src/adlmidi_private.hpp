@@ -156,7 +156,7 @@ public:
         VOLUME_CMF,
         VOLUME_DMX,
         VOLUME_APOGEE,
-        VOLUME_9X,
+        VOLUME_9X
     } m_volumeScale;
 
     OPL3();
@@ -181,30 +181,30 @@ public:
     void Silence();
     void updateFlags();
     void ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel);
-    void Reset();
+    void Reset(unsigned long PCM_RATE);
 };
 
 
 class MIDIplay
 {
     // Information about each track
-    struct Position
-    {
-        bool began;
-        char padding[7];
-        double wait;
-        struct TrackInfo
-        {
-            size_t ptr;
-            uint64_t delay;
-            int    status;
-            char padding2[4];
-            TrackInfo(): ptr(0), delay(0), status(0) {}
-        };
-        std::vector<TrackInfo> track;
+    //struct Position
+    //{
+    //    bool began;
+    //    char padding[7];
+    //    double wait;
+    //    struct TrackInfo
+    //    {
+    //        size_t ptr;
+    //        uint64_t delay;
+    //        int    status;
+    //        char padding2[4];
+    //        TrackInfo(): ptr(0), delay(0), status(0) {}
+    //    };
+    //    std::vector<TrackInfo> track;
 
-        Position(): began(false), wait(0.0l), track() { }
-    } CurrentPosition, LoopBeginPosition, trackBeginPosition;
+    //    Position(): began(false), wait(0.0l), track() { }
+    //} CurrentPosition, LoopBeginPosition, trackBeginPosition;
 
     std::map<std::string, uint64_t> devices;
     std::map<uint64_t /*track*/, uint64_t /*channel begin index*/> current_device;
@@ -323,7 +323,7 @@ private:
             T_SYSCOMSPOSPTR = 0xF2,//size == 2
             T_SYSCOMSNGSEL  = 0xF3,//size == 1
             T_SYSEX2        = 0xF7,//size == len
-            T_SPECIAL       = 0xFF,
+            T_SPECIAL       = 0xFF
         };
         enum SubTypes
         {
@@ -348,7 +348,7 @@ private:
             /* Non-standard, internal ADLMIDI usage only */
             ST_LOOPSTART    = 0xE1,//size == 0 <CUSTOM>
             ST_LOOPEND      = 0xE2,//size == 0 <CUSTOM>
-            ST_RAWOPL       = 0xE3,//size == 0 <CUSTOM>
+            ST_RAWOPL       = 0xE3//size == 0 <CUSTOM>
         };
         //! Main type of event
         uint8_t type;
@@ -390,6 +390,15 @@ private:
         void sortEvents();
     };
 
+    /**
+     * @brief Tempo maker entry. Used in the MIDI data building function only.
+     */
+    struct TempoMarker
+    {
+        uint64_t absPos;
+        fraction<uint64_t> tempo;
+    };
+
     typedef std::list<MidiTrackPos> MidiTrackQueue;
 
     // Information about each track
@@ -420,7 +429,7 @@ private:
 
     std::vector<MidiTrackQueue > trackDataNew;
     std::vector<int> trackDataNewStatus;
-    void buildTrackData();
+    bool buildTrackData();
     MidiEvent parseEvent(uint8_t **ptr, int &status);
 
 public:
@@ -428,7 +437,6 @@ public:
     ~MIDIplay()
     {}
 
-    ADL_MIDIPlayer *config;
     std::string musTitle;
     fraction<uint64_t> InvDeltaTicks, Tempo;
     bool    trackStart,
@@ -440,13 +448,46 @@ public:
             loopStart_hit /*loopStart entry was hited in previous tick*/;
     char ____padding2[2];
     OPL3 opl;
+
+    struct Setup
+    {
+        unsigned int AdlBank;
+        unsigned int NumFourOps;
+        unsigned int NumCards;
+        bool    HighTremoloMode;
+        bool    HighVibratoMode;
+        bool    AdlPercussionMode;
+        bool    LogarithmicVolumes;
+        int     VolumeModel;
+        unsigned int SkipForward;
+        bool loopingIsEnabled;
+        bool ScaleModulators;
+
+        double delay;
+        double carry;
+
+        /* The lag between visual content and audio content equals */
+        /* the sum of these two buffers. */
+        double mindelay;
+        double maxdelay;
+
+        /* For internal usage */
+        ssize_t stored_samples; /* num of collected samples */
+        short   backup_samples[1024]; /* Backup sample storage. */
+        ssize_t backup_samples_size; /* Backup sample storage. */
+        /* For internal usage */
+
+        unsigned long PCM_RATE;
+    } m_setup;
+
 public:
     static uint64_t ReadBEint(const void *buffer, size_t nbytes);
     static uint64_t ReadLEint(const void *buffer, size_t nbytes);
 
     uint64_t ReadVarLen(uint8_t **ptr);
-    uint64_t ReadVarLen(size_t tk);
-    uint64_t ReadVarLenEx(size_t tk, bool &ok);
+    //uint64_t ReadVarLen(size_t tk);
+    //uint64_t ReadVarLenEx(size_t tk, bool &ok);
+    uint64_t ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok);
 
     /*
      * A little class gives able to read filedata from disk and also from a memory segment

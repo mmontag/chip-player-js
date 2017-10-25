@@ -15,13 +15,11 @@ LIBS += -lSDL2 -lpthread -ldl
 
 #DEFINES += DEBUG_TIME_CALCULATION
 #DEFINES += DEBUG_SEEKING_TEST
-
-QMAKE_CFLAGS += -std=c90 -pedantic
-QMAKE_CXXFLAGS += -std=c++98 -pedantic
-
 #DEFINES += DISABLE_EMBEDDED_BANKS
-
 #DEFINES += ADLMIDI_USE_DOSBOX_OPL
+
+QMAKE_CFLAGS    += -std=c90 -pedantic
+QMAKE_CXXFLAGS  += -std=c++98 -pedantic
 
 HEADERS += \
     include/adlmidi.h \

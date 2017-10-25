@@ -406,7 +406,7 @@ void OPL3::ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel)
     }
 }
 
-void OPL3::Reset()
+void OPL3::Reset(unsigned long PCM_RATE)
 {
     #ifdef ADLMIDI_USE_DOSBOX_OPL
     DBOPL::Handler emptyChip; //Constructors inside are will initialize necessary fields
@@ -445,9 +445,9 @@ void OPL3::Reset()
     for(unsigned card = 0; card < NumCards; ++card)
     {
         #ifdef ADLMIDI_USE_DOSBOX_OPL
-        cards[card].Init(_parent->PCM_RATE);
+        cards[card].Init(PCM_RATE);
         #else
-        OPL3_Reset(&cards[card], static_cast<Bit32u>(_parent->PCM_RATE));
+        OPL3_Reset(&cards[card], static_cast<Bit32u>(PCM_RATE));
         #endif
 
         for(unsigned a = 0; a < 18; ++a) Poke(card, 0xB0 + Channels[a], 0x00);

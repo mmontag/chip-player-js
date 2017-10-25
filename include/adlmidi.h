@@ -40,33 +40,7 @@ enum ADLMIDI_VolumeModels
 
 struct ADL_MIDIPlayer
 {
-    unsigned int AdlBank;
-    unsigned int NumFourOps;
-    unsigned int NumCards;
-    unsigned int HighTremoloMode;
-    unsigned int HighVibratoMode;
-    unsigned int AdlPercussionMode;
-    unsigned int LogarithmicVolumes;
-    int VolumeModel;
-    unsigned int SkipForward;
-    unsigned int loopingIsEnabled;
-    unsigned int ScaleModulators;
-    double delay;
-    double carry;
-
-    /* The lag between visual content and audio content equals */
-    /* the sum of these two buffers. */
-    double mindelay;
-    double maxdelay;
-
-    /* For internal usage */
-    ssize_t stored_samples; /* num of collected samples */
-    short   backup_samples[1024]; /* Backup sample storage. */
-    ssize_t backup_samples_size; /* Backup sample storage. */
-    /* For internal usage */
-
     void *adl_midiPlayer;
-    unsigned long PCM_RATE;
 };
 
 /* Sets number of emulated sound cards (from 1 to 100). Emulation of multiple sound cards exchanges polyphony limits*/

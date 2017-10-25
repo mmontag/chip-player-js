@@ -47,7 +47,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
         //For embedded bank
         for(unsigned a = 0; a < 256; ++a)
         {
-            unsigned insno = banks[device->AdlBank][a];
+            unsigned insno = banks[play->m_setup.AdlBank][a];
             if(insno == 198)
                 continue;
             ++n_total[a / 128];
@@ -57,13 +57,13 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
         }
     }
 
-    device->NumFourOps =
-        (n_fourop[0] >= n_total[0] * 7 / 8) ? device->NumCards * 6
-        : (n_fourop[0] < n_total[0] * 1 / 8) ? 0
-        : (device->NumCards == 1 ? 1 : device->NumCards * 4);
-    play->opl.NumFourOps = device->NumFourOps;
+    play->m_setup.NumFourOps =
+            (n_fourop[0] >= n_total[0] * 7 / 8) ? play->m_setup.NumCards * 6
+            : (n_fourop[0] < n_total[0] * 1 / 8) ? 0
+            : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
+    play->opl.NumFourOps = play->m_setup.NumFourOps;
 
-    if(n_fourop[0] >= n_total[0] * 15 / 16 && device->NumFourOps == 0)
+    if(n_fourop[0] >= n_total[0] * 15 / 16 && play->m_setup.NumFourOps == 0)
     {
         ADLMIDI_ErrorString = "ERROR: You have selected a bank that consists almost exclusively of four-op patches.\n"
                               "       The results (silence + much cpu load) would be probably\n"
