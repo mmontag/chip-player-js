@@ -369,6 +369,7 @@ bool MIDIplay::buildTrackData()
     }
 
     fullSongTimeLength += postSongWaitDelay;
+    trackBeginPositionNew = CurrentPositionNew;
 
     return true;
 }
@@ -501,7 +502,8 @@ void MIDIplay::seek(double seconds)
     if(seconds < 0.0)
         return;//Seeking negative position is forbidden! :-P
     const double granularity = m_setup.mindelay,
-                 s = m_setup.delay < m_setup.maxdelay ? m_setup.delay : m_setup.maxdelay;
+                 granualityHalf = granularity * 0.5,
+                 s = seconds;//m_setup.delay < m_setup.maxdelay ? m_setup.delay : m_setup.maxdelay;
 
     bool loopFlagState = m_setup.loopingIsEnabled;
     m_setup.loopingIsEnabled = false;
@@ -520,17 +522,22 @@ void MIDIplay::seek(double seconds)
     {
         CurrentPositionNew.wait -= s;
         CurrentPositionNew.absTimePosition += s;
-
         int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
-        while((CurrentPositionNew.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
+        double dstWait = CurrentPositionNew.wait + granualityHalf;
+        while((CurrentPositionNew.wait <= granualityHalf)/*&& (antiFreezeCounter > 0)*/)
         {
             //std::fprintf(stderr, "wait = %g...\n", CurrentPosition.wait);
             if(!ProcessEventsNew(true))
                 break;
-            if(CurrentPositionNew.wait <= 0.0)
+            //Avoid freeze because of no waiting increasing in more than 10000 cycles
+            if(CurrentPositionNew.wait <= dstWait)
                 antiFreezeCounter--;
+            else
+            {
+                dstWait = CurrentPositionNew.wait + granualityHalf;
+                antiFreezeCounter = 10000;
+            }
         }
-
         if(antiFreezeCounter <= 0)
             CurrentPositionNew.wait += 1.0;/* Add extra 1 second when over 10000 events
                                                with zero delay are been detected */
@@ -1287,13 +1294,13 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 
 bool MIDIplay::ProcessEventsNew(bool isSeek)
 {
-    if(TrackData.size() == 0)
+    if(CurrentPositionNew.track.size() == 0)
         atEnd = true;//No MIDI track data to play
     if(atEnd)
         return false;//No more events in the queue
 
     loopEnd = false;
-    const size_t        TrackCount = TrackData.size();
+    const size_t        TrackCount = CurrentPositionNew.track.size();
     const PositionNew   RowBeginPosition(CurrentPositionNew);
 
     #ifdef DEBUG_TIME_CALCULATION
@@ -1309,6 +1316,8 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
             for(size_t i = 0; i < track.pos->events.size(); i++)
             {
                 MidiEvent &evt = track.pos->events[i];
+                if(!CurrentPositionNew.began && (evt.type == MidiEvent::T_NOTEON))
+                    CurrentPositionNew.began = true;
                 if(isSeek && (evt.type == MidiEvent::T_NOTEON))
                     continue;
                 HandleEvent(tk, evt, track.status);
@@ -1383,12 +1392,12 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
 
     if(loopStart)
     {
-        if(trackStart)
-        {
-            trackBeginPositionNew = RowBeginPosition;
-            trackStart = false;
-            atEnd = false;
-        }
+        //if(trackStart)
+        //{
+        //    trackBeginPositionNew = RowBeginPosition;
+        //    trackStart = false;
+        //    atEnd = false;
+        //}
         LoopBeginPositionNew = RowBeginPosition;
         loopStart = false;
         loopStart_hit = true;
