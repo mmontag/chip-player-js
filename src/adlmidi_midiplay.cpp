@@ -137,14 +137,14 @@ MIDIplay::MidiEvent::MidiEvent() :
 {}
 
 
-MIDIplay::MidiTrackPos::MidiTrackPos() :
+MIDIplay::MidiTrackRow::MidiTrackRow() :
     time(0.0),
     delay(0),
     absPos(0),
     timeDelay(0.0)
 {}
 
-void MIDIplay::MidiTrackPos::reset()
+void MIDIplay::MidiTrackRow::reset()
 {
     time = 0.0;
     delay = 0;
@@ -153,7 +153,7 @@ void MIDIplay::MidiTrackPos::reset()
     events.clear();
 }
 
-void MIDIplay::MidiTrackPos::sortEvents()
+void MIDIplay::MidiTrackRow::sortEvents()
 {
     std::vector<MidiEvent> metas;
     std::vector<MidiEvent> noteOffs;
@@ -217,7 +217,7 @@ bool MIDIplay::buildTrackData()
         uint8_t *trackPtr = TrackData[tk].data();
         //Time delay that follows the first event in the track
         {
-            MidiTrackPos evtPos;
+            MidiTrackRow evtPos;
             evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
             if(!ok)
             {
@@ -230,7 +230,7 @@ bool MIDIplay::buildTrackData()
             trackDataNew[tk].push_back(evtPos);
         }
 
-        MidiTrackPos evtPos;
+        MidiTrackRow evtPos;
         do
         {
             event = parseEvent(&trackPtr, end, status);
@@ -289,13 +289,13 @@ bool MIDIplay::buildTrackData()
         std::fflush(stdout);
         #endif
 
-        MidiTrackPos *posPrev = &(*(track.begin()));//First element
+        MidiTrackRow *posPrev = &(*(track.begin()));//First element
         for(MidiTrackQueue::iterator it = track.begin(); it != track.end(); it++)
         {
             #ifdef DEBUG_TIME_CALCULATION
             bool tempoChanged = false;
             #endif
-            MidiTrackPos &pos = *it;
+            MidiTrackRow &pos = *it;
             if( (posPrev != &pos) && //Skip first event
                 (!tempos.empty()) && //Only when in-track tempo events are available
                 (tempo_change_index < tempos.size())
@@ -305,15 +305,15 @@ bool MIDIplay::buildTrackData()
                 if(tempos[tempo_change_index].absPosition <= pos.absPos)
                 {
                     //Stop points: begin point and tempo change points are before end point
-                    std::vector<TempoMarker> points;
+                    std::vector<TempoChangePoint> points;
                     fraction<uint64_t> t;
-                    TempoMarker firstPoint = {posPrev->absPos, currentTempo};
+                    TempoChangePoint firstPoint = {posPrev->absPos, currentTempo};
                     points.push_back(firstPoint);
 
                     //Collect tempo change points between previous and current events
                     do
                     {
-                        TempoMarker tempoMarker;
+                        TempoChangePoint tempoMarker;
                         MidiEvent &tempoPoint = tempos[tempo_change_index];
                         tempoMarker.absPos = tempoPoint.absPosition;
                         tempoMarker.tempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(tempoPoint.data.data(), tempoPoint.data.size()));
@@ -345,7 +345,7 @@ bool MIDIplay::buildTrackData()
                         #endif
                     }
                     //Then calculate time between last tempo change point and end point
-                    TempoMarker tailTempo = points.back();
+                    TempoChangePoint tailTempo = points.back();
                     uint64_t postDelay = pos.absPos - tailTempo.absPos;
                     t = postDelay * currentTempo;
                     posPrev->timeDelay += t.value();

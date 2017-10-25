@@ -372,10 +372,10 @@ private:
      * Created with purpose to sort events by type in the same position
      * (for example, to keep controllers always first than note on events or lower than note-off events)
      */
-    class MidiTrackPos
+    class MidiTrackRow
     {
     public:
-        MidiTrackPos();
+        MidiTrackRow();
         void reset();
         //! Absolute time position in seconds
         double time;
@@ -393,15 +393,16 @@ private:
     };
 
     /**
-     * @brief Tempo maker entry. Used in the MIDI data building function only.
+     * @brief Tempo change point entry. Used in the MIDI data building function only.
      */
-    struct TempoMarker
+    struct TempoChangePoint
     {
         uint64_t absPos;
         fraction<uint64_t> tempo;
     };
+    //P.S. I declared it here instead of local in-function because C++99 can't process templates with locally-declared structures
 
-    typedef std::list<MidiTrackPos> MidiTrackQueue;
+    typedef std::list<MidiTrackRow> MidiTrackQueue;
 
     // Information about each track
     struct PositionNew
