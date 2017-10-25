@@ -456,9 +456,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     trackStart       = true;
     atEnd            = false;
     loopStart        = true;
-    loopStart_passed = false;
     invalidLoop      = false;
-    loopStart_hit    = false;
 
     bool is_GMF = false; // GMD/MUS files (ScummVM)
     //bool is_MUS = false; // MUS/DMX files (Doom)

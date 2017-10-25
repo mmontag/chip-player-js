@@ -446,9 +446,7 @@ public:
             atEnd,
             loopStart,
             loopEnd,
-            loopStart_passed /*Tells that "loopStart" already passed*/,
-            invalidLoop /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/,
-            loopStart_hit /*loopStart entry was hited in previous tick*/;
+            invalidLoop; /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/
     char ____padding2[2];
     OPL3 opl;
 

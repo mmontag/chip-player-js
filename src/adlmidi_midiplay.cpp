@@ -196,6 +196,11 @@ bool MIDIplay::buildTrackData()
     trackDataNew.resize(trackCount, MidiTrackQueue());
     trackDataNewStatus.resize(trackCount, 0);
 
+    invalidLoop = false;
+    bool gotLoopStart = false, gotLoopEnd = false, gotLoopEventInThisRow = false;
+    uint64_t loopStartTicks = 0;
+    uint64_t loopEndTicks = 0;
+
     CurrentPositionNew.track.clear();
     CurrentPositionNew.track.resize(trackCount);
 
@@ -240,10 +245,50 @@ bool MIDIplay::buildTrackData()
                 return false;
             }
             evtPos.events.push_back(event);
-            if(event.type == MidiEvent::T_SPECIAL && event.subtype == MidiEvent::ST_TEMPOCHANGE)
+            if(event.type == MidiEvent::T_SPECIAL)
             {
-                event.absPosition = abs_position;
-                tempos.push_back(event);
+                if(event.subtype == MidiEvent::ST_TEMPOCHANGE)
+                {
+                    event.absPosition = abs_position;
+                    tempos.push_back(event);
+                }
+                else
+                if(!invalidLoop && (event.subtype == MidiEvent::ST_LOOPSTART))
+                {
+                    /*
+                     * loopStart is invalid when:
+                     * - starts together with loopEnd
+                     * - appears more than one time in same MIDI file
+                     */
+                    if(gotLoopStart || gotLoopEventInThisRow)
+                        invalidLoop = true;
+                    else
+                    {
+                        gotLoopStart = true;
+                        loopStartTicks = abs_position;
+                    }
+                    //In this row we got loop event, register this!
+                    gotLoopEventInThisRow = true;
+                }
+                else
+                if(!invalidLoop && (event.subtype == MidiEvent::ST_LOOPEND))
+                {
+                    /*
+                     * loopEnd is invalid when:
+                     * - starts before loopStart
+                     * - starts together with loopStart
+                     * - appars more than one time in same MIDI file
+                     */
+                    if(gotLoopEnd || gotLoopEventInThisRow)
+                        invalidLoop = true;
+                    else
+                    {
+                        gotLoopEnd = true;
+                        loopEndTicks = abs_position;
+                    }
+                    //In this row we got loop event, register this!
+                    gotLoopEventInThisRow = true;
+                }
             }
 
             if(event.subtype != MidiEvent::ST_ENDTRACK)//Don't try to read delta after EndOfTrack event!
@@ -263,15 +308,18 @@ bool MIDIplay::buildTrackData()
                 evtPos.sortEvents();
                 trackDataNew[tk].push_back(evtPos);
                 evtPos.reset();
+                gotLoopEventInThisRow = false;
             }
         } while((trackPtr <= end) && (event.subtype != MidiEvent::ST_ENDTRACK));
 
-        // Build the chain of events
-        //for(size_t i = 0, j = 1; i < trackDataNew[tk].size() && j < trackDataNew[tk].size(); i++, j++)
-        //    trackDataNew[tk][i].next = &(trackDataNew[tk][j]);
+        //Set the chain of events begin
         if(trackDataNew[tk].size() > 0)
             CurrentPositionNew.track[tk].pos = trackDataNew[tk].begin();
     }
+
+    //loopStart must be located before loopEnd!
+    if(loopStartTicks >= loopEndTicks)
+        invalidLoop = true;
 
     //! Calculate time basing on collected tempo events
     for(size_t tk = 0; tk < trackCount; ++tk)
@@ -388,9 +436,7 @@ MIDIplay::MIDIplay():
     atEnd(false),
     loopStart(false),
     loopEnd(false),
-    loopStart_passed(false),
-    invalidLoop(false),
-    loopStart_hit(false)
+    invalidLoop(false)
 {
     devices.clear();
 
@@ -576,9 +622,7 @@ void MIDIplay::rewind()
     trackStart       = true;
     atEnd            = false;
     loopStart        = true;
-    loopStart_passed = false;
     invalidLoop      = false;
-    loopStart_hit    = false;
 }
 
 void MIDIplay::realTime_ResetState()
@@ -1386,15 +1430,15 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
         // ^HACK: CHRONO TRIGGER LOOP
     */
 
-    if(loopStart_hit && (loopStart || loopEnd)) //Avoid invalid loops
-    {
-        invalidLoop = true;
-        loopStart = false;
-        loopEnd = false;
-        LoopBeginPositionNew = trackBeginPositionNew;
-    }
-    else
-        loopStart_hit = false;
+    //if(loopStart_hit && (loopStart || loopEnd)) //Avoid invalid loops
+    //{
+    //    invalidLoop = true;
+    //    loopStart = false;
+    //    loopEnd = false;
+    //    LoopBeginPositionNew = trackBeginPositionNew;
+    //}
+    //else
+    //    loopStart_hit = false;
 
     if(loopStart)
     {
@@ -1406,7 +1450,6 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
         //}
         LoopBeginPositionNew = RowBeginPosition;
         loopStart = false;
-        loopStart_hit = true;
     }
 
     if(shortest_no || loopEnd)
@@ -1496,6 +1539,32 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
             std::fprintf(stdout, "Instrument: %s\n", str.c_str());
             std::fflush(stdout);
         }
+        else
+        if(evt.subtype == MidiEvent::ST_MARKER)
+        {
+            //To lower
+            for(size_t i = 0; i < data.size(); i++)
+            {
+                if(data[i] <= 'Z' && data[i] >= 'A')
+                    data[i] = data[i] - ('Z' - 'z');
+            }
+
+            if(data == "loopstart")
+            {
+                //Return a custom Loop Start event instead of Marker
+                evt.subtype = MidiEvent::ST_LOOPSTART;
+                evt.data.clear();//Data is not needed
+                return evt;
+            }
+
+            if(data == "loopend")
+            {
+                //Return a custom Loop End event instead of Marker
+                evt.subtype = MidiEvent::ST_LOOPEND;
+                evt.data.clear();//Data is not needed
+                return evt;
+            }
+        }
 
         if(evtype == MidiEvent::ST_ENDTRACK)
             status = -1;//Finalize track
@@ -1554,8 +1623,19 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
             evt.isValid = 0;
             return evt;
         }
+
         evt.data.push_back(*(ptr++));
         evt.data.push_back(*(ptr++));
+
+        //111'th loopStart controller (RPG Maker and others)
+        if((evType == MidiEvent::T_CTRLCHANGE) && (evt.data[0] == 111))
+        {
+            //Change event type to custom Loop Start event and clear data
+            evt.type = MidiEvent::T_SPECIAL;
+            evt.subtype = MidiEvent::ST_LOOPSTART;
+            evt.data.clear();
+        }
+
         return evt;
     case MidiEvent::T_PATCHCHANGE://1 byte length
     case MidiEvent::T_CHANAFTTOUCH:
@@ -1775,55 +1855,32 @@ void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
 
         if(evtype == MidiEvent::ST_MARKER)//Meta event
         {
-            //Turn on/off Loop handling when loop is disabled
-            if(m_setup.loopingIsEnabled)
-            {
-                /* Move this away from events handler */
-                for(size_t i = 0; i < data.size(); i++)
-                {
-                    if(data[i] <= 'Z' && data[i] >= 'A')
-                        data[i] = data[i] - ('Z' - 'z');
-                }
-
-                if((data == "loopstart") && (!invalidLoop))
-                {
-                    loopStart = true;
-                    loopStart_passed = true;
-                }
-
-                if((data == "loopend") && (!invalidLoop))
-                {
-                    if((loopStart_passed) && (!loopStart))
-                        loopEnd = true;
-                    else
-                        invalidLoop = true;
-                }
-            }
+            //Do nothing! :-P
+            return;
         }
 
         if(evtype == MidiEvent::ST_DEVICESWITCH)
+        {
             current_device[tk] = ChooseDevice(data);
+            return;
+        }
 
         //if(evtype >= 1 && evtype <= 6)
         //    UI.PrintLn("Meta %d: %s", evtype, data.c_str());
 
-        if(evtype == MidiEvent::ST_LOOPSTART) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+        //Turn on Loop handling when loop is enabled
+        if(m_setup.loopingIsEnabled && !invalidLoop)
         {
-            if(!invalidLoop)
+            if(evtype == MidiEvent::ST_LOOPSTART) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
             {
                 loopStart = true;
-                loopStart_passed = true;
+                return;
             }
-        }
 
-        if(evtype == MidiEvent::ST_LOOPEND) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
-        {
-            if(!invalidLoop)
+            if(evtype == MidiEvent::ST_LOOPEND) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
             {
-                if((loopStart_passed) && (!loopStart))
-                    loopEnd = true;
-                else
-                    invalidLoop = true;
+                loopEnd = true;
+                return;
             }
         }
 
@@ -1835,6 +1892,7 @@ void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
             //std::printf("OPL poke %02X, %02X\n", i, v);
             //std::fflush(stdout);
             opl.PokeN(0, i, v);
+            return;
         }
 
         return;
@@ -1888,14 +1946,6 @@ void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
     {
         uint8_t ctrlno = evt.data[0];
         uint8_t value =  evt.data[1];
-
-        if((m_setup.loopingIsEnabled) && (ctrlno == 111) && !invalidLoop)
-        {
-            loopStart = true;
-            loopStart_passed = true;
-            break;
-        }
-
         realTime_Controller(midCh, ctrlno, value);
         break;
     }
