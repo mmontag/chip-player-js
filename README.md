@@ -31,6 +31,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Sustain enable/disable
 * MIDI and RMI file support
 * loopStart / loopEnd tag support (Final Fantasy VII)
+* 111-th controller based loop start (RPG-Maker)
 * Use automatic arpeggio with chords to relieve channel pressure
 * Support for multiple concurrent MIDI synthesizers (per-track device/port select FF 09 message), can be used to overcome 16 channel limit
 * Support for playing Id-software Music File format (IMF)
@@ -105,12 +106,10 @@ To build that example you will need to have installed SDL2 library.
 
 # Todo
 * Add hooks to places where are originally was old UI calls to be able to reimplement original ADLMIDI tool which will use libADLMIDI as backend and also to be able to implement various other things based on MIDI event hooking.
-* Move most of variables in the `ADL_MIDIPlayer` structure away into `MIDIplay` class.
 * Implement WOPL Version 3 which will contain pre-calculated `ms_sound_kon` and `ms_sound_koff` values per every instrument.
 * Implement multi-bank to support GS or XG standards.
 * Add tempo multiplier to have tempo changing ability
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
-* Time based Seek/Tell support
 * Support of title and other meta-tags retrieving
 * Support of real-time listening of incoming MIDI-commands.
   That will allow to use library as software MIDI Output device
@@ -126,6 +125,10 @@ To build that example you will need to have installed SDL2 library.
  * Demo tool now can correctly record WAVs and now can correctly deal with CTRL+C termination
  * When loop is disabled, loop points will be ignored
  * Loop now is disabled by default
+ * Reworked internal storage of MIDI events to easier pre-process them and retrieve any useful information before play them
+ * Added ability to get seconds time position and song length
+ * Added seekability support
+ * Fixed IMF playing when passing file as path nor as memory block
  * ...
 
 ## 1.2.1    2017-07-30
