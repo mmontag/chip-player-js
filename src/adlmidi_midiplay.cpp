@@ -132,6 +132,7 @@ MIDIplay::MidiEvent::MidiEvent() :
     type(T_UNKNOWN),
     subtype(T_UNKNOWN),
     channel(0),
+    isValid(1),
     absPosition(0)
 {}
 
@@ -232,7 +233,12 @@ bool MIDIplay::buildTrackData()
         MidiTrackPos evtPos;
         do
         {
-            event = parseEvent(&trackPtr, status);
+            event = parseEvent(&trackPtr, end, status);
+            if(!event.isValid)
+            {
+                //TODO: Implement file parsing error here
+                return false;
+            }
             evtPos.events.push_back(event);
             if(event.type == MidiEvent::T_SPECIAL && event.subtype == MidiEvent::ST_TEMPOCHANGE)
             {
@@ -258,7 +264,7 @@ bool MIDIplay::buildTrackData()
                 trackDataNew[tk].push_back(evtPos);
                 evtPos.reset();
             }
-        } while(event.subtype != MidiEvent::ST_ENDTRACK);
+        } while((trackPtr <= end) && (event.subtype != MidiEvent::ST_ENDTRACK));
 
         // Build the chain of events
         //for(size_t i = 0, j = 1; i < trackDataNew[tk].size() && j < trackDataNew[tk].size(); i++, j++)
@@ -1420,15 +1426,28 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
     return true;//Has events in queue
 }
 
-MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
+MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &status)
 {
     uint8_t *&ptr = *pptr;
     MIDIplay::MidiEvent evt;
+
+    if(ptr + 1 > end)
+    {
+        evt.isValid = 0;
+        return evt;
+    }
+
     unsigned char byte = *(ptr++);
+    bool ok = false;
 
     if(byte == MidiEvent::T_SYSEX || byte == MidiEvent::T_SYSEX2)// Ignore SysEx
     {
-        uint64_t length = ReadVarLen(pptr);
+        uint64_t length = ReadVarLenEx(pptr, end, ok);
+        if(!ok || (ptr + length > end))
+        {
+            evt.isValid = 0;
+            return evt;
+        }
         ptr += (size_t)length;
         return evt;
     }
@@ -1437,7 +1456,12 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
     {
         // Special event FF
         uint8_t  evtype = *(ptr++);
-        uint64_t length = ReadVarLen(pptr);
+        uint64_t length = ReadVarLenEx(pptr, end, ok);
+        if(!ok || (ptr + length > end))
+        {
+            evt.isValid = 0;
+            return evt;
+        }
         std::string data(length ? (const char *)ptr : 0, (size_t)length);
         ptr += (size_t)length;
 
@@ -1489,6 +1513,11 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
     //Sys Com Song Select(Song #) [0-127]
     if(byte == MidiEvent::T_SYSCOMSNGSEL)
     {
+        if(ptr + 1 > end)
+        {
+            evt.isValid = 0;
+            return evt;
+        }
         evt.type = byte;
         evt.data.push_back(*(ptr++));
         return evt;
@@ -1497,6 +1526,11 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
     //Sys Com Song Position Pntr [LSB, MSB]
     if(byte == MidiEvent::T_SYSCOMSPOSPTR)
     {
+        if(ptr + 2 > end)
+        {
+            evt.isValid = 0;
+            return evt;
+        }
         evt.type = byte;
         evt.data.push_back(*(ptr++));
         evt.data.push_back(*(ptr++));
@@ -1515,9 +1549,21 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, int &status)
     case MidiEvent::T_NOTETOUCH:
     case MidiEvent::T_CTRLCHANGE:
     case MidiEvent::T_WHEEL:
-        evt.data.push_back(*(ptr++)); /* fallthrough */
+        if(ptr + 2 > end)
+        {
+            evt.isValid = 0;
+            return evt;
+        }
+        evt.data.push_back(*(ptr++));
+        evt.data.push_back(*(ptr++));
+        return evt;
     case MidiEvent::T_PATCHCHANGE://1 byte length
     case MidiEvent::T_CHANAFTTOUCH:
+        if(ptr + 1 > end)
+        {
+            evt.isValid = 0;
+            return evt;
+        }
         evt.data.push_back(*(ptr++));
         return evt;
     }

@@ -356,8 +356,10 @@ private:
         uint8_t subtype;
         //! Targeted MIDI channel
         uint8_t channel;
+        //! Is valid event
+        uint8_t isValid;
         //! Reserved 5 bytes padding
-        uint8_t __padding[5];
+        uint8_t __padding[4];
         //! Absolute tick position (Used for the tempo calculation only)
         uint64_t absPosition;
         //! Raw data of this event
@@ -430,7 +432,7 @@ private:
     std::vector<MidiTrackQueue > trackDataNew;
     std::vector<int> trackDataNewStatus;
     bool buildTrackData();
-    MidiEvent parseEvent(uint8_t **ptr, int &status);
+    MidiEvent parseEvent(uint8_t **ptr, uint8_t *end, int &status);
 
 public:
     MIDIplay();
