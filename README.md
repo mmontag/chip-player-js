@@ -108,7 +108,6 @@ To build that example you will need to have installed SDL2 library.
 * Add hooks to places where are originally was old UI calls to be able to reimplement original ADLMIDI tool which will use libADLMIDI as backend and also to be able to implement various other things based on MIDI event hooking.
 * Implement WOPL Version 3 which will contain pre-calculated `ms_sound_kon` and `ms_sound_koff` values per every instrument.
 * Implement multi-bank to support GS or XG standards.
-* Add tempo multiplier to have tempo changing ability
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 * Support of title and other meta-tags retrieving
 * Support of real-time listening of incoming MIDI-commands.
