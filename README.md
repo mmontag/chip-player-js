@@ -94,7 +94,7 @@ You need to make in the any IDE a library project and put into it next files
 **Tip 2**: To compile libADLMIDI without embedded banks, define the `DISABLE_EMBEDDED_BANKS` macro and remove building of the `adldata.cpp` file in your project.
 
 # Example
-In the src/midiplay you will found alone CPP file which an example of library usage.
+In the utils/midiplay you will found an example project which uses this library.
 That example is a simple audio player based on SDL Audio usage.
 
 To build that example you will need to have installed SDL2 library.
