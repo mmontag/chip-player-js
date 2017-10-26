@@ -533,9 +533,11 @@ uint64_t MIDIplay::ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok)
 double MIDIplay::Tick(double s, double granularity)
 {
     s *= tempoMultiplier;
-    //if(CurrentPositionNew.began)
+    #ifdef ENABLE_BEGIN_SILENCE_SKIPPING
+    if(CurrentPositionNew.began)
+    #endif
         CurrentPositionNew.wait -= s;
-        CurrentPositionNew.absTimePosition += s;
+    CurrentPositionNew.absTimePosition += s;
 
     int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
     while((CurrentPositionNew.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
@@ -1297,8 +1299,10 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
             for(size_t i = 0; i < track.pos->events.size(); i++)
             {
                 MidiEvent &evt = track.pos->events[i];
+                #ifdef ENABLE_BEGIN_SILENCE_SKIPPING
                 if(!CurrentPositionNew.began && (evt.type == MidiEvent::T_NOTEON))
                     CurrentPositionNew.began = true;
+                #endif
                 if(isSeek && (evt.type == MidiEvent::T_NOTEON))
                     continue;
                 HandleEvent(tk, evt, track.status);
@@ -1351,8 +1355,11 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
 
     fraction<uint64_t> t = shortest * Tempo;
 
-    //if(CurrentPositionNew.began)
+    #ifdef ENABLE_BEGIN_SILENCE_SKIPPING
+    if(CurrentPositionNew.began)
+    #endif
         CurrentPositionNew.wait += t.value();
+
 
     //if(shortest > 0) UI.PrintLn("Delay %ld (%g)", shortest, (double)t.valuel());
     if(loopStart)
@@ -1779,11 +1786,8 @@ long MIDIplay::CalculateAdlChannelGoodness(unsigned c, uint16_t ins, uint16_t) c
                 ++m)
             {
                 if(m->second.sustained)       continue;
-
                 if(m->second.vibdelay >= 200) continue;
-
                 if(m->second.ins != j->second.ins) continue;
-
                 n_evacuation_stations += 1;
             }
         }
