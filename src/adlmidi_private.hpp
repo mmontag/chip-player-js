@@ -184,6 +184,31 @@ public:
     void Reset(unsigned long PCM_RATE);
 };
 
+/*
+ * TODO: Put usage of those hooks to the places where originally was UI usage.
+ * Also, provide external API to set those hooks
+ */
+
+/**
+ * @brief Hooks of the internal events
+ */
+struct MIDIEventHooks
+{
+    //! Raw MIDI event hook
+    typedef void (*RawEventHook)(void *userdata, uint8_t type, uint8_t subtype, uint8_t channel, uint8_t *data, size_t len);
+    RawEventHook onEvent;
+    void         *onEvent_userData;
+
+    //! Note on/off hooks
+    typedef void (*NoteHook)(void *userdata, int adlchn, int note, int ins, int pressure, double bend);
+    NoteHook     onNote;
+    void         *onNote_userData;
+
+    //! Library internal debug messages
+    typedef void (*DebugMessageHook)(void *userdata, const char *fmt, ...);
+    DebugMessageHook onDebugMessage;
+    void *onDebugMessage_userData;
+};
 
 class MIDIplay
 {
