@@ -129,6 +129,8 @@ To build that example you will need to have installed SDL2 library.
  * Added ability to get seconds time position and song length
  * Added seekability support
  * Fixed IMF playing when passing file as path nor as memory block
+ * Added ability to get time position of every loop point if presented
+ * Added ability to change playing tempo by giving multiplier (how faster or slower than original)
  * ...
 
 ## 1.2.1    2017-07-30

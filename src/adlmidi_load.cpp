@@ -48,53 +48,6 @@ uint64_t MIDIplay::ReadLEint(const void *buffer, size_t nbytes)
     return result;
 }
 
-//uint64_t MIDIplay::ReadVarLenEx(size_t tk, bool &ok)
-//{
-//    uint64_t result = 0;
-//    ok = false;
-
-//    for(;;)
-//    {
-//        if(tk >= TrackData.size())
-//            return 1;
-
-//        if(tk >= CurrentPosition.track.size())
-//            return 2;
-
-//        size_t ptr = CurrentPosition.track[tk].ptr;
-
-//        if(ptr >= TrackData[tk].size())
-//            return 3;
-
-//        unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        result = (result << 7) + (byte & 0x7F);
-
-//        if(!(byte & 0x80)) break;
-//    }
-
-//    ok = true;
-//    return result;
-//}
-
-uint64_t MIDIplay::ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok)
-{
-    uint64_t result = 0;
-    ok = false;
-
-    for(;;)
-    {
-        if(*ptr >= end)
-            return 2;
-        unsigned char byte = *((*ptr)++);
-        result = (result << 7) + (byte & 0x7F);
-        if(!(byte & 0x80)) break;
-    }
-
-    ok = true;
-    return result;
-}
-
-
 bool MIDIplay::LoadBank(const std::string &filename)
 {
     fileReader file;
@@ -388,6 +341,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     ADL_UNUSED(fsize);
     //! Temp buffer for conversion
     AdlMIDI_CPtr<uint8_t> cvt_buf;
+    errorString.clear();
 
     #ifdef DISABLE_EMBEDDED_BANKS
     if((opl.AdlBank != ~0u) || (opl.dynamic_metainstruments.size() < 256))
@@ -792,7 +746,7 @@ InvFmt:
     //Build new MIDI events table (ALPHA!!!)
     if(!buildTrackData())
     {
-        ADLMIDI_ErrorString = fr._fileName + ": MIDI data parsing error has occouped!";
+        ADLMIDI_ErrorString = fr._fileName + ": MIDI data parsing error has occouped!\n" + errorString;
         return false;
     }
 

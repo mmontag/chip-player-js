@@ -104,6 +104,12 @@ extern void adl_reset(struct ADL_MIDIPlayer *device);
 /*Get total time length of current song*/
 extern double adl_totalTimeLength(struct ADL_MIDIPlayer *device);
 
+/*Get loop start time if presented. -1 means MIDI file has no loop points */
+extern double adl_loopStartTime(struct ADL_MIDIPlayer *device);
+
+/*Get loop end time if presented. -1 means MIDI file has no loop points */
+extern double adl_loopEndTime(struct ADL_MIDIPlayer *device);
+
 /*Get current time position in seconds*/
 extern double adl_positionTell(struct ADL_MIDIPlayer *device);
 
@@ -112,6 +118,9 @@ extern void adl_positionSeek(struct ADL_MIDIPlayer *device, double seconds);
 
 /*Reset MIDI track position to begin */
 extern void adl_positionRewind(struct ADL_MIDIPlayer *device);
+
+/*Set tempo multiplier: 1.0 - original tempo, >1 - play faster, <1 - play slower */
+extern void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo);
 
 /*Close and delete ADLMIDI device*/
 extern void adl_close(struct ADL_MIDIPlayer *device);

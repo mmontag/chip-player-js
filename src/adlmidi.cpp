@@ -303,6 +303,20 @@ ADLMIDI_EXPORT double adl_totalTimeLength(ADL_MIDIPlayer *device)
     return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->timeLength();
 }
 
+ADLMIDI_EXPORT double adl_loopStartTime(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return -1.0;
+    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->getLoopStart();
+}
+
+ADLMIDI_EXPORT double adl_loopEndTime(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return -1.0;
+    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->getLoopEnd();
+}
+
 ADLMIDI_EXPORT double adl_positionTell(struct ADL_MIDIPlayer *device)
 {
     if(!device)
@@ -324,6 +338,12 @@ ADLMIDI_EXPORT void adl_positionRewind(struct ADL_MIDIPlayer *device)
     reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->rewind();
 }
 
+ADLMIDI_EXPORT void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo)
+{
+    if(!device || (tempo <= 0.0))
+        return;
+    reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->setTempo(tempo);
+}
 
 
 #ifdef ADLMIDI_USE_DOSBOX_OPL

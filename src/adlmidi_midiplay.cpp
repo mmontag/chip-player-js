@@ -189,17 +189,23 @@ void MIDIplay::MidiTrackRow::sortEvents()
 bool MIDIplay::buildTrackData()
 {
     fullSongTimeLength = 0.0;
+    loopStartTime = -1.0;
+    loopEndTime = -1.0;
     musTitle.clear();
     trackDataNew.clear();
-    trackDataNewStatus.clear();
     const size_t    trackCount = TrackData.size();
     trackDataNew.resize(trackCount, MidiTrackQueue());
-    trackDataNewStatus.resize(trackCount, 0);
 
     invalidLoop = false;
     bool gotLoopStart = false, gotLoopEnd = false, gotLoopEventInThisRow = false;
+    //! Tick position of loop start tag
     uint64_t loopStartTicks = 0;
+    //! Tick position of loop end tag
     uint64_t loopEndTicks = 0;
+    //! Full length of song in ticks
+    uint64_t ticksSongLength = 0;
+    //! Cache for error message strign
+    char error[150];
 
     CurrentPositionNew.track.clear();
     CurrentPositionNew.track.resize(trackCount);
@@ -226,7 +232,9 @@ bool MIDIplay::buildTrackData()
             evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
             if(!ok)
             {
-                //TODO: Implement file parsing error here
+                int len = std::snprintf(error, 150, "buildTrackData: Can't read variable-length value at begin of track %d.\n", (int)tk);
+                if((len > 0) && (len < 150))
+                    errorString += std::string(error, (size_t)len);
                 return false;
             }
             CurrentPositionNew.wait = evtPos.delay;
@@ -241,7 +249,9 @@ bool MIDIplay::buildTrackData()
             event = parseEvent(&trackPtr, end, status);
             if(!event.isValid)
             {
-                //TODO: Implement file parsing error here
+                int len = std::snprintf(error, 150, "buildTrackData: Fail to parse event in the track %d.\n", (int)tk);
+                if((len > 0) && (len < 150))
+                    errorString += std::string(error, (size_t)len);
                 return false;
             }
             evtPos.events.push_back(event);
@@ -296,7 +306,9 @@ bool MIDIplay::buildTrackData()
                 evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
                 if(!ok)
                 {
-                    //TODO: Implement file parsing error here
+                    int len = std::snprintf(error, 150, "buildTrackData: Can't read variable-length value in the track %d.\n", (int)tk);
+                    if((len > 0) && (len < 150))
+                        errorString += std::string(error, (size_t)len);
                     return false;
                 }
             }
@@ -312,9 +324,17 @@ bool MIDIplay::buildTrackData()
             }
         } while((trackPtr <= end) && (event.subtype != MidiEvent::ST_ENDTRACK));
 
+        if(ticksSongLength < abs_position)
+            ticksSongLength = abs_position;
         //Set the chain of events begin
         if(trackDataNew[tk].size() > 0)
             CurrentPositionNew.track[tk].pos = trackDataNew[tk].begin();
+    }
+
+    if(gotLoopStart && !gotLoopEnd)
+    {
+        gotLoopEnd = true;
+        loopEndTicks = ticksSongLength;
     }
 
     //loopStart must be located before loopEnd!
@@ -409,6 +429,16 @@ bool MIDIplay::buildTrackData()
             pos.time = time;
             time += pos.timeDelay;
 
+            if(!invalidLoop)
+            {
+                // Set loop points times
+                if(loopStartTicks == pos.absPos)
+                    loopStartTime = pos.time;
+                else
+                if(loopEndTicks == pos.absPos)
+                    loopEndTime = pos.time;
+            }
+
             #ifdef DEBUG_TIME_CALCULATION
             std::fprintf(stdout, "= %10" PRId64 " = %10f%s\n", pos.absPos, pos.time, tempoChanged ? " <----TEMPO CHANGED" : "");
             std::fflush(stdout);
@@ -432,6 +462,9 @@ MIDIplay::MIDIplay():
     cmf_percussion_mode(false),
     fullSongTimeLength(0.0),
     postSongWaitDelay(1.0),
+    loopStartTime(-1.0),
+    loopEndTime(-1.0),
+    tempoMultiplier(1.0),
     trackStart(false),
     atEnd(false),
     loopStart(false),
@@ -478,22 +511,28 @@ uint64_t MIDIplay::ReadVarLen(uint8_t **ptr)
     return result;
 }
 
-//uint64_t MIDIplay::ReadVarLen(size_t tk)
-//{
-//    uint64_t result = 0;
-//    for(;;)
-//    {
-//        uint8_t byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        result = (result << 7) + (byte & 0x7F);
-//        if(!(byte & 0x80))
-//            break;
-//    }
-//    return result;
-//}
+uint64_t MIDIplay::ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok)
+{
+    uint64_t result = 0;
+    ok = false;
+
+    for(;;)
+    {
+        if(*ptr >= end)
+            return 2;
+        unsigned char byte = *((*ptr)++);
+        result = (result << 7) + (byte & 0x7F);
+        if(!(byte & 0x80)) break;
+    }
+
+    ok = true;
+    return result;
+}
 
 
 double MIDIplay::Tick(double s, double granularity)
 {
+    s *= tempoMultiplier;
     //if(CurrentPositionNew.began)
         CurrentPositionNew.wait -= s;
         CurrentPositionNew.absTimePosition += s;
@@ -522,31 +561,6 @@ double MIDIplay::Tick(double s, double granularity)
         return 0.0;
 
     return CurrentPositionNew.wait;
-
-//    if(CurrentPosition.began)
-//        CurrentPosition.wait -= s;
-
-//    int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
-//    while((CurrentPosition.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
-//    {
-//        //std::fprintf(stderr, "wait = %g...\n", CurrentPosition.wait);
-//        if(!ProcessEvents())
-//            break;
-//        if(CurrentPosition.wait <= 0.0)
-//            antiFreezeCounter--;
-//    }
-
-//    if(antiFreezeCounter <= 0)
-//        CurrentPosition.wait += 1.0;/* Add extra 1 second when over 10000 events
-//                                           with zero delay are been detected */
-
-//    for(uint16_t c = 0; c < opl.NumChannels; ++c)
-//        ch[c].AddAge(static_cast<int64_t>(s * 1000.0));
-
-//    UpdateVibrato(s);
-//    UpdateArpeggio(s);
-
-    //    return CurrentPosition.wait;
 }
 
 void MIDIplay::seek(double seconds)
@@ -613,16 +627,30 @@ double MIDIplay::timeLength()
     return fullSongTimeLength;
 }
 
+double MIDIplay::getLoopStart()
+{
+    return loopStartTime;
+}
+
+double MIDIplay::getLoopEnd()
+{
+    return loopEndTime;
+}
+
 void MIDIplay::rewind()
 {
     Panic();
     KillSustainingNotes(-1, -1);
-    //CurrentPosition  = trackBeginPosition;
     CurrentPositionNew  = trackBeginPositionNew;
     trackStart       = true;
     atEnd            = false;
     loopStart        = true;
     invalidLoop      = false;
+}
+
+void MIDIplay::setTempo(double tempo)
+{
+    tempoMultiplier = tempo;
 }
 
 void MIDIplay::realTime_ResetState()
@@ -1245,103 +1273,6 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 }
 
 
-//bool MIDIplay::ProcessEvents()
-//{
-//    if(TrackData.size() == 0)
-//        atEnd = true;//No MIDI track data to play
-//    if(atEnd)
-//        return false;//No more events in the queue
-
-//    loopEnd = false;
-//    const size_t    TrackCount = TrackData.size();
-//    const Position  RowBeginPosition(CurrentPosition);
-
-//    for(size_t tk = 0; tk < TrackCount; ++tk)
-//    {
-//        if(CurrentPosition.track[tk].status >= 0
-//           && CurrentPosition.track[tk].delay <= 0)
-//        {
-//            // Handle event
-//            HandleEvent(tk);
-
-//            // Read next event time (unless the track just ended)
-//            if(CurrentPosition.track[tk].ptr >= TrackData[tk].size())
-//                CurrentPosition.track[tk].status = -1;
-
-//            if(CurrentPosition.track[tk].status >= 0)
-//                CurrentPosition.track[tk].delay += ReadVarLen(tk);
-//        }
-//    }
-
-//    // Find shortest delay from all track
-//    uint64_t shortest = 0;
-//    bool     shortest_no = true;
-
-//    for(size_t tk = 0; tk < TrackCount; ++tk)
-//        if((CurrentPosition.track[tk].status >= 0) && (shortest_no || CurrentPosition.track[tk].delay < shortest))
-//        {
-//            shortest = CurrentPosition.track[tk].delay;
-//            shortest_no = false;
-//        }
-
-//    //if(shortest > 0) UI.PrintLn("shortest: %ld", shortest);
-
-//    // Schedule the next playevent to be processed after that delay
-//    for(size_t tk = 0; tk < TrackCount; ++tk)
-//        CurrentPosition.track[tk].delay -= shortest;
-
-//    fraction<uint64_t> t = shortest * Tempo;
-
-//    if(CurrentPosition.began)
-//        CurrentPosition.wait += t.valuel();
-
-//    //if(shortest > 0) UI.PrintLn("Delay %ld (%g)", shortest, (double)t.valuel());
-//    /*
-//    if(CurrentPosition.track[0].ptr > 8119)
-//        loopEnd = true;
-//        // ^HACK: CHRONO TRIGGER LOOP
-//    */
-
-//    if(loopStart_hit && (loopStart || loopEnd)) //Avoid invalid loops
-//    {
-//        invalidLoop = true;
-//        loopStart = false;
-//        loopEnd = false;
-//        LoopBeginPosition = trackBeginPosition;
-//    }
-//    else
-//        loopStart_hit = false;
-
-//    if(loopStart)
-//    {
-//        if(trackStart)
-//        {
-//            trackBeginPosition = RowBeginPosition;
-//            trackStart = false;
-//            atEnd = false;
-//        }
-//        LoopBeginPosition = RowBeginPosition;
-//        loopStart = false;
-//        loopStart_hit = true;
-//    }
-
-//    if(shortest_no || loopEnd)
-//    {
-//        //Loop if song end or loop end point has reached
-//        loopEnd         = false;
-//        shortest = 0;
-//        if(!m_setup.loopingIsEnabled)
-//        {
-//            atEnd = true; //Don't handle events anymore
-//            CurrentPosition.wait += 1.0;//One second delay until stop playing
-//            return true;//We have caugh end here!
-//        }
-//        CurrentPosition = LoopBeginPosition;
-//    }
-
-//    return true;//Has events in queue
-//}
-
 bool MIDIplay::ProcessEventsNew(bool isSeek)
 {
     if(CurrentPositionNew.track.size() == 0)
@@ -1421,33 +1352,11 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
     fraction<uint64_t> t = shortest * Tempo;
 
     //if(CurrentPositionNew.began)
-        CurrentPositionNew.wait += t.valuel();
+        CurrentPositionNew.wait += t.value();
 
     //if(shortest > 0) UI.PrintLn("Delay %ld (%g)", shortest, (double)t.valuel());
-    /*
-    if(CurrentPosition.track[0].ptr > 8119)
-        loopEnd = true;
-        // ^HACK: CHRONO TRIGGER LOOP
-    */
-
-    //if(loopStart_hit && (loopStart || loopEnd)) //Avoid invalid loops
-    //{
-    //    invalidLoop = true;
-    //    loopStart = false;
-    //    loopEnd = false;
-    //    LoopBeginPositionNew = trackBeginPositionNew;
-    //}
-    //else
-    //    loopStart_hit = false;
-
     if(loopStart)
     {
-        //if(trackStart)
-        //{
-        //    trackBeginPositionNew = RowBeginPosition;
-        //    trackStart = false;
-        //    atEnd = false;
-        //}
         LoopBeginPositionNew = RowBeginPosition;
         loopStart = false;
     }
@@ -1476,6 +1385,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
 
     if(ptr + 1 > end)
     {
+        errorString += "parseEvent: Can't read event type byte - Unexpected end of track data.\n";
         evt.isValid = 0;
         return evt;
     }
@@ -1488,6 +1398,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
         uint64_t length = ReadVarLenEx(pptr, end, ok);
         if(!ok || (ptr + length > end))
         {
+            errorString += "parseEvent: Can't read SysEx event - Unexpected end of track data.\n";
             evt.isValid = 0;
             return evt;
         }
@@ -1502,6 +1413,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
         uint64_t length = ReadVarLenEx(pptr, end, ok);
         if(!ok || (ptr + length > end))
         {
+            errorString += "parseEvent: Can't read Special event - Unexpected end of track data.\n";
             evt.isValid = 0;
             return evt;
         }
@@ -1584,6 +1496,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
     {
         if(ptr + 1 > end)
         {
+            errorString += "parseEvent: Can't read System Command Song Select event - Unexpected end of track data.\n";
             evt.isValid = 0;
             return evt;
         }
@@ -1597,6 +1510,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
     {
         if(ptr + 2 > end)
         {
+            errorString += "parseEvent: Can't read System Command Position Pointer event - Unexpected end of track data.\n";
             evt.isValid = 0;
             return evt;
         }
@@ -1620,6 +1534,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
     case MidiEvent::T_WHEEL:
         if(ptr + 2 > end)
         {
+            errorString += "parseEvent: Can't read regular 2-byte event - Unexpected end of track data.\n";
             evt.isValid = 0;
             return evt;
         }
@@ -1641,6 +1556,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
     case MidiEvent::T_CHANAFTTOUCH:
         if(ptr + 1 > end)
         {
+            errorString += "parseEvent: Can't read regular 1-byte event - Unexpected end of track data.\n";
             evt.isValid = 0;
             return evt;
         }
@@ -1651,179 +1567,6 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
     return evt;
 }
 
-//void MIDIplay::HandleEvent(size_t tk)
-//{
-//    unsigned char byte = TrackData[tk][CurrentPosition.track[tk].ptr++];
-
-//    if(byte == 0xF7 || byte == 0xF0) // Ignore SysEx
-//    {
-//        uint64_t length = ReadVarLen(tk);
-//        //std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
-//        CurrentPosition.track[tk].ptr += (size_t)length;
-//        //UI.PrintLn("SysEx %02X: %u bytes", byte, length/*, data.c_str()*/);
-//        return;
-//    }
-
-//    if(byte == 0xFF)
-//    {
-//        // Special event FF
-//        uint8_t  evtype = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        uint64_t length = ReadVarLen(tk);
-//        std::string data(length ? (const char *) &TrackData[tk][CurrentPosition.track[tk].ptr] : 0, (size_t)length);
-//        CurrentPosition.track[tk].ptr += (size_t)length;
-
-//        if(evtype == 0x2F)//End Of Track
-//        {
-//            CurrentPosition.track[tk].status = -1;
-//            return;
-//        }
-
-//        if(evtype == 0x51)//Tempo change
-//        {
-//            Tempo = InvDeltaTicks * fraction<uint64_t>(ReadBEint(data.data(), data.size()));
-//            return;
-//        }
-
-//        if(evtype == 6)//Meta event
-//        {
-//            //Turn on/off Loop handling when loop is disabled
-//            if(m_setup.loopingIsEnabled)
-//            {
-//                /* Move this away from events handler */
-//                for(size_t i = 0; i < data.size(); i++)
-//                {
-//                    if(data[i] <= 'Z' && data[i] >= 'A')
-//                        data[i] = data[i] - ('Z' - 'z');
-//                }
-
-//                if((data == "loopstart") && (!invalidLoop))
-//                {
-//                    loopStart = true;
-//                    loopStart_passed = true;
-//                }
-
-//                if((data == "loopend") && (!invalidLoop))
-//                {
-//                    if((loopStart_passed) && (!loopStart))
-//                        loopEnd = true;
-//                    else
-//                        invalidLoop = true;
-//                }
-//            }
-//        }
-
-//        if(evtype == 9)
-//            current_device[tk] = ChooseDevice(data);
-
-//        //if(evtype >= 1 && evtype <= 6)
-//        //    UI.PrintLn("Meta %d: %s", evtype, data.c_str());
-
-//        if(evtype == 0xE3) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
-//        {
-//            uint8_t i = static_cast<uint8_t>(data[0]), v = static_cast<uint8_t>(data[1]);
-
-//            if((i & 0xF0) == 0xC0)
-//                v |= 0x30;
-
-//            //std::printf("OPL poke %02X, %02X\n", i, v);
-//            //std::fflush(stdout);
-//            opl.PokeN(0, i, v);
-//        }
-
-//        return;
-//    }
-
-//    // Any normal event (80..EF)
-//    if(byte < 0x80)
-//    {
-//        byte = static_cast<uint8_t>(CurrentPosition.track[tk].status | 0x80);
-//        CurrentPosition.track[tk].ptr--;
-//    }
-
-//    if(byte == 0xF3)
-//    {
-//        CurrentPosition.track[tk].ptr += 1;
-//        return;
-//    }
-
-//    if(byte == 0xF2)
-//    {
-//        CurrentPosition.track[tk].ptr += 2;
-//        return;
-//    }
-
-//    /*UI.PrintLn("@%X Track %u: %02X %02X",
-//                CurrentPosition.track[tk].ptr-1, (unsigned)tk, byte,
-//                TrackData[tk][CurrentPosition.track[tk].ptr]);*/
-//    uint8_t  MidCh = byte & 0x0F, EvType = byte >> 4;
-//    MidCh += (uint8_t)current_device[tk];
-//    CurrentPosition.track[tk].status = byte;
-
-//    switch(EvType)
-//    {
-//    case 0x8: // Note off
-//    {
-//        uint8_t note = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        /*uint8_t vol=*/TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        //if(MidCh != 9) note -= 12; // HACK
-//        realTime_NoteOff(MidCh, note);
-//        break;
-//    }
-//    case 0x9: // Note on
-//    {
-//        uint8_t note = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        uint8_t vol  = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        //if(MidCh != 9) note -= 12; // HACK
-//        if(realTime_NoteOn(MidCh, note, vol))
-//            CurrentPosition.began  = true;
-//        break;
-//    }
-
-//    case 0xA: // Note touch
-//    {
-//        uint8_t note = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        uint8_t vol = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        realTime_NoteAfterTouch(MidCh, note, vol);
-//        break;
-//    }
-
-//    case 0xB: // Controller change
-//    {
-//        uint8_t ctrlno = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        uint8_t value = TrackData[tk][CurrentPosition.track[tk].ptr++];
-
-//        if((m_setup.loopingIsEnabled) && (ctrlno == 111) && !invalidLoop)
-//        {
-//            loopStart = true;
-//            loopStart_passed = true;
-//            break;
-//        }
-
-//        realTime_Controller(MidCh, ctrlno, value);
-//        break;
-//    }
-
-//    case 0xC: // Patch change
-//        realTime_PatchChange(MidCh, TrackData[tk][CurrentPosition.track[tk].ptr++]);
-//        break;
-
-//    case 0xD: // Channel after-touch
-//    {
-//        // TODO: Verify, is this correct action?
-//        uint8_t vol = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        realTime_ChannelAfterTouch(MidCh, vol);
-//        break;
-//    }
-
-//    case 0xE: // Wheel/pitch bend
-//    {
-//        uint8_t a = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        uint8_t b = TrackData[tk][CurrentPosition.track[tk].ptr++];
-//        realTime_PitchBend(MidCh, b, a);
-//        break;
-//    }
-//    }
-//}
 
 void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
 {

@@ -85,6 +85,11 @@ static void sighandler(int dum)
 
 int main(int argc, char **argv)
 {
+    std::fprintf(stdout, "==========================================\n"
+                         "         libADLMIDI demo utility\n"
+                         "==========================================\n\n");
+    std::fflush(stdout);
+
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
         std::printf(
@@ -131,6 +136,8 @@ int main(int argc, char **argv)
             std::printf("    This build of libADLMIDI has no embedded banks!\n\n");
         }
 
+        std::fflush(stdout);
+
         return 0;
     }
 
@@ -162,8 +169,7 @@ int main(int argc, char **argv)
     }
 
     bool recordWave = false;
-
-    adl_setLoopEnabled(myDevice, 1);
+    int loopEnabled = 1;
 
     while(argc > 2)
     {
@@ -174,14 +180,11 @@ int main(int argc, char **argv)
         else if(!std::strcmp("-v", argv[2]))
             adl_setHVibrato(myDevice, 1);
         else if(!std::strcmp("-w", argv[2]))
-        {
             recordWave = true;
-            adl_setLoopEnabled(myDevice, 0);//Disable loop while record WAV
-        }
         else if(!std::strcmp("-t", argv[2]))
             adl_setHTremolo(myDevice, 1);
         else if(!std::strcmp("-nl", argv[2]))
-            adl_setLoopEnabled(myDevice, 0);
+            loopEnabled = 0;
         else if(!std::strcmp("-s", argv[2]))
             adl_setScaleModulators(myDevice, 1);
         else break;
@@ -190,6 +193,9 @@ int main(int argc, char **argv)
                   argv + 2);
         argc -= (had_option ? 2 : 1);
     }
+
+    //Turn loop on/off (for WAV recording loop must be disabled!)
+    adl_setLoopEnabled(myDevice, recordWave ? 0 : loopEnabled);
 
     if(!recordWave)
     {
@@ -202,7 +208,8 @@ int main(int argc, char **argv)
         }
         if(spec.samples != obtained.samples)
         {
-            std::fprintf(stderr, "Wanted (samples=%u,rate=%u,channels=%u); obtained (samples=%u,rate=%u,channels=%u)\n",
+            std::fprintf(stderr, " - Audio wanted (samples=%u,rate=%u,channels=%u);\n"
+                                 " - Audio obtained (samples=%u,rate=%u,channels=%u)\n",
                          spec.samples,    spec.freq,    spec.channels,
                          obtained.samples, obtained.freq, obtained.channels);
             std::fflush(stderr);
@@ -219,10 +226,12 @@ int main(int argc, char **argv)
                 printError(adl_errorString());
                 return 1;
             }
+            std::fprintf(stdout, " - Use embedded bank #%d [%s]\n", bankno, adl_getBankNames()[bankno]);
+            std::fflush(stdout);
         }
         else
         {
-            std::fprintf(stdout, "Loading custom bank file %s...", argv[2]);
+            std::fprintf(stdout, " - Use custom bank [%s]...", argv[2]);
             std::fflush(stdout);
             if(adl_openBankFile(myDevice, argv[2]) != 0)
             {
@@ -243,7 +252,7 @@ int main(int argc, char **argv)
             printError(adl_errorString());
             return 1;
         }
-        std::fprintf(stdout, "Number of cards %s\n", argv[3]);
+        std::fprintf(stdout, " - Number of cards %s\n", argv[3]);
     }
     else
     {
@@ -262,7 +271,7 @@ int main(int argc, char **argv)
             printError(adl_errorString());
             return 1;
         }
-        std::fprintf(stdout, "Number of four-ops %s\n", argv[4]);
+        std::fprintf(stdout, " - Number of four-ops %s\n", argv[4]);
     }
 
     if(adl_openFile(myDevice, argv[1]) != 0)
@@ -277,10 +286,18 @@ int main(int argc, char **argv)
     signal(SIGHUP, sighandler);
     #endif
 
-    double total = adl_totalTimeLength(myDevice);
+    double total        = adl_totalTimeLength(myDevice);
+    double loopStart    = adl_loopStartTime(myDevice);
+    double loopEnd      = adl_loopEndTime(myDevice);
 
     if(!recordWave)
     {
+        std::fprintf(stdout, " - Loop is turned %s\n", loopEnabled ? "ON" : "OFF");
+        if(loopStart >= 0.0 && loopEnd >= 0.0)
+            std::fprintf(stdout, " - Has loop points: %10f ... %10f\n", loopStart, loopEnd);
+        std::fprintf(stdout, "\n==========================================\n");
+        std::fflush(stdout);
+
         SDL_PauseAudio(0);
 
         #ifdef DEBUG_SEEKING_TEST
@@ -328,7 +345,8 @@ int main(int argc, char **argv)
     else
     {
         std::string wave_out = std::string(argv[1]) + ".wav";
-        std::fprintf(stdout, "Recording WAV file %s...\n", wave_out.c_str());
+        std::fprintf(stdout, " - Recording WAV file %s...\n", wave_out.c_str());
+        std::fprintf(stdout, "\n==========================================\n");
         std::fflush(stdout);
 
         if(wave_open(spec.freq, wave_out.c_str()) == 0)

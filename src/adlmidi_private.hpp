@@ -187,25 +187,6 @@ public:
 
 class MIDIplay
 {
-    // Information about each track
-    //struct Position
-    //{
-    //    bool began;
-    //    char padding[7];
-    //    double wait;
-    //    struct TrackInfo
-    //    {
-    //        size_t ptr;
-    //        uint64_t delay;
-    //        int    status;
-    //        char padding2[4];
-    //        TrackInfo(): ptr(0), delay(0), status(0) {}
-    //    };
-    //    std::vector<TrackInfo> track;
-
-    //    Position(): began(false), wait(0.0l), track() { }
-    //} CurrentPosition, LoopBeginPosition, trackBeginPosition;
-
     std::map<std::string, uint64_t> devices;
     std::map<uint64_t /*track*/, uint64_t /*channel begin index*/> current_device;
 
@@ -294,9 +275,10 @@ class MIDIplay
         AdlChannel(): users(), koff_time_until_neglible(0) { }
         void AddAge(int64_t ms);
     };
-public:
+
+    //Padding to fix CLanc code model's warning
     char ____padding[7];
-private:
+
     std::vector<AdlChannel> ch;
     std::vector<std::vector<uint8_t> > TrackData;
 
@@ -430,9 +412,29 @@ private:
     //! Delay after song playd before rejecting the output stream requests
     double postSongWaitDelay;
 
+    //! Loop start time
+    double loopStartTime;
+    //! Loop end time
+    double loopEndTime;
+    //! Local error string
+    std::string errorString;
+
+    //! Pre-processed track data storage
     std::vector<MidiTrackQueue > trackDataNew;
-    std::vector<int> trackDataNewStatus;
+
+    /**
+     * @brief Build MIDI track data from the raw track data storage
+     * @return true if everything successfully processed, or false on any error
+     */
     bool buildTrackData();
+
+    /**
+     * @brief Parse one event from raw MIDI track stream
+     * @param [_inout] ptr pointer to pointer to current position on the raw data track
+     * @param [_in] end address to end of raw track data, needed to validate position and size
+     * @param [_inout] status status of the track processing
+     * @return Parsed MIDI event entry
+     */
     MidiEvent parseEvent(uint8_t **ptr, uint8_t *end, int &status);
 
 public:
@@ -442,6 +444,8 @@ public:
 
     std::string musTitle;
     fraction<uint64_t> InvDeltaTicks, Tempo;
+    //! Tempo multiplier
+    double  tempoMultiplier;
     bool    trackStart,
             atEnd,
             loopStart,
@@ -481,18 +485,27 @@ public:
         unsigned long PCM_RATE;
     } m_setup;
 
-public:
     static uint64_t ReadBEint(const void *buffer, size_t nbytes);
     static uint64_t ReadLEint(const void *buffer, size_t nbytes);
 
+    /**
+     * @brief Standard MIDI Variable-Length numeric value parser without of validation
+     * @param [_inout] ptr Pointer to memory block that contains begin of variable-length value
+     * @return Unsigned integer that conains parsed variable-length value
+     */
     uint64_t ReadVarLen(uint8_t **ptr);
-    //uint64_t ReadVarLen(size_t tk);
-    //uint64_t ReadVarLenEx(size_t tk, bool &ok);
+    /**
+     * @brief Secure Standard MIDI Variable-Length numeric value parser with anti-out-of-range protection
+     * @param [_inout] ptr Pointer to memory block that contains begin of variable-length value, will be iterated forward
+     * @param [_in end Pointer to end of memory block where variable-length value is stored (after end of track)
+     * @param [_out] ok Reference to boolean which takes result of variable-length value parsing
+     * @return Unsigned integer that conains parsed variable-length value
+     */
     uint64_t ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok);
 
     /*
      * A little class gives able to read filedata from disk and also from a memory segment
-    */
+     */
     class fileReader
     {
     public:
@@ -650,18 +663,54 @@ public:
     bool LoadMIDI(void *data, unsigned long size);
     bool LoadMIDI(fileReader &fr);
 
-    /* Periodic tick handler.
-     *   Input: s           = seconds since last call
-     *   Input: granularity = don't expect intervals smaller than this, in seconds
-     *   Output: desired number of seconds until next call
+    /**
+     * @brief Periodic tick handler.
+     * @param s seconds since last call
+     * @param granularity don't expect intervals smaller than this, in seconds
+     * @return desired number of seconds until next call
      */
     double Tick(double s, double granularity);
 
+    /**
+     * @brief Change current position to specified time position in seconds
+     * @param seconds Absolute time position in seconds
+     */
     void    seek(double seconds);
+
+    /**
+     * @brief Gives current time position in seconds
+     * @return Current time position in seconds
+     */
     double  tell();
+
+    /**
+     * @brief Gives time length of current song in seconds
+     * @return Time length of current song in seconds
+     */
     double  timeLength();
 
+    /**
+     * @brief Gives loop start time position in seconds
+     * @return Loop start time position in seconds or -1 if song has no loop points
+     */
+    double  getLoopStart();
+
+    /**
+     * @brief Gives loop end time position in seconds
+     * @return Loop end time position in seconds or -1 if song has no loop points
+     */
+    double  getLoopEnd();
+
+    /**
+     * @brief Return to begin of current song
+     */
     void    rewind();
+
+    /**
+     * @brief Set tempo multiplier
+     * @param tempo Tempo multiplier: 1.0 - original tempo. >1 - faster, <1 - slower
+     */
+    void    setTempo(double tempo);
 
     /* RealTime event triggers */
     void realTime_ResetState();
