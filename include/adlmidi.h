@@ -86,6 +86,9 @@ extern int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePath);
 extern int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, long size);
 
 
+/*Returns name of currently used OPL3 emulator*/
+extern const char *adl_emulatorName();
+
 /*Returns string which contains last error message*/
 extern const char *adl_errorString();
 

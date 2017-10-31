@@ -265,6 +265,15 @@ ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer *device, void *mem, long size)
 }
 
 
+ADLMIDI_EXPORT const char *adl_emulatorName()
+{
+    #ifdef ADLMIDI_USE_DOSBOX_OPL
+    return "DosBox";
+    #else
+    return "Nuked";
+    #endif
+}
+
 ADLMIDI_EXPORT const char *adl_errorString()
 {
     return ADLMIDI_ErrorString.c_str();

@@ -197,13 +197,15 @@ int main(int argc, char **argv)
     //Turn loop on/off (for WAV recording loop must be disabled!)
     adl_setLoopEnabled(myDevice, recordWave ? 0 : loopEnabled);
 
+
+    std::fprintf(stdout, " - Use %s OPL3 Emulator\n", adl_emulatorName());
+
     if(!recordWave)
     {
         // Set up SDL
         if(SDL_OpenAudio(&spec, &obtained) < 0)
         {
             std::fprintf(stderr, "\nERROR: Couldn't open audio: %s\n\n", SDL_GetError());
-            std::fflush(stderr);
             //return 1;
         }
         if(spec.samples != obtained.samples)
@@ -212,7 +214,6 @@ int main(int argc, char **argv)
                                  " - Audio obtained (samples=%u,rate=%u,channels=%u)\n",
                          spec.samples,    spec.freq,    spec.channels,
                          obtained.samples, obtained.freq, obtained.channels);
-            std::fflush(stderr);
         }
     }
 
@@ -227,7 +228,6 @@ int main(int argc, char **argv)
                 return 1;
             }
             std::fprintf(stdout, " - Use embedded bank #%d [%s]\n", bankno, adl_getBankNames()[bankno]);
-            std::fflush(stdout);
         }
         else
         {
@@ -241,7 +241,6 @@ int main(int argc, char **argv)
                 return 1;
             }
             std::fprintf(stdout, "OK!\n");
-            std::fflush(stdout);
         }
     }
 
@@ -279,6 +278,8 @@ int main(int argc, char **argv)
         printError(adl_errorString());
         return 2;
     }
+
+    std::fflush(stdout);
 
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
