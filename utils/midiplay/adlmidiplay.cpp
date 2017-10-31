@@ -198,7 +198,7 @@ int main(int argc, char **argv)
     adl_setLoopEnabled(myDevice, recordWave ? 0 : loopEnabled);
 
 
-    std::fprintf(stdout, " - Use %s OPL3 Emulator\n", adl_emulatorName());
+    std::fprintf(stdout, " - %s OPL3 Emulator in use\n", adl_emulatorName());
 
     if(!recordWave)
     {
@@ -244,24 +244,16 @@ int main(int argc, char **argv)
         }
     }
 
+    int numOfChips = 4;
     if(argc >= 4)
+        numOfChips = std::atoi(argv[3]);
+
+    if(adl_setNumCards(myDevice, numOfChips) != 0)
     {
-        if(adl_setNumCards(myDevice, std::atoi(argv[3])) != 0)
-        {
-            printError(adl_errorString());
-            return 1;
-        }
-        std::fprintf(stdout, " - Number of cards %s\n", argv[3]);
+        printError(adl_errorString());
+        return 1;
     }
-    else
-    {
-        // 4 chips by default
-        if(adl_setNumCards(myDevice, 4) != 0)
-        {
-            printError(adl_errorString());
-            return 1;
-        }
-    }
+    std::fprintf(stdout, " - Number of chips %d\n", numOfChips);
 
     if(argc >= 5)
     {
