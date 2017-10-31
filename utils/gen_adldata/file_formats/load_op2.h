@@ -86,7 +86,7 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
 
         Doom_opl_instr &ins = *(Doom_opl_instr *) &data[offset2];
 
-        insdata tmp[2];
+        insdata tmp[2] = {InsertNoSoundIns(), InsertNoSoundIns()};
         tmp[0].diff = false;
         tmp[1].diff = true;
         for(unsigned index = 0; index < 2; ++index)

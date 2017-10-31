@@ -479,6 +479,8 @@ public:
     char ____padding2[2];
     OPL3 opl;
 
+    int16_t outBuf[1024];
+
     struct Setup
     {
         unsigned int AdlBank;

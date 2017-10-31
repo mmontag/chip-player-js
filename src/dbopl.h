@@ -277,6 +277,9 @@ namespace DBOPL
         void GenerateBlock2(Bitu samples, Bit32s *output);
         void GenerateBlock3(Bitu samples, Bit32s *output);
 
+        void GenerateBlock2_Mix(Bitu samples, Bit32s *output);
+        void GenerateBlock3_Mix(Bitu samples, Bit32s *output);
+
         void Generate(Bit32u samples);
         void Setup(Bit32u r);
 
@@ -293,6 +296,9 @@ namespace DBOPL
                       Bitu samples);
         void GenerateArr(Bit32s *out, Bitu *samples);
         void GenerateArr(Bit32s *out, ssize_t *samples);
+        void GenerateArr(Bit16s *out, ssize_t *samples);
+        void GenerateArrMix(Bit32s *out, ssize_t *samples);
+        void GenerateArrMix(Bit16s *out, ssize_t *samples);
         void Init(Bitu rate);
     };
 

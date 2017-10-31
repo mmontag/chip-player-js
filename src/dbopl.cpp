@@ -45,6 +45,10 @@ typedef struct vswprintf {} swprintf;
 #include <string.h>
 #include "dbopl.h"
 
+#define DB_MAX(x, y) ((x) > (y) ? (x) : (y))
+#define DB_MIN(x, y) ((x) < (y) ? (x) : (y))
+
+#define DBOPL_CLAMP(V, MIN, MAX) DB_MAX(DB_MIN(V, (MAX)), (MIN))
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -1482,7 +1486,7 @@ namespace DBOPL
     {
         while(total > 0)
         {
-            Bit32u samples = ForwardLFO(total);
+            Bit32u samples = ForwardLFO((Bit32u)total);
             memset(output, 0, sizeof(Bit32s) * samples * 2);
             int count = 0;
 
@@ -1492,6 +1496,39 @@ namespace DBOPL
                 ch = (ch->*(ch->synthHandler))(this, samples, output);
             }
 
+            total -= samples;
+            output += samples * 2;
+        }
+    }
+
+    void Chip::GenerateBlock2_Mix(Bitu total, Bit32s *output)
+    {
+        while(total > 0)
+        {
+            Bit32u samples = ForwardLFO((Bit32u)total);
+            int count = 0;
+            for(Channel *ch = chan; ch < chan + 9;)
+            {
+                count++;
+                ch = (ch->*(ch->synthHandler))(this, samples, output);
+            }
+
+            total -= samples;
+            output += samples;
+        }
+    }
+
+    void Chip::GenerateBlock3_Mix(Bitu total, Bit32s *output)
+    {
+        while(total > 0)
+        {
+            Bit32u samples = ForwardLFO(total);
+            int count = 0;
+            for(Channel *ch = chan; ch < chan + 18;)
+            {
+                count++;
+                ch = (ch->*(ch->synthHandler))(this, samples, output);
+            }
             total -= samples;
             output += samples * 2;
         }
@@ -1955,10 +1992,51 @@ namespace DBOPL
             chip.GenerateBlock3(static_cast<Bitu>(*samples), out);
     }
 
+    void Handler::GenerateArr(Bit16s *out, ssize_t *samples)
+    {
+        Bit32s out32[1024];
+        if(GCC_UNLIKELY(*samples > 512))
+            *samples = 512;
+        memset(out32, 0, sizeof(Bit32s) * 1024);
+        if(!chip.opl3Active)
+            chip.GenerateBlock2(static_cast<Bitu>(*samples), out32);
+        else
+            chip.GenerateBlock3(static_cast<Bitu>(*samples), out32);
+        ssize_t sz = *samples * 2;
+        for(ssize_t i = 0; i < sz; i++)
+            out[i] = static_cast<Bit16s>(DBOPL_CLAMP(out32[i], static_cast<ssize_t>(INT16_MIN), static_cast<ssize_t>(INT16_MAX)));
+    }
+
+    void Handler::GenerateArrMix(Bit32s *out, ssize_t *samples)
+    {
+        if(GCC_UNLIKELY(*samples > 512))
+            *samples = 512;
+        if(!chip.opl3Active)
+            chip.GenerateBlock2_Mix(static_cast<Bitu>(*samples), out);
+        else
+            chip.GenerateBlock3_Mix(static_cast<Bitu>(*samples), out);
+    }
+
+    void Handler::GenerateArrMix(Bit16s *out, ssize_t *samples)
+    {
+        Bit32s out32[1024];
+        if(GCC_UNLIKELY(*samples > 512))
+            *samples = 512;
+        memset(out32, 0, sizeof(Bit32s) * 1024);
+        if(!chip.opl3Active)
+            chip.GenerateBlock2(static_cast<Bitu>(*samples), out32);
+        else
+            chip.GenerateBlock3(static_cast<Bitu>(*samples), out32);
+        ssize_t sz = *samples * 2;
+        for(ssize_t i = 0; i < sz; i++)
+            out[i] += static_cast<Bit16s>(DBOPL_CLAMP(out32[i], static_cast<ssize_t>(INT16_MIN), static_cast<ssize_t>(INT16_MAX)));
+    }
+
+
     void Handler::Init(Bitu rate)
     {
         InitTables();
-        chip.Setup(rate);
+        chip.Setup((Bit32u)rate);
     }
 
 

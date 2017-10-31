@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <string>
 #include <cstring>
+#include <inttypes.h>
 
 #include "ini/ini_processing.h"
 
@@ -390,7 +391,7 @@ int main(int argc, char**argv)
             unsigned flags = (i->first.pseudo4op ? 1 : 0) | (info.nosound ? 2 : 0);
 
             fprintf(outFile, "    {");
-            fprintf(outFile, "%4d,%4d,%3d, %d, %6ld,%6ld,%lf",
+            fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ",%lf",
                     (unsigned) i->first.insno1,
                     (unsigned) i->first.insno2,
                     (int)(i->first.notenum),

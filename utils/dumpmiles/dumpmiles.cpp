@@ -32,9 +32,9 @@ static void LoadMiles(const char* fn)
         unsigned offset    = *(unsigned*)&data[a*6+2];
 
         if(gmnumber == 0xFF) break;
-        int gmno = gmnumber2==0x7F ? gmnumber+0x80 : gmnumber;
+        //int gmno = gmnumber2==0x7F ? gmnumber+0x80 : gmnumber;
         unsigned length = data[offset] + data[offset+1]*256;
-        signed char notenum = data[offset+2];
+        //signed char notenum = data[offset+2];
 
         std::printf("%02X %02X ", gmnumber,gmnumber2); //, offset);
         for(unsigned b=0; b<length; ++b)
