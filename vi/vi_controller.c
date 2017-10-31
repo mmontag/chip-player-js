@@ -97,9 +97,11 @@ int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         vi->delay = (vi->regs[VI_V_SYNC_REG] + 1) * count_per_scanline;
         if (vi->regs[VI_V_SYNC_REG] != 0 && vi->next_vi == 0)
         {
+            update_count(vi->r4300->state);
             vi->next_vi = state->g_cp0_regs[CP0_COUNT_REG] + vi->delay;
             add_interupt_event_count(state, VI_INT, vi->next_vi);
         }
+        return 0;
     }
 
     masked_write(&vi->regs[reg], value, mask);
@@ -112,10 +114,10 @@ void vi_vertical_interrupt_event(struct vi_controller* vi)
     usf_state_t * state = vi->r4300->state;
     
     /* toggle vi field if in interlaced mode */
+    update_count(vi->r4300->state);
     vi->field ^= (vi->regs[VI_STATUS_REG] >> 6) & 0x1;
 
-    vi->next_vi += vi->delay;
-
+    vi->next_vi = state->g_cp0_regs[CP0_COUNT_REG] + vi->delay;
     add_interupt_event_count(state, VI_INT, vi->next_vi);
 
     /* trigger interrupt */
