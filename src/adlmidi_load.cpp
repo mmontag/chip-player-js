@@ -578,6 +578,7 @@ riffskip:
     {
         // Try parsing as an IMF file
         {
+            uint8_t raw[4];
             size_t end = static_cast<uint8_t>(HeaderBuf[0]) + 256 * static_cast<uint8_t>(HeaderBuf[1]);
 
             if(!end || (end & 3))
@@ -589,11 +590,13 @@ riffskip:
 
             for(unsigned n = 0; n < 42; ++n)
             {
-                int64_t value1 = fr.getc();
-                value1 += fr.getc() << 8;
+                if(fr.read(raw, 1, 4) != 4)
+                    break;
+                int64_t value1 = raw[0];
+                value1 += raw[1] << 8;
                 sum1 += value1;
-                int64_t value2 = fr.getc();
-                value2 += fr.getc() << 8;
+                int64_t value2 = raw[2];
+                value2 += raw[3] << 8;
                 sum2 += value2;
             }
 
