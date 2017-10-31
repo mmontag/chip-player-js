@@ -393,7 +393,7 @@ private:
         {}
     } CurrentPositionNew, LoopBeginPositionNew, trackBeginPositionNew;
 
-    std::vector<std::vector<MidiTrackPos>> trackDataNew;
+    std::vector<std::vector<MidiTrackPos> > trackDataNew;
     std::vector<int> trackDataNewStatus;
     void buildTrackData();
     MidiEvent parseEvent(uint8_t **ptr, int &status);
@@ -415,6 +415,8 @@ public:
             loopStart_hit /*loopStart entry was hited in previous tick*/;
     char ____padding2[2];
     OPL3 opl;
+    //! Generated per-tick audio output buffer
+    int16_t outBuf[1024];
 public:
     static uint64_t ReadBEint(const void *buffer, size_t nbytes);
     static uint64_t ReadLEint(const void *buffer, size_t nbytes);

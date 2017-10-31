@@ -22,6 +22,7 @@ HEADERS += \
     src/adlmidi_xmi2mid.h \
     src/fraction.h \
     src/nukedopl3.h \
+    src/dbopl.h \
     src/midiplay/wave_writer.h
 
 SOURCES += \
@@ -35,6 +36,7 @@ SOURCES += \
     src/adlmidi_private.cpp \
     src/adlmidi_xmi2mid.c \
     src/nukedopl3.c \
+    src/dbopl.cpp \
     utils/midiplay/adlmidiplay.cpp \
     utils/midiplay/wave_writer.c
 
