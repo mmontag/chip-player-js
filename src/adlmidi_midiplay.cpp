@@ -192,6 +192,10 @@ bool MIDIplay::buildTrackData()
     loopStartTime = -1.0;
     loopEndTime = -1.0;
     musTitle.clear();
+    musCopyright.clear();
+    musTrackTitles.clear();
+    musMarkers.clear();
+    caugh_missing_instruments.clear();
     trackDataNew.clear();
     const size_t    trackCount = TrackData.size();
     trackDataNew.resize(trackCount, MidiTrackQueue());
@@ -429,6 +433,21 @@ bool MIDIplay::buildTrackData()
             pos.time = time;
             time += pos.timeDelay;
 
+            //Capture markers after time value calculation
+            for(size_t i = 0; i < pos.events.size(); i++)
+            {
+                MidiEvent &e = pos.events[i];
+                if((e.type == MidiEvent::T_SPECIAL) && (e.subtype == MidiEvent::ST_MARKER))
+                {
+                    MIDI_MarkerEntry marker;
+                    marker.label = std::string((char*)e.data.data(), e.data.size());
+                    marker.pos_ticks = pos.absPos;
+                    marker.pos_time = pos.time;
+                    musMarkers.push_back(marker);
+                }
+            }
+
+            //Capture loop points time positions
             if(!invalidLoop)
             {
                 // Set loop points times
@@ -765,12 +784,12 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     if((opl.AdlPercussionMode == 1) && PercussionMap[midiins & 0xFF]) i[1] = i[0];
 
-    static std::set<uint8_t> missing_warnings;
-
-    if(!missing_warnings.count(static_cast<uint8_t>(midiins)) && (ains.flags & adlinsdata::Flag_NoSound))
+    if(!caugh_missing_instruments.count(static_cast<uint8_t>(midiins)) && (ains.flags & adlinsdata::Flag_NoSound))
     {
-        //UI.PrintLn("[%i]Playing missing instrument %i", MidCh, midiins);
-        missing_warnings.insert(static_cast<uint8_t>(midiins));
+        if(hooks.onDebugMessage)
+            hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                                 "[%i] Playing missing instrument %i", channel, midiins);
+        caugh_missing_instruments.insert(static_cast<uint8_t>(midiins));
     }
 
     // Allocate AdLib channel (the physical sound channel for the note)
@@ -837,7 +856,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
         if(c < 0)
         {
-            //UI.PrintLn("ignored unplaceable note");
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "ignored unplaceable note");
             continue; // Could not play this note. Ignore it.
         }
 
@@ -851,7 +871,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         return false;
     }
 
-    //UI.PrintLn("i1=%d:%d, i2=%d:%d", i[0],adlchannel[0], i[1],adlchannel[1]);
+    //if(hooks.onDebugMessage)
+    //    hooks.onDebugMessage(hooks.onDebugMessage_userData, "i1=%d:%d, i2=%d:%d", i[0],adlchannel[0], i[1],adlchannel[1]);
+
     // Allocate active note for MIDI channel
     std::pair<MIDIchannel::activenoteiterator, bool>
     ir = Ch[channel].activenotes.insert(std::make_pair(note, MIDIchannel::NoteInfo()));
@@ -1090,7 +1112,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
     MIDIchannel::NoteInfo &info = i->second;
     const int16_t tone    = info.tone;
     const uint8_t vol     = info.vol;
-    //const int midiins = info.midiins;
+    const int midiins     = info.midiins;
     const uint32_t insmeta = info.insmeta;
     const adlinsdata &ains = opl.GetAdlMetaIns(insmeta);
     AdlChannel::Location my_loc;
@@ -1139,7 +1161,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 if(k != ch[c].users.end())
                     ch[c].users.erase(k);
 
-                //UI.IllustrateNote(c, tone, midiins, 0, 0.0);
+                if(hooks.onNote)
+                    hooks.onNote(hooks.onNote_userData, c, tone, midiins, 0, 0.0);
 
                 if(ch[c].users.empty())
                 {
@@ -1154,7 +1177,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 //          Also will avoid overwriting it very soon.
                 AdlChannel::LocationData &d = ch[c].users[my_loc];
                 d.sustained = true; // note: not erased!
-                //UI.IllustrateNote(c, tone, midiins, -1, 0.0);
+                if(hooks.onNote)
+                    hooks.onNote(hooks.onNote_userData, c, tone, midiins, -1, 0.0);
             }
 
             info.phys.erase(j);
@@ -1266,6 +1290,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 #endif
                 opl.NoteOn(c, BEND_COEFFICIENT * std::exp(0.057762265 * (tone + bend + phase)));
 #undef BEND_COEFFICIENT
+                if(hooks.onNote)
+                    hooks.onNote(hooks.onNote_userData, c, tone, midiins, vol, Ch[MidCh].bend);
             }
         }
     }
@@ -1435,28 +1461,45 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
          * by external functions (to display song title and copyright in the player) */
         if(evt.subtype == MidiEvent::ST_COPYRIGHT)
         {
-            //TODO: Implement own field for this
-            //TODO: Implement API call to retreive this
-            //TODO: Implement a hook to catch this
-            std::string str((const char*)evt.data.data(), evt.data.size());
-            std::fprintf(stdout, "Copyright: %s\n", str.c_str());
-            std::fflush(stdout);
+            if(musCopyright.empty())
+            {
+                musCopyright = std::string((const char*)evt.data.data(), evt.data.size());
+                if(hooks.onDebugMessage)
+                    hooks.onDebugMessage(hooks.onDebugMessage_userData, "Music copyright: %s", musCopyright.c_str());
+            }
+            else
+            if(hooks.onDebugMessage)
+            {
+                std::string str((const char*)evt.data.data(), evt.data.size());
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "Extra copyright event: %s", str.c_str());
+            }
         }
         else
         if(evt.subtype == MidiEvent::ST_SQTRKTITLE)
         {
-            //TODO: Implement API call to retreive this
-            //TODO: Implement a hook to catch this
             if(musTitle.empty())
+            {
                 musTitle = std::string((const char*)evt.data.data(), evt.data.size());
+                if(hooks.onDebugMessage)
+                    hooks.onDebugMessage(hooks.onDebugMessage_userData, "Music title: %s", musTitle.c_str());
+            }
+            else
+            if(hooks.onDebugMessage)
+            {
+                //TODO: Store track titles and associate them with each track and make API to retreive them
+                std::string str((const char*)evt.data.data(), evt.data.size());
+                musTrackTitles.push_back(str);
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "Track title: %s", str.c_str());
+            }
         }
         else
         if(evt.subtype == MidiEvent::ST_INSTRTITLE)
         {
-            //TODO: Implement a hook to catch this
-            std::string str((const char*)evt.data.data(), evt.data.size());
-            std::fprintf(stdout, "Instrument: %s\n", str.c_str());
-            std::fflush(stdout);
+            if(hooks.onDebugMessage)
+            {
+                std::string str((const char*)evt.data.data(), evt.data.size());
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "Instrument: %s", str.c_str());
+            }
         }
         else
         if(evt.subtype == MidiEvent::ST_MARKER)
@@ -1577,6 +1620,16 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
 
 void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
 {
+    if(hooks.onEvent)
+    {
+        hooks.onEvent(hooks.onEvent_userData,
+                      evt.type,
+                      evt.subtype,
+                      evt.channel,
+                      evt.data.data(),
+                      evt.data.size());
+    }
+
     if(evt.type == MidiEvent::T_SYSEX || evt.type == MidiEvent::T_SYSEX2) // Ignore SysEx
     {
         //std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
@@ -1875,17 +1928,19 @@ void MIDIplay::KillOrEvacuate(size_t from_channel, AdlChannel::users_t::iterator
 
             if(m->second.ins != j->second.ins) continue;
 
-            // the note can be moved here!
-            //                UI.IllustrateNote(
-            //                    from_channel,
-            //                    i->second.tone,
-            //                    i->second.midiins, 0, 0.0);
-            //                UI.IllustrateNote(
-            //                    c,
-            //                    i->second.tone,
-            //                    i->second.midiins,
-            //                    i->second.vol,
-            //                    0.0);
+            if(hooks.onNote)
+            {
+                hooks.onNote(hooks.onNote_userData,
+                             from_channel,
+                             i->second.tone,
+                             i->second.midiins, 0, 0.0);
+                hooks.onNote(hooks.onNote_userData,
+                             c,
+                             i->second.tone,
+                             i->second.midiins,
+                             i->second.vol, 0.0);
+            }
+
             i->second.phys.erase(static_cast<uint16_t>(from_channel));
             i->second.phys[cs] = j->second.ins;
             ch[cs].users.insert(*j);
@@ -1941,8 +1996,9 @@ void MIDIplay::KillSustainingNotes(int32_t MidCh, int32_t this_adlchn)
             if((MidCh < 0 || j->first.MidCh == MidCh)
                && j->second.sustained)
             {
-                //int midiins = '?';
-                //UI.IllustrateNote(c, j->first.note, midiins, 0, 0.0);
+                int midiins = '?';
+                if(hooks.onNote)
+                    hooks.onNote(hooks.onNote_userData, c, j->first.note, midiins, 0, 0.0);
                 ch[c].users.erase(j);
             }
         }

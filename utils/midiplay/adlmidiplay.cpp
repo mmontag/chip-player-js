@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
+#include <cstdarg>
 #include <signal.h>
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
@@ -82,6 +83,29 @@ static void sighandler(int dum)
     )
         stop = 1;
 }
+
+
+static void debugPrint(void * /*userdata*/, const char *fmt, ...)
+{
+    char buffer[4096];
+    std::va_list args;
+    va_start(args, fmt);
+    int rc = std::vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+    if(rc > 0)
+    {
+        std::fprintf(stdout, " - Debug: %s\n", buffer);
+        std::fflush(stdout);
+    }
+}
+
+#ifdef DEBUG_TRACE_ALL_EVENTS
+static void debugPrintEvent(void * /*userdata*/, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, ADL_UInt8 * /*data*/, size_t len)
+{
+    std::fprintf(stdout, " - E: 0x%02X 0x%02X %02d (%d)\n", type, subtype, channel, (int)len);
+    std::fflush(stdout);
+}
+#endif
 
 int main(int argc, char **argv)
 {
@@ -168,6 +192,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    adl_setDebugMessageHook(myDevice, debugPrint, NULL);
+
     bool recordWave = false;
     int loopEnabled = 1;
 
@@ -196,6 +222,10 @@ int main(int argc, char **argv)
 
     //Turn loop on/off (for WAV recording loop must be disabled!)
     adl_setLoopEnabled(myDevice, recordWave ? 0 : loopEnabled);
+    #ifdef DEBUG_TRACE_ALL_EVENTS
+    if(!recordWave)
+        adl_setRawEventHook(myDevice, debugPrintEvent, NULL);
+    #endif
 
 
     std::fprintf(stdout, " - %s OPL3 Emulator in use\n", adl_emulatorName());
@@ -306,9 +336,11 @@ int main(int argc, char **argv)
             if(got <= 0)
                 break;
 
+            #ifndef DEBUG_TRACE_ALL_EVENTS
             std::fprintf(stdout, "                                               \r");
             std::fprintf(stdout, "Time position: %10f / %10f\r", adl_positionTell(myDevice), total);
             std::fflush(stdout);
+            #endif
 
             AudioBuffer_lock.Lock();
             size_t pos = AudioBuffer.size();

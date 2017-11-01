@@ -194,6 +194,14 @@ public:
  */
 struct MIDIEventHooks
 {
+    MIDIEventHooks() :
+        onEvent(NULL),
+        onEvent_userData(NULL),
+        onNote(NULL),
+        onNote_userData(NULL),
+        onDebugMessage(NULL),
+        onDebugMessage_userData(NULL)
+    {}
     //! Raw MIDI event hook
     typedef void (*RawEventHook)(void *userdata, uint8_t type, uint8_t subtype, uint8_t channel, uint8_t *data, size_t len);
     RawEventHook onEvent;
@@ -212,326 +220,16 @@ struct MIDIEventHooks
 
 class MIDIplay
 {
-    std::map<std::string, uint64_t> devices;
-    std::map<uint64_t /*track*/, uint64_t /*channel begin index*/> current_device;
-
-    // Persistent settings for each MIDI channel
-    struct MIDIchannel
-    {
-        uint16_t portamento;
-        uint8_t bank_lsb, bank_msb;
-        uint8_t patch;
-        uint8_t volume, expression;
-        uint8_t panning, vibrato, sustain;
-        char ____padding[6];
-        double  bend, bendsense;
-        double  vibpos, vibspeed, vibdepth;
-        int64_t vibdelay;
-        uint8_t lastlrpn, lastmrpn;
-        bool nrpn;
-        struct NoteInfo
-        {
-            // Current pressure
-            uint8_t vol;
-            // Tone selected on noteon:
-            char ____padding[1];
-            int16_t tone;
-            // Patch selected on noteon; index to banks[AdlBank][]
-            uint8_t midiins;
-            // Index to physical adlib data structure, adlins[]
-            char ____padding2[3];
-            uint32_t insmeta;
-            char ____padding3[4];
-            // List of adlib channels it is currently occupying.
-            std::map<uint16_t /*adlchn*/, uint16_t /*ins, inde to adl[]*/ > phys;
-        };
-        typedef std::map<uint8_t, NoteInfo> activenotemap_t;
-        typedef activenotemap_t::iterator activenoteiterator;
-        char ____padding2[5];
-        activenotemap_t activenotes;
-
-        MIDIchannel()
-            : portamento(0),
-              bank_lsb(0), bank_msb(0), patch(0),
-              volume(100), expression(127),
-              panning(0x30), vibrato(0), sustain(0),
-              bend(0.0), bendsense(2 / 8192.0),
-              vibpos(0), vibspeed(2 * 3.141592653 * 5.0),
-              vibdepth(0.5 / 127), vibdelay(0),
-              lastlrpn(0), lastmrpn(0), nrpn(false),
-              activenotes() { }
-    };
-    std::vector<MIDIchannel> Ch;
-    bool cmf_percussion_mode;
-
-    // Additional information about AdLib channels
-    struct AdlChannel
-    {
-        // For collisions
-        struct Location
-        {
-            uint16_t    MidCh;
-            uint8_t     note;
-            bool operator==(const Location &b) const
-            {
-                return MidCh == b.MidCh && note == b.note;
-            }
-            bool operator< (const Location &b) const
-            {
-                return MidCh < b.MidCh || (MidCh == b.MidCh && note < b.note);
-            }
-            char ____padding[1];
-        };
-        struct LocationData
-        {
-            bool sustained;
-            char ____padding[1];
-            uint16_t ins;  // a copy of that in phys[]
-            char ____padding2[4];
-            int64_t kon_time_until_neglible;
-            int64_t vibdelay;
-        };
-        typedef std::map<Location, LocationData> users_t;
-        users_t users;
-
-        // If the channel is keyoff'd
-        long koff_time_until_neglible;
-        // For channel allocation:
-        AdlChannel(): users(), koff_time_until_neglible(0) { }
-        void AddAge(int64_t ms);
-    };
-
-    //Padding to fix CLanc code model's warning
-    char ____padding[7];
-
-    std::vector<AdlChannel> ch;
-    std::vector<std::vector<uint8_t> > TrackData;
-
-    /**
-     * @brief MIDI Event utility container
-     */
-    class MidiEvent
-    {
-    public:
-        MidiEvent();
-
-        enum Types
-        {
-            T_UNKNOWN       = 0x00,
-            T_NOTEOFF       = 0x08,//size == 2
-            T_NOTEON        = 0x09,//size == 2
-            T_NOTETOUCH     = 0x0A,//size == 2
-            T_CTRLCHANGE    = 0x0B,//size == 2
-            T_PATCHCHANGE   = 0x0C,//size == 1
-            T_CHANAFTTOUCH  = 0x0D,//size == 1
-            T_WHEEL         = 0x0E,//size == 2
-
-            T_SYSEX         = 0xF0,//size == len
-            T_SYSCOMSPOSPTR = 0xF2,//size == 2
-            T_SYSCOMSNGSEL  = 0xF3,//size == 1
-            T_SYSEX2        = 0xF7,//size == len
-            T_SPECIAL       = 0xFF
-        };
-        enum SubTypes
-        {
-            ST_SEQNUMBER    = 0x00,//size == 2
-            ST_TEXT         = 0x01,//size == len
-            ST_COPYRIGHT    = 0x02,//size == len
-            ST_SQTRKTITLE   = 0x03,//size == len
-            ST_INSTRTITLE   = 0x04,//size == len
-            ST_LYRICS       = 0x05,//size == len
-            ST_MARKER       = 0x06,//size == len
-            ST_CUEPOINT     = 0x07,//size == len
-            ST_DEVICESWITCH = 0x09,//size == len <CUSTOM>
-            ST_MIDICHPREFIX = 0x20,//size == 1
-
-            ST_ENDTRACK     = 0x2F,//size == 0
-            ST_TEMPOCHANGE  = 0x51,//size == 3
-            ST_SMPTEOFFSET  = 0x54,//size == 5
-            ST_TIMESIGNATURE= 0x55,//size == 4
-            ST_KEYSIGNATURE = 0x59,//size == 2
-            ST_SEQUENCERSPEC= 0x7F,//size == len
-
-            /* Non-standard, internal ADLMIDI usage only */
-            ST_LOOPSTART    = 0xE1,//size == 0 <CUSTOM>
-            ST_LOOPEND      = 0xE2,//size == 0 <CUSTOM>
-            ST_RAWOPL       = 0xE3//size == 0 <CUSTOM>
-        };
-        //! Main type of event
-        uint8_t type;
-        //! Sub-type of the event
-        uint8_t subtype;
-        //! Targeted MIDI channel
-        uint8_t channel;
-        //! Is valid event
-        uint8_t isValid;
-        //! Reserved 5 bytes padding
-        uint8_t __padding[4];
-        //! Absolute tick position (Used for the tempo calculation only)
-        uint64_t absPosition;
-        //! Raw data of this event
-        std::vector<uint8_t> data;
-    };
-
-    /**
-     * @brief A track position event contains a chain of MIDI events until next delay value
-     *
-     * Created with purpose to sort events by type in the same position
-     * (for example, to keep controllers always first than note on events or lower than note-off events)
-     */
-    class MidiTrackRow
-    {
-    public:
-        MidiTrackRow();
-        void reset();
-        //! Absolute time position in seconds
-        double time;
-        //! Delay to next event in ticks
-        uint64_t delay;
-        //! Absolute position in ticks
-        uint64_t absPos;
-        //! Delay to next event in seconds
-        double timeDelay;
-        std::vector<MidiEvent> events;
-        /**
-         * @brief Sort events in this position
-         */
-        void sortEvents();
-    };
-
-    /**
-     * @brief Tempo change point entry. Used in the MIDI data building function only.
-     */
-    struct TempoChangePoint
-    {
-        uint64_t absPos;
-        fraction<uint64_t> tempo;
-    };
-    //P.S. I declared it here instead of local in-function because C++99 can't process templates with locally-declared structures
-
-    typedef std::list<MidiTrackRow> MidiTrackQueue;
-
-    // Information about each track
-    struct PositionNew
-    {
-        bool began;
-        char padding[7];
-        double wait;
-        double absTimePosition;
-        struct TrackInfo
-        {
-            size_t ptr;
-            uint64_t delay;
-            int     status;
-            char    padding2[4];
-            MidiTrackQueue::iterator pos;
-            TrackInfo(): ptr(0), delay(0), status(0) {}
-        };
-        std::vector<TrackInfo> track;
-        PositionNew(): began(false), wait(0.0), absTimePosition(0.0), track()
-        {}
-    } CurrentPositionNew, LoopBeginPositionNew, trackBeginPositionNew;
-
-    //! Full song length in seconds
-    double fullSongTimeLength;
-    //! Delay after song playd before rejecting the output stream requests
-    double postSongWaitDelay;
-
-    //! Loop start time
-    double loopStartTime;
-    //! Loop end time
-    double loopEndTime;
-    //! Local error string
-    std::string errorString;
-
-    //! Pre-processed track data storage
-    std::vector<MidiTrackQueue > trackDataNew;
-
-    /**
-     * @brief Build MIDI track data from the raw track data storage
-     * @return true if everything successfully processed, or false on any error
-     */
-    bool buildTrackData();
-
-    /**
-     * @brief Parse one event from raw MIDI track stream
-     * @param [_inout] ptr pointer to pointer to current position on the raw data track
-     * @param [_in] end address to end of raw track data, needed to validate position and size
-     * @param [_inout] status status of the track processing
-     * @return Parsed MIDI event entry
-     */
-    MidiEvent parseEvent(uint8_t **ptr, uint8_t *end, int &status);
-
 public:
     MIDIplay();
+
     ~MIDIplay()
     {}
 
-    std::string musTitle;
-    fraction<uint64_t> InvDeltaTicks, Tempo;
-    //! Tempo multiplier
-    double  tempoMultiplier;
-    bool    trackStart,
-            atEnd,
-            loopStart,
-            loopEnd,
-            invalidLoop; /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/
-    char ____padding2[2];
-    OPL3 opl;
-
-    int16_t outBuf[1024];
-
-    struct Setup
-    {
-        unsigned int AdlBank;
-        unsigned int NumFourOps;
-        unsigned int NumCards;
-        bool    HighTremoloMode;
-        bool    HighVibratoMode;
-        bool    AdlPercussionMode;
-        bool    LogarithmicVolumes;
-        int     VolumeModel;
-        unsigned int SkipForward;
-        bool loopingIsEnabled;
-        bool ScaleModulators;
-
-        double delay;
-        double carry;
-
-        /* The lag between visual content and audio content equals */
-        /* the sum of these two buffers. */
-        double mindelay;
-        double maxdelay;
-
-        /* For internal usage */
-        ssize_t stored_samples; /* num of collected samples */
-        short   backup_samples[1024]; /* Backup sample storage. */
-        ssize_t backup_samples_size; /* Backup sample storage. */
-        /* For internal usage */
-
-        unsigned long PCM_RATE;
-    } m_setup;
-
-    static uint64_t ReadBEint(const void *buffer, size_t nbytes);
-    static uint64_t ReadLEint(const void *buffer, size_t nbytes);
+    /**********************Internal structures and classes**********************/
 
     /**
-     * @brief Standard MIDI Variable-Length numeric value parser without of validation
-     * @param [_inout] ptr Pointer to memory block that contains begin of variable-length value
-     * @return Unsigned integer that conains parsed variable-length value
-     */
-    uint64_t ReadVarLen(uint8_t **ptr);
-    /**
-     * @brief Secure Standard MIDI Variable-Length numeric value parser with anti-out-of-range protection
-     * @param [_inout] ptr Pointer to memory block that contains begin of variable-length value, will be iterated forward
-     * @param [_in end Pointer to end of memory block where variable-length value is stored (after end of track)
-     * @param [_out] ok Reference to boolean which takes result of variable-length value parsing
-     * @return Unsigned integer that conains parsed variable-length value
-     */
-    uint64_t ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok);
-
-    /*
-     * A little class gives able to read filedata from disk and also from a memory segment
+     * @brief A little class gives able to read filedata from disk and also from a memory segment
      */
     class fileReader
     {
@@ -681,6 +379,343 @@ public:
         size_t      mp_size;
         size_t      mp_tell;
     };
+
+    // Persistent settings for each MIDI channel
+    struct MIDIchannel
+    {
+        uint16_t portamento;
+        uint8_t bank_lsb, bank_msb;
+        uint8_t patch;
+        uint8_t volume, expression;
+        uint8_t panning, vibrato, sustain;
+        char ____padding[6];
+        double  bend, bendsense;
+        double  vibpos, vibspeed, vibdepth;
+        int64_t vibdelay;
+        uint8_t lastlrpn, lastmrpn;
+        bool nrpn;
+        struct NoteInfo
+        {
+            // Current pressure
+            uint8_t vol;
+            // Tone selected on noteon:
+            char ____padding[1];
+            int16_t tone;
+            // Patch selected on noteon; index to banks[AdlBank][]
+            uint8_t midiins;
+            // Index to physical adlib data structure, adlins[]
+            char ____padding2[3];
+            uint32_t insmeta;
+            char ____padding3[4];
+            // List of adlib channels it is currently occupying.
+            std::map<uint16_t /*adlchn*/, uint16_t /*ins, inde to adl[]*/ > phys;
+        };
+        typedef std::map<uint8_t, NoteInfo> activenotemap_t;
+        typedef activenotemap_t::iterator activenoteiterator;
+        char ____padding2[5];
+        activenotemap_t activenotes;
+
+        MIDIchannel()
+            : portamento(0),
+              bank_lsb(0), bank_msb(0), patch(0),
+              volume(100), expression(127),
+              panning(0x30), vibrato(0), sustain(0),
+              bend(0.0), bendsense(2 / 8192.0),
+              vibpos(0), vibspeed(2 * 3.141592653 * 5.0),
+              vibdepth(0.5 / 127), vibdelay(0),
+              lastlrpn(0), lastmrpn(0), nrpn(false),
+              activenotes() { }
+    };
+
+    // Additional information about AdLib channels
+    struct AdlChannel
+    {
+        // For collisions
+        struct Location
+        {
+            uint16_t    MidCh;
+            uint8_t     note;
+            bool operator==(const Location &b) const
+            {
+                return MidCh == b.MidCh && note == b.note;
+            }
+            bool operator< (const Location &b) const
+            {
+                return MidCh < b.MidCh || (MidCh == b.MidCh && note < b.note);
+            }
+            char ____padding[1];
+        };
+        struct LocationData
+        {
+            bool sustained;
+            char ____padding[1];
+            uint16_t ins;  // a copy of that in phys[]
+            char ____padding2[4];
+            int64_t kon_time_until_neglible;
+            int64_t vibdelay;
+        };
+        typedef std::map<Location, LocationData> users_t;
+        users_t users;
+
+        // If the channel is keyoff'd
+        long koff_time_until_neglible;
+        // For channel allocation:
+        AdlChannel(): users(), koff_time_until_neglible(0) { }
+        void AddAge(int64_t ms);
+    };
+
+    /**
+     * @brief MIDI Event utility container
+     */
+    class MidiEvent
+    {
+    public:
+        MidiEvent();
+
+        enum Types
+        {
+            T_UNKNOWN       = 0x00,
+            T_NOTEOFF       = 0x08,//size == 2
+            T_NOTEON        = 0x09,//size == 2
+            T_NOTETOUCH     = 0x0A,//size == 2
+            T_CTRLCHANGE    = 0x0B,//size == 2
+            T_PATCHCHANGE   = 0x0C,//size == 1
+            T_CHANAFTTOUCH  = 0x0D,//size == 1
+            T_WHEEL         = 0x0E,//size == 2
+
+            T_SYSEX         = 0xF0,//size == len
+            T_SYSCOMSPOSPTR = 0xF2,//size == 2
+            T_SYSCOMSNGSEL  = 0xF3,//size == 1
+            T_SYSEX2        = 0xF7,//size == len
+            T_SPECIAL       = 0xFF
+        };
+        enum SubTypes
+        {
+            ST_SEQNUMBER    = 0x00,//size == 2
+            ST_TEXT         = 0x01,//size == len
+            ST_COPYRIGHT    = 0x02,//size == len
+            ST_SQTRKTITLE   = 0x03,//size == len
+            ST_INSTRTITLE   = 0x04,//size == len
+            ST_LYRICS       = 0x05,//size == len
+            ST_MARKER       = 0x06,//size == len
+            ST_CUEPOINT     = 0x07,//size == len
+            ST_DEVICESWITCH = 0x09,//size == len <CUSTOM>
+            ST_MIDICHPREFIX = 0x20,//size == 1
+
+            ST_ENDTRACK     = 0x2F,//size == 0
+            ST_TEMPOCHANGE  = 0x51,//size == 3
+            ST_SMPTEOFFSET  = 0x54,//size == 5
+            ST_TIMESIGNATURE= 0x55,//size == 4
+            ST_KEYSIGNATURE = 0x59,//size == 2
+            ST_SEQUENCERSPEC= 0x7F,//size == len
+
+            /* Non-standard, internal ADLMIDI usage only */
+            ST_LOOPSTART    = 0xE1,//size == 0 <CUSTOM>
+            ST_LOOPEND      = 0xE2,//size == 0 <CUSTOM>
+            ST_RAWOPL       = 0xE3//size == 0 <CUSTOM>
+        };
+        //! Main type of event
+        uint8_t type;
+        //! Sub-type of the event
+        uint8_t subtype;
+        //! Targeted MIDI channel
+        uint8_t channel;
+        //! Is valid event
+        uint8_t isValid;
+        //! Reserved 5 bytes padding
+        uint8_t __padding[4];
+        //! Absolute tick position (Used for the tempo calculation only)
+        uint64_t absPosition;
+        //! Raw data of this event
+        std::vector<uint8_t> data;
+    };
+
+    /**
+     * @brief A track position event contains a chain of MIDI events until next delay value
+     *
+     * Created with purpose to sort events by type in the same position
+     * (for example, to keep controllers always first than note on events or lower than note-off events)
+     */
+    class MidiTrackRow
+    {
+    public:
+        MidiTrackRow();
+        void reset();
+        //! Absolute time position in seconds
+        double time;
+        //! Delay to next event in ticks
+        uint64_t delay;
+        //! Absolute position in ticks
+        uint64_t absPos;
+        //! Delay to next event in seconds
+        double timeDelay;
+        std::vector<MidiEvent> events;
+        /**
+         * @brief Sort events in this position
+         */
+        void sortEvents();
+    };
+
+    /**
+     * @brief Tempo change point entry. Used in the MIDI data building function only.
+     */
+    struct TempoChangePoint
+    {
+        uint64_t absPos;
+        fraction<uint64_t> tempo;
+    };
+    //P.S. I declared it here instead of local in-function because C++99 can't process templates with locally-declared structures
+
+    typedef std::list<MidiTrackRow> MidiTrackQueue;
+
+    // Information about each track
+    struct PositionNew
+    {
+        bool began;
+        char padding[7];
+        double wait;
+        double absTimePosition;
+        struct TrackInfo
+        {
+            size_t ptr;
+            uint64_t delay;
+            int     status;
+            char    padding2[4];
+            MidiTrackQueue::iterator pos;
+            TrackInfo(): ptr(0), delay(0), status(0) {}
+        };
+        std::vector<TrackInfo> track;
+        PositionNew(): began(false), wait(0.0), absTimePosition(0.0), track()
+        {}
+    };
+
+    struct Setup
+    {
+        unsigned int AdlBank;
+        unsigned int NumFourOps;
+        unsigned int NumCards;
+        bool    HighTremoloMode;
+        bool    HighVibratoMode;
+        bool    AdlPercussionMode;
+        bool    LogarithmicVolumes;
+        int     VolumeModel;
+        unsigned int SkipForward;
+        bool loopingIsEnabled;
+        bool ScaleModulators;
+
+        double delay;
+        double carry;
+
+        /* The lag between visual content and audio content equals */
+        /* the sum of these two buffers. */
+        double mindelay;
+        double maxdelay;
+
+        /* For internal usage */
+        ssize_t stored_samples; /* num of collected samples */
+        short   backup_samples[1024]; /* Backup sample storage. */
+        ssize_t backup_samples_size; /* Backup sample storage. */
+        /* For internal usage */
+
+        unsigned long PCM_RATE;
+    };
+
+    struct MIDI_MarkerEntry
+    {
+        std::string     label;
+        double          pos_time;
+        unsigned long   pos_ticks;
+    };
+
+    std::vector<MIDIchannel> Ch;
+    bool cmf_percussion_mode;
+
+    MIDIEventHooks hooks;
+
+private:
+    std::map<std::string, uint64_t> devices;
+    std::map<uint64_t /*track*/, uint64_t /*channel begin index*/> current_device;
+
+    //Padding to fix CLanc code model's warning
+    char ____padding[7];
+
+    std::vector<AdlChannel> ch;
+    std::vector<std::vector<uint8_t> > TrackData;
+
+    PositionNew CurrentPositionNew, LoopBeginPositionNew, trackBeginPositionNew;
+
+    //! Full song length in seconds
+    double fullSongTimeLength;
+    //! Delay after song playd before rejecting the output stream requests
+    double postSongWaitDelay;
+
+    //! Loop start time
+    double loopStartTime;
+    //! Loop end time
+    double loopEndTime;
+    //! Local error string
+    std::string errorString;
+
+    //! Pre-processed track data storage
+    std::vector<MidiTrackQueue > trackDataNew;
+
+    //! Missing instruments catches
+    std::set<uint8_t> caugh_missing_instruments;
+
+    /**
+     * @brief Build MIDI track data from the raw track data storage
+     * @return true if everything successfully processed, or false on any error
+     */
+    bool buildTrackData();
+
+    /**
+     * @brief Parse one event from raw MIDI track stream
+     * @param [_inout] ptr pointer to pointer to current position on the raw data track
+     * @param [_in] end address to end of raw track data, needed to validate position and size
+     * @param [_inout] status status of the track processing
+     * @return Parsed MIDI event entry
+     */
+    MidiEvent parseEvent(uint8_t **ptr, uint8_t *end, int &status);
+
+public:
+
+    std::string musTitle;
+    std::string musCopyright;
+    std::vector<std::string> musTrackTitles;
+    std::vector<MIDI_MarkerEntry> musMarkers;
+
+    fraction<uint64_t> InvDeltaTicks, Tempo;
+    //! Tempo multiplier
+    double  tempoMultiplier;
+    bool    trackStart,
+            atEnd,
+            loopStart,
+            loopEnd,
+            invalidLoop; /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/
+    char ____padding2[2];
+    OPL3 opl;
+
+    int16_t outBuf[1024];
+
+    Setup m_setup;
+
+    static uint64_t ReadBEint(const void *buffer, size_t nbytes);
+    static uint64_t ReadLEint(const void *buffer, size_t nbytes);
+
+    /**
+     * @brief Standard MIDI Variable-Length numeric value parser without of validation
+     * @param [_inout] ptr Pointer to memory block that contains begin of variable-length value
+     * @return Unsigned integer that conains parsed variable-length value
+     */
+    uint64_t ReadVarLen(uint8_t **ptr);
+    /**
+     * @brief Secure Standard MIDI Variable-Length numeric value parser with anti-out-of-range protection
+     * @param [_inout] ptr Pointer to memory block that contains begin of variable-length value, will be iterated forward
+     * @param [_in end Pointer to end of memory block where variable-length value is stored (after end of track)
+     * @param [_out] ok Reference to boolean which takes result of variable-length value parsing
+     * @return Unsigned integer that conains parsed variable-length value
+     */
+    uint64_t ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok);
 
     bool LoadBank(const std::string &filename);
     bool LoadBank(void *data, unsigned long size);

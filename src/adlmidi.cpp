@@ -355,6 +355,98 @@ ADLMIDI_EXPORT void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo)
 }
 
 
+ADLMIDI_EXPORT const char *adl_metaMusicTitle(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return "";
+    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->musTitle.c_str();
+}
+
+
+ADLMIDI_EXPORT const char *adl_metaMusicCopyright(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return "";
+    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->musCopyright.c_str();
+}
+
+ADLMIDI_EXPORT size_t adl_metaTrackTitleCount(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return 0;
+    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->musTrackTitles.size();
+}
+
+ADLMIDI_EXPORT const char *adl_metaTrackTitle(struct ADL_MIDIPlayer *device, size_t index)
+{
+    if(!device)
+        return 0;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(index >= play->musTrackTitles.size())
+        return "INVALID";
+    return play->musTrackTitles[index].c_str();
+}
+
+
+ADLMIDI_EXPORT size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return 0;
+    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->musMarkers.size();
+}
+
+ADLMIDI_EXPORT const Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index)
+{
+    struct Adl_MarkerEntry marker;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!device || !play || (index >= play->musMarkers.size()))
+    {
+        marker.label = "INVALID";
+        marker.pos_time = 0.0;
+        marker.pos_ticks = 0;
+        return marker;
+    }
+    else
+    {
+        MIDIplay::MIDI_MarkerEntry &mk = play->musMarkers[index];
+        marker.label = mk.label.c_str();
+        marker.pos_time = mk.pos_time;
+        marker.pos_ticks = mk.pos_ticks;
+    }
+    return marker;
+}
+
+ADLMIDI_EXPORT void adl_setRawEventHook(struct ADL_MIDIPlayer *device, ADL_RawEventHook rawEventHook, void *userData)
+{
+    if(!device)
+        return;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    play->hooks.onEvent = rawEventHook;
+    play->hooks.onEvent_userData = userData;
+}
+
+/* Set note hook */
+ADLMIDI_EXPORT void adl_setNoteHook(struct ADL_MIDIPlayer *device, ADL_NoteHook noteHook, void *userData)
+{
+    if(!device)
+        return;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    play->hooks.onNote = noteHook;
+    play->hooks.onNote_userData = userData;
+}
+
+/* Set debug message hook */
+ADLMIDI_EXPORT void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_DebugMessageHook debugMessageHook, void *userData)
+{
+    if(!device)
+        return;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    play->hooks.onDebugMessage = debugMessageHook;
+    play->hooks.onDebugMessage_userData = userData;
+}
+
+
+
 inline static void SendStereoAudio(MIDIplay::Setup &device,
                                    int      &samples_requested,
                                    ssize_t  &in_size,

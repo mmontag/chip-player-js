@@ -28,6 +28,21 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
+
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#include <stdint.h>
+typedef uint8_t         ADL_UInt8;
+typedef uint16_t        ADL_Uint16;
+typedef int8_t          ADL_Sint8;
+typedef int16_t         ADL_Sint16;
+#else
+typedef unsigned char   ADL_UInt8;
+typedef unsigned short  ADL_Uint16;
+typedef char            ADL_Sint8;
+typedef short           ADL_Sint16;
+#endif
+
 enum ADLMIDI_VolumeModels
 {
     ADLMIDI_VolumeModel_AUTO = 0,
@@ -128,8 +143,56 @@ extern void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo);
 /*Close and delete ADLMIDI device*/
 extern void adl_close(struct ADL_MIDIPlayer *device);
 
+
+
+/**META**/
+
+/*Returns string which contains a music title*/
+extern const char *adl_metaMusicTitle(struct ADL_MIDIPlayer *device);
+
+/*Returns string which contains a copyright string*/
+extern const char *adl_metaMusicCopyright(struct ADL_MIDIPlayer *device);
+
+/*Returns count of available track titles: NOTE: there are CAN'T be associated with channel in any of event or note hooks */
+extern size_t adl_metaTrackTitleCount(struct ADL_MIDIPlayer *device);
+
+/*Get track title by index*/
+extern const char *adl_metaTrackTitle(struct ADL_MIDIPlayer *device, size_t index);
+
+struct Adl_MarkerEntry
+{
+    const char      *label;
+    double          pos_time;
+    unsigned long   pos_ticks;
+};
+
+/*Returns count of available markers*/
+extern size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device);
+
+/*Returns the marker entry*/
+extern const struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index);
+
+
+
+
 /*Take a sample buffer*/
-extern int adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
+extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
+
+
+/**Hooks**/
+
+typedef void (*ADL_RawEventHook)(void *userdata, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, ADL_UInt8 *data, size_t len);
+typedef void (*ADL_NoteHook)(void *userdata, int adlchn, int note, int ins, int pressure, double bend);
+typedef void (*ADL_DebugMessageHook)(void *userdata, const char *fmt, ...);
+
+/* Set raw MIDI event hook */
+extern void adl_setRawEventHook(struct ADL_MIDIPlayer *device, ADL_RawEventHook rawEventHook, void *userData);
+
+/* Set note hook */
+extern void adl_setNoteHook(struct ADL_MIDIPlayer *device, ADL_NoteHook noteHook, void *userData);
+
+/* Set debug message hook */
+extern void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_DebugMessageHook debugMessageHook, void *userData);
 
 #ifdef __cplusplus
 }
