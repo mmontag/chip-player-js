@@ -105,11 +105,10 @@ To build that example you will need to have installed SDL2 library.
 * [ADLMIDI Player for Android](https://github.com/Wohlstand/ADLMIDI-Player-Java/releases) - a little MIDI-player for Android which uses libADLMIDI to play MIDI files and provides flexible GUI with ability to change bank, flags, number of emulated chips, etc.
 
 # Todo
-* Add hooks to places where are originally was old UI calls to be able to reimplement original ADLMIDI tool which will use libADLMIDI as backend and also to be able to implement various other things based on MIDI event hooking.
+* Reimplement original ADLMIDI with using of new hooks of libADLMIDI
 * Implement WOPL Version 3 which will contain pre-calculated `ms_sound_kon` and `ms_sound_koff` values per every instrument.
 * Implement multi-bank to support GS or XG standards.
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
-* Support of title and other meta-tags retrieving
 * Support of real-time listening of incoming MIDI-commands.
   That will allow to use library as software MIDI Output device
   to play any MIDI via this library.
@@ -130,6 +129,8 @@ To build that example you will need to have installed SDL2 library.
  * Fixed IMF playing when passing file as path nor as memory block
  * Added ability to get time position of every loop point if presented
  * Added ability to change playing tempo by giving multiplier (how faster or slower than original)
+ * Added support for meta-tags getting: title, copyright, track titles, and markers with time and ticks positions
+ * Added hooks to increase advandate of The Library: MIDI-event, Note, and Debug-Message hooks!
  * ...
 
 ## 1.2.1    2017-07-30
