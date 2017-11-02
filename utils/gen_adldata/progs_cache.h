@@ -86,5 +86,6 @@ void SetBank(unsigned bank, unsigned patch, size_t insno);
 size_t InsertIns(const insdata &id, const insdata &id2, ins &in,
                  const std::string &name, const std::string &name2);
 size_t InsertNoSoundIns();
+insdata MakeNoSoundIns();
 
 #endif // PROGS_H

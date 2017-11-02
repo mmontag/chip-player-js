@@ -82,14 +82,14 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
         int gmno = int(a < 128 ? a : ((a | 128) + 35));
 
         char name2[512];
-        sprintf(name2, "%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), gmno & 127);
+        std::snprintf(name2, 512, "%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
         Doom_opl_instr &ins = *(Doom_opl_instr *) &data[offset2];
 
-        insdata tmp[2] = {InsertNoSoundIns(), InsertNoSoundIns()};
+        insdata tmp[2] = {MakeNoSoundIns(), MakeNoSoundIns()};
         tmp[0].diff = false;
         tmp[1].diff = true;
-        for(unsigned index = 0; index < 2; ++index)
+        for(size_t index = 0; index < 2; ++index)
         {
             const Doom_OPL2instrument &src = ins.patchdata[index];
             tmp[index].data[0] = src.trem_vibr_1;
@@ -116,7 +116,7 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
             tmp[1].finetune -= 12;
         }
 
-        if(!(ins.flags & 4))
+        if(!(ins.flags & FL_DOUBLE_VOICE))
         {
             size_t resno = InsertIns(tmp[0], tmp[0], tmp2, std::string(1, '\377') + name, name2);
             SetBank(bank, (unsigned int)gmno, resno);
