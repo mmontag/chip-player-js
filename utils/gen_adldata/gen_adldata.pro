@@ -27,7 +27,8 @@ HEADERS += \
     file_formats/load_bisqwit.h \
     file_formats/load_wopl.h \
     measurer.h \
-    file_formats/common.h
+    file_formats/common.h \
+    file_formats/load_ea.h
 
 SOURCES += \
     gen_adldata.cc \

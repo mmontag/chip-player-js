@@ -22,6 +22,7 @@
 #include "file_formats/load_op2.h"
 #include "file_formats/load_tmb.h"
 #include "file_formats/load_wopl.h"
+#include "file_formats/load_ea.h"
 
 int main(int argc, char**argv)
 {
@@ -135,6 +136,15 @@ int main(int argc, char**argv)
             if(format == "OP2")
             {
                 if(!LoadDoom(filepath.c_str(), bank, prefix.c_str()))
+                {
+                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    return 1;
+                }
+            }
+            else
+            if(format == "EA")
+            {
+                if(!LoadEA(filepath.c_str(), bank, prefix.c_str()))
                 {
                     fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
