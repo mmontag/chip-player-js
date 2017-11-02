@@ -70,6 +70,7 @@ int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     struct vi_controller* vi = (struct vi_controller*)opaque;
     usf_state_t * state = vi->r4300->state;
     uint32_t reg = vi_reg(address);
+	int32_t count_per_scanline;
 
     switch(reg)
     {
@@ -93,7 +94,7 @@ int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
     case VI_V_SYNC_REG:
         masked_write(&vi->regs[reg], value, mask);
-        int32_t count_per_scanline = ((float)state->ROM_PARAMS.aidacrate / (float)state->ROM_PARAMS.vilimit) / (vi->regs[VI_V_SYNC_REG] + 1);
+        count_per_scanline = ((float)state->ROM_PARAMS.aidacrate / (float)state->ROM_PARAMS.vilimit) / (vi->regs[VI_V_SYNC_REG] + 1);
         vi->delay = (vi->regs[VI_V_SYNC_REG] + 1) * count_per_scanline;
         if (vi->regs[VI_V_SYNC_REG] != 0 && vi->next_vi == 0)
         {
