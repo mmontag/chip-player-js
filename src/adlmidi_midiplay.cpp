@@ -799,14 +799,14 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     {
         if(ccount == 1)
         {
-            if(i[0] == i[1]) break; // No secondary channel
-
+            if((i[0] == i[1]) && !pseudo_4op)
+                break; // No secondary channel
             if(adlchannel[0] == -1)
                 break; // No secondary if primary failed
         }
 
         int32_t c = -1;
-        long bs = -0x7FFFFFFFl;
+        int32_t bs = -0x7FFFFFFFl;
 
         for(uint32_t a = 0; a < opl.NumChannels; ++a)
         {
@@ -845,11 +845,10 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                 }
             }
 
-            long s = CalculateAdlChannelGoodness(a, i[ccount], channel);
-
+            int64_t s = CalculateAdlChannelGoodness(a, i[ccount], channel);
             if(s > bs)
             {
-                bs = s;    // Best candidate wins
+                bs = (int32_t)s;    // Best candidate wins
                 c = static_cast<int32_t>(a);
             }
         }
