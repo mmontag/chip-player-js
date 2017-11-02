@@ -2,9 +2,9 @@
 #include <cmath>
 
 #ifndef ADLMIDI_USE_DOSBOX_OPL
-#include "nukedopl3.h"
+#include "../nukedopl3.h"
 #else
-#include "dbopl.h"
+#include "../dbopl.h"
 #endif
 
 DurationInfo MeasureDurations(const ins &in)
@@ -83,7 +83,7 @@ DurationInfo MeasureDurations(const ins &in)
         double hertz = 172.00093 * std::exp(0.057762265 * (notenum + id[n].finetune));
         if(hertz > 131071)
         {
-            fprintf(stderr, "Why does note %d + finetune %d produce hertz %g?\n",
+            std::fprintf(stderr, "MEASURER WARNING: Why does note %d + finetune %d produce hertz %g?          \n",
                     notenum, id[n].finetune, hertz);
             hertz = 131071;
         }
