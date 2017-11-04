@@ -279,14 +279,7 @@ static int read_envelope(struct xmp_envelope *ei, struct it_envelope *env,
 	}
 
 	env->flg = buf[0];
-	env->num = buf[1];
-
-	/* Sanity check */
-	if (env->num >= XMP_MAX_ENV_POINTS) {
-		env->flg = 0;
-		env->num = 0;
-		return -1;
-	}
+	env->num = MIN(buf[1], 25); /* Clamp to IT max */
 
 	env->lpb = buf[2];
 	env->lpe = buf[3];
