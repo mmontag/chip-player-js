@@ -483,8 +483,9 @@ bool MIDIplay::buildTrackData()
     /********************************************************************************/
     #if 1 //Use this to record WAVEs for comparison before/after implementing of this
     {
-        //#define DRUM_NOTE_MIN_TIME 0.0085
-        #define DRUM_NOTE_MIN_TIME  0.0085
+        //! Minimal real time in seconds
+        #define DRUM_NOTE_MIN_TIME  0.03
+        //! Minimal ticks count
         #define DRUM_NOTE_MIN_TICKS 15
         struct NoteState
         {
@@ -504,6 +505,7 @@ bool MIDIplay::buildTrackData()
             for(MidiTrackQueue::iterator it = track.begin(); it != track.end(); it++)
             {
                 MidiTrackRow &pos = *it;
+
                 for(ssize_t e = 0; e < (ssize_t)pos.events.size(); e++)
                 {
                     MidiEvent *et = &pos.events[(size_t)e];
@@ -518,12 +520,6 @@ bool MIDIplay::buildTrackData()
                     {
                         uint8_t     note = et->data[0] & 0x7F;
                         NoteState   &ns = drNotes[note];
-                        //if(ns.isOn)//already on? add NoteOff into the tail!
-                        //{
-                        //    MidiEvent shutUp = *et;
-                        //    shutUp.type = MidiEvent::T_NOTEOFF;
-                        //    pos.events.push_back(shutUp);
-                        //}
                         ns.isOn = true;
                         ns.delay = 0.0;
                         ns.delayTicks = 0;
@@ -575,6 +571,7 @@ bool MIDIplay::buildTrackData()
             }
         }
         #undef DRUM_NOTE_MIN_TIME
+        #undef DRUM_NOTE_MIN_TICKS
     }
     #endif
 
