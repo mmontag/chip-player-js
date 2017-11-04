@@ -84,187 +84,123 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
 
     percussion_offset = melodic_offset + (62 * 128 * mbanks_count);
 
-    for(uint32_t mbank = 0; mbank < 1; mbank++) // only first melodic bank (Until multi-banks support will be implemented)
+    uint32_t root_offsets[2] = {melodic_offset, percussion_offset};
+
+    for(size_t bset = 0; bset < 2; bset++)
     {
-        uint32_t bank_offset = melodic_offset + (mbank * 62 * 128);
-
-        for(uint32_t i = 0; i < 128; i++)
+        bool is_percussion = (bset == 1);
+        for(uint32_t bankno = 0; bankno < 1; bankno++) // only first melodic bank (Until multi-banks support will be implemented)
         {
-            uint32_t offset = bank_offset + uint32_t(i * 62);
-            std::string name;
-            insdata tmp[2];
+            uint32_t bank_offset = root_offsets[bset] + (bankno * 62 * 128);
 
-            name.resize(32);
-            std::memcpy(&name[0], data.data() + offset, 32);
-            name.resize(std::strlen(&name[0]));
-
-            tmp[0].data[0]  = data[offset + 42 + 5];
-            tmp[0].data[1]  = data[offset + 42 + 0];
-            tmp[0].data[2]  = data[offset + 42 + 7];
-            tmp[0].data[3]  = data[offset + 42 + 2];
-            tmp[0].data[4]  = data[offset + 42 + 8];
-            tmp[0].data[5]  = data[offset + 42 + 3];
-            tmp[0].data[6]  = data[offset + 42 + 9];
-            tmp[0].data[7]  = data[offset + 42 + 4];
-            tmp[0].data[8]  = data[offset + 42 + 6];
-            tmp[0].data[9]  = data[offset + 42 + 1];
-            tmp[0].data[10] = data[offset + 40];
-
-            tmp[1].data[0]  = data[offset + 52 + 5];
-            tmp[1].data[1]  = data[offset + 52 + 0];
-            tmp[1].data[2]  = data[offset + 52 + 7];
-            tmp[1].data[3]  = data[offset + 52 + 2];
-            tmp[1].data[4]  = data[offset + 52 + 8];
-            tmp[1].data[5]  = data[offset + 52 + 3];
-            tmp[1].data[6]  = data[offset + 52 + 9];
-            tmp[1].data[7]  = data[offset + 52 + 4];
-            tmp[1].data[8]  = data[offset + 52 + 6];
-            tmp[1].data[9]  = data[offset + 52 + 1];
-            tmp[1].data[10] = data[offset + 41];
-
-            tmp[0].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 32));
-            tmp[1].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 34));
-            uint8_t flags = data[offset + 39];
-
-            struct ins tmp2;
-            tmp2.notenum = 0;
-            bool real4op = (flags & (uint8_t)WOPL_Flags::Mode_4op) != 0;
-            tmp2.pseudo4op = (flags & (uint8_t)WOPL_Flags::Mode_DoubleVoice) != 0;
-            tmp2.voice2_fine_tune = 0;
-            tmp[0].diff = false;
-            tmp[1].diff = real4op && !tmp2.pseudo4op;
-
-            int8_t fine_tune = (int8_t)data[offset + 37];
-            if(fine_tune != 0)
+            for(uint32_t i = 0; i < 128; i++)
             {
-                if(fine_tune == 1)
-                    tmp2.voice2_fine_tune = 0.000025;
-                else if(fine_tune == -1)
-                    tmp2.voice2_fine_tune = -0.000025;
+                uint32_t offset = bank_offset + uint32_t(i * 62);
+                std::string name;
+                insdata tmp[2];
+
+                name.resize(32);
+                std::memcpy(&name[0], data.data() + offset, 32);
+                name.resize(std::strlen(&name[0]));
+    /*
+        WOPL's
+
+     0   AM/Vib/Env/Ksr/FMult characteristics
+     1   Key Scale Level / Total level register data
+     2   Attack / Decay
+     3   Systain and Release register data
+     4   Wave form
+
+     5   AM/Vib/Env/Ksr/FMult characteristics
+     6   Key Scale Level / Total level register data
+     7   Attack / Decay
+     8   Systain and Release register data
+     9   Wave form
+    */
+                tmp[0].data[0]  = data[offset + 42 + 5];//AMVIB op1
+                tmp[0].data[1]  = data[offset + 42 + 0];//AMVIB op2
+                tmp[0].data[2]  = data[offset + 42 + 7];//AtDec op1
+                tmp[0].data[3]  = data[offset + 42 + 2];//AtDec op2
+                tmp[0].data[4]  = data[offset + 42 + 8];//SusRel op1
+                tmp[0].data[5]  = data[offset + 42 + 3];//SusRel op2
+                tmp[0].data[6]  = data[offset + 42 + 9];//Wave op1
+                tmp[0].data[7]  = data[offset + 42 + 4];//Wave op2
+                tmp[0].data[8]  = data[offset + 42 + 6];//KSL op1
+                tmp[0].data[9]  = data[offset + 42 + 1];//KSL op2
+                tmp[0].data[10] = data[offset + 40];
+
+                tmp[1].data[0]  = data[offset + 52 + 5];
+                tmp[1].data[1]  = data[offset + 52 + 0];
+                tmp[1].data[2]  = data[offset + 52 + 7];
+                tmp[1].data[3]  = data[offset + 52 + 2];
+                tmp[1].data[4]  = data[offset + 52 + 8];
+                tmp[1].data[5]  = data[offset + 52 + 3];
+                tmp[1].data[6]  = data[offset + 52 + 9];
+                tmp[1].data[7]  = data[offset + 52 + 4];
+                tmp[1].data[8]  = data[offset + 52 + 6];
+                tmp[1].data[9]  = data[offset + 52 + 1];
+                tmp[1].data[10] = data[offset + 41];
+
+                tmp[0].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 32));
+                tmp[1].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 34));
+                uint8_t flags = data[offset + 39];
+
+                struct ins tmp2;
+                tmp2.notenum = is_percussion ? data[offset + 38] : 0;
+                bool real4op = (flags & (uint8_t)WOPL_Flags::Mode_4op) != 0;
+                tmp2.pseudo4op = (flags & (uint8_t)WOPL_Flags::Mode_DoubleVoice) != 0;
+                tmp2.voice2_fine_tune = 0;
+                tmp[0].diff = false;
+                tmp[1].diff = real4op && !tmp2.pseudo4op;
+
+                int8_t fine_tune = (int8_t)data[offset + 37];
+                if(fine_tune != 0)
+                {
+                    if(fine_tune == 1)
+                        tmp2.voice2_fine_tune = 0.000025;
+                    else if(fine_tune == -1)
+                        tmp2.voice2_fine_tune = -0.000025;
+                    else
+                        tmp2.voice2_fine_tune = ((fine_tune * 15.625) / 1000.0);
+                }
+
+                uint32_t gmno = is_percussion ? i + 128 : i;
+
+                if(is_percussion)
+                {
+                    int midi_index = (gmno < (128 + 35)) ? -1
+                                     : (gmno < (128 + 88)) ? int(gmno) - 35
+                                     : -1;
+                    if(name.empty() && (midi_index >= 0))
+                        name = std::string(1, '\377') + MidiInsName[midi_index];
+                    if(!name.empty())
+                        name.insert(0, 1, '\377');
+                }
                 else
-                    tmp2.voice2_fine_tune = ((fine_tune * 15.625) / 1000.0);
-            }
+                {
+                    if(name.empty())
+                        name = std::string(1, '\377') + MidiInsName[gmno];
+                    else
+                        name.insert(0, 1, '\377');
+                }
 
-            if(name.empty())
-                name = std::string(1, '\377') + MidiInsName[i];
-            else
-                name.insert(0, 1, '\377');
-
-            char name2[512];
-            std::memset(name2, 0, 512);
-            std::snprintf(name2, 512, "%sM%u", prefix, i);
-
-            if(!real4op && !tmp2.pseudo4op)
-            {
-                size_t resno = InsertIns(tmp[0], tmp2, name, name2);
-                SetBank(bank, i, resno);
-            }
-            else
-            {
-                size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2);
-                SetBank(bank, i, resno);
-            }
-        }
-    }
-
-    for(uint32_t pbank = 0; pbank < 1; pbank++) // only first percussion bank (Until multi-banks support will be implemented)
-    {
-        uint32_t bank_offset = percussion_offset + (pbank * 62 * 128);
-
-        for(uint32_t i = 0; i < 128; i++)
-        {
-            uint32_t offset = bank_offset + (i * 62);
-            std::string name;
-            insdata tmp[2];
-
-            name.resize(32);
-            std::memcpy(&name[0], data.data() + offset, 32);
-            name.resize(std::strlen(&name[0]));
-/*
-    WOPL's
-
- 0   AM/Vib/Env/Ksr/FMult characteristics
- 1   Key Scale Level / Total level register data
- 2   Attack / Decay
- 3   Systain and Release register data
- 4   Wave form
-
- 5   AM/Vib/Env/Ksr/FMult characteristics
- 6   Key Scale Level / Total level register data
- 7   Attack / Decay
- 8   Systain and Release register data
- 9   Wave form
-*/
-            tmp[0].data[0]  = data[offset + 42 + 5];//AMVIB op1
-            tmp[0].data[1]  = data[offset + 42 + 0];//AMVIB op2
-            tmp[0].data[2]  = data[offset + 42 + 7];//AtDec op1
-            tmp[0].data[3]  = data[offset + 42 + 2];//AtDec op2
-            tmp[0].data[4]  = data[offset + 42 + 8];//SusRel op1
-            tmp[0].data[5]  = data[offset + 42 + 3];//SusRel op2
-            tmp[0].data[6]  = data[offset + 42 + 9];//Wave op1
-            tmp[0].data[7]  = data[offset + 42 + 4];//Wave op2
-            tmp[0].data[8]  = data[offset + 42 + 6];//KSL op1
-            tmp[0].data[9]  = data[offset + 42 + 1];//KSL op2
-            tmp[0].data[10] = data[offset + 40];
-
-            tmp[1].data[0]  = data[offset + 52 + 5];
-            tmp[1].data[1]  = data[offset + 52 + 0];
-            tmp[1].data[2]  = data[offset + 52 + 7];
-            tmp[1].data[3]  = data[offset + 52 + 2];
-            tmp[1].data[4]  = data[offset + 52 + 8];
-            tmp[1].data[5]  = data[offset + 52 + 3];
-            tmp[1].data[6]  = data[offset + 52 + 9];
-            tmp[1].data[7]  = data[offset + 52 + 4];
-            tmp[1].data[8]  = data[offset + 52 + 6];
-            tmp[1].data[9]  = data[offset + 52 + 1];
-            tmp[1].data[10] = data[offset + 41];
-
-            tmp[0].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 32));
-            tmp[1].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 34));
-            uint8_t flags = data[offset + 39];
-
-            struct ins tmp2;
-            tmp2.notenum = data[offset + 38];
-            bool real4op = (flags & (uint8_t)WOPL_Flags::Mode_4op) != 0;
-            tmp2.pseudo4op = (flags & (uint8_t)WOPL_Flags::Mode_DoubleVoice) != 0;
-            tmp2.voice2_fine_tune = 0;
-            tmp[0].diff = false;
-            tmp[1].diff = real4op && !tmp2.pseudo4op;
-
-            int8_t fine_tune = (int8_t)data[offset + 37];
-            if(fine_tune != 0)
-            {
-                if(fine_tune == 1)
-                    tmp2.voice2_fine_tune = 0.000025;
-                else if(fine_tune == -1)
-                    tmp2.voice2_fine_tune = -0.000025;
+                char name2[512];
+                std::memset(name2, 0, 512);
+                if(is_percussion)
+                    std::snprintf(name2, 512, "%sP%u", prefix, gmno & 127);
                 else
-                    tmp2.voice2_fine_tune = ((fine_tune * 15.625) / 1000.0);
-            }
+                    std::snprintf(name2, 512, "%sM%u", prefix, i);
 
-            uint32_t gmno = i + 128;
-            int midi_index = (gmno < (128 + 35)) ? -1
-                             : (gmno < (128 + 88)) ? int(gmno) - 35
-                             : -1;
-
-            if(name.empty() && (midi_index >= 0))
-                name = std::string(1, '\377') + MidiInsName[midi_index];
-            if(!name.empty())
-                name.insert(0, 1, '\377');
-
-            char name2[512];
-            std::memset(name2, 0, 512);
-            std::snprintf(name2, 512, "%sP%u", prefix, gmno & 127);
-
-            if(!real4op && !tmp2.pseudo4op)
-            {
-                size_t resno = InsertIns(tmp[0], tmp2, name, name2);
-                SetBank(bank, gmno, resno);
-            }
-            else
-            {
-                size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2);
-                SetBank(bank, gmno, resno);
+                if(!real4op && !tmp2.pseudo4op)
+                {
+                    size_t resno = InsertIns(tmp[0], tmp2, name, name2);
+                    SetBank(bank, gmno, resno);
+                }
+                else
+                {
+                    size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2);
+                    SetBank(bank, gmno, resno);
+                }
             }
         }
     }
