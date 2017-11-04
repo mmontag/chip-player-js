@@ -30,7 +30,7 @@ struct insdata
         int c = std::memcmp(data, b.data, 11);
         if(c != 0) return c < 0;
         if(finetune != b.finetune) return finetune < b.finetune;
-        if(diff != b.diff) return (!diff) == (b.diff);
+        if(diff != b.diff) return (diff) == (!b.diff);
         return 0;
     }
     bool operator>(const insdata &b) const
@@ -92,8 +92,15 @@ extern std::vector<std::string> banknames;
 
 void SetBank(unsigned bank, unsigned patch, size_t insno);
 
-size_t InsertIns(const insdata &id, const insdata &id2, ins &in,
+/* 2op voice instrument */
+size_t InsertIns(const insdata &id, ins &in,
                  const std::string &name, const std::string &name2);
+
+/* 4op voice instrument or double-voice 2-op instrument */
+size_t InsertIns(const insdata &id, const insdata &id2, ins &in,
+                 const std::string &name, const std::string &name2,
+                 bool oneVoice = false);
+
 size_t InsertNoSoundIns();
 insdata MakeNoSoundIns();
 

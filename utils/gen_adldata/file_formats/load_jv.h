@@ -66,7 +66,7 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
         tmp[1].data[9] = data[offset + 9 + 11];
         tmp[1].data[10] = data[offset + 7 + 11] & 0x0F;//~0x30;
         tmp[1].finetune = 0;
-        tmp[1].diff = false;
+        tmp[1].diff = data[offset];
 
         struct ins tmp2;
         tmp2.notenum  = data[offset + 1];
@@ -89,7 +89,7 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
 
         if(!data[offset])
         {
-            size_t resno = InsertIns(tmp[0], tmp[0], tmp2, name, name2);
+            size_t resno = InsertIns(tmp[0], tmp2, name, name2);
             SetBank(bank, gmno, resno);
         }
         else // Double instrument

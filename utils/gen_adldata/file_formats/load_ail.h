@@ -57,11 +57,13 @@ static bool LoadMiles(const char *fn, unsigned bank, const char *prefix)
         insdata tmp[200];
 
         const unsigned inscount = (length - 3) / 11;
+        bool twoOp = (inscount == 1);
+
         for(unsigned i = 0; i < inscount; ++i)
         {
             unsigned o = offset + 3 + i * 11;
             tmp[i].finetune = (gmno < 128 && i == 0) ? notenum : 0;
-            tmp[i].diff = false;
+            tmp[i].diff = (i == 1);
             tmp[i].data[0] = data[o + 0]; // 20
             tmp[i].data[8] = data[o + 1]; // 40 (vol)
             tmp[i].data[2] = data[o + 2]; // 60
@@ -81,8 +83,6 @@ static bool LoadMiles(const char *fn, unsigned bank, const char *prefix)
                 tmp[1].data[10] = uint8_t((fb_c & 0x0E) | (fb_c >> 7));
             }
         }
-        if(inscount == 1)
-            tmp[1] = tmp[0];
 
         if(inscount <= 2)
         {
@@ -92,7 +92,7 @@ static bool LoadMiles(const char *fn, unsigned bank, const char *prefix)
             tmp2.voice2_fine_tune = 0.0;
             std::string name;
             if(midi_index >= 0) name = std::string(1, '\377') + MidiInsName[midi_index];
-            size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2);
+            size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2, twoOp);
             SetBank(bank, (unsigned int)gmno, resno);
         }
     }

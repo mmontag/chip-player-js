@@ -59,7 +59,7 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
         sprintf(name2, "%s%c%u", prefix,
                 (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
-        size_t resno = InsertIns(tmp, tmp, tmp2, name, name2);
+        size_t resno = InsertIns(tmp, tmp2, name, name2);
         SetBank(bank, gmno, resno);
     }
     return true;

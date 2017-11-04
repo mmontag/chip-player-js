@@ -5,7 +5,14 @@
 #include "../midi_inst_list.h"
 #include "common.h"
 
-static uint8_t wopl_latest_version = 2;
+static const uint8_t wopl_latest_version = 2;
+
+enum class WOPL_Flags
+{
+    Mode_2op         = 0x00,
+    Mode_4op         = 0x01,
+    Mode_DoubleVoice = 0x02,
+};
 
 static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
 {
@@ -81,7 +88,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
     {
         uint32_t bank_offset = melodic_offset + (mbank * 62 * 128);
 
-        for(unsigned i = 0; i < 128; i++)
+        for(uint32_t i = 0; i < 128; i++)
         {
             uint32_t offset = bank_offset + uint32_t(i * 62);
             std::string name;
@@ -117,15 +124,15 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
 
             tmp[0].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 32));
             tmp[1].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 34));
-
             uint8_t flags = data[offset + 39];
 
             struct ins tmp2;
             tmp2.notenum = 0;
-            tmp2.pseudo4op = (flags & 0x02) != 0;
+            bool real4op = (flags & (uint8_t)WOPL_Flags::Mode_4op) != 0;
+            tmp2.pseudo4op = (flags & (uint8_t)WOPL_Flags::Mode_DoubleVoice) != 0;
             tmp2.voice2_fine_tune = 0;
             tmp[0].diff = false;
-            tmp[1].diff = false;//tmp2.pseudo4op;
+            tmp[1].diff = real4op && !tmp2.pseudo4op;
 
             int8_t fine_tune = (int8_t)data[offset + 37];
             if(fine_tune != 0)
@@ -144,11 +151,12 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 name.insert(0, 1, '\377');
 
             char name2[512];
-            sprintf(name2, "%sM%u", prefix, i);
+            std::memset(name2, 0, 512);
+            std::snprintf(name2, 512, "%sM%u", prefix, i);
 
-            if((flags & 0x03) == 0)
+            if(!real4op && !tmp2.pseudo4op)
             {
-                size_t resno = InsertIns(tmp[0], tmp[0], tmp2, name, name2);
+                size_t resno = InsertIns(tmp[0], tmp2, name, name2);
                 SetBank(bank, i, resno);
             }
             else
@@ -217,10 +225,11 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
 
             struct ins tmp2;
             tmp2.notenum = data[offset + 38];
-            tmp2.pseudo4op = (flags & 0x02) != 0;
+            bool real4op = (flags & (uint8_t)WOPL_Flags::Mode_4op) != 0;
+            tmp2.pseudo4op = (flags & (uint8_t)WOPL_Flags::Mode_DoubleVoice) != 0;
             tmp2.voice2_fine_tune = 0;
             tmp[0].diff = false;
-            tmp[1].diff = false;//tmp2.pseudo4op;
+            tmp[1].diff = real4op && !tmp2.pseudo4op;
 
             int8_t fine_tune = (int8_t)data[offset + 37];
             if(fine_tune != 0)
@@ -244,11 +253,12 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 name.insert(0, 1, '\377');
 
             char name2[512];
-            sprintf(name2, "%sP%u", prefix, gmno & 127);
+            std::memset(name2, 0, 512);
+            std::snprintf(name2, 512, "%sP%u", prefix, gmno & 127);
 
-            if((flags & 0x03) == 0)
+            if(!real4op && !tmp2.pseudo4op)
             {
-                size_t resno = InsertIns(tmp[0], tmp[0], tmp2, name, name2);
+                size_t resno = InsertIns(tmp[0], tmp2, name, name2);
                 SetBank(bank, gmno, resno);
             }
             else
@@ -258,6 +268,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
             }
         }
     }
+
     return true;
 }
 

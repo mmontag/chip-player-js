@@ -43,7 +43,8 @@ static bool LoadBisqwit(const char *fn, unsigned bank, const char *prefix)
         sprintf(name2, "%s%c%u", prefix,
                 (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
-        size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2);
+        tmp[1].diff = (tmp[0] != tmp[1]);
+        size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2, (tmp[0] == tmp[1]));
         SetBank(bank, gmno, resno);
     }
     std::fclose(fp);

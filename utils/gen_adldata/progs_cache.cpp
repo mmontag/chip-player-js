@@ -14,18 +14,23 @@ void SetBank(unsigned bank, unsigned patch, size_t insno)
     progs[bank][patch] = insno + 1;
 }
 
+size_t InsertIns(const insdata &id, ins &in, const std::string &name, const std::string &name2)
+{
+    return InsertIns(id, id, in, name, name2, true);
+}
+
 size_t InsertIns(
     const insdata &id,
     const insdata &id2,
     ins &in,
     const std::string &name,
-    const std::string &name2)
+    const std::string &name2,
+    bool oneVoice)
 {
-    if(true)
     {
         InstrumentDataTab::iterator i = insdatatab.lower_bound(id);
 
-        size_t insno = size_t(~0);
+        size_t insno = ~size_t(0);
         if(i == insdatatab.end() || i->first != id)
         {
             std::pair<insdata, std::pair<size_t, std::set<std::string> > > res;
@@ -45,11 +50,14 @@ size_t InsertIns(
 
         in.insno1 = insno;
     }
-    if(id != id2)
+
+    if(oneVoice || (id == id2))
+        in.insno2 = in.insno1;
+    else
     {
         InstrumentDataTab::iterator i = insdatatab.lower_bound(id2);
 
-        size_t insno2 = size_t(~0);
+        size_t insno2 = ~size_t(0);
         if(i == insdatatab.end() || i->first != id2)
         {
             std::pair<insdata, std::pair<size_t, std::set<std::string> > > res;
@@ -68,14 +76,11 @@ size_t InsertIns(
         }
         in.insno2 = insno2;
     }
-    else
-        in.insno2 = in.insno1;
-
 
     {
         InstrumentsData::iterator i = instab.lower_bound(in);
 
-        size_t resno = size_t(~0);
+        size_t resno = ~size_t(0);
         if(i == instab.end() || i->first != in)
         {
             std::pair<ins, std::pair<size_t, std::set<std::string> > > res;
@@ -109,3 +114,4 @@ insdata MakeNoSoundIns()
 {
     return { {0x00, 0x10, 0x07, 0x07, 0xF7, 0xF7, 0x00, 0x00, 0xFF, 0xFF, 0x00}, 0, false};
 }
+

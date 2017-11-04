@@ -86,13 +86,14 @@ static bool LoadBNK2(const char *fn, unsigned bank, const char *prefix,
         if(xxP24NNN & 8)
         {
             // dual-op
+            tmp[1].diff = true;
             size_t resno = InsertIns(tmp[0], tmp[1], tmp2, std::string(1, '\377') + name, name2);
             SetBank(bank, (unsigned int)gmno, resno);
         }
         else
         {
             // single-op
-            size_t resno = InsertIns(tmp[0], tmp[0], tmp2, std::string(1, '\377') + name, name2);
+            size_t resno = InsertIns(tmp[0], tmp2, std::string(1, '\377') + name, name2);
             SetBank(bank, (unsigned int)gmno, resno);
         }
     }

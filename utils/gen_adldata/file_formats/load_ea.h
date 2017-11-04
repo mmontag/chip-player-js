@@ -96,31 +96,31 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
         {
             std::snprintf(name2, 512, "%sunk%04X", prefix, offset);
         }
-        size_t resno = InsertIns(tmp, tmp, tmp2, std::string(1, '\377') + name, name2);
+        size_t resno = InsertIns(tmp, tmp2, std::string(1, '\377') + name, name2);
         SetBank(bank, gmno, resno);
 
         if(gmno == 10)
         {
             /*tmp.finetune=0;*/ tmp2.notenum = 0x49;
-            SetBank(bank, 0x80 + 0x36, InsertIns(tmp, tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x36 - 35], std::string(1, '\377') + prefix + "P54"));
+            SetBank(bank, 0x80 + 0x36, InsertIns(tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x36 - 35], std::string(1, '\377') + prefix + "P54"));
         }
 
         if(gmno == 18)
         {
             /*tmp.finetune=0;*/ tmp2.notenum = 0x17;
-            SetBank(bank, 0x80 + 0x2A, InsertIns(tmp, tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x2A - 35], std::string(1, '\377') + prefix + "P42"));
+            SetBank(bank, 0x80 + 0x2A, InsertIns(tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x2A - 35], std::string(1, '\377') + prefix + "P42"));
         }
 
         if(gmno == 16)
         {
             /*tmp.finetune=0;*/ tmp2.notenum = 0x0C;
-            SetBank(bank, 0x80 + 0x24, InsertIns(tmp, tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x24 - 35], std::string(1, '\377') + prefix + "P36"));
+            SetBank(bank, 0x80 + 0x24, InsertIns(tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x24 - 35], std::string(1, '\377') + prefix + "P36"));
         }
 
         if(gmno == 17)
         {
             /*tmp.finetune=0;*/ tmp2.notenum = 0x01;
-            SetBank(bank, 0x80 + 0x26, InsertIns(tmp, tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x26 - 35], std::string(1, '\377') + prefix + "P38"));
+            SetBank(bank, 0x80 + 0x26, InsertIns(tmp, tmp2, std::string(1, '\377') + MidiInsName[0x80 + 0x26 - 35], std::string(1, '\377') + prefix + "P38"));
         }
     }
 

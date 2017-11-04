@@ -111,7 +111,7 @@ static bool LoadBNK(const char *fn, unsigned bank, const char *prefix, bool is_f
 
         if(is_fat) tmp.data[10] ^= 1;
 
-        size_t resno = InsertIns(tmp, tmp, tmp2, std::string(1, '\377') + name, name2);
+        size_t resno = InsertIns(tmp, tmp2, std::string(1, '\377') + name, name2);
 
         if(!is_fat)
         {
