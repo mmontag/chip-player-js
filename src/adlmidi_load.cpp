@@ -369,6 +369,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     opl.HighVibratoMode = m_setup.HighVibratoMode;
     opl.ScaleModulators = m_setup.ScaleModulators;
     opl.LogarithmicVolumes = m_setup.LogarithmicVolumes;
+    opl.CartoonersVolumes = false;
     opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(m_setup.VolumeModel));
 
     if(m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)
@@ -416,6 +417,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     //bool is_MUS = false; // MUS/DMX files (Doom)
     bool is_IMF = false; // IMF
     bool is_CMF = false; // Creative Music format (CMF/CTMF)
+    bool is_RSXX = false; // RSXX, such as Cartooners
 
     const size_t HeaderSize = 4 + 4 + 2 + 2 + 2; // 14
     char HeaderBuf[HeaderSize] = "";
@@ -576,52 +578,70 @@ riffskip:
     }
     else
     {
-        // Try parsing as an IMF file
+        // Try to identify RSXX format
+        if(HeaderBuf[0] == 0x7D)
         {
-            uint8_t raw[4];
-            size_t end = static_cast<uint8_t>(HeaderBuf[0]) + 256 * static_cast<uint8_t>(HeaderBuf[1]);
-
-            if(!end || (end & 3))
-                goto not_imf;
-
-            size_t backup_pos = fr.tell();
-            int64_t sum1 = 0, sum2 = 0;
-            fr.seek(2, SEEK_SET);
-
-            for(unsigned n = 0; n < 42; ++n)
+            fr.seek(0x6D, SEEK_SET);
+            fr.read(HeaderBuf, 6, 1);
+            if(std::memcmp(HeaderBuf, "rsxx}u", 6) == 0)
             {
-                if(fr.read(raw, 1, 4) != 4)
-                    break;
-                int64_t value1 = raw[0];
-                value1 += raw[1] << 8;
-                sum1 += value1;
-                int64_t value2 = raw[2];
-                value2 += raw[3] << 8;
-                sum2 += value2;
-            }
-
-            fr.seek(static_cast<long>(backup_pos), SEEK_SET);
-
-            if(sum1 > sum2)
-            {
-                is_IMF = true;
-                DeltaTicks = 1;
+                is_RSXX = true;
+                fr.seek(0x7D, SEEK_SET);
+                TrackCount = 1;
+                DeltaTicks = 60;
+                opl.LogarithmicVolumes = true;
+                opl.CartoonersVolumes = true;
+                opl.m_volumeScale = OPL3::VOLUME_CMF;
             }
         }
 
-        if(!is_IMF)
+        // Try parsing as an IMF file
+        if(!is_RSXX)
         {
-not_imf:
+            do
+            {
+                uint8_t raw[4];
+                size_t end = static_cast<uint8_t>(HeaderBuf[0]) + 256 * static_cast<uint8_t>(HeaderBuf[1]);
 
+                if(!end || (end & 3))
+                    break;
+
+                size_t backup_pos = fr.tell();
+                int64_t sum1 = 0, sum2 = 0;
+                fr.seek(2, SEEK_SET);
+
+                for(unsigned n = 0; n < 42; ++n)
+                {
+                    if(fr.read(raw, 1, 4) != 4)
+                        break;
+                    int64_t value1 = raw[0];
+                    value1 += raw[1] << 8;
+                    sum1 += value1;
+                    int64_t value2 = raw[2];
+                    value2 += raw[3] << 8;
+                    sum2 += value2;
+                }
+
+                fr.seek(static_cast<long>(backup_pos), SEEK_SET);
+
+                if(sum1 > sum2)
+                {
+                    is_IMF = true;
+                    DeltaTicks = 1;
+                }
+            } while(false);
+        }
+
+        if(!is_IMF && !is_RSXX)
+        {
             if(std::memcmp(HeaderBuf, "MThd\0\0\0\6", 8) != 0)
             {
-InvFmt:
                 fr.close();
-                ADLMIDI_ErrorString = fr._fileName + ": Invalid format\n";
+                ADLMIDI_ErrorString = fr._fileName + ": Invalid format, Header signature is unknown!\n";
                 return false;
             }
 
-            /*size_t  Fmt =*/ ReadBEint(HeaderBuf + 8,  2);
+            /*size_t  Fmt =      ReadBEint(HeaderBuf + 8,  2);*/
             TrackCount = (size_t)ReadBEint(HeaderBuf + 10, 2);
             DeltaTicks = (size_t)ReadBEint(HeaderBuf + 12, 2);
         }
@@ -691,7 +711,8 @@ InvFmt:
         }
         else
         {
-            if(is_GMF || is_CMF) // Take the rest of the file
+            // Take the rest of the file
+            if(is_GMF || is_CMF || is_RSXX)
             {
                 size_t pos = fr.tell();
                 fr.seek(0, SEEK_END);
@@ -710,7 +731,11 @@ InvFmt:
             {
                 fsize = fr.read(HeaderBuf, 1, 8);
                 if(std::memcmp(HeaderBuf, "MTrk", 4) != 0)
-                    goto InvFmt;
+                {
+                    fr.close();
+                    ADLMIDI_ErrorString = fr._fileName + ": Invalid format, MTrk signature is not found!\n";
+                    return false;
+                }
                 TrackLength = (size_t)ReadBEint(HeaderBuf + 4, 4);
             }
 
@@ -719,8 +744,10 @@ InvFmt:
             fsize = fr.read(&TrackData[tk][0], 1, TrackLength);
             totalGotten += fsize;
 
-            if(is_GMF /*|| is_MUS*/) // Note: CMF does include the track end tag.
+            if(is_GMF/*|| is_MUS*/) // Note: CMF does include the track end tag.
                 TrackData[tk].insert(TrackData[tk].end(), EndTag + 0, EndTag + 4);
+            if(is_RSXX)//Finalize raw track data with a zero
+                TrackData[tk].push_back(0);
 
             //bool ok = false;
             //// Read next event time

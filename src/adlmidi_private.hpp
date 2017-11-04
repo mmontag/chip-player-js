@@ -140,16 +140,27 @@ private:
     const adldata       &GetAdlIns(unsigned short insno);
 
 public:
+    //! Total number of running concurrent emulated chips
     unsigned int NumCards;
+    //! Currently running embedded bank number. "~0" means usign of the custom bank.
     unsigned int AdlBank;
+    //! Total number of needed four-operator channels in all running chips
     unsigned int NumFourOps;
+    //! Turn global Deep Tremolo mode on
     bool HighTremoloMode;
+    //! Turn global Deep Vibrato mode on
     bool HighVibratoMode;
+    //! Use AdLib percussion mode
     bool AdlPercussionMode;
+    //! Carriers-only are scaled by default by volume level. This flag will tell to scale modulators too.
     bool ScaleModulators;
-
+    //! Required to play CMF files. Can be turned on by using of "CMF" volume model
     bool LogarithmicVolumes;
+    //! Required to play EA-MUS files
+    bool CartoonersVolumes;
+    //! Just a padding. Reserved.
     char ___padding2[3];
+    //! Volume models enum
     enum VolumesScale
     {
         VOLUME_Generic,

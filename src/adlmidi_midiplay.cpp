@@ -233,7 +233,9 @@ bool MIDIplay::buildTrackData()
         //Time delay that follows the first event in the track
         {
             MidiTrackRow evtPos;
-            evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
+            if(!opl.CartoonersVolumes)
+                evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
+            else ok = true;
             if(!ok)
             {
                 int len = std::snprintf(error, 150, "buildTrackData: Can't read variable-length value at begin of track %d.\n", (int)tk);
@@ -541,7 +543,8 @@ uint64_t MIDIplay::ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok)
             return 2;
         unsigned char byte = *((*ptr)++);
         result = (result << 7) + (byte & 0x7F);
-        if(!(byte & 0x80)) break;
+        if(!(byte & 0x80))
+            break;
     }
 
     ok = true;
@@ -679,7 +682,7 @@ void MIDIplay::realTime_ResetState()
     for(size_t ch = 0; ch < Ch.size(); ch++)
     {
         MIDIchannel &chan = Ch[ch];
-        chan.volume = 100;
+        chan.volume = opl.CartoonersVolumes ? 127 : 100;
         chan.expression = 127;
         chan.panning = 0x30;
         chan.vibrato = 0;
@@ -699,6 +702,18 @@ void MIDIplay::realTime_ResetState()
 
 bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
+    if((opl.CartoonersVolumes) && (velocity != 0))
+    {
+        // Check if this is just a note after-touch
+        MIDIchannel::activenoteiterator i = Ch[channel].activenotes.find(note);
+        if(i != Ch[channel].activenotes.end())
+        {
+            i->second.vol = velocity;
+            NoteUpdate(channel, i, Upd_Volume);
+            return false;
+        }
+    }
+
     channel = channel % 16;
     NoteOff(channel, note);
     // On Note on, Keyoff the note first, just in case keyoff
@@ -1417,8 +1432,10 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t**pptr, uint8_t *end, int &statu
 
     if(ptr + 1 > end)
     {
-        errorString += "parseEvent: Can't read event type byte - Unexpected end of track data.\n";
-        evt.isValid = 0;
+        //errorString += "parseEvent: Can't read event type byte - Unexpected end of track data.\n";
+        //evt.isValid = 0;
+        evt.type = MidiEvent::T_SPECIAL;
+        evt.subtype = MidiEvent::ST_ENDTRACK;
         return evt;
     }
 

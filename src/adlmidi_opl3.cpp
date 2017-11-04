@@ -44,7 +44,7 @@ int maxAdlBanks()
 }
 
 const unsigned short banks[][256] = {{0}};
-const char* const banknames[] = {"<Embedded banks are disabled>"};
+const char *const banknames[] = {"<Embedded banks are disabled>"};
 #endif
 
 static const unsigned short Operators[23 * 2] =
@@ -143,6 +143,7 @@ OPL3::OPL3() :
     HighVibratoMode(false),
     AdlPercussionMode(false),
     LogarithmicVolumes(false),
+    CartoonersVolumes(false),
     m_volumeScale(VOLUME_Generic)
 {}
 
@@ -260,12 +261,21 @@ void OPL3::Touch_Real(unsigned c, unsigned volume)
         { false, true  }, /* 4 op FM-AM ops 3&4 */
         { true,  true  }  /* 4 op AM-AM ops 3&4 */
     };
-    bool do_modulator = do_ops[ mode ][ 0 ] || ScaleModulators;
-    bool do_carrier   = do_ops[ mode ][ 1 ] || ScaleModulators;
-    Poke(card, 0x40 + o1, do_modulator ? (x | 63) - volume + volume * (x & 63) / 63 : x);
 
-    if(o2 != 0xFFF)
-        Poke(card, 0x40 + o2, do_carrier   ? (y | 63) - volume + volume * (y & 63) / 63 : y);
+    if(CartoonersVolumes)
+    {
+        Poke(card, 0x40 + o1, x);
+        if(o2 != 0xFFF)
+            Poke(card, 0x40 + o2, y - volume / 2);
+    }
+    else
+    {
+        bool do_modulator = do_ops[ mode ][ 0 ] || ScaleModulators;
+        bool do_carrier   = do_ops[ mode ][ 1 ] || ScaleModulators;
+        Poke(card, 0x40 + o1, do_modulator ? (x | 63) - volume + volume * (x & 63) / 63 : x);
+        if(o2 != 0xFFF)
+            Poke(card, 0x40 + o2, do_carrier   ? (y | 63) - volume + volume * (y & 63) / 63 : y);
+    }
 
     // Correct formula (ST3, AdPlug):
     //   63-((63-(instrvol))/63)*chanvol
@@ -412,7 +422,7 @@ void OPL3::Reset(unsigned long PCM_RATE)
     DBOPL::Handler emptyChip; //Constructors inside are will initialize necessary fields
     #else
     _opl3_chip emptyChip;
-    memset(&emptyChip, 0, sizeof(_opl3_chip));
+    std::memset(&emptyChip, 0, sizeof(_opl3_chip));
     #endif
     cards.clear();
     ins.clear();
@@ -427,11 +437,8 @@ void OPL3::Reset(unsigned long PCM_RATE)
 
     for(unsigned p = 0, a = 0; a < NumCards; ++a)
     {
-        for(unsigned b = 0; b < 18; ++b)
-            four_op_category[p++] = 0;
-
-        for(unsigned b = 0; b < 5; ++b)
-            four_op_category[p++] = 8;
+        for(unsigned b = 0; b < 18; ++b) four_op_category[p++] = 0;
+        for(unsigned b = 0; b < 5; ++b)  four_op_category[p++] = 8;
     }
 
     static const uint16_t data[] =
@@ -451,10 +458,8 @@ void OPL3::Reset(unsigned long PCM_RATE)
         #endif
 
         for(unsigned a = 0; a < 18; ++a) Poke(card, 0xB0 + Channels[a], 0x00);
-
         for(unsigned a = 0; a < sizeof(data) / sizeof(*data); a += 2)
             PokeN(card, data[a], static_cast<uint8_t>(data[a + 1]));
-
         Poke(card, 0x0BD, regBD[card] = (HighTremoloMode * 0x80
                                          + HighVibratoMode * 0x40
                                          + AdlPercussionMode * 0x20));
@@ -466,15 +471,13 @@ void OPL3::Reset(unsigned long PCM_RATE)
 
     // Mark all channels that are reserved for four-operator function
     if(AdlPercussionMode == 1)
+    {
         for(unsigned a = 0; a < NumCards; ++a)
         {
-            for(unsigned b = 0; b < 5; ++b)
-                four_op_category[a * 23 + 18 + b] = static_cast<char>(b + 3);
-
-            for(unsigned b = 0; b < 3; ++b)
-                four_op_category[a * 23 + 6  + b] = 8;
+            for(unsigned b = 0; b < 5; ++b) four_op_category[a * 23 + 18 + b] = static_cast<char>(b + 3);
+            for(unsigned b = 0; b < 3; ++b) four_op_category[a * 23 + 6  + b] = 8;
         }
-
+    }
     unsigned nextfour = 0;
 
     for(unsigned a = 0; a < NumFourOps; ++a)
