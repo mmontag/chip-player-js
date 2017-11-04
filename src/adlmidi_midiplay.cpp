@@ -162,7 +162,8 @@ void MIDIplay::MidiTrackRow::sortEvents()
 
     for(size_t i = 0; i < events.size(); i++)
     {
-        if(events[i].type == MidiEvent::T_NOTEOFF)
+        if( (events[i].type == MidiEvent::T_NOTEOFF) ||
+            ((events[i].type == MidiEvent::T_NOTEON) && (events[i].data[1] == 0)))
             noteOffs.push_back(events[i]);
         else if((events[i].type == MidiEvent::T_CTRLCHANGE)
                 || (events[i].type == MidiEvent::T_PATCHCHANGE)
@@ -218,8 +219,9 @@ bool MIDIplay::buildTrackData()
     /*
      * TODO: Make this be safer for memory in case of broken input data
      * which may cause going away of available track data (and then give a crash!)
+     *
+     * POST: Check this more carefully for possible vulnuabilities are can crash this
      */
-
     for(size_t tk = 0; tk < trackCount; ++tk)
     {
         uint64_t abs_position = 0;
@@ -344,7 +346,9 @@ bool MIDIplay::buildTrackData()
     if(loopStartTicks >= loopEndTicks)
         invalidLoop = true;
 
-    //! Calculate time basing on collected tempo events
+    /********************************************************************************/
+    //Calculate time basing on collected tempo events
+    /********************************************************************************/
     for(size_t tk = 0; tk < trackCount; ++tk)
     {
         fraction<uint64_t> currentTempo = Tempo;
@@ -471,6 +475,109 @@ bool MIDIplay::buildTrackData()
 
     fullSongTimeLength += postSongWaitDelay;
     trackBeginPositionNew = CurrentPositionNew;
+
+
+    /********************************************************************************/
+    //Resolve "hell of all times" of too short drum notes:
+    //move too short percussion note-offs far far away as possible
+    /********************************************************************************/
+    #if 1 //Use this to record WAVEs for comparison before/after implementing of this
+    {
+        //#define DRUM_NOTE_MIN_TIME 0.0085
+        #define DRUM_NOTE_MIN_TIME  0.0085
+        #define DRUM_NOTE_MIN_TICKS 1
+        struct NoteState
+        {
+            double       delay;
+            uint64_t     delayTicks;
+            bool         isOn;
+            char         ___pad[7];
+        } drNotes[255];
+
+        for(size_t tk = 0; tk < trackCount; ++tk)
+        {
+            std::memset(drNotes, 0, sizeof(drNotes));
+            MidiTrackQueue &track = trackDataNew[tk];
+            if(track.empty())
+                continue;//Empty track is useless!
+
+            for(MidiTrackQueue::iterator it = track.begin(); it != track.end(); it++)
+            {
+                MidiTrackRow &pos = *it;
+                for(ssize_t e = 0; e < (ssize_t)pos.events.size(); e++)
+                {
+                    MidiEvent *et = &pos.events[(size_t)e];
+                    if(et->channel != 9)
+                        continue;
+
+                    bool noteOn  = (et->type == MidiEvent::T_NOTEON) && (et->data[1] > 0);
+                    bool noteOff = (et->type == MidiEvent::T_NOTEOFF) ||
+                                   ((et->type == MidiEvent::T_NOTEON) && (et->data[1] == 0));
+
+                    if(noteOn)
+                    {
+                        uint8_t     note = et->data[0] & 0x7F;
+                        NoteState   &ns = drNotes[note];
+                        //if(ns.isOn)//already on? add NoteOff into the tail!
+                        //{
+                        //    MidiEvent shutUp = *et;
+                        //    shutUp.type = MidiEvent::T_NOTEOFF;
+                        //    pos.events.push_back(shutUp);
+                        //}
+                        ns.isOn = true;
+                        ns.delay = 0.0;
+                        ns.delayTicks = 0;
+                    }
+                    else
+                    if(noteOff)
+                    {
+                        uint8_t note = et->data[0] & 0x7F;
+                        NoteState &ns = drNotes[note];
+                        if(ns.isOn)
+                        {
+                            ns.isOn = false;
+                            if(ns.delayTicks < DRUM_NOTE_MIN_TICKS || ns.delay < DRUM_NOTE_MIN_TIME)//If note is too short
+                            {
+                                //Move it into next event position if that possible
+                                for(MidiTrackQueue::iterator itNext = it;
+                                    itNext != track.end();
+                                    itNext++)
+                                {
+                                    MidiTrackRow &posN = *itNext;
+                                    if(ns.delayTicks > DRUM_NOTE_MIN_TICKS && ns.delay > DRUM_NOTE_MIN_TIME)
+                                    {
+                                        posN.events.push_back(pos.events[(size_t)e]);
+                                        pos.events.erase(pos.events.begin() + (int)e);
+                                        e--;
+                                        posN.sortEvents();
+                                        break;
+                                    }
+                                    ns.delay += posN.timeDelay;
+                                    ns.delayTicks += posN.delay;
+                                }
+                            }
+                            ns.delay = 0.0;
+                            ns.delayTicks = 0;
+                        }
+                    }
+                }
+
+                //Append time delays to sustaining notes
+                for(size_t no = 0; no < 128; no++)
+                {
+                    NoteState &ns = drNotes[no];
+                    if(ns.isOn)
+                    {
+                        ns.delay        += pos.timeDelay;
+                        ns.delayTicks   += pos.delay;
+                    }
+                }
+            }
+        }
+        #undef DRUM_NOTE_MIN_TIME
+    }
+    #endif
+
 
     return true;
 }
