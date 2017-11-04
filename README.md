@@ -131,6 +131,8 @@ To build that example you will need to have installed SDL2 library.
  * Added ability to change playing tempo by giving multiplier (how faster or slower than original)
  * Added support for meta-tags getting: title, copyright, track titles, and markers with time and ticks positions
  * Added hooks to increase advandate of The Library: MIDI-event, Note, and Debug-Message hooks!
+ * Fixed the ability to merge two equal pseudo-4-operator voices as one voice without damaging the result!
+ * Added auto-increasing of percussion note lengths when there are too short and playing an incorrect sound on various banks
  * ...
 
 ## 1.2.1    2017-07-30
