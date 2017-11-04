@@ -126,7 +126,7 @@ struct OPL3
     std::vector<_opl3_chip> cards;
     #endif
 private:
-    std::vector<uint16_t>   ins; // index to adl[], cached, needed by Touch()
+    std::vector<size_t>     ins; // index to adl[], cached, needed by Touch()
     std::vector<uint8_t>    pit;  // value poked to B0, cached, needed by NoteOff)(
     std::vector<uint8_t>    regBD;
 
@@ -137,7 +137,7 @@ private:
                     DynamicMetaInstrumentTag /* = 0x4000000u*/;
     const adlinsdata    &GetAdlMetaIns(unsigned n);
     unsigned            GetAdlMetaNumber(unsigned midiins);
-    const adldata       &GetAdlIns(unsigned short insno);
+    const adldata       &GetAdlIns(size_t insno);
 
 public:
     //! Total number of running concurrent emulated chips
@@ -187,7 +187,7 @@ public:
     void Touch_Real(unsigned c, unsigned volume);
     //void Touch(unsigned c, unsigned volume)
 
-    void Patch(uint16_t c, uint16_t i);
+    void Patch(uint16_t c, size_t i);
     void Pan(unsigned c, unsigned value);
     void Silence();
     void updateFlags();
@@ -418,8 +418,25 @@ public:
             char ____padding2[3];
             uint32_t insmeta;
             char ____padding3[4];
+            struct Phys
+            {
+                //! ins, inde to adl[]
+                size_t  insId;
+                //! Is this voice must be detunable?
+                bool    pseudo4op;
+
+                bool operator==(const Phys &oth) const
+                {
+                    return (insId == oth.insId) && (pseudo4op == oth.pseudo4op);
+                }
+                bool operator!=(const Phys &oth) const
+                {
+                    return !operator==(oth);
+                }
+            };
+            typedef std::map<uint16_t, Phys> PhysMap;
             // List of adlib channels it is currently occupying.
-            std::map<uint16_t /*adlchn*/, uint16_t /*ins, inde to adl[]*/ > phys;
+            std::map<uint16_t /*adlchn*/, Phys> phys;
         };
         typedef std::map<uint8_t, NoteInfo> activenotemap_t;
         typedef activenotemap_t::iterator activenoteiterator;
@@ -460,7 +477,7 @@ public:
         {
             bool sustained;
             char ____padding[1];
-            uint16_t ins;  // a copy of that in phys[]
+            MIDIchannel::NoteInfo::Phys ins;  // a copy of that in phys[]
             char ____padding2[4];
             int64_t kon_time_until_neglible;
             int64_t vibdelay;
@@ -827,11 +844,11 @@ private:
 
     // Determine how good a candidate this adlchannel
     // would be for playing a note from this instrument.
-    long CalculateAdlChannelGoodness(unsigned c, uint16_t ins, uint16_t /*MidCh*/) const;
+    long CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t /*MidCh*/) const;
 
     // A new note will be played on this channel using this instrument.
     // Kill existing notes on this channel (or don't, if we do arpeggio)
-    void PrepareAdlChannelForNewNote(size_t c, int ins);
+    void PrepareAdlChannelForNewNote(size_t c, const MIDIchannel::NoteInfo::Phys &ins);
 
     void KillOrEvacuate(
         size_t  from_channel,

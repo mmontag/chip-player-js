@@ -125,7 +125,7 @@ unsigned OPL3::GetAdlMetaNumber(unsigned midiins)
 }
 
 
-const adldata &OPL3::GetAdlIns(unsigned short insno)
+const adldata &OPL3::GetAdlIns(size_t insno)
 {
     return (insno & DynamicInstrumentTag)
            ? dynamic_instruments[insno & ~DynamicInstrumentTag]
@@ -214,15 +214,16 @@ void OPL3::NoteOn(unsigned c, double hertz) // Hertz range: 0..131071
 
 void OPL3::Touch_Real(unsigned c, unsigned volume)
 {
-    if(volume > 63) volume = 63;
+    if(volume > 63)
+        volume = 63;
 
-    unsigned card = c / 23, cc = c % 23;
-    uint16_t i = ins[c];
-    unsigned o1 = Operators[cc * 2 + 0];
-    unsigned o2 = Operators[cc * 2 + 1];
+    size_t card = c / 23, cc = c % 23;
+    size_t i = ins[c];
+    uint16_t o1 = Operators[cc * 2 + 0];
+    uint16_t o2 = Operators[cc * 2 + 1];
     const adldata &adli = GetAdlIns(i);
-    unsigned x = adli.modulator_40, y = adli.carrier_40;
-    unsigned mode = 1; // 2-op AM
+    uint8_t  x = adli.modulator_40, y = adli.carrier_40;
+    uint16_t mode = 1; // 2-op AM
 
     if(four_op_category[c] == 0 || four_op_category[c] == 3)
     {
@@ -230,7 +231,7 @@ void OPL3::Touch_Real(unsigned c, unsigned volume)
     }
     else if(four_op_category[c] == 1 || four_op_category[c] == 2)
     {
-        uint16_t i0, i1;
+        size_t i0, i1;
 
         if(four_op_category[c] == 1)
         {
@@ -299,7 +300,7 @@ void OPL3::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
     }
 }*/
 
-void OPL3::Patch(uint16_t c, uint16_t i)
+void OPL3::Patch(uint16_t c, size_t i)
 {
     uint16_t card = c / 23, cc = c % 23;
     static const uint8_t data[4] = {0x20, 0x60, 0x80, 0xE0};

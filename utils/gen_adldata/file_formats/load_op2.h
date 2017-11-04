@@ -88,7 +88,7 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
 
         insdata tmp[2] = {MakeNoSoundIns(), MakeNoSoundIns()};
         tmp[0].diff = false;
-        tmp[1].diff = true;
+        tmp[1].diff = false;
         for(size_t index = 0; index < 2; ++index)
         {
             const Doom_OPL2instrument &src = ins.patchdata[index];
