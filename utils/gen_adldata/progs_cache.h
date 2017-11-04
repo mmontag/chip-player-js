@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <limits>
+#include <cmath>
 
 struct insdata
 {
@@ -37,6 +39,13 @@ struct insdata
     }
 };
 
+inline bool equal_approx(double const a, double const b)
+{
+    double const epsilon(std::numeric_limits<double>::epsilon() * 100);
+    double const scale(1.0);
+    return std::fabs(a - b) < epsilon * (scale + (std::max)(std::fabs(a), std::fabs(b)));
+}
+
 struct ins
 {
     size_t insno1, insno2;
@@ -50,7 +59,7 @@ struct ins
                && insno1 == b.insno1
                && insno2 == b.insno2
                && pseudo4op == b.pseudo4op
-               && voice2_fine_tune == b.voice2_fine_tune;
+               && equal_approx(voice2_fine_tune, b.voice2_fine_tune);
     }
     bool operator< (const ins &b) const
     {
@@ -58,7 +67,7 @@ struct ins
         if(insno2 != b.insno2) return insno2 < b.insno2;
         if(notenum != b.notenum) return notenum < b.notenum;
         if(pseudo4op != b.pseudo4op) return pseudo4op < b.pseudo4op;
-        if(voice2_fine_tune != b.voice2_fine_tune) return voice2_fine_tune < b.voice2_fine_tune;
+        if(!equal_approx(voice2_fine_tune, b.voice2_fine_tune)) return voice2_fine_tune < b.voice2_fine_tune;
         return 0;
     }
     bool operator!=(const ins &b) const

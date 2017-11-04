@@ -125,7 +125,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
             tmp2.pseudo4op = (flags & 0x02) != 0;
             tmp2.voice2_fine_tune = 0;
             tmp[0].diff = false;
-            tmp[1].diff = tmp2.pseudo4op;
+            tmp[1].diff = false;//tmp2.pseudo4op;
 
             int8_t fine_tune = (int8_t)data[offset + 37];
             if(fine_tune != 0)
@@ -220,7 +220,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
             tmp2.pseudo4op = (flags & 0x02) != 0;
             tmp2.voice2_fine_tune = 0;
             tmp[0].diff = false;
-            tmp[1].diff = tmp2.pseudo4op;
+            tmp[1].diff = false;//tmp2.pseudo4op;
 
             int8_t fine_tune = (int8_t)data[offset + 37];
             if(fine_tune != 0)
