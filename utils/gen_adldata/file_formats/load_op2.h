@@ -154,6 +154,15 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
         printf(" %s VS %s\n", name.c_str(), MidiInsName[a]);
         printf("------------------------------------------------------------\n");*/
     }
+
+    AdlBankSetup setup;
+    setup.volumeModel = VOLUME_DMX;
+    setup.deepTremolo = false;
+    setup.deepVibrato = false;
+    setup.adLibPercussions = false;
+    setup.scaleModulators = false;
+    SetBankSetup(bank, setup);
+
     return true;
 }
 

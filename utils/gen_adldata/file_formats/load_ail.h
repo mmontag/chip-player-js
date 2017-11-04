@@ -96,6 +96,15 @@ static bool LoadMiles(const char *fn, unsigned bank, const char *prefix)
             SetBank(bank, (unsigned int)gmno, resno);
         }
     }
+
+    AdlBankSetup setup;
+    setup.volumeModel = VOLUME_Generic;
+    setup.deepTremolo = true;
+    setup.deepVibrato = true;
+    setup.adLibPercussions = false;
+    setup.scaleModulators = false;
+    SetBankSetup(bank, setup);
+
     return true;
 }
 

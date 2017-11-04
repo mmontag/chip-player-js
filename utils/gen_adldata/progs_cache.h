@@ -76,6 +76,24 @@ struct ins
     }
 };
 
+enum VolumesModels
+{
+    VOLUME_Generic,
+    VOLUME_CMF,
+    VOLUME_DMX,
+    VOLUME_APOGEE,
+    VOLUME_9X
+};
+
+struct AdlBankSetup
+{
+    int     volumeModel;
+    bool    deepTremolo;
+    bool    deepVibrato;
+    bool    adLibPercussions;
+    bool    scaleModulators;
+};
+
 typedef std::map<insdata, std::pair<size_t, std::set<std::string> > > InstrumentDataTab;
 extern InstrumentDataTab insdatatab;
 
@@ -85,12 +103,16 @@ extern InstrumentsData instab;
 typedef std::map<size_t, std::map<size_t, size_t> > InstProgsData;
 extern InstProgsData progs;
 
+typedef std::map<size_t, AdlBankSetup> BankSetupData;
+extern BankSetupData banksetup;
+
 extern std::vector<std::string> banknames;
 
 //static std::map<unsigned, std::map<unsigned, unsigned> > Correlate;
 //extern unsigned maxvalues[30];
 
-void SetBank(unsigned bank, unsigned patch, size_t insno);
+void SetBank(size_t bank, unsigned patch, size_t insno);
+void SetBankSetup(size_t bank, const AdlBankSetup &setup);
 
 /* 2op voice instrument */
 size_t InsertIns(const insdata &id, ins &in,

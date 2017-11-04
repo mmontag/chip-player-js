@@ -97,6 +97,15 @@ static bool LoadBNK2(const char *fn, unsigned bank, const char *prefix,
             SetBank(bank, (unsigned int)gmno, resno);
         }
     }
+
+    AdlBankSetup setup;
+    setup.volumeModel = VOLUME_Generic;
+    setup.deepTremolo = false;
+    setup.deepVibrato = false;
+    setup.adLibPercussions = false;
+    setup.scaleModulators = false;
+    SetBankSetup(bank, setup);
+
     return true;
 }
 

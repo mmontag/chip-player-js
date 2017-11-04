@@ -4,14 +4,20 @@ InstrumentDataTab insdatatab;
 
 InstrumentsData instab;
 InstProgsData   progs;
+BankSetupData   banksetup;
 
 std::vector<std::string> banknames;
 
 //unsigned maxvalues[30] = { 0 };
 
-void SetBank(unsigned bank, unsigned patch, size_t insno)
+void SetBank(size_t bank, unsigned patch, size_t insno)
 {
     progs[bank][patch] = insno + 1;
+}
+
+void SetBankSetup(size_t bank, const AdlBankSetup &setup)
+{
+    banksetup[bank] = setup;
 }
 
 size_t InsertIns(const insdata &id, ins &in, const std::string &name, const std::string &name2)

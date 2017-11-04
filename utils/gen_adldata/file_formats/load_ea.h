@@ -125,6 +125,15 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
     }
 
     std::fclose(fp);
+
+    AdlBankSetup setup;
+    setup.volumeModel = VOLUME_CMF;
+    setup.deepTremolo = false;
+    setup.deepVibrato = false;
+    setup.adLibPercussions = false;
+    setup.scaleModulators = false;
+    SetBankSetup(bank, setup);
+
     return true;
 }
 

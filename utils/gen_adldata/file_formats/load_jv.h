@@ -98,6 +98,15 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
             SetBank(bank, gmno, resno);
         }
     }
+
+    AdlBankSetup setup;
+    setup.volumeModel = VOLUME_9X;
+    setup.deepTremolo = true;
+    setup.deepVibrato = true;
+    setup.adLibPercussions = false;
+    setup.scaleModulators = false;
+    SetBankSetup(bank, setup);
+
     return true;
 }
 

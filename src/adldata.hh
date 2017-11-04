@@ -21,19 +21,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef ADLMIDI_buildAsApp
-#include <SDL2/SDL.h>
-class MutexType
-{
-    SDL_mutex* mut;
-public:
-    MutexType() : mut(SDL_CreateMutex()) { }
-    ~MutexType() { SDL_DestroyMutex(mut); }
-    void Lock() { SDL_mutexP(mut); }
-    void Unlock() { SDL_mutexV(mut); }
-};
-#endif
-
 extern const struct adldata
 {
     unsigned int modulator_E862, carrier_E862;  // See below
@@ -58,3 +45,14 @@ int maxAdlBanks();
 extern const unsigned short banks[][256];
 extern const char* const banknames[];
 
+/**
+ * @brief Bank global setup
+ */
+extern const struct AdlBankSetup
+{
+    int     volumeModel;
+    bool    deepTremolo;
+    bool    deepVibrato;
+    bool    adLibPercussions;
+    bool    scaleModulators;
+} adlbanksetup[];

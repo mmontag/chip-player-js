@@ -28,7 +28,7 @@ int main(int argc, char**argv)
 {
     if(argc == 1)
     {
-        printf("Usage:\n"
+        std::printf("Usage:\n"
                "\n"
                "bin/gen_adldata src/adldata.cpp\n"
                "\n");
@@ -37,14 +37,14 @@ int main(int argc, char**argv)
 
     const char *outFile_s = argv[1];
 
-    FILE *outFile = fopen(outFile_s, "w");
+    FILE *outFile = std::fopen(outFile_s, "w");
     if(!outFile)
     {
-        fprintf(stderr, "Can't open %s file for write!\n", outFile_s);
+        std::fprintf(stderr, "Can't open %s file for write!\n", outFile_s);
         return 1;
     }
 
-    fprintf(outFile, "\
+    std::fprintf(outFile, "\
 #include \"adldata.hh\"\n\
 \n\
 /* THIS OPL-3 FM INSTRUMENT DATA IS AUTOMATICALLY GENERATED\n\
@@ -56,7 +56,7 @@ int main(int argc, char**argv)
         IniProcessing ini;
         if(!ini.open("banks.ini"))
         {
-            fprintf(stderr, "Can't open banks.ini!\n");
+            std::fprintf(stderr, "Can't open banks.ini!\n");
             return 1;
         }
 
@@ -67,7 +67,7 @@ int main(int argc, char**argv)
 
         if(!banks_count)
         {
-            fprintf(stderr, "Zero count of banks found in banks.ini!\n");
+            std::fprintf(stderr, "Zero count of banks found in banks.ini!\n");
             return 1;
         }
 
@@ -75,7 +75,7 @@ int main(int argc, char**argv)
         {
             if(!ini.beginGroup(std::string("bank-") + std::to_string(bank)))
             {
-                fprintf(stderr, "Failed to find bank %u!\n", bank);
+                std::fprintf(stderr, "Failed to find bank %u!\n", bank);
                 return 1;
             }
             std::string bank_name;
@@ -98,7 +98,7 @@ int main(int argc, char**argv)
 
             if(filepath.empty())
             {
-                fprintf(stderr, "Failed to load bank %u, file is empty!\n", bank);
+                std::fprintf(stderr, "Failed to load bank %u, file is empty!\n", bank);
                 return 1;
             }
 
@@ -110,7 +110,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadMiles(filepath.c_str(), bank, prefix.c_str()))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
             }
@@ -119,7 +119,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadBisqwit(filepath.c_str(), bank, prefix.c_str()))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
             }
@@ -128,7 +128,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadWopl(filepath.c_str(), bank, prefix.c_str()))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
             }
@@ -137,7 +137,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadDoom(filepath.c_str(), bank, prefix.c_str()))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
             }
@@ -146,7 +146,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadEA(filepath.c_str(), bank, prefix.c_str()))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
             }
@@ -155,7 +155,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadTMB(filepath.c_str(), bank, prefix.c_str()))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
             }
@@ -164,7 +164,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadJunglevision(filepath.c_str(), bank, prefix.c_str()))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
             }
@@ -173,7 +173,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadBNK2(filepath.c_str(), bank, prefix.c_str(), filter_m, filter_p))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
             }
@@ -182,14 +182,14 @@ int main(int argc, char**argv)
             {
                 if(!LoadBNK(filepath.c_str(),  bank, prefix.c_str(),   false, false))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
                 if(!filepath_d.empty())
                 {
                     if(!LoadBNK(filepath_d.c_str(),bank, prefix_d.c_str(), false, true))
                     {
-                        fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                        std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                         return 1;
                     }
                 }
@@ -199,7 +199,7 @@ int main(int argc, char**argv)
             {
                 if(!LoadIBK(filepath.c_str(),  bank, prefix.c_str(),   false))
                 {
-                    fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                    std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                     return 1;
                 }
                 if(!filepath_d.empty())
@@ -207,14 +207,14 @@ int main(int argc, char**argv)
                     //printf("Loading %s... \n", filepath_d.c_str());
                     if(!LoadIBK(filepath_d.c_str(),bank, prefix_d.c_str(), true))
                     {
-                        fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
+                        std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                         return 1;
                     }
                 }
             }
             else
             {
-                fprintf(stderr, "Failed to load bank %u, file %s!\nUnknown format type %s\n",
+                std::fprintf(stderr, "Failed to load bank %u, file %s!\nUnknown format type %s\n",
                         bank,
                         filepath.c_str(),
                         format.c_str());
@@ -225,8 +225,8 @@ int main(int argc, char**argv)
             ini.endGroup();
         }
 
-        printf("Loaded %u banks!\n", banks_count);
-        fflush(stdout);
+        std::printf("Loaded %u banks!\n", banks_count);
+        std::fflush(stdout);
     }
 
     #if 0
@@ -245,21 +245,21 @@ int main(int argc, char**argv)
             correlations.push_back(std::make_pair(i->second, i->first));
         }
         std::sort(correlations.begin(), correlations.end());
-        fprintf(outFile, "Byte %2u bit %u=mask %02X:\n", a / 8, a % 8, 1 << (a % 8));
+        std::fprintf(outFile, "Byte %2u bit %u=mask %02X:\n", a / 8, a % 8, 1 << (a % 8));
         for(size_t c = 0; c < correlations.size() && c < 10; ++c)
         {
             unsigned count = correlations[correlations.size() - 1 - c ].first;
             unsigned index = correlations[correlations.size() - 1 - c ].second;
-            fprintf(outFile, "\tAdldata index %u, bit %u=mask %02X (%u matches)\n",
+            std::fprintf(outFile, "\tAdldata index %u, bit %u=mask %02X (%u matches)\n",
                     index / 8, index % 8, 1 << (index % 8), count);
         }
     }
     #endif
 
-    printf("Writing raw instrument data...\n");
-    fflush(stdout);
+    std::printf("Writing raw instrument data...\n");
+    std::fflush(stdout);
     {
-        fprintf(outFile,
+        std::fprintf(outFile,
                 /*
                 "static const struct\n"
                 "{\n"
@@ -289,7 +289,7 @@ int main(int argc, char**argv)
                 ++i)
             {
                 if(i->second.first != c) continue;
-                fprintf(outFile, "    { ");
+                std::fprintf(outFile, "    { ");
 
                 uint32_t carrier_E862 =
                     uint32_t(i->first.data[6] << 24)
@@ -302,7 +302,7 @@ int main(int argc, char**argv)
                     + uint32_t(i->first.data[3] << 8)
                     + uint32_t(i->first.data[1] << 0);
 
-                fprintf(outFile, "0x%07X,0x%07X, 0x%02X,0x%02X, 0x%X, %+d",
+                std::fprintf(outFile, "0x%07X,0x%07X, 0x%02X,0x%02X, 0x%X, %+d",
                         carrier_E862,
                         modulator_E862,
                         i->first.data[8],
@@ -322,13 +322,13 @@ int main(int argc, char**argv)
                     else
                         names += *j;
                 }
-                fprintf(outFile, " }, // %u: %s\n", (unsigned)c, names.c_str());
+                std::fprintf(outFile, " }, // %u: %s\n", (unsigned)c, names.c_str());
             }
         }
-        fprintf(outFile, "};\n");
+        std::fprintf(outFile, "};\n");
     }
 
-    /*fprintf(outFile, "static const struct\n"
+    /*std::fprintf(outFile, "static const struct\n"
            "{\n"
            "    unsigned short adlno1, adlno2;\n"
            "    unsigned char tone;\n"
@@ -337,8 +337,8 @@ int main(int argc, char**argv)
            "    long ms_sound_koff;\n"
            "} adlins[] =\n");*/
 
-    fprintf(outFile, "const struct adlinsdata adlins[%u] =\n", (unsigned)instab.size());
-    fprintf(outFile, "{\n");
+    std::fprintf(outFile, "const struct adlinsdata adlins[%u] =\n", (unsigned)instab.size());
+    std::fprintf(outFile, "{\n");
 
     MeasureThreaded measureCounter;
     {
@@ -378,7 +378,7 @@ int main(int argc, char**argv)
             {
                 if(info.peak_amplitude_time == 0)
                 {
-                    fprintf(outFile,
+                    std::fprintf(outFile,
                         "    // Amplitude begins at %6.1f,\n"
                         "    // fades to 20%% at %.1fs, keyoff fades to 20%% in %.1fs.\n",
                         info.begin_amplitude,
@@ -387,7 +387,7 @@ int main(int argc, char**argv)
                 }
                 else
                 {
-                    fprintf(outFile,
+                    std::fprintf(outFile,
                         "    // Amplitude begins at %6.1f, peaks %6.1f at %.1fs,\n"
                         "    // fades to 20%% at %.1fs, keyoff fades to 20%% in %.1fs.\n",
                         info.begin_amplitude,
@@ -400,8 +400,8 @@ int main(int argc, char**argv)
 
             unsigned flags = (i->first.pseudo4op ? 1 : 0) | (info.nosound ? 2 : 0);
 
-            fprintf(outFile, "    {");
-            fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ",%lf",
+            std::fprintf(outFile, "    {");
+            std::fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ",%lf",
                     (unsigned) i->first.insno1,
                     (unsigned) i->first.insno2,
                     (int)(i->first.notenum),
@@ -421,15 +421,15 @@ int main(int argc, char**argv)
                 else
                     names += *j;
             }
-            fprintf(outFile, " }, // %u: %s\n\n", (unsigned)c, names.c_str());
-            fflush(outFile);
+            std::fprintf(outFile, " }, // %u: %s\n\n", (unsigned)c, names.c_str());
+            std::fflush(outFile);
             adlins_flags.push_back(flags);
         }
-    fprintf(outFile, "};\n\n");
+    std::fprintf(outFile, "};\n\n");
 
 
-    printf("Writing banks data...\n");
-    fflush(stdout);
+    std::printf("Writing banks data...\n");
+    std::fflush(stdout);
 
     //fprintf(outFile, "static const unsigned short banks[][256] =\n");
     #ifdef HARD_BANKS
@@ -458,23 +458,23 @@ int main(int argc, char**argv)
     }
     std::set<size_t> listed;
 
-    fprintf(outFile,
+    std::fprintf(outFile,
             "\n\n//Returns total number of generated banks\n"
             "int  maxAdlBanks()\n"
             "{"
             "   return %u;\n"
             "}\n\n"
             "const char* const banknames[%u] =\n", (unsigned int)bankcount, (unsigned int)bankcount);
-    fprintf(outFile, "{\n");
+    std::fprintf(outFile, "{\n");
     for(unsigned bank = 0; bank < bankcount; ++bank)
-        fprintf(outFile, "    \"%s\",\n", banknames[bank].c_str());
-    fprintf(outFile, "};\n");
+        std::fprintf(outFile, "    \"%s\",\n", banknames[bank].c_str());
+    std::fprintf(outFile, "};\n");
 
-    fprintf(outFile, "const unsigned short banks[%u][256] =\n", (unsigned int)bankcount);
-    fprintf(outFile, "{\n");
+    std::fprintf(outFile, "const unsigned short banks[%u][256] =\n", (unsigned int)bankcount);
+    std::fprintf(outFile, "{\n");
     for(unsigned bank = 0; bank < bankcount; ++bank)
     {
-        fprintf(outFile, "    { // bank %u, %s\n", bank, banknames[bank].c_str());
+        std::fprintf(outFile, "    { // bank %u, %s\n", bank, banknames[bank].c_str());
         bool redundant = true;
         for(unsigned p = 0; p < 256; ++p)
         {
@@ -484,13 +484,13 @@ int main(int argc, char**argv)
                 listed.insert(v);
                 redundant = false;
             }
-            fprintf(outFile, "%4d,", (unsigned int)v);
+            std::fprintf(outFile, "%4d,", (unsigned int)v);
             if(p % 16 == 15) fprintf(outFile, "\n");
         }
-        fprintf(outFile, "    },\n");
+        std::fprintf(outFile, "    },\n");
         if(redundant)
         {
-            fprintf(outFile, "    // Bank %u defines nothing new.\n", bank);
+            std::fprintf(outFile, "    // Bank %u defines nothing new.\n", bank);
             for(unsigned refbank = 0; refbank < bank; ++refbank)
             {
                 bool match = true;
@@ -502,16 +502,40 @@ int main(int argc, char**argv)
                         break;
                     }
                 if(match)
-                    fprintf(outFile, "    // Bank %u is just a subset of bank %u!\n",
+                    std::fprintf(outFile, "    // Bank %u is just a subset of bank %u!\n",
                             bank, refbank);
             }
         }
     }
 
-    fprintf(outFile, "};\n");
-    fflush(outFile);
-    fclose(outFile);
+    std::fprintf(outFile, "};\n\n");
+    std::fflush(outFile);
 
-    printf("Generation of ADLMIDI data has been completed!\n");
-    fflush(stdout);
+    std::fprintf(outFile, "const AdlBankSetup adlbanksetup[%u] =\n", (unsigned)banksetup.size());
+    std::fprintf(outFile, "{\n");
+    {
+        BankSetupData::iterator last = banksetup.end();
+        last--;
+        for(BankSetupData::iterator it = banksetup.begin(); it != banksetup.end(); it++)
+        {
+            AdlBankSetup &setup = it->second;
+            std::fprintf(outFile, "    {%d, %d, %d, %d, %d}",
+                         setup.volumeModel,
+                         setup.deepTremolo,
+                         setup.deepVibrato,
+                         setup.adLibPercussions,
+                         setup.scaleModulators);
+            if(it != last)
+                std::fprintf(outFile, ", //Bank %u, %s\n", (unsigned)it->first, banknames[it->first].c_str());
+            else
+                std::fprintf(outFile, "  //Bank %u, %s\n", (unsigned)it->first, banknames[it->first].c_str());
+        }
+    }
+    std::fprintf(outFile, "};\n");
+    std::fflush(outFile);
+
+    std::fclose(outFile);
+
+    std::printf("Generation of ADLMIDI data has been completed!\n");
+    std::fflush(stdout);
 }

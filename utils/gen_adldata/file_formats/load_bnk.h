@@ -146,6 +146,15 @@ static bool LoadBNK(const char *fn, unsigned bank, const char *prefix, bool is_f
         printf("\n");
         */
     }
+
+    AdlBankSetup setup;
+    setup.volumeModel = VOLUME_Generic;
+    setup.deepTremolo = false;
+    setup.deepVibrato = false;
+    setup.adLibPercussions = false;
+    setup.scaleModulators = false;
+    SetBankSetup(bank, setup);
+
     return true;
 }
 

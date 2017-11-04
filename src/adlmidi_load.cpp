@@ -364,44 +364,21 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
 
     m_setup.stored_samples = 0;
     m_setup.backup_samples_size = 0;
-    opl.AdlPercussionMode = m_setup.AdlPercussionMode;
+
+    /*
+     * TODO: Implement tri-state: "AUTO (use bank default setup), force On, force Off"
+     * for thuse four flags:
+     */
     opl.HighTremoloMode = m_setup.HighTremoloMode;
     opl.HighVibratoMode = m_setup.HighVibratoMode;
+    opl.AdlPercussionMode = m_setup.AdlPercussionMode;
     opl.ScaleModulators = m_setup.ScaleModulators;
+
     opl.LogarithmicVolumes = m_setup.LogarithmicVolumes;
     opl.CartoonersVolumes = false;
     opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(m_setup.VolumeModel));
-
-    if(m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)
-    {
-        switch(m_setup.AdlBank)
-        {
-        default:
-            opl.m_volumeScale = OPL3::VOLUME_Generic;
-            break;
-
-        case 14://Doom 2
-        case 15://Heretic
-        case 16://Doom 1
-        case 64://Raptor
-            opl.m_volumeScale = OPL3::VOLUME_DMX;
-            break;
-
-        case 58://FatMan bank hardcoded in the Windows 9x drivers
-        case 65://Modded Wohlstand's Fatman bank
-        case 66://O'Connel's bank
-            opl.m_volumeScale = OPL3::VOLUME_9X;
-            break;
-
-        case 62://Duke Nukem 3D
-        case 63://Shadow Warrior
-        case 69://Blood
-        case 70://Lee
-        case 71://Nam
-            opl.m_volumeScale = OPL3::VOLUME_APOGEE;
-            break;
-        }
-    }
+    if(m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)//Use bank default volume model
+        opl.m_volumeScale = (OPL3::VolumesScale)adlbanksetup[m_setup.AdlBank].volumeModel;
 
     opl.NumCards    = m_setup.NumCards;
     opl.NumFourOps  = m_setup.NumFourOps;

@@ -45,6 +45,7 @@ int maxAdlBanks()
 
 const unsigned short banks[][256] = {{0}};
 const char *const banknames[] = {"<Embedded banks are disabled>"};
+const AdlBankSetup adlbanksetup[] = {{0, 1, 1, 0, 0}};
 #endif
 
 static const unsigned short Operators[23 * 2] =

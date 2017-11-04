@@ -62,6 +62,15 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
         size_t resno = InsertIns(tmp, tmp2, name, name2);
         SetBank(bank, gmno, resno);
     }
+
+    AdlBankSetup setup;
+    setup.volumeModel = VOLUME_APOGEE;
+    setup.deepTremolo = false;
+    setup.deepVibrato = false;
+    setup.adLibPercussions = false;
+    setup.scaleModulators = false;
+    SetBankSetup(bank, setup);
+
     return true;
 }
 

@@ -66,6 +66,15 @@ static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool perc
         size_t resno = InsertIns(tmp, tmp2, std::string(1, '\377') + name, name2);
         SetBank(bank, (unsigned int)gmno, resno);
     }
+
+    AdlBankSetup setup;
+    setup.volumeModel = VOLUME_Generic;
+    setup.deepTremolo = false;
+    setup.deepVibrato = false;
+    setup.adLibPercussions = false;
+    setup.scaleModulators = false;
+    SetBankSetup(bank, setup);
+
     return true;
 }
 
