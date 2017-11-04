@@ -485,7 +485,7 @@ bool MIDIplay::buildTrackData()
     {
         //#define DRUM_NOTE_MIN_TIME 0.0085
         #define DRUM_NOTE_MIN_TIME  0.0085
-        #define DRUM_NOTE_MIN_TICKS 1
+        #define DRUM_NOTE_MIN_TICKS 15
         struct NoteState
         {
             double       delay;
