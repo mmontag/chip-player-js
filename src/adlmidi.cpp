@@ -525,9 +525,9 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
             n_periodCountStereo = static_cast<ssize_t>(setup.carry);
             setup.carry -= n_periodCountStereo;
 
-            if(setup.SkipForward > 0)
-                setup.SkipForward -= 1;
-            else
+            //if(setup.SkipForward > 0)
+            //    setup.SkipForward -= 1;
+            //else
             {
                 if((player->atEnd) && (setup.delay <= 0.0))
                     break;//Stop to fetch samples at reaching the song end with disabled loop

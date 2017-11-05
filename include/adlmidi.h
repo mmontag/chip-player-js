@@ -73,16 +73,16 @@ extern const char *const *adl_getBankNames();
 /*Sets number of 4-chan operators*/
 extern int adl_setNumFourOpsChn(struct ADL_MIDIPlayer *device, int ops4);
 
-/*Enable or disable AdLib percussion mode*/
+/*Override Enable(1) or Disable(0) AdLib percussion mode. -1 - use bank default AdLib percussion mode*/
 extern void adl_setPercMode(struct ADL_MIDIPlayer *device, int percmod);
 
-/*Enable or disable deep vibrato*/
+/*Override Enable(1) or Disable(0) deep vibrato state. -1 - use bank default vibrato state*/
 extern void adl_setHVibrato(struct ADL_MIDIPlayer *device, int hvibro);
 
-/*Enable or disable deep tremolo*/
+/*Override Enable(1) or Disable(0) deep tremolo state. -1 - use bank default tremolo state*/
 extern void adl_setHTremolo(struct ADL_MIDIPlayer *device, int htremo);
 
-/*Enable or disable Enables scaling of modulator volumes*/
+/*Override Enable(1) or Disable(0) scaling of modulator volumes. -1 - use bank default scaling of modulator volumes*/
 extern void adl_setScaleModulators(struct ADL_MIDIPlayer *device, int smod);
 
 /*Enable or disable built-in loop (built-in loop supports 'loopStart' and 'loopEnd' tags to loop specific part)*/

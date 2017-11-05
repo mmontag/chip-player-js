@@ -629,14 +629,14 @@ public:
         unsigned int AdlBank;
         unsigned int NumFourOps;
         unsigned int NumCards;
-        bool    HighTremoloMode;
-        bool    HighVibratoMode;
-        bool    AdlPercussionMode;
+        int     HighTremoloMode;
+        int     HighVibratoMode;
+        int     AdlPercussionMode;
         bool    LogarithmicVolumes;
         int     VolumeModel;
-        unsigned int SkipForward;
-        bool loopingIsEnabled;
-        bool ScaleModulators;
+        //unsigned int SkipForward;
+        bool    loopingIsEnabled;
+        int     ScaleModulators;
 
         double delay;
         double carry;

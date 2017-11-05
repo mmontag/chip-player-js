@@ -133,6 +133,7 @@ To build that example you will need to have installed SDL2 library.
  * Added hooks to increase advandate of The Library: MIDI-event, Note, and Debug-Message hooks!
  * Fixed the ability to merge two equal pseudo-4-operator voices as one voice without damaging the result!
  * Added auto-increasing of percussion note lengths when there are too short and playing an incorrect sound on various banks
+ * Tri-state support for deep-tremolo/vibrato, scale modulators, and legacy adlib percussion mode. -1 means "auto", I.e. default and specified by bank.
  * ...
 
 ## 1.2.1    2017-07-30

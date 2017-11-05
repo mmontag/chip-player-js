@@ -639,13 +639,13 @@ MIDIplay::MIDIplay():
     m_setup.AdlBank    = 0;
     m_setup.NumFourOps = 7;
     m_setup.NumCards   = 2;
-    m_setup.HighTremoloMode   = false;
-    m_setup.HighVibratoMode   = false;
-    m_setup.AdlPercussionMode = false;
-    m_setup.LogarithmicVolumes = false;
-    m_setup.SkipForward = 0;
+    m_setup.HighTremoloMode     = -1;
+    m_setup.HighVibratoMode     = -1;
+    m_setup.AdlPercussionMode   = -1;
+    m_setup.LogarithmicVolumes  = false;
+    //m_setup.SkipForward = 0;
     m_setup.loopingIsEnabled = false;
-    m_setup.ScaleModulators = false;
+    m_setup.ScaleModulators     = -1;
     m_setup.delay = 0.0;
     m_setup.carry = 0.0;
     m_setup.stored_samples = 0;
@@ -654,11 +654,11 @@ MIDIplay::MIDIplay():
     opl.NumCards = m_setup.NumCards;
     opl.AdlBank = m_setup.AdlBank;
     opl.NumFourOps = m_setup.NumFourOps;
-    opl.LogarithmicVolumes = m_setup.LogarithmicVolumes;
-    opl.HighTremoloMode = m_setup.HighTremoloMode;
-    opl.HighVibratoMode = m_setup.HighVibratoMode;
-    opl.AdlPercussionMode = m_setup.AdlPercussionMode;
-    opl.ScaleModulators = m_setup.ScaleModulators;
+    opl.LogarithmicVolumes  = m_setup.LogarithmicVolumes;
+    opl.HighTremoloMode     = m_setup.HighTremoloMode == -1 ? adlbanksetup[m_setup.AdlBank].deepTremolo : (bool)m_setup.HighTremoloMode;
+    opl.HighVibratoMode     = m_setup.HighVibratoMode == -1 ? adlbanksetup[m_setup.AdlBank].deepVibrato : (bool)m_setup.HighVibratoMode;
+    opl.AdlPercussionMode   = m_setup.AdlPercussionMode == -1 ? adlbanksetup[m_setup.AdlBank].adLibPercussions : (bool)m_setup.AdlPercussionMode;
+    opl.ScaleModulators     = m_setup.ScaleModulators == -1 ? adlbanksetup[m_setup.AdlBank].scaleModulators : (bool)m_setup.ScaleModulators;
 }
 
 uint64_t MIDIplay::ReadVarLen(uint8_t **ptr)

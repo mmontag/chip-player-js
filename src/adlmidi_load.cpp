@@ -361,19 +361,12 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     }
 
     /**** Set all properties BEFORE starting of actial file reading! ****/
-
     m_setup.stored_samples = 0;
     m_setup.backup_samples_size = 0;
-
-    /*
-     * TODO: Implement tri-state: "AUTO (use bank default setup), force On, force Off"
-     * for thuse four flags:
-     */
-    opl.HighTremoloMode = m_setup.HighTremoloMode;
-    opl.HighVibratoMode = m_setup.HighVibratoMode;
-    opl.AdlPercussionMode = m_setup.AdlPercussionMode;
-    opl.ScaleModulators = m_setup.ScaleModulators;
-
+    opl.HighTremoloMode     = m_setup.HighTremoloMode == -1 ? adlbanksetup[m_setup.AdlBank].deepTremolo : (bool)m_setup.HighTremoloMode;
+    opl.HighVibratoMode     = m_setup.HighVibratoMode == -1 ? adlbanksetup[m_setup.AdlBank].deepVibrato : (bool)m_setup.HighVibratoMode;
+    opl.AdlPercussionMode   = m_setup.AdlPercussionMode == -1 ? adlbanksetup[m_setup.AdlBank].adLibPercussions : (bool)m_setup.AdlPercussionMode;
+    opl.ScaleModulators     = m_setup.ScaleModulators == -1 ? adlbanksetup[m_setup.AdlBank].scaleModulators : (bool)m_setup.ScaleModulators;
     opl.LogarithmicVolumes = m_setup.LogarithmicVolumes;
     //opl.CartoonersVolumes = false;
     opl.m_musicMode = OPL3::MODE_MIDI;
