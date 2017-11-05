@@ -528,9 +528,9 @@ bool MIDIplay::buildTrackData()
     #if 1 //Use this to record WAVEs for comparison before/after implementing of this
     {
         //! Minimal real time in seconds
-        #define DRUM_NOTE_MIN_TIME  0.03
+#define DRUM_NOTE_MIN_TIME  0.03
         //! Minimal ticks count
-        #define DRUM_NOTE_MIN_TICKS 15
+#define DRUM_NOTE_MIN_TICKS 15
         struct NoteState
         {
             double       delay;
@@ -564,8 +564,7 @@ bool MIDIplay::buildTrackData()
                         ns.delay = 0.0;
                         ns.delayTicks = 0;
                     }
-                    else
-                    if(et->type == MidiEvent::T_NOTEOFF)
+                    else if(et->type == MidiEvent::T_NOTEOFF)
                     {
                         uint8_t note = et->data[0] & 0x7F;
                         NoteState &ns = drNotes[note];
@@ -611,8 +610,8 @@ bool MIDIplay::buildTrackData()
                 }
             }
         }
-        #undef DRUM_NOTE_MIN_TIME
-        #undef DRUM_NOTE_MIN_TICKS
+#undef DRUM_NOTE_MIN_TIME
+#undef DRUM_NOTE_MIN_TICKS
     }
     #endif
 
@@ -2069,13 +2068,10 @@ void MIDIplay::KillOrEvacuate(size_t from_channel, AdlChannel::users_t::iterator
 
         if(c > std::numeric_limits<uint32_t>::max())
             break;
-
         if(c == from_channel)
             continue;
-
-        if(opl.four_op_category[c]
-           != opl.four_op_category[from_channel]
-          ) continue;
+        if(opl.four_op_category[c] != opl.four_op_category[from_channel])
+            continue;
 
         for(AdlChannel::users_t::iterator
             m = ch[c].users.begin();
@@ -2177,27 +2173,18 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
     case 0x0000 + 0*0x10000 + 1*0x20000: // Pitch-bender sensitivity
         Ch[MidCh].bendsense = value / 8192.0;
         break;
-
     case 0x0108 + 1*0x10000 + 1*0x20000: // Vibrato speed
-        if(value == 64)
-            Ch[MidCh].vibspeed = 1.0;
-        else if(value < 100)
-            Ch[MidCh].vibspeed = 1.0 / (1.6e-2 * (value ? value : 1));
-        else
-            Ch[MidCh].vibspeed = 1.0 / (0.051153846 * value - 3.4965385);
-
+        if(value == 64)      Ch[MidCh].vibspeed = 1.0;
+        else if(value < 100) Ch[MidCh].vibspeed = 1.0 / (1.6e-2 * (value ? value : 1));
+        else                 Ch[MidCh].vibspeed = 1.0 / (0.051153846 * value - 3.4965385);
         Ch[MidCh].vibspeed *= 2 * 3.141592653 * 5.0;
         break;
-
     case 0x0109 + 1*0x10000 + 1*0x20000: // Vibrato depth
         Ch[MidCh].vibdepth = ((value - 64) * 0.15) * 0.01;
         break;
-
     case 0x010A + 1*0x10000 + 1*0x20000: // Vibrato delay in millisecons
-        Ch[MidCh].vibdelay =
-            value ? int64_t(0.2092 * std::exp(0.0795 * (double)value)) : 0;
+        Ch[MidCh].vibdelay = value ? int64_t(0.2092 * std::exp(0.0795 * (double)value)) : 0;
         break;
-
     default:/* UI.PrintLn("%s %04X <- %d (%cSB) (ch %u)",
                 "NRPN"+!nrpn, addr, value, "LM"[MSB], MidCh);*/
         break;
@@ -2239,6 +2226,7 @@ void MIDIplay::NoteOff(uint16_t MidCh, uint8_t note)
 void MIDIplay::UpdateVibrato(double amount)
 {
     for(size_t a = 0, b = Ch.size(); a < b; ++a)
+    {
         if(Ch[a].vibrato && !Ch[a].activenotes.empty())
         {
             NoteUpdate_All(static_cast<uint16_t>(a), Upd_Pitch);
@@ -2246,6 +2234,7 @@ void MIDIplay::UpdateVibrato(double amount)
         }
         else
             Ch[a].vibpos = 0.0;
+    }
 }
 
 
