@@ -153,17 +153,17 @@ void MIDIplay::MidiTrackRow::reset()
     events.clear();
 }
 
-void MIDIplay::MidiTrackRow::sortEvents()
+void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
 {
-    std::vector<MidiEvent> metas;
-    std::vector<MidiEvent> noteOffs;
-    std::vector<MidiEvent> controllers;
-    std::vector<MidiEvent> anyOther;
+    typedef std::vector<MidiEvent> EvtArr;
+    EvtArr metas;
+    EvtArr noteOffs;
+    EvtArr controllers;
+    EvtArr anyOther;
 
     for(size_t i = 0; i < events.size(); i++)
     {
-        if( (events[i].type == MidiEvent::T_NOTEOFF) ||
-            ((events[i].type == MidiEvent::T_NOTEON) && (events[i].data[1] == 0)))
+        if(events[i].type == MidiEvent::T_NOTEOFF)
             noteOffs.push_back(events[i]);
         else if((events[i].type == MidiEvent::T_CTRLCHANGE)
                 || (events[i].type == MidiEvent::T_PATCHCHANGE)
@@ -177,6 +177,42 @@ void MIDIplay::MidiTrackRow::sortEvents()
         else
             anyOther.push_back(events[i]);
     }
+
+    /*
+     * If Note-Off and it's Note-On is on the same row - move this danmed note off down!
+     */
+    if(noteStates)
+    {
+        for(size_t i = 0; i < anyOther.size(); i++)
+        {
+            MidiEvent &e = anyOther[i];
+            if(e.type == MidiEvent::T_NOTEON)
+            {
+                size_t note_i = (e.channel * 255) + e.data[0];
+                //Check, was previously note is on or off
+                bool wasOn = noteStates[note_i];
+                bool keepOn = true;
+                for(EvtArr::iterator j = noteOffs.begin(); j != noteOffs.end();)
+                {
+                    //If note was off, and note-off on same row with note-on - move it down!
+                    if(
+                        ((*j).channel == e.channel) &&
+                        ((*j).data[0] == e.data[0]) &&
+                        !wasOn // Also check, is this note already OFF!!!
+                    )
+                    {
+                        anyOther.push_back(*j);
+                        j = noteOffs.erase(j);
+                        keepOn = false;
+                        continue;
+                    }
+                    j++;
+                }
+                if(keepOn) noteStates[note_i] = true;
+            }
+        }
+    }
+    /***********************************************************************************/
 
     events.clear();
     events.insert(events.end(), noteOffs.begin(), noteOffs.end());
@@ -213,6 +249,12 @@ bool MIDIplay::buildTrackData()
     CurrentPositionNew.track.clear();
     CurrentPositionNew.track.resize(trackCount);
 
+    //! Caches note on/off states.
+    bool noteStates[16 * 255];
+    /* This is required to carefully detect zero-length notes           *
+     * and avoid a move of "note-off" event over "note-on" while sort.  *
+     * Otherwise, after sort those notes will play infinite sound       */
+
     //Tempo change events
     std::vector<MidiEvent> tempos;
 
@@ -230,6 +272,8 @@ bool MIDIplay::buildTrackData()
         bool ok = false;
         uint8_t *end      = TrackData[tk].data() + TrackData[tk].size();
         uint8_t *trackPtr = TrackData[tk].data();
+        std::memset(noteStates, 0, sizeof(noteStates));
+
         //Time delay that follows the first event in the track
         {
             MidiTrackRow evtPos;
@@ -321,7 +365,7 @@ bool MIDIplay::buildTrackData()
             {
                 evtPos.absPos = abs_position;
                 abs_position += evtPos.delay;
-                evtPos.sortEvents();
+                evtPos.sortEvents(noteStates);
                 trackDataNew[tk].push_back(evtPos);
                 evtPos.reset();
                 gotLoopEventInThisRow = false;
@@ -512,11 +556,7 @@ bool MIDIplay::buildTrackData()
                     if(et->channel != 9)
                         continue;
 
-                    bool noteOn  = (et->type == MidiEvent::T_NOTEON) && (et->data[1] > 0);
-                    bool noteOff = (et->type == MidiEvent::T_NOTEOFF) ||
-                                   ((et->type == MidiEvent::T_NOTEON) && (et->data[1] == 0));
-
-                    if(noteOn)
+                    if(et->type == MidiEvent::T_NOTEON)
                     {
                         uint8_t     note = et->data[0] & 0x7F;
                         NoteState   &ns = drNotes[note];
@@ -525,7 +565,7 @@ bool MIDIplay::buildTrackData()
                         ns.delayTicks = 0;
                     }
                     else
-                    if(noteOff)
+                    if(et->type == MidiEvent::T_NOTEOFF)
                     {
                         uint8_t note = et->data[0] & 0x7F;
                         NoteState &ns = drNotes[note];
@@ -542,10 +582,11 @@ bool MIDIplay::buildTrackData()
                                     MidiTrackRow &posN = *itNext;
                                     if(ns.delayTicks > DRUM_NOTE_MIN_TICKS && ns.delay > DRUM_NOTE_MIN_TIME)
                                     {
-                                        posN.events.push_back(pos.events[(size_t)e]);
+                                        //Put note-off into begin of next event list
+                                        posN.events.insert(posN.events.begin(), pos.events[(size_t)e]);
+                                        //Renive this event from a current row
                                         pos.events.erase(pos.events.begin() + (int)e);
                                         e--;
-                                        posN.sortEvents();
                                         break;
                                     }
                                     ns.delay += posN.timeDelay;
@@ -1709,8 +1750,10 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t **pptr, uint8_t *end, int &stat
         evt.data.push_back(*(ptr++));
         evt.data.push_back(*(ptr++));
 
+        if((evType == MidiEvent::T_NOTEON) && (evt.data[1] == 0))
+            evt.type = MidiEvent::T_NOTEOFF; // Note ON with zero velocity is Note OFF!
         //111'th loopStart controller (RPG Maker and others)
-        if((evType == MidiEvent::T_CTRLCHANGE) && (evt.data[0] == 111))
+        else if((evType == MidiEvent::T_CTRLCHANGE) && (evt.data[0] == 111))
         {
             //Change event type to custom Loop Start event and clear data
             evt.type = MidiEvent::T_SPECIAL;
@@ -2113,7 +2156,7 @@ void MIDIplay::KillSustainingNotes(int32_t MidCh, int32_t this_adlchn)
             {
                 int midiins = '?';
                 if(hooks.onNote)
-                    hooks.onNote(hooks.onNote_userData, c, j->first.note, midiins, 0, 0.0);
+                    hooks.onNote(hooks.onNote_userData, (int)c, j->first.note, midiins, 0, 0.0);
                 ch[c].users.erase(j);
             }
         }

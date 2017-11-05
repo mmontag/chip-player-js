@@ -581,7 +581,7 @@ public:
         /**
          * @brief Sort events in this position
          */
-        void sortEvents();
+        void sortEvents(bool *noteStates = NULL);
     };
 
     /**
