@@ -54,11 +54,11 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
     uint16_t pbanks_count = toUint16BE((const uint8_t *)data.data() + 0x0f);
 
     AdlBankSetup setup;
-    setup.deepTremolo = data[0x11] & 0x80;
-    setup.deepVibrato = data[0x11] & 0x40;
+    setup.deepTremolo = (data[0x11] >> 0) & 0x01;
+    setup.deepVibrato = (data[0x11] >> 1) & 0x01;
     setup.volumeModel = (int)data[0x12];
     setup.adLibPercussions = false;
-    setup.scaleModulators = false;
+    setup.scaleModulators  = false;
 
     // Validate file format by size calculation
     if(version == 1)

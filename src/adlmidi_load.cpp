@@ -232,11 +232,14 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     }
 
     /*UNUSED YET*/
-    //bool default_deep_vibrato   = ((head[4]>>0) & 0x01);
-    //bool default_deep_tremolo   = ((head[4]>>1) & 0x01);
+    bool default_deep_vibrato   = ((head[4]>>0) & 0x01);
+    bool default_deep_tremolo   = ((head[4]>>1) & 0x01);
 
     //5'th byte reserved for Deep-Tremolo and Deep-Vibrato flags
+    m_setup.HighTremoloMode = default_deep_tremolo;
+    m_setup.HighVibratoMode = default_deep_vibrato;
     //6'th byte reserved for ADLMIDI's default volume model
+    m_setup.VolumeModel = (int)head[5];
 
     if(version >= 2)//Read bank meta-entries
     {
