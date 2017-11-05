@@ -144,7 +144,8 @@ OPL3::OPL3() :
     HighVibratoMode(false),
     AdlPercussionMode(false),
     LogarithmicVolumes(false),
-    CartoonersVolumes(false),
+    //CartoonersVolumes(false),
+    m_musicMode(MODE_MIDI),
     m_volumeScale(VOLUME_Generic)
 {}
 
@@ -264,7 +265,7 @@ void OPL3::Touch_Real(unsigned c, unsigned volume)
         { true,  true  }  /* 4 op AM-AM ops 3&4 */
     };
 
-    if(CartoonersVolumes)
+    if(m_musicMode == MODE_RSXX)
     {
         Poke(card, 0x40 + o1, x);
         if(o2 != 0xFFF)

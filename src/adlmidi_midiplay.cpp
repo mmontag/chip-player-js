@@ -277,9 +277,10 @@ bool MIDIplay::buildTrackData()
         //Time delay that follows the first event in the track
         {
             MidiTrackRow evtPos;
-            if(!opl.CartoonersVolumes)
+            if(opl.m_musicMode == OPL3::MODE_RSXX)
+                ok = true;
+            else
                 evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
-            else ok = true;
             if(!ok)
             {
                 int len = std::snprintf(error, 150, "buildTrackData: Can't read variable-length value at begin of track %d.\n", (int)tk);
@@ -526,10 +527,11 @@ bool MIDIplay::buildTrackData()
     //move too short percussion note-offs far far away as possible
     /********************************************************************************/
     #if 1 //Use this to record WAVEs for comparison before/after implementing of this
+    if(opl.m_musicMode == OPL3::MODE_MIDI)//Percussion fix is needed for MIDI only, not for IMF/RSXX or CMF
     {
-        //! Minimal real time in seconds
+//! Minimal real time in seconds
 #define DRUM_NOTE_MIN_TIME  0.03
-        //! Minimal ticks count
+//! Minimal ticks count
 #define DRUM_NOTE_MIN_TICKS 15
         struct NoteState
         {
@@ -822,7 +824,7 @@ void MIDIplay::realTime_ResetState()
     for(size_t ch = 0; ch < Ch.size(); ch++)
     {
         MIDIchannel &chan = Ch[ch];
-        chan.volume = opl.CartoonersVolumes ? 127 : 100;
+        chan.volume = (opl.m_musicMode == OPL3::MODE_RSXX) ? 127 : 100;
         chan.expression = 127;
         chan.panning = 0x30;
         chan.vibrato = 0;
@@ -842,7 +844,7 @@ void MIDIplay::realTime_ResetState()
 
 bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    if((opl.CartoonersVolumes) && (velocity != 0))
+    if((opl.m_musicMode == OPL3::MODE_RSXX) && (velocity != 0))
     {
         // Check if this is just a note after-touch
         MIDIchannel::activenoteiterator i = Ch[channel].activenotes.find(note);

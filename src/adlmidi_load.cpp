@@ -375,7 +375,8 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     opl.ScaleModulators = m_setup.ScaleModulators;
 
     opl.LogarithmicVolumes = m_setup.LogarithmicVolumes;
-    opl.CartoonersVolumes = false;
+    //opl.CartoonersVolumes = false;
+    opl.m_musicMode = OPL3::MODE_MIDI;
     opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(m_setup.VolumeModel));
     if(m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)//Use bank default volume model
         opl.m_volumeScale = (OPL3::VolumesScale)adlbanksetup[m_setup.AdlBank].volumeModel;
@@ -551,6 +552,7 @@ riffskip:
         //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
         opl.LogarithmicVolumes = true;
         opl.AdlPercussionMode = true;
+        opl.m_musicMode = OPL3::MODE_CMF;
         opl.m_volumeScale = OPL3::VOLUME_CMF;
     }
     else
@@ -567,7 +569,8 @@ riffskip:
                 TrackCount = 1;
                 DeltaTicks = 60;
                 opl.LogarithmicVolumes = true;
-                opl.CartoonersVolumes = true;
+                //opl.CartoonersVolumes = true;
+                opl.m_musicMode = OPL3::MODE_RSXX;
                 opl.m_volumeScale = OPL3::VOLUME_CMF;
             }
         }
@@ -685,6 +688,7 @@ riffskip:
             //CurrentPosition.began = true;
             //std::fprintf(stderr, "Done reading IMF file\n");
             opl.NumFourOps = 0; //Don't use 4-operator channels for IMF playing!
+            opl.m_musicMode = OPL3::MODE_IMF;
         }
         else
         {

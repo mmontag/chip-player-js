@@ -156,8 +156,15 @@ public:
     bool ScaleModulators;
     //! Required to play CMF files. Can be turned on by using of "CMF" volume model
     bool LogarithmicVolumes;
-    //! Required to play EA-MUS files
-    bool CartoonersVolumes;
+    // ! Required to play EA-MUS files [REPLACED WITH "m_musicMode", DEPRECATED!!!]
+    //bool CartoonersVolumes;
+    enum MusicMode
+    {
+        MODE_MIDI,
+        MODE_IMF,
+        MODE_CMF,
+        MODE_RSXX
+    } m_musicMode;
     //! Just a padding. Reserved.
     char ___padding2[3];
     //! Volume models enum
