@@ -135,11 +135,11 @@ private:
     std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
     const unsigned  DynamicInstrumentTag /* = 0x8000u*/,
                     DynamicMetaInstrumentTag /* = 0x4000000u*/;
+public:
     const adlinsdata    &GetAdlMetaIns(unsigned n);
     unsigned            GetAdlMetaNumber(unsigned midiins);
     const adldata       &GetAdlIns(size_t insno);
 
-public:
     //! Total number of running concurrent emulated chips
     unsigned int NumCards;
     //! Currently running embedded bank number. "~0" means usign of the custom bank.
@@ -874,6 +874,8 @@ public:
     uint64_t ChooseDevice(const std::string &name);
 };
 
+// I think, this is useless inside of Library
+/*
 struct FourChars
 {
     char ret[4];
@@ -889,7 +891,7 @@ struct FourChars
             ret[c] = static_cast<int8_t>((w >>(c * 8)) & 0xFF);
     }
 };
-
+*/
 
 extern int adlRefreshNumCards(ADL_MIDIPlayer *device);
 
