@@ -21,6 +21,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef ADLDATA_H
+#define ADLDATA_H
+
 extern const struct adldata
 {
     unsigned int modulator_E862, carrier_E862;  // See below
@@ -56,3 +59,5 @@ extern const struct AdlBankSetup
     bool    adLibPercussions;
     bool    scaleModulators;
 } adlbanksetup[];
+
+#endif //ADLDATA_H
