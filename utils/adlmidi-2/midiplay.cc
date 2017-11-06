@@ -137,7 +137,7 @@ static void SigWinchHandler(int) {}
 static void GuessInitialWindowHeight()
 {
     auto s = std::getenv("LINES");
-    if(s && std::atoi(s)) WindowLines = std::atoi(s);
+    if(s && std::atoi(s)) WindowLines = (unsigned)std::atoi(s);
     SigWinchHandler(0);
 }
 
@@ -507,7 +507,7 @@ public:
     {
         HideCursor();
         #if 1
-        int notex = 2 + (note + 55) % (NColumns - 3);
+        int notex = 2 + (note + 55) % ((int)NColumns - 3);
         int limit = (int)WinHeight(), minline = 3;
 
         int notey = minline + adlchn;
@@ -584,7 +584,7 @@ public:
             for(unsigned w = 0; w < 2; ++w)
             {
                 char c = amp[w] > (maxy - 1) - y ? '|' : background[w][y + 1];
-                Draw(w, y + 1,
+                Draw((int)w, (int)y + 1,
                      c == '|' ? y < white_threshold ? 15
                      : y < red_threshold ? 12
                      : y < yellow_threshold ? 14
@@ -709,8 +709,8 @@ public:
 
         if(a >= 0 && b >= 0)
         {
-            player.incoming   += b;
-            computer.incoming += a;
+            player.incoming   += (unsigned)b;
+            computer.incoming += (unsigned)a;
         }
         return player.DelayOpinion() >= 0
                && computer.DelayOpinion() >= 0;
@@ -733,8 +733,8 @@ namespace ADLMIDI_PuzzleGame
     static void PutCell(int x, int y, unsigned cell)
     {
         static const unsigned char valid_attrs[] = {8, 6, 5, 3};
-        unsigned char ch = cell, attr = cell >> 8;
-        int height = WinHeight();//std::min(NumCards*18, 50u);
+        unsigned char ch = (unsigned char)cell, attr = (unsigned char)(cell >> 8);
+        int height = (int)WinHeight();//std::min(NumCards*18, 50u);
         y = std::max(0, int(std::min(height, 40) - 25 + y));
         if(ch == 0xDB) ch = '#';
         if(ch == 0xB0) ch = '*';
@@ -742,10 +742,10 @@ namespace ADLMIDI_PuzzleGame
 
         //bool diff = UI.background[x][y] != UI.slots[x][y];
         UI.backgroundcolor[x][y] = attr;
-        UI.background[x][y]      = ch;
+        UI.background[x][y]      = (char)ch;
         UI.GotoXY(x, y);
         UI.Color(attr);
-        UI.PutC(ch);
+        UI.PutC((char)ch);
         //UI.Draw(x,y, attr, ch);
     }
 }
