@@ -23,6 +23,10 @@
 
 #include "adlmidi_private.hpp"
 
+#ifdef ADLMIDI_HW_OPL
+static const unsigned OPLBase = 0x388;
+#endif
+
 #ifdef DISABLE_EMBEDDED_BANKS
 /*
     Dummy data which replaces adldata.cpp banks database
@@ -151,19 +155,37 @@ OPL3::OPL3() :
 
 void OPL3::Poke(size_t card, uint32_t index, uint32_t value)
 {
+    #ifdef ADLMIDI_HW_OPL
+    unsigned o = index >> 8;
+    unsigned port = OPLBase + o * 2;
+    outportb(port, index);
+    for(unsigned c = 0; c < 6; ++c) inportb(port);
+    outportb(port + 1, value);
+    for(unsigned c = 0; c < 35; ++c) inportb(port);
+    #else
     #ifdef ADLMIDI_USE_DOSBOX_OPL
     cards[card].WriteReg(index, static_cast<uint8_t>(value));
     #else
     OPL3_WriteReg(&cards[card], static_cast<Bit16u>(index), static_cast<Bit8u>(value));
     #endif
+    #endif
 }
 
 void OPL3::PokeN(size_t card, uint16_t index, uint8_t value)
 {
+    #ifdef ADLMIDI_HW_OPL
+    unsigned o = index >> 8;
+    unsigned port = OPLBase + o * 2;
+    outportb(port, index);
+    for(unsigned c = 0; c < 6; ++c) inportb(port);
+    outportb(port + 1, value);
+    for(unsigned c = 0; c < 35; ++c) inportb(port);
+    #else
     #ifdef ADLMIDI_USE_DOSBOX_OPL
     cards[card].WriteReg(static_cast<Bit32u>(index), value);
     #else
     OPL3_WriteReg(&cards[card], index, value);
+    #endif
     #endif
 }
 
@@ -427,11 +449,15 @@ void OPL3::Reset(unsigned long PCM_RATE)
     _opl3_chip emptyChip;
     std::memset(&emptyChip, 0, sizeof(_opl3_chip));
     #endif
+    #ifndef ADLMIDI_HW_OPL
     cards.clear();
+    #endif
     ins.clear();
     pit.clear();
     regBD.clear();
+    #ifndef ADLMIDI_HW_OPL
     cards.resize(NumCards, emptyChip);
+    #endif
     NumChannels = NumCards * 23;
     ins.resize(NumChannels, 189);
     pit.resize(NumChannels,   0);
@@ -454,10 +480,12 @@ void OPL3::Reset(unsigned long PCM_RATE)
 
     for(unsigned card = 0; card < NumCards; ++card)
     {
-        #ifdef ADLMIDI_USE_DOSBOX_OPL
+        #ifndef ADLMIDI_HW_OPL
+        #   ifdef ADLMIDI_USE_DOSBOX_OPL
         cards[card].Init(PCM_RATE);
-        #else
+        #   else
         OPL3_Reset(&cards[card], static_cast<Bit32u>(PCM_RATE));
+        #   endif
         #endif
 
         for(unsigned a = 0; a < 18; ++a) Poke(card, 0xB0 + Channels[a], 0x00);

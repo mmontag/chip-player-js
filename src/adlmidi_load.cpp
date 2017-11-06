@@ -176,7 +176,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     ADL_UNUSED(fsize);
     if(!fr.isValid())
     {
-        ADLMIDI_ErrorString = "Custom bank: Invalid data stream!";
+        errorStringOut = "Custom bank: Invalid data stream!";
         return false;
     }
 
@@ -190,27 +190,27 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
 
     if(fr.read(magic, 1, 11) != 11)
     {
-        ADLMIDI_ErrorString = "Custom bank: Can't read magic number!";
+        errorStringOut = "Custom bank: Can't read magic number!";
         return false;
     }
 
     if(strncmp(magic, wopl3_magic, 11) != 0)
     {
-        ADLMIDI_ErrorString = "Custom bank: Invalid magic number!";
+        errorStringOut = "Custom bank: Invalid magic number!";
         return false;
     }
 
     uint8_t version_raw[2];
     if(fr.read(version_raw, 1, 2) != 2)
     {
-        ADLMIDI_ErrorString = "Custom bank: Can't read version!";
+        errorStringOut = "Custom bank: Can't read version!";
         return false;
     }
 
     version = toUint16LE(version_raw);
     if(version > wopl_latest_version)
     {
-        ADLMIDI_ErrorString = "Custom bank: Unsupported WOPL version!";
+        errorStringOut = "Custom bank: Unsupported WOPL version!";
         return false;
     }
 
@@ -218,7 +218,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     memset(head, 0, 6);
     if(fr.read(head, 1, 6) != 6)
     {
-        ADLMIDI_ErrorString = "Custom bank: Can't read header!";
+        errorStringOut = "Custom bank: Can't read header!";
         return false;
     }
 
@@ -227,7 +227,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
 
     if((count_melodic_banks < 1) || (count_percusive_banks < 1))
     {
-        ADLMIDI_ErrorString = "Custom bank: Too few banks in this file!";
+        errorStringOut = "Custom bank: Too few banks in this file!";
         return false;
     }
 
@@ -248,7 +248,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
             uint8_t bank_meta[34];
             if(fr.read(bank_meta, 1, 34) != 34)
             {
-                ADLMIDI_ErrorString = "Custom bank: Fail to read melodic bank meta-data!";
+                errorStringOut = "Custom bank: Fail to read melodic bank meta-data!";
                 return false;
             }
             //strncpy(bankMeta.name, char_p(bank_meta), 32);
@@ -261,7 +261,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
             uint8_t bank_meta[34];
             if(fr.read(bank_meta, 1, 34) != 34)
             {
-                ADLMIDI_ErrorString = "Custom bank: Fail to read melodic bank meta-data!";
+                errorStringOut = "Custom bank: Fail to read melodic bank meta-data!";
                 return false;
             }
             //strncpy(bankMeta.name, char_p(bank_meta), 32);
@@ -286,7 +286,7 @@ tryAgain:
         {
             opl.dynamic_metainstruments.clear();
             opl.dynamic_instruments.clear();
-            ADLMIDI_ErrorString = "Custom bank: Fail to read instrument!";
+            errorStringOut = "Custom bank: Fail to read instrument!";
             return false;
         }
 
@@ -356,9 +356,9 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
 
     if(!fr.isValid())
     {
-        ADLMIDI_ErrorString = "Invalid data stream!\n";
+        errorStringOut = "Invalid data stream!\n";
         #ifndef _WIN32
-        ADLMIDI_ErrorString += std::strerror(errno);
+        errorStringOut += std::strerror(errno);
         #endif
         return false;
     }
@@ -423,7 +423,7 @@ riffskip:
         uint8_t *mus = (uint8_t *)malloc(mus_len);
         if(!mus)
         {
-            ADLMIDI_ErrorString = "Out of memory!";
+            errorStringOut = "Out of memory!";
             return false;
         }
         fr.read(mus, 1, mus_len);
@@ -437,7 +437,7 @@ riffskip:
         if(mus) free(mus);
         if(m2mret < 0)
         {
-            ADLMIDI_ErrorString = "Invalid MUS/DMX data format!";
+            errorStringOut = "Invalid MUS/DMX data format!";
             return false;
         }
         cvt_buf.reset(mid);
@@ -451,7 +451,7 @@ riffskip:
         if(std::memcmp(HeaderBuf + 8, "XDIR", 4) != 0)
         {
             fr.close();
-            ADLMIDI_ErrorString = fr._fileName + ": Invalid format\n";
+            errorStringOut = fr._fileName + ": Invalid format\n";
             return false;
         }
 
@@ -461,7 +461,7 @@ riffskip:
         uint8_t *mus = (uint8_t *)malloc(mus_len);
         if(!mus)
         {
-            ADLMIDI_ErrorString = "Out of memory!";
+            errorStringOut = "Out of memory!";
             return false;
         }
         fr.read(mus, 1, mus_len);
@@ -475,7 +475,7 @@ riffskip:
         if(mus) free(mus);
         if(m2mret < 0)
         {
-            ADLMIDI_ErrorString = "Invalid XMI data format!";
+            errorStringOut = "Invalid XMI data format!";
             return false;
         }
         cvt_buf.reset(mid);
@@ -613,7 +613,7 @@ riffskip:
             if(std::memcmp(HeaderBuf, "MThd\0\0\0\6", 8) != 0)
             {
                 fr.close();
-                ADLMIDI_ErrorString = fr._fileName + ": Invalid format, Header signature is unknown!\n";
+                errorStringOut = fr._fileName + ": Invalid format, Header signature is unknown!\n";
                 return false;
             }
 
@@ -710,7 +710,7 @@ riffskip:
                 if(std::memcmp(HeaderBuf, "MTrk", 4) != 0)
                 {
                     fr.close();
-                    ADLMIDI_ErrorString = fr._fileName + ": Invalid format, MTrk signature is not found!\n";
+                    errorStringOut = fr._fileName + ": Invalid format, MTrk signature is not found!\n";
                     return false;
                 }
                 TrackLength = (size_t)ReadBEint(HeaderBuf + 4, 4);
@@ -746,14 +746,14 @@ riffskip:
 
     if(totalGotten == 0)
     {
-        ADLMIDI_ErrorString = fr._fileName + ": Empty track data";
+        errorStringOut = fr._fileName + ": Empty track data";
         return false;
     }
 
     //Build new MIDI events table (ALPHA!!!)
     if(!buildTrackData())
     {
-        ADLMIDI_ErrorString = fr._fileName + ": MIDI data parsing error has occouped!\n" + errorString;
+        errorStringOut = fr._fileName + ": MIDI data parsing error has occouped!\n" + errorString;
         return false;
     }
 

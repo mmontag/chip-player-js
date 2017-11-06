@@ -8,7 +8,7 @@
 #include <set>
 #include <cstdlib>
 #include <cstring>
-#include <chrono>
+#include <ctime>
 #include <cstdarg>
 #include <cmath>
 #include <unistd.h>
@@ -21,7 +21,7 @@
 #include <assert.h>
 
 #define SUPPORT_VIDEO_OUTPUT
-//#define SUPPORT_PUZZLE_GAME
+#define SUPPORT_PUZZLE_GAME
 
 #ifdef __WIN32__
 # include <cctype>
@@ -35,7 +35,10 @@ typedef unsigned char Uint8;
 typedef unsigned short Uint16;
 typedef unsigned Uint32;
 #else
+
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
+
 class MutexType
 {
     SDL_mutex *mut;
@@ -57,13 +60,14 @@ public:
 #endif
 
 #ifdef __DJGPP__
-# include <conio.h>
-# include <pc.h>
-# include <dpmi.h>
-# include <go32.h>
-# include <sys/farptr.h>
-# include <dos.h>
-# define BIOStimer _farpeekl(_dos_ds, 0x46C)
+#include <conio.h>
+#include <pc.h>
+#include <dpmi.h>
+#include <go32.h>
+#include <sys/farptr.h>
+#include <dos.h>
+#include <stdlib.h>
+#define BIOStimer _farpeekl(_dos_ds, 0x46C)
 static const unsigned NewTimerFreq = 209;
 #elif !defined(__WIN32__) || defined(__CYGWIN__)
 # include <termios.h>
@@ -77,16 +81,10 @@ static const unsigned NewTimerFreq = 209;
 
 #include <signal.h>
 
-
 #include "adlmidi.h"
-#include "adlmidi_private.hpp" //   For OPL3 and MIDIplay classes
-
-#include "fraction.h"
+#include "adlmidi.hpp"
 
 #ifndef __DJGPP__
-#include "dbopl.h"
-
-#include "adldata.hh"
 
 static const unsigned long PCM_RATE = 48000;
 static const unsigned MaxCards = 100;
@@ -136,7 +134,7 @@ static void SigWinchHandler(int) {}
 
 static void GuessInitialWindowHeight()
 {
-    auto s = std::getenv("LINES");
+    char *s = std::getenv("LINES");
     if(s && std::atoi(s)) WindowLines = (unsigned)std::atoi(s);
     SigWinchHandler(0);
 }
@@ -438,9 +436,10 @@ public:
         VidPut(c);
         ++x; // One letter drawn. Update cursor position.
     }
-    #ifdef __DJGPP__
-#define RawPrn cprintf
-    #else
+
+#ifdef __DJGPP__
+#   define RawPrn cprintf
+#else
     static void RawPrn(const char *fmt, ...) __attribute__((format(printf, 1, 2)))
     {
         // Note: should essentially match PutC, except without updates to x
@@ -449,7 +448,8 @@ public:
         vfprintf(stderr, fmt, ap);
         va_end(ap);
     }
-    #endif
+#endif
+
     int Print(unsigned beginx, unsigned color, bool ln, const char *fmt, va_list ap)
     {
         char Line[1024];
@@ -1270,192 +1270,194 @@ static void SendStereoAudio(unsigned long count, short *samples)
 /*
  * THIS CLASS USES !!!ADL PRIVATE!!!
  */
-class AdlInstrumentTester
-{
-    uint32_t cur_gm;
-    uint32_t ins_idx;
-    std::vector<uint32_t> adl_ins_list;
-    OPL3 &opl;
 
-public:
-    AdlInstrumentTester(OPL3 &o)
-        : opl(o)
-    {
-        cur_gm   = 0;
-        ins_idx  = 0;
-    }
+//class OPL3;
+//class AdlInstrumentTester
+//{
+//    uint32_t cur_gm;
+//    uint32_t ins_idx;
+//    std::vector<uint32_t> adl_ins_list;
+//    OPL3 *opl;
+//    MIDIplay * play;
 
-    ~AdlInstrumentTester()
-    {}
+//public:
+//    AdlInstrumentTester(ADL_MIDIPlayer *device)
+//    {
+//        cur_gm   = 0;
+//        ins_idx  = 0;
+//        play = reinterpret_cast<MIDIplay*>(device->adl_midiPlayer);
+//        if(!play)
+//            return;
+//        opl = &play->opl;
+//    }
 
-    // Find list of adlib instruments that supposedly implement this GM
-    void FindAdlList()
-    {
-        const unsigned NumBanks = (unsigned)adl_getBanksCount();
-        std::set<unsigned> adl_ins_set;
-        for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
-            adl_ins_set.insert(banks[bankno][cur_gm]);
-        adl_ins_list.assign(adl_ins_set.begin(), adl_ins_set.end());
-        ins_idx = 0;
-        NextAdl(0);
-        opl.Silence();
-    }
+//    ~AdlInstrumentTester()
+//    {}
+
+//    // Find list of adlib instruments that supposedly implement this GM
+//    void FindAdlList()
+//    {
+//        const unsigned NumBanks = (unsigned)adl_getBanksCount();
+//        std::set<unsigned> adl_ins_set;
+//        for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
+//            adl_ins_set.insert(banks[bankno][cur_gm]);
+//        adl_ins_list.assign(adl_ins_set.begin(), adl_ins_set.end());
+//        ins_idx = 0;
+//        NextAdl(0);
+//        opl->Silence();
+//    }
 
 
-    void Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
-    {
-        if(opl.LogarithmicVolumes)// !!!ADL PRIVATE!!!
-            opl.Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);// !!!ADL PRIVATE!!!
-        else
-        {
-            // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-            opl.Touch_Real(c, volume > 8725 ? static_cast<unsigned int>(std::log(volume) * 11.541561 + (0.5 - 104.22845)) : 0);// !!!ADL PRIVATE!!!
-            // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
-            //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
-        }
-    }
+//    void Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
+//    {
+//        if(opl->LogarithmicVolumes)// !!!ADL PRIVATE!!!
+//            opl->Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);// !!!ADL PRIVATE!!!
+//        else
+//        {
+//            // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
+//            opl->Touch_Real(c, volume > 8725 ? static_cast<unsigned int>(std::log(volume) * 11.541561 + (0.5 - 104.22845)) : 0);// !!!ADL PRIVATE!!!
+//            // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
+//            //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
+//        }
+//    }
 
-    void DoNote(int note)
-    {
-        if(adl_ins_list.empty()) FindAdlList();
-        const unsigned meta = adl_ins_list[ins_idx];
-        const adlinsdata &ains = opl.GetAdlMetaIns(meta);// !!!ADL PRIVATE!!!
+//    void DoNote(int note)
+//    {
+//        if(adl_ins_list.empty()) FindAdlList();
+//        const unsigned meta = adl_ins_list[ins_idx];
+//        const adlinsdata &ains = opl->GetAdlMetaIns(meta);// !!!ADL PRIVATE!!!
 
-        int tone = (cur_gm & 128) ? (cur_gm & 127) : (note + 50);
-        if(ains.tone)
-        {
-            /*if(ains.tone < 20)
-                tone += ains.tone;
-            else */
-            if(ains.tone < 128)
-                tone = ains.tone;
-            else
-                tone -= ains.tone - 128;
-        }
-        double hertz = 172.00093 * std::exp(0.057762265 * (tone + 0.0));
-        int i[2] = { ains.adlno1, ains.adlno2 };
-        int32_t adlchannel[2] = { 0, 3 };
-        if(i[0] == i[1])
-        {
-            adlchannel[1] = -1;
-            adlchannel[0] = 6; // single-op
-            std::printf("noteon at %d(%d) for %g Hz\n",
-                        adlchannel[0], i[0], hertz);
-        }
-        else
-        {
-            std::printf("noteon at %d(%d) and %d(%d) for %g Hz\n",
-                        adlchannel[0], i[0], adlchannel[1], i[1], hertz);
-        }
+//        int tone = (cur_gm & 128) ? (cur_gm & 127) : (note + 50);
+//        if(ains.tone)
+//        {
+//            /*if(ains.tone < 20)
+//                tone += ains.tone;
+//            else */
+//            if(ains.tone < 128)
+//                tone = ains.tone;
+//            else
+//                tone -= ains.tone - 128;
+//        }
+//        double hertz = 172.00093 * std::exp(0.057762265 * (tone + 0.0));
+//        int i[2] = { ains.adlno1, ains.adlno2 };
+//        int32_t adlchannel[2] = { 0, 3 };
+//        if(i[0] == i[1])
+//        {
+//            adlchannel[1] = -1;
+//            adlchannel[0] = 6; // single-op
+//            std::printf("noteon at %d(%d) for %g Hz\n",
+//                        adlchannel[0], i[0], hertz);
+//        }
+//        else
+//        {
+//            std::printf("noteon at %d(%d) and %d(%d) for %g Hz\n",
+//                        adlchannel[0], i[0], adlchannel[1], i[1], hertz);
+//        }
 
-        opl.NoteOff(0);
-        opl.NoteOff(3);
-        opl.NoteOff(6);
-        for(unsigned c = 0; c < 2; ++c)
-        {
-            if(adlchannel[c] < 0) continue;
-            opl.Patch((uint16_t)adlchannel[c], (uint16_t)i[c]);
-            opl.Touch_Real((uint16_t)adlchannel[c], 127 * 127 * 100);
-            opl.Pan((uint16_t)adlchannel[c], 0x30);
-            opl.NoteOn((uint16_t)adlchannel[c], hertz);
-        }
-    }
+//        opl->NoteOff(0);
+//        opl->NoteOff(3);
+//        opl->NoteOff(6);
+//        for(unsigned c = 0; c < 2; ++c)
+//        {
+//            if(adlchannel[c] < 0) continue;
+//            opl->Patch((uint16_t)adlchannel[c], (uint16_t)i[c]);
+//            opl->Touch_Real((uint16_t)adlchannel[c], 127 * 127 * 100);
+//            opl->Pan((uint16_t)adlchannel[c], 0x30);
+//            opl->NoteOn((uint16_t)adlchannel[c], hertz);
+//        }
+//    }
 
-    void NextGM(int offset)
-    {
-        cur_gm = (cur_gm + 256 + (uint32_t)offset) & 0xFF;
-        FindAdlList();
-    }
+//    void NextGM(int offset)
+//    {
+//        cur_gm = (cur_gm + 256 + (uint32_t)offset) & 0xFF;
+//        FindAdlList();
+//    }
 
-    void NextAdl(int offset)
-    {
-        if(adl_ins_list.empty()) FindAdlList();
-        const unsigned NumBanks = (unsigned)adl_getBanksCount();
-        ins_idx = (uint32_t)((int32_t)ins_idx + (int32_t)adl_ins_list.size() + offset) % adl_ins_list.size();
+//    void NextAdl(int offset)
+//    {
+//        if(adl_ins_list.empty()) FindAdlList();
+//        const unsigned NumBanks = (unsigned)adl_getBanksCount();
+//        ins_idx = (uint32_t)((int32_t)ins_idx + (int32_t)adl_ins_list.size() + offset) % adl_ins_list.size();
 
-        UI.Color(15);
-        std::fflush(stderr);
-        std::printf("SELECTED G%c%d\t%s\n",
-                    cur_gm < 128 ? 'M' : 'P', cur_gm < 128 ? cur_gm + 1 : cur_gm - 128,
-                    "<-> select GM, ^v select ins, qwe play note");
-        std::fflush(stdout);
-        UI.Color(7);
-        std::fflush(stderr);
-        for(unsigned a = 0; a < adl_ins_list.size(); ++a)
-        {
-            const unsigned i = adl_ins_list[a];
-            const adlinsdata &ains = opl.GetAdlMetaIns(i);
+//        UI.Color(15);
+//        std::fflush(stderr);
+//        std::printf("SELECTED G%c%d\t%s\n",
+//                    cur_gm < 128 ? 'M' : 'P', cur_gm < 128 ? cur_gm + 1 : cur_gm - 128,
+//                    "<-> select GM, ^v select ins, qwe play note");
+//        std::fflush(stdout);
+//        UI.Color(7);
+//        std::fflush(stderr);
+//        for(unsigned a = 0; a < adl_ins_list.size(); ++a)
+//        {
+//            const unsigned i = adl_ins_list[a];
+//            const adlinsdata &ains = opl->GetAdlMetaIns(i);
 
-            char ToneIndication[8] = "   ";
-            if(ains.tone)
-            {
-                if(ains.tone < 20)
-                    sprintf(ToneIndication, "+%-2d", ains.tone);
-                else if(ains.tone < 128)
-                    sprintf(ToneIndication, "=%-2d", ains.tone);
-                else
-                    sprintf(ToneIndication, "-%-2d", ains.tone - 128);
-            }
-            std::printf("%s%s%s%u\t",
-                        ToneIndication,
-                        ains.adlno1 != ains.adlno2 ? "[2]" : "   ",
-                        (ins_idx == a) ? "->" : "\t",
-                        i
-                       );
+//            char ToneIndication[8] = "   ";
+//            if(ains.tone)
+//            {
+//                /*if(ains.tone < 20)
+//                    std::sprintf(ToneIndication, "+%-2d", ains.tone);
+//                else*/
+//                if(ains.tone < 128)
+//                    std::sprintf(ToneIndication, "=%-2d", ains.tone);
+//                else
+//                    std::sprintf(ToneIndication, "-%-2d", ains.tone - 128);
+//            }
+//            std::printf("%s%s%s%u\t",
+//                        ToneIndication,
+//                        ains.adlno1 != ains.adlno2 ? "[2]" : "   ",
+//                        (ins_idx == a) ? "->" : "\t",
+//                        i
+//                       );
 
-            for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
-                if(banks[bankno][cur_gm] == i)
-                    std::printf(" %u", bankno);
+//            for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
+//                if(banks[bankno][cur_gm] == i)
+//                    std::printf(" %u", bankno);
 
-            std::printf("\n");
-        }
-    }
+//            std::printf("\n");
+//        }
+//    }
 
-    void HandleInputChar(char ch)
-    {
-        static const char notes[] = "zsxdcvgbhnjmq2w3er5t6y7ui9o0p";
-        //                           c'd'ef'g'a'bC'D'EF'G'A'Bc'd'e
-        switch(ch)
-        {
-        case '/':
-        case 'H':
-        case 'A':
-            NextAdl(-1);
-            break;
-        case '*':
-        case 'P':
-        case 'B':
-            NextAdl(+1);
-            break;
-        case '-':
-        case 'K':
-        case 'D':
-            NextGM(-1);
-            break;
-        case '+':
-        case 'M':
-        case 'C':
-            NextGM(+1);
-            break;
-        case 3:
-            #if !((!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__))
-        case 27:
-            #endif
-            QuitFlag = true;
-            break;
-        default:
-            const char *p = strchr(notes, ch);
-            if(p && *p) DoNote((p - notes) - 12);
-        }
-    }
-
-    double Tick(double /*eat_delay*/, double /*mindelay*/)
-    {
-        HandleInputChar(Input.PeekInput());
-        //return eat_delay;
-        return 0.1;
-    }
-};
+//    bool HandleInputChar(char ch)
+//    {
+//        static const char notes[] = "zsxdcvgbhnjmq2w3er5t6y7ui9o0p";
+//        //                           c'd'ef'g'a'bC'D'EF'G'A'Bc'd'e
+//        switch(ch)
+//        {
+//        case '/':
+//        case 'H':
+//        case 'A':
+//            NextAdl(-1);
+//            break;
+//        case '*':
+//        case 'P':
+//        case 'B':
+//            NextAdl(+1);
+//            break;
+//        case '-':
+//        case 'K':
+//        case 'D':
+//            NextGM(-1);
+//            break;
+//        case '+':
+//        case 'M':
+//        case 'C':
+//            NextGM(+1);
+//            break;
+//        case 3:
+//            #if !((!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__))
+//        case 27:
+//            #endif
+//            return false;
+//            break;
+//        default:
+//            const char *p = strchr(notes, ch);
+//            if(p && *p)
+//                DoNote((p - notes) - 12);
+//        }
+//        return true;
+//    }
+//};
 
 static void TidyupAndExit(int)
 {
@@ -1529,17 +1531,17 @@ static int ParseCommandLine(char *cmdline, char **argv)
     return(argc);
 }
 
+extern int main(int argc, char **argv);
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
 {
-    extern int main(int, char **);
+    //extern int main(int, char **);
     char *cmdline = GetCommandLine();
     int argc = ParseCommandLine(cmdline, NULL);
     char **argv = new char *[argc + 1];
     ParseCommandLine(cmdline, argv);
-#else
-#undef main
-
-
+    return main(argc, argv);
+}
+#endif
 
 static void adlEventHook(void *ui, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 /*channel*/, ADL_UInt8 *data, size_t len)
 {
@@ -1577,7 +1579,6 @@ static void adlDebugMsgHook(void *userdata, const char *fmt, ...)
 
 int main(int argc, char **argv)
 {
-#endif
     // How long is SDL buffer, in seconds?
     // The smaller the value, the more often AdlAudioCallBack()
     // is called.
@@ -1648,10 +1649,16 @@ int main(int argc, char **argv)
         return 0;
     }
 
+#ifndef __DJGPP__
     std::srand((unsigned int)std::time(0));
+#endif
 
     ADL_MIDIPlayer *myDevice;
+    #ifndef __DJGPP__
     myDevice = adl_init(PCM_RATE);
+    #else
+    myDevice = adl_init(48000);
+    #endif
 
     // Set hooks
     adl_setNoteHook(myDevice, adlNoteHook, (void *)&UI);
@@ -1764,6 +1771,7 @@ int main(int argc, char **argv)
         adl_setBank(myDevice, bankno);
     }
 
+#if 0
     unsigned n_fourop[2] = {0, 0}, n_total[2] = {0, 0};
     for(unsigned a = 0; a < 256; ++a)
     {
@@ -1778,6 +1786,7 @@ int main(int argc, char **argv)
         UI.PrintLn("This bank has %u/%u four-op melodic instruments", n_fourop[0], n_total[0]);
         UI.PrintLn("          and %u/%u percussive ones.", n_fourop[1], n_total[1]);
     }
+#endif
 
     if(argc >= 4)
     {
@@ -1790,6 +1799,7 @@ int main(int argc, char **argv)
         }
         adl_setNumCards(myDevice, (int)NumCards);
     }
+
     if(argc >= 5)
     {
         NumFourOps = (unsigned)std::atoi(argv[4]);
@@ -1800,14 +1810,21 @@ int main(int argc, char **argv)
             UI.ShowCursor();
             return 0;
         }
-        adl_setNumFourOpsChn(myDevice, (int)NumFourOps);
+        if(adl_setNumFourOpsChn(myDevice, (int)NumFourOps) < 0)
+        {
+            UI.ShowCursor();
+            std::fprintf(stderr, "%s\n", adl_errorInfo(myDevice));
+            return 0;
+        }
     }
+    /*
     else
         NumFourOps =
             DoingInstrumentTesting ? 2
             : (n_fourop[0] >= n_total[0] * 7 / 8) ? NumCards * 6
             : (n_fourop[0] < n_total[0] * 1 / 8) ? 0
             : (NumCards == 1 ? 1 : NumCards * 4);
+    */
     if(WritingToTTY)
     {
         UI.PrintLn("Simulating %u OPL3 cards for a total of %u operators.", NumCards, NumCards * 36);
@@ -1825,17 +1842,9 @@ int main(int argc, char **argv)
     UI.Color(7);
     if(adl_openFile(myDevice, argv[1]) != 0)
     {
+        std::fprintf(stderr, "%s\n", adl_errorInfo(myDevice));
         UI.ShowCursor();
         return 2;
-    }
-
-    if(n_fourop[0] >= n_total[0] * 15 / 16 && NumFourOps == 0)
-    {
-        std::fprintf(stderr,
-                     "ERROR: You have selected a bank that consists almost exclusively of four-op patches.\n"
-                     "       The results (silence + much cpu load) would be probably\n"
-                     "       not what you want, therefore ignoring the request.\n");
-        return 0;
     }
 
     #ifdef __DJGPP__
@@ -1850,8 +1859,7 @@ int main(int argc, char **argv)
 
     #else
 
-    const double mindelay = 1 / (double)PCM_RATE;
-    const double maxdelay = MaxSamplesAtTime / (double)PCM_RATE;
+    //const double maxdelay = MaxSamplesAtTime / (double)PCM_RATE;
 
     #ifdef __WIN32
     WindowsAudio::Open(PCM_RATE, 2, 16);
@@ -1861,20 +1869,19 @@ int main(int argc, char **argv)
 
     #endif /* djgpp */
 
-    // !!!ADL PRIVATE!!!
-    AdlInstrumentTester InstrumentTester(((MIDIplay *)myDevice->adl_midiPlayer)->opl);
+    AdlInstrumentTester InstrumentTester(myDevice);
 
     //static std::vector<int> sample_buf;
-    double delay = 0.0;
+    //double delay = 0.0;
     //sample_buf.resize(1024);
     short buff[1024];
 
     UI.TetrisLaunched = true;
     while(!QuitFlag)
     {
-        #ifndef __DJGPP__
-        const double eat_delay = delay < maxdelay ? delay : maxdelay;
-        delay -= eat_delay;
+#ifndef __DJGPP__
+        //const double eat_delay = delay < maxdelay ? delay : maxdelay;
+        //delay -= eat_delay;
         size_t got = 0;
 
         if(!DoingInstrumentTesting)
@@ -1950,7 +1957,7 @@ int main(int argc, char **argv)
         #endif
         //fprintf(stderr, "Exit: %u\n", (unsigned)AudioBuffer.size());
         //}
-        #else /* DJGPP */
+#else /* DJGPP */
         UI.IllustrateVolumes(0, 0);
         const double mindelay = 1.0 / NewTimerFreq;
 
@@ -1962,11 +1969,18 @@ int main(int argc, char **argv)
         const unsigned long CurTimer = BIOStimer;
         const double eat_delay = (CurTimer - PrevTimer) / (double)NewTimerFreq;
         PrevTimer = CurTimer;
-        #endif
+#endif
 
         //double nextdelay =
         if(DoingInstrumentTesting)
-            InstrumentTester.Tick(eat_delay, mindelay);
+        {
+            if(!InstrumentTester.HandleInputChar(Input.PeekInput()))
+                QuitFlag = true;
+            #ifdef __DJGPP__
+            else
+                delay = adl_tickEvents(myDevice, eat_delay, mindelay);
+            #endif
+        }
         //: player.Tick(eat_delay, mindelay);
 
         UI.GotoXY(0, 0);

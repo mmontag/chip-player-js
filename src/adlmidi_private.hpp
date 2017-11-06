@@ -24,29 +24,43 @@
 #ifndef ADLMIDI_PRIVATE_HPP
 #define ADLMIDI_PRIVATE_HPP
 
+#ifndef ADLMIDI_VERSION
+#define ADLMIDI_VERSION "1.3.0"
+#endif
+
 // Setup compiler defines useful for exporting required public API symbols in gme.cpp
 #ifndef ADLMIDI_EXPORT
-    #if defined (_WIN32) && defined(ADLMIDI_BUILD_DLL)
-        #define ADLMIDI_EXPORT __declspec(dllexport)
-    #elif defined (LIBADLMIDI_VISIBILITY)
-        #define ADLMIDI_EXPORT __attribute__((visibility ("default")))
-    #else
-        #define ADLMIDI_EXPORT
-    #endif
+#   if defined (_WIN32) && defined(ADLMIDI_BUILD_DLL)
+#       define ADLMIDI_EXPORT __declspec(dllexport)
+#   elif defined (LIBADLMIDI_VISIBILITY)
+#       define ADLMIDI_EXPORT __attribute__((visibility ("default")))
+#   else
+#       define ADLMIDI_EXPORT
+#   endif
 #endif
 
 #ifdef _WIN32
-    #undef NO_OLDNAMES
+#   undef NO_OLDNAMES
 
-    #ifdef _MSC_VER
-        #ifdef _WIN64
-            typedef __int64 ssize_t;
-        #else
-            typedef __int32 ssize_t;
-        #endif
-        #define NOMINMAX //Don't override std::min and std::max
-    #endif
-    #include <windows.h>
+#   ifdef _MSC_VER
+#       ifdef _WIN64
+typedef __int64 ssize_t;
+#       else
+typedef __int32 ssize_t;
+#       endif
+#       define NOMINMAX //Don't override std::min and std::max
+#   endif
+#   include <windows.h>
+#endif
+
+#ifdef __DJGPP__
+#define ADLMIDI_HW_OPL
+#include <conio.h>
+#include <pc.h>
+#include <dpmi.h>
+#include <go32.h>
+#include <sys/farptr.h>
+#include <dos.h>
 #endif
 
 #include <vector>
@@ -72,15 +86,19 @@
 #include <deque>
 #include <algorithm>
 
-#include "fraction.h"
+#include "fraction.hpp"
+
 #ifdef ADLMIDI_USE_DOSBOX_OPL
-    #include "dbopl.h"
+#include "dbopl.h"
 #else
-    #include "nukedopl3.h"
+#include "nukedopl3.h"
 #endif
 
 #include "adldata.hh"
-#include "adlmidi.h"
+#include "adlmidi.h"    //Main API
+#ifndef ADLMIDI_DISABLE_CPP_EXTRAS
+#include "adlmidi.hpp"  //Extra C++ API
+#endif
 
 #define ADL_UNUSED(x) (void)x
 
@@ -93,7 +111,7 @@ extern std::string ADLMIDI_ErrorString;
 template<class PTR>
 class AdlMIDI_CPtr
 {
-    PTR* m_p;
+    PTR *m_p;
 public:
     AdlMIDI_CPtr() : m_p(NULL) {}
     ~AdlMIDI_CPtr()
@@ -108,9 +126,18 @@ public:
         m_p = p;
     }
 
-    PTR* get() { return m_p;}
-    PTR& operator*() { return *m_p; }
-    PTR* operator->() { return m_p; }
+    PTR *get()
+    {
+        return m_p;
+    }
+    PTR &operator*()
+    {
+        return *m_p;
+    }
+    PTR *operator->()
+    {
+        return m_p;
+    }
 };
 
 class MIDIplay;
@@ -120,10 +147,12 @@ struct OPL3
     uint32_t NumChannels;
     char ____padding[4];
     ADL_MIDIPlayer *_parent;
+    #ifndef ADLMIDI_HW_OPL
     #ifdef ADLMIDI_USE_DOSBOX_OPL
     std::vector<DBOPL::Handler> cards;
     #else
     std::vector<_opl3_chip> cards;
+    #endif
     #endif
 private:
     std::vector<size_t>     ins; // index to adl[], cached, needed by Touch()
@@ -134,7 +163,7 @@ private:
     std::vector<adlinsdata> dynamic_metainstruments; // Replaces adlins[] when CMF file
     std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
     const unsigned  DynamicInstrumentTag /* = 0x8000u*/,
-                    DynamicMetaInstrumentTag /* = 0x4000000u*/;
+          DynamicMetaInstrumentTag /* = 0x4000000u*/;
 public:
     const adlinsdata    &GetAdlMetaIns(unsigned n);
     unsigned            GetAdlMetaNumber(unsigned midiins);
@@ -540,9 +569,9 @@ public:
             ST_ENDTRACK     = 0x2F,//size == 0
             ST_TEMPOCHANGE  = 0x51,//size == 3
             ST_SMPTEOFFSET  = 0x54,//size == 5
-            ST_TIMESIGNATURE= 0x55,//size == 4
+            ST_TIMESIGNATURE = 0x55, //size == 4
             ST_KEYSIGNATURE = 0x59,//size == 2
-            ST_SEQUENCERSPEC= 0x7F,//size == len
+            ST_SEQUENCERSPEC = 0x7F, //size == len
 
             /* Non-standard, internal ADLMIDI usage only */
             ST_LOOPSTART    = 0xE1,//size == 0 <CUSTOM>
@@ -690,6 +719,8 @@ private:
     double loopEndTime;
     //! Local error string
     std::string errorString;
+    //! Local error string
+    std::string errorStringOut;
 
     //! Pre-processed track data storage
     std::vector<MidiTrackQueue > trackDataNew;
@@ -713,6 +744,9 @@ private:
     MidiEvent parseEvent(uint8_t **ptr, uint8_t *end, int &status);
 
 public:
+
+    const std::string &getErrorString();
+    void setErrorString(const std::string &err);
 
     std::string musTitle;
     std::string musCopyright;

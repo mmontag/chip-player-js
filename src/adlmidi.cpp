@@ -23,7 +23,11 @@
 
 #include "adlmidi_private.hpp"
 
+#ifdef ADLMIDI_HW_OPL
+static const unsigned MaxCards = 1;
+#else
 static const unsigned MaxCards = 100;
+#endif
 
 /*---------------------------EXPORTS---------------------------*/
 
@@ -31,7 +35,20 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
 {
     ADL_MIDIPlayer *midi_device;
     midi_device = (ADL_MIDIPlayer *)malloc(sizeof(ADL_MIDIPlayer));
+    if(!midi_device)
+    {
+        ADLMIDI_ErrorString = "Can't initialize ADLMIDI: out of memory!";
+        return NULL;
+    }
+
     MIDIplay *player = new MIDIplay;
+    if(!player)
+    {
+        free(midi_device);
+        ADLMIDI_ErrorString = "Can't initialize ADLMIDI: out of memory!";
+        return NULL;
+    }
+
     midi_device->adl_midiPlayer = player;
     player->m_setup.PCM_RATE = static_cast<unsigned long>(sample_rate);
     player->m_setup.mindelay = 1.0 / (double)player->m_setup.PCM_RATE;
@@ -52,7 +69,7 @@ ADLMIDI_EXPORT int adl_setNumCards(ADL_MIDIPlayer *device, int numCards)
     {
         std::stringstream s;
         s << "number of cards may only be 1.." << MaxCards << ".\n";
-        ADLMIDI_ErrorString = s.str();
+        play->setErrorString(s.str());
         return -1;
     }
 
@@ -83,7 +100,7 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
     {
         std::stringstream s;
         s << "bank number may only be 0.." << (NumBanks - 1) << ".\n";
-        ADLMIDI_ErrorString = s.str();
+        play->setErrorString(s.str());
         return -1;
     }
 
@@ -113,7 +130,7 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
     {
         std::stringstream s;
         s << "number of four-op channels may only be 0.." << (6 * (play->m_setup.NumCards)) << " when " << play->m_setup.NumCards << " OPL3 cards are used.\n";
-        ADLMIDI_ErrorString = s.str();
+        play->setErrorString(s.str());
         return -1;
     }
 
@@ -178,8 +195,6 @@ ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int v
 
 ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePath)
 {
-    ADLMIDI_ErrorString.clear();
-
     if(device && device->adl_midiPlayer)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
@@ -187,8 +202,9 @@ ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePat
         play->m_setup.backup_samples_size = 0;
         if(!play->LoadBank(filePath))
         {
-            if(ADLMIDI_ErrorString.empty())
-                ADLMIDI_ErrorString = "ADL MIDI: Can't load file";
+            std::string err = play->getErrorString();
+            if(err.empty())
+                play->setErrorString("ADL MIDI: Can't load file");
             return -1;
         }
         else return 0;
@@ -200,8 +216,6 @@ ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePat
 
 ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, long size)
 {
-    ADLMIDI_ErrorString.clear();
-
     if(device && device->adl_midiPlayer)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
@@ -209,8 +223,9 @@ ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, lo
         play->m_setup.backup_samples_size = 0;
         if(!play->LoadBank(mem, static_cast<size_t>(size)))
         {
-            if(ADLMIDI_ErrorString.empty())
-                ADLMIDI_ErrorString = "ADL MIDI: Can't load data from memory";
+            std::string err = play->getErrorString();
+            if(err.empty())
+                play->setErrorString("ADL MIDI: Can't load data from memory");
             return -1;
         }
         else return 0;
@@ -222,8 +237,6 @@ ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, lo
 
 ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)
 {
-    ADLMIDI_ErrorString.clear();
-
     if(device && device->adl_midiPlayer)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
@@ -231,8 +244,9 @@ ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)
         play->m_setup.backup_samples_size = 0;
         if(!play->LoadMIDI(filePath))
         {
-            if(ADLMIDI_ErrorString.empty())
-                ADLMIDI_ErrorString = "ADL MIDI: Can't load file";
+            std::string err = play->getErrorString();
+            if(err.empty())
+                play->setErrorString("ADL MIDI: Can't load file");
             return -1;
         }
         else return 0;
@@ -244,8 +258,6 @@ ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)
 
 ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer *device, void *mem, long size)
 {
-    ADLMIDI_ErrorString.clear();
-
     if(device && device->adl_midiPlayer)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
@@ -253,13 +265,13 @@ ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer *device, void *mem, long size)
         play->m_setup.backup_samples_size = 0;
         if(!play->LoadMIDI(mem, static_cast<size_t>(size)))
         {
-            if(ADLMIDI_ErrorString.empty())
-                ADLMIDI_ErrorString = "ADL MIDI: Can't load data from memory";
+            std::string err = play->getErrorString();
+            if(err.empty())
+                play->setErrorString("ADL MIDI: Can't load data from memory");
             return -1;
         }
         else return 0;
     }
-
     ADLMIDI_ErrorString = "Can't load file: ADL MIDI is not initialized";
     return -1;
 }
@@ -274,16 +286,35 @@ ADLMIDI_EXPORT const char *adl_emulatorName()
     #endif
 }
 
+ADLMIDI_EXPORT const char *adl_linkedLibraryVersion()
+{
+    return ADLMIDI_VERSION;
+}
+
+
 ADLMIDI_EXPORT const char *adl_errorString()
 {
     return ADLMIDI_ErrorString.c_str();
+}
+
+ADLMIDI_EXPORT const char *adl_errorInfo(ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return adl_errorString();
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!play)
+        return adl_errorString();
+    return play->getErrorString().c_str();
 }
 
 ADLMIDI_EXPORT const char *adl_getMusicTitle(ADL_MIDIPlayer *device)
 {
     if(!device)
         return "";
-    return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->musTitle.c_str();
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!play)
+        return "";
+    return play->musTitle.c_str();
 }
 
 ADLMIDI_EXPORT void adl_close(ADL_MIDIPlayer *device)
@@ -477,6 +508,9 @@ inline static void SendStereoAudio(MIDIplay::Setup &device,
 
 ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
+    #ifdef ADLMIDI_HW_OPL
+    return 0;
+    #else
     sampleCount -= sampleCount % 2; //Avoid even sample requests
     if(sampleCount < 0)
         return 0;
@@ -573,11 +607,15 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
     }
 
     return static_cast<int>(gotten_len);
+    #endif
 }
 
 
 ADLMIDI_EXPORT int adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
+    #ifdef ADLMIDI_HW_OPL
+    return 0;
+    #else
     sampleCount -= sampleCount % 2; //Avoid even sample requests
     if(sampleCount < 0)
         return 0;
@@ -617,4 +655,15 @@ ADLMIDI_EXPORT int adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *
     }
 
     return sampleCount;
+    #endif
+}
+
+ADLMIDI_EXPORT double adl_tickEvents(ADL_MIDIPlayer *device, double seconds, double granuality)
+{
+    if(!device)
+        return -1.0;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return -1.0;
+    return player->Tick(seconds, granuality);
 }

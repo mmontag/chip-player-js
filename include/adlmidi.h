@@ -104,8 +104,14 @@ extern int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, long size)
 /*Returns name of currently used OPL3 emulator*/
 extern const char *adl_emulatorName();
 
-/*Returns string which contains last error message*/
+/*Returns string which contains a version number*/
+extern const char *adl_linkedLibraryVersion();
+
+/*Returns string which contains last error message of initialization*/
 extern const char *adl_errorString();
+
+/*Returns string which contains last error message on specific device*/
+extern const char *adl_errorInfo(ADL_MIDIPlayer *device);
 
 /*Initialize ADLMIDI Player device*/
 extern struct ADL_MIDIPlayer *adl_init(long sample_rate);
@@ -180,6 +186,18 @@ extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]
 
 /*Generate audio output from chip emulators without iteration of MIDI timers. 512 samples per channel is a maximum*/
 extern int  adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out);
+
+/**
+ * @brief Periodic tick handler.
+ * @param device
+ * @param seconds seconds since last call
+ * @param granularity don't expect intervals smaller than this, in seconds
+ * @return desired number of seconds until next call
+ *
+ * Use it for Hardware OPL3 mode or when you want to process events differently from adl_play() function.
+ * DON'T USE IT TOGETHER WITH adl_play()!!!
+ */
+extern double adl_tickEvents(ADL_MIDIPlayer *device, double seconds, double granuality);
 
 /**Hooks**/
 

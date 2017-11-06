@@ -34,10 +34,12 @@ ENDIF()
 #===========================================================================================
 
 option(WITH_MIDIPLAY        "Build also demo MIDI player" OFF)
+option(WITH_ADLMIDI2        "Build also classic ADLMIDI player [EXPERIMENTAL]" OFF)
 option(WITH_OLD_UTILS       "Build also old utilities" OFF)
 option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
 option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
 option(USE_DOSBOX_EMULATOR  "Use DosBox emulator" OFF)
+option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can be found in 'adlmidi.hpp' header)" OFF)
 
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
 option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
@@ -130,6 +132,10 @@ else()
     add_definitions(-DDISABLE_EMBEDDED_BANKS)
 endif()
 
+if(NOT WITH_CPP_EXTRAS)
+    add_definitions(-DADLMIDI_DISABLE_CPP_EXTRAS)
+endif()
+
 if(libADLMIDI_STATIC)
     add_library(ADLMIDI_static STATIC ${libADLMIDI_SOURCES})
     set_target_properties(ADLMIDI_static PROPERTIES OUTPUT_NAME ADLMIDI)
@@ -189,6 +195,54 @@ if(WITH_MIDIPLAY)
     list(APPEND libADLMIDI_INSTALLS adlmidiplay)
 endif()
 
+if(WITH_ADLMIDI2)
+    find_library(SDL2_LIBRARY SDL2 REQUIRED)
+    include_directories(${SDL2_INCLUDE_DIR})
+    message("Found ${SDL2_LIBRARY}")
+
+    add_executable(adlmidi2
+        ${libADLMIDI_SOURCE_DIR}/utils/adlmidi-2/midiplay.cc
+    )
+
+    if(WIN32)
+        if(MSVC)
+            target_link_libraries(adlmidi2 ADLMIDI ${SDL2_LIBRARY})
+        else()
+            target_link_libraries(adlmidi2 ADLMIDI ${SDL2_LIBRARY} pthread)
+        endif()
+    else()
+        target_link_libraries(adlmidi2 ADLMIDI ${SDL2_LIBRARY} pthread dl)
+    endif()
+
+    if(NOT WITH_CPP_EXTRAS)
+        message(FATAL_ERROR "ADLMIDI2 Requires C++ Extras. Please enable WITH_CPP_EXTRAS option!")
+    endif()
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
+            CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+            "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+        message("Turned on C++11 on GCC/CLang/Intel")
+        target_compile_options(adlmidi2 PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+    else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        message("Turned on C++11 on MSVC")
+        target_compile_options(adlmidi2 PUBLIC "/std:c++latest")
+    endif()
+
+    if(libADLMIDI_SHARED)
+        add_dependencies(adlmidi2 ADLMIDI_shared)
+        # ========= WIP =========
+        # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+    else()
+        if(NOT libADLMIDI_STATIC)
+            message(FATAL_ERROR "libADLMIDI is required to be built!")
+        endif()
+        add_dependencies(adlmidi2 ADLMIDI_static)
+    endif()
+
+    list(APPEND libADLMIDI_INSTALLS adlmidi2)
+endif()
+
+
 install(TARGETS ${libADLMIDI_INSTALLS}
         RUNTIME DESTINATION "bin"
         LIBRARY DESTINATION "lib"
@@ -197,14 +251,17 @@ install(TARGETS ${libADLMIDI_INSTALLS}
 
 install(FILES
         include/adlmidi.h
+        include/adlmidi.hpp
         DESTINATION include/)
 
 message("==== libADLMIDI options ====")
 message("WITH_MIDIPLAY          = ${WITH_MIDIPLAY}")
+message("WITH_ADLMIDI2          = ${WITH_ADLMIDI2}")
 message("WITH_OLD_UTILS         = ${WITH_OLD_UTILS}")
 message("WITH_EMBEDDED_BANKS    = ${WITH_EMBEDDED_BANKS}")
 message("WITH_GENADLDATA        = ${WITH_GENADLDATA}")
 message("USE_DOSBOX_EMULATOR    = ${USE_DOSBOX_EMULATOR}")
+message("WITH_CPP_EXTRAS        = ${WITH_CPP_EXTRAS}")
 message("libADLMIDI_STATIC      = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED      = ${libADLMIDI_SHARED}")
 

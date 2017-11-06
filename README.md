@@ -66,6 +66,7 @@ You need to make in the any IDE a library project and put into it next files
 
 ### Public header (include)
 * adlmidi.h     - Library Public API header, use it to control library
+* adlmidi.hpp   - Public additional C++ API header, optional
 
 ### Internal code (src)
 * adldata.hh    - bank structures definition
@@ -73,7 +74,7 @@ You need to make in the any IDE a library project and put into it next files
 * adlmidi_private.hpp - header of internal private APIs
 * adlmidi_xmi2mid.h - XMI2MID converter header
 * dbopl.h       - DOSBOX OPL Emulation header
-* fraction.h    - Fraction number handling
+* fraction.hpp  - Fraction number handling
 * nukedopl3.h   - Nuked OPL3 Emulation header
 
 * adldata.cpp	 - Automatically generated database of FM banks from "fm_banks" directory via "gen_adldata" tool. **Don't build it if you have defined `DISABLE_EMBEDDED_BANKS` macro!**
@@ -134,6 +135,9 @@ To build that example you will need to have installed SDL2 library.
  * Fixed the ability to merge two equal pseudo-4-operator voices as one voice without damaging the result!
  * Added auto-increasing of percussion note lengths when there are too short and playing an incorrect sound on various banks
  * Tri-state support for deep-tremolo/vibrato, scale modulators, and legacy adlib percussion mode. -1 means "auto", I.e. default and specified by bank.
+ * Added new functions: adl_linkedLibraryVersion(), adl_errorInfo(), adl_tickEvents(), and adl_generate()
+ * Error string is no more global, now every ADL_MIDIPlayer instance has own thread-safe error info that can be retreived by using adl_errorInfo() function. The adl_errorString() will return library initialization errors only;
+ * Added С++ Extra public API which now includes instrument testing feature (which is required by classic ADLMIDI utility)
  * ...
 
 ## 1.2.1    2017-07-30

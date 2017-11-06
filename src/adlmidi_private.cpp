@@ -65,9 +65,9 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
 
     if(n_fourop[0] >= n_total[0] * 15 / 16 && play->m_setup.NumFourOps == 0)
     {
-        ADLMIDI_ErrorString = "ERROR: You have selected a bank that consists almost exclusively of four-op patches.\n"
+        play->setErrorString("ERROR: You have selected a bank that consists almost exclusively of four-op patches.\n"
                               "       The results (silence + much cpu load) would be probably\n"
-                              "       not what you want, therefore ignoring the request.\n";
+                              "       not what you want, therefore ignoring the request.\n");
         return -1;
     }
 

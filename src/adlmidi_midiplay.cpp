@@ -529,9 +529,9 @@ bool MIDIplay::buildTrackData()
     #if 1 //Use this to record WAVEs for comparison before/after implementing of this
     if(opl.m_musicMode == OPL3::MODE_MIDI)//Percussion fix is needed for MIDI only, not for IMF/RSXX or CMF
     {
-//! Minimal real time in seconds
+        //! Minimal real time in seconds
 #define DRUM_NOTE_MIN_TIME  0.03
-//! Minimal ticks count
+        //! Minimal ticks count
 #define DRUM_NOTE_MIN_TICKS 15
         struct NoteState
         {
@@ -1778,6 +1778,16 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t **pptr, uint8_t *end, int &stat
     return evt;
 }
 
+const std::string &MIDIplay::getErrorString()
+{
+    return errorStringOut;
+}
+
+void MIDIplay::setErrorString(const std::string &err)
+{
+    errorStringOut = err;
+}
+
 
 void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
 {
@@ -2323,3 +2333,193 @@ retry_arpeggio:
         }
     }
 }
+
+
+#ifndef ADLMIDI_DISABLE_CPP_EXTRAS
+
+ADLMIDI_EXPORT AdlInstrumentTester::AdlInstrumentTester(ADL_MIDIPlayer *device)
+{
+    cur_gm   = 0;
+    ins_idx  = 0;
+    play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!play)
+        return;
+    opl = &play->opl;
+}
+
+ADLMIDI_EXPORT AdlInstrumentTester::~AdlInstrumentTester()
+{}
+
+ADLMIDI_EXPORT void AdlInstrumentTester::FindAdlList()
+{
+    const unsigned NumBanks = (unsigned)adl_getBanksCount();
+    std::set<unsigned> adl_ins_set;
+    for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
+        adl_ins_set.insert(banks[bankno][cur_gm]);
+    adl_ins_list.assign(adl_ins_set.begin(), adl_ins_set.end());
+    ins_idx = 0;
+    NextAdl(0);
+    opl->Silence();
+}
+
+
+
+ADLMIDI_EXPORT void AdlInstrumentTester::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
+{
+    if(opl->LogarithmicVolumes)// !!!ADL PRIVATE!!!
+        opl->Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);// !!!ADL PRIVATE!!!
+    else
+    {
+        // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
+        opl->Touch_Real(c, volume > 8725 ? static_cast<unsigned int>(std::log(volume) * 11.541561 + (0.5 - 104.22845)) : 0);// !!!ADL PRIVATE!!!
+        // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
+        //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
+    }
+}
+
+ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
+{
+    if(adl_ins_list.empty()) FindAdlList();
+    const unsigned meta = adl_ins_list[ins_idx];
+    const adlinsdata &ains = opl->GetAdlMetaIns(meta);// !!!ADL PRIVATE!!!
+
+    int tone = (cur_gm & 128) ? (cur_gm & 127) : (note + 50);
+    if(ains.tone)
+    {
+        /*if(ains.tone < 20)
+                tone += ains.tone;
+            else */
+        if(ains.tone < 128)
+            tone = ains.tone;
+        else
+            tone -= ains.tone - 128;
+    }
+    double hertz = 172.00093 * std::exp(0.057762265 * (tone + 0.0));
+    int i[2] = { ains.adlno1, ains.adlno2 };
+    int32_t adlchannel[2] = { 0, 3 };
+    if(i[0] == i[1])
+    {
+        adlchannel[1] = -1;
+        adlchannel[0] = 6; // single-op
+        if(play->hooks.onDebugMessage)
+        {
+            play->hooks.onDebugMessage(play->hooks.onDebugMessage_userData,
+                                       "noteon at %d(%d) for %g Hz\n", adlchannel[0], i[0], hertz);
+        }
+    }
+    else
+    {
+        if(play->hooks.onDebugMessage)
+        {
+            play->hooks.onDebugMessage(play->hooks.onDebugMessage_userData,
+                                       "noteon at %d(%d) and %d(%d) for %g Hz\n", adlchannel[0], i[0], adlchannel[1], i[1], hertz);
+        }
+    }
+
+    opl->NoteOff(0);
+    opl->NoteOff(3);
+    opl->NoteOff(6);
+    for(unsigned c = 0; c < 2; ++c)
+    {
+        if(adlchannel[c] < 0) continue;
+        opl->Patch((uint16_t)adlchannel[c], (uint16_t)i[c]);
+        opl->Touch_Real((uint16_t)adlchannel[c], 127 * 127 * 100);
+        opl->Pan((uint16_t)adlchannel[c], 0x30);
+        opl->NoteOn((uint16_t)adlchannel[c], hertz);
+    }
+}
+
+ADLMIDI_EXPORT void AdlInstrumentTester::NextGM(int offset)
+{
+    cur_gm = (cur_gm + 256 + (uint32_t)offset) & 0xFF;
+    FindAdlList();
+}
+
+ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
+{
+    if(adl_ins_list.empty()) FindAdlList();
+    const unsigned NumBanks = (unsigned)adl_getBanksCount();
+    ins_idx = (uint32_t)((int32_t)ins_idx + (int32_t)adl_ins_list.size() + offset) % adl_ins_list.size();
+
+    #if 0
+    UI.Color(15);
+    std::fflush(stderr);
+    std::printf("SELECTED G%c%d\t%s\n",
+                cur_gm < 128 ? 'M' : 'P', cur_gm < 128 ? cur_gm + 1 : cur_gm - 128,
+                "<-> select GM, ^v select ins, qwe play note");
+    std::fflush(stdout);
+    UI.Color(7);
+    std::fflush(stderr);
+    #endif
+
+    for(unsigned a = 0; a < adl_ins_list.size(); ++a)
+    {
+        const unsigned i = adl_ins_list[a];
+        const adlinsdata &ains = opl->GetAdlMetaIns(i);
+
+        char ToneIndication[8] = "   ";
+        if(ains.tone)
+        {
+            /*if(ains.tone < 20)
+                    std::sprintf(ToneIndication, "+%-2d", ains.tone);
+                else*/
+            if(ains.tone < 128)
+                std::sprintf(ToneIndication, "=%-2d", ains.tone);
+            else
+                std::sprintf(ToneIndication, "-%-2d", ains.tone - 128);
+        }
+        std::printf("%s%s%s%u\t",
+                    ToneIndication,
+                    ains.adlno1 != ains.adlno2 ? "[2]" : "   ",
+                    (ins_idx == a) ? "->" : "\t",
+                    i
+                   );
+
+        for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
+            if(banks[bankno][cur_gm] == i)
+                std::printf(" %u", bankno);
+
+        std::printf("\n");
+    }
+}
+
+ADLMIDI_EXPORT bool AdlInstrumentTester::HandleInputChar(char ch)
+{
+    static const char notes[] = "zsxdcvgbhnjmq2w3er5t6y7ui9o0p";
+    //                           c'd'ef'g'a'bC'D'EF'G'A'Bc'd'e
+    switch(ch)
+    {
+    case '/':
+    case 'H':
+    case 'A':
+        NextAdl(-1);
+        break;
+    case '*':
+    case 'P':
+    case 'B':
+        NextAdl(+1);
+        break;
+    case '-':
+    case 'K':
+    case 'D':
+        NextGM(-1);
+        break;
+    case '+':
+    case 'M':
+    case 'C':
+        NextGM(+1);
+        break;
+    case 3:
+        #if !((!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__))
+    case 27:
+        #endif
+        return false;
+    default:
+        const char *p = strchr(notes, ch);
+        if(p && *p)
+            DoNote((p - notes) - 12);
+    }
+    return true;
+}
+
+#endif//ADLMIDI_DISABLE_CPP_EXTRAS

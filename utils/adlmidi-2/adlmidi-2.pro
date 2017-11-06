@@ -23,13 +23,13 @@ linux-*: {
 #DEFINES += DISABLE_EMBEDDED_BANKS
 #DEFINES += ADLMIDI_USE_DOSBOX_OPL
 #DEFINES += ENABLE_BEGIN_SILENCE_SKIPPING
-#DEFINES += DEBUG_TRACE_ALL_EVENTS
 
 QMAKE_CFLAGS    += -std=c90 -pedantic
 QMAKE_CXXFLAGS  += -std=c++98 -pedantic
 
 HEADERS += \
     $$PWD/../../include/adlmidi.h \
+    $$PWD/../../include/adlmidi.hpp \
     $$PWD/../../src/adlbank.h \
     $$PWD/../../src/adldata.hh \
     $$PWD/../../src/adlmidi_mus2mid.h \
@@ -56,8 +56,7 @@ SOURCES += \
     $$PWD/../../src/adlmidi_xmi2mid.c \
     $$PWD/../../src/nukedopl3.c \
     $$PWD/../../src/dbopl.cpp \
-    #$$PWD/../../utils/midiplay/adlmidiplay.cpp \
-    #$$PWD/../../utils/midiplay/wave_writer.c \
+    \
     midiplay.cc
 
 
