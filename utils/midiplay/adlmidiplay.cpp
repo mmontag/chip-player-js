@@ -132,7 +132,9 @@ int main(int argc, char **argv)
             "\n"
         );
 
+        // Get count of embedded banks (no initialization needed)
         int banksCount = adl_getBanksCount();
+        //Get pointer to list of embedded bank names
         const char *const *banknames = adl_getBankNames();
 
         if(banksCount > 0)
@@ -185,6 +187,7 @@ int main(int argc, char **argv)
     spec.callback = SDL_AudioCallbackX;
 
     ADL_MIDIPlayer *myDevice;
+    //Initialize libADLMIDI and create the instance (you can initialize multiple of them!)
     myDevice = adl_init(44100);
     if(myDevice == NULL)
     {
@@ -192,30 +195,34 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    //Set internal debug messages hook to print all libADLMIDI's internal debug messages
     adl_setDebugMessageHook(myDevice, debugPrint, NULL);
 
+    /*
+     * Set library options by parsing of command line arguments
+     */
     bool recordWave = false;
     int loopEnabled = 1;
-
     while(argc > 2)
     {
         bool had_option = false;
 
         if(!std::strcmp("-p", argv[2]))
-            adl_setPercMode(myDevice, 1);
+            adl_setPercMode(myDevice, 1);//Turn on AdLib percussion mode
         else if(!std::strcmp("-v", argv[2]))
-            adl_setHVibrato(myDevice, 1);
+            adl_setHVibrato(myDevice, 1);//Turn on deep vibrato
         else if(!std::strcmp("-w", argv[2]))
-            recordWave = true;
+            recordWave = true;//Record library output into WAV file
         else if(!std::strcmp("-t", argv[2]))
-            adl_setHTremolo(myDevice, 1);
+            adl_setHTremolo(myDevice, 1);//Turn on deep tremolo
         else if(!std::strcmp("-nl", argv[2]))
-            loopEnabled = 0;
+            loopEnabled = 0; //Enable loop
         else if(!std::strcmp("-s", argv[2]))
-            adl_setScaleModulators(myDevice, 1);
+            adl_setScaleModulators(myDevice, 1);//Turn on modulators scaling by volume
         else break;
 
-        std::copy(argv + (had_option ? 4 : 3), argv + argc,
+        std::copy(argv + (had_option ? 4 : 3),
+                  argv + argc,
                   argv + 2);
         argc -= (had_option ? 2 : 1);
     }
@@ -223,10 +230,10 @@ int main(int argc, char **argv)
     //Turn loop on/off (for WAV recording loop must be disabled!)
     adl_setLoopEnabled(myDevice, recordWave ? 0 : loopEnabled);
     #ifdef DEBUG_TRACE_ALL_EVENTS
+    //Hook all MIDI events are ticking while generating an output buffer
     if(!recordWave)
         adl_setRawEventHook(myDevice, debugPrintEvent, NULL);
     #endif
-
 
     std::fprintf(stdout, " - %s OPL3 Emulator in use\n", adl_emulatorName());
 
@@ -252,9 +259,10 @@ int main(int argc, char **argv)
         if(is_number(argv[2]))
         {
             int bankno = std::atoi(argv[2]);
+            //Choose one of embedded banks
             if(adl_setBank(myDevice, bankno) != 0)
             {
-                printError(adl_errorString());
+                printError(adl_errorInfo(myDevice));
                 return 1;
             }
             std::fprintf(stdout, " - Use embedded bank #%d [%s]\n", bankno, adl_getBankNames()[bankno]);
@@ -263,11 +271,13 @@ int main(int argc, char **argv)
         {
             std::fprintf(stdout, " - Use custom bank [%s]...", argv[2]);
             std::fflush(stdout);
+            //Open external bank file (WOPL format is supported)
+            //to create or edit them, use OPL3 Bank Editor you can take here https://github.com/Wohlstand/OPL3BankEditor
             if(adl_openBankFile(myDevice, argv[2]) != 0)
             {
                 std::fprintf(stdout, "FAILED!\n");
                 std::fflush(stdout);
-                printError(adl_errorString());
+                printError(adl_errorInfo(myDevice));
                 return 1;
             }
             std::fprintf(stdout, "OK!\n");
@@ -278,26 +288,29 @@ int main(int argc, char **argv)
     if(argc >= 4)
         numOfChips = std::atoi(argv[3]);
 
+    //Set count of concurrent emulated chips count to excite channels limit of one chip
     if(adl_setNumCards(myDevice, numOfChips) != 0)
     {
-        printError(adl_errorString());
+        printError(adl_errorInfo(myDevice));
         return 1;
     }
     std::fprintf(stdout, " - Number of chips %d\n", numOfChips);
 
     if(argc >= 5)
     {
+        //Set total count of 4-operator channels between all emulated chips
         if(adl_setNumFourOpsChn(myDevice, std::atoi(argv[4])) != 0)
         {
-            printError(adl_errorString());
+            printError(adl_errorInfo(myDevice));
             return 1;
         }
         std::fprintf(stdout, " - Number of four-ops %s\n", argv[4]);
     }
 
+    //Open MIDI file to play
     if(adl_openFile(myDevice, argv[1]) != 0)
     {
-        printError(adl_errorString());
+        printError(adl_errorInfo(myDevice));
         return 2;
     }
 

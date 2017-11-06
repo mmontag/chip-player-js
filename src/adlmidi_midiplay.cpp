@@ -866,10 +866,29 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if(velocity == 0)
         return false;
 
-    uint8_t midiins = Ch[channel].patch;
+    size_t midiins = Ch[channel].patch;
+    bool isPercussion = (channel  % 16 == 9);
 
-    if(channel  % 16 == 9)
-        midiins = 128 + note; // Percussion instrument
+    if(isPercussion)
+        midiins = opl.dynamic_percussion_offset + note; // Percussion instrument
+
+    //Set bank bank
+    if(Ch[channel].bank_msb || Ch[channel].bank_lsb)
+    {
+        uint16_t bank = (uint16_t(Ch[channel].bank_msb) * 256) + uint16_t(Ch[channel].bank_lsb);
+        if(isPercussion)
+        {
+            OPL3::BankMap::iterator b = opl.dynamic_percussion_banks.find(bank);
+            if(b != opl.dynamic_percussion_banks.end())
+                midiins += b->second * 128;
+        }
+        else
+        {
+            OPL3::BankMap::iterator b = opl.dynamic_melodic_banks.find(bank);
+            if(b != opl.dynamic_melodic_banks.end())
+                midiins += b->second * 128;
+        }
+    }
 
     /*
         if(MidCh%16 == 9 || (midiins != 32 && midiins != 46 && midiins != 48 && midiins != 50))
@@ -921,7 +940,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     */
 
     //int meta = banks[opl.AdlBank][midiins];
-    const uint32_t      meta   = opl.GetAdlMetaNumber(midiins);
+    const size_t        meta   = opl.GetAdlMetaNumber(midiins);
     const adlinsdata    &ains  = opl.GetAdlMetaIns(meta);
     int16_t tone = note;
 

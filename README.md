@@ -106,16 +106,15 @@ To build that example you will need to have installed SDL2 library.
 * [ADLMIDI Player for Android](https://github.com/Wohlstand/ADLMIDI-Player-Java/releases) - a little MIDI-player for Android which uses libADLMIDI to play MIDI files and provides flexible GUI with ability to change bank, flags, number of emulated chips, etc.
 
 # Todo
-* Reimplement original ADLMIDI with using of new hooks of libADLMIDI
 * Implement WOPL Version 3 which will contain pre-calculated `ms_sound_kon` and `ms_sound_koff` values per every instrument.
-* Implement multi-bank to support GS or XG standards.
+* Check out for XG/GS standards to provide a support to use any channels as percussion and also check some of SysEx commands.
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 * Support of real-time listening of incoming MIDI-commands.
   That will allow to use library as software MIDI Output device
   to play any MIDI via this library.
 
 # Changelog
-## 1.3.0   2017-10-17 -WIP-
+## 1.3.0   2017-10-17
  * "gen_adldata" tool now supports WOPL banks format which supports a full set of libADLMIDI features
  * Added support for custom banks are loadable in runtime without rebuilding of "adldata.cpp" banks database
  * Smooth finalizing of song when loop is disabled (old ugly hack has been removed :wink:)
@@ -138,7 +137,7 @@ To build that example you will need to have installed SDL2 library.
  * Added new functions: adl_linkedLibraryVersion(), adl_errorInfo(), adl_tickEvents(), and adl_generate()
  * Error string is no more global, now every ADL_MIDIPlayer instance has own thread-safe error info that can be retreived by using adl_errorInfo() function. The adl_errorString() will return library initialization errors only;
  * Added С++ Extra public API which now includes instrument testing feature (which is required by classic ADLMIDI utility)
- * ...
+ * Multi-bank WOPL files now supported! Feel free to implement GS or XG - compatible bank
 
 ## 1.2.1    2017-07-30
  * Minor fixes

@@ -93,16 +93,16 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
         bankno = 0;
 
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.AdlBank = static_cast<uint32_t>(bankno);
-    play->opl.AdlBank = play->m_setup.AdlBank;
-
-    if(play->m_setup.AdlBank >= NumBanks)
+    if(static_cast<uint32_t>(bankno) >= NumBanks)
     {
         std::stringstream s;
         s << "bank number may only be 0.." << (NumBanks - 1) << ".\n";
         play->setErrorString(s.str());
         return -1;
     }
+
+    play->m_setup.AdlBank = static_cast<uint32_t>(bankno);
+    play->opl.setEmbeddedBank(play->m_setup.AdlBank);
 
     return adlRefreshNumCards(device);
     #endif

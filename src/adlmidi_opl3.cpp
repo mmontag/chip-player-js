@@ -115,30 +115,39 @@ static const unsigned short Channels[23] =
 */
 
 
-const adlinsdata &OPL3::GetAdlMetaIns(unsigned n)
+const adlinsdata &OPL3::GetAdlMetaIns(size_t n)
 {
     return (n & DynamicMetaInstrumentTag) ?
            dynamic_metainstruments[n & ~DynamicMetaInstrumentTag]
            : adlins[n];
 }
 
-unsigned OPL3::GetAdlMetaNumber(unsigned midiins)
+size_t OPL3::GetAdlMetaNumber(size_t midiins)
 {
     return (AdlBank == ~0u) ?
            (midiins | DynamicMetaInstrumentTag)
            : banks[AdlBank][midiins];
 }
 
-
 const adldata &OPL3::GetAdlIns(size_t insno)
 {
     return (insno & DynamicInstrumentTag)
            ? dynamic_instruments[insno & ~DynamicInstrumentTag]
-           : adl[insno];
+            : adl[insno];
+}
+
+void OPL3::setEmbeddedBank(unsigned int bank)
+{
+    AdlBank = bank;
+    //Embedded banks are supports 128:128 GM set only
+    dynamic_percussion_offset = 128;
+    dynamic_melodic_banks.clear();
+    dynamic_percussion_banks.clear();
 }
 
 
 OPL3::OPL3() :
+    dynamic_percussion_offset(128),
     DynamicInstrumentTag(0x8000u),
     DynamicMetaInstrumentTag(0x4000000u),
     NumCards(1),

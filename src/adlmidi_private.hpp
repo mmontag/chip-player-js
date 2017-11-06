@@ -141,8 +141,9 @@ public:
 };
 
 class MIDIplay;
-struct OPL3
+class OPL3
 {
+public:
     friend class MIDIplay;
     uint32_t NumChannels;
     char ____padding[4];
@@ -162,12 +163,18 @@ private:
     friend int adlRefreshNumCards(ADL_MIDIPlayer *device);
     std::vector<adlinsdata> dynamic_metainstruments; // Replaces adlins[] when CMF file
     std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
+    size_t                  dynamic_percussion_offset;
+    typedef std::map<uint16_t, size_t> BankMap;
+    BankMap dynamic_melodic_banks;
+    BankMap dynamic_percussion_banks;
     const unsigned  DynamicInstrumentTag /* = 0x8000u*/,
           DynamicMetaInstrumentTag /* = 0x4000000u*/;
 public:
-    const adlinsdata    &GetAdlMetaIns(unsigned n);
-    unsigned            GetAdlMetaNumber(unsigned midiins);
+    const adlinsdata    &GetAdlMetaIns(size_t n);
+    size_t              GetAdlMetaNumber(size_t midiins);
     const adldata       &GetAdlIns(size_t insno);
+
+    void    setEmbeddedBank(unsigned int bank);
 
     //! Total number of running concurrent emulated chips
     unsigned int NumCards;
@@ -446,14 +453,14 @@ public:
         {
             // Current pressure
             uint8_t vol;
-            // Tone selected on noteon:
             char ____padding[1];
+            // Tone selected on noteon:
             int16_t tone;
+            char ____padding2[4];
             // Patch selected on noteon; index to banks[AdlBank][]
-            uint8_t midiins;
+            size_t  midiins;
             // Index to physical adlib data structure, adlins[]
-            char ____padding2[3];
-            uint32_t insmeta;
+            size_t  insmeta;
             struct Phys
             {
                 //! ins, inde to adl[]
@@ -471,7 +478,6 @@ public:
                 }
             };
             typedef std::map<uint16_t, Phys> PhysMap;
-            char    ____padding3[4];
             // List of OPL3 channels it is currently occupying.
             std::map<uint16_t /*adlchn*/, Phys> phys;
         };

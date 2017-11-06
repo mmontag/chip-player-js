@@ -241,6 +241,9 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     //6'th byte reserved for ADLMIDI's default volume model
     m_setup.VolumeModel = (int)head[5];
 
+    opl.dynamic_melodic_banks.clear();
+    opl.dynamic_percussion_banks.clear();
+
     if(version >= 2)//Read bank meta-entries
     {
         for(uint16_t i = 0; i < count_melodic_banks; i++)
@@ -251,6 +254,9 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
                 errorStringOut = "Custom bank: Fail to read melodic bank meta-data!";
                 return false;
             }
+            uint16_t bank = uint16_t(bank_meta[33]) * 256 + uint16_t(bank_meta[32]);
+            size_t offset = opl.dynamic_melodic_banks.size();
+            opl.dynamic_melodic_banks[bank] = offset;
             //strncpy(bankMeta.name, char_p(bank_meta), 32);
             //bankMeta.lsb = bank_meta[32];
             //bankMeta.msb = bank_meta[33];
@@ -264,15 +270,16 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
                 errorStringOut = "Custom bank: Fail to read melodic bank meta-data!";
                 return false;
             }
+            uint16_t bank = uint16_t(bank_meta[33]) * 256 + uint16_t(bank_meta[32]);
+            size_t offset = opl.dynamic_percussion_banks.size();
+            opl.dynamic_percussion_banks[bank] = offset;
             //strncpy(bankMeta.name, char_p(bank_meta), 32);
             //bankMeta.lsb = bank_meta[32];
             //bankMeta.msb = bank_meta[33];
         }
     }
 
-    opl.AdlBank = m_setup.AdlBank;
-    opl.dynamic_metainstruments.clear();
-    opl.dynamic_instruments.clear();
+    opl.setEmbeddedBank(m_setup.AdlBank);
 
     uint16_t total = 128 * count_melodic_banks;
     bool readPercussion = false;
@@ -284,28 +291,24 @@ tryAgain:
         memset(&ins, 0, sizeof(WOPL_Inst));
         if(!readInstrument(fr, ins, readPercussion))
         {
-            opl.dynamic_metainstruments.clear();
-            opl.dynamic_instruments.clear();
+            opl.setEmbeddedBank(m_setup.AdlBank);
             errorStringOut = "Custom bank: Fail to read instrument!";
             return false;
         }
 
-        if(i < 128) //Only first bank!
+        /*
+         * 0..127 - melodic, 128...255 - percussion.
+         * TODO: Make separated melodic and drum arrays and make MIDI bank ID support
+         */
+        ins.adlins.adlno1 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
+        opl.dynamic_instruments.push_back(ins.op[0]);
+        ins.adlins.adlno2 = ins.adlins.adlno1;
+        if(ins.fourOps)
         {
-            /*
-             * 0..127 - melodic, 128...255 - percussion.
-             * TODO: Make separated melodic and drum arrays and make MIDI bank ID support
-             */
-            ins.adlins.adlno1 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
-            opl.dynamic_instruments.push_back(ins.op[0]);
-            ins.adlins.adlno2 = ins.adlins.adlno1;
-            if(ins.fourOps)
-            {
-                ins.adlins.adlno2 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
-                opl.dynamic_instruments.push_back(ins.op[1]);
-            }
-            opl.dynamic_metainstruments.push_back(ins.adlins);
+            ins.adlins.adlno2 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
+            opl.dynamic_instruments.push_back(ins.op[1]);
         }
+        opl.dynamic_metainstruments.push_back(ins.adlins);
     }
 
     if(!readPercussion)
@@ -316,6 +319,8 @@ tryAgain:
     }
 
     opl.AdlBank = ~0u; // Use dynamic banks!
+    //Percussion offset is count of instruments multipled to count of melodic banks
+    opl.dynamic_percussion_offset = 128 * count_melodic_banks;
 
     return true;
 }
