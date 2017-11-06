@@ -236,6 +236,7 @@ struct MIDIEventHooks
     void *onDebugMessage_userData;
 };
 
+
 class MIDIplay
 {
 public:
@@ -424,7 +425,6 @@ public:
             // Index to physical adlib data structure, adlins[]
             char ____padding2[3];
             uint32_t insmeta;
-            char ____padding3[4];
             struct Phys
             {
                 //! ins, inde to adl[]
@@ -442,7 +442,8 @@ public:
                 }
             };
             typedef std::map<uint16_t, Phys> PhysMap;
-            // List of adlib channels it is currently occupying.
+            char    ____padding3[4];
+            // List of OPL3 channels it is currently occupying.
             std::map<uint16_t /*adlchn*/, Phys> phys;
         };
         typedef std::map<uint8_t, NoteInfo> activenotemap_t;
@@ -462,7 +463,7 @@ public:
               activenotes() { }
     };
 
-    // Additional information about AdLib channels
+    // Additional information about OPL3 channels
     struct AdlChannel
     {
         // For collisions
@@ -483,9 +484,8 @@ public:
         struct LocationData
         {
             bool sustained;
-            char ____padding[1];
+            char ____padding[7];
             MIDIchannel::NoteInfo::Phys ins;  // a copy of that in phys[]
-            char ____padding2[4];
             int64_t kon_time_until_neglible;
             int64_t vibdelay;
         };

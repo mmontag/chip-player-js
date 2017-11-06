@@ -13,6 +13,11 @@ INCLUDEPATH += $$PWD/../../src $$PWD/../../include
 #LIBS += -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lpthread -ldl
 LIBS += -lSDL2 -lpthread -ldl
 
+linux-*: {
+    QMAKE_CXXFLAGS += -fopenmp
+    QMAKE_LFLAGS += -fopenmp
+}
+
 #DEFINES += DEBUG_TIME_CALCULATION
 #DEFINES += DEBUG_SEEKING_TEST
 #DEFINES += DISABLE_EMBEDDED_BANKS

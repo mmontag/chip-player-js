@@ -477,16 +477,14 @@ inline static void SendStereoAudio(MIDIplay::Setup &device,
 
 ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
+    sampleCount -= sampleCount % 2; //Avoid even sample requests
+    if(sampleCount < 0)
+        return 0;
     if(!device)
         return 0;
 
     MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     MIDIplay::Setup &setup = player->m_setup;
-
-    sampleCount -= sampleCount % 2; //Avoid even sample requests
-
-    if(sampleCount < 0)
-        return 0;
 
     ssize_t gotten_len = 0;
     ssize_t n_periodCountStereo = 512;
@@ -575,4 +573,48 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
     }
 
     return static_cast<int>(gotten_len);
+}
+
+
+ADLMIDI_EXPORT int adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out)
+{
+    sampleCount -= sampleCount % 2; //Avoid even sample requests
+    if(sampleCount < 0)
+        return 0;
+    if(!device)
+        return 0;
+
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    sampleCount = (sampleCount > 1024) ? 1024 : sampleCount;
+
+    //! Count of stereo samples
+    ssize_t in_generatedStereo = sampleCount / 2;
+    //! Unsigned total sample count
+    //fill buffer with zeros
+    std::memset(out, 0, static_cast<size_t>(sampleCount) * sizeof(int16_t));
+
+    if(player->m_setup.NumCards == 1)
+    {
+        #ifdef ADLMIDI_USE_DOSBOX_OPL
+        player->opl.cards[0].GenerateArr(out, &in_generatedStereo);
+        in_generatedPhys = in_generatedStereo * 2;
+        #else
+        OPL3_GenerateStream(&player->opl.cards[0], out, static_cast<Bit32u>(in_generatedStereo));
+        #endif
+    }
+    else
+    {
+        /* Generate data from every chip and mix result */
+        for(unsigned card = 0; card < player->m_setup.NumCards; ++card)
+        {
+            #ifdef ADLMIDI_USE_DOSBOX_OPL
+            player->opl.cards[card].GenerateArrMix(out, &in_generatedStereo);
+            in_generatedPhys = in_generatedStereo * 2;
+            #else
+            OPL3_GenerateStreamMix(&player->opl.cards[card], out, static_cast<Bit32u>(in_generatedStereo));
+            #endif
+        }
+    }
+
+    return sampleCount;
 }

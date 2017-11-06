@@ -21,7 +21,7 @@
 #include <assert.h>
 
 #define SUPPORT_VIDEO_OUTPUT
-#define SUPPORT_PUZZLE_GAME
+//#define SUPPORT_PUZZLE_GAME
 
 #ifdef __WIN32__
 # include <cctype>
@@ -1270,22 +1270,23 @@ static void SendStereoAudio(unsigned long count, short *samples)
 /*
  * THIS CLASS USES !!!ADL PRIVATE!!!
  */
-class Tester
+class AdlInstrumentTester
 {
-    unsigned cur_gm;
-    unsigned ins_idx;
-    std::vector<unsigned> adl_ins_list;
-    OPL3 &opl;// !!!ADL PRIVATE!!!
+    uint32_t cur_gm;
+    uint32_t ins_idx;
+    std::vector<uint32_t> adl_ins_list;
+    OPL3 &opl;
+
 public:
-    Tester(OPL3 &o) // !!!ADL PRIVATE!!!
+    AdlInstrumentTester(OPL3 &o)
         : opl(o)
     {
         cur_gm   = 0;
         ins_idx  = 0;
     }
-    ~Tester()
-    {
-    }
+
+    ~AdlInstrumentTester()
+    {}
 
     // Find list of adlib instruments that supposedly implement this GM
     void FindAdlList()
@@ -1323,16 +1324,17 @@ public:
         int tone = (cur_gm & 128) ? (cur_gm & 127) : (note + 50);
         if(ains.tone)
         {
-            if(ains.tone < 20)
+            /*if(ains.tone < 20)
                 tone += ains.tone;
-            else if(ains.tone < 128)
+            else */
+            if(ains.tone < 128)
                 tone = ains.tone;
             else
                 tone -= ains.tone - 128;
         }
         double hertz = 172.00093 * std::exp(0.057762265 * (tone + 0.0));
         int i[2] = { ains.adlno1, ains.adlno2 };
-        int adlchannel[2] = { 0, 3 };
+        int32_t adlchannel[2] = { 0, 3 };
         if(i[0] == i[1])
         {
             adlchannel[1] = -1;
@@ -1352,16 +1354,16 @@ public:
         for(unsigned c = 0; c < 2; ++c)
         {
             if(adlchannel[c] < 0) continue;
-            opl.Patch(adlchannel[c], i[c]);
-            opl.Touch_Real(adlchannel[c], 127 * 127 * 100);
-            opl.Pan(adlchannel[c], 0x30);
-            opl.NoteOn(adlchannel[c], hertz);
+            opl.Patch((uint16_t)adlchannel[c], (uint16_t)i[c]);
+            opl.Touch_Real((uint16_t)adlchannel[c], 127 * 127 * 100);
+            opl.Pan((uint16_t)adlchannel[c], 0x30);
+            opl.NoteOn((uint16_t)adlchannel[c], hertz);
         }
     }
 
     void NextGM(int offset)
     {
-        cur_gm = (cur_gm + 256 + offset) & 0xFF;
+        cur_gm = (cur_gm + 256 + (uint32_t)offset) & 0xFF;
         FindAdlList();
     }
 
@@ -1369,7 +1371,7 @@ public:
     {
         if(adl_ins_list.empty()) FindAdlList();
         const unsigned NumBanks = (unsigned)adl_getBanksCount();
-        ins_idx = (ins_idx + adl_ins_list.size() + offset) % adl_ins_list.size();
+        ins_idx = (uint32_t)((int32_t)ins_idx + (int32_t)adl_ins_list.size() + offset) % adl_ins_list.size();
 
         UI.Color(15);
         std::fflush(stderr);
@@ -1860,7 +1862,7 @@ int main(int argc, char **argv)
     #endif /* djgpp */
 
     // !!!ADL PRIVATE!!!
-    Tester InstrumentTester(((MIDIplay *)myDevice->adl_midiPlayer)->opl);
+    AdlInstrumentTester InstrumentTester(((MIDIplay *)myDevice->adl_midiPlayer)->opl);
 
     //static std::vector<int> sample_buf;
     double delay = 0.0;
@@ -1873,7 +1875,12 @@ int main(int argc, char **argv)
         #ifndef __DJGPP__
         const double eat_delay = delay < maxdelay ? delay : maxdelay;
         delay -= eat_delay;
-        size_t got = (size_t)adl_play(myDevice, 1024, buff);
+        size_t got = 0;
+
+        if(!DoingInstrumentTesting)
+            got = (size_t)adl_play(myDevice, 1024, buff);
+        else
+            got = (size_t)adl_generate(myDevice, 1024, buff);
         if(got <= 0)
             break;
         /* Process it */

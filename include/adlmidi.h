@@ -175,9 +175,11 @@ extern const struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device
 
 
 
-/*Take a sample buffer*/
+/*Take a sample buffer and iterate MIDI timers */
 extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
 
+/*Generate audio output from chip emulators without iteration of MIDI timers. 512 samples per channel is a maximum*/
+extern int  adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out);
 
 /**Hooks**/
 
