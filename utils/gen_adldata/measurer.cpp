@@ -220,8 +220,8 @@ DurationInfo MeasureDurations(const ins &in)
     result.peak_amplitude_time = peak_amplitude_time;
     result.peak_amplitude_value = peak_amplitude_value;
     result.begin_amplitude = begin_amplitude;
-    result.quarter_amplitude_time = quarter_amplitude_time;
-    result.keyoff_out_time = keyoff_out_time;
+    result.quarter_amplitude_time = (double)quarter_amplitude_time;
+    result.keyoff_out_time = (double)keyoff_out_time;
 
     result.ms_sound_kon  = (long)(quarter_amplitude_time * 1000.0 / interval);
     result.ms_sound_koff = (long)(keyoff_out_time        * 1000.0 / interval);

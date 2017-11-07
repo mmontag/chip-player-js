@@ -11,7 +11,9 @@
 #include <ctime>
 #include <cstdarg>
 #include <cmath>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <stdarg.h>
 #include <cstdio>
 #include <vector> // vector
@@ -20,22 +22,30 @@
 
 #include <assert.h>
 
+#ifndef _WIN32
 #define SUPPORT_VIDEO_OUTPUT
 #define SUPPORT_PUZZLE_GAME
+#endif
 
-#ifdef __WIN32__
+#if !defined(_WIN32) || !defined(_MSC_VER)
+#define ATTRIBUTE_FORMAT_PRINTF(x, y) __attribute__((format(printf, x, y)))
+#else
+#define ATTRIBUTE_FORMAT_PRINTF(x, y)
+#endif
+
+#ifdef _WIN32
 # include <cctype>
 # define WIN32_LEAN_AND_MEAN
+# define NOMINMAX //To don't damage std::min and std::max
 # include <windows.h>
 # include <mmsystem.h>
 #endif
 
-#if defined(__WIN32__) || defined(__DJGPP__)
+#if defined(_WIN32) || defined(__DJGPP__)
 typedef unsigned char Uint8;
 typedef unsigned short Uint16;
 typedef unsigned Uint32;
 #else
-
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 
@@ -69,7 +79,7 @@ public:
 #include <stdlib.h>
 #define BIOStimer _farpeekl(_dos_ds, 0x46C)
 static const unsigned NewTimerFreq = 209;
-#elif !defined(__WIN32__) || defined(__CYGWIN__)
+#elif !defined(_WIN32) || defined(__CYGWIN__)
 # include <termios.h>
 # include <fcntl.h>
 # include <sys/ioctl.h>
@@ -118,7 +128,7 @@ static unsigned WinHeight()
     return result;
 }
 
-#if (!defined(__WIN32__) || defined(__CYGWIN__)) && defined(TIOCGWINSZ)
+#if (!defined(_WIN32) || defined(__CYGWIN__)) && defined(TIOCGWINSZ)
 extern "C" {
     static void SigWinchHandler(int);
 }
@@ -141,19 +151,19 @@ static void GuessInitialWindowHeight()
 
 static class Input
 {
-    #ifdef __WIN32__
+    #ifdef _WIN32
     void *inhandle;
     #endif
-    #if (!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__)
+    #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
     struct termio back;
     #endif
 public:
     Input()
     {
-        #ifdef __WIN32__
+        #ifdef _WIN32
         inhandle = GetStdHandle(STD_INPUT_HANDLE);
         #endif
-        #if (!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__)
+        #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
         ioctl(0, TCGETA, &back);
         struct termio term = back;
         term.c_lflag &= ~(ICANON | ECHO);
@@ -164,7 +174,7 @@ public:
     }
     ~Input()
     {
-        #if (!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__)
+        #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
         if(ioctl(0, TCSETA, &back) < 0)
             fcntl(0, F_SETFL, fcntl(0, F_GETFL) & ~ O_NONBLOCK);
         #endif
@@ -179,7 +189,7 @@ public:
             return c ? c : getch();
         }
         #endif
-        #ifdef __WIN32__
+        #ifdef _WIN32
         DWORD nread = 0;
         INPUT_RECORD inbuf[1];
         while(PeekConsoleInput(inhandle, inbuf, sizeof(inbuf) / sizeof(*inbuf), &nread) && nread)
@@ -195,7 +205,7 @@ public:
             }
         }
         #endif
-        #if (!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__)
+        #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
         char c = 0;
         if(read(0, &c, 1) == 1) return c;
         #endif
@@ -248,7 +258,7 @@ public:
     bool           DirtyCells[TxWidth * TxHeight] = {false};
     unsigned       NDirty = 0;
     #endif
-    #ifdef __WIN32__
+    #ifdef _WIN32
     void *handle;
     #endif
     int x, y, color, txtline, maxy;
@@ -268,7 +278,7 @@ public:
         maxy(0), cursor_visible(true)
     {
         GuessInitialWindowHeight();
-        #ifdef __WIN32__
+        #ifdef _WIN32
         handle = GetStdHandle(STD_OUTPUT_HANDLE);
         GotoXY(41, 13);
         CONSOLE_SCREEN_BUFFER_INFO tmp;
@@ -285,7 +295,7 @@ public:
             //SetConsoleScreenBufferSize(handle,size);
         }
         #endif
-        #if (!defined(__WIN32__) || defined(__CYGWIN__)) && defined(TIOCGWINSZ)
+        #if (!defined(_WIN32) || defined(__CYGWIN__)) && defined(TIOCGWINSZ)
         std::signal(SIGWINCH, SigWinchHandler);
         #endif
         #ifdef __DJGPP__
@@ -294,7 +304,9 @@ public:
         std::memset(slots, '.',      sizeof(slots));
         std::memset(background, '.', sizeof(background));
         std::memset(backgroundcolor, 1, sizeof(backgroundcolor));
+        #ifndef _WIN32
         setbuffer(stderr, stderr_buffer, sizeof(stderr_buffer));
+        #endif
         RawPrn("\r"); // Ensure cursor is at the x=0 we imagine it being
         Print(0, 7, true, "Hit Ctrl-C to quit");
     }
@@ -302,7 +314,7 @@ public:
     {
         if(!cursor_visible) return;
         cursor_visible = false;
-        #ifdef __WIN32__
+        #ifdef _WIN32
         if(handle)
         {
             const CONSOLE_CURSOR_INFO info = {100, false};
@@ -328,7 +340,7 @@ public:
         cursor_visible = true;
         GotoXY(0, maxy);
         Color(7);
-        #ifdef __WIN32__
+        #ifdef _WIN32
         if(handle)
         {
             const CONSOLE_CURSOR_INFO info = {100, true};
@@ -422,7 +434,7 @@ public:
     #endif
     void PutC(char c)
     {
-        #ifdef __WIN32__
+        #ifdef _WIN32
         if(handle) WriteConsole(handle, &c, 1, 0, 0);
         else
         #endif
@@ -440,13 +452,16 @@ public:
 #ifdef __DJGPP__
 #   define RawPrn cprintf
 #else
-    static void RawPrn(const char *fmt, ...) __attribute__((format(printf, 1, 2)))
+    static void RawPrn(const char *fmt, ...) ATTRIBUTE_FORMAT_PRINTF(1, 2)
     {
         // Note: should essentially match PutC, except without updates to x
         va_list ap;
         va_start(ap, fmt);
         vfprintf(stderr, fmt, ap);
         va_end(ap);
+        #ifdef _WIN32
+        fflush(stderr);
+        #endif
     }
 #endif
 
@@ -487,7 +502,7 @@ public:
 
         return nchars;
     }
-    int Print(unsigned beginx, unsigned color, bool ln, const char *fmt, ...) __attribute__((format(printf, 5, 6)))
+    int Print(unsigned beginx, unsigned color, bool ln, const char *fmt, ...) ATTRIBUTE_FORMAT_PRINTF(5, 6)
     {
         va_list ap;
         va_start(ap, fmt);
@@ -495,7 +510,7 @@ public:
         va_end(ap);
         return r;
     }
-    int PrintLn(const char *fmt, ...) __attribute__((format(printf, 2, 3)))
+    int PrintLn(const char *fmt, ...) ATTRIBUTE_FORMAT_PRINTF(2, 3)
     {
         va_list ap;
         va_start(ap, fmt);
@@ -608,7 +623,7 @@ public:
             y += 1;
             x = 0;
         }
-        #ifdef __WIN32__
+        #ifdef _WIN32
         if(handle)
         {
             CONSOLE_SCREEN_BUFFER_INFO tmp;
@@ -656,7 +671,7 @@ public:
     {
         if(color != newcolor)
         {
-            #ifdef __WIN32__
+            #ifdef _WIN32
             if(handle)
                 SetConsoleTextAttribute(handle, newcolor);
             else
@@ -863,7 +878,7 @@ static struct MyReverbData
     }
 } reverb_data;
 
-#ifdef __WIN32__
+#ifdef _WIN32
 namespace WindowsAudio
 {
     static const unsigned BUFFER_COUNT = 16;
@@ -1095,7 +1110,7 @@ static void SendStereoAudio(unsigned long count, short *samples)
 
     //static unsigned counter = 0; if(++counter < 8000)  return;
 
-    #if defined(__WIN32__) && 0
+    #if defined(_WIN32) && 0
     // Cheat on dosbox recording: easier on the cpu load.
     {
         count *= 2;
@@ -1107,7 +1122,7 @@ static void SendStereoAudio(unsigned long count, short *samples)
     }
     #endif
 
-    #ifdef __WIN32__
+    #ifdef _WIN32
     std::vector<short> AudioBuffer(count * 2);
     const size_t pos = 0;
     #else
@@ -1217,6 +1232,7 @@ static void SendStereoAudio(unsigned long count, short *samples)
         //    raise(SIGINT);
     }
 
+    #ifdef SUPPORT_VIDEO_OUTPUT
     if(WriteVideoFile)
     {
         static constexpr unsigned framerate = 15;
@@ -1258,7 +1274,9 @@ static void SendStereoAudio(unsigned long count, short *samples)
             }
         }
     }
-    #ifndef __WIN32__
+    #endif
+
+    #ifndef _WIN32
     AudioBuffer_lock.Unlock();
     #else
     if(!WritePCMfile)
@@ -1445,7 +1463,7 @@ static void SendStereoAudio(unsigned long count, short *samples)
 //            NextGM(+1);
 //            break;
 //        case 3:
-//            #if !((!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__))
+//            #if !((!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__))
 //        case 27:
 //            #endif
 //            return false;
@@ -1468,7 +1486,7 @@ static void TidyupAndExit(int)
     raise(SIGINT);
 }
 
-#ifdef __WIN32__
+#ifdef _WIN32
 /* Parse a command line buffer into arguments */
 static void UnEscapeQuotes(char *arg)
 {
@@ -1589,6 +1607,7 @@ int main(int argc, char **argv)
     // The lag between visual content and audio content equals
     // the sum of these two buffers.
 
+    #ifndef _WIN32
     WritingToTTY = isatty(STDOUT_FILENO);
     if(WritingToTTY)
     {
@@ -1600,6 +1619,9 @@ int main(int argc, char **argv)
                  #endif
                 );
     }
+    #else
+    WritingToTTY = true;
+    #endif
     if(WritingToTTY)
     {
         UI.Print(0, 3, true, "(C) -- http://iki.fi/bisqwit/source/adlmidi.html");
@@ -1726,7 +1748,7 @@ int main(int argc, char **argv)
 
     #ifndef __DJGPP__
 
-    #ifndef __WIN32__
+    #ifndef _WIN32
     static SDL_AudioSpec spec, obtained;
     spec.freq     = PCM_RATE;
     spec.format   = AUDIO_S16SYS;
@@ -1861,7 +1883,7 @@ int main(int argc, char **argv)
 
     //const double maxdelay = MaxSamplesAtTime / (double)PCM_RATE;
 
-    #ifdef __WIN32
+    #ifdef _WIN32
     WindowsAudio::Open(PCM_RATE, 2, 16);
     #else
     SDL_PauseAudio(0);
@@ -1933,7 +1955,7 @@ int main(int argc, char **argv)
 
         //fprintf(stderr, "Enter: %u (%.2f ms)\n", (unsigned)AudioBuffer.size(),
         //    AudioBuffer.size() * .5e3 / obtained.freq);
-        #ifndef __WIN32__
+        #ifndef _WIN32
         const SDL_AudioSpec &spec_ = (WritePCMfile ? spec : obtained);
         for(unsigned grant = 0; AudioBuffer.size() > spec_.samples + (spec_.freq * 2) * OurHeadRoomLength; ++grant)
         {
@@ -2007,7 +2029,7 @@ int main(int argc, char **argv)
 
     #else
 
-    #ifdef __WIN32__
+    #ifdef _WIN32
     WindowsAudio::Close();
     #else
     SDL_CloseAudio();

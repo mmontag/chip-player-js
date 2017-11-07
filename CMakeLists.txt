@@ -196,20 +196,18 @@ if(WITH_MIDIPLAY)
 endif()
 
 if(WITH_ADLMIDI2)
-    find_library(SDL2_LIBRARY SDL2 REQUIRED)
-    include_directories(${SDL2_INCLUDE_DIR})
-    message("Found ${SDL2_LIBRARY}")
+    if(NOT WIN32)
+        find_library(SDL2_LIBRARY SDL2 REQUIRED)
+        include_directories(${SDL2_INCLUDE_DIR})
+        message("Found ${SDL2_LIBRARY}")
+    endif()
 
     add_executable(adlmidi2
         ${libADLMIDI_SOURCE_DIR}/utils/adlmidi-2/midiplay.cc
     )
 
     if(WIN32)
-        if(MSVC)
-            target_link_libraries(adlmidi2 ADLMIDI ${SDL2_LIBRARY})
-        else()
-            target_link_libraries(adlmidi2 ADLMIDI ${SDL2_LIBRARY} pthread)
-        endif()
+        target_link_libraries(adlmidi2 ADLMIDI winmm)
     else()
         target_link_libraries(adlmidi2 ADLMIDI ${SDL2_LIBRARY} pthread dl m stdc++)
     endif()

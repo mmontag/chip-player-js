@@ -416,9 +416,9 @@ bool IniProcessing::parseFile(const char *filename)
     int newSize = MultiByteToWideChar(CP_UTF8,
                                       0,
                                       filename,
-                                      dest.size(),
+                                      (int)dest.size(),
                                       (wchar_t *)dest.c_str(),
-                                      dest.size());
+                                      (int)dest.size());
     dest.resize(newSize);
     FILE *cFile = _wfopen(dest.c_str(), L"rb");
     #else

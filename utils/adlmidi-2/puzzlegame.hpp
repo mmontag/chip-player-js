@@ -32,7 +32,7 @@ namespace ADLMIDI_PuzzleGame
     static unsigned long TimerRead()
     {
         static std::chrono::time_point<std::chrono::system_clock> begin = std::chrono::system_clock::now();
-        return 519 * std::chrono::duration<double>( std::chrono::system_clock::now() - begin ).count();
+        return (unsigned long)(519 * std::chrono::duration<double>( std::chrono::system_clock::now() - begin ).count());
     }
     #define Timer TimerRead()
     static void Sound(unsigned/*freq*/, unsigned/*duration*/)
@@ -684,7 +684,7 @@ namespace ADLMIDI_PuzzleGame
             seq[6]>db; seq[5] = seq[6];*/
             fx();
             const unsigned npieces = sizeof(b) / sizeof(*b);
-            unsigned rnd = (std::rand()/double(RAND_MAX)) * (4*npieces);
+            unsigned rnd = (unsigned)((std::rand()/double(RAND_MAX)) * (4 * npieces));
         #ifndef EASY
             /*if(pieces > 3)
             {
