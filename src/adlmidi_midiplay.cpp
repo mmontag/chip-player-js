@@ -25,6 +25,20 @@
 
 // Mapping from MIDI volume level to OPL level value.
 
+#if defined(ANDROID) && (cplusplus < 201103L)
+namespace std
+{
+    int snprintf(char *out, size_t len, const char *fmt, ...)
+    {
+        va_list args;
+        va_start(args, fmt);
+        int rc = ::vsnprintf(out, len, fmt, args);
+        va_end(args);
+        return rc;
+    }
+}
+#endif
+
 static const uint32_t DMX_volume_mapping_table[] =
 {
     0,  1,  3,  5,  6,  8,  10, 11,
