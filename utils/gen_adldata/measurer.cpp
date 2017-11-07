@@ -2,9 +2,9 @@
 #include <cmath>
 
 #ifndef ADLMIDI_USE_DOSBOX_OPL
-#include "../nukedopl3.h"
+#include "../../src/nukedopl3.h"
 #else
-#include "../dbopl.h"
+#include "../../src/dbopl.h"
 #endif
 
 DurationInfo MeasureDurations(const ins &in)
