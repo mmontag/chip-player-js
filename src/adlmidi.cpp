@@ -635,7 +635,7 @@ ADLMIDI_EXPORT int adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *
     {
         #ifdef ADLMIDI_USE_DOSBOX_OPL
         player->opl.cards[0].GenerateArr(out, &in_generatedStereo);
-        in_generatedPhys = in_generatedStereo * 2;
+        sampleCount = in_generatedStereo * 2;
         #else
         OPL3_GenerateStream(&player->opl.cards[0], out, static_cast<Bit32u>(in_generatedStereo));
         #endif
@@ -647,7 +647,7 @@ ADLMIDI_EXPORT int adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *
         {
             #ifdef ADLMIDI_USE_DOSBOX_OPL
             player->opl.cards[card].GenerateArrMix(out, &in_generatedStereo);
-            in_generatedPhys = in_generatedStereo * 2;
+            sampleCount = in_generatedStereo * 2;
             #else
             OPL3_GenerateStreamMix(&player->opl.cards[card], out, static_cast<Bit32u>(in_generatedStereo));
             #endif
