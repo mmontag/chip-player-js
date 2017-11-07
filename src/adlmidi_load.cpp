@@ -387,7 +387,6 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     cmf_percussion_mode = false;
     opl.Reset(m_setup.PCM_RATE);
 
-    trackStart       = true;
     atEnd            = false;
     loopStart        = true;
     invalidLoop      = false;

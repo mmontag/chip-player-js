@@ -533,7 +533,10 @@ bool MIDIplay::buildTrackData()
     }
 
     fullSongTimeLength += postSongWaitDelay;
+    //Set begin of the music
     trackBeginPositionNew = CurrentPositionNew;
+    //Initial loop position will begin at begin of track until passing of the loop point
+    LoopBeginPositionNew  = CurrentPositionNew;
 
 
     /********************************************************************************/
@@ -642,7 +645,6 @@ MIDIplay::MIDIplay():
     loopStartTime(-1.0),
     loopEndTime(-1.0),
     tempoMultiplier(1.0),
-    trackStart(false),
     atEnd(false),
     loopStart(false),
     loopEnd(false),
@@ -752,6 +754,7 @@ void MIDIplay::seek(double seconds)
                  s = seconds;//m_setup.delay < m_setup.maxdelay ? m_setup.delay : m_setup.maxdelay;
 
     bool loopFlagState = m_setup.loopingIsEnabled;
+    // Turn loop pooints off because it causes wrong position rememberin on a quick seek
     m_setup.loopingIsEnabled = false;
 
     /*
@@ -761,8 +764,16 @@ void MIDIplay::seek(double seconds)
      * - All sustaining notes must be killed
      * - Ignore Note-On events
      */
-
     rewind();
+
+    /*
+     * Set "loop Start" to false to prevent overwrite of loopStart position with
+     * seek destinition position
+     *
+     * TODO: Detect & set loopStart position on load time to don't break loop while seeking
+     */
+    loopStart   = false;
+
     while((CurrentPositionNew.absTimePosition < seconds) &&
           (CurrentPositionNew.absTimePosition < fullSongTimeLength))
     {
@@ -821,11 +832,11 @@ void MIDIplay::rewind()
 {
     Panic();
     KillSustainingNotes(-1, -1);
-    CurrentPositionNew  = trackBeginPositionNew;
-    trackStart       = true;
+    CurrentPositionNew   = trackBeginPositionNew;
     atEnd            = false;
     loopStart        = true;
-    invalidLoop      = false;
+    loopEnd          = false;
+    //invalidLoop      = false;//No more needed here as this flag is set on load time
 }
 
 void MIDIplay::setTempo(double tempo)
@@ -1581,7 +1592,6 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
     if(CurrentPositionNew.began)
     #endif
         CurrentPositionNew.wait += t.value();
-
 
     //if(shortest > 0) UI.PrintLn("Delay %ld (%g)", shortest, (double)t.valuel());
     if(loopStart)

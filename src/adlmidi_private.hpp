@@ -762,8 +762,7 @@ public:
     fraction<uint64_t> InvDeltaTicks, Tempo;
     //! Tempo multiplier
     double  tempoMultiplier;
-    bool    trackStart,
-            atEnd,
+    bool    atEnd,
             loopStart,
             loopEnd,
             invalidLoop; /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/
