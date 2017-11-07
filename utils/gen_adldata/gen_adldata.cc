@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <string>
 #include <cstring>
+
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 #include "ini/ini_processing.h"

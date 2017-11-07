@@ -36,7 +36,9 @@
 #ifdef _WIN32
 # include <cctype>
 # define WIN32_LEAN_AND_MEAN
-# define NOMINMAX //To don't damage std::min and std::max
+# ifndef NOMINMAX
+#   define NOMINMAX //To don't damage std::min and std::max
+# endif
 # include <windows.h>
 # include <mmsystem.h>
 #endif
@@ -112,8 +114,10 @@ static bool QuitFlag = false, FakeDOSshell = false;
 static bool DoingInstrumentTesting = false;
 static bool WritePCMfile = false;
 static std::string PCMfilepath = "adlmidi.wav";
+#ifdef SUPPORT_VIDEO_OUTPUT
 static std::string VidFilepath = "adlmidi.mkv";
 static bool WriteVideoFile = false;
+#endif
 static unsigned WindowLines = 0;
 static bool WritingToTTY;
 
@@ -628,7 +632,7 @@ public:
         {
             CONSOLE_SCREEN_BUFFER_INFO tmp;
             GetConsoleScreenBufferInfo(handle, &tmp);
-            COORD tmp2 = { x = newx, tmp.dwCursorPosition.Y } ;
+            COORD tmp2 = { (SHORT)(x = newx), (SHORT)tmp.dwCursorPosition.Y };
             if(newy < y)
             {
                 tmp2.Y -= (y - newy);
@@ -1719,6 +1723,7 @@ int main(int argc, char **argv)
                 }
             }
         }
+        #ifdef SUPPORT_VIDEO_OUTPUT
         else if(!std::strcmp("-d", argv[2]))
         {
             loopEnabled = 0;
@@ -1733,6 +1738,7 @@ int main(int argc, char **argv)
                 }
             }
         }
+        #endif
         else if(!std::strcmp("-s", argv[2]))
             adl_setScaleModulators(myDevice, 1);
         else if(!std::strcmp("-nr", argv[2]))
