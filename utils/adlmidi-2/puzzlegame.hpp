@@ -815,7 +815,7 @@ namespace ADLMIDI_PuzzleGame
         virtual int MyGetCh()
         {
             int r = PendingAIinput;
-            return r ? (PendingAIinput=0), r : GenerateAIinput();
+            return r ? static_cast<void>((PendingAIinput=0)), r : GenerateAIinput();
         }
         char d(char c, int maxdelay)
         {

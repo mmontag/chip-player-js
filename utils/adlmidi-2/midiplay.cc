@@ -105,8 +105,6 @@ static const unsigned MaxSamplesAtTime = 512; // 512=dbopl limitation
 static const unsigned MaxCards = 1;
 static const unsigned OPLBase = 0x388;
 #endif
-static unsigned AdlBank    = 0;
-static unsigned NumFourOps = 7;
 static unsigned NumCards   = 2;
 static bool AdlPercussionMode = false;
 static bool ReverbIsOn = true;
@@ -1481,13 +1479,18 @@ static void SendStereoAudio(unsigned long count, short *samples)
 //    }
 //};
 
-static void TidyupAndExit(int)
+static void TidyupAndExit(int sig)
 {
-    UI.ShowCursor();
-    UI.Color(7);
-    std::fflush(stderr);
-    signal(SIGINT, SIG_DFL);
-    raise(SIGINT);
+    if(sig == SIGINT)
+    {
+        UI.ShowCursor();
+        UI.Color(7);
+        std::fflush(stderr);
+        //signal(SIGINT, SIG_DFL);
+        //raise(SIGINT);
+        std::printf("\nBye!\n");
+        QuitFlag = true;
+    }
 }
 
 #ifdef _WIN32
@@ -1599,6 +1602,13 @@ static void adlDebugMsgHook(void *userdata, const char *fmt, ...)
     //return r;
 }
 
+static bool is_number(const std::string &s)
+{
+    std::string::const_iterator it = s.begin();
+    while(it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
+
 int main(int argc, char **argv)
 {
     // How long is SDL buffer, in seconds?
@@ -1661,6 +1671,9 @@ int main(int argc, char **argv)
         std::printf(
             "     Use banks 2-5 to play Descent \"q\" soundtracks.\n"
             "     Look up the relevant bank number from descent.sng.\n"
+            "\n"
+            "     You can pass the file path instead of bank number\n"
+            "     to use a custom bank. (WOPL format is supported)\n"
             "\n"
             "     <numfourops> can be used to specify the number\n"
             "     of four-op channels to use. Each four-op channel eats\n"
@@ -1780,23 +1793,41 @@ int main(int argc, char **argv)
 
     if(argc >= 3)
     {
-        const unsigned NumBanks = (unsigned)adl_getBanksCount();
-        int bankno = std::atoi(argv[2]);
-        if(bankno == -1)
+        if(is_number(argv[2]))
         {
-            bankno = 0;
-            DoingInstrumentTesting = true;
+            int bankno = std::atoi(argv[2]);
+            if(bankno == -1)
+            {
+                bankno = 0;
+                DoingInstrumentTesting = true;
+            }
+            else
+            {
+                if(WritingToTTY)
+                    UI.PrintLn("FM instrument bank %u selected.", bankno);
+
+                if(adl_setBank(myDevice, bankno) < 0)
+                {
+                    std::fprintf(stderr, "ERROR: %s\n", adl_errorInfo(myDevice));
+                    UI.ShowCursor();
+                    return 1;
+                }
+            }
         }
-        AdlBank = (unsigned)bankno;
-        if(AdlBank >= NumBanks)
+        else
         {
-            std::fprintf(stderr, "bank number may only be 0..%u.\n", NumBanks - 1);
-            UI.ShowCursor();
-            return 0;
+            //Open external bank file (WOPL format is supported)
+            //to create or edit them, use OPL3 Bank Editor you can take here https://github.com/Wohlstand/OPL3BankEditor
+            if(adl_openBankFile(myDevice, argv[2]) != 0)
+            {
+                std::fprintf(stdout, "FAILED: %s\n", adl_errorInfo(myDevice));
+                UI.ShowCursor();
+                return 1;
+            }
+
+            if(WritingToTTY)
+                UI.PrintLn("FM instrument bank %s loaded.", argv[2]);
         }
-        if(WritingToTTY)
-            UI.PrintLn("FM instrument bank %u selected.", AdlBank);
-        adl_setBank(myDevice, bankno);
     }
 
 #if 0
@@ -1818,30 +1849,22 @@ int main(int argc, char **argv)
 
     if(argc >= 4)
     {
-        NumCards = (unsigned)std::atoi(argv[3]);
-        if(NumCards < 1 || NumCards > MaxCards)
+        int numChips = std::atoi(argv[3]);
+        if(adl_setNumChips(myDevice, (int)numChips) < 0)
         {
-            std::fprintf(stderr, "number of cards may only be 1..%u.\n", MaxCards);
+            std::fprintf(stderr, "ERROR: %s\n", adl_errorInfo(myDevice));
             UI.ShowCursor();
             return 0;
         }
-        adl_setNumChips(myDevice, (int)NumCards);
     }
 
     if(argc >= 5)
     {
-        NumFourOps = (unsigned)std::atoi(argv[4]);
-        if(NumFourOps > 6 * NumCards)
+        int numFourOps = std::atoi(argv[4]);
+        if(adl_setNumFourOpsChn(myDevice, (int)numFourOps) < 0)
         {
-            std::fprintf(stderr, "number of four-op channels may only be 0..%u when %u OPL3 cards are used.\n",
-                         6 * NumCards, NumCards);
+            std::fprintf(stderr, "ERROR: %s\n", adl_errorInfo(myDevice));
             UI.ShowCursor();
-            return 0;
-        }
-        if(adl_setNumFourOpsChn(myDevice, (int)NumFourOps) < 0)
-        {
-            UI.ShowCursor();
-            std::fprintf(stderr, "%s\n", adl_errorInfo(myDevice));
             return 0;
         }
     }
@@ -1855,14 +1878,16 @@ int main(int argc, char **argv)
     */
     if(WritingToTTY)
     {
-        UI.PrintLn("Simulating %u OPL3 cards for a total of %u operators.", NumCards, NumCards * 36);
+        int numChips = adl_getNumChips(myDevice);
+        int numFourOpChans = adl_getNumFourOpsChn(myDevice);
+        UI.PrintLn("Simulating %u OPL3 cards for a total of %u operators.", numChips, numChips * 36);
         std::string s = "Operator set-up: "
-                        + std::to_string(NumFourOps)
+                        + std::to_string(numFourOpChans)
                         + " 4op, "
-                        + std::to_string((AdlPercussionMode ? 15 : 18) * NumCards - NumFourOps * 2)
+                        + std::to_string((AdlPercussionMode ? 15 : 18) * numChips - numFourOpChans * 2)
                         + " 2op";
         if(AdlPercussionMode)
-            s += ", " + std::to_string(NumCards * 5) + " percussion";
+            s += ", " + std::to_string(numChips * 5) + " percussion";
         s += " channels";
         UI.PrintLn("%s", s.c_str());
     }
