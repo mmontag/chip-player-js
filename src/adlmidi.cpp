@@ -133,7 +133,7 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
     if(!device)
         return -1;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    if(ops4 > 6 * play->m_setup.NumCards)
+    if((unsigned int)ops4 > 6 * play->m_setup.NumCards)
     {
         std::stringstream s;
         s << "number of four-op channels may only be 0.." << (6 * (play->m_setup.NumCards)) << " when " << play->m_setup.NumCards << " OPL3 cards are used.\n";
