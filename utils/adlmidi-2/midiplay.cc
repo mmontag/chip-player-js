@@ -249,6 +249,10 @@ static const char MIDIsymbols[256 + 1] =
 
 static class UserInterface
 {
+#ifdef SUPPORT_PUZZLE_GAME
+    ADLMIDI_PuzzleGame::TetrisAI    player;
+    ADLMIDI_PuzzleGame::TetrisAI    computer;
+#endif
 public:
     static constexpr unsigned NColumns = 1216 / 20;
     #ifdef SUPPORT_VIDEO_OUTPUT
@@ -276,7 +280,12 @@ public:
     bool cursor_visible;
     char stderr_buffer[256];
 public:
-    UserInterface(): x(0), y(0), color(-1), txtline(0),
+    UserInterface():
+    #ifdef SUPPORT_PUZZLE_GAME
+        player(2),
+        computer(31),
+    #endif
+        x(0), y(0), color(-1), txtline(0),
         maxy(0), cursor_visible(true)
     {
         GuessInitialWindowHeight();
