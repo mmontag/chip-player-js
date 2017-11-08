@@ -244,6 +244,8 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     opl.dynamic_melodic_banks.clear();
     opl.dynamic_percussion_banks.clear();
 
+    opl.setEmbeddedBank(m_setup.AdlBank);
+
     if(version >= 2)//Read bank meta-entries
     {
         for(uint16_t i = 0; i < count_melodic_banks; i++)
@@ -278,8 +280,6 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
             //bankMeta.msb = bank_meta[33];
         }
     }
-
-    opl.setEmbeddedBank(m_setup.AdlBank);
 
     uint16_t total = 128 * count_melodic_banks;
     bool readPercussion = false;

@@ -58,7 +58,7 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
     return midi_device;
 }
 
-ADLMIDI_EXPORT int adl_setNumCards(ADL_MIDIPlayer *device, int numCards)
+ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numCards)
 {
     if(device == NULL)
         return -2;
@@ -76,6 +76,16 @@ ADLMIDI_EXPORT int adl_setNumCards(ADL_MIDIPlayer *device, int numCards)
     play->opl.NumCards = play->m_setup.NumCards;
 
     return adlRefreshNumCards(device);
+}
+
+ADLMIDI_EXPORT int adl_getNumChips(struct ADL_MIDIPlayer *device)
+{
+    if(device == NULL)
+        return -2;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(play)
+        return (int)play->m_setup.NumCards;
+    return -2;
 }
 
 ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
@@ -123,10 +133,7 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
     if(!device)
         return -1;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.NumFourOps = static_cast<unsigned int>(ops4);
-    play->opl.NumFourOps = play->m_setup.NumFourOps;
-
-    if(play->m_setup.NumFourOps > 6 * play->m_setup.NumCards)
+    if(ops4 > 6 * play->m_setup.NumCards)
     {
         std::stringstream s;
         s << "number of four-op channels may only be 0.." << (6 * (play->m_setup.NumCards)) << " when " << play->m_setup.NumCards << " OPL3 cards are used.\n";
@@ -134,9 +141,21 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
         return -1;
     }
 
-    return adlRefreshNumCards(device);
+    play->m_setup.NumFourOps = static_cast<unsigned int>(ops4);
+    play->opl.NumFourOps = play->m_setup.NumFourOps;
+
+    return 0; //adlRefreshNumCards(device);
 }
 
+ADLMIDI_EXPORT int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return -1;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(play)
+        return (int)play->m_setup.NumFourOps;
+    return -1;
+}
 
 ADLMIDI_EXPORT void adl_setPercMode(ADL_MIDIPlayer *device, int percmod)
 {
@@ -207,7 +226,7 @@ ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePat
                 play->setErrorString("ADL MIDI: Can't load file");
             return -1;
         }
-        else return 0;
+        else return adlRefreshNumCards(device);
     }
 
     ADLMIDI_ErrorString = "Can't load file: ADLMIDI is not initialized";
@@ -228,7 +247,7 @@ ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, lo
                 play->setErrorString("ADL MIDI: Can't load data from memory");
             return -1;
         }
-        else return 0;
+        else return adlRefreshNumCards(device);
     }
 
     ADLMIDI_ErrorString = "Can't load file: ADL MIDI is not initialized";

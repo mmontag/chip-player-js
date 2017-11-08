@@ -117,7 +117,7 @@ int main(int argc, char **argv)
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
         std::printf(
-            "Usage: adlmidi <midifilename> [ <options> ] [ <bank> [ <numcards> [ <numfourops>] ] ]\n"
+            "Usage: adlmidi <midifilename> [ <options> ] [ <bank> [ <numchips> [ <numfourops>] ] ]\n"
             " -p Enables adlib percussion instrument mode\n"
             " -t Enables tremolo amplification mode\n"
             " -v Enables vibrato amplification mode\n"
@@ -289,12 +289,12 @@ int main(int argc, char **argv)
         numOfChips = std::atoi(argv[3]);
 
     //Set count of concurrent emulated chips count to excite channels limit of one chip
-    if(adl_setNumCards(myDevice, numOfChips) != 0)
+    if(adl_setNumChips(myDevice, numOfChips) != 0)
     {
         printError(adl_errorInfo(myDevice));
         return 1;
     }
-    std::fprintf(stdout, " - Number of chips %d\n", numOfChips);
+    std::fprintf(stdout, " - Number of chips %d\n", adl_getNumChips(myDevice));
 
     if(argc >= 5)
     {
@@ -304,8 +304,8 @@ int main(int argc, char **argv)
             printError(adl_errorInfo(myDevice));
             return 1;
         }
-        std::fprintf(stdout, " - Number of four-ops %s\n", argv[4]);
     }
+    std::fprintf(stdout, " - Number of four-ops %d\n", adl_getNumFourOpsChn(myDevice));
 
     //Open MIDI file to play
     if(adl_openFile(myDevice, argv[1]) != 0)

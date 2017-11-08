@@ -897,21 +897,34 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if(isPercussion)
         midiins = opl.dynamic_percussion_offset + note; // Percussion instrument
 
+    uint16_t bank = 0;
     //Set bank bank
     if(Ch[channel].bank_msb || Ch[channel].bank_lsb)
     {
-        uint16_t bank = (uint16_t(Ch[channel].bank_msb) * 256) + uint16_t(Ch[channel].bank_lsb);
+        bank = (uint16_t(Ch[channel].bank_msb) * 256) + uint16_t(Ch[channel].bank_lsb);
         if(isPercussion)
         {
             OPL3::BankMap::iterator b = opl.dynamic_percussion_banks.find(bank);
             if(b != opl.dynamic_percussion_banks.end())
                 midiins += b->second * 128;
+            else
+            {
+                if(hooks.onDebugMessage)
+                    hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                                         "[%i] Playing missing percussion bank %i (patch %i)", channel, bank, midiins);
+            }
         }
         else
         {
             OPL3::BankMap::iterator b = opl.dynamic_melodic_banks.find(bank);
             if(b != opl.dynamic_melodic_banks.end())
                 midiins += b->second * 128;
+            else
+            {
+                if(hooks.onDebugMessage)
+                    hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                                         "[%i] Playing missing melodic bank %i (patch %i)", channel, bank, midiins);
+            }
         }
     }
 
@@ -1063,7 +1076,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         if(c < 0)
         {
             if(hooks.onDebugMessage)
-                hooks.onDebugMessage(hooks.onDebugMessage_userData, "ignored unplaceable note");
+                hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                                     "ignored unplaceable note [bank %i, inst %i, note %i, MIDI channel %i]",
+                                     bank, Ch[channel].patch, note, channel);
             continue; // Could not play this note. Ignore it.
         }
 

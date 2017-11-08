@@ -1825,7 +1825,7 @@ int main(int argc, char **argv)
             UI.ShowCursor();
             return 0;
         }
-        adl_setNumCards(myDevice, (int)NumCards);
+        adl_setNumChips(myDevice, (int)NumCards);
     }
 
     if(argc >= 5)

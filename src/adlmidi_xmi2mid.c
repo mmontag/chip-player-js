@@ -643,6 +643,11 @@ static int ConvertEvent(struct xmi_ctx *ctx, const int32_t time,
 
     data = read1(ctx);
 
+    //HACK!
+    if (((status >> 4) == 0xB) && (status & 0xF) != 9 && (data == 114)) {
+        data = 32; //Change XMI 114 controller into XG bank
+    }
+
     /* Bank changes are handled here */
     if ((status >> 4) == 0xB && data == 0) {
         data = read1(ctx);
@@ -659,7 +664,7 @@ static int ConvertEvent(struct xmi_ctx *ctx, const int32_t time,
         CreateNewEvent(ctx, time);
         ctx->current->status = status;
         ctx->current->data[0] = 0;
-        ctx->current->data[1] = data;
+        ctx->current->data[1] = data == 127 ? 0 : data;//HACK:
 
         if (ctx->convert_type == XMIDI_CONVERT_GS127_TO_GS && data == 127)
             ctx->bank127[status & 0xF] = 1;
