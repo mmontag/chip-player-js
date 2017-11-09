@@ -1346,6 +1346,11 @@ void MIDIplay::realTime_BankChange(uint8_t channel, uint16_t bank)
     Ch[channel].bank_msb = uint8_t((bank >> 8) & 0xFF);
 }
 
+void MIDIplay::realTime_panic()
+{
+    Panic();
+}
+
 
 void MIDIplay::NoteUpdate(uint16_t MidCh,
                           MIDIplay::MIDIchannel::activenoteiterator i,

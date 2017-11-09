@@ -696,3 +696,13 @@ ADLMIDI_EXPORT int adl_atEnd(ADL_MIDIPlayer *device)
         return 1;
     return (int)player->atEnd;
 }
+
+ADLMIDI_EXPORT void adl_panic(ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_panic();
+}

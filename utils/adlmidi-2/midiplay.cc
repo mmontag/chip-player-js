@@ -1578,7 +1578,9 @@ int main(int argc, char **argv)
     std::fflush(stderr);
 
     signal(SIGINT, TidyupAndExit);
-    __djgpp_set_ctrl_c(1);
+    #ifdef __DJGPP__
+    signal(SIGQUIT, TidyupAndExit);
+    #endif
 
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
@@ -1863,8 +1865,11 @@ int main(int argc, char **argv)
     #ifdef __DJGPP__
     double tick_delay = 0.0;
     #endif
+
+    #ifndef __DJGPP__
     //sample_buf.resize(1024);
     short buff[1024];
+    #endif
 
     UI.TetrisLaunched = true;
     while(!QuitFlag)
@@ -1959,6 +1964,13 @@ int main(int argc, char **argv)
         const unsigned long CurTimer = BIOStimer;
         const double eat_delay = (CurTimer - PrevTimer) / (double)NewTimerFreq;
         PrevTimer = CurTimer;
+
+        if(kbhit())
+        {   // Quit on ESC key!
+            int c = getch();
+            if(c == 27)
+                QuitFlag = true;
+        }
 #endif
 
         //double nextdelay =
@@ -1991,6 +2003,9 @@ int main(int argc, char **argv)
         //tick_delay = nextdelay;
     }
 
+    //Shut up all sustaining notes
+    adl_panic(myDevice);
+
     #ifdef __DJGPP__
     // Fix the skewed clock and reset BIOS tick rate
     _farpokel(_dos_ds, 0x46C, BIOStimer_begin +
@@ -2002,9 +2017,10 @@ int main(int argc, char **argv)
     outportb(0x40, 0);
     //enable();
 
+    UI.GotoXY(0, 0);
+    UI.ShowCursor();
     UI.Color(7);
     clrscr();
-    std::printf("Bye!\n");
     #else
     #ifdef _WIN32
     WindowsAudio::Close();

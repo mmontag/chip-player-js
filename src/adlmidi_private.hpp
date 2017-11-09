@@ -868,6 +868,8 @@ public:
     void realTime_BankChangeMSB(uint8_t channel, uint8_t msb);
     void realTime_BankChange(uint8_t channel, uint16_t bank);
 
+    void realTime_panic();
+
 private:
     enum
     {
