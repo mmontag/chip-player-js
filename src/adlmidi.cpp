@@ -528,6 +528,7 @@ inline static void SendStereoAudio(MIDIplay::Setup &device,
 ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
     #ifdef ADLMIDI_HW_OPL
+    (void)device; (void)sampleCount; (void)out;
     return 0;
     #else
     sampleCount -= sampleCount % 2; //Avoid even sample requests
@@ -633,6 +634,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 ADLMIDI_EXPORT int adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
     #ifdef ADLMIDI_HW_OPL
+    (void)device; (void)sampleCount; (void)out;
     return 0;
     #else
     sampleCount -= sampleCount % 2; //Avoid even sample requests
