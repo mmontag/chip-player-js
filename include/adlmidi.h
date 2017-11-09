@@ -212,6 +212,9 @@ extern int  adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out);
  */
 extern double adl_tickEvents(ADL_MIDIPlayer *device, double seconds, double granuality);
 
+/*Returns 1 if music position has reached end*/
+extern int adl_atEnd(ADL_MIDIPlayer *device);
+
 /**Hooks**/
 
 typedef void (*ADL_RawEventHook)(void *userdata, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, const ADL_UInt8 *data, size_t len);

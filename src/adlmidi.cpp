@@ -686,3 +686,13 @@ ADLMIDI_EXPORT double adl_tickEvents(ADL_MIDIPlayer *device, double seconds, dou
         return -1.0;
     return player->Tick(seconds, granuality);
 }
+
+ADLMIDI_EXPORT int adl_atEnd(ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return 1;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return 1;
+    return (int)player->atEnd;
+}
