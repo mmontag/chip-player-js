@@ -214,7 +214,7 @@ extern double adl_tickEvents(ADL_MIDIPlayer *device, double seconds, double gran
 
 /**Hooks**/
 
-typedef void (*ADL_RawEventHook)(void *userdata, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, ADL_UInt8 *data, size_t len);
+typedef void (*ADL_RawEventHook)(void *userdata, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, const ADL_UInt8 *data, size_t len);
 typedef void (*ADL_NoteHook)(void *userdata, int adlchn, int note, int ins, int pressure, double bend);
 typedef void (*ADL_DebugMessageHook)(void *userdata, const char *fmt, ...);
 

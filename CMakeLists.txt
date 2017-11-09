@@ -202,9 +202,29 @@ if(WITH_ADLMIDI2)
         message("Found ${SDL2_LIBRARY}")
     endif()
 
-    add_executable(adlmidi2
+    if(NOT WIN32)
+        set(ADLMIDI2_HAS_PUZZLE_GAME "TRUE")
+        set(ADLMIDI2_VIDEO_OUT_SUPPORT "TRUE")
+    endif()
+
+    set(adlmidi2_src)
+    list(APPEND adlmidi2_src
         ${libADLMIDI_SOURCE_DIR}/utils/adlmidi-2/midiplay.cc
-    )
+        ${libADLMIDI_SOURCE_DIR}/utils/adlmidi-2/input.cc)
+
+    if(ADLMIDI2_HAS_PUZZLE_GAME)
+        list(APPEND adlmidi2_src ${libADLMIDI_SOURCE_DIR}/utils/adlmidi-2/puzzlegame.cc)
+    endif()
+
+    add_executable(adlmidi2 ${adlmidi2_src})
+
+    if(ADLMIDI2_HAS_PUZZLE_GAME)
+        target_compile_options(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
+    endif()
+
+    if(ADLMIDI2_VIDEO_OUT_SUPPORT)
+        target_compile_options(adlmidi2 PUBLIC "-DSUPPORT_VIDEO_OUTPUT")
+    endif()
 
     if(WIN32)
         target_link_libraries(adlmidi2 ADLMIDI winmm)

@@ -100,7 +100,7 @@ static void debugPrint(void * /*userdata*/, const char *fmt, ...)
 }
 
 #ifdef DEBUG_TRACE_ALL_EVENTS
-static void debugPrintEvent(void * /*userdata*/, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, ADL_UInt8 * /*data*/, size_t len)
+static void debugPrintEvent(void * /*userdata*/, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, const ADL_UInt8 * /*data*/, size_t len)
 {
     std::fprintf(stdout, " - E: 0x%02X 0x%02X %02d (%d)\n", type, subtype, channel, (int)len);
     std::fflush(stdout);

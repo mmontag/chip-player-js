@@ -22,10 +22,12 @@
 
 #include <assert.h>
 
-#ifndef _WIN32
-#define SUPPORT_VIDEO_OUTPUT
-#define SUPPORT_PUZZLE_GAME
-#endif
+#include "input.hpp"
+
+//#ifndef _WIN32
+//#define SUPPORT_VIDEO_OUTPUT// MOVED TO CMake build script
+//#define SUPPORT_PUZZLE_GAME// MOVED TO CMake build script
+//#endif
 
 #if !defined(_WIN32) || !defined(_MSC_VER)
 #define ATTRIBUTE_FORMAT_PRINTF(x, y) __attribute__((format(printf, x, y)))
@@ -71,22 +73,7 @@ public:
 };
 #endif
 
-#ifdef __DJGPP__
-#include <conio.h>
-#include <pc.h>
-#include <dpmi.h>
-#include <go32.h>
-#include <sys/farptr.h>
-#include <dos.h>
-#include <stdlib.h>
-#define BIOStimer _farpeekl(_dos_ds, 0x46C)
-static const unsigned NewTimerFreq = 209;
-#elif !defined(_WIN32) || defined(__CYGWIN__)
-# include <termios.h>
-# include <fcntl.h>
-# include <sys/ioctl.h>
-# include <csignal>
-#endif
+
 
 #include <deque>
 #include <algorithm>
@@ -151,69 +138,9 @@ static void GuessInitialWindowHeight()
     SigWinchHandler(0);
 }
 
-static class Input
-{
-    #ifdef _WIN32
-    void *inhandle;
-    #endif
-    #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
-    struct termio back;
-    #endif
-public:
-    Input()
-    {
-        #ifdef _WIN32
-        inhandle = GetStdHandle(STD_INPUT_HANDLE);
-        #endif
-        #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
-        ioctl(0, TCGETA, &back);
-        struct termio term = back;
-        term.c_lflag &= ~(ICANON | ECHO);
-        term.c_cc[VMIN] = 0; // 0=no block, 1=do block
-        if(ioctl(0, TCSETA, &term) < 0)
-            fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
-        #endif
-    }
-    ~Input()
-    {
-        #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
-        if(ioctl(0, TCSETA, &back) < 0)
-            fcntl(0, F_SETFL, fcntl(0, F_GETFL) & ~ O_NONBLOCK);
-        #endif
-    }
 
-    char PeekInput()
-    {
-        #ifdef __DJGPP__
-        if(kbhit())
-        {
-            int c = getch();
-            return c ? c : getch();
-        }
-        #endif
-        #ifdef _WIN32
-        DWORD nread = 0;
-        INPUT_RECORD inbuf[1];
-        while(PeekConsoleInput(inhandle, inbuf, sizeof(inbuf) / sizeof(*inbuf), &nread) && nread)
-        {
-            ReadConsoleInput(inhandle, inbuf, sizeof(inbuf) / sizeof(*inbuf), &nread);
-            if(inbuf[0].EventType == KEY_EVENT
-               && inbuf[0].Event.KeyEvent.bKeyDown)
-            {
-                char c = inbuf[0].Event.KeyEvent.uChar.AsciiChar;
-                unsigned s = inbuf[0].Event.KeyEvent.wVirtualScanCode;
-                if(c == 0) c = s;
-                return c;
-            }
-        }
-        #endif
-        #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
-        char c = 0;
-        if(read(0, &c, 1) == 1) return c;
-        #endif
-        return '\0';
-    }
-} Input;
+
+xInput Input;
 
 #ifdef SUPPORT_PUZZLE_GAME
 #include "puzzlegame.hpp"
@@ -727,9 +654,6 @@ public:
     bool DoCheckTetris()
     {
         #ifdef SUPPORT_PUZZLE_GAME
-        static ADLMIDI_PuzzleGame::TetrisAI    player(2);
-        static ADLMIDI_PuzzleGame::TetrisAI    computer(31);
-
         int a = player.GameLoop();
         int b = computer.GameLoop();
 
@@ -754,26 +678,23 @@ public:
 } UI;
 
 #ifdef SUPPORT_PUZZLE_GAME
-namespace ADLMIDI_PuzzleGame
+void ADLMIDI_PuzzleGame::PutCell(int x, int y, unsigned cell)
 {
-    static void PutCell(int x, int y, unsigned cell)
-    {
-        static const unsigned char valid_attrs[] = {8, 6, 5, 3};
-        unsigned char ch = (unsigned char)cell, attr = (unsigned char)(cell >> 8);
-        int height = (int)WinHeight();//std::min(NumCards*18, 50u);
-        y = std::max(0, int(std::min(height, 40) - 25 + y));
-        if(ch == 0xDB) ch = '#';
-        if(ch == 0xB0) ch = '*';
-        if(attr != 1) attr = valid_attrs[attr % sizeof(valid_attrs)];
+    static const unsigned char valid_attrs[] = {8, 6, 5, 3};
+    unsigned char ch = (unsigned char)cell, attr = (unsigned char)(cell >> 8);
+    int height = (int)WinHeight();//std::min(NumCards*18, 50u);
+    y = std::max(0, int(std::min(height, 40) - 25 + y));
+    if(ch == 0xDB) ch = '#';
+    if(ch == 0xB0) ch = '*';
+    if(attr != 1) attr = valid_attrs[attr % sizeof(valid_attrs)];
 
-        //bool diff = UI.background[x][y] != UI.slots[x][y];
-        UI.backgroundcolor[x][y] = attr;
-        UI.background[x][y]      = (char)ch;
-        UI.GotoXY(x, y);
-        UI.Color(attr);
-        UI.PutC((char)ch);
-        //UI.Draw(x,y, attr, ch);
-    }
+    //bool diff = UI.background[x][y] != UI.slots[x][y];
+    UI.backgroundcolor[x][y] = attr;
+    UI.background[x][y]      = (char)ch;
+    UI.GotoXY(x, y);
+    UI.Color(attr);
+    UI.PutC((char)ch);
+    //UI.Draw(x,y, attr, ch);
 }
 #endif
 
@@ -1577,7 +1498,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
 }
 #endif
 
-static void adlEventHook(void *ui, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 /*channel*/, ADL_UInt8 *data, size_t len)
+static void adlEventHook(void *ui, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 /*channel*/, const ADL_UInt8 *data, size_t len)
 {
     UserInterface *mUI = (UserInterface *)ui;
 

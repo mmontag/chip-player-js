@@ -57,6 +57,6 @@ SOURCES += \
     $$PWD/../../src/nukedopl3.c \
     $$PWD/../../src/dbopl.cpp \
     \
-    midiplay.cc
-
+    midiplay.cc \
+    puzzlegame.cc
 

@@ -193,38 +193,59 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
     }
 
     /*
-     * If Note-Off and it's Note-On is on the same row - move this danmed note off down!
+     * If Note-Off and it's Note-On is on the same row - move this damned note off down!
      */
     if(noteStates)
     {
+        std::set<size_t> markAsOn;
         for(size_t i = 0; i < anyOther.size(); i++)
         {
-            MidiEvent &e = anyOther[i];
+            const MidiEvent e = anyOther[i];
             if(e.type == MidiEvent::T_NOTEON)
             {
-                size_t note_i = (e.channel * 255) + e.data[0];
+                const size_t note_i = (e.channel * 255) + (e.data[0] & 0x7F);
                 //Check, was previously note is on or off
                 bool wasOn = noteStates[note_i];
-                bool keepOn = true;
+                markAsOn.insert(note_i);
+                // Detect zero-length notes are following previously pressed note
+                int noteOffsOnSameNote = 0;
                 for(EvtArr::iterator j = noteOffs.begin(); j != noteOffs.end();)
                 {
                     //If note was off, and note-off on same row with note-on - move it down!
                     if(
                         ((*j).channel == e.channel) &&
-                        ((*j).data[0] == e.data[0]) &&
-                        !wasOn // Also check, is this note already OFF!!!
+                        ((*j).data[0] == e.data[0])
                     )
                     {
-                        anyOther.push_back(*j);
-                        j = noteOffs.erase(j);
-                        keepOn = false;
-                        continue;
+                        //If note is already off OR more than one note-off on same row and same note
+                        if(!wasOn || (noteOffsOnSameNote != 0))
+                        {
+                            anyOther.push_back(*j);
+                            j = noteOffs.erase(j);
+                            markAsOn.erase(note_i);
+                            continue;
+                        } else {
+                            //When same row has many note-offs on same row
+                            //that means a zero-length note follows previous note
+                            //it must be shuted down
+                            noteOffsOnSameNote++;
+                        }
                     }
                     j++;
                 }
-                if(keepOn) noteStates[note_i] = true;
             }
         }
+
+        //Mark other notes as released
+        for(EvtArr::iterator j = noteOffs.begin(); j != noteOffs.end(); j++)
+        {
+            size_t note_i = (j->channel * 255) + (j->data[0] & 0x7F);
+            noteStates[note_i] = false;
+        }
+
+        for(std::set<size_t>::iterator j = markAsOn.begin(); j != markAsOn.end(); j++)
+            noteStates[*j] = true;
+
     }
     /***********************************************************************************/
 
@@ -1543,10 +1564,17 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
         PositionNew::TrackInfo &track = CurrentPositionNew.track[tk];
         if((track.status >= 0) && (track.delay <= 0))
         {
+            //Check is an end of track has been reached
+            if(track.pos == trackDataNew[tk].end())
+            {
+                track.status = -1;
+                break;
+            }
+
             // Handle event
             for(size_t i = 0; i < track.pos->events.size(); i++)
             {
-                MidiEvent &evt = track.pos->events[i];
+                const MidiEvent &evt = track.pos->events[i];
                 #ifdef ENABLE_BEGIN_SILENCE_SKIPPING
                 if(!CurrentPositionNew.began && (evt.type == MidiEvent::T_NOTEON))
                     CurrentPositionNew.began = true;
@@ -1562,11 +1590,7 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
             if(maxTime < track.pos->time)
                 maxTime = track.pos->time;
             #endif
-
             // Read next event time (unless the track just ended)
-            if(track.pos == trackDataNew[tk].end())
-                track.status = -1;
-
             if(track.status >= 0)
             {
                 track.delay += track.pos->delay;
@@ -1847,7 +1871,7 @@ void MIDIplay::setErrorString(const std::string &err)
 }
 
 
-void MIDIplay::HandleEvent(size_t tk, MIDIplay::MidiEvent &evt, int &status)
+void MIDIplay::HandleEvent(size_t tk, const MIDIplay::MidiEvent &evt, int &status)
 {
     if(hooks.onEvent)
     {
@@ -2575,7 +2599,7 @@ ADLMIDI_EXPORT bool AdlInstrumentTester::HandleInputChar(char ch)
     default:
         const char *p = strchr(notes, ch);
         if(p && *p)
-            DoNote((p - notes) - 12);
+            DoNote((int)(p - notes) - 12);
     }
     return true;
 }
