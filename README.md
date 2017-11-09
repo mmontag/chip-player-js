@@ -19,6 +19,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Mac OS X CLang (Xcode 7.x)
 * Windows MinGW 4.9.x, 5.2
 * Android NDK 12b/13
+* DJGPP GCC 7.2 cross compiler from Linux to MS-DOS 32-bit
 
 # Key features
 * OPL3 emulation with four-operator mode support
@@ -47,10 +48,16 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 sudo make install
 ```
+### Notes
+* To compile for DOS via DJGPP on Linux, use `cmake/djgpp/djgpp-cmake.sh` script which a wrapper over CMake to pass DJGPP's stuff required for build
+
+
 ## Available CMake options
 * **CMAKE_PREFIX_PATH** - destinition folder where libADLMIDI will be installed. On Linux it is /usr/local/ by default.
 * **CMAKE_BUILD_TYPE** - Build types: **Debug** or **Release**
 * **WITH_MIDIPLAY** - (ON/OFF, default OFF) Build demo MIDI player (Requires SDL2 and also pthread on Windows with MinGW)
+* **WITH_ADLMIDI2** - (ON/OFF, default OFF) Build Classic ADLMIDI MIDI player (Requires SDL2 on Linux and macOS, requires pthread on Windows with MinGW, SDL doesn't required on Windows. Also, the **WITH_CPP_EXTRAS** flag must be enabled)
+* **WITH_CPP_EXTRAS** - (ON/OFF, default OFF) Build libADLMIDI with some extra public features for C++ language (for example, instrument testing API is available for C++ only).
 * **WITH_OLD_UTILS** - (ON/OFF, default OFF) Build old utilities to dump some bank formats, made by original creator of ADLMIDI
 * **WITH_EMBEDDED_BANKS** - (ON/OFF, default ON) Enable or disable embedded banks (Original ADLMIDI and older versions of libADLMIDI are had embedded-only banks with no ability to load custom banks in runtime).
 * **WITH_GENADLDATA**  - (ON/OFF, default OFF) Build and execute the utility which will rebuild the embedded banks database (which is an adldata.cpp file).
@@ -138,6 +145,7 @@ To build that example you will need to have installed SDL2 library.
  * Error string is no more global, now every ADL_MIDIPlayer instance has own thread-safe error info that can be retreived by using adl_errorInfo() function. The adl_errorString() will return library initialization errors only;
  * Added С++ Extra public API which now includes instrument testing feature (which is required by classic ADLMIDI utility)
  * Multi-bank WOPL files now supported! Feel free to implement GS or XG - compatible bank
+ * Added support for DJGPP compiler to build libADLMIDI for DOS to use hardware OPL3 chip
 
 ## 1.2.1    2017-07-30
  * Minor fixes
