@@ -207,6 +207,22 @@ public:
     bool cursor_visible;
     char stderr_buffer[256];
 public:
+#ifdef __DJGPP__
+#   define RawPrn cprintf
+#else
+    static void RawPrn(const char *fmt, ...) ATTRIBUTE_FORMAT_PRINTF(1, 2)
+    {
+        // Note: should essentially match PutC, except without updates to x
+        va_list ap;
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+        #ifdef _WIN32
+        fflush(stderr);
+        #endif
+    }
+#endif
+
     UserInterface():
     #ifdef SUPPORT_PUZZLE_GAME
         player(2),
@@ -386,22 +402,6 @@ public:
         VidPut(c);
         ++x; // One letter drawn. Update cursor position.
     }
-
-#ifdef __DJGPP__
-#   define RawPrn cprintf
-#else
-    static void RawPrn(const char *fmt, ...) ATTRIBUTE_FORMAT_PRINTF(1, 2)
-    {
-        // Note: should essentially match PutC, except without updates to x
-        va_list ap;
-        va_start(ap, fmt);
-        vfprintf(stderr, fmt, ap);
-        va_end(ap);
-        #ifdef _WIN32
-        fflush(stderr);
-        #endif
-    }
-#endif
 
     int Print(unsigned beginx, unsigned color, bool ln, const char *fmt, va_list ap)
     {
@@ -1411,7 +1411,11 @@ static void SendStereoAudio(unsigned long count, short *samples)
 
 static void TidyupAndExit(int sig)
 {
-    if(sig == SIGINT)
+    if((sig == SIGINT)
+        #ifdef __DJGPP__
+        || (sig == SIGQUIT)
+        #endif
+    )
     {
         UI.ShowCursor();
         UI.Color(7);
@@ -1574,6 +1578,7 @@ int main(int argc, char **argv)
     std::fflush(stderr);
 
     signal(SIGINT, TidyupAndExit);
+    __djgpp_set_ctrl_c(1);
 
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
@@ -1855,7 +1860,9 @@ int main(int argc, char **argv)
     AdlInstrumentTester InstrumentTester(myDevice);
 
     //static std::vector<int> sample_buf;
-    //double delay = 0.0;
+    #ifdef __DJGPP__
+    double tick_delay = 0.0;
+    #endif
     //sample_buf.resize(1024);
     short buff[1024];
 
@@ -1961,9 +1968,17 @@ int main(int argc, char **argv)
                 QuitFlag = true;
             #ifdef __DJGPP__
             else
-                delay = adl_tickEvents(myDevice, eat_delay, mindelay);
+                tick_delay = adl_tickEvents(myDevice, eat_delay, mindelay);
             #endif
         }
+        #ifdef __DJGPP__
+        else
+        {
+            tick_delay = adl_tickEvents(myDevice, eat_delay, mindelay);
+            if(adl_atEnd(myDevice) && tick_delay <= 0)
+                QuitFlag = true;
+        }
+        #endif
         //: player.Tick(eat_delay, mindelay);
 
         UI.GotoXY(0, 0);
@@ -1973,11 +1988,10 @@ int main(int argc, char **argv)
          * TODO: Implement the public "tick()" function for the Hardware OPL3 chip support on DJGPP
          */
 
-        //delay = nextdelay;
+        //tick_delay = nextdelay;
     }
 
     #ifdef __DJGPP__
-
     // Fix the skewed clock and reset BIOS tick rate
     _farpokel(_dos_ds, 0x46C, BIOStimer_begin +
               (BIOStimer - BIOStimer_begin)
@@ -1988,8 +2002,10 @@ int main(int argc, char **argv)
     outportb(0x40, 0);
     //enable();
 
+    UI.Color(7);
+    clrscr();
+    std::printf("Bye!\n");
     #else
-
     #ifdef _WIN32
     WindowsAudio::Close();
     #else
@@ -2002,13 +2018,12 @@ int main(int argc, char **argv)
 
     if(FakeDOSshell)
     {
-        fprintf(stderr,
-                "Going TSR. Type 'EXIT' to return to ADLMIDI.\n"
-                "\n"
-                /*"Megasoft(R) Orifices 98\n"
-                  "    (C)Copyright Megasoft Corp 1981 - 1999.\n"*/
-                ""
-               );
+        std::fprintf(stderr,
+                    "Going TSR. Type 'EXIT' to return to ADLMIDI.\n"
+                    "\n"
+                    /*"Megasoft(R) Orifices 98\n"
+                    "    (C)Copyright Megasoft Corp 1981 - 1999.\n"*/
+                    "");
     }
     return 0;
 }

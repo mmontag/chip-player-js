@@ -17,6 +17,7 @@
 #include <dpmi.h>
 #include <go32.h>
 #include <sys/farptr.h>
+#include <sys/exceptn.h>
 #include <dos.h>
 #include <stdlib.h>
 #define BIOStimer _farpeekl(_dos_ds, 0x46C)
