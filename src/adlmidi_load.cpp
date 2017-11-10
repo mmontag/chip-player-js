@@ -181,7 +181,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     }
 
     char magic[32];
-    memset(magic, 0, 32);
+    std::memset(magic, 0, 32);
 
     uint16_t version = 0;
 
@@ -194,7 +194,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
         return false;
     }
 
-    if(strncmp(magic, wopl3_magic, 11) != 0)
+    if(std::strncmp(magic, wopl3_magic, 11) != 0)
     {
         errorStringOut = "Custom bank: Invalid magic number!";
         return false;
@@ -215,7 +215,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     }
 
     uint8_t head[6];
-    memset(head, 0, 6);
+    std::memset(head, 0, 6);
     if(fr.read(head, 1, 6) != 6)
     {
         errorStringOut = "Custom bank: Can't read header!";
@@ -288,7 +288,7 @@ tryAgain:
     for(uint16_t i = 0; i < total; i++)
     {
         WOPL_Inst ins;
-        memset(&ins, 0, sizeof(WOPL_Inst));
+        std::memset(&ins, 0, sizeof(WOPL_Inst));
         if(!readInstrument(fr, ins, readPercussion))
         {
             opl.setEmbeddedBank(m_setup.AdlBank);

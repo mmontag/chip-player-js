@@ -24,10 +24,13 @@
 #include "adlmidi_private.hpp"
 
 #ifdef ADLMIDI_HW_OPL
-static const unsigned MaxCards = 1;
+#define MaxCards 1
+#define MaxCards_STR "1" //Why not just "#MaxCards" ? Watcom fails to pass this with "syntax error" :-P
 #else
-static const unsigned MaxCards = 100;
+#define MaxCards 100
+#define MaxCards_STR "100"
 #endif
+
 
 /*---------------------------EXPORTS---------------------------*/
 
@@ -67,9 +70,7 @@ ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numCards)
     play->m_setup.NumCards = static_cast<unsigned int>(numCards);
     if(play->m_setup.NumCards < 1 || play->m_setup.NumCards > MaxCards)
     {
-        std::stringstream s;
-        s << "number of cards may only be 1.." << MaxCards << ".\n";
-        play->setErrorString(s.str());
+        play->setErrorString("number of chips may only be 1.." MaxCards_STR ".\n");
         return -1;
     }
 
@@ -105,9 +106,13 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     if(static_cast<uint32_t>(bankno) >= NumBanks)
     {
+        #ifndef __WATCOMC__
         std::stringstream s;
         s << "bank number may only be 0.." << (NumBanks - 1) << ".\n";
         play->setErrorString(s.str());
+        #else
+        play->setErrorString("Selected embedded bank is not exists!\n");
+        #endif
         return -1;
     }
 
@@ -135,9 +140,14 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     if((unsigned int)ops4 > 6 * play->m_setup.NumCards)
     {
+        #ifndef __WATCOMC__
         std::stringstream s;
         s << "number of four-op channels may only be 0.." << (6 * (play->m_setup.NumCards)) << " when " << play->m_setup.NumCards << " OPL3 cards are used.\n";
         play->setErrorString(s.str());
+        #else
+        play->setErrorString("number of four-op channels may not be more than 6 channels per each OPL3 chip!\n");
+        #endif
+
         return -1;
     }
 

@@ -77,6 +77,7 @@ typedef __int32 ssize_t;
 #include <deque>  // deque
 #include <cmath>  // exp, log, ceil
 #include <stdio.h>
+#include <stdlib.h>
 #include <limits> // numeric_limit
 
 #ifndef _WIN32

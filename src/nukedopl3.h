@@ -28,6 +28,7 @@
 #define OPL_OPL3_H
 
 #include <inttypes.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
