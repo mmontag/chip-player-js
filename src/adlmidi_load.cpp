@@ -58,7 +58,7 @@ bool MIDIplay::LoadBank(const std::string &filename)
 bool MIDIplay::LoadBank(void *data, unsigned long size)
 {
     fileReader file;
-    file.openData(data, size);
+    file.openData(data, (size_t)size);
     return LoadBank(file);
 }
 
@@ -339,7 +339,7 @@ bool MIDIplay::LoadMIDI(const std::string &filename)
 bool MIDIplay::LoadMIDI(void *data, unsigned long size)
 {
     fileReader file;
-    file.openData(data, size);
+    file.openData(data, (size_t)size);
     return LoadMIDI(file);
 }
 

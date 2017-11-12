@@ -53,14 +53,17 @@ typedef __int32 ssize_t;
 #   include <windows.h>
 #endif
 
-#ifdef __DJGPP__
+#if defined(__DJGPP__) || (defined(__WATCOMC__) && (defined(__DOS__) || defined(__DOS4G__) || defined(__DOS4GNZ__)))
 #define ADLMIDI_HW_OPL
 #include <conio.h>
+#ifdef __DJGPP__
 #include <pc.h>
 #include <dpmi.h>
 #include <go32.h>
 #include <sys/farptr.h>
 #include <dos.h>
+#endif
+
 #endif
 
 #include <vector>
@@ -72,6 +75,7 @@ typedef __int32 ssize_t;
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
+#include <cstdarg>
 #include <cstdio>
 #include <vector> // vector
 #include <deque>  // deque
@@ -89,10 +93,12 @@ typedef __int32 ssize_t;
 
 #include "fraction.hpp"
 
+#ifndef ADLMIDI_HW_OPL
 #ifdef ADLMIDI_USE_DOSBOX_OPL
 #include "dbopl.h"
 #else
 #include "nukedopl3.h"
+#endif
 #endif
 
 #include "adldata.hh"
@@ -529,7 +535,7 @@ public:
         users_t users;
 
         // If the channel is keyoff'd
-        long koff_time_until_neglible;
+        int64_t koff_time_until_neglible;
         // For channel allocation:
         AdlChannel(): users(), koff_time_until_neglible(0) { }
         void AddAge(int64_t ms);
@@ -695,7 +701,7 @@ public:
     {
         std::string     label;
         double          pos_time;
-        unsigned long   pos_ticks;
+        uint64_t        pos_ticks;
     };
 
     std::vector<MIDIchannel> Ch;
@@ -893,7 +899,7 @@ private:
 
     // Determine how good a candidate this adlchannel
     // would be for playing a note from this instrument.
-    long CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t /*MidCh*/) const;
+    long CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t /*MidCh*/);
 
     // A new note will be played on this channel using this instrument.
     // Kill existing notes on this channel (or don't, if we do arpeggio)

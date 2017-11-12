@@ -471,7 +471,7 @@ ADLMIDI_EXPORT const Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *devic
         MIDIplay::MIDI_MarkerEntry &mk = play->musMarkers[index];
         marker.label = mk.label.c_str();
         marker.pos_time = mk.pos_time;
-        marker.pos_ticks = mk.pos_ticks;
+        marker.pos_ticks = (unsigned long)mk.pos_ticks;
     }
     return marker;
 }

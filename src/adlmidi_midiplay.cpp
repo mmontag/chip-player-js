@@ -175,6 +175,11 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
     EvtArr controllers;
     EvtArr anyOther;
 
+    metas.reserve(events.size());
+    noteOffs.reserve(events.size());
+    controllers.reserve(events.size());
+    anyOther.reserve(events.size());
+
     for(size_t i = 0; i < events.size(); i++)
     {
         if(events[i].type == MidiEvent::T_NOTEOFF)
@@ -340,6 +345,7 @@ bool MIDIplay::buildTrackData()
                     errorString += std::string(error, (size_t)len);
                 return false;
             }
+
             evtPos.events.push_back(event);
             if(event.type == MidiEvent::T_SPECIAL)
             {
@@ -433,7 +439,7 @@ bool MIDIplay::buildTrackData()
     {
         fraction<uint64_t> currentTempo = Tempo;
         double  time = 0.0;
-        uint8_t abs_position = 0;
+        uint64_t abs_position = 0;
         size_t tempo_change_index = 0;
         MidiTrackQueue &track = trackDataNew[tk];
         if(track.empty())
@@ -559,7 +565,6 @@ bool MIDIplay::buildTrackData()
     //Initial loop position will begin at begin of track until passing of the loop point
     LoopBeginPositionNew  = CurrentPositionNew;
 
-
     /********************************************************************************/
     //Resolve "hell of all times" of too short drum notes:
     //move too short percussion note-offs far far away as possible
@@ -654,7 +659,6 @@ bool MIDIplay::buildTrackData()
 #undef DRUM_NOTE_MIN_TICKS
     }
     #endif
-
 
     return true;
 }
@@ -1049,7 +1053,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         int32_t c = -1;
         int32_t bs = -0x7FFFFFFFl;
 
-        for(uint32_t a = 0; a < opl.NumChannels; ++a)
+        for(size_t a = 0; a < (size_t)opl.NumChannels; ++a)
         {
             if(ccount == 1 && static_cast<int32_t>(a) == adlchannel[0]) continue;
             // ^ Don't use the same channel for primary&secondary
@@ -1067,7 +1071,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                         expected_mode = PercussionMap[midiins & 0xFF];
                 }
 
-                if(opl.four_op_category[a] != expected_mode)
+                if(opl.four_op_category[a] != (uint32_t)expected_mode)
                     continue;
             }
             else
@@ -1361,7 +1365,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
     const int16_t tone    = info.tone;
     const uint8_t vol     = info.vol;
     const int midiins     = info.midiins;
-    const uint32_t insmeta = info.insmeta;
+    const size_t  insmeta = info.insmeta;
     const adlinsdata &ains = opl.GetAdlMetaIns(insmeta);
     AdlChannel::Location my_loc;
     my_loc.MidCh = MidCh;
@@ -1461,7 +1465,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 else
                 {
                     // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-                    volume = volume > 8725 ? static_cast<unsigned int>(std::log(volume) * 11.541561 + (0.5 - 104.22845)) : 0;
+                    volume = volume > 8725 ? static_cast<unsigned int>(std::log((double)volume) * 11.541561 + (0.5 - 104.22845)) : 0;
                     // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
                     //opl.Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
                 }
@@ -2033,7 +2037,7 @@ void MIDIplay::HandleEvent(size_t tk, const MIDIplay::MidiEvent &evt, int &statu
     }
 }
 
-long MIDIplay::CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t) const
+long MIDIplay::CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t)
 {
     long s = -ch[c].koff_time_until_neglible;
 
@@ -2453,12 +2457,12 @@ ADLMIDI_EXPORT void AdlInstrumentTester::FindAdlList()
 
 ADLMIDI_EXPORT void AdlInstrumentTester::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
 {
-    if(opl->LogarithmicVolumes)// !!!ADL PRIVATE!!!
-        opl->Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);// !!!ADL PRIVATE!!!
+    if(opl->LogarithmicVolumes)
+        opl->Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);
     else
     {
         // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-        opl->Touch_Real(c, volume > 8725 ? static_cast<unsigned int>(std::log(volume) * 11.541561 + (0.5 - 104.22845)) : 0);// !!!ADL PRIVATE!!!
+        opl->Touch_Real(c, volume > 8725 ? static_cast<unsigned int>(std::log((double)volume) * 11.541561 + (0.5 - 104.22845)) : 0);
         // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
         //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
     }
@@ -2468,7 +2472,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
 {
     if(adl_ins_list.empty()) FindAdlList();
     const unsigned meta = adl_ins_list[ins_idx];
-    const adlinsdata &ains = opl->GetAdlMetaIns(meta);// !!!ADL PRIVATE!!!
+    const adlinsdata &ains = opl->GetAdlMetaIns(meta);
 
     int tone = (cur_gm & 128) ? (cur_gm & 127) : (note + 50);
     if(ains.tone)
@@ -2602,7 +2606,7 @@ ADLMIDI_EXPORT bool AdlInstrumentTester::HandleInputChar(char ch)
         #endif
         return false;
     default:
-        const char *p = strchr(notes, ch);
+        const char *p = std::strchr(notes, ch);
         if(p && *p)
             DoNote((int)(p - notes) - 12);
     }

@@ -5,14 +5,14 @@ project (libADLMIDI)
 # Strip garbage
 if(APPLE)
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -dead_strip")
-ELSEIF(NOT MSVC)
+ELSEIF(NOT MSVC AND NOT MSDOS)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -s -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -s -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s")
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-s")
 ENDIF()
 
 # Global optimization flags
-IF(NOT MSVC)
+IF(NOT MSVC AND NOT MSDOS)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fno-omit-frame-pointer")
 ENDIF()
@@ -27,7 +27,7 @@ if(MSVC)
 ENDIF()
 
 # -fPIC thing
-IF(NOT WIN32 AND NOT DJGPP)
+IF(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 ENDIF()
@@ -38,6 +38,7 @@ option(WITH_ADLMIDI2        "Build also classic ADLMIDI player [EXPERIMENTAL]" O
 option(WITH_OLD_UTILS       "Build also old utilities" OFF)
 option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
 option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
+option(WITH_GENADLDATA_COMMENTS "Enable comments in generated ADLDATA cache file" OFF)
 option(USE_DOSBOX_EMULATOR  "Use DosBox emulator" OFF)
 option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can be found in 'adlmidi.hpp' header)" OFF)
 
@@ -91,6 +92,10 @@ if(WITH_EMBEDDED_BANKS)
             target_compile_options(gen_adldata PUBLIC "/std:c++latest")
         endif()
 
+        if(WITH_GENADLDATA_COMMENTS)
+            target_compile_options(gen_adldata PUBLIC "-DADLDATA_WITH_COMMENTS")
+        endif()
+
         add_custom_target(
             gen-adldata-run
             COMMAND gen_adldata ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
@@ -113,15 +118,17 @@ list(APPEND libADLMIDI_SOURCES
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_xmi2mid.c
 )
 
-if(USE_DOSBOX_EMULATOR)
-    add_definitions(-DADLMIDI_USE_DOSBOX_OPL)
-    list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/dbopl.cpp
-    )
-else()
-    list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/nukedopl3.c
-    )
+if(NOT DJGPP AND NOT MSDOS)
+    if(USE_DOSBOX_EMULATOR)
+        add_definitions(-DADLMIDI_USE_DOSBOX_OPL)
+        list(APPEND libADLMIDI_SOURCES
+            ${libADLMIDI_SOURCE_DIR}/src/dbopl.cpp
+        )
+    else()
+        list(APPEND libADLMIDI_SOURCES
+            ${libADLMIDI_SOURCE_DIR}/src/nukedopl3.c
+        )
+    endif()
 endif()
 
 if(WITH_EMBEDDED_BANKS)
@@ -162,14 +169,21 @@ You must enable at least one of them!")
 endif()
 
 if(WITH_MIDIPLAY)
-    find_library(SDL2_LIBRARY SDL2 REQUIRED)
-    include_directories(${SDL2_INCLUDE_DIR})
-    message("Found ${SDL2_LIBRARY}")
+    if(NOT MSDOS AND NOT DJGPP)
+        find_library(SDL2_LIBRARY SDL2 REQUIRED)
+        include_directories(${SDL2_INCLUDE_DIR})
+        message("Found ${SDL2_LIBRARY}")
+    endif()
 
     add_executable(adlmidiplay
         ${libADLMIDI_SOURCE_DIR}/utils/midiplay/adlmidiplay.cpp
         ${libADLMIDI_SOURCE_DIR}/utils/midiplay/wave_writer.c
     )
+
+    if(MSDOS OR DJGPP)
+        target_compile_options(adlmidiplay PUBLIC "-DHARDWARE_OPL3")
+        message("Turn on hardware OPL3 support on demo tool")
+    endif()
 
     if(WIN32)
         if(MSVC)
@@ -178,7 +192,15 @@ if(WITH_MIDIPLAY)
             target_link_libraries(adlmidiplay ADLMIDI ${SDL2_LIBRARY} pthread)
         endif()
     else()
-        target_link_libraries(adlmidiplay ADLMIDI ${SDL2_LIBRARY} pthread dl m stdc++)
+        if(MSDOS OR DJGPP)
+            target_link_libraries(adlmidiplay ADLMIDI)
+        else()
+            target_link_libraries(adlmidiplay ADLMIDI ${SDL2_LIBRARY} pthread dl m stdc++)
+        endif()
+    endif()
+
+    if(MSDOS OR DJGPP)
+        set_target_properties(adlmidiplay PROPERTIES OUTPUT_NAME adlmidi)
     endif()
 
     if(libADLMIDI_SHARED)
@@ -196,13 +218,13 @@ if(WITH_MIDIPLAY)
 endif()
 
 if(WITH_ADLMIDI2)
-    if(NOT WIN32 AND NOT DJGPP)
+    if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
         find_library(SDL2_LIBRARY SDL2 REQUIRED)
         include_directories(${SDL2_INCLUDE_DIR})
         message("Found ${SDL2_LIBRARY}")
     endif()
 
-    if(NOT WIN32 AND NOT DJGPP)
+    if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
         set(ADLMIDI2_HAS_PUZZLE_GAME "TRUE")
         set(ADLMIDI2_VIDEO_OUT_SUPPORT "TRUE")
     endif()
@@ -228,7 +250,7 @@ if(WITH_ADLMIDI2)
 
     if(WIN32)
         target_link_libraries(adlmidi2 ADLMIDI winmm)
-    elseif(DJGPP)
+    elseif(DJGPP OR MSDOS)
         target_link_libraries(adlmidi2 ADLMIDI)
     else()
         target_link_libraries(adlmidi2 ADLMIDI ${SDL2_LIBRARY} pthread dl m stdc++)
@@ -275,13 +297,14 @@ install(FILES
         DESTINATION include/)
 
 message("==== libADLMIDI options ====")
-message("WITH_MIDIPLAY          = ${WITH_MIDIPLAY}")
-message("WITH_ADLMIDI2          = ${WITH_ADLMIDI2}")
-message("WITH_OLD_UTILS         = ${WITH_OLD_UTILS}")
-message("WITH_EMBEDDED_BANKS    = ${WITH_EMBEDDED_BANKS}")
-message("WITH_GENADLDATA        = ${WITH_GENADLDATA}")
-message("USE_DOSBOX_EMULATOR    = ${USE_DOSBOX_EMULATOR}")
-message("WITH_CPP_EXTRAS        = ${WITH_CPP_EXTRAS}")
-message("libADLMIDI_STATIC      = ${libADLMIDI_STATIC}")
-message("libADLMIDI_SHARED      = ${libADLMIDI_SHARED}")
+message("WITH_MIDIPLAY            = ${WITH_MIDIPLAY}")
+message("WITH_ADLMIDI2            = ${WITH_ADLMIDI2}")
+message("WITH_OLD_UTILS           = ${WITH_OLD_UTILS}")
+message("WITH_EMBEDDED_BANKS      = ${WITH_EMBEDDED_BANKS}")
+message("WITH_GENADLDATA          = ${WITH_GENADLDATA}")
+message("WITH_GENADLDATA_COMMENTS = ${WITH_GENADLDATA_COMMENTS}")
+message("USE_DOSBOX_EMULATOR      = ${USE_DOSBOX_EMULATOR}")
+message("WITH_CPP_EXTRAS          = ${WITH_CPP_EXTRAS}")
+message("libADLMIDI_STATIC        = ${libADLMIDI_STATIC}")
+message("libADLMIDI_SHARED        = ${libADLMIDI_SHARED}")
 

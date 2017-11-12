@@ -98,7 +98,7 @@ static uint32_t read2(struct xmi_ctx *ctx)
     uint8_t b0, b1;
     b0 = *ctx->src_ptr++;
     b1 = *ctx->src_ptr++;
-    return (b0 + (b1 << 8));
+    return (b0 + ((uint32_t)b1 << 8));
 }
 
 static uint32_t read4(struct xmi_ctx *ctx)
@@ -108,7 +108,7 @@ static uint32_t read4(struct xmi_ctx *ctx)
     b2 = *ctx->src_ptr++;
     b1 = *ctx->src_ptr++;
     b0 = *ctx->src_ptr++;
-    return (b0 + (b1<<8) + (b2<<16) + (b3<<24));
+    return (b0 + ((uint32_t)b1<<8) + ((uint32_t)b2<<16) + ((uint32_t)b3<<24));
 }
 
 static void copy(struct xmi_ctx *ctx, char *b, uint32_t len)

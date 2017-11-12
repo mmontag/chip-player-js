@@ -2,16 +2,16 @@
 export WATCOM=$HOME/Qt/Tools/ow-snapshot-2.0
 export EDPATH=$WATCOM/eddat
 export WIPFC=$WATCOM/wipfc
-export INCLUDE="$WATCOM/lh"
-WATCOM_FLAGS="-blinux"
+export INCLUDE="$WATCOM/h"
+WATCOM_FLAGS="-bdos4g -march=i386"
 export CFLAGS="$WATCOM_FLAGS -xc -std=wc"
 export CXXFLAGS="$WATCOM_FLAGS -xc++ -xs -feh -std=c++11"
+export LFLAGS="$WATCOM_FLAGS"
 
 # export PKG_CONFIG_LIBDIR="${WATCOM}/lib/pkgconfig"
 # djgpp_c_flags="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions --param=ssp-buffer-size=4"
 
-
-SCRIPT_PATH=$HOME/_git_repos/libADLMIDI/cmake/openwattcom
+SCRIPT_PATH=$HOME/_git_repos/libADLMIDI/cmake/openwattcom-dos
 CUSTOM_PATH=$SCRIPT_PATH:${WATCOM}/binl:$PATH
 
 if [[ "$1" != '--build' ]]; then
@@ -25,7 +25,7 @@ if [[ "$1" != '--build' ]]; then
         -DSYSCONF_INSTALL_DIR:PATH=${WATCOM}/etc \
         -DSHARE_INSTALL_DIR:PATH=${WATCOM}/share \
         -DBUILD_SHARED_LIBS:BOOL=OFF \
-        -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_PATH/toolchain-ow.cmake \
+        -DCMAKE_TOOLCHAIN_FILE="${SCRIPT_PATH}/toolchain-ow.cmake" \
         "$@"
 
 else

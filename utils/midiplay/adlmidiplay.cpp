@@ -8,11 +8,71 @@
 #include <cstring>
 #include <deque>
 #include <cstdarg>
+#include <algorithm>
 #include <signal.h>
-#define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
+
+#if defined(__DJGPP__) || (defined(__WATCOMC__) && (defined(__DOS__) || defined(__DOS4G__) || defined(__DOS4GNZ__)))
+#define HW_OPL_MSDOS
+#include <conio.h>
+#include <dos.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+#ifdef __DJGPP__
+#include <pc.h>
+#include <dpmi.h>
+#include <go32.h>
+#include <sys/farptr.h>
+#include <sys/exceptn.h>
+#define BIOStimer _farpeekl(_dos_ds, 0x46C)
+#endif//__DJGPP__
+
+#ifdef __WATCOMC__
+//#include <wdpmi.h>
+#include <i86.h>
+#include <bios.h>
+#include <time.h>
+
+unsigned long biostime(unsigned cmd, unsigned long lon)
+{
+    long tval = (long)lon;
+    _bios_timeofday(cmd, &tval);
+    return (unsigned long)tval;
+}
+
+#define BIOStimer   biostime(0, 0l)
+#define BIOSTICK    55                  /* biostime() increases one tick about
+                                   every 55 msec */
+
+void mch_delay(int32_t msec)
+{
+    /*
+     * We busy-wait here.  Unfortunately, delay() and usleep() have been
+     * reported to give problems with the original Windows 95.  This is
+     * fixed in service pack 1, but not everybody installed that.
+     */
+    long starttime = biostime(0, 0L);
+    while(biostime(0, 0L) < starttime + msec / BIOSTICK);
+}
+
+//#define BIOStimer _farpeekl(_dos_ds, 0x46C)
+//#define DOSMEM(s,o,t) *(t _far *)(SS_DOSMEM + (DWORD)((o)|(s)<<4))
+//#define BIOStimer DOSMEM(0x46, 0x6C, WORD);
+//#define VSYNC_STATUS    Ox3da
+//#define VSYNC_MASK      Ox08
+/* #define SYNC { while(inp(VSYNCSTATUS) & VSYNCMASK);\
+      while (!(inp(VSYNCSTATUS) & VSYNCMASK)); } */
+#endif//__WATCOMC__
+
+#endif
 
 #include <adlmidi.h>
+
+#ifndef HARDWARE_OPL3
+
+#define SDL_MAIN_HANDLED
+#include <SDL2/SDL.h>
 
 #include "wave_writer.h"
 
@@ -34,7 +94,6 @@ public:
         SDL_mutexV(mut);
     }
 };
-
 
 static std::deque<short> AudioBuffer;
 static MutexType AudioBuffer_lock;
@@ -59,6 +118,8 @@ static void SDL_AudioCallbackX(void *, Uint8 *stream, int len)
     SDL_UnlockAudio();
 }
 
+#endif //HARDWARE_OPL3
+
 static bool is_number(const std::string &s)
 {
     std::string::const_iterator it = s.begin();
@@ -73,6 +134,7 @@ static void printError(const char *err)
 }
 
 static int stop = 0;
+#ifndef HARDWARE_OPL3
 static void sighandler(int dum)
 {
     if((dum == SIGINT)
@@ -83,6 +145,7 @@ static void sighandler(int dum)
     )
         stop = 1;
 }
+#endif
 
 
 static void debugPrint(void * /*userdata*/, const char *fmt, ...)
@@ -102,7 +165,7 @@ static void debugPrint(void * /*userdata*/, const char *fmt, ...)
 #ifdef DEBUG_TRACE_ALL_EVENTS
 static void debugPrintEvent(void * /*userdata*/, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, const ADL_UInt8 * /*data*/, size_t len)
 {
-    std::fprintf(stdout, " - E: 0x%02X 0x%02X %02d (%d)\n", type, subtype, channel, (int)len);
+    std::fprintf(stdout, " - E: 0x%02X 0x%02X %02d (%d)\r\n", type, subtype, channel, (int)len);
     std::fflush(stdout);
 }
 #endif
@@ -110,7 +173,11 @@ static void debugPrintEvent(void * /*userdata*/, ADL_UInt8 type, ADL_UInt8 subty
 int main(int argc, char **argv)
 {
     std::fprintf(stdout, "==========================================\n"
+                        #ifdef HARDWARE_OPL3
+                         "      libADLMIDI demo utility (HW OPL)\n"
+                        #else
                          "         libADLMIDI demo utility\n"
+                        #endif
                          "==========================================\n\n");
     std::fflush(stdout);
 
@@ -167,6 +234,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    #ifndef HARDWARE_OPL3
     //const unsigned MaxSamplesAtTime = 512; // 512=dbopl limitation
     // How long is SDL buffer, in seconds?
     // The smaller the value, the more often SDL_AudioCallBack()
@@ -185,8 +253,10 @@ int main(int argc, char **argv)
     spec.channels = 2;
     spec.samples  = Uint16((double)spec.freq * AudioBufferLength);
     spec.callback = SDL_AudioCallbackX;
+    #endif
 
     ADL_MIDIPlayer *myDevice;
+
     //Initialize libADLMIDI and create the instance (you can initialize multiple of them!)
     myDevice = adl_init(44100);
     if(myDevice == NULL)
@@ -235,8 +305,13 @@ int main(int argc, char **argv)
         adl_setRawEventHook(myDevice, debugPrintEvent, NULL);
     #endif
 
+    #ifdef HARDWARE_OPL3
+    std::fprintf(stdout, " - Hardware OPL3 chip in use\n");
+    #else
     std::fprintf(stdout, " - %s OPL3 Emulator in use\n", adl_emulatorName());
+    #endif
 
+    #ifndef HARDWARE_OPL3
     if(!recordWave)
     {
         // Set up SDL
@@ -253,6 +328,7 @@ int main(int argc, char **argv)
                          obtained.samples, obtained.freq, obtained.channels);
         }
     }
+    #endif
 
     if(argc >= 3)
     {
@@ -284,6 +360,7 @@ int main(int argc, char **argv)
         }
     }
 
+    #ifndef HARDWARE_OPL3
     int numOfChips = 4;
     if(argc >= 4)
         numOfChips = std::atoi(argv[3]);
@@ -295,6 +372,10 @@ int main(int argc, char **argv)
         return 1;
     }
     std::fprintf(stdout, " - Number of chips %d\n", adl_getNumChips(myDevice));
+    #else
+    int numOfChips = 1;
+    adl_setNumChips(myDevice, numOfChips);
+    #endif
 
     if(argc >= 5)
     {
@@ -314,19 +395,50 @@ int main(int argc, char **argv)
         return 2;
     }
 
+    std::fprintf(stdout, "File opened!\n");
     std::fflush(stdout);
 
+    #ifndef HARDWARE_OPL3
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
     #ifndef _WIN32
     signal(SIGHUP, sighandler);
     #endif
+    #else//HARDWARE_OPL3
+    static const unsigned NewTimerFreq = 209;
+    unsigned TimerPeriod = 0x1234DDul / NewTimerFreq;
+
+    #ifdef __DJGPP__
+    //disable();
+    outportb(0x43, 0x34);
+    outportb(0x40, TimerPeriod & 0xFF);
+    outportb(0x40, TimerPeriod >>   8);
+    //enable();
+    #endif//__DJGPP__
+
+    #ifdef __WATCOMC__
+    std::fprintf(stdout, " - Initializing BIOS timer...\n");
+    std::fflush(stdout);
+    //disable();
+    outp(0x43, 0x34);
+    outp(0x40, TimerPeriod & 0xFF);
+    outp(0x40, TimerPeriod >>   8);
+    //enable();
+    std::fprintf(stdout, " - Ok!\n");
+    std::fflush(stdout);
+    #endif//__WATCOMC__
+
+    unsigned long BIOStimer_begin = BIOStimer;
+    double tick_delay = 0.0;
+    #endif//HARDWARE_OPL3
 
     double total        = adl_totalTimeLength(myDevice);
     double loopStart    = adl_loopStartTime(myDevice);
     double loopEnd      = adl_loopEndTime(myDevice);
 
+    #ifndef HARDWARE_OPL3
     if(!recordWave)
+    #endif
     {
         std::fprintf(stdout, " - Loop is turned %s\n", loopEnabled ? "ON" : "OFF");
         if(loopStart >= 0.0 && loopEnd >= 0.0)
@@ -334,7 +446,9 @@ int main(int argc, char **argv)
         std::fprintf(stdout, "\n==========================================\n");
         std::fflush(stdout);
 
+        #ifndef HARDWARE_OPL3
         SDL_PauseAudio(0);
+        #endif
 
         #ifdef DEBUG_SEEKING_TEST
         int delayBeforeSeek = 50;
@@ -344,10 +458,12 @@ int main(int argc, char **argv)
 
         while(!stop)
         {
+            #ifndef HARDWARE_OPL3
             short buff[4096];
             size_t got = (size_t)adl_play(myDevice, 4096, buff);
             if(got <= 0)
                 break;
+            #endif
 
             #ifndef DEBUG_TRACE_ALL_EVENTS
             std::fprintf(stdout, "                                               \r");
@@ -355,6 +471,7 @@ int main(int argc, char **argv)
             std::fflush(stdout);
             #endif
 
+            #ifndef HARDWARE_OPL3
             AudioBuffer_lock.Lock();
             size_t pos = AudioBuffer.size();
             AudioBuffer.resize(pos + got);
@@ -376,10 +493,42 @@ int main(int argc, char **argv)
                 adl_positionSeek(myDevice, seekTo);
             }
             #endif
+
+            #else//HARDWARE_OPL3
+            const double mindelay = 1.0 / NewTimerFreq;
+
+            //__asm__ volatile("sti\nhlt");
+            //usleep(10000);
+            #ifdef __DJGPP__
+            __dpmi_yield();
+            #endif
+            #ifdef __WATCOMC__
+            //dpmi_dos_yield();
+            mch_delay((unsigned int)(tick_delay * 1000.0));
+            #endif
+            static unsigned long PrevTimer = BIOStimer;
+            const unsigned long CurTimer = BIOStimer;
+            const double eat_delay = (CurTimer - PrevTimer) / (double)NewTimerFreq;
+            PrevTimer = CurTimer;
+            tick_delay = adl_tickEvents(myDevice, eat_delay, mindelay);
+            if(adl_atEnd(myDevice) && tick_delay <= 0)
+                stop = true;
+
+            if(kbhit())
+            {   // Quit on ESC key!
+                int c = getch();
+                if(c == 27)
+                    stop = true;
+            }
+
+            #endif//HARDWARE_OPL3
         }
         std::fprintf(stdout, "                                               \n\n");
+        #ifndef HARDWARE_OPL3
         SDL_CloseAudio();
+        #endif
     }
+    #ifndef HARDWARE_OPL3
     else
     {
         std::string wave_out = std::string(argv[1]) + ".wav";
@@ -418,6 +567,32 @@ int main(int argc, char **argv)
             return 1;
         }
     }
+    #endif
+
+    #ifdef HARDWARE_OPL3
+
+    #ifdef __DJGPP__
+    // Fix the skewed clock and reset BIOS tick rate
+    _farpokel(_dos_ds, 0x46C, BIOStimer_begin +
+              (BIOStimer - BIOStimer_begin)
+              * (0x1234DD / 65536.0) / NewTimerFreq);
+
+    //disable();
+    outportb(0x43, 0x34);
+    outportb(0x40, 0);
+    outportb(0x40, 0);
+    //enable();
+    #endif
+
+    #ifdef __WATCOMC__
+    outp(0x43, 0x34);
+    outp(0x40, 0);
+    outp(0x40, 0);
+    #endif
+
+    adl_panic(myDevice); //Shut up all sustaining notes
+
+    #endif
 
     adl_close(myDevice);
 

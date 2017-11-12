@@ -4,14 +4,15 @@
 #include <cstdio>
 #include <vector>
 #include <cstring>
+#include <stdio.h>
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__WATCOMC__)
 #define PACKED_STRUCT __attribute__((packed))
 #else
 #define PACKED_STRUCT
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__WATCOMC__)
 #pragma pack(push,1)
 #endif
 
@@ -83,7 +84,7 @@ struct BNK2_instrument
    unsigned char xxxxxxxx;
 } PACKED_STRUCT; // Ad Lib Gold instrument maker bankfile patch
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__WATCOMC__)
 #pragma pack(pop)
 #endif
 
@@ -157,7 +158,7 @@ static void LoadBNK2(const std::vector<unsigned char>& data)
 
 static void LoadBNK(const char* fn)
 {
-    FILE* fp = fopen(fn, "rb");
+    FILE* fp = std::fopen(fn, "rb");
     if(!fp)
     {
         std::fprintf(stderr, "ERROR: Can't open %s file!", fn);

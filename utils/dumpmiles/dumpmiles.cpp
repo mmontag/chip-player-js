@@ -3,10 +3,11 @@
 //#endif
 #include <cstdio>
 #include <vector>
+#include <stdio.h>
 
 static void LoadMiles(const char* fn)
 {
-    FILE* fp = fopen(fn, "rb");
+    FILE* fp = std::fopen(fn, "rb");
     if(!fp)
     {
         std::fprintf(stderr, "ERROR: Can't open %s file!", fn);
@@ -39,7 +40,7 @@ static void LoadMiles(const char* fn)
         std::printf("%02X %02X ", gmnumber,gmnumber2); //, offset);
         for(unsigned b=0; b<length; ++b)
         {
-            if(b > 3 && (b-3)%11 == 0) printf("\n                        ");
+            if(b > 3 && (b-3)%11 == 0) std::printf("\n                        ");
             std::printf("%02X ", data[offset+b]);
         }
         std::printf("\n");

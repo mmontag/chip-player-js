@@ -24,24 +24,26 @@
 #ifndef ADLDATA_H
 #define ADLDATA_H
 
+#include <stdint.h>
+
 extern const struct adldata
 {
-    unsigned int modulator_E862, carrier_E862;  // See below
-    unsigned char modulator_40, carrier_40; // KSL/attenuation settings
-    unsigned char feedconn; // Feedback/connection bits for the channel
+    uint32_t    modulator_E862, carrier_E862;  // See below
+    uint8_t     modulator_40, carrier_40; // KSL/attenuation settings
+    uint8_t     feedconn; // Feedback/connection bits for the channel
 
-    signed char finetune;
+    int8_t      finetune;
 } adl[];
 
 extern const struct adlinsdata
 {
     enum { Flag_Pseudo4op = 0x01, Flag_NoSound = 0x02 };
 
-    unsigned short adlno1, adlno2;
-    unsigned char tone;
-    unsigned char flags;
-    unsigned short ms_sound_kon;  // Number of milliseconds it produces sound;
-    unsigned short ms_sound_koff;
+    uint16_t    adlno1, adlno2;
+    uint8_t     tone;
+    uint8_t     flags;
+    uint16_t    ms_sound_kon;  // Number of milliseconds it produces sound;
+    uint16_t    ms_sound_koff;
     double voice2_fine_tune;
 } adlins[];
 int maxAdlBanks();
