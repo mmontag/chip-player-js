@@ -6,12 +6,17 @@ export INCLUDE="$WATCOM/lh"
 WATCOM_FLAGS="-blinux"
 export CFLAGS="$WATCOM_FLAGS -xc -std=wc"
 export CXXFLAGS="$WATCOM_FLAGS -xc++ -xs -feh -std=c++11"
+export LFLAGS="$WATCOM_FLAGS"
+
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+echo "Path to self ${SCRIPTPATH}"
 
 # export PKG_CONFIG_LIBDIR="${WATCOM}/lib/pkgconfig"
 # djgpp_c_flags="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions --param=ssp-buffer-size=4"
 
 
-SCRIPT_PATH=$HOME/_git_repos/libADLMIDI/cmake/openwattcom
+#SCRIPT_PATH=$HOME/_git_repos/libADLMIDI/cmake/openwattcom
+SCRIPT_PATH=$SCRIPTPATH
 CUSTOM_PATH=$SCRIPT_PATH:${WATCOM}/binl:$PATH
 
 if [[ "$1" != '--build' ]]; then

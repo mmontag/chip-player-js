@@ -9,7 +9,7 @@ set (WATCOM_PREFIX "$ENV{HOME}/Qt/Tools/ow-snapshot-2.0")
 
 set (ENV{PATH} ${WATCOM_PREFIX}/binl:$ENV{PATH})
 set (ENV{WATCOM} ${WATCOM_PREFIX})
-set (ENV{INCLUDE} "${WATCOM_PREFIX}/lh")
+set (ENV{INCLUDE} "${WATCOM_PREFIX}/h:${CMAKE_CURRENT_LIST_DIR}/custom-h")
 set (ENV{EDPATH} ${WATCOM_PREFIX}/eddat)
 set (ENV{WIPFC} ${WATCOM_PREFIX}/wipfc)
 
@@ -27,7 +27,7 @@ set (CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set (CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set (CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-include_directories(${WATCOM_PREFIX}/lh)
+include_directories(${WATCOM_PREFIX}/h ${CMAKE_CURRENT_LIST_DIR}/custom-h)
 
 # Make sure Qt can be detected by CMake
 set (QT_BINARY_DIR ${WATCOM_PREFIX}/binl /usr/bin)

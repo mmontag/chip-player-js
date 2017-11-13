@@ -1,5 +1,3 @@
-
-#include <vector>
 #include <string>
 #include <cstdio>
 #include <cctype>

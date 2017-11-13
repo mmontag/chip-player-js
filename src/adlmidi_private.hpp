@@ -70,8 +70,13 @@ typedef __int32 ssize_t;
 #include <list>
 #include <string>
 #include <sstream>
+//#ifdef __WATCOMC__
+//#include <myset.h> //TODO: Implemnet a workaround for OpenWatcom to fix a crash while using those containers
+//#include <mymap.h>
+//#else
 #include <map>
 #include <set>
+//#endif
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
@@ -171,6 +176,7 @@ private:
     std::vector<adlinsdata> dynamic_metainstruments; // Replaces adlins[] when CMF file
     std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
     size_t                  dynamic_percussion_offset;
+
     typedef std::map<uint16_t, size_t> BankMap;
     BankMap dynamic_melodic_banks;
     BankMap dynamic_percussion_banks;
