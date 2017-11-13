@@ -238,6 +238,7 @@ public:
 
     void Poke(size_t card, uint32_t index, uint32_t value);
     void PokeN(size_t card, uint16_t index, uint8_t value);
+
     void NoteOff(size_t c);
     void NoteOn(unsigned c, double hertz);
     void Touch_Real(unsigned c, unsigned volume);
@@ -251,10 +252,6 @@ public:
     void Reset(unsigned long PCM_RATE);
 };
 
-/*
- * TODO: Put usage of those hooks to the places where originally was UI usage.
- * Also, provide external API to set those hooks
- */
 
 /**
  * @brief Hooks of the internal events
@@ -402,9 +399,7 @@ public:
                 return std::getc(fp);
             else
             {
-                if(mp_tell >= mp_size)
-                    return -1;
-
+                if(mp_tell >= mp_size) return -1;
                 int x = reinterpret_cast<unsigned char *>(mp)[mp_tell];
                 mp_tell++;
                 return x;

@@ -354,7 +354,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     #ifdef DISABLE_EMBEDDED_BANKS
     if((opl.AdlBank != ~0u) || (opl.dynamic_metainstruments.size() < 256))
     {
-        ADLMIDI_ErrorString = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
+        errorStringOut = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
         return false;
     }
     #endif
@@ -419,8 +419,6 @@ riffskip:
     else if(std::memcmp(HeaderBuf, "MUS\x1A", 4) == 0)
     {
         // MUS/DMX files (Doom)
-        //uint64_t start = ReadLEint(HeaderBuf + 6, 2);
-        //is_MUS = true;
         fr.seek(0, SEEK_END);
         size_t mus_len = fr.tell();
         fr.seek(0, SEEK_SET);
