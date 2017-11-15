@@ -328,7 +328,6 @@ bool MIDIplay::buildTrackData()
                     errorString += std::string(error, (size_t)len);
                 return false;
             }
-            CurrentPositionNew.wait = evtPos.delay;
             evtPos.absPos = abs_position;
             abs_position += evtPos.delay;
             trackDataNew[tk].push_back(evtPos);

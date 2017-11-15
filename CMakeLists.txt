@@ -80,7 +80,7 @@ if(WITH_EMBEDDED_BANKS)
             ${libADLMIDI_SOURCE_DIR}/src/dbopl.cpp
         )
         if(NOT MSVC)
-            target_link_libraries(gen_adldata pthread)
+            target_link_libraries(gen_adldata pthread m stdc++)
         endif()
         if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
                 CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
