@@ -372,7 +372,6 @@ void OPL3::Patch(uint16_t c, size_t i)
     for(unsigned a = 0; a < 4; ++a, x >>= 8, y >>= 8)
     {
         Poke(card, data[a] + o1, x & 0xFF);
-
         if(o2 != 0xFFF)
             Poke(card, data[a] + o2, y & 0xFF);
     }
