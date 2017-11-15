@@ -1237,7 +1237,7 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
     case 121: // Reset all controllers
         Ch[channel].bend       = 0;
         Ch[channel].volume     = 100;
-        Ch[channel].expression = 100;
+        Ch[channel].expression = 127;
         Ch[channel].sustain    = 0;
         Ch[channel].vibrato    = 0;
         Ch[channel].vibspeed   = 2 * 3.141592653 * 5.0;

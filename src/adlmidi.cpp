@@ -326,7 +326,7 @@ ADLMIDI_EXPORT const char *adl_errorString()
     return ADLMIDI_ErrorString.c_str();
 }
 
-ADLMIDI_EXPORT const char *adl_errorInfo(ADL_MIDIPlayer *device)
+ADLMIDI_EXPORT const char *adl_errorInfo(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return adl_errorString();
@@ -336,7 +336,7 @@ ADLMIDI_EXPORT const char *adl_errorInfo(ADL_MIDIPlayer *device)
     return play->getErrorString().c_str();
 }
 
-ADLMIDI_EXPORT const char *adl_getMusicTitle(ADL_MIDIPlayer *device)
+ADLMIDI_EXPORT const char *adl_getMusicTitle(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return "";
@@ -346,7 +346,7 @@ ADLMIDI_EXPORT const char *adl_getMusicTitle(ADL_MIDIPlayer *device)
     return play->musTitle.c_str();
 }
 
-ADLMIDI_EXPORT void adl_close(ADL_MIDIPlayer *device)
+ADLMIDI_EXPORT void adl_close(struct ADL_MIDIPlayer *device)
 {
     if(device->adl_midiPlayer)
         delete reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
@@ -355,7 +355,7 @@ ADLMIDI_EXPORT void adl_close(ADL_MIDIPlayer *device)
     device = NULL;
 }
 
-ADLMIDI_EXPORT void adl_reset(ADL_MIDIPlayer *device)
+ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return;
@@ -365,7 +365,7 @@ ADLMIDI_EXPORT void adl_reset(ADL_MIDIPlayer *device)
     play->opl.Reset(play->m_setup.PCM_RATE);
 }
 
-ADLMIDI_EXPORT double adl_totalTimeLength(ADL_MIDIPlayer *device)
+ADLMIDI_EXPORT double adl_totalTimeLength(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return -1.0;
@@ -516,7 +516,6 @@ inline static void SendStereoAudio(MIDIplay::Setup &device,
 {
     if(!in_size)
         return;
-
     device.stored_samples = 0;
     size_t offset       = static_cast<size_t>(out_pos);
     size_t inSamples    = static_cast<size_t>(in_size * 2);
@@ -538,7 +537,9 @@ inline static void SendStereoAudio(MIDIplay::Setup &device,
 ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
     #ifdef ADLMIDI_HW_OPL
-    (void)device; (void)sampleCount; (void)out;
+    (void)device;
+    (void)sampleCount;
+    (void)out;
     return 0;
     #else
     sampleCount -= sampleCount % 2; //Avoid even sample requests
@@ -602,8 +603,8 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                 //fill buffer with zeros
                 int16_t *out_buf = player->outBuf;
                 std::memset(out_buf, 0, static_cast<size_t>(in_generatedPhys) * sizeof(int16_t));
-
-                if(player->m_setup.NumCards == 1)
+                unsigned int chips = player->opl.NumCards;
+                if(chips == 1)
                 {
                     #ifdef ADLMIDI_USE_DOSBOX_OPL
                     player->opl.cards[0].GenerateArr(out_buf, &in_generatedStereo);
@@ -615,7 +616,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                 else if(n_periodCountStereo > 0)
                 {
                     /* Generate data from every chip and mix result */
-                    for(unsigned card = 0; card < player->m_setup.NumCards; ++card)
+                    for(unsigned card = 0; card < chips; ++card)
                     {
                         #ifdef ADLMIDI_USE_DOSBOX_OPL
                         player->opl.cards[card].GenerateArrMix(out_buf, &in_generatedStereo);
@@ -641,10 +642,12 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 }
 
 
-ADLMIDI_EXPORT int adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out)
+ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
     #ifdef ADLMIDI_HW_OPL
-    (void)device; (void)sampleCount; (void)out;
+    (void)device;
+    (void)sampleCount;
+    (void)out;
     return 0;
     #else
     sampleCount -= sampleCount % 2; //Avoid even sample requests
@@ -689,7 +692,7 @@ ADLMIDI_EXPORT int adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *
     #endif
 }
 
-ADLMIDI_EXPORT double adl_tickEvents(ADL_MIDIPlayer *device, double seconds, double granuality)
+ADLMIDI_EXPORT double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, double granuality)
 {
     if(!device)
         return -1.0;
@@ -699,7 +702,7 @@ ADLMIDI_EXPORT double adl_tickEvents(ADL_MIDIPlayer *device, double seconds, dou
     return player->Tick(seconds, granuality);
 }
 
-ADLMIDI_EXPORT int adl_atEnd(ADL_MIDIPlayer *device)
+ADLMIDI_EXPORT int adl_atEnd(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return 1;
@@ -709,7 +712,7 @@ ADLMIDI_EXPORT int adl_atEnd(ADL_MIDIPlayer *device)
     return (int)player->atEnd;
 }
 
-ADLMIDI_EXPORT void adl_panic(ADL_MIDIPlayer *device)
+ADLMIDI_EXPORT void adl_panic(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return;

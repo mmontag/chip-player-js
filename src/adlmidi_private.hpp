@@ -893,9 +893,7 @@ private:
                     MIDIchannel::activenoteiterator i,
                     unsigned props_mask,
                     int32_t select_adlchn = -1);
-    bool ProcessEvents();
     bool ProcessEventsNew(bool isSeek = false);
-    void HandleEvent(size_t tk);
     void HandleEvent(size_t tk, const MidiEvent &evt, int &status);
 
     // Determine how good a candidate this adlchannel

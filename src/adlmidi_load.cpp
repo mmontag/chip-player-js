@@ -329,10 +329,8 @@ bool MIDIplay::LoadMIDI(const std::string &filename)
 {
     fileReader file;
     file.openFile(filename.c_str());
-
     if(!LoadMIDI(file))
         return false;
-
     return true;
 }
 

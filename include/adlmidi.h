@@ -124,7 +124,7 @@ extern const char *adl_linkedLibraryVersion();
 extern const char *adl_errorString();
 
 /*Returns string which contains last error message on specific device*/
-extern const char *adl_errorInfo(ADL_MIDIPlayer *device);
+extern const char *adl_errorInfo(struct ADL_MIDIPlayer *device);
 
 /*Initialize ADLMIDI Player device*/
 extern struct ADL_MIDIPlayer *adl_init(long sample_rate);
@@ -198,7 +198,7 @@ extern const struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device
 extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
 
 /*Generate audio output from chip emulators without iteration of MIDI timers. 512 samples per channel is a maximum*/
-extern int  adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out);
+extern int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
 
 /**
  * @brief Periodic tick handler.
@@ -210,13 +210,13 @@ extern int  adl_generate(ADL_MIDIPlayer *device, int sampleCount, short *out);
  * Use it for Hardware OPL3 mode or when you want to process events differently from adl_play() function.
  * DON'T USE IT TOGETHER WITH adl_play()!!!
  */
-extern double adl_tickEvents(ADL_MIDIPlayer *device, double seconds, double granuality);
+extern double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, double granuality);
 
 /*Returns 1 if music position has reached end*/
-extern int adl_atEnd(ADL_MIDIPlayer *device);
+extern int adl_atEnd(struct ADL_MIDIPlayer *device);
 
 /*Force Off all notes on all channels*/
-extern void adl_panic(ADL_MIDIPlayer *device);
+extern void adl_panic(struct ADL_MIDIPlayer *device);
 
 /**Hooks**/
 
