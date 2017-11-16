@@ -157,36 +157,38 @@ class OPL3
 {
 public:
     friend class MIDIplay;
+    friend class AdlInstrumentTester;
     uint32_t NumChannels;
     char ____padding[4];
     ADL_MIDIPlayer *_parent;
-    #ifndef ADLMIDI_HW_OPL
-    #ifdef ADLMIDI_USE_DOSBOX_OPL
+#ifndef ADLMIDI_HW_OPL
+#   ifdef ADLMIDI_USE_DOSBOX_OPL
     std::vector<DBOPL::Handler> cards;
-    #else
+#   else
     std::vector<_opl3_chip> cards;
-    #endif
-    #endif
+#   endif
+#endif
 private:
     std::vector<size_t>     ins; // index to adl[], cached, needed by Touch()
     std::vector<uint8_t>    pit;  // value poked to B0, cached, needed by NoteOff)(
     std::vector<uint8_t>    regBD;
 
     friend int adlRefreshNumCards(ADL_MIDIPlayer *device);
-    std::vector<adlinsdata> dynamic_metainstruments; // Replaces adlins[] when CMF file
-    std::vector<adldata>    dynamic_instruments;     // Replaces adl[]    when CMF file
-    size_t                  dynamic_percussion_offset;
+    //! Meta information about every instrument
+    std::vector<adlinsdata>     dynamic_metainstruments; // Replaces adlins[] when CMF file
+    //! Raw instrument data ready to be sent to the chip
+    std::vector<adldata>        dynamic_instruments;     // Replaces adl[]    when CMF file
+    size_t                      dynamic_percussion_offset;
 
     typedef std::map<uint16_t, size_t> BankMap;
     BankMap dynamic_melodic_banks;
     BankMap dynamic_percussion_banks;
     const unsigned  DynamicInstrumentTag /* = 0x8000u*/,
-          DynamicMetaInstrumentTag /* = 0x4000000u*/;
-public:
+                    DynamicMetaInstrumentTag /* = 0x4000000u*/;
     const adlinsdata    &GetAdlMetaIns(size_t n);
     size_t              GetAdlMetaNumber(size_t midiins);
     const adldata       &GetAdlIns(size_t insno);
-
+public:
     void    setEmbeddedBank(unsigned int bank);
 
     //! Total number of running concurrent emulated chips
