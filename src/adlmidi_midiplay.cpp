@@ -609,8 +609,10 @@ bool MIDIplay::buildTrackData()
                         {
                         case 0: // Set bank msb (GM bank)
                             banks[et->channel] = uint16_t(uint16_t(value) << 8) | uint16_t(banks[et->channel] & 0x00FF);
+                            break;
                         case 32: // Set bank lsb (XG bank)
                             banks[et->channel] = (banks[et->channel] & 0xFF00) | (uint16_t(value) & 0x00FF);
+                            break;
                         }
                         continue;
                     }
