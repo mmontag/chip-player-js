@@ -918,14 +918,25 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     size_t midiins = Ch[channel].patch;
     bool isPercussion = (channel  % 16 == 9);
 
-    if(isPercussion)
-        midiins = opl.dynamic_percussion_offset + note; // Percussion instrument
-
     uint16_t bank = 0;
-    //Set bank bank
     if(Ch[channel].bank_msb || Ch[channel].bank_lsb)
     {
         bank = (uint16_t(Ch[channel].bank_msb) * 256) + uint16_t(Ch[channel].bank_lsb);
+        if(bank == 0x7E00) //XG SFX1/SFX2 channel (16128 signed decimal)
+            isPercussion = true;
+        if(bank == 0x7F00) //XG Percussion channel (16256 signed decimal)
+            isPercussion = true;
+    }
+
+    if(isPercussion)
+    {
+        bank = (uint16_t)midiins; // MIDI instrument defines the patch
+        midiins = opl.dynamic_percussion_offset + note; // Percussion instrument
+    }
+
+    //Set bank bank
+    if(bank > 0)
+    {
         if(isPercussion)
         {
             OPL3::BankMap::iterator b = opl.dynamic_percussion_banks.find(bank);
