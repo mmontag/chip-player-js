@@ -583,8 +583,10 @@ bool MIDIplay::buildTrackData()
             char         ___pad[7];
         } drNotes[255];
 
+        uint16_t banks[16];
         for(size_t tk = 0; tk < trackCount; ++tk)
         {
+            std::memset(banks, 0, sizeof(banks));
             std::memset(drNotes, 0, sizeof(drNotes));
             MidiTrackQueue &track = trackDataNew[tk];
             if(track.empty())
@@ -597,7 +599,26 @@ bool MIDIplay::buildTrackData()
                 for(ssize_t e = 0; e < (ssize_t)pos.events.size(); e++)
                 {
                     MidiEvent *et = &pos.events[(size_t)e];
-                    if(et->channel != 9)
+
+                    /* Set MSB/LSB bank */
+                    if(et->type == MidiEvent::T_CTRLCHANGE)
+                    {
+                        uint8_t ctrlno = et->data[0];
+                        uint8_t value =  et->data[1];
+                        switch(ctrlno)
+                        {
+                        case 0: // Set bank msb (GM bank)
+                            banks[et->channel] = (uint16_t(value) << 8) | (banks[et->channel] & 0x00FF);
+                        case 32: // Set bank lsb (XG bank)
+                            banks[et->channel] = (banks[et->channel] & 0xFF00) | (uint16_t(value) & 0x00FF);
+                        }
+                        continue;
+                    }
+
+                    bool percussion = (et->channel == 9) ||
+                            banks[et->channel] == 0x7E00 || //XG SFX1/SFX2 channel (16128 signed decimal)
+                            banks[et->channel] == 0x7F00;   //XG Percussion channel (16256 signed decimal)
+                    if(!percussion)
                         continue;
 
                     if(et->type == MidiEvent::T_NOTEON)
