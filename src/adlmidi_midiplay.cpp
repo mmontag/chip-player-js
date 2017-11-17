@@ -582,12 +582,12 @@ bool MIDIplay::buildTrackData()
             bool         isOn;
             char         ___pad[7];
         } drNotes[255];
-
         uint16_t banks[16];
+
         for(size_t tk = 0; tk < trackCount; ++tk)
         {
-            std::memset(banks, 0, sizeof(banks));
             std::memset(drNotes, 0, sizeof(drNotes));
+            std::memset(banks, 0, sizeof(banks));
             MidiTrackQueue &track = trackDataNew[tk];
             if(track.empty())
                 continue;//Empty track is useless!
@@ -608,7 +608,7 @@ bool MIDIplay::buildTrackData()
                         switch(ctrlno)
                         {
                         case 0: // Set bank msb (GM bank)
-                            banks[et->channel] = (uint16_t(value) << 8) | (banks[et->channel] & 0x00FF);
+                            banks[et->channel] = uint16_t(uint16_t(value) << 8) | uint16_t(banks[et->channel] & 0x00FF);
                         case 32: // Set bank lsb (XG bank)
                             banks[et->channel] = (banks[et->channel] & 0xFF00) | (uint16_t(value) & 0x00FF);
                         }
