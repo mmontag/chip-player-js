@@ -743,6 +743,10 @@ private:
 
     //! Missing instruments catches
     std::set<uint8_t> caugh_missing_instruments;
+    //! Missing melodic banks catches
+    std::set<uint16_t> caugh_missing_banks_melodic;
+    //! Missing percussion banks catches
+    std::set<uint16_t> caugh_missing_banks_percussion;
 
     /**
      * @brief Build MIDI track data from the raw track data storage
