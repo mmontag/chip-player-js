@@ -1070,12 +1070,13 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if((opl.AdlPercussionMode == 1) && PercussionMap[midiins & 0xFF])
         voices[1] = voices[0];//i[1] = i[0];
 
-    if(!caugh_missing_instruments.count(static_cast<uint8_t>(midiins)) && (ains.flags & adlinsdata::Flag_NoSound))
+    if(hooks.onDebugMessage)
     {
-        if(hooks.onDebugMessage)
-            hooks.onDebugMessage(hooks.onDebugMessage_userData,
-                                 "[%i] Playing missing instrument %i", channel, midiins);
-        caugh_missing_instruments.insert(static_cast<uint8_t>(midiins));
+        if(!caugh_missing_instruments.count(static_cast<uint8_t>(midiins)) && (ains.flags & adlinsdata::Flag_NoSound))
+        {
+            hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Playing missing instrument %i", channel, midiins);
+            caugh_missing_instruments.insert(static_cast<uint8_t>(midiins));
+        }
     }
 
     // Allocate AdLib channel (the physical sound channel for the note)
