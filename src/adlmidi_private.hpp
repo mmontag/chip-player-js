@@ -41,7 +41,7 @@
 
 #ifdef _WIN32
 #   undef NO_OLDNAMES
-
+#	include <stdint.h>
 #   ifdef _MSC_VER
 #       ifdef _WIN64
 typedef __int64 ssize_t;
@@ -49,7 +49,7 @@ typedef __int64 ssize_t;
 typedef __int32 ssize_t;
 #       endif
 #       define NOMINMAX //Don't override std::min and std::max
-#   elif !defined(__MINGW32__)
+#   else
 #       ifdef _WIN64
 typedef int64_t ssize_t;
 #       else
