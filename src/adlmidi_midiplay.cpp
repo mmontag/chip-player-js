@@ -330,6 +330,18 @@ bool MIDIplay::buildTrackData()
                     errorString += std::string(error, (size_t)len);
                 return false;
             }
+
+            //HACK: Begin every track with "Reset all controllers" event to avoid controllers state break came from end of song
+            for(uint8_t chan = 0; chan < 16; chan++)
+            {
+                MidiEvent event;
+                event.type = MidiEvent::T_CTRLCHANGE;
+                event.channel = chan;
+                event.data.push_back(121);
+                event.data.push_back(0);
+                evtPos.events.push_back(event);
+            }
+
             evtPos.absPos = abs_position;
             abs_position += evtPos.delay;
             trackDataNew[tk].push_back(evtPos);
