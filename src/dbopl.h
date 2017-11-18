@@ -48,12 +48,20 @@ typedef signed   char Bit8s;
 //Select the type of wave generator routine
 #define DBOPL_WAVE WAVE_TABLEMUL
 
-#ifdef _MSC_VER
-#ifdef _WIN64
+#ifdef _WIN32
+#   ifdef _MSC_VER
+#       ifdef _WIN64
 typedef __int64 ssize_t;
-#else
+#       else
 typedef __int32 ssize_t;
-#endif
+#       endif
+#   elif !defined(__MINGW32__)
+#       ifdef _WIN64
+typedef int64_t ssize_t;
+#       else
+typedef int32_t ssize_t;
+#       endif
+#   endif
 #endif
 
 namespace DBOPL
