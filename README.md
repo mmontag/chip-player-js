@@ -146,6 +146,8 @@ To build that example you will need to have installed SDL2 library.
  * Added С++ Extra public API which now includes instrument testing feature (which is required by classic ADLMIDI utility)
  * Multi-bank WOPL files now supported! Feel free to implement GS or XG - compatible bank
  * Added support for DJGPP compiler to build libADLMIDI for DOS to use hardware OPL3 chip
+ * Added XG percussion bank channel handling support, XG MIDI files are using custom percussion channels are now playing fine!
+ * Fixed damaged playback while loop music caused by state of controllers came from end of current melody
 
 ## 1.2.1    2017-07-30
  * Minor fixes
