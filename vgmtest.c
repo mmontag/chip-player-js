@@ -1339,6 +1339,14 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 	case 0xE0:	// Seek to PCM Data Bank Pos
 		ym2612_pcmBnkPos = (data[0x01] << 0) | (data[0x02] << 8) | (data[0x03] << 16) | (data[0x04] << 24);
 		return 0x05;
+	case 0x31:	// Set AY8910 stereo mask
+		chipID = (data[0x01] & 0x80) >> 7;
+		// TODO: assign a register or do a special function call
+		//if (data[0x01] & 0x40)
+		//	SendChipCommand_Data8(0x06, chipID, 0xFF, data[0x01] & 0x3F);	// YM2203 SSG
+		//else
+		//	SendChipCommand_Data8(0x12, chipID, 0xFF, data[0x01] & 0x3F);	// AY8910 SSG
+		return 0x02;
 	case 0x4F:	// SN76489 GG Stereo
 		SendChipCommand_Data8(0x00, chipID, 0x01, data[0x01]);
 		return 0x02;

@@ -93,6 +93,7 @@ extern "C"
   uint32_t EPSG_setMask (EPSG *, uint32_t mask);
   uint32_t EPSG_toggleMask (EPSG *, uint32_t mask);
   void EPSG_setMuteMask (EPSG *, UINT32 mask);
+  void EPSG_setStereoMask (EPSG *psg, UINT32 mask);
   void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan);
     
 #ifdef __cplusplus

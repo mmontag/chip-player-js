@@ -198,6 +198,20 @@ EPSG_setMuteMask (EPSG *psg, UINT32 mask)
 }
 
 void
+EPSG_setStereoMask (EPSG *psg, UINT32 mask)
+{
+  if(psg)
+  {
+    uint8_t i;
+    for (i = 0; i < 3; i++)
+    {
+      psg->stereo_mask[i] = mask & 0x03;
+      mask >>= 2;
+    }
+  }  
+}
+
+void
 EPSG_reset (EPSG * psg)
 {
   int i;
