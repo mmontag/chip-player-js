@@ -55,7 +55,7 @@ typedef __int64 ssize_t;
 #       else
 typedef __int32 ssize_t;
 #       endif
-#   elif !defined(__MINGW32__)
+#   else
 #       ifdef _WIN64
 typedef int64_t ssize_t;
 #       else
