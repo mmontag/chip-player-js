@@ -88,7 +88,10 @@ static int16_t toSint16BE(const uint8_t *arr)
 }
 
 static const char       *wopl3_magic = "WOPL3-BANK\0";
-static const uint16_t   wopl_latest_version = 2;
+static const uint16_t   wopl_latest_version = 3;
+
+#define WOPL_INST_SIZE_V2 62
+#define WOPL_INST_SIZE_V3 66
 
 enum WOPL_InstrumentFlags
 {
@@ -103,13 +106,23 @@ struct WOPL_Inst
     char padding[7];
     struct adlinsdata adlins;
     struct adldata    op[2];
+    uint16_t ms_sound_kon;
+    uint16_t ms_sound_koff;
 };
 
-static bool readInstrument(MIDIplay::fileReader &file, WOPL_Inst &ins, bool isPercussion = false)
+static bool readInstrument(MIDIplay::fileReader &file, WOPL_Inst &ins, uint16_t &version, bool isPercussion = false)
 {
-    uint8_t idata[62];
-    if(file.read(idata, 1, 62) != 62)
-        return false;
+    uint8_t idata[WOPL_INST_SIZE_V3];
+    if(version >= 3)
+    {
+        if(file.read(idata, 1, WOPL_INST_SIZE_V3) != WOPL_INST_SIZE_V3)
+            return false;
+    }
+    else
+    {
+        if(file.read(idata, 1, WOPL_INST_SIZE_V2) != WOPL_INST_SIZE_V2)
+            return false;
+    }
 
     //strncpy(ins.name, char_p(idata), 32);
     ins.op[0].finetune = (int8_t)toSint16BE(idata + 32);
@@ -129,12 +142,6 @@ static bool readInstrument(MIDIplay::fileReader &file, WOPL_Inst &ins, bool isPe
     }
 
     ins.adlins.tone = isPercussion ? idata[38] : 0;
-
-    /* TODO: add those fields into next version of WOPL format
-     * and re-generate those values on file save! */
-    ins.adlins.ms_sound_kon  = 1000;
-    ins.adlins.ms_sound_koff = 500;
-    /* ----------------------------------------------------- */
 
     uint8_t flags       = idata[39];
     ins.adlins.flags = (flags & WOPL_Flag_Enable4OP) && (flags & WOPL_Flag_Pseudo4OP) ? adlinsdata::Flag_Pseudo4op : 0;
@@ -167,6 +174,18 @@ static bool readInstrument(MIDIplay::fileReader &file, WOPL_Inst &ins, bool isPe
             | ((static_cast<uint32_t>(idata[off + 0]) << 0) & 0x000000FF);  //AVEKM
         ins.op[slt].modulator_40 = idata[off + 1];//KSLL
     }
+
+    if(version >= 3)
+    {
+        ins.ms_sound_kon  = toUint16BE(idata + 62);
+        ins.ms_sound_koff = toUint16BE(idata + 64);
+    }
+    else
+    {
+        ins.ms_sound_kon = 1000;
+        ins.ms_sound_koff = 500;
+    }
+
     return true;
 }
 
@@ -260,8 +279,6 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
             size_t offset = opl.dynamic_melodic_banks.size();
             opl.dynamic_melodic_banks[bank] = offset;
             //strncpy(bankMeta.name, char_p(bank_meta), 32);
-            //bankMeta.lsb = bank_meta[32];
-            //bankMeta.msb = bank_meta[33];
         }
 
         for(uint16_t i = 0; i < count_percusive_banks; i++)
@@ -276,8 +293,6 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
             size_t offset = opl.dynamic_percussion_banks.size();
             opl.dynamic_percussion_banks[bank] = offset;
             //strncpy(bankMeta.name, char_p(bank_meta), 32);
-            //bankMeta.lsb = bank_meta[32];
-            //bankMeta.msb = bank_meta[33];
         }
     }
 
@@ -289,17 +304,14 @@ tryAgain:
     {
         WOPL_Inst ins;
         std::memset(&ins, 0, sizeof(WOPL_Inst));
-        if(!readInstrument(fr, ins, readPercussion))
+        if(!readInstrument(fr, ins, version, readPercussion))
         {
             opl.setEmbeddedBank(m_setup.AdlBank);
             errorStringOut = "Custom bank: Fail to read instrument!";
             return false;
         }
-
-        /*
-         * 0..127 - melodic, 128...255 - percussion.
-         * TODO: Make separated melodic and drum arrays and make MIDI bank ID support
-         */
+        ins.adlins.ms_sound_kon  = ins.ms_sound_kon;
+        ins.adlins.ms_sound_koff = ins.ms_sound_koff;
         ins.adlins.adlno1 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
         opl.dynamic_instruments.push_back(ins.op[0]);
         ins.adlins.adlno2 = ins.adlins.adlno1;

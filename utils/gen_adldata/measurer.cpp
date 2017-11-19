@@ -223,8 +223,8 @@ DurationInfo MeasureDurations(const ins &in)
     result.quarter_amplitude_time = (double)quarter_amplitude_time;
     result.keyoff_out_time = (double)keyoff_out_time;
 
-    result.ms_sound_kon  = (long)(quarter_amplitude_time * 1000.0 / interval);
-    result.ms_sound_koff = (long)(keyoff_out_time        * 1000.0 / interval);
+    result.ms_sound_kon  = (int64_t)(quarter_amplitude_time * 1000.0 / interval);
+    result.ms_sound_koff = (int64_t)(keyoff_out_time        * 1000.0 / interval);
     result.nosound = (peak_amplitude_value < 0.5);
     return result;
 }

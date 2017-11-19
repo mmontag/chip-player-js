@@ -5,7 +5,10 @@
 #include "../midi_inst_list.h"
 #include "common.h"
 
-static const uint8_t wopl_latest_version = 2;
+static const uint8_t wopl_latest_version = 3;
+
+#define WOPL_INST_SIZE_V2 62
+#define WOPL_INST_SIZE_V3 66
 
 enum class WOPL_Flags
 {
@@ -82,6 +85,10 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
         }
     }
 
+    size_t insSize = WOPL_INST_SIZE_V2;
+    if(version >= 3)
+        insSize = WOPL_INST_SIZE_V3;
+
     uint32_t melodic_offset = 0;
     uint32_t percussion_offset = 0;
     if(version < 2)
@@ -89,7 +96,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
     else
         melodic_offset = 0x13 + 34 * mbanks_count + 34 * pbanks_count;
 
-    percussion_offset = melodic_offset + (62 * 128 * mbanks_count);
+    percussion_offset = melodic_offset + (insSize * 128 * mbanks_count);
 
     uint32_t root_offsets[2] = {melodic_offset, percussion_offset};
 
@@ -98,11 +105,11 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
         bool is_percussion = (bset == 1);
         for(uint32_t bankno = 0; bankno < 1; bankno++) // only first melodic bank (Until multi-banks support will be implemented)
         {
-            uint32_t bank_offset = root_offsets[bset] + (bankno * 62 * 128);
+            uint32_t bank_offset = root_offsets[bset] + (bankno * insSize * 128);
 
             for(uint32_t i = 0; i < 128; i++)
             {
-                uint32_t offset = bank_offset + uint32_t(i * 62);
+                uint32_t offset = bank_offset + uint32_t(i * insSize);
                 std::string name;
                 insdata tmp[2];
 
@@ -147,6 +154,12 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 tmp[1].data[8]  = data[offset + 52 + 6];
                 tmp[1].data[9]  = data[offset + 52 + 1];
                 tmp[1].data[10] = data[offset + 41];
+                /*
+                 * We will don't read two millisecond delays on tail of instrument
+                 * as there are will be re-calculated by measurer here.
+                 * Those fields are made for hot-loading while runtime, but not
+                 * for generation of embedded banks database.
+                 */
 
                 tmp[0].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 32));
                 tmp[1].finetune = int8_t(toSint16BE((const uint8_t *)data.data() + offset + 34));
