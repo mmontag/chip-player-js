@@ -4,8 +4,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <deque>
 #include <cstdarg>
+#include <deque>
 #include <algorithm>
 #include <signal.h>
 
@@ -93,26 +93,22 @@ public:
     }
 };
 
-static std::deque<short> AudioBuffer;
-static MutexType AudioBuffer_lock;
+typedef std::deque<int16_t> AudioBuff;
+static AudioBuff g_audioBuffer;
+static MutexType g_audioBuffer_lock;
 
 static void SDL_AudioCallbackX(void *, Uint8 *stream, int len)
 {
     SDL_LockAudio();
     short *target = (short *) stream;
-    AudioBuffer_lock.Lock();
-    /*if(len != AudioBuffer.size())
-        fprintf(stderr, "len=%d stereo samples, AudioBuffer has %u stereo samples",
-            len/4, (unsigned) AudioBuffer.size()/2);*/
+    g_audioBuffer_lock.Lock();
     unsigned ate = (unsigned)len / 2; // number of shorts
-    if(ate > AudioBuffer.size())
-        ate = (unsigned)AudioBuffer.size();
+    if(ate > g_audioBuffer.size())
+        ate = (unsigned)g_audioBuffer.size();
     for(unsigned a = 0; a < ate; ++a)
-    {
-        target[a] = AudioBuffer[a];
-    }
-    AudioBuffer.erase(AudioBuffer.begin(), AudioBuffer.begin() + ate);
-    AudioBuffer_lock.Unlock();
+        target[a] = g_audioBuffer[a];
+    g_audioBuffer.erase(g_audioBuffer.begin(), g_audioBuffer.begin() + ate);
+    g_audioBuffer_lock.Unlock();
     SDL_UnlockAudio();
 }
 
@@ -343,11 +339,12 @@ int main(int argc, char **argv)
         }
         else
         {
-            std::fprintf(stdout, " - Use custom bank [%s]...", argv[2]);
+            std::string bankPath = argv[2];
+            std::fprintf(stdout, " - Use custom bank [%s]...", bankPath.c_str());
             std::fflush(stdout);
             //Open external bank file (WOPL format is supported)
             //to create or edit them, use OPL3 Bank Editor you can take here https://github.com/Wohlstand/OPL3BankEditor
-            if(adl_openBankFile(myDevice, argv[2]) != 0)
+            if(adl_openBankFile(myDevice, bankPath.c_str()) != 0)
             {
                 std::fprintf(stdout, "FAILED!\n");
                 std::fflush(stdout);
@@ -386,14 +383,15 @@ int main(int argc, char **argv)
     }
     std::fprintf(stdout, " - Number of four-ops %d\n", adl_getNumFourOpsChn(myDevice));
 
+    std::string musPath = argv[1];
     //Open MIDI file to play
-    if(adl_openFile(myDevice, argv[1]) != 0)
+    if(adl_openFile(myDevice, musPath.c_str()) != 0)
     {
         printError(adl_errorInfo(myDevice));
         return 2;
     }
 
-    std::fprintf(stdout, "File opened!\n");
+    std::fprintf(stdout, " - File [%s] opened!\n", musPath.c_str());
     std::fflush(stdout);
 
     #ifndef HARDWARE_OPL3
@@ -470,15 +468,15 @@ int main(int argc, char **argv)
             #endif
 
             #ifndef HARDWARE_OPL3
-            AudioBuffer_lock.Lock();
-            size_t pos = AudioBuffer.size();
-            AudioBuffer.resize(pos + got);
+            g_audioBuffer_lock.Lock();
+            size_t pos = g_audioBuffer.size();
+            g_audioBuffer.resize(pos + got);
             for(size_t p = 0; p < got; ++p)
-                AudioBuffer[pos + p] = buff[p];
-            AudioBuffer_lock.Unlock();
+                g_audioBuffer[pos + p] = buff[p];
+            g_audioBuffer_lock.Unlock();
 
             const SDL_AudioSpec &spec = obtained;
-            while(AudioBuffer.size() > spec.samples + (spec.freq * 2) * OurHeadRoomLength)
+            while(g_audioBuffer.size() > spec.samples + (spec.freq * 2) * OurHeadRoomLength)
             {
                 SDL_Delay(1);
             }
@@ -529,7 +527,7 @@ int main(int argc, char **argv)
     #ifndef HARDWARE_OPL3
     else
     {
-        std::string wave_out = std::string(argv[1]) + ".wav";
+        std::string wave_out = musPath + ".wav";
         std::fprintf(stdout, " - Recording WAV file %s...\n", wave_out.c_str());
         std::fprintf(stdout, "\n==========================================\n");
         std::fflush(stdout);
