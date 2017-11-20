@@ -144,7 +144,7 @@ DurationInfo MeasureDurations(const ins &in)
 
     // Keyoff the note
     for(unsigned n = 0; n < n_notes; ++n)
-        WRITE_REG(0xB0 + n, (x[n] >> 8) & 0xDF);
+        WRITE_REG(0xB0 + n * 3, (x[n] >> 8) & 0xDF);
 
     // Now, for up to 60 seconds, measure mean amplitude.
     std::vector<double> amplitudecurve_off;
