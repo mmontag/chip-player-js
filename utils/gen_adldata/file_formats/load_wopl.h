@@ -141,7 +141,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 tmp[0].data[7]  = data[offset + 42 + 4];//Wave op2
                 tmp[0].data[8]  = data[offset + 42 + 6];//KSL op1
                 tmp[0].data[9]  = data[offset + 42 + 1];//KSL op2
-                tmp[0].data[10] = data[offset + 40];
+                tmp[0].data[10] = data[offset + 40];    //FeedBack/Connection
 
                 tmp[1].data[0]  = data[offset + 52 + 5];
                 tmp[1].data[1]  = data[offset + 52 + 0];
