@@ -108,10 +108,10 @@ extern void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol)
 extern void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel);
 
 /*Load WOPL bank file from File System*/
-extern int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePath);
+extern int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath);
 
 /*Load WOPL bank file from memory data*/
-extern int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, long size);
+extern int adl_openBankData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size);
 
 
 /*Returns name of currently used OPL3 emulator*/
@@ -130,10 +130,10 @@ extern const char *adl_errorInfo(struct ADL_MIDIPlayer *device);
 extern struct ADL_MIDIPlayer *adl_init(long sample_rate);
 
 /*Load MIDI file from File System*/
-extern int adl_openFile(struct ADL_MIDIPlayer *device, char *filePath);
+extern int adl_openFile(struct ADL_MIDIPlayer *device, const char *filePath);
 
 /*Load MIDI file from memory data*/
-extern int adl_openData(struct ADL_MIDIPlayer *device, void *mem, long size);
+extern int adl_openData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size);
 
 /*Resets MIDI player*/
 extern void adl_reset(struct ADL_MIDIPlayer *device);

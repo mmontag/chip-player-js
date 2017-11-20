@@ -222,7 +222,7 @@ ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int v
     play->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
 }
 
-ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePath)
+ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath)
 {
     if(device && device->adl_midiPlayer)
     {
@@ -243,7 +243,7 @@ ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, char *filePat
     return -1;
 }
 
-ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, long size)
+ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size)
 {
     if(device && device->adl_midiPlayer)
     {
@@ -264,7 +264,7 @@ ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, void *mem, lo
     return -1;
 }
 
-ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)
+ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, const char *filePath)
 {
     if(device && device->adl_midiPlayer)
     {
@@ -285,7 +285,7 @@ ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, char *filePath)
     return -1;
 }
 
-ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer *device, void *mem, long size)
+ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer *device, const void *mem, unsigned long size)
 {
     if(device && device->adl_midiPlayer)
     {
