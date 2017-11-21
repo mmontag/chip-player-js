@@ -589,7 +589,7 @@ riffskip:
             do
             {
                 uint8_t raw[4];
-                size_t end = static_cast<uint8_t>(HeaderBuf[0]) + 256 * static_cast<uint8_t>(HeaderBuf[1]);
+                size_t end = static_cast<size_t>(HeaderBuf[0]) + 256 * static_cast<size_t>(HeaderBuf[1]);
 
                 if(!end || (end & 3))
                     break;
@@ -653,7 +653,7 @@ riffskip:
         if(is_IMF)
         {
             //std::fprintf(stderr, "Reading IMF file...\n");
-            size_t end = static_cast<uint8_t>(HeaderBuf[0]) + 256 * static_cast<uint8_t>(HeaderBuf[1]);
+            size_t end = static_cast<size_t>(HeaderBuf[0]) + 256 * static_cast<size_t>(HeaderBuf[1]);
             unsigned IMF_tempo = 1428;
             static const unsigned char imf_tempo[] = {0x0,//Zero delay!
                                                       MidiEvent::T_SPECIAL, MidiEvent::ST_TEMPOCHANGE, 0x4,
