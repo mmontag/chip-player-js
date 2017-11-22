@@ -725,8 +725,7 @@ MIDIplay::MIDIplay():
     m_setup.ScaleModulators     = -1;
     m_setup.delay = 0.0;
     m_setup.carry = 0.0;
-    m_setup.stored_samples = 0;
-    m_setup.backup_samples_size = 0;
+    m_setup.tick_skip_samples_delay = 0;
 
     opl.NumCards = m_setup.NumCards;
     opl.AdlBank = m_setup.AdlBank;

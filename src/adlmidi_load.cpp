@@ -379,8 +379,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     }
 
     /**** Set all properties BEFORE starting of actial file reading! ****/
-    m_setup.stored_samples = 0;
-    m_setup.backup_samples_size = 0;
+    m_setup.tick_skip_samples_delay = 0;
     opl.HighTremoloMode     = m_setup.HighTremoloMode == -1 ? adlbanksetup[m_setup.AdlBank].deepTremolo : (bool)m_setup.HighTremoloMode;
     opl.HighVibratoMode     = m_setup.HighVibratoMode == -1 ? adlbanksetup[m_setup.AdlBank].deepVibrato : (bool)m_setup.HighVibratoMode;
     opl.AdlPercussionMode   = m_setup.AdlPercussionMode == -1 ? adlbanksetup[m_setup.AdlBank].adLibPercussions : (bool)m_setup.AdlPercussionMode;

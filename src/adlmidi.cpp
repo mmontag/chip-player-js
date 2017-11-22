@@ -227,8 +227,7 @@ ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *f
     if(device && device->adl_midiPlayer)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-        play->m_setup.stored_samples = 0;
-        play->m_setup.backup_samples_size = 0;
+        play->m_setup.tick_skip_samples_delay = 0;
         if(!play->LoadBank(filePath))
         {
             std::string err = play->getErrorString();
@@ -248,8 +247,7 @@ ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, const void *m
     if(device && device->adl_midiPlayer)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-        play->m_setup.stored_samples = 0;
-        play->m_setup.backup_samples_size = 0;
+        play->m_setup.tick_skip_samples_delay = 0;
         if(!play->LoadBank(mem, static_cast<size_t>(size)))
         {
             std::string err = play->getErrorString();
@@ -269,8 +267,7 @@ ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, const char *filePath)
     if(device && device->adl_midiPlayer)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-        play->m_setup.stored_samples = 0;
-        play->m_setup.backup_samples_size = 0;
+        play->m_setup.tick_skip_samples_delay = 0;
         if(!play->LoadMIDI(filePath))
         {
             std::string err = play->getErrorString();
@@ -290,8 +287,7 @@ ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer *device, const void *mem, unsigne
     if(device && device->adl_midiPlayer)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-        play->m_setup.stored_samples = 0;
-        play->m_setup.backup_samples_size = 0;
+        play->m_setup.tick_skip_samples_delay = 0;
         if(!play->LoadMIDI(mem, static_cast<size_t>(size)))
         {
             std::string err = play->getErrorString();
@@ -360,8 +356,7 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
     if(!device)
         return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.stored_samples = 0;
-    play->m_setup.backup_samples_size = 0;
+    play->m_setup.tick_skip_samples_delay = 0;
     play->opl.Reset(play->m_setup.PCM_RATE);
 }
 
@@ -516,21 +511,11 @@ inline static void SendStereoAudio(MIDIplay::Setup &device,
 {
     if(!in_size)
         return;
-    device.stored_samples = 0;
     size_t offset       = static_cast<size_t>(out_pos);
     size_t inSamples    = static_cast<size_t>(in_size * 2);
     size_t maxSamples   = static_cast<size_t>(samples_requested) - offset;
     size_t toCopy       = std::min(maxSamples, inSamples);
     std::memcpy(_out + out_pos, _in, toCopy * sizeof(short));
-
-    if(maxSamples < inSamples)
-    {
-        size_t appendSize = inSamples - maxSamples;
-        std::memcpy(device.backup_samples + device.backup_samples_size,
-                    maxSamples + _in, appendSize * sizeof(short));
-        device.backup_samples_size += (ssize_t)appendSize;
-        device.stored_samples += (ssize_t)appendSize;
-    }
 }
 
 
@@ -555,38 +540,24 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
     ssize_t n_periodCountStereo = 512;
     //ssize_t n_periodCountPhys = n_periodCountStereo * 2;
     int left = sampleCount;
+    bool hasSkipped = setup.tick_skip_samples_delay > 0;
 
     while(left > 0)
     {
-        if(setup.backup_samples_size > 0)
-        {
-            //Send reserved samples if exist
-            ssize_t ate = 0;
-
-            while((ate < setup.backup_samples_size) && (ate < left))
-            {
-                out[ate] = setup.backup_samples[ate];
-                ate++;
-            }
-
-            left -= (int)ate;
-            gotten_len += ate;
-
-            if(ate < setup.backup_samples_size)
-            {
-                for(ssize_t j = 0; j < ate; j++)
-                    setup.backup_samples[(ate - 1) - j] = setup.backup_samples[(setup.backup_samples_size - 1) - j];
-            }
-
-            setup.backup_samples_size -= ate;
-        }
-        else
-        {
+        {//...
             const double eat_delay = setup.delay < setup.maxdelay ? setup.delay : setup.maxdelay;
-            setup.delay -= eat_delay;
-            setup.carry += setup.PCM_RATE * eat_delay;
-            n_periodCountStereo = static_cast<ssize_t>(setup.carry);
-            setup.carry -= n_periodCountStereo;
+            if(hasSkipped)
+            {
+                size_t samples = setup.tick_skip_samples_delay > sampleCount ? sampleCount : setup.tick_skip_samples_delay;
+                n_periodCountStereo = samples / 2;
+            }
+            else
+            {
+                setup.delay -= eat_delay;
+                setup.carry += setup.PCM_RATE * eat_delay;
+                n_periodCountStereo = static_cast<ssize_t>(setup.carry);
+                setup.carry -= n_periodCountStereo;
+            }
 
             //if(setup.SkipForward > 0)
             //    setup.SkipForward -= 1;
@@ -595,6 +566,12 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                 if((player->atEnd) && (setup.delay <= 0.0))
                     break;//Stop to fetch samples at reaching the song end with disabled loop
 
+                ssize_t leftSamples = left / 2;
+                if(n_periodCountStereo > leftSamples)
+                {
+                    setup.tick_skip_samples_delay = (n_periodCountStereo - leftSamples) * 2;
+                    n_periodCountStereo = leftSamples;
+                }
                 //! Count of stereo samples
                 ssize_t in_generatedStereo = (n_periodCountStereo > 512) ? 512 : n_periodCountStereo;
                 //! Total count of samples
@@ -630,11 +607,18 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                 SendStereoAudio(setup, sampleCount, in_generatedStereo, out_buf, gotten_len, out);
 
                 left -= (int)in_generatedPhys;
-                gotten_len += (in_generatedPhys) - setup.stored_samples;
+                gotten_len += (in_generatedPhys) /* - setup.stored_samples*/;
             }
 
-            setup.delay = player->Tick(eat_delay, setup.mindelay);
-        }
+            if(hasSkipped)
+            {
+                setup.tick_skip_samples_delay -= n_periodCountStereo * 2;
+                hasSkipped = setup.tick_skip_samples_delay > 0;
+            }
+            else
+                setup.delay = player->Tick(eat_delay, setup.mindelay);
+
+        }//...
     }
 
     return static_cast<int>(gotten_len);

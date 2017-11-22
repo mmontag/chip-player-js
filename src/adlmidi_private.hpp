@@ -698,9 +698,7 @@ public:
         double maxdelay;
 
         /* For internal usage */
-        ssize_t stored_samples; /* num of collected samples */
-        short   backup_samples[1024]; /* Backup sample storage. */
-        ssize_t backup_samples_size; /* Backup sample storage. */
+        ssize_t tick_skip_samples_delay; /* Skip tick processing after samples count. */
         /* For internal usage */
 
         unsigned long PCM_RATE;
