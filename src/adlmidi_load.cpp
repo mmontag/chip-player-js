@@ -286,7 +286,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
             uint8_t bank_meta[34];
             if(fr.read(bank_meta, 1, 34) != 34)
             {
-                errorStringOut = "Custom bank: Fail to read melodic bank meta-data!";
+                errorStringOut = "Custom bank: Fail to read percussion bank meta-data!";
                 return false;
             }
             uint16_t bank = uint16_t(bank_meta[33]) * 256 + uint16_t(bank_meta[32]);
