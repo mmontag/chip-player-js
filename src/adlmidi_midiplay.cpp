@@ -25,7 +25,7 @@
 
 // Mapping from MIDI volume level to OPL level value.
 
-#if defined(ANDROID) && (cplusplus < 201103L)
+#if defined(ANDROID) && (__cplusplus < 201103L)
 namespace std
 {
     int snprintf(char *out, size_t len, const char *fmt, ...)
@@ -1091,7 +1091,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                         expected_mode = PercussionMap[midiins & 0xFF];
                 }
 
-                if(opl.four_op_category[a] != (uint32_t)expected_mode)
+                if(opl.four_op_category[a] != expected_mode)
                     continue;
             }
             else
