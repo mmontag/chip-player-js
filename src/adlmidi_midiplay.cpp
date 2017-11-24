@@ -25,7 +25,7 @@
 
 // Mapping from MIDI volume level to OPL level value.
 
-#if defined(ANDROID) && (cplusplus < 201103L)
+#if defined(ANDROID) && (__cplusplus < 201103L)
 namespace std
 {
     int snprintf(char *out, size_t len, const char *fmt, ...)
