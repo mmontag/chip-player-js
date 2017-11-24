@@ -30,7 +30,7 @@ HEADERS += \
     src/adlmidi_mus2mid.h \
     src/adlmidi_private.hpp \
     src/adlmidi_xmi2mid.h \
-    src/fraction.h \
+    src/fraction.hpp \
     src/nukedopl3.h \
     src/dbopl.h \
     src/midiplay/wave_writer.h

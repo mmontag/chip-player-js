@@ -25,20 +25,6 @@
 
 // Mapping from MIDI volume level to OPL level value.
 
-#if defined(ANDROID) && (__cplusplus < 201103L)
-namespace std
-{
-    int snprintf(char *out, size_t len, const char *fmt, ...)
-    {
-        va_list args;
-        va_start(args, fmt);
-        int rc = ::vsnprintf(out, len, fmt, args);
-        va_end(args);
-        return rc;
-    }
-}
-#endif
-
 static const uint32_t DMX_volume_mapping_table[] =
 {
     0,  1,  3,  5,  6,  8,  10, 11,
@@ -325,7 +311,7 @@ bool MIDIplay::buildTrackData()
                 evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
             if(!ok)
             {
-                int len = std::snprintf(error, 150, "buildTrackData: Can't read variable-length value at begin of track %d.\n", (int)tk);
+                int len = std::sprintf(error, "buildTrackData: Can't read variable-length value at begin of track %d.\n", (int)tk);
                 if((len > 0) && (len < 150))
                     errorString += std::string(error, (size_t)len);
                 return false;
@@ -353,7 +339,7 @@ bool MIDIplay::buildTrackData()
             event = parseEvent(&trackPtr, end, status);
             if(!event.isValid)
             {
-                int len = std::snprintf(error, 150, "buildTrackData: Fail to parse event in the track %d.\n", (int)tk);
+                int len = std::sprintf(error, "buildTrackData: Fail to parse event in the track %d.\n", (int)tk);
                 if((len > 0) && (len < 150))
                     errorString += std::string(error, (size_t)len);
                 return false;
@@ -409,7 +395,7 @@ bool MIDIplay::buildTrackData()
                 evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
                 if(!ok)
                 {
-                    int len = std::snprintf(error, 150, "buildTrackData: Can't read variable-length value in the track %d.\n", (int)tk);
+                    int len = std::sprintf(error, "buildTrackData: Can't read variable-length value in the track %d.\n", (int)tk);
                     if((len > 0) && (len < 150))
                         errorString += std::string(error, (size_t)len);
                     return false;
