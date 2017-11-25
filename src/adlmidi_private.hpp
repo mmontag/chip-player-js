@@ -466,6 +466,7 @@ public:
         uint8_t lastlrpn, lastmrpn;
         bool nrpn;
         uint8_t brightness;
+        bool is_xg_percussion;
         struct NoteInfo
         {
             // Current pressure
@@ -523,6 +524,7 @@ public:
             lastmrpn = 0;
             nrpn = false;
             brightness = 127;
+            is_xg_percussion = false;
         }
         MIDIchannel()
             : activenotes()

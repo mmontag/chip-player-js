@@ -110,6 +110,11 @@ static const uint8_t PercussionMap[256] =
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
+inline bool isXgPercChannel(uint8_t msb, uint8_t lsb)
+{
+    return (msb == 0x7E || msb == 0x7F) && (lsb == 0);
+}
+
 void MIDIplay::AdlChannel::AddAge(int64_t ms)
 {
     if(users.empty())
@@ -1196,10 +1201,12 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
 
     case 0: // Set bank msb (GM bank)
         Ch[channel].bank_msb = value;
+        Ch[channel].is_xg_percussion = isXgPercChannel(Ch[channel].bank_msb, Ch[channel].bank_lsb);
         break;
 
     case 32: // Set bank lsb (XG bank)
         Ch[channel].bank_lsb = value;
+        Ch[channel].is_xg_percussion = isXgPercChannel(Ch[channel].bank_msb, Ch[channel].bank_lsb);
         break;
 
     case 5: // Set portamento msb
@@ -1455,7 +1462,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
         if(props_mask & Upd_Volume)
         {
             uint32_t volume;
-            uint8_t brightness = Ch[MidCh].brightness;
+            bool is_percussion = (MidCh == 9) || Ch[MidCh].is_xg_percussion;
+            uint8_t brightness = is_percussion ? 127 : Ch[MidCh].brightness;
 
             switch(opl.m_volumeScale)
             {
