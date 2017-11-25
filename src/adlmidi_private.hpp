@@ -249,7 +249,7 @@ public:
 
     void NoteOff(size_t c);
     void NoteOn(unsigned c, double hertz);
-    void Touch_Real(unsigned c, unsigned volume);
+    void Touch_Real(unsigned c, unsigned volume, uint8_t brightness = 127);
     //void Touch(unsigned c, unsigned volume)
 
     void Patch(uint16_t c, size_t i);
@@ -465,6 +465,7 @@ public:
         int64_t vibdelay;
         uint8_t lastlrpn, lastmrpn;
         bool nrpn;
+        uint8_t brightness;
         struct NoteInfo
         {
             // Current pressure
@@ -501,17 +502,33 @@ public:
         typedef activenotemap_t::iterator activenoteiterator;
         char ____padding2[5];
         activenotemap_t activenotes;
-
+        void reset()
+        {
+            portamento = 0;
+            bank_lsb = 0;
+            bank_msb = 0;
+            patch = 0;
+            volume  = 100;
+            expression = 127;
+            panning = 0x30;
+            vibrato = 0;
+            sustain = 0;
+            bend = 0.0;
+            bendsense = 2 / 8192.0;
+            vibpos = 0;
+            vibspeed = 2 * 3.141592653 * 5.0;
+            vibdepth = 0.5 / 127;
+            vibdelay = 0;
+            lastlrpn = 0;
+            lastmrpn = 0;
+            nrpn = false;
+            brightness = 127;
+        }
         MIDIchannel()
-            : portamento(0),
-              bank_lsb(0), bank_msb(0), patch(0),
-              volume(100), expression(127),
-              panning(0x30), vibrato(0), sustain(0),
-              bend(0.0), bendsense(2 / 8192.0),
-              vibpos(0), vibspeed(2 * 3.141592653 * 5.0),
-              vibdepth(0.5 / 127), vibdelay(0),
-              lastlrpn(0), lastmrpn(0), nrpn(false),
-              activenotes() { }
+            : activenotes()
+        {
+            reset();
+        }
     };
 
     // Additional information about OPL3 channels

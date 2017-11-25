@@ -149,6 +149,7 @@ To build that example you will need to have installed SDL2 library.
  * Added support for DJGPP compiler to build libADLMIDI for DOS to use hardware OPL3 chip
  * Added XG percussion bank channel handling support, XG MIDI files are using custom percussion channels are now playing fine!
  * Fixed damaged playback while loop music caused by state of controllers came from end of current melody
+ * Added Brightness (CC74) controller which will affect modulator scale
 
 ## 1.2.1    2017-07-30
  * Minor fixes
