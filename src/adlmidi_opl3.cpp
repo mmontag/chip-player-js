@@ -338,7 +338,7 @@ void OPL3::Touch_Real(unsigned c, unsigned volume, uint8_t brightness)
 
         if(brightness != 127)
         {
-            brightness = static_cast<uint8_t>(::round(127.0 * std::sqrt((static_cast<double>(brightness)) * (1.0 / 127.0))) / 2.0);
+            brightness = static_cast<uint8_t>(::round(127.0 * ::sqrt((static_cast<double>(brightness)) * (1.0 / 127.0))) / 2.0);
             if(!do_modulator)
                 modulator = (modulator | 63) - brightness + brightness * (modulator & 63) / 63;
             if(!do_carrier)
