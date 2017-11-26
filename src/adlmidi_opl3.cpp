@@ -271,7 +271,7 @@ void OPL3::NoteOn(unsigned c, double hertz) // Hertz range: 0..131071
     }
 }
 
-void OPL3::Touch_Real(unsigned c, unsigned volume)
+void OPL3::Touch_Real(unsigned c, unsigned volume, uint8_t brightness)
 {
     if(volume > 63)
         volume = 63;
@@ -332,9 +332,22 @@ void OPL3::Touch_Real(unsigned c, unsigned volume)
     {
         bool do_modulator = do_ops[ mode ][ 0 ] || ScaleModulators;
         bool do_carrier   = do_ops[ mode ][ 1 ] || ScaleModulators;
-        Poke(card, 0x40 + o1, do_modulator ? (x | 63) - volume + volume * (x & 63) / 63 : x);
+
+        uint32_t modulator = do_modulator ? (x | 63) - volume + volume * (x & 63) / 63 : x;
+        uint32_t carrier   = do_carrier   ? (y | 63) - volume + volume * (y & 63) / 63 : y;
+
+        if(brightness != 127)
+        {
+            brightness = static_cast<uint8_t>(std::round(127.0 * std::sqrt((static_cast<double>(brightness)) * (1.0 / 127.0))) / 2.0);
+            if(!do_modulator)
+                modulator = (modulator | 63) - brightness + brightness * (modulator & 63) / 63;
+            if(!do_carrier)
+                carrier = (carrier | 63) - brightness + brightness * (carrier & 63) / 63;
+        }
+
+        Poke(card, 0x40 + o1, modulator);
         if(o2 != 0xFFF)
-            Poke(card, 0x40 + o2, do_carrier   ? (y | 63) - volume + volume * (y & 63) / 63 : y);
+            Poke(card, 0x40 + o2, carrier);
     }
 
     // Correct formula (ST3, AdPlug):
