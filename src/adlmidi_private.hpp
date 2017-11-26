@@ -91,6 +91,7 @@ typedef int32_t ssize_t;
 #include <vector> // vector
 #include <deque>  // deque
 #include <cmath>  // exp, log, ceil
+#include <tgmath.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits> // numeric_limit
