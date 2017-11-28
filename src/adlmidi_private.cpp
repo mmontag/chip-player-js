@@ -45,7 +45,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
 
         play->m_setup.NumFourOps =
                 (n_fourop[0] >= 128 * 7 / 8) ? play->m_setup.NumCards * 6
-                : (n_fourop[0] < 128 * 1 / 8) ? 0
+                : (n_fourop[0] < 128 * 1 / 8) ? (n_fourop[1] > 0 ? 4 : 0)
                 : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
     }
     else
