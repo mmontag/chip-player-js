@@ -40,8 +40,12 @@
 #endif
 
 #ifdef _WIN32
+#define NOMINMAX
+#endif
+
+#if defined(_WIN32) && !defined(__WATCOMC__)
 #   undef NO_OLDNAMES
-#	include <stdint.h>
+#       include <stdint.h>
 #   ifdef _MSC_VER
 #       ifdef _WIN64
 typedef __int64 ssize_t;
@@ -91,6 +95,9 @@ typedef int32_t ssize_t;
 #include <vector> // vector
 #include <deque>  // deque
 #include <cmath>  // exp, log, ceil
+#if defined(__WATCOMC__)
+#include <math.h> // round, sqrt
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits> // numeric_limit
@@ -328,7 +335,7 @@ public:
 
         void openFile(const char *path)
         {
-            #ifndef _WIN32
+            #if !defined(_WIN32) || defined(__WATCOMC__)
             fp = std::fopen(path, "rb");
             #else
             wchar_t widePath[MAX_PATH];

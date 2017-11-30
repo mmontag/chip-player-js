@@ -9,6 +9,12 @@
 #include <algorithm>
 #include <signal.h>
 
+#if defined(__WATCOMC__)
+#define flushout(stream)
+#else
+#define flushout(stream) std::fflush(stream)
+#endif
+
 #if defined(__DJGPP__) || (defined(__WATCOMC__) && (defined(__DOS__) || defined(__DOS4G__) || defined(__DOS4GNZ__)))
 #define HW_OPL_MSDOS
 #include <conio.h>
@@ -69,11 +75,14 @@ void mch_delay(int32_t msec)
 
 #ifndef HARDWARE_OPL3
 
+#ifndef OUTPUT_WAVE_ONLY
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
+#endif
 
 #include "wave_writer.h"
 
+#ifndef OUTPUT_WAVE_ONLY
 class MutexType
 {
     SDL_mutex *mut;
@@ -111,6 +120,7 @@ static void SDL_AudioCallbackX(void *, Uint8 *stream, int len)
     g_audioBuffer_lock.Unlock();
     SDL_UnlockAudio();
 }
+#endif//OUTPUT_WAVE_ONLY
 
 #endif //HARDWARE_OPL3
 
@@ -124,7 +134,7 @@ static bool is_number(const std::string &s)
 static void printError(const char *err)
 {
     std::fprintf(stderr, "\nERROR: %s\n\n", err);
-    std::fflush(stderr);
+    flushout(stderr);
 }
 
 static int stop = 0;
@@ -133,7 +143,7 @@ static void sighandler(int dum)
 {
     if((dum == SIGINT)
         || (dum == SIGTERM)
-    #ifndef _WIN32
+    #if !defined(_WIN32) && !defined(__WATCOMC__)
         || (dum == SIGHUP)
     #endif
     )
@@ -152,7 +162,7 @@ static void debugPrint(void * /*userdata*/, const char *fmt, ...)
     if(rc > 0)
     {
         std::fprintf(stdout, " - Debug: %s\n", buffer);
-        std::fflush(stdout);
+        flushout(stdout);
     }
 }
 
@@ -160,7 +170,7 @@ static void debugPrint(void * /*userdata*/, const char *fmt, ...)
 static void debugPrintEvent(void * /*userdata*/, ADL_UInt8 type, ADL_UInt8 subtype, ADL_UInt8 channel, const ADL_UInt8 * /*data*/, size_t len)
 {
     std::fprintf(stdout, " - E: 0x%02X 0x%02X %02d (%d)\r\n", type, subtype, channel, (int)len);
-    std::fflush(stdout);
+    flushout(stdout);
 }
 #endif
 
@@ -173,7 +183,7 @@ int main(int argc, char **argv)
                          "         libADLMIDI demo utility\n"
                         #endif
                          "==========================================\n\n");
-    std::fflush(stdout);
+    flushout(stdout);
 
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
@@ -223,12 +233,13 @@ int main(int argc, char **argv)
             std::printf("    This build of libADLMIDI has no embedded banks!\n\n");
         }
 
-        std::fflush(stdout);
+        flushout(stdout);
 
         return 0;
     }
 
     #ifndef HARDWARE_OPL3
+    long sampleRate = 44100;
     //const unsigned MaxSamplesAtTime = 512; // 512=dbopl limitation
     // How long is SDL buffer, in seconds?
     // The smaller the value, the more often SDL_AudioCallBack()
@@ -239,20 +250,22 @@ int main(int argc, char **argv)
     const double OurHeadRoomLength = 0.1;
     // The lag between visual content and audio content equals
     // the sum of these two buffers.
+    #ifndef OUTPUT_WAVE_ONLY
     SDL_AudioSpec spec;
     SDL_AudioSpec obtained;
 
-    spec.freq     = 44100;
+    spec.freq     = (int)sampleRate;
     spec.format   = AUDIO_S16SYS;
     spec.channels = 2;
     spec.samples  = Uint16((double)spec.freq * AudioBufferLength);
     spec.callback = SDL_AudioCallbackX;
-    #endif
+    #endif //OUTPUT_WAVE_ONLY
+    #endif //HARDWARE_OPL3
 
     ADL_MIDIPlayer *myDevice;
 
     //Initialize libADLMIDI and create the instance (you can initialize multiple of them!)
-    myDevice = adl_init(44100);
+    myDevice = adl_init(sampleRate);
     if(myDevice == NULL)
     {
         printError("Failed to init MIDI device!\n");
@@ -265,8 +278,10 @@ int main(int argc, char **argv)
     /*
      * Set library options by parsing of command line arguments
      */
+    #ifndef OUTPUT_WAVE_ONLY
     bool recordWave = false;
     int loopEnabled = 1;
+    #endif
     while(argc > 2)
     {
         bool had_option = false;
@@ -275,12 +290,16 @@ int main(int argc, char **argv)
             adl_setPercMode(myDevice, 1);//Turn on AdLib percussion mode
         else if(!std::strcmp("-v", argv[2]))
             adl_setHVibrato(myDevice, 1);//Turn on deep vibrato
+        #ifndef OUTPUT_WAVE_ONLY
         else if(!std::strcmp("-w", argv[2]))
             recordWave = true;//Record library output into WAV file
+        #endif
         else if(!std::strcmp("-t", argv[2]))
             adl_setHTremolo(myDevice, 1);//Turn on deep tremolo
+        #ifndef OUTPUT_WAVE_ONLY
         else if(!std::strcmp("-nl", argv[2]))
             loopEnabled = 0; //Enable loop
+        #endif
         else if(!std::strcmp("-s", argv[2]))
             adl_setScaleModulators(myDevice, 1);//Turn on modulators scaling by volume
         else break;
@@ -291,8 +310,11 @@ int main(int argc, char **argv)
         argc -= (had_option ? 2 : 1);
     }
 
+    #ifndef OUTPUT_WAVE_ONLY
     //Turn loop on/off (for WAV recording loop must be disabled!)
     adl_setLoopEnabled(myDevice, recordWave ? 0 : loopEnabled);
+    #endif
+
     #ifdef DEBUG_TRACE_ALL_EVENTS
     //Hook all MIDI events are ticking while generating an output buffer
     if(!recordWave)
@@ -305,7 +327,7 @@ int main(int argc, char **argv)
     std::fprintf(stdout, " - %s OPL3 Emulator in use\n", adl_emulatorName());
     #endif
 
-    #ifndef HARDWARE_OPL3
+    #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
     if(!recordWave)
     {
         // Set up SDL
@@ -341,13 +363,13 @@ int main(int argc, char **argv)
         {
             std::string bankPath = argv[2];
             std::fprintf(stdout, " - Use custom bank [%s]...", bankPath.c_str());
-            std::fflush(stdout);
+            flushout(stdout);
             //Open external bank file (WOPL format is supported)
             //to create or edit them, use OPL3 Bank Editor you can take here https://github.com/Wohlstand/OPL3BankEditor
             if(adl_openBankFile(myDevice, bankPath.c_str()) != 0)
             {
                 std::fprintf(stdout, "FAILED!\n");
-                std::fflush(stdout);
+                flushout(stdout);
                 printError(adl_errorInfo(myDevice));
                 return 1;
             }
@@ -392,12 +414,12 @@ int main(int argc, char **argv)
     }
 
     std::fprintf(stdout, " - File [%s] opened!\n", musPath.c_str());
-    std::fflush(stdout);
+    flushout(stdout);
 
     #ifndef HARDWARE_OPL3
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
-    #ifndef _WIN32
+    #if !defined(_WIN32) && !defined(__WATCOMC__)
     signal(SIGHUP, sighandler);
     #endif
     #else//HARDWARE_OPL3
@@ -414,14 +436,14 @@ int main(int argc, char **argv)
 
     #ifdef __WATCOMC__
     std::fprintf(stdout, " - Initializing BIOS timer...\n");
-    std::fflush(stdout);
+    flushout(stdout);
     //disable();
     outp(0x43, 0x34);
     outp(0x40, TimerPeriod & 0xFF);
     outp(0x40, TimerPeriod >>   8);
     //enable();
     std::fprintf(stdout, " - Ok!\n");
-    std::fflush(stdout);
+    flushout(stdout);
     #endif//__WATCOMC__
 
     unsigned long BIOStimer_begin = BIOStimer;
@@ -429,6 +451,8 @@ int main(int argc, char **argv)
     #endif//HARDWARE_OPL3
 
     double total        = adl_totalTimeLength(myDevice);
+
+    #ifndef OUTPUT_WAVE_ONLY
     double loopStart    = adl_loopStartTime(myDevice);
     double loopEnd      = adl_loopEndTime(myDevice);
 
@@ -440,7 +464,7 @@ int main(int argc, char **argv)
         if(loopStart >= 0.0 && loopEnd >= 0.0)
             std::fprintf(stdout, " - Has loop points: %10f ... %10f\n", loopStart, loopEnd);
         std::fprintf(stdout, "\n==========================================\n");
-        std::fflush(stdout);
+        flushout(stdout);
 
         #ifndef HARDWARE_OPL3
         SDL_PauseAudio(0);
@@ -449,7 +473,7 @@ int main(int argc, char **argv)
         #ifdef DEBUG_SEEKING_TEST
         int delayBeforeSeek = 50;
         std::fprintf(stdout, "DEBUG: === Random position set test is active! ===\n");
-        std::fflush(stdout);
+        flushout(stdout);
         #endif
 
         while(!stop)
@@ -464,7 +488,7 @@ int main(int argc, char **argv)
             #ifndef DEBUG_TRACE_ALL_EVENTS
             std::fprintf(stdout, "                                               \r");
             std::fprintf(stdout, "Time position: %10f / %10f\r", adl_positionTell(myDevice), total);
-            std::fflush(stdout);
+            flushout(stdout);
             #endif
 
             #ifndef HARDWARE_OPL3
@@ -524,15 +548,20 @@ int main(int argc, char **argv)
         SDL_CloseAudio();
         #endif
     }
+    #endif //OUTPUT_WAVE_ONLY
+
     #ifndef HARDWARE_OPL3
+
+    #ifndef OUTPUT_WAVE_ONLY
     else
+    #endif //OUTPUT_WAVE_ONLY
     {
         std::string wave_out = musPath + ".wav";
         std::fprintf(stdout, " - Recording WAV file %s...\n", wave_out.c_str());
         std::fprintf(stdout, "\n==========================================\n");
-        std::fflush(stdout);
+        flushout(stdout);
 
-        if(wave_open(spec.freq, wave_out.c_str()) == 0)
+        if(wave_open(sampleRate, wave_out.c_str()) == 0)
         {
             wave_enable_stereo();
             while(!stop)
@@ -546,7 +575,7 @@ int main(int argc, char **argv)
                 double complete = std::floor(100.0 * adl_positionTell(myDevice) / total);
                 std::fprintf(stdout, "                                               \r");
                 std::fprintf(stdout, "Recording WAV... [%d%% completed]\r", (int)complete);
-                std::fflush(stdout);
+                flushout(stdout);
             }
             wave_close();
             std::fprintf(stdout, "                                               \n\n");
@@ -555,7 +584,7 @@ int main(int argc, char **argv)
                 std::fprintf(stdout, "Interrupted! Recorded WAV is incomplete, but playable!\n");
             else
                 std::fprintf(stdout, "Completed!\n");
-            std::fflush(stdout);
+            flushout(stdout);
         }
         else
         {
@@ -563,7 +592,7 @@ int main(int argc, char **argv)
             return 1;
         }
     }
-    #endif
+    #endif //HARDWARE_OPL3
 
     #ifdef HARDWARE_OPL3
 
