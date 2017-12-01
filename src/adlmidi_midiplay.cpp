@@ -158,6 +158,38 @@ void MIDIplay::MidiTrackRow::reset()
     events.clear();
 }
 
+void TEMP_DEBUG_printSet(std::set<size_t> &container, const char *messsage = "")
+{
+    if(container.empty())
+        return;
+    std::printf("===============%s===============\n", messsage);
+    std::printf("Count: %u\n", container.size());
+    for(std::set<size_t>::iterator j = container.begin(); j != container.end(); j++)
+    {
+        size_t field = *j;
+        std::printf("SET ITEM: [%d]\n", (unsigned int)(field));
+        std::fflush(stdout);
+    }
+    std::printf("---------------%s-END-----------\n", messsage);
+    std::fflush(stdout);
+}
+
+void TEMP_DEBUG_printVector(std::vector<MIDIplay::MidiEvent> &container, const char *messsage = "")
+{
+    if(container.empty())
+        return;
+    std::printf("===============%s===============\n", messsage);
+    std::printf("Count: %u\n", container.size());
+    for(std::vector<MIDIplay::MidiEvent>::iterator j = container.begin(); j != container.end(); j++)
+    {
+        MIDIplay::MidiEvent &e = *j;
+        std::printf("VECTOR ITEM: Ch %d, Valid %d, Type %d\n", j->channel, (int)j->isValid, j->type);
+        std::fflush(stdout);
+    }
+    std::printf("---------------%s-END-----------\n", messsage);
+    std::fflush(stdout);
+}
+
 void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
 {
     typedef std::vector<MidiEvent> EvtArr;
@@ -188,6 +220,8 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
             anyOther.push_back(events[i]);
     }
 
+    TEMP_DEBUG_printVector(noteOffs, "Filled");
+
     /*
      * If Note-Off and it's Note-On is on the same row - move this damned note off down!
      */
@@ -202,7 +236,7 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
                 const size_t note_i = (e.channel * 255) + (e.data[0] & 0x7F);
                 //Check, was previously note is on or off
                 bool wasOn = noteStates[note_i];
-                markAsOn.insert(note_i);
+                markAsOn.insert(note_i); TEMP_DEBUG_printSet(markAsOn, "Inserted");
                 // Detect zero-length notes are following previously pressed note
                 int noteOffsOnSameNote = 0;
                 for(EvtArr::iterator j = noteOffs.begin(); j != noteOffs.end();)
@@ -218,7 +252,7 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
                         {
                             anyOther.push_back(*j);
                             j = noteOffs.erase(j);
-                            markAsOn.erase(note_i);
+                            markAsOn.erase(note_i); TEMP_DEBUG_printSet(markAsOn, "Erased");
                             continue;
                         } else {
                             //When same row has many note-offs on same row
@@ -228,9 +262,16 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
                         }
                     }
                     j++;
+                    TEMP_DEBUG_printVector(noteOffs, "Iterated");
                 }
+                TEMP_DEBUG_printVector(noteOffs, "Quit from noteOffs loop");
+                TEMP_DEBUG_printSet(markAsOn, "Quit from noteOffs loop");
             }
+            TEMP_DEBUG_printVector(noteOffs, "Quit from if NOTEON");
+            TEMP_DEBUG_printSet(markAsOn, "Quit from if NOTEON");
         }
+        TEMP_DEBUG_printVector(noteOffs, "Quit from anyOther loop");
+        TEMP_DEBUG_printSet(markAsOn, "Quit from anyOther loop");
 
         //Mark other notes as released
         for(EvtArr::iterator j = noteOffs.begin(); j != noteOffs.end(); j++)
@@ -238,10 +279,14 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
             size_t note_i = (j->channel * 255) + (j->data[0] & 0x7F);
             noteStates[note_i] = false;
         }
+        TEMP_DEBUG_printVector(noteOffs, "Post-process noteOffs");
+        TEMP_DEBUG_printSet(markAsOn, "Post-process noteOffs");
 
         for(std::set<size_t>::iterator j = markAsOn.begin(); j != markAsOn.end(); j++)
             noteStates[*j] = true;
 
+        TEMP_DEBUG_printVector(noteOffs, "Post-process markAsOn");
+        TEMP_DEBUG_printSet(markAsOn, "Post-process markAsOn");
     }
     /***********************************************************************************/
 
