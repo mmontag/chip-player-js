@@ -160,10 +160,11 @@ void MIDIplay::MidiTrackRow::reset()
 
 void TEMP_DEBUG_printSet(std::set<size_t> &container, const char *messsage = "")
 {
+    std::printf("===============%s===============\n", messsage);
+    std::printf("Set Count: %u\n", container.size());
+    std::fflush(stdout);
     if(container.empty())
         return;
-    std::printf("===============%s===============\n", messsage);
-    std::printf("Count: %u\n", container.size());
     for(std::set<size_t>::iterator j = container.begin(); j != container.end(); j++)
     {
         size_t field = *j;
@@ -176,10 +177,11 @@ void TEMP_DEBUG_printSet(std::set<size_t> &container, const char *messsage = "")
 
 void TEMP_DEBUG_printVector(std::vector<MIDIplay::MidiEvent> &container, const char *messsage = "")
 {
+    std::printf("===============%s===============\n", messsage);
+    std::printf("Vector Count: %u\n", container.size());
+    std::fflush(stdout);
     if(container.empty())
         return;
-    std::printf("===============%s===============\n", messsage);
-    std::printf("Count: %u\n", container.size());
     for(std::vector<MIDIplay::MidiEvent>::iterator j = container.begin(); j != container.end(); j++)
     {
         MIDIplay::MidiEvent &e = *j;
@@ -228,6 +230,7 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
     if(noteStates)
     {
         std::set<size_t> markAsOn;
+        TEMP_DEBUG_printSet(markAsOn, "Initialized");
         for(size_t i = 0; i < anyOther.size(); i++)
         {
             const MidiEvent e = anyOther[i];
