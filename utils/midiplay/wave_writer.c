@@ -53,7 +53,7 @@ int wave_open( long sample_rate, const char* filename )
         return -1;
     }
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__WATCOMC__)
     file = fopen( filename, "wb" );
 #else
     wchar_t widePath[MAX_PATH];
