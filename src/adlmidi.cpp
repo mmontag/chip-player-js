@@ -171,7 +171,7 @@ ADLMIDI_EXPORT void adl_setPercMode(ADL_MIDIPlayer *device, int percmod)
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.AdlPercussionMode = (percmod != 0);
+    play->m_setup.AdlPercussionMode = percmod;
     play->opl.AdlPercussionMode = play->m_setup.AdlPercussionMode;
 }
 
@@ -179,7 +179,7 @@ ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.HighVibratoMode = (hvibro != 0);
+    play->m_setup.HighVibratoMode = hvibro;
     play->opl.HighVibratoMode = play->m_setup.HighVibratoMode;
 }
 
@@ -187,7 +187,7 @@ ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.HighTremoloMode = (htremo != 0);
+    play->m_setup.HighTremoloMode = htremo;
     play->opl.HighTremoloMode = play->m_setup.HighTremoloMode;
 }
 
@@ -195,7 +195,7 @@ ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.ScaleModulators = (smod != 0);
+    play->m_setup.ScaleModulators = smod;
     play->opl.ScaleModulators = play->m_setup.ScaleModulators;
 }
 
@@ -210,7 +210,7 @@ ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.LogarithmicVolumes = (logvol != 0);
+    play->m_setup.LogarithmicVolumes = logvol;
     play->opl.LogarithmicVolumes = play->m_setup.LogarithmicVolumes;
 }
 

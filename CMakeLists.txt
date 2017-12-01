@@ -34,6 +34,7 @@ ENDIF()
 #===========================================================================================
 
 option(WITH_MIDIPLAY        "Build also demo MIDI player" OFF)
+option(MIDIPLAY_WAVE_ONLY   "Build Demo MIDI player without support of real time playing. It will output into WAV only." OFF)
 option(WITH_ADLMIDI2        "Build also classic ADLMIDI player [EXPERIMENTAL]" OFF)
 option(WITH_OLD_UTILS       "Build also old utilities" OFF)
 option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
@@ -169,16 +170,23 @@ You must enable at least one of them!")
 endif()
 
 if(WITH_MIDIPLAY)
-    if(NOT MSDOS AND NOT DJGPP)
+    if(NOT MSDOS AND NOT DJGPP AND NOT MIDIPLAY_WAVE_ONLY)
         find_library(SDL2_LIBRARY SDL2 REQUIRED)
         include_directories(${SDL2_INCLUDE_DIR})
         message("Found ${SDL2_LIBRARY}")
+    else()
+        unset(SDL2_LIBRARY)
     endif()
 
     add_executable(adlmidiplay
         ${libADLMIDI_SOURCE_DIR}/utils/midiplay/adlmidiplay.cpp
         ${libADLMIDI_SOURCE_DIR}/utils/midiplay/wave_writer.c
     )
+
+    if(MIDIPLAY_WAVE_ONLY)
+        target_compile_options(adlmidiplay PUBLIC "-DOUTPUT_WAVE_ONLY")
+        message("Demo tool will only output WAVE file, no playing support.")
+    endif()
 
     if(MSDOS OR DJGPP)
         target_compile_options(adlmidiplay PUBLIC "-DHARDWARE_OPL3")
@@ -298,6 +306,7 @@ install(FILES
 
 message("==== libADLMIDI options ====")
 message("WITH_MIDIPLAY            = ${WITH_MIDIPLAY}")
+message("MIDIPLAY_WAVE_ONLY       = ${MIDIPLAY_WAVE_ONLY}")
 message("WITH_ADLMIDI2            = ${WITH_ADLMIDI2}")
 message("WITH_OLD_UTILS           = ${WITH_OLD_UTILS}")
 message("WITH_EMBEDDED_BANKS      = ${WITH_EMBEDDED_BANKS}")
