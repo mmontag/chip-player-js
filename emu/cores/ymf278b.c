@@ -76,6 +76,7 @@ static UINT8 device_ymf278b_link_opl3(void* param, UINT8 devID, const DEV_INFO* 
 static UINT8 ymf278b_r(void *info, UINT8 offset);
 static void ymf278b_w(void *info, UINT8 offset, UINT8 data);
 static void ymf278b_alloc_rom(void* info, UINT32 memsize);
+static void ymf278b_alloc_ram(void* info, UINT32 memsize);
 static void ymf278b_write_rom(void *info, UINT32 offset, UINT32 length, const UINT8* data);
 static void ymf278b_write_ram(void *info, UINT32 offset, UINT32 length, const UINT8* data);
 
@@ -86,9 +87,10 @@ static DEVDEF_RWFUNC devFunc[] =
 {
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ymf278b_w},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ymf278b_r},
-	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x524F, ymf278b_write_rom},
+	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x524F, ymf278b_write_rom},	// 0x524F = 'RO' for ROM
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0x524F, ymf278b_alloc_rom},
-	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x5241, ymf278b_write_ram},
+	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x5241, ymf278b_write_ram},	// 0x5241 = 'RA' for RAM
+	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0x5241, ymf278b_alloc_ram},
 	{0x00, 0x00, 0, NULL}
 };
 static DEV_DEF devDef =
@@ -200,6 +202,10 @@ struct _YMF278BChip
 	UINT8 last_fm_data;
 	OPL3FM fm;
 };
+
+INLINE UINT8* ymf278b_getMemPtr(YMF278BChip* chip, UINT32 address);
+INLINE UINT8 ymf278b_readMem(YMF278BChip* chip, UINT32 address);
+INLINE void ymf278b_writeMem(YMF278BChip* chip, UINT32 address, UINT8 value);
 
 
 #define EG_SH				16 // 16.16 fixed point (EG timing)
@@ -600,43 +606,6 @@ static void ymf278b_advance(YMF278BChip* chip)
 	}
 }
 
-INLINE UINT8 ymf278b_readMem(YMF278BChip* chip, UINT32 address)
-{
-	// Verified on real YMF278: address space wraps at 4MB.
-	address &= 0x3FFFFF;
-	if (address < chip->ROMSize)
-		return chip->rom[address];
-	else if (address < chip->ROMSize + chip->RAMSize)
-		return chip->ram[address - chip->ROMSize];
-	else
-		return 0xFF; // TODO check
-}
-
-INLINE UINT8* ymf278b_readMemAddr(YMF278BChip* chip, UINT32 address)
-{
-	// Verified on real YMF278: address space wraps at 4MB.
-	address &= 0x3FFFFF;
-	if (address < chip->ROMSize)
-		return &chip->rom[address];
-	else if (address < chip->ROMSize + chip->RAMSize)
-		return &chip->ram[address - chip->ROMSize];
-	else
-		return NULL; // TODO check
-}
-
-INLINE void ymf278b_writeMem(YMF278BChip* chip, UINT32 address, UINT8 value)
-{
-	address &= 0x3FFFFF;
-	if (address < chip->ROMSize)
-		return; // can't write to ROM
-	else if (address < chip->ROMSize + chip->RAMSize)
-		chip->ram[address - chip->ROMSize] = value;
-	else
-		return;	// can't write to unmapped memory
-	
-	return;
-}
-
 INLINE INT16 ymf278b_getSample(YMF278BChip* chip, YMF278BSlot* op)
 {
 	// TODO How does this behave when R#2 bit 0 = 1?
@@ -655,7 +624,7 @@ INLINE INT16 ymf278b_getSample(YMF278BChip* chip, YMF278BSlot* op)
 	case 1:
 		// 12 bit
 		addr = op->startaddr + ((op->pos / 2) * 3);
-		addrp = ymf278b_readMemAddr(chip, addr);
+		addrp = ymf278b_getMemPtr(chip, addr);
 		if (op->pos & 1)
 			sample = (addrp[2] << 8) | ((addrp[1] << 4) & 0xF0);
 		else
@@ -664,7 +633,9 @@ INLINE INT16 ymf278b_getSample(YMF278BChip* chip, YMF278BSlot* op)
 	case 2:
 		// 16 bit
 		addr = op->startaddr + (op->pos * 2);
-		addrp = ymf278b_readMemAddr(chip, addr);
+		addrp = ymf278b_getMemPtr(chip, addr);
+		if (addrp == NULL)
+			return 0;
 		sample = (addrp[0] << 8) | addrp[1];
 		break;
 	default:
@@ -845,7 +816,9 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 			       (wavetblhdr * 0x80000 + ((slot->wave - 384) * 12));
 			// TODO What if R#2 bit 0 = 1?
 			//      See also getSample()
-			buf = ymf278b_readMemAddr(chip, base);
+			buf = ymf278b_getMemPtr(chip, base);
+			if (buf == NULL)
+				break;
 			
 			slot->bits = (buf[0] & 0xC0) >> 6;
 			slot->startaddr = buf[2] | (buf[1] << 8) |
@@ -1149,9 +1122,133 @@ static void ymf278b_w(void *info, UINT8 offset, UINT8 data)
 	}
 }
 
-static void ymf278b_clearRam(YMF278BChip* chip)
+// This routine translates an address from the (upper) MoonSound address space
+// to an address inside the (linearized) SRAM address space.
+//
+// The following info is based on measurements on a real MoonSound (v2.0)
+// PCB. This PCB can have several possible SRAM configurations:
+//   128kB:
+//    1 SRAM chip of 128kB, chip enable (/CE) of this SRAM chip is connected to
+//    the 1Y0 output of a 74LS139 (2-to-4 decoder). The enable input of the
+//    74LS139 is connected to YMF278 pin /MCS6 and the 74LS139 1B:1A inputs are
+//    connected to YMF278 pins MA18:MA17. So the SRAM is selected when /MC6 is
+//    active and MA18:MA17 == 0:0.
+//   256kB:
+//    2 SRAM chips of 128kB. First one connected as above. Second one has /CE
+//    connected to 74LS139 pin 1Y1. So SRAM2 is selected when /MSC6 is active
+//    and MA18:MA17 == 0:1.
+//   512kB:
+//    1 SRAM chip of 512kB, /CE connected to /MCS6
+//   640kB:
+//    1 SRAM chip of 512kB, /CE connected to /MCS6
+//    1 SRAM chip of 128kB, /CE connected to /MCS7.
+//      (This means SRAM2 is potentially mirrored over a 512kB region)
+//  1024kB:
+//    1 SRAM chip of 512kB, /CE connected to /MCS6
+//    1 SRAM chip of 512kB, /CE connected to /MCS7
+//  2048kB:
+//    1 SRAM chip of 512kB, /CE connected to /MCS6
+//    1 SRAM chip of 512kB, /CE connected to /MCS7
+//    1 SRAM chip of 512kB, /CE connected to /MCS8
+//    1 SRAM chip of 512kB, /CE connected to /MCS9
+//      This configuration is not so easy to create on the v2.0 PCB. So it's
+//      very rare.
+//
+// So the /MCS6 and /MCS7 (and /MCS8 and /MCS9 in case of 2048kB) signals are
+// used to select the different SRAM chips. The meaning of these signals
+// depends on the 'memory access mode'. This mode can be changed at run-time
+// via bit 1 in register 2. The following table indicates for which regions
+// these signals are active (normally MoonSound should be used with mode=0):
+//              mode=0              mode=1
+//  /MCS6   0x200000-0x27FFFF   0x380000-0x39FFFF
+//  /MCS7   0x280000-0x2FFFFF   0x3A0000-0x3BFFFF
+//  /MCS8   0x300000-0x37FFFF   0x3C0000-0x3DFFFF
+//  /MCS9   0x380000-0x3FFFFF   0x3E0000-0x3FFFFF
+//
+// (For completeness) MoonSound also has 2MB ROM (YRW801), /CE of this ROM is
+// connected to YMF278 /MCS0. In both mode=0 and mode=1 this signal is active
+// for the region 0x000000-0x1FFFFF. (But this routine does not handle ROM).
+UINT32 ymf278b_getRamAddress(YMF278BChip* chip, UINT32 addr)
 {
-	memset(chip->ram, 0, chip->RAMSize);
+	if (chip->regs[2] & 2) {
+		// Normally MoonSound is used in 'memory access mode = 0'. But
+		// in the rare case that mode=1 we adjust the address.
+		if ((addr & 0x180000) == 0x180000) {
+			addr &= ~0x180000;
+			switch (addr & 0x060000) {
+			case 0x000000: // [0x380000-0x39FFFF]
+				// 1st 128kB of SRAM1
+				break;
+			case 0x020000: // [0x3A0000-0x3BFFFF]
+				if (chip->RAMSize == 256 * 1024) {
+					// 2nd 128kB SRAM chip
+				} else {
+					// 2nd block of 128kB in SRAM2
+					// In case of 512+128, we use mirroring
+					addr |= 0x080000;
+				}
+				break;
+			case 0x040000: // [0x3C0000-0x3DFFFF]
+				// 3rd 128kB block in SRAM3
+				addr |= 0x100000;
+				break;
+			case 0x060000: // [0x3EFFFF-0x3FFFFF]
+				// 4th 128kB block in SRAM4
+				addr |= 0x180000;
+				break;
+			}
+		} else {
+			return (UINT32)-1; // unmapped
+		}
+	}
+	if (chip->RAMSize == 640 * 1024) {
+		// Verified on real MoonSound cartridge (v2.0): In case of
+		// 640kB (1x512kB + 1x128kB), the 128kB SRAM chip is 4 times
+		// visible. None of the other SRAM configurations show similar
+		// mirroring (because the others are powers of two).
+		if (addr & 0x080000) {
+			addr &= ~0x060000;
+		}
+	}
+	return addr;
+}
+
+INLINE UINT8* ymf278b_getMemPtr(YMF278BChip* chip, UINT32 address)
+{
+	address &= 0x3FFFFF;
+	if (address < chip->ROMSize)
+		return &chip->rom[address];
+	address = ymf278b_getRamAddress(chip, address - chip->ROMSize);
+	if (address < chip->RAMSize)
+		return &chip->ram[address];
+	else
+		return NULL;
+}
+
+INLINE UINT8 ymf278b_readMem(YMF278BChip* chip, UINT32 address)
+{
+	// Verified on real YMF278: address space wraps at 4MB.
+	address &= 0x3FFFFF;
+	if (address < chip->ROMSize)	// ROM connected to /MCS0
+		return chip->rom[address];
+	address = ymf278b_getRamAddress(chip, address - chip->ROMSize);
+	if (address < chip->RAMSize)
+		return chip->ram[address];
+	else	// unmapped region
+		return 0xFF; // TODO check
+}
+
+INLINE void ymf278b_writeMem(YMF278BChip* chip, UINT32 address, UINT8 value)
+{
+	address &= 0x3FFFFF;
+	if (address < chip->ROMSize)
+		return; // can't write to ROM
+	address = ymf278b_getRamAddress(chip, address - chip->ROMSize);
+	if (address < chip->RAMSize)
+		chip->ram[address] = value;
+	else
+		return;	// can't write to unmapped memory
+	return;
 }
 
 static void opl3dummy_write(void* param, UINT8 address, UINT8 data)
@@ -1222,9 +1319,8 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	chip->ROMSize = 0;
 	chip->rom = NULL;
-	chip->RAMSize = 0x080000;
-	chip->ram = (UINT8*)malloc(chip->RAMSize);
-	ymf278b_clearRam(chip);
+	chip->RAMSize = 0;
+	chip->ram = NULL;
 
 	chip->memadr = 0; // avoid UMR
 
@@ -1333,6 +1429,20 @@ static void ymf278b_alloc_rom(void* info, UINT32 memsize)
 	chip->rom = (UINT8*)realloc(chip->rom, memsize);
 	chip->ROMSize = memsize;
 	memset(chip->rom, 0xFF, memsize);
+	
+	return;
+}
+
+static void ymf278b_alloc_ram(void* info, UINT32 memsize)
+{
+	YMF278BChip *chip = (YMF278BChip *)info;
+	
+	if (chip->RAMSize == memsize)
+		return;
+	
+	chip->ram = (UINT8*)realloc(chip->ram, memsize);
+	chip->RAMSize = memsize;
+	memset(chip->ram, 0, chip->RAMSize);
 	
 	return;
 }

@@ -582,6 +582,7 @@ static void InitVGMChips(void)
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write8);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0x524F, (void**)&cDev->romSize);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x524F, (void**)&cDev->romWrite);
+			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0x5241, (void**)&cDev->romSizeB);
 			SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0x5241, (void**)&cDev->romWriteB);
 			if (cDev->romWrite != NULL)
 			{
@@ -992,14 +993,14 @@ static void WriteChipROM(UINT8 chipID, UINT8 chipNum, UINT8 memID,
 	{
 		if (cDev->romSize != NULL)
 			cDev->romSize(cDev->defInf.dataPtr, memSize);
-		if (cDev->romWrite != NULL)
+		if (cDev->romWrite != NULL && dataSize)
 			cDev->romWrite(cDev->defInf.dataPtr, dataOfs, dataSize, data);
 	}
 	else
 	{
 		if (cDev->romSizeB != NULL)
 			cDev->romSizeB(cDev->defInf.dataPtr, memSize);
-		if (cDev->romWriteB != NULL)
+		if (cDev->romWriteB != NULL && dataSize)
 			cDev->romWriteB(cDev->defInf.dataPtr, dataOfs, dataSize, data);
 	}
 	return;
