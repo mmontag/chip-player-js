@@ -92,7 +92,7 @@ bool ADLMIDI_PuzzleGame::TetrisArea::CascadeEmpty(int FirstY)
                     "QUINTUPLE "
                     " SEXTUPLE "
                     " SEPTUPLE "
-                    " OCTUPLE  " + (n_full - 1) * 10;
+                    " OCTUPLE  " + ((n_full - 1) * 10);
                 for(int y = FirstY; y < Height - 1; ++y)
                     if(list_full & (1u << y))
                         DrawBlock(animx, y, label[(animx % 10)] + 0x100);
