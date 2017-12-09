@@ -572,10 +572,10 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
             left -= (int)ate;
             gotten_len += ate;
 
-            if(ate < setup.backup_samples_size)
+            if((ate < setup.backup_samples_size) && (ate != 0))
             {
-                for(ssize_t j = 0; j < ate; j++)
-                    setup.backup_samples[(ate - 1) - j] = setup.backup_samples[(setup.backup_samples_size - 1) - j];
+                for(ssize_t i = 0, j = ate; j < setup.backup_samples_size; i++, j++)
+                    setup.backup_samples[i] = setup.backup_samples[j];
             }
 
             setup.backup_samples_size -= ate;
