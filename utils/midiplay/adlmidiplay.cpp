@@ -238,8 +238,8 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    #ifndef HARDWARE_OPL3
     long sampleRate = 44100;
+    #ifndef HARDWARE_OPL3
     //const unsigned MaxSamplesAtTime = 512; // 512=dbopl limitation
     // How long is SDL buffer, in seconds?
     // The smaller the value, the more often SDL_AudioCallBack()
