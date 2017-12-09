@@ -131,17 +131,17 @@ static const unsigned char bitmap[3840] = {
 };
 static const struct unicode_to_bitmap_index_generator
 {
-    static uint_least8_t Help(uint_least8_t index, bool InRecursion)
+    static uint_least8_t Help(uint8_t index, bool InRecursion)
     {
         return InRecursion ? (index & 0xFF) : Find(UnicodeToASCIIapproximation(index)&0xFF,
 true);
     }
-    static uint_least8_t Find(uint_least8_t index, bool InRecursion)
+    static uint_least8_t Find(uint8_t index, bool InRecursion)
     {
         return
           (index < 160)
           ? ((index <  127) ? index - 0 : Help(index,InRecursion))
-          : ((index <  256) ? index - 33 : Help(index,InRecursion))
+          : /*((index <  256) ?*/ index - 33 /*: Help(index,InRecursion))*/
         ;
     }
     uint_least8_t operator[] (uint_least8_t index) const { return Find(index, false); }

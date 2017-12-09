@@ -34,7 +34,7 @@ class xInput
     #ifdef _WIN32
     void *inhandle;
     #endif
-    #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__)
+    #if (!defined(_WIN32) || defined(__CYGWIN__)) && !defined(__DJGPP__) && !defined(__APPLE__)
     struct termio back;
     #endif
 public:
