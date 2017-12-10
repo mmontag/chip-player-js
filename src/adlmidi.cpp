@@ -640,6 +640,12 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
     if(!device)
         return 0;
 
+    /*
+     * TODO: Implement the processing of vibrato and arpeggio here.
+     * Otherwise, in realtime playing there are will not be processed
+     * and chip channel management will work incorrectly!
+     */
+
     MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     sampleCount = (sampleCount > 1024) ? 1024 : sampleCount;
 
