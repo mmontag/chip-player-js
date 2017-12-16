@@ -689,7 +689,7 @@ bool MIDIplay::buildTrackData()
     return true;
 }
 
-MIDIplay::MIDIplay():
+MIDIplay::MIDIplay(unsigned long sampleRate):
     cmf_percussion_mode(false),
     fullSongTimeLength(0.0),
     postSongWaitDelay(1.0),
@@ -702,6 +702,10 @@ MIDIplay::MIDIplay():
     invalidLoop(false)
 {
     devices.clear();
+
+    m_setup.PCM_RATE   = sampleRate;
+    m_setup.mindelay = 1.0 / (double)m_setup.PCM_RATE;
+    m_setup.maxdelay = 512.0 / (double)m_setup.PCM_RATE;
 
     m_setup.AdlBank    = 0;
     m_setup.NumFourOps = 7;
@@ -718,6 +722,7 @@ MIDIplay::MIDIplay():
     m_setup.tick_skip_samples_delay = 0;
 
     applySetup();
+    ChooseDevice("none");
 }
 
 void MIDIplay::applySetup()

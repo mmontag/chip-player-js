@@ -304,7 +304,7 @@ class MIDIplay
 {
     friend void adl_reset(struct ADL_MIDIPlayer*);
 public:
-    MIDIplay();
+    MIDIplay(unsigned long sampleRate = 22050);
 
     ~MIDIplay()
     {}

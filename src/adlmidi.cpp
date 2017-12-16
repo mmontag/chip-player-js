@@ -44,19 +44,14 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
         return NULL;
     }
 
-    MIDIplay *player = new MIDIplay;
+    MIDIplay *player = new MIDIplay(static_cast<unsigned long>(sample_rate));
     if(!player)
     {
         free(midi_device);
         ADLMIDI_ErrorString = "Can't initialize ADLMIDI: out of memory!";
         return NULL;
     }
-
     midi_device->adl_midiPlayer = player;
-    player->m_setup.PCM_RATE = static_cast<unsigned long>(sample_rate);
-    player->m_setup.mindelay = 1.0 / (double)player->m_setup.PCM_RATE;
-    player->m_setup.maxdelay = 512.0 / (double)player->m_setup.PCM_RATE;
-    player->ChooseDevice("none");
     adlRefreshNumCards(midi_device);
     return midi_device;
 }
