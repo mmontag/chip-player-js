@@ -119,7 +119,7 @@ To build that example you will need to have installed SDL2 library.
 
 # Changelog
 ## 1.3.1   2017-12-16
- * Added Real-Time MIDI API (MIDI event functions and adl_generate() to generate PCM between of event rows)
+ * Added Real-Time MIDI API (MIDI event functions and adl_generate() to generate PCM between of event rows) which allows you to implement plugin for media players or even a real time MIDI playing driver.
  * Fixed some bugs
  * Fixed initialization that allows to use adl_generate without passing of any files.
  * No more extra output buffer is used between of PCM output requests
