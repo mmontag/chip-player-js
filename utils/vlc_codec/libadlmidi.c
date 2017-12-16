@@ -175,9 +175,7 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
     if (p_block->i_flags & (BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED))
     {
         date_Set (&p_sys->end_date, 0);
-        //fluid_synth_system_reset (p_sys->synth);
         adl_panic(p_sys->synth);
-        adl_rt_resetState(p_sys->synth);
     }
 
     if (p_block->i_pts > VLC_TS_INVALID && !date_Get (&p_sys->end_date))
@@ -236,7 +234,7 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
             adl_rt_channelAfterTouch(p_sys->synth, channel, p1);
             break;
         case 0xE0:
-            adl_rt_pitchBend(p_sys->synth, channel, (p2 << 7) | p1);
+            adl_rt_pitchBendML(p_sys->synth, channel, p2, p2);
             break;
     }
 
