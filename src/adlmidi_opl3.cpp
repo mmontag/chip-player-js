@@ -458,6 +458,16 @@ void OPL3::updateFlags()
     }
 }
 
+void OPL3::updateDeepFlags()
+{
+    for(unsigned card = 0; card < NumCards; ++card)
+    {
+        Poke(card, 0x0BD, regBD[card] = (HighTremoloMode * 0x80
+                                         + HighVibratoMode * 0x40
+                                         + AdlPercussionMode * 0x20));
+    }
+}
+
 void OPL3::ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel)
 {
     switch(volumeModel)

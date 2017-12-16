@@ -166,6 +166,7 @@ public:
 };
 
 class MIDIplay;
+struct ADL_MIDIPlayer;
 class OPL3
 {
 public:
@@ -263,6 +264,7 @@ public:
     void Pan(unsigned c, unsigned value);
     void Silence();
     void updateFlags();
+    void updateDeepFlags();
     void ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel);
     void Reset(unsigned long PCM_RATE);
 };
@@ -300,11 +302,14 @@ struct MIDIEventHooks
 
 class MIDIplay
 {
+    friend void adl_reset(struct ADL_MIDIPlayer*);
 public:
     MIDIplay();
 
     ~MIDIplay()
     {}
+
+    void applySetup();
 
     /**********************Internal structures and classes**********************/
 
@@ -852,6 +857,12 @@ public:
     double Tick(double s, double granularity);
 
     /**
+     * @brief Process extra iterators like vibrato or arpeggio
+     * @param s seconds since last call
+     */
+    void   TickIteratos(double s);
+
+    /**
      * @brief Change current position to specified time position in seconds
      * @param seconds Absolute time position in seconds
      */
@@ -950,6 +961,7 @@ private:
     //void UpdatePortamento(unsigned MidCh)
     void NoteUpdate_All(uint16_t MidCh, unsigned props_mask);
     void NoteOff(uint16_t MidCh, uint8_t note);
+
     void UpdateVibrato(double amount);
     void UpdateArpeggio(double /*amount*/);
 

@@ -33,14 +33,14 @@ extern "C" {
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #include <stdint.h>
 typedef uint8_t         ADL_UInt8;
-typedef uint16_t        ADL_Uint16;
-typedef int8_t          ADL_Sint8;
+typedef uint16_t        ADL_UInt16;
+typedef int8_t          ADL_SInt8;
 typedef int16_t         ADL_Sint16;
 #else
 typedef unsigned char   ADL_UInt8;
-typedef unsigned short  ADL_Uint16;
-typedef char            ADL_Sint8;
-typedef short           ADL_Sint16;
+typedef unsigned short  ADL_UInt16;
+typedef char            ADL_SInt8;
+typedef short           ADL_SInt16;
 #endif
 
 enum ADLMIDI_VolumeModels
@@ -67,7 +67,7 @@ extern int adl_setNumChips(struct ADL_MIDIPlayer *device, int numCards);
 /* Get current number of emulated chips */
 extern int adl_getNumChips(struct ADL_MIDIPlayer *device);
 
-/* Sets a number of the patches bank from 0 to N banks */
+/* Sets a number of the patches bank from 0 to N banks. Is recommended to call adl_reset() to apply changes to already-loaded file player or real-time. */
 extern int adl_setBank(struct ADL_MIDIPlayer *device, int bank);
 
 /* Returns total number of available banks */
@@ -107,7 +107,7 @@ extern void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol)
 /*Set different volume range model */
 extern void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel);
 
-/*Load WOPL bank file from File System*/
+/*Load WOPL bank file from File System. Is recommended to call adl_reset() to apply changes to already-loaded file player or real-time.*/
 extern int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath);
 
 /*Load WOPL bank file from memory data*/
@@ -192,12 +192,10 @@ extern size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device);
 extern const struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index);
 
 
-
-
 /*Take a sample buffer and iterate MIDI timers */
 extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
 
-/*Generate audio output from chip emulators without iteration of MIDI timers. 512 samples per channel is a maximum*/
+/*Generate audio output from chip emulators without iteration of MIDI timers.*/
 extern int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
 
 /**
@@ -215,8 +213,43 @@ extern double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, doub
 /*Returns 1 if music position has reached end*/
 extern int adl_atEnd(struct ADL_MIDIPlayer *device);
 
+/**RealTime**/
+
 /*Force Off all notes on all channels*/
 extern void adl_panic(struct ADL_MIDIPlayer *device);
+
+/*Reset states of all controllers on all MIDI channels*/
+extern void adl_rt_resetState(struct ADL_MIDIPlayer *device);
+
+/*Turn specific MIDI note ON*/
+extern bool adl_rt_noteOn(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 velocity);
+
+/*Turn specific MIDI note OFF*/
+extern void adl_rt_noteOff(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note);
+
+/*Set note after-touch*/
+extern void adl_rt_noteAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 atVal);
+/*Set channel after-touch*/
+extern void adl_rt_channelAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 atVal);
+
+/*Apply controller change*/
+extern void adl_rt_controllerChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 type, ADL_UInt8 value);
+
+/*Apply patch change*/
+extern void adl_rt_patchChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 patch);
+
+/*Apply pitch bend change*/
+extern void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 pitch);
+/*Apply pitch bend change*/
+extern void adl_rt_pitchBendML(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb, ADL_UInt8 lsb);
+
+/*Change LSB of the bank*/
+extern void adl_rt_bankChangeLSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 lsb);
+/*Change MSB of the bank*/
+extern void adl_rt_bankChangeMSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb);
+/*Change bank by absolute signed value*/
+extern void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_SInt16 bank);
+
 
 /**Hooks**/
 

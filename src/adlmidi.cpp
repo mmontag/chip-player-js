@@ -75,6 +75,7 @@ ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numCards)
     }
 
     play->opl.NumCards = play->m_setup.NumCards;
+    adl_reset(device);
 
     return adlRefreshNumCards(device);
 }
@@ -173,6 +174,7 @@ ADLMIDI_EXPORT void adl_setPercMode(ADL_MIDIPlayer *device, int percmod)
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.AdlPercussionMode = percmod;
     play->opl.AdlPercussionMode = play->m_setup.AdlPercussionMode;
+    play->opl.updateFlags();
 }
 
 ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
@@ -181,6 +183,7 @@ ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.HighVibratoMode = hvibro;
     play->opl.HighVibratoMode = play->m_setup.HighVibratoMode;
+    play->opl.updateDeepFlags();
 }
 
 ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
@@ -189,6 +192,7 @@ ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.HighTremoloMode = htremo;
     play->opl.HighTremoloMode = play->m_setup.HighTremoloMode;
+    play->opl.updateDeepFlags();
 }
 
 ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
@@ -358,6 +362,8 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.tick_skip_samples_delay = 0;
     play->opl.Reset(play->m_setup.PCM_RATE);
+    play->ch.clear();
+    play->ch.resize(play->opl.NumChannels);
 }
 
 ADLMIDI_EXPORT double adl_totalTimeLength(struct ADL_MIDIPlayer *device)
@@ -640,45 +646,90 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
     if(!device)
         return 0;
 
-    /*
-     * TODO: Implement the processing of vibrato and arpeggio here.
-     * Otherwise, in realtime playing there are will not be processed
-     * and chip channel management will work incorrectly!
-     */
-
     MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    sampleCount = (sampleCount > 1024) ? 1024 : sampleCount;
+    MIDIplay::Setup &setup = player->m_setup;
 
-    //! Count of stereo samples
-    ssize_t in_generatedStereo = sampleCount / 2;
-    //! Unsigned total sample count
-    //fill buffer with zeros
-    std::memset(out, 0, static_cast<size_t>(sampleCount) * sizeof(int16_t));
+    ssize_t gotten_len = 0;
+    ssize_t n_periodCountStereo = 512;
 
-    if(player->m_setup.NumCards == 1)
+    int     left = sampleCount;
+    bool    hasSkipped = setup.tick_skip_samples_delay > 0;
+
+    double  delay = double(sampleCount) / double(setup.PCM_RATE);
+
+    while(left > 0)
     {
-        #ifdef ADLMIDI_USE_DOSBOX_OPL
-        player->opl.cards[0].GenerateArr(out, &in_generatedStereo);
-        sampleCount = in_generatedStereo * 2;
-        #else
-        OPL3_GenerateStream(&player->opl.cards[0], out, static_cast<Bit32u>(in_generatedStereo));
-        #endif
-    }
-    else
-    {
-        /* Generate data from every chip and mix result */
-        for(unsigned card = 0; card < player->m_setup.NumCards; ++card)
-        {
-            #ifdef ADLMIDI_USE_DOSBOX_OPL
-            player->opl.cards[card].GenerateArrMix(out, &in_generatedStereo);
-            sampleCount = in_generatedStereo * 2;
-            #else
-            OPL3_GenerateStreamMix(&player->opl.cards[card], out, static_cast<Bit32u>(in_generatedStereo));
-            #endif
-        }
+        {//...
+            const double eat_delay = delay < setup.maxdelay ? delay : setup.maxdelay;
+            if(hasSkipped)
+            {
+                size_t samples = setup.tick_skip_samples_delay > sampleCount ? sampleCount : setup.tick_skip_samples_delay;
+                n_periodCountStereo = samples / 2;
+            }
+            else
+            {
+                delay -= eat_delay;
+                setup.carry += setup.PCM_RATE * eat_delay;
+                n_periodCountStereo = static_cast<ssize_t>(setup.carry);
+                setup.carry -= n_periodCountStereo;
+            }
+
+            {
+                ssize_t leftSamples = left / 2;
+                if(n_periodCountStereo > leftSamples)
+                {
+                    setup.tick_skip_samples_delay = (n_periodCountStereo - leftSamples) * 2;
+                    n_periodCountStereo = leftSamples;
+                }
+                //! Count of stereo samples
+                ssize_t in_generatedStereo = (n_periodCountStereo > 512) ? 512 : n_periodCountStereo;
+                //! Total count of samples
+                ssize_t in_generatedPhys = in_generatedStereo * 2;
+                //! Unsigned total sample count
+                //fill buffer with zeros
+                int16_t *out_buf = player->outBuf;
+                std::memset(out_buf, 0, static_cast<size_t>(in_generatedPhys) * sizeof(int16_t));
+                unsigned int chips = player->opl.NumCards;
+                if(chips == 1)
+                {
+                    #ifdef ADLMIDI_USE_DOSBOX_OPL
+                    player->opl.cards[0].GenerateArr(out_buf, &in_generatedStereo);
+                    in_generatedPhys = in_generatedStereo * 2;
+                    #else
+                    OPL3_GenerateStream(&player->opl.cards[0], out_buf, static_cast<Bit32u>(in_generatedStereo));
+                    #endif
+                }
+                else if(n_periodCountStereo > 0)
+                {
+                    /* Generate data from every chip and mix result */
+                    for(unsigned card = 0; card < chips; ++card)
+                    {
+                        #ifdef ADLMIDI_USE_DOSBOX_OPL
+                        player->opl.cards[card].GenerateArrMix(out_buf, &in_generatedStereo);
+                        in_generatedPhys = in_generatedStereo * 2;
+                        #else
+                        OPL3_GenerateStreamMix(&player->opl.cards[card], out_buf, static_cast<Bit32u>(in_generatedStereo));
+                        #endif
+                    }
+                }
+                /* Process it */
+                SendStereoAudio(setup, sampleCount, in_generatedStereo, out_buf, gotten_len, out);
+
+                left -= (int)in_generatedPhys;
+                gotten_len += (in_generatedPhys) /* - setup.stored_samples*/;
+            }
+
+            if(hasSkipped)
+            {
+                setup.tick_skip_samples_delay -= n_periodCountStereo * 2;
+                hasSkipped = setup.tick_skip_samples_delay > 0;
+            }
+            else
+                player->TickIteratos(eat_delay);
+        }//...
     }
 
-    return sampleCount;
+    return static_cast<int>(gotten_len);
     #endif
 }
 
@@ -710,4 +761,124 @@ ADLMIDI_EXPORT void adl_panic(struct ADL_MIDIPlayer *device)
     if(!player)
         return;
     player->realTime_panic();
+}
+
+ADLMIDI_EXPORT void adl_rt_resetState(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_ResetState();
+}
+
+bool adl_rt_noteOn(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 velocity)
+{
+    if(!device)
+        return false;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return false;
+    return player->realTime_NoteOn(channel, note, velocity);
+}
+
+void adl_rt_noteOff(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_NoteOff(channel, note);
+}
+
+void adl_rt_noteAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 atVal)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_NoteAfterTouch(channel, note, atVal);
+}
+
+void adl_rt_channelAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 atVal)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_ChannelAfterTouch(channel, atVal);
+}
+
+void adl_rt_controllerChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 type, ADL_UInt8 value)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_Controller(channel, type, value);
+}
+
+void adl_rt_patchChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 patch)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_PatchChange(channel, patch);
+}
+
+void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 pitch)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_PitchBend(channel, pitch);
+}
+
+void adl_rt_pitchBendML(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb, ADL_UInt8 lsb)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_PitchBend(channel, msb, lsb);
+}
+
+void adl_rt_bankChangeLSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 lsb)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_BankChangeLSB(channel, lsb);
+}
+
+void adl_rt_bankChangeMSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_BankChangeMSB(channel, msb);
+}
+
+void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_SInt16 bank)
+{
+    if(!device)
+        return;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return;
+    player->realTime_BankChange(channel, (uint16_t)bank);
 }
