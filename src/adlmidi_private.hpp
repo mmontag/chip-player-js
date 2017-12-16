@@ -25,7 +25,7 @@
 #define ADLMIDI_PRIVATE_HPP
 
 #ifndef ADLMIDI_VERSION
-#define ADLMIDI_VERSION "1.3.0"
+#define ADLMIDI_VERSION "1.3.1"
 #endif
 
 // Setup compiler defines useful for exporting required public API symbols in gme.cpp
