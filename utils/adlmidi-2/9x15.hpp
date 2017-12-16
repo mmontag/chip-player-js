@@ -1,3 +1,7 @@
+#include <stdint.h>
+static unsigned UnicodeToASCIIapproximation(unsigned n);
+class UIfontBase;
+
 namespace ns_font9x15 {
 static const unsigned char bitmap[3840] = {
 0x00,0xDB,0xDB,0x00,0xC3,0xC3,0x00,0xC3,0xC3,0x00,0xDB,0xDB,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x1C,0x3E,0x7F,0xFF,0x7F,0x3E,0x1C,0x08,0x00,0x00,0x00, /* 00 (U+0000) */
@@ -131,6 +135,7 @@ static const unsigned char bitmap[3840] = {
 };
 static const struct unicode_to_bitmap_index_generator
 {
+    explicit unicode_to_bitmap_index_generator() {}
     static uint_least8_t Help(uint8_t index, bool InRecursion)
     {
         return InRecursion ? (index & 0xFF) : Find(UnicodeToASCIIapproximation(index)&0xFF,
@@ -146,12 +151,15 @@ true);
     }
     uint_least8_t operator[] (uint_least8_t index) const { return Find(index, false); }
 } unicode_to_bitmap_index;
-}
+}//ns_font9x15
 struct font9x15: public UIfontBase
 {
+    font9x15() : UIfontBase()
+    {}
     virtual const unsigned char* GetBitmap() const { return ns_font9x15::bitmap; }
     virtual unsigned GetIndex(char32_t c) const { return ns_font9x15::unicode_to_bitmap_index[c]; }
 };
+
 static UIfontBase* Getfont9x15()
 {
     static font9x15 f;

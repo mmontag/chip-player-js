@@ -52,7 +52,7 @@ void ADLMIDI_PuzzleGame::TetrisArea::DrawBlock(unsigned x, unsigned y, int color
 
 void ADLMIDI_PuzzleGame::TetrisArea::DrawPiece(const ADLMIDI_PuzzleGame::Piece &piece, int color)
 {
-    piece > [&](int x, int y)->bool { this->DrawBlock(x, y, color); return false; };
+    (void)(piece > [&](int x, int y)->bool { this->DrawBlock(x, y, color); return false; });
 }
 
 bool ADLMIDI_PuzzleGame::TetrisArea::CollidePiece(const ADLMIDI_PuzzleGame::Piece &piece) const
@@ -82,7 +82,12 @@ bool ADLMIDI_PuzzleGame::TetrisArea::CascadeEmpty(int FirstY)
             // Clear all full lines in Tengen Tetris style.
             for(animx = 1; animx < Width - 1; ++animx)
             {
-                for(timer = Timer; Timer < timer + 6;) ccrReturn(true);
+                for(timer = Timer; Timer < timer + 6;)
+                    ccrReturn(true);
+                /*
+                 * FIXME: Improve weird code fragment disliked by CLang
+                 * /////////BEGIN////////////
+                 */
                 auto label =
                     "  SINGLE  "
                     "  DOUBLE  "
@@ -92,10 +97,17 @@ bool ADLMIDI_PuzzleGame::TetrisArea::CascadeEmpty(int FirstY)
                     "QUINTUPLE "
                     " SEXTUPLE "
                     " SEPTUPLE "
-                    " OCTUPLE  " + ((n_full - 1) * 10);
+                    " OCTUPLE  "
+                    + ((n_full - 1) * 10);
                 for(int y = FirstY; y < Height - 1; ++y)
+                {
                     if(list_full & (1u << y))
                         DrawBlock(animx, y, label[(animx % 10)] + 0x100);
+                }
+                /*
+                 * /////////END////////////
+                 */
+
                 if(DoDraw) Sound(10 + animx * n_full * 40, 2);
             }
             if(DoDraw) Sound(50, 15);
@@ -298,7 +310,7 @@ Recursion:
                 // cells of the piece contribute into full (completed) rows.
                 char full[4] = { -1, -1, -1, -1};
                 int miny = n.y + 9, maxy = n.y - 9, minx = n.x + 9, maxx = n.x - 9, num_eroded = 0;
-                n > [&](int x, int y) -> bool
+                (void)(n > [&](int x, int y) -> bool
                 {
                     if(x < minx)
                         minx = x;
@@ -311,7 +323,7 @@ Recursion:
                     if(full[y - n.y] < 0) full[y - n.y] = this->TestFully(y, true);
                     num_eroded += full[y - n.y];
                     return false;
-                };
+                });
 
                 CascadeEmpty(n.y);
 
@@ -645,9 +657,9 @@ void ADLMIDI_PuzzleGame::Tetris::MakeNext()
         return false;
     };
     fx();
-    seq[1] > db;
+    (void)(seq[1] > db);
     seq[0] = seq[1];
-    seq[2] > db;
+    (void)(seq[2] > db);
     seq[1] = seq[2];
     /*seq[3]>db; seq[2] = seq[3];
         seq[4]>db; seq[3] = seq[4];
@@ -702,9 +714,9 @@ void ADLMIDI_PuzzleGame::Tetris::MakeNext()
     seq[which].r = rnd % 4;
     fx();
     c = seq[1].color;
-    seq[1] > db;
+    (void)(seq[1] > db);
     c = (seq[2].color & 0xF00) + 176;
-    seq[2] > db;
+    (void)(seq[2] > db);
     /*c=(seq[3].color&0xF00) + 176; seq[3]>db;
         c=(seq[4].color&0xF00) + 176; seq[4]>db;
         c=(seq[5].color&0xF00) + 176; seq[5]>db;

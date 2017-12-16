@@ -53,12 +53,14 @@ namespace ADLMIDI_PuzzleGame
         {
             uint64_t p = 1ull, q = shape.s[r];
             for(int by=0; by<8; ++by)
+            {
                 for(int bx=0; bx<8; ++bx)
                 {
                     if((q & p) && it(x+bx, y+by)) return true;
                     //p >>= 1ull;
                     p <<= 1ull;
                 }
+            }
             return false;
         }
         template<typename T> // transmogrify operator

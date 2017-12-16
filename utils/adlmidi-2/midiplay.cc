@@ -147,7 +147,12 @@ xInput Input;
 #endif
 
 #ifdef SUPPORT_VIDEO_OUTPUT
-class UIfontBase {};
+class UIfontBase
+{
+public:
+    explicit UIfontBase() {}
+    virtual ~UIfontBase() {}
+};
 static unsigned UnicodeToASCIIapproximation(unsigned n)
 {
     return n;
@@ -1411,11 +1416,12 @@ static void SendStereoAudio(unsigned long count, short *samples)
 
 static void TidyupAndExit(int sig)
 {
-    if((sig == SIGINT)
-        #ifdef __DJGPP__
-        || (sig == SIGQUIT)
-        #endif
-    )
+    bool hookSignal = false;
+    hookSignal |= (sig == SIGINT);
+    #ifdef __DJGPP__
+        hookSignal |= (sig == SIGQUIT)
+    #endif
+    if(hookSignal)
     {
         UI.ShowCursor();
         UI.Color(7);
