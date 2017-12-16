@@ -1399,6 +1399,7 @@ void MIDIplay::realTime_BankChange(uint8_t channel, uint16_t bank)
 void MIDIplay::realTime_panic()
 {
     Panic();
+    KillSustainingNotes(-1, -1);
 }
 
 
