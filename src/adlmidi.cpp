@@ -653,34 +653,21 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
     ssize_t n_periodCountStereo = 512;
 
     int     left = sampleCount;
-    bool    hasSkipped = setup.tick_skip_samples_delay > 0;
-
     double  delay = double(sampleCount) / double(setup.PCM_RATE);
 
     while(left > 0)
     {
         {//...
             const double eat_delay = delay < setup.maxdelay ? delay : setup.maxdelay;
-            if(hasSkipped)
-            {
-                size_t samples = setup.tick_skip_samples_delay > sampleCount ? sampleCount : setup.tick_skip_samples_delay;
-                n_periodCountStereo = samples / 2;
-            }
-            else
-            {
-                delay -= eat_delay;
-                setup.carry += setup.PCM_RATE * eat_delay;
-                n_periodCountStereo = static_cast<ssize_t>(setup.carry);
-                setup.carry -= n_periodCountStereo;
-            }
+            delay -= eat_delay;
+            setup.carry += setup.PCM_RATE * eat_delay;
+            n_periodCountStereo = static_cast<ssize_t>(setup.carry);
+            setup.carry -= n_periodCountStereo;
 
             {
                 ssize_t leftSamples = left / 2;
                 if(n_periodCountStereo > leftSamples)
-                {
-                    setup.tick_skip_samples_delay = (n_periodCountStereo - leftSamples) * 2;
                     n_periodCountStereo = leftSamples;
-                }
                 //! Count of stereo samples
                 ssize_t in_generatedStereo = (n_periodCountStereo > 512) ? 512 : n_periodCountStereo;
                 //! Total count of samples
@@ -719,13 +706,7 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
                 gotten_len += (in_generatedPhys) /* - setup.stored_samples*/;
             }
 
-            if(hasSkipped)
-            {
-                setup.tick_skip_samples_delay -= n_periodCountStereo * 2;
-                hasSkipped = setup.tick_skip_samples_delay > 0;
-            }
-            else
-                player->TickIteratos(eat_delay);
+            player->TickIteratos(eat_delay);
         }//...
     }
 
@@ -833,7 +814,7 @@ void adl_rt_patchChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UI
     player->realTime_PatchChange(channel, patch);
 }
 
-void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 pitch)
+void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt16 pitch)
 {
     if(!device)
         return;

@@ -1,0 +1,16 @@
+Makefile
+m4/*
+compile
+config.*
+configure
+missing
+libtool
+ltmain.sh
+depcomp
+install-sh
+autom*.cache
+aclocal.m4
+Makefile.in
+.deps
+.libs
+

@@ -36,6 +36,7 @@ ENDIF()
 option(WITH_MIDIPLAY        "Build also demo MIDI player" OFF)
 option(MIDIPLAY_WAVE_ONLY   "Build Demo MIDI player without support of real time playing. It will output into WAV only." OFF)
 option(WITH_ADLMIDI2        "Build also classic ADLMIDI player [EXPERIMENTAL]" OFF)
+option(WITH_VLC_PLUGIN      "Build also a plugin for VLC Media Player" OFF)
 option(WITH_OLD_UTILS       "Build also old utilities" OFF)
 option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
 option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
@@ -45,6 +46,7 @@ option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can
 
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
 option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
+
 
 if(CMAKE_VERSION VERSION_EQUAL "3.1" OR CMAKE_VERSION VERSION_GREATER "3.1")
     set(CMAKE_CXX_STANDARD 11)
@@ -292,6 +294,40 @@ if(WITH_ADLMIDI2)
     list(APPEND libADLMIDI_INSTALLS adlmidi2)
 endif()
 
+if(WITH_VLC_PLUGIN)
+    include(cmake/FindLIBVLC.cmake)
+    include_directories(${LIBVLC_INCLUDE_DIR}/vlc/plugins)
+    include_directories(${LIBVLC_INCLUDE_DIR}/vlc)
+    message("Found ${LIBVLC_LIBRARY} of version ${LIBVLC_VERSION} with includes ${LIBVLC_INCLUDE_DIR}")
+
+    set(adlmidi_vlc_src)
+    list(APPEND adlmidi_vlc_src
+        ${libADLMIDI_SOURCE_DIR}/utils/vlc_codec/libadlmidi.c)
+
+    add_library(adlmidi_plugin MODULE ${adlmidi_vlc_src})
+    target_compile_options(adlmidi_plugin PUBLIC "-DVLC_MODULE_COPYRIGHT=\"Copyright \(c\) Vitaly Novichkov\"")
+    target_compile_options(adlmidi_plugin PUBLIC "-DVLC_MODULE_LICENSE=\"GPLv3\"")
+    target_compile_options(adlmidi_plugin PUBLIC "-DMODULE_STRING=\"adlmidi\"")
+    #target_link_options()
+    #target_compile_definitions(adlmidi_plugin
+    #    PUBLIC -DVLC_MODULE_COPYRIGHT="Copyright \(c\) Vitaly Novichkov" -DVLC_MODULE_LICENSE="GPLv3" -DMODULE_STRING="adlmidi")
+    target_link_libraries(adlmidi_plugin ADLMIDI vlccore m stdc++)
+    target_link_libraries(adlmidi_plugin INTERFACE "-export-symbol-regex ^vlc_entry")
+    #target_compile_definitions(adlmidi_plugin -DVLC_MODULE_LICENSE="GPLv3")
+    #target_compile_definitions(adlmidi_plugin -DMODULE_STRING="adlmidi")
+
+    if(libADLMIDI_SHARED)
+        add_dependencies(adlmidi_plugin ADLMIDI_shared)
+        # ========= WIP =========
+        # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+    else()
+        if(NOT libADLMIDI_STATIC)
+            message(FATAL_ERROR "libADLMIDI is required to be built!")
+        endif()
+        add_dependencies(adlmidi_plugin ADLMIDI_static)
+    endif()
+
+endif()
 
 install(TARGETS ${libADLMIDI_INSTALLS}
         RUNTIME DESTINATION "bin"

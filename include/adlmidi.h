@@ -35,7 +35,7 @@ extern "C" {
 typedef uint8_t         ADL_UInt8;
 typedef uint16_t        ADL_UInt16;
 typedef int8_t          ADL_SInt8;
-typedef int16_t         ADL_Sint16;
+typedef int16_t         ADL_SInt16;
 #else
 typedef unsigned char   ADL_UInt8;
 typedef unsigned short  ADL_UInt16;
@@ -239,7 +239,7 @@ extern void adl_rt_controllerChange(struct ADL_MIDIPlayer *device, ADL_UInt8 cha
 extern void adl_rt_patchChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 patch);
 
 /*Apply pitch bend change*/
-extern void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 pitch);
+extern void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt16 pitch);
 /*Apply pitch bend change*/
 extern void adl_rt_pitchBendML(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb, ADL_UInt8 lsb);
 
