@@ -334,6 +334,8 @@ tryAgain:
     //Percussion offset is count of instruments multipled to count of melodic banks
     opl.dynamic_percussion_offset = 128 * count_melodic_banks;
 
+    applySetup();
+
     return true;
 }
 

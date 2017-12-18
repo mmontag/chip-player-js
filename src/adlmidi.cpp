@@ -114,6 +114,7 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
 
     play->m_setup.AdlBank = static_cast<uint32_t>(bankno);
     play->opl.setEmbeddedBank(play->m_setup.AdlBank);
+    play->applySetup();
 
     return adlRefreshNumCards(device);
     #endif
