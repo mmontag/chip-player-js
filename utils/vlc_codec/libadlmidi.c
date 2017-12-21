@@ -58,6 +58,10 @@
 
 #define SAMPLE_RATE_TEXT N_("Sample rate")
 
+#define EMULATED_CHIPS_TEXT N_("Count of emulated chips")
+
+#define EMBEDDED_BANK_ID_TEXT N_("Embedded bank ID")
+
 static int  Open  (vlc_object_t *);
 static void Close (vlc_object_t *);
 
@@ -68,7 +72,7 @@ vlc_module_begin ()
     set_category (CAT_INPUT)
     set_subcategory (SUBCAT_INPUT_ACODEC)
     set_callbacks (Open, Close)
-    add_loadfile ("custombank", "",
+    add_loadfile ("adlmidi-custombank", "",
                   SOUNDFONT_TEXT, SOUNDFONT_LONGTEXT, false)
     //add_bool ("synth-chorus", true, CHORUS_TEXT, CHORUS_TEXT, false)
     //add_float ("synth-gain", .5, GAIN_TEXT, GAIN_LONGTEXT, false)
@@ -76,8 +80,12 @@ vlc_module_begin ()
     //add_integer ("synth-polyphony", 256, POLYPHONY_TEXT, POLYPHONY_LONGTEXT, false)
     //    change_integer_range (1, 65535)
     //add_bool ("synth-reverb", true, REVERB_TEXT, REVERB_TEXT, true)
-    add_integer ("synth-sample-rate", 44100, SAMPLE_RATE_TEXT, SAMPLE_RATE_TEXT, true)
+    add_integer ("adlmidi-sample-rate", 44100, SAMPLE_RATE_TEXT, SAMPLE_RATE_TEXT, true)
         change_integer_range (22050, 96000)
+    add_integer ("adlmidi-emulated-chips", 6, EMULATED_CHIPS_TEXT, EMULATED_CHIPS_TEXT, true)
+        change_integer_range (1, 100)
+    add_integer ("adlmidi-internal-bank-id", 58, EMBEDDED_BANK_ID_TEXT, EMBEDDED_BANK_ID_TEXT, true)
+        change_integer_range (0, 73)
 vlc_module_end ()
 
 
@@ -105,10 +113,12 @@ static int Open (vlc_object_t *p_this)
     if (unlikely(p_sys == NULL))
         return VLC_ENOMEM;
 
-    p_sys->sample_rate = 44100;//var_InheritInteger (p_this, "synth-sample-rate");
+    p_sys->sample_rate = var_InheritInteger (p_this, "adlmidi-sample-rate");
     p_sys->synth = adl_init( p_sys->sample_rate );
 
-    char *font_path = var_InheritString (p_this, "custombank");
+    adl_setNumChips(p_sys->synth, var_InheritInteger(p_this, "adlmidi-emulated-chips"));
+
+    char *font_path = var_InheritString (p_this, "adlmidi-custombank");
     if (font_path != NULL)
     {
         msg_Dbg (p_this, "loading custom bank file %s", font_path);
@@ -118,7 +128,7 @@ static int Open (vlc_object_t *p_this)
     }
     else
     {
-        adl_setBank(p_sys->synth, 58);
+        adl_setBank(p_sys->synth, var_InheritInteger(p_this, "adlmidi-internal-bank-id"));
     }
 
     p_dec->fmt_out.i_cat = AUDIO_ES;
