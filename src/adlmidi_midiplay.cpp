@@ -714,6 +714,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
     m_setup.HighVibratoMode     = -1;
     m_setup.AdlPercussionMode   = -1;
     m_setup.LogarithmicVolumes  = false;
+    m_setup.VolumeModel = ADLMIDI_VolumeModel_AUTO;
     //m_setup.SkipForward = 0;
     m_setup.loopingIsEnabled = false;
     m_setup.ScaleModulators     = -1;
