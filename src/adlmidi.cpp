@@ -504,8 +504,7 @@ ADLMIDI_EXPORT void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_D
 
 
 
-inline static void SendStereoAudio(MIDIplay::Setup &device,
-                                   int      &samples_requested,
+inline static void SendStereoAudio(int      &samples_requested,
                                    ssize_t  &in_size,
                                    short    *_in,
                                    ssize_t   out_pos,
@@ -606,7 +605,7 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                     }
                 }
                 /* Process it */
-                SendStereoAudio(setup, sampleCount, in_generatedStereo, out_buf, gotten_len, out);
+                SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out);
 
                 left -= (int)in_generatedPhys;
                 gotten_len += (in_generatedPhys) /* - setup.stored_samples*/;
@@ -696,7 +695,7 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
                     }
                 }
                 /* Process it */
-                SendStereoAudio(setup, sampleCount, in_generatedStereo, out_buf, gotten_len, out);
+                SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out);
 
                 left -= (int)in_generatedPhys;
                 gotten_len += (in_generatedPhys) /* - setup.stored_samples*/;
