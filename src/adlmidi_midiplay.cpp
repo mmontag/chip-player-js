@@ -724,6 +724,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
 
     applySetup();
     ChooseDevice("none");
+    realTime_ResetState();
 }
 
 void MIDIplay::applySetup()
