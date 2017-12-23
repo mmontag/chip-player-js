@@ -47,6 +47,7 @@ option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
 option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
 
+option(EXAMPLE_SDL2_AUDIO   "Build also a simple SDL2 demo MIDI player" OFF)
 
 if(CMAKE_VERSION VERSION_EQUAL "3.1" OR CMAKE_VERSION VERSION_GREATER "3.1")
     set(CMAKE_CXX_STANDARD 11)
@@ -294,6 +295,43 @@ if(WITH_ADLMIDI2)
     list(APPEND libADLMIDI_INSTALLS adlmidi2)
 endif()
 
+if(EXAMPLE_SDL2_AUDIO AND NOT MSDOS AND NOT DJGPP)
+    find_library(SDL2_LIBRARY SDL2 REQUIRED)
+    include_directories(${SDL2_INCLUDE_DIR})
+    message("Found ${SDL2_LIBRARY}")
+
+    add_executable(adlmidi_sdl2_demo
+        ${libADLMIDI_SOURCE_DIR}/examples/sd2_audio/sdl2_sample.c
+    )
+
+    if(WIN32)
+        if(MSVC)
+            target_link_libraries(adlmidi_sdl2_demo ADLMIDI ${SDL2_LIBRARY})
+        else()
+            target_link_libraries(adlmidi_sdl2_demo ADLMIDI ${SDL2_LIBRARY} pthread)
+        endif()
+    else()
+        target_link_libraries(adlmidi_sdl2_demo ADLMIDI ${SDL2_LIBRARY} pthread dl m stdc++)
+    endif()
+
+    if(MSDOS OR DJGPP)
+        set_target_properties(adlmidi_sdl2_demo PROPERTIES OUTPUT_NAME adlmidi)
+    endif()
+
+    if(libADLMIDI_SHARED)
+        add_dependencies(adlmidi_sdl2_demo ADLMIDI_shared)
+        # ========= WIP =========
+        # set_target_properties(adlmidi_sdl2_demo PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+    else()
+        if(NOT libADLMIDI_STATIC)
+            message(FATAL_ERROR "libADLMIDI is required to be built!")
+        endif()
+        add_dependencies(adlmidi_sdl2_demo ADLMIDI_static)
+    endif()
+
+    list(APPEND libADLMIDI_INSTALLS adlmidi_sdl2_demo)
+endif()
+
 if(WITH_VLC_PLUGIN)
     include(cmake/FindLIBVLC.cmake)
     include_directories(${LIBVLC_INCLUDE_DIR}/vlc/plugins)
@@ -352,4 +390,5 @@ message("USE_DOSBOX_EMULATOR      = ${USE_DOSBOX_EMULATOR}")
 message("WITH_CPP_EXTRAS          = ${WITH_CPP_EXTRAS}")
 message("libADLMIDI_STATIC        = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED        = ${libADLMIDI_SHARED}")
+message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")
 
