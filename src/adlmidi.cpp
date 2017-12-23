@@ -749,14 +749,14 @@ ADLMIDI_EXPORT void adl_rt_resetState(struct ADL_MIDIPlayer *device)
     player->realTime_ResetState();
 }
 
-ADLMIDI_EXPORT bool adl_rt_noteOn(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 velocity)
+ADLMIDI_EXPORT int adl_rt_noteOn(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 velocity)
 {
     if(!device)
-        return false;
+        return 0;
     MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     if(!player)
-        return false;
-    return player->realTime_NoteOn(channel, note, velocity);
+        return 0;
+    return (int)player->realTime_NoteOn(channel, note, velocity);
 }
 
 ADLMIDI_EXPORT void adl_rt_noteOff(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note)
