@@ -452,7 +452,7 @@ ADLMIDI_EXPORT size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device)
     return reinterpret_cast<MIDIplay *>(device->adl_midiPlayer)->musMarkers.size();
 }
 
-ADLMIDI_EXPORT const Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index)
+ADLMIDI_EXPORT Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index)
 {
     struct Adl_MarkerEntry marker;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);

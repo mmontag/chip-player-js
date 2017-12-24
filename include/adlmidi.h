@@ -189,7 +189,7 @@ struct Adl_MarkerEntry
 extern size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device);
 
 /*Returns the marker entry*/
-extern const struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index);
+extern struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index);
 
 
 /*Take a sample buffer and iterate MIDI timers */
