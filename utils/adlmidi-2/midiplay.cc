@@ -1419,7 +1419,7 @@ static void TidyupAndExit(int sig)
     bool hookSignal = false;
     hookSignal |= (sig == SIGINT);
     #ifdef __DJGPP__
-        hookSignal |= (sig == SIGQUIT)
+        hookSignal |= (sig == SIGQUIT);
     #endif
     if(hookSignal)
     {
