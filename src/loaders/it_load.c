@@ -1340,7 +1340,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 
 			D_(D_INFO "Message length : %d", ifh.msglen);
 
-			for (j = 0; j < ifh.msglen - 1; j++) {
+			for (j = 0; j + 1 < ifh.msglen; j++) {
 				int b = hio_read8(f);
 				if (b == '\r') {
 					b = '\n';
@@ -1352,7 +1352,7 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 			}
 
 			if (ifh.msglen > 0) {
-				m->comment[j-1] = 0;
+				m->comment[j] = 0;
 			}
 		}
 	}
