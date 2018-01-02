@@ -834,6 +834,13 @@ void MIDIplay::seek(double seconds)
                  granualityHalf = granularity * 0.5,
                  s = seconds;//m_setup.delay < m_setup.maxdelay ? m_setup.delay : m_setup.maxdelay;
 
+    /* Attempt to go away out of song end must rewind position to begin */
+    if(seconds > fullSongTimeLength)
+    {
+        rewind();
+        return;
+    }
+
     bool loopFlagState = m_setup.loopingIsEnabled;
     // Turn loop pooints off because it causes wrong position rememberin on a quick seek
     m_setup.loopingIsEnabled = false;
