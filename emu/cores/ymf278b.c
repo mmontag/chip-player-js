@@ -1261,7 +1261,7 @@ static void opl3dummy_reset(void* param)
 	return;
 }
 
-#define OPL4FM_VOL_BALANCE	0xB5	// 0x100 = 100%
+#define OPL4FM_VOL_BALANCE	0x16A	// 0x100 = 100%, FM is 3 db louder than PCM
 static void refresh_opl3_volume(YMF278BChip* chip)
 {
 	INT32 volL, volR;

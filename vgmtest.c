@@ -1077,6 +1077,7 @@ typedef struct
 #define CMDTYPE_QSOUND		0x83	// QSound register write (16-bit data, 8-bit offset)
 #define CMDTYPE_WSWAN_REG	0x84	// WonderSwan register write (O8_D8 with remapping)
 #define CMDTYPE_NES_REG		0x85	// NES APU register write (O8_D8 with remapping)
+#define CMDTYPE_YMW_BANK	0x86	// YMW258 bank write (CMDTYPE_O8_D16 with remapping to register)
 static const VGM_CMDTYPES VGM_CMDS_50[0x10] =
 {
 	{0x00,	CMDTYPE_DUMMY},		// 50 SN76496 (handled separately)
@@ -1120,7 +1121,7 @@ static const VGM_CMDTYPES VGM_CMDS_C0[0x10] =
 	{0x04,	CMDTYPE_SPCM_MEM},	// C0 Sega PCM
 	{0x05,	CMDTYPE_RF5C_MEM},	// C1 RF5C68
 	{0x10,	CMDTYPE_RF5C_MEM},	// C2 RF5C164
-	{0x15,	CMDTYPE_O8_D16},	// C3 YMW258/MultiPCM bank offset
+	{0x15,	CMDTYPE_YMW_BANK},	// C3 YMW258/MultiPCM bank offset
 	{0x1F,	CMDTYPE_QSOUND},	// C4 QSound
 	{0x20,	CMDTYPE_O16_D8},	// C5 SCSP
 	{0x21,	CMDTYPE_O16_D8},	// C6 WonderSwan (memory write)
@@ -1563,6 +1564,16 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 				SendChipCommand_Data8(cmdType.chipID, chipID, ofs, data[0x02]);
 			}
 			break;
+		case CMDTYPE_YMW_BANK:
+			{
+				UINT8 bankmask;
+				
+				chipID = (data[0x01] & 0x80) >> 7;
+				bankmask = data[0x01] & 0x03;
+				// data[0x03] is ignored as we don't support YMW258 ROMs > 16 MB
+				if (bankmask)	// mask 0x03 -> reg 0x10, mask 0x02 -> reg 0x11, mask 0x01 -> reg 0x12
+					SendChipCommand_Data8(cmdType.chipID, chipID, 0x13 - bankmask, data[0x02]);
+			}
 		}
 	}
 	return VGM_CMDLEN[cmd >> 4];

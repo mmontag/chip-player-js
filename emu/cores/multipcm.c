@@ -55,8 +55,6 @@ static UINT8 multipcm_r(void *info, UINT8 offset);
 
 static void multipcm_alloc_rom(void* info, UINT32 memsize);
 static void multipcm_write_rom(void *info, UINT32 offset, UINT32 length, const UINT8* data);
-static void multipcm_set_bank(void *info, UINT32 leftoffs, UINT32 rightoffs);
-static void multipcm_bank_write(void *info, UINT8 offset, UINT16 data);
 
 static void multipcm_set_mute_mask(void *info, UINT32 MuteMask);
 
@@ -66,7 +64,6 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, multipcm_write},
 	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, multipcm_w_quick},
 	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, multipcm_r},
-	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D16, 0, multipcm_bank_write},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, multipcm_write_rom},
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, multipcm_alloc_rom},
 	{0x00, 0x00, 0, NULL}
@@ -170,10 +167,11 @@ struct _MultiPCM
 	
 	// internal state
 	slot_t slots[28];
-	UINT32 cur_slot;
-	UINT32 address;
-	UINT32 bank_right;
-	UINT32 bank_left;
+	INT32 cur_slot;
+	INT32 address;
+	UINT8 sega_banking;
+	UINT32 bank0;
+	UINT32 bank1;
 	float rate;
 
 	UINT32 attack_step[0x40];
@@ -504,12 +502,16 @@ static void write_slot(MultiPCM *ptChip, slot_t *slot, INT32 reg, UINT8 data)
 				slot->envelope_gen.state = ATTACK;
 				slot->envelope_gen.volume = 0;
 
-				if (slot->base >= 0x100000)
+				if (ptChip->sega_banking)
 				{
-					if (slot->pan & 8)
-						slot->base = (slot->base & 0x3fffff) | ptChip->bank_left;
-					else
-						slot->base = (slot->base & 0x3fffff) | ptChip->bank_right;
+					slot->base &= 0x1fffff;
+					if (slot->base & 0x100000)
+					{
+						if (slot->base & 0x080000)
+							slot->base = (slot->base & 0x07ffff) | ptChip->bank1;
+						else
+							slot->base = (slot->base & 0x07ffff) | ptChip->bank0;
+					}
 				}
 
 			}
@@ -708,7 +710,7 @@ static UINT8 device_start_multipcm(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	}
 
 	// Envelope steps
-	for (i = 0; i < 0x40; ++i)
+	for (i = 4; i < 0x40; ++i)
 	{
 		// Times are based on 44100Hz clock, adjust to real chip clock
 		ptChip->attack_step[i] = (float)(0x400 << EG_SHIFT) / (float)(BASE_TIMES[i] * 44100.0 / 1000.0);
@@ -722,7 +724,8 @@ static UINT8 device_start_multipcm(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	ptChip->total_level_steps[0] = -(float)(0x80 << TL_SHIFT) / (78.2f * 44100.0f / 1000.0f); // lower
 	ptChip->total_level_steps[1] = (float)(0x80 << TL_SHIFT) / (78.2f * 2 * 44100.0f / 1000.0f); // raise
 
-	multipcm_set_bank(ptChip, 0x00, 0x00);
+	ptChip->sega_banking = 0;
+	ptChip->bank0 = ptChip->bank1 = 0x000000;
 
 	multipcm_set_mute_mask(ptChip, 0x00);
 
@@ -775,6 +778,21 @@ static void multipcm_write(void *info, UINT8 offset, UINT8 data)
 		case 2:
 			ptChip->address = (data > 7) ? 7 : data;
 			break;
+
+		// special SEGA banking
+		case 0x10:	// 1 MB bank
+			ptChip->sega_banking = 1;
+			ptChip->bank0 = (data | 0x00) << 16;
+			ptChip->bank1 = (data | 0x08) << 16;
+			break;
+		case 0x11:	// first 512 KB bank
+			ptChip->sega_banking = 1;
+			ptChip->bank0 = data << 16;
+			break;
+		case 0x12:	// second 512 KB bank
+			ptChip->sega_banking = 1;
+			ptChip->bank1 = data << 16;
+			break;
 	}
 }
 
@@ -789,26 +807,6 @@ static void multipcm_w_quick(void *info, UINT8 offset, UINT8 data)
 }
 
 /* MAME/M1 access functions */
-
-static void multipcm_set_bank(void *info, UINT32 leftoffs, UINT32 rightoffs)
-{
-	MultiPCM *ptChip = (MultiPCM *)info;
-	ptChip->bank_left = leftoffs;
-	ptChip->bank_right = rightoffs;
-	//printf("%08x, %08x\n", leftoffs, rightoffs);
-}
-
-static void multipcm_bank_write(void *info, UINT8 offset, UINT16 data)
-{
-	MultiPCM *ptChip = (MultiPCM *)info;
-	
-	if (offset & 0x01)
-		ptChip->bank_left = data << 16;
-	if (offset & 0x02)
-		ptChip->bank_right = data << 16;
-	
-	return;
-}
 
 static void multipcm_alloc_rom(void* info, UINT32 memsize)
 {
