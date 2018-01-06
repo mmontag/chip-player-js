@@ -780,18 +780,18 @@ static void multipcm_write(void *info, UINT8 offset, UINT8 data)
 			break;
 
 		// special SEGA banking
-		case 0x10:	// 1 MB bank
+		case 0x10:	// 1 MB banking (Sega Model 1)
 			ptChip->sega_banking = 1;
-			ptChip->bank0 = (data | 0x00) << 16;
-			ptChip->bank1 = (data | 0x08) << 16;
+			ptChip->bank0 = (data << 20) | 0x000000;
+			ptChip->bank1 = (data << 20) | 0x080000;
 			break;
-		case 0x11:	// first 512 KB bank
+		case 0x11:	// 512 KB banking - low bank (Sega Multi 32)
 			ptChip->sega_banking = 1;
-			ptChip->bank0 = data << 16;
+			ptChip->bank0 = data << 19;
 			break;
-		case 0x12:	// second 512 KB bank
+		case 0x12:	// 512 KB banking - high bank (Sega Multi 32)
 			ptChip->sega_banking = 1;
-			ptChip->bank1 = data << 16;
+			ptChip->bank1 = data << 19;
 			break;
 	}
 }

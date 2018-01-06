@@ -1571,8 +1571,19 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 				chipID = (data[0x01] & 0x80) >> 7;
 				bankmask = data[0x01] & 0x03;
 				// data[0x03] is ignored as we don't support YMW258 ROMs > 16 MB
-				if (bankmask)	// mask 0x03 -> reg 0x10, mask 0x02 -> reg 0x11, mask 0x01 -> reg 0x12
-					SendChipCommand_Data8(cmdType.chipID, chipID, 0x13 - bankmask, data[0x02]);
+				if (bankmask == 0x03 && ! (data[0x02] & 0x08))
+				{
+					// 1 MB banking (reg 0x10)
+					SendChipCommand_Data8(cmdType.chipID, chipID, 0x10, data[0x02] / 0x10);
+				}
+				else
+				{
+					// 512 KB banking (regs 0x11/0x12)
+					if (bankmask & 0x02)	// low bank
+						SendChipCommand_Data8(cmdType.chipID, chipID, 0x11, data[0x02] / 0x08);
+					if (bankmask & 0x01)	// high bank
+						SendChipCommand_Data8(cmdType.chipID, chipID, 0x12, data[0x02] / 0x08);
+				}
 			}
 		}
 	}
