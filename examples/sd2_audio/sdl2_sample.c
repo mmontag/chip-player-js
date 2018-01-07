@@ -111,7 +111,7 @@ void my_audio_callback(void *midi_player, Uint8 *stream, int len)
     /* Take some samples from the ADLMIDI */
     samples_count = adl_play(p, samples_count, (short*)buffer);
 
-    if(samples_count <= 0 || adl_atEnd(p))
+    if(samples_count <= 0)
     {
         is_playing = 0;
         SDL_memset(stream, 0, len);
