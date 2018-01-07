@@ -399,10 +399,9 @@ bool MIDIplay::buildTrackData()
                 evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
                 if(!ok)
                 {
-                    int len = std::sprintf(error, "buildTrackData: Can't read variable-length value in the track %d.\n", (int)tk);
-                    if((len > 0) && (len < 150))
-                        errorString += std::string(error, (size_t)len);
-                    return false;
+                    /* End of track has been reached! However, there is no EOT event presented */
+                    event.type = MidiEvent::T_SPECIAL;
+                    event.subtype = MidiEvent::ST_ENDTRACK;
                 }
             }
 
