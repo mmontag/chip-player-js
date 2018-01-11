@@ -1,16 +1,19 @@
 /*
  * Copyright (C) 2013-2016 Alexey Khokholov (Nuke.YKT)
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Lesser General Public License for more details.
  *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  *  Nuked OPL3 emulator.
  *  Thanks:
@@ -34,6 +37,7 @@
 extern "C" {
 #endif
 
+
 #define OPL_WRITEBUF_SIZE   1024
 #define OPL_WRITEBUF_DELAY  2
 
@@ -52,13 +56,11 @@ typedef struct _opl3_slot opl3_slot;
 typedef struct _opl3_channel opl3_channel;
 typedef struct _opl3_chip opl3_chip;
 
-struct _opl3_slot
-{
+struct _opl3_slot {
     opl3_channel *channel;
     opl3_chip *chip;
     Bit16s out;
     Bit16s fbmod;
-    Bit8u ___padding[4];
     Bit16s *mod;
     Bit16s prout;
     Bit16s eg_rout;
@@ -67,7 +69,6 @@ struct _opl3_slot
     Bit8u eg_gen;
     Bit8u eg_rate;
     Bit8u eg_ksl;
-    Bit8u ___padding2[6];
     Bit8u *trem;
     Bit8u reg_vib;
     Bit8u reg_type;
@@ -83,40 +84,36 @@ struct _opl3_slot
     Bit8u key;
     Bit32u pg_phase;
     Bit32u timer;
-    Bit8u ___padding3[4];
+
+    Bit16u maskzero;
+    Bit8u  signpos;
+    Bit8u  phaseshift;
 };
 
-struct _opl3_channel
-{
-    opl3_slot *chipslots[2];
+struct _opl3_channel {
+    opl3_slot *slots[2];
     opl3_channel *pair;
     opl3_chip *chip;
     Bit16s *out[4];
     Bit8u chtype;
-    Bit8u ___padding[1];
     Bit16u f_num;
     Bit8u block;
     Bit8u fb;
     Bit8u con;
     Bit8u alg;
     Bit8u ksv;
-    Bit8u ___padding2[1];
     Bit16u cha, chb;
-    Bit8u ___padding3[2];
 };
 
-typedef struct _opl3_writebuf
-{
+typedef struct _opl3_writebuf {
     Bit64u time;
     Bit16u reg;
     Bit8u data;
-    Bit8u ___padding[5];
 } opl3_writebuf;
 
-struct _opl3_chip
-{
+struct _opl3_chip {
     opl3_channel channel[18];
-    opl3_slot slot[36];
+    opl3_slot chipslot[36];
     Bit16u timer;
     Bit8u newm;
     Bit8u nts;
@@ -129,7 +126,7 @@ struct _opl3_chip
     Bit32u noise;
     Bit16s zeromod;
     Bit32s mixbuff[2];
-    /* OPL3L */
+    //OPL3L
     Bit32s rateratio;
     Bit32s samplecnt;
     Bit16s oldsamples[2];
