@@ -58,7 +58,7 @@ struct ADL_MIDIPlayer
     void *adl_midiPlayer;
 };
 
-//DEPRECATED
+/* DEPRECATED */
 #define adl_setNumCards adl_setNumChips
 
 /* Sets number of emulated chips (from 1 to 100). Emulation of multiple chips exchanges polyphony limits*/
