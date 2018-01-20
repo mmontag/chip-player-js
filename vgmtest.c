@@ -1071,6 +1071,7 @@ typedef struct
 #define CMDTYPE_O8_D16		0x06	// Offset (8-bit) + Data (16-bit)
 #define CMDTYPE_O16_D16		0x07	// Offset (16-bit) + Data (16-bit)
 #define CMDTYPE_P_O8_D8		0x08	// Port + Offset (8-bit) + Data (8-bit)
+#define CMDTYPE_R2_D8		0x09	// Register [with dual-chip bit] + Data (8-bit)
 #define CMDTYPE_SPCM_MEM	0x80	// SegaPCM Memory Write
 #define CMDTYPE_RF5C_MEM	0x81	// RF5Cxx Memory Write
 #define CMDTYPE_PWM_REG		0x82	// PWM register write (4-bit offset, 12-bit data)
@@ -1078,6 +1079,8 @@ typedef struct
 #define CMDTYPE_WSWAN_REG	0x84	// WonderSwan register write (O8_D8 with remapping)
 #define CMDTYPE_NES_REG		0x85	// NES APU register write (O8_D8 with remapping)
 #define CMDTYPE_YMW_BANK	0x86	// YMW258 bank write (CMDTYPE_O8_D16 with remapping to register)
+#define CMDTYPE_SAA_REG		0x87	// SAA1099 register write (CMDTYPE_R_D8 with remapping)
+#define CMDTYPE_RF5C_REG	0x88	// RF5C68/164 register write (CMDTYPE_O8_D8 with bank cache)
 static const VGM_CMDTYPES VGM_CMDS_50[0x10] =
 {
 	{0x00,	CMDTYPE_DUMMY},		// 50 SN76496 (handled separately)
@@ -1099,8 +1102,8 @@ static const VGM_CMDTYPES VGM_CMDS_50[0x10] =
 };
 static const VGM_CMDTYPES VGM_CMDS_B0[0x10] =
 {
-	{0x05,	CMDTYPE_O8_D8},		// B0 RF5C68
-	{0x10,	CMDTYPE_O8_D8},		// B1 RF5C164
+	{0x05,	CMDTYPE_RF5C_REG},	// B0 RF5C68
+	{0x10,	CMDTYPE_RF5C_REG},	// B1 RF5C164
 	{0x11,	CMDTYPE_PWM_REG},	// B2 PWM
 	{0x13,	CMDTYPE_O8_D8},		// B3 GameBoy DMG
 	{0x14,	CMDTYPE_NES_REG},	// B4 NES APU
@@ -1112,7 +1115,7 @@ static const VGM_CMDTYPES VGM_CMDS_B0[0x10] =
 	{0x1D,	CMDTYPE_O8_D8},		// BA K053260
 	{0x1E,	CMDTYPE_O8_D8},		// BB Pokey
 	{0x21,	CMDTYPE_WSWAN_REG},	// BC WonderSwan (register write)
-	{0x23,	CMDTYPE_R_D8},		// BD SAA1099
+	{0x23,	CMDTYPE_SAA_REG},	// BD SAA1099
 	{0x25,	CMDTYPE_O8_D8},		// BE ES5506
 	{0x28,	CMDTYPE_O8_D8},		// BF GA20
 };
@@ -1432,19 +1435,12 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			if (cmd == 0xA0)	// AY8910
 			{
 				cmdType.chipID = 0x12;
-				cmdType.cmdType = CMDTYPE_R_D8;
+				cmdType.cmdType = CMDTYPE_R2_D8;
 				break;
 			}
 			break;
 		case 0xB0:
 			cmdType = VGM_CMDS_B0[cmd & 0x0F];
-			if (cmdType.chipID == 0x05 || cmdType.chipID == 0x10)
-			{
-				// RF5C68 bank patch
-				UINT8 cID = (cmdType.chipID == 0x10) ? 1 : 0;
-				if (data[0x01] == 0x07 && ! (data[0x02] & 0x40))
-					RF5C_Bank[cID] = data[0x02] & 0x0F;
-			}
 			break;
 		case 0xC0:
 			cmdType = VGM_CMDS_C0[cmd & 0x0F];
@@ -1466,6 +1462,10 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 			break;
 		case CMDTYPE_CP_R_D8:	// Port (in command byte) + Register + Data (8-bit)
 			SendChipCommand_RegData8(cmdType.chipID, chipID, cmd & 0x01, data[0x01], data[0x02]);
+			break;
+		case CMDTYPE_R2_D8:	// Register + Data (8-bit)
+			chipID = (data[0x01] & 0x80) >> 7;
+			SendChipCommand_RegData8(cmdType.chipID, chipID, 0, data[0x01] & 0x7F, data[0x02]);
 			break;
 		case CMDTYPE_P_R_D8:	// Port + Register + Data (8-bit)
 			chipID = (data[0x01] & 0x80) >> 7;
@@ -1585,6 +1585,27 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 						SendChipCommand_Data8(cmdType.chipID, chipID, 0x12, data[0x02] / 0x08);
 				}
 			}
+		case CMDTYPE_SAA_REG:	// Offset (8-bit) + Data (8-bit)
+			chipID = (data[0x01] & 0x80) >> 7;
+			SendChipCommand_Data8(cmdType.chipID, chipID, 0x01, data[0x01] & 0x7F);
+			SendChipCommand_Data8(cmdType.chipID, chipID, 0x00, data[0x02]);
+			break;
+		case CMDTYPE_RF5C_REG:	// Offset (8-bit) + Data (8-bit)
+			{
+				UINT8 ofs;
+				
+				chipID = (data[0x01] & 0x80) >> 7;
+				ofs = data[0x01] & 0x7F;
+				SendChipCommand_Data8(cmdType.chipID, chipID, ofs, data[0x02]);
+				
+				// RF5C68 bank patch
+				if (ofs == 0x07 && ! (data[0x02] & 0x40))
+				{
+					UINT8 cID = (cmdType.chipID == 0x10) ? 1 : 0;
+					RF5C_Bank[cID] = data[0x02] & 0x0F;
+				}
+			}
+			break;
 		}
 	}
 	return VGM_CMDLEN[cmd >> 4];

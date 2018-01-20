@@ -98,8 +98,8 @@ if(AUDIODRV_ALSA)
 	find_package(ALSA REQUIRED)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_ALSA")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_ALSA.c)
-	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${ALSA_INCLUDE_DIR})
-	set(AUDIO_LIBS ${AUDIO_LIBS} pthread ${ALSA_LIBRARY})
+	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${ALSA_INCLUDE_DIRS})
+	set(AUDIO_LIBS ${AUDIO_LIBS} pthread ${ALSA_LIBRARIES})
 endif()
 
 if(AUDIODRV_PULSE)
@@ -107,7 +107,7 @@ if(AUDIODRV_PULSE)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_PULSE")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_Pulse.c)
 	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${PULSEAUDIO_INCLUDE_DIR})
-	# There seems to be no package for pulse-simple.
+	# There seems to be no package or variable for pulse-simple.
 	set(AUDIO_LIBS ${AUDIO_LIBS} pthread pulse-simple ${PULSEAUDIO_LIBRARY})
 endif()
 

@@ -74,8 +74,6 @@
 #include <string.h>	// for memset
 
 #include <stdtype.h>
-#include "../EmuStructs.h"
-#include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
 #include "saa1099_mame.h"
@@ -196,7 +194,7 @@ static void saa1099_envelope_w(saa1099_state *saa, int ch)
 {
 	if (saa->env_enable[ch])
 	{
-		UINT8 step, mode, mask;
+		UINT8 step, mode, mask, envval;
 		mode = saa->env_mode[ch];
 		/* step from 0..63 and then loop in steps 32..63 */
 		step = saa->env_step[ch] =
@@ -206,21 +204,15 @@ static void saa1099_envelope_w(saa1099_state *saa, int ch)
 		if (saa->env_bits[ch])
 			mask &= ~1;     /* 3 bit resolution, mask LSB */
 
+		envval = envelope[mode][step] & mask;
 		saa->channels[ch*3+0].envelope[ LEFT] =
 		saa->channels[ch*3+1].envelope[ LEFT] =
-		saa->channels[ch*3+2].envelope[ LEFT] = envelope[mode][step] & mask;
+		saa->channels[ch*3+2].envelope[ LEFT] = envval;
 		if (saa->env_reverse_right[ch] & 0x01)
-		{
-			saa->channels[ch*3+0].envelope[RIGHT] =
-			saa->channels[ch*3+1].envelope[RIGHT] =
-			saa->channels[ch*3+2].envelope[RIGHT] = (15 - envelope[mode][step]) & mask;
-		}
-		else
-		{
-			saa->channels[ch*3+0].envelope[RIGHT] =
-			saa->channels[ch*3+1].envelope[RIGHT] =
-			saa->channels[ch*3+2].envelope[RIGHT] = envelope[mode][step] & mask;
-		}
+			envval = (15 - envval) & mask;
+		saa->channels[ch*3+0].envelope[RIGHT] =
+		saa->channels[ch*3+1].envelope[RIGHT] =
+		saa->channels[ch*3+2].envelope[RIGHT] = envval;
 	}
 	else
 	{
@@ -430,9 +422,9 @@ void saa1099m_reset(void *info)
 void saa1099m_write(void *info, UINT8 offset, UINT8 data)
 {
 	if (offset & 1)
-		saa1099_data_w(info, data);
-	else
 		saa1099_control_w(info, data);
+	else
+		saa1099_data_w(info, data);
 }
 
 static void saa1099_control_w(void *info, UINT8 data)
