@@ -31,6 +31,11 @@
 #define MaxCards_STR "100"
 #endif
 
+static ADL_Version adl_version = {
+    ADLMIDI_VERSION_MAJOR,
+    ADLMIDI_VERSION_MINOR,
+    ADLMIDI_VERSION_PATCHLEVEL
+};
 
 /*---------------------------EXPORTS---------------------------*/
 
@@ -316,6 +321,10 @@ ADLMIDI_EXPORT const char *adl_linkedLibraryVersion()
     return ADLMIDI_VERSION;
 }
 
+ADLMIDI_EXPORT const ADL_Version *adl_linkedVersion()
+{
+    return &adl_version;
+}
 
 ADLMIDI_EXPORT const char *adl_errorString()
 {
