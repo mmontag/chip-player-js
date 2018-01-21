@@ -1,7 +1,7 @@
 /*
 INI Processor - a small library which allows you parsing INI-files
 
-Copyright (c) 2017 Vitaliy Novichkov <admin@wohlnet.ru>
+Copyright (c) 2015-2018 Vitaly Novichkov <admin@wohlnet.ru>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the "Software"),
