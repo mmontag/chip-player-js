@@ -26,6 +26,7 @@ Stable versions
 	Other changes:
 	- fix double free in case of ADPCM sample load error
 	- code refactoring and cleanup
+	- accept WUZAMOD! Scream Tracker 2 modules
 
 4.4.1 (20161012):
 	Fix issues reported by Saga Musix:
