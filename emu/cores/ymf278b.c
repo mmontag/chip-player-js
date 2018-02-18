@@ -141,6 +141,7 @@ typedef struct
 	UINT8 OCT;		// octave [0..15]   TODO store sign-extended?
 	UINT8 PRVB;		// pseudo-reverb
 	UINT8 LD;		// level direct
+	UINT8 TLdest;	// destination total level
 	UINT8 TL;		// total level
 	UINT8 pan;		// panpot
 	UINT8 lfo;		// LFO
@@ -176,6 +177,8 @@ struct _YMF278BChip
 
 	/** Global envelope generator counter. */
 	UINT32 eg_cnt;
+	UINT32 tl_int_cnt;
+	UINT8 tl_int_step;	// modulo 3 counter
 
 	INT32 memadr;
 
@@ -191,9 +194,9 @@ struct _YMF278BChip
 	/** Precalculated attenuation values with some margin for
 	  * envelope and pan levels.
 	  */
-	INT32 volume[256*4];
+	INT32 volume[0x80];
 
-	UINT8 regs[256];
+	UINT8 regs[0x100];
 
 	UINT8 exp;
 
@@ -230,15 +233,15 @@ INLINE void ymf278b_writeMem(YMF278BChip* chip, UINT32 address, UINT8 value);
 
 // Pan values, units are -3dB, i.e. 8.
 static const INT32 pan_left[16]  = {
-	0, 8, 16, 24, 32, 40, 48, 256, 256,   0,  0,  0,  0,  0,  0, 0
+	0, 8, 16, 24, 32, 40, 48, 128, 128,   0,  0,  0,  0,  0,  0, 0
 };
 static const INT32 pan_right[16] = {
-	0, 0,  0,  0,  0,  0,  0,   0, 256, 256, 48, 40, 32, 24, 16, 8
+	0, 0,  0,  0,  0,  0,  0,   0, 128, 128, 48, 40, 32, 24, 16, 8
 };
 
-// Mixing levels, units are -3dB, and add some marging to avoid clipping
+// Mixing levels, units are -3dB
 static const INT32 mix_level[8] = {
-	8, 16, 24, 32, 40, 48, 56, 256+8
+	0, 8, 16, 24, 32, 40, 48, 128
 };
 
 // decay level table (3dB per step)
@@ -368,7 +371,7 @@ INLINE UINT32 calcStep(UINT8 oct, UINT32 fn, int vib)
 
 static void ymf278b_slot_reset(YMF278BSlot* slot)
 {
-	slot->wave = slot->FN = slot->OCT = slot->PRVB = slot->LD = slot->TL = slot->pan =
+	slot->wave = slot->FN = slot->OCT = slot->PRVB = slot->LD = slot->TLdest = slot->TL = slot->pan =
 		slot->lfo = slot->vib = slot->AM = 0;
 	slot->AR = slot->D1R = slot->DL = slot->D2R = slot->RC = slot->RR = 0;
 	slot->stepptr = 0;
@@ -447,10 +450,35 @@ static void ymf278b_advance(YMF278BChip* chip)
 	UINT8 shift;
 	UINT8 select;
 	
+	chip->tl_int_cnt ++;
+	if (chip->tl_int_cnt >= 9)
+	{
+		chip->tl_int_cnt -= 9;
+		chip->tl_int_step ++;
+		if (chip->tl_int_step >= 3)
+			chip->tl_int_step -= 3;
+	}
+
 	chip->eg_cnt ++;
 	for (i = 0; i < 24; i ++)
 	{
 		op = &chip->slots[i];
+
+		if (! chip->tl_int_cnt)
+		{
+			if (op->TL < op->TLdest)
+			{
+				// one step every 27 samples
+				if (chip->tl_int_step == 0)
+					op->TL ++;
+			}
+			else if (op->TL > op->TLdest)
+			{
+				// one step every 13.5 samples
+				if (chip->tl_int_step > 0)
+					op->TL --;
+			}
+		}
 
 		if (op->lfo_active)
 		{
@@ -700,17 +728,18 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 			sample = (sl->sample1 * (0x10000 - sl->stepptr) +
 			          sl->sample2 * sl->stepptr) >> 16;
 			vol = sl->TL + (sl->env_vol >> 2) + ymf278b_slot_compute_am(sl);
+			if (vol < 0)
+				vol = 0;	// clip negative values (can occour due to AM)
 
 			volLeft  = vol + pan_left [sl->pan] + vl;
 			volRight = vol + pan_right[sl->pan] + vr;
-			// TODO prob doesn't happen in real chip
-			//volLeft  = std::max(0, volLeft);
-			//volRight = std::max(0, volRight);
-			volLeft &= 0x3FF;	// catch negative Volume values in a hardware-like way
-			volRight &= 0x3FF;	// (anything beyond 0x100 results in *0)
+			// verified on HW: internal TL levels above 0x7F are cut to silence
+			// TODO: test how envelope + pan + master volume affects this (only [sl->TL > 0x7F] was tested)
+			volLeft  = (volLeft  < 0x80) ? chip->volume[volLeft ] : 0;
+			volRight = (volRight < 0x80) ? chip->volume[volRight] : 0;
 
-			outputs[0][j] += (sample * chip->volume[volLeft] ) >> 17;
-			outputs[1][j] += (sample * chip->volume[volRight]) >> 17;
+			outputs[0][j] += (sample * volLeft ) >> 17;
+			outputs[1][j] += (sample * volRight) >> 17;
 
 			step = (sl->lfo_active && sl->vib)
 			     ? calcStep(sl->OCT, sl->FN, ymf278b_slot_compute_vib(sl))
@@ -848,12 +877,14 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 			slot->step = calcStep(slot->OCT, slot->FN, 0);
 			break;
 		case 3:
-			slot->TL = data >> 1;
+			slot->TLdest = data >> 1;
+			if (slot->TLdest == 0x7F)
+				slot->TLdest = 0xFF;	// verified on HW via volume interpolation
 			slot->LD = data & 0x1;
 
-			// TODO
 			if (slot->LD) {
 				// directly change volume
+				slot->TL = slot->TLdest;
 			} else {
 				// interpolate volume
 			}
@@ -1269,8 +1300,8 @@ static void refresh_opl3_volume(YMF278BChip* chip)
 	if (chip->fm.setVol == NULL)
 		return;
 	
-	volL = mix_level[chip->fm_l] - 8;
-	volR = mix_level[chip->fm_r] - 8;
+	volL = mix_level[chip->fm_l];
+	volR = mix_level[chip->fm_r];
 	// chip->volume[] uses 0x8000 = 100%
 	volL = (chip->volume[volL] * OPL4FM_VOL_BALANCE) >> 7;
 	volR = (chip->volume[volR] * OPL4FM_VOL_BALANCE) >> 7;
@@ -1325,10 +1356,9 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	chip->memadr = 0; // avoid UMR
 
 	// Volume table, 1 = -0.375dB, 8 = -3dB, 256 = -96dB
-	for (i = 0; i < 256; i ++)
-		chip->volume[i] = (INT32)(32768 * pow(2.0, (-0.375 / 6) * i));
-	for (i = 256; i < 256 * 4; i ++)
-		chip->volume[i] = 0;
+	// Note: The base of 2^-0.5 is applied to keep the volume of the original implementation.
+	for (i = 0x00; i < 0x80; i ++)
+		chip->volume[i] = (INT32)(32768 * pow(2.0, -0.5 + (-0.375 / 6) * i));
 
 	ymf278b_set_mute_mask(chip, 0x000000);
 
@@ -1359,6 +1389,8 @@ static void device_reset_ymf278b(void *info)
 	chip->exp = 0x00;
 	
 	chip->eg_cnt = 0;
+	chip->tl_int_cnt = 0;
+	chip->tl_int_step = 0;
 
 	for (i = 0; i < 24; i ++)
 		ymf278b_slot_reset(&chip->slots[i]);
