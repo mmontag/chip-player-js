@@ -138,7 +138,7 @@ typedef struct
 	INT32 DL;
 	INT16 wave;		// wavetable number
 	INT16 FN;		// f-number         TODO store 'FN | 1024'?
-	UINT8 OCT;		// octave [0..15]   TODO store sign-extended?
+	INT8 OCT;		// octave [-8..+7]
 	UINT8 PRVB;		// pseudo-reverb
 	UINT8 LD;		// level direct
 	UINT8 TLdest;	// destination total level
@@ -350,22 +350,20 @@ static const INT32 am_depth[8] = {
 
 // Sign extend a 4-bit value to int (32-bit)
 // require: x in range [0..15]
-INLINE int sign_extend_4(UINT8 x)
+INLINE INT8 sign_extend_4(UINT8 x)
 {
-	return ((int)x ^ 8) - 8;
+	return ((INT8)x ^ 8) - 8;
 }
 
-// Params: oct in [0 ..   15]
-//         fn  in [0 .. 1023]
+// Params: oct in [-8 ..   +7]
+//         fn  in [ 0 .. 1023]
 // We want to interpret oct as a signed 4-bit number and calculate
-//    ((fn | 1024) + vib) << (5 + sign_extend_4(oct))
+//    ((fn | 1024) + vib) << (5 + oct)
 // Though in this formula the shift can go over a negative distance (in that
 // case we should shift in the other direction).
-INLINE UINT32 calcStep(UINT8 oct, UINT32 fn, int vib)
+INLINE UINT32 calcStep(INT8 oct, UINT32 fn, int vib)
 {
-	UINT32 t;
-	oct ^= 8; // [0..15] -> [8..15][0..7] == sign_extend_4(x) + 8
-	t = (fn + 1024 + vib) << oct; // use '+' iso '|' (generates slightly better code)
+	UINT32 t = (fn + 1024 + vib) << (8 + oct); // use '+' iso '|' (generates slightly better code)
 	return t >> 3; // was shifted 3 positions too far
 }
 
@@ -399,16 +397,9 @@ INLINE int ymf278b_slot_compute_rate(YMF278BSlot* slot, int val)
 	else if (val == 15)
 		return 63;
 	
+	res = val * 4;
 	if (slot->RC != 15)
-	{
-		// TODO it may be faster to store 'OCT' sign extended
-		int oct = sign_extend_4(slot->OCT);
-		res = (oct + slot->RC) * 2 + (slot->FN & 0x200 ? 1 : 0) + val * 4;
-	}
-	else
-	{
-		res = val * 4;
-	}
+		res += (slot->OCT + slot->RC) * 2 + (slot->FN & 0x200 ? 1 : 0);
 	
 	if (res < 0)
 		res = 0;
@@ -873,7 +864,7 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 		case 2:
 			slot->FN = (slot->FN & 0x07F) | ((data & 0x07) << 7);
 			slot->PRVB = ((data & 0x08) >> 3);
-			slot->OCT =  ((data & 0xF0) >> 4);
+			slot->OCT =  sign_extend_4((data & 0xF0) >> 4);
 			slot->step = calcStep(slot->OCT, slot->FN, 0);
 			break;
 		case 3:
