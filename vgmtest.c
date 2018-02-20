@@ -161,7 +161,7 @@ typedef struct _vgm_pcm_bank
 
 int main(int argc, char* argv[]);
 static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs);
-static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
+static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
 #ifdef AUDDRV_DSOUND
 static void SetupDirectSound(void* audDrv);
 #endif
@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
 	InitVGMChips();
 	
 	canRender = false;
-	AudioDrv_SetCallback(audDrv, FillBuffer);
+	AudioDrv_SetCallback(audDrv, FillBuffer, NULL);
 	printf("Opening Device %u ...\n", idWavOutDev);
 	retVal = AudioDrv_Start(audDrv, idWavOutDev);
 	if (retVal)
@@ -396,7 +396,7 @@ static void ProcessVGM(UINT32 smplCount, UINT32 smplOfs)
 	return;
 }
 
-static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
+static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
 {
 	UINT32 smplCount;
 	INT16* SmplPtr16;

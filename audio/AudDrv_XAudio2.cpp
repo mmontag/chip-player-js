@@ -41,6 +41,7 @@ typedef struct _xaudio2_driver
 	XAUDIO2_BUFFER* xaBufs;
 	HANDLE hThread;
 	DWORD idThread;
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
 	UINT32 writeBuf;
@@ -60,7 +61,7 @@ EXT_C UINT8 XAudio2_Stop(void* drvObj);
 EXT_C UINT8 XAudio2_Pause(void* drvObj);
 EXT_C UINT8 XAudio2_Resume(void* drvObj);
 
-EXT_C UINT8 XAudio2_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+EXT_C UINT8 XAudio2_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 EXT_C UINT32 XAudio2_GetBufferSize(void* drvObj);
 EXT_C UINT8 XAudio2_IsBusy(void* drvObj);
 EXT_C UINT8 XAudio2_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -212,6 +213,7 @@ UINT8 XAudio2_Create(void** retDrvObj)
 	drv->xaSrcVoice = NULL;
 	drv->xaBufs = NULL;
 	drv->hThread = NULL;
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
@@ -376,10 +378,11 @@ UINT8 XAudio2_Resume(void* drvObj)
 }
 
 
-UINT8 XAudio2_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 XAudio2_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_XAUD2* drv = (DRV_XAUD2*)drvObj;
 	
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -473,7 +476,7 @@ static DWORD WINAPI XAudio2Thread(void* Arg)
 		while(xaVocState.BuffersQueued < drv->bufCount && drv->FillBuffer != NULL)
 		{
 			tempXABuf = &drv->xaBufs[drv->writeBuf];
-			tempXABuf->AudioBytes = drv->FillBuffer(drv->audDrvPtr,
+			tempXABuf->AudioBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam,
 										drv->bufSize, (void*)tempXABuf->pAudioData);
 			
 			retVal = drv->xaSrcVoice->SubmitSourceBuffer(tempXABuf, NULL);

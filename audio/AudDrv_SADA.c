@@ -54,6 +54,7 @@ typedef struct _sada_driver
 	int hFileDSP;
 	volatile UINT8 pauseThread;
 	
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	struct audio_info sadaParams;
 } DRV_SADA;
@@ -72,7 +73,7 @@ UINT8 SADA_Stop(void* drvObj);
 UINT8 SADA_Pause(void* drvObj);
 UINT8 SADA_Resume(void* drvObj);
 
-UINT8 SADA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT8 SADA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 UINT32 SADA_GetBufferSize(void* drvObj);
 UINT8 SADA_IsBusy(void* drvObj);
 UINT8 SADA_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -182,6 +183,7 @@ UINT8 SADA_Create(void** retDrvObj)
 #ifdef ENABLE_SADA_THREAD
 	drv->hThread = 0;
 #endif
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
@@ -328,11 +330,12 @@ UINT8 SADA_Resume(void* drvObj)
 }
 
 
-UINT8 SADA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 SADA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_SADA* drv = (DRV_SADA*)drvObj;
 	
 #ifdef ENABLE_SADA_THREAD
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -404,7 +407,7 @@ static void* SadaThread(void* Arg)
 		didBuffers = 0;
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
-			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSize, drv->bufSpace);
+			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 			wrtBytes = write(drv->hFileDSP, drv->bufSpace, bufBytes);
 			didBuffers ++;
 		}

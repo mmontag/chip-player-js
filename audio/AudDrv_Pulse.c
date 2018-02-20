@@ -34,6 +34,7 @@ typedef struct _pulse_driver
 	UINT8 canPause;
 	char* streamDesc;
 	
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 } DRV_PULSE;
 
@@ -51,7 +52,7 @@ UINT8 Pulse_Stop(void* drvObj);
 UINT8 Pulse_Pause(void* drvObj);
 UINT8 Pulse_Resume(void* drvObj);
 
-UINT8 Pulse_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT8 Pulse_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 UINT32 Pulse_GetBufferSize(void* drvObj);
 UINT8 Pulse_IsBusy(void* drvObj);
 UINT8 Pulse_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -148,6 +149,7 @@ UINT8 Pulse_Create(void** retDrvObj)
 	drv->devState = 0;
 	drv->hPulse = NULL;
 	drv->hThread = 0;
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	drv->streamDesc = strdup("libvgm");
 	
@@ -180,11 +182,11 @@ UINT8 Pulse_Destroy(void* drvObj)
 UINT8 Pulse_SetStreamDesc(void* drvObj, const char* streamDesc)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
-		
+	
 	//The Simple API does not accept updates to the stream description
 	if (drv->hPulse)
 		return AERR_WASDONE;
-
+	
 	free(drv->streamDesc);
 	drv->streamDesc = strdup(streamDesc);
 	
@@ -212,7 +214,7 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 		options = &defOptions;
 	drv->pulseFmt.channels = options->numChannels;
 	drv->pulseFmt.rate = options->sampleRate;
-
+	
 	tempInt64 = (UINT64)options->sampleRate * options->usecPerBuf;
 	drv->bufSmpls = (UINT32)((tempInt64 + 500000) / 1000000);
 	drv->bufSize = (options->numBitsPerSmpl * drv->pulseFmt.channels / 8) * drv->bufSmpls;
@@ -228,12 +230,12 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 		drv->pulseFmt.format = PA_SAMPLE_S32NE;
 	else
 		return 0xCF;
-
+	
 	drv->pauseThread = 1;
 	drv->hThread = 0;
 	drv->canPause = 1;
 	drv->hPulse = pa_simple_new(NULL, "libvgm", PA_STREAM_PLAYBACK, NULL, drv->streamDesc, &drv->pulseFmt, NULL, NULL, NULL);
-
+	
 	if(!drv->hPulse)
 		return 0xC0;
 	
@@ -243,7 +245,7 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 		pa_simple_free(drv->hPulse);
 		return 0xC8;	// CreateThread failed
 	}
-
+	
 	drv->bufSpace = (UINT8*)malloc(drv->bufSize);
 	
 	drv->devState = 1;
@@ -266,10 +268,10 @@ UINT8 Pulse_Stop(void* drvObj)
 		pthread_join(drv->hThread, NULL);
 		drv->hThread = 0;
 	}
-		
-	free(drv->bufSpace);	
+	
+	free(drv->bufSpace);
 	drv->bufSpace = NULL;
-
+	
 	pa_simple_free(drv->hPulse);
 	
 	drv->devState = 0;
@@ -280,7 +282,7 @@ UINT8 Pulse_Stop(void* drvObj)
 UINT8 Pulse_Pause(void* drvObj)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
-
+	
 	drv->pauseThread = 1;
 	return AERR_OK;
 }
@@ -288,15 +290,16 @@ UINT8 Pulse_Pause(void* drvObj)
 UINT8 Pulse_Resume(void* drvObj)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
-
+	
 	drv->pauseThread = 0;
 	return AERR_OK;
 }
 
-UINT8 Pulse_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 Pulse_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
 	
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -312,7 +315,7 @@ UINT32 Pulse_GetBufferSize(void* drvObj)
 UINT8 Pulse_IsBusy(void* drvObj)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
-
+	
 	if (drv->FillBuffer != NULL)
 		return AERR_BAD_MODE;
 	
@@ -326,11 +329,11 @@ UINT8 Pulse_WriteData(void* drvObj, UINT32 dataSize, void* data)
 	
 	if (dataSize > drv->bufSize)
 		return AERR_TOO_MUCH_DATA;
-
+	
 	retVal = pa_simple_write(drv->hPulse, data, (size_t) dataSize, NULL);
 	if (retVal > 0)
 		return 0xFF;
-
+	
 	return AERR_OK;
 }
 
@@ -339,7 +342,7 @@ UINT32 Pulse_GetLatency(void* drvObj)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
 	
-	return (UINT32)(pa_simple_get_latency(drv->hPulse, NULL)/1000);
+	return (UINT32)(pa_simple_get_latency(drv->hPulse, NULL) / 1000);
 }
 
 static void* PulseThread(void* Arg)
@@ -356,7 +359,7 @@ static void* PulseThread(void* Arg)
 		didBuffers = 0;
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
-			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSize, drv->bufSpace);
+			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 			retVal = Pulse_WriteData(drv, bufBytes, drv->bufSpace);
 			didBuffers ++;
 		}

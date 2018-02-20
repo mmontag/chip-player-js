@@ -49,6 +49,7 @@ typedef struct _alsa_driver
 	volatile UINT8 pauseThread;
 	UINT8 canPause;
 	
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 } DRV_ALSA;
 
@@ -66,7 +67,7 @@ UINT8 ALSA_Stop(void* drvObj);
 UINT8 ALSA_Pause(void* drvObj);
 UINT8 ALSA_Resume(void* drvObj);
 
-UINT8 ALSA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT8 ALSA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 UINT32 ALSA_GetBufferSize(void* drvObj);
 UINT8 ALSA_IsBusy(void* drvObj);
 UINT8 ALSA_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -170,6 +171,7 @@ UINT8 ALSA_Create(void** retDrvObj)
 	drv->devState = 0;
 	drv->hPCM = NULL;
 	drv->hThread = 0;
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
@@ -365,10 +367,11 @@ UINT8 ALSA_Resume(void* drvObj)
 }
 
 
-UINT8 ALSA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 ALSA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_ALSA* drv = (DRV_ALSA*)drvObj;
 	
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -436,7 +439,7 @@ static void* AlsaThread(void* Arg)
 			// Note: On errors I try to send some data in order to call recovery functions.
 			if (retVal != 0)
 			{
-				bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSize, drv->bufSpace);
+				bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 				retVal = WriteBuffer(drv, bufBytes, drv->bufSpace);
 			}
 			didBuffers ++;	// not 100% correct, but has the desired effect

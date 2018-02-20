@@ -58,7 +58,7 @@ UINT8 WavWrt_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 UINT8 WavWrt_Stop(void* drvObj);
 UINT8 WavWrt_PauseResume(void* drvObj);
 
-UINT8 WavWrt_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT8 WavWrt_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 UINT32 WavWrt_GetBufferSize(void* drvObj);
 UINT8 WavWrt_IsBusy(void* drvObj);
 UINT8 WavWrt_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -283,7 +283,7 @@ UINT8 WavWrt_PauseResume(void* drvObj)
 }
 
 
-UINT8 WavWrt_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 WavWrt_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	return AERR_NO_SUPPORT;
 }

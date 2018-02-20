@@ -25,7 +25,7 @@ typedef struct _audio_device_list
 } AUDIO_DEV_LIST;
 
 
-typedef UINT32 (*AUDFUNC_FILLBUF)(void* Params, UINT32 bufSize, void* data);
+typedef UINT32 (*AUDFUNC_FILLBUF)(void* drvStruct, void* userParam, UINT32 bufSize, void* data);
 
 typedef UINT8 (*AUDFUNC_COMMON)(void);
 typedef const AUDIO_DEV_LIST* (*AUDFUNC_DEVLIST)(void);
@@ -34,7 +34,7 @@ typedef UINT8 (*AUDFUNC_DRVCOMMON)(void* drvObj);
 typedef UINT8 (*AUDFUNC_DRVCREATE)(void** retDrvObj);
 typedef UINT8 (*AUDFUNC_DRVSTART)(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDrvParam);
 typedef UINT32 (*AUDFUNC_DRVRET32)(void* drvObj);
-typedef UINT8 (*AUDFUNC_DRVSETCB)(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+typedef UINT8 (*AUDFUNC_DRVSETCB)(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 typedef UINT8 (*AUDFUNC_DRVWRTDATA)(void* drvObj, UINT32 dataSize, void* data);
 
 

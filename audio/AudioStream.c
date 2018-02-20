@@ -98,6 +98,7 @@ struct _audio_driver_instance
 	AUDIO_DRV* drvStruct;
 	AUDIO_OPTS drvOpts;
 	void* drvData;
+	void* userParam;
 	AUDFUNC_FILLBUF mainCallback;
 	ADRV_LIST* forwardDrvs;
 };
@@ -127,8 +128,8 @@ static ADRV_INSTANCE* GetFreeRunSlot(void);
 //UINT8 AudioDrv_Stop(void* drvStruct);
 //UINT8 AudioDrv_Pause(void* drvStruct);
 //UINT8 AudioDrv_Resume(void* drvStruct);
-static UINT32 DoDataForwarding(void* Params, UINT32 bufSize, void* data);
-//UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback);
+static UINT32 DoDataForwarding(void* drvStruct, void* userParam, UINT32 bufSize, void* data);
+//UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 //UINT8 AudioDrv_DataForward_Add(void* drvStruct, const void* destDrvStruct);
 //UINT8 AudioDrv_DataForward_Remove(void* drvStruct, const void* destDrvStruct);
 //UINT8 AudioDrv_DataForward_RemoveAll(void* drvStruct);
@@ -296,6 +297,7 @@ UINT8 AudioDrv_Init(UINT32 drvID, void** retDrvStruct)
 	audInst->drvStruct = tempDrv;
 	audInst->drvOpts = *tempDrv->GetDefOpts();
 	audInst->drvData = drvData;
+	audInst->userParam = NULL;
 	audInst->mainCallback = NULL;
 	audInst->forwardDrvs = NULL;
 	*retDrvStruct = (void*)audInst;
@@ -327,6 +329,7 @@ UINT8 AudioDrv_Deinit(void** drvStruct)
 	audInst->ID = ADID_UNUSED;
 	audInst->drvStruct = NULL;
 	audInst->drvData = NULL;
+	audInst->userParam = NULL;
 	audInst->mainCallback = NULL;
 	ADrvLst_Clear(&audInst->forwardDrvs);
 	return AERR_OK;
@@ -399,14 +402,16 @@ UINT8 AudioDrv_Resume(void* drvStruct)
 	return aDrv->Resume(audInst->drvData);
 }
 
-static UINT32 DoDataForwarding(void* Params, UINT32 bufSize, void* data)
+static UINT32 DoDataForwarding(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
 {
-	ADRV_INSTANCE* audInst = (ADRV_INSTANCE*)Params;
+	ADRV_INSTANCE* audInst = (ADRV_INSTANCE*)drvStruct;
 	ADRV_LIST* fwdList;
 	const ADRV_INSTANCE* fwdInst;
 	UINT32 dataSize;
 	
-	dataSize = audInst->mainCallback(Params, bufSize, data);	// fill buffer
+	// Using audInst->userParam instead of the userParam parameter makes
+	// later changes of the userParam via SetCallback work properly.
+	dataSize = audInst->mainCallback(drvStruct, audInst->userParam, bufSize, data);	// fill buffer
 	fwdList = audInst->forwardDrvs;
 	while(fwdList != NULL)
 	{
@@ -418,16 +423,17 @@ static UINT32 DoDataForwarding(void* Params, UINT32 bufSize, void* data)
 	return dataSize;
 }
 
-UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	ADRV_INSTANCE* audInst = (ADRV_INSTANCE*)drvStruct;
 	AUDIO_DRV* aDrv = audInst->drvStruct;
 	
+	audInst->userParam = userParam;
 	audInst->mainCallback = FillBufCallback;
 	if (audInst->forwardDrvs != NULL && audInst->mainCallback != NULL)
-		return aDrv->SetCallback(audInst->drvData, &DoDataForwarding);
+		return aDrv->SetCallback(audInst->drvData, &DoDataForwarding, audInst->userParam);
 	else
-		return aDrv->SetCallback(audInst->drvData, audInst->mainCallback);
+		return aDrv->SetCallback(audInst->drvData, audInst->mainCallback, audInst->userParam);
 }
 
 UINT8 AudioDrv_DataForward_Add(void* drvStruct, const void* destDrvStruct)
@@ -441,7 +447,7 @@ UINT8 AudioDrv_DataForward_Add(void* drvStruct, const void* destDrvStruct)
 	retVal = ADrvLst_Add(&audInstSrc->forwardDrvs, audInstDst);
 	// If callbacks are enabled, make it use the Forwarding-Callback routine.
 	if (audInstSrc->drvStruct != NULL && audInstSrc->mainCallback != NULL)
-		audInstSrc->drvStruct->SetCallback(audInstSrc->drvData, &DoDataForwarding);
+		audInstSrc->drvStruct->SetCallback(audInstSrc->drvData, &DoDataForwarding, audInstSrc->userParam);
 	return AERR_OK;
 }
 
@@ -459,7 +465,7 @@ UINT8 AudioDrv_DataForward_Remove(void* drvStruct, const void* destDrvStruct)
 	
 	// make it call the original callback function
 	if (audInstSrc->forwardDrvs == NULL && audInstSrc->drvStruct != NULL)
-		audInstSrc->drvStruct->SetCallback(audInstSrc->drvData, audInstSrc->mainCallback);
+		audInstSrc->drvStruct->SetCallback(audInstSrc->drvData, audInstSrc->mainCallback, audInstSrc->userParam);
 	return AERR_OK;
 }
 
@@ -475,7 +481,7 @@ UINT8 AudioDrv_DataForward_RemoveAll(void* drvStruct)
 	
 	// make it call the original callback function
 	if (audInst->drvStruct != NULL)
-		audInst->drvStruct->SetCallback(audInst->drvData, audInst->mainCallback);
+		audInst->drvStruct->SetCallback(audInst->drvData, audInst->mainCallback, audInst->userParam);
 	return AERR_OK;
 }
 

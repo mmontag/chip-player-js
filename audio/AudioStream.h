@@ -131,9 +131,10 @@ UINT8 AudioDrv_Resume(void* drvStruct);
  *
  * @param drvStruct audio driver instance
  * @param FillBufCallback address of callback function
+ * @param userParam pointer to user data
  * @return error code. 0 = success, see AERR constants
  */
-UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback);
+UINT8 AudioDrv_SetCallback(void* drvStruct, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 /**
  * @brief Adds another audio driver instance to data forwarding, so it will receive a copy of all audio data.
  *

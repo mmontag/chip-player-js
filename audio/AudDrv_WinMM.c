@@ -51,6 +51,7 @@ typedef struct _winmm_driver
 	DWORD idThread;
 	HWAVEOUT hWaveOut;
 	WAVEHDR* waveHdrs;
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
 	UINT32 BlocksSent;
@@ -71,7 +72,7 @@ UINT8 WinMM_Stop(void* drvObj);
 UINT8 WinMM_Pause(void* drvObj);
 UINT8 WinMM_Resume(void* drvObj);
 
-UINT8 WinMM_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT8 WinMM_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 UINT32 WinMM_GetBufferSize(void* drvObj);
 UINT8 WinMM_IsBusy(void* drvObj);
 UINT8 WinMM_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -204,6 +205,7 @@ UINT8 WinMM_Create(void** retDrvObj)
 	drv->devState = 0;
 	drv->hWaveOut = NULL;
 	drv->hThread = NULL;
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
@@ -367,10 +369,11 @@ UINT8 WinMM_Resume(void* drvObj)
 }
 
 
-UINT8 WinMM_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 WinMM_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_WINMM* drv = (DRV_WINMM*)drvObj;
 	
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -458,8 +461,7 @@ static DWORD WINAPI WaveOutThread(void* Arg)
 			{
 				if (drv->FillBuffer == NULL)
 					break;
-				//tempWavHdr->dwBufferLength = drv->FillBuffer(tempWavHdr->lpData, SMPL_P_BUFFER);
-				tempWavHdr->dwBufferLength = drv->FillBuffer(drv->audDrvPtr,
+				tempWavHdr->dwBufferLength = drv->FillBuffer(drv->audDrvPtr, drv->userParam,
 															drv->bufSize, tempWavHdr->lpData);
 				WriteBuffer(drv, tempWavHdr);
 				didBuffers ++;

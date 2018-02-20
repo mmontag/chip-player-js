@@ -63,6 +63,7 @@ typedef struct _oss_driver
 	int hFileDSP;
 	volatile UINT8 pauseThread;
 	
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	OSS_PARAMS ossParams;
 } DRV_OSS;
@@ -82,7 +83,7 @@ UINT8 OSS_Stop(void* drvObj);
 UINT8 OSS_Pause(void* drvObj);
 UINT8 OSS_Resume(void* drvObj);
 
-UINT8 OSS_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT8 OSS_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 UINT32 OSS_GetBufferSize(void* drvObj);
 UINT8 OSS_IsBusy(void* drvObj);
 UINT8 OSS_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -186,6 +187,7 @@ UINT8 OSS_Create(void** retDrvObj)
 #ifdef ENABLE_OSS_THREAD
 	drv->hThread = 0;
 #endif
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
@@ -377,11 +379,12 @@ UINT8 OSS_Resume(void* drvObj)
 }
 
 
-UINT8 OSS_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 OSS_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_OSS* drv = (DRV_OSS*)drvObj;
 	
 #ifdef ENABLE_OSS_THREAD
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -450,7 +453,7 @@ static void* OssThread(void* Arg)
 		didBuffers = 0;
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
-			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSize, drv->bufSpace);
+			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 			wrtBytes = write(drv->hFileDSP, drv->bufSpace, bufBytes);
 			didBuffers ++;
 		}

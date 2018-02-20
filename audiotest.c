@@ -25,7 +25,7 @@ int main(int argc, char* argv[]);
 #ifdef AUDDRV_DSOUND
 static void SetupDirectSound(void* audDrv);
 #endif
-static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* Data);
+static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
 
 
 #pragma pack(1)
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 	for (curDrv = 0; curDrv < devList->devCount; curDrv ++)
 		printf("    Device %u: %s\n", curDrv, devList->devNames[curDrv]);
 	
-	AudioDrv_SetCallback(audDrv, FillBuffer);
+	AudioDrv_SetCallback(audDrv, FillBuffer, NULL);
 	printf("Opening Device %u ...\n", idWavOutDev);
 	retVal = AudioDrv_Start(audDrv, idWavOutDev);
 	if (retVal)
@@ -232,7 +232,7 @@ Exit_Deinit:
 	return 0;
 }
 
-static UINT32 FillBuffer(void* Params, UINT32 bufSize, void* data)
+static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
 {
 	UINT32 smplCount;
 	UINT8* SmplPtr8;

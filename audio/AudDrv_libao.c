@@ -48,6 +48,7 @@ typedef struct _libao_driver
 	ao_device* hDevAO;
 	volatile UINT8 pauseThread;
 	
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	ao_sample_format aoParams;
 } DRV_AO;
@@ -66,7 +67,7 @@ UINT8 LibAO_Stop(void* drvObj);
 UINT8 LibAO_Pause(void* drvObj);
 UINT8 LibAO_Resume(void* drvObj);
 
-UINT8 LibAO_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+UINT8 LibAO_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 UINT32 LibAO_GetBufferSize(void* drvObj);
 UINT8 LibAO_IsBusy(void* drvObj);
 UINT8 LibAO_WriteData(void* drvObj, UINT32 dataSize, void* data);
@@ -171,6 +172,7 @@ UINT8 LibAO_Create(void** retDrvObj)
 	drv->devState = 0;
 	drv->hDevAO = NULL;
 	drv->hThread = 0;
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
@@ -300,10 +302,11 @@ UINT8 LibAO_Resume(void* drvObj)
 }
 
 
-UINT8 LibAO_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 LibAO_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_AO* drv = (DRV_AO*)drvObj;
 	
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -363,7 +366,7 @@ static void* AoThread(void* Arg)
 		didBuffers = 0;
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
-			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSize, drv->bufSpace);
+			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 			retVal = ao_play(drv->hDevAO, (char*)drv->bufSpace, bufBytes);
 			didBuffers ++;
 		}

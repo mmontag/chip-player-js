@@ -48,6 +48,7 @@ typedef struct _directsound_driver
 	LPDIRECTSOUNDBUFFER dSndBuf;
 	HANDLE hThread;
 	DWORD idThread;
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
 	UINT32 writePos;
@@ -68,7 +69,7 @@ EXT_C UINT8 DSound_Stop(void* drvObj);
 EXT_C UINT8 DSound_Pause(void* drvObj);
 EXT_C UINT8 DSound_Resume(void* drvObj);
 
-EXT_C UINT8 DSound_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+EXT_C UINT8 DSound_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 EXT_C UINT32 DSound_GetBufferSize(void* drvObj);
 static UINT32 GetFreeBytes(DRV_DSND* drv);
 EXT_C UINT8 DSound_IsBusy(void* drvObj);
@@ -228,6 +229,7 @@ UINT8 DSound_Create(void** retDrvObj)
 	drv->dSndIntf = NULL;
 	drv->dSndBuf = NULL;
 	drv->hThread = NULL;
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
@@ -410,10 +412,11 @@ UINT8 DSound_Resume(void* drvObj)
 }
 
 
-UINT8 DSound_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 DSound_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_DSND* drv = (DRV_DSND*)drvObj;
 	
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -504,7 +507,7 @@ static DWORD WINAPI DirectSoundThread(void* Arg)
 		
 		while(GetFreeBytes(drv) >= drv->bufSegSize && drv->FillBuffer != NULL)
 		{
-			wrtBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSegSize, drv->bufSpace);
+			wrtBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSegSize, drv->bufSpace);
 			WriteBuffer(drv, wrtBytes, drv->bufSpace);
 			didBuffers ++;
 		}

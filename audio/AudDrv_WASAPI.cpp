@@ -44,6 +44,7 @@ typedef struct _wasapi_driver
 	
 	HANDLE hThread;
 	DWORD idThread;
+	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
 	UINT32 bufFrmCount;
@@ -63,7 +64,7 @@ EXT_C UINT8 WASAPI_Stop(void* drvObj);
 EXT_C UINT8 WASAPI_Pause(void* drvObj);
 EXT_C UINT8 WASAPI_Resume(void* drvObj);
 
-EXT_C UINT8 WASAPI_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback);
+EXT_C UINT8 WASAPI_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam);
 EXT_C UINT32 WASAPI_GetBufferSize(void* drvObj);
 static UINT32 GetFreeSamples(DRV_WASAPI* drv);
 EXT_C UINT8 WASAPI_IsBusy(void* drvObj);
@@ -303,6 +304,7 @@ UINT8 WASAPI_Create(void** retDrvObj)
 	drv->audClnt = NULL;
 	drv->rendClnt = NULL;
 	drv->hThread = NULL;
+	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
@@ -486,10 +488,11 @@ UINT8 WASAPI_Resume(void* drvObj)
 }
 
 
-UINT8 WASAPI_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback)
+UINT8 WASAPI_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userParam)
 {
 	DRV_WASAPI* drv = (DRV_WASAPI*)drvObj;
 	
+	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
 	
 	return AERR_OK;
@@ -583,7 +586,7 @@ static DWORD WINAPI WasapiThread(void* Arg)
 			retVal = drv->rendClnt->GetBuffer(drv->bufSmpls, &bufData);
 			if (retVal == S_OK)
 			{
-				wrtBytes = drv->FillBuffer(drv->audDrvPtr, drv->bufSize, (void*)bufData);
+				wrtBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, (void*)bufData);
 				wrtSmpls = wrtBytes / drv->waveFmt.nBlockAlign;
 				
 				retVal = drv->rendClnt->ReleaseBuffer(wrtSmpls, 0x00);
