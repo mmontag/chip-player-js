@@ -88,7 +88,8 @@ OBJDIRS = \
 	$(OBJ) \
 	$(LIBAUDOBJ) \
 	$(LIBEMUOBJ) \
-	$(LIBEMUOBJ)/cores
+	$(LIBEMUOBJ)/cores \
+	$(OBJ)/vgm
 
 ALL_LIBS = \
 	$(LIBAUD_A) \
@@ -229,6 +230,7 @@ AUDEMU_MAINOBJS = \
 	$(OBJ)/audemutest.o
 
 VGMTEST_MAINOBJS = \
+	$(OBJ)/vgm/dblk_compr.o \
 	$(OBJ)/vgmtest.o
 
 

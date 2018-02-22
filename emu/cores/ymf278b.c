@@ -457,16 +457,16 @@ static void ymf278b_advance(YMF278BChip* chip)
 
 		if (! chip->tl_int_cnt)
 		{
-			if (op->TL < op->TLdest)
+			if (chip->tl_int_step == 0)
 			{
-				// one step every 27 samples
-				if (chip->tl_int_step == 0)
+				// decrease volume by one step every 27 samples
+				if (op->TL < op->TLdest)
 					op->TL ++;
 			}
-			else if (op->TL > op->TLdest)
+			else //if (chip->tl_int_step > 0)
 			{
-				// one step every 13.5 samples
-				if (chip->tl_int_step > 0)
+				// increase volume by one step every 13.5 samples
+				if (op->TL > op->TLdest)
 					op->TL --;
 			}
 		}

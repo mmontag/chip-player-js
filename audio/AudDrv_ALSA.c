@@ -316,6 +316,8 @@ UINT8 ALSA_Stop(void* drvObj)
 		drv->hThread = 0;
 	}
 	
+	if (drv->canPause)
+		retVal = snd_pcm_pause(drv->hPCM, 0);
 	retVal = snd_pcm_drain(drv->hPCM);
 	
 	free(drv->bufSpace);	drv->bufSpace = NULL;
