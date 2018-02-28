@@ -20,7 +20,7 @@ USE_PULSE = 1
 endif
 
 CC = gcc
-CPP = g++
+CXX = g++
 PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
@@ -30,7 +30,7 @@ else
 CFLAGS := -O2 -g0 $(CFLAGS) -I.
 endif
 CCFLAGS = -std=gnu90
-CPPFLAGS = -std=gnu++98
+CXXFLAGS = -std=gnu++98
 ARFLAGS = -cr
 
 CFLAGS += -Wall
@@ -89,7 +89,8 @@ OBJDIRS = \
 	$(LIBAUDOBJ) \
 	$(LIBEMUOBJ) \
 	$(LIBEMUOBJ)/cores \
-	$(OBJ)/vgm
+	$(OBJ)/vgm \
+	$(OBJ)/player
 
 ALL_LIBS = \
 	$(LIBAUD_A) \
@@ -233,8 +234,12 @@ VGMTEST_MAINOBJS = \
 	$(OBJ)/vgm/dblk_compr.o \
 	$(OBJ)/vgmtest.o
 
+S98TEST_MAINOBJS = \
+	$(OBJ)/player/helper.o \
+	$(OBJ)/player/s98player.o \
+	$(OBJ)/player.o
 
-all:	audiotest emutest audemutest vgmtest
+all:	audiotest emutest audemutest vgmtest s98test
 
 audiotest:	dirs libaudio $(AUD_MAINOBJS)
 	@echo Linking audiotest ...
@@ -264,6 +269,11 @@ vgmtest:	dirs libaudio libemu $(VGMTEST_MAINOBJS)
 	@$(CC) $(VGMTEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -lm -o vgmtest
 	@echo Done.
 
+s98test:	dirs libaudio libemu $(S98TEST_MAINOBJS)
+	@echo Linking s98test ...
+	@$(CXX) $(S98TEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lm -o s98test
+	@echo Done.
+
 vgm_dbcompr_bench:	vgm_dbcompr_bench.c vgm/dblk_compr.c
 	@echo Compiling+Linking vgm_dbcompr_bench
 	@$(CC) $(CFLAGS) $(CCFLAGS) $^ $(LDFLAGS) -o vgm_dbcompr_bench
@@ -279,11 +289,11 @@ $(OBJ)/%.o: $(SRC)/%.c
 
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@echo Compiling $< ...
-	@$(CPP) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	@echo Deleting object files ...
-	@rm -f $(AUD_MAINOBJS) $(EMU_MAINOBJS) $(AUDEMU_MAINOBJS) $(VGMTEST_MAINOBJS) $(ALL_LIBS) $(LIBAUDOBJS) $(LIBEMUOBJS)
+	@rm -f $(AUD_MAINOBJS) $(EMU_MAINOBJS) $(AUDEMU_MAINOBJS) $(VGMTEST_MAINOBJS) $(S98TEST_MAINOBJS) $(ALL_LIBS) $(LIBAUDOBJS) $(LIBEMUOBJS)
 	@echo Deleting executable files ...
 	@rm -f audiotest emutest audemutest vgmtest
 	@echo Done.

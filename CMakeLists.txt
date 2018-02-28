@@ -70,6 +70,7 @@ endif()
 if(BUILD_LIBEMU)
 	add_subdirectory(emu)
 endif()
+#add_subdirectory(player)
 
 
 if(BUILD_TESTS)
