@@ -30,6 +30,7 @@ extern "C" int __cdecl _getch(void);	// from conio.h
 
 
 int main(int argc, char* argv[]);
+static const char* GetFileTitle(const char* filePath);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
 static UINT8 FilePlayCallback(void* userParam, UINT8 evtType, void* evtParam);
 static UINT8 InitAudioSystem(void);
@@ -66,14 +67,18 @@ static INT32 WaveWrtDrv = -1;
 
 int main(int argc, char* argv[])
 {
+	int argbase;
 	UINT8 retVal;
 	S98Player s98play;
+	const S98_HEADER* s98hdr;
+	int curSong;
 	
 	if (argc < 2)
 	{
 		printf("Usage: %s inputfile\n", argv[0]);
 		return 0;
 	}
+	argbase = 1;
 	
 	retVal = InitAudioSystem();
 	if (retVal)
@@ -84,20 +89,23 @@ int main(int argc, char* argv[])
 		DeinitAudioSystem();
 		return 1;
 	}
+	playState = 0x00;
+	
+	for (curSong = argbase; curSong < argc; curSong ++)
+	{
 	
 	s98play.SetCallback(&FilePlayCallback, NULL);
 	
-	printf("Loading S98 ...\n");
-	retVal = s98play.LoadFile(argv[1]);
+	printf("Loading %s ...  ", GetFileTitle(argv[curSong]));
+	fflush(stdout);
+	retVal = s98play.LoadFile(argv[curSong]);
 	if (retVal)
 	{
-		StopAudioDevice();
-		DeinitAudioSystem();
 		printf("Error 0x%02X loading S98 file!\n", retVal);
-		return 2;
+		continue;
 	}
-	printf("S98 v%u, Tick Rate: %u/%u\n", s98play.GetFileHeader()->fileVer,
-		s98play.GetFileHeader()->tickMult, s98play.GetFileHeader()->tickDiv);
+	s98hdr = s98play.GetFileHeader();
+	printf("S98 v%u, Tick Rate: %u/%u\n", s98hdr->fileVer, s98hdr->tickMult, s98hdr->tickDiv);
 	printf("Song Title: %s\n", s98play.GetSongTitle());
 	
 	isRendering = false;
@@ -110,11 +118,14 @@ int main(int argc, char* argv[])
 #ifndef _WIN32
 	changemode(1);
 #endif
-	playState = 0x00;
+	playState &= ~PLAYSTATE_END;
 	while(! (playState & PLAYSTATE_END))
 	{
-		printf("Playing %.2f ...   \r", s98play.GetCurSample() / (double)s98play.GetSampleRate());
-		fflush(stdout);
+		if (! (playState & PLAYSTATE_PAUSE))
+		{
+			printf("Playing %.2f ...   \r", s98play.GetCurSample() / (double)s98play.GetSampleRate());
+			fflush(stdout);
+		}
 		Sleep(50);
 		
 		if (_kbhit())
@@ -130,9 +141,27 @@ int main(int argc, char* argv[])
 				else
 					AudioDrv_Resume(audDrv);
 			}
-			else if (inkey == 0x1B || letter == 'Q')
+			else if (letter == 'R')	// restart
+			{
+				s98play.Reset();
+			}
+			else if (letter == 'B')	// previous file
+			{
+				if (curSong > argbase)
+				{
+					playState |= PLAYSTATE_END;
+					curSong -= 2;
+				}
+			}
+			else if (letter == 'N')	// next file
+			{
+				if (curSong + 1 < argc)
+					playState |= PLAYSTATE_END;
+			}
+			else if (inkey == 0x1B || letter == 'Q')	// quit
 			{
 				playState |= PLAYSTATE_END;
+				curSong = argc - 1;
 			}
 		}
 	}
@@ -147,6 +176,8 @@ int main(int argc, char* argv[])
 	s98play.Stop();
 	s98play.UnloadFile();
 	
+	}	// end for(curSong)
+	
 	StopAudioDevice();
 	DeinitAudioSystem();
 	printf("Done.\n");
@@ -158,6 +189,19 @@ int main(int argc, char* argv[])
 #endif
 	
 	return 0;
+}
+
+static const char* GetFileTitle(const char* filePath)
+{
+	const char* dirSep1;
+	const char* dirSep2;
+	
+	dirSep1 = strrchr(filePath, '/');
+	dirSep2 = strrchr(filePath, '\\');
+	if (dirSep2 > dirSep1)
+		dirSep1 = dirSep2;
+
+	return (dirSep1 == NULL) ? filePath : (dirSep1 + 1);
 }
 
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
@@ -212,20 +256,21 @@ static UINT8 FilePlayCallback(void* userParam, UINT8 evtType, void* evtParam)
 	switch(evtType)
 	{
 	case PLREVT_START:
-		printf("Playback started.\n");
+		//printf("S98 playback started.\n");
 		break;
 	case PLREVT_STOP:
-		printf("Playback stopped.\n");
+		//printf("S98 playback stopped.\n");
 		break;
 	case PLREVT_LOOP:
 		{
 			UINT32* curLoop = (UINT32*)evtParam;
-			printf("Loop %u.\n", *curLoop);
 			if (*curLoop >= maxLoops)
 			{
+				printf("Loop End.\n");
 				playState |= PLAYSTATE_END;
 				return 0x01;
 			}
+			printf("Loop %u.\n", 1 + *curLoop);
 		}
 		break;
 	case PLREVT_END:
