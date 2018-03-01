@@ -32,6 +32,12 @@ extern "C" int __cdecl _getch(void);	// from conio.h
 int main(int argc, char* argv[]);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
 static UINT8 FilePlayCallback(void* userParam, UINT8 evtType, void* evtParam);
+static UINT8 InitAudioSystem(void);
+static UINT8 DeinitAudioSystem(void);
+static UINT8 StartAudioDevice(void);
+static UINT8 StopAudioDevice(void);
+static UINT8 StartDiskWriter(const char* fileName);
+static UINT8 StopDiskWriter(void);
 #ifndef _WIN32
 static void changemode(UINT8 noEcho);
 static int _kbhit(void);
@@ -45,20 +51,22 @@ static void* audDrvLog;
 static UINT32 smplAlloc;
 static WAVE_32BS* smplData;
 static volatile bool canRender;
+static volatile bool isRendering;
 
-static UINT32 sampleRate;
+static UINT32 sampleRate = 44100;
 static UINT32 maxLoops = 2;
 static UINT8 playState;
+
+static UINT32 idWavOut;
+static UINT32 idWavOutDev;
+static UINT32 idWavWrt;
+
+static INT32 AudioOutDrv = 1;
+static INT32 WaveWrtDrv = -1;
 
 int main(int argc, char* argv[])
 {
 	UINT8 retVal;
-	UINT32 drvCount;
-	UINT32 idWavOut;
-	UINT32 idWavOutDev;
-	UINT32 idWavWrt;
-	AUDDRV_INFO* drvInfo;
-	AUDIO_OPTS* opts;
 	S98Player s98play;
 	
 	if (argc < 2)
@@ -67,82 +75,38 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	
+	retVal = InitAudioSystem();
+	if (retVal)
+		return 1;
+	retVal = StartAudioDevice();
+	if (retVal)
+	{
+		DeinitAudioSystem();
+		return 1;
+	}
+	
 	s98play.SetCallback(&FilePlayCallback, NULL);
 	
 	printf("Loading S98 ...\n");
 	retVal = s98play.LoadFile(argv[1]);
 	if (retVal)
 	{
+		StopAudioDevice();
+		DeinitAudioSystem();
 		printf("Error 0x%02X loading S98 file!\n", retVal);
 		return 2;
 	}
 	printf("S98 v%u, Tick Rate: %u/%u\n", s98play.GetFileHeader()->fileVer,
 		s98play.GetFileHeader()->tickMult, s98play.GetFileHeader()->tickDiv);
+	printf("Song Title: %s\n", s98play.GetSongTitle());
 	
-	printf("Opening Audio Device ...\n");
-	Audio_Init();
-	drvCount = Audio_GetDriverCount();
-	if (! drvCount)
-		goto Exit_AudDeinit;
-	
-	idWavOut = 2;
-	idWavOutDev = 0;
-	idWavWrt = (UINT32)-1;
-	//idWavWrt = 0;
-	
-	Audio_GetDriverInfo(idWavOut, &drvInfo);
-	printf("Using driver %s.\n", drvInfo->drvName);
-	retVal = AudioDrv_Init(idWavOut, &audDrv);
-	if (retVal)
-	{
-		printf("WaveOut: Drv Init Error: %02X\n", retVal);
-		goto Exit_AudDeinit;
-	}
-	
-	sampleRate = 44100;
-	
-	opts = AudioDrv_GetOptions(audDrv);
-	opts->sampleRate = sampleRate;
-	opts->numChannels = 2;
-	opts->numBitsPerSmpl = 16;
-	smplSize = opts->numChannels * opts->numBitsPerSmpl / 8;
-	
-	canRender = false;
+	isRendering = false;
 	AudioDrv_SetCallback(audDrv, FillBuffer, &s98play);
-	printf("Opening Device %u ...\n", idWavOutDev);
-	retVal = AudioDrv_Start(audDrv, idWavOutDev);
-	if (retVal)
-	{
-		printf("Dev Init Error: %02X\n", retVal);
-		goto Exit_SndDrvDeinit;
-	}
-	
-	smplAlloc = AudioDrv_GetBufferSize(audDrv) / smplSize;
-	smplData = (WAVE_32BS*)malloc(smplAlloc * sizeof(WAVE_32BS));
-	
-	audDrvLog = NULL;
-	if (idWavWrt != (UINT32)-1)
-	{
-		retVal = AudioDrv_Init(idWavWrt, &audDrvLog);
-		if (retVal)
-			audDrvLog = NULL;
-	}
-	if (audDrvLog != NULL)
-	{
-		void* aDrv = AudioDrv_GetDrvData(audDrvLog);
-		WavWrt_SetFileName(aDrv, "waveOut.wav");
-		retVal = AudioDrv_Start(audDrvLog, 0);
-		if (retVal)
-			AudioDrv_Deinit(&audDrvLog);
-	}
-	if (audDrvLog != NULL)
-		AudioDrv_DataForward_Add(audDrv, audDrvLog);
-	
 	s98play.SetSampleRate(sampleRate);
 	s98play.Start();
 	
+	StartDiskWriter("waveOut.wav");
 	canRender = true;
-	printf("Song Title: %s\n", s98play.GetSongTitle());
 #ifndef _WIN32
 	changemode(1);
 #endif
@@ -176,21 +140,15 @@ int main(int argc, char* argv[])
 	changemode(0);
 #endif
 	canRender = false;
+	while(isRendering)
+		Sleep(1);	// wait for render thread to finish
+	StopDiskWriter();
 	
-	retVal = AudioDrv_Stop(audDrv);
-	if (audDrvLog != NULL)
-		retVal = AudioDrv_Stop(audDrvLog);
-	free(smplData);	smplData = NULL;
-	
-Exit_SndDrvDeinit:
 	s98play.Stop();
 	s98play.UnloadFile();
-//Exit_AudDrvDeinit:
-	AudioDrv_Deinit(&audDrv);
-	if (audDrvLog != NULL)
-		AudioDrv_Deinit(&audDrvLog);
-Exit_AudDeinit:
-	Audio_Deinit();
+	
+	StopAudioDevice();
+	DeinitAudioSystem();
 	printf("Done.\n");
 	
 #if defined(_DEBUG) && (_MSC_VER >= 1400)
@@ -221,6 +179,7 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 		return smplCount * smplSize;
 	}
 	
+	isRendering = true;
 	if (smplCount > smplAlloc)
 		smplCount = smplAlloc;
 	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));
@@ -243,6 +202,7 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 		SmplPtr16[0] = (INT16)fnlSmpl.L;
 		SmplPtr16[1] = (INT16)fnlSmpl.R;
 	}
+	isRendering = false;
 	
 	return curSmpl * smplSize;
 }
@@ -276,6 +236,145 @@ static UINT8 FilePlayCallback(void* userParam, UINT8 evtType, void* evtParam)
 	return 0x00;
 }
 
+// initialize audio system and search for requested audio drivers
+static UINT8 InitAudioSystem(void)
+{
+	UINT32 drvCount;
+	UINT32 curDrv;
+	UINT32 outDrv;
+	UINT32 wrtDrv;
+	AUDDRV_INFO* drvInfo;
+	UINT8 retVal;
+	
+	printf("Opening Audio Device ...\n");
+	Audio_Init();
+	drvCount = Audio_GetDriverCount();
+	if (! drvCount)
+	{
+		Audio_Deinit();
+		return 0xF0;
+	}
+	
+	idWavOut = (UINT32)-1;
+	idWavOutDev = 0;
+	idWavWrt = (UINT32)-1;
+	
+	// go through all audio drivers store the IDs of the requested Output and Disk Writer drivers
+	outDrv = wrtDrv = 0;
+	for (curDrv = 0; curDrv < drvCount; curDrv ++)
+	{
+		Audio_GetDriverInfo(curDrv, &drvInfo);
+		if (drvInfo->drvType == ADRVTYPE_OUT)
+		{
+			if (outDrv == AudioOutDrv)
+				idWavOut = curDrv;
+			outDrv ++;
+		}
+		else if (drvInfo->drvType == ADRVTYPE_DISK)
+		{
+			if (wrtDrv == WaveWrtDrv)
+				idWavWrt = curDrv;
+			wrtDrv ++;
+		}
+	}
+	if (idWavOut == (UINT32)-1)
+	{
+		printf("Requested Audio Output driver not found!\n");
+		Audio_Deinit();
+		return 0x81;
+	}
+	
+	Audio_GetDriverInfo(idWavOut, &drvInfo);
+	printf("Using driver %s.\n", drvInfo->drvName);
+	retVal = AudioDrv_Init(idWavOut, &audDrv);
+	if (retVal)
+	{
+		printf("WaveOut: Drv Init Error: %02X\n", retVal);
+		Audio_Deinit();
+		return retVal;
+	}
+	
+	audDrvLog = NULL;
+	if (idWavWrt != (UINT32)-1)
+	{
+		retVal = AudioDrv_Init(idWavWrt, &audDrvLog);
+		if (retVal)
+			audDrvLog = NULL;
+	}
+	
+	return 0x00;
+}
+
+static UINT8 DeinitAudioSystem(void)
+{
+	UINT8 retVal;
+	
+	retVal = AudioDrv_Deinit(&audDrv);
+	if (audDrvLog != NULL)
+		AudioDrv_Deinit(&audDrvLog);
+	Audio_Deinit();
+	
+	return retVal;
+}
+
+static UINT8 StartAudioDevice(void)
+{
+	AUDIO_OPTS* opts;
+	UINT8 retVal;
+	
+	opts = AudioDrv_GetOptions(audDrv);
+	opts->sampleRate = sampleRate;
+	opts->numChannels = 2;
+	opts->numBitsPerSmpl = 16;
+	smplSize = opts->numChannels * opts->numBitsPerSmpl / 8;
+	
+	canRender = false;
+	printf("Opening Device %u ...\n", idWavOutDev);
+	retVal = AudioDrv_Start(audDrv, idWavOutDev);
+	if (retVal)
+	{
+		printf("Dev Init Error: %02X\n", retVal);
+		return retVal;
+	}
+	
+	smplAlloc = AudioDrv_GetBufferSize(audDrv) / smplSize;
+	smplData = (WAVE_32BS*)malloc(smplAlloc * sizeof(WAVE_32BS));
+	
+	return 0x00;
+}
+
+static UINT8 StopAudioDevice(void)
+{
+	UINT8 retVal;
+	
+	retVal = AudioDrv_Stop(audDrv);
+	free(smplData);	smplData = NULL;
+	
+	return retVal;
+}
+
+static UINT8 StartDiskWriter(const char* fileName)
+{
+	UINT8 retVal;
+	
+	if (audDrvLog == NULL)
+		return 0x00;
+	
+	WavWrt_SetFileName(AudioDrv_GetDrvData(audDrvLog), fileName);
+	retVal = AudioDrv_Start(audDrvLog, 0);
+	if (! retVal)
+		AudioDrv_DataForward_Add(audDrv, audDrvLog);
+	return retVal;
+}
+
+static UINT8 StopDiskWriter(void)
+{
+	if (audDrvLog == NULL)
+		return 0x00;
+	
+	AudioDrv_DataForward_Remove(audDrv, audDrvLog);
+	return AudioDrv_Stop(audDrvLog);
+}
 
 
 #ifndef _WIN32
@@ -324,4 +423,3 @@ static int _kbhit(void)
 	return FD_ISSET(STDIN_FILENO, &rdfs);;
 }
 #endif
-
