@@ -1,8 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <vector>
 #include <string>
+#include <algorithm>
+
+#include <iconv.h>
 
 #define INLINE	static inline
 
@@ -70,10 +74,13 @@ S98Player::S98Player() :
 	_eventCbFunc(NULL),
 	_eventCbParam(NULL)
 {
+	_icSJIS = iconv_open("UTF-8", "CP932");
 }
 
 S98Player::~S98Player()
 {
+	if (_icSJIS != (iconv_t)-1)
+		iconv_close(_icSJIS);
 }
 
 UINT8 S98Player::LoadFile(const char* fileName)
@@ -126,6 +133,9 @@ UINT8 S98Player::LoadFile(const char* fileName)
 	_devHdrs.clear();
 	switch(_fileHdr.fileVer)
 	{
+	case 0:
+		_fileHdr.tickMult = 0;
+		// fall through
 	case 1:
 		_fileHdr.tickDiv = 0;
 		// only default device available
@@ -176,48 +186,155 @@ UINT8 S98Player::LoadFile(const char* fileName)
 	if (! _fileHdr.tickDiv)
 		_fileHdr.tickDiv = 1000;
 	
-	_songTitle.clear();
-	_tagIsUTF8 = false;
+	LoadTags();
+	
+	return 0x00;
+}
+
+UINT8 S98Player::LoadTags(void)
+{
 	_tagData.clear();
-	if (_fileHdr.tagOfs)
+	if (! _fileHdr.tagOfs)
+		return 0x00;
+	
+	char* startPtr;
+	char* endPtr;
+	
+	// find end of string (can be either '\0' or EOF)
+	startPtr = (char*)&_fileData[_fileHdr.tagOfs];
+	endPtr = (char*)memchr(startPtr, '\0', _fileData.size() - _fileHdr.tagOfs);
+	if (endPtr == NULL)
+		endPtr = (char*)&_fileData[0] + _fileData.size();
+	
+	if (_fileHdr.fileVer < 3)
 	{
-		char* startPtr;
-		char* endPtr;
+		// tag offset = song title (\0-terminated)
+		_tagData["TITLE"] = GetUTF8String(startPtr, endPtr);
+	}
+	else
+	{
+		std::string tagData;
+		bool tagIsUTF8 = false;
 		
-		// find end of string (can be either '\0' or EOF)
-		startPtr = (char*)&_fileData[_fileHdr.tagOfs];
-		endPtr = (char*)memchr(startPtr, '\0', _fileData.size() - _fileHdr.tagOfs);
-		if (endPtr == NULL)
-			endPtr = (char*)&_fileData[0] + _fileData.size();
-		
-		if (_fileHdr.fileVer < 3)
+		// tag offset = PSF tag
+		if (endPtr - startPtr < 5 || memcmp(startPtr, "[S98]", 5))
 		{
-			// tag offset = song title (\0-terminated)
-			_songTitle.assign(startPtr, endPtr);
+			printf("Invalid S98 tag data!\n");
+			printf("tagData size: %zu, Signature: %.5s\n", endPtr - startPtr, startPtr);
+			return 0xF0;
 		}
+		startPtr += 5;
+		if (endPtr - startPtr >= 3)
+		{
+			if (startPtr[0] == 0xEF && startPtr[1] == 0xBB && startPtr[2] == 0xBF)	// check for UTF-8 BOM
+			{
+				tagIsUTF8 = true;
+				startPtr += 3;
+				printf("Info: Tags are UTF-8 encoded.");
+			}
+		}
+		
+		if (! tagIsUTF8)
+			tagData = GetUTF8String(startPtr, endPtr);
 		else
+			tagData.assign(startPtr, endPtr);
+		ParsePSFTags(tagData);
+	}
+	
+	return 0x00;
+}
+
+std::string S98Player::GetUTF8String(const char* startPtr, const char* endPtr)
+{
+	if (_icSJIS != (iconv_t)-1)
+	{
+		size_t convSize = 0;
+		char* convData = NULL;
+		std::string result;
+		UINT8 retVal;
+		
+		retVal = StrCharsetConv(_icSJIS, &convSize, &convData, endPtr - startPtr, startPtr);
+		
+		result.assign(convData, convData + convSize);
+		free(convData);
+		if (retVal < 0x80)
+			return result;
+	}
+	// unable to convert - fallback using the original string
+	return std::string(startPtr, endPtr);
+}
+
+static std::string TrimPSFTagWhitespace(const std::string& data)
+{
+	size_t posStart;
+	size_t posEnd;
+	
+	// according to the PSF tag specification, all characters 0x01..0x20 are considered whitespace
+	// http://wiki.neillcorlett.com/PSFTagFormat
+	for (posStart = 0; posStart < data.length(); posStart ++)
+	{
+		if ((unsigned char)data[posStart] > 0x20)
+			break;
+	}
+	for (posEnd = data.length(); posEnd > 0; posEnd --)
+	{
+		if ((unsigned char)data[posEnd - 1] > 0x20)
+			break;
+	}
+	return data.substr(posStart, posEnd - posStart);
+}
+
+static UINT8 ExtractKeyValue(const std::string& line, std::string& retKey, std::string& retValue)
+{
+	size_t equalPos;
+	
+	equalPos = line.find('=');
+	if (equalPos == std::string::npos)
+		return 0xFF;	// not a "key=value" line
+	
+	retKey = line.substr(0, equalPos);
+	retValue = line.substr(equalPos + 1);
+	
+	retKey = TrimPSFTagWhitespace(retKey);
+	if (retKey.empty())
+		return 0x01;	// invalid key
+	retValue = TrimPSFTagWhitespace(retValue);
+	
+	return 0x00;
+}
+
+UINT8 S98Player::ParsePSFTags(const std::string& tagData)
+{
+	size_t lineStart;
+	size_t lineEnd;
+	std::string curLine;
+	std::string curKey;
+	std::string curVal;
+	UINT8 retVal;
+	
+	lineStart = 0;
+	while(lineStart < tagData.length())
+	{
+		lineEnd = tagData.find('\n', lineStart);
+		if (lineEnd == std::string::npos)
+			lineEnd = tagData.length();
+		
+		curLine = tagData.substr(lineStart, lineEnd - lineStart);
+		retVal = ExtractKeyValue(curLine, curKey, curVal);
+		if (! retVal)
 		{
-			// tag offset = PSF tag
-			if (endPtr - startPtr < 5 || memcmp(startPtr, "[S98]", 5))
-			{
-				printf("Invalid S98 tag data!\n");
-				printf("tagData size: %zu, Signature: %.5s\n", endPtr - startPtr, startPtr);
-			}
+			std::map<std::string, std::string>::iterator mapIt;
+			
+			// keys are case insensitive, so let's make it uppercase
+			std::transform(curKey.begin(), curKey.end(), curKey.begin(), ::toupper);
+			mapIt = _tagData.find(curKey);
+			if (mapIt == _tagData.end())
+				_tagData[curKey] = curVal;	// new value
 			else
-			{
-				startPtr += 5;
-				if (endPtr - startPtr >= 3)
-				{
-					if (startPtr[0] == 0xEF && startPtr[1] == 0xBB && startPtr[2] == 0xBF)	// check for UTF-8 BOM
-					{
-						_tagIsUTF8 = true;
-						startPtr += 3;
-						printf("Tags are UTF-8 encoded!");
-					}
-				}
-				_tagData.assign(startPtr, endPtr);
-			}
+				mapIt->second = mapIt->second + '\n' + curVal;	// multiline-value
 		}
+		
+		lineStart = lineEnd + 1;
 	}
 	
 	return 0x00;
@@ -231,7 +348,7 @@ UINT8 S98Player::UnloadFile(void)
 	_fileHdr.dataOfs = 0x00;
 	_devHdrs.clear();
 	_devices.clear();
-	_songTitle.clear();
+	_tagData.clear();
 	
 	return 0x00;
 }
@@ -243,22 +360,13 @@ const S98_HEADER* S98Player::GetFileHeader(void) const
 
 const char* S98Player::GetSongTitle(void)
 {
-	if (! _songTitle.empty())
-		return _songTitle.c_str();
+	std::map<std::string, std::string>::const_iterator mapIt;
 	
-	// very cheap way of finding the title tag - TODO: fix/improve
-	size_t titlePos = _tagData.find("title=");
-	if (titlePos != std::string::npos)
-	{
-		titlePos += 6;
-		size_t endPos = _tagData.find('\n', titlePos);
-		if (endPos == std::string::npos)
-			endPos = _tagData.length();
-		_tmpStr = _tagData.substr(titlePos, endPos - titlePos);
-		return _tmpStr.c_str();
-	}
-	
-	return NULL;
+	mapIt = _tagData.find("TITLE");
+	if (mapIt != _tagData.end())
+		return mapIt->second.c_str();
+	else
+		return NULL;
 }
 
 UINT32 S98Player::GetSampleRate(void) const
@@ -483,7 +591,7 @@ UINT8 S98Player::Reset(void)
 		clDev = &cDev->base;
 		while(clDev != NULL)
 		{
-			Resmpl_Init(&clDev->resmpl);
+			// TODO: Resmpl_Reset(&clDev->resmpl);
 			clDev = clDev->linkDev;
 		}
 		

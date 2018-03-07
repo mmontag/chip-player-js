@@ -209,7 +209,7 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	snd_pcm_uframes_t periodSize;
 	snd_pcm_uframes_t bufferSize;
 	snd_pcm_uframes_t oldBufSize;
-	int rateDir;
+	int rateDir = 0;
 	
 	if (drv->devState != 0)
 		return 0xD0;	// already running

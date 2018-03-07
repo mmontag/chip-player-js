@@ -71,6 +71,7 @@ int main(int argc, char* argv[])
 	UINT8 retVal;
 	S98Player s98play;
 	const S98_HEADER* s98hdr;
+	const char* s98Title;
 	int curSong;
 	
 	if (argc < 2)
@@ -105,8 +106,10 @@ int main(int argc, char* argv[])
 		continue;
 	}
 	s98hdr = s98play.GetFileHeader();
+	s98Title = s98play.GetSongTitle();
 	printf("S98 v%u, Tick Rate: %u/%u\n", s98hdr->fileVer, s98hdr->tickMult, s98hdr->tickDiv);
-	printf("Song Title: %s\n", s98play.GetSongTitle());
+	if (s98Title != NULL)
+		printf("Song Title: %s\n", s98Title);
 	
 	isRendering = false;
 	AudioDrv_SetCallback(audDrv, FillBuffer, &s98play);
@@ -286,8 +289,8 @@ static UINT8 InitAudioSystem(void)
 {
 	UINT32 drvCount;
 	UINT32 curDrv;
-	UINT32 outDrv;
-	UINT32 wrtDrv;
+	INT32 outDrv;
+	INT32 wrtDrv;
 	AUDDRV_INFO* drvInfo;
 	UINT8 retVal;
 	

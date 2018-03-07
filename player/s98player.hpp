@@ -4,8 +4,10 @@
 #include <stdtype.h>
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
+#include <iconv.h>
 #include "helper.h"
 #include <vector>
+#include <map>
 #include <string>
 
 
@@ -84,18 +86,21 @@ public:
 	//UINT8 Seek(...); // TODO
 	
 private:
+	UINT8 LoadTags(void);
+	std::string GetUTF8String(const char* startPtr, const char* endPtr);
+	UINT8 ParsePSFTags(const std::string& tagData);
+	
 	void RefreshTSRates(void);
 	
 	void ParseFile(UINT32 ticks);
 	void DoCommand(void);
 	
+	iconv_t _icSJIS;	// ShiftJIS -> UTF-8 iconv object
 	std::vector<UINT8> _fileData;
 	
 	S98_HEADER _fileHdr;
 	std::vector<S98_DEVICE> _devHdrs;
-	std::string _songTitle;
-	bool _tagIsUTF8;
-	std::string _tagData;
+	std::map<std::string, std::string> _tagData;
 	std::string _tmpStr;
 	
 	UINT32 _outSmplRate;

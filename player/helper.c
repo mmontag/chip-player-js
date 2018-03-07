@@ -1,4 +1,8 @@
 #include <stdlib.h>
+#include <string.h>
+
+#include <errno.h>
+#include <iconv.h>
 
 #include <stdtype.h>
 #include <emu/EmuStructs.h>
@@ -72,4 +76,75 @@ void FreeDeviceTree(VGM_BASEDEV* cBaseDev, UINT8 freeBase)
 	}
 	
 	return;
+}
+
+// parameters:
+//	hIConv: iconv_t handle
+//	outSize: [input] size of output buffer, [output] size of converted string
+//	outStr: [input/output] pointer to output buffer, if data is NULL, it will be allocated automatically
+//	inSize: [input] length of input string, may be 0 (in that case, strlen() is used to determine the string's length)
+//	inStr: [input] input string
+UINT8 StrCharsetConv(iconv_t hIConv, size_t* outSize, char** outStr, size_t inSize, const char* inStr)
+{
+	size_t outBufSize;
+	size_t remBytesIn;
+	size_t remBytesOut;
+	char* inPtr;
+	char* outPtr;
+	size_t wrtBytes;
+	char resVal;
+	
+	iconv(hIConv, NULL, NULL, NULL, NULL);	// reset conversion state
+	
+	if (hIConv == NULL)
+		return 0xFF;	// bad input
+	
+	remBytesIn = inSize ? inSize : strlen(inStr);
+	inPtr = (char*)&inStr[0];	// const-cast due to a bug in the API
+	if (remBytesIn == 0)
+	{
+		*outSize = 0;
+		return 0x02;	// nothing to convert
+	}
+	
+	if (*outStr == NULL)
+	{
+		outBufSize = remBytesIn * 3 / 2;
+		*outStr = (char*)malloc(outBufSize);
+	}
+	else
+	{
+		outBufSize = *outSize;
+	}
+	remBytesOut = outBufSize;
+	outPtr = *outStr;
+	
+	resVal = 0x00;
+	wrtBytes = iconv(hIConv, &inPtr, &remBytesIn, &outPtr, &remBytesOut);
+	while(wrtBytes == (size_t)-1)
+	{
+		if (errno == EILSEQ || errno == EINVAL)
+		{
+			// invalid encoding
+			resVal = 0x80;
+			if (errno == EINVAL && remBytesIn <= 1)
+			{
+				// assume that the string got truncated
+				iconv(hIConv, NULL, NULL, &outPtr, &remBytesOut);
+				resVal = 0x01;
+			}
+			break;
+		}
+		// errno == E2BIG
+		wrtBytes = outPtr - *outStr;
+		outBufSize += remBytesIn * 2;
+		*outStr = (char*)realloc(*outStr, outBufSize);
+		outPtr = *outStr + wrtBytes;
+		remBytesOut = outBufSize - wrtBytes;
+		
+		wrtBytes = iconv(hIConv, &inPtr, &remBytesIn, &outPtr, &remBytesOut);
+	}
+	
+	*outSize = outPtr - *outStr;
+	return resVal;
 }
