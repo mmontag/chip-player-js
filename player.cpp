@@ -107,7 +107,9 @@ int main(int argc, char* argv[])
 	}
 	s98hdr = s98play.GetFileHeader();
 	s98Title = s98play.GetSongTitle();
-	printf("S98 v%u, Tick Rate: %u/%u\n", s98hdr->fileVer, s98hdr->tickMult, s98hdr->tickDiv);
+	printf("S98 v%u, Total Length: %.2f s, Loop Length: %.2f s, Tick Rate: %u/%u\n", s98hdr->fileVer,
+			s98play.Tick2Second(s98play.GetTotalTicks()), s98play.Tick2Second(s98play.GetLoopTicks()),
+			s98hdr->tickMult, s98hdr->tickDiv);
 	if (s98Title != NULL)
 		printf("Song Title: %s\n", s98Title);
 	
@@ -126,7 +128,8 @@ int main(int argc, char* argv[])
 	{
 		if (! (playState & PLAYSTATE_PAUSE))
 		{
-			printf("Playing %.2f ...   \r", s98play.GetCurSample() / (double)s98play.GetSampleRate());
+			printf("Playing %.2f / %.2f ...   \r", s98play.Sample2Second(s98play.GetCurSample()),
+					s98play.Tick2Second(s98play.GetTotalPlayTicks(maxLoops)));
 			fflush(stdout);
 		}
 		Sleep(50);

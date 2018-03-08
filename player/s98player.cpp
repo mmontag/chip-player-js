@@ -186,9 +186,46 @@ UINT8 S98Player::LoadFile(const char* fileName)
 	if (! _fileHdr.tickDiv)
 		_fileHdr.tickDiv = 1000;
 	
+	CalcSongLength();
 	LoadTags();
 	
 	return 0x00;
+}
+
+void S98Player::CalcSongLength(void)
+{
+	UINT32 filePos;
+	bool fileEnd;
+	UINT8 curCmd;
+	
+	_totalTicks = 0;
+	_loopTick = 0;
+	
+	fileEnd = false;
+	filePos = _fileHdr.dataOfs;
+	while(! fileEnd && filePos < _fileData.size())
+	{
+		if (filePos == _fileHdr.loopOfs)
+			_loopTick = _totalTicks;
+		
+		curCmd = _fileData[filePos];
+		filePos ++;
+		switch(curCmd)
+		{
+		case 0xFF:	// advance 1 tick
+			_totalTicks ++;
+			break;
+		case 0xFE:	// advance multiple ticks
+			_totalTicks += 2 + ReadVarInt(filePos);
+			break;
+		case 0xFD:
+			fileEnd = true;
+			break;
+		default:
+			filePos += 0x02;
+			break;
+		}
+	}
 }
 
 UINT8 S98Player::LoadTags(void)
@@ -377,21 +414,23 @@ UINT32 S98Player::GetSampleRate(void) const
 UINT8 S98Player::SetSampleRate(UINT32 sampleRate)
 {
 	if (_playState & PLAYSTATE_PLAY)
-		return false;
+		return 0x01;	// can't set during playback
 	
 	_outSmplRate = sampleRate;
-	return true;
+	return 0x00;
 }
 
 UINT8 S98Player::SetPlaybackSpeed(double speed)
 {
-	return false;	// not yet supported
+	return 0xFF;	// not yet supported
 }
 
 void S98Player::SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam)
 {
 	_eventCbFunc = cbFunc;
 	_eventCbParam = cbParam;
+	
+	return;
 }
 
 
@@ -411,6 +450,16 @@ UINT32 S98Player::Tick2Sample(UINT32 ticks) const
 UINT32 S98Player::Sample2Tick(UINT32 samples) const
 {
 	return (UINT32)(samples * _tsDiv / _tsMult);
+}
+
+double S98Player::Tick2Second(UINT32 ticks) const
+{
+	return ticks * _fileHdr.tickMult / (double)_fileHdr.tickDiv;
+}
+
+double S98Player::Sample2Second(UINT32 samples) const
+{
+	return samples / (double)_outSmplRate;
 }
 
 UINT8 S98Player::GetState(void) const
@@ -435,12 +484,20 @@ UINT32 S98Player::GetCurSample(void) const
 
 UINT32 S98Player::GetTotalTicks(void) const
 {
-	return 0;
+	return _totalTicks;
+}
+
+UINT32 S98Player::GetLoopTicks(void) const
+{
+	if (! _fileHdr.loopOfs)
+		return 0;
+	else
+		return _totalTicks - _loopTick;
 }
 
 UINT32 S98Player::GetTotalPlayTicks(UINT32 numLoops) const
 {
-	return 0;
+	return _totalTicks + GetLoopTicks() * (numLoops - 1);
 }
 
 UINT32 S98Player::GetCurrentLoop(void) const
@@ -671,29 +728,17 @@ void S98Player::DoCommand(void)
 		return;
 	}
 	
-	switch(_fileData[_filePos])
+	UINT8 curCmd;
+	
+	curCmd = _fileData[_filePos];
+	_filePos ++;
+	switch(curCmd)
 	{
 	case 0xFF:	// advance 1 tick
 		_fileTick ++;
-		_filePos ++;
 		return;
 	case 0xFE:	// advance multiple ticks
-		_filePos ++;
-		{
-			UINT32 tickVal = 0;
-			UINT8 tickShift = 0;
-			UINT8 moreFlag;
-			
-			do
-			{
-				moreFlag = _fileData[_filePos] & 0x80;
-				tickVal |= (_fileData[_filePos] & 0x7F) << tickShift;
-				tickShift += 7;
-				_filePos ++;
-			} while(moreFlag);
-			
-			_fileTick += 2 + tickVal;
-		}
+		_fileTick += 2 + ReadVarInt(_filePos);
 		return;
 	case 0xFD:
 		if (! _fileHdr.loopOfs)
@@ -724,14 +769,16 @@ void S98Player::DoCommand(void)
 	}
 	
 	{
-		UINT8 deviceID = _fileData[_filePos + 0x00] >> 1;
-		UINT8 port = _fileData[_filePos + 0x00] & 0x01;
-		UINT8 reg = _fileData[_filePos + 0x01];
-		UINT8 data = _fileData[_filePos + 0x02];
+		UINT8 deviceID = curCmd >> 1;
 		if (deviceID < _devices.size())
 		{
 			S98_CHIPDEV* cDev = &_devices[deviceID];
 			DEV_DATA* dataPtr = cDev->base.defInf.dataPtr;
+			
+			UINT8 port = curCmd & 0x01;
+			UINT8 reg = _fileData[_filePos + 0x00];
+			UINT8 data = _fileData[_filePos + 0x01];
+			
 			if (_devHdrs[deviceID].devType == S98DEV_DCSG)
 			{
 				if (reg == 1)	// GG stereo
@@ -746,6 +793,23 @@ void S98Player::DoCommand(void)
 			}
 		}
 	}
-	_filePos += 0x03;
+	_filePos += 0x02;
 	return;
+}
+
+UINT32 S98Player::ReadVarInt(UINT32& filePos)
+{
+	UINT32 tickVal = 0;
+	UINT8 tickShift = 0;
+	UINT8 moreFlag;
+	
+	do
+	{
+		moreFlag = _fileData[filePos] & 0x80;
+		tickVal |= (_fileData[filePos] & 0x7F) << tickShift;
+		tickShift += 7;
+		filePos ++;
+	} while(moreFlag);
+	
+	return tickVal;
 }

@@ -70,12 +70,15 @@ public:
 	void SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
 	UINT32 Tick2Sample(UINT32 ticks) const;
 	UINT32 Sample2Tick(UINT32 samples) const;
+	double Tick2Second(UINT32 ticks) const;
+	double Sample2Second(UINT32 samples) const;
 	
 	UINT8 GetState(void) const;
 	UINT32 GetCurFileOfs(void) const;
 	UINT32 GetCurTick(void) const;
 	UINT32 GetCurSample(void) const;
 	UINT32 GetTotalTicks(void) const;	// get time for playing once in ticks
+	UINT32 GetLoopTicks(void) const;	// get time for one loop in ticks
 	UINT32 GetTotalPlayTicks(UINT32 numLoops) const;	// get time for playing + looping (without fading)
 	UINT32 GetCurrentLoop(void) const;
 	
@@ -86,9 +89,11 @@ public:
 	//UINT8 Seek(...); // TODO
 	
 private:
+	void CalcSongLength(void);
 	UINT8 LoadTags(void);
 	std::string GetUTF8String(const char* startPtr, const char* endPtr);
 	UINT8 ParsePSFTags(const std::string& tagData);
+	UINT32 ReadVarInt(UINT32& filePos);
 	
 	void RefreshTSRates(void);
 	
@@ -100,8 +105,9 @@ private:
 	
 	S98_HEADER _fileHdr;
 	std::vector<S98_DEVICE> _devHdrs;
+	UINT32 _totalTicks;
+	UINT32 _loopTick;
 	std::map<std::string, std::string> _tagData;
-	std::string _tmpStr;
 	
 	UINT32 _outSmplRate;
 	
