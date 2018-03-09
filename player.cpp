@@ -31,9 +31,10 @@ extern "C" int __cdecl _getch(void);	// from conio.h
 
 int main(int argc, char* argv[]);
 static const char* GetFileTitle(const char* filePath);
-static UINT32 CalcCurrentVolume(S98Player* s98play);
+static UINT32 CalcCurrentVolume(UINT32 playbackSmpl);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
 static UINT8 FilePlayCallback(S98Player* s98play, void* userParam, UINT8 evtType, void* evtParam);
+static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber);
 static UINT8 InitAudioSystem(void);
 static UINT8 DeinitAudioSystem(void);
 static UINT8 StartAudioDevice(void);
@@ -57,7 +58,7 @@ static volatile bool isRendering;
 
 static UINT32 sampleRate = 44100;
 static UINT32 maxLoops = 2;
-static UINT8 playState;
+static volatile UINT8 playState;
 
 static UINT32 idWavOut;
 static UINT32 idWavOutDev;
@@ -236,7 +237,7 @@ static const char* GetFileTitle(const char* filePath)
 #define VOL_PRESH	4	// sample data pre-shift
 #define VOL_POSTSH	(VOL_BITS - VOL_PRESH)	// post-shift after volume multiplication
 
-static UINT32 CalcCurrentVolume(S98Player* s98play)
+static UINT32 CalcCurrentVolume(UINT32 playbackSmpl)
 {
 	UINT32 curVol;	// 16.16 fixed point
 	
@@ -244,19 +245,19 @@ static UINT32 CalcCurrentVolume(S98Player* s98play)
 	curVol = masterVol;
 	
 	// 2. apply fade-out factor
-	if (fadeSmplStart != (UINT32)-1)
+	if (playbackSmpl >= fadeSmplStart)
 	{
 		UINT32 fadeSmpls;
-		UINT64 fadeVol;	// 64 bit for less type casts when doingmultiplications with .16 fixed point
+		UINT64 fadeVol;	// 64 bit for less type casts when doing multiplications with .16 fixed point
 		
-		fadeSmpls = s98play->GetCurSample() - fadeSmplStart;
+		fadeSmpls = playbackSmpl - fadeSmplStart;
 		if (fadeSmpls >= fadeSmplTime)
 			return 0x0000;	// going beyond fade time -> volume 0
 		
 		fadeVol = (UINT64)fadeSmpls * 0x10000 / fadeSmplTime;
 		fadeVol = 0x10000 - fadeVol;	// fade from full volume to silence
-		fadeVol = (fadeVol * fadeVol) >> 16;	// logarithmic fading sounds nicer
-		curVol = (UINT32)((fadeVol * curVol) >> 16);
+		fadeVol = fadeVol * fadeVol;	// logarithmic fading sounds nicer
+		curVol = (UINT32)((fadeVol * curVol) >> 32);
 	}
 	
 	return curVol;
@@ -265,6 +266,7 @@ static UINT32 CalcCurrentVolume(S98Player* s98play)
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
 {
 	S98Player* s98play = (S98Player*)userParam;
+	UINT32 basePbSmpl;
 	UINT32 smplCount;
 	UINT32 smplRendered;
 	INT16* SmplPtr16;
@@ -286,25 +288,26 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	if (smplCount > smplAlloc)
 		smplCount = smplAlloc;
 	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));
+	basePbSmpl = s98play->GetCurSample();
 	smplRendered = s98play->Render(smplCount, smplData);
 	smplCount = smplRendered;
 	
-	curVolume = (INT32)CalcCurrentVolume(s98play) >> VOL_SHIFT;
+	curVolume = (INT32)CalcCurrentVolume(basePbSmpl) >> VOL_SHIFT;
 	SmplPtr16 = (INT16*)data;
-	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
+	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, basePbSmpl ++, SmplPtr16 += 2)
 	{
-		if (fadeSmplStart != (UINT32)-1)
+		if (basePbSmpl >= fadeSmplStart)
 		{
 			UINT32 fadeSmpls;
 			
-			fadeSmpls = s98play->GetCurSample() - fadeSmplStart;
+			fadeSmpls = basePbSmpl - fadeSmplStart;
 			if (fadeSmpls >= fadeSmplTime && ! (playState & PLAYSTATE_END))
 			{
 				playState |= PLAYSTATE_END;
-				smplCount = curSmpl;
+				break;
 			}
 			
-			curVolume = (INT32)CalcCurrentVolume(s98play) >> VOL_SHIFT;
+			curVolume = (INT32)CalcCurrentVolume(basePbSmpl) >> VOL_SHIFT;
 		}
 		
 		// Input is about 24 bits (some cores might output a bit more)
@@ -374,53 +377,49 @@ static UINT8 FilePlayCallback(S98Player* s98play, void* userParam, UINT8 evtType
 	return 0x00;
 }
 
-// initialize audio system and search for requested audio drivers
-static UINT8 InitAudioSystem(void)
+static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber)
 {
 	UINT32 drvCount;
 	UINT32 curDrv;
-	INT32 outDrv;
-	INT32 wrtDrv;
+	INT32 typedDrv;
+	AUDDRV_INFO* drvInfo;
+	
+	// go through all audio drivers get the ID of the requested Output/Disk Writer driver
+	drvCount = Audio_GetDriverCount();
+	for (typedDrv = 0, curDrv = 0; curDrv < drvCount; curDrv ++)
+	{
+		Audio_GetDriverInfo(curDrv, &drvInfo);
+		if (drvInfo->drvType == adrvType)
+		{
+			if (typedDrv == drvNumber)
+				return curDrv;
+			typedDrv ++;
+		}
+	}
+	
+	return (UINT32)-1;
+}
+
+// initialize audio system and search for requested audio drivers
+static UINT8 InitAudioSystem(void)
+{
 	AUDDRV_INFO* drvInfo;
 	UINT8 retVal;
 	
 	printf("Opening Audio Device ...\n");
-	Audio_Init();
-	drvCount = Audio_GetDriverCount();
-	if (! drvCount)
-	{
-		Audio_Deinit();
-		return 0xF0;
-	}
+	retVal = Audio_Init();
+	if (retVal == AERR_NODRVS)
+		return retVal;
 	
-	idWavOut = (UINT32)-1;
-	idWavOutDev = 0;
-	idWavWrt = (UINT32)-1;
-	
-	// go through all audio drivers store the IDs of the requested Output and Disk Writer drivers
-	outDrv = wrtDrv = 0;
-	for (curDrv = 0; curDrv < drvCount; curDrv ++)
-	{
-		Audio_GetDriverInfo(curDrv, &drvInfo);
-		if (drvInfo->drvType == ADRVTYPE_OUT)
-		{
-			if (outDrv == AudioOutDrv)
-				idWavOut = curDrv;
-			outDrv ++;
-		}
-		else if (drvInfo->drvType == ADRVTYPE_DISK)
-		{
-			if (wrtDrv == WaveWrtDrv)
-				idWavWrt = curDrv;
-			wrtDrv ++;
-		}
-	}
+	idWavOut = GetNthAudioDriver(ADRVTYPE_OUT, AudioOutDrv);
+	idWavOutDev = 0;	// default device
 	if (idWavOut == (UINT32)-1)
 	{
 		printf("Requested Audio Output driver not found!\n");
 		Audio_Deinit();
-		return 0x81;
+		return AERR_NODRVS;
 	}
+	idWavWrt = GetNthAudioDriver(ADRVTYPE_DISK, WaveWrtDrv);
 	
 	Audio_GetDriverInfo(idWavOut, &drvInfo);
 	printf("Using driver %s.\n", drvInfo->drvName);
