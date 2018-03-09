@@ -31,8 +31,9 @@ extern "C" int __cdecl _getch(void);	// from conio.h
 
 int main(int argc, char* argv[]);
 static const char* GetFileTitle(const char* filePath);
+static UINT32 CalcCurrentVolume(S98Player* s98play);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
-static UINT8 FilePlayCallback(void* userParam, UINT8 evtType, void* evtParam);
+static UINT8 FilePlayCallback(S98Player* s98play, void* userParam, UINT8 evtType, void* evtParam);
 static UINT8 InitAudioSystem(void);
 static UINT8 DeinitAudioSystem(void);
 static UINT8 StartAudioDevice(void);
@@ -64,6 +65,10 @@ static UINT32 idWavWrt;
 
 static INT32 AudioOutDrv = 1;
 static INT32 WaveWrtDrv = -1;
+
+static UINT32 masterVol = 0x10000;	// fixed point 16.16
+static UINT32 fadeSmplStart;
+static UINT32 fadeSmplTime;
 
 int main(int argc, char* argv[])
 {
@@ -117,6 +122,8 @@ int main(int argc, char* argv[])
 	AudioDrv_SetCallback(audDrv, FillBuffer, &s98play);
 	s98play.SetSampleRate(sampleRate);
 	s98play.Start();
+	fadeSmplTime = s98play.GetSampleRate() * 4;
+	fadeSmplStart = (UINT32)-1;
 	
 	StartDiskWriter("waveOut.wav");
 	canRender = true;
@@ -169,6 +176,10 @@ int main(int argc, char* argv[])
 				playState |= PLAYSTATE_END;
 				curSong = argc - 1;
 			}
+			else if (letter == 'F')	// fade out
+			{
+				fadeSmplStart = s98play.GetCurSample();
+			}
 		}
 	}
 #ifndef _WIN32
@@ -210,6 +221,47 @@ static const char* GetFileTitle(const char* filePath)
 	return (dirSep1 == NULL) ? filePath : (dirSep1 + 1);
 }
 
+#if 1
+#define VOLCALC64
+#define VOL_BITS	16	// use .X fixed point for working volume
+#else
+#define VOL_BITS	8	// use .X fixed point for working volume
+#endif
+#define VOL_SHIFT	(16 - VOL_BITS)	// shift for master volume -> working volume
+
+// Pre- and post-shifts are used to reduce make the calculations as accurate as possible
+// without causing the sample data (likely 24 bits) to overflow while applying the volume gain.
+// Smaller values for VOL_PRESH are more accurate, but have a higher risk of overflows during calculations.
+// (24 + VOL_POSTSH) must NOT be larger than 31
+#define VOL_PRESH	4	// sample data pre-shift
+#define VOL_POSTSH	(VOL_BITS - VOL_PRESH)	// post-shift after volume multiplication
+
+static UINT32 CalcCurrentVolume(S98Player* s98play)
+{
+	UINT32 curVol;	// 16.16 fixed point
+	
+	// 1. master volume
+	curVol = masterVol;
+	
+	// 2. apply fade-out factor
+	if (fadeSmplStart != (UINT32)-1)
+	{
+		UINT32 fadeSmpls;
+		UINT64 fadeVol;	// 64 bit for less type casts when doingmultiplications with .16 fixed point
+		
+		fadeSmpls = s98play->GetCurSample() - fadeSmplStart;
+		if (fadeSmpls >= fadeSmplTime)
+			return 0x0000;	// going beyond fade time -> volume 0
+		
+		fadeVol = (UINT64)fadeSmpls * 0x10000 / fadeSmplTime;
+		fadeVol = 0x10000 - fadeVol;	// fade from full volume to silence
+		fadeVol = (fadeVol * fadeVol) >> 16;	// logarithmic fading sounds nicer
+		curVol = (UINT32)((fadeVol * curVol) >> 16);
+	}
+	
+	return curVol;
+}
+
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
 {
 	S98Player* s98play = (S98Player*)userParam;
@@ -217,7 +269,8 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	UINT32 smplRendered;
 	INT16* SmplPtr16;
 	UINT32 curSmpl;
-	WAVE_32BS fnlSmpl;
+	WAVE_32BS fnlSmpl;	// final sample value
+	INT32 curVolume;
 	
 	smplCount = bufSize / smplSize;
 	if (! smplCount)
@@ -236,11 +289,37 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	smplRendered = s98play->Render(smplCount, smplData);
 	smplCount = smplRendered;
 	
+	curVolume = (INT32)CalcCurrentVolume(s98play) >> VOL_SHIFT;
 	SmplPtr16 = (INT16*)data;
 	for (curSmpl = 0; curSmpl < smplCount; curSmpl ++, SmplPtr16 += 2)
 	{
-		fnlSmpl.L = smplData[curSmpl].L >> 8;
-		fnlSmpl.R = smplData[curSmpl].R >> 8;
+		if (fadeSmplStart != (UINT32)-1)
+		{
+			UINT32 fadeSmpls;
+			
+			fadeSmpls = s98play->GetCurSample() - fadeSmplStart;
+			if (fadeSmpls >= fadeSmplTime && ! (playState & PLAYSTATE_END))
+			{
+				playState |= PLAYSTATE_END;
+				smplCount = curSmpl;
+			}
+			
+			curVolume = (INT32)CalcCurrentVolume(s98play) >> VOL_SHIFT;
+		}
+		
+		// Input is about 24 bits (some cores might output a bit more)
+		fnlSmpl = smplData[curSmpl];
+		
+#ifdef VOLCALC64
+		fnlSmpl.L = (INT32)( ((INT64)fnlSmpl.L * curVolume) >> VOL_BITS );
+		fnlSmpl.R = (INT32)( ((INT64)fnlSmpl.R * curVolume) >> VOL_BITS );
+#else
+		fnlSmpl.L = ((fnlSmpl.L >> VOL_PRESH) * curVolume) >> VOL_POSTSH;
+		fnlSmpl.R = ((fnlSmpl.R >> VOL_PRESH) * curVolume) >> VOL_POSTSH;
+#endif
+		
+		fnlSmpl.L >>= 8;	// 24 bit -> 16 bit
+		fnlSmpl.R >>= 8;
 		if (fnlSmpl.L < -0x8000)
 			fnlSmpl.L = -0x8000;
 		else if (fnlSmpl.L > +0x7FFF)
@@ -257,7 +336,7 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	return curSmpl * smplSize;
 }
 
-static UINT8 FilePlayCallback(void* userParam, UINT8 evtType, void* evtParam)
+static UINT8 FilePlayCallback(S98Player* s98play, void* userParam, UINT8 evtType, void* evtParam)
 {
 	switch(evtType)
 	{
@@ -272,9 +351,17 @@ static UINT8 FilePlayCallback(void* userParam, UINT8 evtType, void* evtParam)
 			UINT32* curLoop = (UINT32*)evtParam;
 			if (*curLoop >= maxLoops)
 			{
-				printf("Loop End.\n");
-				playState |= PLAYSTATE_END;
-				return 0x01;
+				if (fadeSmplTime)
+				{
+					if (fadeSmplStart == (UINT32)-1)
+						fadeSmplStart = s98play->GetCurSample();
+				}
+				else
+				{
+					printf("Loop End.\n");
+					playState |= PLAYSTATE_END;
+					return 0x01;
+				}
 			}
 			printf("Loop %u.\n", 1 + *curLoop);
 		}

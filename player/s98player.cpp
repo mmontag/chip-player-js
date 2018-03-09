@@ -602,7 +602,7 @@ UINT8 S98Player::Start(void)
 	_playState |= PLAYSTATE_PLAY;
 	Reset();
 	if (_eventCbFunc != NULL)
-		_eventCbFunc(_eventCbParam, PLREVT_START, NULL);
+		_eventCbFunc(this, _eventCbParam, PLREVT_START, NULL);
 	
 	return 0x00;
 }
@@ -620,7 +620,7 @@ UINT8 S98Player::Stop(void)
 	}
 	_devices.clear();
 	if (_eventCbFunc != NULL)
-		_eventCbFunc(_eventCbParam, PLREVT_STOP, NULL);
+		_eventCbFunc(this, _eventCbParam, PLREVT_STOP, NULL);
 	
 	return 0x00;
 }
@@ -746,7 +746,7 @@ void S98Player::DoCommand(void)
 			_playState |= PLAYSTATE_END;
 			_psTrigger |= PLAYSTATE_END;
 			if (_eventCbFunc != NULL)
-				_eventCbFunc(_eventCbParam, PLREVT_END, NULL);
+				_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
 		}
 		else
 		{
@@ -755,7 +755,7 @@ void S98Player::DoCommand(void)
 			{
 				UINT8 retVal;
 				
-				retVal = _eventCbFunc(_eventCbParam, PLREVT_LOOP, &_curLoop);
+				retVal = _eventCbFunc(this, _eventCbParam, PLREVT_LOOP, &_curLoop);
 				if (retVal == 0x01)
 				{
 					_playState |= PLAYSTATE_END;

@@ -15,7 +15,8 @@
 #define PLAYSTATE_PAUSE	0x02	// is paused (render wave, but don't advance in the song)
 #define PLAYSTATE_END	0x04	// has reached the end of the file
 
-typedef UINT8 (*PLAYER_EVENT_CB)(void* userParam, UINT8 evtType, void* evtParam);
+class S98Player;
+typedef UINT8 (*PLAYER_EVENT_CB)(S98Player* player, void* userParam, UINT8 evtType, void* evtParam);
 #define PLREVT_NONE		0x00
 #define PLREVT_START	0x01	// playback started
 #define PLREVT_STOP		0x02	// playback stopped
