@@ -63,16 +63,13 @@ INLINE UINT32 ReadLE32(const UINT8* data)
 }
 
 S98Player::S98Player() :
-	_outSmplRate(0),
 	_filePos(0),
 	_fileTick(0),
 	_playTick(0),
 	_playSmpl(0),
 	_curLoop(0),
 	_playState(0x00),
-	_psTrigger(0x00),
-	_eventCbFunc(NULL),
-	_eventCbParam(NULL)
+	_psTrigger(0x00)
 {
 	_icSJIS = iconv_open("UTF-8", "CP932");
 }
@@ -81,6 +78,16 @@ S98Player::~S98Player()
 {
 	if (_icSJIS != (iconv_t)-1)
 		iconv_close(_icSJIS);
+}
+
+UINT32 S98Player::GetPlayerType(void) const
+{
+	return FCC_S98;
+}
+
+const char* S98Player::GetPlayerName(void) const
+{
+	return "S98";
 }
 
 UINT8 S98Player::LoadFile(const char* fileName)
@@ -406,11 +413,6 @@ const char* S98Player::GetSongTitle(void)
 		return NULL;
 }
 
-UINT32 S98Player::GetSampleRate(void) const
-{
-	return _outSmplRate;
-}
-
 UINT8 S98Player::SetSampleRate(UINT32 sampleRate)
 {
 	if (_playState & PLAYSTATE_PLAY)
@@ -423,14 +425,6 @@ UINT8 S98Player::SetSampleRate(UINT32 sampleRate)
 UINT8 S98Player::SetPlaybackSpeed(double speed)
 {
 	return 0xFF;	// not yet supported
-}
-
-void S98Player::SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam)
-{
-	_eventCbFunc = cbFunc;
-	_eventCbParam = cbParam;
-	
-	return;
 }
 
 
@@ -455,11 +449,6 @@ UINT32 S98Player::Sample2Tick(UINT32 samples) const
 double S98Player::Tick2Second(UINT32 ticks) const
 {
 	return ticks * _fileHdr.tickMult / (double)_fileHdr.tickDiv;
-}
-
-double S98Player::Sample2Second(UINT32 samples) const
-{
-	return samples / (double)_outSmplRate;
 }
 
 UINT8 S98Player::GetState(void) const
@@ -493,11 +482,6 @@ UINT32 S98Player::GetLoopTicks(void) const
 		return 0;
 	else
 		return _totalTicks - _loopTick;
-}
-
-UINT32 S98Player::GetTotalPlayTicks(UINT32 numLoops) const
-{
-	return _totalTicks + GetLoopTicks() * (numLoops - 1);
 }
 
 UINT32 S98Player::GetCurrentLoop(void) const

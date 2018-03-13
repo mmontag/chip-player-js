@@ -23,6 +23,7 @@ extern "C" int __cdecl _getch(void);	// from conio.h
 #endif
 
 #include <common_def.h>
+#include "player/playerbase.hpp"
 #include "player/s98player.hpp"
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
@@ -30,10 +31,11 @@ extern "C" int __cdecl _getch(void);	// from conio.h
 
 
 int main(int argc, char* argv[]);
+static UINT8 GetPlayerForFile(const char* fileName, PlayerBase** retPlayer);
 static const char* GetFileTitle(const char* filePath);
 static UINT32 CalcCurrentVolume(UINT32 playbackSmpl);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
-static UINT8 FilePlayCallback(S98Player* s98play, void* userParam, UINT8 evtType, void* evtParam);
+static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam);
 static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber);
 static UINT8 InitAudioSystem(void);
 static UINT8 DeinitAudioSystem(void);
@@ -75,9 +77,7 @@ int main(int argc, char* argv[])
 {
 	int argbase;
 	UINT8 retVal;
-	S98Player s98play;
-	const S98_HEADER* s98hdr;
-	const char* s98Title;
+	PlayerBase* player;
 	int curSong;
 	
 	if (argc < 2)
@@ -101,29 +101,37 @@ int main(int argc, char* argv[])
 	for (curSong = argbase; curSong < argc; curSong ++)
 	{
 	
-	s98play.SetCallback(&FilePlayCallback, NULL);
-	
 	printf("Loading %s ...  ", GetFileTitle(argv[curSong]));
 	fflush(stdout);
-	retVal = s98play.LoadFile(argv[curSong]);
+	player = NULL;
+	retVal = GetPlayerForFile(argv[curSong], &player);
 	if (retVal)
 	{
+		if (player != NULL)
+			delete player;
 		printf("Error 0x%02X loading S98 file!\n", retVal);
 		continue;
 	}
-	s98hdr = s98play.GetFileHeader();
-	s98Title = s98play.GetSongTitle();
-	printf("S98 v%u, Total Length: %.2f s, Loop Length: %.2f s, Tick Rate: %u/%u\n", s98hdr->fileVer,
-			s98play.Tick2Second(s98play.GetTotalTicks()), s98play.Tick2Second(s98play.GetLoopTicks()),
-			s98hdr->tickMult, s98hdr->tickDiv);
-	if (s98Title != NULL)
-		printf("Song Title: %s\n", s98Title);
+	player->SetCallback(&FilePlayCallback, NULL);
+	
+	if (player->GetPlayerType() == FCC_S98)
+	{
+		S98Player* s98play = dynamic_cast<S98Player*>(player);
+		const S98_HEADER* s98hdr = s98play->GetFileHeader();
+		const char* s98Title = player->GetSongTitle();
+		
+		printf("S98 v%u, Total Length: %.2f s, Loop Length: %.2f s, Tick Rate: %u/%u\n", s98hdr->fileVer,
+				player->Tick2Second(player->GetTotalTicks()), player->Tick2Second(player->GetLoopTicks()),
+				s98hdr->tickMult, s98hdr->tickDiv);
+		if (s98Title != NULL)
+			printf("Song Title: %s\n", s98Title);
+	}
 	
 	isRendering = false;
-	AudioDrv_SetCallback(audDrv, FillBuffer, &s98play);
-	s98play.SetSampleRate(sampleRate);
-	s98play.Start();
-	fadeSmplTime = s98play.GetSampleRate() * 4;
+	AudioDrv_SetCallback(audDrv, FillBuffer, player);
+	player->SetSampleRate(sampleRate);
+	player->Start();
+	fadeSmplTime = player->GetSampleRate() * 4;
 	fadeSmplStart = (UINT32)-1;
 	
 	StartDiskWriter("waveOut.wav");
@@ -136,8 +144,8 @@ int main(int argc, char* argv[])
 	{
 		if (! (playState & PLAYSTATE_PAUSE))
 		{
-			printf("Playing %.2f / %.2f ...   \r", s98play.Sample2Second(s98play.GetCurSample()),
-					s98play.Tick2Second(s98play.GetTotalPlayTicks(maxLoops)));
+			printf("Playing %.2f / %.2f ...   \r", player->Sample2Second(player->GetCurSample()),
+					player->Tick2Second(player->GetTotalPlayTicks(maxLoops)));
 			fflush(stdout);
 		}
 		Sleep(50);
@@ -157,7 +165,7 @@ int main(int argc, char* argv[])
 			}
 			else if (letter == 'R')	// restart
 			{
-				s98play.Reset();
+				player->Reset();
 			}
 			else if (letter == 'B')	// previous file
 			{
@@ -179,7 +187,7 @@ int main(int argc, char* argv[])
 			}
 			else if (letter == 'F')	// fade out
 			{
-				fadeSmplStart = s98play.GetCurSample();
+				fadeSmplStart = player->GetCurSample();
 			}
 		}
 	}
@@ -191,8 +199,8 @@ int main(int argc, char* argv[])
 		Sleep(1);	// wait for render thread to finish
 	StopDiskWriter();
 	
-	s98play.Stop();
-	s98play.UnloadFile();
+	player->Stop();
+	player->UnloadFile();
 	
 	}	// end for(curSong)
 	
@@ -207,6 +215,23 @@ int main(int argc, char* argv[])
 #endif
 	
 	return 0;
+}
+
+static UINT8 GetPlayerForFile(const char* fileName, PlayerBase** retPlayer)
+{
+	UINT8 retVal;
+	PlayerBase* player;
+	
+	player = new S98Player;
+	retVal = player->LoadFile(fileName);
+	if (retVal < 0x80)
+	{
+		*retPlayer = player;
+		return retVal;
+	}
+	delete player;
+	
+	return 0xFF;
 }
 
 static const char* GetFileTitle(const char* filePath)
@@ -265,7 +290,7 @@ static UINT32 CalcCurrentVolume(UINT32 playbackSmpl)
 
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
 {
-	S98Player* s98play = (S98Player*)userParam;
+	PlayerBase* player = (PlayerBase*)userParam;
 	UINT32 basePbSmpl;
 	UINT32 smplCount;
 	UINT32 smplRendered;
@@ -288,8 +313,8 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	if (smplCount > smplAlloc)
 		smplCount = smplAlloc;
 	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));
-	basePbSmpl = s98play->GetCurSample();
-	smplRendered = s98play->Render(smplCount, smplData);
+	basePbSmpl = player->GetCurSample();
+	smplRendered = player->Render(smplCount, smplData);
 	smplCount = smplRendered;
 	
 	curVolume = (INT32)CalcCurrentVolume(basePbSmpl) >> VOL_SHIFT;
@@ -339,7 +364,7 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	return curSmpl * smplSize;
 }
 
-static UINT8 FilePlayCallback(S98Player* s98play, void* userParam, UINT8 evtType, void* evtParam)
+static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType, void* evtParam)
 {
 	switch(evtType)
 	{
@@ -357,7 +382,7 @@ static UINT8 FilePlayCallback(S98Player* s98play, void* userParam, UINT8 evtType
 				if (fadeSmplTime)
 				{
 					if (fadeSmplStart == (UINT32)-1)
-						fadeSmplStart = s98play->GetCurSample();
+						fadeSmplStart = player->GetCurSample();
 				}
 				else
 				{

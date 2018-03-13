@@ -6,6 +6,7 @@ extern "C"
 {
 #endif
 
+#include <stddef.h>	// for NULL
 #include <stdtype.h>
 #include "snddef.h"
 

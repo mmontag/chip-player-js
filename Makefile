@@ -236,6 +236,7 @@ VGMTEST_MAINOBJS = \
 
 S98TEST_MAINOBJS = \
 	$(OBJ)/player/helper.o \
+	$(OBJ)/player/playerbase.o \
 	$(OBJ)/player/s98player.o \
 	$(OBJ)/player.o
 

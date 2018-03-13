@@ -6,29 +6,18 @@
 #include <emu/Resampler.h>
 #include <iconv.h>
 #include "helper.h"
+#include "playerbase.hpp"
 #include <vector>
 #include <map>
 #include <string>
 
 
-#define PLAYSTATE_PLAY	0x01	// is playing
-#define PLAYSTATE_PAUSE	0x02	// is paused (render wave, but don't advance in the song)
-#define PLAYSTATE_END	0x04	// has reached the end of the file
-
-class S98Player;
-typedef UINT8 (*PLAYER_EVENT_CB)(S98Player* player, void* userParam, UINT8 evtType, void* evtParam);
-#define PLREVT_NONE		0x00
-#define PLREVT_START	0x01	// playback started
-#define PLREVT_STOP		0x02	// playback stopped
-#define PLREVT_LOOP		0x03	// starting next loop [evtParam: UINT32* loopNumber, ret == 0x01 -> stop processing]
-#define PLREVT_END		0x04	// reached the end of the song
-
-
+#define FCC_S98 	0x53393800
 
 struct S98_HEADER
 {
 	UINT8 fileVer;
-	UINT32 tickMult;	// tick timing numerator
+	UINT32 tickMult;	// [v1] tick timing numerator
 	UINT32 tickDiv;		// [v2] tick timing denumerator
 	UINT32 compression;	// [v1: 0 - no compression, >0 - size of uncompressed data] [v2: ??] [v3: must be 0]
 	UINT32 tagOfs;		// [v1/2: song title file offset] [v3: tag data file offset]
@@ -50,29 +39,27 @@ struct _s98_chip_device
 	DEVFUNC_WRITE_A8D8 write;
 };
 
-//	--- concept ---
-//	- Player class does file rendering at fixed volume (but changeable speed)
-//	- host program handles master volume + fading + stopping after X loops (notified via callback)
-
-class S98Player
+class S98Player : public PlayerBase
 {
 public:
 	S98Player();
 	~S98Player();
 	
+	UINT32 GetPlayerType(void) const;
+	const char* GetPlayerName(void) const;
 	UINT8 LoadFile(const char* fileName);
 	UINT8 UnloadFile(void);
 	const S98_HEADER* GetFileHeader(void) const;
 	const char* GetSongTitle(void);
 	
-	UINT32 GetSampleRate(void) const;
+	//UINT32 GetSampleRate(void) const;
 	UINT8 SetSampleRate(UINT32 sampleRate);
 	UINT8 SetPlaybackSpeed(double speed);
-	void SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
+	//void SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
 	UINT32 Tick2Sample(UINT32 ticks) const;
 	UINT32 Sample2Tick(UINT32 samples) const;
 	double Tick2Second(UINT32 ticks) const;
-	double Sample2Second(UINT32 samples) const;
+	//double Sample2Second(UINT32 samples) const;
 	
 	UINT8 GetState(void) const;
 	UINT32 GetCurFileOfs(void) const;
@@ -80,7 +67,7 @@ public:
 	UINT32 GetCurSample(void) const;
 	UINT32 GetTotalTicks(void) const;	// get time for playing once in ticks
 	UINT32 GetLoopTicks(void) const;	// get time for one loop in ticks
-	UINT32 GetTotalPlayTicks(UINT32 numLoops) const;	// get time for playing + looping (without fading)
+	//UINT32 GetTotalPlayTicks(UINT32 numLoops) const;	// get time for playing + looping (without fading)
 	UINT32 GetCurrentLoop(void) const;
 	
 	UINT8 Start(void);
@@ -110,7 +97,7 @@ private:
 	UINT32 _loopTick;
 	std::map<std::string, std::string> _tagData;
 	
-	UINT32 _outSmplRate;
+	//UINT32 _outSmplRate;
 	
 	// tick/sample conversion rates
 	UINT64 _tsMult;
@@ -125,8 +112,8 @@ private:
 	
 	UINT8 _playState;
 	UINT8 _psTrigger;	// used to temporarily trigger special commands
-	PLAYER_EVENT_CB _eventCbFunc;
-	void* _eventCbParam;
+	//PLAYER_EVENT_CB _eventCbFunc;
+	//void* _eventCbParam;
 };
 
 #endif	// __S98PLAYER_HPP__
