@@ -1,0 +1,146 @@
+#ifndef __DROPLAYER_HPP__
+#define __DROPLAYER_HPP__
+
+#include <stdtype.h>
+#include <emu/EmuStructs.h>
+#include <emu/Resampler.h>
+#include <iconv.h>
+#include "helper.h"
+#include "playerbase.hpp"
+#include <vector>
+#include <map>
+#include <string>
+
+
+#define FCC_DRO 	0x44524F00
+
+// DRO v0 header (DOSBox 0.61)
+//	Ofs	Len	Description
+//	00	08	"DBRAWOPL"
+//	04	04	data length in milliseconds
+//	08	04	data length in bytes
+//	0C	01	hardware type (0 = OPL2, 1 = OPL3, 2 = DualOPL2)
+
+// DRO v1 header (DOSBox 0.63)
+//	Ofs	Len	Description
+//	00	08	"DBRAWOPL"
+//	04	04	version minor
+//	08	04	version major
+//	0C	04	data length in milliseconds
+//	10	04	data length in bytes
+//	14	04	hardware type (0 = OPL2, 1 = OPL3, 2 = DualOPL2)
+
+// DRO v2 header (DOSBox 0.73)
+//	Ofs	Len	Description
+//	00	08	"DBRAWOPL"
+//	04	04	version major
+//	08	04	version minor
+//	0C	04	data length in "pairs" (1 pair = 2 bytes, a pair consists of command + data)
+//	10	04	data length in milliseconds
+//	14	01	hardware type (0 = OPL2, 1 = DualOPL2, 2 = OPL3)
+//	15	01	data format (0 = interleaved command/data)
+//	16	01	compression (0 = no compression)
+//	17	01	command code for short delay
+//	18	01	command code for long delay
+//	19	01	size of register codemap cl
+//	1A	cl	register codemap
+
+struct DRO_HEADER
+{
+	UINT16 verMajor;
+	UINT16 verMinor;
+	UINT32 dataSize;	// in bytes
+	UINT32 lengthMS;
+	UINT8 hwType;
+	UINT8 format;
+	UINT8 compression;
+	UINT8 cmdDlyShort;
+	UINT8 cmdDlyLong;
+	UINT8 regCmdCnt;
+	UINT8 regCmdMap[0x80];
+};
+
+typedef struct _dro_chip_device DRO_CHIPDEV;
+struct _dro_chip_device
+{
+	VGM_BASEDEV base;
+	DEVFUNC_WRITE_A8D8 write;
+};
+
+class DROPlayer : public PlayerBase
+{
+public:
+	DROPlayer();
+	~DROPlayer();
+	
+	UINT32 GetPlayerType(void) const;
+	const char* GetPlayerName(void) const;
+	UINT8 LoadFile(const char* fileName);
+	UINT8 UnloadFile(void);
+	const DRO_HEADER* GetFileHeader(void) const;
+	const char* GetSongTitle(void);
+	
+	//UINT32 GetSampleRate(void) const;
+	UINT8 SetSampleRate(UINT32 sampleRate);
+	//UINT8 SetPlaybackSpeed(double speed);
+	//void SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
+	UINT32 Tick2Sample(UINT32 ticks) const;
+	UINT32 Sample2Tick(UINT32 samples) const;
+	double Tick2Second(UINT32 ticks) const;
+	//double Sample2Second(UINT32 samples) const;
+	
+	UINT8 GetState(void) const;
+	UINT32 GetCurFileOfs(void) const;
+	UINT32 GetCurTick(void) const;
+	UINT32 GetCurSample(void) const;
+	UINT32 GetTotalTicks(void) const;	// get time for playing once in ticks
+	UINT32 GetLoopTicks(void) const;	// get time for one loop in ticks
+	//UINT32 GetTotalPlayTicks(UINT32 numLoops) const;	// get time for playing + looping (without fading)
+	UINT32 GetCurrentLoop(void) const;
+	
+	UINT8 Start(void);
+	UINT8 Stop(void);
+	UINT8 Reset(void);
+	UINT32 Render(UINT32 smplCnt, WAVE_32BS* data);
+	//UINT8 Seek(...); // TODO
+	
+private:
+	void ParseFile(UINT32 ticks);
+	void DoCommand_v1(void);
+	void DoCommand_v2(void);
+	void DoFileEnd(void);
+	void WriteReg(UINT8 port, UINT8 reg, UINT8 data);
+	
+	std::vector<UINT8> _fileData;
+	
+	DRO_HEADER _fileHdr;
+	std::vector<UINT8> _devTypes;
+	UINT8 _realHwType;
+	UINT8 _portMask;
+	UINT8 _portShift;
+	UINT32 _dataOfs;
+	UINT32 _tickFreq;
+	UINT32 _totalTicks;
+	UINT32 _loopTick;
+	
+	//UINT32 _outSmplRate;
+	
+	// tick/sample conversion rates
+	UINT64 _tsMult;
+	UINT64 _tsDiv;
+	
+	std::vector<DRO_CHIPDEV> _devices;
+	UINT32 _filePos;
+	UINT32 _fileTick;
+	UINT32 _playTick;
+	UINT32 _playSmpl;
+	UINT32 _curLoop;
+	
+	UINT8 _playState;
+	UINT8 _psTrigger;	// used to temporarily trigger special commands
+	UINT8 _selPort;		// currently selected OPL chip (for DRO v1)
+	//PLAYER_EVENT_CB _eventCbFunc;
+	//void* _eventCbParam;
+};
+
+#endif	// __DROPLAYER_HPP__

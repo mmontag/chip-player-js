@@ -386,6 +386,9 @@ UINT8 S98Player::ParsePSFTags(const std::string& tagData)
 
 UINT8 S98Player::UnloadFile(void)
 {
+	if (_playState & PLAYSTATE_PLAY)
+		return 0xFF;
+	
 	_playState = 0x00;
 	_fileData.clear();
 	_fileHdr.fileVer = 0xFF;
@@ -422,10 +425,10 @@ UINT8 S98Player::SetSampleRate(UINT32 sampleRate)
 	return 0x00;
 }
 
-UINT8 S98Player::SetPlaybackSpeed(double speed)
+/*UINT8 S98Player::SetPlaybackSpeed(double speed)
 {
 	return 0xFF;	// not yet supported
-}
+}*/
 
 
 void S98Player::RefreshTSRates(void)

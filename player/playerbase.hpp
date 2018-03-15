@@ -37,7 +37,7 @@ public:
 	
 	virtual UINT32 GetSampleRate(void) const;
 	virtual UINT8 SetSampleRate(UINT32 sampleRate);
-	virtual UINT8 SetPlaybackSpeed(double speed) = 0;
+	virtual UINT8 SetPlaybackSpeed(double speed);
 	virtual void SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam);
 	virtual UINT32 Tick2Sample(UINT32 ticks) const = 0;
 	virtual UINT32 Sample2Tick(UINT32 samples) const = 0;

@@ -32,6 +32,11 @@ UINT8 PlayerBase::SetSampleRate(UINT32 sampleRate)
 	return 0x00;
 }
 
+UINT8 PlayerBase::SetPlaybackSpeed(double speed)
+{
+	return 0xFF;	// not yet supported
+}
+
 void PlayerBase::SetCallback(PLAYER_EVENT_CB cbFunc, void* cbParam)
 {
 	_eventCbFunc = cbFunc;

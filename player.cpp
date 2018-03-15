@@ -25,6 +25,7 @@ extern "C" int __cdecl _getch(void);	// from conio.h
 #include <common_def.h>
 #include "player/playerbase.hpp"
 #include "player/s98player.hpp"
+#include "player/droplayer.hpp"
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
 #include "emu/Resampler.h"
@@ -120,12 +121,30 @@ int main(int argc, char* argv[])
 		const S98_HEADER* s98hdr = s98play->GetFileHeader();
 		const char* s98Title = player->GetSongTitle();
 		
-		printf("S98 v%u, Total Length: %.2f s, Loop Length: %.2f s, Tick Rate: %u/%u\n", s98hdr->fileVer,
+		printf("S98 v%u, Total Length: %.2f s, Loop Length: %.2f s, Tick Rate: %u/%u", s98hdr->fileVer,
 				player->Tick2Second(player->GetTotalTicks()), player->Tick2Second(player->GetLoopTicks()),
 				s98hdr->tickMult, s98hdr->tickDiv);
 		if (s98Title != NULL)
-			printf("Song Title: %s\n", s98Title);
+			printf("\nSong Title: %s", s98Title);
 	}
+	else if (player->GetPlayerType() == FCC_DRO)
+	{
+		DROPlayer* droplay = dynamic_cast<DROPlayer*>(player);
+		const DRO_HEADER* drohdr = droplay->GetFileHeader();
+		const char* hwType;
+		
+		if (drohdr->hwType == 0)
+			hwType = "OPL2";
+		else if (drohdr->hwType == 1)
+			hwType = "DualOPL2";
+		else if (drohdr->hwType == 2)
+			hwType = "OPL3";
+		else
+			hwType = "unknown";
+		printf("DRO v%u, Total Length: %.2f s, HW Type: %s", drohdr->verMajor,
+				player->Tick2Second(player->GetTotalTicks()), hwType);
+	}
+	putchar('\n');
 	
 	isRendering = false;
 	AudioDrv_SetCallback(audDrv, FillBuffer, player);
@@ -223,6 +242,15 @@ static UINT8 GetPlayerForFile(const char* fileName, PlayerBase** retPlayer)
 	PlayerBase* player;
 	
 	player = new S98Player;
+	retVal = player->LoadFile(fileName);
+	if (retVal < 0x80)
+	{
+		*retPlayer = player;
+		return retVal;
+	}
+	delete player;
+	
+	player = new DROPlayer;
 	retVal = player->LoadFile(fileName);
 	if (retVal < 0x80)
 	{
