@@ -153,9 +153,9 @@ UINT8 DROPlayer::LoadFile(const char* fileName)
 		}
 		// swap DualOPL2 and OPL3 values
 		if (_fileHdr.hwType == 0x01)
-			_fileHdr.hwType = 0x02;
+			_fileHdr.hwType = DROHW_OPL3;
 		else if (_fileHdr.hwType == 0x02)
-			_fileHdr.hwType = 0x01;
+			_fileHdr.hwType = DROHW_DUALOPL2;
 		_fileHdr.format = 0x00;
 		_fileHdr.compression = 0x00;
 		_fileHdr.cmdDlyShort = 0x00;
@@ -190,25 +190,26 @@ UINT8 DROPlayer::LoadFile(const char* fileName)
 	}
 	
 	_devTypes.clear();
+	_devPanning.clear();
 	_portShift = 0;
 	switch(_realHwType)
 	{
-	case 0:	// single OPL2
-		_devTypes.push_back(DEVID_YM3812);
+	case DROHW_OPL2:	// single OPL2
+		_devTypes.push_back(DEVID_YM3812);	_devPanning.push_back(0x00);
 		break;
-	case 1:	// dual OPL2
-		_devTypes.push_back(DEVID_YM3812);
-		_devTypes.push_back(DEVID_YM3812);
+	case DROHW_DUALOPL2:	// dual OPL2
+		_devTypes.push_back(DEVID_YM3812);	_devPanning.push_back(0x01);
+		_devTypes.push_back(DEVID_YM3812);	_devPanning.push_back(0x02);
 		break;
-	case 2:	// single OPL3
-		_devTypes.push_back(DEVID_YMF262);
+	case DROHW_OPL3:	// single OPL3
+		_devTypes.push_back(DEVID_YMF262);	_devPanning.push_back(0x00);
 		_portShift = 1;
 		break;
 	}
 	_portMask = (1 << _portShift) - 1;
 	
 	_totalTicks = _fileHdr.lengthMS;
-	_loopTick = 0;
+	_initBlkEndOfs = 0x20;
 	
 	return 0x00;
 }
@@ -223,6 +224,7 @@ UINT8 DROPlayer::UnloadFile(void)
 	_fileHdr.verMajor = 0xFF;
 	_dataOfs = 0x00;
 	_devTypes.clear();
+	_devPanning.clear();
 	_devices.clear();
 	
 	return 0x00;
@@ -344,6 +346,11 @@ UINT8 DROPlayer::Start(void)
 		while(clDev != NULL)
 		{
 			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
+			// do DualOPL2 hard panning by muting either the left or right speaker
+			if (_devPanning[curDev] & 0x02)
+				clDev->resmpl.volumeL = 0x00;
+			if (_devPanning[curDev] & 0x01)
+				clDev->resmpl.volumeR = 0x00;
 			Resmpl_DevConnect(&clDev->resmpl, &clDev->defInf);
 			Resmpl_Init(&clDev->resmpl);
 			clDev = clDev->linkDev;
@@ -507,10 +514,15 @@ void DROPlayer::DoCommand_v1(void)
 		_filePos ++;
 		return;
 	case 0x01:	// 2-byte delay
-		if (_filePos < 0x40)
-			break;	// assume missing escape command during initialization block
+		// Note: With DRO v1, the DOSBox developers wanted to change this command from 0x01 to 0x10.
+		//       Too bad that they updated the documentation, but not the actual code.
 		if (_fileData[_filePos + 0x01] == 0xBD)
-			break;	// This is an unescaped register write. (sequence 01 20 BD xx)
+			break;	// This is an unescaped register write. (sequence 01 xx BD xx)
+		if (_fileData[_filePos + 0x00] == 0x20 && _fileData[_filePos + 0x01] == 0x08)
+			break;	// This is an unescaped register write. (sequence 01 20 08 xx)
+		if (_filePos < _initBlkEndOfs)
+			break;	// assume missing escape command during initialization block
+		
 		_fileTick += 1 + ReadLE16(&_fileData[_filePos]);
 		_filePos += 0x02;
 		return;
@@ -524,8 +536,12 @@ void DROPlayer::DoCommand_v1(void)
 		}
 		return;
 	case 0x04:	// escape command
-		if (_filePos < 0x40)
+		// Note: This command is used by various tools that edit DRO files, but DOSBox itself doesn't write it.
+		if (_fileData[_filePos] >= 0x20)
+			break;	// It only makes sense to escape register 00..04, so should be a direct write to register 04.
+		if (_filePos < _initBlkEndOfs)
 			break;	// assume missing escape command during initialization block
+		
 		// read the next value and treat it as register value
 		curCmd = _fileData[_filePos];
 		_filePos ++;

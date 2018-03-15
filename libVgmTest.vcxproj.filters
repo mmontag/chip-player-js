@@ -24,6 +24,18 @@
     <ClInclude Include="stdtype.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="player\droplayer.hpp">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="player\helper.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="player\playerbase.hpp">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="player\s98player.hpp">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="emutest.c">
@@ -42,6 +54,21 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="vgm_dbcompr_bench.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player\droplayer.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player\helper.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player\playerbase.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player\s98player.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

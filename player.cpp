@@ -15,6 +15,7 @@
 
 #ifdef _WIN32
 extern "C" int __cdecl _getch(void);	// from conio.h
+extern "C" int __cdecl _kbhit(void);
 #else
 #include <unistd.h>		// for STDIN_FILENO and usleep()
 #include <termios.h>
@@ -58,6 +59,7 @@ static UINT32 smplAlloc;
 static WAVE_32BS* smplData;
 static volatile bool canRender;
 static volatile bool isRendering;
+static volatile bool renderDoWait;
 
 static UINT32 sampleRate = 44100;
 static UINT32 maxLoops = 2;
@@ -154,6 +156,7 @@ int main(int argc, char* argv[])
 	fadeSmplStart = (UINT32)-1;
 	
 	StartDiskWriter("waveOut.wav");
+	renderDoWait = false;
 	canRender = true;
 #ifndef _WIN32
 	changemode(1);
@@ -184,7 +187,11 @@ int main(int argc, char* argv[])
 			}
 			else if (letter == 'R')	// restart
 			{
+				renderDoWait = true;
+				while(isRendering)
+					Sleep(1);
 				player->Reset();
+				renderDoWait = false;
 			}
 			else if (letter == 'B')	// previous file
 			{
@@ -213,7 +220,7 @@ int main(int argc, char* argv[])
 #ifndef _WIN32
 	changemode(0);
 #endif
-	canRender = false;
+	renderDoWait = true;
 	while(isRendering)
 		Sleep(1);	// wait for render thread to finish
 	StopDiskWriter();
@@ -222,6 +229,8 @@ int main(int argc, char* argv[])
 	player->UnloadFile();
 	
 	}	// end for(curSong)
+	canRender = false;
+	renderDoWait = false;
 	
 	StopAudioDevice();
 	DeinitAudioSystem();
@@ -331,6 +340,8 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	if (! smplCount)
 		return 0;
 	
+	while(renderDoWait)
+		Sleep(1);	// pause the thread while the main thread wants to do some actions
 	if (! canRender)
 	{
 		memset(data, 0x00, smplCount * smplSize);

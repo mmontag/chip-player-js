@@ -64,30 +64,30 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>libs\include;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\libs\include;$(ProjectDir);$(ProjectDir)\libs\iconv\include;$(IncludePath)</IncludePath>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-    <LibraryPath>libs\lib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\libs\lib;$(SolutionDir)bin\;$(ProjectDir)\libs\iconv\lib;$(LibraryPath)</LibraryPath>
     <OutDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>libs\include;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\libs\include;$(ProjectDir);$(ProjectDir)\libs\iconv\include;$(IncludePath)</IncludePath>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-    <LibraryPath>libs\lib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\libs\lib;$(SolutionDir)bin\;$(ProjectDir)\libs\iconv\lib;$(LibraryPath)</LibraryPath>
     <OutDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>libs\include;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\libs\include;$(ProjectDir);$(ProjectDir)\libs\iconv\include;$(IncludePath)</IncludePath>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-    <LibraryPath>libs\lib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\libs\lib;$(SolutionDir)bin\;$(ProjectDir)\libs\iconv\lib;$(LibraryPath)</LibraryPath>
     <OutDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>libs\include;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\libs\include;$(ProjectDir);$(ProjectDir)\libs\iconv\include;$(IncludePath)</IncludePath>
     <IntDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-    <LibraryPath>libs\lib;$(SolutionDir)bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\libs\lib;$(SolutionDir)bin\;$(ProjectDir)\libs\iconv\lib;$(LibraryPath)</LibraryPath>
     <OutDir>obj\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -101,7 +101,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zlibd.lib;libAudio_Win32d.lib;libEmu_Win32d.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zlibd.lib;libAudio_Win32d.lib;libEmu_Win32d.lib;libiconv.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -133,7 +133,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>zlib.lib;libAudio_Win32.lib;libEmu_Win32.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zlib.lib;libAudio_Win32.lib;libEmu_Win32.lib;libiconv.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -156,6 +156,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="common_def.h" />
+    <ClInclude Include="player\droplayer.hpp" />
+    <ClInclude Include="player\helper.h" />
+    <ClInclude Include="player\playerbase.hpp" />
+    <ClInclude Include="player\s98player.hpp" />
     <ClInclude Include="stdbool.h" />
     <ClInclude Include="stdtype.h" />
   </ItemGroup>
@@ -178,7 +182,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="vgmtest.c" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="player\droplayer.cpp" />
+    <ClCompile Include="player\helper.c" />
+    <ClCompile Include="player\playerbase.cpp" />
+    <ClCompile Include="player\s98player.cpp" />
+    <ClCompile Include="vgmtest.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="vgm\dblk_compr.c" />
     <ClCompile Include="vgm_dbcompr_bench.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

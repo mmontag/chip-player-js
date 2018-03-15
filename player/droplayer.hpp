@@ -115,13 +115,14 @@ private:
 	
 	DRO_HEADER _fileHdr;
 	std::vector<UINT8> _devTypes;
+	std::vector<UINT8> _devPanning;
 	UINT8 _realHwType;
 	UINT8 _portMask;
 	UINT8 _portShift;
 	UINT32 _dataOfs;
 	UINT32 _tickFreq;
 	UINT32 _totalTicks;
-	UINT32 _loopTick;
+	UINT32 _initBlkEndOfs;	// offset of end of initialization block (for special fixes)
 	
 	//UINT32 _outSmplRate;
 	
