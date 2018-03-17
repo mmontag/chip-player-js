@@ -14,14 +14,14 @@
 
 #define FCC_DRO 	0x44524F00
 
-// DRO v0 header (DOSBox 0.61)
+// DRO v0 header (DOSBox 0.62, SVN r1864)
 //	Ofs	Len	Description
 //	00	08	"DBRAWOPL"
 //	04	04	data length in milliseconds
 //	08	04	data length in bytes
 //	0C	01	hardware type (0 = OPL2, 1 = OPL3, 2 = DualOPL2)
 
-// DRO v1 header (DOSBox 0.63)
+// DRO v1 header (DOSBox 0.63, SVN r2065)
 //	Ofs	Len	Description
 //	00	08	"DBRAWOPL"
 //	04	04	version minor
@@ -30,7 +30,7 @@
 //	10	04	data length in bytes
 //	14	04	hardware type (0 = OPL2, 1 = OPL3, 2 = DualOPL2)
 
-// DRO v2 header (DOSBox 0.73)
+// DRO v2 header (DOSBox 0.73, SVN r3178)
 //	Ofs	Len	Description
 //	00	08	"DBRAWOPL"
 //	04	04	version major
@@ -105,6 +105,8 @@ public:
 	//UINT8 Seek(...); // TODO
 	
 private:
+	void ScanInitBlock(void);
+	
 	void ParseFile(UINT32 ticks);
 	void DoCommand_v1(void);
 	void DoCommand_v2(void);
@@ -117,12 +119,16 @@ private:
 	std::vector<UINT8> _devTypes;
 	std::vector<UINT8> _devPanning;
 	UINT8 _realHwType;
-	UINT8 _portMask;
-	UINT8 _portShift;
+	UINT8 _portShift;	// 0 for OPL2 (1 port per chip), 1 for OPL3 (2 ports per chip)
+	UINT8 _portMask;	// (1 << _portShift) - 1
 	UINT32 _dataOfs;
 	UINT32 _tickFreq;
 	UINT32 _totalTicks;
-	UINT32 _initBlkEndOfs;	// offset of end of initialization block (for special fixes)
+	
+	// information about the initialization block (ends with first delay)
+	UINT32 _initBlkEndOfs;	// offset of end of init. block (for special fixes)
+	std::vector<bool> _initRegSet;	// registers set during init. block
+	UINT8 _initOPL3Enable;	// value of OPL3 enable register set during init. block
 	
 	//UINT32 _outSmplRate;
 	
@@ -135,7 +141,6 @@ private:
 	UINT32 _fileTick;
 	UINT32 _playTick;
 	UINT32 _playSmpl;
-	UINT32 _curLoop;
 	
 	UINT8 _playState;
 	UINT8 _psTrigger;	// used to temporarily trigger special commands

@@ -682,7 +682,7 @@ UINT32 S98Player::Render(UINT32 smplCnt, WAVE_32BS* data)
 				if (clDev->defInf.dataPtr != NULL)
 					Resmpl_Execute(&clDev->resmpl, 1, &data[curSmpl]);
 				clDev = clDev->linkDev;
-			};
+			}
 		}
 		if (_psTrigger & PLAYSTATE_END)
 		{

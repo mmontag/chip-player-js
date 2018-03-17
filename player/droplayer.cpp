@@ -50,10 +50,10 @@ DROPlayer::DROPlayer() :
 	_fileTick(0),
 	_playTick(0),
 	_playSmpl(0),
-	_curLoop(0),
 	_playState(0x00),
 	_psTrigger(0x00)
 {
+	_initRegSet.resize(0x200, false);
 }
 
 DROPlayer::~DROPlayer()
@@ -180,13 +180,19 @@ UINT8 DROPlayer::LoadFile(const char* fileName)
 		break;
 	}
 	
+	ScanInitBlock();
+	
 	_realHwType = _fileHdr.hwType;
 	if (true)
 	{
 		// DOSBox puts "DualOPL2" into the header of DROs that log OPL3 data ...
 		// ... unless 4op mode is enabled.
-		if (_realHwType == 1)
-			_realHwType = 2;	// DualOPL2 -> OPL3
+		if (_realHwType == DROHW_DUALOPL2)
+		{
+			// if OPL3 enable is set, it definitely is an OPL3 file
+			if (_initRegSet[0x105] && (_initOPL3Enable & 0x01))
+				_realHwType = DROHW_OPL3;
+		}
 	}
 	
 	_devTypes.clear();
@@ -202,6 +208,7 @@ UINT8 DROPlayer::LoadFile(const char* fileName)
 		_devTypes.push_back(DEVID_YM3812);	_devPanning.push_back(0x02);
 		break;
 	case DROHW_OPL3:	// single OPL3
+	default:
 		_devTypes.push_back(DEVID_YMF262);	_devPanning.push_back(0x00);
 		_portShift = 1;
 		break;
@@ -209,9 +216,98 @@ UINT8 DROPlayer::LoadFile(const char* fileName)
 	_portMask = (1 << _portShift) - 1;
 	
 	_totalTicks = _fileHdr.lengthMS;
-	_initBlkEndOfs = 0x20;
 	
 	return 0x00;
+}
+
+void DROPlayer::ScanInitBlock(void)
+{
+	// Scan initialization block of the DRO in order to be able to apply special fixes.
+	// Fixes like:
+	//	- DualOPL2 vs. OPL3 detection (because DOSBox sets hwType to DualOPL2 more often that it should)
+	//	- [DRO v1] detect size of initialization block (for filtering out unescaped writes to register 01/04)
+	UINT32 filePos;
+	UINT8 curCmd;
+	UINT8 selPort;
+	UINT16 curReg;
+	UINT16 lastReg;
+	
+	std::fill(_initRegSet.begin(), _initRegSet.end(), false);
+	_initOPL3Enable = 0x00;
+	
+	filePos = _dataOfs;
+	if (_fileHdr.verMajor < 2)
+	{
+		selPort = 0;
+		lastReg = 0x000;
+		// The file begins with a register dump with increasing register numbers.
+		while(filePos < _fileData.size())
+		{
+			curCmd = _fileData[filePos];
+			if (curCmd == 0x02 || curCmd == 0x03)
+			{
+				// make an exception for the chip select commands
+				selPort = curCmd & 0x01;
+				filePos ++;
+				continue;
+			}
+			
+			curReg = (selPort << 8) | (curCmd << 0);
+			if (curReg < lastReg)
+				break;
+			
+			_initRegSet[curReg] = true;
+			if (curReg == 0x105)
+				_initOPL3Enable = _fileData[filePos + 0x01];
+			lastReg = curReg;
+			filePos += 0x02;
+		}
+		while(filePos < _fileData.size())
+		{
+			curCmd = _fileData[filePos];
+			
+			if (curCmd == 0x00 || curCmd == 0x01)
+				break;	// delay command - stop scanning
+			if (curCmd == 0x02 || curCmd == 0x03)
+			{
+				selPort = curCmd & 0x01;
+				filePos ++;
+				continue;
+			}
+			if (curCmd == 0x04)
+			{
+				if (_fileData[filePos + 0x01] < 0x08)
+					break;	// properly escaped command - stop scanning
+			}
+			curReg = (selPort << 8) | (curCmd << 0);
+			_initRegSet[curReg] = true;
+			if (curReg == 0x105)
+				_initOPL3Enable = _fileData[filePos + 0x01];
+			filePos += 0x02;
+		}
+	}
+	else //if (_fileHdr.verMajor == 2)
+	{
+		lastReg = 0x000;
+		// The file begins with a register dump with increasing register numbers.
+		while(filePos < _fileData.size())
+		{
+			curCmd = _fileData[filePos];
+			if (curCmd == _fileHdr.cmdDlyShort || curCmd == _fileHdr.cmdDlyLong)
+				break;
+			
+			if ((curCmd & 0x7F) >= _fileHdr.regCmdCnt)
+				break;
+			curReg = ((curCmd & 0x80) << 1) | (_fileHdr.regCmdMap[curCmd & 0x7F] << 0);
+			_initRegSet[curReg] = true;
+			if (curReg == 0x105)
+				_initOPL3Enable = _fileData[filePos + 0x01];
+			filePos += 0x02;
+		}
+	}
+	_initBlkEndOfs = filePos;
+	
+	return;
 }
 
 UINT8 DROPlayer::UnloadFile(void)
@@ -302,7 +398,7 @@ UINT32 DROPlayer::GetLoopTicks(void) const
 
 UINT32 DROPlayer::GetCurrentLoop(void) const
 {
-	return _curLoop;
+	return 0;
 }
 
 
@@ -397,7 +493,6 @@ UINT8 DROPlayer::Reset(void)
 	_playState &= ~PLAYSTATE_END;
 	_psTrigger = 0x00;
 	_selPort = 0;
-	_curLoop = 0;
 	
 	_tsMult = _outSmplRate;
 	_tsDiv = _tickFreq;
@@ -418,11 +513,18 @@ UINT8 DROPlayer::Reset(void)
 	
 	for (curDev = 0; curDev < _devices.size(); curDev ++)
 	{
+		if (_devTypes[curDev] == DEVID_YMF262)
+			WriteReg((curDev << _portShift) | 1, 0x05, 0x01);	// temporary OPL3 enable for proper register reset
+		
 		for (curPort = 0; curPort <= _portMask; curPort ++)
 		{
 			devport = (curDev << _portShift) | curPort;
 			for (curReg = 0xFF; curReg >= 0x20; curReg --)
-				WriteReg(devport, curReg, 0x00);
+			{
+				// [optimization] only send registers that are NOT part of the initialization block
+				if (! _initRegSet[(curPort << 8) | curReg])
+					WriteReg(devport, curReg, 0x00);
+			}
 		}
 		devport = (curDev << _portShift);
 		WriteReg(devport | 0, 0x08, 0x00);
@@ -430,8 +532,8 @@ UINT8 DROPlayer::Reset(void)
 		
 		if (_devTypes[curDev] == DEVID_YMF262)
 		{
-			// enable OPL3 mode (DOSBox dumps the registers in the wrong order)
-			WriteReg(devport | 1, 0x05, 0x01);
+			// send OPL3 mode from DRO file now (DOSBox dumps the registers in the wrong order)
+			WriteReg(devport | 1, 0x05, _initOPL3Enable);
 			WriteReg(devport | 1, 0x04, 0x00);	// disable 4op mode
 		}
 	}
@@ -462,7 +564,7 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 				if (clDev->defInf.dataPtr != NULL)
 					Resmpl_Execute(&clDev->resmpl, 1, &data[curSmpl]);
 				clDev = clDev->linkDev;
-			};
+			}
 		}
 		if (_psTrigger & PLAYSTATE_END)
 		{
@@ -516,12 +618,11 @@ void DROPlayer::DoCommand_v1(void)
 	case 0x01:	// 2-byte delay
 		// Note: With DRO v1, the DOSBox developers wanted to change this command from 0x01 to 0x10.
 		//       Too bad that they updated the documentation, but not the actual code.
-		if (_fileData[_filePos + 0x01] == 0xBD)
-			break;	// This is an unescaped register write. (sequence 01 xx BD xx)
-		if (_fileData[_filePos + 0x00] == 0x20 && _fileData[_filePos + 0x01] == 0x08)
-			break;	// This is an unescaped register write. (sequence 01 20 08 xx)
 		if (_filePos < _initBlkEndOfs)
 			break;	// assume missing escape command during initialization block
+		if (! (_fileData[_filePos + 0x00] & ~0x20) &&
+			(_fileData[_filePos + 0x01] == 0x08 || _fileData[_filePos + 0x01] >= 0x20))
+			break;	// This is an unescaped register write. (e.g. 01 20 08 xx or 01 00 BD C0)
 		
 		_fileTick += 1 + ReadLE16(&_fileData[_filePos]);
 		_filePos += 0x02;
@@ -537,7 +638,7 @@ void DROPlayer::DoCommand_v1(void)
 		return;
 	case 0x04:	// escape command
 		// Note: This command is used by various tools that edit DRO files, but DOSBox itself doesn't write it.
-		if (_fileData[_filePos] >= 0x20)
+		if (_fileData[_filePos] >= 0x08)
 			break;	// It only makes sense to escape register 00..04, so should be a direct write to register 04.
 		if (_filePos < _initBlkEndOfs)
 			break;	// assume missing escape command during initialization block
