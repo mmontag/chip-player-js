@@ -1,12 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 #include <vector>
-#include <string>
 #include <algorithm>
-
-#include <iconv.h>
 
 #define INLINE	static inline
 
@@ -17,8 +13,6 @@
 #include <emu/Resampler.h>
 #include <emu/SoundDevs.h>
 #include <emu/EmuCores.h>
-#include <emu/cores/sn764intf.h>	// for SN76496_CFG
-#include <emu/cores/ayintf.h>		// for AY8910_CFG
 #include "helper.h"
 
 
@@ -97,21 +91,19 @@ UINT8 DROPlayer::LoadFile(const char* fileName)
 	tempLng = ReadLE32(&fileSig[0x08]);
 	if (tempLng & 0xFF00FF00)
 	{
-		// DOSBox 0.61 - DRO v0
-		// This version didn't write version bytes.
+		// DRO v0 - This version didn't write version bytes.
 		_fileHdr.verMajor = 0x00;
 		_fileHdr.verMinor = 0x00;
 	}
 	else if (! (tempLng & 0x0000FFFF))
 	{
-		// DOSBox 0.63 - DRO v1
-		// order is: minor, major
+		// DRO v1 - order is: minor, major
 		_fileHdr.verMinor = ReadLE16(&fileSig[0x08]);
 		_fileHdr.verMajor = ReadLE16(&fileSig[0x0A]);
 	}
 	else
 	{
-		// DOSBox 0.73 - DRO v2
+		// DRO v2 - order is: major, minor
 		_fileHdr.verMajor = ReadLE16(&fileSig[0x08]);
 		_fileHdr.verMinor = ReadLE16(&fileSig[0x0A]);
 	}
@@ -133,7 +125,7 @@ UINT8 DROPlayer::LoadFile(const char* fileName)
 	
 	switch(_fileHdr.verMajor)
 	{
-	case 0:	// version 0 (DOSBox 0.61)
+	case 0:	// version 0 (DOSBox 0.62)
 	case 1:	// version 1 (DOSBox 0.63)
 		switch(_fileHdr.verMajor)
 		{
@@ -183,10 +175,11 @@ UINT8 DROPlayer::LoadFile(const char* fileName)
 	ScanInitBlock();
 	
 	_realHwType = _fileHdr.hwType;
-	if (true)
+	if (_fileHdr.verMajor >= 2)
 	{
 		// DOSBox puts "DualOPL2" into the header of DROs that log OPL3 data ...
-		// ... unless 4op mode is enabled.
+		// ... unless the "4op enable" register is accessed while OPL3 mode is active.
+		// This bug was introduced when DRO logging was rewritten for DOSBox 0.73.
 		if (_realHwType == DROHW_DUALOPL2)
 		{
 			// if OPL3 enable is set, it definitely is an OPL3 file
@@ -545,13 +538,23 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 {
 	UINT32 curSmpl;
 	UINT32 smplFileTick;
+	UINT32 maxSmpl;
+	INT32 smplStep;	// might be negative due to rounding errors in Tick2Sample
 	size_t curDev;
 	
-	for (curSmpl = 0; curSmpl < smplCnt; curSmpl ++)
+	curSmpl = 0;
+	while(curSmpl < smplCnt)
 	{
 		smplFileTick = Sample2Tick(_playSmpl);
 		ParseFile(smplFileTick - _playTick);
-		_playSmpl ++;
+		
+		// render as many samples at once as possible (for better performance)
+		maxSmpl = Tick2Sample(_fileTick);
+		smplStep = maxSmpl - _playSmpl;
+		if (smplStep < 1)
+			smplStep = 1;
+		else if ((UINT32)smplStep > smplCnt - curSmpl)
+			smplStep = smplCnt - curSmpl;
 		
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
 		{
@@ -562,14 +565,16 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 			while(clDev != NULL)
 			{
 				if (clDev->defInf.dataPtr != NULL)
-					Resmpl_Execute(&clDev->resmpl, 1, &data[curSmpl]);
+					Resmpl_Execute(&clDev->resmpl, smplStep, &data[curSmpl]);
 				clDev = clDev->linkDev;
 			}
 		}
+		curSmpl += smplStep;
+		_playSmpl += smplStep;
 		if (_psTrigger & PLAYSTATE_END)
 		{
 			_psTrigger &= ~PLAYSTATE_END;
-			return curSmpl + 1;
+			break;
 		}
 	}
 	

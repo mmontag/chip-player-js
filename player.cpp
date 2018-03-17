@@ -556,10 +556,14 @@ static UINT8 StopAudioDevice(void)
 
 static UINT8 StartDiskWriter(const char* fileName)
 {
+	AUDIO_OPTS* opts;
 	UINT8 retVal;
 	
 	if (audDrvLog == NULL)
 		return 0x00;
+	
+	opts = AudioDrv_GetOptions(audDrvLog);
+	*opts = *AudioDrv_GetOptions(audDrv);
 	
 	WavWrt_SetFileName(AudioDrv_GetDrvData(audDrvLog), fileName);
 	retVal = AudioDrv_Start(audDrvLog, 0);
