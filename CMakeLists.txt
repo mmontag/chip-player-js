@@ -43,6 +43,9 @@ option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache"
 option(WITH_GENADLDATA_COMMENTS "Enable comments in generated ADLDATA cache file" OFF)
 option(USE_DOSBOX_EMULATOR  "Use DosBox emulator" OFF)
 option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can be found in 'adlmidi.hpp' header)" OFF)
+option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)" ON)
+option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files)" ON)
+option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files)" ON)
 
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
 option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
@@ -118,9 +121,23 @@ list(APPEND libADLMIDI_SOURCES
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_midiplay.cpp
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_opl3.cpp
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_private.cpp
-    ${libADLMIDI_SOURCE_DIR}/src/adlmidi_mus2mid.c
-    ${libADLMIDI_SOURCE_DIR}/src/adlmidi_xmi2mid.c
 )
+
+if(WITH_MUS_SUPPORT AND WITH_MIDI_SEQUENCER)
+    list(APPEND libADLMIDI_SOURCES
+        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_mus2mid.c
+    )
+else()
+    add_definitions(-DADLMIDI_DISABLE_MUS_SUPPORT)
+endif()
+
+if(WITH_XMI_SUPPORT AND WITH_MIDI_SEQUENCER)
+    list(APPEND libADLMIDI_SOURCES
+        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_xmi2mid.c
+    )
+else()
+    add_definitions(-DADLMIDI_DISABLE_XMI_SUPPORT)
+endif()
 
 if(NOT DJGPP AND NOT MSDOS)
     if(USE_DOSBOX_EMULATOR)
@@ -141,6 +158,10 @@ if(WITH_EMBEDDED_BANKS)
     )
 else()
     add_definitions(-DDISABLE_EMBEDDED_BANKS)
+endif()
+
+if(NOT WITH_MIDI_SEQUENCER)
+    add_definitions(-DADLMIDI_DISABLE_MIDI_SEQUENCER)
 endif()
 
 if(NOT WITH_CPP_EXTRAS)
@@ -387,7 +408,10 @@ message("WITH_EMBEDDED_BANKS      = ${WITH_EMBEDDED_BANKS}")
 message("WITH_GENADLDATA          = ${WITH_GENADLDATA}")
 message("WITH_GENADLDATA_COMMENTS = ${WITH_GENADLDATA_COMMENTS}")
 message("USE_DOSBOX_EMULATOR      = ${USE_DOSBOX_EMULATOR}")
+message("WITH_MIDI_SEQUENCER      = ${WITH_MIDI_SEQUENCER}")
 message("WITH_CPP_EXTRAS          = ${WITH_CPP_EXTRAS}")
+message("WITH_MUS_SUPPORT         = ${WITH_MUS_SUPPORT}")
+message("WITH_XMI_SUPPORT         = ${WITH_XMI_SUPPORT}")
 message("libADLMIDI_STATIC        = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED        = ${libADLMIDI_SHARED}")
 message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")

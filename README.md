@@ -72,15 +72,20 @@ sudo make install
 You need to make in the any IDE a library project and put into it next files
 (or include those files into subfolder of your exist project instead if you want to use it statically):
 
+### Useful macros
+* `ADLMIDI_DISABLE_XMI_SUPPORT` - Disables XMI to MIDI converter
+* `ADLMIDI_DISABLE_MUS_SUPPORT` - Disables MUS to MIDI converter
+* `ADLMIDI_DISABLE_MIDI_SEQUENCER` - Completely disables built-in MIDI sequencer.
+* `ADLMIDI_USE_DOSBOX_OPL` - Enables DosBox 0.74 OPL3 emulator to be used. Nuked OPL3 is used by default if macro is not defined.
+* `DISABLE_EMBEDDED_BANKS` - Disables usage of embedded banks. Use it to use custom-only banks.
+
 ### Public header (include)
 * adlmidi.h     - Library Public API header, use it to control library
 * adlmidi.hpp   - Public additional C++ API header, optional
 
 ### Internal code (src)
 * adldata.hh    - bank structures definition
-* adlmidi_mus2mid.h - MUS2MID converter header
 * adlmidi_private.hpp - header of internal private APIs
-* adlmidi_xmi2mid.h - XMI2MID converter header
 * dbopl.h       - DOSBOX OPL Emulation header
 * fraction.hpp  - Fraction number handling
 * nukedopl3.h   - Nuked OPL3 Emulation header
@@ -89,12 +94,21 @@ You need to make in the any IDE a library project and put into it next files
 * adlmidi.cpp   - code of library
 * adlmidi_load.cpp	- Source of file loading and parsing processing
 * adlmidi_midiplay.cpp	- MIDI event sequencer
-* adlmidi_mus2mid.c	- MUS2MID converter source
 * adlmidi_opl3.cpp	- OPL3 chips manager
 * adlmidi_private.cpp	- some internal functions sources
-* adlmidi_xmi2mid.c	- XMI2MID converter source
 * dbopl.cpp     - DOSBOX OPL Emulation code (used when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
 * nukedopl3.c   - Nuked OPL3 Emulation code (used by default, disabled when `ADLMIDI_USE_DOSBOX_OPL` macro is defined)
+
+#### MUS2MIDI converter
+To remove MUS support, define `ADLMIDI_DISABLE_MUS_SUPPORT` macro and remove those files:
+* adlmidi_mus2mid.h - MUS2MID converter header
+* adlmidi_mus2mid.c	- MUS2MID converter source
+
+#### XMI2MIDI converter
+To remove XMI support, define `ADLMIDI_DISABLE_XMI_SUPPORT` macro and remove those files:
+* adlmidi_xmi2mid.h - XMI2MID converter header
+* adlmidi_xmi2mid.c	- XMI2MID converter source
+
 
 **Important**: Please use DosBox emulator on mobile devices because it requires small CPU power. Nuked OPL synthesizer is very accurate (compared to real OPL3 chip), but it requires much more power device and is high probability your device will lag and playback will be choppy.
 
@@ -118,6 +132,10 @@ To build that example you will need to have installed SDL2 library.
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 
 # Changelog
+## 1.3.2   dev
+ * Added ability to disable MUS and XMI converters
+ * Added ability to disable embedded MIDI sequencer to use library as RealTime synthesizer only or use any custom MIDI sequencer plugins.
+
 ## 1.3.1   2017-12-16
  * Added Real-Time MIDI API (MIDI event functions and adl_generate() to generate PCM between of event rows) which allows you to implement plugin for media players or even a real time MIDI playing driver.
  * Fixed some bugs
