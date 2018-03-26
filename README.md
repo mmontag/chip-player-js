@@ -135,6 +135,7 @@ To build that example you will need to have installed SDL2 library.
 ## 1.3.2   dev
  * Added ability to disable MUS and XMI converters
  * Added ability to disable embedded MIDI sequencer to use library as RealTime synthesizer only or use any custom MIDI sequencer plugins.
+ * Fixed blank instruments fallback in multi-bank support. When using non-zero bank, if instrument is blank, then, instrument will be taken from a root (I.e. zero bank).
 
 ## 1.3.1   2017-12-16
  * Added Real-Time MIDI API (MIDI event functions and adl_generate() to generate PCM between of event rows) which allows you to implement plugin for media players or even a real time MIDI playing driver.
