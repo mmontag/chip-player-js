@@ -244,7 +244,7 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
             adl_rt_channelAfterTouch(p_sys->synth, channel, p1);
             break;
         case 0xE0:
-            adl_rt_pitchBendML(p_sys->synth, channel, p2, p2);
+            adl_rt_pitchBendML(p_sys->synth, channel, p2, p1);
             break;
     }
 
