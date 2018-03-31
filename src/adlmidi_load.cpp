@@ -104,7 +104,7 @@ enum WOPL_InstrumentFlags
     WOPL_Flags_NONE      = 0,
     WOPL_Flag_Enable4OP  = 0x01,
     WOPL_Flag_Pseudo4OP  = 0x02,
-    WOPL_Flag_NoSound    = 0x04,
+    WOPL_Flag_NoSound    = 0x04
 };
 
 struct WOPL_Inst
