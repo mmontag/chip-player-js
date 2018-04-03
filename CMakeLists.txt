@@ -31,6 +31,26 @@ IF(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 ENDIF()
+
+if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} LESS 3.2)
+    message("==Legacy CMake detected! Turning C++11 for everything==")
+    if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+        # Turn on C++11 for everything
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    endif()
+endif()
+
+function(set_legacy_standard destTarget)
+    if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
+        if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+            # Turn on warnings and legacy C/C++ standards to support more compilers
+            target_compile_options(${destTarget} PRIVATE
+                $<$<COMPILE_LANGUAGE:C>:-Wall -pedantic -std=c90>
+                $<$<COMPILE_LANGUAGE:CXX>:-Wall -pedantic -std=gnu++98>
+            )
+        endif()
+    endif()
+endfunction()
 #===========================================================================================
 
 option(WITH_MIDIPLAY        "Build also demo MIDI player" OFF)
@@ -92,8 +112,10 @@ if(WITH_EMBEDDED_BANKS)
         if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
                 CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
                 "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-            message("Turned on C++11 on GCC/CLang/Intel")
-            target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+            if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
+                message("Turned on C++11 on GCC/CLang/Intel")
+                target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+            endif()
         else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             message("Turned on C++11 on MSVC")
             target_compile_options(gen_adldata PUBLIC "/std:c++latest")
@@ -172,6 +194,7 @@ if(libADLMIDI_STATIC)
     add_library(ADLMIDI_static STATIC ${libADLMIDI_SOURCES})
     set_target_properties(ADLMIDI_static PROPERTIES OUTPUT_NAME ADLMIDI)
     target_include_directories(ADLMIDI_static PUBLIC ${SDLMixerX_SOURCE_DIR}/include)
+    set_legacy_standard(ADLMIDI_static)
     list(APPEND libADLMIDI_INSTALLS ADLMIDI_static)
     if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
         add_dependencies(ADLMIDI_static gen-adldata-run)
@@ -182,6 +205,7 @@ if(libADLMIDI_SHARED)
     add_library(ADLMIDI_shared SHARED ${libADLMIDI_SOURCES})
     set_target_properties(ADLMIDI_shared PROPERTIES OUTPUT_NAME ADLMIDI)
     target_include_directories(ADLMIDI_shared PUBLIC ${SDLMixerX_SOURCE_DIR}/include)
+    set_legacy_standard(ADLMIDI_shared)
     list(APPEND libADLMIDI_INSTALLS ADLMIDI_shared)
     if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
         add_dependencies(ADLMIDI_shared gen-adldata-run)
@@ -295,8 +319,10 @@ if(WITH_ADLMIDI2)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
             CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
             "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-        message("Turned on C++11 on GCC/CLang/Intel")
-        target_compile_options(adlmidi2 PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+        if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
+            message("Turned on C++11 on GCC/CLang/Intel")
+            target_compile_options(adlmidi2 PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+        endif()
     else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         message("Turned on C++11 on MSVC")
         target_compile_options(adlmidi2 PUBLIC "/std:c++latest")
