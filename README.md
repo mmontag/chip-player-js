@@ -9,6 +9,8 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 
 [http://iki.fi/bisqwit/source/adlmidi.html](http://iki.fi/bisqwit/source/adlmidi.html)
 
+[![Build Status](https://semaphoreci.com/api/v1/wohlstand/libadlmidi/branches/master/badge.svg)](https://semaphoreci.com/wohlstand/libadlmidi)
+
 # Differences with original tool
 * Reverb code has been removed.
 * Doesn't contains platform specific code. Library can be used with various purposes include making of a custom music decoders for a media players and usage with a games.
