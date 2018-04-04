@@ -342,7 +342,10 @@ void uiMsgStore::Msg()
 
 bool uiGetPassword(UIPASSWORD_TYPE Type,const wchar *FileName,SecPassword *Password)
 {
-  return GetConsolePassword(Type,FileName,Password);
+  // Unlike GUI we cannot provide Cancel button here, so we use the empty
+  // password to abort. Otherwise user not knowing a password would need to
+  // press Ctrl+C multiple times to quit from infinite password request loop.
+  return GetConsolePassword(Type,FileName,Password) && Password->IsSet();
 }
 
 

@@ -480,7 +480,12 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
           // reset cached passwords. Update appropriate code if changed.
           uiMsg(UIWAIT_BADPSW,ArcFileName);
           Cmd->Password.Clean();
+
+          // Avoid new requests for unrar.dll to prevent the infinite loop
+          // if app always returns the same password.
+#ifndef RARDLL
           continue; // Request a password again.
+#endif
         }
 #ifdef RARDLL
         // If we already have ERAR_EOPEN as result of missing volume,

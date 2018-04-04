@@ -471,6 +471,9 @@ void CommandData::ProcessSwitch(const wchar *Switch)
           case '3':
             Shutdown=POWERMODE_SLEEP;
             break;
+          case '4':
+            Shutdown=POWERMODE_RESTART;
+            break;
         }
         break;
       }
