@@ -63,6 +63,10 @@ enum SAVECOPY_MODE {
   SAVECOPY_DUPLISTEXIT
 };
 
+enum POWER_MODE {
+  POWERMODE_KEEP=0,POWERMODE_OFF,POWERMODE_HIBERNATE,POWERMODE_SLEEP
+};
+
 struct FilterMode
 {
   FilterState State;
@@ -85,10 +89,12 @@ class RAROptions
     bool InclAttrSet;
     size_t WinSize;
     wchar TempPath[NM];
-#ifdef USE_QOPEN
     wchar SFXModule[NM];
+
+#ifdef USE_QOPEN
     QOPEN_MODE QOpenMode;
 #endif
+
     bool ConfigDisabled; // Switch -cfg-.
     wchar ExtrPath[NM];
     wchar CommentFile[NM];
@@ -128,6 +134,7 @@ class RAROptions
     Array<int64> NextVolSizes;
     uint CurVolNum;
     bool AllYes;
+    bool MoreInfo; // -im, show more information, used only in "WinRAR t" now.
     bool DisableSortSolid;
     int ArcTime;
     int ConvertNames;
@@ -166,7 +173,7 @@ class RAROptions
     wchar EmailTo[NM];
     uint VersionControl;
     bool AppendArcNameToPath;
-    bool Shutdown;
+    POWER_MODE Shutdown;
     EXTTIME_MODE xmtime;
     EXTTIME_MODE xctime;
     EXTTIME_MODE xatime;

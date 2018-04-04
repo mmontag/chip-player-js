@@ -124,6 +124,9 @@ void uiMsgStore::Msg()
     case UIERROR_FILEDELETE:
       Log(Str[0],St(MCannotDelete),Str[1]);
       break;
+    case UIERROR_RECYCLEFAILED:
+      Log(Str[0],St(MRecycleFailed));
+      break;
     case UIERROR_FILERENAME:
       Log(Str[0],St(MErrRename),Str[1],Str[2]);
       break;
