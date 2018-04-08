@@ -32,7 +32,7 @@ IF(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 ENDIF()
 
-if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} LESS 3.2)
+if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_LESS 3.2)
     message("==Legacy CMake detected! Turning C++11 for everything==")
     if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         # Turn on C++11 for everything
@@ -41,7 +41,7 @@ if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} LESS 3.2)
 endif()
 
 function(set_legacy_standard destTarget)
-    if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
+    if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
         if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
             # Turn on warnings and legacy C/C++ standards to support more compilers
             target_compile_options(${destTarget} PRIVATE
