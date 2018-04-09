@@ -99,13 +99,42 @@ endif()
 
 if(WITH_EMBEDDED_BANKS)
     if(WITH_GENADLDATA)
-        add_executable(gen_adldata
+        set(GEN_ADLDATA_SRC)
+        list(APPEND GEN_ADLDATA_SRC
             ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/gen_adldata.cc
             ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/progs_cache.cpp
             ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/measurer.cpp
             ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/ini/ini_processing.cpp
-            ${libADLMIDI_SOURCE_DIR}/src/nukedopl3.c
-            ${libADLMIDI_SOURCE_DIR}/src/dbopl.cpp
+        )
+
+        list(APPEND GEN_ADLDATA_SRC
+            ${libADLMIDI_SOURCE_DIR}/src/chips/opl_chip_base.cpp
+        )
+
+        if(USE_DOSBOX_EMULATOR)
+            set(HAS_EMULATOR TRUE)
+            list(APPEND GEN_ADLDATA_SRC
+                ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox_opl3.cpp
+                ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox/dbopl.cpp
+            )
+        else()
+            add_definitions(-DADLMIDI_DISABLE_DOSBOX_EMULATOR)
+        endif()
+
+        if(USE_NUKED_EMULATOR)
+            set(HAS_EMULATOR TRUE)
+            list(APPEND GEN_ADLDATA_SRC
+                ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3.cpp       # v 1.8
+                ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3.c
+                ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3_v174.cpp  # v 1.7.4
+                ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3_174.c
+            )
+        else()
+            add_definitions(-DADLMIDI_DISABLE_NUKED_EMULATOR)
+        endif()
+
+        add_executable(gen_adldata
+            ${GEN_ADLDATA_SRC}
         )
         if(NOT MSVC)
             target_link_libraries(gen_adldata pthread m stdc++)

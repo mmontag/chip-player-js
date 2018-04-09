@@ -1,10 +1,17 @@
 #include "measurer.h"
 #include <cmath>
 
-#ifndef ADLMIDI_USE_DOSBOX_OPL
-#include "../../src/nukedopl3.h"
-#else
-#include "../../src/dbopl.h"
+#include "../../src/chips/opl_chip_base.h"
+
+// Nuked OPL3 emulator, Most accurate, but requires the powerful CPU
+#ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
+#   include "../../src/chips/nuked_opl3.h"
+#   include "../../src/chips/nuked_opl3_v174.h"
+#endif
+
+// DosBox 0.74 OPL3 emulator, Well-accurate and fast
+#ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
+#    include "../../src/chips/dosbox_opl3.h"
 #endif
 
 DurationInfo MeasureDurations(const ins &in)
@@ -40,25 +47,22 @@ DurationInfo MeasureDurations(const ins &in)
                               : in.notenum >= 128 ? (44 + 128 - in.notenum)
                                                   : in.notenum;
 
-#ifndef ADLMIDI_USE_DOSBOX_OPL
-#define WRITE_REG(key, value) OPL3_WriteReg(&opl, (Bit8u)(key), (Bit8u)(value))
-    _opl3_chip opl;
-#else
-#define WRITE_REG(key, value) opl.WriteReg((Bit8u)(key), (Bit8u)(value));
-    DBOPL::Handler opl;
-#endif
+    OPLChipBase *opl;
+
+    //DosBoxOPL3 db; opl = &db;
+    //NukedOPL3 nuke; opl = &nuke;
+    NukedOPL3v174 nuke74; opl = &nuke74;
+
+#define WRITE_REG(key, value) opl->writeReg((uint16_t)(key), (uint8_t)(value))
 
     static const short initdata[(2 + 3 + 2 + 2) * 2] =
     {
-            0x004, 96, 0x004, 128,      // Pulse timer
-            0x105, 0, 0x105, 1, 0x105, 0, // Pulse OPL3 enable, leave disabled
-            0x001, 32, 0x0BD, 0         // Enable wave & melodic
-};
-#ifndef ADLMIDI_USE_DOSBOX_OPL
-    OPL3_Reset(&opl, rate);
-#else
-    opl.Init(rate);
-#endif
+        0x004, 96, 0x004, 128,      // Pulse timer
+        0x105, 0, 0x105, 1, 0x105, 0, // Pulse OPL3 enable, leave disabled
+        0x001, 32, 0x0BD, 0         // Enable wave & melodic
+    };
+    opl->setRate(rate);
+
     for(unsigned a = 0; a < 18; a += 2) WRITE_REG(initdata[a], initdata[a + 1]);
 
     const unsigned n_notes = in.insno1 == in.insno2 ? 1 : 2;
@@ -100,32 +104,28 @@ DurationInfo MeasureDurations(const ins &in)
         WRITE_REG(0xB0 + n * 3, x[n] >> 8);
     }
 
+    const unsigned max_silent = 6;
     const unsigned max_on  = 40;
     const unsigned max_off = 60;
 
     // For up to 40 seconds, measure mean amplitude.
     std::vector<double> amplitudecurve_on;
     double highest_sofar = 0;
+    short sound_min = 0, sound_max = 0;
     for(unsigned period = 0; period < max_on * interval; ++period)
     {
         stereoSampleBuf.clear();
         stereoSampleBuf.resize(samples_per_interval * 2);
-#ifndef ADLMIDI_USE_DOSBOX_OPL
-        OPL3_GenerateStream(&opl, stereoSampleBuf.data(), samples_per_interval);
-#else
-        {
-            stereoSampleBuf_32.resize(samples_per_interval * 2);
-            Bitu samples = samples_per_interval;
-            opl.GenerateArr(stereoSampleBuf_32.data(), &samples);
-            size_t ssat = 0;
-            for(const int32_t &i : stereoSampleBuf_32)
-                stereoSampleBuf[ssat++] = (int16_t)i;
-        }
-#endif
+        opl->generate(stereoSampleBuf.data(), samples_per_interval);
 
         double mean = 0.0;
         for(unsigned long c = 0; c < samples_per_interval; ++c)
-            mean += stereoSampleBuf[c * 2];
+        {
+            short s = stereoSampleBuf[c * 2];
+            mean += s;
+            if(sound_min > s) sound_min = s;
+            if(sound_max < s) sound_max = s;
+        }
         mean /= samples_per_interval;
         double std_deviation = 0;
         for(unsigned long c = 0; c < samples_per_interval; ++c)
@@ -138,7 +138,10 @@ DurationInfo MeasureDurations(const ins &in)
         if(std_deviation > highest_sofar)
             highest_sofar = std_deviation;
 
-        if(period > 6 * interval && std_deviation < highest_sofar * 0.2)
+        if((period > max_silent * interval) &&
+            ((std_deviation < highest_sofar * 0.2)||
+             (sound_min >= -1 && sound_max <= 1))
+        )
             break;
     }
 
@@ -152,22 +155,16 @@ DurationInfo MeasureDurations(const ins &in)
     {
         stereoSampleBuf.clear();
         stereoSampleBuf.resize(samples_per_interval * 2);
-#ifndef ADLMIDI_USE_DOSBOX_OPL
-        OPL3_GenerateStream(&opl, stereoSampleBuf.data(), samples_per_interval);
-#else
-        {
-            stereoSampleBuf_32.resize(samples_per_interval * 2);
-            Bitu samples = samples_per_interval;
-            opl.GenerateArr(stereoSampleBuf_32.data(), &samples);
-            size_t ssat = 0;
-            for(const int32_t &i : stereoSampleBuf_32)
-                stereoSampleBuf[ssat++] = (int16_t)i;
-        }
-#endif
+        opl->generate(stereoSampleBuf.data(), samples_per_interval);
 
         double mean = 0.0;
         for(unsigned long c = 0; c < samples_per_interval; ++c)
-            mean += stereoSampleBuf[c * 2];
+        {
+            short s = stereoSampleBuf[c * 2];
+            mean += s;
+            if(sound_min > s) sound_min = s;
+            if(sound_max < s) sound_max = s;
+        }
         mean /= samples_per_interval;
         double std_deviation = 0;
         for(unsigned long c = 0; c < samples_per_interval; ++c)
@@ -178,7 +175,11 @@ DurationInfo MeasureDurations(const ins &in)
         std_deviation = std::sqrt(std_deviation / samples_per_interval);
         amplitudecurve_off.push_back(std_deviation);
 
-        if(std_deviation < highest_sofar * 0.2) break;
+        if(std_deviation < highest_sofar * 0.2)
+            break;
+
+        if((period > max_silent * interval) && (sound_min >= -1 && sound_max <= 1))
+            break;
     }
 
     /* Analyze the results */
@@ -225,7 +226,7 @@ DurationInfo MeasureDurations(const ins &in)
 
     result.ms_sound_kon  = (int64_t)(quarter_amplitude_time * 1000.0 / interval);
     result.ms_sound_koff = (int64_t)(keyoff_out_time        * 1000.0 / interval);
-    result.nosound = (peak_amplitude_value < 0.5);
+    result.nosound = (peak_amplitude_value < 0.5) || ((sound_min >= -1) && (sound_max <= 1));
     return result;
 }
 
