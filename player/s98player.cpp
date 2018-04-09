@@ -493,6 +493,16 @@ UINT32 S98Player::GetCurrentLoop(void) const
 }
 
 
+static void SetSSGCore(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink)
+{
+	if (dLink->devID == DEVID_AY8910)
+	{
+		// possible AY8910 sound core selection here
+	}
+	
+	return;
+}
+
 UINT8 S98Player::Start(void)
 {
 	size_t curDev;
@@ -573,13 +583,18 @@ UINT8 S98Player::Start(void)
 		}
 		SndEmu_GetDeviceFunc(cDev->base.defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, (void**)&cDev->write);
 		
-		// TODO: use callback to fix SSG volume
-		SetupLinkedDevices(&cDev->base, NULL, NULL);
+		SetupLinkedDevices(&cDev->base, &SetSSGCore, this);
 		
 		clDev = &cDev->base;
 		while(clDev != NULL)
 		{
 			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
+			if (deviceID == DEVID_YM2203 || deviceID == DEVID_YM2608)
+			{
+				// set SSG volume
+				if (clDev != &cDev->base)
+					clDev->resmpl.volumeL = clDev->resmpl.volumeR = 0xCD;
+			}
 			Resmpl_DevConnect(&clDev->resmpl, &clDev->defInf);
 			Resmpl_Init(&clDev->resmpl);
 			clDev = clDev->linkDev;
@@ -712,6 +727,9 @@ void S98Player::DoCommand(void)
 	{
 		_playState |= PLAYSTATE_END;
 		_psTrigger |= PLAYSTATE_END;
+		if (_eventCbFunc != NULL)
+			_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
+		printf("S98 file ends early! (filePos 0x%06X, fileSize 0x%06X)\n", _filePos, _fileData.size());
 		return;
 	}
 	

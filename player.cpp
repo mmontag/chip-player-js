@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 	playState = 0x00;
+	isRendering = false;
 	
 	for (curSong = argbase; curSong < argc; curSong ++)
 	{
@@ -148,8 +149,7 @@ int main(int argc, char* argv[])
 	}
 	putchar('\n');
 	
-	isRendering = false;
-	AudioDrv_SetCallback(audDrv, FillBuffer, player);
+	AudioDrv_SetCallback(audDrv, FillBuffer, &player);
 	player->SetSampleRate(sampleRate);
 	player->Start();
 	fadeSmplTime = player->GetSampleRate() * 4;
@@ -227,6 +227,7 @@ int main(int argc, char* argv[])
 	
 	player->Stop();
 	player->UnloadFile();
+	delete player;	player = NULL;
 	
 	}	// end for(curSong)
 	canRender = false;
@@ -327,7 +328,7 @@ static UINT32 CalcCurrentVolume(UINT32 playbackSmpl)
 
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* data)
 {
-	PlayerBase* player = (PlayerBase*)userParam;
+	PlayerBase* player;
 	UINT32 basePbSmpl;
 	UINT32 smplCount;
 	UINT32 smplRendered;
@@ -342,8 +343,15 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	
 	while(renderDoWait)
 		Sleep(1);	// pause the thread while the main thread wants to do some actions
-	if (! canRender)
+	player = *(PlayerBase**)userParam;
+	if (! canRender || player == NULL)
 	{
+		memset(data, 0x00, smplCount * smplSize);
+		return smplCount * smplSize;
+	}
+	if (! (player->GetState() & PLAYSTATE_PLAY))
+	{
+		printf("Player Warning: calling Render while not playing! playState = 0x%02X\n", player->GetState());
 		memset(data, 0x00, smplCount * smplSize);
 		return smplCount * smplSize;
 	}
