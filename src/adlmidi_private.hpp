@@ -112,13 +112,8 @@ typedef int32_t ssize_t;
 #endif
 
 #include "fraction.hpp"
-
 #ifndef ADLMIDI_HW_OPL
-#ifdef ADLMIDI_USE_DOSBOX_OPL
-#include "dbopl.h"
-#else
-#include "nukedopl3.h"
-#endif
+#include "chips/opl_chip_base.h"
 #endif
 
 #include "adldata.hh"
@@ -178,11 +173,7 @@ public:
     char ____padding[4];
     ADL_MIDIPlayer *_parent;
 #ifndef ADLMIDI_HW_OPL
-#   ifdef ADLMIDI_USE_DOSBOX_OPL
-    std::vector<DBOPL::Handler> cards;
-#   else
-    std::vector<_opl3_chip> cards;
-#   endif
+    std::vector<AdlMIDI_CPtr<OPLChipBase > > cardsOP2;
 #endif
 private:
     std::vector<size_t>     ins; // index to adl[], cached, needed by Touch()
@@ -268,7 +259,8 @@ public:
     void updateFlags();
     void updateDeepFlags();
     void ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel);
-    void Reset(unsigned long PCM_RATE);
+    void ClearChips();
+    void Reset(int emulator, unsigned long PCM_RATE);
 };
 
 
@@ -712,6 +704,7 @@ public:
 
     struct Setup
     {
+        int          emulator;
         unsigned int AdlBank;
         unsigned int NumFourOps;
         unsigned int NumCards;

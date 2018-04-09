@@ -195,6 +195,11 @@ int main(int argc, char **argv)
             " -s Enables scaling of modulator volumes\n"
             " -nl Quit without looping\n"
             " -w Write WAV file rather than playing\n"
+            #ifndef HARDWARE_OPL3
+            " --emu-nuked Uses Nuked OPL3 v 1.7.4 emulator\n"
+            " --emu-nuked8 Uses Nuked OPL3 v 1.8 emulator\n"
+            " --emu-dosbox Uses DosBox 0.74 OPL3 emulator\n"
+            #endif
             "\n"
             "Where <bank> - number of embeeded bank or filepath to custom WOPL bank file\n"
             "\n"
@@ -282,6 +287,10 @@ int main(int argc, char **argv)
     bool recordWave = false;
     int loopEnabled = 1;
     #endif
+    #ifndef HARDWARE_OPL3
+    int emulator = ADLMIDI_EMU_NUKED;
+    #endif
+
     while(argc > 2)
     {
         bool had_option = false;
@@ -290,16 +299,29 @@ int main(int argc, char **argv)
             adl_setPercMode(myDevice, 1);//Turn on AdLib percussion mode
         else if(!std::strcmp("-v", argv[2]))
             adl_setHVibrato(myDevice, 1);//Turn on deep vibrato
+
         #ifndef OUTPUT_WAVE_ONLY
         else if(!std::strcmp("-w", argv[2]))
             recordWave = true;//Record library output into WAV file
         #endif
+
         else if(!std::strcmp("-t", argv[2]))
             adl_setHTremolo(myDevice, 1);//Turn on deep tremolo
+
         #ifndef OUTPUT_WAVE_ONLY
         else if(!std::strcmp("-nl", argv[2]))
             loopEnabled = 0; //Enable loop
         #endif
+
+        #ifndef HARDWARE_OPL3
+        else if(!std::strcmp("--emu-nuked", argv[2]))
+            emulator = ADLMIDI_EMU_NUKED;
+        else if(!std::strcmp("--emu-nuked8", argv[2]))
+            emulator = ADLMIDI_EMU_NUKED_8;
+        else if(!std::strcmp("--emu-dosbox", argv[2]))
+            emulator = ADLMIDI_EMU_DOSBOX;
+        #endif
+
         else if(!std::strcmp("-s", argv[2]))
             adl_setScaleModulators(myDevice, 1);//Turn on modulators scaling by volume
         else break;
@@ -321,10 +343,14 @@ int main(int argc, char **argv)
         adl_setRawEventHook(myDevice, debugPrintEvent, NULL);
     #endif
 
+    #ifndef HARDWARE_OPL3
+    adl_switchEmulator(myDevice, emulator);
+    #endif
+
     #ifdef HARDWARE_OPL3
     std::fprintf(stdout, " - Hardware OPL3 chip in use\n");
     #else
-    std::fprintf(stdout, " - %s OPL3 Emulator in use\n", adl_emulatorName());
+    std::fprintf(stdout, " - %s Emulator in use\n", adl_chipEmulatorName(myDevice));
     #endif
 
     #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)

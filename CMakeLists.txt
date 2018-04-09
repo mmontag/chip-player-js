@@ -61,7 +61,8 @@ option(WITH_OLD_UTILS       "Build also old utilities" OFF)
 option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
 option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
 option(WITH_GENADLDATA_COMMENTS "Enable comments in generated ADLDATA cache file" OFF)
-option(USE_DOSBOX_EMULATOR  "Use DosBox emulator" OFF)
+option(USE_DOSBOX_EMULATOR  "Use DosBox 0.74 OPL3 emulator (semi-accurate, suggested for slow or mobile platforms)" ON)
+option(USE_NUKED_EMULATOR   "Use Nuked OPL3 emulator (most accurate, powerful)" ON)
 option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can be found in 'adlmidi.hpp' header)" OFF)
 option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)" ON)
 option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files)" ON)
@@ -162,15 +163,34 @@ else()
 endif()
 
 if(NOT DJGPP AND NOT MSDOS)
+    list(APPEND libADLMIDI_SOURCES
+        ${libADLMIDI_SOURCE_DIR}/src/chips/opl_chip_base.cpp
+    )
+
     if(USE_DOSBOX_EMULATOR)
-        add_definitions(-DADLMIDI_USE_DOSBOX_OPL)
+        set(HAS_EMULATOR TRUE)
         list(APPEND libADLMIDI_SOURCES
-            ${libADLMIDI_SOURCE_DIR}/src/dbopl.cpp
+            ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox_opl3.cpp
+            ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox/dbopl.cpp
         )
     else()
+        add_definitions(-DADLMIDI_DISABLE_DOSBOX_EMULATOR)
+    endif()
+
+    if(USE_NUKED_EMULATOR)
+        set(HAS_EMULATOR TRUE)
         list(APPEND libADLMIDI_SOURCES
-            ${libADLMIDI_SOURCE_DIR}/src/nukedopl3.c
+            ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3.cpp       # v 1.8
+            ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3.c
+            ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3_v174.cpp  # v 1.7.4
+            ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3_174.c
         )
+    else()
+        add_definitions(-DADLMIDI_DISABLE_NUKED_EMULATOR)
+    endif()
+
+    if(NOT HAS_EMULATOR)
+        message(FATAL_ERROR "No emulators enabled! You must enable at least one emulator!")
     endif()
 endif()
 
@@ -434,6 +454,7 @@ message("WITH_EMBEDDED_BANKS      = ${WITH_EMBEDDED_BANKS}")
 message("WITH_GENADLDATA          = ${WITH_GENADLDATA}")
 message("WITH_GENADLDATA_COMMENTS = ${WITH_GENADLDATA_COMMENTS}")
 message("USE_DOSBOX_EMULATOR      = ${USE_DOSBOX_EMULATOR}")
+message("USE_NUKED_EMULATOR       = ${USE_NUKED_EMULATOR}")
 message("WITH_MIDI_SEQUENCER      = ${WITH_MIDI_SEQUENCER}")
 message("WITH_CPP_EXTRAS          = ${WITH_CPP_EXTRAS}")
 message("WITH_MUS_SUPPORT         = ${WITH_MUS_SUPPORT}")

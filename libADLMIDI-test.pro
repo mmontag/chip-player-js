@@ -30,9 +30,14 @@ HEADERS += \
     src/adlmidi_mus2mid.h \
     src/adlmidi_private.hpp \
     src/adlmidi_xmi2mid.h \
+    src/chips/dosbox/dbopl.h \
+    src/chips/dosbox_opl3.h \
+    src/chips/nuked/nukedopl3_174.h \
+    src/chips/nuked/nukedopl3.h \
+    src/chips/nuked_opl3.h \
+    src/chips/nuked_opl3_v174.h \
+    src/chips/opl_chip_base.h \
     src/fraction.hpp \
-    src/nukedopl3.h \
-    src/dbopl.h \
     src/midiplay/wave_writer.h
 
 SOURCES += \
@@ -45,8 +50,13 @@ SOURCES += \
     src/adlmidi_opl3.cpp \
     src/adlmidi_private.cpp \
     src/adlmidi_xmi2mid.c \
-    src/nukedopl3.c \
-    src/dbopl.cpp \
+    src/chips/dosbox/dbopl.cpp \
+    src/chips/dosbox_opl3.cpp \
+    src/chips/nuked/nukedopl3_174.c \
+    src/chips/nuked/nukedopl3.c \
+    src/chips/nuked_opl3.cpp \
+    src/chips/nuked_opl3_v174.cpp \
+    src/chips/opl_chip_base.cpp \
     utils/midiplay/adlmidiplay.cpp \
     utils/midiplay/wave_writer.c
 

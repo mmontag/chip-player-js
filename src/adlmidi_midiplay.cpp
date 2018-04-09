@@ -710,6 +710,8 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
 {
     devices.clear();
 
+    m_setup.emulator = ADLMIDI_EMU_NUKED;
+
     m_setup.PCM_RATE   = sampleRate;
     m_setup.mindelay = 1.0 / (double)m_setup.PCM_RATE;
     m_setup.maxdelay = 512.0 / (double)m_setup.PCM_RATE;
@@ -752,7 +754,7 @@ void MIDIplay::applySetup()
     opl.NumFourOps  = m_setup.NumFourOps;
     cmf_percussion_mode = false;
 
-    opl.Reset(m_setup.PCM_RATE);
+    opl.Reset(m_setup.emulator, m_setup.PCM_RATE);
     ch.clear();
     ch.resize(opl.NumChannels);
 }

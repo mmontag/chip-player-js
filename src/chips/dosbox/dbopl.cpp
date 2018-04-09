@@ -1,4 +1,4 @@
-#ifdef ADLMIDI_USE_DOSBOX_OPL
+//#ifdef ADLMIDI_USE_DOSBOX_OPL
 
 #ifdef __MINGW32__
 typedef struct vswprintf {} swprintf;
@@ -2042,4 +2042,4 @@ namespace DBOPL
 
 }       //Namespace DBOPL
 
-#endif //ADLMIDI_USE_DOSBOX_OPL
+//#endif //ADLMIDI_USE_DOSBOX_OPL

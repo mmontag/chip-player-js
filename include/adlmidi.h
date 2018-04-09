@@ -126,8 +126,23 @@ extern int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath)
 extern int adl_openBankData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size);
 
 
-/*Returns name of currently used OPL3 emulator*/
+/* DEPRECATED */
 extern const char *adl_emulatorName();
+
+/*Returns chip emulator name string*/
+extern const char *adl_chipEmulatorName(struct ADL_MIDIPlayer *device);
+
+enum ADL_Emulator
+{
+    ADLMIDI_EMU_NUKED = 0,
+    ADLMIDI_EMU_NUKED_8,
+    ADLMIDI_EMU_DOSBOX,
+    ADLMIDI_EMU_end
+};
+
+/* Switch the emulation core */
+extern int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulator);
+
 
 typedef struct {
     ADL_UInt16 major;

@@ -25,6 +25,21 @@
 
 #ifdef ADLMIDI_HW_OPL
 static const unsigned OPLBase = 0x388;
+#else
+#   if defined(ADLMIDI_DISABLE_NUKED_EMULATOR) && defined(ADLMIDI_DISABLE_DOSBOX_EMULATOR)
+#       error "No emulators enabled. You must enable at least one emulator to use this library!"
+#   endif
+
+// Nuked OPL3 emulator, Most accurate, but requires the powerful CPU
+#   ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
+#       include "chips/nuked_opl3.h"
+#       include "chips/nuked_opl3_v174.h"
+#   endif
+
+// DosBox 0.74 OPL3 emulator, Well-accurate and fast
+#   ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
+#       include "chips/dosbox_opl3.h"
+#   endif
 #endif
 
 #ifdef DISABLE_EMBEDDED_BANKS
@@ -184,13 +199,7 @@ void OPL3::Poke(size_t card, uint32_t index, uint32_t value)
     #endif//__WATCOMC__
 
     #else//ADLMIDI_HW_OPL
-
-    #ifdef ADLMIDI_USE_DOSBOX_OPL
-    cards[card].WriteReg(index, static_cast<uint8_t>(value));
-    #else
-    OPL3_WriteReg(&cards[card], static_cast<Bit16u>(index), static_cast<Bit8u>(value));
-    #endif
-
+    cardsOP2[card]->writeReg(static_cast<uint16_t>(index), static_cast<uint8_t>(value));
     #endif//ADLMIDI_HW_OPL
 }
 
@@ -216,11 +225,7 @@ void OPL3::PokeN(size_t card, uint16_t index, uint8_t value)
     #endif//__WATCOMC__
 
     #else
-    #ifdef ADLMIDI_USE_DOSBOX_OPL
-    cards[card].WriteReg(static_cast<Bit32u>(index), value);
-    #else
-    OPL3_WriteReg(&cards[card], index, value);
-    #endif
+    cardsOP2[card]->writeReg(index, value);
     #endif
 }
 
@@ -498,24 +503,27 @@ void OPL3::ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel)
     }
 }
 
-void OPL3::Reset(unsigned long PCM_RATE)
+void OPL3::ClearChips()
+{
+    for(size_t i = 0; i < cardsOP2.size(); i++)
+        cardsOP2[i].reset(NULL);
+    cardsOP2.clear();
+}
+
+void OPL3::Reset(int emulator, unsigned long PCM_RATE)
 {
     #ifndef ADLMIDI_HW_OPL
-    #ifdef ADLMIDI_USE_DOSBOX_OPL
-    DBOPL::Handler emptyChip; //Constructors inside are will initialize necessary fields
-    #else
-    _opl3_chip emptyChip;
-    std::memset(&emptyChip, 0, sizeof(_opl3_chip));
-    #endif
-    cards.clear();
+    ClearChips();
     #endif
     (void)PCM_RATE;
     ins.clear();
     pit.clear();
     regBD.clear();
+
     #ifndef ADLMIDI_HW_OPL
-    cards.resize(NumCards, emptyChip);
+    cardsOP2.resize(NumCards, AdlMIDI_CPtr<OPLChipBase>());
     #endif
+
     NumChannels = NumCards * 23;
     ins.resize(NumChannels, 189);
     pit.resize(NumChannels,   0);
@@ -536,24 +544,35 @@ void OPL3::Reset(unsigned long PCM_RATE)
     };
     unsigned fours = NumFourOps;
 
-    for(unsigned card = 0; card < NumCards; ++card)
+    for(size_t i = 0; i < cardsOP2.size(); ++i)
     {
-        #ifndef ADLMIDI_HW_OPL
-        #   ifdef ADLMIDI_USE_DOSBOX_OPL
-        cards[card].Init(PCM_RATE);
-        #   else
-        OPL3_Reset(&cards[card], static_cast<Bit32u>(PCM_RATE));
-        #   endif
-        #endif
+        switch(emulator)
+        {
+        default:
+#ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
+        case ADLMIDI_EMU_NUKED:
+            cardsOP2[i].reset(new NukedOPL3v174());
+            break;
+        case ADLMIDI_EMU_NUKED_8:
+            cardsOP2[i].reset(new NukedOPL3());
+            break;
+#endif
+#ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
+        case ADLMIDI_EMU_DOSBOX:
+            cardsOP2[i].reset(new DosBoxOPL3());
+            break;
+#endif
+        }
+        cardsOP2[i]->setRate((uint32_t)PCM_RATE);
 
-        for(unsigned a = 0; a < 18; ++a) Poke(card, 0xB0 + Channels[a], 0x00);
+        for(unsigned a = 0; a < 18; ++a) Poke(i, 0xB0 + Channels[a], 0x00);
         for(unsigned a = 0; a < sizeof(data) / sizeof(*data); a += 2)
-            PokeN(card, data[a], static_cast<uint8_t>(data[a + 1]));
-        Poke(card, 0x0BD, regBD[card] = (HighTremoloMode * 0x80
-                                         + HighVibratoMode * 0x40
-                                         + AdlPercussionMode * 0x20));
+            PokeN(i, data[a], static_cast<uint8_t>(data[a + 1]));
+        Poke(i, 0x0BD, regBD[i] = (HighTremoloMode * 0x80
+                                 + HighVibratoMode * 0x40
+                                 + AdlPercussionMode * 0x20));
         unsigned fours_this_card = std::min(fours, 6u);
-        Poke(card, 0x104, (1 << fours_this_card) - 1);
+        Poke(i, 0x104, (1 << fours_this_card) - 1);
         //fprintf(stderr, "Card %u: %u four-ops.\n", card, fours_this_card);
         fours -= fours_this_card;
     }

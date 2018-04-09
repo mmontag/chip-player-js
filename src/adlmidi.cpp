@@ -312,11 +312,34 @@ ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer *device, const void *mem, unsigne
 
 ADLMIDI_EXPORT const char *adl_emulatorName()
 {
-    #ifdef ADLMIDI_USE_DOSBOX_OPL
-    return "DosBox";
-    #else
-    return "Nuked";
-    #endif
+    return "<adl_emulatorName() is deprecated! Use adl_chipEmulatorName() instead!>";
+}
+
+ADLMIDI_EXPORT const char *adl_chipEmulatorName(struct ADL_MIDIPlayer *device)
+{
+    if(device)
+    {
+        MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+        if(play && !play->opl.cardsOP2.empty())
+            return play->opl.cardsOP2[0]->emulatorName();
+    }
+    return "Unknown";
+}
+
+ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulator)
+{
+    if(device)
+    {
+        MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+        if(play && (emulator >= 0) && (emulator < ADLMIDI_EMU_end))
+        {
+            play->m_setup.emulator = emulator;
+            adl_reset(device);
+            return 0;
+        }
+        play->setErrorString("OPN2 MIDI: Unknown emulation core!");
+    }
+    return -1;
 }
 
 ADLMIDI_EXPORT const char *adl_linkedLibraryVersion()
@@ -373,7 +396,7 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
         return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.tick_skip_samples_delay = 0;
-    play->opl.Reset(play->m_setup.PCM_RATE);
+    play->opl.Reset(play->m_setup.emulator, play->m_setup.PCM_RATE);
     play->ch.clear();
     play->ch.resize(play->opl.NumChannels);
 }
@@ -651,25 +674,13 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                 unsigned int chips = player->opl.NumCards;
                 if(chips == 1)
                 {
-                    #ifdef ADLMIDI_USE_DOSBOX_OPL
-                    player->opl.cards[0].GenerateArr(out_buf, &in_generatedStereo);
-                    in_generatedPhys = in_generatedStereo * 2;
-                    #else
-                    OPL3_GenerateStream(&player->opl.cards[0], out_buf, static_cast<Bit32u>(in_generatedStereo));
-                    #endif
+                    player->opl.cardsOP2[0]->generate(out_buf, (size_t)in_generatedStereo);
                 }
                 else if(n_periodCountStereo > 0)
                 {
                     /* Generate data from every chip and mix result */
-                    for(unsigned card = 0; card < chips; ++card)
-                    {
-                        #ifdef ADLMIDI_USE_DOSBOX_OPL
-                        player->opl.cards[card].GenerateArrMix(out_buf, &in_generatedStereo);
-                        in_generatedPhys = in_generatedStereo * 2;
-                        #else
-                        OPL3_GenerateStreamMix(&player->opl.cards[card], out_buf, static_cast<Bit32u>(in_generatedStereo));
-                        #endif
-                    }
+                    for(size_t card = 0; card < chips; ++card)
+                        player->opl.cardsOP2[card]->generateAndMix(out_buf, (size_t)in_generatedStereo);
                 }
                 /* Process it */
                 SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out);
@@ -743,26 +754,12 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
                 std::memset(out_buf, 0, static_cast<size_t>(in_generatedPhys) * sizeof(int16_t));
                 unsigned int chips = player->opl.NumCards;
                 if(chips == 1)
-                {
-                    #ifdef ADLMIDI_USE_DOSBOX_OPL
-                    player->opl.cards[0].GenerateArr(out_buf, &in_generatedStereo);
-                    in_generatedPhys = in_generatedStereo * 2;
-                    #else
-                    OPL3_GenerateStream(&player->opl.cards[0], out_buf, static_cast<Bit32u>(in_generatedStereo));
-                    #endif
-                }
+                    player->opl.cardsOP2[0]->generate(out_buf, (size_t)in_generatedStereo);
                 else if(n_periodCountStereo > 0)
                 {
                     /* Generate data from every chip and mix result */
                     for(unsigned card = 0; card < chips; ++card)
-                    {
-                        #ifdef ADLMIDI_USE_DOSBOX_OPL
-                        player->opl.cards[card].GenerateArrMix(out_buf, &in_generatedStereo);
-                        in_generatedPhys = in_generatedStereo * 2;
-                        #else
-                        OPL3_GenerateStreamMix(&player->opl.cards[card], out_buf, static_cast<Bit32u>(in_generatedStereo));
-                        #endif
-                    }
+                        player->opl.cardsOP2[card]->generate(out_buf, (size_t)in_generatedStereo);
                 }
                 /* Process it */
                 SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out);
