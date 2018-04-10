@@ -1599,10 +1599,16 @@ int main(int argc, char **argv)
             " -t Enables tremolo amplification mode\n"
             " -v Enables vibrato amplification mode\n"
             " -s Enables scaling of modulator volumes\n"
+            " -frb Enables full-ranged CC74 XG Brightness controller\n"
             " -nl Quit without looping\n"
             " -nr Disables the reverb effect\n"
             " -w [<filename>] Write WAV file rather than playing\n"
             " -d [<filename>] Write video file using ffmpeg\n"
+            #ifndef HARDWARE_OPL3
+            " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
+            " --emu-nuked7 Uses Nuked OPL3 v 1.7.4 emulator\n"
+            " --emu-dosbox Uses DosBox 0.74 OPL3 emulator\n"
+            #endif
         );
         int banksCount = adl_getBanksCount();
         const char *const *bankNames = adl_getBankNames();
@@ -1648,6 +1654,9 @@ int main(int argc, char **argv)
     adl_setDebugMessageHook(myDevice, adlDebugMsgHook, (void *)&UI);
 
     int loopEnabled = 1;
+#ifndef HARDWARE_OPL3
+    int emulator = ADLMIDI_EMU_NUKED;
+#endif
 
     while(argc > 2)
     {
@@ -1661,6 +1670,16 @@ int main(int argc, char **argv)
             adl_setHTremolo(myDevice, 1);
         else if(!std::strcmp("-nl", argv[2]))
             loopEnabled = 0;
+        else if(!std::strcmp("-frb", argv[2]))
+            adl_setFullRangeBrightness(myDevice, 1);
+#ifndef HARDWARE_OPL3
+        else if(!std::strcmp("--emu-nuked", argv[2]))
+            emulator = ADLMIDI_EMU_NUKED;
+        else if(!std::strcmp("--emu-nuked7", argv[2]))
+            emulator = ADLMIDI_EMU_NUKED_174;
+        else if(!std::strcmp("--emu-dosbox", argv[2]))
+            emulator = ADLMIDI_EMU_DOSBOX;
+#endif
         else if(!std::strcmp("-w", argv[2]))
         {
             loopEnabled = 0;
@@ -1706,6 +1725,9 @@ int main(int argc, char **argv)
         argc -= (had_option ? 2 : 1);
     }
 
+#ifndef HARDWARE_OPL3
+    adl_switchEmulator(myDevice, emulator);
+#endif
     adl_setLoopEnabled(myDevice, loopEnabled);
 
     #ifndef __DJGPP__
