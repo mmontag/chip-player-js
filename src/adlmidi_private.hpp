@@ -87,6 +87,7 @@ typedef int32_t ssize_t;
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
+#include <cinttypes> //PRId32, PRIu32, etc.
 #include <vector> // vector
 #include <deque>  // deque
 #include <cmath>  // exp, log, ceil
@@ -259,7 +260,9 @@ public:
     void updateFlags();
     void updateDeepFlags();
     void ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel);
+    #ifndef ADLMIDI_HW_OPL
     void ClearChips();
+    #endif
     void Reset(int emulator, unsigned long PCM_RATE);
 };
 

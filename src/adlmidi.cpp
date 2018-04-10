@@ -67,7 +67,12 @@ ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numCards)
         return -2;
 
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+#ifdef ADLMIDI_HW_OPL
+    (void)numCards;
+    play->m_setup.NumCards = 1;
+#else
     play->m_setup.NumCards = static_cast<unsigned int>(numCards);
+#endif
     if(play->m_setup.NumCards < 1 || play->m_setup.NumCards > MaxCards)
     {
         play->setErrorString("number of chips may only be 1.." MaxCards_STR ".\n");
@@ -108,7 +113,7 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
     if(static_cast<uint32_t>(bankno) >= NumBanks)
     {
         char errBuf[150];
-        snprintf(errBuf, 150, "Embedded bank number may only be 0..%u!\n", (NumBanks - 1));
+        snprintf(errBuf, 150, "Embedded bank number may only be 0..%" PRIu32 "!\n", (NumBanks - 1));
         play->setErrorString(errBuf);
         return -1;
     }
@@ -319,9 +324,13 @@ ADLMIDI_EXPORT const char *adl_chipEmulatorName(struct ADL_MIDIPlayer *device)
 {
     if(device)
     {
+        #ifndef ADLMIDI_HW_OPL
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
         if(play && !play->opl.cardsOP2.empty())
             return play->opl.cardsOP2[0]->emulatorName();
+        #else
+        return "Hardware OPL3 chip on 0x330";
+        #endif
     }
     return "Unknown";
 }

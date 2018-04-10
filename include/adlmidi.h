@@ -135,7 +135,7 @@ extern const char *adl_chipEmulatorName(struct ADL_MIDIPlayer *device);
 enum ADL_Emulator
 {
     ADLMIDI_EMU_NUKED = 0,
-    ADLMIDI_EMU_NUKED_8,
+    ADLMIDI_EMU_NUKED_174,
     ADLMIDI_EMU_DOSBOX,
     ADLMIDI_EMU_end
 };

@@ -196,8 +196,8 @@ int main(int argc, char **argv)
             " -nl Quit without looping\n"
             " -w Write WAV file rather than playing\n"
             #ifndef HARDWARE_OPL3
-            " --emu-nuked Uses Nuked OPL3 v 1.7.4 emulator\n"
-            " --emu-nuked8 Uses Nuked OPL3 v 1.8 emulator\n"
+            " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
+            " --emu-nuked7 Uses Nuked OPL3 v 1.7.4 emulator\n"
             " --emu-dosbox Uses DosBox 0.74 OPL3 emulator\n"
             #endif
             "\n"
@@ -316,8 +316,8 @@ int main(int argc, char **argv)
         #ifndef HARDWARE_OPL3
         else if(!std::strcmp("--emu-nuked", argv[2]))
             emulator = ADLMIDI_EMU_NUKED;
-        else if(!std::strcmp("--emu-nuked8", argv[2]))
-            emulator = ADLMIDI_EMU_NUKED_8;
+        else if(!std::strcmp("--emu-nuked7", argv[2]))
+            emulator = ADLMIDI_EMU_NUKED_174;
         else if(!std::strcmp("--emu-dosbox", argv[2]))
             emulator = ADLMIDI_EMU_DOSBOX;
         #endif

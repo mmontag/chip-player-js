@@ -503,12 +503,14 @@ void OPL3::ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel)
     }
 }
 
+#ifndef ADLMIDI_HW_OPL
 void OPL3::ClearChips()
 {
     for(size_t i = 0; i < cardsOP2.size(); i++)
         cardsOP2[i].reset(NULL);
     cardsOP2.clear();
 }
+#endif
 
 void OPL3::Reset(int emulator, unsigned long PCM_RATE)
 {
@@ -544,17 +546,18 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE)
     };
     unsigned fours = NumFourOps;
 
-    for(size_t i = 0; i < cardsOP2.size(); ++i)
+    for(size_t i = 0; i < NumCards; ++i)
     {
+#ifndef ADLMIDI_HW_OPL
         switch(emulator)
         {
         default:
 #ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
-        case ADLMIDI_EMU_NUKED:
-            cardsOP2[i].reset(new NukedOPL3v174());
-            break;
-        case ADLMIDI_EMU_NUKED_8:
+        case ADLMIDI_EMU_NUKED: /* Latest Nuked OPL3 */
             cardsOP2[i].reset(new NukedOPL3());
+            break;
+        case ADLMIDI_EMU_NUKED_174: /* Old Nuked OPL3 1.4.7 modified and optimized */
+            cardsOP2[i].reset(new NukedOPL3v174());
             break;
 #endif
 #ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
@@ -564,6 +567,7 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE)
 #endif
         }
         cardsOP2[i]->setRate((uint32_t)PCM_RATE);
+#endif // ADLMIDI_HW_OPL
 
         for(unsigned a = 0; a < 18; ++a) Poke(i, 0xB0 + Channels[a], 0x00);
         for(unsigned a = 0; a < sizeof(data) / sizeof(*data); a += 2)
