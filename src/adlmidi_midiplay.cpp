@@ -1513,9 +1513,12 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 {
                     opl.NoteOff(c);
                     if(props_mask & Upd_Mute) // Mute the note
+                    {
                         opl.Touch_Real(c, 0);
-                    ch[c].koff_time_until_neglible =
-                        ains.ms_sound_koff;
+                        ch[c].koff_time_until_neglible = 0;
+                    } else {
+                        ch[c].koff_time_until_neglible = ains.ms_sound_koff;
+                    }
                 }
             }
             else
