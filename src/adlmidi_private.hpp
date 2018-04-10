@@ -143,9 +143,11 @@ public:
 
     void reset(PTR *p = NULL)
     {
-        if(m_p)
-            free(m_p);
-        m_p = p;
+        if(p != m_p) {
+            if(m_p)
+                free(m_p);
+            m_p = p;
+        }
     }
 
     PTR *get()
@@ -157,6 +159,77 @@ public:
         return *m_p;
     }
     PTR *operator->()
+    {
+        return m_p;
+    }
+private:
+    AdlMIDI_CPtr(const AdlMIDI_CPtr &);
+    AdlMIDI_CPtr &operator=(const AdlMIDI_CPtr &);
+};
+
+/*
+    Shared pointer with non-atomic counter
+    FAQ: Why not std::shared_ptr? Because of Android NDK now doesn't supports it
+*/
+template<class VALUE>
+class AdlMIDI_SPtr
+{
+    VALUE *m_p;
+    size_t *m_counter;
+public:
+    AdlMIDI_SPtr() : m_p(NULL), m_counter(NULL) {}
+    ~AdlMIDI_SPtr()
+    {
+        reset(NULL);
+    }
+
+    AdlMIDI_SPtr(const AdlMIDI_SPtr &other)
+        : m_p(other.m_p), m_counter(other.m_counter)
+    {
+        if(m_counter)
+            ++*m_counter;
+    }
+
+    AdlMIDI_SPtr &operator=(const AdlMIDI_SPtr &other)
+    {
+        reset();
+        m_p = other.m_p;
+        m_counter = other.m_counter;
+        if(m_counter)
+            ++*m_counter;
+        return *this;
+    }
+
+    void reset(VALUE *p = NULL)
+    {
+        if(p != m_p) {
+            if(m_p && --*m_counter == 0)
+                delete m_p;
+            m_p = p;
+            if(!p) {
+                if(m_counter) {
+                    delete m_counter;
+                    m_counter = NULL;
+                }
+            }
+            else
+            {
+                if(!m_counter)
+                    m_counter = new size_t;
+                *m_counter = 1;
+            }
+        }
+    }
+
+    VALUE *get()
+    {
+        return m_p;
+    }
+    VALUE &operator*()
+    {
+        return *m_p;
+    }
+    VALUE *operator->()
     {
         return m_p;
     }
@@ -173,7 +246,7 @@ public:
     char ____padding[4];
     ADL_MIDIPlayer *_parent;
 #ifndef ADLMIDI_HW_OPL
-    std::vector<AdlMIDI_CPtr<OPLChipBase > > cardsOP2;
+    std::vector<AdlMIDI_SPtr<OPLChipBase > > cardsOP2;
 #endif
 private:
     std::vector<size_t>     ins; // index to adl[], cached, needed by Touch()

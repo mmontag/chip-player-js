@@ -521,7 +521,7 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE)
     regBD.clear();
 
     #ifndef ADLMIDI_HW_OPL
-    cardsOP2.resize(NumCards, AdlMIDI_CPtr<OPLChipBase>());
+    cardsOP2.resize(NumCards, AdlMIDI_SPtr<OPLChipBase>());
     #endif
 
     NumChannels = NumCards * 23;
