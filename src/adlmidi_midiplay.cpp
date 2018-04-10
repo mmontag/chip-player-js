@@ -1338,6 +1338,10 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         KillSustainingNotes(channel);
         break;
 
+    case 120: // All sounds off
+        NoteUpdate_All(channel, Upt_OffMute);
+        break;
+
     case 123: // All notes off
         NoteUpdate_All(channel, Upd_Off);
         break;
@@ -1490,7 +1494,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
         uint16_t c   = j->first;
         const MIDIchannel::NoteInfo::Phys &ins = j->second;
 
-        if(select_adlchn >= 0 && c != select_adlchn) continue;
+        if(select_adlchn >= 0 && c != select_adlchn)
+            continue;
 
         if(props_mask & Upd_Off) // note off
         {
@@ -1507,6 +1512,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 if(ch[c].users.empty())
                 {
                     opl.NoteOff(c);
+                    if(props_mask & Upd_Mute) // Mute the note
+                        opl.Touch_Real(c, 0);
                     ch[c].koff_time_until_neglible =
                         ains.ms_sound_koff;
                 }
