@@ -775,7 +775,7 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
                 {
                     /* Generate data from every chip and mix result */
                     for(unsigned card = 0; card < chips; ++card)
-                        player->opl.cardsOP2[card]->generate(out_buf, (size_t)in_generatedStereo);
+                        player->opl.cardsOP2[card]->generateAndMix(out_buf, (size_t)in_generatedStereo);
                 }
                 /* Process it */
                 SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out);
