@@ -193,6 +193,7 @@ int main(int argc, char **argv)
             " -t Enables tremolo amplification mode\n"
             " -v Enables vibrato amplification mode\n"
             " -s Enables scaling of modulator volumes\n"
+            " -frb Enables full-ranged CC74 XG Brightness controller\n"
             " -nl Quit without looping\n"
             " -w Write WAV file rather than playing\n"
             #ifndef HARDWARE_OPL3
@@ -306,7 +307,10 @@ int main(int argc, char **argv)
         #endif
 
         else if(!std::strcmp("-t", argv[2]))
-            adl_setHTremolo(myDevice, 1);//Turn on deep tremolo
+            adl_setHTremolo(myDevice, 1);//Firce turn on deep tremolo
+
+        else if(!std::strcmp("-frb", argv[2]))
+            adl_setFullRangeBrightness(myDevice, 1);//Turn on a full-ranged XG CC74 Brightness
 
         #ifndef OUTPUT_WAVE_ONLY
         else if(!std::strcmp("-nl", argv[2]))
