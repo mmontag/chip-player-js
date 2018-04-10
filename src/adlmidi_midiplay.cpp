@@ -727,6 +727,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
     //m_setup.SkipForward = 0;
     m_setup.loopingIsEnabled = false;
     m_setup.ScaleModulators     = -1;
+    m_setup.fullRangeBrightnessCC74 = false;
     m_setup.delay = 0.0;
     m_setup.carry = 0.0;
     m_setup.tick_skip_samples_delay = 0;
@@ -1543,6 +1544,15 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             uint32_t volume;
             bool is_percussion = (MidCh == 9) || Ch[MidCh].is_xg_percussion;
             uint8_t brightness = is_percussion ? 127 : Ch[MidCh].brightness;
+
+            if(!m_setup.fullRangeBrightnessCC74)
+            {
+                // Simulate post-High-Pass filter result which affects sounding by half level only
+                if(brightness >= 64)
+                    brightness = 127;
+                else
+                    brightness *= 2;
+            }
 
             switch(opl.m_volumeScale)
             {

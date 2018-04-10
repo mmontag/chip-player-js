@@ -200,6 +200,13 @@ ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
     play->opl.ScaleModulators = play->m_setup.ScaleModulators;
 }
 
+ADLMIDI_EXPORT void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_brightness)
+{
+    if(!device) return;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    play->m_setup.fullRangeBrightnessCC74 = fr_brightness;
+}
+
 ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
 {
     if(!device) return;

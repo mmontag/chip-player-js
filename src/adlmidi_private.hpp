@@ -792,6 +792,7 @@ public:
         //unsigned int SkipForward;
         bool    loopingIsEnabled;
         int     ScaleModulators;
+        bool    fullRangeBrightnessCC74;
 
         double delay;
         double carry;

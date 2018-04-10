@@ -110,6 +110,12 @@ extern void adl_setHTremolo(struct ADL_MIDIPlayer *device, int htremo);
 /*Override Enable(1) or Disable(0) scaling of modulator volumes. -1 - use bank default scaling of modulator volumes*/
 extern void adl_setScaleModulators(struct ADL_MIDIPlayer *device, int smod);
 
+/*Enable(1) or Disable(0) full-range brightness (MIDI CC74 used in XG music to filter result sounding) scaling.
+    By default, brightness affects sound between 0 and 64.
+    When this option is enabled, the range will use a full range from 0 up to 127.
+*/
+extern void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_brightness);
+
 /*Enable or disable built-in loop (built-in loop supports 'loopStart' and 'loopEnd' tags to loop specific part)*/
 extern void adl_setLoopEnabled(struct ADL_MIDIPlayer *device, int loopEn);
 
