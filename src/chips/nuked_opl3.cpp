@@ -44,7 +44,7 @@ void NukedOPL3::reset(uint32_t rate)
 void NukedOPL3::writeReg(uint16_t addr, uint8_t data)
 {
     opl3_chip *chip_r = reinterpret_cast<opl3_chip*>(m_chip);
-    OPL3_WriteReg(chip_r, addr, data);
+    OPL3_WriteRegBuffered(chip_r, addr, data);
 }
 
 int NukedOPL3::generate(int16_t *output, size_t frames)
