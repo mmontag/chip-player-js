@@ -299,7 +299,7 @@ int main(int argc, char **argv)
         if(!std::strcmp("-p", argv[2]))
             adl_setPercMode(myDevice, 1);//Turn on AdLib percussion mode
         else if(!std::strcmp("-v", argv[2]))
-            adl_setHVibrato(myDevice, 1);//Turn on deep vibrato
+            adl_setHVibrato(myDevice, 1);//Force turn on deep vibrato
 
         #ifndef OUTPUT_WAVE_ONLY
         else if(!std::strcmp("-w", argv[2]))
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
         #endif
 
         else if(!std::strcmp("-t", argv[2]))
-            adl_setHTremolo(myDevice, 1);//Firce turn on deep tremolo
+            adl_setHTremolo(myDevice, 1);//Force turn on deep tremolo
 
         else if(!std::strcmp("-frb", argv[2]))
             adl_setFullRangeBrightness(myDevice, 1);//Turn on a full-ranged XG CC74 Brightness
