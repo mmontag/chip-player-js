@@ -17,8 +17,8 @@ public:
     virtual void writeReg(uint16_t addr, uint8_t data) override;
     virtual int generate(int16_t *output, size_t frames) override;
     virtual int generateAndMix(int16_t *output, size_t frames) override;
-    virtual int generate(int32_t *output, size_t frames) override;
-    virtual int generateAndMix(int32_t *output, size_t frames) override;
+    virtual int generate32(int32_t *output, size_t frames) override;
+    virtual int generateAndMix32(int32_t *output, size_t frames) override;
     virtual const char *emulatorName() override;
 };
 

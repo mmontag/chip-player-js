@@ -78,7 +78,7 @@ int DosBoxOPL3::generateAndMix(int16_t *output, size_t frames)
     return (int)frames;
 }
 
-int DosBoxOPL3::generate(int32_t *output, size_t frames)
+int DosBoxOPL3::generate32(int32_t *output, size_t frames)
 {
     DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
     ssize_t left = (ssize_t)frames;
@@ -92,7 +92,7 @@ int DosBoxOPL3::generate(int32_t *output, size_t frames)
     return (int)frames;
 }
 
-int DosBoxOPL3::generateAndMix(int32_t *output, size_t frames)
+int DosBoxOPL3::generateAndMix32(int32_t *output, size_t frames)
 {
     DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
     ssize_t left = (ssize_t)frames;

@@ -251,16 +251,16 @@ extern struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size
 
 
 /*Take a sample buffer and iterate MIDI timers */
-extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
+extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
 
 /*Take a sample buffer and iterate MIDI timers */
-extern int  adl_playFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 left[], ADL_UInt8 right[], const struct ADLMIDI_AudioFormat *format);
+extern int  adl_playFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 *left, ADL_UInt8 *right, const struct ADLMIDI_AudioFormat *format);
 
 /*Generate audio output from chip emulators without iteration of MIDI timers.*/
-extern int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
+extern int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
 
 /*Generate audio output from chip emulators without iteration of MIDI timers.*/
-extern int  adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 left[], ADL_UInt8 right[], const struct ADLMIDI_AudioFormat *format);
+extern int  adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 *left, ADL_UInt8 *right, const struct ADLMIDI_AudioFormat *format);
 
 /**
  * @brief Periodic tick handler.

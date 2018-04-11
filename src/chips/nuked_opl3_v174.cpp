@@ -61,26 +61,28 @@ int NukedOPL3v174::generateAndMix(int16_t *output, size_t frames)
     return (int)frames;
 }
 
-int NukedOPL3v174::generate(int32_t *output, size_t frames)
+int NukedOPL3v174::generate32(int32_t *output, size_t frames)
 {
     opl3_chip *chip_r = reinterpret_cast<opl3_chip*>(m_chip);
     for(size_t i = 0; i < frames; ++i) {
         int16_t frame[2];
         OPL3v17_GenerateResampled(chip_r, frame);
-        output[2 * i] = frame[0];
-        output[2 * i + 1] = frame[1];
+        output[0] = (int32_t)frame[0];
+        output[1] = (int32_t)frame[1];
+        output += 2;
     }
     return (int)frames;
 }
 
-int NukedOPL3v174::generateAndMix(int32_t *output, size_t frames)
+int NukedOPL3v174::generateAndMix32(int32_t *output, size_t frames)
 {
     opl3_chip *chip_r = reinterpret_cast<opl3_chip*>(m_chip);
     for(size_t i = 0; i < frames; ++i) {
         int16_t frame[2];
         OPL3v17_GenerateResampled(chip_r, frame);
-        output[2 * i] += frame[0];
-        output[2 * i + 1] += frame[1];
+        output[0] += (int32_t)frame[0];
+        output[1] += (int32_t)frame[1];
+        output += 2;
     }
     return (int)frames;
 }
