@@ -951,20 +951,12 @@ void MIDIplay::realTime_ResetState()
     for(size_t ch = 0; ch < Ch.size(); ch++)
     {
         MIDIchannel &chan = Ch[ch];
+        chan.resetAllControllers();
         chan.volume = (opl.m_musicMode == OPL3::MODE_RSXX) ? 127 : 100;
-        chan.expression = 127;
-        chan.panning = 0x30;
-        chan.vibrato = 0;
-        chan.sustain = 0;
-        chan.bend = 0.0;
-        chan.bendsense = 2 / 8192.0;
         chan.vibpos = 0.0;
-        chan.vibdepth = 0.5 / 127.0;
-        chan.vibdelay = 0;
         chan.lastlrpn = 0;
         chan.lastmrpn = 0;
         chan.nrpn = false;
-        chan.brightness = 127;
         NoteUpdate_All(uint16_t(ch), Upd_All);
         NoteUpdate_All(uint16_t(ch), Upd_Off);
     }
@@ -1315,24 +1307,14 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
 
     case 10: // Change panning
         Ch[channel].panning = 0x00;
-        if(value  < 64 + 32) Ch[channel].panning |= 0x10;
-        if(value >= 64 - 32) Ch[channel].panning |= 0x20;
+        if(value  < 64 + 32) Ch[channel].panning |= OPL_PANNING_LEFT;
+        if(value >= 64 - 32) Ch[channel].panning |= OPL_PANNING_RIGHT;
 
         NoteUpdate_All(channel, Upd_Pan);
         break;
 
     case 121: // Reset all controllers
-        Ch[channel].bend       = 0;
-        Ch[channel].volume     = 100;
-        Ch[channel].expression = 127;
-        Ch[channel].sustain    = 0;
-        Ch[channel].vibrato    = 0;
-        Ch[channel].vibspeed   = 2 * 3.141592653 * 5.0;
-        Ch[channel].vibdepth   = 0.5 / 127;
-        Ch[channel].vibdelay   = 0;
-        Ch[channel].panning    = 0x30;
-        Ch[channel].portamento = 0;
-        Ch[channel].brightness = 127;
+        Ch[channel].resetAllControllers();
         //UpdatePortamento(MidCh);
         NoteUpdate_All(channel, Upd_Pan + Upd_Volume + Upd_Pitch);
         // Kill all sustained notes

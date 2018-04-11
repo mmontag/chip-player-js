@@ -125,6 +125,10 @@ typedef int32_t ssize_t;
 
 #define ADL_UNUSED(x) (void)x
 
+#define OPL_PANNING_LEFT    0x10
+#define OPL_PANNING_RIGHT   0x20
+#define OPL_PANNING_BOTH    0x30
+
 extern std::string ADLMIDI_ErrorString;
 
 /*
@@ -587,26 +591,30 @@ public:
         activenotemap_t activenotes;
         void reset()
         {
-            portamento = 0;
+            resetAllControllers();
+            patch = 0;
+            vibpos = 0;
             bank_lsb = 0;
             bank_msb = 0;
-            patch = 0;
-            volume  = 100;
-            expression = 127;
-            panning = 0x30;
-            vibrato = 0;
-            sustain = 0;
-            bend = 0.0;
-            bendsense = 2 / 8192.0;
-            vibpos = 0;
-            vibspeed = 2 * 3.141592653 * 5.0;
-            vibdepth = 0.5 / 127;
-            vibdelay = 0;
             lastlrpn = 0;
             lastmrpn = 0;
             nrpn = false;
-            brightness = 127;
             is_xg_percussion = false;
+        }
+        void resetAllControllers()
+        {
+            bend = 0.0;
+            bendsense = 2 / 8192.0;
+            volume  = 100;
+            expression = 127;
+            sustain = 0;
+            vibrato = 0;
+            vibspeed = 2 * 3.141592653 * 5.0;
+            vibdepth = 0.5 / 127;
+            vibdelay = 0;
+            panning = OPL_PANNING_BOTH;
+            portamento = 0;
+            brightness = 127;
         }
         MIDIchannel()
             : activenotes()
