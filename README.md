@@ -140,6 +140,7 @@ To build that example you will need to have installed SDL2 library.
  * Added support for real-time switching the emulator
  * Added support for CC-120 - "All sound off" on the MIDI channel
  * Changed logic of CC-74 Brightness to affect sound only between 0 and 64 like real XG synthesizers. Ability to turn on a full-ranged brightness (to use full 0...127 range) is kept.
+ * Added support for different output sample formats (PCM8, PCM16, PCM32, Float32, and Float64) (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
 
 ## 1.3.1   2017-12-16
  * Added Real-Time MIDI API (MIDI event functions and adl_generate() to generate PCM between of event rows) which allows you to implement plugin for media players or even a real time MIDI playing driver.
