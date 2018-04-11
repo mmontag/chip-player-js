@@ -65,6 +65,22 @@ enum ADLMIDI_VolumeModels
     ADLMIDI_VolumeModel_9X
 };
 
+enum ADLMIDI_SampleType
+{
+    ADLMIDI_SampleType_S16 = 0,  /* signed PCM 16-bit */
+    ADLMIDI_SampleType_S8,       /* signed PCM 8-bit */
+    ADLMIDI_SampleType_F32,      /* float 32-bit */
+    ADLMIDI_SampleType_F64,      /* float 64-bit */
+    ADLMIDI_SampleType_Count,
+};
+
+struct ADLMIDI_AudioFormat
+{
+    enum ADLMIDI_SampleType type;  /* type of sample */
+    unsigned containerSize;        /* size in bytes of the storage type */
+    unsigned sampleOffset;         /* distance in bytes between consecutive samples */
+};
+
 struct ADL_MIDIPlayer
 {
     void *adl_midiPlayer;
@@ -237,8 +253,14 @@ extern struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size
 /*Take a sample buffer and iterate MIDI timers */
 extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
 
+/*Take a sample buffer and iterate MIDI timers */
+extern int  adl_playFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 left[], ADL_UInt8 right[], const struct ADLMIDI_AudioFormat *format);
+
 /*Generate audio output from chip emulators without iteration of MIDI timers.*/
-extern int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
+extern int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short out[]);
+
+/*Generate audio output from chip emulators without iteration of MIDI timers.*/
+extern int  adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 left[], ADL_UInt8 right[], const struct ADLMIDI_AudioFormat *format);
 
 /**
  * @brief Periodic tick handler.

@@ -61,6 +61,30 @@ int NukedOPL3::generateAndMix(int16_t *output, size_t frames)
     return (int)frames;
 }
 
+int NukedOPL3::generate(int32_t *output, size_t frames)
+{
+    opl3_chip *chip_r = reinterpret_cast<opl3_chip*>(m_chip);
+    for(size_t i = 0; i < frames; ++i) {
+        int16_t frame[2];
+        OPL3_GenerateResampled(chip_r, frame);
+        output[2 * i] = frame[0];
+        output[2 * i + 1] = frame[1];
+    }
+    return (int)frames;
+}
+
+int NukedOPL3::generateAndMix(int32_t *output, size_t frames)
+{
+    opl3_chip *chip_r = reinterpret_cast<opl3_chip*>(m_chip);
+    for(size_t i = 0; i < frames; ++i) {
+        int16_t frame[2];
+        OPL3_GenerateResampled(chip_r, frame);
+        output[2 * i] += frame[0];
+        output[2 * i + 1] += frame[1];
+    }
+    return (int)frames;
+}
+
 const char *NukedOPL3::emulatorName()
 {
     return "Nuked OPL3 (v 1.8)";

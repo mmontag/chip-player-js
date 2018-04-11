@@ -37,6 +37,13 @@ static ADL_Version adl_version = {
     ADLMIDI_VERSION_PATCHLEVEL
 };
 
+static const ADLMIDI_AudioFormat adl_DefaultAudioFormat =
+{
+    ADLMIDI_SampleType_S16,
+    sizeof(short),
+    2 * sizeof(short),
+};
+
 /*---------------------------EXPORTS---------------------------*/
 
 ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
@@ -608,30 +615,107 @@ ADLMIDI_EXPORT void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_D
 }
 
 
+template <class Dst>
+static void CopySamplesRaw(ADL_UInt8 *dstLeft, ADL_UInt8 *dstRight, const int32_t *src,
+                           size_t frameCount, unsigned sampleOffset)
+{
+    for(size_t i = 0; i < frameCount; ++i) {
+        *(Dst *)(dstLeft + i * sampleOffset) = src[2 * i];
+        *(Dst *)(dstRight + i * sampleOffset) = src[2 * i + 1];
+    }
+}
 
-inline static void SendStereoAudio(int      &samples_requested,
-                                   ssize_t  &in_size,
-                                   short    *_in,
-                                   ssize_t   out_pos,
-                                   short    *_out)
+template <class Dst, class Ret>
+static void CopySamplesTransformed(ADL_UInt8 *dstLeft, ADL_UInt8 *dstRight, const int32_t *src,
+                                   size_t frameCount, unsigned sampleOffset,
+                                   Ret(&transform)(int32_t))
+{
+    for(size_t i = 0; i < frameCount; ++i) {
+        *(Dst *)(dstLeft + i * sampleOffset) = transform(src[2 * i]);
+        *(Dst *)(dstRight + i * sampleOffset) = transform(src[2 * i + 1]);
+    }
+}
+
+static int SendStereoAudio(int        samples_requested,
+                           ssize_t    in_size,
+                           int32_t   *_in,
+                           ssize_t    out_pos,
+                           ADL_UInt8 *left,
+                           ADL_UInt8 *right,
+                           const ADLMIDI_AudioFormat *format)
 {
     if(!in_size)
-        return;
-    size_t offset       = static_cast<size_t>(out_pos);
+        return 0;
+    size_t outputOffset = static_cast<size_t>(out_pos);
     size_t inSamples    = static_cast<size_t>(in_size * 2);
-    size_t maxSamples   = static_cast<size_t>(samples_requested) - offset;
+    size_t maxSamples   = static_cast<size_t>(samples_requested) - outputOffset;
     size_t toCopy       = std::min(maxSamples, inSamples);
-    std::memcpy(_out + out_pos, _in, toCopy * sizeof(short));
+
+    ADLMIDI_SampleType sampleType = format->type;
+    const unsigned containerSize = format->containerSize;
+    const unsigned sampleOffset = format->sampleOffset;
+
+    switch(sampleType) {
+    case ADLMIDI_SampleType_S8:
+        switch(containerSize) {
+        case sizeof(int8_t):
+            CopySamplesTransformed<int8_t>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS8);
+            break;
+        case sizeof(int16_t):
+            CopySamplesTransformed<int16_t>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS8);
+            break;
+        case sizeof(int32_t):
+            CopySamplesTransformed<int32_t>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS8);
+            break;
+        default:
+            return -1;
+        }
+        break;
+    case ADLMIDI_SampleType_S16:
+        switch(containerSize) {
+        case sizeof(int16_t):
+            CopySamplesTransformed<int16_t>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS16);
+            break;
+        case sizeof(int32_t):
+            CopySamplesRaw<int32_t>(left, right, _in, toCopy / 2, sampleOffset);
+            break;
+        default:
+            return -1;
+        }
+        break;
+    case ADLMIDI_SampleType_F32:
+        if(containerSize != sizeof(float))
+            return -1;
+        CopySamplesTransformed<float>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtReal<float>);
+        break;
+    case ADLMIDI_SampleType_F64:
+        if(containerSize != sizeof(double))
+            return -1;
+        CopySamplesTransformed<double>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtReal<double>);
+        break;
+    default:
+        return -1;
+    }
+
+    return 0;
 }
 
 
-ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
+ADLMIDI_EXPORT int adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short *out)
+{
+    return adl_playFormat(device, sampleCount, (ADL_UInt8 *)out, (ADL_UInt8 *)(out + 1), &adl_DefaultAudioFormat);
+}
+
+ADLMIDI_EXPORT int adl_playFormat(ADL_MIDIPlayer *device, int sampleCount,
+                                  ADL_UInt8 out_left[], ADL_UInt8 out_right[],
+                                  const ADLMIDI_AudioFormat *format)
 {
     #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     #ifdef ADLMIDI_HW_OPL
     (void)device;
     (void)sampleCount;
     (void)out;
+    (void)format;
     return 0;
     #else
     sampleCount -= sampleCount % 2; //Avoid even sample requests
@@ -685,8 +769,8 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                 ssize_t in_generatedPhys = in_generatedStereo * 2;
                 //! Unsigned total sample count
                 //fill buffer with zeros
-                int16_t *out_buf = player->outBuf;
-                std::memset(out_buf, 0, static_cast<size_t>(in_generatedPhys) * sizeof(int16_t));
+                int32_t *out_buf = player->outBuf;
+                std::memset(out_buf, 0, static_cast<size_t>(in_generatedPhys) * sizeof(out_buf[0]));
                 unsigned int chips = player->opl.NumCards;
                 if(chips == 1)
                 {
@@ -699,7 +783,8 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
                         player->opl.cardsOP2[card]->generateAndMix(out_buf, (size_t)in_generatedStereo);
                 }
                 /* Process it */
-                SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out);
+                if(SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out_left, out_right, format) == -1)
+                    return 0;
 
                 left -= (int)in_generatedPhys;
                 gotten_len += (in_generatedPhys) /* - setup.stored_samples*/;
@@ -726,10 +811,18 @@ ADLMIDI_EXPORT int adl_play(ADL_MIDIPlayer *device, int sampleCount, short *out)
 
 ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
+    return adl_generateFormat(device, sampleCount, (ADL_UInt8 *)out, (ADL_UInt8 *)(out + 1), &adl_DefaultAudioFormat);
+}
+
+ADLMIDI_EXPORT int adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleCount,
+                                      ADL_UInt8 out_left[], ADL_UInt8 out_right[],
+                                      const ADLMIDI_AudioFormat *format)
+{
     #ifdef ADLMIDI_HW_OPL
     (void)device;
     (void)sampleCount;
     (void)out;
+    (void)format;
     return 0;
     #else
     sampleCount -= sampleCount % 2; //Avoid even sample requests
@@ -766,8 +859,8 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
                 ssize_t in_generatedPhys = in_generatedStereo * 2;
                 //! Unsigned total sample count
                 //fill buffer with zeros
-                int16_t *out_buf = player->outBuf;
-                std::memset(out_buf, 0, static_cast<size_t>(in_generatedPhys) * sizeof(int16_t));
+                int32_t *out_buf = player->outBuf;
+                std::memset(out_buf, 0, static_cast<size_t>(in_generatedPhys) * sizeof(out_buf[0]));
                 unsigned int chips = player->opl.NumCards;
                 if(chips == 1)
                     player->opl.cardsOP2[0]->generate(out_buf, (size_t)in_generatedStereo);
@@ -778,7 +871,8 @@ ADLMIDI_EXPORT int adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, 
                         player->opl.cardsOP2[card]->generateAndMix(out_buf, (size_t)in_generatedStereo);
                 }
                 /* Process it */
-                SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out);
+                if(SendStereoAudio(sampleCount, in_generatedStereo, out_buf, gotten_len, out_left, out_right, format) == -1)
+                    return 0;
 
                 left -= (int)in_generatedPhys;
                 gotten_len += (in_generatedPhys) /* - setup.stored_samples*/;
