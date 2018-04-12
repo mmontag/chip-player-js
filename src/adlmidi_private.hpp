@@ -216,6 +216,8 @@ public:
 
     AdlMIDI_SPtr &operator=(const AdlMIDI_SPtr &other)
     {
+        if(this == &other)
+            return *this;
         reset();
         m_p = other.m_p;
         m_counter = other.m_counter;
