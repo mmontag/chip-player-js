@@ -430,25 +430,23 @@ endif()
 
 if(WITH_VLC_PLUGIN)
     include(cmake/FindLIBVLC.cmake)
-    include_directories(${LIBVLC_INCLUDE_DIR}/vlc/plugins)
-    include_directories(${LIBVLC_INCLUDE_DIR}/vlc)
-    message("Found ${LIBVLC_LIBRARY} of version ${LIBVLC_VERSION} with includes ${LIBVLC_INCLUDE_DIR}")
+    message("Found ${LIBVLCCORE_LIBRARY} of version ${LIBVLC_VERSION} with includes ${LIBVLC_INCLUDE_DIR}")
 
     set(adlmidi_vlc_src)
     list(APPEND adlmidi_vlc_src
         ${libADLMIDI_SOURCE_DIR}/utils/vlc_codec/libadlmidi.c)
 
     add_library(adlmidi_plugin MODULE ${adlmidi_vlc_src})
-    target_compile_options(adlmidi_plugin PUBLIC "-DVLC_MODULE_COPYRIGHT=\"Copyright \(c\) Vitaly Novichkov\"")
-    target_compile_options(adlmidi_plugin PUBLIC "-DVLC_MODULE_LICENSE=\"GPLv3\"")
-    target_compile_options(adlmidi_plugin PUBLIC "-DMODULE_STRING=\"adlmidi\"")
-    #target_link_options()
-    #target_compile_definitions(adlmidi_plugin
-    #    PUBLIC -DVLC_MODULE_COPYRIGHT="Copyright \(c\) Vitaly Novichkov" -DVLC_MODULE_LICENSE="GPLv3" -DMODULE_STRING="adlmidi")
+    target_compile_options(adlmidi_plugin PUBLIC
+                "-DVLC_MODULE_COPYRIGHT=\"Copyright \(c\) Vitaly Novichkov\""
+                "-DVLC_MODULE_LICENSE=\"GPLv3\""
+                "-DMODULE_STRING=\"adlmidi\""
+                ${VLCPLUGIN_DEFINITIONS})
+    target_include_directories(adlmidi_plugin PRIVATE
+            ${LIBVLC_INCLUDE_DIR}/vlc/plugins
+            ${LIBVLC_INCLUDE_DIR}/vlc)
     target_link_libraries(adlmidi_plugin ADLMIDI vlccore m stdc++)
-    target_link_libraries(adlmidi_plugin INTERFACE "-export-symbol-regex ^vlc_entry")
-    #target_compile_definitions(adlmidi_plugin -DVLC_MODULE_LICENSE="GPLv3")
-    #target_compile_definitions(adlmidi_plugin -DMODULE_STRING="adlmidi")
+    # target_link_libraries(adlmidi_plugin INTERFACE "-export-symbol-regex ^vlc_entry")
 
     if(libADLMIDI_SHARED)
         add_dependencies(adlmidi_plugin ADLMIDI_shared)
@@ -476,6 +474,7 @@ install(FILES
 
 message("==== libADLMIDI options ====")
 message("WITH_MIDIPLAY            = ${WITH_MIDIPLAY}")
+message("WITH_VLC_PLUGIN          = ${WITH_VLC_PLUGIN}")
 message("MIDIPLAY_WAVE_ONLY       = ${MIDIPLAY_WAVE_ONLY}")
 message("WITH_ADLMIDI2            = ${WITH_ADLMIDI2}")
 message("WITH_OLD_UTILS           = ${WITH_OLD_UTILS}")

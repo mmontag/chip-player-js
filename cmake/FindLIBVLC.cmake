@@ -24,6 +24,8 @@ if (NOT WIN32)
     find_package(PkgConfig)
     pkg_check_modules(PC_LIBVLC libvlc)
     set(LIBVLC_DEFINITIONS ${PC_LIBVLC_CFLAGS_OTHER})
+    pkg_check_modules(PC_VLCPLUGIN vlc-plugin)
+    set(VLCPLUGIN_DEFINITIONS ${PC_VLCPLUGIN_CFLAGS_OTHER})
 endif (NOT WIN32)
 
 #Put here path to custom location
