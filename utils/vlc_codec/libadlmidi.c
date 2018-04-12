@@ -97,6 +97,12 @@ struct decoder_sys_t
     date_t            end_date;
 };
 
+static const struct ADLMIDI_AudioFormat g_output_format =
+{
+    ADLMIDI_SampleType_F32,
+    sizeof(float),
+    2 * sizeof(float)
+};
 
 //static int  DecodeBlock (decoder_t *p_dec, block_t *p_block); //For different version
 static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block);
@@ -137,8 +143,8 @@ static int Open (vlc_object_t *p_this)
     p_dec->fmt_out.audio.i_channels = 2;
     p_dec->fmt_out.audio.i_physical_channels = AOUT_CHAN_LEFT | AOUT_CHAN_RIGHT;
 
-    p_dec->fmt_out.i_codec = VLC_CODEC_S16L;
-    p_dec->fmt_out.audio.i_bitspersample = 16;
+    p_dec->fmt_out.i_codec = VLC_CODEC_F32L;
+    p_dec->fmt_out.audio.i_bitspersample = 32;
     date_Init (&p_sys->end_date, p_dec->fmt_out.audio.i_rate, 1);
     date_Set (&p_sys->end_date, 0);
 
@@ -258,7 +264,10 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
         goto drop;
 
     p_out->i_pts = date_Get (&p_sys->end_date );
-    samples = adl_generate(p_sys->synth, samples * 2, (short*)p_out->p_buffer);
+    samples = adl_generateFormat(p_sys->synth, (int)samples * 2,
+                                 (ADL_UInt8*)p_out->p_buffer,
+                                 (ADL_UInt8*)(p_out->p_buffer + g_output_format.containerSize),
+                                 &g_output_format);
     samples /= 2;
     p_out->i_length = date_Increment (&p_sys->end_date, samples) - p_out->i_pts;
 
