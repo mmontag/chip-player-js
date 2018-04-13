@@ -87,7 +87,11 @@ typedef int32_t ssize_t;
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
+#if !(defined(__APPLE__) && defined(__GLIBCXX__))
 #include <cinttypes> //PRId32, PRIu32, etc.
+#else
+#include <inttypes.h>
+#endif
 #include <vector> // vector
 #include <deque>  // deque
 #include <cmath>  // exp, log, ceil
