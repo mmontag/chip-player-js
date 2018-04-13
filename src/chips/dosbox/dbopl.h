@@ -20,6 +20,7 @@
 /* BEGIN MIDIPLAY GLUE */
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/types.h>
 typedef unsigned long Bitu;
 typedef   signed long Bits;
 typedef unsigned Bit32u;
