@@ -658,26 +658,35 @@ static int SendStereoAudio(int        samples_requested,
     left  += (outputOffset / 2) * sampleOffset;
     right += (outputOffset / 2) * sampleOffset;
 
+    typedef int32_t(&pfnConvert)(int32_t);
+
     switch(sampleType) {
     case ADLMIDI_SampleType_S8:
+    case ADLMIDI_SampleType_U8:
+    {
+        pfnConvert cvt = (sampleType == ADLMIDI_SampleType_S8) ? adl_cvtS8 : adl_cvtU8;
         switch(containerSize) {
         case sizeof(int8_t):
-            CopySamplesTransformed<int8_t>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS8);
+            CopySamplesTransformed<int8_t>(left, right, _in, toCopy / 2, sampleOffset, cvt);
             break;
         case sizeof(int16_t):
-            CopySamplesTransformed<int16_t>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS8);
+            CopySamplesTransformed<int16_t>(left, right, _in, toCopy / 2, sampleOffset, cvt);
             break;
         case sizeof(int32_t):
-            CopySamplesTransformed<int32_t>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS8);
+            CopySamplesTransformed<int32_t>(left, right, _in, toCopy / 2, sampleOffset, cvt);
             break;
         default:
             return -1;
         }
         break;
+    }
     case ADLMIDI_SampleType_S16:
+    case ADLMIDI_SampleType_U16:
+    {
+        pfnConvert cvt = (sampleType == ADLMIDI_SampleType_S16) ? adl_cvtS16 : adl_cvtU16;
         switch(containerSize) {
         case sizeof(int16_t):
-            CopySamplesTransformed<int16_t>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS16);
+            CopySamplesTransformed<int16_t>(left, right, _in, toCopy / 2, sampleOffset, cvt);
             break;
         case sizeof(int32_t):
             CopySamplesRaw<int32_t>(left, right, _in, toCopy / 2, sampleOffset);
@@ -686,6 +695,33 @@ static int SendStereoAudio(int        samples_requested,
             return -1;
         }
         break;
+    }
+    case ADLMIDI_SampleType_S24:
+    case ADLMIDI_SampleType_U24:
+    {
+        pfnConvert cvt = (sampleType == ADLMIDI_SampleType_S24) ? adl_cvtS24 : adl_cvtU24;
+        switch(containerSize) {
+        case sizeof(int32_t):
+            CopySamplesTransformed<int32_t>(left, right, _in, toCopy / 2, sampleOffset, cvt);
+            break;
+        default:
+            return -1;
+        }
+        break;
+    }
+    case ADLMIDI_SampleType_S32:
+    case ADLMIDI_SampleType_U32:
+    {
+        pfnConvert cvt = (sampleType == ADLMIDI_SampleType_S32) ? adl_cvtS32 : adl_cvtU32;
+        switch(containerSize) {
+        case sizeof(int32_t):
+            CopySamplesTransformed<int32_t>(left, right, _in, toCopy / 2, sampleOffset, cvt);
+            break;
+        default:
+            return -1;
+        }
+        break;
+    }
     case ADLMIDI_SampleType_F32:
         if(containerSize != sizeof(float))
             return -1;
