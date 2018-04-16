@@ -618,8 +618,14 @@ public:
             size_t  midiins;
             // Index to physical adlib data structure, adlins[]
             size_t  insmeta;
+            enum
+            {
+                MaxNumPhysChans = 2
+            };
             struct Phys
             {
+                //! Destinition chip channel
+                uint16_t chip_chan;
                 //! ins, inde to adl[]
                 size_t  insId;
                 //! Is this voice must be detunable?
@@ -634,9 +640,10 @@ public:
                     return !operator==(oth);
                 }
             };
-            typedef std::map<uint16_t, Phys> PhysMap;
-            // List of OPL3 channels it is currently occupying.
-            std::map<uint16_t /*adlchn*/, Phys> phys;
+            //! List of OPL3 channels it is currently occupying.
+            Phys chip_channels[MaxNumPhysChans];
+            //! Count of used channels.
+            size_t chip_channels_max;
         };
         char ____padding2[5];
         NoteInfo activenotes[128];
