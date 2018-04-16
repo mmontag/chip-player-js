@@ -967,10 +967,10 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if((opl.m_musicMode == OPL3::MODE_RSXX) && (velocity != 0))
     {
         // Check if this is just a note after-touch
-        MIDIchannel::activenoteiterator i = Ch[channel].activenotes.find(note);
-        if(i != Ch[channel].activenotes.end())
+        MIDIchannel::activenoteiterator i = Ch[channel].activenotes_find(note);
+        if(i)
         {
-            i->second.vol = velocity;
+            i->vol = velocity;
             NoteUpdate(channel, i, Upd_Volume);
             return false;
         }
@@ -1196,11 +1196,11 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     // Allocate active note for MIDI channel
     std::pair<MIDIchannel::activenoteiterator, bool>
-    ir = Ch[channel].activenotes.insert(std::make_pair(note, MIDIchannel::NoteInfo()));
-    ir.first->second.vol     = velocity;
-    ir.first->second.tone    = tone;
-    ir.first->second.midiins = midiins;
-    ir.first->second.insmeta = meta;
+    ir = Ch[channel].activenotes_insert(note);
+    ir.first->vol     = velocity;
+    ir.first->tone    = tone;
+    ir.first->midiins = midiins;
+    ir.first->insmeta = meta;
 
     for(unsigned ccount = 0; ccount < 2; ++ccount)
     {
@@ -1208,7 +1208,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         if(c < 0)
             continue;
         uint16_t chipChan = static_cast<uint16_t>(adlchannel[ccount]);
-        ir.first->second.phys[chipChan] = voices[ccount];
+        ir.first->phys[chipChan] = voices[ccount];
     }
     NoteUpdate(channel, ir.first, Upd_All | Upd_Patch);
     return true;
@@ -1224,13 +1224,13 @@ void MIDIplay::realTime_NoteAfterTouch(uint8_t channel, uint8_t note, uint8_t at
 {
     channel = channel % 16;
     MIDIchannel::activenoteiterator
-    i = Ch[channel].activenotes.find(note);
-    if(i == Ch[channel].activenotes.end())
+    i = Ch[channel].activenotes_find(note);
+    if(!i)
     {
         // Ignore touch if note is not active
         return;
     }
-    i->second.vol = 127 - atVal;
+    i->vol = 127 - atVal;
     NoteUpdate(channel, i, Upd_Volume);
 }
 
@@ -1239,12 +1239,10 @@ void MIDIplay::realTime_ChannelAfterTouch(uint8_t channel, uint8_t atVal)
     // TODO: Verify, is this correct action?
     channel = channel % 16;
     for(MIDIchannel::activenoteiterator
-        i = Ch[channel].activenotes.begin();
-        i != Ch[channel].activenotes.end();
-        ++i)
+        i = Ch[channel].activenotes_begin(); i; ++i)
     {
         // Set this pressure to all active notes on the channel
-        i->second.vol = 127 - atVal;
+        i->vol = 127 - atVal;
     }
 
     NoteUpdate_All(channel, Upd_Volume);
@@ -1436,7 +1434,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                           unsigned props_mask,
                           int32_t select_adlchn)
 {
-    MIDIchannel::NoteInfo &info = i->second;
+    MIDIchannel::NoteInfo &info = *i;
     const int16_t tone    = info.tone;
     const uint8_t vol     = info.vol;
     const int midiins     = info.midiins;
@@ -1444,7 +1442,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
     const adlinsdata &ains = opl.GetAdlMetaIns(insmeta);
     AdlChannel::Location my_loc;
     my_loc.MidCh = MidCh;
-    my_loc.note  = i->first;
+    my_loc.note  = info.note;
 
     for(MIDIchannel::NoteInfo::PhysMap::iterator
         jnext = info.phys.begin();
@@ -1640,7 +1638,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
     }
 
     if(info.phys.empty())
-        Ch[MidCh].activenotes.erase(i);
+        Ch[MidCh].activenotes_erase(i);
 }
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
@@ -2150,10 +2148,10 @@ int64_t MIDIplay::CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::Not
         else
             s -= (j->second.kon_time_until_neglible / 2);
 
-        MIDIchannel::activenotemap_t::const_iterator
-        k = Ch[j->first.MidCh].activenotes.find(j->first.note);
+        MIDIchannel::activenoteiterator
+        k = const_cast<MIDIchannel &>(Ch[j->first.MidCh]).activenotes_find(j->first.note);
 
-        if(k != Ch[j->first.MidCh].activenotes.end())
+        if(k)
         {
             // Same instrument = good
             if(j->second.ins == ins)
@@ -2166,7 +2164,7 @@ int64_t MIDIplay::CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::Not
             }
 
             // Percussion is inferior to melody
-            s += 50 * (int64_t)(k->second.midiins / 128);
+            s += 50 * (int64_t)(k->midiins / 128);
             /*
                     if(k->second.midiins >= 25
                     && k->second.midiins < 40
@@ -2225,7 +2223,7 @@ void MIDIplay::PrepareAdlChannelForNewNote(size_t c, const MIDIchannel::NoteInfo
             // Collision: Kill old note,
             // UNLESS we're going to do arpeggio
             MIDIchannel::activenoteiterator i
-            (Ch[j->first.MidCh].activenotes.find(j->first.note));
+            (Ch[j->first.MidCh].activenotes_find(j->first.note));
 
             // Check if we can do arpeggio.
             if((j->second.vibdelay < 70
@@ -2284,17 +2282,17 @@ void MIDIplay::KillOrEvacuate(size_t from_channel, AdlChannel::users_t::iterator
             {
                 hooks.onNote(hooks.onNote_userData,
                              (int)from_channel,
-                             i->second.tone,
-                             i->second.midiins, 0, 0.0);
+                             i->tone,
+                             i->midiins, 0, 0.0);
                 hooks.onNote(hooks.onNote_userData,
                              (int)c,
-                             i->second.tone,
-                             i->second.midiins,
-                             i->second.vol, 0.0);
+                             i->tone,
+                             i->midiins,
+                             i->vol, 0.0);
             }
 
-            i->second.phys.erase(static_cast<uint16_t>(from_channel));
-            i->second.phys[cs] = j->second.ins;
+            i->phys.erase(static_cast<uint16_t>(from_channel));
+            i->phys[cs] = j->second.ins;
             ch[cs].users.insert(*j);
             ch[from_channel].users.erase(j);
             return;
@@ -2402,9 +2400,7 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
 void MIDIplay::NoteUpdate_All(uint16_t MidCh, unsigned props_mask)
 {
     for(MIDIchannel::activenoteiterator
-        i = Ch[MidCh].activenotes.begin();
-        i != Ch[MidCh].activenotes.end();
-       )
+        i = Ch[MidCh].activenotes_begin(); i;)
     {
         MIDIchannel::activenoteiterator j(i++);
         NoteUpdate(MidCh, j, props_mask);
@@ -2414,9 +2410,9 @@ void MIDIplay::NoteUpdate_All(uint16_t MidCh, unsigned props_mask)
 void MIDIplay::NoteOff(uint16_t MidCh, uint8_t note)
 {
     MIDIchannel::activenoteiterator
-    i = Ch[MidCh].activenotes.find(note);
+    i = Ch[MidCh].activenotes_find(note);
 
-    if(i != Ch[MidCh].activenotes.end())
+    if(i)
         NoteUpdate(MidCh, i, Upd_Off);
 }
 
@@ -2425,7 +2421,7 @@ void MIDIplay::UpdateVibrato(double amount)
 {
     for(size_t a = 0, b = Ch.size(); a < b; ++a)
     {
-        if(Ch[a].vibrato && !Ch[a].activenotes.empty())
+        if(Ch[a].vibrato && !Ch[a].activenotes_empty())
         {
             NoteUpdate_All(static_cast<uint16_t>(a), Upd_Pitch);
             Ch[a].vibpos += amount * Ch[a].vibspeed;
@@ -2447,7 +2443,17 @@ uint64_t MIDIplay::ChooseDevice(const std::string &name)
 
     size_t n = devices.size() * 16;
     devices.insert(std::make_pair(name, n));
-    Ch.resize(n + 16);
+
+    size_t channelsBefore = Ch.size();
+    size_t channels = n + 16;
+    Ch.resize(channels);
+
+    for(size_t ch = channelsBefore; ch < channels; ++ch) {
+        for(unsigned i = 0; i < 128; ++i) {
+            Ch[ch].activenotes[i].note = i;
+            Ch[ch].activenotes[i].active = false;
+        }
+    }
     return n;
 }
 
@@ -2504,7 +2510,7 @@ retry_arpeggio:
                 {
                     NoteUpdate(
                         i->first.MidCh,
-                        Ch[ i->first.MidCh ].activenotes.find(i->first.note),
+                        Ch[ i->first.MidCh ].activenotes_find(i->first.note),
                         Upd_Off,
                         static_cast<int32_t>(c));
                     goto retry_arpeggio;
@@ -2512,7 +2518,7 @@ retry_arpeggio:
 
                 NoteUpdate(
                     i->first.MidCh,
-                    Ch[ i->first.MidCh ].activenotes.find(i->first.note),
+                    Ch[ i->first.MidCh ].activenotes_find(i->first.note),
                     Upd_Pitch | Upd_Volume | Upd_Pan,
                     static_cast<int32_t>(c));
             }
