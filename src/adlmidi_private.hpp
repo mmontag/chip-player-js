@@ -606,6 +606,8 @@ public:
         bool is_xg_percussion;
         struct NoteInfo
         {
+            uint8_t note;
+            bool active;
             // Current pressure
             uint8_t vol;
             char ____padding[1];
@@ -636,10 +638,73 @@ public:
             // List of OPL3 channels it is currently occupying.
             std::map<uint16_t /*adlchn*/, Phys> phys;
         };
-        typedef std::map<uint8_t, NoteInfo> activenotemap_t;
-        typedef activenotemap_t::iterator activenoteiterator;
         char ____padding2[5];
-        activenotemap_t activenotes;
+        NoteInfo activenotes[128];
+
+        struct activenoteiterator
+        {
+            explicit activenoteiterator(NoteInfo *info = 0)
+                : ptr(info) {}
+            activenoteiterator &operator++()
+            {
+                if(ptr->note == 127)
+                    ptr = 0;
+                else
+                    for(++ptr; ptr && !ptr->active;)
+                        ptr = (ptr->note == 127) ? 0 : (ptr + 1);
+                return *this;
+            };
+            activenoteiterator operator++(int)
+            {
+                activenoteiterator pos = *this;
+                ++*this;
+                return pos;
+            }
+            NoteInfo &operator*() const
+                { return *ptr; }
+            NoteInfo *operator->() const
+                { return ptr; }
+            bool operator==(activenoteiterator other) const
+                { return ptr == other.ptr; }
+            bool operator!=(activenoteiterator other) const
+                { return ptr != other.ptr; }
+            operator NoteInfo *() const
+                { return ptr; }
+        private:
+            NoteInfo *ptr;
+        };
+
+        activenoteiterator activenotes_begin()
+        {
+            activenoteiterator it(activenotes);
+            return (it->active) ? it : ++it;
+        }
+
+        activenoteiterator activenotes_find(uint8_t note)
+        {
+            return activenoteiterator(
+                activenotes[note].active ? &activenotes[note] : 0);
+        }
+
+        std::pair<activenoteiterator, bool> activenotes_insert(uint8_t note)
+        {
+            NoteInfo &info = activenotes[note];
+            bool inserted = !info.active;
+            if(inserted) info.active = true;
+            return std::pair<activenoteiterator, bool>(activenoteiterator(&info), inserted);
+        }
+
+        void activenotes_erase(activenoteiterator pos)
+        {
+            if(pos)
+                pos->active = false;
+        }
+
+        bool activenotes_empty()
+        {
+            return !activenotes_begin();
+        }
+
         void reset()
         {
             resetAllControllers();
