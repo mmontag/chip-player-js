@@ -87,6 +87,7 @@ typedef int32_t ssize_t;
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
+#include <cassert>
 #if !(defined(__APPLE__) && defined(__GLIBCXX__))
 #include <cinttypes> //PRId32, PRIu32, etc.
 #else
@@ -620,17 +621,23 @@ public:
             size_t  insmeta;
             enum
             {
-                MaxNumPhysChans = 2
+                MaxNumPhysChans = 2,
+                MaxNumPhysItemCount = MaxNumPhysChans,
             };
             struct Phys
             {
-                //! Destinition chip channel
+                //! Destination chip channel
                 uint16_t chip_chan;
                 //! ins, inde to adl[]
                 size_t  insId;
                 //! Is this voice must be detunable?
                 bool    pseudo4op;
 
+                void assign(const Phys &oth)
+                {
+                    insId = oth.insId;
+                    pseudo4op = oth.pseudo4op;
+                }
                 bool operator==(const Phys &oth) const
                 {
                     return (insId == oth.insId) && (pseudo4op == oth.pseudo4op);
@@ -641,9 +648,49 @@ public:
                 }
             };
             //! List of OPL3 channels it is currently occupying.
-            Phys chip_channels[MaxNumPhysChans];
+            Phys chip_channels[MaxNumPhysItemCount];
             //! Count of used channels.
-            size_t chip_channels_max;
+            unsigned chip_channels_count;
+            //
+            Phys *phys_find(unsigned chip_chan)
+            {
+                Phys *ph = NULL;
+                for(unsigned i = 0; i < chip_channels_count && !ph; ++i)
+                    if(chip_channels[i].chip_chan == chip_chan)
+                        ph = &chip_channels[i];
+                return ph;
+            }
+            Phys *phys_find_or_create(unsigned chip_chan)
+            {
+                Phys *ph = phys_find(chip_chan);
+                if(!ph) {
+                    if(chip_channels_count < MaxNumPhysItemCount) {
+                        ph = &chip_channels[chip_channels_count++];
+                        ph->chip_chan = chip_chan;
+                    }
+                }
+                return ph;
+            }
+            Phys *phys_ensure_find_or_create(unsigned chip_chan)
+            {
+                Phys *ph = phys_find_or_create(chip_chan);
+                assert(ph);
+                return ph;
+            }
+            void phys_erase_at(const Phys *ph)
+            {
+                unsigned pos = ph - chip_channels;
+                assert(pos < chip_channels_count);
+                for(unsigned i = pos + 1; i < chip_channels_count; ++i)
+                    chip_channels[i - 1] = chip_channels[i];
+                --chip_channels_count;
+            }
+            void phys_erase(unsigned chip_chan)
+            {
+                Phys *ph = phys_find(chip_chan);
+                if(ph)
+                    phys_erase_at(ph);
+            }
         };
         char ____padding2[5];
         NoteInfo activenotes[128];
@@ -691,6 +738,13 @@ public:
         {
             return activenoteiterator(
                 activenotes[note].active ? &activenotes[note] : 0);
+        }
+
+        activenoteiterator activenotes_ensure_find(uint8_t note)
+        {
+            activenoteiterator it = activenotes_find(note);
+            assert(it);
+            return it;
         }
 
         std::pair<activenoteiterator, bool> activenotes_insert(uint8_t note)

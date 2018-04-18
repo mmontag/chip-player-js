@@ -1093,8 +1093,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     //uint16_t i[2] = { ains.adlno1, ains.adlno2 };
     bool pseudo_4op = ains->flags & adlinsdata::Flag_Pseudo4op;
-    size_t chans_count = (pseudo_4op || (ains->adlno1 != ains->adlno2)) ? 2 : 1;
-    MIDIchannel::NoteInfo::Phys voices[2] =
+    MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans] =
     {
         {0, ains->adlno1, false},
         {0, ains->adlno2, pseudo_4op}
@@ -1202,15 +1201,15 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     ir.first->tone    = tone;
     ir.first->midiins = midiins;
     ir.first->insmeta = meta;
-    ir.first->chip_channels_max = chans_count;
+    ir.first->chip_channels_count = 0;
 
-    for(size_t ccount = 0; ccount < MIDIchannel::NoteInfo::MaxNumPhysChans; ++ccount)
+    for(unsigned ccount = 0; ccount < MIDIchannel::NoteInfo::MaxNumPhysChans; ++ccount)
     {
         int32_t c = adlchannel[ccount];
         if(c < 0)
             continue;
-        voices[ccount].chip_chan = static_cast<uint16_t>(c);
-        ir.first->chip_channels[ccount] = voices[ccount];
+        uint16_t chipChan = static_cast<uint16_t>(adlchannel[ccount]);
+        ir.first->phys_ensure_find_or_create(chipChan)->assign(voices[ccount]);
     }
     NoteUpdate(channel, ir.first, Upd_All | Upd_Patch);
     return true;
@@ -1446,7 +1445,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
     my_loc.MidCh = MidCh;
     my_loc.note  = info.note;
 
-    for(size_t ccount = 0; ccount < info.chip_channels_max; ccount++)
+    for(unsigned ccount = 0, ctotal = info.chip_channels_count; ccount < ctotal; ccount++)
     {
         const MIDIchannel::NoteInfo::Phys &ins = info.chip_channels[ccount];
         uint16_t c   = ins.chip_chan;
@@ -1464,7 +1463,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
         }
     }
 
-    for(size_t ccount = 0; ccount < info.chip_channels_max; ccount++)
+    for(unsigned ccount = 0; ccount < info.chip_channels_count; ccount++)
     {
         const MIDIchannel::NoteInfo::Phys &ins = info.chip_channels[ccount];
         uint16_t c   = ins.chip_chan;
@@ -1506,9 +1505,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                     hooks.onNote(hooks.onNote_userData, c, tone, midiins, -1, 0.0);
             }
 
-            //info.phys.erase(j);
-            if(ccount == (info.chip_channels_max - 1))
-                info.chip_channels_max = 0;
+            info.phys_erase_at(&ins);  // decrements channel count
+            --ccount;  // adjusts index accordingly
             continue;
         }
 
@@ -1633,7 +1631,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
         }
     }
 
-    if(info.chip_channels_max == 0)
+    if(info.chip_channels_count == 0)
         Ch[MidCh].activenotes_erase(i);
 }
 
@@ -2219,7 +2217,7 @@ void MIDIplay::PrepareAdlChannelForNewNote(size_t c, const MIDIchannel::NoteInfo
             // Collision: Kill old note,
             // UNLESS we're going to do arpeggio
             MIDIchannel::activenoteiterator i
-            (Ch[j->first.MidCh].activenotes_find(j->first.note));
+            (Ch[j->first.MidCh].activenotes_ensure_find(j->first.note));
 
             // Check if we can do arpeggio.
             if((j->second.vibdelay < 70
@@ -2289,15 +2287,8 @@ void MIDIplay::KillOrEvacuate(size_t from_channel,
                              i->vol, 0.0);
             }
 
-            for(size_t cchan = 0; cchan < i->chip_channels_max; cchan++)
-            {
-                MIDIchannel::NoteInfo::Phys &chan = i->chip_channels[cchan];
-                if(chan.chip_chan == static_cast<uint16_t>(from_channel))
-                {
-                    chan = j->second.ins;
-                    chan.chip_chan = cs;
-                }
-            }
+            i->phys_erase(static_cast<uint16_t>(from_channel));
+            i->phys_ensure_find_or_create(cs)->assign(j->second.ins);
             ch[cs].users.insert(*j);
             ch[from_channel].users.erase(j);
             return;
@@ -2515,7 +2506,7 @@ retry_arpeggio:
                 {
                     NoteUpdate(
                         i->first.MidCh,
-                        Ch[ i->first.MidCh ].activenotes_find(i->first.note),
+                        Ch[ i->first.MidCh ].activenotes_ensure_find(i->first.note),
                         Upd_Off,
                         static_cast<int32_t>(c));
                     goto retry_arpeggio;
@@ -2523,7 +2514,7 @@ retry_arpeggio:
 
                 NoteUpdate(
                     i->first.MidCh,
-                    Ch[ i->first.MidCh ].activenotes_find(i->first.note),
+                    Ch[ i->first.MidCh ].activenotes_ensure_find(i->first.note),
                     Upd_Pitch | Upd_Volume | Upd_Pan,
                     static_cast<int32_t>(c));
             }
