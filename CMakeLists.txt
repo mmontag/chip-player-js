@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.2)
 project (libADLMIDI)
 
 #===========================================================================================
@@ -264,6 +264,13 @@ endif()
 if(NOT libADLMIDI_STATIC AND NOT libADLMIDI_SHARED)
     message(FATAL_ERROR "Both static and shared libADLMIDI builds are disabled!
 You must enable at least one of them!")
+endif()
+
+add_library(ADLMIDI INTERFACE)
+if(libADLMIDI_SHARED)
+  target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
+else()
+  target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
 endif()
 
 if(WITH_MIDIPLAY)
