@@ -803,36 +803,113 @@ public:
     // Additional information about OPL3 channels
     struct AdlChannel
     {
-        // For collisions
         struct Location
         {
             uint16_t    MidCh;
             uint8_t     note;
-            bool operator==(const Location &b) const
-            {
-                return MidCh == b.MidCh && note == b.note;
-            }
-            bool operator< (const Location &b) const
-            {
-                return MidCh < b.MidCh || (MidCh == b.MidCh && note < b.note);
-            }
-            char ____padding[1];
+            bool operator==(const Location &l) const
+                { return MidCh == l.MidCh && note == l.note; }
+            bool operator!=(const Location &l) const
+                { return !operator==(l); }
         };
         struct LocationData
         {
+            LocationData *prev, *next;
+            Location loc;
             bool sustained;
             char ____padding[7];
             MIDIchannel::NoteInfo::Phys ins;  // a copy of that in phys[]
             int64_t kon_time_until_neglible;
             int64_t vibdelay;
         };
-        typedef std::map<Location, LocationData> users_t;
-        users_t users;
 
         // If the channel is keyoff'd
         int64_t koff_time_until_neglible;
+
+        enum { users_max = 128 };
+        LocationData *users_first, *users_free_cells;
+        LocationData users_cells[users_max];
+        unsigned users_size;
+
+        bool users_empty() const
+            { return !users_first; }
+        LocationData *users_find(Location loc)
+        {
+            LocationData *user = NULL;
+            for(LocationData *curr = users_first; !user && curr; curr = curr->next)
+                if(curr->loc == loc)
+                    user = curr;
+            return user;
+        }
+        LocationData *users_allocate()
+        {
+            // remove free cells front
+            LocationData *user = users_free_cells;
+            if(!user)
+                return NULL;
+            users_free_cells = user->next;
+            users_free_cells->prev = NULL;
+            // add to users front
+            if(users_first)
+                users_first->prev = user;
+            user->prev = NULL;
+            user->next = users_first;
+            users_first = user;
+            ++users_size;
+            return user;
+        }
+        LocationData *users_find_or_create(Location loc)
+        {
+            LocationData *user = users_find(loc);
+            if(!user) {
+                user = users_allocate();
+                if(!user)
+                    return NULL;
+                LocationData *prev = user->prev, *next = user->next;
+                *user = LocationData();
+                user->prev = prev; user->next = next;
+                user->loc = loc;
+            }
+            return user;
+        }
+        LocationData *users_insert(const LocationData &x)
+        {
+            LocationData *user = users_find(x.loc);
+            if(!user)
+            {
+                user = users_allocate();
+                if(!user)
+                    return NULL;
+                LocationData *prev = user->prev, *next = user->next;
+                *user = x;
+                user->prev = prev; user->next = next;
+            }
+            return user;
+        }
+        void users_erase(LocationData *user)
+        {
+            if(user->prev)
+                user->prev->next = user->next;
+            if(user->next)
+                user->next->prev = user->prev;
+            if(user == users_first)
+                users_first = user->next;
+            user->prev = NULL;
+            user->next = users_free_cells;
+            users_free_cells = user;
+            --users_size;
+        }
+
         // For channel allocation:
-        AdlChannel(): users(), koff_time_until_neglible(0) { }
+        AdlChannel(): koff_time_until_neglible(0), users_first(NULL), users_size(0)
+        {
+            users_free_cells = users_cells;
+            for(size_t i = 0; i < users_max; ++i)
+            {
+                users_cells[i].prev = (i > 0) ? &users_cells[i - 1] : NULL;
+                users_cells[i].next = (i + 1 < users_max) ? &users_cells[i + 1] : NULL;
+            }
+        }
         void AddAge(int64_t ms);
     };
 
@@ -1230,7 +1307,7 @@ private:
 
     void KillOrEvacuate(
         size_t  from_channel,
-        AdlChannel::users_t::iterator j,
+        AdlChannel::LocationData *j,
         MIDIchannel::activenoteiterator i);
     void Panic();
     void KillSustainingNotes(int32_t MidCh = -1, int32_t this_adlchn = -1);
