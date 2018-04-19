@@ -760,6 +760,7 @@ void MIDIplay::applySetup()
     ch.resize(opl.NumChannels);
 }
 
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 uint64_t MIDIplay::ReadVarLen(uint8_t **ptr)
 {
     uint64_t result = 0;
@@ -792,7 +793,6 @@ uint64_t MIDIplay::ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok)
     return result;
 }
 
-#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 double MIDIplay::Tick(double s, double granularity)
 {
     s *= tempoMultiplier;

@@ -32,6 +32,7 @@
 #   endif//XMI
 #endif //ADLMIDI_DISABLE_MIDI_SEQUENCER
 
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 uint64_t MIDIplay::ReadBEint(const void *buffer, size_t nbytes)
 {
     uint64_t result = 0;
@@ -53,6 +54,8 @@ uint64_t MIDIplay::ReadLEint(const void *buffer, size_t nbytes)
 
     return result;
 }
+
+#endif
 
 bool MIDIplay::LoadBank(const std::string &filename)
 {

@@ -1167,7 +1167,21 @@ public:
 
     Setup m_setup;
 
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+    /**
+     * @brief Utility function to read Big-Endian integer from raw binary data
+     * @param buffer Pointer to raw binary buffer
+     * @param nbytes Count of bytes to parse integer
+     * @return Extracted unsigned integer
+     */
     static uint64_t ReadBEint(const void *buffer, size_t nbytes);
+
+    /**
+     * @brief Utility function to read Little-Endian integer from raw binary data
+     * @param buffer Pointer to raw binary buffer
+     * @param nbytes Count of bytes to parse integer
+     * @return Extracted unsigned integer
+     */
     static uint64_t ReadLEint(const void *buffer, size_t nbytes);
 
     /**
@@ -1184,6 +1198,7 @@ public:
      * @return Unsigned integer that conains parsed variable-length value
      */
     uint64_t ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok);
+#endif
 
     bool LoadBank(const std::string &filename);
     bool LoadBank(const void *data, size_t size);
