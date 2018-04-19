@@ -18,6 +18,7 @@ LOCAL_SRC_FILES := src/adldata.cpp \
                    src/adlmidi_private.cpp \
                    src/adlmidi_xmi2mid.c \
                    src/adlmidi.cpp \
+                   src/wopl/wopl_file.c \
                    src/chips/dosbox_opl3.cpp \
                    src/chips/nuked_opl3_v174.cpp \
                    src/chips/nuked_opl3.cpp \
