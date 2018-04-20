@@ -71,7 +71,7 @@ static void fromUint16BE(uint16_t in, uint8_t *arr)
 static void fromSint16BE(int16_t in, uint8_t *arr)
 {
     arr[1] =  in & 0x00FF;
-    arr[0] = (in >> 8) & 0x00FF;
+    arr[0] = ((uint16_t)in >> 8) & 0x00FF;
 }
 
 
