@@ -173,6 +173,7 @@ list(APPEND libADLMIDI_SOURCES
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_midiplay.cpp
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_opl3.cpp
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_private.cpp
+    ${libADLMIDI_SOURCE_DIR}/src/wopl/wopl_file.c
 )
 
 if(WITH_MUS_SUPPORT AND WITH_MIDI_SEQUENCER)

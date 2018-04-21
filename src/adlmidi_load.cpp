@@ -22,6 +22,7 @@
  */
 
 #include "adlmidi_private.hpp"
+#include "wopl/wopl_file.h"
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 #   ifndef ADLMIDI_DISABLE_MUS_SUPPORT
@@ -32,6 +33,7 @@
 #   endif//XMI
 #endif //ADLMIDI_DISABLE_MIDI_SEQUENCER
 
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 uint64_t MIDIplay::ReadBEint(const void *buffer, size_t nbytes)
 {
     uint64_t result = 0;
@@ -54,6 +56,8 @@ uint64_t MIDIplay::ReadLEint(const void *buffer, size_t nbytes)
     return result;
 }
 
+#endif
+
 bool MIDIplay::LoadBank(const std::string &filename)
 {
     fileReader file;
@@ -69,44 +73,6 @@ bool MIDIplay::LoadBank(const void *data, size_t size)
 }
 
 
-
-/* WOPL-needed misc functions */
-static uint16_t toUint16LE(const uint8_t *arr)
-{
-    uint16_t num = arr[0];
-    num |= ((arr[1] << 8) & 0xFF00);
-    return num;
-}
-
-static uint16_t toUint16BE(const uint8_t *arr)
-{
-    uint16_t num = arr[1];
-    num |= ((arr[0] << 8) & 0xFF00);
-    return num;
-}
-
-static int16_t toSint16BE(const uint8_t *arr)
-{
-    int16_t num = *reinterpret_cast<const int8_t *>(&arr[0]);
-    num *= 1 << 8;
-    num |= arr[1];
-    return num;
-}
-
-static const char       *wopl3_magic = "WOPL3-BANK\0";
-static const uint16_t   wopl_latest_version = 3;
-
-#define WOPL_INST_SIZE_V2 62
-#define WOPL_INST_SIZE_V3 66
-
-enum WOPL_InstrumentFlags
-{
-    WOPL_Flags_NONE      = 0,
-    WOPL_Flag_Enable4OP  = 0x01,
-    WOPL_Flag_Pseudo4OP  = 0x02,
-    WOPL_Flag_NoSound    = 0x04
-};
-
 struct WOPL_Inst
 {
     bool fourOps;
@@ -117,27 +83,13 @@ struct WOPL_Inst
     uint16_t ms_sound_koff;
 };
 
-static bool readInstrument(MIDIplay::fileReader &file, WOPL_Inst &ins, uint16_t &version, bool isPercussion = false)
+static void cvt_WOPLI_to_FMIns(WOPL_Inst &ins, WOPLInstrument &in)
 {
-    uint8_t idata[WOPL_INST_SIZE_V3];
-    if(version >= 3)
-    {
-        if(file.read(idata, 1, WOPL_INST_SIZE_V3) != WOPL_INST_SIZE_V3)
-            return false;
-    }
-    else
-    {
-        if(file.read(idata, 1, WOPL_INST_SIZE_V2) != WOPL_INST_SIZE_V2)
-            return false;
-    }
-
-    //strncpy(ins.name, char_p(idata), 32);
-    ins.op[0].finetune = (int8_t)toSint16BE(idata + 32);
-    ins.op[1].finetune = (int8_t)toSint16BE(idata + 34);
-    //ins.velocity_offset = int8_t(idata[36]);
+    ins.op[0].finetune = in.note_offset1;
+    ins.op[1].finetune = in.note_offset2;
 
     ins.adlins.voice2_fine_tune = 0.0;
-    int8_t voice2_fine_tune = int8_t(idata[37]);
+    int8_t voice2_fine_tune = in.second_voice_detune;
     if(voice2_fine_tune != 0)
     {
         if(voice2_fine_tune == 1)
@@ -148,201 +100,144 @@ static bool readInstrument(MIDIplay::fileReader &file, WOPL_Inst &ins, uint16_t 
             ins.adlins.voice2_fine_tune = ((voice2_fine_tune * 15.625) / 1000.0);
     }
 
-    ins.adlins.tone = isPercussion ? idata[38] : 0;
+    ins.adlins.tone = in.percussion_key_number;
 
-    uint8_t flags       = idata[39];
-    ins.adlins.flags = (flags & WOPL_Flag_Enable4OP) && (flags & WOPL_Flag_Pseudo4OP) ? adlinsdata::Flag_Pseudo4op : 0;
-    ins.adlins.flags|= (flags & WOPL_Flag_NoSound) ? adlinsdata::Flag_NoSound : 0;
-    ins.fourOps      = (flags & WOPL_Flag_Enable4OP) || (flags & WOPL_Flag_Pseudo4OP);
+    ins.adlins.flags = (in.inst_flags & WOPL_Ins_4op) && (in.inst_flags & WOPL_Ins_Pseudo4op) ? adlinsdata::Flag_Pseudo4op : 0;
+    ins.adlins.flags|= (in.inst_flags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
+    ins.fourOps      = (in.inst_flags & WOPL_Ins_4op) || (in.inst_flags & WOPL_Ins_Pseudo4op);
 
-    ins.op[0].feedconn = (idata[40]);
-    ins.op[1].feedconn = (idata[41]);
+    ins.op[0].feedconn = in.fb_conn1_C0;
+    ins.op[1].feedconn = in.fb_conn2_C0;
 
     for(size_t op = 0, slt = 0; op < 4; op++, slt++)
     {
-        size_t off = 42 + size_t(op) * 5;
-        //        ins.setAVEKM(op,    idata[off + 0]);//AVEKM
-        //        ins.setAtDec(op,    idata[off + 2]);//AtDec
-        //        ins.setSusRel(op,   idata[off + 3]);//SusRel
-        //        ins.setWaveForm(op, idata[off + 4]);//WaveForm
-        //        ins.setKSLL(op,     idata[off + 1]);//KSLL
         ins.op[slt].carrier_E862 =
-            ((static_cast<uint32_t>(idata[off + 4]) << 24) & 0xFF000000)    //WaveForm
-            | ((static_cast<uint32_t>(idata[off + 3]) << 16) & 0x00FF0000)  //SusRel
-            | ((static_cast<uint32_t>(idata[off + 2]) << 8) & 0x0000FF00)   //AtDec
-            | ((static_cast<uint32_t>(idata[off + 0]) << 0) & 0x000000FF);  //AVEKM
-        ins.op[slt].carrier_40 = idata[off + 1];//KSLL
+            ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
+            | ((static_cast<uint32_t>(in.operators[op].susrel_80) << 16) & 0x00FF0000) //SusRel
+            | ((static_cast<uint32_t>(in.operators[op].atdec_60) << 8) & 0x0000FF00)   //AtDec
+            | ((static_cast<uint32_t>(in.operators[op].avekf_20) << 0) & 0x000000FF);  //AVEKM
+        ins.op[slt].carrier_40 = in.operators[op].ksl_l_40;//KSLL
 
         op++;
-        off = 42 + size_t(op) * 5;
         ins.op[slt].modulator_E862 =
-            ((static_cast<uint32_t>(idata[off + 4]) << 24) & 0xFF000000)    //WaveForm
-            | ((static_cast<uint32_t>(idata[off + 3]) << 16) & 0x00FF0000)  //SusRel
-            | ((static_cast<uint32_t>(idata[off + 2]) << 8) & 0x0000FF00)   //AtDec
-            | ((static_cast<uint32_t>(idata[off + 0]) << 0) & 0x000000FF);  //AVEKM
-        ins.op[slt].modulator_40 = idata[off + 1];//KSLL
+            ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
+            | ((static_cast<uint32_t>(in.operators[op].susrel_80) << 16) & 0x00FF0000) //SusRel
+            | ((static_cast<uint32_t>(in.operators[op].atdec_60) << 8) & 0x0000FF00)   //AtDec
+            | ((static_cast<uint32_t>(in.operators[op].avekf_20) << 0) & 0x000000FF);  //AVEKM
+        ins.op[slt].modulator_40 = in.operators[op].ksl_l_40;//KSLL
     }
 
-    if(version >= 3)
-    {
-        ins.ms_sound_kon  = toUint16BE(idata + 62);
-        ins.ms_sound_koff = toUint16BE(idata + 64);
-    }
-    else
-    {
-        ins.ms_sound_kon = 1000;
-        ins.ms_sound_koff = 500;
-    }
-
-    return true;
+    ins.ms_sound_kon  = in.delay_on_ms;
+    ins.ms_sound_koff = in.delay_off_ms;
 }
 
 bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
 {
+    int err = 0;
+    WOPLFile *wopl = NULL;
+    char *raw_file_data = NULL;
     size_t  fsize;
-    ADL_UNUSED(fsize);
     if(!fr.isValid())
     {
         errorStringOut = "Custom bank: Invalid data stream!";
         return false;
     }
 
-    char magic[32];
-    std::memset(magic, 0, 32);
-
-    uint16_t version = 0;
-
-    uint16_t count_melodic_banks     = 1;
-    uint16_t count_percusive_banks   = 1;
-
-    if(fr.read(magic, 1, 11) != 11)
+    // Read complete bank file into the memory
+    fr.seek(0, SEEK_END);
+    fsize = fr.tell();
+    fr.seek(0, SEEK_SET);
+    // Allocate necessary memory block
+    raw_file_data = (char*)malloc(fsize);
+    if(!raw_file_data)
     {
-        errorStringOut = "Custom bank: Can't read magic number!";
+        errorStringOut = "Custom bank: Out of memory before of read!";
         return false;
     }
+    fr.read(raw_file_data, 1, fsize);
 
-    if(std::strncmp(magic, wopl3_magic, 11) != 0)
+    // Parse bank file from the memory
+    wopl = WOPL_LoadBankFromMem((void*)raw_file_data, fsize, &err);
+    //Free the buffer no more needed
+    free(raw_file_data);
+
+    // Check for any erros
+    if(!wopl)
     {
-        errorStringOut = "Custom bank: Invalid magic number!";
-        return false;
+        switch(err)
+        {
+        case WOPL_ERR_BAD_MAGIC:
+            errorStringOut = "Custom bank: Invalid magic!";
+            return false;
+        case WOPL_ERR_UNEXPECTED_ENDING:
+            errorStringOut = "Custom bank: Unexpected ending!";
+            return false;
+        case WOPL_ERR_INVALID_BANKS_COUNT:
+            errorStringOut = "Custom bank: Invalid banks count!";
+            return false;
+        case WOPL_ERR_NEWER_VERSION:
+            errorStringOut = "Custom bank: Version is newer than supported by this library!";
+            return false;
+        case WOPL_ERR_OUT_OF_MEMORY:
+            errorStringOut = "Custom bank: Out of memory!";
+            return false;
+        default:
+            errorStringOut = "Custom bank: Unknown error!";
+            return false;
+        }
     }
 
-    uint8_t version_raw[2];
-    if(fr.read(version_raw, 1, 2) != 2)
-    {
-        errorStringOut = "Custom bank: Can't read version!";
-        return false;
-    }
+    m_setup.HighTremoloMode = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
+    m_setup.HighVibratoMode = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;
+    m_setup.VolumeModel     = wopl->volume_model;
 
-    version = toUint16LE(version_raw);
-    if(version > wopl_latest_version)
-    {
-        errorStringOut = "Custom bank: Unsupported WOPL version!";
-        return false;
-    }
-
-    uint8_t head[6];
-    std::memset(head, 0, 6);
-    if(fr.read(head, 1, 6) != 6)
-    {
-        errorStringOut = "Custom bank: Can't read header!";
-        return false;
-    }
-
-    count_melodic_banks     = toUint16BE(head);
-    count_percusive_banks   = toUint16BE(head + 2);
-
-    if((count_melodic_banks < 1) || (count_percusive_banks < 1))
-    {
-        errorStringOut = "Custom bank: Too few banks in this file!";
-        return false;
-    }
-
-    /*UNUSED YET*/
-    bool default_deep_vibrato   = ((head[4]>>0) & 0x01);
-    bool default_deep_tremolo   = ((head[4]>>1) & 0x01);
-
-    //5'th byte reserved for Deep-Tremolo and Deep-Vibrato flags
-    m_setup.HighTremoloMode = default_deep_tremolo;
-    m_setup.HighVibratoMode = default_deep_vibrato;
-    //6'th byte reserved for ADLMIDI's default volume model
-    m_setup.VolumeModel = (int)head[5];
-
+    /* TODO: Avoid memory reallocation in nearest future! */
     opl.dynamic_melodic_banks.clear();
     opl.dynamic_percussion_banks.clear();
 
     opl.setEmbeddedBank(m_setup.AdlBank);
 
-    if(version >= 2)//Read bank meta-entries
+    OPL3::BankMap *slots_banks[2] = { &opl.dynamic_melodic_banks, &opl.dynamic_percussion_banks};
+    uint16_t slots_counts[2] = {wopl->banks_count_melodic, wopl->banks_count_percussion};
+    WOPLBank *slots_src_ins[2] = { wopl->banks_melodic, wopl->banks_percussive };
+
+    for(int ss = 0; ss < 2; ss++)
     {
-        for(uint16_t i = 0; i < count_melodic_banks; i++)
+        for(int i = 0; i < slots_counts[ss]; i++)
         {
-            uint8_t bank_meta[34];
-            if(fr.read(bank_meta, 1, 34) != 34)
+            uint16_t bank = (slots_src_ins[ss][i].bank_midi_msb * 256) + slots_src_ins[ss][i].bank_midi_lsb;
+            size_t offset = slots_banks[ss]->size();
+            (*slots_banks[ss])[bank] = offset;
+
+            for(int j = 0; j < 128; j++)
             {
-                errorStringOut = "Custom bank: Fail to read melodic bank meta-data!";
-                return false;
+                WOPL_Inst ins;
+                std::memset(&ins, 0, sizeof(WOPL_Inst));
+                WOPLInstrument &inIns = slots_src_ins[ss][i].ins[j];
+
+                cvt_WOPLI_to_FMIns(ins, inIns);
+
+                ins.adlins.ms_sound_kon  = ins.ms_sound_kon;
+                ins.adlins.ms_sound_koff = ins.ms_sound_koff;
+                ins.adlins.adlno1 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
+                opl.dynamic_instruments.push_back(ins.op[0]);
+                ins.adlins.adlno2 = ins.adlins.adlno1;
+                if(ins.fourOps)
+                {
+                    ins.adlins.adlno2 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
+                    opl.dynamic_instruments.push_back(ins.op[1]);
+                }
+                opl.dynamic_metainstruments.push_back(ins.adlins);
             }
-            uint16_t bank = uint16_t(bank_meta[33]) * 256 + uint16_t(bank_meta[32]);
-            size_t offset = opl.dynamic_melodic_banks.size();
-            opl.dynamic_melodic_banks[bank] = offset;
-            //strncpy(bankMeta.name, char_p(bank_meta), 32);
         }
-
-        for(uint16_t i = 0; i < count_percusive_banks; i++)
-        {
-            uint8_t bank_meta[34];
-            if(fr.read(bank_meta, 1, 34) != 34)
-            {
-                errorStringOut = "Custom bank: Fail to read percussion bank meta-data!";
-                return false;
-            }
-            uint16_t bank = uint16_t(bank_meta[33]) * 256 + uint16_t(bank_meta[32]);
-            size_t offset = opl.dynamic_percussion_banks.size();
-            opl.dynamic_percussion_banks[bank] = offset;
-            //strncpy(bankMeta.name, char_p(bank_meta), 32);
-        }
-    }
-
-    uint16_t total = 128 * count_melodic_banks;
-    bool readPercussion = false;
-
-tryAgain:
-    for(uint16_t i = 0; i < total; i++)
-    {
-        WOPL_Inst ins;
-        std::memset(&ins, 0, sizeof(WOPL_Inst));
-        if(!readInstrument(fr, ins, version, readPercussion))
-        {
-            opl.setEmbeddedBank(m_setup.AdlBank);
-            errorStringOut = "Custom bank: Fail to read instrument!";
-            return false;
-        }
-        ins.adlins.ms_sound_kon  = ins.ms_sound_kon;
-        ins.adlins.ms_sound_koff = ins.ms_sound_koff;
-        ins.adlins.adlno1 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
-        opl.dynamic_instruments.push_back(ins.op[0]);
-        ins.adlins.adlno2 = ins.adlins.adlno1;
-        if(ins.fourOps)
-        {
-            ins.adlins.adlno2 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
-            opl.dynamic_instruments.push_back(ins.op[1]);
-        }
-        opl.dynamic_metainstruments.push_back(ins.adlins);
-    }
-
-    if(!readPercussion)
-    {
-        total = 128 * count_percusive_banks;
-        readPercussion = true;
-        goto tryAgain;
     }
 
     opl.AdlBank = ~0u; // Use dynamic banks!
     //Percussion offset is count of instruments multipled to count of melodic banks
-    opl.dynamic_percussion_offset = 128 * count_melodic_banks;
-
+    opl.dynamic_percussion_offset = 128 * wopl->banks_count_melodic;
     applySetup();
+
+    WOPL_Free(wopl);
 
     return true;
 }

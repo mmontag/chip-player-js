@@ -26,7 +26,7 @@ int OPLChipBase::generate32(int32_t *output, size_t frames)
     enum { maxFramesAtOnce = 256 };
     int16_t temp[2 * maxFramesAtOnce];
     for(size_t left = frames; left > 0;) {
-        size_t count = (left < maxFramesAtOnce) ? left : maxFramesAtOnce;
+        size_t count = (left < static_cast<size_t>(maxFramesAtOnce)) ? left : static_cast<size_t>(maxFramesAtOnce);
         generate(temp, count);
         for(size_t i = 0; i < 2 * count; ++i)
             output[i] = temp[i];
@@ -41,7 +41,7 @@ int OPLChipBase::generateAndMix32(int32_t *output, size_t frames)
     enum { maxFramesAtOnce = 256 };
     int16_t temp[2 * maxFramesAtOnce];
     for(size_t left = frames; left > 0;) {
-        size_t count = (left < maxFramesAtOnce) ? left : maxFramesAtOnce;
+        size_t count = (left < static_cast<size_t>(maxFramesAtOnce)) ? left : static_cast<size_t>(maxFramesAtOnce);
         generate(temp, count);
         for(size_t i = 0; i < 2 * count; ++i)
             output[i] += temp[i];

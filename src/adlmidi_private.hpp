@@ -87,6 +87,7 @@ typedef int32_t ssize_t;
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
+#include <cassert>
 #if !(defined(__APPLE__) && defined(__GLIBCXX__))
 #include <cinttypes> //PRId32, PRIu32, etc.
 #else
@@ -606,6 +607,8 @@ public:
         bool is_xg_percussion;
         struct NoteInfo
         {
+            uint8_t note;
+            bool active;
             // Current pressure
             uint8_t vol;
             char ____padding[1];
@@ -616,13 +619,25 @@ public:
             size_t  midiins;
             // Index to physical adlib data structure, adlins[]
             size_t  insmeta;
+            enum
+            {
+                MaxNumPhysChans = 2,
+                MaxNumPhysItemCount = MaxNumPhysChans,
+            };
             struct Phys
             {
+                //! Destination chip channel
+                uint16_t chip_chan;
                 //! ins, inde to adl[]
                 size_t  insId;
                 //! Is this voice must be detunable?
                 bool    pseudo4op;
 
+                void assign(const Phys &oth)
+                {
+                    insId = oth.insId;
+                    pseudo4op = oth.pseudo4op;
+                }
                 bool operator==(const Phys &oth) const
                 {
                     return (insId == oth.insId) && (pseudo4op == oth.pseudo4op);
@@ -632,14 +647,125 @@ public:
                     return !operator==(oth);
                 }
             };
-            typedef std::map<uint16_t, Phys> PhysMap;
-            // List of OPL3 channels it is currently occupying.
-            std::map<uint16_t /*adlchn*/, Phys> phys;
+            //! List of OPL3 channels it is currently occupying.
+            Phys chip_channels[MaxNumPhysItemCount];
+            //! Count of used channels.
+            unsigned chip_channels_count;
+            //
+            Phys *phys_find(unsigned chip_chan)
+            {
+                Phys *ph = NULL;
+                for(unsigned i = 0; i < chip_channels_count && !ph; ++i)
+                    if(chip_channels[i].chip_chan == chip_chan)
+                        ph = &chip_channels[i];
+                return ph;
+            }
+            Phys *phys_find_or_create(unsigned chip_chan)
+            {
+                Phys *ph = phys_find(chip_chan);
+                if(!ph) {
+                    if(chip_channels_count < MaxNumPhysItemCount) {
+                        ph = &chip_channels[chip_channels_count++];
+                        ph->chip_chan = chip_chan;
+                    }
+                }
+                return ph;
+            }
+            Phys *phys_ensure_find_or_create(unsigned chip_chan)
+            {
+                Phys *ph = phys_find_or_create(chip_chan);
+                assert(ph);
+                return ph;
+            }
+            void phys_erase_at(const Phys *ph)
+            {
+                unsigned pos = ph - chip_channels;
+                assert(pos < chip_channels_count);
+                for(unsigned i = pos + 1; i < chip_channels_count; ++i)
+                    chip_channels[i - 1] = chip_channels[i];
+                --chip_channels_count;
+            }
+            void phys_erase(unsigned chip_chan)
+            {
+                Phys *ph = phys_find(chip_chan);
+                if(ph)
+                    phys_erase_at(ph);
+            }
         };
-        typedef std::map<uint8_t, NoteInfo> activenotemap_t;
-        typedef activenotemap_t::iterator activenoteiterator;
         char ____padding2[5];
-        activenotemap_t activenotes;
+        NoteInfo activenotes[128];
+
+        struct activenoteiterator
+        {
+            explicit activenoteiterator(NoteInfo *info = 0)
+                : ptr(info) {}
+            activenoteiterator &operator++()
+            {
+                if(ptr->note == 127)
+                    ptr = 0;
+                else
+                    for(++ptr; ptr && !ptr->active;)
+                        ptr = (ptr->note == 127) ? 0 : (ptr + 1);
+                return *this;
+            };
+            activenoteiterator operator++(int)
+            {
+                activenoteiterator pos = *this;
+                ++*this;
+                return pos;
+            }
+            NoteInfo &operator*() const
+                { return *ptr; }
+            NoteInfo *operator->() const
+                { return ptr; }
+            bool operator==(activenoteiterator other) const
+                { return ptr == other.ptr; }
+            bool operator!=(activenoteiterator other) const
+                { return ptr != other.ptr; }
+            operator NoteInfo *() const
+                { return ptr; }
+        private:
+            NoteInfo *ptr;
+        };
+
+        activenoteiterator activenotes_begin()
+        {
+            activenoteiterator it(activenotes);
+            return (it->active) ? it : ++it;
+        }
+
+        activenoteiterator activenotes_find(uint8_t note)
+        {
+            return activenoteiterator(
+                activenotes[note].active ? &activenotes[note] : 0);
+        }
+
+        activenoteiterator activenotes_ensure_find(uint8_t note)
+        {
+            activenoteiterator it = activenotes_find(note);
+            assert(it);
+            return it;
+        }
+
+        std::pair<activenoteiterator, bool> activenotes_insert(uint8_t note)
+        {
+            NoteInfo &info = activenotes[note];
+            bool inserted = !info.active;
+            if(inserted) info.active = true;
+            return std::pair<activenoteiterator, bool>(activenoteiterator(&info), inserted);
+        }
+
+        void activenotes_erase(activenoteiterator pos)
+        {
+            if(pos)
+                pos->active = false;
+        }
+
+        bool activenotes_empty()
+        {
+            return !activenotes_begin();
+        }
+
         void reset()
         {
             resetAllControllers();
@@ -677,36 +803,113 @@ public:
     // Additional information about OPL3 channels
     struct AdlChannel
     {
-        // For collisions
         struct Location
         {
             uint16_t    MidCh;
             uint8_t     note;
-            bool operator==(const Location &b) const
-            {
-                return MidCh == b.MidCh && note == b.note;
-            }
-            bool operator< (const Location &b) const
-            {
-                return MidCh < b.MidCh || (MidCh == b.MidCh && note < b.note);
-            }
-            char ____padding[1];
+            bool operator==(const Location &l) const
+                { return MidCh == l.MidCh && note == l.note; }
+            bool operator!=(const Location &l) const
+                { return !operator==(l); }
         };
         struct LocationData
         {
+            LocationData *prev, *next;
+            Location loc;
             bool sustained;
             char ____padding[7];
             MIDIchannel::NoteInfo::Phys ins;  // a copy of that in phys[]
             int64_t kon_time_until_neglible;
             int64_t vibdelay;
         };
-        typedef std::map<Location, LocationData> users_t;
-        users_t users;
 
         // If the channel is keyoff'd
         int64_t koff_time_until_neglible;
+
+        enum { users_max = 128 };
+        LocationData *users_first, *users_free_cells;
+        LocationData users_cells[users_max];
+        unsigned users_size;
+
+        bool users_empty() const
+            { return !users_first; }
+        LocationData *users_find(Location loc)
+        {
+            LocationData *user = NULL;
+            for(LocationData *curr = users_first; !user && curr; curr = curr->next)
+                if(curr->loc == loc)
+                    user = curr;
+            return user;
+        }
+        LocationData *users_allocate()
+        {
+            // remove free cells front
+            LocationData *user = users_free_cells;
+            if(!user)
+                return NULL;
+            users_free_cells = user->next;
+            users_free_cells->prev = NULL;
+            // add to users front
+            if(users_first)
+                users_first->prev = user;
+            user->prev = NULL;
+            user->next = users_first;
+            users_first = user;
+            ++users_size;
+            return user;
+        }
+        LocationData *users_find_or_create(Location loc)
+        {
+            LocationData *user = users_find(loc);
+            if(!user) {
+                user = users_allocate();
+                if(!user)
+                    return NULL;
+                LocationData *prev = user->prev, *next = user->next;
+                *user = LocationData();
+                user->prev = prev; user->next = next;
+                user->loc = loc;
+            }
+            return user;
+        }
+        LocationData *users_insert(const LocationData &x)
+        {
+            LocationData *user = users_find(x.loc);
+            if(!user)
+            {
+                user = users_allocate();
+                if(!user)
+                    return NULL;
+                LocationData *prev = user->prev, *next = user->next;
+                *user = x;
+                user->prev = prev; user->next = next;
+            }
+            return user;
+        }
+        void users_erase(LocationData *user)
+        {
+            if(user->prev)
+                user->prev->next = user->next;
+            if(user->next)
+                user->next->prev = user->prev;
+            if(user == users_first)
+                users_first = user->next;
+            user->prev = NULL;
+            user->next = users_free_cells;
+            users_free_cells = user;
+            --users_size;
+        }
+
         // For channel allocation:
-        AdlChannel(): users(), koff_time_until_neglible(0) { }
+        AdlChannel(): koff_time_until_neglible(0), users_first(NULL), users_size(0)
+        {
+            users_free_cells = users_cells;
+            for(size_t i = 0; i < users_max; ++i)
+            {
+                users_cells[i].prev = (i > 0) ? &users_cells[i - 1] : NULL;
+                users_cells[i].next = (i + 1 < users_max) ? &users_cells[i + 1] : NULL;
+            }
+        }
         void AddAge(int64_t ms);
     };
 
@@ -964,7 +1167,21 @@ public:
 
     Setup m_setup;
 
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+    /**
+     * @brief Utility function to read Big-Endian integer from raw binary data
+     * @param buffer Pointer to raw binary buffer
+     * @param nbytes Count of bytes to parse integer
+     * @return Extracted unsigned integer
+     */
     static uint64_t ReadBEint(const void *buffer, size_t nbytes);
+
+    /**
+     * @brief Utility function to read Little-Endian integer from raw binary data
+     * @param buffer Pointer to raw binary buffer
+     * @param nbytes Count of bytes to parse integer
+     * @return Extracted unsigned integer
+     */
     static uint64_t ReadLEint(const void *buffer, size_t nbytes);
 
     /**
@@ -981,6 +1198,7 @@ public:
      * @return Unsigned integer that conains parsed variable-length value
      */
     uint64_t ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok);
+#endif
 
     bool LoadBank(const std::string &filename);
     bool LoadBank(const void *data, size_t size);
@@ -1104,7 +1322,7 @@ private:
 
     void KillOrEvacuate(
         size_t  from_channel,
-        AdlChannel::users_t::iterator j,
+        AdlChannel::LocationData *j,
         MIDIchannel::activenoteiterator i);
     void Panic();
     void KillSustainingNotes(int32_t MidCh = -1, int32_t this_adlchn = -1);
