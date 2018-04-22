@@ -736,6 +736,7 @@ public:
 
         activenoteiterator activenotes_find(uint8_t note)
         {
+            assert(note < 128);
             return activenoteiterator(
                 activenotes[note].active ? &activenotes[note] : 0);
         }
@@ -749,6 +750,7 @@ public:
 
         std::pair<activenoteiterator, bool> activenotes_insert(uint8_t note)
         {
+            assert(note < 128);
             NoteInfo &info = activenotes[note];
             bool inserted = !info.active;
             if(inserted) info.active = true;
@@ -764,6 +766,14 @@ public:
         bool activenotes_empty()
         {
             return !activenotes_begin();
+        }
+
+        void activenotes_clear()
+        {
+            for(unsigned i = 0; i < 128; ++i) {
+                activenotes[i].note = i;
+                activenotes[i].active = false;
+            }
         }
 
         void reset()
@@ -794,8 +804,8 @@ public:
             brightness = 127;
         }
         MIDIchannel()
-            : activenotes()
         {
+            activenotes_clear();
             reset();
         }
     };
@@ -831,86 +841,33 @@ public:
         LocationData users_cells[users_max];
         unsigned users_size;
 
-        bool users_empty() const
-            { return !users_first; }
-        LocationData *users_find(Location loc)
-        {
-            LocationData *user = NULL;
-            for(LocationData *curr = users_first; !user && curr; curr = curr->next)
-                if(curr->loc == loc)
-                    user = curr;
-            return user;
-        }
-        LocationData *users_allocate()
-        {
-            // remove free cells front
-            LocationData *user = users_free_cells;
-            if(!user)
-                return NULL;
-            users_free_cells = user->next;
-            if(users_free_cells)
-                users_free_cells->prev = NULL;
-            // add to users front
-            if(users_first)
-                users_first->prev = user;
-            user->prev = NULL;
-            user->next = users_first;
-            users_first = user;
-            ++users_size;
-            return user;
-        }
-        LocationData *users_find_or_create(Location loc)
-        {
-            LocationData *user = users_find(loc);
-            if(!user) {
-                user = users_allocate();
-                if(!user)
-                    return NULL;
-                LocationData *prev = user->prev, *next = user->next;
-                *user = LocationData();
-                user->prev = prev; user->next = next;
-                user->loc = loc;
-            }
-            return user;
-        }
-        LocationData *users_insert(const LocationData &x)
-        {
-            LocationData *user = users_find(x.loc);
-            if(!user)
-            {
-                user = users_allocate();
-                if(!user)
-                    return NULL;
-                LocationData *prev = user->prev, *next = user->next;
-                *user = x;
-                user->prev = prev; user->next = next;
-            }
-            return user;
-        }
-        void users_erase(LocationData *user)
-        {
-            if(user->prev)
-                user->prev->next = user->next;
-            if(user->next)
-                user->next->prev = user->prev;
-            if(user == users_first)
-                users_first = user->next;
-            user->prev = NULL;
-            user->next = users_free_cells;
-            users_free_cells = user;
-            --users_size;
-        }
+        bool users_empty() const;
+        LocationData *users_find(Location loc);
+        LocationData *users_allocate();
+        LocationData *users_find_or_create(Location loc);
+        LocationData *users_insert(const LocationData &x);
+        void users_erase(LocationData *user);
+        void users_clear();
+        void users_assign(const LocationData *users, size_t count);
 
         // For channel allocation:
-        AdlChannel(): koff_time_until_neglible(0), users_first(NULL), users_size(0)
+        AdlChannel(): koff_time_until_neglible(0)
         {
-            users_free_cells = users_cells;
-            for(size_t i = 0; i < users_max; ++i)
-            {
-                users_cells[i].prev = (i > 0) ? &users_cells[i - 1] : NULL;
-                users_cells[i].next = (i + 1 < users_max) ? &users_cells[i + 1] : NULL;
-            }
+            users_clear();
         }
+
+        AdlChannel(const AdlChannel &oth): koff_time_until_neglible(oth.koff_time_until_neglible)
+        {
+            users_assign(oth.users_first, oth.users_size);
+        }
+
+        AdlChannel &operator=(const AdlChannel &oth)
+         {
+             koff_time_until_neglible = oth.koff_time_until_neglible;
+             users_assign(oth.users_first, oth.users_size);
+             return *this;
+         }
+
         void AddAge(int64_t ms);
     };
 
