@@ -88,7 +88,7 @@ typedef int32_t ssize_t;
 #include <cstdarg>
 #include <cstdio>
 #include <cassert>
-#if !(defined(__APPLE__) && defined(__GLIBCXX__))
+#if !(defined(__APPLE__) && defined(__GLIBCXX__)) && !defined(__ANDROID__)
 #include <cinttypes> //PRId32, PRIu32, etc.
 #else
 #include <inttypes.h>

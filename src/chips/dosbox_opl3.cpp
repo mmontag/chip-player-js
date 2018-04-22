@@ -5,14 +5,14 @@
 
 DosBoxOPL3::DosBoxOPL3() :
     OPLChipBase(),
-    m_chip(nullptr)
+    m_chip(NULL)
 {
     reset();
 }
 
 DosBoxOPL3::DosBoxOPL3(const DosBoxOPL3 &c) :
     OPLChipBase(c),
-    m_chip(nullptr)
+    m_chip(NULL)
 {
     setRate(c.m_rate);
 }
