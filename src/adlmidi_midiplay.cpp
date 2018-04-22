@@ -1618,7 +1618,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                     phase = ains.voice2_fine_tune;//0.125; // Detune the note slightly (this is what Doom does)
                 }
 
-                if(Ch[MidCh].vibrato && d->vibdelay >= Ch[MidCh].vibdelay)
+                if(Ch[MidCh].vibrato && (!d || d->vibdelay >= Ch[MidCh].vibdelay))
                     bend += Ch[MidCh].vibrato * Ch[MidCh].vibdepth * std::sin(Ch[MidCh].vibpos);
 
                 #ifdef ADLMIDI_USE_DOSBOX_OPL
