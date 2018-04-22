@@ -848,7 +848,8 @@ public:
             if(!user)
                 return NULL;
             users_free_cells = user->next;
-            users_free_cells->prev = NULL;
+            if(users_free_cells)
+                users_free_cells->prev = NULL;
             // add to users front
             if(users_first)
                 users_first->prev = user;
