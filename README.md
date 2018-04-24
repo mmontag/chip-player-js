@@ -59,12 +59,14 @@ sudo make install
 * **CMAKE_PREFIX_PATH** - destinition folder where libADLMIDI will be installed. On Linux it is /usr/local/ by default.
 * **CMAKE_BUILD_TYPE** - Build types: **Debug** or **Release**
 * **WITH_MIDIPLAY** - (ON/OFF, default OFF) Build demo MIDI player (Requires SDL2 and also pthread on Windows with MinGW)
+* **WITH_VLC_PLUGIN** - (ON/OFF, default OFF) Compile VLC plugin. For now, works on Linux and VLC version 2.2.2. Support for newer VLC versions and other platforms comming soon!
 * **WITH_ADLMIDI2** - (ON/OFF, default OFF) Build Classic ADLMIDI MIDI player (Requires SDL2 on Linux and macOS, requires pthread on Windows with MinGW, SDL doesn't required on Windows. Also, the **WITH_CPP_EXTRAS** flag must be enabled)
 * **WITH_CPP_EXTRAS** - (ON/OFF, default OFF) Build libADLMIDI with some extra public features for C++ language (for example, instrument testing API is available for C++ only).
 * **WITH_OLD_UTILS** - (ON/OFF, default OFF) Build old utilities to dump some bank formats, made by original creator of ADLMIDI
 * **WITH_EMBEDDED_BANKS** - (ON/OFF, default ON) Enable or disable embedded banks (Original ADLMIDI and older versions of libADLMIDI are had embedded-only banks with no ability to load custom banks in runtime).
 * **WITH_GENADLDATA**  - (ON/OFF, default OFF) Build and execute the utility which will rebuild the embedded banks database (which is an adldata.cpp file).
-* **USE_DOSBOX_EMULATOR** - (ON/OFF, default OFF) Use DosBox emulator instead of current Nuked OPL3. This emulator has less accuracy, but it is well optimized for a work on slow devices such as older computers, embedded devices, or mobile device.
+* **USE_DOSBOX_EMULATOR** - (ON/OFF, default ON) Enable support for DosBox 0.74 emulator. (Well-accurate and fast)
+* **USE_NUKED_EMULATOR** - (ON/OFF, default ON) Enable support for Nuked OPL3 emulator. (Very-accurate, needs more CPU power)
 
 * **libADLMIDI_STATIC** - (ON/OFF, default ON) Build static library
 * **libADLMIDI_SHARED** - (ON/OFF, default OFF) Build shared library
@@ -133,7 +135,7 @@ To build that example you will need to have installed SDL2 library.
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 
 # Changelog
-## 1.3.2   dev
+## 1.3.2   2018-04-24
  * Added ability to disable MUS and XMI converters
  * Added ability to disable embedded MIDI sequencer to use library as RealTime synthesizer only or use any custom MIDI sequencer plugins.
  * Fixed blank instruments fallback in multi-bank support. When using non-zero bank, if instrument is blank, then, instrument will be taken from a root (I.e. zero bank).
