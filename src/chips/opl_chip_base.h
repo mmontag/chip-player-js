@@ -4,8 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* TODO: MSVC: Use MSVC versioing instead of this to detect does it supports those C++11 keywords or not */
-#if __cplusplus <= 199711L
+#if !defined(_MSC_VER) && (__cplusplus <= 199711L)
 #define final
 #define override
 #endif
