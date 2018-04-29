@@ -444,7 +444,7 @@ int main(int argc, char **argv)
             std::fprintf(stderr, " - Audio wanted (format=%s,samples=%u,rate=%u,channels=%u);\n"
                                  " - Audio obtained (format=%s,samples=%u,rate=%u,channels=%u)\n",
                          SDLAudioToStr(spec.format), spec.samples,    spec.freq,    spec.channels,
-                         SDLAudioToStr(spec.format), obtained.samples, obtained.freq, obtained.channels);
+                         SDLAudioToStr(obtained.format), obtained.samples, obtained.freq, obtained.channels);
         }
     }
     #endif
