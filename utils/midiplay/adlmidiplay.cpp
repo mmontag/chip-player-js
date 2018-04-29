@@ -132,12 +132,20 @@ static const char *SDLAudioToStr(int format)
         return "U8";
     case AUDIO_S16:
         return "S16";
+    case AUDIO_S16MSB:
+        return "S16MSB";
     case AUDIO_U16:
         return "U16";
+    case AUDIO_U16MSB:
+        return "U16MSB";
     case AUDIO_S32:
         return "S32";
+    case AUDIO_S32MSB:
+        return "S32MSB";
     case AUDIO_F32:
         return "F32";
+    case AUDIO_F32MSB:
+        return "F32MSB";
     default:
         return "UNK";
     }
@@ -336,47 +344,17 @@ int main(int argc, char **argv)
             recordWave = true;//Record library output into WAV file
         }
         else if(!std::strcmp("-s8", argv[2]) && !recordWave)
-        {
             spec.format = AUDIO_S8;
-            g_audioFormat.type = ADLMIDI_SampleType_S8;
-            g_audioFormat.containerSize = sizeof(Sint8);
-            g_audioFormat.sampleOffset = sizeof(Sint8) * 2;
-        }
         else if(!std::strcmp("-u8", argv[2]) && !recordWave)
-        {
             spec.format = AUDIO_U8;
-            g_audioFormat.type = ADLMIDI_SampleType_U8;
-            g_audioFormat.containerSize = sizeof(Uint8);
-            g_audioFormat.sampleOffset = sizeof(Uint8) * 2;
-        }
         else if(!std::strcmp("-s16", argv[2]) && !recordWave)
-        {
             spec.format = AUDIO_S16;
-            g_audioFormat.type = ADLMIDI_SampleType_S16;
-            g_audioFormat.containerSize = sizeof(Sint16);
-            g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
-        }
         else if(!std::strcmp("-u16", argv[2]) && !recordWave)
-        {
             spec.format = AUDIO_U16;
-            g_audioFormat.type = ADLMIDI_SampleType_U16;
-            g_audioFormat.containerSize = sizeof(Uint16);
-            g_audioFormat.sampleOffset = sizeof(Uint16) * 2;
-        }
         else if(!std::strcmp("-s32", argv[2]) && !recordWave)
-        {
             spec.format = AUDIO_S32;
-            g_audioFormat.type = ADLMIDI_SampleType_S32;
-            g_audioFormat.containerSize = sizeof(Sint32);
-            g_audioFormat.sampleOffset = sizeof(Sint32) * 2;
-        }
         else if(!std::strcmp("-f32", argv[2]) && !recordWave)
-        {
             spec.format = AUDIO_F32;
-            g_audioFormat.type = ADLMIDI_SampleType_F32;
-            g_audioFormat.containerSize = sizeof(float);
-            g_audioFormat.sampleOffset = sizeof(float) * 2;
-        }
         #endif
 
         else if(!std::strcmp("-t", argv[2]))
@@ -445,6 +423,39 @@ int main(int argc, char **argv)
                                  " - Audio obtained (format=%s,samples=%u,rate=%u,channels=%u)\n",
                          SDLAudioToStr(spec.format), spec.samples,    spec.freq,    spec.channels,
                          SDLAudioToStr(obtained.format), obtained.samples, obtained.freq, obtained.channels);
+        }
+        switch(obtained.format)
+        {
+        case AUDIO_S8:
+            g_audioFormat.type = ADLMIDI_SampleType_S8;
+            g_audioFormat.containerSize = sizeof(Sint8);
+            g_audioFormat.sampleOffset = sizeof(Sint8) * 2;
+            break;
+        case AUDIO_U8:
+            g_audioFormat.type = ADLMIDI_SampleType_U8;
+            g_audioFormat.containerSize = sizeof(Uint8);
+            g_audioFormat.sampleOffset = sizeof(Uint8) * 2;
+            break;
+        case AUDIO_S16:
+            g_audioFormat.type = ADLMIDI_SampleType_S16;
+            g_audioFormat.containerSize = sizeof(Sint16);
+            g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
+            break;
+        case AUDIO_U16:
+            g_audioFormat.type = ADLMIDI_SampleType_U16;
+            g_audioFormat.containerSize = sizeof(Uint16);
+            g_audioFormat.sampleOffset = sizeof(Uint16) * 2;
+            break;
+        case AUDIO_S32:
+            g_audioFormat.type = ADLMIDI_SampleType_S32;
+            g_audioFormat.containerSize = sizeof(Sint32);
+            g_audioFormat.sampleOffset = sizeof(Sint32) * 2;
+            break;
+        case AUDIO_F32:
+            g_audioFormat.type = ADLMIDI_SampleType_F32;
+            g_audioFormat.containerSize = sizeof(float);
+            g_audioFormat.sampleOffset = sizeof(float) * 2;
+            break;
         }
     }
     #endif
