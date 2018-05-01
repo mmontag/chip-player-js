@@ -225,6 +225,9 @@
     <ClCompile Include="emu\cores\ym3438.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="emu\cores\saa1099_vb.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu\EmuStructs.h">
@@ -459,6 +462,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\ym3438.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\saa1099_vb.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

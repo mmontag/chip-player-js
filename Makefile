@@ -217,6 +217,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/vsu.o \
 	$(LIBEMUOBJ)/cores/saaintf.o \
 	$(LIBEMUOBJ)/cores/saa1099_mame.o \
+	$(LIBEMUOBJ)/cores/saa1099_vb.o \
 	$(LIBEMUOBJ)/cores/es5503.o \
 	$(LIBEMUOBJ)/cores/es5506.o \
 	$(LIBEMUOBJ)/cores/x1_010.o \

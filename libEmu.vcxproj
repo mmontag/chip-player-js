@@ -197,6 +197,7 @@
     <ClCompile Include="emu\cores\rf5c68.c" />
     <ClCompile Include="emu\cores\rf5cintf.c" />
     <ClCompile Include="emu\cores\saa1099_mame.c" />
+    <ClCompile Include="emu\cores\saa1099_vb.c" />
     <ClCompile Include="emu\cores\saaintf.c" />
     <ClCompile Include="emu\cores\scd_pcm.c" />
     <ClCompile Include="emu\cores\scsp.c" />
@@ -276,6 +277,7 @@
     <ClInclude Include="emu\cores\rf5c68.h" />
     <ClInclude Include="emu\cores\rf5cintf.h" />
     <ClInclude Include="emu\cores\saa1099_mame.h" />
+    <ClInclude Include="emu\cores\saa1099_vb.h" />
     <ClInclude Include="emu\cores\saaintf.h" />
     <ClInclude Include="emu\cores\scd_pcm.h" />
     <ClInclude Include="emu\cores\scsp.h" />

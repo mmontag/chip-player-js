@@ -115,7 +115,7 @@ struct saa1099_noise
 	/* vars to simulate the noise generator output */
 	double counter;
 	double freq;
-	UINT16 level;                   /* noise polynomal shifter */
+	UINT32 level;                   /* noise polynomal shifter */
 };
 
 typedef struct _saa1099_state saa1099_state;
