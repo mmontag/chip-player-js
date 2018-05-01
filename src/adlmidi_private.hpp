@@ -168,7 +168,7 @@ inline int32_t adl_cvtU16(int32_t x)
 }
 inline int32_t adl_cvtU8(int32_t x)
 {
-    return adl_cvtS8(x) - INT8_MIN;
+    return (adl_cvtS16(x) / 256) - INT8_MIN;
 }
 inline int32_t adl_cvtU24(int32_t x)
 {

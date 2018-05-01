@@ -102,23 +102,53 @@ public:
     }
 };
 
-typedef std::deque<int16_t> AudioBuff;
+typedef std::deque<uint8_t> AudioBuff;
 static AudioBuff g_audioBuffer;
 static MutexType g_audioBuffer_lock;
+static ADLMIDI_AudioFormat g_audioFormat;
 
 static void SDL_AudioCallbackX(void *, Uint8 *stream, int len)
 {
     SDL_LockAudio();
-    short *target = (short *) stream;
+    //short *target = (short *) stream;
     g_audioBuffer_lock.Lock();
-    unsigned ate = (unsigned)len / 2; // number of shorts
+    unsigned ate = len; // number of bytes
     if(ate > g_audioBuffer.size())
         ate = (unsigned)g_audioBuffer.size();
     for(unsigned a = 0; a < ate; ++a)
-        target[a] = g_audioBuffer[a];
+        stream[a] = g_audioBuffer[a];
     g_audioBuffer.erase(g_audioBuffer.begin(), g_audioBuffer.begin() + ate);
     g_audioBuffer_lock.Unlock();
     SDL_UnlockAudio();
+}
+
+static const char *SDLAudioToStr(int format)
+{
+    switch(format)
+    {
+    case AUDIO_S8:
+        return "S8";
+    case AUDIO_U8:
+        return "U8";
+    case AUDIO_S16:
+        return "S16";
+    case AUDIO_S16MSB:
+        return "S16MSB";
+    case AUDIO_U16:
+        return "U16";
+    case AUDIO_U16MSB:
+        return "U16MSB";
+    case AUDIO_S32:
+        return "S32";
+    case AUDIO_S32MSB:
+        return "S32MSB";
+    case AUDIO_F32:
+        return "F32";
+    case AUDIO_F32MSB:
+        return "F32MSB";
+    default:
+        return "UNK";
+    }
 }
 #endif//OUTPUT_WAVE_ONLY
 
@@ -290,6 +320,9 @@ int main(int argc, char **argv)
     #endif
     #ifndef HARDWARE_OPL3
     int emulator = ADLMIDI_EMU_NUKED;
+    g_audioFormat.type = ADLMIDI_SampleType_S16;
+    g_audioFormat.containerSize = sizeof(Sint16);
+    g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
     #endif
 
     while(argc > 2)
@@ -303,7 +336,25 @@ int main(int argc, char **argv)
 
         #ifndef OUTPUT_WAVE_ONLY
         else if(!std::strcmp("-w", argv[2]))
+        {
+            //Current Wave output implementation allows only SINT16 output
+            g_audioFormat.type = ADLMIDI_SampleType_S16;
+            g_audioFormat.containerSize = sizeof(Sint16);
+            g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
             recordWave = true;//Record library output into WAV file
+        }
+        else if(!std::strcmp("-s8", argv[2]) && !recordWave)
+            spec.format = AUDIO_S8;
+        else if(!std::strcmp("-u8", argv[2]) && !recordWave)
+            spec.format = AUDIO_U8;
+        else if(!std::strcmp("-s16", argv[2]) && !recordWave)
+            spec.format = AUDIO_S16;
+        else if(!std::strcmp("-u16", argv[2]) && !recordWave)
+            spec.format = AUDIO_U16;
+        else if(!std::strcmp("-s32", argv[2]) && !recordWave)
+            spec.format = AUDIO_S32;
+        else if(!std::strcmp("-f32", argv[2]) && !recordWave)
+            spec.format = AUDIO_F32;
         #endif
 
         else if(!std::strcmp("-t", argv[2]))
@@ -368,10 +419,43 @@ int main(int argc, char **argv)
         }
         if(spec.samples != obtained.samples)
         {
-            std::fprintf(stderr, " - Audio wanted (samples=%u,rate=%u,channels=%u);\n"
-                                 " - Audio obtained (samples=%u,rate=%u,channels=%u)\n",
-                         spec.samples,    spec.freq,    spec.channels,
-                         obtained.samples, obtained.freq, obtained.channels);
+            std::fprintf(stderr, " - Audio wanted (format=%s,samples=%u,rate=%u,channels=%u);\n"
+                                 " - Audio obtained (format=%s,samples=%u,rate=%u,channels=%u)\n",
+                         SDLAudioToStr(spec.format), spec.samples,    spec.freq,    spec.channels,
+                         SDLAudioToStr(obtained.format), obtained.samples, obtained.freq, obtained.channels);
+        }
+        switch(obtained.format)
+        {
+        case AUDIO_S8:
+            g_audioFormat.type = ADLMIDI_SampleType_S8;
+            g_audioFormat.containerSize = sizeof(Sint8);
+            g_audioFormat.sampleOffset = sizeof(Sint8) * 2;
+            break;
+        case AUDIO_U8:
+            g_audioFormat.type = ADLMIDI_SampleType_U8;
+            g_audioFormat.containerSize = sizeof(Uint8);
+            g_audioFormat.sampleOffset = sizeof(Uint8) * 2;
+            break;
+        case AUDIO_S16:
+            g_audioFormat.type = ADLMIDI_SampleType_S16;
+            g_audioFormat.containerSize = sizeof(Sint16);
+            g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
+            break;
+        case AUDIO_U16:
+            g_audioFormat.type = ADLMIDI_SampleType_U16;
+            g_audioFormat.containerSize = sizeof(Uint16);
+            g_audioFormat.sampleOffset = sizeof(Uint16) * 2;
+            break;
+        case AUDIO_S32:
+            g_audioFormat.type = ADLMIDI_SampleType_S32;
+            g_audioFormat.containerSize = sizeof(Sint32);
+            g_audioFormat.sampleOffset = sizeof(Sint32) * 2;
+            break;
+        case AUDIO_F32:
+            g_audioFormat.type = ADLMIDI_SampleType_F32;
+            g_audioFormat.containerSize = sizeof(float);
+            g_audioFormat.sampleOffset = sizeof(float) * 2;
+            break;
         }
     }
     #endif
@@ -509,8 +593,11 @@ int main(int argc, char **argv)
         while(!stop)
         {
             #ifndef HARDWARE_OPL3
-            short buff[4096];
-            size_t got = (size_t)adl_play(myDevice, 4096, buff);
+            Uint8 buff[16384];
+            size_t got = (size_t)adl_playFormat(myDevice, 4096,
+                                                buff,
+                                                buff + g_audioFormat.containerSize,
+                                                &g_audioFormat) * g_audioFormat.containerSize;
             if(got <= 0)
                 break;
             #endif
@@ -530,7 +617,7 @@ int main(int argc, char **argv)
             g_audioBuffer_lock.Unlock();
 
             const SDL_AudioSpec &spec = obtained;
-            while(g_audioBuffer.size() > spec.samples + (spec.freq * 2) * OurHeadRoomLength)
+            while(g_audioBuffer.size() > spec.samples + (spec.freq * g_audioFormat.sampleOffset) * OurHeadRoomLength)
             {
                 SDL_Delay(1);
             }

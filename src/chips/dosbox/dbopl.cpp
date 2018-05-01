@@ -1875,8 +1875,8 @@ namespace DBOPL
             if(i >= 16)
                 index += 9;
 
-            Bitu blah = reinterpret_cast<Bitu>(&(chip->chan[ index ]));
-            ChanOffsetTable[i] = blah;
+            intptr_t blah = reinterpret_cast<intptr_t>(&(chip->chan[ index ]));
+            ChanOffsetTable[i] = static_cast<Bit16u>(blah);
         }
 
         //Same for operators
@@ -1895,9 +1895,9 @@ namespace DBOPL
                 chNum += 16 - 12;
 
             Bitu opNum = (i % 8) / 3;
-            DBOPL::Channel *chan = 0;
-            Bitu blah = reinterpret_cast<Bitu>(&(chan->op[opNum]));
-            OpOffsetTable[i] = ChanOffsetTable[ chNum ] + blah;
+            DBOPL::Channel *chan = NULL;
+            intptr_t blah = reinterpret_cast<intptr_t>(&(chan->op[opNum]));
+            OpOffsetTable[i] = static_cast<Bit16u>((intptr_t)ChanOffsetTable[ chNum ] + blah);
         }
 
         #if 0
