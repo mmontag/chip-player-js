@@ -22,7 +22,7 @@
 
     Missing features / things to do:
 
-    - Add LFO support. But do any games actually use it?
+    - Verify LFO frequency from real hardware.
 
     - Add shared index for waveform playback and sample writes. Almost every
       game will reset the index prior to playback so this isn't an issue.
@@ -253,18 +253,48 @@ void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 			}
 			else
 			{
-				/* Waveform mode */
-				UINT32 step = p->wave_freq_tab[p->channel[ch].frequency];
-				for(i = 0; i < samples; i += 1)
+				if ((p->lfo_control & 0x80) && (ch < 2))
 				{
-					int offset;
-					INT16 data;
-					offset = (p->channel[ch].counter >> 12) & 0x1F;
-					p->channel[ch].counter += step;
-					p->channel[ch].counter &= 0x1FFFF;
-					data = p->channel[ch].waveform[offset];
-					outputs[0][i] += (vll * (data - 16));
-					outputs[1][i] += (vlr * (data - 16));
+					if (ch == 0) // CH 0 only, CH 1 is muted
+					{
+						/* Waveform mode with LFO */
+						UINT32 step = p->channel[0].frequency;
+						UINT16 lfo_step = p->channel[1].frequency;
+						for (i = 0; i < samples; i += 1)
+						{
+							int offset, lfooffset;
+							INT16 data, lfo_data;
+							lfooffset = (p->channel[1].counter >> 12) & 0x1F;
+							p->channel[1].counter += p->wave_freq_tab[(lfo_step * p->lfo_frequency) & 0xfff]; // TODO : multiply? verify this from real hardware.
+							p->channel[1].counter &= 0x1FFFF;
+							lfo_data = p->channel[1].waveform[lfooffset];
+							if (p->lfo_control & 3)
+								step += ((lfo_data - 16) << ((p->lfo_control-1)<<1)); // verified from patent, TODO : same in real hardware?
+
+							offset = (p->channel[0].counter >> 12) & 0x1F;
+							p->channel[0].counter += p->wave_freq_tab[step & 0xfff];
+							p->channel[0].counter &= 0x1FFFF;
+							data = p->channel[0].waveform[offset];
+							outputs[0][i] += (vll * (data - 16));
+							outputs[1][i] += (vlr * (data - 16));
+						}
+					}
+				}
+				else
+				{
+					/* Waveform mode */
+					UINT32 step = p->wave_freq_tab[p->channel[ch].frequency];
+					for (i = 0; i < samples; i += 1)
+					{
+						int offset;
+						INT16 data;
+						offset = (p->channel[ch].counter >> 12) & 0x1F;
+						p->channel[ch].counter += step;
+						p->channel[ch].counter &= 0x1FFFF;
+						data = p->channel[ch].waveform[offset];
+						outputs[0][i] += (vll * (data - 16));
+						outputs[1][i] += (vlr * (data - 16));
+					}
 				}
 			}
 		}
