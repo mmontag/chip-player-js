@@ -69,7 +69,8 @@ static bool LoadBNK(const char *fn, unsigned bank, const char *prefix, bool is_f
             if(name[2] == 'O'
                || name[2] == 'S')
             {
-                gmno = 128 + std::stoi(name.substr(3));
+                std::string n = name.substr(3);
+                gmno = 128 + std::atoi(n.c_str());
             }
         }
 
