@@ -194,6 +194,9 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     /* TODO: Avoid memory reallocation in nearest future! */
     opl.dynamic_melodic_banks.clear();
     opl.dynamic_percussion_banks.clear();
+    opl.dynamic_instruments.clear();
+    opl.dynamic_metainstruments.clear();
+    opl.dynamic_percussion_offset = 0;
 
     opl.setEmbeddedBank(m_setup.AdlBank);
 
