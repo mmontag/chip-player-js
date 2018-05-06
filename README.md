@@ -135,6 +135,9 @@ To build that example you will need to have installed SDL2 library.
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 
 # Changelog
+## 1.3.3   dev
+ * Fixed an inability to load another custom bank without of library re-initialization
+
 ## 1.3.2   2018-04-24
  * Added ability to disable MUS and XMI converters
  * Added ability to disable embedded MIDI sequencer to use library as RealTime synthesizer only or use any custom MIDI sequencer plugins.
