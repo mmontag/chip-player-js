@@ -82,7 +82,7 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
         int gmno = int(a < 128 ? a : ((a | 128) + 35));
 
         char name2[512];
-        std::snprintf(name2, 512, "%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), gmno & 127);
+        snprintf(name2, 512, "%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
         Doom_opl_instr &ins = *(Doom_opl_instr *) &data[offset2];
 

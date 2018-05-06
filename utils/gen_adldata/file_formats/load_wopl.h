@@ -207,9 +207,9 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 char name2[512];
                 std::memset(name2, 0, 512);
                 if(is_percussion)
-                    std::snprintf(name2, 512, "%sP%u", prefix, gmno & 127);
+                    snprintf(name2, 512, "%sP%u", prefix, gmno & 127);
                 else
-                    std::snprintf(name2, 512, "%sM%u", prefix, i);
+                    snprintf(name2, 512, "%sM%u", prefix, i);
 
                 if(!real4op && !tmp2.pseudo4op)
                 {
