@@ -146,7 +146,9 @@ if(WITH_EMBEDDED_BANKS)
                 CMAKE_COMPILER_IS_MINGW)
             if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
                 message("Turned on C++11 on GCC/CLang/Intel/MinGW")
-                target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+                set_target_properties(gen_adldata PROPERTIES
+                                      CXX_STANDARD 11
+                                      CXX_STANDARD_REQUIRED YES)
             endif()
         else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             message("Turned on C++11 on MSVC")
@@ -382,7 +384,9 @@ if(WITH_ADLMIDI2)
                 CMAKE_COMPILER_IS_MINGW)
         if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
             message("Turned on C++11 on GCC/CLang/Intel")
-            target_compile_options(adlmidi2 PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+            set_target_properties(gen_adldata PROPERTIES
+                                      CXX_STANDARD 11
+                                      CXX_STANDARD_REQUIRED YES)
         endif()
     else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         message("Turned on C++11 on MSVC")
