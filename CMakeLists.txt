@@ -139,9 +139,10 @@ if(WITH_EMBEDDED_BANKS)
         if(NOT MSVC)
             target_link_libraries(gen_adldata pthread m stdc++)
         endif()
-        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
-                CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+        if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
                 "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
                 CMAKE_COMPILER_IS_MINGW)
             if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
                 message("Turned on C++11 on GCC/CLang/Intel/MinGW")
