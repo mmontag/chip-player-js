@@ -144,7 +144,7 @@ if(WITH_EMBEDDED_BANKS)
                 "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
                 "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
                 CMAKE_COMPILER_IS_MINGW)
-            if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
+            if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
                 message("Turned on C++11 on GCC/CLang/Intel/MinGW")
                 target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
             endif()
@@ -375,10 +375,12 @@ if(WITH_ADLMIDI2)
         message(FATAL_ERROR "ADLMIDI2 Requires C++ Extras. Please enable WITH_CPP_EXTRAS option!")
     endif()
 
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
-            CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
-            "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-        if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
+                CMAKE_COMPILER_IS_MINGW)
+        if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
             message("Turned on C++11 on GCC/CLang/Intel")
             target_compile_options(adlmidi2 PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
         endif()
