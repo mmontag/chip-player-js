@@ -141,9 +141,10 @@ if(WITH_EMBEDDED_BANKS)
         endif()
         if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
                 CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
-                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
+                CMAKE_COMPILER_IS_MINGW)
             if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
-                message("Turned on C++11 on GCC/CLang/Intel")
+                message("Turned on C++11 on GCC/CLang/Intel/MinGW")
                 target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
             endif()
         else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
