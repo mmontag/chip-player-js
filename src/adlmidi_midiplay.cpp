@@ -1393,7 +1393,7 @@ void MIDIplay::realTime_PatchChange(uint8_t channel, uint8_t patch)
 void MIDIplay::realTime_PitchBend(uint8_t channel, uint16_t pitch)
 {
     channel = channel % 16;
-    Ch[channel].bend = (uint32_t(pitch) - 8192) * Ch[channel].bendsense;
+    Ch[channel].bend = (int(pitch) - 8192) * Ch[channel].bendsense;
     NoteUpdate_All(channel, Upd_Pitch);
 }
 
