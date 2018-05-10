@@ -2358,8 +2358,14 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
     switch(addr + nrpn * 0x10000 + MSB * 0x20000)
     {
     case 0x0000 + 0*0x10000 + 1*0x20000: // Pitch-bender sensitivity
-        Ch[MidCh].bendsense = value / 8192.0;
+    {
+        if (MSB)
+            Ch[MidCh].bendsense_msb = value;
+        else
+            Ch[MidCh].bendsense_lsb = value;
+        Ch[MidCh].updateBendSensitivity();
         break;
+    }
     case 0x0108 + 1*0x10000 + 1*0x20000: // Vibrato speed
         if(value == 64)      Ch[MidCh].vibspeed = 1.0;
         else if(value < 100) Ch[MidCh].vibspeed = 1.0 / (1.6e-2 * (value ? value : 1));
