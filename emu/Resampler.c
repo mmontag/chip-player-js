@@ -307,6 +307,9 @@ static void Resmpl_Exec_Copy(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSam
 	return;
 }
 
+// TODO: The resample is not completely stable.
+//	Resampling tiny blocks (1 resulting sample) sometimes causes values to be off-by-one,
+//	compared to resampling large blocks.
 static void Resmpl_Exec_LinearDown(RESMPL_STATE* CAA, UINT32 length, WAVE_32BS* retSample)
 {
 	// RESALGO_LINEAR_DOWN: Linear Downsampling

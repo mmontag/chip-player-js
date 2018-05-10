@@ -705,6 +705,7 @@ static void InitVGMChips(void)
 			}
 			break;
 		case DEVID_QSOUND:
+			devCfg.emuCore = FCC_VBEL;
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;

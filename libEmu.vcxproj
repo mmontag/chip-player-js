@@ -193,7 +193,9 @@
     <ClCompile Include="emu\cores\opnintf.c" />
     <ClCompile Include="emu\cores\pokey.c" />
     <ClCompile Include="emu\cores\pwm.c" />
-    <ClCompile Include="emu\cores\qsound.c" />
+    <ClCompile Include="emu\cores\qsound_mame.c" />
+    <ClCompile Include="emu\cores\qsoundintf.c" />
+    <ClCompile Include="emu\cores\qsound_vb.c" />
     <ClCompile Include="emu\cores\rf5c68.c" />
     <ClCompile Include="emu\cores\rf5cintf.c" />
     <ClCompile Include="emu\cores\saa1099_mame.c" />
@@ -273,7 +275,9 @@
     <ClInclude Include="emu\cores\opnintf.h" />
     <ClInclude Include="emu\cores\pokey.h" />
     <ClInclude Include="emu\cores\pwm.h" />
-    <ClInclude Include="emu\cores\qsound.h" />
+    <ClInclude Include="emu\cores\qsound_mame.h" />
+    <ClInclude Include="emu\cores\qsoundintf.h" />
+    <ClInclude Include="emu\cores\qsound_vb.h" />
     <ClInclude Include="emu\cores\rf5c68.h" />
     <ClInclude Include="emu\cores\rf5cintf.h" />
     <ClInclude Include="emu\cores\saa1099_mame.h" />

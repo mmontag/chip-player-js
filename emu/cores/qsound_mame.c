@@ -39,7 +39,7 @@
 #include "../EmuCores.h"
 #include "../snddef.h"
 #include "../EmuHelper.h"
-#include "qsound.h"
+#include "qsound_mame.h"
 
 
 static void qsound_update(void *param, UINT32 samples, DEV_SMPL **outputs);
@@ -66,7 +66,7 @@ static DEVDEF_RWFUNC devFunc[] =
 	{RWF_MEMORY | RWF_WRITE, DEVRW_MEMSIZE, 0, qsound_alloc_rom},
 	{0x00, 0x00, 0, NULL}
 };
-static DEV_DEF devDef =
+DEV_DEF devDef_QSound_MAME =
 {
 	"QSound", "MAME", FCC_MAME,
 	
@@ -82,12 +82,6 @@ static DEV_DEF devDef =
 	NULL,	// LinkDevice
 	
 	devFunc,	// rwFuncs
-};
-
-const DEV_DEF* devDefList_QSound[] =
-{
-	&devDef,
-	NULL
 };
 
 
@@ -158,7 +152,7 @@ static UINT8 device_start_qsound(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	qsound_set_mute_mask(chip, 0x0000);
 
 	chip->_devData.chipInf = chip;
-	INIT_DEVINF(retDevInf, &chip->_devData, cfg->clock / QSOUND_CLOCKDIV, &devDef);
+	INIT_DEVINF(retDevInf, &chip->_devData, cfg->clock / QSOUND_CLOCKDIV, &devDef_QSound_MAME);
 
 	return 0x00;
 }
