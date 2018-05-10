@@ -599,6 +599,7 @@ public:
         uint8_t panning, vibrato, sustain;
         char ____padding[6];
         double  bend, bendsense;
+        int bendsense_lsb, bendsense_msb;
         double  vibpos, vibspeed, vibdepth;
         int64_t vibdelay;
         uint8_t lastlrpn, lastmrpn;
@@ -791,7 +792,9 @@ public:
         void resetAllControllers()
         {
             bend = 0.0;
-            bendsense = 2 / 8192.0;
+            bendsense_msb = 2;
+            bendsense_lsb = 0;
+            updateBendSensitivity();
             volume  = 100;
             expression = 127;
             sustain = 0;
@@ -802,6 +805,11 @@ public:
             panning = OPL_PANNING_BOTH;
             portamento = 0;
             brightness = 127;
+        }
+        void updateBendSensitivity()
+        {
+            int cent = bendsense_msb * 100 + bendsense_lsb;
+            bendsense = cent * (0.01 / 8192.0);
         }
         MIDIchannel()
         {
