@@ -488,5 +488,8 @@
     <ClInclude Include="emu\cores\emu2149_private.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="emu\cores\sn76489_private.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

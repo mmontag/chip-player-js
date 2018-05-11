@@ -8,6 +8,7 @@
 #include "qsound_vb.h"
 #endif
 
+
 const DEV_DEF* devDefList_QSound[] =
 {
 #ifdef EC_QSOUND_MAME

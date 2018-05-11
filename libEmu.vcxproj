@@ -290,6 +290,7 @@
     <ClInclude Include="emu\cores\scsp.h" />
     <ClInclude Include="emu\cores\scspdsp.h" />
     <ClInclude Include="emu\cores\segapcm.h" />
+    <ClInclude Include="emu\cores\sn76489_private.h" />
     <ClInclude Include="emu\cores\upd7759.h" />
     <ClInclude Include="emu\cores\vsu.h" />
     <ClInclude Include="emu\cores\ws_audio.h" />
