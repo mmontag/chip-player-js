@@ -63,9 +63,38 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
 #include "../EmuHelper.h"
 #include "emu2413.h"
+#include "emu2413_private.h"
 #include "../panning.h" // Maxim
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, EOPLL_writeIO},
+	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, EOPLL_writeReg},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_YM2413_Emu =
+{
+	"YM2413", "EMU2413", FCC_EMU_,
+	
+	device_start_ym2413_emu,
+	(DEVFUNC_CTRL)EOPLL_delete,
+	(DEVFUNC_CTRL)EOPLL_reset,
+	(DEVFUNC_UPDATE)EOPLL_calc_stereo,
+	
+	NULL,	// SetOptionBits
+	(DEVFUNC_OPTMASK)EOPLL_SetMuteMask,
+	ym2413_pan_emu,
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
+
 
 // Note: Dump size changed to 8 per instrument, since bytes 8-15 were all 0. -VB
 #define OPLL_TONE_NUM 3
@@ -909,6 +938,26 @@ maketables (EOPLL * opll, uint32_t c, uint32_t r)
     opll->rate = r;
     internal_refresh (opll);
   }
+}
+
+static UINT8 device_start_ym2413_emu(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	EOPLL* chip;
+	UINT32 rate;
+	
+	rate = cfg->clock / 72;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	chip = EOPLL_new(cfg->clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	
+	EOPLL_set_quality(chip, 0);	// disable internal sample rate converter
+	EOPLL_SetChipMode(chip, cfg->flags);
+	
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_YM2413_Emu);
+	return 0x00;
 }
 
 EOPLL *
@@ -1831,4 +1880,14 @@ EOPLL_set_pan (EOPLL * opll, uint32_t ch, int16_t pan)
     return;
   
   Panning_Calculate( opll->pan[ch], pan ); // Maxim
+}
+
+static void ym2413_pan_emu(void* chipptr, INT16* PanVals)
+{
+	UINT8 curChn;
+	
+	for (curChn = 0; curChn < 14; curChn ++)
+		EOPLL_set_pan((EOPLL*)chipptr, curChn, PanVals[curChn]);
+	
+	return;
 }

@@ -5,6 +5,9 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
+#include "../EmuHelper.h"
 #include "../RatioCntr.h"
 #include "saa1099_vb.h"
 
@@ -15,12 +18,13 @@ typedef struct saa_envelope_generator SAA_ENV_GEN;
 typedef struct saa_channel SAA_CHN;
 typedef struct saa_chip SAA_CHIP;
 
-//void* saa1099v_create(UINT32 clock, UINT32 sampleRate);
-//void saa1099v_destroy(void* info);
-//void saa1099v_reset(void* info);
-//void saa1099v_set_mute_mask(void* info, UINT32 MuteMask);
+static UINT8 device_start_saa1099_vb(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
+static void* saa1099v_create(UINT32 clock, UINT32 sampleRate);
+static void saa1099v_destroy(void* info);
+static void saa1099v_reset(void* info);
+static void saa1099v_set_mute_mask(void* info, UINT32 MuteMask);
 
-//void saa1099v_write(void* info, UINT8 offset, UINT8 data);
+static void saa1099v_write(void* info, UINT8 offset, UINT8 data);
 static void saa_write_addr(void* info, UINT8 data);
 static void saa_write_data(void* info, UINT8 data);
 
@@ -29,7 +33,31 @@ INLINE void saa_freq_gen_step(SAA_FREQ_GEN* fgen, UINT16 inc);
 static void saa_envgen_load(SAA_CHIP* saa, UINT8 genID);
 static void saa_envgen_step(SAA_ENV_GEN* saaEGen);
 static void saa_advance(SAA_CHIP* saa, UINT32 steps);
-//void saa1099v_update(void* param, UINT32 samples, DEV_SMPL** outputs);
+static void saa1099v_update(void* param, UINT32 samples, DEV_SMPL** outputs);
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, saa1099v_write},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_SAA1099_VB =
+{
+	"SAA1099", "Valley Bell", FCC_VBEL,
+	
+	device_start_saa1099_vb,
+	saa1099v_destroy,
+	saa1099v_reset,
+	saa1099v_update,
+	
+	NULL,	// SetOptionBits
+	saa1099v_set_mute_mask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
 
 
 struct saa_frequency_generator
@@ -134,7 +162,26 @@ static const UINT8 saa_envelopes[8][32] =
 	}
 };
 
-void* saa1099v_create(UINT32 clock, UINT32 sampleRate)
+static UINT8 device_start_saa1099_vb(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->clock / 128;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	chip = saa1099v_create(cfg->clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_SAA1099_VB);
+	return 0x00;
+}
+
+static void* saa1099v_create(UINT32 clock, UINT32 sampleRate)
 {
 	SAA_CHIP* saa;
 	UINT8 curVol;
@@ -155,7 +202,7 @@ void* saa1099v_create(UINT32 clock, UINT32 sampleRate)
 	return saa;
 }
 
-void saa1099v_destroy(void* info)
+static void saa1099v_destroy(void* info)
 {
 	SAA_CHIP* saa = (SAA_CHIP*)info;
 	
@@ -164,7 +211,7 @@ void saa1099v_destroy(void* info)
 	return;
 }
 
-void saa1099v_reset(void* info)
+static void saa1099v_reset(void* info)
 {
 	SAA_CHIP* saa = (SAA_CHIP*)info;
 	SAA_CHN* saaCh;
@@ -203,7 +250,7 @@ void saa1099v_reset(void* info)
 	return;
 }
 
-void saa1099v_set_mute_mask(void* info, UINT32 MuteMask)
+static void saa1099v_set_mute_mask(void* info, UINT32 MuteMask)
 {
 	SAA_CHIP* saa = (SAA_CHIP*)info;
 	UINT8 curChn;
@@ -214,7 +261,7 @@ void saa1099v_set_mute_mask(void* info, UINT32 MuteMask)
 	return;
 }
 
-void saa1099v_write(void* info, UINT8 offset, UINT8 data)
+static void saa1099v_write(void* info, UINT8 offset, UINT8 data)
 {
 	if (offset & 0x01)
 		saa_write_addr(info, data);
@@ -469,7 +516,7 @@ static void saa_envgen_step(SAA_ENV_GEN* saaEGen)
 	return;
 }
 
-void saa1099v_update(void* param, UINT32 samples, DEV_SMPL** outputs)
+static void saa1099v_update(void* param, UINT32 samples, DEV_SMPL** outputs)
 {
 	SAA_CHIP* saa = (SAA_CHIP*)param;
 	SAA_CHN* saaCh;

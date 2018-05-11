@@ -246,7 +246,9 @@
     <ClInclude Include="emu\cores\c6280intf.h" />
     <ClInclude Include="emu\cores\c6280_mame.h" />
     <ClInclude Include="emu\cores\emu2149.h" />
+    <ClInclude Include="emu\cores\emu2149_private.h" />
     <ClInclude Include="emu\cores\emu2413.h" />
+    <ClInclude Include="emu\cores\emu2413_private.h" />
     <ClInclude Include="emu\cores\emutypes.h" />
     <ClInclude Include="emu\cores\es5503.h" />
     <ClInclude Include="emu\cores\es5506.h" />
@@ -268,6 +270,7 @@
     <ClInclude Include="emu\cores\okiadpcm.h" />
     <ClInclude Include="emu\cores\okim6258.h" />
     <ClInclude Include="emu\cores\Ootake_PSG.h" />
+    <ClInclude Include="emu\cores\Ootake_PSG_private.h" />
     <ClInclude Include="emu\cores\oplintf.h" />
     <ClInclude Include="emu\cores\opll_2413tone.h" />
     <ClInclude Include="emu\cores\opll_281btone.h" />

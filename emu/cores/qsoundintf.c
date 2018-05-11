@@ -1,9 +1,4 @@
-#include <stdlib.h>
-
-#include <stdtype.h>
 #include "../EmuStructs.h"
-#include "../EmuCores.h"
-#include "../EmuHelper.h"
 
 #include "qsoundintf.h"
 #ifdef EC_QSOUND_MAME

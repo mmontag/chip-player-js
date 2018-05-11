@@ -539,10 +539,40 @@ YM2203 Japanese datasheet contents, translated: http://www.larwe.com/technical/c
 
 #include <stdtype.h>
 #include "../snddef.h"
-#include "../EmuHelper.h"
 #include "../EmuStructs.h"
+#include "../EmuCores.h"
+#include "../EmuHelper.h"
 #include "ayintf.h"
 #include "ay8910.h"
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ay8910_write},
+	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, ay8910_write_reg},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ay8910_read},
+	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, ay8910_set_clock},
+	{RWF_SRATE | RWF_READ, DEVRW_VALUE, 0, ay8910_get_sample_rate},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_AY8910_MAME =
+{
+	"AY8910", "MAME", FCC_MAME,
+	
+	(DEVFUNC_START)device_start_ay8910_mame,
+	ay8910_stop,
+	ay8910_reset,
+	ay8910_update_one,
+	
+	NULL,	// SetOptionBits
+	ay8910_set_mute_mask,
+	NULL,	// SetPanning
+	ay8910_set_srchg_cb,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
+
 
 /*************************************
  *
@@ -1338,6 +1368,22 @@ static void ay8910_set_type(ay8910_context *info, UINT8 chip_type)
 	}
 	
 	return;
+}
+
+static UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = ay8910_start(&chip, cfg->_genCfg.clock, cfg->chipType, cfg->chipFlags);
+	if (chip == NULL)
+		return 0xFF;
+	
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_AY8910_MAME);
+	return 0x00;
 }
 
 UINT32 ay8910_start(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags)

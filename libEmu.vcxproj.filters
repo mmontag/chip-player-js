@@ -479,5 +479,14 @@
     <ClInclude Include="emu\cores\qsound_vb.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="emu\cores\Ootake_PSG_private.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\emu2413_private.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\emu2149_private.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

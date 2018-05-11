@@ -44,8 +44,48 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
 #include "../EmuHelper.h"
 #include "c6280_mame.h"
+
+
+static void c6280mame_w(void *chip, UINT8 offset, UINT8 data);
+static UINT8 c6280mame_r(void* chip, UINT8 offset);
+
+static void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs);
+static UINT8 device_start_c6280_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
+static void* device_start_c6280mame(UINT32 clock, UINT32 rate);
+static void device_stop_c6280mame(void* chip);
+static void device_reset_c6280mame(void* chip);
+
+static void c6280mame_set_mute_mask(void* chip, UINT32 MuteMask);
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, c6280mame_w},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, c6280mame_r},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_C6280_MAME =
+{
+	"HuC6280", "MAME", FCC_MAME,
+	
+	device_start_c6280_mame,
+	device_stop_c6280mame,
+	device_reset_c6280mame,
+	c6280mame_update,
+	
+	NULL,	// SetOptionBits
+	c6280mame_set_mute_mask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
+
 
 typedef struct {
 	UINT16 frequency;
@@ -101,7 +141,7 @@ static void c6280_calculate_clocks(c6280_t *p, double clk, double rate)
 }
 
 
-void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
+static void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
 {
 	c6280_t *p = (c6280_t *)chip;
 	t_channel *chan = &p->channel[p->select];
@@ -180,7 +220,7 @@ void c6280mame_w(void *chip, UINT8 offset, UINT8 data)
 }
 
 
-void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
+static void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 {
 	static const UINT8 scale_tab[] = {
 		0x00, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F,
@@ -306,7 +346,26 @@ void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 /* MAME specific code                                                       */
 /*--------------------------------------------------------------------------*/
 
-void* device_start_c6280mame(UINT32 clock, UINT32 rate)
+static UINT8 device_start_c6280_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->clock / 16;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	chip = device_start_c6280mame(cfg->clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_C6280_MAME);
+	return 0x00;
+}
+
+static void* device_start_c6280mame(UINT32 clock, UINT32 rate)
 {
 	c6280_t *info;
 	int i;
@@ -335,7 +394,7 @@ void* device_start_c6280mame(UINT32 clock, UINT32 rate)
 	return info;
 }
 
-void device_stop_c6280mame(void* chip)
+static void device_stop_c6280mame(void* chip)
 {
 	c6280_t *info = (c6280_t *)chip;
 	
@@ -344,7 +403,7 @@ void device_stop_c6280mame(void* chip)
 	return;
 }
 
-void device_reset_c6280mame(void* chip)
+static void device_reset_c6280mame(void* chip)
 {
 	c6280_t *info = (c6280_t *)chip;
 	UINT8 CurChn;
@@ -373,7 +432,7 @@ void device_reset_c6280mame(void* chip)
 	return;
 }
 
-UINT8 c6280mame_r(void* chip, UINT8 offset)
+static UINT8 c6280mame_r(void* chip, UINT8 offset)
 {
 	c6280_t *info = (c6280_t *)chip;
 	//return m_cpudevice->io_get_buffer();
@@ -383,7 +442,7 @@ UINT8 c6280mame_r(void* chip, UINT8 offset)
 }
 
 
-void c6280mame_set_mute_mask(void* chip, UINT32 MuteMask)
+static void c6280mame_set_mute_mask(void* chip, UINT32 MuteMask)
 {
 	c6280_t *info = (c6280_t *)chip;
 	UINT8 CurChn;
