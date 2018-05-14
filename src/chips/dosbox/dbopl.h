@@ -65,6 +65,14 @@ typedef int32_t ssize_t;
 #   endif
 #endif
 
+#ifndef INT16_MIN
+#define INT16_MIN   (-0x7fff - 1)
+#endif
+
+#ifndef INT16_MAX
+#define INT16_MAX   0x7fff
+#endif
+
 namespace DBOPL
 {
 
