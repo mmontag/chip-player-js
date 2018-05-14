@@ -120,7 +120,7 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
     if(static_cast<uint32_t>(bankno) >= NumBanks)
     {
         char errBuf[150];
-        snprintf(errBuf, 150, "Embedded bank number may only be 0..%" PRIu32 "!\n", (NumBanks - 1));
+        snprintf(errBuf, 150, "Embedded bank number may only be 0..%u!\n", static_cast<unsigned int>(NumBanks - 1));
         play->setErrorString(errBuf);
         return -1;
     }

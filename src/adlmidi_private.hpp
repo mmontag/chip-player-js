@@ -88,17 +88,13 @@ typedef int32_t ssize_t;
 #include <cstdarg>
 #include <cstdio>
 #include <cassert>
-#if !(defined(__APPLE__) && defined(__GLIBCXX__)) && !defined(__ANDROID__)
-#include <cinttypes> //PRId32, PRIu32, etc.
-#else
-#include <inttypes.h>
-#endif
 #include <vector> // vector
 #include <deque>  // deque
 #include <cmath>  // exp, log, ceil
 #if defined(__WATCOMC__)
 #include <math.h> // round, sqrt
 #endif
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits> // numeric_limit
@@ -109,6 +105,28 @@ typedef int32_t ssize_t;
 
 #include <deque>
 #include <algorithm>
+
+/*
+ * Workaround for some compilers are has no those macros in their headers!
+ */
+#ifndef INT8_MIN
+#define INT8_MIN    (-0x7f - 1)
+#endif
+#ifndef INT16_MIN
+#define INT16_MIN   (-0x7fff - 1)
+#endif
+#ifndef INT32_MIN
+#define INT32_MIN   (-0x7fffffff - 1)
+#endif
+#ifndef INT8_MAX
+#define INT8_MAX    0x7f
+#endif
+#ifndef INT16_MAX
+#define INT16_MAX   0x7fff
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX   0x7fffffff
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(disable:4319)
