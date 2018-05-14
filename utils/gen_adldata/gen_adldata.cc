@@ -348,7 +348,7 @@ int main(int argc, char**argv)
 
     MeasureThreaded measureCounter;
     {
-        std::printf("Beginning to generate measures data... (Hardware concurrency: %d)\n", std::thread::hardware_concurrency());
+        std::printf("Beginning to generate measures data... (hardware concurrency of %d)\n", std::thread::hardware_concurrency());
         std::fflush(stdout);
         measureCounter.LoadCache("fm_banks/adldata-cache.dat");
         measureCounter.m_total = instab.size();
