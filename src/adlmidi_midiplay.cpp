@@ -1393,7 +1393,7 @@ void MIDIplay::realTime_PatchChange(uint8_t channel, uint8_t patch)
 void MIDIplay::realTime_PitchBend(uint8_t channel, uint16_t pitch)
 {
     channel = channel % 16;
-    Ch[channel].bend = (uint32_t(pitch) - 8192) * Ch[channel].bendsense;
+    Ch[channel].bend = (int(pitch) - 8192) * Ch[channel].bendsense;
     NoteUpdate_All(channel, Upd_Pitch);
 }
 
@@ -2358,7 +2358,12 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
     switch(addr + nrpn * 0x10000 + MSB * 0x20000)
     {
     case 0x0000 + 0*0x10000 + 1*0x20000: // Pitch-bender sensitivity
-        Ch[MidCh].bendsense = value / 8192.0;
+        Ch[MidCh].bendsense_msb = value;
+        Ch[MidCh].updateBendSensitivity();
+        break;
+    case 0x0000 + 0*0x10000 + 0*0x20000: // Pitch-bender sensitivity LSB
+        Ch[MidCh].bendsense_lsb = value;
+        Ch[MidCh].updateBendSensitivity();
         break;
     case 0x0108 + 1*0x10000 + 1*0x20000: // Vibrato speed
         if(value == 64)      Ch[MidCh].vibspeed = 1.0;
