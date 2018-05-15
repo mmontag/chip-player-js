@@ -145,6 +145,7 @@ typedef int32_t ssize_t;
 #ifndef ADLMIDI_DISABLE_CPP_EXTRAS
 #include "adlmidi.hpp"  //Extra C++ API
 #endif
+#include "adlmidi_bankmap.h"
 
 #define ADL_UNUSED(x) (void)x
 
@@ -335,7 +336,7 @@ private:
     std::vector<adldata>        dynamic_instruments;     // Replaces adl[]    when CMF file
     size_t                      dynamic_percussion_offset;
 
-    typedef std::map<uint16_t, size_t> BankMap;
+    typedef BasicBankMap<size_t> BankMap;
     BankMap dynamic_melodic_banks;
     BankMap dynamic_percussion_banks;
     const unsigned  DynamicInstrumentTag /* = 0x8000u*/,

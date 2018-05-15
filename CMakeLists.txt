@@ -488,6 +488,12 @@ install(FILES
         include/adlmidi.hpp
         DESTINATION include/)
 
+option(WITH_UNIT_TESTS "Enable unit testing" OFF)
+if(WITH_UNIT_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
 message("==== libADLMIDI options ====")
 message("WITH_MIDIPLAY            = ${WITH_MIDIPLAY}")
 message("WITH_VLC_PLUGIN          = ${WITH_VLC_PLUGIN}")
@@ -506,4 +512,4 @@ message("WITH_XMI_SUPPORT         = ${WITH_XMI_SUPPORT}")
 message("libADLMIDI_STATIC        = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED        = ${libADLMIDI_SHARED}")
 message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")
-
+message("WITH_UNIT_TESTS          = ${WITH_UNIT_TESTS}")
