@@ -71,7 +71,7 @@ struct qsound_echo {
 	INT16 delay_line[1024];
 	INT16 delay_pos;
 };
-	
+
 struct qsound_chip {
 
 	DEV_DATA _devData;
@@ -108,7 +108,7 @@ struct qsound_chip {
 	UINT16 delay_update;
 
 	int state_counter;
-	int ready_flag;
+	UINT8 ready_flag;
 
 	UINT16 *register_map[256];
 };
@@ -123,7 +123,7 @@ static void state_refresh_filter_2(struct qsound_chip *chip);
 static void state_normal_update(struct qsound_chip *chip);
 
 INLINE INT16 get_sample(struct qsound_chip *chip, UINT16 bank,UINT16 address);
-INLINE INT16* get_filter_table(struct qsound_chip *chip, UINT16 offset);
+INLINE const INT16* get_filter_table(struct qsound_chip *chip, UINT16 offset);
 INLINE INT16 pcm_update(struct qsound_chip *chip, int voice_no, INT32 *echo_out);
 INLINE void adpcm_update(struct qsound_chip *chip, int voice_no, int nibble);
 INLINE INT16 echo(struct qsound_echo *r,INT32 input);
@@ -317,7 +317,7 @@ static void qsoundc_set_mute_mask(void* info, UINT32 MuteMask)
 
 // ============================================================================
 
-static INT16 qsound_dry_mix_table[33] = {
+static const INT16 qsound_dry_mix_table[33] = {
 	-16384,-16384,-16384,-16384,-16384,-16384,-16384,-16384,
 	-16384,-16384,-16384,-16384,-16384,-16384,-16384,-16384,
 	-16384,-14746,-13107,-11633,-10486,-9175,-8520,-7209,
@@ -325,7 +325,7 @@ static INT16 qsound_dry_mix_table[33] = {
 	0
 };
 
-static INT16 qsound_wet_mix_table[33] = {
+static const INT16 qsound_wet_mix_table[33] = {
 	0,-1638,-1966,-2458,-2949,-3441,-4096,-4669,
 	-4915,-5120,-5489,-6144,-7537,-8831,-9339,-9830,
 	-10240,-10322,-10486,-10568,-10650,-11796,-12288,-12288,
@@ -333,7 +333,7 @@ static INT16 qsound_wet_mix_table[33] = {
 	-16384
 };
 
-static INT16 qsound_linear_mix_table[33] = {
+static const INT16 qsound_linear_mix_table[33] = {
 	-16379,-16338,-16257,-16135,-15973,-15772,-15531,-15251,
 	-14934,-14580,-14189,-13763,-13303,-12810,-12284,-11729,
 	-11729,-11144,-10531,-9893,-9229,-8543,-7836,-7109,
@@ -341,7 +341,7 @@ static INT16 qsound_linear_mix_table[33] = {
 	0
 };
 
-static INT16 qsound_filter_data[5][95] = {
+static const INT16 qsound_filter_data[5][95] = {
 	{	// d53 - 0
 		0,0,0,6,44,-24,-53,-10,59,-40,-27,1,39,-27,56,127,174,36,-13,49,
 		212,142,143,-73,-20,66,-108,-117,-399,-265,-392,-569,-473,-71,95,-319,-218,-230,331,638,
@@ -379,7 +379,7 @@ static INT16 qsound_filter_data[5][95] = {
 	}
 };
 
-static INT16 qsound_filter_data2[209] = {
+static const INT16 qsound_filter_data2[209] = {
 	// f2e - following 95 values used for "disable output" filter
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -399,7 +399,7 @@ static INT16 qsound_filter_data2[209] = {
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
-static INT16 adpcm_step_table[16] = {
+static const INT16 adpcm_step_table[16] = {
 	154, 154, 128, 102, 77, 58, 58, 58,
 	58, 58, 58, 58, 77, 102, 128, 154
 };
@@ -509,16 +509,16 @@ INLINE INT16 get_sample(struct qsound_chip *chip, UINT16 bank,UINT16 address)
 	return (INT16)((sample_data << 8) | (sample_data << 0));	// MAME currently expands the 8 bit ROM data to 16 bits this way.
 }
 
-INLINE INT16* get_filter_table(struct qsound_chip *chip, UINT16 offset)
+INLINE const INT16* get_filter_table(struct qsound_chip *chip, UINT16 offset)
 {
 	int index;
 	
 	if (offset >= 0xf2e && offset < 0xfff)
-		return (INT16*)&qsound_filter_data2[offset-0xf2e];	// overlapping filter data
+		return &qsound_filter_data2[offset-0xf2e];	// overlapping filter data
 	
 	index = (offset-0xd53)/95;
 	if(index >= 0 && index < 5)
-		return (INT16*)&qsound_filter_data[index];	// normal tables
+		return qsound_filter_data[index];	// normal tables
 	
 	return NULL;	// no filter found.
 }
@@ -816,9 +816,13 @@ static void state_normal_update(struct qsound_chip *chip)
 		
 		for(v=0; v<19; v++)
 		{
+			UINT16 pan_index = chip->voice_pan[v]-0x110;
+			if(pan_index > 97)
+				pan_index = 97;
+			
 			// Apply different volume tables on the dry and wet inputs.
-			dry -= (chip->voice_output[v] * chip->pan_tables[ch][PANTBL_DRY][chip->voice_pan[v]-0x110])<<2;
-			wet -= (chip->voice_output[v] * chip->pan_tables[ch][PANTBL_WET][chip->voice_pan[v]-0x110])<<2;
+			dry -= (chip->voice_output[v] * chip->pan_tables[ch][PANTBL_DRY][pan_index])<<2;
+			wet -= (chip->voice_output[v] * chip->pan_tables[ch][PANTBL_WET][pan_index])<<2;
 		}
 		
 		// Apply FIR filter on 'wet' input
