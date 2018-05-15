@@ -705,7 +705,9 @@ static void InitVGMChips(void)
 			}
 			break;
 		case DEVID_QSOUND:
-			devCfg.emuCore = FCC_VBEL;
+			if (devCfg.clock < 10000000)	// QSound clock used to be 4 MHz
+				devCfg.clock = devCfg.clock * 15;	// 4 MHz -> 60 MHz
+			devCfg.emuCore = FCC_CTR_;
 			retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 			if (retVal)
 				break;

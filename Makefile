@@ -210,7 +210,9 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/c140.o \
 	$(LIBEMUOBJ)/cores/k053260.o \
 	$(LIBEMUOBJ)/cores/pokey.o \
-	$(LIBEMUOBJ)/cores/qsound.o \
+	$(LIBEMUOBJ)/cores/qsoundintf.o \
+	$(LIBEMUOBJ)/cores/qsound_mame.o \
+	$(LIBEMUOBJ)/cores/qsound_ctr.o \
 	$(LIBEMUOBJ)/cores/scsp.o \
 	$(LIBEMUOBJ)/cores/scspdsp.o \
 	$(LIBEMUOBJ)/cores/ws_audio.o \

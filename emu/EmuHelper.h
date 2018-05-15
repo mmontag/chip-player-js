@@ -8,7 +8,7 @@
 #endif
 #endif
 
-#if _MSC_VEV < 1400
+#if _MSC_VER < 1400
 // Math function defines from VC2010's math.h for VC6
 #ifndef powf
 #define powf(x,y)   ((float)pow((double)(x), (double)(y)))

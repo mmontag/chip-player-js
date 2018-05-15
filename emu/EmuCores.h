@@ -14,5 +14,6 @@
 #define FCC_NUKE	0x4E554B45	// Nuked OPx
 #define FCC_NRS_	0x4E52535F	// NewRisingSun
 #define FCC_VBEL	0x5642454C	// Valley Bell
+#define FCC_CTR_	0x4354525F	// superctr
 
 #endif	// __EMUCORES_H__

@@ -92,8 +92,8 @@ Debug defines
 #define LOG(x) do { if (VERBOSE) logerror x; } while (0)
 
 
-#define QSOUND_CLOCK    4000000   /* default 4MHz clock */
-#define QSOUND_CLOCKDIV 166       /* /166 clock divider? */
+#define QSOUND_CLOCK    60000000  /* default 60MHz clock */
+#define QSOUND_CLOCKDIV (2*1248)  /* /2/1248 clock divider */
 #define QSOUND_CHANNELS 16
 
 typedef struct QSOUND_CHANNEL
