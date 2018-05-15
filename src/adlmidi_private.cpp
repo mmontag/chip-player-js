@@ -38,8 +38,8 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
         {
             size_t div = (a >= play->opl.dynamic_percussion_offset) ? 1 : 0;
             ++n_total[div];
-            adlinsdata &ins = play->opl.dynamic_metainstruments[a];
-            if((ins.adlno1 != ins.adlno2) && ((ins.flags & adlinsdata::Flag_Pseudo4op) == 0))
+            adlinsdata2 &ins = play->opl.dynamic_metainstruments[a];
+            if((ins.adl[0] != ins.adl[1]) && ((ins.flags & adlinsdata::Flag_Pseudo4op) == 0))
                 ++n_fourop[div];
         }
 
@@ -57,8 +57,8 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
             if(insno == 198)
                 continue;
             ++n_total[a / 128];
-            const adlinsdata &ins = adlins[insno];
-            if((ins.adlno1 != ins.adlno2) && ((ins.flags & adlinsdata::Flag_Pseudo4op) == 0))
+            adlinsdata2 ins(adlins[insno]);
+            if((ins.adl[0] != ins.adl[1]) && ((ins.flags & adlinsdata::Flag_Pseudo4op) == 0))
                 ++n_fourop[a / 128];
         }
 

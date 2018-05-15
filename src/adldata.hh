@@ -24,7 +24,15 @@
 #ifndef ADLDATA_H
 #define ADLDATA_H
 
+#include <string.h>
 #include <stdint.h>
+
+#pragma pack(push, 1)
+#define ADLDATA_BYTE_COMPARABLE(T)                      \
+    inline bool operator==(const T &a, const T &b)      \
+    { return !memcmp(&a, &b, sizeof(T)); }              \
+    inline bool operator!=(const T &a, const T &b)      \
+    { return !operator==(a, b); }
 
 extern const struct adldata
 {
@@ -34,6 +42,8 @@ extern const struct adldata
 
     int8_t      finetune;
 } adl[];
+ADLDATA_BYTE_COMPARABLE(struct adldata);
+enum { adlDefaultNumber = 189 };
 
 extern const struct adlinsdata
 {
@@ -46,9 +56,29 @@ extern const struct adlinsdata
     uint16_t    ms_sound_koff;
     double voice2_fine_tune;
 } adlins[];
+ADLDATA_BYTE_COMPARABLE(struct adlinsdata);
 int maxAdlBanks();
 extern const unsigned short banks[][256];
 extern const char* const banknames[];
+
+/**
+ * @brief Instrument data with operators included
+ */
+struct adlinsdata2
+{
+    adldata     adl[2];
+    uint8_t     tone;
+    uint8_t     flags;
+    uint16_t    ms_sound_kon;  // Number of milliseconds it produces sound;
+    uint16_t    ms_sound_koff;
+    double voice2_fine_tune;
+    adlinsdata2() {}
+    explicit adlinsdata2(const adlinsdata &d);
+};
+ADLDATA_BYTE_COMPARABLE(struct adlinsdata2);
+
+#undef ADLDATA_BYTE_COMPARABLE
+#pragma pack(pop)
 
 /**
  * @brief Bank global setup
@@ -61,5 +91,17 @@ extern const struct AdlBankSetup
     bool    adLibPercussions;
     bool    scaleModulators;
 } adlbanksetup[];
+
+/**
+ * @brief Conversion of storage formats
+ */
+inline adlinsdata2::adlinsdata2(const adlinsdata &d)
+    : tone(d.tone), flags(d.flags),
+      ms_sound_kon(d.ms_sound_kon), ms_sound_koff(d.ms_sound_koff),
+      voice2_fine_tune(d.voice2_fine_tune)
+{
+    adl[0] = ::adl[d.adlno1];
+    adl[1] = ::adl[d.adlno2];
+}
 
 #endif //ADLDATA_H

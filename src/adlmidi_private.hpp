@@ -215,13 +215,13 @@ public:
     std::vector<AdlMIDI_SPtr<OPLChipBase > > cardsOP2;
 #endif
 private:
-    std::vector<size_t>     ins; // index to adl[], cached, needed by Touch()
+    std::vector<adldata>    ins;  // patch data, cached, needed by Touch()
     std::vector<uint8_t>    pit;  // value poked to B0, cached, needed by NoteOff)(
     std::vector<uint8_t>    regBD;
 
     friend int adlRefreshNumCards(ADL_MIDIPlayer *device);
     //! Meta information about every instrument
-    std::vector<adlinsdata>     dynamic_metainstruments; // Replaces adlins[] when CMF file
+    std::vector<adlinsdata2>    dynamic_metainstruments; // Replaces adlins[] when CMF file
     //! Raw instrument data ready to be sent to the chip
     std::vector<adldata>        dynamic_instruments;     // Replaces adl[]    when CMF file
     size_t                      dynamic_percussion_offset;
@@ -231,9 +231,8 @@ private:
     BankMap dynamic_percussion_banks;
     const unsigned  DynamicInstrumentTag /* = 0x8000u*/,
                     DynamicMetaInstrumentTag /* = 0x4000000u*/;
-    const adlinsdata    &GetAdlMetaIns(size_t n);
+    adlinsdata2         GetAdlMetaIns(size_t n);
     size_t              GetAdlMetaNumber(size_t midiins);
-    const adldata       &GetAdlIns(size_t insno);
 public:
     void    setEmbeddedBank(unsigned int bank);
 
@@ -292,7 +291,7 @@ public:
     void Touch_Real(unsigned c, unsigned volume, uint8_t brightness = 127);
     //void Touch(unsigned c, unsigned volume)
 
-    void Patch(uint16_t c, size_t i);
+    void Patch(uint16_t c, const adldata &adli);
     void Pan(unsigned c, unsigned value);
     void Silence();
     void updateFlags();
@@ -539,18 +538,18 @@ public:
                 //! Destination chip channel
                 uint16_t chip_chan;
                 //! ins, inde to adl[]
-                size_t  insId;
+                adldata ains;
                 //! Is this voice must be detunable?
                 bool    pseudo4op;
 
                 void assign(const Phys &oth)
                 {
-                    insId = oth.insId;
+                    ains = oth.ains;
                     pseudo4op = oth.pseudo4op;
                 }
                 bool operator==(const Phys &oth) const
                 {
-                    return (insId == oth.insId) && (pseudo4op == oth.pseudo4op);
+                    return (ains == oth.ains) && (pseudo4op == oth.pseudo4op);
                 }
                 bool operator!=(const Phys &oth) const
                 {

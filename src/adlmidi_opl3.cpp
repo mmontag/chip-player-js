@@ -130,11 +130,11 @@ static const unsigned short Channels[23] =
 */
 
 
-const adlinsdata &OPL3::GetAdlMetaIns(size_t n)
+adlinsdata2 OPL3::GetAdlMetaIns(size_t n)
 {
     return (n & DynamicMetaInstrumentTag) ?
            dynamic_metainstruments[n & ~DynamicMetaInstrumentTag]
-           : adlins[n];
+           : adlinsdata2(adlins[n]);
 }
 
 size_t OPL3::GetAdlMetaNumber(size_t midiins)
@@ -142,13 +142,6 @@ size_t OPL3::GetAdlMetaNumber(size_t midiins)
     return (AdlBank == ~0u) ?
            (midiins | DynamicMetaInstrumentTag)
            : banks[AdlBank][midiins];
-}
-
-const adldata &OPL3::GetAdlIns(size_t insno)
-{
-    return (insno & DynamicInstrumentTag)
-           ? dynamic_instruments[insno & ~DynamicInstrumentTag]
-            : adl[insno];
 }
 
 void OPL3::setEmbeddedBank(unsigned int bank)
@@ -282,10 +275,9 @@ void OPL3::Touch_Real(unsigned c, unsigned volume, uint8_t brightness)
         volume = 63;
 
     size_t card = c / 23, cc = c % 23;
-    size_t i = ins[c];
+    const adldata &adli = ins[c];
     uint16_t o1 = Operators[cc * 2 + 0];
     uint16_t o2 = Operators[cc * 2 + 1];
-    const adldata &adli = GetAdlIns(i);
     uint8_t  x = adli.modulator_40, y = adli.carrier_40;
     uint16_t mode = 1; // 2-op AM
 
@@ -295,22 +287,22 @@ void OPL3::Touch_Real(unsigned c, unsigned volume, uint8_t brightness)
     }
     else if(four_op_category[c] == 1 || four_op_category[c] == 2)
     {
-        size_t i0, i1;
+        const adldata *i0, *i1;
 
         if(four_op_category[c] == 1)
         {
-            i0 = i;
-            i1 = ins[c + 3];
+            i0 = &adli;
+            i1 = &ins[c + 3];
             mode = 2; // 4-op xx-xx ops 1&2
         }
         else
         {
-            i0 = ins[c - 3];
-            i1 = i;
+            i0 = &ins[c - 3];
+            i1 = &adli;
             mode = 6; // 4-op xx-xx ops 3&4
         }
 
-        mode += (GetAdlIns(i0).feedconn & 1) + (GetAdlIns(i1).feedconn & 1) * 2;
+        mode += (i0->feedconn & 1) + (i1->feedconn & 1) * 2;
     }
 
     static const bool do_ops[10][2] =
@@ -377,14 +369,13 @@ void OPL3::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
     }
 }*/
 
-void OPL3::Patch(uint16_t c, size_t i)
+void OPL3::Patch(uint16_t c, const adldata &adli)
 {
     uint16_t card = c / 23, cc = c % 23;
     static const uint8_t data[4] = {0x20, 0x60, 0x80, 0xE0};
-    ins[c] = i;
+    ins[c] = adli;
     uint16_t o1 = Operators[cc * 2 + 0];
     uint16_t o2 = Operators[cc * 2 + 1];
-    const adldata &adli = GetAdlIns(i);
     unsigned x = adli.modulator_E862, y = adli.carrier_E862;
 
     for(unsigned a = 0; a < 4; ++a, x >>= 8, y >>= 8)
@@ -400,7 +391,7 @@ void OPL3::Pan(unsigned c, unsigned value)
     unsigned card = c / 23, cc = c % 23;
 
     if(Channels[cc] != 0xFFF)
-        Poke(card, 0xC0 + Channels[cc], GetAdlIns(ins[c]).feedconn | value);
+        Poke(card, 0xC0 + Channels[cc], ins[c].feedconn | value);
 }
 
 void OPL3::Silence() // Silence all OPL channels.
@@ -527,7 +518,7 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE)
     #endif
 
     NumChannels = NumCards * 23;
-    ins.resize(NumChannels, 189);
+    ins.resize(NumChannels, adl[adlDefaultNumber]);
     pit.resize(NumChannels,   0);
     regBD.resize(NumCards,    0);
     four_op_category.resize(NumChannels, 0);
