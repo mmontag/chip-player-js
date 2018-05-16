@@ -384,7 +384,7 @@ if(WITH_ADLMIDI2)
                 CMAKE_COMPILER_IS_MINGW)
         if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
             message("Turned on C++11 on GCC/CLang/Intel")
-            set_target_properties(gen_adldata PROPERTIES
+            set_target_properties(adlmidi2 PROPERTIES
                                       CXX_STANDARD 11
                                       CXX_STANDARD_REQUIRED YES)
         endif()
