@@ -23,6 +23,9 @@
 
 #ifndef ADLMIDI_PTR_HPP_THING
 #define ADLMIDI_PTR_HPP_THING
+
+#include <stddef.h>
+
 /*
     Smart pointer for C heaps, created with malloc() call.
     FAQ: Why not std::shared_ptr? Because of Android NDK now doesn't supports it
@@ -177,16 +180,13 @@ public:
             if(m_p && --*m_counter == 0) {
                 DELETER del;
                 del(m_p);
-            }
-            m_p = p;
-            if(!p) {
-                if(m_counter) {
+                if(!p) {
                     delete m_counter;
                     m_counter = NULL;
                 }
             }
-            else
-            {
+            m_p = p;
+            if(p) {
                 if(!m_counter)
                     m_counter = new size_t;
                 *m_counter = 1;
