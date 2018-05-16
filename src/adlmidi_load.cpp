@@ -91,7 +91,7 @@ static void cvt_WOPLI_to_FMIns(adlinsdata2 &ins, WOPLInstrument &in)
     ins.flags|= (in.inst_flags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
 
     bool fourOps = (in.inst_flags & WOPL_Ins_4op) || (in.inst_flags & WOPL_Ins_Pseudo4op);
-    for(size_t op = 0, slt = 0; op < fourOps ? 4 : 2; op++, slt++)
+    for(size_t op = 0, slt = 0; op < (fourOps ? 4 : 2); op++, slt++)
     {
         ins.adl[slt].carrier_E862 =
             ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
