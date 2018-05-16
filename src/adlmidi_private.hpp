@@ -145,6 +145,7 @@ typedef int32_t ssize_t;
 #ifndef ADLMIDI_DISABLE_CPP_EXTRAS
 #include "adlmidi.hpp"  //Extra C++ API
 #endif
+#include "adlmidi_ptr.hpp"
 #include "adlmidi_bankmap.h"
 
 #define ADL_UNUSED(x) (void)x
@@ -199,117 +200,6 @@ inline int32_t adl_cvtU32(int32_t x)
     // unsigned operation because overflow on signed integers is undefined
     return (uint32_t)adl_cvtS32(x) - (uint32_t)INT32_MIN;
 }
-
-/*
-    Smart pointer for C heaps, created with malloc() call.
-    FAQ: Why not std::shared_ptr? Because of Android NDK now doesn't supports it
-*/
-template<class PTR>
-class AdlMIDI_CPtr
-{
-    PTR *m_p;
-public:
-    AdlMIDI_CPtr() : m_p(NULL) {}
-    ~AdlMIDI_CPtr()
-    {
-        reset(NULL);
-    }
-
-    void reset(PTR *p = NULL)
-    {
-        if(p != m_p) {
-            if(m_p)
-                free(m_p);
-            m_p = p;
-        }
-    }
-
-    PTR *get()
-    {
-        return m_p;
-    }
-    PTR &operator*()
-    {
-        return *m_p;
-    }
-    PTR *operator->()
-    {
-        return m_p;
-    }
-private:
-    AdlMIDI_CPtr(const AdlMIDI_CPtr &);
-    AdlMIDI_CPtr &operator=(const AdlMIDI_CPtr &);
-};
-
-/*
-    Shared pointer with non-atomic counter
-    FAQ: Why not std::shared_ptr? Because of Android NDK now doesn't supports it
-*/
-template<class VALUE>
-class AdlMIDI_SPtr
-{
-    VALUE *m_p;
-    size_t *m_counter;
-public:
-    AdlMIDI_SPtr() : m_p(NULL), m_counter(NULL) {}
-    ~AdlMIDI_SPtr()
-    {
-        reset(NULL);
-    }
-
-    AdlMIDI_SPtr(const AdlMIDI_SPtr &other)
-        : m_p(other.m_p), m_counter(other.m_counter)
-    {
-        if(m_counter)
-            ++*m_counter;
-    }
-
-    AdlMIDI_SPtr &operator=(const AdlMIDI_SPtr &other)
-    {
-        if(this == &other)
-            return *this;
-        reset();
-        m_p = other.m_p;
-        m_counter = other.m_counter;
-        if(m_counter)
-            ++*m_counter;
-        return *this;
-    }
-
-    void reset(VALUE *p = NULL)
-    {
-        if(p != m_p) {
-            if(m_p && --*m_counter == 0)
-                delete m_p;
-            m_p = p;
-            if(!p) {
-                if(m_counter) {
-                    delete m_counter;
-                    m_counter = NULL;
-                }
-            }
-            else
-            {
-                if(!m_counter)
-                    m_counter = new size_t;
-                *m_counter = 1;
-            }
-        }
-    }
-
-    VALUE *get()
-    {
-        return m_p;
-    }
-    VALUE &operator*()
-    {
-        return *m_p;
-    }
-    VALUE *operator->()
-    {
-        return m_p;
-    }
-};
 
 class MIDIplay;
 struct ADL_MIDIPlayer;
