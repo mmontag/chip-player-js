@@ -42,7 +42,7 @@ extern const struct adldata
 
     int8_t      finetune;
 } adl[];
-ADLDATA_BYTE_COMPARABLE(struct adldata);
+ADLDATA_BYTE_COMPARABLE(struct adldata)
 enum { adlDefaultNumber = 189 };
 
 extern const struct adlinsdata
@@ -56,7 +56,7 @@ extern const struct adlinsdata
     uint16_t    ms_sound_koff;
     double voice2_fine_tune;
 } adlins[];
-ADLDATA_BYTE_COMPARABLE(struct adlinsdata);
+ADLDATA_BYTE_COMPARABLE(struct adlinsdata)
 int maxAdlBanks();
 extern const unsigned short banks[][256];
 extern const char* const banknames[];
@@ -75,7 +75,7 @@ struct adlinsdata2
     adlinsdata2() {}
     explicit adlinsdata2(const adlinsdata &d);
 };
-ADLDATA_BYTE_COMPARABLE(struct adlinsdata2);
+ADLDATA_BYTE_COMPARABLE(struct adlinsdata2)
 
 #undef ADLDATA_BYTE_COMPARABLE
 #pragma pack(pop)
