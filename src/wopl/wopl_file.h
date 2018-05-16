@@ -32,6 +32,14 @@
 extern "C" {
 #endif
 
+#if !defined(__STDC_VERSION__) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ < 199901L)) \
+  || defined(__STRICT_ANSI__) || !defined(__cplusplus)
+typedef signed char int8_t;
+typedef unsigned char uint8_t;
+typedef signed short int int16_t;
+typedef unsigned short int uint16_t;
+#endif
+
 /* Global OPL flags */
 typedef enum WOPLFileFlags
 {
