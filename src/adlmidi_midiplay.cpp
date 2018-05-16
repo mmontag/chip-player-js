@@ -2517,35 +2517,47 @@ retry_arpeggio:
 
 #ifndef ADLMIDI_DISABLE_CPP_EXTRAS
 
-ADLMIDI_EXPORT AdlInstrumentTester::AdlInstrumentTester(ADL_MIDIPlayer *device)
+struct AdlInstrumentTester::Impl
 {
-    cur_gm   = 0;
-    ins_idx  = 0;
-    play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    if(!play)
-        return;
-    opl = &play->opl;
+    uint32_t cur_gm;
+    uint32_t ins_idx;
+    std::vector<uint32_t> adl_ins_list;
+    OPL3 *opl;
+    MIDIplay *play;
+};
+
+ADLMIDI_EXPORT AdlInstrumentTester::AdlInstrumentTester(ADL_MIDIPlayer *device)
+    : P(new Impl)
+{
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    P->cur_gm = 0;
+    P->ins_idx = 0;
+    P->play = play;
+    P->opl = play ? &play->opl : NULL;
 }
 
 ADLMIDI_EXPORT AdlInstrumentTester::~AdlInstrumentTester()
-{}
+{
+    delete P;
+}
 
 ADLMIDI_EXPORT void AdlInstrumentTester::FindAdlList()
 {
     const unsigned NumBanks = (unsigned)adl_getBanksCount();
     std::set<unsigned> adl_ins_set;
     for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
-        adl_ins_set.insert(banks[bankno][cur_gm]);
-    adl_ins_list.assign(adl_ins_set.begin(), adl_ins_set.end());
-    ins_idx = 0;
+        adl_ins_set.insert(banks[bankno][P->cur_gm]);
+    P->adl_ins_list.assign(adl_ins_set.begin(), adl_ins_set.end());
+    P->ins_idx = 0;
     NextAdl(0);
-    opl->Silence();
+    P->opl->Silence();
 }
 
 
 
 ADLMIDI_EXPORT void AdlInstrumentTester::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
 {
+    OPL3 *opl = P->opl;
     if(opl->LogarithmicVolumes)
         opl->Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);
     else
@@ -2559,11 +2571,13 @@ ADLMIDI_EXPORT void AdlInstrumentTester::Touch(unsigned c, unsigned volume) // V
 
 ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
 {
-    if(adl_ins_list.empty()) FindAdlList();
-    const unsigned meta = adl_ins_list[ins_idx];
+    MIDIplay *play = P->play;
+    OPL3 *opl = P->opl;
+    if(P->adl_ins_list.empty()) FindAdlList();
+    const unsigned meta = P->adl_ins_list[P->ins_idx];
     const adlinsdata &ains = opl->GetAdlMetaIns(meta);
 
-    int tone = (cur_gm & 128) ? (cur_gm & 127) : (note + 50);
+    int tone = (P->cur_gm & 128) ? (P->cur_gm & 127) : (note + 50);
     if(ains.tone)
     {
         /*if(ains.tone < 20)
@@ -2611,15 +2625,16 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
 
 ADLMIDI_EXPORT void AdlInstrumentTester::NextGM(int offset)
 {
-    cur_gm = (cur_gm + 256 + (uint32_t)offset) & 0xFF;
+    P->cur_gm = (P->cur_gm + 256 + (uint32_t)offset) & 0xFF;
     FindAdlList();
 }
 
 ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
 {
-    if(adl_ins_list.empty()) FindAdlList();
+    OPL3 *opl = P->opl;
+    if(P->adl_ins_list.empty()) FindAdlList();
     const unsigned NumBanks = (unsigned)adl_getBanksCount();
-    ins_idx = (uint32_t)((int32_t)ins_idx + (int32_t)adl_ins_list.size() + offset) % adl_ins_list.size();
+    P->ins_idx = (uint32_t)((int32_t)P->ins_idx + (int32_t)P->adl_ins_list.size() + offset) % P->adl_ins_list.size();
 
     #if 0
     UI.Color(15);
@@ -2632,9 +2647,9 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
     std::fflush(stderr);
     #endif
 
-    for(unsigned a = 0; a < adl_ins_list.size(); ++a)
+    for(unsigned a = 0, n = P->adl_ins_list.size(); a < n; ++a)
     {
-        const unsigned i = adl_ins_list[a];
+        const unsigned i = P->adl_ins_list[a];
         const adlinsdata &ains = opl->GetAdlMetaIns(i);
 
         char ToneIndication[8] = "   ";
@@ -2651,12 +2666,12 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
         std::printf("%s%s%s%u\t",
                     ToneIndication,
                     ains.adlno1 != ains.adlno2 ? "[2]" : "   ",
-                    (ins_idx == a) ? "->" : "\t",
+                    (P->ins_idx == a) ? "->" : "\t",
                     i
                    );
 
         for(unsigned bankno = 0; bankno < NumBanks; ++bankno)
-            if(banks[bankno][cur_gm] == i)
+            if(banks[bankno][P->cur_gm] == i)
                 std::printf(" %u", bankno);
 
         std::printf("\n");
