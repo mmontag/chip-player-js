@@ -1758,7 +1758,7 @@ int main(int argc, char **argv)
 
     if(argc >= 3)
     {
-        if(is_number(argv[2]))
+        if(is_number(argv[2]) || !strcmp(argv[2], "-1"))
         {
             int bankno = std::atoi(argv[2]);
             if(bankno == -1)
