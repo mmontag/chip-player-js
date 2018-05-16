@@ -220,22 +220,19 @@ private:
     std::vector<uint8_t>    regBD;
 
     friend int adlRefreshNumCards(ADL_MIDIPlayer *device);
-    //! Meta information about every instrument
-    std::vector<adlinsdata2>    dynamic_metainstruments; // Replaces adlins[] when CMF file
-    //! Raw instrument data ready to be sent to the chip
-    std::vector<adldata>        dynamic_instruments;     // Replaces adl[]    when CMF file
-    size_t                      dynamic_percussion_offset;
-
-    typedef BasicBankMap<size_t> BankMap;
-    BankMap dynamic_melodic_banks;
-    BankMap dynamic_percussion_banks;
+public:
+    struct Bank
+    {
+        adlinsdata2 ins[128];
+    };
+    typedef BasicBankMap<Bank> BankMap;
+private:
+    BankMap dynamic_banks;
     AdlBankSetup dynamic_bank_setup;
-    const unsigned  DynamicInstrumentTag /* = 0x8000u*/,
-                    DynamicMetaInstrumentTag /* = 0x4000000u*/;
-    adlinsdata2         GetAdlMetaIns(size_t n);
-    size_t              GetAdlMetaNumber(size_t midiins);
 public:
     void    setEmbeddedBank(unsigned int bank);
+    static const adlinsdata2 emptyInstrument;
+    enum { PercussionTag = 1 << 15 };
 
     //! Total number of running concurrent emulated chips
     unsigned int NumCards;
@@ -530,10 +527,10 @@ public:
             // Tone selected on noteon:
             int16_t tone;
             char ____padding2[4];
-            // Patch selected on noteon; index to banks[AdlBank][]
+            // Patch selected on noteon; index to bank.ins[]
             size_t  midiins;
-            // Index to physical adlib data structure, adlins[]
-            size_t  insmeta;
+            // Patch selected
+            const adlinsdata2 *ains;
             enum
             {
                 MaxNumPhysChans = 2,

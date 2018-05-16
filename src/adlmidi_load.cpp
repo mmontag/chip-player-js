@@ -72,7 +72,7 @@ bool MIDIplay::LoadBank(const void *data, size_t size)
     return LoadBank(file);
 }
 
-static void cvt_WOPLI_to_FMIns(adlinsdata2 &ins, WOPLInstrument &in)
+static void cvt_WOPLI_to_FMIns(adlinsdata2 &ins, const WOPLInstrument &in)
 {
     ins.voice2_fine_tune = 0.0;
     int8_t voice2_fine_tune = in.second_voice_detune;
@@ -188,40 +188,32 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     m_setup.HighVibratoMode = -1;
     m_setup.VolumeModel = ADLMIDI_VolumeModel_AUTO;
 
-    /* TODO: Avoid memory reallocation in nearest future! */
-    opl.dynamic_melodic_banks.clear();
-    opl.dynamic_percussion_banks.clear();
-    opl.dynamic_metainstruments.clear();
-    opl.dynamic_percussion_offset = 0;
-
     opl.setEmbeddedBank(m_setup.AdlBank);
 
-    OPL3::BankMap *slots_banks[2] = { &opl.dynamic_melodic_banks, &opl.dynamic_percussion_banks};
     uint16_t slots_counts[2] = {wopl->banks_count_melodic, wopl->banks_count_percussion};
     WOPLBank *slots_src_ins[2] = { wopl->banks_melodic, wopl->banks_percussive };
 
-    for(int ss = 0; ss < 2; ss++)
+    for(unsigned ss = 0; ss < 2; ss++)
     {
-        for(int i = 0; i < slots_counts[ss]; i++)
+        for(unsigned i = 0; i < slots_counts[ss]; i++)
         {
-            uint16_t bank = (slots_src_ins[ss][i].bank_midi_msb * 256) + slots_src_ins[ss][i].bank_midi_lsb;
-            size_t offset = slots_banks[ss]->size();
-            (*slots_banks[ss])[bank] = offset;
-
+            unsigned bankno =
+                (slots_src_ins[ss][i].bank_midi_msb * 256) +
+                slots_src_ins[ss][i].bank_midi_lsb +
+                (ss ? OPL3::PercussionTag : 0);
+            OPL3::Bank &bank = opl.dynamic_banks[bankno];
             for(int j = 0; j < 128; j++)
             {
-                adlinsdata2 ins;
+                adlinsdata2 &ins = bank.ins[j];
                 std::memset(&ins, 0, sizeof(adlinsdata2));
                 WOPLInstrument &inIns = slots_src_ins[ss][i].ins[j];
                 cvt_WOPLI_to_FMIns(ins, inIns);
-                opl.dynamic_metainstruments.push_back(ins);
             }
         }
     }
 
     opl.AdlBank = ~0u; // Use dynamic banks!
     //Percussion offset is count of instruments multipled to count of melodic banks
-    opl.dynamic_percussion_offset = 128 * wopl->banks_count_melodic;
     applySetup();
 
     WOPL_Free(wopl);
@@ -379,8 +371,7 @@ riffskip:
     #endif //ADLMIDI_DISABLE_XMI_SUPPORT
     else if(std::memcmp(HeaderBuf, "CTMF", 4) == 0)
     {
-        opl.dynamic_instruments.clear();
-        opl.dynamic_metainstruments.clear();
+        opl.dynamic_banks.clear();
         // Creative Music Format (CMF).
         // When playing CTMF files, use the following commandline:
         // adlmidi song8.ctmf -p -v 1 1 0
@@ -402,13 +393,19 @@ riffskip:
         //std::printf("%u instruments\n", ins_count);
         for(unsigned i = 0; i < ins_count; ++i)
         {
+            unsigned bank = i / 256;
+            bank = (bank & 127) + ((bank >> 7) << 8);
+            if(bank > 127 + (127 << 8))
+                break;
+            bank += (i % 256 < 128) ? 0 : OPL3::PercussionTag;
+
             unsigned char InsData[16];
             fr.read(InsData, 1, 16);
             /*std::printf("Ins %3u: %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X\n",
                         i, InsData[0],InsData[1],InsData[2],InsData[3], InsData[4],InsData[5],InsData[6],InsData[7],
                            InsData[8],InsData[9],InsData[10],InsData[11], InsData[12],InsData[13],InsData[14],InsData[15]);*/
-            struct adldata    adl;
-            struct adlinsdata2 adlins;
+            adlinsdata2 &adlins = opl.dynamic_banks[bank].ins[i % 128];
+            adldata    adl;
             adl.modulator_E862 =
                 ((static_cast<uint32_t>(InsData[8] & 0x07) << 24) & 0xFF000000) //WaveForm
                 | ((static_cast<uint32_t>(InsData[6]) << 16) & 0x00FF0000) //Sustain/Release
@@ -430,7 +427,6 @@ riffskip:
             adlins.tone  = 0;
             adlins.flags = 0;
             adlins.voice2_fine_tune = 0.0;
-            opl.dynamic_metainstruments.push_back(adlins);
         }
 
         fr.seeku(mus_start, SEEK_SET);

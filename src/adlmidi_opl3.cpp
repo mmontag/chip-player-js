@@ -129,45 +129,54 @@ static const unsigned short Channels[23] =
     Ports: ???
 */
 
-
-adlinsdata2 OPL3::GetAdlMetaIns(size_t n)
-{
-    return (n & DynamicMetaInstrumentTag) ?
-           dynamic_metainstruments[n & ~DynamicMetaInstrumentTag]
-           : adlinsdata2(adlins[n]);
-}
-
-size_t OPL3::GetAdlMetaNumber(size_t midiins)
-{
-    return (AdlBank == ~0u) ?
-           (midiins | DynamicMetaInstrumentTag)
-           : banks[AdlBank][midiins];
-}
-
 void OPL3::setEmbeddedBank(unsigned int bank)
 {
     AdlBank = bank;
     //Embedded banks are supports 128:128 GM set only
-    dynamic_percussion_offset = 128;
-    dynamic_melodic_banks.clear();
-    dynamic_percussion_banks.clear();
-    dynamic_metainstruments.clear();
+    dynamic_banks.clear();
+
+    if(bank >= maxAdlBanks())
+        return;
+
+    Bank *bank_pair[2] =
+    {
+        &dynamic_banks[0],
+        &dynamic_banks[PercussionTag]
+    };
+
+    for(unsigned i = 0; i < 256; ++i)
+    {
+        size_t meta = banks[bank][i];
+        adlinsdata2 &ins = bank_pair[i / 128]->ins[i % 128];
+        ins = adlinsdata2(adlins[meta]);
+    }
 }
 
+static adlinsdata2 makeEmptyInstrument()
+{
+    adlinsdata2 ins;
+    memset(&ins, 0, sizeof(adlinsdata2));
+    ins.flags = adlinsdata::Flag_NoSound;
+    return ins;
+}
+
+const adlinsdata2 OPL3::emptyInstrument = makeEmptyInstrument();
 
 OPL3::OPL3() :
-    dynamic_percussion_offset(128),
-    DynamicInstrumentTag(0x8000u),
-    DynamicMetaInstrumentTag(0x4000000u),
     NumCards(1),
-    AdlBank(0),
     NumFourOps(0),
     HighTremoloMode(false),
     HighVibratoMode(false),
     AdlPercussionMode(false),
     m_musicMode(MODE_MIDI),
     m_volumeScale(VOLUME_Generic)
-{}
+{
+#ifdef DISABLE_EMBEDDED_BANKS
+    AdlBank = ~0u;
+#else
+    setEmbeddedBank(0);
+#endif
+}
 
 void OPL3::Poke(size_t card, uint32_t index, uint32_t value)
 {

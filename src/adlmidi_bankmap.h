@@ -27,6 +27,7 @@
 #include <list>
 #include <utility>
 #include <stdint.h>
+#include <stddef.h>
 
 #include "adlmidi_ptr.hpp"
 

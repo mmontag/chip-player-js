@@ -34,16 +34,21 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
     if(play->opl.AdlBank == ~0u)
     {
         //For custom bank
-        for(size_t a = 0; a < play->opl.dynamic_metainstruments.size(); ++a)
+        OPL3::BankMap::iterator it = play->opl.dynamic_banks.begin();
+        OPL3::BankMap::iterator end = play->opl.dynamic_banks.end();
+        for(; it != end; ++it)
         {
-            adlinsdata2 &ins = play->opl.dynamic_metainstruments[a];
-            if(ins.flags & adlinsdata::Flag_NoSound)
-                continue;
-
-            size_t div = (a >= play->opl.dynamic_percussion_offset) ? 1 : 0;
-            ++n_total[div];
-            if(ins.flags & adlinsdata::Flag_Real4op)
-                ++n_fourop[div];
+            uint16_t bank = it->first;
+            unsigned div = (bank & OPL3::PercussionTag) ? 1 : 0;
+            for(unsigned i = 0; i < 128; ++i)
+            {
+                adlinsdata2 &ins = it->second.ins[i];
+                if(ins.flags & adlinsdata::Flag_NoSound)
+                    continue;
+                if((ins.adl[0] != ins.adl[1]) && ((ins.flags & adlinsdata::Flag_Pseudo4op) == 0))
+                    ++n_fourop[div];
+                ++n_total[div];
+            }
         }
     }
     else
