@@ -334,7 +334,7 @@ int main(int argc, char **argv)
         else if(!std::strcmp("-v", argv[2]))
             adl_setHVibrato(myDevice, 1);//Force turn on deep vibrato
 
-        #ifndef OUTPUT_WAVE_ONLY
+        #if !defined(OUTPUT_WAVE_ONLY) && !defined(HARDWARE_OPL3)
         else if(!std::strcmp("-w", argv[2]))
         {
             //Current Wave output implementation allows only SINT16 output
