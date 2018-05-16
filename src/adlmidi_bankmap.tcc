@@ -57,7 +57,7 @@ void BasicBankMap<T>::reserve(size_t capacity)
     m_capacity += need;
 
     for(size_t i = need; i-- > 0;)
-        free_slot(&slots.get()[i]);
+        free_slot(&slots[i]);
 }
 
 template <class T>
@@ -65,7 +65,7 @@ typename BasicBankMap<T>::iterator
 BasicBankMap<T>::begin() const
 {
     iterator it(m_buckets.get(), NULL, 0);
-    while(it.index < hash_buckets && !(it.slot = m_buckets.get()[it.index]))
+    while(it.index < hash_buckets && !(it.slot = m_buckets[it.index]))
         ++it.index;
     return it;
 }
@@ -176,12 +176,12 @@ template <class T>
 void BasicBankMap<T>::clear()
 {
     for(size_t i = 0; i < hash_buckets; ++i) {
-        Slot *slot = m_buckets.get()[i];
+        Slot *slot = m_buckets[i];
         while (Slot *cur = slot) {
             slot = slot->next;
             free_slot(cur);
         }
-        m_buckets.get()[i] = NULL;
+        m_buckets[i] = NULL;
     }
     m_size = 0;
 }
@@ -231,7 +231,7 @@ template <class T>
 typename BasicBankMap<T>::Slot *
 BasicBankMap<T>::bucket_find(size_t index, key_type key)
 {
-    Slot *slot = m_buckets.get()[index];
+    Slot *slot = m_buckets[index];
     while(slot && slot->value.first != key)
         slot = slot->next;
     return slot;
@@ -241,11 +241,11 @@ template <class T>
 void BasicBankMap<T>::bucket_add(size_t index, Slot *slot)
 {
     assert(slot);
-    Slot *next = m_buckets.get()[index];
+    Slot *next = m_buckets[index];
     if(next)
         next->prev = slot;
     slot->next = next;
-    m_buckets.get()[index] = slot;
+    m_buckets[index] = slot;
 }
 
 template <class T>
@@ -255,7 +255,7 @@ void BasicBankMap<T>::bucket_remove(size_t index, Slot *slot)
     Slot *prev = slot->prev;
     Slot *next = slot->next;
     if(!prev)
-        m_buckets.get()[index] = next;
+        m_buckets[index] = next;
     else
         prev->next = next;
     if(next)

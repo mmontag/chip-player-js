@@ -24,106 +24,9 @@
 #ifndef ADLMIDI_PTR_HPP_THING
 #define ADLMIDI_PTR_HPP_THING
 
+#include <algorithm>  // swap
 #include <stddef.h>
-
-/*
-    Smart pointer for C heaps, created with malloc() call.
-    FAQ: Why not std::shared_ptr? Because of Android NDK now doesn't supports it
-*/
-template<class PTR>
-class AdlMIDI_CPtr
-{
-    PTR *m_p;
-public:
-    AdlMIDI_CPtr() : m_p(NULL) {}
-    ~AdlMIDI_CPtr()
-    {
-        reset(NULL);
-    }
-
-    void reset(PTR *p = NULL)
-    {
-        if(p != m_p) {
-            if(m_p)
-                free(m_p);
-            m_p = p;
-        }
-    }
-
-    PTR *get()
-    {
-        return m_p;
-    }
-    PTR &operator*()
-    {
-        return *m_p;
-    }
-    PTR *operator->()
-    {
-        return m_p;
-    }
-private:
-    AdlMIDI_CPtr(const AdlMIDI_CPtr &);
-    AdlMIDI_CPtr &operator=(const AdlMIDI_CPtr &);
-};
-
-template<class PTR>
-class AdlMIDI_NArrPtr
-{
-    PTR *m_p;
-public:
-    AdlMIDI_NArrPtr() : m_p(NULL) {}
-    AdlMIDI_NArrPtr(PTR *value)
-    {
-        reset(value);
-    }
-
-    ~AdlMIDI_NArrPtr()
-    {
-        reset(NULL);
-    }
-
-    void reset(PTR *p = NULL)
-    {
-        if(p != m_p) {
-            if(m_p)
-                delete [] m_p;
-            m_p = p;
-        }
-    }
-
-    PTR *get()
-    {
-        return m_p;
-    }
-    PTR &operator*()
-    {
-        return *m_p;
-    }
-    PTR *operator->()
-    {
-        return m_p;
-    }
-    PTR operator[](size_t index)
-    {
-        return m_p[index];
-    }
-    const PTR operator[](size_t index) const
-    {
-        return m_p[index];
-    }
-    AdlMIDI_NArrPtr(AdlMIDI_NArrPtr &other)
-    {
-        m_p = other.m_p;
-        other.m_p = NULL;
-    }
-    AdlMIDI_NArrPtr &operator=(AdlMIDI_NArrPtr &other)
-    {
-        m_p = other.m_p;
-        other.m_p = NULL;
-        return m_p;
-    }
-};
+#include <stdlib.h>
 
 /*
   Generic deleters for smart pointers
@@ -138,18 +41,105 @@ struct ADLMIDI_DefaultArrayDelete
 {
     void operator()(T *x) { delete[] x; }
 };
+struct ADLMIDI_CDelete
+{
+    void operator()(void *x) { free(x); }
+};
+
+/*
+    Safe unique pointer for C++98, non-copyable but swappable.
+*/
+template< class T, class Deleter = ADLMIDI_DefaultDelete<T> >
+class AdlMIDI_UPtr
+{
+    T *m_p;
+public:
+    explicit AdlMIDI_UPtr(T *p)
+        : m_p(p) {}
+    ~AdlMIDI_UPtr()
+    {
+        reset();
+    }
+
+    void reset(T *p = NULL)
+    {
+        if(p != m_p) {
+            if(m_p) {
+                Deleter del;
+                del(m_p);
+            }
+            m_p = p;
+        }
+    }
+
+    void swap(AdlMIDI_UPtr &other)
+    {
+        std::swap(m_p, other.m_p);
+    }
+
+    T *get() const
+    {
+        return m_p;
+    }
+    T &operator*() const
+    {
+        return *m_p;
+    }
+    T *operator->() const
+    {
+        return m_p;
+    }
+    T &operator[](size_t index) const
+    {
+        return m_p[index];
+    }
+private:
+    AdlMIDI_UPtr(const AdlMIDI_UPtr &);
+    AdlMIDI_UPtr &operator=(const AdlMIDI_UPtr &);
+};
+
+template <class T>
+void swap(AdlMIDI_UPtr<T> &a, AdlMIDI_UPtr<T> &b)
+{
+    a.swap(b);
+}
+
+/**
+   Unique pointer for arrays.
+ */
+template<class T>
+class AdlMIDI_UPtrArray :
+    public AdlMIDI_UPtr< T, ADLMIDI_DefaultArrayDelete<T> >
+{
+public:
+    explicit AdlMIDI_UPtrArray(T *p = NULL)
+        : AdlMIDI_UPtr< T, ADLMIDI_DefaultArrayDelete<T> >(p) {}
+};
+
+/**
+   Unique pointer for C memory.
+ */
+template<class T>
+class AdlMIDI_CPtr :
+    public AdlMIDI_UPtr< T, ADLMIDI_CDelete >
+{
+public:
+    explicit AdlMIDI_CPtr(T *p = NULL)
+        : AdlMIDI_UPtr< T, ADLMIDI_CDelete >(p) {}
+};
 
 /*
     Shared pointer with non-atomic counter
     FAQ: Why not std::shared_ptr? Because of Android NDK now doesn't supports it
 */
-template< class VALUE, class DELETER = ADLMIDI_DefaultDelete<VALUE> >
+template< class T, class Deleter = ADLMIDI_DefaultDelete<T> >
 class AdlMIDI_SPtr
 {
-    VALUE *m_p;
+    T *m_p;
     size_t *m_counter;
 public:
-    AdlMIDI_SPtr() : m_p(NULL), m_counter(NULL) {}
+    explicit AdlMIDI_SPtr(T *p = NULL)
+        : m_p(p), m_counter(p ? new size_t(1) : NULL) {}
     ~AdlMIDI_SPtr()
     {
         reset(NULL);
@@ -174,11 +164,11 @@ public:
         return *this;
     }
 
-    void reset(VALUE *p = NULL)
+    void reset(T *p = NULL)
     {
         if(p != m_p) {
             if(m_p && --*m_counter == 0) {
-                DELETER del;
+                Deleter del;
                 del(m_p);
                 if(!p) {
                     delete m_counter;
@@ -194,28 +184,34 @@ public:
         }
     }
 
-    VALUE *get() const
+    T *get() const
     {
         return m_p;
     }
-    VALUE &operator*()
+    T &operator*() const
     {
         return *m_p;
     }
-    const VALUE &operator*() const
-    {
-        return *m_p;
-    }
-    VALUE *operator->() const
+    T *operator->() const
     {
         return m_p;
+    }
+    T &operator[](size_t index) const
+    {
+        return m_p[index];
     }
 };
 
-template<class VALUE>
+/**
+   Shared pointer for arrays.
+ */
+template<class T>
 class AdlMIDI_SPtrArray :
-    public AdlMIDI_SPtr< VALUE, ADLMIDI_DefaultArrayDelete<VALUE> >
+    public AdlMIDI_SPtr< T, ADLMIDI_DefaultArrayDelete<T> >
 {
+public:
+    explicit AdlMIDI_SPtrArray(T *p = NULL)
+        : AdlMIDI_SPtr< T, ADLMIDI_DefaultArrayDelete<T> >(p) {}
 };
 
 #endif //ADLMIDI_PTR_HPP_THING
