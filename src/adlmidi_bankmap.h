@@ -29,6 +29,8 @@
 #include <utility>
 #include <cstdint>
 
+#include "adlmidi_ptr.hpp"
+
 /**
  * A simple hash map which accepts bank numbers as keys, can be reserved to a
  * fixed size, offers O(1) search and insertion, has a hash function to
@@ -87,7 +89,12 @@ public:
         Slot **buckets = nullptr, *slot = nullptr;
         size_t index = 0;
         iterator(Slot **buckets, Slot *slot, size_t index);
-        friend BasicBankMap;
+#ifdef _MSC_VER
+        template<class _T>
+        friend class BasicBankMap;
+        #else
+        friend class BasicBankMap<T>;
+#endif
     };
 
 private:
