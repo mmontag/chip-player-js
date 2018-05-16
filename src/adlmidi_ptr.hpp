@@ -123,10 +123,24 @@ public:
 };
 
 /*
+  Generic deleters for smart pointers
+ */
+template <class T>
+struct ADLMIDI_DefaultDelete
+{
+    void operator()(T *x) { delete x; }
+};
+template <class T>
+struct ADLMIDI_DefaultArrayDelete
+{
+    void operator()(T *x) { delete[] x; }
+};
+
+/*
     Shared pointer with non-atomic counter
     FAQ: Why not std::shared_ptr? Because of Android NDK now doesn't supports it
 */
-template<class VALUE>
+template< class VALUE, class DELETER = ADLMIDI_DefaultDelete<VALUE> >
 class AdlMIDI_SPtr
 {
     VALUE *m_p;
@@ -160,8 +174,10 @@ public:
     void reset(VALUE *p = NULL)
     {
         if(p != m_p) {
-            if(m_p && --*m_counter == 0)
-                delete m_p;
+            if(m_p && --*m_counter == 0) {
+                DELETER del;
+                del(m_p);
+            }
             m_p = p;
             if(!p) {
                 if(m_counter) {
@@ -178,7 +194,7 @@ public:
         }
     }
 
-    VALUE *get()
+    VALUE *get() const
     {
         return m_p;
     }
@@ -186,10 +202,20 @@ public:
     {
         return *m_p;
     }
-    VALUE *operator->()
+    const VALUE &operator*() const
+    {
+        return *m_p;
+    }
+    VALUE *operator->() const
     {
         return m_p;
     }
+};
+
+template<class VALUE>
+class AdlMIDI_SPtrArray :
+    public AdlMIDI_SPtr< VALUE, ADLMIDI_DefaultArrayDelete<VALUE> >
+{
 };
 
 #endif //ADLMIDI_PTR_HPP_THING

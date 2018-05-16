@@ -25,9 +25,8 @@
 #define ADLMIDI_BANKMAP_H
 
 #include <list>
-#include <memory>
 #include <utility>
-#include <cstdint>
+#include <stdint.h>
 
 #include "adlmidi_ptr.hpp"
 
@@ -79,15 +78,15 @@ public:
     class iterator
     {
     public:
-        iterator() {}
+        iterator();
         value_type &operator*() const { return slot->value; }
         value_type *operator->() const { return &slot->value; }
         iterator &operator++();
         bool operator==(const iterator &o) const;
         bool operator!=(const iterator &o) const;
     private:
-        Slot **buckets = nullptr, *slot = nullptr;
-        size_t index = 0;
+        Slot **buckets, *slot;
+        size_t index;
         iterator(Slot **buckets, Slot *slot, size_t index);
 #ifdef _MSC_VER
         template<class _T>
@@ -99,14 +98,15 @@ public:
 
 private:
     struct Slot {
-        Slot *next = nullptr, *prev = nullptr;
+        Slot *next, *prev;
         value_type value;
+        Slot() : next(NULL), prev(NULL) {}
     };
-    std::unique_ptr<Slot *[]> m_buckets;
-    std::list<std::unique_ptr<Slot[]>> m_allocations;
-    Slot *m_freeslots = nullptr;
-    size_t m_size = 0;
-    size_t m_capacity = 0;
+    AdlMIDI_SPtrArray<Slot *> m_buckets;
+    std::list< AdlMIDI_SPtrArray<Slot> > m_allocations;
+    Slot *m_freeslots;
+    size_t m_size;
+    size_t m_capacity;
     static size_t hash(key_type key);
     Slot *allocate_slot();
     Slot *ensure_allocate_slot();

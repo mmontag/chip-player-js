@@ -26,6 +26,9 @@
 
 template <class T>
 inline BasicBankMap<T>::BasicBankMap()
+    : m_freeslots(NULL),
+      m_size(0),
+      m_capacity(0)
 {
     m_buckets.reset(new Slot *[hash_buckets]());
 }
@@ -48,20 +51,21 @@ void BasicBankMap<T>::reserve(size_t capacity)
     size_t need = capacity - m_capacity;
     need = (need < minimum_allocation) ? minimum_allocation : need;
 
-    Slot *slots = new Slot[need];
-    m_allocations.push_back(std::unique_ptr<Slot[]>(slots));
+    AdlMIDI_SPtrArray<Slot> slots;
+    slots.reset(new Slot[need]);
+    m_allocations.push_back(slots);
     m_capacity += need;
 
     for(size_t i = need; i-- > 0;)
-        free_slot(&slots[i]);
+        free_slot(&slots.get()[i]);
 }
 
 template <class T>
 typename BasicBankMap<T>::iterator
 BasicBankMap<T>::begin() const
 {
-    iterator it(m_buckets.get(), nullptr, 0);
-    while(it.index < hash_buckets && !(it.slot = m_buckets[it.index]))
+    iterator it(m_buckets.get(), NULL, 0);
+    while(it.index < hash_buckets && !(it.slot = m_buckets.get()[it.index]))
         ++it.index;
     return it;
 }
@@ -70,7 +74,7 @@ template <class T>
 typename BasicBankMap<T>::iterator
 BasicBankMap<T>::end() const
 {
-    iterator it(m_buckets.get(), nullptr, hash_buckets);
+    iterator it(m_buckets.get(), NULL, hash_buckets);
     return it;
 }
 
@@ -93,7 +97,13 @@ void BasicBankMap<T>::erase(iterator it)
 }
 
 template <class T>
-BasicBankMap<T>::iterator::iterator(Slot **buckets, Slot *slot, size_t index)
+inline BasicBankMap<T>::iterator::iterator()
+    : buckets(NULL), slot(NULL), index(0)
+{
+}
+
+template <class T>
+inline BasicBankMap<T>::iterator::iterator(Slot **buckets, Slot *slot, size_t index)
     : buckets(buckets), slot(slot), index(index)
 {
 }
@@ -105,7 +115,7 @@ BasicBankMap<T>::iterator::operator++()
     if(slot->next)
         slot = slot->next;
     else {
-        Slot *slot = nullptr;
+        Slot *slot = NULL;
         ++index;
         while(index < hash_buckets && !(slot = buckets[index]))
             ++index;
@@ -133,7 +143,7 @@ BasicBankMap<T>::insert(const value_type &value)
     size_t index = hash(value.first);
     Slot *slot = bucket_find(index, value.first);
     if(slot)
-        return {iterator(m_buckets.get(), slot, index), false};
+        return std::make_pair(iterator(m_buckets.get(), slot, index), false);
     slot = allocate_slot();
     if(!slot) {
         reserve(m_capacity + minimum_allocation);
@@ -142,7 +152,7 @@ BasicBankMap<T>::insert(const value_type &value)
     slot->value = value;
     bucket_add(index, slot);
     ++m_size;
-    return {iterator(m_buckets.get(), slot, index), true};
+    return std::make_pair(iterator(m_buckets.get(), slot, index), true);
 }
 
 template <class T>
@@ -152,26 +162,26 @@ BasicBankMap<T>::insert(const value_type &value, do_not_expand_t)
     size_t index = hash(value.first);
     Slot *slot = bucket_find(index, value.first);
     if(slot)
-        return {iterator(m_buckets.get(), slot, index), false};
+        return std::make_pair(iterator(m_buckets.get(), slot, index), false);
     slot = allocate_slot();
     if(!slot)
-        return {end(), false};
+        return std::make_pair(end(), false);
     slot->value = value;
     bucket_add(index, slot);
     ++m_size;
-    return {iterator(m_buckets.get(), slot, index), true};
+    return std::make_pair(iterator(m_buckets.get(), slot, index), true);
 }
 
 template <class T>
 void BasicBankMap<T>::clear()
 {
     for(size_t i = 0; i < hash_buckets; ++i) {
-        Slot *slot = m_buckets[i];
+        Slot *slot = m_buckets.get()[i];
         while (Slot *cur = slot) {
             slot = slot->next;
             free_slot(cur);
         }
-        m_buckets[i] = nullptr;
+        m_buckets.get()[i] = NULL;
     }
     m_size = 0;
 }
@@ -179,7 +189,7 @@ void BasicBankMap<T>::clear()
 template <class T>
 inline T &BasicBankMap<T>::operator[](key_type key)
 {
-    return insert({key, T()}).first->second;
+    return insert(value_type(key, T())).first->second;
 }
 
 template <class T>
@@ -188,10 +198,10 @@ BasicBankMap<T>::allocate_slot()
 {
     Slot *slot = m_freeslots;
     if(!slot)
-        return nullptr;
+        return NULL;
     Slot *next = slot->next;
     if(next)
-        next->prev = nullptr;
+        next->prev = NULL;
     m_freeslots = next;
     return slot;
 }
@@ -211,7 +221,7 @@ void BasicBankMap<T>::free_slot(Slot *slot)
     Slot *next = m_freeslots;
     if(next)
         next->prev = slot;
-    slot->prev = nullptr;
+    slot->prev = NULL;
     slot->next = next;
     m_freeslots = slot;
     m_freeslots->value.second = T();
@@ -221,7 +231,7 @@ template <class T>
 typename BasicBankMap<T>::Slot *
 BasicBankMap<T>::bucket_find(size_t index, key_type key)
 {
-    Slot *slot = m_buckets[index];
+    Slot *slot = m_buckets.get()[index];
     while(slot && slot->value.first != key)
         slot = slot->next;
     return slot;
@@ -231,11 +241,11 @@ template <class T>
 void BasicBankMap<T>::bucket_add(size_t index, Slot *slot)
 {
     assert(slot);
-    Slot *next = m_buckets[index];
+    Slot *next = m_buckets.get()[index];
     if(next)
         next->prev = slot;
     slot->next = next;
-    m_buckets[index] = slot;
+    m_buckets.get()[index] = slot;
 }
 
 template <class T>
@@ -245,7 +255,7 @@ void BasicBankMap<T>::bucket_remove(size_t index, Slot *slot)
     Slot *prev = slot->prev;
     Slot *next = slot->next;
     if(!prev)
-        m_buckets[index] = next;
+        m_buckets.get()[index] = next;
     else
         prev->next = next;
     if(next)
