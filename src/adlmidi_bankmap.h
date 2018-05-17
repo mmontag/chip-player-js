@@ -85,6 +85,8 @@ public:
         iterator &operator++();
         bool operator==(const iterator &o) const;
         bool operator!=(const iterator &o) const;
+        void to_ptrs(void *ptrs[3]);
+        static iterator from_ptrs(void *const ptrs[3]);
     private:
         Slot **buckets;
         Slot *slot;

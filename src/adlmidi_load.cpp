@@ -72,7 +72,8 @@ bool MIDIplay::LoadBank(const void *data, size_t size)
     return LoadBank(file);
 }
 
-static void cvt_WOPLI_to_FMIns(adlinsdata2 &ins, const WOPLInstrument &in)
+template <class WOPLI>
+static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
 {
     ins.voice2_fine_tune = 0.0;
     int8_t voice2_fine_tune = in.second_voice_detune;
@@ -83,7 +84,7 @@ static void cvt_WOPLI_to_FMIns(adlinsdata2 &ins, const WOPLInstrument &in)
         else if(voice2_fine_tune == -1)
             ins.voice2_fine_tune = -0.000025;
         else
-            ins.voice2_fine_tune = ((voice2_fine_tune * 15.625) / 1000.0);
+            ins.voice2_fine_tune = voice2_fine_tune * (15.625 / 1000.0);
     }
 
     ins.tone = in.percussion_key_number;
@@ -114,13 +115,83 @@ static void cvt_WOPLI_to_FMIns(adlinsdata2 &ins, const WOPLInstrument &in)
     ins.adl[0].feedconn = in.fb_conn1_C0;
     if(!fourOps)
         ins.adl[1] = ins.adl[0];
-    else {
+    else
+    {
         ins.adl[1].finetune = in.note_offset2;
         ins.adl[1].feedconn = in.fb_conn2_C0;
     }
 
     ins.ms_sound_kon  = in.delay_on_ms;
     ins.ms_sound_koff = in.delay_off_ms;
+}
+
+template <class WOPLI>
+static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
+{
+    ins.second_voice_detune = 0;
+    double voice2_fine_tune = in.voice2_fine_tune;
+    if(voice2_fine_tune != 0)
+    {
+        if(voice2_fine_tune > 0 && voice2_fine_tune <= 0.000025)
+            ins.second_voice_detune = 1;
+        else if(voice2_fine_tune < 0 && voice2_fine_tune >= -0.000025)
+            ins.second_voice_detune = -1;
+        else
+        {
+            long value = lround(voice2_fine_tune * (1000.0 / 15.625));
+            value = (value < -128) ? -128 : value;
+            value = (value > +127) ? +127 : value;
+            ins.second_voice_detune = static_cast<int8_t>(value);
+        }
+    }
+
+    ins.percussion_key_number = in.tone;
+    bool fourOps = (in.flags & adlinsdata::Flag_Pseudo4op) || in.adl[0] != in.adl[1];
+    ins.inst_flags = fourOps ? WOPL_Ins_4op : 0;
+    ins.inst_flags|= (in.flags & adlinsdata::Flag_Pseudo4op) ? WOPL_Ins_Pseudo4op : 0;
+    ins.inst_flags|= (in.flags & adlinsdata::Flag_NoSound) ? WOPL_Ins_IsBlank : 0;
+
+    for(size_t op = 0, slt = 0; op < (fourOps ? 4 : 2); op++, slt++)
+    {
+        ins.operators[op].waveform_E0 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 24);
+        ins.operators[op].susrel_80 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 16);
+        ins.operators[op].atdec_60 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 8);
+        ins.operators[op].avekf_20 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 0);
+        ins.operators[op].ksl_l_40 = in.adl[slt].carrier_40;
+
+        op++;
+        ins.operators[op].waveform_E0 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 24);
+        ins.operators[op].susrel_80 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 16);
+        ins.operators[op].atdec_60 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 8);
+        ins.operators[op].avekf_20 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 0);
+        ins.operators[op].ksl_l_40 = in.adl[slt].carrier_40;
+    }
+
+    ins.note_offset1 = in.adl[0].finetune;
+    ins.fb_conn1_C0 = in.adl[0].feedconn;
+    if(!fourOps)
+    {
+        ins.operators[2] = ins.operators[0];
+        ins.operators[3] = ins.operators[1];
+    }
+    else
+    {
+        ins.note_offset2 = in.adl[1].finetune;
+        ins.fb_conn2_C0 = in.adl[1].feedconn;
+    }
+
+    ins.delay_on_ms = in.ms_sound_kon;
+    ins.delay_off_ms = in.ms_sound_koff;
+}
+
+void cvt_ADLI_to_FMIns(adlinsdata2 &ins, const ADL_Instrument &in)
+{
+    return cvt_generic_to_FMIns(ins, in);
+}
+
+void cvt_FMIns_to_ADLI(ADL_Instrument &ins, const adlinsdata2 &in)
+{
+    cvt_FMIns_to_generic(ins, in);
 }
 
 bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
@@ -207,7 +278,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
                 adlinsdata2 &ins = bank.ins[j];
                 std::memset(&ins, 0, sizeof(adlinsdata2));
                 WOPLInstrument &inIns = slots_src_ins[ss][i].ins[j];
-                cvt_WOPLI_to_FMIns(ins, inIns);
+                cvt_generic_to_FMIns(ins, inIns);
             }
         }
     }

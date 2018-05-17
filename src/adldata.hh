@@ -104,4 +104,14 @@ inline adlinsdata2::adlinsdata2(const adlinsdata &d)
     adl[1] = ::adl[d.adlno2];
 }
 
+/**
+ * @brief Convert external instrument to internal instrument
+ */
+void cvt_ADLI_to_FMIns(adlinsdata2 &dst, const struct ADL_Instrument &src);
+
+/**
+ * @brief Convert internal instrument to external instrument
+ */
+void cvt_FMIns_to_ADLI(struct ADL_Instrument &dst, const adlinsdata2 &src);
+
 #endif //ADLDATA_H

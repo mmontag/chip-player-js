@@ -35,6 +35,9 @@
 #   endif
 #endif
 
+// Require declarations of unstable API for extern "C"
+#define ADLMIDI_UNSTABLE_API
+
 #ifdef _WIN32
 #define NOMINMAX
 #endif
@@ -226,7 +229,6 @@ public:
         adlinsdata2 ins[128];
     };
     typedef BasicBankMap<Bank> BankMap;
-private:
     BankMap dynamic_banks;
     AdlBankSetup dynamic_bank_setup;
 public:

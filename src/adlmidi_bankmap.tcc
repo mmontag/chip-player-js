@@ -137,6 +137,25 @@ inline bool BasicBankMap<T>::iterator::operator!=(const iterator &o) const
 }
 
 template <class T>
+void BasicBankMap<T>::iterator::to_ptrs(void *ptrs[3])
+{
+    ptrs[0] = buckets;
+    ptrs[1] = slot;
+    ptrs[2] = (void *)index;
+}
+
+template <class T>
+typename BasicBankMap<T>::iterator
+BasicBankMap<T>::iterator::from_ptrs(void *const ptrs[3])
+{
+    iterator it;
+    it.buckets = (Slot **)ptrs[0];
+    it.slot = (Slot *)ptrs[1];
+    it.index = (size_t)ptrs[2];
+    return it;
+}
+
+template <class T>
 std::pair<typename BasicBankMap<T>::iterator, bool>
 BasicBankMap<T>::insert(const value_type &value)
 {
