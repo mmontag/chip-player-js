@@ -320,6 +320,8 @@ int main(int argc, char **argv)
     #endif
     #ifndef HARDWARE_OPL3
     int emulator = ADLMIDI_EMU_NUKED;
+    #endif
+    #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
     g_audioFormat.type = ADLMIDI_SampleType_S16;
     g_audioFormat.containerSize = sizeof(Sint16);
     g_audioFormat.sampleOffset = sizeof(Sint16) * 2;

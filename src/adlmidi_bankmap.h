@@ -85,7 +85,8 @@ public:
         bool operator==(const iterator &o) const;
         bool operator!=(const iterator &o) const;
     private:
-        Slot **buckets, *slot;
+        Slot **buckets;
+        Slot *slot;
         size_t index;
         iterator(Slot **buckets, Slot *slot, size_t index);
 #ifdef _MSC_VER

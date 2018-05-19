@@ -1093,11 +1093,21 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     //uint16_t i[2] = { ains.adlno1, ains.adlno2 };
     bool pseudo_4op = ains.flags & adlinsdata::Flag_Pseudo4op;
+#ifndef __WATCOMC__
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans] =
     {
         {0, ains.adl[0], false},
         {0, ains.adl[1], pseudo_4op}
     };
+#else /* Unfortunately, WatCom can't brace-initialize structure that incluses structure fields */
+    MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans];
+    voices[0].chip_chan = 0;
+    voices[0].ains = ains.adl[0];
+    voices[0].pseudo4op = false;
+    voices[1].chip_chan = 0;
+    voices[1].ains = ains.adl[1];
+    voices[1].pseudo4op = pseudo_4op;
+#endif
 
     if((opl.AdlPercussionMode == 1) && PercussionMap[midiins & 0xFF])
         voices[1] = voices[0];//i[1] = i[0];

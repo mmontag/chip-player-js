@@ -569,7 +569,7 @@ public:
                         ph = &chip_channels[i];
                 return ph;
             }
-            Phys *phys_find_or_create(unsigned chip_chan)
+            Phys *phys_find_or_create(uint16_t chip_chan)
             {
                 Phys *ph = phys_find(chip_chan);
                 if(!ph) {
@@ -580,7 +580,7 @@ public:
                 }
                 return ph;
             }
-            Phys *phys_ensure_find_or_create(unsigned chip_chan)
+            Phys *phys_ensure_find_or_create(uint16_t chip_chan)
             {
                 Phys *ph = phys_find_or_create(chip_chan);
                 assert(ph);
@@ -679,7 +679,7 @@ public:
 
         void activenotes_clear()
         {
-            for(unsigned i = 0; i < 128; ++i) {
+            for(uint8_t i = 0; i < 128; ++i) {
                 activenotes[i].note = i;
                 activenotes[i].active = false;
             }

@@ -659,6 +659,8 @@ static int SendStereoAudio(int        samples_requested,
     right += (outputOffset / 2) * sampleOffset;
 
     typedef int32_t(&pfnConvert)(int32_t);
+    typedef float(&ffnConvert)(int32_t);
+    typedef double(&dfnConvert)(int32_t);
 
     switch(sampleType) {
     case ADLMIDI_SampleType_S8:
@@ -723,15 +725,21 @@ static int SendStereoAudio(int        samples_requested,
         break;
     }
     case ADLMIDI_SampleType_F32:
+    {
         if(containerSize != sizeof(float))
             return -1;
-        CopySamplesTransformed<float>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtReal<float>);
+        ffnConvert cvt = adl_cvtReal<float>;
+        CopySamplesTransformed<float>(left, right, _in, toCopy / 2, sampleOffset, cvt);
         break;
+    }
     case ADLMIDI_SampleType_F64:
+    {
         if(containerSize != sizeof(double))
             return -1;
-        CopySamplesTransformed<double>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtReal<double>);
+        dfnConvert cvt = adl_cvtReal<double>;
+        CopySamplesTransformed<double>(left, right, _in, toCopy / 2, sampleOffset, cvt);
         break;
+    }
     default:
         return -1;
     }
