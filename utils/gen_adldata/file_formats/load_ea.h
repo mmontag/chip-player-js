@@ -85,6 +85,7 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
         ins tmp2{};
         tmp2.notenum   = 0;
         tmp2.pseudo4op = false;
+        tmp2.real4op = false;
 
         std::string name;
         char name2[512];

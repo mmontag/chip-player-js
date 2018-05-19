@@ -49,9 +49,13 @@ DurationInfo MeasureDurations(const ins &in)
 
     OPLChipBase *opl;
 
-    //DosBoxOPL3 db; opl = &db;
+#if !defined(ADLMIDI_DISABLE_NUKED_EMULATOR)
+    NukedOPL3 nuke; opl = &nuke;
+#elif !defined(ADLMIDI_DISABLE_DOSBOX_EMULATOR)
+    DosBoxOPL3 db; opl = &db;
+#endif
     //NukedOPL3 nuke; opl = &nuke;
-    NukedOPL3v174 nuke74; opl = &nuke74;
+    //NukedOPL3v174 nuke74; opl = &nuke74;
 
 #define WRITE_REG(key, value) opl->writeReg((uint16_t)(key), (uint8_t)(value))
 
@@ -68,17 +72,18 @@ DurationInfo MeasureDurations(const ins &in)
     const unsigned n_notes = in.insno1 == in.insno2 ? 1 : 2;
     unsigned x[2];
 
-    if(n_notes == 2 && !in.pseudo4op)
+    if(in.real4op)
     {
         WRITE_REG(0x105, 1);
-        WRITE_REG(0x104, 1);
+        WRITE_REG(0x104, 0xFF);
     }
 
     for(unsigned n = 0; n < n_notes; ++n)
     {
         static const unsigned char patchdata[11] =
         {0x20, 0x23, 0x60, 0x63, 0x80, 0x83, 0xE0, 0xE3, 0x40, 0x43, 0xC0};
-        for(unsigned a = 0; a < 10; ++a) WRITE_REG(patchdata[a] + n * 8, id[n].data[a]);
+        for(unsigned a = 0; a < 10; ++a)
+            WRITE_REG(patchdata[a] + n * 8, id[n].data[a]);
         WRITE_REG(patchdata[10] + n * 8, id[n].data[10] | 0x30);
     }
 
@@ -88,7 +93,7 @@ DurationInfo MeasureDurations(const ins &in)
         if(hertz > 131071)
         {
             std::fprintf(stderr, "MEASURER WARNING: Why does note %d + finetune %d produce hertz %g?          \n",
-                    notenum, id[n].finetune, hertz);
+                         notenum, id[n].finetune, hertz);
             hertz = 131071;
         }
         x[n] = 0x2000;
@@ -115,10 +120,12 @@ DurationInfo MeasureDurations(const ins &in)
     for(unsigned period = 0; period < max_on * interval; ++period)
     {
         stereoSampleBuf.clear();
-        stereoSampleBuf.resize(samples_per_interval * 2);
+        stereoSampleBuf.resize(samples_per_interval * 2, 0);
+
         opl->generate(stereoSampleBuf.data(), samples_per_interval);
 
         double mean = 0.0;
+
         for(unsigned long c = 0; c < samples_per_interval; ++c)
         {
             short s = stereoSampleBuf[c * 2];
@@ -155,6 +162,7 @@ DurationInfo MeasureDurations(const ins &in)
     {
         stereoSampleBuf.clear();
         stereoSampleBuf.resize(samples_per_interval * 2);
+
         opl->generate(stereoSampleBuf.data(), samples_per_interval);
 
         double mean = 0.0;
@@ -290,6 +298,8 @@ void MeasureThreaded::LoadCache(const char *fileName)
         inst.insno2 = inval;
         if(std::fread(&inst.notenum, 1, 1, in) != 1)
             break;
+        if(std::fread(&inst.real4op, 1, 1, in) != 1)
+            break;
         if(std::fread(&inst.pseudo4op, 1, 1, in) != 1)
             break;
         if(std::fread(&inst.voice2_fine_tune, sizeof(double), 1, in) != 1)
@@ -418,6 +428,7 @@ void MeasureThreaded::SaveCache(const char *fileName)
         outval = in.insno2;
         fwrite(&outval, 1, sizeof(uint64_t), out);
         fwrite(&in.notenum, 1, 1, out);
+        fwrite(&in.real4op, 1, 1, out);
         fwrite(&in.pseudo4op, 1, 1, out);
         fwrite(&in.voice2_fine_tune, sizeof(double), 1, out);
 

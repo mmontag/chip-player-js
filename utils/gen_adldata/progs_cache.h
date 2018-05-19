@@ -49,9 +49,11 @@ inline bool equal_approx(double const a, double const b)
 
 struct ins
 {
+    enum { Flag_Pseudo4op = 0x01, Flag_NoSound = 0x02, Flag_Real4op = 0x04 };
     size_t insno1, insno2;
     unsigned char notenum;
     bool pseudo4op;
+    bool real4op;
     double voice2_fine_tune;
 
     bool operator==(const ins &b) const
@@ -60,6 +62,7 @@ struct ins
                && insno1 == b.insno1
                && insno2 == b.insno2
                && pseudo4op == b.pseudo4op
+               && real4op == real4op
                && equal_approx(voice2_fine_tune, b.voice2_fine_tune);
     }
     bool operator< (const ins &b) const
@@ -68,6 +71,7 @@ struct ins
         if(insno2 != b.insno2) return insno2 < b.insno2;
         if(notenum != b.notenum) return notenum < b.notenum;
         if(pseudo4op != b.pseudo4op) return pseudo4op < b.pseudo4op;
+        if(real4op != b.real4op) return real4op < b.real4op;
         if(!equal_approx(voice2_fine_tune, b.voice2_fine_tune)) return voice2_fine_tune < b.voice2_fine_tune;
         return 0;
     }

@@ -138,6 +138,9 @@ To build that example you will need to have installed SDL2 library.
 # Changelog
 ## 1.3.3   dev
  * Fixed an inability to load another custom bank without of library re-initialization
+ * Optimizing the MIDI banks management system for MultiBanks (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Fixed incorrect 4-op counter which is still catch 4-op instruments on 2-op banks
+ * Fixed an incorrect processing of auto-flags
 
 ## 1.3.2   2018-04-24
  * Added ability to disable MUS and XMI converters

@@ -421,7 +421,7 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
     play->m_setup.tick_skip_samples_delay = 0;
     play->opl.Reset(play->m_setup.emulator, play->m_setup.PCM_RATE);
     play->ch.clear();
-    play->ch.resize(play->opl.NumChannels);
+    play->ch.resize((size_t)play->opl.NumChannels);
 }
 
 ADLMIDI_EXPORT double adl_totalTimeLength(struct ADL_MIDIPlayer *device)

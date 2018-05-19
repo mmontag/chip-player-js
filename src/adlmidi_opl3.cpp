@@ -151,6 +151,7 @@ void OPL3::setEmbeddedBank(unsigned int bank)
     dynamic_percussion_offset = 128;
     dynamic_melodic_banks.clear();
     dynamic_percussion_banks.clear();
+    dynamic_metainstruments.clear();
 }
 
 

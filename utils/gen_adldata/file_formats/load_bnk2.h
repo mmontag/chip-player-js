@@ -86,6 +86,7 @@ static bool LoadBNK2(const char *fn, unsigned bank, const char *prefix,
         ins tmp2;
         tmp2.notenum = (gmno & 128) ? 35 : 0;
         tmp2.pseudo4op = false;
+        tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
 
         if(xxP24NNN & 8)

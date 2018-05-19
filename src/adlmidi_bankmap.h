@@ -92,7 +92,7 @@ public:
 #ifdef _MSC_VER
         template<class _T>
         friend class BasicBankMap;
-        #else
+#else
         friend class BasicBankMap<T>;
 #endif
     };

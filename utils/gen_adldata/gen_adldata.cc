@@ -406,7 +406,9 @@ int main(int argc, char**argv)
             }
             #endif
 
-            unsigned flags = (i->first.pseudo4op ? 1 : 0) | (info.nosound ? 2 : 0);
+            unsigned flags = (i->first.pseudo4op ? ins::Flag_Pseudo4op : 0)|
+                             (i->first.real4op ? ins::Flag_Real4op : 0) |
+                             (info.nosound ? ins::Flag_NoSound : 0);
 
             std::fprintf(outFile, "    {");
             std::fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ",%lf",

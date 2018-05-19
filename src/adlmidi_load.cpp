@@ -88,6 +88,7 @@ static void cvt_WOPLI_to_FMIns(adlinsdata2 &ins, WOPLInstrument &in)
 
     ins.tone = in.percussion_key_number;
     ins.flags = (in.inst_flags & WOPL_Ins_4op) && (in.inst_flags & WOPL_Ins_Pseudo4op) ? adlinsdata::Flag_Pseudo4op : 0;
+    ins.flags|= (in.inst_flags & WOPL_Ins_4op) && ((in.inst_flags & WOPL_Ins_Pseudo4op) == 0) ? adlinsdata::Flag_Real4op : 0;
     ins.flags|= (in.inst_flags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
 
     bool fourOps = (in.inst_flags & WOPL_Ins_4op) || (in.inst_flags & WOPL_Ins_Pseudo4op);
@@ -178,9 +179,14 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
         }
     }
 
-    m_setup.HighTremoloMode = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
-    m_setup.HighVibratoMode = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;
-    m_setup.VolumeModel     = wopl->volume_model;
+    opl.dynamic_bank_setup.adLibPercussions = false;
+    opl.dynamic_bank_setup.scaleModulators = false;
+    opl.dynamic_bank_setup.deepTremolo = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
+    opl.dynamic_bank_setup.deepVibrato = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;
+    opl.dynamic_bank_setup.volumeModel = wopl->volume_model;
+    m_setup.HighTremoloMode = -1;
+    m_setup.HighVibratoMode = -1;
+    m_setup.VolumeModel = ADLMIDI_VolumeModels::ADLMIDI_VolumeModel_AUTO;
 
     /* TODO: Avoid memory reallocation in nearest future! */
     opl.dynamic_melodic_banks.clear();

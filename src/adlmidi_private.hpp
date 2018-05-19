@@ -229,6 +229,7 @@ private:
     typedef BasicBankMap<size_t> BankMap;
     BankMap dynamic_melodic_banks;
     BankMap dynamic_percussion_banks;
+    AdlBankSetup dynamic_bank_setup;
     const unsigned  DynamicInstrumentTag /* = 0x8000u*/,
                     DynamicMetaInstrumentTag /* = 0x4000000u*/;
     adlinsdata2         GetAdlMetaIns(size_t n);

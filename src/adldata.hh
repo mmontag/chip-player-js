@@ -47,14 +47,14 @@ enum { adlDefaultNumber = 189 };
 
 extern const struct adlinsdata
 {
-    enum { Flag_Pseudo4op = 0x01, Flag_NoSound = 0x02 };
+    enum { Flag_Pseudo4op = 0x01, Flag_NoSound = 0x02, Flag_Real4op = 0x04 };
 
     uint16_t    adlno1, adlno2;
     uint8_t     tone;
     uint8_t     flags;
     uint16_t    ms_sound_kon;  // Number of milliseconds it produces sound;
     uint16_t    ms_sound_koff;
-    double voice2_fine_tune;
+    double      voice2_fine_tune;
 } adlins[];
 ADLDATA_BYTE_COMPARABLE(struct adlinsdata)
 int maxAdlBanks();
@@ -71,7 +71,7 @@ struct adlinsdata2
     uint8_t     flags;
     uint16_t    ms_sound_kon;  // Number of milliseconds it produces sound;
     uint16_t    ms_sound_koff;
-    double voice2_fine_tune;
+    double      voice2_fine_tune;
     adlinsdata2() {}
     explicit adlinsdata2(const adlinsdata &d);
 };

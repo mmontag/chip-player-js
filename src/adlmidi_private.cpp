@@ -39,13 +39,13 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
             size_t div = (a >= play->opl.dynamic_percussion_offset) ? 1 : 0;
             ++n_total[div];
             adlinsdata2 &ins = play->opl.dynamic_metainstruments[a];
-            if((ins.adl[0] != ins.adl[1]) && ((ins.flags & adlinsdata::Flag_Pseudo4op) == 0))
+            if(ins.flags & adlinsdata::Flag_Real4op)
                 ++n_fourop[div];
         }
 
-        play->m_setup.NumFourOps =
-                (n_fourop[0] >= 128 * 7 / 8) ? play->m_setup.NumCards * 6
-                : (n_fourop[0] < 128 * 1 / 8) ? (n_fourop[1] > 0 ? 4 : 0)
+        play->m_setup.NumFourOps = ((n_fourop[0] == 0) && (n_fourop[1] == 0)) ? 0
+                : (n_fourop[0] >= (128 * 7) / 8) ? play->m_setup.NumCards * 6
+                : (n_fourop[0] < (128 * 1) / 8) ? (n_fourop[1] > 0 ? 4 : 0)
                 : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
     }
     else
@@ -58,13 +58,13 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
                 continue;
             ++n_total[a / 128];
             adlinsdata2 ins(adlins[insno]);
-            if((ins.adl[0] != ins.adl[1]) && ((ins.flags & adlinsdata::Flag_Pseudo4op) == 0))
+            if(ins.flags & adlinsdata::Flag_Real4op)
                 ++n_fourop[a / 128];
         }
 
-        play->m_setup.NumFourOps =
-                (n_fourop[0] >= (n_total[0] % 128) * 7 / 8) ? play->m_setup.NumCards * 6
-                : (n_fourop[0] < (n_total[0] % 128) * 1 / 8) ? 0
+        play->m_setup.NumFourOps = ((n_fourop[0] == 0) && (n_fourop[1] == 0)) ? 0
+                : (n_fourop[0] >= ((n_total[0] % 128) * 7) / 8) ? play->m_setup.NumCards * 6
+                : (n_fourop[0] < ((n_total[0] % 128) * 1) / 8) ? 0
                 : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
     }
 
@@ -80,4 +80,3 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
 
     return 0;
 }
-
