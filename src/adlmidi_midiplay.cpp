@@ -1822,6 +1822,14 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t **pptr, uint8_t *end, int &stat
         evt.subtype = evtype;
         evt.data.insert(evt.data.begin(), data.begin(), data.end());
 
+#if 0 /* Print all tempo events */
+        if(evt.subtype == MidiEvent::ST_TEMPOCHANGE)
+        {
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "Temp Change: %02X%02X%02X", evt.data[0], evt.data[1], evt.data[2]);
+        }
+#endif
+
         /* TODO: Store those meta-strings separately and give ability to read them
          * by external functions (to display song title and copyright in the player) */
         if(evt.subtype == MidiEvent::ST_COPYRIGHT)

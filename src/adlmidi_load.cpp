@@ -517,11 +517,8 @@ riffskip:
 
     TrackData.clear();
     TrackData.resize(TrackCount, std::vector<uint8_t>());
-    //CurrentPosition.track.clear();
-    //CurrentPosition.track.resize(TrackCount);
     InvDeltaTicks = fraction<uint64_t>(1, 1000000l * static_cast<uint64_t>(DeltaTicks));
-    //Tempo       = 1000000l * InvDeltaTicks;
-    Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks));
+    Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks) / 2);
     static const unsigned char EndTag[4] = {0xFF, 0x2F, 0x00, 0x00};
     size_t totalGotten = 0;
 
