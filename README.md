@@ -141,6 +141,7 @@ To build that example you will need to have installed SDL2 library.
  * Optimizing the MIDI banks management system for MultiBanks (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
  * Fixed incorrect 4-op counter which is still catch 4-op instruments on 2-op banks
  * Fixed an incorrect processing of auto-flags
+ * Fixed incorrect initial MIDI tempo when MIDI file doesn't includes the tempo event
 
 ## 1.3.2   2018-04-24
  * Added ability to disable MUS and XMI converters
