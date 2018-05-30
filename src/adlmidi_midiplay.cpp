@@ -1246,28 +1246,23 @@ void MIDIplay::realTime_NoteOff(uint8_t channel, uint8_t note)
 void MIDIplay::realTime_NoteAfterTouch(uint8_t channel, uint8_t note, uint8_t atVal)
 {
     channel = channel % 16;
-    MIDIchannel::activenoteiterator
-    i = Ch[channel].activenotes_find(note);
-    if(!i)
+    MIDIchannel::activenoteiterator i = Ch[channel].activenotes_find(note);
+    if(i)
     {
-        // Ignore touch if note is not active
-        return;
+        i->vol = 127 - atVal;
+        NoteUpdate(channel, i, Upd_Volume);
     }
-    i->vol = 127 - atVal;
-    NoteUpdate(channel, i, Upd_Volume);
 }
 
 void MIDIplay::realTime_ChannelAfterTouch(uint8_t channel, uint8_t atVal)
 {
     // TODO: Verify, is this correct action?
     channel = channel % 16;
-    for(MIDIchannel::activenoteiterator
-        i = Ch[channel].activenotes_begin(); i; ++i)
+    for(MIDIchannel::activenoteiterator i = Ch[channel].activenotes_begin(); i; ++i)
     {
         // Set this pressure to all active notes on the channel
         i->vol = 127 - atVal;
     }
-
     NoteUpdate_All(channel, Upd_Volume);
 }
 
@@ -1964,9 +1959,16 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t **pptr, uint8_t *end, int &stat
         evt.data.push_back(*(ptr++));
         evt.data.push_back(*(ptr++));
 
-        if((evType == MidiEvent::T_NOTEON) && (evt.data[1] == 0))
+        /* TODO: Implement conversion of RSXX's note volumes out of synthesizer */
+        /*if((opl.m_musicMode == OPL3::MODE_RSXX) && (evType == MidiEvent::T_NOTEON) && (evt.data[1] != 0))
+        {
+            //NOT WORKING YET
+            evt.type = MidiEvent::T_NOTETOUCH;
+        }
+        else */if((evType == MidiEvent::T_NOTEON) && (evt.data[1] == 0))
+        {
             evt.type = MidiEvent::T_NOTEOFF; // Note ON with zero velocity is Note OFF!
-        //111'th loopStart controller (RPG Maker and others)
+        } //111'th loopStart controller (RPG Maker and others)
         else if((evType == MidiEvent::T_CTRLCHANGE) && (evt.data[0] == 111))
         {
             //Change event type to custom Loop Start event and clear data
