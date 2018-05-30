@@ -251,8 +251,8 @@ public:
     bool AdlPercussionMode;
     //! Carriers-only are scaled by default by volume level. This flag will tell to scale modulators too.
     bool ScaleModulators;
-    //! Required to play CMF files. Can be turned on by using of "CMF" volume model
-    bool LogarithmicVolumes;
+    // ! Required to play CMF files. Can be turned on by using of "CMF" volume model
+    //bool LogarithmicVolumes; //[REPLACED WITH "m_volumeScale == VOLUME_NATIVE", DEPRECATED!!!]
     // ! Required to play EA-MUS files [REPLACED WITH "m_musicMode", DEPRECATED!!!]
     //bool CartoonersVolumes;
     enum MusicMode
@@ -268,7 +268,7 @@ public:
     enum VolumesScale
     {
         VOLUME_Generic,
-        VOLUME_CMF,
+        VOLUME_NATIVE,
         VOLUME_DMX,
         VOLUME_APOGEE,
         VOLUME_9X

@@ -221,12 +221,14 @@ ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
     play->m_setup.loopingIsEnabled = (loopEn != 0);
 }
 
+/* !!!DEPRECATED!!! */
 ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol)
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.LogarithmicVolumes = logvol;
-    play->opl.LogarithmicVolumes = play->m_setup.LogarithmicVolumes;
+    if(play->m_setup.LogarithmicVolumes)
+        play->opl.ChangeVolumeRangesModel(ADLMIDI_VolumeModel_NativeOPL3);
 }
 
 ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel)

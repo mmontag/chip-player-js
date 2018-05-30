@@ -165,8 +165,6 @@ OPL3::OPL3() :
     HighTremoloMode(false),
     HighVibratoMode(false),
     AdlPercussionMode(false),
-    LogarithmicVolumes(false),
-    //CartoonersVolumes(false),
     m_musicMode(MODE_MIDI),
     m_volumeScale(VOLUME_Generic)
 {}
@@ -476,9 +474,8 @@ void OPL3::ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel)
         m_volumeScale = OPL3::VOLUME_Generic;
         break;
 
-    case ADLMIDI_VolumeModel_CMF:
-        LogarithmicVolumes = true;
-        m_volumeScale = OPL3::VOLUME_CMF;
+    case ADLMIDI_VolumeModel_NativeOPL3:
+        m_volumeScale = OPL3::VOLUME_NATIVE;
         break;
 
     case ADLMIDI_VolumeModel_DMX:

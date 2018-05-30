@@ -756,8 +756,8 @@ void MIDIplay::applySetup()
     opl.ScaleModulators     = m_setup.ScaleModulators < 0 ?
                 opl.dynamic_bank_setup.scaleModulators :
                 (bool)m_setup.ScaleModulators;
-    opl.LogarithmicVolumes  = m_setup.LogarithmicVolumes;
-    //opl.CartoonersVolumes = false;
+    if(m_setup.LogarithmicVolumes)
+        opl.ChangeVolumeRangesModel(ADLMIDI_VolumeModel_NativeOPL3);
     opl.m_musicMode = OPL3::MODE_MIDI;
     opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(m_setup.VolumeModel));
     if(m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)//Use bank default volume model
@@ -1555,8 +1555,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 
             switch(opl.m_volumeScale)
             {
+
             case OPL3::VOLUME_Generic:
-            case OPL3::VOLUME_CMF:
             {
                 volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
 
@@ -1569,17 +1569,21 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                      */
                 //volume = (int)(volume * std::sqrt( (double) ch[c].users.size() ));
 
-                if(opl.LogarithmicVolumes)
-                    volume = volume * 127 / (127 * 127 * 127) / 2;
-                else
-                {
-                    // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-                    volume = volume > 8725 ? static_cast<uint32_t>(std::log(static_cast<double>(volume)) * 11.541561 + (0.5 - 104.22845)) : 0;
-                    // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
-                    //opl.Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
-                }
+                // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
+                volume = volume > 8725 ? static_cast<uint32_t>(std::log(static_cast<double>(volume)) * 11.541561 + (0.5 - 104.22845)) : 0;
+                // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
+                //opl.Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
+
                 opl.Touch_Real(c, volume, brightness);
                 //opl.Touch(c, volume);
+            }
+            break;
+
+            case OPL3::VOLUME_NATIVE:
+            {
+                volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
+                volume = volume * 127 / (127 * 127 * 127) / 2;
+                opl.Touch_Real(c, volume, brightness);
             }
             break;
 
@@ -2588,7 +2592,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::FindAdlList()
 ADLMIDI_EXPORT void AdlInstrumentTester::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
 {
     OPL3 *opl = P->opl;
-    if(opl->LogarithmicVolumes)
+    if(opl->m_volumeScale == OPL3::VOLUME_NATIVE)
         opl->Touch_Real(c, volume * 127 / (127 * 127 * 127) / 2);
     else
     {

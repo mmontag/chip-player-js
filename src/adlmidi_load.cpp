@@ -438,10 +438,9 @@ riffskip:
         DeltaTicks = (size_t)ticks;
         opl.AdlBank    = ~0u; // Ignore AdlBank number, use dynamic banks instead
         //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
-        opl.LogarithmicVolumes = true;
         opl.AdlPercussionMode = true;
         opl.m_musicMode = OPL3::MODE_CMF;
-        opl.m_volumeScale = OPL3::VOLUME_CMF;
+        opl.m_volumeScale = OPL3::VOLUME_NATIVE;
     }
     else
     {
@@ -456,10 +455,9 @@ riffskip:
                 fr.seek(0x7D, SEEK_SET);
                 TrackCount = 1;
                 DeltaTicks = 60;
-                opl.LogarithmicVolumes = true;
                 //opl.CartoonersVolumes = true;
                 opl.m_musicMode = OPL3::MODE_RSXX;
-                opl.m_volumeScale = OPL3::VOLUME_CMF;
+                opl.m_volumeScale = OPL3::VOLUME_NATIVE;
             }
         }
 
@@ -518,7 +516,10 @@ riffskip:
     TrackData.clear();
     TrackData.resize(TrackCount, std::vector<uint8_t>());
     InvDeltaTicks = fraction<uint64_t>(1, 1000000l * static_cast<uint64_t>(DeltaTicks));
-    Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks) * 2);
+    if(is_CMF || is_RSXX)
+        Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks));
+    else
+        Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks) * 2);
     static const unsigned char EndTag[4] = {0xFF, 0x2F, 0x00, 0x00};
     size_t totalGotten = 0;
 

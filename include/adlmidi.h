@@ -30,7 +30,7 @@ extern "C" {
 
 #define ADLMIDI_VERSION_MAJOR       1
 #define ADLMIDI_VERSION_MINOR       3
-#define ADLMIDI_VERSION_PATCHLEVEL  2
+#define ADLMIDI_VERSION_PATCHLEVEL  3
 
 #define ADLMIDI_TOSTR_I(s) #s
 #define ADLMIDI_TOSTR(s) ADLMIDI_TOSTR_I(s)
@@ -58,11 +58,12 @@ typedef short           ADL_SInt16;
 enum ADLMIDI_VolumeModels
 {
     ADLMIDI_VolumeModel_AUTO = 0,
-    ADLMIDI_VolumeModel_Generic,
-    ADLMIDI_VolumeModel_CMF,
-    ADLMIDI_VolumeModel_DMX,
-    ADLMIDI_VolumeModel_APOGEE,
-    ADLMIDI_VolumeModel_9X
+    ADLMIDI_VolumeModel_Generic = 1,
+    ADLMIDI_VolumeModel_NativeOPL3 = 2,
+    ADLMIDI_VolumeModel_CMF = ADLMIDI_VolumeModel_NativeOPL3,
+    ADLMIDI_VolumeModel_DMX = 3,
+    ADLMIDI_VolumeModel_APOGEE = 4,
+    ADLMIDI_VolumeModel_9X = 5
 };
 
 enum ADLMIDI_SampleType
@@ -141,7 +142,7 @@ extern void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_bri
 /*Enable or disable built-in loop (built-in loop supports 'loopStart' and 'loopEnd' tags to loop specific part)*/
 extern void adl_setLoopEnabled(struct ADL_MIDIPlayer *device, int loopEn);
 
-/*Enable or disable Logariphmic volume changer */
+/* !!!DEPRECATED!!! Enable or disable Logariphmic volume changer */
 extern void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol);
 
 /*Set different volume range model */
