@@ -1258,8 +1258,16 @@ void MIDIplay::realTime_NoteAfterTouch(uint8_t channel, uint8_t note, uint8_t at
     {
         i->vibrato = atVal;
     }
-    chan.noteAftertouch[note % 128] = atVal;
-    chan.noteAfterTouchInUse = (std::memcmp(chan.noteAftertouch, chan.noteAftertouch_Zero, 128) != 0);
+
+    uint8_t oldAtVal = chan.noteAftertouch[note % 128];
+    if(atVal != oldAtVal)
+    {
+        chan.noteAftertouch[note % 128] = atVal;
+        bool inUse = atVal != 0;
+        for(unsigned n = 0; !inUse && n < 128; ++n)
+            inUse = chan.noteAftertouch[n] != 0;
+        chan.noteAfterTouchInUse = inUse;
+    }
 }
 
 void MIDIplay::realTime_ChannelAfterTouch(uint8_t channel, uint8_t atVal)

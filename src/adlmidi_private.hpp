@@ -508,8 +508,6 @@ public:
         uint8_t panning, vibrato, aftertouch, sustain;
         //! Per note Aftertouch values
         uint8_t noteAftertouch[128];
-        //! Zero-filled array. Is used to compare with note aftertouch range
-        uint8_t noteAftertouch_Zero[128];
         //! Is note aftertouch has any non-zero value
         bool    noteAfterTouchInUse;
         char ____padding[6];
@@ -717,7 +715,6 @@ public:
             vibrato = 0;
             aftertouch = 0;
             std::memset(noteAftertouch, 0, 128);
-            std::memset(noteAftertouch_Zero, 0, 128);
             noteAfterTouchInUse = false;
             vibspeed = 2 * 3.141592653 * 5.0;
             vibdepth = 0.5 / 127;
