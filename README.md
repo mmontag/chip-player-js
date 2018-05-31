@@ -143,6 +143,8 @@ To build that example you will need to have installed SDL2 library.
  * Fixed an incorrect processing of auto-flags
  * Fixed incorrect initial MIDI tempo when MIDI file doesn't includes the tempo event
  * Channel and Note Aftertouch features are now supported correctly! Aftertouch is the tremolo / vibrato, NOT A VOLUME!
+ * Updated DosBox OPL3 emulator up to r4111 of official DosBox trunk
+ * The automatical choosing of 4 operator channels count has been improved
 
 ## 1.3.2   2018-04-24
  * Added ability to disable MUS and XMI converters
