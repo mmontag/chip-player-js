@@ -977,7 +977,7 @@ void MIDIplay::realTime_ResetState()
 bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
     if(note >= 128)
-        note = 128;
+        note = 127;
 
     if((opl.m_musicMode == OPL3::MODE_RSXX) && (velocity != 0))
     {
