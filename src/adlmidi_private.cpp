@@ -61,10 +61,25 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
         }
     }
 
+    unsigned NumFourOps = 0;
+    // All 2ops (no 4ops)
+    if((n_fourop[0] == 0) && (n_fourop[1] == 0))
+        NumFourOps = 0;
+    // All 2op melodics and Some (or All) 4op drums
+    else if((n_fourop[0] == 0) && (n_fourop[1] > 0))
+        NumFourOps = (play->m_setup.NumCards == 1) ? 2 : play->m_setup.NumCards * 4;
+    // Many 4op melodics
+    else if((n_fourop[0] >= (n_total[0] * 7) / 8))
+        NumFourOps = play->m_setup.NumCards * 6;
+    // Few 4op melodics
+    else if(n_fourop[0] > 0)
+        NumFourOps = play->m_setup.NumCards * 4;
+
+/* //Old formula
     unsigned NumFourOps = ((n_fourop[0] == 0) && (n_fourop[1] == 0)) ? 0
         : (n_fourop[0] >= (n_total[0] * 7) / 8) ? play->m_setup.NumCards * 6
-        : (n_fourop[0] < (n_total[0] * 1) / 8) ? 0
         : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
+*/
 
     play->opl.NumFourOps = play->m_setup.NumFourOps = NumFourOps;
 
