@@ -976,6 +976,9 @@ void MIDIplay::realTime_ResetState()
 
 bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
+    if(note >= 128)
+        note = 128;
+
     if((opl.m_musicMode == OPL3::MODE_RSXX) && (velocity != 0))
     {
         // Check if this is just a note after-touch
@@ -998,14 +1001,16 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if(velocity == 0)
         return false;
 
-    size_t midiins = Ch[channel].patch;
+    MIDIchannel &midiChan = Ch[channel];
+
+    size_t midiins = midiChan.patch;
     bool isPercussion = (channel  % 16 == 9);
     bool isXgPercussion = false;
 
     uint16_t bank = 0;
-    if(Ch[channel].bank_msb || Ch[channel].bank_lsb)
+    if(midiChan.bank_msb || midiChan.bank_lsb)
     {
-        bank = (uint16_t(Ch[channel].bank_msb) * 256) + uint16_t(Ch[channel].bank_lsb);
+        bank = (uint16_t(midiChan.bank_msb) * 256) + uint16_t(midiChan.bank_lsb);
         //0x7E00 - XG SFX1/SFX2 channel (16128 signed decimal)
         //0x7F00 - XG Percussion channel (16256 signed decimal)
         if(bank == 0x7E00 || bank == 0x7F00)
@@ -1086,7 +1091,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                 }
             }
             bank = 0;
-            midiins = Ch[channel].patch;
+            midiins = midiChan.patch;
             meta    = opl.GetAdlMetaNumber(midiins);
             ains    = opl.GetAdlMetaIns(meta);
         }
@@ -1199,7 +1204,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             if(hooks.onDebugMessage)
                 hooks.onDebugMessage(hooks.onDebugMessage_userData,
                                      "ignored unplaceable note [bank %i, inst %i, note %i, MIDI channel %i]",
-                                     bank, Ch[channel].patch, note, channel);
+                                     bank, midiChan.patch, note, channel);
             continue; // Could not play this note. Ignore it.
         }
 
@@ -1218,8 +1223,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     // Allocate active note for MIDI channel
     std::pair<MIDIchannel::activenoteiterator, bool>
-    ir = Ch[channel].activenotes_insert(note);
+    ir = midiChan.activenotes_insert(note);
     ir.first->vol     = velocity;
+    ir.first->vibrato = midiChan.noteAftertouch[note];
     ir.first->tone    = tone;
     ir.first->midiins = midiins;
     ir.first->insmeta = meta;
@@ -1246,24 +1252,20 @@ void MIDIplay::realTime_NoteOff(uint8_t channel, uint8_t note)
 void MIDIplay::realTime_NoteAfterTouch(uint8_t channel, uint8_t note, uint8_t atVal)
 {
     channel = channel % 16;
+    MIDIchannel &chan = Ch[channel];
     MIDIchannel::activenoteiterator i = Ch[channel].activenotes_find(note);
     if(i)
     {
-        i->vol = 127 - atVal;
-        NoteUpdate(channel, i, Upd_Volume);
+        i->vibrato = atVal;
     }
+    chan.noteAftertouch[note % 128] = atVal;
+    chan.noteAfterTouchInUse = (std::memcmp(chan.noteAftertouch, chan.noteAftertouch_Zero, 128) != 0);
 }
 
 void MIDIplay::realTime_ChannelAfterTouch(uint8_t channel, uint8_t atVal)
 {
-    // TODO: Verify, is this correct action?
     channel = channel % 16;
-    for(MIDIchannel::activenoteiterator i = Ch[channel].activenotes_begin(); i; ++i)
-    {
-        // Set this pressure to all active notes on the channel
-        i->vol = 127 - atVal;
-    }
-    NoteUpdate_All(channel, Upd_Volume);
+    Ch[channel].aftertouch = atVal;
 }
 
 void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
@@ -1633,14 +1635,16 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             {
                 double bend = Ch[MidCh].bend + ins.ains.finetune;
                 double phase = 0.0;
+                uint8_t vibrato = std::max(Ch[MidCh].vibrato, Ch[MidCh].aftertouch);
+                vibrato = std::max(vibrato, i->vibrato);
 
                 if((ains.flags & adlinsdata::Flag_Pseudo4op) && ins.pseudo4op)
                 {
                     phase = ains.voice2_fine_tune;//0.125; // Detune the note slightly (this is what Doom does)
                 }
 
-                if(Ch[MidCh].vibrato && (!d || d->vibdelay >= Ch[MidCh].vibdelay))
-                    bend += Ch[MidCh].vibrato * Ch[MidCh].vibdepth * std::sin(Ch[MidCh].vibpos);
+                if(vibrato && (!d || d->vibdelay >= Ch[MidCh].vibdelay))
+                    bend += static_cast<double>(vibrato) * Ch[MidCh].vibdepth * std::sin(Ch[MidCh].vibpos);
 
                 #ifdef ADLMIDI_USE_DOSBOX_OPL
 #define BEND_COEFFICIENT 172.00093
@@ -2453,7 +2457,7 @@ void MIDIplay::UpdateVibrato(double amount)
 {
     for(size_t a = 0, b = Ch.size(); a < b; ++a)
     {
-        if(Ch[a].vibrato && !Ch[a].activenotes_empty())
+        if(Ch[a].hasVibrato() && !Ch[a].activenotes_empty())
         {
             NoteUpdate_All(static_cast<uint16_t>(a), Upd_Pitch);
             Ch[a].vibpos += amount * Ch[a].vibspeed;
