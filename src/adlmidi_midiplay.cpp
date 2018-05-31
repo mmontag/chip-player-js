@@ -25,7 +25,7 @@
 
 // Mapping from MIDI volume level to OPL level value.
 
-static const uint32_t DMX_volume_mapping_table[] =
+static const uint8_t DMX_volume_mapping_table[128] =
 {
     0,  1,  3,  5,  6,  8,  10, 11,
     13, 14, 16, 17, 19, 20, 22, 23,
@@ -43,23 +43,6 @@ static const uint32_t DMX_volume_mapping_table[] =
     116, 117, 117, 118, 118, 119, 119, 120,
     120, 121, 121, 122, 122, 123, 123, 123,
     124, 124, 125, 125, 126, 126, 127, 127,
-    //Protection entries to avoid crash if value more than 127
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
-    127, 127, 127, 127, 127, 127, 127, 127,
 };
 
 static const uint8_t W9X_volume_mapping_table[32] =
@@ -1596,7 +1579,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             {
                 volume = 2 * ((Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 16129) + 1;
                 //volume = 2 * (Ch[MidCh].volume) + 1;
-                volume = (DMX_volume_mapping_table[vol] * volume) >> 9;
+                volume = (DMX_volume_mapping_table[(vol < 128) ? vol : 127] * volume) >> 9;
                 opl.Touch_Real(c, volume, brightness);
             }
             break;
