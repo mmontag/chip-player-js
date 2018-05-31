@@ -7,12 +7,12 @@ MComponent
 0
 2
 WString
-4
-NEXE
+3
+EXE
 3
 WString
 5
-nc2en
+dr2en
 1
 0
 1
@@ -28,8 +28,8 @@ MItem
 playmidi.exe
 7
 WString
-4
-NEXE
+3
+EXE
 8
 WVList
 2
@@ -196,12 +196,12 @@ WCC
 53
 WString
 25
-n????Include directories:
+d????Include directories:
 1
 54
 WString
-47
-"$(%watcom)/h;$(%watcom)/h/nt"  "../../include"
+31
+"$(%watcom)/h"  "../../include"
 0
 55
 WVList
@@ -248,12 +248,12 @@ WPP
 65
 WString
 25
-n????Include directories:
+d????Include directories:
 1
 66
 WString
-47
-"$(%watcom)/h;$(%watcom)/h/nt"  "../../include"
+30
+"$(%watcom)/h" "../../include"
 0
 67
 MVState

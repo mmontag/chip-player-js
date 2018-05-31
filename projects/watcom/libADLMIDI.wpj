@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
--32
+-8
 260
-10304
-9710
+10288
+9680
 2
 MProject
 3
@@ -43,7 +43,7 @@ WFileName
 11
 ADLMIDI.tgt
 0
-17
+10
 11
 VComponent
 12
@@ -60,4 +60,4 @@ WFileName
 playmidi.tgt
 0
 3
-8
+11
