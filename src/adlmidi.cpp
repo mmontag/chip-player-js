@@ -616,7 +616,7 @@ ADLMIDI_EXPORT void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_D
     play->hooks.onDebugMessage_userData = userData;
 }
 
-
+#ifndef ADLMIDI_HW_OPL
 template <class Dst>
 static void CopySamplesRaw(ADL_UInt8 *dstLeft, ADL_UInt8 *dstRight, const int32_t *src,
                            size_t frameCount, unsigned sampleOffset)
@@ -748,7 +748,7 @@ static int SendStereoAudio(int        samples_requested,
 
     return 0;
 }
-
+#endif
 
 ADLMIDI_EXPORT int adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short *out)
 {
