@@ -186,7 +186,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
     opl.dynamic_bank_setup.volumeModel = wopl->volume_model;
     m_setup.HighTremoloMode = -1;
     m_setup.HighVibratoMode = -1;
-    m_setup.VolumeModel = ADLMIDI_VolumeModels::ADLMIDI_VolumeModel_AUTO;
+    m_setup.VolumeModel = ADLMIDI_VolumeModel_AUTO;
 
     /* TODO: Avoid memory reallocation in nearest future! */
     opl.dynamic_melodic_banks.clear();
