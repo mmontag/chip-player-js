@@ -274,10 +274,9 @@ struct Handler {
 	Bit32u WriteAddr( Bit32u port, Bit8u val );
 	void WriteReg( Bit32u addr, Bit8u val );
 	void GenerateArr(Bit32s *out, Bitu *samples);
-	void GenerateArr(Bit32s *out, ssize_t *samples);
-	void GenerateArr(Bit16s *out, ssize_t *samples);
-	void GenerateArrMix(Bit32s *out, ssize_t *samples);
-	void GenerateArrMix(Bit16s *out, ssize_t *samples);
+	void GenerateArr(Bit16s *out, Bitu *samples);
+	void GenerateArrMix(Bit32s *out, Bitu *samples);
+	void GenerateArrMix(Bit16s *out, Bitu *samples);
 	void Init( Bitu rate );
 };
 
