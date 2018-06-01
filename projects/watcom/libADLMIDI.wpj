@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
--8
+-32
 260
-10288
-9680
+10304
+9710
 2
 MProject
 3
@@ -48,8 +48,8 @@ ADLMIDI.tgt
 VComponent
 12
 WRect
-3752
-3250
+2928
+1060
 5712
 4360
 0
