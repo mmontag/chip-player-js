@@ -12,7 +12,7 @@ LIB
 3
 WString
 5
-d_2sn
+x_2sn
 1
 0
 1
@@ -24,8 +24,8 @@ MCommand
 0
 6
 MItem
-11
-ADLMIDI.lib
+19
+ADLMIDI-linux32.lib
 7
 WString
 3
@@ -59,7 +59,7 @@ WString
 15
 WString
 4
-4096
+1024
 0
 16
 WVList
@@ -100,12 +100,12 @@ WCC
 26
 WString
 25
-d????Include directories:
+x????Include directories:
 1
 27
 WString
-30
-"$(%watcom)/h" "../../include"
+31
+"$(%watcom)/lh" "../../include"
 0
 28
 MRState
@@ -257,12 +257,12 @@ WPP
 63
 WString
 25
-d????Include directories:
+x????Include directories:
 1
 64
 WString
-30
-"$(%watcom)/h" "../../include"
+31
+"$(%watcom)/lh" "../../include"
 0
 65
 MVState

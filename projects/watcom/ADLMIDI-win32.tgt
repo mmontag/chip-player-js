@@ -7,12 +7,12 @@ MComponent
 0
 2
 WString
-3
-LIB
+4
+NDLL
 3
 WString
 5
-d_2sn
+n_2dn
 1
 0
 1
@@ -24,12 +24,12 @@ MCommand
 0
 6
 MItem
-11
-ADLMIDI.lib
+17
+ADLMIDI-win32.dll
 7
 WString
-3
-LIB
+4
+NDLL
 8
 WVList
 2
@@ -59,7 +59,7 @@ WString
 15
 WString
 4
-4096
+1024
 0
 16
 WVList
@@ -100,12 +100,12 @@ WCC
 26
 WString
 25
-d????Include directories:
+n????Include directories:
 1
 27
 WString
-30
-"$(%watcom)/h" "../../include"
+47
+"$(%watcom)/h;$(%watcom)/h/nt"  "../../include"
 0
 28
 MRState
@@ -257,12 +257,12 @@ WPP
 63
 WString
 25
-d????Include directories:
+n????Include directories:
 1
 64
 WString
-30
-"$(%watcom)/h" "../../include"
+47
+"$(%watcom)/h;$(%watcom)/h/nt"  "../../include"
 0
 65
 MVState
