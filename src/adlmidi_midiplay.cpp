@@ -2651,7 +2651,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextGM(int offset)
 
 ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
 {
-    OPL3 *opl = P->opl;
+    //OPL3 *opl = P->opl;
     if(P->adl_ins_list.empty()) FindAdlList();
     const unsigned NumBanks = (unsigned)adl_getBanksCount();
     P->ins_idx = (uint32_t)((int32_t)P->ins_idx + (int32_t)P->adl_ins_list.size() + offset) % P->adl_ins_list.size();

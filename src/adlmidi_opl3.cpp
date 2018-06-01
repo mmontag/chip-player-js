@@ -135,7 +135,7 @@ void OPL3::setEmbeddedBank(unsigned int bank)
     //Embedded banks are supports 128:128 GM set only
     dynamic_banks.clear();
 
-    if(bank >= maxAdlBanks())
+    if(bank >= static_cast<unsigned int>(maxAdlBanks()))
         return;
 
     Bank *bank_pair[2] =
