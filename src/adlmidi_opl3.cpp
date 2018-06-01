@@ -178,33 +178,7 @@ OPL3::OPL3() :
 #endif
 }
 
-void OPL3::Poke(size_t card, uint32_t index, uint32_t value)
-{
-    #ifdef ADLMIDI_HW_OPL
-    (void)card;
-    unsigned o = index >> 8;
-    unsigned port = OPLBase + o * 2;
-
-    #ifdef __DJGPP__
-    outportb(port, index);
-    for(unsigned c = 0; c < 6; ++c) inportb(port);
-    outportb(port + 1, value);
-    for(unsigned c = 0; c < 35; ++c) inportb(port);
-    #endif//__DJGPP__
-
-    #ifdef __WATCOMC__
-    outp(port, index);
-    for(uint16_t c = 0; c < 6; ++c)  inp(port);
-    outp(port + 1, value);
-    for(uint16_t c = 0; c < 35; ++c) inp(port);
-    #endif//__WATCOMC__
-
-    #else//ADLMIDI_HW_OPL
-    cardsOP2[card]->writeReg(static_cast<uint16_t>(index), static_cast<uint8_t>(value));
-    #endif//ADLMIDI_HW_OPL
-}
-
-void OPL3::PokeN(size_t card, uint16_t index, uint8_t value)
+void OPL3::Poke(size_t card, uint16_t index, uint8_t value)
 {
     #ifdef ADLMIDI_HW_OPL
     (void)card;
@@ -569,7 +543,7 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE)
 
         for(unsigned a = 0; a < 18; ++a) Poke(i, 0xB0 + Channels[a], 0x00);
         for(unsigned a = 0; a < sizeof(data) / sizeof(*data); a += 2)
-            PokeN(i, data[a], static_cast<uint8_t>(data[a + 1]));
+            Poke(i, data[a], static_cast<uint8_t>(data[a + 1]));
         Poke(i, 0x0BD, regBD[i] = (HighTremoloMode * 0x80
                                  + HighVibratoMode * 0x40
                                  + AdlPercussionMode * 0x20));

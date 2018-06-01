@@ -2066,7 +2066,7 @@ void MIDIplay::HandleEvent(size_t tk, const MIDIplay::MidiEvent &evt, int &statu
                 v |= 0x30;
             //std::printf("OPL poke %02X, %02X\n", i, v);
             //std::fflush(stdout);
-            opl.PokeN(0, i, v);
+            opl.Poke(0, i, v);
             return;
         }
 

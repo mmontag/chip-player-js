@@ -281,8 +281,7 @@ public:
     // 7 = percussion Hihat
     // 8 = percussion slave
 
-    void Poke(size_t card, uint32_t index, uint32_t value);
-    void PokeN(size_t card, uint16_t index, uint8_t value);
+    void Poke(size_t card, uint16_t index, uint8_t value);
 
     void NoteOff(size_t c);
     void NoteOn(unsigned c, double hertz);
