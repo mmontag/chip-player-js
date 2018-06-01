@@ -205,7 +205,9 @@ void MIDIplay::MidiTrackRow::sortEvents(bool *noteStates)
                             j = noteOffs.erase(j);
                             markAsOn.erase(note_i);
                             continue;
-                        } else {
+                        }
+                        else
+                        {
                             //When same row has many note-offs on same row
                             //that means a zero-length note follows previous note
                             //it must be shuted down
@@ -434,17 +436,17 @@ bool MIDIplay::buildTrackData()
         if(track.empty())
             continue;//Empty track is useless!
 
-        #ifdef DEBUG_TIME_CALCULATION
+#ifdef DEBUG_TIME_CALCULATION
         std::fprintf(stdout, "\n============Track %" PRIuPTR "=============\n", tk);
         std::fflush(stdout);
-        #endif
+#endif
 
         MidiTrackRow *posPrev = &(*(track.begin()));//First element
         for(MidiTrackQueue::iterator it = track.begin(); it != track.end(); it++)
         {
-            #ifdef DEBUG_TIME_CALCULATION
+#ifdef DEBUG_TIME_CALCULATION
             bool tempoChanged = false;
-            #endif
+#endif
             MidiTrackRow &pos = *it;
             if((posPrev != &pos) &&  //Skip first event
                (!tempos.empty()) && //Only when in-track tempo events are available
@@ -490,9 +492,9 @@ bool MIDIplay::buildTrackData()
 
                         //Apply next tempo
                         currentTempo = points[j].tempo;
-                        #ifdef DEBUG_TIME_CALCULATION
+#ifdef DEBUG_TIME_CALCULATION
                         tempoChanged = true;
-                        #endif
+#endif
                     }
                     //Then calculate time between last tempo change point and end point
                     TempoChangePoint tailTempo = points.back();
@@ -535,10 +537,10 @@ bool MIDIplay::buildTrackData()
                     loopEndTime = pos.time;
             }
 
-            #ifdef DEBUG_TIME_CALCULATION
+#ifdef DEBUG_TIME_CALCULATION
             std::fprintf(stdout, "= %10" PRId64 " = %10f%s\n", pos.absPos, pos.time, tempoChanged ? " <----TEMPO CHANGED" : "");
             std::fflush(stdout);
-            #endif
+#endif
 
             abs_position += pos.delay;
             posPrev = &pos;
@@ -558,7 +560,7 @@ bool MIDIplay::buildTrackData()
     //Resolve "hell of all times" of too short drum notes:
     //move too short percussion note-offs far far away as possible
     /********************************************************************************/
-    #if 1 //Use this to record WAVEs for comparison before/after implementing of this
+#if 1 //Use this to record WAVEs for comparison before/after implementing of this
     if(opl.m_musicMode == OPL3::MODE_MIDI)//Percussion fix is needed for MIDI only, not for IMF/RSXX or CMF
     {
         //! Minimal real time in seconds
@@ -608,8 +610,8 @@ bool MIDIplay::buildTrackData()
                     }
 
                     bool percussion = (et->channel == 9) ||
-                            banks[et->channel] == 0x7E00 || //XG SFX1/SFX2 channel (16128 signed decimal)
-                            banks[et->channel] == 0x7F00;   //XG Percussion channel (16256 signed decimal)
+                                      banks[et->channel] == 0x7E00 || //XG SFX1/SFX2 channel (16128 signed decimal)
+                                      banks[et->channel] == 0x7F00;   //XG Percussion channel (16256 signed decimal)
                     if(!percussion)
                         continue;
 
@@ -670,7 +672,7 @@ bool MIDIplay::buildTrackData()
 #undef DRUM_NOTE_MIN_TIME
 #undef DRUM_NOTE_MIN_TICKS
     }
-    #endif
+#endif
 
     return true;
 }
@@ -728,17 +730,17 @@ void MIDIplay::applySetup()
         opl.dynamic_bank_setup = adlbanksetup[m_setup.AdlBank];
 
     opl.HighTremoloMode     = m_setup.HighTremoloMode < 0 ?
-                opl.dynamic_bank_setup.deepTremolo :
-                (bool)m_setup.HighTremoloMode;
+                              opl.dynamic_bank_setup.deepTremolo :
+                              (bool)m_setup.HighTremoloMode;
     opl.HighVibratoMode     = m_setup.HighVibratoMode < 0 ?
-                opl.dynamic_bank_setup.deepVibrato :
-                (bool)m_setup.HighVibratoMode;
+                              opl.dynamic_bank_setup.deepVibrato :
+                              (bool)m_setup.HighVibratoMode;
     opl.AdlPercussionMode   = m_setup.AdlPercussionMode < 0 ?
-                opl.dynamic_bank_setup.adLibPercussions :
-                (bool)m_setup.AdlPercussionMode;
+                              opl.dynamic_bank_setup.adLibPercussions :
+                              (bool)m_setup.AdlPercussionMode;
     opl.ScaleModulators     = m_setup.ScaleModulators < 0 ?
-                opl.dynamic_bank_setup.scaleModulators :
-                (bool)m_setup.ScaleModulators;
+                              opl.dynamic_bank_setup.scaleModulators :
+                              (bool)m_setup.ScaleModulators;
     if(m_setup.LogarithmicVolumes)
         opl.ChangeVolumeRangesModel(ADLMIDI_VolumeModel_NativeOPL3);
     opl.m_musicMode = OPL3::MODE_MIDI;
@@ -791,9 +793,9 @@ uint64_t MIDIplay::ReadVarLenEx(uint8_t **ptr, uint8_t *end, bool &ok)
 double MIDIplay::Tick(double s, double granularity)
 {
     s *= tempoMultiplier;
-    #ifdef ENABLE_BEGIN_SILENCE_SKIPPING
+#ifdef ENABLE_BEGIN_SILENCE_SKIPPING
     if(CurrentPositionNew.began)
-    #endif
+#endif
         CurrentPositionNew.wait -= s;
     CurrentPositionNew.absTimePosition += s;
 
@@ -822,7 +824,7 @@ double MIDIplay::Tick(double s, double granularity)
 
     return CurrentPositionNew.wait;
 }
-#endif
+#endif /* ADLMIDI_DISABLE_MIDI_SEQUENCER */
 
 void MIDIplay::TickIteratos(double s)
 {
@@ -939,7 +941,7 @@ void MIDIplay::setTempo(double tempo)
 {
     tempoMultiplier = tempo;
 }
-#endif
+#endif /* ADLMIDI_DISABLE_MIDI_SEQUENCER */
 
 void MIDIplay::realTime_ResetState()
 {
@@ -987,7 +989,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     MIDIchannel &midiChan = Ch[channel];
 
     size_t midiins = midiChan.patch;
-    bool isPercussion = (channel  % 16 == 9);
+    bool isPercussion = (channel % 16 == 9);
     bool isXgPercussion = false;
 
     uint16_t bank = 0;
@@ -1030,9 +1032,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         else if(hooks.onDebugMessage)
         {
             std::set<uint16_t> &missing = (isPercussion || isXgPercussion) ?
-                caugh_missing_banks_percussion : caugh_missing_banks_melodic;
+                                          caugh_missing_banks_percussion : caugh_missing_banks_melodic;
             const char *text = (isPercussion || isXgPercussion) ?
-                "percussion" : "melodic";
+                               "percussion" : "melodic";
             if(missing.insert(bank).second)
                 hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Playing missing %s MIDI bank %i (patch %i)", channel, text, bank, midiins);
         }
@@ -1100,7 +1102,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     voices[1].chip_chan = 0;
     voices[1].ains = ains->adl[1];
     voices[1].pseudo4op = pseudo_4op;
-#endif
+#endif /* __WATCOMC__ */
 
     if((opl.AdlPercussionMode == 1) && PercussionMap[midiins & 0xFF])
         voices[1] = voices[0];//i[1] = i[0];
@@ -1456,7 +1458,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
         {
             opl.Patch(c, ins.ains);
             AdlChannel::LocationData *d = ch[c].users_find_or_create(my_loc);
-            if(d) {  // inserts if necessary
+            if(d)    // inserts if necessary
+            {
                 d->sustained = false;
                 d->vibdelay  = 0;
                 d->kon_time_until_neglible = ains.ms_sound_kon;
@@ -1492,7 +1495,9 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                     {
                         opl.Touch_Real(c, 0);
                         ch[c].koff_time_until_neglible = 0;
-                    } else {
+                    }
+                    else
+                    {
                         ch[c].koff_time_until_neglible = ains.ms_sound_koff;
                     }
                 }
@@ -1627,11 +1632,11 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 if(vibrato && (!d || d->vibdelay >= Ch[MidCh].vibdelay))
                     bend += static_cast<double>(vibrato) * Ch[MidCh].vibdepth * std::sin(Ch[MidCh].vibpos);
 
-                #ifdef ADLMIDI_USE_DOSBOX_OPL
-#define BEND_COEFFICIENT 172.00093
-                #else
-#define BEND_COEFFICIENT 172.4387
-                #endif
+#ifdef ADLMIDI_USE_DOSBOX_OPL
+#   define BEND_COEFFICIENT 172.00093
+#else
+#   define BEND_COEFFICIENT 172.4387
+#endif
                 opl.NoteOn(c, BEND_COEFFICIENT * std::exp(0.057762265 * (tone + bend + phase)));
 #undef BEND_COEFFICIENT
                 if(hooks.onNote)
@@ -1656,9 +1661,9 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
     const size_t        TrackCount = CurrentPositionNew.track.size();
     const PositionNew   RowBeginPosition(CurrentPositionNew);
 
-    #ifdef DEBUG_TIME_CALCULATION
+#ifdef DEBUG_TIME_CALCULATION
     double maxTime = 0.0;
-    #endif
+#endif
 
     for(size_t tk = 0; tk < TrackCount; ++tk)
     {
@@ -1676,10 +1681,10 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
             for(size_t i = 0; i < track.pos->events.size(); i++)
             {
                 const MidiEvent &evt = track.pos->events[i];
-                #ifdef ENABLE_BEGIN_SILENCE_SKIPPING
+#ifdef ENABLE_BEGIN_SILENCE_SKIPPING
                 if(!CurrentPositionNew.began && (evt.type == MidiEvent::T_NOTEON))
                     CurrentPositionNew.began = true;
-                #endif
+#endif
                 if(isSeek && (evt.type == MidiEvent::T_NOTEON))
                     continue;
                 HandleEvent(tk, evt, track.status);
@@ -1687,10 +1692,10 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
                     break;//Stop event handling on catching loopEnd event!
             }
 
-            #ifdef DEBUG_TIME_CALCULATION
+#ifdef DEBUG_TIME_CALCULATION
             if(maxTime < track.pos->time)
                 maxTime = track.pos->time;
-            #endif
+#endif
             // Read next event time (unless the track just ended)
             if(track.status >= 0)
             {
@@ -1700,11 +1705,11 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
         }
     }
 
-    #ifdef DEBUG_TIME_CALCULATION
+#ifdef DEBUG_TIME_CALCULATION
     std::fprintf(stdout, "                              \r");
     std::fprintf(stdout, "Time: %10f; Audio: %10f\r", maxTime, CurrentPositionNew.absTimePosition);
     std::fflush(stdout);
-    #endif
+#endif
 
     // Find shortest delay from all track
     uint64_t shortest = 0;
@@ -1728,9 +1733,9 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
 
     fraction<uint64_t> t = shortest * Tempo;
 
-    #ifdef ENABLE_BEGIN_SILENCE_SKIPPING
+#ifdef ENABLE_BEGIN_SILENCE_SKIPPING
     if(CurrentPositionNew.began)
-    #endif
+#endif
         CurrentPositionNew.wait += t.value();
 
     //if(shortest > 0) UI.PrintLn("Delay %ld (%g)", shortest, (double)t.valuel());
@@ -1756,9 +1761,7 @@ bool MIDIplay::ProcessEventsNew(bool isSeek)
 
     return true;//Has events in queue
 }
-#endif
 
-#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t **pptr, uint8_t *end, int &status)
 {
     uint8_t *&ptr = *pptr;
@@ -1977,7 +1980,7 @@ MIDIplay::MidiEvent MIDIplay::parseEvent(uint8_t **pptr, uint8_t *end, int &stat
 
     return evt;
 }
-#endif
+#endif /* ADLMIDI_DISABLE_MIDI_SEQUENCER */
 
 const std::string &MIDIplay::getErrorString()
 {
@@ -2146,7 +2149,7 @@ void MIDIplay::HandleEvent(size_t tk, const MIDIplay::MidiEvent &evt, int &statu
     }
     }
 }
-#endif
+#endif /* ADLMIDI_DISABLE_MIDI_SEQUENCER */
 
 int64_t MIDIplay::CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t) const
 {
@@ -2154,7 +2157,7 @@ int64_t MIDIplay::CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::Not
 
     // Same midi-instrument = some stability
     //if(c == MidCh) s += 4;
-    for (AdlChannel::LocationData *j = ch[c].users_first; j; j = j->next)
+    for(AdlChannel::LocationData *j = ch[c].users_first; j; j = j->next)
     {
         s -= 4000;
 
@@ -2468,9 +2471,9 @@ void MIDIplay::UpdateArpeggio(double) // amount = amount of time passed
 {
     // If there is an adlib channel that has multiple notes
     // simulated on the same channel, arpeggio them.
-    #if 0
+#if 0
     const unsigned desired_arpeggio_rate = 40; // Hz (upper limit)
-    #if 1
+#   if 1
     static unsigned cache = 0;
     amount = amount; // Ignore amount. Assume we get a constant rate.
     cache += MaxSamplesAtTime * desired_arpeggio_rate;
@@ -2478,15 +2481,15 @@ void MIDIplay::UpdateArpeggio(double) // amount = amount of time passed
     if(cache < PCM_RATE) return;
 
     cache %= PCM_RATE;
-    #else
+#   else
     static double arpeggio_cache = 0;
     arpeggio_cache += amount * desired_arpeggio_rate;
 
     if(arpeggio_cache < 1.0) return;
 
     arpeggio_cache = 0.0;
-    #endif
-    #endif
+#   endif
+#endif
     static unsigned arpeggio_counter = 0;
     ++arpeggio_counter;
 
@@ -2510,7 +2513,7 @@ retry_arpeggio:
                 rate_reduction = 1;
 
             for(unsigned count = (arpeggio_counter / rate_reduction) % n_users,
-                     n = 0; n < count; ++n)
+                n = 0; n < count; ++n)
                 i = i->next;
 
             if(i->sustained == false)
@@ -2656,7 +2659,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
     const unsigned NumBanks = (unsigned)adl_getBanksCount();
     P->ins_idx = (uint32_t)((int32_t)P->ins_idx + (int32_t)P->adl_ins_list.size() + offset) % P->adl_ins_list.size();
 
-    #if 0
+#if 0
     UI.Color(15);
     std::fflush(stderr);
     std::printf("SELECTED G%c%d\t%s\n",
@@ -2665,7 +2668,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
     std::fflush(stdout);
     UI.Color(7);
     std::fflush(stderr);
-    #endif
+#endif
 
     for(unsigned a = 0, n = P->adl_ins_list.size(); a < n; ++a)
     {
@@ -2725,9 +2728,9 @@ ADLMIDI_EXPORT bool AdlInstrumentTester::HandleInputChar(char ch)
         NextGM(+1);
         break;
     case 3:
-        #if !((!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__))
+#if !((!defined(__WIN32__) || defined(__CYGWIN__)) && !defined(__DJGPP__))
     case 27:
-        #endif
+#endif
         return false;
     default:
         const char *p = std::strchr(notes, ch);
@@ -2737,7 +2740,7 @@ ADLMIDI_EXPORT bool AdlInstrumentTester::HandleInputChar(char ch)
     return true;
 }
 
-#endif//ADLMIDI_DISABLE_CPP_EXTRAS
+#endif /* ADLMIDI_DISABLE_CPP_EXTRAS */
 
 // Implement the user map data structure.
 
@@ -2777,13 +2780,15 @@ MIDIplay::AdlChannel::LocationData *MIDIplay::AdlChannel::users_allocate()
 MIDIplay::AdlChannel::LocationData *MIDIplay::AdlChannel::users_find_or_create(Location loc)
 {
     LocationData *user = users_find(loc);
-    if(!user) {
+    if(!user)
+    {
         user = users_allocate();
         if(!user)
             return NULL;
         LocationData *prev = user->prev, *next = user->next;
         *user = LocationData();
-        user->prev = prev; user->next = next;
+        user->prev = prev;
+        user->next = next;
         user->loc = loc;
     }
     return user;
@@ -2799,7 +2804,8 @@ MIDIplay::AdlChannel::LocationData *MIDIplay::AdlChannel::users_insert(const Loc
             return NULL;
         LocationData *prev = user->prev, *next = user->next;
         *user = x;
-        user->prev = prev; user->next = next;
+        user->prev = prev;
+        user->next = next;
     }
     return user;
 }
@@ -2834,7 +2840,8 @@ void MIDIplay::AdlChannel::users_assign(const LocationData *users, size_t count)
 {
     ADL_UNUSED(count);//Avoid warning for release builds
     assert(count <= users_max);
-    if(users == users_first && users) {
+    if(users == users_first && users)
+    {
         // self assignment
         assert(users_size == count);
         return;
@@ -2842,17 +2849,20 @@ void MIDIplay::AdlChannel::users_assign(const LocationData *users, size_t count)
     users_clear();
     const LocationData *src_cell = users;
     // move to the last
-    if(src_cell) {
+    if(src_cell)
+    {
         while(src_cell->next)
             src_cell = src_cell->next;
     }
     // push cell copies in reverse order
-    while(src_cell) {
+    while(src_cell)
+    {
         LocationData *dst_cell = users_allocate();
         assert(dst_cell);
         LocationData *prev = dst_cell->prev, *next = dst_cell->next;
         *dst_cell = *src_cell;
-        dst_cell->prev = prev; dst_cell->next = next;
+        dst_cell->prev = prev;
+        dst_cell->next = next;
         src_cell = src_cell->prev;
     }
     assert(users_size == count);
