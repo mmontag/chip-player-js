@@ -1015,6 +1015,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if(isPercussion || isXgPercussion)
         bank += OPL3::PercussionTag;
 
+    const adlinsdata2 *ains = &OPL3::emptyInstrument;
+
     //Set bank bank
     const OPL3::Bank *bnk = NULL;
     if((bank & ~(uint16_t)OPL3::PercussionTag) > 0)
@@ -1023,7 +1025,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         if(b != opl.dynamic_banks.end())
             bnk = &b->second;
 
-        if(!bnk && hooks.onDebugMessage)
+        if(bnk)
+            ains = &bnk->ins[midiins];
+        else if(hooks.onDebugMessage)
         {
             std::set<uint16_t> &missing = (isPercussion || isXgPercussion) ?
                 caugh_missing_banks_percussion : caugh_missing_banks_melodic;
@@ -1034,11 +1038,14 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         }
     }
     //Or fall back to first bank
-    if(!bnk)
+    if(ains->flags & adlinsdata::Flag_NoSound)
     {
-        OPL3::BankMap::iterator b = opl.dynamic_banks.find((bank & OPL3::PercussionTag));
+        OPL3::BankMap::iterator b = opl.dynamic_banks.find(bank & OPL3::PercussionTag);
         if(b != opl.dynamic_banks.end())
             bnk = &b->second;
+
+        if(bnk)
+            ains = &bnk->ins[midiins];
     }
 
     /*
@@ -1050,12 +1057,11 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     //if(midiins == 56) vol = vol*6/10; // HACK
     //int meta = banks[opl.AdlBank][midiins];
 
-    const adlinsdata2 &ains = bnk ? bnk->ins[midiins] : OPL3::emptyInstrument;
     int16_t tone = note;
 
     if(!isPercussion && !isXgPercussion && (bank > 0)) // For non-zero banks
     {
-        if(ains.flags & adlinsdata::Flag_NoSound)
+        if(ains->flags & adlinsdata::Flag_NoSound)
         {
             if(hooks.onDebugMessage)
             {
@@ -1067,32 +1073,32 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         }
     }
 
-    if(ains.tone)
+    if(ains->tone)
     {
-        /*if(ains.tone < 20)
-            tone += ains.tone;
+        /*if(ains->tone < 20)
+            tone += ains->tone;
         else*/
-        if(ains.tone < 128)
-            tone = ains.tone;
+        if(ains->tone < 128)
+            tone = ains->tone;
         else
-            tone -= ains.tone - 128;
+            tone -= ains->tone - 128;
     }
 
-    //uint16_t i[2] = { ains.adlno1, ains.adlno2 };
-    bool pseudo_4op = ains.flags & adlinsdata::Flag_Pseudo4op;
+    //uint16_t i[2] = { ains->adlno1, ains->adlno2 };
+    bool pseudo_4op = ains->flags & adlinsdata::Flag_Pseudo4op;
 #ifndef __WATCOMC__
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans] =
     {
-        {0, ains.adl[0], false},
-        {0, ains.adl[1], pseudo_4op}
+        {0, ains->adl[0], false},
+        {0, ains->adl[1], pseudo_4op}
     };
 #else /* Unfortunately, WatCom can't brace-initialize structure that incluses structure fields */
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans];
     voices[0].chip_chan = 0;
-    voices[0].ains = ains.adl[0];
+    voices[0].ains = ains->adl[0];
     voices[0].pseudo4op = false;
     voices[1].chip_chan = 0;
-    voices[1].ains = ains.adl[1];
+    voices[1].ains = ains->adl[1];
     voices[1].pseudo4op = pseudo_4op;
 #endif
 
@@ -1101,7 +1107,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     if(hooks.onDebugMessage)
     {
-        if((ains.flags & adlinsdata::Flag_NoSound) &&
+        if((ains->flags & adlinsdata::Flag_NoSound) &&
            caugh_missing_instruments.insert(static_cast<uint8_t>(midiins)).second)
             hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Playing missing instrument %i", channel, midiins);
     }
@@ -1196,7 +1202,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     ir.first->vibrato = midiChan.noteAftertouch[note];
     ir.first->tone    = tone;
     ir.first->midiins = midiins;
-    ir.first->ains = &ains;
+    ir.first->ains = ains;
     ir.first->chip_channels_count = 0;
 
     for(unsigned ccount = 0; ccount < MIDIchannel::NoteInfo::MaxNumPhysChans; ++ccount)
