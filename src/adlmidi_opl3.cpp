@@ -129,73 +129,56 @@ static const unsigned short Channels[23] =
     Ports: ???
 */
 
-
-adlinsdata2 OPL3::GetAdlMetaIns(size_t n)
-{
-    return (n & DynamicMetaInstrumentTag) ?
-           dynamic_metainstruments[n & ~DynamicMetaInstrumentTag]
-           : adlinsdata2(adlins[n]);
-}
-
-size_t OPL3::GetAdlMetaNumber(size_t midiins)
-{
-    return (AdlBank == ~0u) ?
-           (midiins | DynamicMetaInstrumentTag)
-           : banks[AdlBank][midiins];
-}
-
 void OPL3::setEmbeddedBank(unsigned int bank)
 {
     AdlBank = bank;
     //Embedded banks are supports 128:128 GM set only
-    dynamic_percussion_offset = 128;
-    dynamic_melodic_banks.clear();
-    dynamic_percussion_banks.clear();
-    dynamic_metainstruments.clear();
+    dynamic_banks.clear();
+
+    if(bank >= static_cast<unsigned int>(maxAdlBanks()))
+        return;
+
+    Bank *bank_pair[2] =
+    {
+        &dynamic_banks[0],
+        &dynamic_banks[PercussionTag]
+    };
+
+    for(unsigned i = 0; i < 256; ++i)
+    {
+        size_t meta = banks[bank][i];
+        adlinsdata2 &ins = bank_pair[i / 128]->ins[i % 128];
+        ins = adlinsdata2(adlins[meta]);
+    }
 }
 
+static adlinsdata2 makeEmptyInstrument()
+{
+    adlinsdata2 ins;
+    memset(&ins, 0, sizeof(adlinsdata2));
+    ins.flags = adlinsdata::Flag_NoSound;
+    return ins;
+}
+
+const adlinsdata2 OPL3::emptyInstrument = makeEmptyInstrument();
 
 OPL3::OPL3() :
-    dynamic_percussion_offset(128),
-    DynamicInstrumentTag(0x8000u),
-    DynamicMetaInstrumentTag(0x4000000u),
     NumCards(1),
-    AdlBank(0),
     NumFourOps(0),
     HighTremoloMode(false),
     HighVibratoMode(false),
     AdlPercussionMode(false),
     m_musicMode(MODE_MIDI),
     m_volumeScale(VOLUME_Generic)
-{}
-
-void OPL3::Poke(size_t card, uint32_t index, uint32_t value)
 {
-    #ifdef ADLMIDI_HW_OPL
-    (void)card;
-    unsigned o = index >> 8;
-    unsigned port = OPLBase + o * 2;
-
-    #ifdef __DJGPP__
-    outportb(port, index);
-    for(unsigned c = 0; c < 6; ++c) inportb(port);
-    outportb(port + 1, value);
-    for(unsigned c = 0; c < 35; ++c) inportb(port);
-    #endif//__DJGPP__
-
-    #ifdef __WATCOMC__
-    outp(port, index);
-    for(uint16_t c = 0; c < 6; ++c)  inp(port);
-    outp(port + 1, value);
-    for(uint16_t c = 0; c < 35; ++c) inp(port);
-    #endif//__WATCOMC__
-
-    #else//ADLMIDI_HW_OPL
-    cardsOP2[card]->writeReg(static_cast<uint16_t>(index), static_cast<uint8_t>(value));
-    #endif//ADLMIDI_HW_OPL
+#ifdef DISABLE_EMBEDDED_BANKS
+    AdlBank = ~0u;
+#else
+    setEmbeddedBank(0);
+#endif
 }
 
-void OPL3::PokeN(size_t card, uint16_t index, uint8_t value)
+void OPL3::Poke(size_t card, uint16_t index, uint8_t value)
 {
     #ifdef ADLMIDI_HW_OPL
     (void)card;
@@ -560,7 +543,7 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE)
 
         for(unsigned a = 0; a < 18; ++a) Poke(i, 0xB0 + Channels[a], 0x00);
         for(unsigned a = 0; a < sizeof(data) / sizeof(*data); a += 2)
-            PokeN(i, data[a], static_cast<uint8_t>(data[a + 1]));
+            Poke(i, data[a], static_cast<uint8_t>(data[a + 1]));
         Poke(i, 0x0BD, regBD[i] = (HighTremoloMode * 0x80
                                  + HighVibratoMode * 0x40
                                  + AdlPercussionMode * 0x20));
