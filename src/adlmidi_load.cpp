@@ -318,7 +318,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     errorString.clear();
 
     #ifdef DISABLE_EMBEDDED_BANKS
-    if((opl.AdlBank != ~0u) || (opl.dynamic_metainstruments.size() < 256))
+    if((opl.AdlBank != ~0u) || opl.dynamic_banks.empty())
     {
         errorStringOut = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
         return false;
