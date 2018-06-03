@@ -73,10 +73,14 @@ int NukedOPL3::generateAndMix(int16_t *output, size_t frames)
 #if defined(ADLMIDI_ENABLE_HQ_RESAMPLER)
     for(size_t i = 0; i < frames; ++i)
     {
-        int16_t frame[2];
-        generateResampledHq(frame);
-        output[0] += (int32_t)frame[0];
-        output[1] += (int32_t)frame[1];
+        int32_t frame[2];
+        generateResampledHq32(frame);
+        for (unsigned c = 0; c < 2; ++c) {
+            int32_t temp = (int32_t)output[c] + frame[c];
+            temp = (temp > -32768) ? temp : -32768;
+            temp = (temp < 32767) ? temp : 32767;
+            output[c] = temp;
+        }
         output += 2;
     }
 #else
