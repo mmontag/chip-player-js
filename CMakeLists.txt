@@ -70,6 +70,7 @@ option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can
 option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)" ON)
 option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files)" ON)
 option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files)" ON)
+option(WITH_HQ_RESAMPLER    "Build with support for high quality resampling" OFF)
 
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
 option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
@@ -480,6 +481,17 @@ if(WITH_VLC_PLUGIN)
 
 endif()
 
+if(WITH_HQ_RESAMPLER)
+  find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler" REQUIRED)
+  add_definitions(-DADLMIDI_ENABLE_HQ_RESAMPLER)
+  if(libADLMIDI_SHARED)
+    target_link_libraries(ADLMIDI_shared PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
+  endif()
+  if(libADLMIDI_STATIC)
+    target_link_libraries(ADLMIDI_static PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
+  endif()
+endif()
+
 install(TARGETS ${libADLMIDI_INSTALLS}
         RUNTIME DESTINATION "bin"
         LIBRARY DESTINATION "lib"
@@ -512,6 +524,7 @@ message("WITH_MIDI_SEQUENCER      = ${WITH_MIDI_SEQUENCER}")
 message("WITH_CPP_EXTRAS          = ${WITH_CPP_EXTRAS}")
 message("WITH_MUS_SUPPORT         = ${WITH_MUS_SUPPORT}")
 message("WITH_XMI_SUPPORT         = ${WITH_XMI_SUPPORT}")
+message("WITH_HQ_RESAMPLER        = ${WITH_HQ_RESAMPLER}")
 message("libADLMIDI_STATIC        = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED        = ${libADLMIDI_SHARED}")
 message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")
