@@ -70,6 +70,7 @@ option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can
 option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)" ON)
 option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files)" ON)
 option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files)" ON)
+option(WITH_HQ_RESAMPLER    "Build with support for high quality resampling" OFF)
 
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
 option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
@@ -276,9 +277,9 @@ endif()
 
 add_library(ADLMIDI INTERFACE)
 if(libADLMIDI_SHARED)
-  target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
+    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
 else()
-  target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
+    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
 endif()
 
 if(WITH_MIDIPLAY)
@@ -338,6 +339,8 @@ if(WITH_MIDIPLAY)
 endif()
 
 if(WITH_ADLMIDI2)
+    find_package(OpenMP)
+
     if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
         find_library(SDL2_LIBRARY SDL2 REQUIRED)
         include_directories(${SDL2_INCLUDE_DIR})
@@ -348,6 +351,7 @@ if(WITH_ADLMIDI2)
         set(ADLMIDI2_HAS_PUZZLE_GAME "TRUE")
         set(ADLMIDI2_VIDEO_OUT_SUPPORT "TRUE")
     endif()
+
 
     set(adlmidi2_src)
     list(APPEND adlmidi2_src
@@ -361,11 +365,11 @@ if(WITH_ADLMIDI2)
     add_executable(adlmidi2 ${adlmidi2_src})
 
     if(ADLMIDI2_HAS_PUZZLE_GAME)
-        target_compile_options(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
+        target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
     endif()
 
     if(ADLMIDI2_VIDEO_OUT_SUPPORT)
-        target_compile_options(adlmidi2 PUBLIC "-DSUPPORT_VIDEO_OUTPUT")
+        target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_VIDEO_OUTPUT")
     endif()
 
     if(WIN32)
@@ -391,6 +395,10 @@ if(WITH_ADLMIDI2)
                                       CXX_STANDARD 11
                                       CXX_STANDARD_REQUIRED YES)
         endif()
+        if(OPENMP_FOUND)
+            target_compile_options(adlmidi2 PUBLIC "-fopenmp")
+            target_link_libraries(adlmidi2 "-fopenmp")
+        endif()
     else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         message("Turned on C++11 on MSVC")
         target_compile_options(adlmidi2 PUBLIC "/std:c++latest")
@@ -399,7 +407,7 @@ if(WITH_ADLMIDI2)
     if(libADLMIDI_SHARED)
         add_dependencies(adlmidi2 ADLMIDI_shared)
         # ========= WIP =========
-        # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+        set_target_properties(adlmidi2 PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
     else()
         if(NOT libADLMIDI_STATIC)
             message(FATAL_ERROR "libADLMIDI is required to be built!")
@@ -480,6 +488,17 @@ if(WITH_VLC_PLUGIN)
 
 endif()
 
+if(WITH_HQ_RESAMPLER)
+  find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler" REQUIRED)
+  add_definitions(-DADLMIDI_ENABLE_HQ_RESAMPLER)
+  if(libADLMIDI_SHARED)
+    target_link_libraries(ADLMIDI_shared PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
+  endif()
+  if(libADLMIDI_STATIC)
+    target_link_libraries(ADLMIDI_static PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
+  endif()
+endif()
+
 install(TARGETS ${libADLMIDI_INSTALLS}
         RUNTIME DESTINATION "bin"
         LIBRARY DESTINATION "lib"
@@ -512,6 +531,7 @@ message("WITH_MIDI_SEQUENCER      = ${WITH_MIDI_SEQUENCER}")
 message("WITH_CPP_EXTRAS          = ${WITH_CPP_EXTRAS}")
 message("WITH_MUS_SUPPORT         = ${WITH_MUS_SUPPORT}")
 message("WITH_XMI_SUPPORT         = ${WITH_XMI_SUPPORT}")
+message("WITH_HQ_RESAMPLER        = ${WITH_HQ_RESAMPLER}")
 message("libADLMIDI_STATIC        = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED        = ${libADLMIDI_SHARED}")
 message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")

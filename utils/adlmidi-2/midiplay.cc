@@ -1593,6 +1593,7 @@ int main(int argc, char **argv)
         UI.Color(7);
         std::fflush(stderr);
         std::printf(
+            "\n\n"
             "Usage: adlmidi <midifilename> [ <options> ] [ <banknumber> [ <numcards> [ <numfourops>] ] ]\n"
             "       adlmidi <midifilename> -1   To enter instrument tester\n"
             " -p Enables adlib percussion instrument mode (use with CMF files)\n"

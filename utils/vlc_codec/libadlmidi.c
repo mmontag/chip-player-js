@@ -18,10 +18,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-//#ifdef HAVE_CONFIG_H
-//# include "config.h"
-//#endif
-
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 #include <vlc_codec.h>
@@ -44,18 +40,20 @@
 #define SOUNDFONT_LONGTEXT N_( \
     "Custom bank file to use for software synthesis." )
 
-//#define CHORUS_TEXT N_("Chorus")
+#if 0 /* Old code */
+#define CHORUS_TEXT N_("Chorus")
 
-//#define GAIN_TEXT N_("Synthesis gain")
-//#define GAIN_LONGTEXT N_("This gain is applied to synthesis output. " \
-//    "High values may cause saturation when many notes are played at a time." )
+#define GAIN_TEXT N_("Synthesis gain")
+#define GAIN_LONGTEXT N_("This gain is applied to synthesis output. " \
+    "High values may cause saturation when many notes are played at a time." )
 
-//#define POLYPHONY_TEXT N_("Polyphony")
-//#define POLYPHONY_LONGTEXT N_( \
-//    "The polyphony defines how many voices can be played at a time. " \
-//    "Larger values require more processing power.")
+#define POLYPHONY_TEXT N_("Polyphony")
+#define POLYPHONY_LONGTEXT N_( \
+    "The polyphony defines how many voices can be played at a time. " \
+    "Larger values require more processing power.")
 
-//#define REVERB_TEXT N_("Reverb")
+#define REVERB_TEXT N_("Reverb")
+#endif
 
 #define SAMPLE_RATE_TEXT N_("Sample rate")
 
@@ -179,8 +177,11 @@ static void Close (vlc_object_t *p_this)
 static void Flush (decoder_t *p_dec)
 {
     decoder_sys_t *p_sys = p_dec->p_sys;
-
+#if (LIBVLC_VERSION_MAJOR >= 3)
     date_Set (&p_sys->end_date, VLC_TS_INVALID);
+#else
+    date_Set (&p_sys->end_date, 0);
+#endif
     adl_panic(p_sys->synth);
 }
 
@@ -225,8 +226,7 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
             return VLCDEC_SUCCESS;
         }
 #else
-        date_Set (&p_sys->end_date, 0);
-        adl_panic(p_sys->synth);
+        Flush (p_dec);
 #endif
     }
 
