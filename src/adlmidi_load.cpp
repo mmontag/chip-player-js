@@ -93,7 +93,7 @@ static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
     ins.flags|= (in.inst_flags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
 
     bool fourOps = (in.inst_flags & WOPL_Ins_4op) || (in.inst_flags & WOPL_Ins_Pseudo4op);
-    for(size_t op = 0, slt = 0; op < (fourOps ? 4 : 2); op++, slt++)
+    for(size_t op = 0, slt = 0; op < static_cast<size_t>(fourOps ? 4 : 2); op++, slt++)
     {
         ins.adl[slt].carrier_E862 =
             ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
@@ -111,13 +111,13 @@ static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
         ins.adl[slt].modulator_40 = in.operators[op].ksl_l_40;//KSLL
     }
 
-    ins.adl[0].finetune = in.note_offset1;
+    ins.adl[0].finetune = static_cast<int8_t>(in.note_offset1);
     ins.adl[0].feedconn = in.fb_conn1_C0;
     if(!fourOps)
         ins.adl[1] = ins.adl[0];
     else
     {
-        ins.adl[1].finetune = in.note_offset2;
+        ins.adl[1].finetune = static_cast<int8_t>(in.note_offset2);
         ins.adl[1].feedconn = in.fb_conn2_C0;
     }
 
@@ -151,7 +151,7 @@ static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
     ins.inst_flags|= (in.flags & adlinsdata::Flag_Pseudo4op) ? WOPL_Ins_Pseudo4op : 0;
     ins.inst_flags|= (in.flags & adlinsdata::Flag_NoSound) ? WOPL_Ins_IsBlank : 0;
 
-    for(size_t op = 0, slt = 0; op < (fourOps ? 4 : 2); op++, slt++)
+    for(size_t op = 0, slt = 0; op < static_cast<size_t>(fourOps ? 4 : 2); op++, slt++)
     {
         ins.operators[op].waveform_E0 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 24);
         ins.operators[op].susrel_80 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 16);

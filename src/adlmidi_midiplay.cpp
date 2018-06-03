@@ -680,7 +680,8 @@ bool MIDIplay::buildTrackData()
 
 
 MIDIplay::MIDIplay(unsigned long sampleRate):
-    cmf_percussion_mode(false)
+    cmf_percussion_mode(false),
+    m_arpeggioCounter(0)
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     , fullSongTimeLength(0.0),
     postSongWaitDelay(1.0),
@@ -731,16 +732,16 @@ void MIDIplay::applySetup()
 
     opl.HighTremoloMode     = m_setup.HighTremoloMode < 0 ?
                               opl.dynamic_bank_setup.deepTremolo :
-                              (bool)m_setup.HighTremoloMode;
+                              (m_setup.HighTremoloMode != 0);
     opl.HighVibratoMode     = m_setup.HighVibratoMode < 0 ?
                               opl.dynamic_bank_setup.deepVibrato :
-                              (bool)m_setup.HighVibratoMode;
+                              (m_setup.HighVibratoMode != 0);
     opl.AdlPercussionMode   = m_setup.AdlPercussionMode < 0 ?
                               opl.dynamic_bank_setup.adLibPercussions :
-                              (bool)m_setup.AdlPercussionMode;
+                              (m_setup.AdlPercussionMode != 0);
     opl.ScaleModulators     = m_setup.ScaleModulators < 0 ?
                               opl.dynamic_bank_setup.scaleModulators :
-                              (bool)m_setup.ScaleModulators;
+                              (m_setup.ScaleModulators != 0);
     if(m_setup.LogarithmicVolumes)
         opl.ChangeVolumeRangesModel(ADLMIDI_VolumeModel_NativeOPL3);
     opl.m_musicMode = OPL3::MODE_MIDI;
@@ -755,6 +756,9 @@ void MIDIplay::applySetup()
     opl.Reset(m_setup.emulator, m_setup.PCM_RATE);
     ch.clear();
     ch.resize(opl.NumChannels);
+
+    // Reset the arpeggio counter
+    m_arpeggioCounter = 0;
 }
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
@@ -1441,7 +1445,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
     MIDIchannel::NoteInfo &info = *i;
     const int16_t tone    = info.tone;
     const uint8_t vol     = info.vol;
-    const int midiins     = info.midiins;
+    const int midiins     = static_cast<int>(info.midiins);
     const adlinsdata2 &ains = *info.ains;
     AdlChannel::Location my_loc;
     my_loc.MidCh = MidCh;
@@ -2151,7 +2155,7 @@ void MIDIplay::HandleEvent(size_t tk, const MIDIplay::MidiEvent &evt, int &statu
 }
 #endif /* ADLMIDI_DISABLE_MIDI_SEQUENCER */
 
-int64_t MIDIplay::CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t) const
+int64_t MIDIplay::CalculateAdlChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t) const
 {
     int64_t s = -ch[c].koff_time_until_neglible;
 
@@ -2198,7 +2202,7 @@ int64_t MIDIplay::CalculateAdlChannelGoodness(unsigned c, const MIDIchannel::Not
         // increase the score slightly.
         unsigned n_evacuation_stations = 0;
 
-        for(unsigned c2 = 0; c2 < opl.NumChannels; ++c2)
+        for(size_t c2 = 0; c2 < static_cast<size_t>(opl.NumChannels); ++c2)
         {
             if(c2 == c) continue;
 
@@ -2299,11 +2303,11 @@ void MIDIplay::KillOrEvacuate(size_t from_channel,
                 hooks.onNote(hooks.onNote_userData,
                              (int)from_channel,
                              i->tone,
-                             i->midiins, 0, 0.0);
+                             static_cast<int>(i->midiins), 0, 0.0);
                 hooks.onNote(hooks.onNote_userData,
                              (int)c,
                              i->tone,
-                             i->midiins,
+                             static_cast<int>(i->midiins),
                              i->vol, 0.0);
             }
 
@@ -2490,8 +2494,8 @@ void MIDIplay::UpdateArpeggio(double) // amount = amount of time passed
     arpeggio_cache = 0.0;
 #   endif
 #endif
-    static unsigned arpeggio_counter = 0;
-    ++arpeggio_counter;
+
+    ++m_arpeggioCounter;
 
     for(uint32_t c = 0; c < opl.NumChannels; ++c)
     {
@@ -2512,7 +2516,7 @@ retry_arpeggio:
             if(n_users >= 4)
                 rate_reduction = 1;
 
-            for(unsigned count = (arpeggio_counter / rate_reduction) % n_users,
+            for(size_t count = (m_arpeggioCounter / rate_reduction) % n_users,
                 n = 0; n < count; ++n)
                 i = i->next;
 

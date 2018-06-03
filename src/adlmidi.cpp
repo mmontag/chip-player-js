@@ -313,7 +313,9 @@ ADLMIDI_EXPORT void adl_setPercMode(ADL_MIDIPlayer *device, int percmod)
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.AdlPercussionMode = percmod;
-    play->opl.AdlPercussionMode = play->m_setup.AdlPercussionMode;
+    play->opl.AdlPercussionMode     = play->m_setup.AdlPercussionMode < 0 ?
+                                      play->opl.dynamic_bank_setup.adLibPercussions :
+                                      (play->m_setup.AdlPercussionMode != 0);
     play->opl.updateFlags();
 }
 
@@ -322,7 +324,9 @@ ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.HighVibratoMode = hvibro;
-    play->opl.HighVibratoMode = play->m_setup.HighVibratoMode;
+    play->opl.HighVibratoMode     = play->m_setup.HighVibratoMode < 0 ?
+                                    play->opl.dynamic_bank_setup.deepVibrato :
+                                    (play->m_setup.HighVibratoMode != 0);
     play->opl.updateDeepFlags();
 }
 
@@ -331,7 +335,9 @@ ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.HighTremoloMode = htremo;
-    play->opl.HighTremoloMode = play->m_setup.HighTremoloMode;
+    play->opl.HighTremoloMode     = play->m_setup.HighTremoloMode < 0 ?
+                                    play->opl.dynamic_bank_setup.deepTremolo :
+                                    (play->m_setup.HighTremoloMode != 0);
     play->opl.updateDeepFlags();
 }
 
@@ -340,14 +346,16 @@ ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.ScaleModulators = smod;
-    play->opl.ScaleModulators = play->m_setup.ScaleModulators;
+    play->opl.ScaleModulators     = play->m_setup.ScaleModulators < 0 ?
+                                    play->opl.dynamic_bank_setup.scaleModulators :
+                                    (play->m_setup.ScaleModulators != 0);
 }
 
 ADLMIDI_EXPORT void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_brightness)
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.fullRangeBrightnessCC74 = fr_brightness;
+    play->m_setup.fullRangeBrightnessCC74 = (fr_brightness != 0);
 }
 
 ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
@@ -362,7 +370,7 @@ ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.LogarithmicVolumes = logvol;
+    play->m_setup.LogarithmicVolumes = (logvol != 0);
     if(play->m_setup.LogarithmicVolumes)
         play->opl.ChangeVolumeRangesModel(ADLMIDI_VolumeModel_NativeOPL3);
 }
@@ -372,7 +380,10 @@ ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int v
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.VolumeModel = volumeModel;
-    play->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
+    if(play->m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)//Use bank default volume model
+        play->opl.m_volumeScale = (OPL3::VolumesScale)play->opl.dynamic_bank_setup.volumeModel;
+    else
+        play->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
 }
 
 ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath)

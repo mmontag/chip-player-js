@@ -416,7 +416,7 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
 
             memcpy(ctx.dst_ptr, temp_buffer, out_local - temp_buffer);
             ctx.dst_ptr += out_local - temp_buffer;
-            ctx.dstrem -= out_local - temp_buffer;
+            ctx.dstrem -= (uint32_t)(out_local - temp_buffer);
         }
 
         if (event & 128) {
