@@ -49,15 +49,16 @@ void BasicBankMap<T>::reserve(size_t capacity)
         return;
 
     size_t need = capacity - m_capacity;
-    need = (need < minimum_allocation) ? minimum_allocation : need;
+    const size_t minalloc = static_cast<size_t>(minimum_allocation);
+    need = (need < minalloc) ? minalloc : need;
 
-    AdlMIDI_SPtrArray<Slot> slots;
-    slots.reset(new Slot[need]);
-    m_allocations.push_back(slots);
+    AdlMIDI_SPtrArray<Slot> slotz;
+    slotz.reset(new Slot[need]);
+    m_allocations.push_back(slotz);
     m_capacity += need;
 
     for(size_t i = need; i-- > 0;)
-        free_slot(&slots[i]);
+        free_slot(&slotz[i]);
 }
 
 template <class T>

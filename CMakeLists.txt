@@ -11,10 +11,13 @@ ELSEIF(NOT MSVC AND NOT MSDOS)
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-s")
 ENDIF()
 
-# Global optimization flags
 IF(NOT MSVC AND NOT MSDOS)
+# Global optimization flags
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fno-omit-frame-pointer")
+# Turn on all warnings
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_RELEASE} -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wextra")
 ENDIF()
 
 if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
@@ -45,7 +48,7 @@ function(set_legacy_standard destTarget)
         if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
             # Turn on warnings and legacy C/C++ standards to support more compilers
             target_compile_options(${destTarget} PRIVATE
-                $<$<COMPILE_LANGUAGE:C>:-Wall -pedantic -std=c90>
+                $<$<COMPILE_LANGUAGE:C>:-Wall -pedantic -std=c90 -Wno-long-long>
                 $<$<COMPILE_LANGUAGE:CXX>:-Wall -pedantic -std=gnu++98>
             )
         endif()
