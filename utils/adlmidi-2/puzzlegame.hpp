@@ -36,7 +36,7 @@ namespace ADLMIDI_PuzzleGame
     void Sound(unsigned/*freq*/, unsigned/*duration*/);
     void PutCell(int x, int y, unsigned cell);
     void ScreenPutString(const char* str, unsigned attr, unsigned column, unsigned row);
-    static char peeked_input = 0;
+    extern char peeked_input;
     bool kbhit();
     char getch();
 

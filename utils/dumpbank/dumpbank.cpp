@@ -190,5 +190,12 @@ static void LoadBNK(const char* fn)
 
 int main(int argc, const char* const* argv)
 {
+    if(argc < 2)
+    {
+        std::printf("Usage: \n"
+                    "   %s filename.bnk\n"
+                    "\n", argv[0]);
+        return 1;
+    }
     LoadBNK(argv[1]);
 }

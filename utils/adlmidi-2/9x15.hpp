@@ -160,8 +160,8 @@ struct font9x15: public UIfontBase
     virtual unsigned GetIndex(char32_t c) const { return ns_font9x15::unicode_to_bitmap_index[c]; }
 };
 
-static UIfontBase* Getfont9x15()
-{
-    static font9x15 f;
-    return &f;
-}
+//static UIfontBase* Getfont9x15()
+//{
+//    static font9x15 f;
+//    return &f;
+//}

@@ -277,9 +277,9 @@ endif()
 
 add_library(ADLMIDI INTERFACE)
 if(libADLMIDI_SHARED)
-  target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
+    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
 else()
-  target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
+    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
 endif()
 
 if(WITH_MIDIPLAY)
@@ -339,6 +339,8 @@ if(WITH_MIDIPLAY)
 endif()
 
 if(WITH_ADLMIDI2)
+    find_package(OpenMP)
+
     if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
         find_library(SDL2_LIBRARY SDL2 REQUIRED)
         include_directories(${SDL2_INCLUDE_DIR})
@@ -349,6 +351,7 @@ if(WITH_ADLMIDI2)
         set(ADLMIDI2_HAS_PUZZLE_GAME "TRUE")
         set(ADLMIDI2_VIDEO_OUT_SUPPORT "TRUE")
     endif()
+
 
     set(adlmidi2_src)
     list(APPEND adlmidi2_src
@@ -362,11 +365,11 @@ if(WITH_ADLMIDI2)
     add_executable(adlmidi2 ${adlmidi2_src})
 
     if(ADLMIDI2_HAS_PUZZLE_GAME)
-        target_compile_options(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
+        target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
     endif()
 
     if(ADLMIDI2_VIDEO_OUT_SUPPORT)
-        target_compile_options(adlmidi2 PUBLIC "-DSUPPORT_VIDEO_OUTPUT")
+        target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_VIDEO_OUTPUT")
     endif()
 
     if(WIN32)
@@ -392,6 +395,10 @@ if(WITH_ADLMIDI2)
                                       CXX_STANDARD 11
                                       CXX_STANDARD_REQUIRED YES)
         endif()
+        if(OPENMP_FOUND)
+            target_compile_options(adlmidi2 PUBLIC "-fopenmp")
+            target_link_libraries(adlmidi2 "-fopenmp")
+        endif()
     else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         message("Turned on C++11 on MSVC")
         target_compile_options(adlmidi2 PUBLIC "/std:c++latest")
@@ -400,7 +407,7 @@ if(WITH_ADLMIDI2)
     if(libADLMIDI_SHARED)
         add_dependencies(adlmidi2 ADLMIDI_shared)
         # ========= WIP =========
-        # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+        set_target_properties(adlmidi2 PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
     else()
         if(NOT libADLMIDI_STATIC)
             message(FATAL_ERROR "libADLMIDI is required to be built!")
