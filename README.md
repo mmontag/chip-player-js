@@ -57,20 +57,35 @@ sudo make install
 
 
 ## Available CMake options
+
+### Library options
 * **CMAKE_PREFIX_PATH** - destinition folder where libADLMIDI will be installed. On Linux it is /usr/local/ by default.
 * **CMAKE_BUILD_TYPE** - Build types: **Debug** or **Release**
-* **WITH_MIDIPLAY** - (ON/OFF, default OFF) Build demo MIDI player (Requires SDL2 and also pthread on Windows with MinGW)
-* **WITH_VLC_PLUGIN** - (ON/OFF, default OFF) Compile VLC plugin. For now, works on Linux and VLC version 2.2.2. Support for newer VLC versions and other platforms comming soon!
-* **WITH_ADLMIDI2** - (ON/OFF, default OFF) Build Classic ADLMIDI MIDI player (Requires SDL2 on Linux and macOS, requires pthread on Windows with MinGW, SDL doesn't required on Windows. Also, the **WITH_CPP_EXTRAS** flag must be enabled)
-* **WITH_CPP_EXTRAS** - (ON/OFF, default OFF) Build libADLMIDI with some extra public features for C++ language (for example, instrument testing API is available for C++ only).
-* **WITH_OLD_UTILS** - (ON/OFF, default OFF) Build old utilities to dump some bank formats, made by original creator of ADLMIDI
-* **WITH_EMBEDDED_BANKS** - (ON/OFF, default ON) Enable or disable embedded banks (Original ADLMIDI and older versions of libADLMIDI are had embedded-only banks with no ability to load custom banks in runtime).
-* **WITH_GENADLDATA**  - (ON/OFF, default OFF) Build and execute the utility which will rebuild the embedded banks database (which is an adldata.cpp file).
-* **USE_DOSBOX_EMULATOR** - (ON/OFF, default ON) Enable support for DosBox 0.74 emulator. (Well-accurate and fast)
-* **USE_NUKED_EMULATOR** - (ON/OFF, default ON) Enable support for Nuked OPL3 emulator. (Very-accurate, needs more CPU power)
 
 * **libADLMIDI_STATIC** - (ON/OFF, default ON) Build static library
 * **libADLMIDI_SHARED** - (ON/OFF, default OFF) Build shared library
+* **WITH_UNIT_TESTS** - (ON/OFF, default OFF) Enable unit testing
+
+* **WITH_CPP_EXTRAS** - (ON/OFF, default OFF) Build libADLMIDI with some extra public features for C++ language (for example, instrument testing API is available for C++ only).
+* **WITH_MIDI_SEQUENCER** - (ON/OFF, default ON) Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)
+* **WITH_EMBEDDED_BANKS** - (ON/OFF, default ON) Enable or disable embedded banks (Original ADLMIDI and older versions of libADLMIDI are had embedded-only banks with no ability to load custom banks in runtime).
+* **WITH_HQ_RESAMPLER** - (ON/OFF, default OFF) Build with support for high quality resampling (requires zita-resampler to be installed)
+* **WITH_MUS_SUPPORT** - (ON/OFF, default ON) Build with support for DMX MUS files)
+* **WITH_XMI_SUPPORT** - (ON/OFF, default ON) Build with support for AIL XMI files)
+* **USE_DOSBOX_EMULATOR** - (ON/OFF, default ON) Enable support for DosBox 0.74 emulator. (Well-accurate and fast)
+* **USE_NUKED_EMULATOR** - (ON/OFF, default ON) Enable support for Nuked OPL3 emulator. (Very-accurate, needs more CPU power)
+
+
+### Utils and extras
+* **WITH_GENADLDATA**  - (ON/OFF, default OFF) Build and execute the utility which will rebuild the embedded banks database (which is an adldata.cpp file).
+* **WITH_GENADLDATA_COMMENTS** - (ON/OFF, default OFF) Enable comments in generated ADLDATA cache file
+
+* **WITH_MIDIPLAY** - (ON/OFF, default OFF) Build demo MIDI player (Requires SDL2 and also pthread on Windows with MinGW)
+* **MIDIPLAY_WAVE_ONLY** - (ON/OFF, default OFF) Build Demo MIDI player without support of real time playing. It will output into WAV only.
+* **WITH_ADLMIDI2** - (ON/OFF, default OFF) Build Classic ADLMIDI MIDI player (Requires SDL2 on Linux and macOS, requires pthread on Windows with MinGW, SDL doesn't required on Windows. Also, the **WITH_CPP_EXTRAS** flag must be enabled)
+* **WITH_VLC_PLUGIN** - (ON/OFF, default OFF) Compile VLC plugin. For now, works on Linux and VLC. Support for other platforms comming soon!
+* **WITH_OLD_UTILS** - (ON/OFF, default OFF) Build old utilities to dump some bank formats, made by original creator of ADLMIDI
+* **EXAMPLE_SDL2_AUDIO** - (ON/OFF, default OFF) Build also a simple SDL2 demo MIDI player
 
 
 ## You also can build library manually:
@@ -143,8 +158,9 @@ To build that example you will need to have installed SDL2 library.
  * Fixed an incorrect processing of auto-flags
  * Fixed incorrect initial MIDI tempo when MIDI file doesn't includes the tempo event
  * Channel and Note Aftertouch features are now supported correctly! Aftertouch is the tremolo / vibrato, NOT A VOLUME!
- * Updated DosBox OPL3 emulator up to r4111 of official DosBox trunk
- * The automatical choosing of 4 operator channels count has been improved
+ * Updated DosBox OPL3 emulator up to r4111 of official DosBox trunk (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * The automatical choosing of 4 operator channels count has been improved (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Added optional HQ resampler for Nuked OPL3 emulators which does usage of Zita-Resampler library (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
 
 ## 1.3.2   2018-04-24
  * Added ability to disable MUS and XMI converters
