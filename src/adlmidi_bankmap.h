@@ -51,6 +51,8 @@ public:
         { return m_size; }
     size_t capacity() const
         { return m_capacity; }
+    bool empty() const
+        { return m_size == 0; }
 
     class iterator;
     iterator begin() const;
