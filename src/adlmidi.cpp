@@ -373,6 +373,8 @@ ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int
     play->m_setup.LogarithmicVolumes = (logvol != 0);
     if(play->m_setup.LogarithmicVolumes)
         play->opl.ChangeVolumeRangesModel(ADLMIDI_VolumeModel_NativeOPL3);
+    else
+        play->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(play->opl.m_volumeScale));
 }
 
 ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel)
