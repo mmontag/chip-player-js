@@ -1400,16 +1400,14 @@ void MIDIplay::realTime_PatchChange(uint8_t channel, uint8_t patch)
 void MIDIplay::realTime_PitchBend(uint8_t channel, uint16_t pitch)
 {
     channel = channel % 16;
-    Ch[channel].bendSrc = (int(pitch) - 8192);
-    Ch[channel].bend = Ch[channel].bendSrc * Ch[channel].bendsense;
+    Ch[channel].bend = int(pitch) - 8192;
     NoteUpdate_All(channel, Upd_Pitch);
 }
 
 void MIDIplay::realTime_PitchBend(uint8_t channel, uint8_t msb, uint8_t lsb)
 {
     channel = channel % 16;
-    Ch[channel].bendSrc = (int(lsb) + int(msb) * 128 - 8192);
-    Ch[channel].bend = Ch[channel].bendSrc * Ch[channel].bendsense;
+    Ch[channel].bend = int(lsb) + int(msb) * 128 - 8192;
     NoteUpdate_All(channel, Upd_Pitch);
 }
 
@@ -1625,7 +1623,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             // Don't bend a sustained note
             if(!d || !d->sustained)
             {
-                double bend = Ch[MidCh].bend + ins.ains.finetune;
+                double midibend = Ch[MidCh].bend * Ch[MidCh].bendsense;
+                double bend = midibend + ins.ains.finetune;
                 double phase = 0.0;
                 uint8_t vibrato = std::max(Ch[MidCh].vibrato, Ch[MidCh].aftertouch);
                 vibrato = std::max(vibrato, i->vibrato);
@@ -1646,7 +1645,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 opl.NoteOn(c, BEND_COEFFICIENT * std::exp(0.057762265 * (static_cast<double>(tone) + bend + phase)));
 #undef BEND_COEFFICIENT
                 if(hooks.onNote)
-                    hooks.onNote(hooks.onNote_userData, c, tone, midiins, vol, Ch[MidCh].bend);
+                    hooks.onNote(hooks.onNote_userData, c, tone, midiins, vol, midibend);
             }
         }
     }
@@ -2390,12 +2389,10 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
     case 0x0000 + 0*0x10000 + 1*0x20000: // Pitch-bender sensitivity
         Ch[MidCh].bendsense_msb = value;
         Ch[MidCh].updateBendSensitivity();
-        NoteUpdate_All(MidCh, Upd_Pitch);
         break;
     case 0x0000 + 0*0x10000 + 0*0x20000: // Pitch-bender sensitivity LSB
         Ch[MidCh].bendsense_lsb = value;
         Ch[MidCh].updateBendSensitivity();
-        NoteUpdate_All(MidCh, Upd_Pitch);
         break;
     case 0x0108 + 1*0x10000 + 1*0x20000: // Vibrato speed
         if(value == 64)      Ch[MidCh].vibspeed = 1.0;
