@@ -38,11 +38,12 @@ typedef struct psf_file_callbacks
     /* list of characters which act as path separators, null terminated */
     const char * path_separators;
 
-    /* accepts UTF-8 encoding, returns file handle */
-    void * (* fopen )(const char *);
+    /* opens the file pointed to by path read-only in binary mode, 
+     * accepts UTF-8 encoding, returns file handle */
+    void * (* fopen )(const char * path);
 
     /* reads to specified buffer, returns count of size bytes read */
-    size_t (* fread )(void *, size_t size, size_t count, void * handle);
+    size_t (* fread )(void * buffer, size_t size, size_t count, void * handle);
 
     /* returns zero on success, -1 on error */
     int    (* fseek )(void * handle, int64_t, int);
