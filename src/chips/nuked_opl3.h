@@ -3,34 +3,20 @@
 
 #include "opl_chip_base.h"
 
-#if defined(ADLMIDI_ENABLE_HQ_RESAMPLER)
-class VResampler;
-#endif
-
-class NukedOPL3 final : public OPLChipBase
+class NukedOPL3 final : public OPLChipBaseT<NukedOPL3>
 {
     void *m_chip;
-#if defined(ADLMIDI_ENABLE_HQ_RESAMPLER)
-    VResampler *m_resampler;
-#endif
 public:
     NukedOPL3();
-    virtual ~NukedOPL3() override;
+    ~NukedOPL3() override;
 
-    virtual void setRate(uint32_t rate) override;
-    virtual void reset() override;
-    virtual void reset(uint32_t rate) override;
-    virtual void writeReg(uint16_t addr, uint8_t data) override;
-    virtual int generate(int16_t *output, size_t frames) override;
-    virtual int generateAndMix(int16_t *output, size_t frames) override;
-    virtual int generate32(int32_t *output, size_t frames) override;
-    virtual int generateAndMix32(int32_t *output, size_t frames) override;
-    virtual const char *emulatorName() override;
-private:
-#if defined(ADLMIDI_ENABLE_HQ_RESAMPLER)
-    void generateResampledHq(int16_t *out);
-    void generateResampledHq32(int32_t *out);
-#endif
+    void setRate(uint32_t rate) override;
+    void reset() override;
+    void writeReg(uint16_t addr, uint8_t data) override;
+    void nativePreGenerate() override {}
+    void nativePostGenerate() override {}
+    void nativeGenerate(int16_t *frame) override;
+    const char *emulatorName() override;
 };
 
 #endif // NUKED_OPL3_H

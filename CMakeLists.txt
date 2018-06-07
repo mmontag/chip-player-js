@@ -113,10 +113,6 @@ if(WITH_EMBEDDED_BANKS)
             ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/ini/ini_processing.cpp
         )
 
-        list(APPEND GEN_ADLDATA_SRC
-            ${libADLMIDI_SOURCE_DIR}/src/chips/opl_chip_base.cpp
-        )
-
         if(USE_DOSBOX_EMULATOR)
             set(HAS_EMULATOR TRUE)
             list(APPEND GEN_ADLDATA_SRC
@@ -203,10 +199,6 @@ else()
 endif()
 
 if(NOT DJGPP AND NOT MSDOS)
-    list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/chips/opl_chip_base.cpp
-    )
-
     if(USE_DOSBOX_EMULATOR)
         set(HAS_EMULATOR TRUE)
         list(APPEND libADLMIDI_SOURCES
