@@ -518,7 +518,11 @@ ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulato
 
 ADLMIDI_EXPORT const char *adl_linkedLibraryVersion()
 {
+#if !defined(ADLMIDI_ENABLE_HQ_RESAMPLER)
     return ADLMIDI_VERSION;
+#else
+    return ADLMIDI_VERSION " (HQ)";
+#endif
 }
 
 ADLMIDI_EXPORT const ADL_Version *adl_linkedVersion()

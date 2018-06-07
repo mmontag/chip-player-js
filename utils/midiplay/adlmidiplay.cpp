@@ -404,6 +404,7 @@ int main(int argc, char **argv)
     adl_switchEmulator(myDevice, emulator);
     #endif
 
+    std::fprintf(stdout, " - Library version %s\n", adl_linkedLibraryVersion());
     #ifdef HARDWARE_OPL3
     std::fprintf(stdout, " - Hardware OPL3 chip in use\n");
     #else
