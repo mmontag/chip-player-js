@@ -1,20 +1,14 @@
 #include "dosbox_opl3.h"
 #include "dosbox/dbopl.h"
+#include <new>
 #include <cstdlib>
 #include <assert.h>
 
 DosBoxOPL3::DosBoxOPL3() :
-    OPLChipBase(),
-    m_chip(NULL)
+    OPLChipBaseBufferedT(),
+    m_chip(new DBOPL::Handler)
 {
     reset();
-}
-
-DosBoxOPL3::DosBoxOPL3(const DosBoxOPL3 &c) :
-    OPLChipBase(c),
-    m_chip(NULL)
-{
-    setRate(c.m_rate);
 }
 
 DosBoxOPL3::~DosBoxOPL3()
@@ -25,23 +19,20 @@ DosBoxOPL3::~DosBoxOPL3()
 
 void DosBoxOPL3::setRate(uint32_t rate)
 {
-    OPLChipBase::setRate(rate);
-    reset();
+    OPLChipBaseBufferedT::setRate(rate);
+    DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
+    chip_r->~Handler();
+    new(chip_r) DBOPL::Handler;
+    chip_r->Init(49716);
 }
 
 void DosBoxOPL3::reset()
 {
+    OPLChipBaseBufferedT::reset();
     DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
-    if(m_chip && chip_r)
-        delete chip_r;
-    m_chip = new DBOPL::Handler;
-    chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
-    chip_r->Init(m_rate);
-}
-
-void DosBoxOPL3::reset(uint32_t rate)
-{
-    setRate(rate);
+    chip_r->~Handler();
+    new(chip_r) DBOPL::Handler;
+    chip_r->Init(49716);
 }
 
 void DosBoxOPL3::writeReg(uint16_t addr, uint8_t data)
@@ -50,60 +41,11 @@ void DosBoxOPL3::writeReg(uint16_t addr, uint8_t data)
     chip_r->WriteReg(static_cast<Bit32u>(addr), data);
 }
 
-int DosBoxOPL3::generate(int16_t *output, size_t frames)
+void DosBoxOPL3::nativeGenerateN(int16_t *output, size_t frames)
 {
     DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
-    Bitu left = (Bitu)frames;
-    while(left > 0)
-    {
-        Bitu frames_i = left;
-        chip_r->GenerateArr(output, &frames_i);
-        output += (frames_i * 2);
-        left -= frames_i;
-    }
-    return (int)frames;
-}
-
-int DosBoxOPL3::generateAndMix(int16_t *output, size_t frames)
-{
-    DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
-    Bitu left = (Bitu)frames;
-    while(left > 0)
-    {
-        Bitu frames_i = left;
-        chip_r->GenerateArrMix(output, &frames_i);
-        output += (frames_i * 2);
-        left -= frames_i;
-    }
-    return (int)frames;
-}
-
-int DosBoxOPL3::generate32(int32_t *output, size_t frames)
-{
-    DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
-    Bitu left = (Bitu)frames;
-    while(left > 0)
-    {
-        Bitu frames_i = left;
-        chip_r->GenerateArr(output, &frames_i);
-        output += (frames_i * 2);
-        left -= frames_i;
-    }
-    return (int)frames;
-}
-
-int DosBoxOPL3::generateAndMix32(int32_t *output, size_t frames)
-{
-    DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
-    Bitu left = (Bitu)frames;
-    while(left > 0)
-    {
-        Bitu frames_i = left;
-        chip_r->GenerateArrMix(output, &frames_i);
-        output += (frames_i * 2);
-        left -= frames_i;
-    }
-    return (int)frames;
+    Bitu frames_i = frames;
+    chip_r->GenerateArr(output, &frames_i);
 }
 
 const char *DosBoxOPL3::emulatorName()

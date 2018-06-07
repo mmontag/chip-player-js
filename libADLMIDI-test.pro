@@ -37,6 +37,7 @@ HEADERS += \
     src/chips/nuked_opl3.h \
     src/chips/nuked_opl3_v174.h \
     src/chips/opl_chip_base.h \
+    src/chips/opl_chip_base.tcc \
     src/fraction.hpp \
     src/midiplay/wave_writer.h
 
@@ -57,7 +58,6 @@ SOURCES += \
     src/chips/nuked/nukedopl3.c \
     src/chips/nuked_opl3.cpp \
     src/chips/nuked_opl3_v174.cpp \
-    src/chips/opl_chip_base.cpp \
     utils/midiplay/adlmidiplay.cpp \
     utils/midiplay/wave_writer.c
 
