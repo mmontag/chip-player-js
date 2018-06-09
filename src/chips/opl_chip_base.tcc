@@ -65,8 +65,9 @@ void OPLChipBaseT<T>::generate(int16_t *output, size_t frames)
             int32_t temp = frame[c];
             temp = (temp > -32768) ? temp : -32768;
             temp = (temp < 32767) ? temp : 32767;
-            output[c] = temp;
+            output[c] = (int16_t)temp;
         }
+        output += 2;
     }
     static_cast<T *>(this)->nativePostGenerate();
 }
@@ -83,8 +84,9 @@ void OPLChipBaseT<T>::generateAndMix(int16_t *output, size_t frames)
             int32_t temp = (int32_t)output[c] + frame[c];
             temp = (temp > -32768) ? temp : -32768;
             temp = (temp < 32767) ? temp : 32767;
-            output[c] = temp;
+            output[c] = (int16_t)temp;
         }
+        output += 2;
     }
     static_cast<T *>(this)->nativePostGenerate();
 }
