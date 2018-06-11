@@ -1358,10 +1358,10 @@ static UINT32 DoVgmCommand(UINT8 cmd, const UINT8* data)
 		//	SendChipCommand_Data8(0x12, chipID, 0xFF, data[0x01] & 0x3F);	// AY8910 SSG
 		return 0x02;
 	case 0x4F:	// SN76489 GG Stereo
-		SendChipCommand_Data8(0x00, chipID, 0x01, data[0x01]);
+		SendChipCommand_Data8(0x00, chipID, SN76496_W_GGST, data[0x01]);
 		return 0x02;
 	case 0x50:	// SN76489
-		SendChipCommand_Data8(0x00, chipID, 0x00, data[0x01]);
+		SendChipCommand_Data8(0x00, chipID, SN76496_W_REG, data[0x01]);
 		return 0x02;
 	case 0x90:	// DAC Ctrl: Setup Chip
 		if (data[0x01] < DACSTRM_COUNT)

@@ -44,4 +44,7 @@ typedef struct sn76496_config
 
 extern const DEV_DEF* devDefList_SN76496[];
 
+#define SN76496_W_REG	0x00	// normal register write
+#define SN76496_W_GGST	0x01	// GameGear stereo write
+
 #endif	// __SN764INTF_H__

@@ -799,9 +799,9 @@ void S98Player::DoCommand(void)
 			if (_devHdrs[deviceID].devType == S98DEV_DCSG)
 			{
 				if (reg == 1)	// GG stereo
-					cDev->write(dataPtr, 0x01, data);
+					cDev->write(dataPtr, SN76496_W_GGST, data);
 				else
-					cDev->write(dataPtr, 0x00, data);
+					cDev->write(dataPtr, SN76496_W_REG, data);
 			}
 			else
 			{

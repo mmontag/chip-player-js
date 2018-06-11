@@ -414,10 +414,10 @@ static void sn76496_w_maxim(SN76489_Context* chip, UINT8 reg, UINT8 data)
 {
 	switch(reg)
 	{
-	case 0x00:
+	case SN76496_W_REG:
 		SN76489_Write(chip, data);
 		break;
-	case 0x01:
+	case SN76496_W_GGST:
 		SN76489_GGStereoWrite(chip, data);
 		break;
 	}

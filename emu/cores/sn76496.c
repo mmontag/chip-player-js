@@ -702,10 +702,10 @@ static void sn76496_w_mame(void *chip, UINT8 reg, UINT8 data)
 {
 	switch(reg)
 	{
-	case 0x00:
+	case SN76496_W_REG:
 		sn76496_write_reg(chip, 0x00, data);
 		break;
-	case 0x01:
+	case SN76496_W_GGST:
 		sn76496_stereo_w(chip, 0x00, data);
 		break;
 	}
