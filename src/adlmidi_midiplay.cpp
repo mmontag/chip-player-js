@@ -100,17 +100,16 @@ inline bool isXgPercChannel(uint8_t msb, uint8_t lsb)
 
 void MIDIplay::AdlChannel::AddAge(int64_t ms)
 {
+    const int64_t neg = static_cast<int64_t>(-0x1FFFFFFFl);
     if(users_empty())
-        koff_time_until_neglible =
-            std::max(int64_t(koff_time_until_neglible - ms), static_cast<int64_t>(-0x1FFFFFFFl));
+        koff_time_until_neglible = std::max(int64_t(koff_time_until_neglible - ms), neg);
     else
     {
         koff_time_until_neglible = 0;
-
         for(LocationData *i = users_first; i; i = i->next)
         {
-            i->kon_time_until_neglible =
-                std::max(i->kon_time_until_neglible - ms, static_cast<int64_t>(-0x1FFFFFFFl));
+            if(!i->fixed_sustain)
+                i->kon_time_until_neglible = std::max(i->kon_time_until_neglible - ms, neg);
             i->vibdelay += ms;
         }
     }
@@ -1466,6 +1465,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             {
                 d->sustained = false;
                 d->vibdelay  = 0;
+                d->fixed_sustain = (ains.ms_sound_kon == static_cast<uint16_t>(adlNoteOnMaxTime));
                 d->kon_time_until_neglible = ains.ms_sound_kon;
                 d->ins       = ins;
             }

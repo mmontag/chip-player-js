@@ -61,6 +61,8 @@ int maxAdlBanks();
 extern const unsigned short banks[][256];
 extern const char* const banknames[];
 
+enum { adlNoteOnMaxTime = 40000 };
+
 /**
  * @brief Instrument data with operators included
  */
