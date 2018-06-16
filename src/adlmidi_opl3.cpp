@@ -489,6 +489,7 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE)
     #ifndef ADLMIDI_HW_OPL
     ClearChips();
     #endif
+    (void)emulator;
     (void)PCM_RATE;
     ins.clear();
     pit.clear();
