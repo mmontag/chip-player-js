@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (libADLMIDI)
+project (libADLMIDI C CXX)
 
 #===========================================================================================
 # Strip garbage
@@ -20,7 +20,8 @@ IF(NOT MSVC AND NOT MSDOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 ENDIF()
 
-if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
+string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
+if(CMAKE_BUILD_TYPE_LOWER EQUAL "release")
     add_definitions(-DNDEBUG)
 ENDIF()
 
