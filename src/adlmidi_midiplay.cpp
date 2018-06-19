@@ -2463,7 +2463,7 @@ void MIDIplay::UpdatePortamento(unsigned MidCh)
     double rate = HUGE_VAL;
     uint16_t midival = Ch[MidCh].portamento;
     if(Ch[MidCh].portamentoEnable && midival > 0)
-        rate = 350.0 * std::exp2(-0.062 * (1.0 / 128) * midival);
+        rate = 350.0 * std::pow(2.0, -0.062 * (1.0 / 128) * midival);
     Ch[MidCh].portamentoRate = rate;
 }
 
