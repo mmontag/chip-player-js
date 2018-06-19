@@ -219,6 +219,9 @@ typedef struct {
     ADL_UInt16 patch;
 } ADL_Version;
 
+/*Run emulator with PCM rate to reduce CPU usage on slow devices. May decrease sounding accuracy.*/
+extern int adl_setRunAtPcmRate(struct ADL_MIDIPlayer *device, int enabled);
+
 /*Returns string which contains a version number*/
 extern const char *adl_linkedLibraryVersion();
 

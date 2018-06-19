@@ -10,6 +10,7 @@ public:
     NukedOPL3v174();
     ~NukedOPL3v174() override;
 
+    bool canRunAtPcmRate() const override { return false; }
     void setRate(uint32_t rate) override;
     void reset() override;
     void writeReg(uint16_t addr, uint8_t data) override;

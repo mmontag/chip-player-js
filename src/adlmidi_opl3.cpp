@@ -484,7 +484,7 @@ void OPL3::ClearChips()
 }
 #endif
 
-void OPL3::Reset(int emulator, unsigned long PCM_RATE)
+void OPL3::Reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 {
     #ifndef ADLMIDI_HW_OPL
     ClearChips();
@@ -520,25 +520,32 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE)
 
     for(size_t i = 0; i < NumCards; ++i)
     {
+        OPLChipBase *chip;
+
 #ifndef ADLMIDI_HW_OPL
         switch(emulator)
         {
         default:
 #ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
         case ADLMIDI_EMU_NUKED: /* Latest Nuked OPL3 */
-            cardsOP2[i].reset(new NukedOPL3());
+            chip = new NukedOPL3;
             break;
         case ADLMIDI_EMU_NUKED_174: /* Old Nuked OPL3 1.4.7 modified and optimized */
-            cardsOP2[i].reset(new NukedOPL3v174());
+            chip = new NukedOPL3v174;
             break;
 #endif
 #ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
         case ADLMIDI_EMU_DOSBOX:
-            cardsOP2[i].reset(new DosBoxOPL3());
+            chip = new DosBoxOPL3;
             break;
 #endif
         }
-        cardsOP2[i]->setRate((uint32_t)PCM_RATE);
+        cardsOP2[i].reset(chip);
+        chip->setChipId(i);
+        chip->setRate((uint32_t)PCM_RATE);
+        if(runAtPcmRate)
+            chip->setRunningAtPcmRate(true);
+        chip->setAudioTickHandlerInstance(audioTickHandler);
 #endif // ADLMIDI_HW_OPL
 
         for(unsigned a = 0; a < 18; ++a) Poke(i, 0xB0 + Channels[a], 0x00);

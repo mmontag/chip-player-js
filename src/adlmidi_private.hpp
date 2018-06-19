@@ -245,6 +245,8 @@ public:
     bool AdlPercussionMode;
     //! Carriers-only are scaled by default by volume level. This flag will tell to scale modulators too.
     bool ScaleModulators;
+    //! Run emulator at PCM rate if that possible. Reduces sounding accuracy, but decreases CPU usage on lower rates.
+    bool runAtPcmRate;
     // ! Required to play CMF files. Can be turned on by using of "CMF" volume model
     //bool LogarithmicVolumes; //[REPLACED WITH "m_volumeScale == VOLUME_NATIVE", DEPRECATED!!!]
     // ! Required to play EA-MUS files [REPLACED WITH "m_musicMode", DEPRECATED!!!]
@@ -294,7 +296,7 @@ public:
     #ifndef ADLMIDI_HW_OPL
     void ClearChips();
     #endif
-    void Reset(int emulator, unsigned long PCM_RATE);
+    void Reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler);
 };
 
 
@@ -933,6 +935,7 @@ public:
     struct Setup
     {
         int          emulator;
+        bool         runAtPcmRate;
         unsigned int AdlBank;
         unsigned int NumFourOps;
         unsigned int NumCards;
@@ -983,6 +986,9 @@ private:
     std::vector<AdlChannel> ch;
     //! Counter of arpeggio processing
     size_t m_arpeggioCounter;
+
+    //! Audio tick counter
+    uint32_t m_audioTickCounter;
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     std::vector<std::vector<uint8_t> > TrackData;
@@ -1181,6 +1187,9 @@ public:
 
     void realTime_panic();
 
+    // Audio rate tick handler
+    void AudioTick(uint32_t chipId, uint32_t rate);
+
 private:
     enum
     {
@@ -1249,6 +1258,11 @@ struct FourChars
 };
 */
 
+#if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
+#error The audio tick handler must be enabled!
+#endif
+
+extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate);
 extern int adlRefreshNumCards(ADL_MIDIPlayer *device);
 
 

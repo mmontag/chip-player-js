@@ -680,7 +680,8 @@ bool MIDIplay::buildTrackData()
 
 MIDIplay::MIDIplay(unsigned long sampleRate):
     cmf_percussion_mode(false),
-    m_arpeggioCounter(0)
+    m_arpeggioCounter(0),
+    m_audioTickCounter(0)
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     , fullSongTimeLength(0.0),
     postSongWaitDelay(1.0),
@@ -696,6 +697,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
     devices.clear();
 
     m_setup.emulator = ADLMIDI_EMU_NUKED;
+    m_setup.runAtPcmRate = false;
 
     m_setup.PCM_RATE   = sampleRate;
     m_setup.mindelay = 1.0 / (double)m_setup.PCM_RATE;
@@ -726,6 +728,8 @@ void MIDIplay::applySetup()
 {
     m_setup.tick_skip_samples_delay = 0;
 
+    opl.runAtPcmRate = m_setup.runAtPcmRate;
+
     if(opl.AdlBank != ~0u)
         opl.dynamic_bank_setup = adlbanksetup[m_setup.AdlBank];
 
@@ -752,7 +756,7 @@ void MIDIplay::applySetup()
     opl.NumFourOps  = m_setup.NumFourOps;
     cmf_percussion_mode = false;
 
-    opl.Reset(m_setup.emulator, m_setup.PCM_RATE);
+    opl.Reset(m_setup.emulator, m_setup.PCM_RATE, this);
     ch.clear();
     ch.resize(opl.NumChannels);
 
@@ -1435,6 +1439,13 @@ void MIDIplay::realTime_panic()
     KillSustainingNotes(-1, -1);
 }
 
+void MIDIplay::AudioTick(uint32_t chipId, uint32_t /*rate*/)
+{
+    if(chipId != 0)  // do first chip ticks only
+        return;
+
+    /*uint32_t tickNumber = */m_audioTickCounter++;
+}
 
 void MIDIplay::NoteUpdate(uint16_t MidCh,
                           MIDIplay::MIDIchannel::activenoteiterator i,
