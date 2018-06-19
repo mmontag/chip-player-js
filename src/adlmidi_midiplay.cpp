@@ -1209,10 +1209,25 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     ir = midiChan.activenotes_insert(note);
     ir.first->vol     = velocity;
     ir.first->vibrato = midiChan.noteAftertouch[note];
-    ir.first->tone    = tone;
+    ir.first->noteTone = tone;
+    ir.first->currentTone = tone;
+    ir.first->glideRate = HUGE_VAL;
     ir.first->midiins = midiins;
     ir.first->ains = ains;
     ir.first->chip_channels_count = 0;
+
+    int8_t currentPortamentoSource = midiChan.portamentoSource;
+    bool portamentoEnable = midiChan.portamentoEnable &&
+        !isPercussion && !isXgPercussion;
+    // Record the last note on MIDI channel as source of portamento
+    midiChan.portamentoSource = portamentoEnable ? (int8_t)note : (int8_t)-1;
+
+    // Enable gliding on portamento note
+    if (portamentoEnable && currentPortamentoSource >= 0)
+    {
+        ir.first->currentTone = currentPortamentoSource;
+        ir.first->glideRate = midiChan.portamentoRate;
+    }
 
     for(unsigned ccount = 0; ccount < MIDIchannel::NoteInfo::MaxNumPhysChans; ++ccount)
     {
@@ -1222,6 +1237,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         uint16_t chipChan = static_cast<uint16_t>(adlchannel[ccount]);
         ir.first->phys_ensure_find_or_create(chipChan)->assign(voices[ccount]);
     }
+
     NoteUpdate(channel, ir.first, Upd_All | Upd_Patch);
     return true;
 }
@@ -1281,17 +1297,17 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
 
     case 5: // Set portamento msb
         Ch[channel].portamento = static_cast<uint16_t>((Ch[channel].portamento & 0x7F) | (value << 7));
-        //UpdatePortamento(MidCh);
+        UpdatePortamento(channel);
         break;
 
     case 37: // Set portamento lsb
         Ch[channel].portamento = (Ch[channel].portamento & 0x3F80) | (value);
-        //UpdatePortamento(MidCh);
+        UpdatePortamento(channel);
         break;
 
     case 65: // Enable/disable portamento
-        // value >= 64 ? enabled : disabled
-        //UpdatePortamento(MidCh);
+        Ch[channel].portamentoEnable = value >= 64;
+        UpdatePortamento(channel);
         break;
 
     case 7: // Change volume
@@ -1324,7 +1340,6 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
 
     case 121: // Reset all controllers
         Ch[channel].resetAllControllers();
-        //UpdatePortamento(MidCh);
         NoteUpdate_All(channel, Upd_Pan + Upd_Volume + Upd_Pitch);
         // Kill all sustained notes
         KillSustainingNotes(channel);
@@ -1439,12 +1454,44 @@ void MIDIplay::realTime_panic()
     KillSustainingNotes(-1, -1);
 }
 
-void MIDIplay::AudioTick(uint32_t chipId, uint32_t /*rate*/)
+void MIDIplay::AudioTick(uint32_t chipId, uint32_t rate)
 {
     if(chipId != 0)  // do first chip ticks only
         return;
 
-    /*uint32_t tickNumber = */m_audioTickCounter++;
+    uint32_t tickNumber = m_audioTickCounter++;
+    double timeDelta = 1.0 / rate;
+
+    enum { portamentoInterval = 32 }; // for efficiency, set rate limit on pitch updates
+
+    if(tickNumber % portamentoInterval == 0)
+    {
+        double portamentoDelta = timeDelta * portamentoInterval;
+
+        for(unsigned channel = 0; channel < 16; ++channel)
+        {
+            MIDIchannel &midiChan = Ch[channel];
+            for(MIDIchannel::activenoteiterator it = midiChan.activenotes_begin();
+                it; ++it)
+            {
+                double finalTone = it->noteTone;
+                double previousTone = it->currentTone;
+
+                bool directionUp = previousTone < finalTone;
+                double toneIncr = portamentoDelta * (directionUp ? +it->glideRate : -it->glideRate);
+
+                double currentTone = previousTone + toneIncr;
+                bool glideFinished = !(directionUp ? (currentTone < finalTone) : (currentTone > finalTone));
+                currentTone = glideFinished ? finalTone : currentTone;
+
+                if(currentTone != previousTone)
+                {
+                    it->currentTone = currentTone;
+                    NoteUpdate(channel, it, Upd_Pitch);
+                }
+            }
+        }
+    }
 }
 
 void MIDIplay::NoteUpdate(uint16_t MidCh,
@@ -1453,7 +1500,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                           int32_t select_adlchn)
 {
     MIDIchannel::NoteInfo &info = *i;
-    const int16_t tone    = info.tone;
+    const int16_t noteTone    = info.noteTone;
+    const double currentTone    = info.currentTone;
     const uint8_t vol     = info.vol;
     const int midiins     = static_cast<int>(info.midiins);
     const adlinsdata2 &ains = *info.ains;
@@ -1501,7 +1549,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                     ch[c].users_erase(k);
 
                 if(hooks.onNote)
-                    hooks.onNote(hooks.onNote_userData, c, tone, midiins, 0, 0.0);
+                    hooks.onNote(hooks.onNote_userData, c, noteTone, midiins, 0, 0.0);
 
                 if(ch[c].users_empty())
                 {
@@ -1525,7 +1573,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 if(d)
                     d->sustained = true; // note: not erased!
                 if(hooks.onNote)
-                    hooks.onNote(hooks.onNote_userData, c, tone, midiins, -1, 0.0);
+                    hooks.onNote(hooks.onNote_userData, c, noteTone, midiins, -1, 0.0);
             }
 
             info.phys_erase_at(&ins);  // decrements channel count
@@ -1653,10 +1701,10 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 #else
 #   define BEND_COEFFICIENT 172.4387
 #endif
-                opl.NoteOn(c, BEND_COEFFICIENT * std::exp(0.057762265 * (static_cast<double>(tone) + bend + phase)));
+                opl.NoteOn(c, BEND_COEFFICIENT * std::exp(0.057762265 * (currentTone + bend + phase)));
 #undef BEND_COEFFICIENT
                 if(hooks.onNote)
-                    hooks.onNote(hooks.onNote_userData, c, tone, midiins, vol, midibend);
+                    hooks.onNote(hooks.onNote_userData, c, noteTone, midiins, vol, midibend);
             }
         }
     }
@@ -2314,11 +2362,11 @@ void MIDIplay::KillOrEvacuate(size_t from_channel,
             {
                 hooks.onNote(hooks.onNote_userData,
                              (int)from_channel,
-                             i->tone,
+                             i->noteTone,
                              static_cast<int>(i->midiins), 0, 0.0);
                 hooks.onNote(hooks.onNote_userData,
                              (int)c,
-                             i->tone,
+                             i->noteTone,
                              static_cast<int>(i->midiins),
                              i->vol, 0.0);
             }
@@ -2423,15 +2471,14 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
     }
 }
 
-//void MIDIplay::UpdatePortamento(unsigned MidCh)
-//{
-//    // mt = 2^(portamento/2048) * (1.0 / 5000.0)
-//    /*
-//    double mt = std::exp(0.00033845077 * Ch[MidCh].portamento);
-//    NoteUpdate_All(MidCh, Upd_Pitch);
-//    */
-//    //UI.PrintLn("Portamento %u: %u (unimplemented)", MidCh, Ch[MidCh].portamento);
-//}
+void MIDIplay::UpdatePortamento(unsigned MidCh)
+{
+    double rate = HUGE_VAL;
+    uint16_t midival = Ch[MidCh].portamento;
+    if(Ch[MidCh].portamentoEnable && midival > 0)
+        rate = 350.0 * std::exp2(-0.062 * (1.0 / 128) * midival);
+    Ch[MidCh].portamentoRate = rate;
+}
 
 void MIDIplay::NoteUpdate_All(uint16_t MidCh, unsigned props_mask)
 {

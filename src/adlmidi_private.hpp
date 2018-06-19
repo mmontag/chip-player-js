@@ -334,7 +334,7 @@ class MIDIplay
 {
     friend void adl_reset(struct ADL_MIDIPlayer*);
 public:
-    MIDIplay(unsigned long sampleRate = 22050);
+    explicit MIDIplay(unsigned long sampleRate = 22050);
 
     ~MIDIplay()
     {}
@@ -496,11 +496,14 @@ public:
     // Persistent settings for each MIDI channel
     struct MIDIchannel
     {
-        uint16_t portamento;
         uint8_t bank_lsb, bank_msb;
         uint8_t patch;
         uint8_t volume, expression;
         uint8_t panning, vibrato, aftertouch, sustain;
+        uint16_t portamento;
+        bool portamentoEnable;
+        int8_t portamentoSource;  // note number or -1
+        double portamentoRate;
         //! Per note Aftertouch values
         uint8_t noteAftertouch[128];
         //! Is note aftertouch has any non-zero value
@@ -524,8 +527,11 @@ public:
             // Note vibrato (a part of Note Aftertouch feature)
             uint8_t vibrato;
             // Tone selected on noteon:
-            int16_t tone;
-            char ____padding2[4];
+            int16_t noteTone;
+            // Current tone (!= noteTone if gliding note)
+            double currentTone;
+            // Gliding rate
+            double glideRate;
             // Patch selected on noteon; index to bank.ins[]
             size_t  midiins;
             // Patch selected
@@ -717,6 +723,9 @@ public:
             vibdelay = 0;
             panning = OPL_PANNING_BOTH;
             portamento = 0;
+            portamentoEnable = false;
+            portamentoSource = -1;
+            portamentoRate = HUGE_VAL;
             brightness = 127;
         }
         bool hasVibrato()
@@ -1228,7 +1237,7 @@ private:
     void Panic();
     void KillSustainingNotes(int32_t MidCh = -1, int32_t this_adlchn = -1);
     void SetRPN(unsigned MidCh, unsigned value, bool MSB);
-    //void UpdatePortamento(unsigned MidCh)
+    void UpdatePortamento(unsigned MidCh);
     void NoteUpdate_All(uint16_t MidCh, unsigned props_mask);
     void NoteOff(uint16_t MidCh, uint8_t note);
 
