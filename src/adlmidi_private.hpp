@@ -1258,10 +1258,6 @@ struct FourChars
 };
 */
 
-#if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
-#error The audio tick handler must be enabled!
-#endif
-
 extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate);
 extern int adlRefreshNumCards(ADL_MIDIPlayer *device);
 

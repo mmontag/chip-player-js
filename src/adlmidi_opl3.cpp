@@ -486,18 +486,22 @@ void OPL3::ClearChips()
 
 void OPL3::Reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 {
-    #ifndef ADLMIDI_HW_OPL
+#ifndef ADLMIDI_HW_OPL
     ClearChips();
-    #endif
+#else
     (void)emulator;
     (void)PCM_RATE;
+#endif
+#if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
+    (void)audioTickHandler;
+#endif
     ins.clear();
     pit.clear();
     regBD.clear();
 
-    #ifndef ADLMIDI_HW_OPL
+#ifndef ADLMIDI_HW_OPL
     cardsOP2.resize(NumCards, AdlMIDI_SPtr<OPLChipBase>());
-    #endif
+#endif
 
     NumChannels = NumCards * 23;
     ins.resize(NumChannels, adl[adlDefaultNumber]);
@@ -521,9 +525,8 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 
     for(size_t i = 0; i < NumCards; ++i)
     {
-        OPLChipBase *chip;
-
 #ifndef ADLMIDI_HW_OPL
+        OPLChipBase *chip;
         switch(emulator)
         {
         default:
@@ -546,7 +549,9 @@ void OPL3::Reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
         chip->setRate((uint32_t)PCM_RATE);
         if(runAtPcmRate)
             chip->setRunningAtPcmRate(true);
+#   if defined(ADLMIDI_AUDIO_TICK_HANDLER)
         chip->setAudioTickHandlerInstance(audioTickHandler);
+#   endif
 #endif // ADLMIDI_HW_OPL
 
         for(unsigned a = 0; a < 18; ++a) Poke(i, 0xB0 + Channels[a], 0x00);

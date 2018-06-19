@@ -1551,6 +1551,7 @@ static bool is_number(const std::string &s)
 
 int main(int argc, char **argv)
 {
+#ifndef HARDWARE_OPL3
     // How long is SDL buffer, in seconds?
     // The smaller the value, the more often AdlAudioCallBack()
     // is called.
@@ -1560,8 +1561,9 @@ int main(int argc, char **argv)
     const double OurHeadRoomLength = 0.1;
     // The lag between visual content and audio content equals
     // the sum of these two buffers.
+#endif
 
-    #ifndef _WIN32
+#ifndef _WIN32
     WritingToTTY = isatty(STDOUT_FILENO);
     if(WritingToTTY)
     {
@@ -1573,9 +1575,9 @@ int main(int argc, char **argv)
                  #endif
                 );
     }
-    #else
+#else
     WritingToTTY = true;
-    #endif
+#endif
     if(WritingToTTY)
     {
         UI.Print(0, 3, true, "(C) -- http://iki.fi/bisqwit/source/adlmidi.html");
@@ -1584,9 +1586,9 @@ int main(int argc, char **argv)
     std::fflush(stderr);
 
     signal(SIGINT, TidyupAndExit);
-    #ifdef __DJGPP__
+#ifdef __DJGPP__
     signal(SIGQUIT, TidyupAndExit);
-    #endif
+#endif
 
     if(argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")
     {
