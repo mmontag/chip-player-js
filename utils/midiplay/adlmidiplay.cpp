@@ -320,6 +320,8 @@ int main(int argc, char **argv)
     #endif
     #ifndef HARDWARE_OPL3
     int emulator = ADLMIDI_EMU_NUKED;
+    #endif
+    #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
     g_audioFormat.type = ADLMIDI_SampleType_S16;
     g_audioFormat.containerSize = sizeof(Sint16);
     g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
@@ -334,7 +336,7 @@ int main(int argc, char **argv)
         else if(!std::strcmp("-v", argv[2]))
             adl_setHVibrato(myDevice, 1);//Force turn on deep vibrato
 
-        #ifndef OUTPUT_WAVE_ONLY
+        #if !defined(OUTPUT_WAVE_ONLY) && !defined(HARDWARE_OPL3)
         else if(!std::strcmp("-w", argv[2]))
         {
             //Current Wave output implementation allows only SINT16 output
@@ -402,6 +404,7 @@ int main(int argc, char **argv)
     adl_switchEmulator(myDevice, emulator);
     #endif
 
+    std::fprintf(stdout, " - Library version %s\n", adl_linkedLibraryVersion());
     #ifdef HARDWARE_OPL3
     std::fprintf(stdout, " - Hardware OPL3 chip in use\n");
     #else

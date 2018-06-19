@@ -100,6 +100,7 @@ struct MeasureThreaded
     void waitAll();
 };
 
-extern DurationInfo MeasureDurations(const ins &in);
+class OPLChipBase;
+extern DurationInfo MeasureDurations(const ins &in, OPLChipBase *chip);
 
 #endif // MEASURER_H

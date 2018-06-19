@@ -44,6 +44,7 @@ static bool LoadBisqwit(const char *fn, unsigned bank, const char *prefix)
                 (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
         tmp[1].diff = (tmp[0] != tmp[1]);
+        tmp2.real4op = tmp[1].diff;
         size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2, (tmp[0] == tmp[1]));
         SetBank(bank, gmno, resno);
     }

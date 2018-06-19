@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (libADLMIDI)
+project (libADLMIDI C CXX)
 
 #===========================================================================================
 # Strip garbage
@@ -11,13 +11,21 @@ ELSEIF(NOT MSVC AND NOT MSDOS)
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-s")
 ENDIF()
 
-# Global optimization flags
 IF(NOT MSVC AND NOT MSDOS)
+# Global optimization flags
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fno-omit-frame-pointer")
+# Turn on all warnings
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 ENDIF()
 
-if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
+if(CMAKE_BUILD_TYPE_LOWER EQUAL "release")
     add_definitions(-DNDEBUG)
 ENDIF()
 
@@ -45,7 +53,7 @@ function(set_legacy_standard destTarget)
         if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
             # Turn on warnings and legacy C/C++ standards to support more compilers
             target_compile_options(${destTarget} PRIVATE
-                $<$<COMPILE_LANGUAGE:C>:-Wall -pedantic -std=c90>
+                $<$<COMPILE_LANGUAGE:C>:-Wall -pedantic -std=c90 -Wno-long-long>
                 $<$<COMPILE_LANGUAGE:CXX>:-Wall -pedantic -std=gnu++98>
             )
         endif()
@@ -53,25 +61,28 @@ function(set_legacy_standard destTarget)
 endfunction()
 #===========================================================================================
 
+option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
+option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
+
+option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can be found in 'adlmidi.hpp' header)" OFF)
+option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)" ON)
+option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
+option(WITH_HQ_RESAMPLER    "Build with support for high quality resampling" OFF)
+option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files)" ON)
+option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files)" ON)
+option(USE_DOSBOX_EMULATOR  "Use DosBox 0.74 OPL3 emulator (semi-accurate, suggested for slow or mobile platforms)" ON)
+option(USE_NUKED_EMULATOR   "Use Nuked OPL3 emulator (most accurate, powerful)" ON)
+
+option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
+option(WITH_GENADLDATA_COMMENTS "Enable comments in generated ADLDATA cache file" OFF)
+
 option(WITH_MIDIPLAY        "Build also demo MIDI player" OFF)
 option(MIDIPLAY_WAVE_ONLY   "Build Demo MIDI player without support of real time playing. It will output into WAV only." OFF)
 option(WITH_ADLMIDI2        "Build also classic ADLMIDI player [EXPERIMENTAL]" OFF)
 option(WITH_VLC_PLUGIN      "Build also a plugin for VLC Media Player" OFF)
 option(WITH_OLD_UTILS       "Build also old utilities" OFF)
-option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
-option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
-option(WITH_GENADLDATA_COMMENTS "Enable comments in generated ADLDATA cache file" OFF)
-option(USE_DOSBOX_EMULATOR  "Use DosBox 0.74 OPL3 emulator (semi-accurate, suggested for slow or mobile platforms)" ON)
-option(USE_NUKED_EMULATOR   "Use Nuked OPL3 emulator (most accurate, powerful)" ON)
-option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can be found in 'adlmidi.hpp' header)" OFF)
-option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)" ON)
-option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files)" ON)
-option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files)" ON)
-
-option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
-option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
-
 option(EXAMPLE_SDL2_AUDIO   "Build also a simple SDL2 demo MIDI player" OFF)
+
 
 if(CMAKE_VERSION VERSION_EQUAL "3.1" OR CMAKE_VERSION VERSION_GREATER "3.1")
     set(CMAKE_CXX_STANDARD 11)
@@ -97,6 +108,14 @@ if(WITH_OLD_UTILS)
     list(APPEND libADLMIDI_INSTALLS adldumpmiles)
 endif()
 
+if(WITH_ADLMIDI2 OR (WITH_EMBEDDED_BANKS AND WITH_GENADLDATA))
+    find_package(OpenMP)
+endif()
+
+if(WITH_HQ_RESAMPLER)
+    find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler" REQUIRED)
+endif()
+
 if(WITH_EMBEDDED_BANKS)
     if(WITH_GENADLDATA)
         set(GEN_ADLDATA_SRC)
@@ -105,10 +124,6 @@ if(WITH_EMBEDDED_BANKS)
             ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/progs_cache.cpp
             ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/measurer.cpp
             ${libADLMIDI_SOURCE_DIR}/utils/gen_adldata/ini/ini_processing.cpp
-        )
-
-        list(APPEND GEN_ADLDATA_SRC
-            ${libADLMIDI_SOURCE_DIR}/src/chips/opl_chip_base.cpp
         )
 
         if(USE_DOSBOX_EMULATOR)
@@ -139,12 +154,20 @@ if(WITH_EMBEDDED_BANKS)
         if(NOT MSVC)
             target_link_libraries(gen_adldata pthread m stdc++)
         endif()
-        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
-                CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
-                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-            if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
-                message("Turned on C++11 on GCC/CLang/Intel")
-                target_compile_options(gen_adldata PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+        if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
+                CMAKE_COMPILER_IS_MINGW)
+            if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
+                message("Turned on C++11 on GCC/CLang/Intel/MinGW")
+                set_target_properties(gen_adldata PROPERTIES
+                                      CXX_STANDARD 11
+                                      CXX_STANDARD_REQUIRED YES)
+                if(OPENMP_FOUND)
+                    target_compile_options(gen_adldata PUBLIC "-fopenmp")
+                    target_link_libraries(gen_adldata "-fopenmp")
+                endif()
             endif()
         else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             message("Turned on C++11 on MSVC")
@@ -155,12 +178,16 @@ if(WITH_EMBEDDED_BANKS)
             target_compile_options(gen_adldata PUBLIC "-DADLDATA_WITH_COMMENTS")
         endif()
 
-        add_custom_target(
-            gen-adldata-run
-            COMMAND gen_adldata ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
-            WORKING_DIRECTORY ${libADLMIDI_SOURCE_DIR}
+        set(ADLDATA_DATABASE
+            "${libADLMIDI_SOURCE_DIR}/src/adldata.cpp"
         )
-        add_dependencies(gen-adldata-run gen_adldata)
+        add_custom_target(gen-adldata-run #OUTPUT ${ADLDATA_DATABASE}
+            COMMAND gen_adldata "${ADLDATA_DATABASE}"
+            WORKING_DIRECTORY ${libADLMIDI_SOURCE_DIR}
+            DEPENDS gen_adldata "${libADLMIDI_SOURCE_DIR}/banks.ini"
+            COMMENT "Running Embedded FM banks database generation"
+            VERBATIM
+        )
     endif()
 endif()
 
@@ -193,10 +220,6 @@ else()
 endif()
 
 if(NOT DJGPP AND NOT MSDOS)
-    list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/chips/opl_chip_base.cpp
-    )
-
     if(USE_DOSBOX_EMULATOR)
         set(HAS_EMULATOR TRUE)
         list(APPEND libADLMIDI_SOURCES
@@ -269,9 +292,9 @@ endif()
 
 add_library(ADLMIDI INTERFACE)
 if(libADLMIDI_SHARED)
-  target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
+    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
 else()
-  target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
+    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
 endif()
 
 if(WITH_MIDIPLAY)
@@ -342,6 +365,7 @@ if(WITH_ADLMIDI2)
         set(ADLMIDI2_VIDEO_OUT_SUPPORT "TRUE")
     endif()
 
+
     set(adlmidi2_src)
     list(APPEND adlmidi2_src
         ${libADLMIDI_SOURCE_DIR}/utils/adlmidi-2/midiplay.cc
@@ -354,11 +378,11 @@ if(WITH_ADLMIDI2)
     add_executable(adlmidi2 ${adlmidi2_src})
 
     if(ADLMIDI2_HAS_PUZZLE_GAME)
-        target_compile_options(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
+        target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
     endif()
 
     if(ADLMIDI2_VIDEO_OUT_SUPPORT)
-        target_compile_options(adlmidi2 PUBLIC "-DSUPPORT_VIDEO_OUTPUT")
+        target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_VIDEO_OUTPUT")
     endif()
 
     if(WIN32)
@@ -373,12 +397,20 @@ if(WITH_ADLMIDI2)
         message(FATAL_ERROR "ADLMIDI2 Requires C++ Extras. Please enable WITH_CPP_EXTRAS option!")
     endif()
 
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
-            CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
-            "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-        if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.2)
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
+                CMAKE_COMPILER_IS_MINGW)
+        if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
             message("Turned on C++11 on GCC/CLang/Intel")
-            target_compile_options(adlmidi2 PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+            set_target_properties(adlmidi2 PROPERTIES
+                                      CXX_STANDARD 11
+                                      CXX_STANDARD_REQUIRED YES)
+        endif()
+        if(OPENMP_FOUND)
+            target_compile_options(adlmidi2 PUBLIC "-fopenmp")
+            target_link_libraries(adlmidi2 "-fopenmp")
         endif()
     else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         message("Turned on C++11 on MSVC")
@@ -388,7 +420,7 @@ if(WITH_ADLMIDI2)
     if(libADLMIDI_SHARED)
         add_dependencies(adlmidi2 ADLMIDI_shared)
         # ========= WIP =========
-        # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+        set_target_properties(adlmidi2 PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
     else()
         if(NOT libADLMIDI_STATIC)
             message(FATAL_ERROR "libADLMIDI is required to be built!")
@@ -469,6 +501,17 @@ if(WITH_VLC_PLUGIN)
 
 endif()
 
+if(WITH_HQ_RESAMPLER)
+    if(libADLMIDI_SHARED)
+        target_compile_definitions(ADLMIDI_shared PRIVATE -DADLMIDI_ENABLE_HQ_RESAMPLER)
+        target_link_libraries(ADLMIDI_shared PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
+    endif()
+    if(libADLMIDI_STATIC)
+        target_compile_definitions(ADLMIDI_static PRIVATE -DADLMIDI_ENABLE_HQ_RESAMPLER)
+        target_link_libraries(ADLMIDI_static PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
+    endif()
+endif()
+
 install(TARGETS ${libADLMIDI_INSTALLS}
         RUNTIME DESTINATION "bin"
         LIBRARY DESTINATION "lib"
@@ -480,22 +523,33 @@ install(FILES
         include/adlmidi.hpp
         DESTINATION include/)
 
+option(WITH_UNIT_TESTS "Enable unit testing" OFF)
+if(WITH_UNIT_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
 message("==== libADLMIDI options ====")
-message("WITH_MIDIPLAY            = ${WITH_MIDIPLAY}")
-message("WITH_VLC_PLUGIN          = ${WITH_VLC_PLUGIN}")
-message("MIDIPLAY_WAVE_ONLY       = ${MIDIPLAY_WAVE_ONLY}")
-message("WITH_ADLMIDI2            = ${WITH_ADLMIDI2}")
-message("WITH_OLD_UTILS           = ${WITH_OLD_UTILS}")
-message("WITH_EMBEDDED_BANKS      = ${WITH_EMBEDDED_BANKS}")
-message("WITH_GENADLDATA          = ${WITH_GENADLDATA}")
-message("WITH_GENADLDATA_COMMENTS = ${WITH_GENADLDATA_COMMENTS}")
-message("USE_DOSBOX_EMULATOR      = ${USE_DOSBOX_EMULATOR}")
-message("USE_NUKED_EMULATOR       = ${USE_NUKED_EMULATOR}")
-message("WITH_MIDI_SEQUENCER      = ${WITH_MIDI_SEQUENCER}")
-message("WITH_CPP_EXTRAS          = ${WITH_CPP_EXTRAS}")
-message("WITH_MUS_SUPPORT         = ${WITH_MUS_SUPPORT}")
-message("WITH_XMI_SUPPORT         = ${WITH_XMI_SUPPORT}")
 message("libADLMIDI_STATIC        = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED        = ${libADLMIDI_SHARED}")
-message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")
+message("WITH_UNIT_TESTS          = ${WITH_UNIT_TESTS}")
 
+message("WITH_CPP_EXTRAS          = ${WITH_CPP_EXTRAS}")
+message("WITH_MIDI_SEQUENCER      = ${WITH_MIDI_SEQUENCER}")
+message("WITH_EMBEDDED_BANKS      = ${WITH_EMBEDDED_BANKS}")
+message("WITH_HQ_RESAMPLER        = ${WITH_HQ_RESAMPLER}")
+message("WITH_MUS_SUPPORT         = ${WITH_MUS_SUPPORT}")
+message("WITH_XMI_SUPPORT         = ${WITH_XMI_SUPPORT}")
+message("USE_DOSBOX_EMULATOR      = ${USE_DOSBOX_EMULATOR}")
+message("USE_NUKED_EMULATOR       = ${USE_NUKED_EMULATOR}")
+
+message("===== Utils and extras =====")
+message("WITH_GENADLDATA          = ${WITH_GENADLDATA}")
+message("WITH_GENADLDATA_COMMENTS = ${WITH_GENADLDATA_COMMENTS}")
+
+message("WITH_MIDIPLAY            = ${WITH_MIDIPLAY}")
+message("MIDIPLAY_WAVE_ONLY       = ${MIDIPLAY_WAVE_ONLY}")
+message("WITH_ADLMIDI2            = ${WITH_ADLMIDI2}")
+message("WITH_VLC_PLUGIN          = ${WITH_VLC_PLUGIN}")
+message("WITH_OLD_UTILS           = ${WITH_OLD_UTILS}")
+message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")

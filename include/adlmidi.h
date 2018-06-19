@@ -30,7 +30,7 @@ extern "C" {
 
 #define ADLMIDI_VERSION_MAJOR       1
 #define ADLMIDI_VERSION_MINOR       3
-#define ADLMIDI_VERSION_PATCHLEVEL  2
+#define ADLMIDI_VERSION_PATCHLEVEL  3
 
 #define ADLMIDI_TOSTR_I(s) #s
 #define ADLMIDI_TOSTR(s) ADLMIDI_TOSTR_I(s)
@@ -58,11 +58,12 @@ typedef short           ADL_SInt16;
 enum ADLMIDI_VolumeModels
 {
     ADLMIDI_VolumeModel_AUTO = 0,
-    ADLMIDI_VolumeModel_Generic,
-    ADLMIDI_VolumeModel_CMF,
-    ADLMIDI_VolumeModel_DMX,
-    ADLMIDI_VolumeModel_APOGEE,
-    ADLMIDI_VolumeModel_9X
+    ADLMIDI_VolumeModel_Generic = 1,
+    ADLMIDI_VolumeModel_NativeOPL3 = 2,
+    ADLMIDI_VolumeModel_CMF = ADLMIDI_VolumeModel_NativeOPL3,
+    ADLMIDI_VolumeModel_DMX = 3,
+    ADLMIDI_VolumeModel_APOGEE = 4,
+    ADLMIDI_VolumeModel_9X = 5
 };
 
 enum ADLMIDI_SampleType
@@ -110,6 +111,46 @@ extern int adl_getBanksCount();
 /* Returns pointer to array of names of every bank */
 extern const char *const *adl_getBankNames();
 
+/* Reference to dynamic bank */
+typedef struct ADL_Bank
+{
+    void *pointer[3];
+} ADL_Bank;
+
+/* Identifier of dynamic bank */
+typedef struct ADL_BankId
+{
+    ADL_UInt8 percussive, msb, lsb;
+} ADL_BankId;
+
+/* Flags for dynamic bank access */
+enum ADL_BankAccessFlags
+{
+    ADLMIDI_Bank_Create = 1,      /* create bank, allocating memory as needed */
+    ADLMIDI_Bank_CreateRt = 1|2,  /* create bank, never allocating memory */
+};
+
+typedef struct ADL_Instrument ADL_Instrument;
+
+#if defined(ADLMIDI_UNSTABLE_API)
+/* Preallocates a minimum number of bank slots. Returns the actual capacity. */
+extern int adl_reserveBanks(struct ADL_MIDIPlayer *device, unsigned banks);
+/* Gets the bank designated by the identifier, optionally creating if it does not exist. */
+extern int adl_getBank(struct ADL_MIDIPlayer *device, const ADL_BankId *id, int flags, ADL_Bank *bank);
+/* Gets the identifier of a bank. */
+extern int adl_getBankId(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, ADL_BankId *id);
+/* Removes a bank. */
+extern int adl_removeBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
+/* Gets the first bank. */
+extern int adl_getFirstBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
+/* Iterates to the next bank. */
+extern int adl_getNextBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
+/* Gets the nth intrument in the bank [0..127]. */
+extern int adl_getInstrument(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, unsigned index, ADL_Instrument *ins);
+/* Sets the nth intrument in the bank [0..127]. */
+extern int adl_setInstrument(struct ADL_MIDIPlayer *device, ADL_Bank *bank, unsigned index, const ADL_Instrument *ins);
+#endif /* defined(ADLMIDI_UNSTABLE_API) */
+
 /*Sets number of 4-operator channels between all chips.
   By default, it is automatically re-calculating every bank change.
   If you want to specify custom number of four operator channels,
@@ -141,7 +182,7 @@ extern void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_bri
 /*Enable or disable built-in loop (built-in loop supports 'loopStart' and 'loopEnd' tags to loop specific part)*/
 extern void adl_setLoopEnabled(struct ADL_MIDIPlayer *device, int loopEn);
 
-/*Enable or disable Logariphmic volume changer */
+/* !!!DEPRECATED!!! Enable or disable Logariphmic volume changer */
 extern void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol);
 
 /*Set different volume range model */
@@ -335,6 +376,70 @@ extern void adl_setNoteHook(struct ADL_MIDIPlayer *device, ADL_NoteHook noteHook
 
 /* Set debug message hook */
 extern void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_DebugMessageHook debugMessageHook, void *userData);
+
+
+/**Instrument structures**/
+
+enum
+{
+    ADLMIDI_InstrumentVersion = 0,
+};
+
+typedef enum ADL_InstrumentFlags
+{
+    /* Is two-operator single-voice instrument (no flags) */
+    ADLMIDI_Ins_2op        = 0x00,
+    /* Is true four-operator instrument */
+    ADLMIDI_Ins_4op        = 0x01,
+    /* Is pseudo four-operator (two 2-operator voices) instrument */
+    ADLMIDI_Ins_Pseudo4op  = 0x02,
+    /* Is a blank instrument entry */
+    ADLMIDI_Ins_IsBlank    = 0x04,
+    /* Mask of the flags range */
+    ADLMIDI_Ins_ALL_MASK   = 0x07,
+} ADL_InstrumentFlags;
+
+typedef struct ADL_Operator
+{
+    /* AM/Vib/Env/Ksr/FMult characteristics */
+    ADL_UInt8 avekf_20;
+    /* Key Scale Level / Total level register data */
+    ADL_UInt8 ksl_l_40;
+    /* Attack / Decay */
+    ADL_UInt8 atdec_60;
+    /* Systain and Release register data */
+    ADL_UInt8 susrel_80;
+    /* Wave form */
+    ADL_UInt8 waveform_E0;
+} ADL_Operator;
+
+typedef struct ADL_Instrument
+{
+    /* Version of the instrument object */
+    int version;
+    /* MIDI note key (half-tone) offset for an instrument (or a first voice in pseudo-4-op mode) */
+    ADL_SInt16 note_offset1;
+    /* MIDI note key (half-tone) offset for a second voice in pseudo-4-op mode */
+    ADL_SInt16 note_offset2;
+    /* MIDI note velocity offset (taken from Apogee TMB format) */
+    ADL_SInt8  midi_velocity_offset;
+    /* Second voice detune level (taken from DMX OP2) */
+    ADL_SInt8  second_voice_detune;
+    /* Percussion MIDI base tone number at which this drum will be played */
+    ADL_UInt8 percussion_key_number;
+    /* Enum ADL_InstrumentFlags */
+    ADL_UInt8 inst_flags;
+    /* Feedback&Connection register for first and second operators */
+    ADL_UInt8 fb_conn1_C0;
+    /* Feedback&Connection register for third and fourth operators */
+    ADL_UInt8 fb_conn2_C0;
+    /* Operators register data */
+    ADL_Operator operators[4];
+    /* Millisecond delay of sounding while key is on */
+    ADL_UInt16 delay_on_ms;
+    /* Millisecond delay of sounding after key off */
+    ADL_UInt16 delay_off_ms;
+} ADL_Instrument;
 
 #ifdef __cplusplus
 }

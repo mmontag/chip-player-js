@@ -50,6 +50,7 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
         struct ins tmp2;
         tmp2.notenum   = data[offset + 11];
         tmp2.pseudo4op = false;
+        tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
 
         std::string name;

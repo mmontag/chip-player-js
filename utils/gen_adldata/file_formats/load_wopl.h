@@ -57,8 +57,8 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
     uint16_t pbanks_count = toUint16BE((const uint8_t *)data.data() + 0x0f);
 
     AdlBankSetup setup;
-    setup.deepTremolo = (data[0x11] >> 0) & 0x01;
-    setup.deepVibrato = (data[0x11] >> 1) & 0x01;
+    setup.deepTremolo = (data[0x11] & 0x01) != 0;
+    setup.deepVibrato = (data[0x11] & 0x02) != 0;
     setup.volumeModel = (int)data[0x12];
     setup.adLibPercussions = false;
     setup.scaleModulators  = false;
@@ -169,6 +169,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 tmp2.notenum = is_percussion ? data[offset + 38] : 0;
                 bool real4op = (flags & (uint8_t)WOPL_Flags::Mode_4op) != 0;
                 tmp2.pseudo4op = (flags & (uint8_t)WOPL_Flags::Mode_DoubleVoice) != 0;
+                tmp2.real4op = real4op && !tmp2.pseudo4op;
                 tmp2.voice2_fine_tune = 0;
                 tmp[0].diff = false;
                 tmp[1].diff = real4op && !tmp2.pseudo4op;
@@ -207,9 +208,9 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 char name2[512];
                 std::memset(name2, 0, 512);
                 if(is_percussion)
-                    std::snprintf(name2, 512, "%sP%u", prefix, gmno & 127);
+                    snprintf(name2, 512, "%sP%u", prefix, gmno & 127);
                 else
-                    std::snprintf(name2, 512, "%sM%u", prefix, i);
+                    snprintf(name2, 512, "%sM%u", prefix, i);
 
                 if(!real4op && !tmp2.pseudo4op)
                 {

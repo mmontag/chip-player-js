@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
--24
-270
-10288
-9680
+-32
+260
+10304
+9710
 2
 MProject
 3
@@ -24,7 +24,7 @@ ADLMIDI.tgt
 6
 WFileName
 12
-playmidi.tgt
+pmidid32.tgt
 7
 WVList
 2
@@ -32,8 +32,8 @@ WVList
 VComponent
 9
 WRect
-160
-270
+328
+240
 5712
 4360
 0
@@ -48,8 +48,8 @@ ADLMIDI.tgt
 VComponent
 12
 WRect
-1712
-810
+3760
+680
 5712
 4360
 0
@@ -57,7 +57,7 @@ WRect
 13
 WFileName
 12
-playmidi.tgt
+pmidid32.tgt
 0
 3
 11

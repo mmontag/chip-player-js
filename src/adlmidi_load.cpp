@@ -72,63 +72,126 @@ bool MIDIplay::LoadBank(const void *data, size_t size)
     return LoadBank(file);
 }
 
-
-struct WOPL_Inst
+template <class WOPLI>
+static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
 {
-    bool fourOps;
-    char padding[7];
-    struct adlinsdata adlins;
-    struct adldata    op[2];
-    uint16_t ms_sound_kon;
-    uint16_t ms_sound_koff;
-};
-
-static void cvt_WOPLI_to_FMIns(WOPL_Inst &ins, WOPLInstrument &in)
-{
-    ins.op[0].finetune = in.note_offset1;
-    ins.op[1].finetune = in.note_offset2;
-
-    ins.adlins.voice2_fine_tune = 0.0;
+    ins.voice2_fine_tune = 0.0;
     int8_t voice2_fine_tune = in.second_voice_detune;
     if(voice2_fine_tune != 0)
     {
         if(voice2_fine_tune == 1)
-            ins.adlins.voice2_fine_tune = 0.000025;
+            ins.voice2_fine_tune = 0.000025;
         else if(voice2_fine_tune == -1)
-            ins.adlins.voice2_fine_tune = -0.000025;
+            ins.voice2_fine_tune = -0.000025;
         else
-            ins.adlins.voice2_fine_tune = ((voice2_fine_tune * 15.625) / 1000.0);
+            ins.voice2_fine_tune = voice2_fine_tune * (15.625 / 1000.0);
     }
 
-    ins.adlins.tone = in.percussion_key_number;
+    ins.tone = in.percussion_key_number;
+    ins.flags = (in.inst_flags & WOPL_Ins_4op) && (in.inst_flags & WOPL_Ins_Pseudo4op) ? adlinsdata::Flag_Pseudo4op : 0;
+    ins.flags|= (in.inst_flags & WOPL_Ins_4op) && ((in.inst_flags & WOPL_Ins_Pseudo4op) == 0) ? adlinsdata::Flag_Real4op : 0;
+    ins.flags|= (in.inst_flags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
 
-    ins.adlins.flags = (in.inst_flags & WOPL_Ins_4op) && (in.inst_flags & WOPL_Ins_Pseudo4op) ? adlinsdata::Flag_Pseudo4op : 0;
-    ins.adlins.flags|= (in.inst_flags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
-    ins.fourOps      = (in.inst_flags & WOPL_Ins_4op) || (in.inst_flags & WOPL_Ins_Pseudo4op);
-
-    ins.op[0].feedconn = in.fb_conn1_C0;
-    ins.op[1].feedconn = in.fb_conn2_C0;
-
-    for(size_t op = 0, slt = 0; op < 4; op++, slt++)
+    bool fourOps = (in.inst_flags & WOPL_Ins_4op) || (in.inst_flags & WOPL_Ins_Pseudo4op);
+    for(size_t op = 0, slt = 0; op < static_cast<size_t>(fourOps ? 4 : 2); op++, slt++)
     {
-        ins.op[slt].carrier_E862 =
+        ins.adl[slt].carrier_E862 =
             ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
             | ((static_cast<uint32_t>(in.operators[op].susrel_80) << 16) & 0x00FF0000) //SusRel
             | ((static_cast<uint32_t>(in.operators[op].atdec_60) << 8) & 0x0000FF00)   //AtDec
             | ((static_cast<uint32_t>(in.operators[op].avekf_20) << 0) & 0x000000FF);  //AVEKM
-        ins.op[slt].carrier_40 = in.operators[op].ksl_l_40;//KSLL
+        ins.adl[slt].carrier_40 = in.operators[op].ksl_l_40;//KSLL
 
         op++;
-        ins.op[slt].modulator_E862 =
+        ins.adl[slt].modulator_E862 =
             ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
             | ((static_cast<uint32_t>(in.operators[op].susrel_80) << 16) & 0x00FF0000) //SusRel
             | ((static_cast<uint32_t>(in.operators[op].atdec_60) << 8) & 0x0000FF00)   //AtDec
             | ((static_cast<uint32_t>(in.operators[op].avekf_20) << 0) & 0x000000FF);  //AVEKM
-        ins.op[slt].modulator_40 = in.operators[op].ksl_l_40;//KSLL
+        ins.adl[slt].modulator_40 = in.operators[op].ksl_l_40;//KSLL
+    }
+
+    ins.adl[0].finetune = static_cast<int8_t>(in.note_offset1);
+    ins.adl[0].feedconn = in.fb_conn1_C0;
+    if(!fourOps)
+        ins.adl[1] = ins.adl[0];
+    else
+    {
+        ins.adl[1].finetune = static_cast<int8_t>(in.note_offset2);
+        ins.adl[1].feedconn = in.fb_conn2_C0;
     }
 
     ins.ms_sound_kon  = in.delay_on_ms;
     ins.ms_sound_koff = in.delay_off_ms;
+}
+
+template <class WOPLI>
+static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
+{
+    ins.second_voice_detune = 0;
+    double voice2_fine_tune = in.voice2_fine_tune;
+    if(voice2_fine_tune != 0)
+    {
+        if(voice2_fine_tune > 0 && voice2_fine_tune <= 0.000025)
+            ins.second_voice_detune = 1;
+        else if(voice2_fine_tune < 0 && voice2_fine_tune >= -0.000025)
+            ins.second_voice_detune = -1;
+        else
+        {
+            long value = lround(voice2_fine_tune * (1000.0 / 15.625));
+            value = (value < -128) ? -128 : value;
+            value = (value > +127) ? +127 : value;
+            ins.second_voice_detune = static_cast<int8_t>(value);
+        }
+    }
+
+    ins.percussion_key_number = in.tone;
+    bool fourOps = (in.flags & adlinsdata::Flag_Pseudo4op) || in.adl[0] != in.adl[1];
+    ins.inst_flags = fourOps ? WOPL_Ins_4op : 0;
+    ins.inst_flags|= (in.flags & adlinsdata::Flag_Pseudo4op) ? WOPL_Ins_Pseudo4op : 0;
+    ins.inst_flags|= (in.flags & adlinsdata::Flag_NoSound) ? WOPL_Ins_IsBlank : 0;
+
+    for(size_t op = 0, slt = 0; op < static_cast<size_t>(fourOps ? 4 : 2); op++, slt++)
+    {
+        ins.operators[op].waveform_E0 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 24);
+        ins.operators[op].susrel_80 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 16);
+        ins.operators[op].atdec_60 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 8);
+        ins.operators[op].avekf_20 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 0);
+        ins.operators[op].ksl_l_40 = in.adl[slt].carrier_40;
+
+        op++;
+        ins.operators[op].waveform_E0 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 24);
+        ins.operators[op].susrel_80 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 16);
+        ins.operators[op].atdec_60 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 8);
+        ins.operators[op].avekf_20 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 0);
+        ins.operators[op].ksl_l_40 = in.adl[slt].carrier_40;
+    }
+
+    ins.note_offset1 = in.adl[0].finetune;
+    ins.fb_conn1_C0 = in.adl[0].feedconn;
+    if(!fourOps)
+    {
+        ins.operators[2] = ins.operators[0];
+        ins.operators[3] = ins.operators[1];
+    }
+    else
+    {
+        ins.note_offset2 = in.adl[1].finetune;
+        ins.fb_conn2_C0 = in.adl[1].feedconn;
+    }
+
+    ins.delay_on_ms = in.ms_sound_kon;
+    ins.delay_off_ms = in.ms_sound_koff;
+}
+
+void cvt_ADLI_to_FMIns(adlinsdata2 &ins, const ADL_Instrument &in)
+{
+    return cvt_generic_to_FMIns(ins, in);
+}
+
+void cvt_FMIns_to_ADLI(ADL_Instrument &ins, const adlinsdata2 &in)
+{
+    cvt_FMIns_to_generic(ins, in);
 }
 
 bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
@@ -187,54 +250,41 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
         }
     }
 
-    m_setup.HighTremoloMode = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
-    m_setup.HighVibratoMode = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;
-    m_setup.VolumeModel     = wopl->volume_model;
-
-    /* TODO: Avoid memory reallocation in nearest future! */
-    opl.dynamic_melodic_banks.clear();
-    opl.dynamic_percussion_banks.clear();
+    opl.dynamic_bank_setup.adLibPercussions = false;
+    opl.dynamic_bank_setup.scaleModulators = false;
+    opl.dynamic_bank_setup.deepTremolo = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
+    opl.dynamic_bank_setup.deepVibrato = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;
+    opl.dynamic_bank_setup.volumeModel = wopl->volume_model;
+    m_setup.HighTremoloMode = -1;
+    m_setup.HighVibratoMode = -1;
+    m_setup.VolumeModel = ADLMIDI_VolumeModel_AUTO;
 
     opl.setEmbeddedBank(m_setup.AdlBank);
 
-    OPL3::BankMap *slots_banks[2] = { &opl.dynamic_melodic_banks, &opl.dynamic_percussion_banks};
     uint16_t slots_counts[2] = {wopl->banks_count_melodic, wopl->banks_count_percussion};
     WOPLBank *slots_src_ins[2] = { wopl->banks_melodic, wopl->banks_percussive };
 
-    for(int ss = 0; ss < 2; ss++)
+    for(unsigned ss = 0; ss < 2; ss++)
     {
-        for(int i = 0; i < slots_counts[ss]; i++)
+        for(unsigned i = 0; i < slots_counts[ss]; i++)
         {
-            uint16_t bank = (slots_src_ins[ss][i].bank_midi_msb * 256) + slots_src_ins[ss][i].bank_midi_lsb;
-            size_t offset = slots_banks[ss]->size();
-            (*slots_banks[ss])[bank] = offset;
-
+            unsigned bankno =
+                (slots_src_ins[ss][i].bank_midi_msb * 256) +
+                slots_src_ins[ss][i].bank_midi_lsb +
+                (ss ? OPL3::PercussionTag : 0);
+            OPL3::Bank &bank = opl.dynamic_banks[bankno];
             for(int j = 0; j < 128; j++)
             {
-                WOPL_Inst ins;
-                std::memset(&ins, 0, sizeof(WOPL_Inst));
+                adlinsdata2 &ins = bank.ins[j];
+                std::memset(&ins, 0, sizeof(adlinsdata2));
                 WOPLInstrument &inIns = slots_src_ins[ss][i].ins[j];
-
-                cvt_WOPLI_to_FMIns(ins, inIns);
-
-                ins.adlins.ms_sound_kon  = ins.ms_sound_kon;
-                ins.adlins.ms_sound_koff = ins.ms_sound_koff;
-                ins.adlins.adlno1 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
-                opl.dynamic_instruments.push_back(ins.op[0]);
-                ins.adlins.adlno2 = ins.adlins.adlno1;
-                if(ins.fourOps)
-                {
-                    ins.adlins.adlno2 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
-                    opl.dynamic_instruments.push_back(ins.op[1]);
-                }
-                opl.dynamic_metainstruments.push_back(ins.adlins);
+                cvt_generic_to_FMIns(ins, inIns);
             }
         }
     }
 
     opl.AdlBank = ~0u; // Use dynamic banks!
     //Percussion offset is count of instruments multipled to count of melodic banks
-    opl.dynamic_percussion_offset = 128 * wopl->banks_count_melodic;
     applySetup();
 
     WOPL_Free(wopl);
@@ -268,7 +318,7 @@ bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
     errorString.clear();
 
     #ifdef DISABLE_EMBEDDED_BANKS
-    if((opl.AdlBank != ~0u) || (opl.dynamic_metainstruments.size() < 256))
+    if((opl.AdlBank != ~0u) || opl.dynamic_banks.empty())
     {
         errorStringOut = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
         return false;
@@ -392,8 +442,7 @@ riffskip:
     #endif //ADLMIDI_DISABLE_XMI_SUPPORT
     else if(std::memcmp(HeaderBuf, "CTMF", 4) == 0)
     {
-        opl.dynamic_instruments.clear();
-        opl.dynamic_metainstruments.clear();
+        opl.dynamic_banks.clear();
         // Creative Music Format (CMF).
         // When playing CTMF files, use the following commandline:
         // adlmidi song8.ctmf -p -v 1 1 0
@@ -415,13 +464,19 @@ riffskip:
         //std::printf("%u instruments\n", ins_count);
         for(unsigned i = 0; i < ins_count; ++i)
         {
+            unsigned bank = i / 256;
+            bank = (bank & 127) + ((bank >> 7) << 8);
+            if(bank > 127 + (127 << 8))
+                break;
+            bank += (i % 256 < 128) ? 0 : OPL3::PercussionTag;
+
             unsigned char InsData[16];
             fr.read(InsData, 1, 16);
             /*std::printf("Ins %3u: %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X\n",
                         i, InsData[0],InsData[1],InsData[2],InsData[3], InsData[4],InsData[5],InsData[6],InsData[7],
                            InsData[8],InsData[9],InsData[10],InsData[11], InsData[12],InsData[13],InsData[14],InsData[15]);*/
-            struct adldata    adl;
-            struct adlinsdata adlins;
+            adlinsdata2 &adlins = opl.dynamic_banks[bank].ins[i % 128];
+            adldata    adl;
             adl.modulator_E862 =
                 ((static_cast<uint32_t>(InsData[8] & 0x07) << 24) & 0xFF000000) //WaveForm
                 | ((static_cast<uint32_t>(InsData[6]) << 16) & 0x00FF0000) //Sustain/Release
@@ -436,15 +491,13 @@ riffskip:
             adl.carrier_40   = InsData[3];
             adl.feedconn     = InsData[10] & 0x0F;
             adl.finetune = 0;
-            adlins.adlno1 = static_cast<uint16_t>(opl.dynamic_instruments.size() | opl.DynamicInstrumentTag);
-            adlins.adlno2 = adlins.adlno1;
+            adlins.adl[0] = adl;
+            adlins.adl[1] = adl;
             adlins.ms_sound_kon  = 1000;
             adlins.ms_sound_koff = 500;
             adlins.tone  = 0;
             adlins.flags = 0;
             adlins.voice2_fine_tune = 0.0;
-            opl.dynamic_metainstruments.push_back(adlins);
-            opl.dynamic_instruments.push_back(adl);
         }
 
         fr.seeku(mus_start, SEEK_SET);
@@ -452,10 +505,9 @@ riffskip:
         DeltaTicks = (size_t)ticks;
         opl.AdlBank    = ~0u; // Ignore AdlBank number, use dynamic banks instead
         //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
-        opl.LogarithmicVolumes = true;
         opl.AdlPercussionMode = true;
         opl.m_musicMode = OPL3::MODE_CMF;
-        opl.m_volumeScale = OPL3::VOLUME_CMF;
+        opl.m_volumeScale = OPL3::VOLUME_NATIVE;
     }
     else
     {
@@ -470,10 +522,9 @@ riffskip:
                 fr.seek(0x7D, SEEK_SET);
                 TrackCount = 1;
                 DeltaTicks = 60;
-                opl.LogarithmicVolumes = true;
                 //opl.CartoonersVolumes = true;
                 opl.m_musicMode = OPL3::MODE_RSXX;
-                opl.m_volumeScale = OPL3::VOLUME_CMF;
+                opl.m_volumeScale = OPL3::VOLUME_NATIVE;
             }
         }
 
@@ -531,11 +582,11 @@ riffskip:
 
     TrackData.clear();
     TrackData.resize(TrackCount, std::vector<uint8_t>());
-    //CurrentPosition.track.clear();
-    //CurrentPosition.track.resize(TrackCount);
     InvDeltaTicks = fraction<uint64_t>(1, 1000000l * static_cast<uint64_t>(DeltaTicks));
-    //Tempo       = 1000000l * InvDeltaTicks;
-    Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks));
+    if(is_CMF || is_RSXX)
+        Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks));
+    else
+        Tempo         = fraction<uint64_t>(1,            static_cast<uint64_t>(DeltaTicks) * 2);
     static const unsigned char EndTag[4] = {0xFF, 0x2F, 0x00, 0x00};
     size_t totalGotten = 0;
 

@@ -85,16 +85,17 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
         ins tmp2{};
         tmp2.notenum   = 0;
         tmp2.pseudo4op = false;
+        tmp2.real4op = false;
 
         std::string name;
         char name2[512];
         if(gmno < 20)
         {
-            std::snprintf(name2, 512, "%sM%u", prefix, gmno);
+            snprintf(name2, 512, "%sM%u", prefix, gmno);
         }
         else
         {
-            std::snprintf(name2, 512, "%sunk%04X", prefix, offset);
+            snprintf(name2, 512, "%sunk%04X", prefix, offset);
         }
         size_t resno = InsertIns(tmp, tmp2, std::string(1, '\377') + name, name2);
         SetBank(bank, gmno, resno);

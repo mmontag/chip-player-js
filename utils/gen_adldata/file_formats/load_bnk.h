@@ -69,7 +69,8 @@ static bool LoadBNK(const char *fn, unsigned bank, const char *prefix, bool is_f
             if(name[2] == 'O'
                || name[2] == 'S')
             {
-                gmno = 128 + std::stoi(name.substr(3));
+                std::string n = name.substr(3);
+                gmno = 128 + std::atoi(n.c_str());
             }
         }
 
@@ -107,6 +108,7 @@ static bool LoadBNK(const char *fn, unsigned bank, const char *prefix, bool is_f
         ins tmp2;
         tmp2.notenum = is_fat ? voice_num : (percussive ? usage_flag : 0);
         tmp2.pseudo4op = false;
+        tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
 
         if(is_fat) tmp.data[10] ^= 1;

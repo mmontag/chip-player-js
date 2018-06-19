@@ -82,7 +82,7 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
         int gmno = int(a < 128 ? a : ((a | 128) + 35));
 
         char name2[512];
-        std::snprintf(name2, 512, "%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), gmno & 127);
+        snprintf(name2, 512, "%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), gmno & 127);
 
         Doom_opl_instr &ins = *(Doom_opl_instr *) &data[offset2];
 
@@ -108,6 +108,7 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
         struct ins tmp2;
         tmp2.notenum  = ins.note;
         tmp2.pseudo4op = false;
+        tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
         while(tmp2.notenum && tmp2.notenum < 20)
         {

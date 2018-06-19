@@ -71,6 +71,7 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
         struct ins tmp2;
         tmp2.notenum  = data[offset + 1];
         tmp2.pseudo4op = false;
+        tmp2.real4op = (data[offset] != 0);
         tmp2.voice2_fine_tune = 0.0;
 
         while(tmp2.notenum && tmp2.notenum < 20)

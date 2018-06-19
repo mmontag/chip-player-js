@@ -120,7 +120,7 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
     if(static_cast<uint32_t>(bankno) >= NumBanks)
     {
         char errBuf[150];
-        snprintf(errBuf, 150, "Embedded bank number may only be 0..%" PRIu32 "!\n", (NumBanks - 1));
+        snprintf(errBuf, 150, "Embedded bank number may only be 0..%u!\n", static_cast<unsigned int>(NumBanks - 1));
         play->setErrorString(errBuf);
         return -1;
     }
@@ -141,6 +141,142 @@ ADLMIDI_EXPORT int adl_getBanksCount()
 ADLMIDI_EXPORT const char *const *adl_getBankNames()
 {
     return banknames;
+}
+
+ADLMIDI_EXPORT int adl_reserveBanks(ADL_MIDIPlayer *device, unsigned banks)
+{
+    if(!device)
+        return -1;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    OPL3::BankMap &map = play->opl.dynamic_banks;
+    map.reserve(banks);
+    return (int)map.capacity();
+}
+
+ADLMIDI_EXPORT int adl_getBank(ADL_MIDIPlayer *device, const ADL_BankId *idp, int flags, ADL_Bank *bank)
+{
+    if(!device || !idp || !bank)
+        return -1;
+
+    ADL_BankId id = *idp;
+    if(id.lsb > 127 || id.msb > 127 || id.percussive > 1)
+        return -1;
+    unsigned idnumber = (id.msb << 8) | id.lsb | (id.percussive ? OPL3::PercussionTag : 0);
+
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    OPL3::BankMap &map = play->opl.dynamic_banks;
+
+    OPL3::BankMap::iterator it;
+    if(!(flags & ADLMIDI_Bank_Create))
+    {
+        it = map.find(idnumber);
+        if(it == map.end())
+            return -1;
+    }
+    else
+    {
+        std::pair<uint16_t, OPL3::Bank> value;
+        value.first = idnumber;
+        memset(&value.second, 0, sizeof(value.second));
+        for (unsigned i = 0; i < 128; ++i)
+            value.second.ins[i].flags = adlinsdata::Flag_NoSound;
+
+        std::pair<OPL3::BankMap::iterator, bool> ir;
+        if(flags & ADLMIDI_Bank_CreateRt)
+        {
+            ir = map.insert(value, OPL3::BankMap::do_not_expand_t());
+            if(ir.first == map.end())
+                return -1;
+        }
+        else
+            ir = map.insert(value);
+        it = ir.first;
+    }
+
+    it.to_ptrs(bank->pointer);
+    return 0;
+}
+
+ADLMIDI_EXPORT int adl_getBankId(ADL_MIDIPlayer *device, const ADL_Bank *bank, ADL_BankId *id)
+{
+    if(!device || !bank)
+        return -1;
+
+    OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
+    unsigned idnumber = it->first;
+    id->msb = (idnumber >> 8) & 127;
+    id->lsb = idnumber & 127;
+    id->percussive = (idnumber & OPL3::PercussionTag) ? 1 : 0;
+    return 0;
+}
+
+ADLMIDI_EXPORT int adl_removeBank(ADL_MIDIPlayer *device, ADL_Bank *bank)
+{
+    if(!device || !bank)
+        return -1;
+
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    OPL3::BankMap &map = play->opl.dynamic_banks;
+    OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
+    size_t size = map.size();
+    map.erase(it);
+    return (map.size() != size) ? 0 : -1;
+}
+
+ADLMIDI_EXPORT int adl_getFirstBank(ADL_MIDIPlayer *device, ADL_Bank *bank)
+{
+    if(!device)
+        return -1;
+
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    OPL3::BankMap &map = play->opl.dynamic_banks;
+
+    OPL3::BankMap::iterator it = map.begin();
+    if(it == map.end())
+        return -1;
+
+    it.to_ptrs(bank->pointer);
+    return 0;
+}
+
+ADLMIDI_EXPORT int adl_getNextBank(ADL_MIDIPlayer *device, ADL_Bank *bank)
+{
+    if(!device)
+        return -1;
+
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    OPL3::BankMap &map = play->opl.dynamic_banks;
+
+    OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
+    if(++it == map.end())
+        return -1;
+
+    it.to_ptrs(bank->pointer);
+    return 0;
+}
+
+ADLMIDI_EXPORT int adl_getInstrument(ADL_MIDIPlayer *device, const ADL_Bank *bank, unsigned index, ADL_Instrument *ins)
+{
+    if(!device || !bank || index > 127 || !ins)
+        return 1;
+
+    OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
+    cvt_FMIns_to_ADLI(*ins, it->second.ins[index]);
+    ins->version = 0;
+    return 0;
+}
+
+ADLMIDI_EXPORT int adl_setInstrument(ADL_MIDIPlayer *device, ADL_Bank *bank, unsigned index, const ADL_Instrument *ins)
+{
+    if(!device || !bank || index > 127 || !ins)
+        return 1;
+
+    if(ins->version != 0)
+        return 1;
+
+    OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
+    cvt_ADLI_to_FMIns(it->second.ins[index], *ins);
+    return 0;
 }
 
 ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
@@ -177,7 +313,9 @@ ADLMIDI_EXPORT void adl_setPercMode(ADL_MIDIPlayer *device, int percmod)
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.AdlPercussionMode = percmod;
-    play->opl.AdlPercussionMode = play->m_setup.AdlPercussionMode;
+    play->opl.AdlPercussionMode     = play->m_setup.AdlPercussionMode < 0 ?
+                                      play->opl.dynamic_bank_setup.adLibPercussions :
+                                      (play->m_setup.AdlPercussionMode != 0);
     play->opl.updateFlags();
 }
 
@@ -186,7 +324,9 @@ ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.HighVibratoMode = hvibro;
-    play->opl.HighVibratoMode = play->m_setup.HighVibratoMode;
+    play->opl.HighVibratoMode     = play->m_setup.HighVibratoMode < 0 ?
+                                    play->opl.dynamic_bank_setup.deepVibrato :
+                                    (play->m_setup.HighVibratoMode != 0);
     play->opl.updateDeepFlags();
 }
 
@@ -195,7 +335,9 @@ ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.HighTremoloMode = htremo;
-    play->opl.HighTremoloMode = play->m_setup.HighTremoloMode;
+    play->opl.HighTremoloMode     = play->m_setup.HighTremoloMode < 0 ?
+                                    play->opl.dynamic_bank_setup.deepTremolo :
+                                    (play->m_setup.HighTremoloMode != 0);
     play->opl.updateDeepFlags();
 }
 
@@ -204,14 +346,16 @@ ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.ScaleModulators = smod;
-    play->opl.ScaleModulators = play->m_setup.ScaleModulators;
+    play->opl.ScaleModulators     = play->m_setup.ScaleModulators < 0 ?
+                                    play->opl.dynamic_bank_setup.scaleModulators :
+                                    (play->m_setup.ScaleModulators != 0);
 }
 
 ADLMIDI_EXPORT void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_brightness)
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.fullRangeBrightnessCC74 = fr_brightness;
+    play->m_setup.fullRangeBrightnessCC74 = (fr_brightness != 0);
 }
 
 ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
@@ -221,12 +365,16 @@ ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
     play->m_setup.loopingIsEnabled = (loopEn != 0);
 }
 
+/* !!!DEPRECATED!!! */
 ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol)
 {
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    play->m_setup.LogarithmicVolumes = logvol;
-    play->opl.LogarithmicVolumes = play->m_setup.LogarithmicVolumes;
+    play->m_setup.LogarithmicVolumes = (logvol != 0);
+    if(play->m_setup.LogarithmicVolumes)
+        play->opl.ChangeVolumeRangesModel(ADLMIDI_VolumeModel_NativeOPL3);
+    else
+        play->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(play->opl.m_volumeScale));
 }
 
 ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel)
@@ -234,7 +382,10 @@ ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int v
     if(!device) return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.VolumeModel = volumeModel;
-    play->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
+    if(play->m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)//Use bank default volume model
+        play->opl.m_volumeScale = (OPL3::VolumesScale)play->opl.dynamic_bank_setup.volumeModel;
+    else
+        play->opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
 }
 
 ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath)
@@ -367,7 +518,11 @@ ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulato
 
 ADLMIDI_EXPORT const char *adl_linkedLibraryVersion()
 {
+#if !defined(ADLMIDI_ENABLE_HQ_RESAMPLER)
     return ADLMIDI_VERSION;
+#else
+    return ADLMIDI_VERSION " (HQ)";
+#endif
 }
 
 ADLMIDI_EXPORT const ADL_Version *adl_linkedVersion()
@@ -421,7 +576,7 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
     play->m_setup.tick_skip_samples_delay = 0;
     play->opl.Reset(play->m_setup.emulator, play->m_setup.PCM_RATE);
     play->ch.clear();
-    play->ch.resize(play->opl.NumChannels);
+    play->ch.resize((size_t)play->opl.NumChannels);
 }
 
 ADLMIDI_EXPORT double adl_totalTimeLength(struct ADL_MIDIPlayer *device)
@@ -614,7 +769,7 @@ ADLMIDI_EXPORT void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_D
     play->hooks.onDebugMessage_userData = userData;
 }
 
-
+#ifndef ADLMIDI_HW_OPL
 template <class Dst>
 static void CopySamplesRaw(ADL_UInt8 *dstLeft, ADL_UInt8 *dstRight, const int32_t *src,
                            size_t frameCount, unsigned sampleOffset)
@@ -659,6 +814,8 @@ static int SendStereoAudio(int        samples_requested,
     right += (outputOffset / 2) * sampleOffset;
 
     typedef int32_t(&pfnConvert)(int32_t);
+    typedef float(&ffnConvert)(int32_t);
+    typedef double(&dfnConvert)(int32_t);
 
     switch(sampleType) {
     case ADLMIDI_SampleType_S8:
@@ -723,22 +880,28 @@ static int SendStereoAudio(int        samples_requested,
         break;
     }
     case ADLMIDI_SampleType_F32:
+    {
         if(containerSize != sizeof(float))
             return -1;
-        CopySamplesTransformed<float>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtReal<float>);
+        ffnConvert cvt = adl_cvtReal<float>;
+        CopySamplesTransformed<float>(left, right, _in, toCopy / 2, sampleOffset, cvt);
         break;
+    }
     case ADLMIDI_SampleType_F64:
+    {
         if(containerSize != sizeof(double))
             return -1;
-        CopySamplesTransformed<double>(left, right, _in, toCopy / 2, sampleOffset, adl_cvtReal<double>);
+        dfnConvert cvt = adl_cvtReal<double>;
+        CopySamplesTransformed<double>(left, right, _in, toCopy / 2, sampleOffset, cvt);
         break;
+    }
     default:
         return -1;
     }
 
     return 0;
 }
-
+#endif
 
 ADLMIDI_EXPORT int adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short *out)
 {

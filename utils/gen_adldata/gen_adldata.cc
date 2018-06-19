@@ -312,7 +312,7 @@ int main(int argc, char**argv)
                         i->first.data[10],
                         i->first.finetune);
 
-                #ifdef ADLDATA_WITH_COMMENTS
+#ifdef ADLDATA_WITH_COMMENTS
                 std::string names;
                 for(std::set<std::string>::const_iterator
                     j = i->second.second.begin();
@@ -326,9 +326,9 @@ int main(int argc, char**argv)
                         names += *j;
                 }
                 std::fprintf(outFile, " }, // %u: %s\n", (unsigned)c, names.c_str());
-                #else
+#else
                 std::fprintf(outFile, " },\n");
-                #endif
+#endif
             }
         }
         std::fprintf(outFile, "};\n");
@@ -341,6 +341,7 @@ int main(int argc, char**argv)
            "    unsigned char flags;\n"
            "    long ms_sound_kon;  // Number of milliseconds it produces sound;\n"
            "    long ms_sound_koff;\n"
+           "    double voice2_fine_tune;\n"
            "} adlins[] =\n");*/
 
     std::fprintf(outFile, "const struct adlinsdata adlins[%u] =\n", (unsigned)instab.size());
@@ -348,7 +349,7 @@ int main(int argc, char**argv)
 
     MeasureThreaded measureCounter;
     {
-        std::printf("Beginning to generate measures data... (Hardware concurrency: %d)\n", std::thread::hardware_concurrency());
+        std::printf("Beginning to generate measures data... (hardware concurrency of %d)\n", std::thread::hardware_concurrency());
         std::fflush(stdout);
         measureCounter.LoadCache("fm_banks/adldata-cache.dat");
         measureCounter.m_total = instab.size();
@@ -381,7 +382,7 @@ int main(int argc, char**argv)
             //DurationInfo info = MeasureDurations(i->first);
             MeasureThreaded::DurationInfoCache::iterator indo_i = measureCounter.m_durationInfo.find(i->first);
             DurationInfo info = indo_i->second;
-            #ifdef ADLDATA_WITH_COMMENTS
+#ifdef ADLDATA_WITH_COMMENTS
             {
                 if(info.peak_amplitude_time == 0)
                 {
@@ -404,12 +405,14 @@ int main(int argc, char**argv)
                         info.keyoff_out_time / double(info.interval));
                 }
             }
-            #endif
+#endif
 
-            unsigned flags = (i->first.pseudo4op ? 1 : 0) | (info.nosound ? 2 : 0);
+            unsigned flags = (i->first.pseudo4op ? ins::Flag_Pseudo4op : 0)|
+                             (i->first.real4op ? ins::Flag_Real4op : 0) |
+                             (info.nosound ? ins::Flag_NoSound : 0);
 
             std::fprintf(outFile, "    {");
-            std::fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ",%lf",
+            std::fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ",%g",
                     (unsigned) i->first.insno1,
                     (unsigned) i->first.insno2,
                     (int)(i->first.notenum),
@@ -429,11 +432,11 @@ int main(int argc, char**argv)
                 else
                     names += *j;
             }
-            #ifdef ADLDATA_WITH_COMMENTS
+#ifdef ADLDATA_WITH_COMMENTS
             std::fprintf(outFile, " }, // %u: %s\n\n", (unsigned)c, names.c_str());
-            #else
+#else
             std::fprintf(outFile, " },\n");
-            #endif
+#endif
             std::fflush(outFile);
             adlins_flags.push_back(flags);
         }
@@ -444,11 +447,11 @@ int main(int argc, char**argv)
     std::fflush(stdout);
 
     //fprintf(outFile, "static const unsigned short banks[][256] =\n");
-    #ifdef HARD_BANKS
+#ifdef HARD_BANKS
     const unsigned bankcount = sizeof(banknames) / sizeof(*banknames);
-    #else
+#else
     const size_t bankcount = banknames.size();
-    #endif
+#endif
 
     size_t nosound = InsertNoSoundIns();
 
@@ -486,25 +489,29 @@ int main(int argc, char**argv)
     std::fprintf(outFile, "{\n");
     for(unsigned bank = 0; bank < bankcount; ++bank)
     {
-        #ifdef ADLDATA_WITH_COMMENTS
+#ifdef ADLDATA_WITH_COMMENTS
         std::fprintf(outFile, "    { // bank %u, %s\n", bank, banknames[bank].c_str());
-        #else
+#else
         std::fprintf(outFile, "    {\n");
         #endif
+#ifdef ADLDATA_WITH_COMMENTS
         bool redundant = true;
+#endif
         for(unsigned p = 0; p < 256; ++p)
         {
             size_t v = bank_data[bank][p];
             if(listed.find(v) == listed.end())
             {
                 listed.insert(v);
+#ifdef ADLDATA_WITH_COMMENTS
                 redundant = false;
+#endif
             }
             std::fprintf(outFile, "%4d,", (unsigned int)v);
             if(p % 16 == 15) fprintf(outFile, "\n");
         }
         std::fprintf(outFile, "    },\n");
-        #ifdef ADLDATA_WITH_COMMENTS
+#ifdef ADLDATA_WITH_COMMENTS
         if(redundant)
         {
             std::fprintf(outFile, "    // Bank %u defines nothing new.\n", bank);
@@ -523,7 +530,7 @@ int main(int argc, char**argv)
                             bank, refbank);
             }
         }
-        #endif
+#endif
     }
 
     std::fprintf(outFile, "};\n\n");

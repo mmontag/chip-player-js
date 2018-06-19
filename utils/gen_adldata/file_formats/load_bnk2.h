@@ -3,6 +3,11 @@
 
 #include "../progs_cache.h"
 
+inline int stdstoi(const std::string& str)
+{
+    return std::atoi(str.c_str());
+}
+
 static bool LoadBNK2(const char *fn, unsigned bank, const char *prefix,
                      const std::string &melo_filter,
                      const std::string &perc_filter)
@@ -43,9 +48,9 @@ static bool LoadBNK2(const char *fn, unsigned bank, const char *prefix,
 
         int gmno = 0;
         if(name.substr(0, melo_filter.size()) == melo_filter)
-            gmno = std::stoi(name.substr(melo_filter.size()));
+            gmno = stdstoi(name.substr(melo_filter.size()));
         else if(name.substr(0, perc_filter.size()) == perc_filter)
-            gmno = std::stoi(name.substr(perc_filter.size())) + 128;
+            gmno = stdstoi(name.substr(perc_filter.size())) + 128;
         else
             continue;
 
@@ -81,6 +86,7 @@ static bool LoadBNK2(const char *fn, unsigned bank, const char *prefix,
         ins tmp2;
         tmp2.notenum = (gmno & 128) ? 35 : 0;
         tmp2.pseudo4op = false;
+        tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
 
         if(xxP24NNN & 8)

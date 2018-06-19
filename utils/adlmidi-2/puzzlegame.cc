@@ -4,6 +4,8 @@
 #include "input.hpp"
 #include "puzzlegame.hpp"
 
+char ADLMIDI_PuzzleGame::peeked_input = 0;
+
 unsigned long ADLMIDI_PuzzleGame::TimerRead()
 {
     static std::chrono::time_point<std::chrono::system_clock> begin = std::chrono::system_clock::now();

@@ -49,5 +49,14 @@ static void LoadMiles(const char* fn)
 
 int main(int argc, const char* const* argv)
 {
+    if(argc < 2)
+    {
+        std::printf("Usage: \n"
+                    "   %s filename.opl\n"
+                    "or:\n"
+                    "   %s filename.opl\n"
+                    "\n", argv[0], argv[0]);
+        return 1;
+    }
     LoadMiles(argv[1]);
 }
