@@ -511,10 +511,27 @@ ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulato
             adl_reset(device);
             return 0;
         }
-        play->setErrorString("OPN2 MIDI: Unknown emulation core!");
+        play->setErrorString("OPL3 MIDI: Unknown emulation core!");
     }
     return -1;
 }
+
+
+ADLMIDI_EXPORT int adl_setRunAtPcmRate(ADL_MIDIPlayer *device, int enabled)
+{
+    if(device)
+    {
+        MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+        if(play)
+        {
+            play->m_setup.runAtPcmRate = (enabled != 0);
+            adl_reset(device);
+            return 0;
+        }
+    }
+    return -1;
+}
+
 
 ADLMIDI_EXPORT const char *adl_linkedLibraryVersion()
 {
@@ -574,7 +591,8 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
         return;
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
     play->m_setup.tick_skip_samples_delay = 0;
-    play->opl.Reset(play->m_setup.emulator, play->m_setup.PCM_RATE);
+    play->opl.runAtPcmRate = play->m_setup.runAtPcmRate;
+    play->opl.Reset(play->m_setup.emulator, play->m_setup.PCM_RATE, play);
     play->ch.clear();
     play->ch.resize((size_t)play->opl.NumChannels);
 }

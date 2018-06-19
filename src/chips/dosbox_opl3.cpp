@@ -23,7 +23,7 @@ void DosBoxOPL3::setRate(uint32_t rate)
     DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
     chip_r->~Handler();
     new(chip_r) DBOPL::Handler;
-    chip_r->Init(49716);
+    chip_r->Init(effectiveRate());
 }
 
 void DosBoxOPL3::reset()
@@ -32,7 +32,7 @@ void DosBoxOPL3::reset()
     DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
     chip_r->~Handler();
     new(chip_r) DBOPL::Handler;
-    chip_r->Init(49716);
+    chip_r->Init(effectiveRate());
 }
 
 void DosBoxOPL3::writeReg(uint16_t addr, uint8_t data)

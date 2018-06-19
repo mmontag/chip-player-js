@@ -714,7 +714,7 @@ riffskip:
         return false;
     }
 
-    opl.Reset(m_setup.emulator, m_setup.PCM_RATE); // Reset OPL3 chip
+    opl.Reset(m_setup.emulator, m_setup.PCM_RATE, this); // Reset OPL3 chip
     //opl.Reset(); // ...twice (just in case someone misprogrammed OPL3 previously)
     ch.clear();
     ch.resize(opl.NumChannels);

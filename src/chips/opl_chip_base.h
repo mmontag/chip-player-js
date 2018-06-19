@@ -13,15 +13,33 @@
 class VResampler;
 #endif
 
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
+extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate);
+#endif
+
 class OPLChipBase
 {
+public:
+    enum { nativeRate = 49716 };
 protected:
+    uint32_t m_id;
     uint32_t m_rate;
 public:
     OPLChipBase();
     virtual ~OPLChipBase();
 
+    uint32_t chipId() const { return m_id; }
+    void setChipId(uint32_t id) { m_id = id; }
+
+    virtual bool canRunAtPcmRate() const = 0;
+    virtual bool isRunningAtPcmRate() const = 0;
+    virtual bool setRunningAtPcmRate(bool r) = 0;
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
+    virtual void setAudioTickHandlerInstance(void *instance) = 0;
+#endif
+
     virtual void setRate(uint32_t rate) = 0;
+    virtual uint32_t effectiveRate() const = 0;
     virtual void reset() = 0;
     virtual void writeReg(uint16_t addr, uint8_t data) = 0;
 
@@ -49,13 +67,25 @@ public:
     OPLChipBaseT();
     virtual ~OPLChipBaseT();
 
+    bool isRunningAtPcmRate() const override;
+    bool setRunningAtPcmRate(bool r) override;
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
+    void setAudioTickHandlerInstance(void *instance);
+#endif
+
     virtual void setRate(uint32_t rate) override;
+    uint32_t effectiveRate() const override;
     virtual void reset() override;
     void generate(int16_t *output, size_t frames) override;
     void generateAndMix(int16_t *output, size_t frames) override;
     void generate32(int32_t *output, size_t frames) override;
     void generateAndMix32(int32_t *output, size_t frames) override;
 private:
+    bool m_runningAtPcmRate;
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
+    void *m_audioTickHandlerInstance;
+#endif
+    void nativeTick(int16_t *frame);
     void setupResampler(uint32_t rate);
     void resetResampler();
     void resampledGenerate(int32_t *output);

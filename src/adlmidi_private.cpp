@@ -25,6 +25,13 @@
 
 std::string ADLMIDI_ErrorString;
 
+// Generator callback on audio rate ticks
+
+void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate)
+{
+    reinterpret_cast<MIDIplay *>(instance)->AudioTick(chipId, rate);
+}
+
 int adlRefreshNumCards(ADL_MIDIPlayer *device)
 {
     unsigned n_fourop[2] = {0, 0}, n_total[2] = {0, 0};
