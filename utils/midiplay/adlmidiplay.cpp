@@ -204,6 +204,21 @@ static void debugPrintEvent(void * /*userdata*/, ADL_UInt8 type, ADL_UInt8 subty
 }
 #endif
 
+static inline void secondsToHMSM(double seconds_full, char *hmsm_buffer, size_t hmsm_buffer_size)
+{
+    double seconds_integral;
+    double seconds_fractional = std::modf(seconds_full, &seconds_integral);
+    unsigned int milliseconds = static_cast<unsigned int>(std::floor(seconds_fractional * 1000.0));
+    unsigned int seconds = std::fmod(seconds_full, 60.0);
+    unsigned int minutes = static_cast<unsigned int>(std::floor(seconds_full / 60));
+    unsigned int hours   = static_cast<unsigned int>(std::floor(seconds_full / 3600));
+    std::memset(hmsm_buffer, 0, hmsm_buffer_size);
+    if (hours > 0)
+        snprintf(hmsm_buffer, hmsm_buffer_size, "%02u:%02u:%02u,%03u", hours, minutes, seconds, milliseconds);
+    else
+        snprintf(hmsm_buffer, hmsm_buffer_size, "%02u:%02u,%03u", minutes, seconds, milliseconds);
+}
+
 int main(int argc, char **argv)
 {
     std::fprintf(stdout, "==========================================\n"
@@ -572,6 +587,15 @@ int main(int argc, char **argv)
     #ifndef OUTPUT_WAVE_ONLY
     double loopStart    = adl_loopStartTime(myDevice);
     double loopEnd      = adl_loopEndTime(myDevice);
+    char totalHMS[25];
+    char loopStartHMS[25];
+    char loopEndHMS[25];
+    secondsToHMSM(total, totalHMS, 25);
+    if(loopStart >= 0.0 && loopEnd >= 0.0)
+    {
+        secondsToHMSM(loopStart, loopStartHMS, 25);
+        secondsToHMSM(loopEnd, loopEndHMS, 25);
+    }
 
     #ifndef HARDWARE_OPL3
     if(!recordWave)
@@ -593,10 +617,14 @@ int main(int argc, char **argv)
         flushout(stdout);
         #endif
 
+        #ifndef HARDWARE_OPL3
+        Uint8 buff[16384];
+        #endif
+        char posHMS[25];
+        uint64_t milliseconds_prev = -1;
         while(!stop)
         {
             #ifndef HARDWARE_OPL3
-            Uint8 buff[16384];
             size_t got = (size_t)adl_playFormat(myDevice, 4096,
                                                 buff,
                                                 buff + g_audioFormat.containerSize,
@@ -606,9 +634,17 @@ int main(int argc, char **argv)
             #endif
 
             #ifndef DEBUG_TRACE_ALL_EVENTS
+            double time_pos = adl_positionTell(myDevice);
             std::fprintf(stdout, "                                               \r");
-            std::fprintf(stdout, "Time position: %10f / %10f\r", adl_positionTell(myDevice), total);
-            flushout(stdout);
+            uint64_t milliseconds = static_cast<uint64_t>(time_pos * 1000.0);
+            if(milliseconds != milliseconds_prev)
+            {
+                secondsToHMSM(time_pos, posHMS, 25);
+                std::fprintf(stdout, "                                               \r");
+                std::fprintf(stdout, "Time position: %s / %s\r", posHMS, totalHMS);
+                flushout(stdout);
+                milliseconds_prev = milliseconds;
+            }
             #endif
 
             #ifndef HARDWARE_OPL3
@@ -684,18 +720,24 @@ int main(int argc, char **argv)
         if(wave_open(sampleRate, wave_out.c_str()) == 0)
         {
             wave_enable_stereo();
+            short buff[4096];
+            int complete_prev = -1;
             while(!stop)
             {
-                short buff[4096];
                 size_t got = (size_t)adl_play(myDevice, 4096, buff);
                 if(got <= 0)
                     break;
                 wave_write(buff, (long)got);
 
-                double complete = std::floor(100.0 * adl_positionTell(myDevice) / total);
-                std::fprintf(stdout, "                                               \r");
-                std::fprintf(stdout, "Recording WAV... [%d%% completed]\r", (int)complete);
+                int complete = static_cast<int>(std::floor(100.0 * adl_positionTell(myDevice) / total));
                 flushout(stdout);
+                if(complete_prev != complete)
+                {
+                    std::fprintf(stdout, "                                               \r");
+                    std::fprintf(stdout, "Recording WAV... [%d%% completed]\r", complete);
+                    std::fflush(stdout);
+                    complete_prev = complete;
+                }
             }
             wave_close();
             std::fprintf(stdout, "                                               \n\n");

@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (libADLMIDI)
+project (libADLMIDI C CXX)
 
 #===========================================================================================
 # Strip garbage
@@ -20,7 +20,12 @@ IF(NOT MSVC AND NOT MSDOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 ENDIF()
 
-if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
+if(CMAKE_BUILD_TYPE_LOWER EQUAL "release")
     add_definitions(-DNDEBUG)
 ENDIF()
 
@@ -103,6 +108,14 @@ if(WITH_OLD_UTILS)
     list(APPEND libADLMIDI_INSTALLS adldumpmiles)
 endif()
 
+if(WITH_ADLMIDI2 OR (WITH_EMBEDDED_BANKS AND WITH_GENADLDATA))
+    find_package(OpenMP)
+endif()
+
+if(WITH_HQ_RESAMPLER)
+    find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler" REQUIRED)
+endif()
+
 if(WITH_EMBEDDED_BANKS)
     if(WITH_GENADLDATA)
         set(GEN_ADLDATA_SRC)
@@ -151,6 +164,10 @@ if(WITH_EMBEDDED_BANKS)
                 set_target_properties(gen_adldata PROPERTIES
                                       CXX_STANDARD 11
                                       CXX_STANDARD_REQUIRED YES)
+                if(OPENMP_FOUND)
+                    target_compile_options(gen_adldata PUBLIC "-fopenmp")
+                    target_link_libraries(gen_adldata "-fopenmp")
+                endif()
             endif()
         else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             message("Turned on C++11 on MSVC")
@@ -161,12 +178,16 @@ if(WITH_EMBEDDED_BANKS)
             target_compile_options(gen_adldata PUBLIC "-DADLDATA_WITH_COMMENTS")
         endif()
 
-        add_custom_target(
-            gen-adldata-run
-            COMMAND gen_adldata ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
-            WORKING_DIRECTORY ${libADLMIDI_SOURCE_DIR}
+        set(ADLDATA_DATABASE
+            "${libADLMIDI_SOURCE_DIR}/src/adldata.cpp"
         )
-        add_dependencies(gen-adldata-run gen_adldata)
+        add_custom_target(gen-adldata-run #OUTPUT ${ADLDATA_DATABASE}
+            COMMAND gen_adldata "${ADLDATA_DATABASE}"
+            WORKING_DIRECTORY ${libADLMIDI_SOURCE_DIR}
+            DEPENDS gen_adldata "${libADLMIDI_SOURCE_DIR}/banks.ini"
+            COMMENT "Running Embedded FM banks database generation"
+            VERBATIM
+        )
     endif()
 endif()
 
@@ -335,8 +356,6 @@ if(WITH_MIDIPLAY)
 endif()
 
 if(WITH_ADLMIDI2)
-    find_package(OpenMP)
-
     if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
         find_library(SDL2_LIBRARY SDL2 REQUIRED)
         include_directories(${SDL2_INCLUDE_DIR})
@@ -485,12 +504,12 @@ if(WITH_VLC_PLUGIN)
 endif()
 
 if(WITH_HQ_RESAMPLER)
-    find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler" REQUIRED)
-    add_definitions(-DADLMIDI_ENABLE_HQ_RESAMPLER)
     if(libADLMIDI_SHARED)
+        target_compile_definitions(ADLMIDI_shared PRIVATE -DADLMIDI_ENABLE_HQ_RESAMPLER)
         target_link_libraries(ADLMIDI_shared PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
     endif()
     if(libADLMIDI_STATIC)
+        target_compile_definitions(ADLMIDI_static PRIVATE -DADLMIDI_ENABLE_HQ_RESAMPLER)
         target_link_libraries(ADLMIDI_static PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
     endif()
 endif()

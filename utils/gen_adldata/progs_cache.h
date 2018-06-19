@@ -62,7 +62,7 @@ struct ins
                && insno1 == b.insno1
                && insno2 == b.insno2
                && pseudo4op == b.pseudo4op
-               && real4op == real4op
+               && real4op == b.real4op
                && equal_approx(voice2_fine_tune, b.voice2_fine_tune);
     }
     bool operator< (const ins &b) const

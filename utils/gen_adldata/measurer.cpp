@@ -1,7 +1,9 @@
 #include "measurer.h"
 #include <cmath>
 
-#include "../../src/chips/opl_chip_base.h"
+#ifndef M_PI
+#define M_PI    3.14159265358979323846
+#endif
 
 // Nuked OPL3 emulator, Most accurate, but requires the powerful CPU
 #ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
@@ -14,216 +16,367 @@
 #    include "../../src/chips/dosbox_opl3.h"
 #endif
 
-DurationInfo MeasureDurations(const ins &in)
+template <class T>
+class AudioHistory
 {
-    std::vector<int16_t> stereoSampleBuf;
-#ifdef ADLMIDI_USE_DOSBOX_OPL
-    std::vector<int32_t> stereoSampleBuf_32;
-#endif
-    insdata id[2];
-    bool found[2] = {false, false};
-    for(InstrumentDataTab::const_iterator j = insdatatab.begin();
-        j != insdatatab.end();
-        ++j)
+    std::unique_ptr<T[]> m_data;
+    size_t m_index = 0;  // points to the next write slot
+    size_t m_length = 0;
+    size_t m_capacity = 0;
+
+public:
+    size_t size() const { return m_length; }
+    size_t capacity() const { return m_capacity; }
+    const T *data() const { return &m_data[m_index + m_capacity - m_length]; }
+
+    void reset(size_t capacity)
     {
-        if(j->second.first == in.insno1)
+        m_data.reset(new T[2 * capacity]());
+        m_index = 0;
+        m_length = 0;
+        m_capacity = capacity;
+    }
+
+    void clear()
+    {
+        m_length = 0;
+    }
+
+    void add(const T &item)
+    {
+        T *data = m_data.get();
+        const size_t capacity = m_capacity;
+        size_t index = m_index;
+        data[index] = item;
+        data[index + capacity] = item;
+        m_index = (index + 1 != capacity) ? (index + 1) : 0;
+        size_t length = m_length + 1;
+        m_length = (length < capacity) ? length : capacity;
+    }
+};
+
+static void HannWindow(double *w, unsigned n)
+{
+    for (unsigned i = 0; i < n; ++i)
+        w[i] = 0.5 * (1.0 - std::cos(2 * M_PI * i / (n - 1)));
+}
+
+static double MeasureRMS(const double *signal, const double *window, unsigned length)
+{
+    double mean = 0;
+#pragma omp simd reduction(+: mean)
+    for(unsigned i = 0; i < length; ++i)
+        mean += window[i] * signal[i];
+    mean /= length;
+
+    double rms = 0;
+#pragma omp simd reduction(+: rms)
+    for(unsigned i = 0; i < length; ++i)
+    {
+        double diff = window[i] * signal[i] - mean;
+        rms += diff * diff;
+    }
+    rms = std::sqrt(rms / (length - 1));
+
+    return rms;
+}
+
+static const unsigned g_outputRate = 49716;
+
+struct TinySynth
+{
+    OPLChipBase *m_chip;
+    unsigned m_notesNum;
+    int m_notenum;
+    int8_t m_fineTune;
+    int16_t m_noteOffsets[2];
+    unsigned m_x[2];
+
+    void resetChip()
+    {
+        static const short initdata[(2 + 3 + 2 + 2) * 2] =
         {
-            id[0] = j->first;
-            found[0] = true;
-            if(found[1]) break;
+            0x004, 96, 0x004, 128,      // Pulse timer
+            0x105, 0, 0x105, 1, 0x105, 0, // Pulse OPL3 enable, leave disabled
+            0x001, 32, 0x0BD, 0         // Enable wave & melodic
+        };
+
+        m_chip->setRate(g_outputRate);
+
+        for(unsigned a = 0; a < 18; a += 2)
+            m_chip->writeReg((uint16_t)initdata[a], (uint8_t)initdata[a + 1]);
+    }
+
+    void setInstrument(const ins &in)
+    {
+        insdata rawData[2];
+        bool found[2] = {false, false};
+        for(InstrumentDataTab::const_iterator j = insdatatab.begin();
+            j != insdatatab.end();
+            ++j)
+        {
+            if(j->second.first == in.insno1)
+            {
+                rawData[0] = j->first;
+                found[0] = true;
+                if(found[1]) break;
+            }
+            if(j->second.first == in.insno2)
+            {
+                rawData[1] = j->first;
+                found[1] = true;
+                if(found[0]) break;
+            }
         }
-        if(j->second.first == in.insno2)
+
+        std::memset(m_x, 0, sizeof(m_x));
+        m_notenum = in.notenum >= 128 ? (in.notenum - 128) : in.notenum;
+        if(m_notenum == 0)
+            m_notenum = 25;
+        m_notesNum = in.insno1 == in.insno2 ? 1 : 2;
+        m_fineTune = 0;
+        m_noteOffsets[0] = rawData[0].finetune;
+        m_noteOffsets[1] = rawData[1].finetune;
+        if(in.pseudo4op)
+            m_fineTune = in.voice2_fine_tune;
+        if(in.real4op)
         {
-            id[1] = j->first;
-            found[1] = true;
-            if(found[0]) break;
+            m_chip->writeReg(0x105, 1);
+            m_chip->writeReg(0x104, 0xFF);
+        }
+
+        //For clearer measurement, disable tremolo and vibrato
+        rawData[0].data[0] &= 0x3F;
+        rawData[0].data[1] &= 0x3F;
+        rawData[1].data[0] &= 0x3F;
+        rawData[1].data[1] &= 0x3F;
+
+        for(unsigned n = 0; n < m_notesNum; ++n)
+        {
+            static const unsigned char patchdata[11] =
+            {0x20, 0x23, 0x60, 0x63, 0x80, 0x83, 0xE0, 0xE3, 0x40, 0x43, 0xC0};
+            for(unsigned a = 0; a < 10; ++a)
+                m_chip->writeReg(patchdata[a] + n * 8, rawData[n].data[a]);
+            m_chip->writeReg(patchdata[10] + n * 8, rawData[n].data[10] | 0x30);
         }
     }
-    const unsigned rate = 22010;
+
+    void noteOn()
+    {
+        std::memset(m_x, 0, sizeof(m_x));
+        for(unsigned n = 0; n < m_notesNum; ++n)
+        {
+            double hertz = 172.00093 * std::exp(0.057762265 * (m_notenum + m_noteOffsets[n]));
+            if(hertz > 131071)
+            {
+                std::fprintf(stdout, "%s:%d:0: warning: Why does note %d + note-offset %d produce hertz %g?\n", __FILE__, __LINE__,
+                             m_notenum, m_noteOffsets[n], hertz);
+                std::fflush(stdout);
+                hertz = 131071;
+            }
+            m_x[n] = 0x2000;
+            while(hertz >= 1023.5)
+            {
+                hertz /= 2.0;    // Calculate octave
+                m_x[n] += 0x400;
+            }
+            m_x[n] += (unsigned int)(hertz + 0.5);
+
+            // Keyon the note
+            m_chip->writeReg(0xA0 + n * 3, m_x[n] & 0xFF);
+            m_chip->writeReg(0xB0 + n * 3, m_x[n] >> 8);
+        }
+    }
+
+    void noteOff()
+    {
+        // Keyoff the note
+        for(unsigned n = 0; n < m_notesNum; ++n)
+            m_chip->writeReg(0xB0 + n * 3, (m_x[n] >> 8) & 0xDF);
+    }
+
+    void generate(int16_t *output, size_t frames)
+    {
+        m_chip->generate(output, frames);
+    }
+};
+
+
+DurationInfo MeasureDurations(const ins &in, OPLChipBase *chip)
+{
+    AudioHistory<double> audioHistory;
+
     const unsigned interval             = 150;
-    const unsigned samples_per_interval = rate / interval;
-    const int notenum =
-            in.notenum < 20   ? (44 + in.notenum)
-                              : in.notenum >= 128 ? (44 + 128 - in.notenum)
-                                                  : in.notenum;
+    const unsigned samples_per_interval = g_outputRate / interval;
 
-    OPLChipBase *opl;
+    const double historyLength = 0.1;  // maximum duration to memorize (seconds)
+    audioHistory.reset(std::ceil(historyLength * g_outputRate));
 
-#if !defined(ADLMIDI_DISABLE_NUKED_EMULATOR)
-    NukedOPL3 nuke; opl = &nuke;
-#elif !defined(ADLMIDI_DISABLE_DOSBOX_EMULATOR)
-    DosBoxOPL3 db; opl = &db;
-#endif
-    //NukedOPL3 nuke; opl = &nuke;
-    //NukedOPL3v174 nuke74; opl = &nuke74;
+    std::unique_ptr<double[]> window;
+    window.reset(new double[audioHistory.capacity()]);
+    unsigned winsize = 0;
 
-#define WRITE_REG(key, value) opl->writeReg((uint16_t)(key), (uint8_t)(value))
+    TinySynth synth;
+    synth.m_chip = chip;
+    synth.resetChip();
+    synth.setInstrument(in);
+    synth.noteOn();
 
-    static const short initdata[(2 + 3 + 2 + 2) * 2] =
-    {
-        0x004, 96, 0x004, 128,      // Pulse timer
-        0x105, 0, 0x105, 1, 0x105, 0, // Pulse OPL3 enable, leave disabled
-        0x001, 32, 0x0BD, 0         // Enable wave & melodic
-    };
-    opl->setRate(rate);
-
-    for(unsigned a = 0; a < 18; a += 2) WRITE_REG(initdata[a], initdata[a + 1]);
-
-    const unsigned n_notes = in.insno1 == in.insno2 ? 1 : 2;
-    unsigned x[2];
-
-    if(in.real4op)
-    {
-        WRITE_REG(0x105, 1);
-        WRITE_REG(0x104, 0xFF);
-    }
-
-    for(unsigned n = 0; n < n_notes; ++n)
-    {
-        static const unsigned char patchdata[11] =
-        {0x20, 0x23, 0x60, 0x63, 0x80, 0x83, 0xE0, 0xE3, 0x40, 0x43, 0xC0};
-        for(unsigned a = 0; a < 10; ++a)
-            WRITE_REG(patchdata[a] + n * 8, id[n].data[a]);
-        WRITE_REG(patchdata[10] + n * 8, id[n].data[10] | 0x30);
-    }
-
-    for(unsigned n = 0; n < n_notes; ++n)
-    {
-        double hertz = 172.00093 * std::exp(0.057762265 * (notenum + id[n].finetune));
-        if(hertz > 131071)
-        {
-            std::fprintf(stderr, "MEASURER WARNING: Why does note %d + finetune %d produce hertz %g?          \n",
-                         notenum, id[n].finetune, hertz);
-            hertz = 131071;
-        }
-        x[n] = 0x2000;
-        while(hertz >= 1023.5)
-        {
-            hertz /= 2.0;    // Calculate octave
-            x[n] += 0x400;
-        }
-        x[n] += (unsigned int)(hertz + 0.5);
-
-        // Keyon the note
-        WRITE_REG(0xA0 + n * 3, x[n] & 0xFF);
-        WRITE_REG(0xB0 + n * 3, x[n] >> 8);
-    }
-
+    /* For capturing */
     const unsigned max_silent = 6;
     const unsigned max_on  = 40;
     const unsigned max_off = 60;
 
+    unsigned max_period_on = max_on * interval;
+    unsigned max_period_off = max_off * interval;
+
+    const double min_coefficient_on = 0.008;
+    const double min_coefficient_off = 0.2;
+
+    unsigned windows_passed_on = 0;
+    unsigned windows_passed_off = 0;
+
+    /* For Analyze the results */
+    double begin_amplitude        = 0;
+    double peak_amplitude_value   = 0;
+    size_t peak_amplitude_time    = 0;
+    size_t quarter_amplitude_time = max_period_on;
+    bool   quarter_amplitude_time_found = false;
+    size_t keyoff_out_time        = 0;
+    bool   keyoff_out_time_found  = false;
+
+    const size_t audioBufferLength = 256;
+    const size_t audioBufferSize = 2 * audioBufferLength;
+    int16_t audioBuffer[audioBufferSize];
+
     // For up to 40 seconds, measure mean amplitude.
-    std::vector<double> amplitudecurve_on;
     double highest_sofar = 0;
     short sound_min = 0, sound_max = 0;
-    for(unsigned period = 0; period < max_on * interval; ++period)
+
+    for(unsigned period = 0; period < max_period_on; ++period, ++windows_passed_on)
     {
-        stereoSampleBuf.clear();
-        stereoSampleBuf.resize(samples_per_interval * 2, 0);
-
-        opl->generate(stereoSampleBuf.data(), samples_per_interval);
-
-        double mean = 0.0;
-
-        for(unsigned long c = 0; c < samples_per_interval; ++c)
+        for(unsigned i = 0; i < samples_per_interval;)
         {
-            short s = stereoSampleBuf[c * 2];
-            mean += s;
-            if(sound_min > s) sound_min = s;
-            if(sound_max < s) sound_max = s;
+            size_t blocksize = samples_per_interval - i;
+            blocksize = (blocksize < audioBufferLength) ? blocksize : audioBufferLength;
+            synth.generate(audioBuffer, blocksize);
+            for (unsigned j = 0; j < blocksize; ++j)
+            {
+                int16_t s = audioBuffer[2 * j];
+                audioHistory.add(s);
+                if(sound_min > s) sound_min = s;
+                if(sound_max < s) sound_max = s;
+            }
+            i += blocksize;
         }
-        mean /= samples_per_interval;
-        double std_deviation = 0;
-        for(unsigned long c = 0; c < samples_per_interval; ++c)
+
+        if(winsize != audioHistory.size())
         {
-            double diff = (stereoSampleBuf[c * 2] - mean);
-            std_deviation += diff * diff;
+            winsize = audioHistory.size();
+            HannWindow(window.get(), winsize);
         }
-        std_deviation = std::sqrt(std_deviation / samples_per_interval);
-        amplitudecurve_on.push_back(std_deviation);
-        if(std_deviation > highest_sofar)
-            highest_sofar = std_deviation;
+
+        double rms = MeasureRMS(audioHistory.data(), window.get(), winsize);
+        /* ======== Peak time detection ======== */
+        if(period == 0)
+        {
+            begin_amplitude = rms;
+            peak_amplitude_value = rms;
+            peak_amplitude_time = 0;
+        }
+        else if(rms > peak_amplitude_value)
+        {
+            peak_amplitude_value = rms;
+            peak_amplitude_time  = period;
+            // In next step, update the quater amplitude time
+            quarter_amplitude_time_found = false;
+        }
+        else if(!quarter_amplitude_time_found && (rms <= peak_amplitude_value * min_coefficient_on))
+        {
+            quarter_amplitude_time = period;
+            quarter_amplitude_time_found = true;
+        }
+        /* ======== Peak time detection =END==== */
+        if(rms > highest_sofar)
+            highest_sofar = rms;
 
         if((period > max_silent * interval) &&
-            ((std_deviation < highest_sofar * 0.2)||
-             (sound_min >= -1 && sound_max <= 1))
+           ( (rms < highest_sofar * min_coefficient_on) || (sound_min >= -1 && sound_max <= 1) )
         )
             break;
     }
 
-    // Keyoff the note
-    for(unsigned n = 0; n < n_notes; ++n)
-        WRITE_REG(0xB0 + n * 3, (x[n] >> 8) & 0xDF);
+    if(!quarter_amplitude_time_found)
+        quarter_amplitude_time = windows_passed_on;
+
+    if(windows_passed_on >= max_period_on)
+    {
+        // Just Keyoff the note
+        synth.noteOff();
+    }
+    else
+    {
+        // Reset the emulator and re-run the "ON" simulation until reaching the peak time
+        synth.resetChip();
+        synth.setInstrument(in);
+        synth.noteOn();
+
+        audioHistory.reset(std::ceil(historyLength * g_outputRate));
+        for(unsigned period = 0;
+            (period < peak_amplitude_time) && (period < max_period_on);
+            ++period)
+        {
+            for(unsigned i = 0; i < samples_per_interval;)
+            {
+                size_t blocksize = samples_per_interval - i;
+                blocksize = (blocksize < audioBufferLength) ? blocksize : audioBufferLength;
+                synth.generate(audioBuffer, blocksize);
+                for (unsigned j = 0; j < blocksize; ++j)
+                    audioHistory.add(audioBuffer[2 * j]);
+                i += blocksize;
+            }
+        }
+        synth.noteOff();
+    }
 
     // Now, for up to 60 seconds, measure mean amplitude.
-    std::vector<double> amplitudecurve_off;
-    for(unsigned period = 0; period < max_off * interval; ++period)
+    for(unsigned period = 0; period < max_period_off; ++period, ++windows_passed_off)
     {
-        stereoSampleBuf.clear();
-        stereoSampleBuf.resize(samples_per_interval * 2);
-
-        opl->generate(stereoSampleBuf.data(), samples_per_interval);
-
-        double mean = 0.0;
-        for(unsigned long c = 0; c < samples_per_interval; ++c)
+        for(unsigned i = 0; i < samples_per_interval;)
         {
-            short s = stereoSampleBuf[c * 2];
-            mean += s;
-            if(sound_min > s) sound_min = s;
-            if(sound_max < s) sound_max = s;
+            size_t blocksize = samples_per_interval - i;
+            blocksize = (blocksize < 256) ? blocksize : 256;
+            synth.generate(audioBuffer, blocksize);
+            for (unsigned j = 0; j < blocksize; ++j)
+            {
+                int16_t s = audioBuffer[2 * j];
+                audioHistory.add(s);
+                if(sound_min > s) sound_min = s;
+                if(sound_max < s) sound_max = s;
+            }
+            i += blocksize;
         }
-        mean /= samples_per_interval;
-        double std_deviation = 0;
-        for(unsigned long c = 0; c < samples_per_interval; ++c)
-        {
-            double diff = (stereoSampleBuf[c * 2] - mean);
-            std_deviation += diff * diff;
-        }
-        std_deviation = std::sqrt(std_deviation / samples_per_interval);
-        amplitudecurve_off.push_back(std_deviation);
 
-        if(std_deviation < highest_sofar * 0.2)
+        if(winsize != audioHistory.size())
+        {
+            winsize = audioHistory.size();
+            HannWindow(window.get(), winsize);
+        }
+
+        double rms = MeasureRMS(audioHistory.data(), window.get(), winsize);
+        /* ======== Find Key Off time ======== */
+        if(!keyoff_out_time_found && (rms <= peak_amplitude_value * min_coefficient_off))
+        {
+            keyoff_out_time = period;
+            keyoff_out_time_found = true;
+        }
+        /* ======== Find Key Off time ==END=== */
+        if(rms < highest_sofar * min_coefficient_off)
             break;
 
         if((period > max_silent * interval) && (sound_min >= -1 && sound_max <= 1))
             break;
     }
-
-    /* Analyze the results */
-    double begin_amplitude        = amplitudecurve_on[0];
-    double peak_amplitude_value   = begin_amplitude;
-    size_t peak_amplitude_time    = 0;
-    size_t quarter_amplitude_time = amplitudecurve_on.size();
-    size_t keyoff_out_time        = 0;
-
-    for(size_t a = 1; a < amplitudecurve_on.size(); ++a)
-    {
-        if(amplitudecurve_on[a] > peak_amplitude_value)
-        {
-            peak_amplitude_value = amplitudecurve_on[a];
-            peak_amplitude_time  = a;
-        }
-    }
-    for(size_t a = peak_amplitude_time; a < amplitudecurve_on.size(); ++a)
-    {
-        if(amplitudecurve_on[a] <= peak_amplitude_value * 0.2)
-        {
-            quarter_amplitude_time = a;
-            break;
-        }
-    }
-    for(size_t a = 0; a < amplitudecurve_off.size(); ++a)
-    {
-        if(amplitudecurve_off[a] <= peak_amplitude_value * 0.2)
-        {
-            keyoff_out_time = a;
-            break;
-        }
-    }
-
-    if(keyoff_out_time == 0 && amplitudecurve_on.back() < peak_amplitude_value * 0.2)
-        keyoff_out_time = quarter_amplitude_time;
 
     DurationInfo result;
     result.peak_amplitude_time = peak_amplitude_time;
@@ -235,10 +388,9 @@ DurationInfo MeasureDurations(const ins &in)
     result.ms_sound_kon  = (int64_t)(quarter_amplitude_time * 1000.0 / interval);
     result.ms_sound_koff = (int64_t)(keyoff_out_time        * 1000.0 / interval);
     result.nosound = (peak_amplitude_value < 0.5) || ((sound_min >= -1) && (sound_max <= 1));
+
     return result;
 }
-
-static const char* spinner = "-\\|/";
 
 void MeasureThreaded::LoadCache(const char *fileName)
 {
@@ -469,9 +621,13 @@ void MeasureThreaded::SaveCache(const char *fileName)
     std::fclose(out);
 }
 
+#ifdef ADL_GENDATA_PRINT_PROGRESS
+
+static const char* spinner = "-\\|/";
+
 void MeasureThreaded::printProgress()
 {
-    std::printf("Calculating measures... [%c %3u%% (%4u/%4u) Threads %3u, Matches %u]       \r",
+    std::printf("Calculating measures... [%c %3u%% {%4u/%4u} Threads %3u, Matches %u]       \r",
             spinner[m_done.load() % 4],
             (unsigned int)(((double)m_done.load() / (double)(m_total)) * 100),
             (unsigned int)m_done.load(),
@@ -481,6 +637,12 @@ void MeasureThreaded::printProgress()
             );
     std::fflush(stdout);
 }
+#else
+void MeasureThreaded::printProgress()
+{
+    //Do nothing
+}
+#endif
 
 void MeasureThreaded::printFinal()
 {
@@ -512,14 +674,18 @@ void MeasureThreaded::run(InstrumentsData::const_iterator i)
     dd->myself = this;
     dd->start();
     m_threads.push_back(dd);
+#ifdef ADL_GENDATA_PRINT_PROGRESS
     printProgress();
+#endif
 }
 
 void MeasureThreaded::waitAll()
 {
     for(auto &th : m_threads)
     {
+#ifdef ADL_GENDATA_PRINT_PROGRESS
         printProgress();
+#endif
         delete th;
     }
     m_threads.clear();
@@ -535,6 +701,7 @@ void MeasureThreaded::destData::callback(void *myself)
 {
     destData *s = reinterpret_cast<destData *>(myself);
     DurationInfo info;
+    DosBoxOPL3 dosbox;
     DurationInfoCache::iterator cachedEntry = s->myself->m_durationInfo.find(s->i->first);
 
     if(cachedEntry != s->myself->m_durationInfo.end())
@@ -543,7 +710,7 @@ void MeasureThreaded::destData::callback(void *myself)
         goto endWork;
     }
 
-    info = MeasureDurations(s->i->first);
+    info = MeasureDurations(s->i->first, &dosbox);
     s->myself->m_durationInfo_mx.lock();
     s->myself->m_durationInfo.insert({s->i->first, info});
     s->myself->m_durationInfo_mx.unlock();
