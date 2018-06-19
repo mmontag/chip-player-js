@@ -1225,7 +1225,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     ir.first->chip_channels_count = 0;
 
     int8_t currentPortamentoSource = midiChan.portamentoSource;
-    bool portamentoEnable = midiChan.portamentoEnable &&
+    double currentPortamentoRate = midiChan.portamentoRate;
+    bool portamentoEnable =
+        midiChan.portamentoEnable && currentPortamentoRate != HUGE_VAL &&
         !isPercussion && !isXgPercussion;
     // Record the last note on MIDI channel as source of portamento
     midiChan.portamentoSource = portamentoEnable ? (int8_t)note : (int8_t)-1;
@@ -1234,7 +1236,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if (portamentoEnable && currentPortamentoSource >= 0)
     {
         ir.first->currentTone = currentPortamentoSource;
-        ir.first->glideRate = midiChan.portamentoRate;
+        ir.first->glideRate = currentPortamentoRate;
+        ++midiChan.gliding_note_count;
     }
 
     for(unsigned ccount = 0; ccount < MIDIchannel::NoteInfo::MaxNumPhysChans; ++ccount)
@@ -1697,7 +1700,11 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
     }
 
     if(info.chip_channels_count == 0)
+    {
+        if(i->glideRate != HUGE_VAL)
+            --Ch[MidCh].gliding_note_count;
         Ch[MidCh].activenotes_erase(i);
+    }
 }
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
@@ -2593,6 +2600,9 @@ void MIDIplay::UpdateGlide(double amount)
     for(unsigned channel = 0; channel < 16; ++channel)
     {
         MIDIchannel &midiChan = Ch[channel];
+        if(midiChan.gliding_note_count == 0)
+            continue;
+
         for(MIDIchannel::activenoteiterator it = midiChan.activenotes_begin();
             it; ++it)
         {
