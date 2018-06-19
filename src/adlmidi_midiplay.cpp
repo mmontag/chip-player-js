@@ -680,8 +680,10 @@ bool MIDIplay::buildTrackData()
 
 MIDIplay::MIDIplay(unsigned long sampleRate):
     cmf_percussion_mode(false),
-    m_arpeggioCounter(0),
-    m_audioTickCounter(0)
+    m_arpeggioCounter(0)
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
+    , m_audioTickCounter(0)
+#endif
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     , fullSongTimeLength(0.0),
     postSongWaitDelay(1.0),
@@ -825,6 +827,9 @@ double MIDIplay::Tick(double s, double granularity)
 
     UpdateVibrato(s);
     UpdateArpeggio(s);
+#if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
+    UpdateGlide(s);
+#endif
 
     if(CurrentPositionNew.wait < 0.0)//Avoid negative delay value!
         return 0.0;
@@ -839,6 +844,9 @@ void MIDIplay::TickIteratos(double s)
         ch[c].AddAge(static_cast<int64_t>(s * 1000.0));
     UpdateVibrato(s);
     UpdateArpeggio(s);
+#if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
+    UpdateGlide(s);
+#endif
 }
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
@@ -1454,6 +1462,7 @@ void MIDIplay::realTime_panic()
     KillSustainingNotes(-1, -1);
 }
 
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
 void MIDIplay::AudioTick(uint32_t chipId, uint32_t rate)
 {
     if(chipId != 0)  // do first chip ticks only
@@ -1467,32 +1476,10 @@ void MIDIplay::AudioTick(uint32_t chipId, uint32_t rate)
     if(tickNumber % portamentoInterval == 0)
     {
         double portamentoDelta = timeDelta * portamentoInterval;
-
-        for(unsigned channel = 0; channel < 16; ++channel)
-        {
-            MIDIchannel &midiChan = Ch[channel];
-            for(MIDIchannel::activenoteiterator it = midiChan.activenotes_begin();
-                it; ++it)
-            {
-                double finalTone = it->noteTone;
-                double previousTone = it->currentTone;
-
-                bool directionUp = previousTone < finalTone;
-                double toneIncr = portamentoDelta * (directionUp ? +it->glideRate : -it->glideRate);
-
-                double currentTone = previousTone + toneIncr;
-                bool glideFinished = !(directionUp ? (currentTone < finalTone) : (currentTone > finalTone));
-                currentTone = glideFinished ? finalTone : currentTone;
-
-                if(currentTone != previousTone)
-                {
-                    it->currentTone = currentTone;
-                    NoteUpdate(channel, it, Upd_Pitch);
-                }
-            }
-        }
+        UpdateGlide(portamentoDelta);
     }
 }
+#endif
 
 void MIDIplay::NoteUpdate(uint16_t MidCh,
                           MIDIplay::MIDIchannel::activenoteiterator i,
@@ -2596,6 +2583,33 @@ retry_arpeggio:
                     Ch[ i->loc.MidCh ].activenotes_ensure_find(i->loc.note),
                     Upd_Pitch | Upd_Volume | Upd_Pan,
                     static_cast<int32_t>(c));
+            }
+        }
+    }
+}
+
+void MIDIplay::UpdateGlide(double amount)
+{
+    for(unsigned channel = 0; channel < 16; ++channel)
+    {
+        MIDIchannel &midiChan = Ch[channel];
+        for(MIDIchannel::activenoteiterator it = midiChan.activenotes_begin();
+            it; ++it)
+        {
+            double finalTone = it->noteTone;
+            double previousTone = it->currentTone;
+
+            bool directionUp = previousTone < finalTone;
+            double toneIncr = amount * (directionUp ? +it->glideRate : -it->glideRate);
+
+            double currentTone = previousTone + toneIncr;
+            bool glideFinished = !(directionUp ? (currentTone < finalTone) : (currentTone > finalTone));
+            currentTone = glideFinished ? finalTone : currentTone;
+
+            if(currentTone != previousTone)
+            {
+                it->currentTone = currentTone;
+                NoteUpdate(channel, it, Upd_Pitch);
             }
         }
     }

@@ -996,8 +996,10 @@ private:
     //! Counter of arpeggio processing
     size_t m_arpeggioCounter;
 
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
     //! Audio tick counter
     uint32_t m_audioTickCounter;
+#endif
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     std::vector<std::vector<uint8_t> > TrackData;
@@ -1196,8 +1198,10 @@ public:
 
     void realTime_panic();
 
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
     // Audio rate tick handler
     void AudioTick(uint32_t chipId, uint32_t rate);
+#endif
 
 private:
     enum
@@ -1243,6 +1247,7 @@ private:
 
     void UpdateVibrato(double amount);
     void UpdateArpeggio(double /*amount*/);
+    void UpdateGlide(double amount);
 
 public:
     uint64_t ChooseDevice(const std::string &name);
@@ -1267,7 +1272,9 @@ struct FourChars
 };
 */
 
+#if defined(ADLMIDI_AUDIO_TICK_HANDLER)
 extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate);
+#endif
 extern int adlRefreshNumCards(ADL_MIDIPlayer *device);
 
 
