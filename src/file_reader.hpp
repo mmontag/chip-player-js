@@ -83,14 +83,14 @@ public:
      */
     void openFile(const char *path)
     {
-        #if !defined(_WIN32) || defined(__WATCOMC__)
+#if !defined(_WIN32) || defined(__WATCOMC__)
         m_fp = std::fopen(path, "rb");
-        #else
+#else
         wchar_t widePath[MAX_PATH];
         int size = MultiByteToWideChar(CP_UTF8, 0, path, (int)std::strlen(path), widePath, MAX_PATH);
         widePath[size] = '\0';
-        fp = _wfopen(widePath, L"rb");
-        #endif
+        m_fp = _wfopen(widePath, L"rb");
+#endif
         m_file_name = path;
         m_mp = NULL;
         m_mp_size = 0;
