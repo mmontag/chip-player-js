@@ -60,14 +60,14 @@ uint64_t MIDIplay::ReadLEint(const void *buffer, size_t nbytes)
 
 bool MIDIplay::LoadBank(const std::string &filename)
 {
-    fileReader file;
+    FileAndMemReader file;
     file.openFile(filename.c_str());
     return LoadBank(file);
 }
 
 bool MIDIplay::LoadBank(const void *data, size_t size)
 {
-    fileReader file;
+    FileAndMemReader file;
     file.openData(data, size);
     return LoadBank(file);
 }
@@ -194,7 +194,7 @@ void cvt_FMIns_to_ADLI(ADL_Instrument &ins, const adlinsdata2 &in)
     cvt_FMIns_to_generic(ins, in);
 }
 
-bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
+bool MIDIplay::LoadBank(FileAndMemReader &fr)
 {
     int err = 0;
     WOPLFile *wopl = NULL;
@@ -295,7 +295,7 @@ bool MIDIplay::LoadBank(MIDIplay::fileReader &fr)
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 bool MIDIplay::LoadMIDI(const std::string &filename)
 {
-    fileReader file;
+    FileAndMemReader file;
     file.openFile(filename.c_str());
     if(!LoadMIDI(file))
         return false;
@@ -304,12 +304,12 @@ bool MIDIplay::LoadMIDI(const std::string &filename)
 
 bool MIDIplay::LoadMIDI(const void *data, size_t size)
 {
-    fileReader file;
+    FileAndMemReader file;
     file.openData(data, size);
     return LoadMIDI(file);
 }
 
-bool MIDIplay::LoadMIDI(MIDIplay::fileReader &fr)
+bool MIDIplay::LoadMIDI(FileAndMemReader &fr)
 {
     size_t  fsize;
     ADL_UNUSED(fsize);
@@ -406,7 +406,7 @@ riffskip:
         if(std::memcmp(HeaderBuf + 8, "XDIR", 4) != 0)
         {
             fr.close();
-            errorStringOut = fr._fileName + ": Invalid format\n";
+            errorStringOut = fr.fileName() + ": Invalid format\n";
             return false;
         }
 
@@ -570,7 +570,7 @@ riffskip:
             if(std::memcmp(HeaderBuf, "MThd\0\0\0\6", 8) != 0)
             {
                 fr.close();
-                errorStringOut = fr._fileName + ": Invalid format, Header signature is unknown!\n";
+                errorStringOut = fr.fileName() + ": Invalid format, Header signature is unknown!\n";
                 return false;
             }
 
@@ -667,7 +667,7 @@ riffskip:
                 if(std::memcmp(HeaderBuf, "MTrk", 4) != 0)
                 {
                     fr.close();
-                    errorStringOut = fr._fileName + ": Invalid format, MTrk signature is not found!\n";
+                    errorStringOut = fr.fileName() + ": Invalid format, MTrk signature is not found!\n";
                     return false;
                 }
                 TrackLength = (size_t)ReadBEint(HeaderBuf + 4, 4);
@@ -703,14 +703,14 @@ riffskip:
 
     if(totalGotten == 0)
     {
-        errorStringOut = fr._fileName + ": Empty track data";
+        errorStringOut = fr.fileName() + ": Empty track data";
         return false;
     }
 
     //Build new MIDI events table
     if(!buildTrackData())
     {
-        errorStringOut = fr._fileName + ": MIDI data parsing error has occouped!\n" + errorString;
+        errorStringOut = fr.fileName() + ": MIDI data parsing error has occouped!\n" + errorString;
         return false;
     }
 

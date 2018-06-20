@@ -131,6 +131,7 @@ typedef int32_t ssize_t;
 #define INT32_MAX   0x7fffffff
 #endif
 
+#include "file_reader.hpp"
 #include "fraction.hpp"
 #ifndef ADLMIDI_HW_OPL
 #include "chips/opl_chip_base.h"
@@ -342,156 +343,6 @@ public:
     void applySetup();
 
     /**********************Internal structures and classes**********************/
-
-    /**
-     * @brief A little class gives able to read filedata from disk and also from a memory segment
-     */
-    class fileReader
-    {
-    public:
-        enum relTo
-        {
-            SET = 0,
-            CUR = 1,
-            END = 2
-        };
-
-        fileReader()
-        {
-            fp = NULL;
-            mp = NULL;
-            mp_size = 0;
-            mp_tell = 0;
-        }
-        ~fileReader()
-        {
-            close();
-        }
-
-        void openFile(const char *path)
-        {
-            #if !defined(_WIN32) || defined(__WATCOMC__)
-            fp = std::fopen(path, "rb");
-            #else
-            wchar_t widePath[MAX_PATH];
-            int size = MultiByteToWideChar(CP_UTF8, 0, path, (int)std::strlen(path), widePath, MAX_PATH);
-            widePath[size] = '\0';
-            fp = _wfopen(widePath, L"rb");
-            #endif
-            _fileName = path;
-            mp = NULL;
-            mp_size = 0;
-            mp_tell = 0;
-        }
-
-        void openData(const void *mem, size_t lenght)
-        {
-            fp = NULL;
-            mp = mem;
-            mp_size = lenght;
-            mp_tell = 0;
-        }
-
-        void seek(long pos, int rel_to)
-        {
-            if(fp)
-                std::fseek(fp, pos, rel_to);
-            else
-            {
-                switch(rel_to)
-                {
-                case SET:
-                    mp_tell = static_cast<size_t>(pos);
-                    break;
-
-                case END:
-                    mp_tell = mp_size - static_cast<size_t>(pos);
-                    break;
-
-                case CUR:
-                    mp_tell = mp_tell + static_cast<size_t>(pos);
-                    break;
-                }
-
-                if(mp_tell > mp_size)
-                    mp_tell = mp_size;
-            }
-        }
-
-        inline void seeku(uint64_t pos, int rel_to)
-        {
-            seek(static_cast<long>(pos), rel_to);
-        }
-
-        size_t read(void *buf, size_t num, size_t size)
-        {
-            if(fp)
-                return std::fread(buf, num, size, fp);
-            else
-            {
-                size_t pos = 0;
-                size_t maxSize = static_cast<size_t>(size * num);
-
-                while((pos < maxSize) && (mp_tell < mp_size))
-                {
-                    reinterpret_cast<unsigned char *>(buf)[pos] = reinterpret_cast<unsigned const char *>(mp)[mp_tell];
-                    mp_tell++;
-                    pos++;
-                }
-
-                return pos;
-            }
-        }
-
-        int getc()
-        {
-            if(fp)
-                return std::getc(fp);
-            else
-            {
-                if(mp_tell >= mp_size) return -1;
-                int x = reinterpret_cast<unsigned const char *>(mp)[mp_tell];
-                mp_tell++;
-                return x;
-            }
-        }
-
-        size_t tell()
-        {
-            if(fp)
-                return static_cast<size_t>(std::ftell(fp));
-            else
-                return mp_tell;
-        }
-
-        void close()
-        {
-            if(fp) std::fclose(fp);
-
-            fp = NULL;
-            mp = NULL;
-            mp_size = 0;
-            mp_tell = 0;
-        }
-
-        bool isValid()
-        {
-            return (fp) || (mp);
-        }
-
-        bool eof()
-        {
-            if(fp)
-                return (std::feof(fp) != 0);
-            else
-                return mp_tell >= mp_size;
-        }
-        std::string _fileName;
-        std::FILE   *fp;
-        const void  *mp;
-        size_t      mp_size;
-        size_t      mp_tell;
-    };
 
     // Persistent settings for each MIDI channel
     struct MIDIchannel
@@ -1113,12 +964,12 @@ public:
 
     bool LoadBank(const std::string &filename);
     bool LoadBank(const void *data, size_t size);
-    bool LoadBank(fileReader &fr);
+    bool LoadBank(FileAndMemReader &fr);
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     bool LoadMIDI(const std::string &filename);
     bool LoadMIDI(const void *data, size_t size);
-    bool LoadMIDI(fileReader &fr);
+    bool LoadMIDI(FileAndMemReader &fr);
 
     /**
      * @brief Periodic tick handler.
