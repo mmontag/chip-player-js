@@ -151,6 +151,9 @@ To build that example you will need to have installed SDL2 library.
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 
 # Changelog
+## 1.4.0   <dev>
+ * Implemented a full support for Portamento! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization
  * Optimizing the MIDI banks management system for MultiBanks (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
