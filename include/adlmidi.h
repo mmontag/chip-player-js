@@ -237,6 +237,9 @@ extern const char *adl_errorInfo(struct ADL_MIDIPlayer *device);
 /*Initialize ADLMIDI Player device*/
 extern struct ADL_MIDIPlayer *adl_init(long sample_rate);
 
+/*Set 4-bit device identifier*/
+extern int adl_setDeviceIdentifier(struct ADL_MIDIPlayer *device, unsigned id);
+
 /*Load MIDI file from File System*/
 extern int adl_openFile(struct ADL_MIDIPlayer *device, const char *filePath);
 
@@ -363,6 +366,9 @@ extern void adl_rt_bankChangeLSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channe
 extern void adl_rt_bankChangeMSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb);
 /*Change bank by absolute signed value*/
 extern void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_SInt16 bank);
+
+/*Perform a system exclusive message*/
+extern int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const ADL_UInt8 *msg, unsigned size);
 
 
 /**Hooks**/
