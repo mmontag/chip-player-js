@@ -189,7 +189,8 @@ class BW_MidiSequencer
     {
         //! Was track began playing
         bool began;
-        char padding[7];
+        //! Reserved
+        char __padding[7];
         //! Waiting time before next event in seconds
         double wait;
         //! Absolute time position on the track in seconds
@@ -197,15 +198,19 @@ class BW_MidiSequencer
         //! Track information
         struct TrackInfo
         {
-            size_t ptr;
             //! Delay to next event in a track
             uint64_t delay;
             //! Last handled event type
-            int     lastHandledEvent;
-            char    padding2[4];
+            int32_t lastHandledEvent;
+            //! Reserved
+            char    __padding2[4];
             //! MIDI Events queue position iterator
             MidiTrackQueue::iterator pos;
-            TrackInfo(): ptr(0), delay(0), lastHandledEvent(0) {}
+
+            TrackInfo() :
+                delay(0),
+                lastHandledEvent(0)
+            {}
         };
         std::vector<TrackInfo> track;
         Position(): began(false), wait(0.0), absTimePosition(0.0), track()
@@ -243,7 +248,7 @@ class BW_MidiSequencer
      * @param evt MIDI event entry
      * @param status Recent event type, -1 returned when end of track event was handled.
      */
-    void handleEvent(size_t tk, const MidiEvent &evt, int &status);
+    void handleEvent(size_t tk, const MidiEvent &evt, int32_t &status);
 
 public:
     /**

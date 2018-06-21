@@ -517,7 +517,10 @@ ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulato
     if(device)
     {
         MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-        if(play && (emulator >= 0) && (emulator < ADLMIDI_EMU_end))
+        assert(play);
+        if(!play)
+            return -1;
+        if((emulator >= 0) && (emulator < ADLMIDI_EMU_end))
         {
             play->m_setup.emulator = emulator;
             adl_reset(device);

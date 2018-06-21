@@ -59,7 +59,7 @@ typedef int32_t ssize_t;
  * @param nbytes Count of bytes to parse integer
  * @return Extracted unsigned integer
  */
-static inline uint64_t ReadBEint(const void *buffer, size_t nbytes)
+static inline uint64_t readBEint(const void *buffer, size_t nbytes)
 {
     uint64_t result = 0;
     const unsigned char *data = reinterpret_cast<const unsigned char *>(buffer);
@@ -76,7 +76,7 @@ static inline uint64_t ReadBEint(const void *buffer, size_t nbytes)
  * @param nbytes Count of bytes to parse integer
  * @return Extracted unsigned integer
  */
-static inline uint64_t ReadLEint(const void *buffer, size_t nbytes)
+static inline uint64_t readLEint(const void *buffer, size_t nbytes)
 {
     uint64_t result = 0;
     const unsigned char *data = reinterpret_cast<const unsigned char *>(buffer);
@@ -573,7 +573,7 @@ bool BW_MidiSequencer::buildTrackData(const std::vector<std::vector<uint8_t> > &
                         TempoChangePoint tempoMarker;
                         MidiEvent &tempoPoint = tempos[tempo_change_index];
                         tempoMarker.absPos = tempoPoint.absPosition;
-                        tempoMarker.tempo = m_invDeltaTicks * fraction<uint64_t>(ReadBEint(tempoPoint.data.data(), tempoPoint.data.size()));
+                        tempoMarker.tempo = m_invDeltaTicks * fraction<uint64_t>(readBEint(tempoPoint.data.data(), tempoPoint.data.size()));
                         points.push_back(tempoMarker);
                         tempo_change_index++;
                     }
@@ -839,7 +839,7 @@ bool BW_MidiSequencer::processEvents(bool isSeek)
 
 #ifdef DEBUG_TIME_CALCULATION
     std::fprintf(stdout, "                              \r");
-    std::fprintf(stdout, "Time: %10f; Audio: %10f\r", maxTime, CurrentPositionNew.absTimePosition);
+    std::fprintf(stdout, "Time: %10f; Audio: %10f\r", maxTime, m_currentPosition.absTimePosition);
     std::fflush(stdout);
 #endif
 
@@ -1107,7 +1107,7 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
     return evt;
 }
 
-void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent &evt, int &status)
+void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent &evt, int32_t &status)
 {
     if(m_interface->onEvent)
     {
@@ -1139,7 +1139,7 @@ void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent 
 
         if(evtype == MidiEvent::ST_TEMPOCHANGE)//Tempo change
         {
-            m_tempo = m_invDeltaTicks * fraction<uint64_t>(ReadBEint(evt.data.data(), evt.data.size()));
+            m_tempo = m_invDeltaTicks * fraction<uint64_t>(readBEint(evt.data.data(), evt.data.size()));
             return;
         }
 
@@ -1463,12 +1463,17 @@ bool BW_MidiSequencer::loadMIDI(FileAndMemReader &fr)
     bool is_CMF = false; // Creative Music format (CMF/CTMF)
     bool is_RSXX = false; // RSXX, such as Cartooners
 
-    const size_t HeaderSize = 4 + 4 + 2 + 2 + 2; // 14
-    char headerBuf[HeaderSize] = "";
+    const size_t headerSize = 4 + 4 + 2 + 2 + 2; // 14
+    char headerBuf[headerSize] = "";
     size_t DeltaTicks = 192, TrackCount = 1;
 
 riffskip:
-    fsize = fr.read(headerBuf, 1, HeaderSize);
+    fsize = fr.read(headerBuf, 1, headerSize);
+    if(fsize < headerSize)
+    {
+        m_errorString = "Unexpected end of file at header!\n";
+        return false;
+    }
 
     if(std::memcmp(headerBuf, "RIFF", 4) == 0)
     {
@@ -1479,7 +1484,7 @@ riffskip:
     if(std::memcmp(headerBuf, "GMF\x1", 4) == 0)
     {
         // GMD/MUS files (ScummVM)
-        fr.seek(7 - static_cast<long>(HeaderSize), FileAndMemReader::CUR);
+        fr.seek(7 - static_cast<long>(headerSize), FileAndMemReader::CUR);
         is_GMF = true;
     }
 #ifndef BWMIDI_DISABLE_MUS_SUPPORT
@@ -1494,7 +1499,14 @@ riffskip:
             m_errorString = "Out of memory!";
             return false;
         }
-        fr.read(mus, 1, mus_len);
+        fsize = fr.read(mus, 1, mus_len);
+        if(fsize < mus_len)
+        {
+            fr.close();
+            m_errorString = "Failed to read MUS file data!\n";
+            return false;
+        }
+
         //Close source stream
         fr.close();
 
@@ -1536,7 +1548,14 @@ riffskip:
             m_errorString = "Out of memory!";
             return false;
         }
-        fr.read(mus, 1, mus_len);
+        fsize = fr.read(mus, 1, mus_len);
+        if(fsize < mus_len)
+        {
+            fr.close();
+            m_errorString = "Failed to read XMI file data!\n";
+            return false;
+        }
+
         //Close source stream
         fr.close();
 
@@ -1567,23 +1586,43 @@ riffskip:
         is_CMF = true;
         m_format = Format_CMF;
         //unsigned version   = ReadLEint(HeaderBuf+4, 2);
-        uint64_t ins_start = ReadLEint(headerBuf + 6, 2);
-        uint64_t mus_start = ReadLEint(headerBuf + 8, 2);
+        uint64_t ins_start = readLEint(headerBuf + 6, 2);
+        uint64_t mus_start = readLEint(headerBuf + 8, 2);
         //unsigned deltas    = ReadLEint(HeaderBuf+10, 2);
-        uint64_t ticks     = ReadLEint(headerBuf + 12, 2);
+        uint64_t ticks     = readLEint(headerBuf + 12, 2);
         // Read title, author, remarks start offsets in file
-        fr.read(headerBuf, 1, 6);
+        fsize = fr.read(headerBuf, 1, 6);
+        if(fsize < 6)
+        {
+            fr.close();
+            m_errorString = "Unexpected file ending on attempt to read CTMF header!";
+            return false;
+        }
+
         //unsigned long notes_starts[3] = {ReadLEint(HeaderBuf+0,2),ReadLEint(HeaderBuf+0,4),ReadLEint(HeaderBuf+0,6)};
         fr.seek(16, FileAndMemReader::CUR); // Skip the channels-in-use table
-        fr.read(headerBuf, 1, 4);
-        uint64_t ins_count =  ReadLEint(headerBuf + 0, 2); //, basictempo = ReadLEint(HeaderBuf+2, 2);
+        fsize = fr.read(headerBuf, 1, 4);
+        if(fsize < 4)
+        {
+            fr.close();
+            m_errorString = "Unexpected file ending on attempt to read CMF instruments block header!";
+            return false;
+        }
+
+        uint64_t ins_count =  readLEint(headerBuf + 0, 2); //, basictempo = ReadLEint(HeaderBuf+2, 2);
         fr.seek(static_cast<long>(ins_start), FileAndMemReader::SET);
 
         m_cmfInstruments.reserve(static_cast<size_t>(ins_count));
         for(uint64_t i = 0; i < ins_count; ++i)
         {
             CmfInstrument inst;
-            fr.read(inst.data, 1, 16);
+            fsize = fr.read(inst.data, 1, 16);
+            if(fsize < 16)
+            {
+                fr.close();
+                m_errorString = "Unexpected file ending on attempt to read CMF instruments raw data!";
+                return false;
+            }
             m_cmfInstruments.push_back(inst);
         }
 
@@ -1597,7 +1636,7 @@ riffskip:
         if(headerBuf[0] == 0x7D)
         {
             fr.seek(0x6D, FileAndMemReader::SET);
-            fr.read(headerBuf, 6, 1);
+            fr.read(headerBuf, 1, 6);
             if(std::memcmp(headerBuf, "rsxx}u", 6) == 0)
             {
                 is_RSXX = true;
@@ -1656,8 +1695,8 @@ riffskip:
             }
 
             /*size_t  Fmt =      ReadBEint(HeaderBuf + 8,  2);*/
-            TrackCount = (size_t)ReadBEint(headerBuf + 10, 2);
-            DeltaTicks = (size_t)ReadBEint(headerBuf + 12, 2);
+            TrackCount = (size_t)readBEint(headerBuf + 10, 2);
+            DeltaTicks = (size_t)readBEint(headerBuf + 12, 2);
         }
     }
 
@@ -1674,7 +1713,7 @@ riffskip:
     for(size_t tk = 0; tk < TrackCount; ++tk)
     {
         // Read track header
-        size_t TrackLength;
+        size_t trackLength;
 
         if(is_IMF)
         {
@@ -1728,32 +1767,30 @@ riffskip:
             {
                 size_t pos = fr.tell();
                 fr.seek(0, FileAndMemReader::END);
-                TrackLength = fr.tell() - pos;
+                trackLength = fr.tell() - pos;
                 fr.seek(static_cast<long>(pos), FileAndMemReader::SET);
             }
-            //else if(is_MUS) // Read TrackLength from file position 4
-            //{
-            //    size_t pos = fr.tell();
-            //    fr.seek(4, FileAndMemReader::SET);
-            //    TrackLength = static_cast<size_t>(fr.getc());
-            //    TrackLength += static_cast<size_t>(fr.getc() << 8);
-            //    fr.seek(static_cast<long>(pos), FileAndMemReader::SET);
-            //}
             else
             {
                 fsize = fr.read(headerBuf, 1, 8);
-                if(std::memcmp(headerBuf, "MTrk", 4) != 0)
+                if((fsize < 8) || (std::memcmp(headerBuf, "MTrk", 4) != 0))
                 {
                     fr.close();
                     m_errorString = fr.fileName() + ": Invalid format, MTrk signature is not found!\n";
                     return false;
                 }
-                TrackLength = (size_t)ReadBEint(headerBuf + 4, 4);
+                trackLength = (size_t)readBEint(headerBuf + 4, 4);
             }
 
             // Read track data
-            rawTrackData[tk].resize(TrackLength);
-            fsize = fr.read(&rawTrackData[tk][0], 1, TrackLength);
+            rawTrackData[tk].resize(trackLength);
+            fsize = fr.read(&rawTrackData[tk][0], 1, trackLength);
+            if(fsize < trackLength)
+            {
+                fr.close();
+                m_errorString = fr.fileName() + ": Unexpected file ending while getting raw track data!\n";
+                return false;
+            }
             totalGotten += fsize;
 
             if(is_GMF/*|| is_MUS*/) // Note: CMF does include the track end tag.
