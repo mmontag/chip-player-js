@@ -914,7 +914,7 @@ public:
      * @param size Length of SysEx message
      * @return true if message was passed successfully. False on any errors
      */
-    bool realTime_SysEx(const uint8_t *msg, unsigned size);
+    bool realTime_SysEx(const uint8_t *msg, size_t size);
 
     /**
      * @brief Turn off all notes and mute the sound of releasing notes
@@ -967,9 +967,9 @@ private:
         YamahaModel_XG   = 0x4C
     };
 
-    bool doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data, unsigned size);
-    bool doRolandSysEx(unsigned dev, const uint8_t *data, unsigned size);
-    bool doYamahaSysEx(unsigned dev, const uint8_t *data, unsigned size);
+    bool doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data, size_t size);
+    bool doRolandSysEx(unsigned dev, const uint8_t *data, size_t size);
+    bool doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size);
 
 private:
     enum

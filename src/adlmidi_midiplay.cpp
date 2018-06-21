@@ -712,7 +712,7 @@ void MIDIplay::setDeviceId(uint8_t id)
     m_sysExDeviceId = id;
 }
 
-bool MIDIplay::realTime_SysEx(const uint8_t *msg, unsigned size)
+bool MIDIplay::realTime_SysEx(const uint8_t *msg, size_t size)
 {
     if(size < 4 || msg[0] != 0xF0 || msg[size - 1] != 0xF7)
         return false;
@@ -739,7 +739,7 @@ bool MIDIplay::realTime_SysEx(const uint8_t *msg, unsigned size)
     return false;
 }
 
-bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data, unsigned size)
+bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data, size_t size)
 {
     bool devicematch = dev == 0x7F || dev == m_sysExDeviceId;
     if(size < 2 || !devicematch)
@@ -773,7 +773,7 @@ bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data
     return false;
 }
 
-bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, unsigned size)
+bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
 {
     bool devicematch = dev == 0x7F || (dev & 0x0F) == m_sysExDeviceId;
     if(size < 6 || !devicematch)
@@ -788,7 +788,7 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, unsigned size)
 #if !defined(ADLMIDI_SKIP_ROLAND_CHECKSUM)
     {
         unsigned checkvalue = 0;
-        for(unsigned i = 0; i < size; ++i)
+        for(size_t i = 0; i < size; ++i)
             checkvalue += data[i] & 0x7F;
         checkvalue = (128 - (checkvalue & 127)) & 127;
         if(checkvalue != checksum)
@@ -831,7 +831,7 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, unsigned size)
     return false;
 }
 
-bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, unsigned size)
+bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size)
 {
     bool devicematch = dev == 0x7F || (dev & 0x0F) == m_sysExDeviceId;
     if(size < 1 || !devicematch)

@@ -1342,7 +1342,7 @@ ADLMIDI_EXPORT void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 c
     player->realTime_BankChange(channel, (uint16_t)bank);
 }
 
-ADLMIDI_EXPORT int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const ADL_UInt8 *msg, unsigned size)
+ADLMIDI_EXPORT int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const ADL_UInt8 *msg, size_t size)
 {
     if(!device)
         return -1;

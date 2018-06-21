@@ -368,7 +368,7 @@ extern void adl_rt_bankChangeMSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channe
 extern void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_SInt16 bank);
 
 /*Perform a system exclusive message*/
-extern int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const ADL_UInt8 *msg, unsigned size);
+extern int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const ADL_UInt8 *msg, size_t size);
 
 
 /**Hooks**/
