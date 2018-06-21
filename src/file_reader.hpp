@@ -57,11 +57,11 @@ public:
     enum relTo
     {
         //! At begin position
-        SET = 0,
+        SET = SEEK_SET,
         //! At current position
-        CUR = 1,
+        CUR = SEEK_CUR,
         //! At end position
-        END = 2
+        END = SEEK_END
     };
 
     /**
