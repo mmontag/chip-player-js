@@ -39,7 +39,7 @@
 #define ADLMIDI_UNSTABLE_API
 
 #ifdef _WIN32
-#define NOMINMAX
+#define NOMINMAX 1
 #endif
 
 #if defined(_WIN32) && !defined(__WATCOMC__)
@@ -51,7 +51,7 @@ typedef __int64 ssize_t;
 #       else
 typedef __int32 ssize_t;
 #       endif
-#       define NOMINMAX //Don't override std::min and std::max
+#       define NOMINMAX 1 //Don't override std::min and std::max
 #   else
 #       ifdef _WIN64
 typedef int64_t ssize_t;
