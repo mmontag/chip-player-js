@@ -285,10 +285,10 @@ public:
             return 0;
         if(!m_fp)
             return m_mp_size; //Size of memory block is well known
-        size_t old_pos = tell();
-        seek(0, FileAndMemReader::END);
-        size_t file_size = tell();
-        seek(old_pos, FileAndMemReader::SET);
+        size_t old_pos = this->tell();
+        seek(0l, FileAndMemReader::END);
+        size_t file_size = this->tell();
+        seek(static_cast<long>(old_pos), FileAndMemReader::SET);
         return file_size;
     }
 };
