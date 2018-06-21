@@ -26,9 +26,10 @@
 #ifndef FILE_AND_MEM_READER_HHHH
 #define FILE_AND_MEM_READER_HHHH
 
-#include <string>
-#include <cstdio>
+#include <string> // std::string
+#include <cstdio> // std::fopen, std::fread, std::fseek, std::ftell, std::fclose, std::feof
 #ifdef _WIN32
+#include <cstring> // std::strlen
 #include <windows.h> // MultiByteToWideChar
 #endif
 
@@ -93,7 +94,7 @@ public:
         m_fp = std::fopen(path, "rb");
 #else
         wchar_t widePath[MAX_PATH];
-        int size = MultiByteToWideChar(CP_UTF8, 0, path, (int)std::strlen(path), widePath, MAX_PATH);
+        int size = MultiByteToWideChar(CP_UTF8, 0, path, static_cast<int>(std::strlen(path)), widePath, MAX_PATH);
         widePath[size] = '\0';
         m_fp = _wfopen(widePath, L"rb");
 #endif
