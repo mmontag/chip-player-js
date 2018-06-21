@@ -104,7 +104,7 @@ static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
             ins.second_voice_detune = -1;
         else
         {
-            long value = lround(voice2_fine_tune * (1000.0 / 15.625));
+            long value = static_cast<long>(round(voice2_fine_tune * (1000.0 / 15.625)));
             value = (value < -128) ? -128 : value;
             value = (value > +127) ? +127 : value;
             ins.second_voice_detune = static_cast<int8_t>(value);
