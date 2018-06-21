@@ -22,6 +22,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
+#ifndef FILE_AND_MEM_READER_HHHH
+#define FILE_AND_MEM_READER_HHHH
+
 #include <string>
 #include <cstdio>
 #ifdef _WIN32
@@ -83,6 +87,8 @@ public:
      */
     void openFile(const char *path)
     {
+        if(m_fp)
+            this->close();//Close previously opened file first!
 #if !defined(_WIN32) || defined(__WATCOMC__)
         m_fp = std::fopen(path, "rb");
 #else
@@ -104,6 +110,8 @@ public:
      */
     void openData(const void *mem, size_t lenght)
     {
+        if(m_fp)
+            this->close();//Close previously opened file first!
         m_fp = NULL;
         m_mp = mem;
         m_mp_size = lenght;
@@ -117,6 +125,9 @@ public:
      */
     void seek(long pos, int rel_to)
     {
+        if(!this->isValid())
+            return;
+
         if(m_fp)//If a file
         {
             std::fseek(m_fp, pos, rel_to);
@@ -162,6 +173,8 @@ public:
      */
     size_t read(void *buf, size_t num, size_t size)
     {
+        if(!this->isValid())
+            return 0;
         if(m_fp)
             return std::fread(buf, num, size, m_fp);
         else
@@ -186,6 +199,8 @@ public:
      */
     int getc()
     {
+        if(!this->isValid())
+            return -1;
         if(m_fp)//If a file
         {
             return std::getc(m_fp);
@@ -206,6 +221,8 @@ public:
      */
     size_t tell()
     {
+        if(!this->isValid())
+            return 0;
         if(m_fp)//If a file
             return static_cast<size_t>(std::ftell(m_fp));
         else//If a memory block
@@ -241,6 +258,8 @@ public:
      */
     bool eof()
     {
+        if(!this->isValid())
+            return true;
         if(m_fp)
             return (std::feof(m_fp) != 0);
         else
@@ -256,4 +275,22 @@ public:
         return m_file_name;
     }
 
+    /**
+     * @brief Retrieve file size
+     * @return Size of file in bytes
+     */
+    size_t fileSize()
+    {
+        if(!this->isValid())
+            return 0;
+        if(!m_fp)
+            return m_mp_size; //Size of memory block is well known
+        size_t old_pos = tell();
+        seek(0, FileAndMemReader::END);
+        size_t file_size = tell();
+        seek(old_pos, FileAndMemReader::SET);
+        return file_size;
+    }
 };
+
+#endif /* FILE_AND_MEM_READER_HHHH */
