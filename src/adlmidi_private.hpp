@@ -134,7 +134,7 @@ typedef int32_t ssize_t;
 #include "file_reader.hpp"
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
-// Rename class to avoid ABI conflicts
+// Rename class to avoid ABI collisions
 #define BW_MidiSequencer AdlMidiSequencer
 #include "midi_sequencer.hpp"
 typedef BW_MidiSequencer MidiSequencer;

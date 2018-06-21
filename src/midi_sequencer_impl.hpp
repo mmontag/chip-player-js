@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <memory>
 #include <cstring>
+#include <set>
 
 #include <assert.h>
 

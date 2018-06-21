@@ -23,11 +23,12 @@
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 
-#include "adlmidi_private.hpp"
-
+// Rename class to avoid ABI collisions
+#define BW_MidiSequencer AdlMidiSequencer
 // Inlucde MIDI sequencer class implementation
 #include "midi_sequencer_impl.hpp"
 
+#include "adlmidi_private.hpp"
 
 /****************************************************
  *           Real-Time MIDI calls proxies           *
