@@ -351,7 +351,7 @@ public:
      * @brief Sets the RT interface
      * @param interface Pre-Initialized interface structure (pointer will be taken)
      */
-    void setInterface(const BW_MidiRtInterface *interface);
+    void setInterface(const BW_MidiRtInterface *intrf);
 
     /**
      * @brief Returns file format type of currently loaded file

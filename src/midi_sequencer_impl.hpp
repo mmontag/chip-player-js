@@ -252,29 +252,29 @@ BW_MidiSequencer::BW_MidiSequencer() :
 BW_MidiSequencer::~BW_MidiSequencer()
 {}
 
-void BW_MidiSequencer::setInterface(const BW_MidiRtInterface *interface)
+void BW_MidiSequencer::setInterface(const BW_MidiRtInterface *intrf)
 {
     // Interface must NOT be NULL
-    assert(interface);
+    assert(intrf);
 
     //Note ON hook is REQUIRED
-    assert(interface->rt_noteOn);
+    assert(intrf->rt_noteOn);
     //Note OFF hook is REQUIRED
-    assert(interface->rt_noteOff);
+    assert(intrf->rt_noteOff);
     //Note Aftertouch hook is REQUIRED
-    assert(interface->rt_noteAfterTouch);
+    assert(intrf->rt_noteAfterTouch);
     //Channel Aftertouch hook is REQUIRED
-    assert(interface->rt_channelAfterTouch);
+    assert(intrf->rt_channelAfterTouch);
     //Controller change hook is REQUIRED
-    assert(interface->rt_controllerChange);
+    assert(intrf->rt_controllerChange);
     //Patch change hook is REQUIRED
-    assert(interface->rt_patchChange);
+    assert(intrf->rt_patchChange);
     //Pitch bend hook is REQUIRED
-    assert(interface->rt_pitchBend);
+    assert(intrf->rt_pitchBend);
     //System Exclusive hook is REQUIRED
-    assert(interface->rt_systemExclusive);
+    assert(intrf->rt_systemExclusive);
 
-    m_interface = interface;
+    m_interface = intrf;
 }
 
 BW_MidiSequencer::FileFormat BW_MidiSequencer::getFormat()
