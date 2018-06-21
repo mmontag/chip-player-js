@@ -207,7 +207,6 @@ inline int32_t adl_cvtU32(int32_t x)
     return (uint32_t)adl_cvtS32(x) - (uint32_t)INT32_MIN;
 }
 
-class MIDIplay;
 struct ADL_MIDIPlayer;
 class OPL3
 {
@@ -216,7 +215,6 @@ public:
     friend class AdlInstrumentTester;
     uint32_t NumChannels;
     char ____padding[4];
-    ADL_MIDIPlayer *_parent;
 #ifndef ADLMIDI_HW_OPL
     std::vector<AdlMIDI_SPtr<OPLChipBase > > cardsOP2;
 #endif
