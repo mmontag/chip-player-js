@@ -173,9 +173,8 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
     }
 
     // Read complete bank file into the memory
-    fr.seek(0, SEEK_END);
-    fsize = fr.tell();
-    fr.seek(0, SEEK_SET);
+    fsize = fr.fileSize();
+    fr.seek(0, FileAndMemReader::SET);
     // Allocate necessary memory block
     raw_file_data = (char*)malloc(fsize);
     if(!raw_file_data)
