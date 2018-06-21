@@ -33,7 +33,7 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-struct BW_MidiRtInterface
+typedef struct
 {
     //! Raw MIDI event hook
     typedef void (*RawEventHook)(void *userdata, uint8_t type, uint8_t subtype, uint8_t channel, const uint8_t *data, size_t len);
@@ -82,7 +82,7 @@ struct BW_MidiRtInterface
 
     typedef uint64_t (*RtCurrentDevice)(void *userdata, size_t track);
     RtCurrentDevice     rt_currentDevice;
-};
+} BW_MidiRtInterface;
 
 #ifdef __cplusplus
 }
