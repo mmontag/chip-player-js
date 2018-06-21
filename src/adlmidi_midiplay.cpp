@@ -117,6 +117,7 @@ void MIDIplay::AdlChannel::AddAge(int64_t ms)
 
 MIDIplay::MIDIplay(unsigned long sampleRate):
     cmf_percussion_mode(false),
+    m_sysExDeviceId(0),
     m_arpeggioCounter(0)
 #if defined(ADLMIDI_AUDIO_TICK_HANDLER)
     , m_audioTickCounter(0)
@@ -704,6 +705,172 @@ void MIDIplay::realTime_BankChange(uint8_t channel, uint16_t bank)
     channel = channel % 16;
     Ch[channel].bank_lsb = uint8_t(bank & 0xFF);
     Ch[channel].bank_msb = uint8_t((bank >> 8) & 0xFF);
+}
+
+void MIDIplay::setDeviceId(uint8_t id)
+{
+    m_sysExDeviceId = id;
+}
+
+bool MIDIplay::realTime_SysEx(const uint8_t *msg, unsigned size)
+{
+    if(size < 4 || msg[0] != 0xF0 || msg[size - 1] != 0xF7)
+        return false;
+
+    unsigned manufacturer = msg[1];
+    unsigned dev = msg[2];
+    msg += 3;
+    size -= 4;
+
+    switch(manufacturer)
+    {
+    default:
+        break;
+    case Manufacturer_UniversalNonRealtime:
+    case Manufacturer_UniversalRealtime:
+        return doUniversalSysEx(
+            dev, manufacturer == Manufacturer_UniversalRealtime, msg, size);
+    case Manufacturer_Roland:
+        return doRolandSysEx(dev, msg, size);
+    case Manufacturer_Yamaha:
+        return doYamahaSysEx(dev, msg, size);
+    }
+
+    return false;
+}
+
+bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data, unsigned size)
+{
+    bool devicematch = dev == 0x7F || dev == m_sysExDeviceId;
+    if(size < 2 || !devicematch)
+        return false;
+
+    unsigned address =
+        (((unsigned)data[0] & 0x7F) << 8) |
+        (((unsigned)data[1] & 0x7F));
+    data += 2;
+    size -= 2;
+
+    switch(((unsigned)realtime << 16) | address)
+    {
+        case (0 << 16) | 0x0901: // GM System On
+            /*TODO*/
+            return true;
+        case (0 << 16) | 0x0902: // GM System Off
+            /*TODO*/
+            return true;
+        case (1 << 16) | 0x0401: // MIDI Master Volume
+            if(size != 2)
+                break;
+            unsigned volume =
+                (((unsigned)data[0] & 0x7F)) |
+                (((unsigned)data[1] & 0x7F) << 7);
+            /*TODO*/
+            (void)volume;
+            return true;
+    }
+
+    return false;
+}
+
+bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, unsigned size)
+{
+    bool devicematch = dev == 0x7F || (dev & 0x0F) == m_sysExDeviceId;
+    if(size < 6 || !devicematch)
+        return false;
+
+    unsigned model = data[0] & 0x7F;
+    unsigned mode = data[1] & 0x7F;
+    unsigned checksum = data[size - 1] & 0x7F;
+    data += 2;
+    size -= 3;
+
+#if !defined(ADLMIDI_SKIP_ROLAND_CHECKSUM)
+    {
+        unsigned checkvalue = 0;
+        for(unsigned i = 0; i < size; ++i)
+            checkvalue += data[i] & 0x7F;
+        checkvalue = (128 - (checkvalue & 127)) & 127;
+        if(checkvalue != checksum)
+            return false;
+    }
+#endif
+
+    unsigned address =
+        (((unsigned)data[0] & 0x7F) << 16) |
+        (((unsigned)data[1] & 0x7F) << 8)  |
+        (((unsigned)data[2] & 0x7F));
+    data += 3;
+    size -= 3;
+
+    if(mode != RolandMode_Send) // don't have MIDI-Out reply ability
+        return false;
+
+    switch((model << 24) | address)
+    {
+    case (RolandModel_GS << 24) | 0x00007F: // System Mode Set
+    {
+        if(size != 1 || (dev & 0xF0) != 0x10)
+            break;
+        unsigned mode = data[0] & 0x7F;
+        /*TODO*/
+        (void)mode;
+        return true;
+    }
+    case (RolandModel_GS << 24) | 0x40007F: // Mode Set
+    {
+        if(size != 1 || (dev & 0xF0) != 0x10)
+            break;
+        unsigned value = data[0] & 0x7F;
+        /*TODO*/
+        (void)value;
+        return true;
+    }
+    }
+
+    return false;
+}
+
+bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, unsigned size)
+{
+    bool devicematch = dev == 0x7F || (dev & 0x0F) == m_sysExDeviceId;
+    if(size < 1 || !devicematch)
+        return false;
+
+    unsigned model = data[0] & 0x7F;
+    ++data;
+    --size;
+
+    switch((model << 8) | (dev & 0xF0))
+    {
+    case (YamahaModel_XG << 8) | 0x10:  // parameter change
+    {
+        if(size < 3)
+            break;
+
+        unsigned address =
+            (((unsigned)data[0] & 0x7F) << 16) |
+            (((unsigned)data[1] & 0x7F) << 8)  |
+            (((unsigned)data[2] & 0x7F));
+        data += 3;
+        size -= 3;
+
+        switch(address)
+        {
+        case 0x00007E:  // XG System On
+            if(size != 1)
+                break;
+            unsigned value = data[0] & 0x7F;
+            /*TODO*/
+            (void)value;
+            return true;
+        }
+
+        break;
+    }
+    }
+
+    return false;
 }
 
 void MIDIplay::realTime_panic()

@@ -919,6 +919,10 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
             evt.isValid = 0;
             return evt;
         }
+        evt.type = MidiEvent::T_SYSEX;
+        evt.data.clear();
+        evt.data.push_back(byte);
+        std::copy(ptr, ptr + length, std::back_inserter(evt.data));
         ptr += (size_t)length;
         return evt;
     }
@@ -1120,6 +1124,12 @@ void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent 
     {
         //std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
         //UI.PrintLn("SysEx %02X: %u bytes", byte, length/*, data.c_str()*/);
+#if 0
+        std::fputs("SysEx:", stderr);
+        for(size_t i = 0; i < evt.data.size(); ++i)
+            std::fprintf(stderr, " %02X", evt.data[i]);
+        std::fputc('\n', stderr);
+#endif
         m_interface->rt_systemExclusive(m_interface->rtUserData, evt.data.data(), evt.data.size());
         return;
     }

@@ -79,10 +79,7 @@ static void rtPitchBend(void *userdata, uint8_t channel, uint8_t msb, uint8_t ls
 static void rtSysEx(void *userdata, const uint8_t *msg, size_t size)
 {
     MIDIplay *context = reinterpret_cast<MIDIplay *>(userdata);
-    ADL_UNUSED(context);
-    ADL_UNUSED(msg);
-    ADL_UNUSED(size);
-    /* TODO: pass SysEx HERE! */
+    context->realTime_SysEx(msg, (unsigned)size);
 }
 
 
