@@ -108,7 +108,6 @@ typedef int32_t ssize_t;
 
 #include <deque>
 #include <algorithm>
-#include <iterator>
 
 /*
  * Workaround for some compilers are has no those macros in their headers!
