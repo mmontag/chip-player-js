@@ -759,9 +759,13 @@ bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data
     switch(((unsigned)realtime << 16) | address)
     {
         case (0 << 16) | 0x0901: // GM System On
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: GM System On");
             realTime_ResetState();
             return true;
         case (0 << 16) | 0x0902: // GM System Off
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: GM System Off");
             realTime_ResetState();
             return true;
         case (1 << 16) | 0x0401: // MIDI Master Volume
@@ -819,7 +823,9 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         if(size != 1 || (dev & 0xF0) != 0x10)
             break;
         unsigned mode = data[0] & 0x7F;
-        (void)mode;
+        ADL_UNUSED(mode);
+        if(hooks.onDebugMessage)
+            hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caugh Roland System Mode Set: %02X", mode);
         realTime_ResetState();
         return true;
     }
@@ -828,7 +834,9 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         if(size != 1 || (dev & 0xF0) != 0x10)
             break;
         unsigned value = data[0] & 0x7F;
-        (void)value;
+        ADL_UNUSED(value);
+        if(hooks.onDebugMessage)
+            hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caugh Roland Mode Set: %02X", value);
         realTime_ResetState();
         return true;
     }
@@ -867,7 +875,9 @@ bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size)
             if(size != 1)
                 break;
             unsigned value = data[0] & 0x7F;
-            (void)value;
+            ADL_UNUSED(value);
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caugh Yamaha XG System On: %02X", value);
             realTime_ResetState();
             return true;
         }
