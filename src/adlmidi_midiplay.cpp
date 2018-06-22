@@ -335,7 +335,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             if(hooks.onDebugMessage)
             {
                 if(caugh_missing_instruments.insert(static_cast<uint8_t>(midiins)).second)
-                    hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Caugh a blank instrument %i (offset %i) in the MIDI bank %u", channel, Ch[channel].patch, midiins, bank);
+                    hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Caught a blank instrument %i (offset %i) in the MIDI bank %u", channel, Ch[channel].patch, midiins, bank);
             }
             bank = 0;
             midiins = midiChan.patch;
@@ -825,7 +825,7 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         unsigned mode = data[0] & 0x7F;
         ADL_UNUSED(mode);
         if(hooks.onDebugMessage)
-            hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caugh Roland System Mode Set: %02X", mode);
+            hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland System Mode Set: %02X", mode);
         realTime_ResetState();
         return true;
     }
@@ -836,7 +836,7 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         unsigned value = data[0] & 0x7F;
         ADL_UNUSED(value);
         if(hooks.onDebugMessage)
-            hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caugh Roland Mode Set: %02X", value);
+            hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland Mode Set: %02X", value);
         realTime_ResetState();
         return true;
     }
@@ -877,7 +877,7 @@ bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size)
             unsigned value = data[0] & 0x7F;
             ADL_UNUSED(value);
             if(hooks.onDebugMessage)
-                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caugh Yamaha XG System On: %02X", value);
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Yamaha XG System On: %02X", value);
             realTime_ResetState();
             return true;
         }
