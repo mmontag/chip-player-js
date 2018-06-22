@@ -1049,9 +1049,6 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 volume = volume > (8725 * 127) ? static_cast<uint32_t>(std::log(static_cast<double>(volume)) * 11.541560327111707 - 1.601379199767093e+02) : 0;
                 // The incorrect formula below: SOLVE(V=127^4 * (2^(A/63)-1), A)
                 //opl.Touch_Real(c, volume>(11210*127) ? 91.61112 * std::log((4.8819E-7/127)*volume + 1.0)+0.5 : 0);
-
-                opl.Touch_Real(c, volume, brightness);
-                //opl.Touch(c, volume);
             }
             break;
 
@@ -1059,7 +1056,6 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             {
                 volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
                 volume = volume * m_masterVolume / (127 * 127 * 127) / 2;
-                opl.Touch_Real(c, volume, brightness);
             }
             break;
 
@@ -1068,7 +1064,6 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 volume = 2 * (Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 16129) + 1;
                 //volume = 2 * (Ch[MidCh].volume) + 1;
                 volume = (DMX_volume_mapping_table[(vol < 128) ? vol : 127] * volume) >> 9;
-                opl.Touch_Real(c, volume, brightness);
             }
             break;
 
@@ -1077,7 +1072,6 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 volume = (Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 16129);
                 volume = ((64 * (vol + 0x80)) * volume) >> 15;
                 //volume = ((63 * (vol + 0x80)) * Ch[MidCh].volume) >> 15;
-                opl.Touch_Real(c, volume, brightness);
             }
             break;
 
@@ -1086,10 +1080,11 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 //volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume /** Ch[MidCh].expression*/) * m_masterVolume / 16129 /*2048383*/) >> 2)];
                 volume = 63 - W9X_volume_mapping_table[((vol * Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 2048383) >> 2)];
                 //volume = W9X_volume_mapping_table[vol >> 2] + volume;
-                opl.Touch_Real(c, volume, brightness);
             }
             break;
             }
+
+            opl.Touch_Real(c, volume, brightness);
 
             /* DEBUG ONLY!!!
             static uint32_t max = 0;
