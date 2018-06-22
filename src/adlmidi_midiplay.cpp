@@ -93,6 +93,8 @@ static const uint8_t PercussionMap[256] =
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
+enum { MasterVolumeDefault = 127 };
+
 inline bool isXgPercChannel(uint8_t msb, uint8_t lsb)
 {
     return (msb == 0x7E || msb == 0x7F) && (lsb == 0);
@@ -117,6 +119,7 @@ void MIDIplay::AdlChannel::AddAge(int64_t ms)
 
 MIDIplay::MIDIplay(unsigned long sampleRate):
     cmf_percussion_mode(false),
+    m_masterVolume(MasterVolumeDefault),
     m_sysExDeviceId(0),
     m_arpeggioCounter(0)
 #if defined(ADLMIDI_AUDIO_TICK_HANDLER)
@@ -220,6 +223,7 @@ void MIDIplay::realTime_ResetState()
         NoteUpdate_All(uint16_t(ch), Upd_All);
         NoteUpdate_All(uint16_t(ch), Upd_Off);
     }
+    m_masterVolume = MasterVolumeDefault;
 }
 
 bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
@@ -766,8 +770,9 @@ bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data
             unsigned volume =
                 (((unsigned)data[0] & 0x7F)) |
                 (((unsigned)data[1] & 0x7F) << 7);
-            /*TODO*/
-            (void)volume;
+            m_masterVolume = volume >> 7;
+            for(size_t ch = 0; ch < Ch.size(); ch++)
+                NoteUpdate_All(uint16_t(ch), Upd_Volume);
             return true;
     }
 
@@ -1029,7 +1034,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 
             case OPL3::VOLUME_Generic:
             {
-                volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
+                volume = vol * m_masterVolume * Ch[MidCh].volume * Ch[MidCh].expression;
 
                 /* If the channel has arpeggio, the effective volume of
                      * *this* instrument is actually lower due to timesharing.
@@ -1040,10 +1045,10 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                      */
                 //volume = (int)(volume * std::sqrt( (double) ch[c].users.size() ));
 
-                // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-                volume = volume > 8725 ? static_cast<uint32_t>(std::log(static_cast<double>(volume)) * 11.541561 + (0.5 - 104.22845)) : 0;
-                // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
-                //opl.Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
+                // The formula below: SOLVE(V=127^4 * 2^( (A-63.49999) / 8), A)
+                volume = volume > (8725 * 127) ? static_cast<uint32_t>(std::log(static_cast<double>(volume) * (1.0 / 127.0)) * 11.541561 + (0.5 - 104.22845)) : 0;
+                // The incorrect formula below: SOLVE(V=127^4 * (2^(A/63)-1), A)
+                //opl.Touch_Real(c, volume>(11210*127) ? 91.61112 * std::log((4.8819E-7/127)*volume + 1.0)+0.5 : 0);
 
                 opl.Touch_Real(c, volume, brightness);
                 //opl.Touch(c, volume);
@@ -1053,14 +1058,14 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             case OPL3::VOLUME_NATIVE:
             {
                 volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
-                volume = volume * 127 / (127 * 127 * 127) / 2;
+                volume = volume * m_masterVolume / (127 * 127 * 127) / 2;
                 opl.Touch_Real(c, volume, brightness);
             }
             break;
 
             case OPL3::VOLUME_DMX:
             {
-                volume = 2 * ((Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 16129) + 1;
+                volume = 2 * (Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 16129) + 1;
                 //volume = 2 * (Ch[MidCh].volume) + 1;
                 volume = (DMX_volume_mapping_table[(vol < 128) ? vol : 127] * volume) >> 9;
                 opl.Touch_Real(c, volume, brightness);
@@ -1069,7 +1074,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 
             case OPL3::VOLUME_APOGEE:
             {
-                volume = ((Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 16129);
+                volume = (Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 16129);
                 volume = ((64 * (vol + 0x80)) * volume) >> 15;
                 //volume = ((63 * (vol + 0x80)) * Ch[MidCh].volume) >> 15;
                 opl.Touch_Real(c, volume, brightness);
@@ -1078,8 +1083,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 
             case OPL3::VOLUME_9X:
             {
-                //volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume /** Ch[MidCh].expression*/) * 127 / 16129 /*2048383*/) >> 2)];
-                volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 2048383) >> 2)];
+                //volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume /** Ch[MidCh].expression*/) * m_masterVolume / 16129 /*2048383*/) >> 2)];
+                volume = 63 - W9X_volume_mapping_table[((vol * Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 2048383) >> 2)];
                 //volume = W9X_volume_mapping_table[vol >> 2] + volume;
                 opl.Touch_Real(c, volume, brightness);
             }

@@ -723,6 +723,7 @@ public:
 
     std::vector<MIDIchannel> Ch;
     bool cmf_percussion_mode;
+    uint8_t m_masterVolume;
     uint8_t m_sysExDeviceId;
 
     MIDIEventHooks hooks;
