@@ -121,6 +121,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
     cmf_percussion_mode(false),
     m_masterVolume(MasterVolumeDefault),
     m_sysExDeviceId(0),
+    m_synthMode(Mode_XG),
     m_arpeggioCounter(0)
 #if defined(ADLMIDI_AUDIO_TICK_HANDLER)
     , m_audioTickCounter(0)
@@ -262,10 +263,13 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     uint16_t bank = 0;
     if(midiChan.bank_msb || midiChan.bank_lsb)
     {
-        bank = (uint16_t(midiChan.bank_msb) * 256) + uint16_t(midiChan.bank_lsb);
+        if((m_synthMode & Mode_GS) != 0) //in GS mode ignore LSB
+            bank = (uint16_t(midiChan.bank_msb) * 256);
+        else
+            bank = (uint16_t(midiChan.bank_msb) * 256) + uint16_t(midiChan.bank_lsb);
         //0x7E00 - XG SFX1/SFX2 channel (16128 signed decimal)
         //0x7F00 - XG Percussion channel (16256 signed decimal)
-        if(bank == 0x7E00 || bank == 0x7F00)
+        if(((m_synthMode & Mode_XG) != 0) && (bank == 0x7E00 || bank == 0x7F00))
         {
             //Let XG SFX1/SFX2 bank will have LSB==1 (128...255 range in WOPN file)
             //Let XG Percussion bank will use (0...127 range in WOPN file)
@@ -761,11 +765,13 @@ bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data
         case (0 << 16) | 0x0901: // GM System On
             if(hooks.onDebugMessage)
                 hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: GM System On");
+            m_synthMode = Mode_GM;
             realTime_ResetState();
             return true;
         case (0 << 16) | 0x0902: // GM System Off
             if(hooks.onDebugMessage)
                 hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: GM System Off");
+            m_synthMode = Mode_XG;//TODO: TEMPORARY, make something RIGHT
             realTime_ResetState();
             return true;
         case (1 << 16) | 0x0401: // MIDI Master Volume
@@ -826,6 +832,7 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         ADL_UNUSED(mode);
         if(hooks.onDebugMessage)
             hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland System Mode Set: %02X", mode);
+        m_synthMode = Mode_GS;
         realTime_ResetState();
         return true;
     }
@@ -837,6 +844,7 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         ADL_UNUSED(value);
         if(hooks.onDebugMessage)
             hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland Mode Set: %02X", value);
+        m_synthMode = Mode_GS;
         realTime_ResetState();
         return true;
     }
@@ -878,6 +886,7 @@ bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size)
             ADL_UNUSED(value);
             if(hooks.onDebugMessage)
                 hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Yamaha XG System On: %02X", value);
+            m_synthMode = Mode_XG;
             realTime_ResetState();
             return true;
         }
@@ -1396,17 +1405,26 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
         Ch[MidCh].bendsense_lsb = value;
         Ch[MidCh].updateBendSensitivity();
         break;
-    case 0x0108 + 1*0x10000 + 1*0x20000: // Vibrato speed
-        if(value == 64)      Ch[MidCh].vibspeed = 1.0;
-        else if(value < 100) Ch[MidCh].vibspeed = 1.0 / (1.6e-2 * (value ? value : 1));
-        else                 Ch[MidCh].vibspeed = 1.0 / (0.051153846 * value - 3.4965385);
-        Ch[MidCh].vibspeed *= 2 * 3.141592653 * 5.0;
+    case 0x0108 + 1*0x10000 + 1*0x20000:
+        if((m_synthMode & Mode_XG) != 0) // Vibrato speed
+        {
+            if(value == 64)      Ch[MidCh].vibspeed = 1.0;
+            else if(value < 100) Ch[MidCh].vibspeed = 1.0 / (1.6e-2 * (value ? value : 1));
+            else                 Ch[MidCh].vibspeed = 1.0 / (0.051153846 * value - 3.4965385);
+            Ch[MidCh].vibspeed *= 2 * 3.141592653 * 5.0;
+        }
         break;
-    case 0x0109 + 1*0x10000 + 1*0x20000: // Vibrato depth
-        Ch[MidCh].vibdepth = ((value - 64) * 0.15) * 0.01;
+    case 0x0109 + 1*0x10000 + 1*0x20000:
+        if((m_synthMode & Mode_XG) != 0) // Vibrato depth
+        {
+            Ch[MidCh].vibdepth = ((value - 64) * 0.15) * 0.01;
+        }
         break;
-    case 0x010A + 1*0x10000 + 1*0x20000: // Vibrato delay in millisecons
-        Ch[MidCh].vibdelay = value ? int64_t(0.2092 * std::exp(0.0795 * (double)value)) : 0;
+    case 0x010A + 1*0x10000 + 1*0x20000:
+        if((m_synthMode & Mode_XG) != 0) // Vibrato delay in millisecons
+        {
+            Ch[MidCh].vibdelay = value ? int64_t(0.2092 * std::exp(0.0795 * (double)value)) : 0;
+        }
         break;
     default:/* UI.PrintLn("%s %04X <- %d (%cSB) (ch %u)",
                 "NRPN"+!nrpn, addr, value, "LM"[MSB], MidCh);*/
