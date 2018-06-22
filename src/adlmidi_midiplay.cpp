@@ -867,8 +867,8 @@ bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size)
             if(size != 1)
                 break;
             unsigned value = data[0] & 0x7F;
-            /*TODO*/
             (void)value;
+            realTime_ResetState();
             return true;
         }
 
