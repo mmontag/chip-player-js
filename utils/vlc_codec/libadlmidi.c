@@ -257,8 +257,9 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
                     msg_Warn (p_dec, "fragmented SysEx not implemented");
                     goto drop;
                 }
-                //fluid_synth_sysex (p_sys->synth, (char *)p_block->p_buffer + 1,
-                //                   p_block->i_buffer - 2, NULL, NULL, NULL, 0);
+                adl_rt_systemExclusive(p_sys->synth,
+                                       (const ADL_UInt8 *)p_block->p_buffer + 1,
+                                       p_block->i_buffer - 2);
                 break;
             case 0xF:
                 adl_rt_resetState(p_sys->synth);
