@@ -606,7 +606,7 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         break;
 
     case 120: // All sounds off
-        NoteUpdate_All(channel, Upt_OffMute);
+        NoteUpdate_All(channel, Upd_OffMute);
         break;
 
     case 123: // All notes off
@@ -755,10 +755,10 @@ bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data
     switch(((unsigned)realtime << 16) | address)
     {
         case (0 << 16) | 0x0901: // GM System On
-            /*TODO*/
+            realTime_ResetState();
             return true;
         case (0 << 16) | 0x0902: // GM System Off
-            /*TODO*/
+            realTime_ResetState();
             return true;
         case (1 << 16) | 0x0401: // MIDI Master Volume
             if(size != 2)
@@ -814,8 +814,8 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         if(size != 1 || (dev & 0xF0) != 0x10)
             break;
         unsigned mode = data[0] & 0x7F;
-        /*TODO*/
         (void)mode;
+        realTime_ResetState();
         return true;
     }
     case (RolandModel_GS << 24) | 0x40007F: // Mode Set
@@ -823,8 +823,8 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         if(size != 1 || (dev & 0xF0) != 0x10)
             break;
         unsigned value = data[0] & 0x7F;
-        /*TODO*/
         (void)value;
+        realTime_ResetState();
         return true;
     }
     }

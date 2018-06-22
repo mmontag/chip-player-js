@@ -980,7 +980,7 @@ private:
         Upd_All    = Upd_Pan + Upd_Volume + Upd_Pitch,
         Upd_Off    = 0x20,
         Upd_Mute   = 0x40,
-        Upt_OffMute = Upd_Off + Upd_Mute
+        Upd_OffMute = Upd_Off + Upd_Mute
     };
 
     void NoteUpdate(uint16_t MidCh,
