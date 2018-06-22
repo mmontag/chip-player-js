@@ -1046,7 +1046,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 //volume = (int)(volume * std::sqrt( (double) ch[c].users.size() ));
 
                 // The formula below: SOLVE(V=127^4 * 2^( (A-63.49999) / 8), A)
-                volume = volume > (8725 * 127) ? static_cast<uint32_t>(std::log(static_cast<double>(volume) * (1.0 / 127.0)) * 11.541561 + (0.5 - 104.22845)) : 0;
+                volume = volume > (8725 * 127) ? static_cast<uint32_t>(std::log(static_cast<double>(volume)) * 11.541560327111707 - 1.601379199767093e+02) : 0;
                 // The incorrect formula below: SOLVE(V=127^4 * (2^(A/63)-1), A)
                 //opl.Touch_Real(c, volume>(11210*127) ? 91.61112 * std::log((4.8819E-7/127)*volume + 1.0)+0.5 : 0);
 
