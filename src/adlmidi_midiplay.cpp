@@ -1041,7 +1041,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 
             switch(opl.m_volumeScale)
             {
-
+            default:
             case OPL3::VOLUME_Generic:
             {
                 volume = vol * m_masterVolume * Ch[MidCh].volume * Ch[MidCh].expression;
