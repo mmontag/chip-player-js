@@ -68,6 +68,17 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
     return midi_device;
 }
 
+ADLMIDI_EXPORT int adl_setDeviceIdentifier(ADL_MIDIPlayer *device, unsigned id)
+{
+    if(!device || id > 0x0f)
+        return -1;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!play)
+        return -1;
+    play->setDeviceId(id);
+    return 0;
+}
+
 ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numCards)
 {
     if(device == NULL)
@@ -1329,4 +1340,14 @@ ADLMIDI_EXPORT void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 c
     if(!player)
         return;
     player->realTime_BankChange(channel, (uint16_t)bank);
+}
+
+ADLMIDI_EXPORT int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const ADL_UInt8 *msg, size_t size)
+{
+    if(!device)
+        return -1;
+    MIDIplay *player = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!player)
+        return -1;
+    return player->realTime_SysEx(msg, size);
 }

@@ -93,6 +93,8 @@ static const uint8_t PercussionMap[256] =
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
+enum { MasterVolumeDefault = 127 };
+
 inline bool isXgPercChannel(uint8_t msb, uint8_t lsb)
 {
     return (msb == 0x7E || msb == 0x7F) && (lsb == 0);
@@ -117,6 +119,9 @@ void MIDIplay::AdlChannel::AddAge(int64_t ms)
 
 MIDIplay::MIDIplay(unsigned long sampleRate):
     cmf_percussion_mode(false),
+    m_masterVolume(MasterVolumeDefault),
+    m_sysExDeviceId(0),
+    m_synthMode(Mode_XG),
     m_arpeggioCounter(0)
 #if defined(ADLMIDI_AUDIO_TICK_HANDLER)
     , m_audioTickCounter(0)
@@ -219,6 +224,7 @@ void MIDIplay::realTime_ResetState()
         NoteUpdate_All(uint16_t(ch), Upd_All);
         NoteUpdate_All(uint16_t(ch), Upd_Off);
     }
+    m_masterVolume = MasterVolumeDefault;
 }
 
 bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
@@ -257,10 +263,13 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     uint16_t bank = 0;
     if(midiChan.bank_msb || midiChan.bank_lsb)
     {
-        bank = (uint16_t(midiChan.bank_msb) * 256) + uint16_t(midiChan.bank_lsb);
+        if((m_synthMode & Mode_GS) != 0) //in GS mode ignore LSB
+            bank = (uint16_t(midiChan.bank_msb) * 256);
+        else
+            bank = (uint16_t(midiChan.bank_msb) * 256) + uint16_t(midiChan.bank_lsb);
         //0x7E00 - XG SFX1/SFX2 channel (16128 signed decimal)
         //0x7F00 - XG Percussion channel (16256 signed decimal)
-        if(bank == 0x7E00 || bank == 0x7F00)
+        if(((m_synthMode & Mode_XG) != 0) && (bank == 0x7E00 || bank == 0x7F00))
         {
             //Let XG SFX1/SFX2 bank will have LSB==1 (128...255 range in WOPN file)
             //Let XG Percussion bank will use (0...127 range in WOPN file)
@@ -330,7 +339,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             if(hooks.onDebugMessage)
             {
                 if(caugh_missing_instruments.insert(static_cast<uint8_t>(midiins)).second)
-                    hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Caugh a blank instrument %i (offset %i) in the MIDI bank %u", channel, Ch[channel].patch, midiins, bank);
+                    hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Caught a blank instrument %i (offset %i) in the MIDI bank %u", channel, Ch[channel].patch, midiins, bank);
             }
             bank = 0;
             midiins = midiChan.patch;
@@ -605,7 +614,7 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         break;
 
     case 120: // All sounds off
-        NoteUpdate_All(channel, Upt_OffMute);
+        NoteUpdate_All(channel, Upd_OffMute);
         break;
 
     case 123: // All notes off
@@ -705,6 +714,188 @@ void MIDIplay::realTime_BankChange(uint8_t channel, uint16_t bank)
     channel = channel % 16;
     Ch[channel].bank_lsb = uint8_t(bank & 0xFF);
     Ch[channel].bank_msb = uint8_t((bank >> 8) & 0xFF);
+}
+
+void MIDIplay::setDeviceId(uint8_t id)
+{
+    m_sysExDeviceId = id;
+}
+
+bool MIDIplay::realTime_SysEx(const uint8_t *msg, size_t size)
+{
+    if(size < 4 || msg[0] != 0xF0 || msg[size - 1] != 0xF7)
+        return false;
+
+    unsigned manufacturer = msg[1];
+    unsigned dev = msg[2];
+    msg += 3;
+    size -= 4;
+
+    switch(manufacturer)
+    {
+    default:
+        break;
+    case Manufacturer_UniversalNonRealtime:
+    case Manufacturer_UniversalRealtime:
+        return doUniversalSysEx(
+            dev, manufacturer == Manufacturer_UniversalRealtime, msg, size);
+    case Manufacturer_Roland:
+        return doRolandSysEx(dev, msg, size);
+    case Manufacturer_Yamaha:
+        return doYamahaSysEx(dev, msg, size);
+    }
+
+    return false;
+}
+
+bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data, size_t size)
+{
+    bool devicematch = dev == 0x7F || dev == m_sysExDeviceId;
+    if(size < 2 || !devicematch)
+        return false;
+
+    unsigned address =
+        (((unsigned)data[0] & 0x7F) << 8) |
+        (((unsigned)data[1] & 0x7F));
+    data += 2;
+    size -= 2;
+
+    switch(((unsigned)realtime << 16) | address)
+    {
+        case (0 << 16) | 0x0901: // GM System On
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: GM System On");
+            m_synthMode = Mode_GM;
+            realTime_ResetState();
+            return true;
+        case (0 << 16) | 0x0902: // GM System Off
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: GM System Off");
+            m_synthMode = Mode_XG;//TODO: TEMPORARY, make something RIGHT
+            realTime_ResetState();
+            return true;
+        case (1 << 16) | 0x0401: // MIDI Master Volume
+            if(size != 2)
+                break;
+            unsigned volume =
+                (((unsigned)data[0] & 0x7F)) |
+                (((unsigned)data[1] & 0x7F) << 7);
+            m_masterVolume = volume >> 7;
+            for(size_t ch = 0; ch < Ch.size(); ch++)
+                NoteUpdate_All(uint16_t(ch), Upd_Volume);
+            return true;
+    }
+
+    return false;
+}
+
+bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
+{
+    bool devicematch = dev == 0x7F || (dev & 0x0F) == m_sysExDeviceId;
+    if(size < 6 || !devicematch)
+        return false;
+
+    unsigned model = data[0] & 0x7F;
+    unsigned mode = data[1] & 0x7F;
+    unsigned checksum = data[size - 1] & 0x7F;
+    data += 2;
+    size -= 3;
+
+#if !defined(ADLMIDI_SKIP_ROLAND_CHECKSUM)
+    {
+        unsigned checkvalue = 0;
+        for(size_t i = 0; i < size; ++i)
+            checkvalue += data[i] & 0x7F;
+        checkvalue = (128 - (checkvalue & 127)) & 127;
+        if(checkvalue != checksum)
+            return false;
+    }
+#endif
+
+    unsigned address =
+        (((unsigned)data[0] & 0x7F) << 16) |
+        (((unsigned)data[1] & 0x7F) << 8)  |
+        (((unsigned)data[2] & 0x7F));
+    data += 3;
+    size -= 3;
+
+    if(mode != RolandMode_Send) // don't have MIDI-Out reply ability
+        return false;
+
+    switch((model << 24) | address)
+    {
+    case (RolandModel_GS << 24) | 0x00007F: // System Mode Set
+    {
+        if(size != 1 || (dev & 0xF0) != 0x10)
+            break;
+        unsigned mode = data[0] & 0x7F;
+        ADL_UNUSED(mode);//TODO: Hook this correctly!
+        if(hooks.onDebugMessage)
+            hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland System Mode Set: %02X", mode);
+        m_synthMode = Mode_GS;
+        realTime_ResetState();
+        return true;
+    }
+    case (RolandModel_GS << 24) | 0x40007F: // Mode Set
+    {
+        if(size != 1 || (dev & 0xF0) != 0x10)
+            break;
+        unsigned value = data[0] & 0x7F;
+        ADL_UNUSED(value);//TODO: Hook this correctly!
+        if(hooks.onDebugMessage)
+            hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland Mode Set: %02X", value);
+        m_synthMode = Mode_GS;
+        realTime_ResetState();
+        return true;
+    }
+    }
+
+    return false;
+}
+
+bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size)
+{
+    bool devicematch = dev == 0x7F || (dev & 0x0F) == m_sysExDeviceId;
+    if(size < 1 || !devicematch)
+        return false;
+
+    unsigned model = data[0] & 0x7F;
+    ++data;
+    --size;
+
+    switch((model << 8) | (dev & 0xF0))
+    {
+    case (YamahaModel_XG << 8) | 0x10:  // parameter change
+    {
+        if(size < 3)
+            break;
+
+        unsigned address =
+            (((unsigned)data[0] & 0x7F) << 16) |
+            (((unsigned)data[1] & 0x7F) << 8)  |
+            (((unsigned)data[2] & 0x7F));
+        data += 3;
+        size -= 3;
+
+        switch(address)
+        {
+        case 0x00007E:  // XG System On
+            if(size != 1)
+                break;
+            unsigned value = data[0] & 0x7F;
+            ADL_UNUSED(value);//TODO: Hook this correctly!
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Yamaha XG System On: %02X", value);
+            m_synthMode = Mode_XG;
+            realTime_ResetState();
+            return true;
+        }
+
+        break;
+    }
+    }
+
+    return false;
 }
 
 void MIDIplay::realTime_panic()
@@ -859,10 +1050,10 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 
             switch(opl.m_volumeScale)
             {
-
+            default:
             case OPL3::VOLUME_Generic:
             {
-                volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
+                volume = vol * m_masterVolume * Ch[MidCh].volume * Ch[MidCh].expression;
 
                 /* If the channel has arpeggio, the effective volume of
                      * *this* instrument is actually lower due to timesharing.
@@ -873,51 +1064,46 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                      */
                 //volume = (int)(volume * std::sqrt( (double) ch[c].users.size() ));
 
-                // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-                volume = volume > 8725 ? static_cast<uint32_t>(std::log(static_cast<double>(volume)) * 11.541561 + (0.5 - 104.22845)) : 0;
-                // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
-                //opl.Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
-
-                opl.Touch_Real(c, volume, brightness);
-                //opl.Touch(c, volume);
+                // The formula below: SOLVE(V=127^4 * 2^( (A-63.49999) / 8), A)
+                volume = volume > (8725 * 127) ? static_cast<uint32_t>(std::log(static_cast<double>(volume)) * 11.541560327111707 - 1.601379199767093e+02) : 0;
+                // The incorrect formula below: SOLVE(V=127^4 * (2^(A/63)-1), A)
+                //opl.Touch_Real(c, volume>(11210*127) ? 91.61112 * std::log((4.8819E-7/127)*volume + 1.0)+0.5 : 0);
             }
             break;
 
             case OPL3::VOLUME_NATIVE:
             {
                 volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
-                volume = volume * 127 / (127 * 127 * 127) / 2;
-                opl.Touch_Real(c, volume, brightness);
+                volume = volume * m_masterVolume / (127 * 127 * 127) / 2;
             }
             break;
 
             case OPL3::VOLUME_DMX:
             {
-                volume = 2 * ((Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 16129) + 1;
+                volume = 2 * (Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 16129) + 1;
                 //volume = 2 * (Ch[MidCh].volume) + 1;
                 volume = (DMX_volume_mapping_table[(vol < 128) ? vol : 127] * volume) >> 9;
-                opl.Touch_Real(c, volume, brightness);
             }
             break;
 
             case OPL3::VOLUME_APOGEE:
             {
-                volume = ((Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 16129);
+                volume = (Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 16129);
                 volume = ((64 * (vol + 0x80)) * volume) >> 15;
                 //volume = ((63 * (vol + 0x80)) * Ch[MidCh].volume) >> 15;
-                opl.Touch_Real(c, volume, brightness);
             }
             break;
 
             case OPL3::VOLUME_9X:
             {
-                //volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume /** Ch[MidCh].expression*/) * 127 / 16129 /*2048383*/) >> 2)];
-                volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume * Ch[MidCh].expression) * 127 / 2048383) >> 2)];
+                //volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume /** Ch[MidCh].expression*/) * m_masterVolume / 16129 /*2048383*/) >> 2)];
+                volume = 63 - W9X_volume_mapping_table[((vol * Ch[MidCh].volume * Ch[MidCh].expression * m_masterVolume / 2048383) >> 2)];
                 //volume = W9X_volume_mapping_table[vol >> 2] + volume;
-                opl.Touch_Real(c, volume, brightness);
             }
             break;
             }
+
+            opl.Touch_Real(c, volume, brightness);
 
             /* DEBUG ONLY!!!
             static uint32_t max = 0;
@@ -1219,17 +1405,26 @@ void MIDIplay::SetRPN(unsigned MidCh, unsigned value, bool MSB)
         Ch[MidCh].bendsense_lsb = value;
         Ch[MidCh].updateBendSensitivity();
         break;
-    case 0x0108 + 1*0x10000 + 1*0x20000: // Vibrato speed
-        if(value == 64)      Ch[MidCh].vibspeed = 1.0;
-        else if(value < 100) Ch[MidCh].vibspeed = 1.0 / (1.6e-2 * (value ? value : 1));
-        else                 Ch[MidCh].vibspeed = 1.0 / (0.051153846 * value - 3.4965385);
-        Ch[MidCh].vibspeed *= 2 * 3.141592653 * 5.0;
+    case 0x0108 + 1*0x10000 + 1*0x20000:
+        if((m_synthMode & Mode_XG) != 0) // Vibrato speed
+        {
+            if(value == 64)      Ch[MidCh].vibspeed = 1.0;
+            else if(value < 100) Ch[MidCh].vibspeed = 1.0 / (1.6e-2 * (value ? value : 1));
+            else                 Ch[MidCh].vibspeed = 1.0 / (0.051153846 * value - 3.4965385);
+            Ch[MidCh].vibspeed *= 2 * 3.141592653 * 5.0;
+        }
         break;
-    case 0x0109 + 1*0x10000 + 1*0x20000: // Vibrato depth
-        Ch[MidCh].vibdepth = ((value - 64) * 0.15) * 0.01;
+    case 0x0109 + 1*0x10000 + 1*0x20000:
+        if((m_synthMode & Mode_XG) != 0) // Vibrato depth
+        {
+            Ch[MidCh].vibdepth = ((value - 64) * 0.15) * 0.01;
+        }
         break;
-    case 0x010A + 1*0x10000 + 1*0x20000: // Vibrato delay in millisecons
-        Ch[MidCh].vibdelay = value ? int64_t(0.2092 * std::exp(0.0795 * (double)value)) : 0;
+    case 0x010A + 1*0x10000 + 1*0x20000:
+        if((m_synthMode & Mode_XG) != 0) // Vibrato delay in millisecons
+        {
+            Ch[MidCh].vibdelay = value ? int64_t(0.2092 * std::exp(0.0795 * (double)value)) : 0;
+        }
         break;
     default:/* UI.PrintLn("%s %04X <- %d (%cSB) (ch %u)",
                 "NRPN"+!nrpn, addr, value, "LM"[MSB], MidCh);*/

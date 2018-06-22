@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <memory>
 #include <cstring>
+#include <iterator>  // std::back_inserter
+#include <algorithm> // std::copy
 #include <set>
 #include <assert.h>
 
@@ -158,31 +160,48 @@ void BW_MidiSequencer::MidiTrackRow::clear()
 void BW_MidiSequencer::MidiTrackRow::sortEvents(bool *noteStates)
 {
     typedef std::vector<MidiEvent> EvtArr;
+    EvtArr sysEx;
     EvtArr metas;
     EvtArr noteOffs;
     EvtArr controllers;
     EvtArr anyOther;
 
-    metas.reserve(events.size());
-    noteOffs.reserve(events.size());
-    controllers.reserve(events.size());
-    anyOther.reserve(events.size());
-
     for(size_t i = 0; i < events.size(); i++)
     {
         if(events[i].type == MidiEvent::T_NOTEOFF)
+        {
+            if(noteOffs.capacity() == 0)
+                noteOffs.reserve(events.size());
             noteOffs.push_back(events[i]);
+        }
+        else if(events[i].type == MidiEvent::T_SYSEX ||
+                events[i].type == MidiEvent::T_SYSEX2)
+        {
+            if(sysEx.capacity() == 0)
+                sysEx.reserve(events.size());
+            sysEx.push_back(events[i]);
+        }
         else if((events[i].type == MidiEvent::T_CTRLCHANGE)
                 || (events[i].type == MidiEvent::T_PATCHCHANGE)
                 || (events[i].type == MidiEvent::T_WHEEL)
                 || (events[i].type == MidiEvent::T_CHANAFTTOUCH))
         {
+            if(controllers.capacity() == 0)
+                controllers.reserve(events.size());
             controllers.push_back(events[i]);
         }
         else if((events[i].type == MidiEvent::T_SPECIAL) && (events[i].subtype == MidiEvent::ST_MARKER))
+        {
+            if(metas.capacity() == 0)
+                metas.reserve(events.size());
             metas.push_back(events[i]);
+        }
         else
+        {
+            if(anyOther.capacity() == 0)
+                anyOther.reserve(events.size());
             anyOther.push_back(events[i]);
+        }
     }
 
     /*
@@ -244,10 +263,16 @@ void BW_MidiSequencer::MidiTrackRow::sortEvents(bool *noteStates)
     /***********************************************************************************/
 
     events.clear();
-    events.insert(events.end(), noteOffs.begin(), noteOffs.end());
-    events.insert(events.end(), metas.begin(), metas.end());
-    events.insert(events.end(), controllers.begin(), controllers.end());
-    events.insert(events.end(), anyOther.begin(), anyOther.end());
+    if(!sysEx.empty())
+        events.insert(events.end(), sysEx.begin(), sysEx.end());
+    if(!noteOffs.empty())
+        events.insert(events.end(), noteOffs.begin(), noteOffs.end());
+    if(!metas.empty())
+        events.insert(events.end(), metas.begin(), metas.end());
+    if(!controllers.empty())
+        events.insert(events.end(), controllers.begin(), controllers.end());
+    if(!anyOther.empty())
+        events.insert(events.end(), anyOther.begin(), anyOther.end());
 }
 
 BW_MidiSequencer::BW_MidiSequencer() :
@@ -919,6 +944,10 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
             evt.isValid = 0;
             return evt;
         }
+        evt.type = MidiEvent::T_SYSEX;
+        evt.data.clear();
+        evt.data.push_back(byte);
+        std::copy(ptr, ptr + length, std::back_inserter(evt.data));
         ptr += (size_t)length;
         return evt;
     }
@@ -1120,6 +1149,12 @@ void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent 
     {
         //std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
         //UI.PrintLn("SysEx %02X: %u bytes", byte, length/*, data.c_str()*/);
+#if 0
+        std::fputs("SysEx:", stderr);
+        for(size_t i = 0; i < evt.data.size(); ++i)
+            std::fprintf(stderr, " %02X", evt.data[i]);
+        std::fputc('\n', stderr);
+#endif
         m_interface->rt_systemExclusive(m_interface->rtUserData, evt.data.data(), evt.data.size());
         return;
     }

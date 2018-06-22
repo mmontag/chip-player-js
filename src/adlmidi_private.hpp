@@ -723,6 +723,17 @@ public:
 
     std::vector<MIDIchannel> Ch;
     bool cmf_percussion_mode;
+    uint8_t m_masterVolume;
+    uint8_t m_sysExDeviceId;
+
+    enum SynthMode
+    {
+        Mode_GM  = 0x00,
+        Mode_GS  = 0x01,
+        Mode_XG  = 0x02,
+        Mode_GM2 = 0x04,
+    };
+    uint32_t m_synthMode;
 
     MIDIEventHooks hooks;
 
@@ -901,6 +912,20 @@ public:
     void realTime_BankChange(uint8_t channel, uint16_t bank);
 
     /**
+     * @brief Sets the Device identifier
+     * @param id 7-bit Device identifier
+     */
+    void setDeviceId(uint8_t id);
+
+    /**
+     * @brief System Exclusive message
+     * @param msg Raw SysEx Message
+     * @param size Length of SysEx message
+     * @return true if message was passed successfully. False on any errors
+     */
+    bool realTime_SysEx(const uint8_t *msg, size_t size);
+
+    /**
      * @brief Turn off all notes and mute the sound of releasing notes
      */
     void realTime_panic();
@@ -934,6 +959,30 @@ public:
 private:
     enum
     {
+        Manufacturer_Roland               = 0x41,
+        Manufacturer_Yamaha               = 0x43,
+        Manufacturer_UniversalNonRealtime = 0x7E,
+        Manufacturer_UniversalRealtime    = 0x7F
+    };
+    enum
+    {
+        RolandMode_Request = 0x11,
+        RolandMode_Send    = 0x12
+    };
+    enum
+    {
+        RolandModel_GS   = 0x42,
+        RolandModel_SC55 = 0x45,
+        YamahaModel_XG   = 0x4C
+    };
+
+    bool doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data, size_t size);
+    bool doRolandSysEx(unsigned dev, const uint8_t *data, size_t size);
+    bool doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size);
+
+private:
+    enum
+    {
         Upd_Patch  = 0x1,
         Upd_Pan    = 0x2,
         Upd_Volume = 0x4,
@@ -941,7 +990,7 @@ private:
         Upd_All    = Upd_Pan + Upd_Volume + Upd_Pitch,
         Upd_Off    = 0x20,
         Upd_Mute   = 0x40,
-        Upt_OffMute = Upd_Off + Upd_Mute
+        Upd_OffMute = Upd_Off + Upd_Mute
     };
 
     void NoteUpdate(uint16_t MidCh,
