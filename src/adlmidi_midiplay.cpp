@@ -829,7 +829,7 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         if(size != 1 || (dev & 0xF0) != 0x10)
             break;
         unsigned mode = data[0] & 0x7F;
-        ADL_UNUSED(mode);
+        ADL_UNUSED(mode);//TODO: Hook this correctly!
         if(hooks.onDebugMessage)
             hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland System Mode Set: %02X", mode);
         m_synthMode = Mode_GS;
@@ -841,7 +841,7 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         if(size != 1 || (dev & 0xF0) != 0x10)
             break;
         unsigned value = data[0] & 0x7F;
-        ADL_UNUSED(value);
+        ADL_UNUSED(value);//TODO: Hook this correctly!
         if(hooks.onDebugMessage)
             hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland Mode Set: %02X", value);
         m_synthMode = Mode_GS;
@@ -883,7 +883,7 @@ bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size)
             if(size != 1)
                 break;
             unsigned value = data[0] & 0x7F;
-            ADL_UNUSED(value);
+            ADL_UNUSED(value);//TODO: Hook this correctly!
             if(hooks.onDebugMessage)
                 hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Yamaha XG System On: %02X", value);
             m_synthMode = Mode_XG;
