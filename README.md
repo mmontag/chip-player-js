@@ -93,8 +93,8 @@ You need to make in the any IDE a library project and put into it next files
 (or include those files into subfolder of your exist project instead if you want to use it statically):
 
 ### Useful macros
-* `ADLMIDI_DISABLE_XMI_SUPPORT` - Disables XMI to MIDI converter
-* `ADLMIDI_DISABLE_MUS_SUPPORT` - Disables MUS to MIDI converter
+* `BWMIDI_DISABLE_XMI_SUPPORT` - Disables XMI to MIDI converter
+* `BWMIDI_DISABLE_MUS_SUPPORT` - Disables MUS to MIDI converter
 * `ADLMIDI_DISABLE_MIDI_SEQUENCER` - Completely disables built-in MIDI sequencer.
 * `ADLMIDI_DISABLE_DOSBOX_EMULATOR` - Disables DosBox 0.74 OPL3 emulator.
 * `ADLMIDI_DISABLE_NUKED_EMULATOR` - Disables Nuked OPL3 emulator.
@@ -108,7 +108,6 @@ You need to make in the any IDE a library project and put into it next files
 * chips/*       - Various OPL3 chip emulators and commonized interface over them
 * adldata.hh    - bank structures definition
 * adlmidi_private.hpp - header of internal private APIs
-* fraction.hpp  - Fraction number handling
 
 * adldata.cpp	 - Automatically generated database of FM banks from "fm_banks" directory via "gen_adldata" tool. **Don't build it if you have defined `DISABLE_EMBEDDED_BANKS` macro!**
 * adlmidi.cpp   - code of library
@@ -117,16 +116,16 @@ You need to make in the any IDE a library project and put into it next files
 * adlmidi_opl3.cpp	- OPL3 chips manager
 * adlmidi_private.cpp	- some internal functions sources
 
+#### MIDI Sequencer
+To remove MIDI Sequecer, define `ADLMIDI_DISABLE_MIDI_SEQUENCER` macro and remove all those files
+* adlmidi_sequencer.cpp	- MIDI Sequencer related source
+* cvt_mus2mid.hpp - MUS2MID converter source (define `BWMIDI_DISABLE_MUS_SUPPORT` macro to remove MUS support)
+* cvt_xmi2mid.hpp - XMI2MID converter source (define `BWMIDI_DISABLE_XMI_SUPPORT` macro to remove XMI support)
+* fraction.hpp  - Fraction number handling (Used by Sequencer only)
+* midi_sequencer.h	- MIDI Sequencer C bindings
+* midi_sequencer.hpp	- MIDI Sequencer C++ declaration
+* midi_sequencer_impl.hpp	- MIDI Sequencer C++ implementation (must be once included into one of CPP together with interfaces initializations)
 
-#### MUS2MIDI converter
-To remove MUS support, define `ADLMIDI_DISABLE_MUS_SUPPORT` macro and remove those files:
-* adlmidi_mus2mid.h - MUS2MID converter header
-* adlmidi_mus2mid.c	- MUS2MID converter source
-
-#### XMI2MIDI converter
-To remove XMI support, define `ADLMIDI_DISABLE_XMI_SUPPORT` macro and remove those files:
-* adlmidi_xmi2mid.h - XMI2MID converter header
-* adlmidi_xmi2mid.c	- XMI2MID converter source
 
 
 **Important**: Please use DosBox emulator on mobile devices because it requires small CPU power. Nuked OPL synthesizer is very accurate (compared to real OPL3 chip), but it requires much more power device and is high probability your device will lag and playback will be choppy.

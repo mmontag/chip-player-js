@@ -203,20 +203,18 @@ list(APPEND libADLMIDI_SOURCES
     ${libADLMIDI_SOURCE_DIR}/src/wopl/wopl_file.c
 )
 
-if(WITH_MUS_SUPPORT AND WITH_MIDI_SEQUENCER)
+if(WITH_MIDI_SEQUENCER)
     list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_mus2mid.c
+        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_sequencer.cpp
     )
-else()
-    add_definitions(-DADLMIDI_DISABLE_MUS_SUPPORT)
 endif()
 
-if(WITH_XMI_SUPPORT AND WITH_MIDI_SEQUENCER)
-    list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_xmi2mid.c
-    )
-else()
-    add_definitions(-DADLMIDI_DISABLE_XMI_SUPPORT)
+if(NOT WITH_MUS_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
+    add_definitions(-DBWMIDI_DISABLE_MUS_SUPPORT)
+endif()
+
+if(NOT WITH_XMI_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
+    add_definitions(-DBWMIDI_DISABLE_XMI_SUPPORT)
 endif()
 
 if(NOT DJGPP AND NOT MSDOS)

@@ -603,7 +603,7 @@ int main(int argc, char **argv)
     {
         std::fprintf(stdout, " - Loop is turned %s\n", loopEnabled ? "ON" : "OFF");
         if(loopStart >= 0.0 && loopEnd >= 0.0)
-            std::fprintf(stdout, " - Has loop points: %10f ... %10f\n", loopStart, loopEnd);
+            std::fprintf(stdout, " - Has loop points: %s ... %s\n", loopStartHMS, loopEndHMS);
         std::fprintf(stdout, "\n==========================================\n");
         flushout(stdout);
 
