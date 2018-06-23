@@ -28,6 +28,8 @@
 
 #include <string> // std::string
 #include <cstdio> // std::fopen, std::fread, std::fseek, std::ftell, std::fclose, std::feof
+#include <stdint.h> // uint*_t
+#include <stddef.h> // size_t and friends
 #ifdef _WIN32
 #include <cstring> // std::strlen
 #include <windows.h> // MultiByteToWideChar
