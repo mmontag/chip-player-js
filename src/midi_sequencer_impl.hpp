@@ -64,9 +64,9 @@ typedef int32_t ssize_t;
 static inline uint64_t readBEint(const void *buffer, size_t nbytes)
 {
     uint64_t result = 0;
-    const unsigned char *data = reinterpret_cast<const unsigned char *>(buffer);
+    const uint8_t *data = reinterpret_cast<const uint8_t *>(buffer);
 
-    for(unsigned n = 0; n < nbytes; ++n)
+    for(size_t n = 0; n < nbytes; ++n)
         result = (result << 8) + data[n];
 
     return result;
@@ -81,29 +81,11 @@ static inline uint64_t readBEint(const void *buffer, size_t nbytes)
 static inline uint64_t readLEint(const void *buffer, size_t nbytes)
 {
     uint64_t result = 0;
-    const unsigned char *data = reinterpret_cast<const unsigned char *>(buffer);
+    const uint8_t *data = reinterpret_cast<const uint8_t *>(buffer);
 
-    for(unsigned n = 0; n < nbytes; ++n)
+    for(size_t n = 0; n < nbytes; ++n)
         result = result + static_cast<uint64_t>(data[n] << (n * 8));
 
-    return result;
-}
-
-/**
- * @brief Standard MIDI Variable-Length numeric value parser without of validation
- * @param [_inout] ptr Pointer to memory block that contains begin of variable-length value
- * @return Unsigned integer that conains parsed variable-length value
- */
-static inline uint64_t readVarLen(uint8_t **ptr)
-{
-    uint64_t result = 0;
-    for(;;)
-    {
-        uint8_t byte = *((*ptr)++);
-        result = (result << 7) + (byte & 0x7F);
-        if(!(byte & 0x80))
-            break;
-    }
     return result;
 }
 
@@ -1136,7 +1118,7 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
     return evt;
 }
 
-void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent &evt, int32_t &status)
+void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEvent &evt, int32_t &status)
 {
     if(m_interface->onEvent)
     {
@@ -1147,7 +1129,7 @@ void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent 
 
     if(evt.type == MidiEvent::T_SYSEX || evt.type == MidiEvent::T_SYSEX2) // Ignore SysEx
     {
-        //std::string data( length?(const char*) &TrackData[tk][CurrentPosition.track[tk].ptr]:0, length );
+        //std::string data( length?(const char*) &TrackData[track][CurrentPosition.track[track].ptr]:0, length );
         //UI.PrintLn("SysEx %02X: %u bytes", byte, length/*, data.c_str()*/);
 #if 0
         std::fputs("SysEx:", stderr);
@@ -1186,8 +1168,10 @@ void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent 
 
         if(evtype == MidiEvent::ST_DEVICESWITCH)
         {
+            if(m_interface->onDebugMessage)
+                m_interface->onDebugMessage(m_interface->onDebugMessage_userData, "Switching another device: %s", data.c_str());
             if(m_interface->rt_deviceSwitch)
-                m_interface->rt_deviceSwitch(m_interface->rtUserData, tk, data.c_str(), data.size());
+                m_interface->rt_deviceSwitch(m_interface->rtUserData, track, data.c_str(), data.size());
             return;
         }
 
@@ -1197,13 +1181,13 @@ void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent 
         //Turn on Loop handling when loop is enabled
         if(m_loopEnabled && !m_invalidLoop)
         {
-            if(evtype == MidiEvent::ST_LOOPSTART) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+            if(evtype == MidiEvent::ST_LOOPSTART) // Special non-spec MIDI loop Start point
             {
                 m_loopStart = true;
                 return;
             }
 
-            if(evtype == MidiEvent::ST_LOOPEND) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib
+            if(evtype == MidiEvent::ST_LOOPEND) // Special non-spec MIDI loop End point
             {
                 m_loopEnd = true;
                 return;
@@ -1223,8 +1207,8 @@ void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent 
     // Any normal event (80..EF)
     //    if(evt.type < 0x80)
     //    {
-    //        byte = static_cast<uint8_t>(CurrentPosition.track[tk].status | 0x80);
-    //        CurrentPosition.track[tk].ptr--;
+    //        byte = static_cast<uint8_t>(CurrentPosition.track[track].status | 0x80);
+    //        CurrentPosition.track[track].ptr--;
     //    }
 
     if(evt.type == MidiEvent::T_SYSCOMSNGSEL ||
@@ -1232,11 +1216,11 @@ void BW_MidiSequencer::handleEvent(size_t tk, const BW_MidiSequencer::MidiEvent 
         return;
 
     /*UI.PrintLn("@%X Track %u: %02X %02X",
-                CurrentPosition.track[tk].ptr-1, (unsigned)tk, byte,
-                TrackData[tk][CurrentPosition.track[tk].ptr]);*/
+                CurrentPosition.track[track].ptr-1, (unsigned)track, byte,
+                TrackData[track][CurrentPosition.track[track].ptr]);*/
     uint8_t  midCh = evt.channel;//byte & 0x0F, EvType = byte >> 4;
     if(m_interface->rt_currentDevice)
-        midCh += (uint8_t)m_interface->rt_currentDevice(m_interface->rtUserData, tk);
+        midCh += (uint8_t)m_interface->rt_currentDevice(m_interface->rtUserData, track);
     status = evt.type;
 
     switch(evt.type)
