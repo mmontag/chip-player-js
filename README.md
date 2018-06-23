@@ -152,6 +152,10 @@ To build that example you will need to have installed SDL2 library.
 # Changelog
 ## 1.4.0   <dev>
  * Implemented a full support for Portamento! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Added support for SysEx event handling! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Added support for GS way of custom drum channels (through SysEx events)
+ * Ignore some NRPN events and lsb bank number when using GS standard (after catching of GS Reset SysEx call)
+ * Added support for CC66-Sostenuto controller (Pedal hold of currently-pressed notes only while CC64 holds also all next notes)
 
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization
