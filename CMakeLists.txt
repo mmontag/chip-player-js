@@ -5,20 +5,26 @@ project (libADLMIDI C CXX)
 # Strip garbage
 if(APPLE)
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -dead_strip")
-ELSEIF(NOT MSVC AND NOT MSDOS)
+elseif(NOT MSVC AND NOT MSDOS)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -s -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -s -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s")
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-s")
-ENDIF()
+endif()
 
-IF(NOT MSVC AND NOT MSDOS)
+if(NOT MSVC AND NOT MSDOS)
 # Global optimization flags
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fno-omit-frame-pointer")
 # Turn on all warnings
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-ENDIF()
+# Deny undefined symbols
+    if(NOT APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined" )
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined" )
+        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined" )
+    endif()
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
