@@ -464,6 +464,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     //if(hooks.onDebugMessage)
     //    hooks.onDebugMessage(hooks.onDebugMessage_userData, "i1=%d:%d, i2=%d:%d", i[0],adlchannel[0], i[1],adlchannel[1]);
 
+    if(midiChan.softPedal) // Apply Soft Pedal level reducing
+        velocity = static_cast<uint8_t>(std::floor(static_cast<float>(velocity) * 0.8f));
+
     // Allocate active note for MIDI channel
     std::pair<MIDIchannel::activenoteiterator, bool>
     ir = midiChan.activenotes_insert(note);
@@ -596,6 +599,10 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
             MarkSostenutoNotes(channel);
         else
             KillSustainingNotes(channel, -1, AdlChannel::LocationData::Sustain_Sostenuto);
+        break;
+
+    case 67: // Enable/disable soft-pedal
+        Ch[channel].softPedal = (value >= 64);
         break;
 
     case 11: // Change expression (another volume factor)

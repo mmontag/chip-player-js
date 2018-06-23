@@ -352,6 +352,7 @@ public:
         uint8_t panning, vibrato, aftertouch;
         uint16_t portamento;
         bool sustain;
+        bool softPedal;
         bool portamentoEnable;
         int8_t portamentoSource;  // note number or -1
         double portamentoRate;
@@ -566,6 +567,7 @@ public:
             volume  = 100;
             expression = 127;
             sustain = false;
+            softPedal = false;
             vibrato = 0;
             aftertouch = 0;
             std::memset(noteAftertouch, 0, 128);
