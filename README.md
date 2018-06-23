@@ -28,7 +28,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * OPL3 emulation with four-operator mode support
 * FM patches from a number of known PC games, copied from files typical to AIL = Miles Sound System / DMX / HMI = Human Machine Interfaces / Creative IBK.
 * Stereo sound
-* Number of simulated soundcards can be specified as 1-100 (maximum channels 1800!)
+* Number of simulated OPL3 chips can be specified as 1-100 (maximum channels 1800!)
 * Pan (binary panning, i.e. left/right side on/off)
 * Pitch-bender with adjustable range
 * Vibrato that responds to RPN/NRPN parameters
