@@ -40,7 +40,10 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Support for multiple concurrent MIDI synthesizers (per-track device/port select FF 09 message), can be used to overcome 16 channel limit
 * Support for playing Id-software Music File format (IMF)
 * Support for custom banks of [WOPL format](https://github.com/Wohlstand/OPL3BankEditor/blob/master/Specifications/WOPL-and-OPLI-Specification.txt)
-* Partial support for XG standard (having more instruments than in one 128:128 GM set and ability to use multiple channels for percussion purposes)
+* Partial support for GS and XG standards (having more instruments than in one 128:128 GM set and ability to use multiple channels for percussion purposes, and a support for some GS/XG exclusive controllers)
+* CC74 affects a modulator scale
+* Portamento support (CC5, CC37, and CC65)
+* SysEx support that supports some generic, GS, and XG features
 
 # How to build
 To build libADLMIDI you need to use CMake:
