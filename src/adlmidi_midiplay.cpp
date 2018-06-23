@@ -1225,7 +1225,7 @@ void MIDIplay::setErrorString(const std::string &err)
 
 int64_t MIDIplay::CalculateAdlChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t) const
 {
-    int64_t s = -ch[c].koff_time_until_neglible;
+    int64_t s = (opl.m_musicMode != OPL3::MODE_CMF) ? -ch[c].koff_time_until_neglible : 0;
 
     // Same midi-instrument = some stability
     //if(c == MidCh) s += 4;
