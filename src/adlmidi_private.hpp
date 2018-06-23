@@ -946,6 +946,7 @@ public:
      * @param length Length of device name string
      */
     void realTime_deviceSwitch(size_t track, const char *data, size_t length);
+
     /**
      * @brief Currently selected device index
      * @param track MIDI track index
