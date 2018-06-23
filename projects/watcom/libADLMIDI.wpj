@@ -32,8 +32,8 @@ WVList
 VComponent
 9
 WRect
-328
-240
+360
+590
 5712
 4360
 0
@@ -43,13 +43,13 @@ WFileName
 11
 ADLMIDI.tgt
 0
-10
+13
 11
 VComponent
 12
 WRect
-3760
-680
+4168
+2980
 5712
 4360
 0

@@ -32,8 +32,8 @@ WVList
 VComponent
 9
 WRect
-560
-450
+360
+380
 5712
 4360
 0
@@ -43,7 +43,7 @@ WFileName
 17
 ADLMIDI-win32.tgt
 0
-15
+13
 11
 VComponent
 12
@@ -60,4 +60,4 @@ WFileName
 playmidi-win32.tgt
 0
 3
-11
+8

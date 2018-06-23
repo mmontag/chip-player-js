@@ -32,8 +32,8 @@ WVList
 VComponent
 9
 WRect
-232
-380
+224
+370
 5712
 4360
 0
@@ -43,13 +43,13 @@ WFileName
 19
 ADLMIDI-linux32.tgt
 0
-15
+9
 11
 VComponent
 12
 WRect
-3896
-1440
+3960
+1880
 5712
 4360
 0
@@ -60,4 +60,4 @@ WFileName
 playmidi-linux32.tgt
 0
 3
-11
+8

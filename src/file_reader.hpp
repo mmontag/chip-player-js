@@ -31,6 +31,7 @@
 #include <stdint.h> // uint*_t
 #include <stddef.h> // size_t and friends
 #ifdef _WIN32
+#define NOMINMAX 1
 #include <cstring> // std::strlen
 #include <windows.h> // MultiByteToWideChar
 #endif
