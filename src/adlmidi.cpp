@@ -861,6 +861,8 @@ ADLMIDI_EXPORT void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_D
 }
 
 #ifndef ADLMIDI_HW_OPL
+
+#   ifndef __WATCOMC__
 template <class Dst>
 static void CopySamplesRaw(ADL_UInt8 *dstLeft, ADL_UInt8 *dstRight, const int32_t *src,
                            size_t frameCount, unsigned sampleOffset)
@@ -992,7 +994,61 @@ static int SendStereoAudio(int        samples_requested,
 
     return 0;
 }
-#endif
+#   else // __WATCOMC__
+
+/*
+    Workaround for OpenWattcom where templates are declared above are causing compiler to be crashed
+*/
+static void CopySamplesTransformed(ADL_UInt8 *dstLeft, ADL_UInt8 *dstRight, const int32_t *src,
+                                   size_t frameCount, unsigned sampleOffset,
+                                   int32_t(&transform)(int32_t))
+{
+    for(size_t i = 0; i < frameCount; ++i) {
+        *(int16_t *)(dstLeft + (i * sampleOffset)) = (int16_t)transform(src[2 * i]);
+        *(int16_t *)(dstRight + (i * sampleOffset)) = (int16_t)transform(src[(2 * i) + 1]);
+    }
+}
+
+static int SendStereoAudio(int        samples_requested,
+                           ssize_t    in_size,
+                           int32_t   *_in,
+                           ssize_t    out_pos,
+                           ADL_UInt8 *left,
+                           ADL_UInt8 *right,
+                           const ADLMIDI_AudioFormat *format)
+{
+    if(!in_size)
+        return 0;
+    size_t outputOffset = static_cast<size_t>(out_pos);
+    size_t inSamples    = static_cast<size_t>(in_size * 2);
+    size_t maxSamples   = static_cast<size_t>(samples_requested) - outputOffset;
+    size_t toCopy       = std::min(maxSamples, inSamples);
+
+    ADLMIDI_SampleType sampleType = format->type;
+    const unsigned containerSize = format->containerSize;
+    const unsigned sampleOffset = format->sampleOffset;
+
+    left  += (outputOffset / 2) * sampleOffset;
+    right += (outputOffset / 2) * sampleOffset;
+
+    if(sampleType == ADLMIDI_SampleType_U16)
+    {
+        switch(containerSize) {
+        case sizeof(int16_t):
+            CopySamplesTransformed(left, right, _in, toCopy / 2, sampleOffset, adl_cvtS16);
+            break;
+        default:
+            return -1;
+        }
+    }
+    else
+        return -1;
+    return 0;
+}
+#   endif // __WATCOM__
+
+#endif // ADLMIDI_HW_OPL
+
 
 ADLMIDI_EXPORT int adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short *out)
 {

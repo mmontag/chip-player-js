@@ -10,6 +10,7 @@
 #include <signal.h>
 
 #if defined(__WATCOMC__)
+#include <stdio.h> // snprintf is here!
 #define flushout(stream)
 #else
 #define flushout(stream) std::fflush(stream)
