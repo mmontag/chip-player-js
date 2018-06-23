@@ -160,6 +160,7 @@ To build that example you will need to have installed SDL2 library.
  * Ignore some NRPN events and lsb bank number when using GS standard (after catching of GS Reset SysEx call)
  * Added support for CC66-Sostenuto controller (Pedal hold of currently-pressed notes only while CC64 holds also all next notes)
  * Added support for CC67-SoftPedal controller (SoftPedal lowers the volume of notes played)
+ * Fixed correctness of CMF files playing
 
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization
