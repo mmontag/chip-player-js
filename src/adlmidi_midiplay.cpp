@@ -586,8 +586,16 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         break;
 
     case 64: // Enable/disable sustain
-        Ch[channel].sustain = value;
-        if(!value) KillSustainingNotes(channel);
+        Ch[channel].sustain = (value >= 64);
+        if(!Ch[channel].sustain)
+            KillSustainingNotes(channel, -1, AdlChannel::LocationData::Sustain_Pedal);
+        break;
+
+    case 66: // Enable/disable sostenuto
+        if(value >= 64) //Find notes and mark them as sostenutoed
+            MarkSostenutoNotes(channel);
+        else
+            KillSustainingNotes(channel, -1, AdlChannel::LocationData::Sustain_Sostenuto);
         break;
 
     case 11: // Change expression (another volume factor)
@@ -607,7 +615,7 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         Ch[channel].resetAllControllers();
         NoteUpdate_All(channel, Upd_Pan + Upd_Volume + Upd_Pitch);
         // Kill all sustained notes
-        KillSustainingNotes(channel);
+        KillSustainingNotes(channel, -1, AdlChannel::LocationData::Sustain_ANY);
         break;
 
     case 120: // All sounds off
@@ -936,7 +944,7 @@ bool MIDIplay::doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size)
 void MIDIplay::realTime_panic()
 {
     Panic();
-    KillSustainingNotes(-1, -1);
+    KillSustainingNotes(-1, -1, AdlChannel::LocationData::Sustain_ANY);
 }
 
 void MIDIplay::realTime_deviceSwitch(size_t track, const char *data, size_t length)
@@ -1006,7 +1014,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             AdlChannel::LocationData *d = ch[c].users_find_or_create(my_loc);
             if(d)    // inserts if necessary
             {
-                d->sustained = false;
+                d->sustained = AdlChannel::LocationData::Sustain_None;
                 d->vibdelay  = 0;
                 d->fixed_sustain = (ains.ms_sound_kon == static_cast<uint16_t>(adlNoteOnMaxTime));
                 d->kon_time_until_neglible = ains.ms_sound_kon;
@@ -1025,17 +1033,17 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
 
         if(props_mask & Upd_Off) // note off
         {
-            if(Ch[MidCh].sustain == 0)
+            if(!Ch[MidCh].sustain)
             {
                 AdlChannel::LocationData *k = ch[c].users_find(my_loc);
-
-                if(k)
+                bool do_erase_user = (k && ((k->sustained & AdlChannel::LocationData::Sustain_Sostenuto) == 0));
+                if(do_erase_user)
                     ch[c].users_erase(k);
 
                 if(hooks.onNote)
                     hooks.onNote(hooks.onNote_userData, c, noteTone, midiins, 0, 0.0);
 
-                if(ch[c].users_empty())
+                if(do_erase_user && ch[c].users_empty())
                 {
                     opl.NoteOff(c);
                     if(props_mask & Upd_Mute) // Mute the note
@@ -1055,7 +1063,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
                 //          Also will avoid overwriting it very soon.
                 AdlChannel::LocationData *d = ch[c].users_find_or_create(my_loc);
                 if(d)
-                    d->sustained = true; // note: not erased!
+                    d->sustained |= AdlChannel::LocationData::Sustain_Pedal; // note: not erased!
                 if(hooks.onNote)
                     hooks.onNote(hooks.onNote_userData, c, noteTone, midiins, -1, 0.0);
             }
@@ -1159,7 +1167,7 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             AdlChannel::LocationData *d = ch[c].users_find(my_loc);
 
             // Don't bend a sustained note
-            if(!d || !d->sustained)
+            if(!d || (d->sustained == AdlChannel::LocationData::Sustain_None))
             {
                 double midibend = Ch[MidCh].bend * Ch[MidCh].bendsense;
                 double bend = midibend + ins.ains.finetune;
@@ -1212,7 +1220,7 @@ int64_t MIDIplay::CalculateAdlChannelGoodness(size_t c, const MIDIchannel::NoteI
     {
         s -= 4000;
 
-        if(!j->sustained)
+        if(j->sustained == AdlChannel::LocationData::Sustain_None)
             s -= j->kon_time_until_neglible;
         else
             s -= (j->kon_time_until_neglible / 2);
@@ -1258,7 +1266,7 @@ int64_t MIDIplay::CalculateAdlChannelGoodness(size_t c, const MIDIchannel::NoteI
 
             for(AdlChannel::LocationData *m = ch[c2].users_first; m; m = m->next)
             {
-                if(m->sustained)       continue;
+                if(m->sustained != AdlChannel::LocationData::Sustain_None) continue;
                 if(m->vibdelay >= 200) continue;
                 if(m->ins != j->ins) continue;
                 n_evacuation_stations += 1;
@@ -1282,7 +1290,7 @@ void MIDIplay::PrepareAdlChannelForNewNote(size_t c, const MIDIchannel::NoteInfo
         AdlChannel::LocationData *j = jnext;
         jnext = jnext->next;
 
-        if(!j->sustained)
+        if(j->sustained == AdlChannel::LocationData::Sustain_None)
         {
             // Collision: Kill old note,
             // UNLESS we're going to do arpeggio
@@ -1307,7 +1315,7 @@ void MIDIplay::PrepareAdlChannelForNewNote(size_t c, const MIDIchannel::NoteInfo
     // Kill all sustained notes on this channel
     // Don't keep them for arpeggio, because arpeggio requires
     // an intact "activenotes" record. This is a design flaw.
-    KillSustainingNotes(-1, static_cast<int32_t>(c));
+    KillSustainingNotes(-1, static_cast<int32_t>(c), AdlChannel::LocationData::Sustain_ANY);
 
     // Keyoff the channel so that it can be retriggered,
     // unless the new note will be introduced as just an arpeggio.
@@ -1390,7 +1398,7 @@ void MIDIplay::Panic()
     }
 }
 
-void MIDIplay::KillSustainingNotes(int32_t MidCh, int32_t this_adlchn)
+void MIDIplay::KillSustainingNotes(int32_t MidCh, int32_t this_adlchn, uint8_t sustain_type)
 {
     uint32_t first = 0, last = opl.NumChannels;
 
@@ -1400,9 +1408,10 @@ void MIDIplay::KillSustainingNotes(int32_t MidCh, int32_t this_adlchn)
         last = first + 1;
     }
 
-    for(unsigned c = first; c < last; ++c)
+    for(uint32_t c = first; c < last; ++c)
     {
-        if(ch[c].users_empty()) continue; // Nothing to do
+        if(ch[c].users_empty())
+            continue; // Nothing to do
 
         for(AdlChannel::LocationData *jnext = ch[c].users_first; jnext;)
         {
@@ -1410,18 +1419,38 @@ void MIDIplay::KillSustainingNotes(int32_t MidCh, int32_t this_adlchn)
             jnext = jnext->next;
 
             if((MidCh < 0 || j->loc.MidCh == MidCh)
-               && j->sustained)
+                && ((j->sustained & sustain_type) != 0))
             {
                 int midiins = '?';
                 if(hooks.onNote)
                     hooks.onNote(hooks.onNote_userData, (int)c, j->loc.note, midiins, 0, 0.0);
-                ch[c].users_erase(j);
+                j->sustained &= ~sustain_type;
+                if((j->sustained == AdlChannel::LocationData::Sustain_None))
+                    ch[c].users_erase(j);//Remove only when note is clean from any holders
             }
         }
 
         // Keyoff the channel, if there are no users left.
         if(ch[c].users_empty())
             opl.NoteOff(c);
+    }
+}
+
+void MIDIplay::MarkSostenutoNotes(int32_t MidCh)
+{
+    uint32_t first = 0, last = opl.NumChannels;
+    for(uint32_t c = first; c < last; ++c)
+    {
+        if(ch[c].users_empty())
+            continue; // Nothing to do
+
+        for(AdlChannel::LocationData *jnext = ch[c].users_first; jnext;)
+        {
+            AdlChannel::LocationData *j = jnext;
+            jnext = jnext->next;
+            if((j->loc.MidCh == MidCh) && (j->sustained == AdlChannel::LocationData::Sustain_None))
+                j->sustained |= AdlChannel::LocationData::Sustain_Sostenuto;
+        }
     }
 }
 
@@ -1572,7 +1601,7 @@ retry_arpeggio:
                 n = 0; n < count; ++n)
                 i = i->next;
 
-            if(i->sustained == false)
+            if(i->sustained == AdlChannel::LocationData::Sustain_None)
             {
                 if(i->kon_time_until_neglible <= 0l)
                 {

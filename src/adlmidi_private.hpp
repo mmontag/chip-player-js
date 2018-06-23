@@ -349,8 +349,9 @@ public:
         uint8_t bank_lsb, bank_msb;
         uint8_t patch;
         uint8_t volume, expression;
-        uint8_t panning, vibrato, aftertouch, sustain;
+        uint8_t panning, vibrato, aftertouch;
         uint16_t portamento;
+        bool sustain;
         bool portamentoEnable;
         int8_t portamentoSource;  // note number or -1
         double portamentoRate;
@@ -564,7 +565,7 @@ public:
             updateBendSensitivity();
             volume  = 100;
             expression = 127;
-            sustain = 0;
+            sustain = false;
             vibrato = 0;
             aftertouch = 0;
             std::memset(noteAftertouch, 0, 128);
@@ -612,8 +613,14 @@ public:
         {
             LocationData *prev, *next;
             Location loc;
-            bool sustained;
-            char ____padding[7];
+            enum {
+                Sustain_None        = 0x00,
+                Sustain_Pedal       = 0x01,
+                Sustain_Sostenuto   = 0x02,
+                Sustain_ANY         = Sustain_Pedal | Sustain_Sostenuto,
+            };
+            uint8_t sustained;
+            char ____padding[6];
             MIDIchannel::NoteInfo::Phys ins;  // a copy of that in phys[]
             //! Has fixed sustain, don't iterate "on" timeout
             bool    fixed_sustain;
@@ -1011,7 +1018,10 @@ private:
         AdlChannel::LocationData *j,
         MIDIchannel::activenoteiterator i);
     void Panic();
-    void KillSustainingNotes(int32_t MidCh = -1, int32_t this_adlchn = -1);
+    void KillSustainingNotes(int32_t MidCh = -1,
+                             int32_t this_adlchn = -1,
+                             uint8_t sustain_type = AdlChannel::LocationData::Sustain_ANY);
+    void MarkSostenutoNotes(int32_t MidCh = -1);
     void SetRPN(unsigned MidCh, unsigned value, bool MSB);
     void UpdatePortamento(unsigned MidCh);
     void NoteUpdate_All(uint16_t MidCh, unsigned props_mask);
