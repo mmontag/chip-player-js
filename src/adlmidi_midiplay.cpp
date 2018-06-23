@@ -221,6 +221,8 @@ void MIDIplay::realTime_ResetState()
         chan.lastlrpn = 0;
         chan.lastmrpn = 0;
         chan.nrpn = false;
+        if((m_synthMode & Mode_GS) != 0)// Reset custom drum channels on GS
+            chan.is_xg_percussion = false;
         NoteUpdate_All(uint16_t(ch), Upd_All);
         NoteUpdate_All(uint16_t(ch), Upd_Off);
     }
@@ -257,8 +259,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     MIDIchannel &midiChan = Ch[channel];
 
     size_t midiins = midiChan.patch;
-    bool isPercussion = (channel % 16 == 9);
-    bool isXgPercussion = false;
+    bool isPercussion = (channel % 16 == 9) || midiChan.is_xg_percussion;
 
     uint16_t bank = 0;
     if(midiChan.bank_msb || midiChan.bank_lsb)
@@ -267,25 +268,30 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             bank = (uint16_t(midiChan.bank_msb) * 256);
         else
             bank = (uint16_t(midiChan.bank_msb) * 256) + uint16_t(midiChan.bank_lsb);
-        //0x7E00 - XG SFX1/SFX2 channel (16128 signed decimal)
-        //0x7F00 - XG Percussion channel (16256 signed decimal)
-        if(((m_synthMode & Mode_XG) != 0) && (bank == 0x7E00 || bank == 0x7F00))
-        {
-            //Let XG SFX1/SFX2 bank will have LSB==1 (128...255 range in WOPN file)
-            //Let XG Percussion bank will use (0...127 range in WOPN file)
-            bank = (uint16_t)midiins + ((bank == 0x7E00) ? 128 : 0); // MIDI instrument defines the patch
-            midiins = note; // Percussion instrument
-            isXgPercussion = true;
-            isPercussion = false;
-        }
     }
 
     if(isPercussion)
     {
-        bank = (uint16_t)midiins; // MIDI instrument defines the patch
+        // == XG bank numbers ==
+        // 0x7E00 - XG "SFX Kits" SFX1/SFX2 channel (16128 signed decimal)
+        // 0x7F00 - XG "Drum Kits" Percussion channel (16256 signed decimal)
+
+        // MIDI instrument defines the patch:
+        if((m_synthMode & Mode_XG) != 0)
+        {
+            // Let XG SFX1/SFX2 bank will go in 128...255 range of LSB in WOPN file)
+            // Let XG Percussion bank will use (0...127 LSB range in WOPN file)
+
+            // Choose: SFX or Drum Kits
+            bank = (uint16_t)midiins + ((bank == 0x7E00) ? 128 : 0);
+        }
+        else
+        {
+            bank = (uint16_t)midiins;
+        }
         midiins = note; // Percussion instrument
     }
-    if(isPercussion || isXgPercussion)
+    if(isPercussion)
         bank += OPL3::PercussionTag;
 
     const adlinsdata2 *ains = &OPL3::emptyInstrument;
@@ -302,9 +308,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             ains = &bnk->ins[midiins];
         else if(hooks.onDebugMessage)
         {
-            std::set<uint16_t> &missing = (isPercussion || isXgPercussion) ?
+            std::set<uint16_t> &missing = (isPercussion) ?
                                           caugh_missing_banks_percussion : caugh_missing_banks_melodic;
-            const char *text = (isPercussion || isXgPercussion) ?
+            const char *text = (isPercussion) ?
                                "percussion" : "melodic";
             if(missing.insert(bank).second)
                 hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Playing missing %s MIDI bank %i (patch %i)", channel, text, bank, midiins);
@@ -321,18 +327,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             ains = &bnk->ins[midiins];
     }
 
-    /*
-        if(MidCh%16 == 9 || (midiins != 32 && midiins != 46 && midiins != 48 && midiins != 50))
-            break; // HACK
-        if(midiins == 46) vol = (vol*7)/10;          // HACK
-        if(midiins == 48 || midiins == 50) vol /= 4; // HACK
-        */
-    //if(midiins == 56) vol = vol*6/10; // HACK
-    //int meta = banks[opl.AdlBank][midiins];
-
     int16_t tone = note;
-
-    if(!isPercussion && !isXgPercussion && (bank > 0)) // For non-zero banks
+    if(!isPercussion && (bank > 0)) // For non-zero banks
     {
         if(ains->flags & adlinsdata::Flag_NoSound)
         {
@@ -483,8 +479,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     int8_t currentPortamentoSource = midiChan.portamentoSource;
     double currentPortamentoRate = midiChan.portamentoRate;
     bool portamentoEnable =
-        midiChan.portamentoEnable && currentPortamentoRate != HUGE_VAL &&
-        !isPercussion && !isXgPercussion;
+        midiChan.portamentoEnable && currentPortamentoRate != HUGE_VAL && !isPercussion;
     // Record the last note on MIDI channel as source of portamento
     midiChan.portamentoSource = static_cast<int8_t>(note);
     // midiChan.portamentoSource = portamentoEnable ? (int8_t)note : (int8_t)-1;
@@ -555,12 +550,14 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
 
     case 0: // Set bank msb (GM bank)
         Ch[channel].bank_msb = value;
-        Ch[channel].is_xg_percussion = isXgPercChannel(Ch[channel].bank_msb, Ch[channel].bank_lsb);
+        if((m_synthMode & Mode_GS) == 0)// Don't use XG drums on GS synth mode
+            Ch[channel].is_xg_percussion = isXgPercChannel(Ch[channel].bank_msb, Ch[channel].bank_lsb);
         break;
 
     case 32: // Set bank lsb (XG bank)
         Ch[channel].bank_lsb = value;
-        Ch[channel].is_xg_percussion = isXgPercChannel(Ch[channel].bank_msb, Ch[channel].bank_lsb);
+        if((m_synthMode & Mode_GS) == 0)// Don't use XG drums on GS synth mode
+            Ch[channel].is_xg_percussion = isXgPercChannel(Ch[channel].bank_msb, Ch[channel].bank_lsb);
         break;
 
     case 5: // Set portamento msb
@@ -808,7 +805,11 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
             checkvalue += data[i] & 0x7F;
         checkvalue = (128 - (checkvalue & 127)) & 127;
         if(checkvalue != checksum)
+        {
+            if(hooks.onDebugMessage)
+                hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught invalid roland SysEx message!");
             return false;
+        }
     }
 #endif
 
@@ -816,11 +817,27 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
         (((unsigned)data[0] & 0x7F) << 16) |
         (((unsigned)data[1] & 0x7F) << 8)  |
         (((unsigned)data[2] & 0x7F));
+    unsigned target_channel = 0;
+
+    /* F0 41 10 42 12 40 00 7F 00 41 F7 */
+
+    if((address & 0xFFF0FF) == 0x401015) // Turn channel 1 into percussion
+    {
+        address = 0x401015;
+        target_channel = data[1] & 0x0F;
+    }
+
     data += 3;
     size -= 3;
 
     if(mode != RolandMode_Send) // don't have MIDI-Out reply ability
         return false;
+
+    // Mode Set
+    // F0 {41 10 42 12} {40 00 7F} {00 41} F7
+
+    // Custom drum channels
+    // F0 {41 10 42 12} {40 1<ch> 15} {<state> <sum>} F7
 
     switch((model << 24) | address)
     {
@@ -846,6 +863,24 @@ bool MIDIplay::doRolandSysEx(unsigned dev, const uint8_t *data, size_t size)
             hooks.onDebugMessage(hooks.onDebugMessage_userData, "SysEx: Caught Roland Mode Set: %02X", value);
         m_synthMode = Mode_GS;
         realTime_ResetState();
+        return true;
+    }
+    case (RolandModel_GS << 24) | 0x401015: // Percussion channel
+    {
+        if(size != 1 || (dev & 0xF0) != 0x10)
+            break;
+        if(Ch.size() < 16)
+            break;
+        unsigned value = data[0] & 0x7F;
+        const uint8_t channels_map[16] =
+        {
+            9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15
+        };
+        if(hooks.onDebugMessage)
+            hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                                 "SysEx: Caught Roland Percussion set: %02X on channel %u (from %X)",
+                                 value, channels_map[target_channel], target_channel);
+        Ch[channels_map[target_channel]].is_xg_percussion = ((value == 0x01)) || ((value == 0x02));
         return true;
     }
     }
