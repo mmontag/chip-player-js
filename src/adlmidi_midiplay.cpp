@@ -161,6 +161,8 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
 
 void MIDIplay::applySetup()
 {
+    opl.m_musicMode = OPL3::MODE_MIDI;
+
     m_setup.tick_skip_samples_delay = 0;
 
     opl.runAtPcmRate = m_setup.runAtPcmRate;
@@ -180,10 +182,12 @@ void MIDIplay::applySetup()
     opl.ScaleModulators     = m_setup.ScaleModulators < 0 ?
                               opl.dynamic_bank_setup.scaleModulators :
                               (m_setup.ScaleModulators != 0);
+
     if(m_setup.LogarithmicVolumes)
         opl.ChangeVolumeRangesModel(ADLMIDI_VolumeModel_NativeOPL3);
-    opl.m_musicMode = OPL3::MODE_MIDI;
-    opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(m_setup.VolumeModel));
+    else
+        opl.ChangeVolumeRangesModel(static_cast<ADLMIDI_VolumeModels>(m_setup.VolumeModel));
+
     if(m_setup.VolumeModel == ADLMIDI_VolumeModel_AUTO)//Use bank default volume model
         opl.m_volumeScale = (OPL3::VolumesScale)opl.dynamic_bank_setup.volumeModel;
 
@@ -291,6 +295,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         }
         midiins = note; // Percussion instrument
     }
+
     if(isPercussion)
         bank += OPL3::PercussionTag;
 
@@ -1124,7 +1129,8 @@ void MIDIplay::NoteUpdate(uint16_t MidCh,
             case OPL3::VOLUME_NATIVE:
             {
                 volume = vol * Ch[MidCh].volume * Ch[MidCh].expression;
-                volume = volume * m_masterVolume / (127 * 127 * 127) / 2;
+                // volume = volume * m_masterVolume / (127 * 127 * 127) / 2;
+                volume = (volume * m_masterVolume) / 4096766;
             }
             break;
 
@@ -1632,9 +1638,9 @@ retry_arpeggio:
 
 void MIDIplay::UpdateGlide(double amount)
 {
-    unsigned num_channels = Ch.size();
+    size_t num_channels = Ch.size();
 
-    for(unsigned channel = 0; channel < num_channels; ++channel)
+    for(size_t channel = 0; channel < num_channels; ++channel)
     {
         MIDIchannel &midiChan = Ch[channel];
         if(midiChan.gliding_note_count == 0)
@@ -1656,7 +1662,7 @@ void MIDIplay::UpdateGlide(double amount)
             if(currentTone != previousTone)
             {
                 it->currentTone = currentTone;
-                NoteUpdate(channel, it, Upd_Pitch);
+                NoteUpdate(static_cast<uint16_t>(channel), it, Upd_Pitch);
             }
         }
     }
