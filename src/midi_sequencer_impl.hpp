@@ -94,7 +94,7 @@ static inline uint64_t readLEint(const void *buffer, size_t nbytes)
  * @param [_inout] ptr Pointer to memory block that contains begin of variable-length value
  * @return Unsigned integer that conains parsed variable-length value
  */
-static inline uint64_t ReadVarLen(uint8_t **ptr)
+static inline uint64_t readVarLen(uint8_t **ptr)
 {
     uint64_t result = 0;
     for(;;)
@@ -114,7 +114,7 @@ static inline uint64_t ReadVarLen(uint8_t **ptr)
  * @param [_out] ok Reference to boolean which takes result of variable-length value parsing
  * @return Unsigned integer that conains parsed variable-length value
  */
-static inline uint64_t ReadVarLenEx(const uint8_t **ptr, const uint8_t *end, bool &ok)
+static inline uint64_t readVarLenEx(const uint8_t **ptr, const uint8_t *end, bool &ok)
 {
     uint64_t result = 0;
     ok = false;
@@ -431,7 +431,7 @@ bool BW_MidiSequencer::buildTrackData(const std::vector<std::vector<uint8_t> > &
             if(m_format == Format_RSXX)
                 ok = true;
             else
-                evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
+                evtPos.delay = readVarLenEx(&trackPtr, end, ok);
             if(!ok)
             {
                 int len = snprintf(error, 150, "buildTrackData: Can't read variable-length value at begin of track %d.\n", (int)tk);
@@ -515,7 +515,7 @@ bool BW_MidiSequencer::buildTrackData(const std::vector<std::vector<uint8_t> > &
 
             if(event.subtype != MidiEvent::ST_ENDTRACK)//Don't try to read delta after EndOfTrack event!
             {
-                evtPos.delay = ReadVarLenEx(&trackPtr, end, ok);
+                evtPos.delay = readVarLenEx(&trackPtr, end, ok);
                 if(!ok)
                 {
                     /* End of track has been reached! However, there is no EOT event presented */
@@ -937,7 +937,7 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
 
     if(byte == MidiEvent::T_SYSEX || byte == MidiEvent::T_SYSEX2)// Ignore SysEx
     {
-        uint64_t length = ReadVarLenEx(pptr, end, ok);
+        uint64_t length = readVarLenEx(pptr, end, ok);
         if(!ok || (ptr + length > end))
         {
             m_parsingErrorsString += "parseEvent: Can't read SysEx event - Unexpected end of track data.\n";
@@ -956,7 +956,7 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
     {
         // Special event FF
         uint8_t  evtype = *(ptr++);
-        uint64_t length = ReadVarLenEx(pptr, end, ok);
+        uint64_t length = readVarLenEx(pptr, end, ok);
         if(!ok || (ptr + length > end))
         {
             m_parsingErrorsString += "parseEvent: Can't read Special event - Unexpected end of track data.\n";
