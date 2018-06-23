@@ -1632,7 +1632,9 @@ retry_arpeggio:
 
 void MIDIplay::UpdateGlide(double amount)
 {
-    for(unsigned channel = 0; channel < 16; ++channel)
+    unsigned num_channels = Ch.size();
+
+    for(unsigned channel = 0; channel < num_channels; ++channel)
     {
         MIDIchannel &midiChan = Ch[channel];
         if(midiChan.gliding_note_count == 0)
