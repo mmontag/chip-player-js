@@ -258,8 +258,8 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
                     goto drop;
                 }
                 adl_rt_systemExclusive(p_sys->synth,
-                                       (const ADL_UInt8 *)p_block->p_buffer + 1,
-                                       p_block->i_buffer - 2);
+                                       (const ADL_UInt8 *)p_block->p_buffer,
+                                       p_block->i_buffer);
                 break;
             case 0xF:
                 adl_rt_resetState(p_sys->synth);
