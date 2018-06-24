@@ -172,7 +172,8 @@ void BW_MidiSequencer::MidiTrackRow::sortEvents(bool *noteStates)
                 controllers.reserve(events.size());
             controllers.push_back(events[i]);
         }
-        else if((events[i].type == MidiEvent::T_SPECIAL) && (events[i].subtype == MidiEvent::ST_MARKER))
+        else if((events[i].type == MidiEvent::T_SPECIAL)
+            && ((events[i].subtype == MidiEvent::ST_MARKER) || (events[i].subtype == MidiEvent::ST_DEVICESWITCH)))
         {
             if(metas.capacity() == 0)
                 metas.reserve(events.size());

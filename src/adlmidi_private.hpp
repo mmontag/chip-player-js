@@ -227,6 +227,7 @@ public:
     //! Just a padding. Reserved.
     char ____padding[4];
 #ifndef ADLMIDI_HW_OPL
+    //! Running chip emulators
     std::vector<AdlMIDI_SPtr<OPLChipBase > > m_chips;
 #endif
 
@@ -254,6 +255,7 @@ public:
     BankMap         m_insBanks;
     //! MIDI bank-wide setup
     AdlBankSetup    m_insBankSetup;
+
 public:
     //! Blank instrument template
     static const adlinsdata2 m_emptyInstrument;
@@ -1303,7 +1305,7 @@ private:
      * @param props_mask Properties to update
      * @param select_adlchn Specify chip channel, or -1 - all chip channels used by the note
      */
-    void noteUpdate(uint16_t midCh,
+    void noteUpdate(size_t midCh,
                     MIDIchannel::activenoteiterator i,
                     unsigned props_mask,
                     int32_t select_adlchn = -1);
@@ -1315,14 +1317,13 @@ private:
      */
     void noteUpdateAll(size_t midCh, unsigned props_mask);
 
-
     /**
      * @brief Determine how good a candidate this adlchannel would be for playing a note from this instrument.
      * @param c Wanted chip channel
      * @param ins Instrument wanted to be used in this channel
      * @return Calculated coodness points
      */
-    int64_t calculateAdlChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins) const;
+    int64_t calculateChipChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins) const;
 
     /**
      * @brief A new note will be played on this channel using this instrument.
@@ -1330,7 +1331,7 @@ private:
      * @param ins Instrument wanted to be used in this channel
      * Kill existing notes on this channel (or don't, if we do arpeggio)
      */
-    void prepareAdlChannelForNewNote(size_t c, const MIDIchannel::NoteInfo::Phys &ins);
+    void prepareChipChannelForNewNote(size_t c, const MIDIchannel::NoteInfo::Phys &ins);
 
     /**
      * @brief Kills note that uses wanted channel. When arpeggio is possible, note is evaluating to another channel
@@ -1354,14 +1355,14 @@ private:
      * @param this_adlchn Chip channel, -1 - all chip channels
      * @param sustain_type Type of systain to process
      */
-    void killSustainingNotes(int32_t MidCh = -1,
+    void killSustainingNotes(int32_t midCh = -1,
                              int32_t this_adlchn = -1,
                              uint8_t sustain_type = AdlChannel::LocationData::Sustain_ANY);
     /**
      * @brief Find active notes and mark them as sostenuto-sustained
      * @param MidCh MIDI channel, -1 - all MIDI channels
      */
-    void markSostenutoNotes(int32_t MidCh = -1);
+    void markSostenutoNotes(int32_t midCh = -1);
 
     /**
      * @brief Set RPN event value
@@ -1369,7 +1370,7 @@ private:
      * @param value 1 byte part of RPN value
      * @param MSB is MSB or LSB part of value
      */
-    void setRPN(unsigned MidCh, unsigned value, bool MSB);
+    void setRPN(size_t midCh, unsigned value, bool MSB);
 
     /**
      * @brief Update portamento setup in MIDI channel
@@ -1382,7 +1383,7 @@ private:
      * @param midCh MIDI channel
      * @param note Note to off
      */
-    void noteOff(uint16_t midCh, uint8_t note);
+    void noteOff(size_t midCh, uint8_t note);
 
     /**
      * @brief Update processing of vibrato to amount of seconds
