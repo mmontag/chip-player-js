@@ -188,21 +188,21 @@ void OPL3::writeReg(size_t chip, uint16_t address, uint8_t value)
 
 void OPL3::noteOff(size_t c)
 {
-    size_t card = c / 23, cc = c % 23;
+    size_t chip = c / 23, cc = c % 23;
 
     if(cc >= 18)
     {
-        m_regBD[card] &= ~(0x10 >> (cc - 18));
-        writeReg(card, 0xBD, m_regBD[card]);
+        m_regBD[chip] &= ~(0x10 >> (cc - 18));
+        writeReg(chip, 0xBD, m_regBD[chip]);
         return;
     }
 
-    writeReg(card, 0xB0 + g_channelsMap[cc], m_keyBlockFNumCache[c] & 0xDF);
+    writeReg(chip, 0xB0 + g_channelsMap[cc], m_keyBlockFNumCache[c] & 0xDF);
 }
 
 void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
 {
-    size_t card = c / 23, cc = c % 23;
+    size_t chip = c / 23, cc = c % 23;
     uint32_t x = 0x2000;
 
     if(hertz < 0 || hertz > 131071) // Avoid infinite loop
@@ -219,26 +219,26 @@ void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
 
     if(cc >= 18)
     {
-        m_regBD[card] |= (0x10 >> (cc - 18));
-        writeReg(card, 0x0BD, m_regBD[card]);
+        m_regBD[chip ] |= (0x10 >> (cc - 18));
+        writeReg(chip , 0x0BD, m_regBD[chip ]);
         x &= ~0x2000u;
         //x |= 0x800; // for test
     }
 
     if(chn != 0xFFF)
     {
-        writeReg(card, 0xA0 + chn, static_cast<uint8_t>(x & 0xFF));
-        writeReg(card, 0xB0 + chn, static_cast<uint8_t>(x >> 8));
+        writeReg(chip , 0xA0 + chn, static_cast<uint8_t>(x & 0xFF));
+        writeReg(chip , 0xB0 + chn, static_cast<uint8_t>(x >> 8));
         m_keyBlockFNumCache[c] = static_cast<uint8_t>(x >> 8);
     }
 }
 
-void OPL3::touchNote(uint32_t c, uint8_t volume, uint8_t brightness)
+void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
 {
     if(volume > 63)
         volume = 63;
 
-    size_t card = c / 23, cc = c % 23;
+    size_t chip = c / 23, cc = c % 23;
     const adldata &adli = m_insCache[c];
     uint16_t o1 = g_operatorsMap[cc * 2 + 0];
     uint16_t o2 = g_operatorsMap[cc * 2 + 1];
@@ -285,9 +285,9 @@ void OPL3::touchNote(uint32_t c, uint8_t volume, uint8_t brightness)
 
     if(m_musicMode == MODE_RSXX)
     {
-        writeReg(card, 0x40 + o1, x);
+        writeReg(chip, 0x40 + o1, x);
         if(o2 != 0xFFF)
-            writeReg(card, 0x40 + o2, y - volume / 2);
+            writeReg(chip, 0x40 + o2, y - volume / 2);
     }
     else
     {
@@ -306,9 +306,9 @@ void OPL3::touchNote(uint32_t c, uint8_t volume, uint8_t brightness)
                 carrier = (carrier | 63) - brightness + brightness * (carrier & 63) / 63;
         }
 
-        writeReg(card, 0x40 + o1, modulator);
+        writeReg(chip, 0x40 + o1, modulator);
         if(o2 != 0xFFF)
-            writeReg(card, 0x40 + o2, carrier);
+            writeReg(chip, 0x40 + o2, carrier);
     }
 
     // Correct formula (ST3, AdPlug):
@@ -333,9 +333,9 @@ void OPL3::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
     }
 }*/
 
-void OPL3::setPatch(uint16_t c, const adldata &instrument)
+void OPL3::setPatch(size_t c, const adldata &instrument)
 {
-    uint16_t card = c / 23, cc = c % 23;
+    uint16_t chip = c / 23, cc = c % 23;
     static const uint8_t data[4] = {0x20, 0x60, 0x80, 0xE0};
     m_insCache[c] = instrument;
     uint16_t o1 = g_operatorsMap[cc * 2 + 0];
@@ -344,17 +344,17 @@ void OPL3::setPatch(uint16_t c, const adldata &instrument)
 
     for(unsigned a = 0; a < 4; ++a, x >>= 8, y >>= 8)
     {
-        writeReg(card, data[a] + o1, x & 0xFF);
+        writeReg(chip, data[a] + o1, x & 0xFF);
         if(o2 != 0xFFF)
-            writeReg(card, data[a] + o2, y & 0xFF);
+            writeReg(chip, data[a] + o2, y & 0xFF);
     }
 }
 
-void OPL3::setPan(size_t  c, uint8_t value)
+void OPL3::setPan(size_t c, uint8_t value)
 {
-    size_t card = c / 23, cc = c % 23;
+    size_t chip = c / 23, cc = c % 23;
     if(g_channelsMap[cc] != 0xFFF)
-        writeReg(card, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | value);
+        writeReg(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | value);
 }
 
 void OPL3::silenceAll() // Silence all OPL channels.

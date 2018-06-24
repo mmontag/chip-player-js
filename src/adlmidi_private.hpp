@@ -276,6 +276,9 @@ public:
     //! Run emulator at PCM rate if that possible. Reduces sounding accuracy, but decreases CPU usage on lower rates.
     bool m_runAtPcmRate;
 
+    //! Just a padding. Reserved.
+    char ___padding2[3];
+
     /**
      * @brief Music playing mode
      */
@@ -290,9 +293,6 @@ public:
         //! EA-MUS (a.k.a. RSXX) mode
         MODE_RSXX
     } m_musicMode;
-
-    //! Just a padding. Reserved.
-    char ___padding2[3];
 
     /**
      * @brief Volume models enum
@@ -389,14 +389,14 @@ public:
      * @param volume Volume level (from 0 to 63)
      * @param brightness CC74 Brightness level (from 0 to 127)
      */
-    void touchNote(uint32_t c, uint8_t volume, uint8_t brightness = 127);
+    void touchNote(size_t c, uint8_t volume, uint8_t brightness = 127);
 
     /**
      * @brief Set the instrument into specified chip channel
      * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
      * @param instrument Instrument data to set into the chip channel
      */
-    void setPatch(uint16_t c, const adldata &instrument);
+    void setPatch(size_t c, const adldata &instrument);
 
     /**
      * @brief Set panpot position
@@ -659,15 +659,15 @@ public:
 
         struct activenoteiterator
         {
-            explicit activenoteiterator(NoteInfo *info = 0)
+            explicit activenoteiterator(NoteInfo *info = NULL)
                 : ptr(info) {}
             activenoteiterator &operator++()
             {
                 if(ptr->note == 127)
-                    ptr = 0;
+                    ptr = NULL;
                 else
                     for(++ptr; ptr && !ptr->active;)
-                        ptr = (ptr->note == 127) ? 0 : (ptr + 1);
+                        ptr = (ptr->note == 127) ? NULL : (ptr + 1);
                 return *this;
             }
             activenoteiterator operator++(int)
@@ -700,7 +700,7 @@ public:
         {
             assert(note < 128);
             return activenoteiterator(
-                activenotes[note].active ? &activenotes[note] : 0);
+                activenotes[note].active ? &activenotes[note] : NULL);
         }
 
         activenoteiterator activenotes_ensure_find(uint8_t note)
