@@ -197,7 +197,7 @@ void OPL3::noteOff(size_t c)
         return;
     }
 
-    writeReg(card, 0xB0 + g_channelsMap[cc], m_pit[c] & 0xDF);
+    writeReg(card, 0xB0 + g_channelsMap[cc], m_keyBlockFNumCache[c] & 0xDF);
 }
 
 void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
@@ -229,7 +229,7 @@ void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
     {
         writeReg(card, 0xA0 + chn, static_cast<uint8_t>(x & 0xFF));
         writeReg(card, 0xB0 + chn, static_cast<uint8_t>(x >> 8));
-        m_pit[c] = static_cast<uint8_t>(x >> 8);
+        m_keyBlockFNumCache[c] = static_cast<uint8_t>(x >> 8);
     }
 }
 
@@ -239,7 +239,7 @@ void OPL3::touchNote(uint32_t c, uint8_t volume, uint8_t brightness)
         volume = 63;
 
     size_t card = c / 23, cc = c % 23;
-    const adldata &adli = m_ins[c];
+    const adldata &adli = m_insCache[c];
     uint16_t o1 = g_operatorsMap[cc * 2 + 0];
     uint16_t o2 = g_operatorsMap[cc * 2 + 1];
     uint8_t  x = adli.modulator_40, y = adli.carrier_40;
@@ -256,12 +256,12 @@ void OPL3::touchNote(uint32_t c, uint8_t volume, uint8_t brightness)
         if(m_channelCategory[c] == 1)
         {
             i0 = &adli;
-            i1 = &m_ins[c + 3];
+            i1 = &m_insCache[c + 3];
             mode = 2; // 4-op xx-xx ops 1&2
         }
         else
         {
-            i0 = &m_ins[c - 3];
+            i0 = &m_insCache[c - 3];
             i1 = &adli;
             mode = 6; // 4-op xx-xx ops 3&4
         }
@@ -337,7 +337,7 @@ void OPL3::setPatch(uint16_t c, const adldata &instrument)
 {
     uint16_t card = c / 23, cc = c % 23;
     static const uint8_t data[4] = {0x20, 0x60, 0x80, 0xE0};
-    m_ins[c] = instrument;
+    m_insCache[c] = instrument;
     uint16_t o1 = g_operatorsMap[cc * 2 + 0];
     uint16_t o2 = g_operatorsMap[cc * 2 + 1];
     unsigned x = instrument.modulator_E862, y = instrument.carrier_E862;
@@ -354,7 +354,7 @@ void OPL3::setPan(size_t  c, uint8_t value)
 {
     size_t card = c / 23, cc = c % 23;
     if(g_channelsMap[cc] != 0xFFF)
-        writeReg(card, 0xC0 + g_channelsMap[cc], m_ins[c].feedconn | value);
+        writeReg(card, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | value);
 }
 
 void OPL3::silenceAll() // Silence all OPL channels.
@@ -502,8 +502,8 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 #if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
     (void)audioTickHandler;
 #endif
-    m_ins.clear();
-    m_pit.clear();
+    m_insCache.clear();
+    m_keyBlockFNumCache.clear();
     m_regBD.clear();
 
 #ifndef ADLMIDI_HW_OPL
@@ -512,8 +512,8 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 
     const struct adldata defaultInsCache = { 0x1557403,0x005B381, 0x49,0x80, 0x4, +0 };
     m_numChannels = m_numChips * 23;
-    m_ins.resize(m_numChannels, defaultInsCache);
-    m_pit.resize(m_numChannels,   0);
+    m_insCache.resize(m_numChannels, defaultInsCache);
+    m_keyBlockFNumCache.resize(m_numChannels,   0);
     m_regBD.resize(m_numChips,    0);
     m_channelCategory.resize(m_numChannels, 0);
 

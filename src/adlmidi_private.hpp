@@ -232,9 +232,11 @@ public:
 
 private:
     //! Cached patch data, needed by Touch()
-    std::vector<adldata>    m_ins;
-    //! Value poked to B0, cached, needed by NoteOff)
-    std::vector<uint8_t>    m_pit;
+    std::vector<adldata>    m_insCache;
+    //! Value written to B0, cached, needed by NoteOff.
+    /*! Contains Key on/off state, octave block and frequency number values
+     */
+    std::vector<uint8_t>    m_keyBlockFNumCache;
     //! Cached BD registry value (flags register: DeepTremolo, DeepVibrato, and RhythmMode)
     std::vector<uint8_t>    m_regBD;
 
