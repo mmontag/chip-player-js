@@ -97,7 +97,7 @@ struct ADL_MIDIPlayer
 #define adl_setNumCards adl_setNumChips
 
 /* Sets number of emulated chips (from 1 to 100). Emulation of multiple chips exchanges polyphony limits*/
-extern int adl_setNumChips(struct ADL_MIDIPlayer *device, int numCards);
+extern int adl_setNumChips(struct ADL_MIDIPlayer *device, int numChips);
 
 /* Get current number of emulated chips */
 extern int adl_getNumChips(struct ADL_MIDIPlayer *device);
@@ -238,7 +238,7 @@ extern const char *adl_errorInfo(struct ADL_MIDIPlayer *device);
 extern struct ADL_MIDIPlayer *adl_init(long sample_rate);
 
 /*Set 4-bit device identifier*/
-extern int adl_setDeviceIdentifier(struct ADL_MIDIPlayer *device, unsigned id);
+extern int adl_setDeviceIdentifier(struct ADL_MIDIPlayer *device, ADL_UInt8 id);
 
 /*Load MIDI file from File System*/
 extern int adl_openFile(struct ADL_MIDIPlayer *device, const char *filePath);

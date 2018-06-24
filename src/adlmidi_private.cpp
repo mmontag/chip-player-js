@@ -40,11 +40,13 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
 
     //Automatically calculate how much 4-operator channels is necessary
-    if(play->opl.AdlBank == ~0u)
+#ifndef DISABLE_EMBEDDED_BANKS
+    if(play->m_synth.m_embeddedBank == ~0u)
+#endif
     {
         //For custom bank
-        OPL3::BankMap::iterator it = play->opl.dynamic_banks.begin();
-        OPL3::BankMap::iterator end = play->opl.dynamic_banks.end();
+        OPL3::BankMap::iterator it = play->m_synth.m_insBanks.begin();
+        OPL3::BankMap::iterator end = play->m_synth.m_insBanks.end();
         for(; it != end; ++it)
         {
             uint16_t bank = it->first;
@@ -60,12 +62,13 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
             }
         }
     }
+#ifndef DISABLE_EMBEDDED_BANKS
     else
     {
         //For embedded bank
         for(unsigned a = 0; a < 256; ++a)
         {
-            unsigned insno = banks[play->m_setup.AdlBank][a];
+            unsigned insno = banks[play->m_setup.bankId][a];
             if(insno == 198)
                 continue;
             ++n_total[a / 128];
@@ -74,6 +77,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
                 ++n_fourop[a / 128];
         }
     }
+#endif
 
     unsigned numFourOps = 0;
 
@@ -96,7 +100,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
         : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
 */
 
-    play->opl.NumFourOps = play->m_setup.NumFourOps = (numFourOps * play->m_setup.NumCards);
+    play->m_synth.m_numFourOps = play->m_setup.numFourOps = (numFourOps * play->m_setup.numChips);
 
     return 0;
 }
