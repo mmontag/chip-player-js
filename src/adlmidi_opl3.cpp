@@ -335,7 +335,7 @@ void OPL3::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
 
 void OPL3::setPatch(size_t c, const adldata &instrument)
 {
-    uint16_t chip = c / 23, cc = c % 23;
+    size_t chip = c / 23, cc = c % 23;
     static const uint8_t data[4] = {0x20, 0x60, 0x80, 0xE0};
     m_insCache[c] = instrument;
     uint16_t o1 = g_operatorsMap[cc * 2 + 0];
