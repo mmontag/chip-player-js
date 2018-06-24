@@ -24,19 +24,28 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "adlmidi_mus2mid.h"
+#include <stdint.h>
 
-#define FREQUENCY   140 /* default Hz or BPM */
-
-#if 0 /* older units: */
-#define TEMPO       0x001aa309 /* MPQN: 60000000 / 34.37Hz = 1745673 */
-#define DIVISION    0x0059 /* 89 -- used by many mus2midi converters */
+#ifdef __DJGPP__
+typedef signed char     int8_t;
+typedef unsigned char   uint8_t;
+typedef signed short    int16_t;
+typedef unsigned short  uint16_t;
+typedef signed long     int32_t;
+typedef unsigned long   uint32_t;
 #endif
 
-#define TEMPO       0x00068A1B /* MPQN: 60000000 / 140BPM (140Hz) = 428571 */
+#define MUS_FREQUENCY   140 /* default Hz or BPM */
+
+#if 0 /* older units: */
+#define MUS_TEMPO       0x001aa309 /* MPQN: 60000000 / 34.37Hz = 1745673 */
+#define MUS_DIVISION    0x0059 /* 89 -- used by many mus2midi converters */
+#endif
+
+#define MUS_TEMPO       0x00068A1B /* MPQN: 60000000 / 140BPM (140Hz) = 428571 */
                 /*  0x000D1436 -> MPQN: 60000000 /  70BPM  (70Hz) = 857142 */
 
-#define DIVISION    0x0101 /* 257 for 140Hz files with a 140MPQN */
+#define MUS_DIVISION    0x0101 /* 257 for 140Hz files with a 140MPQN */
                 /*  0x0088 -> 136 for  70Hz files with a 140MPQN */
                 /*  0x010B -> 267 for  70hz files with a 70MPQN  */
                 /*  0x01F9 -> 505 for 140hz files with a 70MPQN  */
@@ -72,11 +81,11 @@
 #define MUSEVENT_CONTROLLERCHANGE   4
 #define MUSEVENT_END                6
 
-#define MIDI_MAXCHANNELS            16
+#define MUS_MIDI_MAXCHANNELS        16
 
 static char MUS_ID[] = { 'M', 'U', 'S', 0x1A };
 
-static uint8_t midimap[] =
+static uint8_t mus_midimap[] =
 {/* MIDI  Number  Description */
     0,    /* 0    program change */
     0,    /* 1    bank selection */
@@ -129,35 +138,35 @@ struct mus_ctx {
 };
 
 #define DST_CHUNK 8192
-static void resize_dst(struct mus_ctx *ctx) {
+static void mus2mid_resize_dst(struct mus_ctx *ctx) {
     uint32_t pos = (uint32_t)(ctx->dst_ptr - ctx->dst);
-    ctx->dst = realloc(ctx->dst, ctx->dstsize + DST_CHUNK);
+    ctx->dst = (uint8_t *)realloc(ctx->dst, ctx->dstsize + DST_CHUNK);
     ctx->dstsize += DST_CHUNK;
     ctx->dstrem += DST_CHUNK;
     ctx->dst_ptr = ctx->dst + pos;
 }
 
-static void write1(struct mus_ctx *ctx, uint32_t val)
+static void mus2mid_write1(struct mus_ctx *ctx, uint32_t val)
 {
     if (ctx->dstrem < 1)
-        resize_dst(ctx);
+        mus2mid_resize_dst(ctx);
     *ctx->dst_ptr++ = val & 0xff;
     ctx->dstrem--;
 }
 
-static void write2(struct mus_ctx *ctx, uint32_t val)
+static void mus2mid_write2(struct mus_ctx *ctx, uint32_t val)
 {
     if (ctx->dstrem < 2)
-        resize_dst(ctx);
+        mus2mid_resize_dst(ctx);
     *ctx->dst_ptr++ = (val>>8) & 0xff;
     *ctx->dst_ptr++ = val & 0xff;
     ctx->dstrem -= 2;
 }
 
-static void write4(struct mus_ctx *ctx, uint32_t val)
+static void mus2mid_write4(struct mus_ctx *ctx, uint32_t val)
 {
     if (ctx->dstrem < 4)
-        resize_dst(ctx);
+        mus2mid_resize_dst(ctx);
     *ctx->dst_ptr++ = (val>>24)&0xff;
     *ctx->dst_ptr++ = (val>>16)&0xff;
     *ctx->dst_ptr++ = (val>>8) & 0xff;
@@ -165,28 +174,28 @@ static void write4(struct mus_ctx *ctx, uint32_t val)
     ctx->dstrem -= 4;
 }
 
-static void seekdst(struct mus_ctx *ctx, uint32_t pos) {
+static void mus2mid_seekdst(struct mus_ctx *ctx, uint32_t pos) {
     ctx->dst_ptr = ctx->dst + pos;
     while (ctx->dstsize < pos)
-        resize_dst(ctx);
+        mus2mid_resize_dst(ctx);
     ctx->dstrem = ctx->dstsize - pos;
 }
 
-static void skipdst(struct mus_ctx *ctx, int32_t pos) {
+static void mus2mid_skipdst(struct mus_ctx *ctx, int32_t pos) {
     size_t newpos;
     ctx->dst_ptr += pos;
     newpos = ctx->dst_ptr - ctx->dst;
     while (ctx->dstsize < newpos)
-        resize_dst(ctx);
+        mus2mid_resize_dst(ctx);
     ctx->dstrem = (uint32_t)(ctx->dstsize - newpos);
 }
 
-static uint32_t getdstpos(struct mus_ctx *ctx) {
+static uint32_t mus2mid_getdstpos(struct mus_ctx *ctx) {
     return (uint32_t)(ctx->dst_ptr - ctx->dst);
 }
 
 /* writes a variable length integer to a buffer, and returns bytes written */
-static int32_t writevarlen(int32_t value, uint8_t *out)
+static int32_t mus2mid_writevarlen(int32_t value, uint8_t *out)
 {
     int32_t buffer, count = 0;
 
@@ -209,20 +218,21 @@ static int32_t writevarlen(int32_t value, uint8_t *out)
     return (count);
 }
 
-#define READ_INT16(b) ((b)[0] | ((b)[1] << 8))
-#define READ_INT32(b) ((b)[0] | ((b)[1] << 8) | ((b)[2] << 16) | ((b)[3] << 24))
+#define MUS_READ_INT16(b) ((b)[0] | ((b)[1] << 8))
+#define MUS_READ_INT32(b) ((b)[0] | ((b)[1] << 8) | ((b)[2] << 16) | ((b)[3] << 24))
 
-int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
-                 uint8_t **out, uint32_t *outsize,
-                 uint16_t frequency) {
+static int Convert_mus2midi(uint8_t *in, uint32_t insize,
+                            uint8_t **out, uint32_t *outsize,
+                            uint16_t frequency)
+{
     struct mus_ctx ctx;
     MUSHeader header;
     uint8_t *cur, *end;
     uint32_t track_size_pos, begin_track_pos, current_pos;
     int32_t delta_time;/* Delta time for midi event */
     int temp, ret = -1;
-    int channel_volume[MIDI_MAXCHANNELS];
-    int channelMap[MIDI_MAXCHANNELS], currentChannel;
+    int channel_volume[MUS_MIDI_MAXCHANNELS];
+    int channelMap[MUS_MIDI_MAXCHANNELS], currentChannel;
 
     if (insize < MUS_HEADERSIZE) {
         /*_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_CORUPT, "(too short)", 0);*/
@@ -230,15 +240,15 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
     }
 
     if (!frequency)
-        frequency = FREQUENCY;
+        frequency = MUS_FREQUENCY;
 
     /* read the MUS header and set our location */
     memcpy(header.ID, in, 4);
-    header.scoreLen = READ_INT16(&in[4]);
-    header.scoreStart = READ_INT16(&in[6]);
-    header.channels = READ_INT16(&in[8]);
-    header.sec_channels = READ_INT16(&in[10]);
-    header.instrCnt = READ_INT16(&in[12]);
+    header.scoreLen = MUS_READ_INT16(&in[4]);
+    header.scoreStart = MUS_READ_INT16(&in[6]);
+    header.channels = MUS_READ_INT16(&in[8]);
+    header.sec_channels = MUS_READ_INT16(&in[10]);
+    header.instrCnt = MUS_READ_INT16(&in[12]);
 
     if (memcmp(header.ID, MUS_ID, 4)) {
         /*_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_NOT_MUS, NULL, 0);*/
@@ -249,7 +259,7 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
         return (-1);
     }
     /* channel #15 should be excluded in the numchannels field: */
-    if (header.channels > MIDI_MAXCHANNELS - 1) {
+    if (header.channels > MUS_MIDI_MAXCHANNELS - 1) {
         /*_WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_INVALID, NULL, 0);*/
         return (-1);
     }
@@ -258,50 +268,50 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
     ctx.src = ctx.src_ptr = in;
     ctx.srcsize = insize;
 
-    ctx.dst = calloc(DST_CHUNK, sizeof(uint8_t));
+    ctx.dst = (uint8_t*)calloc(DST_CHUNK, sizeof(uint8_t));
     ctx.dst_ptr = ctx.dst;
     ctx.dstsize = DST_CHUNK;
     ctx.dstrem = DST_CHUNK;
 
     /* Map channel 15 to 9 (percussions) */
-    for (temp = 0; temp < MIDI_MAXCHANNELS; ++temp) {
+    for (temp = 0; temp < MUS_MIDI_MAXCHANNELS; ++temp) {
         channelMap[temp] = -1;
         channel_volume[temp] = 0x40;
     }
     channelMap[15] = 9;
 
     /* Header is 14 bytes long and add the rest as well */
-    write1(&ctx, 'M');
-    write1(&ctx, 'T');
-    write1(&ctx, 'h');
-    write1(&ctx, 'd');
-    write4(&ctx, 6);    /* length of header */
-    write2(&ctx, 0);    /* MIDI type (always 0) */
-    write2(&ctx, 1);    /* MUS files only have 1 track */
-    write2(&ctx, DIVISION); /* division */
+    mus2mid_write1(&ctx, 'M');
+    mus2mid_write1(&ctx, 'T');
+    mus2mid_write1(&ctx, 'h');
+    mus2mid_write1(&ctx, 'd');
+    mus2mid_write4(&ctx, 6);    /* length of header */
+    mus2mid_write2(&ctx, 0);    /* MIDI type (always 0) */
+    mus2mid_write2(&ctx, 1);    /* MUS files only have 1 track */
+    mus2mid_write2(&ctx, MUS_DIVISION); /* division */
 
     /* Write out track header and track length position for later */
-    begin_track_pos = getdstpos(&ctx);
-    write1(&ctx, 'M');
-    write1(&ctx, 'T');
-    write1(&ctx, 'r');
-    write1(&ctx, 'k');
-    track_size_pos = getdstpos(&ctx);
-    skipdst(&ctx, 4);
+    begin_track_pos = mus2mid_getdstpos(&ctx);
+    mus2mid_write1(&ctx, 'M');
+    mus2mid_write1(&ctx, 'T');
+    mus2mid_write1(&ctx, 'r');
+    mus2mid_write1(&ctx, 'k');
+    track_size_pos = mus2mid_getdstpos(&ctx);
+    mus2mid_skipdst(&ctx, 4);
 
     /* write tempo: microseconds per quarter note */
-    write1(&ctx, 0x00); /* delta time */
-    write1(&ctx, 0xff); /* sys command */
-    write2(&ctx, 0x5103);   /* command - set tempo */
-    write1(&ctx, TEMPO & 0x000000ff);
-    write1(&ctx, (TEMPO & 0x0000ff00) >> 8);
-    write1(&ctx, (TEMPO & 0x00ff0000) >> 16);
+    mus2mid_write1(&ctx, 0x00); /* delta time */
+    mus2mid_write1(&ctx, 0xff); /* sys command */
+    mus2mid_write2(&ctx, 0x5103);   /* command - set tempo */
+    mus2mid_write1(&ctx, MUS_TEMPO & 0x000000ff);
+    mus2mid_write1(&ctx, (MUS_TEMPO & 0x0000ff00) >> 8);
+    mus2mid_write1(&ctx, (MUS_TEMPO & 0x00ff0000) >> 16);
 
     /* Percussions channel starts out at full volume */
-    write1(&ctx, 0x00);
-    write1(&ctx, 0xB9);
-    write1(&ctx, 0x07);
-    write1(&ctx, 127);
+    mus2mid_write1(&ctx, 0x00);
+    mus2mid_write1(&ctx, 0xB9);
+    mus2mid_write1(&ctx, 0x07);
+    mus2mid_write1(&ctx, 127);
 
     /* get current position in source, and end of position */
     cur = in + header.scoreStart;
@@ -324,7 +334,7 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
         channel = (event & 15);     /* current channel */
 
         /* write variable length delta time */
-        out_local += writevarlen(delta_time, out_local);
+        out_local += mus2mid_writevarlen(delta_time, out_local);
 
         /* set all channels to 127 (max) volume */
         if (channelMap[channel] < 0) {
@@ -359,12 +369,12 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
                 break;
             case MUSEVENT_CHANNELMODE:
                 status |= 0xB0;
-                if (*cur >= sizeof(midimap) / sizeof(midimap[0])) {
+                if (*cur >= sizeof(mus_midimap) / sizeof(mus_midimap[0])) {
                     /*_WM_ERROR_NEW("%s:%i: can't map %u to midi",
                                   __FUNCTION__, __LINE__, *cur);*/
                     goto _end;
                 }
-                bit1 = midimap[*cur++];
+                bit1 = mus_midimap[*cur++];
                 bit2 = (*cur++ == 12) ? header.channels + 1 : 0x00;
                 break;
             case MUSEVENT_CONTROLLERCHANGE:
@@ -376,12 +386,12 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
                     bitc = 1;
                 } else {
                     status |= 0xB0;
-                    if (*cur >= sizeof(midimap) / sizeof(midimap[0])) {
+                    if (*cur >= sizeof(mus_midimap) / sizeof(mus_midimap[0])) {
                         /*_WM_ERROR_NEW("%s:%i: can't map %u to midi",
                                       __FUNCTION__, __LINE__, *cur);*/
                         goto _end;
                     }
-                    bit1 = midimap[*cur++];
+                    bit1 = mus_midimap[*cur++];
                     bit2 = *cur++;
                 }
                 break;
@@ -412,7 +422,7 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
         if (out_local != temp_buffer)
         {
             if (ctx.dstrem < sizeof(temp_buffer))
-                resize_dst(&ctx);
+                mus2mid_resize_dst(&ctx);
 
             memcpy(ctx.dst_ptr, temp_buffer, out_local - temp_buffer);
             ctx.dst_ptr += out_local - temp_buffer;
@@ -430,10 +440,10 @@ int AdlMidi_mus2midi(uint8_t *in, uint32_t insize,
     }
 
     /* write out track length */
-    current_pos = getdstpos(&ctx);
-    seekdst(&ctx, track_size_pos);
-    write4(&ctx, current_pos - begin_track_pos - TRK_CHUNKSIZE);
-    seekdst(&ctx, current_pos); /* reseek to end position */
+    current_pos = mus2mid_getdstpos(&ctx);
+    mus2mid_seekdst(&ctx, track_size_pos);
+    mus2mid_write4(&ctx, current_pos - begin_track_pos - TRK_CHUNKSIZE);
+    mus2mid_seekdst(&ctx, current_pos); /* reseek to end position */
 
     *out = ctx.dst;
     *outsize = ctx.dstsize - ctx.dstrem;

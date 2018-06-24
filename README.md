@@ -28,7 +28,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * OPL3 emulation with four-operator mode support
 * FM patches from a number of known PC games, copied from files typical to AIL = Miles Sound System / DMX / HMI = Human Machine Interfaces / Creative IBK.
 * Stereo sound
-* Number of simulated soundcards can be specified as 1-100 (maximum channels 1800!)
+* Number of simulated OPL3 chips can be specified as 1-100 (maximum channels 1800!)
 * Pan (binary panning, i.e. left/right side on/off)
 * Pitch-bender with adjustable range
 * Vibrato that responds to RPN/NRPN parameters
@@ -40,7 +40,10 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Support for multiple concurrent MIDI synthesizers (per-track device/port select FF 09 message), can be used to overcome 16 channel limit
 * Support for playing Id-software Music File format (IMF)
 * Support for custom banks of [WOPL format](https://github.com/Wohlstand/OPL3BankEditor/blob/master/Specifications/WOPL-and-OPLI-Specification.txt)
-* Partial support for XG standard (having more instruments than in one 128:128 GM set and ability to use multiple channels for percussion purposes)
+* Partial support for GS and XG standards (having more instruments than in one 128:128 GM set and ability to use multiple channels for percussion purposes, and a support for some GS/XG exclusive controllers)
+* CC74 affects a modulator scale
+* Portamento support (CC5, CC37, and CC65)
+* SysEx support that supports some generic, GS, and XG features
 
 # How to build
 To build libADLMIDI you need to use CMake:
@@ -93,8 +96,8 @@ You need to make in the any IDE a library project and put into it next files
 (or include those files into subfolder of your exist project instead if you want to use it statically):
 
 ### Useful macros
-* `ADLMIDI_DISABLE_XMI_SUPPORT` - Disables XMI to MIDI converter
-* `ADLMIDI_DISABLE_MUS_SUPPORT` - Disables MUS to MIDI converter
+* `BWMIDI_DISABLE_XMI_SUPPORT` - Disables XMI to MIDI converter
+* `BWMIDI_DISABLE_MUS_SUPPORT` - Disables MUS to MIDI converter
 * `ADLMIDI_DISABLE_MIDI_SEQUENCER` - Completely disables built-in MIDI sequencer.
 * `ADLMIDI_DISABLE_DOSBOX_EMULATOR` - Disables DosBox 0.74 OPL3 emulator.
 * `ADLMIDI_DISABLE_NUKED_EMULATOR` - Disables Nuked OPL3 emulator.
@@ -108,7 +111,6 @@ You need to make in the any IDE a library project and put into it next files
 * chips/*       - Various OPL3 chip emulators and commonized interface over them
 * adldata.hh    - bank structures definition
 * adlmidi_private.hpp - header of internal private APIs
-* fraction.hpp  - Fraction number handling
 
 * adldata.cpp	 - Automatically generated database of FM banks from "fm_banks" directory via "gen_adldata" tool. **Don't build it if you have defined `DISABLE_EMBEDDED_BANKS` macro!**
 * adlmidi.cpp   - code of library
@@ -117,16 +119,16 @@ You need to make in the any IDE a library project and put into it next files
 * adlmidi_opl3.cpp	- OPL3 chips manager
 * adlmidi_private.cpp	- some internal functions sources
 
+#### MIDI Sequencer
+To remove MIDI Sequecer, define `ADLMIDI_DISABLE_MIDI_SEQUENCER` macro and remove all those files
+* adlmidi_sequencer.cpp	- MIDI Sequencer related source
+* cvt_mus2mid.hpp - MUS2MID converter source (define `BWMIDI_DISABLE_MUS_SUPPORT` macro to remove MUS support)
+* cvt_xmi2mid.hpp - XMI2MID converter source (define `BWMIDI_DISABLE_XMI_SUPPORT` macro to remove XMI support)
+* fraction.hpp  - Fraction number handling (Used by Sequencer only)
+* midi_sequencer.h	- MIDI Sequencer C bindings
+* midi_sequencer.hpp	- MIDI Sequencer C++ declaration
+* midi_sequencer_impl.hpp	- MIDI Sequencer C++ implementation (must be once included into one of CPP together with interfaces initializations)
 
-#### MUS2MIDI converter
-To remove MUS support, define `ADLMIDI_DISABLE_MUS_SUPPORT` macro and remove those files:
-* adlmidi_mus2mid.h - MUS2MID converter header
-* adlmidi_mus2mid.c	- MUS2MID converter source
-
-#### XMI2MIDI converter
-To remove XMI support, define `ADLMIDI_DISABLE_XMI_SUPPORT` macro and remove those files:
-* adlmidi_xmi2mid.h - XMI2MID converter header
-* adlmidi_xmi2mid.c	- XMI2MID converter source
 
 
 **Important**: Please use DosBox emulator on mobile devices because it requires small CPU power. Nuked OPL synthesizer is very accurate (compared to real OPL3 chip), but it requires much more power device and is high probability your device will lag and playback will be choppy.
@@ -151,6 +153,15 @@ To build that example you will need to have installed SDL2 library.
 * Add support of MIDI Format 2 files (FL Studio made MIDI-files are wired and opening of those files making lossy of tempo and some meta-information events)
 
 # Changelog
+## 1.4.0   <dev>
+ * Implemented a full support for Portamento! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Added support for SysEx event handling! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Added support for GS way of custom drum channels (through SysEx events)
+ * Ignore some NRPN events and lsb bank number when using GS standard (after catching of GS Reset SysEx call)
+ * Added support for CC66-Sostenuto controller (Pedal hold of currently-pressed notes only while CC64 holds also all next notes)
+ * Added support for CC67-SoftPedal controller (SoftPedal lowers the volume of notes played)
+ * Fixed correctness of CMF files playing
+
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization
  * Optimizing the MIDI banks management system for MultiBanks (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)

@@ -5,20 +5,26 @@ project (libADLMIDI C CXX)
 # Strip garbage
 if(APPLE)
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -dead_strip")
-ELSEIF(NOT MSVC AND NOT MSDOS)
+elseif(NOT MSVC AND NOT MSDOS)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -s -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -s -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s")
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-s")
-ENDIF()
+endif()
 
-IF(NOT MSVC AND NOT MSDOS)
+if(NOT MSVC AND NOT MSDOS)
 # Global optimization flags
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fno-omit-frame-pointer")
 # Turn on all warnings
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-ENDIF()
+# Deny undefined symbols
+    if(NOT APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined" )
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined" )
+        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined" )
+    endif()
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
@@ -203,20 +209,18 @@ list(APPEND libADLMIDI_SOURCES
     ${libADLMIDI_SOURCE_DIR}/src/wopl/wopl_file.c
 )
 
-if(WITH_MUS_SUPPORT AND WITH_MIDI_SEQUENCER)
+if(WITH_MIDI_SEQUENCER)
     list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_mus2mid.c
+        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_sequencer.cpp
     )
-else()
-    add_definitions(-DADLMIDI_DISABLE_MUS_SUPPORT)
 endif()
 
-if(WITH_XMI_SUPPORT AND WITH_MIDI_SEQUENCER)
-    list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_xmi2mid.c
-    )
-else()
-    add_definitions(-DADLMIDI_DISABLE_XMI_SUPPORT)
+if(NOT WITH_MUS_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
+    add_definitions(-DBWMIDI_DISABLE_MUS_SUPPORT)
+endif()
+
+if(NOT WITH_XMI_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
+    add_definitions(-DBWMIDI_DISABLE_XMI_SUPPORT)
 endif()
 
 if(NOT DJGPP AND NOT MSDOS)
@@ -290,11 +294,11 @@ if(NOT libADLMIDI_STATIC AND NOT libADLMIDI_SHARED)
 You must enable at least one of them!")
 endif()
 
-add_library(ADLMIDI INTERFACE)
+add_library(ADLMIDI_IF INTERFACE)
 if(libADLMIDI_SHARED)
-    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
+    target_link_libraries(ADLMIDI_IF INTERFACE ADLMIDI_shared)
 else()
-    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
+    target_link_libraries(ADLMIDI_IF INTERFACE ADLMIDI_static)
 endif()
 
 if(WITH_MIDIPLAY)
@@ -323,15 +327,15 @@ if(WITH_MIDIPLAY)
 
     if(WIN32)
         if(MSVC)
-            target_link_libraries(adlmidiplay ADLMIDI ${SDL2_LIBRARY})
+            target_link_libraries(adlmidiplay ADLMIDI_IF ${SDL2_LIBRARY})
         else()
-            target_link_libraries(adlmidiplay ADLMIDI ${SDL2_LIBRARY} pthread)
+            target_link_libraries(adlmidiplay ADLMIDI_IF ${SDL2_LIBRARY} pthread)
         endif()
     else()
         if(MSDOS OR DJGPP)
-            target_link_libraries(adlmidiplay ADLMIDI)
+            target_link_libraries(adlmidiplay ADLMIDI_IF)
         else()
-            target_link_libraries(adlmidiplay ADLMIDI ${SDL2_LIBRARY} pthread dl m stdc++)
+            target_link_libraries(adlmidiplay ADLMIDI_IF ${SDL2_LIBRARY} pthread dl m stdc++)
         endif()
     endif()
 
@@ -341,8 +345,6 @@ if(WITH_MIDIPLAY)
 
     if(libADLMIDI_SHARED)
         add_dependencies(adlmidiplay ADLMIDI_shared)
-        # ========= WIP =========
-        # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
     else()
         if(NOT libADLMIDI_STATIC)
             message(FATAL_ERROR "libADLMIDI is required to be built!")
@@ -391,11 +393,11 @@ if(WITH_ADLMIDI2)
     endif()
 
     if(WIN32)
-        target_link_libraries(adlmidi2 ADLMIDI winmm)
+        target_link_libraries(adlmidi2 ADLMIDI_IF winmm)
     elseif(DJGPP OR MSDOS)
-        target_link_libraries(adlmidi2 ADLMIDI)
+        target_link_libraries(adlmidi2 ADLMIDI_IF)
     else()
-        target_link_libraries(adlmidi2 ADLMIDI ${SDL2_LIBRARY} pthread dl m stdc++)
+        target_link_libraries(adlmidi2 ADLMIDI_IF ${SDL2_LIBRARY} pthread dl m stdc++)
     endif()
 
     if(NOT WITH_CPP_EXTRAS)
@@ -424,7 +426,6 @@ if(WITH_ADLMIDI2)
 
     if(libADLMIDI_SHARED)
         add_dependencies(adlmidi2 ADLMIDI_shared)
-        # ========= WIP =========
         set_target_properties(adlmidi2 PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
     else()
         if(NOT libADLMIDI_STATIC)
@@ -447,12 +448,12 @@ if(EXAMPLE_SDL2_AUDIO AND NOT MSDOS AND NOT DJGPP)
 
     if(WIN32)
         if(MSVC)
-            target_link_libraries(adlmidi_sdl2_demo ADLMIDI ${SDL2_LIBRARY})
+            target_link_libraries(adlmidi_sdl2_demo ADLMIDI_IF ${SDL2_LIBRARY})
         else()
-            target_link_libraries(adlmidi_sdl2_demo ADLMIDI ${SDL2_LIBRARY} pthread)
+            target_link_libraries(adlmidi_sdl2_demo ADLMIDI_IF ${SDL2_LIBRARY} pthread)
         endif()
     else()
-        target_link_libraries(adlmidi_sdl2_demo ADLMIDI ${SDL2_LIBRARY} pthread dl m stdc++)
+        target_link_libraries(adlmidi_sdl2_demo ADLMIDI_IF ${SDL2_LIBRARY} pthread dl m stdc++)
     endif()
 
     if(MSDOS OR DJGPP)
@@ -461,8 +462,7 @@ if(EXAMPLE_SDL2_AUDIO AND NOT MSDOS AND NOT DJGPP)
 
     if(libADLMIDI_SHARED)
         add_dependencies(adlmidi_sdl2_demo ADLMIDI_shared)
-        # ========= WIP =========
-        # set_target_properties(adlmidi_sdl2_demo PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+        set_target_properties(adlmidi_sdl2_demo PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
     else()
         if(NOT libADLMIDI_STATIC)
             message(FATAL_ERROR "libADLMIDI is required to be built!")
@@ -490,7 +490,7 @@ if(WITH_VLC_PLUGIN)
     target_include_directories(adlmidi_plugin PRIVATE
             ${LIBVLC_INCLUDE_DIR}/vlc/plugins
             ${LIBVLC_INCLUDE_DIR}/vlc)
-    target_link_libraries(adlmidi_plugin ADLMIDI vlccore m stdc++)
+    target_link_libraries(adlmidi_plugin ADLMIDI_IF vlccore m stdc++)
     # target_link_libraries(adlmidi_plugin INTERFACE "-export-symbol-regex ^vlc_entry")
 
     if(libADLMIDI_SHARED)

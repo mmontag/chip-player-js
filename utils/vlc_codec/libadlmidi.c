@@ -77,12 +77,14 @@ vlc_module_begin ()
     set_callbacks (Open, Close)
     add_loadfile ("adlmidi-custombank", "",
                   SOUNDFONT_TEXT, SOUNDFONT_LONGTEXT, false)
-    //add_bool ("synth-chorus", true, CHORUS_TEXT, CHORUS_TEXT, false)
-    //add_float ("synth-gain", .5, GAIN_TEXT, GAIN_LONGTEXT, false)
-    //    change_float_range (0., 10.)
-    //add_integer ("synth-polyphony", 256, POLYPHONY_TEXT, POLYPHONY_LONGTEXT, false)
-    //    change_integer_range (1, 65535)
-    //add_bool ("synth-reverb", true, REVERB_TEXT, REVERB_TEXT, true)
+    /*
+    add_bool ("synth-chorus", true, CHORUS_TEXT, CHORUS_TEXT, false)
+    add_float ("synth-gain", .5, GAIN_TEXT, GAIN_LONGTEXT, false)
+        change_float_range (0., 10.)
+    add_integer ("synth-polyphony", 256, POLYPHONY_TEXT, POLYPHONY_LONGTEXT, false)
+        change_integer_range (1, 65535)
+    add_bool ("synth-reverb", true, REVERB_TEXT, REVERB_TEXT, true)
+    */
     add_integer ("adlmidi-sample-rate", 44100, SAMPLE_RATE_TEXT, SAMPLE_RATE_TEXT, true)
         change_integer_range (22050, 96000)
     add_integer ("adlmidi-emulated-chips", 6, EMULATED_CHIPS_TEXT, EMULATED_CHIPS_TEXT, true)
@@ -107,7 +109,6 @@ static const struct ADLMIDI_AudioFormat g_output_format =
     2 * sizeof(float)
 };
 
-//static int  DecodeBlock (decoder_t *p_dec, block_t *p_block); //For different version
 #if (LIBVLC_VERSION_MAJOR >= 3)
 static int DecodeBlock (decoder_t *p_dec, block_t *p_block);
 #else
@@ -162,7 +163,7 @@ static int Open (vlc_object_t *p_this)
 #else
     p_dec->pf_decode_audio = DecodeBlock;
 #endif
-    return VLC_SUCCESS;//VLCDEC_SUCCESS
+    return VLC_SUCCESS;
 }
 
 
@@ -177,6 +178,7 @@ static void Close (vlc_object_t *p_this)
 static void Flush (decoder_t *p_dec)
 {
     decoder_sys_t *p_sys = p_dec->p_sys;
+
 #if (LIBVLC_VERSION_MAJOR >= 3)
     date_Set (&p_sys->end_date, VLC_TS_INVALID);
 #else
@@ -257,8 +259,9 @@ static block_t *DecodeBlock (decoder_t *p_dec, block_t **pp_block)
                     msg_Warn (p_dec, "fragmented SysEx not implemented");
                     goto drop;
                 }
-                //fluid_synth_sysex (p_sys->synth, (char *)p_block->p_buffer + 1,
-                //                   p_block->i_buffer - 2, NULL, NULL, NULL, 0);
+                adl_rt_systemExclusive(p_sys->synth,
+                                       (const ADL_UInt8 *)p_block->p_buffer,
+                                       p_block->i_buffer);
                 break;
             case 0xF:
                 adl_rt_resetState(p_sys->synth);
@@ -325,3 +328,4 @@ drop:
     return p_out;
 #endif
 }
+

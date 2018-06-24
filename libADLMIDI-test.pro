@@ -27,9 +27,7 @@ HEADERS += \
     include/adlmidi.h \
     src/adlbank.h \
     src/adldata.hh \
-    src/adlmidi_mus2mid.h \
     src/adlmidi_private.hpp \
-    src/adlmidi_xmi2mid.h \
     src/chips/dosbox/dbopl.h \
     src/chips/dosbox_opl3.h \
     src/chips/nuked/nukedopl3_174.h \
@@ -38,6 +36,11 @@ HEADERS += \
     src/chips/nuked_opl3_v174.h \
     src/chips/opl_chip_base.h \
     src/chips/opl_chip_base.tcc \
+    src/cvt_mus2mid.hpp \
+    src/cvt_xmi2mid.hpp \
+    src/midi_sequencer.h \
+    src/midi_sequencer.hpp \
+    src/midi_sequencer_impl.hpp \
     src/fraction.hpp \
     src/midiplay/wave_writer.h
 
@@ -47,10 +50,9 @@ SOURCES += \
     src/adlmidi.cpp \
     src/adlmidi_load.cpp \
     src/adlmidi_midiplay.cpp \
-    src/adlmidi_mus2mid.c \
     src/adlmidi_opl3.cpp \
     src/adlmidi_private.cpp \
-    src/adlmidi_xmi2mid.c \
+    src/adlmidi_sequencer.cpp \
     src/wopl/wopl_file.c \
     src/chips/dosbox/dbopl.cpp \
     src/chips/dosbox_opl3.cpp \
