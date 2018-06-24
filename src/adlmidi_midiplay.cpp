@@ -1063,7 +1063,7 @@ void MIDIplay::noteUpdate(uint16_t midCh,
                     m_synth.noteOff(c);
                     if(props_mask & Upd_Mute) // Mute the note
                     {
-                        m_synth.touchReal(c, 0);
+                        m_synth.touchNote(c, 0);
                         m_chipChannels[c].koff_time_until_neglible = 0;
                     }
                     else
@@ -1162,7 +1162,7 @@ void MIDIplay::noteUpdate(uint16_t midCh,
             break;
             }
 
-            m_synth.touchReal(c, volume, brightness);
+            m_synth.touchNote(c, volume, brightness);
 
             /* DEBUG ONLY!!!
             static uint32_t max = 0;
@@ -1723,11 +1723,11 @@ ADLMIDI_EXPORT void AdlInstrumentTester::Touch(unsigned c, unsigned volume) // V
 #ifndef DISABLE_EMBEDDED_BANKS
     OPL3 *opl = P->opl;
     if(opl->m_volumeScale == OPL3::VOLUME_NATIVE)
-        opl->touchReal(c, volume * 127 / (127 * 127 * 127) / 2);
+        opl->touchNote(c, volume * 127 / (127 * 127 * 127) / 2);
     else
     {
         // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-        opl->touchReal(c, volume > 8725 ? static_cast<unsigned int>(std::log((double)volume) * 11.541561 + (0.5 - 104.22845)) : 0);
+        opl->touchNote(c, volume > 8725 ? static_cast<unsigned int>(std::log((double)volume) * 11.541561 + (0.5 - 104.22845)) : 0);
         // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
         //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
     }
@@ -1785,7 +1785,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
     {
         if(adlchannel[c] < 0) continue;
         opl->setPatch(static_cast<size_t>(adlchannel[c]), ains.adl[c]);
-        opl->touchReal(static_cast<size_t>(adlchannel[c]), 63);
+        opl->touchNote(static_cast<size_t>(adlchannel[c]), 63);
         opl->setPan(static_cast<size_t>(adlchannel[c]), 0x30);
         opl->noteOn(static_cast<size_t>(adlchannel[c]), hertz);
     }

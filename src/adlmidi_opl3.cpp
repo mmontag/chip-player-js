@@ -233,7 +233,7 @@ void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
     }
 }
 
-void OPL3::touchReal(uint32_t c, uint8_t volume, uint8_t brightness)
+void OPL3::touchNote(uint32_t c, uint8_t volume, uint8_t brightness)
 {
     if(volume > 63)
         volume = 63;
@@ -362,7 +362,7 @@ void OPL3::silenceAll() // Silence all OPL channels.
     for(size_t c = 0; c < m_numChannels; ++c)
     {
         noteOff(c);
-        touchReal(c, 0);
+        touchNote(c, 0);
     }
 }
 

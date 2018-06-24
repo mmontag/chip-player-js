@@ -385,7 +385,7 @@ public:
      * @param volume Volume level (from 0 to 63)
      * @param brightness CC74 Brightness level (from 0 to 127)
      */
-    void touchReal(uint32_t c, uint8_t volume, uint8_t brightness = 127);
+    void touchNote(uint32_t c, uint8_t volume, uint8_t brightness = 127);
 
     /**
      * @brief Set the instrument into specified chip channel
