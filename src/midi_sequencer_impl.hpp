@@ -1406,7 +1406,6 @@ void BW_MidiSequencer::rewind()
     m_atEnd            = false;
     m_loopStart        = true;
     m_loopEnd          = false;
-    //invalidLoop      = false;//No more needed here as this flag is set on load time
 }
 
 void BW_MidiSequencer::setTempo(double tempo)
@@ -1478,7 +1477,6 @@ bool BW_MidiSequencer::loadMIDI(FileAndMemReader &fr)
     m_format = Format_MIDI;
 
     bool is_GMF = false; // GMD/MUS files (ScummVM)
-    //bool is_MUS = false; // MUS/DMX files (Doom)
     bool is_IMF = false; // IMF
     bool is_CMF = false; // Creative Music format (CMF/CTMF)
     bool is_RSXX = false; // RSXX, such as Cartooners
@@ -1777,8 +1775,6 @@ riffskip:
             }
 
             rawTrackData[tk].insert(rawTrackData[tk].end(), EndTag + 0, EndTag + 4);
-            //CurrentPosition.track[tk].delay = 0;
-            //CurrentPosition.began = true;
         }
         else
         {
@@ -1817,19 +1813,6 @@ riffskip:
                 rawTrackData[tk].insert(rawTrackData[tk].end(), EndTag + 0, EndTag + 4);
             if(is_RSXX)//Finalize raw track data with a zero
                 rawTrackData[tk].push_back(0);
-
-            //bool ok = false;
-            //// Read next event time
-            //uint64_t tkDelay = ReadVarLenEx(tk, ok);
-            //if(ok)
-            //    CurrentPosition.track[tk].delay = tkDelay;
-            //else
-            //{
-            //    std::stringstream msg;
-            //    msg << fr._fileName << ": invalid variable length in the track " << tk << "! (error code " << tkDelay << ")";
-            //    ADLMIDI_ErrorString = msg.str();
-            //    return false;
-            //}
         }
     }
 
@@ -1842,7 +1825,7 @@ riffskip:
         return false;
     }
 
-    //Build new MIDI events table
+    // Build new MIDI events table
     if(!buildTrackData(rawTrackData))
     {
         m_errorString = fr.fileName() + ": MIDI data parsing error has occouped!\n" + m_parsingErrorsString;
