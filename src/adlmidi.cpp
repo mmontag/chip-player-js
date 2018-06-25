@@ -319,6 +319,7 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
 
     play->m_setup.numFourOps = static_cast<unsigned int>(ops4);
     play->m_synth.m_numFourOps = play->m_setup.numFourOps;
+    play->m_synth.updateChannelCategories();
 
     return 0; //adlRefreshNumCards(device);
 }

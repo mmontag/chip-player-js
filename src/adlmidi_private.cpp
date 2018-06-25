@@ -101,6 +101,8 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
 */
 
     play->m_synth.m_numFourOps = play->m_setup.numFourOps = static_cast<unsigned>(numFourOps * play->m_setup.numChips);
+    // Update channel categories and set up four-operator channels
+    play->m_synth.updateChannelCategories();
 
     return 0;
 }
