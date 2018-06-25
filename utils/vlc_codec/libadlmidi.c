@@ -80,7 +80,7 @@ static const char * const volume_models_descriptions[] =
     N_("Generic"),
     N_("OPL3 Native"),
     N_("DMX"),
-    N_("Apogee Sound Syste"),
+    N_("Apogee Sound System"),
     N_("Win9x driver"),
     NULL
 };
