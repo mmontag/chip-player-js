@@ -238,7 +238,7 @@ extern const char *adl_errorInfo(struct ADL_MIDIPlayer *device);
 extern struct ADL_MIDIPlayer *adl_init(long sample_rate);
 
 /*Set 4-bit device identifier*/
-extern int adl_setDeviceIdentifier(struct ADL_MIDIPlayer *device, ADL_UInt8 id);
+extern int adl_setDeviceIdentifier(struct ADL_MIDIPlayer *device, unsigned id);
 
 /*Load MIDI file from File System*/
 extern int adl_openFile(struct ADL_MIDIPlayer *device, const char *filePath);

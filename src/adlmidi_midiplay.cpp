@@ -25,7 +25,7 @@
 
 // Mapping from MIDI volume level to OPL level value.
 
-static const uint8_t DMX_volume_mapping_table[128] =
+static const uint_fast32_t DMX_volume_mapping_table[128] =
 {
     0,  1,  3,  5,  6,  8,  10, 11,
     13, 14, 16, 17, 19, 20, 22, 23,
@@ -45,7 +45,7 @@ static const uint8_t DMX_volume_mapping_table[128] =
     124, 124, 125, 125, 126, 126, 127, 127,
 };
 
-static const uint8_t W9X_volume_mapping_table[32] =
+static const uint_fast32_t W9X_volume_mapping_table[32] =
 {
     63, 63, 40, 36, 32, 28, 23, 21,
     19, 17, 15, 14, 13, 12, 11, 10,
@@ -154,8 +154,8 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     initSequencerInterface();
 #endif
+    resetMIDI();
     applySetup();
-    chooseDevice("none");
     realTime_ResetState();
 }
 
@@ -168,7 +168,7 @@ void MIDIplay::applySetup()
     m_synth.m_runAtPcmRate = m_setup.runAtPcmRate;
 
 #ifndef DISABLE_EMBEDDED_BANKS
-    if(m_synth.m_embeddedBank != ~0u)
+    if(m_synth.m_embeddedBank != OPL3::CustomBankTag)
         m_synth.m_insBankSetup = adlbanksetup[m_setup.bankId];
 #endif
 
@@ -203,6 +203,21 @@ void MIDIplay::applySetup()
 
     // Reset the arpeggio counter
     m_arpeggioCounter = 0;
+}
+
+void MIDIplay::resetMIDI()
+{
+    m_masterVolume = MasterVolumeDefault;
+    m_sysExDeviceId = 0;
+    m_synthMode = Mode_XG;
+    m_arpeggioCounter = 0;
+
+    m_midiChannels.clear();
+    m_midiChannels.resize(16, MIDIchannel());
+
+    caugh_missing_instruments.clear();
+    caugh_missing_banks_melodic.clear();
+    caugh_missing_banks_percussion.clear();
 }
 
 void MIDIplay::TickIterators(double s)
@@ -268,13 +283,13 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     size_t midiins = midiChan.patch;
     bool isPercussion = (channel % 16 == 9) || midiChan.is_xg_percussion;
 
-    uint16_t bank = 0;
+    size_t bank = 0;
     if(midiChan.bank_msb || midiChan.bank_lsb)
     {
         if((m_synthMode & Mode_GS) != 0) //in GS mode ignore LSB
-            bank = (uint16_t(midiChan.bank_msb) * 256);
+            bank = (midiChan.bank_msb * 256);
         else
-            bank = (uint16_t(midiChan.bank_msb) * 256) + uint16_t(midiChan.bank_lsb);
+            bank = (midiChan.bank_msb * 256) + midiChan.bank_lsb;
     }
 
     if(isPercussion)
@@ -290,11 +305,11 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             // Let XG Percussion bank will use (0...127 LSB range in WOPN file)
 
             // Choose: SFX or Drum Kits
-            bank = (uint16_t)midiins + ((bank == 0x7E00) ? 128 : 0);
+            bank = midiins + ((bank == 0x7E00) ? 128 : 0);
         }
         else
         {
-            bank = (uint16_t)midiins;
+            bank = midiins;
         }
         midiins = note; // Percussion instrument
     }
@@ -316,8 +331,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             ains = &bnk->ins[midiins];
         else if(hooks.onDebugMessage)
         {
-            std::set<uint16_t> &missing = (isPercussion) ?
-                                          caugh_missing_banks_percussion : caugh_missing_banks_melodic;
+            std::set<size_t> &missing = (isPercussion) ?
+                                        caugh_missing_banks_percussion : caugh_missing_banks_melodic;
             const char *text = (isPercussion) ?
                                "percussion" : "melodic";
             if(missing.insert(bank).second)
@@ -335,7 +350,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             ains = &bnk->ins[midiins];
     }
 
-    int16_t tone = note;
+    int32_t tone = note;
     if(!isPercussion && (bank > 0)) // For non-zero banks
     {
         if(ains->flags & adlinsdata::Flag_NoSound)
@@ -413,9 +428,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             if(voices[0].ains == voices[1].ains || pseudo_4op/*i[0] == i[1] || pseudo_4op*/)
             {
                 // Only use regular channels
-                uint8_t expected_mode = 0;
+                uint32_t expected_mode = 0;
 
-                if(m_synth.m_rhythmMode == 1)
+                if(m_synth.m_rhythmMode)
                 {
                     if(m_cmfPercussionMode)
                         expected_mode = channel  < 11 ? 0 : (3 + channel  - 11); // CMF
@@ -431,7 +446,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                 if(ccount == 0)
                 {
                     // Only use four-op master channels
-                    if(m_synth.m_channelCategory[a] != 1)
+                    if(m_synth.m_channelCategory[a] != OPL3::ChanCat_4op_Master)
                         continue;
                 }
                 else
@@ -480,7 +495,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     ir = midiChan.activenotes_insert(note);
     ir.first->vol     = velocity;
     ir.first->vibrato = midiChan.noteAftertouch[note];
-    ir.first->noteTone = tone;
+    ir.first->noteTone = static_cast<int16_t>(tone);
     ir.first->currentTone = tone;
     ir.first->glideRate = HUGE_VAL;
     ir.first->midiins = midiins;
@@ -576,12 +591,12 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         break;
 
     case 5: // Set portamento msb
-        m_midiChannels[channel].portamento = static_cast<uint16_t>((m_midiChannels[channel].portamento & 0x7F) | (value << 7));
+        m_midiChannels[channel].portamento = static_cast<uint16_t>((m_midiChannels[channel].portamento & 0x007F) | (value << 7));
         updatePortamento(channel);
         break;
 
     case 37: // Set portamento lsb
-        m_midiChannels[channel].portamento = (m_midiChannels[channel].portamento & 0x3F80) | (value);
+        m_midiChannels[channel].portamento = static_cast<uint16_t>((m_midiChannels[channel].portamento & 0x3F80) | (value));
         updatePortamento(channel);
         break;
 
@@ -811,7 +826,7 @@ bool MIDIplay::doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data
             unsigned volume =
                 (((unsigned)data[0] & 0x7F)) |
                 (((unsigned)data[1] & 0x7F) << 7);
-            m_masterVolume = volume >> 7;
+            m_masterVolume = static_cast<uint8_t>(volume >> 7);
             for(size_t ch = 0; ch < m_midiChannels.size(); ch++)
                 noteUpdateAll(uint16_t(ch), Upd_Volume);
             return true;
@@ -981,6 +996,8 @@ void MIDIplay::realTime_deviceSwitch(size_t track, const char *data, size_t leng
 
 uint64_t MIDIplay::realTime_currentDevice(size_t track)
 {
+    if(m_currentMidiDevice.empty())
+        return 0;
     return m_currentMidiDevice[track];
 }
 
@@ -1104,9 +1121,9 @@ void MIDIplay::noteUpdate(size_t midCh,
 
         if(props_mask & Upd_Volume)
         {
-            uint32_t volume;
+            uint_fast32_t volume;
             bool is_percussion = (midCh == 9) || m_midiChannels[midCh].is_xg_percussion;
-            uint8_t brightness = is_percussion ? 127 : m_midiChannels[midCh].brightness;
+            uint_fast32_t brightness = is_percussion ? 127 : m_midiChannels[midCh].brightness;
 
             if(!m_setup.fullRangeBrightnessCC74)
             {
@@ -1134,7 +1151,7 @@ void MIDIplay::noteUpdate(size_t midCh,
                 //volume = (int)(volume * std::sqrt( (double) ch[c].users.size() ));
 
                 // The formula below: SOLVE(V=127^4 * 2^( (A-63.49999) / 8), A)
-                volume = volume > (8725 * 127) ? static_cast<uint32_t>(std::log(static_cast<double>(volume)) * 11.541560327111707 - 1.601379199767093e+02) : 0;
+                volume = volume > (8725 * 127) ? static_cast<uint_fast32_t>(std::log(static_cast<double>(volume)) * 11.541560327111707 - 1.601379199767093e+02) : 0;
                 // The incorrect formula below: SOLVE(V=127^4 * (2^(A/63)-1), A)
                 //opl.Touch_Real(c, volume>(11210*127) ? 91.61112 * std::log((4.8819E-7/127)*volume + 1.0)+0.5 : 0);
             }
@@ -1173,7 +1190,7 @@ void MIDIplay::noteUpdate(size_t midCh,
             break;
             }
 
-            m_synth.touchNote(c, volume, brightness);
+            m_synth.touchNote(c, static_cast<uint8_t>(volume), static_cast<uint8_t>(brightness));
 
             /* DEBUG ONLY!!!
             static uint32_t max = 0;
@@ -1435,7 +1452,7 @@ void MIDIplay::panic()
     }
 }
 
-void MIDIplay::killSustainingNotes(int32_t midCh, int32_t this_adlchn, uint8_t sustain_type)
+void MIDIplay::killSustainingNotes(int32_t midCh, int32_t this_adlchn, uint32_t sustain_type)
 {
     uint32_t first = 0, last = m_synth.m_numChannels;
 
@@ -1734,11 +1751,11 @@ ADLMIDI_EXPORT void AdlInstrumentTester::Touch(unsigned c, unsigned volume) // V
 #ifndef DISABLE_EMBEDDED_BANKS
     OPL3 *opl = P->opl;
     if(opl->m_volumeScale == OPL3::VOLUME_NATIVE)
-        opl->touchNote(c, volume * 127 / (127 * 127 * 127) / 2);
+        opl->touchNote(c, static_cast<uint8_t>(volume * 127 / (127 * 127 * 127) / 2));
     else
     {
         // The formula below: SOLVE(V=127^3 * 2^( (A-63.49999) / 8), A)
-        opl->touchNote(c, volume > 8725 ? static_cast<unsigned int>(std::log((double)volume) * 11.541561 + (0.5 - 104.22845)) : 0);
+        opl->touchNote(c, static_cast<uint8_t>(volume > 8725 ? static_cast<unsigned int>(std::log((double)volume) * 11.541561 + (0.5 - 104.22845)) : 0));
         // The incorrect formula below: SOLVE(V=127^3 * (2^(A/63)-1), A)
         //Touch_Real(c, volume>11210 ? 91.61112 * std::log(4.8819E-7*volume + 1.0)+0.5 : 0);
     }
@@ -1821,7 +1838,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
     //OPL3 *opl = P->opl;
     if(P->adl_ins_list.empty()) FindAdlList();
     const unsigned NumBanks = (unsigned)adl_getBanksCount();
-    P->ins_idx = (uint32_t)((int32_t)P->ins_idx + (int32_t)P->adl_ins_list.size() + offset) % P->adl_ins_list.size();
+    P->ins_idx = (uint32_t)((int32_t)P->ins_idx + (int32_t)P->adl_ins_list.size() + offset) % (int32_t)P->adl_ins_list.size();
 
 #if 0
     UI.Color(15);
@@ -1834,7 +1851,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
     std::fflush(stderr);
 #endif
 
-    for(unsigned a = 0, n = P->adl_ins_list.size(); a < n; ++a)
+    for(size_t a = 0, n = P->adl_ins_list.size(); a < n; ++a)
     {
         const unsigned i = P->adl_ins_list[a];
         const adlinsdata2 ains(adlins[i]);

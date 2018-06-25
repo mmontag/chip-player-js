@@ -72,14 +72,14 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
     return midi_device;
 }
 
-ADLMIDI_EXPORT int adl_setDeviceIdentifier(ADL_MIDIPlayer *device, ADL_UInt8 id)
+ADLMIDI_EXPORT int adl_setDeviceIdentifier(ADL_MIDIPlayer *device, unsigned id)
 {
     if(!device || id > 0x0f)
         return -1;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     if(!play)
         return -1;
-    play->setDeviceId(id);
+    play->setDeviceId(static_cast<uint8_t>(id));
     return 0;
 }
 
@@ -186,7 +186,7 @@ ADLMIDI_EXPORT int adl_getBank(ADL_MIDIPlayer *device, const ADL_BankId *idp, in
     ADL_BankId id = *idp;
     if(id.lsb > 127 || id.msb > 127 || id.percussive > 1)
         return -1;
-    uint16_t idnumber = uint16_t((id.msb << 8) | id.lsb | (id.percussive ? OPL3::PercussionTag : 0));
+    size_t idnumber = ((id.msb << 8) | id.lsb | (id.percussive ? size_t(OPL3::PercussionTag) : 0));
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     OPL3::BankMap &map = play->m_synth.m_insBanks;
@@ -200,7 +200,7 @@ ADLMIDI_EXPORT int adl_getBank(ADL_MIDIPlayer *device, const ADL_BankId *idp, in
     }
     else
     {
-        std::pair<uint16_t, OPL3::Bank> value;
+        std::pair<size_t, OPL3::Bank> value;
         value.first = idnumber;
         memset(&value.second, 0, sizeof(value.second));
         for (unsigned i = 0; i < 128; ++i)
@@ -228,7 +228,7 @@ ADLMIDI_EXPORT int adl_getBankId(ADL_MIDIPlayer *device, const ADL_Bank *bank, A
         return -1;
 
     OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
-    unsigned idnumber = it->first;
+    OPL3::BankMap::key_type idnumber = it->first;
     id->msb = (idnumber >> 8) & 127;
     id->lsb = idnumber & 127;
     id->percussive = (idnumber & OPL3::PercussionTag) ? 1 : 0;
@@ -643,6 +643,7 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
     play->m_synth.reset(play->m_setup.emulator, play->m_setup.PCM_RATE, play);
     play->m_chipChannels.clear();
     play->m_chipChannels.resize((size_t)play->m_synth.m_numChannels);
+    play->resetMIDI();
 }
 
 ADLMIDI_EXPORT double adl_totalTimeLength(struct ADL_MIDIPlayer *device)

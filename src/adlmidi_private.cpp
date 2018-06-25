@@ -36,12 +36,12 @@ void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate)
 
 int adlRefreshNumCards(ADL_MIDIPlayer *device)
 {
-    unsigned n_fourop[2] = {0, 0}, n_total[2] = {0, 0};
+    size_t n_fourop[2] = {0, 0}, n_total[2] = {0, 0};
     MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
 
     //Automatically calculate how much 4-operator channels is necessary
 #ifndef DISABLE_EMBEDDED_BANKS
-    if(play->m_synth.m_embeddedBank == ~0u)
+    if(play->m_synth.m_embeddedBank == OPL3::CustomBankTag)
 #endif
     {
         //For custom bank
@@ -49,9 +49,9 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
         OPL3::BankMap::iterator end = play->m_synth.m_insBanks.end();
         for(; it != end; ++it)
         {
-            uint16_t bank = it->first;
-            unsigned div = (bank & OPL3::PercussionTag) ? 1 : 0;
-            for(unsigned i = 0; i < 128; ++i)
+            size_t bank = it->first;
+            size_t div = (bank & OPL3::PercussionTag) ? 1 : 0;
+            for(size_t i = 0; i < 128; ++i)
             {
                 adlinsdata2 &ins = it->second.ins[i];
                 if(ins.flags & adlinsdata::Flag_NoSound)
@@ -66,9 +66,9 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
     else
     {
         //For embedded bank
-        for(unsigned a = 0; a < 256; ++a)
+        for(size_t  a = 0; a < 256; ++a)
         {
-            unsigned insno = banks[play->m_setup.bankId][a];
+            size_t insno = banks[play->m_setup.bankId][a];
             if(insno == 198)
                 continue;
             ++n_total[a / 128];
@@ -79,7 +79,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
     }
 #endif
 
-    unsigned numFourOps = 0;
+    size_t numFourOps = 0;
 
     // All 2ops (no 4ops)
     if((n_fourop[0] == 0) && (n_fourop[1] == 0))
@@ -100,7 +100,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
         : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
 */
 
-    play->m_synth.m_numFourOps = play->m_setup.numFourOps = (numFourOps * play->m_setup.numChips);
+    play->m_synth.m_numFourOps = play->m_setup.numFourOps = static_cast<unsigned>(numFourOps * play->m_setup.numChips);
 
     return 0;
 }

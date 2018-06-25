@@ -126,7 +126,7 @@ OPL3::OPL3() :
     m_volumeScale(VOLUME_Generic)
 {
 #ifdef DISABLE_EMBEDDED_BANKS
-    m_embeddedBank = ~0u;
+    m_embeddedBank = CustomBankTag;
 #else
     setEmbeddedBank(0);
 #endif
@@ -161,7 +161,7 @@ void OPL3::setEmbeddedBank(uint32_t bank)
 
 void OPL3::writeReg(size_t chip, uint16_t address, uint8_t value)
 {
-    #ifdef ADLMIDI_HW_OPL
+#ifdef ADLMIDI_HW_OPL
     ADL_UNUSED(chip);
     unsigned o = address >> 8;
     unsigned port = OPLBase + o * 2;
@@ -180,9 +180,18 @@ void OPL3::writeReg(size_t chip, uint16_t address, uint8_t value)
     for(uint16_t c = 0; c < 35; ++c) inp(port);
     #endif//__WATCOMC__
 
-    #else//ADLMIDI_HW_OPL
+#else//ADLMIDI_HW_OPL
     m_chips[chip]->writeReg(address, value);
-    #endif
+#endif
+}
+
+void OPL3::writeRegI(size_t chip, uint32_t address, uint32_t value)
+{
+#ifdef ADLMIDI_HW_OPL
+    writeReg(chip, static_cast<uint16_t>(address), static_cast<uint8_t>(value));
+#else//ADLMIDI_HW_OPL
+    m_chips[chip]->writeReg(static_cast<uint16_t>(address), static_cast<uint8_t>(value));
+#endif
 }
 
 
@@ -193,11 +202,11 @@ void OPL3::noteOff(size_t c)
     if(cc >= 18)
     {
         m_regBD[chip] &= ~(0x10 >> (cc - 18));
-        writeReg(chip, 0xBD, m_regBD[chip]);
+        writeRegI(chip, 0xBD, m_regBD[chip]);
         return;
     }
 
-    writeReg(chip, 0xB0 + g_channelsMap[cc], m_keyBlockFNumCache[c] & 0xDF);
+    writeRegI(chip, 0xB0 + g_channelsMap[cc], m_keyBlockFNumCache[c] & 0xDF);
 }
 
 void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
@@ -220,16 +229,16 @@ void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
     if(cc >= 18)
     {
         m_regBD[chip ] |= (0x10 >> (cc - 18));
-        writeReg(chip , 0x0BD, m_regBD[chip ]);
+        writeRegI(chip , 0x0BD, m_regBD[chip ]);
         x &= ~0x2000u;
         //x |= 0x800; // for test
     }
 
     if(chn != 0xFFF)
     {
-        writeReg(chip , 0xA0 + chn, static_cast<uint8_t>(x & 0xFF));
-        writeReg(chip , 0xB0 + chn, static_cast<uint8_t>(x >> 8));
-        m_keyBlockFNumCache[c] = static_cast<uint8_t>(x >> 8);
+        writeRegI(chip , 0xA0 + chn, (x & 0xFF));
+        writeRegI(chip , 0xB0 + chn, (x >> 8));
+        m_keyBlockFNumCache[c] = (x >> 8);
     }
 }
 
@@ -243,7 +252,7 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
     uint16_t o1 = g_operatorsMap[cc * 2 + 0];
     uint16_t o2 = g_operatorsMap[cc * 2 + 1];
     uint8_t  x = adli.modulator_40, y = adli.carrier_40;
-    uint16_t mode = 1; // 2-op AM
+    uint32_t mode = 1; // 2-op AM
 
     if(m_channelCategory[c] == 0 || m_channelCategory[c] == 3)
     {
@@ -285,9 +294,9 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
 
     if(m_musicMode == MODE_RSXX)
     {
-        writeReg(chip, 0x40 + o1, x);
+        writeRegI(chip, 0x40 + o1, x);
         if(o2 != 0xFFF)
-            writeReg(chip, 0x40 + o2, y - volume / 2);
+            writeRegI(chip, 0x40 + o2, y - volume / 2);
     }
     else
     {
@@ -306,9 +315,9 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
                 carrier = (carrier | 63) - brightness + brightness * (carrier & 63) / 63;
         }
 
-        writeReg(chip, 0x40 + o1, modulator);
+        writeRegI(chip, 0x40 + o1, modulator);
         if(o2 != 0xFFF)
-            writeReg(chip, 0x40 + o2, carrier);
+            writeRegI(chip, 0x40 + o2, carrier);
     }
 
     // Correct formula (ST3, AdPlug):
@@ -342,11 +351,11 @@ void OPL3::setPatch(size_t c, const adldata &instrument)
     uint16_t o2 = g_operatorsMap[cc * 2 + 1];
     unsigned x = instrument.modulator_E862, y = instrument.carrier_E862;
 
-    for(unsigned a = 0; a < 4; ++a, x >>= 8, y >>= 8)
+    for(size_t a = 0; a < 4; ++a, x >>= 8, y >>= 8)
     {
-        writeReg(chip, data[a] + o1, x & 0xFF);
+        writeRegI(chip, data[a] + o1, x & 0xFF);
         if(o2 != 0xFFF)
-            writeReg(chip, data[a] + o2, y & 0xFF);
+            writeRegI(chip, data[a] + o2, y & 0xFF);
     }
 }
 
@@ -354,7 +363,7 @@ void OPL3::setPan(size_t c, uint8_t value)
 {
     size_t chip = c / 23, cc = c % 23;
     if(g_channelsMap[cc] != 0xFFF)
-        writeReg(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | value);
+        writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | value);
 }
 
 void OPL3::silenceAll() // Silence all OPL channels.
@@ -373,9 +382,9 @@ void OPL3::updateChannelCategories()
     for(size_t chip = 0; chip < m_numChips; ++chip)
     {
         m_regBD[chip] = (m_deepTremoloMode * 0x80 + m_deepVibratoMode * 0x40 + m_rhythmMode * 0x20);
-        writeReg(chip, 0x0BD, m_regBD[chip]);
-        uint8_t fours_this_chip = std::min(fours, static_cast<uint32_t>(6u));
-        writeReg(chip, 0x104, (1 << fours_this_chip) - 1);
+        writeRegI(chip, 0x0BD, m_regBD[chip]);
+        uint32_t fours_this_chip = std::min(fours, static_cast<uint32_t>(6u));
+        writeRegI(chip, 0x104, (1 << fours_this_chip) - 1);
         fours -= fours_this_chip;
     }
 
@@ -449,7 +458,7 @@ void OPL3::commitDeepFlags()
     for(size_t chip = 0; chip < m_numChips; ++chip)
     {
         m_regBD[chip] = (m_deepTremoloMode * 0x80 + m_deepVibratoMode * 0x40 + m_rhythmMode * 0x20);
-        writeReg(chip, 0x0BD, m_regBD[chip]);
+        writeRegI(chip, 0x0BD, m_regBD[chip]);
     }
 }
 
@@ -566,9 +575,9 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 
         /* Clean-up channels from any playing junk sounds */
         for(size_t a = 0; a < 18; ++a)
-            writeReg(i, 0xB0 + g_channelsMap[a], 0x00);
+            writeRegI(i, 0xB0 + g_channelsMap[a], 0x00);
         for(size_t a = 0; a < sizeof(data) / sizeof(*data); a += 2)
-            writeReg(i, data[a], static_cast<uint8_t>(data[a + 1]));
+            writeRegI(i, data[a], (data[a + 1]));
     }
 
     updateChannelCategories();

@@ -233,11 +233,9 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
     {
         for(size_t i = 0; i < slots_counts[ss]; i++)
         {
-            uint16_t bankno = uint16_t(
-                (slots_src_ins[ss][i].bank_midi_msb * 256) +
-                slots_src_ins[ss][i].bank_midi_lsb +
-                (ss ? OPL3::PercussionTag : 0)
-            );
+            size_t bankno = (slots_src_ins[ss][i].bank_midi_msb * 256) +
+                            (slots_src_ins[ss][i].bank_midi_lsb) +
+                            (ss ? size_t(OPL3::PercussionTag) : 0);
             OPL3::Bank &bank = m_synth.m_insBanks[bankno];
             for(int j = 0; j < 128; j++)
             {
@@ -249,7 +247,7 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
         }
     }
 
-    m_synth.m_embeddedBank = ~0u; // Use dynamic banks!
+    m_synth.m_embeddedBank = OPL3::CustomBankTag; // Use dynamic banks!
     //Percussion offset is count of instruments multipled to count of melodic banks
     applySetup();
 
@@ -263,18 +261,15 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
 bool MIDIplay::LoadMIDI_pre()
 {
 #ifdef DISABLE_EMBEDDED_BANKS
-    if((m_synth.m_embeddedBank != ~0u) || m_synth.m_insBanks.empty())
+    if((m_synth.m_embeddedBank != CustomBankTag) || m_synth.m_insBanks.empty())
     {
         errorStringOut = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
         return false;
     }
 #endif
     /**** Set all properties BEFORE starting of actial file reading! ****/
+    resetMIDI();
     applySetup();
-
-    caugh_missing_instruments.clear();
-    caugh_missing_banks_melodic.clear();
-    caugh_missing_banks_percussion.clear();
 
     return true;
 }
@@ -291,11 +286,11 @@ bool MIDIplay::LoadMIDI_post()
         for(uint16_t i = 0; i < ins_count; ++i)
         {
             const uint8_t *InsData = instruments[i].data;
-            uint16_t bank = i / 256;
-            bank = uint16_t((bank & 127) + ((bank >> 7) << 8));
+            size_t bank = i / 256;
+            bank = ((bank & 127) + ((bank >> 7) << 8));
             if(bank > 127 + (127 << 8))
                 break;
-            bank += (i % 256 < 128) ? 0 : OPL3::PercussionTag;
+            bank += (i % 256 < 128) ? 0 : size_t(OPL3::PercussionTag);
 
             /*std::printf("Ins %3u: %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X\n",
                         i, InsData[0],InsData[1],InsData[2],InsData[3], InsData[4],InsData[5],InsData[6],InsData[7],
@@ -325,7 +320,7 @@ bool MIDIplay::LoadMIDI_post()
             adlins.voice2_fine_tune = 0.0;
         }
 
-        m_synth.m_embeddedBank    = ~0u; // Ignore AdlBank number, use dynamic banks instead
+        m_synth.m_embeddedBank = OPL3::CustomBankTag; // Ignore AdlBank number, use dynamic banks instead
         //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
         m_synth.m_rhythmMode = true;
         m_synth.m_musicMode = OPL3::MODE_CMF;

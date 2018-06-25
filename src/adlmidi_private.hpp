@@ -169,7 +169,7 @@ extern std::string ADLMIDI_ErrorString;
 template <class Real>
 inline Real adl_cvtReal(int32_t x)
 {
-    return x * ((Real)1 / INT16_MAX);
+    return static_cast<Real>(x) * (static_cast<Real>(1) / static_cast<Real>(INT16_MAX));
 }
 
 inline int32_t adl_cvtS16(int32_t x)
@@ -220,12 +220,16 @@ class OPL3
     friend class AdlInstrumentTester;
     friend int adlRefreshNumCards(ADL_MIDIPlayer *device);
 public:
-    enum { PercussionTag = 1 << 15 };
+    enum
+    {
+        PercussionTag = 1 << 15,
+        CustomBankTag = 0xFFFFFFFF
+    };
 
     //! Total number of chip channels between all running emulators
     uint32_t m_numChannels;
     //! Just a padding. Reserved.
-    char ____padding[4];
+    char _padding[4];
 #ifndef ADLMIDI_HW_OPL
     //! Running chip emulators
     std::vector<AdlMIDI_SPtr<OPLChipBase > > m_chips;
@@ -237,9 +241,9 @@ private:
     //! Value written to B0, cached, needed by NoteOff.
     /*! Contains Key on/off state, octave block and frequency number values
      */
-    std::vector<uint8_t>    m_keyBlockFNumCache;
+    std::vector<uint32_t>   m_keyBlockFNumCache;
     //! Cached BD registry value (flags register: DeepTremolo, DeepVibrato, and RhythmMode)
-    std::vector<uint8_t>    m_regBD;
+    std::vector<uint32_t>   m_regBD;
 
 public:
     /**
@@ -261,7 +265,7 @@ public:
     static const adlinsdata2 m_emptyInstrument;
     //! Total number of running concurrent emulated chips
     uint32_t m_numChips;
-    //! Currently running embedded bank number. "~0" means usign of the custom bank.
+    //! Currently running embedded bank number. "CustomBankTag" means usign of the custom bank.
     uint32_t m_embeddedBank;
     //! Total number of needed four-operator channels in all running chips
     uint32_t m_numFourOps;
@@ -277,7 +281,7 @@ public:
     bool m_runAtPcmRate;
 
     //! Just a padding. Reserved.
-    char ___padding2[3];
+    char _padding2[3];
 
     /**
      * @brief Music playing mode
@@ -312,7 +316,7 @@ public:
     } m_volumeScale;
 
     //! Reserved
-    char ____padding3[8];
+    char _padding3[8];
 
     /**
      * @brief Channel categiry enumeration
@@ -348,7 +352,7 @@ public:
         7 = percussion Hihat
         8 = percussion slave
     */
-    std::vector<char> m_channelCategory;
+    std::vector<uint32_t> m_channelCategory;
 
 
     /**
@@ -369,6 +373,14 @@ public:
      * @param value Value to write
      */
     void writeReg(size_t chip, uint16_t address, uint8_t value);
+
+    /**
+     * @brief Write data to OPL3 chip register
+     * @param chip Index of emulated chip. In hardware OPL3 builds, this parameter is ignored
+     * @param index Register address to write
+     * @param value Value to write
+     */
+    void writeRegI(size_t chip, uint32_t address, uint32_t value);
 
     /**
      * @brief Off the note in specified chip channel
@@ -478,6 +490,8 @@ public:
 
     void applySetup();
 
+    void resetMIDI();
+
     /**********************Internal structures and classes**********************/
 
     /**
@@ -518,7 +532,7 @@ public:
         //! Is note aftertouch has any non-zero value
         bool    noteAfterTouchInUse;
         //! Reserved
-        char ____padding[6];
+        char _padding[6];
         //! Pitch bend value
         int bend;
         //! Pitch bend sensitivity
@@ -650,7 +664,7 @@ public:
         };
 
         //! Reserved
-        char ____padding2[5];
+        char _padding2[5];
         //! Count of gliding notes in this channel
         unsigned gliding_note_count;
 
@@ -832,8 +846,8 @@ public:
                 Sustain_Sostenuto   = 0x02,
                 Sustain_ANY         = Sustain_Pedal | Sustain_Sostenuto,
             };
-            uint8_t sustained;
-            char ____padding[6];
+            uint32_t sustained;
+            char _padding[6];
             MIDIchannel::NoteInfo::Phys ins;  // a copy of that in phys[]
             //! Has fixed sustain, don't iterate "on" timeout
             bool    fixed_sustain;
@@ -986,7 +1000,7 @@ private:
     std::map<uint64_t /*track*/, uint64_t /*channel begin index*/> m_currentMidiDevice;
 
     //! Padding to fix CLanc code model's warning
-    char ____padding[7];
+    char _padding[7];
 
     //! Chip channels map
     std::vector<AdlChannel> m_chipChannels;
@@ -1002,11 +1016,11 @@ private:
     std::string errorStringOut;
 
     //! Missing instruments catches
-    std::set<uint8_t> caugh_missing_instruments;
+    std::set<size_t> caugh_missing_instruments;
     //! Missing melodic banks catches
-    std::set<uint16_t> caugh_missing_banks_melodic;
+    std::set<size_t> caugh_missing_banks_melodic;
     //! Missing percussion banks catches
-    std::set<uint16_t> caugh_missing_banks_percussion;
+    std::set<size_t> caugh_missing_banks_percussion;
 
 public:
 
@@ -1357,7 +1371,7 @@ private:
      */
     void killSustainingNotes(int32_t midCh = -1,
                              int32_t this_adlchn = -1,
-                             uint8_t sustain_type = AdlChannel::LocationData::Sustain_ANY);
+                             uint32_t sustain_type = AdlChannel::LocationData::Sustain_ANY);
     /**
      * @brief Find active notes and mark them as sostenuto-sustained
      * @param MidCh MIDI channel, -1 - all MIDI channels

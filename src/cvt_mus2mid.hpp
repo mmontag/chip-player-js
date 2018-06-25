@@ -167,10 +167,10 @@ static void mus2mid_write4(struct mus_ctx *ctx, uint32_t val)
 {
     if (ctx->dstrem < 4)
         mus2mid_resize_dst(ctx);
-    *ctx->dst_ptr++ = (val>>24)&0xff;
-    *ctx->dst_ptr++ = (val>>16)&0xff;
-    *ctx->dst_ptr++ = (val>>8) & 0xff;
-    *ctx->dst_ptr++ = val & 0xff;
+    *ctx->dst_ptr++ = (uint8_t)((val>>24)&0xff);
+    *ctx->dst_ptr++ = (uint8_t)((val>>16)&0xff);
+    *ctx->dst_ptr++ = (uint8_t)((val>>8) & 0xff);
+    *ctx->dst_ptr++ = (uint8_t)((val & 0xff));
     ctx->dstrem -= 4;
 }
 

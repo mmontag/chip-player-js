@@ -687,7 +687,7 @@ bool BW_MidiSequencer::buildTrackData(const std::vector<std::vector<uint8_t> > &
             bool         isOn;
             char         ___pad[7];
         } drNotes[255];
-        uint16_t banks[16];
+        size_t banks[16];
 
         for(size_t tk = 0; tk < trackCount; ++tk)
         {
@@ -713,10 +713,10 @@ bool BW_MidiSequencer::buildTrackData(const std::vector<std::vector<uint8_t> > &
                         switch(ctrlno)
                         {
                         case 0: // Set bank msb (GM bank)
-                            banks[et->channel] = uint16_t(uint16_t(value) << 8) | uint16_t(banks[et->channel] & 0x00FF);
+                            banks[et->channel] = (value << 8) | (banks[et->channel] & 0x00FF);
                             break;
                         case 32: // Set bank lsb (XG bank)
-                            banks[et->channel] = (banks[et->channel] & 0xFF00) | (uint16_t(value) & 0x00FF);
+                            banks[et->channel] = (banks[et->channel] & 0xFF00) | (value & 0x00FF);
                             break;
                         }
                         continue;
@@ -1007,7 +1007,7 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
             for(size_t i = 0; i < data.size(); i++)
             {
                 if(data[i] <= 'Z' && data[i] >= 'A')
-                    data[i] = data[i] - ('Z' - 'z');
+                    data[i] = static_cast<char>(data[i] - ('Z' - 'z'));
             }
 
             if(data == "loopstart")
@@ -1219,9 +1219,9 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
     /*UI.PrintLn("@%X Track %u: %02X %02X",
                 CurrentPosition.track[track].ptr-1, (unsigned)track, byte,
                 TrackData[track][CurrentPosition.track[track].ptr]);*/
-    uint8_t  midCh = evt.channel;//byte & 0x0F, EvType = byte >> 4;
+    size_t midCh = evt.channel;//byte & 0x0F, EvType = byte >> 4;
     if(m_interface->rt_currentDevice)
-        midCh += (uint8_t)m_interface->rt_currentDevice(m_interface->rtUserData, track);
+        midCh += m_interface->rt_currentDevice(m_interface->rtUserData, track);
     status = evt.type;
 
     switch(evt.type)
@@ -1229,7 +1229,7 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
     case MidiEvent::T_NOTEOFF: // Note off
     {
         uint8_t note = evt.data[0];
-        m_interface->rt_noteOff(m_interface->rtUserData, midCh, note);
+        m_interface->rt_noteOff(m_interface->rtUserData, static_cast<uint8_t>(midCh), note);
         break;
     }
 
@@ -1237,7 +1237,7 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
     {
         uint8_t note = evt.data[0];
         uint8_t vol  = evt.data[1];
-        m_interface->rt_noteOn(m_interface->rtUserData, midCh, note, vol);
+        m_interface->rt_noteOn(m_interface->rtUserData, static_cast<uint8_t>(midCh), note, vol);
         break;
     }
 
@@ -1245,7 +1245,7 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
     {
         uint8_t note = evt.data[0];
         uint8_t vol =  evt.data[1];
-        m_interface->rt_noteAfterTouch(m_interface->rtUserData, midCh, note, vol);
+        m_interface->rt_noteAfterTouch(m_interface->rtUserData, static_cast<uint8_t>(midCh), note, vol);
         break;
     }
 
@@ -1253,20 +1253,20 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
     {
         uint8_t ctrlno = evt.data[0];
         uint8_t value =  evt.data[1];
-        m_interface->rt_controllerChange(m_interface->rtUserData, midCh, ctrlno, value);
+        m_interface->rt_controllerChange(m_interface->rtUserData, static_cast<uint8_t>(midCh), ctrlno, value);
         break;
     }
 
     case MidiEvent::T_PATCHCHANGE: // Patch change
     {
-        m_interface->rt_patchChange(m_interface->rtUserData, midCh, evt.data[0]);
+        m_interface->rt_patchChange(m_interface->rtUserData, static_cast<uint8_t>(midCh), evt.data[0]);
         break;
     }
 
     case MidiEvent::T_CHANAFTTOUCH: // Channel after-touch
     {
         uint8_t chanat = evt.data[0];
-        m_interface->rt_channelAfterTouch(m_interface->rtUserData, midCh, chanat);
+        m_interface->rt_channelAfterTouch(m_interface->rtUserData, static_cast<uint8_t>(midCh), chanat);
         break;
     }
 
@@ -1274,7 +1274,7 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
     {
         uint8_t a = evt.data[0];
         uint8_t b = evt.data[1];
-        m_interface->rt_pitchBend(m_interface->rtUserData, midCh, b, a);
+        m_interface->rt_pitchBend(m_interface->rtUserData, static_cast<uint8_t>(midCh), b, a);
         break;
     }
     }//switch
@@ -1768,10 +1768,10 @@ riffskip:
                 rawTrackData[tk].insert(rawTrackData[tk].end(), special_event_buf, special_event_buf + 5);
                 //if(delay>>21) TrackData[tk].push_back( 0x80 | ((delay>>21) & 0x7F ) );
                 if(delay >> 14)
-                    rawTrackData[tk].push_back(0x80 | ((delay >> 14) & 0x7F));
+                    rawTrackData[tk].push_back(static_cast<uint8_t>(0x80 | ((delay >> 14) & 0x7F)));
                 if(delay >> 7)
-                    rawTrackData[tk].push_back(0x80 | ((delay >> 7) & 0x7F));
-                rawTrackData[tk].push_back(((delay >> 0) & 0x7F));
+                    rawTrackData[tk].push_back(static_cast<uint8_t>(0x80 | ((delay >> 7) & 0x7F)));
+                rawTrackData[tk].push_back(static_cast<uint8_t>(((delay >> 0) & 0x7F)));
             }
 
             rawTrackData[tk].insert(rawTrackData[tk].end(), EndTag + 0, EndTag + 4);
