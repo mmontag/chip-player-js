@@ -994,7 +994,7 @@ void MIDIplay::realTime_deviceSwitch(size_t track, const char *data, size_t leng
     m_currentMidiDevice[track] = chooseDevice(indata);
 }
 
-uint64_t MIDIplay::realTime_currentDevice(size_t track)
+size_t MIDIplay::realTime_currentDevice(size_t track)
 {
     if(m_currentMidiDevice.empty())
         return 0;
@@ -1583,9 +1583,9 @@ void MIDIplay::updateVibrato(double amount)
     }
 }
 
-uint64_t MIDIplay::chooseDevice(const std::string &name)
+size_t MIDIplay::chooseDevice(const std::string &name)
 {
-    std::map<std::string, uint64_t>::iterator i = m_midiDevices.find(name);
+    std::map<std::string, size_t>::iterator i = m_midiDevices.find(name);
 
     if(i != m_midiDevices.end())
         return i->second;

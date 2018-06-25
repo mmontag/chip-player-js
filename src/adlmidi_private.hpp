@@ -995,9 +995,9 @@ public:
 
 private:
     //! Per-track MIDI devices map
-    std::map<std::string, uint64_t> m_midiDevices;
+    std::map<std::string, size_t> m_midiDevices;
     //! Current MIDI device per track
-    std::map<uint64_t /*track*/, uint64_t /*channel begin index*/> m_currentMidiDevice;
+    std::map<size_t /*track*/, size_t /*channel begin index*/> m_currentMidiDevice;
 
     //! Padding to fix CLanc code model's warning
     char _padding[7];
@@ -1223,7 +1223,7 @@ public:
      * @param track MIDI track index
      * @return Multiple 16 value
      */
-    uint64_t realTime_currentDevice(size_t track);
+    size_t realTime_currentDevice(size_t track);
 
     /**
      * @brief Send raw OPL chip command
@@ -1423,7 +1423,7 @@ public:
      * @param name Name of MIDI device
      * @return Offset of the MIDI Channels, multiple to 16
      */
-    uint64_t chooseDevice(const std::string &name);
+    size_t chooseDevice(const std::string &name);
 };
 
 // I think, this is useless inside of Library
