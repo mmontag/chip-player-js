@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <memory>
 #include <cstring>
+#include <cerrno>
 #include <iterator>  // std::back_inserter
 #include <algorithm> // std::copy
 #include <set>

@@ -1479,7 +1479,7 @@ void MIDIplay::killSustainingNotes(int32_t midCh, int32_t this_adlchn, uint32_t 
                 if(hooks.onNote)
                     hooks.onNote(hooks.onNote_userData, (int)c, j->loc.note, midiins, 0, 0.0);
                 j->sustained &= ~sustain_type;
-                if((j->sustained == AdlChannel::LocationData::Sustain_None))
+                if(j->sustained == AdlChannel::LocationData::Sustain_None)
                     m_chipChannels[c].users_erase(j);//Remove only when note is clean from any holders
             }
         }
