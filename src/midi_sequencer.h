@@ -111,7 +111,7 @@ typedef struct
     RtDeviceSwitch      rt_deviceSwitch;
 
     /*! Get the channels offset for current MIDI device */
-    typedef uint64_t (*RtCurrentDevice)(void *userdata, size_t track);
+    typedef size_t (*RtCurrentDevice)(void *userdata, size_t track);
     /*! Get the channels offset for current MIDI device hook. Returms multiple to 16 value. */
     RtCurrentDevice     rt_currentDevice;
 

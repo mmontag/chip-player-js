@@ -215,29 +215,28 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
         }
     }
 
-    opl.dynamic_bank_setup.adLibPercussions = false;
-    opl.dynamic_bank_setup.scaleModulators = false;
-    opl.dynamic_bank_setup.deepTremolo = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
-    opl.dynamic_bank_setup.deepVibrato = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;
-    opl.dynamic_bank_setup.volumeModel = wopl->volume_model;
-    m_setup.HighTremoloMode = -1;
-    m_setup.HighVibratoMode = -1;
-    m_setup.VolumeModel = ADLMIDI_VolumeModel_AUTO;
+    m_synth.m_insBankSetup.adLibPercussions = false;
+    m_synth.m_insBankSetup.scaleModulators = false;
+    m_synth.m_insBankSetup.deepTremolo = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
+    m_synth.m_insBankSetup.deepVibrato = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;
+    m_synth.m_insBankSetup.volumeModel = wopl->volume_model;
+    m_setup.deepTremoloMode = -1;
+    m_setup.deepVibratoMode = -1;
+    m_setup.volumeScaleModel = ADLMIDI_VolumeModel_AUTO;
 
-    opl.setEmbeddedBank(m_setup.AdlBank);
+    m_synth.setEmbeddedBank(m_setup.bankId);
 
     uint16_t slots_counts[2] = {wopl->banks_count_melodic, wopl->banks_count_percussion};
     WOPLBank *slots_src_ins[2] = { wopl->banks_melodic, wopl->banks_percussive };
 
-    for(unsigned ss = 0; ss < 2; ss++)
+    for(size_t ss = 0; ss < 2; ss++)
     {
-        for(unsigned i = 0; i < slots_counts[ss]; i++)
+        for(size_t i = 0; i < slots_counts[ss]; i++)
         {
-            unsigned bankno =
-                (slots_src_ins[ss][i].bank_midi_msb * 256) +
-                slots_src_ins[ss][i].bank_midi_lsb +
-                (ss ? OPL3::PercussionTag : 0);
-            OPL3::Bank &bank = opl.dynamic_banks[bankno];
+            size_t bankno = (slots_src_ins[ss][i].bank_midi_msb * 256) +
+                            (slots_src_ins[ss][i].bank_midi_lsb) +
+                            (ss ? size_t(OPL3::PercussionTag) : 0);
+            OPL3::Bank &bank = m_synth.m_insBanks[bankno];
             for(int j = 0; j < 128; j++)
             {
                 adlinsdata2 &ins = bank.ins[j];
@@ -248,7 +247,7 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
         }
     }
 
-    opl.AdlBank = ~0u; // Use dynamic banks!
+    m_synth.m_embeddedBank = OPL3::CustomBankTag; // Use dynamic banks!
     //Percussion offset is count of instruments multipled to count of melodic banks
     applySetup();
 
@@ -262,18 +261,15 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
 bool MIDIplay::LoadMIDI_pre()
 {
 #ifdef DISABLE_EMBEDDED_BANKS
-    if((opl.AdlBank != ~0u) || opl.dynamic_banks.empty())
+    if((m_synth.m_embeddedBank != OPL3::CustomBankTag) || m_synth.m_insBanks.empty())
     {
         errorStringOut = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
         return false;
     }
 #endif
     /**** Set all properties BEFORE starting of actial file reading! ****/
+    resetMIDI();
     applySetup();
-
-    caugh_missing_instruments.clear();
-    caugh_missing_banks_melodic.clear();
-    caugh_missing_banks_percussion.clear();
 
     return true;
 }
@@ -284,22 +280,22 @@ bool MIDIplay::LoadMIDI_post()
     if(format == MidiSequencer::Format_CMF)
     {
         const std::vector<MidiSequencer::CmfInstrument> &instruments = m_sequencer.getRawCmfInstruments();
-        opl.dynamic_banks.clear();//Clean up old banks
+        m_synth.m_insBanks.clear();//Clean up old banks
 
         uint16_t ins_count = static_cast<uint16_t>(instruments.size());
         for(uint16_t i = 0; i < ins_count; ++i)
         {
             const uint8_t *InsData = instruments[i].data;
-            uint16_t bank = i / 256;
-            bank = (bank & 127) + ((bank >> 7) << 8);
+            size_t bank = i / 256;
+            bank = ((bank & 127) + ((bank >> 7) << 8));
             if(bank > 127 + (127 << 8))
                 break;
-            bank += (i % 256 < 128) ? 0 : OPL3::PercussionTag;
+            bank += (i % 256 < 128) ? 0 : size_t(OPL3::PercussionTag);
 
             /*std::printf("Ins %3u: %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X\n",
                         i, InsData[0],InsData[1],InsData[2],InsData[3], InsData[4],InsData[5],InsData[6],InsData[7],
                            InsData[8],InsData[9],InsData[10],InsData[11], InsData[12],InsData[13],InsData[14],InsData[15]);*/
-            adlinsdata2 &adlins = opl.dynamic_banks[bank].ins[i % 128];
+            adlinsdata2 &adlins = m_synth.m_insBanks[bank].ins[i % 128];
             adldata    adl;
             adl.modulator_E862 =
                 ((static_cast<uint32_t>(InsData[8] & 0x07) << 24) & 0xFF000000) //WaveForm
@@ -324,29 +320,29 @@ bool MIDIplay::LoadMIDI_post()
             adlins.voice2_fine_tune = 0.0;
         }
 
-        opl.AdlBank    = ~0u; // Ignore AdlBank number, use dynamic banks instead
+        m_synth.m_embeddedBank = OPL3::CustomBankTag; // Ignore AdlBank number, use dynamic banks instead
         //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
-        opl.AdlPercussionMode = true;
-        opl.m_musicMode = OPL3::MODE_CMF;
-        opl.m_volumeScale = OPL3::VOLUME_NATIVE;
+        m_synth.m_rhythmMode = true;
+        m_synth.m_musicMode = OPL3::MODE_CMF;
+        m_synth.m_volumeScale = OPL3::VOLUME_NATIVE;
     }
     else if(format == MidiSequencer::Format_RSXX)
     {
         //opl.CartoonersVolumes = true;
-        opl.m_musicMode     = OPL3::MODE_RSXX;
-        opl.m_volumeScale   = OPL3::VOLUME_NATIVE;
+        m_synth.m_musicMode     = OPL3::MODE_RSXX;
+        m_synth.m_volumeScale   = OPL3::VOLUME_NATIVE;
     }
     else if(format == MidiSequencer::Format_IMF)
     {
         //std::fprintf(stderr, "Done reading IMF file\n");
-        opl.NumFourOps  = 0; //Don't use 4-operator channels for IMF playing!
-        opl.m_musicMode = OPL3::MODE_IMF;
+        m_synth.m_numFourOps  = 0; //Don't use 4-operator channels for IMF playing!
+        m_synth.m_musicMode = OPL3::MODE_IMF;
     }
 
-    opl.Reset(m_setup.emulator, m_setup.PCM_RATE, this); // Reset OPL3 chip
+    m_synth.reset(m_setup.emulator, m_setup.PCM_RATE, this); // Reset OPL3 chip
     //opl.Reset(); // ...twice (just in case someone misprogrammed OPL3 previously)
-    ch.clear();
-    ch.resize(opl.NumChannels);
+    m_chipChannels.clear();
+    m_chipChannels.resize(m_synth.m_numChannels);
 
     return true;
 }

@@ -145,10 +145,13 @@ typedef BW_MidiSequencer MidiSequencer;
 #endif
 
 #include "adldata.hh"
+
 #include "adlmidi.h"    //Main API
+
 #ifndef ADLMIDI_DISABLE_CPP_EXTRAS
 #include "adlmidi.hpp"  //Extra C++ API
 #endif
+
 #include "adlmidi_ptr.hpp"
 #include "adlmidi_bankmap.h"
 
@@ -166,7 +169,7 @@ extern std::string ADLMIDI_ErrorString;
 template <class Real>
 inline Real adl_cvtReal(int32_t x)
 {
-    return x * ((Real)1 / INT16_MAX);
+    return static_cast<Real>(x) * (static_cast<Real>(1) / static_cast<Real>(INT16_MAX));
 }
 
 inline int32_t adl_cvtS16(int32_t x)
@@ -208,101 +211,247 @@ inline int32_t adl_cvtU32(int32_t x)
 }
 
 struct ADL_MIDIPlayer;
+/**
+ * @brief OPL3 Chip management class
+ */
 class OPL3
 {
-public:
     friend class MIDIplay;
     friend class AdlInstrumentTester;
-    uint32_t NumChannels;
-    char ____padding[4];
-#ifndef ADLMIDI_HW_OPL
-    std::vector<AdlMIDI_SPtr<OPLChipBase > > cardsOP2;
-#endif
-private:
-    std::vector<adldata>    ins;  // patch data, cached, needed by Touch()
-    std::vector<uint8_t>    pit;  // value poked to B0, cached, needed by NoteOff)(
-    std::vector<uint8_t>    regBD;
-
     friend int adlRefreshNumCards(ADL_MIDIPlayer *device);
 public:
+    enum
+    {
+        PercussionTag = 1 << 15,
+        CustomBankTag = 0xFFFFFFFF
+    };
+
+    //! Total number of chip channels between all running emulators
+    uint32_t m_numChannels;
+    //! Just a padding. Reserved.
+    char _padding[4];
+#ifndef ADLMIDI_HW_OPL
+    //! Running chip emulators
+    std::vector<AdlMIDI_SPtr<OPLChipBase > > m_chips;
+#endif
+
+private:
+    //! Cached patch data, needed by Touch()
+    std::vector<adldata>    m_insCache;
+    //! Value written to B0, cached, needed by NoteOff.
+    /*! Contains Key on/off state, octave block and frequency number values
+     */
+    std::vector<uint32_t>   m_keyBlockFNumCache;
+    //! Cached BD registry value (flags register: DeepTremolo, DeepVibrato, and RhythmMode)
+    std::vector<uint32_t>   m_regBD;
+
+public:
+    /**
+     * @brief MIDI bank entry
+     */
     struct Bank
     {
+        //! MIDI Bank instruments
         adlinsdata2 ins[128];
     };
     typedef BasicBankMap<Bank> BankMap;
-    BankMap dynamic_banks;
-    AdlBankSetup dynamic_bank_setup;
-public:
-    void    setEmbeddedBank(unsigned int bank);
-    static const adlinsdata2 emptyInstrument;
-    enum { PercussionTag = 1 << 15 };
+    //! MIDI bank instruments data
+    BankMap         m_insBanks;
+    //! MIDI bank-wide setup
+    AdlBankSetup    m_insBankSetup;
 
+public:
+    //! Blank instrument template
+    static const adlinsdata2 m_emptyInstrument;
     //! Total number of running concurrent emulated chips
-    unsigned int NumCards;
-    //! Currently running embedded bank number. "~0" means usign of the custom bank.
-    unsigned int AdlBank;
+    uint32_t m_numChips;
+    //! Currently running embedded bank number. "CustomBankTag" means usign of the custom bank.
+    uint32_t m_embeddedBank;
     //! Total number of needed four-operator channels in all running chips
-    unsigned int NumFourOps;
+    uint32_t m_numFourOps;
     //! Turn global Deep Tremolo mode on
-    bool HighTremoloMode;
+    bool m_deepTremoloMode;
     //! Turn global Deep Vibrato mode on
-    bool HighVibratoMode;
-    //! Use AdLib percussion mode
-    bool AdlPercussionMode;
+    bool m_deepVibratoMode;
+    //! Use Rhythm Mode percussions
+    bool m_rhythmMode;
     //! Carriers-only are scaled by default by volume level. This flag will tell to scale modulators too.
-    bool ScaleModulators;
+    bool m_scaleModulators;
     //! Run emulator at PCM rate if that possible. Reduces sounding accuracy, but decreases CPU usage on lower rates.
-    bool runAtPcmRate;
-    // ! Required to play CMF files. Can be turned on by using of "CMF" volume model
-    //bool LogarithmicVolumes; //[REPLACED WITH "m_volumeScale == VOLUME_NATIVE", DEPRECATED!!!]
-    // ! Required to play EA-MUS files [REPLACED WITH "m_musicMode", DEPRECATED!!!]
-    //bool CartoonersVolumes;
+    bool m_runAtPcmRate;
+
+    //! Just a padding. Reserved.
+    char _padding2[3];
+
+    /**
+     * @brief Music playing mode
+     */
     enum MusicMode
     {
+        //! MIDI mode
         MODE_MIDI,
+        //! Id-Software Music mode
         MODE_IMF,
+        //! Creative Music Files mode
         MODE_CMF,
+        //! EA-MUS (a.k.a. RSXX) mode
         MODE_RSXX
     } m_musicMode;
-    //! Just a padding. Reserved.
-    char ___padding2[3];
-    //! Volume models enum
+
+    /**
+     * @brief Volume models enum
+     */
     enum VolumesScale
     {
+        //! Generic volume model (linearization of logarithmic scale)
         VOLUME_Generic,
+        //! OPL3 native logarithmic scale
         VOLUME_NATIVE,
+        //! DMX volume scale logarithmic table
         VOLUME_DMX,
+        //! Apoge Sound System volume scaling model
         VOLUME_APOGEE,
+        //! Windows 9x driver volume scale table
         VOLUME_9X
     } m_volumeScale;
 
+    //! Reserved
+    char _padding3[8];
+
+    /**
+     * @brief Channel categiry enumeration
+     */
+    enum ChanCat
+    {
+        //! Regular melodic/percussion channel
+        ChanCat_Regular     = 0,
+        //! Four-op master
+        ChanCat_4op_Master  = 1,
+        //! Four-op slave
+        ChanCat_4op_Slave   = 2,
+        //! Rhythm-mode Bass drum
+        ChanCat_Rhythm_Bass     = 3,
+        //! Rhythm-mode Snare drum
+        ChanCat_Rhythm_Snare    = 4,
+        //! Rhythm-mode Tom-Tom
+        ChanCat_Rhythm_Tom      = 5,
+        //! Rhythm-mode Cymbal
+        ChanCat_Rhythm_Cymbal   = 6,
+        //! Rhythm-mode Hi-Hat
+        ChanCat_Rhythm_HiHat    = 7,
+        //! Rhythm-mode Slave channel
+        ChanCat_Rhythm_Slave    = 8
+    };
+
+    //! Category of the channel
+    /*! 1 = quad-master, 2 = quad-slave, 0 = regular
+        3 = percussion BassDrum
+        4 = percussion Snare
+        5 = percussion Tom
+        6 = percussion Crash cymbal
+        7 = percussion Hihat
+        8 = percussion slave
+    */
+    std::vector<uint32_t> m_channelCategory;
+
+
+    /**
+     * @brief C.O. Constructor
+     */
     OPL3();
-    char ____padding3[8];
-    std::vector<char> four_op_category; // 1 = quad-master, 2 = quad-slave, 0 = regular
-    // 3 = percussion BassDrum
-    // 4 = percussion Snare
-    // 5 = percussion Tom
-    // 6 = percussion Crash cymbal
-    // 7 = percussion Hihat
-    // 8 = percussion slave
 
-    void Poke(size_t card, uint16_t index, uint8_t value);
+    /**
+     * @brief Choose one of embedded banks
+     * @param bank ID of the bank
+     */
+    void setEmbeddedBank(uint32_t bank);
 
-    void NoteOff(size_t c);
-    void NoteOn(unsigned c, double hertz);
-    void Touch_Real(unsigned c, unsigned volume, uint8_t brightness = 127);
-    //void Touch(unsigned c, unsigned volume)
+    /**
+     * @brief Write data to OPL3 chip register
+     * @param chip Index of emulated chip. In hardware OPL3 builds, this parameter is ignored
+     * @param index Register address to write
+     * @param value Value to write
+     */
+    void writeReg(size_t chip, uint16_t address, uint8_t value);
 
-    void Patch(uint16_t c, const adldata &adli);
-    void Pan(unsigned c, unsigned value);
-    void Silence();
-    void updateFlags();
-    void updateDeepFlags();
-    void ChangeVolumeRangesModel(ADLMIDI_VolumeModels volumeModel);
+    /**
+     * @brief Write data to OPL3 chip register
+     * @param chip Index of emulated chip. In hardware OPL3 builds, this parameter is ignored
+     * @param index Register address to write
+     * @param value Value to write
+     */
+    void writeRegI(size_t chip, uint32_t address, uint32_t value);
+
+    /**
+     * @brief Off the note in specified chip channel
+     * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
+     */
+    void noteOff(size_t c);
+
+    /**
+     * @brief On the note in specified chip channel with specified frequency of the tone
+     * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
+     * @param hertz Frequency of the tone in hertzes
+     */
+    void noteOn(size_t c, double hertz);
+
+    /**
+     * @brief Change setup of instrument in specified chip channel
+     * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
+     * @param volume Volume level (from 0 to 63)
+     * @param brightness CC74 Brightness level (from 0 to 127)
+     */
+    void touchNote(size_t c, uint8_t volume, uint8_t brightness = 127);
+
+    /**
+     * @brief Set the instrument into specified chip channel
+     * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
+     * @param instrument Instrument data to set into the chip channel
+     */
+    void setPatch(size_t c, const adldata &instrument);
+
+    /**
+     * @brief Set panpot position
+     * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
+     * @param value 3-bit panpot value
+     */
+    void setPan(size_t c, uint8_t value);
+
+    /**
+     * @brief Shut up all chip channels
+     */
+    void silenceAll();
+
+    /**
+     * @brief Commit updated flag states to chip registers
+     */
+    void updateChannelCategories();
+
+    /**
+     * @brief commit deepTremolo and deepVibrato flags
+     */
+    void commitDeepFlags();
+
+    /**
+     * @brief Set the volume scaling model
+     * @param volumeModel Type of volume scale model scale
+     */
+    void setVolumeScaleModel(ADLMIDI_VolumeModels volumeModel);
+
     #ifndef ADLMIDI_HW_OPL
-    void ClearChips();
+    /**
+     * @brief Clean up all running emulated chip instances
+     */
+    void clearChips();
     #endif
-    void Reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler);
+
+    /**
+     * @brief Reset chip properties and initialize them
+     * @param emulator Type of chip emulator
+     * @param PCM_RATE Output sample rate to generate on output
+     * @param audioTickHandler PCM-accurate clock hook
+     */
+    void reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler);
 };
 
 
@@ -341,58 +490,109 @@ public:
 
     void applySetup();
 
+    void resetMIDI();
+
     /**********************Internal structures and classes**********************/
 
-    // Persistent settings for each MIDI channel
+    /**
+     * @brief Persistent settings for each MIDI channel
+     */
     struct MIDIchannel
     {
-        uint8_t bank_lsb, bank_msb;
+        //! LSB Bank number
+        uint8_t bank_lsb,
+        //! MSB Bank number
+                bank_msb;
+        //! Current patch number
         uint8_t patch;
-        uint8_t volume, expression;
-        uint8_t panning, vibrato, aftertouch;
+        //! Volume level
+        uint8_t volume,
+        //! Expression level
+                expression;
+        //! Panning level
+        uint8_t panning,
+        //! Vibrato level
+                vibrato,
+        //! Channel aftertouch level
+                aftertouch;
+        //! Portamento time
         uint16_t portamento;
+        //! Is Pedal sustain active
         bool sustain;
+        //! Is Soft pedal active
         bool softPedal;
+        //! Is portamento enabled
         bool portamentoEnable;
+        //! Source note number used by portamento
         int8_t portamentoSource;  // note number or -1
+        //! Portamento rate
         double portamentoRate;
         //! Per note Aftertouch values
         uint8_t noteAftertouch[128];
         //! Is note aftertouch has any non-zero value
         bool    noteAfterTouchInUse;
-        char ____padding[6];
+        //! Reserved
+        char _padding[6];
+        //! Pitch bend value
         int bend;
+        //! Pitch bend sensitivity
         double bendsense;
-        int bendsense_lsb, bendsense_msb;
-        double  vibpos, vibspeed, vibdepth;
+        //! Pitch bend sensitivity LSB value
+        int bendsense_lsb,
+        //! Pitch bend sensitivity MSB value
+            bendsense_msb;
+        //! Vibrato position value
+        double  vibpos,
+        //! Vibrato speed value
+                vibspeed,
+        //! Vibrato depth value
+                vibdepth;
+        //! Vibrato delay time
         int64_t vibdelay;
-        uint8_t lastlrpn, lastmrpn;
+        //! Last LSB part of RPN value received
+        uint8_t lastlrpn,
+        //! Last MSB poart of RPN value received
+                lastmrpn;
+        //! Interpret RPN value as NRPN
         bool nrpn;
+        //! Brightness level
         uint8_t brightness;
+
+        //! Is melodic channel turned into percussion
         bool is_xg_percussion;
+
+        /**
+         * @brief Per-Note information
+         */
         struct NoteInfo
         {
+            //! Note number
             uint8_t note;
+            //! Is note active
             bool active;
-            // Current pressure
+            //! Current pressure
             uint8_t vol;
-            // Note vibrato (a part of Note Aftertouch feature)
+            //! Note vibrato (a part of Note Aftertouch feature)
             uint8_t vibrato;
-            // Tone selected on noteon:
+            //! Tone selected on noteon:
             int16_t noteTone;
-            // Current tone (!= noteTone if gliding note)
+            //! Current tone (!= noteTone if gliding note)
             double currentTone;
-            // Gliding rate
+            //! Gliding rate
             double glideRate;
-            // Patch selected on noteon; index to bank.ins[]
+            //! Patch selected on noteon; index to bank.ins[]
             size_t  midiins;
-            // Patch selected
+            //! Patch selected
             const adlinsdata2 *ains;
             enum
             {
                 MaxNumPhysChans = 2,
                 MaxNumPhysItemCount = MaxNumPhysChans,
             };
+
+            /**
+             * @brief Reference to currently using chip channel
+             */
             struct Phys
             {
                 //! Destination chip channel
@@ -416,11 +616,12 @@ public:
                     return !operator==(oth);
                 }
             };
+
             //! List of OPL3 channels it is currently occupying.
             Phys chip_channels[MaxNumPhysItemCount];
             //! Count of used channels.
             unsigned chip_channels_count;
-            //
+
             Phys *phys_find(unsigned chip_chan)
             {
                 Phys *ph = NULL;
@@ -461,21 +662,26 @@ public:
                     phys_erase_at(ph);
             }
         };
-        char ____padding2[5];
+
+        //! Reserved
+        char _padding2[5];
+        //! Count of gliding notes in this channel
         unsigned gliding_note_count;
+
+        //! Active notes in the channel
         NoteInfo activenotes[128];
 
         struct activenoteiterator
         {
-            explicit activenoteiterator(NoteInfo *info = 0)
+            explicit activenoteiterator(NoteInfo *info = NULL)
                 : ptr(info) {}
             activenoteiterator &operator++()
             {
                 if(ptr->note == 127)
-                    ptr = 0;
+                    ptr = NULL;
                 else
                     for(++ptr; ptr && !ptr->active;)
-                        ptr = (ptr->note == 127) ? 0 : (ptr + 1);
+                        ptr = (ptr->note == 127) ? NULL : (ptr + 1);
                 return *this;
             }
             activenoteiterator operator++(int)
@@ -508,7 +714,7 @@ public:
         {
             assert(note < 128);
             return activenoteiterator(
-                activenotes[note].active ? &activenotes[note] : 0);
+                activenotes[note].active ? &activenotes[note] : NULL);
         }
 
         activenoteiterator activenotes_ensure_find(uint8_t note)
@@ -546,6 +752,9 @@ public:
             }
         }
 
+        /**
+         * @brief Reset channel into initial state
+         */
         void reset()
         {
             resetAllControllers();
@@ -558,6 +767,10 @@ public:
             nrpn = false;
             is_xg_percussion = false;
         }
+
+        /**
+         * @brief Reset all MIDI controllers into initial state
+         */
         void resetAllControllers()
         {
             bend = 0;
@@ -582,15 +795,25 @@ public:
             portamentoRate = HUGE_VAL;
             brightness = 127;
         }
+
+        /**
+         * @brief Has channel vibrato to process
+         * @return
+         */
         bool hasVibrato()
         {
             return (vibrato > 0) || (aftertouch > 0) || noteAfterTouchInUse;
         }
+
+        /**
+         * @brief Commit pitch bend sensitivity value from MSB and LSB
+         */
         void updateBendSensitivity()
         {
             int cent = bendsense_msb * 128 + bendsense_lsb;
             bendsense = cent * (1.0 / (128 * 8192));
         }
+
         MIDIchannel()
         {
             activenotes_clear();
@@ -599,7 +822,9 @@ public:
         }
     };
 
-    // Additional information about OPL3 channels
+    /**
+     * @brief Additional information about OPL3 channels
+     */
     struct AdlChannel
     {
         struct Location
@@ -621,8 +846,8 @@ public:
                 Sustain_Sostenuto   = 0x02,
                 Sustain_ANY         = Sustain_Pedal | Sustain_Sostenuto,
             };
-            uint8_t sustained;
-            char ____padding[6];
+            uint32_t sustained;
+            char _padding[6];
             MIDIchannel::NoteInfo::Phys ins;  // a copy of that in phys[]
             //! Has fixed sustain, don't iterate "on" timeout
             bool    fixed_sustain;
@@ -631,7 +856,7 @@ public:
             int64_t vibdelay;
         };
 
-        // If the channel is keyoff'd
+        //! Time left until sounding will be muted after key off
         int64_t koff_time_until_neglible;
 
         enum { users_max = 128 };
@@ -672,7 +897,11 @@ public:
             return *this;
         }
 
-        void AddAge(int64_t ms);
+        /**
+         * @brief Increases age of active note in milliseconds time
+         * @param ms Amount time in milliseconds
+         */
+        void addAge(int64_t ms);
     };
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
@@ -696,16 +925,16 @@ public:
     {
         int          emulator;
         bool         runAtPcmRate;
-        unsigned int AdlBank;
-        unsigned int NumFourOps;
-        unsigned int NumCards;
-        int     HighTremoloMode;
-        int     HighVibratoMode;
-        int     AdlPercussionMode;
-        bool    LogarithmicVolumes;
-        int     VolumeModel;
+        unsigned int bankId;
+        unsigned int numFourOps;
+        unsigned int numChips;
+        int     deepTremoloMode;
+        int     deepVibratoMode;
+        int     rhythmMode;
+        bool    logarithmicVolumes;
+        int     volumeScaleModel;
         //unsigned int SkipForward;
-        int     ScaleModulators;
+        int     scaleModulators;
         bool    fullRangeBrightnessCC74;
 
         double delay;
@@ -723,18 +952,34 @@ public:
         unsigned long PCM_RATE;
     };
 
+    /**
+     * @brief MIDI Marker entry
+     */
     struct MIDI_MarkerEntry
     {
+        //! Label of marker
         std::string     label;
+        //! Absolute position in seconds
         double          pos_time;
+        //! Absolute position in ticks in the track
         uint64_t        pos_ticks;
     };
 
-    std::vector<MIDIchannel> Ch;
-    bool cmf_percussion_mode;
+    //! Available MIDI Channels
+    std::vector<MIDIchannel> m_midiChannels;
+
+    //! CMF Rhythm mode
+    bool    m_cmfPercussionMode;
+
+    //! Master volume, controlled via SysEx
     uint8_t m_masterVolume;
+
+    //! SysEx device ID
     uint8_t m_sysExDeviceId;
 
+    /**
+     * @brief MIDI Synthesizer mode
+     */
     enum SynthMode
     {
         Mode_GM  = 0x00,
@@ -742,18 +987,23 @@ public:
         Mode_XG  = 0x02,
         Mode_GM2 = 0x04,
     };
+    //! MIDI Synthesizer mode
     uint32_t m_synthMode;
 
+    //! Installed function hooks
     MIDIEventHooks hooks;
 
 private:
-    std::map<std::string, uint64_t> devices;
-    std::map<uint64_t /*track*/, uint64_t /*channel begin index*/> current_device;
+    //! Per-track MIDI devices map
+    std::map<std::string, size_t> m_midiDevices;
+    //! Current MIDI device per track
+    std::map<size_t /*track*/, size_t /*channel begin index*/> m_currentMidiDevice;
 
-    //Padding to fix CLanc code model's warning
-    char ____padding[7];
+    //! Padding to fix CLanc code model's warning
+    char _padding[7];
 
-    std::vector<AdlChannel> ch;
+    //! Chip channels map
+    std::vector<AdlChannel> m_chipChannels;
     //! Counter of arpeggio processing
     size_t m_arpeggioCounter;
 
@@ -766,25 +1016,46 @@ private:
     std::string errorStringOut;
 
     //! Missing instruments catches
-    std::set<uint8_t> caugh_missing_instruments;
+    std::set<size_t> caugh_missing_instruments;
     //! Missing melodic banks catches
-    std::set<uint16_t> caugh_missing_banks_melodic;
+    std::set<size_t> caugh_missing_banks_melodic;
     //! Missing percussion banks catches
-    std::set<uint16_t> caugh_missing_banks_percussion;
+    std::set<size_t> caugh_missing_banks_percussion;
 
 public:
 
     const std::string &getErrorString();
     void setErrorString(const std::string &err);
 
-    OPL3 opl;
+    //! OPL3 Chip manager
+    OPL3 m_synth;
 
-    int32_t outBuf[1024];
+    //! Generator output buffer
+    int32_t m_outBuf[1024];
 
+    //! Synthesizer setup
     Setup m_setup;
 
+    /**
+     * @brief Load custom bank from file
+     * @param filename Path to bank file
+     * @return true on succes
+     */
     bool LoadBank(const std::string &filename);
+
+    /**
+     * @brief Load custom bank from memory block
+     * @param data Pointer to memory block where raw bank file is stored
+     * @param size Size of given memory block
+     * @return true on succes
+     */
     bool LoadBank(const void *data, size_t size);
+
+    /**
+     * @brief Load custom bank from opened FileAndMemReader class
+     * @param fr Instance with opened file
+     * @return true on succes
+     */
     bool LoadBank(FileAndMemReader &fr);
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
@@ -952,7 +1223,7 @@ public:
      * @param track MIDI track index
      * @return Multiple 16 value
      */
-    uint64_t realTime_currentDevice(size_t track);
+    size_t realTime_currentDevice(size_t track);
 
     /**
      * @brief Send raw OPL chip command
@@ -967,6 +1238,9 @@ public:
 #endif
 
 private:
+    /**
+     * @brief Hardware manufacturer (Used for SysEx)
+     */
     enum
     {
         Manufacturer_Roland               = 0x41,
@@ -974,11 +1248,19 @@ private:
         Manufacturer_UniversalNonRealtime = 0x7E,
         Manufacturer_UniversalRealtime    = 0x7F
     };
+
+    /**
+     * @brief Roland Mode (Used for SysEx)
+     */
     enum
     {
         RolandMode_Request = 0x11,
         RolandMode_Send    = 0x12
     };
+
+    /**
+     * @brief Device model (Used for SysEx)
+     */
     enum
     {
         RolandModel_GS   = 0x42,
@@ -986,11 +1268,38 @@ private:
         YamahaModel_XG   = 0x4C
     };
 
+    /**
+     * @brief Process generic SysEx events
+     * @param dev Device ID
+     * @param realtime Is real-time event
+     * @param data Raw SysEx data
+     * @param size Size of given SysEx data
+     * @return true when event was successfully handled
+     */
     bool doUniversalSysEx(unsigned dev, bool realtime, const uint8_t *data, size_t size);
+
+    /**
+     * @brief Process events specific to Roland devices
+     * @param dev Device ID
+     * @param data Raw SysEx data
+     * @param size Size of given SysEx data
+     * @return true when event was successfully handled
+     */
     bool doRolandSysEx(unsigned dev, const uint8_t *data, size_t size);
+
+    /**
+     * @brief Process events specific to Yamaha devices
+     * @param dev Device ID
+     * @param data Raw SysEx data
+     * @param size Size of given SysEx data
+     * @return true when event was successfully handled
+     */
     bool doYamahaSysEx(unsigned dev, const uint8_t *data, size_t size);
 
 private:
+    /**
+     * @brief Note Update properties
+     */
     enum
     {
         Upd_Patch  = 0x1,
@@ -1003,39 +1312,118 @@ private:
         Upd_OffMute = Upd_Off + Upd_Mute
     };
 
-    void NoteUpdate(uint16_t MidCh,
+    /**
+     * @brief Update active note
+     * @param MidCh MIDI Channel where note is processing
+     * @param i Iterator that points to active note in the MIDI channel
+     * @param props_mask Properties to update
+     * @param select_adlchn Specify chip channel, or -1 - all chip channels used by the note
+     */
+    void noteUpdate(size_t midCh,
                     MIDIchannel::activenoteiterator i,
                     unsigned props_mask,
                     int32_t select_adlchn = -1);
 
-    // Determine how good a candidate this adlchannel
-    // would be for playing a note from this instrument.
-    int64_t CalculateAdlChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins, uint16_t /*MidCh*/) const;
+    /**
+     * @brief Update all notes in specified MIDI channel
+     * @param midCh MIDI channel to update all notes in it
+     * @param props_mask Properties to update
+     */
+    void noteUpdateAll(size_t midCh, unsigned props_mask);
 
-    // A new note will be played on this channel using this instrument.
-    // Kill existing notes on this channel (or don't, if we do arpeggio)
-    void PrepareAdlChannelForNewNote(size_t c, const MIDIchannel::NoteInfo::Phys &ins);
+    /**
+     * @brief Determine how good a candidate this adlchannel would be for playing a note from this instrument.
+     * @param c Wanted chip channel
+     * @param ins Instrument wanted to be used in this channel
+     * @return Calculated coodness points
+     */
+    int64_t calculateChipChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins) const;
 
-    void KillOrEvacuate(
+    /**
+     * @brief A new note will be played on this channel using this instrument.
+     * @param c Wanted chip channel
+     * @param ins Instrument wanted to be used in this channel
+     * Kill existing notes on this channel (or don't, if we do arpeggio)
+     */
+    void prepareChipChannelForNewNote(size_t c, const MIDIchannel::NoteInfo::Phys &ins);
+
+    /**
+     * @brief Kills note that uses wanted channel. When arpeggio is possible, note is evaluating to another channel
+     * @param from_channel Wanted chip channel
+     * @param j Chip channel instance
+     * @param i MIDI Channel active note instance
+     */
+    void killOrEvacuate(
         size_t  from_channel,
         AdlChannel::LocationData *j,
         MIDIchannel::activenoteiterator i);
-    void Panic();
-    void KillSustainingNotes(int32_t MidCh = -1,
-                             int32_t this_adlchn = -1,
-                             uint8_t sustain_type = AdlChannel::LocationData::Sustain_ANY);
-    void MarkSostenutoNotes(int32_t MidCh = -1);
-    void SetRPN(unsigned MidCh, unsigned value, bool MSB);
-    void UpdatePortamento(unsigned MidCh);
-    void NoteUpdate_All(uint16_t MidCh, unsigned props_mask);
-    void NoteOff(uint16_t MidCh, uint8_t note);
 
-    void UpdateVibrato(double amount);
-    void UpdateArpeggio(double /*amount*/);
-    void UpdateGlide(double amount);
+    /**
+     * @brief Off all notes and silence sound
+     */
+    void panic();
+
+    /**
+     * @brief Kill note, sustaining by pedal or sostenuto
+     * @param MidCh MIDI channel, -1 - all MIDI channels
+     * @param this_adlchn Chip channel, -1 - all chip channels
+     * @param sustain_type Type of systain to process
+     */
+    void killSustainingNotes(int32_t midCh = -1,
+                             int32_t this_adlchn = -1,
+                             uint32_t sustain_type = AdlChannel::LocationData::Sustain_ANY);
+    /**
+     * @brief Find active notes and mark them as sostenuto-sustained
+     * @param MidCh MIDI channel, -1 - all MIDI channels
+     */
+    void markSostenutoNotes(int32_t midCh = -1);
+
+    /**
+     * @brief Set RPN event value
+     * @param MidCh MIDI channel
+     * @param value 1 byte part of RPN value
+     * @param MSB is MSB or LSB part of value
+     */
+    void setRPN(size_t midCh, unsigned value, bool MSB);
+
+    /**
+     * @brief Update portamento setup in MIDI channel
+     * @param midCh MIDI channel where portamento needed to be updated
+     */
+    void updatePortamento(size_t midCh);
+
+    /**
+     * @brief Off the note
+     * @param midCh MIDI channel
+     * @param note Note to off
+     */
+    void noteOff(size_t midCh, uint8_t note);
+
+    /**
+     * @brief Update processing of vibrato to amount of seconds
+     * @param amount Amount value in seconds
+     */
+    void updateVibrato(double amount);
+
+    /**
+     * @brief Update auto-arpeggio
+     * @param amount Amount value in seconds [UNUSED]
+     */
+    void updateArpeggio(double /*amount*/);
+
+    /**
+     * @brief Update Portamento gliding to amount of seconds
+     * @param amount Amount value in seconds
+     */
+    void updateGlide(double amount);
 
 public:
-    uint64_t ChooseDevice(const std::string &name);
+    /**
+     * @brief Checks was device name used or not
+     * @param name Name of MIDI device
+     * @return Offset of the MIDI Channels, multiple to 16
+     */
+    size_t chooseDevice(const std::string &name);
 };
 
 // I think, this is useless inside of Library

@@ -96,7 +96,7 @@ static void rtDeviceSwitch(void *userdata, size_t track, const char *data, size_
     context->realTime_deviceSwitch(track, data, length);
 }
 
-static uint64_t rtCurrentDevice(void *userdata, size_t track)
+static size_t rtCurrentDevice(void *userdata, size_t track)
 {
     MIDIplay *context = reinterpret_cast<MIDIplay *>(userdata);
     return context->realTime_currentDevice(track);
@@ -136,13 +136,13 @@ double MIDIplay::Tick(double s, double granularity)
     double ret = m_sequencer.Tick(s, granularity);
 
     s *= m_sequencer.getTempoMultiplier();
-    for(uint16_t c = 0; c < opl.NumChannels; ++c)
-        ch[c].AddAge(static_cast<int64_t>(s * 1000.0));
+    for(uint16_t c = 0; c < m_synth.m_numChannels; ++c)
+        m_chipChannels[c].addAge(static_cast<int64_t>(s * 1000.0));
 
-    UpdateVibrato(s);
-    UpdateArpeggio(s);
+    updateVibrato(s);
+    updateArpeggio(s);
 #if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
-    UpdateGlide(s);
+    updateGlide(s);
 #endif
 
     return ret;

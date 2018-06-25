@@ -97,7 +97,7 @@ struct ADL_MIDIPlayer
 #define adl_setNumCards adl_setNumChips
 
 /* Sets number of emulated chips (from 1 to 100). Emulation of multiple chips exchanges polyphony limits*/
-extern int adl_setNumChips(struct ADL_MIDIPlayer *device, int numCards);
+extern int adl_setNumChips(struct ADL_MIDIPlayer *device, int numChips);
 
 /* Get current number of emulated chips */
 extern int adl_getNumChips(struct ADL_MIDIPlayer *device);

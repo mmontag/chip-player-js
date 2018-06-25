@@ -476,18 +476,20 @@ int main(int argc, char**argv)
     std::fprintf(outFile,
             "\n\n//Returns total number of generated banks\n"
             "int  maxAdlBanks()\n"
-            "{"
+            "{\n"
             "   return %u;\n"
             "}\n\n"
-            "const char* const banknames[%u] =\n", (unsigned int)bankcount, (unsigned int)bankcount);
+            "const char* const banknames[%u] =\n",
+                 (unsigned int)bankcount,
+                 (unsigned int)(bankcount + 1));
     std::fprintf(outFile, "{\n");
-    for(unsigned bank = 0; bank < bankcount; ++bank)
+    for(size_t bank = 0; bank < bankcount; ++bank)
         std::fprintf(outFile, "    \"%s\",\n", banknames[bank].c_str());
-    std::fprintf(outFile, "};\n");
+    std::fprintf(outFile, "    NULL\n};\n");
 
     std::fprintf(outFile, "const unsigned short banks[%u][256] =\n", (unsigned int)bankcount);
     std::fprintf(outFile, "{\n");
-    for(unsigned bank = 0; bank < bankcount; ++bank)
+    for(size_t bank = 0; bank < bankcount; ++bank)
     {
 #ifdef ADLDATA_WITH_COMMENTS
         std::fprintf(outFile, "    { // bank %u, %s\n", bank, banknames[bank].c_str());
@@ -497,7 +499,7 @@ int main(int argc, char**argv)
 #ifdef ADLDATA_WITH_COMMENTS
         bool redundant = true;
 #endif
-        for(unsigned p = 0; p < 256; ++p)
+        for(size_t p = 0; p < 256; ++p)
         {
             size_t v = bank_data[bank][p];
             if(listed.find(v) == listed.end())
