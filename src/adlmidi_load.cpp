@@ -261,7 +261,7 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
 bool MIDIplay::LoadMIDI_pre()
 {
 #ifdef DISABLE_EMBEDDED_BANKS
-    if((m_synth.m_embeddedBank != CustomBankTag) || m_synth.m_insBanks.empty())
+    if((m_synth.m_embeddedBank != OPL3::CustomBankTag) || m_synth.m_insBanks.empty())
     {
         errorStringOut = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
         return false;
