@@ -923,8 +923,8 @@ static void CopySamplesTransformed(ADL_UInt8 *dstLeft, ADL_UInt8 *dstRight, cons
                                    Ret(&transform)(int32_t))
 {
     for(size_t i = 0; i < frameCount; ++i) {
-        *(Dst *)(dstLeft + (i * sampleOffset)) = (Dst)transform(src[2 * i]);
-        *(Dst *)(dstRight + (i * sampleOffset)) = (Dst)transform(src[(2 * i) + 1]);
+        *(Dst *)(dstLeft + (i * sampleOffset)) = static_cast<Dst>(transform(src[2 * i]));
+        *(Dst *)(dstRight + (i * sampleOffset)) = static_cast<Dst>(transform(src[(2 * i) + 1]));
     }
 }
 
