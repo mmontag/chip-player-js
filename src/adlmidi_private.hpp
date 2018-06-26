@@ -584,6 +584,8 @@ public:
             size_t  midiins;
             //! Is note the percussion instrument
             bool    isPercussion;
+            //! Note that plays missing instrument. Doesn't using any chip channels
+            bool    isBlank;
             //! Patch selected
             const adlinsdata2 *ains;
             enum
