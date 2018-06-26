@@ -499,6 +499,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     ir.first->currentTone = tone;
     ir.first->glideRate = HUGE_VAL;
     ir.first->midiins = midiins;
+    ir.first->isPercussion = isPercussion;
     ir.first->ains = ains;
     ir.first->chip_channels_count = 0;
 
@@ -1295,7 +1296,7 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
             }
 
             // Percussion is inferior to melody
-            s += 50 * (int64_t)(k->midiins / 128);
+            s += k->isPercussion ? 50 : 0;
             /*
                     if(k->second.midiins >= 25
                     && k->second.midiins < 40

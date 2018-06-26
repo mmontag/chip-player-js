@@ -582,6 +582,8 @@ public:
             double glideRate;
             //! Patch selected on noteon; index to bank.ins[]
             size_t  midiins;
+            //! Is note the percussion instrument
+            bool    isPercussion;
             //! Patch selected
             const adlinsdata2 *ains;
             enum
