@@ -757,6 +757,18 @@ ADLMIDI_EXPORT void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo)
 }
 
 
+ADLMIDI_EXPORT int adl_describeChannels(struct ADL_MIDIPlayer *device, char *str, char *attr, size_t size)
+{
+    if(!device)
+        return -1;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!play)
+        return -1;
+    play->describeChannels(str, attr, size);
+    return 0;
+}
+
+
 ADLMIDI_EXPORT const char *adl_metaMusicTitle(struct ADL_MIDIPlayer *device)
 {
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER

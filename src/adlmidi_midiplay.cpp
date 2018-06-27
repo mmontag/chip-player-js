@@ -1722,6 +1722,51 @@ void MIDIplay::updateGlide(double amount)
     }
 }
 
+void MIDIplay::describeChannels(char *str, char *attr, size_t size)
+{
+    if (!str || size <= 0)
+        return;
+
+    OPL3 &synth = m_synth;
+    uint32_t numChannels = synth.m_numChannels;
+
+    uint32_t index = 0;
+    for(uint32_t i = 0; index < numChannels && index < size - 1; ++i)
+    {
+        const AdlChannel &adlChannel = m_chipChannels[i];
+
+        AdlChannel::LocationData *loc = adlChannel.users_first;
+        if(!loc)  // off
+        {
+            str[index++] = '-';
+        }
+        else if(loc->next)  // arpeggio
+        {
+            str[index++] = '@';
+        }
+        else  // on
+        {
+            switch(synth.m_channelCategory[i])
+            {
+            case OPL3::ChanCat_Regular:
+                str[index++] = '+';
+                break;
+            case OPL3::ChanCat_4op_Master:
+            case OPL3::ChanCat_4op_Slave:
+                str[index++] = '#';
+                break;
+            default:  // rhythm-mode percussion
+                str[index++] = 'r';
+                break;
+            }
+        }
+
+        attr[index] = '\0';  // TODO
+    }
+
+    str[index] = 0;
+    attr[index] = 0;
+}
 
 #ifndef ADLMIDI_DISABLE_CPP_EXTRAS
 
