@@ -270,6 +270,9 @@ extern void adl_positionRewind(struct ADL_MIDIPlayer *device);
 /*Set tempo multiplier: 1.0 - original tempo, >1 - play faster, <1 - play slower */
 extern void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo);
 
+/*Get a textual description of the channel state. For display only.*/
+extern int adl_describeChannels(struct ADL_MIDIPlayer *device, char *text, char *attr, size_t size);
+
 /*Close and delete ADLMIDI device*/
 extern void adl_close(struct ADL_MIDIPlayer *device);
 
