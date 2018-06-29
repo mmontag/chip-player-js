@@ -397,7 +397,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if((m_synth.m_rhythmMode == 1) && PercussionMap[midiins & 0xFF])
         voices[1] = voices[0];//i[1] = i[0];
 
-    bool isBlankNote = (ains->flags & adlinsdata::Flag_NoSound);
+    bool isBlankNote = (ains->flags & adlinsdata::Flag_NoSound) != 0;
 
     if(hooks.onDebugMessage)
     {
