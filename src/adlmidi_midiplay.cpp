@@ -1761,7 +1761,11 @@ void MIDIplay::describeChannels(char *str, char *attr, size_t size)
             }
         }
 
-        attr[index] = '\0';  // TODO
+        uint8_t attribute = 0;
+        if (loc)  // 4-bit color index of MIDI channel
+            attribute |= (uint8_t)(loc->loc.MidCh & 0xF);
+
+        attr[index] = (char)attribute;
     }
 
     str[index] = 0;
