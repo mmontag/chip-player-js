@@ -71,13 +71,16 @@ typedef enum WOPL_InstrumentFlags
     WOPL_Ins_IsBlank    = 0x04,
 
     /* RythmMode flags mask */
-    WOPL_RythmModeMask  = 0x38,
+    WOPL_RhythmModeMask  = 0x38,
+
+    /* DEPRECATED: It has typo. Don't use it! */
+    WOPL_RythmModeMask  = WOPL_RhythmModeMask,
 
     /* Mask of the flags range */
     WOPL_Ins_ALL_MASK   = 0x07
 } WOPL_InstrumentFlags;
 
-typedef enum WOPL_RythmMode
+typedef enum WOPL_RhythmMode
 {
     /* RythmMode: BassDrum */
     WOPL_RM_BassDrum  = 0x08,
@@ -89,7 +92,10 @@ typedef enum WOPL_RythmMode
     WOPL_RM_Cymball   = 0x20,
     /* RythmMode: HiHat */
     WOPL_RM_HiHat     = 0x28
-} WOPL_RythmMode;
+} WOPL_RhythmMode;
+
+/* DEPRECATED: It has typo. Don't use it! */
+typedef WOPL_RhythmMode WOPL_RythmMode;
 
 /* Error codes */
 typedef enum WOPL_ErrorCodes

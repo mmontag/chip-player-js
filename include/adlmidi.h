@@ -408,9 +408,27 @@ typedef enum ADL_InstrumentFlags
     ADLMIDI_Ins_Pseudo4op  = 0x02,
     /* Is a blank instrument entry */
     ADLMIDI_Ins_IsBlank    = 0x04,
+
+    /* RythmMode flags mask */
+    ADLMIDI_Ins_RhythmModeMask = 0x38,
+
     /* Mask of the flags range */
     ADLMIDI_Ins_ALL_MASK   = 0x07,
 } ADL_InstrumentFlags;
+
+typedef enum ADL_RhythmMode
+{
+    /* RythmMode: BassDrum */
+    WOPL_RM_BassDrum  = 0x08,
+    /* RythmMode: Snare */
+    WOPL_RM_Snare     = 0x10,
+    /* RythmMode: TomTom */
+    WOPL_RM_TomTom    = 0x18,
+    /* RythmMode: Cymbell */
+    WOPL_RM_Cymball   = 0x20,
+    /* RythmMode: HiHat */
+    WOPL_RM_HiHat     = 0x28
+} ADL_RhythmMode;
 
 typedef struct ADL_Operator
 {
