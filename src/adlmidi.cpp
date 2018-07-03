@@ -72,6 +72,18 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
     return midi_device;
 }
 
+ADLMIDI_EXPORT void adl_close(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return;
+    MIDIplay * play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(play)
+        delete play;
+    device->adl_midiPlayer = NULL;
+    free(device);
+    device = NULL;
+}
+
 ADLMIDI_EXPORT int adl_setDeviceIdentifier(ADL_MIDIPlayer *device, unsigned id)
 {
     if(!device || id > 0x0f)
@@ -651,18 +663,6 @@ ADLMIDI_EXPORT const char *adl_errorInfo(struct ADL_MIDIPlayer *device)
 ADLMIDI_EXPORT const char *adl_getMusicTitle(struct ADL_MIDIPlayer *device)
 {
     return adl_metaMusicTitle(device);
-}
-
-ADLMIDI_EXPORT void adl_close(struct ADL_MIDIPlayer *device)
-{
-    if(!device)
-        return;
-    MIDIplay * play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    if(play)
-        delete play;
-    device->adl_midiPlayer = NULL;
-    free(device);
-    device = NULL;
 }
 
 ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
