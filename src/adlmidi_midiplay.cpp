@@ -1731,32 +1731,32 @@ void MIDIplay::describeChannels(char *str, char *attr, size_t size)
     uint32_t numChannels = synth.m_numChannels;
 
     uint32_t index = 0;
-    for(uint32_t i = 0; index < numChannels && index < size - 1; ++i)
+    while(index < numChannels && index < size - 1)
     {
-        const AdlChannel &adlChannel = m_chipChannels[i];
+        const AdlChannel &adlChannel = m_chipChannels[index];
 
         AdlChannel::LocationData *loc = adlChannel.users_first;
         if(!loc)  // off
         {
-            str[index++] = '-';
+            str[index] = '-';
         }
         else if(loc->next)  // arpeggio
         {
-            str[index++] = '@';
+            str[index] = '@';
         }
         else  // on
         {
-            switch(synth.m_channelCategory[i])
+            switch(synth.m_channelCategory[index])
             {
             case OPL3::ChanCat_Regular:
-                str[index++] = '+';
+                str[index] = '+';
                 break;
             case OPL3::ChanCat_4op_Master:
             case OPL3::ChanCat_4op_Slave:
-                str[index++] = '#';
+                str[index] = '#';
                 break;
             default:  // rhythm-mode percussion
-                str[index++] = 'r';
+                str[index] = 'r';
                 break;
             }
         }
@@ -1766,6 +1766,7 @@ void MIDIplay::describeChannels(char *str, char *attr, size_t size)
             attribute |= (uint8_t)(loc->loc.MidCh & 0xF);
 
         attr[index] = (char)attribute;
+        ++index;
     }
 
     str[index] = 0;
