@@ -149,6 +149,8 @@ extern int adl_getNextBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
 extern int adl_getInstrument(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, unsigned index, ADL_Instrument *ins);
 /* Sets the nth intrument in the bank [0..127]. */
 extern int adl_setInstrument(struct ADL_MIDIPlayer *device, ADL_Bank *bank, unsigned index, const ADL_Instrument *ins);
+/* Loads the melodic or percussive part of the nth embedded bank. */
+extern int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank, int num);
 #endif /* defined(ADLMIDI_UNSTABLE_API) */
 
 /*Sets number of 4-operator channels between all chips.

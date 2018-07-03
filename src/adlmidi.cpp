@@ -123,8 +123,8 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
     ADL_UNUSED(bank);
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     play->setErrorString("This build of libADLMIDI has no embedded banks. "
-                         "Please load bank by using of adl_openBankFile() or "
-                         "adl_openBankData() functions instead of adl_setBank()");
+                         "Please load banks by using adl_openBankFile() or "
+                         "adl_openBankData() functions instead of adl_setBank().");
     return -1;
 #else
     const uint32_t NumBanks = static_cast<uint32_t>(maxAdlBanks());
@@ -302,6 +302,37 @@ ADLMIDI_EXPORT int adl_setInstrument(ADL_MIDIPlayer *device, ADL_Bank *bank, uns
     OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
     cvt_ADLI_to_FMIns(it->second.ins[index], *ins);
     return 0;
+}
+
+ADLMIDI_EXPORT int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank, int num)
+{
+    if(!device)
+        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if (!play)
+        return -1;
+
+#ifdef DISABLE_EMBEDDED_BANKS
+    ADL_UNUSED(bank);
+    ADL_UNUSED(num);
+    play->setErrorString("This build of libADLMIDI has no embedded banks. "
+                         "Please load banks by using adl_openBankFile() or "
+                         "adl_openBankData() functions instead of adl_loadEmbeddedBank().");
+    return -1;
+#else
+    if(num < 0 || num >= maxAdlBanks())
+        return -1;
+
+    OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
+    size_t id = it->first;
+
+    for (unsigned i = 0; i < 128; ++i) {
+        size_t insno = i + ((id & OPL3::PercussionTag) ? 128 : 0);
+        size_t adlmeta = ::banks[num][insno];
+        it->second.ins[i] = adlinsdata2(::adlins[adlmeta]);
+    }
+    return 0;
+#endif
 }
 
 ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
