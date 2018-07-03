@@ -89,9 +89,12 @@ typedef enum WOPL_RhythmMode
     /* RythmMode: TomTom */
     WOPL_RM_TomTom    = 0x18,
     /* RythmMode: Cymbell */
-    WOPL_RM_Cymball   = 0x20,
+    WOPL_RM_Cymbal   = 0x20,
     /* RythmMode: HiHat */
-    WOPL_RM_HiHat     = 0x28
+    WOPL_RM_HiHat     = 0x28,
+
+    /* DEPRECATED: It has typo. Don't use it! */
+    WOPL_RM_Cymball   = WOPL_RM_Cymbal
 } WOPL_RhythmMode;
 
 /* DEPRECATED: It has typo. Don't use it! */

@@ -55,90 +55,182 @@ typedef char            ADL_SInt8;
 typedef short           ADL_SInt16;
 #endif
 
+/**
+ * @brief Volume scaling models
+ */
 enum ADLMIDI_VolumeModels
 {
+    /*! Automatical choice by the specific bank */
     ADLMIDI_VolumeModel_AUTO = 0,
+    /*! Linearized scaling model, most standard */
     ADLMIDI_VolumeModel_Generic = 1,
+    /*! Native OPL3's logarithmic volume scale */
     ADLMIDI_VolumeModel_NativeOPL3 = 2,
+    /*! Native OPL3's logarithmic volume scale. Alias. */
     ADLMIDI_VolumeModel_CMF = ADLMIDI_VolumeModel_NativeOPL3,
+    /*! Logarithmic volume scale, using volume map table. Used in DMX. */
     ADLMIDI_VolumeModel_DMX = 3,
+    /*! Logarithmic volume scale, used in Apogee Sound System. */
     ADLMIDI_VolumeModel_APOGEE = 4,
+    /*! Aproximated and shorted volume map table. Similar to general, but has less granularity. */
     ADLMIDI_VolumeModel_9X = 5
 };
 
+/**
+ * @brief Sound output format
+ */
 enum ADLMIDI_SampleType
 {
-    ADLMIDI_SampleType_S16 = 0,  /* signed PCM 16-bit */
-    ADLMIDI_SampleType_S8,       /* signed PCM 8-bit */
-    ADLMIDI_SampleType_F32,      /* float 32-bit */
-    ADLMIDI_SampleType_F64,      /* float 64-bit */
-    ADLMIDI_SampleType_S24,      /* signed PCM 24-bit */
-    ADLMIDI_SampleType_S32,      /* signed PCM 32-bit */
-    ADLMIDI_SampleType_U8,       /* unsigned PCM 8-bit */
-    ADLMIDI_SampleType_U16,      /* unsigned PCM 16-bit */
-    ADLMIDI_SampleType_U24,      /* unsigned PCM 24-bit */
-    ADLMIDI_SampleType_U32,      /* unsigned PCM 32-bit */
+    /*! signed PCM 16-bit */
+    ADLMIDI_SampleType_S16 = 0,
+    /*! signed PCM 8-bit */
+    ADLMIDI_SampleType_S8,
+    /*! float 32-bit */
+    ADLMIDI_SampleType_F32,
+    /*! float 64-bit */
+    ADLMIDI_SampleType_F64,
+    /*! signed PCM 24-bit */
+    ADLMIDI_SampleType_S24,
+    /*! signed PCM 32-bit */
+    ADLMIDI_SampleType_S32,
+    /*! unsigned PCM 8-bit */
+    ADLMIDI_SampleType_U8,
+    /*! unsigned PCM 16-bit */
+    ADLMIDI_SampleType_U16,
+    /*! unsigned PCM 24-bit */
+    ADLMIDI_SampleType_U24,
+    /*! unsigned PCM 32-bit */
+    ADLMIDI_SampleType_U32,
+    /*! Count of available sample format types */
     ADLMIDI_SampleType_Count,
 };
 
+/**
+ * @brief Sound output format context
+ */
 struct ADLMIDI_AudioFormat
 {
-    enum ADLMIDI_SampleType type;  /* type of sample */
-    unsigned containerSize;        /* size in bytes of the storage type */
-    unsigned sampleOffset;         /* distance in bytes between consecutive samples */
+    /*! type of sample */
+    enum ADLMIDI_SampleType type;
+    /*! size in bytes of the storage type */
+    unsigned containerSize;
+    /*! distance in bytes between consecutive samples */
+    unsigned sampleOffset;
 };
 
+/**
+ * @brief Instance of the library
+ */
 struct ADL_MIDIPlayer
 {
+    /*! Private context descriptor */
     void *adl_midiPlayer;
 };
 
 /* DEPRECATED */
 #define adl_setNumCards adl_setNumChips
 
-/* Sets number of emulated chips (from 1 to 100). Emulation of multiple chips exchanges polyphony limits*/
+/**
+ * @brief Sets number of emulated chips (from 1 to 100). Emulation of multiple chips exchanges polyphony limits
+ * @param device Instance of the library
+ * @param numChips Count of virtual chips to emulate
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_setNumChips(struct ADL_MIDIPlayer *device, int numChips);
 
-/* Get current number of emulated chips */
+/**
+ * @brief Get current number of emulated chips
+ * @param device Instance of the library
+ * @return Count of working chip emulators
+ */
 extern int adl_getNumChips(struct ADL_MIDIPlayer *device);
 
-/* Sets a number of the patches bank from 0 to N banks. Is recommended to call adl_reset() to apply changes to already-loaded file player or real-time. */
+/**
+ * @brief Sets a number of the patches bank from 0 to N banks.
+ * @param device Instance of the library
+ * @param bank Number of embedded bank
+ * @return 0 on success, <0 when any error has occurred
+ *
+ * Is recommended to call adl_reset() to apply changes to already-loaded file player or real-time.
+ */
 extern int adl_setBank(struct ADL_MIDIPlayer *device, int bank);
 
-/* Returns total number of available banks */
+/**
+ * @brief Returns total number of available banks
+ * @return Total number of available embedded banks
+ */
 extern int adl_getBanksCount();
 
-/* Returns pointer to array of names of every bank */
+/**
+ * @brief Returns pointer to array of names of every bank
+ * @return Array of strings are containing names of every embedded bank
+ */
 extern const char *const *adl_getBankNames();
 
-/* Reference to dynamic bank */
+/**
+ * @brief Reference to dynamic bank
+ */
 typedef struct ADL_Bank
 {
     void *pointer[3];
 } ADL_Bank;
 
-/* Identifier of dynamic bank */
+/**
+ * @brief Identifier of dynamic bank
+ */
 typedef struct ADL_BankId
 {
-    ADL_UInt8 percussive, msb, lsb;
+    /*! 0 if bank is melodic set, or 1 if bank is a percussion set */
+    ADL_UInt8 percussive;
+    /*! Assign to MSB bank number */
+    ADL_UInt8 msb;
+    /*! Assign to LSB bank number */
+    ADL_UInt8 lsb;
 } ADL_BankId;
 
-/* Flags for dynamic bank access */
+/**
+ * @brief Flags for dynamic bank access
+ */
 enum ADL_BankAccessFlags
 {
-    ADLMIDI_Bank_Create = 1,      /* create bank, allocating memory as needed */
-    ADLMIDI_Bank_CreateRt = 1|2,  /* create bank, never allocating memory */
+    /*! create bank, allocating memory as needed */
+    ADLMIDI_Bank_Create = 1,
+    /*! create bank, never allocating memory */
+    ADLMIDI_Bank_CreateRt = 1|2,
 };
 
 typedef struct ADL_Instrument ADL_Instrument;
 
-/* Preallocates a minimum number of bank slots. Returns the actual capacity. */
+/**
+ * @brief Preallocates a minimum number of bank slots. Returns the actual capacity.
+ * @param device Instance of the library
+ * @param banks Count of bank slots to pre-allocate.
+ * @return actual capacity of reserved bank slots.
+ */
 extern int adl_reserveBanks(struct ADL_MIDIPlayer *device, unsigned banks);
-/* Gets the bank designated by the identifier, optionally creating if it does not exist. */
+/**
+ * @brief Gets the bank designated by the identifier, optionally creating if it does not exist.
+ * @param device Instance of the library
+ * @param id Identifier of dynamic bank
+ * @param flags Flags for dynamic bank access (ADL_BankAccessFlags)
+ * @param bank Reference to dynamic bank
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_getBank(struct ADL_MIDIPlayer *device, const ADL_BankId *id, int flags, ADL_Bank *bank);
-/* Gets the identifier of a bank. */
+/**
+ * @brief Gets the identifier of a bank.
+ * @param device Instance of the library
+ * @param bank Reference to dynamic bank.
+ * @param id Identifier of dynamic bank
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_getBankId(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, ADL_BankId *id);
-/* Removes a bank. */
+/**
+ * @brief Removes a bank
+ * @param device Instance of the library
+ * @param bank Reference to dynamic bank.
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_removeBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
 /* Gets the first bank. */
 extern int adl_getFirstBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
@@ -391,84 +483,97 @@ extern void adl_setNoteHook(struct ADL_MIDIPlayer *device, ADL_NoteHook noteHook
 extern void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_DebugMessageHook debugMessageHook, void *userData);
 
 
-/**Instrument structures**/
+/** Instrument structures **/
 
 enum
 {
     ADLMIDI_InstrumentVersion = 0,
 };
 
+/**
+ * @brief Instrument flags
+ */
 typedef enum ADL_InstrumentFlags
 {
-    /* Is two-operator single-voice instrument (no flags) */
+    /*! Is two-operator single-voice instrument (no flags) */
     ADLMIDI_Ins_2op        = 0x00,
-    /* Is true four-operator instrument */
+    /*! Is true four-operator instrument */
     ADLMIDI_Ins_4op        = 0x01,
-    /* Is pseudo four-operator (two 2-operator voices) instrument */
+    /*! Is pseudo four-operator (two 2-operator voices) instrument */
     ADLMIDI_Ins_Pseudo4op  = 0x02,
-    /* Is a blank instrument entry */
+    /*! Is a blank instrument entry */
     ADLMIDI_Ins_IsBlank    = 0x04,
 
-    /* RythmMode flags mask */
+    /*! RythmMode flags mask */
     ADLMIDI_Ins_RhythmModeMask = 0x38,
 
-    /* Mask of the flags range */
+    /*! Mask of the flags range */
     ADLMIDI_Ins_ALL_MASK   = 0x07,
 } ADL_InstrumentFlags;
 
+/**
+ * @brief Rhythm-mode drum type
+ */
 typedef enum ADL_RhythmMode
 {
-    /* RythmMode: BassDrum */
-    WOPL_RM_BassDrum  = 0x08,
-    /* RythmMode: Snare */
-    WOPL_RM_Snare     = 0x10,
-    /* RythmMode: TomTom */
-    WOPL_RM_TomTom    = 0x18,
-    /* RythmMode: Cymbell */
-    WOPL_RM_Cymball   = 0x20,
-    /* RythmMode: HiHat */
-    WOPL_RM_HiHat     = 0x28
+    /*! RythmMode: BassDrum */
+    ADLMIDI_RM_BassDrum  = 0x08,
+    /*! RythmMode: Snare */
+    ADLMIDI_RM_Snare     = 0x10,
+    /*! RythmMode: TomTom */
+    ADLMIDI_RM_TomTom    = 0x18,
+    /*! RythmMode: Cymbal */
+    ADLMIDI_RM_Cymbal    = 0x20,
+    /*! RythmMode: HiHat */
+    ADLMIDI_RM_HiHat     = 0x28
 } ADL_RhythmMode;
 
+
+/**
+ * @brief Operator structure, part of Instrument structure
+ */
 typedef struct ADL_Operator
 {
-    /* AM/Vib/Env/Ksr/FMult characteristics */
+    /*! AM/Vib/Env/Ksr/FMult characteristics */
     ADL_UInt8 avekf_20;
-    /* Key Scale Level / Total level register data */
+    /*! Key Scale Level / Total level register data */
     ADL_UInt8 ksl_l_40;
-    /* Attack / Decay */
+    /*! Attack / Decay */
     ADL_UInt8 atdec_60;
-    /* Systain and Release register data */
+    /*! Systain and Release register data */
     ADL_UInt8 susrel_80;
-    /* Wave form */
+    /*! Wave form */
     ADL_UInt8 waveform_E0;
 } ADL_Operator;
 
+/**
+ * @brief Instrument structure
+ */
 typedef struct ADL_Instrument
 {
-    /* Version of the instrument object */
+    /*! Version of the instrument object */
     int version;
-    /* MIDI note key (half-tone) offset for an instrument (or a first voice in pseudo-4-op mode) */
+    /*! MIDI note key (half-tone) offset for an instrument (or a first voice in pseudo-4-op mode) */
     ADL_SInt16 note_offset1;
-    /* MIDI note key (half-tone) offset for a second voice in pseudo-4-op mode */
+    /*! MIDI note key (half-tone) offset for a second voice in pseudo-4-op mode */
     ADL_SInt16 note_offset2;
-    /* MIDI note velocity offset (taken from Apogee TMB format) */
+    /*! MIDI note velocity offset (taken from Apogee TMB format) */
     ADL_SInt8  midi_velocity_offset;
-    /* Second voice detune level (taken from DMX OP2) */
+    /*! Second voice detune level (taken from DMX OP2) */
     ADL_SInt8  second_voice_detune;
-    /* Percussion MIDI base tone number at which this drum will be played */
+    /*! Percussion MIDI base tone number at which this drum will be played */
     ADL_UInt8 percussion_key_number;
-    /* Enum ADL_InstrumentFlags */
+    /*! Enum ADL_InstrumentFlags */
     ADL_UInt8 inst_flags;
-    /* Feedback&Connection register for first and second operators */
+    /*! Feedback&Connection register for first and second operators */
     ADL_UInt8 fb_conn1_C0;
-    /* Feedback&Connection register for third and fourth operators */
+    /*! Feedback&Connection register for third and fourth operators */
     ADL_UInt8 fb_conn2_C0;
-    /* Operators register data */
+    /*! Operators register data */
     ADL_Operator operators[4];
-    /* Millisecond delay of sounding while key is on */
+    /*! Millisecond delay of sounding while key is on */
     ADL_UInt16 delay_on_ms;
-    /* Millisecond delay of sounding after key off */
+    /*! Millisecond delay of sounding after key off */
     ADL_UInt16 delay_off_ms;
 } ADL_Instrument;
 
