@@ -35,8 +35,6 @@
 #   endif
 #endif
 
-// Require declarations of unstable API for extern "C"
-#define ADLMIDI_UNSTABLE_API
 
 #ifdef _WIN32
 #define NOMINMAX 1

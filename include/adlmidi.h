@@ -132,7 +132,6 @@ enum ADL_BankAccessFlags
 
 typedef struct ADL_Instrument ADL_Instrument;
 
-#if defined(ADLMIDI_UNSTABLE_API)
 /* Preallocates a minimum number of bank slots. Returns the actual capacity. */
 extern int adl_reserveBanks(struct ADL_MIDIPlayer *device, unsigned banks);
 /* Gets the bank designated by the identifier, optionally creating if it does not exist. */
@@ -151,7 +150,7 @@ extern int adl_getInstrument(struct ADL_MIDIPlayer *device, const ADL_Bank *bank
 extern int adl_setInstrument(struct ADL_MIDIPlayer *device, ADL_Bank *bank, unsigned index, const ADL_Instrument *ins);
 /* Loads the melodic or percussive part of the nth embedded bank. */
 extern int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank, int num);
-#endif /* defined(ADLMIDI_UNSTABLE_API) */
+
 
 /*Sets number of 4-operator channels between all chips.
   By default, it is automatically re-calculating every bank change.
