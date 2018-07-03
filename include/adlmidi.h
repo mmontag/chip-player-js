@@ -202,14 +202,14 @@ enum ADL_BankAccessFlags
 typedef struct ADL_Instrument ADL_Instrument;
 
 /**
- * @brief Preallocates a minimum number of bank slots. Returns the actual capacity.
+ * @brief Preallocates a minimum number of bank slots. Returns the actual capacity
  * @param device Instance of the library
  * @param banks Count of bank slots to pre-allocate.
  * @return actual capacity of reserved bank slots.
  */
 extern int adl_reserveBanks(struct ADL_MIDIPlayer *device, unsigned banks);
 /**
- * @brief Gets the bank designated by the identifier, optionally creating if it does not exist.
+ * @brief Gets the bank designated by the identifier, optionally creating if it does not exist
  * @param device Instance of the library
  * @param id Identifier of dynamic bank
  * @param flags Flags for dynamic bank access (ADL_BankAccessFlags)
@@ -218,7 +218,7 @@ extern int adl_reserveBanks(struct ADL_MIDIPlayer *device, unsigned banks);
  */
 extern int adl_getBank(struct ADL_MIDIPlayer *device, const ADL_BankId *id, int flags, ADL_Bank *bank);
 /**
- * @brief Gets the identifier of a bank.
+ * @brief Gets the identifier of a bank
  * @param device Instance of the library
  * @param bank Reference to dynamic bank.
  * @param id Identifier of dynamic bank
@@ -228,48 +228,113 @@ extern int adl_getBankId(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, AD
 /**
  * @brief Removes a bank
  * @param device Instance of the library
- * @param bank Reference to dynamic bank.
+ * @param bank Reference to dynamic bank
  * @return 0 on success, <0 when any error has occurred
  */
 extern int adl_removeBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
-/* Gets the first bank. */
+/**
+ * @brief Gets the first bank
+ * @param device Instance of the library
+ * @param bank Reference to dynamic bank
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_getFirstBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
-/* Iterates to the next bank. */
+/**
+ * @brief Iterates to the next bank
+ * @param device Instance of the library
+ * @param bank Reference to dynamic bank
+ * @return 0 on success, <0 when any error has occurred or end has been reached.
+ */
 extern int adl_getNextBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
-/* Gets the nth intrument in the bank [0..127]. */
+/**
+ * @brief Gets the nth intrument in the bank [0..127]
+ * @param device Instance of the library
+ * @param bank Reference to dynamic bank
+ * @param index Index of the instrument
+ * @param ins Instrument entry
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_getInstrument(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, unsigned index, ADL_Instrument *ins);
-/* Sets the nth intrument in the bank [0..127]. */
+/**
+ * @brief Sets the nth intrument in the bank [0..127]
+ * @param device Instance of the library
+ * @param bank Reference to dynamic bank
+ * @param index Index of the instrument
+ * @param ins Instrument structure pointer
+ * @return 0 on success, <0 when any error has occurred
+ *
+ * This function allows to override an instrument on the fly
+ */
 extern int adl_setInstrument(struct ADL_MIDIPlayer *device, ADL_Bank *bank, unsigned index, const ADL_Instrument *ins);
-/* Loads the melodic or percussive part of the nth embedded bank. */
+/**
+ * @brief Loads the melodic or percussive part of the nth embedded bank
+ * @param device Instance of the library
+ * @param bank Reference to dynamic bank
+ * @param num Number of embedded bank to load into the current bank array
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank, int num);
 
 
-/*Sets number of 4-operator channels between all chips.
-  By default, it is automatically re-calculating every bank change.
-  If you want to specify custom number of four operator channels,
-  please call this function after bank change (adl_setBank() or adl_openBank()),
-  otherwise, value will be overwritten by auto-calculated.*/
+
+/**
+ * @brief Sets number of 4-operator channels between all chips
+ * @param device Instance of the library
+ * @param ops4 Count of four-op channels to allocate between all emulating chips
+ * @return 0 on success, <0 when any error has occurred
+ *
+ * By default, it is automatically re-calculating every bank change.
+ * If you want to specify custom number of four operator channels,
+ * please call this function after bank change (adl_setBank() or adl_openBank()),
+ * otherwise, value will be overwritten by auto-calculated.
+ */
 extern int adl_setNumFourOpsChn(struct ADL_MIDIPlayer *device, int ops4);
 
-/*Get current total count of 4-operator channels between all chips*/
+/**
+ * @brief Get current total count of 4-operator channels between all chips
+ * @param device Instance of the library
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device);
 
-/*Override Enable(1) or Disable(0) AdLib percussion mode. -1 - use bank default AdLib percussion mode*/
+/**
+ * @brief Override Enable(1) or Disable(0) AdLib percussion mode. -1 - use bank default AdLib percussion mode
+ * @param device Instance of the library
+ * @param percmod 0 - disabled, 1 - enabled
+ *
+ * This function forces rhythm-mode on any bank. The result will wrork glitchy.
+ */
 extern void adl_setPercMode(struct ADL_MIDIPlayer *device, int percmod);
 
-/*Override Enable(1) or Disable(0) deep vibrato state. -1 - use bank default vibrato state*/
+/**
+ * @brief Override Enable(1) or Disable(0) deep vibrato state. -1 - use bank default vibrato state
+ * @param device Instance of the library
+ * @param hvibro 0 - disabled, 1 - enabled
+ */
 extern void adl_setHVibrato(struct ADL_MIDIPlayer *device, int hvibro);
 
-/*Override Enable(1) or Disable(0) deep tremolo state. -1 - use bank default tremolo state*/
+/**
+ * @brief Override Enable(1) or Disable(0) deep tremolo state. -1 - use bank default tremolo state
+ * @param device Instance of the library
+ * @param hvibro 0 - disabled, 1 - enabled
+ */
 extern void adl_setHTremolo(struct ADL_MIDIPlayer *device, int htremo);
 
-/*Override Enable(1) or Disable(0) scaling of modulator volumes. -1 - use bank default scaling of modulator volumes*/
+/**
+ * @brief Override Enable(1) or Disable(0) scaling of modulator volumes. -1 - use bank default scaling of modulator volumes
+ * @param device Instance of the library
+ * @param hvibro 0 - disabled, 1 - enabled
+ */
 extern void adl_setScaleModulators(struct ADL_MIDIPlayer *device, int smod);
 
-/*Enable(1) or Disable(0) full-range brightness (MIDI CC74 used in XG music to filter result sounding) scaling.
-    By default, brightness affects sound between 0 and 64.
-    When this option is enabled, the range will use a full range from 0 up to 127.
-*/
+/**
+ * @brief Enable(1) or Disable(0) full-range brightness (MIDI CC74 used in XG music to filter result sounding) scaling
+ * @param device Instance of the library
+ * @param fr_brightness 0 - disabled, 1 - enabled
+ *
+ * By default, brightness affects sound between 0 and 64.
+ * When this option is enabled, the range will use a full range from 0 up to 127.
+ */
 extern void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_brightness);
 
 /*Enable or disable built-in loop (built-in loop supports 'loopStart' and 'loopEnd' tags to loop specific part)*/
@@ -291,28 +356,51 @@ extern int adl_openBankData(struct ADL_MIDIPlayer *device, const void *mem, unsi
 /* DEPRECATED */
 extern const char *adl_emulatorName();
 
-/*Returns chip emulator name string*/
+/**
+ * @brief Returns chip emulator name string
+ * @param device Instance of the library
+ * @return Understandible name of current OPL3 emulator
+ */
 extern const char *adl_chipEmulatorName(struct ADL_MIDIPlayer *device);
 
+/**
+ * @brief List of available OPL3 emulators
+ */
 enum ADL_Emulator
 {
+    /*! Nuked OPL3 v. 1.8 */
     ADLMIDI_EMU_NUKED = 0,
+    /*! Nuked OPL3 v. 1.7.4 */
     ADLMIDI_EMU_NUKED_174,
+    /*! DosBox */
     ADLMIDI_EMU_DOSBOX,
+    /*! Count instrument on the level */
     ADLMIDI_EMU_end
 };
 
-/* Switch the emulation core */
+/**
+ * @brief Switch the emulation core
+ * @param device Instance of the library
+ * @param emulator Type of emulator (ADL_Emulator)
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulator);
 
-
+/**
+ * @brief Library version context
+ */
 typedef struct {
     ADL_UInt16 major;
     ADL_UInt16 minor;
     ADL_UInt16 patch;
 } ADL_Version;
 
-/*Run emulator with PCM rate to reduce CPU usage on slow devices. May decrease sounding accuracy.*/
+/**
+ * @brief Run emulator with PCM rate to reduce CPU usage on slow devices. May decrease sounding accuracy.
+ * @param device Instance of the library
+ * @param enabled 0 - disabled, 1 - enabled
+ * @return 0 on success, <0 when any error has occurred
+ */
 extern int adl_setRunAtPcmRate(struct ADL_MIDIPlayer *device, int enabled);
 
 /*Returns string which contains a version number*/
