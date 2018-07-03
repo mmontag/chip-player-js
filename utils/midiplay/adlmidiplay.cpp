@@ -242,6 +242,7 @@ int main(int argc, char **argv)
             " -frb Enables full-ranged CC74 XG Brightness controller\n"
             " -nl Quit without looping\n"
             " -w Write WAV file rather than playing\n"
+            " -mb Run the test of multibank over embedded. 62, 14, 68, and 74'th banks will be combined into one\n"
             #ifndef HARDWARE_OPL3
             " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
             " --emu-nuked7 Uses Nuked OPL3 v 1.7.4 emulator\n"
@@ -330,18 +331,22 @@ int main(int argc, char **argv)
     /*
      * Set library options by parsing of command line arguments
      */
-    #ifndef OUTPUT_WAVE_ONLY
+    bool multibankFromEnbededTest = false;
+
+#ifndef OUTPUT_WAVE_ONLY
     bool recordWave = false;
     int loopEnabled = 1;
-    #endif
-    #ifndef HARDWARE_OPL3
+#endif
+
+#ifndef HARDWARE_OPL3
     int emulator = ADLMIDI_EMU_NUKED;
-    #endif
-    #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
+#endif
+
+#if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
     g_audioFormat.type = ADLMIDI_SampleType_S16;
     g_audioFormat.containerSize = sizeof(Sint16);
     g_audioFormat.sampleOffset = sizeof(Sint16) * 2;
-    #endif
+#endif
 
     while(argc > 2)
     {
@@ -352,7 +357,7 @@ int main(int argc, char **argv)
         else if(!std::strcmp("-v", argv[2]))
             adl_setHVibrato(myDevice, 1);//Force turn on deep vibrato
 
-        #if !defined(OUTPUT_WAVE_ONLY) && !defined(HARDWARE_OPL3)
+#if !defined(OUTPUT_WAVE_ONLY) && !defined(HARDWARE_OPL3)
         else if(!std::strcmp("-w", argv[2]))
         {
             //Current Wave output implementation allows only SINT16 output
@@ -373,7 +378,7 @@ int main(int argc, char **argv)
             spec.format = AUDIO_S32;
         else if(!std::strcmp("-f32", argv[2]) && !recordWave)
             spec.format = AUDIO_F32;
-        #endif
+#endif
 
         else if(!std::strcmp("-t", argv[2]))
             adl_setHTremolo(myDevice, 1);//Force turn on deep tremolo
@@ -381,20 +386,22 @@ int main(int argc, char **argv)
         else if(!std::strcmp("-frb", argv[2]))
             adl_setFullRangeBrightness(myDevice, 1);//Turn on a full-ranged XG CC74 Brightness
 
-        #ifndef OUTPUT_WAVE_ONLY
+#ifndef OUTPUT_WAVE_ONLY
         else if(!std::strcmp("-nl", argv[2]))
             loopEnabled = 0; //Enable loop
-        #endif
+#endif
 
-        #ifndef HARDWARE_OPL3
+#ifndef HARDWARE_OPL3
         else if(!std::strcmp("--emu-nuked", argv[2]))
             emulator = ADLMIDI_EMU_NUKED;
         else if(!std::strcmp("--emu-nuked7", argv[2]))
             emulator = ADLMIDI_EMU_NUKED_174;
         else if(!std::strcmp("--emu-dosbox", argv[2]))
             emulator = ADLMIDI_EMU_DOSBOX;
-        #endif
+#endif
 
+        else if(!std::strcmp("-mb", argv[2]))
+            multibankFromEnbededTest = true;
         else if(!std::strcmp("-s", argv[2]))
             adl_setScaleModulators(myDevice, 1);//Turn on modulators scaling by volume
         else break;
@@ -405,29 +412,29 @@ int main(int argc, char **argv)
         argc -= (had_option ? 2 : 1);
     }
 
-    #ifndef OUTPUT_WAVE_ONLY
+#ifndef OUTPUT_WAVE_ONLY
     //Turn loop on/off (for WAV recording loop must be disabled!)
     adl_setLoopEnabled(myDevice, recordWave ? 0 : loopEnabled);
-    #endif
+#endif
 
-    #ifdef DEBUG_TRACE_ALL_EVENTS
+#ifdef DEBUG_TRACE_ALL_EVENTS
     //Hook all MIDI events are ticking while generating an output buffer
     if(!recordWave)
         adl_setRawEventHook(myDevice, debugPrintEvent, NULL);
-    #endif
+#endif
 
-    #ifndef HARDWARE_OPL3
+#ifndef HARDWARE_OPL3
     adl_switchEmulator(myDevice, emulator);
-    #endif
+#endif
 
     std::fprintf(stdout, " - Library version %s\n", adl_linkedLibraryVersion());
-    #ifdef HARDWARE_OPL3
+#ifdef HARDWARE_OPL3
     std::fprintf(stdout, " - Hardware OPL3 chip in use\n");
-    #else
+#else
     std::fprintf(stdout, " - %s Emulator in use\n", adl_chipEmulatorName(myDevice));
-    #endif
+#endif
 
-    #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
+#if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
     if(!recordWave)
     {
         // Set up SDL
@@ -477,7 +484,7 @@ int main(int argc, char **argv)
             break;
         }
     }
-    #endif
+#endif
 
     if(argc >= 3)
     {
@@ -510,7 +517,40 @@ int main(int argc, char **argv)
         }
     }
 
-    #ifndef HARDWARE_OPL3
+    if(multibankFromEnbededTest)
+    {
+        ADL_BankId id[] =
+        {
+            {0, 0, 0}, /*62*/ // isPercussion, MIDI bank MSB, LSB
+            {0, 8, 0}, /*14*/ // Use as MSB-8
+            {1, 0, 0}, /*68*/
+            {1, 0, 25} /*74*/
+        };
+        int banks[] =
+        {
+            62, 14, 68, 74
+        };
+
+        for(size_t i = 0; i < 4; i++)
+        {
+            ADL_Bank bank;
+            if(adl_getBank(myDevice, &id[i], ADLMIDI_Bank_Create, &bank) < 0)
+            {
+                printError(adl_errorInfo(myDevice));
+                return 1;
+            }
+
+            if(adl_loadEmbeddedBank(myDevice, &bank, banks[i]) < 0)
+            {
+                printError(adl_errorInfo(myDevice));
+                return 1;
+            }
+        }
+
+        std::fprintf(stdout, " - Ran a test of multibank over embedded\n");
+    }
+
+#ifndef HARDWARE_OPL3
     int numOfChips = 4;
     if(argc >= 4)
         numOfChips = std::atoi(argv[3]);
@@ -522,10 +562,10 @@ int main(int argc, char **argv)
         return 1;
     }
     std::fprintf(stdout, " - Number of chips %d\n", adl_getNumChips(myDevice));
-    #else
+#else
     int numOfChips = 1;
     adl_setNumChips(myDevice, numOfChips);
-    #endif
+#endif
 
     if(argc >= 5)
     {
@@ -549,13 +589,14 @@ int main(int argc, char **argv)
     std::fprintf(stdout, " - File [%s] opened!\n", musPath.c_str());
     flushout(stdout);
 
-    #ifndef HARDWARE_OPL3
+#ifndef HARDWARE_OPL3
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
-    #if !defined(_WIN32) && !defined(__WATCOMC__)
+#   if !defined(_WIN32) && !defined(__WATCOMC__)
     signal(SIGHUP, sighandler);
-    #endif
-    #else//HARDWARE_OPL3
+#   endif
+
+#else//HARDWARE_OPL3
     static const unsigned NewTimerFreq = 209;
     unsigned TimerPeriod = 0x1234DDul / NewTimerFreq;
 
@@ -581,11 +622,11 @@ int main(int argc, char **argv)
 
     unsigned long BIOStimer_begin = BIOStimer;
     double tick_delay = 0.0;
-    #endif//HARDWARE_OPL3
+#endif//HARDWARE_OPL3
 
     double total        = adl_totalTimeLength(myDevice);
 
-    #ifndef OUTPUT_WAVE_ONLY
+#ifndef OUTPUT_WAVE_ONLY
     double loopStart    = adl_loopStartTime(myDevice);
     double loopEnd      = adl_loopEndTime(myDevice);
     char totalHMS[25];
@@ -598,9 +639,9 @@ int main(int argc, char **argv)
         secondsToHMSM(loopEnd, loopEndHMS, 25);
     }
 
-    #ifndef HARDWARE_OPL3
+#   ifndef HARDWARE_OPL3
     if(!recordWave)
-    #endif
+#   endif
     {
         std::fprintf(stdout, " - Loop is turned %s\n", loopEnabled ? "ON" : "OFF");
         if(loopStart >= 0.0 && loopEnd >= 0.0)
@@ -608,42 +649,42 @@ int main(int argc, char **argv)
         std::fprintf(stdout, "\n==========================================\n");
         flushout(stdout);
 
-        #ifndef HARDWARE_OPL3
+#   ifndef HARDWARE_OPL3
         SDL_PauseAudio(0);
-        #endif
+#   endif
 
-        #ifdef DEBUG_SEEKING_TEST
+#   ifdef DEBUG_SEEKING_TEST
         int delayBeforeSeek = 50;
         std::fprintf(stdout, "DEBUG: === Random position set test is active! ===\n");
         flushout(stdout);
-        #endif
+#   endif
 
-        #ifndef HARDWARE_OPL3
+#   ifndef HARDWARE_OPL3
         Uint8 buff[16384];
-        #endif
+#   endif
         char posHMS[25];
         uint64_t milliseconds_prev = -1;
         while(!stop)
         {
-            #ifndef HARDWARE_OPL3
+#   ifndef HARDWARE_OPL3
             size_t got = (size_t)adl_playFormat(myDevice, 4096,
                                                 buff,
                                                 buff + g_audioFormat.containerSize,
                                                 &g_audioFormat) * g_audioFormat.containerSize;
             if(got <= 0)
                 break;
-            #endif
+#   endif
 
-            #ifdef DEBUG_TRACE_ALL_CHANNELS
+#   ifdef DEBUG_TRACE_ALL_CHANNELS
             enum { TerminalColumns = 80 };
             char channelText[TerminalColumns + 1];
             char channelAttr[TerminalColumns + 1];
             adl_describeChannels(myDevice, channelText, channelAttr, sizeof(channelText));
             std::fprintf(stdout, "%*s\r", TerminalColumns, "");  // erase the line
             std::fprintf(stdout, "%s\n", channelText);
-            #endif
+#   endif
 
-            #ifndef DEBUG_TRACE_ALL_EVENTS
+#   ifndef DEBUG_TRACE_ALL_EVENTS
             double time_pos = adl_positionTell(myDevice);
             std::fprintf(stdout, "                                               \r");
             uint64_t milliseconds = static_cast<uint64_t>(time_pos * 1000.0);
@@ -655,9 +696,9 @@ int main(int argc, char **argv)
                 flushout(stdout);
                 milliseconds_prev = milliseconds;
             }
-            #endif
+#   endif
 
-            #ifndef HARDWARE_OPL3
+#   ifndef HARDWARE_OPL3
             g_audioBuffer_lock.Lock();
             size_t pos = g_audioBuffer.size();
             g_audioBuffer.resize(pos + got);
@@ -671,16 +712,16 @@ int main(int argc, char **argv)
                 SDL_Delay(1);
             }
 
-            #ifdef DEBUG_SEEKING_TEST
+#       ifdef DEBUG_SEEKING_TEST
             if(delayBeforeSeek-- <= 0)
             {
                 delayBeforeSeek = rand() % 50;
                 double seekTo = double((rand() % int(adl_totalTimeLength(myDevice)) - delayBeforeSeek - 1 ));
                 adl_positionSeek(myDevice, seekTo);
             }
-            #endif
+#       endif
 
-            #else//HARDWARE_OPL3
+#   else//HARDWARE_OPL3
             const double mindelay = 1.0 / NewTimerFreq;
 
             //__asm__ volatile("sti\nhlt");
@@ -707,20 +748,20 @@ int main(int argc, char **argv)
                     stop = true;
             }
 
-            #endif//HARDWARE_OPL3
+#   endif//HARDWARE_OPL3
         }
         std::fprintf(stdout, "                                               \n\n");
-        #ifndef HARDWARE_OPL3
+#   ifndef HARDWARE_OPL3
         SDL_CloseAudio();
-        #endif
+#   endif
     }
-    #endif //OUTPUT_WAVE_ONLY
+#endif //OUTPUT_WAVE_ONLY
 
-    #ifndef HARDWARE_OPL3
+#ifndef HARDWARE_OPL3
 
-    #ifndef OUTPUT_WAVE_ONLY
+#   ifndef OUTPUT_WAVE_ONLY
     else
-    #endif //OUTPUT_WAVE_ONLY
+#   endif //OUTPUT_WAVE_ONLY
     {
         std::string wave_out = musPath + ".wav";
         std::fprintf(stdout, " - Recording WAV file %s...\n", wave_out.c_str());
@@ -764,9 +805,9 @@ int main(int argc, char **argv)
             return 1;
         }
     }
-    #endif //HARDWARE_OPL3
+#endif //HARDWARE_OPL3
 
-    #ifdef HARDWARE_OPL3
+#ifdef HARDWARE_OPL3
 
     #ifdef __DJGPP__
     // Fix the skewed clock and reset BIOS tick rate
@@ -789,7 +830,7 @@ int main(int argc, char **argv)
 
     adl_panic(myDevice); //Shut up all sustaining notes
 
-    #endif
+#endif
 
     adl_close(myDevice);
 
