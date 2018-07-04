@@ -73,9 +73,6 @@ typedef enum WOPL_InstrumentFlags
     /* RythmMode flags mask */
     WOPL_RhythmModeMask  = 0x38,
 
-    /* DEPRECATED: It has typo. Don't use it! */
-    WOPL_RythmModeMask  = WOPL_RhythmModeMask,
-
     /* Mask of the flags range */
     WOPL_Ins_ALL_MASK   = 0x07
 } WOPL_InstrumentFlags;
@@ -92,9 +89,6 @@ typedef enum WOPL_RhythmMode
     WOPL_RM_Cymbal   = 0x20,
     /* RythmMode: HiHat */
     WOPL_RM_HiHat     = 0x28,
-
-    /* DEPRECATED: It has typo. Don't use it! */
-    WOPL_RM_Cymball   = WOPL_RM_Cymbal
 } WOPL_RhythmMode;
 
 /* DEPRECATED: It has typo. Don't use it! */
