@@ -36,3 +36,6 @@ build-*
 # Cmake caches
 build/*
 
+# DoxyGen's output:
+docs
+

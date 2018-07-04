@@ -1324,7 +1324,7 @@ ADLMIDI_EXPORT int adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleC
 #endif
 }
 
-ADLMIDI_EXPORT double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, double granuality)
+ADLMIDI_EXPORT double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, double granulality)
 {
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     if(!device)
@@ -1332,11 +1332,11 @@ ADLMIDI_EXPORT double adl_tickEvents(struct ADL_MIDIPlayer *device, double secon
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     if(!play)
         return -1.0;
-    return play->Tick(seconds, granuality);
+    return play->Tick(seconds, granulality);
 #else
     ADL_UNUSED(device);
     ADL_UNUSED(seconds);
-    ADL_UNUSED(granuality);
+    ADL_UNUSED(granulality);
     return -1.0;
 #endif
 }

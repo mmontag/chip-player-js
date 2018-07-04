@@ -367,7 +367,7 @@ public:
     /**
      * @brief Write data to OPL3 chip register
      * @param chip Index of emulated chip. In hardware OPL3 builds, this parameter is ignored
-     * @param index Register address to write
+     * @param address Register address to write
      * @param value Value to write
      */
     void writeReg(size_t chip, uint16_t address, uint8_t value);
@@ -375,7 +375,7 @@ public:
     /**
      * @brief Write data to OPL3 chip register
      * @param chip Index of emulated chip. In hardware OPL3 builds, this parameter is ignored
-     * @param index Register address to write
+     * @param address Register address to write
      * @param value Value to write
      */
     void writeRegI(size_t chip, uint32_t address, uint32_t value);
@@ -1182,7 +1182,7 @@ public:
     /**
      * @brief MSB Bank Change CC
      * @param channel MIDI channel
-     * @param lsb MSB value of bank number
+     * @param msb MSB value of bank number
      */
     void realTime_BankChangeMSB(uint8_t channel, uint8_t msb);
 

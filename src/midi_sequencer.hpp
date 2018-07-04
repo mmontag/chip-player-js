@@ -354,7 +354,7 @@ public:
 
     /**
      * @brief Sets the RT interface
-     * @param interface Pre-Initialized interface structure (pointer will be taken)
+     * @param intrf Pre-Initialized interface structure (pointer will be taken)
      */
     void setInterface(const BW_MidiRtInterface *intrf);
 
