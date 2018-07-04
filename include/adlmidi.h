@@ -175,7 +175,7 @@ extern int adl_getBanksCount();
 
 /**
  * @brief Returns pointer to array of names of every bank
- * @return Array of strings are containing names of every embedded bank
+ * @return Array of strings containing the name of every embedded bank
  */
 extern const char *const *adl_getBankNames();
 
