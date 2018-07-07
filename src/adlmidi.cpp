@@ -1389,12 +1389,12 @@ ADLMIDI_EXPORT int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t tra
     {
     default:
         break;
-    case ADL_TrackOption_On:
-    case ADL_TrackOption_Off:
-        if(!seq.setTrackEnabled(trackNumber, enableFlag == ADL_TrackOption_On))
+    case ADLMIDI_TrackOption_On:
+    case ADLMIDI_TrackOption_Off:
+        if(!seq.setTrackEnabled(trackNumber, enableFlag == ADLMIDI_TrackOption_On))
             return -1;
         break;
-    case ADL_TrackOption_Solo:
+    case ADLMIDI_TrackOption_Solo:
         seq.setSoloTrack(trackNumber);
         break;
     }
