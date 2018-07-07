@@ -343,6 +343,11 @@ private:
     //! Are loop points invalid?
     bool    m_invalidLoop; /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/
 
+    //! Whether the nth track has playback disabled
+    std::vector<bool> m_trackDisable;
+    //! Index of solo track, or max for disabled
+    size_t m_trackSolo;
+
     //! File parsing errors string (adding into m_errorString on aborting of the process)
     std::string m_parsingErrorsString;
     //! Common error string
@@ -363,6 +368,26 @@ public:
      * @return File format type enumeration
      */
     FileFormat getFormat();
+
+    /**
+     * @brief Returns the number of tracks
+     * @return Track count
+     */
+    size_t getTrackCount() const;
+
+    /**
+     * @brief Sets whether a track is playing
+     * @param track Track identifier
+     * @param enable Whether to enable track playback
+     * @return true on success, false if there was no such track
+     */
+    bool setTrackEnabled(size_t track, bool enable);
+
+    /**
+     * @brief Enables or disables solo on a track
+     * @param track Identifier of solo track, or max to disable
+     */
+    void setSoloTrack(size_t track);
 
     /**
      * @brief Get the list of CMF instruments (CMF only)

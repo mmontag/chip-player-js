@@ -636,6 +636,33 @@ extern void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo);
  */
 extern int adl_atEnd(struct ADL_MIDIPlayer *device);
 
+/**
+ * @brief Returns the number of tracks of the current sequence
+ * @param device Instance of the library
+ * @return Count of tracks in the current sequence
+ */
+extern size_t adl_trackCount(struct ADL_MIDIPlayer *device);
+
+/**
+ * @brief Track options
+ */
+enum ADLMIDI_TrackOptions
+{
+    /*! Enabled track */
+    ADL_TrackOption_On   = 1,
+    /*! Disabled track */
+    ADL_TrackOption_Off  = 2,
+    /*! Solo track */
+    ADL_TrackOption_Solo = 3,
+};
+
+/**
+ * @brief Sets options on a track of the current sequence
+ * @param device Instance of the library
+ * @param trackNumber Identifier of the designated track.
+ * @return 0 on success, <0 when any error has occurred
+ */
+extern int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t trackNumber, unsigned trackOptions);
 
 
 

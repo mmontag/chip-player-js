@@ -342,6 +342,8 @@ int main(int argc, char **argv)
     int emulator = ADLMIDI_EMU_NUKED;
 #endif
 
+    size_t soloTrack = ~(size_t)0;
+
 #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
     g_audioFormat.type = ADLMIDI_SampleType_S16;
     g_audioFormat.containerSize = sizeof(Sint16);
@@ -404,6 +406,18 @@ int main(int argc, char **argv)
             multibankFromEnbededTest = true;
         else if(!std::strcmp("-s", argv[2]))
             adl_setScaleModulators(myDevice, 1);//Turn on modulators scaling by volume
+
+        else if(!std::strcmp("--solo", argv[2]))
+        {
+            if(argc <= 3)
+            {
+                printError("The option --solo requires an argument!\n");
+                return 1;
+            }
+            soloTrack = std::strtoul(argv[3], NULL, 0);
+            had_option = true;
+        }
+
         else break;
 
         std::copy(argv + (had_option ? 4 : 3),
@@ -584,6 +598,14 @@ int main(int argc, char **argv)
     {
         printError(adl_errorInfo(myDevice));
         return 2;
+    }
+
+    std::fprintf(stdout, " - Track count: %lu\n", (unsigned long)adl_trackCount(myDevice));
+
+    if(soloTrack != ~(size_t)0)
+    {
+        std::fprintf(stdout, " - Solo track: %lu\n", (unsigned long)soloTrack);
+        adl_setTrackOptions(myDevice, soloTrack, ADL_TrackOption_Solo);
     }
 
     std::fprintf(stdout, " - File [%s] opened!\n", musPath.c_str());

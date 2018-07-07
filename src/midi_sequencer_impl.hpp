@@ -271,7 +271,8 @@ BW_MidiSequencer::BW_MidiSequencer() :
     m_atEnd(false),
     m_loopStart(false),
     m_loopEnd(false),
-    m_invalidLoop(false)
+    m_invalidLoop(false),
+    m_trackSolo(~(size_t)0)
 {}
 
 BW_MidiSequencer::~BW_MidiSequencer()
@@ -305,6 +306,25 @@ void BW_MidiSequencer::setInterface(const BW_MidiRtInterface *intrf)
 BW_MidiSequencer::FileFormat BW_MidiSequencer::getFormat()
 {
     return m_format;
+}
+
+size_t BW_MidiSequencer::getTrackCount() const
+{
+    return m_trackData.size();
+}
+
+bool BW_MidiSequencer::setTrackEnabled(size_t track, bool enable)
+{
+    size_t trackCount = m_trackData.size();
+    if(track >= trackCount)
+        return false;
+    m_trackDisable[track] = !enable;
+    return true;
+}
+
+void BW_MidiSequencer::setSoloTrack(size_t track)
+{
+    m_trackSolo = track;
 }
 
 const std::vector<BW_MidiSequencer::CmfInstrument> BW_MidiSequencer::getRawCmfInstruments()
@@ -362,6 +382,8 @@ bool BW_MidiSequencer::buildTrackData(const std::vector<std::vector<uint8_t> > &
     m_fullSongTimeLength = 0.0;
     m_loopStartTime = -1.0;
     m_loopEndTime = -1.0;
+    m_trackDisable.clear();
+    m_trackSolo = ~(size_t)0;
     m_musTitle.clear();
     m_musCopyright.clear();
     m_musTrackTitles.clear();
@@ -369,6 +391,7 @@ bool BW_MidiSequencer::buildTrackData(const std::vector<std::vector<uint8_t> > &
     m_trackData.clear();
     const size_t    trackCount = trackData.size();
     m_trackData.resize(trackCount, MidiTrackQueue());
+    m_trackDisable.resize(trackCount);
 
     m_invalidLoop = false;
     bool gotLoopStart = false, gotLoopEnd = false, gotLoopEventInThisRow = false;
@@ -1122,6 +1145,11 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
 
 void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEvent &evt, int32_t &status)
 {
+    if(m_trackSolo != ~(size_t)0 && track != m_trackSolo)
+        return;
+    if(m_trackDisable[track])
+        return;
+
     if(m_interface->onEvent)
     {
         m_interface->onEvent(m_interface->onEvent_userData,
