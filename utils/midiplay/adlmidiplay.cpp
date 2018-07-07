@@ -605,7 +605,7 @@ int main(int argc, char **argv)
     if(soloTrack != ~(size_t)0)
     {
         std::fprintf(stdout, " - Solo track: %lu\n", (unsigned long)soloTrack);
-        adl_setTrackOptions(myDevice, soloTrack, ADL_TrackOption_Solo);
+        adl_setTrackOptions(myDevice, soloTrack, ADLMIDI_TrackOption_Solo);
     }
 
     std::fprintf(stdout, " - File [%s] opened!\n", musPath.c_str());

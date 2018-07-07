@@ -649,11 +649,11 @@ extern size_t adl_trackCount(struct ADL_MIDIPlayer *device);
 enum ADLMIDI_TrackOptions
 {
     /*! Enabled track */
-    ADL_TrackOption_On   = 1,
+    ADLMIDI_TrackOption_On   = 1,
     /*! Disabled track */
-    ADL_TrackOption_Off  = 2,
+    ADLMIDI_TrackOption_Off  = 2,
     /*! Solo track */
-    ADL_TrackOption_Solo = 3,
+    ADLMIDI_TrackOption_Solo = 3,
 };
 
 /**
