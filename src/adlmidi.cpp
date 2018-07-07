@@ -1356,6 +1356,63 @@ ADLMIDI_EXPORT int adl_atEnd(struct ADL_MIDIPlayer *device)
 #endif
 }
 
+ADLMIDI_EXPORT size_t adl_trackCount(struct ADL_MIDIPlayer *device)
+{
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+    if(!device)
+        return 0;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if(!play)
+        return 0;
+    return play->m_sequencer.getTrackCount();
+#else
+    ADL_UNUSED(device);
+    return 0;
+#endif
+}
+
+ADLMIDI_EXPORT int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t trackNumber, unsigned trackOptions)
+{
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+    if(!device)
+        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if(!play)
+        return -1;
+    MidiSequencer &seq = play->m_sequencer;
+
+    unsigned enableFlag = trackOptions & 3;
+    trackOptions &= ~3u;
+
+    // handle on/off/solo
+    switch(enableFlag)
+    {
+    default:
+        break;
+    case ADL_TrackOption_On:
+    case ADL_TrackOption_Off:
+        if(!seq.setTrackEnabled(trackNumber, enableFlag == ADL_TrackOption_On))
+            return -1;
+        break;
+    case ADL_TrackOption_Solo:
+        seq.setSoloTrack(trackNumber);
+        break;
+    }
+
+    // handle others...
+    if(trackOptions != 0)
+        return -1;
+
+    return 0;
+
+#else
+    ADL_UNUSED(device);
+    ADL_UNUSED(trackNumber);
+    ADL_UNUSED(trackOptions);
+    return -1;
+#endif
+}
+
 ADLMIDI_EXPORT void adl_panic(struct ADL_MIDIPlayer *device)
 {
     if(!device)
