@@ -291,6 +291,8 @@ public:
 private:
     //! Music file format type. MIDI is default.
     FileFormat m_format;
+    //! SMF format identifier.
+    unsigned m_smfFormat;
 
     //! Current position
     Position m_currentPosition;

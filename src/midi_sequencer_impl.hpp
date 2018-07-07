@@ -262,6 +262,7 @@ void BW_MidiSequencer::MidiTrackRow::sortEvents(bool *noteStates)
 BW_MidiSequencer::BW_MidiSequencer() :
     m_interface(NULL),
     m_format(Format_MIDI),
+    m_smfFormat(0),
     m_loopEnabled(false),
     m_fullSongTimeLength(0.0),
     m_postSongWaitDelay(1.0),
@@ -1145,10 +1146,19 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
 
 void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEvent &evt, int32_t &status)
 {
-    if(m_trackSolo != ~(size_t)0 && track != m_trackSolo)
-        return;
-    if(m_trackDisable[track])
-        return;
+    if(track == 0 && m_smfFormat < 2 && evt.type == MidiEvent::T_SPECIAL &&
+       (evt.subtype == MidiEvent::ST_TEMPOCHANGE || evt.subtype == MidiEvent::ST_TIMESIGNATURE))
+    {
+        /* never reject track 0 timing events on SMF format != 2
+           note: multi-track XMI convert to format 2 SMF */
+    }
+    else
+    {
+        if(m_trackSolo != ~(size_t)0 && track != m_trackSolo)
+            return;
+        if(m_trackDisable[track])
+            return;
+    }
 
     if(m_interface->onEvent)
     {
@@ -1513,6 +1523,7 @@ bool BW_MidiSequencer::loadMIDI(FileAndMemReader &fr)
     const size_t headerSize = 4 + 4 + 2 + 2 + 2; // 14
     char headerBuf[headerSize] = "";
     size_t DeltaTicks = 192, TrackCount = 1;
+    unsigned Fmt = 0;
 
 riffskip:
     fsize = fr.read(headerBuf, 1, headerSize);
@@ -1741,9 +1752,12 @@ riffskip:
                 return false;
             }
 
-            /*size_t  Fmt =      ReadBEint(HeaderBuf + 8,  2);*/
+            Fmt = (unsigned)readBEint(headerBuf + 8,  2);
             TrackCount = (size_t)readBEint(headerBuf + 10, 2);
             DeltaTicks = (size_t)readBEint(headerBuf + 12, 2);
+
+            if(Fmt > 2)
+                Fmt = 1;
         }
     }
 
@@ -1860,6 +1874,8 @@ riffskip:
         m_errorString = fr.fileName() + ": MIDI data parsing error has occouped!\n" + m_parsingErrorsString;
         return false;
     }
+
+    m_smfFormat = Fmt;
 
     return true;
 }
