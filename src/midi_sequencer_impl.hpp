@@ -628,7 +628,7 @@ bool BW_MidiSequencer::buildTrackData(const std::vector<std::vector<uint8_t> > &
     if(loopStartTicks >= loopEndTicks)
     {
         m_loop.invalidLoop = true;
-        if(m_interface->onDebugMessage)
+        if(m_interface->onDebugMessage && (gotGlobalLoopStart || gotGlobalLoopEnd))
         {
             m_interface->onDebugMessage(
                 m_interface->onDebugMessage_userData,
