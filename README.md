@@ -171,6 +171,9 @@ To build that example you will need to have installed SDL2 library.
  * Added support for CC67-SoftPedal controller (SoftPedal lowers the volume of notes played)
  * Fixed correctness of CMF files playing
  * Fixed unnecessary overuse of chip channels by blank notes
+ * Added API to disable specific MIDI tracks or play one of MIDI tracks solo
+ * Added support for more complex loop (loopStart=XX, loopEnd=0). Where XX - count of loops, or 0 - infinite. Nested loops are supported without of any limits.
+ * XMIDI now supports loops
 
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization
