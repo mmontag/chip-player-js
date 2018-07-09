@@ -277,7 +277,9 @@ BW_MidiSequencer::BW_MidiSequencer() :
     m_loopEndTime(-1.0),
     m_tempoMultiplier(1.0),
     m_atEnd(false),
-    m_trackSolo(~(size_t)0)
+    m_trackSolo(~(size_t)0),
+    m_triggerHandler(NULL),
+    m_triggerUserData(NULL)
 {
     m_loop.reset();
     m_loop.invalidLoop = false;
@@ -333,6 +335,12 @@ bool BW_MidiSequencer::setTrackEnabled(size_t track, bool enable)
 void BW_MidiSequencer::setSoloTrack(size_t track)
 {
     m_trackSolo = track;
+}
+
+void BW_MidiSequencer::setTriggerHandler(TriggerHandler handler, void *userData)
+{
+    m_triggerHandler = handler;
+    m_triggerUserData = userData;
 }
 
 const std::vector<BW_MidiSequencer::CmfInstrument> BW_MidiSequencer::getRawCmfInstruments()
@@ -1345,8 +1353,9 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
 
             if(m_format == Format_XMIDI)
             {
-                if(evt.data[0] == 116)
+                switch(evt.data[0])
                 {
+                case 116:  // For Loop Controller
                     evt.type = MidiEvent::T_SPECIAL;
                     evt.subtype = MidiEvent::ST_LOOPSTACK_BEGIN;
                     evt.data[0] = evt.data[1];
@@ -1362,10 +1371,9 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
                             evt.data[0]
                         );
                     }
-                }
+                    break;
 
-                if(evt.data[0] == 117)
-                {
+                case 117:  // Next/Break Loop Controller
                     evt.type = MidiEvent::T_SPECIAL;
                     evt.subtype = evt.data[1] < 64 ?
                                 MidiEvent::ST_LOOPSTACK_BREAK :
@@ -1382,6 +1390,13 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
                             m_loop.stackLevel - 1
                         );
                     }
+                    break;
+
+                case 119:  // Callback Trigger
+                    evt.type = MidiEvent::T_SPECIAL;
+                    evt.subtype = MidiEvent::ST_CALLBACK_TRIGGER;
+                    evt.data.assign(1, evt.data[1]);
+                    break;
                 }
             }
         }
@@ -1516,6 +1531,17 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
                 m_loop.caughtStackBreak = true;
                 return;
             }
+        }
+
+        if(evtype == MidiEvent::ST_CALLBACK_TRIGGER)
+        {
+#if 0 /* Print all callback triggers events */
+            if(m_interface->onDebugMessage)
+                m_interface->onDebugMessage(m_interface->onDebugMessage_userData, "Callback Trigger: %02X", evt.data[0]);
+#endif
+            if(m_triggerHandler)
+                m_triggerHandler(m_triggerUserData, data[0], track);
+            return;
         }
 
         if(evtype == MidiEvent::ST_RAWOPL) // Special non-spec ADLMIDI special for IMF playback: Direct poke to AdLib

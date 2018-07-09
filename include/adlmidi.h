@@ -664,6 +664,24 @@ enum ADLMIDI_TrackOptions
  */
 extern int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t trackNumber, unsigned trackOptions);
 
+/**
+ * @brief Handler of callback trigger events
+ * @param userData Pointer to user data (usually, context of something)
+ * @param trigger Value of the event which triggered this callback.
+ * @param track Identifier of the track which triggered this callback.
+ */
+typedef void (*ADL_TriggerHandler)(void *userData, unsigned trigger, size_t track);
+
+/**
+ * @brief Defines a handler for callback trigger events
+ * @param device Instance of the library
+ * @param handler Handler to invoke from the sequencer when triggered, or NULL.
+ * @param userData Instance of the library
+ * @return 0 on success, <0 when any error has occurred
+ */
+extern int adl_setTriggerHandler(struct ADL_MIDIPlayer *device, ADL_TriggerHandler handler, void *userData);
+
+
 
 
 /* ======== Meta-Tags ======== */

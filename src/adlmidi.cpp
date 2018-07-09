@@ -1413,6 +1413,25 @@ ADLMIDI_EXPORT int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t tra
 #endif
 }
 
+ADLMIDI_EXPORT int adl_setTriggerHandler(struct ADL_MIDIPlayer *device, ADL_TriggerHandler handler, void *userData)
+{
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+    if(!device)
+        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if(!play)
+        return -1;
+    MidiSequencer &seq = play->m_sequencer;
+    seq.setTriggerHandler(handler, userData);
+    return 0;
+#else
+    ADL_UNUSED(device);
+    ADL_UNUSED(handler);
+    ADL_UNUSED(userData);
+    return -1;
+#endif
+}
+
 ADLMIDI_EXPORT void adl_panic(struct ADL_MIDIPlayer *device)
 {
     if(!device)
