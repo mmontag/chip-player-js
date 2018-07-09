@@ -131,6 +131,8 @@ class BW_MidiSequencer
             ST_LOOPSTACK_END   = 0xE5,//size == 0 <CUSTOM>
             //! [Non-Standard] Loop End point with support of multi-loops
             ST_LOOPSTACK_BREAK = 0xE6,//size == 0 <CUSTOM>
+            //! [Non-Standard] Callback Trigger
+            ST_CALLBACK_TRIGGER = 0xE7,//size == 1 <CUSTOM>
         };
         //! Main type of event
         uint8_t type;
@@ -453,6 +455,19 @@ private:
     //! Index of solo track, or max for disabled
     size_t m_trackSolo;
 
+    /**
+     * @brief Handler of callback trigger events
+     * @param userData Pointer to user data (usually, context of something)
+     * @param trigger Value of the event which triggered this callback.
+     * @param track Identifier of the track which triggered this callback.
+     */
+    typedef void (*TriggerHandler)(void *userData, unsigned trigger, size_t track);
+
+    //! Handler of callback trigger events
+    TriggerHandler m_triggerHandler;
+    //! User data of callback trigger events
+    void *m_triggerUserData;
+
     //! File parsing errors string (adding into m_errorString on aborting of the process)
     std::string m_parsingErrorsString;
     //! Common error string
@@ -493,6 +508,13 @@ public:
      * @param track Identifier of solo track, or max to disable
      */
     void setSoloTrack(size_t track);
+
+    /**
+     * @brief Defines a handler for callback trigger events
+     * @param handler Handler to invoke from the sequencer when triggered, or NULL.
+     * @param userData Instance of the library
+     */
+    void setTriggerHandler(TriggerHandler handler, void *userData);
 
     /**
      * @brief Get the list of CMF instruments (CMF only)
