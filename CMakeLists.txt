@@ -87,6 +87,7 @@ option(MIDIPLAY_WAVE_ONLY   "Build Demo MIDI player without support of real time
 option(WITH_ADLMIDI2        "Build also classic ADLMIDI player [EXPERIMENTAL]" OFF)
 option(WITH_VLC_PLUGIN      "Build also a plugin for VLC Media Player" OFF)
 option(WITH_OLD_UTILS       "Build also old utilities" OFF)
+option(WITH_XMI2MID         "Build a XMI to MIDI converter" OFF)
 option(EXAMPLE_SDL2_AUDIO   "Build also a simple SDL2 demo MIDI player" OFF)
 
 
@@ -437,6 +438,11 @@ if(WITH_ADLMIDI2)
     list(APPEND libADLMIDI_INSTALLS adlmidi2)
 endif()
 
+if(WITH_XMI2MID)
+  add_executable(xmi2mid
+    ${libADLMIDI_SOURCE_DIR}/utils/xmi2mid/xmi2mid.cpp)
+endif()
+
 if(EXAMPLE_SDL2_AUDIO AND NOT MSDOS AND NOT DJGPP)
     find_library(SDL2_LIBRARY SDL2 REQUIRED)
     include_directories(${SDL2_INCLUDE_DIR})
@@ -557,4 +563,5 @@ message("MIDIPLAY_WAVE_ONLY       = ${MIDIPLAY_WAVE_ONLY}")
 message("WITH_ADLMIDI2            = ${WITH_ADLMIDI2}")
 message("WITH_VLC_PLUGIN          = ${WITH_VLC_PLUGIN}")
 message("WITH_OLD_UTILS           = ${WITH_OLD_UTILS}")
+message("WITH_XMI2MID             = ${WITH_XMI2MID}")
 message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")
