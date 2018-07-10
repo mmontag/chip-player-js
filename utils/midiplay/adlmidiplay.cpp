@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cstdarg>
 #include <deque>
+#include <vector>
 #include <algorithm>
 #include <signal.h>
 
@@ -243,6 +244,8 @@ int main(int argc, char **argv)
             " -nl Quit without looping\n"
             " -w Write WAV file rather than playing\n"
             " -mb Run the test of multibank over embedded. 62, 14, 68, and 74'th banks will be combined into one\n"
+            " --solo <track>             Selects a solo track to play\n"
+            " --only <track1,...,trackN> Selects a subset of tracks to play\n"
             #ifndef HARDWARE_OPL3
             " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
             " --emu-nuked7 Uses Nuked OPL3 v 1.7.4 emulator\n"
@@ -343,6 +346,7 @@ int main(int argc, char **argv)
 #endif
 
     size_t soloTrack = ~(size_t)0;
+    std::vector<size_t> onlyTracks;
 
 #if !defined(HARDWARE_OPL3) && !defined(OUTPUT_WAVE_ONLY)
     g_audioFormat.type = ADLMIDI_SampleType_S16;
@@ -415,6 +419,31 @@ int main(int argc, char **argv)
                 return 1;
             }
             soloTrack = std::strtoul(argv[3], NULL, 0);
+            had_option = true;
+        }
+        else if(!std::strcmp("--only", argv[2]))
+        {
+            if(argc <= 3)
+            {
+                printError("The option --only requires an argument!\n");
+                return 1;
+            }
+
+            const char *strp = argv[3];
+            unsigned long value;
+            unsigned size;
+            bool err = std::sscanf(strp, "%lu%n", &value, &size) != 1;
+            while(!err && *(strp += size))
+            {
+                onlyTracks.push_back(value);
+                err = std::sscanf(strp, ",%lu%n", &value, &size) != 1;
+            }
+            if(err)
+            {
+                printError("Invalid argument to --only!\n");
+                return 1;
+            }
+            onlyTracks.push_back(value);
             had_option = true;
         }
 
@@ -606,6 +635,21 @@ int main(int argc, char **argv)
     {
         std::fprintf(stdout, " - Solo track: %lu\n", (unsigned long)soloTrack);
         adl_setTrackOptions(myDevice, soloTrack, ADLMIDI_TrackOption_Solo);
+    }
+
+    if(!onlyTracks.empty())
+    {
+        size_t count = adl_trackCount(myDevice);
+        for(size_t track = 0; track < count; ++track)
+            adl_setTrackOptions(myDevice, track, ADLMIDI_TrackOption_Off);
+        std::fprintf(stdout, " - Only tracks:");
+        for(size_t i = 0, n = onlyTracks.size(); i < n; ++i)
+        {
+            size_t track = onlyTracks[i];
+            adl_setTrackOptions(myDevice, track, ADLMIDI_TrackOption_On);
+            std::fprintf(stdout, " %lu", (unsigned long)track);
+        }
+        std::fprintf(stdout, "\n");
     }
 
     std::fprintf(stdout, " - File [%s] opened!\n", musPath.c_str());
