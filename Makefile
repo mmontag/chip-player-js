@@ -237,14 +237,17 @@ VGMTEST_MAINOBJS = \
 	$(OBJ)/vgm/dblk_compr.o \
 	$(OBJ)/vgmtest.o
 
-S98TEST_MAINOBJS = \
+PLAYER_MAINOBJS = \
 	$(OBJ)/player/helper.o \
 	$(OBJ)/player/playerbase.o \
 	$(OBJ)/player/s98player.o \
 	$(OBJ)/player/droplayer.o \
+	$(OBJ)/player/vgmplayer.o \
+	$(OBJ)/player/vgmplayer_cmdhandler.o \
+	$(OBJ)/vgm/dblk_compr.o \
 	$(OBJ)/player.o
 
-all:	audiotest emutest audemutest vgmtest s98test
+all:	audiotest emutest audemutest vgmtest plrtest
 
 audiotest:	dirs libaudio $(AUD_MAINOBJS)
 	@echo Linking audiotest ...
@@ -274,9 +277,9 @@ vgmtest:	dirs libaudio libemu $(VGMTEST_MAINOBJS)
 	@$(CC) $(VGMTEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -lm -o vgmtest
 	@echo Done.
 
-s98test:	dirs libaudio libemu $(S98TEST_MAINOBJS)
-	@echo Linking s98test ...
-	@$(CXX) $(S98TEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lm -o s98test
+plrtest:	dirs libaudio libemu $(PLAYER_MAINOBJS)
+	@echo Linking $@ ...
+	@$(CXX) $(PLAYER_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lm -o $@
 	@echo Done.
 
 vgm_dbcompr_bench:	vgm_dbcompr_bench.c vgm/dblk_compr.c

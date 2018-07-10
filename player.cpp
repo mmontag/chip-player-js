@@ -27,6 +27,7 @@ extern "C" int __cdecl _kbhit(void);
 #include "player/playerbase.hpp"
 #include "player/s98player.hpp"
 #include "player/droplayer.hpp"
+#include "player/vgmplayer.hpp"
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
 #include "emu/Resampler.h"
@@ -113,7 +114,7 @@ int main(int argc, char* argv[])
 	{
 		if (player != NULL)
 			delete player;
-		printf("Error 0x%02X loading S98 file!\n", retVal);
+		printf("Error 0x%02X loading file!\n", retVal);
 		continue;
 	}
 	player->SetCallback(&FilePlayCallback, NULL);
@@ -129,6 +130,17 @@ int main(int argc, char* argv[])
 				s98hdr->tickMult, s98hdr->tickDiv);
 		if (s98Title != NULL)
 			printf("\nSong Title: %s", s98Title);
+	}
+	else if (player->GetPlayerType() == FCC_VGM)
+	{
+		VGMPlayer* vgmplay = dynamic_cast<VGMPlayer*>(player);
+		const VGM_HEADER* vgmhdr = vgmplay->GetFileHeader();
+		const char* vgmTitle = player->GetSongTitle();
+		
+		printf("VGM v%3X, Total Length: %.2f s, Loop Length: %.2f s", vgmhdr->fileVer,
+				player->Tick2Second(player->GetTotalTicks()), player->Tick2Second(player->GetLoopTicks()));
+		if (vgmTitle != NULL && strlen(vgmTitle) > 0)
+			printf("\nSong Title: %s", vgmTitle);
 	}
 	else if (player->GetPlayerType() == FCC_DRO)
 	{
@@ -250,6 +262,15 @@ static UINT8 GetPlayerForFile(const char* fileName, PlayerBase** retPlayer)
 {
 	UINT8 retVal;
 	PlayerBase* player;
+	
+	player = new VGMPlayer;
+	retVal = player->LoadFile(fileName);
+	if (retVal < 0x80)
+	{
+		*retPlayer = player;
+		return retVal;
+	}
+	delete player;
 	
 	player = new S98Player;
 	retVal = player->LoadFile(fileName);
