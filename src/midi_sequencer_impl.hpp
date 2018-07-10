@@ -1248,7 +1248,7 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
                 return evt;
             }
 
-            if(!data.compare(0, 10, "loopstart="))
+            if(data.substr(0, 10) == "loopstart=")
             {
                 evt.type = MidiEvent::T_SPECIAL;
                 evt.subtype = MidiEvent::ST_LOOPSTACK_BEGIN;
@@ -1269,7 +1269,7 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
                 return evt;
             }
 
-            if(!data.compare(0, 8, "loopend="))
+            if(data.substr(0, 8) == "loopend=")
             {
                 evt.type = MidiEvent::T_SPECIAL;
                 evt.subtype = MidiEvent::ST_LOOPSTACK_END;
