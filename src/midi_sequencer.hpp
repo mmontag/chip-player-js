@@ -230,10 +230,26 @@ class BW_MidiSequencer
     const BW_MidiRtInterface *m_interface;
 
     /**
+     * @brief Prepare internal events storage for track data building
+     * @param trackCount Count of tracks
+     */
+    void buildSmfSetupReset(size_t trackCount);
+
+    /**
      * @brief Build MIDI track data from the raw track data storage
      * @return true if everything successfully processed, or false on any error
      */
-    bool buildTrackData(const std::vector<std::vector<uint8_t> > &trackData);
+    bool buildSmfTrackData(const std::vector<std::vector<uint8_t> > &trackData);
+
+    /**
+     * @brief Build the time line from off loaded events
+     * @param tempos Pre-collected list of tempo events
+     * @param loopStartTicks Global loop start tick (give zero if no global loop presented)
+     * @param loopEndTicks Global loop end tick (give zero if no global loop presented)
+     */
+    void buildTimeLine(const std::vector<MidiEvent> &tempos,
+                       uint64_t loopStartTicks = 0,
+                       uint64_t loopEndTicks = 0);
 
     /**
      * @brief Parse one event from raw MIDI track stream
@@ -648,6 +664,68 @@ public:
      * @param tempo Tempo multiplier: 1.0 - original tempo. >1 - faster, <1 - slower
      */
     void   setTempo(double tempo);
+
+private:
+    /**
+     * @brief Load file as Id-software-Music-File (Wolfenstein)
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseIMF(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as EA MUS
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseRSXX(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as Creative Music Format
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseCMF(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as GMF (ScummVM)
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseGMF(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as Standard MIDI file
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseSMF(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as RIFF MIDI
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseRMI(FileAndMemReader &fr);
+
+#ifndef BWMIDI_DISABLE_MUS_SUPPORT
+    /**
+     * @brief Load file as DMX MUS file (Doom)
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseMUS(FileAndMemReader &fr);
+#endif
+
+#ifndef BWMIDI_DISABLE_XMI_SUPPORT
+    /**
+     * @brief Load file as AIL eXtended MIdi
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseXMI(FileAndMemReader &fr);
+#endif
+
 };
 
 #endif /* BISQUIT_AND_WOHLSTANDS_MIDI_SEQUENCER_HHHHPPP */
