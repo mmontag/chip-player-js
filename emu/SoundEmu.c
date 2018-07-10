@@ -129,7 +129,7 @@
 #include "cores/pokey.h"
 #endif
 #ifdef SNDDEV_QSOUND
-#include "cores/qsound.h"
+#include "cores/qsoundintf.h"
 #endif
 #ifdef SNDDEV_SCSP
 #include "cores/scsp.h"

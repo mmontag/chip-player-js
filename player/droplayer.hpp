@@ -4,12 +4,9 @@
 #include <stdtype.h>
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
-#include <iconv.h>
 #include "helper.h"
 #include "playerbase.hpp"
 #include <vector>
-#include <map>
-#include <string>
 
 
 #define FCC_DRO 	0x44524F00

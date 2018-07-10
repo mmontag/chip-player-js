@@ -75,20 +75,47 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
 #include "../EmuHelper.h"
 #include "saa1099_mame.h"
 
 
-//void saa1099m_write(void *info, UINT8 offset, UINT8 data);
+static void saa1099m_write(void *info, UINT8 offset, UINT8 data);
 static void saa1099_control_w(void *info, UINT8 data);
 static void saa1099_data_w(void *info, UINT8 data);
 
-//void saa1099m_update(void *param, UINT32 samples, DEV_SMPL **outputs);
-//void* saa1099m_create(UINT32 clock, UINT32 sampleRate);
-//void saa1099m_destroy(void *info);
-//void saa1099m_reset(void *info);
+static void saa1099m_update(void *param, UINT32 samples, DEV_SMPL **outputs);
+static UINT8 device_start_saa1099_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
+static void* saa1099m_create(UINT32 clock, UINT32 sampleRate);
+static void saa1099m_destroy(void *info);
+static void saa1099m_reset(void *info);
 
-//void saa1099m_set_mute_mask(void *info, UINT32 MuteMask);
+static void saa1099m_set_mute_mask(void *info, UINT32 MuteMask);
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, saa1099m_write},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_SAA1099_MAME =
+{
+	"SAA1099", "MAME", FCC_MAME,
+	
+	device_start_saa1099_mame,
+	saa1099m_destroy,
+	saa1099m_reset,
+	saa1099m_update,
+	
+	NULL,	// SetOptionBits
+	saa1099m_set_mute_mask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
 
 
 #define LEFT	0x00
@@ -115,7 +142,7 @@ struct saa1099_noise
 	/* vars to simulate the noise generator output */
 	double counter;
 	double freq;
-	UINT16 level;                   /* noise polynomal shifter */
+	UINT32 level;                   /* noise polynomal shifter */
 };
 
 typedef struct _saa1099_state saa1099_state;
@@ -227,7 +254,7 @@ static void saa1099_envelope_w(saa1099_state *saa, int ch)
 }
 
 
-void saa1099m_update(void *param, UINT32 samples, DEV_SMPL **outputs)
+static void saa1099m_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
 	saa1099_state *saa = (saa1099_state *)param;
 	UINT32 j, ch;
@@ -350,7 +377,26 @@ void saa1099m_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 
 
-void* saa1099m_create(UINT32 clock, UINT32 sampleRate)
+static UINT8 device_start_saa1099_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->clock / 128;	// /128 seems right based on the highest noise frequency
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	chip = saa1099m_create(cfg->clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_SAA1099_MAME);
+	return 0x00;
+}
+
+static void* saa1099m_create(UINT32 clock, UINT32 sampleRate)
 {
 	saa1099_state *saa;
 
@@ -367,7 +413,7 @@ void* saa1099m_create(UINT32 clock, UINT32 sampleRate)
 	return saa;
 }
 
-void saa1099m_destroy(void *info)
+static void saa1099m_destroy(void *info)
 {
 	saa1099_state *saa = (saa1099_state *)info;
 	
@@ -376,7 +422,7 @@ void saa1099m_destroy(void *info)
 	return;
 }
 
-void saa1099m_reset(void *info)
+static void saa1099m_reset(void *info)
 {
 	saa1099_state *saa = (saa1099_state *)info;
 	struct saa1099_channel *saach;
@@ -419,7 +465,7 @@ void saa1099m_reset(void *info)
 	return;
 }
 
-void saa1099m_write(void *info, UINT8 offset, UINT8 data)
+static void saa1099m_write(void *info, UINT8 offset, UINT8 data)
 {
 	if (offset & 1)
 		saa1099_control_w(info, data);
@@ -531,7 +577,7 @@ static void saa1099_data_w(void *info, UINT8 data)
 }
 
 
-void saa1099m_set_mute_mask(void *info, UINT32 MuteMask)
+static void saa1099m_set_mute_mask(void *info, UINT32 MuteMask)
 {
 	saa1099_state *saa = (saa1099_state *)info;
 	UINT8 CurChn;

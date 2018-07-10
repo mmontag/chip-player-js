@@ -10,7 +10,55 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
 #include "rf5c68.h"
+
+
+static void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs);
+
+static UINT8 device_start_rf5c68_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
+static void* device_start_rf5c68(UINT32 clock);
+static void device_stop_rf5c68(void *info);
+static void device_reset_rf5c68(void *info);
+//void rf5c68_set_sample_end_callback(void *info, SAMPLE_END_CB callback, void* param);
+
+static UINT8 rf5c68_r(void *info, UINT8 offset);
+static void rf5c68_w(void *info, UINT8 offset, UINT8 data);
+
+static UINT8 rf5c68_mem_r(void *info, UINT16 offset);
+static void rf5c68_mem_w(void *info, UINT16 offset, UINT8 data);
+static void rf5c68_write_ram(void *info, UINT32 offset, UINT32 length, const UINT8* data);
+
+static void rf5c68_set_mute_mask(void *info, UINT32 MuteMask);
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, rf5c68_w},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, rf5c68_r},
+	{RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, rf5c68_mem_w},
+	{RWF_MEMORY | RWF_READ, DEVRW_A16D8, 0, rf5c68_mem_r},
+	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, rf5c68_write_ram},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_RF5C68_MAME =
+{
+	"RF5C68", "MAME", FCC_MAME,
+	
+	device_start_rf5c68_mame,
+	device_stop_rf5c68,
+	device_reset_rf5c68,
+	rf5c68_update,
+	
+	NULL,	// SetOptionBits
+	rf5c68_set_mute_mask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
 
 
 #define NUM_CHANNELS	(8)
@@ -106,7 +154,7 @@ static void memstream_sample_check(rf5c68_state *chip, UINT32 addr, UINT16 Speed
 	return;
 }
 
-void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
+static void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	mem_stream* ms = &chip->memstrm;
@@ -212,6 +260,24 @@ void rf5c68_update(void *info, UINT32 samples, DEV_SMPL **outputs)
 }
 
 
+static UINT8 device_start_rf5c68_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->clock / 384;
+	chip = device_start_rf5c68(cfg->clock);
+	if (chip == NULL)
+		return 0xFF;
+	
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_RF5C68_MAME);
+	return 0x00;
+}
+
+
 //-------------------------------------------------
 //    RF5C68 start
 //-------------------------------------------------
@@ -235,7 +301,7 @@ void* device_start_rf5c68(UINT32 clock)
 	return chip;
 }
 
-void device_stop_rf5c68(void *info)
+static void device_stop_rf5c68(void *info)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	free(chip->data);
@@ -244,7 +310,7 @@ void device_stop_rf5c68(void *info)
 	return;
 }
 
-void device_reset_rf5c68(void *info)
+static void device_reset_rf5c68(void *info)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	UINT8 i;
@@ -292,7 +358,7 @@ void rf5c68_set_sample_end_callback(void *info, SAMPLE_END_CB callback, void* pa
 //    RF5C68 write register
 //-------------------------------------------------
 
-UINT8 rf5c68_r(void *info, UINT8 offset)
+static UINT8 rf5c68_r(void *info, UINT8 offset)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	UINT8 shift;
@@ -304,7 +370,7 @@ UINT8 rf5c68_r(void *info, UINT8 offset)
 	return (chip->chan[(offset & 0x0e) >> 1].addr) >> shift;
 }
 
-void rf5c68_w(void *info, UINT8 offset, UINT8 data)
+static void rf5c68_w(void *info, UINT8 offset, UINT8 data)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	pcm_channel *chan = &chip->chan[chip->cbank];
@@ -367,7 +433,7 @@ void rf5c68_w(void *info, UINT8 offset, UINT8 data)
 //    RF5C68 read memory
 //-------------------------------------------------
 
-UINT8 rf5c68_mem_r(void *info, UINT16 offset)
+static UINT8 rf5c68_mem_r(void *info, UINT16 offset)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	return chip->data[chip->wbank * 0x1000 | offset];
@@ -378,7 +444,7 @@ UINT8 rf5c68_mem_r(void *info, UINT16 offset)
 //    RF5C68 write memory
 //-------------------------------------------------
 
-void rf5c68_mem_w(void *info, UINT16 offset, UINT8 data)
+static void rf5c68_mem_w(void *info, UINT16 offset, UINT8 data)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	rf5c68_mem_stream_flush(chip);
@@ -398,7 +464,7 @@ static void rf5c68_mem_stream_flush(rf5c68_state *chip)
 	return;
 }
 
-void rf5c68_write_ram(void *info, UINT32 offset, UINT32 length, const UINT8* data)
+static void rf5c68_write_ram(void *info, UINT32 offset, UINT32 length, const UINT8* data)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	mem_stream* ms = &chip->memstrm;
@@ -432,7 +498,7 @@ void rf5c68_write_ram(void *info, UINT32 offset, UINT32 length, const UINT8* dat
 }
 
 
-void rf5c68_set_mute_mask(void *info, UINT32 MuteMask)
+static void rf5c68_set_mute_mask(void *info, UINT32 MuteMask)
 {
 	rf5c68_state *chip = (rf5c68_state *)info;
 	UINT8 CurChn;

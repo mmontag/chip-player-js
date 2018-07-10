@@ -33,9 +33,43 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
+#include "../EmuHelper.h"
 #include "ayintf.h"
 #include "emu2149.h"
+#include "emu2149_private.h"
 #include "../panning.h"
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, EPSG_writeIO},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, EPSG_readIO},
+	{RWF_REGISTER | RWF_QUICKWRITE, DEVRW_A8D8, 0, EPSG_writeReg},
+	{RWF_REGISTER | RWF_QUICKREAD, DEVRW_A8D8, 0, EPSG_readReg},
+	{RWF_CLOCK | RWF_WRITE, DEVRW_VALUE, 0, EPSG_set_clock},
+	{RWF_SRATE | RWF_WRITE, DEVRW_VALUE, 0, EPSG_set_rate},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_YM2149_Emu =
+{
+	"YM2149", "EMU2149", FCC_EMU_,
+	
+	(DEVFUNC_START)device_start_ay8910_emu,
+	(DEVFUNC_CTRL)EPSG_delete,
+	(DEVFUNC_CTRL)EPSG_reset,
+	(DEVFUNC_UPDATE)EPSG_calc_stereo,
+	
+	NULL,	// SetOptionBits
+	(DEVFUNC_OPTMASK)EPSG_setMuteMask,
+	ay8910_pan_emu,
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
+
 
 static const uint32_t voltbl[2][32] = {
   {0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09,
@@ -96,6 +130,38 @@ EPSG_set_quality (EPSG * psg, uint32_t q)
 {
   psg->quality = q;
   internal_refresh (psg);
+}
+
+static UINT8 device_start_ay8910_emu(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
+{
+	EPSG* chip;
+	UINT8 isYM;
+	UINT8 flags;
+	UINT32 clock;
+	UINT32 rate;
+	
+	clock = cfg->_genCfg.clock;
+	isYM = ((cfg->chipType & 0xF0) > 0x00);
+	flags = cfg->chipFlags;
+	if (! isYM)
+		flags &= ~YM2149_PIN26_LOW;
+	
+	if (flags & YM2149_PIN26_LOW)
+		rate = clock / 2 / 8;
+	else
+		rate = clock / 8;
+	SRATE_CUSTOM_HIGHEST(cfg->_genCfg.srMode, rate, cfg->_genCfg.smplRate);
+	
+	chip = EPSG_new(clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	EPSG_set_quality(chip, 0);	// disable internal sample rate converter
+	EPSG_setVolumeMode(chip, isYM ? 1 : 2);
+	EPSG_setFlags(chip, flags);
+	
+	chip->_devData.chipInf = chip;
+	INIT_DEVINF(retDevInf, &chip->_devData, rate, &devDef_YM2149_Emu);
+	return 0x00;
 }
 
 EPSG *
@@ -529,4 +595,14 @@ void EPSG_set_pan (EPSG * psg, uint8_t ch, int16_t pan)
     return;
   
   Panning_Calculate( psg->pan[ch], pan );
+}
+
+static void ay8910_pan_emu(void* chipptr, INT16* PanVals)
+{
+  UINT8 curChn;
+  
+  for (curChn = 0; curChn < 3; curChn ++)
+    EPSG_set_pan((EPSG*)chipptr, curChn, PanVals[curChn]);
+  
+  return;
 }

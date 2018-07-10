@@ -678,13 +678,23 @@ UINT32 S98Player::Render(UINT32 smplCnt, WAVE_32BS* data)
 {
 	UINT32 curSmpl;
 	UINT32 smplFileTick;
+	UINT32 maxSmpl;
+	INT32 smplStep;	// might be negative due to rounding errors in Tick2Sample
 	size_t curDev;
 	
-	for (curSmpl = 0; curSmpl < smplCnt; curSmpl ++)
+	curSmpl = 0;
+	while(curSmpl < smplCnt)
 	{
 		smplFileTick = Sample2Tick(_playSmpl);
 		ParseFile(smplFileTick - _playTick);
-		_playSmpl ++;
+		
+		// render as many samples at once as possible (for better performance)
+		maxSmpl = Tick2Sample(_fileTick);
+		smplStep = maxSmpl - _playSmpl;
+		if (smplStep < 1)
+			smplStep = 1;
+		else if ((UINT32)smplStep > smplCnt - curSmpl)
+			smplStep = smplCnt - curSmpl;
 		
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
 		{
@@ -695,14 +705,16 @@ UINT32 S98Player::Render(UINT32 smplCnt, WAVE_32BS* data)
 			while(clDev != NULL)
 			{
 				if (clDev->defInf.dataPtr != NULL)
-					Resmpl_Execute(&clDev->resmpl, 1, &data[curSmpl]);
+					Resmpl_Execute(&clDev->resmpl, smplStep, &data[curSmpl]);
 				clDev = clDev->linkDev;
 			}
 		}
+		curSmpl += smplStep;
+		_playSmpl += smplStep;
 		if (_psTrigger & PLAYSTATE_END)
 		{
 			_psTrigger &= ~PLAYSTATE_END;
-			return curSmpl + 1;
+			break;
 		}
 	}
 	

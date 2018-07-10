@@ -5,6 +5,8 @@
 #include "../snddef.h"
 #include "../EmuStructs.h"
 
+extern DEV_DEF devDef_AY8910_MAME;
+
 /*
 AY-3-8910A: 2 I/O ports
 AY-3-8912A: 1 I/O port
@@ -74,6 +76,7 @@ OKI M5255, Winbond WF19054, JFC 95101, File KC89C72, Toshiba T7766A : difference
 
 typedef struct _ay8910_context ay8910_context;
 
+static UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf);
 UINT32 ay8910_start(void **chip, UINT32 clock, UINT8 ay_type, UINT8 ay_flags);
 
 void ay8910_stop(void *chip);

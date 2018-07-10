@@ -55,7 +55,36 @@ Copyright(C)2006-2012 Kitao Nakamura.
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
+#include "../EmuHelper.h"
 #include "Ootake_PSG.h"
+#include "Ootake_PSG_private.h"
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, OPSG_Write},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, OPSG_Read},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_C6280_Ootake =
+{
+	"HuC6280", "Ootake", FCC_OOTK,
+	
+	device_start_c6280_ootake,
+	OPSG_Deinit,
+	OPSG_ResetVolumeReg,	// TODO: not a "real" reset
+	OPSG_Mix,
+	
+	NULL,	// SetOptionBits
+	OPSG_SetMuteMask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
 
 
 typedef UINT8	Uint8;
@@ -538,7 +567,7 @@ set_VOL(huc6280_state* info)
 	[Mix]
 		ＰＳＧの出力をミックスします。
 -----------------------------------------------------------------------------*/
-void
+static void
 OPSG_Mix(
 	void*		chip,
 	UINT32		nSample,	// 書き出すサンプル数
@@ -678,11 +707,33 @@ psg_reset(huc6280_state* info)
 }
 
 
+static UINT8 device_start_c6280_ootake(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->clock / 16;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	chip = OPSG_Init(cfg->clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	
+	OPSG_SetHoneyInTheSky(chip, cfg->flags);
+	
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_C6280_Ootake);
+	return 0x00;
+}
+
+
 /*-----------------------------------------------------------------------------
 	[Init]
 		ＰＳＧを初期化します。
 -----------------------------------------------------------------------------*/
-void*
+static void*
 OPSG_Init(
 	UINT32		clock,
 	UINT32		sampleRate)
@@ -724,7 +775,7 @@ OPSG_Init(
 	[Deinit]
 		ＰＳＧを破棄します。
 -----------------------------------------------------------------------------*/
-void
+static void
 OPSG_Deinit(void* chip)
 {
 	huc6280_state* info = (huc6280_state*)chip;
@@ -737,7 +788,7 @@ OPSG_Deinit(void* chip)
 	[Read]
 		ＰＳＧポートの読み出しに対する動作を記述します。
 -----------------------------------------------------------------------------*/
-UINT8
+static UINT8
 OPSG_Read(
 	void*	chip,
 	UINT8	regNum)
@@ -755,7 +806,7 @@ OPSG_Read(
 	[Write]
 		ＰＳＧポートの書き込みに対する動作を記述します。
 -----------------------------------------------------------------------------*/
-void
+static void
 OPSG_Write(
 	void*		chip,
 	UINT8		regNum,
@@ -782,7 +833,7 @@ OPSG_Write(
 
 
 //Kitao追加
-void
+static void
 OPSG_ResetVolumeReg(void* chip)
 {
 	huc6280_state* info = (huc6280_state*)chip;
@@ -802,7 +853,7 @@ OPSG_ResetVolumeReg(void* chip)
 
 
 //Kitao追加
-void
+static void
 OPSG_SetMutePsgChannel(
 	void*	chip,
 	UINT8	num,
@@ -818,7 +869,7 @@ OPSG_SetMutePsgChannel(
 	}
 }
 
-void OPSG_SetMuteMask(void* chip, UINT32 MuteMask)
+static void OPSG_SetMuteMask(void* chip, UINT32 MuteMask)
 {
 	Uint8 CurChn;
 	
@@ -829,7 +880,7 @@ void OPSG_SetMuteMask(void* chip, UINT32 MuteMask)
 }
 
 //Kitao追加
-UINT8
+static UINT8
 OPSG_GetMutePsgChannel(
 	void*	chip,
 	UINT8	num)
@@ -840,7 +891,7 @@ OPSG_GetMutePsgChannel(
 }
 
 //Kitao追加。v2.60
-void
+static void
 OPSG_SetHoneyInTheSky(
 	void*	chip,
 	UINT8	bHoneyInTheSky)

@@ -132,8 +132,52 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
 #include "../EmuHelper.h"
+#include "sn764intf.h"
 #include "sn76496.h"
+
+
+static UINT8 sn76496_ready_r(void *chip, UINT8 offset);
+static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data);
+static void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data);
+
+static void SN76496Update(void *param, UINT32 samples, DEV_SMPL** outputs);
+static UINT32 sn76496_start(void* _chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
+							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega);
+static void sn76496_connect_t6w28(void *noisechip, void *tonechip);
+static void sn76496_shutdown(void *chip);
+static void sn76496_reset(void *chip);
+static void sn76496_freq_limiter(void* chip, UINT32 sample_rate);
+static void sn76496_set_mutemask(void *chip, UINT32 MuteMask);
+
+static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevInf);
+static void sn76496_w_mame(void *chip, UINT8 reg, UINT8 data);
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_mame},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_SN76496_MAME =
+{
+	"SN76496", "MAME", FCC_MAME,
+	
+	(DEVFUNC_START)device_start_sn76496_mame,
+	sn76496_shutdown,
+	sn76496_reset,
+	SN76496Update,
+	
+	NULL,	// SetOptionBits
+	sn76496_set_mutemask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
 
 
 #define MAX_OUTPUT 0x8000
@@ -143,6 +187,7 @@ typedef struct _sn76496_state sn76496_state;
 struct _sn76496_state
 {
 	DEV_DATA _devData;
+	SN76496_CFG cfg;
 	
 	UINT32 clock;
 	UINT32 feedback_mask;   // mask for feedback
@@ -174,20 +219,20 @@ struct _sn76496_state
 };
 
 
-UINT8 sn76496_ready_r(void *chip, UINT8 offset)
+static UINT8 sn76496_ready_r(void *chip, UINT8 offset)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	return R->ready_state ? 1 : 0;
 }
 
-void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data)
+static void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	if (R->stereo) R->stereo_mask = data;
 	else logerror("sn76496_base_device: Call to stereo write with mono chip!\n");
 }
 
-void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
+static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	UINT8 n, r, c;
@@ -268,7 +313,7 @@ INLINE void countdown_cycles(sn76496_state *R)
 	}
 }
 
-void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
+static void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 {
 	UINT32 i;
 	UINT32 j;
@@ -511,19 +556,14 @@ static void SN76496_set_gain(sn76496_state *R,int gain)
 }
 
 
-UINT32 sn76496_start(void **_chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
-					UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega)
+static UINT32 sn76496_start(void* _chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
+							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega)
 {
-	sn76496_state* chip;
+	sn76496_state *chip = (sn76496_state*)_chip;
 	UINT32 feedbackmask;
 	UINT32 ntap[2];
 	UINT8 curbit;
 	UINT8 curtap;
-	
-	chip = (sn76496_state*)calloc(1, sizeof(sn76496_state));
-	if (chip == NULL)
-		return 0;
-	*_chip = chip;
 	
 	feedbackmask = 1 << (shiftregwidth - 1);
 	// extract single noise tap bits
@@ -559,7 +599,7 @@ UINT32 sn76496_start(void **_chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noi
 	return chip->clock / 2 / chip->clock_divider;
 }
 
-void sn76496_connect_t6w28(void *noisechip, void *tonechip)
+static void sn76496_connect_t6w28(void *noisechip, void *tonechip)
 {
 	sn76496_state *Rnoise = (sn76496_state *)noisechip;
 	sn76496_state *Rtone = (sn76496_state *)tonechip;
@@ -573,7 +613,7 @@ void sn76496_connect_t6w28(void *noisechip, void *tonechip)
 	return;
 }
 
-void sn76496_shutdown(void *chip)
+static void sn76496_shutdown(void *chip)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	
@@ -581,7 +621,7 @@ void sn76496_shutdown(void *chip)
 	return;
 }
 
-void sn76496_reset(void *chip)
+static void sn76496_reset(void *chip)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	UINT8 i;
@@ -614,7 +654,7 @@ void sn76496_reset(void *chip)
 	return;
 }
 
-void sn76496_freq_limiter(void* chip, UINT32 sample_rate)
+static void sn76496_freq_limiter(void* chip, UINT32 sample_rate)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	
@@ -623,7 +663,7 @@ void sn76496_freq_limiter(void* chip, UINT32 sample_rate)
 	return;
 }
 
-void sn76496_set_mutemask(void *chip, UINT32 MuteMask)
+static void sn76496_set_mutemask(void *chip, UINT32 MuteMask)
 {
 	sn76496_state *R = (sn76496_state*)chip;
 	UINT8 CurChn;
@@ -631,6 +671,44 @@ void sn76496_set_mutemask(void *chip, UINT32 MuteMask)
 	for (CurChn = 0; CurChn < 4; CurChn ++)
 		R->MuteMsk[CurChn] = (MuteMask & (1 << CurChn)) ? 0 : ~0;
 	
+	return;
+}
+
+static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevInf)
+{
+	sn76496_state* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	chip = (sn76496_state*)calloc(1, sizeof(sn76496_state));
+	if (chip == NULL)
+		return 0xFF;
+	
+	rate = sn76496_start(chip, cfg->_genCfg.clock, cfg->shiftRegWidth, cfg->noiseTaps,
+						cfg->negate, cfg->stereo, cfg->clkDiv, cfg->segaPSG);
+	
+	chip->cfg = *cfg;
+	if (cfg->t6w28_tone != NULL)
+		sn76496_connect_t6w28(chip, cfg->t6w28_tone);
+	sn76496_freq_limiter(chip, cfg->_genCfg.smplRate);
+	
+	devData = &chip->_devData;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_SN76496_MAME);
+	return 0x00;
+}
+
+static void sn76496_w_mame(void *chip, UINT8 reg, UINT8 data)
+{
+	switch(reg)
+	{
+	case 0x00:
+		sn76496_write_reg(chip, 0x00, data);
+		break;
+	case 0x01:
+		sn76496_stereo_w(chip, 0x00, data);
+		break;
+	}
 	return;
 }
 

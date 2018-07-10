@@ -14,7 +14,53 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
+#include "../EmuHelper.h"
 #include "scd_pcm.h"
+
+
+static UINT8 device_start_rf5c68_gens(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
+static void*SCD_PCM_Init(UINT32 Clock, UINT32 Rate, UINT8 smpl0patch);
+static void SCD_PCM_Deinit(void* info);
+static void SCD_PCM_Set_Rate(void* info, UINT32 Clock, UINT32 Rate);
+static void SCD_PCM_Reset(void* info);
+static void SCD_PCM_Write_Reg(void* info, UINT8 Reg, UINT8 Data);
+static UINT8 SCD_PCM_Read_Reg(void* info, UINT8 Reg);
+static void SCD_PCM_Update(void* info, UINT32 Length, DEV_SMPL **buf);
+static UINT8 SCD_PCM_MemRead(void *info, UINT16 offset);
+static void SCD_PCM_MemWrite(void *info, UINT16 offset, UINT8 data);
+static void SCD_PCM_MemBlockWrite(void* info, UINT32 offset, UINT32 length, const UINT8* data);
+static void SCD_PCM_SetMuteMask(void* info, UINT32 MuteMask);
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, SCD_PCM_Write_Reg},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, SCD_PCM_Read_Reg},
+	{RWF_MEMORY | RWF_WRITE, DEVRW_A16D8, 0, SCD_PCM_MemWrite},
+	{RWF_MEMORY | RWF_READ, DEVRW_A16D8, 0, SCD_PCM_MemRead},
+	{RWF_MEMORY | RWF_WRITE, DEVRW_BLOCK, 0, SCD_PCM_MemBlockWrite},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_RF5C68_Gens =
+{
+	"RF5C164", "Gens", FCC_GENS,
+	
+	device_start_rf5c68_gens,
+	SCD_PCM_Deinit,
+	SCD_PCM_Reset,
+	SCD_PCM_Update,
+	
+	NULL,	// SetOptionBits
+	SCD_PCM_SetMuteMask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
+
 
 struct pcm_chan_
 {
@@ -50,12 +96,31 @@ struct pcm_chip_
 #define PCM_STEP_SHIFT 11
 
 
+static UINT8 device_start_rf5c68_gens(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->clock / 384;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	chip = SCD_PCM_Init(cfg->clock, rate, cfg->flags);
+	if (chip == NULL)
+		return 0xFF;
+	
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_RF5C68_Gens);
+	return 0x00;
+}
+
 /**
  * SCD_PCM_Init(): Initialize the PCM chip.
  * @param Rate Sample rate.
  * @return 0 if successful.
  */
-void* SCD_PCM_Init(UINT32 Clock, UINT32 Rate, UINT8 smpl0patch)
+static void* SCD_PCM_Init(UINT32 Clock, UINT32 Rate, UINT8 smpl0patch)
 {
 	struct pcm_chip_ *chip;
 	
@@ -74,7 +139,7 @@ void* SCD_PCM_Init(UINT32 Clock, UINT32 Rate, UINT8 smpl0patch)
 	return chip;
 }
 
-void SCD_PCM_Deinit(void* info)
+static void SCD_PCM_Deinit(void* info)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	free(chip->RAM);	chip->RAM = NULL;
@@ -87,7 +152,7 @@ void SCD_PCM_Deinit(void* info)
 /**
  * SCD_PCM_Reset(): Reset the PCM chip.
  */
-void SCD_PCM_Reset(void* info)
+static void SCD_PCM_Reset(void* info)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	int i;
@@ -121,7 +186,7 @@ void SCD_PCM_Reset(void* info)
  * SCD_PCM_Set_Rate(): Change the PCM sample rate.
  * @param Rate New sample rate.
  */
-void SCD_PCM_Set_Rate(void* info, UINT32 Clock, UINT32 Rate)
+static void SCD_PCM_Set_Rate(void* info, UINT32 Clock, UINT32 Rate)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	int i;
@@ -145,7 +210,7 @@ void SCD_PCM_Set_Rate(void* info, UINT32 Clock, UINT32 Rate)
  * @param Reg Register ID.
  * @param Data Data to write.
  */
-void SCD_PCM_Write_Reg(void* info, UINT8 Reg, UINT8 Data)
+static void SCD_PCM_Write_Reg(void* info, UINT8 Reg, UINT8 Data)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	int i;
@@ -263,7 +328,7 @@ void SCD_PCM_Write_Reg(void* info, UINT8 Reg, UINT8 Data)
 	}
 }
 
-UINT8 SCD_PCM_Read_Reg(void* info, UINT8 Reg)
+static UINT8 SCD_PCM_Read_Reg(void* info, UINT8 Reg)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	UINT8 shift;
@@ -279,7 +344,7 @@ UINT8 SCD_PCM_Read_Reg(void* info, UINT8 Reg)
  * @param Length Buffer length.
  * @param buf PCM buffer.
  */
-void SCD_PCM_Update(void* info, UINT32 Length, DEV_SMPL **buf)
+static void SCD_PCM_Update(void* info, UINT32 Length, DEV_SMPL **buf)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	int i;
@@ -366,19 +431,19 @@ void SCD_PCM_Update(void* info, UINT32 Length, DEV_SMPL **buf)
 }
 
 
-UINT8 SCD_PCM_MemRead(void *info, UINT16 offset)
+static UINT8 SCD_PCM_MemRead(void *info, UINT16 offset)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	return chip->RAM[chip->Bank | offset];
 }
 
-void SCD_PCM_MemWrite(void *info, UINT16 offset, UINT8 data)
+static void SCD_PCM_MemWrite(void *info, UINT16 offset, UINT8 data)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	chip->RAM[chip->Bank | offset] = data;
 }
 
-void SCD_PCM_MemBlockWrite(void* info, UINT32 offset, UINT32 length, const UINT8* data)
+static void SCD_PCM_MemBlockWrite(void* info, UINT32 offset, UINT32 length, const UINT8* data)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	
@@ -394,7 +459,7 @@ void SCD_PCM_MemBlockWrite(void* info, UINT32 offset, UINT32 length, const UINT8
 }
 
 
-void SCD_PCM_SetMuteMask(void* info, UINT32 MuteMask)
+static void SCD_PCM_SetMuteMask(void* info, UINT32 MuteMask)
 {
 	struct pcm_chip_ *chip = (struct pcm_chip_ *)info;
 	unsigned char CurChn;

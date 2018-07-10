@@ -177,9 +177,6 @@
     <ClCompile Include="emu\cores\pokey.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\cores\qsound.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="emu\cores\vsu.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
@@ -223,6 +220,18 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="emu\cores\ym3438.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\saa1099_vb.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\qsoundintf.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\qsound_mame.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="emu\cores\qsound_vb.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -413,9 +422,6 @@
     <ClInclude Include="emu\cores\pokey.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\cores\qsound.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="emu\cores\vsu.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -459,6 +465,30 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\ym3438.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\saa1099_vb.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\qsoundintf.h">
+      <Filter>Quelldateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\qsound_mame.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\qsound_vb.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\Ootake_PSG_private.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\emu2413_private.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\emu2149_private.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\sn76489_private.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

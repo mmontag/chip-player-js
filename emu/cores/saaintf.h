@@ -7,6 +7,7 @@
 // undefine one of the variables to disable the cores
 #define EC_SAA1099_MAME		// enable SAA1099 core from MAME
 #define EC_SAA1099_NRS		// enable SAA1099 core by NewRisingSun
+#define EC_SAA1099_VB		// enable SAA1099 core by Valley Bell
 #endif
 
 

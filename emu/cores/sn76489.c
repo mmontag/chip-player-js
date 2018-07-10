@@ -26,8 +26,37 @@
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
+#include "../EmuHelper.h"
 #include "sn76489.h"
+#include "sn76489_private.h"
 #include "../panning.h"
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, sn76496_w_maxim},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_SN76489_Maxim =
+{
+	"SN76489", "Maxim", FCC_MAXM,
+	
+	(DEVFUNC_START)device_start_sn76496_maxim,
+	(DEVFUNC_CTRL)SN76489_Shutdown,
+	(DEVFUNC_CTRL)SN76489_Reset,
+	(DEVFUNC_UPDATE)SN76489_Update,
+	
+	NULL,	// SetOptionBits
+	(DEVFUNC_OPTMASK)sn76489_mute_maxim,
+	(DEVFUNC_PANALL)sn76489_pan_maxim,
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
+
 
 #define NoiseInitialState 0x8000  /* Initial state of shift register */
 #define PSG_CUTOFF        0x6     /* Value below which PSG does not output */
@@ -42,7 +71,7 @@ static const int PSGVolumeValues[16] = {
 };
 
 
-SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
+static SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
 {
 	int i;
 	SN76489_Context* chip = (SN76489_Context*)calloc(1, sizeof(SN76489_Context));
@@ -63,7 +92,7 @@ SN76489_Context* SN76489_Init( UINT32 PSGClockValue, UINT32 SamplingRate)
 	return chip;
 }
 
-void SN76489_ConnectT6W28(SN76489_Context* noisechip, SN76489_Context* tonechip)
+static void SN76489_ConnectT6W28(SN76489_Context* noisechip, SN76489_Context* tonechip)
 {
 	// Activate special NeoGeoPocket Mode
 	tonechip->NgpFlags = 0x80 | 0x00;
@@ -74,7 +103,7 @@ void SN76489_ConnectT6W28(SN76489_Context* noisechip, SN76489_Context* tonechip)
 	return;
 }
 
-void SN76489_Reset(SN76489_Context* chip)
+static void SN76489_Reset(SN76489_Context* chip)
 {
 	int i;
 
@@ -109,18 +138,18 @@ void SN76489_Reset(SN76489_Context* chip)
 	chip->Clock = 0;
 }
 
-void SN76489_Shutdown(SN76489_Context* chip)
+static void SN76489_Shutdown(SN76489_Context* chip)
 {
 	free(chip);
 }
 
-void SN76489_Config(SN76489_Context* chip, UINT32 feedback, UINT8 sr_width)
+static void SN76489_Config(SN76489_Context* chip, UINT32 feedback, UINT8 sr_width)
 {
 	chip->WhiteNoiseFeedback = feedback;
 	chip->SRWidth = sr_width;
 }
 
-void SN76489_Write(SN76489_Context* chip, UINT8 data)
+static void SN76489_Write(SN76489_Context* chip, UINT8 data)
 {
 	if ( data & 0x80 )
 	{
@@ -154,12 +183,12 @@ void SN76489_Write(SN76489_Context* chip, UINT8 data)
 	}
 }
 
-void SN76489_GGStereoWrite(SN76489_Context* chip, UINT8 data)
+static void SN76489_GGStereoWrite(SN76489_Context* chip, UINT8 data)
 {
 	chip->PSGStereo=data;
 }
 
-void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
+static void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 {
 	UINT32 i, j;
 	SN76489_Context* chip_t;
@@ -341,20 +370,68 @@ void SN76489_Update(SN76489_Context* chip, UINT32 length, DEV_SMPL **buffer)
 }
 
 
-UINT32 SN76489_GetMute(SN76489_Context* chip)
+static UINT32 SN76489_GetMute(SN76489_Context* chip)
 {
 	return chip->Mute;
 }
 
-void SN76489_SetMute(SN76489_Context* chip, UINT32 val)
+static void SN76489_SetMute(SN76489_Context* chip, UINT32 val)
 {
 	chip->Mute=(UINT8)val;
 }
 
-void SN76489_SetPanning(SN76489_Context* chip, INT16 ch0, INT16 ch1, INT16 ch2, INT16 ch3)
+static void SN76489_SetPanning(SN76489_Context* chip, INT16 ch0, INT16 ch1, INT16 ch2, INT16 ch3)
 {
 	Panning_Calculate( chip->panning[0], ch0 );
 	Panning_Calculate( chip->panning[1], ch1 );
 	Panning_Calculate( chip->panning[2], ch2 );
 	Panning_Calculate( chip->panning[3], ch3 );
+}
+
+static UINT8 device_start_sn76496_maxim(const SN76496_CFG* cfg, DEV_INFO* retDevInf)
+{
+	SN76489_Context* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->_genCfg.smplRate;
+	chip = SN76489_Init(cfg->_genCfg.clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	
+	chip->cfg = *cfg;
+	if (cfg->t6w28_tone != NULL)
+		SN76489_ConnectT6W28(chip, (SN76489_Context*)cfg->t6w28_tone);
+	SN76489_Config(chip, cfg->noiseTaps, cfg->shiftRegWidth);
+	
+	devData = &chip->_devData;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_SN76489_Maxim);
+	return 0x00;
+}
+
+static void sn76496_w_maxim(SN76489_Context* chip, UINT8 reg, UINT8 data)
+{
+	switch(reg)
+	{
+	case 0x00:
+		SN76489_Write(chip, data);
+		break;
+	case 0x01:
+		SN76489_GGStereoWrite(chip, data);
+		break;
+	}
+	return;
+}
+
+static void sn76489_mute_maxim(SN76489_Context* chip, UINT32 MuteMask)
+{
+	SN76489_SetMute(chip, ~MuteMask & 0x0F);
+	return;
+}
+
+static void sn76489_pan_maxim(SN76489_Context* chip, INT16* PanVals)
+{
+	SN76489_SetPanning(chip, PanVals[0x00], PanVals[0x01], PanVals[0x02], PanVals[0x03]);
+	return;
 }

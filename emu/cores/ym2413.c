@@ -47,12 +47,53 @@ to do:
 
 #include <stdtype.h>
 #include "../snddef.h"
+#include "../EmuStructs.h"
+#include "../EmuCores.h"
 #include "../EmuHelper.h"
 #include "ym2413.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4244)	// disable warning for converting double -> UINT32
 #endif
+
+
+static UINT8 device_start_ym2413_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
+static void *ym2413_init(UINT32 clock, UINT32 rate);
+static void ym2413_shutdown(void *chip);
+static void ym2413_reset_chip(void *chip);
+static void ym2413_write(void *chip, UINT8 a, UINT8 v);
+static UINT8 ym2413_read(void *chip, UINT8 a);
+static void ym2413_update_one(void *chip, UINT32 length, DEV_SMPL **buffers);
+
+//void ym2413_set_update_handler(void *chip, OPLL_UPDATEHANDLER UpdateHandler, void *param);
+static void ym2413_set_mutemask(void* chip, UINT32 MuteMask);
+//void ym2413_set_chip_mode(void* chip, UINT8 Mode);
+//void ym2413_override_patches(void* chip, const UINT8* PatchDump);
+
+
+static DEVDEF_RWFUNC devFunc[] =
+{
+	{RWF_REGISTER | RWF_WRITE, DEVRW_A8D8, 0, ym2413_write},
+	{RWF_REGISTER | RWF_READ, DEVRW_A8D8, 0, ym2413_read},
+	{0x00, 0x00, 0, NULL}
+};
+DEV_DEF devDef_YM2413_MAME =
+{
+	"YM2413", "MAME", FCC_MAME,
+	
+	device_start_ym2413_mame,
+	ym2413_shutdown,
+	ym2413_reset_chip,
+	ym2413_update_one,
+	
+	NULL,	// SetOptionBits
+	ym2413_set_mutemask,
+	NULL,	// SetPanning
+	NULL,	// SetSampleRateChangeCallback
+	NULL,	// LinkDevice
+	
+	devFunc,	// rwFuncs
+};
 
 
 #define FREQ_SH         16  /* 16.16 fixed point (frequency calculations) */
@@ -1791,13 +1832,34 @@ INLINE void OPLLWrite(YM2413 *chip,UINT8 a,UINT8 v)
 
 
 
-void * ym2413_init(UINT32 clock, UINT32 rate)
+static UINT8 device_start_ym2413_mame(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
+{
+	void* chip;
+	DEV_DATA* devData;
+	UINT32 rate;
+	
+	rate = cfg->clock / 72;
+	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
+	
+	chip = ym2413_init(cfg->clock, rate);
+	if (chip == NULL)
+		return 0xFF;
+	
+	ym2413_set_chip_mode(chip, cfg->flags);
+	
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef_YM2413_MAME);
+	return 0x00;
+}
+
+static void * ym2413_init(UINT32 clock, UINT32 rate)
 {
 	/* emulator create */
 	return OPLLCreate(clock, rate);
 }
 
-void ym2413_shutdown(void *chip)
+static void ym2413_shutdown(void *chip)
 {
 	YM2413 *OPLL = (YM2413 *)chip;
 
@@ -1805,19 +1867,19 @@ void ym2413_shutdown(void *chip)
 	OPLLDestroy(OPLL);
 }
 
-void ym2413_reset_chip(void *chip)
+static void ym2413_reset_chip(void *chip)
 {
 	YM2413 *OPLL = (YM2413 *)chip;
 	OPLLResetChip(OPLL);
 }
 
-void ym2413_write(void *chip, UINT8 a, UINT8 v)
+static void ym2413_write(void *chip, UINT8 a, UINT8 v)
 {
 	YM2413 *OPLL = (YM2413 *)chip;
 	OPLLWrite(OPLL, a, v);
 }
 
-UINT8 ym2413_read(void *chip, UINT8 a)
+static UINT8 ym2413_read(void *chip, UINT8 a)
 {
 	return 0xFF;
 }
@@ -1836,7 +1898,7 @@ void ym2413_set_update_handler(void *chip,OPLL_UPDATEHANDLER UpdateHandler,void 
 ** '*buffer' is the output buffer pointer
 ** 'length' is the number of samples that should be generated
 */
-void ym2413_update_one(void *_chip, UINT32 length, DEV_SMPL **buffers)
+static void ym2413_update_one(void *_chip, UINT32 length, DEV_SMPL **buffers)
 {
 	YM2413		*chip  = (YM2413 *)_chip;
 	UINT8		rhythm = chip->rhythm&0x20;
@@ -1881,7 +1943,7 @@ void ym2413_update_one(void *_chip, UINT32 length, DEV_SMPL **buffers)
 	}
 }
 
-void ym2413_set_mutemask(void* chip, UINT32 MuteMask)
+static void ym2413_set_mutemask(void* chip, UINT32 MuteMask)
 {
 	YM2413* OPLL = (YM2413*)chip;
 	UINT8 CurChn;
