@@ -688,7 +688,7 @@ private:
     bool parseCMF(FileAndMemReader &fr);
 
     /**
-     * @brief Load file as GMF (ScummVM)
+     * @brief Load file as GMD/MUS files (ScummVM)
      * @param fr Context with opened file
      * @return true on successful load
      */

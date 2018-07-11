@@ -2267,7 +2267,6 @@ bool BW_MidiSequencer::parseGMF(FileAndMemReader &fr)
     if(std::memcmp(headerBuf, "GMF\x1", 4) != 0)
     {
         m_errorString = fr.fileName() + ": Invalid format, GMF\\x1 signature is not found!\n";
-        // GMD/MUS files (ScummVM)
         return false;
     }
 
