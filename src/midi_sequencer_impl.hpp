@@ -2268,9 +2268,10 @@ bool BW_MidiSequencer::parseGMF(FileAndMemReader &fr)
     {
         m_errorString = fr.fileName() + ": Invalid format, GMF\\x1 signature is not found!\n";
         // GMD/MUS files (ScummVM)
-        fr.seek(7 - static_cast<long>(headerSize), FileAndMemReader::CUR);
         return false;
     }
+
+    fr.seek(7 - static_cast<long>(headerSize), FileAndMemReader::CUR);
 
     rawTrackData.clear();
     rawTrackData.resize(trackCount, std::vector<uint8_t>());
@@ -2293,7 +2294,6 @@ bool BW_MidiSequencer::parseGMF(FileAndMemReader &fr)
         fsize = fr.read(&rawTrackData[tk][0], 1, trackLength);
         if(fsize < trackLength)
         {
-            fr.close();
             m_errorString = fr.fileName() + ": Unexpected file ending while getting raw track data!\n";
             return false;
         }
