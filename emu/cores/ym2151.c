@@ -1476,10 +1476,6 @@ INLINE void chan7_calc(YM2151 *PSG)
 	}
 	/* M1 */
 	op->mem_value = PSG->mem;
-
-	// do per-channel clipping
-	if (PSG->chanout[7] > +16384)       PSG->chanout[7] = +16384;
-	else if (PSG->chanout[7] < -16384)  PSG->chanout[7] = -16384;
 }
 
 

@@ -575,7 +575,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
-if(CMAKE_COMPILER_IS_GNUCC)
+if(CMAKE_COMPILER_IS_GNUCC OR UNIX)
 	# link Math library
 	target_link_libraries(${PROJECT_NAME} PRIVATE m)
 endif()

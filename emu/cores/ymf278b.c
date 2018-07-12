@@ -38,6 +38,31 @@
           16Mbit capacity (2,097,152word x 8)
 */
 
+/*
+	Improved by Valley Bell, 2018
+	Thanks to niekniek and l_oliveira for providing recordings from OPL4 hardware.
+	Thanks to superctr for discussing changes.
+
+	Improvements:
+		- added TL interpolation, recordings show that internal TL levels are 0x00..0xFF
+		- fixed ADSR speeds
+		- correct clamping of intermediate Rate Correction values
+		- emulation of "loop glitch" (going out-of-bounds by playing a sample faster than it the loop is long)
+		- made calculation of sample position cleaner and closer to how the HW works
+		- increased output resolution from TL (0.375 db) to envelope (0.09375 db)
+		- fixed volume table - 6 db steps are done using bit shifts, steps in between are multiplicators
+		- made octave -8 freeze the sample
+
+	Known issues:
+		- TL 0x60 and D1L 0x0C still causes output on HW, but is clipped to silence in emulation.
+		  With TL 0x00 and D1L 0x0F or TL 0x00 + release phase, output is confirmed to go silent at -60 db.
+		  Maybe TL and envelope calculation are done separately?
+		- Octave -8 was only tested with fnum 0. Other fnum values might behave differently.
+		- pseudo reverb needs testing
+		- damping needs testing
+		- LFO stuff needs testing
+*/
+
 // Based on ymf278b.c written by R. Belmont and O. Galibert
 
 // This class doesn't model a full YMF278b chip. Instead it only models the
@@ -122,7 +147,7 @@ typedef struct
 {
 	UINT32 startaddr;
 	UINT16 loopaddr;
-	UINT16 endaddr;
+	UINT16 endaddr;	// Note: stored in 2s complement (0x0000 = 0, 0x0001 = -65535, 0xFFFF = -1)
 	UINT32 step;	// fixed-point frequency step
 					// invariant: step == calcStep(OCT, FN)
 	UINT32 stepptr;	// fixed-point pointer into the sample
@@ -191,11 +216,6 @@ struct _YMF278BChip
 	UINT8 *ram;
 	UINT32 clock;
 
-	/** Precalculated attenuation values with some margin for
-	  * envelope and pan levels.
-	  */
-	INT32 volume[0x80];
-
 	UINT8 regs[0x100];
 
 	UINT8 exp;
@@ -215,11 +235,15 @@ INLINE void ymf278b_writeMem(YMF278BChip* chip, UINT32 address, UINT8 value);
 #define EG_TIMER_OVERFLOW	(1 << EG_SH)
 
 // envelope output entries
+// fixed to match recordings from actual OPL4 -Valley Bell
 #define ENV_BITS			10
 #define ENV_LEN				(1 << ENV_BITS)
-#define ENV_STEP			(128.0f / ENV_LEN)
-#define MAX_ATT_INDEX		((1 << (ENV_BITS - 1)) - 1)	// 511
+#define ENV_STEP			(64.0 / ENV_LEN)
+
+#define MAX_ATT_INDEX		(ENV_LEN - 1)
 #define MIN_ATT_INDEX		0
+
+#define TL_SHIFT			2	// envelope values are 4x as fine as TL levels
 
 // Envelope Generator phases
 #define EG_ATT	4
@@ -233,16 +257,19 @@ INLINE void ymf278b_writeMem(YMF278BChip* chip, UINT32 address, UINT8 value);
 
 // Pan values, units are -3dB, i.e. 8.
 static const INT32 pan_left[16]  = {
-	0, 8, 16, 24, 32, 40, 48, 128, 128,   0,  0,  0,  0,  0,  0, 0
+	0, 8, 16, 24, 32, 40, 48, 255, 255,   0,  0,  0,  0,  0,  0, 0
 };
 static const INT32 pan_right[16] = {
-	0, 0,  0,  0,  0,  0,  0,   0, 128, 128, 48, 40, 32, 24, 16, 8
+	0, 0,  0,  0,  0,  0,  0,   0, 255, 255, 48, 40, 32, 24, 16, 8
 };
 
 // Mixing levels, units are -3dB
 static const INT32 mix_level[8] = {
-	0, 8, 16, 24, 32, 40, 48, 128
+	0, 8, 16, 24, 32, 40, 48, 255
 };
+
+// Precalculated attenuation values
+static INT32 vol_tab[ENV_LEN];
 
 // decay level table (3dB per step)
 // 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)
@@ -326,29 +353,31 @@ static const UINT8 eg_rate_shift[64] = {
 // TODO check if frequency matches real chip
 #define O(a) (INT32)((EG_TIMER_OVERFLOW / a) / 6)
 static const INT32 lfo_period[8] = {
-	O(0.168f), O(2.019f), O(3.196f), O(4.206f),
-	O(5.215f), O(5.888f), O(6.224f), O(7.066f)
+	O(0.168), O(2.019), O(3.196), O(4.206),
+	O(5.215), O(5.888), O(6.224), O(7.066)
 };
 #undef O
 
 
 #define O(a) (INT32)((a) * 65536)
 static const INT32 vib_depth[8] = {
-	O( 0.0f  ), O( 3.378f), O( 5.065f), O( 6.750f),
-	O(10.114f), O(20.170f), O(40.106f), O(79.307f)
+	O( 0.0  ), O( 3.378), O( 5.065), O( 6.750),
+	O(10.114), O(20.170), O(40.106), O(79.307)
 };
 #undef O
 
 
-#define SC(db) (INT32)((db) * (2.0f / ENV_STEP))
+#define SC(db) (INT32)((db) * (2.0 / ENV_STEP))
 static const INT32 am_depth[8] = {
-	SC(0.0f  ), SC(1.781f), SC(2.906f), SC( 3.656f),
-	SC(4.406f), SC(5.906f), SC(7.406f), SC(11.91f )
+	SC(0.0  ), SC(1.781), SC(2.906), SC( 3.656),
+	SC(4.406), SC(5.906), SC(7.406), SC(11.91 )
 };
 #undef SC
 
 
-// Sign extend a 4-bit value to int (32-bit)
+static UINT8 tablesInit = 0;
+
+// Sign extend a 4-bit value to 8-bit int
 // require: x in range [0..15]
 INLINE INT8 sign_extend_4(UINT8 x)
 {
@@ -363,8 +392,15 @@ INLINE INT8 sign_extend_4(UINT8 x)
 // case we should shift in the other direction).
 INLINE UINT32 calcStep(INT8 oct, UINT32 fn, int vib)
 {
-	UINT32 t = (fn + 1024 + vib) << (8 + oct); // use '+' iso '|' (generates slightly better code)
-	return t >> 3; // was shifted 3 positions too far
+	if (oct == -8)
+	{
+		return 0;
+	}
+	else
+	{
+		UINT32 t = (fn + 1024 + vib) << (8 + oct); // use '+' iso '|' (generates slightly better code)
+		return t >> 3; // was shifted 3 positions too far
+	}
 }
 
 static void ymf278b_slot_reset(YMF278BSlot* slot)
@@ -399,7 +435,15 @@ INLINE int ymf278b_slot_compute_rate(YMF278BSlot* slot, int val)
 	
 	res = val * 4;
 	if (slot->RC != 15)
-		res += (slot->OCT + slot->RC) * 2 + (slot->FN & 0x200 ? 1 : 0);
+	{
+		int oct_rc = slot->OCT + slot->RC;
+		// clamping verified with HW tests -Valley Bell
+		if (oct_rc < 0x0)
+			oct_rc = 0x0;
+		else if (oct_rc > 0xF)
+			oct_rc = 0xF;
+		res += oct_rc * 2 + ((slot->FN & 0x200) >> 9);
+	}
 	
 	if (res < 0)
 		res = 0;
@@ -502,7 +546,8 @@ static void ymf278b_advance(YMF278BChip* chip)
 			if (! (chip->eg_cnt & ((1 << shift) - 1)))
 			{
 				select = eg_rate_select[rate];
-				op->env_vol += (~op->env_vol * eg_inc[select + ((chip->eg_cnt >> shift) & 7)]) >> 3;
+				// >>4 makes the attack phase match the actual chip -Valley Bell
+				op->env_vol += (~op->env_vol * eg_inc[select + ((chip->eg_cnt >> shift) & 7)]) >> 4;
 				if (op->env_vol <= MIN_ATT_INDEX)
 				{
 					op->env_vol = MIN_ATT_INDEX;
@@ -703,6 +748,7 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 		{
 			YMF278BSlot* sl;
 			INT16 sample;
+			INT32 smplOut;
 			int vol;
 			int volLeft;
 			int volRight;
@@ -718,35 +764,48 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 
 			sample = (sl->sample1 * (0x10000 - sl->stepptr) +
 			          sl->sample2 * sl->stepptr) >> 16;
-			vol = sl->TL + (sl->env_vol >> 2) + ymf278b_slot_compute_am(sl);
+			
+			// TL levels are 00..FF internally (TL register value 7F is mapped to TL level FF)
+			// Envelope levels have 4x the resolution (000..3FF)
+			// Recordings from actual hardware indicate, that TL level and envelope level are added up first and
+			// then converted into a volume level.
+			// Volume levels are approximate logarithmic. 6db result in half volume. Steps in between use linear interpolation.
+			// A volume of -60 db or lower results in silence. (value 0x280..0x3FF).
+			vol = (sl->TL << TL_SHIFT) + sl->env_vol + (ymf278b_slot_compute_am(sl) << TL_SHIFT);
 			if (vol < 0)
 				vol = 0;	// clip negative values (can occour due to AM)
+			else if (vol >= MAX_ATT_INDEX)
+				vol = MAX_ATT_INDEX;
+			smplOut = (sample * vol_tab[vol]) >> 17;
 
-			volLeft  = vol + pan_left [sl->pan] + vl;
-			volRight = vol + pan_right[sl->pan] + vr;
-			// verified on HW: internal TL levels above 0x7F are cut to silence
-			// TODO: test how envelope + pan + master volume affects this (only [sl->TL > 0x7F] was tested)
-			volLeft  = (volLeft  < 0x80) ? chip->volume[volLeft ] : 0;
-			volRight = (volRight < 0x80) ? chip->volume[volRight] : 0;
-
-			outputs[0][j] += (sample * volLeft ) >> 17;
-			outputs[1][j] += (sample * volRight) >> 17;
+			// Panning is done separately and thus allows you to go lower than -60 db.
+			// I'll also be taking wild guess and assume that, for simplicity, -3 db is approximated with 75%.
+			// The same applies to the PCM mix level.
+			volLeft  = pan_left [sl->pan] + vl;
+			volRight = pan_right[sl->pan] + vr;
+			// 0 -> 0x20, 8 -> 0x18, 16 -> 0x10, 24 -> 0x0C, etc.
+			volLeft  = (0x20 - (volLeft  & 0x0F)) >> (volLeft  >> 4);
+			volRight = (0x20 - (volRight & 0x0F)) >> (volRight >> 4);
+			
+			outputs[0][j] += (smplOut * volLeft ) >> 5;
+			outputs[1][j] += (smplOut * volRight) >> 5;
 
 			step = (sl->lfo_active && sl->vib)
 			     ? calcStep(sl->OCT, sl->FN, ymf278b_slot_compute_vib(sl))
 			     : sl->step;
 			sl->stepptr += step;
 
-			while (sl->stepptr >= 0x10000)
+			// If there is a 4-sample loop and you advance 12 samples per step,
+			// it may exceed the end offset.
+			// This is abused by the "Lizard Star" song to generate noise at 0:52. -Valley Bell
+			if (sl->stepptr >= 0x10000)
 			{
-				sl->stepptr -= 0x10000;
 				sl->sample1 = sl->sample2;
-				
 				sl->sample2 = ymf278b_getSample(chip, sl);
-				if (sl->pos >= sl->endaddr)
-					sl->pos = sl->pos - sl->endaddr + sl->loopaddr;
-				else
-					sl->pos ++;
+				sl->pos += (sl->stepptr >> 16);
+				sl->stepptr &= 0xFFFF;
+				if ((UINT32)sl->pos + sl->endaddr >= 0x10000)	// check position >= (negated) end address
+					sl->pos = sl->pos + sl->endaddr + sl->loopaddr;	// This is how the actual chip does it.
 			}
 		}
 		ymf278b_advance(chip);
@@ -841,10 +900,9 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 				break;
 			
 			slot->bits = (buf[0] & 0xC0) >> 6;
-			slot->startaddr = buf[2] | (buf[1] << 8) |
-			                  ((buf[0] & 0x3F) << 16);
-			slot->loopaddr = buf[4] + (buf[3] << 8);
-			slot->endaddr  = ((buf[6] + (buf[5] << 8)) ^ 0xFFFF);
+			slot->startaddr = buf[2] | (buf[1] << 8) | ((buf[0] & 0x3F) << 16);
+			slot->loopaddr = buf[4] | (buf[3] << 8);
+			slot->endaddr  = buf[6] | (buf[5] << 8);
 			for (i = 7; i < 12; ++i)
 			{
 				// Verified on real YMF278:
@@ -1190,7 +1248,7 @@ static void ymf278b_w(void *info, UINT8 offset, UINT8 data)
 // (For completeness) MoonSound also has 2MB ROM (YRW801), /CE of this ROM is
 // connected to YMF278 /MCS0. In both mode=0 and mode=1 this signal is active
 // for the region 0x000000-0x1FFFFF. (But this routine does not handle ROM).
-UINT32 ymf278b_getRamAddress(YMF278BChip* chip, UINT32 addr)
+static UINT32 ymf278b_getRamAddress(YMF278BChip* chip, UINT32 addr)
 {
 	if (chip->regs[2] & 2) {
 		// Normally MoonSound is used in 'memory access mode = 0'. But
@@ -1294,8 +1352,8 @@ static void refresh_opl3_volume(YMF278BChip* chip)
 	volL = mix_level[chip->fm_l];
 	volR = mix_level[chip->fm_r];
 	// chip->volume[] uses 0x8000 = 100%
-	volL = (chip->volume[volL] * OPL4FM_VOL_BALANCE) >> 7;
-	volR = (chip->volume[volR] * OPL4FM_VOL_BALANCE) >> 7;
+	volL = (vol_tab[volL << TL_SHIFT] * OPL4FM_VOL_BALANCE) >> 7;
+	volR = (vol_tab[volR << TL_SHIFT] * OPL4FM_VOL_BALANCE) >> 7;
 	chip->fm.setVol(chip->fm.chip, volL, volR);
 	
 	return;
@@ -1346,10 +1404,23 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	chip->memadr = 0; // avoid UMR
 
-	// Volume table, 1 = -0.375dB, 8 = -3dB, 256 = -96dB
-	// Note: The base of 2^-0.5 is applied to keep the volume of the original implementation.
-	for (i = 0x00; i < 0x80; i ++)
-		chip->volume[i] = (INT32)(32768 * pow(2.0, -0.5 + (-0.375 / 6) * i));
+	if (! tablesInit)
+	{
+		INT32 baseVol;
+		tablesInit = 1;
+		
+		// Volume table (envelope levels)
+		// Note: Base volume is at -3 db to keep the volume of the original implementation.
+		baseVol = (INT32)(32768 * pow(2.0, -0.5));
+		for (i = 0x00; i < ENV_LEN; i ++)
+		{
+			int vol_mul = 0x80 - (i & 0x3F);	// 0x40 values per 6 db
+			int vol_shift = 7 + (i >> 6);		// approximation: -6 dB == divide by two (shift right)
+			if (i >= 0x280)
+				vol_mul = 0;	// actual OPL4 hardware seems to clip to silence here
+			vol_tab[i] = (baseVol * vol_mul) >> vol_shift;
+		}
+	}
 
 	ymf278b_set_mute_mask(chip, 0x000000);
 
