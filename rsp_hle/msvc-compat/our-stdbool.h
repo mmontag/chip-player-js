@@ -23,6 +23,8 @@
 
 #pragma once
 
+#if defined(_MSC_VER) && _MSC_VER < 1700
+
 typedef int _Bool;
 
 /**
@@ -34,4 +36,11 @@ typedef int _Bool;
 #define false 0
 
 #define __bool_true_false_are_defined 1
+
+#else
+
+#include <stdbool.h>
+
+#endif
+
 
