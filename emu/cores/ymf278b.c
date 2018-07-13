@@ -45,18 +45,16 @@
 
 	Improvements:
 		- added TL interpolation, recordings show that internal TL levels are 0x00..0xFF
-		- fixed ADSR speeds
+		- fixed ADSR speeds, attack rate 15 is now instant
 		- correct clamping of intermediate Rate Correction values
 		- emulation of "loop glitch" (going out-of-bounds by playing a sample faster than it the loop is long)
 		- made calculation of sample position cleaner and closer to how the HW works
 		- increased output resolution from TL (0.375 db) to envelope (0.09375 db)
 		- fixed volume table - 6 db steps are done using bit shifts, steps in between are multiplicators
 		- made octave -8 freeze the sample
+		- verified that TL and envelope levels are applied separately, both go silent at -60 db
 
 	Known issues:
-		- TL 0x60 and D1L 0x0C still causes output on HW, but is clipped to silence in emulation.
-		  With TL 0x00 and D1L 0x0F or TL 0x00 + release phase, output is confirmed to go silent at -60 db.
-		  Maybe TL and envelope calculation are done separately?
 		- Octave -8 was only tested with fnum 0. Other fnum values might behave differently.
 		- pseudo reverb needs testing
 		- damping needs testing
@@ -240,7 +238,7 @@ INLINE void ymf278b_writeMem(YMF278BChip* chip, UINT32 address, UINT8 value);
 #define ENV_LEN				(1 << ENV_BITS)
 #define ENV_STEP			(64.0 / ENV_LEN)
 
-#define MAX_ATT_INDEX		(ENV_LEN - 1)
+#define MAX_ATT_INDEX		0x280	// makes attack phase right and also goes well with "envelope stops at -60 db"
 #define MIN_ATT_INDEX		0
 
 #define TL_SHIFT			2	// envelope values are 4x as fine as TL levels
@@ -462,7 +460,7 @@ INLINE int ymf278b_slot_compute_vib(YMF278BSlot* slot)
 INLINE int ymf278b_slot_compute_am(YMF278BSlot* slot)
 {
 	if (slot->lfo_active && slot->AM)
-		return (((slot->lfo_step << 8) / slot->lfo_max) * am_depth[slot->AM]) >> 12;
+		return (((slot->lfo_step << 8) / slot->lfo_max) * am_depth[slot->AM]) >> (12 - TL_SHIFT);
 	else
 		return 0;
 }
@@ -551,10 +549,7 @@ static void ymf278b_advance(YMF278BChip* chip)
 				if (op->env_vol <= MIN_ATT_INDEX)
 				{
 					op->env_vol = MIN_ATT_INDEX;
-					if (op->DL)
-						op->state = EG_DEC;
-					else
-						op->state = EG_SUS;
+					op->state = EG_DEC;
 				}
 			}
 			break;
@@ -749,7 +744,7 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 			YMF278BSlot* sl;
 			INT16 sample;
 			INT32 smplOut;
-			int vol;
+			int envVol;
 			int volLeft;
 			int volRight;
 			UINT32 step;
@@ -767,26 +762,28 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 			
 			// TL levels are 00..FF internally (TL register value 7F is mapped to TL level FF)
 			// Envelope levels have 4x the resolution (000..3FF)
-			// Recordings from actual hardware indicate, that TL level and envelope level are added up first and
-			// then converted into a volume level.
-			// Volume levels are approximate logarithmic. 6db result in half volume. Steps in between use linear interpolation.
+			// Volume levels are approximate logarithmic: -6 db result in half volume. Steps in between use linear interpolation.
 			// A volume of -60 db or lower results in silence. (value 0x280..0x3FF).
-			vol = (sl->TL << TL_SHIFT) + sl->env_vol + (ymf278b_slot_compute_am(sl) << TL_SHIFT);
-			if (vol < 0)
-				vol = 0;	// clip negative values (can occour due to AM)
-			else if (vol >= MAX_ATT_INDEX)
-				vol = MAX_ATT_INDEX;
-			smplOut = (sample * vol_tab[vol]) >> 17;
+			// Recordings from actual hardware indicate, that TL level and envelope level are applied separately.
+			// Each of them is clipped to silence below -60 db, but TL+envelope might result in a lower volume. -Valley Bell
+			envVol = sl->env_vol + ymf278b_slot_compute_am(sl);
+			if (envVol < 0)
+				envVol = 0;	// clip negative values (can occour due to AM)
+			else if (envVol >= MAX_ATT_INDEX)
+				envVol = MAX_ATT_INDEX;
+			smplOut = (sample * vol_tab[envVol]) >> 15;
+			smplOut = (smplOut * vol_tab[sl->TL << TL_SHIFT]) >> 15;
 
-			// Panning is done separately and thus allows you to go lower than -60 db.
-			// I'll also be taking wild guess and assume that, for simplicity, -3 db is approximated with 75%.
+			// Panning is also done separately. (low-volume TL + low-volume panning goes below -60 db)
+			// I'll be taking wild guess and assume that -3 db is approximated with 75%. (same as with TL and envelope levels)
 			// The same applies to the PCM mix level.
 			volLeft  = pan_left [sl->pan] + vl;
 			volRight = pan_right[sl->pan] + vr;
-			// 0 -> 0x20, 8 -> 0x18, 16 -> 0x10, 24 -> 0x0C, etc.
+			// 0 -> 0x20, 8 -> 0x18, 16 -> 0x10, 24 -> 0x0C, etc. (not using vol_tab here saves array boundary checks)
 			volLeft  = (0x20 - (volLeft  & 0x0F)) >> (volLeft  >> 4);
 			volRight = (0x20 - (volRight & 0x0F)) >> (volRight >> 4);
 			
+			smplOut = (smplOut * 0x5A82) >> 17;	// reduce volume by -15 db, should bring it into balance with FM
 			outputs[0][j] += (smplOut * volLeft ) >> 5;
 			outputs[1][j] += (smplOut * volRight) >> 5;
 
@@ -814,9 +811,17 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 
 INLINE void ymf278b_keyOnHelper(YMF278BChip* chip, YMF278BSlot* slot)
 {
+	int rate;
+
 	slot->active = 1;
 
 	slot->state = EG_ATT;
+	rate = ymf278b_slot_compute_rate(slot, slot->AR);
+	if (rate >= 60)
+	{
+		slot->env_vol = MIN_ATT_INDEX;
+		slot->state = EG_DEC;
+	}
 	slot->stepptr = 0;
 	slot->pos = 0;
 	slot->sample1 = ymf278b_getSample(chip, slot);
@@ -1341,7 +1346,7 @@ static void opl3dummy_reset(void* param)
 	return;
 }
 
-#define OPL4FM_VOL_BALANCE	0x16A	// 0x100 = 100%, FM is 3 db louder than PCM
+#define OPL4FM_VOL_BALANCE	0x100	// 0x100 = 100%
 static void refresh_opl3_volume(YMF278BChip* chip)
 {
 	INT32 volL, volR;
@@ -1351,7 +1356,7 @@ static void refresh_opl3_volume(YMF278BChip* chip)
 	
 	volL = mix_level[chip->fm_l];
 	volR = mix_level[chip->fm_r];
-	// chip->volume[] uses 0x8000 = 100%
+	// vol_tab[] uses 0x8000 = 100%
 	volL = (vol_tab[volL << TL_SHIFT] * OPL4FM_VOL_BALANCE) >> 7;
 	volR = (vol_tab[volR << TL_SHIFT] * OPL4FM_VOL_BALANCE) >> 7;
 	chip->fm.setVol(chip->fm.chip, volL, volR);
@@ -1406,19 +1411,22 @@ static UINT8 device_start_ymf278b(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 
 	if (! tablesInit)
 	{
-		INT32 baseVol;
 		tablesInit = 1;
 		
 		// Volume table (envelope levels)
-		// Note: Base volume is at -3 db to keep the volume of the original implementation.
-		baseVol = (INT32)(32768 * pow(2.0, -0.5));
 		for (i = 0x00; i < ENV_LEN; i ++)
 		{
-			int vol_mul = 0x80 - (i & 0x3F);	// 0x40 values per 6 db
-			int vol_shift = 7 + (i >> 6);		// approximation: -6 dB == divide by two (shift right)
-			if (i >= 0x280)
-				vol_mul = 0;	// actual OPL4 hardware seems to clip to silence here
-			vol_tab[i] = (baseVol * vol_mul) >> vol_shift;
+			if (i < MAX_ATT_INDEX)
+			{
+				int vol_mul = 0x80 - (i & 0x3F);	// 0x40 values per 6 db
+				int vol_shift = 7 + (i >> 6);		// approximation: -6 dB == divide by two (shift right)
+				vol_tab[i] = (0x8000 * vol_mul) >> vol_shift;
+			}
+			else
+			{
+				// OPL4 hardware seems to clip to silence here below -60 db.
+				vol_tab[i] = 0;
+			}
 		}
 	}
 

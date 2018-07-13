@@ -9,7 +9,7 @@
 #include "vgmplayer.hpp"
 #include <emu/EmuStructs.h>
 #include <emu/dac_control.h>
-#include <emu/cores/sn764intf.h>
+#include <emu/cores/sn764intf.h>	// for SN76496_W constants
 
 #include "../vgm/dblk_compr.h"
 #include "helper.h"
@@ -838,7 +838,7 @@ void VGMPlayer::Cmd_DACCtrl_Setup(void)	// DAC Stream Control: Setup Chip
 	return;
 }
 
-void VGMPlayer::Cmd_DACCtrl_SetData(void)	// DAC Stream Control: Set Data
+void VGMPlayer::Cmd_DACCtrl_SetData(void)	// DAC Stream Control: Set Data Bank
 {
 	size_t dsID = _dacStrmMap[fData[0x01]];
 	if (dsID == (size_t)-1)
@@ -854,7 +854,7 @@ void VGMPlayer::Cmd_DACCtrl_SetData(void)	// DAC Stream Control: Set Data
 	return;
 }
 
-void VGMPlayer::Cmd_DACCtrl_SetFrequency(void)	// DAC Stream Control: Set Freq
+void VGMPlayer::Cmd_DACCtrl_SetFrequency(void)	// DAC Stream Control: Set Frequency
 {
 	size_t dsID = _dacStrmMap[fData[0x01]];
 	if (dsID == (size_t)-1)
@@ -925,7 +925,7 @@ void VGMPlayer::Cmd_GGStereo(void)
 	if (cDev == NULL || cDev->write8 == NULL)
 		return;
 	
-	cDev->write8(cDev->base.defInf.dataPtr, 0x01, fData[0x01]);
+	cDev->write8(cDev->base.defInf.dataPtr, SN76496_W_GGST, fData[0x01]);
 	return;
 }
 
@@ -937,7 +937,7 @@ void VGMPlayer::Cmd_SN76489(void)
 	if (cDev == NULL || cDev->write8 == NULL)
 		return;
 	
-	cDev->write8(cDev->base.defInf.dataPtr, 0x00, fData[0x01]);
+	cDev->write8(cDev->base.defInf.dataPtr, SN76496_W_REG, fData[0x01]);
 	return;
 }
 

@@ -36,6 +36,9 @@
     <ClInclude Include="player\s98player.hpp">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="player\vgmplayer.hpp">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="emutest.c">
@@ -69,6 +72,12 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player\vgmplayer.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="player\vgmplayer_cmdhandler.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
