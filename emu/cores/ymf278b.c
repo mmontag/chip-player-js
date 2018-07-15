@@ -53,11 +53,12 @@
 		- fixed volume table - 6 db steps are done using bit shifts, steps in between are multiplicators
 		- made octave -8 freeze the sample
 		- verified that TL and envelope levels are applied separately, both go silent at -60 db
+		- implemented pseudo-reverb and damping according to manual
 
 	Known issues:
 		- Octave -8 was only tested with fnum 0. Other fnum values might behave differently.
 		- pseudo reverb needs testing
-		- damping needs testing
+		- damping needs testing (affected by Rate Correction or not?)
 		- LFO stuff needs testing
 */
 
@@ -167,6 +168,8 @@ typedef struct
 	UINT8 TLdest;	// destination total level
 	UINT8 TL;		// total level
 	UINT8 pan;		// panpot
+	UINT8 keyon;	// slot keyed on
+	UINT8 DAMP;
 	UINT8 lfo;		// LFO
 	UINT8 vib;		// vibrato
 	UINT8 AM;		// AM level
@@ -177,9 +180,8 @@ typedef struct
 	UINT8 RR;
 
 	UINT8 bits;		// width of the samples
-	UINT8 active;	// slot keyed on
 
-	UINT8 state;
+	UINT8 state;	// envelope generator state
 	UINT8 lfo_active;
 
 	UINT8 Muted;
@@ -249,9 +251,6 @@ INLINE void ymf278b_writeMem(YMF278BChip* chip, UINT32 address, UINT8 value);
 #define EG_SUS	2
 #define EG_REL	1
 #define EG_OFF	0
-
-#define EG_REV	5 // pseudo reverb
-#define EG_DMP	6 // damp
 
 // Pan values, units are -3dB, i.e. 8.
 static const INT32 pan_left[16]  = {
@@ -404,7 +403,7 @@ INLINE UINT32 calcStep(INT8 oct, UINT32 fn, int vib)
 static void ymf278b_slot_reset(YMF278BSlot* slot)
 {
 	slot->wave = slot->FN = slot->OCT = slot->PRVB = slot->LD = slot->TLdest = slot->TL = slot->pan =
-		slot->lfo = slot->vib = slot->AM = 0;
+		slot->keyon = slot->DAMP = slot->lfo = slot->vib = slot->AM = 0;
 	slot->AR = slot->D1R = slot->DL = slot->D2R = slot->RC = slot->RR = 0;
 	slot->stepptr = 0;
 	slot->step = calcStep(slot->OCT, slot->FN, 0);
@@ -416,7 +415,6 @@ static void ymf278b_slot_reset(YMF278BSlot* slot)
 	slot->lfo_max = lfo_period[0];
 
 	slot->state = EG_OFF;
-	slot->active = 0;
 
 	// not strictly needed, but avoid UMR on savestate
 	slot->pos = slot->sample1 = slot->sample2 = 0;
@@ -449,6 +447,36 @@ INLINE int ymf278b_slot_compute_rate(YMF278BSlot* slot, int val)
 		res = 63;
 	
 	return res;
+}
+
+INLINE int ymf278b_slot_compute_decay_rate(YMF278BSlot* slot, int val)
+{
+	if (slot->DAMP)
+	{
+		// damping
+		// The manual lists these times: (44100 samples/second)
+		// -12 db at  5.8 ms, sample 256
+		// -48 db at  8.0 ms, sample 352
+		// -72 db at  9.4 ms, sample 416
+		// -96 db at 10.9 ms, sample 480
+		// This results in these times:
+		//   0 db .. -12 db: 256 samples (5.80 ms) -> 128 samples per -6 db = rate 48
+		// -12 db .. -48 db:  96 samples (2.18 ms) ->  16 samples per -6 db = rate 63
+		// -48 db .. -72 db:  64 samples (1.45 ms) ->  16 samples per -6 db = rate 63
+		// -72 db .. -96 db:  64 samples (1.45 ms) ->  16 samples per -6 db = rate 63
+		if (slot->env_vol < dl_tab[4])
+			return 48;	// 0 db .. -12 db
+		else
+			return 63;	// -12 db .. -96 db
+	}
+	if (slot->PRVB)
+	{
+		// pseudo reverb
+		// activated when reaching -18 db, overrides D1R/D2R/RR with reverb rate 5
+		if (slot->env_vol >= dl_tab[6])
+			return ymf278b_slot_compute_rate(slot, 5);
+	}
+	return ymf278b_slot_compute_rate(slot, val);
 }
 
 INLINE int ymf278b_slot_compute_vib(YMF278BSlot* slot)
@@ -544,7 +572,7 @@ static void ymf278b_advance(YMF278BChip* chip)
 			if (! (chip->eg_cnt & ((1 << shift) - 1)))
 			{
 				select = eg_rate_select[rate];
-				// >>4 makes the attack phase match the actual chip -Valley Bell
+				// >>4 makes the attack phase's shape match the actual chip -Valley Bell
 				op->env_vol += (~op->env_vol * eg_inc[select + ((chip->eg_cnt >> shift) & 7)]) >> 4;
 				if (op->env_vol <= MIN_ATT_INDEX)
 				{
@@ -554,7 +582,7 @@ static void ymf278b_advance(YMF278BChip* chip)
 			}
 			break;
 		case EG_DEC:	// decay phase
-			rate = ymf278b_slot_compute_rate(op, op->D1R);
+			rate = ymf278b_slot_compute_decay_rate(op, op->D1R);
 			if (rate < 4)
 				break;
 			
@@ -563,18 +591,12 @@ static void ymf278b_advance(YMF278BChip* chip)
 			{
 				select = eg_rate_select[rate];
 				op->env_vol += eg_inc[select + ((chip->eg_cnt >> shift) & 7)];
-
-				if ((op->env_vol > dl_tab[6]) && op->PRVB)
-					op->state = EG_REV;
-				else
-				{
-					if (op->env_vol >= op->DL)
-						op->state = EG_SUS;
-				}
+				if (op->env_vol >= op->DL)
+					op->state = EG_SUS;
 			}
 			break;
 		case EG_SUS:	// sustain phase
-			rate = ymf278b_slot_compute_rate(op, op->D2R);
+			rate = ymf278b_slot_compute_decay_rate(op, op->D2R);
 			if (rate < 4)
 				break;
 			
@@ -583,21 +605,15 @@ static void ymf278b_advance(YMF278BChip* chip)
 			{
 				select = eg_rate_select[rate];
 				op->env_vol += eg_inc[select + ((chip->eg_cnt >> shift) & 7)];
-
-				if ((op->env_vol > dl_tab[6]) && op->PRVB)
-					op->state = EG_REV;
-				else
+				if (op->env_vol >= MAX_ATT_INDEX)
 				{
-					if (op->env_vol >= MAX_ATT_INDEX)
-					{
-						op->env_vol = MAX_ATT_INDEX;
-						op->active = 0;
-					}
+					op->env_vol = MAX_ATT_INDEX;
+					op->state = EG_OFF;
 				}
 			}
 			break;
 		case EG_REL:	// release phase
-			rate = ymf278b_slot_compute_rate(op, op->RR);
+			rate = ymf278b_slot_compute_decay_rate(op, op->RR);
 			if (rate < 4)
 				break;
 			
@@ -606,51 +622,10 @@ static void ymf278b_advance(YMF278BChip* chip)
 			{
 				select = eg_rate_select[rate];
 				op->env_vol += eg_inc[select + ((chip->eg_cnt >> shift) & 7)];
-
-				if ((op->env_vol > dl_tab[6]) && op->PRVB)
-					op->state = EG_REV;
-				else
-				{
-					if (op->env_vol >= MAX_ATT_INDEX)
-					{
-						op->env_vol = MAX_ATT_INDEX;
-						op->active = 0;
-					}
-				}
-			}
-			break;
-		case EG_REV:	// pseudo reverb
-			// TODO improve env_vol update
-			rate = ymf278b_slot_compute_rate(op, 5);
-			//if (rate < 4)
-			//	break;
-			
-			shift = eg_rate_shift[rate];
-			if (! (chip->eg_cnt & ((1 << shift) - 1)))
-			{
-				select = eg_rate_select[rate];
-				op->env_vol += eg_inc[select + ((chip->eg_cnt >> shift) & 7)];
-
 				if (op->env_vol >= MAX_ATT_INDEX)
 				{
 					op->env_vol = MAX_ATT_INDEX;
-					op->active = 0;
-				}
-			}
-			break;
-		case EG_DMP:	// damping
-			// TODO improve env_vol update, damp is just fastest decay now
-			rate = 56;
-			shift = eg_rate_shift[rate];
-			if (! (chip->eg_cnt & ((1 << shift) - 1)))
-			{
-				select = eg_rate_select[rate];
-				op->env_vol += eg_inc[select + ((chip->eg_cnt >> shift) & 7)];
-
-				if (op->env_vol >= MAX_ATT_INDEX)
-				{
-					op->env_vol = MAX_ATT_INDEX;
-					op->active = 0;
+					op->state = EG_OFF;
 				}
 			}
 			break;
@@ -711,7 +686,7 @@ static int ymf278b_anyActive(YMF278BChip* chip)
 	
 	for (i = 0; i < 24; i ++)
 	{
-		if (chip->slots[i].active)
+		if (chip->slots[i].state != EG_OFF)
 			return 1;
 	}
 	return 0;
@@ -725,8 +700,8 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 	INT32 vl;
 	INT32 vr;
 	
-	memset(outputs[0], 0x00, samples * sizeof(DEV_SMPL));
-	memset(outputs[1], 0x00, samples * sizeof(DEV_SMPL));
+	memset(outputs[0], 0, samples * sizeof(DEV_SMPL));
+	memset(outputs[1], 0, samples * sizeof(DEV_SMPL));
 	
 	if (! ymf278b_anyActive(chip))
 	{
@@ -750,7 +725,7 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 			UINT32 step;
 			
 			sl = &chip->slots[i];
-			if (! sl->active || sl->Muted)
+			if (sl->state == EG_OFF || sl->Muted)
 			{
 				//outputs[0][j] += 0;
 				//outputs[1][j] += 0;
@@ -813,12 +788,12 @@ INLINE void ymf278b_keyOnHelper(YMF278BChip* chip, YMF278BSlot* slot)
 {
 	int rate;
 
-	slot->active = 1;
-
 	slot->state = EG_ATT;
 	rate = ymf278b_slot_compute_rate(slot, slot->AR);
-	if (rate >= 60)
+	if (rate >= 63)
 	{
+		// Nuke.YKT verified that the FM part does it exactly this way,
+		// and the OPL4 manual says it's instant as well.
 		slot->env_vol = MIN_ATT_INDEX;
 		slot->state = EG_DEC;
 	}
@@ -916,7 +891,7 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 				ymf278b_C_w(chip, 8 + snum + (i - 2) * 24, buf[i]);
 			}
 			
-			if (chip->regs[reg + 0x60] & 0x080)
+			if (slot->keyon)
 				ymf278b_keyOnHelper(chip, slot);
 			break;
 		case 1:
@@ -954,7 +929,7 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 			else
 				slot->pan = data & 0x0F;
 
-			if (data & 0x020)
+			if (data & 0x20)
 			{
 				// LFO reset
 				slot->lfo_active = 0;
@@ -968,27 +943,22 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 				slot->lfo_active = 1;
 			}
 
-			switch (data >> 6)
+			slot->DAMP = (data & 0x40) >> 6;
+			if (data & 0x80)
 			{
-			case 0: // tone off, no damp
-				if (slot->active && (slot->state != EG_REV))
-					slot->state = EG_REL;
-				break;
-			case 2: // tone on, no damp
-				// 'Life on Mars' bug fix:
-				//    In case KEY=ON + DAMP (value 0xc0) and we reach
-				//    'env_vol == MAX_ATT_INDEX' (-> slot->active = false)
-				//    we didn't trigger keyOnHelper() because KEY didn't
-				//    change OFF->ON. Fixed by also checking slot.state.
-				// TODO real HW is probably simpler because EG_DMP is not
-				// an actual state, nor is 'slot->active' stored.
-				if (!slot->active || !(chip->regs[reg] & 0x080))
+				if (! slot->keyon)
+				{
+					slot->keyon = 1;
 					ymf278b_keyOnHelper(chip, slot);
-				break;
-			case 1: // tone off, damp
-			case 3: // tone on,  damp
-				slot->state = EG_DMP;
-				break;
+				}
+			}
+			else
+			{
+				if (slot->keyon)
+				{
+					slot->keyon = 0;
+					slot->state = EG_REL;
+				}
 			}
 			break;
 		case 5:
