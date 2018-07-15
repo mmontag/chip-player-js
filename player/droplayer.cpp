@@ -16,15 +16,12 @@
 #include "helper.h"
 
 
-
-
 enum DRO_HWTYPES
 {
 	DROHW_OPL2 = 0,
 	DROHW_DUALOPL2 = 1,
 	DROHW_OPL3 = 2,
 };
-
 
 
 INLINE UINT16 ReadLE16(const UINT8* data)
@@ -431,8 +428,7 @@ UINT8 DROPlayer::Start(void)
 		
 		SetupLinkedDevices(&cDev->base, NULL, NULL);
 		
-		clDev = &cDev->base;
-		while(clDev != NULL)
+		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
 			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
 			// do DualOPL2 hard panning by muting either the left or right speaker
@@ -442,7 +438,6 @@ UINT8 DROPlayer::Start(void)
 				clDev->resmpl.volumeR = 0x00;
 			Resmpl_DevConnect(&clDev->resmpl, &clDev->defInf);
 			Resmpl_Init(&clDev->resmpl);
-			clDev = clDev->linkDev;
 		}
 	}
 	
@@ -496,11 +491,9 @@ UINT8 DROPlayer::Reset(void)
 		VGM_BASEDEV* clDev;
 		
 		cDev->base.defInf.devDef->Reset(cDev->base.defInf.dataPtr);
-		clDev = &cDev->base;
-		while(clDev != NULL)
+		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
 			// TODO: Resmpl_Reset(&clDev->resmpl);
-			clDev = clDev->linkDev;
 		}
 	}
 	
@@ -561,12 +554,10 @@ UINT32 DROPlayer::Render(UINT32 smplCnt, WAVE_32BS* data)
 			DRO_CHIPDEV* cDev = &_devices[curDev];
 			VGM_BASEDEV* clDev;
 			
-			clDev = &cDev->base;
-			while(clDev != NULL)
+			for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 			{
 				if (clDev->defInf.dataPtr != NULL)
 					Resmpl_Execute(&clDev->resmpl, smplStep, &data[curSmpl]);
-				clDev = clDev->linkDev;
 			}
 		}
 		curSmpl += smplStep;

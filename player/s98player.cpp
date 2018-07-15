@@ -22,8 +22,6 @@
 #include "helper.h"
 
 
-
-
 enum S98_DEVTYPES
 {
 	S98DEV_NONE = 0,	// S98 v2 End-Of-Device marker
@@ -41,14 +39,13 @@ enum S98_DEVTYPES
 	S98DEV_DCSG = 16,	// SN76489
 	S98DEV_END
 };
-static const UINT8 S98_DEV_LIST[17] = {
+static const UINT8 S98_DEV_LIST[S98DEV_END] = {
 	0xFF,
 	DEVID_AY8910, DEVID_YM2203, DEVID_YM2612, DEVID_YM2608,
 	DEVID_YM2151, DEVID_YM2413, DEVID_YM3526, DEVID_YM3812,
 	DEVID_YMF262, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, DEVID_AY8910, DEVID_SN76496,
 };
-
 
 
 INLINE UINT16 ReadLE16(const UINT8* data)
@@ -233,6 +230,8 @@ void S98Player::CalcSongLength(void)
 			break;
 		}
 	}
+	
+	return;
 }
 
 UINT8 S98Player::LoadTags(void)
@@ -585,8 +584,7 @@ UINT8 S98Player::Start(void)
 		
 		SetupLinkedDevices(&cDev->base, &SetSSGCore, this);
 		
-		clDev = &cDev->base;
-		while(clDev != NULL)
+		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
 			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
 			if (deviceID == DEVID_YM2203 || deviceID == DEVID_YM2608)
@@ -597,7 +595,6 @@ UINT8 S98Player::Start(void)
 			}
 			Resmpl_DevConnect(&clDev->resmpl, &clDev->defInf);
 			Resmpl_Init(&clDev->resmpl);
-			clDev = clDev->linkDev;
 		}
 	}
 	
@@ -647,11 +644,9 @@ UINT8 S98Player::Reset(void)
 		VGM_BASEDEV* clDev;
 		
 		cDev->base.defInf.devDef->Reset(cDev->base.defInf.dataPtr);
-		clDev = &cDev->base;
-		while(clDev != NULL)
+		for (clDev = &cDev->base; clDev != NULL; clDev = clDev->linkDev)
 		{
 			// TODO: Resmpl_Reset(&clDev->resmpl);
-			clDev = clDev->linkDev;
 		}
 		
 		if (_devHdrs[curDev].devType == S98DEV_OPNA)
@@ -698,15 +693,12 @@ UINT32 S98Player::Render(UINT32 smplCnt, WAVE_32BS* data)
 		
 		for (curDev = 0; curDev < _devices.size(); curDev ++)
 		{
-			S98_CHIPDEV* cDev = &_devices[curDev];
 			VGM_BASEDEV* clDev;
 			
-			clDev = &cDev->base;
-			while(clDev != NULL)
+			for (clDev = &_devices[curDev].base; clDev != NULL; clDev = clDev->linkDev)
 			{
 				if (clDev->defInf.dataPtr != NULL)
 					Resmpl_Execute(&clDev->resmpl, smplStep, &data[curSmpl]);
-				clDev = clDev->linkDev;
 			}
 		}
 		curSmpl += smplStep;
