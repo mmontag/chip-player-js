@@ -283,7 +283,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     size_t midiins = midiChan.patch;
     bool isPercussion = (channel % 16 == 9) || midiChan.is_xg_percussion;
 
-    size_t bank = midiChan.bank_msb * 256 + midiChan.bank_lsb;
+    size_t bank = (midiChan.bank_msb * 256) + midiChan.bank_lsb;
 
     if(isPercussion)
     {
@@ -314,45 +314,55 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     //Set bank bank
     const OPL3::Bank *bnk = NULL;
-    if((bank & ~(uint16_t)OPL3::PercussionTag) > 0)
+    bool caughtMissingBank = false;
+    if((bank & ~static_cast<uint16_t>(OPL3::PercussionTag)) > 0)
     {
         OPL3::BankMap::iterator b = m_synth.m_insBanks.find(bank);
         if(b != m_synth.m_insBanks.end())
             bnk = &b->second;
-
         if(bnk)
             ains = &bnk->ins[midiins];
-        else if(hooks.onDebugMessage)
-        {
-            std::set<size_t> &missing = (isPercussion) ?
-                                        caugh_missing_banks_percussion : caugh_missing_banks_melodic;
-            const char *text = (isPercussion) ?
-                               "percussion" : "melodic";
-            if(missing.insert(bank).second)
-                hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Playing missing %s MIDI bank %i (patch %i)", channel, text, bank, midiins);
-        }
+        else
+            caughtMissingBank = true;
     }
+
     //Or fall back to bank ignoring LSB (GS)
-    if((ains->flags & adlinsdata::Flag_NoSound) && (m_synthMode & Mode_GS) != 0)
+    if((ains->flags & adlinsdata::Flag_NoSound) && ((m_synthMode & Mode_GS) != 0))
     {
         size_t fallback = bank & ~(size_t)0x7F;
         if(fallback != bank)
         {
             OPL3::BankMap::iterator b = m_synth.m_insBanks.find(fallback);
+            caughtMissingBank = false;
             if(b != m_synth.m_insBanks.end())
                 bnk = &b->second;
-
             if(bnk)
                 ains = &bnk->ins[midiins];
+            else
+                caughtMissingBank = true;
         }
     }
+
+    if(caughtMissingBank && hooks.onDebugMessage)
+    {
+        std::set<size_t> &missing = (isPercussion) ?
+                                    caugh_missing_banks_percussion : caugh_missing_banks_melodic;
+        const char *text = (isPercussion) ?
+                           "percussion" : "melodic";
+        if(missing.insert(bank).second)
+        {
+            hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                                 "[%i] Playing missing %s MIDI bank %i (patch %i)",
+                                 channel, text, (bank & ~static_cast<uint16_t>(OPL3::PercussionTag)), midiins);
+        }
+    }
+
     //Or fall back to first bank
-    if(ains->flags & adlinsdata::Flag_NoSound)
+    if((ains->flags & adlinsdata::Flag_NoSound) != 0)
     {
         OPL3::BankMap::iterator b = m_synth.m_insBanks.find(bank & OPL3::PercussionTag);
         if(b != m_synth.m_insBanks.end())
             bnk = &b->second;
-
         if(bnk)
             ains = &bnk->ins[midiins];
     }
@@ -362,10 +372,11 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     {
         if(ains->flags & adlinsdata::Flag_NoSound)
         {
-            if(hooks.onDebugMessage)
+            if(hooks.onDebugMessage && caugh_missing_instruments.insert(static_cast<uint8_t>(midiins)).second)
             {
-                if(caugh_missing_instruments.insert(static_cast<uint8_t>(midiins)).second)
-                    hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Caught a blank instrument %i (offset %i) in the MIDI bank %u", channel, m_midiChannels[channel].patch, midiins, bank);
+                hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                     "[%i] Caught a blank instrument %i (offset %i) in the MIDI bank %u",
+                     channel, m_midiChannels[channel].patch, midiins, bank);
             }
             bank = 0;
             midiins = midiChan.patch;
