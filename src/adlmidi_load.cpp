@@ -117,20 +117,17 @@ static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
     ins.inst_flags|= (in.flags & adlinsdata::Flag_Pseudo4op) ? WOPL_Ins_Pseudo4op : 0;
     ins.inst_flags|= (in.flags & adlinsdata::Flag_NoSound) ? WOPL_Ins_IsBlank : 0;
 
-    for(size_t op = 0, slt = 0; op < static_cast<size_t>(fourOps ? 4 : 2); op++, slt++)
+    for(size_t op = 0; op < 4; op++)
     {
-        ins.operators[op].waveform_E0 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 24);
-        ins.operators[op].susrel_80 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 16);
-        ins.operators[op].atdec_60 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 8);
-        ins.operators[op].avekf_20 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 0);
-        ins.operators[op].ksl_l_40 = in.adl[slt].carrier_40;
+        const adldata &in2op = in.adl[(op < 2) ? 0 : 1];
+        uint32_t regE862 = ((op & 1) == 0) ? in2op.carrier_E862 : in2op.modulator_E862;
+        uint8_t reg40 = ((op & 1) == 0) ? in2op.carrier_40 : in2op.modulator_40;
 
-        op++;
-        ins.operators[op].waveform_E0 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 24);
-        ins.operators[op].susrel_80 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 16);
-        ins.operators[op].atdec_60 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 8);
-        ins.operators[op].avekf_20 = static_cast<uint8_t>(in.adl[slt].carrier_E862 >> 0);
-        ins.operators[op].ksl_l_40 = in.adl[slt].carrier_40;
+        ins.operators[op].waveform_E0 = static_cast<uint8_t>(regE862 >> 24);
+        ins.operators[op].susrel_80 = static_cast<uint8_t>(regE862 >> 16);
+        ins.operators[op].atdec_60 = static_cast<uint8_t>(regE862 >> 8);
+        ins.operators[op].avekf_20 = static_cast<uint8_t>(regE862 >> 0);
+        ins.operators[op].ksl_l_40 = reg40;
     }
 
     ins.note_offset1 = in.adl[0].finetune;
