@@ -63,6 +63,7 @@ static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool perc
         tmp2.pseudo4op = false;
         tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
+        tmp2.midi_velocity_offset = 0;
 
         size_t resno = InsertIns(tmp, tmp2, std::string(1, '\377') + name, name2);
         SetBank(bank, (unsigned int)gmno, resno);

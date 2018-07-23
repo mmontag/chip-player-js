@@ -54,6 +54,7 @@ struct adlinsdata
     uint8_t     flags;
     uint16_t    ms_sound_kon;  // Number of milliseconds it produces sound;
     uint16_t    ms_sound_koff;
+    int8_t      midi_velocity_offset;
     double      voice2_fine_tune;
 };
 ADLDATA_BYTE_COMPARABLE(struct adlinsdata)

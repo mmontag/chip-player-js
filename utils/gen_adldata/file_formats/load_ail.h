@@ -91,6 +91,7 @@ static bool LoadMiles(const char *fn, unsigned bank, const char *prefix)
             tmp2.pseudo4op = false;
             tmp2.real4op = (inscount > 1);
             tmp2.voice2_fine_tune = 0.0;
+            tmp2.midi_velocity_offset = 0;
             std::string name;
             if(midi_index >= 0) name = std::string(1, '\377') + MidiInsName[midi_index];
             size_t resno = InsertIns(tmp[0], tmp[1], tmp2, name, name2, twoOp);
