@@ -71,6 +71,7 @@ struct adlinsdata2
     uint8_t     flags;
     uint16_t    ms_sound_kon;  // Number of milliseconds it produces sound;
     uint16_t    ms_sound_koff;
+    int8_t      midi_velocity_offset;
     double      voice2_fine_tune;
     adlinsdata2() {}
     explicit adlinsdata2(const adlinsdata &d);
@@ -105,7 +106,7 @@ extern const AdlBankSetup adlbanksetup[];
  * @brief Conversion of storage formats
  */
 inline adlinsdata2::adlinsdata2(const adlinsdata &d)
-    : tone(d.tone), flags(d.flags),
+    : tone(d.tone), flags(d.flags), midi_velocity_offset(d.midi_velocity_offset),
       ms_sound_kon(d.ms_sound_kon), ms_sound_koff(d.ms_sound_koff),
       voice2_fine_tune(d.voice2_fine_tune)
 {

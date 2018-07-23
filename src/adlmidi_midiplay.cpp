@@ -261,6 +261,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         MIDIchannel::activenoteiterator i = m_midiChannels[channel].activenotes_find(note);
         if(i)
         {
+            const int veloffset = i->ains->midi_velocity_offset;
+            velocity = (uint8_t)std::min(127, std::max(1, (int)velocity + veloffset));
             i->vol = velocity;
             noteUpdate(channel, i, Upd_Volume);
             return false;
@@ -366,6 +368,9 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         if(bnk)
             ains = &bnk->ins[midiins];
     }
+
+    const int veloffset = ains->midi_velocity_offset;
+    velocity = (uint8_t)std::min(127, std::max(1, (int)velocity + veloffset));
 
     int32_t tone = note;
     if(!isPercussion && (bank > 0)) // For non-zero banks

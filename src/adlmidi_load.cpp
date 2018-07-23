@@ -87,6 +87,8 @@ static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
         ins.adl[1].feedconn = in.fb_conn2_C0;
     }
 
+    ins.midi_velocity_offset = in.midi_velocity_offset;
+
     ins.ms_sound_kon  = in.delay_on_ms;
     ins.ms_sound_koff = in.delay_off_ms;
 }
@@ -142,6 +144,8 @@ static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
         ins.note_offset2 = in.adl[1].finetune;
         ins.fb_conn2_C0 = in.adl[1].feedconn;
     }
+
+    ins.midi_velocity_offset = in.midi_velocity_offset;
 
     ins.delay_on_ms = in.ms_sound_kon;
     ins.delay_off_ms = in.ms_sound_koff;
