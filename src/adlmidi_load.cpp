@@ -58,8 +58,7 @@ static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
     ins.flags|= (in.inst_flags & WOPL_Ins_4op) && ((in.inst_flags & WOPL_Ins_Pseudo4op) == 0) ? adlinsdata::Flag_Real4op : 0;
     ins.flags|= (in.inst_flags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
 
-    bool fourOps = (in.inst_flags & WOPL_Ins_4op) || (in.inst_flags & WOPL_Ins_Pseudo4op);
-    for(size_t op = 0, slt = 0; op < static_cast<size_t>(fourOps ? 4 : 2); op++, slt++)
+    for(size_t op = 0, slt = 0; op < 4; op++, slt++)
     {
         ins.adl[slt].carrier_E862 =
             ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
@@ -79,13 +78,8 @@ static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
 
     ins.adl[0].finetune = static_cast<int8_t>(in.note_offset1);
     ins.adl[0].feedconn = in.fb_conn1_C0;
-    if(!fourOps)
-        ins.adl[1] = ins.adl[0];
-    else
-    {
-        ins.adl[1].finetune = static_cast<int8_t>(in.note_offset2);
-        ins.adl[1].feedconn = in.fb_conn2_C0;
-    }
+    ins.adl[1].finetune = static_cast<int8_t>(in.note_offset2);
+    ins.adl[1].feedconn = in.fb_conn2_C0;
 
     ins.ms_sound_kon  = in.delay_on_ms;
     ins.ms_sound_koff = in.delay_off_ms;
@@ -112,8 +106,7 @@ static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
     }
 
     ins.percussion_key_number = in.tone;
-    bool fourOps = (in.flags & adlinsdata::Flag_Pseudo4op) || in.adl[0] != in.adl[1];
-    ins.inst_flags = fourOps ? WOPL_Ins_4op : 0;
+    ins.inst_flags = (in.flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op)) ? WOPL_Ins_4op : 0;
     ins.inst_flags|= (in.flags & adlinsdata::Flag_Pseudo4op) ? WOPL_Ins_Pseudo4op : 0;
     ins.inst_flags|= (in.flags & adlinsdata::Flag_NoSound) ? WOPL_Ins_IsBlank : 0;
 
@@ -132,16 +125,8 @@ static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
 
     ins.note_offset1 = in.adl[0].finetune;
     ins.fb_conn1_C0 = in.adl[0].feedconn;
-    if(!fourOps)
-    {
-        ins.operators[2] = ins.operators[0];
-        ins.operators[3] = ins.operators[1];
-    }
-    else
-    {
-        ins.note_offset2 = in.adl[1].finetune;
-        ins.fb_conn2_C0 = in.adl[1].feedconn;
-    }
+    ins.note_offset2 = in.adl[1].finetune;
+    ins.fb_conn2_C0 = in.adl[1].feedconn;
 
     ins.delay_on_ms = in.ms_sound_kon;
     ins.delay_off_ms = in.ms_sound_koff;
