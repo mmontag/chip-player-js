@@ -106,9 +106,9 @@ extern const AdlBankSetup adlbanksetup[];
  * @brief Conversion of storage formats
  */
 inline adlinsdata2::adlinsdata2(const adlinsdata &d)
-    : tone(d.tone), flags(d.flags), midi_velocity_offset(d.midi_velocity_offset),
+    : tone(d.tone), flags(d.flags),
       ms_sound_kon(d.ms_sound_kon), ms_sound_koff(d.ms_sound_koff),
-      voice2_fine_tune(d.voice2_fine_tune)
+      midi_velocity_offset(d.midi_velocity_offset), voice2_fine_tune(d.voice2_fine_tune)
 {
 #ifdef DISABLE_EMBEDDED_BANKS
     std::memset(adl, 0, sizeof(adldata) * 2);
