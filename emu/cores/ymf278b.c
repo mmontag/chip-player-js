@@ -60,6 +60,28 @@
 		- pseudo reverb needs testing
 		- damping needs testing (affected by Rate Correction or not?)
 		- LFO stuff needs testing
+
+	A note about attack/decay/release times in the OPL4 manual:
+		The general formula used to calculate the times is:
+			samples = baseValue / pow(2, floor(rate / 4)) / ((4 + (rate % 4)) / 8)
+			msec = samples / 44.1
+
+		attack time (exponential db):
+			- 0 ~ 100%, values 4-48
+			  baseValue = 0x43000
+			- 10 ~ 90%, values 4-48
+			  baseValue = 0x28000
+		decay/release time (linear db):
+			- 0 ~ 100% equals 0 db .. -90 db, which is 15 "steps" of -6 db change
+			  time for -6 db = (value of 0~100%) / 15
+			  baseValue = 0x3C0000
+			- 10 ~ 90% is the time for going from envelope level 0 to 205
+			  time for -6 db = (value of 10~90%) / (205/64)
+			  baseValue = 0x0CD000
+		
+		The formulas above seem pretty accurate for low rates and slightly off for high rates.
+		I assume it's due to rounding.
+		The value for "attack rate, time 10~90%" is wrong and should be 0.31.
 */
 
 // Based on ymf278b.c written by R. Belmont and O. Galibert
@@ -270,10 +292,10 @@ static INT32 vol_tab[ENV_LEN];
 
 // decay level table (3dB per step)
 // 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)
-#define SC(db) (UINT32)(db * (2.0 / ENV_STEP))
+#define SC(db) (UINT32)(db / 3 * 0x20)
 static const UINT32 dl_tab[16] = {
- SC( 0), SC( 1), SC( 2), SC(3 ), SC(4 ), SC(5 ), SC(6 ), SC( 7),
- SC( 8), SC( 9), SC(10), SC(11), SC(12), SC(13), SC(14), SC(31)
+ SC( 0), SC( 3), SC( 6), SC( 9), SC(12), SC(15), SC(18), SC(21),
+ SC(24), SC(27), SC(30), SC(33), SC(36), SC(39), SC(42), SC(93)
 };
 #undef SC
 
@@ -364,10 +386,10 @@ static const INT32 vib_depth[8] = {
 #undef O
 
 
-#define SC(db) (INT32)((db) * (2.0 / ENV_STEP))
+#define SC(db) (INT32)(db / 3.0 * 0x20 + 0.5)
 static const INT32 am_depth[8] = {
-	SC(0.0  ), SC(1.781), SC(2.906), SC( 3.656),
-	SC(4.406), SC(5.906), SC(7.406), SC(11.91 )
+	SC(0.000), SC(1.781), SC(2.906), SC( 3.656),
+	SC(4.406), SC(5.906), SC(7.406), SC(11.910)
 };
 #undef SC
 
@@ -454,12 +476,12 @@ INLINE int ymf278b_slot_compute_decay_rate(YMF278BSlot* slot, int val)
 	if (slot->DAMP)
 	{
 		// damping
-		// The manual lists these times: (44100 samples/second)
+		// The manual lists these values for time and attenuation: (44100 samples/second)
 		// -12 db at  5.8 ms, sample 256
 		// -48 db at  8.0 ms, sample 352
 		// -72 db at  9.4 ms, sample 416
 		// -96 db at 10.9 ms, sample 480
-		// This results in these times:
+		// This results in these durations and rate values for the respecitve phases:
 		//   0 db .. -12 db: 256 samples (5.80 ms) -> 128 samples per -6 db = rate 48
 		// -12 db .. -48 db:  96 samples (2.18 ms) ->  16 samples per -6 db = rate 63
 		// -48 db .. -72 db:  64 samples (1.45 ms) ->  16 samples per -6 db = rate 63
@@ -647,7 +669,6 @@ INLINE INT16 ymf278b_getSample(YMF278BChip* chip, YMF278BSlot* op)
 	//      sound generation blocked at some higher level?
 	INT16 sample;
 	UINT32 addr;
-	UINT8* addrp;
 	
 	switch (op->bits)
 	{
@@ -658,19 +679,15 @@ INLINE INT16 ymf278b_getSample(YMF278BChip* chip, YMF278BSlot* op)
 	case 1:
 		// 12 bit
 		addr = op->startaddr + ((op->pos / 2) * 3);
-		addrp = ymf278b_getMemPtr(chip, addr);
 		if (op->pos & 1)
-			sample = (addrp[2] << 8) | ((addrp[1] << 4) & 0xF0);
+			sample = (ymf278b_readMem(chip, addr + 2) << 8) | ((ymf278b_readMem(chip, addr + 1) & 0x0F) << 4);
 		else
-			sample = (addrp[0] << 8) | (addrp[1] & 0xF0);
+			sample = (ymf278b_readMem(chip, addr + 0) << 8) | ((ymf278b_readMem(chip, addr + 1) & 0xF0) << 0);
 		break;
 	case 2:
 		// 16 bit
 		addr = op->startaddr + (op->pos * 2);
-		addrp = ymf278b_getMemPtr(chip, addr);
-		if (addrp == NULL)
-			return 0;
-		sample = (addrp[0] << 8) | addrp[1];
+		sample = (ymf278b_readMem(chip, addr + 0) << 8) | ymf278b_readMem(chip, addr + 1);
 		break;
 	default:
 		// TODO unspecified

@@ -719,7 +719,7 @@ INLINE void adpcm_update(struct qsound_chip *chip, int voice_no, int nibble)
 	if(!nibble)
 	{
 		// Mute voice when it reaches the end address.
-		if(v->start_addr == v->end_addr)
+		if(v->cur_addr == v->end_addr)
 			v->cur_vol = 0;
 		
 		// Playback start flag
