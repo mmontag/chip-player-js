@@ -174,6 +174,7 @@ To build that example you will need to have installed SDL2 library.
  * Added API to disable specific MIDI tracks or play one of MIDI tracks solo
  * Added support for more complex loop (loopStart=XX, loopEnd=0). Where XX - count of loops, or 0 - infinite. Nested loops are supported without of any limits.
  * XMIDI now supports loops
+ * Added working implementation of TMB's velocity offset
 
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization
