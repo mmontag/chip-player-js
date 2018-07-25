@@ -56,7 +56,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
                 adlinsdata2 &ins = it->second.ins[i];
                 if(ins.flags & adlinsdata::Flag_NoSound)
                     continue;
-                if((ins.adl[0] != ins.adl[1]) && ((ins.flags & adlinsdata::Flag_Pseudo4op) == 0))
+                if((ins.flags & adlinsdata::Flag_Real4op) != 0)
                     ++n_fourop[div];
                 ++n_total[div];
             }
@@ -73,7 +73,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
                 continue;
             ++n_total[a / 128];
             adlinsdata2 ins(adlins[insno]);
-            if(ins.flags & adlinsdata::Flag_Real4op)
+            if((ins.flags & adlinsdata::Flag_Real4op) != 0)
                 ++n_fourop[a / 128];
         }
     }

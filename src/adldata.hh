@@ -49,6 +49,9 @@ struct adlinsdata
 {
     enum { Flag_Pseudo4op = 0x01, Flag_NoSound = 0x02, Flag_Real4op = 0x04 };
 
+    enum { Flag_RM_BassDrum  = 0x08, Flag_RM_Snare = 0x10, Flag_RM_TomTom = 0x18,
+           Flag_RM_Cymbal = 0x20, Flag_RM_HiHat = 0x28, Mask_RhythmMode = 0x38 };
+
     uint16_t    adlno1, adlno2;
     uint8_t     tone;
     uint8_t     flags;

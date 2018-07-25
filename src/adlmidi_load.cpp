@@ -22,6 +22,7 @@
  */
 
 #include "adlmidi_private.hpp"
+#include "adlmidi_cvt.hpp"
 #include "wopl/wopl_file.h"
 
 bool MIDIplay::LoadBank(const std::string &filename)
@@ -36,119 +37,6 @@ bool MIDIplay::LoadBank(const void *data, size_t size)
     FileAndMemReader file;
     file.openData(data, size);
     return LoadBank(file);
-}
-
-template <class WOPLI>
-static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
-{
-    ins.voice2_fine_tune = 0.0;
-    int8_t voice2_fine_tune = in.second_voice_detune;
-    if(voice2_fine_tune != 0)
-    {
-        if(voice2_fine_tune == 1)
-            ins.voice2_fine_tune = 0.000025;
-        else if(voice2_fine_tune == -1)
-            ins.voice2_fine_tune = -0.000025;
-        else
-            ins.voice2_fine_tune = voice2_fine_tune * (15.625 / 1000.0);
-    }
-
-    ins.tone = in.percussion_key_number;
-    ins.flags = (in.inst_flags & WOPL_Ins_4op) && (in.inst_flags & WOPL_Ins_Pseudo4op) ? adlinsdata::Flag_Pseudo4op : 0;
-    ins.flags|= (in.inst_flags & WOPL_Ins_4op) && ((in.inst_flags & WOPL_Ins_Pseudo4op) == 0) ? adlinsdata::Flag_Real4op : 0;
-    ins.flags|= (in.inst_flags & WOPL_Ins_IsBlank) ? adlinsdata::Flag_NoSound : 0;
-
-    bool fourOps = (in.inst_flags & WOPL_Ins_4op) || (in.inst_flags & WOPL_Ins_Pseudo4op);
-    for(size_t op = 0, slt = 0; op < static_cast<size_t>(fourOps ? 4 : 2); op++, slt++)
-    {
-        ins.adl[slt].carrier_E862 =
-            ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
-            | ((static_cast<uint32_t>(in.operators[op].susrel_80) << 16) & 0x00FF0000) //SusRel
-            | ((static_cast<uint32_t>(in.operators[op].atdec_60) << 8) & 0x0000FF00)   //AtDec
-            | ((static_cast<uint32_t>(in.operators[op].avekf_20) << 0) & 0x000000FF);  //AVEKM
-        ins.adl[slt].carrier_40 = in.operators[op].ksl_l_40;//KSLL
-
-        op++;
-        ins.adl[slt].modulator_E862 =
-            ((static_cast<uint32_t>(in.operators[op].waveform_E0) << 24) & 0xFF000000) //WaveForm
-            | ((static_cast<uint32_t>(in.operators[op].susrel_80) << 16) & 0x00FF0000) //SusRel
-            | ((static_cast<uint32_t>(in.operators[op].atdec_60) << 8) & 0x0000FF00)   //AtDec
-            | ((static_cast<uint32_t>(in.operators[op].avekf_20) << 0) & 0x000000FF);  //AVEKM
-        ins.adl[slt].modulator_40 = in.operators[op].ksl_l_40;//KSLL
-    }
-
-    ins.adl[0].finetune = static_cast<int8_t>(in.note_offset1);
-    ins.adl[0].feedconn = in.fb_conn1_C0;
-    if(!fourOps)
-        ins.adl[1] = ins.adl[0];
-    else
-    {
-        ins.adl[1].finetune = static_cast<int8_t>(in.note_offset2);
-        ins.adl[1].feedconn = in.fb_conn2_C0;
-    }
-
-    ins.midi_velocity_offset = in.midi_velocity_offset;
-
-    ins.ms_sound_kon  = in.delay_on_ms;
-    ins.ms_sound_koff = in.delay_off_ms;
-}
-
-template <class WOPLI>
-static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
-{
-    ins.second_voice_detune = 0;
-    double voice2_fine_tune = in.voice2_fine_tune;
-    if(voice2_fine_tune != 0)
-    {
-        if(voice2_fine_tune > 0 && voice2_fine_tune <= 0.000025)
-            ins.second_voice_detune = 1;
-        else if(voice2_fine_tune < 0 && voice2_fine_tune >= -0.000025)
-            ins.second_voice_detune = -1;
-        else
-        {
-            long value = static_cast<long>(round(voice2_fine_tune * (1000.0 / 15.625)));
-            value = (value < -128) ? -128 : value;
-            value = (value > +127) ? +127 : value;
-            ins.second_voice_detune = static_cast<int8_t>(value);
-        }
-    }
-
-    ins.percussion_key_number = in.tone;
-    bool fourOps = (in.flags & adlinsdata::Flag_Pseudo4op) || in.adl[0] != in.adl[1];
-    ins.inst_flags = fourOps ? WOPL_Ins_4op : 0;
-    ins.inst_flags|= (in.flags & adlinsdata::Flag_Pseudo4op) ? WOPL_Ins_Pseudo4op : 0;
-    ins.inst_flags|= (in.flags & adlinsdata::Flag_NoSound) ? WOPL_Ins_IsBlank : 0;
-
-    for(size_t op = 0; op < 4; op++)
-    {
-        const adldata &in2op = in.adl[(op < 2) ? 0 : 1];
-        uint32_t regE862 = ((op & 1) == 0) ? in2op.carrier_E862 : in2op.modulator_E862;
-        uint8_t reg40 = ((op & 1) == 0) ? in2op.carrier_40 : in2op.modulator_40;
-
-        ins.operators[op].waveform_E0 = static_cast<uint8_t>(regE862 >> 24);
-        ins.operators[op].susrel_80 = static_cast<uint8_t>(regE862 >> 16);
-        ins.operators[op].atdec_60 = static_cast<uint8_t>(regE862 >> 8);
-        ins.operators[op].avekf_20 = static_cast<uint8_t>(regE862 >> 0);
-        ins.operators[op].ksl_l_40 = reg40;
-    }
-
-    ins.note_offset1 = in.adl[0].finetune;
-    ins.fb_conn1_C0 = in.adl[0].feedconn;
-    if(!fourOps)
-    {
-        ins.operators[2] = ins.operators[0];
-        ins.operators[3] = ins.operators[1];
-    }
-    else
-    {
-        ins.note_offset2 = in.adl[1].finetune;
-        ins.fb_conn2_C0 = in.adl[1].feedconn;
-    }
-
-    ins.midi_velocity_offset = in.midi_velocity_offset;
-
-    ins.delay_on_ms = in.ms_sound_kon;
-    ins.delay_off_ms = in.ms_sound_koff;
 }
 
 void cvt_ADLI_to_FMIns(adlinsdata2 &ins, const ADL_Instrument &in)

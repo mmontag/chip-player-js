@@ -400,12 +400,13 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     }
 
     //uint16_t i[2] = { ains->adlno1, ains->adlno2 };
+    bool is_2op = !(ains->flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op));
     bool pseudo_4op = ains->flags & adlinsdata::Flag_Pseudo4op;
 #ifndef __WATCOMC__
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans] =
     {
         {0, ains->adl[0], false},
-        {0, ains->adl[1], pseudo_4op}
+        {0, (!is_2op) ? ains->adl[1] : ains->adl[0], pseudo_4op}
     };
 #else /* Unfortunately, WatCom can't brace-initialize structure that incluses structure fields */
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans];
@@ -413,7 +414,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     voices[0].ains = ains->adl[0];
     voices[0].pseudo4op = false;
     voices[1].chip_chan = 0;
-    voices[1].ains = ains->adl[1];
+    voices[1].ains = (!is_2op) ? ains->adl[1] : ains->adl[0];
     voices[1].pseudo4op = pseudo_4op;
 #endif /* __WATCOMC__ */
 
@@ -462,7 +463,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             if(ccount == 1 && static_cast<int32_t>(a) == adlchannel[0]) continue;
             // ^ Don't use the same channel for primary&secondary
 
-            if(voices[0].ains == voices[1].ains || pseudo_4op/*i[0] == i[1] || pseudo_4op*/)
+            if(is_2op || pseudo_4op)
             {
                 // Only use regular channels
                 uint32_t expected_mode = 0;
@@ -1883,7 +1884,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
     }
     double hertz = 172.00093 * std::exp(0.057762265 * (tone + 0.0));
     int32_t adlchannel[2] = { 0, 3 };
-    if(ains.adl[0] == ains.adl[1])
+    if((ains.flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op)) == 0)
     {
         adlchannel[1] = -1;
         adlchannel[0] = 6; // single-op
@@ -1965,7 +1966,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
         }
         std::printf("%s%s%s%u\t",
                     ToneIndication,
-                    ains.adl[0] != ains.adl[1] ? "[2]" : "   ",
+                    (ains.flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op)) ? "[2]" : "   ",
                     (P->ins_idx == a) ? "->" : "\t",
                     i
                    );
