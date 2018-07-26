@@ -114,7 +114,7 @@ ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numChips)
     }
 
     play->m_synth.m_numChips = play->m_setup.numChips;
-    adl_reset(device);
+    play->partialReset();
 
     return adlRefreshNumCards(device);
 }
@@ -606,7 +606,7 @@ ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulato
         if((emulator >= 0) && (emulator < ADLMIDI_EMU_end))
         {
             play->m_setup.emulator = emulator;
-            adl_reset(device);
+            play->partialReset();
             return 0;
         }
         play->setErrorString("OPL3 MIDI: Unknown emulation core!");
@@ -623,7 +623,7 @@ ADLMIDI_EXPORT int adl_setRunAtPcmRate(ADL_MIDIPlayer *device, int enabled)
         if(play)
         {
             play->m_setup.runAtPcmRate = (enabled != 0);
-            adl_reset(device);
+            play->partialReset();
             return 0;
         }
     }
@@ -670,11 +670,7 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    play->m_setup.tick_skip_samples_delay = 0;
-    play->m_synth.m_runAtPcmRate = play->m_setup.runAtPcmRate;
-    play->m_synth.reset(play->m_setup.emulator, play->m_setup.PCM_RATE, play);
-    play->m_chipChannels.clear();
-    play->m_chipChannels.resize((size_t)play->m_synth.m_numChannels);
+    play->partialReset();
     play->resetMIDI();
 }
 

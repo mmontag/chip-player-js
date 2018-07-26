@@ -488,6 +488,7 @@ public:
 
     void applySetup();
 
+    void partialReset();
     void resetMIDI();
 
     /**********************Internal structures and classes**********************/
