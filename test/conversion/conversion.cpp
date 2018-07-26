@@ -46,8 +46,7 @@ static void check_instrument_equality(const ADL_Instrument &a, const ADL_Instrum
 {
     REQUIRE((int)a.note_offset1 == (int)b.note_offset1);
     REQUIRE((int)a.note_offset2 == (int)b.note_offset2);
-    #pragma message("velocity offset: uncomment this test when it's implemented")
-    // REQUIRE((int)a.midi_velocity_offset == (int)b.midi_velocity_offset);
+    REQUIRE((int)a.midi_velocity_offset == (int)b.midi_velocity_offset);
     REQUIRE((int)a.second_voice_detune == (int)b.second_voice_detune);
     REQUIRE((int)a.percussion_key_number == (int)b.percussion_key_number);
     REQUIRE((int)a.inst_flags == (int)b.inst_flags);

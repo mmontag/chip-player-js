@@ -40,6 +40,7 @@ static void cvt_generic_to_FMIns(adlinsdata2 &ins, const WOPLI &in)
             ins.voice2_fine_tune = voice2_fine_tune * (15.625 / 1000.0);
     }
 
+    ins.midi_velocity_offset = in.midi_velocity_offset;
     ins.tone = in.percussion_key_number;
     ins.flags = (in.inst_flags & WOPL_Ins_4op) && (in.inst_flags & WOPL_Ins_Pseudo4op) ? adlinsdata::Flag_Pseudo4op : 0;
     ins.flags|= (in.inst_flags & WOPL_Ins_4op) && ((in.inst_flags & WOPL_Ins_Pseudo4op) == 0) ? adlinsdata::Flag_Real4op : 0;
@@ -93,6 +94,7 @@ static void cvt_FMIns_to_generic(WOPLI &ins, const adlinsdata2 &in)
         }
     }
 
+    ins.midi_velocity_offset = in.midi_velocity_offset;
     ins.percussion_key_number = in.tone;
     ins.inst_flags = (in.flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op)) ? WOPL_Ins_4op : 0;
     ins.inst_flags|= (in.flags & adlinsdata::Flag_Pseudo4op) ? WOPL_Ins_Pseudo4op : 0;
