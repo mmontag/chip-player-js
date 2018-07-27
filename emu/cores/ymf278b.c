@@ -324,7 +324,7 @@ static const UINT8 eg_inc[15 * RATE_STEPS] = {
 
 #define O(a) ((a) * RATE_STEPS)
 static const UINT8 eg_rate_select[64] = {
-	O( 0),O( 1),O( 2),O( 3),
+	O(14),O(14),O(14),O(14),
 	O( 0),O( 1),O( 2),O( 3),
 	O( 0),O( 1),O( 2),O( 3),
 	O( 0),O( 1),O( 2),O( 3),
@@ -587,9 +587,6 @@ static void ymf278b_advance(YMF278BChip* chip)
 		{
 		case EG_ATT:	// attack phase
 			rate = ymf278b_slot_compute_rate(op, op->AR);
-			if (rate < 4)
-				break;
-			
 			shift = eg_rate_shift[rate];
 			if (! (chip->eg_cnt & ((1 << shift) - 1)))
 			{
@@ -605,9 +602,6 @@ static void ymf278b_advance(YMF278BChip* chip)
 			break;
 		case EG_DEC:	// decay phase
 			rate = ymf278b_slot_compute_decay_rate(op, op->D1R);
-			if (rate < 4)
-				break;
-			
 			shift = eg_rate_shift[rate];
 			if (! (chip->eg_cnt & ((1 << shift) - 1)))
 			{
@@ -619,9 +613,6 @@ static void ymf278b_advance(YMF278BChip* chip)
 			break;
 		case EG_SUS:	// sustain phase
 			rate = ymf278b_slot_compute_decay_rate(op, op->D2R);
-			if (rate < 4)
-				break;
-			
 			shift = eg_rate_shift[rate];
 			if (! (chip->eg_cnt & ((1 << shift) - 1)))
 			{
@@ -636,9 +627,6 @@ static void ymf278b_advance(YMF278BChip* chip)
 			break;
 		case EG_REL:	// release phase
 			rate = ymf278b_slot_compute_decay_rate(op, op->RR);
-			if (rate < 4)
-				break;
-			
 			shift = eg_rate_shift[rate];
 			if (! (chip->eg_cnt & ((1 << shift) - 1)))
 			{
