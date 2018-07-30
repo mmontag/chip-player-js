@@ -660,11 +660,6 @@ ADLMIDI_EXPORT const char *adl_errorInfo(struct ADL_MIDIPlayer *device)
     return play->getErrorString().c_str();
 }
 
-ADLMIDI_EXPORT const char *adl_getMusicTitle(struct ADL_MIDIPlayer *device)
-{
-    return adl_metaMusicTitle(device);
-}
-
 ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
 {
     if(!device)
