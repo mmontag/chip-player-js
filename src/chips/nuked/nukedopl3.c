@@ -181,7 +181,7 @@ static const Bit8u ch_slot[18] = {
  * Pan law table
  */
 
-static Bit16u panlawtable[] =
+static const Bit16u panlawtable[] =
 {
     65535, 65529, 65514, 65489, 65454, 65409, 65354, 65289,
     65214, 65129, 65034, 64929, 64814, 64689, 64554, 64410,
