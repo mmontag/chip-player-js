@@ -36,10 +36,6 @@
 
 #define RSM_FRAC    10
 
-#ifndef PI
-#define PI 3.14159265358979323846
-#endif
-
 /* Channel types */
 
 enum {
@@ -179,6 +175,31 @@ static const Bit8s ad_slot[0x20] = {
 
 static const Bit8u ch_slot[18] = {
     0, 1, 2, 6, 7, 8, 12, 13, 14, 18, 19, 20, 24, 25, 26, 30, 31, 32
+};
+
+/*
+ * Pan law table
+ */
+
+static Bit16u panlawtable[] =
+{
+    65535, 65529, 65514, 65489, 65454, 65409, 65354, 65289,
+    65214, 65129, 65034, 64929, 64814, 64689, 64554, 64410,
+    64255, 64091, 63917, 63733, 63540, 63336, 63123, 62901,
+    62668, 62426, 62175, 61914, 61644, 61364, 61075, 60776,
+    60468, 60151, 59825, 59489, 59145, 58791, 58428, 58057,
+    57676, 57287, 56889, 56482, 56067, 55643, 55211, 54770,
+    54320, 53863, 53397, 52923, 52441, 51951, 51453, 50947,
+    50433, 49912, 49383, 48846, 48302, 47750, 47191, 46625,
+    46052, /* Center */
+    45472, 44885, 44291, 43690, 43083, 42469, 41848, 41221,
+    40588, 39948, 39303, 38651, 37994, 37330, 36661, 35986,
+    35306, 34621, 33930, 33234, 32533, 31827, 31116, 30400,
+    29680, 28955, 28225, 27492, 26754, 26012, 25266, 24516,
+    23762, 23005, 22244, 21480, 20713, 19942, 19169, 18392,
+    17613, 16831, 16046, 15259, 14469, 13678, 12884, 12088,
+    11291, 10492, 9691, 8888, 8085, 7280, 6473, 5666,
+    4858, 4050, 3240, 2431, 1620, 810, 0
 };
 
 /*
@@ -1236,8 +1257,8 @@ void OPL3_Reset(opl3_chip *chip, Bit32u samplerate)
         chip->channel[channum].chtype = ch_2op;
         chip->channel[channum].cha = 0xffff;
         chip->channel[channum].chb = 0xffff;
-        chip->channel[channum].chl = 0xffff;
-        chip->channel[channum].chr = 0xffff;
+        chip->channel[channum].chl = 46052;
+        chip->channel[channum].chr = 46052;
         chip->channel[channum].ch_num = channum;
         OPL3_ChannelSetupAlg(&chip->channel[channum]);
     }
@@ -1249,8 +1270,8 @@ void OPL3_Reset(opl3_chip *chip, Bit32u samplerate)
 
 static void OPL3_ChannelWritePan(opl3_channel *channel, Bit8u data)
 {
-    channel->chl = (Bit16u)(cos((float)data * (PI / 2.0f / 127.0f)) * 65535.0f);
-    channel->chr = (Bit16u)(sin((float)data * (PI / 2.0f / 127.0f)) * 65535.0f);
+    channel->chl = panlawtable[data & 0x7F];
+    channel->chr = panlawtable[0x7F - (data & 0x7F)];
 }
 
 void OPL3_WritePan(opl3_chip *chip, Bit16u reg, Bit8u v)

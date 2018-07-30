@@ -122,6 +122,7 @@ OPL3::OPL3() :
     m_deepTremoloMode(false),
     m_deepVibratoMode(false),
     m_rhythmMode(false),
+    m_softPanning(false),
     m_musicMode(MODE_MIDI),
     m_volumeScale(VOLUME_Generic)
 {
@@ -198,6 +199,10 @@ void OPL3::writePan(size_t chip, uint32_t address, uint32_t value)
 {
 #ifndef ADLMIDI_HW_OPL
     m_chips[chip]->writePan(static_cast<uint16_t>(address), static_cast<uint8_t>(value));
+#else
+    ADL_UNUSED(chip);
+    ADL_UNUSED(address);
+    ADL_UNUSED(value);
 #endif
 }
 
@@ -369,17 +374,24 @@ void OPL3::setPatch(size_t c, const adldata &instrument)
 void OPL3::setPan(size_t c, uint8_t value)
 {
     size_t chip = c / 23, cc = c % 23;
-    if(g_channelsMap[cc] != 0xFFF) {
-        if (m_softPanning) {
+    if(g_channelsMap[cc] != 0xFFF)
+    {
+#ifndef ADLMIDI_HW_OPL
+        if (m_softPanning)
+        {
             writePan(chip, g_channelsMap[cc], value);
             writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | 0x30);
         }
-        else {
+        else
+        {
+#endif
             int panning = 0;
-            if (value  < 64 + 32) panning |= OPL_PANNING_LEFT;
-            if (value >= 64 - 32) panning |= OPL_PANNING_RIGHT;
+            if(value  < 64 + 32) panning |= OPL_PANNING_LEFT;
+            if(value >= 64 - 32) panning |= OPL_PANNING_RIGHT;
             writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | panning);
+#ifndef ADLMIDI_HW_OPL
         }
+#endif
     }
 }
 

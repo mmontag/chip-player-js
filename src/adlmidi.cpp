@@ -449,12 +449,12 @@ ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
 
 ADLMIDI_EXPORT void adl_setSoftPanEnabled(ADL_MIDIPlayer *device, int softPanEn)
 {
-    if (!device)
+    if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if (!play)
+    if(!play)
         return;
-    play->m_synth.m_softPanning = softPanEn != 0;
+    play->m_synth.m_softPanning = (softPanEn != 0);
 }
 
 /* !!!DEPRECATED!!! */
