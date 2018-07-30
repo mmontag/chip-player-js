@@ -1608,6 +1608,7 @@ int main(int argc, char **argv)
             " -w [<filename>] Write WAV file rather than playing\n"
             " -d [<filename>] Write video file using ffmpeg\n"
             #ifndef HARDWARE_OPL3
+            " -fp Enables full-panning stereo support\n"
             " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
             " --emu-nuked7 Uses Nuked OPL3 v 1.7.4 emulator\n"
             " --emu-dosbox Uses DosBox 0.74 OPL3 emulator\n"
@@ -1676,6 +1677,8 @@ int main(int argc, char **argv)
         else if(!std::strcmp("-frb", argv[2]))
             adl_setFullRangeBrightness(myDevice, 1);
 #ifndef HARDWARE_OPL3
+        else if(!std::strcmp("-fp", argv[2]))
+            adl_setSoftPanEnabled(myDevice, 1);
         else if(!std::strcmp("--emu-nuked", argv[2]))
             emulator = ADLMIDI_EMU_NUKED;
         else if(!std::strcmp("--emu-nuked7", argv[2]))
