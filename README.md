@@ -45,6 +45,7 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * CC74 "Brightness" affects a modulator scale (to simulate frequency cut-off on WT synths)
 * Portamento support (CC5, CC37, and CC65)
 * SysEx support that supports some generic, GS, and XG features
+* Full-panning stereo option (works for emulators only)
 
 # How to build
 To build libADLMIDI you need to use CMake:
@@ -175,6 +176,7 @@ To build that example you will need to have installed SDL2 library.
  * Added support for more complex loop (loopStart=XX, loopEnd=0). Where XX - count of loops, or 0 - infinite. Nested loops are supported without of any limits.
  * XMIDI now supports loops
  * Added working implementation of TMB's velocity offset
+ * Added support for full-panning stereo option (Thanks to [Christopher Snowhill](https://github.com/kode54) for a work!)
 
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization
