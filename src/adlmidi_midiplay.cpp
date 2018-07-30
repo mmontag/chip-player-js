@@ -688,9 +688,7 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         break;
 
     case 10: // Change panning
-        m_midiChannels[channel].panning = 0x00;
-        if(value  < 64 + 32) m_midiChannels[channel].panning |= OPL_PANNING_LEFT;
-        if(value >= 64 - 32) m_midiChannels[channel].panning |= OPL_PANNING_RIGHT;
+        m_midiChannels[channel].panning = value;
 
         noteUpdateAll(channel, Upd_Pan);
         break;

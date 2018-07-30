@@ -57,6 +57,12 @@ void NukedOPL3v174::writeReg(uint16_t addr, uint8_t data)
     OPL3v17_WriteReg(chip_r, addr, data);
 }
 
+void NukedOPL3v174::writePan(uint16_t addr, uint8_t data)
+{
+    opl3_chip *chip_r = reinterpret_cast<opl3_chip*>(m_chip);
+    OPL3v17_WritePan(chip_r, addr, data);
+}
+
 void NukedOPL3v174::nativeGenerate(int16_t *frame)
 {
     opl3_chip *chip_r = reinterpret_cast<opl3_chip*>(m_chip);

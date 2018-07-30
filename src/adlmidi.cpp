@@ -447,6 +447,16 @@ ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
 #endif
 }
 
+ADLMIDI_EXPORT void adl_setSoftPanEnabled(ADL_MIDIPlayer *device, int softPanEn)
+{
+    if (!device)
+        return;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if (!play)
+        return;
+    play->m_synth.m_softPanning = softPanEn != 0;
+}
+
 /* !!!DEPRECATED!!! */
 ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol)
 {

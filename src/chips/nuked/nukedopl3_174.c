@@ -34,7 +34,11 @@
 
 #define RSM_FRAC    10
 
-/* Channel types */
+#ifndef PI
+#define PI 3.14159265358979323846
+#endif
+
+ /* Channel types */
 
 enum {
     ch_2op = 0,
@@ -1222,12 +1226,27 @@ void OPL3v17_Reset(opl3_chip *chip, Bit32u samplerate)
         chip->channel[channum].chtype = ch_2op;
         chip->channel[channum].cha = ~0;
         chip->channel[channum].chb = ~0;
+        chip->channel[channum].chl = ~0;
+        chip->channel[channum].chr = ~0;
         OPL3_ChannelSetupAlg(&chip->channel[channum]);
     }
     chip->noise = 0x306600;
     chip->rateratio = (samplerate << RSM_FRAC) / 49716;
     chip->tremoloshift = 4;
     chip->vibshift = 1;
+}
+
+static void OPL3v17_ChannelWritePan(opl3_channel *channel, Bit8u data)
+{
+    channel->chl = (Bit16u)(cos((float)data * (PI / 2.0f / 127.0f)) * 65535.0f);
+    channel->chr = (Bit16u)(sin((float)data * (PI / 2.0f / 127.0f)) * 65535.0f);
+}
+
+void OPL3v17_WritePan(opl3_chip *chip, Bit16u reg, Bit8u v)
+{
+    Bit8u high = (reg >> 8) & 0x01;
+    Bit8u regm = reg & 0xff;
+    OPL3v17_ChannelWritePan(&chip->channel[9 * high + (regm & 0x0f)], v);
 }
 
 void OPL3v17_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v)

@@ -61,6 +61,9 @@ public:
     virtual void reset() = 0;
     virtual void writeReg(uint16_t addr, uint8_t data) = 0;
 
+    // extended
+    virtual void writePan(uint16_t addr, uint8_t data) { };
+
     virtual void nativePreGenerate() = 0;
     virtual void nativePostGenerate() = 0;
     virtual void nativeGenerate(int16_t *frame) = 0;

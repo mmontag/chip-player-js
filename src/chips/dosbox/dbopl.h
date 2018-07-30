@@ -192,6 +192,9 @@ struct Channel {
 	Bit8s maskLeft;		//Sign extended values for both channel's panning
 	Bit8s maskRight;
 
+	Bit16u panLeft; // Extended behavior, scale values for soft panning
+	Bit16u panRight;
+
 	//Forward the channel data to the operators of the channel
 	void SetChanData( const Chip* chip, Bit32u data );
 	//Change in the chandata, check for new values and if we have to forward to operators
@@ -200,6 +203,8 @@ struct Channel {
 	void WriteA0( const Chip* chip, Bit8u val );
 	void WriteB0( const Chip* chip, Bit8u val );
 	void WriteC0( const Chip* chip, Bit8u val );
+
+	void WritePan( Bit8u val );
 
 	//call this for the first channel
 	template< bool opl3Mode >
@@ -271,6 +276,7 @@ struct Chip {
 
 struct Handler {
 	DBOPL::Chip chip;
+	void WritePan( Bit32u port, Bit8u val );
 	Bit32u WriteAddr( Bit32u port, Bit8u val );
 	void WriteReg( Bit32u addr, Bit8u val );
 	void GenerateArr(Bit32s *out, Bitu *samples);

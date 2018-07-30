@@ -36,6 +36,10 @@
 
 #define RSM_FRAC    10
 
+#ifndef PI
+#define PI 3.14159265358979323846
+#endif
+
 /* Channel types */
 
 enum {
@@ -1071,7 +1075,7 @@ void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
         {
             accm += *chip->channel[ii].out[jj];
         }
-        chip->mixbuff[0] += (Bit16s)(accm & chip->channel[ii].cha);
+        chip->mixbuff[0] += (Bit16s)((accm * chip->channel[ii].chl / 65535) & chip->channel[ii].cha);
     }
 
     for (ii = 15; ii < 18; ii++)
@@ -1100,7 +1104,7 @@ void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
         {
             accm += *chip->channel[ii].out[jj];
         }
-        chip->mixbuff[1] += (Bit16s)(accm & chip->channel[ii].chb);
+        chip->mixbuff[1] += (Bit16s)((accm * chip->channel[ii].chr / 65535) & chip->channel[ii].chb);
     }
 
     for (ii = 33; ii < 36; ii++)
@@ -1232,6 +1236,8 @@ void OPL3_Reset(opl3_chip *chip, Bit32u samplerate)
         chip->channel[channum].chtype = ch_2op;
         chip->channel[channum].cha = 0xffff;
         chip->channel[channum].chb = 0xffff;
+        chip->channel[channum].chl = 0xffff;
+        chip->channel[channum].chr = 0xffff;
         chip->channel[channum].ch_num = channum;
         OPL3_ChannelSetupAlg(&chip->channel[channum]);
     }
@@ -1239,6 +1245,19 @@ void OPL3_Reset(opl3_chip *chip, Bit32u samplerate)
     chip->rateratio = (samplerate << RSM_FRAC) / 49716;
     chip->tremoloshift = 4;
     chip->vibshift = 1;
+}
+
+static void OPL3_ChannelWritePan(opl3_channel *channel, Bit8u data)
+{
+    channel->chl = (Bit16u)(cos((float)data * (PI / 2.0f / 127.0f)) * 65535.0f);
+    channel->chr = (Bit16u)(sin((float)data * (PI / 2.0f / 127.0f)) * 65535.0f);
+}
+
+void OPL3_WritePan(opl3_chip *chip, Bit16u reg, Bit8u v)
+{
+    Bit8u high = (reg >> 8) & 0x01;
+    Bit8u regm = reg & 0xff;
+    OPL3_ChannelWritePan(&chip->channel[9 * high + (regm & 0x0f)], v);
 }
 
 void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v)

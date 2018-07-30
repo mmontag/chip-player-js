@@ -34,6 +34,7 @@ public:
     void setRate(uint32_t rate) override;
     void reset() override;
     void writeReg(uint16_t addr, uint8_t data) override;
+    void writePan(uint16_t addr, uint8_t data) override;
     void nativePreGenerate() override {}
     void nativePostGenerate() override {}
     void nativeGenerate(int16_t *frame) override;

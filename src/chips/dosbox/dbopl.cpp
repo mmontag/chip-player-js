@@ -757,6 +757,11 @@ void Channel::WriteC0(const Chip* chip, Bit8u val) {
 	UpdateSynth(chip);
 }
 
+void Channel::WritePan(Bit8u val) {
+	panLeft = (Bit16u)(cos((float)val * (PI / 2.0f / 127.0f)) * 65535.0f);
+	panRight = (Bit16u)(sin((float)val * (PI / 2.0f / 127.0f)) * 65535.0f);
+}
+
 void Channel::UpdateSynth( const Chip* chip ) {
 	//Select the new synth mode
 	if ( chip->opl3Active ) {
@@ -971,8 +976,8 @@ Channel* Channel::BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output ) {
 		case sm3AMFM:
 		case sm3FMAM:
 		case sm3AMAM:
-			output[ i * 2 + 0 ] += sample & maskLeft;
-			output[ i * 2 + 1 ] += sample & maskRight;
+			output[ i * 2 + 0 ] += (sample * panLeft / 65535) & maskLeft;
+			output[ i * 2 + 1 ] += (sample * panRight / 65535) & maskRight;
 			break;
 		default:
 			break;
@@ -1388,6 +1393,10 @@ void Chip::Setup( Bit32u rate ) {
 		WriteReg( i, 0xff );
 		WriteReg( i, 0x0 );
 	}
+
+	for ( int i = 0; i < 18; i++ ) {
+		chan[i].WritePan( 0x40 );
+	}
 }
 
 static bool doneTables = false;
@@ -1614,5 +1623,14 @@ void Handler::Init( Bitu rate ) {
 	chip.Setup( static_cast<Bit32u>(rate) );
 }
 
+void Handler::WritePan( Bit32u reg, Bit8u val )
+{
+	Bitu index;
+	index = ((reg >> 4) & 0x10) | (reg & 0xf);
+	if (ChanOffsetTable[index]) {
+		Channel* regChan = (Channel*)(((char *)&chip) + ChanOffsetTable[index]);
+		regChan->WritePan(val);
+	}
+}
 
 }		//Namespace DBOPL

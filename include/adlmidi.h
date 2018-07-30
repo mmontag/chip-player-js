@@ -365,6 +365,13 @@ extern void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_bri
 extern void adl_setLoopEnabled(struct ADL_MIDIPlayer *device, int loopEn);
 
 /**
+ * @brief Enable or disable soft panning with chip emulators
+ * @param device Instance of the library
+ * @param softPanEn 0 - disabled, 1 - enabled
+ */
+extern void adl_setSoftPanEnabled(struct ADL_MIDIPlayer *device, int softPanEn);
+
+/**
  * @brief [DEPRECATED] Enable or disable Logarithmic volume changer
  *
  * This function is deprecated. Suggested replacement: `adl_setVolumeRangeModel` with `ADLMIDI_VolumeModel_NativeOPL3` volume model value;

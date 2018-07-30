@@ -194,6 +194,13 @@ void OPL3::writeRegI(size_t chip, uint32_t address, uint32_t value)
 #endif
 }
 
+void OPL3::writePan(size_t chip, uint32_t address, uint32_t value)
+{
+#ifndef ADLMIDI_HW_OPL
+    m_chips[chip]->writePan(static_cast<uint16_t>(address), static_cast<uint8_t>(value));
+#endif
+}
+
 
 void OPL3::noteOff(size_t c)
 {
@@ -362,8 +369,18 @@ void OPL3::setPatch(size_t c, const adldata &instrument)
 void OPL3::setPan(size_t c, uint8_t value)
 {
     size_t chip = c / 23, cc = c % 23;
-    if(g_channelsMap[cc] != 0xFFF)
-        writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | value);
+    if(g_channelsMap[cc] != 0xFFF) {
+        if (m_softPanning) {
+            writePan(chip, g_channelsMap[cc], value);
+            writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | 0x30);
+        }
+        else {
+            int panning = 0;
+            if (value  < 64 + 32) panning |= OPL_PANNING_LEFT;
+            if (value >= 64 - 32) panning |= OPL_PANNING_RIGHT;
+            writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | panning);
+        }
+    }
 }
 
 void OPL3::silenceAll() // Silence all OPL channels.

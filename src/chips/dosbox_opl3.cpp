@@ -61,6 +61,12 @@ void DosBoxOPL3::writeReg(uint16_t addr, uint8_t data)
     chip_r->WriteReg(static_cast<Bit32u>(addr), data);
 }
 
+void DosBoxOPL3::writePan(uint16_t addr, uint8_t data)
+{
+    DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
+    chip_r->WritePan(static_cast<Bit32u>(addr), data);
+}
+
 void DosBoxOPL3::nativeGenerateN(int16_t *output, size_t frames)
 {
     DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
