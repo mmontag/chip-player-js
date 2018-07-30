@@ -1258,8 +1258,8 @@ void OPL3_Reset(opl3_chip *chip, Bit32u samplerate)
         chip->channel[channum].chtype = ch_2op;
         chip->channel[channum].cha = 0xffff;
         chip->channel[channum].chb = 0xffff;
-        chip->channel[channum].chl = 46052;
-        chip->channel[channum].chr = 46052;
+        chip->channel[channum].chl = 46340;
+        chip->channel[channum].chr = 46340;
         chip->channel[channum].ch_num = channum;
         OPL3_ChannelSetupAlg(&chip->channel[channum]);
     }

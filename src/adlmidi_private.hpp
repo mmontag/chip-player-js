@@ -801,7 +801,7 @@ public:
             vibspeed = 2 * 3.141592653 * 5.0;
             vibdepth = 0.5 / 127;
             vibdelay = 0;
-            panning = OPL_PANNING_BOTH;
+            panning = 64;
             portamento = 0;
             portamentoEnable = false;
             portamentoSource = -1;
