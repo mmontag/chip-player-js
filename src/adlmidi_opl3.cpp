@@ -380,7 +380,7 @@ void OPL3::setPan(size_t c, uint8_t value)
         if (m_softPanning)
         {
             writePan(chip, g_channelsMap[cc], value);
-            writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | 0x30);
+            writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | OPL_PANNING_BOTH);
         }
         else
         {
