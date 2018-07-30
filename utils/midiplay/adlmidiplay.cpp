@@ -247,7 +247,7 @@ int main(int argc, char **argv)
             " --solo <track>             Selects a solo track to play\n"
             " --only <track1,...,trackN> Selects a subset of tracks to play\n"
             #ifndef HARDWARE_OPL3
-            " -fp Enables full-panning stereo support"
+            " -fp Enables full-panning stereo support\n"
             " --emu-nuked  Uses Nuked OPL3 v 1.8 emulator\n"
             " --emu-nuked7 Uses Nuked OPL3 v 1.7.4 emulator\n"
             " --emu-dosbox Uses DosBox 0.74 OPL3 emulator\n"
