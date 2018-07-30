@@ -69,7 +69,7 @@ endfunction()
 function(set_visibility_hidden destTarget)
     if(CMAKE_C_COMPILER_ID MATCHES "^(GNU|Clang)$")
         target_compile_options(${destTarget} PRIVATE
-          -fvisibility=hidden -fvisibility-inlines-hidden)
+          $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden> -fvisibility=hidden)
         target_compile_definitions(${destTarget} PRIVATE
           "LIBADLMIDI_VISIBILITY")
     endif()
