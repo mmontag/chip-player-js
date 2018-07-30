@@ -65,6 +65,10 @@
 #define EMBEDDED_BANK_ID_LONGTEXT N_( \
     "Use one of embedded banks.")
 
+#define FULL_PANNING_TEXT N_("Full panning")
+#define FULL_PANNING_LONGTEXT N_( \
+    "Enable full-panning stereo support")
+
 #define VOLUME_MODEL_TEXT N_("Volume scaling model")
 #define VOLUME_MODEL_LONGTEXT N_( \
     "Declares volume scaling model which will affect volume levels.")
@@ -146,6 +150,9 @@ vlc_module_begin ()
     add_bool( CONFIG_PREFIX "full-range-brightness", false, FULL_RANGE_CC74_TEXT,
               FULL_RANGE_CC74_LONGTEXT, false )
 
+    add_bool( CONFIG_PREFIX "full-panning", false, FULL_PANNING_TEXT,
+              FULL_PANNING_LONGTEXT, false )
+
 vlc_module_end ()
 
 
@@ -190,6 +197,8 @@ static int Open (vlc_object_t *p_this)
     adl_setNumChips(p_sys->synth, var_InheritInteger(p_this, CONFIG_PREFIX "emulated-chips"));
 
     adl_setVolumeRangeModel(p_sys->synth, var_InheritInteger(p_this, CONFIG_PREFIX "volume-model"));
+
+    adl_setSoftPanEnabled(p_sys->synth, var_InheritBool(p_this, CONFIG_PREFIX "full-panning"));
 
     adl_setFullRangeBrightness(p_sys->synth, var_InheritBool(p_this, CONFIG_PREFIX "full-range-brightness"));
 
