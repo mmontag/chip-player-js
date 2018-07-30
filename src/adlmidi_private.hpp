@@ -144,6 +144,7 @@ typedef BW_MidiSequencer MidiSequencer;
 
 #include "adldata.hh"
 
+#define ADLMIDI_BUILD
 #include "adlmidi.h"    //Main API
 
 #ifndef ADLMIDI_DISABLE_CPP_EXTRAS

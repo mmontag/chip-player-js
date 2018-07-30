@@ -65,6 +65,18 @@ typedef short           ADL_SInt16;
 #define DEPRECATED(func) func
 #endif
 
+#ifdef ADLMIDI_BUILD
+#   ifndef ADLMIDI_DECLSPEC
+#       if defined (_WIN32) && defined(ADLMIDI_BUILD_DLL)
+#           define ADLMIDI_DECLSPEC __declspec(dllexport)
+#       else
+#           define ADLMIDI_DECLSPEC
+#       endif
+#   endif
+#else
+#   define ADLMIDI_DECLSPEC
+#endif
+
 
 /**
  * @brief Volume scaling models
@@ -147,14 +159,14 @@ struct ADL_MIDIPlayer
  * @param numChips Count of virtual chips to emulate
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_setNumChips(struct ADL_MIDIPlayer *device, int numChips);
+extern ADLMIDI_DECLSPEC int adl_setNumChips(struct ADL_MIDIPlayer *device, int numChips);
 
 /**
  * @brief Get current number of emulated chips
  * @param device Instance of the library
  * @return Count of working chip emulators
  */
-extern int adl_getNumChips(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC int adl_getNumChips(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Sets a number of the patches bank from 0 to N banks.
@@ -165,19 +177,19 @@ extern int adl_getNumChips(struct ADL_MIDIPlayer *device);
  * @param bank Number of embedded bank
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_setBank(struct ADL_MIDIPlayer *device, int bank);
+extern ADLMIDI_DECLSPEC int adl_setBank(struct ADL_MIDIPlayer *device, int bank);
 
 /**
  * @brief Returns total number of available banks
  * @return Total number of available embedded banks
  */
-extern int adl_getBanksCount();
+extern ADLMIDI_DECLSPEC int adl_getBanksCount();
 
 /**
  * @brief Returns pointer to array of names of every bank
  * @return Array of strings containing the name of every embedded bank
  */
-extern const char *const *adl_getBankNames();
+extern ADLMIDI_DECLSPEC const char *const *adl_getBankNames();
 
 /**
  * @brief Reference to dynamic bank
@@ -224,7 +236,7 @@ typedef struct ADL_Instrument ADL_Instrument;
  * @param banks Count of bank slots to pre-allocate.
  * @return actual capacity of reserved bank slots.
  */
-extern int adl_reserveBanks(struct ADL_MIDIPlayer *device, unsigned banks);
+extern ADLMIDI_DECLSPEC int adl_reserveBanks(struct ADL_MIDIPlayer *device, unsigned banks);
 /**
  * @brief Gets the bank designated by the identifier, optionally creating if it does not exist
  * @param device Instance of the library
@@ -233,7 +245,7 @@ extern int adl_reserveBanks(struct ADL_MIDIPlayer *device, unsigned banks);
  * @param bank Reference to dynamic bank
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_getBank(struct ADL_MIDIPlayer *device, const ADL_BankId *id, int flags, ADL_Bank *bank);
+extern ADLMIDI_DECLSPEC int adl_getBank(struct ADL_MIDIPlayer *device, const ADL_BankId *id, int flags, ADL_Bank *bank);
 /**
  * @brief Gets the identifier of a bank
  * @param device Instance of the library
@@ -241,28 +253,28 @@ extern int adl_getBank(struct ADL_MIDIPlayer *device, const ADL_BankId *id, int 
  * @param id Identifier of dynamic bank
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_getBankId(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, ADL_BankId *id);
+extern ADLMIDI_DECLSPEC int adl_getBankId(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, ADL_BankId *id);
 /**
  * @brief Removes a bank
  * @param device Instance of the library
  * @param bank Reference to dynamic bank
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_removeBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
+extern ADLMIDI_DECLSPEC int adl_removeBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
 /**
  * @brief Gets the first bank
  * @param device Instance of the library
  * @param bank Reference to dynamic bank
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_getFirstBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
+extern ADLMIDI_DECLSPEC int adl_getFirstBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
 /**
  * @brief Iterates to the next bank
  * @param device Instance of the library
  * @param bank Reference to dynamic bank
  * @return 0 on success, <0 when any error has occurred or end has been reached.
  */
-extern int adl_getNextBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
+extern ADLMIDI_DECLSPEC int adl_getNextBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
 /**
  * @brief Gets the nth intrument in the bank [0..127]
  * @param device Instance of the library
@@ -271,7 +283,7 @@ extern int adl_getNextBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank);
  * @param ins Instrument entry
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_getInstrument(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, unsigned index, ADL_Instrument *ins);
+extern ADLMIDI_DECLSPEC int adl_getInstrument(struct ADL_MIDIPlayer *device, const ADL_Bank *bank, unsigned index, ADL_Instrument *ins);
 /**
  * @brief Sets the nth intrument in the bank [0..127]
  * @param device Instance of the library
@@ -282,7 +294,7 @@ extern int adl_getInstrument(struct ADL_MIDIPlayer *device, const ADL_Bank *bank
  *
  * This function allows to override an instrument on the fly
  */
-extern int adl_setInstrument(struct ADL_MIDIPlayer *device, ADL_Bank *bank, unsigned index, const ADL_Instrument *ins);
+extern ADLMIDI_DECLSPEC int adl_setInstrument(struct ADL_MIDIPlayer *device, ADL_Bank *bank, unsigned index, const ADL_Instrument *ins);
 /**
  * @brief Loads the melodic or percussive part of the nth embedded bank
  * @param device Instance of the library
@@ -290,7 +302,7 @@ extern int adl_setInstrument(struct ADL_MIDIPlayer *device, ADL_Bank *bank, unsi
  * @param num Number of embedded bank to load into the current bank array
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank, int num);
+extern ADLMIDI_DECLSPEC int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank, int num);
 
 
 
@@ -306,14 +318,14 @@ extern int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank, i
  * @param ops4 Count of four-op channels to allocate between all emulating chips
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_setNumFourOpsChn(struct ADL_MIDIPlayer *device, int ops4);
+extern ADLMIDI_DECLSPEC int adl_setNumFourOpsChn(struct ADL_MIDIPlayer *device, int ops4);
 
 /**
  * @brief Get current total count of 4-operator channels between all chips
  * @param device Instance of the library
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Override Enable(1) or Disable(0) AdLib percussion mode. -1 - use bank default AdLib percussion mode
@@ -323,28 +335,28 @@ extern int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device);
  * @param device Instance of the library
  * @param percmod 0 - disabled, 1 - enabled
  */
-extern void adl_setPercMode(struct ADL_MIDIPlayer *device, int percmod);
+extern ADLMIDI_DECLSPEC void adl_setPercMode(struct ADL_MIDIPlayer *device, int percmod);
 
 /**
  * @brief Override Enable(1) or Disable(0) deep vibrato state. -1 - use bank default vibrato state
  * @param device Instance of the library
  * @param hvibro 0 - disabled, 1 - enabled
  */
-extern void adl_setHVibrato(struct ADL_MIDIPlayer *device, int hvibro);
+extern ADLMIDI_DECLSPEC void adl_setHVibrato(struct ADL_MIDIPlayer *device, int hvibro);
 
 /**
  * @brief Override Enable(1) or Disable(0) deep tremolo state. -1 - use bank default tremolo state
  * @param device Instance of the library
  * @param htremo 0 - disabled, 1 - enabled
  */
-extern void adl_setHTremolo(struct ADL_MIDIPlayer *device, int htremo);
+extern ADLMIDI_DECLSPEC void adl_setHTremolo(struct ADL_MIDIPlayer *device, int htremo);
 
 /**
  * @brief Override Enable(1) or Disable(0) scaling of modulator volumes. -1 - use bank default scaling of modulator volumes
  * @param device Instance of the library
  * @param smod 0 - disabled, 1 - enabled
  */
-extern void adl_setScaleModulators(struct ADL_MIDIPlayer *device, int smod);
+extern ADLMIDI_DECLSPEC void adl_setScaleModulators(struct ADL_MIDIPlayer *device, int smod);
 
 /**
  * @brief Enable(1) or Disable(0) full-range brightness (MIDI CC74 used in XG music to filter result sounding) scaling
@@ -355,35 +367,35 @@ extern void adl_setScaleModulators(struct ADL_MIDIPlayer *device, int smod);
  * @param device Instance of the library
  * @param fr_brightness 0 - disabled, 1 - enabled
  */
-extern void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_brightness);
+extern ADLMIDI_DECLSPEC void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, int fr_brightness);
 
 /**
  * @brief Enable or disable built-in loop (built-in loop supports 'loopStart' and 'loopEnd' tags to loop specific part)
  * @param device Instance of the library
  * @param loopEn 0 - disabled, 1 - enabled
  */
-extern void adl_setLoopEnabled(struct ADL_MIDIPlayer *device, int loopEn);
+extern ADLMIDI_DECLSPEC void adl_setLoopEnabled(struct ADL_MIDIPlayer *device, int loopEn);
 
 /**
  * @brief Enable or disable soft panning with chip emulators
  * @param device Instance of the library
  * @param softPanEn 0 - disabled, 1 - enabled
  */
-extern void adl_setSoftPanEnabled(struct ADL_MIDIPlayer *device, int softPanEn);
+extern ADLMIDI_DECLSPEC void adl_setSoftPanEnabled(struct ADL_MIDIPlayer *device, int softPanEn);
 
 /**
  * @brief [DEPRECATED] Enable or disable Logarithmic volume changer
  *
  * This function is deprecated. Suggested replacement: `adl_setVolumeRangeModel` with `ADLMIDI_VolumeModel_NativeOPL3` volume model value;
  */
-DEPRECATED(extern void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol));
+DEPRECATED(extern ADLMIDI_DECLSPEC void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol));
 
 /**
  * @brief Set different volume range model
  * @param device Instance of the library
  * @param volumeModel Volume model type (#ADLMIDI_VolumeModels)
  */
-extern void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel);
+extern ADLMIDI_DECLSPEC void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel);
 
 /**
  * @brief Load WOPL bank file from File System
@@ -394,7 +406,7 @@ extern void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeMod
  * @param filePath Absolute or relative path to the WOPL bank file. UTF8 encoding is required, even on Windows.
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath);
+extern ADLMIDI_DECLSPEC int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath);
 
 /**
  * @brief Load WOPL bank file from memory data
@@ -406,7 +418,7 @@ extern int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath)
  * @param size Size of given memory block
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_openBankData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size);
+extern ADLMIDI_DECLSPEC int adl_openBankData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size);
 
 
 /**
@@ -416,14 +428,14 @@ extern int adl_openBankData(struct ADL_MIDIPlayer *device, const void *mem, unsi
  *
  * @return A string that contains a notice to use `adl_chipEmulatorName` instead of this function.
  */
-DEPRECATED(extern const char *adl_emulatorName());
+DEPRECATED(extern ADLMIDI_DECLSPEC const char *adl_emulatorName());
 
 /**
  * @brief Returns chip emulator name string
  * @param device Instance of the library
  * @return Understandable name of current OPL3 emulator
  */
-extern const char *adl_chipEmulatorName(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC const char *adl_chipEmulatorName(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief List of available OPL3 emulators
@@ -446,7 +458,7 @@ enum ADL_Emulator
  * @param emulator Type of emulator (#ADL_Emulator)
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulator);
+extern ADLMIDI_DECLSPEC int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulator);
 
 /**
  * @brief Library version context
@@ -466,7 +478,7 @@ typedef struct {
  * @param enabled 0 - disabled, 1 - enabled
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_setRunAtPcmRate(struct ADL_MIDIPlayer *device, int enabled);
+extern ADLMIDI_DECLSPEC int adl_setRunAtPcmRate(struct ADL_MIDIPlayer *device, int enabled);
 
 /**
  * @brief Set 4-bit device identifier. Used by the SysEx processor.
@@ -474,7 +486,7 @@ extern int adl_setRunAtPcmRate(struct ADL_MIDIPlayer *device, int enabled);
  * @param id 4-bit device identifier
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_setDeviceIdentifier(struct ADL_MIDIPlayer *device, unsigned id);
+extern ADLMIDI_DECLSPEC int adl_setDeviceIdentifier(struct ADL_MIDIPlayer *device, unsigned id);
 
 /**
  * @section Information
@@ -484,13 +496,13 @@ extern int adl_setDeviceIdentifier(struct ADL_MIDIPlayer *device, unsigned id);
  * @brief Returns string which contains a version number
  * @return String which contains a version of the library
  */
-extern const char *adl_linkedLibraryVersion();
+extern ADLMIDI_DECLSPEC const char *adl_linkedLibraryVersion();
 
 /**
  * @brief Returns structure which contains a version number of library
  * @return Library version context structure which contains version number of the library
  */
-extern const ADL_Version *adl_linkedVersion();
+extern ADLMIDI_DECLSPEC const ADL_Version *adl_linkedVersion();
 
 
 /* ======== Error Info ======== */
@@ -503,14 +515,14 @@ extern const ADL_Version *adl_linkedVersion();
  *
  * @return String with error message related to library initialization
  */
-extern const char *adl_errorString();
+extern ADLMIDI_DECLSPEC const char *adl_errorString();
 
 /**
  * @brief Returns string which contains last error message on specific device
  * @param device Instance of the library
  * @return String with error message related to last function call returned non-zero value.
  */
-extern const char *adl_errorInfo(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC const char *adl_errorInfo(struct ADL_MIDIPlayer *device);
 
 
 
@@ -526,13 +538,13 @@ extern const char *adl_errorInfo(struct ADL_MIDIPlayer *device);
  * @param sample_rate Output sample rate
  * @return Instance of the library. If NULL was returned, check the `adl_errorString` message for more info.
  */
-extern struct ADL_MIDIPlayer *adl_init(long sample_rate);
+extern ADLMIDI_DECLSPEC struct ADL_MIDIPlayer *adl_init(long sample_rate);
 
 /**
  * @brief Close and delete ADLMIDI device
  * @param device Instance of the library
  */
-extern void adl_close(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC void adl_close(struct ADL_MIDIPlayer *device);
 
 
 
@@ -547,7 +559,7 @@ extern void adl_close(struct ADL_MIDIPlayer *device);
  * @param filePath Absolute or relative path to the music file. UTF8 encoding is required, even on Windows.
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_openFile(struct ADL_MIDIPlayer *device, const char *filePath);
+extern ADLMIDI_DECLSPEC int adl_openFile(struct ADL_MIDIPlayer *device, const char *filePath);
 
 /**
  * @brief Load MIDI (or any other supported format) file from memory data
@@ -559,13 +571,13 @@ extern int adl_openFile(struct ADL_MIDIPlayer *device, const char *filePath);
  * @param size Size of given memory block
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_openData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size);
+extern ADLMIDI_DECLSPEC int adl_openData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size);
 
 /**
  * @brief Resets MIDI player (per-channel setup) into initial state
  * @param device Instance of the library
  */
-extern void adl_reset(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC void adl_reset(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Get total time length of current song
@@ -575,7 +587,7 @@ extern void adl_reset(struct ADL_MIDIPlayer *device);
  * @param device Instance of the library
  * @return Total song length in seconds
  */
-extern double adl_totalTimeLength(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC double adl_totalTimeLength(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Get loop start time if presented.
@@ -585,7 +597,7 @@ extern double adl_totalTimeLength(struct ADL_MIDIPlayer *device);
  * @param device Instance of the library
  * @return Time position in seconds of loop start point, or -1 when file has no loop points
  */
-extern double adl_loopStartTime(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC double adl_loopStartTime(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Get loop endtime if presented.
@@ -595,7 +607,7 @@ extern double adl_loopStartTime(struct ADL_MIDIPlayer *device);
  * @param device Instance of the library
  * @return Time position in seconds of loop end point, or -1 when file has no loop points
  */
-extern double adl_loopEndTime(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC double adl_loopEndTime(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Get current time position in seconds
@@ -605,7 +617,7 @@ extern double adl_loopEndTime(struct ADL_MIDIPlayer *device);
  * @param device Instance of the library
  * @return Current time position in seconds
  */
-extern double adl_positionTell(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC double adl_positionTell(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Jump to absolute time position in seconds
@@ -615,7 +627,7 @@ extern double adl_positionTell(struct ADL_MIDIPlayer *device);
  * @param device Instance of the library
  * @param seconds Destination time position in seconds to seek
  */
-extern void adl_positionSeek(struct ADL_MIDIPlayer *device, double seconds);
+extern ADLMIDI_DECLSPEC void adl_positionSeek(struct ADL_MIDIPlayer *device, double seconds);
 
 /**
  * @brief Reset MIDI track position to begin
@@ -624,7 +636,7 @@ extern void adl_positionSeek(struct ADL_MIDIPlayer *device, double seconds);
  *
  * @param device Instance of the library
  */
-extern void adl_positionRewind(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC void adl_positionRewind(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Set tempo multiplier
@@ -634,21 +646,21 @@ extern void adl_positionRewind(struct ADL_MIDIPlayer *device);
  * @param device Instance of the library
  * @param tempo Tempo multiplier value: 1.0 - original tempo, >1 - play faster, <1 - play slower
  */
-extern void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo);
+extern ADLMIDI_DECLSPEC void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo);
 
 /**
  * @brief Returns 1 if music position has reached end
  * @param device Instance of the library
  * @return 1 when end of sing has been reached, otherwise, 0 will be returned. <0 is returned on any error
  */
-extern int adl_atEnd(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC int adl_atEnd(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Returns the number of tracks of the current sequence
  * @param device Instance of the library
  * @return Count of tracks in the current sequence
  */
-extern size_t adl_trackCount(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC size_t adl_trackCount(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Track options
@@ -669,7 +681,7 @@ enum ADLMIDI_TrackOptions
  * @param trackNumber Identifier of the designated track.
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t trackNumber, unsigned trackOptions);
+extern ADLMIDI_DECLSPEC int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t trackNumber, unsigned trackOptions);
 
 /**
  * @brief Handler of callback trigger events
@@ -677,7 +689,7 @@ extern int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t trackNumber
  * @param trigger Value of the event which triggered this callback.
  * @param track Identifier of the track which triggered this callback.
  */
-typedef void (*ADL_TriggerHandler)(void *userData, unsigned trigger, size_t track);
+typedef ADLMIDI_DECLSPEC void (*ADL_TriggerHandler)(void *userData, unsigned trigger, size_t track);
 
 /**
  * @brief Defines a handler for callback trigger events
@@ -686,7 +698,7 @@ typedef void (*ADL_TriggerHandler)(void *userData, unsigned trigger, size_t trac
  * @param userData Instance of the library
  * @return 0 on success, <0 when any error has occurred
  */
-extern int adl_setTriggerHandler(struct ADL_MIDIPlayer *device, ADL_TriggerHandler handler, void *userData);
+extern ADLMIDI_DECLSPEC int adl_setTriggerHandler(struct ADL_MIDIPlayer *device, ADL_TriggerHandler handler, void *userData);
 
 
 
@@ -698,14 +710,14 @@ extern int adl_setTriggerHandler(struct ADL_MIDIPlayer *device, ADL_TriggerHandl
  * @param device Instance of the library
  * @return A string that contains music title
  */
-extern const char *adl_metaMusicTitle(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC const char *adl_metaMusicTitle(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Returns string which contains a copyright string*
  * @param device Instance of the library
  * @return A string that contains copyright notice, otherwise NULL
  */
-extern const char *adl_metaMusicCopyright(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC const char *adl_metaMusicCopyright(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Returns count of available track titles
@@ -715,7 +727,7 @@ extern const char *adl_metaMusicCopyright(struct ADL_MIDIPlayer *device);
  * @param device Instance of the library
  * @return Count of available MIDI tracks, otherwise NULL
  */
-extern size_t adl_metaTrackTitleCount(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC size_t adl_metaTrackTitleCount(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Get track title by index
@@ -723,7 +735,7 @@ extern size_t adl_metaTrackTitleCount(struct ADL_MIDIPlayer *device);
  * @param index Index of the track to retreive the title
  * @return A string that contains track title, otherwise NULL.
  */
-extern const char *adl_metaTrackTitle(struct ADL_MIDIPlayer *device, size_t index);
+extern ADLMIDI_DECLSPEC const char *adl_metaTrackTitle(struct ADL_MIDIPlayer *device, size_t index);
 
 /**
  * @brief MIDI Marker structure
@@ -743,7 +755,7 @@ struct Adl_MarkerEntry
  * @param device Instance of the library
  * @return Count of available MIDI markers
  */
-extern size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Returns the marker entry
@@ -751,7 +763,7 @@ extern size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device);
  * @param index Index of the marker to retreive it.
  * @return MIDI Marker description structure.
  */
-extern struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index);
+extern ADLMIDI_DECLSPEC struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index);
 
 
 
@@ -774,7 +786,7 @@ extern struct Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size
  * @param out Pointer to output with 16-bit stereo PCM output
  * @return Count of given samples, otherwise, 0 or when catching an error while playing
  */
-extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
+extern ADLMIDI_DECLSPEC int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
 
 /**
  * @brief Generate PCM stereo audio output in sample format declared by given context and iterate MIDI timers
@@ -794,7 +806,7 @@ extern int  adl_play(struct ADL_MIDIPlayer *device, int sampleCount, short *out)
  * @param format Destination PCM format format context
  * @return Count of given samples, otherwise, 0 or when catching an error while playing
  */
-extern int  adl_playFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 *left, ADL_UInt8 *right, const struct ADLMIDI_AudioFormat *format);
+extern ADLMIDI_DECLSPEC int  adl_playFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 *left, ADL_UInt8 *right, const struct ADLMIDI_AudioFormat *format);
 
 /**
  * @brief Generate PCM signed 16-bit stereo audio output without iteration of MIDI timers
@@ -813,7 +825,7 @@ extern int  adl_playFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_U
  * @param out Pointer to output with 16-bit stereo PCM output
  * @return Count of given samples, otherwise, 0 or when catching an error while playing
  */
-extern int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
+extern ADLMIDI_DECLSPEC int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *out);
 
 /**
  * @brief Generate PCM stereo audio output in sample format declared by given context without iteration of MIDI timers
@@ -834,7 +846,7 @@ extern int  adl_generate(struct ADL_MIDIPlayer *device, int sampleCount, short *
  * @param format Destination PCM format format context
  * @return Count of given samples, otherwise, 0 or when catching an error while playing
  */
-extern int  adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 *left, ADL_UInt8 *right, const struct ADLMIDI_AudioFormat *format);
+extern ADLMIDI_DECLSPEC int  adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleCount, ADL_UInt8 *left, ADL_UInt8 *right, const struct ADLMIDI_AudioFormat *format);
 
 /**
  * @brief Periodic tick handler.
@@ -850,7 +862,7 @@ extern int  adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleCount, A
  * @param granulality Minimal size of one MIDI tick in seconds.
  * @return desired number of seconds until next call. Pass this value into `seconds` field in next time
  */
-extern double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, double granulality);
+extern ADLMIDI_DECLSPEC double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, double granulality);
 
 
 
@@ -861,13 +873,13 @@ extern double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, doub
  * @brief Force Off all notes on all channels
  * @param device Instance of the library
  */
-extern void adl_panic(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC void adl_panic(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Reset states of all controllers on all MIDI channels
  * @param device Instance of the library
  */
-extern void adl_rt_resetState(struct ADL_MIDIPlayer *device);
+extern ADLMIDI_DECLSPEC void adl_rt_resetState(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Turn specific MIDI note ON
@@ -877,7 +889,7 @@ extern void adl_rt_resetState(struct ADL_MIDIPlayer *device);
  * @param velocity Velocity level [Between 0 and 127]
  * @return 1 when note was successfully started, 0 when note was rejected by any reason.
  */
-extern int adl_rt_noteOn(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 velocity);
+extern ADLMIDI_DECLSPEC int adl_rt_noteOn(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 velocity);
 
 /**
  * @brief Turn specific MIDI note OFF
@@ -885,7 +897,7 @@ extern int adl_rt_noteOn(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_U
  * @param channel Target MIDI channel [Between 0 and 16]
  * @param note Note number to off [Between 0 and 127]
  */
-extern void adl_rt_noteOff(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note);
+extern ADLMIDI_DECLSPEC void adl_rt_noteOff(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note);
 
 /**
  * @brief Set note after-touch
@@ -894,7 +906,7 @@ extern void adl_rt_noteOff(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL
  * @param note Note number to affect by aftertouch event [Between 0 and 127]
  * @param atVal After-Touch value [Between 0 and 127]
  */
-extern void adl_rt_noteAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 atVal);
+extern ADLMIDI_DECLSPEC void adl_rt_noteAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 note, ADL_UInt8 atVal);
 
 /**
  * @brief Set channel after-touch
@@ -902,7 +914,7 @@ extern void adl_rt_noteAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 chann
  * @param channel Target MIDI channel [Between 0 and 16]
  * @param atVal After-Touch level [Between 0 and 127]
  */
-extern void adl_rt_channelAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 atVal);
+extern ADLMIDI_DECLSPEC void adl_rt_channelAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 atVal);
 
 /**
  * @brief Apply controller change
@@ -911,7 +923,7 @@ extern void adl_rt_channelAfterTouch(struct ADL_MIDIPlayer *device, ADL_UInt8 ch
  * @param type Type of the controller [Between 0 and 255]
  * @param value Value of the controller event [Between 0 and 127]
  */
-extern void adl_rt_controllerChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 type, ADL_UInt8 value);
+extern ADLMIDI_DECLSPEC void adl_rt_controllerChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 type, ADL_UInt8 value);
 
 /**
  * @brief Apply patch change
@@ -919,7 +931,7 @@ extern void adl_rt_controllerChange(struct ADL_MIDIPlayer *device, ADL_UInt8 cha
  * @param channel Target MIDI channel [Between 0 and 16]
  * @param patch Patch number [Between 0 and 127]
  */
-extern void adl_rt_patchChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 patch);
+extern ADLMIDI_DECLSPEC void adl_rt_patchChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 patch);
 
 /**
  * @brief Apply pitch bend change
@@ -927,7 +939,7 @@ extern void adl_rt_patchChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel,
  * @param channel Target MIDI channel [Between 0 and 16]
  * @param pitch 24-bit pitch bend value
  */
-extern void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt16 pitch);
+extern ADLMIDI_DECLSPEC void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt16 pitch);
 
 /**
  * @brief Apply pitch bend change
@@ -936,7 +948,7 @@ extern void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, A
  * @param msb MSB part of 24-bit pitch bend value
  * @param lsb LSB part of 24-bit pitch bend value
  */
-extern void adl_rt_pitchBendML(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb, ADL_UInt8 lsb);
+extern ADLMIDI_DECLSPEC void adl_rt_pitchBendML(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb, ADL_UInt8 lsb);
 
 /**
  * @brief Change LSB of the bank number (Alias to CC-32 event)
@@ -944,7 +956,7 @@ extern void adl_rt_pitchBendML(struct ADL_MIDIPlayer *device, ADL_UInt8 channel,
  * @param channel Target MIDI channel [Between 0 and 16]
  * @param lsb LSB value of the MIDI bank number
  */
-extern void adl_rt_bankChangeLSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 lsb);
+extern ADLMIDI_DECLSPEC void adl_rt_bankChangeLSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 lsb);
 
 /**
  * @brief Change MSB of the bank (Alias to CC-0 event)
@@ -952,7 +964,7 @@ extern void adl_rt_bankChangeLSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channe
  * @param channel Target MIDI channel [Between 0 and 16]
  * @param msb MSB value of the MIDI bank number
  */
-extern void adl_rt_bankChangeMSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb);
+extern ADLMIDI_DECLSPEC void adl_rt_bankChangeMSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_UInt8 msb);
 
 /**
  * @brief Change bank by absolute signed value
@@ -961,7 +973,7 @@ extern void adl_rt_bankChangeMSB(struct ADL_MIDIPlayer *device, ADL_UInt8 channe
  * @param bank Bank number as concoctated signed 16-bit value of MSB and LSB parts.
  */
 
-extern void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_SInt16 bank);
+extern ADLMIDI_DECLSPEC void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, ADL_SInt16 bank);
 
 /**
  * @brief Perform a system exclusive message
@@ -970,7 +982,7 @@ extern void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 channel, 
  * @param size Size of given SysEx message buffer
  * @return 1 when SysEx message was successfully processed, 0 when SysEx message was rejected by any reason
  */
-extern int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const ADL_UInt8 *msg, size_t size);
+extern ADLMIDI_DECLSPEC int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const ADL_UInt8 *msg, size_t size);
 
 
 
@@ -1011,7 +1023,7 @@ typedef void (*ADL_DebugMessageHook)(void *userdata, const char *fmt, ...);
  * @param rawEventHook Pointer to the callback function which will be called on every MIDI event
  * @param userData Pointer to user data which will be passed through the callback.
  */
-extern void adl_setRawEventHook(struct ADL_MIDIPlayer *device, ADL_RawEventHook rawEventHook, void *userData);
+extern ADLMIDI_DECLSPEC void adl_setRawEventHook(struct ADL_MIDIPlayer *device, ADL_RawEventHook rawEventHook, void *userData);
 
 /**
  * @brief Set note hook
@@ -1019,7 +1031,7 @@ extern void adl_setRawEventHook(struct ADL_MIDIPlayer *device, ADL_RawEventHook 
  * @param noteHook Pointer to the callback function which will be called on every noteOn MIDI event
  * @param userData Pointer to user data which will be passed through the callback.
  */
-extern void adl_setNoteHook(struct ADL_MIDIPlayer *device, ADL_NoteHook noteHook, void *userData);
+extern ADLMIDI_DECLSPEC void adl_setNoteHook(struct ADL_MIDIPlayer *device, ADL_NoteHook noteHook, void *userData);
 
 /**
  * @brief Set debug message hook
@@ -1027,7 +1039,7 @@ extern void adl_setNoteHook(struct ADL_MIDIPlayer *device, ADL_NoteHook noteHook
  * @param debugMessageHook Pointer to the callback function which will be called on every debug message
  * @param userData Pointer to user data which will be passed through the callback.
  */
-extern void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_DebugMessageHook debugMessageHook, void *userData);
+extern ADLMIDI_DECLSPEC void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_DebugMessageHook debugMessageHook, void *userData);
 
 /**
  * @brief Get a textual description of the channel state. For display only.
@@ -1049,7 +1061,7 @@ extern void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_DebugMess
  * The `attr` field receives the MIDI channel from which the chip channel is used.
  * To get the valid MIDI channel you will need to apply the & 0x0F mask to every value.
  */
-extern int adl_describeChannels(struct ADL_MIDIPlayer *device, char *text, char *attr, size_t size);
+extern ADLMIDI_DECLSPEC int adl_describeChannels(struct ADL_MIDIPlayer *device, char *text, char *attr, size_t size);
 
 
 
