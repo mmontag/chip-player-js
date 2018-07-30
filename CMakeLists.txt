@@ -67,7 +67,7 @@ function(set_legacy_standard destTarget)
 endfunction()
 
 function(set_visibility_hidden destTarget)
-    if(CMAKE_C_COMPILER_ID MATCHES "^(GNU|Clang)$")
+    if(CMAKE_C_COMPILER_ID MATCHES "^(GNU|Clang)$" AND NOT DJGPP)
         if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
             target_compile_options(${destTarget} PRIVATE
               $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden> -fvisibility=hidden)
