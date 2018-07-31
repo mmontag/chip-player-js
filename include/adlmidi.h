@@ -125,7 +125,7 @@ enum ADLMIDI_SampleType
     /*! unsigned PCM 32-bit */
     ADLMIDI_SampleType_U32,
     /*! Count of available sample format types */
-    ADLMIDI_SampleType_Count,
+    ADLMIDI_SampleType_Count
 };
 
 /**
@@ -220,7 +220,7 @@ enum ADL_BankAccessFlags
     /*! create bank, allocating memory as needed */
     ADLMIDI_Bank_Create = 1,
     /*! create bank, never allocating memory */
-    ADLMIDI_Bank_CreateRt = 1|2,
+    ADLMIDI_Bank_CreateRt = 1|2
 };
 
 typedef struct ADL_Instrument ADL_Instrument;
@@ -672,7 +672,7 @@ enum ADLMIDI_TrackOptions
     /*! Disabled track */
     ADLMIDI_TrackOption_Off  = 2,
     /*! Solo track */
-    ADLMIDI_TrackOption_Solo = 3,
+    ADLMIDI_TrackOption_Solo = 3
 };
 
 /**
@@ -1073,7 +1073,7 @@ extern ADLMIDI_DECLSPEC int adl_describeChannels(struct ADL_MIDIPlayer *device, 
  */
 enum
 {
-    ADLMIDI_InstrumentVersion = 0,
+    ADLMIDI_InstrumentVersion = 0
 };
 
 /**
@@ -1094,7 +1094,7 @@ typedef enum ADL_InstrumentFlags
     ADLMIDI_Ins_RhythmModeMask = 0x38,
 
     /*! Mask of the flags range */
-    ADLMIDI_Ins_ALL_MASK   = 0x07,
+    ADLMIDI_Ins_ALL_MASK   = 0x07
 } ADL_InstrumentFlags;
 
 /**

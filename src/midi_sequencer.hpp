@@ -132,7 +132,7 @@ class BW_MidiSequencer
             //! [Non-Standard] Loop End point with support of multi-loops
             ST_LOOPSTACK_BREAK = 0xE6,//size == 0 <CUSTOM>
             //! [Non-Standard] Callback Trigger
-            ST_CALLBACK_TRIGGER = 0xE7,//size == 1 <CUSTOM>
+            ST_CALLBACK_TRIGGER = 0xE7//size == 1 <CUSTOM>
         };
         //! Main type of event
         uint8_t type;

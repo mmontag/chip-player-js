@@ -75,13 +75,13 @@ typedef enum {
 	sm3AMAM,
 	sm6Start,
 	sm2Percussion,
-	sm3Percussion,
+	sm3Percussion
 } SynthMode;
 
 //Shifts for the values contained in chandata variable
 enum {
 	SHIFT_KSLBASE = 16,
-	SHIFT_KEYCODE = 24,
+	SHIFT_KEYCODE = 24
 };
 
 struct Operator {
@@ -91,7 +91,7 @@ public:
 		MASK_KSR = 0x10,
 		MASK_SUSTAIN = 0x20,
 		MASK_VIBRATO = 0x40,
-		MASK_TREMOLO = 0x80,
+		MASK_TREMOLO = 0x80
 	};
 
 	typedef enum {
@@ -99,7 +99,7 @@ public:
 		RELEASE,
 		SUSTAIN,
 		DECAY,
-		ATTACK,
+		ATTACK
 	} State;
 
 	VolumeHandler volHandler;

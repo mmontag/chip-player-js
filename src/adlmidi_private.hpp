@@ -601,7 +601,7 @@ public:
             enum
             {
                 MaxNumPhysChans = 2,
-                MaxNumPhysItemCount = MaxNumPhysChans,
+                MaxNumPhysItemCount = MaxNumPhysChans
             };
 
             /**
@@ -858,7 +858,7 @@ public:
                 Sustain_None        = 0x00,
                 Sustain_Pedal       = 0x01,
                 Sustain_Sostenuto   = 0x02,
-                Sustain_ANY         = Sustain_Pedal | Sustain_Sostenuto,
+                Sustain_ANY         = Sustain_Pedal | Sustain_Sostenuto
             };
             uint32_t sustained;
             char _padding[6];
@@ -999,7 +999,7 @@ public:
         Mode_GM  = 0x00,
         Mode_GS  = 0x01,
         Mode_XG  = 0x02,
-        Mode_GM2 = 0x04,
+        Mode_GM2 = 0x04
     };
     //! MIDI Synthesizer mode
     uint32_t m_synthMode;
