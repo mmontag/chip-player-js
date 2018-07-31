@@ -153,7 +153,7 @@ void OPL3::setEmbeddedBank(uint32_t bank)
     {
         size_t meta = banks[bank][i];
         adlinsdata2 &ins = bank_pair[i / 128]->ins[i % 128];
-        ins = adlinsdata2(adlins[meta]);
+        ins = adlinsdata2::from_adldata(::adlins[meta]);
     }
 #else
     ADL_UNUSED(bank);

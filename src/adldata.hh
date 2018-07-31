@@ -76,8 +76,7 @@ struct adlinsdata2
     uint16_t    ms_sound_koff;
     int8_t      midi_velocity_offset;
     double      voice2_fine_tune;
-    adlinsdata2() {}
-    explicit adlinsdata2(const adlinsdata &d);
+    static adlinsdata2 from_adldata(const adlinsdata &d);
 };
 ADLDATA_BYTE_COMPARABLE(struct adlinsdata2)
 
@@ -108,17 +107,22 @@ extern const AdlBankSetup adlbanksetup[];
 /**
  * @brief Conversion of storage formats
  */
-inline adlinsdata2::adlinsdata2(const adlinsdata &d)
-    : tone(d.tone), flags(d.flags),
-      ms_sound_kon(d.ms_sound_kon), ms_sound_koff(d.ms_sound_koff),
-      midi_velocity_offset(d.midi_velocity_offset), voice2_fine_tune(d.voice2_fine_tune)
+inline adlinsdata2 adlinsdata2::from_adldata(const adlinsdata &d)
 {
+    adlinsdata2 ins;
+    ins.tone = d.tone;
+    ins.flags = d.flags;
+    ins.ms_sound_kon = d.ms_sound_kon;
+    ins.ms_sound_koff = d.ms_sound_koff;
+    ins.midi_velocity_offset = d.midi_velocity_offset;
+    ins.voice2_fine_tune = d.voice2_fine_tune;
 #ifdef DISABLE_EMBEDDED_BANKS
-    std::memset(adl, 0, sizeof(adldata) * 2);
+    std::memset(ins.adl, 0, sizeof(adldata) * 2);
 #else
-    adl[0] = ::adl[d.adlno1];
-    adl[1] = ::adl[d.adlno2];
+    ins.adl[0] = ::adl[d.adlno1];
+    ins.adl[1] = ::adl[d.adlno2];
 #endif
+    return ins;
 }
 
 /**

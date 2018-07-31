@@ -341,7 +341,7 @@ ADLMIDI_EXPORT int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank 
     for (unsigned i = 0; i < 128; ++i) {
         size_t insno = i + ((id & OPL3::PercussionTag) ? 128 : 0);
         size_t adlmeta = ::banks[num][insno];
-        it->second.ins[i] = adlinsdata2(::adlins[adlmeta]);
+        it->second.ins[i] = adlinsdata2::from_adldata(::adlins[adlmeta]);
     }
     return 0;
 #endif
