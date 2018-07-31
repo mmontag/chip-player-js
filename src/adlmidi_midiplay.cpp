@@ -1877,7 +1877,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
     OPL3 *opl = P->opl;
     if(P->adl_ins_list.empty()) FindAdlList();
     const unsigned meta = P->adl_ins_list[P->ins_idx];
-    const adlinsdata2 ains(adlins[meta]);
+    const adlinsdata2 ains = adlinsdata2::from_adldata(::adlins[meta]);
 
     int tone = (P->cur_gm & 128) ? (P->cur_gm & 127) : (note + 50);
     if(ains.tone)
@@ -1959,7 +1959,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
     for(size_t a = 0, n = P->adl_ins_list.size(); a < n; ++a)
     {
         const unsigned i = P->adl_ins_list[a];
-        const adlinsdata2 ains(adlins[i]);
+        const adlinsdata2 ains = adlinsdata2::from_adldata(::adlins[i]);
 
         char ToneIndication[8] = "   ";
         if(ains.tone)

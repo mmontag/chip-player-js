@@ -72,7 +72,7 @@ int adlRefreshNumCards(ADL_MIDIPlayer *device)
             if(insno == 198)
                 continue;
             ++n_total[a / 128];
-            adlinsdata2 ins(adlins[insno]);
+            adlinsdata2 ins = adlinsdata2::from_adldata(::adlins[insno]);
             if((ins.flags & adlinsdata::Flag_Real4op) != 0)
                 ++n_fourop[a / 128];
         }
