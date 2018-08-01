@@ -57,13 +57,29 @@ typedef short           ADL_SInt16;
 
 /* == Deprecated function markers == */
 
-#ifdef __GNUC__
-#define DEPRECATED(func) func __attribute__ ((deprecated))
-#elif defined(_MSC_VER)
-#define DEPRECATED(func) __declspec(deprecated) func
-#else
-#define DEPRECATED(func) func
-#endif
+#if defined(_MSC_VER) /* MSVC */
+#   if _MSC_VER >= 1500 /* MSVC 2008 */
+                     /*! Indicates that the following function is deprecated. */
+#       define ADLMIDI_DEPRECATED(message) __declspec(deprecated(message))
+#   endif
+#endif /* defined(_MSC_VER) */
+
+#ifdef __clang__
+#   if __has_extension(attribute_deprecated_with_message)
+#       define JSONCPP_DEPRECATED(message) __attribute__((deprecated(message)))
+#   endif
+#elif defined __GNUC__ /* not clang (gcc comes later since clang emulates gcc) */
+#   if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#       define ADLMIDI_DEPRECATED(message) __attribute__((deprecated(message)))
+#   elif (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+#       define ADLMIDI_DEPRECATED(message) __attribute__((__deprecated__))
+#   endif /* GNUC version */
+#endif /* __clang__ || __GNUC__ */
+
+#if !defined(ADLMIDI_DEPRECATED)
+#   define ADLMIDI_DEPRECATED(message)
+#endif /* if !defined(ADLMIDI_DEPRECATED) */
+
 
 #ifdef ADLMIDI_BUILD
 #   ifndef ADLMIDI_DECLSPEC
@@ -388,7 +404,8 @@ extern ADLMIDI_DECLSPEC void adl_setSoftPanEnabled(struct ADL_MIDIPlayer *device
  *
  * This function is deprecated. Suggested replacement: `adl_setVolumeRangeModel` with `ADLMIDI_VolumeModel_NativeOPL3` volume model value;
  */
-DEPRECATED(extern ADLMIDI_DECLSPEC void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol));
+ADLMIDI_DEPRECATED("Use `adl_setVolumeRangeModel(device, ADLMIDI_VolumeModel_NativeOPL3)` instead")
+extern ADLMIDI_DECLSPEC void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int logvol);
 
 /**
  * @brief Set different volume range model
@@ -428,7 +445,8 @@ extern ADLMIDI_DECLSPEC int adl_openBankData(struct ADL_MIDIPlayer *device, cons
  *
  * @return A string that contains a notice to use `adl_chipEmulatorName` instead of this function.
  */
-DEPRECATED(extern ADLMIDI_DECLSPEC const char *adl_emulatorName());
+ADLMIDI_DEPRECATED("Use `adl_chipEmulatorName(device)` instead")
+extern ADLMIDI_DECLSPEC const char *adl_emulatorName();
 
 /**
  * @brief Returns chip emulator name string
