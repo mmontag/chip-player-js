@@ -1472,5 +1472,8 @@ extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate)
 #endif
 extern int adlRefreshNumCards(ADL_MIDIPlayer *device);
 
+extern bool adl_isEmulatorAvailable(int emulator);
+extern int adl_getHighestEmulator();
+extern int adl_getLowestEmulator();
 
 #endif // ADLMIDI_PRIVATE_HPP

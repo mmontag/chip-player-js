@@ -129,7 +129,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
 {
     m_midiDevices.clear();
 
-    m_setup.emulator = ADLMIDI_EMU_NUKED;
+    m_setup.emulator = adl_getLowestEmulator();
     m_setup.runAtPcmRate = false;
 
     m_setup.PCM_RATE   = sampleRate;

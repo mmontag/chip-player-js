@@ -613,7 +613,7 @@ ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulato
         assert(play);
         if(!play)
             return -1;
-        if((emulator >= 0) && (emulator < ADLMIDI_EMU_end))
+        if(adl_isEmulatorAvailable(emulator))
         {
             play->m_setup.emulator = emulator;
             play->partialReset();

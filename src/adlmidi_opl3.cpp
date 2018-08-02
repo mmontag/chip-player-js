@@ -22,6 +22,8 @@
  */
 
 #include "adlmidi_private.hpp"
+#include <stdlib.h>
+#include <cassert>
 
 #ifdef ADLMIDI_HW_OPL
 static const unsigned OPLBase = 0x388;
@@ -41,6 +43,45 @@ static const unsigned OPLBase = 0x388;
 #       include "chips/dosbox_opl3.h"
 #   endif
 #endif
+
+static const unsigned adl_emulatorSupport = 0
+#ifndef ADLMIDI_HW_OPL
+#ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
+    | (1u << ADLMIDI_EMU_NUKED) | (1u << ADLMIDI_EMU_NUKED_174)
+#endif
+#ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
+    | (1u << ADLMIDI_EMU_DOSBOX)
+#endif
+#endif
+;
+
+//! Check emulator availability
+bool adl_isEmulatorAvailable(int emulator)
+{
+    return (adl_emulatorSupport & (1u << (unsigned)emulator)) != 0;
+}
+
+//! Find highest emulator
+int adl_getHighestEmulator()
+{
+    int emu = -1;
+    for(unsigned m = adl_emulatorSupport; m > 0; m >>= 1)
+        ++emu;
+    return emu;
+}
+
+//! Find lowest emulator
+int adl_getLowestEmulator()
+{
+    int emu = -1;
+    unsigned m = adl_emulatorSupport;
+    if(m > 0)
+    {
+        for(emu = 0; (m & 1) == 0; m >>= 1)
+            ++emu;
+    }
+    return emu;
+}
 
 //! Per-channel and per-operator registers map
 static const uint16_t g_operatorsMap[23 * 2] =
@@ -578,6 +619,8 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
         switch(emulator)
         {
         default:
+            assert(false);
+            abort();
 #ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
         case ADLMIDI_EMU_NUKED: /* Latest Nuked OPL3 */
             chip = new NukedOPL3;
