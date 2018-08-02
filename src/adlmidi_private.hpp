@@ -1470,10 +1470,31 @@ struct FourChars
 #if defined(ADLMIDI_AUDIO_TICK_HANDLER)
 extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate);
 #endif
+
+/**
+ * @brief Automatically calculate and enable necessary count of 4-op channels on emulated chips
+ * @param device Library context
+ * @return Always 0
+ */
 extern int adlRefreshNumCards(ADL_MIDIPlayer *device);
 
+/**
+ * @brief Check emulator availability
+ * @param emulator Emulator ID (ADL_Emulator)
+ * @return true when emulator is available
+ */
 extern bool adl_isEmulatorAvailable(int emulator);
+
+/**
+ * @brief Find highest emulator
+ * @return The ADL_Emulator enum value which contains ID of highest emulator
+ */
 extern int adl_getHighestEmulator();
+
+/**
+ * @brief Find lowerest emulator
+ * @return The ADL_Emulator enum value which contains ID of lowerest emulator
+ */
 extern int adl_getLowestEmulator();
 
 #endif // ADLMIDI_PRIVATE_HPP

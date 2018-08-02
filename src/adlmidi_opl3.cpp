@@ -46,12 +46,13 @@ static const unsigned OPLBase = 0x388;
 
 static const unsigned adl_emulatorSupport = 0
 #ifndef ADLMIDI_HW_OPL
-#ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
+#   ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
     | (1u << ADLMIDI_EMU_NUKED) | (1u << ADLMIDI_EMU_NUKED_174)
-#endif
-#ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
+#   endif
+
+#   ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
     | (1u << ADLMIDI_EMU_DOSBOX)
-#endif
+#   endif
 #endif
 ;
 
