@@ -28,15 +28,13 @@
 #ifndef ADLMIDI_EXPORT
 #   if defined (_WIN32) && defined(ADLMIDI_BUILD_DLL)
 #       define ADLMIDI_EXPORT __declspec(dllexport)
-#   elif defined (LIBADLMIDI_VISIBILITY)
+#   elif defined (LIBADLMIDI_VISIBILITY) && defined (__GNUC__)
 #       define ADLMIDI_EXPORT __attribute__((visibility ("default")))
 #   else
 #       define ADLMIDI_EXPORT
 #   endif
 #endif
 
-// Require declarations of unstable API for extern "C"
-#define ADLMIDI_UNSTABLE_API
 
 #ifdef _WIN32
 #define NOMINMAX 1
@@ -146,6 +144,7 @@ typedef BW_MidiSequencer MidiSequencer;
 
 #include "adldata.hh"
 
+#define ADLMIDI_BUILD
 #include "adlmidi.h"    //Main API
 
 #ifndef ADLMIDI_DISABLE_CPP_EXTRAS
@@ -279,6 +278,8 @@ public:
     bool m_scaleModulators;
     //! Run emulator at PCM rate if that possible. Reduces sounding accuracy, but decreases CPU usage on lower rates.
     bool m_runAtPcmRate;
+    //! Enable soft panning
+    bool m_softPanning;
 
     //! Just a padding. Reserved.
     char _padding2[3];
@@ -369,7 +370,7 @@ public:
     /**
      * @brief Write data to OPL3 chip register
      * @param chip Index of emulated chip. In hardware OPL3 builds, this parameter is ignored
-     * @param index Register address to write
+     * @param address Register address to write
      * @param value Value to write
      */
     void writeReg(size_t chip, uint16_t address, uint8_t value);
@@ -377,10 +378,18 @@ public:
     /**
      * @brief Write data to OPL3 chip register
      * @param chip Index of emulated chip. In hardware OPL3 builds, this parameter is ignored
-     * @param index Register address to write
+     * @param address Register address to write
      * @param value Value to write
      */
     void writeRegI(size_t chip, uint32_t address, uint32_t value);
+
+    /**
+     * @brief Write to soft panning control of OPL3 chip emulator
+     * @param chip Index of emulated chip.
+     * @param address Register of channel to write
+     * @param value Value to write
+     */
+    void writePan(size_t chip, uint32_t address, uint32_t value);
 
     /**
      * @brief Off the note in specified chip channel
@@ -490,6 +499,7 @@ public:
 
     void applySetup();
 
+    void partialReset();
     void resetMIDI();
 
     /**********************Internal structures and classes**********************/
@@ -591,7 +601,7 @@ public:
             enum
             {
                 MaxNumPhysChans = 2,
-                MaxNumPhysItemCount = MaxNumPhysChans,
+                MaxNumPhysItemCount = MaxNumPhysChans
             };
 
             /**
@@ -792,7 +802,7 @@ public:
             vibspeed = 2 * 3.141592653 * 5.0;
             vibdepth = 0.5 / 127;
             vibdelay = 0;
-            panning = OPL_PANNING_BOTH;
+            panning = 64;
             portamento = 0;
             portamentoEnable = false;
             portamentoSource = -1;
@@ -848,7 +858,7 @@ public:
                 Sustain_None        = 0x00,
                 Sustain_Pedal       = 0x01,
                 Sustain_Sostenuto   = 0x02,
-                Sustain_ANY         = Sustain_Pedal | Sustain_Sostenuto,
+                Sustain_ANY         = Sustain_Pedal | Sustain_Sostenuto
             };
             uint32_t sustained;
             char _padding[6];
@@ -989,7 +999,7 @@ public:
         Mode_GM  = 0x00,
         Mode_GS  = 0x01,
         Mode_XG  = 0x02,
-        Mode_GM2 = 0x04,
+        Mode_GM2 = 0x04
     };
     //! MIDI Synthesizer mode
     uint32_t m_synthMode;
@@ -1184,7 +1194,7 @@ public:
     /**
      * @brief MSB Bank Change CC
      * @param channel MIDI channel
-     * @param lsb MSB value of bank number
+     * @param msb MSB value of bank number
      */
     void realTime_BankChangeMSB(uint8_t channel, uint8_t msb);
 
@@ -1428,6 +1438,14 @@ public:
      * @return Offset of the MIDI Channels, multiple to 16
      */
     size_t chooseDevice(const std::string &name);
+
+    /**
+     * @brief Gets a textual description of the state of chip channels
+     * @param text character pointer for text
+     * @param attr character pointer for text attributes
+     * @param size number of characters available to write
+     */
+    void describeChannels(char *text, char *attr, size_t size);
 };
 
 // I think, this is useless inside of Library
@@ -1452,7 +1470,31 @@ struct FourChars
 #if defined(ADLMIDI_AUDIO_TICK_HANDLER)
 extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate);
 #endif
+
+/**
+ * @brief Automatically calculate and enable necessary count of 4-op channels on emulated chips
+ * @param device Library context
+ * @return Always 0
+ */
 extern int adlRefreshNumCards(ADL_MIDIPlayer *device);
 
+/**
+ * @brief Check emulator availability
+ * @param emulator Emulator ID (ADL_Emulator)
+ * @return true when emulator is available
+ */
+extern bool adl_isEmulatorAvailable(int emulator);
+
+/**
+ * @brief Find highest emulator
+ * @return The ADL_Emulator enum value which contains ID of highest emulator
+ */
+extern int adl_getHighestEmulator();
+
+/**
+ * @brief Find lowerest emulator
+ * @return The ADL_Emulator enum value which contains ID of lowerest emulator
+ */
+extern int adl_getLowestEmulator();
 
 #endif // ADLMIDI_PRIVATE_HPP

@@ -1,3 +1,23 @@
+/*
+ * Interfaces over Yamaha OPL3 (YMF262) chip emulators
+ *
+ * Copyright (C) 2017-2018 Vitaly Novichkov (Wohlstand)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 #include "dosbox_opl3.h"
 #include "dosbox/dbopl.h"
 #include <new>
@@ -39,6 +59,12 @@ void DosBoxOPL3::writeReg(uint16_t addr, uint8_t data)
 {
     DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
     chip_r->WriteReg(static_cast<Bit32u>(addr), data);
+}
+
+void DosBoxOPL3::writePan(uint16_t addr, uint8_t data)
+{
+    DBOPL::Handler *chip_r = reinterpret_cast<DBOPL::Handler*>(m_chip);
+    chip_r->WritePan(static_cast<Bit32u>(addr), data);
 }
 
 void DosBoxOPL3::nativeGenerateN(int16_t *output, size_t frames)

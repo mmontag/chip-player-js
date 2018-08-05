@@ -55,6 +55,7 @@ struct ins
     bool pseudo4op;
     bool real4op;
     double voice2_fine_tune;
+    int8_t midi_velocity_offset;
 
     bool operator==(const ins &b) const
     {
@@ -63,7 +64,8 @@ struct ins
                && insno2 == b.insno2
                && pseudo4op == b.pseudo4op
                && real4op == b.real4op
-               && equal_approx(voice2_fine_tune, b.voice2_fine_tune);
+               && equal_approx(voice2_fine_tune, b.voice2_fine_tune)
+               && midi_velocity_offset == b.midi_velocity_offset;
     }
     bool operator< (const ins &b) const
     {
@@ -73,6 +75,7 @@ struct ins
         if(pseudo4op != b.pseudo4op) return pseudo4op < b.pseudo4op;
         if(real4op != b.real4op) return real4op < b.real4op;
         if(!equal_approx(voice2_fine_tune, b.voice2_fine_tune)) return voice2_fine_tune < b.voice2_fine_tune;
+        if(midi_velocity_offset != b.midi_velocity_offset) return midi_velocity_offset < b.midi_velocity_offset;
         return 0;
     }
     bool operator!=(const ins &b) const

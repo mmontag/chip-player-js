@@ -32,8 +32,9 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Pan (binary panning, i.e. left/right side on/off)
 * Pitch-bender with adjustable range
 * Vibrato that responds to RPN/NRPN parameters
-* Sustain enable/disable
+* Sustain (a.k.a. Pedal hold) and Sostenuto enable/disable
 * MIDI and RMI file support
+* Real-Time MIDI API support
 * loopStart / loopEnd tag support (Final Fantasy VII)
 * 111-th controller based loop start (RPG-Maker)
 * Use automatic arpeggio with chords to relieve channel pressure
@@ -41,9 +42,10 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Support for playing Id-software Music File format (IMF)
 * Support for custom banks of [WOPL format](https://github.com/Wohlstand/OPL3BankEditor/blob/master/Specifications/WOPL-and-OPLI-Specification.txt)
 * Partial support for GS and XG standards (having more instruments than in one 128:128 GM set and ability to use multiple channels for percussion purposes, and a support for some GS/XG exclusive controllers)
-* CC74 affects a modulator scale
+* CC74 "Brightness" affects a modulator scale (to simulate frequency cut-off on WT synths)
 * Portamento support (CC5, CC37, and CC65)
 * SysEx support that supports some generic, GS, and XG features
+* Full-panning stereo option (works for emulators only)
 
 # How to build
 To build libADLMIDI you need to use CMake:
@@ -58,6 +60,14 @@ sudo make install
 ### Notes
 * To compile for DOS via DJGPP on Linux, use `cmake/djgpp/djgpp-cmake.sh` script which a wrapper over CMake to pass DJGPP's stuff required for build
 
+# License
+The library is licensed under in it's parts LGPL 2.1+, GPL v2+, GPL v3+, and MIT.
+* Nuked OPL3 emulators are licensed under LGPL v2.1+.
+* DosBox OPL3 emulator is licensed under GPL v2+.
+* Chip interfaces are licensed under LGPL v2.1+.
+* File Reader class and MIDI Sequencer is licensed under MIT.
+* WOPL reader and writer module is licensed under MIT.
+* Other parts of library are licensed under GPLv3+.
 
 ## Available CMake options
 
@@ -162,6 +172,11 @@ To build that example you will need to have installed SDL2 library.
  * Added support for CC67-SoftPedal controller (SoftPedal lowers the volume of notes played)
  * Fixed correctness of CMF files playing
  * Fixed unnecessary overuse of chip channels by blank notes
+ * Added API to disable specific MIDI tracks or play one of MIDI tracks solo
+ * Added support for more complex loop (loopStart=XX, loopEnd=0). Where XX - count of loops, or 0 - infinite. Nested loops are supported without of any limits.
+ * XMIDI now supports loops
+ * Added working implementation of TMB's velocity offset
+ * Added support for full-panning stereo option (Thanks to [Christopher Snowhill](https://github.com/kode54) for a work!)
 
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization

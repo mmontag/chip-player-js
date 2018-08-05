@@ -26,6 +26,7 @@ static bool LoadBisqwit(const char *fn, unsigned bank, const char *prefix)
         tmp2.notenum = (uint8_t)std::fgetc(fp);
         tmp2.pseudo4op = false;
         tmp2.voice2_fine_tune = 0.0;
+        tmp2.midi_velocity_offset = 0;
 
         insdata tmp[2];
         for(int side = 0; side < 2; ++side)

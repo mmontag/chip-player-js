@@ -171,6 +171,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 tmp2.pseudo4op = (flags & (uint8_t)WOPL_Flags::Mode_DoubleVoice) != 0;
                 tmp2.real4op = real4op && !tmp2.pseudo4op;
                 tmp2.voice2_fine_tune = 0;
+                tmp2.midi_velocity_offset = (int8_t)data[offset + 36];
                 tmp[0].diff = false;
                 tmp[1].diff = real4op && !tmp2.pseudo4op;
 

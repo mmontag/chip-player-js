@@ -219,6 +219,29 @@ static const Bit8u KslShiftTable[4] = {
 	31,1,2,0
 };
 
+// Pan law table
+static const Bit16u PanLawTable[] =
+{
+    65535, 65529, 65514, 65489, 65454, 65409, 65354, 65289,
+    65214, 65129, 65034, 64929, 64814, 64689, 64554, 64410,
+    64255, 64091, 63917, 63733, 63540, 63336, 63123, 62901,
+    62668, 62426, 62175, 61914, 61644, 61364, 61075, 60776,
+    60468, 60151, 59825, 59489, 59145, 58791, 58428, 58057,
+    57676, 57287, 56889, 56482, 56067, 55643, 55211, 54770,
+    54320, 53863, 53397, 52923, 52441, 51951, 51453, 50947,
+    50433, 49912, 49383, 48846, 48302, 47750, 47191,
+    46340, /* Center left */
+    46340, /* Center right */
+    45472, 44885, 44291, 43690, 43083, 42469, 41848, 41221,
+    40588, 39948, 39303, 38651, 37994, 37330, 36661, 35986,
+    35306, 34621, 33930, 33234, 32533, 31827, 31116, 30400,
+    29680, 28955, 28225, 27492, 26754, 26012, 25266, 24516,
+    23762, 23005, 22244, 21480, 20713, 19942, 19169, 18392,
+    17613, 16831, 16046, 15259, 14469, 13678, 12884, 12088,
+    11291, 10492, 9691, 8888, 8085, 7280, 6473, 5666,
+    4858, 4050, 3240, 2431, 1620, 810, 0
+};
+
 //Generate a table index and table shift value using input value from a selected rate
 static void EnvelopeSelect( Bit8u val, Bit8u& index, Bit8u& shift ) {
 	if ( val < 13 * 4 ) {				//Rate 0 - 12
@@ -442,6 +465,7 @@ Bits Operator::TemplateVolume(  ) {
 			return vol;
 		}
 		//In sustain phase, but not sustaining, do regular release
+                /* fall through */
 	case RELEASE:
 		vol += RateForward( releaseAdd );;
 		if ( GCC_UNLIKELY(vol >= ENV_MAX) ) {
@@ -757,6 +781,11 @@ void Channel::WriteC0(const Chip* chip, Bit8u val) {
 	UpdateSynth(chip);
 }
 
+void Channel::WritePan(Bit8u val) {
+	panLeft  = PanLawTable[val & 0x7F];
+	panRight = PanLawTable[0x7F - (val & 0x7F)];
+}
+
 void Channel::UpdateSynth( const Chip* chip ) {
 	//Select the new synth mode
 	if ( chip->opl3Active ) {
@@ -971,8 +1000,8 @@ Channel* Channel::BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output ) {
 		case sm3AMFM:
 		case sm3FMAM:
 		case sm3AMAM:
-			output[ i * 2 + 0 ] += sample & maskLeft;
-			output[ i * 2 + 1 ] += sample & maskRight;
+			output[ i * 2 + 0 ] += (sample * panLeft / 65535) & maskLeft;
+			output[ i * 2 + 1 ] += (sample * panRight / 65535) & maskRight;
 			break;
 		default:
 			break;
@@ -1388,6 +1417,10 @@ void Chip::Setup( Bit32u rate ) {
 		WriteReg( i, 0xff );
 		WriteReg( i, 0x0 );
 	}
+
+	for ( int i = 0; i < 18; i++ ) {
+		chan[i].WritePan( 0x40 );
+	}
 }
 
 static bool doneTables = false;
@@ -1614,5 +1647,14 @@ void Handler::Init( Bitu rate ) {
 	chip.Setup( static_cast<Bit32u>(rate) );
 }
 
+void Handler::WritePan( Bit32u reg, Bit8u val )
+{
+	Bitu index;
+	index = ((reg >> 4) & 0x10) | (reg & 0xf);
+	if (ChanOffsetTable[index]) {
+		Channel* regChan = (Channel*)(((char *)&chip) + ChanOffsetTable[index]);
+		regChan->WritePan(val);
+	}
+}
 
 }		//Namespace DBOPL

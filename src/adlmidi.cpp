@@ -72,6 +72,18 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
     return midi_device;
 }
 
+ADLMIDI_EXPORT void adl_close(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return;
+    MIDIplay * play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(play)
+        delete play;
+    device->adl_midiPlayer = NULL;
+    free(device);
+    device = NULL;
+}
+
 ADLMIDI_EXPORT int adl_setDeviceIdentifier(ADL_MIDIPlayer *device, unsigned id)
 {
     if(!device || id > 0x0f)
@@ -102,7 +114,7 @@ ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numChips)
     }
 
     play->m_synth.m_numChips = play->m_setup.numChips;
-    adl_reset(device);
+    play->partialReset();
 
     return adlRefreshNumCards(device);
 }
@@ -123,8 +135,8 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
     ADL_UNUSED(bank);
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     play->setErrorString("This build of libADLMIDI has no embedded banks. "
-                         "Please load bank by using of adl_openBankFile() or "
-                         "adl_openBankData() functions instead of adl_setBank()");
+                         "Please load banks by using adl_openBankFile() or "
+                         "adl_openBankData() functions instead of adl_setBank().");
     return -1;
 #else
     const uint32_t NumBanks = static_cast<uint32_t>(maxAdlBanks());
@@ -304,6 +316,37 @@ ADLMIDI_EXPORT int adl_setInstrument(ADL_MIDIPlayer *device, ADL_Bank *bank, uns
     return 0;
 }
 
+ADLMIDI_EXPORT int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank *bank, int num)
+{
+    if(!device)
+        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if (!play)
+        return -1;
+
+#ifdef DISABLE_EMBEDDED_BANKS
+    ADL_UNUSED(bank);
+    ADL_UNUSED(num);
+    play->setErrorString("This build of libADLMIDI has no embedded banks. "
+                         "Please load banks by using adl_openBankFile() or "
+                         "adl_openBankData() functions instead of adl_loadEmbeddedBank().");
+    return -1;
+#else
+    if(num < 0 || num >= maxAdlBanks())
+        return -1;
+
+    OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
+    size_t id = it->first;
+
+    for (unsigned i = 0; i < 128; ++i) {
+        size_t insno = i + ((id & OPL3::PercussionTag) ? 128 : 0);
+        size_t adlmeta = ::banks[num][insno];
+        it->second.ins[i] = adlinsdata2::from_adldata(::adlins[adlmeta]);
+    }
+    return 0;
+#endif
+}
+
 ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
 {
     if(!device)
@@ -402,6 +445,16 @@ ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
 #else
     ADL_UNUSED(loopEn);
 #endif
+}
+
+ADLMIDI_EXPORT void adl_setSoftPanEnabled(ADL_MIDIPlayer *device, int softPanEn)
+{
+    if(!device)
+        return;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if(!play)
+        return;
+    play->m_synth.m_softPanning = (softPanEn != 0);
 }
 
 /* !!!DEPRECATED!!! */
@@ -560,10 +613,10 @@ ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulato
         assert(play);
         if(!play)
             return -1;
-        if((emulator >= 0) && (emulator < ADLMIDI_EMU_end))
+        if(adl_isEmulatorAvailable(emulator))
         {
             play->m_setup.emulator = emulator;
-            adl_reset(device);
+            play->partialReset();
             return 0;
         }
         play->setErrorString("OPL3 MIDI: Unknown emulation core!");
@@ -580,7 +633,7 @@ ADLMIDI_EXPORT int adl_setRunAtPcmRate(ADL_MIDIPlayer *device, int enabled)
         if(play)
         {
             play->m_setup.runAtPcmRate = (enabled != 0);
-            adl_reset(device);
+            play->partialReset();
             return 0;
         }
     }
@@ -617,33 +670,12 @@ ADLMIDI_EXPORT const char *adl_errorInfo(struct ADL_MIDIPlayer *device)
     return play->getErrorString().c_str();
 }
 
-ADLMIDI_EXPORT const char *adl_getMusicTitle(struct ADL_MIDIPlayer *device)
-{
-    return adl_metaMusicTitle(device);
-}
-
-ADLMIDI_EXPORT void adl_close(struct ADL_MIDIPlayer *device)
-{
-    if(!device)
-        return;
-    MIDIplay * play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    if(play)
-        delete play;
-    device->adl_midiPlayer = NULL;
-    free(device);
-    device = NULL;
-}
-
 ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    play->m_setup.tick_skip_samples_delay = 0;
-    play->m_synth.m_runAtPcmRate = play->m_setup.runAtPcmRate;
-    play->m_synth.reset(play->m_setup.emulator, play->m_setup.PCM_RATE, play);
-    play->m_chipChannels.clear();
-    play->m_chipChannels.resize((size_t)play->m_synth.m_numChannels);
+    play->partialReset();
     play->resetMIDI();
 }
 
@@ -754,6 +786,18 @@ ADLMIDI_EXPORT void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo)
     ADL_UNUSED(device);
     ADL_UNUSED(tempo);
 #endif
+}
+
+
+ADLMIDI_EXPORT int adl_describeChannels(struct ADL_MIDIPlayer *device, char *str, char *attr, size_t size)
+{
+    if(!device)
+        return -1;
+    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
+    if(!play)
+        return -1;
+    play->describeChannels(str, attr, size);
+    return 0;
 }
 
 
@@ -1281,7 +1325,7 @@ ADLMIDI_EXPORT int adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleC
 #endif
 }
 
-ADLMIDI_EXPORT double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, double granuality)
+ADLMIDI_EXPORT double adl_tickEvents(struct ADL_MIDIPlayer *device, double seconds, double granulality)
 {
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     if(!device)
@@ -1289,11 +1333,11 @@ ADLMIDI_EXPORT double adl_tickEvents(struct ADL_MIDIPlayer *device, double secon
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     if(!play)
         return -1.0;
-    return play->Tick(seconds, granuality);
+    return play->Tick(seconds, granulality);
 #else
     ADL_UNUSED(device);
     ADL_UNUSED(seconds);
-    ADL_UNUSED(granuality);
+    ADL_UNUSED(granulality);
     return -1.0;
 #endif
 }
@@ -1310,6 +1354,82 @@ ADLMIDI_EXPORT int adl_atEnd(struct ADL_MIDIPlayer *device)
 #else
     ADL_UNUSED(device);
     return 1;
+#endif
+}
+
+ADLMIDI_EXPORT size_t adl_trackCount(struct ADL_MIDIPlayer *device)
+{
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+    if(!device)
+        return 0;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if(!play)
+        return 0;
+    return play->m_sequencer.getTrackCount();
+#else
+    ADL_UNUSED(device);
+    return 0;
+#endif
+}
+
+ADLMIDI_EXPORT int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t trackNumber, unsigned trackOptions)
+{
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+    if(!device)
+        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if(!play)
+        return -1;
+    MidiSequencer &seq = play->m_sequencer;
+
+    unsigned enableFlag = trackOptions & 3;
+    trackOptions &= ~3u;
+
+    // handle on/off/solo
+    switch(enableFlag)
+    {
+    default:
+        break;
+    case ADLMIDI_TrackOption_On:
+    case ADLMIDI_TrackOption_Off:
+        if(!seq.setTrackEnabled(trackNumber, enableFlag == ADLMIDI_TrackOption_On))
+            return -1;
+        break;
+    case ADLMIDI_TrackOption_Solo:
+        seq.setSoloTrack(trackNumber);
+        break;
+    }
+
+    // handle others...
+    if(trackOptions != 0)
+        return -1;
+
+    return 0;
+
+#else
+    ADL_UNUSED(device);
+    ADL_UNUSED(trackNumber);
+    ADL_UNUSED(trackOptions);
+    return -1;
+#endif
+}
+
+ADLMIDI_EXPORT int adl_setTriggerHandler(struct ADL_MIDIPlayer *device, ADL_TriggerHandler handler, void *userData)
+{
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+    if(!device)
+        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if(!play)
+        return -1;
+    MidiSequencer &seq = play->m_sequencer;
+    seq.setTriggerHandler(handler, userData);
+    return 0;
+#else
+    ADL_UNUSED(device);
+    ADL_UNUSED(handler);
+    ADL_UNUSED(userData);
+    return -1;
 #endif
 }
 

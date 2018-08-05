@@ -52,6 +52,7 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
         tmp2.pseudo4op = false;
         tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
+        tmp2.midi_velocity_offset = (int8_t)data[offset + 12];
 
         std::string name;
         if(midi_index >= 0) name = std::string(1, '\377') + MidiInsName[midi_index];

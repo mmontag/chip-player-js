@@ -412,13 +412,14 @@ int main(int argc, char**argv)
                              (info.nosound ? ins::Flag_NoSound : 0);
 
             std::fprintf(outFile, "    {");
-            std::fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ",%g",
+            std::fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ", %6d, %g",
                     (unsigned) i->first.insno1,
                     (unsigned) i->first.insno2,
                     (int)(i->first.notenum),
                     flags,
                     info.ms_sound_kon,
                     info.ms_sound_koff,
+                    i->first.midi_velocity_offset,
                     i->first.voice2_fine_tune);
             std::string names;
             for(std::set<std::string>::const_iterator

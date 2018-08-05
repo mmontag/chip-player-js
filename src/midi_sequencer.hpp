@@ -123,7 +123,16 @@ class BW_MidiSequencer
             //! [Non-Standard] Loop End point
             ST_LOOPEND      = 0xE2,//size == 0 <CUSTOM>
             //! [Non-Standard] Raw OPL data
-            ST_RAWOPL       = 0xE3//size == 0 <CUSTOM>
+            ST_RAWOPL       = 0xE3,//size == 0 <CUSTOM>
+
+            //! [Non-Standard] Loop Start point with support of multi-loops
+            ST_LOOPSTACK_BEGIN = 0xE4,//size == 1 <CUSTOM>
+            //! [Non-Standard] Loop End point with support of multi-loops
+            ST_LOOPSTACK_END   = 0xE5,//size == 0 <CUSTOM>
+            //! [Non-Standard] Loop End point with support of multi-loops
+            ST_LOOPSTACK_BREAK = 0xE6,//size == 0 <CUSTOM>
+            //! [Non-Standard] Callback Trigger
+            ST_CALLBACK_TRIGGER = 0xE7//size == 1 <CUSTOM>
         };
         //! Main type of event
         uint8_t type;
@@ -221,10 +230,26 @@ class BW_MidiSequencer
     const BW_MidiRtInterface *m_interface;
 
     /**
+     * @brief Prepare internal events storage for track data building
+     * @param trackCount Count of tracks
+     */
+    void buildSmfSetupReset(size_t trackCount);
+
+    /**
      * @brief Build MIDI track data from the raw track data storage
      * @return true if everything successfully processed, or false on any error
      */
-    bool buildTrackData(const std::vector<std::vector<uint8_t> > &trackData);
+    bool buildSmfTrackData(const std::vector<std::vector<uint8_t> > &trackData);
+
+    /**
+     * @brief Build the time line from off loaded events
+     * @param tempos Pre-collected list of tempo events
+     * @param loopStartTicks Global loop start tick (give zero if no global loop presented)
+     * @param loopEndTicks Global loop end tick (give zero if no global loop presented)
+     */
+    void buildTimeLine(const std::vector<MidiEvent> &tempos,
+                       uint64_t loopStartTicks = 0,
+                       uint64_t loopEndTicks = 0);
 
     /**
      * @brief Parse one event from raw MIDI track stream
@@ -285,12 +310,16 @@ public:
         //! Id-Software Music File
         Format_IMF,
         //! EA-MUS format
-        Format_RSXX
+        Format_RSXX,
+        //! AIL's XMIDI format (act same as MIDI, but with exceptions)
+        Format_XMIDI
     };
 
 private:
     //! Music file format type. MIDI is default.
     FileFormat m_format;
+    //! SMF format identifier.
+    unsigned m_smfFormat;
 
     //! Current position
     Position m_currentPosition;
@@ -307,9 +336,9 @@ private:
     //! Delay after song playd before rejecting the output stream requests
     double m_postSongWaitDelay;
 
-    //! Loop start time
+    //! Global loop start time
     double m_loopStartTime;
-    //! Loop end time
+    //! Global loop end time
     double m_loopEndTime;
 
     //! Pre-processed track data storage
@@ -336,12 +365,124 @@ private:
     double  m_tempoMultiplier;
     //! Is song at end
     bool    m_atEnd;
-    //! Loop start has reached
-    bool    m_loopStart;
-    //! Loop end has reached, reset on handling
-    bool    m_loopEnd;
-    //! Are loop points invalid?
-    bool    m_invalidLoop; /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/
+
+    /**
+     * @brief Loop stack entry
+     */
+    struct LoopStackEntry
+    {
+        //! is infinite loop
+        bool infinity;
+        //! Count of loops left to break. <0 - infinite loop
+        int loops;
+        //! Start position snapshot to return back
+        Position startPosition;
+        //! Loop start tick
+        uint64_t start;
+        //! Loop end tick
+        uint64_t end;
+    };
+
+    struct LoopState
+    {
+        //! Loop start has reached
+        bool    caughtStart;
+        //! Loop end has reached, reset on handling
+        bool    caughtEnd;
+
+        //! Loop start has reached
+        bool    caughtStackStart;
+        //! Loop next has reached, reset on handling
+        bool    caughtStackEnd;
+        //! Loop break has reached, reset on handling
+        bool    caughtStackBreak;
+        //! Skip next stack loop start event handling
+        bool    skipStackStart;
+
+        //! Are loop points invalid?
+        bool    invalidLoop; /*Loop points are invalid (loopStart after loopEnd or loopStart and loopEnd are on same place)*/
+
+        //! Stack of nested loops
+        std::vector<LoopStackEntry> stack;
+        //! Current level on the loop stack (<0 - out of loop, 0++ - the index in the loop stack)
+        int                         stackLevel;
+
+        /**
+         * @brief Reset loop state to initial
+         */
+        void reset()
+        {
+            caughtStart = false;
+            caughtEnd = false;
+            caughtStackStart = false;
+            caughtStackEnd = false;
+            caughtStackBreak = false;
+            skipStackStart = false;
+        }
+
+        void fullReset()
+        {
+            reset();
+            invalidLoop = false;
+            stack.clear();
+            stackLevel = -1;
+        }
+
+        bool isStackEnd()
+        {
+            if(caughtStackEnd && (stackLevel >= 0) && (stackLevel < static_cast<int>(stack.size())))
+            {
+                const LoopStackEntry &e = stack[stackLevel];
+                if(e.infinity || (!e.infinity && e.loops > 0))
+                    return true;
+            }
+            return false;
+        }
+
+        void stackUp(int count = 1)
+        {
+            stackLevel += count;
+        }
+
+        void stackDown(int count = 1)
+        {
+            stackLevel -= count;
+        }
+
+        LoopStackEntry &getCurStack()
+        {
+            if((stackLevel >= 0) && (stackLevel < static_cast<int>(stack.size())))
+                return stack[stackLevel];
+            if(stack.empty())
+            {
+                LoopStackEntry d;
+                d.loops = 0;
+                d.infinity = 0;
+                d.start = 0;
+                d.end = 0;
+                stack.push_back(d);
+            }
+            return stack[0];
+        }
+    } m_loop;
+
+    //! Whether the nth track has playback disabled
+    std::vector<bool> m_trackDisable;
+    //! Index of solo track, or max for disabled
+    size_t m_trackSolo;
+
+    /**
+     * @brief Handler of callback trigger events
+     * @param userData Pointer to user data (usually, context of something)
+     * @param trigger Value of the event which triggered this callback.
+     * @param track Identifier of the track which triggered this callback.
+     */
+    typedef void (*TriggerHandler)(void *userData, unsigned trigger, size_t track);
+
+    //! Handler of callback trigger events
+    TriggerHandler m_triggerHandler;
+    //! User data of callback trigger events
+    void *m_triggerUserData;
 
     //! File parsing errors string (adding into m_errorString on aborting of the process)
     std::string m_parsingErrorsString;
@@ -354,7 +495,7 @@ public:
 
     /**
      * @brief Sets the RT interface
-     * @param interface Pre-Initialized interface structure (pointer will be taken)
+     * @param intrf Pre-Initialized interface structure (pointer will be taken)
      */
     void setInterface(const BW_MidiRtInterface *intrf);
 
@@ -363,6 +504,33 @@ public:
      * @return File format type enumeration
      */
     FileFormat getFormat();
+
+    /**
+     * @brief Returns the number of tracks
+     * @return Track count
+     */
+    size_t getTrackCount() const;
+
+    /**
+     * @brief Sets whether a track is playing
+     * @param track Track identifier
+     * @param enable Whether to enable track playback
+     * @return true on success, false if there was no such track
+     */
+    bool setTrackEnabled(size_t track, bool enable);
+
+    /**
+     * @brief Enables or disables solo on a track
+     * @param track Identifier of solo track, or max to disable
+     */
+    void setSoloTrack(size_t track);
+
+    /**
+     * @brief Defines a handler for callback trigger events
+     * @param handler Handler to invoke from the sequencer when triggered, or NULL.
+     * @param userData Instance of the library
+     */
+    void setTriggerHandler(TriggerHandler handler, void *userData);
 
     /**
      * @brief Get the list of CMF instruments (CMF only)
@@ -496,6 +664,68 @@ public:
      * @param tempo Tempo multiplier: 1.0 - original tempo. >1 - faster, <1 - slower
      */
     void   setTempo(double tempo);
+
+private:
+    /**
+     * @brief Load file as Id-software-Music-File (Wolfenstein)
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseIMF(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as EA MUS
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseRSXX(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as Creative Music Format
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseCMF(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as GMD/MUS files (ScummVM)
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseGMF(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as Standard MIDI file
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseSMF(FileAndMemReader &fr);
+
+    /**
+     * @brief Load file as RIFF MIDI
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseRMI(FileAndMemReader &fr);
+
+#ifndef BWMIDI_DISABLE_MUS_SUPPORT
+    /**
+     * @brief Load file as DMX MUS file (Doom)
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseMUS(FileAndMemReader &fr);
+#endif
+
+#ifndef BWMIDI_DISABLE_XMI_SUPPORT
+    /**
+     * @brief Load file as AIL eXtended MIdi
+     * @param fr Context with opened file
+     * @return true on successful load
+     */
+    bool parseXMI(FileAndMemReader &fr);
+#endif
+
 };
 
 #endif /* BISQUIT_AND_WOHLSTANDS_MIDI_SEQUENCER_HHHHPPP */

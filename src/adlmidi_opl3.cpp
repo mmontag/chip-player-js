@@ -22,6 +22,8 @@
  */
 
 #include "adlmidi_private.hpp"
+#include <stdlib.h>
+#include <cassert>
 
 #ifdef ADLMIDI_HW_OPL
 static const unsigned OPLBase = 0x388;
@@ -41,6 +43,46 @@ static const unsigned OPLBase = 0x388;
 #       include "chips/dosbox_opl3.h"
 #   endif
 #endif
+
+static const unsigned adl_emulatorSupport = 0
+#ifndef ADLMIDI_HW_OPL
+#   ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
+    | (1u << ADLMIDI_EMU_NUKED) | (1u << ADLMIDI_EMU_NUKED_174)
+#   endif
+
+#   ifndef ADLMIDI_DISABLE_DOSBOX_EMULATOR
+    | (1u << ADLMIDI_EMU_DOSBOX)
+#   endif
+#endif
+;
+
+//! Check emulator availability
+bool adl_isEmulatorAvailable(int emulator)
+{
+    return (adl_emulatorSupport & (1u << (unsigned)emulator)) != 0;
+}
+
+//! Find highest emulator
+int adl_getHighestEmulator()
+{
+    int emu = -1;
+    for(unsigned m = adl_emulatorSupport; m > 0; m >>= 1)
+        ++emu;
+    return emu;
+}
+
+//! Find lowest emulator
+int adl_getLowestEmulator()
+{
+    int emu = -1;
+    unsigned m = adl_emulatorSupport;
+    if(m > 0)
+    {
+        for(emu = 0; (m & 1) == 0; m >>= 1)
+            ++emu;
+    }
+    return emu;
+}
 
 //! Per-channel and per-operator registers map
 static const uint16_t g_operatorsMap[23 * 2] =
@@ -122,6 +164,7 @@ OPL3::OPL3() :
     m_deepTremoloMode(false),
     m_deepVibratoMode(false),
     m_rhythmMode(false),
+    m_softPanning(false),
     m_musicMode(MODE_MIDI),
     m_volumeScale(VOLUME_Generic)
 {
@@ -152,7 +195,7 @@ void OPL3::setEmbeddedBank(uint32_t bank)
     {
         size_t meta = banks[bank][i];
         adlinsdata2 &ins = bank_pair[i / 128]->ins[i % 128];
-        ins = adlinsdata2(adlins[meta]);
+        ins = adlinsdata2::from_adldata(::adlins[meta]);
     }
 #else
     ADL_UNUSED(bank);
@@ -191,6 +234,17 @@ void OPL3::writeRegI(size_t chip, uint32_t address, uint32_t value)
     writeReg(chip, static_cast<uint16_t>(address), static_cast<uint8_t>(value));
 #else//ADLMIDI_HW_OPL
     m_chips[chip]->writeReg(static_cast<uint16_t>(address), static_cast<uint8_t>(value));
+#endif
+}
+
+void OPL3::writePan(size_t chip, uint32_t address, uint32_t value)
+{
+#ifndef ADLMIDI_HW_OPL
+    m_chips[chip]->writePan(static_cast<uint16_t>(address), static_cast<uint8_t>(value));
+#else
+    ADL_UNUSED(chip);
+    ADL_UNUSED(address);
+    ADL_UNUSED(value);
 #endif
 }
 
@@ -363,7 +417,24 @@ void OPL3::setPan(size_t c, uint8_t value)
 {
     size_t chip = c / 23, cc = c % 23;
     if(g_channelsMap[cc] != 0xFFF)
-        writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | value);
+    {
+#ifndef ADLMIDI_HW_OPL
+        if (m_softPanning)
+        {
+            writePan(chip, g_channelsMap[cc], value);
+            writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | OPL_PANNING_BOTH);
+        }
+        else
+        {
+#endif
+            int panning = 0;
+            if(value  < 64 + 32) panning |= OPL_PANNING_LEFT;
+            if(value >= 64 - 32) panning |= OPL_PANNING_RIGHT;
+            writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | panning);
+#ifndef ADLMIDI_HW_OPL
+        }
+#endif
+    }
 }
 
 void OPL3::silenceAll() // Silence all OPL channels.
@@ -549,6 +620,8 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
         switch(emulator)
         {
         default:
+            assert(false);
+            abort();
 #ifndef ADLMIDI_DISABLE_NUKED_EMULATOR
         case ADLMIDI_EMU_NUKED: /* Latest Nuked OPL3 */
             chip = new NukedOPL3;

@@ -90,7 +90,7 @@ bool ADLMIDI_PuzzleGame::TetrisArea::CascadeEmpty(int FirstY)
                  * FIXME: Improve weird code fragment disliked by CLang
                  * /////////BEGIN////////////
                  */
-                auto label =
+                auto label = &
                     "  SINGLE  "
                     "  DOUBLE  "
                     "  TRIPLE  "
@@ -100,7 +100,7 @@ bool ADLMIDI_PuzzleGame::TetrisArea::CascadeEmpty(int FirstY)
                     " SEXTUPLE "
                     " SEPTUPLE "
                     " OCTUPLE  "
-                    + ((n_full - 1) * 10);
+                    [(n_full - 1) * 10];
                 for(int y = FirstY; y < Height - 1; ++y)
                 {
                     if(list_full & (1u << y))
@@ -214,9 +214,9 @@ int ADLMIDI_PuzzleGame::TetrisAIengine::AI_Run(const decltype(Area)&in_area, con
             for(unsigned rot2 = 0; rot2 < 4; ++rot2)
                 for(int x2 = -1; x2 <= 1; ++x2)
                 {
-                    positions1.push_back(std::move<position> ({int(rot), x, int(rot2), x2}));
+                    positions1.push_back(position{int(rot), x, int(rot2), x2});
                     if(rot2 == rot && x2 == 0)
-                        positions2.push_back(std::move<position> ({int(rot), x, int(rot2), x2}));
+                        positions2.push_back(position{int(rot), x, int(rot2), x2});
                 }
 
     confident = false;

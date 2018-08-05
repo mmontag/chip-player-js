@@ -129,7 +129,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
 {
     m_midiDevices.clear();
 
-    m_setup.emulator = ADLMIDI_EMU_NUKED;
+    m_setup.emulator = adl_getLowestEmulator();
     m_setup.runAtPcmRate = false;
 
     m_setup.PCM_RATE   = sampleRate;
@@ -205,6 +205,16 @@ void MIDIplay::applySetup()
     m_arpeggioCounter = 0;
 }
 
+void MIDIplay::partialReset()
+{
+    realTime_panic();
+    m_setup.tick_skip_samples_delay = 0;
+    m_synth.m_runAtPcmRate = m_setup.runAtPcmRate;
+    m_synth.reset(m_setup.emulator, m_setup.PCM_RATE, this);
+    m_chipChannels.clear();
+    m_chipChannels.resize((size_t)m_synth.m_numChannels);
+}
+
 void MIDIplay::resetMIDI()
 {
     m_masterVolume = MasterVolumeDefault;
@@ -261,6 +271,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         MIDIchannel::activenoteiterator i = m_midiChannels[channel].activenotes_find(note);
         if(i)
         {
+            const int veloffset = i->ains->midi_velocity_offset;
+            velocity = (uint8_t)std::min(127, std::max(1, (int)velocity + veloffset));
             i->vol = velocity;
             noteUpdate(channel, i, Upd_Volume);
             return false;
@@ -283,14 +295,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     size_t midiins = midiChan.patch;
     bool isPercussion = (channel % 16 == 9) || midiChan.is_xg_percussion;
 
-    size_t bank = 0;
-    if(midiChan.bank_msb || midiChan.bank_lsb)
-    {
-        if((m_synthMode & Mode_GS) != 0) //in GS mode ignore LSB
-            bank = (midiChan.bank_msb * 256);
-        else
-            bank = (midiChan.bank_msb * 256) + midiChan.bank_lsb;
-    }
+    size_t bank = (midiChan.bank_msb * 256) + midiChan.bank_lsb;
 
     if(isPercussion)
     {
@@ -321,44 +326,72 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     //Set bank bank
     const OPL3::Bank *bnk = NULL;
-    if((bank & ~(uint16_t)OPL3::PercussionTag) > 0)
+    bool caughtMissingBank = false;
+    if((bank & ~static_cast<uint16_t>(OPL3::PercussionTag)) > 0)
     {
         OPL3::BankMap::iterator b = m_synth.m_insBanks.find(bank);
         if(b != m_synth.m_insBanks.end())
             bnk = &b->second;
-
         if(bnk)
             ains = &bnk->ins[midiins];
-        else if(hooks.onDebugMessage)
+        else
+            caughtMissingBank = true;
+    }
+
+    //Or fall back to bank ignoring LSB (GS)
+    if((ains->flags & adlinsdata::Flag_NoSound) && ((m_synthMode & Mode_GS) != 0))
+    {
+        size_t fallback = bank & ~(size_t)0x7F;
+        if(fallback != bank)
         {
-            std::set<size_t> &missing = (isPercussion) ?
-                                        caugh_missing_banks_percussion : caugh_missing_banks_melodic;
-            const char *text = (isPercussion) ?
-                               "percussion" : "melodic";
-            if(missing.insert(bank).second)
-                hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Playing missing %s MIDI bank %i (patch %i)", channel, text, bank, midiins);
+            OPL3::BankMap::iterator b = m_synth.m_insBanks.find(fallback);
+            caughtMissingBank = false;
+            if(b != m_synth.m_insBanks.end())
+                bnk = &b->second;
+            if(bnk)
+                ains = &bnk->ins[midiins];
+            else
+                caughtMissingBank = true;
         }
     }
+
+    if(caughtMissingBank && hooks.onDebugMessage)
+    {
+        std::set<size_t> &missing = (isPercussion) ?
+                                    caugh_missing_banks_percussion : caugh_missing_banks_melodic;
+        const char *text = (isPercussion) ?
+                           "percussion" : "melodic";
+        if(missing.insert(bank).second)
+        {
+            hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                                 "[%i] Playing missing %s MIDI bank %i (patch %i)",
+                                 channel, text, (bank & ~static_cast<uint16_t>(OPL3::PercussionTag)), midiins);
+        }
+    }
+
     //Or fall back to first bank
-    if(ains->flags & adlinsdata::Flag_NoSound)
+    if((ains->flags & adlinsdata::Flag_NoSound) != 0)
     {
         OPL3::BankMap::iterator b = m_synth.m_insBanks.find(bank & OPL3::PercussionTag);
         if(b != m_synth.m_insBanks.end())
             bnk = &b->second;
-
         if(bnk)
             ains = &bnk->ins[midiins];
     }
+
+    const int veloffset = ains->midi_velocity_offset;
+    velocity = (uint8_t)std::min(127, std::max(1, (int)velocity + veloffset));
 
     int32_t tone = note;
     if(!isPercussion && (bank > 0)) // For non-zero banks
     {
         if(ains->flags & adlinsdata::Flag_NoSound)
         {
-            if(hooks.onDebugMessage)
+            if(hooks.onDebugMessage && caugh_missing_instruments.insert(static_cast<uint8_t>(midiins)).second)
             {
-                if(caugh_missing_instruments.insert(static_cast<uint8_t>(midiins)).second)
-                    hooks.onDebugMessage(hooks.onDebugMessage_userData, "[%i] Caught a blank instrument %i (offset %i) in the MIDI bank %u", channel, m_midiChannels[channel].patch, midiins, bank);
+                hooks.onDebugMessage(hooks.onDebugMessage_userData,
+                     "[%i] Caught a blank instrument %i (offset %i) in the MIDI bank %u",
+                     channel, m_midiChannels[channel].patch, midiins, bank);
             }
             bank = 0;
             midiins = midiChan.patch;
@@ -377,12 +410,13 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     }
 
     //uint16_t i[2] = { ains->adlno1, ains->adlno2 };
+    bool is_2op = !(ains->flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op));
     bool pseudo_4op = ains->flags & adlinsdata::Flag_Pseudo4op;
 #ifndef __WATCOMC__
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans] =
     {
         {0, ains->adl[0], false},
-        {0, ains->adl[1], pseudo_4op}
+        {0, (!is_2op) ? ains->adl[1] : ains->adl[0], pseudo_4op}
     };
 #else /* Unfortunately, WatCom can't brace-initialize structure that incluses structure fields */
     MIDIchannel::NoteInfo::Phys voices[MIDIchannel::NoteInfo::MaxNumPhysChans];
@@ -390,14 +424,14 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     voices[0].ains = ains->adl[0];
     voices[0].pseudo4op = false;
     voices[1].chip_chan = 0;
-    voices[1].ains = ains->adl[1];
+    voices[1].ains = (!is_2op) ? ains->adl[1] : ains->adl[0];
     voices[1].pseudo4op = pseudo_4op;
 #endif /* __WATCOMC__ */
 
     if((m_synth.m_rhythmMode == 1) && PercussionMap[midiins & 0xFF])
         voices[1] = voices[0];//i[1] = i[0];
 
-    bool isBlankNote = (ains->flags & adlinsdata::Flag_NoSound);
+    bool isBlankNote = (ains->flags & adlinsdata::Flag_NoSound) != 0;
 
     if(hooks.onDebugMessage)
     {
@@ -439,7 +473,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
             if(ccount == 1 && static_cast<int32_t>(a) == adlchannel[0]) continue;
             // ^ Don't use the same channel for primary&secondary
 
-            if(voices[0].ains == voices[1].ains || pseudo_4op/*i[0] == i[1] || pseudo_4op*/)
+            if(is_2op || pseudo_4op)
             {
                 // Only use regular channels
                 uint32_t expected_mode = 0;
@@ -654,9 +688,7 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         break;
 
     case 10: // Change panning
-        m_midiChannels[channel].panning = 0x00;
-        if(value  < 64 + 32) m_midiChannels[channel].panning |= OPL_PANNING_LEFT;
-        if(value >= 64 - 32) m_midiChannels[channel].panning |= OPL_PANNING_RIGHT;
+        m_midiChannels[channel].panning = value;
 
         noteUpdateAll(channel, Upd_Pan);
         break;
@@ -1722,6 +1754,56 @@ void MIDIplay::updateGlide(double amount)
     }
 }
 
+void MIDIplay::describeChannels(char *str, char *attr, size_t size)
+{
+    if (!str || size <= 0)
+        return;
+
+    OPL3 &synth = m_synth;
+    uint32_t numChannels = synth.m_numChannels;
+
+    uint32_t index = 0;
+    while(index < numChannels && index < size - 1)
+    {
+        const AdlChannel &adlChannel = m_chipChannels[index];
+
+        AdlChannel::LocationData *loc = adlChannel.users_first;
+        if(!loc)  // off
+        {
+            str[index] = '-';
+        }
+        else if(loc->next)  // arpeggio
+        {
+            str[index] = '@';
+        }
+        else  // on
+        {
+            switch(synth.m_channelCategory[index])
+            {
+            case OPL3::ChanCat_Regular:
+                str[index] = '+';
+                break;
+            case OPL3::ChanCat_4op_Master:
+            case OPL3::ChanCat_4op_Slave:
+                str[index] = '#';
+                break;
+            default:  // rhythm-mode percussion
+                str[index] = 'r';
+                break;
+            }
+        }
+
+        uint8_t attribute = 0;
+        if (loc)  // 4-bit color index of MIDI channel
+            attribute |= (uint8_t)(loc->loc.MidCh & 0xF);
+
+        attr[index] = (char)attribute;
+        ++index;
+    }
+
+    str[index] = 0;
+    attr[index] = 0;
+}
 
 #ifndef ADLMIDI_DISABLE_CPP_EXTRAS
 
@@ -1795,7 +1877,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
     OPL3 *opl = P->opl;
     if(P->adl_ins_list.empty()) FindAdlList();
     const unsigned meta = P->adl_ins_list[P->ins_idx];
-    const adlinsdata2 ains(adlins[meta]);
+    const adlinsdata2 ains = adlinsdata2::from_adldata(::adlins[meta]);
 
     int tone = (P->cur_gm & 128) ? (P->cur_gm & 127) : (note + 50);
     if(ains.tone)
@@ -1810,7 +1892,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
     }
     double hertz = 172.00093 * std::exp(0.057762265 * (tone + 0.0));
     int32_t adlchannel[2] = { 0, 3 };
-    if(ains.adl[0] == ains.adl[1])
+    if((ains.flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op)) == 0)
     {
         adlchannel[1] = -1;
         adlchannel[0] = 6; // single-op
@@ -1877,7 +1959,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
     for(size_t a = 0, n = P->adl_ins_list.size(); a < n; ++a)
     {
         const unsigned i = P->adl_ins_list[a];
-        const adlinsdata2 ains(adlins[i]);
+        const adlinsdata2 ains = adlinsdata2::from_adldata(::adlins[i]);
 
         char ToneIndication[8] = "   ";
         if(ains.tone)
@@ -1892,7 +1974,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
         }
         std::printf("%s%s%s%u\t",
                     ToneIndication,
-                    ains.adl[0] != ains.adl[1] ? "[2]" : "   ",
+                    (ains.flags & (adlinsdata::Flag_Pseudo4op|adlinsdata::Flag_Real4op)) ? "[2]" : "   ",
                     (P->ins_idx == a) ? "->" : "\t",
                     i
                    );
