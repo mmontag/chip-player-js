@@ -1492,8 +1492,8 @@ extern bool adl_isEmulatorAvailable(int emulator);
 extern int adl_getHighestEmulator();
 
 /**
- * @brief Find lowerest emulator
- * @return The ADL_Emulator enum value which contains ID of lowerest emulator
+ * @brief Find lowest emulator
+ * @return The ADL_Emulator enum value which contains ID of lowest emulator
  */
 extern int adl_getLowestEmulator();
 
