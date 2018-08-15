@@ -1,12 +1,23 @@
 {
   "name": "chip-player-js",
   "version": "0.1.0",
+  "private": true,
   "repository": "https://github.com/mmontag/chip-player-js",
   "description": "Web-based music player for a variety of video game and chiptune music formats.",
+  "dependencies": {
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-scripts": "1.1.4"
+  },
   "devDependencies": {
-    "glob": "^5.0.3",
-    "gulp": "^3.8.11",
-    "gulp-util": "^3.0.4",
-    "yargs": "^3.10.0"
+    "child_process": "^1.0.2",
+    "glob": "^7.1.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "build-gme": "node build-gme.js"
   }
 }
