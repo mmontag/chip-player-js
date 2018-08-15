@@ -12,7 +12,8 @@
   "devDependencies": {
     "child_process": "^1.0.2",
     "gh-pages": "^1.2.0",
-    "glob": "^7.1.2"
+    "glob": "^7.1.2",
+    "tmp": "^0.0.33"
   },
   "homepage": "http://mmontag.github.io/chip-player-js",
   "scripts": {
@@ -20,7 +21,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "build-gme": "node build-gme.js",
+    "build-gme": "source ~/src/emsdk/emsdk_set_env.sh; node build-gme.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   }
