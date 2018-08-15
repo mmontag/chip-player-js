@@ -1,0 +1,13 @@
+{
+  "name": "chip-player-js",
+  "version": "0.1.0",
+  "repository": "https://github.com/mmontag/chip-player-js",
+  "description": "Web-based music player for a variety of video game and chiptune music formats.",
+  "devDependencies": {
+    "glob": "^5.0.3",
+    "gulp": "^3.8.11",
+    "gulp-util": "^3.0.4",
+    "lodash": "^3.9.3",
+    "yargs": "^3.10.0"
+  }
+}
