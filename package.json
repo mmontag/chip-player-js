@@ -11,13 +11,17 @@
   },
   "devDependencies": {
     "child_process": "^1.0.2",
+    "gh-pages": "^1.2.0",
     "glob": "^7.1.2"
   },
+  "homepage": "http://mmontag.github.io/chip-player-js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "build-gme": "node build-gme.js"
+    "build-gme": "node build-gme.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   }
 }
