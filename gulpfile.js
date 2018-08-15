@@ -2,7 +2,6 @@ var argv = require('yargs').argv;
 var glob = require('glob');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
-var path = require('path');
 var spawn = require('child_process').spawn;
 
 /**
@@ -11,11 +10,8 @@ var spawn = require('child_process').spawn;
 gulp.task('build', function(done) {
     var empp = process.env.EMPP_BIN || argv.empp || 'em++';
 
-    var gme_dir = path.join('emscripten', 'game_music_emu', 'gme');
-    var gme_files = glob.sync(gme_dir + '/*.cpp');
-    var json_dir = path.join('emscripten', 'json', 'ccan', 'json');
-    var json_files = glob.sync(json_dir + '/*.c');
-    var source_files = [].concat(gme_files, json_files);
+    var gme_dir = './game_music_emu/gme';
+    var source_files = glob.sync(gme_dir + '/*.cpp');
     var outfile = 'libgme.js';
     var exported_functions = [
         '_gme_open_data',
@@ -38,7 +34,6 @@ gulp.task('build', function(done) {
         '-s', 'ALLOW_MEMORY_GROWTH=1',
         '-O3',
         '-I' + gme_dir,
-        '-I' + json_dir,
         '-o', outfile,
 
         // GCC/Clang arguments to shut up about warnings in code I didn't
@@ -48,7 +43,8 @@ gulp.task('build', function(done) {
         '-DVGM_YM2612_NUKED=1',
         '-Wno-logical-op-parentheses',
         '-Wno-c++11-extensions',
-        '-Wno-inconsistent-missing-override'
+        '-Wno-inconsistent-missing-override',
+        '-std=c++11'
     ];
     var args = [].concat(flags, source_files);
 
