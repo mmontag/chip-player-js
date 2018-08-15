@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script
+            src="jquery.min.js"
+            integrity="sha256-R7aNzoy2gFrVs+pNJ6+SokH04ppcEqJ0yFLkNGoFALQ="
+            crossorigin="anonymous"></script>
+    <script type="text/javascript" src="chroma.js"></script>
+    <script type="text/javascript" src="visualizer.js"></script>
+    <script type="text/javascript" src="libgme.js"></script>
+    <script type="text/javascript" src="player.js"></script>
+    <title>JavaScript Game Music Player</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h2>JavaScript Game Music Player</h2>
+    <p>Drag files to play: NSF, GBS, SPC, GYM, VGM<br>
+        <small>powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a></small>
+    </p>
+    <h4>Demo Songs
+        <button onclick="stop();">Stop Playback</button>
+    </h4>
+    <div id="files">
+        <a href="#">35_giantsteps.nsf</a> -
+        <a href="#">28_zjam300.nsf</a> -
+        <a href="#">castlevania_vrc6.nsf</a> -
+        <a href="#">Shovel_Knight_Music.nsf</a> -
+        <a href="#">kdl3-29.spc</a> -
+        <a href="#">wt-01.spc</a> -
+        <a href="#">dkq-10.spc</a> -
+        <a href="#">04_realblue.nsf</a> -
+        <a href="#">kss-49.spc</a> -
+        <a href="#">ThunderForce4.gym</a>
+    </div>
+    <h4>Analyzer</h4>
+    <canvas id="canvasTimeDomain" width="512" height="64"></canvas>
+    <canvas id="canvasFrequency" width="512" height="64"></canvas>
+    <canvas id="canvasSpectrogram" width="512" height="256"></canvas>
+    <h4>Track Info</h4>
+    <p id="song_info"></p>
+    <h4>Voices</h4>
+    <input type="checkbox" id="ch1" onclick="setChannels();" checked>
+    <input type="checkbox" id="ch2" onclick="setChannels();" checked>
+    <input type="checkbox" id="ch3" onclick="setChannels();" checked>
+    <input type="checkbox" id="ch4" onclick="setChannels();" checked>
+    <input type="checkbox" id="ch5" onclick="setChannels();" checked>
+    <input type="checkbox" id="ch6" onclick="setChannels();" checked>
+    <input type="checkbox" id="ch7" onclick="setChannels();" checked>
+    <input type="checkbox" id="ch8" onclick="setChannels();" checked>
+    <p>
+        Playback speed:
+        <input type="range" min="0.1" step="0.1" max="2.0" id="tempo" size="10" onchange="updateTempo()" oninput="updateTempo()" value="1.0"/>
+        <span id="tempolabel">1.0</span>
+
+    <h4>Filter</h4>
+    <small>
+        <label><input type="radio" name="filterType" onclick="filterSetup()" value="0">LowPass</label>
+        <label><input type="radio" name="filterType" onclick="filterSetup()" value="1">HighPass</label>
+        <label><input type="radio" name="filterType" onclick="filterSetup()" value="2">BandPass</label>
+        <label><input type="radio" name="filterType" onclick="filterSetup()" value="3">LowShelf</label>
+        <label><input type="radio" name="filterType" onclick="filterSetup()" value="4">HighShelf</label>
+        <label><input type="radio" name="filterType" onclick="filterSetup()" value="5">Peaking</label>
+        <label><input type="radio" name="filterType" onclick="filterSetup()" value="6">Notch</label>
+        <label><input type="radio" name="filterType" onclick="filterSetup()" value="7" checked>AllPass</label>
+    </small>
+    <p>
+        Freq:
+        <input type="range" min="100" max="20000" id="freq" size="10" onchange="filterSetup()" oninput="filterSetup()"
+               value="5000" class="wideslider"/>
+        <span id="freqlabel">5000Hz</span>
+
+    <p>
+        Q:
+        <input type="range" min="0" max="50" step="0.1" id="q" size="10" onchange="filterSetup()"
+               oninput="filterSetup()"
+               value="5"/>
+        <span id="qlabel">5</span>
+
+    <p>
+        Gain :
+        <input type="range" min="-50" max="50" id="gain" size="10" onchange="filterSetup()" oninput="filterSetup()"
+               value="0" disabled/>
+        <span id="gainlabel">0</span>
+
+    <h4>Console</h4>
+    <div id="message" class="console"></div>
+</div>
+<script type="text/javascript">
+    // iOS audio workaround
+    // document.addEventListener('touchstart', function () {
+    //     if (!ctx) ctx = new webkitAudioContext();
+    //     var tmp = ctx.createBufferSource();
+    //     tmp.noteOn(0);
+    // }, false);
+
+    // Dirty iOS audio workaround. Sound can only be enabled in a touch handler.
+    if (/iPad|iPhone|iPod/.test(navigator.platform)) {
+        window.addEventListener("touchend", iOSUnlockSound, false);
+        function iOSUnlockSound() {
+            window.removeEventListener("touchend", iOSUnlockSound, false);
+            var buffer = audioContext.createBuffer(1, 1, 22050);
+            var source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            if(source.play){ source.play(0); } else if(source.noteOn){ source.noteOn(0); }
+            message("Trying to open iOS audio.");
+        }
+    }
+</script>
+</body>
+</html>

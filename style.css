@@ -1,0 +1,32 @@
+body {
+	font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+	margin: 30px;
+}
+
+button {
+	font-size: 16px;
+}
+
+.container {
+	max-width: 800px;
+	margin: 0 auto;
+}
+
+#files a {
+	white-space: nowrap;
+}
+
+canvas{
+	background-color:#222;
+	display: block;
+}
+
+.console{
+	padding:5px;
+	background-color:black;
+	color:white;
+	font-size: 11px;
+	width:600px;
+	height:120px;
+	overflow: scroll;
+}
