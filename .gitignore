@@ -1,0 +1,14 @@
+# Ignore "build" folder
+build/*
+
+# Qt Creator local user settings files
+*.user
+
+# test data
+test/demo
+test/demo_mem
+test/cur/*
+test/curm/*
+test/new/*
+test/newm/*
+
