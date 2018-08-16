@@ -10,7 +10,7 @@ fs.writeSync(tmpObj.fd, "/*eslint-disable*/\n");
  * Compile the C libraries with emscripten.
  */
 var empp = process.env.EMPP_BIN || 'em++';
-var gme_dir = './game_music_emu/gme';
+var gme_dir = './game-music-emu/gme';
 var source_files = glob.sync(gme_dir + '/*.cpp');
 var outfile = 'public/libgme.js';
 var exported_functions = [
