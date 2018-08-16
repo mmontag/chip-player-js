@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import './App.css';
+
 const LibGME = require('./libgme');
 const libgme = new LibGME({
   // Look for .wasm file in web root, not the same location as the app bundle (static/js).
@@ -12,38 +13,40 @@ const libgme = new LibGME({
 let emu = null;
 let node = null;
 const audioContext = new AudioContext();
+let paused = false;
 
-function message(str) {
+function log(str) {
   console.log(str);
 }
 
 function playMusicData(payload, subtune) {
-  message("subtune:" + subtune);
+  subtune = subtune || 0;
+  log("Subtune: " + subtune);
 
   const ref = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
   libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
 
   const samplerate = audioContext.sampleRate;
 
-  if (libgme.ccall("gme_open_data", "number", ["array", "number", "number", "number"], [payload, payload.length, ref, samplerate]) !== 0) {
+  if (libgme._gme_open_data(payload, payload.length, ref, samplerate) !== 0) {
     console.error("gme_open_data failed.");
     return;
   }
   emu = libgme.getValue(ref, "i32");
 
-  var subtune_count = libgme.ccall("gme_track_count", "number", ["number"], [emu]);
+  var subtune_count = libgme._gme_track_count(emu);
 
-  libgme.ccall("gme_ignore_silence", "number", ["number"], [emu, 1]);
+  libgme._gme_ignore_silence(emu, 1);
 
-  var voice_count = libgme.ccall("gme_voice_count", "number", ["number"], [emu]);
-  message("Channel count: ", voice_count);
-  message("Track count: ", subtune_count);
+  var voice_count = libgme._gme_voice_count(emu);
+  log("Channel count: ", voice_count);
+  log("Track count: ", subtune_count);
 
   // $("#tempo").val(1.0);
   // $("#tempolabel").html(1.0);
 
-  if (libgme.ccall("gme_start_track", "number", ["number", "number"], [emu, subtune]) !== 0)
-    message("could not load track");
+  if (libgme._gme_start_track(emu, subtune) !== 0)
+    log("Could not load track");
   // setChannels();
 
   var bufferSize = 4096;
@@ -58,17 +61,26 @@ function playMusicData(payload, subtune) {
   var INT16_MAX = Math.pow(2, 16) - 1;
 
   node.onaudioprocess = function (e) {
-    if (libgme.ccall("gme_track_ended", "number", ["number"], [emu]) === 1) {
-      node.disconnect();
-      message("end of stream");
+    const channels = [e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1)];
+    let i, channel;
+
+    if (paused) {
+      for (i = 0; i < bufferSize; i++)
+        for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++)
+          channels[channel][i] = 0;
       return;
     }
 
-    var channels = [e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1)];
+    // TODO: don't tear down audio when a track ends.
+    if (libgme._gme_track_ended(emu) === 1) {
+      node.disconnect();
+      log("End of track.");
+      return;
+    }
 
-    var err = libgme.ccall("gme_play", "number", ["number", "number", "number"], [emu, bufferSize * 2, buffer]);
-    for (var i = 0; i < bufferSize; i++)
-      for (var channel = 0; channel < e.outputBuffer.numberOfChannels; channel++)
+    libgme._gme_play(emu, bufferSize * 2, buffer);
+    for (i = 0; i < bufferSize; i++)
+      for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++)
         channels[channel][i] = libgme.getValue(buffer +
           // Interleaved channel format
           // frame number * bytes per frame +
@@ -85,7 +97,18 @@ function playMusicData(payload, subtune) {
 }
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+
+    this.togglePause = this.togglePause.bind(this);
+
+    this.state = {
+      paused: false
+    };
+  }
+
   playSong(filename, subtune) {
+    filename = 'songs/wt-01.spc';
     if (node) {
       node.disconnect();
       node = null;
@@ -94,11 +117,11 @@ class App extends Component {
     xhr.open("GET", filename, true);
     xhr.responseType = "arraybuffer";
     xhr.onerror = function (e) {
-      message(e);
+      log(e);
     };
     xhr.onload = function (e) {
       if (this.status === 404) {
-        message("not found");
+        log("not found");
         return;
       }
       var payload = new Uint8Array(this.response);
@@ -108,7 +131,12 @@ class App extends Component {
     xhr.send();
   }
 
-
+  togglePause() {
+    paused = !this.state.paused;
+    this.setState({
+      paused: !this.state.paused
+    });
+  }
 
   render() {
     return (
@@ -118,7 +146,12 @@ class App extends Component {
           <small>powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a></small>
         </header>
         <p className="App-intro">
-          <button onClick={()=>{this.playSong('songs/wt-01.spc')}}>Play Music</button>
+          <button onClick={this.playSong}>
+            Play Music
+          </button>
+          <button onClick={this.togglePause}>
+            {this.state.paused ? 'Resume' : 'Pause'}
+          </button>
         </p>
       </div>
     );
