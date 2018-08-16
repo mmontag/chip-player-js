@@ -1,6 +1,13 @@
 import React, {Component} from 'react';
 import './App.css';
-import Module from './libgme';
+const LibGME = require('./libgme');
+const libgme = new LibGME({
+  // Look for .wasm file in web root, not the same location as the app bundle (static/js).
+  locateFile: (path, prefix) => {
+    if (path.endsWith('.wasm') || path.endsWith('.wast')) return '/' + path;
+    return prefix + path;
+  }
+});
 
 let emu = null;
 let node = null;
@@ -13,29 +20,29 @@ function message(str) {
 function playMusicData(payload, subtune) {
   message("subtune:" + subtune);
 
-  const ref = Module.allocate(1, "i32", Module.ALLOC_NORMAL);
-  Module.allocate(1, "i32", Module.ALLOC_NORMAL);
+  const ref = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
+  libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
 
   const samplerate = audioContext.sampleRate;
 
-  if (Module.ccall("gme_open_data", "number", ["array", "number", "number", "number"], [payload, payload.length, ref, samplerate]) !== 0) {
+  if (libgme.ccall("gme_open_data", "number", ["array", "number", "number", "number"], [payload, payload.length, ref, samplerate]) !== 0) {
     console.error("gme_open_data failed.");
     return;
   }
-  emu = Module.getValue(ref, "i32");
+  emu = libgme.getValue(ref, "i32");
 
-  var subtune_count = Module.ccall("gme_track_count", "number", ["number"], [emu]);
+  var subtune_count = libgme.ccall("gme_track_count", "number", ["number"], [emu]);
 
-  Module.ccall("gme_ignore_silence", "number", ["number"], [emu, 1]);
+  libgme.ccall("gme_ignore_silence", "number", ["number"], [emu, 1]);
 
-  var voice_count = Module.ccall("gme_voice_count", "number", ["number"], [emu]);
+  var voice_count = libgme.ccall("gme_voice_count", "number", ["number"], [emu]);
   message("Channel count: ", voice_count);
   message("Track count: ", subtune_count);
 
   // $("#tempo").val(1.0);
   // $("#tempolabel").html(1.0);
 
-  if (Module.ccall("gme_start_track", "number", ["number", "number"], [emu, subtune]) !== 0)
+  if (libgme.ccall("gme_start_track", "number", ["number", "number"], [emu, subtune]) !== 0)
     message("could not load track");
   // setChannels();
 
@@ -46,12 +53,12 @@ function playMusicData(payload, subtune) {
   if (!node && audioContext.createJavaScriptNode) node = audioContext.createJavaScriptNode(bufferSize, inputs, outputs);
   if (!node && audioContext.createScriptProcessor) node = audioContext.createScriptProcessor(bufferSize, inputs, outputs);
 
-  var buffer = Module.allocate(bufferSize * 16, "i16", Module.ALLOC_NORMAL);
+  var buffer = libgme.allocate(bufferSize * 16, "i16", libgme.ALLOC_NORMAL);
 
   var INT16_MAX = Math.pow(2, 16) - 1;
 
   node.onaudioprocess = function (e) {
-    if (Module.ccall("gme_track_ended", "number", ["number"], [emu]) === 1) {
+    if (libgme.ccall("gme_track_ended", "number", ["number"], [emu]) === 1) {
       node.disconnect();
       message("end of stream");
       return;
@@ -59,10 +66,10 @@ function playMusicData(payload, subtune) {
 
     var channels = [e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1)];
 
-    var err = Module.ccall("gme_play", "number", ["number", "number", "number"], [emu, bufferSize * 2, buffer]);
+    var err = libgme.ccall("gme_play", "number", ["number", "number", "number"], [emu, bufferSize * 2, buffer]);
     for (var i = 0; i < bufferSize; i++)
       for (var channel = 0; channel < e.outputBuffer.numberOfChannels; channel++)
-        channels[channel][i] = Module.getValue(buffer +
+        channels[channel][i] = libgme.getValue(buffer +
           // Interleaved channel format
           // frame number * bytes per frame +
           i * 4 +
@@ -111,7 +118,7 @@ class App extends Component {
           <small>powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a></small>
         </header>
         <p className="App-intro">
-          <button onClick={this.playSong('songs/wt-01.spc')}>Play Music</button>
+          <button onClick={()=>{this.playSong('songs/wt-01.spc')}}>Play Music</button>
         </p>
       </div>
     );

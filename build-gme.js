@@ -12,7 +12,7 @@ fs.writeSync(tmpObj.fd, "/*eslint-disable*/\n");
 var empp = process.env.EMPP_BIN || 'em++';
 var gme_dir = './game-music-emu/gme';
 var source_files = glob.sync(gme_dir + '/*.cpp');
-var outfile = 'public/libgme.js';
+var outfile = 'src/libgme.js';
 var exported_functions = [
   '_gme_open_data',
   '_gme_play',
@@ -32,15 +32,16 @@ var flags = [
   '-s', 'EXPORTED_FUNCTIONS=[' + exported_functions.join(',') + ']',
   '-s', 'EXTRA_EXPORTED_RUNTIME_METHODS=[allocate,ALLOC_NORMAL,ccall,getValue,Pointer_stringify]',
   '-s', 'ALLOW_MEMORY_GROWTH=1',
-  '-s', 'WASM=0',
   '-O1',
   '-I' + gme_dir,
   '-o', outfile,
 
   // Flags to eliminate linter warnings
-  '-s', 'MODULARIZE_INSTANCE=1',
+  '-s', 'MODULARIZE=1',
+  // '-s', 'MODULARIZE_INSTANCE=1',
   '-s', 'EXPORT_NAME=GME',
-  '-s', 'ENVIRONMENT=web',
+  // '-s', 'ENVIRONMENT=web',
+  // '-s', 'ENVIRONMENT=node',
   '--pre-js', tmpObj.name,
 
   // GCC/Clang arguments to shut up about warnings in code I didn't
