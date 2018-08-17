@@ -1,11 +1,12 @@
 import React, {Component} from 'react';
 import './App.css';
+import songData from './song-data';
 
 const LibGME = require('./libgme');
 const libgme = new LibGME({
   // Look for .wasm file in web root, not the same location as the app bundle (static/js).
   locateFile: (path, prefix) => {
-    if (path.endsWith('.wasm') || path.endsWith('.wast')) return '/' + path;
+    if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
     return prefix + path;
   }
 });
@@ -28,7 +29,7 @@ function playMusicData(payload, subtune) {
 
   const samplerate = audioContext.sampleRate;
 
-  if (libgme._gme_open_data(payload, payload.length, ref, samplerate) !== 0) {
+  if (libgme.ccall("gme_open_data", "number", ["array", "number", "number", "number"], [payload, payload.length, ref, samplerate]) !== 0) {
     console.error("gme_open_data failed.");
     return;
   }

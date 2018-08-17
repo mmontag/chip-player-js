@@ -1,7 +1,8 @@
 var glob = require('glob');
-var spawn = require('child_process').spawn;
+const { spawn, execSync } = require('child_process');
 var tmp = require('tmp');
 var fs = require('fs');
+const paths = require('config/paths');
 
 var tmpObj = tmp.fileSync();
 fs.writeSync(tmpObj.fd, "/*eslint-disable*/\n");
@@ -12,7 +13,9 @@ fs.writeSync(tmpObj.fd, "/*eslint-disable*/\n");
 var empp = process.env.EMPP_BIN || 'em++';
 var gme_dir = './game-music-emu/gme';
 var source_files = glob.sync(gme_dir + '/*.cpp');
-var outfile = 'src/libgme.js';
+var js_file = 'src/libgme.js';
+var wasm_file = 'src/libgme.wasm';
+var wasm_dir = paths.appPublic;
 var exported_functions = [
   '_gme_open_data',
   '_gme_play',
@@ -34,7 +37,7 @@ var flags = [
   '-s', 'ALLOW_MEMORY_GROWTH=1',
   '-O1',
   '-I' + gme_dir,
-  '-o', outfile,
+  '-o', js_file,
 
   // Flags to eliminate linter warnings
   '-s', 'MODULARIZE=1',
@@ -56,6 +59,10 @@ var flags = [
 ];
 var args = [].concat(flags, source_files);
 
-console.log('Compiling to %s...', outfile);
+console.log('Compiling to %s...', js_file);
 var begin = Date.now();
 var build_proc = spawn(empp, args, {stdio: 'inherit'});
+build_proc.on('exit', function () {
+  console.log('Moving %s to %s.', wasm_file, wasm_dir);
+  execSync(`mv ${wasm_file} ${wasm_dir}`);
+});
