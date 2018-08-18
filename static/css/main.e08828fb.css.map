@@ -1,1 +1,0 @@
-{"version":3,"sources":["index.css"],"names":[],"mappings":"AAAA,KACE,wDACA,WAAa","file":"static/css/main.e08828fb.css","sourcesContent":["body {\n  font-family: -apple-system, BlinkMacSystemFont, sans-serif;\n  margin: 30px;\n}\n\n\n\n// WEBPACK FOOTER //\n// ./src/index.css"],"sourceRoot":""}
