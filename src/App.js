@@ -84,6 +84,20 @@ function playMusicData(payload, subtune) {
   playerResume();
 }
 
+function playerSetVoices(voices) {
+  let mask = 0;
+  voices.forEach((isEnabled, i) => {
+    if (!isEnabled) {
+      mask += 1 << i;
+    }
+  });
+  if (emu) libgme._gme_mute_voices(emu, mask);
+}
+
+function playerSetTempo(val) {
+  if (emu) libgme._gme_set_tempo(emu, val);
+}
+
 function parseMetadata(filename, subtune) {
   subtune = subtune || 0;
   const metadataPtr = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
@@ -134,6 +148,7 @@ class App extends Component {
     this.getSongInfo = this.getSongInfo.bind(this);
     this.handleSliderDrag = this.handleSliderDrag.bind(this);
     this.handleSliderChange = this.handleSliderChange.bind(this);
+    this.handleTempoChange = this.handleTempoChange.bind(this);
     this.getSongPos = this.getSongPos.bind(this);
 
     libgme = new LibGME({
@@ -156,6 +171,7 @@ class App extends Component {
       currentSongPositionMs: 0,
       draggedSongPositionMs: -1,
       currentSongNumVoices: 0,
+      tempo: 1,
       voices: Array(MAX_VOICES).fill(true),
     };
   }
@@ -173,17 +189,20 @@ class App extends Component {
     filename = corsPrefix + songData[Math.floor(Math.random() * songData.length)];
     fetch(filename).then(response => response.arrayBuffer()).then(buffer => {
       playMusicData(new Uint8Array(buffer));
+      playerSetTempo(this.state.tempo);
+      playerSetVoices(this.state.voices);
       this.setState({
         paused: playerIsPaused(),
         currentSongNumVoices: libgme._gme_voice_count(emu),
       });
       this.getSongInfo(filename, subtune);
     });
+    clearInterval(this.sliderTimer);
     this.sliderTimer = setInterval(() => {
       this.setState({
         currentSongPositionMs: libgme._gme_tell(emu),
       });
-    }, 1000);
+    }, 200);
   }
 
   togglePause() {
@@ -215,17 +234,13 @@ class App extends Component {
       voices: this.state.voices,
     });
 
-    let mask = 0;
-    this.state.voices.forEach((isEnabled, i) => {
-      if (!isEnabled) {
-        mask += 1 << i;
-      }
-    });
-    if (emu) libgme._gme_mute_voices(emu, mask);
+    playerSetVoices(this.state.voices);
   }
 
-  handleTempoChange(val) {
-
+  handleTempoChange(event) {
+    const val = parseFloat(event.target.value) || 1.0;
+    this.setState({tempo: val});
+    playerSetTempo(val);
   }
 
   getSongPos() {
@@ -263,9 +278,15 @@ class App extends Component {
               pos={this.getSongPos()}
               onDrag={this.handleSliderDrag}
               onChange={this.handleSliderChange}/>
-            {this.getTimeLabel()}
             {this.state.currentSongMetadata &&
             <div className="Song-details">
+              Time: {this.getTimeLabel()}<br/>
+              Speed: <input
+                type="range" value={this.state.tempo}
+                min="0.5" max="2.0" step="0.1"
+                onInput={this.handleTempoChange}
+                onChange={this.handleTempoChange}/>
+              {this.state.tempo.toFixed(1)}<br/>
               Voices:
               {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
                 return <input type="checkbox" onChange={() => {
