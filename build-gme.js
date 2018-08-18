@@ -2,7 +2,7 @@ var glob = require('glob');
 const { spawn, execSync } = require('child_process');
 var tmp = require('tmp');
 var fs = require('fs');
-const paths = require('config/paths');
+const paths = require('./config/paths');
 
 var tmpObj = tmp.fileSync();
 fs.writeSync(tmpObj.fd, "/*eslint-disable*/\n");
@@ -28,23 +28,23 @@ var exported_functions = [
   '_gme_start_track',
   '_gme_open_data',
   '_gme_ignore_silence',
-  '_gme_set_tempo'
+  '_gme_set_tempo',
+  '_gme_seek',
+  '_gme_tell',
 ];
 
 var flags = [
   '-s', 'EXPORTED_FUNCTIONS=[' + exported_functions.join(',') + ']',
   '-s', 'EXTRA_EXPORTED_RUNTIME_METHODS=[allocate,ALLOC_NORMAL,ccall,getValue,Pointer_stringify]',
   '-s', 'ALLOW_MEMORY_GROWTH=1',
-  '-O1',
-  '-I' + gme_dir,
-  '-o', js_file,
-
-  // Flags to eliminate linter warnings
+  '-s', 'ASSERTIONS=1',
   '-s', 'MODULARIZE=1',
   // '-s', 'MODULARIZE_INSTANCE=1',
   '-s', 'EXPORT_NAME=GME',
   // '-s', 'ENVIRONMENT=web',
-  // '-s', 'ENVIRONMENT=node',
+  '-O1',
+  '-I' + gme_dir,
+  '-o', js_file,
   '--pre-js', tmpObj.name,
 
   // GCC/Clang arguments to shut up about warnings in code I didn't

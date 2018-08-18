@@ -21,12 +21,13 @@ SaltyGME is a GME-based web player targeting Google Chrome NaCl. (Deprecated)
 ##### Cirrus Retro
 https://github.com/multimediamike/cirrusretro-players
 
-Cirrusretro is an updated version of SaltyGME compiled with Emscripten.
+Cirrusretro is an updated version of SaltyGME compiled with Emscripten. Self-hosted file archive.
 
 ##### Chipmachine
 http://sasq64.github.io/chipmachine/
 
 Chipmachine is a multiplatform player supporting an enormous number of formats. Downloads music from an impressive variety of [external sources](https://github.com/sasq64/chipmachine/blob/master/lua/db.lua).
+Most of these come from HTTP sources without CORS headers, not feasible for direct playback.
 
 ##### Audio Overload
 https://www.bannister.org/software/ao.htm
@@ -37,3 +38,8 @@ Audio Overload is a multiplatform player supporting 33 formats.
 https://github.com/osmose/moseamp
 
 MoseAmp is a multiplatform player built with Electron. Some nice game console icons: https://www.deviantart.com/jaffacakelover/art/Pixel-Gaming-Machine-Icons-413704203
+
+##### JSGME
+http://onakasuita.org/jsgme/
+
+One of the first examples of GME compiled with Emscripten. Self-hosted mirror of Famicompo entries.
