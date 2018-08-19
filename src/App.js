@@ -18,6 +18,7 @@ const INT16_MAX = Math.pow(2, 16) - 1;
 
 function playerTogglePause() {
   paused = !paused;
+  return paused;
 }
 
 function playerIsPaused() {
@@ -98,8 +99,7 @@ function playerSetTempo(val) {
   if (emu) libgme._gme_set_tempo(emu, val);
 }
 
-function parseMetadata(filename, subtune) {
-  subtune = subtune || 0;
+function parseMetadata(subtune = 0) {
   const metadataPtr = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
   if (libgme._gme_track_info(emu, metadataPtr, subtune) !== 0)
     console.error("could not load metadata");
@@ -145,11 +145,12 @@ class App extends Component {
 
     this.togglePause = this.togglePause.bind(this);
     this.playSong = this.playSong.bind(this);
-    this.getSongInfo = this.getSongInfo.bind(this);
     this.handleSliderDrag = this.handleSliderDrag.bind(this);
     this.handleSliderChange = this.handleSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.getSongPos = this.getSongPos.bind(this);
+    this.prevSubtune = this.prevSubtune.bind(this);
+    this.nextSubtune = this.nextSubtune.bind(this);
 
     libgme = new LibGME({
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
@@ -167,35 +168,34 @@ class App extends Component {
       loading: true,
       paused: false,
       currentSongMetadata: {},
+      currentSongNumVoices: 0,
+      currentSongNumSubtunes: 0,
+      currentSongSubtune: 0,
       currentSongDurationMs: 1000,
       currentSongPositionMs: 0,
       draggedSongPositionMs: -1,
-      currentSongNumVoices: 0,
       tempo: 1,
       voices: Array(MAX_VOICES).fill(true),
     };
   }
 
-  getSongInfo(filename, subtune) {
-    const metadata = parseMetadata(filename, subtune);
-
-    this.setState({
-      currentSongMetadata: metadata,
-      currentSongDurationMs: metadata.length,
-    });
-  }
-
   playSong(filename, subtune) {
-    filename = corsPrefix + songData[Math.floor(Math.random() * songData.length)];
+    // filename = corsPrefix + songData[Math.floor(Math.random() * songData.length)];
     fetch(filename).then(response => response.arrayBuffer()).then(buffer => {
       playMusicData(new Uint8Array(buffer));
       playerSetTempo(this.state.tempo);
       playerSetVoices(this.state.voices);
+      const numSubtunes = libgme._gme_track_count(emu);
+      const metadata = parseMetadata(filename, subtune);
+
       this.setState({
         paused: playerIsPaused(),
+        currentSongMetadata: metadata,
+        currentSongDurationMs: metadata.length,
         currentSongNumVoices: libgme._gme_voice_count(emu),
+        currentSongNumSubtunes: numSubtunes,
+        currentSongSubtune: 0,
       });
-      this.getSongInfo(filename, subtune);
     });
     clearInterval(this.sliderTimer);
     this.sliderTimer = setInterval(() => {
@@ -205,9 +205,39 @@ class App extends Component {
     }, 200);
   }
 
+  prevSubtune() {
+    const subtune = this.state.currentSongSubtune - 1;
+    if (subtune < 0) return;
+    if (libgme._gme_start_track(emu, subtune) !== 0)
+      console.error("Could not load track");
+    else {
+      const metadata = parseMetadata(subtune);
+      this.setState({
+        currentSongSubtune: subtune,
+        currentSongMetadata: metadata,
+        currentSongPositionMs: 0,
+      });
+    }
+  }
+
+  nextSubtune() {
+    const subtune = this.state.currentSongSubtune + 1;
+    if (subtune >= this.state.currentSongNumSubtunes) return;
+    if (libgme._gme_start_track(emu, subtune) !== 0)
+      console.error("Could not load track");
+    else {
+      const metadata = parseMetadata(subtune);
+      this.setState({
+        currentSongSubtune: subtune,
+        currentSongMetadata: metadata,
+        currentSongPositionMs: 0,
+      });
+    }
+  }
+
   togglePause() {
-    playerTogglePause();
-    this.setState({paused: playerIsPaused()});
+    const paused = playerTogglePause();
+    this.setState({paused: paused});
   }
 
   handleSliderDrag(pos) {
@@ -229,18 +259,16 @@ class App extends Component {
   }
 
   handleVoiceToggle(index) {
-    this.state.voices[index] = !this.state.voices[index];
-    this.setState({
-      voices: this.state.voices,
-    });
-
-    playerSetVoices(this.state.voices);
+    const voices = [...this.state.voices];
+    voices[index] = !voices[index];
+    playerSetVoices(voices);
+    this.setState({voices: voices});
   }
 
   handleTempoChange(event) {
-    const val = parseFloat(event.target.value) || 1.0;
-    this.setState({tempo: val});
-    playerSetTempo(val);
+    const tempo = parseFloat(event.target.value) || 1.0;
+    playerSetTempo(tempo);
+    this.setState({tempo: tempo});
   }
 
   getSongPos() {
@@ -282,11 +310,19 @@ class App extends Component {
             <div className="Song-details">
               Time: {this.getTimeLabel()}<br/>
               Speed: <input
-                type="range" value={this.state.tempo}
-                min="0.5" max="2.0" step="0.1"
-                onInput={this.handleTempoChange}
-                onChange={this.handleTempoChange}/>
+              type="range" value={this.state.tempo}
+              min="0.1" max="2.0" step="0.1"
+              onInput={this.handleTempoChange}
+              onChange={this.handleTempoChange}/>
               {this.state.tempo.toFixed(1)}<br/>
+              {this.state.currentSongNumSubtunes > 1 &&
+              <span>
+                  Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
+                <button onClick={this.prevSubtune}>Prev</button>
+                &nbsp;
+                <button onClick={this.nextSubtune}>Next</button><br/>
+                </span>
+              }
               Voices:
               {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
                 return <input type="checkbox" onChange={() => {
@@ -301,6 +337,21 @@ class App extends Component {
               Comment: {this.state.currentSongMetadata.comment || '--'}
             </div>
             }
+            {songData.map(group => {
+              return (
+                <div>
+                  <h4>{group.title}</h4>
+                  {group.files.map(file => {
+                    const href = group.url_prefix + file;
+                    return (
+                      <div>
+                        <a onClick={() => this.playSong(href)} href="javascript:void(0)">{unescape(file)}</a>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
           </div>
         }
       </div>

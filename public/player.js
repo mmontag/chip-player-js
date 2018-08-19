@@ -177,6 +177,7 @@ function handleDroppedFiles(files){
 
     if(getFileExtension(file.name).toLowerCase() === "gbs" ||
         getFileExtension(file.name).toLowerCase() === "nsf" ||
+        getFileExtension(file.name).toLowerCase() === "nsfe" ||
         getFileExtension(file.name).toLowerCase() === "spc" ||
         getFileExtension(file.name).toLowerCase() === "gym"
     ){
