@@ -343,11 +343,16 @@ void Nsf_Emu::update_eq( blip_eq_t const& eq )
 	#endif
 }
 
-void Nsf_Emu::set_voice( int i, Blip_Buffer* buf, Blip_Buffer*, Blip_Buffer* )
+void Nsf_Emu::set_voice( int i, Blip_Buffer* center, Blip_Buffer* left, Blip_Buffer* right)
 {
 	if ( i < Nes_Apu::osc_count )
 	{
-		apu.osc_output( i, buf );
+		if (i == 0)
+			apu.osc_output( i, left );
+		else if (i == 1)
+			apu.osc_output( i, right );
+		else
+			apu.osc_output( i, center );
 		return;
 	}
 	i -= Nes_Apu::osc_count;
@@ -356,7 +361,7 @@ void Nsf_Emu::set_voice( int i, Blip_Buffer* buf, Blip_Buffer*, Blip_Buffer* )
 	{
 		if ( fme7 && i < Nes_Fme7_Apu::osc_count )
 		{
-			fme7->osc_output( i, buf );
+			fme7->osc_output( i, center );
 			return;
 		}
 		
@@ -367,7 +372,7 @@ void Nsf_Emu::set_voice( int i, Blip_Buffer* buf, Blip_Buffer*, Blip_Buffer* )
 				// put saw first
 				if ( --i < 0 )
 					i = 2;
-				vrc6->osc_output( i, buf );
+				vrc6->osc_output( i, center );
 				return;
 			}
 			i -= Nes_Vrc6_Apu::osc_count;
@@ -375,7 +380,7 @@ void Nsf_Emu::set_voice( int i, Blip_Buffer* buf, Blip_Buffer*, Blip_Buffer* )
 		
 		if ( namco && i < Nes_Namco_Apu::osc_count )
 		{
-			namco->osc_output( i, buf );
+			namco->osc_output( i, center );
 			return;
 		}
 	}
