@@ -26,11 +26,16 @@ struct VGM_HEADER
 	UINT32 dataEnd;		// command data end offset
 	UINT32 gd3Ofs;		// GD3 tag offset
 	
-	UINT32 numTicks;	// total number of samples
-	UINT32 loopTicks;	// number of samples for the looping part
-	
 	UINT32 xhChpClkOfs;	// extra header offset: chip clocks
 	UINT32 xhChpVolOfs;	// extra header offset: chip volume
+	
+	UINT32 numTicks;	// total number of samples
+	UINT32 loopTicks;	// number of samples for the looping part
+	UINT32 recordHz;	// rate of the recording in Hz (60 for NTSC, 50 for PAL, 0 disables rate scaling)
+	
+	INT8 loopBase;
+	UINT8 loopModifier;	// 4.4 fixed point
+	INT16 volumeGain;	// 8.8 fixed point, +0x100 = +6 db
 };
 
 class VGMPlayer : public PlayerBase
@@ -57,6 +62,17 @@ private:
 		UINT8 devType;
 		UINT16 volume;
 		UINT32 clock;
+	};
+	struct XHDR_DATA32
+	{
+		UINT8 type;
+		UINT32 data;
+	};
+	struct XHDR_DATA16
+	{
+		UINT8 type;
+		UINT8 flags;
+		UINT16 data;
 	};
 	
 	struct DACSTRM_DEV
@@ -121,14 +137,21 @@ public:
 	//UINT8 Seek(...); // TODO
 	
 private:
-	UINT8 ParseHeader(VGM_HEADER* vgmHdr);
+	UINT8 ParseHeader(void);
+	void ParseXHdr_Data32(UINT32 fileOfs, std::vector<XHDR_DATA32>& xData);
+	void ParseXHdr_Data16(UINT32 fileOfs, std::vector<XHDR_DATA16>& xData);
 	
 	UINT8 LoadTags(void);
 	std::string GetUTF8String(const UINT8* startPtr, const UINT8* endPtr);
 	
 	void RefreshTSRates(void);
 	
-	UINT32 GetHeaderChipClock(UINT8 chipID);	// returns raw chip clock value from VGM header
+	UINT32 GetHeaderChipClock(UINT8 chipType);	// returns raw chip clock value from VGM header
+	inline UINT32 GetChipCount(UINT8 chipType);
+	UINT32 GetChipClock(UINT8 chipType, UINT8 chipID);
+	UINT16 GetChipVolume(UINT8 chipType, UINT8 chipID, UINT8 isLinked);
+	UINT16 EstimateOverallVolume(void);
+	void NormalizeOverallVolume(UINT16 overallVol);
 	void InitDevices(void);
 	
 	static void DeviceLinkCallback(void* userParam, VGM_BASEDEV* cDev, DEVLINK_INFO* dLink);
@@ -190,6 +213,8 @@ private:
 	};
 	
 	VGM_HEADER _fileHdr;
+	std::vector<XHDR_DATA32> _xHdrChipClk;
+	std::vector<XHDR_DATA16> _xHdrChipVol;
 	UINT8 _hdrBuffer[_HDR_BUF_SIZE];	// buffer containing the file header
 	UINT32 _hdrLenFile;
 	UINT32 _tagVer;
@@ -212,12 +237,15 @@ private:
 	//PLAYER_EVENT_CB _eventCbFunc;
 	//void* _eventCbParam;
 	
-	static const UINT8 _DEV_LIST[_CHIP_COUNT];
-	static const UINT32 _CHIPCLK_OFS[_CHIP_COUNT];
-	static const COMMAND_INFO _CMD_INFO[0x100];
-	static const UINT8 _VGM_BANK_CHIPS[_PCM_BANK_COUNT];
-	static const UINT8 _VGM_ROM_CHIPS[0x40][2];
-	static const UINT8 _VGM_RAM_CHIPS[0x40];
+	static const UINT8 _DEV_LIST[_CHIP_COUNT];	// VGM chip ID -> libvgm device ID
+	static const UINT32 _CHIPCLK_OFS[_CHIP_COUNT];	// file offsets for chip clocks in VGM header
+	static const UINT16 _CHIP_VOLUME[_CHIP_COUNT];	// default volume for chips
+	static const UINT16 _PB_VOL_AMNT[_CHIP_COUNT];	// amount of the chip's playback volume in overall gain
+	
+	static const COMMAND_INFO _CMD_INFO[0x100];	// VGM commands
+	static const UINT8 _VGM_BANK_CHIPS[_PCM_BANK_COUNT];	// PCM database ID -> VGM chip
+	static const UINT8 _VGM_ROM_CHIPS[0x40][2];	// ROM write datablock ID -> VGM chip / memory type
+	static const UINT8 _VGM_RAM_CHIPS[0x40];	// RAM write datablock ID -> VGM chip
 	
 	size_t _devMap[_CHIP_COUNT][2];	// maps VGM device ID to _devices vector
 	std::vector<CHIP_DEVICE> _devices;

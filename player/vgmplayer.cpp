@@ -48,7 +48,23 @@
 	0x6C, 0x70, 0x74, 0x80, 0x84, 0x88, 0x8C, 0x90,
 	0x98, 0x9C, 0xA0, 0xA4, 0xA8, 0xAC, 0xB0, 0xB4,
 	0xB8, 0xC0, 0xC4, 0xC8, 0xCC, 0xD0, 0xD8, 0xDC,
-	0xE0
+	0xE0,
+};
+/*static*/ const UINT16 VGMPlayer::_CHIP_VOLUME[_CHIP_COUNT] =
+{	0x80, 0x200, 0x100, 0x100, 0x180, 0xB0, 0x100, 0x80,
+	0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x98,
+	0x80, 0xE0, 0x100, 0xC0, 0x100, 0x40, 0x11E, 0x1C0,
+	0x100, 0xA0, 0x100, 0x100, 0x100, 0xB3, 0x100, 0x100,
+	0x20, 0x100, 0x100, 0x100, 0x40, 0x20, 0x100, 0x40,
+	0x280,
+};
+/*static*/ const UINT16 VGMPlayer::_PB_VOL_AMNT[_CHIP_COUNT] =
+{	0x100, 0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
+	0x100, 0x200, 0x200, 0x200, 0x200, 0x100, 0x100, 0x1AF,
+	0x200, 0x100, 0x200, 0x200, 0x200, 0x400, 0x100, 0x200,
+	0x200, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
+	0x800, 0x100, 0x100, 0x100, 0x800, 0x1000, 0x100, 0x800,
+	0x100,
 };
 
 
@@ -80,6 +96,14 @@ INLINE UINT32 ReadRelOfs(const UINT8* data, UINT32 fileOfs)
 	return ofs ? (fileOfs + ofs) : ofs;	// add base to offset, if offset != 0
 }
 
+INLINE UINT16 MulFixed8x8(UINT16 a, UINT16 b)	// 8.8 fixed point multiplication
+{
+	UINT32 res16;	// 16.16 fixed point result
+	
+	res16 = (UINT32)a * b;
+	return (res16 + 0x80) >> 8;	// round to nearest neighbour + scale back to 8.8 fixed point
+}
+
 VGMPlayer::VGMPlayer() :
 	_filePos(0),
 	_fileTick(0),
@@ -90,6 +114,7 @@ VGMPlayer::VGMPlayer() :
 	_psTrigger(0x00)
 {
 	_icUTF16 = iconv_open("UTF-8", "UTF-16LE");
+	memset(&_pcmComprTbl, 0x00, sizeof(PCM_COMPR_TBL));
 	
 	return;
 }
@@ -98,6 +123,8 @@ VGMPlayer::~VGMPlayer()
 {
 	if (_icUTF16 != (iconv_t)-1)
 		iconv_close(_icUTF16);
+	
+	return;
 }
 
 UINT32 VGMPlayer::GetPlayerType(void) const
@@ -146,59 +173,128 @@ UINT8 VGMPlayer::LoadFile(const char* fileName)
 	
 	fclose(hFile);
 	
-	ParseHeader(&_fileHdr);
+	// parse main header
+	ParseHeader();
 	
+	// parse extra headers
+	ParseXHdr_Data32(_fileHdr.xhChpClkOfs, _xHdrChipClk);
+	ParseXHdr_Data16(_fileHdr.xhChpVolOfs, _xHdrChipVol);
+	
+	// parse tags
 	LoadTags();
 	
 	return 0x00;
 }
 
-UINT8 VGMPlayer::ParseHeader(VGM_HEADER* vgmHdr)
+UINT8 VGMPlayer::ParseHeader(void)
 {
-	memset(vgmHdr, 0x00, sizeof(VGM_HEADER));
+	memset(&_fileHdr, 0x00, sizeof(VGM_HEADER));
 	
-	vgmHdr->fileVer = ReadLE32(&_fileData[0x08]);
+	_fileHdr.fileVer = ReadLE32(&_fileData[0x08]);
 	
-	vgmHdr->dataOfs = (vgmHdr->fileVer >= 0x150) ? ReadRelOfs(&_fileData[0], 0x34) : 0x00;
-	if (! vgmHdr->dataOfs)
-		vgmHdr->dataOfs = 0x40;
-	_hdrLenFile = vgmHdr->dataOfs;
+	_fileHdr.dataOfs = (_fileHdr.fileVer >= 0x150) ? ReadRelOfs(&_fileData[0], 0x34) : 0x00;
+	if (! _fileHdr.dataOfs)
+		_fileHdr.dataOfs = 0x40;
+	_hdrLenFile = _fileHdr.dataOfs;
 	
-	vgmHdr->extraHdrOfs = (_hdrLenFile >= 0xC0) ? ReadRelOfs(&_fileData[0], 0xBC) : 0x00;
-	if (vgmHdr->extraHdrOfs && _hdrLenFile > vgmHdr->extraHdrOfs)
-		_hdrLenFile = vgmHdr->extraHdrOfs;	// the main header ends where the extra header begins
+	_fileHdr.extraHdrOfs = (_hdrLenFile >= 0xC0) ? ReadRelOfs(&_fileData[0], 0xBC) : 0x00;
+	if (_fileHdr.extraHdrOfs && _hdrLenFile > _fileHdr.extraHdrOfs)
+		_hdrLenFile = _fileHdr.extraHdrOfs;	// the main header ends where the extra header begins
 	
 	if (_hdrLenFile > _HDR_BUF_SIZE)
 		_hdrLenFile = _HDR_BUF_SIZE;
 	memset(_hdrBuffer, 0x00, _HDR_BUF_SIZE);
 	memcpy(_hdrBuffer, &_fileData[0x00], _hdrLenFile);
 	
-	vgmHdr->eofOfs = ReadRelOfs(_hdrBuffer, 0x04);
-	vgmHdr->gd3Ofs = ReadRelOfs(_hdrBuffer, 0x14);
-	vgmHdr->numTicks = ReadLE32(&_hdrBuffer[0x18]);
-	vgmHdr->loopOfs = ReadRelOfs(_hdrBuffer, 0x1C);
-	vgmHdr->loopTicks = ReadLE32(&_hdrBuffer[0x20]);
+	_fileHdr.eofOfs = ReadRelOfs(_hdrBuffer, 0x04);
+	_fileHdr.gd3Ofs = ReadRelOfs(_hdrBuffer, 0x14);
+	_fileHdr.numTicks = ReadLE32(&_hdrBuffer[0x18]);
+	_fileHdr.loopOfs = ReadRelOfs(_hdrBuffer, 0x1C);
+	_fileHdr.loopTicks = ReadLE32(&_hdrBuffer[0x20]);
 	
-	if (vgmHdr->extraHdrOfs)
+	_fileHdr.loopBase = (INT8)_hdrBuffer[0x7E];
+	_fileHdr.loopModifier = _hdrBuffer[0x7F];
+	if (_hdrBuffer[0x7C] <= 0xC0)
+		_fileHdr.volumeGain = _hdrBuffer[0x7C];
+	else if (_hdrBuffer[0x7C] == 0xC1)
+		_fileHdr.volumeGain = -0x40;
+	else
+		_fileHdr.volumeGain = _hdrBuffer[0x7C] - 0x100;
+	_fileHdr.volumeGain <<= 3;	// 3.5 fixed point -> 8.8 fixed point
+	
+	if (_fileHdr.extraHdrOfs)
 	{
 		UINT32 xhLen;
 		
-		xhLen = ReadLE32(&_fileData[vgmHdr->extraHdrOfs]);
+		xhLen = ReadLE32(&_fileData[_fileHdr.extraHdrOfs]);
 		if (xhLen >= 0x08)
-			vgmHdr->xhChpClkOfs = ReadRelOfs(&_fileData[0], vgmHdr->extraHdrOfs + 0x04);
+			_fileHdr.xhChpClkOfs = ReadRelOfs(&_fileData[0], _fileHdr.extraHdrOfs + 0x04);
 		if (xhLen >= 0x0C)
-			vgmHdr->xhChpVolOfs = ReadRelOfs(&_fileData[0], vgmHdr->extraHdrOfs + 0x08);
+			_fileHdr.xhChpVolOfs = ReadRelOfs(&_fileData[0], _fileHdr.extraHdrOfs + 0x08);
 	}
 	
-	if (! vgmHdr->eofOfs || vgmHdr->eofOfs > _fileData.size())
-		vgmHdr->eofOfs = _fileData.size();	// catch invalid EOF values
-	vgmHdr->dataEnd = vgmHdr->eofOfs;
+	if (! _fileHdr.eofOfs || _fileHdr.eofOfs > _fileData.size())
+		_fileHdr.eofOfs = _fileData.size();	// catch invalid EOF values
+	_fileHdr.dataEnd = _fileHdr.eofOfs;
 	// command data ends at the GD3 offset if:
 	//	GD3 is used && GD3 offset < EOF (just to be sure) && GD3 offset > dataOfs (catch files with GD3 between header and data)
-	if (vgmHdr->gd3Ofs && (vgmHdr->gd3Ofs < vgmHdr->dataEnd && vgmHdr->gd3Ofs >= vgmHdr->dataOfs))
-		vgmHdr->dataEnd = vgmHdr->gd3Ofs;
+	if (_fileHdr.gd3Ofs && (_fileHdr.gd3Ofs < _fileHdr.dataEnd && _fileHdr.gd3Ofs >= _fileHdr.dataOfs))
+		_fileHdr.dataEnd = _fileHdr.gd3Ofs;
 	
 	return 0x00;
+}
+
+void VGMPlayer::ParseXHdr_Data32(UINT32 fileOfs, std::vector<XHDR_DATA32>& xData)
+{
+	xData.clear();
+	if (! fileOfs || fileOfs >= _fileData.size())
+		return;
+	
+	UINT32 curPos = fileOfs;
+	size_t curChip;
+	
+	xData.resize(_fileData[curPos]);	curPos ++;
+	for (curChip = 0; curChip < xData.size(); curChip ++, curPos += 0x05)
+	{
+		if (curPos + 0x05 > _fileData.size())
+		{
+			xData.resize(curChip);
+			break;
+		}
+		
+		XHDR_DATA32& cData = xData[curChip];
+		cData.type = _fileData[curPos + 0x00];
+		cData.data = ReadLE32(&_fileData[curPos + 0x01]);
+	}
+	
+	return;
+}
+
+void VGMPlayer::ParseXHdr_Data16(UINT32 fileOfs, std::vector<XHDR_DATA16>& xData)
+{
+	xData.clear();
+	if (! fileOfs || fileOfs >= _fileData.size())
+		return;
+	
+	UINT32 curPos = fileOfs;
+	size_t curChip;
+	
+	xData.resize(_fileData[curPos]);	curPos ++;
+	for (curChip = 0; curChip < xData.size(); curChip ++, curPos += 0x04)
+	{
+		if (curPos + 0x04 > _fileData.size())
+		{
+			xData.resize(curChip);
+			break;
+		}
+		
+		XHDR_DATA16& cData = xData[curChip];
+		cData.type = _fileData[curPos + 0x00];
+		cData.flags = _fileData[curPos + 0x01];
+		cData.data = ReadLE16(&_fileData[curPos + 0x02]);
+	}
+	
+	return;
 }
 
 UINT8 VGMPlayer::LoadTags(void)
@@ -443,12 +539,149 @@ UINT8 VGMPlayer::Reset(void)
 	return 0x00;
 }
 
-UINT32 VGMPlayer::GetHeaderChipClock(UINT8 chipID)
+UINT32 VGMPlayer::GetHeaderChipClock(UINT8 chipType)
 {
-	if (chipID >= _CHIP_COUNT)
+	if (chipType >= _CHIP_COUNT)
 		return 0;
 	
-	return ReadLE32(&_hdrBuffer[_CHIPCLK_OFS[chipID]]);
+	return ReadLE32(&_hdrBuffer[_CHIPCLK_OFS[chipType]]);
+}
+
+inline UINT32 VGMPlayer::GetChipCount(UINT8 chipType)
+{
+	UINT32 clock = GetHeaderChipClock(chipType);
+	if (! clock)
+		return 0;
+	return (clock & 0x40000000) ? 2 : 1;
+}
+
+UINT32 VGMPlayer::GetChipClock(UINT8 chipType, UINT8 chipID)
+{
+	size_t curChip;
+	UINT32 clock = GetHeaderChipClock(chipType);
+	
+	if (chipID == 0)
+		return clock & ~0x40000000;	// return clock without dual-chip bit
+	if (! (clock & 0x40000000))
+		return 0;	// dual-chip bit not set - no second chip used
+	
+	for (curChip = 0; curChip < _xHdrChipClk.size(); curChip ++)
+	{
+		XHDR_DATA32& cData = _xHdrChipClk[curChip];
+		if (cData.type == chipType)
+			return cData.data;
+	}
+	
+	return clock & ~0x40000000;	// return clock without dual-chip bit
+}
+
+UINT16 VGMPlayer::GetChipVolume(UINT8 chipType, UINT8 chipID, UINT8 isLinked)
+{
+	if (chipType >= _CHIP_COUNT)
+		return 0;
+	
+	size_t curChip;
+	UINT16 numChips;
+	UINT16 vol = _CHIP_VOLUME[chipType];
+	
+	numChips = GetChipCount(chipType);
+	if (chipType == 0x00)
+	{
+		// The T6W28 consists of 2 "half" chips, so we need to treat it as 1.
+		if (GetHeaderChipClock(chipType) & 0x80000000)
+			numChips = 1;
+	}
+	
+	if (isLinked)
+	{
+		if (chipType == 0x06)
+			vol /= 2;	// the YM2203's SSG should be half as loud as the FM part
+	}
+	if (numChips > 1)
+		vol /= numChips;
+	
+	chipType = (isLinked << 7) | (chipType & 0x7F);
+	for (curChip = 0; curChip < _xHdrChipVol.size(); curChip ++)
+	{
+		XHDR_DATA16& cData = _xHdrChipVol[curChip];
+		if (cData.type == chipType && (cData.flags & 0x01) == chipID)
+		{
+			// Bit 15 - absolute/relative volume
+			//	0 - absolute
+			//	1 - relative (0x0100 = 1.0, 0x80 = 0.5, etc.)
+			if (cData.data & 0x8000)
+				return MulFixed8x8(vol, cData.data & 0x7FFF);
+			else
+				return cData.data;
+		}
+	}
+	
+	return vol;
+}
+
+UINT16 VGMPlayer::EstimateOverallVolume(void)
+{
+	size_t curChip;
+	VGM_BASEDEV* clDev;
+	UINT16 absVol;
+	
+	absVol = 0x00;
+	for (curChip = 0; curChip < _devices.size(); curChip ++)
+	{
+		CHIP_DEVICE& chipDev = _devices[curChip];
+		for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev)
+		{
+			absVol += MulFixed8x8(clDev->resmpl.volumeL + clDev->resmpl.volumeR,
+									_PB_VOL_AMNT[chipDev.vgmChipType]) / 2;
+		}
+	}
+	
+	return absVol;
+}
+
+void VGMPlayer::NormalizeOverallVolume(UINT16 overallVol)
+{
+	if (! overallVol)
+		return;
+	
+	UINT16 volFactor;
+	size_t curChip;
+	VGM_BASEDEV* clDev;
+	
+	if (overallVol <= 0x180)
+	{
+		volFactor = 1;
+		while(overallVol <= 0x180)
+			volFactor *= 2;
+		
+		for (curChip = 0; curChip < _devices.size(); curChip ++)
+		{
+			CHIP_DEVICE& chipDev = _devices[curChip];
+			for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev)
+			{
+				clDev->resmpl.volumeL *= volFactor;
+				clDev->resmpl.volumeR *= volFactor;
+			}
+		}
+	}
+	else if (overallVol > 0x300)
+	{
+		volFactor = 1;
+		while(overallVol > 0x300)
+			volFactor *= 2;
+		
+		for (curChip = 0; curChip < _devices.size(); curChip ++)
+		{
+			CHIP_DEVICE& chipDev = _devices[curChip];
+			for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev)
+			{
+				clDev->resmpl.volumeL /= volFactor;
+				clDev->resmpl.volumeR /= volFactor;
+			}
+		}
+	}
+	
+	return;
 }
 
 void VGMPlayer::InitDevices(void)
@@ -474,16 +707,12 @@ void VGMPlayer::InitDevices(void)
 	
 	for (vgmChip = 0x00; vgmChip < _CHIP_COUNT; vgmChip ++)
 	{
-		hdrClock = GetHeaderChipClock(vgmChip);
-		if (! hdrClock)
-			continue;
-		for (chipID = 0; chipID < 2; chipID ++)
+		for (chipID = 0; chipID < GetChipCount(vgmChip); chipID ++)
 		{
-			if (chipID && ! (hdrClock & 0x40000000))
-				continue;
 			memset(&chipDev, 0x00, sizeof(CHIP_DEVICE));
 			devInf = &chipDev.base.defInf;
 			
+			hdrClock = GetChipClock(vgmChip, chipID);
 			chipType = _DEV_LIST[vgmChip];
 			chipDev.vgmChipType = vgmChip;
 			chipDev.chipID = chipID;
@@ -775,13 +1004,40 @@ void VGMPlayer::InitDevices(void)
 	// and the memory address of the RESMPL_STATE mustn't change in order to allow callbacks from the devices.
 	for (curChip = 0; curChip < _devices.size(); curChip ++)
 	{
-		for (clDev = &_devices[curChip].base; clDev != NULL; clDev = clDev->linkDev)
+		CHIP_DEVICE& chipDev = _devices[curChip];
+		UINT8 linkCntr = 0;
+		for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev, linkCntr ++)
 		{
-			Resmpl_SetVals(&clDev->resmpl, 0xFF, 0x100, _outSmplRate);
+			UINT16 chipVol = GetChipVolume(chipDev.vgmChipType, chipDev.chipID, linkCntr);
+			
+			Resmpl_SetVals(&clDev->resmpl, 0xFF, chipVol, _outSmplRate);
 			Resmpl_DevConnect(&clDev->resmpl, &clDev->defInf);
 			Resmpl_Init(&clDev->resmpl);
 		}
+		
+		if (_DEV_LIST[chipDev.vgmChipType] == DEVID_YM3812)
+		{
+			if (GetChipClock(chipDev.vgmChipType, chipDev.chipID) & 0x80000000)
+			{
+				// Dual-OPL with Stereo - 1st chip is panned to the left, 2nd chip is panned to the right
+				for (clDev = &chipDev.base; clDev != NULL; clDev = clDev->linkDev, linkCntr ++)
+				{
+					if (chipDev.chipID & 0x01)
+					{
+						clDev->resmpl.volumeL = 0x00;
+						clDev->resmpl.volumeR *= 2;
+					}
+					else
+					{
+						clDev->resmpl.volumeL *= 2;
+						clDev->resmpl.volumeR = 0x00;
+					}
+				}
+			}
+		}
 	}
+	
+	NormalizeOverallVolume(EstimateOverallVolume());
 	
 	return;
 }
