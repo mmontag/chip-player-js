@@ -266,33 +266,37 @@ void OPL3::noteOff(size_t c)
 void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
 {
     size_t chip = c / 23, cc = c % 23;
-    uint32_t x = 0x2000;
+    uint32_t octave = 0;
 
-    if(hertz < 0 || hertz > 131071) // Avoid infinite loop
+    if(hertz < 0)
         return;
 
     while(hertz >= 1023.5)
     {
-        hertz /= 2.0;    // Calculate octave
-        x += 0x400;
+        hertz /= 2.0; // Calculate octave
+        if(octave < 0x1C00)
+            octave += 0x400;
     }
 
-    x += static_cast<uint32_t>(hertz + 0.5);
+    octave += static_cast<uint32_t>(hertz + 0.5);
     uint32_t chn = g_channelsMap[cc];
 
     if(cc >= 18)
     {
         m_regBD[chip ] |= (0x10 >> (cc - 18));
         writeRegI(chip , 0x0BD, m_regBD[chip ]);
-        x &= ~0x2000u;
         //x |= 0x800; // for test
+    }
+    else
+    {
+        octave += 0x2000u; /* Key-ON [KON] */
     }
 
     if(chn != 0xFFF)
     {
-        writeRegI(chip , 0xA0 + chn, (x & 0xFF));
-        writeRegI(chip , 0xB0 + chn, (x >> 8));
-        m_keyBlockFNumCache[c] = (x >> 8);
+        writeRegI(chip , 0xA0 + chn, (octave & 0xFF));
+        writeRegI(chip , 0xB0 + chn, (octave >> 8));
+        m_keyBlockFNumCache[c] = (octave >> 8);
     }
 }
 
