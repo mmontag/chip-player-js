@@ -177,6 +177,7 @@ To build that example you will need to have installed SDL2 library.
  * XMIDI now supports loops
  * Added working implementation of TMB's velocity offset
  * Added support for full-panning stereo option (Thanks to [Christopher Snowhill](https://github.com/kode54) for a work!)
+ * Fixed inability to play high notes due physical tone frequency out of range on the OPL3 chip
 
 ## 1.3.3   2018-06-19
  * Fixed an inability to load another custom bank without of library re-initialization
