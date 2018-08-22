@@ -42,4 +42,9 @@ MoseAmp is a multiplatform player built with Electron. Some nice game console ic
 ##### JSGME
 http://onakasuita.org/jsgme/
 
-One of the first examples of GME compiled with Emscripten. Self-hosted mirror of Famicompo entries.
+One of the first examples of GME compiled with Emscripten. Music collection is a self-hosted mirror of Famicompo entries.
+
+##### Chiptune Blaster
+https://github.com/wothke?tab=repositories
+
+Jeurgen Wothke's collection of chipmusic projects ported to the web with Emscripten. He's beaten me to it, but with a rudimentary player and no built-in music collection. http://www.wothke.ch/blaster
