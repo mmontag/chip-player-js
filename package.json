@@ -30,6 +30,7 @@
     "html-webpack-plugin": "2.29.0",
     "immutability-helper": "^2.7.1",
     "jest": "20.0.4",
+    "node-unrar-js": "^0.8.1",
     "object-assign": "4.1.1",
     "postcss-flexbugs-fixes": "3.2.0",
     "postcss-loader": "2.0.8",
@@ -51,6 +52,8 @@
     "child_process": "^1.0.2",
     "gh-pages": "^1.2.0",
     "glob": "^7.1.2",
+    "patch-package": "^5.1.1",
+    "postinstall-prepare": "^1.0.1",
     "tmp": "^0.0.33"
   },
   "homepage": "http://mmontag.github.io/chip-player-js",
@@ -60,7 +63,8 @@
     "test": "node scripts/test.js --env=jsdom",
     "build-gme": "source ~/src/emsdk/emsdk_set_env.sh; node build-gme.js",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "prepare": "patch-package"
   },
   "jest": {
     "collectCoverageFrom": [

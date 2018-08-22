@@ -18,6 +18,15 @@ export default [
     ]
   },
   {
+    title: 'Super Nintendo (RSN)',
+    url_prefix: 'https://cors-anywhere.herokuapp.com/http://snesmusic.org/v2/download.php?spcNow=',
+    files: [
+      "smw&.rsn",
+      "yc&.rsn",
+      "yi&.rsn",
+    ]
+  },
+  {
     title: 'Nintendo (NSF)',
     url_prefix: 'https://www.mattmontag.com/vgm/nsf/',
     files: [

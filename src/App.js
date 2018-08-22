@@ -4,8 +4,7 @@ import './App.css';
 import songData from './song-data';
 
 const LibGME = require('./libgme');
-
-const corsPrefix = 'https://cors-anywhere.herokuapp.com/';
+const unrar = require('node-unrar-js');
 
 let emu = null;
 let audioNode = null;
@@ -162,6 +161,8 @@ class App extends Component {
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
     this.playSubtune = this.playSubtune.bind(this);
+    this.getTimeLabel = this.getTimeLabel.bind(this);
+    this.displayLoop = this.displayLoop.bind(this);
     this.getFadeMs = this.getFadeMs.bind(this);
 
     libgme = new LibGME({
@@ -183,6 +184,7 @@ class App extends Component {
       currentSongNumVoices: 0,
       currentSongNumSubtunes: 0,
       currentSongSubtune: 0,
+      extractedTunes: [],
       currentSongDurationMs: 1000,
       currentSongPositionMs: 0,
       draggedSongPositionMs: -1,
@@ -196,7 +198,22 @@ class App extends Component {
   playSong(filename, subtune) {
     // filename = corsPrefix + songData[Math.floor(Math.random() * songData.length)];
     fetch(filename).then(response => response.arrayBuffer()).then(buffer => {
-      playMusicData(new Uint8Array(buffer));
+      let uint8Array;
+      let extractedTunes = [];
+      if (filename.endsWith('.rsn')) {
+        // Unrar RSN files
+        const extractor = unrar.createExtractorFromData(buffer);
+        const extracted = extractor.extractAll();
+        extractedTunes = extracted[1].files.filter(file => {
+          // Skip tiny files
+          return file.extract[1].byteLength >= 8192;
+        }).map(file => file.extract[1]);
+        uint8Array = extractedTunes[0];
+      } else {
+        uint8Array = new Uint8Array(buffer);
+      }
+
+      playMusicData(uint8Array);
       playerSetTempo(this.state.tempo);
       playerSetVoices(this.state.voices);
       const numSubtunes = libgme._gme_track_count(emu);
@@ -208,9 +225,10 @@ class App extends Component {
         currentSongMetadata: metadata,
         currentSongDurationMs: getDurationMs(metadata),
         currentSongNumVoices: libgme._gme_voice_count(emu),
-        currentSongNumSubtunes: numSubtunes,
+        currentSongNumSubtunes: extractedTunes.length || numSubtunes,
         currentSongPositionMs: 0,
         currentSongSubtune: 0,
+        extractedTunes: extractedTunes,
       });
     });
 
@@ -234,24 +252,34 @@ class App extends Component {
   prevSubtune() {
     const subtune = this.state.currentSongSubtune - 1;
     if (subtune < 0) return;
-    if (libgme._gme_start_track(emu, subtune) !== 0)
-      console.error("Could not load track");
-    else {
-      const metadata = parseMetadata(subtune);
-      this.setState({
-        currentSongSubtune: subtune,
-        currentSongMetadata: metadata,
-        currentSongPositionMs: 0,
-      });
-    }
+    this.playSubtune(subtune);
   }
 
   nextSubtune() {
     const subtune = this.state.currentSongSubtune + 1;
     if (subtune >= this.state.currentSongNumSubtunes) return;
-    if (libgme._gme_start_track(emu, subtune) !== 0)
-      console.error("Could not load track");
-    else {
+    this.playSubtune(subtune);
+  }
+
+  playSubtune(subtune) {
+    if (this.state.extractedTunes.length) {
+      // TODO: factor with playSong()
+      playMusicData(this.state.extractedTunes[subtune]);
+      playerSetTempo(this.state.tempo);
+      playerSetVoices(this.state.voices);
+      const metadata = parseMetadata();
+      playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
+      this.setState({
+        currentSongSubtune: subtune,
+        currentSongDurationMs: getDurationMs(metadata),
+        currentSongMetadata: metadata,
+        currentSongPositionMs: 0,
+      });
+    } else {
+      if (libgme._gme_start_track(emu, subtune) !== 0) {
+        console.error("Could not load track");
+        return;
+      }
       const metadata = parseMetadata(subtune);
       playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
       this.setState({
@@ -369,7 +397,7 @@ class App extends Component {
               }
               Voices:
               {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
-                return <input type="checkbox" onChange={() => {
+                return <input key={i} type="checkbox" onChange={() => {
                   this.handleVoiceToggle(i)
                 }} checked={this.state.voices[i]}/>
               })}<br/>
@@ -383,12 +411,12 @@ class App extends Component {
             }
             {songData.map(group => {
               return (
-                <div>
+                <div key={group.title}>
                   <h4>{group.title}</h4>
                   {group.files.map(file => {
                     const href = group.url_prefix + file;
                     return (
-                      <div>
+                      <div key={file}>
                         <a onClick={() => this.playSong(href)} href="javascript:void(0)">{unescape(file)}</a>
                       </div>
                     )
