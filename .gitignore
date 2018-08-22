@@ -1,5 +1,6 @@
 node_modules/
 dist/
 build/
+cmake-build-debug/
 libgme.wasm
 libgme.js
