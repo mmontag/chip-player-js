@@ -13,6 +13,7 @@ let libgme = null;
 let audioCtx = null;
 let paused = false;
 const BUFFER_SIZE = 4096;
+const FADE_OUT_DURATION_MS = 8000; // Default fade out duration in game-music-emu
 const MAX_VOICES = 8;
 const INT16_MAX = Math.pow(2, 16) - 1;
 
@@ -31,6 +32,15 @@ function playerPause() {
 
 function playerResume() {
   paused = false;
+}
+
+function getDurationMs(metadata) {
+  console.log(metadata);
+  if (metadata.loop_length || metadata.intro_length) {
+    return metadata.play_length + FADE_OUT_DURATION_MS;
+  } else {
+    return metadata.play_length;
+  }
 }
 
 function playMusicData(payload, subtune) {
@@ -57,16 +67,8 @@ function playMusicData(payload, subtune) {
     const channels = [e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1)];
     let i, channel;
 
-    if (paused) {
-      for (i = 0; i < BUFFER_SIZE; i++)
-        for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++)
-          channels[channel][i] = 0;
-      return;
-    }
-
-    if (libgme._gme_track_ended(emu) === 1) {
-      audioNode.disconnect();
-      console.log("End of track.");
+    if (paused || libgme._gme_track_ended(emu) === 1) {
+      channels.forEach(channel => channel.fill(0));
       return;
     }
 
@@ -97,6 +99,14 @@ function playerSetVoices(voices) {
 
 function playerSetTempo(val) {
   if (emu) libgme._gme_set_tempo(emu, val);
+}
+
+function playerSetFadeout(startMs) {
+  if (emu) libgme._gme_set_fade(emu, startMs);
+}
+
+function playerGetPosition() {
+  if (emu) return libgme._gme_tell(emu);
 }
 
 function parseMetadata(subtune = 0) {
@@ -151,6 +161,8 @@ class App extends Component {
     this.getSongPos = this.getSongPos.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
+    this.playSubtune = this.playSubtune.bind(this);
+    this.getFadeMs = this.getFadeMs.bind(this);
 
     libgme = new LibGME({
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
@@ -163,7 +175,7 @@ class App extends Component {
       },
     });
 
-    this.sliderTimer = null;
+    this.lastTime = (new Date()).getTime();
     this.state = {
       loading: true,
       paused: false,
@@ -177,6 +189,8 @@ class App extends Component {
       tempo: 1,
       voices: Array(MAX_VOICES).fill(true),
     };
+
+    this.displayLoop();
   }
 
   playSong(filename, subtune) {
@@ -186,23 +200,35 @@ class App extends Component {
       playerSetTempo(this.state.tempo);
       playerSetVoices(this.state.voices);
       const numSubtunes = libgme._gme_track_count(emu);
-      const metadata = parseMetadata(filename, subtune);
+      const metadata = parseMetadata(subtune);
+      playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
 
       this.setState({
         paused: playerIsPaused(),
         currentSongMetadata: metadata,
-        currentSongDurationMs: metadata.length,
+        currentSongDurationMs: getDurationMs(metadata),
         currentSongNumVoices: libgme._gme_voice_count(emu),
         currentSongNumSubtunes: numSubtunes,
+        currentSongPositionMs: 0,
         currentSongSubtune: 0,
       });
     });
-    clearInterval(this.sliderTimer);
-    this.sliderTimer = setInterval(() => {
-      this.setState({
-        currentSongPositionMs: libgme._gme_tell(emu),
-      });
-    }, 200);
+
+  }
+
+  displayLoop() {
+    const currentTime = (new Date()).getTime();
+    const deltaTime = currentTime - this.lastTime;
+    this.lastTime = currentTime;
+    if (emu) {
+      if (!playerIsPaused() && libgme._gme_track_ended(emu) !== 1) {
+        const currMs = this.state.currentSongPositionMs;
+        this.setState({
+          currentSongPositionMs: currMs + deltaTime * this.state.tempo,
+        });
+      }
+    }
+    requestAnimationFrame(this.displayLoop);
   }
 
   prevSubtune() {
@@ -227,8 +253,10 @@ class App extends Component {
       console.error("Could not load track");
     else {
       const metadata = parseMetadata(subtune);
+      playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
       this.setState({
         currentSongSubtune: subtune,
+        currentSongDurationMs: getDurationMs(metadata),
         currentSongMetadata: metadata,
         currentSongPositionMs: 0,
       });
@@ -240,20 +268,24 @@ class App extends Component {
     this.setState({paused: paused});
   }
 
-  handleSliderDrag(pos) {
+  handleSliderDrag(event) {
+    const pos = event.target ? event.target.value : event;
     // Update current time position label
     this.setState({
       draggedSongPositionMs: Math.floor(pos * this.state.currentSongDurationMs),
     });
   }
 
-  handleSliderChange(pos) {
+  handleSliderChange(event) {
+    const pos = event.target ? event.target.value : event;
     // Seek in song
     if (emu) {
-      libgme._gme_seek(emu, Math.floor(pos * this.state.currentSongDurationMs));
+      const seekMs = Math.floor(pos * this.state.currentSongDurationMs) / this.state.tempo;
+      playerSetFadeout(this.getFadeMs(this.state.currentSongMetadata, this.state.tempo));
+      libgme._gme_seek(emu, seekMs);
       this.setState({
         draggedSongPositionMs: -1,
-        currentSongPositionMs: libgme._gme_tell(emu),
+        currentSongPositionMs: pos * this.state.currentSongDurationMs,
       });
     }
   }
@@ -266,9 +298,13 @@ class App extends Component {
   }
 
   handleTempoChange(event) {
-    const tempo = parseFloat(event.target.value) || 1.0;
+    const tempo = (event.target ? event.target.value : event) || 1.0;
+    // const newDurationMs = this.state.currentSongMetadata.play_length / tempo + FADE_OUT_DURATION_MS;
     playerSetTempo(tempo);
-    this.setState({tempo: tempo});
+    playerSetFadeout(this.getFadeMs(this.state.currentSongMetadata, tempo));
+    this.setState({
+      tempo: tempo
+    });
   }
 
   getSongPos() {
@@ -276,13 +312,21 @@ class App extends Component {
   }
 
   getTimeLabel() {
-    const pad = n => n < 10 ? '0' + n : n;
     const val = this.state.draggedSongPositionMs >= 0 ?
       this.state.draggedSongPositionMs :
       this.state.currentSongPositionMs;
+    return this.getTime(val);
+  }
+
+  getTime(val) {
+    const pad = n => n < 10 ? '0' + n : n;
     const min = Math.floor(val / 60000);
-    const sec = Math.floor((val % 60000) / 1000);
+    const sec = Math.floor((val / 1000) % 60);
     return `${min}:${pad(sec)}`;
+  }
+
+  getFadeMs(metadata, tempo) {
+    return Math.floor(metadata.play_length / tempo);
   }
 
   render() {
