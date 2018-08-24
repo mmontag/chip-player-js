@@ -52,7 +52,7 @@ var flags = [
   // write. :D
   '-Wno-deprecated',
   '-Qunused-arguments',
-  '-DVGM_YM2612_NUKED=1',
+  '-DVGM_YM2612_GENS=1',
   '-Wno-logical-op-parentheses',
   '-Wno-c++11-extensions',
   '-Wno-inconsistent-missing-override',
