@@ -27,6 +27,18 @@ export default [
     ]
   },
   {
+    title: 'Local',
+    url_prefix: 'songs/',
+    files: [
+      "04_realblue.nsf",
+      "28_zjam300.nsf",
+      "35_giantsteps.nsf",
+      "Shovel_Knight_Music.nsf",
+      "ThunderForce4.gym",
+      "wt-01.spc",
+    ],
+  },
+  {
     title: 'Nintendo (NSF)',
     url_prefix: 'https://www.mattmontag.com/vgm/nsf/',
     files: [
