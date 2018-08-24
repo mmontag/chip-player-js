@@ -397,6 +397,12 @@ class App extends Component {
   }
 
   render() {
+    const onFileClick = (filename) => {
+      return (e) => {
+        e.preventDefault();
+        this.playSong(filename);
+      }
+    };
     return (
       <div className="App">
         <header className="App-header">
@@ -456,7 +462,7 @@ class App extends Component {
                     const href = group.url_prefix + file;
                     return (
                       <div key={file}>
-                        <a onClick={() => this.playSong(href)} href="javascript:void(0)">{unescape(file)}</a>
+                        <a onClick={onFileClick(href)} href={href}>{unescape(file)}</a>
                       </div>
                     )
                   })}
