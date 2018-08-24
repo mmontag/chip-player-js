@@ -11,8 +11,7 @@ let audioNode = null;
 let libgme = null;
 let audioCtx = null;
 let paused = false;
-const BUFFER_SIZE = 4096;
-const FADE_OUT_DURATION_MS = 8000; // Default fade out duration in game-music-emu
+const BUFFER_SIZE = 1024;
 const MAX_VOICES = 8;
 const INT16_MAX = Math.pow(2, 16) - 1;
 
@@ -25,33 +24,62 @@ function playerIsPaused() {
   return paused;
 }
 
-function playerPause() {
-  paused = true;
-}
-
 function playerResume() {
   paused = false;
 }
 
 function getDurationMs(metadata) {
   console.log(metadata);
-  if (metadata.loop_length || metadata.intro_length) {
-    return metadata.play_length + FADE_OUT_DURATION_MS;
-  } else {
-    return metadata.play_length;
-  }
+  return metadata.play_length;
 }
 
-function playMusicData(payload, subtune) {
-  subtune = subtune || 0;
+function playSubtune(subtune) {
+  if (emu) return libgme._gme_start_track(emu, subtune)
+}
+
+function playMusicData(payload, callback = null) {
+  let endSongCallback = callback;
+  const subtune = 0;
+  const trackEnded = libgme._gme_track_ended(emu) === 1;
+  const buffer = libgme.allocate(BUFFER_SIZE * 16, "i16", libgme.ALLOC_NORMAL);
+  const ref = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
+
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     audioNode = audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
-  }
-  audioNode.connect(audioCtx.destination);
+    audioNode.connect(audioCtx.destination);
+    audioNode.onaudioprocess = function (e) {
+      let i, channel;
+      const channels = [];
+      for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
+        channels[channel] = e.outputBuffer.getChannelData(channel);
+      }
 
-  const buffer = libgme.allocate(BUFFER_SIZE * 16, "i16", libgme.ALLOC_NORMAL);
-  const ref = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
+      if (paused || trackEnded) {
+        if (trackEnded && typeof endSongCallback === 'function') {
+          endSongCallback();
+          endSongCallback = null;
+        }
+        for (channel = 0; channel < channels.length; channel++) {
+          channels[channel].fill(0);
+        }
+        return;
+      }
+
+      libgme._gme_play(emu, BUFFER_SIZE * 2, buffer);
+
+      for (channel = 0; channel < channels.length; channel++) {
+        for (i = 0; i < BUFFER_SIZE; i++) {
+          channels[channel][i] = libgme.getValue(buffer +
+            // Interleaved channel format
+            i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
+            channel * 2,            // channel offset * bytes per sample
+            "i16") / INT16_MAX;     // convert int16 to float
+        }
+      }
+    };
+    window.savedReferences = [audioCtx, audioNode];
+  }
 
   if (libgme.ccall("gme_open_data", "number", ["array", "number", "number", "number"], [payload, payload.length, ref, audioCtx.sampleRate]) !== 0) {
     console.error("gme_open_data failed.");
@@ -59,30 +87,11 @@ function playMusicData(payload, subtune) {
   }
   emu = libgme.getValue(ref, "i32");
   // libgme._gme_ignore_silence(emu, 1); // causes crash in 2nd call to _gme_seek.
-  if (libgme._gme_start_track(emu, subtune) !== 0)
-    console.error("Could not load track");
+  if (libgme._gme_start_track(emu, subtune) !== 0) {
+    console.error("gme_start_track failed.");
+    return;
+  }
 
-  audioNode.onaudioprocess = function (e) {
-    const channels = [e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1)];
-    let i, channel;
-
-    if (paused || libgme._gme_track_ended(emu) === 1) {
-      channels.forEach(channel => channel.fill(0));
-      return;
-    }
-
-    libgme._gme_play(emu, BUFFER_SIZE * 2, buffer);
-    for (i = 0; i < BUFFER_SIZE; i++) {
-      for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-        channels[channel][i] = libgme.getValue(buffer +
-          // Interleaved channel format
-          i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
-          channel * 2,            // channel offset * bytes per sample
-          "i16") / INT16_MAX;     // convert int16 to float
-      }
-    }
-  };
-  window.savedReferences = [audioCtx, audioNode];
   playerResume();
 }
 
@@ -177,6 +186,7 @@ class App extends Component {
     });
 
     this.lastTime = (new Date()).getTime();
+    this.startedFadeOut = false;
     this.state = {
       loading: true,
       paused: false,
@@ -196,6 +206,17 @@ class App extends Component {
   }
 
   playSong(filename, subtune) {
+    if (typeof filename !== 'string') {
+      if (emu) {
+        libgme._gme_seek(emu, 0);
+        playerResume();
+        this.setState({
+          paused: false,
+          currentSongPositionMs: 0,
+        });
+      }
+      return;
+    }
     // filename = corsPrefix + songData[Math.floor(Math.random() * songData.length)];
     fetch(filename).then(response => response.arrayBuffer()).then(buffer => {
       let uint8Array;
@@ -218,8 +239,9 @@ class App extends Component {
       playerSetVoices(this.state.voices);
       const numSubtunes = libgme._gme_track_count(emu);
       const metadata = parseMetadata(subtune);
-      playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
+      // playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
 
+      this.startedFadeOut = false;
       this.setState({
         paused: playerIsPaused(),
         currentSongMetadata: metadata,
@@ -240,13 +262,29 @@ class App extends Component {
     this.lastTime = currentTime;
     if (emu) {
       if (!playerIsPaused() && libgme._gme_track_ended(emu) !== 1) {
-        const currMs = this.state.currentSongPositionMs;
-        this.setState({
-          currentSongPositionMs: currMs + deltaTime * this.state.tempo,
-        });
+        if (this.state.currentSongPositionMs >= this.state.currentSongDurationMs) {
+          if (!this.startedFadeOut) {
+            // Fade out right now
+            console.log('Starting fadeout at ', playerGetPosition());
+            this.startedFadeOut = true;
+            playerSetFadeout(playerGetPosition());
+          }
+        } else {
+          const currMs = this.state.currentSongPositionMs;
+          this.setState({
+            currentSongPositionMs: currMs + deltaTime * this.state.tempo,
+          });
+        }
       }
     }
     requestAnimationFrame(this.displayLoop);
+  }
+
+  songEnded() {
+    // update state with the song's exact duration
+    this.setState({
+      currentSongDurationMs: this.state.currentSongPositionMs
+    });
   }
 
   prevSubtune() {
@@ -268,7 +306,7 @@ class App extends Component {
       playerSetTempo(this.state.tempo);
       playerSetVoices(this.state.voices);
       const metadata = parseMetadata();
-      playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
+      // playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
       this.setState({
         currentSongSubtune: subtune,
         currentSongDurationMs: getDurationMs(metadata),
@@ -276,12 +314,12 @@ class App extends Component {
         currentSongPositionMs: 0,
       });
     } else {
-      if (libgme._gme_start_track(emu, subtune) !== 0) {
+      if (playSubtune(subtune) !== 0) {
         console.error("Could not load track");
         return;
       }
       const metadata = parseMetadata(subtune);
-      playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
+      // playerSetFadeout(this.getFadeMs(metadata, this.state.tempo));
       this.setState({
         currentSongSubtune: subtune,
         currentSongDurationMs: getDurationMs(metadata),
@@ -309,8 +347,9 @@ class App extends Component {
     // Seek in song
     if (emu) {
       const seekMs = Math.floor(pos * this.state.currentSongDurationMs) / this.state.tempo;
-      playerSetFadeout(this.getFadeMs(this.state.currentSongMetadata, this.state.tempo));
+      // playerSetFadeout(this.getFadeMs(this.state.currentSongMetadata, this.state.tempo));
       libgme._gme_seek(emu, seekMs);
+      this.startedFadeOut = false;
       this.setState({
         draggedSongPositionMs: -1,
         currentSongPositionMs: pos * this.state.currentSongDurationMs,
@@ -329,7 +368,7 @@ class App extends Component {
     const tempo = (event.target ? event.target.value : event) || 1.0;
     // const newDurationMs = this.state.currentSongMetadata.play_length / tempo + FADE_OUT_DURATION_MS;
     playerSetTempo(tempo);
-    playerSetFadeout(this.getFadeMs(this.state.currentSongMetadata, tempo));
+    // playerSetFadeout(this.getFadeMs(this.state.currentSongMetadata, tempo));
     this.setState({
       tempo: tempo
     });
@@ -380,13 +419,13 @@ class App extends Component {
               onChange={this.handleSliderChange}/>
             {this.state.currentSongMetadata &&
             <div className="Song-details">
-              Time: {this.getTimeLabel()}<br/>
+              Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
               Speed: <input
               type="range" value={this.state.tempo}
               min="0.1" max="2.0" step="0.1"
               onInput={this.handleTempoChange}
               onChange={this.handleTempoChange}/>
-              {this.state.tempo.toFixed(1)}<br/>
+              {this.state.tempo}<br/>
               {this.state.currentSongNumSubtunes > 1 &&
               <span>
                   Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
