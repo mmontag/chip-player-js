@@ -1,0 +1,102 @@
+
+Amusic supports two kinds of modules. The packed module and the normal
+module format. The normal format is easier to code but modules are bigger
+in size (often 10 times bigger!!!). Its up to you!!!
+
+
+
+Adlib-MOD-Format: (c)23.8.1995 - 20:10:30 by Conqueror :)
+-----------------
+ hex  -  dec  -  function
+
+ 000h      0     name of song + nullbyte
+ 018h     24     name of autor + nullbyte
+ 030h     48     [...]  26 instruments (26*34 byte)
+ 3A4h    932     songlen
+ 3A5h    933     number of patterns-1
+ 3A6h    934     patterntable (128 Byte)
+ 426h   1062     id: "<oïQUîRoR"
+ 42Fh   1071     version 10h=normal module
+			 11h=packed module
+
+if the module isn't packed:
+
+ 430h   1072     all patterns (count*9*3*64 Bytes)
+
+ END!!!
+
+
+if the module is packed:
+
+
+ 430h   1072     table with Trax (ptncount*9*2)
+
+- A pattern is divided into 9 tracks. Here comes a table that contains a
+  number (offset) for each track saved in the file.
+  This is because many tracks in the song can be identical copies of only
+  one track saved in the file.
+
+ xxxx   xxxx     number of trax  (WORD)
+ xxxx+2 xxxx+2   [...] traxdatas
+
+ END!!!
+
+
+
+A track is written in the following manner: First comes a word that contains
+the position of the track in song. (pattern*9+tracknr)
+Then follows the events. One event takes 3 bytes. But empty events takes
+only 1 byte ! You can distinguish real events from empty events
+with the most significant bit of the first saved byte of the event.
+If the bit is zero than you have a real event. But if the bit isn't zero
+than you have to create some empty events in your current track. To get
+the number of empty events just read the lower 7 bits of the byte.
+
+Got it??? Hope so!!!
+
+
+Here comes the format of an event:
+
+
+ BYTES: x,y,z:
+
+ xxxxxxxxyyyyyyyyzzzzzzzz
+ 000011122222333354444444
+
+ 0 - pitch of the event (0-12)
+ 1 - octave of the event (0-7)
+ 2 - instrumentnumber of the event (0-26)
+ 3 - eventcommand (0-9)
+ 4 - parameter of the command (0-99)
+
+ 5 - if this bit is turned on and the file is a packed module than 4 stands
+     for the number of empty tracks. But you already know that!!!
+
+
+
+Note: Read the event from the file in this direction:
+
+	z y x     !!!!
+
+
+
+
+
+Here comes the instrument format of the modules:
+
+(decimal offsets)
+
+0-22 Name
+  23 Mod-Charakt.
+  24 Mod-Amplit.
+  25 Mod-AD
+  26 Mod-SR
+  27 Mod-Waveform
+  28 Carr-Charakt.
+  29 Carr-Amplit.
+  30 Carr-AD
+  31 Carr-SR
+  32 Carr-Waveform
+  33 Conntect
+
+

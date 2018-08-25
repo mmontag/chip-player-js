@@ -1,0 +1,48 @@
+General guidelines for libxmp 5:
+
+We want to make the API usable in more languages/platforms, so don't
+expose pointers, and don't assume we have stdio. Just load from a buffer
+in memory and render frames. Don't be C-centric or POSIX-centric.
+
+Focus on the main player business. Remove decompression from the library
+so that front-ends can handle archives.
+
+
+
+
+Specific things to do:
+
+- envelope pool like digitrakker
+  * allows envelope setting effect in digitrakker
+  * saves memory
+
+- add support for extra fine volume slides
+  * used in digitrakker
+
+- add support to sample rate to decouple period/pitch
+  * needed to adjust MED IFFOCT octave offset
+  * needed to properly map IT samples
+  * rate affects period flag per sample
+
+- add missing fields to instrument/sample
+  * random pan variation
+  * sample sustain loop
+  * c5spd that affects transposition
+  * c5spd that doesn't affect transposition (MDL, MED multisamples)
+
+- true bidirectional sample loop processing
+  * saves memory used to unroll loops
+  * saves memory used to unroll sustain loops
+
+- remove direct access to strucutre pointers
+
+- lower MIN_BPM to 10
+
+- fix CFLAGS mess
+
+- alloc buffer externally?
+
+- handle stereo samples?
+
+- flags and mixer info in frame_info
+  * to inform mixer type in use

@@ -1,0 +1,67 @@
+#ifdef __SUNPRO_C
+#pragma error_messages (off,E_EMPTY_TRANSLATION_UNIT)
+#endif
+
+#ifdef AMIGA
+#ifdef __amigaos4__
+#define __USE_INLINE__
+#endif
+#include <proto/exec.h>
+#include <proto/xfdmaster.h>
+#include <exec/types.h>
+
+#if defined(__amigaos4__) || defined(__MORPHOS__)
+struct Library *xfdMasterBase;
+#else
+struct xfdMasterBase *xfdMasterBase;
+#endif
+
+#ifdef __amigaos4__
+struct xfdMasterIFace *IxfdMaster;
+/*struct ExecIFace *IExec;*/
+#endif
+
+#ifdef __GNUC__
+void INIT_8_open_xfd(void) __attribute__ ((constructor));
+void EXIT_8_close_xfd(void) __attribute__ ((destructor));
+#endif
+#ifdef __VBCC__
+#define INIT_8_open_xfd _INIT_8_open_xfd
+#define EXIT_8_close_xfd _EXIT_8_close_xfd
+#endif
+
+void EXIT_8_close_xfd(void) {
+#ifdef __amigaos4__
+	if (IxfdMaster) {
+		DropInterface((struct Interface *) IxfdMaster);
+		IxfdMaster = NULL;
+	}
+#endif
+	if (xfdMasterBase) {
+		CloseLibrary((struct Library *) xfdMasterBase);
+		xfdMasterBase = NULL;
+	}
+}
+
+void INIT_8_open_xfd(void) {
+#ifdef __amigaos4__
+	/*IExec = (struct ExecIFace *)(*(struct ExecBase **)4)->MainInterface;*/
+#endif
+
+#if defined(__amigaos4__) || defined(__MORPHOS__)
+	xfdMasterBase = OpenLibrary("xfdmaster.library",38);
+#else
+	xfdMasterBase = (struct xfdMasterBase *) OpenLibrary("xfdmaster.library",38);
+#endif
+	if (!xfdMasterBase) return;
+
+#ifdef __amigaos4__
+	IxfdMaster = (struct xfdMasterIFace *) GetInterface(xfdMasterBase,"main",1,NULL);
+	if (!IxfdMaster) {
+		CloseLibrary(xfdMasterBase);
+		xfdMasterBase = NULL;
+	}
+#endif
+}
+
+#endif /* AMIGA */
