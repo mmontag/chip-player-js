@@ -558,7 +558,7 @@ public:
         //! Vibrato depth value
                 vibdepth;
         //! Vibrato delay time
-        int64_t vibdelay;
+        int64_t vibdelay_us;
         //! Last LSB part of RPN value received
         uint8_t lastlrpn,
         //! Last MSB poart of RPN value received
@@ -801,7 +801,7 @@ public:
             noteAfterTouchInUse = false;
             vibspeed = 2 * 3.141592653 * 5.0;
             vibdepth = 0.5 / 127;
-            vibdelay = 0;
+            vibdelay_us = 0;
             panning = 64;
             portamento = 0;
             portamentoEnable = false;
@@ -866,12 +866,12 @@ public:
             //! Has fixed sustain, don't iterate "on" timeout
             bool    fixed_sustain;
             //! Timeout until note will be allowed to be killed by channel manager while it is on
-            int64_t kon_time_until_neglible;
-            int64_t vibdelay;
+            int64_t kon_time_until_neglible_us;
+            int64_t vibdelay_us;
         };
 
         //! Time left until sounding will be muted after key off
-        int64_t koff_time_until_neglible;
+        int64_t koff_time_until_neglible_us;
 
         enum { users_max = 128 };
         LocationData *users_first, *users_free_cells;
@@ -888,12 +888,12 @@ public:
         void users_assign(const LocationData *users, size_t count);
 
         // For channel allocation:
-        AdlChannel(): koff_time_until_neglible(0)
+        AdlChannel(): koff_time_until_neglible_us(0)
         {
             users_clear();
         }
 
-        AdlChannel(const AdlChannel &oth): koff_time_until_neglible(oth.koff_time_until_neglible)
+        AdlChannel(const AdlChannel &oth): koff_time_until_neglible_us(oth.koff_time_until_neglible_us)
         {
             if(oth.users_first)
             {
@@ -906,16 +906,16 @@ public:
 
         AdlChannel &operator=(const AdlChannel &oth)
         {
-            koff_time_until_neglible = oth.koff_time_until_neglible;
+            koff_time_until_neglible_us = oth.koff_time_until_neglible_us;
             users_assign(oth.users_first, oth.users_size);
             return *this;
         }
 
         /**
-         * @brief Increases age of active note in milliseconds time
-         * @param ms Amount time in milliseconds
+         * @brief Increases age of active note in microseconds time
+         * @param us Amount time in microseconds
          */
-        void addAge(int64_t ms);
+        void addAge(int64_t us);
     };
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
