@@ -200,6 +200,7 @@ class App extends Component {
       draggedSongPositionMs: -1,
       tempo: 1,
       voices: Array(MAX_VOICES).fill(true),
+      voiceNames: Array(MAX_VOICES).fill(''),
     };
 
     this.displayLoop();
@@ -442,9 +443,14 @@ class App extends Component {
               }
               Voices:
               {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
-                return <input key={i} type="checkbox" onChange={() => {
-                  this.handleVoiceToggle(i)
-                }} checked={this.state.voices[i]}/>
+                return (
+                  <label key={i}>
+                    <input type="checkbox" onChange={() => {
+                      this.handleVoiceToggle(i)
+                    }} checked={this.state.voices[i]}/>
+                    {this.state.voiceNames[i]}
+                  </label>
+                )
               })}<br/>
               System: {this.state.currentSongMetadata.system || '--'}<br/>
               Game: {this.state.currentSongMetadata.game || '--'}<br/>

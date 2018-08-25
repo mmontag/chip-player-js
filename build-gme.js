@@ -32,6 +32,7 @@ var exported_functions = [
   '_gme_seek',
   '_gme_tell',
   '_gme_set_fade',
+  '_gme_voice_name',
 ];
 
 var flags = [
