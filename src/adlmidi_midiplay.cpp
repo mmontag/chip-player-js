@@ -578,6 +578,15 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     }
 
     noteUpdate(channel, ir.first, Upd_All | Upd_Patch);
+
+    for(unsigned ccount = 0; ccount < MIDIchannel::NoteInfo::MaxNumPhysChans; ++ccount)
+    {
+        int32_t c = adlchannel[ccount];
+        if(c < 0)
+            continue;
+        m_chipChannels[c].addAge(0);
+    }
+
     return true;
 }
 
