@@ -468,8 +468,10 @@ void OPL3::updateChannelCategories()
         for(size_t a = 0, n = m_numChips; a < n; ++a)
         {
             for(size_t b = 0; b < 23; ++b)
+            {
                 m_channelCategory[a * 23 + b] =
                     (b >= 18) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
+            }
         }
     }
     else
@@ -477,9 +479,11 @@ void OPL3::updateChannelCategories()
         for(size_t a = 0, n = m_numChips; a < n; ++a)
         {
             for(size_t b = 0; b < 23; ++b)
+            {
                 m_channelCategory[a * 23 + b] =
                     (b >= 18) ? static_cast<char>(ChanCat_Rhythm_Bass + (b - 18)) :
                     (b >= 6 && b < 9) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
+            }
         }
     }
 
