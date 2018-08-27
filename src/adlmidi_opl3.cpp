@@ -452,31 +452,39 @@ void OPL3::silenceAll() // Silence all OPL channels.
 
 void OPL3::updateChannelCategories()
 {
-    uint32_t fours = m_numFourOps;
+    const uint32_t fours = m_numFourOps;
 
-    for(size_t chip = 0; chip < m_numChips; ++chip)
+    for(uint32_t chip = 0, fours_left = fours; chip < m_numChips; ++chip)
     {
         m_regBD[chip] = (m_deepTremoloMode * 0x80 + m_deepVibratoMode * 0x40 + m_rhythmMode * 0x20);
         writeRegI(chip, 0x0BD, m_regBD[chip]);
-        uint32_t fours_this_chip = std::min(fours, static_cast<uint32_t>(6u));
+        uint32_t fours_this_chip = std::min(fours_left, static_cast<uint32_t>(6u));
         writeRegI(chip, 0x104, (1 << fours_this_chip) - 1);
-        fours -= fours_this_chip;
+        fours_left -= fours_this_chip;
     }
 
-    // Mark all channels that are reserved for four-operator function
-    if(m_rhythmMode == 1)
+    if(!m_rhythmMode)
     {
-        for(size_t a = 0; a < m_numChips; ++a)
+        for(size_t a = 0, n = m_numChips; a < n; ++a)
         {
-            for(size_t b = 0; b < 5; ++b)
-                m_channelCategory[a * 23 + 18 + b] = static_cast<char>(b + 3);
-            for(size_t b = 0; b < 3; ++b)
-                m_channelCategory[a * 23 + 6  + b] = ChanCat_Rhythm_Slave;
+            for(size_t b = 0; b < 23; ++b)
+                m_channelCategory[a * 23 + b] =
+                    (b >= 18) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
+        }
+    }
+    else
+    {
+        for(size_t a = 0, n = m_numChips; a < n; ++a)
+        {
+            for(size_t b = 0; b < 23; ++b)
+                m_channelCategory[a * 23 + b] =
+                    (b >= 18) ? static_cast<char>(ChanCat_Rhythm_Bass + (b - 18)) :
+                    (b >= 6 && b < 9) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
         }
     }
 
-    size_t nextfour = 0;
-    for(size_t a = 0; a < m_numFourOps; ++a)
+    uint32_t nextfour = 0;
+    for(uint32_t a = 0; a < fours; ++a)
     {
         m_channelCategory[nextfour] = ChanCat_4op_Master;
         m_channelCategory[nextfour + 3] = ChanCat_4op_Slave;
