@@ -27,7 +27,7 @@ export default [
     ]
   },
   {
-    title: 'Local',
+    title: 'Local GME',
     url_prefix: 'songs/',
     files: [
       "04_realblue.nsf",
@@ -36,6 +36,15 @@ export default [
       "Shovel_Knight_Music.nsf",
       "ThunderForce4.gym",
       "wt-01.spc",
+    ],
+  },
+  {
+    title: 'Local XMP',
+    url_prefix: 'songs/',
+    files: [
+      "dd-smkr.xm",
+      "tr3cheato.it",
+      "ut-firebr.xm",
     ],
   },
   {
