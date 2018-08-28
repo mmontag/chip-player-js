@@ -30,19 +30,6 @@ export default class GMEPlayer extends Player {
     this.audioNode = null;
   }
 
-  togglePause() {
-    this.paused = !this.paused;
-    return this.paused;
-  }
-
-  isPaused() {
-    return this.paused;
-  }
-
-  resume() {
-    this.paused = false;
-  }
-
   restart() {
     libgme._gme_seek(emu, 0);
     this.resume();
@@ -93,10 +80,15 @@ export default class GMEPlayer extends Player {
           }
         }
       };
-      window.savedReferences = [this.audioCtx, this.audioNode];
+      window.savedReferenceGME = this.audioNode;
     }
 
-    if (libgme.ccall("gme_open_data", "number", ["array", "number", "number", "number"], [data, data.length, emuPtr, this.audioCtx.sampleRate]) !== 0) {
+    if (libgme.ccall(
+      "gme_open_data",
+      "number",
+      ["array", "number", "number", "number"],
+      [data, data.length, emuPtr, this.audioCtx.sampleRate]
+    ) !== 0) {
       console.error("gme_open_data failed.");
       return;
     }
@@ -196,9 +188,5 @@ export default class GMEPlayer extends Player {
 
   seekMs(seekMs) {
     if (emu) return libgme._gme_seek(emu, seekMs);
-  }
-
-  isReady() {
-    return this.isReady;
   }
 }
