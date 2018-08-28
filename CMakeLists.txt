@@ -226,6 +226,7 @@ if(WITH_MIDI_SEQUENCER)
     list(APPEND libADLMIDI_SOURCES
         ${libADLMIDI_SOURCE_DIR}/src/adlmidi_sequencer.cpp
     )
+    add_definitions(-DENABLE_END_SILENCE_SKIPPING)
 endif()
 
 if(NOT WITH_MUS_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
