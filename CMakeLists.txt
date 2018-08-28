@@ -43,9 +43,9 @@ list(APPEND SOURCES
 )
 
 # Dependencies:
-pkg_check_modules(LIBVORBIS vorbis>=1.3.5)
-pkg_check_modules(LIBVORBISFILE vorbisfile>=1.3.5)
-if (NOT LIBVORBIS_FOUND OR NOT LIBVORBISFILE_FOUND)
+# pkg_check_modules(LIBVORBIS vorbis>=1.3.5)
+# pkg_check_modules(LIBVORBISFILE vorbisfile>=1.3.5)
+# if (NOT LIBVORBIS_FOUND OR NOT LIBVORBISFILE_FOUND)
     list(APPEND SOURCES
         libvorbis-1.3.5/lib/vorbisenc.c
         libvorbis-1.3.5/lib/info.c
@@ -75,23 +75,24 @@ if (NOT LIBVORBIS_FOUND OR NOT LIBVORBISFILE_FOUND)
         ${CMAKE_SOURCE_DIR}/libvorbis-1.3.5/lib
     )
     message(WARNING "Using libvorbis shipped sources.")
-else()
-    message(STATUS "Using pkg-config provided libvorbis")
-    set(ADDITIONAL_LIBS "${LIBVORBIS_LDFLAGS} ${LIBVORBISFILE_LDFLAGS}")
-endif()
+# else()
+#     message(STATUS "Using pkg-config provided libvorbis")
+#     set(ADDITIONAL_LIBS "${LIBVORBIS_LDFLAGS} ${LIBVORBISFILE_LDFLAGS}")
+# endif()
 
-pkg_check_modules(LIBOGG ogg>=1.3.2)
-if (NOT LIBOGG_FOUND)
+# pkg_check_modules(LIBOGG ogg>=1.3.2)
+# if (NOT LIBOGG_FOUND)
     list(APPEND SOURCES
         libogg-1.3.2/src/bitwise.c
         libogg-1.3.2/src/framing.c
     )
     set(LIBOGG_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libogg-1.3.2/include)
+
     message(WARNING "Using libogg shipped sources.")
-else()
-    message(STATUS "Using pkg-config provided libogg")
-    string(CONCAT ADDITIONAL_LIBS "${ADDITIONAL_LIBS} ${LIBOGG_LDFLAGS}")
-endif()
+# else()
+#     message(STATUS "Using pkg-config provided libogg")
+#     string(CONCAT ADDITIONAL_LIBS "${ADDITIONAL_LIBS} ${LIBOGG_LDFLAGS}")
+# endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/include)
