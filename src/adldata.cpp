@@ -9450,7 +9450,7 @@ const char* const banknames[76] =
     "DMX (Raptor)",
     "OP3 (Modded GMOPL by Wohlstand)",
     "SB (Jamie O'Connell's bank)",
-    "TMB (Default bank of Apgee Sound System)",
+    "TMB (Default bank of Apogee Sound System)",
     "WOPL (4op bank by James Alan Nguyen and Wohlstand)",
     "TMB (Blood)",
     "TMB (Lee)",
@@ -10883,7 +10883,7 @@ const AdlBankSetup adlbanksetup[75] =
     {2, 0, 0, 0, 0}, //Bank 64, DMX (Raptor)
     {3, 0, 0, 0, 0}, //Bank 65, OP3 (Modded GMOPL by Wohlstand)
     {3, 0, 0, 0, 0}, //Bank 66, SB (Jamie O'Connell's bank)
-    {3, 0, 0, 0, 0}, //Bank 67, TMB (Default bank of Apgee Sound System)
+    {3, 0, 0, 0, 0}, //Bank 67, TMB (Default bank of Apogee Sound System)
     {0, 1, 1, 0, 0}, //Bank 68, WOPL (4op bank by James Alan Nguyen and Wohlstand)
     {3, 0, 0, 0, 0}, //Bank 69, TMB (Blood)
     {3, 0, 0, 0, 0}, //Bank 70, TMB (Lee)
