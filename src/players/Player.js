@@ -1,6 +1,7 @@
 export default class Player {
   constructor() {
     this.paused = false;
+    this.fileExtensions = [];
   }
 
   togglePause() {
@@ -18,5 +19,13 @@ export default class Player {
 
   isReady() {
     return this.isReady;
+  }
+
+  canPlay(fileExtension) {
+    return this.fileExtensions.indexOf(fileExtension.toLowerCase()) !== -1;
+  }
+
+  stop() {
+    throw Error('Player.stop() must be implemented.');
   }
 }

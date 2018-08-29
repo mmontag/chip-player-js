@@ -1,10 +1,17 @@
-import Player from "./Player";
-const LibGME = require('../libgme');
+import Player from "./Player.js";
+const LibGME = require('../libgme.js');
 
 let emu = null;
 let libgme = null;
 const INT16_MAX = Math.pow(2, 16) - 1;
 const BUFFER_SIZE = 1024;
+const fileExtensions = [
+  'nsf',
+  'nsfe',
+  'spc',
+  'gym',
+  'vgm',
+];
 
 export default class GMEPlayer extends Player {
   constructor(audioContext, initCallback) {
@@ -28,6 +35,7 @@ export default class GMEPlayer extends Player {
     this.paused = false;
     this.metadata = {};
     this.audioNode = null;
+    this.fileExtensions = fileExtensions;
   }
 
   restart() {
@@ -80,7 +88,6 @@ export default class GMEPlayer extends Player {
           }
         }
       };
-      window.savedReferenceGME = this.audioNode;
     }
 
     if (libgme.ccall(
@@ -188,5 +195,12 @@ export default class GMEPlayer extends Player {
 
   seekMs(seekMs) {
     if (emu) return libgme._gme_seek(emu, seekMs);
+  }
+
+  stop() {
+    this.paused = true;
+    this.audioNode.disconnect();
+    this.audioNode = null;
+    libgme._gme_delete();
   }
 }

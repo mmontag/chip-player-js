@@ -2,7 +2,12 @@ import Player from "./Player.js";
 const LibXMP = require('../libxmp.js');
 const INT16_MAX = Math.pow(2, 16) - 1;
 const BUFFER_SIZE = 1024;
-const useBPM = true;
+const fileExtensions = [
+  'mod',
+  'xm',
+  'it',
+  's3m',
+];
 
 export default class XMPPlayer extends Player {
   constructor(audioContext, initCallback) {
@@ -30,6 +35,7 @@ export default class XMPPlayer extends Player {
     this.audioNode = null;
     this.initialBPM = 125;
     this.tempoScale = 1;
+    this.fileExtensions = fileExtensions;
   }
 
   _parseMetadata() {
@@ -223,5 +229,12 @@ export default class XMPPlayer extends Player {
 
   seekMs(seekMs) {
     // if (emu) return libxmp._gme_seek(emu, seekMs);
+  }
+
+  stop() {
+    const xmp = this.libxmp;
+    const ctx = this.xmpCtx;
+    this.paused = true;
+    xmp._xmp_stop_module(ctx);
   }
 }

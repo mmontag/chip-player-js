@@ -37,7 +37,7 @@ var exported_functions = [
   // '_xmp_next_position',
   // '_xmp_prev_position',
   // '_xmp_set_position',
-  // '_xmp_stop_module',
+  '_xmp_stop_module',
   // '_xmp_restart_module',
   // '_xmp_seek_time',
   '_xmp_channel_mute',
