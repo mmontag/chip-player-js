@@ -18,6 +18,11 @@ export default [
       "Shovel_Knight_Music.nsf",
       "ThunderForce4.gym",
       "wt-01.spc",
+      "monx-AllYouGot.nsf",
+      "monx-herveroy.nsf",
+      "monx-HuGH2.nsf",
+      "monx-OlympicHeroes.nsf",
+      "monx-trash.nsf",
     ],
   },
   {
