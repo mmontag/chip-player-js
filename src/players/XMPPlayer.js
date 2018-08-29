@@ -1,41 +1,87 @@
 import Player from "./Player.js";
+
 const LibXMP = require('../libxmp.js');
 const INT16_MAX = Math.pow(2, 16) - 1;
-const BUFFER_SIZE = 1024;
+const BUFFER_SIZE = 2048;
+const XMP_PLAYER_STATE = 8;
+const XMP_STATE_PLAYING = 2;
 const fileExtensions = [
-  'mod',
-  'xm',
-  'it',
-  's3m',
+  // libxmp-lite:
+  'it',  //  Impulse Tracker  1.00, 2.00, 2.14, 2.15
+  'mod', //  Sound/Noise/Protracker M.K., M!K!, M&K!, N.T., CD81
+  's3m', //  Scream Tracker 3 3.00, 3.01+
+  'xm',  //  Fast Tracker II  1.02, 1.03, 1.04
+  // libxmp:
+  '669', //  Composer 669/UNIS 669   if, JN
+  'abk', //  AMOS Sound Bank -
+  'amd', //  Amusic Adlib Tracker -
+  'amf', //  Asylum Music Format 1.0, DSMI (DMP)  0.9, 1.0, 1.1, 1.2, 1.3, 1.4
+  'dbm', //  DigiBooster Pro  DBM0
+  'digi',//  DIGI Booster  1.4, 1.5, 1.6, 1.7
+  'dtm', //  Digital Tracker  1.9
+  'emod',//  Quadra Composer  0001
+  'far', //  Farandole Composer 1.0
+  'flx',
+  'fnk', //  Funktracker  R0, R1, R2
+  'gdm', //  Generic Digital Music 1.0
+  'hsc', //  NEO soft/HSC-Tracker 1.5
+  'imf', //  Imago Orpheus  1.0
+  'j2b', //  Galaxy Music System 5.0 -
+  'liq', //  Liquid Tracker  0.0, 1.0
+  'm15', //  Soundtracker  2.2, UST
+  'mdl', //  Digitrakker  0.0, 1.0, 1.1
+  'med', //  MED 3.00/OctaMED MMD0, MMD1, MMD2, MMD3
+  'mfp', //
+  'mgt', //  Megatracker -
+  'mtm', //  Multitracker  1.0
+  'okt', //  Oktalyzer -
+  'psm', //  Epic Megagames MASI epic, sinaria Protracker Studio 0.01, 1.00
+  'ptm', //  Poly Tracker  2.03
+  'rtm', //  Real Tracker  1.00
+  'sfx', //  SoundFX   1.3, 2.0?
+  'smp', //  Magnetic Fields Packer -
+  'stim',//  Slamtilt -
+  'stm', //  Scream Tracker 2 !Scream!, BMOD2STM
+  'stx', //  ST Music Interface Kit 1.0, 1.1
+  'ult', //  Ultra Tracker  V0001, V0002, V0003, V0004
+  'umx', //  Epic Games Unreal/UT
+  'wow',
 ];
 
 export default class XMPPlayer extends Player {
   constructor(audioContext, initCallback) {
     super();
 
-    this.libxmp = new LibXMP({
+    const emscInitOpts = {
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
       locateFile: (path, prefix) => {
         if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
         return prefix + path;
       },
       onRuntimeInitialized: () => {
+        const xmp = this.libxmp;
         this.isReady = true;
-        this.xmpCtx = this.libxmp._xmp_create_context();
+        this.xmpCtx = xmp._xmp_create_context();
+        this.xmp_frame_infoPtr = xmp._malloc(2048);
         if (typeof initCallback === 'function') {
           initCallback();
         }
       },
-    });
+    };
+
+    this.libxmp = new LibXMP(emscInitOpts);
     this.isReady = false;
     this.audioCtx = audioContext;
     this.xmpCtx = null;
+    this.xmp_frame_infoPtr = null;
     this.paused = false;
     this.metadata = {};
     this.audioNode = null;
     this.initialBPM = 125;
     this.tempoScale = 1;
     this.fileExtensions = fileExtensions;
+    this._positionMs = 0;
+    this._durationMs = 1000;
   }
 
   _parseMetadata() {
@@ -70,6 +116,9 @@ export default class XMPPlayer extends Player {
   }
 
   restart() {
+    const xmp = this.libxmp;
+    const ctx = this.xmpCtx;
+    xmp._xmp_restart_module(ctx);
     this.resume();
   }
 
@@ -78,13 +127,13 @@ export default class XMPPlayer extends Player {
   }
 
   loadData(data, callback = null) {
-    let endSongCallback = callback;
-    let err;
     const xmp = this.libxmp;
     const ctx = this.xmpCtx;
+    const infoPtr = this.xmp_frame_infoPtr;
     const trackEnded = false;
     const buffer = xmp.allocate(BUFFER_SIZE * 16, "i16", xmp.ALLOC_NORMAL);
-    const xmp_frame_infoPtr = xmp._malloc(2048);
+    let endSongCallback = callback;
+    let err;
 
     err = xmp.ccall(
       'xmp_load_module_from_memory', 'number',
@@ -124,8 +173,10 @@ export default class XMPPlayer extends Player {
 
         // Get current module BPM
         // see http://xmp.sourceforge.net/libxmp.html#id25
-        xmp._xmp_get_frame_info(ctx, xmp_frame_infoPtr);
-        const bpm = xmp.getValue(xmp_frame_infoPtr + 6 * 4, 'i32');
+        xmp._xmp_get_frame_info(ctx, infoPtr);
+        const bpm = xmp.getValue(infoPtr + 6 * 4, 'i32');
+        this._positionMs = xmp.getValue(infoPtr + 7 * 4, 'i32');
+        this._durationMs = xmp.getValue(infoPtr + 8 * 4, 'i32');
         this._maybeInjectTempo(bpm);
 
         for (channel = 0; channel < channels.length; channel++) {
@@ -153,13 +204,6 @@ export default class XMPPlayer extends Player {
   }
 
   setVoices(voices) {
-    // let mask = 0;
-    // voices.forEach((isEnabled, i) => {
-    //   if (!isEnabled) {
-    //     mask += 1 << i;
-    //   }
-    // });
-    // if (emu) libxmp._gme_mute_voices(emu, mask);
     const xmp = this.libxmp;
     const ctx = this.xmpCtx;
 
@@ -174,7 +218,6 @@ export default class XMPPlayer extends Player {
       return;
     }
     this.tempoScale = val;
-    this._maybeInjectTempo(0);
   }
 
   _maybeInjectTempo(measuredBPM) {
@@ -196,11 +239,8 @@ export default class XMPPlayer extends Player {
   }
 
   setFadeout(startMs) {
-    // if (emu) libxmp._gme_set_fade(emu, startMs);
-  }
-
-  getPosition() {
-    // if (emu) return libxmp._gme_tell(emu);
+    console.info('Fade out is not supported with libxmp yet.');
+    this.stop();
   }
 
   getVoiceName(index) {
@@ -215,8 +255,12 @@ export default class XMPPlayer extends Player {
     // if (emu) return libxmp._gme_track_count(emu);
   }
 
+  getPositionMs() {
+    return this._positionMs;
+  }
+
   getDurationMs() {
-    // return this.metadata.play_length;
+    return this._durationMs;
   }
 
   getMetadata() {
@@ -224,11 +268,17 @@ export default class XMPPlayer extends Player {
   }
 
   isPlaying() {
-    // return this.isReady && !this.isPaused() && libxmp._gme_track_ended(emu) !== 1;
+    const xmp = this.libxmp;
+    const ctx = this.xmpCtx;
+    const playingState = xmp._xmp_get_player(ctx, XMP_PLAYER_STATE);
+
+    return this.isReady && !this.isPaused() && playingState === XMP_STATE_PLAYING;
   }
 
   seekMs(seekMs) {
-    // if (emu) return libxmp._gme_seek(emu, seekMs);
+    const xmp = this.libxmp;
+    const ctx = this.xmpCtx;
+    xmp._xmp_seek_time(ctx, seekMs);
   }
 
   stop() {
