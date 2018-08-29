@@ -17,7 +17,7 @@ export default class GMEPlayer extends Player {
   constructor(audioContext, initCallback) {
     super();
 
-    libgme = new LibGME({
+    const emscInitOpts = {
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
       locateFile: (path, prefix) => {
         if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
@@ -29,7 +29,9 @@ export default class GMEPlayer extends Player {
           initCallback();
         }
       },
-    });
+    };
+
+    libgme = new LibGME(emscInitOpts);
     this.isReady = false;
     this.audioCtx = audioContext;
     this.paused = false;
@@ -44,7 +46,7 @@ export default class GMEPlayer extends Player {
   }
 
   playSubtune(subtune) {
-    this.metadata = this.parseMetadata(subtune);
+    this.metadata = this._parseMetadata(subtune);
     return libgme._gme_start_track(emu, subtune);
   }
 
@@ -126,11 +128,7 @@ export default class GMEPlayer extends Player {
     if (emu) libgme._gme_set_fade(emu, startMs);
   }
 
-  getPosition() {
-    if (emu) return libgme._gme_tell(emu);
-  }
-
-  parseMetadata(subtune) {
+  _parseMetadata(subtune) {
     const metadataPtr = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
     if (libgme._gme_track_info(emu, metadataPtr, subtune) !== 0)
       console.error("could not load metadata");
@@ -179,6 +177,10 @@ export default class GMEPlayer extends Player {
 
   getNumSubtunes() {
     if (emu) return libgme._gme_track_count(emu);
+  }
+
+  getPositionMs() {
+    if (emu) return libgme._gme_tell(emu);
   }
 
   getDurationMs() {

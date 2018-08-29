@@ -13,6 +13,7 @@ class App extends Component {
     super(props);
 
     this.togglePause = this.togglePause.bind(this);
+    this.play = this.play.bind(this);
     this.playSong = this.playSong.bind(this);
     this.handleSliderDrag = this.handleSliderDrag.bind(this);
     this.handleSliderChange = this.handleSliderChange.bind(this);
@@ -58,17 +59,17 @@ class App extends Component {
     this.displayLoop();
   }
 
+  play() {
+    if (this.player !== null) {
+      this.player.restart();
+      this.setState({
+        paused: false,
+        currentSongPositionMs: 0,
+      });
+    }
+  }
+
   playSong(filename) {
-    // if (typeof filename !== 'string') {
-    //   if (emu) {
-    //     this.player.restart();
-    //     this.setState({
-    //       paused: false,
-    //       currentSongPositionMs: 0,
-    //     });
-    //   }
-    //   return;
-    // }
     if (this.player !== null) {
       this.player.stop();
     }
@@ -153,7 +154,7 @@ class App extends Component {
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
     if (this.player) {
-      const playerPositionMs = this.player.getPosition();
+      const playerPositionMs = this.player.getPositionMs();
       if (this.player.isPlaying() && playerPositionMs) {
         if (this.state.currentSongPositionMs >= this.state.currentSongDurationMs) {
           if (!this.startedFadeOut) {
@@ -166,6 +167,7 @@ class App extends Component {
           const currMs = this.state.currentSongPositionMs;
           this.setState({
             currentSongPositionMs: currMs + deltaTime * this.state.tempo,
+            currentSongDurationMs: this.player.getDurationMs(),
           });
         }
       }
@@ -200,7 +202,7 @@ class App extends Component {
     const pos = event.target ? event.target.value : event;
     // Update current time position label
     this.setState({
-      draggedSongPositionMs: Math.floor(pos * this.state.currentSongDurationMs),
+      draggedSongPositionMs: pos * this.state.currentSongDurationMs,
     });
   }
 
@@ -213,8 +215,13 @@ class App extends Component {
     this.startedFadeOut = false;
     this.setState({
       draggedSongPositionMs: -1,
-      currentSongPositionMs: pos * this.state.currentSongDurationMs,
+      currentSongPositionMs: pos * this.state.currentSongDurationMs, // Smooth
     });
+    setTimeout(() => {
+      this.setState({
+        currentSongPositionMs: this.player.getPositionMs(), // Accurate
+      });
+    }, 100);
   }
 
   handleVoiceToggle(index) {
@@ -266,14 +273,16 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          <h1 className="App-title">JavaScript Game Music Player</h1>
-          <small>powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a></small>
+          <p className="App-title">Chip Player JS</p>
+          <small>
+            powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a> and <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>
+          </small>
         </header>
         {this.state.loading ?
           <p>Loading...{this.state.loading} remaining player engine{this.state.loading === 1 ? '' : 's'}.</p>
           :
           <div className="App-intro">
-            <button onClick={this.playSong}>
+            <button onClick={this.play}>
               Play
             </button>
             <button onClick={this.togglePause}>
@@ -338,8 +347,8 @@ class App extends Component {
           </div>
         }
       </div>
-    );
+  );
   }
-}
+  }
 
-export default App;
+  export default App;
