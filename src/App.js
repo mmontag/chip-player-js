@@ -3,9 +3,10 @@ import Slider from './Slider'
 import './App.css';
 import songData from './song-data';
 import GMEPlayer from './players/GMEPlayer';
+import XMPPlayer from './players/XMPPlayer';
 
 const unrar = require('node-unrar-js');
-const MAX_VOICES = 8;
+const MAX_VOICES = 32;
 
 class App extends Component {
   constructor(props) {
@@ -24,14 +25,22 @@ class App extends Component {
     this.displayLoop = this.displayLoop.bind(this);
     this.getFadeMs = this.getFadeMs.bind(this);
 
-    this.player = new GMEPlayer(new (window.AudioContext || window.webkitAudioContext)(), () => {
-      this.setState({loading: false});
-    });
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    this.players = [
+      new GMEPlayer(audioContext, () => {
+        this.setState({loading: this.state.loading - 1});
+      }),
+      new XMPPlayer(audioContext, () => {
+        this.setState({loading: this.state.loading - 1});
+      }),
+    ];
+    this.player = null;
 
     this.lastTime = (new Date()).getTime();
     this.startedFadeOut = false;
     this.state = {
-      loading: true,
+      loading: this.players.length,
       paused: false,
       currentSongMetadata: {},
       currentSongNumVoices: 0,
@@ -60,6 +69,22 @@ class App extends Component {
     //   }
     //   return;
     // }
+    if (this.player !== null) {
+      this.player.stop();
+    }
+    this.player = null;
+    const ext = filename.split('.').pop().toLowerCase();
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i].canPlay(ext)) {
+        this.player = this.players[i];
+        break;
+      }
+    }
+    if (this.player === null) {
+      console.error(`None of the Player engines can handle the ".${ext}" file format.`);
+      return;
+    }
+
     fetch(filename).then(response => response.arrayBuffer()).then(buffer => {
       let uint8Array;
       let extractedTunes = [];
@@ -127,20 +152,22 @@ class App extends Component {
     const currentTime = (new Date()).getTime();
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
-    const playerPositionMs = this.player.getPosition();
-    if (this.player.isPlaying() && playerPositionMs) {
-      if (this.state.currentSongPositionMs >= this.state.currentSongDurationMs) {
-        if (!this.startedFadeOut) {
-          // Fade out right now
-          console.log('Starting fadeout at', playerPositionMs);
-          this.startedFadeOut = true;
-          this.player.setFadeout(playerPositionMs);
+    if (this.player) {
+      const playerPositionMs = this.player.getPosition();
+      if (this.player.isPlaying() && playerPositionMs) {
+        if (this.state.currentSongPositionMs >= this.state.currentSongDurationMs) {
+          if (!this.startedFadeOut) {
+            // Fade out right now
+            console.log('Starting fadeout at', playerPositionMs);
+            this.startedFadeOut = true;
+            this.player.setFadeout(playerPositionMs);
+          }
+        } else {
+          const currMs = this.state.currentSongPositionMs;
+          this.setState({
+            currentSongPositionMs: currMs + deltaTime * this.state.tempo,
+          });
         }
-      } else {
-        const currMs = this.state.currentSongPositionMs;
-        this.setState({
-          currentSongPositionMs: currMs + deltaTime * this.state.tempo,
-        });
       }
     }
     requestAnimationFrame(this.displayLoop);
@@ -243,7 +270,7 @@ class App extends Component {
           <small>powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a></small>
         </header>
         {this.state.loading ?
-          <p>Loading...</p>
+          <p>Loading...{this.state.loading} remaining player engine{this.state.loading === 1 ? '' : 's'}.</p>
           :
           <div className="App-intro">
             <button onClick={this.playSong}>
@@ -261,7 +288,7 @@ class App extends Component {
               Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
               Speed: <input
               type="range" value={this.state.tempo}
-              min="0.1" max="2.0" step="0.1"
+              min="0.3" max="2.0" step="0.1"
               onInput={this.handleTempoChange}
               onChange={this.handleTempoChange}/>
               {this.state.tempo}<br/>
@@ -284,6 +311,7 @@ class App extends Component {
                   </label>
                 )
               })}<br/>
+              Title: {this.state.currentSongMetadata.title || '--'}<br/>
               System: {this.state.currentSongMetadata.system || '--'}<br/>
               Game: {this.state.currentSongMetadata.game || '--'}<br/>
               Song: {this.state.currentSongMetadata.song || '--'}<br/>
