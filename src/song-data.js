@@ -1,12 +1,3 @@
-// export default [
-//   // 'http://66.90.93.122/soundfiles/nintendo-snes-spc/donkey-kong-country/07%20Aquatic%20Ambiance.spc',
-//   // 'http://66.90.93.122/soundfiles/nintendo-snes-spc/donkey-kong-country/10%20Mine%20Cart%20Madness.spc',
-//   // 'http://66.90.93.122/soundfiles/nintendo-snes-spc/evo-search-for-eden/01%20The%20Origin%20of%20Gaia.spc',
-//   'http://www.hotdogstorm.com/bucky/GameMusicArchives/NSFE_by_bucky/Ferrari%20Grand%20Prix%20Challenge.nsfe',
-//   // 'http://snesmusic.org/v2/download.php?spcNow=yc.rsn',
-//   // 'http://snesmusic.org/v2/download.php?spcNow=unir.rsn',
-// ];
-
 export default [
   {
     title: 'Super Nintendo (SPC)',
@@ -15,15 +6,6 @@ export default [
       "donkey-kong-country/07%20Aquatic%20Ambiance.spc",
       "donkey-kong-country/10%20Mine%20Cart%20Madness.spc",
       "evo-search-for-eden/01%20The%20Origin%20of%20Gaia.spc",
-    ]
-  },
-  {
-    title: 'Super Nintendo (RSN)',
-    url_prefix: 'https://cors-anywhere.herokuapp.com/http://snesmusic.org/v2/download.php?spcNow=',
-    files: [
-      "smw&.rsn",
-      "yc&.rsn",
-      "yi&.rsn",
     ]
   },
   {
@@ -45,7 +27,20 @@ export default [
       "dd-smkr.xm",
       "tr3cheato.it",
       "ut-firebr.xm",
+      "Death Rally/MENUTUNE.S3M",
+      "Jazz Jackrabbit/Menu.s3m",
+      "One Must Fall 2097/03-MENU.S3M",
+      "Unreal Tournament/16 - Razorback (Unreal Mix) [Peter Hajba].it",
     ],
+  },
+  {
+    title: 'Super Nintendo (RSN) (currently disabled)',
+    url_prefix: 'https://cors-anywhere.herokuapp.com/http://snesmusic.org/v2/download.php?spcNow=',
+    files: [
+      "smw&.rsn",
+      "yc&.rsn",
+      "yi&.rsn",
+    ]
   },
   {
     title: 'Nintendo (NSF)',
