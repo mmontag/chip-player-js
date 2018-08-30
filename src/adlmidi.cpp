@@ -351,6 +351,10 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
 {
     if(!device)
         return -1;
+
+    if(ops4 == -1)
+        return adlRefreshNumCards(device);
+
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     if((unsigned int)ops4 > 6 * play->m_setup.numChips)
     {
@@ -364,7 +368,7 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
     play->m_synth.m_numFourOps = play->m_setup.numFourOps;
     play->m_synth.updateChannelCategories();
 
-    return 0; //adlRefreshNumCards(device);
+    return 0;
 }
 
 ADLMIDI_EXPORT int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device)
