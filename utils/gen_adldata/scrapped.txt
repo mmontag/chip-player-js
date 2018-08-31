@@ -75,7 +75,7 @@ static const char *const banknames[] =
     "TMB (Shadow Warrior)",
     "DMX (Raptor)",
     "OP3 (Modded GMOPL by Wohlstand)",
-    "SB (Jammey O'Connel's bank)",
+    "SB (Jamie O'Connell's bank)",
     "TMB (Default bank of Build Engine)",
     "OP3 (4op bank by James Alan Nguyen)",
     "TMB (Blood)",

@@ -329,6 +329,7 @@ extern ADLMIDI_DECLSPEC int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, 
  * If you want to specify custom number of four operator channels,
  * please call this function after bank change (adl_setBank() or adl_openBank()),
  * otherwise, value will be overwritten by auto-calculated.
+ * If the count is specified as -1, an auto-calculated amount is used instead.
  *
  * @param device Instance of the library
  * @param ops4 Count of four-op channels to allocate between all emulating chips

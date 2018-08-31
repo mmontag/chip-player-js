@@ -528,7 +528,7 @@ void OPL3::updateChannelCategories()
             for(size_t b = 0; b < 23; ++b)
             {
                 m_channelCategory[a * 23 + b] =
-                    (b >= 18) ? static_cast<int>(ChanCat_Rhythm_Bass + (b - 18)) :
+                    (b >= 18) ? static_cast<ChanCat>(ChanCat_Rhythm_Bass + (b - 18)) :
                     (b >= 6 && b < 9) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
             }
         }

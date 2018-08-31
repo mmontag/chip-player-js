@@ -1600,7 +1600,7 @@ void MIDIplay::setRPN(size_t midCh, unsigned value, bool MSB)
     case 0x0109 + 1*0x10000 + 1*0x20000:
         if((m_synthMode & Mode_XG) != 0) // Vibrato depth
         {
-            m_midiChannels[midCh].vibdepth = ((value - 64) * 0.15) * 0.01;
+            m_midiChannels[midCh].vibdepth = (((int)value - 64) * 0.15) * 0.01;
         }
         break;
     case 0x010A + 1*0x10000 + 1*0x20000:
