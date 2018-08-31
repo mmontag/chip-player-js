@@ -399,10 +399,11 @@ public:
 
     /**
      * @brief On the note in specified chip channel with specified frequency of the tone
-     * @param c Channel of chip (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
+     * @param c1 Channel of chip [or master 4-op channel] (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
+     * @param c2 Slave 4-op channel of chip, unused for 2op (Emulated chip choosing by next formula: [c = ch + (chipId * 23)])
      * @param hertz Frequency of the tone in hertzes
      */
-    void noteOn(size_t c, double hertz);
+    void noteOn(size_t c1, size_t c2, double hertz);
 
     /**
      * @brief Change setup of instrument in specified chip channel

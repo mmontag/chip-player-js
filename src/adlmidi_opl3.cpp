@@ -263,40 +263,85 @@ void OPL3::noteOff(size_t c)
     writeRegI(chip, 0xB0 + g_channelsMap[cc], m_keyBlockFNumCache[c] & 0xDF);
 }
 
-void OPL3::noteOn(size_t c, double hertz) // Hertz range: 0..131071
+void OPL3::noteOn(size_t c1, size_t c2, double hertz) // Hertz range: 0..131071
 {
-    size_t chip = c / 23, cc = c % 23;
-    uint32_t octave = 0;
+    size_t chip = c1 / 23, cc1 = c1 % 23, cc2 = c2 % 23;
+    uint32_t octave = 0, ftone = 0, mul_offset = 0;
 
     if(hertz < 0)
         return;
 
-    while(hertz >= 1023.5)
+    //Basic range until max of octaves reaching
+    while((hertz >= 1023.5) && (octave < 0x1C00))
     {
-        hertz /= 2.0; // Calculate octave
-        if(octave < 0x1C00)
-            octave += 0x400;
+        hertz /= 2.0;    // Calculate octave
+        octave += 0x400;
+    }
+    //Extended range, rely on frequency multiplication increment
+    while(hertz >= 1022.75)
+    {
+        hertz /= 2.0;    // Calculate octave
+        mul_offset++;
     }
 
-    octave += static_cast<uint32_t>(hertz + 0.5);
-    uint32_t chn = g_channelsMap[cc];
+    ftone = octave + static_cast<uint32_t>(hertz + 0.5);
+    uint32_t chn = g_channelsMap[cc1];
+    const adldata &patch1 = m_insCache[c1];
+    const adldata &patch2 = m_insCache[c2 < m_insCache.size() ? c2 : 0];
 
-    if(cc >= 18)
+    if(cc1 < 18)
     {
-        m_regBD[chip ] |= (0x10 >> (cc - 18));
-        writeRegI(chip , 0x0BD, m_regBD[chip ]);
-        //x |= 0x800; // for test
-    }
-    else
-    {
-        octave += 0x2000u; /* Key-ON [KON] */
+        ftone += 0x2000u; /* Key-ON [KON] */
+
+        const bool natural_4op = (m_channelCategory[c1] == ChanCat_4op_Master);
+        const size_t opsCount = natural_4op ? 4 : 2;
+        const uint16_t op_addr[4] =
+        {
+            g_operatorsMap[cc1 * 2 + 0], g_operatorsMap[cc1 * 2 + 1],
+            g_operatorsMap[cc2 * 2 + 0], g_operatorsMap[cc2 * 2 + 1]
+        };
+        const uint32_t ops[4] =
+        {
+            patch1.modulator_E862 & 0xFF,
+            patch1.carrier_E862 & 0xFF,
+            patch2.modulator_E862 & 0xFF,
+            patch2.carrier_E862 & 0xFF
+        };
+
+        for(size_t op = 0; op < opsCount; op++)
+        {
+            if((op > 0) && (op_addr[op] == 0xFFF))
+                break;
+            if(mul_offset > 0)
+            {
+                uint32_t dt  = ops[op] & 0xF0;
+                uint32_t mul = ops[op] & 0x0F;
+                if((mul + mul_offset) > 0x0F)
+                {
+                    mul_offset = 0;
+                    mul = 0x0F;
+                }
+                writeRegI(chip, 0x20 + op_addr[op],  (dt | (mul + mul_offset)) & 0xFF);
+            }
+            else
+            {
+                writeRegI(chip, 0x20 + op_addr[op],  ops[op] & 0xFF);
+            }
+        }
     }
 
     if(chn != 0xFFF)
     {
-        writeRegI(chip , 0xA0 + chn, (octave & 0xFF));
-        writeRegI(chip , 0xB0 + chn, (octave >> 8));
-        m_keyBlockFNumCache[c] = (octave >> 8);
+        writeRegI(chip , 0xA0 + chn, (ftone & 0xFF));
+        writeRegI(chip , 0xB0 + chn, (ftone >> 8));
+        m_keyBlockFNumCache[c1] = (ftone >> 8);
+    }
+
+    if(cc1 >= 18)
+    {
+        m_regBD[chip ] |= (0x10 >> (cc1 - 18));
+        writeRegI(chip , 0x0BD, m_regBD[chip ]);
+        //x |= 0x800; // for test
     }
 }
 
@@ -312,15 +357,17 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
     uint8_t  x = adli.modulator_40, y = adli.carrier_40;
     uint32_t mode = 1; // 2-op AM
 
-    if(m_channelCategory[c] == 0 || m_channelCategory[c] == 3)
+    if(m_channelCategory[c] == ChanCat_Regular ||
+       m_channelCategory[c] == ChanCat_Rhythm_Bass)
     {
         mode = adli.feedconn & 1; // 2-op FM or 2-op AM
     }
-    else if(m_channelCategory[c] == 1 || m_channelCategory[c] == 2)
+    else if(m_channelCategory[c] == ChanCat_4op_Master ||
+            m_channelCategory[c] == ChanCat_4op_Slave)
     {
         const adldata *i0, *i1;
 
-        if(m_channelCategory[c] == 1)
+        if(m_channelCategory[c] == ChanCat_4op_Master)
         {
             i0 = &adli;
             i1 = &m_insCache[c + 3];
@@ -481,7 +528,7 @@ void OPL3::updateChannelCategories()
             for(size_t b = 0; b < 23; ++b)
             {
                 m_channelCategory[a * 23 + b] =
-                    (b >= 18) ? static_cast<char>(ChanCat_Rhythm_Bass + (b - 18)) :
+                    (b >= 18) ? static_cast<int>(ChanCat_Rhythm_Bass + (b - 18)) :
                     (b >= 6 && b < 9) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
             }
         }
