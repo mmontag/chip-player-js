@@ -5,7 +5,6 @@ import songData from './song-data';
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
 
-const unrar = require('node-unrar-js');
 const MAX_VOICES = 32;
 
 class App extends Component {

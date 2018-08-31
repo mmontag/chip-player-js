@@ -252,7 +252,7 @@ export default class XMPPlayer extends Player {
   }
 
   getNumSubtunes() {
-    // if (emu) return libxmp._gme_track_count(emu);
+    return 0;
   }
 
   getPositionMs() {

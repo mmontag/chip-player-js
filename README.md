@@ -11,7 +11,7 @@ Chip Player JS is a work in progress. Goals:
 - High-quality MIDI playback with JS wavetable synthesis
     * Bonus: user-selectable soundbanks
 
-### Development Notes 
+### Development Notes
 
 #### Architecture
 

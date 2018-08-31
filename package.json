@@ -54,7 +54,8 @@
     "glob": "^7.1.2",
     "patch-package": "^5.1.1",
     "postinstall-prepare": "^1.0.1",
-    "tmp": "^0.0.33"
+    "tmp": "^0.0.33",
+    "webpack-bundle-analyzer": "^2.13.1"
   },
   "homepage": "http://mmontag.github.io/chip-player-js",
   "scripts": {
