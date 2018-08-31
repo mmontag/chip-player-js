@@ -1930,7 +1930,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
         opl->setPatch(static_cast<size_t>(adlchannel[c]), ains.adl[c]);
         opl->touchNote(static_cast<size_t>(adlchannel[c]), 63);
         opl->setPan(static_cast<size_t>(adlchannel[c]), 0x30);
-        opl->noteOn(static_cast<size_t>(adlchannel[c]), hertz);
+        opl->noteOn(static_cast<size_t>(adlchannel[c]), static_cast<size_t>(adlchannel[1]), hertz);
     }
 #else
     ADL_UNUSED(note);
