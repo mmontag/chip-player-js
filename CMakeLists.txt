@@ -24,6 +24,7 @@ list(APPEND SCOPED_HEADERS
 )
 
 list(APPEND SOURCES
+    src/fluid_init.c
     src/fluid_chan.c
     src/fluid_chorus.c
     src/fluid_conv.c
