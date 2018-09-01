@@ -168,6 +168,12 @@ OPL3::OPL3() :
     m_musicMode(MODE_MIDI),
     m_volumeScale(VOLUME_Generic)
 {
+    m_insBankSetup.volumeModel = OPL3::VOLUME_Generic;
+    m_insBankSetup.deepTremolo = false;
+    m_insBankSetup.deepVibrato = false;
+    m_insBankSetup.adLibPercussions = false;
+    m_insBankSetup.scaleModulators = false;
+
 #ifdef DISABLE_EMBEDDED_BANKS
     m_embeddedBank = CustomBankTag;
 #else
