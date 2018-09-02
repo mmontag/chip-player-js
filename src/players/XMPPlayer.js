@@ -1,6 +1,6 @@
 import Player from "./Player.js";
 
-const LibXMP = require('../libxmp.js');
+const LibXMP = require('../chipplayer.js');
 const INT16_MAX = Math.pow(2, 16) - 1;
 const BUFFER_SIZE = 2048;
 const XMP_PLAYER_STATE = 8;

@@ -64,6 +64,7 @@
     "test": "node scripts/test.js --env=jsdom",
     "build-gme": "source ~/src/emsdk/emsdk_set_env.sh; node build-gme.js",
     "build-xmp": "source ~/src/emsdk/emsdk_set_env.sh; node build-xmp.js",
+    "build-all": "source ~/src/emsdk/emsdk_set_env.sh; node build-all.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "prepare": "patch-package"

@@ -1,5 +1,5 @@
 import Player from "./Player.js";
-const LibGME = require('../libgme.js');
+const LibGME = require('../chipplayer.js');
 
 let emu = null;
 let libgme = null;
