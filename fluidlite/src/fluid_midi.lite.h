@@ -171,6 +171,47 @@ enum midi_meta_event {
   MIDI_SEQUENCER_EVENT = 0x7f
 };
 
+/* MIDI SYSEX useful manufacturer values */
+enum midi_sysex_manuf {
+  MIDI_SYSEX_MANUF_ROLAND       = 0x41,         /**< Roland manufacturer ID */
+  MIDI_SYSEX_UNIV_NON_REALTIME  = 0x7E,         /**< Universal non realtime message */
+  MIDI_SYSEX_UNIV_REALTIME      = 0x7F          /**< Universal realtime message */
+};
+
+#define MIDI_SYSEX_DEVICE_ID_ALL        0x7F    /**< Device ID used in SYSEX messages to indicate all devices */
+
+/* SYSEX sub-ID #1 which follows device ID */
+#define MIDI_SYSEX_MIDI_TUNING_ID       0x08    /**< Sysex sub-ID #1 for MIDI tuning messages */
+#define MIDI_SYSEX_GM_ID                0x09    /**< Sysex sub-ID #1 for General MIDI messages */
+
+/**
+ * SYSEX tuning message IDs.
+ */
+enum midi_sysex_tuning_msg_id {
+  MIDI_SYSEX_TUNING_BULK_DUMP_REQ       = 0x00, /**< Bulk tuning dump request (non-realtime) */
+  MIDI_SYSEX_TUNING_BULK_DUMP           = 0x01, /**< Bulk tuning dump response (non-realtime) */
+  MIDI_SYSEX_TUNING_NOTE_TUNE           = 0x02, /**< Tuning note change message (realtime) */
+  MIDI_SYSEX_TUNING_BULK_DUMP_REQ_BANK  = 0x03, /**< Bulk tuning dump request (with bank, non-realtime) */
+  MIDI_SYSEX_TUNING_BULK_DUMP_BANK      = 0x04, /**< Bulk tuning dump resonse (with bank, non-realtime) */
+  MIDI_SYSEX_TUNING_OCTAVE_DUMP_1BYTE   = 0x05, /**< Octave tuning dump using 1 byte values (non-realtime) */
+  MIDI_SYSEX_TUNING_OCTAVE_DUMP_2BYTE   = 0x06, /**< Octave tuning dump using 2 byte values (non-realtime) */
+  MIDI_SYSEX_TUNING_NOTE_TUNE_BANK      = 0x07, /**< Tuning note change message (with bank, realtime/non-realtime) */
+  MIDI_SYSEX_TUNING_OCTAVE_TUNE_1BYTE   = 0x08, /**< Octave tuning message using 1 byte values (realtime/non-realtime) */
+  MIDI_SYSEX_TUNING_OCTAVE_TUNE_2BYTE   = 0x09  /**< Octave tuning message using 2 byte values (realtime/non-realtime) */
+};
+
+/* General MIDI sub-ID #2 */
+#define MIDI_SYSEX_GM_ON                0x01    /**< Enable GM mode */
+#define MIDI_SYSEX_GM_OFF               0x02    /**< Disable GM mode */
+
+
+enum fluid_player_status
+{
+  FLUID_PLAYER_READY,
+  FLUID_PLAYER_PLAYING,
+  FLUID_PLAYER_DONE
+};
+
 enum fluid_driver_status
 {
   FLUID_MIDI_READY,
@@ -201,132 +242,6 @@ struct _fluid_midi_event_t {
 };
 
 
-/*
- * fluid_track_t
- */
-struct _fluid_track_t {
-  char* name;
-  int num;
-  fluid_midi_event_t *first;
-  fluid_midi_event_t *cur;
-  fluid_midi_event_t *last;
-  unsigned int ticks;
-};
-
-typedef struct _fluid_track_t fluid_track_t;
-
-fluid_track_t* new_fluid_track(int num);
-int delete_fluid_track(fluid_track_t* track);
-int fluid_track_set_name(fluid_track_t* track, char* name);
-char* fluid_track_get_name(fluid_track_t* track);
-int fluid_track_add_event(fluid_track_t* track, fluid_midi_event_t* evt);
-fluid_midi_event_t* fluid_track_first_event(fluid_track_t* track);
-fluid_midi_event_t* fluid_track_next_event(fluid_track_t* track);
-int fluid_track_get_duration(fluid_track_t* track);
-int fluid_track_reset(fluid_track_t* track);
-
-int fluid_track_send_events(fluid_track_t* track,
-			   fluid_synth_t* synth,
-			   fluid_player_t* player,
-			   unsigned int ticks);
-
-#define fluid_track_eot(track)  ((track)->cur == NULL)
-
-
-/*
- * fluid_player
- */
-struct _fluid_player_t {
-  int status;
-  int loop;
-  int ntracks;
-  fluid_track_t *track[MAX_NUMBER_OF_TRACKS];
-  fluid_synth_t* synth;
-  fluid_timer_t* system_timer;
-  fluid_sample_timer_t* sample_timer;
-  fluid_list_t* playlist;
-  char* current_file;
-  char send_program_change; /* should we ignore the program changes? */
-  char use_system_timer;   /* if zero, use sample timers, otherwise use system clock timer */
-  int start_ticks;          /* the number of tempo ticks passed at the last tempo change */
-  int cur_ticks;            /* the number of tempo ticks passed */
-  int begin_msec;           /* the time (msec) of the beginning of the file */
-  int start_msec;           /* the start time of the last tempo change */
-  int cur_msec;             /* the current time */
-  int miditempo;            /* as indicated by MIDI SetTempo: n 24th of a usec per midi-clock. bravo! */
-  double deltatime;         /* milliseconds per midi tick. depends on set-tempo */
-  unsigned int division;
-};
-
-int fluid_player_add_track(fluid_player_t* player, fluid_track_t* track);
-int fluid_player_callback(void* data, unsigned int msec);
-int fluid_player_count_tracks(fluid_player_t* player);
-fluid_track_t* fluid_player_get_track(fluid_player_t* player, int i);
-int fluid_player_reset(fluid_player_t* player);
-int fluid_player_load(fluid_player_t* player, char *filename);
-
-void fluid_player_settings(fluid_settings_t* settings);
-
-
-/*
- * fluid_midi_file
- */
-typedef struct {
-  fluid_file fp;
-  int running_status;
-  int c;
-  int type;
-  int ntracks;
-  int uses_smpte;
-  unsigned int smpte_fps;
-  unsigned int smpte_res;
-  unsigned int division;       /* If uses_SMPTE == 0 then division is
-				  ticks per beat (quarter-note) */
-  double tempo;                /* Beats per second (SI rules =) */
-  int tracklen;
-  int trackpos;
-  int eot;
-  int varlen;
-  int dtime;
-} fluid_midi_file;
-
-fluid_midi_file* new_fluid_midi_file(char* filename);
-void delete_fluid_midi_file(fluid_midi_file* mf);
-int fluid_midi_file_read_mthd(fluid_midi_file* midifile);
-int fluid_midi_file_load_tracks(fluid_midi_file* midifile, fluid_player_t* player);
-int fluid_midi_file_read_track(fluid_midi_file* mf, fluid_player_t* player, int num);
-int fluid_midi_file_read_event(fluid_midi_file* mf, fluid_track_t* track);
-int fluid_midi_file_read_varlen(fluid_midi_file* mf);
-int fluid_midi_file_getc(fluid_midi_file* mf);
-int fluid_midi_file_push(fluid_midi_file* mf, int c);
-int fluid_midi_file_read(fluid_midi_file* mf, void* buf, int len);
-int fluid_midi_file_skip(fluid_midi_file* mf, int len);
-int fluid_midi_file_read_tracklen(fluid_midi_file* mf);
-int fluid_midi_file_eot(fluid_midi_file* mf);
-int fluid_midi_file_get_division(fluid_midi_file* midifile);
-int fluid_midi_event_length(unsigned char status);
-
-/* How many parameters may a MIDI event have? */
-#define FLUID_MIDI_PARSER_MAX_PAR 3
-
-/*
- * fluid_midi_parser_t
- */
-struct _fluid_midi_parser_t {
-  unsigned char status;           /* Identifies the type of event, that is currently received ('Noteon', 'Pitch Bend' etc). */
-  unsigned char channel;          /* The channel of the event that is received (in case of a channel event) */
-  unsigned int nr_bytes;          /* How many bytes have been read for the current event? */
-  unsigned int nr_bytes_total;    /* How many bytes does the current event type include? */
-  unsigned short p[FLUID_MIDI_PARSER_MAX_PAR]; /* The parameters */
-  fluid_midi_event_t event;        /* The event, that is returned to the MIDI driver. */
-};
-
-int fluid_isasciistring(char* s);
-long fluid_getlength(unsigned char *s);
-
-
-
-int fluid_midi_router_send_event(fluid_midi_router_t* router, fluid_midi_event_t* event);
 
 
 #endif /* _FLUID_MIDI_H */

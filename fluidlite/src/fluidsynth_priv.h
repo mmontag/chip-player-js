@@ -40,16 +40,91 @@
 #include <math.h>
 #endif
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 #if HAVE_STDARG_H
 #include <stdarg.h>
+#endif
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
 #endif
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 
+#if HAVE_SYS_MMAN_H
+#include <sys/mman.h>
+#endif
+
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+
+#if HAVE_NETINET_TCP_H
+#include <netinet/tcp.h>
+#endif
+
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+
 #if HAVE_LIMITS_H
 #include <limits.h>
+#endif
+
+#if HAVE_PTHREAD_H
+#include <pthread.h>
+#endif
+
+#if HAVE_IO_H
+#include <io.h>
+#endif
+
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
+/* MinGW32 special defines */
+#if 1 //MINGW32
+
+//#include <stdint.h>
+//#define snprintf _snprintf
+//#define vsnprintf _vsnprintf
+
+#define DSOUND_SUPPORT 1
+#define WINMIDI_SUPPORT 1
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+#define WITHOUT_SERVER 1
+
+#endif
+
+/* Darwin special defines (taken from config_macosx.h) */
+#ifdef DARWIN
+#define MACINTOSH
+#define __Types__
+#define WITHOUT_SERVER 1
 #endif
 
 
@@ -74,67 +149,66 @@ typedef enum {
 } fluid_status;
 
 
-//socket disabled
+#if defined(WIN32)
+typedef SOCKET fluid_socket_t;
+#else
+typedef int fluid_socket_t;
+#define INVALID_SOCKET -1
+#endif
+
 
 /** Integer types  */
 
-typedef signed char       sint8;
-typedef unsigned char     uint8;
+#if defined(MINGW32)
+
+/* Windows using MinGW32 */
+typedef int8_t             sint8;
+typedef uint8_t            uint8;
+typedef int16_t            sint16;
+typedef uint16_t           uint16;
+typedef int32_t            sint32;
+typedef uint32_t           uint32;
+typedef int64_t            sint64;
+typedef uint64_t           uint64;
+
+#elif defined(_WIN32)
+
+/* Windows */
+typedef signed __int8      sint8;
+typedef unsigned __int8    uint8;
+typedef signed __int16     sint16;
+typedef unsigned __int16   uint16;
+typedef signed __int32     sint32;
+typedef unsigned __int32   uint32;
+typedef signed __int64     sint64;
+typedef unsigned __int64   uint64;
+
+#elif 1 //defined(MACOS9)
+
+/* Macintosh */
+typedef signed char        sint8;
+typedef unsigned char      uint8;
 typedef signed short       sint16;
 typedef unsigned short     uint16;
 typedef signed int         sint32;
 typedef unsigned int       uint32;
+/* FIXME: needs to be verified */
+typedef long long          sint64;
+typedef unsigned long long uint64;
 
-//#if defined(MINGW32)
+#elif 0
 
-///* Windows using MinGW32 */
-//typedef int8_t             sint8;
-//typedef uint8_t            uint8;
-//typedef int16_t            sint16;
-//typedef uint16_t           uint16;
-//typedef int32_t            sint32;
-//typedef uint32_t           uint32;
-//typedef int64_t            sint64;
-//typedef uint64_t           uint64;
+/* Linux & Darwin */
+typedef int8_t             sint8;
+typedef u_int8_t           uint8;
+typedef int16_t            sint16;
+typedef u_int16_t          uint16;
+typedef int32_t            sint32;
+typedef u_int32_t          uint32;
+typedef int64_t            sint64;
+typedef u_int64_t          uint64;
 
-//#elif defined(_WIN32)
-
-///* Windows */
-//typedef signed __int8      sint8;
-//typedef unsigned __int8    uint8;
-//typedef signed __int16     sint16;
-//typedef unsigned __int16   uint16;
-//typedef signed __int32     sint32;
-//typedef unsigned __int32   uint32;
-//typedef signed __int64     sint64;
-//typedef unsigned __int64   uint64;
-
-//#elif defined(MACOS9)
-
-///* Macintosh */
-//typedef signed char        sint8;
-//typedef unsigned char      uint8;
-//typedef signed short       sint16;
-//typedef unsigned short     uint16;
-//typedef signed int         sint32;
-//typedef unsigned int       uint32;
-///* FIXME: needs to be verified */
-//typedef long long          sint64;
-//typedef unsigned long long uint64;
-
-//#else
-
-///* Linux & Darwin */
-//typedef int8_t             sint8;
-//typedef u_int8_t           uint8;
-//typedef int16_t            sint16;
-//typedef u_int16_t          uint16;
-//typedef int32_t            sint32;
-//typedef u_int32_t          uint32;
-//typedef int64_t            sint64;
-//typedef u_int64_t          uint64;
-
-//#endif
+#endif
 
 
 /***************************************************************
@@ -147,6 +221,8 @@ typedef struct _fluid_channel_t fluid_channel_t;
 typedef struct _fluid_tuning_t fluid_tuning_t;
 typedef struct _fluid_hashtable_t  fluid_hashtable_t;
 typedef struct _fluid_client_t fluid_client_t;
+typedef struct _fluid_server_socket_t fluid_server_socket_t;
+typedef struct _fluid_sample_timer_t fluid_sample_timer_t;
 
 /***************************************************************
  *

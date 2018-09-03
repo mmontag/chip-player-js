@@ -27,6 +27,15 @@
 #include "fluid_settings.h"
 #include "fluid_sfont.h"
 
+#ifdef TRAP_ON_FPE
+#define _GNU_SOURCE
+#include <fenv.h>
+
+/* seems to not be declared in fenv.h */
+extern int feenableexcept (int excepts);
+#endif
+
+
 fluid_sfloader_t* new_fluid_defsfloader(void);
 
 /************************************************************************
@@ -59,11 +68,6 @@ int fluid_synth_set_gen2(fluid_synth_t* synth, int chan,
 static int fluid_synth_initialized = 0;
 static void fluid_synth_init(void);
 static void init_dither(void);
-
-static int fluid_synth_sysex_midi_tuning (fluid_synth_t *synth, const char *data,
-                                          int len, char *response,
-                                          int *response_len, int avail_response,
-                                          int *handled, int dryrun);
 
 /* default modulators
  * SF2.01 page 52 ff:
@@ -109,7 +113,6 @@ void fluid_synth_settings(fluid_settings_t* settings)
   fluid_settings_register_str(settings, "synth.chorus.active", "yes", 0, NULL, NULL);
   fluid_settings_register_str(settings, "synth.ladspa.active", "no", 0, NULL, NULL);
   fluid_settings_register_str(settings, "midi.portname", "", 0, NULL, NULL);
-  fluid_settings_register_str(settings, "synth.drums-channel.active", "yes", 0, NULL, NULL);
 
   fluid_settings_register_int(settings, "synth.polyphony",
 			     256, 16, 4096, 0, NULL, NULL);
@@ -127,7 +130,6 @@ void fluid_synth_settings(fluid_settings_t* settings)
   fluid_settings_register_num(settings, "synth.sample-rate",
 			     44100.0f, 22050.0f, 96000.0f,
 			     0, NULL, NULL);
-  fluid_settings_register_int(settings, "synth.min-note-length", 10, 0, 65535, 0, NULL, NULL);
 }
 
 /*
@@ -158,6 +160,11 @@ static void
 fluid_synth_init()
 {
   fluid_synth_initialized++;
+
+#ifdef TRAP_ON_FPE
+  /* Turn on floating point exception traps */
+  feenableexcept (FE_DIVBYZERO | FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID);
+#endif
 
   fluid_conversion_config();
 
@@ -324,6 +331,73 @@ int fluid_synth_verify_settings(fluid_settings_t *settings)
 }
 
 /***************************************************************
+ *                    FLUID SAMPLE TIMERS 
+ *    Timers that use written audio data as timing reference       
+ */
+struct _fluid_sample_timer_t
+{
+	fluid_sample_timer_t* next; /* Single linked list of timers */
+	unsigned long starttick;
+	fluid_timer_callback_t callback;
+	void* data;
+	int isfinished;
+};
+
+/*
+ * fluid_sample_timer_process - called when synth->ticks is updated
+ */
+void fluid_sample_timer_process(fluid_synth_t* synth)
+{
+	fluid_sample_timer_t* st;
+	long msec;
+	int cont;
+
+	for (st=synth->sample_timers; st; st=st->next) {
+		if (st->isfinished) {
+			continue;
+		}
+
+		msec = (long) (1000.0*((double) (synth->ticks - st->starttick))/synth->sample_rate);
+		cont = (*st->callback)(st->data, msec);
+		if (cont == 0) {
+			st->isfinished = 1;
+		}
+	}
+}
+
+fluid_sample_timer_t* new_fluid_sample_timer(fluid_synth_t* synth, fluid_timer_callback_t callback, void* data)
+{
+	fluid_sample_timer_t* result = FLUID_NEW(fluid_sample_timer_t);
+	if (result == NULL) {
+		FLUID_LOG(FLUID_ERR, "Out of memory");
+		return NULL;
+	}
+	result->starttick = synth->ticks;
+	result->isfinished = 0;
+	result->data = data;
+	result->callback = callback;
+	result->next = synth->sample_timers;
+	synth->sample_timers = result;
+	return result;		
+}
+
+int delete_fluid_sample_timer(fluid_synth_t* synth, fluid_sample_timer_t* timer)
+{
+	fluid_sample_timer_t** ptr = &synth->sample_timers;
+	while (*ptr) {
+		if (*ptr == timer) {
+			*ptr = timer->next; 
+			FLUID_FREE(timer);
+			return FLUID_OK;
+		}
+		ptr = &((*ptr)->next);
+	}
+	FLUID_LOG(FLUID_ERR,"delete_fluid_sample_timer failed, no timer found");
+	return FLUID_FAILED;
+}
+
+
+/***************************************************************
  *
  *                      FLUID SYNTH
  */
@@ -353,7 +427,7 @@ new_fluid_synth(fluid_settings_t *settings)
   }
   FLUID_MEMSET(synth, 0, sizeof(fluid_synth_t));
 
-  //fluid_mutex_init(synth->busy);
+  fluid_mutex_init(synth->busy);
 
   synth->settings = settings;
 
@@ -369,9 +443,6 @@ new_fluid_synth(fluid_settings_t *settings)
   fluid_settings_getint(settings, "synth.audio-groups", &synth->audio_groups);
   fluid_settings_getint(settings, "synth.effects-channels", &synth->effects_channels);
   fluid_settings_getnum(settings, "synth.gain", &synth->gain);
-  fluid_settings_getint(settings, "synth.min-note-length", &i);
-  synth->min_note_length_ticks = (unsigned int) (i*synth->sample_rate/1000.0f);
-
 
   /* register the callbacks */
   fluid_settings_register_num(settings, "synth.gain",
@@ -551,35 +622,14 @@ new_fluid_synth(fluid_settings_t *settings)
     goto error_recovery;
   }
 
-  if(fluid_settings_str_equal(settings, "synth.drums-channel.active", "yes"))
-      fluid_synth_bank_select(synth,9,DRUM_INST_BANK);
+  /* FIXME */
+  synth->start = fluid_curtime();
 
   return synth;
 
  error_recovery:
   delete_fluid_synth(synth);
   return NULL;
-}
-
-/**
- * Set sample rate of the synth.
- * NOTE: This function is currently experimental and should only be
- * used when no voices or notes are active, and before any rendering calls.
- * @param synth FluidSynth instance
- * @param sample_rate New sample rate (Hz)
- * @since 1.1.2
- */
-void
-fluid_synth_set_sample_rate(fluid_synth_t* synth, float sample_rate)
-{
-    int i;
-    for (i = 0; i < synth->nvoice; i++) {
-      delete_fluid_voice(synth->voice[i]);
-      synth->voice[i] = new_fluid_voice(synth->sample_rate);
-    }
-
-    delete_fluid_chorus(synth->chorus);
-    synth->chorus = new_fluid_chorus(synth->sample_rate);
 }
 
 /*
@@ -597,6 +647,8 @@ delete_fluid_synth(fluid_synth_t* synth)
   if (synth == NULL) {
     return FLUID_OK;
   }
+
+  fluid_profiling_print();
 
   synth->state = FLUID_SYNTH_STOPPED;
 
@@ -721,7 +773,7 @@ delete_fluid_synth(fluid_synth_t* synth)
   FLUID_FREE(synth->LADSPA_FxUnit);
 #endif
 
-  //fluid_mutex_destroy(synth->busy);
+  fluid_mutex_destroy(synth->busy);
 
   FLUID_FREE(synth);
 
@@ -765,9 +817,10 @@ fluid_synth_noteon(fluid_synth_t* synth, int chan, int key, int vel)
   /* make sure this channel has a preset */
   if (channel->preset == NULL) {
     if (synth->verbose) {
-      FLUID_LOG(FLUID_INFO, "noteon\t%d\t%d\t%d\t%05d\t%.3f\t\t%.3f\t%d\t%s",
+      FLUID_LOG(FLUID_INFO, "noteon\t%d\t%d\t%d\t%05d\t%.3f\t%.3f\t%.3f\t%d\t%s",
 	       chan, key, vel, 0,
 	       (float) synth->ticks / 44100.0f,
+	       (fluid_curtime() - synth->start) / 1000.0f,
 	       0.0f, 0, "channel has no preset");
     }
     return FLUID_FAILED;
@@ -803,9 +856,10 @@ fluid_synth_noteoff(fluid_synth_t* synth, int chan, int key)
 	    used_voices++;
 	  }
 	}
-    FLUID_LOG(FLUID_INFO, "noteoff\t%d\t%d\t%d\t%05d\t%.3f\t\t%.3f\t%d",
+	FLUID_LOG(FLUID_INFO, "noteoff\t%d\t%d\t%d\t%05d\t%.3f\t%.3f\t%.3f\t%d",
 		 voice->chan, voice->key, 0, voice->id,
 		 (float) (voice->start_time + voice->ticks) / 44100.0f,
+		 (fluid_curtime() - synth->start) / 1000.0f,
 		 (float) voice->ticks / 44100.0f,
 		 used_voices);
       } /* if verbose */
@@ -889,281 +943,6 @@ fluid_synth_get_cc(fluid_synth_t* synth, int chan, int num, int* pval)
   }
 
   *pval = synth->channel[chan]->cc[num];
-  return FLUID_OK;
-}
-
-/**
- * Process a MIDI SYSEX (system exclusive) message.
- * @param synth FluidSynth instance
- * @param data Buffer containing SYSEX data (not including 0xF0 and 0xF7)
- * @param len Length of data in buffer
- * @param response Buffer to store response to or NULL to ignore
- * @param response_len IN/OUT parameter, in: size of response buffer, out:
- *   amount of data written to response buffer (if FLUID_FAILED is returned and
- *   this value is non-zero, it indicates the response buffer is too small)
- * @param handled Optional location to store boolean value if message was
- *   recognized and handled or not (set to TRUE if it was handled)
- * @param dryrun TRUE to just do a dry run but not actually execute the SYSEX
- *   command (useful for checking if a SYSEX message would be handled)
- * @return FLUID_OK on success, FLUID_FAILED otherwise
- * @since 1.1.0
- */
-/* SYSEX format (0xF0 and 0xF7 not passed to this function):
- * Non-realtime:    0xF0 0x7E <DeviceId> [BODY] 0xF7
- * Realtime:        0xF0 0x7F <DeviceId> [BODY] 0xF7
- * Tuning messages: 0xF0 0x7E/0x7F <DeviceId> 0x08 <sub ID2> [BODY] <ChkSum> 0xF7
- */
-int
-fluid_synth_sysex(fluid_synth_t *synth, const char *data, int len,
-                  char *response, int *response_len, int *handled, int dryrun)
-{
-  int avail_response = 0;
-
-  if (handled) *handled = 0; //FALSE
-
-  if (response_len)
-  {
-    avail_response = *response_len;
-    *response_len = 0;
-  }
-
-  if(!(synth != NULL)) return FLUID_FAILED;
-  if(!(data != NULL)) return FLUID_FAILED;
-  if(!(len > 0)) return FLUID_FAILED;
-  if(!(!response || response_len)) return FLUID_FAILED;
-
-  if (len < 4) return FLUID_OK;
-
-  /* MIDI tuning SYSEX message? */
-  if ((data[0] == MIDI_SYSEX_UNIV_NON_REALTIME || data[0] == MIDI_SYSEX_UNIV_REALTIME)
-      && data[2] == MIDI_SYSEX_MIDI_TUNING_ID)
-      //&& (data[1] == synth->device_id || data[1] == MIDI_SYSEX_DEVICE_ID_ALL) -> we don't handle device id
-  {
-    int result;
-    //fluid_synth_api_enter(synth); -> we don't handle mutex
-    result = fluid_synth_sysex_midi_tuning (synth, data, len, response,
-                        response_len, avail_response,
-                        handled, dryrun);
-
-    return result;
-  }
-  return FLUID_OK;
-}
-
-/* Handler for MIDI tuning SYSEX messages */
-static int
-fluid_synth_sysex_midi_tuning (fluid_synth_t *synth, const char *data, int len,
-                               char *response, int *response_len, int avail_response,
-                               int *handled, int dryrun)
-{
-  int realtime, msgid;
-  int bank = 0, prog, channels;
-  double tunedata[128];
-  int keys[128];
-  char name[17];
-  int note, frac, frac2;
-  uint8 chksum;
-  int i, count, index;
-  const char *dataptr;
-  char *resptr;
-
-  realtime = data[0] == MIDI_SYSEX_UNIV_REALTIME;
-  msgid = data[3];
-
-  switch (msgid)
-  {
-    case MIDI_SYSEX_TUNING_BULK_DUMP_REQ:
-    case MIDI_SYSEX_TUNING_BULK_DUMP_REQ_BANK:
-      if (data[3] == MIDI_SYSEX_TUNING_BULK_DUMP_REQ)
-      {
-        if (len != 5 || data[4] & 0x80 || !response)
-          return FLUID_OK;
-
-        *response_len = 406;
-        prog = data[4];
-      }
-      else
-      {
-        if (len != 6 || data[4] & 0x80 || data[5] & 0x80 || !response)
-          return FLUID_OK;
-
-        *response_len = 407;
-        bank = data[4];
-        prog = data[5];
-      }
-
-      if (dryrun)
-      {
-        if (handled) *handled = 1; //TRUE
-        return FLUID_OK;
-      }
-
-      if (avail_response < *response_len) return FLUID_FAILED;
-
-      /* Get tuning data, return if tuning not found */
-      if (fluid_synth_tuning_dump (synth, bank, prog, name, 17, tunedata) == FLUID_FAILED)
-      {
-        *response_len = 0;
-        return FLUID_OK;
-      }
-
-      resptr = response;
-
-      *resptr++ = MIDI_SYSEX_UNIV_NON_REALTIME;
-      *resptr++ = 0; //no synth->device_id
-      *resptr++ = MIDI_SYSEX_MIDI_TUNING_ID;
-      *resptr++ = MIDI_SYSEX_TUNING_BULK_DUMP;
-
-      if (msgid == MIDI_SYSEX_TUNING_BULK_DUMP_REQ_BANK)
-        *resptr++ = bank;
-
-      *resptr++ = prog;
-      strncpy(resptr, name, 16); //FLUID_STRNCPY
-      resptr += 16;
-
-      for (i = 0; i < 128; i++)
-      {
-        note = tunedata[i] / 100.0;
-        fluid_clip (note, 0, 127);
-
-        frac = ((tunedata[i] - note * 100.0) * 16384.0 + 50.0) / 100.0;
-        fluid_clip (frac, 0, 16383);
-
-        *resptr++ = note;
-        *resptr++ = frac >> 7;
-        *resptr++ = frac & 0x7F;
-      }
-
-      if (msgid == MIDI_SYSEX_TUNING_BULK_DUMP_REQ)
-      {  /* NOTE: Checksum is not as straight forward as the bank based messages */
-        chksum = MIDI_SYSEX_UNIV_NON_REALTIME ^ MIDI_SYSEX_MIDI_TUNING_ID
-          ^ MIDI_SYSEX_TUNING_BULK_DUMP ^ prog;
-
-        for (i = 21; i < 128 * 3 + 21; i++)
-          chksum ^= response[i];
-      }
-      else
-      {
-        for (i = 1, chksum = 0; i < 406; i++)
-          chksum ^= response[i];
-      }
-
-      *resptr++ = chksum & 0x7F;
-
-      if (handled) *handled = 1; //TRUE
-      break;
-    case MIDI_SYSEX_TUNING_NOTE_TUNE:
-    case MIDI_SYSEX_TUNING_NOTE_TUNE_BANK:
-      dataptr = data + 4;
-
-      if (msgid == MIDI_SYSEX_TUNING_NOTE_TUNE)
-      {
-        if (len < 10 || data[4] & 0x80 || data[5] & 0x80 || len != data[5] * 4 + 6)
-          return FLUID_OK;
-      }
-      else
-      {
-        if (len < 11 || data[4] & 0x80 || data[5] & 0x80 || data[6] & 0x80
-            || len != data[5] * 4 + 7)
-          return FLUID_OK;
-
-        bank = *dataptr++;
-      }
-
-      if (dryrun)
-      {
-        if (handled) *handled = 1; //TRUE
-        return FLUID_OK;
-      }
-
-      prog = *dataptr++;
-      count = *dataptr++;
-
-      for (i = 0, index = 0; i < count; i++)
-      {
-        note = *dataptr++;
-        if (note & 0x80) return FLUID_OK;
-        keys[index] = note;
-
-        note = *dataptr++;
-        frac = *dataptr++;
-        frac2 = *dataptr++;
-
-        if (note & 0x80 || frac & 0x80 || frac2 & 0x80)
-          return FLUID_OK;
-
-        frac = frac << 7 | frac2;
-
-        /* No change pitch value?  Doesn't really make sense to send that, but.. */
-        if (note == 0x7F && frac == 16383) continue;
-
-        tunedata[index] = note * 100.0 + (frac * 100.0 / 16384.0);
-        index++;
-      }
-
-      if (index > 0)
-      {
-        if (fluid_synth_tune_notes (synth, bank, prog, index, keys, tunedata,
-                                    realtime) == FLUID_FAILED)
-          return FLUID_FAILED;
-      }
-
-      if (handled) *handled = 1; //TRUE
-      break;
-    case MIDI_SYSEX_TUNING_OCTAVE_TUNE_1BYTE:
-    case MIDI_SYSEX_TUNING_OCTAVE_TUNE_2BYTE:
-      if ((msgid == MIDI_SYSEX_TUNING_OCTAVE_TUNE_1BYTE && len != 19)
-          || (msgid == MIDI_SYSEX_TUNING_OCTAVE_TUNE_2BYTE && len != 31))
-        return FLUID_OK;
-
-      if (data[4] & 0x80 || data[5] & 0x80 || data[6] & 0x80)
-        return FLUID_OK;
-
-      if (dryrun)
-      {
-        if (handled) *handled = 1; //TRUE
-        return FLUID_OK;
-      }
-
-      channels = (data[4] & 0x03) << 14 | data[5] << 7 | data[6];
-
-      if (msgid == MIDI_SYSEX_TUNING_OCTAVE_TUNE_1BYTE)
-      {
-        for (i = 0; i < 12; i++)
-        {
-          frac = data[i + 7];
-          if (frac & 0x80) return FLUID_OK;
-          tunedata[i] = (int)frac - 64;
-        }
-      }
-      else
-      {
-        for (i = 0; i < 12; i++)
-        {
-          frac = data[i * 2 + 7];
-          frac2 = data[i * 2 + 8];
-          if (frac & 0x80 || frac2 & 0x80) return FLUID_OK;
-          tunedata[i] = (((int)frac << 7 | (int)frac2) - 8192) * (200.0 / 16384.0);
-        }
-      }
-
-      if (fluid_synth_activate_octave_tuning (synth, 0, 0, "SYSEX",
-                                              tunedata, realtime) == FLUID_FAILED)
-        return FLUID_FAILED;
-
-      if (channels)
-      {
-        for (i = 0; i < 16; i++)
-        {
-          if (channels & (1 << i))
-            fluid_synth_activate_tuning (synth, i, 0, 0, realtime);
-        }
-      }
-
-      if (handled) *handled = 1; //TRUE
-      break;
-  }
-
   return FLUID_OK;
 }
 
@@ -1516,7 +1295,16 @@ fluid_synth_program_change(fluid_synth_t* synth, int chan, int prognum)
   if (synth->verbose)
     FLUID_LOG(FLUID_INFO, "prog\t%d\t%d\t%d", chan, banknum, prognum);
 
-  preset = fluid_synth_find_preset(synth, banknum, prognum); //if (channel->channum == 9) fluid_synth_find_preset(synth, DRUM_INST_BANK, prognum);
+  /* Special handling of channel 10 (or 9 counting from 0). channel
+   * 10 is the percussion channel.
+   *
+   * FIXME - Shouldn't hard code bank selection for channel 10.  I think this
+   * is a hack for MIDI files that do bank changes in GM mode.  Proper way to
+   * handle this would probably be to ignore bank changes when in GM mode.
+   */
+  if (channel->channum == 9)
+    preset = fluid_synth_find_preset(synth, DRUM_INST_BANK, prognum);
+  else preset = fluid_synth_find_preset(synth, banknum, prognum);
 
   /* Fallback to another preset if not found */
   if (!preset)
@@ -1525,7 +1313,7 @@ fluid_synth_program_change(fluid_synth_t* synth, int chan, int prognum)
     subst_prog = prognum;
 
     /* Melodic instrument? */
-    if (banknum != DRUM_INST_BANK)
+    if (channel->channum != 9 && banknum != DRUM_INST_BANK)
     {
       subst_bank = 0;
 
@@ -1911,6 +1699,7 @@ fluid_synth_nwrite_float(fluid_synth_t* synth, int len,
 {
   fluid_real_t** left_in = synth->left_buf;
   fluid_real_t** right_in = synth->right_buf;
+  double time = fluid_utime();
   int i, num, available, count, bytes;
 
   /* make sure we're playing */
@@ -1951,6 +1740,10 @@ fluid_synth_nwrite_float(fluid_synth_t* synth, int len,
   }
 
   synth->cur = num;
+
+  time = fluid_utime() - time;
+  synth->cpu_load = 0.5 * (synth->cpu_load +
+			   time * synth->sample_rate / len / 10000.0);
 
 /*   printf("CPU: %.2f\n", synth->cpu_load); */
 
@@ -1995,6 +1788,7 @@ fluid_synth_write_float(fluid_synth_t* synth, int len,
   float* right_out = (float*) rout;
   fluid_real_t* left_in = synth->left_buf[0];
   fluid_real_t* right_in = synth->right_buf[0];
+  double time = fluid_utime();
 
   /* make sure we're playing */
   if (synth->state != FLUID_SYNTH_PLAYING) {
@@ -2015,6 +1809,10 @@ fluid_synth_write_float(fluid_synth_t* synth, int len,
   }
 
   synth->cur = l;
+
+  time = fluid_utime() - time;
+  synth->cpu_load = 0.5 * (synth->cpu_load +
+			   time * synth->sample_rate / len / 10000.0);
 
 /*   printf("CPU: %.2f\n", synth->cpu_load); */
 
@@ -2043,8 +1841,7 @@ static void init_dither(void)
 }
 
 /* A portable replacement for roundf(), seems it may actually be faster too! */
-//removed inline
-static int
+static inline int
 roundi (float x)
 {
   if (x >= 0.0f)
@@ -2066,9 +1863,12 @@ fluid_synth_write_s16(fluid_synth_t* synth, int len,
   signed short* right_out = (signed short*) rout;
   fluid_real_t* left_in = synth->left_buf[0];
   fluid_real_t* right_in = synth->right_buf[0];
+  double prof_ref = fluid_profile_ref();
   fluid_real_t left_sample;
   fluid_real_t right_sample;
+  double time = fluid_utime();
   int di = synth->dither_index;
+  double prof_ref_on_block;
 
   /* make sure we're playing */
   if (synth->state != FLUID_SYNTH_PLAYING) {
@@ -2081,8 +1881,12 @@ fluid_synth_write_s16(fluid_synth_t* synth, int len,
 
     /* fill up the buffers as needed */
     if (cur == FLUID_BUFSIZE) {
+      prof_ref_on_block = fluid_profile_ref();
+
       fluid_synth_one_block(synth, 0);
       cur = 0;
+
+      fluid_profile(FLUID_PROF_ONE_BLOCK, prof_ref_on_block);
     }
 
     left_sample = roundi (left_in[cur] * 32766.0f + rand_table[0][di]);
@@ -2103,6 +1907,13 @@ fluid_synth_write_s16(fluid_synth_t* synth, int len,
 
   synth->cur = cur;
   synth->dither_index = di;	/* keep dither buffer continous */
+
+  fluid_profile(FLUID_PROF_WRITE_S16, prof_ref);
+
+
+  time = fluid_utime() - time;
+  synth->cpu_load = 0.5 * (synth->cpu_load +
+			   time * synth->sample_rate / len / 10000.0);
 
 /*   printf("CPU: %.2f\n", synth->cpu_load); */
 
@@ -2125,6 +1936,7 @@ fluid_synth_dither_s16(int *dither_index, int len, float* lin, float* rin,
   int i, j, k;
   signed short* left_out = (signed short*) lout;
   signed short* right_out = (signed short*) rout;
+  double prof_ref = fluid_profile_ref();
   fluid_real_t left_sample;
   fluid_real_t right_sample;
   int di = *dither_index;
@@ -2148,6 +1960,8 @@ fluid_synth_dither_s16(int *dither_index, int len, float* lin, float* rin,
   }
 
   *dither_index = di;	/* keep dither buffer continous */
+
+  fluid_profile(FLUID_PROF_WRITE_S16, prof_ref);
 }
 
 /*
@@ -2163,8 +1977,11 @@ fluid_synth_one_block(fluid_synth_t* synth, int do_not_mix_fx_to_out)
   fluid_real_t* reverb_buf;
   fluid_real_t* chorus_buf;
   int byte_size = FLUID_BUFSIZE * sizeof(fluid_real_t);
+  double prof_ref = fluid_profile_ref();
 
 /*   fluid_mutex_lock(synth->busy); /\* Here comes the audio thread. Lock the synth. *\/ */
+
+  fluid_check_fpe("??? Just starting up ???");
 
   /* clean the audio buffers */
   for (i = 0; i < synth->nbuf; i++) {
@@ -2184,11 +2001,15 @@ fluid_synth_one_block(fluid_synth_t* synth, int do_not_mix_fx_to_out)
   reverb_buf = synth->with_reverb ? synth->fx_left_buf[0] : NULL;
   chorus_buf = synth->with_chorus ? synth->fx_left_buf[1] : NULL;
 
+  fluid_profile(FLUID_PROF_ONE_BLOCK_CLEAR, prof_ref);
+
   /* call all playing synthesis processes */
   for (i = 0; i < synth->polyphony; i++) {
     voice = synth->voice[i];
 
     if (_PLAYING(voice)) {
+      double prof_ref_voice = fluid_profile_ref();
+
       /* The output associated with a MIDI channel is wrapped around
        * using the number of audio groups as modulo divider.  This is
        * typically the number of output channels on the 'sound card',
@@ -2207,8 +2028,14 @@ fluid_synth_one_block(fluid_synth_t* synth, int do_not_mix_fx_to_out)
       right_buf = synth->right_buf[auchan];
 
       fluid_voice_write(voice, left_buf, right_buf, reverb_buf, chorus_buf);
+
+      fluid_profile(FLUID_PROF_ONE_BLOCK_VOICE, prof_ref_voice);
     }
   }
+
+  fluid_check_fpe("Synthesis processes");
+
+  fluid_profile(FLUID_PROF_ONE_BLOCK_VOICES, prof_ref);
 
   /* if multi channel output, don't mix the output of the chorus and
      reverb in the final output. The effects outputs are send
@@ -2220,12 +2047,16 @@ fluid_synth_one_block(fluid_synth_t* synth, int do_not_mix_fx_to_out)
     if (reverb_buf) {
       fluid_revmodel_processreplace(synth->reverb, reverb_buf,
 				   synth->fx_left_buf[0], synth->fx_right_buf[0]);
+      fluid_check_fpe("Reverb");
     }
+
+    fluid_profile(FLUID_PROF_ONE_BLOCK_REVERB, prof_ref);
 
     /* send to chorus */
     if (chorus_buf) {
       fluid_chorus_processreplace(synth->chorus, chorus_buf,
 				 synth->fx_left_buf[1], synth->fx_right_buf[1]);
+      fluid_check_fpe("Chorus");
     }
 
   } else {
@@ -2234,15 +2065,20 @@ fluid_synth_one_block(fluid_synth_t* synth, int do_not_mix_fx_to_out)
     if (reverb_buf) {
       fluid_revmodel_processmix(synth->reverb, reverb_buf,
 			       synth->left_buf[0], synth->right_buf[0]);
+      fluid_check_fpe("Reverb");
     }
+
+    fluid_profile(FLUID_PROF_ONE_BLOCK_REVERB, prof_ref);
 
     /* send to chorus */
     if (chorus_buf) {
       fluid_chorus_processmix(synth->chorus, chorus_buf,
 			     synth->left_buf[0], synth->right_buf[0]);
+      fluid_check_fpe("Chorus");
     }
   }
 
+  fluid_profile(FLUID_PROF_ONE_BLOCK_CHORUS, prof_ref);
 
 #ifdef LADSPA
   /* Run the signal through the LADSPA Fx unit */
@@ -2256,8 +2092,13 @@ fluid_synth_one_block(fluid_synth_t* synth, int do_not_mix_fx_to_out)
 #if 0
   {float num=1;while (num != 0){num*=0.5;};};
 #endif
+  fluid_check_fpe("??? Remainder of synth_one_block ???");
 
 /*   fluid_mutex_unlock(synth->busy); /\* Allow other threads to touch the synth *\/ */
+
+  fluid_sample_timer_process(synth);
+
+  fluid_check_fpe("fluid_sample_timer_process");
 
   return 0;
 }
@@ -2300,7 +2141,10 @@ fluid_synth_free_voice_by_kill(fluid_synth_t* synth)
      * Typically, drum notes are triggered only very briefly, they run most
      * of the time in release phase.
      */
-    if (_RELEASED(voice)){
+    if (voice->chan == 9){
+      this_voice_prio += 4000;
+
+    } else if (_RELEASED(voice)){
       /* The key for this voice has been released. Consider it much less important
        * than a voice, which is still held.
        */
@@ -2385,9 +2229,10 @@ fluid_synth_alloc_voice(fluid_synth_t* synth, fluid_sample_t* sample, int chan, 
       }
     }
 
-    FLUID_LOG(FLUID_INFO, "noteon\t%d\t%d\t%d\t%05d\t%.3f\t\t%.3f\t%d",
+    FLUID_LOG(FLUID_INFO, "noteon\t%d\t%d\t%d\t%05d\t%.3f\t%.3f\t%.3f\t%d",
 	     chan, key, vel, synth->storeid,
 	     (float) synth->ticks / 44100.0f,
+	     (fluid_curtime() - synth->start) / 1000.0f,
 	     0.0f,
 	     k);
   }
@@ -2528,25 +2373,40 @@ fluid_synth_sfload(fluid_synth_t* synth, const char* filename, int reset_presets
   for (list = synth->loaders; list; list = fluid_list_next(list)) {
     loader = (fluid_sfloader_t*) fluid_list_get(list);
 
-    sfont = FLUID_NEW(fluid_sfont_t);
-    sfont->id = ++synth->sfont_id;
-    synth->sfont = fluid_list_prepend(synth->sfont, sfont);
+    sfont = fluid_sfloader_load(loader, filename);
 
-    loader->data = sfont;
-    fluid_sfloader_load(loader, filename);
-    loader->data = NULL;
+    if (sfont != NULL) {
 
+      sfont->id = ++synth->sfont_id;
 
-    if (reset_presets) {
-        fluid_synth_program_reset(synth);
+      /* insert the sfont as the first one on the list */
+      synth->sfont = fluid_list_prepend(synth->sfont, sfont);
+
+      /* reset the presets for all channels */
+      if (reset_presets) {
+	fluid_synth_program_reset(synth);
+      }
+
+      return (int) sfont->id;
     }
-    return (int) sfont->id;
   }
 
   FLUID_LOG(FLUID_ERR, "Failed to load SoundFont \"%s\"", filename);
   return -1;
 }
 
+/*
+ * fluid_synth_sfunload_callback
+ */
+static int fluid_synth_sfunload_callback(void* data, unsigned int msec)
+{
+  fluid_sfont_t* sfont = (fluid_sfont_t*) data;
+  int r = delete_fluid_sfont(sfont);
+  if (r == 0) {
+    FLUID_LOG(FLUID_DBG,"Unloaded SoundFont");
+  }
+  return r != 0;
+}
 
 /*
  * fluid_synth_sfunload_macos9
@@ -2600,10 +2460,8 @@ fluid_synth_sfunload(fluid_synth_t* synth, unsigned int id, int reset_presets)
 #if defined(MACOS9)
     synth->unloading = fluid_list_prepend(synth->unloading, sfont);
 #else
-  int r = delete_fluid_sfont(sfont);
-  if (r == 0) {
-    FLUID_LOG(FLUID_DBG,"Unloaded SoundFont");
-  }
+    /* spin off a timer thread to unload the sfont later */
+    new_fluid_timer(100, fluid_synth_sfunload_callback, sfont, 1, 1);
 #endif
   }
 
@@ -2941,6 +2799,11 @@ fluid_synth_count_effects_channels(fluid_synth_t* synth)
   return synth->effects_channels;
 }
 
+double fluid_synth_get_cpu_load(fluid_synth_t* synth)
+{
+  return synth->cpu_load;
+}
+
 static fluid_tuning_t*
 fluid_synth_get_tuning(fluid_synth_t* synth, int bank, int prog)
 {
@@ -2962,7 +2825,7 @@ fluid_synth_get_tuning(fluid_synth_t* synth, int bank, int prog)
 }
 
 static fluid_tuning_t*
-fluid_synth_create_tuning(fluid_synth_t* synth, int bank, int prog, const char* name)
+fluid_synth_create_tuning(fluid_synth_t* synth, int bank, int prog, char* name)
 {
   if ((bank < 0) || (bank >= 128)) {
     FLUID_LOG(FLUID_WARN, "Bank number out of range");
@@ -3007,7 +2870,7 @@ fluid_synth_create_tuning(fluid_synth_t* synth, int bank, int prog, const char* 
 
 int fluid_synth_create_key_tuning(fluid_synth_t* synth,
 				 int bank, int prog,
-                 const char* name, double* pitch)
+				 char* name, double* pitch)
 {
   fluid_tuning_t* tuning = fluid_synth_create_tuning(synth, bank, prog, name);
   if (tuning == NULL) {
@@ -3022,17 +2885,9 @@ int fluid_synth_create_key_tuning(fluid_synth_t* synth,
 
 int fluid_synth_create_octave_tuning(fluid_synth_t* synth,
 				    int bank, int prog,
-                    const char* name, const double* pitch)
+				    char* name, double* pitch)
 {
-    fluid_tuning_t* tuning;
-
-    if(!(synth != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(bank >= 0 && bank < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(prog >= 0 && prog < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(name != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(pitch != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
-
-  tuning = fluid_synth_create_tuning(synth, bank, prog, name);
+  fluid_tuning_t* tuning = fluid_synth_create_tuning(synth, bank, prog, name);
   if (tuning == NULL) {
     return FLUID_FAILED;
   }
@@ -3040,53 +2895,19 @@ int fluid_synth_create_octave_tuning(fluid_synth_t* synth,
   return FLUID_OK;
 }
 
-/**
- * Activate an octave tuning on every octave in the MIDI note scale.
- * @param synth FluidSynth instance
- * @param bank Tuning bank number (0-127), not related to MIDI instrument bank
- * @param prog Tuning preset number (0-127), not related to MIDI instrument program
- * @param name Label name for this tuning
- * @param pitch Array of pitch values (length of 12 for each note of an octave
- *   starting at note C, values are number of offset cents to add to the normal
- *   tuning amount)
- * @param apply TRUE to apply new tuning in realtime to existing notes which
- *   are using the replaced tuning (if any), FALSE otherwise
- * @return FLUID_OK on success, FLUID_FAILED otherwise
- * @since 1.1.0
- */
-int
-fluid_synth_activate_octave_tuning(fluid_synth_t* synth, int bank, int prog,
-                                   const char* name, const double* pitch, int apply)
-{
-  return fluid_synth_create_octave_tuning(synth,bank,prog,name,pitch);
-}
-
-
 int fluid_synth_tune_notes(fluid_synth_t* synth, int bank, int prog,
 			  int len, int *key, double* pitch, int apply)
 {
-    fluid_tuning_t* tuning;
-    int i;
+  fluid_tuning_t* tuning = fluid_synth_get_tuning(synth, bank, prog);
+  int i;
 
-    if(!(synth != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(bank >= 0 && bank < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(prog >= 0 && prog < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(len > 0)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(key != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(pitch != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
+  if (tuning == NULL) {
+    return FLUID_FAILED;
+  }
 
-    tuning = fluid_synth_get_tuning (synth, bank, prog);
-
-    if(!tuning)
-        tuning = new_fluid_tuning ("Unnamed", bank, prog);
-
-    if (tuning == NULL) {
-        return FLUID_FAILED;
-    }
-
-    for (i = 0; i < len; i++) {
-        fluid_tuning_set_pitch(tuning, key[i], pitch[i]);
-    }
+  for (i = 0; i < len; i++) {
+    fluid_tuning_set_pitch(tuning, key[i], pitch[i]);
+  }
 
   return FLUID_OK;
 }
@@ -3094,13 +2915,7 @@ int fluid_synth_tune_notes(fluid_synth_t* synth, int bank, int prog,
 int fluid_synth_select_tuning(fluid_synth_t* synth, int chan,
 			     int bank, int prog)
 {
-    fluid_tuning_t* tuning;
-
-    if(!(synth != NULL)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(bank >= 0 && bank < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
-    if(!(prog >= 0 && prog < 128)) return FLUID_FAILED; //fluid_return_val_if_fail
-
-  tuning = fluid_synth_get_tuning(synth, bank, prog);
+  fluid_tuning_t* tuning = fluid_synth_get_tuning(synth, bank, prog);
 
   if (tuning == NULL) {
     return FLUID_FAILED;
@@ -3113,26 +2928,6 @@ int fluid_synth_select_tuning(fluid_synth_t* synth, int chan,
   fluid_channel_set_tuning(synth->channel[chan], synth->tuning[bank][prog]);
 
   return FLUID_OK;
-}
-
-/**
- * Activate a tuning scale on a MIDI channel.
- * @param synth FluidSynth instance
- * @param chan MIDI channel number (0 to MIDI channel count - 1)
- * @param bank Tuning bank number (0-127), not related to MIDI instrument bank
- * @param prog Tuning preset number (0-127), not related to MIDI instrument program
- * @param apply TRUE to apply tuning change to active notes, FALSE otherwise
- * @return FLUID_OK on success, FLUID_FAILED otherwise
- * @since 1.1.0
- *
- * NOTE: A default equal tempered scale will be created, if no tuning exists
- * on the given bank and prog.
- */
-int
-fluid_synth_activate_tuning(fluid_synth_t* synth, int chan, int bank, int prog,
-                            int apply)
-{
-    return fluid_synth_select_tuning(synth,chan,bank,prog);
 }
 
 int fluid_synth_reset_tuning(fluid_synth_t* synth, int chan)
@@ -3188,36 +2983,6 @@ int fluid_synth_tuning_iteration_next(fluid_synth_t* synth, int* bank, int* prog
 
   return 0;
 }
-
-//workaround for snprint on MSVC <2015 from http://stackoverflow.com/questions/2915672/snprintf-and-visual-studio-2010
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf c99_snprintf
-#define vsnprintf c99_vsnprintf
-
-__inline int c99_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
-{
-    int count = -1;
-
-    if (size != 0)
-        count = _vsnprintf_s(outBuf, size, _TRUNCATE, format, ap);
-    if (count == -1)
-        count = _vscprintf(format, ap);
-
-    return count;
-}
-
-__inline int c99_snprintf(char *outBuf, size_t size, const char *format, ...)
-{
-    int count;
-    va_list ap;
-
-    va_start(ap, format);
-    count = c99_vsnprintf(outBuf, size, format, ap);
-    va_end(ap);
-
-    return count;
-}
-#endif
 
 int fluid_synth_tuning_dump(fluid_synth_t* synth, int bank, int prog,
 			   char* name, int len, double* pitch)
@@ -3372,20 +3137,52 @@ float fluid_synth_get_gen(fluid_synth_t* synth, int chan, int param)
   return fluid_channel_get_gen(synth->channel[chan], param);
 }
 
-//midi_router disabled
 /* The synth needs to know the router for the command line handlers (they only
  * supply the synth as argument)
  */
-//void fluid_synth_set_midi_router(fluid_synth_t* synth, fluid_midi_router_t* router){
-//  synth->midi_router=router;
-//};
+void fluid_synth_set_midi_router(fluid_synth_t* synth, fluid_midi_router_t* router){
+  synth->midi_router=router;
+};
 
 /* Purpose:
  * Any MIDI event from the MIDI router arrives here and is handed
  * to the appropriate function.
  */
+int fluid_synth_handle_midi_event(void* data, fluid_midi_event_t* event)
+{
+  fluid_synth_t* synth = (fluid_synth_t*) data;
+  int type = fluid_midi_event_get_type(event);
+  int chan = fluid_midi_event_get_channel(event);
 
-//fluid_synth_handle_midi_event disabled
+  switch(type) {
+      case NOTE_ON:
+	return fluid_synth_noteon(synth, chan,
+				 fluid_midi_event_get_key(event),
+				 fluid_midi_event_get_velocity(event));
+
+      case NOTE_OFF:
+	return fluid_synth_noteoff(synth, chan, fluid_midi_event_get_key(event));
+
+      case CONTROL_CHANGE:
+	return fluid_synth_cc(synth, chan,
+			     fluid_midi_event_get_control(event),
+			     fluid_midi_event_get_value(event));
+
+      case PROGRAM_CHANGE:
+	return fluid_synth_program_change(synth, chan, fluid_midi_event_get_program(event));
+
+      case CHANNEL_PRESSURE:
+      return fluid_synth_channel_pressure(synth, chan, fluid_midi_event_get_program(event));
+
+      case PITCH_BEND:
+	return fluid_synth_pitch_bend(synth, chan, fluid_midi_event_get_pitch(event));
+
+      case MIDI_SYSTEM_RESET:
+	return fluid_synth_system_reset(synth);
+  }
+  return FLUID_FAILED;
+}
+
 
 int fluid_synth_start(fluid_synth_t* synth, unsigned int id, fluid_preset_t* preset,
 		      int audio_chan, int midi_chan, int key, int vel)
@@ -3408,13 +3205,12 @@ int fluid_synth_start(fluid_synth_t* synth, unsigned int id, fluid_preset_t* pre
     return FLUID_FAILED;
   }
 
-  //mutex disabled, must render in a single thread
-  //fluid_mutex_lock(synth->busy); /* One at a time, please */
+  fluid_mutex_lock(synth->busy); /* One at a time, please */
 
   synth->storeid = id;
   r = fluid_preset_noteon(preset, synth, midi_chan, key, vel);
 
-  //fluid_mutex_unlock(synth->busy);
+  fluid_mutex_unlock(synth->busy);
 
   return r;
 }

@@ -21,6 +21,7 @@ list(APPEND SCOPED_HEADERS
     include/fluidsynth/gen.h
     include/fluidsynth/voice.h
     include/fluidsynth/version.h
+    include/fluidsynth/midi.h
 )
 
 list(APPEND SOURCES
@@ -40,6 +41,12 @@ list(APPEND SOURCES
     src/fluid_sys.c
     src/fluid_tuning.c
     src/fluid_voice.c
+    src/fluid_io.c
+	src/fluid_event.c
+    src/fluid_seq.c
+    src/fluid_seqbind.c
+    src/fluid_midi_router.c
+    src/fluid_midi.c
 )
 
 # Dependencies:

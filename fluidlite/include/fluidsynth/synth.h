@@ -21,6 +21,7 @@
 #ifndef _FLUIDSYNTH_SYNTH_H
 #define _FLUIDSYNTH_SYNTH_H
 
+#define FLUIDSYNTH_API
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,8 +55,6 @@ extern "C" {
    * \return a newly allocated synthesizer or NULL in case of error
    */
 FLUIDSYNTH_API fluid_synth_t* new_fluid_synth(fluid_settings_t* settings);
-
-FLUIDSYNTH_API void fluid_synth_set_sample_rate(fluid_synth_t* synth, float sample_rate);
 
 
   /** 
@@ -108,10 +107,6 @@ FLUIDSYNTH_API int fluid_synth_get_pitch_wheel_sens(fluid_synth_t* synth, int ch
 
   /** Send a program change message. Returns 0 if no error occurred, -1 otherwise. */
 FLUIDSYNTH_API int fluid_synth_program_change(fluid_synth_t* synth, int chan, int program);
-
-FLUIDSYNTH_API int fluid_synth_channel_pressure(fluid_synth_t* synth, int chan, int val);
-FLUIDSYNTH_API int fluid_synth_sysex(fluid_synth_t *synth, const char *data, int len,
-                                     char *response, int *response_len, int *handled, int dryrun);
 
   /** Select a bank. Returns 0 if no error occurred, -1 otherwise. */
 FLUIDSYNTH_API 
@@ -185,16 +180,6 @@ FLUIDSYNTH_API int fluid_synth_stop(fluid_synth_t* synth, unsigned int id);
    * SoundFont management 
    *
    */
-
-  /** Set an optional function callback each time a preset has finished loading.
-      This can be useful when calling fluid_synth_sfload asynchronously.
-      The function must be formatted like this:
-      void my_callback_function(int bank, int num, char* name)
-
-      \param callback Pointer to the function
-  */
-FLUIDSYNTH_API
-void fluid_synth_set_preset_callback(void* callback);
 
   /** Loads a SoundFont file and creates a new SoundFont. The newly
       loaded SoundFont will be put on top of the SoundFont
@@ -478,7 +463,7 @@ FLUIDSYNTH_API float fluid_synth_get_gen(fluid_synth_t* synth, int chan, int par
   */
 FLUIDSYNTH_API 
 int fluid_synth_create_key_tuning(fluid_synth_t* synth, int tuning_bank, int tuning_prog,
-                                 const char* name, double* pitch);
+				 char* name, double* pitch);
 
   /** Create a new octave-based tuning with given name, number, and
       pitches.  The array 'pitches' should have length 12 and contains
@@ -494,11 +479,7 @@ int fluid_synth_create_key_tuning(fluid_synth_t* synth, int tuning_bank, int tun
   */
 FLUIDSYNTH_API 
 int fluid_synth_create_octave_tuning(fluid_synth_t* synth, int tuning_bank, int tuning_prog,
-                                    const char* name, const double* pitch);
-
-FLUIDSYNTH_API
-int fluid_synth_activate_octave_tuning(fluid_synth_t* synth, int bank, int prog,
-                                       const char* name, const double* pitch, int apply);
+				    char* name, double* pitch);
 
   /** Request a note tuning changes. Both they 'keys' and 'pitches'
       arrays should be of length 'num_pitches'. If 'apply' is non-zero,
@@ -527,8 +508,6 @@ int fluid_synth_tune_notes(fluid_synth_t* synth, int tuning_bank, int tuning_pro
   */
 FLUIDSYNTH_API 
 int fluid_synth_select_tuning(fluid_synth_t* synth, int chan, int tuning_bank, int tuning_prog);
-
-int fluid_synth_activate_tuning(fluid_synth_t* synth, int chan, int bank, int prog, int apply);
 
   /** Set the tuning to the default well-tempered tuning on a channel.
 
@@ -579,6 +558,13 @@ FLUIDSYNTH_API int fluid_synth_tuning_dump(fluid_synth_t* synth, int bank, int p
    * Misc 
    *
    */
+
+  /** Get an estimation of the CPU load due to the audio synthesis.
+      Returns a percentage (0-100).
+
+      \param synth The synthesizer object
+  */
+FLUIDSYNTH_API double fluid_synth_get_cpu_load(fluid_synth_t* synth);
 
   /** Get a textual representation of the last error */
 FLUIDSYNTH_API char* fluid_synth_error(fluid_synth_t* synth);
@@ -700,10 +686,13 @@ FLUIDSYNTH_API void fluid_synth_get_voicelist(fluid_synth_t* synth,
 					    fluid_voice_t* buf[], int bufsize, int ID);
 
 
-//midi router disabled
-//  /** This is a hack to get command handlers working */
-//FLUIDSYNTH_API void fluid_synth_set_midi_router(fluid_synth_t* synth,
-//					      fluid_midi_router_t* router);
+  /** Callback function for the MIDI router. Any event goes through this. */
+FLUIDSYNTH_API int fluid_synth_handle_midi_event(void* data, fluid_midi_event_t* event);
+
+
+  /** This is a hack to get command handlers working */
+FLUIDSYNTH_API void fluid_synth_set_midi_router(fluid_synth_t* synth, 
+					      fluid_midi_router_t* router);
 
 #ifdef __cplusplus
 }

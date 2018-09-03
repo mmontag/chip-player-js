@@ -88,6 +88,9 @@ extern "C" {
 #include "fluidsynth/gen.h"
 #include "fluidsynth/voice.h"
 #include "fluidsynth/version.h"
+#include "fluidsynth/event.h"
+#include "fluidsynth/seq.h"
+#include "fluidsynth/midi.h"
 
 
 #ifdef __cplusplus

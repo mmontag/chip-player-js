@@ -28,12 +28,16 @@
  *                         INCLUDES
  */
 
-#include "fluid_config.h"
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "fluidsynth_priv.h"
 #include "fluid_list.h"
 #include "fluid_rev.h"
 #include "fluid_voice.h"
 #include "fluid_chorus.h"
+#include "fluid_ladspa.h"
+#include "fluid_midi_router.h"
 #include "fluid_sys.h"
 
 /***************************************************************
@@ -77,7 +81,6 @@ struct _fluid_bank_offset_t {
 	int offset;
 };
 
-
 /*
  * fluid_synth_t
  */
@@ -99,6 +102,7 @@ struct _fluid_synth_t
   int effects_channels;              /** the number of effects channels (= 2) */
   unsigned int state;                /** the synthesizer state */
   unsigned int ticks;                /** the number of audio samples since the start */
+  unsigned int start;                /** the start in msec, as returned by system clock */
 
   fluid_list_t *loaders;              /** the soundfont loaders */
   fluid_list_t* sfont;                /** the loaded soundfont */
@@ -129,11 +133,22 @@ struct _fluid_synth_t
   int dither_index;		/* current index in random dither value buffer: fluid_synth_(write_s16|dither_s16) */
 
   char outbuf[256];                  /** buffer for message output */
+  double cpu_load;
 
   fluid_tuning_t*** tuning;           /** 128 banks of 128 programs for the tunings */
   fluid_tuning_t* cur_tuning;         /** current tuning in the iteration */
 
   unsigned int min_note_length_ticks; /**< If note-offs are triggered just after a note-on, they will be delayed */
+  fluid_midi_router_t* midi_router;     /* The midi router. Could be done nicer. */
+  fluid_mutex_t busy;                   /* Indicates, whether the audio thread is currently running.
+					 * Note: This simple scheme does -not- provide 100 % protection against
+					 * thread problems, for example from MIDI thread and shell thread
+					 */
+  fluid_sample_timer_t* sample_timers; /* List of timers triggered after a block has been processed */
+
+#ifdef LADSPA
+  fluid_LADSPA_FxUnit_t* LADSPA_FxUnit; /** Effects unit for LADSPA support */
+#endif
 };
 
 /** returns 1 if the value has been set, 0 otherwise */
@@ -195,6 +210,10 @@ void fluid_synth_remove_bank_offset(fluid_synth_t* synth, int sfont_id);
 void fluid_synth_dither_s16(int *dither_index, int len, float* lin, float* rin,
 			    void* lout, int loff, int lincr,
 			    void* rout, int roff, int rincr);
+
+fluid_sample_timer_t* new_fluid_sample_timer(fluid_synth_t* synth, fluid_timer_callback_t callback, void* data);
+int delete_fluid_sample_timer(fluid_synth_t* synth, fluid_sample_timer_t* timer);
+
 /*
  * misc
  */
