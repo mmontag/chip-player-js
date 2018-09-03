@@ -248,6 +248,7 @@ struct _fluid_player_t {
   char* current_file;
   char send_program_change; /* should we ignore the program changes? */
   char use_system_timer;   /* if zero, use sample timers, otherwise use system clock timer */
+  int seek_ticks;           /* new position in tempo ticks (midi ticks) for seeking */
   int start_ticks;          /* the number of tempo ticks passed at the last tempo change */
   int cur_ticks;            /* the number of tempo ticks passed */
   int begin_msec;           /* the time (msec) of the beginning of the file */
@@ -256,6 +257,9 @@ struct _fluid_player_t {
   int miditempo;            /* as indicated by MIDI SetTempo: n 24th of a usec per midi-clock. bravo! */
   double deltatime;         /* milliseconds per midi tick. depends on set-tempo */
   unsigned int division;
+
+	handle_midi_event_func_t playback_callback; /* function fired on each midi event as it is played */
+	void* playback_userdata; /* pointer to user-defined data passed to playback_callback function */
 };
 
 int fluid_player_add_track(fluid_player_t* player, fluid_track_t* track);
