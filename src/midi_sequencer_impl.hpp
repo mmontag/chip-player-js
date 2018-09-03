@@ -1515,7 +1515,7 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
             if(m_interface->onDebugMessage)
                 m_interface->onDebugMessage(m_interface->onDebugMessage_userData, "Switching another device: %s", data);
             if(m_interface->rt_deviceSwitch)
-                m_interface->rt_deviceSwitch(m_interface->rtUserData, track, data, length);
+                m_interface->rt_deviceSwitch(m_interface->rtUserData, track, data, size_t(length));
             return;
         }
 
