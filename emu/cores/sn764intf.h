@@ -18,6 +18,7 @@ typedef struct sn76496_config
 	UINT8 shiftRegWidth;	// noise shift register width
 	UINT8 negate;			// invert output
 	UINT8 clkDiv;			// clock divider (1 or 8)
+	UINT8 ncrPSG;			// enable NCR noise algorithm
 	UINT8 segaPSG;			// enable Sega PSG frequencies (frequency 0 is treated as 1)
 	UINT8 stereo;			// enable Sega Game Gear stereo
 	
@@ -25,18 +26,19 @@ typedef struct sn76496_config
 } SN76496_CFG;
 
 // example configurations from MAME:
-//	chip		taps	srWidth	negate	clkDiv	segaPSG	stereo
-//	--------	----	----	----	----	----	----
-//	SN76489		0x03	15		1		8		0		0
-//	U8106		0x03	15		1		8		0		0
-//	SN94624		0x03	15		1		1		0		0
-//	SN76489A	0x0C	17		0		8		0		0
-//	SN76496		0x0C	17		0		8		0		0
-//	Y2404		0x0C	17		0		8		0		0
-//	SN76494		0x0C	17		0		1		0		0
-//	NCR7496		0x22	16		0		8		0		0
-//	SEGA PSG	0x09	16		1		8		1		0
-//	Game Gear	0x09	16		1		8		1		1
+//	chip		taps	srWidth	negate	clkDiv	ncrPSG	segaPSG	stereo
+//	--------	----	----	----	----	----	----	----
+//	SN76489		0x03	15		1		8		0		0		0
+//	U8106		0x03	15		1		8		0		0		0
+//	SN94624		0x03	15		1		1		0		0		0
+//	SN76489A	0x0C	17		0		8		0		0		0
+//	SN76496		0x0C	17		0		8		0		0		0
+//	Y2404		0x0C	17		0		8		0		0		0
+//	SN76494		0x0C	17		0		1		0		0		0
+//	NCR8496		0x22	16		1		8		1		0		0
+//	PSSJ-3		0x22	16		0		8		1		0		0
+//	SEGA PSG	0x09	16		1		8		0		1		0
+//	Game Gear	0x09	16		1		8		0		1		1
 
 // The T6W28 consists of two SN76489A devices - tone and noise. The tone device is created first.
 // The noise device needs cfg.t6w28_tone to be set to the dataPtr of the tone device.

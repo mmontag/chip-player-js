@@ -114,7 +114,7 @@ struct _ga20_state
 	
 	UINT8 *rom;
 	UINT32 rom_size;
-	UINT8 regs[0x40];
+	UINT8 regs[0x20];
 	struct IremGA20_channel_def channel[4];
 };
 
@@ -204,7 +204,7 @@ static void irem_ga20_w(void *info, UINT8 offset, UINT8 data)
 
 	//logerror("GA20:  Offset %02x, data %04x\n",offset,data);
 
-	offset &= 0x3F;
+	offset &= 0x1F;
 	channel = offset >> 3;
 
 	chip->regs[offset] = data;
@@ -248,7 +248,7 @@ static UINT8 irem_ga20_r(void *info, UINT8 offset)
 	ga20_state *chip = (ga20_state *)info;
 	int channel;
 
-	offset &= 0x3F;
+	offset &= 0x1F;
 	channel = offset >> 3;
 
 	switch (offset & 0x7)

@@ -520,6 +520,7 @@ static void InitVGMChips(void)
 				snCfg.negate = (VGMHdr.bytPSG_Flags & 0x02) ? 1 : 0;
 				snCfg.stereo = (VGMHdr.bytPSG_Flags & 0x04) ? 0 : 1;
 				snCfg.clkDiv = (VGMHdr.bytPSG_Flags & 0x08) ? 1 : 8;
+				snCfg.ncrPSG = (VGMHdr.bytPSG_Flags & 0x10) ? 1 : 0;
 				if ((chipNum & 0x01) && (chpClk & 0x80000000))	// must be 2nd chip + T6W28 mode
 					snCfg.t6w28_tone = VGMChips[curChip][chipNum ^ 0x01].defInf.dataPtr;
 				else

@@ -46,10 +46,12 @@
   Noise is an XOR function, and audio output is negated before being output.
   All the Sega-made PSG chips act as if the frequency was set to 0 if 0 is written
   to the frequency register.
-  ** NCR7496 (as used on the Tandy 1000) is similar to the SN76489 but with a
-  different noise LFSR patttern: taps on bits A and E, output on E
+  ** NCR8496 (as used on the Tandy 1000TX) is similar to the SN76489 but with a
+  different noise LFSR pattern: taps on bits A and E, output on E, XNOR function
   It uses a 15-bit ring buffer for periodic noise/arbitrary duty cycle.
-  (all this chip's info needs to be verified)
+  Its output is inverted.
+  ** PSSJ-3 (as used on the later Tandy 1000 series computers) is the same as the
+  NCR8496 with the exception that its output is not inverted.
 
   28/03/2005 : Sebastien Chevalier
   Update th SN76496Write func, according to SN76489 doc found on SMSPower.
@@ -77,7 +79,7 @@
   16/11/2009 : Lord Nightmare
   Fix screeching in regulus: When summing together four equal channels, the
   size of the max amplitude per channel should be 1/4 of the max range, not
-  1/3. Added NCR7496.
+  1/3. Added NCR8496.
 
   18/11/2009 : Lord Nightmare
   Modify Init functions to support negating the audio output. The gamegear
@@ -115,12 +117,21 @@
   ValleyBell. Made Sega PSG chips start up with register 0x3 selected (volume
   for channel 2) based on hardware tests by Nemesis.
 
+  03/09/2018: Lord Nightmare, Qbix, ValleyBell, NewRisingSun
+  * renamed the NCR8496 to its correct name, based on chip pictures on VGMPF
+  * fixed NCR8496's noise LFSR behavior so it is only reset if the mode bit in
+  register 6 is changed.
+  * NCR8496's LFSR feedback function is an XNOR, which is now supported.
+  * add PSSJ-3 support for the later Tandy 1000 series computers.
+  * NCR8496's output is inverted, PSSJ-3's output is not.
+
   TODO: * Implement the TMS9919 - any difference to sn94624?
         * Implement the T6W28; has registers in a weird order, needs writes
           to be 'sanitized' first. Also is stereo, similar to game gear.
-        * Test the NCR7496; Smspower says the whitenoise taps are A and E,
-          but this needs verification on real hardware.
         * Factor out common code so that the SAA1099 can share some code.
+        * verify NCR8496/PSSJ-3 behavior on write to mirrored registers; unlike the
+          other variants, the NCR-derived variants are implied to ignore writes to
+          regs 1,3,5,6,7 if 0x80 is not set. This needs to be verified on real hardware.
 
 ***************************************************************************/
 
@@ -145,7 +156,7 @@ static void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data);
 
 static void SN76496Update(void *param, UINT32 samples, DEV_SMPL** outputs);
 static UINT32 sn76496_start(void* _chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
-							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega);
+							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 ncr, UINT8 sega);
 static void sn76496_connect_t6w28(void *noisechip, void *tonechip);
 static void sn76496_shutdown(void *chip);
 static void sn76496_reset(void *chip);
@@ -196,7 +207,8 @@ struct _sn76496_state
 	UINT8 negate;           // output negate flag
 	UINT8 stereo;           // whether we're dealing with stereo or not
 	UINT32 clock_divider;   // clock divider
-	UINT8 sega_style_psg;   // flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0; AND if the initial register is pointing to 0x3 instead of 0x0 AND if the volume reg is preloaded with 0xF instead of 0x0
+	UINT8 ncr_style_psg;    // flag to ignore writes to regs 1,3,5,6,7 with bit 7 low
+	UINT8 sega_style_psg;   // flag to make frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0; the initial register is pointing to 0x3 instead of 0x0; the volume reg is preloaded with 0xF instead of 0x0
 	
 	INT32 vol_table[16];    // volume table (for 4-bit to db conversion)
 	UINT16 Register[8];     // registers
@@ -245,11 +257,13 @@ static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 	{
 		r = (data & 0x70) >> 4;
 		R->last_register = r;
+		if (((R->ncr_style_psg) && (r == 6)) && ((data&0x04) != (R->Register[6]&0x04))) R->RNG = R->feedback_mask; // NCR-style PSG resets the LFSR only on a mode write which actually changes the state of bit 2 of register 6
 		R->Register[r] = (R->Register[r] & 0x3f0) | (data & 0x0f);
 	}
 	else
 	{
 		r = R->last_register;
+		//if ((R->ncr_style_psg) && ((r & 1) || (r == 6))) return; // NCR-style PSG ignores writes to regs 1, 3, 5, 6 and 7 with bit 7 clear; this behavior is not verified on hardware yet, uncomment it once verified.
 	}
 
 	c = r >> 1;
@@ -274,11 +288,6 @@ static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 		case 7: // noise: volume
 			R->volume[c] = R->vol_table[data & 0x0f];
 			if ((data & 0x80) == 0) R->Register[r] = (R->Register[r] & 0x3f0) | (data & 0x0f);
-			
-		//	// "Every volume write resets the waveform to High level.", TmEE, 2012-11-24 on SMSPower
-		//	R->output[c] = 1;
-		//	R->count[c] = R->period[c];
-		//	disabled for now - sounds awful
 			break;
 		case 6: // noise: frequency, mode
 			{
@@ -287,7 +296,7 @@ static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data)
 				n = R->Register[6]&3;
 				// N/512,N/1024,N/2048,Tone #3 output
 				R->period[3] = (n == 3) ? (R->period[2]<<1) : (2 << (4+n));
-				R->RNG = R->feedback_mask;
+				if (!(R->ncr_style_psg)) R->RNG = R->feedback_mask;
 			}
 			break;
 	}
@@ -392,7 +401,10 @@ static void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 				{
 					R->RNG >>= 1;
 				}
-				R->output[3] = R->RNG & 1;
+				if (R->ncr_style_psg && in_noise_mode(R))
+					R->output[3] ^= (R->RNG & 1);
+				else
+					R->output[3] = R->RNG & 1;
 
 				R->count[3] = R->period[3];
 			}
@@ -557,7 +569,7 @@ static void SN76496_set_gain(sn76496_state *R,int gain)
 
 
 static UINT32 sn76496_start(void* _chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
-							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 sega)
+							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 ncr, UINT8 sega)
 {
 	sn76496_state *chip = (sn76496_state*)_chip;
 	UINT32 feedbackmask;
@@ -587,6 +599,7 @@ static UINT32 sn76496_start(void* _chip, UINT32 clock, UINT8 shiftregwidth, UINT
 	chip->whitenoise_tap2 = ntap[1];    // mask for white noise tap 2
 	chip->negate = negate;              // channel negation
 	chip->stereo = stereo;              // GameGear stereo
+	chip->ncr_style_psg = ncr;          // NCR mode
 	chip->sega_style_psg = sega;        // frequency set to 0 results in freq = 0x400 rather than 0
 	chip->NgpFlags = 0x00;
 	chip->NgpChip2 = NULL;
@@ -685,7 +698,7 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 		return 0xFF;
 	
 	rate = sn76496_start(chip, cfg->_genCfg.clock, cfg->shiftRegWidth, cfg->noiseTaps,
-						cfg->negate, cfg->stereo, cfg->clkDiv, cfg->segaPSG);
+						cfg->negate, cfg->stereo, cfg->clkDiv, cfg->ncrPSG, cfg->segaPSG);
 	
 	chip->cfg = *cfg;
 	if (cfg->t6w28_tone != NULL)
@@ -749,9 +762,14 @@ sn94624_device::sn94624_device(const machine_config &mconfig, const char *tag, d
 	:  sn76496_base_device(mconfig, SN94624, "SN94624", tag, 0x4000, 0x01, 0x02, true, false, 1, true, owner, clock, "sn94624", __FILE__)
 	{ }
 
-// NCR7496 not verified; info from smspower wiki
-ncr7496_device::ncr7496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	:  sn76496_base_device(mconfig, NCR7496, "NCR7496", tag, 0x8000, 0x02, 0x20, false, false, 8, true, owner, clock, "ncr7496", __FILE__)
+// NCR8496 whitenoise verified, phase verified; verified by ValleyBell & NewRisingSun
+ncr8496_device::ncr8496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, NCR8496, "NCR8496", tag, 0x8000, 0x02, 0x20, true, false, 8, true, owner, clock, "ncr8496", __FILE__)
+	{ }
+
+// PSSJ-3 whitenoise verified, phase verified; verified by ValleyBell & NewRisingSun
+pssj3_device::pssj3_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	:  sn76496_base_device(mconfig, PSSJ3, "PSSJ-3", tag, 0x8000, 0x02, 0x20, false, false, 8, true, owner, clock, "pssj3", __FILE__)
 	{ }
 
 // Verified by Justin Kerk
