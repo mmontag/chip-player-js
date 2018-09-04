@@ -140,6 +140,7 @@
 #endif
 #include <stdlib.h>
 #include <string.h>	// for memset()
+#include <math.h>
 
 #include <stdtype.h>
 #include "../snddef.h"
@@ -154,7 +155,7 @@ static UINT8 sn76496_ready_r(void *chip, UINT8 offset);
 static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data);
 static void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data);
 
-static void SN76496Update(void *param, UINT32 samples, DEV_SMPL** outputs);
+static void sn76496_update(void *param, UINT32 samples, DEV_SMPL** outputs);
 static UINT32 sn76496_start(void* _chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
 							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 ncr, UINT8 sega);
 static void sn76496_connect_t6w28(void *noisechip, void *tonechip);
@@ -179,7 +180,7 @@ DEV_DEF devDef_SN76496_MAME =
 	(DEVFUNC_START)device_start_sn76496_mame,
 	sn76496_shutdown,
 	sn76496_reset,
-	SN76496Update,
+	sn76496_update,
 	
 	NULL,	// SetOptionBits
 	sn76496_set_mutemask,
@@ -322,7 +323,7 @@ INLINE void countdown_cycles(sn76496_state *R)
 	}
 }
 
-static void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
+static void sn76496_update(void* param, UINT32 samples, DEV_SMPL** outputs)
 {
 	UINT32 i;
 	UINT32 j;
@@ -392,7 +393,7 @@ static void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 				// if noisemode is 1, both taps are enabled
 				// if noisemode is 0, the lower tap, whitenoisetap2, is held at 0
 				// The != was a bit-XOR (^) before
-				if (((R->RNG & R->whitenoise_tap1)!=0) != (((R->RNG & R->whitenoise_tap2)!=0) && in_noise_mode(R)))
+				if (((R->RNG & R->whitenoise_tap1)!=0) != (((R->RNG & R->whitenoise_tap2)!=(R->ncr_style_psg?R->whitenoise_tap2:0)) && in_noise_mode(R)))
 				{
 					R->RNG >>= 1;
 					R->RNG |= R->feedback_mask;
@@ -401,10 +402,7 @@ static void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 				{
 					R->RNG >>= 1;
 				}
-				if (R->ncr_style_psg && in_noise_mode(R))
-					R->output[3] ^= (R->RNG & 1);
-				else
-					R->output[3] = R->RNG & 1;
+				R->output[3] = R->RNG & 1;
 
 				R->count[3] = R->period[3];
 			}
@@ -540,78 +538,6 @@ static void SN76496Update(void* param, UINT32 samples, DEV_SMPL** outputs)
 	}
 }
 
-
-
-static void SN76496_set_gain(sn76496_state *R,int gain)
-{
-	int i;
-	double out;
-
-
-	gain &= 0xff;
-
-	// increase max output basing on gain (0.2 dB per step)
-	out = MAX_OUTPUT / 4; // four channels, each gets 1/4 of the total range
-	while (gain-- > 0)
-		out *= 1.023292992; // = (10 ^ (0.2/20))
-
-	// build volume table (2dB per step)
-	for (i = 0; i < 15; i++)
-	{
-		// limit volume to avoid clipping
-		if (out > MAX_OUTPUT / 4) R->vol_table[i] = MAX_OUTPUT / 4;
-		else R->vol_table[i] = (INT32)(out + 0.5);  // I like rounding
-
-		out /= 1.258925412; /* = 10 ^ (2/20) = 2dB */
-	}
-	R->vol_table[15] = 0;
-}
-
-
-static UINT32 sn76496_start(void* _chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
-							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 ncr, UINT8 sega)
-{
-	sn76496_state *chip = (sn76496_state*)_chip;
-	UINT32 feedbackmask;
-	UINT32 ntap[2];
-	UINT8 curbit;
-	UINT8 curtap;
-	
-	feedbackmask = 1 << (shiftregwidth - 1);
-	// extract single noise tap bits
-	ntap[0] = ntap[1] = 0x00;
-	curtap = 0;
-	for (curbit = 0; curbit < shiftregwidth; curbit ++)
-	{
-		if (noisetaps & (1 << curbit))
-		{
-			ntap[curtap] = (1 << curbit);
-			curtap ++;
-			if (curtap >= 2)
-				break;
-		}
-	}
-	
-	chip->clock = clock;
-	chip->clock_divider = clockdivider ? clockdivider : 8;
-	chip->feedback_mask = feedbackmask; // mask for feedback
-	chip->whitenoise_tap1 = ntap[0];    // mask for white noise tap 1
-	chip->whitenoise_tap2 = ntap[1];    // mask for white noise tap 2
-	chip->negate = negate;              // channel negation
-	chip->stereo = stereo;              // GameGear stereo
-	chip->ncr_style_psg = ncr;          // NCR mode
-	chip->sega_style_psg = sega;        // frequency set to 0 results in freq = 0x400 rather than 0
-	chip->NgpFlags = 0x00;
-	chip->NgpChip2 = NULL;
-	
-	// set gain
-	SN76496_set_gain(chip, 0);
-	
-	sn76496_set_mutemask(chip, 0x00);
-	
-	return chip->clock / 2 / chip->clock_divider;
-}
-
 static void sn76496_connect_t6w28(void *noisechip, void *tonechip)
 {
 	sn76496_state *Rnoise = (sn76496_state *)noisechip;
@@ -692,13 +618,52 @@ static UINT8 device_start_sn76496_mame(const SN76496_CFG* cfg, DEV_INFO* retDevI
 	sn76496_state* chip;
 	DEV_DATA* devData;
 	UINT32 rate;
+	UINT32 ntap[2];
+	int curtap;
+	int i;
+	double out;
 	
 	chip = (sn76496_state*)calloc(1, sizeof(sn76496_state));
 	if (chip == NULL)
 		return 0xFF;
 	
-	rate = sn76496_start(chip, cfg->_genCfg.clock, cfg->shiftRegWidth, cfg->noiseTaps,
-						cfg->negate, cfg->stereo, cfg->clkDiv, cfg->ncrPSG, cfg->segaPSG);
+	// extract single noise tap bits
+	ntap[0] = ntap[1] = 0x00;
+	curtap = 0;
+	for (i = 0; i < cfg->shiftRegWidth; i ++)
+	{
+		if (cfg->noiseTaps & (1 << i))
+		{
+			ntap[curtap] = (1 << i);
+			curtap ++;
+			if (curtap >= 2)
+				break;
+		}
+	}
+	
+	chip->clock = cfg->_genCfg.clock;
+	chip->clock_divider = cfg->clkDiv ? cfg->clkDiv : 8;
+	chip->feedback_mask = 1 << (cfg->shiftRegWidth - 1);    // mask for feedback
+	chip->whitenoise_tap1 = ntap[0];        // mask for white noise tap 1
+	chip->whitenoise_tap2 = ntap[1];        // mask for white noise tap 2
+	chip->negate = cfg->negate;             // channel negation
+	chip->stereo = cfg->stereo;             // GameGear stereo
+	chip->ncr_style_psg = cfg->ncrPSG;      // NCR mode
+	chip->sega_style_psg = cfg->segaPSG;    // frequency set to 0 results in freq = 0x400 rather than 0
+	chip->NgpFlags = 0x00;
+	chip->NgpChip2 = NULL;
+	rate = chip->clock / 2 / chip->clock_divider;
+	
+	// build volume table (2dB per step)
+	// four channels, each gets 1/4 of the total range
+	for (i = 0; i < 15; i++)
+	{
+		out = MAX_OUTPUT / 4 * pow(2.0, i / -3.0);
+		chip->vol_table[i] = (INT32)(out + 0.5); // I like rounding
+	}
+	chip->vol_table[15] = 0;
+	
+	sn76496_set_mutemask(chip, 0x00);
 	
 	chip->cfg = *cfg;
 	if (cfg->t6w28_tone != NULL)
