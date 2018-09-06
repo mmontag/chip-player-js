@@ -631,6 +631,24 @@ void OPL3::setVolumeScaleModel(ADLMIDI_VolumeModels volumeModel)
     }
 }
 
+ADLMIDI_VolumeModels OPL3::getVolumeScaleModel()
+{
+    switch(m_volumeScale)
+    {
+    default:
+    case OPL3::VOLUME_Generic:
+        return ADLMIDI_VolumeModel_Generic;
+    case OPL3::VOLUME_NATIVE:
+        return ADLMIDI_VolumeModel_NativeOPL3;
+    case OPL3::VOLUME_DMX:
+        return ADLMIDI_VolumeModel_DMX;
+    case OPL3::VOLUME_APOGEE:
+        return ADLMIDI_VolumeModel_APOGEE;
+    case OPL3::VOLUME_9X:
+        return ADLMIDI_VolumeModel_9X;
+    }
+}
+
 #ifndef ADLMIDI_HW_OPL
 void OPL3::clearChips()
 {
