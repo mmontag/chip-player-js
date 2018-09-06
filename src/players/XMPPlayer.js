@@ -122,16 +122,12 @@ export default class XMPPlayer extends Player {
     this.resume();
   }
 
-  playSubtune() {
-    console.error('Subtunes not supported in LibXMP');
-  }
-
   loadData(data, callback = null) {
     const xmp = this.libxmp;
     const ctx = this.xmpCtx;
     const infoPtr = this.xmp_frame_infoPtr;
     const trackEnded = false;
-    const buffer = xmp.allocate(BUFFER_SIZE * 16, "i16", xmp.ALLOC_NORMAL);
+    const buffer = xmp.allocate(BUFFER_SIZE * 16, 'i16', xmp.ALLOC_NORMAL);
     let endSongCallback = callback;
     let err;
 
@@ -190,7 +186,6 @@ export default class XMPPlayer extends Player {
           }
         }
       };
-      window.savedReferenceXMP = this.audioNode;
     }
 
     err = xmp._xmp_start_player(ctx, this.audioCtx.sampleRate, 0);
@@ -236,11 +231,6 @@ export default class XMPPlayer extends Player {
     xmp.setValue(xmp_eventPtr + 3, 0x87, 'i8');
     xmp.setValue(xmp_eventPtr + 4, targetBPM, 'i32');
     xmp._xmp_inject_event(ctx, 0, xmp_eventPtr);
-  }
-
-  setFadeout(startMs) {
-    console.info('Fade out is not supported with libxmp yet.');
-    this.stop();
   }
 
   getVoiceName(index) {

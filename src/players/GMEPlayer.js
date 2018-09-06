@@ -201,8 +201,10 @@ export default class GMEPlayer extends Player {
 
   stop() {
     this.paused = true;
-    this.audioNode.disconnect();
-    this.audioNode = null;
-    libgme._gme_delete();
+    if (this.audioNode) {
+      this.audioNode.disconnect();
+      this.audioNode = null;
+    }
+    // if (emu) libgme._gme_delete(emu);
   }
 }
