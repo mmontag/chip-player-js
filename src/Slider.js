@@ -1,7 +1,7 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import './Slider.css';
 
-export default class Slider extends Component {
+export default class Slider extends PureComponent {
   constructor(props) {
     super(props);
 

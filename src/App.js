@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import Slider from './Slider'
 import './App.css';
 import songData from './song-data';
@@ -8,7 +8,7 @@ import MIDIPlayer from './players/MIDIPlayer';
 
 const MAX_VOICES = 32;
 
-class App extends Component {
+class App extends PureComponent {
   constructor(props) {
     super(props);
 
