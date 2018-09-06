@@ -694,6 +694,9 @@ FLUIDSYNTH_API int fluid_synth_handle_midi_event(void* data, fluid_midi_event_t*
 FLUIDSYNTH_API void fluid_synth_set_midi_router(fluid_synth_t* synth, 
 					      fluid_midi_router_t* router);
 
+FLUIDSYNTH_API int fluid_synth_all_notes_off(fluid_synth_t* synth, int chan);
+FLUIDSYNTH_API int fluid_synth_all_sounds_off(fluid_synth_t* synth, int chan);
+
 #ifdef __cplusplus
 }
 #endif

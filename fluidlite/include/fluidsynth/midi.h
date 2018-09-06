@@ -111,11 +111,15 @@ enum fluid_player_status
 FLUIDSYNTH_API fluid_player_t* new_fluid_player(fluid_synth_t* synth);
 FLUIDSYNTH_API int delete_fluid_player(fluid_player_t* player);
 FLUIDSYNTH_API int fluid_player_add(fluid_player_t* player, char* midifile);
+FLUIDSYNTH_API int fluid_player_load(fluid_player_t* player, char* midifile);
 FLUIDSYNTH_API int fluid_player_play(fluid_player_t* player);
 FLUIDSYNTH_API int fluid_player_stop(fluid_player_t* player);
+FLUIDSYNTH_API int fluid_player_reset(fluid_player_t* player);
 FLUIDSYNTH_API int fluid_player_join(fluid_player_t* player);
 FLUIDSYNTH_API int fluid_player_set_loop(fluid_player_t* player, int loop);
+FLUIDSYNTH_API int fluid_player_get_midi_tempo(fluid_player_t* player);
 FLUIDSYNTH_API int fluid_player_set_midi_tempo(fluid_player_t* player, int tempo);
+FLUIDSYNTH_API int fluid_player_get_bpm(fluid_player_t* player);
 FLUIDSYNTH_API int fluid_player_set_bpm(fluid_player_t* player, int bpm);
 FLUIDSYNTH_API int fluid_player_get_status(fluid_player_t* player);
 FLUIDSYNTH_API int fluid_player_get_total_ticks(fluid_player_t *player);
