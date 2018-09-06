@@ -4,6 +4,7 @@ import './App.css';
 import songData from './song-data';
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
+import MIDIPlayer from './players/MIDIPlayer';
 
 const MAX_VOICES = 32;
 
@@ -26,6 +27,7 @@ class App extends Component {
     this.getFadeMs = this.getFadeMs.bind(this);
 
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    console.log('Sample rate: %d hz', audioContext.sampleRate);
 
     this.players = [
       new GMEPlayer(audioContext, () => {
@@ -34,6 +36,9 @@ class App extends Component {
       new XMPPlayer(audioContext, () => {
         this.setState({loading: this.state.loading - 1});
       }),
+      new MIDIPlayer(audioContext, () => {
+        this.setState({loading: this.state.loading - 1});
+      })
     ];
     this.player = null;
 
@@ -102,12 +107,13 @@ class App extends Component {
       this.player.loadData(uint8Array);
       this.player.setTempo(this.state.tempo);
       this.player.setVoices(this.state.voices);
+      this.player.resume();
       const numSubtunes = this.player.getNumSubtunes();
       const numVoices = this.player.getNumVoices();
 
       this.startedFadeOut = false;
       this.setState({
-        paused: this.player.isPaused(),
+        paused: false,
         currentSongMetadata: this.player.getMetadata(),
         currentSongDurationMs: this.player.getDurationMs(),
         currentSongNumVoices: numVoices,
@@ -146,7 +152,6 @@ class App extends Component {
     });
     // }
   }
-
 
   displayLoop() {
     const currentTime = (new Date()).getTime();
@@ -274,7 +279,7 @@ class App extends Component {
         <header className="App-header">
           <p className="App-title">Chip Player JS</p>
           <small>
-            powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a> and <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>
+            powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>, <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and <a href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>
           </small>
         </header>
         {this.state.loading ?
