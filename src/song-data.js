@@ -9,6 +9,23 @@ export default [
     ]
   },
   {
+    title: 'MIDI',
+    url_prefix: 'songs/',
+    files: [
+      'all_night_long.mid',
+      'christmas.mid',
+      'koolthin.mid',
+      'majicalljarr.mid',
+      'neptune.mid',
+      'rach3_1.mid',
+      'rach3_2.mid',
+      'rite-of-spring.mid',
+      'staccato.mid',
+      'syrinx.mid',
+      'take5.mid',
+    ],
+  },
+  {
     title: 'Local GME',
     url_prefix: 'songs/',
     files: [
@@ -17,6 +34,9 @@ export default [
       "35_giantsteps.nsf",
       "Shovel_Knight_Music.nsf",
       "ThunderForce4.gym",
+      'SFORCE2_003 - Town.gym',
+      'SFORCE2_015 - Sad Theme 1.gym',
+      'SFORCE2_027 - Goddess Mitula.gym',
       "wt-01.spc",
       "monx-AllYouGot.nsf",
       "monx-herveroy.nsf",
