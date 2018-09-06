@@ -448,6 +448,11 @@ public:
      */
     void setVolumeScaleModel(ADLMIDI_VolumeModels volumeModel);
 
+    /**
+     * @brief Get the volume scaling model
+     */
+    ADLMIDI_VolumeModels getVolumeScaleModel();
+
     #ifndef ADLMIDI_HW_OPL
     /**
      * @brief Clean up all running emulated chip instances

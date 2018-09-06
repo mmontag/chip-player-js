@@ -403,6 +403,13 @@ ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
     play->m_synth.commitDeepFlags();
 }
 
+ADLMIDI_EXPORT int adl_getHVibrato(struct ADL_MIDIPlayer *device)
+{
+    if(!device) return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    return play->m_synth.m_deepVibratoMode;
+}
+
 ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
 {
     if(!device) return;
@@ -412,6 +419,13 @@ ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
                                     play->m_synth.m_insBankSetup.deepTremolo :
                                     (play->m_setup.deepTremoloMode != 0);
     play->m_synth.commitDeepFlags();
+}
+
+ADLMIDI_EXPORT int adl_getHTremolo(struct ADL_MIDIPlayer *device)
+{
+    if(!device) return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    return play->m_synth.m_deepTremoloMode;
 }
 
 ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
@@ -488,6 +502,16 @@ ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int v
         play->m_synth.m_volumeScale = (OPL3::VolumesScale)play->m_synth.m_insBankSetup.volumeModel;
     else
         play->m_synth.setVolumeScaleModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
+}
+
+ADLMIDI_EXPORT int adl_getVolumeRangeModel(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    if(!play)
+        return -1;
+    return play->m_synth.getVolumeScaleModel();
 }
 
 ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath)
