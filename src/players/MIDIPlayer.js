@@ -1,6 +1,5 @@
 import Player from "./Player";
 
-const ChipPlayer = require('../chipplayer');
 let lib = null;
 let tsf = null;
 let synth = null;
@@ -16,48 +15,40 @@ const fileExtensions = [
 ];
 
 export default class MIDIPlayer extends Player {
-  constructor(audioContext, initCallback) {
+  constructor(audioContext, emscriptenRuntime) {
     super();
+    lib = emscriptenRuntime;
 
-    const emscInitOpts = {
-      // Look for .wasm file in web root, not the same location as the app bundle (static/js).
-      locateFile: (path, prefix) => {
-        if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
-        return prefix + path;
-      },
-      onRuntimeInitialized: () => {
-        // const settings = lib._new_fluid_settings();
-        // lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.polyphony', 128]);
-        // lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.reverb.active', 1]);
-        // lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.chorus.active', 0]);
-        // lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.threadsafe-api', 0]);
-        // lib.ccall('fluid_settings_setnum', 'number', ['number', 'string', 'number'], [settings, 'synth.gain', 0.5]);
-        //
-        // synth = lib._new_fluid_synth(settings);
-        // player = lib._new_fluid_player(synth);
+    // const settings = lib._new_fluid_settings();
+    // lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.polyphony', 128]);
+    // lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.reverb.active', 1]);
+    // lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.chorus.active', 0]);
+    // lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.threadsafe-api', 0]);
+    // lib.ccall('fluid_settings_setnum', 'number', ['number', 'string', 'number'], [settings, 'synth.gain', 0.5]);
+    //
+    // synth = lib._new_fluid_synth(settings);
+    // player = lib._new_fluid_player(synth);
 
-        console.log('Downloading soundfont...');
+    console.log('Downloading soundfont...');
 
-        fetch(SOUNDFONT_URL).then(response => response.arrayBuffer()).then(buffer => {
-          const arr = new Uint8Array(buffer);
+    fetch(SOUNDFONT_URL).then(response => response.arrayBuffer()).then(buffer => {
+      const arr = new Uint8Array(buffer);
 
-          // tsf = lib.ccall('tsf_load_memory', 'number', ['array', 'number'], [arr, arr.byteLength]);
+      // tsf = lib.ccall('tsf_load_memory', 'number', ['array', 'number'], [arr, arr.byteLength]);
 
-          console.log('Writing soundfont to FS...');
-          const soundfontFile = 'soundfont.sf2';
-          lib.FS_writeFile(soundfontFile, arr);
-          console.log('Loading soundfont from FS...');
-          tsf = lib.ccall('tsf_load_filename', 'number', ['string'], [soundfontFile]);
+      console.log('Writing soundfont to FS...');
+      const soundfontFile = 'soundfont.sf2';
+      lib.FS_writeFile(soundfontFile, arr);
+      console.log('Loading soundfont from FS...');
+      tsf = lib.ccall('tsf_load_filename', 'number', ['string'], [soundfontFile]);
 
-          console.log('created TinySoundFont', tsf);
-          // lib.ccall('fluid_synth_sfload', 'number', ['number', 'string', 'number'], [synth, soundfontFile, 1]);
-        });
+      console.log('created TinySoundFont', tsf);
+      // lib.ccall('fluid_synth_sfload', 'number', ['number', 'string', 'number'], [synth, soundfontFile, 1]);
 
-        if (typeof initCallback === 'function') {
-          initCallback();
-        }
-      },
-    };
+      this.isReady = true;
+    });
+
+    this.isReady = false;
     this.audioCtx = audioContext;
     this.audioNode = null;
     this.paused = false;
@@ -65,7 +56,6 @@ export default class MIDIPlayer extends Player {
     this.ppq = 96;
     this.miditempo = 0;
     this.fileExtensions = fileExtensions;
-    lib = new ChipPlayer(emscInitOpts);
   }
 
   _fluidMidiPlay(data) {

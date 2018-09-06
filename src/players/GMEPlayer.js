@@ -1,5 +1,4 @@
 import Player from "./Player.js";
-const LibGME = require('../chipplayer.js');
 
 let emu = null;
 let libgme = null;
@@ -14,25 +13,10 @@ const fileExtensions = [
 ];
 
 export default class GMEPlayer extends Player {
-  constructor(audioContext, initCallback) {
+  constructor(audioContext, emscriptenRuntime) {
     super();
 
-    const emscInitOpts = {
-      // Look for .wasm file in web root, not the same location as the app bundle (static/js).
-      locateFile: (path, prefix) => {
-        if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
-        return prefix + path;
-      },
-      onRuntimeInitialized: () => {
-        this.isReady = true;
-        if (typeof initCallback === 'function') {
-          initCallback();
-        }
-      },
-    };
-
-    libgme = new LibGME(emscInitOpts);
-    this.isReady = false;
+    libgme = emscriptenRuntime;
     this.audioCtx = audioContext;
     this.paused = false;
     this.metadata = {};
@@ -192,7 +176,7 @@ export default class GMEPlayer extends Player {
   }
 
   isPlaying() {
-    return this.isReady && !this.isPaused() && libgme._gme_track_ended(emu) !== 1;
+    return !this.isPaused() && libgme._gme_track_ended(emu) !== 1;
   }
 
   seekMs(seekMs) {

@@ -2,6 +2,7 @@ import React, {PureComponent} from 'react';
 import Slider from './Slider'
 import './App.css';
 import songData from './song-data';
+import ChipPlayer from './chipplayer';
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
@@ -29,23 +30,28 @@ class App extends PureComponent {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     console.log('Sample rate: %d hz', audioContext.sampleRate);
 
-    this.players = [
-      new GMEPlayer(audioContext, () => {
-        this.setState({loading: this.state.loading - 1});
-      }),
-      new XMPPlayer(audioContext, () => {
-        this.setState({loading: this.state.loading - 1});
-      }),
-      new MIDIPlayer(audioContext, () => {
-        this.setState({loading: this.state.loading - 1});
-      })
-    ];
+    const emscriptenRuntime = new ChipPlayer({
+      // Look for .wasm file in web root, not the same location as the app bundle (static/js).
+      locateFile: (path, prefix) => {
+        if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
+        return prefix + path;
+      },
+      onRuntimeInitialized: () => {
+        this.players = [
+          new GMEPlayer(audioContext, emscriptenRuntime),
+          new XMPPlayer(audioContext, emscriptenRuntime),
+          new MIDIPlayer(audioContext, emscriptenRuntime),
+        ];
+        this.setState({loading: false});
+      },
+    });
+
     this.player = null;
 
     this.lastTime = (new Date()).getTime();
     this.startedFadeOut = false;
     this.state = {
-      loading: this.players.length,
+      loading: true,
       paused: false,
       currentSongMetadata: {},
       currentSongNumVoices: 0,
@@ -61,6 +67,31 @@ class App extends PureComponent {
     };
 
     this.displayLoop();
+  }
+
+  displayLoop(currentTime) {
+    const deltaTime = currentTime - this.lastTime;
+    this.lastTime = currentTime;
+    if (this.player) {
+      const playerPositionMs = this.player.getPositionMs();
+      if (this.player.isPlaying() && playerPositionMs) {
+        if (this.state.currentSongPositionMs >= this.state.currentSongDurationMs) {
+          if (!this.startedFadeOut) {
+            // Fade out right now
+            console.log('Starting fadeout at', playerPositionMs);
+            this.startedFadeOut = true;
+            this.player.setFadeout(playerPositionMs);
+          }
+        } else {
+          const currMs = this.state.currentSongPositionMs;
+          this.setState({
+            currentSongPositionMs: currMs + deltaTime * this.state.tempo,
+            currentSongDurationMs: this.player.getDurationMs(),
+          });
+        }
+      }
+    }
+    requestAnimationFrame(this.displayLoop);
   }
 
   play() {
@@ -151,32 +182,6 @@ class App extends PureComponent {
       currentSongPositionMs: 0,
     });
     // }
-  }
-
-  displayLoop() {
-    const currentTime = (new Date()).getTime();
-    const deltaTime = currentTime - this.lastTime;
-    this.lastTime = currentTime;
-    if (this.player) {
-      const playerPositionMs = this.player.getPositionMs();
-      if (this.player.isPlaying() && playerPositionMs) {
-        if (this.state.currentSongPositionMs >= this.state.currentSongDurationMs) {
-          if (!this.startedFadeOut) {
-            // Fade out right now
-            console.log('Starting fadeout at', playerPositionMs);
-            this.startedFadeOut = true;
-            this.player.setFadeout(playerPositionMs);
-          }
-        } else {
-          const currMs = this.state.currentSongPositionMs;
-          this.setState({
-            currentSongPositionMs: currMs + deltaTime * this.state.tempo,
-            currentSongDurationMs: this.player.getDurationMs(),
-          });
-        }
-      }
-    }
-    requestAnimationFrame(this.displayLoop);
   }
 
   songEnded() {
@@ -283,7 +288,7 @@ class App extends PureComponent {
           </small>
         </header>
         {this.state.loading ?
-          <p>Loading...{this.state.loading} remaining player engine{this.state.loading === 1 ? '' : 's'}.</p>
+          <p>Loading...</p>
           :
           <div className="App-intro">
             <button onClick={this.play}>

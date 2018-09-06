@@ -17,10 +17,6 @@ export default class Player {
     this.paused = false;
   }
 
-  isReady() {
-    return this.isReady;
-  }
-
   canPlay(fileExtension) {
     return this.fileExtensions.indexOf(fileExtension.toLowerCase()) !== -1;
   }
