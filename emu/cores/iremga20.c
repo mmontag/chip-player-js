@@ -91,18 +91,18 @@ const DEV_DEF* devDefList_GA20[] =
 
 
 #define MAX_VOL 256
+#define RATE_SHIFT 24
 
 struct IremGA20_channel_def
 {
 	UINT32 rate;
-	//UINT32 size;
 	UINT32 start;
 	UINT32 pos;
 	UINT32 frac;
 	UINT32 end;
-	UINT32 volume;
-	UINT32 pan;
-	//UINT32 effect;
+	UINT16 volume;
+	UINT16 pan;
+	//UINT16 effect;
 	UINT8 play;
 	UINT8 Muted;
 };
@@ -122,25 +122,12 @@ struct _ga20_state
 static void IremGA20_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
 	ga20_state *chip = (ga20_state *)param;
-	UINT32 rate[4], pos[4], frac[4], end[4], vol[4], play[4];
-	const UINT8 *pSamples;
 	DEV_SMPL *outL, *outR;
 	UINT32 i;
+	int j;
 	DEV_SMPL sampleout;
+	struct IremGA20_channel_def* ch;
 
-	/* precache some values */
-	for (i=0; i < 4; i++)
-	{
-		rate[i] = chip->channel[i].rate;
-		pos[i] = chip->channel[i].pos;
-		frac[i] = chip->channel[i].frac;
-		end[i] = chip->channel[i].end - 0x20;
-		vol[i] = chip->channel[i].volume;
-		play[i] = (! chip->channel[i].Muted) ? chip->channel[i].play : 0;
-	}
-
-	i = samples;
-	pSamples = chip->rom;
 	outL = outputs[0];
 	outR = outputs[1];
 
@@ -148,58 +135,30 @@ static void IremGA20_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	{
 		sampleout = 0;
 
-		// update the 4 channels inline
-		if (play[0])
+		for (j = 0; j < 4; j++)
 		{
-			sampleout += (pSamples[pos[0]] - 0x80) * vol[0];
-			frac[0] += rate[0];
-			pos[0] += frac[0] >> 24;
-			frac[0] &= 0xffffff;
-			play[0] = (pos[0] < end[0]);
-		}
-		if (play[1])
-		{
-			sampleout += (pSamples[pos[1]] - 0x80) * vol[1];
-			frac[1] += rate[1];
-			pos[1] += frac[1] >> 24;
-			frac[1] &= 0xffffff;
-			play[1] = (pos[1] < end[1]);
-		}
-		if (play[2])
-		{
-			sampleout += (pSamples[pos[2]] - 0x80) * vol[2];
-			frac[2] += rate[2];
-			pos[2] += frac[2] >> 24;
-			frac[2] &= 0xffffff;
-			play[2] = (pos[2] < end[2]);
-		}
-		if (play[3])
-		{
-			sampleout += (pSamples[pos[3]] - 0x80) * vol[3];
-			frac[3] += rate[3];
-			pos[3] += frac[3] >> 24;
-			frac[3] &= 0xffffff;
-			play[3] = (pos[3] < end[3]);
+			ch = &chip->channel[j];
+			if (ch->Muted || ! ch->play)
+				continue;
+			
+			sampleout += (chip->rom[ch->pos] - 0x80) * (INT32)ch->volume;
+			ch->frac += ch->rate;
+			ch->pos += (ch->frac >> RATE_SHIFT);
+			ch->frac &= ((1 << RATE_SHIFT) - 1);
+			if (ch->pos >= ch->end - 0x20)
+				ch->play = 0x00;
 		}
 
 		sampleout >>= 2;
 		outL[i] = sampleout;
 		outR[i] = sampleout;
 	}
-
-	/* update the regs now */
-	for (i=0; i < 4; i++)
-	{
-		chip->channel[i].pos = pos[i];
-		chip->channel[i].frac = frac[i];
-		if (! chip->channel[i].Muted)
-			chip->channel[i].play = play[i];
-	}
 }
 
 static void irem_ga20_w(void *info, UINT8 offset, UINT8 data)
 {
 	ga20_state *chip = (ga20_state *)info;
+	struct IremGA20_channel_def* ch;
 	int channel;
 
 	//logerror("GA20:  Offset %02x, data %04x\n",offset,data);
@@ -209,36 +168,37 @@ static void irem_ga20_w(void *info, UINT8 offset, UINT8 data)
 
 	chip->regs[offset] = data;
 
+	ch = &chip->channel[channel];
 	switch (offset & 0x7)
 	{
 		case 0: /* start address low */
-			chip->channel[channel].start = ((chip->channel[channel].start)&0xff000) | (data<<4);
+			ch->start = ((ch->start)&0xff000) | (data<<4);
 			break;
 
 		case 1: /* start address high */
-			chip->channel[channel].start = ((chip->channel[channel].start)&0x00ff0) | (data<<12);
+			ch->start = ((ch->start)&0x00ff0) | (data<<12);
 			break;
 
 		case 2: /* end address low */
-			chip->channel[channel].end = ((chip->channel[channel].end)&0xff000) | (data<<4);
+			ch->end = ((ch->end)&0xff000) | (data<<4);
 			break;
 
 		case 3: /* end address high */
-			chip->channel[channel].end = ((chip->channel[channel].end)&0x00ff0) | (data<<12);
+			ch->end = ((ch->end)&0x00ff0) | (data<<12);
 			break;
 
 		case 4:
-			chip->channel[channel].rate = 0x1000000 / (256 - data);
+			ch->rate = (1 << RATE_SHIFT) / (256 - data);
 			break;
 
 		case 5: //AT: gain control
-			chip->channel[channel].volume = (data * MAX_VOL) / (data + 10);
+			ch->volume = (data * MAX_VOL) / (data + 10);
 			break;
 
 		case 6: //AT: this is always written 2(enabling both channels?)
-			chip->channel[channel].play = data;
-			chip->channel[channel].pos = chip->channel[channel].start;
-			chip->channel[channel].frac = 0;
+			ch->play = data;
+			ch->pos = ch->start;
+			ch->frac = 0;
 			break;
 	}
 }
@@ -271,7 +231,6 @@ static void device_reset_iremga20(void *info)
 
 	for( i = 0; i < 4; i++ ) {
 		chip->channel[i].rate = 0;
-		//chip->channel[i].size = 0;
 		chip->channel[i].start = 0;
 		chip->channel[i].pos = 0;
 		chip->channel[i].frac = 0;
