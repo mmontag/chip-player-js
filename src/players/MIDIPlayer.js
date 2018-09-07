@@ -122,7 +122,6 @@ export default class MIDIPlayer extends Player {
     // const tml = lib._tml_load_memory(data, data.byteLength);
     const buffer = lib.allocate(BUFFER_SIZE * 8, 'i32', lib.ALLOC_NORMAL);
 
-    // lib._tp_open(tsf, data, data.byteLength);
     lib.ccall('tp_open', 'number', ['number', 'array', 'number', 'number'], [tsf, data, data.byteLength, this.audioCtx.sampleRate]);
 
     if (!this.audioNode) {
