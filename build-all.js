@@ -107,7 +107,7 @@ var flags = [
   '-s', 'MODULARIZE=1',
   '-s', 'EXPORT_NAME=CHIPPLAYER',
   '-s', 'ENVIRONMENT=web',
-  '-O1',
+  '-O2',
   // '--closure', '1',
   // '--llvm-lto', '3',
   '-o', js_file,

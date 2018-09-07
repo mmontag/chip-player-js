@@ -28,6 +28,8 @@ class App extends PureComponent {
     this.getFadeMs = this.getFadeMs.bind(this);
 
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    // Save a global reference
+    window.audioContext = audioContext;
     this._iosAudioUnlock(audioContext);
 
     console.log('Sample rate: %d hz', audioContext.sampleRate);
@@ -73,12 +75,9 @@ class App extends PureComponent {
 
   _iosAudioUnlock(context) {
     // https://hackernoon.com/unlocking-web-audio-the-smarter-way-8858218c0e09
-    if (context.state === 'suspended' && 'ontouchstart' in window)
-    {
-      var unlock = function()
-      {
-        context.resume().then(function()
-        {
+    if (context.state === 'suspended' && 'ontouchstart' in window) {
+      var unlock = function () {
+        context.resume().then(function () {
           document.body.removeEventListener('touchstart', unlock);
           document.body.removeEventListener('touchend', unlock);
         });
@@ -303,9 +302,12 @@ class App extends PureComponent {
       <div className="App">
         <header className="App-header">
           <p className="App-title">Chip Player JS</p>
-          <small>
-            powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>, <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and <a href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>
-          </small>
+          <p className="App-subtitle">
+            powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>, <a
+            href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and <a
+            href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>. AudioContext
+            state: {window.audioContext.state}
+          </p>
         </header>
         {this.state.loading ?
           <p>Loading...</p>
@@ -376,8 +378,8 @@ class App extends PureComponent {
           </div>
         }
       </div>
-  );
+    );
   }
-  }
+}
 
-  export default App;
+export default App;
