@@ -38,7 +38,7 @@ export default class MIDIPlayer extends Player {
 
       console.log('Writing soundfont to FS...');
       const soundfontFile = 'soundfont.sf2';
-      lib.FS_writeFile(soundfontFile, arr);
+      lib.FS.writeFile(soundfontFile, arr);
       console.log('Loading soundfont from FS...');
       tsf = lib.ccall('tsf_load_filename', 'number', ['string'], [soundfontFile]);
 
@@ -62,7 +62,7 @@ export default class MIDIPlayer extends Player {
     // MIDI playback with FluidSynth
     console.log('Writing file.mid to FS...');
     const midiFile = 'file.mid';
-    lib.FS_writeFile(midiFile, data);
+    lib.FS.writeFile(midiFile, data);
     console.log('Loading file.mid from FS...');
 
     // TODO: fix me.

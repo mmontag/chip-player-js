@@ -20,8 +20,6 @@ export default class XMPPlayer extends Player {
     this.xmpCtx = this.libxmp._xmp_create_context();
     this.xmp_frame_infoPtr = this.libxmp._malloc(2048);
     this.audioCtx = audioContext;
-    this.xmpCtx = null;
-    this.xmp_frame_infoPtr = null;
     this.paused = false;
     this.metadata = {};
     this.audioNode = null;
