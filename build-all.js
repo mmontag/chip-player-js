@@ -1,11 +1,7 @@
 var glob = require('glob');
 const { spawn, execSync } = require('child_process');
-var tmp = require('tmp');
 var fs = require('fs');
 const paths = require('./config/paths');
-
-var tmpObj = tmp.fileSync();
-fs.writeSync(tmpObj.fd, "/*eslint-disable*/\n");
 
 /**
  * Compile the C libraries with emscripten.
@@ -95,7 +91,7 @@ var exported_functions = [
 
 var runtime_methods = [
   'ALLOC_NORMAL',
-  'FS_writeFile',
+  'FS',
   'Pointer_stringify',
   'allocate',
   'ccall',
@@ -105,7 +101,7 @@ var runtime_methods = [
 
 var flags = [
   '-s', 'EXPORTED_FUNCTIONS=[' + exported_functions.join(',') + ']',
-  '-s', 'EXTRA_EXPORTED_RUNTIME_METHODS=[' + runtime_methods.join(',') + ']',
+  '-s', 'EXPORTED_RUNTIME_METHODS=[' + runtime_methods.join(',') + ']',
   '-s', 'ALLOW_MEMORY_GROWTH=1',
   '-s', 'ASSERTIONS=1',
   '-s', 'MODULARIZE=1',
@@ -115,13 +111,11 @@ var flags = [
   // '--closure', '1',
   // '--llvm-lto', '3',
   '-o', js_file,
-  '--pre-js', tmpObj.name,
 
-  // GCC/Clang arguments to shut up about warnings in code I didn't
-  // write. :D
-  '-Wno-deprecated',
+  '-DVGM_YM2612_GENS=1', // the gme YM2612 GENS core is much faster than NUKED
+
   '-Qunused-arguments',
-  '-DVGM_YM2612_GENS=1',
+  '-Wno-deprecated',
   '-Wno-logical-op-parentheses',
   '-Wno-c++11-extensions',
   '-Wno-inconsistent-missing-override',
@@ -130,9 +124,20 @@ var flags = [
 var args = [].concat(flags, source_files);
 
 console.log('Compiling to %s...', js_file);
-var begin = Date.now();
 var build_proc = spawn(empp, args, {stdio: 'inherit'});
 build_proc.on('exit', function () {
   console.log('Moving %s to %s.', wasm_file, wasm_dir);
   execSync(`mv ${wasm_file} ${wasm_dir}`);
+
+  // Don't use --pre-js because it can get stripped out by closure.
+  const eslint_disable = '/*eslint-disable*/\n';
+  console.log('Prepending %s with %s.', js_file, eslint_disable.trim());
+  const data = fs.readFileSync(js_file);
+  const fd = fs.openSync(js_file, 'w+');
+  const insert = new Buffer(eslint_disable);
+  fs.writeSync(fd, insert, 0, insert.length, 0);
+  fs.writeSync(fd, data, 0, data.length, insert.length);
+  fs.close(fd, (err) => {
+    if (err) throw err;
+  });
 });
