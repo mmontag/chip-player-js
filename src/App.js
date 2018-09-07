@@ -28,6 +28,8 @@ class App extends PureComponent {
     this.getFadeMs = this.getFadeMs.bind(this);
 
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    this._iosAudioUnlock(audioContext);
+
     console.log('Sample rate: %d hz', audioContext.sampleRate);
 
     const emscriptenRuntime = new ChipPlayer({
@@ -67,6 +69,24 @@ class App extends PureComponent {
     };
 
     this.displayLoop();
+  }
+
+  _iosAudioUnlock(context) {
+    // https://hackernoon.com/unlocking-web-audio-the-smarter-way-8858218c0e09
+    if (context.state === 'suspended' && 'ontouchstart' in window)
+    {
+      var unlock = function()
+      {
+        context.resume().then(function()
+        {
+          document.body.removeEventListener('touchstart', unlock);
+          document.body.removeEventListener('touchend', unlock);
+        });
+      };
+
+      document.body.addEventListener('touchstart', unlock, false);
+      document.body.addEventListener('touchend', unlock, false);
+    }
   }
 
   displayLoop(currentTime) {
