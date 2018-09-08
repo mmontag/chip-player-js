@@ -17,7 +17,7 @@ class App extends PureComponent {
     this.play = this.play.bind(this);
     this.playSong = this.playSong.bind(this);
     this.handleSliderDrag = this.handleSliderDrag.bind(this);
-    this.handleSliderChange = this.handleSliderChange.bind(this);
+    this.handleSliderDrop = this.handleSliderDrop.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.getSongPos = this.getSongPos.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
@@ -26,13 +26,12 @@ class App extends PureComponent {
     this.getTimeLabel = this.getTimeLabel.bind(this);
     this.displayLoop = this.displayLoop.bind(this);
     this.getFadeMs = this.getFadeMs.bind(this);
+    this.songEnded = this.songEnded.bind(this);
 
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    // Save a global reference
-    window.audioContext = audioContext;
-    this._iosAudioUnlock(audioContext);
+    const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    this._iosAudioUnlock(audioCtx);
 
-    console.log('Sample rate: %d hz', audioContext.sampleRate);
+    console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
     const emscriptenRuntime = new ChipPlayer({
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
@@ -42,9 +41,9 @@ class App extends PureComponent {
       },
       onRuntimeInitialized: () => {
         this.players = [
-          new GMEPlayer(audioContext, emscriptenRuntime),
-          new XMPPlayer(audioContext, emscriptenRuntime),
-          new MIDIPlayer(audioContext, emscriptenRuntime),
+          new GMEPlayer(audioCtx, emscriptenRuntime),
+          new XMPPlayer(audioCtx, emscriptenRuntime),
+          new MIDIPlayer(audioCtx, emscriptenRuntime),
         ];
         this.setState({loading: false});
       },
@@ -62,7 +61,7 @@ class App extends PureComponent {
       currentSongNumSubtunes: 0,
       currentSongSubtune: 0,
       extractedTunes: [],
-      currentSongDurationMs: 1000,
+      currentSongDurationMs: 1,
       currentSongPositionMs: 0,
       draggedSongPositionMs: -1,
       tempo: 1,
@@ -70,7 +69,7 @@ class App extends PureComponent {
       voiceNames: Array(MAX_VOICES).fill(''),
     };
 
-    this.displayLoop();
+    setInterval(this.displayLoop, 400); // every 24 frames @ 60 fps
   }
 
   _iosAudioUnlock(context) {
@@ -82,35 +81,18 @@ class App extends PureComponent {
           document.body.removeEventListener('touchend', unlock);
         });
       };
-
       document.body.addEventListener('touchstart', unlock, false);
       document.body.addEventListener('touchend', unlock, false);
     }
   }
 
-  displayLoop(currentTime) {
-    const deltaTime = currentTime - this.lastTime;
-    this.lastTime = currentTime;
+  displayLoop() {
     if (this.player) {
-      const playerPositionMs = this.player.getPositionMs();
-      if (this.player.isPlaying() && playerPositionMs) {
-        if (this.state.currentSongPositionMs >= this.state.currentSongDurationMs) {
-          if (!this.startedFadeOut) {
-            // Fade out right now
-            console.log('Starting fadeout at', playerPositionMs);
-            this.startedFadeOut = true;
-            this.player.setFadeout(playerPositionMs);
-          }
-        } else {
-          const currMs = this.state.currentSongPositionMs;
-          this.setState({
-            currentSongPositionMs: currMs + deltaTime * this.state.tempo,
-            currentSongDurationMs: this.player.getDurationMs(),
-          });
-        }
-      }
+      const positionMs = Math.min(this.player.getPositionMs(), this.player.getDurationMs());
+      this.setState({
+        currentSongPositionMs: this.player.getPositionMs(),
+      });
     }
-    requestAnimationFrame(this.displayLoop);
   }
 
   play() {
@@ -154,7 +136,7 @@ class App extends PureComponent {
       uint8Array = new Uint8Array(buffer);
       // }
 
-      this.player.loadData(uint8Array);
+      this.player.loadData(uint8Array, this.songEnded);
       this.player.setTempo(this.state.tempo);
       this.player.setVoices(this.state.voices);
       this.player.resume();
@@ -177,19 +159,6 @@ class App extends PureComponent {
   }
 
   playSubtune(subtune) {
-    // if (this.state.extractedTunes.length) {
-    //   // TODO: factor with playSong()
-    //   this.player.LoadData(this.state.extractedTunes[subtune]);
-    //   this.player.SetTempo(this.state.tempo);
-    //   this.player.SetVoices(this.state.voices);
-    //   const metadata = parseMetadata();
-    //   this.setState({
-    //     currentSongSubtune: subtune,
-    // currentSongDurationMs: this.player.getDurationMs(),
-    //   currentSongMetadata: this.player.getMetadata(),
-    //     currentSongPositionMs: 0,
-    //   });
-    // } else {
     if (this.player.playSubtune(subtune) !== 0) {
       console.error("Could not load track");
       return;
@@ -205,8 +174,16 @@ class App extends PureComponent {
 
   songEnded() {
     // update state with the song's exact duration
+    this.player = null;
     this.setState({
-      currentSongDurationMs: this.state.currentSongPositionMs
+      currentSongMetadata: {},
+      currentSongNumVoices: 0,
+      currentSongNumSubtunes: 0,
+      currentSongSubtune: 0,
+      extractedTunes: [],
+      currentSongDurationMs: 1,
+      currentSongPositionMs: 0,
+      draggedSongPositionMs: -1,
     });
   }
 
@@ -223,6 +200,8 @@ class App extends PureComponent {
   }
 
   togglePause() {
+    if (!this.player) return;
+
     this.setState({paused: this.player.togglePause()});
   }
 
@@ -234,25 +213,32 @@ class App extends PureComponent {
     });
   }
 
-  handleSliderChange(event) {
+  handleSliderDrop(event) {
+    if (!this.player) return;
+
     const pos = event.target ? event.target.value : event;
     // Seek in song
-    const seekMs = Math.floor(pos * this.state.currentSongDurationMs) / this.state.tempo;
+    const seekMs = Math.floor(pos * this.state.currentSongDurationMs);
+    // -> (only for GME?): / this.state.tempo;
     // this.player.setFadeout(this.getFadeMs(this.state.currentSongMetadata, this.state.tempo));
     this.player.seekMs(seekMs);
-    this.startedFadeOut = false;
+    // this.startedFadeOut = false;
     this.setState({
       draggedSongPositionMs: -1,
       currentSongPositionMs: pos * this.state.currentSongDurationMs, // Smooth
     });
     setTimeout(() => {
-      this.setState({
-        currentSongPositionMs: this.player.getPositionMs(), // Accurate
-      });
+      if (this.player.isPlaying()) {
+        this.setState({
+          currentSongPositionMs: this.player.getPositionMs(), // Accurate
+        });
+      }
     }, 100);
   }
 
   handleVoiceToggle(index) {
+    if (!this.player) return;
+
     const voices = [...this.state.voices];
     voices[index] = !voices[index];
     this.player.setVoices(voices);
@@ -260,6 +246,8 @@ class App extends PureComponent {
   }
 
   handleTempoChange(event) {
+    if (!this.player) return;
+
     const tempo = (event.target ? event.target.value : event) || 1.0;
     // const newDurationMs = this.state.currentSongMetadata.play_length / tempo + FADE_OUT_DURATION_MS;
     this.player.setTempo(tempo);
@@ -306,27 +294,26 @@ class App extends PureComponent {
             powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>, <a
             href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and <a
             href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>. AudioContext
-            state: {window.audioContext.state}
+            state: {this.audioCtx.state}
           </p>
         </header>
         {this.state.loading ?
           <p>Loading...</p>
           :
           <div className="App-intro">
-            <button onClick={this.play}>
-              Play
-            </button>
-            <button onClick={this.togglePause}>
+            <button onClick={this.togglePause}
+                    disabled={this.player ? null : true}>
               {this.state.paused ? 'Resume' : 'Pause'}
             </button>
             <Slider
               pos={this.getSongPos()}
               onDrag={this.handleSliderDrag}
-              onChange={this.handleSliderChange}/>
+              onChange={this.handleSliderDrop}/>
             {this.state.currentSongMetadata &&
             <div className="Song-details">
               Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
               Speed: <input
+              disabled={this.player ? null : true}
               type="range" value={this.state.tempo}
               min="0.3" max="2.0" step="0.1"
               onInput={this.handleTempoChange}
@@ -335,16 +322,21 @@ class App extends PureComponent {
               {this.state.currentSongNumSubtunes > 1 &&
               <span>
                   Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
-                <button onClick={this.prevSubtune}>Prev</button>
+                <button
+                  disabled={this.player ? null : true}
+                  onClick={this.prevSubtune}>Prev</button>
                 &nbsp;
-                <button onClick={this.nextSubtune}>Next</button><br/>
+                <button
+                  disabled={this.player ? null : true}
+                  onClick={this.nextSubtune}>Next</button><br/>
                 </span>
               }
               Voices:
               {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
                 return (
                   <label key={i}>
-                    <input type="checkbox" onChange={() => {
+                    <input
+                      type="checkbox" onChange={() => {
                       this.handleVoiceToggle(i)
                     }} checked={this.state.voices[i]}/>
                     {this.state.voiceNames[i]}
