@@ -41,7 +41,7 @@
 /*
 	Improved by Valley Bell, 2018
 	Thanks to niekniek and l_oliveira for providing recordings from OPL4 hardware.
-	Thanks to superctr for discussing changes.
+	Thanks to superctr and wouterv for discussing changes.
 
 	Improvements:
 		- added TL interpolation, recordings show that internal TL levels are 0x00..0xFF
@@ -54,11 +54,10 @@
 		- made octave -8 freeze the sample
 		- verified that TL and envelope levels are applied separately, both go silent at -60 db
 		- implemented pseudo-reverb and damping according to manual
+		- made pseudo-reverb ignore Rate Correction (real hardware seems to ignore it)
 
 	Known issues:
 		- Octave -8 was only tested with fnum 0. Other fnum values might behave differently.
-		- pseudo reverb needs testing
-		- damping needs testing (affected by Rate Correction or not?)
 		- LFO stuff needs testing
 
 	A note about attack/decay/release times in the OPL4 manual:
@@ -81,7 +80,7 @@
 		
 		The formulas above seem pretty accurate for low rates and slightly off for high rates.
 		I assume it's due to rounding.
-		The value for "attack rate, time 10~90%" is wrong and should be 0.31.
+		The value for "attack rate, time 10~90%, rate 58" is wrong and should be 0.31.
 */
 
 // Based on ymf278b.c written by R. Belmont and O. Galibert
@@ -293,7 +292,7 @@ static INT32 vol_tab[ENV_LEN];
 // decay level table (3dB per step)
 // 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)
 #define SC(db) (UINT32)(db / 3 * 0x20)
-static const UINT32 dl_tab[16] = {
+static const INT32 dl_tab[16] = {
  SC( 0), SC( 3), SC( 6), SC( 9), SC(12), SC(15), SC(18), SC(21),
  SC(24), SC(27), SC(30), SC(33), SC(36), SC(39), SC(42), SC(93)
 };
@@ -486,6 +485,7 @@ INLINE int ymf278b_slot_compute_decay_rate(YMF278BSlot* slot, int val)
 		// -12 db .. -48 db:  96 samples (2.18 ms) ->  16 samples per -6 db = rate 63
 		// -48 db .. -72 db:  64 samples (1.45 ms) ->  16 samples per -6 db = rate 63
 		// -72 db .. -96 db:  64 samples (1.45 ms) ->  16 samples per -6 db = rate 63
+		// Damping was verified to ignore rate correction.
 		if (slot->env_vol < dl_tab[4])
 			return 48;	// 0 db .. -12 db
 		else
@@ -495,8 +495,13 @@ INLINE int ymf278b_slot_compute_decay_rate(YMF278BSlot* slot, int val)
 	{
 		// pseudo reverb
 		// activated when reaching -18 db, overrides D1R/D2R/RR with reverb rate 5
+		
+		// The manual is actually a bit unclear and just says "RATE=5", referring to the D1R/D2R/RR register value.
+		// However, later pages use "RATE" to refer to the "internal" rate, which is (register * 4) + rate correction.
+		// HW recordings prove that Rate Correction is ignored, so pseudo reverb just sets the
+		// "internal" rate to a value of 4*5 = 20.
 		if (slot->env_vol >= dl_tab[6])
-			return ymf278b_slot_compute_rate(slot, 5);
+			return 20;
 	}
 	return ymf278b_slot_compute_rate(slot, val);
 }
@@ -524,6 +529,42 @@ INLINE void ymf278b_slot_set_lfo(YMF278BSlot* slot, UINT8 newlfo)
 	slot->lfo_max = lfo_period[slot->lfo];
 }
 
+
+static void ymf278b_eg_phase_switch(YMF278BSlot* op)
+{
+	while(1)	// try to advance multiple phases at once for better performance
+	{
+		switch(op->state)
+		{
+		case EG_ATT:	// attack phase
+			if (op->env_vol > MIN_ATT_INDEX)
+				return;
+			// op->env_vol <= MIN_ATT_INDEX
+			op->env_vol = MIN_ATT_INDEX;
+			op->state = EG_DEC;
+			break;
+		case EG_DEC:	// decay phase
+			if (op->env_vol < op->DL)
+				return;
+			// op->env_vol >= op->DL
+			op->state = EG_SUS;
+			break;
+		case EG_SUS:	// sustain phase
+		case EG_REL:	// release phase
+			if (op->env_vol < MAX_ATT_INDEX)
+				return;
+			// op->env_vol >= MAX_ATT_INDEX
+			op->env_vol = MAX_ATT_INDEX;
+			op->state = EG_OFF;
+			break;
+		case EG_OFF:
+		default:
+			return;
+		}
+	}
+	
+	return;
+}
 
 static void ymf278b_advance(YMF278BChip* chip)
 {
@@ -587,17 +628,19 @@ static void ymf278b_advance(YMF278BChip* chip)
 		{
 		case EG_ATT:	// attack phase
 			rate = ymf278b_slot_compute_rate(op, op->AR);
+			// Verified by HW recording (and matches Nemesis' tests of the YM2612):
+			// AR = 0xF during KeyOn results in instant switch to EG_DEC. (see keyOnHelper)
+			// Setting AR = 0xF while the attack phase is in progress freezes the envelope.
+			if (rate >= 63)
+				break;
+			
 			shift = eg_rate_shift[rate];
 			if (! (chip->eg_cnt & ((1 << shift) - 1)))
 			{
 				select = eg_rate_select[rate];
 				// >>4 makes the attack phase's shape match the actual chip -Valley Bell
 				op->env_vol += (~op->env_vol * eg_inc[select + ((chip->eg_cnt >> shift) & 7)]) >> 4;
-				if (op->env_vol <= MIN_ATT_INDEX)
-				{
-					op->env_vol = MIN_ATT_INDEX;
-					op->state = EG_DEC;
-				}
+				ymf278b_eg_phase_switch(op);
 			}
 			break;
 		case EG_DEC:	// decay phase
@@ -607,8 +650,7 @@ static void ymf278b_advance(YMF278BChip* chip)
 			{
 				select = eg_rate_select[rate];
 				op->env_vol += eg_inc[select + ((chip->eg_cnt >> shift) & 7)];
-				if (op->env_vol >= op->DL)
-					op->state = EG_SUS;
+				ymf278b_eg_phase_switch(op);
 			}
 			break;
 		case EG_SUS:	// sustain phase
@@ -618,11 +660,7 @@ static void ymf278b_advance(YMF278BChip* chip)
 			{
 				select = eg_rate_select[rate];
 				op->env_vol += eg_inc[select + ((chip->eg_cnt >> shift) & 7)];
-				if (op->env_vol >= MAX_ATT_INDEX)
-				{
-					op->env_vol = MAX_ATT_INDEX;
-					op->state = EG_OFF;
-				}
+				ymf278b_eg_phase_switch(op);
 			}
 			break;
 		case EG_REL:	// release phase
@@ -632,19 +670,11 @@ static void ymf278b_advance(YMF278BChip* chip)
 			{
 				select = eg_rate_select[rate];
 				op->env_vol += eg_inc[select + ((chip->eg_cnt >> shift) & 7)];
-				if (op->env_vol >= MAX_ATT_INDEX)
-				{
-					op->env_vol = MAX_ATT_INDEX;
-					op->state = EG_OFF;
-				}
+				ymf278b_eg_phase_switch(op);
 			}
 			break;
 		case EG_OFF:
 			// nothing
-			break;
-
-		default:
-			//UNREACHABLE;
 			break;
 		}
 	}
@@ -793,6 +823,8 @@ INLINE void ymf278b_keyOnHelper(YMF278BChip* chip, YMF278BSlot* slot)
 {
 	int rate;
 
+	// Unlike FM, the envelope level is reset. (And it makes sense, because you restart the sample.)
+	slot->env_vol = MAX_ATT_INDEX;
 	slot->state = EG_ATT;
 	rate = ymf278b_slot_compute_rate(slot, slot->AR);
 	if (rate >= 63)
@@ -800,7 +832,7 @@ INLINE void ymf278b_keyOnHelper(YMF278BChip* chip, YMF278BSlot* slot)
 		// Nuke.YKT verified that the FM part does it exactly this way,
 		// and the OPL4 manual says it's instant as well.
 		slot->env_vol = MIN_ATT_INDEX;
-		slot->state = EG_DEC;
+		ymf278b_eg_phase_switch(slot);
 	}
 	slot->stepptr = 0;
 	slot->pos = 0;
