@@ -1527,15 +1527,14 @@ int fluid_voice_modulate_all(fluid_voice_t* voice)
 int
 fluid_voice_noteoff(fluid_voice_t* voice)
 {
-  unsigned int at_tick;
-
-  at_tick = fluid_channel_get_min_note_length_ticks (voice->channel);
+  unsigned int at_tick = fluid_channel_get_min_note_length_ticks (voice->channel);
 
   if (at_tick > voice->ticks) {
     /* Delay noteoff */
     voice->noteoff_ticks = at_tick;
     return FLUID_OK;
   }
+  voice->noteoff_ticks = 0;
 
   if (voice->channel && fluid_channel_sustained(voice->channel)) {
     voice->status = FLUID_VOICE_SUSTAINED;
