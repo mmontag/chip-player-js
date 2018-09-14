@@ -53,7 +53,7 @@ export default class Slider extends PureComponent {
            onMouseDown={this.onMouseDown}>
         <div className="Slider-rail"/>
         <div className="Slider-knob"
-             style={{left: pos}}/>
+             style={{left: pos, transitionDuration: this.state.dragging ? '0ms' : '400ms'}}/>
       </div>
     );
   }
