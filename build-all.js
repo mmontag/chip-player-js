@@ -12,8 +12,8 @@ var gme_dir = './game-music-emu/gme';
 // var unrar_dir = './unrar';
 var source_files = [];
 source_files = source_files.concat(glob.sync(gme_dir + '/*.cpp'));
-source_files.push('libxmp/lib/libxmp-lite.a');
-// source_files.push('fluidlite/build/libfluidlite.a');
+source_files.push('libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a');
+source_files.push('fluidlite/build/libfluidlite.a');
 source_files.push('TinySoundFont/tinyplayer.c');
 
 var js_file = 'src/chipplayer.js';
@@ -53,35 +53,24 @@ var exported_functions = [
   '_xmp_get_player',
   '_xmp_load_module_from_memory',
 
-  // '_new_fluid_settings',
-  // '_new_fluid_synth',
-  // '_new_fluid_player',
-  // '_fluid_player_add',
-  // '_fluid_player_load',
-  // '_fluid_player_play',
-  // '_fluid_player_seek',
-  // '_fluid_player_stop',
-  // '_fluid_player_get_status',
-  // '_fluid_player_get_current_tick',
-  // '_fluid_player_get_total_ticks',
-  // '_fluid_player_get_bpm',
-  // '_fluid_player_get_midi_tempo',
-  // '_fluid_player_set_midi_tempo',
-  // '_fluid_player_reset',
-  // '_fluid_settings_setint',
-  // '_fluid_settings_setnum',
-  // '_fluid_synth_sfload',
-  // '_fluid_synth_noteon',
-  // '_fluid_synth_noteoff',
-  // '_fluid_synth_all_notes_off',
-  // '_fluid_synth_all_sounds_off',
-  // '_fluid_synth_write_float',
+  '_new_fluid_settings',
+  '_new_fluid_synth',
+  '_fluid_settings_setint',
+  '_fluid_settings_setnum',
+  '_fluid_settings_setstr',
+  '_fluid_synth_sfload',
+  '_fluid_synth_noteon',
+  '_fluid_synth_noteoff',
+  '_fluid_synth_all_notes_off',
+  '_fluid_synth_all_sounds_off',
+  '_fluid_synth_write_float',
 
   '_tsf_load_memory',
   '_tsf_load_filename',
   '_tml_load_memory',
   '_tp_write_audio',
   '_tp_open',
+  '_tp_open_fluidsynth',
   '_tp_stop',
   '_tp_seek',
   '_tp_set_speed',
