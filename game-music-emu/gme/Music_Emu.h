@@ -167,6 +167,9 @@ private:
 	
 	// track-specific
 	int current_track_;
+	// TODO: add variable for tracking position in the track (independent of speed)
+	// i.e. track_position += count * speed;
+	// then add corresponding seek methods
 	blargg_long out_time;  // number of samples played since start of track
 	blargg_long emu_time;  // number of samples emulator has generated since start of track
 	bool emu_track_ended_; // emulator has reached end of track
