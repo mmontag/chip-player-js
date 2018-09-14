@@ -21,6 +21,12 @@ export default [
       'rach3_2.mid',
       'rite-of-spring.mid',
       'STACCATO.MID',
+      'Astro_Guy.mid',
+      'DESCENT.MID',
+      'GAME14.MID',
+      'GAME18.MID',
+      'GAME22.MID',
+      'swanlake.mid',
       'syrinx.mid',
       'take5.mid',
     ],
@@ -43,6 +49,7 @@ export default [
       "monx-HuGH2.nsf",
       "monx-OlympicHeroes.nsf",
       "monx-trash.nsf",
+      'scriabin2.nsf',
     ],
   },
   {
@@ -65,6 +72,14 @@ export default [
       "smw&.rsn",
       "yc&.rsn",
       "yi&.rsn",
+    ]
+  },
+  {
+    title: 'http://rainwarrior.ca (Brad Smith)',
+    url_prefix: 'https://cors-anywhere.herokuapp.com/http://rainwarrior.ca/',
+    files: [
+      'music/moon8.nsfe',
+      'projects/nes/2a03puritans.nsfe',
     ]
   },
   {
