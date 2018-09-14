@@ -45,6 +45,11 @@ export default class XMPPlayer extends Player {
     res.system = xmp.Pointer_stringify(xmp_modulePtr + 64, 256);
     res.comment = xmp.Pointer_stringify(xmp.getValue(xmp_module_infoPtr + 24, '*'), 256);
 
+    const infoPtr = this.xmp_frame_infoPtr;
+    xmp._xmp_get_frame_info(ctx, infoPtr);
+    const bpm = xmp.getValue(infoPtr + 6 * 4, 'i32');
+    this._durationMs = xmp.getValue(infoPtr + 8 * 4, 'i32');
+
     // XMP-specific metadata
     res.patterns = xmp.getValue(xmp_modulePtr + 128 + 4 * 0, 'i32'); // patterns
     res.tracks = xmp.getValue(xmp_modulePtr + 128 + 4 * 1, 'i32'); // tracks
@@ -117,8 +122,7 @@ export default class XMPPlayer extends Player {
         // see http://xmp.sourceforge.net/libxmp.html#id25
         xmp._xmp_get_frame_info(ctx, infoPtr);
         const bpm = xmp.getValue(infoPtr + 6 * 4, 'i32');
-        this._positionMs = xmp.getValue(infoPtr + 7 * 4, 'i32');
-        this._durationMs = xmp.getValue(infoPtr + 8 * 4, 'i32');
+        this._positionMs = xmp.getValue(infoPtr + 7 * 4, 'i32'); // xmp_frame_info.time
         this._maybeInjectTempo(bpm);
 
         for (channel = 0; channel < channels.length; channel++) {
