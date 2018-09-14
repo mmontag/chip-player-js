@@ -22,6 +22,7 @@ export default class GMEPlayer extends Player {
     this.metadata = {};
     this.audioNode = null;
     this.fileExtensions = fileExtensions;
+    this.subtune = 0;
   }
 
   restart() {
@@ -34,10 +35,8 @@ export default class GMEPlayer extends Player {
     return libgme._gme_start_track(emu, subtune);
   }
 
-  loadData(data, callback = null) {
-    let endSongCallback = callback;
-    const subtune = 0;
-    const trackEnded = libgme._gme_track_ended(emu) === 1;
+  loadData(data, endSongCallback) {
+    this.subtune = 0;
     const buffer = libgme.allocate(BUFFER_SIZE * 16, "i16", libgme.ALLOC_NORMAL);
     const emuPtr = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
 
@@ -51,26 +50,33 @@ export default class GMEPlayer extends Player {
           channels[channel] = e.outputBuffer.getChannelData(channel);
         }
 
-        if (this.paused || trackEnded) {
-          if (trackEnded && typeof endSongCallback === 'function') {
-            endSongCallback();
-            endSongCallback = null;
-          }
+        if (this.paused) {
           for (channel = 0; channel < channels.length; channel++) {
             channels[channel].fill(0);
           }
           return;
         }
 
-        libgme._gme_play(emu, BUFFER_SIZE * 2, buffer);
+        if (libgme._gme_track_ended(emu) !== 1) {
+          libgme._gme_play(emu, BUFFER_SIZE * 2, buffer);
 
-        for (channel = 0; channel < channels.length; channel++) {
-          for (i = 0; i < BUFFER_SIZE; i++) {
-            channels[channel][i] = libgme.getValue(buffer +
-              // Interleaved channel format
-              i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
-              channel * 2,            // channel offset * bytes per sample
-              "i16") / INT16_MAX;     // convert int16 to float
+          for (channel = 0; channel < channels.length; channel++) {
+            for (i = 0; i < BUFFER_SIZE; i++) {
+              channels[channel][i] = libgme.getValue(buffer +
+                // Interleaved channel format
+                i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
+                channel * 2,            // channel offset * bytes per sample
+                "i16") / INT16_MAX;     // convert int16 to float
+            }
+          }
+        } else {
+          this.subtune++;
+          if (this.playSubtune(this.subtune) !== 0) {
+            this.audioNode.disconnect();
+            this.audioNode = null;
+            if (typeof endSongCallback === 'function') {
+              endSongCallback();
+            }
           }
         }
       };
@@ -86,7 +92,7 @@ export default class GMEPlayer extends Player {
       return;
     }
     emu = libgme.getValue(emuPtr, "i32");
-    if (this.playSubtune(subtune) !== 0) {
+    if (this.playSubtune(this.subtune) !== 0) {
       console.error("gme_start_track failed.");
       return;
     }
