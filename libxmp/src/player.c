@@ -1600,6 +1600,7 @@ int xmp_play_frame(xmp_context opaque)
 	struct module_data *m = &ctx->m;
 	struct xmp_module *mod = &m->mod;
 	struct flow_control *f = &p->flow;
+	struct ord_data *oinfo = &m->xxo_info[p->ord];
 	int i;
 
 	if (ctx->state < XMP_STATE_PLAYING)
@@ -1699,7 +1700,12 @@ int xmp_play_frame(xmp_context opaque)
 	}
 
 	p->frame_time = m->time_factor * m->rrate / p->bpm;
-	p->current_time += p->frame_time;
+	//TODO(montag): current time should be ... independent of speed
+	// this is a workaround since we are injecting BPM
+	// current_time is designed to always flow at realtime.
+	// time is precomputed in order_info (maybe)
+	// so injecting BPM causes it to get out of sync
+	p->current_time += m->time_factor * m->rrate / oinfo->bpm;
 
 	libxmp_mixer_softmixer(ctx);
 
