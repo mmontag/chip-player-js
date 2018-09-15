@@ -56,10 +56,10 @@
 		- implemented pseudo-reverb and damping according to manual
 		- made pseudo-reverb ignore Rate Correction (real hardware ignores it)
 		- reimplemented LFO, speed exactly matches the formulas that were probably used when creating the manual
-		- fixed LFO amplitude modulation
+		- fixed LFO tremolo (amplitude modulation)
+		- made LFO vibrato and tremolo accurate to hardware
 
 	Known issues:
-		- LFO vibrato range is not quite right yet
 		- Octave -8 was only tested with fnum 0. Other fnum values might behave differently.
 
 	A note about attack/decay/release times in the OPL4 manual:
@@ -176,14 +176,11 @@ typedef struct
 	UINT16 pos;
 	INT16 sample1, sample2;
 
-	INT32 env_vol;
+	INT16 env_vol;
 
-	UINT32 lfo_step;
 	UINT32 lfo_cnt;	// LFO state counter
-	INT32 lfo_fm_cnt;	// LFO vibrato state counter (0..+255, +255..0, 0..-255, -255..0)
-	UINT32 lfo_am_cnt;	// LFO tremolo state counter (0..255, 255..0)
 
-	INT32 DL;
+	INT16 DL;
 	UINT16 wave;	// wavetable number
 	UINT16 FN;		// f-number         TODO store 'FN | 1024'?
 	INT8 OCT;		// octave [-8..+7]
@@ -293,8 +290,8 @@ static INT32 vol_tab[ENV_LEN];
 
 // decay level table (3dB per step)
 // 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)
-#define SC(db) (UINT32)(db / 3 * 0x20)
-static const INT32 dl_tab[16] = {
+#define SC(db) (INT16)(db / 3 * 0x20)
+static const INT16 dl_tab[16] = {
  SC( 0), SC( 3), SC( 6), SC( 9), SC(12), SC(15), SC(18), SC(21),
  SC(24), SC(27), SC(30), SC(33), SC(36), SC(39), SC(42), SC(93)
 };
@@ -369,8 +366,7 @@ static const UINT8 eg_rate_shift[64] = {
 #undef O
 
 
-// number of steps to take in quarter of lfo frequency
-// TODO check if frequency matches real chip
+// number of steps the LFO counter advances per sample
 #define O(a) (INT32)(LFO_PERIOD * a / 44100.0 + 0.5)	// LFO frequency (Hz) -> LFO counter steps per sample
 static const INT32 lfo_period[8] = {
 	O(0.168),	// step:  1, period: 262144 samples
@@ -385,18 +381,35 @@ static const INT32 lfo_period[8] = {
 #undef O
 
 
-#define O(a) (INT32)((a) / 100.0 * 0x10000)
-static const INT32 vib_depth[8] = {
-	O( 0.000), O( 3.378), O( 5.065), O( 6.750),
-	O(10.114), O(20.170), O(40.106), O(79.307)
+// formula used by Yamaha docs:
+//	vib_depth_cents(x) = (log2(0x400 + x) - 10) * 1200
+static const INT16 vib_depth[8] = {
+	0,	//  0.000 cents
+	2,	//  3.378 cents
+	3,	//  5.065 cents
+	4,	//  6.750 cents
+	6,	// 10.114 cents
+	12,	// 20.170 cents
+	24,	// 40.106 cents
+	48,	// 79.307 cents
 };
-#undef O
 
 
-#define SC(db) (INT32)(db / 3.0 * 0x20 + 0.5)
-static const INT32 am_depth[8] = {
-	SC(0.000), SC(1.781), SC(2.906), SC( 3.656),
-	SC(4.406), SC(5.906), SC(7.406), SC(11.910)
+// formula used by Yamaha docs:
+//	am_depth_db(x) = (x-1) / 0x40 * 6.0
+//	They use (x-1), because the depth is multiplied with the AM counter, which has a range of 0..0x7F.
+//	Thus the maximum attenuation with x=0x80 is (0x7F * 0x80) >> 7 = 0x7F.
+// reversed formula:
+//	am_depth(db) = round(db / 6.0 * 0x40) + 1
+static const UINT8 am_depth[8] = {
+	0x00,	//  0.000 db
+	0x14,	//  1.781 db
+	0x20,	//  2.906 db
+	0x28,	//  3.656 db
+	0x30,	//  4.406 db
+	0x40,	//  5.906 db
+	0x50,	//  7.406 db
+	0x80,	// 11.910 db
 };
 #undef SC
 
@@ -416,7 +429,7 @@ INLINE INT8 sign_extend_4(UINT8 x)
 //    ((fn | 1024) + vib) << (5 + oct)
 // Though in this formula the shift can go over a negative distance (in that
 // case we should shift in the other direction).
-INLINE UINT32 calcStep(INT8 oct, UINT32 fn, int vib)
+INLINE UINT32 calcStep(INT8 oct, UINT16 fn, INT16 vib)
 {
 	if (oct == -8)
 	{
@@ -433,16 +446,14 @@ static void ymf278b_slot_reset(YMF278BSlot* slot)
 {
 	slot->wave = slot->FN = slot->OCT = slot->PRVB = slot->LD = slot->TLdest = slot->TL = slot->pan =
 		slot->keyon = slot->DAMP = slot->lfo = slot->vib = slot->AM = 0;
-	slot->AR = slot->D1R = slot->DL = slot->D2R = slot->RC = slot->RR = 0;
+	slot->DL = slot->AR = slot->D1R = slot->D2R = slot->RC = slot->RR = 0;
 	slot->stepptr = 0;
 	slot->step = calcStep(slot->OCT, slot->FN, 0);
 	slot->bits = slot->startaddr = slot->loopaddr = slot->endaddr = 0;
 	slot->env_vol = MAX_ATT_INDEX;
 
 	slot->lfo_active = 0;
-	slot->lfo_step = lfo_period[slot->lfo];
 	slot->lfo_cnt = 0;
-	slot->lfo_am_cnt = slot->lfo_fm_cnt = 0;
 
 	slot->state = EG_OFF;
 
@@ -515,65 +526,69 @@ INLINE int ymf278b_slot_compute_decay_rate(YMF278BSlot* slot, int val)
 	return ymf278b_slot_compute_rate(slot, val);
 }
 
-INLINE void ymf278b_slot_compute_lfo_counters(YMF278BSlot* slot)
+INLINE INT16 ymf278b_slot_compute_vib(YMF278BSlot* slot)
 {
-	// results in 0x00..0xFF, 0xFF..0x00
-	slot->lfo_am_cnt = slot->lfo_cnt / (LFO_PERIOD / 0x200);
-	if (slot->lfo_am_cnt >= 0x100)
-		slot->lfo_am_cnt ^= 0x1FF;
+	// verified via hardware recording:
+	//  With LFO speed 0 (period 262144 samples), each vibrato step takes 4096 samples.
+	//  -> 64 steps total
+	//  Also, with vibrato depth 7 (80 cents) and an F-Num of 0x400, the final F-Nums are:
+	//  0x400 .. 0x43C, 0x43C .. 0x400, 0x400 .. 0x3C4, 0x3C4 .. 0x400
+	INT16 lfo_fm = (INT16)(slot->lfo_cnt / (LFO_PERIOD / 0x40));
+	// results in +0x00..+0x0F, +0x0F..+0x00, -0x00..-0x0F, -0x0F..-0x00
+	if (lfo_fm & 0x10)
+		lfo_fm ^= 0x1F;
+	if (lfo_fm & 0x20)
+		lfo_fm = -(lfo_fm & 0x0F);
 	
-	// results in +0x00..+0xFF, +0xFF..+0x00, -0x00..-0xFF, -0xFF..-0x00
-	slot->lfo_fm_cnt = slot->lfo_cnt / (LFO_PERIOD / 0x400);
-	if (slot->lfo_fm_cnt >= 0x100 && slot->lfo_fm_cnt < 0x300)
-		slot->lfo_fm_cnt = 0x1FF - slot->lfo_fm_cnt;
-	else if (slot->lfo_fm_cnt >= 0x300)
-		slot->lfo_fm_cnt = slot->lfo_fm_cnt - 0x400;
-	
-	return;
+	return (lfo_fm * vib_depth[slot->vib]) / 12;
 }
 
-INLINE int ymf278b_slot_compute_vib(YMF278BSlot* slot)
+INLINE UINT16 ymf278b_slot_compute_am(YMF278BSlot* slot)
 {
-	return (slot->lfo_fm_cnt * vib_depth[slot->vib]) >> 18;
-}
-
-INLINE int ymf278b_slot_compute_am(YMF278BSlot* slot)
-{
-	return (slot->lfo_am_cnt * am_depth[slot->AM]) >> 8;
+	// verified via hardware recording:
+	//  With LFO speed 0 (period 262144 samples), each tremolo step takes 1024 samples.
+	//  -> 256 steps total
+	UINT16 lfo_am = (UINT16)(slot->lfo_cnt / (LFO_PERIOD / 0x100));
+	// results in 0x00..0x7F, 0x7F..0x00
+	if (lfo_am >= 0x80)
+		lfo_am ^= 0xFF;
+	
+	return (lfo_am * am_depth[slot->AM]) >> 7;
 }
 
 
 static void ymf278b_eg_phase_switch(YMF278BSlot* op)
 {
-	while(1)	// try to advance multiple phases at once for better performance
+	// Note: The real hardware does only 1 phase switch at once, but it does the check
+	// every time the envelope generator runs, even if env_vol is not modified.
+	// In order to improve the performance a bit, we call this function only when env_vol
+	// is modified and instead can do multiple phase switches at once.
+	switch(op->state)
 	{
-		switch(op->state)
-		{
-		case EG_ATT:	// attack phase
-			if (op->env_vol > MIN_ATT_INDEX)
-				return;
-			// op->env_vol <= MIN_ATT_INDEX
-			op->env_vol = MIN_ATT_INDEX;
-			op->state = EG_DEC;
+	case EG_ATT:	// attack phase
+		if (op->env_vol > MIN_ATT_INDEX)
 			break;
-		case EG_DEC:	// decay phase
-			if (op->env_vol < op->DL)
-				return;
-			// op->env_vol >= op->DL
-			op->state = EG_SUS;
+		// op->env_vol <= MIN_ATT_INDEX
+		op->env_vol = MIN_ATT_INDEX;
+		op->state = EG_DEC;
+		// fall through
+	case EG_DEC:	// decay phase
+		if (op->env_vol < op->DL)
 			break;
-		case EG_SUS:	// sustain phase
-		case EG_REL:	// release phase
-			if (op->env_vol < MAX_ATT_INDEX)
-				return;
-			// op->env_vol >= MAX_ATT_INDEX
-			op->env_vol = MAX_ATT_INDEX;
-			op->state = EG_OFF;
+		// op->env_vol >= op->DL
+		op->state = EG_SUS;
+		// fall through
+	case EG_SUS:	// sustain phase
+	case EG_REL:	// release phase
+		if (op->env_vol < MAX_ATT_INDEX)
 			break;
-		case EG_OFF:
-		default:
-			return;
-		}
+		// op->env_vol >= MAX_ATT_INDEX
+		op->env_vol = MAX_ATT_INDEX;
+		op->state = EG_OFF;
+		break;
+	case EG_OFF:
+	default:
+		break;
 	}
 	
 	return;
@@ -619,9 +634,8 @@ static void ymf278b_advance(YMF278BChip* chip)
 
 		if (op->lfo_active)
 		{
-			op->lfo_cnt += op->lfo_step;
+			op->lfo_cnt += lfo_period[op->lfo];
 			op->lfo_cnt &= (LFO_PERIOD - 1);
-			ymf278b_slot_compute_lfo_counters(op);
 		}
 
 		// Envelope Generator
@@ -755,9 +769,9 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 			YMF278BSlot* sl;
 			INT16 sample;
 			INT32 smplOut;
-			int envVol;
-			int volLeft;
-			int volRight;
+			UINT16 envVol;
+			INT32 volLeft;
+			INT32 volRight;
 			UINT32 step;
 			
 			sl = &chip->slots[i];
@@ -777,7 +791,7 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 			// A volume of -60 db or lower results in silence. (value 0x280..0x3FF).
 			// Recordings from actual hardware indicate, that TL level and envelope level are applied separately.
 			// Each of them is clipped to silence below -60 db, but TL+envelope might result in a lower volume. -Valley Bell
-			envVol = sl->env_vol;
+			envVol = (UINT16)sl->env_vol;
 			if (sl->lfo_active && sl->AM)
 				envVol += ymf278b_slot_compute_am(sl);
 			if (envVol >= MAX_ATT_INDEX)
@@ -971,9 +985,7 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 			{
 				// LFO reset
 				slot->lfo_active = 0;
-				slot->lfo_step = lfo_period[slot->lfo];
 				slot->lfo_cnt = 0;
-				slot->lfo_am_cnt = slot->lfo_fm_cnt = 0;
 			}
 			else
 			{
@@ -1001,7 +1013,6 @@ static void ymf278b_C_w(YMF278BChip* chip, UINT8 reg, UINT8 data)
 			break;
 		case 5:
 			slot->lfo = (data >> 3) & 0x7;
-			slot->lfo_step = lfo_period[slot->lfo];
 			slot->vib = data & 0x7;
 			break;
 		case 6:
