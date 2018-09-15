@@ -88,7 +88,6 @@ class App extends PureComponent {
 
   displayLoop() {
     if (this.player) {
-      const positionMs = Math.min(this.player.getPositionMs(), this.player.getDurationMs());
       this.setState({
         currentSongPositionMs: this.player.getPositionMs(),
       });
@@ -219,8 +218,6 @@ class App extends PureComponent {
     const pos = event.target ? event.target.value : event;
     // Seek in song
     const seekMs = Math.floor(pos * this.state.currentSongDurationMs);
-    // -> (only for GME?): / this.state.tempo;
-    // this.player.setFadeout(this.getFadeMs(this.state.currentSongMetadata, this.state.tempo));
     this.player.seekMs(seekMs);
     // this.startedFadeOut = false;
     this.setState({

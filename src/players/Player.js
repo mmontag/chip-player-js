@@ -43,7 +43,6 @@ export default class Player {
 
   setFadeout(startMs) {
     console.warn('Player.setFadeout() not implemented for this player.');
-    this.stop();
   }
 
   getNumVoices() {

@@ -2,7 +2,7 @@ import Player from "./Player.js";
 
 let emu = null;
 let libgme = null;
-const INT16_MAX = Math.pow(2, 16) - 1;
+const INT16_MAX = 65535;
 const BUFFER_SIZE = 1024;
 const fileExtensions = [
   'nsf',
@@ -23,20 +23,24 @@ export default class GMEPlayer extends Player {
     this.audioNode = null;
     this.fileExtensions = fileExtensions;
     this.subtune = 0;
+    this.tempo = 1.0;
   }
 
   restart() {
+    this.fadingOut = false;
     libgme._gme_seek(emu, 0);
     this.resume();
   }
 
   playSubtune(subtune) {
+    this.fadingOut = false;
     this.metadata = this._parseMetadata(subtune);
     return libgme._gme_start_track(emu, subtune);
   }
 
   loadData(data, endSongCallback) {
     this.subtune = 0;
+    this.fadingOut = false;
     const buffer = libgme.allocate(BUFFER_SIZE * 16, "i16", libgme.ALLOC_NORMAL);
     const emuPtr = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
 
@@ -57,6 +61,12 @@ export default class GMEPlayer extends Player {
           return;
         }
 
+        if (this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
+          console.log('Fading out . pos %d. duration %d.', this.getPositionMs(), this.getDurationMs());
+          this.setFadeout(this.getPositionMs());
+          this.fadingOut = true;
+        }
+
         if (libgme._gme_track_ended(emu) !== 1) {
           libgme._gme_play(emu, BUFFER_SIZE * 2, buffer);
 
@@ -71,7 +81,7 @@ export default class GMEPlayer extends Player {
           }
         } else {
           this.subtune++;
-          if (this.playSubtune(this.subtune) !== 0) {
+          if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
             this.audioNode.disconnect();
             this.audioNode = null;
             if (typeof endSongCallback === 'function') {
@@ -98,24 +108,6 @@ export default class GMEPlayer extends Player {
     }
 
     this.resume();
-  }
-
-  setVoices(voices) {
-    let mask = 0;
-    voices.forEach((isEnabled, i) => {
-      if (!isEnabled) {
-        mask += 1 << i;
-      }
-    });
-    if (emu) libgme._gme_mute_voices(emu, mask);
-  }
-
-  setTempo(val) {
-    if (emu) libgme._gme_set_tempo(emu, val);
-  }
-
-  setFadeout(startMs) {
-    if (emu) libgme._gme_set_fade(emu, startMs);
   }
 
   _parseMetadata(subtune) {
@@ -185,7 +177,28 @@ export default class GMEPlayer extends Player {
     return !this.isPaused() && libgme._gme_track_ended(emu) !== 1;
   }
 
+  setTempo(val) {
+    this.tempo = val;
+    if (emu) libgme._gme_set_tempo(emu, val);
+  }
+
+  setFadeout(startMs) {
+    if (emu) libgme._gme_set_fade(emu, startMs);
+  }
+
+  setVoices(voices) {
+    let mask = 0;
+    voices.forEach((isEnabled, i) => {
+      if (!isEnabled) {
+        mask += 1 << i;
+      }
+    });
+    if (emu) libgme._gme_mute_voices(emu, mask);
+  }
+
   seekMs(seekMs) {
+    // / this.state.tempo;
+    // this.player.setFadeout(this.getFadeMs(this.state.currentSongMetadata, this.state.tempo));
     if (emu) return libgme._gme_seek(emu, seekMs);
   }
 
