@@ -1753,10 +1753,7 @@ static void OPLResetChip(FM_OPL *OPL)
 		YM_DELTAT *DELTAT = OPL->deltat;
 
 		DELTAT->freqbase = OPL->freqbase;
-		DELTAT->output_pointer = &OPL->output_deltat[0];
-		DELTAT->portshift = 5;
-		DELTAT->output_range = 1<<23;
-		YM_DELTAT_ADPCM_Reset(DELTAT,0,YM_DELTAT_EMULATION_MODE_NORMAL);
+		YM_DELTAT_ADPCM_Reset(DELTAT,0);
 	}
 #endif
 }
@@ -2263,6 +2260,8 @@ void *y8950_init(UINT32 clock, UINT32 rate)
 
 	//Y8950->deltat->write_time = 10.0 / clock;     /* a single byte write takes 10 cycles of main clock */
 	//Y8950->deltat->read_time  = 8.0 / clock;      /* a single byte read takes 8 cycles of main clock */
+
+	YM_DELTAT_ADPCM_Init(Y8950->deltat,YM_DELTAT_EMULATION_MODE_NORMAL,5,Y8950->output_deltat,1<<23);
 
 	OPLSetUpdateHandler(Y8950, y8950_update_req, Y8950);
 	// reset

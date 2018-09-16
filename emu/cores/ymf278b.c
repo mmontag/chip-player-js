@@ -367,8 +367,8 @@ static const UINT8 eg_rate_shift[64] = {
 
 
 // number of steps the LFO counter advances per sample
-#define O(a) (INT32)(LFO_PERIOD * a / 44100.0 + 0.5)	// LFO frequency (Hz) -> LFO counter steps per sample
-static const INT32 lfo_period[8] = {
+#define O(a) (UINT32)(LFO_PERIOD * a / 44100.0 + 0.5)	// LFO frequency (Hz) -> LFO counter steps per sample
+static const UINT32 lfo_period[8] = {
 	O(0.168),	// step:  1, period: 262144 samples
 	O(2.019),	// step: 12, period:  21845 samples
 	O(3.196),	// step: 19, period:  13797 samples
@@ -411,7 +411,6 @@ static const UINT8 am_depth[8] = {
 	0x50,	//  7.406 db
 	0x80,	// 11.910 db
 };
-#undef SC
 
 
 static UINT8 tablesInit = 0;
@@ -461,7 +460,7 @@ static void ymf278b_slot_reset(YMF278BSlot* slot)
 	slot->pos = slot->sample1 = slot->sample2 = 0;
 }
 
-INLINE int ymf278b_slot_compute_rate(YMF278BSlot* slot, int val)
+INLINE UINT8 ymf278b_slot_compute_rate(YMF278BSlot* slot, int val)
 {
 	int res;
 	
@@ -487,10 +486,10 @@ INLINE int ymf278b_slot_compute_rate(YMF278BSlot* slot, int val)
 	else if (res > 63)
 		res = 63;
 	
-	return res;
+	return (UINT8)res;
 }
 
-INLINE int ymf278b_slot_compute_decay_rate(YMF278BSlot* slot, int val)
+INLINE UINT8 ymf278b_slot_compute_decay_rate(YMF278BSlot* slot, int val)
 {
 	if (slot->DAMP)
 	{
@@ -550,17 +549,17 @@ INLINE UINT16 ymf278b_slot_compute_am(YMF278BSlot* slot)
 	//  -> 256 steps total
 	UINT16 lfo_am = (UINT16)(slot->lfo_cnt / (LFO_PERIOD / 0x100));
 	// results in 0x00..0x7F, 0x7F..0x00
-	if (lfo_am >= 0x80)
+	if (lfo_am & 0x80)
 		lfo_am ^= 0xFF;
 	
 	return (lfo_am * am_depth[slot->AM]) >> 7;
 }
 
 
-static void ymf278b_eg_phase_switch(YMF278BSlot* op)
+INLINE void ymf278b_eg_phase_switch(YMF278BSlot* op)
 {
-	// Note: The real hardware does only 1 phase switch at once, but it does the check
-	// every time the envelope generator runs, even if env_vol is not modified.
+	// Note: The real hardware probably does only 1 phase switch at once (see Nuked OPL3/OPN2),
+	// but it does the check every time the envelope generator runs, even if env_vol is not modified.
 	// In order to improve the performance a bit, we call this function only when env_vol
 	// is modified and instead can do multiple phase switches at once.
 	switch(op->state)
@@ -836,7 +835,7 @@ static void ymf278b_pcm_update(void *info, UINT32 samples, DEV_SMPL** outputs)
 
 INLINE void ymf278b_keyOnHelper(YMF278BChip* chip, YMF278BSlot* slot)
 {
-	int rate;
+	UINT8 rate;
 
 	// Unlike FM, the envelope level is reset. (And it makes sense, because you restart the sample.)
 	slot->env_vol = MAX_ATT_INDEX;

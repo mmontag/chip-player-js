@@ -2882,6 +2882,8 @@ void * ym2608_init(void *param, UINT32 clock, UINT32 rate,
 	F2608->deltaT.status_change_BRDY_bit = 0x08;    /* status flag: set bit3 on BRDY */
 	F2608->deltaT.status_change_ZERO_bit = 0x10;    /* status flag: set bit4 if silence continues for more than 290 miliseconds while recording the ADPCM */
 
+	YM_DELTAT_ADPCM_Init(&F2608->deltaT,YM_DELTAT_EMULATION_MODE_NORMAL,5,F2608->OPN.out_delta,1<<23);
+
 	/* ADPCM Rhythm */
 	F2608->pcmbuf   = (UINT8*)YM2608_ADPCM_ROM;
 	F2608->pcm_size = 0x2000;
@@ -2986,10 +2988,7 @@ void ym2608_reset_chip(void *chip)
 
 	/* DELTA-T unit */
 	DELTAT->freqbase = OPN->ST.freqbase;
-	DELTAT->output_pointer = OPN->out_delta;
-	DELTAT->portshift = 5;      /* always 5bits shift */ /* ASG */
-	DELTAT->output_range = 1<<23;
-	YM_DELTAT_ADPCM_Reset(DELTAT,OUTD_CENTER,YM_DELTAT_EMULATION_MODE_NORMAL);
+	YM_DELTAT_ADPCM_Reset(DELTAT,OUTD_CENTER);
 }
 
 /* YM2608 write */
@@ -3553,6 +3552,8 @@ void *ym2610_init(void *param, UINT32 clock, UINT32 rate,
 	F2610->deltaT.status_change_which_chip = F2610;
 	F2610->deltaT.status_change_EOS_bit = 0x80; /* status flag: set bit7 on End Of Sample */
 
+	YM_DELTAT_ADPCM_Init(&F2610->deltaT,YM_DELTAT_EMULATION_MODE_YM2610,8,F2610->OPN.out_delta,1<<23);
+
 	Init_ADPCMATable();
 
 	ym2610_set_mutemask(F2610, 0x00);
@@ -3639,10 +3640,7 @@ void ym2610_reset_chip(void *chip)
 
 	/* DELTA-T unit */
 	DELTAT->freqbase = OPN->ST.freqbase;
-	DELTAT->output_pointer = OPN->out_delta;
-	DELTAT->portshift = 8;      /* always 8bits shift */
-	DELTAT->output_range = 1<<23;
-	YM_DELTAT_ADPCM_Reset(DELTAT,OUTD_CENTER,YM_DELTAT_EMULATION_MODE_YM2610);
+	YM_DELTAT_ADPCM_Reset(DELTAT,OUTD_CENTER);
 }
 
 /* YM2610 write */
