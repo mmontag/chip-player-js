@@ -195,7 +195,14 @@ extern void tp_open(tsf *t, void *data, int length, int sampleRate) {
   tsf_channel_set_bank_preset(g_TSF, 9, 128, 0);
   g_MidiEvt = tml_load_memory(data, length);
   g_FirstEvt = g_MidiEvt;
+
+  // Skip to first note to eliminate silence
+  unsigned int firstNoteTimeMs;
+  tml_get_info(g_FirstEvt, NULL, NULL, NULL, &firstNoteTimeMs, NULL);
+  g_MidiTimeMs = (double)firstNoteTimeMs;
+
   EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
+  EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
 }
 
 extern void tp_open_fluidsynth(fluid_synth_t *fs, void *data, int length, int sampleRate) {
@@ -209,7 +216,14 @@ extern void tp_open_fluidsynth(fluid_synth_t *fs, void *data, int length, int sa
 
   g_MidiEvt = tml_load_memory(data, length);
   g_FirstEvt = g_MidiEvt;
+
+  // Skip to first note to eliminate silence
+  unsigned int firstNoteTimeMs;
+  tml_get_info(g_FirstEvt, NULL, NULL, NULL, &firstNoteTimeMs, NULL);
+  g_MidiTimeMs = (double)firstNoteTimeMs;
+
   EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
+  EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
 }
 #ifdef __cplusplus
 }
