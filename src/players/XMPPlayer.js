@@ -47,7 +47,6 @@ export default class XMPPlayer extends Player {
 
     const infoPtr = this.xmp_frame_infoPtr;
     xmp._xmp_get_frame_info(ctx, infoPtr);
-    const bpm = xmp.getValue(infoPtr + 6 * 4, 'i32');
     this._durationMs = xmp.getValue(infoPtr + 8 * 4, 'i32');
 
     // XMP-specific metadata

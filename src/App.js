@@ -283,6 +283,8 @@ class App extends PureComponent {
         this.playSong(filename);
       }
     };
+    const playerParams = this.player ? this.player.getParameters() : [];
+
     return (
       <div className="App">
         <header className="App-header">
@@ -347,6 +349,20 @@ class App extends PureComponent {
               Author: {this.state.currentSongMetadata.author || '--'}<br/>
               Copyright: {this.state.currentSongMetadata.copyright || '--'}<br/>
               Comment: {this.state.currentSongMetadata.comment || '--'}
+              {playerParams.length &&
+              <div>
+                {playerParams.map(param =>
+                  <div key={param}>
+                    {param.name}:
+                    <select onChange={(e) => this.player.setParameter(param.name, e.target.value)}>
+                      {param.options.map(option =>
+                        <option key={option} value={option}>{option}</option>
+                      )}
+                    </select>
+                  </div>
+                )}
+              </div>
+              }
             </div>
             }
             {songData.map(group => {

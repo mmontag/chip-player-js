@@ -2,12 +2,7 @@ import Player from "./Player";
 
 let lib = null;
 let synth = null;
-const SOUNDFONT_URL = 'soundfonts/gmgsx.sf2';
-// const SOUNDFONT_URL = 'soundfonts/generaluser.sf2';
-// const SOUNDFONT_URL = 'soundfonts/masquerade55v006.sf2';
-// const SOUNDFONT_URL = 'soundfonts/R_FM_v1.99g-beta.sf2';
-// const SOUNDFONT_URL = 'soundfonts/OPL-3 FM 128M.sf3';
-// const SOUNDFONT_URL = 'soundfonts/Scc1t2.sf2';
+const DEFAULT_SOUNDFONT = 'gmgsx.sf2';
 const BUFFER_SIZE = 2048;
 const fileExtensions = [
   'mid',
@@ -27,11 +22,11 @@ export default class MIDIPlayer extends Player {
     synth = lib._new_fluid_synth(settings);
 
     console.log('Downloading soundfont...');
-    fetch(SOUNDFONT_URL).then(response => response.arrayBuffer()).then(buffer => {
+    const soundfontFile = DEFAULT_SOUNDFONT;
+    fetch('soundfonts/' + soundfontFile).then(response => response.arrayBuffer()).then(buffer => {
       const arr = new Uint8Array(buffer);
 
       console.log('Writing soundfont to Emscripten file system...');
-      const soundfontFile = 'soundfont.sf2';
       lib.FS.writeFile(soundfontFile, arr);
 
       // console.log('Loading soundfont in TinySoundFont...');
@@ -51,6 +46,7 @@ export default class MIDIPlayer extends Player {
     this.paused = false;
     this.fileExtensions = fileExtensions;
   }
+
   loadData(data, endSongCallback) {
     const buffer = lib.allocate(BUFFER_SIZE * 8, 'i32', lib.ALLOC_NORMAL);
 
@@ -90,26 +86,6 @@ export default class MIDIPlayer extends Player {
             }
           }
         } else {
-          //
-          // Player can be viewed as a state machine with
-          // 3 states (playing, paused, stopped) and 5 transitions
-          // (open, pause, unpause, seek, close).
-          // If the player has reached end of the song,
-          // it is in the terminal "stopped" state and is
-          // no longer playable:
-          //                         ╭– (seek) –╮
-          //                         ^          v
-          //  ┌─ ─ ─ ─ ─┐         ┌─────────────────┐            ┌─────────┐
-          //  │ stopped │–(open)–>│     playing     │––(close)––>│ stopped │
-          //  └ ─ ─ ─ ─ ┘         └─────────────────┘            └─────────┘
-          //                        | ┌────────┐ ^
-          //                (pause) ╰>│ paused │–╯ (unpause)
-          //                          └────────┘
-          //
-          // In the "open" transition, the audioNode is connected.
-          // In the "close" transition, it is disconnected.
-          // "stopped" is synonymous with closed/empty.
-          //
           console.log('MIDI file ended.');
           lib._tp_stop();
           this.audioNode.disconnect();
@@ -151,5 +127,63 @@ export default class MIDIPlayer extends Player {
 
   setTempo(tempo) {
     lib._tp_set_speed(tempo);
+  }
+
+  getParameters() {
+    return [
+      {
+        name: 'Soundfont',
+        options: [
+          'gmgsx.sf2',
+          'generaluser.sf2',
+          'masquerade55v006.sf2',
+          'R_FM_v1.99g-beta.sf2',
+          'Scc1t2.sf2',
+          'Vintage Dreams Waves v2.sf2',
+          'Kirby\'s_Dream_Land_3.sf2',
+          'Nokia_30.sf2',
+          'Setzer\'s_SPC_Soundfont.sf2',
+        ],
+      }
+    ];
+  }
+
+  setParameter(name, value) {
+    switch (name) {
+      case "Soundfont":
+        const soundfontUrl = 'soundfonts/' + value;
+        const soundfontFile = value;
+        let fileExists = false;
+        try {
+          lib.FS.stat(soundfontFile);
+          fileExists = true;
+        } catch (e) {
+        }
+
+        if (fileExists) {
+          this._loadSoundfont(soundfontFile);
+        } else {
+          console.log('Downloading soundfont...');
+          fetch(soundfontUrl)
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+              const arr = new Uint8Array(buffer);
+
+              console.log('Writing soundfont to Emscripten file system...');
+              lib.FS.writeFile(soundfontFile, arr);
+
+              this._loadSoundfont(soundfontFile);
+            });
+        }
+        break;
+      default:
+        console.warn('No parameter named "%s".', name);
+    }
+  }
+
+  _loadSoundfont(soundfontFile) {
+    console.log('Loading soundfont in FluidSynth...');
+    lib.ccall('fluid_synth_sfload', 'number', ['number', 'string', 'number'], [synth, soundfontFile, 1]);
+    console.log('Loaded soundfont.');
   }
 }

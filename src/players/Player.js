@@ -1,3 +1,23 @@
+//
+// Player can be viewed as a state machine with
+// 3 states (playing, paused, stopped) and 5 transitions
+// (open, pause, unpause, seek, close).
+// If the player has reached end of the song,
+// it is in the terminal "stopped" state and is
+// no longer playable:
+//                         ╭– (seek) –╮
+//                         ^          v
+//  ┌─ ─ ─ ─ ─┐         ┌─────────────────┐            ┌─────────┐
+//  │ stopped │–(open)–>│     playing     │––(close)––>│ stopped │
+//  └ ─ ─ ─ ─ ┘         └─────────────────┘            └─────────┘
+//                        | ┌────────┐ ^
+//                (pause) ╰>│ paused │–╯ (unpause)
+//                          └────────┘
+//
+// In the "open" transition, the audioNode is connected.
+// In the "close" transition, it is disconnected.
+// "stopped" is synonymous with closed/empty.
+//
 export default class Player {
   constructor() {
     this.paused = false;
@@ -58,5 +78,9 @@ export default class Player {
       title: '[Not implemented]',
       author: '[Not implemented]',
     }
+  }
+
+  getParameters() {
+    return [];
   }
 }
