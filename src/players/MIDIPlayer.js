@@ -1,7 +1,17 @@
 import Player from "./Player";
 
 let lib = null;
-let synth = null;
+const SOUNDFONTS = [
+  'gmgsx.sf2',
+  'generaluser.sf2',
+  'masquerade55v006.sf2',
+  'R_FM_v1.99g-beta.sf2',
+  'Scc1t2.sf2',
+  'Vintage Dreams Waves v2.sf2',
+  'Kirby\'s_Dream_Land_3.sf2',
+  'Nokia_30.sf2',
+  'Setzer\'s_SPC_Soundfont.sf2',
+];
 const DEFAULT_SOUNDFONT = 'gmgsx.sf2';
 const BUFFER_SIZE = 2048;
 const fileExtensions = [
@@ -13,34 +23,10 @@ export default class MIDIPlayer extends Player {
   constructor(audioContext, emscriptenRuntime) {
     super();
     lib = emscriptenRuntime;
+    lib._tp_init(audioContext.sampleRate);
+    this._ensureFile(DEFAULT_SOUNDFONT, `soundfonts/${DEFAULT_SOUNDFONT}`)
+      .then(filename => this._loadSoundfont(filename));
 
-    const settings = lib._new_fluid_settings();
-    lib.ccall('fluid_settings_setstr', 'number', ['number', 'string', 'string'], [settings, 'synth.reverb.active', 'yes']);
-    lib.ccall('fluid_settings_setstr', 'number', ['number', 'string', 'string'], [settings, 'synth.chorus.active', 'no']);
-    lib.ccall('fluid_settings_setint', 'number', ['number', 'string', 'number'], [settings, 'synth.threadsafe-api', 0]);
-    lib.ccall('fluid_settings_setnum', 'number', ['number', 'string', 'number'], [settings, 'synth.gain', 0.5]);
-    synth = lib._new_fluid_synth(settings);
-
-    console.log('Downloading soundfont...');
-    const soundfontFile = DEFAULT_SOUNDFONT;
-    fetch('soundfonts/' + soundfontFile).then(response => response.arrayBuffer()).then(buffer => {
-      const arr = new Uint8Array(buffer);
-
-      console.log('Writing soundfont to Emscripten file system...');
-      lib.FS.writeFile(soundfontFile, arr);
-
-      // console.log('Loading soundfont in TinySoundFont...');
-      // tsf = lib.ccall('tsf_load_filename', 'number', ['string'], [soundfontFile]);
-      // console.log('Created TinySoundFont instance.', tsf);
-
-      console.log('Loading soundfont in FluidSynth...');
-      lib.ccall('fluid_synth_sfload', 'number', ['number', 'string', 'number'], [synth, soundfontFile, 1]);
-      console.log('Created FluidSynth instance.');
-
-      this.isReady = true;
-    });
-
-    this.isReady = false;
     this.audioCtx = audioContext;
     this.audioNode = null;
     this.paused = false;
@@ -50,11 +36,8 @@ export default class MIDIPlayer extends Player {
   loadData(data, endSongCallback) {
     const buffer = lib.allocate(BUFFER_SIZE * 8, 'i32', lib.ALLOC_NORMAL);
 
-    // console.log('Playing MIDI with TinySoundFont...');
-    // lib.ccall('tp_open', 'number', ['number', 'array', 'number', 'number'], [tsf, data, data.byteLength, this.audioCtx.sampleRate]);
-
-    console.log('Playing MIDI with FluidSynth...');
-    lib.ccall('tp_open_fluidsynth', 'number', ['number', 'array', 'number', 'number'], [synth, data, data.byteLength, this.audioCtx.sampleRate]);
+    console.log('Playing MIDI data...');
+    lib.ccall('tp_open', 'number', ['array', 'number'], [data, data.byteLength]);
 
     if (!this.audioNode) {
       this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
@@ -133,17 +116,7 @@ export default class MIDIPlayer extends Player {
     return [
       {
         name: 'Soundfont',
-        options: [
-          'gmgsx.sf2',
-          'generaluser.sf2',
-          'masquerade55v006.sf2',
-          'R_FM_v1.99g-beta.sf2',
-          'Scc1t2.sf2',
-          'Vintage Dreams Waves v2.sf2',
-          'Kirby\'s_Dream_Land_3.sf2',
-          'Nokia_30.sf2',
-          'Setzer\'s_SPC_Soundfont.sf2',
-        ],
+        options: SOUNDFONTS,
       }
     ];
   }
@@ -151,39 +124,43 @@ export default class MIDIPlayer extends Player {
   setParameter(name, value) {
     switch (name) {
       case "Soundfont":
-        const soundfontUrl = 'soundfonts/' + value;
-        const soundfontFile = value;
-        let fileExists = false;
-        try {
-          lib.FS.stat(soundfontFile);
-          fileExists = true;
-        } catch (e) {
-        }
-
-        if (fileExists) {
-          this._loadSoundfont(soundfontFile);
-        } else {
-          console.log('Downloading soundfont...');
-          fetch(soundfontUrl)
-            .then(response => response.arrayBuffer())
-            .then(buffer => {
-              const arr = new Uint8Array(buffer);
-
-              console.log('Writing soundfont to Emscripten file system...');
-              lib.FS.writeFile(soundfontFile, arr);
-
-              this._loadSoundfont(soundfontFile);
-            });
-        }
+        const url = 'soundfonts/' + value;
+        this._ensureFile(value, url)
+          .then(filename => this._loadSoundfont(filename));
         break;
       default:
         console.warn('No parameter named "%s".', name);
     }
   }
 
-  _loadSoundfont(soundfontFile) {
-    console.log('Loading soundfont in FluidSynth...');
-    lib.ccall('fluid_synth_sfload', 'number', ['number', 'string', 'number'], [synth, soundfontFile, 1]);
-    console.log('Loaded soundfont.');
+  _ensureFile(filename, url) {
+    let fileExists = false;
+    try {
+      lib.FS.stat(filename);
+      console.log(`${filename} exists in Emscripten file system.`);
+      fileExists = true;
+    } catch (e) {
+    }
+
+    if (fileExists) {
+      return Promise.resolve(filename);
+      // this._loadSoundfont(filename);
+    } else {
+      console.log(`Downloading ${filename}...`);
+      return fetch(url)
+        .then(response => response.arrayBuffer())
+        .then(buffer => {
+          const arr = new Uint8Array(buffer);
+          console.log(`Writing ${filename} to Emscripten file system...`);
+          lib.FS.writeFile(filename, arr);
+          return filename;
+        });
+    }
+  }
+
+  _loadSoundfont(filename) {
+    console.log('Loading soundfont...');
+    const err = lib.ccall('tp_load_soundfont', 'number', ['string'], [filename]);
+    if (err !== -1) console.log('Loaded soundfont.');
   }
 }

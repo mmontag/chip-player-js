@@ -21,15 +21,25 @@ extern "C" {
 #endif
 
 //TODO: Remove debug logging (EM_ASM_)
-tsf *g_TSF;                  //instance of TinySoundFont
-tml_message *g_MidiEvt;      //next message to be played
-tml_message *g_FirstEvt;     //first event in current file
-double g_MidiTimeMs;         //current playback time
+tsf *g_TSF;                  // instance of TinySoundFont
+fluid_synth_t *g_FluidSynth; // instance of FluidSynth
+tml_message *g_MidiEvt;      // next message to be played
+tml_message *g_FirstEvt;     // first event in current file
+double g_MidiTimeMs;         // current playback time
 double g_Speed = 1.0;
 int g_SampleRate;
 unsigned int g_DurationMs = 0;
 
-fluid_synth_t *g_FluidSynth;
+// TODO: TinySoundFont not implemented
+extern void tp_init(int sampleRate) {
+  fluid_settings_t *settings = new_fluid_settings();
+  fluid_settings_setstr(settings, "synth.reverb.active", "yes");
+  fluid_settings_setstr(settings, "synth.chorus.active", "no");
+  fluid_settings_setint(settings, "synth.threadsafe-api", 0);
+  fluid_settings_setnum(settings, "synth.gain", 0.5);
+  g_FluidSynth = new_fluid_synth(settings);
+  g_SampleRate = sampleRate;
+}
 
 // Returns the number of bytes written. Value of 0 means the song has ended.
 extern int tp_write_audio(float *buffer, int bufferSize) {
@@ -184,12 +194,14 @@ extern void tp_restart() {
   g_MidiEvt = g_FirstEvt;
 }
 
-extern void tp_open(tsf *t, void *data, int length, int sampleRate) {
+// TODO: TinySoundFont not currently used
+extern void tp_open_tsf(tsf *t, void *data, int length, int sampleRate) {
   g_MidiTimeMs = 0;
   g_DurationMs = 0;
   g_TSF = t;
   g_FluidSynth = NULL;
   g_SampleRate = sampleRate;
+
   tsf_set_output(g_TSF, TSF_STEREO_INTERLEAVED, sampleRate, 0.0);
   // Channel 10 uses percussion sound bank
   tsf_channel_set_bank_preset(g_TSF, 9, 128, 0);
@@ -205,15 +217,10 @@ extern void tp_open(tsf *t, void *data, int length, int sampleRate) {
   EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
 }
 
-extern void tp_open_fluidsynth(fluid_synth_t *fs, void *data, int length, int sampleRate) {
+extern void tp_open(void *data, int length) {
   g_MidiTimeMs = 0;
   g_DurationMs = 0;
-  g_TSF = NULL;
-  g_FluidSynth = fs;
-  g_SampleRate = sampleRate;
-
-  fluid_synth_system_reset(fs);
-
+  fluid_synth_system_reset(g_FluidSynth);
   g_MidiEvt = tml_load_memory(data, length);
   g_FirstEvt = g_MidiEvt;
 
@@ -225,6 +232,12 @@ extern void tp_open_fluidsynth(fluid_synth_t *fs, void *data, int length, int sa
   EM_ASM_({ console.log('Tiny MIDI Player loaded %d bytes.', $0); }, length);
   EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
 }
+
+// TODO: TinySoundFont not implemented
+extern int tp_load_soundfont(char *filename) {
+  return fluid_synth_sfload(g_FluidSynth, filename, 1);
+}
+
 #ifdef __cplusplus
 }
 #endif
