@@ -50,9 +50,6 @@ class App extends PureComponent {
     });
 
     this.player = null;
-
-    this.lastTime = (new Date()).getTime();
-    this.startedFadeOut = false;
     this.state = {
       loading: true,
       paused: false,

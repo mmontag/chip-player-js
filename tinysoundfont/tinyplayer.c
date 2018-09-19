@@ -38,6 +38,7 @@ extern void tp_init(int sampleRate) {
   fluid_settings_setint(settings, "synth.threadsafe-api", 0);
   fluid_settings_setnum(settings, "synth.gain", 0.5);
   g_FluidSynth = new_fluid_synth(settings);
+  fluid_synth_set_interp_method(g_FluidSynth, -1, FLUID_INTERP_LINEAR);
   g_SampleRate = sampleRate;
 }
 

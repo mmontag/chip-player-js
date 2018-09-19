@@ -65,9 +65,6 @@ var exported_functions = [
   '_fluid_synth_all_sounds_off',
   '_fluid_synth_write_float',
 
-  '_tsf_load_memory',
-  '_tsf_load_filename',
-  '_tml_load_memory',
   '_tp_write_audio',
   '_tp_open',
   '_tp_init',
