@@ -1,6 +1,8 @@
 import Player from "./Player";
 
 let lib = null;
+const MOUNTPOINT = '/soundfonts';
+const SOUNDFONT_URL_PATH = 'soundfonts';
 const SOUNDFONTS = [
   'gmgsx.sf2',
   'generaluser.sf2',
@@ -12,7 +14,7 @@ const SOUNDFONTS = [
   'Nokia_30.sf2',
   'Setzer\'s_SPC_Soundfont.sf2',
 ];
-const DEFAULT_SOUNDFONT = 'gmgsx.sf2';
+const DEFAULT_SOUNDFONT = SOUNDFONTS[0];
 const BUFFER_SIZE = 2048;
 const fileExtensions = [
   'mid',
@@ -24,8 +26,15 @@ export default class MIDIPlayer extends Player {
     super();
     lib = emscriptenRuntime;
     lib._tp_init(audioContext.sampleRate);
-    this._ensureFile(DEFAULT_SOUNDFONT, `soundfonts/${DEFAULT_SOUNDFONT}`)
-      .then(filename => this._loadSoundfont(filename));
+
+    lib.FS.mkdir(MOUNTPOINT);
+    lib.FS.mount(lib.FS.filesystems.IDBFS, {}, MOUNTPOINT);
+    lib.FS.syncfs(true, (err) => {
+      if (err) {
+        console.log('Error populating FS from indexeddb.', err);
+      }
+      this.setParameter('Soundfont', DEFAULT_SOUNDFONT);
+    });
 
     this.audioCtx = audioContext;
     this.audioNode = null;
@@ -123,9 +132,9 @@ export default class MIDIPlayer extends Player {
 
   setParameter(name, value) {
     switch (name) {
-      case "Soundfont":
-        const url = 'soundfonts/' + value;
-        this._ensureFile(value, url)
+      case 'Soundfont':
+        const url = `${SOUNDFONT_URL_PATH}/${value}`;
+        this._ensureFile(`${MOUNTPOINT}/${value}`, url)
           .then(filename => this._loadSoundfont(filename));
         break;
       default:
@@ -153,6 +162,13 @@ export default class MIDIPlayer extends Player {
           const arr = new Uint8Array(buffer);
           console.log(`Writing ${filename} to Emscripten file system...`);
           lib.FS.writeFile(filename, arr);
+          lib.FS.syncfs(false, (err) => {
+            if (err) {
+              console.log('Error synchronizing to indexeddb.', err);
+            } else {
+              console.log(`Synchronized ${filename} to indexeddb.`);
+            }
+          });
           return filename;
         });
     }
