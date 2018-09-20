@@ -368,8 +368,10 @@ BLARGG_EXPORT gme_err_t gme_play           ( Music_Emu* me, int n, short* p )   
 BLARGG_EXPORT void      gme_set_fade       ( Music_Emu* me, int start_msec )      { me->set_fade( start_msec ); }
 BLARGG_EXPORT int       gme_track_ended    ( Music_Emu const* me )                { return me->track_ended(); }
 BLARGG_EXPORT int       gme_tell           ( Music_Emu const* me )                { return me->tell(); }
+BLARGG_EXPORT int       gme_tell_scaled    ( Music_Emu const* me )                { return me->tell_scaled(); }
 BLARGG_EXPORT int       gme_tell_samples   ( Music_Emu const* me )                { return me->tell_samples(); }
 BLARGG_EXPORT gme_err_t gme_seek           ( Music_Emu* me, int msec )            { return me->seek( msec ); }
+BLARGG_EXPORT gme_err_t gme_seek_scaled    ( Music_Emu* me, int msec )            { return me->seek_scaled( msec ); }
 BLARGG_EXPORT gme_err_t gme_seek_samples   ( Music_Emu* me, int n )               { return me->seek_samples( n ); }
 BLARGG_EXPORT int       gme_voice_count    ( Music_Emu const* me )                { return me->voice_count(); }
 BLARGG_EXPORT void      gme_ignore_silence ( Music_Emu* me, int disable )         { me->ignore_silence( disable != 0 ); }

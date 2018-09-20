@@ -51,9 +51,15 @@ public:
 	// Number of samples generated since beginning of track
 	long tell_samples() const;
 
+	// Number of milliseconds played since beginning of track (scaled with tempo)
+	long tell_scaled() const;
+
 	// Seek to new time in track. Seeking backwards or far forward can take a while.
 	blargg_err_t seek( long msec );
 	
+	// Seek to new time in track (scaled with tempo).
+	blargg_err_t seek_scaled( long msec );
+
 	// Equivalent to restarting track then skipping n samples
 	blargg_err_t seek_samples( long n );
 	
@@ -171,6 +177,7 @@ private:
 	// i.e. track_position += count * speed;
 	// then add corresponding seek methods
 	blargg_long out_time;  // number of samples played since start of track
+	blargg_long out_time_scaled;
 	blargg_long emu_time;  // number of samples emulator has generated since start of track
 	bool emu_track_ended_; // emulator has reached end of track
 	volatile bool track_ended_;

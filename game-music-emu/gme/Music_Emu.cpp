@@ -30,6 +30,7 @@ void Music_Emu::clear_track_vars()
 {
 	current_track_   = -1;
 	out_time         = 0;
+	out_time_scaled = 0;
 	emu_time         = 0;
 	emu_track_ended_ = true;
 	track_ended_     = true;
@@ -172,6 +173,7 @@ blargg_err_t Music_Emu::start_track( int track )
 		
 		emu_time      = buf_remain;
 		out_time      = 0;
+		out_time_scaled = 0;
 		silence_time  = 0;
 		silence_count = 0;
 	}
@@ -208,6 +210,11 @@ long Music_Emu::tell() const
 	return sec * 1000 + (out_time - sec * rate) * 1000 / rate;
 }
 
+long Music_Emu::tell_scaled() const
+{
+	return out_time_scaled / (sample_rate() / 1000.0);
+}
+
 blargg_err_t Music_Emu::seek_samples( long time )
 {
 	if ( time < out_time )
@@ -220,10 +227,22 @@ blargg_err_t Music_Emu::seek( long msec )
 	return seek_samples( msec_to_samples( msec ) );
 }
 
+blargg_err_t Music_Emu::seek_scaled( long msec )
+{
+  require( tempo_ > 0 );
+	blargg_long frames = (msec / 1000.0) * sample_rate();
+	if (frames < out_time_scaled)
+  	RETURN_ERR(start_track( current_track_ ));
+	int samples_to_skip = (frames - out_time_scaled) * out_channels() / tempo_;
+	samples_to_skip += samples_to_skip % out_channels();
+	return skip( samples_to_skip );
+}
+
 blargg_err_t Music_Emu::skip( long count )
 {
 	require( current_track() >= 0 ); // start_track() must have been called already
 	out_time += count;
+	out_time_scaled += count * tempo_ / out_channels();
 	
 	// remove from silence and buf first
 	{
@@ -423,6 +442,7 @@ blargg_err_t Music_Emu::play( long out_count, sample_t* out )
 			handle_fade( out_count, out );
 	}
 	out_time += out_count;
+	out_time_scaled += out_count * tempo_ / out_channels();
 	return 0;
 }
 
