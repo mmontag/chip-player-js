@@ -64,6 +64,7 @@ var exported_functions = [
   '_fluid_synth_all_notes_off',
   '_fluid_synth_all_sounds_off',
   '_fluid_synth_write_float',
+  '_fluid_synth_set_reverb',
 
   '_tp_write_audio',
   '_tp_open',
@@ -74,6 +75,7 @@ var exported_functions = [
   '_tp_set_speed',
   '_tp_get_duration_ms',
   '_tp_get_position_ms',
+  '_tp_set_reverb',
 ];
 
 var runtime_methods = [

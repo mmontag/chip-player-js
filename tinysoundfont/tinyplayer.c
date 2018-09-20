@@ -245,6 +245,18 @@ extern int tp_load_soundfont(char *filename) {
   return fluid_synth_sfload(g_FluidSynth, filename, 1);
 }
 
+extern void tp_set_reverb(double level) {
+  fluid_synth_set_reverb(
+          g_FluidSynth,
+          0.2 + level * 0.8, // roomsize (default: 0.2) 0.2 to 1.0
+          0.0 + level * 0.4, // damp     (default: 0.0) 0.0 to 0.4
+          1.0,               // width    (default: 0.5) 1.0
+          1.0);              // level    (default: 0.9) 1.0
+  // Override MIDI channel reverb levels
+  for (int i = 0; i < 16; i++)
+    fluid_synth_cc(g_FluidSynth, i, 91, 127);
+}
+
 #ifdef __cplusplus
 }
 #endif

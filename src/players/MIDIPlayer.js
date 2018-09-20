@@ -15,6 +15,7 @@ const SOUNDFONTS = [
   'Setzer\'s_SPC_Soundfont.sf2',
 ];
 const DEFAULT_SOUNDFONT = SOUNDFONTS[0];
+const DEFAULT_REVERB = 0.65;
 const BUFFER_SIZE = 2048;
 const fileExtensions = [
   'mid',
@@ -33,13 +34,15 @@ export default class MIDIPlayer extends Player {
       if (err) {
         console.log('Error populating FS from indexeddb.', err);
       }
-      this.setParameter('Soundfont', DEFAULT_SOUNDFONT);
+      this.setParameter('soundfont', DEFAULT_SOUNDFONT);
+      this.setParameter('reverb', DEFAULT_REVERB);
     });
 
     this.audioCtx = audioContext;
     this.audioNode = null;
     this.paused = false;
     this.fileExtensions = fileExtensions;
+    this.params = {};
   }
 
   loadData(data, endSongCallback) {
@@ -121,24 +124,45 @@ export default class MIDIPlayer extends Player {
     lib._tp_set_speed(tempo);
   }
 
+  getParameter(id) {
+    return this.params[id];
+  }
+
   getParameters() {
     return [
       {
-        name: 'Soundfont',
+        id: 'soundfont',
+        label: 'Soundfont',
+        type: 'enum',
         options: SOUNDFONTS,
-      }
+        value: DEFAULT_SOUNDFONT,
+      },
+      {
+        id: 'reverb',
+        label: 'Reverb',
+        type: 'number',
+        min: 0.0,
+        max: 1.0,
+        step: 0.01,
+        value: 0.6,
+      },
     ];
   }
 
-  setParameter(name, value) {
-    switch (name) {
-      case 'Soundfont':
+  setParameter(id, value) {
+    switch (id) {
+      case 'soundfont':
         const url = `${SOUNDFONT_URL_PATH}/${value}`;
         this._ensureFile(`${MOUNTPOINT}/${value}`, url)
           .then(filename => this._loadSoundfont(filename));
+        this.params[id] = value;
+        break;
+      case 'reverb':
+        lib._tp_set_reverb(value);
+        this.params[id] = value;
         break;
       default:
-        console.warn('No parameter named "%s".', name);
+        console.warn('MIDIPlayer has no parameter with id "%s".', id);
     }
   }
 

@@ -216,7 +216,6 @@ class App extends PureComponent {
     // Seek in song
     const seekMs = Math.floor(pos * this.state.currentSongDurationMs);
     this.player.seekMs(seekMs);
-    // this.startedFadeOut = false;
     this.setState({
       draggedSongPositionMs: -1,
       currentSongPositionMs: pos * this.state.currentSongDurationMs, // Smooth
@@ -243,9 +242,7 @@ class App extends PureComponent {
     if (!this.player) return;
 
     const tempo = (event.target ? event.target.value : event) || 1.0;
-    // const newDurationMs = this.state.currentSongMetadata.play_length / tempo + FADE_OUT_DURATION_MS;
     this.player.setTempo(tempo);
-    // this.player.setFadeout(this.getFadeMs(this.state.currentSongMetadata, tempo));
     this.setState({
       tempo: tempo
     });
@@ -265,7 +262,7 @@ class App extends PureComponent {
   getTime(val) {
     const pad = n => n < 10 ? '0' + n : n;
     const min = Math.floor(val / 60000);
-    const sec = Math.floor((val / 1000) % 60);
+    const sec = ((val / 1000) % 60).toFixed(1);
     return `${min}:${pad(sec)}`;
   }
 
@@ -346,18 +343,37 @@ class App extends PureComponent {
               Author: {this.state.currentSongMetadata.author || '--'}<br/>
               Copyright: {this.state.currentSongMetadata.copyright || '--'}<br/>
               Comment: {this.state.currentSongMetadata.comment || '--'}
-              {playerParams.length &&
+              {playerParams.length > 0 &&
               <div>
-                {playerParams.map(param =>
-                  <div key={param}>
-                    {param.name}:
-                    <select onChange={(e) => this.player.setParameter(param.name, e.target.value)}>
-                      {param.options.map(option =>
-                        <option key={option} value={option}>{option}</option>
-                      )}
-                    </select>
-                  </div>
-                )}
+                <h3>Player Settings</h3>
+                {playerParams.map(param => {
+                  switch (param.type) {
+                    case 'enum':
+                      return (
+                        <div key={param.id}>
+                          {param.label}:
+                          <select onChange={(e) => this.player.setParameter(param.id, e.target.value)}>
+                            {param.options.map(option =>
+                              <option key={option} value={option}>{option}</option>
+                            )}
+                          </select>
+                        </div>
+                      );
+                    case 'number':
+                      return (
+                        <div key={param.id}>
+                          {param.label}:
+                          <input type="range"
+                                 min={param.min} max={param.max} step={param.step}
+                                 value={this.player.getParameter(param.id)}
+                                 onChange={(e) => this.player.setParameter(param.id, e.target.value)}>
+                          </input>
+                        </div>
+                      );
+                    default:
+                      return null;
+                  }
+                })}
               </div>
               }
             </div>
