@@ -162,7 +162,7 @@ export default class GMEPlayer extends Player {
   }
 
   getPositionMs() {
-    if (emu) return libgme._gme_tell(emu);
+    if (emu) return libgme._gme_tell_scaled(emu);
   }
 
   getDurationMs() {
@@ -197,9 +197,7 @@ export default class GMEPlayer extends Player {
   }
 
   seekMs(seekMs) {
-    // / this.state.tempo;
-    // this.player.setFadeout(this.getFadeMs(this.state.currentSongMetadata, this.state.tempo));
-    if (emu) return libgme._gme_seek(emu, seekMs);
+    if (emu) return libgme._gme_seek_scaled(emu, seekMs);
   }
 
   stop() {
