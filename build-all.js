@@ -112,19 +112,21 @@ var args = [].concat(flags, source_files);
 
 console.log('Compiling to %s...', js_file);
 var build_proc = spawn(empp, args, {stdio: 'inherit'});
-build_proc.on('exit', function () {
-  console.log('Moving %s to %s.', wasm_file, wasm_dir);
-  execSync(`mv ${wasm_file} ${wasm_dir}`);
+build_proc.on('exit', function (code) {
+  if (code === 0) {
+    console.log('Moving %s to %s.', wasm_file, wasm_dir);
+    execSync(`mv ${wasm_file} ${wasm_dir}`);
 
-  // Don't use --pre-js because it can get stripped out by closure.
-  const eslint_disable = '/*eslint-disable*/\n';
-  console.log('Prepending %s with %s.', js_file, eslint_disable.trim());
-  const data = fs.readFileSync(js_file);
-  const fd = fs.openSync(js_file, 'w+');
-  const insert = new Buffer(eslint_disable);
-  fs.writeSync(fd, insert, 0, insert.length, 0);
-  fs.writeSync(fd, data, 0, data.length, insert.length);
-  fs.close(fd, (err) => {
-    if (err) throw err;
-  });
+    // Don't use --pre-js because it can get stripped out by closure.
+    const eslint_disable = '/*eslint-disable*/\n';
+    console.log('Prepending %s with %s.', js_file, eslint_disable.trim());
+    const data = fs.readFileSync(js_file);
+    const fd = fs.openSync(js_file, 'w+');
+    const insert = new Buffer(eslint_disable);
+    fs.writeSync(fd, insert, 0, insert.length, 0);
+    fs.writeSync(fd, data, 0, data.length, insert.length);
+    fs.close(fd, (err) => {
+      if (err) throw err;
+    });
+  }
 });
