@@ -95,11 +95,11 @@ const DEV_DEF* devDefList_GA20[] =
 
 struct IremGA20_channel_def
 {
-	UINT32 rate;
 	UINT32 start;
+	UINT32 end;
+	UINT32 rate;
 	UINT32 pos;
 	UINT32 frac;
-	UINT32 end;
 	UINT16 volume;
 	UINT16 pan;
 	//UINT16 effect;
@@ -141,11 +141,14 @@ static void IremGA20_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			if (ch->Muted || ! ch->play)
 				continue;
 			
-			sampleout += (chip->rom[ch->pos] - 0x80) * (INT32)ch->volume;
+			if (! chip->rom[ch->pos])	// check for sample end marker
+				ch->play = 0x00;
+			else
+				sampleout += (chip->rom[ch->pos] - 0x80) * (INT32)ch->volume;
 			ch->frac += ch->rate;
 			ch->pos += (ch->frac >> RATE_SHIFT);
 			ch->frac &= ((1 << RATE_SHIFT) - 1);
-			if (ch->pos >= ch->end - 0x20)
+			if (ch->pos >= ch->end)
 				ch->play = 0x00;
 		}
 
@@ -172,19 +175,19 @@ static void irem_ga20_w(void *info, UINT8 offset, UINT8 data)
 	switch (offset & 0x7)
 	{
 		case 0: /* start address low */
-			ch->start = ((ch->start)&0xff000) | (data<<4);
+			ch->start = (ch->start&0xff000) | (data<<4);
 			break;
 
 		case 1: /* start address high */
-			ch->start = ((ch->start)&0x00ff0) | (data<<12);
+			ch->start = (ch->start&0x00ff0) | (data<<12);
 			break;
 
-		case 2: /* end address low */
-			ch->end = ((ch->end)&0xff000) | (data<<4);
+		case 2: /* end? address low */
+			ch->end = (ch->end&0xff000) | (data<<4);
 			break;
 
-		case 3: /* end address high */
-			ch->end = ((ch->end)&0x00ff0) | (data<<12);
+		case 3: /* end? address high */
+			ch->end = (ch->end&0x00ff0) | (data<<12);
 			break;
 
 		case 4:

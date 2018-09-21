@@ -235,14 +235,14 @@ value:   START, REC, MEMDAT, REPEAT, SPOFF, x,x,RESET   meaning:
 			}
 			else
 			{
-				if( DELTAT->end >= DELTAT->memory_size )	/* Check End in Range */
+				if( (DELTAT->end & DELTAT->memory_mask) >= DELTAT->memory_size )	/* Check End in Range */
 				{
 #ifdef _DEBUG
 					logerror("YM Delta-T ADPCM end out of range: $%08x\n", DELTAT->end);
 #endif
-					DELTAT->end = DELTAT->memory_size - 1;
+					DELTAT->end = (DELTAT->end & ~DELTAT->memory_mask) | (DELTAT->memory_size - 1);
 				}
-				if( DELTAT->start >= DELTAT->memory_size )	/* Check Start in Range */
+				if( (DELTAT->start & DELTAT->memory_mask) >= DELTAT->memory_size )	/* Check Start in Range */
 				{
 #ifdef _DEBUG
 					logerror("YM Delta-T ADPCM start out of range: $%08x\n", DELTAT->start);
