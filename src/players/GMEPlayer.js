@@ -13,7 +13,7 @@ const fileExtensions = [
 ];
 
 export default class GMEPlayer extends Player {
-  constructor(audioContext, emscriptenRuntime) {
+  constructor(audioContext, emscriptenRuntime, onPlayerStateUpdate = function() {}) {
     super();
 
     libgme = emscriptenRuntime;
@@ -24,6 +24,7 @@ export default class GMEPlayer extends Player {
     this.fileExtensions = fileExtensions;
     this.subtune = 0;
     this.tempo = 1.0;
+    this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
 
   restart() {
@@ -34,15 +35,17 @@ export default class GMEPlayer extends Player {
 
   playSubtune(subtune) {
     this.fadingOut = false;
+    this.subtune = subtune;
     this.metadata = this._parseMetadata(subtune);
+    this.onPlayerStateUpdate(false);
     return libgme._gme_start_track(emu, subtune);
   }
 
-  loadData(data, endSongCallback = function() {}) {
+  loadData(data) {
     this.subtune = 0;
     this.fadingOut = false;
-    const buffer = libgme.allocate(BUFFER_SIZE * 16, "i16", libgme.ALLOC_NORMAL);
-    const emuPtr = libgme.allocate(1, "i32", libgme.ALLOC_NORMAL);
+    const buffer = libgme.allocate(BUFFER_SIZE * 16, 'i16', libgme.ALLOC_NORMAL);
+    const emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
 
     if (!this.audioNode) {
       this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
@@ -62,7 +65,7 @@ export default class GMEPlayer extends Player {
         }
 
         if (this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
-          console.log('Fading out . pos %d. duration %d.', this.getPositionMs(), this.getDurationMs());
+          console.log('Fading out at %d ms.', this.getPositionMs());
           this.setFadeout(this.getPositionMs());
           this.fadingOut = true;
         }
@@ -76,7 +79,7 @@ export default class GMEPlayer extends Player {
                 // Interleaved channel format
                 i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
                 channel * 2,            // channel offset * bytes per sample
-                "i16") / INT16_MAX;     // convert int16 to float
+                'i16') / INT16_MAX;     // convert int16 to float
             }
           }
         } else {
@@ -85,9 +88,7 @@ export default class GMEPlayer extends Player {
           if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
             this.audioNode.disconnect();
             this.audioNode = null;
-            endSongCallback(true);
-          } else {
-            endSongCallback(false);
+            this.onPlayerStateUpdate(true);
           }
         }
       };
@@ -211,6 +212,7 @@ export default class GMEPlayer extends Player {
       this.audioNode.disconnect();
       this.audioNode = null;
     }
+    this.onPlayerStateUpdate(true);
     // if (emu) libgme._gme_delete(emu);
   }
 }

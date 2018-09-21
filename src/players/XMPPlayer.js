@@ -13,7 +13,7 @@ const fileExtensions = [
 ];
 
 export default class XMPPlayer extends Player {
-  constructor(audioContext, emscriptenRuntime) {
+  constructor(audioContext, emscriptenRuntime, onPlayerStateUpdate = function() {}) {
     super();
 
     this.libxmp = emscriptenRuntime;
@@ -28,6 +28,7 @@ export default class XMPPlayer extends Player {
     this.fileExtensions = fileExtensions;
     this._positionMs = 0;
     this._durationMs = 1000;
+    this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
 
   _parseMetadata() {
@@ -72,7 +73,7 @@ export default class XMPPlayer extends Player {
     this.resume();
   }
 
-  loadData(data, endSongCallback = function() {}) {
+  loadData(data) {
     const xmp = this.libxmp;
     const ctx = this.xmpCtx;
     const infoPtr = this.xmp_frame_infoPtr;
@@ -109,7 +110,7 @@ export default class XMPPlayer extends Player {
         if (err === -1) {
           this.audioNode.disconnect();
           this.audioNode = null;
-          endSongCallback(true);
+          this.onPlayerStateUpdate(true);
         } else if (err !== 0) {
           console.error("xmp_play_buffer failed. error code: %d", err);
           this.audioNode.disconnect();
@@ -223,5 +224,6 @@ export default class XMPPlayer extends Player {
     const ctx = this.xmpCtx;
     this.paused = true;
     xmp._xmp_stop_module(ctx);
+    this.onPlayerStateUpdate(true);
   }
 }

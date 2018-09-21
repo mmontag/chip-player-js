@@ -41,9 +41,9 @@ class App extends PureComponent {
       },
       onRuntimeInitialized: () => {
         this.players = [
-          new GMEPlayer(audioCtx, emscriptenRuntime),
-          new XMPPlayer(audioCtx, emscriptenRuntime),
-          new MIDIPlayer(audioCtx, emscriptenRuntime),
+          new GMEPlayer(audioCtx, emscriptenRuntime, this.handlePlayerStateUpdate),
+          new XMPPlayer(audioCtx, emscriptenRuntime, this.handlePlayerStateUpdate),
+          new MIDIPlayer(audioCtx, emscriptenRuntime, this.handlePlayerStateUpdate),
         ];
         this.setState({loading: false});
       },
@@ -132,14 +132,13 @@ class App extends PureComponent {
       uint8Array = new Uint8Array(buffer);
       // }
 
-      this.player.loadData(uint8Array, this.handlePlayerStateUpdate);
+      this.player.loadData(uint8Array);
       this.player.setTempo(this.state.tempo);
       this.player.setVoices(this.state.voices);
       this.player.resume();
       const numSubtunes = this.player.getNumSubtunes();
       const numVoices = this.player.getNumVoices();
 
-      this.startedFadeOut = false;
       this.setState({
         paused: false,
         currentSongMetadata: this.player.getMetadata(),
@@ -155,17 +154,7 @@ class App extends PureComponent {
   }
 
   playSubtune(subtune) {
-    if (this.player.playSubtune(subtune) !== 0) {
-      console.error("Could not load track");
-      return;
-    }
-    this.setState({
-      currentSongSubtune: subtune,
-      currentSongDurationMs: this.player.getDurationMs(),
-      currentSongMetadata: this.player.getMetadata(),
-      currentSongPositionMs: 0,
-    });
-    // }
+    this.player.playSubtune(subtune);
   }
 
   handlePlayerStateUpdate(isStopped) {
@@ -196,14 +185,14 @@ class App extends PureComponent {
   }
 
   prevSubtune() {
-    const subtune = this.state.currentSongSubtune - 1;
+    const subtune = this.player.getSubtune() - 1;
     if (subtune < 0) return;
     this.playSubtune(subtune);
   }
 
   nextSubtune() {
-    const subtune = this.state.currentSongSubtune + 1;
-    if (subtune >= this.state.currentSongNumSubtunes) return;
+    const subtune = this.player.getSubtune() + 1;
+    if (subtune >= this.player.getNumSubtunes()) return;
     this.playSubtune(subtune);
   }
 

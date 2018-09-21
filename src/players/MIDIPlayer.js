@@ -23,7 +23,7 @@ const fileExtensions = [
 ];
 
 export default class MIDIPlayer extends Player {
-  constructor(audioContext, emscriptenRuntime) {
+  constructor(audioContext, emscriptenRuntime, onPlayerStateUpdate = function() {}) {
     super();
     lib = emscriptenRuntime;
     lib._tp_init(audioContext.sampleRate);
@@ -43,9 +43,10 @@ export default class MIDIPlayer extends Player {
     this.paused = false;
     this.fileExtensions = fileExtensions;
     this.params = {};
+    this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
 
-  loadData(data, endSongCallback = function() {}) {
+  loadData(data) {
     const buffer = lib.allocate(BUFFER_SIZE * 8, 'i32', lib.ALLOC_NORMAL);
 
     console.log('Playing MIDI data...');
@@ -86,7 +87,7 @@ export default class MIDIPlayer extends Player {
           this.audioNode.disconnect();
           this.audioNode = null;
 
-          endSongCallback(true);
+          this.onPlayerStateUpdate(true);
         }
       };
     }
@@ -107,6 +108,7 @@ export default class MIDIPlayer extends Player {
       this.audioNode.disconnect();
       this.audioNode = null;
     }
+    this.onPlayerStateUpdate(true);
   }
 
   getDurationMs() {

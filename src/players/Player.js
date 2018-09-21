@@ -8,14 +8,14 @@
 //                         ╭– (seek) –╮
 //                         ^          v
 //  ┌─ ─ ─ ─ ─┐         ┌─────────────────┐            ┌─────────┐
-//  │ stopped │–(open)–>│     playing     │––(close)––>│ stopped │
+//  │ stopped │–(open)–>│     playing     │––(stop)–––>│ stopped │
 //  └ ─ ─ ─ ─ ┘         └─────────────────┘            └─────────┘
 //                        | ┌────────┐ ^
 //                (pause) ╰>│ paused │–╯ (unpause)
 //                          └────────┘
 //
 // In the "open" transition, the audioNode is connected.
-// In the "close" transition, it is disconnected.
+// In the "stop" transition, it is disconnected.
 // "stopped" is synonymous with closed/empty.
 //
 export default class Player {
