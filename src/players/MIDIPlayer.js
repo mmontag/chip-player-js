@@ -15,7 +15,7 @@ const SOUNDFONTS = [
   'Setzer\'s_SPC_Soundfont.sf2',
 ];
 const DEFAULT_SOUNDFONT = SOUNDFONTS[0];
-const DEFAULT_REVERB = 0.65;
+const DEFAULT_REVERB = 0.5;
 const BUFFER_SIZE = 2048;
 const fileExtensions = [
   'mid',
@@ -170,17 +170,9 @@ export default class MIDIPlayer extends Player {
   }
 
   _ensureFile(filename, url) {
-    let fileExists = false;
-    try {
-      lib.FS.stat(filename);
+    if (lib.FS.analyzePath(filename).exists) {
       console.log(`${filename} exists in Emscripten file system.`);
-      fileExists = true;
-    } catch (e) {
-    }
-
-    if (fileExists) {
       return Promise.resolve(filename);
-      // this._loadSoundfont(filename);
     } else {
       console.log(`Downloading ${filename}...`);
       return fetch(url)
