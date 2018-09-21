@@ -39,7 +39,7 @@ void gme_delete( Music_Emu* );
 
 /* Set time to start fading track out. Once fade ends track_ended() returns true.
 Fade time can be changed while track is playing. */
-void gme_set_fade( Music_Emu*, int start_msec );
+void gme_set_fade( Music_Emu*, int start_msec, int length_msec );
 
 /* True if a track has reached its end */
 int gme_track_ended( Music_Emu const* );
