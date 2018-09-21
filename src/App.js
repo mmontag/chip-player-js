@@ -16,9 +16,10 @@ class App extends PureComponent {
     this.togglePause = this.togglePause.bind(this);
     this.play = this.play.bind(this);
     this.playSong = this.playSong.bind(this);
-    this.handleSliderDrag = this.handleSliderDrag.bind(this);
-    this.handleSliderDrop = this.handleSliderDrop.bind(this);
+    this.handlePositionDrag = this.handlePositionDrag.bind(this);
+    this.handlePositionDrop = this.handlePositionDrop.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
+    this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
     this.getSongPos = this.getSongPos.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
@@ -201,7 +202,7 @@ class App extends PureComponent {
     this.setState({paused: this.player.togglePause()});
   }
 
-  handleSliderDrag(event) {
+  handlePositionDrag(event) {
     const pos = event.target ? event.target.value : event;
     // Update current time position label
     this.setState({
@@ -209,7 +210,7 @@ class App extends PureComponent {
     });
   }
 
-  handleSliderDrop(event) {
+  handlePositionDrop(event) {
     if (!this.player) return;
 
     const pos = event.target ? event.target.value : event;
@@ -278,7 +279,7 @@ class App extends PureComponent {
       }
     };
     const playerParams = this.player ? this.player.getParameters() : [];
-
+    const metadata = this.state.currentSongMetadata;
     return (
       <div className="App">
         <header className="App-header">
@@ -300,9 +301,9 @@ class App extends PureComponent {
             </button>
             <Slider
               pos={this.getSongPos()}
-              onDrag={this.handleSliderDrag}
-              onChange={this.handleSliderDrop}/>
-            {this.state.currentSongMetadata &&
+              onDrag={this.handlePositionDrag}
+              onChange={this.handlePositionDrop}/>
+            {metadata &&
             <div className="Song-details">
               Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
               Speed: <input
@@ -336,13 +337,13 @@ class App extends PureComponent {
                   </label>
                 )
               })}<br/>
-              Title: {this.state.currentSongMetadata.title || '--'}<br/>
-              System: {this.state.currentSongMetadata.system || '--'}<br/>
-              Game: {this.state.currentSongMetadata.game || '--'}<br/>
-              Song: {this.state.currentSongMetadata.song || '--'}<br/>
-              Author: {this.state.currentSongMetadata.author || '--'}<br/>
-              Copyright: {this.state.currentSongMetadata.copyright || '--'}<br/>
-              Comment: {this.state.currentSongMetadata.comment || '--'}
+              Title: {metadata.title || '--'}<br/>
+              System: {metadata.system || '--'}<br/>
+              Game: {metadata.game || '--'}<br/>
+              Song: {metadata.song || '--'}<br/>
+              Author: {metadata.author || '--'}<br/>
+              Copyright: {metadata.copyright || '--'}<br/>
+              Comment: {metadata.comment || '--'}
               {playerParams.length > 0 &&
               <div>
                 <h3>Player Settings</h3>
