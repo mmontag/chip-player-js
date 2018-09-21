@@ -206,17 +206,7 @@ export default class GMEPlayer extends Player {
 
   seekMs(positionMs) {
     if (emu) {
-      const audioprocess = this.audioNode.onaudioprocess;
-      // Workaround to eliminate stuttering:
-      // Temporarily swap the audio process callback, and do the
-      // expensive seek only after buffer is filled with silence
-      this.audioNode.onaudioprocess = (e) => {
-        for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
-          e.outputBuffer.getChannelData(i).fill(0);
-        }
-        libgme._gme_seek_scaled(emu, positionMs);
-        this.audioNode.onaudioprocess = audioprocess;
-      };
+      Player.muteAudioDuringCall(this.audioNode, () => libgme._gme_seek_scaled(emu, positionMs));
     }
   }
 

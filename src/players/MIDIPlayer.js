@@ -195,7 +195,9 @@ export default class MIDIPlayer extends Player {
 
   _loadSoundfont(filename) {
     console.log('Loading soundfont...');
-    const err = lib.ccall('tp_load_soundfont', 'number', ['string'], [filename]);
-    if (err !== -1) console.log('Loaded soundfont.');
+    Player.muteAudioDuringCall(this.audioNode, () => {
+      const err = lib.ccall('tp_load_soundfont', 'number', ['string'], [filename]);
+      if (err !== -1) console.log('Loaded soundfont.');
+    });
   }
 }
