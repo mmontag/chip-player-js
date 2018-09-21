@@ -169,10 +169,12 @@ export default class GMEPlayer extends Player {
 
   getPositionMs() {
     if (emu) return libgme._gme_tell_scaled(emu);
+    return 0;
   }
 
   getDurationMs() {
-    return this.metadata.play_length;
+    if (emu) return this.metadata.play_length;
+    return 0;
   }
 
   getMetadata() {
@@ -189,7 +191,7 @@ export default class GMEPlayer extends Player {
   }
 
   setFadeout(startMs) {
-    if (emu) libgme._gme_set_fade(emu, startMs);
+    if (emu) libgme._gme_set_fade(emu, startMs, 4000);
   }
 
   setVoices(voices) {
@@ -202,8 +204,20 @@ export default class GMEPlayer extends Player {
     if (emu) libgme._gme_mute_voices(emu, mask);
   }
 
-  seekMs(seekMs) {
-    if (emu) return libgme._gme_seek_scaled(emu, seekMs);
+  seekMs(positionMs) {
+    if (emu) {
+      const audioprocess = this.audioNode.onaudioprocess;
+      // Workaround to eliminate stuttering:
+      // Temporarily swap the audio process callback, and do the
+      // expensive seek only after buffer is filled with silence
+      this.audioNode.onaudioprocess = (e) => {
+        for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
+          e.outputBuffer.getChannelData(i).fill(0);
+        }
+        libgme._gme_seek_scaled(emu, positionMs);
+        this.audioNode.onaudioprocess = audioprocess;
+      };
+    }
   }
 
   stop() {
@@ -212,7 +226,8 @@ export default class GMEPlayer extends Player {
       this.audioNode.disconnect();
       this.audioNode = null;
     }
+    if (emu) libgme._gme_delete(emu);
+    emu = null;
     this.onPlayerStateUpdate(true);
-    // if (emu) libgme._gme_delete(emu);
   }
 }
