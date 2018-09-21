@@ -73,6 +73,10 @@ export default class Player {
     return 1;
   }
 
+  getSubtune() {
+    return 0;
+  }
+
   getMetadata() {
     return {
       title: '[Not implemented]',

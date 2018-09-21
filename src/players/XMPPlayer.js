@@ -72,13 +72,11 @@ export default class XMPPlayer extends Player {
     this.resume();
   }
 
-  loadData(data, callback = null) {
+  loadData(data, endSongCallback = function() {}) {
     const xmp = this.libxmp;
     const ctx = this.xmpCtx;
     const infoPtr = this.xmp_frame_infoPtr;
-    const trackEnded = false;
     const buffer = xmp.allocate(BUFFER_SIZE * 16, 'i16', xmp.ALLOC_NORMAL);
-    let endSongCallback = callback;
     let err;
 
     err = xmp.ccall(
@@ -100,19 +98,19 @@ export default class XMPPlayer extends Player {
           channels[channel] = e.outputBuffer.getChannelData(channel);
         }
 
-        if (this.paused || trackEnded) {
-          if (trackEnded && typeof endSongCallback === 'function') {
-            endSongCallback();
-            endSongCallback = null;
-          }
+        if (this.paused) {
           for (channel = 0; channel < channels.length; channel++) {
             channels[channel].fill(0);
           }
           return;
         }
 
-        err = xmp._xmp_play_buffer(ctx, buffer, BUFFER_SIZE * 4, 0);
-        if (err !== 0) {
+        err = xmp._xmp_play_buffer(ctx, buffer, BUFFER_SIZE * 4, 1);
+        if (err === -1) {
+          this.audioNode.disconnect();
+          this.audioNode = null;
+          endSongCallback(true);
+        } else if (err !== 0) {
           console.error("xmp_play_buffer failed. error code: %d", err);
           this.audioNode.disconnect();
         }

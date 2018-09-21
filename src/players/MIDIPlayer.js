@@ -45,7 +45,7 @@ export default class MIDIPlayer extends Player {
     this.params = {};
   }
 
-  loadData(data, endSongCallback) {
+  loadData(data, endSongCallback = function() {}) {
     const buffer = lib.allocate(BUFFER_SIZE * 8, 'i32', lib.ALLOC_NORMAL);
 
     console.log('Playing MIDI data...');
@@ -85,7 +85,8 @@ export default class MIDIPlayer extends Player {
           lib._tp_stop();
           this.audioNode.disconnect();
           this.audioNode = null;
-          if (typeof endSongCallback === 'function') endSongCallback();
+
+          endSongCallback(true);
         }
       };
     }

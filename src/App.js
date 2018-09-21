@@ -27,7 +27,6 @@ class App extends PureComponent {
     this.getTimeLabel = this.getTimeLabel.bind(this);
     this.displayLoop = this.displayLoop.bind(this);
     this.getFadeMs = this.getFadeMs.bind(this);
-    this.songEnded = this.songEnded.bind(this);
 
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     this._iosAudioUnlock(audioCtx);
@@ -133,7 +132,7 @@ class App extends PureComponent {
       uint8Array = new Uint8Array(buffer);
       // }
 
-      this.player.loadData(uint8Array, this.songEnded);
+      this.player.loadData(uint8Array, this.handlePlayerStateUpdate);
       this.player.setTempo(this.state.tempo);
       this.player.setVoices(this.state.voices);
       this.player.resume();
@@ -169,19 +168,31 @@ class App extends PureComponent {
     // }
   }
 
-  songEnded() {
-    // update state with the song's exact duration
-    this.player = null;
-    this.setState({
-      currentSongMetadata: {},
-      currentSongNumVoices: 0,
-      currentSongNumSubtunes: 0,
-      currentSongSubtune: 0,
-      extractedTunes: [],
-      currentSongDurationMs: 1,
-      currentSongPositionMs: 0,
-      draggedSongPositionMs: -1,
-    });
+  handlePlayerStateUpdate(isStopped) {
+    if (isStopped) {
+      this.player = null;
+      this.setState({
+        extractedTunes: [],
+        currentSongSubtune: 0,
+        currentSongMetadata: {},
+        currentSongNumVoices: 0,
+        currentSongPositionMs: 0,
+        currentSongDurationMs: 1,
+        draggedSongPositionMs: -1,
+        currentSongNumSubtunes: 0,
+      });
+    } else {
+      this.setState({
+        paused: this.player.isPaused(),
+        currentSongSubtune: this.player.getSubtune(),
+        currentSongMetadata: this.player.getMetadata(),
+        currentSongNumVoices: this.player.getNumVoices(),
+        currentSongPositionMs: this.player.getPositionMs(),
+        currentSongDurationMs: this.player.getDurationMs(),
+        currentSongNumSubtunes: this.player.getNumSubtunes(),
+        // voiceNames: [...Array(this.player.getNumVoices())].map((_, i) => this.player.getVoiceName(i)),
+      });
+    }
   }
 
   prevSubtune() {

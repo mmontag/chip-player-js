@@ -38,7 +38,7 @@ export default class GMEPlayer extends Player {
     return libgme._gme_start_track(emu, subtune);
   }
 
-  loadData(data, endSongCallback) {
+  loadData(data, endSongCallback = function() {}) {
     this.subtune = 0;
     this.fadingOut = false;
     const buffer = libgme.allocate(BUFFER_SIZE * 16, "i16", libgme.ALLOC_NORMAL);
@@ -81,12 +81,13 @@ export default class GMEPlayer extends Player {
           }
         } else {
           this.subtune++;
+
           if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
             this.audioNode.disconnect();
             this.audioNode = null;
-            if (typeof endSongCallback === 'function') {
-              endSongCallback();
-            }
+            endSongCallback(true);
+          } else {
+            endSongCallback(false);
           }
         }
       };
@@ -159,6 +160,10 @@ export default class GMEPlayer extends Player {
 
   getNumSubtunes() {
     if (emu) return libgme._gme_track_count(emu);
+  }
+
+  getSubtune() {
+    return this.subtune;
   }
 
   getPositionMs() {
