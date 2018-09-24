@@ -242,7 +242,7 @@ class App extends PureComponent {
   handleTempoChange(event) {
     if (!this.player) return;
 
-    const tempo = (event.target ? event.target.value : event) || 1.0;
+    const tempo = parseFloat((event.target ? event.target.value : event)) || 1.0;
     this.player.setTempo(tempo);
     this.setState({
       tempo: tempo
@@ -283,12 +283,12 @@ class App extends PureComponent {
     return (
       <div className="App">
         <header className="App-header">
-          <p className="App-title">Chip Player JS</p>
+          <h2 className="App-title">Chip Player JS</h2>
           <p className="App-subtitle">
             powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>, <a
             href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and <a
-            href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>. AudioContext
-            state: {this.audioCtx.state}
+            href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>. <br/>
+            AudioContext state: {this.audioCtx.state}
           </p>
         </header>
         {this.state.loading ?
@@ -309,10 +309,10 @@ class App extends PureComponent {
               Speed: <input
               disabled={this.player ? null : true}
               type="range" value={this.state.tempo}
-              min="0.3" max="2.0" step="0.1"
+              min="0.3" max="2.0" step="0.05"
               onInput={this.handleTempoChange}
-              onChange={this.handleTempoChange}/>
-              {this.state.tempo}<br/>
+              onChange={this.handleTempoChange}/>&nbsp;
+              {this.state.tempo.toFixed(2)}<br/>
               {this.state.currentSongNumSubtunes > 1 &&
               <span>
                   Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
@@ -354,16 +354,18 @@ class App extends PureComponent {
                         <div key={param.id}>
                           {param.label}:
                           <select onChange={(e) => this.player.setParameter(param.id, e.target.value)}>
-                            {param.options.map(option =>
-                              <option key={option} value={option}>{option}</option>
-                            )}
+                            <optgroup>
+                              {param.options.map(option =>
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              )}
+                            </optgroup>
                           </select>
                         </div>
                       );
                     case 'number':
                       return (
                         <div key={param.id}>
-                          {param.label}:
+                          {param.label}:&nbsp;
                           <input type="range"
                                  min={param.min} max={param.max} step={param.step}
                                  value={this.player.getParameter(param.id)}
