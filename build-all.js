@@ -101,7 +101,9 @@ var flags = [
   // '--llvm-lto', '3',
   '-o', js_file,
 
-  '-DVGM_YM2612_GENS=1', // the gme YM2612 GENS core is much faster than NUKED
+  '-DVGM_YM2612_MAME=1',     // fast and accurate, but suffers on some GYM files
+  // '-DVGM_YM2612_NUKED=1', // slow but very accurate
+  // '-DVGM_YM2612_GENS=1',  // very fast but inaccurate
 
   '-Qunused-arguments',
   '-Wno-deprecated',
