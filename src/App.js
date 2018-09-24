@@ -328,7 +328,7 @@ class App extends PureComponent {
               Voices:
               {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
                 return (
-                  <label key={i}>
+                  <label className="App-label" key={i}>
                     <input
                       type="checkbox" onChange={() => {
                       this.handleVoiceToggle(i)

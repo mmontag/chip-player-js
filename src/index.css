@@ -1,4 +1,179 @@
+/* MSDOS 6.22 CSS Theme */
+
+@font-face {
+    font-family: VGA_SquarePx;
+    src: url(fonts/pxplus_vga_squarepx.ttf) format('truetype');
+    font-weight: 400;
+    font-style: normal
+}
+
+* {
+    font-size: 24px !important;
+    -webkit-font-smoothing: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    font-family: VGA_SquarePx, monospace !important;
+    line-height: 19px !important;
+    text-decoration: none;
+    color: #aaa;
+}
+
+*::selection {
+    background: rgba(170, 170, 170, 0.99);
+    color: #008;
+}
+
+*:focus {
+    outline: none;
+    background-color: #00f;
+}
+
+/* Basic elements */
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  margin: 30px;
+    margin: 30px;
+    background: #008;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #fff;
+    margin: 19px 0;
+    padding: 0;
+    font-weight: normal;
+}
+
+p { margin: 19px 0; }
+
+a {
+    font-size: 24px;
+    font-weight: normal;
+    text-decoration: none;
+    -webkit-font-smoothing: none;
+    margin: 0;
+    padding: 0;
+    line-height: 24px;
+    color: #ff0;
+}
+
+a:focus   { background: #00f; }
+a:active  { background: #800; }
+a:visited { color: #ff0; }
+
+/* Form elements */
+
+select, button {
+    border: none;
+    background: none;
+    border-radius: 0;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    padding: 0 8px;
+    color: #ff0;
+}
+select {
+    background-image: /* A little down-arrow */
+            linear-gradient(60deg, transparent 50%, #ff0 50%),
+            linear-gradient(120deg, #ff0 50%, transparent 50%);
+    background-position: calc(100% - 16px) 5px, calc(100% - 12px) 5px;
+    background-size: 4px 12px, 4px 12px;
+    background-repeat: no-repeat;
+}
+button { padding: 0; margin: 0; }
+select:before, button:before { content: '[ '; }
+select:after, button:after   { content: ' ]'; }
+select option                { font-size: 14px; }
+
+button:focus    { background: #00f; }
+button:active   { background: #800; }
+button:disabled { color: #ccc; }
+
+input { user-select: none; }
+input[type=checkbox] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    width: 32px;
+    margin: 0;
+    color: #ff0;
+}
+
+input[type=checkbox]:focus          { background-color: #00f; }
+input[type=checkbox]:before         { content: '[ ]'; }
+input[type=checkbox]:checked:before { content: '[×]'; }
+
+input[type=range] {
+    margin: 0;
+    -webkit-appearance: none;
+    background: transparent;
+    vertical-align: bottom;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    height: 3px;
+    border: 1px solid yellow;
+    margin: 8px 0;
+}
+
+input[type=range]:focus { background: #00f; }
+input[type=range]:disabled::-webkit-slider-runnable-track { border-color: #aaa; }
+input[type=range]:disabled::-webkit-slider-thumb { background: #aaa; }
+input[type=range]:active::-webkit-slider-thumb { background: #ff0; }
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: yellow;
+    border: 0;
+    height: 19px;
+    margin-top: -9px;
+    width: 8px;
+}
+
+/* Component overrides */
+
+.App {
+    border: 3px double yellow;
+    padding: 0 19px;
+}
+
+.App .App-header {
+    border-bottom: 1px solid yellow;
+    padding: 0 19px;
+    margin: 0 -19px 19px -19px;
+}
+
+.App .App-label {
+    margin: 0 8px 0 0;
+}
+
+.App .Slider {
+    height: 19px;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    border: 0;
+    margin: 19px 0;
+}
+
+.App .Slider-rail {
+    width: 100%;
+    height: 3px;
+    margin-top: -2px;
+    background: none;
+    position: absolute;
+    top: 50%;
+    box-sizing: border-box;
+    border: 1px solid yellow;
+}
+
+.App .Slider-knob {
+    height: 19px;
+    width: 8px;
+    margin: 0;
+    border-radius: 0;
+    background-color: #ff0;
+    position: absolute;
+    -webkit-box-shadow: none;
+    box-shadow: none;
 }
