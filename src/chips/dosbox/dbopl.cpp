@@ -37,6 +37,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 #include "dbopl.h"
 
 #if defined(__GNUC__) && __GNUC__ > 3
@@ -69,6 +70,36 @@
 #ifndef PI
 #define PI 3.14159265358979323846
 #endif
+
+struct NoCopy {
+    NoCopy() {}
+private:
+    NoCopy(const NoCopy &);
+    NoCopy &operator=(const NoCopy &);
+};
+#if !defined(_WIN32)
+#include <pthread.h>
+struct Mutex : NoCopy {
+    Mutex() : m(PTHREAD_MUTEX_INITIALIZER) {}
+    void lock() { pthread_mutex_lock(&m); }
+    void unlock() { pthread_mutex_unlock(&m); }
+    pthread_mutex_t m;
+};
+#else
+#include <windows.h>
+struct Mutex : NoCopy {
+    Mutex() { InitializeCriticalSection(&m); }
+    ~Mutex() { DeleteCriticalSection(&m); }
+    void lock() { EnterCriticalSection(&m); }
+    void unlock() { LeaveCriticalSection(&m); }
+    CRITICAL_SECTION m;
+};
+#endif
+struct MutexHolder : NoCopy {
+    explicit MutexHolder(Mutex &m) : m(m) { m.lock(); }
+    ~MutexHolder() { m.unlock(); }
+    Mutex &m;
+};
 
 namespace DBOPL {
 
@@ -1294,21 +1325,40 @@ void Chip::GenerateBlock3_Mix( Bitu total, Bit32s* output  ) {
 	}
 }
 
-void Chip::Setup( Bit32u rate ) {
+struct CacheEntry {
+	Bit32u rate;
+	Bit32u freqMul[16];
+	Bit32u linearRates[76];
+	Bit32u attackRates[76];
+};
+static std::vector<CacheEntry> cache;
+static Mutex cacheMutex;
+
+static const CacheEntry *CacheLookupRateDependent( Bit32u rate )
+{
+	for ( size_t i = 0, n = cache.size(); i < n; ++i ) {
+		if (cache[i].rate == rate)
+			return &cache[i];
+	}
+	return NULL;
+}
+
+static const CacheEntry &ComputeRateDependent( Bit32u rate )
+{
+	{
+		MutexHolder lock( cacheMutex );
+		if (const CacheEntry *entry = CacheLookupRateDependent( rate ))
+			return *entry;
+	}
+
 	double original = OPLRATE;
-//	double original = rate;
 	double scale = original / (double)rate;
 
-	//Noise counter is run at the same precision as general waves
-	noiseAdd = (Bit32u)( 0.5 + scale * ( 1 << LFO_SH ) );
-	noiseCounter = 0;
-	noiseValue = 1;	//Make sure it triggers the noise xor the first time
-	//The low frequency oscillation counter
-	//Every time his overflows vibrato and tremoloindex are increased
-	lfoAdd = (Bit32u)( 0.5 + scale * ( 1 << LFO_SH ) );
-	lfoCounter = 0;
-	vibratoIndex = 0;
-	tremoloIndex = 0;
+	CacheEntry entry;
+	entry.rate = rate;
+	Bit32u *freqMul = entry.freqMul;
+	Bit32u *linearRates = entry.linearRates;
+	Bit32u *attackRates = entry.attackRates;
 
 	//With higher octave this gets shifted up
 	//-1 since the freqCreateTable = *2
@@ -1330,6 +1380,7 @@ void Chip::Setup( Bit32u rate ) {
 		EnvelopeSelect( i, index, shift );
 		linearRates[i] = (Bit32u)( scale * (EnvelopeIncreaseTable[ index ] << ( RATE_SH + ENV_EXTRA - shift - 3 )));
 	}
+
 //	Bit32s attackDiffs[62];
 	//Generate the best matching attack rate
 	for ( Bit8u i = 0; i < 62; i++ ) {
@@ -1382,6 +1433,36 @@ void Chip::Setup( Bit32u rate ) {
 		//This should provide instant volume maximizing
 		attackRates[i] = 8 << RATE_SH;
 	}
+
+	MutexHolder lock( cacheMutex );
+	if (const CacheEntry *entry = CacheLookupRateDependent( rate ))
+		return *entry;
+
+	cache.push_back(entry);
+	return cache.back();
+}
+
+void Chip::Setup( Bit32u rate ) {
+	double original = OPLRATE;
+//	double original = rate;
+	double scale = original / (double)rate;
+
+	//Noise counter is run at the same precision as general waves
+	noiseAdd = (Bit32u)( 0.5 + scale * ( 1 << LFO_SH ) );
+	noiseCounter = 0;
+	noiseValue = 1;	//Make sure it triggers the noise xor the first time
+	//The low frequency oscillation counter
+	//Every time his overflows vibrato and tremoloindex are increased
+	lfoAdd = (Bit32u)( 0.5 + scale * ( 1 << LFO_SH ) );
+	lfoCounter = 0;
+	vibratoIndex = 0;
+	tremoloIndex = 0;
+
+	const CacheEntry &entry = ComputeRateDependent( rate );
+	freqMul = entry.freqMul;
+	linearRates = entry.linearRates;
+	attackRates = entry.attackRates;
+
 	//Setup the channels with the correct four op flags
 	//Channels are accessed through a table so they appear linear here
 	chan[ 0].fourMask = 0x00 | ( 1 << 0 );
