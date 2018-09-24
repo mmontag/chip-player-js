@@ -72,33 +72,33 @@
 #endif
 
 struct NoCopy {
-    NoCopy() {}
+	NoCopy() {}
 private:
-    NoCopy(const NoCopy &);
-    NoCopy &operator=(const NoCopy &);
+	NoCopy(const NoCopy &);
+	NoCopy &operator=(const NoCopy &);
 };
 #if !defined(_WIN32)
 #include <pthread.h>
 struct Mutex : NoCopy {
-    Mutex() : m(PTHREAD_MUTEX_INITIALIZER) {}
-    void lock() { pthread_mutex_lock(&m); }
-    void unlock() { pthread_mutex_unlock(&m); }
-    pthread_mutex_t m;
+	Mutex() : m(PTHREAD_MUTEX_INITIALIZER) {}
+	void lock() { pthread_mutex_lock(&m); }
+	void unlock() { pthread_mutex_unlock(&m); }
+	pthread_mutex_t m;
 };
 #else
 #include <windows.h>
 struct Mutex : NoCopy {
-    Mutex() { InitializeCriticalSection(&m); }
-    ~Mutex() { DeleteCriticalSection(&m); }
-    void lock() { EnterCriticalSection(&m); }
-    void unlock() { LeaveCriticalSection(&m); }
-    CRITICAL_SECTION m;
+	Mutex() { InitializeCriticalSection(&m); }
+	~Mutex() { DeleteCriticalSection(&m); }
+	void lock() { EnterCriticalSection(&m); }
+	void unlock() { LeaveCriticalSection(&m); }
+	CRITICAL_SECTION m;
 };
 #endif
 struct MutexHolder : NoCopy {
-    explicit MutexHolder(Mutex &m) : m(m) { m.lock(); }
-    ~MutexHolder() { m.unlock(); }
-    Mutex &m;
+	explicit MutexHolder(Mutex &m) : m(m) { m.lock(); }
+	~MutexHolder() { m.unlock(); }
+	Mutex &m;
 };
 
 namespace DBOPL {
@@ -253,24 +253,24 @@ static const Bit8u KslShiftTable[4] = {
 // Pan law table
 static const Bit16u PanLawTable[] =
 {
-    65535, 65529, 65514, 65489, 65454, 65409, 65354, 65289,
-    65214, 65129, 65034, 64929, 64814, 64689, 64554, 64410,
-    64255, 64091, 63917, 63733, 63540, 63336, 63123, 62901,
-    62668, 62426, 62175, 61914, 61644, 61364, 61075, 60776,
-    60468, 60151, 59825, 59489, 59145, 58791, 58428, 58057,
-    57676, 57287, 56889, 56482, 56067, 55643, 55211, 54770,
-    54320, 53863, 53397, 52923, 52441, 51951, 51453, 50947,
-    50433, 49912, 49383, 48846, 48302, 47750, 47191,
-    46340, /* Center left */
-    46340, /* Center right */
-    45472, 44885, 44291, 43690, 43083, 42469, 41848, 41221,
-    40588, 39948, 39303, 38651, 37994, 37330, 36661, 35986,
-    35306, 34621, 33930, 33234, 32533, 31827, 31116, 30400,
-    29680, 28955, 28225, 27492, 26754, 26012, 25266, 24516,
-    23762, 23005, 22244, 21480, 20713, 19942, 19169, 18392,
-    17613, 16831, 16046, 15259, 14469, 13678, 12884, 12088,
-    11291, 10492, 9691, 8888, 8085, 7280, 6473, 5666,
-    4858, 4050, 3240, 2431, 1620, 810, 0
+	65535, 65529, 65514, 65489, 65454, 65409, 65354, 65289,
+	65214, 65129, 65034, 64929, 64814, 64689, 64554, 64410,
+	64255, 64091, 63917, 63733, 63540, 63336, 63123, 62901,
+	62668, 62426, 62175, 61914, 61644, 61364, 61075, 60776,
+	60468, 60151, 59825, 59489, 59145, 58791, 58428, 58057,
+	57676, 57287, 56889, 56482, 56067, 55643, 55211, 54770,
+	54320, 53863, 53397, 52923, 52441, 51951, 51453, 50947,
+	50433, 49912, 49383, 48846, 48302, 47750, 47191,
+	46340, /* Center left */
+	46340, /* Center right */
+	45472, 44885, 44291, 43690, 43083, 42469, 41848, 41221,
+	40588, 39948, 39303, 38651, 37994, 37330, 36661, 35986,
+	35306, 34621, 33930, 33234, 32533, 31827, 31116, 30400,
+	29680, 28955, 28225, 27492, 26754, 26012, 25266, 24516,
+	23762, 23005, 22244, 21480, 20713, 19942, 19169, 18392,
+	17613, 16831, 16046, 15259, 14469, 13678, 12884, 12088,
+	11291, 10492, 9691, 8888, 8085, 7280, 6473, 5666,
+	4858, 4050, 3240, 2431, 1620, 810, 0
 };
 
 //Generate a table index and table shift value using input value from a selected rate
@@ -496,7 +496,7 @@ Bits Operator::TemplateVolume(  ) {
 			return vol;
 		}
 		//In sustain phase, but not sustaining, do regular release
-                /* fall through */
+				/* fall through */
 	case RELEASE:
 		vol += RateForward( releaseAdd );;
 		if ( GCC_UNLIKELY(vol >= ENV_MAX) ) {
