@@ -93,7 +93,7 @@ export default class Player {
       const audioprocess = audioNode.onaudioprocess;
       // Workaround to eliminate stuttering:
       // Temporarily swap the audio process callback, and do the
-      // expensive seek only after buffer is filled with silence
+      // expensive operation only after buffer is filled with silence
       audioNode.onaudioprocess = function(e) {
         for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
           e.outputBuffer.getChannelData(i).fill(0);
