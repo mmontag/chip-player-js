@@ -270,6 +270,7 @@ BW_MidiSequencer::BW_MidiSequencer() :
     m_interface(NULL),
     m_format(Format_MIDI),
     m_smfFormat(0),
+    m_loopFormat(Loop_Default),
     m_loopEnabled(false),
     m_fullSongTimeLength(0.0),
     m_postSongWaitDelay(1.0),
@@ -399,6 +400,7 @@ void BW_MidiSequencer::buildSmfSetupReset(size_t trackCount)
     m_fullSongTimeLength = 0.0;
     m_loopStartTime = -1.0;
     m_loopEndTime = -1.0;
+    m_loopFormat = Loop_Default;
     m_trackDisable.clear();
     m_trackSolo = ~(size_t)0;
     m_musTitle.clear();
@@ -613,6 +615,19 @@ bool BW_MidiSequencer::buildSmfTrackData(const std::vector<std::vector<uint8_t> 
                     event.subtype = MidiEvent::ST_ENDTRACK;
                 }
             }
+
+#ifdef ENABLE_END_SILENCE_SKIPPING
+            //Have track end on its own row? Clear any delay on the row before
+            if(event.subtype == MidiEvent::ST_ENDTRACK && evtPos.events.size() == 1)
+            {
+                if (!m_trackData[tk].empty())
+                {
+                    MidiTrackRow &previous = m_trackData[tk].back();
+                    previous.delay = 0;
+                    previous.timeDelay = 0;
+                }
+            }
+#endif
 
             if((evtPos.delay > 0) || (event.subtype == MidiEvent::ST_ENDTRACK))
             {
@@ -1361,12 +1376,92 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
         if(evType == MidiEvent::T_CTRLCHANGE)
         {
             //111'th loopStart controller (RPG Maker and others)
-            if((m_format == Format_MIDI) && (evt.data[0] == 111))
+            if(m_format == Format_MIDI)
             {
-                //Change event type to custom Loop Start event and clear data
-                evt.type = MidiEvent::T_SPECIAL;
-                evt.subtype = MidiEvent::ST_LOOPSTART;
-                evt.data.clear();
+                switch(evt.data[0])
+                {
+                case 110:
+                    if(m_loopFormat == Loop_Default)
+                    {
+                        //Change event type to custom Loop Start event and clear data
+                        evt.type = MidiEvent::T_SPECIAL;
+                        evt.subtype = MidiEvent::ST_LOOPSTART;
+                        evt.data.clear();
+                        m_loopFormat = Loop_HMI;
+                    }
+                    else if(m_loopFormat == Loop_HMI)
+                    {
+                        // Repeating of 110'th point is BAD practice, treat as EMIDI
+                        m_loopFormat = Loop_EMIDI;
+                    }
+                    break;
+
+                case 111:
+                    if(m_loopFormat == Loop_HMI)
+                    {
+                        //Change event type to custom Loop End event and clear data
+                        evt.type = MidiEvent::T_SPECIAL;
+                        evt.subtype = MidiEvent::ST_LOOPEND;
+                        evt.data.clear();
+                    }
+                    else if(m_loopFormat != Loop_EMIDI)
+                    {
+                        // Change event type to custom Loop Start event and clear data
+                        evt.type = MidiEvent::T_SPECIAL;
+                        evt.subtype = MidiEvent::ST_LOOPSTART;
+                        evt.data.clear();
+                    }
+                    break;
+
+                case 113:
+                    if(m_loopFormat == Loop_EMIDI)
+                    {
+                        //EMIDI does using of CC113 with same purpose as CC7
+                        evt.data[0] = 7;
+                    }
+                    break;
+#if 0 //WIP
+                case 116:
+                    if(m_loopFormat == Loop_EMIDI)
+                    {
+                        evt.type = MidiEvent::T_SPECIAL;
+                        evt.subtype = MidiEvent::ST_LOOPSTACK_BEGIN;
+                        evt.data[0] = evt.data[1];
+                        evt.data.pop_back();
+
+                        if(m_interface->onDebugMessage)
+                        {
+                            m_interface->onDebugMessage(
+                                m_interface->onDebugMessage_userData,
+                                "Stack EMIDI Loop Start at %d to %d level with %d loops",
+                                m_loop.stackLevel,
+                                m_loop.stackLevel + 1,
+                                evt.data[0]
+                            );
+                        }
+                    }
+                    break;
+
+                case 117:  // Next/Break Loop Controller
+                    if(m_loopFormat == Loop_EMIDI)
+                    {
+                        evt.type = MidiEvent::T_SPECIAL;
+                        evt.subtype = MidiEvent::ST_LOOPSTACK_END;
+                        evt.data.clear();
+
+                        if(m_interface->onDebugMessage)
+                        {
+                            m_interface->onDebugMessage(
+                                m_interface->onDebugMessage_userData,
+                                "Stack EMIDI Loop End at %d to %d level",
+                                m_loop.stackLevel,
+                                m_loop.stackLevel - 1
+                            );
+                        }
+                    }
+                    break;
+#endif
+                }
             }
 
             if(m_format == Format_XMIDI)
@@ -1502,7 +1597,7 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
             if(m_interface->onDebugMessage)
                 m_interface->onDebugMessage(m_interface->onDebugMessage_userData, "Switching another device: %s", data);
             if(m_interface->rt_deviceSwitch)
-                m_interface->rt_deviceSwitch(m_interface->rtUserData, track, data, length);
+                m_interface->rt_deviceSwitch(m_interface->rtUserData, track, data, size_t(length));
             return;
         }
 

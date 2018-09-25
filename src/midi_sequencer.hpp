@@ -315,11 +315,24 @@ public:
         Format_XMIDI
     };
 
+    /**
+     * @brief Format of loop points implemented by CC events
+     */
+    enum LoopFormat
+    {
+        Loop_Default,
+        Loop_RPGMaker = 1,
+        Loop_EMIDI,
+        Loop_HMI
+    };
+
 private:
     //! Music file format type. MIDI is default.
     FileFormat m_format;
     //! SMF format identifier.
     unsigned m_smfFormat;
+    //! Loop points format
+    LoopFormat m_loopFormat;
 
     //! Current position
     Position m_currentPosition;

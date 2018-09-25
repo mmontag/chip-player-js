@@ -60,7 +60,7 @@ ADLMIDI_EXPORT struct ADL_MIDIPlayer *adl_init(long sample_rate)
         return NULL;
     }
 
-    MIDIplay *player = new MIDIplay(static_cast<unsigned long>(sample_rate));
+    MIDIplay *player = new(std::nothrow) MIDIplay(static_cast<unsigned long>(sample_rate));
     if(!player)
     {
         free(midi_device);
@@ -76,9 +76,9 @@ ADLMIDI_EXPORT void adl_close(struct ADL_MIDIPlayer *device)
 {
     if(!device)
         return;
-    MIDIplay * play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    if(play)
-        delete play;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
+    delete play;
     device->adl_midiPlayer = NULL;
     free(device);
     device = NULL;
@@ -89,8 +89,7 @@ ADLMIDI_EXPORT int adl_setDeviceIdentifier(ADL_MIDIPlayer *device, unsigned id)
     if(!device || id > 0x0f)
         return -1;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1;
+    assert(play);
     play->setDeviceId(static_cast<uint8_t>(id));
     return 0;
 }
@@ -101,6 +100,7 @@ ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numChips)
         return -2;
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
 #ifdef ADLMIDI_HW_OPL
     ADL_UNUSED(numChips);
     play->m_setup.numChips = 1;
@@ -124,9 +124,8 @@ ADLMIDI_EXPORT int adl_getNumChips(struct ADL_MIDIPlayer *device)
     if(device == NULL)
         return -2;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(play)
-        return (int)play->m_setup.numChips;
-    return -2;
+    assert(play);
+    return (int)play->m_setup.numChips;
 }
 
 ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
@@ -134,6 +133,7 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
 #ifdef DISABLE_EMBEDDED_BANKS
     ADL_UNUSED(bank);
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->setErrorString("This build of libADLMIDI has no embedded banks. "
                          "Please load banks by using adl_openBankFile() or "
                          "adl_openBankData() functions instead of adl_setBank().");
@@ -146,6 +146,7 @@ ADLMIDI_EXPORT int adl_setBank(ADL_MIDIPlayer *device, int bank)
         bankno = 0;
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     if(static_cast<uint32_t>(bankno) >= NumBanks)
     {
         char errBuf[150];
@@ -185,6 +186,7 @@ ADLMIDI_EXPORT int adl_reserveBanks(ADL_MIDIPlayer *device, unsigned banks)
     if(!device)
         return -1;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     OPL3::BankMap &map = play->m_synth.m_insBanks;
     map.reserve(banks);
     return (int)map.capacity();
@@ -201,6 +203,7 @@ ADLMIDI_EXPORT int adl_getBank(ADL_MIDIPlayer *device, const ADL_BankId *idp, in
     size_t idnumber = ((id.msb << 8) | id.lsb | (id.percussive ? size_t(OPL3::PercussionTag) : 0));
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     OPL3::BankMap &map = play->m_synth.m_insBanks;
 
     OPL3::BankMap::iterator it;
@@ -253,6 +256,7 @@ ADLMIDI_EXPORT int adl_removeBank(ADL_MIDIPlayer *device, ADL_Bank *bank)
         return -1;
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     OPL3::BankMap &map = play->m_synth.m_insBanks;
     OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
     size_t size = map.size();
@@ -266,6 +270,7 @@ ADLMIDI_EXPORT int adl_getFirstBank(ADL_MIDIPlayer *device, ADL_Bank *bank)
         return -1;
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     OPL3::BankMap &map = play->m_synth.m_insBanks;
 
     OPL3::BankMap::iterator it = map.begin();
@@ -282,6 +287,7 @@ ADLMIDI_EXPORT int adl_getNextBank(ADL_MIDIPlayer *device, ADL_Bank *bank)
         return -1;
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     OPL3::BankMap &map = play->m_synth.m_insBanks;
 
     OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
@@ -295,7 +301,7 @@ ADLMIDI_EXPORT int adl_getNextBank(ADL_MIDIPlayer *device, ADL_Bank *bank)
 ADLMIDI_EXPORT int adl_getInstrument(ADL_MIDIPlayer *device, const ADL_Bank *bank, unsigned index, ADL_Instrument *ins)
 {
     if(!device || !bank || index > 127 || !ins)
-        return 1;
+        return -1;
 
     OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
     cvt_FMIns_to_ADLI(*ins, it->second.ins[index]);
@@ -306,10 +312,10 @@ ADLMIDI_EXPORT int adl_getInstrument(ADL_MIDIPlayer *device, const ADL_Bank *ban
 ADLMIDI_EXPORT int adl_setInstrument(ADL_MIDIPlayer *device, ADL_Bank *bank, unsigned index, const ADL_Instrument *ins)
 {
     if(!device || !bank || index > 127 || !ins)
-        return 1;
+        return -1;
 
     if(ins->version != 0)
-        return 1;
+        return -1;
 
     OPL3::BankMap::iterator it = OPL3::BankMap::iterator::from_ptrs(bank->pointer);
     cvt_ADLI_to_FMIns(it->second.ins[index], *ins);
@@ -320,13 +326,12 @@ ADLMIDI_EXPORT int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, ADL_Bank 
 {
     if(!device)
         return -1;
-    MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if (!play)
-        return -1;
 
 #ifdef DISABLE_EMBEDDED_BANKS
     ADL_UNUSED(bank);
     ADL_UNUSED(num);
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->setErrorString("This build of libADLMIDI has no embedded banks. "
                          "Please load banks by using adl_openBankFile() or "
                          "adl_openBankData() functions instead of adl_loadEmbeddedBank().");
@@ -351,7 +356,12 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
 {
     if(!device)
         return -1;
+
+    if(ops4 == -1)
+        return adlRefreshNumCards(device);
+
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     if((unsigned int)ops4 > 6 * play->m_setup.numChips)
     {
         char errBuff[250];
@@ -364,7 +374,7 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
     play->m_synth.m_numFourOps = play->m_setup.numFourOps;
     play->m_synth.updateChannelCategories();
 
-    return 0; //adlRefreshNumCards(device);
+    return 0;
 }
 
 ADLMIDI_EXPORT int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device)
@@ -372,15 +382,15 @@ ADLMIDI_EXPORT int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device)
     if(!device)
         return -1;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(play)
-        return (int)play->m_setup.numFourOps;
-    return -1;
+    assert(play);
+    return (int)play->m_setup.numFourOps;
 }
 
 ADLMIDI_EXPORT void adl_setPercMode(ADL_MIDIPlayer *device, int percmod)
 {
     if(!device) return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->m_setup.rhythmMode = percmod;
     play->m_synth.m_rhythmMode   = play->m_setup.rhythmMode < 0 ?
                               (play->m_synth.m_insBankSetup.adLibPercussions) :
@@ -392,6 +402,7 @@ ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
 {
     if(!device) return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->m_setup.deepVibratoMode = hvibro;
     play->m_synth.m_deepVibratoMode     = play->m_setup.deepVibratoMode < 0 ?
                                     play->m_synth.m_insBankSetup.deepVibrato :
@@ -399,10 +410,19 @@ ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)
     play->m_synth.commitDeepFlags();
 }
 
+ADLMIDI_EXPORT int adl_getHVibrato(struct ADL_MIDIPlayer *device)
+{
+    if(!device) return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
+    return play->m_synth.m_deepVibratoMode;
+}
+
 ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
 {
     if(!device) return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->m_setup.deepTremoloMode = htremo;
     play->m_synth.m_deepTremoloMode     = play->m_setup.deepTremoloMode < 0 ?
                                     play->m_synth.m_insBankSetup.deepTremolo :
@@ -410,13 +430,20 @@ ADLMIDI_EXPORT void adl_setHTremolo(ADL_MIDIPlayer *device, int htremo)
     play->m_synth.commitDeepFlags();
 }
 
+ADLMIDI_EXPORT int adl_getHTremolo(struct ADL_MIDIPlayer *device)
+{
+    if(!device) return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
+    return play->m_synth.m_deepTremoloMode;
+}
+
 ADLMIDI_EXPORT void adl_setScaleModulators(ADL_MIDIPlayer *device, int smod)
 {
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->m_setup.scaleModulators = smod;
     play->m_synth.m_scaleModulators     = play->m_setup.scaleModulators < 0 ?
                                     play->m_synth.m_insBankSetup.scaleModulators :
@@ -428,8 +455,7 @@ ADLMIDI_EXPORT void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, in
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->m_setup.fullRangeBrightnessCC74 = (fr_brightness != 0);
 }
 
@@ -438,8 +464,7 @@ ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     play->m_sequencer.setLoopEnabled(loopEn != 0);
 #else
@@ -452,8 +477,7 @@ ADLMIDI_EXPORT void adl_setSoftPanEnabled(ADL_MIDIPlayer *device, int softPanEn)
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->m_synth.m_softPanning = (softPanEn != 0);
 }
 
@@ -463,8 +487,7 @@ ADLMIDI_EXPORT void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *device, int
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->m_setup.logarithmicVolumes = (logvol != 0);
     if(play->m_setup.logarithmicVolumes)
         play->m_synth.setVolumeScaleModel(ADLMIDI_VolumeModel_NativeOPL3);
@@ -477,8 +500,7 @@ ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int v
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->m_setup.volumeScaleModel = volumeModel;
     if(play->m_setup.volumeScaleModel == ADLMIDI_VolumeModel_AUTO)//Use bank default volume model
         play->m_synth.m_volumeScale = (OPL3::VolumesScale)play->m_synth.m_insBankSetup.volumeModel;
@@ -486,11 +508,21 @@ ADLMIDI_EXPORT void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int v
         play->m_synth.setVolumeScaleModel(static_cast<ADLMIDI_VolumeModels>(volumeModel));
 }
 
+ADLMIDI_EXPORT int adl_getVolumeRangeModel(struct ADL_MIDIPlayer *device)
+{
+    if(!device)
+        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
+    return play->m_synth.getVolumeScaleModel();
+}
+
 ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *filePath)
 {
-    if(device && device->adl_midiPlayer)
+    if(device)
     {
         MidiPlayer *play = GET_MIDI_PLAYER(device);
+        assert(play);
         play->m_setup.tick_skip_samples_delay = 0;
         if(!play->LoadBank(filePath))
         {
@@ -508,11 +540,10 @@ ADLMIDI_EXPORT int adl_openBankFile(struct ADL_MIDIPlayer *device, const char *f
 
 ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, const void *mem, unsigned long size)
 {
-    if(device && device->adl_midiPlayer)
+    if(device)
     {
         MidiPlayer *play = GET_MIDI_PLAYER(device);
-        if(!play)
-            return -1;
+        assert(play);
         play->m_setup.tick_skip_samples_delay = 0;
         if(!play->LoadBank(mem, static_cast<size_t>(size)))
         {
@@ -530,11 +561,10 @@ ADLMIDI_EXPORT int adl_openBankData(struct ADL_MIDIPlayer *device, const void *m
 
 ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, const char *filePath)
 {
-    if(device && device->adl_midiPlayer)
+    if(device)
     {
         MidiPlayer *play = GET_MIDI_PLAYER(device);
-        if(!play)
-            return -1;
+        assert(play);
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
         play->m_setup.tick_skip_samples_delay = 0;
         if(!play->LoadMIDI(filePath))
@@ -558,11 +588,10 @@ ADLMIDI_EXPORT int adl_openFile(ADL_MIDIPlayer *device, const char *filePath)
 
 ADLMIDI_EXPORT int adl_openData(ADL_MIDIPlayer *device, const void *mem, unsigned long size)
 {
-    if(device && device->adl_midiPlayer)
+    if(device)
     {
         MidiPlayer *play = GET_MIDI_PLAYER(device);
-        if(!play)
-            return -1;
+        assert(play);
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
         play->m_setup.tick_skip_samples_delay = 0;
         if(!play->LoadMIDI(mem, static_cast<size_t>(size)))
@@ -596,9 +625,10 @@ ADLMIDI_EXPORT const char *adl_chipEmulatorName(struct ADL_MIDIPlayer *device)
     {
 #ifndef ADLMIDI_HW_OPL
         MidiPlayer *play = GET_MIDI_PLAYER(device);
-        if(play && !play->m_synth.m_chips.empty())
+        assert(play);
+        if(!play->m_synth.m_chips.empty())
             return play->m_synth.m_chips[0]->emulatorName();
-        #else
+#else
         return "Hardware OPL3 chip on 0x330";
 #endif
     }
@@ -611,8 +641,6 @@ ADLMIDI_EXPORT int adl_switchEmulator(struct ADL_MIDIPlayer *device, int emulato
     {
         MidiPlayer *play = GET_MIDI_PLAYER(device);
         assert(play);
-        if(!play)
-            return -1;
         if(adl_isEmulatorAvailable(emulator))
         {
             play->m_setup.emulator = emulator;
@@ -630,12 +658,10 @@ ADLMIDI_EXPORT int adl_setRunAtPcmRate(ADL_MIDIPlayer *device, int enabled)
     if(device)
     {
         MidiPlayer *play = GET_MIDI_PLAYER(device);
-        if(play)
-        {
-            play->m_setup.runAtPcmRate = (enabled != 0);
-            play->partialReset();
-            return 0;
-        }
+        assert(play);
+        play->m_setup.runAtPcmRate = (enabled != 0);
+        play->partialReset();
+        return 0;
     }
     return -1;
 }
@@ -675,6 +701,7 @@ ADLMIDI_EXPORT void adl_reset(struct ADL_MIDIPlayer *device)
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->partialReset();
     play->resetMIDI();
 }
@@ -685,8 +712,7 @@ ADLMIDI_EXPORT double adl_totalTimeLength(struct ADL_MIDIPlayer *device)
     if(!device)
         return -1.0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1.0;
+    assert(play);
     return play->m_sequencer.timeLength();
 #else
     ADL_UNUSED(device);
@@ -700,8 +726,7 @@ ADLMIDI_EXPORT double adl_loopStartTime(struct ADL_MIDIPlayer *device)
     if(!device)
         return -1.0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1.0;
+    assert(play);
     return play->m_sequencer.getLoopStart();
 #else
     ADL_UNUSED(device);
@@ -715,8 +740,7 @@ ADLMIDI_EXPORT double adl_loopEndTime(struct ADL_MIDIPlayer *device)
     if(!device)
         return -1.0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1.0;
+    assert(play);
     return play->m_sequencer.getLoopEnd();
 #else
     ADL_UNUSED(device);
@@ -730,8 +754,7 @@ ADLMIDI_EXPORT double adl_positionTell(struct ADL_MIDIPlayer *device)
     if(!device)
         return -1.0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1.0;
+    assert(play);
     return play->m_sequencer.tell();
 #else
     ADL_UNUSED(device);
@@ -747,8 +770,7 @@ ADLMIDI_EXPORT void adl_positionSeek(struct ADL_MIDIPlayer *device, double secon
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_panic();
     play->m_setup.delay = play->m_sequencer.seek(seconds, play->m_setup.mindelay);
     play->m_setup.carry = 0.0;
@@ -764,8 +786,7 @@ ADLMIDI_EXPORT void adl_positionRewind(struct ADL_MIDIPlayer *device)
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_panic();
     play->m_sequencer.rewind();
 #else
@@ -779,8 +800,7 @@ ADLMIDI_EXPORT void adl_setTempo(struct ADL_MIDIPlayer *device, double tempo)
     if(!device || (tempo <= 0.0))
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->m_sequencer.setTempo(tempo);
 #else
     ADL_UNUSED(device);
@@ -793,9 +813,8 @@ ADLMIDI_EXPORT int adl_describeChannels(struct ADL_MIDIPlayer *device, char *str
 {
     if(!device)
         return -1;
-    MIDIplay *play = reinterpret_cast<MIDIplay *>(device->adl_midiPlayer);
-    if(!play)
-        return -1;
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->describeChannels(str, attr, size);
     return 0;
 }
@@ -807,8 +826,7 @@ ADLMIDI_EXPORT const char *adl_metaMusicTitle(struct ADL_MIDIPlayer *device)
     if(!device)
         return "";
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return "";
+    assert(play);
     return play->m_sequencer.getMusicTitle().c_str();
 #else
     ADL_UNUSED(device);
@@ -823,8 +841,7 @@ ADLMIDI_EXPORT const char *adl_metaMusicCopyright(struct ADL_MIDIPlayer *device)
     if(!device)
         return "";
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return "";
+    assert(play);
     return play->m_sequencer.getMusicCopyright().c_str();
 #else
     ADL_UNUSED(device);
@@ -838,8 +855,7 @@ ADLMIDI_EXPORT size_t adl_metaTrackTitleCount(struct ADL_MIDIPlayer *device)
     if(!device)
         return 0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return 0;
+    assert(play);
     return play->m_sequencer.getTrackTitles().size();
 #else
     ADL_UNUSED(device);
@@ -853,6 +869,7 @@ ADLMIDI_EXPORT const char *adl_metaTrackTitle(struct ADL_MIDIPlayer *device, siz
     if(!device)
         return "";
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     const std::vector<std::string> &titles = play->m_sequencer.getTrackTitles();
     if(index >= titles.size())
         return "INVALID";
@@ -871,8 +888,7 @@ ADLMIDI_EXPORT size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device)
     if(!device)
         return 0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return 0;
+    assert(play);
     return play->m_sequencer.getMarkers().size();
 #else
     ADL_UNUSED(device);
@@ -883,23 +899,32 @@ ADLMIDI_EXPORT size_t adl_metaMarkerCount(struct ADL_MIDIPlayer *device)
 ADLMIDI_EXPORT Adl_MarkerEntry adl_metaMarker(struct ADL_MIDIPlayer *device, size_t index)
 {
     struct Adl_MarkerEntry marker;
+
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
-    MidiPlayer *play = GET_MIDI_PLAYER(device);
-    const std::vector<MidiSequencer::MIDI_MarkerEntry> &markers = play->m_sequencer.getMarkers();
-    if(!device || !play || (index >= markers.size()))
+    if(!device)
     {
         marker.label = "INVALID";
         marker.pos_time = 0.0;
         marker.pos_ticks = 0;
         return marker;
     }
-    else
+
+    MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
+
+    const std::vector<MidiSequencer::MIDI_MarkerEntry> &markers = play->m_sequencer.getMarkers();
+    if(index >= markers.size())
     {
-        const MidiSequencer::MIDI_MarkerEntry &mk = markers[index];
-        marker.label = mk.label.c_str();
-        marker.pos_time = mk.pos_time;
-        marker.pos_ticks = (unsigned long)mk.pos_ticks;
+        marker.label = "INVALID";
+        marker.pos_time = 0.0;
+        marker.pos_ticks = 0;
+        return marker;
     }
+
+    const MidiSequencer::MIDI_MarkerEntry &mk = markers[index];
+    marker.label = mk.label.c_str();
+    marker.pos_time = mk.pos_time;
+    marker.pos_ticks = (unsigned long)mk.pos_ticks;
 #else
     ADL_UNUSED(device);
     ADL_UNUSED(index);
@@ -916,6 +941,7 @@ ADLMIDI_EXPORT void adl_setRawEventHook(struct ADL_MIDIPlayer *device, ADL_RawEv
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->m_sequencerInterface.onEvent = rawEventHook;
     play->m_sequencerInterface.onEvent_userData = userData;
 #else
@@ -931,6 +957,7 @@ ADLMIDI_EXPORT void adl_setNoteHook(struct ADL_MIDIPlayer *device, ADL_NoteHook 
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->hooks.onNote = noteHook;
     play->hooks.onNote_userData = userData;
 }
@@ -941,6 +968,7 @@ ADLMIDI_EXPORT void adl_setDebugMessageHook(struct ADL_MIDIPlayer *device, ADL_D
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
+    assert(play);
     play->hooks.onDebugMessage = debugMessageHook;
     play->hooks.onDebugMessage_userData = userData;
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
@@ -1165,6 +1193,7 @@ ADLMIDI_EXPORT int adl_playFormat(ADL_MIDIPlayer *device, int sampleCount,
         return 0;
 
     MidiPlayer *player = GET_MIDI_PLAYER(device);
+    assert(player);
     MidiPlayer::Setup &setup = player->m_setup;
 
     ssize_t gotten_len = 0;
@@ -1271,6 +1300,7 @@ ADLMIDI_EXPORT int adl_generateFormat(struct ADL_MIDIPlayer *device, int sampleC
         return 0;
 
     MidiPlayer *player = GET_MIDI_PLAYER(device);
+    assert(player);
     MidiPlayer::Setup &setup = player->m_setup;
 
     ssize_t gotten_len = 0;
@@ -1331,8 +1361,7 @@ ADLMIDI_EXPORT double adl_tickEvents(struct ADL_MIDIPlayer *device, double secon
     if(!device)
         return -1.0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1.0;
+    assert(play);
     return play->Tick(seconds, granulality);
 #else
     ADL_UNUSED(device);
@@ -1348,8 +1377,7 @@ ADLMIDI_EXPORT int adl_atEnd(struct ADL_MIDIPlayer *device)
     if(!device)
         return 1;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return 1;
+    assert(play);
     return (int)play->m_sequencer.positionAtEnd();
 #else
     ADL_UNUSED(device);
@@ -1363,8 +1391,7 @@ ADLMIDI_EXPORT size_t adl_trackCount(struct ADL_MIDIPlayer *device)
     if(!device)
         return 0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return 0;
+    assert(play);
     return play->m_sequencer.getTrackCount();
 #else
     ADL_UNUSED(device);
@@ -1378,8 +1405,7 @@ ADLMIDI_EXPORT int adl_setTrackOptions(struct ADL_MIDIPlayer *device, size_t tra
     if(!device)
         return -1;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1;
+    assert(play);
     MidiSequencer &seq = play->m_sequencer;
 
     unsigned enableFlag = trackOptions & 3;
@@ -1420,8 +1446,7 @@ ADLMIDI_EXPORT int adl_setTriggerHandler(struct ADL_MIDIPlayer *device, ADL_Trig
     if(!device)
         return -1;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1;
+    assert(play);
     MidiSequencer &seq = play->m_sequencer;
     seq.setTriggerHandler(handler, userData);
     return 0;
@@ -1438,8 +1463,7 @@ ADLMIDI_EXPORT void adl_panic(struct ADL_MIDIPlayer *device)
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_panic();
 }
 
@@ -1448,8 +1472,7 @@ ADLMIDI_EXPORT void adl_rt_resetState(struct ADL_MIDIPlayer *device)
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_ResetState();
 }
 
@@ -1458,8 +1481,7 @@ ADLMIDI_EXPORT int adl_rt_noteOn(struct ADL_MIDIPlayer *device, ADL_UInt8 channe
     if(!device)
         return 0;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return 0;
+    assert(play);
     return (int)play->realTime_NoteOn(channel, note, velocity);
 }
 
@@ -1468,8 +1490,7 @@ ADLMIDI_EXPORT void adl_rt_noteOff(struct ADL_MIDIPlayer *device, ADL_UInt8 chan
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_NoteOff(channel, note);
 }
 
@@ -1478,8 +1499,7 @@ ADLMIDI_EXPORT void adl_rt_noteAfterTouch(struct ADL_MIDIPlayer *device, ADL_UIn
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_NoteAfterTouch(channel, note, atVal);
 }
 
@@ -1488,8 +1508,7 @@ ADLMIDI_EXPORT void adl_rt_channelAfterTouch(struct ADL_MIDIPlayer *device, ADL_
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_ChannelAfterTouch(channel, atVal);
 }
 
@@ -1498,8 +1517,7 @@ ADLMIDI_EXPORT void adl_rt_controllerChange(struct ADL_MIDIPlayer *device, ADL_U
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_Controller(channel, type, value);
 }
 
@@ -1508,8 +1526,7 @@ ADLMIDI_EXPORT void adl_rt_patchChange(struct ADL_MIDIPlayer *device, ADL_UInt8 
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_PatchChange(channel, patch);
 }
 
@@ -1518,8 +1535,7 @@ ADLMIDI_EXPORT void adl_rt_pitchBend(struct ADL_MIDIPlayer *device, ADL_UInt8 ch
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_PitchBend(channel, pitch);
 }
 
@@ -1528,8 +1544,7 @@ ADLMIDI_EXPORT void adl_rt_pitchBendML(struct ADL_MIDIPlayer *device, ADL_UInt8 
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_PitchBend(channel, msb, lsb);
 }
 
@@ -1538,8 +1553,7 @@ ADLMIDI_EXPORT void adl_rt_bankChangeLSB(struct ADL_MIDIPlayer *device, ADL_UInt
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_BankChangeLSB(channel, lsb);
 }
 
@@ -1548,8 +1562,7 @@ ADLMIDI_EXPORT void adl_rt_bankChangeMSB(struct ADL_MIDIPlayer *device, ADL_UInt
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_BankChangeMSB(channel, msb);
 }
 
@@ -1558,8 +1571,7 @@ ADLMIDI_EXPORT void adl_rt_bankChange(struct ADL_MIDIPlayer *device, ADL_UInt8 c
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return;
+    assert(play);
     play->realTime_BankChange(channel, (uint16_t)bank);
 }
 
@@ -1568,7 +1580,6 @@ ADLMIDI_EXPORT int adl_rt_systemExclusive(struct ADL_MIDIPlayer *device, const A
     if(!device)
         return -1;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
-    if(!play)
-        return -1;
+    assert(play);
     return play->realTime_SysEx(msg, size);
 }

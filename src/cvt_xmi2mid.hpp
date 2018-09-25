@@ -640,7 +640,7 @@ static int xmi2mid_GetVLQ2(struct xmi2mid_xmi_ctx *ctx, uint32_t *quant) {
     int32_t data;
 
     *quant = 0;
-    for (i = 0; i < 4; i++) {
+    for (i = 0; xmi2mid_getsrcpos(ctx) != xmi2mid_getsrcsize(ctx); ++i) {
         data = xmi2mid_read1(ctx);
         if (data & 0x80) {
             xmi2mid_skipsrc(ctx, -1);

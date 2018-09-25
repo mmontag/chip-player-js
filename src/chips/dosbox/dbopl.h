@@ -227,11 +227,11 @@ struct Chip {
 	Bit32u noiseValue;
 
 	//Frequency scales for the different multiplications
-	Bit32u freqMul[16];
+	const Bit32u *freqMul/*[16]*/;
 	//Rates for decay and release for rate of this chip
-	Bit32u linearRates[76];
+	const Bit32u *linearRates/*[76]*/;
 	//Best match attack rates for the rate of this chip
-	Bit32u attackRates[76];
+	const Bit32u *attackRates/*[76]*/;
 
 	//18 channels with 2 operators each
 	Channel chan[18];

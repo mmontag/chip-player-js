@@ -76,5 +76,5 @@ void DosBoxOPL3::nativeGenerateN(int16_t *output, size_t frames)
 
 const char *DosBoxOPL3::emulatorName()
 {
-    return "DosBox 0.74-r4111 OPL3";
+    return "DOSBox 0.74-r4111 OPL3";
 }

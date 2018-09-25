@@ -100,19 +100,19 @@ inline bool isXgPercChannel(uint8_t msb, uint8_t lsb)
     return (msb == 0x7E || msb == 0x7F) && (lsb == 0);
 }
 
-void MIDIplay::AdlChannel::addAge(int64_t ms)
+void MIDIplay::AdlChannel::addAge(int64_t us)
 {
-    const int64_t neg = static_cast<int64_t>(-0x1FFFFFFFl);
+    const int64_t neg = 1000 * static_cast<int64_t>(-0x1FFFFFFFll);
     if(users_empty())
-        koff_time_until_neglible = std::max(int64_t(koff_time_until_neglible - ms), neg);
+        koff_time_until_neglible_us = std::max(koff_time_until_neglible_us - us, neg);
     else
     {
-        koff_time_until_neglible = 0;
+        koff_time_until_neglible_us = 0;
         for(LocationData *i = users_first; i; i = i->next)
         {
             if(!i->fixed_sustain)
-                i->kon_time_until_neglible = std::max(i->kon_time_until_neglible - ms, neg);
-            i->vibdelay += ms;
+                i->kon_time_until_neglible_us = std::max(i->kon_time_until_neglible_us - us, neg);
+            i->vibdelay_us += us;
         }
     }
 }
@@ -233,7 +233,7 @@ void MIDIplay::resetMIDI()
 void MIDIplay::TickIterators(double s)
 {
     for(uint16_t c = 0; c < m_synth.m_numChannels; ++c)
-        m_chipChannels[c].addAge(static_cast<int64_t>(s * 1000.0));
+        m_chipChannels[c].addAge(static_cast<int64_t>(s * 1e6));
     updateVibrato(s);
     updateArpeggio(s);
 #if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
@@ -578,6 +578,15 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     }
 
     noteUpdate(channel, ir.first, Upd_All | Upd_Patch);
+
+    for(unsigned ccount = 0; ccount < MIDIchannel::NoteInfo::MaxNumPhysChans; ++ccount)
+    {
+        int32_t c = adlchannel[ccount];
+        if(c < 0)
+            continue;
+        m_chipChannels[c].addAge(0);
+    }
+
     return true;
 }
 
@@ -1113,9 +1122,9 @@ void MIDIplay::noteUpdate(size_t midCh,
             if(d)    // inserts if necessary
             {
                 d->sustained = AdlChannel::LocationData::Sustain_None;
-                d->vibdelay  = 0;
+                d->vibdelay_us = 0;
                 d->fixed_sustain = (ains.ms_sound_kon == static_cast<uint16_t>(adlNoteOnMaxTime));
-                d->kon_time_until_neglible = ains.ms_sound_kon;
+                d->kon_time_until_neglible_us = 1000 * ains.ms_sound_kon;
                 d->ins       = ins;
             }
         }
@@ -1124,7 +1133,8 @@ void MIDIplay::noteUpdate(size_t midCh,
     for(unsigned ccount = 0; ccount < info.chip_channels_count; ccount++)
     {
         const MIDIchannel::NoteInfo::Phys &ins = info.chip_channels[ccount];
-        uint16_t c   = ins.chip_chan;
+        uint16_t c          = ins.chip_chan;
+        uint16_t c_slave    = info.chip_channels[1].chip_chan;
 
         if(select_adlchn >= 0 && c != select_adlchn)
             continue;
@@ -1147,11 +1157,11 @@ void MIDIplay::noteUpdate(size_t midCh,
                     if(props_mask & Upd_Mute) // Mute the note
                     {
                         m_synth.touchNote(c, 0);
-                        m_chipChannels[c].koff_time_until_neglible = 0;
+                        m_chipChannels[c].koff_time_until_neglible_us = 0;
                     }
                     else
                     {
-                        m_chipChannels[c].koff_time_until_neglible = ains.ms_sound_koff;
+                        m_chipChannels[c].koff_time_until_neglible_us = 1000 * ains.ms_sound_koff;
                     }
                 }
             }
@@ -1279,11 +1289,11 @@ void MIDIplay::noteUpdate(size_t midCh,
                     phase = ains.voice2_fine_tune;//0.125; // Detune the note slightly (this is what Doom does)
                 }
 
-                if(vibrato && (!d || d->vibdelay >= m_midiChannels[midCh].vibdelay))
+                if(vibrato && (!d || d->vibdelay_us >= m_midiChannels[midCh].vibdelay_us))
                     bend += static_cast<double>(vibrato) * m_midiChannels[midCh].vibdepth * std::sin(m_midiChannels[midCh].vibpos);
 
 #define BEND_COEFFICIENT 172.4387
-                m_synth.noteOn(c, BEND_COEFFICIENT * std::exp(0.057762265 * (currentTone + bend + phase)));
+                m_synth.noteOn(c, c_slave, BEND_COEFFICIENT * std::exp(0.057762265 * (currentTone + bend + phase)));
 #undef BEND_COEFFICIENT
                 if(hooks.onNote)
                     hooks.onNote(hooks.onNote_userData, c, noteTone, midiins, vol, midibend);
@@ -1321,7 +1331,8 @@ void MIDIplay::setErrorString(const std::string &err)
 
 int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins) const
 {
-    int64_t s = (m_synth.m_musicMode != OPL3::MODE_CMF) ? -m_chipChannels[c].koff_time_until_neglible : 0;
+    int64_t koff_ms = m_chipChannels[c].koff_time_until_neglible_us / 1000;
+    int64_t s = (m_synth.m_musicMode != OPL3::MODE_CMF) ? -koff_ms : 0;
 
     // Same midi-instrument = some stability
     //if(c == MidCh) s += 4;
@@ -1329,10 +1340,9 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
     {
         s -= 4000;
 
-        if(j->sustained == AdlChannel::LocationData::Sustain_None)
-            s -= j->kon_time_until_neglible;
-        else
-            s -= (j->kon_time_until_neglible / 2);
+        int64_t kon_ms = j->kon_time_until_neglible_us / 1000;
+        s -= (j->sustained == AdlChannel::LocationData::Sustain_None) ?
+            kon_ms : (kon_ms / 2);
 
         MIDIchannel::activenoteiterator
         k = const_cast<MIDIchannel &>(m_midiChannels[j->loc.MidCh]).activenotes_find(j->loc.note);
@@ -1344,8 +1354,8 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
             {
                 s += 300;
                 // Arpeggio candidate = even better
-                if(j->vibdelay < 70
-                   || j->kon_time_until_neglible > 20000)
+                if(j->vibdelay_us < 70000
+                   || j->kon_time_until_neglible_us > 20000000)
                     s += 0;
             }
 
@@ -1376,7 +1386,7 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
             for(AdlChannel::LocationData *m = m_chipChannels[c2].users_first; m; m = m->next)
             {
                 if(m->sustained != AdlChannel::LocationData::Sustain_None) continue;
-                if(m->vibdelay >= 200) continue;
+                if(m->vibdelay_us >= 200000) continue;
                 if(m->ins != j->ins) continue;
                 n_evacuation_stations += 1;
             }
@@ -1407,8 +1417,8 @@ void MIDIplay::prepareChipChannelForNewNote(size_t c, const MIDIchannel::NoteInf
             (m_midiChannels[j->loc.MidCh].activenotes_ensure_find(j->loc.note));
 
             // Check if we can do arpeggio.
-            if((j->vibdelay < 70
-                || j->kon_time_until_neglible > 20000)
+            if((j->vibdelay_us < 70000
+                || j->kon_time_until_neglible_us > 20000000)
                && j->ins == ins)
             {
                 // Do arpeggio together with this note.
@@ -1458,8 +1468,8 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
 
         for(AdlChannel::LocationData *m = adlch.users_first; m; m = m->next)
         {
-            if(m->vibdelay >= 200
-               && m->kon_time_until_neglible < 10000) continue;
+            if(m->vibdelay_us >= 200000
+               && m->kon_time_until_neglible_us < 10000000) continue;
             if(m->ins != j->ins)
                 continue;
             if(hooks.onNote)
@@ -1590,13 +1600,13 @@ void MIDIplay::setRPN(size_t midCh, unsigned value, bool MSB)
     case 0x0109 + 1*0x10000 + 1*0x20000:
         if((m_synthMode & Mode_XG) != 0) // Vibrato depth
         {
-            m_midiChannels[midCh].vibdepth = ((value - 64) * 0.15) * 0.01;
+            m_midiChannels[midCh].vibdepth = (((int)value - 64) * 0.15) * 0.01;
         }
         break;
     case 0x010A + 1*0x10000 + 1*0x20000:
         if((m_synthMode & Mode_XG) != 0) // Vibrato delay in millisecons
         {
-            m_midiChannels[midCh].vibdelay = value ? int64_t(0.2092 * std::exp(0.0795 * (double)value)) : 0;
+            m_midiChannels[midCh].vibdelay_us = value ? int64_t(209.2 * std::exp(0.0795 * (double)value)) : 0;
         }
         break;
     default:/* UI.PrintLn("%s %04X <- %d (%cSB) (ch %u)",
@@ -1702,7 +1712,7 @@ retry_arpeggio:
 
             if(i->sustained == AdlChannel::LocationData::Sustain_None)
             {
-                if(i->kon_time_until_neglible <= 0l)
+                if(i->kon_time_until_neglible_us <= 0)
                 {
                     noteUpdate(
                         i->loc.MidCh,
@@ -1920,7 +1930,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
         opl->setPatch(static_cast<size_t>(adlchannel[c]), ains.adl[c]);
         opl->touchNote(static_cast<size_t>(adlchannel[c]), 63);
         opl->setPan(static_cast<size_t>(adlchannel[c]), 0x30);
-        opl->noteOn(static_cast<size_t>(adlchannel[c]), hertz);
+        opl->noteOn(static_cast<size_t>(adlchannel[c]), static_cast<size_t>(adlchannel[1]), hertz);
     }
 #else
     ADL_UNUSED(note);

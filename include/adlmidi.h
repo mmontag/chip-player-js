@@ -329,6 +329,7 @@ extern ADLMIDI_DECLSPEC int adl_loadEmbeddedBank(struct ADL_MIDIPlayer *device, 
  * If you want to specify custom number of four operator channels,
  * please call this function after bank change (adl_setBank() or adl_openBank()),
  * otherwise, value will be overwritten by auto-calculated.
+ * If the count is specified as -1, an auto-calculated amount is used instead.
  *
  * @param device Instance of the library
  * @param ops4 Count of four-op channels to allocate between all emulating chips
@@ -361,11 +362,25 @@ extern ADLMIDI_DECLSPEC void adl_setPercMode(struct ADL_MIDIPlayer *device, int 
 extern ADLMIDI_DECLSPEC void adl_setHVibrato(struct ADL_MIDIPlayer *device, int hvibro);
 
 /**
+ * @brief Get the deep vibrato state.
+ * @param device Instance of the library
+ * @return deep vibrato state on success, <0 when any error has occurred
+ */
+extern ADLMIDI_DECLSPEC int adl_getHVibrato(struct ADL_MIDIPlayer *device);
+
+/**
  * @brief Override Enable(1) or Disable(0) deep tremolo state. -1 - use bank default tremolo state
  * @param device Instance of the library
  * @param htremo 0 - disabled, 1 - enabled
  */
 extern ADLMIDI_DECLSPEC void adl_setHTremolo(struct ADL_MIDIPlayer *device, int htremo);
+
+/**
+ * @brief Get the deep tremolo state.
+ * @param device Instance of the library
+ * @return deep tremolo state on success, <0 when any error has occurred
+ */
+extern ADLMIDI_DECLSPEC int adl_getHTremolo(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Override Enable(1) or Disable(0) scaling of modulator volumes. -1 - use bank default scaling of modulator volumes
@@ -413,6 +428,13 @@ extern ADLMIDI_DECLSPEC void adl_setLogarithmicVolumes(struct ADL_MIDIPlayer *de
  * @param volumeModel Volume model type (#ADLMIDI_VolumeModels)
  */
 extern ADLMIDI_DECLSPEC void adl_setVolumeRangeModel(struct ADL_MIDIPlayer *device, int volumeModel);
+
+/**
+ * @brief Get the volume range model
+ * @param device Instance of the library
+ * @return volume model on success, <0 when any error has occurred
+ */
+extern ADLMIDI_DECLSPEC int adl_getVolumeRangeModel(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Load WOPL bank file from File System
