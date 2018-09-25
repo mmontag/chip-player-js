@@ -588,6 +588,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         int32_t c = adlchannel[ccount];
         if(c < 0)
             continue;
+        m_chipChannels[c].recent_ins = voices[ccount];
         m_chipChannels[c].addAge(0);
     }
 
@@ -1335,12 +1336,22 @@ void MIDIplay::setErrorString(const std::string &err)
 
 int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins) const
 {
-    int64_t koff_ms = m_chipChannels[c].koff_time_until_neglible_us / 1000;
-    int64_t s = (m_synth.m_musicMode != OPL3::MODE_CMF) ? -koff_ms : 0;
+    const AdlChannel &chan = m_chipChannels[c];
+    int64_t koff_ms = chan.koff_time_until_neglible_us / 1000;
+    int64_t s = -koff_ms;
+
+    // Rate channel with a releasing note
+    if(s < 0 && chan.users_empty())
+    {
+        s = -10000;
+        // If it's same instrument, better chance to get it when no free channels
+        if(chan.recent_ins == ins)
+            s = (m_synth.m_musicMode == OPL3::MODE_CMF) ? 0 : -5000;
+        return s;
+    }
 
     // Same midi-instrument = some stability
-    //if(c == MidCh) s += 4;
-    for(AdlChannel::LocationData *j = m_chipChannels[c].users_first; j; j = j->next)
+    for(AdlChannel::LocationData *j = chan.users_first; j; j = j->next)
     {
         s -= 4000000;
 

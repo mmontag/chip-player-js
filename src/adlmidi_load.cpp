@@ -203,7 +203,7 @@ bool MIDIplay::LoadMIDI_post()
             adlins.adl[0] = adl;
             adlins.adl[1] = adl;
             adlins.ms_sound_kon  = 1000;
-            adlins.ms_sound_koff = 0;
+            adlins.ms_sound_koff = 500;
             adlins.tone  = 0;
             adlins.flags = 0;
             adlins.voice2_fine_tune = 0.0;

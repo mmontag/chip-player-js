@@ -880,6 +880,9 @@ public:
         //! Time left until sounding will be muted after key off
         int64_t koff_time_until_neglible_us;
 
+        //! Recently passed instrument, improves a goodness of released but busy channel when matching
+        MIDIchannel::NoteInfo::Phys recent_ins;
+
         enum { users_max = 128 };
         LocationData *users_first, *users_free_cells;
         LocationData users_cells[users_max];
@@ -898,6 +901,7 @@ public:
         AdlChannel(): koff_time_until_neglible_us(0)
         {
             users_clear();
+            std::memset(&recent_ins, 0, sizeof(MIDIchannel::NoteInfo::Phys));
         }
 
         AdlChannel(const AdlChannel &oth): koff_time_until_neglible_us(oth.koff_time_until_neglible_us)
