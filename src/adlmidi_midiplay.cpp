@@ -104,7 +104,11 @@ void MIDIplay::AdlChannel::addAge(int64_t us)
 {
     const int64_t neg = 1000 * static_cast<int64_t>(-0x1FFFFFFFll);
     if(users_empty())
+    {
         koff_time_until_neglible_us = std::max(koff_time_until_neglible_us - us, neg);
+        if(koff_time_until_neglible_us < 0)
+            koff_time_until_neglible_us = 0;
+    }
     else
     {
         koff_time_until_neglible_us = 0;
@@ -1161,7 +1165,7 @@ void MIDIplay::noteUpdate(size_t midCh,
                     }
                     else
                     {
-                        m_chipChannels[c].koff_time_until_neglible_us = 1000 * ains.ms_sound_koff;
+                        m_chipChannels[c].koff_time_until_neglible_us = 1000 * int64_t(ains.ms_sound_koff);
                     }
                 }
             }
@@ -1338,7 +1342,7 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
     //if(c == MidCh) s += 4;
     for(AdlChannel::LocationData *j = m_chipChannels[c].users_first; j; j = j->next)
     {
-        s -= 4000;
+        s -= 4000000;
 
         int64_t kon_ms = j->kon_time_until_neglible_us / 1000;
         s -= (j->sustained == AdlChannel::LocationData::Sustain_None) ?
@@ -1356,7 +1360,7 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
                 // Arpeggio candidate = even better
                 if(j->vibdelay_us < 70000
                    || j->kon_time_until_neglible_us > 20000000)
-                    s += 0;
+                    s += 10;
             }
 
             // Percussion is inferior to melody
