@@ -1343,10 +1343,10 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
     // Rate channel with a releasing note
     if(s < 0 && chan.users_empty())
     {
-        s = -10000;
+        s -= 40000;
         // If it's same instrument, better chance to get it when no free channels
         if(chan.recent_ins == ins)
-            s = (m_synth.m_musicMode == OPL3::MODE_CMF) ? 0 : -5000;
+            s = (m_synth.m_musicMode == OPL3::MODE_CMF) ? 0 : -koff_ms;
         return s;
     }
 
