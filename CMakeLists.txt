@@ -507,27 +507,30 @@ if(WITH_VLC_PLUGIN)
     list(APPEND adlmidi_vlc_src
         ${libADLMIDI_SOURCE_DIR}/utils/vlc_codec/libadlmidi.c)
 
-    add_library(adlmidi_plugin MODULE ${adlmidi_vlc_src})
-    target_compile_options(adlmidi_plugin PUBLIC
+    add_library(adlmidi_vlc_plugin MODULE ${adlmidi_vlc_src})
+    set_target_properties(adlmidi_vlc_plugin PROPERTIES OUTPUT_NAME adlmidi_plugin)
+    target_compile_options(adlmidi_vlc_plugin PUBLIC
                 "-DVLC_MODULE_COPYRIGHT=\"Copyright \(c\) Vitaly Novichkov\""
                 "-DVLC_MODULE_LICENSE=\"GPLv3\""
                 "-DMODULE_STRING=\"adlmidi\""
                 ${VLCPLUGIN_DEFINITIONS})
-    target_include_directories(adlmidi_plugin PRIVATE
+    target_include_directories(adlmidi_vlc_plugin PRIVATE
             ${LIBVLC_INCLUDE_DIR}/vlc/plugins
             ${LIBVLC_INCLUDE_DIR}/vlc)
-    target_link_libraries(adlmidi_plugin ADLMIDI_IF vlccore m stdc++)
-    # target_link_libraries(adlmidi_plugin INTERFACE "-export-symbol-regex ^vlc_entry")
+    target_link_libraries(adlmidi_vlc_plugin ADLMIDI_IF vlccore m stdc++)
+    # target_link_libraries(adlmidi_vlc_plugin INTERFACE "-export-symbol-regex ^vlc_entry")
+
+    install(TARGETS adlmidi_vlc_plugin DESTINATION "${VLCPLUGIN_CODEC_INSTALL_PATH}")
 
     if(libADLMIDI_SHARED)
-        add_dependencies(adlmidi_plugin ADLMIDI_shared)
+        add_dependencies(adlmidi_vlc_plugin ADLMIDI_shared)
         # ========= WIP =========
         # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
     else()
         if(NOT libADLMIDI_STATIC)
             message(FATAL_ERROR "libADLMIDI is required to be built!")
         endif()
-        add_dependencies(adlmidi_plugin ADLMIDI_static)
+        add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
     endif()
 
 endif()
