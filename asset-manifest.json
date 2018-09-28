@@ -1,9 +1,7 @@
 {
-  "main.css": "static/css/main.4fdf3cb6.css",
-  "main.css.map": "static/css/main.4fdf3cb6.css.map",
-  "main.js": "static/js/main.2fd96e23.js",
-  "main.js.map": "static/js/main.2fd96e23.js.map",
-  "static/media/PxPlus_VGA_SquarePx.ttf": "static/media/PxPlus_VGA_SquarePx.634410d4.ttf",
-  "static/media/flexi_ibm_vga9_false.ttf": "static/media/flexi_ibm_vga9_false.d6befb93.ttf",
-  "static/media/pxplus_ibm_vga9.ttf": "static/media/pxplus_ibm_vga9.33e0c189.ttf"
+  "main.css": "static/css/main.f5f9d002.css",
+  "main.css.map": "static/css/main.f5f9d002.css.map",
+  "main.js": "static/js/main.ac0354b7.js",
+  "main.js.map": "static/js/main.ac0354b7.js.map",
+  "static/media/pxplus_vga_squarepx.ttf": "static/media/pxplus_vga_squarepx.634410d4.ttf"
 }
