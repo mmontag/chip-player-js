@@ -20,13 +20,34 @@ endif(NOT LIBVLC_MIN_VERSION)
 # locations. When an earlier FIND_* succeeds, subsequent FIND_*s
 # searching for the same item do nothing.
 
-if (NOT WIN32)
+if(NOT WIN32)
     find_package(PkgConfig)
     pkg_check_modules(PC_LIBVLC libvlc)
     set(LIBVLC_DEFINITIONS ${PC_LIBVLC_CFLAGS_OTHER})
+    set(LIBVLC_INCLUDE_DIRS ${PC_LIBVLC_INCLUDEDIR} ${PC_LIBVLC_INCLUDE_DIRS})
+
     pkg_check_modules(PC_VLCPLUGIN vlc-plugin)
     set(VLCPLUGIN_DEFINITIONS ${PC_VLCPLUGIN_CFLAGS_OTHER})
-endif (NOT WIN32)
+    set(VLCPLUGIN_INCLUDE_DIRS ${PC_VLCPLUGIN_INCLUDEDIR} ${PC_VLCPLUGIN_INCLUDE_DIRS})
+
+    pkg_get_variable(PC_VLCPLUGIN_PLUGINS_PATH vlc-plugin pluginsdir)
+    set(VLCPLUGIN_CODEC_INSTALL_PATH ${PC_VLCPLUGIN_PLUGINS_PATH}/codec)
+
+    message("-- VLC Lib include path is \"${LIBVLC_INCLUDE_DIRS}\" ==")
+    message("-- VLC Plugins include path is \"${VLCPLUGIN_INCLUDE_DIRS}\" ==")
+    message("-- VLC Plugins path is \"${VLCPLUGIN_CODEC_INSTALL_PATH}\" ==")
+else()
+    set(LIBVLC_DEFINITIONS)
+    # FIXME: Is "_FILE_OFFSET_BITS=64" correct for Windows?
+    set(VLCPLUGIN_DEFINITIONS
+        -D__PLUGIN__
+        -D_FILE_OFFSET_BITS=64
+        -D_REENTRANT
+        -D_THREAD_SAFE
+    )
+    # FIXME: Put the proper install path here
+    set(VLCPLUGIN_CODEC_INSTALL_PATH "C:/Program Files/vlc/plugins/codec")
+endif()
 
 #Put here path to custom location
 #example: /home/user/vlc/include etc..
@@ -42,7 +63,7 @@ PATHS
     #mingw
     c:/msys/local/include
 )
-find_path(LIBVLC_INCLUDE_DIR PATHS "${CMAKE_INCLUDE_PATH}/vlc" NAMES vlc.h 
+find_path(LIBVLC_INCLUDE_DIR PATHS "${CMAKE_INCLUDE_PATH}/vlc" NAMES vlc.h
         HINTS ${PC_LIBVLC_INCLUDEDIR} ${PC_LIBVLC_INCLUDE_DIRS})
 
 #Put here path to custom location
