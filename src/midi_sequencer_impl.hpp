@@ -1999,6 +1999,8 @@ bool BW_MidiSequencer::loadMIDI(FileAndMemReader &fr)
     m_format = Format_MIDI;
     m_smfFormat = 0;
 
+    m_cmfInstruments.clear();
+
     const size_t headerSize = 4 + 4 + 2 + 2 + 2; // 14
     char headerBuf[headerSize] = "";
 

@@ -185,6 +185,13 @@ extern ADLMIDI_DECLSPEC int adl_setNumChips(struct ADL_MIDIPlayer *device, int n
 extern ADLMIDI_DECLSPEC int adl_getNumChips(struct ADL_MIDIPlayer *device);
 
 /**
+ * @brief Get obtained number of emulated chips
+ * @param device Instance of the library
+ * @return Count of working chip emulators
+ */
+extern ADLMIDI_DECLSPEC int adl_getNumChipsObtained(struct ADL_MIDIPlayer *device);
+
+/**
  * @brief Sets a number of the patches bank from 0 to N banks.
  *
  * Is recommended to call adl_reset() to apply changes to already-loaded file player or real-time.
@@ -340,9 +347,16 @@ extern ADLMIDI_DECLSPEC int adl_setNumFourOpsChn(struct ADL_MIDIPlayer *device, 
 /**
  * @brief Get current total count of 4-operator channels between all chips
  * @param device Instance of the library
- * @return 0 on success, <0 when any error has occurred
+ * @return 0 on success, <-1 when any error has occurred, but, -1 - "auto"
  */
 extern ADLMIDI_DECLSPEC int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device);
+
+/**
+ * @brief Get obtained total count of 4-operator channels between all chips
+ * @param device Instance of the library
+ * @return 0 on success, <0 when any error has occurred
+ */
+extern ADLMIDI_DECLSPEC int adl_getNumFourOpsChnObtained(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Override Enable(1) or Disable(0) AdLib percussion mode. -1 - use bank default AdLib percussion mode
