@@ -1474,8 +1474,6 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
     {
         uint16_t cs = static_cast<uint16_t>(c);
 
-        if(c > std::numeric_limits<uint32_t>::max())
-            break;
         if(c == from_channel)
             continue;
         if(m_synth.m_channelCategory[c] != m_synth.m_channelCategory[from_channel])
