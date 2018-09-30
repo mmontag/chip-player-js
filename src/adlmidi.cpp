@@ -383,7 +383,7 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     assert(play);
-    if((unsigned int)ops4 > 6 * play->m_setup.numChips)
+    if((ops4 >= 0) && (unsigned int)ops4 > 6 * play->m_setup.numChips)
     {
         char errBuff[250];
         snprintf(errBuff, 250, "number of four-op channels may only be 0..%u when %u OPL3 cards are used.\n", (6 * (play->m_setup.numChips)), play->m_setup.numChips);
@@ -391,13 +391,13 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
         return -1;
     }
 
-    play->m_setup.numFourOps = static_cast<unsigned int>(ops4);
+    play->m_setup.numFourOps = ops4;
     if(!play->m_synth.setupLocked())
     {
-        if(play->m_setup.numFourOps >= 0)
-            play->m_synth.m_numFourOps = play->m_setup.numFourOps;
+        if(play->m_setup.numFourOps < 0)
+            adlCalculateFourOpChannels(play, true);
         else
-            adlCalculateFourOpChannels(play);
+            play->m_synth.m_numFourOps = static_cast<uint32_t>(play->m_setup.numFourOps);
         play->m_synth.updateChannelCategories();
     }
 
