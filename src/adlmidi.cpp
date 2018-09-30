@@ -383,7 +383,7 @@ ADLMIDI_EXPORT int adl_setNumFourOpsChn(ADL_MIDIPlayer *device, int ops4)
 
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     assert(play);
-    if((ops4 >= 0) && (unsigned int)ops4 > 6 * play->m_setup.numChips)
+    if(ops4 > 6 * static_cast<int>(play->m_setup.numChips))
     {
         char errBuff[250];
         snprintf(errBuff, 250, "number of four-op channels may only be 0..%u when %u OPL3 cards are used.\n", (6 * (play->m_setup.numChips)), play->m_setup.numChips);
