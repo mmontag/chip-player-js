@@ -1,4 +1,4 @@
-/*
+﻿/*
  * libADLMIDI is a free MIDI to WAV conversion library with OPL3 emulation
  *
  * Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
@@ -214,20 +214,36 @@ bool MIDIplay::LoadMIDI_post()
         m_synth.m_rhythmMode = true;
         m_synth.m_musicMode = OPL3::MODE_CMF;
         m_synth.m_volumeScale = OPL3::VOLUME_NATIVE;
+
+        m_synth.m_numChips = 1;
+        m_synth.m_numFourOps = 0;
     }
     else if(format == MidiSequencer::Format_RSXX)
     {
         //opl.CartoonersVolumes = true;
         m_synth.m_musicMode     = OPL3::MODE_RSXX;
         m_synth.m_volumeScale   = OPL3::VOLUME_NATIVE;
+
+        m_synth.m_numChips = 1;
+        m_synth.m_numFourOps = 0;
     }
     else if(format == MidiSequencer::Format_IMF)
     {
         //std::fprintf(stderr, "Done reading IMF file\n");
         m_synth.m_numFourOps  = 0; //Don't use 4-operator channels for IMF playing!
         m_synth.m_musicMode = OPL3::MODE_IMF;
+
+        m_synth.m_numChips = 1;
+        m_synth.m_numFourOps = 0;
+    }
+    else
+    {
+        m_synth.m_numChips = m_setup.numChips;
+        if(m_setup.numFourOps < 0)
+            adlCalculateFourOpChannels(this, true);
     }
 
+    m_setup.tick_skip_samples_delay = 0;
     m_synth.reset(m_setup.emulator, m_setup.PCM_RATE, this); // Reset OPL3 chip
     //opl.Reset(); // ...twice (just in case someone misprogrammed OPL3 previously)
     m_chipChannels.clear();

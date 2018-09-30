@@ -141,7 +141,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
     m_setup.maxdelay = 512.0 / (double)m_setup.PCM_RATE;
 
     m_setup.bankId    = 0;
-    m_setup.numFourOps = 7;
+    m_setup.numFourOps = -1;
     m_setup.numChips   = 2;
     m_setup.deepTremoloMode     = -1;
     m_setup.deepVibratoMode     = -1;
@@ -198,8 +198,12 @@ void MIDIplay::applySetup()
         m_synth.m_volumeScale = (OPL3::VolumesScale)m_synth.m_insBankSetup.volumeModel;
 
     m_synth.m_numChips    = m_setup.numChips;
-    m_synth.m_numFourOps  = m_setup.numFourOps;
     m_cmfPercussionMode = false;
+
+    if(m_setup.numFourOps >= 0)
+        m_synth.m_numFourOps  = m_setup.numFourOps;
+    else
+        adlCalculateFourOpChannels(this, true);
 
     m_synth.reset(m_setup.emulator, m_setup.PCM_RATE, this);
     m_chipChannels.clear();

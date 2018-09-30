@@ -606,7 +606,6 @@ int main(int argc, char **argv)
         printError(adl_errorInfo(myDevice));
         return 1;
     }
-    std::fprintf(stdout, " - Number of chips %d\n", adl_getNumChips(myDevice));
 #else
     int numOfChips = 1;
     adl_setNumChips(myDevice, numOfChips);
@@ -621,7 +620,6 @@ int main(int argc, char **argv)
             return 1;
         }
     }
-    std::fprintf(stdout, " - Number of four-ops %d\n", adl_getNumFourOpsChn(myDevice));
 
     std::string musPath = argv[1];
     //Open MIDI file to play
@@ -631,6 +629,8 @@ int main(int argc, char **argv)
         return 2;
     }
 
+    std::fprintf(stdout, " - Number of chips %d\n", adl_getNumChipsObtained(myDevice));
+    std::fprintf(stdout, " - Number of four-ops %d\n", adl_getNumFourOpsChnObtained(myDevice));
     std::fprintf(stdout, " - Track count: %lu\n", (unsigned long)adl_trackCount(myDevice));
 
     if(soloTrack != ~(size_t)0)
