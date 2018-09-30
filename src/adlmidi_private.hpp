@@ -161,6 +161,14 @@ typedef BW_MidiSequencer MidiSequencer;
 #define OPL_PANNING_RIGHT   0x20
 #define OPL_PANNING_BOTH    0x30
 
+#ifdef ADLMIDI_HW_OPL
+#define ADL_MAX_CHIPS 1
+#define ADL_MAX_CHIPS_STR "1" //Why not just "#MaxCards" ? Watcom fails to pass this with "syntax error" :-P
+#else
+#define ADL_MAX_CHIPS 100
+#define ADL_MAX_CHIPS_STR "100"
+#endif
+
 extern std::string ADLMIDI_ErrorString;
 
 /*

@@ -23,14 +23,6 @@
 
 #include "adlmidi_private.hpp"
 
-#ifdef ADLMIDI_HW_OPL
-#define MaxChips 1
-#define MaxChips_STR "1" //Why not just "#MaxCards" ? Watcom fails to pass this with "syntax error" :-P
-#else
-#define MaxChips 100
-#define MaxChips_STR "100"
-#endif
-
 /* Unify MIDI player casting and interface between ADLMIDI and OPNMIDI */
 #define GET_MIDI_PLAYER(device) reinterpret_cast<MIDIplay *>((device)->adl_midiPlayer)
 typedef MIDIplay MidiPlayer;
@@ -107,9 +99,9 @@ ADLMIDI_EXPORT int adl_setNumChips(ADL_MIDIPlayer *device, int numChips)
 #else
     play->m_setup.numChips = static_cast<unsigned int>(numChips);
 #endif
-    if(play->m_setup.numChips < 1 || play->m_setup.numChips > MaxChips)
+    if(play->m_setup.numChips < 1 || play->m_setup.numChips > ADL_MAX_CHIPS)
     {
-        play->setErrorString("number of chips may only be 1.." MaxChips_STR ".\n");
+        play->setErrorString("number of chips may only be 1.." ADL_MAX_CHIPS_STR ".\n");
         return -1;
     }
 

@@ -1465,6 +1465,8 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
                               AdlChannel::LocationData *j,
                               MIDIplay::MIDIchannel::activenoteiterator i)
 {
+    uint32_t maxChannels = ADL_MAX_CHIPS * 18;
+
     // Before killing the note, check if it can be
     // evacuated to another channel as an arpeggio
     // instrument. This helps if e.g. all channels
@@ -1474,6 +1476,8 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
     {
         uint16_t cs = static_cast<uint16_t>(c);
 
+        if(c >= maxChannels)
+            break;
         if(c == from_channel)
             continue;
         if(m_synth.m_channelCategory[c] != m_synth.m_channelCategory[from_channel])
