@@ -717,7 +717,8 @@ ADLMIDI_EXPORT int adl_setRunAtPcmRate(ADL_MIDIPlayer *device, int enabled)
         MidiPlayer *play = GET_MIDI_PLAYER(device);
         assert(play);
         play->m_setup.runAtPcmRate = (enabled != 0);
-        play->partialReset();
+        if(!play->m_synth.setupLocked())
+            play->partialReset();
         return 0;
     }
     return -1;
