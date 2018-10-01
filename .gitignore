@@ -4,3 +4,8 @@ build/
 cmake-build-debug/
 *.wasm
 lib*.js
+libxmp/libxmp-lite-stagedir/
+public/soundfonts/
+scripts/untracked/
+src/-catalog-tests/
+src/chip-core.js
