@@ -10,6 +10,7 @@ const fileExtensions = [
   'spc',
   'gym',
   'vgm',
+  'vgz',
 ];
 
 export default class GMEPlayer extends Player {
@@ -101,6 +102,7 @@ export default class GMEPlayer extends Player {
       [data, data.length, emuPtr, this.audioCtx.sampleRate]
     ) !== 0) {
       console.error("gme_open_data failed.");
+      this.stop();
       return;
     }
     emu = libgme.getValue(emuPtr, "i32");

@@ -96,6 +96,7 @@ var flags = [
   '-s', 'MODULARIZE=1',
   '-s', 'EXPORT_NAME=CHIPPLAYER',
   '-s', 'ENVIRONMENT=web',
+  '-s', 'USE_ZLIB=1',
   '-O2',
   // '--closure', '1',
   // '--llvm-lto', '3',
@@ -104,6 +105,7 @@ var flags = [
   '-DVGM_YM2612_MAME=1',     // fast and accurate, but suffers on some GYM files
   // '-DVGM_YM2612_NUKED=1', // slow but very accurate
   // '-DVGM_YM2612_GENS=1',  // very fast but inaccurate
+  '-DHAVE_ZLIB_H',
 
   '-Qunused-arguments',
   '-Wno-deprecated',
