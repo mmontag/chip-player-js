@@ -4,26 +4,45 @@ let lib = null;
 const MOUNTPOINT = '/soundfonts';
 const SOUNDFONT_URL_PATH = 'soundfonts';
 const SOUNDFONTS = [
-  {label: 'GMGSx (4.1 MB)', value: 'gmgsx.sf2'},
-  {label: 'AWE64 Gold (1.1 MB)', value: 'AWE64 Gold.sf2'},
-  {label: 'Tim GM (6 MB)', value: 'TimGM6mb.sf2'},
-  {label: 'Fluid R3 Mono SF3 (14.6 MB)', value: 'FluidR3Mono_GM.sf3'},
-  {label: 'GeneralUser GS v1.471 (31.3 MB)', value: 'generaluser.sf2'},
-  {label: 'MuseScore General SF3 (37.7 MB)', value: 'MuseScore_General.sf3'},
-  {label: 'Masquerade 55 v006 (18.4 MB)', value: 'masquerade55v006.sf2'},
-  {label: 'Roland SC-55 (3.3 MB)', value: 'Roland SC-55.sf2'},
-  {label: 'Roland SCC1 (3.3 MB)', value: 'Scc1t2.sf2'},
-  {label: 'Yamaha DB50XG (3.9 MB)', value: 'Yamaha DB50XG.sf2'},
-  {label: 'Kirby\'s Dream Land 3 (271 KB)', value: 'Kirby\'s_Dream_Land_3.sf2'},
-  {label: 'Setzer\'s SPC Soundfont (1.2 MB)', value: 'Setzer\'s_SPC_Soundfont.sf2'},
-  {label: 'Nokia 30 (2.2 MB)', value: 'Nokia_30.sf2'},
-  {label: 'PC Beep (31 KB)', value: 'pcbeep.sf2'},
-  {label: 'The Ultimate Megadrive Soundfont (63.2 MB)', value: 'The Ultimate Megadrive Soundfont.sf2'},
-  {label: 'Regression FM v1.99g (14.4 MB)', value: 'R_FM_v1.99g-beta.sf2'},
-  {label: 'Vintage Dreams Waves v2 (315 KB)', value: 'Vintage Dreams Waves v2.sf2'},
+  {
+    label: 'Small Soundfonts',
+    items: [
+      {label: 'GMGSx (4.1 MB)', value: 'gmgsx.sf2'},
+      {label: 'Roland SC-55 (3.3 MB)', value: 'Roland SC-55.sf2'},
+      {label: 'Roland SCC1 (3.3 MB)', value: 'Scc1t2.sf2'},
+      {label: 'Yamaha DB50XG (3.9 MB)', value: 'Yamaha DB50XG.sf2'},
+      {label: 'Tim GM (6 MB)', value: 'TimGM6mb.sf2'},
+    ],
+  },
+  {
+    label: 'Large Soundfonts',
+    items: [
+      {label: 'Masquerade 55 v006 (18.4 MB)', value: 'masquerade55v006.sf2'},
+      {label: 'GeneralUser GS v1.471 (31.3 MB)', value: 'generaluser.sf2'},
+    ],
+  },
+  {
+    label: 'Novelty Soundfonts',
+    items: [
+      {label: 'PC Beep (31 KB)', value: 'pcbeep.sf2'},
+      {label: 'Kirby\'s Dream Land 3 (271 KB)', value: 'Kirby\'s_Dream_Land_3.sf2'},
+      {label: 'Vintage Dreams Waves v2 (315 KB)', value: 'Vintage Dreams Waves v2.sf2'},
+      {label: 'Setzer\'s SPC Soundfont (1.2 MB)', value: 'Setzer\'s_SPC_Soundfont.sf2'},
+      {label: 'Nokia 30 (2.2 MB)', value: 'Nokia_30.sf2'},
+      {label: 'Regression FM v1.99g (14.4 MB)', value: 'R_FM_v1.99g-beta.sf2'},
+      {label: 'The Ultimate Megadrive Soundfont (63.2 MB)', value: 'The Ultimate Megadrive Soundfont.sf2'},
+    ],
+  },
+  {
+    label: 'SF3 Compressed Soundfonts',
+    items: [
+      {label: 'Fluid R3 Mono SF3 (14.6 MB)', value: 'FluidR3Mono_GM.sf3'},
+      {label: 'MuseScore General SF3 (37.7 MB)', value: 'MuseScore_General.sf3'},
+    ],
+  },
 ];
-const DEFAULT_SOUNDFONT = SOUNDFONTS[0].value;
-const DEFAULT_REVERB = 0.5;
+const DEFAULT_SOUNDFONT = SOUNDFONTS[0].items[0].value;
+const DEFAULT_REVERB = 0.33;
 const BUFFER_SIZE = 2048;
 const fileExtensions = [
   'mid',
@@ -92,8 +111,10 @@ export default class MIDIPlayer extends Player {
         } else {
           console.log('MIDI file ended.');
           lib._tp_stop();
-          this.audioNode.disconnect();
-          this.audioNode = null;
+          if (this.audioNode) {
+            this.audioNode.disconnect();
+            this.audioNode = null;
+          }
 
           this.onPlayerStateUpdate(true);
         }

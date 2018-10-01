@@ -272,7 +272,7 @@ class App extends PureComponent {
   }
 
   render() {
-    const onFileClick = (filename) => {
+    const handleFileClick = (filename) => {
       return (e) => {
         e.preventDefault();
         this.playSong(filename);
@@ -354,11 +354,13 @@ class App extends PureComponent {
                         <div key={param.id}>
                           {param.label}:
                           <select onChange={(e) => this.player.setParameter(param.id, e.target.value)}>
-                            <optgroup>
-                              {param.options.map(option =>
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                              )}
-                            </optgroup>
+                            {param.options.map(optgroup =>
+                              <optgroup key={optgroup.label} label={optgroup.label}>
+                                {optgroup.items.map(option =>
+                                  <option key={option.value} value={option.value}>{option.label}</option>
+                                )}
+                              </optgroup>
+                            )}
                           </select>
                         </div>
                       );
@@ -389,7 +391,7 @@ class App extends PureComponent {
                     const href = group.url_prefix + file;
                     return (
                       <div key={file}>
-                        <a onClick={onFileClick(href)} href={href}>{unescape(file)}</a>
+                        <a onClick={handleFileClick(href)} href={href}>{unescape(file)}</a>
                       </div>
                     )
                   })}
