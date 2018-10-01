@@ -1,7 +1,7 @@
 var glob = require('glob');
 const { spawn, execSync } = require('child_process');
 var fs = require('fs');
-const paths = require('./config/paths');
+const paths = require('../config/paths');
 
 /**
  * Compile the C libraries with emscripten.
@@ -16,8 +16,8 @@ source_files.push('libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a');
 source_files.push('fluidlite/build/libfluidlite.a');
 source_files.push('TinySoundFont/tinyplayer.c');
 
-var js_file = 'src/chipplayer.js';
-var wasm_file = 'src/chipplayer.wasm';
+var js_file = 'src/chip-core.js';
+var wasm_file = 'src/chip-core.wasm';
 var wasm_dir = paths.appPublic;
 
 var exported_functions = [
