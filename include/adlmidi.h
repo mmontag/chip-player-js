@@ -743,7 +743,7 @@ extern ADLMIDI_DECLSPEC int adl_setTrackOptions(struct ADL_MIDIPlayer *device, s
  * @param trigger Value of the event which triggered this callback.
  * @param track Identifier of the track which triggered this callback.
  */
-typedef ADLMIDI_DECLSPEC void (*ADL_TriggerHandler)(void *userData, unsigned trigger, size_t track);
+typedef void (*ADL_TriggerHandler)(void *userData, unsigned trigger, size_t track);
 
 /**
  * @brief Defines a handler for callback trigger events
