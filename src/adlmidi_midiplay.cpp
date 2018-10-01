@@ -104,7 +104,11 @@ void MIDIplay::AdlChannel::addAge(int64_t us)
 {
     const int64_t neg = 1000 * static_cast<int64_t>(-0x1FFFFFFFll);
     if(users_empty())
+    {
         koff_time_until_neglible_us = std::max(koff_time_until_neglible_us - us, neg);
+        if(koff_time_until_neglible_us < 0)
+            koff_time_until_neglible_us = 0;
+    }
     else
     {
         koff_time_until_neglible_us = 0;
@@ -137,7 +141,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
     m_setup.maxdelay = 512.0 / (double)m_setup.PCM_RATE;
 
     m_setup.bankId    = 0;
-    m_setup.numFourOps = 7;
+    m_setup.numFourOps = -1;
     m_setup.numChips   = 2;
     m_setup.deepTremoloMode     = -1;
     m_setup.deepVibratoMode     = -1;
@@ -194,8 +198,12 @@ void MIDIplay::applySetup()
         m_synth.m_volumeScale = (OPL3::VolumesScale)m_synth.m_insBankSetup.volumeModel;
 
     m_synth.m_numChips    = m_setup.numChips;
-    m_synth.m_numFourOps  = m_setup.numFourOps;
     m_cmfPercussionMode = false;
+
+    if(m_setup.numFourOps >= 0)
+        m_synth.m_numFourOps  = m_setup.numFourOps;
+    else
+        adlCalculateFourOpChannels(this, true);
 
     m_synth.reset(m_setup.emulator, m_setup.PCM_RATE, this);
     m_chipChannels.clear();
@@ -584,6 +592,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         int32_t c = adlchannel[ccount];
         if(c < 0)
             continue;
+        m_chipChannels[c].recent_ins = voices[ccount];
         m_chipChannels[c].addAge(0);
     }
 
@@ -1161,7 +1170,7 @@ void MIDIplay::noteUpdate(size_t midCh,
                     }
                     else
                     {
-                        m_chipChannels[c].koff_time_until_neglible_us = 1000 * ains.ms_sound_koff;
+                        m_chipChannels[c].koff_time_until_neglible_us = 1000 * int64_t(ains.ms_sound_koff);
                     }
                 }
             }
@@ -1331,14 +1340,24 @@ void MIDIplay::setErrorString(const std::string &err)
 
 int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins) const
 {
-    int64_t koff_ms = m_chipChannels[c].koff_time_until_neglible_us / 1000;
-    int64_t s = (m_synth.m_musicMode != OPL3::MODE_CMF) ? -koff_ms : 0;
+    const AdlChannel &chan = m_chipChannels[c];
+    int64_t koff_ms = chan.koff_time_until_neglible_us / 1000;
+    int64_t s = -koff_ms;
+
+    // Rate channel with a releasing note
+    if(s < 0 && chan.users_empty())
+    {
+        s -= 40000;
+        // If it's same instrument, better chance to get it when no free channels
+        if(chan.recent_ins == ins)
+            s = (m_synth.m_musicMode == OPL3::MODE_CMF) ? 0 : -koff_ms;
+        return s;
+    }
 
     // Same midi-instrument = some stability
-    //if(c == MidCh) s += 4;
-    for(AdlChannel::LocationData *j = m_chipChannels[c].users_first; j; j = j->next)
+    for(AdlChannel::LocationData *j = chan.users_first; j; j = j->next)
     {
-        s -= 4000;
+        s -= 4000000;
 
         int64_t kon_ms = j->kon_time_until_neglible_us / 1000;
         s -= (j->sustained == AdlChannel::LocationData::Sustain_None) ?
@@ -1356,7 +1375,7 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
                 // Arpeggio candidate = even better
                 if(j->vibdelay_us < 70000
                    || j->kon_time_until_neglible_us > 20000000)
-                    s += 0;
+                    s += 10;
             }
 
             // Percussion is inferior to melody
@@ -1446,6 +1465,8 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
                               AdlChannel::LocationData *j,
                               MIDIplay::MIDIchannel::activenoteiterator i)
 {
+    uint32_t maxChannels = ADL_MAX_CHIPS * 18;
+
     // Before killing the note, check if it can be
     // evacuated to another channel as an arpeggio
     // instrument. This helps if e.g. all channels
@@ -1455,7 +1476,7 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
     {
         uint16_t cs = static_cast<uint16_t>(c);
 
-        if(c > std::numeric_limits<uint32_t>::max())
+        if(c >= maxChannels)
             break;
         if(c == from_channel)
             continue;

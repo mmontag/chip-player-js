@@ -66,7 +66,7 @@ typedef short           ADL_SInt16;
 
 #ifdef __clang__
 #   if __has_extension(attribute_deprecated_with_message)
-#       define JSONCPP_DEPRECATED(message) __attribute__((deprecated(message)))
+#       define ADLMIDI_DEPRECATED(message) __attribute__((deprecated(message)))
 #   endif
 #elif defined __GNUC__ /* not clang (gcc comes later since clang emulates gcc) */
 #   if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
@@ -183,6 +183,13 @@ extern ADLMIDI_DECLSPEC int adl_setNumChips(struct ADL_MIDIPlayer *device, int n
  * @return Count of working chip emulators
  */
 extern ADLMIDI_DECLSPEC int adl_getNumChips(struct ADL_MIDIPlayer *device);
+
+/**
+ * @brief Get obtained number of emulated chips
+ * @param device Instance of the library
+ * @return Count of working chip emulators
+ */
+extern ADLMIDI_DECLSPEC int adl_getNumChipsObtained(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Sets a number of the patches bank from 0 to N banks.
@@ -340,9 +347,16 @@ extern ADLMIDI_DECLSPEC int adl_setNumFourOpsChn(struct ADL_MIDIPlayer *device, 
 /**
  * @brief Get current total count of 4-operator channels between all chips
  * @param device Instance of the library
- * @return 0 on success, <0 when any error has occurred
+ * @return 0 on success, <-1 when any error has occurred, but, -1 - "auto"
  */
 extern ADLMIDI_DECLSPEC int adl_getNumFourOpsChn(struct ADL_MIDIPlayer *device);
+
+/**
+ * @brief Get obtained total count of 4-operator channels between all chips
+ * @param device Instance of the library
+ * @return 0 on success, <0 when any error has occurred
+ */
+extern ADLMIDI_DECLSPEC int adl_getNumFourOpsChnObtained(struct ADL_MIDIPlayer *device);
 
 /**
  * @brief Override Enable(1) or Disable(0) AdLib percussion mode. -1 - use bank default AdLib percussion mode
@@ -729,7 +743,7 @@ extern ADLMIDI_DECLSPEC int adl_setTrackOptions(struct ADL_MIDIPlayer *device, s
  * @param trigger Value of the event which triggered this callback.
  * @param track Identifier of the track which triggered this callback.
  */
-typedef ADLMIDI_DECLSPEC void (*ADL_TriggerHandler)(void *userData, unsigned trigger, size_t track);
+typedef void (*ADL_TriggerHandler)(void *userData, unsigned trigger, size_t track);
 
 /**
  * @brief Defines a handler for callback trigger events

@@ -414,6 +414,9 @@ void BW_MidiSequencer::buildSmfSetupReset(size_t trackCount)
     m_loop.reset();
     m_loop.invalidLoop = false;
 
+    m_currentPosition.began = false;
+    m_currentPosition.absTimePosition = 0.0;
+    m_currentPosition.wait = 0.0;
     m_currentPosition.track.clear();
     m_currentPosition.track.resize(trackCount);
 }
@@ -1995,6 +1998,8 @@ bool BW_MidiSequencer::loadMIDI(FileAndMemReader &fr)
 
     m_format = Format_MIDI;
     m_smfFormat = 0;
+
+    m_cmfInstruments.clear();
 
     const size_t headerSize = 4 + 4 + 2 + 2 + 2; // 14
     char headerBuf[headerSize] = "";

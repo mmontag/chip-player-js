@@ -181,6 +181,13 @@ OPL3::OPL3() :
 #endif
 }
 
+bool OPL3::setupLocked()
+{
+    return (m_musicMode == MODE_CMF ||
+            m_musicMode == MODE_IMF ||
+            m_musicMode == MODE_RSXX);
+}
+
 void OPL3::setEmbeddedBank(uint32_t bank)
 {
 #ifndef DISABLE_EMBEDDED_BANKS
@@ -487,6 +494,7 @@ void OPL3::setPan(size_t c, uint8_t value)
             int panning = 0;
             if(value  < 64 + 32) panning |= OPL_PANNING_LEFT;
             if(value >= 64 - 32) panning |= OPL_PANNING_RIGHT;
+            writePan(chip, g_channelsMap[cc], 64);
             writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | panning);
 #ifndef ADLMIDI_HW_OPL
         }

@@ -161,6 +161,14 @@ typedef BW_MidiSequencer MidiSequencer;
 #define OPL_PANNING_RIGHT   0x20
 #define OPL_PANNING_BOTH    0x30
 
+#ifdef ADLMIDI_HW_OPL
+#define ADL_MAX_CHIPS 1
+#define ADL_MAX_CHIPS_STR "1" //Why not just "#MaxCards" ? Watcom fails to pass this with "syntax error" :-P
+#else
+#define ADL_MAX_CHIPS 100
+#define ADL_MAX_CHIPS_STR "100"
+#endif
+
 extern std::string ADLMIDI_ErrorString;
 
 /*
@@ -211,6 +219,7 @@ inline int32_t adl_cvtU32(int32_t x)
 }
 
 struct ADL_MIDIPlayer;
+class  MIDIplay;
 /**
  * @brief OPL3 Chip management class
  */
@@ -218,7 +227,7 @@ class OPL3
 {
     friend class MIDIplay;
     friend class AdlInstrumentTester;
-    friend int adlRefreshNumCards(ADL_MIDIPlayer *device);
+    friend int adlCalculateFourOpChannels(MIDIplay *play, bool silent);
 public:
     enum
     {
@@ -361,6 +370,12 @@ public:
      * @brief C.O. Constructor
      */
     OPL3();
+
+    /**
+     * @brief Checks are setup locked to be changed on the fly or not
+     * @return true when setup on the fly is locked
+     */
+    bool setupLocked();
 
     /**
      * @brief Choose one of embedded banks
@@ -880,6 +895,9 @@ public:
         //! Time left until sounding will be muted after key off
         int64_t koff_time_until_neglible_us;
 
+        //! Recently passed instrument, improves a goodness of released but busy channel when matching
+        MIDIchannel::NoteInfo::Phys recent_ins;
+
         enum { users_max = 128 };
         LocationData *users_first, *users_free_cells;
         LocationData users_cells[users_max];
@@ -898,6 +916,7 @@ public:
         AdlChannel(): koff_time_until_neglible_us(0)
         {
             users_clear();
+            std::memset(&recent_ins, 0, sizeof(MIDIchannel::NoteInfo::Phys));
         }
 
         AdlChannel(const AdlChannel &oth): koff_time_until_neglible_us(oth.koff_time_until_neglible_us)
@@ -947,7 +966,7 @@ public:
         int          emulator;
         bool         runAtPcmRate;
         unsigned int bankId;
-        unsigned int numFourOps;
+        int          numFourOps;
         unsigned int numChips;
         int     deepTremoloMode;
         int     deepVibratoMode;
@@ -1481,9 +1500,10 @@ extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate)
 /**
  * @brief Automatically calculate and enable necessary count of 4-op channels on emulated chips
  * @param device Library context
+ * @param silent Don't re-count channel categories
  * @return Always 0
  */
-extern int adlRefreshNumCards(ADL_MIDIPlayer *device);
+extern int adlCalculateFourOpChannels(MIDIplay *play, bool silent = false);
 
 /**
  * @brief Check emulator availability

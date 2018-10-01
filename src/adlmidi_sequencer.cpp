@@ -137,7 +137,7 @@ double MIDIplay::Tick(double s, double granularity)
 
     s *= m_sequencer.getTempoMultiplier();
     for(uint16_t c = 0; c < m_synth.m_numChannels; ++c)
-        m_chipChannels[c].addAge(static_cast<int64_t>(s * 1000.0));
+        m_chipChannels[c].addAge(static_cast<int64_t>(s * 1e6));
 
     updateVibrato(s);
     updateArpeggio(s);

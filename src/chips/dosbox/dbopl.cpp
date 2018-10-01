@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
+#include <memory>
 #include "dbopl.h"
 
 #if defined(__GNUC__) && __GNUC__ > 3
@@ -80,7 +81,8 @@ private:
 #if !defined(_WIN32)
 #include <pthread.h>
 struct Mutex : NoCopy {
-	Mutex() : m(PTHREAD_MUTEX_INITIALIZER) {}
+	Mutex() { pthread_mutex_init(&m, NULL);}
+	~Mutex() { pthread_mutex_destroy(&m); }
 	void lock() { pthread_mutex_lock(&m); }
 	void unlock() { pthread_mutex_unlock(&m); }
 	pthread_mutex_t m;
@@ -1331,14 +1333,26 @@ struct CacheEntry {
 	Bit32u linearRates[76];
 	Bit32u attackRates[76];
 };
-static std::vector<CacheEntry> cache;
-static Mutex cacheMutex;
+struct Cache : NoCopy {
+    ~Cache();
+    Mutex mutex;
+    std::vector<CacheEntry *> entries;
+};
+
+static Cache cache;
+
+Cache::~Cache()
+{
+	for ( size_t i = 0, n = entries.size(); i < n; ++i )
+		delete entries[i];
+}
 
 static const CacheEntry *CacheLookupRateDependent( Bit32u rate )
 {
-	for ( size_t i = 0, n = cache.size(); i < n; ++i ) {
-		if (cache[i].rate == rate)
-			return &cache[i];
+	for ( size_t i = 0, n = cache.entries.size(); i < n; ++i ) {
+		const CacheEntry *entry = cache.entries[i];
+		if (entry->rate == rate)
+			return entry;
 	}
 	return NULL;
 }
@@ -1346,7 +1360,7 @@ static const CacheEntry *CacheLookupRateDependent( Bit32u rate )
 static const CacheEntry &ComputeRateDependent( Bit32u rate )
 {
 	{
-		MutexHolder lock( cacheMutex );
+		MutexHolder lock( cache.mutex );
 		if (const CacheEntry *entry = CacheLookupRateDependent( rate ))
 			return *entry;
 	}
@@ -1354,11 +1368,15 @@ static const CacheEntry &ComputeRateDependent( Bit32u rate )
 	double original = OPLRATE;
 	double scale = original / (double)rate;
 
-	CacheEntry entry;
-	entry.rate = rate;
-	Bit32u *freqMul = entry.freqMul;
-	Bit32u *linearRates = entry.linearRates;
-	Bit32u *attackRates = entry.attackRates;
+#if __cplusplus >= 201103L
+	std::unique_ptr<CacheEntry> entry(new CacheEntry);
+#else
+	std::auto_ptr<CacheEntry> entry(new CacheEntry);
+#endif
+	entry->rate = rate;
+	Bit32u *freqMul = entry->freqMul;
+	Bit32u *linearRates = entry->linearRates;
+	Bit32u *attackRates = entry->attackRates;
 
 	//With higher octave this gets shifted up
 	//-1 since the freqCreateTable = *2
@@ -1434,12 +1452,12 @@ static const CacheEntry &ComputeRateDependent( Bit32u rate )
 		attackRates[i] = 8 << RATE_SH;
 	}
 
-	MutexHolder lock( cacheMutex );
+	MutexHolder lock( cache.mutex );
 	if (const CacheEntry *entry = CacheLookupRateDependent( rate ))
 		return *entry;
 
-	cache.push_back(entry);
-	return cache.back();
+	cache.entries.push_back(entry.get());
+	return *entry.release();
 }
 
 void Chip::Setup( Bit32u rate ) {
