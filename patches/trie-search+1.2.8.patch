@@ -1,0 +1,48 @@
+patch-package
+--- a/node_modules/trie-search/src/TrieSearch.js
++++ b/node_modules/trie-search/src/TrieSearch.js
+@@ -56,7 +56,7 @@ var TrieSearch = function (keyFields, options) {
+   this.size = 0;
+ 
+   if (this.options.cache) {
+-    this.getCache = new HashArray('key');
++    this.getCache = new HashArray('key', null, {ignoreDuplicates: true});
+   }
+ };
+ 
+@@ -139,7 +139,7 @@ TrieSearch.prototype = {
+     // if (this.getCache && !this.getCache._list.length) {
+     //   return;
+     // }
+-    this.getCache = new HashArray('key');
++    this.getCache = new HashArray('key', null, {ignoreDuplicates: true});
+   },
+   cleanCache: function () {
+     while (this.getCache.all.length > this.options.maxCacheSize)
+@@ -189,7 +189,7 @@ TrieSearch.prototype = {
+       this.clearCache();
+ 
+     if (this.options.keepAll) {
+-      this.indexed = this.indexed || new HashArray([this.options.keepAllKey]);
++      this.indexed = this.indexed || new HashArray([this.options.keepAllKey], null, {ignoreDuplicates: true});
+       this.indexed.add(value);
+     }
+ 
+@@ -265,7 +265,7 @@ TrieSearch.prototype = {
+       if (this.options.min && words[w].length < this.options.min)
+         continue;
+ 
+-      var temp = new HashArray(haKeyFields);
++      var temp = new HashArray(haKeyFields, null, {ignoreDuplicates: true});
+ 
+       if (node = this.findNode(words[w]))
+         aggregate(node, temp);
+@@ -311,7 +311,7 @@ TrieSearch.prototype = {
+       if (reducer) {
+         accumulator = reducer(accumulator, phrases[i], matches, this);
+       } else {
+-        ret = ret ? ret.addAll(matches) : new HashArray(haKeyFields).addAll(matches);
++        ret = ret ? ret.addAll(matches) : new HashArray(haKeyFields, null, {ignoreDuplicates: true}).addAll(matches);
+       }
+     }
+ 
