@@ -37,6 +37,7 @@ extern void tp_init(int sampleRate) {
   fluid_settings_setstr(settings, "synth.chorus.active", "no");
   fluid_settings_setint(settings, "synth.threadsafe-api", 0);
   fluid_settings_setnum(settings, "synth.gain", 0.5);
+  fluid_settings_setnum(settings, "synth.sample-rate", sampleRate);
   g_FluidSynth = new_fluid_synth(settings);
   fluid_synth_set_interp_method(g_FluidSynth, -1, FLUID_INTERP_LINEAR);
   g_SampleRate = sampleRate;
@@ -246,6 +247,8 @@ extern int tp_load_soundfont(char *filename) {
 }
 
 extern void tp_set_reverb(double level) {
+  // Completely disable reverb at very low levels to improve performance
+  fluid_synth_set_reverb_on(g_FluidSynth, level > 0.01);
   fluid_synth_set_reverb(
           g_FluidSynth,
           0.2 + level * 0.8, // roomsize (default: 0.2) 0.2 to 1.0
@@ -254,7 +257,7 @@ extern void tp_set_reverb(double level) {
           1.0);              // level    (default: 0.9) 1.0
   // Override MIDI channel reverb levels
   for (int i = 0; i < 16; i++)
-    fluid_synth_cc(g_FluidSynth, i, 91, 127);
+    fluid_synth_cc(g_FluidSynth, i, 91, 64);
 }
 
 #ifdef __cplusplus
