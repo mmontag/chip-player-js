@@ -49,6 +49,9 @@ export default [
     title: 'Local GME',
     url_prefix: 'songs/',
     files: [
+      'vgm1.vgz',
+      'vgm2.vgz',
+      'vgm3.vgz',
       "04_realblue.nsf",
       "28_zjam300.nsf",
       "35_giantsteps.nsf",
