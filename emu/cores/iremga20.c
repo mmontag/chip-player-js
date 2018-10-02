@@ -1,10 +1,19 @@
 // license:BSD-3-Clause
-// copyright-holders:Acho A. Tang,R. Belmont
+// copyright-holders:Acho A. Tang,R. Belmont, Valley Bell
 /*********************************************************
 
 Irem GA20 PCM Sound Chip
+80 pin QFP, label NANAO GA20 (Nanao Corporation was Irem's parent company)
 
-It's not currently known whether this chip is stereo.
+TODO:
+- It's not currently known whether this chip is stereo.
+- Is sample position base(regs 0,1) used while sample is playing, or
+  latched at key on? We've always emulated it the latter way.
+  gunforc2 seems to be the only game updating the address regs sometimes
+  while a sample is playing, but it doesn't seem intentional.
+- What is the 2nd sample address for? Is it end(cut-off) address, or
+  loop start address? Every game writes a value that's past sample end.
+- All games write either 0 or 2 to reg #6, do other bits have any function?
 
 
 Revisions:
@@ -25,6 +34,9 @@ Revisions:
 
 02-03-2007 R. Belmont
 - Cleaned up faux x86 assembly.
+
+09-25-2018 Valley Bell & co
+- rewrote channel update to make data 0 act as sample terminator
 
 *********************************************************/
 
@@ -97,12 +109,12 @@ struct IremGA20_channel_def
 {
 	UINT32 start;
 	UINT32 end;
-	UINT32 rate;
 	UINT32 pos;
 	UINT32 frac;
+	UINT32 fracrate;
 	UINT16 volume;
-	UINT16 pan;
-	//UINT16 effect;
+	UINT8 rate;
+	UINT8 counter;
 	UINT8 play;
 	UINT8 Muted;
 };
@@ -142,14 +154,23 @@ static void IremGA20_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				continue;
 			
 			if (! chip->rom[ch->pos])	// check for sample end marker
+			{
 				ch->play = 0x00;
+			}
 			else
+			{
 				sampleout += (chip->rom[ch->pos] - 0x80) * (INT32)ch->volume;
-			ch->frac += ch->rate;
-			ch->pos += (ch->frac >> RATE_SHIFT);
-			ch->frac &= ((1 << RATE_SHIFT) - 1);
-			if (ch->pos >= ch->end)
-				ch->play = 0x00;
+				// optional TODO: use ch->frac to do sample interpolation
+				ch->frac += ch->fracrate;
+				ch->counter ++;
+				if (! ch->counter)
+				{
+					// advance position + reset counter on overflow
+					ch->pos ++;
+					ch->frac = 0;
+					ch->counter = ch->rate;
+				}
+			}
 		}
 
 		sampleout >>= 2;
@@ -171,6 +192,14 @@ static void irem_ga20_w(void *info, UINT8 offset, UINT8 data)
 
 	chip->regs[offset] = data;
 
+	// channel regs:
+	// 0,1: start address
+	// 2,3: end? address
+	// 4: rate
+	// 5: volume
+	// 6: control
+	// 7: voice status (read-only)
+
 	ch = &chip->channel[channel];
 	switch (offset & 0x7)
 	{
@@ -191,7 +220,8 @@ static void irem_ga20_w(void *info, UINT8 offset, UINT8 data)
 			break;
 
 		case 4:
-			ch->rate = (1 << RATE_SHIFT) / (256 - data);
+			ch->rate = data;
+			ch->fracrate = (1 << RATE_SHIFT) / (0x100 - ch->rate);
 			break;
 
 		case 5: //AT: gain control
@@ -199,9 +229,21 @@ static void irem_ga20_w(void *info, UINT8 offset, UINT8 data)
 			break;
 
 		case 6: //AT: this is always written 2(enabling both channels?)
-			ch->play = data;
-			ch->pos = ch->start;
-			ch->frac = 0;
+			// d1: key on/off
+			if (data & 2)
+			{
+				ch->play = 1;
+				ch->pos = ch->start;
+				ch->counter = ch->rate;
+				ch->frac = 0;
+			}
+			else
+			{
+				ch->play = 0;
+			}
+
+			// other: unknown/unused
+			// possibilities are: loop flag, left/right speaker(stereo)
 			break;
 	}
 }
@@ -216,11 +258,11 @@ static UINT8 irem_ga20_r(void *info, UINT8 offset)
 
 	switch (offset & 0x7)
 	{
-		case 7: // voice status.  bit 0 is 1 if active. (routine around 0xccc in rtypeleo)
-			return chip->channel[channel].play ? 1 : 0;
+		case 7: // voice status. bit 0 is 1 if active. (routine around 0xccc in rtypeleo)
+			return chip->channel[channel].play;
 
 		default:
-			logerror("GA20: read unk. register %d, channel %d\n", offset & 0xf, channel);
+			logerror("GA20: read unk. register %d, channel %d\n", offset & 0x7, channel);
 			break;
 	}
 
@@ -239,8 +281,6 @@ static void device_reset_iremga20(void *info)
 		chip->channel[i].frac = 0;
 		chip->channel[i].end = 0;
 		chip->channel[i].volume = 0;
-		chip->channel[i].pan = 0;
-		//chip->channel[i].effect = 0;
 		chip->channel[i].play = 0;
 	}
 
