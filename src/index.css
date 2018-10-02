@@ -162,6 +162,14 @@ input[type=range]::-webkit-slider-thumb {
     margin: 0 8px 0 0;
 }
 
+.App .App-error {
+    display: inline-block;
+    background-color: #800;
+    color: white;
+    margin: 0 8px;
+    padding: 0 8px;
+}
+
 .App .Slider {
     height: 19px;
     padding: 0;

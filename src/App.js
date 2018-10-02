@@ -57,6 +57,7 @@ class App extends PureComponent {
     this.state = {
       loading: true,
       paused: false,
+      playerError: null,
       currentSongMetadata: {},
       currentSongNumVoices: 0,
       currentSongNumSubtunes: 0,
@@ -109,6 +110,7 @@ class App extends PureComponent {
   }
 
   playSong(url) {
+    this.setState({playerError: null});
     if (this.player !== null) {
       this.player.stop();
     }
@@ -137,7 +139,15 @@ class App extends PureComponent {
         let uint8Array;
         uint8Array = new Uint8Array(buffer);
 
-        this.player.loadData(uint8Array);
+        try {
+          this.player.loadData(uint8Array);
+        } catch (e) {
+          this.setState({
+            playerError: e.message,
+          });
+          return;
+        }
+
         this.player.setTempo(this.state.tempo);
         this.player.setVoices(this.state.voices);
         this.player.resume();
@@ -153,8 +163,7 @@ class App extends PureComponent {
           currentSongSubtune: 0,
           voiceNames: [...Array(numVoices)].map((_, i) => this.player.getVoiceName(i)),
         });
-      })
-      .catch(e => console.log(e));
+      });
   }
 
   playSubtune(subtune) {
@@ -303,6 +312,9 @@ class App extends PureComponent {
                     disabled={this.player ? null : true}>
               {this.state.paused ? 'Resume' : 'Pause'}
             </button>
+            {this.state.playerError &&
+            <div className="App-error">ERROR: {this.state.playerError}</div>
+            }
             <Slider
               pos={this.getSongPos()}
               onDrag={this.handlePositionDrag}
