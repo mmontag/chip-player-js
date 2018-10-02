@@ -1,6 +1,8 @@
-import React, {PureComponent} from 'react';
-import Slider from './Slider'
 import './App.css';
+
+import React, {PureComponent} from 'react';
+import Slider from './Slider';
+import Search from './Search';
 import songData from './song-data';
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
@@ -289,10 +291,10 @@ class App extends PureComponent {
           <p className="App-subtitle">
             powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>, <a
             href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and <a
-            href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>. <br/>
-            AudioContext state: {this.audioCtx.state}
+            href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
           </p>
         </header>
+        <Search onResultClick={handleFileClick}/>
         {this.state.loading ?
           <p>Loading...</p>
           :

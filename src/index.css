@@ -58,6 +58,12 @@ a:focus   { background: #00f; }
 a:active  { background: #800; }
 a:visited { color: #ff0; }
 
+section {
+    border-bottom: 1px solid yellow;
+    padding: 0 19px 19px 19px;
+    margin: 0 -19px 18px -19px;
+}
+
 /* Form elements */
 
 select, button {
@@ -86,12 +92,23 @@ button:focus    { background: #00f; }
 button:active   { background: #800; }
 button:disabled { color: #ccc; }
 
-input { user-select: none; }
+input[type=text] {
+    border: 0;
+    border-radius: 0;
+    background-color: #aaa;
+    color: #008;
+    padding: 0 8px;
+}
+
+input[type=text]::selection                 { background-color: #fff; }
+input[type=text]::-webkit-input-placeholder { color: #666 }
+
 input[type=checkbox] {
     -webkit-appearance: none;
     -moz-appearance: none;
     background: transparent;
     border: 0;
+    border-radius: 0;
     outline: 0;
     width: 32px;
     margin: 0;
@@ -138,7 +155,7 @@ input[type=range]::-webkit-slider-thumb {
 .App .App-header {
     border-bottom: 1px solid yellow;
     padding: 0 19px;
-    margin: 0 -19px 19px -19px;
+    margin: 0 -19px 18px -19px;
 }
 
 .App .App-label {
@@ -176,4 +193,14 @@ input[type=range]::-webkit-slider-thumb {
     position: absolute;
     -webkit-box-shadow: none;
     box-shadow: none;
+}
+
+.App .Search-results {
+    margin-top: 19px;
+}
+
+.App .Search-results div {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
