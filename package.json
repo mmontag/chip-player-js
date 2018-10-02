@@ -77,7 +77,8 @@
     "build-all": "source ~/src/emsdk/emsdk_set_env.sh; node scripts/build-all.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "prepare": "patch-package"
+    "prepare": "patch-package",
+    "build-catalog": "node $NODE_DEBUG_OPTION scripts/build-catalog.js",
   },
   "jest": {
     "collectCoverageFrom": [
