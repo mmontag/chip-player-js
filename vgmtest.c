@@ -781,6 +781,8 @@ static void InitVGMChips(void)
 				cDev->defInf.devDef->SetOptionBits(cDev->defInf.dataPtr, 0x80);	// enable legacy mode
 			else if (curChip == DEVID_GB_DMG)
 				cDev->defInf.devDef->SetOptionBits(cDev->defInf.dataPtr, 0x80);	// enable legacy mode
+			else if (curChip == DEVID_GA20)
+				cDev->defInf.devDef->SetOptionBits(cDev->defInf.dataPtr, 0x01);	// enable interpolation
 			break;
 		}
 		if (retVal)
