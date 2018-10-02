@@ -68,7 +68,9 @@ class App extends PureComponent {
       voiceNames: Array(MAX_VOICES).fill(''),
     };
 
-    setInterval(this.displayLoop, 400); // every 24 frames @ 60 fps
+    setInterval(this.displayLoop, 46); //  46 ms = 2048/44100 sec or 21.5 fps
+                                       // 400 ms = 2.5 fps
+    // this.displayLoop();
   }
 
   _iosAudioUnlock(context) {
@@ -88,9 +90,10 @@ class App extends PureComponent {
   displayLoop() {
     if (this.player) {
       this.setState({
-        currentSongPositionMs: this.player.getPositionMs(),
+        currentSongPositionMs: Math.min(this.player.getPositionMs(), this.state.currentSongDurationMs),
       });
     }
+    // requestAnimationFrame(this.displayLoop);
   }
 
   play() {
