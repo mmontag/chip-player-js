@@ -29,6 +29,11 @@ http://sasq64.github.io/chipmachine/
 Chipmachine is a multiplatform player supporting an enormous number of formats. Downloads music from an impressive variety of [external sources](https://github.com/sasq64/chipmachine/blob/master/lua/db.lua).
 Most of these come from HTTP sources without CORS headers, not feasible for direct playback. 
 
+##### Muki (JS)
+http://muki.io
+
+Muki, by [Tomás Pollak](https://github.com/tomas), is a polished JS player pulling together [Timidity (MIDI)](http://timidity.sourceforge.net/), [Munt (MT-32)](https://github.com/munt/munt), [libopenmpt](https://lib.openmpt.org/libopenmpt/) (instead of libxmp), game-music-emu, Wildmidi, Adplug, [Adlmidi (OPL3)](https://bisqwit.iki.fi/source/adlmidi.html), mdxmini, and [sc68](http://sc68.atari.org/apidoc/index.html). The music is a collection of PC game music.
+
 ##### Chiptune Blaster (JS)
 https://github.com/wothke?tab=repositories
 
@@ -72,3 +77,8 @@ The best modern option for playing MIDI is probably using a well-designed GM Sou
 - MIDI file library: https://github.com/craigsapp/midifile
 - FluidSynth Lite, supports SF3: https://github.com/divideconcept/FluidLite
 - Compress SF2 to SF3: https://github.com/cognitone/sf2convert
+
+##### Music archives
+
+- The best pop music MIDI archive comes from [Colin Raffel's thesis work](https://colinraffel.com/projects/lmd/) on MIDI alignment. About 20,000 cleaned MIDI files
+    * Colin Raffel. "Learning-Based Methods for Comparing Sequences, with Applications to Audio-to-MIDI Alignment and Matching". PhD Thesis, 2016.
