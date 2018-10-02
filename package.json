@@ -79,6 +79,7 @@
     "deploy": "gh-pages -d build",
     "prepare": "patch-package",
     "build-catalog": "node $NODE_DEBUG_OPTION scripts/build-catalog.js",
+    "fixvgm": "node $NODE_DEBUG_OPTION scripts/fixvgm.js"
   },
   "jest": {
     "collectCoverageFrom": [
