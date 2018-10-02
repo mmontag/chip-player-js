@@ -2,10 +2,11 @@ import React, {PureComponent} from 'react';
 import Slider from './Slider'
 import './App.css';
 import songData from './song-data';
-import ChipPlayer from './chipplayer';
+import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
+import promisify from './promisifyXhr';
 
 const MAX_VOICES = 32;
 
@@ -33,7 +34,7 @@ class App extends PureComponent {
 
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
-    const emscriptenRuntime = new ChipPlayer({
+    const emscriptenRuntime = new ChipCore({
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
       locateFile: (path, prefix) => {
         if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
@@ -50,6 +51,7 @@ class App extends PureComponent {
     });
 
     this.player = null;
+    this.songRequest = null;
     this.state = {
       loading: true,
       paused: false,
@@ -101,12 +103,12 @@ class App extends PureComponent {
     }
   }
 
-  playSong(filename) {
+  playSong(url) {
     if (this.player !== null) {
       this.player.stop();
     }
     this.player = null;
-    const ext = filename.split('.').pop().toLowerCase();
+    const ext = url.split('.').pop().toLowerCase();
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].canPlay(ext)) {
         this.player = this.players[i];
@@ -118,39 +120,36 @@ class App extends PureComponent {
       return;
     }
 
-    fetch(filename).then(response => response.arrayBuffer()).then(buffer => {
-      let uint8Array;
-      let extractedTunes = [];
-      // if (filename.endsWith('.rsn')) {
-      //   // Unrar RSN files
-      //   const extractedTunes = unrar.createExtractorFromData(buffer)
-      //     .extractAll()[1].files
-      //     .map(file => file.extract[1])
-      //     .filter(arr => arr.byteLength >= 8192);
-      //   uint8Array = extractedTunes[0];
-      // } else {
-      uint8Array = new Uint8Array(buffer);
-      // }
+    // Cancel any outstanding request so that playback doesn't happen out of order
+    if (this.songRequest) this.songRequest.abort();
+    this.songRequest = promisify(new XMLHttpRequest());
+    this.songRequest.responseType = 'arraybuffer';
+    this.songRequest.open('GET', url);
+    this.songRequest.send()
+      // .then(response => response.arrayBuffer())
+      .then(xhr => xhr.response)
+      .then(buffer => {
+        let uint8Array;
+        uint8Array = new Uint8Array(buffer);
 
-      this.player.loadData(uint8Array);
-      this.player.setTempo(this.state.tempo);
-      this.player.setVoices(this.state.voices);
-      this.player.resume();
-      const numSubtunes = this.player.getNumSubtunes();
-      const numVoices = this.player.getNumVoices();
+        this.player.loadData(uint8Array);
+        this.player.setTempo(this.state.tempo);
+        this.player.setVoices(this.state.voices);
+        this.player.resume();
+        const numVoices = this.player.getNumVoices();
 
-      this.setState({
-        paused: false,
-        currentSongMetadata: this.player.getMetadata(),
-        currentSongDurationMs: this.player.getDurationMs(),
-        currentSongNumVoices: numVoices,
-        currentSongNumSubtunes: extractedTunes.length || numSubtunes,
-        currentSongPositionMs: 0,
-        currentSongSubtune: 0,
-        extractedTunes: extractedTunes,
-        voiceNames: [...Array(numVoices)].map((_, i) => this.player.getVoiceName(i)),
-      });
-    });
+        this.setState({
+          paused: false,
+          currentSongMetadata: this.player.getMetadata(),
+          currentSongDurationMs: this.player.getDurationMs(),
+          currentSongNumVoices: numVoices,
+          currentSongNumSubtunes: this.player.getNumSubtunes(),
+          currentSongPositionMs: 0,
+          currentSongSubtune: 0,
+          voiceNames: [...Array(numVoices)].map((_, i) => this.player.getVoiceName(i)),
+        });
+      })
+      .catch(e => console.log(e));
   }
 
   playSubtune(subtune) {
