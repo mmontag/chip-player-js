@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.2)
 project (libADLMIDI C CXX)
 
+include(GNUInstallDirs)
+
 #===========================================================================================
 # Strip garbage
 if(APPLE)
@@ -306,6 +308,7 @@ if(libADLMIDI_SHARED)
     if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
         add_dependencies(ADLMIDI_shared gen-adldata-run)
     endif()
+    set_target_properties(ADLMIDI_shared PROPERTIES SOVERSION "1")
 endif()
 
 if(NOT libADLMIDI_STATIC AND NOT libADLMIDI_SHARED)
@@ -547,15 +550,15 @@ if(WITH_HQ_RESAMPLER)
 endif()
 
 install(TARGETS ${libADLMIDI_INSTALLS}
-        RUNTIME DESTINATION "bin"
-        LIBRARY DESTINATION "lib"
-        ARCHIVE DESTINATION "lib"
-        INCLUDES DESTINATION "include")
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 install(FILES
         include/adlmidi.h
         include/adlmidi.hpp
-        DESTINATION include/)
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 option(WITH_UNIT_TESTS "Enable unit testing" OFF)
 if(WITH_UNIT_TESTS)
