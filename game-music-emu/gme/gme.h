@@ -52,8 +52,14 @@ gme_bool gme_track_ended( const gme_t* );
 /* Number of milliseconds played since beginning of track (1000 = one second) */
 int gme_tell( const gme_t* );
 
+/* Number of milliseconds played since beginning of track (scaled with tempo) */
+int gme_tell_scaled( const gme_t* );
+
 /* Seeks to new time in track. Seeking backwards or far forward can take a while. */
 gme_err_t gme_seek( gme_t*, int msec );
+
+/* Seeks to new time in track (scaled with current tempo) */
+gme_err_t gme_seek_scaled( gme_t*, int msec );
 
 /* Skips the specified number of samples. */
 gme_err_t gme_skip( gme_t*, int samples );

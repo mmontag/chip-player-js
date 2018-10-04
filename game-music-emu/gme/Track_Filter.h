@@ -42,23 +42,29 @@ public:
 	
 	// Sets time that fade starts, and how long until track ends.
 	void set_fade( sample_count_t start, sample_count_t length );
-	
+
+	void set_tempo( double t )                  { tempo_ = t; }
+
 	// Generates n samples into buf
 	blargg_err_t play( int n, sample_t buf [] );
-	
+
 	// Skips n samples
 	blargg_err_t skip( int n );
-	
+
 	// Number of samples played/skipped since start_track()
 	int sample_count() const                    { return out_time; }
-	
+
+	// Number of samples played/skipped since start_track(), scaled along with tempo changes.
+	// This should approximate the absolute position in the song.
+	int sample_count_scaled() const             { return out_time_scaled_; }
+
 	// True if track ended. Causes are end of source samples, end of fade,
 	// or excessive silence.
 	bool track_ended() const                    { return track_ended_; }
-	
+
 	// Clears state
 	void stop();
-	
+
 // For use by callbacks
 
 	// Sets internal "track ended" flag and stops generation of further source samples
@@ -80,6 +86,8 @@ private:
 	
 	// Timing
 	int out_time;  // number of samples played since start of track
+	int out_time_scaled_;
+	double tempo_;
 	int emu_time;  // number of samples emulator has generated since start of track
 	int emu_track_ended_; // emulator has reached end of track
 	volatile int track_ended_;

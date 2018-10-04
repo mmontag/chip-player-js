@@ -50,10 +50,16 @@ public:
 
 	// Number of milliseconds played since beginning of track (1000 per second)
 	int tell() const;
-	
+
+	// Number of milliseconds played since beginning of track (scaled with tempo)
+	int tell_scaled() const;
+
 	// Seeks to new time in track. Seeking backwards or far forward can take a while.
 	blargg_err_t seek( int msec );
-	
+
+	// Seek to new time in track (scaled with tempo).
+	blargg_err_t seek_scaled( int msec );
+
 	// Skips n samples
 	blargg_err_t skip( int n );
 	
@@ -196,7 +202,7 @@ private:
 	double gain_;
 	int sample_rate_;
 	int current_track_;
-    
+
     bool fade_set;
     int length_msec;
     int fade_msec;

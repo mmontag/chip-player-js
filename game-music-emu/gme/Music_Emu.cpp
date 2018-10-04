@@ -125,6 +125,7 @@ void Music_Emu::set_tempo( double t )
 	if ( t > max ) t = max;
 	tempo_ = t;
 	set_tempo_( t );
+	track_filter.set_tempo( t );
 }
 
 blargg_err_t Music_Emu::post_load()
@@ -150,6 +151,11 @@ int Music_Emu::tell() const
 	return sec * 1000 + (track_filter.sample_count() - sec * rate) * 1000 / rate;
 }
 
+int Music_Emu::tell_scaled() const
+{
+	return int(track_filter.sample_count_scaled() / (sample_rate() / 1000.0));
+}
+
 blargg_err_t Music_Emu::seek( int msec )
 {
 	int time = msec_to_samples( msec );
@@ -160,6 +166,17 @@ blargg_err_t Music_Emu::seek( int msec )
             set_fade( length_msec, fade_msec );
     }
 	return skip( time - track_filter.sample_count() );
+}
+
+blargg_err_t Music_Emu::seek_scaled( int msec )
+{
+	require( tempo_ > 0 );
+	float frames = (msec / 1000.0f) * sample_rate();
+	if (frames < track_filter.sample_count_scaled())
+		RETURN_ERR(start_track( current_track_ ));
+	int samples_to_skip = int((frames - track_filter.sample_count_scaled()) * stereo / tempo_);
+	samples_to_skip += samples_to_skip % stereo;
+	return skip( samples_to_skip );
 }
 
 blargg_err_t Music_Emu::skip( int count )

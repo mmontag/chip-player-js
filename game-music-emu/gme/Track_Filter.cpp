@@ -18,6 +18,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 int const fade_block_size = 512;
 int const fade_shift = 8; // fade ends with gain at 1.0 / (1 << fade_shift)
 int const silence_threshold = 8;
+int const stereo = 2; // number of channels for stereo
 
 blargg_err_t Track_Filter::init( callbacks_t* c )
 {
@@ -29,6 +30,7 @@ void Track_Filter::clear_time_vars()
 {
 	emu_time      = buf_remain;
 	out_time      = 0;
+	out_time_scaled_ = 0;
 	silence_time  = 0;
 	silence_count = 0;
 }
@@ -90,6 +92,7 @@ blargg_err_t Track_Filter::skip( int count )
 {
 	emu_error = NULL;
 	out_time += count;
+	out_time_scaled_ += int(count * tempo_ / stereo);
 	
 	// remove from silence and buf first
 	{
@@ -289,5 +292,6 @@ blargg_err_t Track_Filter::play( int out_count, sample_t out [] )
 			handle_fade( out, out_count );
 	}
 	out_time += out_count;
+	out_time_scaled_ += int(out_count * tempo_ / stereo);
 	return emu_error;
 }
