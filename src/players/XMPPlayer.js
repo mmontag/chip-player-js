@@ -87,6 +87,7 @@ export default class XMPPlayer extends Player {
     );
     if (err !== 0) {
       console.error("xmp_load_module_from_memory failed. error code: %d", err);
+      throw Error('Unable to load this file!');
     }
 
     if (!this.audioNode) {
@@ -112,8 +113,9 @@ export default class XMPPlayer extends Player {
           this.audioNode = null;
           this.onPlayerStateUpdate(true);
         } else if (err !== 0) {
-          console.error("xmp_play_buffer failed. error code: %d", err);
           this.audioNode.disconnect();
+          console.error("xmp_play_buffer failed. error code: %d", err);
+          throw Error('Unable to play this file!');
         }
 
         // Get current module BPM

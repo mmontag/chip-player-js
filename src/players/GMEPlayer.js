@@ -103,12 +103,12 @@ export default class GMEPlayer extends Player {
     ) !== 0) {
       console.error("gme_open_data failed.");
       this.stop();
-      throw Error('Unable to play this file!');
+      throw Error('Unable to load this file!');
     }
     emu = libgme.getValue(emuPtr, "i32");
     if (this.playSubtune(this.subtune) !== 0) {
       console.error("gme_start_track failed.");
-      return;
+      throw Error('Unable to play this subtune!');
     }
 
     this.resume();
