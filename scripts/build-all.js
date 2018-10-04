@@ -154,8 +154,8 @@ var exported_functions = [
   '_gme_open_data',
   '_gme_ignore_silence',
   '_gme_set_tempo',
-  // '_gme_seek_scaled',
-  // '_gme_tell_scaled',
+  '_gme_seek_scaled',
+  '_gme_tell_scaled',
   '_gme_set_fade',
   '_gme_voice_name',
 

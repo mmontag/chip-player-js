@@ -170,7 +170,7 @@ export default class GMEPlayer extends Player {
   }
 
   getPositionMs() {
-    // if (emu) return libgme._gme_tell_scaled(emu);
+    if (emu) return libgme._gme_tell_scaled(emu);
     return 0;
   }
 
@@ -208,8 +208,8 @@ export default class GMEPlayer extends Player {
 
   seekMs(positionMs) {
     if (emu) {
-      // Player.muteAudioDuringCall(this.audioNode, () =>
-      //   libgme._gme_seek_scaled(emu, positionMs));
+      Player.muteAudioDuringCall(this.audioNode, () =>
+        libgme._gme_seek_scaled(emu, positionMs));
     }
   }
 
