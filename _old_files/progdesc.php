@@ -50,6 +50,7 @@ using software OPL3 emulation (FM synthesis).
  <li>loopStart / loopEnd tag support (Final Fantasy VII)</li>
  <li>Use automatic arpeggio with chords to relieve channel pressure</li>
  <li>Support for multiple concurrent MIDI synthesizers (per-track device/port select FF 09 message), can be used to overcome 16 channel limit</li>
+ <li>Support for ScummVM, Doom, IMF and CMF files</li>
 </ul>
 
 <hr>
@@ -65,11 +66,9 @@ Note: The GW-BASIC version does not contain all of the same features that the C+
 
 ", 'usage: 1. Usage' => "
 
-<pre>ADLMIDI: MIDI player for Linux and Windows with OPL3 emulation
-(C) -- http://iki.fi/bisqwit/source/adlmidi.html
-Usage: adlmidi <midifilename> [ <options> ] [ <banknumber> [ <numcards> [ <numfourops>] ] ]
-       adlmidi <midifilename> -1   To enter instrument tester
- -p Enables adlib percussion instrument mode
+<pre>Usage: adlmidi &lt;midifilename> [ &lt;options> ] [ &lt;banknumber> [ &lt;numcards> [ &lt;numfourops>] ] ]
+       adlmidi &lt;midifilename> -1   To enter instrument tester
+ -p Enables adlib percussion instrument mode (use with CMF files)
  -t Enables tremolo amplification mode
  -v Enables vibrato amplification mode
  -s Enables scaling of modulator volumes
@@ -140,14 +139,18 @@ Usage: adlmidi <midifilename> [ <options> ] [ <banknumber> [ <numcards> [ <numfo
           62 = TMB (Duke Nukem 3D)
           63 = TMB (Shadow Warrior)
           64 = DMX (Raptor)
+          65 = TMB (Blood)
      Use banks 2-5 to play Descent \"q\" soundtracks.
      Look up the relevant bank number from descent.sng.
 
-     The fourth parameter can be used to specify the number
+     &lt;numfourops> can be used to specify the number
      of four-op channels to use. Each four-op channel eats
      the room of two regular channels. Use as many as required.
      The Doom & Hexen sets require one or two, while
-     Miles four-op set requires the maximum of numcards*6.</pre>
+     Miles four-op set requires the maximum of numcards*6.
+
+     When playing Creative Music Files (CMF), try the
+     -p and -v options if it sounds wrong otherwise.</pre>
 
 ", 'copying:1. Copying and contributing' => "
 
