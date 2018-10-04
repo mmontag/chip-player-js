@@ -296,18 +296,22 @@ void Nsf_Emu::update_eq( blip_eq_t const& eq )
 	#endif
 }
 
-void Nsf_Emu::set_voice( int i, Blip_Buffer* buf, Blip_Buffer*, Blip_Buffer* )
+void Nsf_Emu::set_voice( int i, Blip_Buffer* center, Blip_Buffer* left, Blip_Buffer* right)
 {
+	Blip_Buffer* buf = center;
+	if (i == 0) buf = left;
+	if (i == 1) buf = right;
+
 	#define HANDLE_CHIP( chip ) \
 		if ( chip && (i -= chip->osc_count) < 0 )\
 		{\
 			chip->set_output( i + chip->osc_count, buf );\
 			return;\
 		}\
-	
+
 	HANDLE_CHIP( core_.nes_apu() );
-	
-	#if !NSF_EMU_APU_ONLY
+
+#if !NSF_EMU_APU_ONLY
 	{
 		// TODO: order of chips here must match that in init_sound()
 		HANDLE_CHIP( core_.vrc6_apu()  );
@@ -317,7 +321,7 @@ void Nsf_Emu::set_voice( int i, Blip_Buffer* buf, Blip_Buffer*, Blip_Buffer* )
 		HANDLE_CHIP( core_.namco_apu() );
 		HANDLE_CHIP( core_.vrc7_apu()  );
 	}
-	#endif
+#endif
 }
 
 blargg_err_t Nsf_Emu::start_track_( int track )
