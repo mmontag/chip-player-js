@@ -2,15 +2,14 @@
 
 #include "Music_Emu.h"
 
-#include "gme_types.h"
-#if !GME_DISABLE_STEREO_DEPTH
+#if !GME_DISABLE_EFFECTS
 #include "Effects_Buffer.h"
 #endif
 #include "blargg_endian.h"
 #include <string.h>
 #include <ctype.h>
 
-/* Copyright (C) 2003-2006 Shay Green. This module is free software; you
+/* Copyright (C) 2003-2009 Shay Green. This module is free software; you
 can redistribute it and/or modify it under the terms of the GNU Lesser
 General Public License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version. This
@@ -23,47 +22,31 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 
 #include "blargg_source.h"
 
-BLARGG_EXPORT gme_type_t const* gme_type_list()
-{
-	static gme_type_t const gme_type_list_ [] = {
-#ifdef GME_TYPE_LIST
-	GME_TYPE_LIST,
-#else
-	#ifdef USE_GME_AY
-	            gme_ay_type,
-	#endif
-	#ifdef USE_GME_GBS
-	            gme_gbs_type,
-	#endif
-	#ifdef USE_GME_GYM
-	            gme_gym_type,
-	#endif
-	#ifdef USE_GME_HES
-	            gme_hes_type,
-	#endif
-	#ifdef USE_GME_KSS
-	            gme_kss_type,
-	#endif
-	#ifdef USE_GME_NSF
-	            gme_nsf_type,
-	#endif
-	#ifdef USE_GME_NSFE
-	            gme_nsfe_type,
-	#endif
-	#ifdef USE_GME_SAP
-	            gme_sap_type,
-	#endif
-	#ifdef USE_GME_SPC
-	            gme_spc_type,
-	#endif
-	#ifdef USE_GME_VGM
-	            gme_vgm_type,
-	            gme_vgz_type,
-	#endif
-#endif
-        0
-    };
+#ifndef GME_TYPE_LIST
 
+// Default list of all supported game music types (copy this to blargg_config.h
+// if you want to modify it)
+#define GME_TYPE_LIST \
+	gme_ay_type,\
+	gme_gbs_type,\
+	gme_gym_type,\
+	gme_hes_type,\
+	gme_kss_type,\
+	gme_nsf_type,\
+	gme_nsfe_type,\
+	gme_sap_type,\
+  gme_sfm_type,\
+	gme_sgc_type,\
+	gme_spc_type,\
+	gme_vgm_type,\
+	gme_vgz_type
+
+#endif
+
+static gme_type_t const gme_type_list_ [] = { GME_TYPE_LIST, 0 };
+
+gme_type_t const* gme_type_list()
+{
 	return gme_type_list_;
 }
 
@@ -72,7 +55,8 @@ BLARGG_EXPORT const char* gme_identify_header( void const* header )
 	switch ( get_be32( header ) )
 	{
 		case BLARGG_4CHAR('Z','X','A','Y'):  return "AY";
-		case BLARGG_4CHAR('G','B','S',0x01): return "GBS";
+		case BLARGG_4CHAR('G','B','S',0x01):
+		case BLARGG_4CHAR('G','B','S',0x02): return "GBS";
 		case BLARGG_4CHAR('G','Y','M','X'):  return "GYM";
 		case BLARGG_4CHAR('H','E','S','M'):  return "HES";
 		case BLARGG_4CHAR('K','S','C','C'):
@@ -80,6 +64,8 @@ BLARGG_EXPORT const char* gme_identify_header( void const* header )
 		case BLARGG_4CHAR('N','E','S','M'):  return "NSF";
 		case BLARGG_4CHAR('N','S','F','E'):  return "NSFE";
 		case BLARGG_4CHAR('S','A','P',0x0D): return "SAP";
+    case BLARGG_4CHAR('S','F','M','1'):  return "SFM";
+		case BLARGG_4CHAR('S','G','C',0x1A): return "SGC";
 		case BLARGG_4CHAR('S','N','E','S'):  return "SPC";
 		case BLARGG_4CHAR('V','g','m',' '):  return "VGM";
 	}
@@ -88,7 +74,7 @@ BLARGG_EXPORT const char* gme_identify_header( void const* header )
 	return "";
 }
 
-static void to_uppercase( const char* in, int len, char* out )
+static void to_uppercase( const char in [], int len, char out [] )
 {
 	for ( int i = 0; i < len; i++ )
 	{
@@ -98,7 +84,7 @@ static void to_uppercase( const char* in, int len, char* out )
 	*out = 0; // extension too long
 }
 
-BLARGG_EXPORT gme_type_t gme_identify_extension( const char* extension_ )
+BLARGG_EXPORT gme_type_t gme_identify_extension( const char extension_ [] )
 {
 	char const* end = strrchr( extension_, '.' );
 	if ( end )
@@ -107,21 +93,14 @@ BLARGG_EXPORT gme_type_t gme_identify_extension( const char* extension_ )
 	char extension [6];
 	to_uppercase( extension_, sizeof extension, extension );
 	
-	for ( gme_type_t const* types = gme_type_list(); *types; types++ )
+	gme_type_t const* types = gme_type_list_;
+	for ( ; *types; types++ )
 		if ( !strcmp( extension, (*types)->extension_ ) )
-			return *types;
-	return 0;
+			break;
+	return *types;
 }
 
-BLARGG_EXPORT const char *gme_type_extension( gme_type_t music_type )
-{
-	const gme_type_t_ *const music_typeinfo = static_cast<const gme_type_t_ *>( music_type );
-	if ( music_type )
-		return music_typeinfo->extension_;
-	return "";
-}
-
-BLARGG_EXPORT gme_err_t gme_identify_file( const char* path, gme_type_t* type_out )
+BLARGG_EXPORT gme_err_t gme_identify_file( const char path [], gme_type_t* type_out )
 {
 	*type_out = gme_identify_extension( path );
 	// TODO: don't examine header if file has extension?
@@ -133,19 +112,21 @@ BLARGG_EXPORT gme_err_t gme_identify_file( const char* path, gme_type_t* type_ou
 		RETURN_ERR( in.read( header, sizeof header ) );
 		*type_out = gme_identify_extension( gme_identify_header( header ) );
 	}
-	return 0;   
+	return blargg_ok;   
 }
 
 BLARGG_EXPORT gme_err_t gme_open_data( void const* data, long size, Music_Emu** out, int sample_rate )
 {
 	require( (data || !size) && out );
-	*out = 0;
-	
+	*out = NULL;
 	gme_type_t file_type = 0;
-	if ( size >= 4 )
-		file_type = gme_identify_extension( gme_identify_header( data ) );
-	if ( !file_type )
-		return gme_wrong_file_type;
+	if ( size >= 4 ) {
+    const char *extension = gme_identify_header(data);
+    file_type = gme_identify_extension(extension);
+  }
+	if ( !file_type ) {
+    return blargg_err_file_type;
+  }
 	
 	Music_Emu* emu = gme_new_emu( file_type, sample_rate );
 	CHECK_ALLOC( emu );
@@ -156,14 +137,14 @@ BLARGG_EXPORT gme_err_t gme_open_data( void const* data, long size, Music_Emu** 
 		delete emu;
 	else
 		*out = emu;
-	
+
 	return err;
 }
 
-BLARGG_EXPORT gme_err_t gme_open_file( const char* path, Music_Emu** out, int sample_rate )
+BLARGG_EXPORT gme_err_t gme_open_file( const char path [], Music_Emu** out, int sample_rate )
 {
 	require( path && out );
-	*out = 0;
+	*out = NULL;
 	
 	GME_FILE_READER in;
 	RETURN_ERR( in.open( path ) );
@@ -179,7 +160,7 @@ BLARGG_EXPORT gme_err_t gme_open_file( const char* path, Music_Emu** out, int sa
 		file_type = gme_identify_extension( gme_identify_header( header ) );
 	}
 	if ( !file_type )
-		return gme_wrong_file_type;
+		return blargg_err_file_type;
 	
 	Music_Emu* emu = gme_new_emu( file_type, sample_rate );
 	CHECK_ALLOC( emu );
@@ -197,81 +178,62 @@ BLARGG_EXPORT gme_err_t gme_open_file( const char* path, Music_Emu** out, int sa
 	return err;
 }
 
-// Used to implement gme_new_emu and gme_new_emu_multi_channel
-Music_Emu* gme_internal_new_emu_( gme_type_t type, int rate, bool multi_channel )
+BLARGG_EXPORT Music_Emu* gme_new_emu( gme_type_t type, int rate )
 {
 	if ( type )
 	{
 		if ( rate == gme_info_only )
 			return type->new_info();
 		
-		Music_Emu* me = type->new_emu();
-		if ( me )
+		Music_Emu* gme = type->new_emu();
+		if ( gme )
 		{
-		#if !GME_DISABLE_STEREO_DEPTH
-			me->set_multi_channel( multi_channel );
-
+		#if !GME_DISABLE_EFFECTS
 			if ( type->flags_ & 1 )
 			{
-				if ( me->multi_channel() )
-				{
-					me->effects_buffer = BLARGG_NEW Effects_Buffer(8);
-				}
-				else
-				{
-					me->effects_buffer = BLARGG_NEW Effects_Buffer(1);
-				}
-				if ( me->effects_buffer )
-					me->set_buffer( me->effects_buffer );
+				gme->effects_buffer_ = BLARGG_NEW Simple_Effects_Buffer;
+				if ( gme->effects_buffer_ )
+					gme->set_buffer( gme->effects_buffer_ );
 			}
 			
-			if ( !(type->flags_ & 1) || me->effects_buffer )
+			if ( !(type->flags_ & 1) || gme->effects_buffer_ )
 		#endif
 			{
-				if ( !me->set_sample_rate( rate ) )
+				if ( !gme->set_sample_rate( rate ) )
 				{
-					check( me->type() == type );
-					return me;
+					check( gme->type() == type );
+					return gme;
 				}
 			}
-			delete me;
+			delete gme;
 		}
 	}
-	return 0;
+	return NULL;
 }
 
-BLARGG_EXPORT Music_Emu* gme_new_emu( gme_type_t type, int rate )
-{
-    return gme_internal_new_emu_( type, rate, false /* no multichannel */);
-}
+BLARGG_EXPORT gme_err_t gme_load_file( Music_Emu* gme, const char path [] ) { return gme->load_file( path ); }
 
-BLARGG_EXPORT Music_Emu* gme_new_emu_multi_channel( gme_type_t type, int rate )
-{
-    // multi-channel emulator (if possible, not all emu types support multi-channel)
-    return gme_internal_new_emu_( type, rate, true /* multichannel */);
-}
-
-BLARGG_EXPORT gme_err_t gme_load_file( Music_Emu* me, const char* path ) { return me->load_file( path ); }
-
-BLARGG_EXPORT gme_err_t gme_load_data( Music_Emu* me, void const* data, long size )
+BLARGG_EXPORT gme_err_t gme_load_data( Music_Emu* gme, void const* data, long size )
 {
 	Mem_File_Reader in( data, size );
-	return me->load( in );
+	return gme->load( in );
 }
 
-BLARGG_EXPORT gme_err_t gme_load_custom( Music_Emu* me, gme_reader_t func, long size, void* data )
-{
+BLARGG_EXPORT gme_err_t gme_load_custom( Music_Emu* gme, gme_reader_t func, long size, void* data )
+{ /* wyatt */
 	Callback_Reader in( func, size, data );
-	return me->load( in );
+	return gme->load( in );
 }
 
-BLARGG_EXPORT void gme_delete( Music_Emu* me ) { delete me; }
+BLARGG_EXPORT void gme_delete( Music_Emu* gme ) { delete gme; }
 
-BLARGG_EXPORT gme_type_t gme_type( Music_Emu const* me ) { return me->type(); }
+BLARGG_EXPORT gme_type_t gme_type( Music_Emu const* gme ) { return gme->type(); }
 
-BLARGG_EXPORT const char* gme_warning( Music_Emu* me ) { return me->warning(); }
+BLARGG_EXPORT const char* gme_type_system( gme_type_t_ const* type ) { return type->system; }
 
-BLARGG_EXPORT int gme_track_count( Music_Emu const* me ) { return me->track_count(); }
+BLARGG_EXPORT const char* gme_warning( Music_Emu* gme ) { return gme->warning(); }
+
+BLARGG_EXPORT int gme_track_count( Music_Emu const* gme ) { return gme->track_count(); }
 
 struct gme_info_t_ : gme_info_t
 {
@@ -343,7 +305,38 @@ BLARGG_EXPORT gme_err_t gme_track_info( Music_Emu const* me, gme_info_t** out, i
 	
 	*out = info;
 	
-	return 0;
+	return blargg_ok;
+}
+
+BLARGG_EXPORT gme_err_t gme_set_track_info( Music_Emu * me, gme_info_t* in, int track )
+{
+	track_info_t* info = BLARGG_NEW track_info_t;
+	CHECK_ALLOC( info );
+	
+#define COPY(name) info->name = in->name;
+	
+	COPY( length );
+	COPY( intro_length );
+	COPY( loop_length );
+	
+#undef COPY
+#define COPY(name) if ( in->name ) strncpy( info->name, in->name, sizeof(info->name) - 1 ), info->name[sizeof(info->name)-1] = '\0'; else info->name[0] = '\0';
+    
+	COPY( system );
+	COPY( game );
+	COPY( song );
+	COPY( author );
+	COPY( copyright );
+	COPY( comment );
+	COPY( dumper );
+	
+#undef COPY
+	
+	blargg_err_t err = me->set_track_info( info, track );
+    
+    delete info;
+    
+    return err;
 }
 
 BLARGG_EXPORT void gme_free_info( gme_info_t* info )
@@ -351,62 +344,133 @@ BLARGG_EXPORT void gme_free_info( gme_info_t* info )
 	delete STATIC_CAST(gme_info_t_*,info);
 }
 
-BLARGG_EXPORT void gme_set_stereo_depth( Music_Emu* me, double depth )
+BLARGG_EXPORT void*     gme_user_data      ( Music_Emu const* gme )                   { return gme->user_data(); }
+BLARGG_EXPORT void      gme_set_user_data  ( Music_Emu* gme, void* new_user_data )    { gme->set_user_data( new_user_data ); }
+BLARGG_EXPORT void      gme_set_user_cleanup(Music_Emu* gme, gme_user_cleanup_t func ){ gme->set_user_cleanup( func ); }
+
+BLARGG_EXPORT gme_err_t gme_start_track    ( Music_Emu* gme, int index )              { return gme->start_track( index ); }
+BLARGG_EXPORT gme_err_t gme_play           ( Music_Emu* gme, int n, short p [] )      { return gme->play( n, p ); }
+BLARGG_EXPORT void      gme_set_fade       ( Music_Emu* gme, int start_msec, int length_msec ) { gme->set_fade( start_msec, length_msec ); }
+BLARGG_EXPORT gme_bool  gme_track_ended    ( Music_Emu const* gme )                   { return gme->track_ended(); }
+BLARGG_EXPORT int       gme_tell           ( Music_Emu const* gme )                   { return gme->tell(); }
+BLARGG_EXPORT gme_err_t gme_seek           ( Music_Emu* gme, int msec )               { return gme->seek( msec ); }
+BLARGG_EXPORT gme_err_t gme_skip           ( Music_Emu* gme, int samples )            { return gme->skip( samples ); }
+BLARGG_EXPORT int       gme_voice_count    ( Music_Emu const* gme )                   { return gme->voice_count(); }
+BLARGG_EXPORT void      gme_ignore_silence ( Music_Emu* gme, gme_bool disable )       { gme->ignore_silence( disable != 0 ); }
+BLARGG_EXPORT void      gme_set_tempo      ( Music_Emu* gme, double t )               { gme->set_tempo( t ); }
+BLARGG_EXPORT void      gme_mute_voice     ( Music_Emu* gme, int index, gme_bool mute ){ gme->mute_voice( index, mute != 0 ); }
+BLARGG_EXPORT void      gme_mute_voices    ( Music_Emu* gme, int mask )               { gme->mute_voices( mask ); }
+BLARGG_EXPORT void      gme_set_equalizer  ( Music_Emu* gme, gme_equalizer_t const* eq ) { gme->set_equalizer( *eq ); }
+BLARGG_EXPORT void      gme_equalizer      ( Music_Emu const* gme, gme_equalizer_t* o )  { *o = gme->equalizer(); }
+BLARGG_EXPORT const char* gme_voice_name   ( Music_Emu const* gme, int i )            { return gme->voice_name( i ); }
+BLARGG_EXPORT gme_err_t gme_save           ( Music_Emu const* gme, gme_writer_t writer, void* your_data ) { return gme->save( writer, your_data ); }
+/* this function is no longer needed, apparently, but a stub is kept to avoid ABI breakage.  --Wyatt */
+BLARGG_EXPORT void      gme_enable_accuracy( Music_Emu* gme, int enabled ){return;}
+
+
+BLARGG_EXPORT void gme_effects( Music_Emu const* gme, gme_effects_t* out )
 {
-#if !GME_DISABLE_STEREO_DEPTH
-	if ( me->effects_buffer )
-		STATIC_CAST(Effects_Buffer*,me->effects_buffer)->set_depth( depth );
-#endif
+	static gme_effects_t const zero = { 0, 0, 0,0,0,0,0,0, 0, 0, 0,0,0,0,0,0 };
+	*out = zero;
+
+	#if !GME_DISABLE_EFFECTS
+	{
+		Simple_Effects_Buffer* b = STATIC_CAST(Simple_Effects_Buffer*,gme->effects_buffer_);
+		if ( b )
+		{
+			out->enabled  = b->config().enabled;
+			out->echo     = b->config().echo;
+			out->stereo   = b->config().stereo;
+			out->surround = b->config().surround;
+		}
+	}
+	#endif
 }
 
-BLARGG_EXPORT void*     gme_user_data      ( Music_Emu const* me )                { return me->user_data(); }
-BLARGG_EXPORT void      gme_set_user_data  ( Music_Emu* me, void* new_user_data ) { me->set_user_data( new_user_data ); }
-BLARGG_EXPORT void      gme_set_user_cleanup(Music_Emu* me, gme_user_cleanup_t func ) { me->set_user_cleanup( func ); }
-
-BLARGG_EXPORT gme_err_t gme_start_track    ( Music_Emu* me, int index )           { return me->start_track( index ); }
-BLARGG_EXPORT gme_err_t gme_play           ( Music_Emu* me, int n, short* p )     { return me->play( n, p ); }
-BLARGG_EXPORT void      gme_set_fade       ( Music_Emu* me, int start_msec, int length_msec )	{ me->set_fade( start_msec, length_msec ); }
-BLARGG_EXPORT int       gme_track_ended    ( Music_Emu const* me )                { return me->track_ended(); }
-BLARGG_EXPORT int       gme_tell           ( Music_Emu const* me )                { return me->tell(); }
-BLARGG_EXPORT int       gme_tell_scaled    ( Music_Emu const* me )                { return me->tell_scaled(); }
-BLARGG_EXPORT int       gme_tell_samples   ( Music_Emu const* me )                { return me->tell_samples(); }
-BLARGG_EXPORT gme_err_t gme_seek           ( Music_Emu* me, int msec )            { return me->seek( msec ); }
-BLARGG_EXPORT gme_err_t gme_seek_scaled    ( Music_Emu* me, int msec )            { return me->seek_scaled( msec ); }
-BLARGG_EXPORT gme_err_t gme_seek_samples   ( Music_Emu* me, int n )               { return me->seek_samples( n ); }
-BLARGG_EXPORT int       gme_voice_count    ( Music_Emu const* me )                { return me->voice_count(); }
-BLARGG_EXPORT void      gme_ignore_silence ( Music_Emu* me, int disable )         { me->ignore_silence( disable != 0 ); }
-BLARGG_EXPORT void      gme_set_tempo      ( Music_Emu* me, double t )            { me->set_tempo( t ); }
-BLARGG_EXPORT void      gme_mute_voice     ( Music_Emu* me, int index, int mute ) { me->mute_voice( index, mute != 0 ); }
-BLARGG_EXPORT void      gme_mute_voices    ( Music_Emu* me, int mask )            { me->mute_voices( mask ); }
-BLARGG_EXPORT void      gme_enable_accuracy( Music_Emu* me, int enabled )         { me->enable_accuracy( enabled ); }
-BLARGG_EXPORT void      gme_clear_playlist ( Music_Emu* me )                      { me->clear_playlist(); }
-BLARGG_EXPORT int       gme_type_multitrack( gme_type_t t )                       { return t->track_count != 1; }
-BLARGG_EXPORT int       gme_multi_channel  ( Music_Emu const* me )                { return me->multi_channel(); }
-
-BLARGG_EXPORT void      gme_set_equalizer  ( Music_Emu* me, gme_equalizer_t const* eq )
+BLARGG_EXPORT void gme_set_effects( Music_Emu* gme, gme_effects_t const* in )
 {
-	Music_Emu::equalizer_t e = me->equalizer();
-	e.treble = eq->treble;
-	e.bass   = eq->bass;
-	me->set_equalizer( e );
+	#if !GME_DISABLE_EFFECTS
+	{
+		Simple_Effects_Buffer* b = STATIC_CAST(Simple_Effects_Buffer*,gme->effects_buffer_);
+		if ( b )
+		{
+			b->config().enabled = false;
+			if ( in )
+			{
+				b->config().enabled  = in->enabled;
+				b->config().echo     = in->echo;
+				b->config().stereo   = in->stereo;
+				b->config().surround = in->surround;
+			}
+			b->apply_config();
+		}
+	}
+	#endif
 }
 
-BLARGG_EXPORT void gme_equalizer( Music_Emu const* me, gme_equalizer_t* out )
+BLARGG_EXPORT void gme_set_stereo_depth( Music_Emu* gme, double depth )
 {
-	gme_equalizer_t e = gme_equalizer_t(); // Default-init all fields to 0.0f
-	e.treble = me->equalizer().treble;
-	e.bass   = me->equalizer().bass;
-	*out = e;
+	#if !GME_DISABLE_EFFECTS
+	{
+		if ( gme->effects_buffer_ )
+		{
+			gme_effects_t cfg;
+			gme_effects( gme, &cfg );
+			cfg.enabled  = (depth > 0.0);
+			cfg.echo     = depth;
+			cfg.stereo   = depth;
+			cfg.surround = true;
+			gme_set_effects( gme, &cfg );
+		}
+	}
+	#endif
 }
 
-BLARGG_EXPORT const char* gme_voice_name( Music_Emu const* me, int i )
+#define ENTRY( name ) { blargg_err_##name, gme_err_##name }
+static blargg_err_to_code_t const gme_codes [] =
 {
-	assert( (unsigned) i < (unsigned) me->voice_count() );
-	return me->voice_names() [i];
+	ENTRY( generic ),
+	ENTRY( memory ),
+	ENTRY( caller ),
+	ENTRY( internal ),
+	ENTRY( limitation ),
+	
+	ENTRY( file_missing ),
+	ENTRY( file_read ),
+	ENTRY( file_io ),
+	ENTRY( file_eof ),
+	
+	ENTRY( file_type ),
+	ENTRY( file_feature ),
+	ENTRY( file_corrupt ),
+	
+	{ 0, -1 }
+};
+#undef ENTRY
+
+static int err_code( gme_err_t err )
+{
+	return blargg_err_to_code( err, gme_codes );
 }
 
-BLARGG_EXPORT const char* gme_type_system( gme_type_t type )
+int gme_err_code( gme_err_t err )
 {
-	assert( type );
-	return type->system;
+	int code = err_code( err );
+	return (code >= 0 ? code : gme_err_generic);
+}
+
+gme_err_t gme_code_to_err( int code )
+{
+	return blargg_code_to_err( code, gme_codes );
+}
+
+const char* gme_err_details( gme_err_t err )
+{
+	// If we don't have error code assigned, return entire string
+	return (err_code( err ) >= 0 ? blargg_err_details( err ) : blargg_err_str( err ));
+}
+
+const char* gme_err_str( gme_err_t err )
+{
+	return blargg_err_str( err );
 }
