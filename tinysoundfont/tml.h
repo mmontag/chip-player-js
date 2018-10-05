@@ -120,6 +120,8 @@ TMLDEF tml_message* tml_load_memory(const void* buffer, int size);
 //   time_length:     Will be set to the total time in milliseconds
 TMLDEF int tml_get_info(tml_message* first_message, int* used_channels, int* used_programs, int* total_notes, unsigned int* time_first_note, unsigned int* time_length);
 
+TMLDEF void tml_get_channels_in_use_and_initial_programs(tml_message* Msg, char* channels, int* programs);
+
 // Free all the memory of the linked message list (can also call free() manually)
 TMLDEF void tml_free(tml_message* f);
 
@@ -489,6 +491,21 @@ TMLDEF int tml_get_info(tml_message* Msg, int* out_used_channels, int* out_used_
 	if (out_time_first_note) *out_time_first_note = time_first_note;
 	if (out_time_length    ) *out_time_length     = time_length;
 	return total_notes;
+}
+
+TMLDEF void tml_get_channels_in_use_and_initial_programs(tml_message* Msg, char* channels, int* programs) {
+	for (int i = 0; i < 16; i++) {
+		channels[i] = 0;
+		programs[i] = 0;
+	}
+	for (;Msg; Msg = Msg->next) {
+		if (Msg->type == TML_NOTE_ON) {
+			channels[Msg->channel] = 1;
+		}
+		if (Msg->type == TML_PROGRAM_CHANGE && !programs[(int)Msg->channel]) {
+			programs[Msg->channel] = (int)Msg->program;
+		}
+	}
 }
 
 TMLDEF void tml_free(tml_message* f)
