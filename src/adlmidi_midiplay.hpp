@@ -607,7 +607,7 @@ public:
     void setErrorString(const std::string &err);
 
     //! OPL3 Chip manager
-    AdlMIDI_UPtr<OPL3> m_synth;
+    AdlMIDI_UPtr<Synth> m_synth;
 
     //! Generator output buffer
     int32_t m_outBuf[1024];

@@ -142,6 +142,8 @@ typedef struct BW_MidiRtInterface BW_MidiRtInterface;
 class OPL3;
 class OPLChipBase;
 
+typedef class OPL3 Synth;
+
 #include "adldata.hh"
 
 #define ADLMIDI_BUILD

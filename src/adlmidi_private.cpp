@@ -38,21 +38,21 @@ void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate)
 
 int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
 {
-    OPL3 &synth = *play->m_synth;
+    Synth &synth = *play->m_synth;
     size_t n_fourop[2] = {0, 0}, n_total[2] = {0, 0};
 
     //Automatically calculate how much 4-operator channels is necessary
 #ifndef DISABLE_EMBEDDED_BANKS
-    if(synth.m_embeddedBank == OPL3::CustomBankTag)
+    if(synth.m_embeddedBank == Synth::CustomBankTag)
 #endif
     {
         //For custom bank
-        OPL3::BankMap::iterator it = synth.m_insBanks.begin();
-        OPL3::BankMap::iterator end = synth.m_insBanks.end();
+        Synth::BankMap::iterator it = synth.m_insBanks.begin();
+        Synth::BankMap::iterator end = synth.m_insBanks.end();
         for(; it != end; ++it)
         {
             size_t bank = it->first;
-            size_t div = (bank & OPL3::PercussionTag) ? 1 : 0;
+            size_t div = (bank & Synth::PercussionTag) ? 1 : 0;
             for(size_t i = 0; i < 128; ++i)
             {
                 adlinsdata2 &ins = it->second.ins[i];

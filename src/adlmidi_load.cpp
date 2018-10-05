@@ -108,7 +108,7 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
         }
     }
 
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     synth.m_insBankSetup.adLibPercussions = false;
     synth.m_insBankSetup.scaleModulators = false;
     synth.m_insBankSetup.deepTremolo = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
@@ -129,8 +129,8 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
         {
             size_t bankno = (slots_src_ins[ss][i].bank_midi_msb * 256) +
                             (slots_src_ins[ss][i].bank_midi_lsb) +
-                            (ss ? size_t(OPL3::PercussionTag) : 0);
-            OPL3::Bank &bank = synth.m_insBanks[bankno];
+                            (ss ? size_t(Synth::PercussionTag) : 0);
+            Synth::Bank &bank = synth.m_insBanks[bankno];
             for(int j = 0; j < 128; j++)
             {
                 adlinsdata2 &ins = bank.ins[j];
@@ -141,7 +141,7 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
         }
     }
 
-    synth.m_embeddedBank = OPL3::CustomBankTag; // Use dynamic banks!
+    synth.m_embeddedBank = Synth::CustomBankTag; // Use dynamic banks!
     //Percussion offset is count of instruments multipled to count of melodic banks
     applySetup();
 
@@ -155,8 +155,8 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
 bool MIDIplay::LoadMIDI_pre()
 {
 #ifdef DISABLE_EMBEDDED_BANKS
-    OPL3 &synth = *m_synth;
-    if((synth.m_embeddedBank != OPL3::CustomBankTag) || synth.m_insBanks.empty())
+    Synth &synth = *m_synth;
+    if((synth.m_embeddedBank != Synth::CustomBankTag) || synth.m_insBanks.empty())
     {
         errorStringOut = "Bank is not set! Please load any instruments bank by using of adl_openBankFile() or adl_openBankData() functions!";
         return false;
@@ -171,7 +171,7 @@ bool MIDIplay::LoadMIDI_pre()
 
 bool MIDIplay::LoadMIDI_post()
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     MidiSequencer &seq = *m_sequencer;
     MidiSequencer::FileFormat format = seq.getFormat();
     if(format == MidiSequencer::Format_CMF)
@@ -187,7 +187,7 @@ bool MIDIplay::LoadMIDI_post()
             bank = ((bank & 127) + ((bank >> 7) << 8));
             if(bank > 127 + (127 << 8))
                 break;
-            bank += (i % 256 < 128) ? 0 : size_t(OPL3::PercussionTag);
+            bank += (i % 256 < 128) ? 0 : size_t(Synth::PercussionTag);
 
             /*std::printf("Ins %3u: %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X  %02X %02X %02X %02X\n",
                         i, InsData[0],InsData[1],InsData[2],InsData[3], InsData[4],InsData[5],InsData[6],InsData[7],
@@ -217,11 +217,11 @@ bool MIDIplay::LoadMIDI_post()
             adlins.voice2_fine_tune = 0.0;
         }
 
-        synth.m_embeddedBank = OPL3::CustomBankTag; // Ignore AdlBank number, use dynamic banks instead
+        synth.m_embeddedBank = Synth::CustomBankTag; // Ignore AdlBank number, use dynamic banks instead
         //std::printf("CMF deltas %u ticks %u, basictempo = %u\n", deltas, ticks, basictempo);
         synth.m_rhythmMode = true;
-        synth.m_musicMode = OPL3::MODE_CMF;
-        synth.m_volumeScale = OPL3::VOLUME_NATIVE;
+        synth.m_musicMode = Synth::MODE_CMF;
+        synth.m_volumeScale = Synth::VOLUME_NATIVE;
 
         synth.m_numChips = 1;
         synth.m_numFourOps = 0;
@@ -229,8 +229,8 @@ bool MIDIplay::LoadMIDI_post()
     else if(format == MidiSequencer::Format_RSXX)
     {
         //opl.CartoonersVolumes = true;
-        synth.m_musicMode     = OPL3::MODE_RSXX;
-        synth.m_volumeScale   = OPL3::VOLUME_NATIVE;
+        synth.m_musicMode     = Synth::MODE_RSXX;
+        synth.m_volumeScale   = Synth::VOLUME_NATIVE;
 
         synth.m_numChips = 1;
         synth.m_numFourOps = 0;
@@ -239,7 +239,7 @@ bool MIDIplay::LoadMIDI_post()
     {
         //std::fprintf(stderr, "Done reading IMF file\n");
         synth.m_numFourOps  = 0; //Don't use 4-operator channels for IMF playing!
-        synth.m_musicMode = OPL3::MODE_IMF;
+        synth.m_musicMode = Synth::MODE_IMF;
 
         synth.m_numChips = 1;
         synth.m_numFourOps = 0;

@@ -158,7 +158,7 @@ MIDIplay::MIDIplay(unsigned long sampleRate):
     m_setup.carry = 0.0;
     m_setup.tick_skip_samples_delay = 0;
 
-    m_synth.reset(new OPL3);
+    m_synth.reset(new Synth);
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     m_sequencer.reset(new MidiSequencer);
@@ -175,16 +175,16 @@ MIDIplay::~MIDIplay()
 
 void MIDIplay::applySetup()
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
 
-    synth.m_musicMode = OPL3::MODE_MIDI;
+    synth.m_musicMode = Synth::MODE_MIDI;
 
     m_setup.tick_skip_samples_delay = 0;
 
     synth.m_runAtPcmRate = m_setup.runAtPcmRate;
 
 #ifndef DISABLE_EMBEDDED_BANKS
-    if(synth.m_embeddedBank != OPL3::CustomBankTag)
+    if(synth.m_embeddedBank != Synth::CustomBankTag)
         synth.m_insBankSetup = adlbanksetup[m_setup.bankId];
 #endif
 
@@ -207,7 +207,7 @@ void MIDIplay::applySetup()
         synth.setVolumeScaleModel(static_cast<ADLMIDI_VolumeModels>(m_setup.volumeScaleModel));
 
     if(m_setup.volumeScaleModel == ADLMIDI_VolumeModel_AUTO)//Use bank default volume model
-        synth.m_volumeScale = (OPL3::VolumesScale)synth.m_insBankSetup.volumeModel;
+        synth.m_volumeScale = (Synth::VolumesScale)synth.m_insBankSetup.volumeModel;
 
     synth.m_numChips    = m_setup.numChips;
     m_cmfPercussionMode = false;
@@ -227,7 +227,7 @@ void MIDIplay::applySetup()
 
 void MIDIplay::partialReset()
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     realTime_panic();
     m_setup.tick_skip_samples_delay = 0;
     synth.m_runAtPcmRate = m_setup.runAtPcmRate;
@@ -253,7 +253,7 @@ void MIDIplay::resetMIDI()
 
 void MIDIplay::TickIterators(double s)
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     for(uint16_t c = 0; c < synth.m_numChannels; ++c)
         m_chipChannels[c].addAge(static_cast<int64_t>(s * 1e6));
     updateVibrato(s);
@@ -265,12 +265,12 @@ void MIDIplay::TickIterators(double s)
 
 void MIDIplay::realTime_ResetState()
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     for(size_t ch = 0; ch < m_midiChannels.size(); ch++)
     {
         MIDIchannel &chan = m_midiChannels[ch];
         chan.resetAllControllers();
-        chan.volume = (synth.m_musicMode == OPL3::MODE_RSXX) ? 127 : 100;
+        chan.volume = (synth.m_musicMode == Synth::MODE_RSXX) ? 127 : 100;
         chan.vibpos = 0.0;
         chan.lastlrpn = 0;
         chan.lastmrpn = 0;
@@ -285,12 +285,12 @@ void MIDIplay::realTime_ResetState()
 
 bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
 
     if(note >= 128)
         note = 127;
 
-    if((synth.m_musicMode == OPL3::MODE_RSXX) && (velocity != 0))
+    if((synth.m_musicMode == Synth::MODE_RSXX) && (velocity != 0))
     {
         // Check if this is just a note after-touch
         MIDIchannel::activenoteiterator i = m_midiChannels[channel].activenotes_find(note);
@@ -345,16 +345,16 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     }
 
     if(isPercussion)
-        bank += OPL3::PercussionTag;
+        bank += Synth::PercussionTag;
 
-    const adlinsdata2 *ains = &OPL3::m_emptyInstrument;
+    const adlinsdata2 *ains = &Synth::m_emptyInstrument;
 
     //Set bank bank
-    const OPL3::Bank *bnk = NULL;
+    const Synth::Bank *bnk = NULL;
     bool caughtMissingBank = false;
-    if((bank & ~static_cast<uint16_t>(OPL3::PercussionTag)) > 0)
+    if((bank & ~static_cast<uint16_t>(Synth::PercussionTag)) > 0)
     {
-        OPL3::BankMap::iterator b = synth.m_insBanks.find(bank);
+        Synth::BankMap::iterator b = synth.m_insBanks.find(bank);
         if(b != synth.m_insBanks.end())
             bnk = &b->second;
         if(bnk)
@@ -369,7 +369,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         size_t fallback = bank & ~(size_t)0x7F;
         if(fallback != bank)
         {
-            OPL3::BankMap::iterator b = synth.m_insBanks.find(fallback);
+            Synth::BankMap::iterator b = synth.m_insBanks.find(fallback);
             caughtMissingBank = false;
             if(b != synth.m_insBanks.end())
                 bnk = &b->second;
@@ -390,14 +390,14 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         {
             hooks.onDebugMessage(hooks.onDebugMessage_userData,
                                  "[%i] Playing missing %s MIDI bank %i (patch %i)",
-                                 channel, text, (bank & ~static_cast<uint16_t>(OPL3::PercussionTag)), midiins);
+                                 channel, text, (bank & ~static_cast<uint16_t>(Synth::PercussionTag)), midiins);
         }
     }
 
     //Or fall back to first bank
     if((ains->flags & adlinsdata::Flag_NoSound) != 0)
     {
-        OPL3::BankMap::iterator b = synth.m_insBanks.find(bank & OPL3::PercussionTag);
+        Synth::BankMap::iterator b = synth.m_insBanks.find(bank & Synth::PercussionTag);
         if(b != synth.m_insBanks.end())
             bnk = &b->second;
         if(bnk)
@@ -519,7 +519,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                 if(ccount == 0)
                 {
                     // Only use four-op master channels
-                    if(synth.m_channelCategory[a] != OPL3::ChanCat_4op_Master)
+                    if(synth.m_channelCategory[a] != Synth::ChanCat_4op_Master)
                         continue;
                 }
                 else
@@ -654,7 +654,7 @@ void MIDIplay::realTime_ChannelAfterTouch(uint8_t channel, uint8_t atVal)
 
 void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     if(static_cast<size_t>(channel) > m_midiChannels.size())
         channel = channel % 16;
     switch(type)
@@ -791,7 +791,7 @@ void MIDIplay::realTime_Controller(uint8_t channel, uint8_t type, uint8_t value)
         break;
 
     case 103:
-        if(synth.m_musicMode == OPL3::MODE_CMF)
+        if(synth.m_musicMode == Synth::MODE_CMF)
             m_cmfPercussionMode = (value != 0);
         break; // CMF (ctrl 0x67) rhythm mode
 
@@ -1087,7 +1087,7 @@ size_t MIDIplay::realTime_currentDevice(size_t track)
 
 void MIDIplay::realTime_rawOPL(uint8_t reg, uint8_t value)
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     if((reg & 0xF0) == 0xC0)
         value |= 0x30;
     //std::printf("OPL poke %02X, %02X\n", reg, value);
@@ -1119,7 +1119,7 @@ void MIDIplay::noteUpdate(size_t midCh,
                           unsigned props_mask,
                           int32_t select_adlchn)
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     MIDIchannel::NoteInfo &info = *i;
     const int16_t noteTone    = info.noteTone;
     const double currentTone    = info.currentTone;
@@ -1231,7 +1231,7 @@ void MIDIplay::noteUpdate(size_t midCh,
             switch(synth.m_volumeScale)
             {
             default:
-            case OPL3::VOLUME_Generic:
+            case Synth::VOLUME_Generic:
             {
                 volume = vol * m_masterVolume * m_midiChannels[midCh].volume * m_midiChannels[midCh].expression;
 
@@ -1251,7 +1251,7 @@ void MIDIplay::noteUpdate(size_t midCh,
             }
             break;
 
-            case OPL3::VOLUME_NATIVE:
+            case Synth::VOLUME_NATIVE:
             {
                 volume = vol * m_midiChannels[midCh].volume * m_midiChannels[midCh].expression;
                 // volume = volume * m_masterVolume / (127 * 127 * 127) / 2;
@@ -1259,7 +1259,7 @@ void MIDIplay::noteUpdate(size_t midCh,
             }
             break;
 
-            case OPL3::VOLUME_DMX:
+            case Synth::VOLUME_DMX:
             {
                 volume = 2 * (m_midiChannels[midCh].volume * m_midiChannels[midCh].expression * m_masterVolume / 16129) + 1;
                 //volume = 2 * (Ch[MidCh].volume) + 1;
@@ -1267,7 +1267,7 @@ void MIDIplay::noteUpdate(size_t midCh,
             }
             break;
 
-            case OPL3::VOLUME_APOGEE:
+            case Synth::VOLUME_APOGEE:
             {
                 volume = (m_midiChannels[midCh].volume * m_midiChannels[midCh].expression * m_masterVolume / 16129);
                 volume = ((64 * (vol + 0x80)) * volume) >> 15;
@@ -1275,7 +1275,7 @@ void MIDIplay::noteUpdate(size_t midCh,
             }
             break;
 
-            case OPL3::VOLUME_9X:
+            case Synth::VOLUME_9X:
             {
                 //volume = 63 - W9X_volume_mapping_table[(((vol * Ch[MidCh].volume /** Ch[MidCh].expression*/) * m_masterVolume / 16129 /*2048383*/) >> 2)];
                 volume = 63 - W9X_volume_mapping_table[((vol * m_midiChannels[midCh].volume * m_midiChannels[midCh].expression * m_masterVolume / 2048383) >> 2)];
@@ -1360,7 +1360,7 @@ void MIDIplay::setErrorString(const std::string &err)
 
 int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::NoteInfo::Phys &ins) const
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     const AdlChannel &chan = m_chipChannels[c];
     int64_t koff_ms = chan.koff_time_until_neglible_us / 1000;
     int64_t s = -koff_ms;
@@ -1371,7 +1371,7 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
         s -= 40000;
         // If it's same instrument, better chance to get it when no free channels
         if(chan.recent_ins == ins)
-            s = (synth.m_musicMode == OPL3::MODE_CMF) ? 0 : -koff_ms;
+            s = (synth.m_musicMode == Synth::MODE_CMF) ? 0 : -koff_ms;
         return s;
     }
 
@@ -1443,7 +1443,7 @@ void MIDIplay::prepareChipChannelForNewNote(size_t c, const MIDIchannel::NoteInf
 {
     if(m_chipChannels[c].users_empty()) return; // Nothing to do
 
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
 
     //bool doing_arpeggio = false;
     for(AdlChannel::LocationData *jnext = m_chipChannels[c].users_first; jnext;)
@@ -1488,7 +1488,7 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
                               AdlChannel::LocationData *j,
                               MIDIplay::MIDIchannel::activenoteiterator i)
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     uint32_t maxChannels = ADL_MAX_CHIPS * 18;
 
     // Before killing the note, check if it can be
@@ -1564,7 +1564,7 @@ void MIDIplay::panic()
 
 void MIDIplay::killSustainingNotes(int32_t midCh, int32_t this_adlchn, uint32_t sustain_type)
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     uint32_t first = 0, last = synth.m_numChannels;
 
     if(this_adlchn >= 0)
@@ -1603,7 +1603,7 @@ void MIDIplay::killSustainingNotes(int32_t midCh, int32_t this_adlchn, uint32_t 
 
 void MIDIplay::markSostenutoNotes(int32_t midCh)
 {
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     uint32_t first = 0, last = synth.m_numChannels;
     for(uint32_t c = first; c < last; ++c)
     {
@@ -1713,7 +1713,7 @@ void MIDIplay::updateArpeggio(double) // amount = amount of time passed
     // If there is an adlib channel that has multiple notes
     // simulated on the same channel, arpeggio them.
 
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
 
 #if 0
     const unsigned desired_arpeggio_rate = 40; // Hz (upper limit)
@@ -1819,7 +1819,7 @@ void MIDIplay::describeChannels(char *str, char *attr, size_t size)
     if (!str || size <= 0)
         return;
 
-    OPL3 &synth = *m_synth;
+    Synth &synth = *m_synth;
     uint32_t numChannels = synth.m_numChannels;
 
     uint32_t index = 0;
@@ -1840,11 +1840,11 @@ void MIDIplay::describeChannels(char *str, char *attr, size_t size)
         {
             switch(synth.m_channelCategory[index])
             {
-            case OPL3::ChanCat_Regular:
+            case Synth::ChanCat_Regular:
                 str[index] = '+';
                 break;
-            case OPL3::ChanCat_4op_Master:
-            case OPL3::ChanCat_4op_Slave:
+            case Synth::ChanCat_4op_Master:
+            case Synth::ChanCat_4op_Slave:
                 str[index] = '#';
                 break;
             default:  // rhythm-mode percussion
@@ -1872,7 +1872,7 @@ struct AdlInstrumentTester::Impl
     uint32_t cur_gm;
     uint32_t ins_idx;
     std::vector<uint32_t> adl_ins_list;
-    OPL3 *opl;
+    Synth *opl;
     MIDIplay *play;
 };
 
@@ -1914,8 +1914,8 @@ ADLMIDI_EXPORT void AdlInstrumentTester::FindAdlList()
 ADLMIDI_EXPORT void AdlInstrumentTester::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
 {
 #ifndef DISABLE_EMBEDDED_BANKS
-    OPL3 *opl = P->opl;
-    if(opl->m_volumeScale == OPL3::VOLUME_NATIVE)
+    Synth *opl = P->opl;
+    if(opl->m_volumeScale == Synth::VOLUME_NATIVE)
         opl->touchNote(c, static_cast<uint8_t>(volume * 127 / (127 * 127 * 127) / 2));
     else
     {
@@ -1934,7 +1934,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::DoNote(int note)
 {
 #ifndef DISABLE_EMBEDDED_BANKS
     MIDIplay *play = P->play;
-    OPL3 *opl = P->opl;
+    Synth *opl = P->opl;
     if(P->adl_ins_list.empty()) FindAdlList();
     const unsigned meta = P->adl_ins_list[P->ins_idx];
     const adlinsdata2 ains = adlinsdata2::from_adldata(::adlins[meta]);
@@ -2000,7 +2000,7 @@ ADLMIDI_EXPORT void AdlInstrumentTester::NextGM(int offset)
 ADLMIDI_EXPORT void AdlInstrumentTester::NextAdl(int offset)
 {
 #ifndef DISABLE_EMBEDDED_BANKS
-    //OPL3 *opl = P->opl;
+    //Synth *opl = P->opl;
     if(P->adl_ins_list.empty()) FindAdlList();
     const unsigned NumBanks = (unsigned)adl_getBanksCount();
     P->ins_idx = (uint32_t)((int32_t)P->ins_idx + (int32_t)P->adl_ins_list.size() + offset) % (int32_t)P->adl_ins_list.size();
