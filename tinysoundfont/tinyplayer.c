@@ -223,6 +223,7 @@ extern void tp_open(void *data, int length) {
   g_MidiTimeMs = 0;
   g_DurationMs = 0;
   fluid_synth_system_reset(g_FluidSynth);
+  fluid_synth_program_reset(g_FluidSynth);
   g_MidiEvt = tml_load_memory(data, length);
   g_FirstEvt = g_MidiEvt;
 
