@@ -29,6 +29,9 @@ double g_MidiTimeMs;         // current playback time
 double g_Speed = 1.0;
 int g_SampleRate;
 unsigned int g_DurationMs = 0;
+char g_ChannelsInUse[16];
+char g_ChannelsMuted[16];
+int g_ChannelProgramNums[16];
 
 // TODO: TinySoundFont not implemented
 extern void tp_init(int sampleRate) {
@@ -61,6 +64,7 @@ extern int tp_write_audio(float *buffer, int bufferSize) {
          g_MidiEvt = g_MidiEvt->next) {
       switch (g_MidiEvt->type) {
         case TML_NOTE_ON:
+          if (g_ChannelsMuted[g_MidiEvt->channel]) break;
           if (g_FluidSynth) {
             fluid_synth_noteon(g_FluidSynth, g_MidiEvt->channel, g_MidiEvt->key, g_MidiEvt->velocity);
           } else {
@@ -68,6 +72,7 @@ extern int tp_write_audio(float *buffer, int bufferSize) {
           }
           break;
         case TML_NOTE_OFF:
+          if (g_ChannelsMuted[g_MidiEvt->channel]) break;
           if (g_FluidSynth) {
             fluid_synth_noteoff(g_FluidSynth, g_MidiEvt->channel, g_MidiEvt->key);
           } else {
@@ -197,7 +202,7 @@ extern void tp_restart() {
 }
 
 // TODO: TinySoundFont not currently used
-extern void tp_open_tsf(tsf *t, void *data, int length, int sampleRate) {
+extern void tp_open_tsf(tsf *t, const void *data, int length, int sampleRate) {
   g_MidiTimeMs = 0;
   g_DurationMs = 0;
   g_TSF = t;
@@ -219,13 +224,16 @@ extern void tp_open_tsf(tsf *t, void *data, int length, int sampleRate) {
   EM_ASM_({ console.log('First note appears at %d ms.', $0); }, g_MidiTimeMs);
 }
 
-extern void tp_open(void *data, int length) {
+extern void tp_open(const void *data, int length) {
   g_MidiTimeMs = 0;
   g_DurationMs = 0;
   fluid_synth_system_reset(g_FluidSynth);
   fluid_synth_program_reset(g_FluidSynth);
   g_MidiEvt = tml_load_memory(data, length);
   g_FirstEvt = g_MidiEvt;
+  memset(g_ChannelsInUse, 0, sizeof g_ChannelsInUse);
+  memset(g_ChannelsMuted, 0, sizeof g_ChannelsMuted);
+  tml_get_channels_in_use_and_initial_programs(g_MidiEvt, g_ChannelsInUse, g_ChannelProgramNums);
 
   // Skip to first note to eliminate silence
   unsigned int firstNoteTimeMs;
@@ -237,7 +245,7 @@ extern void tp_open(void *data, int length) {
 }
 
 // TODO: TinySoundFont not implemented
-extern int tp_load_soundfont(char *filename) {
+extern int tp_load_soundfont(const char *filename) {
   if (fluid_synth_sfcount(g_FluidSynth) > 0) {
     fluid_sfont_t *sfont = fluid_synth_get_sfont(g_FluidSynth, 0);
     fluid_synth_remove_sfont(g_FluidSynth, sfont);
@@ -259,6 +267,21 @@ extern void tp_set_reverb(double level) {
   // Override MIDI channel reverb levels
   for (int i = 0; i < 16; i++)
     fluid_synth_cc(g_FluidSynth, i, 91, 64);
+}
+
+extern char tp_get_channel_in_use(int chan) {
+  return g_ChannelsInUse[chan] != 0;
+}
+
+extern int tp_get_channel_program(int chan) {
+  return g_ChannelProgramNums[chan];
+}
+
+extern void tp_set_channel_mute(int chan, char isMuted) {
+  g_ChannelsMuted[chan] = isMuted;
+  if (isMuted) {
+    fluid_synth_all_notes_off(g_FluidSynth, chan);
+  }
 }
 
 #ifdef __cplusplus
