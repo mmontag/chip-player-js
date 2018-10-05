@@ -65,6 +65,10 @@ export default class Player {
     console.warn('Player.setFadeout() not implemented for this player.');
   }
 
+  getVoiceName(index) {
+    console.warn('Player.getVoiceName() not implemented for this player.');
+  }
+
   getNumVoices() {
     return 0;
   }

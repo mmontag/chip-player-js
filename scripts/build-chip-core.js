@@ -197,6 +197,9 @@ var exported_functions = [
   '_tp_get_duration_ms',
   '_tp_get_position_ms',
   '_tp_set_reverb',
+  '_tp_get_channel_in_use',
+  '_tp_get_channel_program',
+  '_tp_set_channel_mute',
 ];
 
 var runtime_methods = [

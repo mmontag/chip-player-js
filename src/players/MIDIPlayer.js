@@ -1,4 +1,5 @@
-import Player from "./Player";
+import Player from './Player';
+import GENERAL_MIDI_PATCH_MAP from '../gm-patch-map';
 
 let lib = null;
 const MOUNTPOINT = '/soundfonts';
@@ -41,6 +42,7 @@ const SOUNDFONTS = [
     ],
   },
 ];
+
 const DEFAULT_SOUNDFONT = SOUNDFONTS[0].items[0].value;
 const DEFAULT_REVERB = 0.33;
 const BUFFER_SIZE = 2048;
@@ -69,6 +71,7 @@ export default class MIDIPlayer extends Player {
     this.audioNode = null;
     this.paused = false;
     this.fileExtensions = fileExtensions;
+    this.activeChannels = [];
     this.params = {};
     this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
@@ -78,6 +81,11 @@ export default class MIDIPlayer extends Player {
 
     console.log('Playing MIDI data...');
     lib.ccall('tp_open', 'number', ['array', 'number'], [data, data.byteLength]);
+
+    this.activeChannels = [];
+    for(let i = 0; i < 16; i++) {
+      if (lib._tp_get_channel_in_use(i)) this.activeChannels.push(i);
+    }
 
     if (!this.audioNode) {
       this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
@@ -154,6 +162,20 @@ export default class MIDIPlayer extends Player {
 
   setTempo(tempo) {
     lib._tp_set_speed(tempo);
+  }
+
+  getNumVoices() {
+    return this.activeChannels.length;
+  }
+
+  getVoiceName(index) {
+    return GENERAL_MIDI_PATCH_MAP[lib._tp_get_channel_program(this.activeChannels[index])];
+  }
+
+  setVoices(voices) {
+    voices.forEach((isEnabled, i) => {
+      lib._tp_set_channel_mute(this.activeChannels[i], !isEnabled);
+    });
   }
 
   getParameter(id) {
