@@ -54,7 +54,7 @@ class AdlMIDI_UPtr
 {
     T *m_p;
 public:
-    explicit AdlMIDI_UPtr(T *p)
+    explicit AdlMIDI_UPtr(T *p = NULL)
         : m_p(p) {}
     ~AdlMIDI_UPtr()
     {

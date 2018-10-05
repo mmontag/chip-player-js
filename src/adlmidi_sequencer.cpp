@@ -28,6 +28,7 @@
 // Inlucde MIDI sequencer class implementation
 #include "midi_sequencer_impl.hpp"
 
+#include "adlmidi_midiplay.hpp"
 #include "adlmidi_private.hpp"
 
 /****************************************************
@@ -106,37 +107,42 @@ static size_t rtCurrentDevice(void *userdata, size_t track)
 
 void MIDIplay::initSequencerInterface()
 {
-    std::memset(&m_sequencerInterface, 0, sizeof(BW_MidiRtInterface));
+    BW_MidiRtInterface *seq = new BW_MidiRtInterface;
+    m_sequencerInterface.reset(seq);
 
-    m_sequencerInterface.onDebugMessage             = hooks.onDebugMessage;
-    m_sequencerInterface.onDebugMessage_userData    = hooks.onDebugMessage_userData;
+    std::memset(seq, 0, sizeof(BW_MidiRtInterface));
+
+    seq->onDebugMessage             = hooks.onDebugMessage;
+    seq->onDebugMessage_userData    = hooks.onDebugMessage_userData;
 
     /* MIDI Real-Time calls */
-    m_sequencerInterface.rtUserData = this;
-    m_sequencerInterface.rt_noteOn  = rtNoteOn;
-    m_sequencerInterface.rt_noteOff = rtNoteOff;
-    m_sequencerInterface.rt_noteAfterTouch = rtNoteAfterTouch;
-    m_sequencerInterface.rt_channelAfterTouch = rtChannelAfterTouch;
-    m_sequencerInterface.rt_controllerChange = rtControllerChange;
-    m_sequencerInterface.rt_patchChange = rtPatchChange;
-    m_sequencerInterface.rt_pitchBend = rtPitchBend;
-    m_sequencerInterface.rt_systemExclusive = rtSysEx;
+    seq->rtUserData = this;
+    seq->rt_noteOn  = rtNoteOn;
+    seq->rt_noteOff = rtNoteOff;
+    seq->rt_noteAfterTouch = rtNoteAfterTouch;
+    seq->rt_channelAfterTouch = rtChannelAfterTouch;
+    seq->rt_controllerChange = rtControllerChange;
+    seq->rt_patchChange = rtPatchChange;
+    seq->rt_pitchBend = rtPitchBend;
+    seq->rt_systemExclusive = rtSysEx;
 
     /* NonStandard calls */
-    m_sequencerInterface.rt_rawOPL = rtRawOPL;
-    m_sequencerInterface.rt_deviceSwitch = rtDeviceSwitch;
-    m_sequencerInterface.rt_currentDevice = rtCurrentDevice;
+    seq->rt_rawOPL = rtRawOPL;
+    seq->rt_deviceSwitch = rtDeviceSwitch;
+    seq->rt_currentDevice = rtCurrentDevice;
     /* NonStandard calls End */
 
-    m_sequencer.setInterface(&m_sequencerInterface);
+    m_sequencer->setInterface(seq);
 }
 
 double MIDIplay::Tick(double s, double granularity)
 {
-    double ret = m_sequencer.Tick(s, granularity);
+    MidiSequencer &seqr = *m_sequencer;
+    double ret = seqr.Tick(s, granularity);
 
-    s *= m_sequencer.getTempoMultiplier();
-    for(uint16_t c = 0; c < m_synth.m_numChannels; ++c)
+    OPL3 &synth = *m_synth;
+    s *= seqr.getTempoMultiplier();
+    for(uint16_t c = 0; c < synth.m_numChannels; ++c)
         m_chipChannels[c].addAge(static_cast<int64_t>(s * 1e6));
 
     updateVibrato(s);
