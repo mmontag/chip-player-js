@@ -22,8 +22,11 @@
  */
 
 #include "adlmidi_midiplay.hpp"
+#include "adlmidi_opl3.hpp"
 #include "adlmidi_private.hpp"
 #include "adlmidi_cvt.hpp"
+#include "file_reader.hpp"
+#include "midi_sequencer.hpp"
 #include "wopl/wopl_file.h"
 
 bool MIDIplay::LoadBank(const std::string &filename)

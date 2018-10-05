@@ -22,6 +22,7 @@
  */
 
 #include "adlmidi_midiplay.hpp"
+#include "adlmidi_opl3.hpp"
 #include "adlmidi_private.hpp"
 
 std::string ADLMIDI_ErrorString;

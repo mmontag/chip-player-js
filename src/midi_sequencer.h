@@ -36,7 +36,7 @@ extern "C" {
 /**
   \brief Real-Time MIDI interface between Sequencer and the Synthesizer
  */
-typedef struct
+typedef struct BW_MidiRtInterface
 {
     /*! Raw MIDI event hook */
     typedef void (*RawEventHook)(void *userdata, uint8_t type, uint8_t subtype, uint8_t channel, const uint8_t *data, size_t len);

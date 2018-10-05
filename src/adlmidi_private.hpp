@@ -49,7 +49,6 @@ typedef __int64 ssize_t;
 #       else
 typedef __int32 ssize_t;
 #       endif
-#       define NOMINMAX 1 //Don't override std::min and std::max
 #   else
 #       ifdef _WIN64
 typedef int64_t ssize_t;
@@ -130,18 +129,18 @@ typedef int32_t ssize_t;
 #define INT32_MAX   0x7fffffff
 #endif
 
-#include "file_reader.hpp"
+class FileAndMemReader;
 
 #ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
 // Rename class to avoid ABI collisions
 #define BW_MidiSequencer AdlMidiSequencer
-#include "midi_sequencer.hpp"
+class BW_MidiSequencer;
 typedef BW_MidiSequencer MidiSequencer;
+typedef struct BW_MidiRtInterface BW_MidiRtInterface;
 #endif//ADLMIDI_DISABLE_MIDI_SEQUENCER
 
-#ifndef ADLMIDI_HW_OPL
-#include "chips/opl_chip_base.h"
-#endif
+class OPL3;
+class OPLChipBase;
 
 #include "adldata.hh"
 
@@ -153,7 +152,8 @@ typedef BW_MidiSequencer MidiSequencer;
 #endif
 
 #include "adlmidi_ptr.hpp"
-#include "adlmidi_opl3.hpp"
+
+class MIDIplay;
 
 #define ADL_UNUSED(x) (void)x
 
@@ -214,25 +214,6 @@ inline int32_t adl_cvtU32(int32_t x)
     return (uint32_t)adl_cvtS32(x) - (uint32_t)INT32_MIN;
 }
 
-
-// I think, this is useless inside of Library
-/*
-struct FourChars
-{
-    char ret[4];
-
-    FourChars(const char *s)
-    {
-        for(unsigned c = 0; c < 4; ++c)
-            ret[c] = s[c];
-    }
-    FourChars(unsigned w) // Little-endian
-    {
-        for(unsigned c = 0; c < 4; ++c)
-            ret[c] = static_cast<int8_t>((w >>(c * 8)) & 0xFF);
-    }
-};
-*/
 
 #if defined(ADLMIDI_AUDIO_TICK_HANDLER)
 extern void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate);

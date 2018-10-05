@@ -22,7 +22,14 @@
  */
 
 #include "adlmidi_midiplay.hpp"
+#include "adlmidi_opl3.hpp"
 #include "adlmidi_private.hpp"
+#ifndef ADLMIDI_HW_OPL
+#include "chips/opl_chip_base.h"
+#endif
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
+#include "midi_sequencer.hpp"
+#endif
 
 /* Unify MIDI player casting and interface between ADLMIDI and OPNMIDI */
 #define GET_MIDI_PLAYER(device) reinterpret_cast<MIDIplay *>((device)->adl_midiPlayer)

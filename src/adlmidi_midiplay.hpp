@@ -27,19 +27,6 @@
 #include "adldata.hh"
 #include "adlmidi_private.hpp"
 #include "adlmidi_ptr.hpp"
-#include "adlmidi.h"
-#include "midi_sequencer.h"
-#include <vector>
-#include <map>
-#include <set>
-#include <cstring>
-#include <cassert>
-#include <math.h>
-#include <stdint.h>
-
-class OPL3;
-class BW_MidiSequencer;
-class FileAndMemReader;
 
 /**
  * @brief Hooks of the internal events

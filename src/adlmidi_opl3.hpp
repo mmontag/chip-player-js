@@ -26,13 +26,8 @@
 
 #include "adldata.hh"
 #include "adlmidi_ptr.hpp"
+#include "adlmidi_private.hpp"
 #include "adlmidi_bankmap.h"
-#include "adlmidi.h"
-#include <vector>
-#include <stdint.h>
-
-class MIDIplay;
-class OPLChipBase;
 
 /**
  * @brief OPL3 Chip management class
