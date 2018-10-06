@@ -21,6 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "adlmidi_opl3.hpp"
 #include "adlmidi_private.hpp"
 #include <stdlib.h>
 #include <cassert>
@@ -148,6 +149,13 @@ static const uint16_t g_channelsMap[23] =
     Ports: ???
 */
 
+enum
+{
+    OPL_PANNING_LEFT  = 0x10,
+    OPL_PANNING_RIGHT = 0x20,
+    OPL_PANNING_BOTH  = 0x30
+};
+
 static adlinsdata2 makeEmptyInstrument()
 {
     adlinsdata2 ins;
@@ -179,6 +187,10 @@ OPL3::OPL3() :
 #else
     setEmbeddedBank(0);
 #endif
+}
+
+OPL3::~OPL3()
+{
 }
 
 bool OPL3::setupLocked()

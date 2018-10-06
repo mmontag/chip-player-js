@@ -21,6 +21,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "adlmidi_midiplay.hpp"
+#include "adlmidi_opl3.hpp"
 #include "adlmidi_private.hpp"
 
 std::string ADLMIDI_ErrorString;
@@ -36,20 +38,21 @@ void adl_audioTickHandler(void *instance, uint32_t chipId, uint32_t rate)
 
 int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
 {
+    Synth &synth = *play->m_synth;
     size_t n_fourop[2] = {0, 0}, n_total[2] = {0, 0};
 
     //Automatically calculate how much 4-operator channels is necessary
 #ifndef DISABLE_EMBEDDED_BANKS
-    if(play->m_synth.m_embeddedBank == OPL3::CustomBankTag)
+    if(synth.m_embeddedBank == Synth::CustomBankTag)
 #endif
     {
         //For custom bank
-        OPL3::BankMap::iterator it = play->m_synth.m_insBanks.begin();
-        OPL3::BankMap::iterator end = play->m_synth.m_insBanks.end();
+        Synth::BankMap::iterator it = synth.m_insBanks.begin();
+        Synth::BankMap::iterator end = synth.m_insBanks.end();
         for(; it != end; ++it)
         {
             size_t bank = it->first;
-            size_t div = (bank & OPL3::PercussionTag) ? 1 : 0;
+            size_t div = (bank & Synth::PercussionTag) ? 1 : 0;
             for(size_t i = 0; i < 128; ++i)
             {
                 adlinsdata2 &ins = it->second.ins[i];
@@ -99,10 +102,10 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
         : (play->m_setup.NumCards == 1 ? 1 : play->m_setup.NumCards * 4);
 */
 
-    play->m_synth.m_numFourOps = static_cast<unsigned>(numFourOps * play->m_synth.m_numChips);
+    synth.m_numFourOps = static_cast<unsigned>(numFourOps * synth.m_numChips);
     // Update channel categories and set up four-operator channels
     if(!silent)
-        play->m_synth.updateChannelCategories();
+        synth.updateChannelCategories();
 
     return 0;
 }
