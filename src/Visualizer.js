@@ -1,22 +1,20 @@
-const chroma = require('./chroma');
+const chroma = require('chroma-js');
 
-const hot = new chroma.scale({
-  colors: [
-    '#000000',
-    '#0000a0',
-    '#6000a0',
-    '#662781',
-    '#dd1440',
-    '#f0b000',
-    '#ffffa0',
-    '#ffffff'
-  ],
-  mode: 'rgb',
-  limits: [0, 255]
-});
+const colorMap = new chroma.scale([
+  '#000000',
+  '#0000a0',
+  '#6000a0',
+  '#962761',
+  '#dd1440',
+  '#f0b000',
+  '#ffffa0',
+  '#ffffff',
+]).domain([0, 255]).mode('lch');
 
 export default class Visualizer {
   constructor(audioCtx, freqCanvasEl, specCanvasEl, minDb = -90, maxDb = -30) {
+    this.updateFrame = this.updateFrame.bind(this);
+
     this.lastCalledTime = 0;
     this.fps = 0;
 
@@ -32,10 +30,10 @@ export default class Visualizer {
     this.ctxFq = this.freqCanvasEl.getContext('2d');
     this.ctxSp = this.specCanvasEl.getContext('2d');
 
-    const tempCanvas        = document.createElement('canvas');
-          tempCanvas.width  = this.specCanvasEl.width;
-          tempCanvas.height = this.specCanvasEl.height;
-    this.tempCtx = tempCanvas.getContext('2d');
+    this.tempCanvas = document.createElement('canvas');
+    this.tempCanvas.width = this.specCanvasEl.width;
+    this.tempCanvas.height = this.specCanvasEl.height;
+    this.tempCtx = this.tempCanvas.getContext('2d');
     this.updateFrame();
   }
 
@@ -50,9 +48,9 @@ export default class Visualizer {
     } else {
       const delta = (new Date().getTime() - this.lastCalledTime) / 1000;
       this.lastCalledTime = new Date().getTime();
-      this.fps = 1 / delta;
+      this.fps = Math.round(1 / delta);
     }
-    // $("#fps").html(Math.round(fps) + "FPS");
+
     requestAnimationFrame(this.updateFrame);
   }
 
@@ -60,7 +58,7 @@ export default class Visualizer {
     let value;
 
     this.ctxFq.beginPath();
-    this.ctxFq.fillStyle = "black";
+    this.ctxFq.fillStyle = 'black';
     this.ctxFq.rect(0, 0, this.freqCanvasEl.width, this.freqCanvasEl.height);
     this.ctxFq.fill();
     this.ctxFq.beginPath();
@@ -71,7 +69,7 @@ export default class Visualizer {
     for (let i = 0; i < data.length; ++i) {
       value = fqHeight - data[i] / divider;// - 128 + freqCanvasEl.height / 2;
       this.ctxFq.lineTo(i, value);
-      this.ctxFq.fillStyle = hot.getColor(data[i]).hex();
+      this.ctxFq.fillStyle = colorMap(data[i]).hex();
       this.ctxFq.fillRect(i, fqHeight - data[i] / divider, 1, data[i] / divider);
     }
     this.ctxFq.moveTo(0, 999);
@@ -85,7 +83,7 @@ export default class Visualizer {
     // iterate over the elements from the array
     for (let i = 0; i < array.length; i++) {
       // draw each pixel with the specific color
-      this.ctxSp.fillStyle = hot.getColor(array[i]).hex();
+      this.ctxSp.fillStyle = colorMap(array[i]).hex();
       // draw the line at the right side of the canvas
       this.ctxSp.fillRect(i, 0, 1, frameHeight);
     }
@@ -100,6 +98,4 @@ export default class Visualizer {
     // reset the transformation matrix
     this.ctxSp.setTransform(1, 0, 0, 1, 0, 0);
   }
-
-
 }
