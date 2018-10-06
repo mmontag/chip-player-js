@@ -13,22 +13,17 @@ const fileExtensions = [
 ];
 
 export default class XMPPlayer extends Player {
-  constructor(audioContext, emscriptenRuntime, onPlayerStateUpdate = function() {}) {
-    super();
+  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
+    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
 
-    this.libxmp = emscriptenRuntime;
-    this.xmpCtx = this.libxmp._xmp_create_context();
-    this.xmp_frame_infoPtr = this.libxmp._malloc(2048);
-    this.audioCtx = audioContext;
-    this.paused = false;
-    this.metadata = {};
-    this.audioNode = null;
+    this.libxmp = chipCore;
+    this.xmpCtx = chipCore._xmp_create_context();
+    this.xmp_frame_infoPtr = chipCore._malloc(2048);
+    this.fileExtensions = fileExtensions;
     this.initialBPM = 125;
     this.tempoScale = 1;
-    this.fileExtensions = fileExtensions;
     this._positionMs = 0;
     this._durationMs = 1000;
-    this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
 
   _parseMetadata() {
@@ -92,7 +87,7 @@ export default class XMPPlayer extends Player {
 
     if (!this.audioNode) {
       this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
-      this.audioNode.connect(this.audioCtx.destination);
+      this.audioNode.connect(this.audioCtx.foozer);
       this.audioNode.onaudioprocess = (e) => {
         let i, channel;
         const channels = [];

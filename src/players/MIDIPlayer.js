@@ -52,10 +52,11 @@ const fileExtensions = [
 ];
 
 export default class MIDIPlayer extends Player {
-  constructor(audioContext, emscriptenRuntime, onPlayerStateUpdate = function() {}) {
-    super();
-    lib = emscriptenRuntime;
-    lib._tp_init(audioContext.sampleRate);
+  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
+    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
+
+    lib = chipCore;
+    lib._tp_init(audioCtx.sampleRate);
 
     lib.FS.mkdir(MOUNTPOINT);
     lib.FS.mount(lib.FS.filesystems.IDBFS, {}, MOUNTPOINT);
@@ -67,14 +68,9 @@ export default class MIDIPlayer extends Player {
       this.setParameter('reverb', DEFAULT_REVERB);
     });
 
-    this.audioCtx = audioContext;
-    this.audioNode = null;
-    this.paused = false;
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
     this.params = {};
-    this.metadata = {};
-    this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
 
   loadData(data, filename) {
@@ -90,7 +86,7 @@ export default class MIDIPlayer extends Player {
 
     if (!this.audioNode) {
       this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
-      this.audioNode.connect(this.audioCtx.destination);
+      this.audioNode.connect(this.destinationNode);
       this.audioNode.onaudioprocess = (e) => {
         let i, channel;
         const channels = [];

@@ -14,18 +14,15 @@ const fileExtensions = [
 ];
 
 export default class GMEPlayer extends Player {
-  constructor(audioContext, emscriptenRuntime, onPlayerStateUpdate = function() {}) {
-    super();
+  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
+    super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
 
-    libgme = emscriptenRuntime;
-    this.audioCtx = audioContext;
+    libgme = chipCore;
     this.paused = false;
-    this.metadata = {};
     this.audioNode = null;
     this.fileExtensions = fileExtensions;
     this.subtune = 0;
     this.tempo = 1.0;
-    this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
 
   restart() {
@@ -50,7 +47,7 @@ export default class GMEPlayer extends Player {
 
     if (!this.audioNode) {
       this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
-      this.audioNode.connect(this.audioCtx.destination);
+      this.audioNode.connect(this.destinationNode);
       this.audioNode.onaudioprocess = (e) => {
         let i, channel;
         const channels = [];

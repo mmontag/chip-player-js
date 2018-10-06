@@ -19,9 +19,13 @@
 // "stopped" is synonymous with closed/empty.
 //
 export default class Player {
-  constructor() {
+  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate) {
     this.paused = false;
     this.fileExtensions = [];
+    this.metadata = {};
+    this.audioCtx = audioCtx;
+    this.destinationNode = destNode;
+    this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
 
   togglePause() {

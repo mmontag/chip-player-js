@@ -8,6 +8,7 @@ import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
+import Visualizer from './VisualizerComponent';
 import promisify from './promisifyXhr';
 
 const MAX_VOICES = 32;
@@ -34,9 +35,11 @@ class App extends PureComponent {
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     this._iosAudioUnlock(audioCtx);
 
+    const playerNode = this.playerNode = audioCtx.createGain();
+    playerNode.connect(audioCtx.destination);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
-    const emscriptenRuntime = new ChipCore({
+    const chipCore = new ChipCore({
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
       locateFile: (path, prefix) => {
         if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
@@ -44,9 +47,9 @@ class App extends PureComponent {
       },
       onRuntimeInitialized: () => {
         this.players = [
-          new GMEPlayer(audioCtx, emscriptenRuntime, this.handlePlayerStateUpdate),
-          new XMPPlayer(audioCtx, emscriptenRuntime, this.handlePlayerStateUpdate),
-          new MIDIPlayer(audioCtx, emscriptenRuntime, this.handlePlayerStateUpdate),
+          new GMEPlayer (audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
+          new XMPPlayer (audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
+          new MIDIPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
         ];
         this.setState({loading: false});
       },
@@ -308,7 +311,8 @@ class App extends PureComponent {
         {this.state.loading ?
           <p>Loading...</p>
           :
-          <div className="App-intro">
+          <div>
+            <Visualizer audioCtx={this.audioCtx} sourceNode={this.playerNode}/>
             <button onClick={this.togglePause}
                     disabled={this.player ? null : true}>
               {this.state.paused ? 'Resume' : 'Pause'}
