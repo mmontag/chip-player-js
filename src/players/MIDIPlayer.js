@@ -73,16 +73,17 @@ export default class MIDIPlayer extends Player {
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
     this.params = {};
+    this.metadata = {};
     this.onPlayerStateUpdate = onPlayerStateUpdate;
   }
 
-  loadData(data) {
+  loadData(data, filename) {
+    this.metadata.title = filename;
+    this.activeChannels = [];
     const buffer = lib.allocate(BUFFER_SIZE * 8, 'i32', lib.ALLOC_NORMAL);
 
     console.log('Playing MIDI data...');
     lib.ccall('tp_open', 'number', ['array', 'number'], [data, data.byteLength]);
-
-    this.activeChannels = [];
     for(let i = 0; i < 16; i++) {
       if (lib._tp_get_channel_in_use(i)) this.activeChannels.push(i);
     }
@@ -176,6 +177,10 @@ export default class MIDIPlayer extends Player {
     voices.forEach((isEnabled, i) => {
       lib._tp_set_channel_mute(this.activeChannels[i], !isEnabled);
     });
+  }
+
+  getMetadata() {
+    return this.metadata;
   }
 
   getParameter(id) {

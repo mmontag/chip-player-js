@@ -15,7 +15,6 @@ onmessage = (message) => {
     case 'load':
       const start = performance.now();
       const files = trieToList(filesTrie).map((file, i) => ({id: i, file: file}));
-      console.log('some files: ', files.slice(0, 10));
       trie.addAll(files);
       const time = (performance.now() - start).toFixed(1);
       console.log('Added %s items (%s tokens) to search trie in %s ms.', files.length, trie.size, time);

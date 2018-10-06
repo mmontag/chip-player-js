@@ -41,6 +41,10 @@ export default class Player {
     return this.fileExtensions.indexOf(fileExtension.toLowerCase()) !== -1;
   }
 
+  loadData(data, filename) {
+    throw Error('Player.loadData() must be implemented.');
+  }
+
   stop() {
     throw Error('Player.stop() must be implemented.');
   }
@@ -83,8 +87,8 @@ export default class Player {
 
   getMetadata() {
     return {
-      title: '[Not implemented]',
-      author: '[Not implemented]',
+      title: null,
+      author: null,
     }
   }
 

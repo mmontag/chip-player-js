@@ -116,6 +116,7 @@ class App extends PureComponent {
     }
     this.player = null;
     const ext = url.split('.').pop().toLowerCase();
+    const filename = url.split('/').pop();
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].canPlay(ext)) {
         this.player = this.players[i];
@@ -140,7 +141,7 @@ class App extends PureComponent {
         uint8Array = new Uint8Array(buffer);
 
         try {
-          this.player.loadData(uint8Array);
+          this.player.loadData(uint8Array, filename);
         } catch (e) {
           this.setState({
             playerError: e.message,
