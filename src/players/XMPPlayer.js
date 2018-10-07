@@ -87,7 +87,7 @@ export default class XMPPlayer extends Player {
 
     if (!this.audioNode) {
       this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
-      this.audioNode.connect(this.audioCtx.foozer);
+      this.audioNode.connect(this.destinationNode);
       this.audioNode.onaudioprocess = (e) => {
         let i, channel;
         const channels = [];
