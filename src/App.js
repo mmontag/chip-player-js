@@ -3,12 +3,12 @@ import './App.css';
 import React, {PureComponent} from 'react';
 import Slider from './Slider';
 import Search from './Search';
+import Visualizer from './Visualizer';
 import songData from './song-data';
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
-import Visualizer from './VisualizerComponent';
 import promisify from './promisifyXhr';
 
 const MAX_VOICES = 32;
@@ -39,7 +39,7 @@ class App extends PureComponent {
     playerNode.connect(audioCtx.destination);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
-    const chipCore = new ChipCore({
+    const chipCore = this.chipCore = new ChipCore({
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
       locateFile: (path, prefix) => {
         if (path.endsWith('.wasm') || path.endsWith('.wast')) return './' + path;
@@ -314,6 +314,7 @@ class App extends PureComponent {
           <div>
             <Visualizer audioCtx={this.audioCtx}
                         sourceNode={this.playerNode}
+                        chipCore={this.chipCore}
                         paused={this.state.paused}/>
             <button onClick={this.togglePause}
                     disabled={this.player ? null : true}>
