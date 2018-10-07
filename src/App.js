@@ -312,7 +312,9 @@ class App extends PureComponent {
           <p>Loading...</p>
           :
           <div>
-            <Visualizer audioCtx={this.audioCtx} sourceNode={this.playerNode}/>
+            <Visualizer audioCtx={this.audioCtx}
+                        sourceNode={this.playerNode}
+                        paused={this.state.paused}/>
             <button onClick={this.togglePause}
                     disabled={this.player ? null : true}>
               {this.state.paused ? 'Resume' : 'Pause'}

@@ -99,11 +99,16 @@ input[type=text] {
     color: #008;
     padding: 0 8px;
 }
-
 input[type=text]::selection                 { background-color: #fff; }
 input[type=text]::-webkit-input-placeholder { color: #666 }
 
-input[type=checkbox] {
+input[type=checkbox]:focus,
+input[type=radio]:focus,
+input[type=range]:focus { background: #00f; }
+
+label { display: inline-block; margin-right: 8px; }
+input[type=checkbox],
+input[type=radio] {
     -webkit-appearance: none;
     -moz-appearance: none;
     background: transparent;
@@ -115,9 +120,11 @@ input[type=checkbox] {
     color: #ff0;
 }
 
-input[type=checkbox]:focus          { background-color: #00f; }
 input[type=checkbox]:before         { content: '[ ]'; }
 input[type=checkbox]:checked:before { content: '[×]'; }
+
+input[type=radio]:before         { content: '( )'; }
+input[type=radio]:checked:before { content: '(•)'; }
 
 input[type=range] {
     margin: 0;
@@ -132,7 +139,6 @@ input[type=range]::-webkit-slider-runnable-track {
     margin: 8px 0;
 }
 
-input[type=range]:focus { background: #00f; }
 input[type=range]:disabled::-webkit-slider-runnable-track { border-color: #aaa; }
 input[type=range]:disabled::-webkit-slider-thumb { background: #aaa; }
 input[type=range]:active::-webkit-slider-thumb { background: #ff0; }
@@ -212,3 +218,6 @@ input[type=range]::-webkit-slider-thumb {
     white-space: nowrap;
     overflow: hidden;
 }
+
+.Visualizer { position: relative; }
+.Visualizer-canvas { display: block; width: 100%; }
