@@ -517,13 +517,14 @@ ADLMIDI_EXPORT void adl_setFullRangeBrightness(struct ADL_MIDIPlayer *device, in
 
 ADLMIDI_EXPORT void adl_setLoopEnabled(ADL_MIDIPlayer *device, int loopEn)
 {
+#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     if(!device)
         return;
     MidiPlayer *play = GET_MIDI_PLAYER(device);
     assert(play);
-#ifndef ADLMIDI_DISABLE_MIDI_SEQUENCER
     play->m_sequencer->setLoopEnabled(loopEn != 0);
 #else
+    ADL_UNUSED(device);
     ADL_UNUSED(loopEn);
 #endif
 }
