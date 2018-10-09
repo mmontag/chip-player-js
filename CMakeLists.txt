@@ -536,6 +536,9 @@ if(WITH_VLC_PLUGIN)
         add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
     endif()
 
+    if(WIN32)
+        target_link_libraries(adlmidi_vlc_plugin PUBLIC -static-libgcc -static-libstdc++)
+    endif()
 endif()
 
 if(WITH_HQ_RESAMPLER)
