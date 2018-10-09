@@ -520,7 +520,16 @@ if(WITH_VLC_PLUGIN)
     target_include_directories(adlmidi_vlc_plugin PRIVATE
             ${LIBVLC_INCLUDE_DIR}/vlc/plugins
             ${LIBVLC_INCLUDE_DIR}/vlc)
-    target_link_libraries(adlmidi_vlc_plugin ADLMIDI_IF vlccore m stdc++)
+
+    set(ADLMIDIVLC_LIBS ADLMIDI_IF vlccore m)
+
+    if(WIN32)
+        list(APPEND ADLMIDIVLC_LIBS -static-libgcc -static-libstdc++)
+    else()
+        list(APPEND ADLMIDIVLC_LIBS stdc++)
+    endif()
+
+    target_link_libraries(adlmidi_vlc_plugin ${ADLMIDIVLC_LIBS})
     # target_link_libraries(adlmidi_vlc_plugin INTERFACE "-export-symbol-regex ^vlc_entry")
 
     install(TARGETS adlmidi_vlc_plugin DESTINATION "${VLCPLUGIN_CODEC_INSTALL_PATH}")
@@ -536,9 +545,6 @@ if(WITH_VLC_PLUGIN)
         add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
     endif()
 
-    if(WIN32)
-        target_link_libraries(adlmidi_vlc_plugin PUBLIC -static-libgcc -static-libstdc++)
-    endif()
 endif()
 
 if(WITH_HQ_RESAMPLER)
