@@ -523,9 +523,10 @@ if(WITH_VLC_PLUGIN)
 
     set(ADLMIDIVLC_LIBS ADLMIDI_IF vlccore m)
 
-    if(WIN32)
-        list(APPEND ADLMIDIVLC_LIBS -static-libgcc -static-libstdc++)
-    else()
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_COMPILER_IS_GNUCXX)
+        set_property(TARGET adlmidi_vlc_plugin APPEND_STRING PROPERTY LINK_FLAGS " -static-libgcc -static-libstdc++")
+        set_property(TARGET adlmidi_vlc_plugin APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,-Bdynamic,--no-whole-archive")
+    elseif(NOT WIN32)
         list(APPEND ADLMIDIVLC_LIBS stdc++)
     endif()
 
