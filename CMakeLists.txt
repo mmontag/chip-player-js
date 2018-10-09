@@ -525,7 +525,7 @@ if(WITH_VLC_PLUGIN)
             ${LIBVLC_INCLUDE_DIR}/vlc/plugins
             ${LIBVLC_INCLUDE_DIR}/vlc)
 
-    set(ADLMIDIVLC_LIBS ADLMIDI_IF vlccore m)
+    set(ADLMIDIVLC_LIBS ADLMIDI_IF ${LIBVLCCORE_LIBRARY} m)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_COMPILER_IS_GNUCXX)
         set_property(TARGET adlmidi_vlc_plugin APPEND_STRING PROPERTY LINK_FLAGS " -static-libgcc -static-libstdc++")
