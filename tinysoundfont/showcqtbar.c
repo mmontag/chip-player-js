@@ -35,7 +35,6 @@
 
 #define MAX_FFT_SIZE 32768
 #define MAX_WIDTH 1920
-#define MAX_HEIGHT 1080
 #define MAX_KERNEL_SIZE 200000
 #define MIN_VOL 1.0f
 #define MAX_VOL 100.0f
@@ -77,7 +76,6 @@ typedef struct ShowCQT {
 
   /* props */
   int width;
-  int height;
   int fft_size;
   int t_size;
   int attack_size; // num samples in 1/30th of a second
@@ -233,12 +231,11 @@ static void fft_calc(Complex *v, int n) {
   }
 }
 
-int cqt_init(int rate, int width, int height, float bar_v, float sono_v, int super) {
-  if (height <= 0 || height > MAX_HEIGHT || width <= 0 || width > MAX_WIDTH)
+int cqt_init(int rate, int width, float bar_v, float sono_v, int super) {
+  if (width <= 0 || width > MAX_WIDTH)
     return 0;
 
   cqt.width = width;
-  cqt.height = height;
 
   cqt.bar_v = (bar_v > MAX_VOL) ? MAX_VOL : (bar_v > MIN_VOL) ? bar_v : MIN_VOL;
   cqt.sono_v = (sono_v > MAX_VOL) ? MAX_VOL : (sono_v > MIN_VOL) ? sono_v : MIN_VOL;
@@ -445,32 +442,9 @@ void cqt_render_line2(float *out) {
     out[x] = cqt.color_buf[x].g + 0.5f;
 }
 
-void cqt_render_line(int y, int alpha) {
-  alpha = (alpha < 0) ? 0 : (alpha > 255) ? 255 : alpha;
-  if (y >= 0 && y < cqt.height) {
-    float ht = (cqt.height - y) / (float) cqt.height;
-    for (int x = 0; x < cqt.width; x++) {
-      if (cqt.color_buf[x].h <= ht) {
-        cqt.output[x] = (Color) {0, 0, 0, alpha};
-      } else {
-        float mul = (cqt.color_buf[x].h - ht) * cqt.rcp_h_buf[x];
-        cqt.output[x] = (Color) {mul * cqt.color_buf[x].r + 0.5f, mul * cqt.color_buf[x].g + 0.5f,
-                                 mul * cqt.color_buf[x].b + 0.5f, alpha};
-      }
-    }
-  } else {
-    for (int x = 0; x < cqt.width; x++)
-      cqt.output[x] = (Color) {cqt.color_buf[x].r + 0.5f, cqt.color_buf[x].g + 0.5f, cqt.color_buf[x].b + 0.5f, alpha};
-  }
-}
-
 void cqt_set_volume(float bar_v, float sono_v) {
   cqt.bar_v = (bar_v > MAX_VOL) ? MAX_VOL : (bar_v > MIN_VOL) ? bar_v : MIN_VOL;
   cqt.sono_v = (sono_v > MAX_VOL) ? MAX_VOL : (sono_v > MIN_VOL) ? sono_v : MIN_VOL;
-}
-
-void cqt_set_height(int height) {
-  cqt.height = (height > MAX_HEIGHT) ? MAX_HEIGHT : (height > 1) ? height : 1;
 }
 
 #ifdef __cplusplus
