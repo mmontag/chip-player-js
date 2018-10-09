@@ -1,13 +1,18 @@
+/*
+ * Fraction number handling.
+ * Copyright (C) 1992,2001 Bisqwit (http://iki.fi/bisqwit/)
+ *
+ * The license of this file is in Public Domain:
+ * https://bisqwit.iki.fi/src/index.html
+ *
+ * "... and orphan source code files are copyrighted public domain."
+ */
+
 #ifndef bqw_fraction_h
 #define bqw_fraction_h
 
 #include <cmath>
 #include <limits>
-
-
-/* Fraction number handling.
- * Copyright (C) 1992,2001 Bisqwit (http://iki.fi/bisqwit/)
- */
 
 template<typename inttype=int>
 class fraction
