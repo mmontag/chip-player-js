@@ -156,7 +156,7 @@ export default class Spectrogram {
       _calcTime += _middle - _start;
       _renderTime += _end - _middle;
       _timeCount++;
-      if (_timeCount >= 100) {
+      if (_timeCount >= 500) {
         console.log(
           (_calcTime / _timeCount).toFixed(2) + "  ms   (calc time)\n" +
           (_renderTime / _timeCount).toFixed(2) + "  ms (render time)\n" +

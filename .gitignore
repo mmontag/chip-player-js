@@ -10,3 +10,4 @@ scripts/untracked/
 src/-catalog-tests/
 src/chip-core.js
 src/catalog.json
+public/catalog.json

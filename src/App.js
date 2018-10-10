@@ -34,6 +34,7 @@ class App extends PureComponent {
     this.displayLoop = this.displayLoop.bind(this);
     this.getFadeMs = this.getFadeMs.bind(this);
     this.loadCatalog = this.loadCatalog.bind(this);
+    this.handlePlayRandom = this.handlePlayRandom.bind(this);
 
     // Initialize audio graph
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -282,6 +283,14 @@ class App extends PureComponent {
     });
   }
 
+  handlePlayRandom() {
+    const catalog = this.state.catalog;
+    if (catalog) {
+      const idx = (Math.random() * catalog.length) | 0;
+      this.playSong(CATALOG_PREFIX + catalog[idx]);
+    }
+  }
+
   getSongPos() {
     return this.state.currentSongPositionMs / this.state.currentSongDurationMs;
   }
@@ -335,6 +344,9 @@ class App extends PureComponent {
             <button onClick={this.togglePause}
                     disabled={this.player ? null : true}>
               {this.state.paused ? 'Resume' : 'Pause'}
+            </button>&nbsp;
+            <button onClick={this.handlePlayRandom}>
+              I Feel Lucky
             </button>
             {this.state.playerError &&
             <div className="App-error">ERROR: {this.state.playerError}</div>
