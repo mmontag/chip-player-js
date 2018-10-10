@@ -1045,8 +1045,6 @@ bool BW_MidiSequencer::processEvents(bool isSeek)
         }
     }
 
-    //if(shortest > 0) UI.PrintLn("shortest: %ld", shortest);
-
     // Schedule the next playevent to be processed after that delay
     for(size_t tk = 0; tk < TrackCount; ++tk)
         m_currentPosition.track[tk].delay -= shortest;
@@ -1604,9 +1602,6 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
             return;
         }
 
-        //if(evtype >= 1 && evtype <= 6)
-        //    UI.PrintLn("Meta %d: %s", evtype, data.c_str());
-
         //Turn on Loop handling when loop is enabled
         if(m_loopEnabled && !m_loop.invalidLoop)
         {
@@ -1670,21 +1665,11 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
         return;
     }
 
-    // Any normal event (80..EF)
-    //    if(evt.type < 0x80)
-    //    {
-    //        byte = static_cast<uint8_t>(CurrentPosition.track[track].status | 0x80);
-    //        CurrentPosition.track[track].ptr--;
-    //    }
-
     if(evt.type == MidiEvent::T_SYSCOMSNGSEL ||
        evt.type == MidiEvent::T_SYSCOMSPOSPTR)
         return;
 
-    /*UI.PrintLn("@%X Track %u: %02X %02X",
-                CurrentPosition.track[track].ptr-1, (unsigned)track, byte,
-                TrackData[track][CurrentPosition.track[track].ptr]);*/
-    size_t midCh = evt.channel;//byte & 0x0F, EvType = byte >> 4;
+    size_t midCh = evt.channel;
     if(m_interface->rt_currentDevice)
         midCh += m_interface->rt_currentDevice(m_interface->rtUserData, track);
     status = evt.type;
@@ -1759,7 +1744,6 @@ double BW_MidiSequencer::Tick(double s, double granularity)
     int antiFreezeCounter = 10000;//Limit 10000 loops to avoid freezing
     while((m_currentPosition.wait <= granularity * 0.5) && (antiFreezeCounter > 0))
     {
-        //std::fprintf(stderr, "wait = %g...\n", CurrentPosition.wait);
         if(!processEvents())
             break;
         if(m_currentPosition.wait <= 0.0)
@@ -2272,7 +2256,7 @@ bool BW_MidiSequencer::parseCMF(FileAndMemReader &fr)
         return false;
     }
 
-    //unsigned long notes_starts[3] = {ReadLEint(HeaderBuf+0,2),ReadLEint(HeaderBuf+0,4),ReadLEint(HeaderBuf+0,6)};
+    //uint64_t notes_starts[3] = {readLEint(headerBuf + 0, 2), readLEint(headerBuf + 0, 4), readLEint(headerBuf + 0, 6)};
     fr.seek(16, FileAndMemReader::CUR); // Skip the channels-in-use table
     fsize = fr.read(headerBuf, 1, 4);
     if(fsize < 4)
@@ -2282,7 +2266,7 @@ bool BW_MidiSequencer::parseCMF(FileAndMemReader &fr)
         return false;
     }
 
-    uint64_t ins_count =  readLEint(headerBuf + 0, 2); //, basictempo = ReadLEint(HeaderBuf+2, 2);
+    uint64_t ins_count =  readLEint(headerBuf + 0, 2);
     fr.seek(static_cast<long>(ins_start), FileAndMemReader::SET);
 
     m_cmfInstruments.reserve(static_cast<size_t>(ins_count));
