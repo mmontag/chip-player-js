@@ -1,7 +1,4 @@
 import TrieSearch from 'trie-search';
-import {trieToList} from "./ResigTrie";
-
-const filesTrie = require('./catalog.json');
 
 const trie = new TrieSearch('file', {
   indexField: 'id',
@@ -14,7 +11,7 @@ onmessage = (message) => {
   switch (data.type) {
     case 'load':
       const start = performance.now();
-      const files = trieToList(filesTrie).map((file, i) => ({id: i, file: file}));
+      const files = JSON.parse(data.payload).map((file, i) => ({id: i, file: file}));
       trie.addAll(files);
       const time = (performance.now() - start).toFixed(1);
       console.log('Added %s items (%s tokens) to search trie in %s ms.', files.length, trie.size, time);

@@ -10,8 +10,10 @@ import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
 import promisify from './promisifyXhr';
+import {trieToList} from "./ResigTrie";
 
 const MAX_VOICES = 32;
+const CATALOG_PREFIX = 'https://gifx.co/music/';
 
 class App extends PureComponent {
   constructor(props) {
@@ -31,14 +33,16 @@ class App extends PureComponent {
     this.getTimeLabel = this.getTimeLabel.bind(this);
     this.displayLoop = this.displayLoop.bind(this);
     this.getFadeMs = this.getFadeMs.bind(this);
+    this.loadCatalog = this.loadCatalog.bind(this);
 
+    // Initialize audio graph
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     this._iosAudioUnlock(audioCtx);
-
     const playerNode = this.playerNode = audioCtx.createGain();
     playerNode.connect(audioCtx.destination);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
+    // Load the chip-core Emscripten runtime
     const chipCore = this.chipCore = new ChipCore({
       // Look for .wasm file in web root, not the same location as the app bundle (static/js).
       locateFile: (path, prefix) => {
@@ -58,6 +62,7 @@ class App extends PureComponent {
     this.player = null;
     this.songRequest = null;
     this.state = {
+      catalog: null,
       loading: true,
       paused: false,
       playerError: null,
@@ -65,7 +70,6 @@ class App extends PureComponent {
       currentSongNumVoices: 0,
       currentSongNumSubtunes: 0,
       currentSongSubtune: 0,
-      extractedTunes: [],
       currentSongDurationMs: 1,
       currentSongPositionMs: 0,
       draggedSongPositionMs: -1,
@@ -74,9 +78,12 @@ class App extends PureComponent {
       voiceNames: Array(MAX_VOICES).fill(''),
     };
 
+    // Load the song catalog
+    this.loadCatalog();
+
+    // Start display loop
     setInterval(this.displayLoop, 46); //  46 ms = 2048/44100 sec or 21.5 fps
                                        // 400 ms = 2.5 fps
-    // this.displayLoop();
   }
 
   _iosAudioUnlock(context) {
@@ -100,6 +107,16 @@ class App extends PureComponent {
       });
     }
     // requestAnimationFrame(this.displayLoop);
+  }
+
+  loadCatalog() {
+    fetch('./catalog.json')
+      .then(response => response.json())
+      .then(trie => trieToList(trie))
+      .then(list => {
+        console.log('Loaded catalog.json (%d items).', list.length);
+        this.setState({ catalog: list });
+      });
   }
 
   play() {
@@ -178,7 +195,6 @@ class App extends PureComponent {
     if (isStopped) {
       this.player = null;
       this.setState({
-        extractedTunes: [],
         currentSongSubtune: 0,
         currentSongMetadata: {},
         currentSongNumVoices: 0,
@@ -307,7 +323,7 @@ class App extends PureComponent {
             href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
           </p>
         </header>
-        <Search onResultClick={handleFileClick}/>
+        <Search catalog={this.state.catalog} onResultClick={handleFileClick}/>
         {this.state.loading ?
           <p>Loading...</p>
           :

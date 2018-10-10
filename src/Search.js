@@ -19,13 +19,22 @@ export default class Search extends PureComponent {
     this.handleStatus = this.handleStatus.bind(this);
 
     searchWorker.onmessage = (message) => this.handleMessage(message.data);
-    searchWorker.postMessage({type: 'load'});
 
     this.state = {
       searching: false,
       results: {},
       resultsCount: 0,
       totalSongs: 0,
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    if (!prevProps.catalog && this.props.catalog) {
+      console.log('posting catalog load message to worker...');
+      searchWorker.postMessage({
+        type: 'load',
+        payload: JSON.stringify(this.props.catalog),
+      });
     }
   }
 
