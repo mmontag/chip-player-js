@@ -13,6 +13,11 @@ export default class Visualizer extends Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      vizMode: 0,
+      fftSize: 2048,
+    };
+
     this.freqCanvasRef = React.createRef();
     this.specCanvasRef = React.createRef();
   }
@@ -27,14 +32,21 @@ export default class Visualizer extends Component {
     this.props.sourceNode.connect(this.spectrogram.analyserNode);
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    this.spectrogram.setPaused(nextProps.paused);
-    return false;
+  componentDidUpdate(prevProps) {
+    this.spectrogram.setPaused(this.props.paused);
   }
 
   render() {
-    const handleModeClick    = (e) => this.spectrogram.setMode(parseInt(e.target.value));
-    const handleFFTSizeClick = (e) => this.spectrogram.setFFTSize(parseInt(e.target.value));
+    const handleModeClick = (e) => {
+      const mode = parseInt(e.target.value, 10);
+      this.setState({ vizMode: mode });
+      this.spectrogram.setMode(mode);
+    };
+    const handleFFTSizeClick = (e) => {
+      const size = parseInt(e.target.value, 10);
+      this.setState({ fftSize: size });
+      this.spectrogram.setFFTSize(size);
+    };
     return (
       <section className='Visualizer'>
         <h3>Visualizer</h3>
@@ -43,17 +55,23 @@ export default class Visualizer extends Component {
             <label key={i}><input onClick={handleModeClick}
                                   type='radio'
                                   name='spectrogram-mode'
+                                  defaultChecked={this.state.vizMode === i}
                                   value={i}/>{mode}</label>
           )
         }
         <br/>
-        FFT Size: {
-          FFT_SIZES.map((size, i) =>
-            <label key={i}><input onClick={handleFFTSizeClick}
-                                  type='radio'
-                                  name='fft-size'
-                                  value={size}/>{size}</label>
-          )
+        {this.state.vizMode !== 2 &&
+        <div>
+          FFT Size: {
+            FFT_SIZES.map((size, i) =>
+              <label key={i}><input onClick={handleFFTSizeClick}
+                                    type='radio'
+                                    name='fft-size'
+                                    defaultChecked={this.state.fftSize === size}
+                                    value={size}/>{size}</label>
+            )
+          }
+        </div>
         }
         <canvas className='Visualizer-canvas' width={1024} height={60} ref={this.freqCanvasRef}/>
         <canvas className='Visualizer-canvas' width={1024} height={400} ref={this.specCanvasRef}/>

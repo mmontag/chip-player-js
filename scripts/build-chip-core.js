@@ -135,7 +135,8 @@ source_files = [
 
 source_files.push('libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a');
 source_files.push('fluidlite/build/libfluidlite.a');
-source_files.push('TinySoundFont/tinyplayer.c');
+source_files.push('tinysoundfont/tinyplayer.c');
+source_files.push('tinysoundfont/showcqtbar.c');
 
 var js_file = 'src/chip-core.js';
 var wasm_file = 'src/chip-core.wasm';
@@ -200,6 +201,12 @@ var exported_functions = [
   '_tp_get_channel_in_use',
   '_tp_get_channel_program',
   '_tp_set_channel_mute',
+
+  // From showcqtbar.c
+  '_cqt_init',
+  '_cqt_calc',
+  '_cqt_render_line',
+  '_cqt_set_volume',
 ];
 
 var runtime_methods = [
