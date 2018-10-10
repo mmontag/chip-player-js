@@ -57,16 +57,10 @@ typedef union Kernel {
 } Kernel;
 
 typedef struct ShowCQT {
-  /* args */
-  // stereo input signal
-  float input[2][MAX_FFT_SIZE];
-  float out[2][MAX_WIDTH];
-  Color output[MAX_WIDTH];
-
   /* tables */
   Complex exp_tbl[MAX_FFT_SIZE + MAX_FFT_SIZE / 4];
   int16_t reversed_bit_tbl[MAX_FFT_SIZE / 4];
-  float attack_tbl[MAX_FFT_SIZE / 8]; // windowing table?
+  float attack_tbl[MAX_FFT_SIZE / 8];
   uint8_t padding[1024];
 
   /* buffers */
@@ -91,14 +85,6 @@ static __attribute__((__aligned__(128))) ShowCQT cqt;
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-float *cqt_get_input_array(int index) {
-  return cqt.input[!!index];
-}
-
-Color *cqt_get_output_array(void) {
-  return cqt.output;
-}
 
 // See https://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
 static unsigned reverse_bits(unsigned x, int bits) {
@@ -297,7 +283,7 @@ int cqt_init(int rate, int width, float bar_v, float sono_v, int super) {
   return cqt.fft_size;
 }
 
-void cqt_calc2(const float *input_L, const float *input_R) {
+void cqt_calc(const float *input_L, const float *input_R) {
   int fft_size_h = cqt.fft_size >> 1;
   int fft_size_q = cqt.fft_size >> 2;
   int shift = fft_size_h - cqt.attack_size;
@@ -367,77 +353,7 @@ void cqt_calc2(const float *input_L, const float *input_R) {
     cqt.rcp_h_buf[x] = 1.0f / (cqt.color_buf[x].h + 0.0001f);
 }
 
-void cqt_calc(void) {
-  int fft_size_h = cqt.fft_size >> 1;
-  int fft_size_q = cqt.fft_size >> 2;
-  int shift = fft_size_h - cqt.attack_size;
-
-  for (int x = 0; x < cqt.attack_size; x++) {
-    int i = 4 * cqt.reversed_bit_tbl[x];
-    cqt.fft_buf[i] = (Complex) {cqt.input[0][shift + x], cqt.input[1][shift + x]};
-    cqt.fft_buf[i + 1].re = cqt.attack_tbl[x] * cqt.input[0][fft_size_h + shift + x];
-    cqt.fft_buf[i + 1].im = cqt.attack_tbl[x] * cqt.input[1][fft_size_h + shift + x];
-    cqt.fft_buf[i + 2] = (Complex) {cqt.input[0][fft_size_q + shift + x], cqt.input[1][fft_size_q + shift + x]};
-    cqt.fft_buf[i + 3] = (Complex) {0, 0};
-  }
-
-  for (int x = cqt.attack_size; x < fft_size_q; x++) {
-    int i = 4 * cqt.reversed_bit_tbl[x];
-    cqt.fft_buf[i] = (Complex) {cqt.input[0][shift + x], cqt.input[1][shift + x]};
-    cqt.fft_buf[i + 1] = (Complex) {0, 0};
-    cqt.fft_buf[i + 2] = (Complex) {cqt.input[0][fft_size_q + shift + x], cqt.input[1][fft_size_q + shift + x]};
-    cqt.fft_buf[i + 3] = (Complex) {0, 0};
-  }
-
-  fft_calc(cqt.fft_buf, cqt.fft_size);
-
-  for (int x = 0, m = 0; x < cqt.t_size; x++) {
-    int len = cqt.kernel[m].i;
-    int start = cqt.kernel[m + 1].i;
-    if (!len) {
-      cqt.color_buf[x] = (ColorF) {0, 0, 0, 0};
-      continue;
-    }
-    Complex a = {0, 0}, b = {0, 0};
-    for (int y = 0; y < len; y++) {
-      int i = start + y;
-      int j = cqt.fft_size - i;
-      float u = cqt.kernel[m + 2 + y].f;
-      a.re += u * cqt.fft_buf[i].re;
-      a.im += u * cqt.fft_buf[i].im;
-      b.re += u * cqt.fft_buf[j].re;
-      b.im += u * cqt.fft_buf[j].im;
-    }
-    Complex v0 = {a.re + b.re, a.im - b.im};
-    Complex v1 = {b.im + a.im, b.re - a.re};
-    float r0 = v0.re * v0.re + v0.im * v0.im;
-    float r1 = v1.re * v1.re + v1.im * v1.im;
-
-    float c = 255.0f * sqrtf(cqt.sono_v * sqrtf(r0));
-    cqt.color_buf[x].r = (c < 255.0f) ? c : 255.0f;
-    c = 255.0f * sqrtf(cqt.sono_v * sqrtf(0.5f * (r0 + r1)));
-    cqt.color_buf[x].g = (c < 255.0f) ? c : 255.0f;
-    c = 255.0f * sqrtf(cqt.sono_v * sqrtf(r1));
-    cqt.color_buf[x].b = (c < 255.0f) ? c : 255.0f;
-    cqt.color_buf[x].h = cqt.bar_v * sqrtf(0.5f * (r0 + r1));
-
-    m += len + 2;
-  }
-
-  if (cqt.t_size != cqt.width) {
-    for (int x = 0; x < cqt.width; x++) {
-      cqt.color_buf[x].r = 0.5f * (cqt.color_buf[2 * x].r + cqt.color_buf[2 * x + 1].r);
-      cqt.color_buf[x].g = 0.5f * (cqt.color_buf[2 * x].g + cqt.color_buf[2 * x + 1].g);
-      cqt.color_buf[x].b = 0.5f * (cqt.color_buf[2 * x].b + cqt.color_buf[2 * x + 1].b);
-      cqt.color_buf[x].h = 0.5f * (cqt.color_buf[2 * x].h + cqt.color_buf[2 * x + 1].h);
-    }
-  }
-
-  for (int x = 0; x < cqt.width; x++)
-    cqt.rcp_h_buf[x] = 1.0f / (cqt.color_buf[x].h + 0.0001f);
-}
-
-void cqt_render_line2(float *out) {
+void cqt_render_line(float *out) {
   for (int x = 0; x < cqt.width; x++)
     out[x] = cqt.color_buf[x].g + 0.5f;
 }
