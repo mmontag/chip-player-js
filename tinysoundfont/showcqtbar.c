@@ -23,6 +23,8 @@
  * Modified for chip-player-js by Matt Montag, October 6, 2018.
  * from https://github.com/mfcc64/html5-showcqtbar
  *
+ * Helpful documentation here: https://ffmpeg.org/ffmpeg-filters.html#showcqt
+ *
  * Notes:
  * - removed all instances of C99 'restrict' keyword
  * - added extern "C" { ... }
@@ -38,6 +40,9 @@
 #define MAX_KERNEL_SIZE 200000
 #define MIN_VOL 1.0f
 #define MAX_VOL 100.0f
+
+const double basefreq = 20.01523126408007475;
+const double endfreq = 20495.59681441799654;
 
 typedef struct Complex {
   float re, im;
@@ -66,15 +71,13 @@ typedef struct ShowCQT {
   /* buffers */
   Complex fft_buf[MAX_FFT_SIZE];
   ColorF color_buf[MAX_WIDTH * 2];
-  float rcp_h_buf[MAX_WIDTH];
 
   /* props */
   int width;
   int fft_size;
-  int t_size;
+  int out_bins; // kernel table size?
   int attack_size; // num samples in 1/30th of a second
-  float sono_v;
-  float bar_v;
+  float volume;
 
   /* kernel */
   Kernel kernel[MAX_KERNEL_SIZE];
@@ -217,18 +220,18 @@ static void fft_calc(Complex *v, int n) {
   }
 }
 
-int cqt_init(int rate, int width, float bar_v, float sono_v, int super) {
+int cqt_init(int rate, int width, float volume, int super) {
   if (width <= 0 || width > MAX_WIDTH)
     return 0;
 
   cqt.width = width;
-
-  cqt.bar_v = (bar_v > MAX_VOL) ? MAX_VOL : (bar_v > MIN_VOL) ? bar_v : MIN_VOL;
-  cqt.sono_v = (sono_v > MAX_VOL) ? MAX_VOL : (sono_v > MIN_VOL) ? sono_v : MIN_VOL;
+  cqt.volume = (volume > MAX_VOL) ? MAX_VOL : (volume > MIN_VOL) ? volume : MIN_VOL;
 
   if (rate < 8000 || rate > 100000)
     return 0;
 
+  // Get a power of 2 samples just over 0.33 seconds
+  // for example, 16384/44100 = 0.3715
   int bits = ceil(log(rate * 0.33) / M_LN2);
   if (bits > 20 || bits < 10)
     return 0;
@@ -246,19 +249,24 @@ int cqt_init(int rate, int width, float bar_v, float sono_v, int super) {
     cqt.attack_tbl[x] = 0.355768 + 0.487396 * cos(y) + 0.144232 * cos(2 * y) + 0.012604 * cos(3 * y);
   }
 
-  cqt.t_size = cqt.width * (1 + !!super);
-  double log_base = log(20.01523126408007475);
-  double log_end = log(20495.59681441799654);
-  for (int f = 0, idx = 0; f < cqt.t_size; f++) {
-    double freq = exp(log_base + (f + 0.5) * (log_end - log_base) * (1.0 / cqt.t_size));
+  cqt.out_bins = cqt.width * (1 + !!super);
+  double log_base = log(basefreq);
+  double log_end = log(endfreq);
+  for (int f = 0, idx = 0; f < cqt.out_bins; f++) {
+    double freq = exp(log_base + (f + 0.5) * (log_end - log_base) * (1.0 / cqt.out_bins));
 
     if (freq >= 0.5 * rate) {
       cqt.kernel[idx].i = 0;
       break;
     }
 
-    double tlen = 384 * 0.33 / (384 / 0.17 + 0.33 * freq / (1 - 0.17)) +
-                  384 * 0.33 / (0.33 * freq / 0.17 + 384 / (1 - 0.17));
+
+
+    const double timeclamp = 0.17;
+
+    // transform length in time domain - varies per frequency bin
+    double tlen = 384 * 0.33 / (384 / timeclamp + 0.33 * freq / (1 - timeclamp)) +
+                  384 * 0.33 / (0.33 * freq / timeclamp + 384 / (1 - timeclamp));
     double flen = 8.0 * cqt.fft_size / (tlen * rate);
     double center = freq * cqt.fft_size / rate;
     int start = ceil(center - 0.5 * flen);
@@ -288,26 +296,45 @@ void cqt_calc(const float *input_L, const float *input_R) {
   int fft_size_q = cqt.fft_size >> 2;
   int shift = fft_size_h - cqt.attack_size;
 
-  for (int x = 0; x < cqt.attack_size; x++) {
-    int i = 4 * cqt.reversed_bit_tbl[x];
-    cqt.fft_buf[i] = (Complex) {input_L[shift + x], input_R[shift + x]};
-    cqt.fft_buf[i + 1].re = cqt.attack_tbl[x] * input_L[fft_size_h + shift + x];
-    cqt.fft_buf[i + 1].im = cqt.attack_tbl[x] * input_R[fft_size_h + shift + x];
-    cqt.fft_buf[i + 2] = (Complex) {input_L[fft_size_q + shift + x], input_R[fft_size_q + shift + x]};
-    cqt.fft_buf[i + 3] = (Complex) {0, 0};
-  }
-
-  for (int x = cqt.attack_size; x < fft_size_q; x++) {
-    int i = 4 * cqt.reversed_bit_tbl[x];
-    cqt.fft_buf[i] = (Complex) {input_L[shift + x], input_R[shift + x]};
-    cqt.fft_buf[i + 1] = (Complex) {0, 0};
-    cqt.fft_buf[i + 2] = (Complex) {input_L[fft_size_q + shift + x], input_R[fft_size_q + shift + x]};
-    cqt.fft_buf[i + 3] = (Complex) {0, 0};
+  // Appears to put the left channel in reals and right channel in imaginaries
+  // so it will do the FFT on both channels at once
+  if (!input_R || input_L == input_R) {
+    // Only operate on input_L
+    for (int x = 0; x < cqt.attack_size; x++) {
+      int i = 4 * cqt.reversed_bit_tbl[x];
+      cqt.fft_buf[i] = (Complex) {input_L[shift + x], 0};
+      cqt.fft_buf[i + 1] = (Complex) {cqt.attack_tbl[x] * input_L[fft_size_h + shift + x], 0};
+      cqt.fft_buf[i + 2] = (Complex) {input_L[fft_size_q + shift + x], 0};
+      cqt.fft_buf[i + 3] = (Complex) {0, 0};
+    }
+    for (int x = cqt.attack_size; x < fft_size_q; x++) {
+      int i = 4 * cqt.reversed_bit_tbl[x];
+      cqt.fft_buf[i] = (Complex) {input_L[shift + x], 0};
+      cqt.fft_buf[i + 1] = (Complex) {0, 0};
+      cqt.fft_buf[i + 2] = (Complex) {input_L[fft_size_q + shift + x], 0};
+      cqt.fft_buf[i + 3] = (Complex) {0, 0};
+    }
+  } else {
+    for (int x = 0; x < cqt.attack_size; x++) {
+      int i = 4 * cqt.reversed_bit_tbl[x];
+      cqt.fft_buf[i] = (Complex) {input_L[shift + x], input_R[shift + x]};
+      cqt.fft_buf[i + 1].re = cqt.attack_tbl[x] * input_L[fft_size_h + shift + x];
+      cqt.fft_buf[i + 1].im = cqt.attack_tbl[x] * input_R[fft_size_h + shift + x];
+      cqt.fft_buf[i + 2] = (Complex) {input_L[fft_size_q + shift + x], input_R[fft_size_q + shift + x]};
+      cqt.fft_buf[i + 3] = (Complex) {0, 0};
+    }
+    for (int x = cqt.attack_size; x < fft_size_q; x++) {
+      int i = 4 * cqt.reversed_bit_tbl[x];
+      cqt.fft_buf[i] = (Complex) {input_L[shift + x], input_R[shift + x]};
+      cqt.fft_buf[i + 1] = (Complex) {0, 0};
+      cqt.fft_buf[i + 2] = (Complex) {input_L[fft_size_q + shift + x], input_R[fft_size_q + shift + x]};
+      cqt.fft_buf[i + 3] = (Complex) {0, 0};
+    }
   }
 
   fft_calc(cqt.fft_buf, cqt.fft_size);
 
-  for (int x = 0, m = 0; x < cqt.t_size; x++) {
+  for (int x = 0, m = 0; x < cqt.out_bins; x++) {
     int len = cqt.kernel[m].i;
     int start = cqt.kernel[m + 1].i;
     if (!len) {
@@ -324,23 +351,26 @@ void cqt_calc(const float *input_L, const float *input_R) {
       b.re += u * cqt.fft_buf[j].re;
       b.im += u * cqt.fft_buf[j].im;
     }
+    // Left channel
     Complex v0 = {a.re + b.re, a.im - b.im};
-    Complex v1 = {b.im + a.im, b.re - a.re};
     float r0 = v0.re * v0.re + v0.im * v0.im;
+
+    // Right channel - real and imaginary swapped. Is this a 90 degree rotation?
+    Complex v1 = {b.im + a.im, b.re - a.re};
     float r1 = v1.re * v1.re + v1.im * v1.im;
 
-    float c = 255.0f * sqrtf(cqt.sono_v * sqrtf(r0));
-    cqt.color_buf[x].r = (c < 255.0f) ? c : 255.0f;
-    c = 255.0f * sqrtf(cqt.sono_v * sqrtf(0.5f * (r0 + r1)));
-    cqt.color_buf[x].g = (c < 255.0f) ? c : 255.0f;
-    c = 255.0f * sqrtf(cqt.sono_v * sqrtf(r1));
-    cqt.color_buf[x].b = (c < 255.0f) ? c : 255.0f;
-    cqt.color_buf[x].h = cqt.bar_v * sqrtf(0.5f * (r0 + r1));
+//    float c = 255.0f * sqrtf(cqt.sono_v * sqrtf(r0));
+//    cqt.color_buf[x].r = (c < 255.0f) ? c : 255.0f;
+    cqt.color_buf[x].g = sqrtf(cqt.volume * sqrtf(0.5f * (r0 + r1)));
+//    c = 255.0f * sqrtf(cqt.sono_v * sqrtf(r1));
+//    cqt.color_buf[x].b = (c < 255.0f) ? c : 255.0f;
+//    cqt.color_buf[x].h = cqt.bar_v * sqrtf(0.5f * (r0 + r1));
 
     m += len + 2;
   }
 
-  if (cqt.t_size != cqt.width) {
+  // supersampling case
+  if (cqt.out_bins != cqt.width) {
     for (int x = 0; x < cqt.width; x++) {
       cqt.color_buf[x].r = 0.5f * (cqt.color_buf[2 * x].r + cqt.color_buf[2 * x + 1].r);
       cqt.color_buf[x].g = 0.5f * (cqt.color_buf[2 * x].g + cqt.color_buf[2 * x + 1].g);
@@ -348,19 +378,22 @@ void cqt_calc(const float *input_L, const float *input_R) {
       cqt.color_buf[x].h = 0.5f * (cqt.color_buf[2 * x].h + cqt.color_buf[2 * x + 1].h);
     }
   }
-
-  for (int x = 0; x < cqt.width; x++)
-    cqt.rcp_h_buf[x] = 1.0f / (cqt.color_buf[x].h + 0.0001f);
 }
 
 void cqt_render_line(float *out) {
   for (int x = 0; x < cqt.width; x++)
-    out[x] = cqt.color_buf[x].g + 0.5f;
+    out[x] = cqt.color_buf[x].g;
 }
 
-void cqt_set_volume(float bar_v, float sono_v) {
-  cqt.bar_v = (bar_v > MAX_VOL) ? MAX_VOL : (bar_v > MIN_VOL) ? bar_v : MIN_VOL;
-  cqt.sono_v = (sono_v > MAX_VOL) ? MAX_VOL : (sono_v > MIN_VOL) ? sono_v : MIN_VOL;
+void cqt_set_volume(float volume) {
+  cqt.volume = (volume > MAX_VOL) ? MAX_VOL : (volume > MIN_VOL) ? volume : MIN_VOL;
+}
+
+double cqt_bin_to_freq(int bin) {
+  double log_base = log(basefreq);
+  double log_end = log(endfreq);
+  double freq = exp(log_base + (bin + 0.5) * (log_end - log_base) * (1.0 / cqt.out_bins));
+  return freq;
 }
 
 #ifdef __cplusplus
