@@ -346,7 +346,7 @@ class App extends PureComponent {
               {this.state.paused ? 'Resume' : 'Pause'}
             </button>&nbsp;
             <button onClick={this.handlePlayRandom}>
-              I Feel Lucky
+              I'm Feeling Lucky
             </button>
             {this.state.playerError &&
             <div className="App-error">ERROR: {this.state.playerError}</div>
