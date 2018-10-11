@@ -38,9 +38,9 @@ class App extends PureComponent {
 
     // Initialize audio graph
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    this._iosAudioUnlock(audioCtx);
     const playerNode = this.playerNode = audioCtx.createGain();
     playerNode.connect(audioCtx.destination);
+    this._safariAudioUnlock(audioCtx);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
     // Load the chip-core Emscripten runtime
@@ -87,17 +87,13 @@ class App extends PureComponent {
                                        // 400 ms = 2.5 fps
   }
 
-  _iosAudioUnlock(context) {
+  _safariAudioUnlock(context) {
     // https://hackernoon.com/unlocking-web-audio-the-smarter-way-8858218c0e09
-    if (context.state === 'suspended' && 'ontouchstart' in window) {
-      const unlock = function () {
-        context.resume().then(function () {
-          document.body.removeEventListener('touchstart', unlock);
-          document.body.removeEventListener('touchend', unlock);
-        });
-      };
-      document.body.addEventListener('touchstart', unlock, false);
-      document.body.addEventListener('touchend', unlock, false);
+    if (context.state === 'suspended') {
+      const events = ['touchstart','touchend', 'mousedown','mouseup'];
+      const unlock = () => context.resume()
+        .then(() => events.forEach(event => document.body.removeEventListener(event, unlock)));
+      events.forEach(event => document.body.addEventListener(event, unlock, false));
     }
   }
 
