@@ -46,8 +46,6 @@ export default class Spectrogram {
     this.cqtFreqs = Array(cqtBins).fill().map((_, i) => this.lib._cqt_bin_to_freq(i));
     _aWeightingLUT = this.cqtFreqs.map(f => 0.5 + 0.5 * _getAWeighting(f));
 
-    console.log(_aWeightingLUT);
-
     this.cqtOutput = this.lib.allocate(16, 'float', this.lib.ALLOC_NORMAL);
     this.cqtInput = this.lib.allocate(cqtSize * 4, 'float', this.lib.ALLOC_NORMAL);
     this.floatTimeDomainData = new Float32Array(this.cqtSize);
@@ -192,4 +190,15 @@ export default class Spectrogram {
       }
     }
   }
+}
+
+// getFloatTimeDomainData polyfill for Safari
+if (global.AnalyserNode && !global.AnalyserNode.prototype.getFloatTimeDomainData) {
+  var uint8 = new Uint8Array(2048);
+  global.AnalyserNode.prototype.getFloatTimeDomainData = function(array) {
+    this.getByteTimeDomainData(uint8);
+    for (var i = 0, imax = array.length; i < imax; i++) {
+      array[i] = (uint8[i] - 128) * 0.0078125;
+    }
+  };
 }
