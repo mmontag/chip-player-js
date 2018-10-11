@@ -194,7 +194,6 @@ class App extends PureComponent {
 
   handlePlayerStateUpdate(isStopped) {
     if (isStopped) {
-      this.player = null;
       this.setState({
         currentSongSubtune: 0,
         currentSongMetadata: {},
