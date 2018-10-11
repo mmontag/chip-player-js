@@ -220,4 +220,4 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .Visualizer { position: relative; }
-.Visualizer-canvas { display: block; width: 100%; }
+.Visualizer-canvas { display: block; }

@@ -150,7 +150,7 @@ export default class Spectrogram {
       this.lib._cqt_render_line(this.cqtOutput);
       // copy output to canvas
       for (let i = 0; i < 1024; i++) {
-        const weighting = this.weighting === 0 ? 1 : _aWeightingLUT[i];
+        const weighting = this.weighting === WEIGHTING_A ? _aWeightingLUT[i] : 1;
         const val = Math.floor(255 * weighting * this.lib.getValue(this.cqtOutput + i * 4, 'float'));
         const fillStyle = colorMap(val).hex();
         this.specCtx.fillStyle = fillStyle;
