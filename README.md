@@ -21,7 +21,7 @@ The player engines come from C/C++ libraries such as [game-music-emu](https://bi
 
 As more player engines are added, it seems the best way to combine them is probably to create a wrapper C project with one interface that gets exposed through Emscripten, rather than compiling several separate C/C++ libraries to JS and unifying their interfaces in the JS layer. This would make the bindings easier and reduce the overhead of running multiple Emscripten runtimes.
 
-#### Related Projects and Resources
+### Related Projects and Resources
 
 ##### Chipmachine (Native)
 http://sasq64.github.io/chipmachine/
@@ -82,3 +82,7 @@ The best modern option for playing MIDI is probably using a well-designed GM Sou
 
 - The best pop music MIDI archive comes from [Colin Raffel's thesis work](https://colinraffel.com/projects/lmd/) on MIDI alignment. About 20,000 cleaned MIDI files
     * Colin Raffel. "Learning-Based Methods for Comparing Sequences, with Applications to Audio-to-MIDI Alignment and Matching". PhD Thesis, 2016.
+
+#### Miscellaneous
+
+[ISO 226 Equal loudness curves](https://github.com/IoSR-Surrey/MatlabToolbox/blob/master/%2Biosr/%2Bauditory/iso226.m)

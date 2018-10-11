@@ -126,7 +126,7 @@ export default class XMPPlayer extends Player {
               buffer +                // Interleaved channel format
               i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
               channel * 2,            // channel offset * bytes per sample
-              "i16"                   // the sample values are signed 16-bit integers
+              'i16'                   // the sample values are signed 16-bit integers
             ) / INT16_MAX;            // convert int16 to float
           }
         }
@@ -135,7 +135,7 @@ export default class XMPPlayer extends Player {
 
     err = xmp._xmp_start_player(ctx, this.audioCtx.sampleRate, 0);
     if (err !== 0) {
-      console.error("xmp_start_player failed. error code: %d", err);
+      console.error('xmp_start_player failed. error code: %d', err);
     }
 
     this.metadata = this._parseMetadata();
