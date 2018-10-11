@@ -88,9 +88,10 @@ select:before, button:before { content: '[ '; }
 select:after, button:after   { content: ' ]'; }
 select option                { font-size: 14px; }
 
+button          { background: #66d; }
 button:focus    { background: #00f; }
 button:active   { background: #800; }
-button:disabled { color: #ccc; }
+button:disabled { background: #777; color: #ccc; }
 
 input[type=text] {
     border: 0;
