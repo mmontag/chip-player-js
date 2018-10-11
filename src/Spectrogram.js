@@ -3,6 +3,9 @@ const chroma = require('chroma-js');
 const MODE_LINEAR = 0;
 const MODE_LOG = 1;
 const MODE_CONSTANT_Q = 2;
+
+const WEIGHTING_NONE = 0;
+const WEIGHTING_A = 1;
 const colorMap = new chroma.scale([
   '#000000',
   '#0000a0',
@@ -14,10 +17,17 @@ const colorMap = new chroma.scale([
   '#ffffff',
 ]).domain([0, 255]);
 const _debug = window.location.search.indexOf('debug=true') !== -1;
+let _aWeightingLUT;
 let _calcTime = 0;
 let _renderTime = 0;
 let _timeCount = 0;
 let _lastTime = 0;
+
+function _getAWeighting(f) {
+  var f2 = f*f;
+  return 1.2588966 * 148840000 * f2*f2 /
+    ((f2 + 424.36) * Math.sqrt((f2 + 11599.29) * (f2 + 544496.41)) * (f2 + 148840000));
+}
 
 export default class Spectrogram {
   constructor(chipCore, audioCtx, freqCanvas, specCanvas, minDb = -90, maxDb = -30) {
@@ -26,18 +36,25 @@ export default class Spectrogram {
 
     // Constant Q setup
     this.lib = chipCore;
-    const db = 20;
+    const db = 32;
     const supersample = 0;
-    const cqtSize = this.lib._cqt_init(audioCtx.sampleRate, freqCanvas.width, 60, db, db, supersample);
+    const cqtBins = freqCanvas.width;
+    const cqtSize = this.lib._cqt_init(audioCtx.sampleRate, cqtBins, db, supersample);
     console.log('cqtSize:', cqtSize);
     if (!cqtSize) throw Error('Error initializing constant Q transform.');
     this.cqtSize = cqtSize;
+    this.cqtFreqs = Array(cqtBins).fill().map((_, i) => this.lib._cqt_bin_to_freq(i));
+    _aWeightingLUT = this.cqtFreqs.map(f => 0.5 + 0.5 * _getAWeighting(f));
+
+    console.log(_aWeightingLUT);
+
     this.cqtOutput = this.lib.allocate(16, 'float', this.lib.ALLOC_NORMAL);
     this.cqtInput = this.lib.allocate(cqtSize * 4, 'float', this.lib.ALLOC_NORMAL);
     this.floatTimeDomainData = new Float32Array(this.cqtSize);
 
     this.paused = true;
     this.mode = MODE_LINEAR;
+    this.weighting = WEIGHTING_NONE;
 
     this.analyserNode = audioCtx.createAnalyser();
     this.analyserNode.minDecibels = minDb;
@@ -76,6 +93,10 @@ export default class Spectrogram {
   setFFTSize(size) {
     this.fftSize = size;
     this.analyserNode.fftSize = size;
+  }
+
+  setWeighting(mode) {
+    this.weighting = mode;
   }
 
   updateFrame() {
@@ -129,7 +150,8 @@ export default class Spectrogram {
       this.lib._cqt_render_line(this.cqtOutput);
       // copy output to canvas
       for (let i = 0; i < 1024; i++) {
-        const val = Math.floor(this.lib.getValue(this.cqtOutput + i * 4, 'float'));
+        const weighting = this.weighting === 0 ? 1 : _aWeightingLUT[i];
+        const val = Math.floor(255 * weighting * this.lib.getValue(this.cqtOutput + i * 4, 'float'));
         const fillStyle = colorMap(val).hex();
         this.specCtx.fillStyle = fillStyle;
         this.specCtx.fillRect(i, 0, 1, frameHeight);

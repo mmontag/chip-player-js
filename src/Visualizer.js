@@ -5,6 +5,10 @@ const SPECTROGRAM_MODES = [
   'Linear FFT', 'Log FFT', 'Constant Q'
 ];
 
+const WEIGHTING_MODES = [
+  'None', 'A Weighting'
+];
+
 const FFT_SIZES = [
   512, 1024, 2048, 4096, 8192, 16384
 ];
@@ -15,6 +19,7 @@ export default class Visualizer extends Component {
 
     this.state = {
       vizMode: 0,
+      weightingMode: 0,
       fftSize: 2048,
     };
 
@@ -39,18 +44,24 @@ export default class Visualizer extends Component {
   render() {
     const handleModeClick = (e) => {
       const mode = parseInt(e.target.value, 10);
-      this.setState({ vizMode: mode });
+      this.setState({vizMode: mode});
       this.spectrogram.setMode(mode);
+    };
+    const handleWeightingModeClick = (e) => {
+      const mode = parseInt(e.target.value, 10);
+      this.setState({weightingMode: mode});
+      this.spectrogram.setWeighting(mode);
     };
     const handleFFTSizeClick = (e) => {
       const size = parseInt(e.target.value, 10);
-      this.setState({ fftSize: size });
+      this.setState({fftSize: size});
       this.spectrogram.setFFTSize(size);
     };
     return (
       <section className='Visualizer'>
         <h3>Visualizer</h3>
-        Mode: {
+        Mode:&nbsp;
+        {
           SPECTROGRAM_MODES.map((mode, i) =>
             <label key={i}><input onClick={handleModeClick}
                                   type='radio'
@@ -60,9 +71,21 @@ export default class Visualizer extends Component {
           )
         }
         <br/>
+        Weighting:&nbsp;
+        {
+          WEIGHTING_MODES.map((mode, i) =>
+            <label key={i}><input onClick={handleWeightingModeClick}
+                                  type='radio'
+                                  name='weighting-mode'
+                                  defaultChecked={this.state.weightingMode === i}
+                                  value={i}/>{mode}</label>
+          )
+        }
+        <br/>
         {this.state.vizMode !== 2 &&
         <div>
-          FFT Size: {
+          FFT Size:&nbsp;
+          {
             FFT_SIZES.map((size, i) =>
               <label key={i}><input onClick={handleFFTSizeClick}
                                     type='radio'

@@ -206,7 +206,7 @@ var exported_functions = [
   '_cqt_init',
   '_cqt_calc',
   '_cqt_render_line',
-  '_cqt_set_volume',
+  '_cqt_bin_to_freq',
 ];
 
 var runtime_methods = [
@@ -225,7 +225,7 @@ var flags = [
   '-s', 'ALLOW_MEMORY_GROWTH=1',
   '-s', 'ASSERTIONS=1',
   '-s', 'MODULARIZE=1',
-  '-s', 'EXPORT_NAME=CHIPPLAYER',
+  '-s', 'EXPORT_NAME=CHIP_CORE',
   '-s', 'ENVIRONMENT=web',
   '-s', 'USE_ZLIB=1',
   '-O2',
