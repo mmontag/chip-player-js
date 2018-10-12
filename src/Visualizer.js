@@ -6,7 +6,8 @@ const SPECTROGRAM_MODES = [
 ];
 
 const WEIGHTING_MODES = [
-  'None', 'A Weighting'
+  {label: 'None', description: 'No attenuation'},
+  {label: 'A Weighting', description: 'Darkens low and high frequencies to approximate sensitivity of human hearing.'}
 ];
 
 const FFT_SIZES = [
@@ -74,11 +75,12 @@ export default class Visualizer extends Component {
         Weighting:&nbsp;
         {
           WEIGHTING_MODES.map((mode, i) =>
-            <label key={i}><input onClick={handleWeightingModeClick}
-                                  type='radio'
-                                  name='weighting-mode'
-                                  defaultChecked={this.state.weightingMode === i}
-                                  value={i}/>{mode}</label>
+            <label title={mode.description} key={i}>
+              <input onClick={handleWeightingModeClick}
+                     type='radio'
+                     name='weighting-mode'
+                     defaultChecked={this.state.weightingMode === i}
+                     value={i}/>{mode.label}</label>
           )
         }
         <br/>

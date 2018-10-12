@@ -83,12 +83,11 @@ select {
     background-size: 4px 12px, 4px 12px;
     background-repeat: no-repeat;
 }
-button { padding: 0; margin: 0; }
 select:before, button:before { content: '[ '; }
 select:after, button:after   { content: ' ]'; }
 select option                { font-size: 14px; }
 
-button          { background: #66d; }
+button          { background: #66d; padding: 0; margin: 0; }
 button:focus    { background: #00f; }
 button:active   { background: #800; }
 button:disabled { background: #777; color: #ccc; }
