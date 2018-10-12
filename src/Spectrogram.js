@@ -46,9 +46,7 @@ export default class Spectrogram {
     this.cqtFreqs = Array(cqtBins).fill().map((_, i) => this.lib._cqt_bin_to_freq(i));
     _aWeightingLUT = this.cqtFreqs.map(f => 0.5 + 0.5 * _getAWeighting(f));
 
-    this.cqtOutput = this.lib.allocate(16, 'float', this.lib.ALLOC_NORMAL);
-    this.cqtInput = this.lib.allocate(cqtSize * 4, 'float', this.lib.ALLOC_NORMAL);
-    this.floatTimeDomainData = new Float32Array(this.cqtSize);
+    this.dataPtr = this.lib._malloc(cqtSize * 4);
 
     this.paused = true;
     this.mode = MODE_LINEAR;
@@ -68,9 +66,9 @@ export default class Spectrogram {
     this.tempCanvas.width = this.specCanvas.width;
     this.tempCanvas.height = this.specCanvas.height;
 
-    this.freqCtx = this.freqCanvas.getContext('2d');
-    this.specCtx = this.specCanvas.getContext('2d');
-    this.tempCtx = this.tempCanvas.getContext('2d');
+    this.freqCtx = this.freqCanvas.getContext('2d', {alpha: false});
+    this.specCtx = this.specCanvas.getContext('2d', {alpha: false});
+    this.tempCtx = this.tempCanvas.getContext('2d', {alpha: false});
 
     this.updateFrame();
   }
@@ -101,74 +99,71 @@ export default class Spectrogram {
     requestAnimationFrame(this.updateFrame);
     if (this.paused) return;
 
-    const _start = performance.now();
-
     const fqHeight = this.freqCanvas.height;
     const canvasWidth = this.freqCanvas.width;
-    const divider = (256.0 / fqHeight);
-    const frameHeight = 3;
-
+    const hCoeff = fqHeight / 256.0;
+    const specSpeed = 3;
     const data = this.byteFrequencyData;
-    const floatData = this.floatTimeDomainData;
-    this.freqCtx.fillStyle = 'black';
-    this.freqCtx.fillRect(0, 0, this.freqCanvas.width, this.freqCanvas.height);
-    this.tempCtx.drawImage(this.specCanvas, 0, 0, this.specCanvas.width, this.specCanvas.height);
+    const analyserNode = this.analyserNode;
+    const freqCtx = this.freqCtx;
+    const specCtx = this.specCtx;
+    const tempCtx = this.tempCtx;
+    freqCtx.fillStyle = 'black';
+    freqCtx.fillRect(0, 0, this.freqCanvas.width, this.freqCanvas.height);
+    tempCtx.drawImage(this.specCanvas, 0, 0, this.specCanvas.width, this.specCanvas.height);
+    const _start = performance.now();
+    const dataHeap = new Float32Array(this.lib.HEAPF32.buffer, this.dataPtr, this.cqtSize);
 
     if (this.mode === MODE_LINEAR) {
-      this.analyserNode.getByteFrequencyData(data);
-      for (let i = 0; i < data.length && i < canvasWidth; ++i) {
-        this.freqCtx.fillStyle = colorMap(data[i]).hex();
-        this.freqCtx.fillRect(i, fqHeight - data[i] / divider, 1, data[i] / divider);
-
-        this.specCtx.fillStyle = colorMap(data[i]).hex();
-        this.specCtx.fillRect(i, 0, 1, frameHeight);
+      analyserNode.getByteFrequencyData(data);
+      for (let x = 0; x < data.length && x < canvasWidth; ++x) {
+        const style = colorMap(data[x]).hex();
+        const h =     data[x] * hCoeff | 0;
+        freqCtx.fillStyle = style;
+        freqCtx.fillRect(x, fqHeight - h, 1, h);
+        specCtx.fillStyle = style;
+        specCtx.fillRect(x, 0, 1, specSpeed);
       }
     } else if (this.mode === MODE_LOG) {
-      this.analyserNode.getByteFrequencyData(data);
+      analyserNode.getByteFrequencyData(data);
       const logmax = Math.log(data.length);
       for (let i = 0; i < data.length && i < canvasWidth; i++) {
-        const x = Math.floor((Math.log(i) / logmax) * canvasWidth);
-        const binWidth = Math.floor((Math.log(i + 1) / logmax) * canvasWidth - x);
-        this.freqCtx.fillStyle = colorMap(data[i]).hex();
-        this.freqCtx.fillRect(x, fqHeight - data[i] / divider, binWidth, data[i] / divider);
-        this.specCtx.fillStyle = colorMap(data[i]).hex();
-        this.specCtx.fillRect(x, 0, binWidth, frameHeight);
+        const x =        (Math.log(i) / logmax) * canvasWidth | 0;
+        const binWidth = (Math.log(i + 1) / logmax) * canvasWidth - x | 0;
+        const h =        data[i] * hCoeff | 0;
+        const style =    colorMap(data[i]).hex();
+        freqCtx.fillStyle = style;
+        freqCtx.fillRect(x, fqHeight - h, binWidth, h);
+        specCtx.fillStyle = style;
+        specCtx.fillRect(x, 0, binWidth, specSpeed);
       }
     } else if (this.mode === MODE_CONSTANT_Q) {
-      this.analyserNode.getFloatTimeDomainData(floatData);
-      for (let i = 0; i < floatData.length; i++) {
-        const byteOffset = 4 * i;
-        this.lib.setValue(
-          this.cqtInput + byteOffset,
-          floatData[i],
-          'float'
-        );
-      }
-      this.lib._cqt_calc(this.cqtInput, this.cqtInput);
-      this.lib._cqt_render_line(this.cqtOutput);
+      analyserNode.getFloatTimeDomainData(dataHeap);
+      this.lib._cqt_calc(this.dataPtr, this.dataPtr);
+      this.lib._cqt_render_line(this.dataPtr);
       // copy output to canvas
-      for (let i = 0; i < 1024; i++) {
-        const weighting = this.weighting === WEIGHTING_A ? _aWeightingLUT[i] : 1;
-        const val = Math.floor(255 * weighting * this.lib.getValue(this.cqtOutput + i * 4, 'float'));
-        const fillStyle = colorMap(val).hex();
-        this.specCtx.fillStyle = fillStyle;
-        this.specCtx.fillRect(i, 0, 1, frameHeight);
-        this.freqCtx.fillStyle = fillStyle;
-        this.freqCtx.fillRect(i, fqHeight - val / divider, 1, val / divider);
+      for (let x = 0; x < 1024; x++) {
+        const weighting = this.weighting === WEIGHTING_A ? _aWeightingLUT[x] : 1;
+        const val =       255 * weighting * dataHeap[x] | 0; //this.lib.getValue(this.cqtOutput + x * 4, 'float') | 0;
+        const h =         val * hCoeff | 0;
+        const style =     colorMap(val).hex();
+        specCtx.fillStyle = style;
+        specCtx.fillRect(x, 0, 1, specSpeed);
+        freqCtx.fillStyle = style;
+        freqCtx.fillRect(x, fqHeight - h, 1, h);
       }
     }
 
     const _middle = performance.now();
 
     // set translate on the canvas
-    this.specCtx.translate(0, frameHeight);
+    specCtx.translate(0, specSpeed);
     // draw the copied image
-    this.specCtx.drawImage(this.tempCanvas,
+    specCtx.drawImage(this.tempCanvas,
       0, 0, this.specCanvas.width, this.specCanvas.height,
       0, 0, this.specCanvas.width, this.specCanvas.height);
-
     // reset the transformation matrix
-    this.specCtx.setTransform(1, 0, 0, 1, 0, 0);
+    specCtx.setTransform(1, 0, 0, 1, 0, 0);
 
     const _end = performance.now();
 
@@ -176,7 +171,7 @@ export default class Spectrogram {
       _calcTime += _middle - _start;
       _renderTime += _end - _middle;
       _timeCount++;
-      if (_timeCount >= 500) {
+      if (_timeCount >= 200) {
         console.log(
           (_calcTime / _timeCount).toFixed(2) + "  ms   (calc time)\n" +
           (_renderTime / _timeCount).toFixed(2) + "  ms (render time)\n" +
@@ -194,7 +189,7 @@ export default class Spectrogram {
 
 // getFloatTimeDomainData polyfill for Safari
 if (global.AnalyserNode && !global.AnalyserNode.prototype.getFloatTimeDomainData) {
-  var uint8 = new Uint8Array(2048);
+  var uint8 = new Uint8Array(16384);
   global.AnalyserNode.prototype.getFloatTimeDomainData = function(array) {
     this.getByteTimeDomainData(uint8);
     for (var i = 0, imax = array.length; i < imax; i++) {
