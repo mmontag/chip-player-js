@@ -19,8 +19,8 @@ export default class Visualizer extends PureComponent {
     super(props);
 
     this.state = {
-      vizMode: 0,
-      weightingMode: 0,
+      vizMode: 2,
+      weightingMode: 1,
       fftSize: 2048,
     };
 
@@ -35,6 +35,8 @@ export default class Visualizer extends PureComponent {
       this.freqCanvasRef.current,
       this.specCanvasRef.current,
     );
+    this.spectrogram.setMode(this.state.vizMode);
+    this.spectrogram.setWeighting(this.state.weightingMode);
     this.props.sourceNode.connect(this.spectrogram.analyserNode);
   }
 
