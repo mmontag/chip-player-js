@@ -133,7 +133,10 @@ class App extends PureComponent {
     }
     this.player = null;
     const ext = url.split('.').pop().toLowerCase();
-    const filename = url.split('/').pop();
+    const parts = url.split('/');
+    const filename = parts.pop();
+    url = [...parts, encodeURIComponent(filename)].join('/'); // escape #, which appears in some filenames
+
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].canPlay(ext)) {
         this.player = this.players[i];
