@@ -102,7 +102,7 @@ export default class Spectrogram {
     const fqHeight = this.freqCanvas.height;
     const canvasWidth = this.freqCanvas.width;
     const hCoeff = fqHeight / 256.0;
-    const specSpeed = 3;
+    const specSpeed = 2;
     const data = this.byteFrequencyData;
     const analyserNode = this.analyserNode;
     const freqCtx = this.freqCtx;
@@ -139,18 +139,20 @@ export default class Spectrogram {
       }
     } else if (this.mode === MODE_CONSTANT_Q) {
       analyserNode.getFloatTimeDomainData(dataHeap);
-      this.lib._cqt_calc(this.dataPtr, this.dataPtr);
-      this.lib._cqt_render_line(this.dataPtr);
-      // copy output to canvas
-      for (let x = 0; x < 1024; x++) {
-        const weighting = this.weighting === WEIGHTING_A ? _aWeightingLUT[x] : 1;
-        const val =       255 * weighting * dataHeap[x] | 0; //this.lib.getValue(this.cqtOutput + x * 4, 'float') | 0;
-        const h =         val * hCoeff | 0;
-        const style =     colorMap(val).hex();
-        specCtx.fillStyle = style;
-        specCtx.fillRect(x, 0, 1, specSpeed);
-        freqCtx.fillStyle = style;
-        freqCtx.fillRect(x, fqHeight - h, 1, h);
+      if (!dataHeap.every(n => n === 0)) {
+        this.lib._cqt_calc(this.dataPtr, this.dataPtr);
+        this.lib._cqt_render_line(this.dataPtr);
+        // copy output to canvas
+        for (let x = 0; x < canvasWidth; x++) {
+          const weighting = this.weighting === WEIGHTING_A ? _aWeightingLUT[x] : 1;
+          const val = 255 * weighting * dataHeap[x] | 0; //this.lib.getValue(this.cqtOutput + x * 4, 'float') | 0;
+          const h = val * hCoeff | 0;
+          const style = colorMap(val).hex();
+          specCtx.fillStyle = style;
+          specCtx.fillRect(x, 0, 1, specSpeed);
+          freqCtx.fillStyle = style;
+          freqCtx.fillRect(x, fqHeight - h, 1, h);
+        }
       }
     }
 
