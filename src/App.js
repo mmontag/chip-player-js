@@ -62,7 +62,17 @@ class App extends PureComponent {
         const urlParams = queryString.parse(window.location.search.substr(1));
         if (urlParams.play) {
           // Allow a little time for initial page render before starting the song
-          setTimeout(() => this.playSong(CATALOG_PREFIX + urlParams.play), 500);
+          setTimeout(() => {
+            this.playSong(CATALOG_PREFIX + urlParams.play);
+            if (urlParams.t) {
+              //
+              setTimeout(() => {
+                if (this.player) {
+                  this.player.seekMs(parseInt(urlParams.t, 10));
+                }
+              }, 100);
+            }
+          }, 500);
         }
       },
     });
@@ -149,6 +159,7 @@ class App extends PureComponent {
       ...queryString.parse(window.location.search.substr(1)),
       play: filepath,
     };
+    delete urlParams.t;
     const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+').replace(/%2F/g, '/');
     window.history.replaceState(null, '', stateUrl);
 
@@ -261,8 +272,16 @@ class App extends PureComponent {
     if (!this.player) return;
 
     const pos = event.target ? event.target.value : event;
-    // Seek in song
+
     const seekMs = Math.floor(pos * this.state.currentSongDurationMs);
+    const urlParams = {
+      ...queryString.parse(window.location.search.substr(1)),
+      t: seekMs,
+    };
+    const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+').replace(/%2F/g, '/');
+    window.history.replaceState(null, '', stateUrl);
+
+    // Seek in song
     this.player.seekMs(seekMs);
     this.setState({
       draggedSongPositionMs: -1,
