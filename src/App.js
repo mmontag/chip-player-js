@@ -11,7 +11,7 @@ import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
 import promisify from './promisifyXhr';
 import {trieToList} from './ResigTrie';
-import queryString from 'query-string';
+import queryString from 'querystring';
 
 const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
@@ -59,7 +59,7 @@ class App extends PureComponent {
         ];
         this.setState({loading: false});
 
-        const urlParams = queryString.parse(window.location.search);
+        const urlParams = queryString.parse(window.location.search.substr(1));
         if (urlParams.play) {
           // Allow a little time for initial page render before starting the song
           setTimeout(() => this.playSong(CATALOG_PREFIX + urlParams.play), 500);
@@ -146,7 +146,7 @@ class App extends PureComponent {
     url = [...parts, encodeURIComponent(filename)].join('/'); // escape #, which appears in some filenames
 
     const urlParams = {
-      ...queryString.parse(window.location.search),
+      ...queryString.parse(window.location.search.substr(1)),
       play: filepath,
     };
     const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+').replace(/%2F/g, '/');

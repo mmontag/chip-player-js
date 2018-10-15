@@ -47,7 +47,6 @@ export default class GMEPlayer extends Player {
     const _debug = window.location.search.indexOf('debug=true') !== -1;
     let _timeCount = 0;
     let _renderTime = 0;
-    let _lastTime = 0;
     let _perfInterval = 100;
 
     if (!this.audioNode) {
@@ -114,7 +113,6 @@ export default class GMEPlayer extends Player {
             );
             _renderTime = 0.0;
             _timeCount = 0;
-            _lastTime = _start;
           }
         }
 
