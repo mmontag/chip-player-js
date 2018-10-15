@@ -10,4 +10,4 @@ const files = glob.sync(`${root}**/*.{${formats}}`, {nocase: true},)
   .map(file => file.replace(root, ''));
 
 const trie = listToTrie(files);
-fs.writeSync(fs.openSync('src/catalog.json', 'w+'), JSON.stringify(trie));
+fs.writeSync(fs.openSync('public/catalog.json', 'w+'), JSON.stringify(trie));
