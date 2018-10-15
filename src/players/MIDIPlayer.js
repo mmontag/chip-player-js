@@ -166,7 +166,12 @@ export default class MIDIPlayer extends Player {
   }
 
   getVoiceName(index) {
-    return GENERAL_MIDI_PATCH_MAP[lib._tp_get_channel_program(this.activeChannels[index])];
+    const channel = this.activeChannels[index];
+    if (channel === 9) {
+      return 'Drums';
+    } else {
+      return GENERAL_MIDI_PATCH_MAP[lib._tp_get_channel_program(channel)];
+    }
   }
 
   setVoices(voices) {
