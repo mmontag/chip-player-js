@@ -343,7 +343,8 @@ class App extends PureComponent {
             <button onClick={this.togglePause}
                     disabled={this.player ? null : true}>
               {this.state.paused ? 'Resume' : 'Pause'}
-            </button>&nbsp;
+            </button>
+            &nbsp;
             <button onClick={this.handlePlayRandom}>
               I'm Feeling Lucky
             </button>
@@ -435,7 +436,7 @@ class App extends PureComponent {
               }
             </div>
             }
-            {songData.map(group => {
+            {window.location.search.indexOf('debug=true') !== -1 && songData.map(group => {
               return (
                 <div key={group.title}>
                   <h4>{group.title}</h4>
