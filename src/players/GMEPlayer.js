@@ -3,7 +3,7 @@ import Player from "./Player.js";
 let emu = null;
 let libgme = null;
 const INT16_MAX = 65535;
-const BUFFER_SIZE = 1024;
+const BUFFER_SIZE = 2048;
 const fileExtensions = [
   'nsf',
   'nsfe',
@@ -44,11 +44,18 @@ export default class GMEPlayer extends Player {
     this.fadingOut = false;
     const buffer = libgme.allocate(BUFFER_SIZE * 16, 'i16', libgme.ALLOC_NORMAL);
     const emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
+    const _debug = window.location.search.indexOf('debug=true') !== -1;
+    let _timeCount = 0;
+    let _renderTime = 0;
+    let _lastTime = 0;
+    let _perfInterval = 100;
 
     if (!this.audioNode) {
       this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
       this.audioNode.connect(this.destinationNode);
       this.audioNode.onaudioprocess = (e) => {
+        const _start = performance.now();
+
         let i, channel;
         const channels = [];
         for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
@@ -89,6 +96,28 @@ export default class GMEPlayer extends Player {
             this.onPlayerStateUpdate(true);
           }
         }
+
+        const _end = performance.now();
+
+        if (_debug) {
+          _renderTime += _end - _start;
+          _timeCount++;
+          if (_timeCount >= _perfInterval) {
+            const cost = _renderTime / _timeCount;
+            const budget = 1000*BUFFER_SIZE/this.audioCtx.sampleRate;
+            console.log(
+              '[GME] %s ms to render %d frames (%s ms) (%s% utilization)',
+              cost.toFixed(2),
+              BUFFER_SIZE,
+              budget.toFixed(2),
+              (100 * cost / budget).toFixed(2),
+            );
+            _renderTime = 0.0;
+            _timeCount = 0;
+            _lastTime = _start;
+          }
+        }
+
       };
     }
 
