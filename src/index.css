@@ -76,6 +76,7 @@ select, button {
     color: #ff0;
 }
 select {
+    background-color: #66d;
     background-image: /* A little down-arrow */
             linear-gradient(60deg, transparent 50%, #ff0 50%),
             linear-gradient(120deg, #ff0 50%, transparent 50%);
@@ -155,7 +156,7 @@ input[type=range]::-webkit-slider-thumb {
 
 .App {
     border: 3px double yellow;
-    padding: 0 19px;
+    padding: 0 19px 19px 19px;
 }
 
 .App .App-header {

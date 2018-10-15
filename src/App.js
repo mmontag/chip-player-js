@@ -376,7 +376,7 @@ class App extends PureComponent {
                   onClick={this.nextSubtune}>Next</button><br/>
                 </span>
               }
-              Voices:
+              Voices:&nbsp;
               {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
                 return (
                   <label className="App-label" key={i}>
@@ -402,8 +402,10 @@ class App extends PureComponent {
                     case 'enum':
                       return (
                         <div key={param.id}>
-                          {param.label}:
-                          <select onChange={(e) => this.player.setParameter(param.id, e.target.value)}>
+                          {param.label}:&nbsp;
+                          <select
+                            onChange={(e) => this.player.setParameter(param.id, e.target.value)}
+                            defaultValue={this.player.getParameter(param.id)}>
                             {param.options.map(optgroup =>
                               <optgroup key={optgroup.label} label={optgroup.label}>
                                 {optgroup.items.map(option =>
