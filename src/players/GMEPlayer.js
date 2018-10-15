@@ -142,8 +142,8 @@ export default class GMEPlayer extends Player {
 
     res.system = readString();
     res.game = readString();
-    res.song = readString();
-    res.author = readString();
+    res.title = readString();
+    res.artist = readString();
     res.copyright = readString();
     res.comment = readString();
 

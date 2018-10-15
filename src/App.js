@@ -90,7 +90,7 @@ class App extends PureComponent {
   _safariAudioUnlock(context) {
     // https://hackernoon.com/unlocking-web-audio-the-smarter-way-8858218c0e09
     if (context.state === 'suspended') {
-      const events = ['touchstart','touchend', 'mousedown','mouseup'];
+      const events = ['touchstart', 'touchend', 'mousedown', 'mouseup'];
       const unlock = () => context.resume()
         .then(() => events.forEach(event => document.body.removeEventListener(event, unlock)));
       events.forEach(event => document.body.addEventListener(event, unlock, false));
@@ -112,7 +112,7 @@ class App extends PureComponent {
       .then(trie => trieToList(trie))
       .then(list => {
         console.log('Loaded catalog.json (%d items).', list.length);
-        this.setState({ catalog: list });
+        this.setState({catalog: list});
       });
   }
 
@@ -132,6 +132,7 @@ class App extends PureComponent {
       this.player.stop();
     }
     this.player = null;
+    const filepath = url.replace(CATALOG_PREFIX, '');
     const ext = url.split('.').pop().toLowerCase();
     const parts = url.split('/');
     const filename = parts.pop();
@@ -161,7 +162,7 @@ class App extends PureComponent {
         uint8Array = new Uint8Array(buffer);
 
         try {
-          this.player.loadData(uint8Array, filename);
+          this.player.loadData(uint8Array, filepath);
         } catch (e) {
           this.setState({
             playerError: e.message,
@@ -386,12 +387,11 @@ class App extends PureComponent {
                     {this.state.voiceNames[i]}
                   </label>
                 )
-              })}<br/>
+              })}<br/><br/>
               Title: {metadata.title || '--'}<br/>
-              System: {metadata.system || '--'}<br/>
               Game: {metadata.game || '--'}<br/>
-              Song: {metadata.song || '--'}<br/>
-              Author: {metadata.author || '--'}<br/>
+              Artist: {metadata.artist || '--'}<br/>
+              System: {metadata.system || '--'}<br/>
               Copyright: {metadata.copyright || '--'}<br/>
               Comment: {metadata.comment || '--'}
               {playerParams.length > 0 &&
