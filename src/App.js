@@ -65,7 +65,7 @@ class App extends PureComponent {
     this.state = {
       catalog: null,
       loading: true,
-      paused: false,
+      paused: true,
       playerError: null,
       currentSongMetadata: {},
       currentSongNumVoices: 0,

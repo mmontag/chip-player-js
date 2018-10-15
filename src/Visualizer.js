@@ -1,5 +1,5 @@
 import Spectrogram from './Spectrogram';
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 
 const SPECTROGRAM_MODES = [
   'Linear FFT', 'Log FFT', 'Constant Q'
@@ -14,7 +14,7 @@ const FFT_SIZES = [
   512, 1024, 2048, 4096, 8192, 16384
 ];
 
-export default class Visualizer extends Component {
+export default class Visualizer extends PureComponent {
   constructor(props) {
     super(props);
 
@@ -98,8 +98,8 @@ export default class Visualizer extends Component {
           }
         </div>
         }
-        <canvas className='Visualizer-canvas' width={1024} height={60} ref={this.freqCanvasRef}/>
-        <canvas className='Visualizer-canvas' width={1024} height={400} ref={this.specCanvasRef}/>
+        <canvas className='Visualizer-canvas' width={512} height={60} ref={this.freqCanvasRef}/>
+        <canvas className='Visualizer-canvas' width={512} height={200} ref={this.specCanvasRef}/>
       </section>
     );
   }
