@@ -10,7 +10,8 @@ import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
 import promisify from './promisifyXhr';
-import {trieToList} from "./ResigTrie";
+import {trieToList} from './ResigTrie';
+import queryString from 'query-string';
 
 const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
@@ -57,6 +58,12 @@ class App extends PureComponent {
           new MIDIPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
         ];
         this.setState({loading: false});
+
+        const urlParams = queryString.parse(window.location.search);
+        if (urlParams.play) {
+          // Allow a little time for initial page render before starting the song
+          setTimeout(() => this.playSong(CATALOG_PREFIX + urlParams.play), 500);
+        }
       },
     });
 
@@ -137,6 +144,13 @@ class App extends PureComponent {
     const parts = url.split('/');
     const filename = parts.pop();
     url = [...parts, encodeURIComponent(filename)].join('/'); // escape #, which appears in some filenames
+
+    const urlParams = {
+      ...queryString.parse(window.location.search),
+      play: filepath,
+    };
+    const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+').replace(/%2F/g, '/');
+    window.history.replaceState(null, '', stateUrl);
 
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].canPlay(ext)) {
