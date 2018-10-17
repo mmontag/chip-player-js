@@ -45,7 +45,6 @@ const SOUNDFONTS = [
 
 const DEFAULT_SOUNDFONT = SOUNDFONTS[0].items[0].value;
 const DEFAULT_REVERB = 0.33;
-const BUFFER_SIZE = 2048;
 const fileExtensions = [
   'mid',
   'midi',
@@ -71,11 +70,49 @@ export default class MIDIPlayer extends Player {
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
     this.params = {};
+    this.bufferSize = 2048;
+    this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
+
+    this.setAudioProcess(this.midiAudioProcess);
+
+  }
+
+  midiAudioProcess(e) {
+    let i, channel;
+    const channels = [];
+
+    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
+      channels[channel] = e.outputBuffer.getChannelData(channel);
+    }
+
+    if (this.paused) {
+      for (channel = 0; channel < channels.length; channel++) {
+        channels[channel].fill(0);
+      }
+      return;
+    }
+
+    if (lib._tp_write_audio(this.buffer, this.bufferSize)) {
+      for (channel = 0; channel < channels.length; channel++) {
+        for (i = 0; i < this.bufferSize; i++) {
+          channels[channel][i] = lib.getValue(
+            this.buffer +    // Interleaved channel format
+            i * 4 * 2 +      // frame offset   * bytes per sample * num channels +
+            channel * 4,     // channel offset * bytes per sample
+            'float'
+          );
+        }
+      }
+    } else {
+      console.log('MIDI file ended.');
+      lib._tp_stop();
+      this.disconnect();
+      this.onPlayerStateUpdate(true);
+    }
   }
 
   loadData(data, filepath) {
     this.activeChannels = [];
-    const buffer = lib.allocate(BUFFER_SIZE * 8, 'i32', lib.ALLOC_NORMAL);
     this.metadata = this._metadataFromFilepath(filepath);
 
     lib.ccall('tp_open', 'number', ['array', 'number'], [data, data.byteLength]);
@@ -83,51 +120,11 @@ export default class MIDIPlayer extends Player {
       if (lib._tp_get_channel_in_use(i)) this.activeChannels.push(i);
     }
 
-    if (!this.audioNode) {
-      this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
-      this.audioNode.connect(this.destinationNode);
-      this.audioNode.onaudioprocess = (e) => {
-        let i, channel;
-        const channels = [];
-
-        for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-          channels[channel] = e.outputBuffer.getChannelData(channel);
-        }
-
-        if (this.paused) {
-          for (channel = 0; channel < channels.length; channel++) {
-            channels[channel].fill(0);
-          }
-          return;
-        }
-
-        if (lib._tp_write_audio(buffer, BUFFER_SIZE)) {
-          for (channel = 0; channel < channels.length; channel++) {
-            for (i = 0; i < BUFFER_SIZE; i++) {
-              channels[channel][i] = lib.getValue(
-                buffer +         // Interleaved channel format
-                i * 4 * 2 +      // frame offset   * bytes per sample * num channels +
-                channel * 4,     // channel offset * bytes per sample
-                'float'
-              );
-            }
-          }
-        } else {
-          console.log('MIDI file ended.');
-          lib._tp_stop();
-          if (this.audioNode) {
-            this.audioNode.disconnect();
-            this.audioNode = null;
-          }
-
-          this.onPlayerStateUpdate(true);
-        }
-      };
-    }
+    this.connect();
   }
 
   isPlaying() {
-    return lib && this.audioNode && !this.paused;
+    return lib && !this.paused;
   }
 
   restart() {
@@ -137,10 +134,7 @@ export default class MIDIPlayer extends Player {
 
   stop() {
     lib._tp_stop();
-    if (this.audioNode) {
-      this.audioNode.disconnect();
-      this.audioNode = null;
-    }
+    this.disconnect();
     this.onPlayerStateUpdate(true);
   }
 

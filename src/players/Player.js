@@ -20,12 +20,22 @@
 //
 export default class Player {
   constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate) {
+    this._outerAudioProcess = this._outerAudioProcess.bind(this);
+
     this.paused = false;
     this.fileExtensions = [];
     this.metadata = {};
     this.audioCtx = audioCtx;
     this.destinationNode = destNode;
     this.onPlayerStateUpdate = onPlayerStateUpdate;
+    this.bufferSize = 2048;
+    this.audioProcess = null;
+    this.audioNode = this.audioCtx.createScriptProcessor(this.bufferSize, 2, 2);
+    this.audioNode.onaudioprocess = this._outerAudioProcess;
+    this.debug = window.location.search.indexOf('debug=true') !== -1;
+    this.timeCount = 0;
+    this.renderTime = 0;
+    this.perfLoggingInterval = 100;
   }
 
   togglePause() {
@@ -98,6 +108,49 @@ export default class Player {
 
   getParameters() {
     return [];
+  }
+
+  connect() {
+    if (!this.audioProcess) {
+      throw Error('Player.audioProcess has not been set.');
+    }
+    this.audioNode.connect(this.destinationNode);
+  }
+
+  disconnect() {
+    this.audioNode.disconnect();
+  }
+
+  setAudioProcess(fn) {
+    if (typeof fn !== 'function') {
+      throw Error('AudioProcess must be a function.');
+    }
+    this.audioProcess = fn;
+  }
+
+  _outerAudioProcess(event) {
+    const start = performance.now();
+    this.audioProcess(event);
+    const end = performance.now();
+
+    if (this.debug) {
+      this.renderTime += end - start;
+      this.timeCount++;
+      if (this.timeCount >= this.perfLoggingInterval) {
+        const cost = this.renderTime / this.timeCount;
+        const budget = 1000 * this.bufferSize / this.audioCtx.sampleRate;
+        console.log(
+          '[%s] %s ms to render %d frames (%s ms) (%s% utilization)',
+          this.constructor.name,
+          cost.toFixed(2),
+          this.bufferSize,
+          budget.toFixed(1),
+          (100 * cost / budget).toFixed(1),
+        );
+        this.renderTime = 0.0;
+        this.timeCount = 0;
+      }
+    }
   }
 
   static muteAudioDuringCall(audioNode, fn) {

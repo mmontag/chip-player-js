@@ -3,7 +3,6 @@ import Player from "./Player.js";
 let emu = null;
 let libgme = null;
 const INT16_MAX = 65535;
-const BUFFER_SIZE = 2048;
 const fileExtensions = [
   'nsf',
   'nsfe',
@@ -11,18 +10,65 @@ const fileExtensions = [
   'gym',
   'vgm',
   'vgz',
+  'ay',
 ];
 
 export default class GMEPlayer extends Player {
-  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
+  constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate) {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
 
     libgme = chipCore;
     this.paused = false;
-    this.audioNode = null;
     this.fileExtensions = fileExtensions;
     this.subtune = 0;
     this.tempo = 1.0;
+
+    this.buffer = libgme.allocate(this.bufferSize * 16, 'i16', libgme.ALLOC_NORMAL);
+    this.emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
+
+    this.setAudioProcess(this.gmeAudioProcess);
+  }
+
+  gmeAudioProcess(e) {
+    let i, channel;
+    const channels = [];
+    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
+      channels[channel] = e.outputBuffer.getChannelData(channel);
+    }
+
+    if (this.paused) {
+      for (channel = 0; channel < channels.length; channel++) {
+        channels[channel].fill(0);
+      }
+      return;
+    }
+
+    if (this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
+      console.log('Fading out at %d ms.', this.getPositionMs());
+      this.setFadeout(this.getPositionMs());
+      this.fadingOut = true;
+    }
+
+    if (libgme._gme_track_ended(emu) !== 1) {
+      libgme._gme_play(emu, this.bufferSize * 2, this.buffer);
+
+      for (channel = 0; channel < channels.length; channel++) {
+        for (i = 0; i < this.bufferSize; i++) {
+          channels[channel][i] = libgme.getValue(this.buffer +
+            // Interleaved channel format
+            i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
+            channel * 2,            // channel offset * bytes per sample
+            'i16') / INT16_MAX;     // convert int16 to float
+        }
+      }
+    } else {
+      this.subtune++;
+
+      if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
+        this.disconnect();
+        this.onPlayerStateUpdate(true);
+      }
+    }
   }
 
   restart() {
@@ -42,94 +88,19 @@ export default class GMEPlayer extends Player {
   loadData(data) {
     this.subtune = 0;
     this.fadingOut = false;
-    const buffer = libgme.allocate(BUFFER_SIZE * 16, 'i16', libgme.ALLOC_NORMAL);
-    const emuPtr = libgme.allocate(1, 'i32', libgme.ALLOC_NORMAL);
-    const _debug = window.location.search.indexOf('debug=true') !== -1;
-    let _timeCount = 0;
-    let _renderTime = 0;
-    let _perfInterval = 100;
-
-    if (!this.audioNode) {
-      this.audioNode = this.audioCtx.createScriptProcessor(BUFFER_SIZE, 2, 2);
-      this.audioNode.connect(this.destinationNode);
-      this.audioNode.onaudioprocess = (e) => {
-        const _start = performance.now();
-
-        let i, channel;
-        const channels = [];
-        for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-          channels[channel] = e.outputBuffer.getChannelData(channel);
-        }
-
-        if (this.paused) {
-          for (channel = 0; channel < channels.length; channel++) {
-            channels[channel].fill(0);
-          }
-          return;
-        }
-
-        if (this.getPositionMs() >= this.getDurationMs() && this.fadingOut === false) {
-          console.log('Fading out at %d ms.', this.getPositionMs());
-          this.setFadeout(this.getPositionMs());
-          this.fadingOut = true;
-        }
-
-        if (libgme._gme_track_ended(emu) !== 1) {
-          libgme._gme_play(emu, BUFFER_SIZE * 2, buffer);
-
-          for (channel = 0; channel < channels.length; channel++) {
-            for (i = 0; i < BUFFER_SIZE; i++) {
-              channels[channel][i] = libgme.getValue(buffer +
-                // Interleaved channel format
-                i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
-                channel * 2,            // channel offset * bytes per sample
-                'i16') / INT16_MAX;     // convert int16 to float
-            }
-          }
-        } else {
-          this.subtune++;
-
-          if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
-            this.audioNode.disconnect();
-            this.audioNode = null;
-            this.onPlayerStateUpdate(true);
-          }
-        }
-
-        const _end = performance.now();
-
-        if (_debug) {
-          _renderTime += _end - _start;
-          _timeCount++;
-          if (_timeCount >= _perfInterval) {
-            const cost = _renderTime / _timeCount;
-            const budget = 1000*BUFFER_SIZE/this.audioCtx.sampleRate;
-            console.log(
-              '[GME] %s ms to render %d frames (%s ms) (%s% utilization)',
-              cost.toFixed(2),
-              BUFFER_SIZE,
-              budget.toFixed(2),
-              (100 * cost / budget).toFixed(2),
-            );
-            _renderTime = 0.0;
-            _timeCount = 0;
-          }
-        }
-
-      };
-    }
+    this.connect();
 
     if (libgme.ccall(
       "gme_open_data",
       "number",
       ["array", "number", "number", "number"],
-      [data, data.length, emuPtr, this.audioCtx.sampleRate]
+      [data, data.length, this.emuPtr, this.audioCtx.sampleRate]
     ) !== 0) {
       console.error("gme_open_data failed.");
       this.stop();
       throw Error('Unable to load this file!');
     }
-    emu = libgme.getValue(emuPtr, "i32");
+    emu = libgme.getValue(this.emuPtr, "i32");
     if (this.playSubtune(this.subtune) !== 0) {
       console.error("gme_start_track failed.");
       throw Error('Unable to play this subtune!');
@@ -239,10 +210,7 @@ export default class GMEPlayer extends Player {
 
   stop() {
     this.paused = true;
-    if (this.audioNode) {
-      this.audioNode.disconnect();
-      this.audioNode = null;
-    }
+    this.disconnect();
     if (emu) libgme._gme_delete(emu);
     emu = null;
     this.onPlayerStateUpdate(true);
