@@ -46,7 +46,7 @@ else()
         -D_THREAD_SAFE
     )
     # FIXME: Put the proper install path here
-    set(VLCPLUGIN_CODEC_INSTALL_PATH "C:/Program Files/vlc/plugins/codec")
+    set(VLCPLUGIN_CODEC_INSTALL_PATH "C:/Program Files/VideoLAN/VLC/plugins/codec")
 endif()
 
 #Put here path to custom location
@@ -61,6 +61,7 @@ PATHS
     "/usr/local/include"
     "/usr/local/include/vlc"
     #mingw
+    ${CMAKE_PREFIX_PATH}/include
     c:/msys/local/include
 )
 find_path(LIBVLC_INCLUDE_DIR PATHS "${CMAKE_INCLUDE_PATH}/vlc" NAMES vlc.h
@@ -73,6 +74,7 @@ HINTS "$ENV{LIBVLC_LIBRARY_PATH}" ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS}
 PATHS
     "$ENV{LIB_DIR}/lib"
     #mingw
+    ${CMAKE_PREFIX_PATH}/lib
     c:/msys/local/lib
 )
 find_library(LIBVLC_LIBRARY NAMES vlc libvlc)
@@ -81,6 +83,7 @@ HINTS "$ENV{LIBVLC_LIBRARY_PATH}" ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS}
 PATHS
     "$ENV{LIB_DIR}/lib"
     #mingw
+    ${CMAKE_PREFIX_PATH}/lib
     c:/msys/local/lib
 )
 find_library(LIBVLCCORE_LIBRARY NAMES vlccore libvlccore)
