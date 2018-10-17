@@ -19,7 +19,6 @@ const colorMap = new chroma.scale([
 const _debug = window.location.search.indexOf('debug=true') !== -1;
 let _aWeightingLUT;
 let _calcTime = 0;
-let _renderTime = 0;
 let _totalTime = 0;
 let _timeCount = 0;
 let _lastTime = 0;
@@ -172,7 +171,6 @@ export default class Spectrogram {
 
     if (_debug) {
       _calcTime += _middle - _start;
-      _renderTime += _end - _middle;
       _totalTime += _end - _start;
       _timeCount++;
       if (_timeCount >= 200) {
@@ -184,7 +182,6 @@ export default class Spectrogram {
           (100 * _totalTime / (_end - _lastTime)).toFixed(1),
         );
         _calcTime = 0;
-        _renderTime = 0;
         _timeCount = 0;
         _totalTime = 0;
         _lastTime = _start;

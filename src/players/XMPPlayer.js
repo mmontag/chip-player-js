@@ -15,7 +15,7 @@ export default class XMPPlayer extends Player {
   constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
 
-    this.libxmp = chipCore;
+    this.lib = chipCore;
     this.xmpCtx = chipCore._xmp_create_context();
     this.bufferSize = 2048;
     this.xmp_frame_infoPtr = chipCore._malloc(2048);
@@ -26,73 +26,70 @@ export default class XMPPlayer extends Player {
     this._durationMs = 1000;
     this.buffer = chipCore.allocate(this.bufferSize * 16, 'i16', chipCore.ALLOC_NORMAL);
 
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
+    this.setAudioProcess(this.xmpAudioProcess);
+  }
+
+  xmpAudioProcess(e) {
+    let err;
+    let i, channel;
     const infoPtr = this.xmp_frame_infoPtr;
+    const channels = [];
+    for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
+      channels[channel] = e.outputBuffer.getChannelData(channel);
+    }
 
-    this.audioProcess = (e) => {
-      let err;
-      let i, channel;
-      const channels = [];
-      for (channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-        channels[channel] = e.outputBuffer.getChannelData(channel);
-      }
-
-      if (this.paused) {
-        for (channel = 0; channel < channels.length; channel++) {
-          channels[channel].fill(0);
-        }
-        return;
-      }
-
-      err = xmp._xmp_play_buffer(ctx, this.buffer, this.bufferSize * 4, 1);
-      if (err === -1) {
-        this.audioNode.disconnect();
-        this.audioNode = null;
-        this.onPlayerStateUpdate(true);
-      } else if (err !== 0) {
-        this.audioNode.disconnect();
-        console.error("xmp_play_buffer failed. error code: %d", err);
-        throw Error('Unable to play this file!');
-      }
-
-      // Get current module BPM
-      // see http://xmp.sourceforge.net/libxmp.html#id25
-      xmp._xmp_get_frame_info(ctx, infoPtr);
-      const bpm = xmp.getValue(infoPtr + 6 * 4, 'i32');
-      this._positionMs = xmp.getValue(infoPtr + 7 * 4, 'i32'); // xmp_frame_info.time
-      this._maybeInjectTempo(bpm);
-
+    if (this.paused) {
       for (channel = 0; channel < channels.length; channel++) {
-        for (i = 0; i < this.bufferSize; i++) {
-          channels[channel][i] = xmp.getValue(
-            this.buffer +           // Interleaved channel format
-            i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
-            channel * 2,            // channel offset * bytes per sample
-            'i16'                   // the sample values are signed 16-bit integers
-          ) / INT16_MAX;            // convert int16 to float
-        }
+        channels[channel].fill(0);
       }
-    };
+      return;
+    }
+
+    err = this.lib._xmp_play_buffer(this.xmpCtx, this.buffer, this.bufferSize * 4, 1);
+    if (err === -1) {
+      this.disconnect();
+      this.onPlayerStateUpdate(true);
+    } else if (err !== 0) {
+      this.disconnect();
+      console.error("xmp_play_buffer failed. error code: %d", err);
+      throw Error('Unable to play this file!');
+    }
+
+    // Get current module BPM
+    // see http://xmp.sourceforge.net/libxmp.html#id25
+    this.lib._xmp_get_frame_info(this.xmpCtx, infoPtr);
+    const bpm = this.lib.getValue(infoPtr + 6 * 4, 'i32');
+    this._positionMs = this.lib.getValue(infoPtr + 7 * 4, 'i32'); // xmp_frame_info.time
+    this._maybeInjectTempo(bpm);
+
+    for (channel = 0; channel < channels.length; channel++) {
+      for (i = 0; i < this.bufferSize; i++) {
+        channels[channel][i] = this.lib.getValue(
+          this.buffer +           // Interleaved channel format
+          i * 2 * 2 +             // frame offset   * bytes per sample * num channels +
+          channel * 2,            // channel offset * bytes per sample
+          'i16'                   // the sample values are signed 16-bit integers
+        ) / INT16_MAX;            // convert int16 to float
+      }
+    }
   }
 
   _parseMetadata() {
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
+    const xmp = this.lib;
     const res = {};
 
     // Match layout of xmp_module_info struct
     // http://xmp.sourceforge.net/libxmp.html
     // #void-xmp-get-module-info-xmp-context-c-struct-xmp-module-info-info
     const xmp_module_infoPtr = xmp._malloc(2048);
-    xmp._xmp_get_module_info(ctx, xmp_module_infoPtr);
+    xmp._xmp_get_module_info(this.xmpCtx, xmp_module_infoPtr);
     const xmp_modulePtr = xmp.getValue(xmp_module_infoPtr + 20, '*');
     res.title = xmp.Pointer_stringify(xmp_modulePtr, 256);
     res.system = xmp.Pointer_stringify(xmp_modulePtr + 64, 256);
     res.comment = xmp.Pointer_stringify(xmp.getValue(xmp_module_infoPtr + 24, '*'), 256);
 
     const infoPtr = this.xmp_frame_infoPtr;
-    xmp._xmp_get_frame_info(ctx, infoPtr);
+    xmp._xmp_get_frame_info(this.xmpCtx, infoPtr);
     this._durationMs = xmp.getValue(infoPtr + 8 * 4, 'i32');
 
     // XMP-specific metadata
@@ -112,28 +109,24 @@ export default class XMPPlayer extends Player {
   }
 
   restart() {
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
-    xmp._xmp_restart_module(ctx);
+    this.lib._xmp_restart_module(this.xmpCtx);
     this.resume();
   }
 
   loadData(data) {
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
     let err;
 
-    err = xmp.ccall(
+    err = this.lib.ccall(
       'xmp_load_module_from_memory', 'number',
       ['number', 'array', 'number'],
-      [ctx, data, data.length]
+      [this.xmpCtx, data, data.length]
     );
     if (err !== 0) {
       console.error("xmp_load_module_from_memory failed. error code: %d", err);
       throw Error('Unable to load this file!');
     }
 
-    err = xmp._xmp_start_player(ctx, this.audioCtx.sampleRate, 0);
+    err = this.lib._xmp_start_player(this.xmpCtx, this.audioCtx.sampleRate, 0);
     if (err !== 0) {
       console.error('xmp_start_player failed. error code: %d', err);
     }
@@ -145,11 +138,8 @@ export default class XMPPlayer extends Player {
   }
 
   setVoices(voices) {
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
-
     voices.forEach((isEnabled, i) => {
-      xmp._xmp_channel_mute(ctx, i, isEnabled ? 0 : 1);
+      this.lib._xmp_channel_mute(this.xmpCtx, i, isEnabled ? 0 : 1);
     });
   }
 
@@ -162,9 +152,7 @@ export default class XMPPlayer extends Player {
   }
 
   _maybeInjectTempo(measuredBPM) {
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
-
+    const xmp = this.lib;
     const minBPM = 20;
     const maxBPM = 255;
     const targetBPM = Math.floor(Math.max(Math.min(this.metadata.initialBPM * this.tempoScale, maxBPM), minBPM));
@@ -176,7 +164,7 @@ export default class XMPPlayer extends Player {
     xmp._memset(xmp_eventPtr, 0, 8);
     xmp.setValue(xmp_eventPtr + 3, 0x87, 'i8');
     xmp.setValue(xmp_eventPtr + 4, targetBPM, 'i32');
-    xmp._xmp_inject_event(ctx, 0, xmp_eventPtr);
+    xmp._xmp_inject_event(this.xmpCtx, 0, xmp_eventPtr);
   }
 
   getVoiceName(index) {
@@ -204,24 +192,17 @@ export default class XMPPlayer extends Player {
   }
 
   isPlaying() {
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
-    const playingState = xmp._xmp_get_player(ctx, XMP_PLAYER_STATE);
-
+    const playingState = this.lib._xmp_get_player(this.xmpCtx, XMP_PLAYER_STATE);
     return !this.isPaused() && playingState === XMP_STATE_PLAYING;
   }
 
   seekMs(seekMs) {
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
-    xmp._xmp_seek_time(ctx, seekMs);
+    this.lib._xmp_seek_time(this.xmpCtx, seekMs);
   }
 
   stop() {
-    const xmp = this.libxmp;
-    const ctx = this.xmpCtx;
     this.paused = true;
-    xmp._xmp_stop_module(ctx);
+    this.lib._xmp_stop_module(this.xmpCtx);
     this.disconnect();
     this.onPlayerStateUpdate(true);
   }
