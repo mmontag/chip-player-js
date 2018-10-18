@@ -5,9 +5,9 @@ environment:
     PLATFORMTOOLSET: "v140"
     CMAKEPREFIXPATH: "."
     VLC_PLUGIN: OFF
-    SEVENZIP: "C:\Program Files\7-Zip\7z.exe"
     VLC_TARBALL_x32: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win32/vlc-3.0.4-win32.7z"
     VLC_TARBALL_x64: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win64/vlc-3.0.4-win64.7z"
+    SEVENZIP: "C:\\Program Files\\7-Zip\\7z.exe"
     VLC_DIR: "vlc-3.0.4"
   matrix:
     - BUILD_TYPE: Debug
@@ -16,46 +16,46 @@ environment:
       GENERATOR: "MinGW Makefiles"
       PLATFORM: Win32
       CMAKEPREFIXPATH: "C:/MinGW"
-      TOOLCHAIN_BIN: "C:\MinGW\bin"
+      TOOLCHAIN_BIN: "C:\\MinGW\\bin"
     - BUILD_TYPE: Release
       COMPILER: MinGW
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: Win32
       CMAKEPREFIXPATH: "C:/MinGW"
-      TOOLCHAIN_BIN: "C:\MinGW\bin"
+      TOOLCHAIN_BIN: "C:\\MinGW\\bin"
     - BUILD_TYPE: Debug
       COMPILER: MinGW-w32
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: Win32
       CMAKEPREFIXPATH: "C:/mingw-w64/i686-6.3.0-posix-dwarf-rt_v5-rev1/mingw32"
-      TOOLCHAIN_BIN: "C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\i686-6.3.0-posix-dwarf-rt_v5-rev1\\mingw32\\bin"
     - BUILD_TYPE: Release
       COMPILER: MinGW-w32
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: Win32
       CMAKEPREFIXPATH: "C:/mingw-w64/i686-6.3.0-posix-dwarf-rt_v5-rev1/mingw32"
-      TOOLCHAIN_BIN: "C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\i686-6.3.0-posix-dwarf-rt_v5-rev1\\mingw32\\bin"
       VLC_PLUGIN: ON
-      VLC_TARBALL: %VLC_TARBALL_x32%
+      VLC_TARBALL: ${VLC_TARBALL_x32}
     - BUILD_TYPE: Debug
       COMPILER: MinGW-w64
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: x64
       CMAKEPREFIXPATH: "C:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64"
-      TOOLCHAIN_BIN: "C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\x86_64-6.3.0-posix-seh-rt_v5-rev1\\mingw64\\bin"
     - BUILD_TYPE: Release
       COMPILER: MinGW-w64
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: x64
       CMAKEPREFIXPATH: "C:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64"
-      TOOLCHAIN_BIN: "C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin"
+      TOOLCHAIN_BIN: "C:\\mingw-w64\\x86_64-6.3.0-posix-seh-rt_v5-rev1\\mingw64\\bin"
       VLC_PLUGIN: ON
-      VLC_TARBALL: %VLC_TARBALL_x64%
+      VLC_TARBALL: ${VLC_TARBALL_x64}
     - BUILD_TYPE: Debug
       COMPILER: MSVC15
       COMPILER_FAMILY: MSVC
