@@ -284,7 +284,8 @@ if(NOT WITH_CPP_EXTRAS)
     add_definitions(-DADLMIDI_DISABLE_CPP_EXTRAS)
 endif()
 
-if(libADLMIDI_STATIC)
+# === Static library ====
+if(libADLMIDI_STATIC OR WITH_VLC_PLUGIN)
     add_library(ADLMIDI_static STATIC ${libADLMIDI_SOURCES})
     set_target_properties(ADLMIDI_static PROPERTIES OUTPUT_NAME ADLMIDI)
     target_include_directories(ADLMIDI_static PUBLIC ${libADLMIDI_SOURCE_DIR}/include)
@@ -294,8 +295,12 @@ if(libADLMIDI_STATIC)
     if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
         add_dependencies(ADLMIDI_static gen-adldata-run)
     endif()
+    if(NOT libADLMIDI_STATIC)
+        set_target_properties(ADLMIDI_static PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
 endif()
 
+# === Shared library ====
 if(libADLMIDI_SHARED)
     add_library(ADLMIDI_shared SHARED ${libADLMIDI_SOURCES})
     set_target_properties(ADLMIDI_shared PROPERTIES OUTPUT_NAME ADLMIDI)
@@ -322,6 +327,10 @@ You must enable at least one of them!")
 endif()
 
 add_library(ADLMIDI_IF INTERFACE)
+
+add_library(ADLMIDI_IF_STATIC INTERFACE)
+target_link_libraries(ADLMIDI_IF_STATIC INTERFACE ADLMIDI_static)
+
 if(libADLMIDI_SHARED)
     target_link_libraries(ADLMIDI_IF INTERFACE ADLMIDI_shared)
 else()
@@ -526,7 +535,7 @@ if(WITH_VLC_PLUGIN)
             ${LIBVLC_INCLUDE_DIR}/vlc/plugins
             ${LIBVLC_INCLUDE_DIR}/vlc)
 
-    set(ADLMIDIVLC_LIBS ADLMIDI_IF ${LIBVLCCORE_LIBRARY} m)
+    set(ADLMIDIVLC_LIBS ADLMIDI_IF_STATIC ${LIBVLCCORE_LIBRARY} m)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_COMPILER_IS_GNUCXX)
         set_property(TARGET adlmidi_vlc_plugin APPEND_STRING PROPERTY LINK_FLAGS " -static-libgcc -static-libstdc++")
@@ -544,17 +553,7 @@ if(WITH_VLC_PLUGIN)
         install(TARGETS adlmidi_vlc_plugin DESTINATION "${CMAKE_INSTALL_LIBDIR}/vlc-codec/")
     endif()
 
-    if(libADLMIDI_STATIC)
-        add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
-        # ========= WIP =========
-        # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
-    else()
-        if(NOT libADLMIDI_SHARED)
-            message(FATAL_ERROR "libADLMIDI is required to be built!")
-        endif()
-        add_dependencies(adlmidi_vlc_plugin ADLMIDI_shared)
-    endif()
-
+    add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
 endif()
 
 if(WITH_HQ_RESAMPLER)
@@ -562,7 +561,7 @@ if(WITH_HQ_RESAMPLER)
         target_compile_definitions(ADLMIDI_shared PRIVATE -DADLMIDI_ENABLE_HQ_RESAMPLER)
         target_link_libraries(ADLMIDI_shared PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
     endif()
-    if(libADLMIDI_STATIC)
+    if(libADLMIDI_STATIC OR WITH_VLC_PLUGIN)
         target_compile_definitions(ADLMIDI_static PRIVATE -DADLMIDI_ENABLE_HQ_RESAMPLER)
         target_link_libraries(ADLMIDI_static PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
     endif()
