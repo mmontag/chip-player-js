@@ -10,6 +10,7 @@ environment:
     VLC_TARBALL_x32: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win32/vlc-3.0.4-win32.7z"
     VLC_TARBALL_x64: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win64/vlc-3.0.4-win64.7z"
     SEVENZIP: "C:\\Program Files\\7-Zip\\7z.exe"
+    WGET_BIN: "C:\\msys64\\usr\\bin\\wget.exe"
     VLC_DIR: "vlc-3.0.4"
   matrix:
     - BUILD_TYPE: Release
@@ -133,7 +134,7 @@ environment:
 
 build_script:
   - if [%VLC_PLUGIN%]==[ON] md C:\vlc-temp
-  - if [%VLC_PLUGIN%]==[ON] C:\msys64\usr\bin\wget.exe %VLC_TARBALL% -O C:\vlc-temp\vlcsdk.7z
+  - if [%VLC_PLUGIN%]==[ON] "%WGET_BIN%" --quiet %VLC_TARBALL% -O C:\vlc-temp\vlcsdk.7z
   - if [%VLC_PLUGIN%]==[ON] "%SEVENZIP%" x C:\vlc-temp\vlcsdk.7z -oC:\vlc-temp
   - if [%VLC_PLUGIN%]==[ON] xcopy /S /E /Y "C:\vlc-temp\%VLC_DIR%\sdk\*" "%TOOLCHAIN_BIN%\.."
   - md build-%COMPILER%-%BUILD_TYPE%-%PLATFORM%
@@ -144,9 +145,9 @@ build_script:
   - if [%COMPILER_FAMILY%]==[MinGW] mingw32-make install
   - if [%COMPILER_FAMILY%]==[MSVC] cmake --build . --config %BUILD_TYPE% --target install
   - if [%VLC_PLUGIN%]==[OFF] 7z a -t7z -mx9 "libADLMIDI-%COMPILER%-%BUILD_TYPE%-%PLATFORM%.7z" "libADLMIDI"
-  - if [%VLC_PLUGIN%]==[OFF] move libADLMIDI-%COMPILER%-%BUILD_TYPE%-%PLATFORM%.7z ..
+  - if [%VLC_PLUGIN%]==[OFF] move "libADLMIDI-%COMPILER%-%BUILD_TYPE%-%PLATFORM%.7z" ..
   - if [%VLC_PLUGIN%]==[ON] 7z a -t7z -mx9 "libADLMIDI-%VLC_DIR%-codec-%PLATFORM%.7z" "libadlmidi_plugin.dll"
-  - if [%VLC_PLUGIN%]==[ON] move libADLMIDI-$(VLC_DIR)-codec-$(PLATFORM).7z ..
+  - if [%VLC_PLUGIN%]==[ON] move "libADLMIDI-%VLC_DIR%-codec-%PLATFORM%.7z" ..
 
 artifacts:
   - path: 'libADLMIDI-$(COMPILER)-$(BUILD_TYPE)-$(PLATFORM).7z'
