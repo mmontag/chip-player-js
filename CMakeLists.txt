@@ -328,8 +328,10 @@ endif()
 
 add_library(ADLMIDI_IF INTERFACE)
 
-add_library(ADLMIDI_IF_STATIC INTERFACE)
-target_link_libraries(ADLMIDI_IF_STATIC INTERFACE ADLMIDI_static)
+if(libADLMIDI_STATIC OR WITH_VLC_PLUGIN)
+    add_library(ADLMIDI_IF_STATIC INTERFACE)
+    target_link_libraries(ADLMIDI_IF_STATIC INTERFACE ADLMIDI_static)
+endif()
 
 if(libADLMIDI_SHARED)
     target_link_libraries(ADLMIDI_IF INTERFACE ADLMIDI_shared)
