@@ -3,27 +3,59 @@ version: 1.3.{build}
 environment:
   global:
     PLATFORMTOOLSET: "v140"
+    CMAKEPREFIXPATH: "."
+    VLC_PLUGIN: OFF
+    SEVENZIP: "C:\Program Files\7-Zip\7z.exe"
+    VLC_TARBALL_x32: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win32/vlc-3.0.4-win32.7z"
+    VLC_TARBALL_x64: "https://mirror.yandex.ru/mirrors/ftp.videolan.org/vlc/3.0.4/win64/vlc-3.0.4-win64.7z"
+    VLC_DIR: "vlc-3.0.4"
   matrix:
     - BUILD_TYPE: Debug
       COMPILER: MinGW
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/MinGW"
+      TOOLCHAIN_BIN: "C:\MinGW\bin"
     - BUILD_TYPE: Release
       COMPILER: MinGW
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/MinGW"
+      TOOLCHAIN_BIN: "C:\MinGW\bin"
+    - BUILD_TYPE: Debug
+      COMPILER: MinGW-w32
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/mingw-w64/i686-6.3.0-posix-dwarf-rt_v5-rev1/mingw32"
+      TOOLCHAIN_BIN: "C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin"
+    - BUILD_TYPE: Release
+      COMPILER: MinGW-w32
+      COMPILER_FAMILY: MinGW
+      GENERATOR: "MinGW Makefiles"
+      PLATFORM: Win32
+      CMAKEPREFIXPATH: "C:/mingw-w64/i686-6.3.0-posix-dwarf-rt_v5-rev1/mingw32"
+      TOOLCHAIN_BIN: "C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin"
+      VLC_PLUGIN: ON
+      VLC_TARBALL: %VLC_TARBALL_x32%
     - BUILD_TYPE: Debug
       COMPILER: MinGW-w64
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: x64
+      CMAKEPREFIXPATH: "C:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64"
+      TOOLCHAIN_BIN: "C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin"
     - BUILD_TYPE: Release
       COMPILER: MinGW-w64
       COMPILER_FAMILY: MinGW
       GENERATOR: "MinGW Makefiles"
       PLATFORM: x64
+      CMAKEPREFIXPATH: "C:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64"
+      TOOLCHAIN_BIN: "C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin"
+      VLC_PLUGIN: ON
+      VLC_TARBALL: %VLC_TARBALL_x64%
     - BUILD_TYPE: Debug
       COMPILER: MSVC15
       COMPILER_FAMILY: MSVC
@@ -82,12 +114,14 @@ environment:
       PLATFORMTOOLSET: "v141_xp"
 
 build_script:
+  - if [%VLC_PLUGIN%]==[ON] md C:\vlc-temp
+  - if [%VLC_PLUGIN%]==[ON] C:\msys64\usr\bin\wget.exe %VLC_TARBALL% -O C:\vlc-temp\vlcsdk.7z
+  - if [%VLC_PLUGIN%]==[ON] %SEVENZIP% x C:\vlc-temp\vlcsdk.7z -oC:\vlc-temp
+  - if [%VLC_PLUGIN%]==[ON] xcopy /S /E /Y "C:\vlc-temp\%VLC_DIR%\sdk\*" "%TOOLCHAIN_BIN%\.."
   - md build-%COMPILER%-%BUILD_TYPE%-%PLATFORM%
   - cd build-%COMPILER%-%BUILD_TYPE%-%PLATFORM%
-  - if [%COMPILER%]==[MinGW] set PATH=C:\MinGW\bin;%PATH:C:\Program Files\Git\usr\bin;=%
-  - if [%COMPILER%]==[MinGW-w32] set PATH=C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin;%PATH:C:\Program Files\Git\usr\bin;=%
-  - if [%COMPILER%]==[MinGW-w64] set PATH=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH:C:\Program Files\Git\usr\bin;=%
-  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_PREFIX_PATH=. -DCMAKE_INSTALL_PREFIX=libADLMIDI -DWITH_OLD_UTILS=ON -DWITH_GENADLDATA=OFF -DlibADLMIDI_STATIC=ON -DlibADLMIDI_SHARED=ON ..
+  - if NOT [%TOOLCHAIN_BIN%]==[] set PATH=%TOOLCHAIN_BIN%;%PATH:C:\Program Files\Git\usr\bin;=%
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_PREFIX_PATH=%CMAKEPREFIXPATH% -DCMAKE_INSTALL_PREFIX=libADLMIDI -DWITH_OLD_UTILS=ON -DWITH_GENADLDATA=OFF -DlibADLMIDI_STATIC=ON -DlibADLMIDI_SHARED=ON -DWITH_VLC_PLUGIN=%VLC_PLUGIN% -DVLC_PLUGIN_NOINSTALL=ON ..
   - if [%COMPILER_FAMILY%]==[MinGW] cmake --build . --config %BUILD_TYPE% -- -j 2
   - if [%COMPILER_FAMILY%]==[MinGW] mingw32-make install
   - if [%COMPILER_FAMILY%]==[MSVC] cmake --build . --config %BUILD_TYPE% --target install
