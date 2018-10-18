@@ -539,15 +539,15 @@ if(WITH_VLC_PLUGIN)
 
     install(TARGETS adlmidi_vlc_plugin DESTINATION "${VLCPLUGIN_CODEC_INSTALL_PATH}")
 
-    if(libADLMIDI_SHARED)
-        add_dependencies(adlmidi_vlc_plugin ADLMIDI_shared)
+    if(libADLMIDI_STATIC)
+        add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
         # ========= WIP =========
         # set_target_properties(adlmidiplay PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
     else()
-        if(NOT libADLMIDI_STATIC)
+        if(NOT libADLMIDI_SHARED)
             message(FATAL_ERROR "libADLMIDI is required to be built!")
         endif()
-        add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
+        add_dependencies(adlmidi_vlc_plugin ADLMIDI_shared)
     endif()
 
 endif()
