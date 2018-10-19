@@ -61,8 +61,12 @@ class App extends PureComponent {
         this.setState({loading: false});
 
         const urlParams = queryString.parse(window.location.search.substr(1));
+        if (urlParams.q) {
+          this.setState({initialQuery: urlParams.q});
+        }
         if (urlParams.play) {
-          // Allow a little time for initial page render before starting the song
+          // Allow a little time for initial page render before starting the song.
+          // This is not absolutely necessary but helps prevent stuttering.
           setTimeout(() => {
             this.playSong(CATALOG_PREFIX + urlParams.play);
             if (urlParams.t) {
@@ -95,6 +99,7 @@ class App extends PureComponent {
       tempo: 1,
       voices: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
+      initialQuery: null,
     };
 
     // Load the song catalog
@@ -365,7 +370,7 @@ class App extends PureComponent {
             href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
           </p>
         </header>
-        <Search catalog={this.state.catalog} onResultClick={handleFileClick}/>
+        <Search initialQuery={this.state.initialQuery} catalog={this.state.catalog} onResultClick={handleFileClick}/>
         {this.state.loading ?
           <p>Loading...</p>
           :

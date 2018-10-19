@@ -1,6 +1,7 @@
 /* eslint import/no-webpack-loader-syntax: off */
 import React, {PureComponent} from 'react';
 import SearchWorker from 'worker-loader!./SearchWorker';
+import queryString from 'querystring';
 
 const searchWorker = new SearchWorker();
 
@@ -43,6 +44,11 @@ export default class Search extends PureComponent {
   }
 
   onSearchInputChange(val) {
+    const urlParams = {
+      q: val ? val : undefined,
+    };
+    const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+');
+    window.history.replaceState(null, '', stateUrl);
     if (val.length) {
       this.doSearch(val);
     } else {
@@ -74,6 +80,9 @@ export default class Search extends PureComponent {
   }
 
   handleStatus(data) {
+    if (data.numRecords && this.props.initialQuery) {
+      this.doSearch(this.props.initialQuery);
+    }
     this.setState({
       totalSongs: data.numRecords,
     });
@@ -102,6 +111,7 @@ export default class Search extends PureComponent {
                               autoComplete="off"
                               autoCorrect="false"
                               autoCapitalize="none"
+                              defaultValue={this.state.totalSongs ? this.props.initialQuery : null}
                               onChange={this.onChange}/></label>
         {
           this.state.searching ?
