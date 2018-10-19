@@ -39,8 +39,9 @@ class App extends PureComponent {
 
     // Initialize audio graph
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const playerNode = this.playerNode = audioCtx.createGain();
-    playerNode.connect(audioCtx.destination);
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = 1;
+
     this._safariAudioUnlock(audioCtx);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
@@ -53,9 +54,9 @@ class App extends PureComponent {
       },
       onRuntimeInitialized: () => {
         this.players = [
-          new GMEPlayer (audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
-          new XMPPlayer (audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
-          new MIDIPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
+          new GMEPlayer (audioCtx, gainNode, chipCore, this.handlePlayerStateUpdate),
+          new XMPPlayer (audioCtx, gainNode, chipCore, this.handlePlayerStateUpdate),
+          new MIDIPlayer(audioCtx, gainNode, chipCore, this.handlePlayerStateUpdate),
         ];
         this.setState({loading: false});
 
