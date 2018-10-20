@@ -42,6 +42,9 @@ class App extends PureComponent {
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
 
+    gainNode.connect(audioCtx.destination);
+    this.playerNode = gainNode;
+
     this._safariAudioUnlock(audioCtx);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
