@@ -6,7 +6,7 @@ import queryString from 'querystring';
 const searchWorker = new SearchWorker();
 
 const CATALOG_PREFIX = 'https://gifx.co/music/';
-const MAX_RESULTS = 30;
+const MAX_RESULTS = 50;
 
 export default class Search extends PureComponent {
   constructor(props) {
@@ -88,11 +88,11 @@ export default class Search extends PureComponent {
     });
   }
 
-  handleSearchResults(results) {
+  handleSearchResults(payload) {
     this.setState({
       searching: true,
-      resultsCount: results.length,
-      results: results.map(result => result.file),
+      resultsCount: payload.count,
+      results: payload.results.map(result => result.file).sort(),
     });
   }
 
@@ -115,9 +115,8 @@ export default class Search extends PureComponent {
                               onChange={this.onChange}/></label>
         {
           this.state.searching ?
-            this.state.resultsCount === 0 ?
-              <span> No results.</span>
-              :
+            <span>
+              <span>{this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}</span>
               <div className='Search-results'>
                 {this.state.results.map((result, i) => {
                   const href = CATALOG_PREFIX + result;
@@ -126,6 +125,7 @@ export default class Search extends PureComponent {
                   )
                 })}
               </div>
+            </span>
             :
             null
         }

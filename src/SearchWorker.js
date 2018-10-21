@@ -28,11 +28,15 @@ onmessage = (message) => {
 
 function search(query, maxResults) {
   let results = trie.get(query, TrieSearch.UNION_REDUCER) || [];
+  const count = results.length;
   if (maxResults) {
     results = results.slice(0, maxResults);
   }
   postMessage({
     type: 'results',
-    payload: results
+    payload: {
+      results: results,
+      count: count,
+    }
   });
 }
