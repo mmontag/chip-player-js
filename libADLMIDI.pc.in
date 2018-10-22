@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: libADLMIDI
+Description: A MIDI playback library with OPL3 (YMF262) emulator
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -lADLMIDI
+Cflags: -I${includedir}

@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (libADLMIDI C CXX)
+project (libADLMIDI VERSION 1.4.0 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 
@@ -579,6 +579,10 @@ install(FILES
         include/adlmidi.h
         include/adlmidi.hpp
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+configure_file(libADLMIDI.pc.in libADLMIDI.pc @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libADLMIDI.pc"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
 option(WITH_UNIT_TESTS "Enable unit testing" OFF)
 if(WITH_UNIT_TESTS)
