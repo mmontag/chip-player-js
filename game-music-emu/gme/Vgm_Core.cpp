@@ -1478,7 +1478,7 @@ void Vgm_Core::start_track()
 			ym2608[0].reset();
 
 		if ( ym2608[1].enabled() )
-			ym2608[0].reset();
+			ym2608[1].reset();
 
 		if ( ym3812[0].enabled() )
 			ym3812[0].reset();

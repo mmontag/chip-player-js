@@ -385,7 +385,25 @@ void Vgm_Emu::mute_voices_( int mask )
 			if ( core.ym2612[1].enabled() )
 				core.ym2612[1].mute_voices( mask );
 		}
-		
+		if (core.ym2610[0].enabled()) {
+			core.ym2610[0].mute_voices(mask);
+			if (core.ym2610[1].enabled()) {
+				core.ym2610[1].mute_voices(mask);
+			}
+		}
+		if (core.ym2608[0].enabled()) {
+			core.ym2608[0].mute_voices(mask);
+			if (core.ym2608[1].enabled()) {
+				core.ym2608[1].mute_voices(mask);
+			}
+		}
+		if (core.ym2203[0].enabled()) {
+			core.ym2203[0].mute_voices(mask);
+			if (core.ym2203[1].enabled()) {
+				core.ym2203[1].mute_voices(mask);
+			}
+		}
+
 		if ( core.ym2413[0].enabled() )
 		{
 			int m = mask & 0x3F;
