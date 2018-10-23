@@ -61,7 +61,7 @@ int Ym2608_Emu::set_rate( int sample_rate, int clock_rate )
 	buffer.set_sample_rate( sample_rate );
 	buffer.clock_rate( psg_clock );
 
-	psg.volume( 1.0 );
+	psg.volume( 0.125 );
 	
 	reset();
 	return 0;
@@ -107,36 +107,34 @@ void Ym2608_Emu::mute_voices( int mask )
 
 void Ym2608_Emu::run( int pair_count, sample_t* out )
 {
+	// buf - destination buffer for PSG
 	blip_sample_t buf[ 1024 ];
+	// buffers (bufL, bufR) - destination buffers for FM synthesis
 	FMSAMPLE bufL[ 1024 ];
 	FMSAMPLE bufR[ 1024 ];
 	FMSAMPLE * buffers[2] = { bufL, bufR };
 
-    blip_time_t psg_end_time = pair_count * psg_clock / sample_rate;
+	blip_time_t psg_end_time = pair_count * psg_clock / sample_rate;
 	psg.end_frame( psg_end_time );
+
+	// buffer - primary BlipBuffer
 	buffer.end_frame( psg_end_time );
 
 	while (pair_count > 0)
 	{
 		int todo = pair_count;
 		if (todo > 1024) todo = 1024;
+
+		// render up to 1024 samples to buffers (bufL and bufR)
 		ym2608_update_one( opn, buffers, todo );
 
+		// copy BlipBuffer to buf
 		int sample_count = buffer.read_samples( buf, todo );
 		memset( buf + sample_count, 0, ( todo - sample_count ) * sizeof( blip_sample_t ) );
 
-		for (int i = 0; i < todo; i++)
-		{
-			int output_l, output_r;
-			int output = buf [i];
-			output_l = output + bufL [i];
-			output_r = output + bufR [i];
-			output_l += out [0];
-			output_r += out [1];
-			if ( (short)output_l != output_l ) output_l = 0x7FFF ^ ( output_l >> 31 );
-			if ( (short)output_r != output_r ) output_r = 0x7FFF ^ ( output_r >> 31 );
-			out [0] = output_l;
-			out [1] = output_r;
+		for (int i = 0; i < todo; i++) {
+			out[0] = short((buf[i] + bufL[i]) * 0.75);
+			out[1] = short((buf[i] + bufR[i]) * 0.75);
 			out += 2;
 		}
 

@@ -3372,7 +3372,7 @@ void ym2608_update_one(void *chip, FMSAMPLE **buffer, int length)
 		{
 			int lt,rt;
 
-			/*lt =  OPN->out_adpcm[OUTD_LEFT]  + OPN->out_adpcm[OUTD_CENTER];
+			lt =  OPN->out_adpcm[OUTD_LEFT]  + OPN->out_adpcm[OUTD_CENTER];
 			rt =  OPN->out_adpcm[OUTD_RIGHT] + OPN->out_adpcm[OUTD_CENTER];
 			lt += (OPN->out_delta[OUTD_LEFT]  + OPN->out_delta[OUTD_CENTER])>>9;
 			rt += (OPN->out_delta[OUTD_RIGHT] + OPN->out_delta[OUTD_CENTER])>>9;
@@ -3387,30 +3387,9 @@ void ym2608_update_one(void *chip, FMSAMPLE **buffer, int length)
 			lt += ((out_fm[4]>>1) & OPN->pan[8]);
 			rt += ((out_fm[4]>>1) & OPN->pan[9]);
 			lt += ((out_fm[5]>>1) & OPN->pan[10]);
-			rt += ((out_fm[5]>>1) & OPN->pan[11]);*/
-			// this way it's louder (and more accurate)
-			lt =  (OPN->out_adpcm[OUTD_LEFT]  + OPN->out_adpcm[OUTD_CENTER]) << 1;
-			rt =  (OPN->out_adpcm[OUTD_RIGHT] + OPN->out_adpcm[OUTD_CENTER]) << 1;
-			lt += (OPN->out_delta[OUTD_LEFT]  + OPN->out_delta[OUTD_CENTER])>>8;
-			rt += (OPN->out_delta[OUTD_RIGHT] + OPN->out_delta[OUTD_CENTER])>>8;
-			lt += (out_fm[0] & OPN->pan[0]);
-			rt += (out_fm[0] & OPN->pan[1]);
-			lt += (out_fm[1] & OPN->pan[2]);
-			rt += (out_fm[1] & OPN->pan[3]);
-			lt += (out_fm[2] & OPN->pan[4]);
-			rt += (out_fm[2] & OPN->pan[5]);
-			lt += (out_fm[3] & OPN->pan[6]);
-			rt += (out_fm[3] & OPN->pan[7]);
-			lt += (out_fm[4] & OPN->pan[8]);
-			rt += (out_fm[4] & OPN->pan[9]);
-			lt += (out_fm[5] & OPN->pan[10]);
-			rt += (out_fm[5] & OPN->pan[11]);
-
-			lt >>= FINAL_SH;
-			rt >>= FINAL_SH;
-
-			//Limit( lt, MAXOUT, MINOUT );
-			//Limit( rt, MAXOUT, MINOUT );
+			rt += ((out_fm[5]>>1) & OPN->pan[11]);
+//			Limit( lt, MAXOUT, MINOUT );
+//			Limit( rt, MAXOUT, MINOUT );
 			/* buffering */
 			bufL[i] = lt;
 			bufR[i] = rt;
@@ -3801,10 +3780,10 @@ void ym2608_set_mutemask(void *chip, UINT32 MuteMask)
 	YM2608 *F2608 = (YM2608 *)chip;
 	UINT8 CurChn;
 	
-	for (CurChn = 0; CurChn < 6; CurChn ++)
+	for (CurChn = 0; CurChn < 6; CurChn ++) {
 		F2608->CH[CurChn].Muted = (MuteMask >> CurChn) & 0x01;
-	for (CurChn = 0; CurChn < 6; CurChn ++)
 		F2608->adpcm[CurChn].Muted = (MuteMask >> (CurChn + 6)) & 0x01;
+	}
 	F2608->MuteDeltaT = (MuteMask >> 12) & 0x01;
 	
 	return;
