@@ -169,7 +169,10 @@ class App extends PureComponent {
       play: filepath,
     };
     delete urlParams.t;
-    const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+').replace(/%2F/g, '/');
+    const stateUrl = '?' + queryString.stringify(urlParams)
+      .replace(/%20/g, '+') // I don't care about escaping these characters
+      .replace(/%2C/g, ',')
+      .replace(/%2F/g, '/');
     window.history.replaceState(null, '', stateUrl);
 
     for (let i = 0; i < this.players.length; i++) {
