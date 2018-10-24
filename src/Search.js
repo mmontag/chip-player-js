@@ -26,6 +26,7 @@ export default class Search extends PureComponent {
       results: {},
       resultsCount: 0,
       totalSongs: 0,
+      query: null,
     }
   }
 
@@ -44,8 +45,9 @@ export default class Search extends PureComponent {
   }
 
   onSearchInputChange(val) {
+    this.setState({ query: val });
     const urlParams = {
-      q: val ? val : undefined,
+      q: val ? val.trim() : undefined,
     };
     const stateUrl = '?' + queryString.stringify(urlParams).replace(/%20/g, '+');
     window.history.replaceState(null, '', stateUrl);
@@ -81,7 +83,7 @@ export default class Search extends PureComponent {
 
   handleStatus(data) {
     if (data.numRecords && this.props.initialQuery) {
-      this.doSearch(this.props.initialQuery);
+      this.onSearchInputChange(this.props.initialQuery);
     }
     this.setState({
       totalSongs: data.numRecords,
@@ -92,12 +94,28 @@ export default class Search extends PureComponent {
     this.setState({
       searching: true,
       resultsCount: payload.count,
-      results: payload.results.map(result => result.file).sort(),
+      results: this.groupResults(payload.results.map(result => result.file).sort()),
     });
   }
 
   showEmptyState() {
     this.setState({searching: false, results: {}})
+  }
+
+  groupResults(results) {
+    // convert to nested results - one level deep
+    const grouped = [];
+    let current = {title: null, items: []};
+    results.forEach(result => {
+      const prefix = result.substring(0, result.lastIndexOf('/') + 1);
+      const suffix = result.substring(result.lastIndexOf('/') + 1);
+      if (prefix !== current.title) {
+        current = {title: prefix, items: []};
+        grouped.push(current);
+      }
+      current.items.push(suffix);
+    });
+    return grouped;
   }
 
   render() {
@@ -111,18 +129,32 @@ export default class Search extends PureComponent {
                               autoComplete="off"
                               autoCorrect="false"
                               autoCapitalize="none"
-                              defaultValue={this.state.totalSongs ? this.props.initialQuery : null}
+                              value={this.state.totalSongs ? this.state.query || '' : ''}
+                              // defaultValue={this.state.totalSongs ? this.props.initialQuery : null}
                               onChange={this.onChange}/></label>
         {
           this.state.searching ?
             <span>
               <span>{this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}</span>
               <div className='Search-results'>
-                {this.state.results.map((result, i) => {
-                  const href = CATALOG_PREFIX + result;
+                {this.state.results.map((group, i) => {
                   return (
-                    <div key={i}><a onClick={this.props.onResultClick(href)} href={href}>{result}</a></div>
-                  )
+                    <div key={i}>
+                      <h5 className='Search-results-group-heading'>
+                        <a href='#' onClick={() => this.onSearchInputChange(group.title.replace(/[^a-zA-Z0-9]+/g, ' '))}>
+                          {group.title}
+                        </a>
+                      </h5>
+                      {group.items.map((result, i) => {
+                        const href = CATALOG_PREFIX + group.title + result;
+                        return (
+                          <div className='Search-results-group-item' key={i}>
+                            <a onClick={this.props.onResultClick(href)} href={href}>{result}</a>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  );
                 })}
               </div>
             </span>

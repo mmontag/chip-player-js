@@ -220,5 +220,17 @@ input[type=range]::-webkit-slider-thumb {
     overflow: hidden;
 }
 
+.App .Search-results-group-heading {
+    margin: 0;
+}
+
+.App .Search-results-group-heading a {
+    color: #aaa;
+}
+
+.App .Search-results-group-item {
+    margin-left: 16px;
+}
+
 .Visualizer { position: relative; }
 .Visualizer-canvas { display: block; }
