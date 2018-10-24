@@ -22,6 +22,7 @@ export default class Visualizer extends PureComponent {
       vizMode: 2,
       weightingMode: 1,
       fftSize: 2048,
+      enabled: true,
     };
 
     this.freqCanvasRef = React.createRef();
@@ -41,7 +42,7 @@ export default class Visualizer extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    this.spectrogram.setPaused(this.props.paused);
+    this.spectrogram.setPaused(this.state.enabled ? this.props.paused : true);
   }
 
   render() {
@@ -60,48 +61,66 @@ export default class Visualizer extends PureComponent {
       this.setState({fftSize: size});
       this.spectrogram.setFFTSize(size);
     };
+    const handleToggleVisualizer = (e) => {
+      const enabled = e.target.value === 'true';
+      this.setState({enabled: enabled});
+    };
     return (
       <section className='Visualizer'>
-        <h3>Visualizer</h3>
-        Mode:&nbsp;
-        {
-          SPECTROGRAM_MODES.map((mode, i) =>
-            <label key={i}><input onClick={handleModeClick}
-                                  type='radio'
-                                  name='spectrogram-mode'
-                                  defaultChecked={this.state.vizMode === i}
-                                  value={i}/>{mode}</label>
-          )
-        }
-        <br/>
-        Weighting:&nbsp;
-        {
-          WEIGHTING_MODES.map((mode, i) =>
-            <label title={mode.description} key={i}>
-              <input onClick={handleWeightingModeClick}
-                     type='radio'
-                     name='weighting-mode'
-                     defaultChecked={this.state.weightingMode === i}
-                     value={i}/>{mode.label}</label>
-          )
-        }
-        <br/>
-        {this.state.vizMode !== 2 &&
-        <div>
-          FFT Size:&nbsp;
+        <h3>
+          Visualizer&nbsp;
+          <label><input onClick={handleToggleVisualizer}
+                        type='radio'
+                        value={true}
+                        defaultChecked={this.state.enabled === true}
+                        name='visualizer-enabled'/>On</label>
+          <label><input onClick={handleToggleVisualizer}
+                        type='radio'
+                        value={false}
+                        defaultChecked={this.state.enabled === false}
+                        name='visualizer-enabled'/>Off</label>
+        </h3>
+        <div style={{ display: this.state.enabled ? 'block' : 'none' }}>
+          Mode:&nbsp;
           {
-            FFT_SIZES.map((size, i) =>
-              <label key={i}><input onClick={handleFFTSizeClick}
+            SPECTROGRAM_MODES.map((mode, i) =>
+              <label key={i}><input onClick={handleModeClick}
                                     type='radio'
-                                    name='fft-size'
-                                    defaultChecked={this.state.fftSize === size}
-                                    value={size}/>{size}</label>
+                                    name='spectrogram-mode'
+                                    defaultChecked={this.state.vizMode === i}
+                                    value={i}/>{mode}</label>
             )
           }
+          <br/>
+          Weighting:&nbsp;
+          {
+            WEIGHTING_MODES.map((mode, i) =>
+              <label title={mode.description} key={i}>
+                <input onClick={handleWeightingModeClick}
+                       type='radio'
+                       name='weighting-mode'
+                       defaultChecked={this.state.weightingMode === i}
+                       value={i}/>{mode.label}</label>
+            )
+          }
+          <br/>
+          {this.state.vizMode !== 2 &&
+          <div>
+            FFT Size:&nbsp;
+            {
+              FFT_SIZES.map((size, i) =>
+                <label key={i}><input onClick={handleFFTSizeClick}
+                                      type='radio'
+                                      name='fft-size'
+                                      defaultChecked={this.state.fftSize === size}
+                                      value={size}/>{size}</label>
+              )
+            }
+          </div>
+          }
+          <canvas className='Visualizer-canvas' width={512} height={60} ref={this.freqCanvasRef}/>
+          <canvas className='Visualizer-canvas' width={512} height={200} ref={this.specCanvasRef}/>
         </div>
-        }
-        <canvas className='Visualizer-canvas' width={512} height={60} ref={this.freqCanvasRef}/>
-        <canvas className='Visualizer-canvas' width={512} height={200} ref={this.specCanvasRef}/>
       </section>
     );
   }
