@@ -42,8 +42,18 @@ class App extends PureComponent {
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
 
+    // const compressorNode = audioCtx.createDynamicsCompressor();
+    // compressorNode.threshold.value = -60;
+    // compressorNode.knee.value = 40;
+    // compressorNode.ratio.value = 16;
+    // compressorNode.attack.value = 0;
+    // compressorNode.release.value = 4;
+    // gainNode.connect(compressorNode);
+    // compressorNode.connect(audioCtx.destination);
+    // this.playerNode = compressorNode;
+
     gainNode.connect(audioCtx.destination);
-    this.playerNode = gainNode;
+    var playerNode = this.playerNode = gainNode;
 
     this._safariAudioUnlock(audioCtx);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
@@ -57,9 +67,9 @@ class App extends PureComponent {
       },
       onRuntimeInitialized: () => {
         this.players = [
-          new GMEPlayer (audioCtx, gainNode, chipCore, this.handlePlayerStateUpdate),
-          new XMPPlayer (audioCtx, gainNode, chipCore, this.handlePlayerStateUpdate),
-          new MIDIPlayer(audioCtx, gainNode, chipCore, this.handlePlayerStateUpdate),
+          new GMEPlayer (audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
+          new XMPPlayer (audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
+          new MIDIPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
         ];
         this.setState({loading: false});
 
