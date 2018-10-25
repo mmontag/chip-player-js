@@ -592,6 +592,16 @@ if(WITH_UNIT_TESTS)
     add_subdirectory(test)
 endif()
 
+# === Version check ====
+set(VERSION_CHECK_SOURCE "
+    #include \"adlmidi.h\"
+    #if !(ADLMIDI_VERSION_MAJOR == ${PROJECT_VERSION_MAJOR} && ADLMIDI_VERSION_MINOR == ${PROJECT_VERSION_MINOR} && ADLMIDI_VERSION_PATCHLEVEL == ${PROJECT_VERSION_PATCH})
+    #error Project and source code version do not match!
+    #endif")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/version_check.c" "${VERSION_CHECK_SOURCE}")
+add_library(ADLMIDI_version_check OBJECT "${CMAKE_CURRENT_BINARY_DIR}/version_check.c")
+target_include_directories(ADLMIDI_version_check PRIVATE "include")
+
 message("==== libADLMIDI options ====")
 message("libADLMIDI_STATIC        = ${libADLMIDI_STATIC}")
 message("libADLMIDI_SHARED        = ${libADLMIDI_SHARED}")
