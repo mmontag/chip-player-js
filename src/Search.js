@@ -21,6 +21,10 @@ export default class Search extends PureComponent {
 
     searchWorker.onmessage = (message) => this.handleMessage(message.data);
 
+    if (props.catalog) {
+      this.loadCatalog(props.catalog);
+    }
+
     this.state = {
       searching: false,
       results: {},
@@ -30,14 +34,19 @@ export default class Search extends PureComponent {
     }
   }
 
-  componentDidUpdate(prevProps) {
-    if (!prevProps.catalog && this.props.catalog) {
-      console.log('posting catalog load message to worker...');
-      searchWorker.postMessage({
-        type: 'load',
-        payload: JSON.stringify(this.props.catalog),
-      });
+  componentDidUpdate() {
+    if (!this.catalogLoaded && this.props.catalog) {
+      this.loadCatalog(this.props.catalog);
     }
+  }
+
+  loadCatalog(catalog) {
+    console.log('Posting catalog load message to worker...');
+    this.catalogLoaded = true;
+    searchWorker.postMessage({
+      type: 'load',
+      payload: JSON.stringify(catalog),
+    });
   }
 
   onChange(e) {
@@ -45,7 +54,7 @@ export default class Search extends PureComponent {
   }
 
   onSearchInputChange(val) {
-    this.setState({ query: val });
+    this.setState({query: val});
     const urlParams = {
       q: val ? val.trim() : undefined,
     };
@@ -122,46 +131,48 @@ export default class Search extends PureComponent {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
     return (
-      <section>
-        <label>Search: <input type="text"
-                              placeholder={placeholder}
-                              spellCheck="false"
-                              autoComplete="off"
-                              autoCorrect="false"
-                              autoCapitalize="none"
-                              value={this.state.totalSongs ? this.state.query || '' : ''}
-                              // defaultValue={this.state.totalSongs ? this.props.initialQuery : null}
-                              onChange={this.onChange}/></label>
+      <div className="Search">
+        <div>
+          <label>Search: <input type="text"
+                                placeholder={placeholder}
+                                spellCheck="false"
+                                autoComplete="off"
+                                autoCorrect="false"
+                                autoCapitalize="none"
+                                value={this.state.totalSongs ? this.state.query || '' : ''}
+                                onChange={this.onChange}/></label>
+          {
+            this.state.searching &&
+            <span>{this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}</span>
+          }
+        </div>
         {
           this.state.searching ?
-            <span>
-              <span>{this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}</span>
-              <div className='Search-results'>
-                {this.state.results.map((group, i) => {
-                  return (
-                    <div key={i}>
-                      <h5 className='Search-results-group-heading'>
-                        <a href='#' onClick={() => this.onSearchInputChange(group.title.replace(/[^a-zA-Z0-9]+/g, ' '))}>
-                          {group.title}
-                        </a>
-                      </h5>
-                      {group.items.map((result, i) => {
-                        const href = CATALOG_PREFIX + group.title + result;
-                        return (
-                          <div className='Search-results-group-item' key={i}>
-                            <a onClick={this.props.onResultClick(href)} href={href}>{result}</a>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            </span>
+            <div className="Search-results">
+              {this.state.results.map((group, i) => {
+                return (
+                  <div key={i}>
+                    <h5 className="Search-results-group-heading">
+                      <a href="#" onClick={() => this.onSearchInputChange(group.title.replace(/[^a-zA-Z0-9]+/g, ' '))}>
+                        {group.title}
+                      </a>
+                    </h5>
+                    {group.items.map((result, i) => {
+                      const href = CATALOG_PREFIX + group.title + result;
+                      return (
+                        <div className="Search-results-group-item" key={i}>
+                          <a onClick={this.props.onResultClick(href)} href={href}>{result}</a>
+                        </div>
+                      )
+                    })}
+                  </div>
+                );
+              })}
+            </div>
             :
             null
         }
-      </section>
+      </div>
     );
   }
 }

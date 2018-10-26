@@ -32,6 +32,7 @@
 body {
     margin: 30px;
     background: #008;
+    overflow: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -57,12 +58,6 @@ a {
 a:focus   { background: #00f; }
 a:active  { background: #800; }
 a:visited { color: #ff0; }
-
-section {
-    border-bottom: 1px solid yellow;
-    padding: 0 19px 19px 19px;
-    margin: 0 -19px 18px -19px;
-}
 
 /* Form elements */
 
@@ -99,6 +94,7 @@ input[type=text] {
     background-color: #aaa;
     color: #008;
     padding: 0 8px;
+    width: 256px;
 }
 input[type=text]::selection                 { background-color: #fff; }
 input[type=text]::-webkit-input-placeholder { color: #666 }
@@ -153,16 +149,45 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 /* Component overrides */
+body,#root {
+    margin: 0;
+}
 
 .App {
-    border: 3px double yellow;
+    padding: 0 19px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+
+.App section {
     padding: 0 19px 19px 19px;
+    margin: 0 -19px;
+}
+
+.App .App-footer {
+    border-top: 1px solid yellow;
+    padding: 19px;
+    margin-top: 18px;
 }
 
 .App .App-header {
     border-bottom: 1px solid yellow;
     padding: 0 19px;
     margin: 0 -19px 18px -19px;
+    flex-grow: 0;
+}
+
+.App-content-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+}
+
+.App-footer {
+    flex-grow: 0;
 }
 
 .App .App-label {
@@ -214,6 +239,19 @@ input[type=range]::-webkit-slider-thumb {
     margin-top: 19px;
 }
 
+.Search {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin-right: 8px;
+}
+
+.Search-results {
+    overflow-y: auto;
+    height: 100%;
+}
+
 .App .Search-results div {
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -232,5 +270,23 @@ input[type=range]::-webkit-slider-thumb {
     margin-left: 16px;
 }
 
-.Visualizer { position: relative; }
-.Visualizer-canvas { display: block; }
+::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+    background: #66d;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ff0;
+    -webkit-border-radius: 0px;
+}
+
+.Visualizer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-right: -19px;
+}
+.Visualizer-toggle { position: fixed; top: 0; right: 19px; }
+.Visualizer-analyzer { display: block; }
+.Visualizer-spectrogram { display: block; flex-grow: 1; min-height: 0; }

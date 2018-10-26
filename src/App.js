@@ -4,7 +4,6 @@ import React, {PureComponent} from 'react';
 import Slider from './Slider';
 import Search from './Search';
 import Visualizer from './Visualizer';
-import songData from './song-data';
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
@@ -386,128 +385,118 @@ class App extends PureComponent {
             href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
           </p>
         </header>
-        <Search initialQuery={this.state.initialQuery} catalog={this.state.catalog} onResultClick={handleFileClick}/>
         {this.state.loading ?
-          <p>Loading...</p>
+          <p className="App-content-area">Loading...</p>
           :
-          <div>
+          <div className="App-content-area">
+            <Search
+              initialQuery={this.state.initialQuery}
+              catalog={this.state.catalog}
+              onResultClick={handleFileClick}/>
             <Visualizer audioCtx={this.audioCtx}
                         sourceNode={this.playerNode}
                         chipCore={this.chipCore}
                         paused={this.state.paused}/>
-            <button onClick={this.togglePause}
-                    disabled={this.player ? null : true}>
-              {this.state.paused ? 'Resume' : 'Pause'}
-            </button>
-            &nbsp;
-            <button onClick={this.handlePlayRandom}>
-              I'm Feeling Lucky
-            </button>
-            {this.state.playerError &&
-            <div className="App-error">ERROR: {this.state.playerError}</div>
-            }
-            <Slider
-              pos={this.getSongPos()}
-              onDrag={this.handlePositionDrag}
-              onChange={this.handlePositionDrop}/>
-            {metadata &&
-            <div className="Song-details">
-              Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
-              Speed: <input
-              disabled={this.player ? null : true}
-              type="range" value={this.state.tempo}
-              min="0.3" max="2.0" step="0.05"
-              onInput={this.handleTempoChange}
-              onChange={this.handleTempoChange}/>&nbsp;
-              {this.state.tempo.toFixed(2)}<br/>
-              {this.state.currentSongNumSubtunes > 1 &&
-              <span>
-                  Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
-                <button
-                  disabled={this.player ? null : true}
-                  onClick={this.prevSubtune}>Prev</button>
-                &nbsp;
-                <button
-                  disabled={this.player ? null : true}
-                  onClick={this.nextSubtune}>Next</button><br/>
-                </span>
-              }
-              Voices:&nbsp;
-              {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
-                return (
-                  <label className="App-label" key={i}>
-                    <input
-                      type="checkbox" onChange={() => {
-                      this.handleVoiceToggle(i)
-                    }} checked={this.state.voices[i]}/>
-                    {this.state.voiceNames[i]}
-                  </label>
-                )
-              })}<br/><br/>
-              Title: {metadata.title || '--'}<br/>
-              Game: {metadata.game || '--'}<br/>
-              Artist: {metadata.artist || '--'}<br/>
-              System: {metadata.system || '--'}<br/>
-              Copyright: {metadata.copyright || '--'}<br/>
-              Comment: {metadata.comment || '--'}
-              {playerParams.length > 0 &&
-              <div>
-                <h3>Player Settings</h3>
-                {playerParams.map(param => {
-                  switch (param.type) {
-                    case 'enum':
-                      return (
-                        <div key={param.id}>
-                          {param.label}:&nbsp;
-                          <select
-                            onChange={(e) => this.player.setParameter(param.id, e.target.value)}
-                            defaultValue={this.player.getParameter(param.id)}>
-                            {param.options.map(optgroup =>
-                              <optgroup key={optgroup.label} label={optgroup.label}>
-                                {optgroup.items.map(option =>
-                                  <option key={option.value} value={option.value}>{option.label}</option>
-                                )}
-                              </optgroup>
-                            )}
-                          </select>
-                        </div>
-                      );
-                    case 'number':
-                      return (
-                        <div key={param.id}>
-                          {param.label}:&nbsp;
-                          <input type="range"
-                                 min={param.min} max={param.max} step={param.step}
-                                 value={this.player.getParameter(param.id)}
-                                 onChange={(e) => this.player.setParameter(param.id, e.target.value)}>
-                          </input>
-                        </div>
-                      );
-                    default:
-                      return null;
-                  }
-                })}
-              </div>
-              }
-            </div>
-            }
-            {window.location.search.indexOf('debug=true') !== -1 && songData.map(group => {
-              return (
-                <div key={group.title}>
-                  <h4>{group.title}</h4>
-                  {group.files.map(file => {
-                    const href = group.url_prefix + file;
-                    return (
-                      <div key={file}>
-                        <a onClick={handleFileClick(href)} href={href}>{unescape(file)}</a>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })}
           </div>
         }
+        <section className="App-footer">
+          <button onClick={this.togglePause}
+                  disabled={this.player ? null : true}>
+            {this.state.paused ? 'Resume' : 'Pause'}
+          </button>
+          &nbsp;
+          <button onClick={this.handlePlayRandom}>
+            I'm Feeling Lucky
+          </button>
+          {this.state.playerError &&
+          <div className="App-error">ERROR: {this.state.playerError}</div>
+          }
+          <Slider
+            pos={this.getSongPos()}
+            onDrag={this.handlePositionDrag}
+            onChange={this.handlePositionDrop}/>
+          {metadata &&
+          <div className="Song-details">
+            Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
+            Speed: <input
+            disabled={this.player ? null : true}
+            type="range" value={this.state.tempo}
+            min="0.3" max="2.0" step="0.05"
+            onInput={this.handleTempoChange}
+            onChange={this.handleTempoChange}/>&nbsp;
+            {this.state.tempo.toFixed(2)}<br/>
+            {this.state.currentSongNumSubtunes > 1 &&
+            <span>
+                Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
+              <button
+                disabled={this.player ? null : true}
+                onClick={this.prevSubtune}>Prev</button>
+              &nbsp;
+              <button
+                disabled={this.player ? null : true}
+                onClick={this.nextSubtune}>Next</button><br/>
+              </span>
+            }
+            Voices:&nbsp;
+            {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
+              return (
+                <label className="App-label" key={i}>
+                  <input
+                    type="checkbox" onChange={() => {
+                    this.handleVoiceToggle(i)
+                  }} checked={this.state.voices[i]}/>
+                  {this.state.voiceNames[i]}
+                </label>
+              )
+            })}<br/><br/>
+            Title: {metadata.title || '--'}<br/>
+            Game: {metadata.game || '--'}<br/>
+            Artist: {metadata.artist || '--'}<br/>
+            System: {metadata.system || '--'}<br/>
+            Copyright: {metadata.copyright || '--'}<br/>
+            Comment: {metadata.comment || '--'}
+            {playerParams.length > 0 &&
+            <div>
+              <h3>Player Settings</h3>
+              {playerParams.map(param => {
+                switch (param.type) {
+                  case 'enum':
+                    return (
+                      <div key={param.id}>
+                        {param.label}:&nbsp;
+                        <select
+                          onChange={(e) => this.player.setParameter(param.id, e.target.value)}
+                          defaultValue={this.player.getParameter(param.id)}>
+                          {param.options.map(optgroup =>
+                            <optgroup key={optgroup.label} label={optgroup.label}>
+                              {optgroup.items.map(option =>
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              )}
+                            </optgroup>
+                          )}
+                        </select>
+                      </div>
+                    );
+                  case 'number':
+                    return (
+                      <div key={param.id}>
+                        {param.label}:&nbsp;
+                        <input type="range"
+                               min={param.min} max={param.max} step={param.step}
+                               value={this.player.getParameter(param.id)}
+                               onChange={(e) => this.player.setParameter(param.id, e.target.value)}>
+                        </input>
+                      </div>
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </div>
+            }
+          </div>
+          }
+        </section>
       </div>
     );
   }
