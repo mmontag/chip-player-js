@@ -40,9 +40,8 @@
 #define MAX_KERNEL_SIZE 200000
 #define MIN_VOL 1.0f
 #define MAX_VOL 100.0f
-
-const double basefreq = 20.01523126408007475;
-const double endfreq = 20495.59681441799654;
+#define MAX_FREQ 20495.59681441799654f
+#define MIN_FREQ 20.01523126408007475f
 
 typedef struct Complex {
   float re, im;
@@ -78,6 +77,8 @@ typedef struct ShowCQT {
   int out_bins; // kernel table size?
   int attack_size; // num samples in 1/30th of a second
   float volume;
+  float basefreq;
+  float endfreq;
 
   /* kernel */
   Kernel kernel[MAX_KERNEL_SIZE];
@@ -220,19 +221,21 @@ static void fft_calc(Complex *v, int n) {
   }
 }
 
-int cqt_init(int rate, int width, float volume, int super) {
+int cqt_init(int rate, int width, float volume, float freq_min, float freq_max, int super) {
   if (width <= 0 || width > MAX_WIDTH)
     return 0;
 
   cqt.width = width;
   cqt.volume = (volume > MAX_VOL) ? MAX_VOL : (volume > MIN_VOL) ? volume : MIN_VOL;
+  cqt.basefreq = (freq_min < MIN_FREQ) ? MIN_FREQ : freq_min;
+  cqt.endfreq = (freq_max > MAX_FREQ) ? MAX_FREQ : freq_max;
 
   if (rate < 8000 || rate > 100000)
     return 0;
 
   // Get a power of 2 samples just over 0.33 seconds
   // for example, 16384/44100 = 0.3715
-  int bits = ceil(log(rate * 0.33) / M_LN2);
+  int bits = 15; //ceil(log(rate * 0.33) / M_LN2);
   if (bits > 20 || bits < 10)
     return 0;
   cqt.fft_size = 1 << bits;
@@ -250,8 +253,8 @@ int cqt_init(int rate, int width, float volume, int super) {
   }
 
   cqt.out_bins = cqt.width * (1 + !!super);
-  double log_base = log(basefreq);
-  double log_end = log(endfreq);
+  double log_base = log(cqt.basefreq);
+  double log_end = log(cqt.endfreq);
   for (int f = 0, idx = 0; f < cqt.out_bins; f++) {
     double freq = exp(log_base + (f + 0.5) * (log_end - log_base) * (1.0 / cqt.out_bins));
 
@@ -390,8 +393,8 @@ void cqt_set_volume(float volume) {
 }
 
 double cqt_bin_to_freq(int bin) {
-  double log_base = log(basefreq);
-  double log_end = log(endfreq);
+  double log_base = log(cqt.basefreq);
+  double log_end = log(cqt.endfreq);
   double freq = exp(log_base + (bin + 0.5) * (log_end - log_base) * (1.0 / cqt.out_bins));
   return freq;
 }
