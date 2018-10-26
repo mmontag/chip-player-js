@@ -30,7 +30,7 @@ function _getAWeighting(f) {
 }
 
 export default class Spectrogram {
-  constructor(chipCore, audioCtx, freqCanvas, specCanvas, minDb = -90, maxDb = -30) {
+  constructor(chipCore, audioCtx, freqCanvas, specCanvas, pianoKeysImage, minDb = -90, maxDb = -30) {
     this.updateFrame = this.updateFrame.bind(this);
     this.setPaused = this.setPaused.bind(this);
 
@@ -39,7 +39,13 @@ export default class Spectrogram {
     const db = 32;
     const supersample = 0;
     const cqtBins = freqCanvas.width;
-    const cqtSize = this.lib._cqt_init(audioCtx.sampleRate, cqtBins, db, supersample);
+    //                MIDI note  16 ==   20.60 hz
+    // Piano key  1 = MIDI note  21 ==   27.50 hz
+    // Piano key 88 = MIDI note 108 == 4186.01 hz
+    //                MIDI note 127 == 12543.8 hz
+    const fMin = 25.95;
+    const fMax = 4504.0;
+    const cqtSize = this.lib._cqt_init(audioCtx.sampleRate, cqtBins, db, fMin, fMax, supersample);
     console.log('cqtSize:', cqtSize);
     if (!cqtSize) throw Error('Error initializing constant Q transform.');
     this.cqtSize = cqtSize;
@@ -69,6 +75,8 @@ export default class Spectrogram {
     this.freqCtx = this.freqCanvas.getContext('2d', {alpha: false});
     this.specCtx = this.specCanvas.getContext('2d', {alpha: false});
     this.tempCtx = this.tempCanvas.getContext('2d', {alpha: false});
+
+    this.pianoKeysImage = pianoKeysImage;
 
     this.updateFrame();
   }
@@ -102,15 +110,14 @@ export default class Spectrogram {
     const fqHeight = this.freqCanvas.height;
     const canvasWidth = this.freqCanvas.width;
     const hCoeff = fqHeight / 256.0;
-    const specSpeed = 2;
+    const specSpeed = 1;
     const data = this.byteFrequencyData;
     const analyserNode = this.analyserNode;
     const freqCtx = this.freqCtx;
-    const specCtx = this.specCtx;
+    //const specCtx = this.specCtx;
     const tempCtx = this.tempCtx;
     freqCtx.fillStyle = 'black';
     freqCtx.fillRect(0, 0, this.freqCanvas.width, this.freqCanvas.height);
-    tempCtx.drawImage(this.specCanvas, 0, 0, this.specCanvas.width, this.specCanvas.height);
     const _start = performance.now();
     const dataHeap = new Float32Array(this.lib.HEAPF32.buffer, this.dataPtr, this.cqtSize);
 
@@ -121,8 +128,8 @@ export default class Spectrogram {
         const h =     data[x] * hCoeff | 0;
         freqCtx.fillStyle = style;
         freqCtx.fillRect(x, fqHeight - h, 1, h);
-        specCtx.fillStyle = style;
-        specCtx.fillRect(x, 0, 1, specSpeed);
+        tempCtx.fillStyle = style;
+        tempCtx.fillRect(x, 0, 1, specSpeed);
       }
     } else if (this.mode === MODE_LOG) {
       analyserNode.getByteFrequencyData(data);
@@ -134,8 +141,8 @@ export default class Spectrogram {
         const style =    colorMap(data[i]).hex();
         freqCtx.fillStyle = style;
         freqCtx.fillRect(x, fqHeight - h, binWidth, h);
-        specCtx.fillStyle = style;
-        specCtx.fillRect(x, 0, binWidth, specSpeed);
+        tempCtx.fillStyle = style;
+        tempCtx.fillRect(x, 0, binWidth, specSpeed);
       }
     } else if (this.mode === MODE_CONSTANT_Q) {
       analyserNode.getFloatTimeDomainData(dataHeap);
@@ -148,8 +155,8 @@ export default class Spectrogram {
           const val = 255 * weighting * dataHeap[x] | 0; //this.lib.getValue(this.cqtOutput + x * 4, 'float') | 0;
           const h = val * hCoeff | 0;
           const style = colorMap(val).hex();
-          specCtx.fillStyle = style;
-          specCtx.fillRect(x, 0, 1, specSpeed);
+          tempCtx.fillStyle = style;
+          tempCtx.fillRect(x, 0, 1, specSpeed);
           freqCtx.fillStyle = style;
           freqCtx.fillRect(x, fqHeight - h, 1, h);
         }
@@ -158,14 +165,19 @@ export default class Spectrogram {
 
     const _middle = performance.now();
 
-    // set translate on the canvas
-    specCtx.translate(0, specSpeed);
+    // tempCtx.drawImage(this.specCanvas, 0, 0);
+    // translate the transformation matrix. subsequent draws happen in this frame
+    tempCtx.translate(0, specSpeed);
     // draw the copied image
-    specCtx.drawImage(this.tempCanvas,
-      0, 0, this.specCanvas.width, this.specCanvas.height,
-      0, 0, this.specCanvas.width, this.specCanvas.height);
+    tempCtx.drawImage(this.tempCanvas, 0, 0);
     // reset the transformation matrix
-    specCtx.setTransform(1, 0, 0, 1, 0, 0);
+    tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+    this.specCtx.drawImage(this.tempCanvas, 0, 0);
+    // Disabled because this is rendered as plain HTML IMG element
+    // if (this.mode === MODE_CONSTANT_Q) {
+    //   this.specCtx.drawImage(this.pianoKeysImage, 0, 0);
+    // }
 
     const _end = performance.now();
 

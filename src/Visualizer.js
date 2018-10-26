@@ -1,3 +1,4 @@
+import pianoKeys from './images/piano-keys.png';
 import Spectrogram from './Spectrogram';
 import React, {PureComponent} from 'react';
 
@@ -27,6 +28,7 @@ export default class Visualizer extends PureComponent {
 
     this.freqCanvasRef = React.createRef();
     this.specCanvasRef = React.createRef();
+    this.pianoKeysRef = React.createRef();
   }
 
   componentDidMount() {
@@ -35,6 +37,7 @@ export default class Visualizer extends PureComponent {
       this.props.audioCtx,
       this.freqCanvasRef.current,
       this.specCanvasRef.current,
+      this.pianoKeysRef.current,
     );
     this.spectrogram.setMode(this.state.vizMode);
     this.spectrogram.setWeighting(this.state.weightingMode);
@@ -65,9 +68,12 @@ export default class Visualizer extends PureComponent {
       const enabled = e.target.value === 'true';
       this.setState({enabled: enabled});
     };
+    const enabledStyle = {
+      display: this.state.enabled ? 'block' : 'none',
+    };
     return (
-      <section className='Visualizer'>
-        <h3>
+      <div className='Visualizer'>
+        <h3 className='Visualizer-toggle'>
           Visualizer&nbsp;
           <label><input onClick={handleToggleVisualizer}
                         type='radio'
@@ -80,7 +86,7 @@ export default class Visualizer extends PureComponent {
                         defaultChecked={this.state.enabled === false}
                         name='visualizer-enabled'/>Off</label>
         </h3>
-        <div style={{ display: this.state.enabled ? 'block' : 'none' }}>
+        <div style={enabledStyle}>
           Mode:&nbsp;
           {
             SPECTROGRAM_MODES.map((mode, i) =>
@@ -118,10 +124,19 @@ export default class Visualizer extends PureComponent {
             }
           </div>
           }
-          <canvas className='Visualizer-canvas' width={512} height={60} ref={this.freqCanvasRef}/>
-          <canvas className='Visualizer-canvas' width={512} height={200} ref={this.specCanvasRef}/>
         </div>
-      </section>
+        <canvas style={enabledStyle} className='Visualizer-analyzer' width={448} height={60}
+                ref={this.freqCanvasRef}/>
+        <canvas style={enabledStyle} className='Visualizer-spectrogram' width={448} height={400}
+                ref={this.specCanvasRef}/>
+        <img src={pianoKeys}
+             ref={this.pianoKeysRef}
+             style={{
+               position: 'absolute',
+               top: '100px',
+               display: this.state.vizMode === 2 ? 'block' : 'none'
+             }}/>
+      </div>
     );
   }
 }
