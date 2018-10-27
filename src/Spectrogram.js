@@ -110,7 +110,7 @@ export default class Spectrogram {
     const fqHeight = this.freqCanvas.height;
     const canvasWidth = this.freqCanvas.width;
     const hCoeff = fqHeight / 256.0;
-    const specSpeed = 1;
+    const specSpeed = 2;
     const data = this.byteFrequencyData;
     const analyserNode = this.analyserNode;
     const freqCtx = this.freqCtx;

@@ -86,7 +86,7 @@ export default class Visualizer extends PureComponent {
                         defaultChecked={this.state.enabled === false}
                         name='visualizer-enabled'/>Off</label>
         </h3>
-        <div style={enabledStyle}>
+        <div className='Visualizer-options' style={enabledStyle}>
           Mode:&nbsp;
           {
             SPECTROGRAM_MODES.map((mode, i) =>
@@ -130,10 +130,9 @@ export default class Visualizer extends PureComponent {
         <canvas style={enabledStyle} className='Visualizer-spectrogram' width={448} height={400}
                 ref={this.specCanvasRef}/>
         <img src={pianoKeys}
+             className='Visualizer-overlay'
              ref={this.pianoKeysRef}
              style={{
-               position: 'absolute',
-               top: '100px',
                display: this.state.vizMode === 2 ? 'block' : 'none'
              }}/>
       </div>
