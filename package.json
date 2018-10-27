@@ -30,6 +30,7 @@
     "fs-extra": "3.0.1",
     "html-webpack-plugin": "2.29.0",
     "immutability-helper": "^2.7.1",
+    "ismobilejs": "^0.4.1",
     "jest": "20.0.4",
     "node-unrar-js": "^0.8.1",
     "object-assign": "4.1.1",

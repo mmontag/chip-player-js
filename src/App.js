@@ -11,6 +11,7 @@ import MIDIPlayer from './players/MIDIPlayer';
 import promisify from './promisifyXhr';
 import {trieToList} from './ResigTrie';
 import queryString from 'querystring';
+import isMobile from 'ismobilejs';
 
 const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
@@ -393,13 +394,14 @@ class App extends PureComponent {
               initialQuery={this.state.initialQuery}
               catalog={this.state.catalog}
               onResultClick={handleFileClick}/>
+            { !isMobile.phone &&
             <Visualizer audioCtx={this.audioCtx}
                         sourceNode={this.playerNode}
                         chipCore={this.chipCore}
-                        paused={this.state.paused}/>
+                        paused={this.state.paused}/> }
           </div>
         }
-        <section className="App-footer">
+        <div className="App-footer">
           <button onClick={this.togglePause}
                   disabled={this.player ? null : true}>
             {this.state.paused ? 'Resume' : 'Pause'}
@@ -496,7 +498,7 @@ class App extends PureComponent {
             }
           </div>
           }
-        </section>
+        </div>
       </div>
     );
   }
