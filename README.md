@@ -72,7 +72,7 @@ The library is licensed under in it's parts LGPL 2.1+, GPL v2+, GPL v3+, and MIT
 ## Available CMake options
 
 ### Library options
-* **CMAKE_PREFIX_PATH** - destinition folder where libADLMIDI will be installed. On Linux it is /usr/local/ by default.
+* **CMAKE_PREFIX_PATH** - destination folder where libADLMIDI will be installed. On Linux it is /usr/local/ by default.
 * **CMAKE_BUILD_TYPE** - Build types: **Debug** or **Release**
 
 * **libADLMIDI_STATIC** - (ON/OFF, default ON) Build static library
@@ -136,7 +136,7 @@ You need to make in the any IDE a library project and put into it next files
 * adlmidi_private.cpp	- some internal functions sources
 
 #### MIDI Sequencer
-To remove MIDI Sequecer, define `ADLMIDI_DISABLE_MIDI_SEQUENCER` macro and remove all those files
+To remove MIDI Sequencer, define `ADLMIDI_DISABLE_MIDI_SEQUENCER` macro and remove all those files
 * adlmidi_sequencer.cpp	- MIDI Sequencer related source
 * cvt_mus2mid.hpp - MUS2MID converter source (define `BWMIDI_DISABLE_MUS_SUPPORT` macro to remove MUS support)
 * cvt_xmi2mid.hpp - XMI2MID converter source (define `BWMIDI_DISABLE_XMI_SUPPORT` macro to remove XMI support)
