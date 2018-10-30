@@ -67,8 +67,8 @@ class App extends PureComponent {
       },
       onRuntimeInitialized: () => {
         this.players = [
-          new GMEPlayer (audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
-          new XMPPlayer (audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
+          new GMEPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
+          new XMPPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
           new MIDIPlayer(audioCtx, playerNode, chipCore, this.handlePlayerStateUpdate),
         ];
         this.setState({loading: false});
@@ -356,10 +356,10 @@ class App extends PureComponent {
     return this.getTime(val);
   }
 
-  getTime(val) {
+  getTime(ms) {
     const pad = n => n < 10 ? '0' + n : n;
-    const min = Math.floor(val / 60000);
-    const sec = ((val / 1000) % 60).toFixed(1);
+    const min = Math.floor(ms / 60000);
+    const sec = (Math.floor((ms % 60000) / 100) / 10).toFixed(1);
     return `${min}:${pad(sec)}`;
   }
 
@@ -380,11 +380,13 @@ class App extends PureComponent {
       <div className="App">
         <header className="App-header">
           <h2 className="App-title">Chip Player JS</h2>
+          {!isMobile.phone &&
           <p className="App-subtitle">
-            powered by <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>, <a
-            href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and <a
-            href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
-          </p>
+            powered by&nbsp;
+            <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>,&nbsp;
+            <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and&nbsp;
+            <a href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
+          </p>}
         </header>
         {this.state.loading ?
           <p className="App-content-area">Loading...</p>
@@ -394,11 +396,11 @@ class App extends PureComponent {
               initialQuery={this.state.initialQuery}
               catalog={this.state.catalog}
               onResultClick={handleFileClick}/>
-            { !isMobile.phone &&
+            {!isMobile.phone &&
             <Visualizer audioCtx={this.audioCtx}
                         sourceNode={this.playerNode}
                         chipCore={this.chipCore}
-                        paused={this.state.paused}/> }
+                        paused={this.state.paused}/>}
           </div>
         }
         <div className="App-footer">
