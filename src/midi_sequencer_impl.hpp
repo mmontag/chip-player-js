@@ -1225,12 +1225,12 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
                 if(m_interface->onDebugMessage)
                     m_interface->onDebugMessage(m_interface->onDebugMessage_userData, "Music title: %s", m_musTitle.c_str());
             }
-            else if(m_interface->onDebugMessage)
+            else
             {
-                //TODO: Store track titles and associate them with each track and make API to retreive them
                 std::string str((const char *)evt.data.data(), evt.data.size());
                 m_musTrackTitles.push_back(str);
-                m_interface->onDebugMessage(m_interface->onDebugMessage_userData, "Track title: %s", str.c_str());
+                if(m_interface->onDebugMessage)
+                    m_interface->onDebugMessage(m_interface->onDebugMessage_userData, "Track title: %s", str.c_str());
             }
         }
         else if(evt.subtype == MidiEvent::ST_INSTRTITLE)
@@ -2117,7 +2117,7 @@ bool BW_MidiSequencer::parseIMF(FileAndMemReader &fr)
         event.data[0] = imfRaw[0]; // port index
         event.data[1] = imfRaw[1]; // port value
         event.absPosition = abs_position;
-        event.isValid = true;
+        event.isValid = 1;
 
         evtPos.events.push_back(event);
         evtPos.delay = static_cast<uint64_t>(imfRaw[2]) + 256 * static_cast<uint64_t>(imfRaw[3]);
@@ -2131,7 +2131,7 @@ bool BW_MidiSequencer::parseIMF(FileAndMemReader &fr)
         }
     }
 
-    if(m_trackData[0].size() > 0)
+    if(!m_trackData[0].empty())
         m_currentPosition.track[0].pos = m_trackData[0].begin();
 
     buildTimeLine(temposList);
