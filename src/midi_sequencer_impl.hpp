@@ -206,7 +206,7 @@ void BW_MidiSequencer::MidiTrackRow::sortEvents(bool *noteStates)
             const MidiEvent e = anyOther[i];
             if(e.type == MidiEvent::T_NOTEON)
             {
-                const size_t note_i = (e.channel * 255) + (e.data[0] & 0x7F);
+                const size_t note_i = static_cast<size_t>(e.channel * 255) + (e.data[0] & 0x7F);
                 //Check, was previously note is on or off
                 bool wasOn = noteStates[note_i];
                 markAsOn.insert(note_i);
@@ -244,7 +244,7 @@ void BW_MidiSequencer::MidiTrackRow::sortEvents(bool *noteStates)
         //Mark other notes as released
         for(EvtArr::iterator j = noteOffs.begin(); j != noteOffs.end(); j++)
         {
-            size_t note_i = (j->channel * 255) + (j->data[0] & 0x7F);
+            size_t note_i = static_cast<size_t>(j->channel * 255) + (j->data[0] & 0x7F);
             noteStates[note_i] = false;
         }
 
@@ -483,12 +483,12 @@ bool BW_MidiSequencer::buildSmfTrackData(const std::vector<std::vector<uint8_t> 
             //HACK: Begin every track with "Reset all controllers" event to avoid controllers state break came from end of song
             for(uint8_t chan = 0; chan < 16; chan++)
             {
-                MidiEvent event;
-                event.type = MidiEvent::T_CTRLCHANGE;
-                event.channel = chan;
-                event.data.push_back(121);
-                event.data.push_back(0);
-                evtPos.events.push_back(event);
+                MidiEvent resetEvent;
+                resetEvent.type = MidiEvent::T_CTRLCHANGE;
+                resetEvent.channel = chan;
+                resetEvent.data.push_back(121);
+                resetEvent.data.push_back(0);
+                evtPos.events.push_back(resetEvent);
             }
 
             evtPos.absPos = abs_position;
@@ -863,6 +863,8 @@ void BW_MidiSequencer::buildTimeLine(const std::vector<MidiEvent> &tempos,
                             break;
                         case 32: // Set bank lsb (XG bank)
                             banks[et->channel] = (banks[et->channel] & 0xFF00) | (value & 0x00FF);
+                            break;
+                        default:
                             break;
                         }
                         continue;
@@ -1526,6 +1528,8 @@ BW_MidiSequencer::MidiEvent BW_MidiSequencer::parseEvent(const uint8_t **pptr, c
         }
         evt.data.push_back(*(ptr++));
         return evt;
+    default:
+        break;
     }
 
     return evt;
@@ -1651,7 +1655,7 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
                 m_interface->onDebugMessage(m_interface->onDebugMessage_userData, "Callback Trigger: %02X", evt.data[0]);
 #endif
             if(m_triggerHandler)
-                m_triggerHandler(m_triggerUserData, data[0], track);
+                m_triggerHandler(m_triggerUserData, static_cast<unsigned>(data[0]), track);
             return;
         }
 
@@ -1727,6 +1731,9 @@ void BW_MidiSequencer::handleEvent(size_t track, const BW_MidiSequencer::MidiEve
         m_interface->rt_pitchBend(m_interface->rtUserData, static_cast<uint8_t>(midCh), b, a);
         break;
     }
+
+    default:
+        break;
     }//switch
 }
 
@@ -1961,7 +1968,7 @@ static bool detectIMF(const char *head, FileAndMemReader &fr)
 
 bool BW_MidiSequencer::loadMIDI(FileAndMemReader &fr)
 {
-    size_t  fsize;
+    size_t  fsize = 0;
     BW_MidiSequencer_UNUSED(fsize);
     m_parsingErrorsString.clear();
 

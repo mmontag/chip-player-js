@@ -140,6 +140,7 @@ public:
         {
             switch(rel_to)
             {
+            default:
             case SET:
                 m_mp_tell = static_cast<size_t>(pos);
                 break;

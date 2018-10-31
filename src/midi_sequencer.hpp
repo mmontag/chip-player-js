@@ -384,6 +384,13 @@ private:
      */
     struct LoopStackEntry
     {
+        LoopStackEntry() :
+            infinity(false),
+            loops(0),
+            start(0),
+            end(0)
+        {}
+
         //! is infinite loop
         bool infinity;
         //! Count of loops left to break. <0 - infinite loop

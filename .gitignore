@@ -39,3 +39,7 @@ build/*
 # DoxyGen's output:
 docs
 
+# Ignore CLeon's files
+.idea/*
+cmake-build-*/*
+
