@@ -130,6 +130,10 @@ export default class Search extends PureComponent {
   render() {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
+    const handleGroupClick = (e, q) => {
+      e.preventDefault();
+      this.onSearchInputChange(q);
+    };
     return (
       <div className="Search">
         <div>
@@ -150,10 +154,11 @@ export default class Search extends PureComponent {
           this.state.searching ?
             <div className="Search-results">
               {this.state.results.map((group, i) => {
+                const groupQuery = group.title.replace(/[^a-zA-Z0-9]+/g, ' ');
                 return (
                   <div key={i}>
                     <h5 className="Search-results-group-heading">
-                      <a href="#" onClick={() => this.onSearchInputChange(group.title.replace(/[^a-zA-Z0-9]+/g, ' '))}>
+                      <a href={'?q=' + groupQuery} onClick={(e) => handleGroupClick(e, groupQuery)}>
                         {group.title}
                       </a>
                     </h5>

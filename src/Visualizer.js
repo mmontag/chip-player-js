@@ -132,6 +132,7 @@ export default class Visualizer extends PureComponent {
         <img src={pianoKeys}
              className='Visualizer-overlay'
              ref={this.pianoKeysRef}
+             alt='Piano keys'
              style={{
                display: this.state.vizMode === 2 ? 'block' : 'none'
              }}/>
