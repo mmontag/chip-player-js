@@ -74,7 +74,6 @@ export default class MIDIPlayer extends Player {
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
 
     this.setAudioProcess(this.midiAudioProcess);
-
   }
 
   midiAudioProcess(e) {
@@ -113,7 +112,7 @@ export default class MIDIPlayer extends Player {
 
   loadData(data, filepath) {
     this.activeChannels = [];
-    this.metadata = this._metadataFromFilepath(filepath);
+    this.metadata = Player.metadataFromFilepath(filepath);
 
     lib.ccall('tp_open', 'number', ['array', 'number'], [data, data.byteLength]);
     for(let i = 0; i < 16; i++) {
@@ -249,21 +248,5 @@ export default class MIDIPlayer extends Player {
       const err = lib.ccall('tp_load_soundfont', 'number', ['string'], [filename]);
       if (err !== -1) console.log('Loaded soundfont.');
     });
-  }
-
-  _metadataFromFilepath(filepath) {
-    // Guess metadata from path/filename for MIDI files.
-    // Assumes structure:  /Game MIDI/{game}/**/{title}
-    //             ...or:  /MIDI/{artist}/**/{title}
-    const parts = filepath.split('/');
-    const metadata = {};
-    metadata.title  = parts.pop();
-    metadata.system = parts.shift();
-    if(metadata.system === 'Game MIDI') {
-      metadata.game = parts.shift();
-    } else {
-      metadata.artist = parts.shift();
-    }
-    return metadata;
   }
 }

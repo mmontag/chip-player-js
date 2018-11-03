@@ -85,9 +85,10 @@ export default class GMEPlayer extends Player {
     return libgme._gme_start_track(emu, subtune);
   }
 
-  loadData(data) {
+  loadData(data, filepath) {
     this.subtune = 0;
     this.fadingOut = false;
+    this.filepathMeta = Player.metadataFromFilepath(filepath);
     this.connect();
 
     if (libgme.ccall(
@@ -140,8 +141,8 @@ export default class GMEPlayer extends Player {
 
     res.system = readString();
     res.game = readString();
-    res.title = readString();
-    res.artist = readString();
+    res.title = readString() || res.game || this.filepathMeta.title;
+    res.artist = readString() || this.filepathMeta.artist;
     res.copyright = readString();
     res.comment = readString();
 

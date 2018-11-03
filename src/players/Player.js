@@ -170,4 +170,20 @@ export default class Player {
       fn();
     }
   }
+
+  static metadataFromFilepath(filepath) {
+    // Guess metadata from path/filename for MIDI files.
+    // Assumes structure:  /Game MIDI/{game}/**/{title}
+    //             ...or:  /MIDI/{artist}/**/{title}
+    const parts = filepath.split('/');
+    const metadata = {};
+    metadata.title  = parts.pop();
+    metadata.system = parts.shift();
+    if(metadata.system === 'Game MIDI') {
+      metadata.game = parts.shift();
+    } else {
+      metadata.artist = parts.shift();
+    }
+    return metadata;
+  }
 }
