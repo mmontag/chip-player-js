@@ -389,7 +389,7 @@ class App extends PureComponent {
           </p>}
         </header>
         {this.state.loading ?
-          <p className="App-content-area">Loading...</p>
+          <p>Loading...</p>
           :
           <div className="App-content-area">
             <Search
