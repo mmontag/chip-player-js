@@ -29,7 +29,7 @@ export default class Player {
     this.destinationNode = destNode;
     this.onPlayerStateUpdate = onPlayerStateUpdate;
     this.bufferSize = 2048;
-    this.audioProcess = null;
+    this._innerAudioProcess = null;
     this.audioNode = this.audioCtx.createScriptProcessor(this.bufferSize, 2, 2);
     this.audioNode.onaudioprocess = this._outerAudioProcess;
     this.debug = window.location.search.indexOf('debug=true') !== -1;
@@ -111,8 +111,8 @@ export default class Player {
   }
 
   connect() {
-    if (!this.audioProcess) {
-      throw Error('Player.audioProcess has not been set.');
+    if (!this._innerAudioProcess) {
+      throw Error('Player.setAudioProcess has not been called.');
     }
     this.audioNode.connect(this.destinationNode);
   }
@@ -125,12 +125,12 @@ export default class Player {
     if (typeof fn !== 'function') {
       throw Error('AudioProcess must be a function.');
     }
-    this.audioProcess = fn;
+    this._innerAudioProcess = fn;
   }
 
   _outerAudioProcess(event) {
     const start = performance.now();
-    this.audioProcess(event);
+    this._innerAudioProcess(event);
     const end = performance.now();
 
     if (this.debug) {
