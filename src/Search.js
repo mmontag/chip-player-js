@@ -6,7 +6,7 @@ import queryString from 'querystring';
 const searchWorker = new SearchWorker();
 
 const CATALOG_PREFIX = 'https://gifx.co/music/';
-const MAX_RESULTS = 50;
+const MAX_RESULTS = 200;
 
 export default class Search extends PureComponent {
   constructor(props) {
