@@ -4,6 +4,7 @@ import React, {PureComponent} from 'react';
 import Slider from './Slider';
 import Search from './Search';
 import Visualizer from './Visualizer';
+import PlayerParams from './PlayerParams';
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
 import XMPPlayer from './players/XMPPlayer';
@@ -426,7 +427,7 @@ class App extends PureComponent {
           <div className="Song-details">
             Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
             Speed: <input
-            disabled={this.player ? null : true}
+            disabled={this.state.ejected}
             type="range" value={this.state.tempo}
             min="0.3" max="2.0" step="0.05"
             onInput={this.handleTempoChange}
@@ -436,11 +437,11 @@ class App extends PureComponent {
             <span>
                 Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
               <button
-                disabled={this.player ? null : true}
+                disabled={this.state.ejected}
                 onClick={this.prevSubtune}>Prev</button>
               &nbsp;
               <button
-                disabled={this.player ? null : true}
+                disabled={this.state.ejected}
                 onClick={this.nextSubtune}>Next</button><br/>
               </span>
             }
@@ -463,44 +464,10 @@ class App extends PureComponent {
             Copyright: {metadata.copyright || '--'}<br/>
             Comment: {metadata.comment || '--'}
             {playerParams.length > 0 &&
-            <div>
-              <h3>Player Settings</h3>
-              {playerParams.map(param => {
-                switch (param.type) {
-                  case 'enum':
-                    return (
-                      <div key={param.id}>
-                        {param.label}:&nbsp;
-                        <select
-                          onChange={(e) => this.player.setParameter(param.id, e.target.value)}
-                          defaultValue={this.player.getParameter(param.id)}>
-                          {param.options.map(optgroup =>
-                            <optgroup key={optgroup.label} label={optgroup.label}>
-                              {optgroup.items.map(option =>
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                              )}
-                            </optgroup>
-                          )}
-                        </select>
-                      </div>
-                    );
-                  case 'number':
-                    return (
-                      <div key={param.id}>
-                        {param.label}:&nbsp;
-                        <input type="range"
-                               min={param.min} max={param.max} step={param.step}
-                               value={this.player.getParameter(param.id)}
-                               onChange={(e) => this.player.setParameter(param.id, e.target.value)}>
-                        </input>
-                      </div>
-                    );
-                  default:
-                    return null;
-                }
-              })}
-            </div>
-            }
+              <PlayerParams
+                getParameter={this.player.getParameter}
+                setParameter={this.player.setParameter}
+                params={playerParams}/>}
           </div>
           }
         </div>

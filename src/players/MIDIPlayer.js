@@ -53,6 +53,9 @@ const fileExtensions = [
 export default class MIDIPlayer extends Player {
   constructor(audioCtx, destNode, chipCore, onPlayerStateUpdate = function() {}) {
     super(audioCtx, destNode, chipCore, onPlayerStateUpdate);
+    this.setParameter = this.setParameter.bind(this);
+    this.getParameter = this.getParameter.bind(this);
+    this.getParameters = this.getParameters.bind(this);
 
     lib = chipCore;
     lib._tp_init(audioCtx.sampleRate);
