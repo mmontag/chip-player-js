@@ -55,7 +55,10 @@ export default class TimeSlider extends PureComponent {
           pos={this.getSongPos()}
           onDrag={this.handlePositionDrag}
           onChange={this.handlePositionDrop}/>
-        Time: {this.getTimeLabel()} / {this.getTime(this.props.currentSongDurationMs)}
+        <div className='TimeSlider-time'>
+          <div className='TimeSlider-elapsed'>{this.getTimeLabel()}</div>
+          <div className='TimeSlider-total'>{this.getTime(this.props.currentSongDurationMs)}</div>
+        </div>
       </div>
     );
   }
