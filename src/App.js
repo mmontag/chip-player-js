@@ -101,6 +101,7 @@ class App extends PureComponent {
       catalog: null,
       loading: true,
       paused: true,
+      ejected: true,
       playerError: null,
       currentSongMetadata: {},
       currentSongNumVoices: 0,
@@ -242,6 +243,7 @@ class App extends PureComponent {
   handlePlayerStateUpdate(isStopped) {
     if (isStopped) {
       this.setState({
+        ejected: true,
         currentSongSubtune: 0,
         currentSongMetadata: {},
         currentSongNumVoices: 0,
@@ -252,6 +254,7 @@ class App extends PureComponent {
       });
     } else {
       this.setState({
+        ejected: false,
         paused: this.player.isPaused(),
         currentSongSubtune: this.player.getSubtune(),
         currentSongMetadata: this.player.getMetadata(),
@@ -400,12 +403,12 @@ class App extends PureComponent {
             <Visualizer audioCtx={this.audioCtx}
                         sourceNode={this.playerNode}
                         chipCore={this.chipCore}
-                        paused={this.state.paused}/>}
+                        paused={this.state.ejected || this.state.paused}/>}
           </div>
         }
         <div className="App-footer">
           <button onClick={this.togglePause}
-                  disabled={this.player ? null : true}>
+                  disabled={this.state.ejected}>
             {this.state.paused ? 'Resume' : 'Pause'}
           </button>
           &nbsp;
