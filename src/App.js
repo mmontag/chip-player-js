@@ -1,7 +1,6 @@
 import './App.css';
 
 import React, {PureComponent} from 'react';
-import Slider from './Slider';
 import Search from './Search';
 import Visualizer from './Visualizer';
 import PlayerParams from './PlayerParams';
@@ -13,6 +12,7 @@ import promisify from './promisifyXhr';
 import {trieToList} from './ResigTrie';
 import queryString from 'querystring';
 import isMobile from 'ismobilejs';
+import TimeSlider from "./TimeSlider";
 
 const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
@@ -24,16 +24,13 @@ class App extends PureComponent {
     this.togglePause = this.togglePause.bind(this);
     this.play = this.play.bind(this);
     this.playSong = this.playSong.bind(this);
-    this.handlePositionDrag = this.handlePositionDrag.bind(this);
-    this.handlePositionDrop = this.handlePositionDrop.bind(this);
+    this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.handleVoiceToggle = this.handleVoiceToggle.bind(this);
     this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
-    this.getSongPos = this.getSongPos.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
     this.playSubtune = this.playSubtune.bind(this);
-    this.getTimeLabel = this.getTimeLabel.bind(this);
     this.displayLoop = this.displayLoop.bind(this);
     this.getFadeMs = this.getFadeMs.bind(this);
     this.loadCatalog = this.loadCatalog.bind(this);
@@ -111,7 +108,6 @@ class App extends PureComponent {
       currentSongSubtune: 0,
       currentSongDurationMs: 1,
       currentSongPositionMs: 0,
-      draggedSongPositionMs: -1,
       tempo: 1,
       voices: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
@@ -251,7 +247,6 @@ class App extends PureComponent {
         currentSongNumVoices: 0,
         currentSongPositionMs: 0,
         currentSongDurationMs: 1,
-        draggedSongPositionMs: -1,
         currentSongNumSubtunes: 0,
       });
     } else {
@@ -287,15 +282,7 @@ class App extends PureComponent {
     this.setState({paused: this.player.togglePause()});
   }
 
-  handlePositionDrag(event) {
-    const pos = event.target ? event.target.value : event;
-    // Update current time position label
-    this.setState({
-      draggedSongPositionMs: pos * this.state.currentSongDurationMs,
-    });
-  }
-
-  handlePositionDrop(event) {
+  handleTimeSliderChange(event) {
     if (!this.player) return;
 
     const pos = event.target ? event.target.value : event;
@@ -311,7 +298,6 @@ class App extends PureComponent {
     // Seek in song
     this.player.seekMs(seekMs);
     this.setState({
-      draggedSongPositionMs: -1,
       currentSongPositionMs: pos * this.state.currentSongDurationMs, // Smooth
     });
     setTimeout(() => {
@@ -350,24 +336,6 @@ class App extends PureComponent {
     }
   }
 
-  getSongPos() {
-    return this.state.currentSongPositionMs / this.state.currentSongDurationMs;
-  }
-
-  getTimeLabel() {
-    const val = this.state.draggedSongPositionMs >= 0 ?
-      this.state.draggedSongPositionMs :
-      this.state.currentSongPositionMs;
-    return this.getTime(val);
-  }
-
-  getTime(ms) {
-    const pad = n => n < 10 ? '0' + n : n;
-    const min = Math.floor(ms / 60000);
-    const sec = (Math.floor((ms % 60000) / 100) / 10).toFixed(1);
-    return `${min}:${pad(sec)}`;
-  }
-
   getFadeMs(metadata, tempo) {
     return Math.floor(metadata.play_length / tempo);
   }
@@ -379,7 +347,6 @@ class App extends PureComponent {
         this.playSong(filename);
       }
     };
-    const playerParams = this.player ? this.player.getParameters() : [];
     const metadata = this.state.currentSongMetadata;
     return (
       <div className="App">
@@ -420,13 +387,12 @@ class App extends PureComponent {
           {this.state.playerError &&
           <div className="App-error">ERROR: {this.state.playerError}</div>
           }
-          <Slider
-            pos={this.getSongPos()}
-            onDrag={this.handlePositionDrag}
-            onChange={this.handlePositionDrop}/>
+          <TimeSlider
+            currentSongPositionMs={this.state.currentSongPositionMs}
+            currentSongDurationMs={this.state.currentSongDurationMs}
+            onChange={this.handleTimeSliderChange}/>
           {metadata &&
           <div className="Song-details">
-            Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
             {this.state.currentSongNumSubtunes > 1 &&
             <span>
                 Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;

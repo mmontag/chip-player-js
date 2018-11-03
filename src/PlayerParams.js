@@ -2,10 +2,6 @@ import {PureComponent} from 'react';
 import React from "react";
 
 export default class PlayerParams extends PureComponent {
-  constructor(props) {
-    super(props);
-  }
-
   render() {
     return (
       <div>
