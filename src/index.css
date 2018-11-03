@@ -196,7 +196,7 @@ body,#root {
     border-top: 1px solid yellow;
     padding: 19px;
     margin: 0 -19px;
-    flex-grow: 0;
+    flex-shrink: 0;
     max-height: 25%;
     overflow-y: auto;
     overflow-x: hidden;

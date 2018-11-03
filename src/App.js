@@ -27,6 +27,7 @@ class App extends PureComponent {
     this.handlePositionDrag = this.handlePositionDrag.bind(this);
     this.handlePositionDrop = this.handlePositionDrop.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
+    this.handleVoiceToggle = this.handleVoiceToggle.bind(this);
     this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
     this.getSongPos = this.getSongPos.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
@@ -426,13 +427,6 @@ class App extends PureComponent {
           {metadata &&
           <div className="Song-details">
             Time: {this.getTimeLabel()} / {this.getTime(this.state.currentSongDurationMs)}<br/>
-            Speed: <input
-            disabled={this.state.ejected}
-            type="range" value={this.state.tempo}
-            min="0.3" max="2.0" step="0.05"
-            onInput={this.handleTempoChange}
-            onChange={this.handleTempoChange}/>&nbsp;
-            {this.state.tempo.toFixed(2)}<br/>
             {this.state.currentSongNumSubtunes > 1 &&
             <span>
                 Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
@@ -445,29 +439,24 @@ class App extends PureComponent {
                 onClick={this.nextSubtune}>Next</button><br/>
               </span>
             }
-            Voices:&nbsp;
-            {[...Array(this.state.currentSongNumVoices)].map((_, i) => {
-              return (
-                <label className="App-label" key={i}>
-                  <input
-                    type="checkbox" onChange={() => {
-                    this.handleVoiceToggle(i)
-                  }} checked={this.state.voices[i]}/>
-                  {this.state.voiceNames[i]}
-                </label>
-              )
-            })}<br/><br/>
             Title: {metadata.title || '--'}<br/>
             Game: {metadata.game || '--'}<br/>
             Artist: {metadata.artist || '--'}<br/>
             System: {metadata.system || '--'}<br/>
             Copyright: {metadata.copyright || '--'}<br/>
             Comment: {metadata.comment || '--'}
-            {playerParams.length > 0 &&
+            {this.player &&
               <PlayerParams
+                ejected={this.state.ejected}
+                tempo={this.state.tempo}
+                numVoices={this.state.currentSongNumVoices}
+                voices={this.state.voices}
+                voiceNames={this.state.voiceNames}
+                handleTempoChange={this.handleTempoChange}
+                handleVoiceToggle={this.handleVoiceToggle}
                 getParameter={this.player.getParameter}
                 setParameter={this.player.setParameter}
-                params={playerParams}/>}
+                params={this.player.getParameters()}/>}
           </div>
           }
         </div>
