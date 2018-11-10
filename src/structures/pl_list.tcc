@@ -80,7 +80,14 @@ pl_list<T>::pl_list(std::size_t capacity)
 template <class T>
 pl_list<T>::~pl_list()
 {
-    delete[] cells_;
+    if (cells_allocd_)
+        delete[] cells_;
+}
+
+template <class T>
+pl_list<T>::pl_list(pl_cell<T> *cells, std::size_t ncells, external_storage_policy)
+{
+    initialize(ncells, cells);
 }
 
 template <class T>
@@ -97,14 +104,15 @@ pl_list<T> &pl_list<T>::operator=(const pl_list &other)
     if(this != &other)
     {
         std::size_t size = other.size();
-        if(size <= capacity())
-            clear();
-        else
+        if(size > capacity())
         {
             pl_cell<T> *oldcells = cells_;
+            bool allocd = cells_allocd_;
             initialize(other.capacity());
-            delete[] oldcells;
+            if (allocd)
+                delete[] oldcells;
         }
+        clear();
         for(const_iterator i = other.end(), b = other.begin(); i-- != b;)
             push_front(i->value);
     }
@@ -280,9 +288,10 @@ typename pl_list<T>::const_iterator pl_list<T>::find_if(const Pred &p) const
 }
 
 template <class T>
-void pl_list<T>::initialize(std::size_t capacity)
+void pl_list<T>::initialize(std::size_t capacity, pl_cell<T> *extcells)
 {
-    cells_ = new pl_cell<T>[capacity];
+    cells_ = extcells ? extcells : new pl_cell<T>[capacity];
+    cells_allocd_ = extcells ? false : true;
     capacity_ = capacity;
     endcell_.next = NULL;
     clear();

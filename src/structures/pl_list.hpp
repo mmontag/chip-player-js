@@ -73,6 +73,9 @@ public:
     pl_list(std::size_t capacity = 0);
     ~pl_list();
 
+    struct external_storage_policy {};
+    pl_list(pl_cell<T> *cells, std::size_t ncells, external_storage_policy);
+
     pl_list(const pl_list &other);
     pl_list &operator=(const pl_list &other);
 
@@ -117,8 +120,10 @@ private:
     pl_cell<T> *free_;
     // value-less cell which terminates the linked list
     pl_basic_cell<T> endcell_;
+    // whether cell storage is allocated
+    bool cells_allocd_;
 
-    void initialize(std::size_t capacity);
+    void initialize(std::size_t capacity, pl_cell<T> *extcells = NULL);
     pl_cell<T> *allocate(pl_cell<T> *pos);
     void deallocate(pl_cell<T> *cell);
 };
