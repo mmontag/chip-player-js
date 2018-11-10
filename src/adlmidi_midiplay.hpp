@@ -27,6 +27,7 @@
 #include "adldata.hh"
 #include "adlmidi_private.hpp"
 #include "adlmidi_ptr.hpp"
+#include "structures/pl_list.hpp"
 
 /**
  * @brief Hooks of the internal events
@@ -413,7 +414,6 @@ public:
         };
         struct LocationData
         {
-            LocationData *prev, *next;
             Location loc;
             enum {
                 Sustain_None        = 0x00,
@@ -429,6 +429,15 @@ public:
             //! Timeout until note will be allowed to be killed by channel manager while it is on
             int64_t kon_time_until_neglible_us;
             int64_t vibdelay_us;
+
+            struct FindPredicate
+            {
+                FindPredicate(Location loc)
+                    : loc(loc) {}
+                bool operator()(const LocationData &ld) const
+                    { return ld.loc == loc; }
+                Location loc;
+            };
         };
 
         //! Time left until sounding will be muted after key off
@@ -437,42 +446,41 @@ public:
         //! Recently passed instrument, improves a goodness of released but busy channel when matching
         MIDIchannel::NoteInfo::Phys recent_ins;
 
-        enum { users_max = 128 };
-        LocationData *users_first, *users_free_cells;
-        LocationData users_cells[users_max];
-        unsigned users_size;
+        pl_list<LocationData> users;
+        typedef typename pl_list<LocationData>::iterator users_iterator;
+        typedef typename pl_list<LocationData>::const_iterator const_users_iterator;
 
-        bool users_empty() const;
-        LocationData *users_find(Location loc);
-        LocationData *users_allocate();
-        LocationData *users_find_or_create(Location loc);
-        LocationData *users_insert(const LocationData &x);
-        void users_erase(LocationData *user);
-        void users_clear();
-        void users_assign(const LocationData *users, size_t count);
+        users_iterator find_user(const Location &loc)
+        {
+            return users.find_if(LocationData::FindPredicate(loc));
+        }
+
+        users_iterator find_or_create_user(const Location &loc)
+        {
+            users_iterator it = find_user(loc);
+            if(it.is_end() && users.size() != users.capacity())
+            {
+                LocationData ld;
+                ld.loc = loc;
+                it = users.insert(users.end(), ld);
+            }
+            return it;
+        }
 
         // For channel allocation:
-        AdlChannel(): koff_time_until_neglible_us(0)
+        AdlChannel(): koff_time_until_neglible_us(0), users(128)
         {
-            users_clear();
             std::memset(&recent_ins, 0, sizeof(MIDIchannel::NoteInfo::Phys));
         }
 
-        AdlChannel(const AdlChannel &oth): koff_time_until_neglible_us(oth.koff_time_until_neglible_us)
+        AdlChannel(const AdlChannel &oth): koff_time_until_neglible_us(oth.koff_time_until_neglible_us), users(oth.users)
         {
-            if(oth.users_first)
-            {
-                users_first = NULL;
-                users_assign(oth.users_first, oth.users_size);
-            }
-            else
-                users_clear();
         }
 
         AdlChannel &operator=(const AdlChannel &oth)
         {
             koff_time_until_neglible_us = oth.koff_time_until_neglible_us;
-            users_assign(oth.users_first, oth.users_size);
+            users = oth.users;
             return *this;
         }
 
@@ -934,7 +942,7 @@ private:
      */
     void killOrEvacuate(
         size_t  from_channel,
-        AdlChannel::LocationData *j,
+        AdlChannel::users_iterator j,
         MIDIchannel::activenoteiterator i);
 
     /**
