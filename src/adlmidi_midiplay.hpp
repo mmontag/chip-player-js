@@ -140,8 +140,6 @@ public:
         {
             //! Note number
             uint8_t note;
-            //! Is note active
-            bool active;
             //! Current pressure
             uint8_t vol;
             //! Note vibrato (a part of Note Aftertouch feature)
@@ -164,6 +162,15 @@ public:
             {
                 MaxNumPhysChans = 2,
                 MaxNumPhysItemCount = MaxNumPhysChans
+            };
+
+            struct FindPredicate
+            {
+                explicit FindPredicate(unsigned note)
+                    : note(note) {}
+                bool operator()(const NoteInfo &ni) const
+                    { return ni.note == note; }
+                unsigned note;
             };
 
             /**
@@ -245,87 +252,31 @@ public:
         unsigned gliding_note_count;
 
         //! Active notes in the channel
-        NoteInfo activenotes[128];
+        pl_list<NoteInfo> activenotes;
+        typedef typename pl_list<NoteInfo>::iterator notes_iterator;
+        typedef typename pl_list<NoteInfo>::const_iterator const_notes_iterator;
 
-        struct activenoteiterator
+        notes_iterator find_activenote(unsigned note)
         {
-            explicit activenoteiterator(NoteInfo *info = NULL)
-                : ptr(info) {}
-            activenoteiterator &operator++()
-            {
-                if(ptr->note == 127)
-                    ptr = NULL;
-                else
-                    for(++ptr; ptr && !ptr->active;)
-                        ptr = (ptr->note == 127) ? NULL : (ptr + 1);
-                return *this;
-            }
-            activenoteiterator operator++(int)
-            {
-                activenoteiterator pos = *this;
-                ++*this;
-                return pos;
-            }
-            NoteInfo &operator*() const
-                { return *ptr; }
-            NoteInfo *operator->() const
-                { return ptr; }
-            bool operator==(activenoteiterator other) const
-                { return ptr == other.ptr; }
-            bool operator!=(activenoteiterator other) const
-                { return ptr != other.ptr; }
-            operator NoteInfo *() const
-                { return ptr; }
-        private:
-            NoteInfo *ptr;
-        };
-
-        activenoteiterator activenotes_begin()
-        {
-            activenoteiterator it(activenotes);
-            return (it->active) ? it : ++it;
+            return activenotes.find_if(NoteInfo::FindPredicate(note));
         }
 
-        activenoteiterator activenotes_find(uint8_t note)
+        notes_iterator ensure_find_activenote(unsigned note)
         {
-            assert(note < 128);
-            return activenoteiterator(
-                activenotes[note].active ? &activenotes[note] : NULL);
-        }
-
-        activenoteiterator activenotes_ensure_find(uint8_t note)
-        {
-            activenoteiterator it = activenotes_find(note);
-            assert(it);
+            notes_iterator it = find_activenote(note);
+            assert(!it.is_end());
             return it;
         }
 
-        std::pair<activenoteiterator, bool> activenotes_insert(uint8_t note)
+        notes_iterator find_or_create_activenote(unsigned note)
         {
-            assert(note < 128);
-            NoteInfo &info = activenotes[note];
-            bool inserted = !info.active;
-            if(inserted) info.active = true;
-            return std::pair<activenoteiterator, bool>(activenoteiterator(&info), inserted);
-        }
-
-        void activenotes_erase(activenoteiterator pos)
-        {
-            if(pos)
-                pos->active = false;
-        }
-
-        bool activenotes_empty()
-        {
-            return !activenotes_begin();
-        }
-
-        void activenotes_clear()
-        {
-            for(uint8_t i = 0; i < 128; ++i) {
-                activenotes[i].note = i;
-                activenotes[i].active = false;
+            notes_iterator it = find_activenote(note);
+            if(it.is_end()) {
+                NoteInfo ni;
+                ni.note = note;
+                it = activenotes.insert(activenotes.end(), ni);
             }
+            return it;
         }
 
         /**
@@ -391,8 +342,8 @@ public:
         }
 
         MIDIchannel()
+            : activenotes(128)
         {
-            activenotes_clear();
             gliding_note_count = 0;
             reset();
         }
@@ -432,7 +383,7 @@ public:
 
             struct FindPredicate
             {
-                FindPredicate(Location loc)
+                explicit FindPredicate(Location loc)
                     : loc(loc) {}
                 bool operator()(const LocationData &ld) const
                     { return ld.loc == loc; }
@@ -907,7 +858,7 @@ private:
      * @param select_adlchn Specify chip channel, or -1 - all chip channels used by the note
      */
     void noteUpdate(size_t midCh,
-                    MIDIchannel::activenoteiterator i,
+                    MIDIchannel::notes_iterator i,
                     unsigned props_mask,
                     int32_t select_adlchn = -1);
 
@@ -943,7 +894,7 @@ private:
     void killOrEvacuate(
         size_t  from_channel,
         AdlChannel::users_iterator j,
-        MIDIchannel::activenoteiterator i);
+        MIDIchannel::notes_iterator i);
 
     /**
      * @brief Off all notes and silence sound

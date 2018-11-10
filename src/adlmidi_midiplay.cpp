@@ -294,12 +294,13 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if((synth.m_musicMode == Synth::MODE_RSXX) && (velocity != 0))
     {
         // Check if this is just a note after-touch
-        MIDIchannel::activenoteiterator i = m_midiChannels[channel].activenotes_find(note);
-        if(i)
+        MIDIchannel::notes_iterator i = m_midiChannels[channel].find_activenote(note);
+        if(!i.is_end())
         {
-            const int veloffset = i->ains->midi_velocity_offset;
+            MIDIchannel::NoteInfo &ni = i->value;
+            const int veloffset = ni.ains->midi_velocity_offset;
             velocity = (uint8_t)std::min(127, std::max(1, (int)velocity + veloffset));
-            i->vol = velocity;
+            ni.vol = velocity;
             noteUpdate(channel, i, Upd_Volume);
             return false;
         }
@@ -468,11 +469,11 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if(isBlankNote)
     {
         // Don't even try to play the blank instrument! But, insert the dummy note.
-        std::pair<MIDIchannel::activenoteiterator, bool>
-        dummy = midiChan.activenotes_insert(note);
-        dummy.first->isBlank = true;
-        dummy.first->ains = NULL;
-        dummy.first->chip_channels_count = 0;
+        MIDIchannel::notes_iterator i = midiChan.find_or_create_activenote(note);
+        MIDIchannel::NoteInfo &dummy = i->value;
+        dummy.isBlank = true;
+        dummy.ains = NULL;
+        dummy.chip_channels_count = 0;
         // Record the last note on MIDI channel as source of portamento
         midiChan.portamentoSource = static_cast<int8_t>(note);
         return false;
@@ -565,18 +566,18 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         velocity = static_cast<uint8_t>(std::floor(static_cast<float>(velocity) * 0.8f));
 
     // Allocate active note for MIDI channel
-    std::pair<MIDIchannel::activenoteiterator, bool>
-    ir = midiChan.activenotes_insert(note);
-    ir.first->vol     = velocity;
-    ir.first->vibrato = midiChan.noteAftertouch[note];
-    ir.first->noteTone = static_cast<int16_t>(tone);
-    ir.first->currentTone = tone;
-    ir.first->glideRate = HUGE_VAL;
-    ir.first->midiins = midiins;
-    ir.first->isPercussion = isPercussion;
-    ir.first->isBlank = isBlankNote;
-    ir.first->ains = ains;
-    ir.first->chip_channels_count = 0;
+    MIDIchannel::notes_iterator ir = midiChan.find_or_create_activenote(note);
+    MIDIchannel::NoteInfo &ni = ir->value;
+    ni.vol     = velocity;
+    ni.vibrato = midiChan.noteAftertouch[note];
+    ni.noteTone = static_cast<int16_t>(tone);
+    ni.currentTone = tone;
+    ni.glideRate = HUGE_VAL;
+    ni.midiins = midiins;
+    ni.isPercussion = isPercussion;
+    ni.isBlank = isBlankNote;
+    ni.ains = ains;
+    ni.chip_channels_count = 0;
 
     int8_t currentPortamentoSource = midiChan.portamentoSource;
     double currentPortamentoRate = midiChan.portamentoRate;
@@ -589,8 +590,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     // Enable gliding on portamento note
     if (portamentoEnable && currentPortamentoSource >= 0)
     {
-        ir.first->currentTone = currentPortamentoSource;
-        ir.first->glideRate = currentPortamentoRate;
+        ni.currentTone = currentPortamentoSource;
+        ni.glideRate = currentPortamentoRate;
         ++midiChan.gliding_note_count;
     }
 
@@ -600,10 +601,10 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         if(c < 0)
             continue;
         uint16_t chipChan = static_cast<uint16_t>(adlchannel[ccount]);
-        ir.first->phys_ensure_find_or_create(chipChan)->assign(voices[ccount]);
+        ni.phys_ensure_find_or_create(chipChan)->assign(voices[ccount]);
     }
 
-    noteUpdate(channel, ir.first, Upd_All | Upd_Patch);
+    noteUpdate(channel, ir, Upd_All | Upd_Patch);
 
     for(unsigned ccount = 0; ccount < MIDIchannel::NoteInfo::MaxNumPhysChans; ++ccount)
     {
@@ -629,10 +630,10 @@ void MIDIplay::realTime_NoteAfterTouch(uint8_t channel, uint8_t note, uint8_t at
     if(static_cast<size_t>(channel) > m_midiChannels.size())
         channel = channel % 16;
     MIDIchannel &chan = m_midiChannels[channel];
-    MIDIchannel::activenoteiterator i = m_midiChannels[channel].activenotes_find(note);
-    if(i)
+    MIDIchannel::notes_iterator i = m_midiChannels[channel].find_activenote(note);
+    if(!i.is_end())
     {
-        i->vibrato = atVal;
+        i->value.vibrato = atVal;
     }
 
     uint8_t oldAtVal = chan.noteAftertouch[note % 128];
@@ -1116,12 +1117,12 @@ void MIDIplay::AudioTick(uint32_t chipId, uint32_t rate)
 #endif
 
 void MIDIplay::noteUpdate(size_t midCh,
-                          MIDIplay::MIDIchannel::activenoteiterator i,
+                          MIDIplay::MIDIchannel::notes_iterator i,
                           unsigned props_mask,
                           int32_t select_adlchn)
 {
     Synth &synth = *m_synth;
-    MIDIchannel::NoteInfo &info = *i;
+    MIDIchannel::NoteInfo &info = i->value;
     const int16_t noteTone    = info.noteTone;
     const double currentTone    = info.currentTone;
     const uint8_t vol     = info.vol;
@@ -1134,7 +1135,7 @@ void MIDIplay::noteUpdate(size_t midCh,
     if(info.isBlank)
     {
         if(props_mask & Upd_Off)
-            m_midiChannels[midCh].activenotes_erase(i);
+            m_midiChannels[midCh].activenotes.erase(i);
         return;
     }
 
@@ -1313,7 +1314,7 @@ void MIDIplay::noteUpdate(size_t midCh,
                 double bend = midibend + ins.ains.finetune;
                 double phase = 0.0;
                 uint8_t vibrato = std::max(m_midiChannels[midCh].vibrato, m_midiChannels[midCh].aftertouch);
-                vibrato = std::max(vibrato, i->vibrato);
+                vibrato = std::max(vibrato, info.vibrato);
 
                 if((ains.flags & adlinsdata::Flag_Pseudo4op) && ins.pseudo4op)
                 {
@@ -1334,18 +1335,18 @@ void MIDIplay::noteUpdate(size_t midCh,
 
     if(info.chip_channels_count == 0)
     {
-        if(i->glideRate != HUGE_VAL)
+        if(info.glideRate != HUGE_VAL)
             --m_midiChannels[midCh].gliding_note_count;
-        m_midiChannels[midCh].activenotes_erase(i);
+        m_midiChannels[midCh].activenotes.erase(i);
     }
 }
 
 void MIDIplay::noteUpdateAll(size_t midCh, unsigned props_mask)
 {
-    for(MIDIchannel::activenoteiterator
-        i = m_midiChannels[midCh].activenotes_begin(); i;)
+    for(MIDIchannel::notes_iterator
+        i = m_midiChannels[midCh].activenotes.begin(); !i.is_end();)
     {
-        MIDIchannel::activenoteiterator j(i++);
+        MIDIchannel::notes_iterator j(i++);
         noteUpdate(midCh, j, props_mask);
     }
 }
@@ -1387,11 +1388,13 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
         s -= (jd.sustained == AdlChannel::LocationData::Sustain_None) ?
             kon_ms : (kon_ms / 2);
 
-        MIDIchannel::activenoteiterator
-        k = const_cast<MIDIchannel &>(m_midiChannels[jd.loc.MidCh]).activenotes_find(jd.loc.note);
+        MIDIchannel::notes_iterator
+        k = const_cast<MIDIchannel &>(m_midiChannels[jd.loc.MidCh]).find_activenote(jd.loc.note);
 
-        if(k)
+        if(!k.is_end())
         {
+            const MIDIchannel::NoteInfo &info = k->value;
+
             // Same instrument = good
             if(jd.ins == ins)
             {
@@ -1403,7 +1406,7 @@ int64_t MIDIplay::calculateChipChannelGoodness(size_t c, const MIDIchannel::Note
             }
 
             // Percussion is inferior to melody
-            s += k->isPercussion ? 50 : 0;
+            s += info.isPercussion ? 50 : 0;
             /*
                     if(k->second.midiins >= 25
                     && k->second.midiins < 40
@@ -1460,8 +1463,8 @@ void MIDIplay::prepareChipChannelForNewNote(size_t c, const MIDIchannel::NoteInf
         {
             // Collision: Kill old note,
             // UNLESS we're going to do arpeggio
-            MIDIchannel::activenoteiterator i
-            (m_midiChannels[jd.loc.MidCh].activenotes_ensure_find(jd.loc.note));
+            MIDIchannel::notes_iterator i
+            (m_midiChannels[jd.loc.MidCh].ensure_find_activenote(jd.loc.note));
 
             // Check if we can do arpeggio.
             if((jd.vibdelay_us < 70000
@@ -1491,11 +1494,12 @@ void MIDIplay::prepareChipChannelForNewNote(size_t c, const MIDIchannel::NoteInf
 
 void MIDIplay::killOrEvacuate(size_t from_channel,
                               AdlChannel::users_iterator j,
-                              MIDIplay::MIDIchannel::activenoteiterator i)
+                              MIDIplay::MIDIchannel::notes_iterator i)
 {
     Synth &synth = *m_synth;
     uint32_t maxChannels = ADL_MAX_CHIPS * 18;
     AdlChannel::LocationData &jd = j->value;
+    MIDIchannel::NoteInfo &info = i->value;
 
     // Before killing the note, check if it can be
     // evacuated to another channel as an arpeggio
@@ -1529,17 +1533,17 @@ void MIDIplay::killOrEvacuate(size_t from_channel,
             {
                 hooks.onNote(hooks.onNote_userData,
                              (int)from_channel,
-                             i->noteTone,
-                             static_cast<int>(i->midiins), 0, 0.0);
+                             info.noteTone,
+                             static_cast<int>(info.midiins), 0, 0.0);
                 hooks.onNote(hooks.onNote_userData,
                              (int)c,
-                             i->noteTone,
-                             static_cast<int>(i->midiins),
-                             i->vol, 0.0);
+                             info.noteTone,
+                             static_cast<int>(info.midiins),
+                             info.vol, 0.0);
             }
 
-            i->phys_erase(static_cast<uint16_t>(from_channel));
-            i->phys_ensure_find_or_create(cs)->assign(jd.ins);
+            info.phys_erase(static_cast<uint16_t>(from_channel));
+            info.phys_ensure_find_or_create(cs)->assign(jd.ins);
             m_chipChannels[cs].users.push_back(jd);
             m_chipChannels[from_channel].users.erase(j);
             return;
@@ -1683,9 +1687,9 @@ void MIDIplay::updatePortamento(size_t midCh)
 
 void MIDIplay::noteOff(size_t midCh, uint8_t note)
 {
-    MIDIchannel::activenoteiterator
-    i = m_midiChannels[midCh].activenotes_find(note);
-    if(i)
+    MIDIchannel::notes_iterator
+    i = m_midiChannels[midCh].find_activenote(note);
+    if(!i.is_end())
         noteUpdate(midCh, i, Upd_Off);
 }
 
@@ -1694,7 +1698,7 @@ void MIDIplay::updateVibrato(double amount)
 {
     for(size_t a = 0, b = m_midiChannels.size(); a < b; ++a)
     {
-        if(m_midiChannels[a].hasVibrato() && !m_midiChannels[a].activenotes_empty())
+        if(m_midiChannels[a].hasVibrato() && !m_midiChannels[a].activenotes.empty())
         {
             noteUpdateAll(static_cast<uint16_t>(a), Upd_Pitch);
             m_midiChannels[a].vibpos += amount * m_midiChannels[a].vibspeed;
@@ -1776,7 +1780,7 @@ retry_arpeggio:
                 {
                     noteUpdate(
                         d.loc.MidCh,
-                        m_midiChannels[ d.loc.MidCh ].activenotes_ensure_find(d.loc.note),
+                        m_midiChannels[ d.loc.MidCh ].ensure_find_activenote(d.loc.note),
                         Upd_Off,
                         static_cast<int32_t>(c));
                     goto retry_arpeggio;
@@ -1784,7 +1788,7 @@ retry_arpeggio:
 
                 noteUpdate(
                     d.loc.MidCh,
-                    m_midiChannels[ d.loc.MidCh ].activenotes_ensure_find(d.loc.note),
+                    m_midiChannels[ d.loc.MidCh ].ensure_find_activenote(d.loc.note),
                     Upd_Pitch | Upd_Volume | Upd_Pan,
                     static_cast<int32_t>(c));
             }
@@ -1802,14 +1806,15 @@ void MIDIplay::updateGlide(double amount)
         if(midiChan.gliding_note_count == 0)
             continue;
 
-        for(MIDIchannel::activenoteiterator it = midiChan.activenotes_begin();
-            it; ++it)
+        for(MIDIchannel::notes_iterator it = midiChan.activenotes.begin();
+            !it.is_end(); ++it)
         {
-            double finalTone = it->noteTone;
-            double previousTone = it->currentTone;
+            MIDIchannel::NoteInfo &info = it->value;
+            double finalTone = info.noteTone;
+            double previousTone = info.currentTone;
 
             bool directionUp = previousTone < finalTone;
-            double toneIncr = amount * (directionUp ? +it->glideRate : -it->glideRate);
+            double toneIncr = amount * (directionUp ? +info.glideRate : -info.glideRate);
 
             double currentTone = previousTone + toneIncr;
             bool glideFinished = !(directionUp ? (currentTone < finalTone) : (currentTone > finalTone));
@@ -1817,7 +1822,7 @@ void MIDIplay::updateGlide(double amount)
 
             if(currentTone != previousTone)
             {
-                it->currentTone = currentTone;
+                info.currentTone = currentTone;
                 noteUpdate(static_cast<uint16_t>(channel), it, Upd_Pitch);
             }
         }
