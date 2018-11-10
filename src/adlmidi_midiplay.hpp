@@ -279,6 +279,13 @@ public:
             return it;
         }
 
+        notes_iterator ensure_find_or_create_activenote(unsigned note)
+        {
+            notes_iterator it = find_or_create_activenote(note);
+            assert(!it.is_end());
+            return it;
+        }
+
         /**
          * @brief Reset channel into initial state
          */

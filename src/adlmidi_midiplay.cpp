@@ -469,7 +469,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     if(isBlankNote)
     {
         // Don't even try to play the blank instrument! But, insert the dummy note.
-        MIDIchannel::notes_iterator i = midiChan.find_or_create_activenote(note);
+        MIDIchannel::notes_iterator i = midiChan.ensure_find_or_create_activenote(note);
         MIDIchannel::NoteInfo &dummy = i->value;
         dummy.isBlank = true;
         dummy.ains = NULL;
@@ -566,7 +566,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         velocity = static_cast<uint8_t>(std::floor(static_cast<float>(velocity) * 0.8f));
 
     // Allocate active note for MIDI channel
-    MIDIchannel::notes_iterator ir = midiChan.find_or_create_activenote(note);
+    MIDIchannel::notes_iterator ir = midiChan.ensure_find_or_create_activenote(note);
     MIDIchannel::NoteInfo &ni = ir->value;
     ni.vol     = velocity;
     ni.vibrato = midiChan.noteAftertouch[note];
