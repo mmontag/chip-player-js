@@ -164,6 +164,7 @@
     <ClCompile Include="emu\cores\ay8910.c" />
     <ClCompile Include="emu\cores\ayintf.c" />
     <ClCompile Include="emu\cores\c140.c" />
+    <ClCompile Include="emu\cores\c219.c" />
     <ClCompile Include="emu\cores\c352.c" />
     <ClCompile Include="emu\cores\c6280intf.c" />
     <ClCompile Include="emu\cores\c6280_mame.c" />
@@ -242,6 +243,7 @@
     <ClInclude Include="emu\cores\ay8910.h" />
     <ClInclude Include="emu\cores\ayintf.h" />
     <ClInclude Include="emu\cores\c140.h" />
+    <ClInclude Include="emu\cores\c219.h" />
     <ClInclude Include="emu\cores\c352.h" />
     <ClInclude Include="emu\cores\c6280intf.h" />
     <ClInclude Include="emu\cores\c6280_mame.h" />

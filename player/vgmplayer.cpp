@@ -887,9 +887,15 @@ void VGMPlayer::InitDevices(void)
 				{
 					if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the sample rate, not the clock
 						devCfg.clock *= 384;	// (for backwards compatibility with old VGM logs from 2013/14)
-					devCfg.flags = _hdrBuffer[0x96];	// banking type
-					
-					retVal = SndEmu_Start(chipType, &devCfg, devInf);
+					if (_hdrBuffer[0x96] == 2)	// Namco ASIC 219
+					{
+						retVal = SndEmu_Start(DEVID_C219, &devCfg, devInf);
+					}
+					else
+					{
+						devCfg.flags = _hdrBuffer[0x96];	// banking type
+						retVal = SndEmu_Start(DEVID_C140, &devCfg, devInf);
+					}
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
