@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:R. Belmont
+// copyright-holders:R. Belmont, superctr, Valley Bell
 /*
 C219.c
 
@@ -42,6 +42,7 @@ Unmapped registers:
     2000.06.26  CAB     fixed compressed pcm playback
     2002.07.20  R. Belmont   added support for multiple banking types
     2006.01.08  R. Belmont   added support for NA-1/2 "219" derivative
+    2018.11.15  Valley Bell  split "219" from C140 code, ported channel update + MuLaw table from superctr's C352 core
 */
 
 
@@ -103,9 +104,19 @@ const DEV_DEF* devDefList_C219[] =
 };
 
 
+enum
+{
+	C219_MODE_MULAW     = 0x01, // sample is mulaw instead of linear 8-bit PCM
+	C219_MODE_NOISE     = 0x04, // play noise instead of sample
+	C219_MODE_L_INV     = 0x08, // left speaker phase invert
+	C219_MODE_LOOP      = 0x10, // loop
+	C219_MODE_INVERT    = 0x40, // invert phase
+	C219_MODE_KEYON     = 0x80  // key on
+};
+
 #define MAX_VOICE 16
 
-struct voice_registers
+typedef struct
 {
 	UINT8 volume_right;
 	UINT8 volume_left;
@@ -120,27 +131,17 @@ struct voice_registers
 	UINT8 loop_msb;
 	UINT8 loop_lsb;
 	UINT8 reserved[4];
-};
+} C219_VREGS;
 
 typedef struct
 {
-	INT32   ptoffset;
-	INT32   pos;
-	INT32   key;
-	//--work
-	INT32   lastdt;
-	INT32   prevdt;
-	INT32   dltdt;
-	//--reg
-	INT32   rvol;
-	INT32   lvol;
-	INT32   frequency;
-	INT32   bank;
-	INT32   mode;
+	UINT32  pos;
+	UINT16  pofs;
+	INT16   sample;
 
-	INT32   sample_start;
-	INT32   sample_end;
-	INT32   sample_loop;
+	UINT32  sample_start;
+	UINT32  sample_end;
+	UINT32  sample_loop;
 	UINT8   Muted;
 } C219_VOICE;
 
@@ -149,31 +150,19 @@ struct _c219_state
 {
 	DEV_DATA _devData;
 
-	UINT32 baserate;
 	UINT32 sample_rate;
 
 	UINT32 pRomSize;
-	INT8 *pRom;
+	UINT32 pRomMask;
+	UINT8 *pRom;
 	UINT8 REG[0x200];
+
+	UINT16 random;
 
 	INT16 mulaw_table[256];
 
 	C219_VOICE voi[MAX_VOICE];
 };
-
-static void init_voice( C219_VOICE *v )
-{
-	v->key=0;
-	v->ptoffset=0;
-	v->rvol=0;
-	v->lvol=0;
-	v->frequency=0;
-	v->bank=0;
-	v->mode=0;
-	v->sample_start=0;
-	v->sample_end=0;
-	v->sample_loop=0;
-}
 
 
 /*
@@ -184,20 +173,20 @@ static void init_voice( C219_VOICE *v )
    is done by a small PAL or GAL external to the sound chip, which can be switched
    per-game or at least per-PCB revision as addressing range needs grow.
  */
-static INT32 find_sample(c219_state *info, INT32 adrs, INT32 bank, int voice)
+static UINT32 find_sample(c219_state *info, UINT32 adrs, int voice)
 {
-	static const INT16 asic219banks[4] = { 0x1f7, 0x1f1, 0x1f3, 0x1f5 };
-
-	adrs=(bank<<16)|adrs;
-
 	// ASIC219's banking is fairly simple
-	return ((info->REG[asic219banks[voice/4]]&0x3) * 0x20000) + adrs;
+	static const UINT16 asic219banks[4] = { 0x1f7, 0x1f1, 0x1f3, 0x1f5 };
+	UINT8 bank = info->REG[asic219banks[voice/4]];
+	return ((bank << 17) | adrs) & info->pRomMask;
 }
 
 static UINT8 c219_r(void *chip, UINT16 offset)
 {
 	c219_state *info = (c219_state *)chip;
-	offset&=0x1ff;
+	offset &= 0x1ff;
+	if (offset >= 0x1f8)
+		offset &= ~0x008;
 	return info->REG[offset];
 }
 
@@ -206,170 +195,119 @@ static void c219_w(void *chip, UINT16 offset, UINT8 data)
 	c219_state *info = (c219_state *)chip;
 
 	offset&=0x1ff;
-
 	// mirror the bank registers on the 219, fixes bkrtmaq (and probably xday2 based on notes in the HLE)
 	if (offset >= 0x1f8)
 		offset &= ~0x008;
 
 	info->REG[offset]=data;
-	if( offset<0x180 )
+	if (offset < 0x180)
 	{
 		C219_VOICE *v = &info->voi[offset>>4];
 
-		if( (offset&0xf)==0x5 )
+		if ((offset & 0xF) == 0x5)
 		{
-			if( data&0x80 )
+			if (data & C219_MODE_KEYON)
 			{
-				const struct voice_registers *vreg = (struct voice_registers *) &info->REG[offset&0x1f0];
-				v->key=1;
-				v->ptoffset=0;
-				v->pos=0;
-				v->lastdt=0;
-				v->prevdt=0;
-				v->dltdt=0;
-				v->bank = vreg->bank;
-				v->mode = data;
+				const C219_VREGS* vreg = (C219_VREGS*)&info->REG[offset & 0x1F0];
 
 				// on the 219 asic, addresses are in words
 				v->sample_loop = ((vreg->loop_msb<<8) | vreg->loop_lsb)*2;
 				v->sample_start = ((vreg->start_msb<<8) | vreg->start_lsb)*2;
 				v->sample_end = ((vreg->end_msb<<8) | vreg->end_lsb)*2;
+				v->pos = v->sample_start;
+				v->pofs = 0xFFFF;
+				v->sample = 0;
 
 				#if 0
 				logerror("219: play v %d mode %02x start %x loop %x end %x\n",
-					offset>>4, v->mode,
+					offset>>4, vreg->mode,
 					find_sample(info, v->sample_start, v->bank, offset>>4),
 					find_sample(info, v->sample_loop, v->bank, offset>>4),
 					find_sample(info, v->sample_end, v->bank, offset>>4));
 				#endif
 			}
-			else
-			{
-				v->key=0;
-			}
 		}
 	}
 }
 
+static void c219_fetch_sample(c219_state *chip, UINT32 vid)
+{
+	C219_VOICE* v = &chip->voi[vid];
+	C219_VREGS* vreg = (C219_VREGS*)&chip->REG[vid*16];
+	
+	if (vreg->mode & C219_MODE_NOISE)
+	{
+		chip->random = (chip->random>>1) ^ ((-(chip->random&1)) & 0xfff6);
+		v->sample = chip->random;
+	}
+	else
+	{
+		UINT32 addr = find_sample(chip, v->pos, vid) ^ 0x01;
+		
+		if (vreg->mode & C219_MODE_MULAW)
+			v->sample = chip->mulaw_table[chip->pRom[addr]];
+		else
+			v->sample = (INT8)chip->pRom[addr] << 8;
+		
+		v->pos ++;
+		if (v->pos == v->sample_end)
+		{
+			if(vreg->mode & C219_MODE_LOOP)
+			{
+				v->pos = v->sample_loop;
+			}
+			else
+			{
+				vreg->mode &= ~C219_MODE_KEYON;
+				v->sample = 0;
+			}
+		}
+	}
+	
+	return;
+}
+
 static void c219_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 {
-	c219_state *info = (c219_state *)param;
-	UINT32  i,j;
+	c219_state *chip = (c219_state *)param;
+	UINT32 i, j;
 
-	INT32   rvol,lvol;
-	INT32   dt;
-	INT32   sdt;
-	INT32   st,ed,sz;
+	DEV_SMPL out[2];
 
-	INT8    *pSampleData;
-	INT32   frequency,delta,offset,pos;
-	UINT32  cnt;
-	INT32   lastdt,prevdt,dltdt;
-	float   pbase=(float)info->baserate*2.0f / (float)info->sample_rate;
+	memset(outputs[0], 0, samples * sizeof(DEV_SMPL));
+	memset(outputs[1], 0, samples * sizeof(DEV_SMPL));
 
-	DEV_SMPL *lmix, *rmix;
-
-	/* Set mixer outputs base pointers */
-	lmix = outputs[0];
-	rmix = outputs[1];
-
-	/* zap the contents of the mixer buffer */
-	memset(lmix, 0, samples * sizeof(DEV_SMPL));
-	memset(rmix, 0, samples * sizeof(DEV_SMPL));
-	if (info->pRom == NULL)
-		return;
-
-	//--- audio update
-	for( i=0;i<MAX_VOICE;i++ )
+	for (i = 0; i < samples; i ++)
 	{
-		C219_VOICE *v = &info->voi[i];
-		const struct voice_registers *vreg = (struct voice_registers *)&info->REG[i*16];
+		out[0] = out[1] = 0;
 
-		if( v->key && ! v->Muted)
+		for (j = 0; j < MAX_VOICE; j ++)
 		{
-			frequency = (vreg->frequency_msb<<8) | vreg->frequency_lsb;
+			C219_VOICE* v = &chip->voi[j];
+			const C219_VREGS* vreg = (C219_VREGS*)&chip->REG[j*16];
 
-			/* Abort voice if no frequency value set */
-			if(frequency==0) continue;
-
-			/* Delta =  frequency * ((8MHz/374)*2 / sample rate) */
-			delta=(INT32)((float)frequency * pbase);
-
-			/* Calculate left/right channel volumes */
-			lvol=(vreg->volume_left*32)/MAX_VOICE; //32ch -> 24ch
-			rvol=(vreg->volume_right*32)/MAX_VOICE;
-
-			/* Retrieve sample start/end and calculate size */
-			st=v->sample_start;
-			ed=v->sample_end;
-			sz=ed-st;
-
-			/* Retrieve base pointer to the sample data */
-			pSampleData = info->pRom + find_sample(info, st, v->bank, i);
-
-			/* Fetch back previous data pointers */
-			offset=v->ptoffset;
-			pos=v->pos;
-			lastdt=v->lastdt;
-			prevdt=v->prevdt;
-			dltdt=v->dltdt;
-
-			/* linear 8bit signed PCM */
-			for(j=0;j<samples;j++)
+			if ((vreg->mode & C219_MODE_KEYON) && ! v->Muted)
 			{
-				offset += delta;
-				cnt = (offset>>16)&0x7fff;
-				offset &= 0xffff;
-				pos += cnt;
-				/* Check for the end of the sample */
-				if(pos >= sz)
-				{
-					/* Check if its a looping sample, either stop or loop */
-					if( v->mode&0x10 )
-					{
-						pos = (v->sample_loop - st);
-					}
-					else
-					{
-						v->key=0;
-						break;
-					}
-				}
+				UINT32 frequency = (vreg->frequency_msb<<8) | vreg->frequency_lsb;
+				INT32 newofs;
+				INT32 s;
 
-				if( cnt )
-				{
-					prevdt=lastdt;
+				newofs = v->pofs + frequency;
+				v->pofs = newofs & 0xFFFF;
+				if (newofs & 0x10000)
+					c219_fetch_sample(chip, j);
 
-					// --- 219 start ---
-					lastdt = pSampleData[pos ^ 0x01];
+				s = v->sample;
+				if (vreg->mode & C219_MODE_INVERT)
+					s = -s;
 
-					// Sign + magnitude format
-					if ((v->mode & 0x01) && (lastdt & 0x80))
-						lastdt = -(lastdt & 0x7f);
-
-					// Sign flip
-					if (v->mode & 0x40)
-						lastdt = -lastdt;
-					// --- 219 end ---
-
-					dltdt = (lastdt - prevdt);
-				}
-
-				/* Caclulate the sample value */
-				dt=((dltdt*offset)>>16)+prevdt;
-
-				/* Write the data to the sample buffers */
-				lmix[j]+=(dt*lvol)>>2;
-				rmix[j]+=(dt*rvol)>>2;
+				out[0] += (((vreg->mode & C219_MODE_INVERT) ? -s : s) * vreg->volume_left);
+				out[1] += (s * vreg->volume_right);
 			}
-
-			/* Save positional data for next callback */
-			v->ptoffset=offset;
-			v->pos=pos;
-			v->lastdt=lastdt;
-			v->prevdt=prevdt;
-			v->dltdt=dltdt;
 		}
+
+		outputs[0][i] += out[0] >> 9;
+		outputs[1][i] += out[1] >> 9;
 	}
 }
 
@@ -378,36 +316,35 @@ static UINT8 device_start_c219(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	c219_state *info;
 	int i;
 	INT16 j;
-
+	
 	info = (c219_state *)calloc(1, sizeof(c219_state));
 	if (info == NULL)
 		return 0xFF;
 	
-	info->baserate = cfg->clock / 384;	// based on MAME's notes on Namco System II
-	info->sample_rate = info->baserate;
-	SRATE_CUSTOM_HIGHEST(cfg->srMode, info->sample_rate, cfg->smplRate);
-
+	info->sample_rate = cfg->clock / 192;
+	
 	info->pRomSize = 0x00;
+	info->pRomMask = 0x00;
 	info->pRom = NULL;
-
-	j=0;
-	for(i=0;i<128;i++)
+	
+	j = 0;
+	for (i = 0; i < 128; i ++)
 	{
-		info->mulaw_table[i] = j<<5;
-		if(i < 16)
+		info->mulaw_table[i] = j << 5;
+		if (i < 16)
 			j += 1;
-		else if(i < 24)
+		else if (i < 24)
 			j += 2;
-		else if(i < 48)
+		else if (i < 48)
 			j += 4;
-		else if(i < 100)
+		else if (i < 100)
 			j += 8;
 		else
 			j += 16;
 	}
-	for(i=128;i<256;i++)
-		info->mulaw_table[i] = (~info->mulaw_table[i-128])&~0x1f;
-
+	for (i = 128; i < 256; i ++)
+		info->mulaw_table[i] = (~info->mulaw_table[i - 128]) & ~0x1F;
+	
 	c219_set_mute_mask(info, 0x000000);
 	
 	info->_devData.chipInf = info;
@@ -434,8 +371,14 @@ static void device_reset_c219(void *chip)
 	
 	for(i = 0; i < MAX_VOICE; i ++)
 	{
-		init_voice(&info->voi[i]);
+		C219_VOICE *v = &info->voi[i];
+		
+		v->pofs = 0;
+		v->pos = 0;
 	}
+	
+	// init noise generator
+	info->random = 0x1234;
 	
 	return;
 }
@@ -447,8 +390,9 @@ static void c219_alloc_rom(void* chip, UINT32 memsize)
 	if (info->pRomSize == memsize)
 		return;
 	
-	info->pRom = (INT8*)realloc(info->pRom, memsize);
+	info->pRom = (UINT8*)realloc(info->pRom, memsize);
 	info->pRomSize = memsize;
+	info->pRomMask = pow2_mask(memsize);
 	memset(info->pRom, 0xFF, memsize);
 	
 	return;
