@@ -1307,10 +1307,11 @@ void MIDIplay::noteUpdate(size_t midCh,
             // Don't bend a sustained note
             if(!d || (d->sustained == AdlChannel::LocationData::Sustain_None))
             {
-                double midibend = m_midiChannels[midCh].bend * m_midiChannels[midCh].bendsense;
+                MIDIchannel &chan = m_midiChannels[midCh];
+                double midibend = chan.bend * chan.bendsense;
                 double bend = midibend + ins.ains.finetune;
                 double phase = 0.0;
-                uint8_t vibrato = std::max(m_midiChannels[midCh].vibrato, m_midiChannels[midCh].aftertouch);
+                uint8_t vibrato = std::max(chan.vibrato, chan.aftertouch);
                 vibrato = std::max(vibrato, i->vibrato);
 
                 if((ains.flags & adlinsdata::Flag_Pseudo4op) && ins.pseudo4op)
@@ -1318,8 +1319,8 @@ void MIDIplay::noteUpdate(size_t midCh,
                     phase = ains.voice2_fine_tune;//0.125; // Detune the note slightly (this is what Doom does)
                 }
 
-                if(vibrato && (!d || d->vibdelay_us >= m_midiChannels[midCh].vibdelay_us))
-                    bend += static_cast<double>(vibrato) * m_midiChannels[midCh].vibdepth * std::sin(m_midiChannels[midCh].vibpos);
+                if(vibrato && (!d || d->vibdelay_us >= chan.vibdelay_us))
+                    bend += static_cast<double>(vibrato) * chan.vibdepth * std::sin(chan.vibpos);
 
 #define BEND_COEFFICIENT 172.4387
                 synth.noteOn(c, c_slave, BEND_COEFFICIENT * std::exp(0.057762265 * (currentTone + bend + phase)));
