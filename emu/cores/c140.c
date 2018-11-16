@@ -21,6 +21,7 @@ Unmapped registers:
     2000.06.26  CAB     fixed compressed pcm playback
     2002.07.20  R. Belmont   added support for multiple banking types
     2006.01.08  R. Belmont   added support for NA-1/2 "219" derivative
+    2018.11.16  Valley Bell  split "219" code, use correct MuLaw table (thanks superctr)
 */
 
 
@@ -82,6 +83,13 @@ const DEV_DEF* devDefList_C140[] =
 };
 
 
+enum
+{
+	C140_MODE_MULAW     = 0x08, // sample is mulaw instead of linear 8-bit PCM
+	C140_MODE_LOOP      = 0x10, // loop
+	C140_MODE_KEYON     = 0x80  // key on
+};
+
 #define MAX_VOICE 24
 
 struct voice_registers
@@ -133,10 +141,10 @@ struct _c140_state
 	UINT8 banking_type;
 
 	UINT32 pRomSize;
-	INT8 *pRom;
+	UINT8 *pRom;
 	UINT8 REG[0x200];
 
-	INT16 pcmtbl[8];        //2000.06.26 CAB
+	INT16 mulaw_table[256];
 
 	C140_VOICE voi[MAX_VOICE];
 };
@@ -207,7 +215,7 @@ static void c140_w(void *chip, UINT16 offset, UINT8 data)
 
 		if( (offset&0xf)==0x5 )
 		{
-			if( data&0x80 )
+			if( data&C140_MODE_KEYON )
 			{
 				const struct voice_registers *vreg = (struct voice_registers *) &info->REG[offset&0x1f0];
 				v->key=1;
@@ -241,7 +249,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	INT32   sdt;
 	INT32   st,ed,sz;
 
-	INT8    *pSampleData;
+	UINT8   *pSampleData;
 	INT32   frequency,delta,offset,pos;
 	UINT32  cnt;
 	INT32   lastdt,prevdt,dltdt;
@@ -295,7 +303,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			dltdt=v->dltdt;
 
 			/* Switch on data type - compressed PCM is only for C140 */
-			if (v->mode&8)
+			if (v->mode&C140_MODE_MULAW)
 			{
 				//compressed PCM (maybe correct...)
 				/* Loop for enough to fill sample buffer as requested */
@@ -311,7 +319,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						if(pos >= sz)
 						{
 							/* Check if its a looping sample, either stop or loop */
-							if(v->mode&0x10)
+							if(v->mode&C140_MODE_LOOP)
 							{
 								pos = (v->sample_loop - st);
 							}
@@ -323,12 +331,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 						}
 
 						/* Read the chosen sample byte */
-						dt=pSampleData[pos];
-
-						/* decompress to 13bit range */     //2000.06.26 CAB
-						sdt=dt>>3;              //signed
-						if(sdt<0)   sdt = (sdt<<(dt&7)) - info->pcmtbl[dt&7];
-						else        sdt = (sdt<<(dt&7)) + info->pcmtbl[dt&7];
+						sdt = info->mulaw_table[pSampleData[pos]];
 
 						prevdt=lastdt;
 						lastdt=sdt;
@@ -339,8 +342,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					dt=((dltdt*offset)>>16)+prevdt;
 
 					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*lvol)>>5;
-					rmix[j]+=(dt*rvol)>>5;
+					lmix[j]+=(dt*lvol)>>8;
+					rmix[j]+=(dt*rvol)>>8;
 				}
 			}
 			else
@@ -356,7 +359,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					if(pos >= sz)
 					{
 						/* Check if its a looping sample, either stop or loop */
-						if( v->mode&0x10 )
+						if( v->mode&C140_MODE_LOOP )
 						{
 							pos = (v->sample_loop - st);
 						}
@@ -370,7 +373,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					if( cnt )
 					{
 						prevdt=lastdt;
-						lastdt=pSampleData[pos];
+						lastdt=(INT8)pSampleData[pos]<<8;
 						dltdt = (lastdt - prevdt);
 					}
 
@@ -378,8 +381,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					dt=((dltdt*offset)>>16)+prevdt;
 
 					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*lvol);
-					rmix[j]+=(dt*rvol);
+					lmix[j]+=(dt*lvol)>>8;
+					rmix[j]+=(dt*rvol)>>8;
 				}
 			}
 
@@ -397,7 +400,6 @@ static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	c140_state *info;
 	int i;
-	INT32 segbase;
 
 	info = (c140_state *)calloc(1, sizeof(c140_state));
 	if (info == NULL)
@@ -412,12 +414,14 @@ static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	info->pRomSize = 0x00;
 	info->pRom = NULL;
 
-	/* make decompress pcm table */     //2000.06.26 CAB
-	segbase = 0;
-	for(i = 0; i < 8; i++)
+	for(i = 0; i < 256; i++)
 	{
-		info->pcmtbl[i]=segbase;    //segment base value
-		segbase += 16<<i;
+		UINT8 s1 = i & 7;
+		UINT8 s2 = abs((INT8)i >> 3) & 0x1F;
+		info->mulaw_table[i]  = (0x80 << s1) & 0xFF00;
+		info->mulaw_table[i] += s2 << (s1 ? (s1+3) : 4);
+		if (i & 0x80)
+			info->mulaw_table[i] = -info->mulaw_table[i];
 	}
 
 	c140_set_mute_mask(info, 0x000000);
@@ -459,7 +463,7 @@ static void c140_alloc_rom(void* chip, UINT32 memsize)
 	if (info->pRomSize == memsize)
 		return;
 	
-	info->pRom = (INT8*)realloc(info->pRom, memsize);
+	info->pRom = (UINT8*)realloc(info->pRom, memsize);
 	info->pRomSize = memsize;
 	memset(info->pRom, 0xFF, memsize);
 	
