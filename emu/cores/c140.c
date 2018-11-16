@@ -276,8 +276,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			delta=(INT32)((float)frequency * pbase);
 
 			/* Calculate left/right channel volumes */
-			lvol=(vreg->volume_left*32)/MAX_VOICE; //32ch -> 24ch
-			rvol=(vreg->volume_right*32)/MAX_VOICE;
+			lvol=vreg->volume_left;
+			rvol=vreg->volume_right;
 
 			/* Retrieve sample start/end and calculate size */
 			st=v->sample_start;
@@ -339,8 +339,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					dt=((dltdt*offset)>>16)+prevdt;
 
 					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*lvol)>>(5+2);
-					rmix[j]+=(dt*rvol)>>(5+2);
+					lmix[j]+=(dt*lvol)>>5;
+					rmix[j]+=(dt*rvol)>>5;
 				}
 			}
 			else
@@ -378,8 +378,8 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 					dt=((dltdt*offset)>>16)+prevdt;
 
 					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*lvol)>>2;
-					rmix[j]+=(dt*rvol)>>2;
+					lmix[j]+=(dt*lvol);
+					rmix[j]+=(dt*rvol);
 				}
 			}
 

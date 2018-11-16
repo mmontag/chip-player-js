@@ -306,8 +306,8 @@ static void c219_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			}
 		}
 
-		outputs[0][i] += out[0] >> 9;
-		outputs[1][i] += out[1] >> 9;
+		outputs[0][i] += (out[0] >> 8);
+		outputs[1][i] += (out[1] >> 8);
 	}
 }
 
