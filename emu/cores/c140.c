@@ -113,21 +113,15 @@ typedef struct
 {
 	INT32   ptoffset;
 	INT32   pos;
-	INT32   key;
 	//--work
 	INT32   lastdt;
 	INT32   prevdt;
 	INT32   dltdt;
-	//--reg
-	INT32   rvol;
-	INT32   lvol;
-	INT32   frequency;
-	INT32   bank;
-	INT32   mode;
 
-	INT32   sample_start;
-	INT32   sample_end;
-	INT32   sample_loop;
+	UINT32  sample_start;
+	UINT32  sample_end;
+	UINT32  sample_loop;
+	UINT8   key;
 	UINT8   Muted;
 } C140_VOICE;
 
@@ -153,11 +147,6 @@ static void init_voice( C140_VOICE *v )
 {
 	v->key=0;
 	v->ptoffset=0;
-	v->rvol=0;
-	v->lvol=0;
-	v->frequency=0;
-	v->bank=0;
-	v->mode=0;
 	v->sample_start=0;
 	v->sample_end=0;
 	v->sample_loop=0;
@@ -172,27 +161,23 @@ static void init_voice( C140_VOICE *v )
    is done by a small PAL or GAL external to the sound chip, which can be switched
    per-game or at least per-PCB revision as addressing range needs grow.
  */
-static INT32 find_sample(c140_state *info, INT32 adrs, INT32 bank, int voice)
+static UINT32 find_sample(c140_state *info, UINT32 adrs, UINT8 bank, int voice)
 {
-	INT32 newadr = 0;
-
 	adrs=(bank<<16)+adrs;
 
 	switch (info->banking_type)
 	{
 		case C140_TYPE_SYSTEM2:
 			// System 2 banking
-			newadr = ((adrs&0x200000)>>2)|(adrs&0x7ffff);
-			break;
+			return ((adrs&0x200000)>>2)|(adrs&0x7ffff);
 
 		case C140_TYPE_SYSTEM21:
 			// System 21 banking.
 			// similar to System 2's.
-			newadr = ((adrs&0x300000)>>1)+(adrs&0x7ffff);
-			break;
+			return ((adrs&0x300000)>>1)+(adrs&0x7ffff);
 	}
 
-	return (newadr);
+	return 0;
 }
 
 static UINT8 c140_r(void *chip, UINT16 offset)
@@ -224,8 +209,6 @@ static void c140_w(void *chip, UINT16 offset, UINT8 data)
 				v->lastdt=0;
 				v->prevdt=0;
 				v->dltdt=0;
-				v->bank = vreg->bank;
-				v->mode = data;
 
 				v->sample_loop = (vreg->loop_msb<<8) | vreg->loop_lsb;
 				v->sample_start = (vreg->start_msb<<8) | vreg->start_lsb;
@@ -244,15 +227,12 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	c140_state *info = (c140_state *)param;
 	UINT32  i,j;
 
-	INT32   rvol,lvol;
 	INT32   dt;
-	INT32   sdt;
-	INT32   st,ed,sz;
+	INT32   sz;
 
 	UINT8   *pSampleData;
-	INT32   frequency,delta,offset,pos;
+	INT32   frequency,delta;
 	UINT32  cnt;
-	INT32   lastdt,prevdt,dltdt;
 	float   pbase=(float)info->baserate*2.0f / (float)info->sample_rate;
 
 	DEV_SMPL *lmix, *rmix;
@@ -283,45 +263,32 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			/* Delta =  frequency * ((8MHz/374)*2 / sample rate) */
 			delta=(INT32)((float)frequency * pbase);
 
-			/* Calculate left/right channel volumes */
-			lvol=vreg->volume_left;
-			rvol=vreg->volume_right;
-
-			/* Retrieve sample start/end and calculate size */
-			st=v->sample_start;
-			ed=v->sample_end;
-			sz=ed-st;
+			/* calculate sample size */
+			sz=v->sample_end-v->sample_start;
 
 			/* Retrieve base pointer to the sample data */
-			pSampleData = info->pRom + find_sample(info, st, v->bank, i);
-
-			/* Fetch back previous data pointers */
-			offset=v->ptoffset;
-			pos=v->pos;
-			lastdt=v->lastdt;
-			prevdt=v->prevdt;
-			dltdt=v->dltdt;
+			pSampleData = info->pRom + find_sample(info, v->sample_start, vreg->bank, i);
 
 			/* Switch on data type - compressed PCM is only for C140 */
-			if (v->mode&C140_MODE_MULAW)
+			if (vreg->mode&C140_MODE_MULAW)
 			{
 				//compressed PCM (maybe correct...)
 				/* Loop for enough to fill sample buffer as requested */
 				for(j=0;j<samples;j++)
 				{
-					offset += delta;
-					cnt = (offset>>16)&0x7fff;
-					offset &= 0xffff;
-					pos+=cnt;
+					v->ptoffset += delta;
+					cnt = (v->ptoffset>>16)&0x7fff;
+					v->ptoffset &= 0xffff;
+					v->pos+=cnt;
 					//for(;cnt>0;cnt--)
 					{
 						/* Check for the end of the sample */
-						if(pos >= sz)
+						if(v->pos >= sz)
 						{
 							/* Check if its a looping sample, either stop or loop */
-							if(v->mode&C140_MODE_LOOP)
+							if(vreg->mode&C140_MODE_LOOP)
 							{
-								pos = (v->sample_loop - st);
+								v->pos = v->sample_loop - v->sample_start;
 							}
 							else
 							{
@@ -330,20 +297,17 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 							}
 						}
 
-						/* Read the chosen sample byte */
-						sdt = info->mulaw_table[pSampleData[pos]];
-
-						prevdt=lastdt;
-						lastdt=sdt;
-						dltdt=(lastdt - prevdt);
+						v->prevdt=v->lastdt;
+						v->lastdt=info->mulaw_table[pSampleData[v->pos]];
+						v->dltdt=(v->lastdt - v->prevdt);
 					}
 
 					/* Caclulate the sample value */
-					dt=((dltdt*offset)>>16)+prevdt;
+					dt=((v->dltdt*v->ptoffset)>>16)+v->prevdt;
 
 					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*lvol)>>8;
-					rmix[j]+=(dt*rvol)>>8;
+					lmix[j]+=(dt*vreg->volume_left)>>8;
+					rmix[j]+=(dt*vreg->volume_right)>>8;
 				}
 			}
 			else
@@ -351,17 +315,17 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				/* linear 8bit signed PCM */
 				for(j=0;j<samples;j++)
 				{
-					offset += delta;
-					cnt = (offset>>16)&0x7fff;
-					offset &= 0xffff;
-					pos += cnt;
+					v->ptoffset += delta;
+					cnt = (v->ptoffset>>16)&0x7fff;
+					v->ptoffset &= 0xffff;
+					v->pos += cnt;
 					/* Check for the end of the sample */
-					if(pos >= sz)
+					if(v->pos >= sz)
 					{
 						/* Check if its a looping sample, either stop or loop */
-						if( v->mode&C140_MODE_LOOP )
+						if( vreg->mode&C140_MODE_LOOP )
 						{
-							pos = (v->sample_loop - st);
+							v->pos = v->sample_loop - v->sample_start;
 						}
 						else
 						{
@@ -372,26 +336,19 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 
 					if( cnt )
 					{
-						prevdt=lastdt;
-						lastdt=(INT8)pSampleData[pos]<<8;
-						dltdt = (lastdt - prevdt);
+						v->prevdt=v->lastdt;
+						v->lastdt=(INT8)pSampleData[v->pos]<<8;
+						v->dltdt = (v->lastdt - v->prevdt);
 					}
 
 					/* Caclulate the sample value */
-					dt=((dltdt*offset)>>16)+prevdt;
+					dt=((v->dltdt*v->ptoffset)>>16)+v->prevdt;
 
 					/* Write the data to the sample buffers */
-					lmix[j]+=(dt*lvol)>>8;
-					rmix[j]+=(dt*rvol)>>8;
+					lmix[j]+=(dt*vreg->volume_left)>>8;
+					rmix[j]+=(dt*vreg->volume_right)>>8;
 				}
 			}
-
-			/* Save positional data for next callback */
-			v->ptoffset=offset;
-			v->pos=pos;
-			v->lastdt=lastdt;
-			v->prevdt=prevdt;
-			v->dltdt=dltdt;
 		}
 	}
 }
