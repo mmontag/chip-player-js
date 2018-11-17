@@ -1,18 +1,20 @@
 import './App.css';
 
 import React, {PureComponent} from 'react';
-import Search from './Search';
-import Visualizer from './Visualizer';
-import PlayerParams from './PlayerParams';
+import isMobile from 'ismobilejs';
+import queryString from 'querystring';
+
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
-import XMPPlayer from './players/XMPPlayer';
 import MIDIPlayer from './players/MIDIPlayer';
+import XMPPlayer from './players/XMPPlayer';
 import promisify from './promisifyXhr';
 import {trieToList} from './ResigTrie';
-import queryString from 'querystring';
-import isMobile from 'ismobilejs';
+
+import PlayerParams from './PlayerParams';
+import Search from './Search';
 import TimeSlider from "./TimeSlider";
+import Visualizer from './Visualizer';
 
 const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
