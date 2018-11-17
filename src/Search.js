@@ -17,6 +17,7 @@ export default class Search extends PureComponent {
     this.onSearchInputChange = this.onSearchInputChange.bind(this);
 
     this.handleSearchResults = this.handleSearchResults.bind(this);
+    this.handleGroupClick = this.handleGroupClick.bind(this);
     this.handleStatus = this.handleStatus.bind(this);
 
     searchWorker.onmessage = (message) => this.handleMessage(message.data);
@@ -139,13 +140,14 @@ export default class Search extends PureComponent {
     }
   };
 
+  handleGroupClick(e, query) {
+    e.preventDefault();
+    this.onSearchInputChange(query);
+  }
+
   render() {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
-    const handleGroupClick = (e, q) => {
-      e.preventDefault();
-      this.onSearchInputChange(q);
-    };
     return (
       <div className="Search">
         <div>
@@ -171,7 +173,7 @@ export default class Search extends PureComponent {
                 return (
                   <div key={i}>
                     <h5 className="Search-results-group-heading">
-                      <a href={'?q=' + groupQuery} onClick={(e) => handleGroupClick(e, groupQuery)}>
+                      <a href={'?q=' + groupQuery} onClick={(e) => this.handleGroupClick(e, groupQuery)}>
                         {group.title}
                       </a>
                     </h5>
