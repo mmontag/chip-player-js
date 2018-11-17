@@ -127,6 +127,18 @@ export default class Search extends PureComponent {
     return grouped;
   }
 
+  handleSearchFocus(e) {
+    // highlight text
+    e.target.select();
+    // ignore mouseup if focused by click
+    if (e.button) {
+      e.target.onmouseup = () => {
+        e.target.onmouseup = null;
+        return false;
+      }
+    }
+  };
+
   render() {
     const placeholder = this.state.totalSongs ?
       `${this.state.totalSongs} tunes` : 'Loading catalog...';
@@ -144,6 +156,7 @@ export default class Search extends PureComponent {
                                 autoCorrect="false"
                                 autoCapitalize="none"
                                 value={this.state.totalSongs ? this.state.query || '' : ''}
+                                onFocus={this.handleSearchFocus}
                                 onChange={this.onChange}/></label>
           {
             this.state.searching &&
