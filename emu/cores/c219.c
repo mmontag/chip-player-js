@@ -138,6 +138,7 @@ typedef struct
 	UINT32  pos;
 	UINT16  pofs;
 	INT16   sample;
+	INT16   last_sample;
 
 	UINT32  sample_start;
 	UINT32  sample_end;
@@ -217,6 +218,7 @@ static void c219_w(void *chip, UINT16 offset, UINT8 data)
 				v->pos = v->sample_start;
 				v->pofs = 0xFFFF;
 				v->sample = 0;
+				v->last_sample = 0;
 
 				#if 0
 				logerror("219: play v %d mode %02x start %x loop %x end %x\n",
@@ -235,6 +237,8 @@ static void c219_fetch_sample(c219_state *chip, UINT32 vid)
 	C219_VOICE* v = &chip->voi[vid];
 	C219_VREGS* vreg = (C219_VREGS*)&chip->REG[vid*16];
 	
+	v->last_sample = v->sample;
+	
 	if (vreg->mode & C219_MODE_NOISE)
 	{
 		chip->random = (chip->random>>1) ^ ((-(chip->random&1)) & 0xfff6);
@@ -242,7 +246,7 @@ static void c219_fetch_sample(c219_state *chip, UINT32 vid)
 	}
 	else
 	{
-		UINT32 addr = find_sample(chip, v->pos, vid) ^ 0x01;
+		UINT32 addr = find_sample(chip, v->pos, vid) ^ 0x01;	// TODO: remove
 		
 		if (vreg->mode & C219_MODE_MULAW)
 			v->sample = chip->mulaw_table[chip->pRom[addr]];
@@ -297,10 +301,11 @@ static void c219_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 				if (newofs & 0x10000)
 					c219_fetch_sample(chip, j);
 
-				s = v->sample;
+				// Interpolate samples
+				s = v->last_sample + (INT32)((INT64)v->pofs * (v->sample - v->last_sample) >> 16);
+
 				if (vreg->mode & C219_MODE_INVERT)
 					s = -s;
-
 				out[0] += (((vreg->mode & C219_MODE_INVERT) ? -s : s) * vreg->volume_left);
 				out[1] += (s * vreg->volume_right);
 			}
@@ -321,7 +326,8 @@ static UINT8 device_start_c219(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (info == NULL)
 		return 0xFF;
 	
-	info->sample_rate = cfg->clock / 192;
+	//info->sample_rate = cfg->clock / 576;	// sample rate according to superctr
+	info->sample_rate = cfg->clock / 288;	// TODO: output at 43 KHz and fix sample reading/interpolation code
 	
 	info->pRomSize = 0x00;
 	info->pRomMask = 0x00;

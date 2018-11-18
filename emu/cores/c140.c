@@ -130,8 +130,9 @@ struct _c140_state
 {
 	DEV_DATA _devData;
 
-	UINT32 baserate;
+	UINT32 clock;
 	UINT32 sample_rate;
+	float pbase;
 	UINT8 banking_type;
 
 	UINT32 pRomSize;
@@ -233,7 +234,6 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 	UINT8   *pSampleData;
 	INT32   frequency,delta;
 	UINT32  cnt;
-	float   pbase=(float)info->baserate*2.0f / (float)info->sample_rate;
 
 	DEV_SMPL *lmix, *rmix;
 
@@ -261,7 +261,7 @@ static void c140_update(void *param, UINT32 samples, DEV_SMPL **outputs)
 			if(frequency==0) continue;
 
 			/* Delta =  frequency * ((8MHz/374)*2 / sample rate) */
-			delta=(INT32)((float)frequency * pbase);
+			delta=(INT32)((float)frequency * info->pbase);
 
 			/* calculate sample size */
 			sz=v->sample_end-v->sample_start;
@@ -362,9 +362,10 @@ static UINT8 device_start_c140(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 	if (info == NULL)
 		return 0xFF;
 	
-	info->baserate = cfg->clock / 384;	// based on MAME's notes on Namco System II
-	info->sample_rate = info->baserate;
+	info->clock = cfg->clock;
+	info->sample_rate = info->clock / 288;	// sample rate according to superctr
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, info->sample_rate, cfg->smplRate);
+	info->pbase = (float)info->clock / 288.0f / (float)info->sample_rate;
 
 	info->banking_type = cfg->flags;
 

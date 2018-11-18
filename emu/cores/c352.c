@@ -29,7 +29,7 @@
 #include "c352.h"
 
 static void c352_update(void *chip, UINT32 samples, DEV_SMPL **outputs);
-static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf);
+static UINT8 device_start_c352(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf);
 static void device_stop_c352(void *chip);
 static void device_reset_c352(void *chip);
 
@@ -56,7 +56,7 @@ static DEV_DEF devDef =
 {
 	"C352", "MAME", FCC_MAME,
 	
-	(DEVFUNC_START)device_start_c352,
+	device_start_c352,
 	device_stop_c352,
 	device_reset_c352,
 	c352_update,
@@ -126,7 +126,6 @@ typedef struct {
 	DEV_DATA _devData;
 
 	UINT32 sample_rate_base;
-	UINT16 divider;
 
 	C352_Voice v[C352_VOICES];
 
@@ -217,7 +216,7 @@ static void c352_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 {
 	C352 *c = (C352 *)chip;
 	UINT32 i, j;
-	INT16 s;
+	INT32 s;
 	INT32 next_counter;
 	C352_Voice* v;
 
@@ -255,11 +254,11 @@ static void c352_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 
 				v->counter = next_counter&0xffff;
 
-				s = v->sample;
-
 				// Interpolate samples
 				if((v->flags & C352_FLG_FILTER) == 0)
-					s = v->last_sample + (v->counter*(v->sample-v->last_sample)>>16);
+					s = v->last_sample + (INT32)((INT64)v->counter*(v->sample-v->last_sample)>>16);
+				else
+					s = v->sample;
 			}
 
 			if(!c->v[j].mute)
@@ -284,7 +283,7 @@ static void c352_update(void *chip, UINT32 samples, DEV_SMPL **outputs)
 	}
 }
 
-static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf)
+static UINT8 device_start_c352(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
 	C352 *c;
 	int i;
@@ -297,9 +296,9 @@ static UINT8 device_start_c352(const C352_CFG* cfg, DEV_INFO* retDevInf)
 	c->wave = NULL;
 	c->wavesize = 0x00;
 
-	c->divider = cfg->clk_divider ? cfg->clk_divider : 288;
-	c->sample_rate_base = cfg->_genCfg.clock / c->divider;
-	c->muteRear = cfg->_genCfg.flags;
+	//c->sample_rate_base = cfg->clock / 576;	// sample rate according to superctr
+	c->sample_rate_base = cfg->clock / 288;	// TODO: output at 43 KHz and fix sample reading/interpolation code
+	c->muteRear = cfg->flags;
 
 	//device_reset_c352(c);
 
