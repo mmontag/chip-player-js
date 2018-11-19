@@ -27,6 +27,7 @@
 #include "adldata.hh"
 #include "adlmidi_private.hpp"
 #include "adlmidi_ptr.hpp"
+#include "structures/pl_list.hpp"
 
 /**
  * @brief Hooks of the internal events
@@ -139,8 +140,6 @@ public:
         {
             //! Note number
             uint8_t note;
-            //! Is note active
-            bool active;
             //! Current pressure
             uint8_t vol;
             //! Note vibrato (a part of Note Aftertouch feature)
@@ -163,6 +162,15 @@ public:
             {
                 MaxNumPhysChans = 2,
                 MaxNumPhysItemCount = MaxNumPhysChans
+            };
+
+            struct FindPredicate
+            {
+                explicit FindPredicate(unsigned note)
+                    : note(note) {}
+                bool operator()(const NoteInfo &ni) const
+                    { return ni.note == note; }
+                unsigned note;
             };
 
             /**
@@ -244,87 +252,38 @@ public:
         unsigned gliding_note_count;
 
         //! Active notes in the channel
-        NoteInfo activenotes[128];
+        pl_list<NoteInfo> activenotes;
+        typedef typename pl_list<NoteInfo>::iterator notes_iterator;
+        typedef typename pl_list<NoteInfo>::const_iterator const_notes_iterator;
 
-        struct activenoteiterator
+        notes_iterator find_activenote(unsigned note)
         {
-            explicit activenoteiterator(NoteInfo *info = NULL)
-                : ptr(info) {}
-            activenoteiterator &operator++()
-            {
-                if(ptr->note == 127)
-                    ptr = NULL;
-                else
-                    for(++ptr; ptr && !ptr->active;)
-                        ptr = (ptr->note == 127) ? NULL : (ptr + 1);
-                return *this;
-            }
-            activenoteiterator operator++(int)
-            {
-                activenoteiterator pos = *this;
-                ++*this;
-                return pos;
-            }
-            NoteInfo &operator*() const
-                { return *ptr; }
-            NoteInfo *operator->() const
-                { return ptr; }
-            bool operator==(activenoteiterator other) const
-                { return ptr == other.ptr; }
-            bool operator!=(activenoteiterator other) const
-                { return ptr != other.ptr; }
-            operator NoteInfo *() const
-                { return ptr; }
-        private:
-            NoteInfo *ptr;
-        };
-
-        activenoteiterator activenotes_begin()
-        {
-            activenoteiterator it(activenotes);
-            return (it->active) ? it : ++it;
+            return activenotes.find_if(NoteInfo::FindPredicate(note));
         }
 
-        activenoteiterator activenotes_find(uint8_t note)
+        notes_iterator ensure_find_activenote(unsigned note)
         {
-            assert(note < 128);
-            return activenoteiterator(
-                activenotes[note].active ? &activenotes[note] : NULL);
-        }
-
-        activenoteiterator activenotes_ensure_find(uint8_t note)
-        {
-            activenoteiterator it = activenotes_find(note);
-            assert(it);
+            notes_iterator it = find_activenote(note);
+            assert(!it.is_end());
             return it;
         }
 
-        std::pair<activenoteiterator, bool> activenotes_insert(uint8_t note)
+        notes_iterator find_or_create_activenote(unsigned note)
         {
-            assert(note < 128);
-            NoteInfo &info = activenotes[note];
-            bool inserted = !info.active;
-            if(inserted) info.active = true;
-            return std::pair<activenoteiterator, bool>(activenoteiterator(&info), inserted);
-        }
-
-        void activenotes_erase(activenoteiterator pos)
-        {
-            if(pos)
-                pos->active = false;
-        }
-
-        bool activenotes_empty()
-        {
-            return !activenotes_begin();
-        }
-
-        void activenotes_clear()
-        {
-            for(uint8_t i = 0; i < 128; ++i) {
-                activenotes[i].note = i;
-                activenotes[i].active = false;
+            notes_iterator it = find_activenote(note);
+            if(it.is_end()) {
+                NoteInfo ni;
+                ni.note = note;
+                it = activenotes.insert(activenotes.end(), ni);
             }
+            return it;
+        }
+
+        notes_iterator ensure_find_or_create_activenote(unsigned note)
+        {
+            notes_iterator it = find_or_create_activenote(note);
+            assert(!it.is_end());
+            return it;
         }
 
         /**
@@ -390,8 +349,8 @@ public:
         }
 
         MIDIchannel()
+            : activenotes(128)
         {
-            activenotes_clear();
             gliding_note_count = 0;
             reset();
         }
@@ -413,7 +372,6 @@ public:
         };
         struct LocationData
         {
-            LocationData *prev, *next;
             Location loc;
             enum {
                 Sustain_None        = 0x00,
@@ -429,6 +387,15 @@ public:
             //! Timeout until note will be allowed to be killed by channel manager while it is on
             int64_t kon_time_until_neglible_us;
             int64_t vibdelay_us;
+
+            struct FindPredicate
+            {
+                explicit FindPredicate(Location loc)
+                    : loc(loc) {}
+                bool operator()(const LocationData &ld) const
+                    { return ld.loc == loc; }
+                Location loc;
+            };
         };
 
         //! Time left until sounding will be muted after key off
@@ -437,42 +404,41 @@ public:
         //! Recently passed instrument, improves a goodness of released but busy channel when matching
         MIDIchannel::NoteInfo::Phys recent_ins;
 
-        enum { users_max = 128 };
-        LocationData *users_first, *users_free_cells;
-        LocationData users_cells[users_max];
-        unsigned users_size;
+        pl_list<LocationData> users;
+        typedef typename pl_list<LocationData>::iterator users_iterator;
+        typedef typename pl_list<LocationData>::const_iterator const_users_iterator;
 
-        bool users_empty() const;
-        LocationData *users_find(Location loc);
-        LocationData *users_allocate();
-        LocationData *users_find_or_create(Location loc);
-        LocationData *users_insert(const LocationData &x);
-        void users_erase(LocationData *user);
-        void users_clear();
-        void users_assign(const LocationData *users, size_t count);
+        users_iterator find_user(const Location &loc)
+        {
+            return users.find_if(LocationData::FindPredicate(loc));
+        }
+
+        users_iterator find_or_create_user(const Location &loc)
+        {
+            users_iterator it = find_user(loc);
+            if(it.is_end() && users.size() != users.capacity())
+            {
+                LocationData ld;
+                ld.loc = loc;
+                it = users.insert(users.end(), ld);
+            }
+            return it;
+        }
 
         // For channel allocation:
-        AdlChannel(): koff_time_until_neglible_us(0)
+        AdlChannel(): koff_time_until_neglible_us(0), users(128)
         {
-            users_clear();
             std::memset(&recent_ins, 0, sizeof(MIDIchannel::NoteInfo::Phys));
         }
 
-        AdlChannel(const AdlChannel &oth): koff_time_until_neglible_us(oth.koff_time_until_neglible_us)
+        AdlChannel(const AdlChannel &oth): koff_time_until_neglible_us(oth.koff_time_until_neglible_us), users(oth.users)
         {
-            if(oth.users_first)
-            {
-                users_first = NULL;
-                users_assign(oth.users_first, oth.users_size);
-            }
-            else
-                users_clear();
         }
 
         AdlChannel &operator=(const AdlChannel &oth)
         {
             koff_time_until_neglible_us = oth.koff_time_until_neglible_us;
-            users_assign(oth.users_first, oth.users_size);
+            users = oth.users;
             return *this;
         }
 
@@ -899,7 +865,7 @@ private:
      * @param select_adlchn Specify chip channel, or -1 - all chip channels used by the note
      */
     void noteUpdate(size_t midCh,
-                    MIDIchannel::activenoteiterator i,
+                    MIDIchannel::notes_iterator i,
                     unsigned props_mask,
                     int32_t select_adlchn = -1);
 
@@ -934,8 +900,8 @@ private:
      */
     void killOrEvacuate(
         size_t  from_channel,
-        AdlChannel::LocationData *j,
-        MIDIchannel::activenoteiterator i);
+        AdlChannel::users_iterator j,
+        MIDIchannel::notes_iterator i);
 
     /**
      * @brief Off all notes and silence sound
