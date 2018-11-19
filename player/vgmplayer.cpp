@@ -886,6 +886,7 @@ void VGMPlayer::InitDevices(void)
 				{
 					if (_hdrBuffer[0x96] == 2)	// Namco ASIC 219
 					{
+						chipDev.flags = 0x01;	// enable 16-bit byteswap patch on all ROM data
 						if (devCfg.clock == 44100)
 							devCfg.clock = 25056500;
 						else if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the (incorrect) sample rate, not the clock
@@ -894,6 +895,7 @@ void VGMPlayer::InitDevices(void)
 					}
 					else
 					{
+						chipDev.flags = 0x00;
 						if (devCfg.clock == 21390)
 							devCfg.clock = 12288000;
 						else if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the (incorrect) sample rate, not the clock

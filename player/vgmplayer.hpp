@@ -54,6 +54,7 @@ public:
 		DEVFUNC_WRITE_BLOCK romWrite;
 		DEVFUNC_WRITE_MEMSIZE romSizeB;
 		DEVFUNC_WRITE_BLOCK romWriteB;
+		UINT32 flags;
 	};
 	
 private:

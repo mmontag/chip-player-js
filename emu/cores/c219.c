@@ -246,7 +246,7 @@ static void c219_fetch_sample(c219_state *chip, UINT32 vid)
 	}
 	else
 	{
-		UINT32 addr = find_sample(chip, v->pos, vid) ^ 0x01;	// TODO: remove
+		UINT32 addr = find_sample(chip, v->pos, vid);
 		
 		if (vreg->mode & C219_MODE_MULAW)
 			v->sample = chip->mulaw_table[chip->pRom[addr]];

@@ -709,7 +709,21 @@ void VGMPlayer::Cmd_DataBlock(void)
 		dataOfs = ReadLE32(&fData[0x04]);
 		dataPtr = &fData[0x08];
 		dataLen = dblkLen - 0x08;
-		WriteChipROM(cDev, _VGM_ROM_CHIPS[dblkType & 0x3F][1], memSize, dataOfs, dataLen, dataPtr);
+		if (chipType == 0x1C && dataLen && (cDev->flags & 0x01))
+		{
+			// chip == ASIC 219 (ID 0x1C + flags 0x01): byte-swap sample data
+			std::vector<UINT8> swpData(dataLen);
+			for (UINT32 curPos = 0x00; curPos < dataLen; curPos += 0x02)
+			{
+				swpData[curPos + 0x00] = dataPtr[curPos + 0x01];
+				swpData[curPos + 0x01] = dataPtr[curPos + 0x00];
+			}
+			WriteChipROM(cDev, _VGM_ROM_CHIPS[dblkType & 0x3F][1], memSize, dataOfs, dataLen, &swpData[0x00]);
+		}
+		else
+		{
+			WriteChipROM(cDev, _VGM_ROM_CHIPS[dblkType & 0x3F][1], memSize, dataOfs, dataLen, dataPtr);
+		}
 		break;
 	case 0xC0:	// RAM Write
 		chipType = _VGM_RAM_CHIPS[dblkType & 0x3F];
