@@ -37,6 +37,7 @@ class App extends PureComponent {
     this.getFadeMs = this.getFadeMs.bind(this);
     this.loadCatalog = this.loadCatalog.bind(this);
     this.handlePlayRandom = this.handlePlayRandom.bind(this);
+    this.handleFileClick = this.handleFileClick.bind(this);
 
     // Initialize audio graph
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -338,17 +339,18 @@ class App extends PureComponent {
     }
   }
 
+  handleFileClick(filename) {
+    return (e) => {
+      e.preventDefault();
+      this.playSong(filename);
+    }
+  }
+
   getFadeMs(metadata, tempo) {
     return Math.floor(metadata.play_length / tempo);
   }
 
   render() {
-    const handleFileClick = (filename) => {
-      return (e) => {
-        e.preventDefault();
-        this.playSong(filename);
-      }
-    };
     const metadata = this.state.currentSongMetadata;
     return (
       <div className="App">
@@ -369,7 +371,7 @@ class App extends PureComponent {
             <Search
               initialQuery={this.state.initialQuery}
               catalog={this.state.catalog}
-              onResultClick={handleFileClick}/>
+              onResultClick={this.handleFileClick}/>
             {!isMobile.phone &&
             <Visualizer audioCtx={this.audioCtx}
                         sourceNode={this.playerNode}
