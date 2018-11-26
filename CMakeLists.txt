@@ -3,6 +3,9 @@ project (libADLMIDI VERSION 1.4.0 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 
+# Prefer C++98 standard
+set(CMAKE_CXX_STANDARD 98)
+
 #===========================================================================================
 # Strip garbage
 if(APPLE)
