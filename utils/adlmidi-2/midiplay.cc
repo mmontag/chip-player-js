@@ -745,9 +745,9 @@ struct Reverb /* This reverb implementation is based on Freeverb impl. in Sox */
             double r = rate * (1 / 44100.0); // Compensate for actual sample-rate
             const int stereo_adjust = 12;
             for(size_t i = 0; i < 8; ++i, offset = -offset)
-                comb[i].Create(scale * r * (comb_lengths[i] + stereo_adjust * offset) + .5);
+                comb[i].Create(static_cast<size_t>(scale * r * (comb_lengths[i] + stereo_adjust * offset) + .5));
             for(size_t i = 0; i < 4; ++i, offset = -offset)
-                allpass[i].Create(r * (allpass_lengths[i] + stereo_adjust * offset) + .5);
+                allpass[i].Create(static_cast<size_t>(r * (allpass_lengths[i] + stereo_adjust * offset) + .5));
         }
         void Process(size_t length,
                      const std::deque<float> &input, std::vector<float> &output,
@@ -771,14 +771,14 @@ struct Reverb /* This reverb implementation is based on Freeverb impl. in Sox */
                 double pre_delay_s, double stereo_depth,
                 size_t buffer_size)
     {
-        size_t delay = pre_delay_s  * sample_rate_Hz + .5;
+        size_t delay = static_cast<size_t>(pre_delay_s  * sample_rate_Hz + .5);
         double scale = room_scale * .9 + .1;
         double depth = stereo_depth;
         double a =  -1 /  std::log(1 - /**/.3 /**/);          // Set minimum feedback
         double b = 100 / (std::log(1 - /**/.98/**/) * a + 1); // Set maximum feedback
-        feedback = 1 - std::exp((reverberance * 100.0 - b) / (a * b));
-        hf_damping = fhf_damping * .3 + .2;
-        gain = std::exp(wet_gain_dB * (std::log(10.0) * 0.05)) * .015;
+        feedback = static_cast<float>(1 - std::exp((reverberance * 100.0 - b) / (a * b)));
+        hf_damping = static_cast<float>(fhf_damping * .3 + .2);
+        gain = static_cast<float>(std::exp(wet_gain_dB * (std::log(10.0) * 0.05)) * .015);
         input_fifo.insert(input_fifo.end(), delay, 0.f);
         for(size_t i = 0; i <= std::ceil(depth); ++i)
         {
@@ -881,7 +881,7 @@ namespace WindowsAudio
         {
             cache.insert(cache.end(), Buf, Buf + len);
             Buf = &cache[0];
-            len = cache.size();
+            len = static_cast<unsigned>(cache.size());
             if(len < BUFFER_SIZE / 2)
                 return;
             cache_reduction = cache.size();
@@ -1079,7 +1079,7 @@ static void SendStereoAudio(unsigned long count, short *samples)
             for(unsigned long p = 0; p < count; ++p)
             {
                 int   s = samples[p * 2 + w];
-                dry[w][p] = (s - a) * double(0.3 / 32768.0);
+                dry[w][p] = static_cast<float>((s - a) * double(0.3 / 32768.0));
             }
             // ^  Note: ftree-vectorize causes an error in this loop on g++-4.4.5
             reverb_data.chan[w].input_fifo.insert(
@@ -1094,13 +1094,15 @@ static void SendStereoAudio(unsigned long count, short *samples)
         for(unsigned long p = 0; p < count; ++p)
             for(unsigned w = 0; w < 2; ++w)
             {
-                float out = ((1 - reverb_data.wetonly) * dry[w][p] +
+                float out = static_cast<float>((1 - reverb_data.wetonly) * dry[w][p] +
                              .5 * (reverb_data.chan[0].out[w][p]
                                    + reverb_data.chan[1].out[w][p])) * 32768.0f
                             + average_flt[w];
                 AudioBuffer[pos + p * 2 + w] =
-                    out < -32768.f ? -32768 :
-                    out > 32767.f ?  32767 : out;
+                    static_cast<short>(
+                        out < -32768.f ? -32768 :
+                        out > 32767.f ?  32767 : out
+                    );
             }
     }
     else
@@ -1217,7 +1219,7 @@ static void SendStereoAudio(unsigned long count, short *samples)
     AudioBuffer_lock.Unlock();
     #else
     if(!WritePCMfile)
-        WindowsAudio::Write((const unsigned char *) &AudioBuffer[0], 2 * AudioBuffer.size());
+        WindowsAudio::Write((const unsigned char *) &AudioBuffer[0], static_cast<unsigned>(2 * AudioBuffer.size()));
     #endif
 }
 #endif /* not DJGPP */
@@ -1726,8 +1728,7 @@ int main(int argc, char **argv)
             ReverbIsOn = false;
         else break;
 
-        std::copy(argv + (had_option ? 4 : 3), argv + argc,
-                  argv + 2);
+        std::copy(argv + (had_option ? 4 : 3), argv + argc, argv + 2);
         argc -= (had_option ? 2 : 1);
     }
 
@@ -1920,7 +1921,7 @@ int main(int argc, char **argv)
         if(got <= 0)
             break;
         /* Process it */
-        SendStereoAudio(got / 2, buff);
+        SendStereoAudio(static_cast<unsigned long>(got / 2), buff);
 
         //static double carry = 0.0;
         //carry += PCM_RATE * eat_delay;
