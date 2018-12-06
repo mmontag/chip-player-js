@@ -29,6 +29,7 @@
 #define DEVID_K054539	0x1A
 #define DEVID_C6280		0x1B
 #define DEVID_C140		0x1C
+#define DEVID_C219		0x80
 #define DEVID_K053260	0x1D
 #define DEVID_POKEY		0x1E
 #define DEVID_QSOUND	0x1F

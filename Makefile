@@ -208,6 +208,7 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/cores/c6280_mame.o \
 	$(LIBEMUOBJ)/cores/Ootake_PSG.o \
 	$(LIBEMUOBJ)/cores/c140.o \
+	$(LIBEMUOBJ)/cores/c219.o \
 	$(LIBEMUOBJ)/cores/k053260.o \
 	$(LIBEMUOBJ)/cores/pokey.o \
 	$(LIBEMUOBJ)/cores/qsoundintf.o \

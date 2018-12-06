@@ -680,9 +680,15 @@ static void InitVGMChips(void)
 			{
 				if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the sample rate, not the clock
 					devCfg.clock *= 384;	// (for backwards compatibility with old VGM logs from 2013/14)
-				devCfg.flags = VGMHdr.bytC140Type;	// banking type
-				
-				retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
+				if (VGMHdr.bytC140Type == 2)	// ASIC 219
+				{
+					retVal = SndEmu_Start(DEVID_C219, &devCfg, &cDev->defInf);
+				}
+				else
+				{
+					devCfg.flags = VGMHdr.bytC140Type;	// banking type
+					retVal = SndEmu_Start(DEVID_C140, &devCfg, &cDev->defInf);
+				}
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&cDev->writeM8);

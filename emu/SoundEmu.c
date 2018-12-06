@@ -36,6 +36,7 @@
 #define SNDDEV_K054539
 #define SNDDEV_C6280
 #define SNDDEV_C140
+#define SNDDEV_C219
 #define SNDDEV_K053260
 #define SNDDEV_POKEY
 #define SNDDEV_QSOUND
@@ -121,6 +122,9 @@
 #endif
 #ifdef SNDDEV_C140
 #include "cores/c140.h"
+#endif
+#ifdef SNDDEV_C219
+#include "cores/c219.h"
 #endif
 #ifdef SNDDEV_K053260
 #include "cores/k053260.h"
@@ -274,6 +278,10 @@ const DEV_DEF** SndEmu_GetDevDefList(UINT8 deviceID)
 #ifdef SNDDEV_C140
 	case DEVID_C140:
 		return devDefList_C140;
+#endif
+#ifdef SNDDEV_C219
+	case DEVID_C219:
+		return devDefList_C219;
 #endif
 #ifdef SNDDEV_K053260
 	case DEVID_K053260:

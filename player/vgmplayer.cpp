@@ -24,7 +24,6 @@
 #include <emu/cores/c140.h>
 #include <emu/cores/es5503.h>
 #include <emu/cores/es5506.h>
-#include <emu/cores/c352.h>			// for C352_CFG
 
 #include "../vgm/dblk_compr.h"
 #include "helper.h"
@@ -54,7 +53,7 @@
 {	0x80, 0x200, 0x100, 0x100, 0x180, 0xB0, 0x100, 0x80,
 	0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x98,
 	0x80, 0xE0, 0x100, 0xC0, 0x100, 0x40, 0x11E, 0x1C0,
-	0x100, 0xA0, 0x100, 0x100, 0x100, 0xB3, 0x100, 0x100,
+	0x100, 0xA0, 0x100, 0x100, 0x55, 0xB3, 0x100, 0x100,
 	0x20, 0x100, 0x100, 0x100, 0x40, 0x20, 0x100, 0x40,
 	0x280,
 };
@@ -62,7 +61,7 @@
 {	0x100, 0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
 	0x100, 0x200, 0x200, 0x200, 0x200, 0x100, 0x100, 0x1AF,
 	0x200, 0x100, 0x200, 0x200, 0x200, 0x400, 0x100, 0x200,
-	0x200, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
+	0x200, 0x100, 0x100, 0x100, 0x300, 0x100, 0x100, 0x100,
 	0x800, 0x100, 0x100, 0x100, 0x800, 0x1000, 0x100, 0x800,
 	0x100,
 };
@@ -885,11 +884,25 @@ void VGMPlayer::InitDevices(void)
 				break;
 			case DEVID_C140:
 				{
-					if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the sample rate, not the clock
-						devCfg.clock *= 384;	// (for backwards compatibility with old VGM logs from 2013/14)
-					devCfg.flags = _hdrBuffer[0x96];	// banking type
-					
-					retVal = SndEmu_Start(chipType, &devCfg, devInf);
+					if (_hdrBuffer[0x96] == 2)	// Namco ASIC 219
+					{
+						chipDev.flags = 0x01;	// enable 16-bit byteswap patch on all ROM data
+						if (devCfg.clock == 44100)
+							devCfg.clock = 25056500;
+						else if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the (incorrect) sample rate, not the clock
+							devCfg.clock *= 576;	// (for backwards compatibility with old VGM logs from 2013/14)
+						retVal = SndEmu_Start(DEVID_C219, &devCfg, devInf);
+					}
+					else
+					{
+						chipDev.flags = 0x00;
+						if (devCfg.clock == 21390)
+							devCfg.clock = 12288000;
+						else if (devCfg.clock < 1000000)	// if < 1 MHz, then it's the (incorrect) sample rate, not the clock
+							devCfg.clock *= 576;	// (for backwards compatibility with old VGM logs from 2013/14)
+						devCfg.flags = _hdrBuffer[0x96];	// banking type
+						retVal = SndEmu_Start(DEVID_C140, &devCfg, devInf);
+					}
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D8, 0, (void**)&chipDev.writeM8);
@@ -899,12 +912,9 @@ void VGMPlayer::InitDevices(void)
 				break;
 			case DEVID_C352:
 				{
-					C352_CFG cCfg;
+					devCfg.clock = devCfg.clock * 72 / _hdrBuffer[0xD6];	// real clock = VGM clock / (VGM clkDiv * 4) * 288
 					
-					cCfg._genCfg = devCfg;
-					cCfg.clk_divider = (UINT16)_hdrBuffer[0xD6] * 4;
-					
-					retVal = SndEmu_Start(chipType, (DEV_GEN_CFG*)&cCfg, devInf);
+					retVal = SndEmu_Start(chipType, &devCfg, devInf);
 					if (retVal)
 						break;
 					SndEmu_GetDeviceFunc(devInf->devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D16, 0, (void**)&chipDev.writeM16);
