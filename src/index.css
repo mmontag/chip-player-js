@@ -183,6 +183,10 @@ body,#root {
     flex-grow: 0;
 }
 
+.App-byline {
+    float: right;
+}
+
 .App-content-area {
     flex-grow: 1;
     display: flex;

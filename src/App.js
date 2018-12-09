@@ -383,7 +383,10 @@ class App extends PureComponent {
           <h2 className="App-title">Chip Player JS</h2>
           {!isMobile.phone &&
           <p className="App-subtitle">
-            powered by&nbsp;
+            <span className="App-byline">Feedback:&nbsp;
+              <a href="https://twitter.com/matthewmontag">@matthewmontag</a>
+            </span>
+            Powered by&nbsp;
             <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>,&nbsp;
             <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and&nbsp;
             <a href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
