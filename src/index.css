@@ -198,12 +198,44 @@ body,#root {
 
 .App-footer {
     border-top: 1px solid yellow;
-    padding: 19px;
     margin: 0 -19px;
     flex-shrink: 0;
-    max-height: 25%;
+    height: 210px;
+    display: flex;
+}
+
+.App-footer-art {
+    width: 210px;
+    height: 210px;
+    background-size: contain;
+    background-position: center;
+    background-color: #000;
+    background-repeat: no-repeat;
+    border-left: 1px solid #ff0;
+    flex-shrink: 0;
+}
+
+.App-footer-main {
+    flex-grow: 1;
+    padding: 19px;
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+.App-footer-settings {
+    border-left: 1px solid #ff0;
+    padding: 19px;
+    max-width: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.PlayerParams h3 {
+    margin-top: 0;
+}
+
+.App-player-settings-button {
+    float: right;
 }
 
 .App .App-label {
@@ -253,6 +285,10 @@ body,#root {
 .App .Search-results {
     margin-top: 19px;
 }
+
+.SongDetails {}
+.SongDetails-title {color: white;}
+.SongDetails-subtitle {}
 
 .Search {
     flex-grow: 1;

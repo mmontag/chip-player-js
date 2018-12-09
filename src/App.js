@@ -408,23 +408,26 @@ class App extends PureComponent {
           </div>
         }
         <div className="App-footer">
-          <button onClick={this.togglePause}
-                  disabled={this.state.ejected}>
-            {this.state.paused ? 'Resume' : 'Pause'}
-          </button>
-          &nbsp;
-          <button onClick={this.handlePlayRandom}>
-            I'm Feeling Lucky
-          </button>
-          {this.state.playerError &&
-          <div className="App-error">ERROR: {this.state.playerError}</div>
-          }
-          <TimeSlider
-            currentSongPositionMs={this.state.currentSongPositionMs}
-            currentSongDurationMs={this.state.currentSongDurationMs}
-            onChange={this.handleTimeSliderChange}/>
-          {metadata &&
-          <div className="Song-details">
+          <div className="App-footer-main">
+            <button onClick={this.togglePause}
+                    disabled={this.state.ejected}>
+              {this.state.paused ? 'Resume' : 'Pause'}
+            </button>
+            &nbsp;
+            <button onClick={this.handlePlayRandom}>
+              I'm Feeling Lucky
+            </button>
+            {!this.state.showSettings &&
+            <button className="App-player-settings-button" onClick={this.toggleSettings}>
+              Player Settings >
+            </button>}
+            {this.state.playerError &&
+            <div className="App-error">ERROR: {this.state.playerError}</div>
+            }
+            <TimeSlider
+              currentSongPositionMs={this.state.currentSongPositionMs}
+              currentSongDurationMs={this.state.currentSongDurationMs}
+              onChange={this.handleTimeSliderChange}/>
             {this.state.currentSongNumSubtunes > 1 &&
             <span>
                 Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
@@ -435,16 +438,13 @@ class App extends PureComponent {
               <button
                 disabled={this.state.ejected}
                 onClick={this.nextSubtune}>Next</button><br/>
-              </span>
-            }
-            Title: {metadata.title || '--'}<br/>
-            Game: {metadata.game || '--'}<br/>
-            Artist: {metadata.artist || '--'}<br/>
-            System: {metadata.system || '--'}<br/>
-            Copyright: {metadata.copyright || '--'}<br/>
-            Comment: {metadata.comment || '--'}
+              </span>}
+            {metadata &&
+            <div className="SongDetails">
+              <div className="SongDetails-title">{metadata.artist} - {metadata.title}</div>
+              <div className="SongDetails-subtitle">{metadata.game} - {metadata.system} ({metadata.copyright})</div>
+            </div>}
           </div>
-          }
           {this.state.showSettings &&
           <div className="App-footer-settings">
             <PlayerParams
@@ -460,6 +460,8 @@ class App extends PureComponent {
               setParameter={this.player.setParameter}
               params={this.player.getParameters()}/>
           </div>}
+          {this.state.imageUrl &&
+          <div className="App-footer-art" style={{backgroundImage: `url("${this.state.imageUrl}")`}}/>}
         </div>
       </div>
     );
