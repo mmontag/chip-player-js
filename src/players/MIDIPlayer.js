@@ -26,19 +26,19 @@ const SOUNDFONTS = [
     label: 'Novelty Soundfonts',
     items: [
       {label: 'PC Beep (31 KB)', value: 'pcbeep.sf2'},
-      {label: 'Kirby\'s Dream Land 3 (271 KB)', value: 'Kirby\'s_Dream_Land_3.sf2'},
-      {label: 'Vintage Dreams Waves v2 (315 KB)', value: 'Vintage Dreams Waves v2.sf2'},
+      {label: 'Kirby\'s Dream Land (271 KB)', value: 'Kirby\'s_Dream_Land_3.sf2'},
+      {label: 'Vintage Waves v2 (315 KB)', value: 'Vintage Dreams Waves v2.sf2'},
       {label: 'Setzer\'s SPC Soundfont (1.2 MB)', value: 'Setzer\'s_SPC_Soundfont.sf2'},
       {label: 'Nokia 30 (2.2 MB)', value: 'Nokia_30.sf2'},
       {label: 'Regression FM v1.99g (14.4 MB)', value: 'R_FM_v1.99g-beta.sf2'},
-      {label: 'The Ultimate Megadrive Soundfont (63.2 MB)', value: 'The Ultimate Megadrive Soundfont.sf2'},
+      {label: 'Ultimate Megadrive (63.2 MB)', value: 'The Ultimate Megadrive Soundfont.sf2'},
     ],
   },
   {
     label: 'SF3 Compressed Soundfonts',
     items: [
       {label: 'Fluid R3 Mono SF3 (14.6 MB)', value: 'FluidR3Mono_GM.sf3'},
-      {label: 'MuseScore General SF3 (37.7 MB)', value: 'MuseScore_General.sf3'},
+      {label: 'MuseScore SF3 (37.7 MB)', value: 'MuseScore_General.sf3'},
     ],
   },
 ];
