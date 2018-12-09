@@ -115,6 +115,7 @@ class App extends PureComponent {
       voices: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
       initialQuery: null,
+      imageUrl: null,
     };
 
     // Load the song catalog
@@ -198,6 +199,23 @@ class App extends PureComponent {
       return;
     }
 
+    const imageUrl = [...parts, 'image.jpg'].join('/');
+    if (this.imageRequest) this.imageRequest.abort();
+    this.imageRequest = promisify(new XMLHttpRequest());
+    this.imageRequest.open('HEAD', imageUrl);
+    console.log('requesting image', imageUrl);
+    this.imageRequest.send()
+      .then(xhr => {
+        console.log(xhr.status);
+        if (xhr.status >= 200 && xhr.status < 400) {
+          console.log('set state', {imageUrl: imageUrl});
+          this.setState({imageUrl: imageUrl});
+        }
+      })
+      .catch(e => {
+        this.setState({imageUrl: null});
+      });
+
     // Cancel any outstanding request so that playback doesn't happen out of order
     if (this.songRequest) this.songRequest.abort();
     this.songRequest = promisify(new XMLHttpRequest());
@@ -251,6 +269,7 @@ class App extends PureComponent {
         currentSongPositionMs: 0,
         currentSongDurationMs: 1,
         currentSongNumSubtunes: 0,
+        imageUrl: null,
       });
     } else {
       this.setState({
