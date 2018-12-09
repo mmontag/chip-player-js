@@ -24,6 +24,7 @@ class App extends PureComponent {
     super(props);
 
     this.togglePause = this.togglePause.bind(this);
+    this.toggleSettings = this.toggleSettings.bind(this);
     this.play = this.play.bind(this);
     this.playSong = this.playSong.bind(this);
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
@@ -116,6 +117,7 @@ class App extends PureComponent {
       voiceNames: Array(MAX_VOICES).fill(''),
       initialQuery: null,
       imageUrl: null,
+      showSettings: false,
     };
 
     // Load the song catalog
@@ -304,6 +306,10 @@ class App extends PureComponent {
     this.setState({paused: this.player.togglePause()});
   }
 
+  toggleSettings() {
+    this.setState({showSettings: !this.state.showSettings});
+  }
+
   handleTimeSliderChange(event) {
     if (!this.player) return;
 
@@ -434,20 +440,23 @@ class App extends PureComponent {
             System: {metadata.system || '--'}<br/>
             Copyright: {metadata.copyright || '--'}<br/>
             Comment: {metadata.comment || '--'}
-            {this.player &&
-              <PlayerParams
-                ejected={this.state.ejected}
-                tempo={this.state.tempo}
-                numVoices={this.state.currentSongNumVoices}
-                voices={this.state.voices}
-                voiceNames={this.state.voiceNames}
-                handleTempoChange={this.handleTempoChange}
-                handleVoiceToggle={this.handleVoiceToggle}
-                getParameter={this.player.getParameter}
-                setParameter={this.player.setParameter}
-                params={this.player.getParameters()}/>}
           </div>
           }
+          {this.state.showSettings &&
+          <div className="App-footer-settings">
+            <PlayerParams
+              ejected={this.state.ejected}
+              tempo={this.state.tempo}
+              numVoices={this.state.currentSongNumVoices}
+              voices={this.state.voices}
+              voiceNames={this.state.voiceNames}
+              handleTempoChange={this.handleTempoChange}
+              handleVoiceToggle={this.handleVoiceToggle}
+              toggleSettings={this.toggleSettings}
+              getParameter={this.player.getParameter}
+              setParameter={this.player.setParameter}
+              params={this.player.getParameters()}/>
+          </div>}
         </div>
       </div>
     );

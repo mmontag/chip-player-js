@@ -4,7 +4,10 @@ import React from "react";
 export default class PlayerParams extends PureComponent {
   render() {
     return (
-      <div>
+      <div className="PlayerParams">
+        <button className="App-player-settings-button" onClick={this.props.toggleSettings}>
+          Close
+        </button>
         <h3>Player Settings</h3>
         Speed:
         <input
