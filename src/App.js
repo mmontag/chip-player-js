@@ -15,6 +15,7 @@ import PlayerParams from './PlayerParams';
 import Search from './Search';
 import TimeSlider from "./TimeSlider";
 import Visualizer from './Visualizer';
+import FavoriteButton from "./FavoriteButton";
 
 const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
@@ -443,6 +444,10 @@ class App extends PureComponent {
             <div className="SongDetails">
               <div className="SongDetails-title">{metadata.artist} - {metadata.title}</div>
               <div className="SongDetails-subtitle">{metadata.game} - {metadata.system} ({metadata.copyright})</div>
+                {this.state.favorites &&
+                <FavoriteButton favorites={this.state.favorites}
+                                toggleFavorite={this.handleToggleFavorite}
+                                href={this.state.songUrl}/>}
             </div>}
           </div>
           {this.state.showSettings &&

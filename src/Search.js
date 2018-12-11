@@ -2,6 +2,7 @@
 import React, {PureComponent} from 'react';
 import SearchWorker from 'worker-loader!./SearchWorker';
 import queryString from 'querystring';
+import FavoriteButton from "./FavoriteButton";
 
 const searchWorker = new SearchWorker();
 
@@ -181,6 +182,10 @@ export default class Search extends PureComponent {
                       const href = CATALOG_PREFIX + group.title + result;
                       return (
                         <div className="Search-results-group-item" key={i}>
+                          {this.props.favorites &&
+                          <FavoriteButton favorites={this.props.favorites}
+                                          toggleFavorite={this.props.toggleFavorite}
+                                          href={href}/>}
                           <a onClick={this.props.onResultClick(href)} href={href}>{result}</a>
                         </div>
                       )
