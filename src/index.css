@@ -322,6 +322,17 @@ body,#root {
     margin-left: 16px;
 }
 
+.Favorite-button::before { content: ' ' }
+.Favorite-button::after { content: ' ' }
+.Favorite-button:active { color: #ff0; }
+.Favorite-button.added { color: #ff0; }
+.Favorite-button {
+    white-space: pre;
+    cursor: pointer;
+    color: #66d;
+    background: initial;
+}
+
 .Visualizer { position: relative; display: flex; flex-direction: column; }
 .Visualizer-overlay { position: absolute; top: 76px; image-rendering: pixelated; }
 .Visualizer-options { padding: 19px; text-align: right; }

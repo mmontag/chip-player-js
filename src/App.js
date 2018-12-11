@@ -3,6 +3,9 @@ import './App.css';
 import React, {PureComponent} from 'react';
 import isMobile from 'ismobilejs';
 import queryString from 'querystring';
+import * as firebase from 'firebase/app';
+import 'firebase/auth';
+import 'firebase/firestore';
 
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
@@ -21,6 +24,48 @@ const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
 
 class App extends PureComponent {
+  handleLogin() {
+    const provider = new firebase.auth.FacebookAuthProvider();
+    firebase.auth().signInWithPopup(provider).then(result => {
+      console.log('firebase auth result:', result);
+    }).catch(error => {
+      console.log('firebase auth error:', error);
+    });
+  }
+
+  handleLogout() {
+    firebase.auth().signOut().then(() => {
+      this.setState({
+        user: null,
+        favorites: null,
+      });
+    });
+  }
+
+  handleToggleFavorite(path) {
+    const user = this.state.user;
+    if (user) {
+      const favorites = Object.assign({}, this.state.favorites);
+      const id = favorites[path];
+      const favoritesRef = this.db.collection('users').doc(user.uid).collection('favorites');
+      if (id && id !== 'pending') {
+        delete favorites[path];
+        this.setState({favorites: favorites});
+        favoritesRef.doc(id).delete().then(() => {
+          console.log('Deleted favorite %s.', path);
+        });
+      } else {
+        favorites[path] = 'pending';
+        this.setState({favorites: favorites});
+        favoritesRef.add({path: path}).then((ref) => {
+          console.log('Added favorite %s.', path);
+          favorites[path] = ref.id;
+          this.setState({favorites: favorites});
+        });
+      }
+    }
+  }
+
   constructor(props) {
     super(props);
 
@@ -40,7 +85,35 @@ class App extends PureComponent {
     this.loadCatalog = this.loadCatalog.bind(this);
     this.handlePlayRandom = this.handlePlayRandom.bind(this);
     this.handleFileClick = this.handleFileClick.bind(this);
+    this.handleLogin = this.handleLogin.bind(this);
+    this.handleLogout = this.handleLogout.bind(this);
+    this.handleToggleFavorite = this.handleToggleFavorite.bind(this);
 
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyDHcrVxSLoGA-_t-Ad46Ds1YEvbM2GazQw",
+      authDomain: "chip-player-js.firebaseapp.com",
+      databaseURL: "https://chip-player-js.firebaseio.com",
+      projectId: "chip-player-js",
+      storageBucket: "chip-player-js.appspot.com",
+      messagingSenderId: "762111649253"
+    };
+    firebase.initializeApp(config);
+    firebase.auth().onAuthStateChanged(user => {
+      this.setState({user: user});
+      if (user) {
+        this.db.collection('users').doc(user.uid).collection('favorites').get().then(docs => {
+          // invert the collection
+          const favorites = {};
+          docs.forEach(doc => {
+            favorites[doc.data().path] = doc.id;
+          });
+          this.setState({favorites: favorites});
+        });
+      }
+    });
+    this.db = firebase.firestore();
+    this.db.settings({timestampsInSnapshots: true});
     // Initialize audio graph
     const audioCtx = this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const gainNode = audioCtx.createGain();
@@ -119,6 +192,9 @@ class App extends PureComponent {
       initialQuery: null,
       imageUrl: null,
       showSettings: false,
+      user: null,
+      favorites: null,
+      songUrl: null,
     };
 
     // Load the song catalog
@@ -254,6 +330,7 @@ class App extends PureComponent {
           currentSongPositionMs: 0,
           currentSongSubtune: 0,
           voiceNames: [...Array(numVoices)].map((_, i) => this.player.getVoiceName(i)),
+          songUrl: url,
         });
       });
   }
@@ -273,6 +350,7 @@ class App extends PureComponent {
         currentSongDurationMs: 1,
         currentSongNumSubtunes: 0,
         imageUrl: null,
+        songUrl: null,
       });
     } else {
       this.setState({
@@ -381,7 +459,17 @@ class App extends PureComponent {
     return (
       <div className="App">
         <header className="App-header">
-          <h2 className="App-title">Chip Player JS</h2>
+          <h2 className="App-title">Chip Player JS&nbsp;
+            {this.state.user ?
+              <span>• Logged in as {this.state.user.displayName}.&nbsp;
+                <a href="#" onClick={this.handleLogout}>Logout</a>
+              </span>
+              :
+              <span>
+                <a href="#" onClick={this.handleLogin}>Login/Sign Up</a> to Save Favorites
+              </span>
+            }
+          </h2>
           {!isMobile.phone &&
           <p className="App-subtitle">
             <span className="App-byline">Feedback:&nbsp;
@@ -400,7 +488,12 @@ class App extends PureComponent {
             <Search
               initialQuery={this.state.initialQuery}
               catalog={this.state.catalog}
+              toggleFavorite={this.handleToggleFavorite}
+              favorites={this.state.favorites}
               onResultClick={this.handleFileClick}/>
+            <div>{(new Array(256)).map((_,i) => {
+              return String.fromCharCode(i);
+            }).join('')}</div>
             {!isMobile.phone &&
             <Visualizer audioCtx={this.audioCtx}
                         sourceNode={this.playerNode}
@@ -440,14 +533,20 @@ class App extends PureComponent {
                 disabled={this.state.ejected}
                 onClick={this.nextSubtune}>Next</button><br/>
               </span>}
-            {metadata &&
+            {this.state.songUrl &&
             <div className="SongDetails">
-              <div className="SongDetails-title">{metadata.artist} - {metadata.title}</div>
-              <div className="SongDetails-subtitle">{metadata.game} - {metadata.system} ({metadata.copyright})</div>
+              <div className="SongDetails-title">
                 {this.state.favorites &&
                 <FavoriteButton favorites={this.state.favorites}
                                 toggleFavorite={this.handleToggleFavorite}
                                 href={this.state.songUrl}/>}
+                {allOrNone(metadata.artist, ' - ')}{metadata.title}
+              </div>
+              <div className="SongDetails-subtitle">
+                {this.state.user && <span>&nbsp;&nbsp;&nbsp;</span>}
+                {[metadata.game, metadata.system].filter(x=>x).join(' - ')}
+                {allOrNone(' (', metadata.copyright, ')')}
+              </div>
             </div>}
           </div>
           {this.state.showSettings &&
@@ -471,6 +570,15 @@ class App extends PureComponent {
       </div>
     );
   }
+}
+
+function allOrNone(...args) {
+  let str = '';
+  for (let i = 0; i < args.length; i++) {
+    if (!args[i]) return '';
+    str += args[i];
+  }
+  return str;
 }
 
 export default App;
