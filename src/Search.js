@@ -179,7 +179,7 @@ export default class Search extends PureComponent {
                       </a>
                     </h5>
                     {group.items.map((result, i) => {
-                      const href = CATALOG_PREFIX + group.title + result;
+                      const href = CATALOG_PREFIX + group.title + result.replace('%', '%25').replace('#', '%23');
                       return (
                         <div className="Search-results-group-item" key={i}>
                           {this.props.favorites &&

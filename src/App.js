@@ -252,9 +252,8 @@ class App extends PureComponent {
     this.player = null;
     const filepath = url.replace(CATALOG_PREFIX, '');
     const ext = url.split('.').pop().toLowerCase();
-    const parts = url.split('/');
-    const filename = parts.pop();
-    url = [...parts, encodeURIComponent(filename)].join('/'); // escape #, which appears in some filenames
+    const pathParts = url.split('/');
+    pathParts.pop();
 
     const urlParams = {
       ...queryString.parse(window.location.search.substr(1)),
@@ -278,7 +277,7 @@ class App extends PureComponent {
       return;
     }
 
-    const imageUrl = [...parts, 'image.jpg'].join('/');
+    const imageUrl = [...pathParts, 'image.jpg'].join('/');
     if (this.imageRequest) this.imageRequest.abort();
     this.imageRequest = promisify(new XMLHttpRequest());
     this.imageRequest.open('HEAD', imageUrl);
