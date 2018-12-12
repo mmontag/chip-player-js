@@ -16,10 +16,12 @@ export default class Search extends PureComponent {
     this.doSearch = this.doSearch.bind(this);
     this.onChange = this.onChange.bind(this);
     this.onSearchInputChange = this.onSearchInputChange.bind(this);
-
     this.handleSearchResults = this.handleSearchResults.bind(this);
     this.handleGroupClick = this.handleGroupClick.bind(this);
     this.handleStatus = this.handleStatus.bind(this);
+    this.handleClear = this.handleClear.bind(this);
+
+    this.textInput = React.createRef();
 
     searchWorker.onmessage = (message) => this.handleMessage(message.data);
 
@@ -109,6 +111,16 @@ export default class Search extends PureComponent {
     });
   }
 
+  handleClear() {
+    this.setState({
+      query: null,
+      searching: false,
+      resultsCount: 0,
+      results: {}
+    });
+    this.textInput.current.focus();
+  }
+
   showEmptyState() {
     this.setState({searching: false, results: {}})
   }
@@ -152,19 +164,23 @@ export default class Search extends PureComponent {
     return (
       <div className="Search">
         <div>
-          <label>Search: <input type="text"
+          <label className="Search-label">Search: <input type="text"
                                 placeholder={placeholder}
                                 spellCheck="false"
                                 autoComplete="off"
                                 autoCorrect="false"
                                 autoCapitalize="none"
+                                ref={this.textInput}
                                 value={this.state.totalSongs ? this.state.query || '' : ''}
-                                onFocus={this.handleSearchFocus}
-                                onChange={this.onChange}/></label>
-          {
-            this.state.searching &&
-            <span>{this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}</span>
-          }
+                                onChange={this.onChange}/>
+            {
+              this.state.searching &&
+              <span>
+                <button className="Search-button-clear" onClick={this.handleClear}/>&nbsp;
+                {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
+              </span>
+            }
+          </label>
         </div>
         {
           this.state.searching ?

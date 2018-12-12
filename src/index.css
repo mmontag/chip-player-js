@@ -121,7 +121,7 @@ input[type=checkbox]:before         { content: '[ ]'; }
 input[type=checkbox]:checked:before { content: '[×]'; }
 
 input[type=radio]:before         { content: '( )'; }
-input[type=radio]:checked:before { content: '(•)'; }
+input[type=radio]:checked:before { content: '(●)'; }
 
 input[type=range] {
     margin: 0;
@@ -298,6 +298,11 @@ body,#root {
     padding: 19px;
     overflow-y: auto;
 }
+
+/*.Search-label { margin-right: */
+.Search-button-clear { white-space: pre; }
+.Search-button-clear::before { content: ' ×'; }
+.Search-button-clear::after  { content: ' '; }
 
 .Search-results {
     /*overflow-y: auto;*/
