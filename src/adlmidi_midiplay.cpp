@@ -105,7 +105,7 @@ inline bool isXgPercChannel(uint8_t msb, uint8_t lsb)
 
 void MIDIplay::AdlChannel::addAge(int64_t us)
 {
-    const int64_t neg = 1000 * static_cast<int64_t>(-0x1FFFFFFFll);
+    const int64_t neg = 1000 * static_cast<int64_t>(-0x1FFFFFFFl);
     if(users.empty())
     {
         koff_time_until_neglible_us = std::max(koff_time_until_neglible_us - us, neg);

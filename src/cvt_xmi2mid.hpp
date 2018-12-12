@@ -58,11 +58,21 @@ typedef unsigned long   uint32_t;
 #define XMI2MID_MIDI_STATUS_SYSEX       0xF
 
 #if 1
-#define XMI2MID_TRACE(...)
+static int XMI2MID_TRACE(...) { return 0; }
 #else
 #include <stdio.h>
-#define XMI2MID_TRACE(fmt, ...)                                 \
-    fprintf(stderr, "XMI2MID: " fmt "\n", ## __VA_ARGS__)
+#include <stdarg.h>
+static int XMI2MID_TRACE(const char *fmt, int n, ...)
+{
+    int ret;
+    char ff[50] = "";
+    snprintf(ff, 49, "XMI2MID: %s\n", fmt);
+    va_list args;
+    va_start(args, n);
+    ret = vfprintf(stderr, const_cast<const char*>(ff), args);
+    va_end(args);
+    return ret;
+}
 #endif
 
 typedef struct _xmi2mid_midi_event {
