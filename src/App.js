@@ -489,10 +489,21 @@ class App extends PureComponent {
               catalog={this.state.catalog}
               toggleFavorite={this.handleToggleFavorite}
               favorites={this.state.favorites}
-              onResultClick={this.handleFileClick}/>
-            <div>{(new Array(256)).map((_,i) => {
-              return String.fromCharCode(i);
-            }).join('')}</div>
+              onResultClick={this.handleFileClick}>
+              <h3>My Favorites</h3>
+              {this.state.favorites ?
+                Object.keys(this.state.favorites).map((href, i) =>
+                  <div className="Search-results-group-item" key={i}>
+                    <FavoriteButton favorites={this.state.favorites}
+                                    toggleFavorite={this.handleToggleFavorite}
+                                    href={href}/>
+                    <a onClick={this.handleFileClick(href)} href={href}>{href.split('/').pop()}</a>
+                  </div>
+                )
+                :
+                '(No favorites)'
+              }
+            </Search>
             {!isMobile.phone &&
             <Visualizer audioCtx={this.audioCtx}
                         sourceNode={this.playerNode}
@@ -543,25 +554,28 @@ class App extends PureComponent {
               </div>
               <div className="SongDetails-subtitle">
                 {this.state.user && <span>&nbsp;&nbsp;&nbsp;</span>}
-                {[metadata.game, metadata.system].filter(x=>x).join(' - ')}
+                {[metadata.game, metadata.system].filter(x => x).join(' - ')}
                 {allOrNone(' (', metadata.copyright, ')')}
               </div>
             </div>}
           </div>
           {this.state.showSettings &&
           <div className="App-footer-settings">
-            <PlayerParams
-              ejected={this.state.ejected}
-              tempo={this.state.tempo}
-              numVoices={this.state.currentSongNumVoices}
-              voices={this.state.voices}
-              voiceNames={this.state.voiceNames}
-              handleTempoChange={this.handleTempoChange}
-              handleVoiceToggle={this.handleVoiceToggle}
-              toggleSettings={this.toggleSettings}
-              getParameter={this.player.getParameter}
-              setParameter={this.player.setParameter}
-              params={this.player.getParameters()}/>
+            {this.player ?
+              <PlayerParams
+                ejected={this.state.ejected}
+                tempo={this.state.tempo}
+                numVoices={this.state.currentSongNumVoices}
+                voices={this.state.voices}
+                voiceNames={this.state.voiceNames}
+                handleTempoChange={this.handleTempoChange}
+                handleVoiceToggle={this.handleVoiceToggle}
+                toggleSettings={this.toggleSettings}
+                getParameter={this.player.getParameter}
+                setParameter={this.player.setParameter}
+                params={this.player.getParameters()}/>
+              :
+              <div>--</div>}
           </div>}
           {this.state.imageUrl &&
           <div className="App-footer-art" style={{backgroundImage: `url("${this.state.imageUrl}")`}}/>}

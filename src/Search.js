@@ -195,7 +195,7 @@ export default class Search extends PureComponent {
               })}
             </div>
             :
-            null
+            this.props.children
         }
       </div>
     );

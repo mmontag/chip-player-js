@@ -14,7 +14,7 @@ export default class FavoriteButton extends PureComponent {
     const added = !!this.props.favorites[this.props.href];
     return (
       <button onClick={this.handleClick}
-              className={'Favorite-button' + (added ? 'added' : '')}>
+              className={'Favorite-button' + (added ? ' added' : '')}>
         &#003;
       </button>
     );
