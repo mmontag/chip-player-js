@@ -34,15 +34,15 @@ if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
 endif()
 
 if(ADLMIDI2_HAS_PUZZLE_GAME)
-    target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
+    target_compile_definitions(adlmidi2 PUBLIC SUPPORT_PUZZLE_GAME)
 endif()
 
 if(ADLMIDI2_VIDEO_OUT_SUPPORT)
-    target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_VIDEO_OUTPUT")
+    target_compile_definitions(adlmidi2 PUBLIC SUPPORT_VIDEO_OUTPUT)
 endif()
 
 if(MSDOS OR DJGPP)
-    target_compile_definitions(adlmidi2 PUBLIC "-DHARDWARE_OPL3")
+    target_compile_definitions(adlmidi2 PUBLIC HARDWARE_OPL3)
     message("Turn on hardware OPL3 support on ADLMIDI2 tool")
 endif()
 

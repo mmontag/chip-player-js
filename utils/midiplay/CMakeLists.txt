@@ -16,12 +16,12 @@ if(NOT MSDOS AND NOT DJGPP AND NOT MIDIPLAY_WAVE_ONLY)
 endif()
 
 if(MIDIPLAY_WAVE_ONLY)
-    target_compile_definitions(adlmidiplay PUBLIC "-DOUTPUT_WAVE_ONLY")
+    target_compile_definitions(adlmidiplay PUBLIC OUTPUT_WAVE_ONLY)
     message("Demo tool will only output WAVE file, no playing support.")
 endif()
 
 if(MSDOS OR DJGPP)
-    target_compile_definitions(adlmidiplay PUBLIC "-DHARDWARE_OPL3")
+    target_compile_definitions(adlmidiplay PUBLIC HARDWARE_OPL3)
     message("Turn on hardware OPL3 support on demo tool")
 endif()
 

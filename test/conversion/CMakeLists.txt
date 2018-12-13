@@ -8,5 +8,5 @@ include_directories(
 
 add_executable(ConversionTest conversion.cpp $<TARGET_OBJECTS:Catch-objects>)
 
-set_target_properties(ConversionTest PROPERTIES COMPILE_DEFINITIONS "GSL_THROW_ON_CONTRACT_VIOLATION")
+target_compile_definitions(ConversionTest PRIVATE GSL_THROW_ON_CONTRACT_VIOLATION)
 add_test(NAME ConversionTest COMMAND ConversionTest)
