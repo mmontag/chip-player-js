@@ -3,9 +3,8 @@ project(adlmidi_vlc_plugin C)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-find_library(SDL2_LIBRARY SDL2 REQUIRED)
+find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
-message("Found ${SDL2_LIBRARY}")
 
 add_executable(adlmidi_sdl2_demo sdl2_sample.c)
 
