@@ -8,5 +8,5 @@ include_directories(
 
 add_executable(BankMapTest bank_map.cpp $<TARGET_OBJECTS:Catch-objects>)
 
-set_target_properties(BankMapTest PROPERTIES COMPILE_DEFINITIONS "GSL_THROW_ON_CONTRACT_VIOLATION")
+target_compile_definitions(BankMapTest PRIVATE GSL_THROW_ON_CONTRACT_VIOLATION)
 add_test(NAME BankMapTest COMMAND BankMapTest)

@@ -4,6 +4,10 @@ project(gen_adldata CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP)
+if(OPENMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
@@ -40,21 +44,11 @@ endif()
 add_executable(gen_adldata
     ${GEN_ADLDATA_SRC}
 )
-if(NOT MSVC)
-    target_link_libraries(gen_adldata pthread m stdc++)
-endif()
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
-        "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
-        "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
-        "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
-        CMAKE_COMPILER_IS_MINGW)
-    if(OPENMP_FOUND)
-        target_compile_options(gen_adldata PUBLIC "-fopenmp")
-        target_link_libraries(gen_adldata "-fopenmp")
-    endif()
-else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(MSVC)
     message("Turned on C++11 on MSVC")
     target_compile_options(gen_adldata PUBLIC "/std:c++latest")
+else()
+    target_link_libraries(gen_adldata PRIVATE pthread m stdc++)
 endif()
 
 if(WITH_GENADLDATA_COMMENTS)
@@ -71,4 +65,3 @@ add_custom_target(gen-adldata-run #OUTPUT ${ADLDATA_DATABASE}
     COMMENT "Running Embedded FM banks database generation"
     VERBATIM
 )
-
