@@ -8,8 +8,9 @@ find_package(OpenMP)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
-    find_package(SDL2 REQUIRED)
+    find_library(SDL2_LIBRARY SDL2 REQUIRED)
     include_directories(${SDL2_INCLUDE_DIR})
+    message("Found ${SDL2_LIBRARY}")
 endif()
 
 if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
