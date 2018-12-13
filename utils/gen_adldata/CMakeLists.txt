@@ -43,11 +43,7 @@ add_executable(gen_adldata
 if(NOT MSVC)
     target_link_libraries(gen_adldata PRIVATE pthread m stdc++)
 endif()
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
-        "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
-        "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
-        "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
-        CMAKE_COMPILER_IS_MINGW)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|Intel|MinGW" OR MINGW)
     if(OPENMP_FOUND)
         target_compile_options(gen_adldata PUBLIC "-fopenmp")
         target_link_libraries(gen_adldata PRIVATE "-fopenmp")

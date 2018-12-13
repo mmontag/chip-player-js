@@ -24,7 +24,7 @@ target_include_directories(adlmidi_vlc_plugin PRIVATE
 
 target_link_libraries(adlmidi_vlc_plugin PRIVATE ADLMIDI_static ${LIBVLCCORE_LIBRARY} m)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_COMPILER_IS_GNUCXX)
+if(WIN32 AND CMAKE_COMPILER_IS_GNUCXX)
     set_property(TARGET adlmidi_vlc_plugin APPEND_STRING PROPERTY LINK_FLAGS " -static-libgcc -static-libstdc++")
     set_property(TARGET adlmidi_vlc_plugin APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-Bstatic,--whole-archive -lpthread -Wl,-Bdynamic,--no-whole-archive")
 elseif(NOT WIN32)

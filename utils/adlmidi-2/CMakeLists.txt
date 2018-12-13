@@ -59,11 +59,7 @@ if(NOT WITH_CPP_EXTRAS)
     message(FATAL_ERROR "ADLMIDI2 Requires C++ Extras. Please enable WITH_CPP_EXTRAS option!")
 endif()
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
-            "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
-            "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
-            "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
-            CMAKE_COMPILER_IS_MINGW)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|Intel|MinGW" OR MINGW)
     if(OPENMP_FOUND)
         target_compile_options(adlmidi2 PUBLIC "-fopenmp")
         target_link_libraries(adlmidi2 PRIVATE "-fopenmp")
