@@ -25,7 +25,7 @@ if(MSDOS OR DJGPP)
     message("Turn on hardware OPL3 support on demo tool")
 endif()
 
-target_link_libraries(adlmidiplay PRIVATE ADLMIDI_IF)
+target_link_libraries(adlmidiplay PRIVATE ADLMIDI)
 
 if(WIN32)
     if(NOT MSVC)
@@ -40,15 +40,6 @@ endif()
 
 if(MSDOS OR DJGPP)
     set_target_properties(adlmidiplay PROPERTIES OUTPUT_NAME adlmidi)
-endif()
-
-if(libADLMIDI_SHARED)
-    add_dependencies(adlmidiplay ADLMIDI_shared)
-else()
-    if(NOT libADLMIDI_STATIC)
-        message(FATAL_ERROR "libADLMIDI is required to be built!")
-    endif()
-    add_dependencies(adlmidiplay ADLMIDI_static)
 endif()
 
 install(TARGETS adlmidiplay

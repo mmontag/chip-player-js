@@ -8,7 +8,7 @@ string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
 
 add_executable(adlmidi_sdl2_demo sdl2_sample.c)
 target_include_directories(adlmidi_sdl2_demo PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries(adlmidi_sdl2_demo PRIVATE ADLMIDI_IF ${SDL2_LIBRARIES})
+target_link_libraries(adlmidi_sdl2_demo PRIVATE ADLMIDI ${SDL2_LIBRARIES})
 
 if(NOT MSVC)
     target_link_libraries(adlmidi_sdl2_demo PRIVATE pthread)
@@ -21,14 +21,8 @@ if(MSDOS OR DJGPP)
     set_target_properties(adlmidi_sdl2_demo PROPERTIES OUTPUT_NAME adlmidi)
 endif()
 
-if(libADLMIDI_SHARED)
-    add_dependencies(adlmidi_sdl2_demo ADLMIDI_shared)
+if(TARGET ADLMIDI_shared)
     set_target_properties(adlmidi_sdl2_demo PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
-else()
-    if(NOT libADLMIDI_STATIC)
-        message(FATAL_ERROR "libADLMIDI is required to be built!")
-    endif()
-    add_dependencies(adlmidi_sdl2_demo ADLMIDI_static)
 endif()
 
 install(TARGETS adlmidi_sdl2_demo

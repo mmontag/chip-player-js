@@ -24,7 +24,7 @@ if(ADLMIDI2_HAS_PUZZLE_GAME)
 endif()
 
 add_executable(adlmidi2 ${adlmidi2_src})
-target_link_libraries(adlmidi2 PRIVATE ADLMIDI_IF)
+target_link_libraries(adlmidi2 PRIVATE ADLMIDI)
 
 if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
     find_package(SDL2 REQUIRED)
@@ -73,16 +73,8 @@ else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(adlmidi2 PUBLIC "/std:c++latest")
 endif()
 
-if(libADLMIDI_SHARED)
-    add_dependencies(adlmidi2 ADLMIDI_shared)
-    if(NOT MSVC)
-        set_target_properties(adlmidi2 PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
-    endif()
-else()
-    if(NOT libADLMIDI_STATIC)
-        message(FATAL_ERROR "libADLMIDI is required to be built!")
-    endif()
-    add_dependencies(adlmidi2 ADLMIDI_static)
+if(TARGET ADLMIDI_shared AND NOT MSVC)
+    set_target_properties(adlmidi2 PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
 endif()
 
 install(TARGETS adlmidi2

@@ -22,16 +22,15 @@ target_include_directories(adlmidi_vlc_plugin PRIVATE
         ${LIBVLC_INCLUDE_DIR}/vlc/plugins
         ${LIBVLC_INCLUDE_DIR}/vlc)
 
-set(ADLMIDIVLC_LIBS ADLMIDI_IF_STATIC ${LIBVLCCORE_LIBRARY} m)
+target_link_libraries(adlmidi_vlc_plugin PRIVATE ADLMIDI_static ${LIBVLCCORE_LIBRARY} m)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_COMPILER_IS_GNUCXX)
     set_property(TARGET adlmidi_vlc_plugin APPEND_STRING PROPERTY LINK_FLAGS " -static-libgcc -static-libstdc++")
     set_property(TARGET adlmidi_vlc_plugin APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-Bstatic,--whole-archive -lpthread -Wl,-Bdynamic,--no-whole-archive")
 elseif(NOT WIN32)
-    list(APPEND ADLMIDIVLC_LIBS stdc++)
+    target_link_libraries(adlmidi_vlc_plugin PRIVATE stdc++)
 endif()
 
-target_link_libraries(adlmidi_vlc_plugin ${ADLMIDIVLC_LIBS})
 # target_link_libraries(adlmidi_vlc_plugin INTERFACE "-export-symbol-regex ^vlc_entry")
 
 if(NOT VLC_PLUGIN_NOINSTALL)
@@ -39,5 +38,3 @@ if(NOT VLC_PLUGIN_NOINSTALL)
 else()
     install(TARGETS adlmidi_vlc_plugin DESTINATION "${CMAKE_INSTALL_LIBDIR}/vlc-codec/")
 endif()
-
-add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
