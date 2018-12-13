@@ -1,6 +1,3 @@
-cmake_minimum_required (VERSION 3.2)
-project(adlmidi_vlc_plugin C)
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")

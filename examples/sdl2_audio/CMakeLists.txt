@@ -1,6 +1,3 @@
-cmake_minimum_required (VERSION 3.2)
-project(adlmidi_vlc_plugin C)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 find_package(SDL2 REQUIRED)
@@ -15,10 +12,6 @@ if(NOT MSVC)
 endif()
 if(NOT WIN32)
     target_link_libraries(adlmidi_sdl2_demo PRIVATE dl m stdc++)
-endif()
-
-if(MSDOS OR DJGPP)
-    set_target_properties(adlmidi_sdl2_demo PROPERTIES OUTPUT_NAME adlmidi)
 endif()
 
 if(TARGET ADLMIDI_shared)
