@@ -1,6 +1,3 @@
-cmake_minimum_required (VERSION 3.2)
-project(adlmidiplay CXX)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_executable(adlmidiplay
@@ -8,7 +5,7 @@ add_executable(adlmidiplay
     wave_writer.c
 )
 
-if(NOT MSDOS AND NOT DJGPP AND NOT MIDIPLAY_WAVE_ONLY)
+if(NOT ADLMIDI_DOS AND NOT MIDIPLAY_WAVE_ONLY)
     find_package(SDL2 REQUIRED)
     string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
     target_include_directories(adlmidiplay PRIVATE ${SDL2_INCLUDE_DIRS})
@@ -20,7 +17,7 @@ if(MIDIPLAY_WAVE_ONLY)
     message("Demo tool will only output WAVE file, no playing support.")
 endif()
 
-if(MSDOS OR DJGPP)
+if(ADLMIDI_DOS)
     target_compile_definitions(adlmidiplay PUBLIC HARDWARE_OPL3)
     message("Turn on hardware OPL3 support on demo tool")
 endif()
@@ -31,14 +28,14 @@ if(WIN32)
     if(NOT MSVC)
         target_link_libraries(adlmidiplay PRIVATE pthread)
     endif()
-elseif(NOT MSDOS AND NOT DJGPP)
+elseif(NOT ADLMIDI_DOS)
     if(NOT OPENBSD_LOCALBASE)
         target_link_libraries(adlmidiplay PRIVATE dl)
     endif()
     target_link_libraries(adlmidiplay PRIVATE pthread m stdc++)
 endif()
 
-if(MSDOS OR DJGPP)
+if(ADLMIDI_DOS)
     set_target_properties(adlmidiplay PROPERTIES OUTPUT_NAME adlmidi)
 endif()
 

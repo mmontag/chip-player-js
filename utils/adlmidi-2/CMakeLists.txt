@@ -1,6 +1,3 @@
-cmake_minimum_required (VERSION 3.2)
-project(adlmidi2 CXX)
-
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP)
@@ -11,7 +8,7 @@ endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
+if(NOT WIN32 AND NOT ADLMIDI_DOS)
     set(ADLMIDI2_HAS_PUZZLE_GAME TRUE)
     set(ADLMIDI2_VIDEO_OUT_SUPPORT TRUE)
 endif()
@@ -30,7 +27,7 @@ endif()
 add_executable(adlmidi2 ${adlmidi2_src})
 target_link_libraries(adlmidi2 PRIVATE ADLMIDI)
 
-if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
+if(NOT WIN32 AND NOT ADLMIDI_DOS)
     find_package(SDL2 REQUIRED)
     string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
     target_include_directories(adlmidi2 PRIVATE ${SDL2_INCLUDE_DIRS})
@@ -45,14 +42,14 @@ if(ADLMIDI2_VIDEO_OUT_SUPPORT)
     target_compile_definitions(adlmidi2 PUBLIC SUPPORT_VIDEO_OUTPUT)
 endif()
 
-if(MSDOS OR DJGPP)
+if(ADLMIDI_DOS)
     target_compile_definitions(adlmidi2 PUBLIC HARDWARE_OPL3)
     message("Turn on hardware OPL3 support on ADLMIDI2 tool")
 endif()
 
 if(WIN32)
     target_link_libraries(adlmidi2 PRIVATE winmm)
-else(NOT DJGPP AND NOT MSDOS)
+elseif(NOT ADLMIDI_DOS)
     if(NOT OPENBSD_LOCALBASE)
         target_link_libraries(adlmidi2 PRIVATE dl)
     endif()

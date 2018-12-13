@@ -6,6 +6,10 @@ include(GNUInstallDirs)
 # Prefer C++98 standard
 set(CMAKE_CXX_STANDARD 98)
 
+if(DJGPP OR MSDOS)
+    set(ADLMIDI_DOS 1)
+endif()
+
 #===========================================================================================
 # Strip garbage
 if(APPLE)
@@ -46,7 +50,7 @@ if(MSVC)
 endif()
 
 # -fPIC thing
-if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
+if(NOT WIN32 AND NOT ADLMIDI_DOS)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
@@ -135,7 +139,7 @@ if(NOT WITH_XMI_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
     add_definitions(-DBWMIDI_DISABLE_XMI_SUPPORT)
 endif()
 
-if(NOT DJGPP AND NOT MSDOS)
+if(NOT ADLMIDI_DOS)
     if(USE_DOSBOX_EMULATOR)
         set(HAS_EMULATOR TRUE)
         list(APPEND libADLMIDI_SOURCES
@@ -187,7 +191,7 @@ if(libADLMIDI_STATIC OR WITH_VLC_PLUGIN)
     set_legacy_standard(ADLMIDI_static)
     set_visibility_hidden(ADLMIDI_static)
     list(APPEND libADLMIDI_INSTALLS ADLMIDI_static)
-    if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
+    if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA AND NOT ADLMIDI_DOS)
         add_dependencies(ADLMIDI_static gen-adldata-run)
     endif()
     if(NOT libADLMIDI_STATIC)
@@ -239,7 +243,7 @@ if(WITH_OLD_UTILS)
     add_subdirectory(utils/dumpmiles)
 endif()
 
-if(WITH_HQ_RESAMPLER)
+if(WITH_HQ_RESAMPLER AND NOT ADLMIDI_DOS)
     find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler")
     if(NOT ZITA_RESAMPLER_LIBRARY)
         message(FATAL_ERROR "zita-resampler library not found")
@@ -254,7 +258,7 @@ if(WITH_HQ_RESAMPLER)
     endif()
 endif()
 
-if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
+if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA AND NOT ADLMIDI_DOS)
     add_subdirectory(utils/gen_adldata)
 endif()
 
@@ -270,11 +274,11 @@ if(WITH_XMI2MID)
     add_subdirectory(utils/xmi2mid)
 endif()
 
-if(EXAMPLE_SDL2_AUDIO AND NOT MSDOS AND NOT DJGPP)
+if(EXAMPLE_SDL2_AUDIO AND NOT ADLMIDI_DOS)
     add_subdirectory(examples/sdl2_audio)
 endif()
 
-if(WITH_VLC_PLUGIN)
+if(WITH_VLC_PLUGIN AND NOT ADLMIDI_DOS)
     add_subdirectory(utils/vlc_codec)
 endif()
 
