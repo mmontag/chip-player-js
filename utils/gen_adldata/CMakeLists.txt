@@ -41,7 +41,7 @@ add_executable(gen_adldata
     ${GEN_ADLDATA_SRC}
 )
 if(NOT MSVC)
-    target_link_libraries(gen_adldata pthread m stdc++)
+    target_link_libraries(gen_adldata PRIVATE pthread m stdc++)
 endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
         "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
@@ -50,7 +50,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
         CMAKE_COMPILER_IS_MINGW)
     if(OPENMP_FOUND)
         target_compile_options(gen_adldata PUBLIC "-fopenmp")
-        target_link_libraries(gen_adldata "-fopenmp")
+        target_link_libraries(gen_adldata PRIVATE "-fopenmp")
     endif()
 else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Turned on C++11 on MSVC")
@@ -71,4 +71,3 @@ add_custom_target(gen-adldata-run #OUTPUT ${ADLDATA_DATABASE}
     COMMENT "Running Embedded FM banks database generation"
     VERBATIM
 )
-

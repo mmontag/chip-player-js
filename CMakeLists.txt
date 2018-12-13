@@ -246,7 +246,10 @@ if(WITH_OLD_UTILS)
 endif()
 
 if(WITH_HQ_RESAMPLER)
-    find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler" REQUIRED)
+    find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler")
+    if(NOT ZITA_RESAMPLER_LIBRARY)
+        message(FATAL_ERROR "zita-resampler library not found")
+    endif()
 endif()
 
 if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
@@ -346,4 +349,3 @@ message("WITH_VLC_PLUGIN          = ${WITH_VLC_PLUGIN}")
 message("WITH_OLD_UTILS           = ${WITH_OLD_UTILS}")
 message("WITH_XMI2MID             = ${WITH_XMI2MID}")
 message("EXAMPLE_SDL2_AUDIO       = ${EXAMPLE_SDL2_AUDIO}")
-

@@ -3,7 +3,8 @@ project(adlmidi_vlc_plugin C)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-include(../../cmake/FindLIBVLC.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
+find_package(LIBVLC REQUIRED)
 message("Found ${LIBVLCCORE_LIBRARY} of version ${LIBVLC_VERSION} with includes ${LIBVLC_INCLUDE_DIR}")
 
 set(adlmidi_vlc_src)
@@ -40,4 +41,3 @@ else()
 endif()
 
 add_dependencies(adlmidi_vlc_plugin ADLMIDI_static)
-

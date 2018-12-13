@@ -3,17 +3,17 @@ project(adlmidiplay CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-if(NOT MSDOS AND NOT DJGPP AND NOT MIDIPLAY_WAVE_ONLY)
-    find_package(SDL2 REQUIRED)
-    include_directories(${SDL2_INCLUDE_DIR})
-else()
-    unset(SDL2_LIBRARY)
-endif()
-
 add_executable(adlmidiplay
     adlmidiplay.cpp
     wave_writer.c
 )
+
+if(NOT MSDOS AND NOT DJGPP AND NOT MIDIPLAY_WAVE_ONLY)
+    find_package(SDL2 REQUIRED)
+    string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
+    target_include_directories(adlmidiplay PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(adlmidiplay PRIVATE ${SDL2_LIBRARIES})
+endif()
 
 if(MIDIPLAY_WAVE_ONLY)
     target_compile_definitions(adlmidiplay PUBLIC "-DOUTPUT_WAVE_ONLY")
@@ -25,22 +25,17 @@ if(MSDOS OR DJGPP)
     message("Turn on hardware OPL3 support on demo tool")
 endif()
 
+target_link_libraries(adlmidiplay PRIVATE ADLMIDI_IF)
+
 if(WIN32)
-    if(MSVC)
-        target_link_libraries(adlmidiplay ADLMIDI_IF ${SDL2_LIBRARY})
-    else()
-        target_link_libraries(adlmidiplay ADLMIDI_IF ${SDL2_LIBRARY} pthread)
+    if(NOT MSVC)
+        target_link_libraries(adlmidiplay PRIVATE pthread)
     endif()
-else()
-    if(MSDOS OR DJGPP)
-        target_link_libraries(adlmidiplay ADLMIDI_IF)
-    else()
-        set(ADLMIDIPLAY_LIBS ADLMIDI_IF ${SDL2_LIBRARY} pthread dl m stdc++)
-        if(OPENBSD_LOCALBASE)
-            list(REMOVE_ITEM ADLMIDIPLAY_LIBS dl)
-        endif()
-        target_link_libraries(adlmidiplay ${ADLMIDIPLAY_LIBS})
+elseif(NOT MSDOS AND NOT DJGPP)
+    if(NOT OPENBSD_LOCALBASE)
+        target_link_libraries(adlmidiplay PRIVATE dl)
     endif()
+    target_link_libraries(adlmidiplay PRIVATE pthread m stdc++)
 endif()
 
 if(MSDOS OR DJGPP)
@@ -58,4 +53,3 @@ endif()
 
 install(TARGETS adlmidiplay
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
-

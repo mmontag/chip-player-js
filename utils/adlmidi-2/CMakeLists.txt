@@ -8,13 +8,8 @@ find_package(OpenMP)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
-    find_package(SDL2 REQUIRED)
-    include_directories(${SDL2_INCLUDE_DIR})
-endif()
-
-if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
-    set(ADLMIDI2_HAS_PUZZLE_GAME "TRUE")
-    set(ADLMIDI2_VIDEO_OUT_SUPPORT "TRUE")
+    set(ADLMIDI2_HAS_PUZZLE_GAME TRUE)
+    set(ADLMIDI2_VIDEO_OUT_SUPPORT TRUE)
 endif()
 
 
@@ -29,6 +24,14 @@ if(ADLMIDI2_HAS_PUZZLE_GAME)
 endif()
 
 add_executable(adlmidi2 ${adlmidi2_src})
+target_link_libraries(adlmidi2 PRIVATE ADLMIDI_IF)
+
+if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
+    find_package(SDL2 REQUIRED)
+    string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
+    target_include_directories(adlmidi2 PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(adlmidi2 PRIVATE ${SDL2_LIBRARIES})
+endif()
 
 if(ADLMIDI2_HAS_PUZZLE_GAME)
     target_compile_definitions(adlmidi2 PUBLIC "-DSUPPORT_PUZZLE_GAME")
@@ -44,15 +47,12 @@ if(MSDOS OR DJGPP)
 endif()
 
 if(WIN32)
-    target_link_libraries(adlmidi2 ADLMIDI_IF winmm)
-elseif(DJGPP OR MSDOS)
-    target_link_libraries(adlmidi2 ADLMIDI_IF)
-else()
-    set(ADLMIDI2_LIBS ADLMIDI_IF ${SDL2_LIBRARY} pthread dl m stdc++)
-    if(OPENBSD_LOCALBASE)
-        list(REMOVE_ITEM ADLMIDI2_LIBS dl)
+    target_link_libraries(adlmidi2 PRIVATE winmm)
+else(NOT DJGPP AND NOT MSDOS)
+    if(NOT OPENBSD_LOCALBASE)
+        target_link_libraries(adlmidi2 PRIVATE dl)
     endif()
-    target_link_libraries(adlmidi2 ${ADLMIDI2_LIBS})
+    target_link_libraries(adlmidi2 PRIVATE pthread m stdc++)
 endif()
 
 if(NOT WITH_CPP_EXTRAS)
@@ -66,7 +66,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
             CMAKE_COMPILER_IS_MINGW)
     if(OPENMP_FOUND)
         target_compile_options(adlmidi2 PUBLIC "-fopenmp")
-        target_link_libraries(adlmidi2 "-fopenmp")
+        target_link_libraries(adlmidi2 PRIVATE "-fopenmp")
     endif()
 else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Turned on C++11 on MSVC")
@@ -87,4 +87,3 @@ endif()
 
 install(TARGETS adlmidi2
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
-
