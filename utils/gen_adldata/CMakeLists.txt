@@ -48,15 +48,9 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
         "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
         "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
         CMAKE_COMPILER_IS_MINGW)
-    if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
-        message("Turned on C++11 on GCC/CLang/Intel/MinGW")
-        set_target_properties(gen_adldata PROPERTIES
-                              CXX_STANDARD 11
-                              CXX_STANDARD_REQUIRED YES)
-        if(OPENMP_FOUND)
-            target_compile_options(gen_adldata PUBLIC "-fopenmp")
-            target_link_libraries(gen_adldata "-fopenmp")
-        endif()
+    if(OPENMP_FOUND)
+        target_compile_options(gen_adldata PUBLIC "-fopenmp")
+        target_link_libraries(gen_adldata "-fopenmp")
     endif()
 else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Turned on C++11 on MSVC")

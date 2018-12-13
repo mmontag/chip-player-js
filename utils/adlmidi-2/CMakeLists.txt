@@ -8,9 +8,8 @@ find_package(OpenMP)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
-    find_library(SDL2_LIBRARY SDL2 REQUIRED)
+    find_package(SDL2 REQUIRED)
     include_directories(${SDL2_INCLUDE_DIR})
-    message("Found ${SDL2_LIBRARY}")
 endif()
 
 if(NOT WIN32 AND NOT DJGPP AND NOT MSDOS)
@@ -65,12 +64,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
             "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR
             "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MinGW" OR
             CMAKE_COMPILER_IS_MINGW)
-    if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_GREATER 3.2)
-        message("Turned on C++11 on GCC/CLang/Intel")
-        set_target_properties(adlmidi2 PROPERTIES
-                                  CXX_STANDARD 11
-                                  CXX_STANDARD_REQUIRED YES)
-    endif()
     if(OPENMP_FOUND)
         target_compile_options(adlmidi2 PUBLIC "-fopenmp")
         target_link_libraries(adlmidi2 "-fopenmp")
