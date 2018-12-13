@@ -72,6 +72,17 @@
 #define PI 3.14159265358979323846
 #endif
 
+/*
+ * Workaround for some compilers are has no those macros in their headers!
+ */
+#ifndef INT16_MIN
+#define INT16_MIN   (-0x7fff - 1)
+#endif
+#ifndef INT16_MAX
+#define INT16_MAX   0x7fff
+#endif
+
+
 struct NoCopy {
 	NoCopy() {}
 private:
