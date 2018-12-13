@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.2)
 project(adlmidi_vlc_plugin C)
 
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 include(../../cmake/FindLIBVLC.cmake)
 message("Found ${LIBVLCCORE_LIBRARY} of version ${LIBVLC_VERSION} with includes ${LIBVLC_INCLUDE_DIR}")
 
