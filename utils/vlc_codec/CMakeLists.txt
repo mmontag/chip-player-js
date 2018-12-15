@@ -1,6 +1,5 @@
 set(CMAKE_C_STANDARD 99)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
 find_package(LIBVLC REQUIRED)
 message("Found ${LIBVLCCORE_LIBRARY} of version ${LIBVLC_VERSION} with includes ${LIBVLC_INCLUDE_DIR}")
 
