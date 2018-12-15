@@ -2,40 +2,22 @@
 # CMake module to search for LIBVLC (VLC library)
 # Authors: Rohit Yadav <rohityadav89@gmail.com>
 #          Harald Sitter <apachelogger@ubuntu.com>
+#          Alexander Grund <git@grundis.de>
 #
-# If it's found it sets LIBVLC_FOUND to TRUE
-# and following variables are set:
-#    LIBVLC_INCLUDE_DIR
-#    LIBVLC_LIBRARY
-#    LIBVLC_VERSION
-
-if(NOT LIBVLC_MIN_VERSION)
-    set(LIBVLC_MIN_VERSION "0.0")
-endif(NOT LIBVLC_MIN_VERSION)
-
-# find_path and find_library normally search standard locations
-# before the specified paths. To search non-standard paths first,
-# FIND_* is invoked first with specified paths and NO_DEFAULT_PATH
-# and then again with no specified paths to search the default
-# locations. When an earlier FIND_* succeeds, subsequent FIND_*s
-# searching for the same item do nothing.
+# If it's found it defines the following targets:
+#   - libvlc::libvlc 
+#   - libvlc::plugin 
 
 if(NOT WIN32)
-    find_package(PkgConfig)
-    pkg_check_modules(PC_LIBVLC libvlc)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(PC_LIBVLC libvlc QUIET)
     set(LIBVLC_DEFINITIONS ${PC_LIBVLC_CFLAGS_OTHER})
-    set(LIBVLC_INCLUDE_DIRS ${PC_LIBVLC_INCLUDEDIR} ${PC_LIBVLC_INCLUDE_DIRS})
 
-    pkg_check_modules(PC_VLCPLUGIN vlc-plugin)
+    pkg_check_modules(PC_VLCPLUGIN vlc-plugin QUIET)
     set(VLCPLUGIN_DEFINITIONS ${PC_VLCPLUGIN_CFLAGS_OTHER})
-    set(VLCPLUGIN_INCLUDE_DIRS ${PC_VLCPLUGIN_INCLUDEDIR} ${PC_VLCPLUGIN_INCLUDE_DIRS})
 
     pkg_get_variable(PC_VLCPLUGIN_PLUGINS_PATH vlc-plugin pluginsdir)
     set(VLCPLUGIN_CODEC_INSTALL_PATH ${PC_VLCPLUGIN_PLUGINS_PATH}/codec)
-
-    message("-- VLC Lib include path is \"${LIBVLC_INCLUDE_DIRS}\" ==")
-    message("-- VLC Plugins include path is \"${VLCPLUGIN_INCLUDE_DIRS}\" ==")
-    message("-- VLC Plugins path is \"${VLCPLUGIN_CODEC_INSTALL_PATH}\" ==")
 else()
     set(LIBVLC_DEFINITIONS)
     # FIXME: Is "_FILE_OFFSET_BITS=64" correct for Windows?
@@ -49,70 +31,73 @@ else()
     set(VLCPLUGIN_CODEC_INSTALL_PATH "C:/Program Files/VideoLAN/VLC/plugins/codec")
 endif()
 
-#Put here path to custom location
-#example: /home/user/vlc/include etc..
-find_path(LIBVLC_INCLUDE_DIR vlc/vlc.h
-HINTS "$ENV{LIBVLC_INCLUDE_PATH}"
-PATHS
-    "$ENV{LIB_DIR}/include"
-    "$ENV{LIB_DIR}/include/vlc"
-    "/usr/include"
-    "/usr/include/vlc"
-    "/usr/local/include"
-    "/usr/local/include/vlc"
-    #mingw
-    ${CMAKE_PREFIX_PATH}/include
-    c:/msys/local/include
+foreach(lib libvlc vlcplugin)
+    string(TOUPPER ${lib} upperLib)
+    if(lib STREQUAL "vlcplugin")
+        set(headerFile vlc_common.h)
+        set(suffixes vlc/plugins include/vlc/plugins)
+    else()
+        set(headerFile vlc/libvlc.h)
+        set(suffixes )
+    endif()
+    find_path(${upperLib}_INCLUDE_DIR ${headerFile}
+	    HINTS ${PC_${upperLib}_INCLUDEDIR} ${PC_${upperLib}_INCLUDE_DIRS} $ENV{LIBVLC_INCLUDE_PATH}
+        PATH_SUFFIXES include ${suffixes}
+        NO_DEFAULT_PATH
+    )
+    find_path(${upperLib}_INCLUDE_DIR ${headerFile}
+        PATHS $ENV{LIB_DIR}
+              C:/msys/local #mingw
+        PATH_SUFFIXES include ${suffixes}
+    )
+endforeach()
+
+foreach(lib vlc vlccore)
+    string(TOUPPER ${lib} upperLib)
+    find_library(LIB${upperLib}_LIBRARY ${lib} lib${lib}
+        HINTS ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS} $ENV{LIBVLC_LIBRARY_PATH}
+        PATH_SUFFIXES lib
+        NO_DEFAULT_PATH
+    )
+    find_library(LIB${upperLib}_LIBRARY ${lib} lib${lib}
+        PATHS $ENV{LIB_DIR}
+              C:/msys/local #mingw
+        PATH_SUFFIXES lib
+    )
+endforeach()
+
+if(LIBVLC_INCLUDE_DIR)
+    set(vlcVersionFile ${LIBVLC_INCLUDE_DIR}/vlc/libvlc_version.h)
+    if(EXISTS ${vlcVersionFile})
+        file(STRINGS ${vlcVersionFile} versionStrings REGEX "#[ \t]*define[ \t]+LIBVLC_VERSION_(MAJOR|MINOR|REVISION|EXTRA)[ \t]+\\(?[0-9]+\\)?")
+        if(NOT versionStrings)
+            message(FATAL_ERROR "Could not read version from ${vlcVersionFile}")
+        endif()
+        foreach(item MAJOR MINOR REVISION EXTRA)
+            string(REGEX REPLACE "#[ \t]*define[ \t]+LIBVLC_VERSION_${item}[ \t]+\\(?([0-9]+)\\)?" "\\1" LIBVLC_VERSION_${item} ${versionStrings})
+        endforeach()
+        set(LIBVLC_VERSION ${LIBVLC_VERSION_MAJOR}.${LIBVLC_VERSION_MINOR}.${LIBVLC_VERSION_REVISION}.${LIBVLC_VERSION_EXTRA})
+    endif()
+endif()
+
+include(FindPackageHandleStandardArgs)
+
+find_package_handle_standard_args(LIBVLC
+    REQUIRED_VARS LIBVLC_INCLUDE_DIR VLCPLUGIN_INCLUDE_DIR LIBVLC_LIBRARY LIBVLCCORE_LIBRARY
+    VERSION_VAR LIBVLC_VERSION
 )
-find_path(LIBVLC_INCLUDE_DIR PATHS "${CMAKE_INCLUDE_PATH}/vlc" NAMES vlc.h
-        HINTS ${PC_LIBVLC_INCLUDEDIR} ${PC_LIBVLC_INCLUDE_DIRS})
 
-#Put here path to custom location
-#example: /home/user/vlc/lib etc..
-find_library(LIBVLC_LIBRARY NAMES vlc libvlc
-HINTS "$ENV{LIBVLC_LIBRARY_PATH}" ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS}
-PATHS
-    "$ENV{LIB_DIR}/lib"
-    #mingw
-    ${CMAKE_PREFIX_PATH}/lib
-    c:/msys/local/lib
-)
-find_library(LIBVLC_LIBRARY NAMES vlc libvlc)
-find_library(LIBVLCCORE_LIBRARY NAMES vlccore libvlccore
-HINTS "$ENV{LIBVLC_LIBRARY_PATH}" ${PC_LIBVLC_LIBDIR} ${PC_LIBVLC_LIBRARY_DIRS}
-PATHS
-    "$ENV{LIB_DIR}/lib"
-    #mingw
-    ${CMAKE_PREFIX_PATH}/lib
-    c:/msys/local/lib
-)
-find_library(LIBVLCCORE_LIBRARY NAMES vlccore libvlccore)
+if(LIBVLC_FOUND)
+    add_library(libvlc_libvlc INTERFACE)
+    target_compile_definitions(libvlc_libvlc INTERFACE ${LIBVLC_DEFINITIONS})
+    target_include_directories(libvlc_libvlc INTERFACE ${LIBVLC_INCLUDE_DIR})
+    target_link_libraries(libvlc_libvlc INTERFACE ${LIBVLC_LIBRARY})
+    
+    add_library(libvlc_plugin INTERFACE)
+    target_include_directories(libvlc_plugin INTERFACE ${LIBVLC_INCLUDE_DIR} ${VLCPLUGIN_INCLUDE_DIR})
+    target_compile_definitions(libvlc_plugin INTERFACE ${VLCPLUGIN_DEFINITIONS})
+    target_link_libraries(libvlc_plugin INTERFACE ${LIBVLCCORE_LIBRARY})
 
-set(LIBVLC_VERSION ${PC_LIBVLC_VERSION})
-if (NOT LIBVLC_VERSION)
-# TODO: implement means to detect version on windows (vlc --version && regex? ... ultimately we would get it from a header though...)
-endif (NOT LIBVLC_VERSION)
-
-if (LIBVLC_INCLUDE_DIR AND LIBVLC_LIBRARY AND LIBVLCCORE_LIBRARY)
-set(LIBVLC_FOUND TRUE)
-endif (LIBVLC_INCLUDE_DIR AND LIBVLC_LIBRARY AND LIBVLCCORE_LIBRARY)
-
-if (LIBVLC_VERSION STRLESS "${LIBVLC_MIN_VERSION}")
-    message(WARNING "LibVLC version not found: version searched: ${LIBVLC_MIN_VERSION}, found ${LIBVLC_VERSION}\nUnless you are on Windows this is bound to fail.")
-# TODO: only activate once version detection can be garunteed (which is currently not the case on windows)
-#     set(LIBVLC_FOUND FALSE)
-endif (LIBVLC_VERSION STRLESS "${LIBVLC_MIN_VERSION}")
-
-if (LIBVLC_FOUND)
-    if (NOT LIBVLC_FIND_QUIETLY)
-        message(STATUS "Found LibVLC include-dir path: ${LIBVLC_INCLUDE_DIR}")
-        message(STATUS "Found LibVLC library path:${LIBVLC_LIBRARY}")
-        message(STATUS "Found LibVLCcore library path:${LIBVLCCORE_LIBRARY}")
-        message(STATUS "Found LibVLC version: ${LIBVLC_VERSION} (searched for: ${LIBVLC_MIN_VERSION})")
-    endif (NOT LIBVLC_FIND_QUIETLY)
-else (LIBVLC_FOUND)
-    if (LIBVLC_FIND_REQUIRED)
-        message(FATAL_ERROR "Could not find LibVLC")
-    endif (LIBVLC_FIND_REQUIRED)
-endif (LIBVLC_FOUND)
-
+    add_library(libvlc::libvlc ALIAS libvlc_libvlc)
+    add_library(libvlc::plugin ALIAS libvlc_plugin)
+endif()
