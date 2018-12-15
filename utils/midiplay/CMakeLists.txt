@@ -30,7 +30,7 @@ elseif(NOT ADLMIDI_DOS)
     if(NOT OPENBSD_LOCALBASE)
         target_link_libraries(adlmidiplay PRIVATE dl)
     endif()
-    target_link_libraries(adlmidiplay PRIVATE pthread m stdc++)
+    target_link_libraries(adlmidiplay PRIVATE pthread m)
 endif()
 
 if(ADLMIDI_DOS)

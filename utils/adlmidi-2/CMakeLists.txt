@@ -50,7 +50,7 @@ elseif(NOT ADLMIDI_DOS)
     if(NOT OPENBSD_LOCALBASE)
         target_link_libraries(adlmidi2 PRIVATE dl)
     endif()
-    target_link_libraries(adlmidi2 PRIVATE pthread m stdc++)
+    target_link_libraries(adlmidi2 PRIVATE pthread m)
 endif()
 
 if(NOT WITH_CPP_EXTRAS)
