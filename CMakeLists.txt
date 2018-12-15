@@ -45,11 +45,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
-if(CMAKE_BUILD_TYPE_LOWER EQUAL "release")
-    add_definitions(-DNDEBUG)
-endif()
-
 # Disable bogus MSVC warnings
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
