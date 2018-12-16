@@ -230,11 +230,10 @@ if(NOT libADLMIDI_STATIC AND NOT libADLMIDI_SHARED)
 You must enable at least one of them!")
 endif()
 
-add_library(ADLMIDI INTERFACE)
 if(libADLMIDI_SHARED)
-    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
+    add_library(ADLMIDI ALIAS ADLMIDI_shared)
 else()
-    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
+    add_library(ADLMIDI ALIAS ADLMIDI_static)
 endif()
 
 if(WITH_OLD_UTILS)
