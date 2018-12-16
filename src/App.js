@@ -19,6 +19,7 @@ import Search from './Search';
 import TimeSlider from "./TimeSlider";
 import Visualizer from './Visualizer';
 import FavoriteButton from "./FavoriteButton";
+import AppHeader from "./AppHeader";
 
 const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
@@ -457,29 +458,10 @@ class App extends PureComponent {
     const metadata = this.state.currentSongMetadata;
     return (
       <div className="App">
-        <header className="App-header">
-          <h2 className="App-title">Chip Player JS&nbsp;
-            {this.state.user ?
-              <span>• Logged in as {this.state.user.displayName}.&nbsp;
-                <a href="#" onClick={this.handleLogout}>Logout</a>
-              </span>
-              :
-              <span>
-                <a href="#" onClick={this.handleLogin}>Login/Sign Up</a> to Save Favorites
-              </span>
-            }
-          </h2>
-          {!isMobile.phone &&
-          <p className="App-subtitle">
-            <span className="App-byline">Feedback:&nbsp;
-              <a href="https://twitter.com/matthewmontag">@matthewmontag</a>
-            </span>
-            Powered by&nbsp;
-            <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>,&nbsp;
-            <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and&nbsp;
-            <a href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
-          </p>}
-        </header>
+        <AppHeader user={this.state.user}
+                   handleLogout={this.handleLogout}
+                   handleLogin={this.handleLogin}
+                   isPhone={isMobile.phone}/>
         {this.state.loading ?
           <p>Loading...</p>
           :
