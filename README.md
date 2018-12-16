@@ -7,10 +7,11 @@ ADLMIDI Library API:   Copyright (c) 2015-2018 Vitaly Novichkov <admin@wohlnet.r
 
 Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 emulation:
 
-[http://iki.fi/bisqwit/source/adlmidi.html](http://iki.fi/bisqwit/source/adlmidi.html)
+[https://bisqwit.iki.fi/source/adlmidi.html](https://bisqwit.iki.fi/source/adlmidi.html)
 
 * Semaphore-CI: [![Build Status](https://semaphoreci.com/api/v1/wohlstand/libadlmidi/branches/master/shields_badge.svg)](https://semaphoreci.com/wohlstand/libadlmidi)
 * AppVeyor CI: [![Build status](https://ci.appveyor.com/api/projects/status/bfhwdsm13s17rn49?svg=true)](https://ci.appveyor.com/project/Wohlstand/libadlmidi)
+* Travis CI: [[![Build Status](https://travis-ci.org/Wohlstand/libADLMIDI.svg?branch=master)](https://travis-ci.org/Wohlstand/libADLMIDI)
 
 # Differences with original tool
 * Reverb code has been removed.
