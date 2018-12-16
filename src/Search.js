@@ -195,6 +195,8 @@ export default class Search extends PureComponent {
                       </a>
                     </h5>
                     {group.items.map((result, i) => {
+                      // XXX: Escape immediately: the escaped URL is considered canonical.
+                      //      The URL must be decoded for display from here on out.
                       const href = CATALOG_PREFIX + group.title + result.replace('%', '%25').replace('#', '%23');
                       return (
                         <div className="Search-results-group-item" key={i}>
@@ -202,7 +204,7 @@ export default class Search extends PureComponent {
                           <FavoriteButton favorites={this.props.favorites}
                                           toggleFavorite={this.props.toggleFavorite}
                                           href={href}/>}
-                          <a onClick={this.props.onResultClick(href)} href={href}>{result}</a>
+                          <a onClick={this.props.onClick(href)} href={href}>{result}</a>
                         </div>
                       )
                     })}
