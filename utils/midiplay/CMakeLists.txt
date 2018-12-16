@@ -37,5 +37,9 @@ if(ADLMIDI_DOS)
     set_target_properties(adlmidiplay PROPERTIES OUTPUT_NAME adlmidi)
 endif()
 
+if(TARGET ADLMIDI_shared)
+    set_target_properties(adlmidiplay PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
+endif()
+
 install(TARGETS adlmidiplay
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

@@ -253,8 +253,8 @@ public:
 
         //! Active notes in the channel
         pl_list<NoteInfo> activenotes;
-        typedef typename pl_list<NoteInfo>::iterator notes_iterator;
-        typedef typename pl_list<NoteInfo>::const_iterator const_notes_iterator;
+        typedef pl_list<NoteInfo>::iterator notes_iterator;
+        typedef pl_list<NoteInfo>::const_iterator const_notes_iterator;
 
         notes_iterator find_activenote(unsigned note)
         {
@@ -405,8 +405,8 @@ public:
         MIDIchannel::NoteInfo::Phys recent_ins;
 
         pl_list<LocationData> users;
-        typedef typename pl_list<LocationData>::iterator users_iterator;
-        typedef typename pl_list<LocationData>::const_iterator const_users_iterator;
+        typedef pl_list<LocationData>::iterator users_iterator;
+        typedef pl_list<LocationData>::const_iterator const_users_iterator;
 
         users_iterator find_user(const Location &loc)
         {

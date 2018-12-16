@@ -13,7 +13,7 @@ if(NOT WIN32)
 endif()
 
 if(TARGET ADLMIDI_shared)
-    set_target_properties(adlmidi_sdl2_demo PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+    set_target_properties(adlmidi_sdl2_demo PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
 endif()
 
 install(TARGETS adlmidi_sdl2_demo

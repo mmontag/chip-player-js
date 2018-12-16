@@ -63,7 +63,7 @@ if(MSVC)
 endif()
 
 if(TARGET ADLMIDI_shared AND NOT MSVC)
-    set_target_properties(adlmidi2 PROPERTIES COMPILE_FLAGS "-Wl,-rpath='$$ORIGIN/../lib'")
+    set_target_properties(adlmidi2 PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
 endif()
 
 install(TARGETS adlmidi2
