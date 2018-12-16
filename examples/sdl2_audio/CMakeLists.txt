@@ -9,7 +9,7 @@ if(NOT MSVC)
     target_link_libraries(adlmidi_sdl2_demo PRIVATE pthread)
 endif()
 if(NOT WIN32)
-    target_link_libraries(adlmidi_sdl2_demo PRIVATE dl m stdc++)
+    target_link_libraries(adlmidi_sdl2_demo PRIVATE dl m)
 endif()
 
 if(TARGET ADLMIDI_shared)

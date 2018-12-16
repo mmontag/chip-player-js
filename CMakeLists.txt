@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD 98)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(DJGPP OR MSDOS)
     set(ADLMIDI_DOS 1)
@@ -43,11 +44,6 @@ endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
-endif()
-
-string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
-if(CMAKE_BUILD_TYPE_LOWER EQUAL "release")
-    add_definitions(-DNDEBUG)
 endif()
 
 # Disable bogus MSVC warnings
@@ -92,12 +88,12 @@ endfunction()
 option(libADLMIDI_STATIC   "Build static library of libADLMIDI" ON)
 option(libADLMIDI_SHARED   "Build shared library of libADLMIDI" OFF)
 
-option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features are can be found in 'adlmidi.hpp' header)" OFF)
-option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins.)" ON)
+option(WITH_CPP_EXTRAS      "Build with support for C++ extras (features can be found in 'adlmidi.hpp' header)" OFF)
+option(WITH_MIDI_SEQUENCER  "Build with embedded MIDI sequencer. Disable this if you want use library in real-time MIDI drivers or plugins." ON)
 option(WITH_EMBEDDED_BANKS  "Use embedded banks" ON)
 option(WITH_HQ_RESAMPLER    "Build with support for high quality resampling" OFF)
-option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files)" ON)
-option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files)" ON)
+option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files" ON)
+option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files" ON)
 option(USE_DOSBOX_EMULATOR  "Use DosBox 0.74 OPL3 emulator (semi-accurate, suggested for slow or mobile platforms)" ON)
 option(USE_NUKED_EMULATOR   "Use Nuked OPL3 emulator (most accurate, powerful)" ON)
 
@@ -113,15 +109,77 @@ option(WITH_OLD_UTILS       "Build also old utilities" OFF)
 option(WITH_XMI2MID         "Build a XMI to MIDI converter" OFF)
 option(EXAMPLE_SDL2_AUDIO   "Build also a simple SDL2 demo MIDI player" OFF)
 
-set(libADLMIDI_INSTALLS)
+function(handle_options targetLib)
+    if(WITH_MIDI_SEQUENCER)
+        target_sources(${targetLib} PRIVATE ${libADLMIDI_SOURCE_DIR}/src/adlmidi_sequencer.cpp)
+        target_compile_definitions(${targetLib} PUBLIC ENABLE_END_SILENCE_SKIPPING)
+    endif()
 
-include_directories(${libADLMIDI_SOURCE_DIR}/include)
-include_directories(${libADLMIDI_SOURCE_DIR}/src/)
-link_directories(${libADLMIDI_BINARY_DIR}/)
+    if(NOT WITH_MUS_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
+        target_compile_definitions(${targetLib} PUBLIC BWMIDI_DISABLE_MUS_SUPPORT)
+    endif()
 
-set(libADLMIDI_SOURCES)
+    if(NOT WITH_XMI_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
+        target_compile_definitions(${targetLib} PUBLIC BWMIDI_DISABLE_XMI_SUPPORT)
+    endif()
 
-list(APPEND libADLMIDI_SOURCES
+    if(NOT ADLMIDI_DOS)
+        if(USE_DOSBOX_EMULATOR)
+            set(HAS_EMULATOR TRUE)
+            target_sources(${targetLib} PRIVATE 
+                ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox_opl3.cpp
+                ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox/dbopl.cpp
+            )
+        else()
+            target_compile_definitions(${targetLib} PUBLIC ADLMIDI_DISABLE_DOSBOX_EMULATOR)
+        endif()
+
+        if(USE_NUKED_EMULATOR)
+            set(HAS_EMULATOR TRUE)
+            target_sources(${targetLib} PRIVATE 
+                ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3.cpp       # v 1.8
+                ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3.c
+                ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3_v174.cpp  # v 1.7.4
+                ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3_174.c
+            )
+        else()
+            target_compile_definitions(${targetLib} PUBLIC ADLMIDI_DISABLE_NUKED_EMULATOR)
+        endif()
+
+        if(NOT HAS_EMULATOR)
+            message(FATAL_ERROR "No emulators enabled! You must enable at least one emulator!")
+        endif()
+    endif()
+
+    if(WITH_EMBEDDED_BANKS)
+        target_sources(${targetLib} PRIVATE ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp)
+    else()
+        target_compile_definitions(${targetLib} PUBLIC DISABLE_EMBEDDED_BANKS)
+    endif()
+
+    if(NOT WITH_MIDI_SEQUENCER)
+        target_compile_definitions(${targetLib} PUBLIC ADLMIDI_DISABLE_MIDI_SEQUENCER)
+    endif()
+
+    if(NOT WITH_CPP_EXTRAS)
+        target_compile_definitions(${targetLib} PUBLIC ADLMIDI_DISABLE_CPP_EXTRAS)
+    endif()
+    
+    if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA AND NOT ADLMIDI_DOS)
+        add_dependencies(${targetLib} gen-adldata-run)
+    endif()
+    
+    if(WITH_HQ_RESAMPLER AND NOT ADLMIDI_DOS)
+        find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler")
+        if(NOT ZITA_RESAMPLER_LIBRARY)
+            message(FATAL_ERROR "zita-resampler library not found")
+        endif()
+        target_compile_definitions(${targetLib} PRIVATE ADLMIDI_ENABLE_HQ_RESAMPLER)
+        target_link_libraries(${targetLib} PUBLIC ${ZITA_RESAMPLER_LIBRARY})
+    endif()
+endfunction()
+
+set(libADLMIDI_SOURCES
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi.cpp
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_load.cpp
     ${libADLMIDI_SOURCE_DIR}/src/adlmidi_midiplay.cpp
@@ -130,65 +188,6 @@ list(APPEND libADLMIDI_SOURCES
     ${libADLMIDI_SOURCE_DIR}/src/wopl/wopl_file.c
 )
 
-if(WITH_MIDI_SEQUENCER)
-    list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/adlmidi_sequencer.cpp
-    )
-    add_definitions(-DENABLE_END_SILENCE_SKIPPING)
-endif()
-
-if(NOT WITH_MUS_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
-    add_definitions(-DBWMIDI_DISABLE_MUS_SUPPORT)
-endif()
-
-if(NOT WITH_XMI_SUPPORT OR NOT WITH_MIDI_SEQUENCER)
-    add_definitions(-DBWMIDI_DISABLE_XMI_SUPPORT)
-endif()
-
-if(NOT ADLMIDI_DOS)
-    if(USE_DOSBOX_EMULATOR)
-        set(HAS_EMULATOR TRUE)
-        list(APPEND libADLMIDI_SOURCES
-            ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox_opl3.cpp
-            ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox/dbopl.cpp
-        )
-    else()
-        add_definitions(-DADLMIDI_DISABLE_DOSBOX_EMULATOR)
-    endif()
-
-    if(USE_NUKED_EMULATOR)
-        set(HAS_EMULATOR TRUE)
-        list(APPEND libADLMIDI_SOURCES
-            ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3.cpp       # v 1.8
-            ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3.c
-            ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3_v174.cpp  # v 1.7.4
-            ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3_174.c
-        )
-    else()
-        add_definitions(-DADLMIDI_DISABLE_NUKED_EMULATOR)
-    endif()
-
-    if(NOT HAS_EMULATOR)
-        message(FATAL_ERROR "No emulators enabled! You must enable at least one emulator!")
-    endif()
-endif()
-
-if(WITH_EMBEDDED_BANKS)
-    list(APPEND libADLMIDI_SOURCES
-        ${libADLMIDI_SOURCE_DIR}/src/adldata.cpp
-    )
-else()
-    add_definitions(-DDISABLE_EMBEDDED_BANKS)
-endif()
-
-if(NOT WITH_MIDI_SEQUENCER)
-    add_definitions(-DADLMIDI_DISABLE_MIDI_SEQUENCER)
-endif()
-
-if(NOT WITH_CPP_EXTRAS)
-    add_definitions(-DADLMIDI_DISABLE_CPP_EXTRAS)
-endif()
-
 # === Static library ====
 if(libADLMIDI_STATIC OR WITH_VLC_PLUGIN)
     add_library(ADLMIDI_static STATIC ${libADLMIDI_SOURCES})
@@ -196,10 +195,7 @@ if(libADLMIDI_STATIC OR WITH_VLC_PLUGIN)
     target_include_directories(ADLMIDI_static PUBLIC ${libADLMIDI_SOURCE_DIR}/include)
     set_legacy_standard(ADLMIDI_static)
     set_visibility_hidden(ADLMIDI_static)
-    list(APPEND libADLMIDI_INSTALLS ADLMIDI_static)
-    if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA AND NOT ADLMIDI_DOS)
-        add_dependencies(ADLMIDI_static gen-adldata-run)
-    endif()
+    handle_options(ADLMIDI_static)
     if(NOT libADLMIDI_STATIC)
         set_target_properties(ADLMIDI_static PROPERTIES EXCLUDE_FROM_ALL TRUE)
     endif()
@@ -212,7 +208,7 @@ if(libADLMIDI_SHARED)
     target_include_directories(ADLMIDI_shared PUBLIC ${libADLMIDI_SOURCE_DIR}/include)
     set_legacy_standard(ADLMIDI_shared)
     set_visibility_hidden(ADLMIDI_shared)
-    list(APPEND libADLMIDI_INSTALLS ADLMIDI_shared)
+    handle_options(ADLMIDI_shared)
     if(WIN32)
         target_compile_definitions(ADLMIDI_shared PRIVATE ADLMIDI_BUILD_DLL)
         if(CMAKE_COMPILER_IS_GNUCXX)
@@ -223,9 +219,6 @@ if(libADLMIDI_SHARED)
     if(OPENBSD_LOCALBASE)
         set_property(TARGET ADLMIDI_shared APPEND_STRING PROPERTY LINK_FLAGS " -lc")
     endif()
-    if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA)
-        add_dependencies(ADLMIDI_shared gen-adldata-run)
-    endif()
     set_target_properties(ADLMIDI_shared PROPERTIES SOVERSION "1")
 endif()
 
@@ -234,34 +227,17 @@ if(NOT libADLMIDI_STATIC AND NOT libADLMIDI_SHARED)
 You must enable at least one of them!")
 endif()
 
-add_library(ADLMIDI INTERFACE)
 if(libADLMIDI_SHARED)
-    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_shared)
+    add_library(ADLMIDI ALIAS ADLMIDI_shared)
 else()
-    target_link_libraries(ADLMIDI INTERFACE ADLMIDI_static)
+    add_library(ADLMIDI ALIAS ADLMIDI_static)
 endif()
 
 if(WITH_OLD_UTILS)
     # Old utility to dump AdLib bank files
     add_subdirectory(utils/dumpbank)
-
     # Old utility to dump AIL bank files
     add_subdirectory(utils/dumpmiles)
-endif()
-
-if(WITH_HQ_RESAMPLER AND NOT ADLMIDI_DOS)
-    find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler")
-    if(NOT ZITA_RESAMPLER_LIBRARY)
-        message(FATAL_ERROR "zita-resampler library not found")
-    endif()
-    if(TARGET ADLMIDI_shared)
-        target_compile_definitions(ADLMIDI_shared PRIVATE ADLMIDI_ENABLE_HQ_RESAMPLER)
-        target_link_libraries(ADLMIDI_shared PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
-    endif()
-    if(TARGET ADLMIDI_static)
-        target_compile_definitions(ADLMIDI_static PRIVATE ADLMIDI_ENABLE_HQ_RESAMPLER)
-        target_link_libraries(ADLMIDI_static PUBLIC "${ZITA_RESAMPLER_LIBRARY}")
-    endif()
 endif()
 
 if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA AND NOT ADLMIDI_DOS)
@@ -287,6 +263,13 @@ endif()
 if(WITH_VLC_PLUGIN AND NOT ADLMIDI_DOS)
     add_subdirectory(utils/vlc_codec)
 endif()
+
+set(libADLMIDI_INSTALLS )
+foreach(lib ADLMIDI_static ADLMIDI_shared)
+    if(TARGET ${lib})
+        list(APPEND libADLMIDI_INSTALLS ${lib})
+    endif()
+endforeach()
 
 install(TARGETS ${libADLMIDI_INSTALLS}
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"

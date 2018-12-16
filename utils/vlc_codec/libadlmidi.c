@@ -22,7 +22,7 @@
 #include <vlc_plugin.h>
 #include <vlc_codec.h>
 #include <vlc_dialog.h>
-#include <libvlc_version.h>
+#include <vlc/libvlc_version.h>
 
 #include <unistd.h>
 

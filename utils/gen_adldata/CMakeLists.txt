@@ -48,7 +48,7 @@ if(MSVC)
     message("Turned on C++11 on MSVC")
     target_compile_options(gen_adldata PUBLIC "/std:c++latest")
 else()
-    target_link_libraries(gen_adldata PRIVATE pthread m stdc++)
+    target_link_libraries(gen_adldata PRIVATE pthread m)
 endif()
 
 if(WITH_GENADLDATA_COMMENTS)
