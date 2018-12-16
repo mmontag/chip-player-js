@@ -17,9 +17,16 @@ Chip Player JS is a work in progress. Goals:
 
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
-The player engines come from C/C++ libraries such as [game-music-emu](https://bitbucket.org/mpyne/game-music-emu/wiki/Home) and [libxmp](https://github.com/cmatsuoka/libxmp), compiled to JS with [Emscripten](https://kripken.github.io/emscripten-site).
+The player engines come from C/C++ libraries such as [game-music-emu](https://bitbucket.org/mpyne/game-music-emu/wiki/Home) and [libxmp](https://github.com/cmatsuoka/libxmp), compiled to JS with [Emscripten](https://kripken.github.io/emscripten-site). Where possible, these projects are incorporated using `git subtree`.
 
-As more player engines are added, it seems the best way to combine them is probably to create a wrapper C project with one interface that gets exposed through Emscripten, rather than compiling several separate C/C++ libraries to JS and unifying their interfaces in the JS layer. This would make the bindings easier and reduce the overhead of running multiple Emscripten runtimes.
+The C/C++ code is compiled by [scripts/build-chip-core.js](scripts/build-chip-core.js). This file also defines the list of exports that will be available to the JavaScript program. Components that go into this build are as follows:
+
+* Manually selected cpp sources from game-music-emu.
+* For libraries with their own build system (LibXMP, Fluidlite):
+    * Build a static library with Emscripten (i.e. using emconfigure, emmake)
+    * Link the static library in build-chip-core.js
+* **tinyplayer.c**: a super light MIDI file reader/player
+* **showcqtbar.c**: a modified [FFMPEG plugin](https://github.com/mfcc64/html5-showcqtbar) providing lovely [constant Q](https://en.wikipedia.org/wiki/Constant-Q_transform#Comparison_with_the_Fourier_transform) spectrum analysis for the visualizer.
 
 ### Related Projects and Resources
 
