@@ -20,6 +20,7 @@ import TimeSlider from "./TimeSlider";
 import Visualizer from './Visualizer';
 import FavoriteButton from "./FavoriteButton";
 import AppHeader from "./AppHeader";
+import Favorites from "./Favorites";
 
 const MAX_VOICES = 32;
 const CATALOG_PREFIX = 'https://gifx.co/music/';
@@ -471,20 +472,11 @@ class App extends PureComponent {
               catalog={this.state.catalog}
               toggleFavorite={this.handleToggleFavorite}
               favorites={this.state.favorites}
-              onResultClick={this.handleFileClick}>
-              <h3>My Favorites</h3>
-              {this.state.favorites ?
-                Object.keys(this.state.favorites).map((href, i) =>
-                  <div className="Search-results-group-item" key={i}>
-                    <FavoriteButton favorites={this.state.favorites}
-                                    toggleFavorite={this.handleToggleFavorite}
-                                    href={href}/>
-                    <a onClick={this.handleFileClick(href)} href={href}>{href.split('/').pop()}</a>
-                  </div>
-                )
-                :
-                '(No favorites)'
-              }
+              onClick={this.handleFileClick}>
+              <Favorites
+                toggleFavorite={this.handleToggleFavorite}
+                onClick={this.handleFileClick}
+                favorites={this.state.favorites}/>
             </Search>
             {!isMobile.phone &&
             <Visualizer audioCtx={this.audioCtx}
