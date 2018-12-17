@@ -58,12 +58,15 @@ static void* audDrv;
 static void* audDrvLog;
 static UINT32 smplAlloc;
 static WAVE_32BS* smplData;
+static UINT32 localAudBufSize;
+static void* localAudBuffer;
 static volatile bool canRender;
 static volatile bool isRendering;
 static volatile bool renderDoWait;
 
 static UINT32 sampleRate = 44100;
 static UINT32 maxLoops = 2;
+static bool manualRenderLoop = false;
 static volatile UINT8 playState;
 
 static UINT32 idWavOut;
@@ -161,7 +164,11 @@ int main(int argc, char* argv[])
 	}
 	putchar('\n');
 	
-	AudioDrv_SetCallback(audDrv, FillBuffer, &player);
+	if (audDrv != NULL)
+		retVal = AudioDrv_SetCallback(audDrv, FillBuffer, &player);
+	else
+		retVal = 0xFF;
+	manualRenderLoop = (retVal != 0x00);
 	player->SetSampleRate(sampleRate);
 	player->Start();
 	fadeSmplTime = player->GetSampleRate() * 4;
@@ -182,7 +189,14 @@ int main(int argc, char* argv[])
 					player->Tick2Second(player->GetTotalPlayTicks(maxLoops)));
 			fflush(stdout);
 		}
-		Sleep(50);
+		
+		if (! manualRenderLoop || (playState & PLAYSTATE_PAUSE))
+			Sleep(50);
+		else
+		{
+			UINT32 wrtBytes = FillBuffer(audDrvLog, &player, localAudBufSize, localAudBuffer);
+			AudioDrv_WriteData(audDrvLog, wrtBytes, localAudBuffer);
+		}
 		
 		if (_kbhit())
 		{
@@ -192,10 +206,13 @@ int main(int argc, char* argv[])
 			if (letter == ' ' || letter == 'P')
 			{
 				playState ^= PLAYSTATE_PAUSE;
-				if (playState & PLAYSTATE_PAUSE)
-					AudioDrv_Pause(audDrv);
-				else
-					AudioDrv_Resume(audDrv);
+				if (audDrv != NULL)
+				{
+					if (playState & PLAYSTATE_PAUSE)
+						AudioDrv_Pause(audDrv);
+					else
+						AudioDrv_Resume(audDrv);
+				}
 			}
 			else if (letter == 'R')	// restart
 			{
@@ -472,6 +489,9 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 
 static UINT32 GetNthAudioDriver(UINT8 adrvType, INT32 drvNumber)
 {
+	if (drvNumber == -1)
+		return (UINT32)-1;
+	
 	UINT32 drvCount;
 	UINT32 curDrv;
 	INT32 typedDrv;
@@ -506,7 +526,7 @@ static UINT8 InitAudioSystem(void)
 	
 	idWavOut = GetNthAudioDriver(ADRVTYPE_OUT, AudioOutDrv);
 	idWavOutDev = 0;	// default device
-	if (idWavOut == (UINT32)-1)
+	if (AudioOutDrv != (UINT32)-1 && idWavOut == (UINT32)-1)
 	{
 		printf("Requested Audio Output driver not found!\n");
 		Audio_Deinit();
@@ -514,14 +534,18 @@ static UINT8 InitAudioSystem(void)
 	}
 	idWavWrt = GetNthAudioDriver(ADRVTYPE_DISK, WaveWrtDrv);
 	
-	Audio_GetDriverInfo(idWavOut, &drvInfo);
-	printf("Using driver %s.\n", drvInfo->drvName);
-	retVal = AudioDrv_Init(idWavOut, &audDrv);
-	if (retVal)
+	audDrv = NULL;
+	if (idWavOut != (UINT32)-1)
 	{
-		printf("WaveOut: Drv Init Error: %02X\n", retVal);
-		Audio_Deinit();
-		return retVal;
+		Audio_GetDriverInfo(idWavOut, &drvInfo);
+		printf("Using driver %s.\n", drvInfo->drvName);
+		retVal = AudioDrv_Init(idWavOut, &audDrv);
+		if (retVal)
+		{
+			printf("WaveOut: Drv Init Error: %02X\n", retVal);
+			Audio_Deinit();
+			return retVal;
+		}
 	}
 	
 	audDrvLog = NULL;
@@ -539,7 +563,9 @@ static UINT8 DeinitAudioSystem(void)
 {
 	UINT8 retVal;
 	
-	retVal = AudioDrv_Deinit(&audDrv);
+	retVal = 0x00;
+	if (audDrv != NULL)
+		retVal = AudioDrv_Deinit(&audDrv);
 	if (audDrvLog != NULL)
 		AudioDrv_Deinit(&audDrvLog);
 	Audio_Deinit();
@@ -552,23 +578,43 @@ static UINT8 StartAudioDevice(void)
 	AUDIO_OPTS* opts;
 	UINT8 retVal;
 	
-	opts = AudioDrv_GetOptions(audDrv);
+	opts = NULL;
+	smplAlloc = 0x00;
+	smplData = NULL;
+	
+	if (audDrv != NULL)
+		opts = AudioDrv_GetOptions(audDrv);
+	else if (audDrvLog != NULL)
+		opts = AudioDrv_GetOptions(audDrvLog);
+	if (opts == NULL)
+		return 0xFF;
 	opts->sampleRate = sampleRate;
 	opts->numChannels = 2;
 	opts->numBitsPerSmpl = 16;
 	smplSize = opts->numChannels * opts->numBitsPerSmpl / 8;
 	
 	canRender = false;
-	printf("Opening Device %u ...\n", idWavOutDev);
-	retVal = AudioDrv_Start(audDrv, idWavOutDev);
-	if (retVal)
+	if (audDrv != NULL)
 	{
-		printf("Dev Init Error: %02X\n", retVal);
-		return retVal;
+		printf("Opening Device %u ...\n", idWavOutDev);
+		retVal = AudioDrv_Start(audDrv, idWavOutDev);
+		if (retVal)
+		{
+			printf("Dev Init Error: %02X\n", retVal);
+			return retVal;
+		}
+		
+		smplAlloc = AudioDrv_GetBufferSize(audDrv) / smplSize;
+		localAudBufSize = 0;
+	}
+	else
+	{
+		smplAlloc = opts->sampleRate / 4;
+		localAudBufSize = smplAlloc * smplSize;
 	}
 	
-	smplAlloc = AudioDrv_GetBufferSize(audDrv) / smplSize;
 	smplData = (WAVE_32BS*)malloc(smplAlloc * sizeof(WAVE_32BS));
+	localAudBuffer = localAudBufSize ? malloc(localAudBufSize) : NULL;
 	
 	return 0x00;
 }
@@ -577,8 +623,11 @@ static UINT8 StopAudioDevice(void)
 {
 	UINT8 retVal;
 	
-	retVal = AudioDrv_Stop(audDrv);
+	retVal = 0x00;
+	if (audDrv != NULL)
+		retVal = AudioDrv_Stop(audDrv);
 	free(smplData);	smplData = NULL;
+	free(localAudBuffer);	localAudBuffer = NULL;
 	
 	return retVal;
 }
@@ -592,11 +641,12 @@ static UINT8 StartDiskWriter(const char* fileName)
 		return 0x00;
 	
 	opts = AudioDrv_GetOptions(audDrvLog);
-	*opts = *AudioDrv_GetOptions(audDrv);
+	if (audDrv != NULL)
+		*opts = *AudioDrv_GetOptions(audDrv);
 	
 	WavWrt_SetFileName(AudioDrv_GetDrvData(audDrvLog), fileName);
 	retVal = AudioDrv_Start(audDrvLog, 0);
-	if (! retVal)
+	if (! retVal && audDrv != NULL)
 		AudioDrv_DataForward_Add(audDrv, audDrvLog);
 	return retVal;
 }
@@ -606,7 +656,8 @@ static UINT8 StopDiskWriter(void)
 	if (audDrvLog == NULL)
 		return 0x00;
 	
-	AudioDrv_DataForward_Remove(audDrv, audDrvLog);
+	if (audDrv != NULL)
+		AudioDrv_DataForward_Remove(audDrv, audDrvLog);
 	return AudioDrv_Stop(audDrvLog);
 }
 
