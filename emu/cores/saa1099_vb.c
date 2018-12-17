@@ -1,5 +1,22 @@
 // SAA1099 sound emulation
 // Valley Bell, 2018
+//
+// I think the emulation should be pretty faithful to the original now.
+// Lots of thanks to NewRisingSun for creating test cases and recording them from real hardware.
+// 
+// The sound core passes most of NewRisingSun's tests now.
+// Known issues are:
+//  - Test 10 "Repeated triangle, continuously resetting frequency counters"
+//    -> envelope speed is slower in emulation than in recording
+//    (might also be caused by different timings in DOSBox vs. the real machine)
+//  - enabling the envelope generator causes tiny clicks (spikes 0 -> 1 -> 0 in the recordings)
+//    These aren't emulated yet.
+//  - Frequency/octave writes are cached in a special way. There is some documentation
+//    about it in SAASound. (The official docs by Philips also recommend to do the writes
+//    in a certain order to avoid that.)
+//  - At the beginning of NRS' test cases, the first phase of the square tone is often
+//    a lot longer than it should be on the real hardware.
+//    This might be related to the issue above.
 #include <stdlib.h>
 #include <string.h>	// for memset
 
@@ -62,8 +79,8 @@ DEV_DEF devDef_SAA1099_VB =
 
 struct saa_frequency_generator
 {
-	UINT16 cntr;
-	UINT16 limit;
+	INT16 cntr;
+	INT16 limit;
 	UINT8 state;
 	UINT8 trigger;
 };
@@ -78,6 +95,7 @@ struct saa_noise_generator
 struct saa_envelope_generator
 {
 	UINT8 enable;
+	UINT8 reload;
 	UINT8 extClock;
 	UINT8 step;
 	UINT8 wave;
@@ -113,6 +131,7 @@ struct saa_chip
 	SAA_ENV_GEN env[2];
 	
 	UINT8 allOn;
+	UINT8 fgReset;	// frequency generator reset
 	UINT8 curAddr;
 	
 	UINT8 regs[0x20];
@@ -220,6 +239,7 @@ static void saa1099v_reset(void* info)
 	RC_RESET(&saa->stepCntr);
 	
 	saa->allOn = 0x00;
+	saa->fgReset = 0x00;
 	saa->curAddr = 0x00;
 	memset(saa->regs, 0x00, 0x20);
 	
@@ -232,7 +252,7 @@ static void saa1099v_reset(void* info)
 		saaCh->oct = 0x00;
 		saaCh->toneOn = saaCh->noiseOn = 0x00;
 		saa_freq_gen_reset(&saaCh->fgen);
-		saaCh->state = 0x00;
+		saaCh->state = 0;
 		saaCh->fgen.limit = saaCh->freq ^ 0x1FF;
 	}
 	for (curChn = 0; curChn < 2; curChn ++)
@@ -241,7 +261,8 @@ static void saa1099v_reset(void* info)
 		saa->noise[curChn].mode = 0x00;
 		saa->noise[curChn].state = ~0;
 		
-		saa->env[curChn].enable = 0x00;
+		saa->env[curChn].enable = 0;
+		saa->env[curChn].reload = 0;
 		saa->env[curChn].pos = 0x00;
 		saa->env[curChn].flags = ENV_LOAD | ENV_STAY;
 		saa->env[curChn].volL = saa->env[curChn].volR = 0x10;
@@ -280,7 +301,7 @@ static void saa_write_addr(void* info, UINT8 data)
 		
 		if (saaEGen->extClock)
 		{
-			if (saaEGen->flags & ENV_LOAD)
+			if ((saaEGen->flags & ENV_LOAD) && saaEGen->reload)
 				saa_envgen_load(saa, saa->curAddr & 0x01);
 			saa_envgen_step(saaEGen);
 		}
@@ -293,6 +314,7 @@ static void saa_write_data(void* info, UINT8 data)
 {
 	SAA_CHIP* saa = (SAA_CHIP*)info;
 	UINT8 curChn;
+	UINT8 prevState;
 	
 	saa->regs[saa->curAddr] = data;
 	switch(saa->curAddr)
@@ -342,31 +364,42 @@ static void saa_write_data(void* info, UINT8 data)
 				saaNGen->fgen.limit = 1;	// clocked by frequency generator
 			else
 				saaNGen->fgen.limit = (1 << saaNGen->mode);
-			saaNGen->fgen.cntr = 0;
+			saaNGen->fgen.cntr = 0x000;
 		}
 		break;
-	case 0x18:	// envelope generator parameters
-	case 0x19:	// envelope generator parameters
+	case 0x18:	// envelope generator 0 parameters
+	case 0x19:	// envelope generator 1 parameters
 		curChn = saa->curAddr & 0x01;
+		prevState = saa->env[curChn].enable;
 		saa->env[curChn].enable = (data >> 7) & 0x01;
 		saa->env[curChn].step = (data >> 4) & 0x01;
-		if (! saa->env[curChn].enable || (saa->env[curChn].flags & ENV_LOAD))
+		saa->env[curChn].reload = 1;
+		if (! saa->env[curChn].enable || ! prevState)
 		{
 			saa_envgen_load(saa, curChn);
-			saa->env[curChn].pos = 0x00;
 			saa_envgen_step(&saa->env[curChn]);
 		}
 		break;
 	case 0x1C:	// chip enable / sync/reset
 		saa->allOn = (data >> 0) & 0x01;
-		if (data & 0x02)
+		prevState = saa->fgReset;
+		saa->fgReset = (data >> 1) & 0x01;
+		if (saa->fgReset)
 		{
 			// reset channel states
 			for (curChn = 0; curChn < 6; curChn ++)
 			{
 				saa_freq_gen_reset(&saa->channels[curChn].fgen);
-				saa->channels[curChn].state = 0x00;
+				// The reset forces the state to 0 according to the recordings from real HW.
+				saa->channels[curChn].state = 0;
 			}
+		}
+		else if (prevState)
+		{
+			// When "reset" is released, it switches to state 1 immediately.
+			// Additionally, the "1" phase seems to be longer than usual in some cases.
+			for (curChn = 0; curChn < 6; curChn ++)
+				saa->channels[curChn].state = 1;
 		}
 		break;
 	}
@@ -376,7 +409,7 @@ static void saa_write_data(void* info, UINT8 data)
 
 INLINE void saa_freq_gen_reset(SAA_FREQ_GEN* fgen)
 {
-	fgen->cntr = 0;
+	fgen->cntr = 0x000;
 	// keep fgen->limit
 	fgen->state = 0;
 	fgen->trigger = 0;
@@ -386,16 +419,12 @@ INLINE void saa_freq_gen_reset(SAA_FREQ_GEN* fgen)
 
 INLINE void saa_freq_gen_step(SAA_FREQ_GEN* fgen, UINT16 inc)
 {
-	fgen->cntr += inc;
-	if (fgen->cntr < fgen->limit)
+	fgen->cntr -= inc;
+	fgen->trigger = (fgen->cntr < 0x000);	// trigger on underflow
+	if (fgen->trigger)
 	{
-		fgen->trigger = 0;
-	}
-	else
-	{
-		fgen->cntr -= fgen->limit;
+		fgen->cntr += fgen->limit;
 		fgen->state ^= 1;
-		fgen->trigger = 1;
 	}
 	
 	return;
@@ -409,19 +438,19 @@ static void saa_advance(SAA_CHIP* saa, UINT32 steps)
 	SAA_ENV_GEN* saaEGen;
 	UINT8 curChn;
 	
-	if (! steps)
-		return;
-	
 	for (; steps > 0; steps --)
 	{
 		// run frequency generators, process tone channels
-		for (curChn = 0; curChn < 6; curChn ++)
+		if (! saa->fgReset)	// skip update when "frequency generator reset" flag is on
 		{
-			saaCh = &saa->channels[curChn];
-			
-			saa_freq_gen_step(&saaCh->fgen, 1 << saaCh->oct);
-			if (FREQGEN_FALL_EDGE(saaCh->fgen))
-				saaCh->state ^= 1;
+			for (curChn = 0; curChn < 6; curChn ++)
+			{
+				saaCh = &saa->channels[curChn];
+				
+				saa_freq_gen_step(&saaCh->fgen, 1 << saaCh->oct);
+				if (FREQGEN_FALL_EDGE(saaCh->fgen))
+					saaCh->state ^= 1;
+			}
 		}
 		
 		// run noise generators, process noise channels
@@ -430,11 +459,12 @@ static void saa_advance(SAA_CHIP* saa, UINT32 steps)
 			UINT16 inc;
 			
 			saaNGen = &saa->noise[curChn];
+			saaCh = &saa->channels[curChn * 3 + 0];
 			
-			// modes 0..2: // master clock, divided by 128 / 256 / 512
+			// modes 0..2: master clock, divided by 128 / 256 / 512
 			// mode 3: using frequency generator 0/3
 			if (saaNGen->mode == 0x03)
-				inc = FREQGEN_FALL_EDGE(saa->channels[curChn * 3 + 0].fgen);
+				inc = FREQGEN_FALL_EDGE(saaCh->fgen);
 			else
 				inc = 1;
 			saa_freq_gen_step(&saaNGen->fgen, inc);
@@ -453,10 +483,11 @@ static void saa_advance(SAA_CHIP* saa, UINT32 steps)
 		for (curChn = 0; curChn < 2; curChn ++)
 		{
 			saaEGen = &saa->env[curChn];
+			saaCh = &saa->channels[curChn * 3 + 1];
 			
-			if (! saaEGen->extClock && FREQGEN_FALL_EDGE(saa->channels[curChn * 3 + 1].fgen))
+			if (! saaEGen->extClock && FREQGEN_FALL_EDGE(saaCh->fgen))
 			{
-				if (saaEGen->flags & ENV_LOAD)
+				if ((saaEGen->flags & ENV_LOAD) && saaEGen->reload)
 					saa_envgen_load(saa, curChn);
 				saa_envgen_step(saaEGen);
 			}
@@ -474,10 +505,11 @@ static void saa_envgen_load(SAA_CHIP* saa, UINT8 genID)
 	saaEGen->extClock = (data >> 5) & 0x01;
 	saaEGen->wave = (data >> 1) & 0x07;
 	saaEGen->invert = (data >> 0) & 0x01;
+	saaEGen->pos = 0x00;
+	saaEGen->reload = 0;
 	
 	if (! saaEGen->enable)
 	{
-		saaEGen->pos = 0x00;
 		saaEGen->flags = ENV_LOAD | ENV_STAY;
 		saaEGen->volL = saaEGen->volR = 0x10;
 	}
@@ -506,6 +538,8 @@ static void saa_envgen_step(SAA_ENV_GEN* saaEGen)
 	if (saaEGen->step)
 	{
 		saaEGen->flags |= (saa_envelopes[saaEGen->wave][saaEGen->pos] & 0xF0);
+		saaEGen->volL &= ~0x01;
+		saaEGen->volR &= ~0x01;
 		if (! (saaEGen->flags & ENV_STAY))
 		{
 			saaEGen->pos ++;
@@ -523,6 +557,7 @@ static void saa1099v_update(void* param, UINT32 samples, DEV_SMPL** outputs)
 	UINT32 curSmpl;
 	UINT8 curChn;
 	UINT8 neChn;	// noise/envelope channel
+	UINT8 noDCremove;
 	DEV_SMPL outState;
 	DEV_SMPL outVolL;
 	DEV_SMPL outVolR;
@@ -534,38 +569,71 @@ static void saa1099v_update(void* param, UINT32 samples, DEV_SMPL** outputs)
 	
 	for (curSmpl = 0; curSmpl < samples; curSmpl ++)
 	{
-		RC_STEP(&saa->stepCntr);
-		saa_advance(saa, RC_GET_VAL(&saa->stepCntr));
-		RC_MASK(&saa->stepCntr);
-		
 		for (curChn = 0; curChn < 6; curChn ++)
 		{
 			saaCh = &saa->channels[curChn];
 			if (saaCh->muted)
 				continue;
 			neChn = curChn / 3;
+			noDCremove = 0;
 			
-			outState = 0;
-			if (saaCh->toneOn)
-				outState += saaCh->state ? +1 : -1;
-			if (saaCh->noiseOn)
-				outState += (saa->noise[neChn].state & 0x01) ? +1 : -1;
+			if (saaCh->toneOn && saaCh->noiseOn)
+			{
+				// mixing tone+noise works like this
+				outState = saaCh->state;
+				if (saaCh->state)
+					outState += (saa->noise[neChn].state & 0x01);
+			}
+			else
+			{
+				outState  = (saaCh->toneOn) ? saaCh->state : 1;
+				outState &= (saaCh->noiseOn) ? (saa->noise[neChn].state & 0x01) : 1;
+				outState *= 2;	// make the same amplitude as when mixing tone+noise
+			}
 			
 			if ((curChn == 2 || curChn == 5) && saa->env[neChn].enable)
 			{
 				// enabling the envelope generator disables amplitude bit 0
 				outVolL = (saa->volTbl[saaCh->volL & ~0x01] * saa->env[neChn].volL) >> 4;
 				outVolR = (saa->volTbl[saaCh->volR & ~0x01] * saa->env[neChn].volR) >> 4;
+				if (! saaCh->toneOn && ! saaCh->noiseOn)
+					noDCremove = 2;
 			}
 			else
 			{
 				outVolL = saa->volTbl[saaCh->volL];
 				outVolR = saa->volTbl[saaCh->volR];
+				if (! saaCh->toneOn && ! saaCh->noiseOn)
+					noDCremove = 1;
 			}
 			
-			outputs[0][curSmpl] += outState * outVolL;
-			outputs[1][curSmpl] += outState * outVolR;
+			// tone XOR noise enabled: outState can be: 0 [off], 2 [on]
+			// tone + noise enabled: outState can be: 0 [both off], 1 [only tone on], 2 [both on]
+			if (! noDCremove)
+			{
+				outState = outState - 1;	// DC offset removal and make bipolar
+				outputs[0][curSmpl] += outState * outVolL;
+				outputs[1][curSmpl] += outState * outVolR;
+			}
+			else if (noDCremove == 1)
+			{
+				// just ignore offset removal (makes software-PCM work)
+				outputs[0][curSmpl] += outState * outVolL;
+				outputs[1][curSmpl] += outState * outVolR;
+			}
+			else //if (noDCremove == 2)
+			{
+				// set "center" based on current volume level (for EnvGen-based sounds)
+				outputs[0][curSmpl] += outState * outVolL - saa->volTbl[saaCh->volL & ~0x01];
+				outputs[1][curSmpl] += outState * outVolR - saa->volTbl[saaCh->volR & ~0x01];
+			}
 		}
+		
+		// Updating after calculating the sample output improves emulation of a few artifacts.
+		// (like the peak down after the frequency generator reset)
+		RC_STEP(&saa->stepCntr);
+		saa_advance(saa, RC_GET_VAL(&saa->stepCntr));
+		RC_MASK(&saa->stepCntr);
 	}
 	
 	return;
