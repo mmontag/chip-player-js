@@ -24,6 +24,8 @@ Library is based on the ADLMIDI, a MIDI player for Linux and Windows with OPL3 e
 * Windows MinGW 4.9.x, 5.2
 * Android NDK 12b/13
 * DJGPP GCC 7.2 cross compiler from Linux to MS-DOS 32-bit
+* OpenBSD
+* Haiku
 
 # Key features
 * OPL3 emulation with four-operator mode support
