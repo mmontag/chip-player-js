@@ -160,11 +160,10 @@ static void C352_fetch_sample(C352 *c, C352_Voice *v)
 
 		s = (INT8)c->wave[v->pos & c->wave_mask];
 
-		v->sample = s<<8;
 		if(v->flags & C352_FLG_MULAW)
-		{
 			v->sample = c->mulaw_table[s&0xff];
-		}
+		else
+			v->sample = s<<8;
 		
 		pos = v->pos&0xffff;
 		

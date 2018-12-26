@@ -39,7 +39,6 @@ int __cdecl _getch(void);	// from conio.h
 #include "emu/cores/c140.h"
 #include "emu/cores/es5503.h"
 #include "emu/cores/es5506.h"
-#include "emu/cores/c352.h"			// for C352_CFG
 
 #include "vgm/dblk_compr.h"
 
@@ -682,6 +681,8 @@ static void InitVGMChips(void)
 					devCfg.clock *= 384;	// (for backwards compatibility with old VGM logs from 2013/14)
 				if (VGMHdr.bytC140Type == 2)	// ASIC 219
 				{
+					// Note: The VGMs have all sample blocks byteswapped. The C219 core now expects them
+					//       unswapped, so everything will sound a bit noisy.
 					retVal = SndEmu_Start(DEVID_C219, &devCfg, &cDev->defInf);
 				}
 				else
@@ -698,12 +699,10 @@ static void InitVGMChips(void)
 			break;
 		case DEVID_C352:
 			{
-				C352_CFG cCfg;
+				// real clock = VGM clock / (VGM clkDiv * 4) * 288
+				devCfg.clock = devCfg.clock * 72 / VGMHdr.bytC352ClkDiv;
 				
-				cCfg._genCfg = devCfg;
-				cCfg.clk_divider = VGMHdr.bytC352ClkDiv * 4;
-				
-				retVal = SndEmu_Start(curChip, (DEV_GEN_CFG*)&cCfg, &cDev->defInf);
+				retVal = SndEmu_Start(curChip, &devCfg, &cDev->defInf);
 				if (retVal)
 					break;
 				SndEmu_GetDeviceFunc(cDev->defInf.devDef, RWF_REGISTER | RWF_WRITE, DEVRW_A16D16, 0, (void**)&cDev->writeM16);

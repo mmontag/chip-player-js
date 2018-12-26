@@ -309,7 +309,7 @@ static void c6280mame_update(void* param, UINT32 samples, DEV_SMPL **outputs)
 							p->channel[1].counter &= 0x1FFFF;
 							lfo_data = p->channel[1].waveform[lfooffset];
 							if (p->lfo_control & 3)
-								step += ((lfo_data - 16) << ((p->lfo_control-1)<<1)); // verified from patent, TODO : same in real hardware?
+								step += ((lfo_data - 16) << (((p->lfo_control & 3)-1)<<1)); // verified from patent, TODO : same in real hardware?
 
 							offset = (p->channel[0].counter >> 12) & 0x1F;
 							p->channel[0].counter += p->wave_freq_tab[step & 0xfff];

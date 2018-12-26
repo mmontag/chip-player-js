@@ -61,7 +61,7 @@ static INT32 UNPACK(UINT16 val)
 void SCSPDSP_Init(SCSPDSP *DSP)
 {
 	memset(DSP,0,sizeof(SCSPDSP));
-	DSP->RBL=0x8000;
+	DSP->RBL=(8*1024); // Initial RBL is 0
 	DSP->Stopped=1;
 }
 
@@ -138,7 +138,7 @@ void SCSPDSP_Step(SCSPDSP *DSP)
 		else if(IRA<=0x2F)
 			INPUTS=DSP->MIXS[IRA-0x20]<<4;  //MIXS is 20 bit
 		else if(IRA<=0x31)
-			INPUTS=0;
+			INPUTS=DSP->EXTS[IRA-0x30]<<8;  //EXTS is 16 bit
 		else
 			return;
 

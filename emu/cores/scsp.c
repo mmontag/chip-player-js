@@ -100,6 +100,10 @@ const DEV_DEF* devDefList_SCSP[] =
 };
 
 
+#define CLIP16(x)  (((x) > 32767) ? 32767 : (((x) < -32768) ? -32768 : (x)))
+#define CLIP18(x)  (((x) > 131071) ? 131071 : (((x) < -131072) ? -131072 : (x)))
+
+
 #define SHIFT   12
 #define FIX(v)  ((UINT32) ((float) (1<<SHIFT)*(v)))
 
@@ -242,8 +246,6 @@ typedef struct _SLOT
 #define SCITMA  6
 #define SCITMB  7
 
-#define USEDSP
-
 typedef struct _scsp_state scsp_state;
 struct _scsp_state
 {
@@ -340,14 +342,6 @@ static int Get_DR(scsp_state *scsp,int base,int R)
 	return scsp->DRTABLE[Rate];
 }
 
-static int Get_RR(scsp_state *scsp,int base,int R)
-{
-	int Rate=base+(R<<1);
-	if(Rate>63) Rate=63;
-	if(Rate<0) Rate=0;
-	return scsp->DRTABLE[Rate];
-}
-
 static void Compute_EG(scsp_state *scsp,SCSP_SLOT *slot)
 {
 	int octave=(OCT(slot)^8)-8;
@@ -361,7 +355,7 @@ static void Compute_EG(scsp_state *scsp,SCSP_SLOT *slot)
 	slot->EG.AR=Get_AR(scsp,rate,AR(slot));
 	slot->EG.D1R=Get_DR(scsp,rate,D1R(slot));
 	slot->EG.D2R=Get_DR(scsp,rate,D2R(slot));
-	slot->EG.RR=Get_RR(scsp,rate,RR(slot));
+	slot->EG.RR=Get_DR(scsp,rate,RR(slot));
 	slot->EG.DL=0x1f-DL(slot);
 	slot->EG.EGHOLD=EGHOLD(slot);
 }
@@ -569,7 +563,7 @@ static void SCSP_Init(scsp_state *scsp, UINT32 clock)
 		t=ARTimes[i];   //In ms
 		if(t!=0.0)
 		{
-			step=(1023*1000.0)/((float) 44100.0f*t);
+			step=(1023*1000.0) / (44100.0*t);
 			scale=(double) (1<<EG_SHIFT);
 			scsp->ARTABLE[i]=(int) (step*scale);
 		}
@@ -577,7 +571,7 @@ static void SCSP_Init(scsp_state *scsp, UINT32 clock)
 			scsp->ARTABLE[i]=1024<<EG_SHIFT;
 
 		t=DRTimes[i];   //In ms
-		step=(1023*1000.0)/((float) 44100.0f*t);
+		step=(1023*1000.0) / (44100.0*t);
 		scale=(double) (1<<EG_SHIFT);
 		scsp->DRTABLE[i]=(int) (step*scale);
 	}
@@ -592,7 +586,6 @@ static void SCSP_Init(scsp_state *scsp, UINT32 clock)
 	}
 
 	LFO_Init();
-
 	// no "pend"
 	scsp->udata.data[0x20/2] = 0;
 	//scsp->TimCnt[0] = 0xffff;
@@ -633,7 +626,7 @@ INLINE void SCSP_UpdateSlotReg(scsp_state *scsp,int s,int r)
 			break;
 		case 0xA:
 		case 0xB:
-			slot->EG.RR=Get_RR(scsp,0,RR(slot));
+			slot->EG.RR=Get_DR(scsp,0,RR(slot));
 			slot->EG.DL=0x1f-DL(slot);
 			break;
 		case 0x12:
@@ -655,16 +648,8 @@ INLINE void SCSP_UpdateReg(scsp_state *scsp, /*address_space &space,*/ int reg)
 		case 0x2:
 		case 0x3:
 			{
-				unsigned int v=RBL(scsp);
-				scsp->DSP.RBP=RBP(scsp);
-				if(v==0)
-					scsp->DSP.RBL=8*1024;
-				else if(v==1)
-					scsp->DSP.RBL=16*1024;
-				else if(v==2)
-					scsp->DSP.RBL=32*1024;
-				else if(v==3)
-					scsp->DSP.RBL=64*1024;
+				scsp->DSP.RBL = (8 * 1024) << RBL(scsp); // 8 / 16 / 32 / 64 kwords
+				scsp->DSP.RBP = RBP(scsp);
 			}
 			break;
 		case 0x6:
@@ -761,7 +746,7 @@ static void SCSP_UpdateRegR(scsp_state *scsp, int reg)
 					++scsp->MidiR;
 					scsp->MidiR&=31;
 				}
-				scsp->udata.data[0x5/2]=v;
+				scsp->udata.data[0x4/2]=v;
 			}
 			break;
 		case 8:
@@ -849,7 +834,7 @@ static UINT16 SCSP_r16(void* info, UINT16 addr)
 {
 	scsp_state *scsp = (scsp_state *)info;
 	UINT16 v=0;
-	addr&=0xfffe;
+	addr&=0xffff;
 	if(addr<0x400)
 	{
 		int slot=addr/0x20;
@@ -910,11 +895,8 @@ static UINT16 SCSP_r16(void* info, UINT16 addr)
 			This port is actually an external parallel port, directly connected from the CD Block device, hence code is a bit of an hack.
 			*/
 			logerror("SCSP: Reading from EXTS register %08x\n",addr);
-			//if(addr == 0xee0)
-			//	v = space.machine().device<cdda_device>("cdda")->get_channel_volume(0);
-			//if(addr == 0xee2)
-			//	v = space.machine().device<cdda_device>("cdda")->get_channel_volume(1);
-			v = 0xFFFF;
+			if(addr<0xEE4)
+				v = *((UINT16 *) (scsp->DSP.EXTS+(addr-0xee0)/2));
 		}
 	}
 #endif
@@ -932,8 +914,11 @@ INLINE INT32 SCSP_UpdateSlot(scsp_state *scsp, SCSP_SLOT *slot)
 	UINT32 *addr[2]      = {&addr1, &addr2};                          // used for linear interpolation
 	UINT32 *slot_addr[2] = {&(slot->cur_addr), &(slot->nxt_addr)};    //
 
-	if(SSCTL(slot)!=0)  //no FM or noise yet
+	if (SSCTL(slot) == 3) // manual says cannot be used
+	{
+		logerror("SCSP: Invaild SSCTL setting at slot %02x\n", slot->slot);
 		return 0;
+	}
 
 	if(PLFOS(slot)!=0)
 	{
@@ -948,8 +933,8 @@ INLINE INT32 SCSP_UpdateSlot(scsp_state *scsp, SCSP_SLOT *slot)
 	}
 	else
 	{
-		addr1=(slot->cur_addr>>(SHIFT-1))&0x7fffe;
-		addr2=(slot->nxt_addr>>(SHIFT-1))&0x7fffe;
+		addr1=(slot->cur_addr>>(SHIFT-1))&~1;
+		addr2=(slot->nxt_addr>>(SHIFT-1))&~1;
 	}
 
 	if(MDL(slot)!=0 || MDXSL(slot)!=0 || MDYSL(slot)!=0)
@@ -966,28 +951,33 @@ INLINE INT32 SCSP_UpdateSlot(scsp_state *scsp, SCSP_SLOT *slot)
 #ifdef VGM_BIG_ENDIAN
 #define READ_BE16(ptr)	(*(INT16*)ptr)
 #else
-#define READ_BE16(ptr)	(((ptr)[0] << 8) | (ptr)[1])
+#define READ_BE16(ptr)	(INT16)(((ptr)[0] << 8) | (ptr)[1])
 #endif
-	// I prefer the byte order 0 1 2 3 4 5 ...
-	// also, I won't use pointers here, since they only used [0] on them anyway.
-	if(PCM8B(slot)) //8 bit signed
+	if (SSCTL(slot) == 0) // External DRAM data
 	{
-		INT16 p1=(INT8)scsp->SCSPRAM[(SA(slot)+addr1)&0x7FFFF]<<8;
-		INT16 p2=(INT8)scsp->SCSPRAM[(SA(slot)+addr2)&0x7FFFF]<<8;
-		INT32 fpart=slot->cur_addr&((1<<SHIFT)-1);
-		INT32 s=(int)p1*((1<<SHIFT)-fpart)+(int)p2*fpart;
-		sample=(s>>SHIFT);
+		if (PCM8B(slot)) //8 bit signed
+		{
+			INT16 p1=(INT8)scsp->SCSPRAM[SA(slot)+addr1]<<8;
+			INT16 p2=(INT8)scsp->SCSPRAM[SA(slot)+addr2]<<8;
+			INT32 fpart=slot->cur_addr&((1<<SHIFT)-1);
+			INT32 s=(int)p1*((1<<SHIFT)-fpart)+(int)p2*fpart;
+			sample=(s>>SHIFT);
+		}
+		else    //16 bit signed
+		{
+			const UINT8 *pp1 = &scsp->SCSPRAM[SA(slot)+addr1];
+			const UINT8 *pp2 = &scsp->SCSPRAM[SA(slot)+addr2];
+			INT16 p1 = READ_BE16(pp1);
+			INT16 p2 = READ_BE16(pp2);
+			INT32 fpart=slot->cur_addr&((1<<SHIFT)-1);
+			INT32 s=(int)p1*((1<<SHIFT)-fpart)+(int)p2*fpart;
+			sample=(s>>SHIFT);
+		}
 	}
-	else    //16 bit signed
-	{
-		UINT8 *pp1 = &scsp->SCSPRAM[(SA(slot)+addr1)&0x7FFFE];
-		UINT8 *pp2 = &scsp->SCSPRAM[(SA(slot)+addr2)&0x7FFFE];
-		INT16 p1 = (INT16)READ_BE16(pp1);
-		INT16 p2 = (INT16)READ_BE16(pp2);
-		INT32 fpart=slot->cur_addr&((1<<SHIFT)-1);
-		INT32 s=(int)p1*((1<<SHIFT)-fpart)+(int)p2*fpart;
-		sample=(s>>SHIFT);
-	}
+	else if (SSCTL(slot) == 1)  // Internally generated data (Noise)
+		sample = (INT16)(rand() & 0xffff); // Unknown algorithm
+	else if (SSCTL(slot) >= 2)  // Internally generated data (All 0)
+		sample = 0;
 
 	if(SBCTL(slot)&0x1)
 		sample ^= 0x7FFF;
@@ -1156,8 +1146,31 @@ static void SCSP_DoMasterSamples(void* info, UINT32 nsamples, DEV_SMPL **outputs
 					smpr+=(scsp->DSP.EFREG[i]*scsp->RPANTABLE[Enc])>>SHIFT;
 				}
 			}
+
+			for(i=0;i<2;++i)
+			{
+				SCSP_SLOT *slot=scsp->Slots+i+16; // 100217, 100237 EFSDL, EFPAN for EXTS0/1
+				if(EFSDL(slot))
+				{
+					UINT16 Enc;
+					scsp->DSP.EXTS[i] = 0; //scsp->exts[i][s];
+					Enc=((EFPAN(slot))<<0x8)|((EFSDL(slot))<<0xd);
+					smpl+=(scsp->DSP.EXTS[i]*scsp->LPANTABLE[Enc])>>SHIFT;
+					smpr+=(scsp->DSP.EXTS[i]*scsp->RPANTABLE[Enc])>>SHIFT;
+				}
+			}
 		}
 
+		if (DAC18B(scsp))
+		{
+			smpl = CLIP18(smpl);
+			smpr = CLIP18(smpr);
+		}
+		else
+		{
+			smpl = CLIP16(smpl>>2);
+			smpr = CLIP16(smpr>>2);
+		}
 		bufl[s] = smpl;
 		bufr[s] = smpr;
 	}

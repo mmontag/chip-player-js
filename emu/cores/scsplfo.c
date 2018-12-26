@@ -144,7 +144,7 @@ INLINE signed int ALFO_Step(SCSP_LFO_t *LFO)
 
 static void LFO_ComputeStep(SCSP_LFO_t *LFO,UINT32 LFOF,UINT32 LFOWS,UINT32 LFOS,int ALFO)
 {
-	float step=(float) LFOFreq[LFOF]*256.0/(float)44100;
+	float step=(float) LFOFreq[LFOF]*256.0f/44100.0f;
 	LFO->phase_step=(unsigned int) ((float) (1<<LFO_SHIFT)*step);
 	if(ALFO)
 	{
