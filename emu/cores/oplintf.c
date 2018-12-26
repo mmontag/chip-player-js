@@ -244,24 +244,23 @@ static UINT8 device_start_ym3812_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 #ifdef EC_YM3812_NUKED
 static UINT8 device_start_ym3812_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
-	nopl3_chip* opl3;
+	void* chip;
+	DEV_DATA* devData;
 	UINT32 rate;
 	
 	rate = cfg->clock / 72;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	opl3 = (nopl3_chip*)calloc(1, sizeof(nopl3_chip));
-	if (opl3 == NULL)
+	chip = nukedopl3_init(cfg->clock * 4, rate);
+	if (chip == NULL)
 		return 0xFF;
 	
-	opl3->clock = cfg->clock * 4;
-	opl3->smplRate = rate; // save for reset
+	nukedopl3_set_volume(chip, 0x10000);
+	nukedopl3_set_mutemask(chip, 0x000000);
 	
-	nukedopl3_set_volume(opl3, 0x10000);
-	nukedopl3_set_mutemask(opl3, 0x000000);
-	
-	opl3->_devData.chipInf = opl3;
-	INIT_DEVINF(retDevInf, &opl3->_devData, rate, &devDef3812_Nuked);
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef3812_Nuked);
 	return 0x00;
 }
 #endif	// EC_YM3812_NUKED

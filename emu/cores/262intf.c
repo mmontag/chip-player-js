@@ -171,24 +171,23 @@ static UINT8 device_start_ymf262_adlibemu(const DEV_GEN_CFG* cfg, DEV_INFO* retD
 #ifdef EC_YMF262_NUKED
 static UINT8 device_start_ymf262_nuked(const DEV_GEN_CFG* cfg, DEV_INFO* retDevInf)
 {
-	nopl3_chip* opl3;
+	void* chip;
+	DEV_DATA* devData;
 	UINT32 rate;
 	
 	rate = cfg->clock / 288;
 	SRATE_CUSTOM_HIGHEST(cfg->srMode, rate, cfg->smplRate);
 	
-	opl3 = (nopl3_chip*)calloc(1, sizeof(nopl3_chip));
-	if (opl3 == NULL)
+	chip = nukedopl3_init(cfg->clock, rate);
+	if (chip == NULL)
 		return 0xFF;
 	
-	opl3->clock = cfg->clock;
-	opl3->smplRate = rate; // save for reset
+	nukedopl3_set_volume(chip, 0x10000);
+	nukedopl3_set_mutemask(chip, 0x000000);
 	
-	nukedopl3_set_volume(opl3, 0x10000);
-	nukedopl3_set_mutemask(opl3, 0x000000);
-	
-	opl3->_devData.chipInf = opl3;
-	INIT_DEVINF(retDevInf, &opl3->_devData, rate, &devDef262_Nuked);
+	devData = (DEV_DATA*)chip;
+	devData->chipInf = chip;
+	INIT_DEVINF(retDevInf, devData, rate, &devDef262_Nuked);
 	return 0x00;
 }
 #endif
