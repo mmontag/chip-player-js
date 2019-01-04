@@ -234,7 +234,7 @@
     <ClCompile Include="emu\cores\qsound_mame.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="emu\cores\qsound_vb.c">
+    <ClCompile Include="emu\cores\qsound_ctr.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -482,7 +482,7 @@
     <ClInclude Include="emu\cores\qsound_mame.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="emu\cores\qsound_vb.h">
+    <ClInclude Include="emu\cores\qsound_ctr.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\Ootake_PSG_private.h">
@@ -495,6 +495,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="emu\cores\sn76489_private.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu\cores\nukedopl_int.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

@@ -24,7 +24,7 @@ Ootake
 ・LFO処理のの実装。"はにいいんざすかい"のOPや、フラッシュハイダースの効果音が
   実機の音に近づいた。v1.59
 
-Copyright(C)2006-2012 Kitao Nakamura.
+Copyright(C)2006-2017 Kitao Nakamura.
 	改造版・後継版を公開なさるときは必ずソースコードを添付してください。
 	その際に事後でかまいませんので、ひとことお知らせいただけると幸いです。
 	商的な利用は禁じます。
@@ -101,9 +101,9 @@ typedef UINT8	BOOL;
 //#define PSG_FRQ		3579545.0
 //#define SAMPLE_RATE			44100.0 //Kitao更新。現状は速度優先でサンプルレートを44100固定とした。
 #define OVERSAMPLE_RATE		1.0 //Kitao更新。PSGはオーバーサンプリングすると響きの美しさが損なわれてしまうのでオーバーサンプリングしないようにした。速度的にもアップ。
-#define PSG_DECLINE			(21.8500*6.0) //21.8500。Kitao追加。PSG音量の減少値。*6.0は各チャンネル足したぶんを割る意味。大きいほど音は減る。CDDAが100%のときにちょうど良いぐらいの音量に合わせよう。v2.19,v2.37,v2.39,v2.62更新
-#define VOL_TABLE_DECLINE	-1.05809999010 //-1.05809999010で雀探物語２OK。Kitao追加。音量テーブルの減少値。マイナスが大きいほど小さい音が聞こえづらくなる。マイナスが小さすぎると平面的な音になる。v2.19,v2.37,v2.39,v2.40,v2.62,v2.65更新
-									       //  ※PSG_DECLINEの値を変更した場合、減退率のベスト値も変更する必要がある。雀探物語２(マイナスが小さいとPSGが目立ちすぎてADPCMが聴きづらい)，大魔界村(マイナスが大きいと音篭り),ソルジャーブレイドで、PSG_DECLINE=(14.4701*6.0)で減退率-1.0498779900db前後が飛び抜けていい響き(うちの環境で主観)。
+#define PSG_DECLINE			(20.3149*6.0) //20.3149。Kitao追加。PSG音量の減少値。*6.0は各チャンネル足したぶんを割る意味。大きいほど音は減る。CDDAが100%のときにちょうど良いぐらいの音量に合わせよう。v2.19,v2.37,v2.39,v2.62更新
+#define VOL_TABLE_DECLINE	-1.08689999991 //-1.08689999991で雀探物語２OK。Kitao追加。音量テーブルの減少値。マイナスが大きいほど小さい音が聞こえづらくなる。マイナスが小さすぎると平面的な音になる。v2.19,v2.37,v2.39,v2.40,v2.62,v2.65更新
+									       //  ※PSG_DECLINEの値を変更した場合、減退率のベスト値も変更する必要がある。雀探物語２(マイナスが小さいとPSGが目立ちすぎてADPCMが聴きづらい)，大魔界村(マイナスが小さいとパンチがありすぎる),ソルジャーブレイドで、PSG_DECLINE=(14.4701*6.0)で減退率-1.0498779900db前後が飛び抜けていい響き(うちの環境で主観)。
 										   //																		  モトローダー(マイナスやや大き目がいい),１９４１(マイナス小さめがいい)なども微妙な値変更で大きく変わる。
 #define NOISE_TABLE_VALUE	-18 : -1 //キレと聴きやすさで-18:-1をベストとした。最大値が大きい(+に近い)と重い音に。２つの値が離れていると重い音に。フォーメーションサッカー，大魔界村のエンディングのドラムなどで調整。v1.46,v2.40,v2.62更新
 									 //  ※VOL_TABLE_DECLINEによってこの値の最適値も変化する。
@@ -276,18 +276,17 @@ typedef struct
 	Sint32		PsgVolumeEffect;	// = 0;//Kitao追加
 	double		Volume;	// = 0;//Kitao追加
 	double		VOL;	// = 0.0;//Kitao追加。v1.08
-	BOOL		bPsgMute[8];
+	BOOL		bPsgMute[8];//Kitao追加。v1.29
+	BOOL		bWaveReset[8]; //v2.81追加
 
 	Uint8		Port[16];				// for debug purpose
 
-	BOOL		bWaveCrash; //Kitao追加。DDA再生中にWaveデータが書き換えられたらTRUE
 	BOOL		bHoneyInTheSky; //はにいいんざすかいパッチ用。v2.60
 } huc6280_state;
 
+static BOOL			_bTblInit = FALSE;
 static Sint32		_VolumeTable[92];
 static Sint32		_NoiseTable[32768];
-
-static BOOL			_bTblInit = FALSE;
 
 //Kitao更新。v1.10。キュー処理をここに統合して高速化。
 /*
@@ -407,8 +406,14 @@ write_reg(
 			for (i = 0; i < N_CHANNEL; i++)
 			{
 				PSGChn = &info->Psg[i];
-				PSGChn->outVolumeL = _VolumeTable[PSGChn->volume + (info->MainVolumeL + PSGChn->volumeL) * 2];
-				PSGChn->outVolumeR = _VolumeTable[PSGChn->volume + (info->MainVolumeR + PSGChn->volumeR) * 2];
+				if (PSGChn->volumeL == 0) //volumeLが0の場合、volumeの値があってもL音量は0とする。スーパーバレーボールの笛後やイメージファイトのやられた後等で必要。※volumeだけが0のときにL音量を0にしてしまうとグラディウスのコナミ起動音で不具合。v2.81追加
+					PSGChn->outVolumeL = 0;
+				else
+					PSGChn->outVolumeL = _VolumeTable[PSGChn->volume + (info->MainVolumeL + PSGChn->volumeL) * 2];
+				if (PSGChn->volumeR == 0) //volumeRが0の場合、volumeの値があってもR音量は0とする。スーパーバレーボールの笛後やイメージファイトのやられた後等で必要。v2.81追加
+					PSGChn->outVolumeR = 0;
+				else
+					PSGChn->outVolumeR = _VolumeTable[PSGChn->volume + (info->MainVolumeR + PSGChn->volumeR) * 2];
 			}
 			break;
 
@@ -451,6 +456,7 @@ write_reg(
 			}
 
 			PSGChn->bOn = ((data & 0x80) != 0);
+
 			if ((PSGChn->bDDA)&&((data & 0x40)==0)) //DDAからWAVEへ切り替わるとき or DDAから消音するとき
 			{
 				//Kitao追加。DDAはいきなり消音すると目立つノイズが載るのでフェードアウトする。
@@ -458,54 +464,75 @@ write_reg(
 															((1 + (1 >> 3) + (1 >> 4) + (1 >> 5) + (1 >> 7) + (1 >> 12) + (1 >> 14) + (1 >> 15)) * SAMPLE_FADE_DECLINE)); //元の音量。v2.65更新
 				info->DdaFadeOutR[info->Channel] = (Sint32)((double)(PSGChn->ddaSample * PSGChn->outVolumeR) *
 															((1 + (1 >> 3) + (1 >> 4) + (1 >> 5) + (1 >> 7) + (1 >> 12) + (1 >> 14) + (1 >> 15)) * SAMPLE_FADE_DECLINE));
-
 			}
 			PSGChn->bDDA = ((data & 0x40) != 0);
-			
+
 			//Kitao追加。dataのbit7,6が01のときにWaveインデックスをリセットする。
-			//DDAモード時にWaveデータを書き込んでいた場合はここでWaveデータを修復（初期化）する。ファイヤープロレスリング。
 			if ((data & 0xC0) == 0x40)
 			{
-				PSGChn->waveIndex = 0;
-				if (info->bWaveCrash)
+				if ((PSGChn->bDDA)&&(PSGChn->waveIndex == 0)&& //DDAモードでwaveIndexが0のとき、Waveデータをリセットする。実機で同様の動きかは未確認。F1トリプルバトル。フォーメーションサッカー'90試合中BGM。v2.79
+					((PSGChn->volumeL > 0)||(PSGChn->volumeR > 0))) //Volumeが0のときに行うとゼビウスでPAUSE後音が薄くなる。v2.82追加
 				{
-					for (i=0; i<32; i++)
-						PSGChn->wave[i] = -14; //Waveデータを最小値で初期化
-					info->bWaveCrash = FALSE;
+					//PRINTF("test4 %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR); //Kitaoテスト用
+					info->bWaveReset[info->Channel] = TRUE; //v2.81追加。フォーメーションサッカー'90，F1トリプルバトル，ファイプロシリーズで必要。
 				}
+				else
+					info->bWaveReset[info->Channel] = FALSE; //v2.81追加
+				PSGChn->waveIndex = 0;
 			}
 
 			PSGChn->volume = data & 0x1F;
-			PSGChn->outVolumeL = _VolumeTable[PSGChn->volume + (info->MainVolumeL + PSGChn->volumeL) * 2];
-			PSGChn->outVolumeR = _VolumeTable[PSGChn->volume + (info->MainVolumeR + PSGChn->volumeR) * 2];
+			if ((PSGChn->volume == 0)||(PSGChn->volumeL == 0)) //スーパーバレーボールの笛後等に必要。v2.81追加
+				PSGChn->outVolumeL = 0;
+			else
+				PSGChn->outVolumeL = _VolumeTable[PSGChn->volume + (info->MainVolumeL + PSGChn->volumeL) * 2];
+			if ((PSGChn->volume == 0)||(PSGChn->volumeR == 0)) //スーパーバレーボールの笛後等に必要。v2.81追加
+				PSGChn->outVolumeR = 0;
+			else
+				PSGChn->outVolumeR = _VolumeTable[PSGChn->volume + (info->MainVolumeR + PSGChn->volumeR) * 2];
 			break;
 
 		case 5:	// LAL, RAL
 			PSGChn = &info->Psg[info->Channel];
+			//PRINTF("test5 %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR); //Kitaoテスト用
 			PSGChn->volumeL = (data >> 4) & 0xF;
 			PSGChn->volumeR = data & 0xF;
-			PSGChn->outVolumeL = _VolumeTable[PSGChn->volume + (info->MainVolumeL + PSGChn->volumeL) * 2];
-			PSGChn->outVolumeR = _VolumeTable[PSGChn->volume + (info->MainVolumeR + PSGChn->volumeR) * 2];
+			if ((PSGChn->volume == 0)||(PSGChn->volumeL == 0)) //グラディウスでポーズ時に必要。v2.81追加
+				PSGChn->outVolumeL = 0;
+			else
+				PSGChn->outVolumeL = _VolumeTable[PSGChn->volume + (info->MainVolumeL + PSGChn->volumeL) * 2];
+			if ((PSGChn->volume == 0)||(PSGChn->volumeR == 0)) //グラディウスでポーズ時に必要。v2.81追加
+				PSGChn->outVolumeR = 0;
+			else
+				PSGChn->outVolumeR = _VolumeTable[PSGChn->volume + (info->MainVolumeR + PSGChn->volumeR) * 2];
 			break;
 
 		case 6:	// wave data  //Kitao更新。DDAモードのときもWaveデータを更新するようにした。v0.63。ファイヤープロレスリング
 			PSGChn = &info->Psg[info->Channel];
 			data &= 0x1F;
-			info->bWaveCrash = FALSE; //Kitao追加
+
+			if ((info->bWaveReset[info->Channel])&&(PSGChn->bDDA)&&(PSGChn->waveIndex == 0)&& //DDAモードでwaveIndexが0のとき、Waveデータをリセットする。実機で同様の動きかは未確認。F1トリプルバトル。フォーメーションサッカー'90試合中BGM。v2.79
+				((PSGChn->volumeL > 0)||(PSGChn->volumeR > 0))) //Volumeが0のときに行うとゼビウスでPAUSE後音が薄くなる。v2.82追加
+			{
+				//PRINTF("test6 %X %X %X %X %X",info->Channel,data,PSGChn->waveIndex,PSGChn->volumeL,PSGChn->volumeR); //Kitaoテスト用
+				for (i=0; i<32; i++)
+					PSGChn->wave[i] = -14; //最小値で初期化。フォーメーションサッカー'90，F1トリプルバトル，ファイプロシリーズで必要。
+			}
+			else
+				info->bWaveReset[info->Channel] = FALSE; //v2.82追加
+
 			if (!PSGChn->bOn) //Kitao追加。音を鳴らしていないときだけWaveデータを更新する。v0.65。F1トリプルバトルのエンジン音。
 			{
 				PSGChn->wave[PSGChn->waveIndex++] = 17 - data; //17。Kitao更新。一番心地よく響く値に。ミズバク大冒険，モトローダー，ドラゴンスピリット等で調整。
 				PSGChn->waveIndex &= 0x1F;
 			}
+
 			if (PSGChn->bDDA)
 			{
 				//Kitao更新。ノイズ軽減のため6より下側の値はカットするようにした。v0.59
 				if (data < 6) //サイバーナイトで6に決定
 					data = 6; //ノイズが多いので小さな値はカット
 				PSGChn->ddaSample = 11 - data; //サイバーナイトで11に決定。ドラムの音色が最適。v0.74
-			
-				if (!PSGChn->bOn) //DDAモード時にWaveデータを書き換えた場合
-					info->bWaveCrash = TRUE;
 			}
 			break;
 
@@ -563,6 +590,27 @@ set_VOL(huc6280_state* info)
 		info->VOL = info->Volume / (double)(OVERSAMPLE_RATE * info->PsgVolumeEffect); //Kitao追加。_PsgVolumeEffect=ボリューム調節効果。
 }
 
+//v2.73更新
+//static inline void
+INLINE void
+inc_phase(
+	huc6280_state* info,
+	Sint32		i)
+{
+	Sint32		lfo;
+
+	if ((i==0)&&(info->LfoCtrl>0))
+	{
+		//_LfoCtrlが1のときに0回シフト(そのまま)で、はにいいんざすかいが実機の音に近い。
+		//_LfoCtrlが3のときに4回シフトで、フラッシュハイダースが実機の音に近い。
+		lfo = info->Psg[1].wave[info->Psg[1].phase >> 27] << ((info->LfoCtrl-1) << 1); //v1.60更新
+		info->Psg[0].phase += (Uint32)((double)(65536.0 * 256.0 * 8.0 * info->RESMPL_RATE) / (double)(info->Psg[0].frq + lfo) +0.5);
+		info->Psg[1].phase += (Uint32)((double)(65536.0 * 256.0 * 8.0 * info->RESMPL_RATE) / (double)(info->Psg[1].frq * info->LfoFrq) +0.5); //v1.60更新
+	}
+	else
+		info->Psg[i].phase += info->Psg[i].deltaPhase;
+}
+
 /*-----------------------------------------------------------------------------
 	[Mix]
 		ＰＳＧの出力をミックスします。
@@ -578,7 +626,6 @@ OPSG_Mix(
 	Sint32		i;
 	Uint32		j;
 	Sint32		sample; //Kitao追加
-	Sint32		lfo;
 	Sint32		sampleAllL; //Kitao追加。6chぶんのサンプルを足していくためのバッファ。精度を維持するために必要。6chぶん合計が終わった後に、これをSint16に変換して書き込むようにした。
 	Sint32		sampleAllR; //Kitao追加。上のＲチャンネル用
 	Sint32		smp; //Kitao追加。DDA音量,ノイズ音量計算用
@@ -598,13 +645,23 @@ OPSG_Mix(
 				if (PSGChn->bDDA)
 				{
 					smp = PSGChn->ddaSample * PSGChn->outVolumeL;
+					//smp = PSGChn->ddaSample * PSGChn->outVolumeL * (Sint32)OVERSAMPLE_RATE; //オーバーサンプリング用
 					sampleAllL += smp + (smp >> 3) + (smp >> 4) + (smp >> 5) + (smp >> 7) + (smp >> 12) + (smp >> 14) + (smp >> 15); //Kitao更新。サンプリング音の音量を実機並みに調整。v2.39,v2.40,v2.62,v2.65再調整した。
 					smp = PSGChn->ddaSample * PSGChn->outVolumeR;
+					//smp = PSGChn->ddaSample * PSGChn->outVolumeR * (Sint32)OVERSAMPLE_RATE; //オーバーサンプリング用
 					sampleAllR += smp + (smp >> 3) + (smp >> 4) + (smp >> 5) + (smp >> 7) + (smp >> 12) + (smp >> 14) + (smp >> 15); //Kitao更新。サンプリング音の音量を実機並みに調整。v2.39,v2.40,v2.62,v2.65再調整した。
 				}
 				else if (PSGChn->bNoiseOn)
 				{
 					sample = _NoiseTable[PSGChn->phase >> 17];
+					PSGChn->phase += PSGChn->deltaNoisePhase; //Kitao更新
+					/*
+					for (k = 2; k<=OVERSAMPLE_RATE; k++) //オーバーサンプリング用
+					{
+						sample += _NoiseTable[PSGChn->phase>>17];
+						PSGChn->phase += PSGChn->deltaNoisePhase;
+					}
+					*/
 					
 					if (PSGChn->noiseFrq == 0) //Kitao追加。noiseFrq=0(dataに0x1Fが書き込まれた)のときは音量が通常の半分とした。（ファイヤープロレスリング３、パックランド、桃太郎活劇、がんばれゴルフボーイズなど）
 					{
@@ -620,30 +677,24 @@ OPSG_Mix(
 						smp = sample * PSGChn->outVolumeR;
 						sampleAllR += smp + (smp >> 11) + (smp >> 14) + (smp >> 15); //Kitao更新。ノイズの音量を実機並みに調整
 					}
-					
-					PSGChn->phase += PSGChn->deltaNoisePhase; //Kitao更新
 				}
 				else if (PSGChn->deltaPhase)
 				{
 					//Kitao更新。オーバーサンプリングしないようにした。
 					sample = PSGChn->wave[PSGChn->phase >> 27];
+					inc_phase(info, i); //v2.73更新
+					/*
+					for (k = 2; k<=OVERSAMPLE_RATE; k++) //オーバーサンプリング用
+					{
+						sample += PSGChn->wave[PSGChn->phase >> 27];
+						inc_phase(i); //v2.73更新
+					}
+					*/
 					if (PSGChn->frq < 128)
 						sample -= sample >> 2; //低周波域の音量を制限。ブラッドギアのスタート時などで実機と同様の音に。ソルジャーブレイドなども実機に近くなった。v2.03
 
 					sampleAllL += sample * PSGChn->outVolumeL; //Kitao更新
 					sampleAllR += sample * PSGChn->outVolumeR; //Kitao更新
-					
-					//Kitao更新。Lfoオンが有効になるようにし、Lfoの掛かり具合を実機に近づけた。v1.59
-					if ((i==0)&&(info->LfoCtrl>0))
-					{
-						//_LfoCtrlが1のときに0回シフト(そのまま)で、はにいいんざすかいが実機の音に近い。
-						//_LfoCtrlが3のときに4回シフトで、フラッシュハイダースが実機の音に近い。
-						lfo = info->Psg[1].wave[info->Psg[1].phase >> 27] << ((info->LfoCtrl-1) << 1); //v1.60更新
-						info->Psg[0].phase += (Uint32)((double)(65536.0 * 256.0 * 8.0 * info->RESMPL_RATE) / (double)(info->Psg[0].frq + lfo) +0.5);
-						info->Psg[1].phase += (Uint32)((double)(65536.0 * 256.0 * 8.0 * info->RESMPL_RATE) / (double)(info->Psg[1].frq * info->LfoFrq) +0.5); //v1.60更新
-					}
-					else
-						PSGChn->phase += PSGChn->deltaPhase;
 				}
 			}
 			//Kitao追加。DDA消音時はノイズ軽減のためフェードアウトで消音する。
@@ -657,7 +708,9 @@ OPSG_Mix(
 			else if (info->DdaFadeOutR[i] < 0)
 				++info->DdaFadeOutR[i];
 			sampleAllL += info->DdaFadeOutL[i];
+			//sampleAllL += info->DdaFadeOutL[i] * OVERSAMPLE_RATE; //オーバーサンプリング用
 			sampleAllR += info->DdaFadeOutR[i];
+			//sampleAllR += info->DdaFadeOutR[i] * OVERSAMPLE_RATE; //オーバーサンプリング用
 		}
 		//Kitao更新。6ch合わさったところで、ボリューム調整してバッファに書き込む。
 		bufL[j] = (DEV_SMPL)((double)sampleAllL * info->VOL);
@@ -680,7 +733,7 @@ OPSG_Mix(
 static void
 psg_reset(huc6280_state* info)
 {
-	int		i,j;
+	int	i;
 
 	memset(info->Psg, 0, sizeof(info->Psg));
 	memset(info->DdaFadeOutL, 0, sizeof(info->DdaFadeOutL)); //Kitao追加
@@ -689,15 +742,13 @@ psg_reset(huc6280_state* info)
 	info->MainVolumeR = 0;
 	info->LfoFrq = 0;
 	info->LfoCtrl = 0;
-	info->Channel = 0; //Kitao追加。v2.65
-	info->bWaveCrash = FALSE; //Kitao追加
+	memset(info->bWaveReset, 0, sizeof(info->bWaveReset)); //Kitao追加。v2.81
 
 	//Kitao更新。v0.65．waveデータを初期化。
-	for (i=0; i<N_CHANNEL; i++)
-		for (j=0; j<32; j++)
-			info->Psg[i].wave[j] = -14; //最小値で初期化。ファイプロ，フォーメーションサッカー'90，F1トリプルバトルで必要。
-	for (j=0; j<32; j++)
-		info->Psg[3].wave[j] = 17; //ch3は最大値で初期化。F1トリプルバトル。v2.65
+	for (info->Channel=0; info->Channel<=5; info->Channel++)
+		for (i=0; i<32; i++)
+			info->Psg[info->Channel].wave[i] = 17; //ch3は最大値で初期化。F1トリプルバトル。ファイプロ。v2.65
+	info->Channel = 0; //Kitao追加。v2.65
 
 #ifdef ENABLE_QUEUE
 	//Kitao更新。v1.10。キュー処理をここに統合

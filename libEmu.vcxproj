@@ -269,6 +269,7 @@
     <ClInclude Include="emu\cores\np_nes_dmc.h" />
     <ClInclude Include="emu\cores\np_nes_fds.h" />
     <ClInclude Include="emu\cores\nukedopl.h" />
+    <ClInclude Include="emu\cores\nukedopl_int.h" />
     <ClInclude Include="emu\cores\okiadpcm.h" />
     <ClInclude Include="emu\cores\okim6258.h" />
     <ClInclude Include="emu\cores\Ootake_PSG.h" />
