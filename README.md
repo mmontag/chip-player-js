@@ -1,5 +1,5 @@
 # libADLMIDI
-libADLMIDI is a free MIDI to WAV conversion library with OPL3 emulation
+libADLMIDI is a free Software MIDI synthesizer library with OPL3 emulation
 
 Original ADLMIDI code: Copyright (c) 2010-2014 Joel Yliluoma <bisqwit@iki.fi>
 
