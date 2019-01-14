@@ -141,18 +141,6 @@ export default class Search extends PureComponent {
     return grouped;
   }
 
-  handleSearchFocus(e) {
-    // highlight text
-    e.target.select();
-    // ignore mouseup if focused by click
-    if (e.button) {
-      e.target.onmouseup = () => {
-        e.target.onmouseup = null;
-        return false;
-      }
-    }
-  };
-
   handleGroupClick(e, query) {
     e.preventDefault();
     this.onSearchInputChange(query);
