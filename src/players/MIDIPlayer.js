@@ -8,7 +8,7 @@ const SOUNDFONTS = [
   {
     label: 'Small Soundfonts',
     items: [
-      {label: 'GMGSx (4.1 MB)', value: 'gmgsx.sf2'},
+      {label: 'GMGSx Plus (6.2 MB)', value: 'gmgsx-plus.sf2'},
       {label: 'Roland SC-55 (3.3 MB)', value: 'Roland SC-55.sf2'},
       {label: 'Roland SCC1 (3.3 MB)', value: 'Scc1t2.sf2'},
       {label: 'Yamaha DB50XG (3.9 MB)', value: 'Yamaha DB50XG.sf2'},
