@@ -179,6 +179,7 @@ class App extends PureComponent {
     this.state = {
       catalog: null,
       loading: true,
+      loadingUser: true,
       paused: true,
       ejected: true,
       playerError: null,

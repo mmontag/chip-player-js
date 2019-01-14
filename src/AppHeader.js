@@ -4,17 +4,18 @@ export default class AppHeader extends PureComponent {
   render() {
     return (
       <header className="App-header">
-        <h2 className="App-title">Chip Player JS&nbsp;
-          {this.props.user ?
-            <span>• Logged in as {this.props.user.displayName}.&nbsp;
-              <a href="#" onClick={this.props.handleLogout}>Logout</a>
-              </span>
-            :
-            <span>
-                <a href="#" onClick={this.props.handleLogin}>Login/Sign Up</a> to Save Favorites
-              </span>
-          }
-        </h2>
+        <a className="App-title" href="/">Chip Player JS</a>&nbsp;
+        {this.props.user ?
+          <span>
+              • Logged in as {this.props.user.displayName}.&nbsp;
+            <a href="#" onClick={this.props.handleLogout}>Logout</a>
+            </span>
+          :
+          <span>
+              • <a href="#" onClick={this.props.handleLogin}>Login/Sign Up</a>&nbsp;
+            to Save Favorites
+            </span>
+        }
         {!this.props.isPhone &&
         <p className="App-subtitle">
             <span className="App-byline">Feedback:&nbsp;
