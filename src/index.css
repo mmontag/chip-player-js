@@ -79,14 +79,14 @@ select {
     background-size: 4px 12px, 4px 12px;
     background-repeat: no-repeat;
 }
-select:before, button:before { content: '[ '; }
-select:after, button:after   { content: ' ]'; }
 select option                { font-size: 14px; }
 
 button          { background: #66d; padding: 0; margin: 0; }
 button:focus    { background: #00f; }
 button:active   { background: #800; }
 button:disabled { background: #777; color: #ccc; }
+.box-button        { padding: 0 16px; box-shadow: 8px 8px rgb(0,0,84); }
+.box-button:active { box-shadow: none; }
 
 input[type=text] {
     border: 0;
@@ -178,9 +178,13 @@ body,#root {
 
 .App .App-header {
     border-bottom: 1px solid yellow;
-    padding: 0 19px;
+    padding: 19px 19px 0 19px;
     margin: 0 -19px;
     flex-grow: 0;
+}
+
+.App-title, .App-title:visited, .App-title:link {
+    color: #fff;
 }
 
 .App-byline {

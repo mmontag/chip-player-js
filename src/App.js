@@ -488,15 +488,15 @@ class App extends PureComponent {
         <div className="App-footer">
           <div className="App-footer-main">
             <button onClick={this.togglePause}
+                    className="box-button"
                     disabled={this.state.ejected}>
               {this.state.paused ? 'Resume' : 'Pause'}
-            </button>
-            &nbsp;
-            <button onClick={this.handlePlayRandom}>
+            </button>&nbsp;
+            <button className="box-button" onClick={this.handlePlayRandom}>
               I'm Feeling Lucky
             </button>
             {!this.state.showSettings &&
-            <button className="App-player-settings-button" onClick={this.toggleSettings}>
+            <button className="App-player-settings-button box-button" onClick={this.toggleSettings}>
               Player Settings >
             </button>}
             {this.state.playerError &&
@@ -510,10 +510,12 @@ class App extends PureComponent {
             <span>
                 Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
               <button
+                className="box-button"
                 disabled={this.state.ejected}
                 onClick={this.prevSubtune}>Prev</button>
               &nbsp;
               <button
+                className="box-button"
                 disabled={this.state.ejected}
                 onClick={this.nextSubtune}>Next</button><br/>
               </span>}
