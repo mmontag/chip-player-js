@@ -12,3 +12,4 @@ src/-catalog-tests/
 src/chip-core.js
 public/catalog.json
 catalog
+public/music
