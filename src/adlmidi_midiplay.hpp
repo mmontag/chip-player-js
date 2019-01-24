@@ -254,6 +254,8 @@ public:
         char _padding2[5];
         //! Count of gliding notes in this channel
         unsigned gliding_note_count;
+        //! Count of notes having a TTL countdown in this channel
+        unsigned extended_note_count;
 
         //! Active notes in the channel
         pl_list<NoteInfo> activenotes;
@@ -275,7 +277,10 @@ public:
         notes_iterator find_or_create_activenote(unsigned note)
         {
             notes_iterator it = find_activenote(note);
-            if(it.is_end()) {
+            if(!it.is_end())
+                cleanupNote(it);
+            else
+            {
                 NoteInfo ni;
                 ni.note = note;
                 it = activenotes.insert(activenotes.end(), ni);
@@ -352,10 +357,23 @@ public:
             bendsense = cent * (1.0 / (128 * 8192));
         }
 
+        /**
+         * @brief Clean up the state of the active note before removal
+         */
+        void cleanupNote(notes_iterator i)
+        {
+            NoteInfo &info = i->value;
+            if(info.glideRate != HUGE_VAL)
+                --gliding_note_count;
+            if(info.ttl > 0)
+                --extended_note_count;
+        }
+
         MIDIchannel()
             : activenotes(128)
         {
             gliding_note_count = 0;
+            extended_note_count = 0;
             reset();
         }
     };
