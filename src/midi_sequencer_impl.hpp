@@ -819,7 +819,7 @@ void BW_MidiSequencer::buildTimeLine(const std::vector<MidiEvent> &tempos,
     //Resolve "hell of all times" of too short drum notes:
     //move too short percussion note-offs far far away as possible
     /********************************************************************************/
-#if 1 //Use this to record WAVEs for comparison before/after implementing of this
+#if 0 //Use this to record WAVEs for comparison before/after implementing of this
     if(m_format == Format_MIDI)//Percussion fix is needed for MIDI only, not for IMF/RSXX or CMF
     {
         //! Minimal real time in seconds

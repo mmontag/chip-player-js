@@ -26,6 +26,10 @@
 #include "adlmidi_private.hpp"
 #include "midi_sequencer.hpp"
 
+// Minimum life time of percussion notes
+static const double drum_note_min_time = 0.03;
+
+
 // Mapping from MIDI volume level to OPL level value.
 
 static const uint_fast32_t DMX_volume_mapping_table[128] =
@@ -255,8 +259,33 @@ void MIDIplay::resetMIDI()
 void MIDIplay::TickIterators(double s)
 {
     Synth &synth = *m_synth;
-    for(uint16_t c = 0; c < synth.m_numChannels; ++c)
-        m_chipChannels[c].addAge(static_cast<int64_t>(s * 1e6));
+    for(uint32_t c = 0, n = synth.m_numChannels; c < n; ++c)
+    {
+        AdlChannel &ch = m_chipChannels[c];
+        ch.addAge(static_cast<int64_t>(s * 1e6));
+    }
+
+    // Resolve "hell of all times" of too short drum notes
+    for(size_t c = 0, n = m_midiChannels.size(); c < n; ++c)
+    {
+        MIDIchannel &ch = m_midiChannels[c];
+        for(MIDIchannel::notes_iterator inext = ch.activenotes.begin(); !inext.is_end();)
+        {
+            MIDIchannel::notes_iterator i(inext++);
+            MIDIchannel::NoteInfo &ni = i->value;
+            double ttl = ni.ttl;
+            if(ttl > 0)
+            {
+                ni.ttl = ttl = ttl - s;
+                if(ni.isOnExtendedLifeTime && ttl <= 0)
+                {
+                    noteUpdate(c, i, Upd_Off);
+                    ni.isOnExtendedLifeTime = false;
+                }
+            }
+        }
+    }
+
     updateVibrato(s);
     updateArpeggio(s);
 #if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
@@ -472,6 +501,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
         MIDIchannel::notes_iterator i = midiChan.ensure_find_or_create_activenote(note);
         MIDIchannel::NoteInfo &dummy = i->value;
         dummy.isBlank = true;
+        dummy.isOnExtendedLifeTime = false;
+        dummy.ttl = 0;
         dummy.ains = NULL;
         dummy.chip_channels_count = 0;
         // Record the last note on MIDI channel as source of portamento
@@ -576,6 +607,8 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     ni.midiins = midiins;
     ni.isPercussion = isPercussion;
     ni.isBlank = isBlankNote;
+    ni.isOnExtendedLifeTime = false;
+    ni.ttl = isPercussion ? drum_note_min_time : 0;
     ni.ains = ains;
     ni.chip_channels_count = 0;
 
@@ -1688,10 +1721,17 @@ void MIDIplay::updatePortamento(size_t midCh)
 
 void MIDIplay::noteOff(size_t midCh, uint8_t note)
 {
-    MIDIchannel::notes_iterator
-    i = m_midiChannels[midCh].find_activenote(note);
+    MIDIchannel &ch = m_midiChannels[midCh];
+    MIDIchannel::notes_iterator i = ch.find_activenote(note);
+
     if(!i.is_end())
-        noteUpdate(midCh, i, Upd_Off);
+    {
+        MIDIchannel::NoteInfo &ni = i->value;
+        if(ni.ttl <= 0)
+            noteUpdate(midCh, i, Upd_Off);
+        else
+            ni.isOnExtendedLifeTime = true;
+    }
 }
 
 

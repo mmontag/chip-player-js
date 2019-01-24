@@ -156,6 +156,10 @@ public:
             bool    isPercussion;
             //! Note that plays missing instrument. Doesn't using any chip channels
             bool    isBlank;
+            //! Whether releasing and on extended life time defined by TTL
+            bool    isOnExtendedLifeTime;
+            //! Time-to-live until release (short percussion note fix)
+            double  ttl;
             //! Patch selected
             const adlinsdata2 *ains;
             enum
