@@ -25,10 +25,8 @@ add_executable(adlmidi2 ${adlmidi2_src})
 target_link_libraries(adlmidi2 PRIVATE ADLMIDI)
 
 if(NOT WIN32 AND NOT ADLMIDI_DOS)
-    find_package(SDL2 REQUIRED)
-    string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
-    target_include_directories(adlmidi2 PRIVATE ${SDL2_INCLUDE_DIRS})
-    target_link_libraries(adlmidi2 PRIVATE ${SDL2_LIBRARIES})
+    libADLMIDI_find_SDL2()
+    target_link_libraries(adlmidi2 PRIVATE ADLMIDI_SDL2)
 endif()
 
 if(ADLMIDI2_HAS_PUZZLE_GAME)

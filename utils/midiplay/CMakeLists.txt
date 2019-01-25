@@ -4,10 +4,8 @@ add_executable(adlmidiplay
 )
 
 if(NOT ADLMIDI_DOS AND NOT MIDIPLAY_WAVE_ONLY)
-    find_package(SDL2 REQUIRED)
-    string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
-    target_include_directories(adlmidiplay PRIVATE ${SDL2_INCLUDE_DIRS})
-    target_link_libraries(adlmidiplay PRIVATE ${SDL2_LIBRARIES})
+    libADLMIDI_find_SDL2()
+    target_link_libraries(adlmidiplay PRIVATE ADLMIDI_SDL2)
 endif()
 
 if(MIDIPLAY_WAVE_ONLY)
