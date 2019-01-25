@@ -963,8 +963,9 @@ private:
      * @brief Off the note
      * @param midCh MIDI channel
      * @param note Note to off
+     * @param forceNow Do not delay the key-off to a later time
      */
-    void noteOff(size_t midCh, uint8_t note);
+    void noteOff(size_t midCh, uint8_t note, bool forceNow = false);
 
     /**
      * @brief Update processing of vibrato to amount of seconds

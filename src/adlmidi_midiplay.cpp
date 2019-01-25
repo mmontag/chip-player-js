@@ -345,7 +345,7 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 
     if(static_cast<size_t>(channel) > m_midiChannels.size())
         channel = channel % 16;
-    noteOff(channel, note);
+    noteOff(channel, note, velocity != 0);
     // On Note on, Keyoff the note first, just in case keyoff
     // was omitted; this fixes Dance of sugar-plum fairy
     // by Microsoft. Now that we've done a Keyoff,
@@ -1733,7 +1733,7 @@ void MIDIplay::updatePortamento(size_t midCh)
 }
 
 
-void MIDIplay::noteOff(size_t midCh, uint8_t note)
+void MIDIplay::noteOff(size_t midCh, uint8_t note, bool forceNow)
 {
     MIDIchannel &ch = m_midiChannels[midCh];
     MIDIchannel::notes_iterator i = ch.find_activenote(note);
@@ -1741,7 +1741,7 @@ void MIDIplay::noteOff(size_t midCh, uint8_t note)
     if(!i.is_end())
     {
         MIDIchannel::NoteInfo &ni = i->value;
-        if(ni.ttl <= 0)
+        if(forceNow || ni.ttl <= 0)
             noteUpdate(midCh, i, Upd_Off);
         else
             ni.isOnExtendedLifeTime = true;
