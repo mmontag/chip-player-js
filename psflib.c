@@ -100,7 +100,7 @@ static int psf_load_internal(psf_load_state * state, const char * file_name);
 
 
 static int psf_want_status(psf_load_state * state);
-static void psf_status(psf_load_state * state, const char * message);
+static void psf_status(psf_load_state * state, const char * message, int indent);
 
 int psf_load(const char * uri, const psf_file_callbacks * file_callbacks, uint8_t allowed_version,
 	psf_load_callback load_target, void * load_context, psf_info_callback info_target,
@@ -130,7 +130,7 @@ int psf_load(const char * uri, const psf_file_callbacks * file_callbacks, uint8_
 	state.base_path = strdup(uri);
 	if (!state.base_path)
 	{
-		psf_status(&state, "Out of memory allocating state.base_path\n");
+		psf_status(&state, "Out of memory allocating state.base_path\n", 1);
 		return -1;
 	}
 
@@ -151,7 +151,7 @@ int psf_load(const char * uri, const psf_file_callbacks * file_callbacks, uint8_
 
 	free(state.base_path);
 
-	psf_status(&state, "Done.");
+	psf_status(&state, "Done.", 0);
 
 	return rval;
 }
@@ -424,7 +424,7 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 
 	if (++state->depth > max_recursion_depth)
 	{
-		psf_status(state, "Exceeded maximum file nesting depth.\n");
+		psf_status(state, "Exceeded maximum file nesting depth.\n", 1);
 		return -1;
 	}
 
@@ -448,33 +448,35 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 	{
 		if (psf_want_status(state))
 		{
-			psf_status(state, "Error opening file: ");
-			psf_status(state, file_name);
-			psf_status(state, "\nFrom base path: ");
-			psf_status(state, state->base_path);
-			psf_status(state, "\n");
+			psf_status(state, "Error opening file: ", 1);
+			psf_status(state, file_name, 0);
+			psf_status(state, "\n", 0);
+			psf_status(state, "From base path: ", 1);
+			psf_status(state, state->base_path, 0);
+			psf_status(state, "\n", 0);
 		}
 		return -1;
 	}
 
 	if (psf_want_status(state))
 	{
-		psf_status(state, "Opened file: ");
-		psf_status(state, file_name);
-		psf_status(state, "\nFrom base path: ");
-		psf_status(state, state->base_path);
-		psf_status(state, "\n");
+		psf_status(state, "Opened file: ", 1);
+		psf_status(state, file_name, 0);
+		psf_status(state, "\n", 0);
+		psf_status(state, "From base path: ", 1);
+		psf_status(state, state->base_path, 0);
+		psf_status(state, "\n", 0);
 	}
 
 	if (state->file_callbacks->fread(header_buffer, 1, 16, file) < 16)
 	{
-		psf_status(state, "File too small to contain a valid header.\n");
+		psf_status(state, "File too small to contain a valid header.\n", 1);
 		goto error_close_file;
 	}
 
 	if (memcmp(header_buffer, "PSF", 3))
 	{
-		psf_status(state, "File does not contain a valid PSF signature.\n");
+		psf_status(state, "File does not contain a valid PSF signature.\n", 1);
 		goto error_close_file;
 	}
 
@@ -484,15 +486,15 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 		{
 			char *end;
 			char temp[8];
-			psf_status(state, "Expected PSF version ");
+			psf_status(state, "Expected PSF version ", 1);
 			snprintf(temp, 7, "%d", (int)state->allowed_version);
 			temp[7] = '\0';
-			psf_status(state, temp);
-			psf_status(state, ", got ");
+			psf_status(state, temp, 0);
+			psf_status(state, ", got ", 0);
 			snprintf(temp, 7, "%d", (int)header_buffer[3]);
 			temp[7] = '\0';
-			psf_status(state, temp);
-			psf_status(state, "\n");
+			psf_status(state, temp, 0);
+			psf_status(state, "\n", 0);
 		}
 		goto error_close_file;
 	}
@@ -503,7 +505,7 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 
 	if (state->file_callbacks->fseek(file, 0, SEEK_END))
 	{
-		psf_status(state, "Could not seek to end of file to determine file size.\n");
+		psf_status(state, "Could not seek to end of file to determine file size.\n", 1);
 		goto error_close_file;
 	}
 
@@ -511,29 +513,29 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 
 	if (file_size <= 0)
 	{
-		psf_status(state, "Could not determine file size.\n");
+		psf_status(state, "Could not determine file size.\n", 1);
 		goto error_close_file;
 	}
 
 	if ((unsigned long)file_size >= 16 + reserved_size + exe_compressed_size + 5)
 	{
-		psf_status(state, "Tag detected, attempting to read it.\n");
+		psf_status(state, "Tag detected, attempting to read it.\n", 1);
 
 		tag_size = file_size - (16 + reserved_size + exe_compressed_size);
 		if (state->file_callbacks->fseek(file, -tag_size, SEEK_CUR))
 		{
-			psf_status(state, "Could not seek back to read tag.\n");
+			psf_status(state, "Could not seek back to read tag.\n", 1);
 			goto error_close_file;
 		}
 		tag_buffer = (char *)malloc(tag_size + 1);
 		if (!tag_buffer)
 		{
-			psf_status(state, "Out of memory allocating tag buffer.\n");
+			psf_status(state, "Out of memory allocating tag buffer.\n", 1);
 			goto error_close_file;
 		}
 		if (state->file_callbacks->fread(tag_buffer, 1, tag_size, file) < (size_t)tag_size)
 		{
-			psf_status(state, "Could not read tag.\n");
+			psf_status(state, "Could not read tag.\n", 1);
 			goto error_free_buffers;
 		}
 		tag_buffer[tag_size] = 0;
@@ -551,11 +553,11 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 				{
 					if (psf_want_status(state))
 					{
-						psf_status(state, "Caller rejected tag: ");
-						psf_status(state, tag->name);
-						psf_status(state, "=");
-						psf_status(state, tag->value);
-						psf_status(state, "\n");
+						psf_status(state, "Caller rejected tag: ", 1);
+						psf_status(state, tag->name, 0);
+						psf_status(state, "=", 0);
+						psf_status(state, tag->value, 0);
+						psf_status(state, "\n", 0);
 					}
 					goto error_free_tags;
 				}
@@ -571,9 +573,9 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 	{
 		if (psf_want_status(state))
 		{
-			psf_status(state, "Found _lib: ");
-			psf_status(state, tag->value);
-			psf_status(state, "\n");
+			psf_status(state, "Found _lib: ", 1);
+			psf_status(state, tag->value, 0);
+			psf_status(state, "\n", 0);
 		}
 		if (psf_load_internal(state, tag->value) < 0) goto error_free_tags;
 	}
@@ -581,35 +583,35 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 	reserved_buffer = (uint8_t *)malloc(reserved_size);
 	if (!reserved_buffer)
 	{
-		psf_status(state, "Out of memory allocating buffer for reserved section.\n");
+		psf_status(state, "Out of memory allocating buffer for reserved section.\n", 1);
 		goto error_free_tags;
 	}
 	exe_compressed_buffer = (uint8_t *)malloc(exe_compressed_size);
 	if (!exe_compressed_buffer)
 	{
-		psf_status(state, "Out of memory allocating buffer for compressed exe section.\n");
+		psf_status(state, "Out of memory allocating buffer for compressed exe section.\n", 1);
 		goto error_free_tags;
 	}
 
 	if (state->file_callbacks->fseek(file, 16, SEEK_SET))
 	{
-		psf_status(state, "Could not seek back to main data section of file.");
+		psf_status(state, "Could not seek back to main data section of file.", 1);
 		goto error_free_tags;
 	}
 	if (reserved_size && state->file_callbacks->fread(reserved_buffer, 1, reserved_size, file) < reserved_size)
 	{
-		psf_status(state, "Could not read reserved section.\n");
+		psf_status(state, "Could not read reserved section.\n", 1);
 		goto error_free_tags;
 	}
 	if (exe_compressed_size && state->file_callbacks->fread(exe_compressed_buffer, 1, exe_compressed_size, file) < exe_compressed_size)
 	{
-		psf_status(state, "Could not read compressed exe section.\n");
+		psf_status(state, "Could not read compressed exe section.\n", 1);
 		goto error_free_tags;
 	}
 	state->file_callbacks->fclose(file);
 	file = NULL;
 
-	psf_status(state, "File closed.\n");
+	psf_status(state, "File closed.\n", 1);
 
 	if (exe_compressed_size)
 	{
@@ -619,15 +621,15 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 			if (psf_want_status(state))
 			{
 				char temp[16];
-				psf_status(state, "CRC mismatch on compressed exe section.\nWanted: 0x");
+				psf_status(state, "CRC mismatch on compressed exe section.\nWanted: 0x", 1);
 				snprintf(temp, 15, "%X", exe_crc32);
 				temp[15] = '\0';
-				psf_status(state, temp);
-				psf_status(state, ", got 0x");
+				psf_status(state, temp, 0);
+				psf_status(state, ", got 0x", 0);
 				snprintf(temp, 15, "%X", got_crc32);
 				temp[15] = '\0';
-				psf_status(state, temp);
-				psf_status(state, "\n");
+				psf_status(state, temp, 0);
+				psf_status(state, "\n", 0);
 			}
 			goto error_free_tags;
 		}
@@ -636,7 +638,7 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 		exe_decompressed_buffer = (uint8_t *)malloc(exe_decompressed_size);
 		if (!exe_decompressed_buffer)
 		{
-			psf_status(state, "Out of memory allocating buffer for decompressed exe section.\n");
+			psf_status(state, "Out of memory allocating buffer for decompressed exe section.\n", 1);
 			goto error_free_tags;
 		}
 
@@ -646,7 +648,7 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 
 			if (Z_MEM_ERROR != zerr && Z_BUF_ERROR != zerr)
 			{
-				psf_status(state, "Could not decompress exe section.\n");
+				psf_status(state, "Could not decompress exe section.\n", 1);
 				goto error_free_tags;
 			}
 
@@ -660,7 +662,7 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 			try_exe_decompressed_buffer = realloc(exe_decompressed_buffer, exe_decompressed_size);
 			if (!try_exe_decompressed_buffer)
 			{
-				psf_status(state, "Out of memory reallocating buffer for decompressed exe section.\n");
+				psf_status(state, "Out of memory reallocating buffer for decompressed exe section.\n", 1);
 				goto error_free_tags;
 			}
 
@@ -673,7 +675,7 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 		exe_decompressed_buffer = (uint8_t *)malloc(exe_decompressed_size);
 		if (!exe_decompressed_buffer)
 		{
-			psf_status(state, "Out of memory allocating dummy buffer for exe section.\n");
+			psf_status(state, "Out of memory allocating dummy buffer for exe section.\n", 1);
 			goto error_free_tags;
 		}
 	}
@@ -681,11 +683,11 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 	free(exe_compressed_buffer);
 	exe_compressed_buffer = NULL;
 
-	psf_status(state, "Passing data on to caller.\n");
+	psf_status(state, "Passing exe and reserved back out.\n", 1);
 
 	if (state->load_target(state->load_context, exe_decompressed_buffer, exe_decompressed_size, reserved_buffer, reserved_size))
 	{
-		psf_status(state, "Caller returned an error.\n");
+		psf_status(state, "Data handler returned an error.\n", 1);
 		goto error_free_tags;
 	}
 
@@ -703,11 +705,11 @@ static int psf_load_internal(psf_load_state * state, const char * file_name)
 	{
 		if (psf_want_status(state))
 		{
-			psf_status(state, "Found ");
-			psf_status(state, tag->name);
-			psf_status(state, ": ");
-			psf_status(state, tag->value);
-			psf_status(state, "\n");
+			psf_status(state, "Found ", 1);
+			psf_status(state, tag->name, 0);
+			psf_status(state, ": ", 0);
+			psf_status(state, tag->value, 0);
+			psf_status(state, "\n", 0);
 		}
 		if (psf_load_internal(state, tag->value) < 0) goto error_free_tags;
 		++n;
@@ -742,15 +744,18 @@ int psf_want_status(psf_load_state * state)
 	return !!state->status_target;
 }
 
-void psf_status(psf_load_state * state, const char * message)
+void psf_status(psf_load_state * state, const char * message, int indent)
 {
 	if (state->status_target)
 	{
-		char indent[16];
-		int indent_level = state->depth > 1 ? state->depth - 1 : 0;
-		memset(indent, ' ', indent_level);
-		indent[indent_level] = '\0';
-		state->status_target(state->status_context, indent);
+		if (indent)
+		{
+			char indent[16];
+			int indent_level = state->depth > 1 ? state->depth - 1 : 0;
+			memset(indent, ' ', indent_level);
+			indent[indent_level] = '\0';
+			state->status_target(state->status_context, indent);
+		}
 		state->status_target(state->status_context, message);
 	}
 }
