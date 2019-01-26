@@ -126,6 +126,11 @@ double get_seconds()
   return (double)(t.tv_sec) + (double)(t.tv_usec) * 0.000001;
 }
 
+static void print_message( void * unused, const char * message )
+{
+	fputs( message, stderr );
+}
+
 int main(int argc, char ** argv)
 {
 	if ( argc == 2 || argc == 3 )
@@ -139,7 +144,7 @@ int main(int argc, char ** argv)
 
         usf_clear(state);
 
-		if ( psf_load( argv[1], &stdio_callbacks, 0x21, usf_loader, 0, usf_info, 0, 1 ) <= 0 )
+		if ( psf_load( argv[1], &stdio_callbacks, 0x21, usf_loader, 0, usf_info, 0, 1, print_message, 0 ) <= 0 )
             return 1;
 
         usf_set_compare(state, enable_compare);
