@@ -346,6 +346,7 @@ const char * usf_render_resampled(void * state, int16_t * buffer, size_t count, 
             unsigned long samples_to_remove = samples_buffered;
             if (samples_to_remove > count)
                 samples_to_remove = count;
+            count -= samples_to_remove;
             while (samples_to_remove--)
                 resampler_remove_sample(USF_STATE->resampler);
             if (!count)
