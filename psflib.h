@@ -74,6 +74,9 @@ typedef int (* psf_load_callback)(void * context, const uint8_t * exe, size_t ex
  */
 typedef int (* psf_info_callback)(void * context, const char * name, const char * value);
 
+/* Receives any status messages, which should be appended to one big message. */
+typedef void (* psf_status_callback)(void * context, const char * message);
+
 /* Loads the PSF chain starting with uri, opened using file_callbacks, passes the tags,
  * if any, to the optional info_target callback, then passes all loaded data to load_target
  * with the highest priority file first.
@@ -86,7 +89,9 @@ typedef int (* psf_info_callback)(void * context, const char * name, const char 
  * Returns negative on error, PSF version on success.
  */
 int psf_load( const char * uri, const psf_file_callbacks * file_callbacks, uint8_t allowed_version,
-              psf_load_callback load_target, void * load_context, psf_info_callback info_target, void * info_context, int info_want_nested_tags );
+              psf_load_callback load_target, void * load_context, psf_info_callback info_target,
+              void * info_context, int info_want_nested_tags, psf_status_callback status_target,
+              void * status_context);
 
 #ifdef __cplusplus
 }
