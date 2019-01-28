@@ -156,6 +156,10 @@ public:
             bool    isPercussion;
             //! Note that plays missing instrument. Doesn't using any chip channels
             bool    isBlank;
+            //! Whether releasing and on extended life time defined by TTL
+            bool    isOnExtendedLifeTime;
+            //! Time-to-live until release (short percussion note fix)
+            double  ttl;
             //! Patch selected
             const adlinsdata2 *ains;
             enum
@@ -250,6 +254,8 @@ public:
         char _padding2[5];
         //! Count of gliding notes in this channel
         unsigned gliding_note_count;
+        //! Count of notes having a TTL countdown in this channel
+        unsigned extended_note_count;
 
         //! Active notes in the channel
         pl_list<NoteInfo> activenotes;
@@ -271,7 +277,10 @@ public:
         notes_iterator find_or_create_activenote(unsigned note)
         {
             notes_iterator it = find_activenote(note);
-            if(it.is_end()) {
+            if(!it.is_end())
+                cleanupNote(it);
+            else
+            {
                 NoteInfo ni;
                 ni.note = note;
                 it = activenotes.insert(activenotes.end(), ni);
@@ -348,10 +357,23 @@ public:
             bendsense = cent * (1.0 / (128 * 8192));
         }
 
+        /**
+         * @brief Clean up the state of the active note before removal
+         */
+        void cleanupNote(notes_iterator i)
+        {
+            NoteInfo &info = i->value;
+            if(info.glideRate != HUGE_VAL)
+                --gliding_note_count;
+            if(info.ttl > 0)
+                --extended_note_count;
+        }
+
         MIDIchannel()
             : activenotes(128)
         {
             gliding_note_count = 0;
+            extended_note_count = 0;
             reset();
         }
     };
@@ -941,8 +963,9 @@ private:
      * @brief Off the note
      * @param midCh MIDI channel
      * @param note Note to off
+     * @param forceNow Do not delay the key-off to a later time
      */
-    void noteOff(size_t midCh, uint8_t note);
+    void noteOff(size_t midCh, uint8_t note, bool forceNow = false);
 
     /**
      * @brief Update processing of vibrato to amount of seconds

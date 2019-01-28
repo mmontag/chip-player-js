@@ -141,16 +141,8 @@ double MIDIplay::Tick(double s, double granularity)
     MidiSequencer &seqr = *m_sequencer;
     double ret = seqr.Tick(s, granularity);
 
-    Synth &synth = *m_synth;
     s *= seqr.getTempoMultiplier();
-    for(uint16_t c = 0; c < synth.m_numChannels; ++c)
-        m_chipChannels[c].addAge(static_cast<int64_t>(s * 1e6));
-
-    updateVibrato(s);
-    updateArpeggio(s);
-#if !defined(ADLMIDI_AUDIO_TICK_HANDLER)
-    updateGlide(s);
-#endif
+    TickIterators(s);
 
     return ret;
 }
