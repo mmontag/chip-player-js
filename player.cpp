@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 		fLoad.CancelLoading();
 		if (player != NULL)
 			delete player;
-		printf("Error 0x%02X loading file!\n", retVal);
+		fprintf(stderr, "Error 0x%02X loading file!\n", retVal);
 		continue;
 	}
 	player->SetCallback(&FilePlayCallback, NULL);
@@ -385,7 +385,7 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	}
 	if (! (player->GetState() & PLAYSTATE_PLAY))
 	{
-		printf("Player Warning: calling Render while not playing! playState = 0x%02X\n", player->GetState());
+		fprintf(stderr, "Player Warning: calling Render while not playing! playState = 0x%02X\n", player->GetState());
 		memset(data, 0x00, smplCount * smplSize);
 		return smplCount * smplSize;
 	}
@@ -450,10 +450,10 @@ static UINT8 FilePlayCallback(PlayerBase* player, void* userParam, UINT8 evtType
 	switch(evtType)
 	{
 	case PLREVT_START:
-		//printf("S98 playback started.\n");
+		//printf("Playback started.\n");
 		break;
 	case PLREVT_STOP:
-		//printf("S98 playback stopped.\n");
+		//printf("Playback stopped.\n");
 		break;
 	case PLREVT_LOOP:
 		{
@@ -524,7 +524,7 @@ static UINT8 InitAudioSystem(void)
 	idWavOutDev = 0;	// default device
 	if (AudioOutDrv != (UINT32)-1 && idWavOut == (UINT32)-1)
 	{
-		printf("Requested Audio Output driver not found!\n");
+		fprintf(stderr, "Requested Audio Output driver not found!\n");
 		Audio_Deinit();
 		return AERR_NODRVS;
 	}
@@ -538,7 +538,7 @@ static UINT8 InitAudioSystem(void)
 		retVal = AudioDrv_Init(idWavOut, &audDrv);
 		if (retVal)
 		{
-			printf("WaveOut: Drv Init Error: %02X\n", retVal);
+			fprintf(stderr, "WaveOut: Driver Init Error: %02X\n", retVal);
 			Audio_Deinit();
 			return retVal;
 		}
@@ -596,7 +596,7 @@ static UINT8 StartAudioDevice(void)
 		retVal = AudioDrv_Start(audDrv, idWavOutDev);
 		if (retVal)
 		{
-			printf("Dev Init Error: %02X\n", retVal);
+			fprintf(stderr, "Device Init Error: %02X\n", retVal);
 			return retVal;
 		}
 		

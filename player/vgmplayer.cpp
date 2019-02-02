@@ -1091,7 +1091,7 @@ void VGMPlayer::LoadOPL4ROM(CHIP_DEVICE* chipDev)
 	hFile = fopen(romFile, "rb");
 	if (hFile == NULL)
 	{
-		printf("Warning: Couldn't load %s!\n", romFile);
+		fprintf(stderr, "Warning: Couldn't load %s!\n", romFile);
 		return;
 	}
 	

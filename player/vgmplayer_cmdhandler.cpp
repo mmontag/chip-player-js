@@ -532,7 +532,7 @@ void VGMPlayer::Cmd_invalid(void)
 	_psTrigger |= PLAYSTATE_END;
 	if (_eventCbFunc != NULL)
 		_eventCbFunc(this, _eventCbParam, PLREVT_END, NULL);
-	printf("Invalid VGM command %02X found! (filePos 0x%06X)\n", fData[0x00], _filePos);
+	fprintf(stderr, "Invalid VGM command %02X found! (filePos 0x%06X)\n", fData[0x00], _filePos);
 	return;
 }
 
@@ -540,7 +540,7 @@ void VGMPlayer::Cmd_unknown(void)
 {
 	// The difference between "invalid" and "unknown" is, that there is a command length
 	// defined for "unknown" and thus it is possible to just skip it.
-	printf("Unknown VGM command %02X found! (filePos 0x%06X)\n", fData[0x00], _filePos);
+	fprintf(stderr, "Unknown VGM command %02X found! (filePos 0x%06X)\n", fData[0x00], _filePos);
 	return;
 }
 

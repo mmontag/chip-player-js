@@ -591,7 +591,7 @@ void DROPlayer::DoCommand_v1(void)
 	
 	UINT8 curCmd;
 	
-	//printf("DRO v1: Ofs %04X, Command %02X data %02X\n", _filePos, _fileData[_filePos], _fileData[_filePos+1]);
+	//fprintf(stderr, "DRO v1: Ofs %04X, Command %02X data %02X\n", _filePos, _fileData[_filePos], _fileData[_filePos+1]);
 	curCmd = _fileData[_filePos];
 	_filePos ++;
 	switch(curCmd)
@@ -617,7 +617,7 @@ void DROPlayer::DoCommand_v1(void)
 		_selPort = curCmd & 0x01;
 		if (_selPort >= (_devTypes.size() << _portShift))
 		{
-			//printf("More chips used than defined in header!\n");
+			//fprintf(stderr, "More chips used than defined in header!\n");
 			//_shownMsgs[2] = true;
 		}
 		return;
@@ -652,7 +652,7 @@ void DROPlayer::DoCommand_v2(void)
 	UINT8 reg;
 	UINT8 data;
 	
-	//printf("DRO v2: Ofs %04X, Command %02X data %02X\n", _filePos, _fileData[_filePos], _fileData[_filePos+1]);
+	//fprintf(stderr, "DRO v2: Ofs %04X, Command %02X data %02X\n", _filePos, _fileData[_filePos], _fileData[_filePos+1]);
 	reg = _fileData[_filePos + 0x00];
 	data = _fileData[_filePos + 0x01];
 	_filePos += 0x02;
