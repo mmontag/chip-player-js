@@ -24,6 +24,7 @@ extern "C" int __cdecl _kbhit(void);
 #endif
 
 #include <common_def.h>
+#include "player/FileLoader.hpp"
 #include "player/playerbase.hpp"
 #include "player/s98player.hpp"
 #include "player/droplayer.hpp"
@@ -34,7 +35,7 @@ extern "C" int __cdecl _kbhit(void);
 
 
 int main(int argc, char* argv[]);
-static UINT8 GetPlayerForFile(const char* fileName, PlayerBase** retPlayer);
+static UINT8 GetPlayerForFile(const char* fileName, FileLoader& fLoad, PlayerBase** retPlayer);
 static const char* GetFileTitle(const char* filePath);
 static UINT32 CalcCurrentVolume(UINT32 playbackSmpl);
 static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void* Data);
@@ -84,6 +85,7 @@ int main(int argc, char* argv[])
 {
 	int argbase;
 	UINT8 retVal;
+	FileLoader fLoad;
 	PlayerBase* player;
 	int curSong;
 	
@@ -112,9 +114,10 @@ int main(int argc, char* argv[])
 	printf("Loading %s ...  ", GetFileTitle(argv[curSong]));
 	fflush(stdout);
 	player = NULL;
-	retVal = GetPlayerForFile(argv[curSong], &player);
+	retVal = GetPlayerForFile(argv[curSong], fLoad, &player);
 	if (retVal)
 	{
+		fLoad.CancelLoading();
 		if (player != NULL)
 			delete player;
 		printf("Error 0x%02X loading file!\n", retVal);
@@ -275,39 +278,32 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-static UINT8 GetPlayerForFile(const char* fileName, PlayerBase** retPlayer)
+static UINT8 GetPlayerForFile(const char* fileName, FileLoader& fLoad, PlayerBase** retPlayer)
 {
 	UINT8 retVal;
 	PlayerBase* player;
 	
-	player = new VGMPlayer;
-	retVal = player->LoadFile(fileName);
-	if (retVal < 0x80)
-	{
-		*retPlayer = player;
+	fLoad.CancelLoading();	// cancel loading, just in case
+	fLoad.SetPreloadBytes(0x100);
+	retVal = fLoad.LoadFile(fileName);
+	if (retVal)
 		return retVal;
-	}
-	delete player;
 	
-	player = new S98Player;
-	retVal = player->LoadFile(fileName);
+	if (! VGMPlayer::IsMyFile(fLoad))
+		player = new VGMPlayer;
+	else if (! S98Player::IsMyFile(fLoad))
+		player = new S98Player;
+	else if (! DROPlayer::IsMyFile(fLoad))
+		player = new DROPlayer;
+	else
+		return 0xFF;
+	
+	retVal = player->LoadFile(fLoad);
 	if (retVal < 0x80)
-	{
 		*retPlayer = player;
-		return retVal;
-	}
-	delete player;
-	
-	player = new DROPlayer;
-	retVal = player->LoadFile(fileName);
-	if (retVal < 0x80)
-	{
-		*retPlayer = player;
-		return retVal;
-	}
-	delete player;
-	
-	return 0xFF;
+	else
+		delete player;
+	return retVal;
 }
 
 static const char* GetFileTitle(const char* filePath)
@@ -319,7 +315,7 @@ static const char* GetFileTitle(const char* filePath)
 	dirSep2 = strrchr(filePath, '\\');
 	if (dirSep2 > dirSep1)
 		dirSep1 = dirSep2;
-
+	
 	return (dirSep1 == NULL) ? filePath : (dirSep1 + 1);
 }
 
@@ -331,7 +327,7 @@ static const char* GetFileTitle(const char* filePath)
 #endif
 #define VOL_SHIFT	(16 - VOL_BITS)	// shift for master volume -> working volume
 
-// Pre- and post-shifts are used to reduce make the calculations as accurate as possible
+// Pre- and post-shifts are used to make the calculations as accurate as possible
 // without causing the sample data (likely 24 bits) to overflow while applying the volume gain.
 // Smaller values for VOL_PRESH are more accurate, but have a higher risk of overflows during calculations.
 // (24 + VOL_POSTSH) must NOT be larger than 31

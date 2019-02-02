@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 2.8)
 set(PLAYER_DEFS)
 set(PLAYER_FILES
 	helper.c
+	FileLoader.cpp
 	playerbase.cpp
 	droplayer.cpp
 	s98player.cpp
@@ -14,6 +15,7 @@ set(PLAYER_FILES
 # export headers
 set(PLAYER_HEADERS
 	helper.h
+	FileLoader.hpp
 	playerbase.hpp
 	droplayer.hpp
 	s98player.hpp

@@ -7,6 +7,7 @@
 #include <iconv.h>
 #include "helper.h"
 #include "playerbase.hpp"
+#include "FileLoader.hpp"
 #include "../vgm/dblk_compr.h"
 #include <vector>
 #include <string>
@@ -108,7 +109,8 @@ public:
 	
 	UINT32 GetPlayerType(void) const;
 	const char* GetPlayerName(void) const;
-	UINT8 LoadFile(const char* fileName);
+	static UINT8 IsMyFile(FileLoader& fileLoader);
+	UINT8 LoadFile(FileLoader& fileLoader);
 	UINT8 UnloadFile(void);
 	const VGM_HEADER* GetFileHeader(void) const;
 	const char* GetSongTitle(void);
@@ -204,7 +206,8 @@ private:
 	void Cmd_AY_Stereo(void);				// command 30 - set AY8910 stereo mask
 	
 	iconv_t _icUTF16;	// UTF-16 LE -> UTF-8 iconv object
-	std::vector<UINT8> _fileData;
+	FileLoader* _fLoad;
+	const UINT8* _fileData;	// data pointer for quick access, equals _fLoad->GetFileData().data()
 	
 	enum
 	{

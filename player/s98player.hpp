@@ -7,6 +7,7 @@
 #include <iconv.h>
 #include "helper.h"
 #include "playerbase.hpp"
+#include "FileLoader.hpp"
 #include <vector>
 #include <map>
 #include <string>
@@ -47,7 +48,8 @@ public:
 	
 	UINT32 GetPlayerType(void) const;
 	const char* GetPlayerName(void) const;
-	UINT8 LoadFile(const char* fileName);
+	static UINT8 IsMyFile(FileLoader& fileLoader);
+	UINT8 LoadFile(FileLoader& fileLoader);
 	UINT8 UnloadFile(void);
 	const S98_HEADER* GetFileHeader(void) const;
 	const char* GetSongTitle(void);
@@ -89,7 +91,8 @@ private:
 	void DoCommand(void);
 	
 	iconv_t _icSJIS;	// ShiftJIS -> UTF-8 iconv object
-	std::vector<UINT8> _fileData;
+	FileLoader* _fLoad;
+	const UINT8* _fileData;	// data pointer for quick access, equals _fLoad->GetFileData().data()
 	
 	S98_HEADER _fileHdr;
 	std::vector<S98_DEVICE> _devHdrs;
