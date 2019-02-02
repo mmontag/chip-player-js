@@ -64,7 +64,7 @@ static DEV_DEF devDef_MAME_2203 =
 	NULL,	// SetOptionBits
 	ym2203_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangeCallback
+	ym2203_set_srchg_cb,	// SetSampleRateChangeCallback
 	device_ym2203_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2203,	// rwFuncs
@@ -98,7 +98,7 @@ static DEV_DEF devDef_MAME_2608 =
 	NULL,	// SetOptionBits
 	ym2608_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangeCallback
+	ym2608_set_srchg_cb,	// SetSampleRateChangeCallback
 	device_ym2608_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2608,	// rwFuncs
@@ -134,7 +134,7 @@ static DEV_DEF devDef_MAME_2610 =
 	NULL,	// SetOptionBits
 	ym2610_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetSampleRateChangeCallback (not required, the YM2610 lacks the "prescaler" register)
 	device_ym2610_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2610,	// rwFuncs
@@ -151,7 +151,7 @@ static DEV_DEF devDef_MAME_2610B =
 	NULL,	// SetOptionBits
 	ym2610_set_mutemask,
 	NULL,	// SetPanning
-	NULL,	// SetSampleRateChangeCallback
+	NULL,	// SetSampleRateChangeCallback (not required, the YM2610 lacks the "prescaler" register)
 	device_ym2610_link_ssg,	// LinkDevice
 	
 	devFunc_MAME_2610,	// rwFuncs

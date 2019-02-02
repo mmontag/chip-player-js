@@ -616,6 +616,7 @@ typedef struct
 typedef struct
 {
 	UINT8   type;           /* chip type */
+	UINT8   smpRateNative;  /* emulating at native sample rate (enable sample rate change callback) */
 	FM_ST   ST;             /* general state */
 	FM_3SLOT SL3;           /* 3 slot mode state */
 	FM_CH   *P_CH;          /* pointer of CH */
@@ -651,6 +652,9 @@ typedef struct
 	INT32   out_adpcm[4];   /* channel output NONE,LEFT,RIGHT or CENTER for YM2608/YM2610 ADPCM */
 	INT32   out_delta[4];   /* channel output NONE,LEFT,RIGHT or CENTER for YM2608/YM2610 DELTAT*/
 #endif
+
+	DEVCB_SRATE_CHG smpRateFunc;
+	void* smpRateData;
 } FM_OPN;
 
 
@@ -1673,6 +1677,13 @@ static void OPNSetPres(FM_OPN *OPN, int pres, int timer_prescaler, int SSGpres)
 {
 	int i;
 
+	if (OPN->smpRateNative && OPN->smpRateFunc != NULL)
+	{
+		OPN->ST.rate = OPN->ST.clock / pres;
+		if (OPN->smpRateFunc != NULL)
+			OPN->smpRateFunc(OPN->smpRateData, OPN->ST.rate);
+	}
+
 	/* frequency base */
 	OPN->ST.freqbase = (OPN->ST.rate) ? ((double)OPN->ST.clock / OPN->ST.rate) / pres : 0;
 	if (fabs(OPN->ST.freqbase - 1.0) < 0.00005)
@@ -2072,6 +2083,31 @@ static void OPNLinkSSG(FM_OPN *OPN, const ssg_callbacks *ssg_cb, void *ssg_param
 	return;
 }
 
+static void OPNCheckNativeSampleRate(FM_OPN *OPN)
+{
+	UINT32 pres;
+	UINT32 nativeSRate;
+	int sRateDiff;
+	
+	pres = 6*12;	// default prescaler
+	if (OPN->type & TYPE_6CH)
+		pres *= 2;
+	nativeSRate = OPN->ST.clock / pres;
+	sRateDiff = (int)OPN->ST.rate - (int)nativeSRate;
+	OPN->smpRateNative = (abs(sRateDiff) <= 2);
+	
+	return;
+}
+
+static void OPNSetSmplRateChgCallback(FM_OPN *OPN, DEVCB_SRATE_CHG cbFunc, void* dataPtr)
+{
+	// set Sample Rate Change Callback routine
+	OPN->smpRateFunc = cbFunc;
+	OPN->smpRateData = dataPtr;
+	return;
+}
+
+
 #if BUILD_YM2203
 /*****************************************************************************/
 /*      YM2203 local section                                                 */
@@ -2229,10 +2265,12 @@ void * ym2203_init(void *param, UINT32 clock, UINT32 rate,
 	F2203->OPN.P_CH = F2203->CH;
 	F2203->OPN.ST.clock = clock;
 	F2203->OPN.ST.rate = rate;
+	OPNCheckNativeSampleRate(&F2203->OPN);
 
 	F2203->OPN.ST.timer_handler = timer_handler;
 	F2203->OPN.ST.IRQ_Handler   = IRQHandler;
 	OPNLinkSSG(&F2203->OPN, NULL, NULL);
+	OPNSetSmplRateChgCallback(&F2203->OPN, NULL, NULL);
 
 	ym2203_set_mutemask(F2203, 0x00);
 
@@ -2246,6 +2284,14 @@ void ym2203_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param)
 
 	OPNLinkSSG(&F2203->OPN, ssg, ssg_param);
 	OPNPrescaler_w(&F2203->OPN, 1, 1);
+	return;
+}
+
+/* set sample rate change callback */
+void ym2203_set_srchg_cb(void *chip, DEVCB_SRATE_CHG cbFunc, void* dataPtr)
+{
+	YM2203 *F2203 = (YM2203 *)chip;
+	OPNSetSmplRateChgCallback(&F2203->OPN, cbFunc, dataPtr);
 	return;
 }
 
@@ -2861,11 +2907,13 @@ void * ym2608_init(void *param, UINT32 clock, UINT32 rate,
 	F2608->OPN.P_CH = F2608->CH;
 	F2608->OPN.ST.clock = clock;
 	F2608->OPN.ST.rate = rate;
+	OPNCheckNativeSampleRate(&F2608->OPN);
 
 	/* External handlers */
 	F2608->OPN.ST.timer_handler = timer_handler;
 	F2608->OPN.ST.IRQ_Handler   = IRQHandler;
 	OPNLinkSSG(&F2608->OPN, NULL, NULL);
+	OPNSetSmplRateChgCallback(&F2608->OPN, NULL, NULL);
 
 	/* DELTA-T */
 	F2608->deltaT.memory = NULL;
@@ -2902,6 +2950,14 @@ void ym2608_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param)
 
 	OPNLinkSSG(&F2608->OPN, ssg, ssg_param);
 	OPNPrescaler_w(&F2608->OPN, 1, 2);
+	return;
+}
+
+/* set sample rate change callback */
+void ym2608_set_srchg_cb(void *chip, DEVCB_SRATE_CHG cbFunc, void* dataPtr)
+{
+	YM2608 *F2608 = (YM2608 *)chip;
+	OPNSetSmplRateChgCallback(&F2608->OPN, cbFunc, dataPtr);
 	return;
 }
 
@@ -3535,10 +3591,12 @@ void *ym2610_init(void *param, UINT32 clock, UINT32 rate,
 	F2610->OPN.P_CH = F2610->CH;
 	F2610->OPN.ST.clock = clock;
 	F2610->OPN.ST.rate = rate;
+	OPNCheckNativeSampleRate(&F2610->OPN);
 	/* Extend handler */
 	F2610->OPN.ST.timer_handler = timer_handler;
 	F2610->OPN.ST.IRQ_Handler   = IRQHandler;
 	OPNLinkSSG(&F2610->OPN, NULL, NULL);
+	OPNSetSmplRateChgCallback(&F2610->OPN, NULL, NULL);
 	/* ADPCM */
 	F2610->pcmbuf   = NULL;
 	F2610->pcm_size = 0x00;

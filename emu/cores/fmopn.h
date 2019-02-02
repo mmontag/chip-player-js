@@ -99,6 +99,11 @@ void * ym2203_init(void *param, UINT32 baseclock, UINT32 rate,
 void ym2203_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param);
 
 /*
+** set the callback function for YM2203 sample rate changes
+*/
+void ym2203_set_srchg_cb(void *chip, DEVCB_SRATE_CHG cbFunc, void* dataPtr);
+
+/*
 ** shutdown the YM2203 emulators
 */
 void ym2203_shutdown(void *chip);
@@ -141,6 +146,7 @@ void ym2203_set_mutemask(void *chip, UINT32 MuteMask);
 void * ym2608_init(void *param, UINT32 baseclock, UINT32 rate,
 				FM_TIMERHANDLER TimerHandler,FM_IRQHANDLER IRQHandler);
 void ym2608_link_ssg(void *chip, const ssg_callbacks *ssg, void *ssg_param);
+void ym2608_set_srchg_cb(void *chip, DEVCB_SRATE_CHG cbFunc, void* dataPtr);
 void ym2608_shutdown(void *chip);
 void ym2608_reset_chip(void *chip);
 void ym2608_update_one(void *chip, UINT32 length, DEV_SMPL **buffer);
