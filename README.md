@@ -22,9 +22,9 @@ The player engines come from C/C++ libraries such as [game-music-emu](https://bi
 The C/C++ code is compiled by [scripts/build-chip-core.js](scripts/build-chip-core.js). This file also defines the list of exports that will be available to the JavaScript program. Components that go into this build are as follows:
 
 * Manually selected cpp sources from game-music-emu.
-* For libraries with their own build system (LibXMP, Fluidlite):
+* For libraries with their own build system like LibXMP and Fluidlite (detailed [below](#Building)):
     * Build a static library with Emscripten (i.e. using emconfigure, emmake)
-    * Link the static library in build-chip-core.js (detailed below)
+    * Link the static library in build-chip-core.js
 * **tinyplayer.c**: a super light MIDI file reader/player
 * **showcqtbar.c**: a modified [FFMPEG plugin](https://github.com/mfcc64/html5-showcqtbar) providing lovely [constant Q](https://en.wikipedia.org/wiki/Constant-Q_transform#Comparison_with_the_Fourier_transform) spectrum analysis for the visualizer.
 
