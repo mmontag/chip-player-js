@@ -11,9 +11,9 @@ Chip Player JS is a work in progress. Goals:
 - High-quality MIDI playback with JS wavetable synthesis
     * Bonus: user-selectable soundbanks
 
-### Development Notes
+## Development Notes
 
-#### Architecture
+### Architecture
 
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
@@ -24,9 +24,87 @@ The C/C++ code is compiled by [scripts/build-chip-core.js](scripts/build-chip-co
 * Manually selected cpp sources from game-music-emu.
 * For libraries with their own build system (LibXMP, Fluidlite):
     * Build a static library with Emscripten (i.e. using emconfigure, emmake)
-    * Link the static library in build-chip-core.js
+    * Link the static library in build-chip-core.js (detailed below)
 * **tinyplayer.c**: a super light MIDI file reader/player
 * **showcqtbar.c**: a modified [FFMPEG plugin](https://github.com/mfcc64/html5-showcqtbar) providing lovely [constant Q](https://en.wikipedia.org/wiki/Constant-Q_transform#Comparison_with_the_Fourier_transform) spectrum analysis for the visualizer.
+
+### Building
+
+Prerequisites: yarn, cmake, emsdk.
+
+* Clone the repository. 
+* Run `yarn install`.
+
+In building the subprojects, we ultimately invoke `emmake make` instead of `make` to yield an object file that can Emscripten can link to in the final build.
+
+* Install the [Emscripten SDK (emsdk)](https://github.com/emscripten-core/emsdk).
+* The build script in package.json looks for it in `~/src/emsdk`. Modify this line to match your emsdk install location if necessary:
+
+  ```"build-chip-core": "source ~/src/emsdk/emsdk_env.sh; node scripts/build-chip-core.js",```
+
+#### Subproject: libxmp-lite
+
+Our goal is to produce **libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a**.
+Build libxmp (uses GNU make):
+
+```
+cd chip-player-js/libxmp/        # navigate to libxmp root
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+autoconf
+emconfigure ./configure
+emmake make
+```
+
+Proceed to build libxmp-lite:
+
+```
+cd libxmp-lite-stagedir/
+autoconf
+emconfigure ./configure --enable-static --disable-shared
+emmake make
+```
+
+#### Subproject: fluidlite
+
+Our goal is to produce **fluidlite/build/libfluidlite.a**.
+Build fluidlite (uses Cmake):
+
+```
+cd chip-player-js/fluidlite/     # navigate to fluidlite root
+source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
+mkdir build                      # create a build folder for Cmake output
+cd build                         
+cmake ..                         # Cmake will generate a Makefile by default
+emmake make
+```
+
+Once these are in place we can build the parent project.
+Our goal is to produce **public/chip-core.wasm**.
+
+```
+cd chip-player-js/
+yarn run build-chip-core
+```
+
+This will use object files created in the previous steps and link them into chip-core.wasm.
+If you change some C/C++ component of the subprojects, you'll need to redo this process.
+Once we have chip-core.wasm, we can proceed to develop JavaScript interactively on localhost:
+
+```
+yarn start
+```
+
+Build the entire project:
+
+```
+yarn build
+```
+
+Or deploy to Github Pages:
+
+```
+yarn deploy
+```
 
 ### Related Projects and Resources
 

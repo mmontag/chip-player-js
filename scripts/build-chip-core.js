@@ -12,7 +12,7 @@ var gme_dir = './game-music-emu/gme';
 // var unrar_dir = './unrar';
 // var source_files = source_files.concat(glob.sync(gme_dir + '/*.cpp'));
 
-source_files = [
+var source_files = [
   'Ay_Apu.cpp',
   'Ay_Core.cpp',
   'Ay_Cpu.cpp',
