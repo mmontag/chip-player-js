@@ -28,7 +28,9 @@ The C/C++ code is compiled by [scripts/build-chip-core.js](scripts/build-chip-co
 * **tinyplayer.c**: a super light MIDI file reader/player
 * **showcqtbar.c**: a modified [FFMPEG plugin](https://github.com/mfcc64/html5-showcqtbar) providing lovely [constant Q](https://en.wikipedia.org/wiki/Constant-Q_transform#Comparison_with_the_Fourier_transform) spectrum analysis for the visualizer.
 
-### Building
+The music catalog is created by [scripts/build-catalog.js](scripts/build-catalog.js). **This script looks for a ./catalog folder to build a music index.** This location is untracked, so put a symlink here that points to your local music archive. TODO: Document the corresponding public location (`CATALOG_PREFIX`).
+
+### Local Development Setup
 
 Prerequisites: yarn, cmake, emsdk.
 
@@ -38,7 +40,7 @@ Prerequisites: yarn, cmake, emsdk.
 In building the subprojects, we ultimately invoke `emmake make` instead of `make` to yield an object file that can Emscripten can link to in the final build.
 
 * Install the [Emscripten SDK (emsdk)](https://github.com/emscripten-core/emsdk).
-* The build script in package.json looks for it in `~/src/emsdk`. Modify this line to match your emsdk install location if necessary:
+* The build script in [package.json](package.json) looks for the emsdk in `~/src/emsdk`. Modify this line to match your emsdk install location if necessary:
 
   ```"build-chip-core": "source ~/src/emsdk/emsdk_env.sh; node scripts/build-chip-core.js",```
 
