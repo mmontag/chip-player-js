@@ -18,7 +18,7 @@ export default class AppHeader extends PureComponent {
         {!this.props.isPhone &&
         <p className="App-subtitle">
             <span className="App-byline">Feedback:&nbsp;
-              <a href="https://twitter.com/matthewmontag" target="_blank">@matthewmontag</a>
+              <a href="https://twitter.com/matthewmontag" target="_blank" rel="noopener noreferrer">@matthewmontag</a>
             </span>
           Powered by&nbsp;
           <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>,&nbsp;
