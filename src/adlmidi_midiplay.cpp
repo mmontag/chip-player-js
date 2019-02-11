@@ -1898,11 +1898,14 @@ void MIDIplay::describeChannels(char *str, char *attr, size_t size)
         const AdlChannel &adlChannel = m_chipChannels[index];
 
         AdlChannel::const_users_iterator loc = adlChannel.users.begin();
-        if(loc.is_end())  // off
+        AdlChannel::const_users_iterator locnext(loc);
+        if(!loc.is_end()) ++locnext;
+
+	if(loc.is_end())  // off
         {
             str[index] = '-';
         }
-        else if(loc->next)  // arpeggio
+        else if(!locnext.is_end())  // arpeggio
         {
             str[index] = '@';
         }
