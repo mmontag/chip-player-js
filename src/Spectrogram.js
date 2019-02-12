@@ -30,7 +30,7 @@ function _getAWeighting(f) {
 }
 
 export default class Spectrogram {
-  constructor(chipCore, audioCtx, freqCanvas, specCanvas, pianoKeysImage, minDb = -90, maxDb = -30) {
+  constructor(chipCore, audioCtx, sourceNode, freqCanvas, specCanvas, pianoKeysImage, minDb = -90, maxDb = -30) {
     this.updateFrame = this.updateFrame.bind(this);
     this.setPaused = this.setPaused.bind(this);
 
@@ -59,6 +59,8 @@ export default class Spectrogram {
     this.weighting = WEIGHTING_NONE;
 
     this.analyserNode = audioCtx.createAnalyser();
+    sourceNode.connect(this.analyserNode);
+
     this.analyserNode.minDecibels = minDb;
     this.analyserNode.maxDecibels = maxDb;
     this.analyserNode.smoothingTimeConstant = 0.0;

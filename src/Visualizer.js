@@ -35,13 +35,13 @@ export default class Visualizer extends PureComponent {
     this.spectrogram = new Spectrogram(
       this.props.chipCore,
       this.props.audioCtx,
+      this.props.sourceNode,
       this.freqCanvasRef.current,
       this.specCanvasRef.current,
       this.pianoKeysRef.current,
     );
     this.spectrogram.setMode(this.state.vizMode);
     this.spectrogram.setWeighting(this.state.weightingMode);
-    this.props.sourceNode.connect(this.spectrogram.analyserNode);
   }
 
   componentDidUpdate(prevProps) {
