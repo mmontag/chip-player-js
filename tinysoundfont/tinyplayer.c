@@ -48,13 +48,11 @@ extern void tp_init(int sampleRate) {
 
 // Returns the number of bytes written. Value of 0 means the song has ended.
 extern int tp_write_audio(float *buffer, int bufferSize) {
-  if (g_MidiEvt == NULL) return 0;
-
   int bytesWritten = 0;
   int batchSize = 128; // Timing of MIDI events will be quantized by the sample batch size.
-  int samplesRemaining = bufferSize * 2;
+
   double msPerBatch = g_Speed * 1000.0 * (batchSize / (float) g_SampleRate) / 2;
-  for (; samplesRemaining > 0; samplesRemaining -= batchSize) {
+  for (int samplesRemaining = bufferSize * 2; samplesRemaining > 0; samplesRemaining -= batchSize) {
     //We progress the MIDI playback and then process `batchSize` samples at once
     if (batchSize > samplesRemaining) batchSize = samplesRemaining;
 
@@ -114,6 +112,22 @@ extern int tp_write_audio(float *buffer, int bufferSize) {
 
     buffer += batchSize;
     bytesWritten += batchSize;
+  }
+
+  if (g_MidiEvt == NULL) {
+    // Last MIDI event has been processed.
+    // Continue synthesis until silence is detected.
+    // This allows voices with a long release tail to complete.
+    // Crude method: when entire buffer is below threshold, consider it silence.
+    int synthStillActive = 0;
+    float threshold = 0.05;
+    for (int i = 0; i < bufferSize; i++) {
+      if (buffer[i * 2] > threshold) { // Check left channel only
+        synthStillActive = 1;          // Exit early
+        break;
+      }
+    }
+    if (synthStillActive == 0) return 0;
   }
 
   return bytesWritten;
