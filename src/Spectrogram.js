@@ -155,10 +155,10 @@ export default class Spectrogram {
           const val = 255 * weighting * dataHeap[x] | 0; //this.lib.getValue(this.cqtOutput + x * 4, 'float') | 0;
           const h = val * hCoeff | 0;
           const style = colorMap(val).hex();
-          tempCtx.fillStyle = style;
-          tempCtx.fillRect(x, 0, 1, specSpeed);
           freqCtx.fillStyle = style;
           freqCtx.fillRect(x, fqHeight - h, 1, h);
+          tempCtx.fillStyle = style;
+          tempCtx.fillRect(x, 0, 1, specSpeed);
         }
       }
     }
@@ -204,7 +204,7 @@ export default class Spectrogram {
 
 // getFloatTimeDomainData polyfill for Safari
 if (global.AnalyserNode && !global.AnalyserNode.prototype.getFloatTimeDomainData) {
-  var uint8 = new Uint8Array(16384);
+  var uint8 = new Uint8Array(32768);
   global.AnalyserNode.prototype.getFloatTimeDomainData = function(array) {
     this.getByteTimeDomainData(uint8);
     for (var i = 0, imax = array.length; i < imax; i++) {
