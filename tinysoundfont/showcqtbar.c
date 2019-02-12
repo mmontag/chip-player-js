@@ -47,14 +47,6 @@ typedef struct Complex {
   float re, im;
 } Complex;
 
-typedef struct Color {
-  uint8_t r, g, b, a;
-} Color;
-
-typedef struct ColorF {
-  float r, g, b, h;
-} ColorF;
-
 typedef union Kernel {
   float f;
   int i;
@@ -69,7 +61,7 @@ typedef struct ShowCQT {
 
   /* buffers */
   Complex fft_buf[MAX_FFT_SIZE];
-  ColorF color_buf[MAX_WIDTH * 2];
+  float color_buf[MAX_WIDTH * 2];
 
   /* props */
   int width;
@@ -341,7 +333,7 @@ void cqt_calc(const float *input_L, const float *input_R) {
     int len = cqt.kernel[m].i;
     int start = cqt.kernel[m + 1].i;
     if (!len) {
-      cqt.color_buf[x] = (ColorF) {0, 0, 0, 0};
+      cqt.color_buf[x] = 0;
       continue;
     }
     Complex a = {0, 0}, b = {0, 0};
@@ -362,12 +354,7 @@ void cqt_calc(const float *input_L, const float *input_R) {
     Complex v1 = {b.im + a.im, b.re - a.re};
     float r1 = v1.re * v1.re + v1.im * v1.im;
 
-//    float c = 255.0f * sqrtf(cqt.sono_v * sqrtf(r0));
-//    cqt.color_buf[x].r = (c < 255.0f) ? c : 255.0f;
-    cqt.color_buf[x].g = sqrtf(cqt.volume * sqrtf(0.5f * (r0 + r1)));
-//    c = 255.0f * sqrtf(cqt.sono_v * sqrtf(r1));
-//    cqt.color_buf[x].b = (c < 255.0f) ? c : 255.0f;
-//    cqt.color_buf[x].h = cqt.bar_v * sqrtf(0.5f * (r0 + r1));
+    cqt.color_buf[x] = sqrtf(cqt.volume * sqrtf(0.5f * (r0 + r1)));
 
     m += len + 2;
   }
@@ -375,17 +362,14 @@ void cqt_calc(const float *input_L, const float *input_R) {
   // supersampling case
   if (cqt.out_bins != cqt.width) {
     for (int x = 0; x < cqt.width; x++) {
-      cqt.color_buf[x].r = 0.5f * (cqt.color_buf[2 * x].r + cqt.color_buf[2 * x + 1].r);
-      cqt.color_buf[x].g = 0.5f * (cqt.color_buf[2 * x].g + cqt.color_buf[2 * x + 1].g);
-      cqt.color_buf[x].b = 0.5f * (cqt.color_buf[2 * x].b + cqt.color_buf[2 * x + 1].b);
-      cqt.color_buf[x].h = 0.5f * (cqt.color_buf[2 * x].h + cqt.color_buf[2 * x + 1].h);
+      cqt.color_buf[x] = 0.5f * (cqt.color_buf[2 * x] + cqt.color_buf[2 * x + 1]);
     }
   }
 }
 
 void cqt_render_line(float *out) {
   for (int x = 0; x < cqt.width; x++)
-    out[x] = cqt.color_buf[x].g;
+    out[x] = cqt.color_buf[x];
 }
 
 void cqt_set_volume(float volume) {
