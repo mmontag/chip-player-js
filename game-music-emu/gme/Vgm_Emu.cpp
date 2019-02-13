@@ -461,7 +461,7 @@ blargg_err_t Vgm_Emu::load_mem_( byte const data [], int size )
 	
 	if ( core.uses_fm() )
 	{
-		set_voice_count( 8 );
+		set_voice_count( 16 );
 		RETURN_ERR( resampler.setup( fm_rate / sample_rate(), rolloff, gain() ) );
 		RETURN_ERR( resampler.reset( core.stereo_buf[0].length() * sample_rate() / 1000 ) );
 		core.psg[0].volume( 0.135 * fm_gain * psg_gain * gain() );
@@ -480,7 +480,7 @@ blargg_err_t Vgm_Emu::load_mem_( byte const data [], int size )
 	}
 	
 	static const char* const fm_names [] = {
-		"FM 1", "FM 2", "FM 3", "FM 4", "FM 5", "FM 6", "PCM", "PSG"
+		"FM 1", "FM 2", "FM 3", "FM 4", "FM 5", "FM 6", "PCM", "PSG", "CH 9", "CH 10", "CH 11", "CH 12", "CH 13", "CH 14", "CH 15", "CH 16"
 	};
 	static const char* const psg_names [] = { "Square 1", "Square 2", "Square 3", "Noise" };
 	set_voice_names( core.uses_fm() ? fm_names : psg_names );
