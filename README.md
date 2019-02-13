@@ -4,12 +4,14 @@ Play online: [Chip Player JS](https://mmontag.github.io/chip-player-js)
 
 Chip Player JS is a work in progress. Goals:
 
-- Support popular game console formats and tracker formats (not exhaustive)
-- Advanced sound control (channel volume, panning, etc.) like [NotSoFatso](https://disch.zophar.net/notsofatso.php)'s stereo and bandlimiting controls
-- Built-in online music library like [Chipmachine](http://sasq64.github.io/chipmachine/)
-- Simple music management (at least the ability to save favorites) like Winamp/Spotify
-- High-quality MIDI playback with JS wavetable synthesis
+- [x] Support popular game console formats and tracker formats (not exhaustive)
+- [x] Advanced sound control (channel volume, panning, etc.) like [NotSoFatso](https://disch.zophar.net/notsofatso.php)'s stereo and bandlimiting controls
+- [x] Built-in online music library like [Chipmachine](http://sasq64.github.io/chipmachine/)
+- [x] Simple music management (at least the ability to save favorites) like Winamp/Spotify
+- [x] High-quality MIDI playback with JS wavetable synthesis
     * Bonus: user-selectable soundbanks
+- [ ] Track sequencer with player controls and shuffle mode
+- [ ] Media key support in Chrome
 
 ## Development Notes
 
