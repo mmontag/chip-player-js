@@ -134,7 +134,7 @@ class App extends PureComponent {
     gainNode.connect(audioCtx.destination);
     var playerNode = this.playerNode = gainNode;
 
-    this._safariAudioUnlock(audioCtx);
+    this._unlockAudioContext(audioCtx);
     console.log('Sample rate: %d hz', audioCtx.sampleRate);
 
     // Load the chip-core Emscripten runtime
@@ -208,7 +208,7 @@ class App extends PureComponent {
                                        // 400 ms = 2.5 fps
   }
 
-  _safariAudioUnlock(context) {
+  _unlockAudioContext(context) {
     // https://hackernoon.com/unlocking-web-audio-the-smarter-way-8858218c0e09
     if (context.state === 'suspended') {
       const events = ['touchstart', 'touchend', 'mousedown', 'mouseup'];
