@@ -9,7 +9,7 @@ Chip Player JS is a work in progress. Goals:
 - [x] Built-in online music library like [Chipmachine](http://sasq64.github.io/chipmachine/)
 - [x] Simple music management (at least the ability to save favorites) like Winamp/Spotify
 - [x] High-quality MIDI playback with JS wavetable synthesis
-    * Bonus: user-selectable soundbanks
+    * [x] Bonus: user-selectable soundbanks
 - [ ] Track sequencer with player controls and shuffle mode
 - [ ] Media key support in Chrome
 
