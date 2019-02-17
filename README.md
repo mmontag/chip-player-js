@@ -12,6 +12,10 @@ Chip Player JS is a work in progress. Goals:
     * [x] Bonus: user-selectable soundbanks
 - [ ] Track sequencer with player controls and shuffle mode
 - [ ] Media key support in Chrome
+- [ ] High performance
+   - [ ] Cold cache time-to-play under 500 ms (i.e. https://mmontag.github.io/chip-player-js/?play=ModArchives/aryx.s3m in incognito window)
+   - [ ] Instant search results
+   - [ ] CPU usage under 25% in most circumstances
 
 ## Development Notes
 
