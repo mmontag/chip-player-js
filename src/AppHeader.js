@@ -12,8 +12,7 @@ export default class AppHeader extends PureComponent {
             </span>
           :
           <span>
-              • <a href="#" onClick={this.props.handleLogin}>Login/Sign Up</a>&nbsp;
-            to Save Favorites
+              • <a href="#" onClick={this.props.handleLogin}>Login/Sign Up</a> to Save Favorites
             </span>
         }
         {!this.props.isPhone &&

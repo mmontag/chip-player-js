@@ -9,7 +9,7 @@ export default class Favorites extends PureComponent {
         <h3>
           My Favorites <span>({favorites.length})</span>
         </h3>
-        {
+        {this.props.user ?
           favorites.length > 0 ?
             <div>
               {
@@ -31,6 +31,8 @@ export default class Favorites extends PureComponent {
               You don't have any favorites yet.<br/>
               Click the &#003; heart icon next to any song to save a favorite.
             </div>
+          :
+          <span>You must <a href="#" onClick={this.props.handleLogin}>login or signup</a> to save favorites.</span>
         }
       </div>
     );
