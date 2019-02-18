@@ -79,6 +79,7 @@ class App extends PureComponent {
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.handleVoiceToggle = this.handleVoiceToggle.bind(this);
     this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
+    this.handleDoSearch = this.handleDoSearch.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
     this.nextSubtune = this.nextSubtune.bind(this);
     this.playSubtune = this.playSubtune.bind(this);
@@ -456,6 +457,12 @@ class App extends PureComponent {
     return Math.floor(metadata.play_length / tempo);
   }
 
+  handleDoSearch(e, query) {
+    this.setState({ initialQuery: query });
+    e.preventDefault();
+    return false;
+  }
+
   render() {
     const metadata = this.state.currentSongMetadata;
     return (
@@ -475,9 +482,32 @@ class App extends PureComponent {
               favorites={this.state.favorites}
               onClick={this.handleFileClick}>
               <Favorites
+                user={this.state.user}
+                handleLogin={this.handleLogin}
                 toggleFavorite={this.handleToggleFavorite}
                 onClick={this.handleFileClick}
                 favorites={this.state.favorites}/>
+              <h1>Top Level Folders</h1>
+              {
+                [
+                  'Classical MIDI',
+                  'Exotica',
+                  'Famicompo',
+                  'Game MIDI',
+                  'Game Mods',
+                  'MIDI',
+                  'ModArchives',
+                  'Nintendo',
+                  'Nintendo SNES',
+                  'Piano E-Competition MIDI',
+                  'Project AY',
+                  'Sega Game Gear',
+                  'Sega Genesis',
+                  'Sega Master System',
+                  'Ubiktune',
+                  'VGM Rips',
+                ].map(t => <a key={t} href="#" onClick={(e) => this.handleDoSearch(e, t)}>{t}</a>)
+              }
             </Search>
             {!isMobile.phone &&
             <Visualizer audioCtx={this.audioCtx}

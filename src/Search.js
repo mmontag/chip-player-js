@@ -38,9 +38,13 @@ export default class Search extends PureComponent {
     }
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     if (!this.catalogLoaded && this.props.catalog) {
       this.loadCatalog(this.props.catalog);
+    } else {
+      if (this.props.initialQuery !== prevProps.initialQuery) {
+        this.onSearchInputChange(this.props.initialQuery);
+      }
     }
   }
 
