@@ -22,9 +22,20 @@ endif()
 if(APPLE)
     set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -dead_strip")
 elseif(NOT MSVC AND NOT MSDOS AND NOT OPENBSD_LOCALBASE)
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -s -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -s -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,-s")
-    set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-s")
+    string(REGEX REPLACE "-O3" ""
+            CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+    string(REGEX REPLACE "-O3" ""
+            CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -fdata-sections -ffunction-sections")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -fdata-sections -ffunction-sections")
+    if(ANDROID)
+        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -funwind-tables")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -funwind-tables")
+    else()
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s -Wl,--gc-sections -Wl,-s")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -Wl,--gc-sections -Wl,-s")
+        set(LINK_FLAGS_RELEASE  "${LINK_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-s")
+    endif()
 endif()
 
 if(NOT MSVC AND NOT MSDOS)
@@ -126,7 +137,7 @@ function(handle_options targetLib)
     if(NOT ADLMIDI_DOS)
         if(USE_DOSBOX_EMULATOR)
             set(HAS_EMULATOR TRUE)
-            target_sources(${targetLib} PRIVATE 
+            target_sources(${targetLib} PRIVATE
                 ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox_opl3.cpp
                 ${libADLMIDI_SOURCE_DIR}/src/chips/dosbox/dbopl.cpp
             )
@@ -136,7 +147,7 @@ function(handle_options targetLib)
 
         if(USE_NUKED_EMULATOR)
             set(HAS_EMULATOR TRUE)
-            target_sources(${targetLib} PRIVATE 
+            target_sources(${targetLib} PRIVATE
                 ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3.cpp       # v 1.8
                 ${libADLMIDI_SOURCE_DIR}/src/chips/nuked/nukedopl3.c
                 ${libADLMIDI_SOURCE_DIR}/src/chips/nuked_opl3_v174.cpp  # v 1.7.4
@@ -164,11 +175,11 @@ function(handle_options targetLib)
     if(NOT WITH_CPP_EXTRAS)
         target_compile_definitions(${targetLib} PUBLIC ADLMIDI_DISABLE_CPP_EXTRAS)
     endif()
-    
+
     if(WITH_EMBEDDED_BANKS AND WITH_GENADLDATA AND NOT ADLMIDI_DOS)
         add_dependencies(${targetLib} gen-adldata-run)
     endif()
-    
+
     if(WITH_HQ_RESAMPLER AND NOT ADLMIDI_DOS)
         find_library(ZITA_RESAMPLER_LIBRARY "zita-resampler")
         if(NOT ZITA_RESAMPLER_LIBRARY)
