@@ -44,7 +44,7 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
         tmp.data[8] = data[offset + 2];
         tmp.data[9] = data[offset + 3];
         tmp.data[10] = data[offset + 10];
-        tmp.finetune = 0; //data[offset + 12];
+        tmp.finetune = 0;
         tmp.diff = false;
 
         struct ins tmp2;
@@ -53,6 +53,7 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
         tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
         tmp2.midi_velocity_offset = (int8_t)data[offset + 12];
+        tmp2.rhythmModeDrum = 0;
 
         std::string name;
         if(midi_index >= 0) name = std::string(1, '\377') + MidiInsName[midi_index];
@@ -69,7 +70,6 @@ static bool LoadTMB(const char *fn, unsigned bank, const char *prefix)
     setup.volumeModel = VOLUME_APOGEE;
     setup.deepTremolo = false;
     setup.deepVibrato = false;
-    setup.adLibPercussions = false;
     setup.scaleModulators = false;
     SetBankSetup(bank, setup);
 

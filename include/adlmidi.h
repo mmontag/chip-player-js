@@ -30,7 +30,7 @@ extern "C" {
 
 #define ADLMIDI_VERSION_MAJOR       1
 #define ADLMIDI_VERSION_MINOR       4
-#define ADLMIDI_VERSION_PATCHLEVEL  0
+#define ADLMIDI_VERSION_PATCHLEVEL  1
 
 #define ADLMIDI_TOSTR_I(s) #s
 #define ADLMIDI_TOSTR(s) ADLMIDI_TOSTR_I(s)
@@ -479,11 +479,14 @@ extern ADLMIDI_DECLSPEC int adl_getNumFourOpsChnObtained(struct ADL_MIDIPlayer *
 /**
  * @brief Override Enable(1) or Disable(0) AdLib percussion mode. -1 - use bank default AdLib percussion mode
  *
+ * [DEPRECATED] This function is no more useful and now it makes nothing. Kept for ABI compatibility. Rhythm mode can be set by the bank data only.
+ *
  * This function forces rhythm-mode on any bank. The result will work glitchy.
  *
  * @param device Instance of the library
  * @param percmod 0 - disabled, 1 - enabled
  */
+ADLMIDI_DEPRECATED("This function is no more useful and now it makes nothing. Kept for ABI compatibility. Rhythm mode can be set by the bank data only.")
 extern ADLMIDI_DECLSPEC void adl_setPercMode(struct ADL_MIDIPlayer *device, int percmod);
 
 /**

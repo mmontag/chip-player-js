@@ -3,7 +3,7 @@
 
 #include "../progs_cache.h"
 
-static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool percussive)
+static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool percussive, bool noRhythmMode = false)
 {
     #ifdef HARD_BANKS
     writeIni("IBK", fn, prefix, bank, percussive ? INI_Drums : INI_Melodic);
@@ -55,15 +55,44 @@ static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool perc
         tmp.data[6] = data[offset2 + 8];
         tmp.data[7] = data[offset2 + 9];
         tmp.data[10] = data[offset2 + 10];
-        // [+11] seems to be used also, what is it for?
-        tmp.finetune = 0;
+        // bisqwit: [+11] seems to be used also, what is it for?
+        // Wohlstand: You wanna know? It's the rhythm-mode drum number! If 0 - melodic, >0 - rhythm-mode drum
+        tmp.finetune = percussive ? 0 : data[offset2 + 12];
         tmp.diff = false;
         struct ins tmp2;
-        tmp2.notenum  = gmno < 128 ? 0 : 35;
+        tmp2.notenum  = percussive ? data[offset2 + 13] : 0;
         tmp2.pseudo4op = false;
         tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
         tmp2.midi_velocity_offset = 0;
+
+        tmp2.rhythmModeDrum = 0;
+        if(percussive && !noRhythmMode)
+        {
+            int rm = data[offset2 + 11];
+            switch(rm)
+            {
+            case 6:
+                tmp2.rhythmModeDrum = ins::Flag_RM_BassDrum;
+                break;
+            case 7:
+                tmp2.rhythmModeDrum = ins::Flag_RM_Snare;
+                break;
+            case 8:
+                tmp2.rhythmModeDrum = ins::Flag_RM_TomTom;
+                break;
+            case 9:
+                tmp2.rhythmModeDrum = ins::Flag_RM_Cymbal;
+                break;
+            case 10:
+                tmp2.rhythmModeDrum = ins::Flag_RM_HiHat;
+                break;
+            default:
+                // IBK logic: make non-percussion instrument be silent
+                tmp = MakeNoSoundIns();
+                break;
+            }
+        }
 
         size_t resno = InsertIns(tmp, tmp2, std::string(1, '\377') + name, name2);
         SetBank(bank, (unsigned int)gmno, resno);
@@ -73,7 +102,6 @@ static bool LoadIBK(const char *fn, unsigned bank, const char *prefix, bool perc
     setup.volumeModel = VOLUME_Generic;
     setup.deepTremolo = false;
     setup.deepVibrato = false;
-    setup.adLibPercussions = false;
     setup.scaleModulators = false;
     SetBankSetup(bank, setup);
 

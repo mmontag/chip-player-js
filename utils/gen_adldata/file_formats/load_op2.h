@@ -111,6 +111,8 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
         tmp2.real4op = false;
         tmp2.voice2_fine_tune = 0.0;
         tmp2.midi_velocity_offset = 0;
+        tmp2.rhythmModeDrum = 0;
+
         while(tmp2.notenum && tmp2.notenum < 20)
         {
             tmp2.notenum += 12;
@@ -161,7 +163,6 @@ static bool LoadDoom(const char *fn, unsigned bank, const char *prefix)
     setup.volumeModel = VOLUME_DMX;
     setup.deepTremolo = false;
     setup.deepVibrato = false;
-    setup.adLibPercussions = false;
     setup.scaleModulators = false;
     SetBankSetup(bank, setup);
 

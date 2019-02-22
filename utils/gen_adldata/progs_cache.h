@@ -50,10 +50,15 @@ inline bool equal_approx(double const a, double const b)
 struct ins
 {
     enum { Flag_Pseudo4op = 0x01, Flag_NoSound = 0x02, Flag_Real4op = 0x04 };
+
+    enum { Flag_RM_BassDrum  = 0x08, Flag_RM_Snare = 0x10, Flag_RM_TomTom = 0x18,
+           Flag_RM_Cymbal = 0x20, Flag_RM_HiHat = 0x28, Mask_RhythmMode = 0x38 };
+
     size_t insno1, insno2;
     unsigned char notenum;
     bool pseudo4op;
     bool real4op;
+    uint32_t rhythmModeDrum;
     double voice2_fine_tune;
     int8_t midi_velocity_offset;
 
@@ -64,6 +69,7 @@ struct ins
                && insno2 == b.insno2
                && pseudo4op == b.pseudo4op
                && real4op == b.real4op
+               && rhythmModeDrum == b.rhythmModeDrum
                && equal_approx(voice2_fine_tune, b.voice2_fine_tune)
                && midi_velocity_offset == b.midi_velocity_offset;
     }
@@ -74,6 +80,7 @@ struct ins
         if(notenum != b.notenum) return notenum < b.notenum;
         if(pseudo4op != b.pseudo4op) return pseudo4op < b.pseudo4op;
         if(real4op != b.real4op) return real4op < b.real4op;
+        if(rhythmModeDrum != b.rhythmModeDrum) return rhythmModeDrum < b.rhythmModeDrum;
         if(!equal_approx(voice2_fine_tune, b.voice2_fine_tune)) return voice2_fine_tune < b.voice2_fine_tune;
         if(midi_velocity_offset != b.midi_velocity_offset) return midi_velocity_offset < b.midi_velocity_offset;
         return 0;
@@ -98,7 +105,6 @@ struct AdlBankSetup
     int     volumeModel;
     bool    deepTremolo;
     bool    deepVibrato;
-    bool    adLibPercussions;
     bool    scaleModulators;
 };
 

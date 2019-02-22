@@ -79,27 +79,6 @@ static const uint_fast32_t W9X_volume_mapping_table[32] =
 //"????????????????"  // Prc 96-111
 //"????????????????"; // Prc 112-127
 
-static const uint8_t PercussionMap[256] =
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"//GM
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" // 3 = bass drum
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" // 4 = snare
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" // 5 = tom
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" // 6 = cymbal
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" // 7 = hihat
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"//GP0
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"//GP16
-    //2 3 4 5 6 7 8 940 1 2 3 4 5 6 7
-    "\0\0\0\3\3\0\0\7\0\5\7\5\0\5\7\5"//GP32
-    //8 950 1 2 3 4 5 6 7 8 960 1 2 3
-    "\5\6\5\0\6\0\5\6\0\6\0\6\5\5\5\5"//GP48
-    //4 5 6 7 8 970 1 2 3 4 5 6 7 8 9
-    "\5\0\0\0\0\0\7\0\0\0\0\0\0\0\0\0"//GP64
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-
 enum { MasterVolumeDefault = 127 };
 
 inline bool isXgPercChannel(uint8_t msb, uint8_t lsb)
@@ -199,9 +178,6 @@ void MIDIplay::applySetup()
     synth.m_deepVibratoMode     = m_setup.deepVibratoMode < 0 ?
                             synth.m_insBankSetup.deepVibrato :
                             (m_setup.deepVibratoMode != 0);
-    synth.m_rhythmMode   = m_setup.rhythmMode < 0 ?
-                            synth.m_insBankSetup.adLibPercussions :
-                            (m_setup.rhythmMode != 0);
     synth.m_scaleModulators     = m_setup.scaleModulators < 0 ?
                             synth.m_insBankSetup.scaleModulators :
                             (m_setup.scaleModulators != 0);
@@ -492,8 +468,16 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
     voices[1].pseudo4op = pseudo_4op;
 #endif /* __WATCOMC__ */
 
-    if((synth.m_rhythmMode == 1) && PercussionMap[midiins & 0xFF])
+    if(
+        (synth.m_rhythmMode == 1) &&
+        (
+            ((ains->flags & adlinsdata::Mask_RhythmMode) != 0) ||
+            (m_cmfPercussionMode && (channel >= 11))
+        )
+    )
+    {
         voices[1] = voices[0];//i[1] = i[0];
+    }
 
     bool isBlankNote = (ains->flags & adlinsdata::Flag_NoSound) != 0;
 
@@ -547,9 +531,24 @@ bool MIDIplay::realTime_NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
                 if(synth.m_rhythmMode)
                 {
                     if(m_cmfPercussionMode)
-                        expected_mode = channel  < 11 ? 0 : (3 + channel  - 11); // CMF
+                    {
+                        expected_mode = channel  < 11 ? OPL3::ChanCat_Regular : (OPL3::ChanCat_Rhythm_Bass + (channel  - 11)); // CMF
+                    }
                     else
-                        expected_mode = PercussionMap[midiins & 0xFF];
+                    {
+                        expected_mode = OPL3::ChanCat_Regular;
+                        uint32_t rm = (ains->flags & adlinsdata::Mask_RhythmMode);
+                        if(rm == adlinsdata::Flag_RM_BassDrum)
+                            expected_mode = OPL3::ChanCat_Rhythm_Bass;
+                        else if(rm == adlinsdata::Flag_RM_Snare)
+                            expected_mode = OPL3::ChanCat_Rhythm_Snare;
+                        else if(rm == adlinsdata::Flag_RM_TomTom)
+                            expected_mode = OPL3::ChanCat_Rhythm_Tom;
+                        else if(rm == adlinsdata::Flag_RM_Cymbal)
+                            expected_mode = OPL3::ChanCat_Rhythm_Cymbal;
+                        else if(rm == adlinsdata::Flag_RM_HiHat)
+                            expected_mode = OPL3::ChanCat_Rhythm_HiHat;
+                    }
                 }
 
                 if(synth.m_channelCategory[a] != expected_mode)

@@ -109,7 +109,6 @@ bool MIDIplay::LoadBank(FileAndMemReader &fr)
     }
 
     Synth &synth = *m_synth;
-    synth.m_insBankSetup.adLibPercussions = false;
     synth.m_insBankSetup.scaleModulators = false;
     synth.m_insBankSetup.deepTremolo = (wopl->opl_flags & WOPL_FLAG_DEEP_TREMOLO) != 0;
     synth.m_insBankSetup.deepVibrato = (wopl->opl_flags & WOPL_FLAG_DEEP_VIBRATO) != 0;

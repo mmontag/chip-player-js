@@ -91,7 +91,6 @@ struct AdlBankSetup
     int     volumeModel;
     bool    deepTremolo;
     bool    deepVibrato;
-    bool    adLibPercussions;
     bool    scaleModulators;
 };
 

@@ -40,6 +40,7 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
 {
     Synth &synth = *play->m_synth;
     size_t n_fourop[2] = {0, 0}, n_total[2] = {0, 0};
+    bool rhythmModeNeeded = false;
 
     //Automatically calculate how much 4-operator channels is necessary
 #ifndef DISABLE_EMBEDDED_BANKS
@@ -61,6 +62,8 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
                 if((ins.flags & adlinsdata::Flag_Real4op) != 0)
                     ++n_fourop[div];
                 ++n_total[div];
+                if(div && ((ins.flags & adlinsdata::Mask_RhythmMode) != 0))
+                    rhythmModeNeeded = true;
             }
         }
     }
@@ -71,12 +74,15 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
         for(size_t  a = 0; a < 256; ++a)
         {
             size_t insno = banks[play->m_setup.bankId][a];
+            size_t div = a / 128;
             if(insno == 198)
                 continue;
-            ++n_total[a / 128];
+            ++n_total[div];
             adlinsdata2 ins = adlinsdata2::from_adldata(::adlins[insno]);
             if((ins.flags & adlinsdata::Flag_Real4op) != 0)
-                ++n_fourop[a / 128];
+                ++n_fourop[div];
+            if(div && ((ins.flags & adlinsdata::Mask_RhythmMode) != 0))
+                rhythmModeNeeded = true;
         }
     }
 #endif
@@ -106,6 +112,9 @@ int adlCalculateFourOpChannels(MIDIplay *play, bool silent)
     // Update channel categories and set up four-operator channels
     if(!silent)
         synth.updateChannelCategories();
+
+    // Set rhythm mode when it needed
+    synth.m_rhythmMode = rhythmModeNeeded;
 
     return 0;
 }

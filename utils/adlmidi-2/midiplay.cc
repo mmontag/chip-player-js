@@ -1600,7 +1600,7 @@ int main(int argc, char **argv)
             "\n\n"
             "Usage: adlmidi <midifilename> [ <options> ] [ <banknumber> [ <numcards> [ <numfourops>] ] ]\n"
             "       adlmidi <midifilename> -1   To enter instrument tester\n"
-            " -p Enables adlib percussion instrument mode (use with CMF files)\n"
+            // " -p Enables adlib percussion instrument mode (use with CMF files)\n"
             " -t Enables tremolo amplification mode\n"
             " -v Enables vibrato amplification mode\n"
             " -s Enables scaling of modulator volumes\n"
@@ -1669,7 +1669,7 @@ int main(int argc, char **argv)
         bool had_option = false;
 
         if(!std::strcmp("-p", argv[2]))
-            adl_setPercMode(myDevice, 1);
+            fprintf(stderr, "Warning: -p argument is deprecated and useless!\n"); //adl_setPercMode(myDevice, 1);
         else if(!std::strcmp("-v", argv[2]))
             adl_setHVibrato(myDevice, 1);
         else if(!std::strcmp("-t", argv[2]))

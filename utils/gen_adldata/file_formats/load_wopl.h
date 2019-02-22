@@ -15,6 +15,7 @@ enum class WOPL_Flags
     Mode_2op         = 0x00,
     Mode_4op         = 0x01,
     Mode_DoubleVoice = 0x02,
+    WOPL_RhythmModeMask = 0x38,
 };
 
 static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
@@ -60,7 +61,6 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
     setup.deepTremolo = (data[0x11] & 0x01) != 0;
     setup.deepVibrato = (data[0x11] & 0x02) != 0;
     setup.volumeModel = (int)data[0x12];
-    setup.adLibPercussions = false;
     setup.scaleModulators  = false;
 
     // Validate file format by size calculation
@@ -172,6 +172,7 @@ static bool LoadWopl(const char *fn, unsigned bank, const char *prefix)
                 tmp2.real4op = real4op && !tmp2.pseudo4op;
                 tmp2.voice2_fine_tune = 0;
                 tmp2.midi_velocity_offset = (int8_t)data[offset + 36];
+                tmp2.rhythmModeDrum = (flags & (uint8_t)WOPL_Flags::WOPL_RhythmModeMask);
                 tmp[0].diff = false;
                 tmp[1].diff = real4op && !tmp2.pseudo4op;
 

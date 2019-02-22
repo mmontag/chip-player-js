@@ -74,6 +74,7 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
         tmp2.real4op = (data[offset] != 0);
         tmp2.voice2_fine_tune = 0.0;
         tmp2.midi_velocity_offset = 0;
+        tmp2.rhythmModeDrum = 0;
 
         while(tmp2.notenum && tmp2.notenum < 20)
         {
@@ -105,7 +106,6 @@ static bool LoadJunglevision(const char *fn, unsigned bank, const char *prefix)
     setup.volumeModel = VOLUME_9X;
     setup.deepTremolo = true;
     setup.deepVibrato = true;
-    setup.adLibPercussions = false;
     setup.scaleModulators = false;
     SetBankSetup(bank, setup);
 

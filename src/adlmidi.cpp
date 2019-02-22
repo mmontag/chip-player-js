@@ -425,21 +425,11 @@ ADLMIDI_EXPORT int adl_getNumFourOpsChnObtained(struct ADL_MIDIPlayer *device)
     return (int)play->m_synth->m_numFourOps;
 }
 
-
+/* !!!DEPRECATED!!! AND !!DUMMIED!! */
 ADLMIDI_EXPORT void adl_setPercMode(ADL_MIDIPlayer *device, int percmod)
 {
-    if(!device) return;
-    MidiPlayer *play = GET_MIDI_PLAYER(device);
-    assert(play);
-    Synth &synth = *play->m_synth;
-    play->m_setup.rhythmMode = percmod;
-    if(!synth.setupLocked())
-    {
-        synth.m_rhythmMode   = play->m_setup.rhythmMode < 0 ?
-                                  (synth.m_insBankSetup.adLibPercussions) :
-                                  (play->m_setup.rhythmMode != 0);
-        synth.updateChannelCategories();
-    }
+    ADL_UNUSED(device);
+    ADL_UNUSED(percmod);
 }
 
 ADLMIDI_EXPORT void adl_setHVibrato(ADL_MIDIPlayer *device, int hvibro)

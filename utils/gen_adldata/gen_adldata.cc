@@ -88,6 +88,7 @@ int main(int argc, char**argv)
             std::string filter_m;
             std::string filter_p;
             std::string format;
+            bool noRhythmMode = false;
 
             ini.read("name",     bank_name, "Untitled");
             ini.read("format",   format,    "Unknown");
@@ -97,6 +98,7 @@ int main(int argc, char**argv)
             ini.read("prefix-p", prefix_d, "");
             ini.read("filter-m", filter_m, "");
             ini.read("filter-p", filter_p, "");
+            ini.read("no-rhythm-mode", noRhythmMode, false);
 
             if(filepath.empty())
             {
@@ -207,7 +209,7 @@ int main(int argc, char**argv)
                 if(!filepath_d.empty())
                 {
                     //printf("Loading %s... \n", filepath_d.c_str());
-                    if(!LoadIBK(filepath_d.c_str(),bank, prefix_d.c_str(), true))
+                    if(!LoadIBK(filepath_d.c_str(),bank, prefix_d.c_str(), true, noRhythmMode))
                     {
                         std::fprintf(stderr, "Failed to load bank %u, file %s!\n", bank, filepath.c_str());
                         return 1;
@@ -409,7 +411,7 @@ int main(int argc, char**argv)
 
             unsigned flags = (i->first.pseudo4op ? ins::Flag_Pseudo4op : 0)|
                              (i->first.real4op ? ins::Flag_Real4op : 0) |
-                             (info.nosound ? ins::Flag_NoSound : 0);
+                             (info.nosound ? ins::Flag_NoSound : 0) | i->first.rhythmModeDrum;
 
             std::fprintf(outFile, "    {");
             std::fprintf(outFile, "%4d,%4d,%3d, %d, %6" PRId64 ",%6" PRId64 ", %6d, %g",
@@ -547,11 +549,10 @@ int main(int argc, char**argv)
         for(BankSetupData::iterator it = banksetup.begin(); it != banksetup.end(); it++)
         {
             AdlBankSetup &setup = it->second;
-            std::fprintf(outFile, "    {%d, %d, %d, %d, %d}",
+            std::fprintf(outFile, "    {%d, %d, %d, %d}",
                          setup.volumeModel,
                          setup.deepTremolo,
                          setup.deepVibrato,
-                         setup.adLibPercussions,
                          setup.scaleModulators);
             if(it != last)
                 std::fprintf(outFile, ", //Bank %u, %s\n", (unsigned)it->first, banknames[it->first].c_str());

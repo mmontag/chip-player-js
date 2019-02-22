@@ -86,6 +86,7 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
         tmp2.notenum   = 0;
         tmp2.pseudo4op = false;
         tmp2.real4op = false;
+        tmp2.rhythmModeDrum = 0;
 
         std::string name;
         char name2[512];
@@ -131,7 +132,6 @@ static bool LoadEA(const char *fn, unsigned bank, const char *prefix)
     setup.volumeModel = VOLUME_CMF;
     setup.deepTremolo = false;
     setup.deepVibrato = false;
-    setup.adLibPercussions = false;
     setup.scaleModulators = false;
     SetBankSetup(bank, setup);
 

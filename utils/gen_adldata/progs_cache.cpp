@@ -112,7 +112,7 @@ size_t InsertNoSoundIns()
 {
     // { 0x0F70700,0x0F70710, 0xFF,0xFF, 0x0,+0 },
     insdata tmp1 = MakeNoSoundIns();
-    struct ins tmp2 = { 0, 0, 0, false, false, 0.0, 0 };
+    struct ins tmp2 = { 0, 0, 0, false, false, 0u, 0.0, 0};
     return InsertIns(tmp1, tmp1, tmp2, "nosound", "");
 }
 

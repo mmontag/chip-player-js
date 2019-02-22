@@ -86,7 +86,7 @@ int adl_getLowestEmulator()
 }
 
 //! Per-channel and per-operator registers map
-static const uint16_t g_operatorsMap[23 * 2] =
+static const uint16_t g_operatorsMap[(23 + 5) * 2] =
 {
     // Channels 0-2
     0x000, 0x003, 0x001, 0x004, 0x002, 0x005, // operators  0, 3,  1, 4,  2, 5
@@ -98,7 +98,20 @@ static const uint16_t g_operatorsMap[23 * 2] =
     0x100, 0x103, 0x101, 0x104, 0x102, 0x105, // operators 18,21, 19,22, 20,23
     0x108, 0x10B, 0x109, 0x10C, 0x10A, 0x10D, // operators 24,27, 25,28, 26,29
     0x110, 0x113, 0x111, 0x114, 0x112, 0x115, // operators 30,33, 31,34, 32,35
+
+    //==For Rhythm-mode percussions
     // Channel 18
+    0x010, 0x013,  // operators 12,15
+    // Channel 19
+    0xFFF, 0x014,  // operator 16
+    // Channel 19
+    0x012, 0xFFF,  // operator 14
+    // Channel 19
+    0xFFF, 0x015,  // operator 17
+    // Channel 19
+    0x011, 0xFFF,  // operator 13
+
+    //==For Rhythm-mode percussions in CMF, snare and cymbal operators has inverted!
     0x010, 0x013,  // operators 12,15
     // Channel 19
     0x014, 0xFFF,  // operator 16
@@ -107,8 +120,8 @@ static const uint16_t g_operatorsMap[23 * 2] =
     // Channel 19
     0x015, 0xFFF,  // operator 17
     // Channel 19
-    0x011, 0xFFF
-}; // operator 13
+    0x011, 0xFFF   // operator 13
+};
 
 //! Channel map to regoster offsets
 static const uint16_t g_channelsMap[23] =
@@ -179,7 +192,6 @@ OPL3::OPL3() :
     m_insBankSetup.volumeModel = OPL3::VOLUME_Generic;
     m_insBankSetup.deepTremolo = false;
     m_insBankSetup.deepVibrato = false;
-    m_insBankSetup.adLibPercussions = false;
     m_insBankSetup.scaleModulators = false;
 
 #ifdef DISABLE_EMBEDDED_BANKS
@@ -335,8 +347,8 @@ void OPL3::noteOn(size_t c1, size_t c2, double hertz) // Hertz range: 0..131071
 
         for(size_t op = 0; op < opsCount; op++)
         {
-            if((op > 0) && (op_addr[op] == 0xFFF))
-                break;
+            if(op_addr[op] == 0xFFF)
+                continue;
             if(mul_offset > 0)
             {
                 uint32_t dt  = ops[op] & 0xF0;
@@ -377,8 +389,9 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
 
     size_t chip = c / 23, cc = c % 23;
     const adldata &adli = m_insCache[c];
-    uint16_t o1 = g_operatorsMap[cc * 2 + 0];
-    uint16_t o2 = g_operatorsMap[cc * 2 + 1];
+    size_t cmf_offset = ((m_musicMode == MODE_CMF) && cc >= 18) ? 10 : 0;
+    uint16_t o1 = g_operatorsMap[cc * 2 + 0 + cmf_offset];
+    uint16_t o2 = g_operatorsMap[cc * 2 + 1 + cmf_offset];
     uint8_t  x = adli.modulator_40, y = adli.carrier_40;
     uint32_t mode = 1; // 2-op AM
 
@@ -424,7 +437,8 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
 
     if(m_musicMode == MODE_RSXX)
     {
-        writeRegI(chip, 0x40 + o1, x);
+        if(o1 != 0xFFF)
+            writeRegI(chip, 0x40 + o1, x);
         if(o2 != 0xFFF)
             writeRegI(chip, 0x40 + o2, y - volume / 2);
     }
@@ -445,7 +459,8 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
                 carrier = (carrier | 63) - brightness + brightness * (carrier & 63) / 63;
         }
 
-        writeRegI(chip, 0x40 + o1, modulator);
+        if(o1 != 0xFFF)
+            writeRegI(chip, 0x40 + o1, modulator);
         if(o2 != 0xFFF)
             writeRegI(chip, 0x40 + o2, carrier);
     }
@@ -477,13 +492,15 @@ void OPL3::setPatch(size_t c, const adldata &instrument)
     size_t chip = c / 23, cc = c % 23;
     static const uint8_t data[4] = {0x20, 0x60, 0x80, 0xE0};
     m_insCache[c] = instrument;
-    uint16_t o1 = g_operatorsMap[cc * 2 + 0];
-    uint16_t o2 = g_operatorsMap[cc * 2 + 1];
+    size_t cmf_offset = ((m_musicMode == MODE_CMF) && (cc >= 18)) ? 10 : 0;
+    uint16_t o1 = g_operatorsMap[cc * 2 + 0 + cmf_offset];
+    uint16_t o2 = g_operatorsMap[cc * 2 + 1 + cmf_offset];
     unsigned x = instrument.modulator_E862, y = instrument.carrier_E862;
 
     for(size_t a = 0; a < 4; ++a, x >>= 8, y >>= 8)
     {
-        writeRegI(chip, data[a] + o1, x & 0xFF);
+        if(o1 != 0xFFF)
+            writeRegI(chip, data[a] + o1, x & 0xFF);
         if(o2 != 0xFFF)
             writeRegI(chip, data[a] + o2, y & 0xFF);
     }

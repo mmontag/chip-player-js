@@ -173,6 +173,12 @@ To build that example you will need to have installed SDL2 library.
 * Add support of MIDI Format 2 files
 
 # Changelog
+## 1.4.1   dev
+ * Drum note length expanding is now supported in real-time mode (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Channels manager has been improved (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Nuked OPL3 1.8 emulator got some optimizations ported from 1.7 where they are was applied previously (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Reworked rhythm-mode percussions system, WOPL banks with rhythm-mode percussions
+
 ## 1.4.0   2018-10-01
  * Implemented a full support for Portamento! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
  * Added support for SysEx event handling! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
