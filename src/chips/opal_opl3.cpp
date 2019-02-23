@@ -60,8 +60,13 @@ void OpalOPL3::writeReg(uint16_t addr, uint8_t data)
 
 void OpalOPL3::writePan(uint16_t addr, uint8_t data)
 {
-    //Opal *chip_r = reinterpret_cast<Opal *>(m_chip);
-    // TODO full panning
+#ifdef OPAL_HAVE_SOFT_PANNING
+    Opal *chip_r = reinterpret_cast<Opal *>(m_chip);
+    chip_r->Pan(addr, data);
+#else
+    (void)addr;
+    (void)data;
+#endif
 }
 
 void OpalOPL3::nativeGenerate(int16_t *frame)
