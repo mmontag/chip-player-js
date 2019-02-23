@@ -86,7 +86,7 @@ int adl_getLowestEmulator()
 }
 
 //! Per-channel and per-operator registers map
-static const uint16_t g_operatorsMap[(23 + 5) * 2] =
+static const uint16_t g_operatorsMap[(NUM_OF_CHANNELS + NUM_OF_RM_CHANNELS) * 2] =
 {
     // Channels 0-2
     0x000, 0x003, 0x001, 0x004, 0x002, 0x005, // operators  0, 3,  1, 4,  2, 5
@@ -124,12 +124,20 @@ static const uint16_t g_operatorsMap[(23 + 5) * 2] =
 };
 
 //! Channel map to regoster offsets
-static const uint16_t g_channelsMap[23] =
+static const uint16_t g_channelsMap[NUM_OF_CHANNELS] =
 {
     0x000, 0x001, 0x002, 0x003, 0x004, 0x005, 0x006, 0x007, 0x008, // 0..8
     0x100, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107, 0x108, // 9..17 (secondary set)
-    0x006, 0x007, 0x008, 0xFFF, 0xFFF
-}; // <- hw percussions, 0xFFF = no support for pitch/pan
+    0x006, 0x007, 0x008, 0x008, 0x008 // <- hw percussions, hihats and cymbals using tom-tom's channel as pitch source
+};
+
+//! Channel map to regoster offsets (separated copy for panning)
+static const uint16_t g_channelsMapPan[NUM_OF_CHANNELS] =
+{
+    0x000, 0x001, 0x002, 0x003, 0x004, 0x005, 0x006, 0x007, 0x008, // 0..8
+    0x100, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107, 0x108, // 9..17 (secondary set)
+    0x006, 0x007, 0x008, 0xFFF, 0xFFF // <- hw percussions, 0xFFF = no support for pitch/pan
+};
 
 /*
     In OPL3 mode:
@@ -288,11 +296,11 @@ void OPL3::writePan(size_t chip, uint32_t address, uint32_t value)
 
 void OPL3::noteOff(size_t c)
 {
-    size_t chip = c / 23, cc = c % 23;
+    size_t chip = c / NUM_OF_CHANNELS, cc = c % NUM_OF_CHANNELS;
 
-    if(cc >= 18)
+    if(cc >= OPL3_CHANNELS_RHYTHM_BASE)
     {
-        m_regBD[chip] &= ~(0x10 >> (cc - 18));
+        m_regBD[chip] &= ~(0x10 >> (cc - OPL3_CHANNELS_RHYTHM_BASE));
         writeRegI(chip, 0xBD, m_regBD[chip]);
         return;
     }
@@ -302,7 +310,7 @@ void OPL3::noteOff(size_t c)
 
 void OPL3::noteOn(size_t c1, size_t c2, double hertz) // Hertz range: 0..131071
 {
-    size_t chip = c1 / 23, cc1 = c1 % 23, cc2 = c2 % 23;
+    size_t chip = c1 / NUM_OF_CHANNELS, cc1 = c1 % NUM_OF_CHANNELS, cc2 = c2 % NUM_OF_CHANNELS;
     uint32_t octave = 0, ftone = 0, mul_offset = 0;
 
     if(hertz < 0)
@@ -326,7 +334,7 @@ void OPL3::noteOn(size_t c1, size_t c2, double hertz) // Hertz range: 0..131071
     const adldata &patch1 = m_insCache[c1];
     const adldata &patch2 = m_insCache[c2 < m_insCache.size() ? c2 : 0];
 
-    if(cc1 < 18)
+    if(cc1 < OPL3_CHANNELS_RHYTHM_BASE)
     {
         ftone += 0x2000u; /* Key-ON [KON] */
 
@@ -374,9 +382,9 @@ void OPL3::noteOn(size_t c1, size_t c2, double hertz) // Hertz range: 0..131071
         m_keyBlockFNumCache[c1] = (ftone >> 8);
     }
 
-    if(cc1 >= 18)
+    if(cc1 >= OPL3_CHANNELS_RHYTHM_BASE)
     {
-        m_regBD[chip ] |= (0x10 >> (cc1 - 18));
+        m_regBD[chip ] |= (0x10 >> (cc1 - OPL3_CHANNELS_RHYTHM_BASE));
         writeRegI(chip , 0x0BD, m_regBD[chip ]);
         //x |= 0x800; // for test
     }
@@ -387,9 +395,9 @@ void OPL3::touchNote(size_t c, uint8_t volume, uint8_t brightness)
     if(volume > 63)
         volume = 63;
 
-    size_t chip = c / 23, cc = c % 23;
+    size_t chip = c / NUM_OF_CHANNELS, cc = c % NUM_OF_CHANNELS;
     const adldata &adli = m_insCache[c];
-    size_t cmf_offset = ((m_musicMode == MODE_CMF) && cc >= 18) ? 10 : 0;
+    size_t cmf_offset = ((m_musicMode == MODE_CMF) && cc >= OPL3_CHANNELS_RHYTHM_BASE) ? 10 : 0;
     uint16_t o1 = g_operatorsMap[cc * 2 + 0 + cmf_offset];
     uint16_t o2 = g_operatorsMap[cc * 2 + 1 + cmf_offset];
     uint8_t  x = adli.modulator_40, y = adli.carrier_40;
@@ -489,10 +497,10 @@ void OPL3::Touch(unsigned c, unsigned volume) // Volume maxes at 127*127*127
 
 void OPL3::setPatch(size_t c, const adldata &instrument)
 {
-    size_t chip = c / 23, cc = c % 23;
+    size_t chip = c / NUM_OF_CHANNELS, cc = c % NUM_OF_CHANNELS;
     static const uint8_t data[4] = {0x20, 0x60, 0x80, 0xE0};
     m_insCache[c] = instrument;
-    size_t cmf_offset = ((m_musicMode == MODE_CMF) && (cc >= 18)) ? 10 : 0;
+    size_t cmf_offset = ((m_musicMode == MODE_CMF) && (cc >= OPL3_CHANNELS_RHYTHM_BASE)) ? 10 : 0;
     uint16_t o1 = g_operatorsMap[cc * 2 + 0 + cmf_offset];
     uint16_t o2 = g_operatorsMap[cc * 2 + 1 + cmf_offset];
     unsigned x = instrument.modulator_E862, y = instrument.carrier_E862;
@@ -508,14 +516,14 @@ void OPL3::setPatch(size_t c, const adldata &instrument)
 
 void OPL3::setPan(size_t c, uint8_t value)
 {
-    size_t chip = c / 23, cc = c % 23;
-    if(g_channelsMap[cc] != 0xFFF)
+    size_t chip = c / NUM_OF_CHANNELS, cc = c % NUM_OF_CHANNELS;
+    if(g_channelsMapPan[cc] != 0xFFF)
     {
 #ifndef ADLMIDI_HW_OPL
         if (m_softPanning)
         {
-            writePan(chip, g_channelsMap[cc], value);
-            writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | OPL_PANNING_BOTH);
+            writePan(chip, g_channelsMapPan[cc], value);
+            writeRegI(chip, 0xC0 + g_channelsMapPan[cc], m_insCache[c].feedconn | OPL_PANNING_BOTH);
         }
         else
         {
@@ -523,8 +531,8 @@ void OPL3::setPan(size_t c, uint8_t value)
             int panning = 0;
             if(value  < 64 + 32) panning |= OPL_PANNING_LEFT;
             if(value >= 64 - 32) panning |= OPL_PANNING_RIGHT;
-            writePan(chip, g_channelsMap[cc], 64);
-            writeRegI(chip, 0xC0 + g_channelsMap[cc], m_insCache[c].feedconn | panning);
+            writePan(chip, g_channelsMapPan[cc], 64);
+            writeRegI(chip, 0xC0 + g_channelsMapPan[cc], m_insCache[c].feedconn | panning);
 #ifndef ADLMIDI_HW_OPL
         }
 #endif
@@ -557,10 +565,10 @@ void OPL3::updateChannelCategories()
     {
         for(size_t a = 0, n = m_numChips; a < n; ++a)
         {
-            for(size_t b = 0; b < 23; ++b)
+            for(size_t b = 0; b < NUM_OF_CHANNELS; ++b)
             {
-                m_channelCategory[a * 23 + b] =
-                    (b >= 18) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
+                m_channelCategory[a * NUM_OF_CHANNELS + b] =
+                    (b >= OPL3_CHANNELS_RHYTHM_BASE) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
             }
         }
     }
@@ -568,10 +576,10 @@ void OPL3::updateChannelCategories()
     {
         for(size_t a = 0, n = m_numChips; a < n; ++a)
         {
-            for(size_t b = 0; b < 23; ++b)
+            for(size_t b = 0; b < NUM_OF_CHANNELS; ++b)
             {
-                m_channelCategory[a * 23 + b] =
-                    (b >= 18) ? static_cast<ChanCat>(ChanCat_Rhythm_Bass + (b - 18)) :
+                m_channelCategory[a * NUM_OF_CHANNELS + b] =
+                    (b >= OPL3_CHANNELS_RHYTHM_BASE) ? static_cast<ChanCat>(ChanCat_Rhythm_Bass + (b - OPL3_CHANNELS_RHYTHM_BASE)) :
                     (b >= 6 && b < 9) ? ChanCat_Rhythm_Slave : ChanCat_Regular;
             }
         }
@@ -597,7 +605,7 @@ void OPL3::updateChannelCategories()
             nextfour += 1;
             break;
         case 5:
-            nextfour += 23 - 9 - 2;
+            nextfour += NUM_OF_CHANNELS - 9 - 2;
             break;
         }
     }
@@ -715,7 +723,7 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 #endif
 
     const struct adldata defaultInsCache = { 0x1557403,0x005B381, 0x49,0x80, 0x4, +0 };
-    m_numChannels = m_numChips * 23;
+    m_numChannels = m_numChips * NUM_OF_CHANNELS;
     m_insCache.resize(m_numChannels, defaultInsCache);
     m_keyBlockFNumCache.resize(m_numChannels,   0);
     m_regBD.resize(m_numChips,    0);
@@ -723,9 +731,9 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 
     for(size_t p = 0, a = 0; a < m_numChips; ++a)
     {
-        for(size_t b = 0; b < 18; ++b)
-            m_channelCategory[p++] = 0;
-        for(size_t b = 0; b < 5; ++b)
+        for(size_t b = 0; b < OPL3_CHANNELS_RHYTHM_BASE; ++b)
+            m_channelCategory[p++] = ChanCat_Regular;
+        for(size_t b = 0; b < NUM_OF_RM_CHANNELS; ++b)
             m_channelCategory[p++] = ChanCat_Rhythm_Slave;
     }
 
@@ -771,7 +779,7 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 #endif // ADLMIDI_HW_OPL
 
         /* Clean-up channels from any playing junk sounds */
-        for(size_t a = 0; a < 18; ++a)
+        for(size_t a = 0; a < OPL3_CHANNELS_RHYTHM_BASE; ++a)
             writeRegI(i, 0xB0 + g_channelsMap[a], 0x00);
         for(size_t a = 0; a < sizeof(data) / sizeof(*data); a += 2)
             writeRegI(i, data[a], (data[a + 1]));

@@ -1372,9 +1372,8 @@ void MIDIplay::noteUpdate(size_t midCh,
                 if(vibrato && (d.is_end() || d->value.vibdelay_us >= chan.vibdelay_us))
                     bend += static_cast<double>(vibrato) * chan.vibdepth * std::sin(chan.vibpos);
 
-#define BEND_COEFFICIENT 172.4387
                 synth.noteOn(c, c_slave, BEND_COEFFICIENT * std::exp(0.057762265 * (currentTone + bend + phase)));
-#undef BEND_COEFFICIENT
+
                 if(hooks.onNote)
                     hooks.onNote(hooks.onNote_userData, c, noteTone, midiins, vol, midibend);
             }

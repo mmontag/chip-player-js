@@ -29,6 +29,17 @@
 #include "adlmidi_private.hpp"
 #include "adlmidi_bankmap.h"
 
+#define BEND_COEFFICIENT                172.4387
+
+#define OPL3_CHANNELS_MELODIC_BASE      0
+#define OPL3_CHANNELS_RHYTHM_BASE       18
+
+#define NUM_OF_CHANNELS                 23
+#define NUM_OF_4OP_CHANNELS             6
+#define NUM_OF_2OP_CHANNELS             18
+#define NUM_OF_2x2_CHANNELS             9
+#define NUM_OF_RM_CHANNELS              5
+
 /**
  * @brief OPL3 Chip management class
  */
