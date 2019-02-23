@@ -19,7 +19,7 @@
  */
 
 #include "opal_opl3.h"
-#include "opal/opal.cpp"
+#include "opal/opal.hpp"
 #include <new>
 #include <cstring>
 

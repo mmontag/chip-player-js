@@ -90,6 +90,7 @@ The library is licensed under in it's parts LGPL 2.1+, GPL v2+, GPL v3+, and MIT
 * **WITH_XMI_SUPPORT** - (ON/OFF, default ON) Build with support for AIL XMI files)
 * **USE_DOSBOX_EMULATOR** - (ON/OFF, default ON) Enable support for DosBox 0.74 emulator. (Well-accurate and fast)
 * **USE_NUKED_EMULATOR** - (ON/OFF, default ON) Enable support for Nuked OPL3 emulator. (Very-accurate, needs more CPU power)
+* **USE_OPAL_EMULATOR** - (ON/OFF, default ON) Enable support for Opal emulator by Reality (Taken from RAD v2 release package). (Inaccurate)
 
 
 ### Utils and extras

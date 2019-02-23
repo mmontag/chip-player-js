@@ -108,7 +108,7 @@ option(WITH_MUS_SUPPORT     "Build with support for DMX MUS files" ON)
 option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files" ON)
 option(USE_DOSBOX_EMULATOR  "Use DosBox 0.74 OPL3 emulator (semi-accurate, suggested for slow or mobile platforms)" ON)
 option(USE_NUKED_EMULATOR   "Use Nuked OPL3 emulator (most accurate, powerful)" ON)
-option(USE_OPAL_EMULATOR    "Use Opal emulator" OFF)
+option(USE_OPAL_EMULATOR    "Use Opal emulator (inaccurate)" ON)
 
 option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
 option(WITH_GENADLDATA_COMMENTS "Enable comments in generated ADLDATA cache file" OFF)
