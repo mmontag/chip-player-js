@@ -48,6 +48,11 @@ static const unsigned OPLBase = 0x388;
 #   ifndef ADLMIDI_DISABLE_OPAL_EMULATOR
 #       include "chips/opal_opl3.h"
 #   endif
+
+// Java emulator
+#   ifndef ADLMIDI_DISABLE_JAVA_EMULATOR
+#       include "chips/java_opl3.h"
+#   endif
 #endif
 
 static const unsigned adl_emulatorSupport = 0
@@ -62,6 +67,10 @@ static const unsigned adl_emulatorSupport = 0
 
 #   ifndef ADLMIDI_DISABLE_OPAL_EMULATOR
     | (1u << ADLMIDI_EMU_OPAL)
+#   endif
+
+#   ifndef ADLMIDI_DISABLE_JAVA_EMULATOR
+    | (1u << ADLMIDI_EMU_JAVA)
 #   endif
 #endif
 ;
@@ -779,6 +788,11 @@ void OPL3::reset(int emulator, unsigned long PCM_RATE, void *audioTickHandler)
 #ifndef ADLMIDI_DISABLE_OPAL_EMULATOR
         case ADLMIDI_EMU_OPAL:
             chip = new OpalOPL3;
+            break;
+#endif
+#ifndef ADLMIDI_DISABLE_JAVA_EMULATOR
+        case ADLMIDI_EMU_JAVA:
+            chip = new JavaOPL3;
             break;
 #endif
         }
