@@ -623,6 +623,8 @@ enum ADL_Emulator
     ADLMIDI_EMU_NUKED_174,
     /*! DosBox */
     ADLMIDI_EMU_DOSBOX,
+    /*! Opal */
+    ADLMIDI_EMU_OPAL,
     /*! Count instrument on the level */
     ADLMIDI_EMU_end
 };
