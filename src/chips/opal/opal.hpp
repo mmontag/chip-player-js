@@ -940,7 +940,7 @@ Opal::Operator::Operator() {
 //==================================================================================================
 // Produce output from operator.
 //==================================================================================================
-int16_t Opal::Operator::Output(uint16_t keyscalenum, uint32_t phase_step, int16_t vibrato, int16_t mod, int16_t fbshift) {
+int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step, int16_t vibrato, int16_t mod, int16_t fbshift) {
 
     // Advance wave phase
     if (VibratoEnable)
@@ -983,12 +983,11 @@ int16_t Opal::Operator::Output(uint16_t keyscalenum, uint32_t phase_step, int16_
 
         // Sustain stage
         case EnvSus: {
-    
             if (SustainMode)
                 break;
-
             // Note: fall-through!
-        }
+
+        }//fallthrough
 
         // Release stage
         case EnvRel: {
