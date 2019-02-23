@@ -38,7 +38,7 @@ class Opal {
         EnvAtt,
         EnvDec,
         EnvSus,
-        EnvRel,
+        EnvRel
     };
 
     // A single FM operator

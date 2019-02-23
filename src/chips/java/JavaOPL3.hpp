@@ -48,6 +48,13 @@
 #include <string.h>
 #include <limits>
 
+#ifndef UINT32_MAX
+#define UINT32_MAX 0xffffffffU
+#endif
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #define OPL_SAMPLE_RATE			49716.0
 #define CENTER_PANNING_POWER	0.70710678118	/* [RH] volume at center for EQP */
 #define VOLUME_MUL		0.3333
@@ -141,10 +148,10 @@ class DisabledChannel : public Channel
 {
 public:
 	DisabledChannel() : Channel(0, 0) { }
-	double getChannelOutput(class OPL3 *OPL3) { return 0; }    
+	double getChannelOutput(class OPL3 *) { return 0; }    
 	void keyOn() { }
 	void keyOff() { }
-	void updateOperators(class OPL3 *OPL3) { }
+	void updateOperators(class OPL3 *) { }
 };
 
 
@@ -341,7 +348,8 @@ public:
 	// The OPL3 tremolo repetition rate is 3.7 Hz.  
 	#define tremoloFrequency (3.7)
 
-	static const int tremoloTableLength = (int)(OPL_SAMPLE_RATE/tremoloFrequency);
+	//static const int tremoloTableLength = (int)(OPL_SAMPLE_RATE/tremoloFrequency);
+	static const int tremoloTableLength = 13436; /* libADLMIDI */
 	static const int vibratoTableLength = 8192;
 
 	OPL3DataStruct()
@@ -526,7 +534,7 @@ namespace EnvelopeGeneratorData
 		{4.80,1.01}, {3.84,0.81}, {3.20,0.69}, {2.74,0.58},
 		{2.40,0.51}, {2.40,0.51}, {2.40,0.51}, {2.40,0.51}
 	};
-};
+}
 
 class OPL3
 {
@@ -1474,6 +1482,8 @@ double EnvelopeGenerator::getEnvelope(OPL3 *OPL3, int egt, int am) {
 				envelope = 0;
 				stage = DECAY;
 			}
+			// libADLMIDI:
+			// fall through
 		case DECAY:   
 			// The decay and release are linear.                
 			if(envelope>envelopeSustainLevel) {
@@ -1482,6 +1492,8 @@ double EnvelopeGenerator::getEnvelope(OPL3 *OPL3, int egt, int am) {
 			}
 			else 
 				stage = SUSTAIN;
+			// libADLMIDI:
+			// fall through
 		case SUSTAIN:
 			// The Sustain stage is mantained all the time of the Key ON,
 			// even if we are in non-sustaining mode.
@@ -1596,7 +1608,7 @@ double RhythmChannel::getChannelOutput(OPL3 *OPL3) {
 	channelOutput = (op1Output + op2Output) / 2;
 	
 	return channelOutput;
-};
+}
 
 TopCymbalOperator::TopCymbalOperator(int baseAddress)
 : Operator(baseAddress)
@@ -1638,6 +1650,8 @@ double TopCymbalOperator::getOperatorOutput(OPL3 *OPL3, double modulator, double
 	if( chopped > 0.1) carrierOutput = 0;
 	
 	return carrierOutput*2;  
+
+	(void)modulator;
 }
 
 HighHatOperator::HighHatOperator()

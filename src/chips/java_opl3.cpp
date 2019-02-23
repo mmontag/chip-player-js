@@ -25,7 +25,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 #ifndef M_SQRT1_2
-# define M_SQRT1_2 0.70710678118654752440
+#define M_SQRT1_2 0.70710678118654752440
 #endif
 
 JavaOPL3::JavaOPL3() :
@@ -47,7 +47,7 @@ void JavaOPL3::setRate(uint32_t rate)
     JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
     chip_r->Reset();
 
-    float pan = sinf(M_SQRT1_2);
+    float pan = sinf((float)M_SQRT1_2);
     for (unsigned channel = 0; channel < 18; ++channel)
         chip_r->SetPanning(channel, pan, pan);
 }
@@ -89,8 +89,8 @@ void JavaOPL3::nativeGenerateN(int16_t *output, size_t frames)
     {
         memset(buf, 0, sizeof(buf));
 
-        size_t curframes = (frames < maxframes) ? frames : maxframes;
-        chip_r->Update(buf, curframes);
+        size_t curframes = (frames < (size_t)maxframes) ? frames : (size_t)maxframes;
+        chip_r->Update(buf, (int)curframes);
 
         size_t cursamples = 2 * curframes;
         for(size_t i = 0; i < cursamples; ++i)
