@@ -24,4 +24,4 @@ UINT8 CPConv_StrConvert(CPCONV* cpc, size_t* outSize, char** outStr, size_t inSi
 }
 #endif
 
-#endif __STRUTILS_H__
+#endif	// __STRUTILS_H__

@@ -1,6 +1,5 @@
 // Audio Stream - Windows Audio Session API
 // Required libraries:
-//	- kernel32.lib (threads)
 //	- ole32.lib (COM stuff)
 #define _CRTDBG_MAP_ALLOC
 #include <stdio.h>
@@ -22,6 +21,7 @@
 #include <stdtype.h>
 
 #include "AudioStream.h"
+#include "../utils/OSThread.h"
 
 #define EXT_C	extern "C"
 
@@ -42,8 +42,7 @@ typedef struct _wasapi_driver
 	IAudioClient* audClnt;
 	IAudioRenderClient* rendClnt;
 	
-	HANDLE hThread;
-	DWORD idThread;
+	OS_THREAD* hThread;
 	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
@@ -71,7 +70,7 @@ EXT_C UINT8 WASAPI_IsBusy(void* drvObj);
 EXT_C UINT8 WASAPI_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
 EXT_C UINT32 WASAPI_GetLatency(void* drvObj);
-static DWORD WINAPI WasapiThread(void* Arg);
+static void WasapiThread(void* Arg);
 
 
 extern "C"
@@ -94,8 +93,6 @@ AUDIO_DRV audDrv_WASAPI =
 	WASAPI_GetLatency,
 };
 }	// extern "C"
-
-static DWORD WINAPI WasapiThread(void* Arg);
 
 
 static const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
@@ -321,8 +318,8 @@ UINT8 WASAPI_Destroy(void* drvObj)
 		WASAPI_Stop(drvObj);
 	if (drv->hThread != NULL)
 	{
-		TerminateThread(drv->hThread, 0);
-		drv->hThread = NULL;
+		OSThread_Cancel(drv->hThread);
+		OSThread_Deinit(drv->hThread);
 	}
 	
 	free(drv);
@@ -338,7 +335,9 @@ UINT8 WASAPI_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	REFERENCE_TIME bufTime;
 	UINT8 errVal;
 	HRESULT retVal;
+	UINT8 retVal8;
 #ifdef NDEBUG
+	HANDLE hWinThr;
 	BOOL retValB;
 #endif
 	
@@ -399,26 +398,26 @@ UINT8 WASAPI_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	if (retVal != S_OK)
 		goto StartErr_HasAudClient;
 	
-	drv->hThread = CreateThread(NULL, 0, &WasapiThread, drv, CREATE_SUSPENDED, &drv->idThread);
-	if (drv->hThread == NULL)
+	retVal8 = OSThread_Init(&drv->hThread, &WasapiThread, drv);
+	if (retVal8)
 	{
 		errVal = 0xC8;	// CreateThread failed
 		goto StartErr_HasRendClient;
 	}
 #ifdef NDEBUG
-	retValB = SetThreadPriority(drv->hThread, THREAD_PRIORITY_TIME_CRITICAL);
+	hWinThr = *(HANDLE*)OSThread_GetHandle(drv->hThread);
+	retValB = SetThreadPriority(hWinThr, THREAD_PRIORITY_TIME_CRITICAL);
 	if (! retValB)
 	{
 		// Error setting priority
 		// Try a lower priority, because too low priorities cause sound stuttering.
-		retValB = SetThreadPriority(drv->hThread, THREAD_PRIORITY_HIGHEST);
+		retValB = SetThreadPriority(hWinThr, THREAD_PRIORITY_HIGHEST);
 	}
 #endif
 	
 	retVal = drv->audClnt->Start();
 	
 	drv->devState = 1;
-	ResumeThread(drv->hThread);
 	
 	return AERR_OK;
 
@@ -438,7 +437,6 @@ UINT8 WASAPI_Stop(void* drvObj)
 {
 	DRV_WASAPI* drv = (DRV_WASAPI*)drvObj;
 	HRESULT retVal;
-	DWORD retValDW;
 	
 	if (drv->devState != 1)
 		return 0xD8;	// is already stopped (or stopping)
@@ -447,10 +445,8 @@ UINT8 WASAPI_Stop(void* drvObj)
 	if (drv->audClnt != NULL)
 		retVal = drv->audClnt->Stop();
 	
-	retValDW = WaitForSingleObject(drv->hThread, 100);
-	if (retValDW == WAIT_TIMEOUT)
-		TerminateThread(drv->hThread, 0);
-	CloseHandle(drv->hThread);	drv->hThread = NULL;
+	OSThread_Join(drv->hThread);
+	OSThread_Deinit(drv->hThread);	drv->hThread = NULL;
 	
 	drv->rendClnt->Release();	drv->rendClnt = NULL;
 	drv->audClnt->Release();	drv->audClnt = NULL;
@@ -568,7 +564,7 @@ UINT32 WASAPI_GetLatency(void* drvObj)
 	return (UINT32)((latencyTime + 5000) / 10000);	// 100 ns steps -> 1 ms steps
 }
 
-static DWORD WINAPI WasapiThread(void* Arg)
+static void WasapiThread(void* Arg)
 {
 	DRV_WASAPI* drv = (DRV_WASAPI*)Arg;
 	UINT32 didBuffers;	// number of processed buffers
@@ -576,6 +572,9 @@ static DWORD WINAPI WasapiThread(void* Arg)
 	UINT32 wrtSmpls;
 	HRESULT retVal;
 	BYTE* bufData;
+	
+	while(drv->devState == 0)
+		Sleep(1);	// TODO: replace with mutex/signal
 	
 	while(drv->devState == 1)
 	{
@@ -602,5 +601,5 @@ static DWORD WINAPI WasapiThread(void* Arg)
 		//	Sleep(1);
 	}
 	
-	return 0;
+	return;
 }

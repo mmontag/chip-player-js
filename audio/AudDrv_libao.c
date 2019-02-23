@@ -1,6 +1,5 @@
 // Audio Stream - libao
 //	- libao
-//	- libpthread (threads)
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,13 +7,13 @@
 
 #include <ao/ao.h>
 
-#include <pthread.h>	// for pthread functions
 #include <unistd.h>		// for usleep()
 #define	Sleep(msec)	usleep(msec * 1000)
 
 #include <stdtype.h>
 
 #include "AudioStream.h"
+#include "../utils/OSThread.h"
 
 
 #pragma pack(1)
@@ -44,7 +43,7 @@ typedef struct _libao_driver
 	UINT32 bufCount;
 	UINT8* bufSpace;
 	
-	pthread_t hThread;
+	OS_THREAD* hThread;
 	ao_device* hDevAO;
 	volatile UINT8 pauseThread;
 	
@@ -73,7 +72,7 @@ UINT8 LibAO_IsBusy(void* drvObj);
 UINT8 LibAO_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
 UINT32 LibAO_GetLatency(void* drvObj);
-static void* AoThread(void* Arg);
+static void AoThread(void* Arg);
 
 
 AUDIO_DRV audDrv_LibAO =
@@ -171,7 +170,7 @@ UINT8 LibAO_Create(void** retDrvObj)
 	drv = (DRV_AO*)malloc(sizeof(DRV_AO));
 	drv->devState = 0;
 	drv->hDevAO = NULL;
-	drv->hThread = 0;
+	drv->hThread = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
@@ -187,11 +186,10 @@ UINT8 LibAO_Destroy(void* drvObj)
 	
 	if (drv->devState != 0)
 		LibAO_Stop(drvObj);
-	if (drv->hThread)
+	if (drv->hThread != NULL)
 	{
-		pthread_cancel(drv->hThread);
-		pthread_join(drv->hThread, NULL);
-		drv->hThread = 0;
+		OSThread_Cancel(drv->hThread);
+		OSThread_Deinit(drv->hThread);
 	}
 	
 	free(drv);
@@ -205,6 +203,7 @@ UINT8 LibAO_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	DRV_AO* drv = (DRV_AO*)drvObj;
 	UINT64 tempInt64;
 	int retVal;
+	UINT8 retVal8;
 	
 	if (drv->devState != 0)
 		return 0xD0;	// already running
@@ -235,9 +234,8 @@ UINT8 LibAO_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 		return 0xC0;		// open() failed
 	
 	drv->pauseThread = 1;
-	drv->hThread = 0;
-	retVal = pthread_create(&drv->hThread, NULL, &AoThread, drv);
-	if (retVal)
+	retVal8 = OSThread_Init(&drv->hThread, &AoThread, drv);
+	if (retVal8)
 	{
 		retVal = ao_close(drv->hDevAO);
 		drv->hDevAO = NULL;
@@ -262,11 +260,8 @@ UINT8 LibAO_Stop(void* drvObj)
 	
 	drv->devState = 2;
 	
-	if (drv->hThread)
-	{
-		pthread_join(drv->hThread, NULL);
-		drv->hThread = 0;
-	}
+	OSThread_Join(drv->hThread);
+	OSThread_Deinit(drv->hThread);	drv->hThread = NULL;
 	
 	free(drv->bufSpace);	drv->bufSpace = NULL;
 	
@@ -352,7 +347,7 @@ UINT32 LibAO_GetLatency(void* drvObj)
 	return 0;	// There's no API call that lets you receive the current latency.
 }
 
-static void* AoThread(void* Arg)
+static void AoThread(void* Arg)
 {
 	DRV_AO* drv = (DRV_AO*)Arg;
 	UINT32 didBuffers;	// number of processed buffers
@@ -377,5 +372,5 @@ static void* AoThread(void* Arg)
 			Sleep(1);
 	}
 	
-	return 0;
+	return;
 }

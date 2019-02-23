@@ -50,5 +50,8 @@
     <ClCompile Include="audio\AudioStream.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="utils\OSThread_Win.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

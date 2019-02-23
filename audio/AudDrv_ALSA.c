@@ -1,6 +1,5 @@
 // Audio Stream - Advanced Linux Sound Architecture
 //	- libasound
-//	- libpthread (threads)
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,13 +7,13 @@
 
 #include <alsa/asoundlib.h>
 
-#include <pthread.h>	// for pthread functions
 #include <unistd.h>		// for usleep()
 #define	Sleep(msec)	usleep(msec * 1000)
 
 #include <stdtype.h>
 
 #include "AudioStream.h"
+#include "../utils/OSThread.h"
 
 
 #pragma pack(1)
@@ -44,7 +43,7 @@ typedef struct _alsa_driver
 	UINT32 bufCount;
 	UINT8* bufSpace;
 	
-	pthread_t hThread;
+	OS_THREAD* hThread;
 	snd_pcm_t* hPCM;
 	volatile UINT8 pauseThread;
 	UINT8 canPause;
@@ -73,7 +72,7 @@ UINT8 ALSA_IsBusy(void* drvObj);
 UINT8 ALSA_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
 UINT32 ALSA_GetLatency(void* drvObj);
-static void* AlsaThread(void* Arg);
+static void AlsaThread(void* Arg);
 static UINT8 WriteBuffer(DRV_ALSA* drv, UINT32 dataSize, void* data);
 
 
@@ -170,7 +169,7 @@ UINT8 ALSA_Create(void** retDrvObj)
 	drv = (DRV_ALSA*)malloc(sizeof(DRV_ALSA));
 	drv->devState = 0;
 	drv->hPCM = NULL;
-	drv->hThread = 0;
+	drv->hThread = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
@@ -186,11 +185,10 @@ UINT8 ALSA_Destroy(void* drvObj)
 	
 	if (drv->devState != 0)
 		ALSA_Stop(drvObj);
-	if (drv->hThread)
+	if (drv->hThread != NULL)
 	{
-		pthread_cancel(drv->hThread);
-		pthread_join(drv->hThread, NULL);
-		drv->hThread = 0;
+		OSThread_Cancel(drv->hThread);
+		OSThread_Deinit(drv->hThread);
 	}
 	
 	free(drv);
@@ -204,6 +202,7 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	DRV_ALSA* drv = (DRV_ALSA*)drvObj;
 	UINT64 tempInt64;
 	int retVal;
+	UINT8 retVal8;
 	snd_pcm_hw_params_t* sndParams;
 	snd_pcm_format_t sndPcmFmt;
 	snd_pcm_uframes_t periodSize;
@@ -283,9 +282,8 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	}
 	
 	drv->pauseThread = 1;
-	drv->hThread = 0;
-	retVal = pthread_create(&drv->hThread, NULL, &AlsaThread, drv);
-	if (retVal)
+	retVal8 = OSThread_Init(&drv->hThread, &AlsaThread, drv);
+	if (retVal8)
 	{
 		snd_pcm_close(drv->hPCM);	drv->hPCM = NULL;
 		return 0xC8;	// CreateThread failed
@@ -310,11 +308,8 @@ UINT8 ALSA_Stop(void* drvObj)
 	
 	drv->devState = 2;
 	
-	if (drv->hThread)
-	{
-		pthread_join(drv->hThread, NULL);
-		drv->hThread = 0;
-	}
+	OSThread_Join(drv->hThread);
+	OSThread_Deinit(drv->hThread);	drv->hThread = NULL;
 	
 	if (drv->canPause)
 		retVal = snd_pcm_pause(drv->hPCM, 0);
@@ -422,7 +417,7 @@ UINT32 ALSA_GetLatency(void* drvObj)
 	return smplsBehind * 1000 / drv->waveFmt.nSamplesPerSec;
 }
 
-static void* AlsaThread(void* Arg)
+static void AlsaThread(void* Arg)
 {
 	DRV_ALSA* drv = (DRV_ALSA*)Arg;
 	UINT32 curBuf;
@@ -453,7 +448,7 @@ static void* AlsaThread(void* Arg)
 			Sleep(1);
 	}
 	
-	return 0;
+	return;
 }
 
 static UINT8 WriteBuffer(DRV_ALSA* drv, UINT32 dataSize, void* data)

@@ -1,10 +1,12 @@
 #### Audio Output Library ####
 project(libVgmTest)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/libs/cmake_modules/")
 
 if(MSVC)
 	set(CMAKE_DEBUG_POSTFIX "d")
@@ -21,6 +23,8 @@ if(MSVC)
 	set(CMAKE_RELWITHDEBINFO_POSTFIX "_${MSVC_POSTFIX}${CMAKE_RELWITHDEBINFO_POSTFIX}")
 	
 	set(ZLIB_ROOT "${CMAKE_SOURCE_DIR}/libs" CACHE PATH "ZLib directory")
+	set(Iconv_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/libs/iconv/include" CACHE PATH "directory with iconv headers")
+	set(Iconv_LIBRARY "${CMAKE_SOURCE_DIR}/libs/iconv/lib/libiconv.lib" CACHE FILEPATH "iconv library")
 	
 	if(NOT MSVC_VERSION LESS 1400)
 		add_definitions("/D _CRT_SECURE_NO_WARNINGS")
@@ -63,8 +67,6 @@ option(BUILD_LIBEMU "build sound emulation library" ON)
 option(BUILD_TESTS "build test programs" ON)
 option(BUILD_PLAYER "build player application" ON)
 
-find_package(ZLIB)
-
 add_subdirectory(utils)
 if(BUILD_LIBAUDIO)
 	add_subdirectory(audio)
@@ -91,14 +93,16 @@ add_executable(audemutest audemutest.c)
 target_include_directories(audemutest PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(audemutest PRIVATE vgm-audio vgm-emu)
 
+find_package(ZLIB REQUIRED)
+
 add_executable(vgmtest vgmtest.c vgm/dblk_compr.c)
 target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR} ${ZLIB_INCLUDE_DIRS})
-target_link_libraries(vgmtest PRIVATE ${ZLIB_LIBRARIES} vgm-audio vgm-emu)
+target_link_libraries(vgmtest PRIVATE ZLIB::ZLIB vgm-audio vgm-emu)
 
 endif(BUILD_TESTS)
 
 if(BUILD_PLAYER)
 add_executable(player player.cpp vgm/dblk_compr.c)
 target_include_directories(player PRIVATE ${CMAKE_SOURCE_DIR} ${ZLIB_INCLUDE_DIRS})
-target_link_libraries(player PRIVATE ${ZLIB_LIBRARIES} vgm-audio vgm-player)
+target_link_libraries(player PRIVATE vgm-audio vgm-player)
 endif()

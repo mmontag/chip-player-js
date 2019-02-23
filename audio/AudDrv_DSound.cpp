@@ -2,7 +2,6 @@
 // Required libraries:
 //	- dsound.lib
 //	- uuid.lib (for GUID_NULL)
-//	- kernel32.lib (threads)
 #define _CRTDBG_MAP_ALLOC
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +14,7 @@
 #include <stdtype.h>
 
 #include "AudioStream.h"
+#include "../utils/OSThread.h"
 
 #define EXT_C	extern "C"
 
@@ -46,8 +46,7 @@ typedef struct _directsound_driver
 	HWND hWnd;
 	LPDIRECTSOUND dSndIntf;
 	LPDIRECTSOUNDBUFFER dSndBuf;
-	HANDLE hThread;
-	DWORD idThread;
+	OS_THREAD* hThread;
 	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
@@ -76,7 +75,7 @@ EXT_C UINT8 DSound_IsBusy(void* drvObj);
 EXT_C UINT8 DSound_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
 EXT_C UINT32 DSound_GetLatency(void* drvObj);
-static DWORD WINAPI DirectSoundThread(void* Arg);
+static void DirectSoundThread(void* Arg);
 static UINT8 WriteBuffer(DRV_DSND* drv, UINT32 dataSize, void* data);
 static UINT8 ClearBuffer(DRV_DSND* drv);
 
@@ -246,8 +245,8 @@ UINT8 DSound_Destroy(void* drvObj)
 		DSound_Stop(drvObj);
 	if (drv->hThread != NULL)
 	{
-		TerminateThread(drv->hThread, 0);
-		drv->hThread = NULL;
+		OSThread_Cancel(drv->hThread);
+		OSThread_Deinit(drv->hThread);
 	}
 	
 	free(drv);
@@ -272,7 +271,9 @@ UINT8 DSound_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	UINT64 tempInt64;
 	DSBUFFERDESC bufDesc;
 	HRESULT retVal;
+	UINT8 retVal8;
 #ifdef NDEBUG
+	HANDLE hWinThr;
 	BOOL retValB;
 #endif
 	
@@ -328,16 +329,17 @@ UINT8 DSound_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	if (retVal != DS_OK)
 		return AERR_API_ERR;
 	
-	drv->hThread = CreateThread(NULL, 0, &DirectSoundThread, drv, CREATE_SUSPENDED, &drv->idThread);
-	if (drv->hThread == NULL)
+	retVal8 = OSThread_Init(&drv->hThread, &DirectSoundThread, drv);
+	if (retVal8)
 		return 0xC8;	// CreateThread failed
 #ifdef NDEBUG
-	retValB = SetThreadPriority(drv->hThread, THREAD_PRIORITY_TIME_CRITICAL);
+	hWinThr = *(HANDLE*)OSThread_GetHandle(drv->hThread);
+	retValB = SetThreadPriority(hWinThr, THREAD_PRIORITY_TIME_CRITICAL);
 	if (! retValB)
 	{
 		// Error setting priority
 		// Try a lower priority, because too low priorities cause sound stuttering.
-		retValB = SetThreadPriority(drv->hThread, THREAD_PRIORITY_HIGHEST);
+		retValB = SetThreadPriority(hWinThr, THREAD_PRIORITY_HIGHEST);
 	}
 #endif
 	
@@ -348,7 +350,6 @@ UINT8 DSound_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	retVal = drv->dSndBuf->Play(0, 0, DSBPLAY_LOOPING);
 	
 	drv->devState = 1;
-	ResumeThread(drv->hThread);
 	
 	return AERR_OK;
 }
@@ -356,7 +357,6 @@ UINT8 DSound_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 UINT8 DSound_Stop(void* drvObj)
 {
 	DRV_DSND* drv = (DRV_DSND*)drvObj;
-	DWORD retVal;
 	
 	if (drv->devState != 1)
 		return 0xD8;	// is already stopped (or stopping)
@@ -366,10 +366,8 @@ UINT8 DSound_Stop(void* drvObj)
 	if (drv->dSndBuf != NULL)
 		drv->dSndBuf->Stop();
 	
-	retVal = WaitForSingleObject(drv->hThread, 100);
-	if (retVal == WAIT_TIMEOUT)
-		TerminateThread(drv->hThread, 0);
-	CloseHandle(drv->hThread);	drv->hThread = NULL;
+	OSThread_Join(drv->hThread);
+	OSThread_Deinit(drv->hThread);	drv->hThread = NULL;
 	
 	free(drv->bufSpace);
 	drv->bufSpace = NULL;
@@ -495,11 +493,14 @@ UINT32 DSound_GetLatency(void* drvObj)
 	return bytesBehind * 1000 / drv->waveFmt.nAvgBytesPerSec;
 }
 
-static DWORD WINAPI DirectSoundThread(void* Arg)
+static void DirectSoundThread(void* Arg)
 {
 	DRV_DSND* drv = (DRV_DSND*)Arg;
 	UINT32 wrtBytes;
 	UINT32 didBuffers;	// number of processed buffers
+	
+	while(drv->devState == 0)
+		Sleep(1);	// TODO: replace with mutex/signal
 	
 	while(drv->devState == 1)
 	{
@@ -520,7 +521,7 @@ static DWORD WINAPI DirectSoundThread(void* Arg)
 		//	Sleep(1);
 	}
 	
-	return 0;
+	return;
 }
 
 static UINT8 WriteBuffer(DRV_DSND* drv, UINT32 dataSize, void* data)

@@ -11,8 +11,10 @@ union LoaderHandles
 };
 
 FileLoader::FileLoader() :
-	_readStopOfs((UINT32)-1),
-	_status(FLSTAT_EMPTY)
+	_modeSrc(0x00),
+	_modeCompr(0x00),
+	_status(FLSTAT_EMPTY),
+	_readStopOfs((UINT32)-1)
 {
 	_hLoad = new LoaderHandles;
 	
@@ -169,7 +171,8 @@ UINT8 FileLoader::FreeData(void)
 		return 0x01;
 	
 	CancelLoading();
-	_data.swap(std::vector<UINT8>());	// release all memory (.clear() doesn't always do that)
+	std::vector<UINT8> empty;
+	_data.swap(empty);	// release all memory (.clear() doesn't always do that)
 	_status = FLSTAT_EMPTY;
 	
 	return 0x00;

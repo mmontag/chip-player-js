@@ -1,5 +1,4 @@
 // Audio Stream - Open Sound System
-//	- libpthread (threads, optional)
 #define ENABLE_OSS_THREAD
 
 #include <stdlib.h>
@@ -12,7 +11,6 @@
 #include <sys/ioctl.h>
 
 #ifdef ENABLE_OSS_THREAD
-#include <pthread.h>	// for pthread functions
 #include <unistd.h>		// for usleep()
 #define	Sleep(msec)	usleep(msec * 1000)
 #endif
@@ -20,6 +18,7 @@
 #include <stdtype.h>
 
 #include "AudioStream.h"
+#include "../utils/OSThread.h"
 
 
 #pragma pack(1)
@@ -58,7 +57,7 @@ typedef struct _oss_driver
 	UINT8* bufSpace;
 	
 #ifdef ENABLE_OSS_THREAD
-	pthread_t hThread;
+	OS_THREAD* hThread;
 #endif
 	int hFileDSP;
 	volatile UINT8 pauseThread;
@@ -89,7 +88,7 @@ UINT8 OSS_IsBusy(void* drvObj);
 UINT8 OSS_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
 UINT32 OSS_GetLatency(void* drvObj);
-static void* OssThread(void* Arg);
+static void OssThread(void* Arg);
 
 
 AUDIO_DRV audDrv_OSS =
@@ -185,7 +184,7 @@ UINT8 OSS_Create(void** retDrvObj)
 	drv->devState = 0;
 	drv->hFileDSP = 0;
 #ifdef ENABLE_OSS_THREAD
-	drv->hThread = 0;
+	drv->hThread = NULL;
 #endif
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
@@ -203,11 +202,10 @@ UINT8 OSS_Destroy(void* drvObj)
 	if (drv->devState != 0)
 		OSS_Stop(drvObj);
 #ifdef ENABLE_OSS_THREAD
-	if (drv->hThread)
+	if (drv->hThread != NULL)
 	{
-		pthread_cancel(drv->hThread);
-		pthread_join(drv->hThread, NULL);
-		drv->hThread = 0;
+		OSThread_Cancel(drv->hThread);
+		OSThread_Deinit(drv->hThread);
 	}
 #endif
 	
@@ -241,6 +239,9 @@ UINT8 OSS_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDrv
 	DRV_OSS* drv = (DRV_OSS*)drvObj;
 	UINT64 tempInt64;
 	int retVal;
+#ifdef ENABLE_OSS_THREAD
+	UINT8 retVal8;
+#endif
 	
 	if (drv->devState != 0)
 		return 0xD0;	// already running
@@ -309,9 +310,8 @@ UINT8 OSS_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDrv
 	
 	drv->pauseThread = 1;
 #ifdef ENABLE_OSS_THREAD
-	drv->hThread = 0;
-	retVal = pthread_create(&drv->hThread, NULL, &OssThread, drv);
-	if (retVal)
+	retVal8 = OSThread_Init(&drv->hThread, &OssThread, drv);
+	if (retVal8)
 	{
 		retVal = close(drv->hFileDSP);
 		drv->hFileDSP = 0;
@@ -338,11 +338,8 @@ UINT8 OSS_Stop(void* drvObj)
 	drv->devState = 2;
 	
 #ifdef ENABLE_OSS_THREAD
-	if (drv->hThread)
-	{
-		pthread_join(drv->hThread, NULL);
-		drv->hThread = 0;
-	}
+	OSThread_Join(drv->hThread);
+	OSThread_Deinit(drv->hThread);	drv->hThread = NULL;
 #endif
 	
 	free(drv->bufSpace);	drv->bufSpace = NULL;
@@ -439,7 +436,7 @@ UINT32 OSS_GetLatency(void* drvObj)
 	return bytesBehind * 1000 / drv->waveFmt.nAvgBytesPerSec;
 }
 
-static void* OssThread(void* Arg)
+static void OssThread(void* Arg)
 {
 	DRV_OSS* drv = (DRV_OSS*)Arg;
 	UINT32 didBuffers;	// number of processed buffers
@@ -464,5 +461,5 @@ static void* OssThread(void* Arg)
 			Sleep(1);
 	}
 	
-	return 0;
+	return;
 }

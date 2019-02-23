@@ -522,7 +522,7 @@ static UINT8 InitAudioSystem(void)
 	
 	idWavOut = GetNthAudioDriver(ADRVTYPE_OUT, AudioOutDrv);
 	idWavOutDev = 0;	// default device
-	if (AudioOutDrv != (UINT32)-1 && idWavOut == (UINT32)-1)
+	if (AudioOutDrv != -1 && idWavOut == (UINT32)-1)
 	{
 		fprintf(stderr, "Requested Audio Output driver not found!\n");
 		Audio_Deinit();
@@ -542,6 +542,8 @@ static UINT8 InitAudioSystem(void)
 			Audio_Deinit();
 			return retVal;
 		}
+		if (drvInfo->drvSig == ADRVSIG_DSOUND)
+			DSound_SetHWnd(AudioDrv_GetDrvData(audDrv), GetDesktopWindow());
 	}
 	
 	audDrvLog = NULL;

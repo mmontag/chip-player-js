@@ -1,6 +1,5 @@
 // Audio Stream - XAudio2
 // Required libraries:
-//	- kernel32.lib (threads)
 //	- ole32.lib (COM stuff)
 #define _CRTDBG_MAP_ALLOC
 #include <stdio.h>
@@ -19,6 +18,7 @@
 #include <stdtype.h>
 
 #include "AudioStream.h"
+#include "../utils/OSThread.h"
 
 #define EXT_C	extern "C"
 
@@ -39,8 +39,7 @@ typedef struct _xaudio2_driver
 	IXAudio2MasteringVoice* xaMstVoice;
 	IXAudio2SourceVoice* xaSrcVoice;
 	XAUDIO2_BUFFER* xaBufs;
-	HANDLE hThread;
-	DWORD idThread;
+	OS_THREAD* hThread;
 	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
@@ -67,7 +66,7 @@ EXT_C UINT8 XAudio2_IsBusy(void* drvObj);
 EXT_C UINT8 XAudio2_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
 EXT_C UINT32 XAudio2_GetLatency(void* drvObj);
-static DWORD WINAPI XAudio2Thread(void* Arg);
+static void XAudio2Thread(void* Arg);
 
 
 extern "C"
@@ -90,8 +89,6 @@ AUDIO_DRV audDrv_XAudio2 =
 	XAudio2_GetLatency,
 };
 }	// extern "C"
-
-static DWORD WINAPI XAudio2Thread(void* Arg);
 
 
 static AUDIO_OPTS defOptions;
@@ -230,8 +227,8 @@ UINT8 XAudio2_Destroy(void* drvObj)
 		XAudio2_Stop(drvObj);
 	if (drv->hThread != NULL)
 	{
-		TerminateThread(drv->hThread, 0);
-		drv->hThread = NULL;
+		OSThread_Cancel(drv->hThread);
+		OSThread_Deinit(drv->hThread);
 	}
 	
 	free(drv);
@@ -247,7 +244,9 @@ UINT8 XAudio2_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* au
 	UINT32 curBuf;
 	XAUDIO2_BUFFER* tempXABuf;
 	HRESULT retVal;
+	UINT8 retVal8;
 #ifdef NDEBUG
+	HANDLE hWinThr;
 	BOOL retValB;
 #endif
 	
@@ -289,16 +288,17 @@ UINT8 XAudio2_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* au
 	retVal = drv->xAudIntf->CreateSourceVoice(&drv->xaSrcVoice,
 				&drv->waveFmt, 0x00, XAUDIO2_DEFAULT_FREQ_RATIO, NULL, NULL, NULL);
 	
-	drv->hThread = CreateThread(NULL, 0, &XAudio2Thread, drv, CREATE_SUSPENDED, &drv->idThread);
-	if (drv->hThread == NULL)
+	retVal8 = OSThread_Init(&drv->hThread, &XAudio2Thread, drv);
+	if (retVal8)
 		return 0xC8;	// CreateThread failed
 #ifdef NDEBUG
-	retValB = SetThreadPriority(drv->hThread, THREAD_PRIORITY_TIME_CRITICAL);
+	hWinThr = *(HANDLE*)OSThread_GetHandle(drv->hThread);
+	retValB = SetThreadPriority(hWinThr, THREAD_PRIORITY_TIME_CRITICAL);
 	if (! retValB)
 	{
 		// Error setting priority
 		// Try a lower priority, because too low priorities cause sound stuttering.
-		retValB = SetThreadPriority(drv->hThread, THREAD_PRIORITY_HIGHEST);
+		retValB = SetThreadPriority(hWinThr, THREAD_PRIORITY_HIGHEST);
 	}
 #endif
 	
@@ -317,7 +317,6 @@ UINT8 XAudio2_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* au
 	retVal = drv->xaSrcVoice->Start(0x00, XAUDIO2_COMMIT_NOW);
 	
 	drv->devState = 1;
-	ResumeThread(drv->hThread);
 	
 	return AERR_OK;
 }
@@ -326,7 +325,6 @@ UINT8 XAudio2_Stop(void* drvObj)
 {
 	DRV_XAUD2* drv = (DRV_XAUD2*)drvObj;
 	HRESULT retVal;
-	DWORD retValDW;
 	
 	if (drv->devState != 1)
 		return 0xD8;	// is already stopped (or stopping)
@@ -335,10 +333,8 @@ UINT8 XAudio2_Stop(void* drvObj)
 	if (drv->xaSrcVoice != NULL)
 		retVal = drv->xaSrcVoice->Stop(0x00, XAUDIO2_COMMIT_NOW);
 	
-	retValDW = WaitForSingleObject(drv->hThread, 100);
-	if (retValDW == WAIT_TIMEOUT)
-		TerminateThread(drv->hThread, 0);
-	CloseHandle(drv->hThread);	drv->hThread = NULL;
+	OSThread_Join(drv->hThread);
+	OSThread_Deinit(drv->hThread);	drv->hThread = NULL;
 	
 	drv->xaMstVoice->DestroyVoice();	drv->xaMstVoice = NULL;
 	drv->xaSrcVoice->DestroyVoice();	drv->xaSrcVoice = NULL;
@@ -460,13 +456,16 @@ UINT32 XAudio2_GetLatency(void* drvObj)
 	return bytesBehind * 1000 / drv->waveFmt.nAvgBytesPerSec;
 }
 
-static DWORD WINAPI XAudio2Thread(void* Arg)
+static void XAudio2Thread(void* Arg)
 {
 	DRV_XAUD2* drv = (DRV_XAUD2*)Arg;
 	XAUDIO2_VOICE_STATE xaVocState;
 	XAUDIO2_BUFFER* tempXABuf;
 	UINT32 didBuffers;	// number of processed buffers
 	HRESULT retVal;
+	
+	while(drv->devState == 0)
+		Sleep(1);	// TODO: replace with mutex/signal
 	
 	while(drv->devState == 1)
 	{
@@ -496,5 +495,5 @@ static DWORD WINAPI XAudio2Thread(void* Arg)
 		//	Sleep(1);
 	}
 	
-	return 0;
+	return;
 }

@@ -61,37 +61,35 @@ endif()
 if(AUDIODRV_WINMM)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_WINMM")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_WinMM.c)
-	set(AUDIO_LIBS ${AUDIO_LIBS} kernel32 winmm)
+	set(AUDIO_LIBS ${AUDIO_LIBS} winmm)
 endif()
 
 if(AUDIODRV_DSOUND)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_DSOUND")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_DSound.cpp)
-	set(AUDIO_LIBS ${AUDIO_LIBS} kernel32 dsound uuid)
+	set(AUDIO_LIBS ${AUDIO_LIBS} dsound uuid)
 endif()
 
 if(AUDIODRV_XAUDIO2)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_XAUD2")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_XAudio2.cpp)
-	set(AUDIO_LIBS ${AUDIO_LIBS} kernel32 ole32)
+	set(AUDIO_LIBS ${AUDIO_LIBS} ole32)
 endif()
 
 if(AUDIODRV_WASAPI)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_WASAPI")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_WASAPI.cpp)
-	set(AUDIO_LIBS ${AUDIO_LIBS} kernel32 ole32)
+	set(AUDIO_LIBS ${AUDIO_LIBS} ole32)
 endif()
 
 if(AUDIODRV_OSS)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_OSS")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_OSS.c)
-	set(AUDIO_LIBS ${AUDIO_LIBS} pthread)
 endif()
 
 if(AUDIODRV_SADA)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_SADA")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_SADA.c)
-	set(AUDIO_LIBS ${AUDIO_LIBS} pthread)
 endif()
 
 if(AUDIODRV_ALSA)
@@ -99,7 +97,7 @@ if(AUDIODRV_ALSA)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_ALSA")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_ALSA.c)
 	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${ALSA_INCLUDE_DIRS})
-	set(AUDIO_LIBS ${AUDIO_LIBS} pthread ${ALSA_LIBRARIES})
+	set(AUDIO_LIBS ${AUDIO_LIBS} ${ALSA_LIBRARIES})
 endif()
 
 if(AUDIODRV_PULSE)
@@ -108,13 +106,13 @@ if(AUDIODRV_PULSE)
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_Pulse.c)
 	set(AUDIO_INCLUDES ${AUDIO_INCLUDES} ${PULSEAUDIO_INCLUDE_DIR})
 	# There seems to be no package or variable for pulse-simple.
-	set(AUDIO_LIBS ${AUDIO_LIBS} pthread pulse-simple ${PULSEAUDIO_LIBRARY})
+	set(AUDIO_LIBS ${AUDIO_LIBS} pulse-simple ${PULSEAUDIO_LIBRARY})
 endif()
 
 if(AUDIODRV_LIBAO)
 	set(AUDIO_DEFS ${AUDIO_DEFS} " AUDDRV_LIBAO")
 	set(AUDIO_FILES ${AUDIO_FILES} AudDrv_libao.c)
-	set(AUDIO_LIBS ${AUDIO_LIBS} pthread ao)
+	set(AUDIO_LIBS ${AUDIO_LIBS} ao)
 endif()
 
 
@@ -142,7 +140,7 @@ elseif(MSVC)
 endif()
 target_include_directories(${PROJECT_NAME} PUBLIC ${AUDIO_INCLUDES})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${AUDIO_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${AUDIO_LIBS} vgm-utils)
 
 install(TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION "bin"

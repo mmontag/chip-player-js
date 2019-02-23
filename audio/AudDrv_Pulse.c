@@ -1,6 +1,5 @@
 // Audio Stream - PulseAudio
 //	- libpulse-simple
-//	- libpthread (threads)
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,13 +7,13 @@
 
 #include <pulse/simple.h>
 
-#include <pthread.h>	// for pthread functions
 #include <unistd.h>		// for usleep()
 #define	Sleep(msec)	usleep(msec * 1000)
 
 #include <stdtype.h>
 
 #include "AudioStream.h"
+#include "../utils/OSThread.h"
 
 typedef struct _pulse_driver
 {
@@ -28,7 +27,7 @@ typedef struct _pulse_driver
 	UINT32 bufCount;
 	UINT8* bufSpace;
 	
-	pthread_t hThread;
+	OS_THREAD* hThread;
 	pa_simple* hPulse;
 	volatile UINT8 pauseThread;
 	UINT8 canPause;
@@ -60,7 +59,7 @@ UINT8 Pulse_WriteData(void* drvObj, UINT32 dataSize, void* data);
 UINT8 Pulse_SetStreamDesc(void* drvObj, const char* fileName);
 const char* Pulse_GetStreamDesc(void* drvObj);
 UINT32 Pulse_GetLatency(void* drvObj);
-static void* PulseThread(void* Arg);
+static void PulseThread(void* Arg);
 
 
 AUDIO_DRV audDrv_Pulse =
@@ -148,7 +147,7 @@ UINT8 Pulse_Create(void** retDrvObj)
 	
 	drv->devState = 0;
 	drv->hPulse = NULL;
-	drv->hThread = 0;
+	drv->hThread = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	drv->streamDesc = strdup("libvgm");
@@ -165,11 +164,10 @@ UINT8 Pulse_Destroy(void* drvObj)
 	
 	if (drv->devState != 0)
 		Pulse_Stop(drvObj);
-	if (drv->hThread)
+	if (drv->hThread != NULL)
 	{
-		pthread_cancel(drv->hThread);
-		pthread_join(drv->hThread, NULL);
-		drv->hThread = 0;
+		OSThread_Cancel(drv->hThread);
+		OSThread_Deinit(drv->hThread);
 	}
 	
 	free(drv->streamDesc);
@@ -204,7 +202,7 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
 	UINT64 tempInt64;
-	int retVal;
+	UINT8 retVal8;
 	
 	if (drv->devState != 0)
 		return 0xD0;	// already running
@@ -231,16 +229,15 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	else
 		return 0xCF;
 	
-	drv->pauseThread = 1;
-	drv->hThread = 0;
 	drv->canPause = 1;
-	drv->hPulse = pa_simple_new(NULL, "libvgm", PA_STREAM_PLAYBACK, NULL, drv->streamDesc, &drv->pulseFmt, NULL, NULL, NULL);
 	
+	drv->hPulse = pa_simple_new(NULL, "libvgm", PA_STREAM_PLAYBACK, NULL, drv->streamDesc, &drv->pulseFmt, NULL, NULL, NULL);
 	if(!drv->hPulse)
 		return 0xC0;
 	
-	retVal = pthread_create(&drv->hThread, NULL, &PulseThread, drv);
-	if (retVal)
+	drv->pauseThread = 1;
+	retVal8 = OSThread_Init(&drv->hThread, &PulseThread, drv);
+	if (retVal8)
 	{
 		pa_simple_free(drv->hPulse);
 		return 0xC8;	// CreateThread failed
@@ -263,11 +260,8 @@ UINT8 Pulse_Stop(void* drvObj)
 	
 	drv->devState = 2;
 	
-	if (drv->hThread)
-	{
-		pthread_join(drv->hThread, NULL);
-		drv->hThread = 0;
-	}
+	OSThread_Join(drv->hThread);
+	OSThread_Deinit(drv->hThread);	drv->hThread = NULL;
 	
 	free(drv->bufSpace);
 	drv->bufSpace = NULL;
@@ -345,7 +339,7 @@ UINT32 Pulse_GetLatency(void* drvObj)
 	return (UINT32)(pa_simple_get_latency(drv->hPulse, NULL) / 1000);
 }
 
-static void* PulseThread(void* Arg)
+static void PulseThread(void* Arg)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)Arg;
 	UINT32 didBuffers;	// number of processed buffers
@@ -370,5 +364,5 @@ static void* PulseThread(void* Arg)
 			Sleep(1);
 	}
 	
-	return 0;
+	return;
 }

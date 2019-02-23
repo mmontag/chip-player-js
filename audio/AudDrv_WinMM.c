@@ -1,6 +1,5 @@
 // Audio Stream - Windows Multimedia API WinMM
 //	- winmm.lib
-//	- kernel32.lib (threads)
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +10,7 @@
 #include <stdtype.h>
 
 #include "AudioStream.h"
+#include "../utils/OSThread.h"
 
 
 #ifdef _MSC_VER
@@ -47,8 +47,7 @@ typedef struct _winmm_driver
 	UINT32 bufCount;
 	UINT8* bufSpace;
 	
-	HANDLE hThread;
-	DWORD idThread;
+	OS_THREAD* hThread;
 	HWAVEOUT hWaveOut;
 	WAVEHDR* waveHdrs;
 	void* userParam;
@@ -78,7 +77,7 @@ UINT8 WinMM_IsBusy(void* drvObj);
 UINT8 WinMM_WriteData(void* drvObj, UINT32 dataSize, void* data);
 
 UINT32 WinMM_GetLatency(void* drvObj);
-static DWORD WINAPI WaveOutThread(void* Arg);
+static void WaveOutThread(void* Arg);
 static void WriteBuffer(DRV_WINMM* drv, WAVEHDR* wHdr);
 static void BufCheck(DRV_WINMM* drv);
 
@@ -222,8 +221,8 @@ UINT8 WinMM_Destroy(void* drvObj)
 		WinMM_Stop(drvObj);
 	if (drv->hThread != NULL)
 	{
-		TerminateThread(drv->hThread, 0);
-		drv->hThread = NULL;
+		OSThread_Cancel(drv->hThread);
+		OSThread_Deinit(drv->hThread);
 	}
 	
 	free(drv);
@@ -240,7 +239,9 @@ UINT8 WinMM_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	UINT32 curBuf;
 	WAVEHDR* tempWavHdr;
 	MMRESULT retValMM;
+	UINT8 retVal8;
 #ifdef NDEBUG
+	HANDLE hWinThr;
 	BOOL retValB;
 #endif
 	
@@ -270,20 +271,21 @@ UINT8 WinMM_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	if (retValMM != MMSYSERR_NOERROR)
 		return 0xC0;		// waveOutOpen failed
 	
-	drv->hThread = CreateThread(NULL, 0, &WaveOutThread, drv, CREATE_SUSPENDED, &drv->idThread);
-	if (drv->hThread == NULL)
+	retVal8 = OSThread_Init(&drv->hThread, &WaveOutThread, drv);
+	if (retVal8)
 	{
 		retValMM = waveOutClose(drv->hWaveOut);
 		drv->hWaveOut = NULL;
 		return 0xC8;	// CreateThread failed
 	}
 #ifdef NDEBUG
-	retValB = SetThreadPriority(drv->hThread, THREAD_PRIORITY_TIME_CRITICAL);
+	hWinThr = *(HANDLE*)OSThread_GetHandle(drv->hThread);
+	retValB = SetThreadPriority(hWinThr, THREAD_PRIORITY_TIME_CRITICAL);
 	if (! retValB)
 	{
 		// Error setting priority
 		// Try a lower priority, because too low priorities cause sound stuttering.
-		retValB = SetThreadPriority(drv->hThread, THREAD_PRIORITY_HIGHEST);
+		retValB = SetThreadPriority(hWinThr, THREAD_PRIORITY_HIGHEST);
 	}
 #endif
 	
@@ -307,7 +309,6 @@ UINT8 WinMM_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	drv->BlocksPlayed = 0;
 	
 	drv->devState = 1;
-	ResumeThread(drv->hThread);
 	
 	return AERR_OK;
 }
@@ -316,7 +317,6 @@ UINT8 WinMM_Stop(void* drvObj)
 {
 	DRV_WINMM* drv = (DRV_WINMM*)drvObj;
 	UINT32 curBuf;
-	DWORD retVal;
 	MMRESULT retValMM;
 	
 	if (drv->devState != 1)
@@ -324,10 +324,8 @@ UINT8 WinMM_Stop(void* drvObj)
 	
 	drv->devState = 2;
 	
-	retVal = WaitForSingleObject(drv->hThread, 100);
-	if (retVal == WAIT_TIMEOUT)
-		TerminateThread(drv->hThread, 0);
-	CloseHandle(drv->hThread);	drv->hThread = NULL;
+	OSThread_Join(drv->hThread);
+	OSThread_Deinit(drv->hThread);	drv->hThread = NULL;
 	
 	retValMM = waveOutReset(drv->hWaveOut);
 	for (curBuf = 0; curBuf < drv->bufCount; curBuf ++)
@@ -442,15 +440,16 @@ UINT32 WinMM_GetLatency(void* drvObj)
 	return smplsBehind * 1000 / drv->waveFmt.nSamplesPerSec;
 }
 
-static DWORD WINAPI WaveOutThread(void* Arg)
+static void WaveOutThread(void* Arg)
 {
 	DRV_WINMM* drv = (DRV_WINMM*)Arg;
 	UINT32 curBuf;
 	UINT32 didBuffers;	// number of processed buffers
 	WAVEHDR* tempWavHdr;
 	
-	drv->BlocksSent = 0;
-	drv->BlocksPlayed = 0;
+	while(drv->devState == 0)
+		Sleep(1);	// TODO: replace with mutex/signal
+	
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
@@ -478,7 +477,7 @@ static DWORD WINAPI WaveOutThread(void* Arg)
 		//	Sleep(1);
 	}
 	
-	return 0;
+	return;
 }
 
 static void WriteBuffer(DRV_WINMM* drv, WAVEHDR* wHdr)

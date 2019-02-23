@@ -1,24 +1,41 @@
 #### miscellaneous utility functions/classes ####
 project(vgm-utils)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 set(UTIL_DEFS)
-set(UTIL_FILES
-	FileLoader.cpp
-)
+set(UTIL_FILES)
 # export headers
 set(UTIL_HEADERS
 	FileLoader.hpp
+	OSThread.h
 	StrUtils.h
 )
 set(UTIL_INCLUDES)
 set(UTIL_LIBS)
 
 
+# File Functions
+find_package(ZLIB REQUIRED)
+set(UTIL_FILES ${UTIL_FILES} FileLoader.cpp)
+set(UTIL_LIBS ${UTIL_LIBS} ZLIB::ZLIB)
+
+
+# Threads
+find_package(Threads REQUIRED)
+
+if(CMAKE_USE_WIN32_THREADS_INIT)
+	set(UTIL_FILES ${UTIL_FILES} OSThread_Win.c)
+elseif(CMAKE_USE_PTHREADS_INIT)
+	set(UTIL_FILES ${UTIL_FILES} OSThread_POSIX.c)
+endif()
+set(UTIL_LIBS ${UTIL_LIBS} Threads::Threads)
+
+
+# String Codepage Conversion
 find_package(Iconv REQUIRED)
 
-set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
 set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_IConv.c)
+set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
 
 
 add_library(${PROJECT_NAME} STATIC ${UTIL_FILES})
