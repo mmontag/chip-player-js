@@ -4,10 +4,10 @@
 #include <stdtype.h>
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
-#include <iconv.h>
+#include "../utils/StrUtils.h"
 #include "helper.h"
 #include "playerbase.hpp"
-#include "FileLoader.hpp"
+#include "../utils/FileLoader.hpp"
 #include <vector>
 #include <map>
 #include <string>
@@ -90,7 +90,7 @@ private:
 	void ParseFile(UINT32 ticks);
 	void DoCommand(void);
 	
-	iconv_t _icSJIS;	// ShiftJIS -> UTF-8 iconv object
+	CPCONV* _cpcSJIS;	// ShiftJIS -> UTF-8 codepage conversion
 	FileLoader* _fLoad;
 	const UINT8* _fileData;	// data pointer for quick access, equals _fLoad->GetFileData().data()
 	

@@ -24,7 +24,7 @@ extern "C" int __cdecl _kbhit(void);
 #endif
 
 #include <common_def.h>
-#include "player/FileLoader.hpp"
+#include "utils/FileLoader.hpp"
 #include "player/playerbase.hpp"
 #include "player/s98player.hpp"
 #include "player/droplayer.hpp"

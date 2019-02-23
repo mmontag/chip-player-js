@@ -4,8 +4,6 @@
 #include <vector>
 #include <string>
 
-#include <iconv.h>
-
 #define INLINE	static inline
 
 #include <common_def.h>
@@ -26,6 +24,7 @@
 #include <emu/cores/es5506.h>
 
 #include "../vgm/dblk_compr.h"
+#include "../utils/StrUtils.h"
 #include "helper.h"
 
 
@@ -112,7 +111,9 @@ VGMPlayer::VGMPlayer() :
 	_playState(0x00),
 	_psTrigger(0x00)
 {
-	_icUTF16 = iconv_open("UTF-8", "UTF-16LE");
+	UINT8 retVal = CPConv_Init(&_cpcUTF16, "UTF-16LE", "UTF-8");
+	if (retVal)
+		_cpcUTF16 = NULL;
 	memset(&_pcmComprTbl, 0x00, sizeof(PCM_COMPR_TBL));
 	
 	return;
@@ -120,8 +121,8 @@ VGMPlayer::VGMPlayer() :
 
 VGMPlayer::~VGMPlayer()
 {
-	if (_icUTF16 != (iconv_t)-1)
-		iconv_close(_icUTF16);
+	if (_cpcUTF16 != NULL)
+		CPConv_Deinit(_cpcUTF16);
 	
 	return;
 }
@@ -323,12 +324,15 @@ UINT8 VGMPlayer::LoadTags(void)
 
 std::string VGMPlayer::GetUTF8String(const UINT8* startPtr, const UINT8* endPtr)
 {
+	if (_cpcUTF16 == NULL)
+		return std::string();
+	
 	size_t convSize = 0;
 	char* convData = NULL;
 	std::string result;
 	UINT8 retVal;
 	
-	retVal = StrCharsetConv(_icUTF16, &convSize, &convData, endPtr - startPtr, (const char*)startPtr);
+	retVal = CPConv_StrConvert(_cpcUTF16, &convSize, &convData, endPtr - startPtr, (const char*)startPtr);
 	
 	result.assign(convData, convData + convSize);
 	free(convData);
@@ -973,7 +977,7 @@ void VGMPlayer::InitDevices(void)
 				else if (chipType == DEVID_C6280)
 					devCfg.emuCore = FCC_OOTK;
 				else if (chipType == DEVID_SAA1099)
-					devCfg.emuCore = FCC_MAME;
+					devCfg.emuCore = FCC_VBEL;
 				
 				retVal = SndEmu_Start(chipType, &devCfg, devInf);
 				if (retVal)

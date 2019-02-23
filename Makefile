@@ -240,6 +240,8 @@ VGMTEST_MAINOBJS = \
 
 PLAYER_MAINOBJS = \
 	$(OBJ)/player/helper.o \
+	$(OBJ)/utils/FileLoader.o \
+	$(OBJ)/utils/StrUtils-CPConv_IConv.o \
 	$(OBJ)/player/playerbase.o \
 	$(OBJ)/player/s98player.o \
 	$(OBJ)/player/droplayer.o \

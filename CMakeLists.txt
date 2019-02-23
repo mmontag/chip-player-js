@@ -65,6 +65,7 @@ option(BUILD_PLAYER "build player application" ON)
 
 find_package(ZLIB)
 
+add_subdirectory(utils)
 if(BUILD_LIBAUDIO)
 	add_subdirectory(audio)
 endif()

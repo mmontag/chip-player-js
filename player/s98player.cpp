@@ -6,8 +6,6 @@
 #include <string>
 #include <algorithm>
 
-#include <iconv.h>
-
 #define INLINE	static inline
 
 #include <common_def.h>
@@ -19,6 +17,7 @@
 #include <emu/EmuCores.h>
 #include <emu/cores/sn764intf.h>	// for SN76496_CFG
 #include <emu/cores/ayintf.h>		// for AY8910_CFG
+#include "../utils/StrUtils.h"
 #include "helper.h"
 
 
@@ -68,13 +67,15 @@ S98Player::S98Player() :
 	_playState(0x00),
 	_psTrigger(0x00)
 {
-	_icSJIS = iconv_open("UTF-8", "CP932");
+	UINT8 retVal = CPConv_Init(&_cpcSJIS, "CP932", "UTF-8");
+	if (retVal)
+		_cpcSJIS = NULL;
 }
 
 S98Player::~S98Player()
 {
-	if (_icSJIS != (iconv_t)-1)
-		iconv_close(_icSJIS);
+	if (_cpcSJIS != NULL)
+		CPConv_Deinit(_cpcSJIS);
 }
 
 UINT32 S98Player::GetPlayerType(void) const
@@ -278,14 +279,14 @@ UINT8 S98Player::LoadTags(void)
 
 std::string S98Player::GetUTF8String(const char* startPtr, const char* endPtr)
 {
-	if (_icSJIS != (iconv_t)-1)
+	if (_cpcSJIS != NULL)
 	{
 		size_t convSize = 0;
 		char* convData = NULL;
 		std::string result;
 		UINT8 retVal;
 		
-		retVal = StrCharsetConv(_icSJIS, &convSize, &convData, endPtr - startPtr, startPtr);
+		retVal = CPConv_StrConvert(_cpcSJIS, &convSize, &convData, endPtr - startPtr, startPtr);
 		
 		result.assign(convData, convData + convSize);
 		free(convData);

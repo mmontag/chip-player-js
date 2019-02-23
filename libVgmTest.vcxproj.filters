@@ -39,7 +39,10 @@
     <ClInclude Include="player\vgmplayer.hpp">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="player\FileLoader.hpp">
+    <ClInclude Include="utils\FileLoader.hpp">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\StrUtils.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
@@ -83,7 +86,10 @@
     <ClCompile Include="player\vgmplayer_cmdhandler.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="player\FileLoader.cpp">
+    <ClCompile Include="utils\FileLoader.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\StrUtils-CPConv_IConv.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

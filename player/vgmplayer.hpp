@@ -4,10 +4,10 @@
 #include <stdtype.h>
 #include <emu/EmuStructs.h>
 #include <emu/Resampler.h>
-#include <iconv.h>
+#include "../utils/StrUtils.h"
 #include "helper.h"
 #include "playerbase.hpp"
-#include "FileLoader.hpp"
+#include "../utils/FileLoader.hpp"
 #include "../vgm/dblk_compr.h"
 #include <vector>
 #include <string>
@@ -205,7 +205,7 @@ private:
 	void Cmd_SAA_Reg(void);					// command BD - SAA1099 register write (Reg8_Data8 with remapping)
 	void Cmd_AY_Stereo(void);				// command 30 - set AY8910 stereo mask
 	
-	iconv_t _icUTF16;	// UTF-16 LE -> UTF-8 iconv object
+	CPCONV* _cpcUTF16;	// UTF-16 LE -> UTF-8 codepage conversion
 	FileLoader* _fLoad;
 	const UINT8* _fileData;	// data pointer for quick access, equals _fLoad->GetFileData().data()
 	

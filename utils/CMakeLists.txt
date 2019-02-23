@@ -1,30 +1,29 @@
-#### File Playback Library ####
-project(vgm-player)
+#### miscellaneous utility functions/classes ####
+project(vgm-utils)
 cmake_minimum_required(VERSION 2.8)
 
-set(PLAYER_DEFS)
-set(PLAYER_FILES
-	helper.c
-	playerbase.cpp
-	droplayer.cpp
-	s98player.cpp
-	vgmplayer_cmdhandler.cpp
-	vgmplayer.cpp
+set(UTIL_DEFS)
+set(UTIL_FILES
+	FileLoader.cpp
 )
 # export headers
-set(PLAYER_HEADERS
-	helper.h
-	playerbase.hpp
-	droplayer.hpp
-	s98player.hpp
-	vgmplayer.hpp
+set(UTIL_HEADERS
+	FileLoader.hpp
+	StrUtils.h
 )
-set(PLAYER_INCLUDES)
-set(PLAYER_LIBS)
+set(UTIL_INCLUDES)
+set(UTIL_LIBS)
 
-add_library(${PROJECT_NAME} STATIC ${PLAYER_FILES})
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC ${PLAYER_DEFS})
+find_package(Iconv REQUIRED)
+
+set(UTIL_LIBS ${UTIL_LIBS} Iconv::Iconv)
+set(UTIL_FILES ${UTIL_FILES} StrUtils-CPConv_IConv.c)
+
+
+add_library(${PROJECT_NAME} STATIC ${UTIL_FILES})
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${UTIL_DEFS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_SOURCE_DIR}
@@ -44,13 +43,12 @@ elseif(MSVC)
 		)
 	endif()
 endif()
-target_include_directories(${PROJECT_NAME} PUBLIC ${PLAYER_INCLUDES})
-
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PLAYER_LIBS} vgm-emu vgm-utils)
+target_include_directories(${PROJECT_NAME} PUBLIC ${UTIL_INCLUDES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${UTIL_LIBS})
 
 install(TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION "bin"
 		LIBRARY DESTINATION "lib"
 		ARCHIVE DESTINATION "lib"
 		)
-install(FILES ${PLAYER_HEADERS} DESTINATION include/player)
+install(FILES ${UTIL_HEADERS} DESTINATION include/utils)
