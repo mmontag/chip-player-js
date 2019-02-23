@@ -19,7 +19,14 @@
  */
 
 #include "java_opl3.h"
-#include "java/OPL3.cpp"
+#include "java/JavaOPL3.hpp"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#ifndef M_SQRT1_2
+# define M_SQRT1_2 0.70710678118654752440
+#endif
 
 JavaOPL3::JavaOPL3() :
     OPLChipBaseBufferedT(),
@@ -39,6 +46,10 @@ void JavaOPL3::setRate(uint32_t rate)
     OPLChipBaseBufferedT::setRate(rate);
     JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
     chip_r->Reset();
+
+    float pan = sinf(M_SQRT1_2);
+    for (unsigned channel = 0; channel < 18; ++channel)
+        chip_r->SetPanning(channel, pan, pan);
 }
 
 void JavaOPL3::reset()
@@ -57,7 +68,14 @@ void JavaOPL3::writeReg(uint16_t addr, uint8_t data)
 void JavaOPL3::writePan(uint16_t addr, uint8_t data)
 {
     JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
-    // TODO panning
+
+    unsigned high = (addr >> 8) & 0x01;
+    unsigned regm = addr & 0xff;
+    unsigned channel = 9 * high + (regm & 0x0f);
+
+    float phase = (data == 63 || data == 64) ? 63.5f : (float)data;
+    phase *= (float)(M_PI / 2 / 127);
+    chip_r->SetPanning(channel, sinf(phase), cosf(phase));
 }
 
 void JavaOPL3::nativeGenerateN(int16_t *output, size_t frames)
@@ -77,7 +95,7 @@ void JavaOPL3::nativeGenerateN(int16_t *output, size_t frames)
         size_t cursamples = 2 * curframes;
         for(size_t i = 0; i < cursamples; ++i)
         {
-            int32_t sample = (int32_t)lround(32768 * buf[i]);
+            int32_t sample = (int32_t)lround(4096 * buf[i]);
             sample = (sample > -32768) ? sample : -32768;
             sample = (sample < +32767) ? sample : +32767;
             output[i] = (int16_t)sample;
