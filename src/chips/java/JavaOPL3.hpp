@@ -47,6 +47,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <limits>
+#include "../common/mutex.hpp"
 
 #ifndef UINT32_MAX
 #define UINT32_MAX 0xffffffffU
@@ -602,6 +603,7 @@ private:
 	void setRhythmMode();
 
 	static int InstanceCount;
+	static Mutex InstanceMutex;
 
 	// OPLEmul interface
 public:
@@ -614,6 +616,7 @@ public:
 OperatorDataStruct *OPL3::OperatorData;
 OPL3DataStruct *OPL3::OPL3Data;
 int OPL3::InstanceCount;
+Mutex OPL3::InstanceMutex;
 
 void OPL3::Update(float *output, int numsamples) {
 	while (numsamples--) {
@@ -735,10 +738,13 @@ OPL3::OPL3(bool fullpan)
     nts = dam = dvb = ryt = bd = sd = tom = tc = hh = _new = connectionsel = 0;
     vibratoIndex = tremoloIndex = 0; 
 
-	if (InstanceCount++ == 0)
 	{
-		OPL3Data = new struct OPL3DataStruct;
-		OperatorData = new struct OperatorDataStruct;
+		MutexHolder lock(InstanceMutex);
+		if (InstanceCount++ == 0)
+		{
+			OPL3Data = new struct OPL3DataStruct;
+			OperatorData = new struct OperatorDataStruct;
+		}
 	}
 
     initOperators();
@@ -770,12 +776,16 @@ OPL3::~OPL3()
 			delete channels4op[array][channelNumber];
 		}
 	}
-	if (--InstanceCount == 0)
+
 	{
-		delete OPL3Data;
-		OPL3Data = NULL;
-		delete OperatorData;
-		OperatorData = NULL;
+		MutexHolder lock(InstanceMutex);
+		if (--InstanceCount == 0)
+		{
+			delete OPL3Data;
+			OPL3Data = NULL;
+			delete OperatorData;
+			OperatorData = NULL;
+		}
 	}
 }
 

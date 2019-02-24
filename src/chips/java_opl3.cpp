@@ -75,7 +75,7 @@ void JavaOPL3::writePan(uint16_t addr, uint8_t data)
 
     float phase = (data == 63 || data == 64) ? 63.5f : (float)data;
     phase *= (float)(M_PI / 2 / 127);
-    chip_r->SetPanning(channel, sinf(phase), cosf(phase));
+    chip_r->SetPanning(channel, cosf(phase), sinf(phase));
 }
 
 void JavaOPL3::nativeGenerateN(int16_t *output, size_t frames)

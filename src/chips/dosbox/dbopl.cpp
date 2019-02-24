@@ -40,6 +40,7 @@
 #include <vector>
 #include <memory>
 #include "dbopl.h"
+#include "../common/mutex.hpp"
 
 #if defined(__GNUC__) && __GNUC__ > 3
 #define INLINE inline __attribute__((__always_inline__))
@@ -82,37 +83,6 @@
 #define INT16_MAX   0x7fff
 #endif
 
-
-struct NoCopy {
-	NoCopy() {}
-private:
-	NoCopy(const NoCopy &);
-	NoCopy &operator=(const NoCopy &);
-};
-#if !defined(_WIN32)
-#include <pthread.h>
-struct Mutex : NoCopy {
-	Mutex() { pthread_mutex_init(&m, NULL);}
-	~Mutex() { pthread_mutex_destroy(&m); }
-	void lock() { pthread_mutex_lock(&m); }
-	void unlock() { pthread_mutex_unlock(&m); }
-	pthread_mutex_t m;
-};
-#else
-#include <windows.h>
-struct Mutex : NoCopy {
-	Mutex() { InitializeCriticalSection(&m); }
-	~Mutex() { DeleteCriticalSection(&m); }
-	void lock() { EnterCriticalSection(&m); }
-	void unlock() { LeaveCriticalSection(&m); }
-	CRITICAL_SECTION m;
-};
-#endif
-struct MutexHolder : NoCopy {
-	explicit MutexHolder(Mutex &m) : m(m) { m.lock(); }
-	~MutexHolder() { m.unlock(); }
-	Mutex &m;
-};
 
 namespace DBOPL {
 
@@ -1344,10 +1314,14 @@ struct CacheEntry {
 	Bit32u linearRates[76];
 	Bit32u attackRates[76];
 };
-struct Cache : NoCopy {
-    ~Cache();
-    Mutex mutex;
-    std::vector<CacheEntry *> entries;
+struct Cache {
+	Cache() {}
+	~Cache();
+	Mutex mutex;
+	std::vector<CacheEntry *> entries;
+private:
+	Cache(const Cache &);
+	Cache &operator=(const Cache &);
 };
 
 static Cache cache;
