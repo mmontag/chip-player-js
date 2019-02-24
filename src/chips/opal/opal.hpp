@@ -411,8 +411,8 @@ void Opal::Port(uint16_t reg_num, uint8_t val) {
 
     // Is it BD, the one-off register stuck in the middle of the register array?
     if (reg_num == 0xBD) {
-        TremoloDepth = (val & 0x80);
-        VibratoDepth = (val & 0x40);
+        TremoloDepth = (val & 0x80) != 0;
+        VibratoDepth = (val & 0x40) != 0;
         return;
     }
 
@@ -452,7 +452,7 @@ void Opal::Port(uint16_t reg_num, uint8_t val) {
         // CSW / Note-sel
         } else if (reg_num == 0x08) {
 
-            NoteSel = (val & 0x40);
+            NoteSel = (val & 0x40) != 0;
 
             // Get the channels to recompute the Key Scale No. as this varies based on NoteSel
             for (int i = 0; i < NumChannels; i++)
@@ -486,7 +486,7 @@ void Opal::Port(uint16_t reg_num, uint8_t val) {
 
             // Key-on / Octave / Frequency High
             case 0xB0: {
-                chan.SetKeyOn(val & 0x20);
+                chan.SetKeyOn((val & 0x20) != 0);
                 chan.SetOctave(val >> 2 & 7);
                 chan.SetFrequencyHigh(val & 3);
                 break;
@@ -494,8 +494,8 @@ void Opal::Port(uint16_t reg_num, uint8_t val) {
 
             // Right Stereo Channel Enable / Left Stereo Channel Enable / Feedback Factor / Modulation Type
             case 0xC0: {
-                chan.SetRightEnable(val & 0x20);
-                chan.SetLeftEnable(val & 0x10);
+                chan.SetRightEnable((val & 0x20) != 0);
+                chan.SetLeftEnable((val & 0x10) != 0);
                 chan.SetFeedback(val >> 1 & 7);
                 chan.SetModulationType(val & 1);
                 break;
@@ -523,10 +523,10 @@ void Opal::Port(uint16_t reg_num, uint8_t val) {
 
             // Tremolo Enable / Vibrato Enable / Sustain Mode / Envelope Scaling / Frequency Multiplier
             case 0x20: {
-                op.SetTremoloEnable(val & 0x80);
-                op.SetVibratoEnable(val & 0x40);
-                op.SetSustainMode(val & 0x20);
-                op.SetEnvelopeScaling(val & 0x10);
+                op.SetTremoloEnable((val & 0x80) != 0);
+                op.SetVibratoEnable((val & 0x40) != 0);
+                op.SetSustainMode((val & 0x20) != 0);
+                op.SetEnvelopeScaling((val & 0x10) != 0);
                 op.SetFrequencyMultiplier(val & 15);
                 break;
             }
@@ -1030,7 +1030,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step, in
             if (phase & 0x100)
                 offset ^= 0xFF;
             logsin = Master->LogSinTable[offset];
-            negate = (phase & 0x200);
+            negate = (phase & 0x200) != 0;
             break;
 
         //------------------------------------
@@ -1075,7 +1075,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step, in
                     offset ^= 0xFF;
 
                 offset = (offset + offset) & 0xFF;
-                negate = (phase & 0x100);
+                negate = (phase & 0x100) != 0;
             }
 
             logsin =  Master->LogSinTable[offset];
@@ -1103,7 +1103,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step, in
         //------------------------------------
         case 6:
             logsin = 0;
-            negate = (phase & 0x200);
+            negate = (phase & 0x200) != 0;
             break;
 
         //------------------------------------
