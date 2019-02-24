@@ -625,6 +625,8 @@ enum ADL_Emulator
     ADLMIDI_EMU_DOSBOX,
     /*! Opal */
     ADLMIDI_EMU_OPAL,
+    /*! Java */
+    ADLMIDI_EMU_JAVA,
     /*! Count instrument on the level */
     ADLMIDI_EMU_end
 };

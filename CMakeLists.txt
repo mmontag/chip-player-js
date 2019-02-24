@@ -109,6 +109,7 @@ option(WITH_XMI_SUPPORT     "Build with support for AIL XMI files" ON)
 option(USE_DOSBOX_EMULATOR  "Use DosBox 0.74 OPL3 emulator (semi-accurate, suggested for slow or mobile platforms)" ON)
 option(USE_NUKED_EMULATOR   "Use Nuked OPL3 emulator (most accurate, powerful)" ON)
 option(USE_OPAL_EMULATOR    "Use Opal emulator (inaccurate)" ON)
+option(USE_JAVA_EMULATOR    "Use JavaOPL emulator" ON)
 
 option(WITH_GENADLDATA      "Build and run full rebuild of embedded banks cache" OFF)
 option(WITH_GENADLDATA_COMMENTS "Enable comments in generated ADLDATA cache file" OFF)
@@ -166,6 +167,15 @@ function(handle_options targetLib)
             )
         else()
             target_compile_definitions(${targetLib} PUBLIC ADLMIDI_DISABLE_OPAL_EMULATOR)
+        endif()
+
+        if(USE_JAVA_EMULATOR)
+            set(HAS_EMULATOR TRUE)
+            target_sources(${targetLib} PRIVATE
+                ${libADLMIDI_SOURCE_DIR}/src/chips/java_opl3.cpp
+            )
+        else()
+            target_compile_definitions(${targetLib} PUBLIC ADLMIDI_DISABLE_JAVA_EMULATOR)
         endif()
 
         if(NOT HAS_EMULATOR)
