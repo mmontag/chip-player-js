@@ -30,21 +30,21 @@
 
 JavaOPL3::JavaOPL3() :
     OPLChipBaseBufferedT(),
-    m_chip(new JavaOPL::OPL3(true))
+    m_chip(new ADL_JavaOPL3::OPL3(true))
 {
     reset();
 }
 
 JavaOPL3::~JavaOPL3()
 {
-    JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
+    ADL_JavaOPL3::OPL3 *chip_r = reinterpret_cast<ADL_JavaOPL3::OPL3 *>(m_chip);
     delete chip_r;
 }
 
 void JavaOPL3::setRate(uint32_t rate)
 {
     OPLChipBaseBufferedT::setRate(rate);
-    JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
+    ADL_JavaOPL3::OPL3 *chip_r = reinterpret_cast<ADL_JavaOPL3::OPL3 *>(m_chip);
     chip_r->Reset();
 
     float pan = sinf((float)M_SQRT1_2);
@@ -55,19 +55,19 @@ void JavaOPL3::setRate(uint32_t rate)
 void JavaOPL3::reset()
 {
     OPLChipBaseBufferedT::reset();
-    JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
+    ADL_JavaOPL3::OPL3 *chip_r = reinterpret_cast<ADL_JavaOPL3::OPL3 *>(m_chip);
     chip_r->Reset();
 }
 
 void JavaOPL3::writeReg(uint16_t addr, uint8_t data)
 {
-    JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
+    ADL_JavaOPL3::OPL3 *chip_r = reinterpret_cast<ADL_JavaOPL3::OPL3 *>(m_chip);
     chip_r->WriteReg(addr, data);
 }
 
 void JavaOPL3::writePan(uint16_t addr, uint8_t data)
 {
-    JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
+    ADL_JavaOPL3::OPL3 *chip_r = reinterpret_cast<ADL_JavaOPL3::OPL3 *>(m_chip);
 
     unsigned high = (addr >> 8) & 0x01;
     unsigned regm = addr & 0xff;
@@ -80,7 +80,7 @@ void JavaOPL3::writePan(uint16_t addr, uint8_t data)
 
 void JavaOPL3::nativeGenerateN(int16_t *output, size_t frames)
 {
-    JavaOPL::OPL3 *chip_r = reinterpret_cast<JavaOPL::OPL3 *>(m_chip);
+    ADL_JavaOPL3::OPL3 *chip_r = reinterpret_cast<ADL_JavaOPL3::OPL3 *>(m_chip);
 
     enum { maxframes = 256 };
 

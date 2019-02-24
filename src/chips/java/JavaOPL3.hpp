@@ -60,7 +60,8 @@
 #define CENTER_PANNING_POWER	0.70710678118	/* [RH] volume at center for EQP */
 #define VOLUME_MUL		0.3333
 
-namespace JavaOPL
+/* libADLMIDI: Renamed from JavaOPL3 into to prevent symbol conflicting with original version linked */
+namespace ADL_JavaOPL3
 {
 
 /* libADLMIDI: random generator */
