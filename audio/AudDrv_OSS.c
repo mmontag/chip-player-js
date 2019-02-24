@@ -19,9 +19,10 @@
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"
+#include "../utils/OSSignal.h"
+#include "../utils/OSMutex.h"
 
 
-#pragma pack(1)
 typedef struct
 {
 	UINT16 wFormatTag;
@@ -31,7 +32,6 @@ typedef struct
 	UINT16 nBlockAlign;
 	UINT16 wBitsPerSample;
 } WAVEFORMAT;	// from MSDN Help
-#pragma pack()
 
 #define WAVE_FORMAT_PCM	0x0001
 
@@ -47,7 +47,6 @@ typedef struct _oss_driver
 {
 	void* audDrvPtr;
 	volatile UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
-	UINT16 dummy;	// [for alignment purposes]
 	
 	WAVEFORMAT waveFmt;
 	UINT32 bufSmpls;
@@ -59,6 +58,8 @@ typedef struct _oss_driver
 #ifdef ENABLE_OSS_THREAD
 	OS_THREAD* hThread;
 #endif
+	OS_SIGNAL* hSignal;
+	OS_MUTEX* hMutex;
 	int hFileDSP;
 	volatile UINT8 pauseThread;
 	
@@ -179,6 +180,7 @@ AUDIO_OPTS* OSS_GetDefaultOpts(void)
 UINT8 OSS_Create(void** retDrvObj)
 {
 	DRV_OSS* drv;
+	UINT8 retVal8;
 	
 	drv = (DRV_OSS*)malloc(sizeof(DRV_OSS));
 	drv->devState = 0;
@@ -186,10 +188,20 @@ UINT8 OSS_Create(void** retDrvObj)
 #ifdef ENABLE_OSS_THREAD
 	drv->hThread = NULL;
 #endif
+	drv->hSignal = NULL;
+	drv->hMutex = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
+	retVal8  = OSSignal_Init(&drv->hSignal, 0);
+	retVal8 |= OSMutex_Init(&drv->hMutex, 0);
+	if (retVal8)
+	{
+		OSS_Destroy(drv);
+		*retDrvObj = NULL;
+		return AERR_API_ERR;
+	}
 	*retDrvObj = drv;
 	
 	return AERR_OK;
@@ -208,6 +220,10 @@ UINT8 OSS_Destroy(void* drvObj)
 		OSThread_Deinit(drv->hThread);
 	}
 #endif
+	if (drv->hSignal != NULL)
+		OSSignal_Deinit(drv->hSignal);
+	if (drv->hMutex != NULL)
+		OSMutex_Deinit(drv->hMutex);
 	
 	free(drv);
 	activeDrivers --;
@@ -308,7 +324,7 @@ UINT8 OSS_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDrv
 	if (retVal)
 		printf("Error setting Sample Rate!\n");
 	
-	drv->pauseThread = 1;
+	OSSignal_Reset(drv->hSignal);
 #ifdef ENABLE_OSS_THREAD
 	retVal8 = OSThread_Init(&drv->hThread, &OssThread, drv);
 	if (retVal8)
@@ -323,6 +339,7 @@ UINT8 OSS_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDrv
 	
 	drv->devState = 1;
 	drv->pauseThread = 0;
+	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
 }
@@ -381,8 +398,10 @@ UINT8 OSS_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userP
 	DRV_OSS* drv = (DRV_OSS*)drvObj;
 	
 #ifdef ENABLE_OSS_THREAD
+	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
 #else
@@ -443,17 +462,19 @@ static void OssThread(void* Arg)
 	UINT32 bufBytes;
 	ssize_t wrtBytes;
 	
-	while(drv->pauseThread)
-		Sleep(1);
+	OSSignal_Wait(drv->hSignal);	// wait until the initialization is done
+	
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
+		OSMutex_Lock(drv->hMutex);
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
 			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 			wrtBytes = write(drv->hFileDSP, drv->bufSpace, bufBytes);
 			didBuffers ++;
 		}
+		OSMutex_Unlock(drv->hMutex);
 		if (! didBuffers)
 			Sleep(1);
 		

@@ -14,9 +14,10 @@
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"
+#include "../utils/OSSignal.h"
+#include "../utils/OSMutex.h"
 
 
-#pragma pack(1)
 typedef struct
 {
 	UINT16 wFormatTag;
@@ -26,7 +27,6 @@ typedef struct
 	UINT16 nBlockAlign;
 	UINT16 wBitsPerSample;
 } WAVEFORMAT;	// from MSDN Help
-#pragma pack()
 
 #define WAVE_FORMAT_PCM	0x0001
 
@@ -35,7 +35,6 @@ typedef struct _libao_driver
 {
 	void* audDrvPtr;
 	volatile UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
-	UINT16 dummy;	// [for alignment purposes]
 	
 	WAVEFORMAT waveFmt;
 	UINT32 bufSmpls;
@@ -44,6 +43,8 @@ typedef struct _libao_driver
 	UINT8* bufSpace;
 	
 	OS_THREAD* hThread;
+	OS_SIGNAL* hSignal;
+	OS_MUTEX* hMutex;
 	ao_device* hDevAO;
 	volatile UINT8 pauseThread;
 	
@@ -166,15 +167,26 @@ AUDIO_OPTS* LibAO_GetDefaultOpts(void)
 UINT8 LibAO_Create(void** retDrvObj)
 {
 	DRV_AO* drv;
+	UINT8 retVal8;
 	
 	drv = (DRV_AO*)malloc(sizeof(DRV_AO));
 	drv->devState = 0;
 	drv->hDevAO = NULL;
 	drv->hThread = NULL;
+	drv->hSignal = NULL;
+	drv->hMutex = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
+	retVal8  = OSSignal_Init(&drv->hSignal, 0);
+	retVal8 |= OSMutex_Init(&drv->hMutex, 0);
+	if (retVal8)
+	{
+		LibAO_Destroy(drv);
+		*retDrvObj = NULL;
+		return AERR_API_ERR;
+	}
 	*retDrvObj = drv;
 	
 	return AERR_OK;
@@ -191,6 +203,10 @@ UINT8 LibAO_Destroy(void* drvObj)
 		OSThread_Cancel(drv->hThread);
 		OSThread_Deinit(drv->hThread);
 	}
+	if (drv->hSignal != NULL)
+		OSSignal_Deinit(drv->hSignal);
+	if (drv->hMutex != NULL)
+		OSMutex_Deinit(drv->hMutex);
 	
 	free(drv);
 	activeDrivers --;
@@ -233,7 +249,7 @@ UINT8 LibAO_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	if (drv->hDevAO == NULL)
 		return 0xC0;		// open() failed
 	
-	drv->pauseThread = 1;
+	OSSignal_Reset(drv->hSignal);
 	retVal8 = OSThread_Init(&drv->hThread, &AoThread, drv);
 	if (retVal8)
 	{
@@ -246,6 +262,7 @@ UINT8 LibAO_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	
 	drv->devState = 1;
 	drv->pauseThread = 0;
+	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
 }
@@ -301,8 +318,10 @@ UINT8 LibAO_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* use
 {
 	DRV_AO* drv = (DRV_AO*)drvObj;
 	
+	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
 }
@@ -354,17 +373,19 @@ static void AoThread(void* Arg)
 	UINT32 bufBytes;
 	int retVal;
 	
-	while(drv->pauseThread)
-		Sleep(1);
+	OSSignal_Wait(drv->hSignal);	// wait until the initialization is done
+	
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
+		OSMutex_Lock(drv->hMutex);
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
 			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 			retVal = ao_play(drv->hDevAO, (char*)drv->bufSpace, bufBytes);
 			didBuffers ++;
 		}
+		OSMutex_Unlock(drv->hMutex);
 		if (! didBuffers)
 			Sleep(1);
 		

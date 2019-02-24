@@ -14,12 +14,14 @@
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"
+#include "../utils/OSSignal.h"
+#include "../utils/OSMutex.h"
+
 
 typedef struct _pulse_driver
 {
 	void* audDrvPtr;
 	volatile UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
-	UINT16 dummy;	// [for alignment purposes]
 	
 	pa_sample_spec pulseFmt;
 	UINT32 bufSmpls;
@@ -28,6 +30,8 @@ typedef struct _pulse_driver
 	UINT8* bufSpace;
 	
 	OS_THREAD* hThread;
+	OS_SIGNAL* hSignal;
+	OS_MUTEX* hMutex;
 	pa_simple* hPulse;
 	volatile UINT8 pauseThread;
 	UINT8 canPause;
@@ -143,16 +147,27 @@ AUDIO_OPTS* Pulse_GetDefaultOpts(void)
 UINT8 Pulse_Create(void** retDrvObj)
 {
 	DRV_PULSE* drv;
-	drv = (DRV_PULSE*)malloc(sizeof(DRV_PULSE));
+	UINT8 retVal8;
 	
+	drv = (DRV_PULSE*)malloc(sizeof(DRV_PULSE));
 	drv->devState = 0;
 	drv->hPulse = NULL;
 	drv->hThread = NULL;
+	drv->hSignal = NULL;
+	drv->hMutex = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	drv->streamDesc = strdup("libvgm");
 	
 	activeDrivers ++;
+	retVal8  = OSSignal_Init(&drv->hSignal, 0);
+	retVal8 |= OSMutex_Init(&drv->hMutex, 0);
+	if (retVal8)
+	{
+		Pulse_Destroy(drv);
+		*retDrvObj = NULL;
+		return AERR_API_ERR;
+	}
 	*retDrvObj = drv;
 	
 	return AERR_OK;
@@ -169,6 +184,10 @@ UINT8 Pulse_Destroy(void* drvObj)
 		OSThread_Cancel(drv->hThread);
 		OSThread_Deinit(drv->hThread);
 	}
+	if (drv->hSignal != NULL)
+		OSSignal_Deinit(drv->hSignal);
+	if (drv->hMutex != NULL)
+		OSMutex_Deinit(drv->hMutex);
 	
 	free(drv->streamDesc);
 	free(drv);
@@ -235,7 +254,7 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	if(!drv->hPulse)
 		return 0xC0;
 	
-	drv->pauseThread = 1;
+	OSSignal_Reset(drv->hSignal);
 	retVal8 = OSThread_Init(&drv->hThread, &PulseThread, drv);
 	if (retVal8)
 	{
@@ -247,6 +266,7 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	
 	drv->devState = 1;
 	drv->pauseThread = 0;
+	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
 }
@@ -293,8 +313,10 @@ UINT8 Pulse_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* use
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
 	
+	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
 }
@@ -346,17 +368,19 @@ static void PulseThread(void* Arg)
 	UINT32 bufBytes;
 	int retVal;
 	
-	while(drv->pauseThread)
-		Sleep(1);
+	OSSignal_Wait(drv->hSignal);	// wait until the initialization is done
+	
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
+		OSMutex_Lock(drv->hMutex);
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
 			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 			retVal = Pulse_WriteData(drv, bufBytes, drv->bufSpace);
 			didBuffers ++;
 		}
+		OSMutex_Unlock(drv->hMutex);
 		if (! didBuffers)
 			Sleep(1);
 		

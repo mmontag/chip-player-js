@@ -53,5 +53,11 @@
     <ClCompile Include="utils\OSThread_Win.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="utils\OSMutex_Win.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\OSSignal_Win.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

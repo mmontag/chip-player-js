@@ -32,6 +32,7 @@ extern "C" int __cdecl _kbhit(void);
 #include "audio/AudioStream.h"
 #include "audio/AudioStream_SpcDrvFuns.h"
 #include "emu/Resampler.h"
+#include "utils/OSMutex.h"
 
 
 int main(int argc, char* argv[]);
@@ -61,9 +62,7 @@ static UINT32 smplAlloc;
 static WAVE_32BS* smplData;
 static UINT32 localAudBufSize;
 static void* localAudBuffer;
-static volatile bool canRender;
-static volatile bool isRendering;
-static volatile bool renderDoWait;
+static OS_MUTEX* renderMtx;	// render thread mutex
 
 static UINT32 sampleRate = 44100;
 static UINT32 maxLoops = 2;
@@ -106,7 +105,6 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 	playState = 0x00;
-	isRendering = false;
 	
 	for (curSong = argbase; curSong < argc; curSong ++)
 	{
@@ -167,19 +165,18 @@ int main(int argc, char* argv[])
 	}
 	putchar('\n');
 	
-	if (audDrv != NULL)
-		retVal = AudioDrv_SetCallback(audDrv, FillBuffer, &player);
-	else
-		retVal = 0xFF;
-	manualRenderLoop = (retVal != 0x00);
 	player->SetSampleRate(sampleRate);
 	player->Start();
 	fadeSmplTime = player->GetSampleRate() * 4;
 	fadeSmplStart = (UINT32)-1;
 	
 	StartDiskWriter("waveOut.wav");
-	renderDoWait = false;
-	canRender = true;
+	
+	if (audDrv != NULL)
+		retVal = AudioDrv_SetCallback(audDrv, FillBuffer, &player);
+	else
+		retVal = 0xFF;
+	manualRenderLoop = (retVal != 0x00);
 #ifndef _WIN32
 	changemode(1);
 #endif
@@ -219,11 +216,9 @@ int main(int argc, char* argv[])
 			}
 			else if (letter == 'R')	// restart
 			{
-				renderDoWait = true;
-				while(isRendering)
-					Sleep(1);
+				OSMutex_Lock(renderMtx);
 				player->Reset();
-				renderDoWait = false;
+				OSMutex_Unlock(renderMtx);
 			}
 			else if (letter == 'B')	// previous file
 			{
@@ -252,9 +247,11 @@ int main(int argc, char* argv[])
 #ifndef _WIN32
 	changemode(0);
 #endif
-	renderDoWait = true;
-	while(isRendering)
-		Sleep(1);	// wait for render thread to finish
+	// remove callback to prevent further rendering
+	// also waits for render thread to finish its work
+	if (audDrv != NULL)
+		AudioDrv_SetCallback(audDrv, NULL, NULL);
+	
 	StopDiskWriter();
 	
 	player->Stop();
@@ -262,8 +259,6 @@ int main(int argc, char* argv[])
 	delete player;	player = NULL;
 	
 	}	// end for(curSong)
-	canRender = false;
-	renderDoWait = false;
 	
 	StopAudioDevice();
 	DeinitAudioSystem();
@@ -375,10 +370,8 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 	if (! smplCount)
 		return 0;
 	
-	while(renderDoWait)
-		Sleep(1);	// pause the thread while the main thread wants to do some actions
 	player = *(PlayerBase**)userParam;
-	if (! canRender || player == NULL)
+	if (player == NULL)
 	{
 		memset(data, 0x00, smplCount * smplSize);
 		return smplCount * smplSize;
@@ -390,7 +383,7 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 		return smplCount * smplSize;
 	}
 	
-	isRendering = true;
+	OSMutex_Lock(renderMtx);
 	if (smplCount > smplAlloc)
 		smplCount = smplAlloc;
 	memset(smplData, 0, smplCount * sizeof(WAVE_32BS));
@@ -440,7 +433,7 @@ static UINT32 FillBuffer(void* drvStruct, void* userParam, UINT32 bufSize, void*
 		SmplPtr16[0] = (INT16)fnlSmpl.L;
 		SmplPtr16[1] = (INT16)fnlSmpl.R;
 	}
-	isRendering = false;
+	OSMutex_Unlock(renderMtx);
 	
 	return curSmpl * smplSize;
 }
@@ -515,6 +508,8 @@ static UINT8 InitAudioSystem(void)
 	AUDDRV_INFO* drvInfo;
 	UINT8 retVal;
 	
+	retVal = OSMutex_Init(&renderMtx, 0);
+	
 	printf("Opening Audio Device ...\n");
 	retVal = Audio_Init();
 	if (retVal == AERR_NODRVS)
@@ -563,10 +558,16 @@ static UINT8 DeinitAudioSystem(void)
 	
 	retVal = 0x00;
 	if (audDrv != NULL)
-		retVal = AudioDrv_Deinit(&audDrv);
+	{
+		retVal = AudioDrv_Deinit(&audDrv);	audDrv = NULL;
+	}
 	if (audDrvLog != NULL)
-		AudioDrv_Deinit(&audDrvLog);
+	{
+		AudioDrv_Deinit(&audDrvLog);	audDrvLog = NULL;
+	}
 	Audio_Deinit();
+	
+	OSMutex_Deinit(renderMtx);	renderMtx = NULL;
 	
 	return retVal;
 }
@@ -591,7 +592,6 @@ static UINT8 StartAudioDevice(void)
 	opts->numBitsPerSmpl = 16;
 	smplSize = opts->numChannels * opts->numBitsPerSmpl / 8;
 	
-	canRender = false;
 	if (audDrv != NULL)
 	{
 		printf("Opening Device %u ...\n", idWavOutDev);

@@ -76,7 +76,7 @@ void OSThread_Cancel(OS_THREAD* thr)
 	if (! thr->id)
 		return;
 	
-	retVal = pthread_cancel(thr->id, NULL);
+	retVal = pthread_cancel(thr->id);
 	if (! retVal)
 		thr->id = 0;	// stopped successfully
 	

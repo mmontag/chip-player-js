@@ -7,6 +7,8 @@ set(UTIL_FILES)
 # export headers
 set(UTIL_HEADERS
 	FileLoader.hpp
+	OSMutex.h
+	OSSignal.h
 	OSThread.h
 	StrUtils.h
 )
@@ -20,13 +22,21 @@ set(UTIL_FILES ${UTIL_FILES} FileLoader.cpp)
 set(UTIL_LIBS ${UTIL_LIBS} ZLIB::ZLIB)
 
 
-# Threads
+# Threads and Synchronization
 find_package(Threads REQUIRED)
 
 if(CMAKE_USE_WIN32_THREADS_INIT)
-	set(UTIL_FILES ${UTIL_FILES} OSThread_Win.c)
+	set(UTIL_FILES ${UTIL_FILES}
+		OSMutex_Win.c
+		OSSignal_Win.c
+		OSThread_Win.c
+	)
 elseif(CMAKE_USE_PTHREADS_INIT)
-	set(UTIL_FILES ${UTIL_FILES} OSThread_POSIX.c)
+	set(UTIL_FILES ${UTIL_FILES}
+		OSMutex_POSIX.c
+		OSSignal_POSIX.c
+		OSThread_POSIX.c
+	)
 endif()
 set(UTIL_LIBS ${UTIL_LIBS} Threads::Threads)
 

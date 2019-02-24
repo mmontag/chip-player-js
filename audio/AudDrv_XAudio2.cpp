@@ -19,6 +19,8 @@
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"
+#include "../utils/OSSignal.h"
+#include "../utils/OSMutex.h"
 
 #define EXT_C	extern "C"
 
@@ -26,7 +28,7 @@
 typedef struct _xaudio2_driver
 {
 	void* audDrvPtr;
-	UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
+	volatile UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
 	UINT16 dummy;	// [for alignment purposes]
 	
 	WAVEFORMATEX waveFmt;
@@ -40,6 +42,8 @@ typedef struct _xaudio2_driver
 	IXAudio2SourceVoice* xaSrcVoice;
 	XAUDIO2_BUFFER* xaBufs;
 	OS_THREAD* hThread;
+	OS_SIGNAL* hSignal;
+	OS_MUTEX* hMutex;
 	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
@@ -202,6 +206,7 @@ AUDIO_OPTS* XAudio2_GetDefaultOpts(void)
 UINT8 XAudio2_Create(void** retDrvObj)
 {
 	DRV_XAUD2* drv;
+	UINT8 retVal8;
 	
 	drv = (DRV_XAUD2*)malloc(sizeof(DRV_XAUD2));
 	drv->devState = 0;
@@ -210,10 +215,20 @@ UINT8 XAudio2_Create(void** retDrvObj)
 	drv->xaSrcVoice = NULL;
 	drv->xaBufs = NULL;
 	drv->hThread = NULL;
+	drv->hSignal = NULL;
+	drv->hMutex = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
+	retVal8  = OSSignal_Init(&drv->hSignal, 0);
+	retVal8 |= OSMutex_Init(&drv->hMutex, 0);
+	if (retVal8)
+	{
+		XAudio2_Destroy(drv);
+		*retDrvObj = NULL;
+		return AERR_API_ERR;
+	}
 	*retDrvObj = drv;
 	
 	return AERR_OK;
@@ -230,6 +245,10 @@ UINT8 XAudio2_Destroy(void* drvObj)
 		OSThread_Cancel(drv->hThread);
 		OSThread_Deinit(drv->hThread);
 	}
+	if (drv->hSignal != NULL)
+		OSSignal_Deinit(drv->hSignal);
+	if (drv->hMutex != NULL)
+		OSMutex_Deinit(drv->hMutex);
 	
 	free(drv);
 	activeDrivers --;
@@ -288,6 +307,7 @@ UINT8 XAudio2_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* au
 	retVal = drv->xAudIntf->CreateSourceVoice(&drv->xaSrcVoice,
 				&drv->waveFmt, 0x00, XAUDIO2_DEFAULT_FREQ_RATIO, NULL, NULL, NULL);
 	
+	OSSignal_Reset(drv->hSignal);
 	retVal8 = OSThread_Init(&drv->hThread, &XAudio2Thread, drv);
 	if (retVal8)
 		return 0xC8;	// CreateThread failed
@@ -317,6 +337,7 @@ UINT8 XAudio2_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* au
 	retVal = drv->xaSrcVoice->Start(0x00, XAUDIO2_COMMIT_NOW);
 	
 	drv->devState = 1;
+	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
 }
@@ -378,8 +399,10 @@ UINT8 XAudio2_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* u
 {
 	DRV_XAUD2* drv = (DRV_XAUD2*)drvObj;
 	
+	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
 }
@@ -464,13 +487,13 @@ static void XAudio2Thread(void* Arg)
 	UINT32 didBuffers;	// number of processed buffers
 	HRESULT retVal;
 	
-	while(drv->devState == 0)
-		Sleep(1);	// TODO: replace with mutex/signal
+	OSSignal_Wait(drv->hSignal);	// wait until the initialization is done
 	
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
 		
+		OSMutex_Lock(drv->hMutex);
 		drv->xaSrcVoice->GetState(&xaVocState);
 		while(xaVocState.BuffersQueued < drv->bufCount && drv->FillBuffer != NULL)
 		{
@@ -486,6 +509,7 @@ static void XAudio2Thread(void* Arg)
 			
 			drv->xaSrcVoice->GetState(&xaVocState);
 		}
+		OSMutex_Unlock(drv->hMutex);
 		if (! didBuffers)
 			Sleep(1);
 		

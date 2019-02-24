@@ -14,9 +14,10 @@
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"
+#include "../utils/OSSignal.h"
+#include "../utils/OSMutex.h"
 
 
-#pragma pack(1)
 typedef struct
 {
 	UINT16 wFormatTag;
@@ -26,7 +27,6 @@ typedef struct
 	UINT16 nBlockAlign;
 	UINT16 wBitsPerSample;
 } WAVEFORMAT;	// from MSDN Help
-#pragma pack()
 
 #define WAVE_FORMAT_PCM	0x0001
 
@@ -35,7 +35,6 @@ typedef struct _alsa_driver
 {
 	void* audDrvPtr;
 	volatile UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
-	UINT16 dummy;	// [for alignment purposes]
 	
 	WAVEFORMAT waveFmt;
 	UINT32 bufSmpls;
@@ -44,6 +43,8 @@ typedef struct _alsa_driver
 	UINT8* bufSpace;
 	
 	OS_THREAD* hThread;
+	OS_SIGNAL* hSignal;
+	OS_MUTEX* hMutex;
 	snd_pcm_t* hPCM;
 	volatile UINT8 pauseThread;
 	UINT8 canPause;
@@ -165,15 +166,26 @@ AUDIO_OPTS* ALSA_GetDefaultOpts(void)
 UINT8 ALSA_Create(void** retDrvObj)
 {
 	DRV_ALSA* drv;
+	UINT8 retVal8;
 	
 	drv = (DRV_ALSA*)malloc(sizeof(DRV_ALSA));
 	drv->devState = 0;
 	drv->hPCM = NULL;
 	drv->hThread = NULL;
+	drv->hSignal = NULL;
+	drv->hMutex = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
+	retVal8  = OSSignal_Init(&drv->hSignal, 0);
+	retVal8 |= OSMutex_Init(&drv->hMutex, 0);
+	if (retVal8)
+	{
+		ALSA_Destroy(drv);
+		*retDrvObj = NULL;
+		return AERR_API_ERR;
+	}
 	*retDrvObj = drv;
 	
 	return AERR_OK;
@@ -190,6 +202,10 @@ UINT8 ALSA_Destroy(void* drvObj)
 		OSThread_Cancel(drv->hThread);
 		OSThread_Deinit(drv->hThread);
 	}
+	if (drv->hSignal != NULL)
+		OSSignal_Deinit(drv->hSignal);
+	if (drv->hMutex != NULL)
+		OSMutex_Deinit(drv->hMutex);
 	
 	free(drv);
 	activeDrivers --;
@@ -281,7 +297,7 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 		return 0xCF;
 	}
 	
-	drv->pauseThread = 1;
+	OSSignal_Reset(drv->hSignal);
 	retVal8 = OSThread_Init(&drv->hThread, &AlsaThread, drv);
 	if (retVal8)
 	{
@@ -294,6 +310,7 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	
 	drv->devState = 1;
 	drv->pauseThread = 0;
+	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
 }
@@ -368,8 +385,10 @@ UINT8 ALSA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* user
 {
 	DRV_ALSA* drv = (DRV_ALSA*)drvObj;
 	
+	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
 }
@@ -396,12 +415,15 @@ UINT8 ALSA_IsBusy(void* drvObj)
 UINT8 ALSA_WriteData(void* drvObj, UINT32 dataSize, void* data)
 {
 	DRV_ALSA* drv = (DRV_ALSA*)drvObj;
-	int retVal;
+	UINT8 retVal;
 	
 	if (dataSize > drv->bufSize)
 		return AERR_TOO_MUCH_DATA;
 	
-	return WriteBuffer(drv, dataSize, data);
+	OSMutex_Lock(drv->hMutex);
+	retVal = WriteBuffer(drv, dataSize, data);
+	OSMutex_Unlock(drv->hMutex);
+	return retVal;
 }
 
 
@@ -420,16 +442,16 @@ UINT32 ALSA_GetLatency(void* drvObj)
 static void AlsaThread(void* Arg)
 {
 	DRV_ALSA* drv = (DRV_ALSA*)Arg;
-	UINT32 curBuf;
 	UINT32 didBuffers;	// number of processed buffers
 	UINT32 bufBytes;
 	int retVal;
 	
-	while(drv->pauseThread)
-		Sleep(1);
+	OSSignal_Wait(drv->hSignal);	// wait until the initialization is done
+	
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
+		OSMutex_Lock(drv->hMutex);
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
 			retVal = snd_pcm_wait(drv->hPCM, 5);
@@ -441,6 +463,7 @@ static void AlsaThread(void* Arg)
 			}
 			didBuffers ++;	// not 100% correct, but has the desired effect
 		}
+		OSMutex_Unlock(drv->hMutex);
 		if (! didBuffers)
 			Sleep(1);
 		

@@ -18,9 +18,10 @@
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"
+#include "../utils/OSSignal.h"
+#include "../utils/OSMutex.h"
 
 
-#pragma pack(1)
 typedef struct
 {
 	UINT16 wFormatTag;
@@ -30,7 +31,6 @@ typedef struct
 	UINT16 nBlockAlign;
 	UINT16 wBitsPerSample;
 } WAVEFORMAT;	// from MSDN Help
-#pragma pack()
 
 #define WAVE_FORMAT_PCM	0x0001
 
@@ -39,7 +39,6 @@ typedef struct _sada_driver
 {
 	void* audDrvPtr;
 	volatile UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
-	UINT16 dummy;	// [for alignment purposes]
 	
 	WAVEFORMAT waveFmt;
 	UINT32 bufSmpls;
@@ -50,6 +49,8 @@ typedef struct _sada_driver
 #ifdef ENABLE_SADA_THREAD
 	OS_THREAD* hThread;
 #endif
+	OS_SIGNAL* hSignal;
+	OS_MUTEX* hMutex;
 	int hFileDSP;
 	volatile UINT8 pauseThread;
 	
@@ -175,6 +176,7 @@ AUDIO_OPTS* SADA_GetDefaultOpts(void)
 UINT8 SADA_Create(void** retDrvObj)
 {
 	DRV_SADA* drv;
+	UINT8 retVal8;
 	
 	drv = (DRV_SADA*)malloc(sizeof(DRV_SADA));
 	drv->devState = 0;
@@ -182,10 +184,20 @@ UINT8 SADA_Create(void** retDrvObj)
 #ifdef ENABLE_SADA_THREAD
 	drv->hThread = NULL;
 #endif
+	drv->hSignal = NULL;
+	drv->hMutex = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
+	retVal8  = OSSignal_Init(&drv->hSignal, 0);
+	retVal8 |= OSMutex_Init(&drv->hMutex, 0);
+	if (retVal8)
+	{
+		SADA_Destroy(drv);
+		*retDrvObj = NULL;
+		return AERR_API_ERR;
+	}
 	*retDrvObj = drv;
 	
 	return AERR_OK;
@@ -204,6 +216,10 @@ UINT8 SADA_Destroy(void* drvObj)
 		OSThread_Deinit(drv->hThread);
 	}
 #endif
+	if (drv->hSignal != NULL)
+		OSSignal_Deinit(drv->hSignal);
+	if (drv->hMutex != NULL)
+		OSMutex_Deinit(drv->hMutex);
 	
 	free(drv);
 	activeDrivers --;
@@ -274,6 +290,7 @@ UINT8 SADA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	
 	drv->devState = 1;
 	drv->pauseThread = 0;
+	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
 }
@@ -332,8 +349,10 @@ UINT8 SADA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* user
 	DRV_SADA* drv = (DRV_SADA*)drvObj;
 	
 #ifdef ENABLE_SADA_THREAD
+	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
 #else
@@ -392,22 +411,23 @@ UINT32 SADA_GetLatency(void* drvObj)
 static void SadaThread(void* Arg)
 {
 	DRV_SADA* drv = (DRV_SADA*)Arg;
-	UINT32 curBuf;
 	UINT32 didBuffers;	// number of processed buffers
 	UINT32 bufBytes;
 	ssize_t wrtBytes;
 	
-	while(drv->pauseThread)
-		Sleep(1);
+	OSSignal_Wait(drv->hSignal);	// wait until the initialization is done
+	
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
+		OSMutex_Lock(drv->hMutex);
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
 			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 			wrtBytes = write(drv->hFileDSP, drv->bufSpace, bufBytes);
 			didBuffers ++;
 		}
+		OSMutex_Unlock(drv->hMutex);
 		if (! didBuffers)
 			Sleep(1);
 		

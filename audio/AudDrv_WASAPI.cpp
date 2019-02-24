@@ -22,6 +22,8 @@
 
 #include "AudioStream.h"
 #include "../utils/OSThread.h"
+#include "../utils/OSSignal.h"
+#include "../utils/OSMutex.h"
 
 #define EXT_C	extern "C"
 
@@ -29,7 +31,7 @@
 typedef struct _wasapi_driver
 {
 	void* audDrvPtr;
-	UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
+	volatile UINT8 devState;	// 0 - not running, 1 - running, 2 - terminating
 	UINT16 dummy;	// [for alignment purposes]
 	
 	WAVEFORMATEX waveFmt;
@@ -43,6 +45,8 @@ typedef struct _wasapi_driver
 	IAudioRenderClient* rendClnt;
 	
 	OS_THREAD* hThread;
+	OS_SIGNAL* hSignal;
+	OS_MUTEX* hMutex;
 	void* userParam;
 	AUDFUNC_FILLBUF FillBuffer;
 	
@@ -292,6 +296,7 @@ AUDIO_OPTS* WASAPI_GetDefaultOpts(void)
 UINT8 WASAPI_Create(void** retDrvObj)
 {
 	DRV_WASAPI* drv;
+	UINT8 retVal8;
 	
 	drv = (DRV_WASAPI*)malloc(sizeof(DRV_WASAPI));
 	drv->devState = 0;
@@ -301,10 +306,20 @@ UINT8 WASAPI_Create(void** retDrvObj)
 	drv->audClnt = NULL;
 	drv->rendClnt = NULL;
 	drv->hThread = NULL;
+	drv->hSignal = NULL;
+	drv->hMutex = NULL;
 	drv->userParam = NULL;
 	drv->FillBuffer = NULL;
 	
 	activeDrivers ++;
+	retVal8  = OSSignal_Init(&drv->hSignal, 0);
+	retVal8 |= OSMutex_Init(&drv->hMutex, 0);
+	if (retVal8)
+	{
+		WASAPI_Destroy(drv);
+		*retDrvObj = NULL;
+		return AERR_API_ERR;
+	}
 	*retDrvObj = drv;
 	
 	return AERR_OK;
@@ -321,6 +336,10 @@ UINT8 WASAPI_Destroy(void* drvObj)
 		OSThread_Cancel(drv->hThread);
 		OSThread_Deinit(drv->hThread);
 	}
+	if (drv->hSignal != NULL)
+		OSSignal_Deinit(drv->hSignal);
+	if (drv->hMutex != NULL)
+		OSMutex_Deinit(drv->hMutex);
 	
 	free(drv);
 	activeDrivers --;
@@ -398,6 +417,7 @@ UINT8 WASAPI_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	if (retVal != S_OK)
 		goto StartErr_HasAudClient;
 	
+	OSSignal_Reset(drv->hSignal);
 	retVal8 = OSThread_Init(&drv->hThread, &WasapiThread, drv);
 	if (retVal8)
 	{
@@ -418,6 +438,7 @@ UINT8 WASAPI_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* aud
 	retVal = drv->audClnt->Start();
 	
 	drv->devState = 1;
+	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
 
@@ -488,8 +509,10 @@ UINT8 WASAPI_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* us
 {
 	DRV_WASAPI* drv = (DRV_WASAPI*)drvObj;
 	
+	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
 }
@@ -573,13 +596,13 @@ static void WasapiThread(void* Arg)
 	HRESULT retVal;
 	BYTE* bufData;
 	
-	while(drv->devState == 0)
-		Sleep(1);	// TODO: replace with mutex/signal
+	OSSignal_Wait(drv->hSignal);	// wait until the initialization is done
 	
 	while(drv->devState == 1)
 	{
 		didBuffers = 0;
 		
+		OSMutex_Lock(drv->hMutex);
 		while(GetFreeSamples(drv) >= drv->bufSmpls && drv->FillBuffer != NULL)
 		{
 			retVal = drv->rendClnt->GetBuffer(drv->bufSmpls, &bufData);
@@ -592,6 +615,7 @@ static void WasapiThread(void* Arg)
 				didBuffers ++;
 			}
 		}
+		OSMutex_Unlock(drv->hMutex);
 		if (! didBuffers)
 			Sleep(1);
 		
