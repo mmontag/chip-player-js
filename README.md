@@ -91,6 +91,7 @@ The library is licensed under in it's parts LGPL 2.1+, GPL v2+, GPL v3+, and MIT
 * **USE_DOSBOX_EMULATOR** - (ON/OFF, default ON) Enable support for DosBox 0.74 emulator. (Well-accurate and fast)
 * **USE_NUKED_EMULATOR** - (ON/OFF, default ON) Enable support for Nuked OPL3 emulator. (Very-accurate, needs more CPU power)
 * **USE_OPAL_EMULATOR** - (ON/OFF, default ON) Enable support for Opal emulator by Reality (Taken from RAD v2 release package). (Inaccurate)
+* **USE_JAVA_EMULATOR** - (ON/OFF, default ON) Enable support for JavaOPL emulator (Taken from GZDoom). (Semi-accurate)
 
 
 ### Utils and extras
@@ -179,6 +180,8 @@ To build that example you will need to have installed SDL2 library.
  * Channels manager has been improved (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
  * Nuked OPL3 1.8 emulator got some optimizations ported from 1.7 where they are was applied previously (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
  * Reworked rhythm-mode percussions system, WOPL banks with rhythm-mode percussions
+ * Added Public Domain Opal OPL3 emulator made by Reality (a team who originally made the Reality Adlib Tracker) (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
+ * Added LGPL licensed JavaOPL3 emulator made by Robson Cozendey in Java and later rewritten into C++ for GZDoom (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
 
 ## 1.4.0   2018-10-01
  * Implemented a full support for Portamento! (Thanks to [Jean Pierre Cimalando](https://github.com/jpcima) for a work!)
