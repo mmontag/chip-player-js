@@ -265,7 +265,7 @@ UINT8 Pulse_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	drv->bufSpace = (UINT8*)malloc(drv->bufSize);
 	
 	drv->devState = 1;
-	drv->pauseThread = 0;
+	drv->pauseThread = 0x00;
 	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
@@ -297,7 +297,7 @@ UINT8 Pulse_Pause(void* drvObj)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
 	
-	drv->pauseThread = 1;
+	drv->pauseThread |= 0x01;
 	return AERR_OK;
 }
 
@@ -305,7 +305,7 @@ UINT8 Pulse_Resume(void* drvObj)
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
 	
-	drv->pauseThread = 0;
+	drv->pauseThread &= ~0x01;
 	return AERR_OK;
 }
 
@@ -313,9 +313,11 @@ UINT8 Pulse_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* use
 {
 	DRV_PULSE* drv = (DRV_PULSE*)drvObj;
 	
+	drv->pauseThread |= 0x02;
 	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	drv->pauseThread &= ~0x02;
 	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
@@ -377,7 +379,7 @@ static void PulseThread(void* Arg)
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
 			bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
-			retVal = Pulse_WriteData(drv, bufBytes, drv->bufSpace);
+			retVal = pa_simple_write(drv->hPulse, drv->bufSpace, (size_t) bufBytes, NULL);
 			didBuffers ++;
 		}
 		OSMutex_Unlock(drv->hMutex);

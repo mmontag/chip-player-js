@@ -122,10 +122,6 @@ UINT8 SADA_IsAvailable(void)
 
 UINT8 SADA_Init(void)
 {
-	UINT32 numDevs;
-	UINT32 curDev;
-	UINT32 devLstID;
-	
 	if (isInit)
 		return AERR_WASDONE;
 	
@@ -149,8 +145,6 @@ UINT8 SADA_Init(void)
 
 UINT8 SADA_Deinit(void)
 {
-	UINT32 curDev;
-	
 	if (! isInit)
 		return AERR_WASDONE;
 	
@@ -275,7 +269,7 @@ UINT8 SADA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	if (retVal)
 		printf("Error setting audio information!\n");
 	
-	drv->pauseThread = 1;
+	OSSignal_Reset(drv->hSignal);
 #ifdef ENABLE_SADA_THREAD
 	retVal8 = OSThread_Init(&drv->hThread, &SadaThread, drv);
 	if (retVal8)
@@ -289,7 +283,7 @@ UINT8 SADA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	drv->bufSpace = (UINT8*)malloc(drv->bufSize);
 	
 	drv->devState = 1;
-	drv->pauseThread = 0;
+	drv->pauseThread = 0x00;
 	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
@@ -328,7 +322,7 @@ UINT8 SADA_Pause(void* drvObj)
 	if (! drv->hFileDSP)
 		return 0xFF;
 	
-	drv->pauseThread = 1;
+	drv->pauseThread |= 0x01;
 	return AERR_OK;
 }
 
@@ -339,7 +333,7 @@ UINT8 SADA_Resume(void* drvObj)
 	if (! drv->hFileDSP)
 		return 0xFF;
 	
-	drv->pauseThread = 0;
+	drv->pauseThread &= ~0x01;
 	return AERR_OK;
 }
 
@@ -349,9 +343,11 @@ UINT8 SADA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* user
 	DRV_SADA* drv = (DRV_SADA*)drvObj;
 	
 #ifdef ENABLE_SADA_THREAD
+	drv->pauseThread |= 0x02;
 	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	drv->pauseThread &= ~0x02;
 	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;

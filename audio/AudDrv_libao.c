@@ -261,7 +261,7 @@ UINT8 LibAO_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audD
 	drv->bufSpace = (UINT8*)malloc(drv->bufSize);
 	
 	drv->devState = 1;
-	drv->pauseThread = 0;
+	drv->pauseThread = 0x00;
 	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
@@ -298,7 +298,7 @@ UINT8 LibAO_Pause(void* drvObj)
 	if (drv->hDevAO == NULL)
 		return 0xFF;
 	
-	drv->pauseThread = 1;
+	drv->pauseThread |= 0x01;
 	return AERR_OK;
 }
 
@@ -309,7 +309,7 @@ UINT8 LibAO_Resume(void* drvObj)
 	if (drv->hDevAO == NULL)
 		return 0xFF;
 	
-	drv->pauseThread = 0;
+	drv->pauseThread &= ~0x01;
 	return AERR_OK;
 }
 
@@ -318,9 +318,11 @@ UINT8 LibAO_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* use
 {
 	DRV_AO* drv = (DRV_AO*)drvObj;
 	
+	drv->pauseThread |= 0x02;
 	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	drv->pauseThread &= ~0x02;
 	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;

@@ -309,7 +309,7 @@ UINT8 ALSA_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDr
 	drv->bufSpace = (UINT8*)malloc(drv->bufSize);
 	
 	drv->devState = 1;
-	drv->pauseThread = 0;
+	drv->pauseThread = 0x00;
 	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
@@ -358,7 +358,7 @@ UINT8 ALSA_Pause(void* drvObj)
 		if (retVal < 0)
 			return AERR_API_ERR;
 	}
-	drv->pauseThread = 1;
+	drv->pauseThread |= 0x01;
 	return AERR_OK;
 }
 
@@ -376,7 +376,7 @@ UINT8 ALSA_Resume(void* drvObj)
 		if (retVal < 0)
 			return AERR_API_ERR;
 	}
-	drv->pauseThread = 0;
+	drv->pauseThread &= ~0x01;
 	return AERR_OK;
 }
 
@@ -385,9 +385,11 @@ UINT8 ALSA_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* user
 {
 	DRV_ALSA* drv = (DRV_ALSA*)drvObj;
 	
+	drv->pauseThread |= 0x02;
 	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	drv->pauseThread &= ~0x02;
 	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;

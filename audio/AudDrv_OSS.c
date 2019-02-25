@@ -338,7 +338,7 @@ UINT8 OSS_Start(void* drvObj, UINT32 deviceID, AUDIO_OPTS* options, void* audDrv
 	drv->bufSpace = (UINT8*)malloc(drv->bufSize);
 	
 	drv->devState = 1;
-	drv->pauseThread = 0;
+	drv->pauseThread = 0x00;
 	OSSignal_Signal(drv->hSignal);
 	
 	return AERR_OK;
@@ -377,7 +377,7 @@ UINT8 OSS_Pause(void* drvObj)
 	if (! drv->hFileDSP)
 		return 0xFF;
 	
-	drv->pauseThread = 1;
+	drv->pauseThread |= 0x01;
 	return AERR_OK;
 }
 
@@ -388,7 +388,7 @@ UINT8 OSS_Resume(void* drvObj)
 	if (! drv->hFileDSP)
 		return 0xFF;
 	
-	drv->pauseThread = 0;
+	drv->pauseThread &= ~0x01;
 	return AERR_OK;
 }
 
@@ -398,9 +398,11 @@ UINT8 OSS_SetCallback(void* drvObj, AUDFUNC_FILLBUF FillBufCallback, void* userP
 	DRV_OSS* drv = (DRV_OSS*)drvObj;
 	
 #ifdef ENABLE_OSS_THREAD
+	drv->pauseThread |= 0x02;
 	OSMutex_Lock(drv->hMutex);
 	drv->userParam = userParam;
 	drv->FillBuffer = FillBufCallback;
+	drv->pauseThread &= ~0x02;
 	OSMutex_Unlock(drv->hMutex);
 	
 	return AERR_OK;
