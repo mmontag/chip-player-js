@@ -161,15 +161,23 @@ MoseAmp is a multiplatform player built with Electron. Some nice game console ic
 
 The best modern option for playing MIDI is probably using a well-designed GM SoundFont bank with a good SoundFont 2.01 implementation like FluidSynth.
 
+- SF2 Overview: https://schristiancollins.wordpress.com/2016/03/02/using-soundfonts-in-2016/
 - Timidity compiled by Emscripten: https://bitmidi.com/
     * https://github.com/feross/timidity/commit/d1790eef24ff3b4067c536e45aa88c0863ad9676
     * Uses the 32 MB ["Old FreePats sound set"](http://freepats.zenvoid.org/SoundSets/general-midi.html)
 - SoundFonts at MuseScore: https://musescore.org/en/handbook/soundfonts-and-sfz-files#list
 - SoundFonts at Woolyss: https://woolyss.com/chipmusic-soundfonts.php
-- GeneralUser SF2 sound bank: http://schristiancollins.com/generaluser.php and SF2 Overview: https://schristiancollins.wordpress.com/2016/03/02/using-soundfonts-in-2016/
 - MIDI file library: https://github.com/craigsapp/midifile
 - FluidSynth Lite, supports SF3: https://github.com/divideconcept/FluidLite
 - Compress SF2 to SF3: https://github.com/cognitone/sf2convert
+
+##### SoundFont credits
+
+Diverse and usable GM SoundFonts.
+
+- GeneralUser SF2 sound bank: http://schristiancollins.com/generaluser.php
+- The Ultimate Megadrive SoundFont: https://musical-artifacts.com/artifacts/24
+- NTONYX SoundFont: http://ntonyx.com/sf_f.htm
 
 ##### Music archives
 
