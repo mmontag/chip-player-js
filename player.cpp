@@ -537,8 +537,10 @@ static UINT8 InitAudioSystem(void)
 			Audio_Deinit();
 			return retVal;
 		}
+#ifdef AUDDRV_DSOUND
 		if (drvInfo->drvSig == ADRVSIG_DSOUND)
 			DSound_SetHWnd(AudioDrv_GetDrvData(audDrv), GetDesktopWindow());
+#endif
 	}
 	
 	audDrvLog = NULL;

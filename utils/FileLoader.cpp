@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <string.h>
 #include <zlib.h>
+
 #include <stdtype.h>
 #include "FileLoader.hpp"
 

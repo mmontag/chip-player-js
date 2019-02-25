@@ -96,13 +96,13 @@ target_link_libraries(audemutest PRIVATE vgm-audio vgm-emu)
 find_package(ZLIB REQUIRED)
 
 add_executable(vgmtest vgmtest.c vgm/dblk_compr.c)
-target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR} ${ZLIB_INCLUDE_DIRS})
+target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(vgmtest PRIVATE ZLIB::ZLIB vgm-audio vgm-emu)
 
 endif(BUILD_TESTS)
 
 if(BUILD_PLAYER)
 add_executable(player player.cpp vgm/dblk_compr.c)
-target_include_directories(player PRIVATE ${CMAKE_SOURCE_DIR} ${ZLIB_INCLUDE_DIRS})
+target_include_directories(player PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(player PRIVATE vgm-audio vgm-player)
 endif()

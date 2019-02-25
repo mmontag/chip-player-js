@@ -83,6 +83,8 @@ LIBAUDSRC = $(SRC)/audio
 LIBAUDOBJ = $(OBJ)/audio
 LIBEMUSRC = $(SRC)/emu
 LIBEMUOBJ = $(OBJ)/emu
+UTILSRC = $(SRC)/utils
+UTILOBJ = $(OBJ)/utils
 
 OBJDIRS = \
 	$(OBJ) \
@@ -90,6 +92,7 @@ OBJDIRS = \
 	$(LIBEMUOBJ) \
 	$(LIBEMUOBJ)/cores \
 	$(OBJ)/vgm \
+	$(UTILOBJ) \
 	$(OBJ)/player
 
 ALL_LIBS = \
@@ -231,6 +234,11 @@ LIBEMUOBJS = \
 	$(LIBEMUOBJ)/dac_control.o
 
 
+UTILOBJS = \
+	$(UTILOBJ)/OSMutex_POSIX.o \
+	$(UTILOBJ)/OSSignal_POSIX.o \
+	$(UTILOBJ)/OSThread_POSIX.o
+
 AUDEMU_MAINOBJS = \
 	$(OBJ)/audemutest.o
 
@@ -240,8 +248,8 @@ VGMTEST_MAINOBJS = \
 
 PLAYER_MAINOBJS = \
 	$(OBJ)/player/helper.o \
-	$(OBJ)/utils/FileLoader.o \
-	$(OBJ)/utils/StrUtils-CPConv_IConv.o \
+	$(UTILOBJ)/FileLoader.o \
+	$(UTILOBJ)/StrUtils-CPConv_IConv.o \
 	$(OBJ)/player/playerbase.o \
 	$(OBJ)/player/s98player.o \
 	$(OBJ)/player/droplayer.o \
@@ -252,9 +260,9 @@ PLAYER_MAINOBJS = \
 
 all:	audiotest emutest audemutest vgmtest plrtest
 
-audiotest:	dirs libaudio $(AUD_MAINOBJS)
+audiotest:	dirs libaudio $(UTILOBJS) $(AUD_MAINOBJS)
 	@echo Linking audiotest ...
-	@$(CC) $(AUD_MAINOBJS) $(LIBAUD_A) $(LDFLAGS) -o audiotest
+	@$(CC) $(UTILOBJS) $(AUD_MAINOBJS) $(LIBAUD_A) $(LDFLAGS) -o $@
 	@echo Done.
 
 libaudio:	$(LIBAUDOBJS)
@@ -263,26 +271,26 @@ libaudio:	$(LIBAUDOBJS)
 
 emutest:	dirs libemu $(EMU_MAINOBJS)
 	@echo Linking emutest ...
-	@$(CC) $(EMU_MAINOBJS) $(LIBEMU_A) $(LDFLAGS) -lm -o emutest
+	@$(CC) $(EMU_MAINOBJS) $(LIBEMU_A) $(LDFLAGS) -lm -o $@
 	@echo Done.
 
 libemu:	$(LIBEMUOBJS)
 	@echo Archiving libemu.a ...
 	@$(AR) $(ARFLAGS) $(LIBEMU_A) $(LIBEMUOBJS)
 
-audemutest:	dirs libaudio libemu $(AUDEMU_MAINOBJS)
+audemutest:	dirs libaudio libemu $(UTILOBJS) $(AUDEMU_MAINOBJS)
 	@echo Linking audemutest ...
-	@$(CC) $(AUDEMU_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lm -o audemutest
+	@$(CC) $(UTILOBJS) $(AUDEMU_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lm -o $@
 	@echo Done.
 
-vgmtest:	dirs libaudio libemu $(VGMTEST_MAINOBJS)
+vgmtest:	dirs libaudio libemu $(UTILOBJS) $(VGMTEST_MAINOBJS)
 	@echo Linking vgmtest ...
-	@$(CC) $(VGMTEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -lm -o vgmtest
+	@$(CC) $(UTILOBJS) $(VGMTEST_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -lm -o $@
 	@echo Done.
 
-plrtest:	dirs libaudio libemu $(PLAYER_MAINOBJS)
+plrtest:	dirs libaudio libemu $(UTILOBJS) $(PLAYER_MAINOBJS)
 	@echo Linking $@ ...
-	@$(CXX) $(PLAYER_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lm -o $@
+	@$(CXX) $(UTILOBJS) $(PLAYER_MAINOBJS) $(LIBAUD_A) $(LIBEMU_A) $(LDFLAGS) -lz -lm -o $@
 	@echo Done.
 
 vgm_dbcompr_bench:	vgm_dbcompr_bench.c vgm/dblk_compr.c
