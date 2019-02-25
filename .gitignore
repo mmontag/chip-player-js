@@ -13,3 +13,4 @@ src/chip-core.js
 public/catalog.json
 catalog
 public/music
+src/config/firebaseConfig.js

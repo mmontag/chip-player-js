@@ -50,6 +50,10 @@ In building the subprojects, we ultimately invoke `emmake make` instead of `make
 
   ```"build-chip-core": "source ~/src/emsdk/emsdk_env.sh; node scripts/build-chip-core.js",```
 
+#### User Accounts and Saved Favorites Functionality
+
+User account management is provided through Firebase Cloud Firestore. You must obtain your own [Google Firebase](https://console.firebase.google.com/) credentials and update [src/config/firebaseConfig.js](src/config/firebaseConfig.js) with these credentials. This file is not tracked. Without these credentials, Login/Favorites functionality won't work.
+
 #### Subproject: libxmp-lite
 
 Our goal is to produce **libxmp/libxmp-lite-stagedir/lib/libxmp-lite.a**.

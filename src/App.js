@@ -6,6 +6,7 @@ import queryString from 'querystring';
 import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import firebaseConfig from './config/firebaseConfig';
 
 import ChipCore from './chip-core';
 import GMEPlayer from './players/GMEPlayer';
@@ -93,15 +94,7 @@ class App extends PureComponent {
     this.handleToggleFavorite = this.handleToggleFavorite.bind(this);
 
     // Initialize Firebase
-    var config = {
-      apiKey: "AIzaSyDHcrVxSLoGA-_t-Ad46Ds1YEvbM2GazQw",
-      authDomain: "chip-player-js.firebaseapp.com",
-      databaseURL: "https://chip-player-js.firebaseio.com",
-      projectId: "chip-player-js",
-      storageBucket: "chip-player-js.appspot.com",
-      messagingSenderId: "762111649253"
-    };
-    firebase.initializeApp(config);
+    firebase.initializeApp(firebaseConfig);
     firebase.auth().onAuthStateChanged(user => {
       this.setState({user: user});
       if (user) {
