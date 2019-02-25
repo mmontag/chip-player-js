@@ -367,6 +367,8 @@ message("WITH_MUS_SUPPORT         = ${WITH_MUS_SUPPORT}")
 message("WITH_XMI_SUPPORT         = ${WITH_XMI_SUPPORT}")
 message("USE_DOSBOX_EMULATOR      = ${USE_DOSBOX_EMULATOR}")
 message("USE_NUKED_EMULATOR       = ${USE_NUKED_EMULATOR}")
+message("USE_OPAL_EMULATOR        = ${USE_OPAL_EMULATOR}")
+message("USE_JAVA_EMULATOR        = ${USE_JAVA_EMULATOR}")
 
 message("===== Utils and extras =====")
 message("WITH_GENADLDATA          = ${WITH_GENADLDATA}")
