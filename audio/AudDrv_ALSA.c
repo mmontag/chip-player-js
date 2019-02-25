@@ -442,7 +442,6 @@ UINT32 ALSA_GetLatency(void* drvObj)
 static void AlsaThread(void* Arg)
 {
 	DRV_ALSA* drv = (DRV_ALSA*)Arg;
-	UINT32 didBuffers;	// number of processed buffers
 	UINT32 bufBytes;
 	int retVal;
 	
@@ -450,24 +449,24 @@ static void AlsaThread(void* Arg)
 	
 	while(drv->devState == 1)
 	{
-		didBuffers = 0;
+		// return values: 0 - timeout, 1 - ready, <0 - error
+		retVal = snd_pcm_wait(drv->hPCM, 5);
+		if (retVal < 0)
+			Sleep(1);	// only wait a bit on errors
+		
 		OSMutex_Lock(drv->hMutex);
 		if (! drv->pauseThread && drv->FillBuffer != NULL)
 		{
-			retVal = snd_pcm_wait(drv->hPCM, 5);
 			// Note: On errors I try to send some data in order to call recovery functions.
 			if (retVal != 0)
 			{
 				bufBytes = drv->FillBuffer(drv->audDrvPtr, drv->userParam, drv->bufSize, drv->bufSpace);
 				retVal = WriteBuffer(drv, bufBytes, drv->bufSpace);
 			}
-			didBuffers ++;	// not 100% correct, but has the desired effect
 		}
 		OSMutex_Unlock(drv->hMutex);
-		if (! didBuffers)
-			Sleep(1);
 		
-		while(drv->FillBuffer == NULL && drv->devState == 1)
+		while((drv->pauseThread || drv->FillBuffer == NULL) && drv->devState == 1)
 			Sleep(1);
 	}
 	
