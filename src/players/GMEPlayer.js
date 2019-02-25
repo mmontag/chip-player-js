@@ -65,7 +65,7 @@ export default class GMEPlayer extends Player {
       this.subtune++;
 
       if (this.subtune >= libgme._gme_track_count(emu) || this.playSubtune(this.subtune) !== 0) {
-        this.disconnect();
+        this.suspend();
         this.onPlayerStateUpdate(true);
       }
     }
@@ -210,8 +210,7 @@ export default class GMEPlayer extends Player {
   }
 
   stop() {
-    this.paused = true;
-    this.disconnect();
+    this.suspend();
     if (emu) libgme._gme_delete(emu);
     emu = null;
     this.onPlayerStateUpdate(true);

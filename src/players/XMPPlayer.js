@@ -17,7 +17,6 @@ export default class XMPPlayer extends Player {
 
     this.lib = chipCore;
     this.xmpCtx = chipCore._xmp_create_context();
-    this.bufferSize = 2048;
     this.xmp_frame_infoPtr = chipCore._malloc(2048);
     this.fileExtensions = fileExtensions;
     this.initialBPM = 125;
@@ -47,10 +46,9 @@ export default class XMPPlayer extends Player {
 
     err = this.lib._xmp_play_buffer(this.xmpCtx, this.buffer, this.bufferSize * 4, 1);
     if (err === -1) {
-      this.disconnect();
-      this.onPlayerStateUpdate(true);
+      this.stop();
     } else if (err !== 0) {
-      this.disconnect();
+      this.suspend();
       console.error("xmp_play_buffer failed. error code: %d", err);
       throw Error('Unable to play this file!');
     }
@@ -201,9 +199,8 @@ export default class XMPPlayer extends Player {
   }
 
   stop() {
-    this.paused = true;
+    this.suspend();
     this.lib._xmp_stop_module(this.xmpCtx);
-    this.disconnect();
     this.onPlayerStateUpdate(true);
   }
 }

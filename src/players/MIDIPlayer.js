@@ -87,7 +87,6 @@ export default class MIDIPlayer extends Player {
     this.fileExtensions = fileExtensions;
     this.activeChannels = [];
     this.params = {};
-    this.bufferSize = 2048;
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
 
     this.setAudioProcess(this.midiAudioProcess);
@@ -120,10 +119,7 @@ export default class MIDIPlayer extends Player {
         }
       }
     } else {
-      console.log('MIDI file ended.');
-      lib._tp_stop();
-      this.disconnect();
-      this.onPlayerStateUpdate(true);
+      this.stop();
     }
   }
 
@@ -149,8 +145,8 @@ export default class MIDIPlayer extends Player {
   }
 
   stop() {
+    this.suspend();
     lib._tp_stop();
-    this.disconnect();
     this.onPlayerStateUpdate(true);
   }
 

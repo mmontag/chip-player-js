@@ -118,8 +118,8 @@ export default class Player {
     this.onPlayerStateUpdate(false);
   }
 
-  disconnect() {
-    this.audioNode.disconnect();
+  suspend() {
+    this.paused = true;
   }
 
   setAudioProcess(fn) {
@@ -160,7 +160,7 @@ export default class Player {
       // Workaround to eliminate stuttering:
       // Temporarily swap the audio process callback, and do the
       // expensive operation only after buffer is filled with silence
-      audioNode.onaudioprocess = function(e) {
+      audioNode.onaudioprocess = function (e) {
         for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
           e.outputBuffer.getChannelData(i).fill(0);
         }
@@ -178,9 +178,9 @@ export default class Player {
     //             ...or:  /MIDI/{artist}/**/{title}
     const parts = filepath.split('/');
     const metadata = {};
-    metadata.title  = parts.pop();
+    metadata.title = parts.pop();
     metadata.system = parts.shift();
-    if(metadata.system === 'Game MIDI') {
+    if (metadata.system === 'Game MIDI') {
       metadata.game = parts.shift();
     } else {
       metadata.artist = parts.shift();
