@@ -156,8 +156,6 @@ static void sn76496_write_reg(void *chip, UINT8 offset, UINT8 data);
 static void sn76496_stereo_w(void *chip, UINT8 offset, UINT8 data);
 
 static void sn76496_update(void *param, UINT32 samples, DEV_SMPL** outputs);
-static UINT32 sn76496_start(void* _chip, UINT32 clock, UINT8 shiftregwidth, UINT16 noisetaps,
-							UINT8 negate, UINT8 stereo, UINT8 clockdivider, UINT8 ncr, UINT8 sega);
 static void sn76496_connect_t6w28(void *noisechip, void *tonechip);
 static void sn76496_shutdown(void *chip);
 static void sn76496_reset(void *chip);

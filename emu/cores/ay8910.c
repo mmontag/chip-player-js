@@ -1370,7 +1370,7 @@ static void ay8910_set_type(ay8910_context *info, UINT8 chip_type)
 	return;
 }
 
-static UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
+UINT8 device_start_ay8910_mame(const AY8910_CFG* cfg, DEV_INFO* retDevInf)
 {
 	void* chip;
 	DEV_DATA* devData;
