@@ -15,10 +15,10 @@ export default class PlayerParams extends PureComponent {
           type="range" value={this.props.tempo}
           min="0.3" max="2.0" step="0.05"
           onInput={this.props.handleTempoChange}
-          onChange={this.props.handleTempoChange}/>&nbsp;
+          onChange={this.props.handleTempoChange}/>{' '}
         {this.props.tempo.toFixed(2)}<br/>
 
-        Voices:&nbsp;
+        Voices:{' '}
         {[...Array(this.props.numVoices)].map((_, i) => {
           return (
             <label className="App-label" key={i}>
@@ -36,7 +36,7 @@ export default class PlayerParams extends PureComponent {
             case 'enum':
               return (
                 <div key={param.id}>
-                  {param.label}:&nbsp;
+                  {param.label}:{' '}
                   <select
                     onChange={(e) => this.props.setParameter(param.id, e.target.value)}
                     defaultValue={this.props.getParameter(param.id)}>
@@ -53,7 +53,7 @@ export default class PlayerParams extends PureComponent {
             case 'number':
               return (
                 <div key={param.id}>
-                  {param.label}:&nbsp;
+                  {param.label}:{' '}
                   <input type="range"
                          min={param.min} max={param.max} step={param.step}
                          value={this.props.getParameter(param.id)}

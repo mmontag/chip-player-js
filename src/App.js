@@ -515,7 +515,7 @@ class App extends PureComponent {
                     className="box-button"
                     disabled={this.state.ejected}>
               {this.state.paused ? 'Resume' : 'Pause'}
-            </button>&nbsp;
+            </button>{' '}
             <button className="box-button" onClick={this.handlePlayRandom}>
               I'm Feeling Lucky
             </button>
@@ -532,12 +532,11 @@ class App extends PureComponent {
               onChange={this.handleTimeSliderChange}/>
             {this.state.currentSongNumSubtunes > 1 &&
             <span>
-                Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}&nbsp;
+                Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}{' '}
               <button
                 className="box-button"
                 disabled={this.state.ejected}
-                onClick={this.prevSubtune}>Prev</button>
-              &nbsp;
+                onClick={this.prevSubtune}>Prev</button>{' '}
               <button
                 className="box-button"
                 disabled={this.state.ejected}

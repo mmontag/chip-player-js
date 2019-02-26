@@ -4,10 +4,10 @@ export default class AppHeader extends PureComponent {
   render() {
     return (
       <header className="App-header">
-        <a className="App-title" href="/">Chip Player JS</a>&nbsp;
+        <a className="App-title" href="/">Chip Player JS</a>{' '}
         {this.props.user ?
           <span>
-              • Logged in as {this.props.user.displayName}.&nbsp;
+              • Logged in as {this.props.user.displayName}.{' '}
             <a href="#" onClick={this.props.handleLogout}>Logout</a>
             </span>
           :
@@ -17,12 +17,14 @@ export default class AppHeader extends PureComponent {
         }
         {!this.props.isPhone &&
         <p className="App-subtitle">
-            <span className="App-byline">Feedback:&nbsp;
-              <a href="https://twitter.com/matthewmontag" target="_blank" rel="noopener noreferrer">@matthewmontag</a>
+            <span className="App-byline">Feedback:{' '}
+              <a href="https://twitter.com/matthewmontag" target="_blank" rel="noopener noreferrer">
+                @matthewmontag
+              </a>
             </span>
-          Powered by&nbsp;
-          <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>,&nbsp;
-          <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and&nbsp;
+          Powered by{' '}
+          <a href="https://bitbucket.org/mpyne/game-music-emu/wiki/Home">Game Music Emu</a>,{' '}
+          <a href="https://github.com/cmatsuoka/libxmp">LibXMP</a>, and{' '}
           <a href="https://github.com/schellingb/TinySoundFont">TinySoundFont</a>.
         </p>}
       </header>

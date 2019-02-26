@@ -74,7 +74,7 @@ export default class Visualizer extends PureComponent {
     return (
       <div className='Visualizer'>
         <h3 className='Visualizer-toggle'>
-          Visualizer&nbsp;
+          Visualizer{' '}
           <label><input onClick={handleToggleVisualizer}
                         type='radio'
                         value={true}
@@ -87,7 +87,7 @@ export default class Visualizer extends PureComponent {
                         name='visualizer-enabled'/>Off</label>
         </h3>
         <div className='Visualizer-options' style={enabledStyle}>
-          Mode:&nbsp;
+          Mode:{' '}
           {
             SPECTROGRAM_MODES.map((mode, i) =>
               <label key={i}><input onClick={handleModeClick}
@@ -98,7 +98,7 @@ export default class Visualizer extends PureComponent {
             )
           }
           <br/>
-          Weighting:&nbsp;
+          Weighting:{' '}
           {
             WEIGHTING_MODES.map((mode, i) =>
               <label title={mode.description} key={i}>
@@ -112,7 +112,7 @@ export default class Visualizer extends PureComponent {
           <br/>
           {this.state.vizMode !== 2 &&
           <div>
-            FFT Size:&nbsp;
+            FFT Size:{' '}
             {
               FFT_SIZES.map((size, i) =>
                 <label key={i}><input onClick={handleFFTSizeClick}

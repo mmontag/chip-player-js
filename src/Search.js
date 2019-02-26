@@ -168,7 +168,7 @@ export default class Search extends PureComponent {
             {
               this.state.searching &&
               <span>
-                <button className="Search-button-clear" onClick={this.handleClear}/>&nbsp;
+                <button className="Search-button-clear" onClick={this.handleClear}/>{' '}
                 {this.state.resultsCount} result{this.state.resultsCount !== 1 && 's'}
               </span>
             }
