@@ -1641,6 +1641,8 @@ double TopCymbalOperator::getOperatorOutput(OPL3 *OPL3, double modulator) {
 // Conversely, this method is also used through inheritance by the HighHatOperator, 
 // now with the TopCymbalOperator phase as the externalPhase.
 double TopCymbalOperator::getOperatorOutput(OPL3 *OPL3, double modulator, double externalPhase) {
+	(void)modulator;
+
 	double envelopeInDB = envelopeGenerator.getEnvelope(OPL3, egt, am);
 	envelope = EnvelopeFromDB(envelopeInDB);
 	
@@ -1661,8 +1663,6 @@ double TopCymbalOperator::getOperatorOutput(OPL3 *OPL3, double modulator, double
 	if( chopped > 0.1) carrierOutput = 0;
 	
 	return carrierOutput*2;  
-
-	(void)modulator;
 }
 
 HighHatOperator::HighHatOperator()
