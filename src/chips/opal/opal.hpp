@@ -329,6 +329,7 @@ void Opal::Init(int sample_rate) {
 
     Clock = 0;
     TremoloClock = 0;
+    TremoloLevel = 0;
     VibratoTick = 0;
     VibratoClock = 0;
     NoteSel = false;
