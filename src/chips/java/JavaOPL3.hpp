@@ -1230,7 +1230,7 @@ const double Operator::noModulator = 0;
 Operator::Operator(int baseAddress) {
 	operatorBaseAddress = baseAddress;
 
-	envelope = 0;
+	envelope = phase = 0;
 	am = vib = ksr = egt = mult = ksl = tl = ar = dr = sl = rr = ws = 0;
 	keyScaleNumber = f_number = block = 0;
 }
