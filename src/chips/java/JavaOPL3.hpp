@@ -1002,7 +1002,7 @@ static double EnvelopeFromDB(double db)
 
 Channel::Channel (int baseAddress, double startvol) {
 	channelBaseAddress = baseAddress;
-	fnuml = fnumh = kon = block = fb = cnt = 0;
+	fnuml = fnumh = kon = block = fb = cha = chb = cnt = 0;
 	feedback[0] = feedback[1] = 0;
 	leftPan = rightPan = startvol;
 }
