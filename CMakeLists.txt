@@ -61,6 +61,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
 
 endif(CMAKE_COMPILER_IS_GNUCC)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/sanitizers")
+find_package(Sanitizers)
 
 option(BUILD_LIBAUDIO "build audio output library" ON)
 option(BUILD_LIBEMU "build sound emulation library" ON)
@@ -70,12 +72,15 @@ option(BUILD_PLAYER "build player application" ON)
 add_subdirectory(utils)
 if(BUILD_LIBAUDIO)
 	add_subdirectory(audio)
+	add_sanitizers(vgm-audio)
 endif()
 if(BUILD_LIBEMU)
 	add_subdirectory(emu)
+	add_sanitizers(vgm-emu)
 endif()
 if(BUILD_PLAYER)
 	add_subdirectory(player)
+	add_sanitizers(vgm-player)
 endif()
 
 
@@ -84,20 +89,24 @@ if(BUILD_TESTS)
 add_executable(audiotest audiotest.c)
 target_include_directories(audiotest PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(audiotest PRIVATE vgm-audio)
+add_sanitizers(audiotest)
 
 add_executable(emutest emutest.c)
 target_include_directories(emutest PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(emutest PRIVATE vgm-emu)
+add_sanitizers(emutest)
 
 add_executable(audemutest audemutest.c)
 target_include_directories(audemutest PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(audemutest PRIVATE vgm-audio vgm-emu)
+add_sanitizers(audemutest)
 
 find_package(ZLIB REQUIRED)
 
 add_executable(vgmtest vgmtest.c vgm/dblk_compr.c)
 target_include_directories(vgmtest PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(vgmtest PRIVATE ZLIB::ZLIB vgm-audio vgm-emu)
+add_sanitizers(vgmtest)
 
 endif(BUILD_TESTS)
 
@@ -105,4 +114,5 @@ if(BUILD_PLAYER)
 add_executable(player player.cpp vgm/dblk_compr.c)
 target_include_directories(player PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(player PRIVATE vgm-audio vgm-player)
+add_sanitizers(player)
 endif()
