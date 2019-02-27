@@ -88,6 +88,7 @@ export default class MIDIPlayer extends Player {
     this.activeChannels = [];
     this.params = {};
     this.buffer = lib.allocate(this.bufferSize * 8, 'i32', lib.ALLOC_NORMAL);
+    this.filepathMeta = {};
 
     this.setAudioProcess(this.midiAudioProcess);
   }
@@ -123,9 +124,32 @@ export default class MIDIPlayer extends Player {
     }
   }
 
+  metadataFromFilepath(filepath) {
+    const parts = filepath.split('/');
+    const len = parts.length;
+    const meta = {};
+    if (parts.length >= 3) {
+      meta.formatted = {
+        title: `${parts[1]} - ${parts[len - 1]}`,
+        subtitle: parts[0],
+      };
+    } else if (parts.length === 2) {
+      meta.formatted = {
+        title: parts[1],
+        subtitle: parts[0],
+      }
+    } else {
+      meta.formatted = {
+        title: parts[0],
+        subtitle: 'MIDI',
+      }
+    }
+    return meta;
+  }
+
   loadData(data, filepath) {
     this.activeChannels = [];
-    this.metadata = Player.metadataFromFilepath(filepath);
+    this.filepathMeta = this.metadataFromFilepath(filepath);
 
     lib.ccall('tp_open', 'number', ['array', 'number'], [data, data.byteLength]);
     for(let i = 0; i < 16; i++) {
@@ -186,7 +210,7 @@ export default class MIDIPlayer extends Player {
   }
 
   getMetadata() {
-    return this.metadata;
+    return this.filepathMeta;
   }
 
   getParameter(id) {

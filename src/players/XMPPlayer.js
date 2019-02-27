@@ -74,7 +74,7 @@ export default class XMPPlayer extends Player {
 
   _parseMetadata() {
     const xmp = this.lib;
-    const res = {};
+    const meta = {};
 
     // Match layout of xmp_module_info struct
     // http://xmp.sourceforge.net/libxmp.html
@@ -82,28 +82,31 @@ export default class XMPPlayer extends Player {
     const xmp_module_infoPtr = xmp._malloc(2048);
     xmp._xmp_get_module_info(this.xmpCtx, xmp_module_infoPtr);
     const xmp_modulePtr = xmp.getValue(xmp_module_infoPtr + 20, '*');
-    res.title = xmp.Pointer_stringify(xmp_modulePtr, 256);
-    res.system = xmp.Pointer_stringify(xmp_modulePtr + 64, 256);
-    res.comment = xmp.Pointer_stringify(xmp.getValue(xmp_module_infoPtr + 24, '*'), 512);
+    meta.title = xmp.Pointer_stringify(xmp_modulePtr, 256);
+    meta.system = xmp.Pointer_stringify(xmp_modulePtr + 64, 256);
+    meta.comment = xmp.Pointer_stringify(xmp.getValue(xmp_module_infoPtr + 24, '*'), 512);
 
     const infoPtr = this.xmp_frame_infoPtr;
     xmp._xmp_get_frame_info(this.xmpCtx, infoPtr);
     this._durationMs = xmp.getValue(infoPtr + 8 * 4, 'i32');
 
     // XMP-specific metadata
-    res.patterns = xmp.getValue(xmp_modulePtr + 128 + 4 * 0, 'i32'); // patterns
-    res.tracks = xmp.getValue(xmp_modulePtr + 128 + 4 * 1, 'i32'); // tracks
-    res.numChannels = xmp.getValue(xmp_modulePtr + 128 + 4 * 2, 'i32'); // tracks per pattern
-    res.numInstruments = xmp.getValue(xmp_modulePtr + 128 + 4 * 3, 'i32'); // instruments
-    res.numSamples = xmp.getValue(xmp_modulePtr + 128 + 4 * 4, 'i32'); // samples
-    res.initialSpeed = xmp.getValue(xmp_modulePtr + 128 + 4 * 5, 'i32'); // initial speed
-    res.initialBPM = xmp.getValue(xmp_modulePtr + 128 + 4 * 6, 'i32'); // initial bpm
-    res.moduleLength = xmp.getValue(xmp_modulePtr + 128 + 4 * 7, 'i32'); // module length
-    res.restartPosition = xmp.getValue(xmp_modulePtr + 128 + 4 * 8, 'i32'); // restart position
+    meta.patterns = xmp.getValue(xmp_modulePtr + 128 + 4 * 0, 'i32'); // patterns
+    meta.tracks = xmp.getValue(xmp_modulePtr + 128 + 4 * 1, 'i32'); // tracks
+    meta.numChannels = xmp.getValue(xmp_modulePtr + 128 + 4 * 2, 'i32'); // tracks per pattern
+    meta.numInstruments = xmp.getValue(xmp_modulePtr + 128 + 4 * 3, 'i32'); // instruments
+    meta.numSamples = xmp.getValue(xmp_modulePtr + 128 + 4 * 4, 'i32'); // samples
+    meta.initialSpeed = xmp.getValue(xmp_modulePtr + 128 + 4 * 5, 'i32'); // initial speed
+    meta.initialBPM = xmp.getValue(xmp_modulePtr + 128 + 4 * 6, 'i32'); // initial bpm
+    meta.moduleLength = xmp.getValue(xmp_modulePtr + 128 + 4 * 7, 'i32'); // module length
+    meta.restartPosition = xmp.getValue(xmp_modulePtr + 128 + 4 * 8, 'i32'); // restart position
 
-    this.initialBPM = res.initialBPM;
+    // Filename fallback
+    if (!meta.title) meta.title = this.filepathMeta.title;
 
-    return res;
+    this.initialBPM = meta.initialBPM;
+
+    return meta;
   }
 
   restart() {
@@ -111,8 +114,9 @@ export default class XMPPlayer extends Player {
     this.resume();
   }
 
-  loadData(data) {
+  loadData(data, filename) {
     let err;
+    this.filepathMeta = Player.metadataFromFilepath(filename);
 
     err = this.lib.ccall(
       'xmp_load_module_from_memory', 'number',
@@ -129,7 +133,7 @@ export default class XMPPlayer extends Player {
       console.error('xmp_start_player failed. error code: %d', err);
     }
 
-    this.metadata = this._parseMetadata();
+    this.metadata = this._parseMetadata(filename);
 
     this.connect();
     this.resume();

@@ -451,13 +451,33 @@ class App extends PureComponent {
   }
 
   handleDoSearch(e, query) {
-    this.setState({ initialQuery: query });
+    this.setState({initialQuery: query});
     e.preventDefault();
     return false;
   }
 
+  static titlesFromMetadata(metadata) {
+    if (metadata.formatted) {
+      return metadata.formatted;
+    }
+
+    const title = App.allOrNone(metadata.artist, ' - ') + metadata.title;
+    const subtitle = [metadata.game, metadata.system].filter(x => x).join(' - ') +
+      App.allOrNone(' (', metadata.copyright, ')');
+    return {title, subtitle};
+  }
+
+  static allOrNone(...args) {
+    let str = '';
+    for (let i = 0; i < args.length; i++) {
+      if (!args[i]) return '';
+      str += args[i];
+    }
+    return str;
+  }
+
   render() {
-    const metadata = this.state.currentSongMetadata;
+    const {title, subtitle} = App.titlesFromMetadata(this.state.currentSongMetadata);
     return (
       <div className="App">
         <AppHeader user={this.state.user}
@@ -551,18 +571,14 @@ class App extends PureComponent {
               onChange={this.handleTimeSliderChange}/>
             {this.state.songUrl &&
             <div className="SongDetails">
-              <div className="SongDetails-title">
-                {this.state.favorites &&
+              {this.state.favorites &&
+              <div style={{float: 'left', marginBottom: '58px'}}>
                 <FavoriteButton favorites={this.state.favorites}
                                 toggleFavorite={this.handleToggleFavorite}
-                                href={this.state.songUrl}/>}
-                {allOrNone(metadata.artist, ' - ')}{metadata.title}
-              </div>
-              <div className="SongDetails-subtitle">
-                {this.state.user && <span>&nbsp;&nbsp;&nbsp;</span>}
-                {[metadata.game, metadata.system].filter(x => x).join(' - ')}
-                {allOrNone(' (', metadata.copyright, ')')}
-              </div>
+                                href={this.state.songUrl}/>
+              </div>}
+              <div className="SongDetails-title">{title}</div>
+              <div className="SongDetails-subtitle">{subtitle}</div>
             </div>}
           </div>
           {this.state.showSettings &&
@@ -589,15 +605,6 @@ class App extends PureComponent {
       </div>
     );
   }
-}
-
-function allOrNone(...args) {
-  let str = '';
-  for (let i = 0; i < args.length; i++) {
-    if (!args[i]) return '';
-    str += args[i];
-  }
-  return str;
 }
 
 export default App;

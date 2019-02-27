@@ -1,4 +1,5 @@
 import Player from "./Player.js";
+import App from "../App";
 
 let emu = null;
 let libgme = null;
@@ -130,23 +131,31 @@ export default class GMEPlayer extends Player {
       return value;
     };
 
-    const res = {};
+    const meta = {};
 
-    res.length = readInt32();
-    res.intro_length = readInt32();
-    res.loop_length = readInt32();
-    res.play_length = readInt32();
+    meta.length = readInt32();
+    meta.intro_length = readInt32();
+    meta.loop_length = readInt32();
+    meta.play_length = readInt32();
 
     offset += 4 * 12; // skip unused bytes
 
-    res.system = readString();
-    res.game = readString();
-    res.title = readString() || res.game || this.filepathMeta.title;
-    res.artist = readString() || this.filepathMeta.artist;
-    res.copyright = readString();
-    res.comment = readString();
+    meta.system = readString();
+    meta.game = readString();
+    meta.title = readString() || meta.game || this.filepathMeta.title;
+    meta.artist = readString() || this.filepathMeta.artist;
+    meta.copyright = readString();
+    meta.comment = readString();
 
-    return res;
+    meta.formatted = {
+      title: meta.game === meta.title ?
+        meta.title :
+        App.allOrNone(meta.game, ' - ') + meta.title,
+      subtitle: [meta.artist, meta.system].filter(x => x).join(' - ') +
+        App.allOrNone(' (', meta.copyright, ')'),
+    };
+
+    return meta;
   }
 
   getVoiceName(index) {
