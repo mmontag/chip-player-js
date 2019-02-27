@@ -515,14 +515,33 @@ class App extends PureComponent {
                     className="box-button"
                     disabled={this.state.ejected}>
               {this.state.paused ? 'Resume' : 'Pause'}
-            </button>{' '}
-            <button className="box-button" onClick={this.handlePlayRandom}>
-              I'm Feeling Lucky
             </button>
-            {!this.state.showSettings &&
-            <button className="App-player-settings-button box-button" onClick={this.toggleSettings}>
-              Player Settings >
-            </button>}
+            {' '}
+            {this.state.currentSongNumSubtunes > 1 &&
+            <span style={{whiteSpace: 'nowrap'}}>
+              Tune {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}{' '}
+              <button
+                className="box-button"
+                disabled={this.state.ejected}
+                onClick={this.prevSubtune}>&lt;
+              </button>
+              {' '}
+              <button
+                className="box-button"
+                disabled={this.state.ejected}
+                onClick={this.nextSubtune}>&gt;
+              </button>
+            </span>}
+            <span style={{float: 'right'}}>
+              <button className="box-button" onClick={this.handlePlayRandom}>
+                I'm Feeling Lucky
+              </button>
+              {' '}
+              {!this.state.showSettings &&
+              <button className="box-button" onClick={this.toggleSettings}>
+                Player Settings >
+              </button>}
+            </span>
             {this.state.playerError &&
             <div className="App-error">ERROR: {this.state.playerError}</div>
             }
@@ -530,18 +549,6 @@ class App extends PureComponent {
               currentSongPositionMs={this.state.currentSongPositionMs}
               currentSongDurationMs={this.state.currentSongDurationMs}
               onChange={this.handleTimeSliderChange}/>
-            {this.state.currentSongNumSubtunes > 1 &&
-            <span>
-                Subtune: {this.state.currentSongSubtune + 1} of {this.state.currentSongNumSubtunes}{' '}
-              <button
-                className="box-button"
-                disabled={this.state.ejected}
-                onClick={this.prevSubtune}>Prev</button>{' '}
-              <button
-                className="box-button"
-                disabled={this.state.ejected}
-                onClick={this.nextSubtune}>Next</button><br/>
-              </span>}
             {this.state.songUrl &&
             <div className="SongDetails">
               <div className="SongDetails-title">

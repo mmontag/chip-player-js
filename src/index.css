@@ -238,10 +238,6 @@ body,#root {
     margin-top: 0;
 }
 
-.App-player-settings-button {
-    float: right;
-}
-
 .App .App-label {
     margin: 0 8px 0 0;
 }
@@ -259,13 +255,13 @@ body,#root {
     padding: 0;
     cursor: pointer;
     position: relative;
-    width: 100%;
+    width: calc(100% - 8px);
     box-sizing: border-box;
     border: 0;
 }
 
 .App .Slider-rail {
-    width: 100%;
+    width: calc(100% + 8px);
     height: 3px;
     margin-top: -2px;
     background: none;

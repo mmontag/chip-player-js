@@ -5,7 +5,7 @@ export default class PlayerParams extends PureComponent {
   render() {
     return (
       <div className="PlayerParams">
-        <button className="App-player-settings-button box-button" onClick={this.props.toggleSettings}>
+        <button style={{float: 'right'}} className="box-button" onClick={this.props.toggleSettings}>
           Close
         </button>
         <h3>Player Settings</h3>
