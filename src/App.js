@@ -24,7 +24,6 @@ import AppHeader from "./AppHeader";
 import Favorites from "./Favorites";
 
 const MAX_VOICES = 64;
-const VOICES_ALL_ON = Array(MAX_VOICES).fill(true);
 const CATALOG_PREFIX = 'https://gifx.co/music/';
 
 class App extends PureComponent {
@@ -79,7 +78,7 @@ class App extends PureComponent {
     this.playSong = this.playSong.bind(this);
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
-    this.handleVoiceToggle = this.handleVoiceToggle.bind(this);
+    this.handleSetVoices = this.handleSetVoices.bind(this);
     this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
     this.handleDoSearch = this.handleDoSearch.bind(this);
     this.prevSubtune = this.prevSubtune.bind(this);
@@ -185,7 +184,7 @@ class App extends PureComponent {
       currentSongDurationMs: 1,
       currentSongPositionMs: 0,
       tempo: 1,
-      voices: VOICES_ALL_ON,
+      voices: Array(MAX_VOICES).fill(true),
       voiceNames: Array(MAX_VOICES).fill(''),
       initialQuery: null,
       imageUrl: null,
@@ -313,10 +312,10 @@ class App extends PureComponent {
           return;
         }
 
-        this.player.setTempo(this.state.tempo);
-        this.player.setVoices(VOICES_ALL_ON);
-        this.player.resume();
         const numVoices = this.player.getNumVoices();
+        this.player.setTempo(this.state.tempo);
+        this.player.setVoices([...Array(numVoices)].fill(true));
+        this.player.resume();
 
         this.setState({
           paused: false,
@@ -327,7 +326,7 @@ class App extends PureComponent {
           currentSongPositionMs: 0,
           currentSongSubtune: 0,
           voiceNames: [...Array(numVoices)].map((_, i) => this.player.getVoiceName(i)),
-          voices: VOICES_ALL_ON,
+          voices: [...Array(numVoices)].fill(true),
           songUrl: url,
         });
       });
@@ -414,13 +413,11 @@ class App extends PureComponent {
     }, 100);
   }
 
-  handleVoiceToggle(index) {
+  handleSetVoices(voices) {
     if (!this.player) return;
 
-    const voices = [...this.state.voices];
-    voices[index] = !voices[index];
     this.player.setVoices(voices);
-    this.setState({voices: voices});
+    this.setState({voices: [...voices]});
   }
 
   handleTempoChange(event) {
@@ -593,7 +590,7 @@ class App extends PureComponent {
                 voices={this.state.voices}
                 voiceNames={this.state.voiceNames}
                 handleTempoChange={this.handleTempoChange}
-                handleVoiceToggle={this.handleVoiceToggle}
+                handleSetVoices={this.handleSetVoices}
                 toggleSettings={this.toggleSettings}
                 getParameter={this.player.getParameter}
                 setParameter={this.player.setParameter}

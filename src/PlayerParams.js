@@ -1,19 +1,44 @@
 import {PureComponent} from 'react';
-import React from "react";
+import React from 'react';
 
 export default class PlayerParams extends PureComponent {
+  constructor(props) {
+    super(props);
+
+    this.handleVoiceToggle = this.handleVoiceToggle.bind(this);
+  }
+
+  handleVoiceToggle(e, index) {
+    const voices = this.props.voices;
+    if (e.altKey|| e.shiftKey || e.metaKey) {
+      // Behaves like Photoshop (toggling layer visibility with alt+click)
+      if (voices.every((enabled, i) => (i === index) === enabled)) {
+        // Alt-click on a single enabled channel unmutes everything
+        voices.fill(true);
+      } else {
+        // Solo the channel
+        voices.fill(false);
+        voices[index] = true;
+      }
+    } else {
+      // Regular toggle behavior
+      voices[index] = !voices[index];
+    }
+    this.props.handleSetVoices(voices);
+  }
+
   render() {
     return (
-      <div className="PlayerParams">
-        <button style={{float: 'right'}} className="box-button" onClick={this.props.toggleSettings}>
+      <div className='PlayerParams'>
+        <button style={{float: 'right'}} className='box-button' onClick={this.props.toggleSettings}>
           Close
         </button>
         <h3>Player Settings</h3>
-        Speed:
+        Speed:{' '}
         <input
           disabled={this.props.ejected}
-          type="range" value={this.props.tempo}
-          min="0.3" max="2.0" step="0.05"
+          type='range' value={this.props.tempo}
+          min='0.3' max='2.0' step='0.05'
           onInput={this.props.handleTempoChange}
           onChange={this.props.handleTempoChange}/>{' '}
         {this.props.tempo.toFixed(2)}<br/>
@@ -21,11 +46,12 @@ export default class PlayerParams extends PureComponent {
         Voices:{' '}
         {[...Array(this.props.numVoices)].map((_, i) => {
           return (
-            <label className="App-label" key={i}>
+            <label className='App-label' key={i}>
               <input
-                type="checkbox" onChange={() => {
-                this.props.handleVoiceToggle(i)
-              }} checked={this.props.voices[i]}/>
+                title='Alt+click to solo. Alt+click again to unmute all.'
+                type='checkbox'
+                onClick={(e) => this.handleVoiceToggle(e, i)}
+                checked={this.props.voices[i]}/>
               {this.props.voiceNames[i]}
             </label>
           )
@@ -54,7 +80,7 @@ export default class PlayerParams extends PureComponent {
               return (
                 <div key={param.id}>
                   {param.label}:{' '}
-                  <input type="range"
+                  <input type='range'
                          min={param.min} max={param.max} step={param.step}
                          value={this.props.getParameter(param.id)}
                          onChange={(e) => this.props.setParameter(param.id, e.target.value)}>
