@@ -23,7 +23,8 @@ import FavoriteButton from "./FavoriteButton";
 import AppHeader from "./AppHeader";
 import Favorites from "./Favorites";
 
-const MAX_VOICES = 32;
+const MAX_VOICES = 64;
+const VOICES_ALL_ON = Array(MAX_VOICES).fill(true);
 const CATALOG_PREFIX = 'https://gifx.co/music/';
 
 class App extends PureComponent {
@@ -184,7 +185,7 @@ class App extends PureComponent {
       currentSongDurationMs: 1,
       currentSongPositionMs: 0,
       tempo: 1,
-      voices: Array(MAX_VOICES).fill(true),
+      voices: VOICES_ALL_ON,
       voiceNames: Array(MAX_VOICES).fill(''),
       initialQuery: null,
       imageUrl: null,
@@ -313,7 +314,7 @@ class App extends PureComponent {
         }
 
         this.player.setTempo(this.state.tempo);
-        this.player.setVoices(this.state.voices);
+        this.player.setVoices(VOICES_ALL_ON);
         this.player.resume();
         const numVoices = this.player.getNumVoices();
 
@@ -326,6 +327,7 @@ class App extends PureComponent {
           currentSongPositionMs: 0,
           currentSongSubtune: 0,
           voiceNames: [...Array(numVoices)].map((_, i) => this.player.getVoiceName(i)),
+          voices: VOICES_ALL_ON,
           songUrl: url,
         });
       });
