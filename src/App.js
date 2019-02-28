@@ -1,5 +1,3 @@
-import './App.css';
-
 import React, {PureComponent} from 'react';
 import isMobile from 'ismobilejs';
 import queryString from 'querystring';

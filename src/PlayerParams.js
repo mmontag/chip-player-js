@@ -10,7 +10,8 @@ export default class PlayerParams extends PureComponent {
 
   handleVoiceToggle(e, index) {
     const voices = this.props.voices;
-    if (e.altKey|| e.shiftKey || e.metaKey) {
+    e = e.nativeEvent || {};
+    if (e.altKey || e.shiftKey || e.metaKey) {
       // Behaves like Photoshop (toggling layer visibility with alt+click)
       if (voices.every((enabled, i) => (i === index) === enabled)) {
         // Alt-click on a single enabled channel unmutes everything
@@ -44,18 +45,20 @@ export default class PlayerParams extends PureComponent {
         {this.props.tempo.toFixed(2)}<br/>
 
         Voices:{' '}
-        {[...Array(this.props.numVoices)].map((_, i) => {
-          return (
-            <label className='App-label' key={i}>
-              <input
-                title='Alt+click to solo. Alt+click again to unmute all.'
-                type='checkbox'
-                onClick={(e) => this.handleVoiceToggle(e, i)}
-                checked={this.props.voices[i]}/>
-              {this.props.voiceNames[i]}
-            </label>
-          )
-        })}<br/>
+        <div style={{display: 'flex', flexWrap: 'wrap', marginRight: '-8px'}}>
+          {[...Array(this.props.numVoices)].map((_, i) => {
+            return (
+              <label className='App-label App-voice-label' key={i}>
+                <input
+                  title='Alt+click to solo. Alt+click again to unmute all.'
+                  type='checkbox'
+                  onChange={(e) => this.handleVoiceToggle(e, i)}
+                  checked={this.props.voices[i]}/>
+                {this.props.voiceNames[i]}
+              </label>
+            )
+          })}
+        </div>
 
         {this.props.params.map(param => {
           switch (param.type) {

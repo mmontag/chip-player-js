@@ -78,6 +78,7 @@ select {
     background-position: calc(100% - 16px) 5px, calc(100% - 12px) 5px;
     background-size: 4px 12px, 4px 12px;
     background-repeat: no-repeat;
+    max-width: 264px;
 }
 select option                { font-size: 14px; }
 
@@ -173,8 +174,9 @@ body,#root {
     flex-direction: column;
     height: 100vh;
     box-sizing: border-box;
+    margin: 0 auto;
+    font-variant-numeric: tabular-nums;
 }
-
 
 .App .App-header {
     border-bottom: 1px solid yellow;
@@ -229,8 +231,8 @@ body,#root {
 .App-footer-settings {
     border-left: 1px solid #ff0;
     padding: 19px;
-    max-width: 300px;
-    overflow-y: auto;
+    max-width: 360px;
+    overflow-y: scroll;
     overflow-x: hidden;
 }
 
@@ -238,11 +240,17 @@ body,#root {
     margin-top: 0;
 }
 
-.App .App-label {
+.App-label {
     margin: 0 8px 0 0;
 }
 
-.App .App-error {
+.App-voice-label {
+    width: 112px;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+
+.App-error {
     display: inline-block;
     background-color: #800;
     color: white;
