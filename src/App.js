@@ -72,19 +72,17 @@ class App extends PureComponent {
 
     this.togglePause = this.togglePause.bind(this);
     this.toggleSettings = this.toggleSettings.bind(this);
-    this.play = this.play.bind(this);
+    this.displayLoop = this.displayLoop.bind(this);
+    this.loadCatalog = this.loadCatalog.bind(this);
     this.playSong = this.playSong.bind(this);
+    this.playSubtune = this.playSubtune.bind(this);
+    this.prevSubtune = this.prevSubtune.bind(this);
+    this.nextSubtune = this.nextSubtune.bind(this);
     this.handleTimeSliderChange = this.handleTimeSliderChange.bind(this);
     this.handleTempoChange = this.handleTempoChange.bind(this);
     this.handleSetVoices = this.handleSetVoices.bind(this);
     this.handlePlayerStateUpdate = this.handlePlayerStateUpdate.bind(this);
     this.handleDoSearch = this.handleDoSearch.bind(this);
-    this.prevSubtune = this.prevSubtune.bind(this);
-    this.nextSubtune = this.nextSubtune.bind(this);
-    this.playSubtune = this.playSubtune.bind(this);
-    this.displayLoop = this.displayLoop.bind(this);
-    this.getFadeMs = this.getFadeMs.bind(this);
-    this.loadCatalog = this.loadCatalog.bind(this);
     this.handlePlayRandom = this.handlePlayRandom.bind(this);
     this.handleFileClick = this.handleFileClick.bind(this);
     this.handleLogin = this.handleLogin.bind(this);
@@ -227,16 +225,6 @@ class App extends PureComponent {
         console.log('Loaded catalog.json (%d items).', list.length);
         this.setState({catalog: list});
       });
-  }
-
-  play() {
-    if (this.player !== null) {
-      this.player.restart();
-      this.setState({
-        paused: false,
-        currentSongPositionMs: 0,
-      });
-    }
   }
 
   playSong(url) {
@@ -441,10 +429,6 @@ class App extends PureComponent {
       e.preventDefault();
       this.playSong(filename);
     }
-  }
-
-  getFadeMs(metadata, tempo) {
-    return Math.floor(metadata.play_length / tempo);
   }
 
   handleDoSearch(e, query) {
