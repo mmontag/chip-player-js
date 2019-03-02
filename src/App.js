@@ -94,7 +94,7 @@ class App extends PureComponent {
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     firebase.auth().onAuthStateChanged(user => {
-      this.setState({user: user});
+      this.setState({user: user, loadingUser: !!user});
       if (user) {
         this.db.collection('users').doc(user.uid).collection('favorites').get().then(docs => {
           // invert the collection
@@ -102,7 +102,7 @@ class App extends PureComponent {
           docs.forEach(doc => {
             favorites[doc.data().path] = doc.id;
           });
-          this.setState({favorites: favorites});
+          this.setState({favorites: favorites, loadingUser: false});
         });
       }
     });
@@ -482,7 +482,7 @@ class App extends PureComponent {
                    handleLogin={this.handleLogin}
                    isPhone={isMobile.phone}/>
         {this.state.loading ?
-          <p>Loading...</p>
+          <p>Loading player engine...</p>
           :
           <div className="App-content-area">
             <Search
@@ -491,12 +491,15 @@ class App extends PureComponent {
               toggleFavorite={this.handleToggleFavorite}
               favorites={this.state.favorites}
               onClick={this.handleFileClick}>
-              <Favorites
-                user={this.state.user}
-                handleLogin={this.handleLogin}
-                toggleFavorite={this.handleToggleFavorite}
-                onClick={this.handleFileClick}
-                favorites={this.state.favorites}/>
+              {this.state.loadingUser ?
+                <p>Loading user data...</p>
+                :
+                <Favorites
+                  user={this.state.user}
+                  handleLogin={this.handleLogin}
+                  toggleFavorite={this.handleToggleFavorite}
+                  onClick={this.handleFileClick}
+                  favorites={this.state.favorites}/>}
               <h1>Top Level Folders</h1>
               {
                 [
