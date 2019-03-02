@@ -213,6 +213,8 @@ var runtime_methods = [
   'ALLOC_NORMAL',
   'FS',
   'Pointer_stringify',
+  'AsciiToString',
+  'UTF8ToString',
   'allocate',
   'ccall',
   'getValue',
