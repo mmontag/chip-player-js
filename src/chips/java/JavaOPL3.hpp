@@ -792,6 +792,8 @@ OPL3::~OPL3()
 
 
 void OPL3::initOperators() {
+    memset(registers, 0, sizeof(registers));
+
     int baseAddress;
     // The YMF262 has 36 operators:
 	memset(operators, 0, sizeof(operators));
