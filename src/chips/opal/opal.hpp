@@ -372,8 +372,11 @@ void Opal::Init(int sample_rate) {
         Op[i].ComputeRates();
 
     // Initialise channel panning at center.
-    for (int i = 0; i < NumChannels; i++)
+    for (int i = 0; i < NumChannels; i++) {
         Chan[i].SetPan(64);
+        Chan[i].SetLeftEnable(true);
+        Chan[i].SetRightEnable(true);
+    }
 
     SetSampleRate(sample_rate);
 }
