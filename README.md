@@ -86,7 +86,7 @@ cd chip-player-js/fluidlite/     # navigate to fluidlite root
 source ~/src/emsdk/emsdk_env.sh  # load the emscripten environment variables
 mkdir build                      # create a build folder for Cmake output
 cd build                         
-cmake ..                         # Cmake will generate a Makefile by default
+emcmake cmake ..                 # Cmake will generate a Makefile by default
 emmake make
 ```
 
